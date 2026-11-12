@@ -28,7 +28,8 @@ function fixture(){
  seller.schedule={default:[{start:0,end:1440,location:INN,activity:'营业',services:['trade']}]};
  // S5-02: reserve ceil(2*60/35)=4 stew; fifth portion remains saleable. Meal = trunc(8*.5)+trunc(15*.5*depth)=4+7=11.
  world.items.find(r=>r.id===BREAD).basePrice=8;world.items.find(r=>r.id===STEW).basePrice=15;
- const engine=new WorldEngine(world),document=engine.initialFromLegacy(seed,'a3-daily');
+ // 现行开局（createCharacter）：旧存档形状的公仓粮 420 对 17110 的目标是饥荒村，食物价被夹到上限。
+ const engine=new WorldEngine(world),document=engine.createCharacter(seed,{},'a3-daily');
  document.state.location=INN;document.state.player.coins=60;
  document.state.player.body={satiety:{value:30,asOf:document.state.minute,activity:'rest'}};
  Object.assign(document.state.npcs[SELLER],{location:INN,status:'正常',activity:'营业',goals:{}});
