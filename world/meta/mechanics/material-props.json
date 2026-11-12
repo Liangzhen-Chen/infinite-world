@@ -46,6 +46,7 @@
   "timber",
   "wood",
   "carbon",
+  "fiber",
   "mushroom",
   "nut",
   "fruit",
@@ -121,6 +122,27 @@
    },
    "heatValue": 30,
    "basis": "木炭。高位热值约 28–33 MJ/kg（Engineering ToolBox 燃料热值表；FAO Forestry Paper 63），取 30.0。【数值凭记忆写入，待 L2 核对】"
+  },
+  "fiber": {
+   "sources": [
+    {
+     "name": "风干植物纤维（草、秸、麻屑）",
+     "citation": "Phyllis2 生物质成分数据库：风干禾草与秸秆含水率约 8–15%",
+     "moistureFraction": 0.12,
+     "range": {
+      "moistureFraction": [
+       0.08,
+       0.15
+      ]
+     }
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "区间内取典型风干值 12%"
+   },
+   "heatValue": 17,
+   "basis": "风干植物纤维（标签 fiber，引火物如火绒、麻屑）。绝干草本生物质高位热值约 15–18 MJ/kg（Phyllis2；Biomass Energy Data Book），取 17.0。补它是因为带 fuel 标签的引火物此前没有热值，折算时只能按重量。【数值凭记忆写入，待 L2 核对】"
   },
   "mushroom": {
    "sources": [

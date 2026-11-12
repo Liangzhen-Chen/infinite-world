@@ -21,7 +21,9 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {marketSupply} from '../server-plugin/market.mjs';
 import {farmTargetFood,openingStockFood} from '../server-plugin/farm-target.mjs';
 import {itemResupplyDays} from '../server-plugin/supply-interval.mjs';
-import {householdDailyUse,householdUsage} from '../server-plugin/household-budget.mjs';
+import {householdDailyUse,householdUsage,usageItemGrams,upkeepSelfSupplyOf} from '../server-plugin/household-budget.mjs';
+import {isItemClass} from '../server-plugin/item-class.mjs';
+import {placeSettlement,personHousehold} from '../server-plugin/entity-view.mjs';
 import {regionalTradePrice,regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {probePriceReads,setPriceReadMode} from '../server-plugin/stock.mjs';
@@ -53,7 +55,19 @@ function report(engine,doc,label,pairs){
     const it=engine.byId.get(item);
     row.parts=attempt(()=>({itemWeight:it?.weight,origin:it?.origin,itemResupplyDays:itemResupplyDays(engine,state,doc.randomSeed,item,place),
      singleHouseholdDailyUse:householdDailyUse(engine,state,[null],item),householdUsage:householdUsage(engine,state,[null]).map(u=>({cls:u.cls,gramsPerDay:u.gramsPerDay})),population:s?.population,
-     demandMinusConsumption:m.demand-m.consumption,craftUse:state.records?.[`craft-use:${place}`]?.days??null}));
+     demandMinusConsumption:m.demand-m.consumption,craftUse:state.records?.[`craft-use:${place}`]?.days??null,
+     // 用度类池：池成员与各自基准克、名册户（成员数、日用度、户内自给、已欠量）——看"经市场的部分"从哪来、柴按户而名册人均是否偏大。
+     pool:attempt(()=>{
+      const cls=householdUsage(engine,state,[null]).map(u=>u.cls).find(c=>isItemClass(engine,item,c)),seen=new Set(),households=[];
+      if(!cls)return null;
+      for(const id of Object.keys(state.npcs??{})){
+       if(placeSettlement(engine,state,state.npcs[id].location).value!==place)continue;
+       const h=personHousehold(engine,state,id).value,key=h?.id??id;if(seen.has(key))continue;seen.add(key);
+       const members=(h?.members??[id]).filter(x=>state.npcs?.[x]);
+       households.push({key,members:members.length,need:householdUsage(engine,state,members).find(u=>u.cls===cls).gramsPerDay,self:attempt(()=>upkeepSelfSupplyOf(engine,state,id)[cls]??0),debt:state.family?.upkeep?.[key]?.[`${cls}DebtG`]??0});
+      }
+      return {cls,members:engine.world.items.filter(i=>isItemClass(engine,i.id,cls)).map(i=>({id:i.id,grams:usageItemGrams(engine,i.id,cls),days:attempt(()=>itemResupplyDays(engine,state,doc.randomSeed,i.id,place))})),households};
+     })}));
    }
   }catch(error){row.market={error:error.message};}
   row.price=attempt(()=>regionalTradePrice(read(doc),engine,item,place));row.base=attempt(()=>regionalTradeBase(read(doc),engine,item,place));

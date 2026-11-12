@@ -75,6 +75,13 @@ const freeWater=(...a)=>{
  if(!registerHouseholdFreeWater.fn)throw Error('household free water not registered: household-subsistence.mjs must call registerHouseholdFreeWater');
  return registerHouseholdFreeWater.fn(...a);
 };
+// 户内自给量（household-subsistence.upkeepSelfSupply，模块体内注册）：本户每天靠自己（采集、砍柴）能采回多少，按用度类给基准克；价格读它扣掉不经市场的那部分用度。
+// 未注册就是装配错误，直接抛错，不回退为 0（否则会静默退回“全额买”）。
+export function registerUpkeepSelfSupply(fn){registerUpkeepSelfSupply.fn=fn;}
+export function upkeepSelfSupplyOf(...a){
+ if(!registerUpkeepSelfSupply.fn)throw Error('upkeep self supply not registered: household-subsistence.mjs must call registerUpkeepSelfSupply');
+ return registerUpkeepSelfSupply.fn(...a);
+}
 // 本户当日水分缺口（与预算同一口径：成员日耗水 × 24，含个人修正），交给注册函数折成当日可免费取到的水分 {hydration,source}。
 // 免费水在 readHouseholdResources 内计算（budgetRead 的 build 里）：缓存命中的预算读不再重算。缓存本身的范围不变：游标读按草稿 revision（任何写入、含水体与日期变化即换键），
 // 非游标读按 d.memo（只读作用域/状态读取器，按 state 对象身份）；没有 memo 的朴素读取器与整份预算一样每次重算（这是等价测试用的对照旁路，不是新增开销）。主观读不缓存。

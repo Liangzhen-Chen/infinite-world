@@ -5,7 +5,7 @@ import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
 import {bodyRule,bodyDrain,metabolismFactor,settlementMouths,mealMouthsOf} from './primitives-body.mjs';
 import {recordsWhere,recordsMemo,canonicalEqual,stateMemo,setRecordRow} from './storage.mjs';
 import {compileRX,evaluateRX} from './rx.mjs';
-import {householdMealPlan,usageItemGrams,registerHouseholdFreeWater} from './household-budget.mjs';
+import {householdMealPlan,usageItemGrams,registerHouseholdFreeWater,registerUpkeepSelfSupply} from './household-budget.mjs';
 import {householdUsage,isItemClass,heldOfClass} from './item-class.mjs';
 import {warClosedRoutes} from './hazard-calendar.mjs';
 import {facilityRouteStates} from './facility-state.mjs';
@@ -103,6 +103,23 @@ function readUpkeepWants(e,state,owner,members,minute){
   return grams>0?[{cls:u.cls,grams}]:[];
  });
 }
+// 一户靠自己每天能采回多少（按用度类，基准克）：用既有规划（householdSubsistencePlan）的采集行程，把"还缺多少"换成"每日全额用度"、
+// "今天已过的钟点"换成零（整天工时），食物与饮水不排（餐况桩）。行程由真实来源（公共林地、无主资源点）的可采量、往返与余量、
+// 本户成员的空闲工时共同限定，所以没有来源、没有空闲劳力的户得 0，全额走市场。只读：不写状态，结果按状态版本记忆。
+const upkeepSelfSupplyMemo=Symbol('household upkeep self supply');
+const noMeal={shortfall:{satiety:0},needs:{hydration:0}};
+export function upkeepSelfSupply(e,state,owner){
+ return stateMemo(state,e,[upkeepSelfSupplyMemo,owner,Math.floor(state.minute/DAY)],()=>{
+  const plan=householdSubsistencePlan(e,state,owner,state.minute,state,noMeal,null,{
+   notBefore:0,
+   wants:members=>householdUsage(e,state.minute,members).filter(u=>u.gramsPerDay>0&&sources(e,state).upkeep.get(u.cls)?.length).map(u=>({cls:u.cls,grams:Math.ceil(u.gramsPerDay)}))
+  });
+  const out={};
+  for(const trip of plan?.upkeepTrips??[])out[trip.cls]=(out[trip.cls]??0)+trip.units*trip.unitGrams;
+  return out;
+ });
+}
+registerUpkeepSelfSupply(upkeepSelfSupply);
 // The engine route resolver owns weather, closed roads, local rooms and tolls.
 // Only the bounded candidate ordering is retained across reads; live route
 // validation is repeated at the day's first use, not for every person/tick.
@@ -275,15 +292,16 @@ function mealDeficit(e,state,owner,settlement,members){
  const d={document,get:(...path)=>path.reduce((v,k)=>v?.[k],document)};
  return householdMealPlan(d,e,owner,{publicShare});
 }
-export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoState=state,mealOverride=null,context=null){
+// override（只读推演用，价格读取走这条，不写状态）：{wants:(members)=>[{cls,grams}]} 换掉"本户还缺多少"（默认读持有量），{notBefore} 换掉"今天已过的钟点"。
+export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoState=state,mealOverride=null,context=null,override=null){
  if(!config(e))return null;
  const h=personHousehold(e,state,owner).value,person=e.byId.get(owner),home=h?.homeLocation??person?.home?.location??person?.location??state.npcs?.[owner]?.location;
  const members=(h?.members??[owner]).filter(id=>id!=='player'&&!isPhysicallyDead(e,state,id)&&!state.npcs?.[id]?.levy&&!state.npcs?.[id]?.materialized?.folded);
  const day=Math.floor(minute/DAY),r=config(e),settlement=h?.settlement??placeSettlement(e,state,home).value;
-  const notBefore=context?.notBefore??(Math.floor(state.minute/DAY)===day?state.minute%DAY:0);
+  const notBefore=override?.notBefore??context?.notBefore??(Math.floor(state.minute/DAY)===day?state.minute%DAY:0);
  const meal=mealOverride??mealDeficit(e,state,owner,settlement,members),portions=Math.ceil(meal.shortfall.satiety/(e.byId.get(r.foodItem)?.nutrition?.satiety??1));
  const water=meal.needs.hydration>0?journey(e,state,home,'water',minute,0,null,memoState,context):null;
- const wants=upkeepWants(e,state,owner,members,minute);
+ const wants=override?.wants?override.wants(members):upkeepWants(e,state,owner,members,minute);
  if(!portions&&!water&&!wants.length)return {worker:null,home,members,water:null,food:null,foodTrips:[],upkeepTrips:[],duties:[],chores:[]};
  const preference=id=>evaluateRX(workerPreference,{}, {rollKey:{seed:seedOf(e),pack:'household',rule:'subsistence-worker',object:`${h?.id??owner}:${id}`,date:0}});
  const opportunity=id=>{

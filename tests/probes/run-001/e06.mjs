@@ -15,6 +15,7 @@ import {adjudicateLegalCase,lawAction} from '../../../server-plugin/law.mjs';
 import {legalCodeAt} from '../../../server-plugin/law-codes.mjs';
 import {faithAction,advanceFaith} from '../../../server-plugin/faith.mjs';
 import {SEAT,T,HOST} from '../../helpers/faith.mjs';
+import {handOatsScarcity} from '../../helpers/hand-targets.mjs';
 
 export function fireScene(){
  const s=setup(),{engine,w}=s;delete w.rules.weather;
@@ -65,6 +66,8 @@ const scenario=once(async()=>{
  const originalAdvance=engine.advance;engine.advance=()=>{};
  try{agricultureAction.call(engine,d,{operation:'donate',settlement:'loc_hw',quantity:lost},'e06:replenish');}finally{engine.advance=originalAdvance;}
  const restored=regionalTradePrice(d,engine,'item_oats','loc_hw',2*DAY+600);
+ // 补回后的价不再等于开局价：目标持有随日变化（距收获少两天，目标少两天餐口）。按手推：价 = 目录基价 3 × 运输因子 1 × 夹取后的稀缺度，稀缺度 = handOatsScarcity（需求 ÷ 供给，不调被测原语）。
+ const [floor,cap]=engine.rules.economy.priceFactorLimits.region,hand=handOatsScarcity(engine,d.get('state'),d.get('state','settlements','loc_hw','food')),restoredExpected=3*Math.min(cap,Math.max(floor,hand.ratio));
  const audited=reconcile(engine,d.document),balanced=Object.values(audited).every(a=>a.length===0);
  const lease={subject:warehouse,createdAt:0,deadline:120*DAY,monthlyRent:400,status:'有效'};
  damageFacility(d,engine,warehouse,facilityView(engine,d.get('state'),warehouse).condition-20,{sourceEvent:'e06:lease'});const stopped=leaseState(engine,d.get('state'),lease).monthlyRent===0;
@@ -84,7 +87,7 @@ const scenario=once(async()=>{
  const p=faithAction.call(engine,d,{operation:'faith_use',org:T,choice:'repair',consent:true},'e06:temple:start'),underConstruction=d.get('state','buildings',SEAT,'condition')===damaged;
  advanceFaith(d,engine,{before:2*DAY+600,after:6*DAY,id:'e06:temple:work'});
  const repaired=damaged<60&&beforeCash-d.get('state','player','coins')===100&&p.remainingWork>=2&&underConstruction&&d.get('state','buildings',SEAT,'condition')===100;
- return {direction,stock:lost>0&&sunk===lost&&stableSeed&&scarce>price&&signed===price&&restored===price&&balanced,lease:stopped&&resumed,repaired,compensated,started,
+ return {direction,stock:lost>0&&sunk===lost&&stableSeed&&scarce>price&&signed===price&&Math.abs(restored-restoredExpected)<=1e-9&&balanced,lease:stopped&&resumed,repaired,compensated,started,
   details:{lost,sunk,price,scarce,restored,signed,case:fireCase?.id,repair:p.id,damaged,templeCondition:d.get('state','buildings',SEAT,'condition'),repairWork:p.remainingWork,templePaid:beforeCash-d.get('state','player','coins'),repairState:d.get('state','records',`faith_repair:${T}`)}};
 });
 

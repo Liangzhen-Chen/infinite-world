@@ -2,14 +2,14 @@
 import {bagStock,priceRead,settlementStock,granary,pledged,freight,crop as cropAccount} from './stock.mjs';
 import {privateCropYieldBase} from './domain-rules.mjs';
 import {placeSettlement,personBusinesses,personHousehold} from './entity-view.mjs';
-import {isItemClass,classItems,workmanshipTier} from './item-class.mjs';
+import {isItemClass,classItems,workmanshipTier,householdUsage as usageDefinition} from './item-class.mjs';
 import {householdUpkeepGap} from './household-budget.mjs';
 import {explainDerived} from './derived.mjs';
 import {obligationRows,obligationClosed,currentGrace,institutionOriginal} from './obligation-state.mjs';
 import {aliveHoldings,holdingsView} from './holdings.mjs';
 import {reject} from './action-rejection.mjs';
 import {recordsMemo,withReadIndex} from './storage.mjs';
-import {budgetRead,householdResources,householdCommitments,householdUsage,householdDailyUse,usageCost} from './household-budget.mjs';
+import {budgetRead,householdResources,householdCommitments,householdUsage,householdDailyUse,usageCost,usageItemGrams,upkeepSelfSupplyOf} from './household-budget.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 import {ln,pow,fromRational,toRational} from './det-math.mjs';
 import {mealMouthsOf} from './primitives-body.mjs';
@@ -73,7 +73,10 @@ function goodsEntry(engine,item){
  // 可食池只收能吃的货；不能吃的货即使标签或表映射到 food，也退回下一个非 food 的派生类：自身其他 goods: 标签，再表中非 food 的映射，最后用物品自己。
  const goodsTag=tags.find(t=>t.startsWith('goods:')&&t!=='goods:food');
  const category=Object.entries(table).find(([tag,cls])=>cls!=='food'&&tags.includes(tag))?.[1];
- const entry={value:satiety>0?'goods:food':goodsTag??`goods:${category??item}`,weight:satiety>0?satiety:1,edible:satiety>0};
+ // 家户用度类（燃料、盐……，item-class.householdUsage 的 cls）：同一用度类的货互为替代品，进同一个池，按"顶多少基准克"计量（燃料按有效热值折算，
+ // 见 household-budget.usageItemGrams；缺热值时按重量）。类需求只在池里算一次，与全类供给比较，不按每件替代品各算一份。有效克数不为正（烧不出净热）的退回按件。
+ const use=satiety>0?null:usageDefinition(engine,0,[]).map(u=>u.cls).find(cls=>isItemClass(engine,item,cls))??null,useGrams=use?usageItemGrams(engine,item,use):0;
+ const entry=use&&useGrams>0?{value:`use:${use}`,weight:useGrams,edible:false,use}:{value:satiety>0?'goods:food':goodsTag??`goods:${category??item}`,weight:satiety>0?satiety:1,edible:satiety>0,use:null};
  if(row&&typeof row==='object')goodsClasses.set(row,{table,tags:row.tags,count:row.tags?.length,item,satiety:row.nutrition?.satiety,calories:row.nutrientContent?.satiety,recipes,entry});
  return entry;
 }
@@ -81,6 +84,7 @@ export function goodsClass(engine,item){return goodsEntry(engine,item).value;}
 // 池内计量权重：可食池 = 饱腹当量；其余货 = 1（按件）。
 export function goodsWeight(engine,item){return goodsEntry(engine,item).weight;}
 function goodsEdible(engine,item){return goodsEntry(engine,item).edible;}
+export function goodsUse(engine,item){return goodsEntry(engine,item).use;}
 const locationOf=(state,id)=>id==='player'?state.location:state.npcs?.[id]?.location??state.creatures?.[id]?.location;
 const settlementOf=(engine,state,location)=>placeSettlement(engine,state,location).value??location;
 const inventoryOf=(state,id)=>{
@@ -266,25 +270,32 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  // F026：货架读全部商铺（含按人物派生的），不再只读登记的几家静态店。货架目标 = 各店各货 maximum+reserve。
  const shelf=(shopShelves(engine,place)??(engine.rules.economy?.shops?.stores??[]).filter(s=>s.settlement===place).flatMap(s=>s.restock??[])).filter(r=>items.some(i=>i.id===r.item)).reduce((n,r)=>n+(r.maximum+(r.reserve??0))*weight.get(r.item),0)/unit;
  // 非食物货的目标持有还含"一个补给间隔内聚落对这件货的实际消耗"（行为显露的需求，聚落里公开可见的活动，符合 I12）：
- //  户用 = 聚落各户的日耗（householdDailyUse，household-budget.mjs；柴、盐等）× 补给间隔天数（resupplyDays，同粮的补给间隔口径）；
+ //  户用 = 聚落各户经市场取得的用度（柴、盐等；日用度扣掉户内自给，加已欠量，见下）× 补给间隔天数（itemResupplyDays）；
  //  生产投入 = 近一个补给间隔内聚落里实际制造的耗料：recordCraft（stock.mjs）按（聚落，物品）滚动记日桶，所有制造写入方（玩家作坊、NPC 自主制造、雇工、野生社会等）统一写入。
  // 食物货另有粮仓目标，不在此叠加。没有任何消耗记录的货，目标持有就是货架目标加承诺，仍为 0 时按下限 1。
  let consumption=0;
  if(place&&settlement&&!items.some(i=>goodsEdible(engine,i.id))){
   // 补给间隔按货物区分（itemResupplyDays：往返该货产地的天数；产地就在本聚落取本地生产周期）。
   const dayMemo=new Map(),daysOf=item=>{if(!dayMemo.has(item))dayMemo.set(item,itemResupplyDays(engine,state,d.get('randomSeed'),item,place));return dayMemo.get(item);};
-  // 户用 = 规则人均日耗 × 聚落人口（公开量，与粮的餐口同一来源 settlement.population）：人均日耗取名册户的合计日耗 ÷ 名册人数（柴按户、盐按人，名册户给出人均）；
-  // 名册里一个人也没有时取单人户的规则日耗（householdDailyUse 对一人户）。名册户只用来给出人均率，不再逐户加总（没上名册的人口也要烧柴吃盐，逐户加总会偏小）。
-  const seen=new Set(),rosterTotal=new Map(items.map(it=>[it.id,0]));let rosterPersons=0;
-  for(const id of Object.keys(state.npcs??{})){
-   if(settlementOf(engine,state,locationOf(state,id))!==place)continue;
-   const h=personHousehold(engine,state,id).value,key=h?.id??id;if(seen.has(key))continue;seen.add(key);
-   const members=(h?.members??[id]).filter(m=>state.npcs?.[m]);rosterPersons+=members.length;
-   for(const it of items)rosterTotal.set(it.id,rosterTotal.get(it.id)+householdDailyUse(engine,state,members,it.id));
-  }
-  for(const it of items){
-   const perCapita=rosterPersons>0?rosterTotal.get(it.id)/rosterPersons:householdDailyUse(engine,state,[null],it.id);
-   if(perCapita>0)consumption+=perCapita*(settlement.population??0)*daysOf(it.id)*weight.get(it.id);
+  // 户用（只有家户用度类的货：柴、盐……，goodsEntry 把同一用度类的货并成一个池，池内每件按"基准克"计量，weight 即基准克）：
+  //  经市场取得的部分 = 补给间隔 × (日用度 − 户内自给) + 本户已欠的量；整类只算一次，不按替代品逐件各算一份。
+  //  · 日用度：household-budget.householdUsage（与 npc-life 每日扣用同一定义）；
+  //  · 户内自给：household-subsistence 既有采集规划能采回的量（upkeepSelfSupplyOf：公共林地与无主资源点的可采量、往返、本户空闲工时；没有来源或没有空闲劳力的户得 0，全额走市场），封顶于日用度；
+  //  · 已欠量：npc-life 记在 state.family.upkeep 的 `${cls}DebtG`（前几日缺的，仍要买），与"补给间隔内的新用度"是不同时段，不重复；缺着的户因此推高需求。
+  // 补给间隔：整类取各成员货补给间隔里最短的（类里最快能补上的那条渠道），不随报价的是哪一件而变。
+  // 率按名册户给出人均（名册户只给比例，没上名册的人口也要烧柴吃盐），乘聚落人口（公开量，与粮的餐口同一来源 settlement.population）。
+  const use=goodsUse(engine,item);
+  if(use){
+   const horizon=Math.min(...items.map(it=>daysOf(it.id))),seen=new Set();let rosterPersons=0,viaMarket=0;
+   for(const id of Object.keys(state.npcs??{})){
+    if(settlementOf(engine,state,locationOf(state,id))!==place)continue;
+    const h=personHousehold(engine,state,id).value,key=h?.id??id;if(seen.has(key))continue;seen.add(key);
+    const members=(h?.members??[id]).filter(m=>state.npcs?.[m]);rosterPersons+=members.length;
+    const need=householdUsage(engine,state,members).find(u=>u.cls===use)?.gramsPerDay??0,self=Math.min(need,upkeepSelfSupplyOf(engine,state,id)[use]??0);
+    viaMarket+=(need-self)*horizon+(state.family?.upkeep?.[key]?.[`${use}DebtG`]??0);
+   }
+   if(!(rosterPersons>0)){viaMarket=(householdUsage(engine,state,[null]).find(u=>u.cls===use)?.gramsPerDay??0)*horizon;rosterPersons=1;}
+   consumption+=viaMarket/rosterPersons*(settlement.population??0);
   }
   // 生产耗料读 recordCraft 的滚动日桶（state.records['craft-use:<聚落>']，stock.mjs accrueCraftUse）：所有制造写入方统一经它记账，这里不再读各写入方自己的记录。
   // 窗口按整数天取（ceil(补给间隔) 个日桶，含当天），跨午夜保持连续，不按当天截断。

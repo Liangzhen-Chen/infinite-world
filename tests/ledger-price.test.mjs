@@ -61,11 +61,11 @@ const SURVEY={
     'derived.mjs':'economy:value 缺省基准取主体 basePrice 事实；只计算上下文基准与修正项，不自行读取库存或现款，供需由市场调用方经已登记账户读取',
     'distribution.mjs':'basePrice>0 只判定“是不是有定价的可交易物品”（目录事实），不计价、不读存量；进货报价经 market 的报价（marketQuote）取得',
     // 下面五个模块的价格字样都不是“读存量或货币量算价”（逐个看过出现处）；按本测试的同一规则一并归类，不再一个一个等失败。
-    'food-habit.mjs':'价格字样只在注释里（说明不复用市场稀缺比、稀缺已在手写 basePrice 里）；惯常性按本户预算与卖家数判定，不计价、不读存量',
+    'food-habit.mjs':'价格字样出现在注释与 affordableShare（food-habit.mjs:28、:45）：它拿来源的单价（s.unitPrice，已由市场报价算好）与本户预算比，只判断买不买得起；不自行读存量或现款定价，惯常性按本户预算与卖家数判定',
     'medicine.mjs':'basePrice 只用来给药品按目录价排序、挑参照药（目录事实，referenceMedicine）；药价本身由 medicine-state 读账户算',
     'npc-labor.mjs':'basePrice 只判定“是不是有定价的可交易物品”（目录事实）；可售量读 saleableStock（家户预算已登记账户），报价转交 keeperQuote（市场投影），不自行读存量定价',
     'remote-generation.mjs':'生成远方聚落时把目录基价写进寄售记忆的挂牌价（目录常量，不读存量或现款，也不是市场报价）；真正成交仍由 K08 消费者核对在场、存量、双方决定并按市场报价',
-    'transport.mjs':'价格字样只在注释里（unitFreight 说明价格由市场稀缺度夹取）；运费按路线与费率算，不读存量定价',
+    'transport.mjs':'运费（unitFreight）按路线与费率算，不读存量定价；货值与估值转调：货值与关税基数走 marketQuote（transport.mjs:212、:274、:686），在途货估值走 valuation（:619、:692），都是市场与估值角色，本模块不自行读存量或现款',
     // W8-A：dialogue / festival / primitives-runtime 的礼物、奖品、同意成本估值已改走估值角色（valuation.mjs 的 goods 市场估值投影），
     // 不再含价格字样，按本测试的规则从归类表删除。
     'manufacturing.mjs':'配方投入重置成本经 regionalTradePrice 统一估值，不自行读取库存',

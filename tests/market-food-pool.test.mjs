@@ -7,7 +7,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {documentReader} from '../server-plugin/read-scope.mjs';
-import {householdResources,householdDailyUse} from '../server-plugin/household-budget.mjs';
+import {householdResources,householdUsage,usageItemGrams,registerUpkeepSelfSupply} from '../server-plugin/household-budget.mjs';
 import {personBusinesses,placeSettlement,personHousehold} from '../server-plugin/entity-view.mjs';
 import {marketSupply,goodsClass,goodsWeight,foodSatiety,upkeepDemand} from '../server-plugin/market.mjs';
 import {isItemClass} from '../server-plugin/item-class.mjs';
@@ -495,50 +495,81 @@ function itemDaysAt(engine,state,seed,item,place){
  return 2*best/1440;
 }
 
-// 手推：聚落对某货的户用日耗 = 规则人均日耗 × 聚落人口；人均 = 名册户（personHousehold 编号去重，居民按所在聚落取）合计日耗 ÷ 名册人数；名册为空取单人户的规则日耗。
-function upkeepDailyAt(engine,state,item,place){
- const seen=new Set();let total=0,persons=0;
+// 手推：家户用度类（柴、燃料→fuel，盐→salt）的池 = 该类全部非食物货，按"顶多少基准克"（usageItemGrams）计量；类需求整类只算一次。
+// 聚落对报价货的户用消耗（报价货件数）= 人均 × 聚落人口 ÷ 报价货基准克；人均 = 名册户（personHousehold 编号去重，居民按所在聚落取）的
+// Σ[(日用度 − min(日用度, 户内自给)) × 补给间隔 + 已欠量 DebtG] ÷ 名册人数；名册为空取单人户日用度 × 补给间隔（无自给无欠量）。
+// 补给间隔 = 类里各货补给间隔（itemDaysAt 手推）的最小值。日用度读规则定义（householdUsage 只给每日克数），自给由调用方给（self(户编号)，基准克/日）。
+function useClassOf(engine,state,item){return householdUsage(engine,state,[null]).map(u=>u.cls).find(c=>isItemClass(engine,item,c)&&!(foodSatiety(engine,item)>0));}
+function marketUseAt(engine,state,seed,item,place,self=()=>0){
+ const cls=useClassOf(engine,state,item),pool=engine.world.items.filter(i=>isItemClass(engine,i.id,cls)&&!(foodSatiety(engine,i.id)>0)&&usageItemGrams(engine,i.id,cls)>0);
+ const horizon=Math.min(...pool.map(i=>itemDaysAt(engine,state,seed,i.id,place))),seen=new Set(),gramsPerDay=ms=>householdUsage(engine,state,ms).find(u=>u.cls===cls).gramsPerDay;
+ let via=0,persons=0;
  for(const id of Object.keys(state.npcs)){
   if(placeSettlement(engine,state,state.npcs[id].location).value!==place)continue;
   const h=personHousehold(engine,state,id).value,key=h?.id??id;if(seen.has(key))continue;seen.add(key);
-  const members=(h?.members??[id]).filter(m=>state.npcs?.[m]);persons+=members.length;total+=householdDailyUse(engine,state,members,item);
+  const members=(h?.members??[id]).filter(m=>state.npcs?.[m]),need=gramsPerDay(members);persons+=members.length;
+  via+=(need-Math.min(need,self(id)))*horizon+(state.family?.upkeep?.[key]?.[`${cls}DebtG`]??0);
  }
- return (persons>0?total/persons:householdDailyUse(engine,state,[null],item))*state.settlements[place].population;
+ if(!(persons>0)){via=gramsPerDay([null])*horizon;persons=1;}
+ return via/persons*state.settlements[place].population/usageItemGrams(engine,item,cls);
 }
-// 手推：报价货所在池（同一 goods 类）的户用消耗 = Σ 池内各货 户用日耗 × 该货补给间隔 × 池权重 ÷ 报价货权重（池内同类货共用一个需求，柴池含各种木料燃料）。
-function poolConsumptionAt(engine,state,seed,item,place){
- const cls=goodsClass(engine,item);let n=0;
- for(const it of engine.world.items){
-  if(goodsClass(engine,it.id)!==cls)continue;
-  const daily=upkeepDailyAt(engine,state,it.id,place);
-  if(daily>0)n+=daily*itemDaysAt(engine,state,seed,it.id,place)*goodsWeight(engine,it.id);
- }
- return n/goodsWeight(engine,item);
-}
+// 价格读取的户内自给由 household-subsistence 注册；这里换成固定函数，只检验"扣自给、加欠量、整类一次"的接线，用完恢复。
+function withSelfSupply(fn,body){const old=registerUpkeepSelfSupply.fn;registerUpkeepSelfSupply(fn);try{return body();}finally{registerUpkeepSelfSupply(old);}}
 
-test('非食物货的户用日耗进目标持有：规则人均日耗 × 聚落人口 × 补给间隔天数（未上名册的人口也计）',()=>{
- // 推导：consumption = upkeepDailyAt（人均 × 聚落人口）× 该货补给间隔天数（itemDaysAt 手推）；名册户只给出人均率，不逐户加总。
- const {engine,doc}=setup('market-food-pool-upkeep'),inn='bld_hw_qingdeng',state=doc.state,read=documentReader(doc),seed=read.get('randomSeed');
- const pick=engine.world.items.find(i=>!(foodSatiety(engine,i.id)>0)&&upkeepDailyAt(engine,state,i.id,'loc_hw')>0);
- assert.ok(pick,'聚落里有户用耗用的非食物货（柴、盐等）');
- // 聚落人口大于名册人数时（未上名册的人口），需求按人口算，不按名册户逐户加总：人口翻倍，户用消耗翻倍。
- const expected=poolConsumptionAt(engine,state,seed,pick.id,'loc_hw');
- assert.ok(expected>0);
- const big=structuredClone(doc);big.state.settlements.loc_hw.population*=2;
- assert.ok(Math.abs(marketSupply(documentReader(big),engine,pick.id,inn).consumption-2*expected)<=1e-6*expected,'人口翻倍则户用消耗翻倍');
- const s=marketSupply(read,engine,pick.id,inn);
- assert.ok(Math.abs(s.consumption-expected)<=1e-6*expected);
+test('非食物货的户用经市场的部分：补给间隔 ×（日用度 − 户内自给）+ 已欠量，整类只算一次（未上名册的人口也计）',()=>{
+ // 推导：marketUseAt 手推（见上）。柴与木炭同属 fuel 类，同一个池；报价哪一件，消耗只差基准克的换算（件数 × 基准克相同）。
+ const {engine,doc}=setup('market-food-pool-upkeep'),inn='bld_hw_qingdeng',state=doc.state,seed=documentReader(doc).get('randomSeed');
+ const fuel=engine.world.items.filter(i=>isItemClass(engine,i.id,'fuel')&&!(foodSatiety(engine,i.id)>0)&&usageItemGrams(engine,i.id,'fuel')>0),pick=fuel[0];
+ assert.ok(pick&&fuel.length>1,'燃料类至少两种，才谈得上不重复计');
+ const read=(d,item)=>marketSupply(documentReader(d),engine,item,inn).consumption;
+ // 1 无自给：全额走市场。人口翻倍，户用消耗翻倍（名册户只给人均率）。
+ withSelfSupply(()=>({}),()=>{
+  const expected=marketUseAt(engine,state,seed,pick.id,'loc_hw');assert.ok(expected>0);
+  assert.ok(Math.abs(read(structuredClone(doc),pick.id)-expected)<=1e-6*expected);
+  const big=structuredClone(doc);big.state.settlements.loc_hw.population*=2;
+  assert.ok(Math.abs(read(big,pick.id)-2*expected)<=1e-6*expected,'人口翻倍则户用消耗翻倍');
+  // 2 整类一次：换报价的另一件燃料，消耗 × 该件基准克 = 同一个类总克数（不是每件各报一份）。
+  const grams=item=>read(structuredClone(doc),item)*usageItemGrams(engine,item,'fuel');
+  for(const it of fuel)assert.ok(Math.abs(grams(it.id)-grams(pick.id))<=1e-6*grams(pick.id),`${it.id}：整类同一个需求`);
+ });
+ // 3 自给扣除：每户每日自给 1000 基准克（小于日用度），经市场的部分少 (min(需求,1000))×间隔；自给 ≥ 日用度的户不经市场。
+ withSelfSupply(()=>({fuel:1000}),()=>{
+  const expected=marketUseAt(engine,state,seed,pick.id,'loc_hw',()=>1000);
+  assert.ok(Math.abs(read(structuredClone(doc),pick.id)-expected)<=1e-6*expected);
+ });
+ withSelfSupply(()=>({fuel:1e9}),()=>{assert.equal(read(structuredClone(doc),pick.id),0,'自给足够：户用不进市场');});
 });
 
-test('单农事聚落的世界：给柴报价不崩溃，消耗 = 户用日耗 × 柴的补给间隔（与有没有别的农事聚落无关）',()=>{
- // 推导：非食物货的补给间隔按该货产地（目录 origin）推，不再依赖"最近的别的农事聚落"；柴产地在 loc_hw 本地，间隔 = 本地生产周期（itemDaysAt 手推）。
+test('户里缺燃料（已欠量）推高需求，且与自给扣除不重复计数',()=>{
+ // 手推小例子：一户日用度 N 克、自给 s 克/日（s<N）、补给间隔 H 天、已欠 B 克。经市场 = (N−s)×H + B：
+ // 自给只扣"新用度"里自己采回的 s×H；欠量是前几日没满足的量，另算一次，所以有欠量的需求 − 无欠量的需求 = B 恰好一份，与 s 无关。
+ const {engine,doc}=setup('market-food-pool-debt'),inn='bld_hw_qingdeng',seed=documentReader(doc).get('randomSeed'),item='item_wood';
+ const id=Object.keys(doc.state.npcs).find(n=>placeSettlement(engine,doc.state,doc.state.npcs[n].location).value==='loc_hw'),h=personHousehold(engine,doc.state,id).value,key=h?.id??id;
+ const B=3000,self=()=>500;
+ const withDebt=structuredClone(doc);withDebt.state.family={...withDebt.state.family,upkeep:{...withDebt.state.family?.upkeep,[key]:{...withDebt.state.family?.upkeep?.[key],fuelDebtG:B}}};
+ withSelfSupply(self,()=>{
+  const read=d=>marketSupply(documentReader(d),engine,item,inn).consumption,base=read(structuredClone(doc)),debt=read(withDebt);
+  const persons=Object.keys(doc.state.npcs).filter(n=>placeSettlement(engine,doc.state,doc.state.npcs[n].location).value==='loc_hw');
+  assert.ok(Math.abs(base-marketUseAt(engine,doc.state,seed,item,'loc_hw',self))<=1e-6*base);
+  assert.ok(Math.abs(debt-marketUseAt(engine,withDebt.state,seed,item,'loc_hw',self))<=1e-6*debt);
+  // 欠量恰好多一份 B（按人均再乘人口，换成报价货件数）：不因自给多算或少算。
+  const members=(h?.members??[id]).filter(m=>doc.state.npcs?.[m]);assert.ok(members.length>=1&&persons.length>=1);
+  const rosterPersons=(()=>{const seen=new Set();let n=0;for(const p of persons){const ph=personHousehold(engine,doc.state,p).value,k=ph?.id??p;if(seen.has(k))continue;seen.add(k);n+=(ph?.members??[p]).filter(m=>doc.state.npcs?.[m]).length;}return n;})();
+  const expectedGap=B/rosterPersons*doc.state.settlements.loc_hw.population/usageItemGrams(engine,item,'fuel');
+  assert.ok(Math.abs((debt-base)-expectedGap)<=1e-6*expectedGap,'欠量只多一份');
+ });
+});
+
+test('单农事聚落的世界：给柴报价不崩溃，消耗 = 经市场的户用 × 该类补给间隔（与有没有别的农事聚落无关）',()=>{
+ // 推导：非食物货的补给间隔按该货产地（目录 origin）推，不再依赖"最近的别的农事聚落"；柴产地在 loc_hw 本地，间隔 = 本地生产周期（itemDaysAt 手推）；类间隔取最短。
  const wood='item_wood',inn='bld_hw_qingdeng',{engine,doc}=setup('market-food-pool-single-farm');
  engine.rules.agriculture.settlements=engine.rules.agriculture.settlements.filter(p=>p.settlement==='loc_hw');
  const state=doc.state,read=documentReader(doc),seed=read.get('randomSeed');
- const expected=poolConsumptionAt(engine,state,seed,wood,'loc_hw');
- assert.ok(upkeepDailyAt(engine,state,wood,'loc_hw')>0&&expected>0);
- let s=null;assert.doesNotThrow(()=>{s=marketSupply(read,engine,wood,inn);});
- assert.ok(Math.abs(s.consumption-expected)<=1e-6*expected);
+ withSelfSupply(()=>({}),()=>{
+  const expected=marketUseAt(engine,state,seed,wood,'loc_hw');assert.ok(expected>0);
+  let s=null;assert.doesNotThrow(()=>{s=marketSupply(read,engine,wood,inn);});
+  assert.ok(Math.abs(s.consumption-expected)<=1e-6*expected);
+ });
 });
 
 test('本地产铁：平时存量 = 目标持有（含铁钉作坊的耗铁）时 cov = 1，稀缺度为 1；本地产地补给间隔不小于一个交易周期',()=>{
@@ -566,15 +597,18 @@ test('柴：平时存量 = 目标持有（货架目标 + 承诺 + 户用日耗 �
  for(const n of Object.values(doc.state.npcs))n.inventory={};
  doc.ledger=openLedger(engine,doc);
  const state=doc.state,read=documentReader(doc),seed=read.get('randomSeed');
- const expected=poolConsumptionAt(engine,state,seed,wood,'loc_hw');
- assert.ok(upkeepDailyAt(engine,state,wood,'loc_hw')>0&&expected>0,'聚落里有户用耗柴');
- const s0=marketSupply(read,engine,wood,inn);
- assert.ok(Math.abs(s0.consumption-expected)<=1e-6*expected);
- const D=s0.demand;assert.ok(D>=expected);
- // 账本里的存量按整数件记账（非整数的存量写不进账，会读成 0），所以存量取不小于 D 的最小整数 S = ceil(D)：与 D 相差不到 1 件，
- // 供给 = S 精确，需求仍 = D（目标与存量无关），稀缺度 D ÷ S 与 1 的差不超过 1 ÷ S。
- const S=Math.ceil(D),full=structuredClone(doc);full.state.settlements.loc_hw.wood=S;full.ledger=openLedger(engine,full);
- const s1=marketSupply(documentReader(full),engine,wood,inn);
- assert.equal(s1.supply,S);assert.ok(S-D<1);assert.ok(Math.abs(s1.demand-D)<=1e-9*D);
- assert.ok(Math.abs(s1.demand/s1.supply-1)<=1/S);
+ // 无户内自给时全额走市场（自给另有手推，见上）；用度类整类只算一次，所以柴池的需求不随池里燃料品种数增加。
+ withSelfSupply(()=>({}),()=>{
+  const expected=marketUseAt(engine,state,seed,wood,'loc_hw');
+  assert.ok(expected>0,'聚落里有户用耗柴');
+  const s0=marketSupply(read,engine,wood,inn);
+  assert.ok(Math.abs(s0.consumption-expected)<=1e-6*expected);
+  const D=s0.demand;assert.ok(D>=expected);
+  // 账本里的存量按整数件记账（非整数的存量写不进账，会读成 0），所以存量取不小于 D 的最小整数 S = ceil(D)：与 D 相差不到 1 件，
+  // 供给 = S 精确，需求仍 = D（目标与存量无关），稀缺度 D ÷ S 与 1 的差不超过 1 ÷ S。
+  const S=Math.ceil(D),full=structuredClone(doc);full.state.settlements.loc_hw.wood=S;full.ledger=openLedger(engine,full);
+  const s1=marketSupply(documentReader(full),engine,wood,inn);
+  assert.equal(s1.supply,S);assert.ok(S-D<1);assert.ok(Math.abs(s1.demand-D)<=1e-9*D);
+  assert.ok(Math.abs(s1.demand/s1.supply-1)<=1/S);
+ });
 });
