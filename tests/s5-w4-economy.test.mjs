@@ -35,15 +35,17 @@ test('F048 分红：收付双方不在场时不凭空转账，形成到期应付
     // 不增添玩家或商户存货：只把夹具原有100木料收窄到可背的13份（26kg），去掉本例不用的食品。
     // 店主原无木料成本批次，真实收购后再转售，保留FIFO与分红断言。
     f.doc=applyIntentSetup(f.e,f.doc,{facts:[{path:['state','inventory'],value:{item_wood:{quantity:13}}}]}).document;
-    // 公共木料S28、D1，稀缺下限.5；报价4×.5×.6=1.2，议价带[.9,1.1]的整数边界均ceil为2，5份实付10铜。
-    const acquired=await f.act({buyer:host,seller:'player',item:'item_wood',quantity:5,unitPrice:2},'stock');assert.equal(acquired.cost,10);
+    // 本例测的是分红的收付与追收，不是木料价水平：议价单价取自当时的实际报价读数的议价带 [ceil(报价×.9), ceil(报价×1.1)]（旧夹具的 3 文已不在新价位的议价带里）。
+    // 收购取带下沿，转售取带上沿；5 份实付 = 5 × 单价，其余断言按这两个单价推出。
+    const rd=()=>({document:f.doc,get:(...p)=>p.reduce((v,k)=>v?.[k],f.doc)}),loc=f.doc.state.location;
+    const buyOffer=Math.ceil(marketQuote(rd(),f.e,{item:'item_wood',quantity:5,seller:'player',buyer:host,location:loc}).listPrice*0.9);
+    const acquired=await f.act({buyer:host,seller:'player',item:'item_wood',quantity:5,unitPrice:buyOffer},'stock');assert.equal(acquired.cost,5*buyOffer);
     const own=await f.act({operation:'invest',seller:host,quantity:20,consent:true},'invest');
-    // 收购后S33、net=-5、opening28，深度1−.2×5/28；报价4×.5×深度×.99895≈1.9265，整数上界ceil(报价×1.1)=3。
-    // 按合法单价3零售原来的5份，实收15铜；日成交10≤开市28。
-    const sale=await f.act({seller:host,item:'item_wood',quantity:5,unitPrice:3},'sale');assert.equal(sale.cost,15);
+    const sellOffer=Math.ceil(marketQuote(rd(),f.e,{item:'item_wood',quantity:5,seller:host,buyer:'player',location:loc}).listPrice*1.1);
+    const sale=await f.act({seller:host,item:'item_wood',quantity:5,unitPrice:sellOffer},'sale');assert.equal(sale.cost,5*sellOffer);
     const tax=f.doc.state.records['trade_tax:sale:commercial']?.amount??0;
-    // 收入15、FIFO成本10，减实际商税；分红floor((15−10−税)×20%)。
-    const due=Math.floor((15-10-tax)*20/100);assert.ok(due>=1);
+    // 收入 5×转售单价、FIFO成本 5×收购单价，减实际商税；分红floor((收入−成本−税)×20%)。
+    const due=Math.floor((5*sellOffer-5*buyOffer-tax)*20/100);assert.ok(due>=1,'前置：转售价差足以分出至少 1 文');
     await move(f,mill,'away');
     const playerBefore=f.doc.state.player.coins,hostBefore=f.doc.state.npcs[host].coins;
     f.tick(f.doc.state.records[own.contract].nextDividend);
@@ -138,7 +140,8 @@ test('F014 顾客钱袋比例来自数值参数表：改参数就改变谁买得
     async function publishWith(share){
         const w=structuredClone(world);
         Object.defineProperty(w,'balance',{value:{...world.balance,economy:{...world.balance.economy,params:world.balance.economy.params.map(p=>p.id==='shop.customerPurseShare'?{...p,value:share}:p)}},enumerable:false,writable:true,configurable:true});
-        const engine=new WorldEngine(w),c=engine.initialFromLegacy({state:seed.state,memories:seed.memories},'w4-share');
+        // 现行开局（旧存档形状的公仓粮 420 对 17110 的目标是饥荒村，读者先顾口粮、不买书）。
+        const engine=new WorldEngine(w),c=engine.createCharacter(seed,{},'w4-share');
         c.state.location='bld_hw_school';c.state.player.coins=500;c.state.skills.skill_literacy=skill(300);
         // E 卡：出版每册耗 1 纸 1 墨；印费 80÷4=20 册，原 10 纸 5 墨供写稿之外另备 20 纸 20 墨。
         c.state.inventory.item_parchment={quantity:30,quality:'木',durability:100,weight:0.06};c.state.inventory.item_soot_ink={quantity:25,quality:'木',durability:100,weight:0.1};
@@ -204,7 +207,7 @@ test('F075 研究法术：阶段不得低于原型（不能低阶价登记高阶
     const skill=p=>({proficiency:p,breakthroughs:[],daily:{}});
     const base=world.spells.find(s=>s.id==='spell_fire_08');// 焰矢：一阶伤害法术，强度 16，原型 mp 15
     assert.deepEqual([base.stage,base.effectSpec.kind,base.effectSpec.power,base.mp],[1,'damage',16,15]);
-    const c=engine.initialFromLegacy({state:seed.state,memories:seed.memories},'w4-research');
+    const c=engine.createCharacter(seed,{},'w4-research');
     const role=engine.byId.get(base.skill).profession;
     if(engine.byId.get(role)?.kind==='life')c.state.professions.life=[role];else c.state.professions.combat=role;
     c.state.location='bld_hw_school';c.state.player.coins=1000;c.state.player.attributes.智力=100;c.state.player.attributes.精神=100;
