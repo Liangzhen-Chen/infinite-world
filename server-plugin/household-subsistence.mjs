@@ -1,5 +1,5 @@
 // Daily self-provisioning: bounded journeys, shared work time, finite stocks.
-import {personHousehold,personAge,personConstraint,personRoutine,personEmployment,placeSettlement,lawAuthorities} from './entity-view.mjs';
+import {personHousehold,personAge,personConstraint,personRoutine,personEmployment,placeSettlement,lawAuthorities,awayFromHearth} from './entity-view.mjs';
 import {registerSubsistenceDuties,householdWorkTime,npcSchedule,lifeRoutine,npcServicePosts} from './npc-state.mjs';
 import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
 import {bodyRule,bodyDrain,metabolismFactor,settlementMouths,mealMouthsOf} from './primitives-body.mjs';
@@ -515,7 +515,7 @@ export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoS
 const planKey=settlement=>`subsistence-plan:${settlement??'unregistered'}`;
 // A mouth is weighted by the member's satiety metabolism (1 for a person, 0 for one who never eats); public rations and meal accounts count weight, not heads.
 export const mouthWeight=(e,state,ids)=>ids.reduce((n,id)=>n+metabolismFactor(e,state,id,'satiety'),0);
-const mealMember=(e,state,id)=>id!=='player'&&!isPhysicallyDead(e,state,id)&&!state.npcs?.[id]?.levy&&!state.npcs?.[id]?.materialized?.folded;
+const mealMember=(e,state,id)=>id!=='player'&&!isPhysicallyDead(e,state,id)&&!state.npcs?.[id]?.levy&&!awayFromHearth(state,id)&&!state.npcs?.[id]?.materialized?.folded;
 export function householdSubsistenceGroups(e,state){
  const groups=new Map();
  for(const id of [...new Set([...Object.keys(state.npcs??{}),...(e.world.households??[]).flatMap(h=>h.members),...Object.values(state.family?.households??{}).flatMap(h=>h.members??[])])].sort()){

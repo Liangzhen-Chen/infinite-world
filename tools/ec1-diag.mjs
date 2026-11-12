@@ -24,7 +24,7 @@
 //   migration-reasons：对每个流时刻或无流时刻的情形给出 noWindow / noMoney / noNeed / slotNotShopping 及依据（coins、status、slot、procurementShortfall）；migration-buys：推进到首夜后账本上迁居者的食物购买。
 import {register} from 'node:module';
 
-// 关注人参数（第 4 个参数，逗号分隔）里的 only:<正则> 项 = 只运行名字匹配该正则的测试（竖线分隔多个片段），不进关注人列表；见 ec1-diag-hooks.mjs。
+// 关注人参数（第 4 个参数，逗号分隔）里的 only:<项+项> = 只运行选定的测试（项 = 测试文件里第几个 test(...)，或用例名里的 ASCII 片段，如 only:10+11、only:S5F-4+S5F-8），不进关注人列表；见 ec1-diag-hooks.mjs。
 const onlyArg=(process.argv[4]??'').split(',').find(x=>x.startsWith('only:'))?.slice(5)||null;
 const watchList=()=>(process.argv[4]??'').split(',').filter(x=>x&&!x.startsWith('only:'));
 register('./ec1-diag-hooks.mjs',import.meta.url,{data:{only:onlyArg,keepTrace:process.argv[2]==='migration-turnip'}});

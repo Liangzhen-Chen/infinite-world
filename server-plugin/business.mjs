@@ -864,7 +864,7 @@ function serve(d,engine,shop,t,residents,gaps,routes){
 // 现金、状态、义务、家务工时、拘留与往返路程是动态条件，仍在结算那一刻由 walkIns/serve 判，不进集合；所以成交带来的变化不改变时刻集合，短步推进与一次长等待得到同一时刻序列。
 // 确定性：输入只有世界定义（作息、年龄、阶层）、当前状态里的店与租约记录与日历日，没有随机数、墙钟与新常数。
 // 缓存依据（storage.mjs stateMemo）：键 = [窗口符号, 日序]；只在 recordIndex 作用域内生效，按 state 对象身份分键，作用域外每次重算；与 scheduleAt/currentShops 的约定相同——作用域内不原地改写已暴露的 state。
-const shoppingSlot=slot=>Boolean(slot)&&!SLEEPING.test(slot.activity??'')&&!(slot.services??[]).some(service=>service!=='trade');
+const shoppingSlot=slot=>Boolean(slot)&&!slot.committed&&!SLEEPING.test(slot.activity??'')&&!(slot.services??[]).some(service=>service!=='trade');
 const windowMemo=Symbol('customer flow times');
 // 某人当天作息的各段：[{start,end,settlement,slot}]，keep(slot) 为真的段（scheduleAt 的 slot.until 接着往下走，防死循环）。
 // arrivalSeed 非空 = 顾客侧：段的起点是“到达本段所在地”的时刻，不是作息切换的时刻。人在上一段的地点，作息一切到本段就出发

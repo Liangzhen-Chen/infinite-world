@@ -206,10 +206,12 @@ function baseNpcSchedule(engine,state,id,minute=state?.minute,constraints=null){
     if(job){
         const home=npcHousehold(engine,state,id,constraints)?.homeLocation??engine.byId.get(id)?.home?.location??job.location;
         const slot=(start,end,location,activity)=>({start,end,location,activity,services:[]});
+        // committed：合同工时。这段时间已约给雇主，不可另作他用（客流顾客与居民卖方窗口都不取它，见 business.mjs shoppingSlot、market-seller sellingWindow）。午休、通勤、家务不是合同工时。
+        const shift=(start,end,location,activity)=>({...slot(start,end,location,activity),committed:true});
         const activity=job.task??'受雇工坊生产',work=job.workMinutes??480,end=480+work+60;
         const time=householdWorkTime(engine,state,id,minute,{commuteMinutes:job.commuteMinutes??0,workMinutes:work,constraints});
         if(time.reservedMinutes||time.commuteMinutes||work!==480){
-            const slots=[slot(0,480,home,'睡眠与休息'),slot(480,1020,job.location,activity),slot(1020,1440,home,'家务与休息')];
+            const slots=[slot(0,480,home,'睡眠与休息'),shift(480,1020,job.location,activity),slot(1020,1440,home,'家务与休息')];
             const overlay=row=>{
                 const next=slots.flatMap(s=>s.end<=row.start||s.start>=row.end?[s]:[
                     ...(s.start<row.start?[{...s,end:row.start}]:[]),
@@ -223,7 +225,7 @@ function baseNpcSchedule(engine,state,id,minute=state?.minute,constraints=null){
             for(const row of time.unused)overlay(slot(row.start,row.end,home,'家务与休息'));
             return {default:slots,restDays:base?.restDays??[],rest:[slot(0,1440,home,'休息')]};
         }
-        return {default:[slot(0,480,home,'睡眠与休息'),slot(480,720,job.location,activity),slot(720,780,job.location,'午间休息'),slot(780,end+1,job.location,activity),slot(end+1,1440,home,'家务与休息')],
+        return {default:[slot(0,480,home,'睡眠与休息'),shift(480,720,job.location,activity),slot(720,780,job.location,'午间休息'),shift(780,end+1,job.location,activity),slot(end+1,1440,home,'家务与休息')],
             restDays:base?.restDays??[],rest:[slot(0,1440,home,'休息')]};
     }
     // F083: a member of a public works crew spends the two work windows at the site (never while detained,
@@ -232,7 +234,8 @@ function baseNpcSchedule(engine,state,id,minute=state?.minute,constraints=null){
     if(crew){
         const home=npcHousehold(engine,state,id,constraints)?.homeLocation??engine.byId.get(id)?.home?.location??crew.location;
         const slot=(start,end,location,activity)=>({start,end,location,activity,services:[]});
-        return {default:[slot(0,480,home,'睡眠与休息'),slot(480,720,crew.location,PROJECT_ACTIVITY),slot(720,780,crew.location,'午间休息'),slot(780,1021,crew.location,PROJECT_ACTIVITY),slot(1021,1440,home,'家务与休息')],
+        const shift=(start,end,location,activity)=>({...slot(start,end,location,activity),committed:true});// 同上：工程班组的工时也是已约给工程的时间
+        return {default:[slot(0,480,home,'睡眠与休息'),shift(480,720,crew.location,PROJECT_ACTIVITY),slot(720,780,crew.location,'午间休息'),shift(780,1021,crew.location,PROJECT_ACTIVITY),slot(1021,1440,home,'家务与休息')],
             restDays:base?.restDays??[],rest:[slot(0,1440,home,'休息')]};
     }
     const routine=state&&personRoutine(engine,state,id,constraints);

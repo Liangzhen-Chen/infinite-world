@@ -4,7 +4,7 @@
 //    让探针在“对方库存不足：扣除自用和已承诺存量后不够出售”抛出之前读到可售量各项。
 // 回调由 tools/ec1-diag.mjs 安装。源码里找不到目标行时原样返回，不报错（探针会在输出里说明未安装）。
 // 用法：由 tools/ec1-diag.mjs 经 node:module register 载入；云上运行，本机不要运行。
-// 只跑名字匹配的测试：关注人参数里写 only:<正则>（竖线分隔多个名字片段）时，ec1-diag 把正则经 register 的 data 传进来；
+// 只跑选定的测试：关注人参数里写 only:<项+项>（ASCII，项 = 用例序号或名字里的 ASCII 片段，门禁只放 [A-Za-z0-9._:=/,@+-]）时，ec1-diag 经 register 的 data 传进来；
 // tests/*.test.mjs 里 `import test from 'node:test'` 在内存里换成带过滤的 test（不匹配的用例不运行；node:test 的其余成员原样保留），文件本身一字不改。
 // keepTrace（情形 migration-turnip）：tests/npc-life-migration.test.mjs 只在出发前一段开账本钩子（`globalThis.__LEDGER_TRACE__=[]` … `delete`），之后到抵达的账本读不到。
 // 这里在内存里去掉这两处开关，并让它读 ec1-diag 全程收集的数组 globalThis.__EC1_FULL_TRACE__（同一份条目，含出发后到抵达的转移）；测试文件本身不改。
@@ -18,7 +18,8 @@ export async function load(url,context,nextLoad){
  }
  if(only&&url.includes('/tests/')&&url.endsWith('.test.mjs')&&result.source!=null){
   const text=String(result.source),target="import test from 'node:test';";
-  if(text.includes(target))return {...result,source:text.replace(target,`import __nodeTest from 'node:test';const __only=new RegExp(${JSON.stringify(only)});const test=Object.assign((name,...rest)=>__only.test(String(name))?__nodeTest(name,...rest):undefined,__nodeTest);`)};
+  // only 是用 + 连接的 ASCII 项：纯数字 = 该文件里第几个 test(...) 调用（从 1 起，按文件顺序），其余 = 用例名里含这段文字。
+  if(text.includes(target))return {...result,source:text.replace(target,`import __nodeTest from 'node:test';const __tokens=${JSON.stringify(only.split('+').filter(Boolean))};let __n=0;const test=Object.assign((name,...rest)=>{__n++;return __tokens.some(t=>/^[0-9]+$/.test(t)?Number(t)===__n:String(name).includes(t))?__nodeTest(name,...rest):undefined;},__nodeTest);`)};
  }
  if(url.endsWith('/server-plugin/finance-bank.mjs')&&result.source!=null){
   const text=String(result.source);

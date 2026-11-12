@@ -2,7 +2,7 @@
 import {bagStock,bag,priceRead,itemResource,crop as cropAccount} from './stock.mjs';
 import {coinRead,purse,COIN,moveCoins,mirrorPartyCoins} from './money.mjs';
 import {declareLedgerWriter,registerPreDebit} from './ledger.mjs';
-import {personHousehold,poolMember} from './entity-view.mjs';
+import {personHousehold,poolMember,awayFromHearth} from './entity-view.mjs';
 import {obligationRows,obligationClosed} from './obligation-state.mjs';
 import {bodyDrain} from './primitives-body.mjs';
 import {explainDerived} from './derived.mjs';
@@ -280,7 +280,7 @@ function nextMealCapState(rows,saved){
 // need, never the nutrition in that same ration. Private food fills the gap.
 export function householdMealPlan(d,engine,owner,{publicShare=0,sourceNutrition={}}={}){
  const state=d.get('state'),f=family(d,engine,owner);
- const members=f.members.filter(id=>id!=='player'&&!isPhysicallyDead(engine,state,id)&&!state.npcs?.[id]?.levy&&!state.npcs?.[id]?.materialized?.folded);
+ const members=f.members.filter(id=>id!=='player'&&!isPhysicallyDead(engine,state,id)&&!state.npcs?.[id]?.levy&&!awayFromHearth(state,id)&&!state.npcs?.[id]?.materialized?.folded);
  const needs=Object.fromEntries(['satiety','hydration'].map(need=>[need,members.reduce((sum,id)=>sum+explainDerived(engine,d.document,'body:drain',id,{base:bodyDrain(engine,state,id,need)*24}).value,0)]));
  const publicNutrition={satiety:members.reduce((n,id)=>n+bodyDrain(engine,state,id,'satiety')*24,0)*Math.max(0,Math.min(1,publicShare)),hydration:0};
  const seeds=stateMemo(state,engine,[seedRecords,JSON.stringify(members)],()=>seedNeeds(engine,state,members),seedInputs);

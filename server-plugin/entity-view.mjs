@@ -589,6 +589,9 @@ export function itemView(engine,state,id){
     return view;
 }
 
+// 迁居途中的人不在灶边：他随身带着自己的包裹，户里留守的人不能吃他的口粮、也不替他做饭（与已排除的征役者同类）。午夜户内口粮（household-budget householdMealPlan、household-subsistence mealMember）共用这一个谓词。
+// 只认迁居（scheduleTravel.migration）：日常作息的几分钟步行不算离灶。
+export const awayFromHearth=(state,id)=>Boolean(state.npcs?.[id]?.scheduleTravel?.migration);
 // 同户共灶的“可动用资金成员”：在世有效、不是玩家、没有死亡/濒死/昏迷。预算（客观读 objectiveCash、主观视图 household）与户内转账（householdPoolTopUp）共用这一个谓词，防口径分叉（EC-1b U7）。
 export function poolMember(engine,state,id){
     return id!=='player'&&Boolean(state.npcs?.[id])&&isEffective(engine,state,id)&&!['死亡','濒死','昏迷'].includes(state.npcs[id].status);
