@@ -3,8 +3,10 @@
 import {placeView,personName} from './entity-view.mjs';
 import {beginHouseholdReads} from './npc-state.mjs';
 import {openingFood} from './agriculture-migration.mjs';
+import {worldEntityRows} from './world-entities.mjs';
 function settlementReader(world,document){
- const engine={world,rules:world.rules,byId:new Map([...world.locations,...world.npcs,...world.residents??[],...Object.values(document?.state.created??{})].map(e=>[e.id,e]))};
+ // byId 与 WorldEngine 同一份实体全集（含 monsters 等物种表），开局存粮的餐口按物种代谢推导才与运行时一致。
+ const engine={world,rules:world.rules,byId:new Map([...worldEntityRows(world),...Object.values(document?.state.created??{})].map(e=>[e.id,e]))};
  engine.advanceHouseholds=beginHouseholdReads(engine);return engine;
 }
 const pick=(row,keys)=>Object.fromEntries(keys.filter(key=>row?.[key]!==undefined).map(key=>[key,structuredClone(row[key])]));
