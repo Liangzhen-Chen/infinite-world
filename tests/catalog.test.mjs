@@ -83,7 +83,10 @@ test('四村公共目录区分登记产量、期初库存和当前结算，治�
     const contract=world.settlementProfiles.find(p=>p.id===id).details.economy.tradeContracts[0];
     document.state.records[`village-trade:${contract.id}`]={status:'delivered',paidCopper:60,receivedCopper:60,taxCopper:3,prepaidCopper:0,privateCargo:'不可公开'};
     const view=catalogDefinition(engine,document,{entity:id,kind:'location'}).settlement.economy;
-    assert.equal(view.currentStock.food,7);assert.equal(view.currentStock.lastSettlementDay,1);assert.equal(view.publicStock.food,18000);
+    assert.equal(view.currentStock.food,7);assert.equal(view.currentStock.lastSettlementDay,1);
+    // 公共仓期初粮食不再登记，公开资料读运行时推导：min(ceil(人口 × (距下次收获 + reserveDays)), 容量 − 种粮)，开局日 0 距收获 = sowDays[1] + growthDays = 205 天。
+    const agri=world.rules.agriculture,farm=agri.settlements.find(s=>s.settlement===id),row=world.settlementProfiles.find(p=>p.id===id);
+    assert.equal(view.publicStock.food,Math.min(Math.ceil(row.population*(agri.crop.sowDays[1]+agri.crop.growthDays+farm.reserveDays)),farm.granaryCapacity-farm.initialSeed));
     assert.equal(view.currentFiscal.taxReceiptsCopper,3);assert.equal(view.tradeContracts[0].settlement.status,'delivered');assert.equal(view.tradeContracts[0].settlement.asOfMinute,document.state.minute);
     assert.equal(JSON.stringify(view).includes('不可公开'),false);
 });

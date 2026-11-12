@@ -27,7 +27,9 @@ export const isRemove=v=>v!==null&&typeof v==='object'&&!Array.isArray(v)&&Objec
 export const sameValue=(cur,value)=>isRemove(value)?cur===undefined:hashContent(cur??null)===hashContent(value??null);
 export function setPath(row,parts,value){const parent=getPath(row,parts.slice(0,-1));assert.ok(parent&&typeof parts.at(-1)==='string','修订路径无效');if(isRemove(value))delete parent[parts.at(-1)];else parent[parts.at(-1)]=structuredClone(value);}
 const pathLabel=parts=>parts.map(p=>typeof p==='string'?p:`[id=${p.id}]`).join('.').replaceAll('.[','[');
-export const rowOf=(world,file,id)=>(file.endsWith('items.json')?world.items:file.endsWith('recipes.json')?world.recipes:world.locations).find(r=>r.id===id);
+// 正式文件 → 世界里装它的行集合（按文件名后缀；其余默认 locations）。新增被修订的文件只在这张表加一行。
+const FILE_COLLECTIONS=[['items.json','items'],['recipes.json','recipes'],['settlements.json','settlementProfiles']];
+export const rowOf=(world,file,id)=>world[FILE_COLLECTIONS.find(([suffix])=>file.endsWith(suffix))?.[1]??'locations'].find(r=>r.id===id);
 
 // --- text-preserving edit: replace only the bytes of one JSON value --------
 // The formal files use several layouts (one-line items, two-space recipes);

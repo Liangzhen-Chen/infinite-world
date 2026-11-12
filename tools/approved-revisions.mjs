@@ -34,8 +34,10 @@ export function parsePublication(pub){
    if(/^\(.*\)$/.test(s.field)||/^commit [0-9a-f]{7,40}\b/.test(s.receipt))continue;
    const m=/^([^\s#]+)#([^\s#]+)$/.exec(s.receipt);if(!m)bad(`receipt 须为“文件#条目”或“commit 提交号”：${s.receipt}`);
    if(m[2]!==e.target)bad(`取代声明的条目与修订目标不同：${s.receipt} / ${e.target}`);
-   if(s.field!==e.field)bad(`取代声明的字段与修订字段不同：${s.field} / ${e.field}`);
-   out.push({revision:pub.revision,entryId:e.id,file:e.file,receiptFile:m[1],targetId:m[2],label:s.field,parts:parseFieldPath(s.field),before:e.before,after:e.after});
+   // 回执里的行形状可以比正式文件的行浅（如草稿回执没有 details 前缀）：取代声明的字段按回执自己的路径写，须是修订字段的整段后缀（或相同）。
+   // parts 是回执一侧的路径（applySupersedes 在设计源/回执行上用），formalParts 是正式文件一侧的路径（revertSuperseded 在正式行上用）；各读者不必自己映射。
+   if(!(s.field===e.field||e.field.endsWith(`.${s.field}`)))bad(`取代声明的字段与修订字段不同：${s.field} / ${e.field}`);
+   out.push({revision:pub.revision,entryId:e.id,file:e.file,receiptFile:m[1],targetId:m[2],label:s.field,parts:parseFieldPath(s.field),formalParts:parseFieldPath(e.field),before:e.before,after:e.after});
   }
  }
  return out;
@@ -118,7 +120,8 @@ export function revertSuperseded(rows,file,supersedes){
  for(const s of supersedes){
   if(s.file!==file)continue;
   const row=byId.get(s.targetId);if(!row)continue;
-  if(sameValue(getPath(row,s.parts),s.after))setPath(row,s.parts,s.before);
+  const parts=s.formalParts??s.parts;
+  if(sameValue(getPath(row,parts),s.after))setPath(row,parts,s.before);
  }
  return out;
 }

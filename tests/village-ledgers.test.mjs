@@ -33,7 +33,11 @@ test('四村年粮守恒，产量单位与周期有来源，期初不冒充期�
  const{engine,doc}=setup();assert.equal(validateWorld(world,{stage:'release'}).ok,true);
  assert.equal(configs.length,4);
  const d={document:doc,get(...keys){return keys.reduce((value,key)=>value?.[key],doc);},set(keys,value){const target=keys.slice(0,-1).reduce((value,key)=>value[key],doc);target[keys.at(-1)]=value;}};
- for(const p of configs){const detail=profiles.find(d=>d.id===p.settlement);assert.equal(detail.economy.publicStock.food,doc.state.settlements[p.settlement].food);assert.equal(detail.economy.production[0].cycleDays,360);assert.equal(detail.economy.production[0].unitKg,.5);assert.equal(detail.economy.publicStock.closing,null);conservation(doc,p.settlement);}
+ // 登记里不再手填公共仓期初粮食；开局存粮 = 开局日目标持有，按规律手推：min(ceil(人口 × (距下次收获 + reserveDays)), 容量 − 种粮)，
+ // 距下次收获 = sowDays[1] + growthDays（开局日 0），餐口按人口（同一物种构成）。例：榆坡 80 人 × (25+180+90) = 23600，容量 50000 − 种粮 2160 未受限。
+ for(const p of configs){const detail=profiles.find(d=>d.id===p.settlement),crop=engine.rules.agriculture.crop;
+  assert.equal(detail.economy.publicStock.food,undefined);
+  assert.equal(doc.state.settlements[p.settlement].food,Math.min(Math.ceil(detail.population*(crop.sowDays[1]+crop.growthDays+p.reserveDays)),p.granaryCapacity-p.initialSeed));assert.equal(detail.economy.production[0].cycleDays,360);assert.equal(detail.economy.production[0].unitKg,.5);assert.equal(detail.economy.publicStock.closing,null);conservation(doc,p.settlement);}
  for(let day=0;day<360;day++){doc.state.minute=day*1440;for(const p of configs){const out=advanceAgriculture(d,engine,p.settlement,doc.state.settlements[p.settlement],day);doc.state.settlements[p.settlement]=out.settlement;doc.state.settlements[p.settlement].wood+=out.woodProduced;conservation(doc,p.settlement);}}
  // 待重推（MKTW ①b）：开局存粮不再是 initialFood，改为开局日目标持有 = 餐口 × (距下次收获天数 + reserveDays)；下面 openingFood 的期望（原 p.initialFood）与第 36 行的登记公仓粮对照待重推，未改值。
  for(const p of configs){assert.ok(record(doc,p.settlement).ledger.harvested>0);assert.equal(record(doc,p.settlement).lastDay,359);assert.equal(record(doc,p.settlement).ledger.openingFood,p.initialFood);assert.throws(()=>advanceAgriculture(d,engine,p.settlement,doc.state.settlements[p.settlement],359),/日结顺序/);}
