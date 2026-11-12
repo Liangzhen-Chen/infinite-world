@@ -256,6 +256,13 @@ B 节补充：
     改代码的卡一律等 S5 合入后再开，照旧两轮审。
   - **李白 11:2x 巡查实采（11:18:33Z，tc_admin）**：done 40/582（10:20 为 15，09:16 为 7；一小时 +25）；.full 2468 字节，mtime 19:17:45+0800（=11:17:45Z）；超时 8、exit=1 失败 6；runjob 1615748 运行 03:11:37；在跑 6 个：village-rumor-access 06:20、npc-schedule 05:43、festival 05:08、world-clock 02:28、s4-office-quests 01:33、w8e8-premises 00:47；30 秒 CPU 22.2%/32 核（+21283 jiffies，约 7 核）；磁盘余 4.0G（92%）；OOM 0。**速度判断**：已完成的 40 个测试各自耗时与 m27-17 同名测试逐个比，总和 68426 秒对 68951 秒，没有任何测试慢 120 秒以上（farm-pests-harvest 反而快 252 秒）；完成数落后是排序差异，慢测试集中在前段。m27-17 在相同已运行时长约 49 个，之后 63 分钟内跑完余下 533 个（后段多为几秒到几分钟的测试）。**新 ETA 12:25–12:40Z**，不需要处理，不杀测试。14 个非 0 退出与 m27-17 逐项相同（pass/fail 数一致）：超时 a3-acceptance、farm-pests-clock、event-size、agriculture、farm-pests-hunt、ledger-price、record-index-check、wildlife（b1m-1 同样超时）；失败 npc-autonomy 8/2、monster-society-content 31/2（b1m-1 27/6）、s5-05 13/3、notables-promotion 6/1、npc-life-t164 7/1、a2-autonomy 1/2（后四项 b1m-1 相同）。目前无新增真失败。说明：本次比对命令里有一处向远端 /tmp 写临时文件的重定向（可能未生效），越出了只读口径，今后不再这样写。
   - **等待期工作说明**：09:41 推送 8f19dd71（三份文档两轮审查与归档）后，10:00–11:15 没有新推送；这段时间我只做了巡查，没有开 WATER-1 实现，而是按原计划等 S5 合入后再开，不符合"等待期不要干等"的要求。11:2x 已改正：新建工作树 F:/dnd-wt/WATER（分支 t-water，基于候选 b7f2bb85，不碰 t-m27 和 t-mkt），派 Sonnet 做 WATER-1 提交 A（注入免费水判断、水分缺口扣当日可取免费水、wants() 共用每铜覆盖次序、整类不变量测试、s5-w4 第 10/11 项按新规律重写）。完成后两轮审查，与 S5 合入后的 master 对齐再上云测。提交 B（固体水分统一派生、删牛乳手写）排在 A 之后。
+  - **【11-12 05:1xZ】EC-1 全量 ec1-7 跑完（586/586）**
+    - 对照 master 基线 batch-1111c：
+      - **35 个文件变差**（清单 F:/dnd-tmp/ec1/fail7.txt，TAP 在 tap7/），重的几项：food-habit 7/0→3/4、meal-cap 15/0→9/6、s5-law-seasonal-credit 21/0→13/8、s5-w4-economy 11/2→8/7（tests-rederive 已列）、food-sources-memo 2/0→0/2、household-food-sources-traders 3/0→1/2、w2-s2 7/0→4/3、s5-f-tender 6/2→4/4；其余约 20 个文件各多 1 败（readonly-entries、actions-catalog、system-map 疑为新工具、动作、原语未登记）。
+      - **9 个超时**：farm-pests-harvest、ledger-stock、monster-society-content、playtest-lifecycle、s3-run001、s5-05、seasonal-migration、w4-b2、w4-b3。基线都能跑完，这次与 water1d-4 全量同机、负载约 13，疑为负载造成，之后单独重跑确认。
+      - **好转 6 个**：npc-autonomy、ledger-reconcile、playtest-scenarios-s5、s5-09、w8b-credit-tender、drinkable-rule。
+    - EC-1 不合入，已派原执行者分诊：先找共因，A 类修实现，B 类按规则重推；登记类直接补，docs/actions.json 若需再生成，在云上做。
+    - **教训**：两个全量同机会让慢测试超时，失去基线可比性。以后全量串行，同机只并跑一个全量加若干定向或探针。
   - **【11-12 05:0xZ】市场 mktw-11 两轮门禁通过，v8 的 58 个情形已在腾讯云开跑**
     - **mktw-11**：t-mktw b9e6ffd7，hash 1530f9e5…。门禁 r1 …045147Z-3396368、r2 …045304Z-3397063。审查者按第一期规范，把写结论和提交分成两次独立调用，提交成功，没有再被拦。
     - **mktw-8 之后的提交**：
