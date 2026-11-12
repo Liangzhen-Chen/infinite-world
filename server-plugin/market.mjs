@@ -12,7 +12,7 @@ import {recordsMemo,withReadIndex} from './storage.mjs';
 import {budgetRead,householdResources,householdCommitments,householdUsage,householdDailyUse,usageCost} from './household-budget.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 import {ln,pow,fromRational,toRational} from './det-math.mjs';
-import {mealMouthsOf} from './primitives-body.mjs';
+import {mealMouthsOf,resupplyDays} from './primitives-body.mjs';
 
 // 顾客一天在商家花费的上限占其钱袋的比例、居民步行上门的最长分钟：数值参数表 balance/economy 的登记值
 // （商店成交、书籍出版的读者、店铺客流共用；不在代码里写字面）。
@@ -220,21 +220,7 @@ const cheapestMemo=new WeakMap();
 //  目标持有（需求）= 粮仓储备目标（餐口 × reserveDays；不在农事表里的聚落 = 餐口 × 补给间隔天数 resupplyDays）+ 货架目标（maximum+reserve）+ 合同承诺。
 // 非经营者私户的背包（实际持有、目标留存、柴盐缺口、饱腹缺口）两边都不计：他人背包的客观余量不是定价方知道的事，也没有公开的求购/下单记录可读。
 // 供给近 0 时由调用方的分母保护（max(1,supply)）与 priceFactorLimits.region 夹取封顶，不会除零。
-// 非农事聚落的补给间隔（天）：粮从农事聚落（agriculture.settlements，唯一有粮食生产的聚落类）运来，间隔 = 最近供粮聚落的 walk 往返路程天数
-// （路线按季节开闭，取一年各月里最快的一条＝路开着时的正常路程；route.minutes 已含每日歇息）。周贸易班线（settlementTrade.lanes）两端都是农事聚落，
-// 不覆盖非农事聚落，所以不是这里的来源。一年里到不了任何供粮聚落：直接报错列出聚落，不编造天数。同一世界数据对象内按聚落记忆。
-const resupplyMemo=new WeakMap();
-function resupplyDays(d,engine,place){
- const memo=resupplyMemo.get(engine.world)??new Map();resupplyMemo.set(engine.world,memo);
- if(memo.has(place))return memo.get(place);
- let best=null;
- for(const p of engine.rules.agriculture?.settlements??[])for(let month=0;month<12;month++){
-  try{const r=engine.route(p.settlement,place,'walk',month*30*DAY,d.get('randomSeed'));if(best===null||r.minutes<best)best=r.minutes;}
-  catch(error){if(!error.message.startsWith('没有当前季节'))throw error;}
- }
- if(best===null)throw Error(`聚落 ${place} 到不了任何供粮（农事）聚落，推不出补给间隔`);
- const days=2*best/DAY;memo.set(place,days);return days;
-}
+// 非农事聚落的补给间隔 resupplyDays 见 primitives-body.mjs（与远方聚落开局存粮共用）。
 function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  const state=stateOf(d),place=settlementOf(engine,state,location),goods=goodsClass(engine,item),rows=[];
  // 供给与需求都按报价这件货的件数表达：池内每件货按权重（可食物资 = 饱腹）折算后再除以报价货的权重。
@@ -269,7 +255,7 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
   // 粮仓实际持有 = 全部库存；储备目标 = 餐口 × reserveDays（与口粮池、公粮扣采购同一份储备口径）。
   // 不在农事表里的聚落没有 reserveDays：粮靠外来补给，目标日数 = 实际补给间隔（resupplyDays：最近供粮聚落的往返路程天数）。
   const mouths=stockName==='food'?mealMouthsOf(engine,state,place,settlement.population??0):0;
-  const target=stockName==='food'?Math.ceil(mouths*(profile?profile.reserveDays:resupplyDays(d,engine,place))):0;
+  const target=stockName==='food'?Math.ceil(mouths*(profile?profile.reserveDays:resupplyDays(engine,d.get('randomSeed'),place))):0;
   const committed=commitments(state,place,it.id);rows.push({owner:place,item:it.id,stock,target,committed,available:stock,unit:weight.get(it.id)/unit});
  }
  const supply=rows.reduce((n,r)=>n+r.available*r.unit,0);

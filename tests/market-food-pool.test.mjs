@@ -12,7 +12,8 @@ import {personBusinesses,placeSettlement} from '../server-plugin/entity-view.mjs
 import {marketSupply,goodsClass,goodsWeight,foodSatiety} from '../server-plugin/market.mjs';
 import {stageReached} from '../server-plugin/seasonal-hazards.mjs';
 import {forestWaterPriceFactor} from '../server-plugin/forest-water.mjs';
-import {openLedger} from '../server-plugin/ledger.mjs';import {mealMouthsOf} from '../server-plugin/primitives-body.mjs';
+import {openLedger} from '../server-plugin/ledger.mjs';
+import {unfoldRemoteAt,remoteEngine} from '../server-plugin/remote-generation.mjs';import {mealMouthsOf} from '../server-plugin/primitives-body.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const quantity=v=>typeof v==='number'?v:v?.quantity??0;
@@ -231,6 +232,28 @@ test('非农事聚落的目标持有 = 餐口 × 补给间隔天数（最近供�
  assert.ok(K>=-1e-6);
  assert.ok(Math.abs(sc.demand/sc.supply-(a.target+K)/(sc.supply*w))<=1e-6);
  assert.ok(sc.demand/sc.supply>=1-1e-6);
+});
+
+test('远方生成聚落开局存粮 = 餐口 × 补给间隔：粮仓开局 cov = 1，稀缺度由持有量之比给出',()=>{
+ // 推导：远方郡展开时每个生成聚落开账存粮 = ceil(餐口 × 补给间隔天数)，补给间隔 = 2 × 最近农事聚落的 walk 路程分钟 ÷ 1440（一年各月最快）；
+ // 市场的目标持有按同一条规律，所以粮仓行的存量恰等于目标（cov = 1），不再是写死的 80/150 天。
+ const {engine,doc}=setup('market-food-pool-remote'),d=engine.primitiveDraft(doc);
+ assert.ok(unfoldRemoteAt(d,engine,'loc_far_duanqi'));
+ const overlay=remoteEngine(engine,d.document,w=>new WorldEngine(w)),state=d.get('state'),seed=d.get('randomSeed')??'default-campaign',DAYMIN=1440;
+ const sids=Object.values(state.remote).flatMap(r=>r.skeleton.settlements.map(s=>s.id));
+ assert.ok(sids.length>0);
+ for(const sid of sids){
+  let best=null;
+  for(const p of overlay.rules.agriculture.settlements)for(let m=0;m<12;m++){
+   let r=null;try{r=overlay.route(p.settlement,sid,'walk',m*30*DAYMIN,seed);}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;}
+   if(r&&(best===null||r.minutes<best))best=r.minutes;
+  }
+  assert.ok(best>0,`${sid} 到得了供粮聚落`);
+  const row=state.settlements[sid],target=Math.ceil(mealMouthsOf(overlay,state,sid,row.population)*2*best/DAYMIN);
+  assert.equal(row.food,target,sid);
+  const granaryRow=marketSupply(d,overlay,'item_oats',sid).rows.find(r=>r.owner===sid);
+  assert.ok(granaryRow,`${sid} 有粮仓行`);assert.equal(granaryRow.target,target);
+ }
 });
 
 test('没有日产粮的非农事聚落（觉醒部族骨架账）没有粮仓目标：不计该行，价格因子中性',()=>{

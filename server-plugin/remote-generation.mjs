@@ -1,4 +1,5 @@
 import {purse,treasury as treasuryAccount,source,moveCoins} from './money.mjs';
+import {mealMouthsOf,resupplyDays} from './primitives-body.mjs';
 import {declareLedgerWriter,parseAccount,accountKey,ledgerActive} from './ledger.mjs';
 import {genesisSettlement,bag,itemResource,stockSource,moveStock,registerLegacyStock,moveFishPopulation} from './stock.mjs';
 // S1b: 远方生成的聚落库存与人物行囊同样从 src:genesis 入账。
@@ -322,7 +323,7 @@ export function remoteHazardProfile(county){
     const cold=biomes.includes('frost')||/冰|雪|寒|冬长/.test(text);
     const rainy=/多雨|湿季|雨/.test(county.climate??'');
     const farm=(county.industry??[]).some(t=>/燕麦|豌豆|粮|麦|豆|果园|奶|放牧|羊|牧|海草|轮作/.test(t));
-    return {wet,cold,rainy,farm,storeDays:farm?150:80};
+    return {wet,cold,rainy,farm};
 }
 function remoteHazards(county,seat,settlements,routes,profiles){
     const h=remoteHazardProfile(county),DAY=1440,hazards=[],ledgers={};
@@ -348,9 +349,11 @@ function remoteHazards(county,seat,settlements,routes,profiles){
             {id:'peak',name:'粮价高企',probability:0.25,condition:{kind:'always'},effects:[{kind:'price_shift',settlement:sid,items:GRAIN,factor:high,minutes:60*DAY,reason:'青黄不接，粮商惜售'}]},
             {id:'ease',name:'粮价回落',probability:0.5,condition:{kind:'always'},effects:[{kind:'price_shift',settlement:sid,items:GRAIN,factor:1,minutes:1,reason:'新粮将下，粮价回落'}]}]});
         // Public ledger on the core village scale: about 12 copper, 0.6 wood and
-        // 0.12 iron per head; grain for storeDays; daily supply just above need
-        // in farming counties, exactly need elsewhere (grain comes in by trade).
-        ledgers[sid]={name:s.name,population:P,treasury:12*P,wood:Math.round(0.6*P),iron:Math.round(0.12*P),food:P*h.storeDays,foodPerDay:h.farm?Math.ceil(P*1.02):P,
+        // 0.12 iron per head; daily supply just above need in farming counties,
+        // exactly need elsewhere (grain comes in by trade). No opening grain here: the skeleton
+        // has no route graph to the supplying villages, so unfoldRemoteAt opens the store at
+        // mouths x resupplyDays (the same law the market's target holding reads: normal = target).
+        ledgers[sid]={name:s.name,population:P,treasury:12*P,wood:Math.round(0.6*P),iron:Math.round(0.12*P),foodPerDay:h.farm?Math.ceil(P*1.02):P,
             woodPerDay:(county.biomes??[]).some(b=>b==='forest'||b==='plant')?4:2,starvation:0};
     }
     return {hazards,ledgers};
@@ -763,7 +766,11 @@ export function unfoldRemoteAt(d,engine,location){
     if(fresh.length)for(const patch of planWildlifeMigration(d.document,{...overlay.rules,wildlife:{...overlay.rules.wildlife,habitats:fresh}},overlay.monsters??[]))holdingSet(d,engine,patch.path,patch.value,'remote-generation');
     // D1: every generated settlement opens its public ledger (notice board money, stores).
     // S1a: money the skeleton opens with enters the books from src:genesis.
-    for(const [sid,ledger] of Object.entries(skeleton.ledgers??{}))if(!d.get('state','settlements',sid)){moveCoins(d,{from:source('genesis','remote'),to:treasuryAccount(sid),amount:ledger.treasury??0,writer:'remote-generation',eventId:`remote:${county}`});genesisSettlement(d,engine,sid,ledger,{writer:'remote-generation',eventId:`remote:${county}`});d.set(['state','settlements',sid],structuredClone(ledger));}
+    // 开局存粮 = 餐口 × 补给间隔（resupplyDays，与市场目标持有同一条规律）：在含本郡路线的覆盖引擎上推，使开局平时 cov 约等于 1。
+    const stocked=remoteEngine(engine,d.document,world=>new engine.constructor(world));
+    for(const [sid,row] of Object.entries(skeleton.ledgers??{}))if(!d.get('state','settlements',sid)){
+        const ledger={...row,food:Math.ceil(mealMouthsOf(stocked,d.get('state'),sid,row.population)*resupplyDays(stocked,d.get('randomSeed')??'default-campaign',sid))};
+        moveCoins(d,{from:source('genesis','remote'),to:treasuryAccount(sid),amount:ledger.treasury??0,writer:'remote-generation',eventId:`remote:${county}`});genesisSettlement(d,engine,sid,ledger,{writer:'remote-generation',eventId:`remote:${county}`});d.set(['state','settlements',sid],structuredClone(ledger));}
     // Shopkeepers, officials (notice board) and festival hosts act from the day
     // they are registered; others act after a full profile.
     openRemoteStock(d,engine,county,skeleton);

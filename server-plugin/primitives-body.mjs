@@ -91,6 +91,21 @@ export function settlementMealRatio(engine,state,sid,need='satiety'){
  const population=state?.settlements?.[sid]?.population??0;
  return population>0?settlementMouths(engine,state,sid,population,need)/population:1;
 }
+// 非农事聚落的补给间隔（天）：粮从农事聚落（agriculture.settlements，唯一有粮食生产的聚落类）运来，间隔 = 最近供粮聚落的 walk 往返路程天数
+// （路线按季节开闭，取一年各月里最快的一条＝路开着时的正常路程；route.minutes 已含每日歇息）。周贸易班线两端都是农事聚落，不覆盖非农事聚落，所以不是这里的来源。
+// 一年里到不了任何供粮聚落：直接报错列出聚落，不编造天数。同一世界数据对象内按聚落记忆。市场的目标持有与远方聚落的开局存粮共用这一条规律（常态 = 目标）。
+const resupplyMemo=new WeakMap();
+export function resupplyDays(engine,seed,place){
+ const memo=resupplyMemo.get(engine.world)??new Map();resupplyMemo.set(engine.world,memo);
+ if(memo.has(place))return memo.get(place);
+ let best=null;
+ for(const p of engine.rules.agriculture?.settlements??[])for(let month=0;month<12;month++){
+  try{const r=engine.route(p.settlement,place,'walk',month*30*1440,seed);if(best===null||r.minutes<best)best=r.minutes;}
+  catch(error){if(!error.message.startsWith('没有当前季节'))throw error;}
+ }
+ if(best===null)throw Error(`聚落 ${place} 到不了任何供粮（农事）聚落，推不出补给间隔`);
+ const days=2*best/1440;memo.set(place,days);return days;
+}
 // Mouths for a head count after `levy` of them left (soldiers keep the settlement's make-up).
 export function mealMouthsOf(engine,state,sid,population,{levy=0,need='satiety'}={}){
  const full=settlementMouths(engine,state,sid,population,need);
