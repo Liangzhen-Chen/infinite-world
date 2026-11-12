@@ -1,5 +1,5 @@
 const key=id=>`agriculture:${id}`;
-import {mealMouthsOf,farmTargetDays} from './primitives-body.mjs';
+import {mealMouthsOf,farmTargetDays} from './settlement-mouths.mjs';
 import {granaryCapacity} from './facility-state.mjs';
 // 农事聚落的粮食目标持有 = min(餐口 × farmTargetDays, 粮仓容量 − 种粮)：村子不会想存装不下的粮。
 // 容量出处：agriculture.settlements[].granaryCapacity（加上已建公共粮仓设施，facility-state.granaryCapacity，与 agriculture.mjs 收粮上限同一函数）；

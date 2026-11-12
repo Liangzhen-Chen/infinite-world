@@ -136,6 +136,16 @@ export function classifySupersedes(supersedes,receiptPattern){
  }
  return {removed,changed};
 }
+// 回执一侧的行（行形状与某个已批回执一致，按回执路径 parts 寻址）回退到被取代前的样子：只回退“现值等于回执 after”的字段。
+// 生成器等“重新生成骨架再与旧回执比对”的读者用它，把新生成的行还原成审批当时的行再比指纹；不改入参。
+export function revertReceiptRow(row,receiptFile,supersedes){
+ const out=structuredClone(row);
+ for(const s of supersedes){
+  if(s.receiptFile!==receiptFile||s.targetId!==row.id)continue;
+  if(sameValue(getPath(out,s.parts),s.after))setPath(out,s.parts,s.before);
+ }
+ return out;
+}
 export async function revertedRows(rows,file,draftsRoot){return revertSuperseded(rows,file,await readApprovedSupersedes(draftsRoot));}
 
 // ---------------------------------------------------------------- 已审叠加层登记表

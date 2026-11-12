@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {REMOVE,editJSONText,rowOf} from '../world/design/p1-revision-approval.mjs';
-import {parsePublication,classifySupersedes,applySupersedes,revertSuperseded} from '../tools/approved-revisions.mjs';
+import {parsePublication,classifySupersedes,applySupersedes,revertSuperseded,revertReceiptRow} from '../tools/approved-revisions.mjs';
 import {loadWorld} from '../tools/load-world.mjs';
 import * as initfood from '../world/design/initfood-approval.mjs';
 
@@ -66,6 +66,12 @@ test('回执侧路径规范化（所有修订批共用）：回执字段是修�
   const draft = [{id: s.targetId, economy: {publicStock: {food: s.before, seed: 1}}}];
   assert.equal(applySupersedes(draft, s.receiptFile, sups).length, 1);
   assert.ok(!Object.hasOwn(draft[0].economy.publicStock, 'food'));
+  // 生成器已不产出该字段：生成的行（没有 food）还原成审批当时的行（有 food）再比指纹；不改入参，别的回执文件的行不动。
+  const generated = {id: s.targetId, economy: {publicStock: {seed: 1}}};
+  const restored = revertReceiptRow(generated, s.receiptFile, sups);
+  assert.equal(restored.economy.publicStock.food, s.before);
+  assert.ok(!Object.hasOwn(generated.economy.publicStock, 'food'));
+  assert.deepEqual(revertReceiptRow(generated, 'world/drafts/other.json', sups), generated);
   // 非整段后缀的字段仍被拒绝。
   const e0 = entries[0], bad = field => parsePublication({revision: 'x', receipt: 'dir/r', entries: [{id: 'i', target: e0.target, file: e0.file, field: e0.field, before: 1, after: REMOVE, supersedes: [{receipt: `a.json#${e0.target}`, field}]}]});
   assert.throws(() => bad('conomy.publicStock.food'), /字段不同/);
