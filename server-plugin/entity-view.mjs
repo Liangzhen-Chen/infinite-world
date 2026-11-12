@@ -592,16 +592,22 @@ export function itemView(engine,state,id){
 // 灶边判定（开饭、白天预算、钱袋入户池共用这一处，防口径分叉）：hearthPlace = 此人若不在本户住处所在聚落，返回他所在（在途则看去向）的聚落，在灶边返回 null。
 // 随身物品与钱跟人走：不在灶边的人在所在之处自成一桌（同一处的同户成员同桌），吃自己的粮、按所在地规则领公粮或买饭，留守者不吃他的粮、他的钱不隔着聚落进户池。
 // 住处取聚落一级：同一聚落内日间上工、赶集、串门是日常，晚上仍回灶边，不算离灶；出远门、迁居在途、在外过夜是同一条。
-export function hearthPlace(engine,state,id){
+// 按状态版本记忆（同 householdView / placeSettlement 的写法）：依赖 = 户视图与聚落解析已声明的输入 + 人物位置与在途去向；热路径（午夜开饭、预算读、顾客流）反复调用不再每次重扫户与地点。
+const hearthMemo=Symbol('hearth place');
+const hearthInputs=[...householdViewInputs,...placeSettlementInputs,['npcs','*','location'],['npcs','*','scheduleTravel']];
+function readHearthPlace(engine,state,id){
     const npc=state.npcs?.[id];if(!npc)return null;
-    const home=personHousehold(engine,state,id).value?.settlement;if(!home)return null;
     const where=npc.location??npc.scheduleTravel?.to;if(!where)return null;
+    const home=personHousehold(engine,state,id).value?.settlement;if(!home)return null;
     const at=placeSettlement(engine,state,where).value;
     return at&&at!==home?at:null;
 }
+export function hearthPlace(engine,state,id){
+    return stateMemo(state,engine,[hearthMemo,id],()=>readHearthPlace(engine,state,id),hearthInputs);
+}
 export const awayFromHearth=(engine,state,id)=>hearthPlace(engine,state,id)!==null;
-// 与 owner 同一桌的成员（list 先由调用方按在世、非征役等筛过）：owner 在灶边则是同在灶边者，owner 在外则是同在那处的同户成员。owner 恒在自己桌上。
-export const hearthMates=(engine,state,owner,list)=>{const place=hearthPlace(engine,state,owner);return list.filter(id=>id===owner||hearthPlace(engine,state,id)===place);};
+// 与 owner 同一桌的成员（list 先由调用方按在世、非征役等筛过）：owner 在灶边则是同在灶边者，owner 在外则是同在那处的同户成员。owner 恒在自己桌上。单人桌不查位置。
+export const hearthMates=(engine,state,owner,list)=>{if(list.length<2)return list;const place=hearthPlace(engine,state,owner);return list.filter(id=>id===owner||hearthPlace(engine,state,id)===place);};
 // 同户共灶的“可动用资金成员”：在世有效、不是玩家、没有死亡/濒死/昏迷。预算（客观读 objectiveCash、主观视图 household）与户内转账（householdPoolTopUp）共用这一个谓词，防口径分叉（EC-1b U7）。
 export function poolMember(engine,state,id){
     return id!=='player'&&Boolean(state.npcs?.[id])&&isEffective(engine,state,id)&&!['死亡','濒死','昏迷'].includes(state.npcs[id].status);
