@@ -201,7 +201,7 @@ export function deriveItemAttributes(world){
  //   含水率有数据而结果仍为 0（如面包 0.15kg×0.36×100=5.4＜12.5）是门槛所致，不是缺数据。
  //   每公斤水的水分值 = 参照水（world/meta/items.json 第 1 行 item_water：weight 0.25、手写 hydration 25，含水 1，见 world/meta/mechanics/material-props.json 的 item_water 行）
  //   的 hydration ÷（weight × 含水率）= 25 ÷ 0.25 = 100/kg；该一次饮水 25 与 world/rules/tables/balance/body.json:11 的 drinkGain 25 同值。常数不另编，从世界里的参照水推出。
- //   例：山羊乳 0.3×0.87×100≈26。牛乳的手写水分 25 暂保留（已审批回执含该整行；按本规则应为 0.5×0.881×100≈44），待 WATER-1D 修订批改为派生，此前手写值照用（content() 里手写维度优先）。
+ //   例：山羊乳 0.3×0.87×100≈26。牛乳 0.5×0.881×100=44.05→44（原手写 25 已删，WATER-1D；其整行回执 a3w-props 须经修订批更新）。
  const waterGain=(()=>{const rm=refWater?materialProps({world,byId},refWater.id).moisture:null;return rm?.known&&rm.value>0?refWater.nutrition.hydration/(refWater.weight*rm.value):0;})();
  const hydrationOf=(water,known)=>{if(!known)return 0;const h=water*waterGain;return h>=drinkMin?h:0;};
  // 物品自己的含水量（kg）= 重量 × 含水率；非食物或没有含水率数据：未知。
