@@ -18,7 +18,8 @@
 import fs from 'node:fs/promises';
 import {loadWorld} from './load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {marketSupply} from '../server-plugin/market.mjs';
+import {marketSupply,marketQuote} from '../server-plugin/market.mjs';
+import {variant as dbVariant,scene as dbScene,setPrice,monthDayMinute,SEED as DB_SEED} from '../tests/helpers/daily-b2.mjs';
 import {farmTargetFood,openingStockFood} from '../server-plugin/farm-target.mjs';
 import {itemResupplyDays} from '../server-plugin/supply-interval.mjs';
 import {householdDailyUse,householdUsage,usageItemGrams,upkeepSelfSupplyOf} from '../server-plugin/household-budget.mjs';
@@ -157,6 +158,37 @@ if(want('F')){
    if(JSON.stringify(a)!==JSON.stringify(b))out.patchDiffs.push({index:i,path:(a??b)?.path,ledger:cut(a?.value),legacy:cut(b?.value)});
   }
   out.resultEqual=JSON.stringify(ledgerOut.result)===JSON.stringify(legacyOut.result);
+ }catch(error){out.error=error.stack?.split('\n').slice(0,4).join(' | ')??error.message;}
+ results.push(out);
+}
+// G/H 读数（只读）：s5-02 与 daily-b2 D05 失败测试的前提状态——每个 (地点,物品) 打印 marketSupply 供需明细，并打印一件货的 marketQuote 解释（价格各因子）。
+const quoteOf=(engine,doc,args)=>attempt(()=>{const q=marketQuote(read(doc),engine,args);return {listPrice:q.listPrice,totalCoins:q.totalCoins,supply:q.supply,retail:q.retail,business:q.business,explanation:JSON.parse(JSON.stringify(q.explanation,(k,v)=>typeof v==='number'?Math.round(v*1e6)/1e6:v))};});
+if(want('G')){
+ const out={label:'G s5-02 夹具（createCharacter + minute 600，青灯坊/铁匠铺）：面包与钢制长剑（#3/#4 的前提：段延 40 把、承诺 20）'};
+ try{
+  const engine=new WorldEngine(structuredClone(world)),doc0=engine.createCharacter(seed,{},'s502-market'),inn='bld_hw_qingdeng',forge='bld_hw_forge',smith='npc_hw_duanyan',sword='item_steel_arming_sword';
+  const prepared=applyIntentSetup(engine,doc0,{minute:600,location:forge,coins:10000,facts:[
+   {path:['state','npcs',smith,'inventory',sword],value:40},
+   {path:['state','records'],value:{...doc0.state.records,'bulk-procurement':{id:'bulk-procurement',category:'contract',kind:'procurement',parties:['player',smith],subject:sword,quantity:20,fulfilled:0,status:'待履约'}}}]});
+  const doc=prepared.document;out.setupUnmet=prepared.setupUnmet;
+  out.sword=report(engine,doc,'钢制长剑 @铁匠铺',[['loc_hw',sword]]);
+  out.swordQuote=quoteOf(engine,doc,{seller:smith,item:sword,buyer:'npc_hw_ayan',quantity:6,location:forge});
+  out.bread=report(engine,doc,'面包 @河湾村',[['loc_hw','item_bread']]);
+  out.breadQuote=quoteOf(engine,doc,{seller:'npc_hw_linsui',item:'item_bread',buyer:'player',quantity:1,location:inn});
+  out.limits={region:world.rules.economy.priceFactorLimits.region,transport:world.rules.economy.priceFactorLimits.transport};
+ }catch(error){out.error=error.stack?.split('\n').slice(0,4).join(' | ')??error.message;}
+ results.push(out);
+}
+if(want('H')){
+ const out={label:'H daily-b2 D05：冬季十二月初三午时，燕麦薄饼 8 文、羊肉 15 文（variant + scene），酒馆林穗'};
+ try{
+  const w=dbVariant(x=>{setPrice(x,'item_oat_flatbread',8);setPrice(x,'item_mutton',15);});
+  const engine=new WorldEngine(w),doc=engine.createCharacter(seed,{},DB_SEED);
+  dbScene('bld_hw_qingdeng',monthDayMinute(12,3,12,0),s=>{s.player.coins=60;})(doc.state,doc);
+  out.readings=report(engine,doc,'燕麦薄饼与羊肉 @河湾村',[['loc_hw','item_oat_flatbread'],['loc_hw','item_mutton'],['loc_hw','item_oats']]);
+  out.flatbreadQuote=quoteOf(engine,doc,{seller:'npc_hw_linsui',item:'item_oat_flatbread',buyer:'player',quantity:1,location:'bld_hw_qingdeng'});
+  out.muttonQuote=quoteOf(engine,doc,{seller:'npc_hw_linsui',item:'item_mutton',buyer:'player',quantity:1,location:'bld_hw_qingdeng'});
+  out.limits=world.rules.economy.priceFactorLimits.region;
  }catch(error){out.error=error.stack?.split('\n').slice(0,4).join(' | ')??error.message;}
  results.push(out);
 }
