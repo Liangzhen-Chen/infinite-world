@@ -72,7 +72,13 @@ test('S5 一局：集日买卖 → 租田种收并卖自产粮 → 存钱与具�
  // 稀缺度、深度都按农事目标持有规律手推（hand-targets：食物池比值 = 需求 ÷ 供给，深度按当日成交记录），读的是买之前的状态。
  const [floor,cap]=engine.rules.economy.priceFactorLimits.region,pre=buy.before.state,ratio=handOatsScarcity(engine,pre,pre.settlements.loc_hw.food).ratio;
  const markup=engine.rules.economy.shops.stores.find(s=>s.keeper===TRADER).markup,depth=handFoodDepth(engine,pre,GRAIN).depth;
- const handCost=Math.trunc(4*engine.byId.get(GRAIN).basePrice*Math.min(cap,Math.max(floor,ratio))*markup*depth);
+ // 区域基准里的运输因子：净麦粒产自白石镇（目录 origin），运到河湾村要付运费：因子 = 1 + 单位运费 ÷ 基价，单位运费 = 路程 km × 计费重量 kg × 驮运费率
+ // （计费重量 = max(0.5 kg, 体积折算 0.5 kg, 1 kg) = 1 kg；河湾村—白石镇 route_hw_bs 24 km；费率读 balance/transport 的 carrier:pack 行 0.02），夹在规则的运输夹取区间内。
+ // 河湾村不自产净麦粒（自产只认库存货品的日产量），所以运费要付。
+ const wheat=engine.byId.get(GRAIN),packRate=world.balance.transport.rows.find(r=>r.key==='carrier:pack').rate,km=world.routes.find(r=>r.id==='route_hw_bs').lengthKm;
+ const [trLo,trHi]=engine.rules.economy.priceFactorLimits.transport,transport=Math.min(trHi,Math.max(trLo,1+km*Math.max(wheat.weight,(wheat.volumeM3??wheat.weight/250)*250,1)*packRate/wheat.basePrice));
+ assert.equal(wheat.origin,'loc_bs');
+ const handCost=Math.trunc(4*engine.byId.get(GRAIN).basePrice*transport*Math.min(cap,Math.max(floor,ratio))*markup*depth);
  assert.equal(buy.result.cost,handCost);
  assert.equal(buy.before.state.player.coins-buy.after.state.player.coins,handCost);
  assert.equal(buy.after.state.npcs[TRADER].coins-buy.before.state.npcs[TRADER].coins,handCost);
@@ -89,7 +95,7 @@ test('S5 一局：集日买卖 → 租田种收并卖自产粮 → 存钱与具�
  assert.equal(standing(engine,buy.before.state,TRADER,'player'),0,'前置：买之前商人对玩家的好感 = 0');
  assert.equal(standing(engine,buy.before.state,'loc_hw','player'),0,'前置：聚落对玩家的好感 = 0');
  const relation=Math.min(relHi,Math.max(relLo,1+shopRel.span*(shopRel.keeper*(0+1)+shopRel.settlement*0)/100));
- const handSale=Math.trunc(4*engine.byId.get(GRAIN).basePrice*Math.min(cap,Math.max(floor,ratio2))*engine.world.marketRules.spread.buy*depth2*relation);
+ const handSale=Math.trunc(4*engine.byId.get(GRAIN).basePrice*transport*Math.min(cap,Math.max(floor,ratio2))*engine.world.marketRules.spread.buy*depth2*relation);
  assert.equal(sale.result.cost,handSale);
  assert.equal(sale.after.state.player.coins-sale.before.state.player.coins,handSale);
  assert.equal(sale.before.state.npcs[TRADER].coins-sale.after.state.npcs[TRADER].coins,handSale);
