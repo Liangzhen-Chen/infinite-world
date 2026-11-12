@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {parsePublication,applySupersedes,revertSuperseded,revertReceiptRow,revertReceiptContext,classifySupersedes,restoreValue,alignKeyOrder} from '../tools/approved-revisions.mjs';
-import {REMOVE,sameValue} from '../world/design/p1-revision-approval.mjs';
+import {REMOVE} from '../world/design/p1-revision-approval.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
 
 const pub=(extra={})=>parsePublication({revision:'r',receipt:'dir/r',entries:[{id:'e1',target:'t1',file:'world/geo/x.json',field:'details.a.k',before:5,after:REMOVE,
@@ -42,5 +42,27 @@ test('alignKeyOrder：只调键序，不增减键、不改值', () => {
   const out=alignKeyOrder({c:3,a:1,b:{y:2,x:1},extra:9},{a:0,b:{x:0,y:0},c:0});
   assert.deepEqual(Object.keys(out),['a','b','c','extra']);assert.deepEqual(Object.keys(out.b),['x','y']);
   assert.equal(hashContent(alignKeyOrder({b:2,a:1},{a:1,b:2})),hashContent({a:1,b:2}));
-  assert.ok(sameValue(undefined,REMOVE));
+  // 模板里没有的键保持相对顺序追加在后；模板里有而行里没有的键不会被造出来。
+  assert.deepEqual(Object.keys(alignKeyOrder({z:1,a:2},{a:0,gone:0})),['a','z']);
+});
+
+test('revertReceiptRow 带 template：被删键回到回执记录的原位，指纹与原行一致；不带 template 则追加在末尾',()=>{
+  const sups=pub().filter(s=>s.scope!=='context'),receipt='dir/rec/t1.json',recorded={id:'t1',a:{x:1,k:5,b:2}};
+  const current={id:'t1',a:{x:1,b:2}};
+  const withTemplate=revertReceiptRow(current,receipt,sups,recorded);
+  assert.deepEqual(Object.keys(withTemplate.a),['x','k','b']);assert.equal(hashContent(withTemplate),hashContent(recorded));
+  assert.deepEqual(Object.keys(revertReceiptRow(current,receipt,sups).a),['x','b','k']);
+  assert.deepEqual(current,{id:'t1',a:{x:1,b:2}});
+});
+
+test('verifyFrozen 负向：before 被改、缺条目、多出未登记的聚落、after 不是删除、scope 不是 context，都被拒',async()=>{
+  const {buildEntries,verifyFrozen}=await import('../world/design/mktw-initialfood-approval.mjs');
+  const entries=await buildEntries();assert.ok(entries.length>0);
+  await verifyFrozen(entries);
+  const clone=()=>structuredClone(entries);
+  const wrongBefore=clone();wrongBefore[0].before+=1;await assert.rejects(verifyFrozen(wrongBefore),/before/);
+  await assert.rejects(verifyFrozen(clone().slice(1)),/覆盖全部/);
+  const unknown=clone();unknown[0].target='loc_not_registered';await assert.rejects(verifyFrozen(unknown));
+  const notRemoval=clone();notRemoval[0].after=0;await assert.rejects(verifyFrozen(notRemoval),/条目形状/);
+  const wrongScope=clone();wrongScope[0].supersedes=wrongScope[0].supersedes.map(s=>({...s,scope:'entry'}));await assert.rejects(verifyFrozen(wrongScope),/条目形状/);
 });
