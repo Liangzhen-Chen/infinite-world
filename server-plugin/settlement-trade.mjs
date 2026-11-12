@@ -203,7 +203,7 @@ function dispatch(d,engine,lane,minute){
     if(lane.routes.some(id=>!route.edges.includes(id)))return reject('实际路线偏离登记贸易道路');
     const reserve=mealMouthsOf(engine,d.get('state'),lane.seller,a.s.population)*profile(engine,lane.seller).reserveDays,surplus=Math.max(0,Math.floor(grain(a,day)-reserve));// floor: the exporter never ships into its reserve; whole units only
     const pending=reserved(d.get('state'),lane.buyer),demand=Math.max(0,Math.floor(farmTargetFood(engine,d.get('state'),profile(engine,lane.buyer),minute)-grain(b,day)-pending));// floor: never ship more than the whole units still wanted
-    const space=Math.max(0,b.r.granary.capacity-b.s.food-b.r.field.seedBank-pending);
+    const space=Math.max(0,granaryCapacity(engine,d.get('state'),lane.buyer,b.r.granary.capacity)-b.s.food-b.r.field.seedBank-pending);
     if(!surplus)return reject('无实际可出口余粮');if(!demand)return reject('无登记目标内的实际需求');if(!space)return reject('收货仓容已满或已预留');
     // This is a signed unit-price contract: freeze an integer unit before
     // dispatch. Floating projections never enter the copper ledger.

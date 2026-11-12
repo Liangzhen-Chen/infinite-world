@@ -11,9 +11,10 @@ import {settlementTradeRules} from '../world/design/m5-trade-rules.mjs';
 import {createTransportAsset} from '../server-plugin/transport.mjs';
 import {bag} from '../server-plugin/stock.mjs';
 import transportTable from '../world/rules/tables/balance/transport.json' with {type:'json'};
-import {farmTargetFood} from '../server-plugin/agriculture-migration.mjs';
+import {handTarget} from './helpers/hand-targets.mjs';
 import {marketSupply} from '../server-plugin/market.mjs';
 import {thinGranaries} from './helpers/granary-fixture.mjs';
+import {granaryCapacity} from '../server-plugin/facility-state.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const DAY=1440,DEPART=7*DAY+540,lanes=world.rules.settlementTrade.lanes;
@@ -68,6 +69,18 @@ function setGrain(doc,id,quantity,{expiresDay=210}={}){
     const r=farm(doc,id),s=doc.state.settlements[id];s.food=quantity;
     r.batches=quantity?[{id:'source_opening',kind:'grain',amount:quantity,harvestDay:-150,expiresDay,source:'isolated fixture actual stock'}]:[];
     r.ledger.openingFood=quantity;r.ledger.freshProduced=0;r.ledger.eaten=0;r.ledger.spoiled=0;r.ledger.overflow=0;
+}
+// 让买方"需求 > 0 而仓容已满"：把一部分存粮改记为非谷物批（'fresh'，周贸易的需求只数谷物批，grain()），再把基础仓容设为 实存 + 种粮，
+// 并让（基础 + 设施）仓容与基础相等（本夹具无设施，断言之），这样空位 = 0，而目标持有（读同一仓容）仍大于谷物存量。
+function fillWithNonGrain(engine,doc,id,minute){
+    const r=farm(doc,id),s=doc.state.settlements[id],g=r.batches.find(b=>b.kind==='grain'),k=Math.max(1,Math.floor(g.amount/4));
+    g.amount-=k;r.batches.push({id:'fixture_non_grain',kind:'fresh',amount:k,harvestDay:g.harvestDay,expiresDay:g.expiresDay,source:'isolated fixture non-grain stock'});
+    r.granary.capacity=s.food+r.field.seedBank;
+    assert.equal(granaryCapacity(engine,doc.state,id,r.granary.capacity),r.granary.capacity);
+    const grainStock=r.batches.filter(b=>b.kind==='grain').reduce((n,b)=>n+b.amount,0),profile=engine.rules.agriculture.settlements.find(p=>p.settlement===id);
+    assert.ok(handTarget(engine,doc.state,profile,minute)>grainStock,'前置：谷物存量低于目标，需求 > 0');
+    assert.equal(r.granary.capacity-s.food-r.field.seedBank,0,'前置：空位 = 0');
+    resyncBooks(engine,doc);
 }
 function tradeState(doc){return {settlements:doc.state.settlements,records:doc.state.records,quotes:doc.state.quotes};}
 
@@ -189,18 +202,17 @@ test('足额粮不足、现金不足、仓容不足和空余劳力为零分别�
         const {engine,doc}=setup(),lane=lanes[0],buyer=lane.buyer,seller=lane.seller;
         if(scenario==='grain')setGrain(doc,seller,doc.state.settlements[seller].population*90);
         if(scenario==='cash')doc.state.settlements[buyer].treasury=0;
-        if(scenario==='capacity')farm(doc,buyer).granary.capacity=doc.state.settlements[buyer].food+farm(doc,buyer).field.seedBank;
         if(scenario==='labour')doc.state.settlements[seller].population=40;
         const prepared=(await wait(engine,doc,DEPART-1)).doc;
         // Change actual capacity/cash immediately before the weekly consumer.
         if(scenario==='grain')setGrain(prepared,seller,prepared.state.settlements[seller].population*90);
-        if(scenario==='capacity')farm(prepared,buyer).granary.capacity=prepared.state.settlements[buyer].food+farm(prepared,buyer).field.seedBank;
+        if(scenario==='capacity')fillWithNonGrain(engine,prepared,buyer,DEPART);
         if(scenario==='partial')prepared.state.settlements[buyer].treasury=11;
         const cash=snapshotCash(prepared),c=(await wait(engine,prepared,DEPART)).doc,o=c.state.records[key(lane)];
         assert.equal(snapshotCash(c),cash);conservation(c);
         if(scenario==='partial'){assert.equal(o.status,'in-transit');assert.equal(o.quantity,Math.floor(11/o.unitPriceCopper));assert.ok(o.quantity<40);}
-        // 仓容：买方目标持有 = min(餐口 × 目标日数，容量 − 种粮)（farmTargetFood），仓装满时目标 = 实存，需求 = 目标 − 实存 = 0，所以按"无登记目标内的实际需求"拒发（先于仓容检查）。
-        else {assert.equal(o.status,'refused');assert.match(o.reason,{grain:/余粮/,cash:/现金/,capacity:/需求/,labour:/劳力/}[scenario]);}
+        // 仓容：夹具（fillWithNonGrain）让仓里一部分是非谷物批（不计入需求的粮存）而仓已满，于是需求 > 0 且空位 = 0，走到"仓容已满"这条拒绝；前置条件在夹具里断言。
+        else {assert.equal(o.status,'refused');assert.match(o.reason,{grain:/余粮/,cash:/现金/,capacity:/仓容/,labour:/劳力/}[scenario]);}
     }
 });
 test('到货前粮批过期逐批记损失、退款，不重置保质期；有效批仍交割并按实际货价记税',async()=>{
@@ -263,7 +275,7 @@ test('玩家world_trade消费实时区域价并扣真实商人库存；同日深
     //  · 成交按整单一次截断：trunc(价)。
     const origin=engine.world.locations.find(x=>x.id===engine.byId.get('item_oats').origin),legKm=engine.route('loc_hw',sid,'walk',doc.state.minute,doc.randomSeed).edges.reduce((n,id)=>n+engine.world.routes.find(r=>r.id===id).lengthKm,0);
     assert.ok(origin&&engine.byId.get('item_oats').weight<1);assert.equal(transportTable.rows.find(r=>r.key==='carrier:pack').rate,0.02);
-    const profile=engine.rules.agriculture.settlements.find(p=>p.settlement===sid),scarcity=farmTargetFood(engine,doc.state,profile,doc.state.minute)/doc.state.settlements[sid].food;
+    const profile=engine.rules.agriculture.settlements.find(p=>p.settlement===sid),scarcity=handTarget(engine,doc.state,profile,doc.state.minute)/doc.state.settlements[sid].food;
     assert.ok(scarcity>=0.5&&scarcity<=3);
     const exact=3*(1+legKm*1*0.02/3)*scarcity,price=Math.trunc(exact);assert.ok(price>=1);
     assert.equal(first.out.result.cost,price);assert.ok(Math.abs(first.out.result.pricing.listPrice-exact)<=1e-9*exact);assert.equal(first.out.result.pricing.depth,1);

@@ -9,8 +9,7 @@ import {advanceHazardClocks,assertHazardRules,validateHazardRules} from '../serv
 import {pureHazardFires,hazardRouteClosure,hazardPriceFactor,famineAt} from '../server-plugin/hazard-calendar.mjs';
 import {thinGranaries} from './helpers/granary-fixture.mjs';
 import transportTable from '../world/rules/tables/balance/transport.json' with {type:'json'};
-import {goodsClass,goodsWeight} from '../server-plugin/market.mjs';
-import {farmTargetFood} from '../server-plugin/agriculture-migration.mjs';
+import {handTarget,handSatiety} from './helpers/hand-targets.mjs';
 import {regionalTradePrice} from '../server-plugin/settlement-trade.mjs';
 import {advanceNpcLife,npcLifeLines} from '../server-plugin/npc-life.mjs';
 import {advanceNpcNeeds} from '../server-plugin/npc-intelligence.mjs';
@@ -137,10 +136,11 @@ test('冬荒：存粮不足时粮价上涨，出现迁居与偷盗动机',async(
  //    实际持有 = 林穗店里的食物类存货（公开在售）+ 公仓燕麦存量；其他居民的私户背包不计（I12）；
  //    目标持有 = 林穗货架目标（各行 maximum + reserve）+ 公仓粮食目标（农事聚落 = min(餐口 × (距收获天数 + reserveDays)，容量 − 种粮)，即 farmTargetFood）；
  //  · 稀缺度落在 [0.5, 3] 之内，不夹取。
- const d=draft(c),st=d.get('state'),unit=i=>goodsWeight(engine,i)/goodsWeight(engine,'item_ration'),food=i=>goodsClass(engine,i)==='goods:food';
+ // 手推（不调用 goodsWeight / goodsClass / farmTargetFood）：食物 = 饱腹值 > 0；一件折成口粮件数 = 自身饱腹 ÷ 口粮饱腹（饱腹值读法见 handSatiety）；公仓目标见 helpers/hand-targets.mjs。
+ const d=draft(c),st=d.get('state'),unit=i=>handSatiety(engine,i)/handSatiety(engine,'item_ration'),food=i=>handSatiety(engine,i)>0;
  const linsui=st.npcs.npc_hw_linsui,shelfRows=engine.rules.economy.shops.stores.filter(x=>x.keeper==='npc_hw_linsui').flatMap(x=>x.restock??[]).filter(r=>food(r.item));
  const held=Object.entries(linsui.inventory??{}).filter(([i])=>food(i)).reduce((n,[i,q])=>n+(q.quantity??q)*unit(i),0)+st.settlements.loc_hw.food*unit('item_oats');
- const target=shelfRows.reduce((n,r)=>n+(r.maximum+(r.reserve??0))*unit(r.item),0)+farmTargetFood(engine,st,engine.rules.agriculture.settlements.find(p=>p.settlement==='loc_hw'),st.minute)*unit('item_oats');
+ const target=shelfRows.reduce((n,r)=>n+(r.maximum+(r.reserve??0))*unit(r.item),0)+handTarget(engine,st,engine.rules.agriculture.settlements.find(p=>p.settlement==='loc_hw'),st.minute)*unit('item_oats');
  const [lo,hi]=engine.rules.economy.priceFactorLimits.region;assert.ok(target/held>=lo&&target/held<=hi);
  // 前置：运输因子 1.16 的各项规则值（基价 3、24 公里、驮畜费率 0.02）先断言，规则变了在这里先报。
  assert.equal(engine.byId.get('item_ration').basePrice,3);assert.equal(engine.world.routes.find(r=>r.id==='route_hw_bs').lengthKm,24);
