@@ -46,8 +46,9 @@ export const READONLY_ENTRIES = [
   ['tools/monster-society-2-content.mjs', '--l1'],
   ['tools/monster-society-3-content.mjs', '--l1'],
   ['tools/monster-society-content.mjs', '--l1'],
-  ['tools/rg-mutate.mjs', '--list'],
+  // 分组按序号取模（i % RUN_GROUPS）：慢入口（SLOW_ENTRY_TIMEOUT_MS）要落在入口数较少的组里。总数 89 = 23+22+22+22，第 1 组（i%4==0）多一条，所以慢入口 s0-metrics 排在 i=35（第 4 组），不与多出的那一条同组。
   ['tools/s0-metrics.mjs', '--fast'],
+  ['tools/rg-mutate.mjs', '--list'],
   ['tools/a3-score.mjs', '--corpus', 'tests/fixtures/a3-intents-v2-r5.json', '--summary'],
   ['tools/rw05-education-content.mjs', '--l1'],
   ['tools/rw07-faith-content.mjs', '--l1'],
