@@ -151,7 +151,7 @@ async function office(){
 async function lifecycle(){
  const {createPlaytestServer}=await import('./playtest-runner.mjs');
  const {recordedLifeChange}=await import('../tests/fixtures/life-population.mjs');
- const server=await createPlaytestServer({seed:'winter-route'});
+ const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,seed:'winter-route'});
  let sequence=0,campaignId,last=null;
  const read=async()=>(await server.api('read',{campaignId})).document;
  const act=async(tool,args,anchor='actions')=>{last={tool,args,eventId:`flow_${sequence}`};return (await server.api('execute',{campaignId,tool,args,eventId:`flow_${sequence++}`,anchor})).result;};

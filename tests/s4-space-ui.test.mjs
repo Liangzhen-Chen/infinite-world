@@ -10,7 +10,7 @@ import {worldActions} from '../server-plugin/action-affordances.mjs';
 import {renderActionsPanel} from '../extension/actions-view.mjs';
 
 test('S4 无模型空间菜单：真实等待裁剪人物，分区按钮移动并保留锁门边界', {timeout:120000},async t=>{
- const server=await createPlaytestServer({consistencyEnabled:false});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyEnabled:false});t.after(()=>server.close());
  const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
  for(const viewport of [{width:390,height:844},{width:1280,height:900}]){
   const created=await server.api('create',{}),campaignId=created.reference.campaignId;

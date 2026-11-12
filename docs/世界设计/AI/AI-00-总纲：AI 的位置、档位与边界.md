@@ -87,7 +87,7 @@
   - **叙述档（T2）**：understand=llm、narrate=llm-async、npcVoice=llm、assist.review=true。现状对应 intent=propose + narration=async。每回合 0.09–0.14 元（盘点 §1）。
   - **全开档（T3）**：T2 + npcPlanning + profileDraft。每日另加离屏规划 ≤1 次（npc-planning-service.mjs:7–26）与首次交谈档案起草 2 次调用/人（population-service.mjs "two model calls per person"）。
 - 对应关系：`understand` 取代 `intent`（off→off，match→llm 且只推荐，propose→llm）；`narrate` 取代 `narration`。迁移时读旧键写新键一次。
-- **【待定·亮圳】默认档位**。推荐：安装后默认 T0，设置页首屏说明"开 AI 需要你自己的密钥，每回合约 X 元（读账本）"。不选它的代价：若默认 T2，没有密钥的玩家第一回合就看到降级提示，与"不依赖 AI"的第一印象相悖。
+- **【已定·亮圳 2026-11-11 15:19 伦敦】默认档位 T0（见 AI-06 修订记录：玩家第一次打开游戏默认不开 AI，所有操作靠菜单和规则完成，想用 AI 的玩家自己去设置里开）**。推荐：安装后默认 T0，设置页首屏说明"开 AI 需要你自己的密钥，每回合约 X 元（读账本）"。不选它的代价：若默认 T2，没有密钥的玩家第一回合就看到降级提示，与"不依赖 AI"的第一印象相悖。
 
 ### 3.3 档位切换的规则
 
@@ -297,8 +297,8 @@ classify(proposal, envelope, engine, state):
 
 | 编号 | 事项 | 推荐 | 不选的代价 |
 |---|---|---|---|
-| 【待定·亮圳】P00-1 | 默认档位（§3.2） | T0 | 无密钥玩家首回合即见降级提示 |
-| 【待定·李白】P00-2 | aiProfile 取代 intent/narration 的迁移是否随 Jev J3 卡一起做 | 一起做（同改 ui-settings） | 两套开关并存一段时间，设置页混乱 |
+| 【已定】P00-1 | 默认档位（§3.2） | T0 | 无密钥玩家首回合即见降级提示 |
+| 【已定】P00-2（亮圳 16:40 马德里：无老玩家，不做旧键迁移，直接以 aiProfile 取代） | aiProfile 取代 intent/narration 的迁移是否随 Jev J3 卡一起做 | 一起做（同改 ui-settings） | 两套开关并存一段时间，设置页混乱 |
 | 【待定·李白】P00-3 | 哈希范围是否已排除 prose/flavor 字段（现状未核） | AI-05 §3.2 先核再定 | 若未排除，AI 润色回写会破坏 30 日哈希对账 |
 
 ---

@@ -138,7 +138,8 @@ const SYSTEMS=[
  // 内核层
  {id:'kernel_engine',layer:'kernel',name:'结算引擎',modules:['engine.mjs','activities.mjs','runtime-world.mjs','campaign-reducer.mjs','archived-reducer.mjs','scheduler.mjs']},
  {id:'kernel_storage',layer:'kernel',name:'存档与迁移',modules:['storage.mjs','migrations.mjs','migrations/r1.mjs','rule-state-migration.mjs','world-registry.mjs','world-upgrade.mjs',
-   'agriculture-migration.mjs','boss-migration.mjs','farm-pests-migration.mjs','compat/v2-phase1-activities.mjs','compat/v2-phase1-engine.mjs','legacy/core.js']},
+   'agriculture-migration.mjs','boss-migration.mjs','farm-pests-migration.mjs','compat/v2-phase1-activities.mjs','compat/v2-phase1-engine.mjs','legacy/core.js',
+   'sideband.mjs'/* AI-18 模型调用旁路记录，与存档同目录约定 */,'digest-exclude.mjs'/* AI-18 规则状态哈希排除口径，包住 storage digest */,'seed-keys.mjs'/* AI-18 种子键登记与静态校验 */]},
  // 底座层 K1–K7
  {id:'base_traits',layer:'base',name:'性状标签',card:'K1',modules:['traits.mjs']},
  {id:'base_interactions',layer:'base',name:'交互规则',card:'K2',modules:['interactions.mjs']},
@@ -171,7 +172,7 @@ const SYSTEMS=[
  // 玩家接口层
  {id:'ui_tools',layer:'ui',name:'模型工具',modules:['ext:tools.mjs']},
  {id:'ui_scene',layer:'ui',name:'场景卡与状态提示',modules:['scene-card.mjs','prompt-scope.mjs','state-notices.mjs','return-summary.mjs']},
- {id:'ui_server',layer:'ui',name:'服务与界面接口',modules:['index.mjs','ui-routes.mjs','ui-affairs.mjs','ui-history.mjs','ui-map.mjs','ui-messages.mjs','ui-overview.mjs','ui-personal.mjs']},
+ {id:'ui_server',layer:'ui',name:'服务与界面接口',modules:['index.mjs','ui-routes.mjs','ui-affairs.mjs','ui-history.mjs','ui-map.mjs','ui-messages.mjs','ui-overview.mjs','ui-personal.mjs','ai-profile.mjs']},
  {id:'ui_client',layer:'ui',name:'浏览器界面',modules:['ext:ui-shell.mjs','ext:ui-affairs.mjs','ext:ui-art.mjs','ext:ui-history.mjs','ext:ui-map.mjs','ext:ui-messages.mjs','ext:ui-personal.mjs','ext:ui-settings.mjs',
    'ext:affairs-panels.mjs','ext:background-view.mjs','ext:input-view.mjs','ext:ledger-view.mjs','ext:mail-view.mjs','ext:map-view.mjs','ext:message-view.mjs','ext:people-history.mjs',
    'ext:personal-panels.mjs','ext:topbar.mjs','ext:history-window.mjs','ext:ambient-audio.mjs','ext:state-read.mjs']},

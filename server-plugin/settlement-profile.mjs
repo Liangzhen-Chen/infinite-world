@@ -2,8 +2,11 @@
 // solutions stay private. Registered contracts retain their settlement status.
 import {placeView,personName} from './entity-view.mjs';
 import {beginHouseholdReads} from './npc-state.mjs';
+import {openingStockFood} from './farm-target.mjs';
+import {worldEntityRows} from './world-entities.mjs';
 function settlementReader(world,document){
- const engine={world,rules:world.rules,byId:new Map([...world.locations,...world.npcs,...world.residents??[],...Object.values(document?.state.created??{})].map(e=>[e.id,e]))};
+ // byId 与 WorldEngine 同一份实体全集（含 monsters 等物种表），开局存粮的餐口按物种代谢推导才与运行时一致。
+ const engine={world,rules:world.rules,byId:new Map([...worldEntityRows(world),...Object.values(document?.state.created??{})].map(e=>[e.id,e]))};
  engine.advanceHouseholds=beginHouseholdReads(engine);return engine;
 }
 const pick=(row,keys)=>Object.fromEntries(keys.filter(key=>row?.[key]!==undefined).map(key=>[key,structuredClone(row[key])]));
@@ -19,10 +22,14 @@ export function publicSettlement(world,id,document=null,reader=null){
  if(!d)return {id,name:name(id),population:currentView?.population.population.value??p.population,householdCount:currentView?.population.householdCount.value??p.householdCount,
   governance:{head:currentView?.government.head.value?{id:currentView.government.head.value,name:name(currentView.government.head.value)}:null,permissions:{head:currentView?.government.powers.value??[]}}};
  const person=id=>({id,name:name(id)}),e=d.economy,g=d.governance,foodUnitKg=world.rules?.agriculture?.foodUnitKg;
+ // 公共仓期初粮食不再手填进世界数据：登记里没有 food 时，按运行时同一条目标持有规律推导；登记了就照登记（旧数据）。
+ // “期初库存”按世界定义在登记日计算（openingStockFood：登记人口、基础容量、开局种粮），不读存档当前状态：无存档视图也有此项，游戏进行中数字不随人口变动。
+ const farmProfile=world.rules?.agriculture?.settlements?.find(s=>s.settlement===id);
+ const withOpeningFood=stock=>{if(stock.food===undefined&&farmProfile&&stock.openingDay!==undefined)stock.food=openingStockFood(engine,farmProfile,stock.openingDay);return stock;};
  const economy={status:e.status,source:e.source,period:pick(e.period,['startDay','endDay','status','calendar']),
   units:{food:'粮单位',foodUnitKg,seed:'粮单位',treasury:'铜币',wood:'木料单位',iron:'铁料单位'},
   production:(e.production??[]).map(row=>pick(row,['name','location','item','areaHa','quantity','unit','unitKg','cycleDays','seasonFactors','status','source'])),
-  publicStock:pick(e.publicStock,['openingDay','food','seed','treasuryCopper','wood','iron','source','closing','closingReason']),
+  publicStock:withOpeningFood(pick(e.publicStock,['openingDay','food','seed','treasuryCopper','wood','iron','source','closing','closingReason'])),
   priceFactor:pick(e.priceFactor,['region','transport','season','shop','source']),
   tax:pick(e.tax,['basis','rateBps','collector','recipient','openingReceiptsCopper','source','note']),
   tradePartners:[...e.tradePartners??[]],tradeContracts:(e.tradeContracts??[]).map(row=>({...pick(row,['id','seller','buyer','item','quantity','unitPriceCopper','taxBps','status','source','deliveryDays']),unit:'粮单位',unitKg:foodUnitKg})),

@@ -1,4 +1,5 @@
 import {advanceHook} from './advance-hooks.mjs';
+import {worldEntityRows} from './world-entities.mjs';
 import {sellLivestock} from './livestock-sale.mjs';
 import {ensureHoldings} from './holdings.mjs';
 import {isPhysicallyDead,aliveHoldings} from './holdings.mjs';
@@ -254,7 +255,7 @@ export class WorldEngine {
         // An edition may lack people or venues that sites and festivals name; those rows stay idle instead of stopping the load (tools/validate-world reports them).
         const siteErrors=validateSites(world,{edition:true});if(siteErrors.length)throw Error(siteErrors.join('；'));
         if(![1,2].includes(this.rules.engineRevision??1))throw new Error('此世界使用尚不支持的引擎版本，停止加载');
-        this.entities = [...world.npcs,...world.residents??[],...world.locations,...world.items,...world.professions,...world.skills,...world.spells,...world.recipes??[],...world.monsters??[],...world.bosses??[],...world.cultures??[],...world.deities??[],...world.factions??[],...world.history??[],...world.factionPeople??[],...world.eras??[],...world.regions??[],...world.festivals??[]];
+        this.entities = worldEntityRows(world);
         this.resolver = new EntityResolver(this.entities);
         this.byId = this.resolver.entities;
         // RW-07: faith competition clocks are derived from the current church seats and join rules.factionClock here.

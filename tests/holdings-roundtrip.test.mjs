@@ -18,7 +18,7 @@ for(const npc of world.npcs.filter(n=>n.id===WORKER))npc.schedule={default:[{sta
 const engine=new WorldEngine(world);
 
 async function tempDir(t){const dir=await fs.mkdtemp(path.join(tmpRoot(),'s2a-holdings-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));return dir;}
-async function open(t,directory){const server=await createPlaytestServer({world,seed:SEED,consistencyEnabled:false,directory});let closed=false;const close=async()=>{if(!closed){closed=true;await server.close();}};t.after(close);return {...server,close};}
+async function open(t,directory){const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,world,seed:SEED,consistencyEnabled:false,directory});let closed=false;const close=async()=>{if(!closed){closed=true;await server.close();}};t.after(close);return {...server,close};}
 function session(server,campaignId){
     const read=async()=>(await server.api('read',{campaignId})).document;
     const execute=async(tool,args,eventId)=>{const view=await server.api('read',{campaignId});return (await server.api('execute',{campaignId,tool,args,eventId,anchor:null,expectedSequence:view.reference.sequence})).result;};

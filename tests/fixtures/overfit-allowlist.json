@@ -7,11 +7,6 @@
    "reason": "授权选择器 grantedBy.role 的协议枚举，与同函数内 authorized_owner/authorized_manager 同族，由引擎公开契约定义，语料只是沿用；不是按题面原句写的特判。"
   },
   {
-   "file": "server-plugin/advance-registry.mjs",
-   "token": "npc_autonomy",
-   "reason": "引擎推进注册表中的系统层 id（NPC 自主行动层），不是玩家可见文本也不是题面用语。"
-  },
-  {
    "file": "server-plugin/agriculture-migration.mjs",
    "token": "source_opening",
    "reason": "旧档迁移时引擎自己生成的开局仓储批次 id，语料夹具沿用引擎命名来构造同形记录。"

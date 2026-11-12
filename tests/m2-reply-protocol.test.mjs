@@ -115,7 +115,7 @@ test('未闭合q只在显示层补边界，登记人物显示姓名，原文仍�
 test('四种真实等待经HTTP共同提交路径只计时一次，重读不重新审稿',async t=>{
  for(const {id,turn} of cases){
   let reviewCalls=0;
-  const client={async generate(body){reviewCalls++;return response([], body);}},server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
+  const client={async generate(body){reviewCalls++;return response([], body);}},server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,consistencyClient:client});t.after(()=>server.close());
   let view=await server.api('create',{});const campaignId=view.reference.campaignId,anchor=id;
   if(id==='npc_delivery'){
    await server.api('execute',{campaignId,anchor:'go',eventId:'go',tool:'world_move',args:{destination:'旧磨坊'},expectedSequence:view.reference.sequence});view=await server.api('read',{campaignId});
@@ -140,10 +140,10 @@ test('四种真实等待经HTTP共同提交路径只计时一次，重读不重�
 test('runner消费同一规范正文，坏审稿响应在服务端阻止提交',async t=>{
  let generated=0;const {turn}=cases.find(row=>row.id==='npc_shove');
  const narrator={async generate(body){return ++generated===1?{choices:[{finish_reason:'tool_calls',message:{tool_calls:[{id:'wait',function:{name:'world_time',arguments:'{"minutes":10}'}}]}}]}:reply(turn.originalReply);}};
- const server=await createPlaytestServer({consistencyClient:{generate:async body=>response([], body)}});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,consistencyClient:{generate:async body=>response([], body)}});t.after(()=>server.close());
  const result=await runPlaytest({scenario:{id:'t146-wait',initial:{mode:'legacy'},turns:[{input:turn.input,assertions:[{kind:'elapsed',min:10,max:10}]}]},api:server.api,client:narrator,bundle:await loadPromptBundle()});
  assert.deepEqual(result.turns[0].errors,[]);assert.equal(result.turns[0].consistency.tail.args.extraMinutes,0);assert.equal(result.turns[0].originalReply,turn.originalReply);assert.match(result.turns[0].reply,/额外="0分"/);
- const invalidServer=await createPlaytestServer({consistencyClient:{generate:async()=>({choices:[{finish_reason:'tool_calls',message:{tool_calls:[{function:{name:'report_consistency_issues',arguments:'{bad'}}]}}]})}});t.after(()=>invalidServer.close());
+ const invalidServer=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,consistencyClient:{generate:async()=>({choices:[{finish_reason:'tool_calls',message:{tool_calls:[{function:{name:'report_consistency_issues',arguments:'{bad'}}]}}]})}});t.after(()=>invalidServer.close());
  const created=await invalidServer.api('create',{}),campaignId=created.reference.campaignId,begun=await invalidServer.api('review/begin',{campaignId,anchor:'invalid',playerText:'我看看。',expectedSequence:created.reference.sequence});
  // 零裁决直接退 pending；真实等待后再检验坏审稿响应仍阻止提交。
  await invalidServer.api('execute',{campaignId,anchor:'invalid',eventId:'invalid-wait',tool:'world_time',args:{minutes:1},expectedSequence:created.reference.sequence});

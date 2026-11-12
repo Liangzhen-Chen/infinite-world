@@ -31,7 +31,7 @@ const PACKS={
 };
 const L3=['scene-card','prompt-scope','chronicle','state-notices','return-summary','consistency-review','consistency-service','consistency-evidence','consistency-outcome',
  'standing','reputation','reputation-registry','reputation-catalog','public-opinion','ui-affairs','ui-history','ui-map','ui-messages','ui-overview','ui-personal',
- 'applied-effects','action-text','action-affordances'/* A1 已应用效果、事件流模板、可做之事 */];
+ 'applied-effects','action-text','action-affordances'/* A1 已应用效果、事件流模板、可做之事 */,'ai-profile'/* AI-01 服务端档位门 */];
 const L4=['index','ui-routes','action-gateway'/* A1 world_act 翻译 */];
 
 const TABLE=new Map();
@@ -58,12 +58,14 @@ put(['household-tools'],'L1');
 put(['distribution','livestock-sale'],'L2','economy');put(['npc-labor'],'L2','npc');
 // W8C: body-derived safe carry load (attr.carry), read by item transfers.
 put(['carry'],'L1');
+// AI-18: sideband audit rows and the rule-state digest scope read only storage (L0); seed-keys is a leaf static check.
+put(['sideband','digest-exclude','seed-keys'],'L0');
 // Time-slot resolution and request programs belong to the shared action ontology.
 put(['primitives-runtime','primitives-effects','primitives-body','primitives-movement','primitives-checks','primitives-learning','primitive-accounts','legacy-primitives','faith-catalog','weather','hazard-calendar','environment-state','map-state','rx-library','action-authority-sources','action-router','action-limits','open-actions','action-rite','mark-actions','mark-reactions','action-costs','action-time','routing-programs','body-needs'],'L1');
 
 // MKTW：补给间隔与自产粮储备模型（supply-interval：只读 entity-view、crop-yield；craft-record：只读 stock、supply-interval；food-stock：读 market、primitives-body、supply-interval）、
 // 统计产粮倍数（crop-yield：无任何导入的纯规则函数，引擎与储备模型共用）、农事目标持有（farm-target：读 primitives-body、facility-state，原在 L0 的 agriculture-migration）。导入全在 L1 内，无向上依赖。
-put(['crop-yield','supply-interval','craft-record','food-stock','farm-target'],'L1');
+put(['crop-yield','supply-interval','craft-record','food-stock','farm-target','settlement-mouths'],'L1');
 
 // {layer, pack} for a repository-relative file, or null when unassigned.
 export function layerOf(file){

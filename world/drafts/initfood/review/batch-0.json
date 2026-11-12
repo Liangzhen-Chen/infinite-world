@@ -1,0 +1,53 @@
+{
+  "index": 0,
+  "fingerprint": "2afe474d7faf517439935c8baa2a11910de13493e412fc8dee0d48b7062ecef5",
+  "count": 4,
+  "passed": 4,
+  "ids": [
+    "initfood-loc_bs_yupo",
+    "initfood-loc_bs_weiting",
+    "initfood-loc_bs_liquan",
+    "initfood-loc_bs_sangban"
+  ],
+  "rewritten": 0,
+  "manual": [],
+  "pending": [],
+  "flagged": [],
+  "sample": [
+    "initfood-loc_bs_sangban",
+    "initfood-loc_bs_yupo",
+    "initfood-loc_bs_weiting",
+    "initfood-loc_bs_liquan"
+  ],
+  "l4": {
+    "approved": true,
+    "reviewer": "sonnet-initfood-L4",
+    "by": "sonnet-initfood-L4",
+    "reviewedAt": "2026-11-12T07:04:44.000Z",
+    "notes": [
+      {
+        "id": "initfood-loc_bs_yupo",
+        "note": "删除对象核对：after 为 REMOVE；目标 world/geo/settlements.json 的 loc_bs_yupo.details.economy.publicStock.food（登记值 18000，与 before 一致，settlements.json 行 571）；两处回执 world/drafts/w1/village-ledgers/loc_bs_yupo.json 与 candidate.json 的 economy.publicStock.food，路径为回执侧后缀写法。L2 contradictions 为空（响应 4f5a479b）；L1 addedErrors 为空、candidateErrors 0（baselineErrors 48 来自新 schema 拒绝发布前的 food，非本批新错）。独立核算运行时期初存量：人口 80（settlements.json）× (sowDays[1] 25 + growthDays 180 + reserveDays 90 = 295) = 23600，容量 50000 − 种粮 2160（1800 田亩单位 × 120 ÷ 100）= 47840，未受限 → 23600，与规律一致。本批无正文，必查清单中针对工序正文的各项不适用。",
+        "by": "sonnet-initfood-L4"
+      },
+      {
+        "id": "initfood-loc_bs_weiting",
+        "note": "删除对象核对：after 为 REMOVE；目标 loc_bs_weiting.details.economy.publicStock.food（登记值 22000，行 1529）；两处回执为 loc_bs_weiting.json 与 candidate.json 的 economy.publicStock.food。L2 contradictions 为空（响应 a3dfae2f）。独立核算：人口 100 × 295 = 29500，容量 50000 − 种粮 1920（1600 × 120 ÷ 100）= 48080，未受限 → 29500，与规律一致。",
+        "by": "sonnet-initfood-L4"
+      },
+      {
+        "id": "initfood-loc_bs_liquan",
+        "note": "删除对象核对：after 为 REMOVE；目标 loc_bs_liquan.details.economy.publicStock.food（登记值 22000，行 2462）；两处回执为 loc_bs_liquan.json 与 candidate.json 的 economy.publicStock.food。L2 contradictions 为空（响应 a1a57d63）。独立核算：人口 96 × 295 = 28320，容量 50000 − 种粮 2520（2100 × 120 ÷ 100）= 47480，未受限 → 28320，与规律一致。",
+        "by": "sonnet-initfood-L4"
+      },
+      {
+        "id": "initfood-loc_bs_sangban",
+        "note": "删除对象核对：after 为 REMOVE；目标 loc_bs_sangban.details.economy.publicStock.food（登记值 25000，行 3441）；两处回执为 loc_bs_sangban.json 与 candidate.json 的 economy.publicStock.food。L2 contradictions 为空（响应 2e83f493）。独立核算：人口 110 × 295 = 32450，容量 50000 − 种粮 2880（2400 × 120 ÷ 100）= 47120，未受限 → 32450，与规律一致。另注：四村 residentIds 为人类（非 npc_ms_ 部族物种），餐口等于人口。补充说明（不影响批准）：冻结的 basis 文字仍写 settlement-profile 按 openingFood 推导、farmTargetDays 在 primitives-body.mjs，实际读者现为 openingStockFood、farmTargetDays 已搬到 settlement-mouths.mjs（primitives-body 重新导出）；规律本身一致，且 basis 不写入世界数据，故不构成错误，也不重冻。",
+        "by": "sonnet-initfood-L4"
+      }
+    ]
+  },
+  "costUpperYuan": 0.0055584,
+  "manualRatio": 0,
+  "needsSystemicRepair": false
+}

@@ -4,6 +4,7 @@ import {loadWorld} from './load-world.mjs';
 import {DeepSeekClient} from './deepseek-client.mjs';
 import {runContentPipeline,defaultReviewRequest,readApprovedContent,hashContent} from './content-pipeline.mjs';
 import {villageProfileCandidates,villageLedgerRules,villageLawCodes,validateVillageLedger,ledgerRevision} from '../world/design/w1-village-profiles.mjs';
+import {readApprovedSupersedes,revertReceiptRow,applySupersedes} from './approved-revisions.mjs';
 import {w1VillagesFoundation} from '../world/design/w1-villages.mjs';
 import {localFacts as wildlifeFacts} from '../world/design/t155-village-wildlife.mjs';
 
@@ -77,10 +78,14 @@ export async function reviewProfiles({world,root=path.resolve('world/drafts/w1/v
 }
 export async function approvedProfiles({world,root=path.resolve('world/drafts/w1/village-ledgers')}={}){
  world??=await loadWorld();
- const entries=villageProfileCandidates(world),rows=await readApprovedContent(root,entries,{contextFor:e=>contextFor(e,world),revision});
+ // 已批回执之后被已审批修订批取代的字段（如 INITFOOD 删掉的公共仓期初粮食）：生成器已不再产出它，比对指纹前把生成的行还原成审批当时的行；
+ // 返回的档案则按修订回执取代（删除或改值），即当前有效的内容。
+ const supersedes=(await readApprovedSupersedes()).filter(s=>s.receiptFile.startsWith('world/drafts/w1/village-ledgers/'));
+ const receiptOf=id=>`world/drafts/w1/village-ledgers/${id}.json`;
+ const entries=villageProfileCandidates(world).map(e=>revertReceiptRow(e,receiptOf(e.id),supersedes)),rows=await readApprovedContent(root,entries,{contextFor:e=>contextFor(e,world),revision});
  if(rows.length!==4)throw Error('四村档案尚未全部通过审核');
  for(const row of rows){const v=validateDraft(row,entries.find(e=>e.id===row.id),world);if(v.errors.length)throw Error(v.errors.join('；'));}
- return rows;
+ return rows.map(row=>{const current=structuredClone(row);applySupersedes([current],receiptOf(row.id),supersedes);return current;});
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(import.meta.filename)){
  const arg=(name,fallback)=>{const at=process.argv.indexOf(name);return at<0?fallback:process.argv[at+1];};

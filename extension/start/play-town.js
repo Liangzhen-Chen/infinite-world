@@ -24,15 +24,17 @@ export function arrivalText(overview,history,{opening=false}={}){
         ...rows.map(row=>`${row.time}：${row.text}`),...(!rows.length?['尚无已登记的经历。']:[])]};
 }
 
+// The AI tier is a per-device preference: it is neither written into a backup nor changed by importing one.
+const readingSettings=value=>{const {aiProfile:_,...rest}=normalizeSettings(value);return rest;};
 export function makeBackup(bundle,session,settings){
     if(session.reference.campaignId!==bundle.metadata.id)throw Error('备份与当前角色不一致，请重新读取');
-    return {format:'infinite-fields-play-v1',bundle,session:structuredClone(session),settings:normalizeSettings(settings)};
+    return {format:'infinite-fields-play-v1',bundle,session:structuredClone(session),settings:readingSettings(settings)};
 }
 export function unpackBackup(value){
     if(value?.format==='infinite-fields-server-v2')return {bundle:value,session:{chat:[],metadata:{}},settings:null};
     if(value?.format!=='infinite-fields-play-v1'||!value.bundle||!Array.isArray(value.session?.chat)||!value.session?.metadata)throw Error('请选择无限原野的存档备份');
     if(value.session.reference?.campaignId!==value.bundle.metadata?.id)throw Error('备份角色与聊天记录不一致');
-    return {bundle:value.bundle,session:structuredClone(value.session),settings:normalizeSettings(value.settings)};
+    return {bundle:value.bundle,session:structuredClone(value.session),settings:readingSettings(value.settings)};
 }
 export function remapSession(session,reference){
     const next=structuredClone(session);next.reference=reference;next.chatId=null;next.metadata??={};next.metadata.infinite_fields=reference;

@@ -13,7 +13,7 @@ import {atomicJSON,digest}from'../server-plugin/storage.mjs';
 const configurations=[{id:'off-0.6',temperature:.6,thinking:false},{id:'off-0.8',temperature:.8,thinking:false},{id:'off-1.0',temperature:1,thinking:false},{id:'thinking-low',temperature:.8,thinking:true}];
 const scenarios=await Promise.all((await fs.readdir('tests/playtests')).filter(file=>file.endsWith('.json')).sort().map(async file=>JSON.parse(await fs.readFile(`tests/playtests/${file}`,'utf8'))));
 const base=await loadPromptBundle(),host=await loadHostPromptProcessor(),seed='settings-r1-v1';
-const client=new DeepSeekClient({budgetYuan:30,logFile:'logs/settings-usage.jsonl'}),server=await createPlaytestServer({seed});
+const client=new DeepSeekClient({budgetYuan:30,logFile:'logs/settings-usage.jsonl'}),server=await createPlaytestServer({aiProfile:'T2'/*review/narration records needed, consistencyClient stays null: no model call*/,seed});
 const tasks=scenarios.flatMap(scenario=>configurations.map(configuration=>({scenario,configuration}))),results=[];
 const styleSamples=['lodging','craft'];let cursor=0,writes=Promise.resolve();
 const quantile=(values,q)=>{const sorted=values.filter(Number.isFinite).sort((a,b)=>a-b);return sorted[Math.min(sorted.length-1,Math.floor(sorted.length*q))]??null;};

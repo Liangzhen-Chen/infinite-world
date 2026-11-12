@@ -161,7 +161,7 @@ test('HTTP 无来源报价只允许一次无工具文字改写与复审，仍失
    reviews++;const payload=reviewPayload(body);
    return reviewResponse(body,[],classify(payload,segment=>segment.quote.includes('八铜')?{kind:'price',subject:'npc_hw_linsui',predicate:'课程报价',object:'lesson',quantity:8,reason:'没有课程价格来源'}:{}));
   }};
-  const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());let view=await server.api('create',{});const campaignId=view.reference.campaignId;
+  const server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,consistencyClient:client});t.after(()=>server.close());let view=await server.api('create',{});const campaignId=view.reference.campaignId;
   const begun=await server.api('review/begin',{campaignId,anchor:'claim-rewrite',playerText:'我稍候一分钟，看看周围。',expectedSequence:view.reference.sequence});
   await server.api('execute',{campaignId,anchor:'claim-rewrite',eventId:'wait-once',tool:'world_time',args:{minutes:1},expectedSequence:view.reference.sequence});
   view=await server.api('read',{campaignId});const saved=structuredClone(view.document),events=await server.api('export',{campaignId});

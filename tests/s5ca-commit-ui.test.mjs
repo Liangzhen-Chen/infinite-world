@@ -6,7 +6,7 @@ import {chromium} from 'playwright-core';
 import {createPlaytestServer} from '../tools/playtest-runner.mjs';
 
 test('提交成功后保存失败：显示已成交并要求对账；再点同一笔复用原请求编号，只成交一次',{timeout:120000},async t=>{
- const server=await createPlaytestServer({consistencyEnabled:false});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyEnabled:false});t.after(()=>server.close());
  const created=await server.api('create',{});
  const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
  const page=await browser.newPage({viewport:{width:390,height:844}}),executes=[];

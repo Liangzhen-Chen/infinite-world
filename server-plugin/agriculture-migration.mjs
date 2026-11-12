@@ -1,5 +1,5 @@
 const key=id=>`agriculture:${id}`;
-// 本模块在 L0（迁移归存档），不得依赖 L1：目标持有 farmTargetFood / openingFood 在 farm-target.mjs，开局初始化 initializeAgriculture 在 agriculture.mjs。
+// 本模块在 L0（迁移归存档），不得依赖 L1：目标持有 farmTargetFood / openingFood / openingStockFood 在 farm-target.mjs，开局初始化 initializeAgriculture 在 agriculture.mjs。
 export function agricultureState(profile,day,{fresh=false,food=0}={}){
     return{category:'agriculture',format:1,mode:fresh?'managed':'legacy',settlement:profile.settlement,initializedDay:day,lastDay:day-1,
         granary:{capacity:profile.granaryCapacity,condition:profile.granaryCondition},tools:{capacity:profile.toolCapacity,condition:profile.toolCondition},

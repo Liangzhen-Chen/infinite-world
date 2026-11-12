@@ -20,7 +20,7 @@ async function campaign(server,count=24){
 }
 const grouped=chat=>groupHistory(chat,{format:'host',tokenCounts:chat.map(()=>100)});
 test('HTTP 覆盖证明来自当前编年史与原文索引；裁剪后可查旧事，编辑撤销使旧游标失效',async t=>{
- const server=await createPlaytestServer({consistencyEnabled:false});t.after(()=>server.close());const row=await campaign(server);
+ const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyEnabled:false});t.after(()=>server.close());const row=await campaign(server);
  const proof=await server.api('history/coverage',{campaignId:row.campaignId,expectedSequence:row.view.reference.sequence});
  assert.ok(proof.anchors['history-0'].factIds.length);assert.ok(proof.anchors['history-0'].eventIds.includes('old-bread'));assert.equal(proof.anchors['history-0'].indexed,true);
  const original=JSON.stringify(row.chat),groups=await grouped(row.chat),window=planHistoryWindow(groups,{coverage:proof,contextTokens:5000,reservedTokens:200});
@@ -36,7 +36,7 @@ test('HTTP 覆盖证明来自当前编年史与原文索引；裁剪后可查旧
 });
 
 test('试玩复用同一窗口，跨批次保留稳定历史开头且完整聊天仍可搜索',async t=>{
- const server=await createPlaytestServer({consistencyEnabled:false});t.after(()=>server.close());const starts=[];
+ const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyEnabled:false});t.after(()=>server.close());const starts=[];
  const client={async generate({messages}){starts.push(messages.find(m=>m.role==='user'&&m.content?.startsWith('（场外）'))?.content);return {choices:[{finish_reason:'stop',message:{content:'已核对。'}}]};}};
  const scenario={id:'history-window-runner',turns:Array.from({length:24},(_,i)=>({input:`（场外）第${i+1}次核对，记着蓝色风筝`,assertions:[{kind:'unchanged',paths:['state.player.coins']}]}))};
  const report=await runPlaytest({scenario,api:server.api,client,bundle:await loadPromptBundle(),countTokens:()=>100,historyWindow:{contextTokens:5000}});
@@ -45,7 +45,7 @@ test('试玩复用同一窗口，跨批次保留稳定历史开头且完整聊�
 });
 
 test('原生生成拦截器只裁当前请求副本，不隐藏原文或修改聊天锚点',{timeout:60000},async t=>{
- const server=await createPlaytestServer({consistencyEnabled:false});t.after(()=>server.close());const row=await campaign(server),browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());const page=await browser.newPage();
+ const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyEnabled:false});t.after(()=>server.close());const row=await campaign(server),browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());const page=await browser.newPage();
  await page.route(/\.(?:mjs|js|css)(?:\?.*)?$/,async route=>{
   const relative=decodeURIComponent(new URL(route.request().url()).pathname).slice(1);
   let body=await fs.readFile(`extension/${relative}`,'utf8');

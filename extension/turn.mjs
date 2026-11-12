@@ -1,7 +1,18 @@
 // Domain lookup failures can be corrected; transport and storage failures propagate.
-export function actionModes(value={}){
- return {intent:['off','match','propose'].includes(value.intent)?value.intent:'propose',
-  narration:['off','async','sync'].includes(value.narration)?value.narration:'sync'};
+// aiProfile is the single client-side AI switch (AI-00 T0-T3); it is never saved into a campaign.
+// Behaviour branches only on the intent/narration values each profile maps to.
+export const DEFAULT_AI_PROFILE='T0';
+export const AI_PROFILES={
+ T0:{intent:'off',narration:'off'},
+ T1:{intent:'match',narration:'off'},
+ T2:{intent:'propose',narration:'async'},
+ T3:{intent:'propose',narration:'async'}};
+export function aiProfile(value={}){return Object.hasOwn(AI_PROFILES,value?.aiProfile)?value.aiProfile:DEFAULT_AI_PROFILE;}
+export function actionModes(value={}){return {...AI_PROFILES[aiProfile(value)]};}
+// The only place that decides whether the host may call a model for a turn.
+export function turnModelAccess(settings={},controlledGenerate){
+ const {intent,narration}=actionModes(settings);
+ return {generate:intent==='off'?null:controlledGenerate,narrate:narration!=='off'};
 }
 export function modelToolAllowed(name,settings={}){
  const {intent}=actionModes(settings);

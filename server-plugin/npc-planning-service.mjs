@@ -17,7 +17,7 @@ export async function settleNpcPlanning(store,campaignId,{anchor=null,planner=pl
     if(Object.keys(document.state.npcs).filter(id=>personSimulation(current,document.state,id).value).length<8)return{status:'unavailable'};
     const directory=path.join(store.directory(campaignId),'npc-planning');
     await fs.mkdir(directory,{recursive:true});
-    const result=await planner(current,document,{...options,ledgerFile:path.join(directory,'budget.json')});
+    const result=await planner(current,document,{...options,ledgerFile:path.join(directory,'budget.json'),sideband:{store,campaignId,turn:view.reference.sequence}});
     if(!result.input)return{status:result.status,reason:result.reason};
     const eventId=`npc_plan_${digest(result.input.plan).slice(0,24)}_${view.reference.sequence}`;
     const saved=await store.transact(campaignId,{id:eventId,input:{...result.input,eventId},anchor,expectedSequence:view.reference.sequence},store.reducer);

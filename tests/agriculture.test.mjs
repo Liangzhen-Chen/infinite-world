@@ -16,6 +16,7 @@ import {initializeAgriculture} from '../server-plugin/agriculture.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
 import {weatherAt} from '../server-plugin/weather.mjs';
 import {recordedLifeChange} from './fixtures/life-population.mjs';
+import {expectedOpeningFood as sharedOpeningFood} from './helpers/opening-food.mjs';
 const legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const source=withAgricultureRules(await loadWorld());
 const record=c=>c.state.records['agriculture:loc_hw'];
@@ -30,14 +31,12 @@ function setup(seed='agriculture-test'){
 //   仓容 = granaryCapacity（前置：开局无已建公共粮仓设施，故无追加）；种粮 = initialSeed。
 // 以 agriculture-foundation 的 loc_hw 参数手算：距收获 205 天 + 储备 90 天 = 295 天；58 口 × 295 = 17110；仓容余量 20000 − 1680 = 18320；取小者。
 function expectedOpeningFood(engine,c){
-    const rules=engine.rules.agriculture,p=rules.settlements.find(s=>s.settlement==='loc_hw'),profile=engine.world.settlementProfiles.find(s=>s.id==='loc_hw');
-    for(const id of profile.residentIds??[]){const sp=engine.byId.get(engine.byId.get(id)?.species),m=sp?.nature?.metabolism?.satiety;assert.ok(m===undefined||m===1,`前置：${id} 饱食代谢非 1，餐口不等于人口`);}
-    assert.equal(profile.pendingSpeciesStructure,undefined,'前置：无待定混种结构');
+    const rules=engine.rules.agriculture,p=rules.settlements.find(s=>s.settlement==='loc_hw');
     assert.ok(!Object.values(c.state.created??{}).some(b=>b.builtProject&&b.facilityType==='granary'),'前置：开局无已建粮仓设施');
     assert.equal(Math.floor(c.state.minute/1440),0,'前置：开局日为第 0 日');
     const mouths=c.state.settlements.loc_hw.population,toHarvest=rules.crop.sowDays[1]+rules.crop.growthDays,days=toHarvest+p.reserveDays;
     assert.equal(days,295,'前置：手算天数 205+90');assert.equal(mouths,58,'前置：开局人口 58');
-    return Math.min(mouths*days,p.granaryCapacity-p.initialSeed);
+    const expected=sharedOpeningFood(engine,p,mouths);assert.equal(expected,Math.min(17110,18320),'前置：与手算 17110 一致');return expected;
 }
 function conservation(c){
     const r=record(c),s=c.state.settlements.loc_hw,l=r.ledger;

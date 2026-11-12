@@ -108,8 +108,8 @@ test('四份粮约从默认出生点保留全部正式作息，实际提运交�
             for (const config of configs) {
                 assert.ok(engine.byId.get(config.manager).schedule);
                 assert.equal(engine.byId.get(config.manager).tier, 'full');
-                // 开局存粮 = 开局日目标持有，期望值由 helpers/opening-food.mjs 按规律独立手算。
-                assert.equal(document.state.settlements[config.settlement].food, expectedOpeningFood(engine, document.state, config));
+                // 开局存粮 = 开局日目标持有（initialFood 已删），期望值由 helpers/opening-food.mjs 按规律独立手算。
+                assert.equal(document.state.settlements[config.settlement].food, expectedOpeningFood(engine, config, document.state.settlements[config.settlement].population));
             }
 
             const history = [];

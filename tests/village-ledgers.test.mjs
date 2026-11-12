@@ -1,3 +1,5 @@
+// 注意（合入顺序）：本文件的新期望（登记里不再有公共仓期初粮食，approvedProfiles 经修订回执取代）是“INITFOOD 修订批发布后才成立”的状态；
+// 发布前会红是预期的。它与发布提交（world/drafts/initfood/ 整个目录、settlements.json 的删除）一起进入 master，不改断言。
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -13,6 +15,8 @@ import {toolDefinitions,modelToolCall} from '../extension/tools.mjs';
 import {expectedOpeningFood} from './helpers/opening-food.mjs';
 const world=await loadWorld(),profiles=await approvedProfiles({world}),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json'));
 const configs=world.rules.agriculture.settlements.filter(p=>p.opening);
+// 开局存粮 = 开局日目标持有，按规律手推：min(ceil(人口 × (距下次收获 + reserveDays)), 容量 − 种粮)；距下次收获 = sowDays[1] + growthDays（开局日 0）。
+const ruleOpeningFood=expectedOpeningFood;
 function setup(){
  const isolated=structuredClone(world);for(const n of isolated.npcs){delete n.schedule;delete n.tier;}
  const engine=new WorldEngine(isolated),doc=engine.createCharacter(legacy,{},'village-ledgers');doc.state.player.coins=1000;
@@ -34,10 +38,14 @@ test('四村年粮守恒，产量单位与周期有来源，期初不冒充期�
  const{engine,doc}=setup();assert.equal(validateWorld(world,{stage:'release'}).ok,true);
  assert.equal(configs.length,4);
  const d={document:doc,get(...keys){return keys.reduce((value,key)=>value?.[key],doc);},set(keys,value){const target=keys.slice(0,-1).reduce((value,key)=>value[key],doc);target[keys.at(-1)]=value;}};
- for(const p of configs){const detail=profiles.find(d=>d.id===p.settlement);assert.equal(detail.economy.publicStock.food,doc.state.settlements[p.settlement].food);assert.equal(detail.economy.production[0].cycleDays,360);assert.equal(detail.economy.production[0].unitKg,.5);assert.equal(detail.economy.publicStock.closing,null);conservation(doc,p.settlement);}
+ // 登记里不再手填公共仓期初粮食；开局存粮 = 开局日目标持有，按规律手推：min(ceil(人口 × (距下次收获 + reserveDays)), 容量 − 种粮)，
+ // 距下次收获 = sowDays[1] + growthDays（开局日 0），餐口按人口（同一物种构成）。例：榆坡 80 人 × (25+180+90) = 23600，容量 50000 − 种粮 2160 未受限。
+ for(const p of configs){const detail=profiles.find(d=>d.id===p.settlement);
+  assert.equal(detail.economy.publicStock.food,undefined);
+  assert.equal(doc.state.settlements[p.settlement].food,ruleOpeningFood(engine,p,detail.population));assert.equal(detail.economy.production[0].cycleDays,360);assert.equal(detail.economy.production[0].unitKg,.5);assert.equal(detail.economy.publicStock.closing,null);conservation(doc,p.settlement);}
  for(let day=0;day<360;day++){doc.state.minute=day*1440;for(const p of configs){const out=advanceAgriculture(d,engine,p.settlement,doc.state.settlements[p.settlement],day);doc.state.settlements[p.settlement]=out.settlement;doc.state.settlements[p.settlement].wood+=out.woodProduced;conservation(doc,p.settlement);}}
- // 待重推（MKTW ①b）：开局存粮不再是 initialFood，改为开局日目标持有 = 餐口 × (距下次收获天数 + reserveDays)；下面 openingFood 的期望（原 p.initialFood）与第 36 行的登记公仓粮对照待重推，未改值。
- for(const p of configs){assert.ok(record(doc,p.settlement).ledger.harvested>0);assert.equal(record(doc,p.settlement).lastDay,359);assert.equal(record(doc,p.settlement).ledger.openingFood,p.initialFood);assert.throws(()=>advanceAgriculture(d,engine,p.settlement,doc.state.settlements[p.settlement],359),/日结顺序/);}
+ // 农事账的开局存粮就是开局日目标持有（initialFood 已删，不再有写死的开局存量）：按同一条规律手推。
+ for(const p of configs){assert.ok(record(doc,p.settlement).ledger.harvested>0);assert.equal(record(doc,p.settlement).lastDay,359);assert.equal(record(doc,p.settlement).ledger.openingFood,ruleOpeningFood(engine,p,profiles.find(d=>d.id===p.settlement).population));assert.throws(()=>advanceAgriculture(d,engine,p.settlement,doc.state.settlements[p.settlement],359),/日结顺序/);}
 });
 test('四村粮约经过真实路线两端交割；在途预款和税款分开，粮钱双方守恒且重放幂等',async()=>{
  for(const p of configs){
@@ -97,7 +105,7 @@ test('严格schema和L1拒绝null账、无期末来源、错单位、错税率�
  for(const mutate of [p=>p.economy.production=null,p=>p.economy.publicStock.closing={food:99999},p=>p.economy.production[0].unitKg=1,p=>p.economy.tax.rateBps=9999,p=>p.governance.head=p.governance.coordinators[1]]){
   const bad=structuredClone(world);mutate(bad.settlementProfiles.find(p=>p.details).details);assert.equal(validateWorld(bad,{stage:'release'}).ok,false);
  }
- // initialFood 已删（开局存粮由规律推出）；负例改为把开局种粮压到不够播已登记田地（agriculture.mjs:340 拒绝）。
- const bad=structuredClone(world);bad.rules.agriculture.settlements.find(p=>p.opening).initialSeed=1;assert.equal(validateWorld(bad,{stage:'release'}).ok,false);
+ // 负例：运行农事规则与审核开局账不符（initialFood 已删，改动仍在的 initialSeed；开局账登记同一个种粮）。
+ const bad=structuredClone(world);bad.rules.agriculture.settlements.find(p=>p.opening).initialSeed++;assert.equal(validateWorld(bad,{stage:'release'}).ok,false);
  const tools=toolDefinitions();assert.equal(tools.length,27);assert.equal(modelToolCall('world_farm',{operation:'settle_trade'}).args.operation,'farm_settle_trade');
 });

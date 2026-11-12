@@ -7,7 +7,7 @@ import {existsSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
 import {readApprovedContent,hashContent} from './content-pipeline.mjs';
-import {getPath,setPath} from '../world/design/p1-revision-approval.mjs';
+import {getPath,setPath,sameValue,isRemove} from '../world/design/p1-revision-approval.mjs';
 
 // 字段路径文本 -> 路径：`site.resources[id=adit_ore].item` -> ['site','resources',{id:'adit_ore'},'item']
 export function parseFieldPath(label){
@@ -34,8 +34,10 @@ export function parsePublication(pub){
    if(/^\(.*\)$/.test(s.field)||/^commit [0-9a-f]{7,40}\b/.test(s.receipt))continue;
    const m=/^([^\s#]+)#([^\s#]+)$/.exec(s.receipt);if(!m)bad(`receipt 须为“文件#条目”或“commit 提交号”：${s.receipt}`);
    if(m[2]!==e.target)bad(`取代声明的条目与修订目标不同：${s.receipt} / ${e.target}`);
-   if(s.field!==e.field)bad(`取代声明的字段与修订字段不同：${s.field} / ${e.field}`);
-   out.push({revision:pub.revision,entryId:e.id,file:e.file,receiptFile:m[1],targetId:m[2],label:s.field,parts:parseFieldPath(s.field),before:e.before,after:e.after});
+   // 回执里的行形状可以比正式文件的行浅（如草稿回执没有 details 前缀）：取代声明的字段按回执自己的路径写，须是修订字段的整段后缀（或相同）。
+   // parts 是回执一侧的路径（applySupersedes 在设计源/回执行上用），formalParts 是正式文件一侧的路径（revertSuperseded 在正式行上用）；各读者不必自己映射。
+   if(!(s.field===e.field||e.field.endsWith(`.${s.field}`)))bad(`取代声明的字段与修订字段不同：${s.field} / ${e.field}`);
+   out.push({revision:pub.revision,entryId:e.id,file:e.file,receiptFile:m[1],targetId:m[2],label:s.field,parts:parseFieldPath(s.field),formalParts:parseFieldPath(e.field),before:e.before,after:e.after});
   }
  }
  return out;
@@ -103,8 +105,11 @@ export function applySupersedes(rows,receiptFile,supersedes){
   if(s.receiptFile!==receiptFile)continue;
   const row=rows.find(r=>r.id===s.targetId);if(!row)continue;
   const cur=getPath(row,s.parts);
-  if(hashContent(cur??null)===hashContent(s.before)){setPath(row,s.parts,s.after);applied.push({id:s.targetId,field:s.label,parts:s.parts,before:s.before,after:s.after,receiptFile,revision:s.revision});}
-  else if(hashContent(cur??null)!==hashContent(s.after))throw new Error(`设计源值与修订回执不符：${receiptFile}#${s.targetId} ${s.label} 现值 ${JSON.stringify(cur)}，回执 before ${JSON.stringify(s.before)} after ${JSON.stringify(s.after)}`);
+  if(sameValue(cur,s.before)){setPath(row,s.parts,s.after);applied.push({id:s.targetId,field:s.label,parts:s.parts,before:s.before,after:s.after,receiptFile,revision:s.revision});}
+  else if(!sameValue(cur,s.after))throw new Error(`设计源值与修订回执不符：${receiptFile}#${s.targetId} ${s.label} 现值 ${JSON.stringify(cur)}，回执 before ${JSON.stringify(s.before)} after ${JSON.stringify(s.after)}`);
+  // 删除型：键不存在等同“已删除”，但回执路径的父对象必须存在；路径中间段写错（父对象也不存在）不能被当成“已删”而静默放过。
+  // （末段拼错、父对象存在的情形由对真实回执行的检查兜住：发布前 getPath(行, parts) 必须等于 before，见 tests/initfood-revision.test.mjs。）
+  else if(isRemove(s.after)&&(getPath(row,s.parts.slice(0,-1))===null||typeof getPath(row,s.parts.slice(0,-1))!=='object'))throw new Error(`回执路径的父对象不存在：${receiptFile}#${s.targetId} ${s.label}`);
  }
  return applied;
 }
@@ -118,7 +123,29 @@ export function revertSuperseded(rows,file,supersedes){
  for(const s of supersedes){
   if(s.file!==file)continue;
   const row=byId.get(s.targetId);if(!row)continue;
-  if(hashContent(getPath(row,s.parts)??null)===hashContent(s.after??null))setPath(row,s.parts,s.before);
+  const parts=s.formalParts??s.parts;
+  if(sameValue(getPath(row,parts),s.after))setPath(row,parts,s.before);
+ }
+ return out;
+}
+// 把指向某批回执（receiptPattern 的第 1 个捕获组是回执条目 id）的取代声明按 after 分两类：
+//   after 是 REMOVE：该行已被移除，不再是现存条目（removed）；after 是新值：该行仍是现存条目，只是字段改成新值（changed，须按新值核对正式文件）。
+// 对任何修订批同一规律；现存条目数 = 该批发布时的行数 − removed 的行数。
+export function classifySupersedes(supersedes,receiptPattern){
+ const removed=[],changed=[];
+ for(const s of supersedes){
+  const m=receiptPattern.exec(s.receiptFile);if(!m)continue;
+  (isRemove(s.after)?removed:changed).push({id:m[1],s});
+ }
+ return {removed,changed};
+}
+// 回执一侧的行（行形状与某个已批回执一致，按回执路径 parts 寻址）回退到被取代前的样子：只回退“现值等于回执 after”的字段。
+// 生成器等“重新生成骨架再与旧回执比对”的读者用它，把新生成的行还原成审批当时的行再比指纹；不改入参。
+export function revertReceiptRow(row,receiptFile,supersedes){
+ const out=structuredClone(row);
+ for(const s of supersedes){
+  if(s.receiptFile!==receiptFile||s.targetId!==row.id)continue;
+  if(sameValue(getPath(out,s.parts),s.after))setPath(out,s.parts,s.before);
  }
  return out;
 }

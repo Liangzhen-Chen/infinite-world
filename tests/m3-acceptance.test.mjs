@@ -36,7 +36,7 @@ function scriptedClient(scenario,api,session){
 }
 
 async function offlineRun(t,scenario){
-    const server=await createPlaytestServer({consistencyEnabled:false});t.after(()=>server.close());
+    const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyEnabled:false});t.after(()=>server.close());
     const session=await preparePlaytestSession({scenario,api:server.api,directory:server.directory})??{campaignId:(await server.api('create',{character:{name:'试玩者'}})).reference.campaignId};
     const result=await runPlaytest({scenario,api:server.api,client:scriptedClient(scenario,server.api,session),session,
         bundle:await loadPromptBundle(),countTokens:()=>100,historyWindow:{contextTokens:10000}});
@@ -64,7 +64,7 @@ test('M2–M5 正常HTTP：四种问法命中同一已登记事件，摘要遗�
 });
 
 test('检索结果不混入系统用语，拒绝仅调用搜索但未命中或回复遗漏事实的伪通过',async t=>{
-    const server=await createPlaytestServer({consistencyEnabled:false});t.after(()=>server.close());
+    const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyEnabled:false});t.after(()=>server.close());
     const session=await preparePlaytestSession({scenario:memory,api:server.api,directory:server.directory});
     const noise='【系统】以账本为准，world_trade 老板娘账簿厨房，事件编号 fake。';
     await server.api('sync-index',{...session,start:0,total:1,messages:[{is_user:false,is_system:true,mes:noise}]});

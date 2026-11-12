@@ -1,0 +1,56 @@
+{
+  "id": "initfood-loc_bs_liquan",
+  "fingerprint": "a1a37415734b7059bbeebc9ddba2236d952d3b5df131c55d8c483b31b2fc7dc6",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "initfood-loc_bs_liquan",
+    "target": "loc_bs_liquan",
+    "field": "details.economy.publicStock.food",
+    "value": {
+      "$remove": true
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "errorCode": null,
+  "frozenCandidate": {
+    "entryHash": "f4c4416cbb1664b931e64761b941067db3a42b75738a53989bab83f4ec71cab6",
+    "draftHash": "66cb99d09f03c2978a60afbe98e09ffddf0d3cd6f6f8c3fa7d3961576ec0b474"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "a1a57d63-a4c1-4e5f-a2e3-de9d2e5e3a8c",
+      "file": "budget-responses/a1a57d63-a4c1-4e5f-a2e3-de9d2e5e3a8c.json",
+      "requestHash": "c09b835d7980ca6caf3987f4c5c16876a982c7a36245d33f20f65bfbef472a10",
+      "responseHash": "ffa487e2bcff1f6341bdc0372cae396698bf3d151087e4949701828cae3bc800"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-initfood-loc_bs_liquan-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1294,
+        "completion_tokens": 7,
+        "total_tokens": 1301,
+        "prompt_tokens_details": {
+          "cached_tokens": 640
+        },
+        "prompt_cache_hit_tokens": 640,
+        "prompt_cache_miss_tokens": 654
+      },
+      "costUpperYuan": 0.0013896,
+      "cumulativeUpperYuan": 0.0041688,
+      "latencyMs": 1038.2017999999998,
+      "timestamp": "2026-11-12T07:03:14.592Z"
+    }
+  ]
+}

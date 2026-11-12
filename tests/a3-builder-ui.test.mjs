@@ -9,7 +9,7 @@ test('真实后端无模型构造器：手机/桌面四步、预览取消、确�
  const world=await loadWorld(),json=async path=>JSON.parse(await fs.readFile(path,'utf8'));
   // Use B's actual tables pinned with the world, never test-only UI vocabulary.
  Object.assign(world,{openActionRules:await json('world/rules/tables/open-actions.json'),openTagging:await json('world/rules/open-tagging.json'),openReactions:await json('world/rules/open-reactions.json')});
- const server=await createPlaytestServer({world,consistencyClient:{async generate(){throw Error('测试叙述模型离线');}}});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,world,consistencyClient:{async generate(){throw Error('测试叙述模型离线');}}});t.after(()=>server.close());
  const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
  for(const viewport of [{width:390,height:844},{width:1280,height:900}]){
   const created=await server.api('create',{}),campaignId=created.reference.campaignId;
@@ -34,7 +34,7 @@ test('真实后端无模型构造器：手机/桌面四步、预览取消、确�
     getRequestHeaders:()=>({'Content-Type':'application/json'}),saveChat:async()=>{},setExtensionPrompt:()=>{},registerFunctionTool:tool=>window.fixtureTools.set(tool.name,tool),stopGeneration:()=>{},
     eventTypes:new Proxy({},{get:(_,key)=>key}),eventSource:{on:(event,handler)=>handlers.set(event,handler)}};
   },created.reference);
-  await page.evaluate(async()=>{await import('/runtime.js');await window.infiniteFieldsV2.refresh();});
+  await page.evaluate(async()=>{await import('/runtime.js');await window.infiniteFieldsV2.refresh();const {updateSettings}=await import('/ui-settings.mjs');updateSettings({aiProfile:'T3'});});
   const modelMenu=await page.evaluate(async()=>JSON.parse(await window.fixtureTools.get('world_actions').action({query:'core:craft'})));
   assert.ok(modelMenu.actions.some(a=>a.slots.some(s=>s.name==='helpers'&&s.multiple===true)));
   // The panel toggle exists only at phone width (style.css); desktop shows the toolbar directly.
@@ -118,7 +118,7 @@ test('真实后端无模型构造器：手机/桌面四步、预览取消、确�
   await page.waitForFunction(minute=>window.infiniteFieldsV2.view.document.state.minute===minute,timed.document.state.minute+quoted.receipt.cost.time);
   const composed=await read();assert.ok(Object.values(composed.document.state.records).some(r=>r.category==='world_event'&&r.verb==='tell'&&r.payload?.text==='今天先观察周围'));
   const openExecution=requests.filter(r=>r.endpoint==='execute').at(-1);assert.equal(openExecution.body.tool,'world_propose');assert.equal(openExecution.body.eventId,openPreview.body.eventId);
-  await page.evaluate(async()=>{const {updateSettings}=await import('/ui-settings.mjs');updateSettings({intent:'match',narration:'sync'});});
+  await page.evaluate(async()=>{const {updateSettings}=await import('/ui-settings.mjs');updateSettings({aiProfile:'T1'});});
   const suggestedAt=await read(),writesBeforeSuggestion=requests.filter(r=>r.endpoint==='execute').length;
   const suggestion=await page.evaluate(async()=>window.fixtureTools.get('world_act').action({action:'core:time',slots:{minutes:1}}));
   assert.equal(suggestion.status,'suggested');assert.deepEqual((await read()).document,suggestedAt.document);
@@ -129,12 +129,12 @@ test('真实后端无模型构造器：手机/桌面四步、预览取消、确�
   await builder.getByRole('button',{name:'预览代价与结果',exact:true}).click();await builder.locator('.fields-builder-preview').waitFor();
   await builder.getByRole('button',{name:'确认执行',exact:true}).click();
   await page.waitForFunction(minute=>window.infiniteFieldsV2.view.document.state.minute===minute,suggestedAt.document.state.minute+1);
-  await page.evaluate(async()=>{const {updateSettings}=await import('/ui-settings.mjs');updateSettings({intent:'off',narration:'off'});});
+  await page.evaluate(async()=>{const {updateSettings}=await import('/ui-settings.mjs');updateSettings({aiProfile:'T0'});});
   const localOnly=await read();
   const disabled=await page.evaluate(async()=>({act:await window.fixtureTools.get('world_act').action({action:'core:time',slots:{minutes:5}}),move:await window.fixtureTools.get('world_move').action({destination:'out'}),registered:window.fixtureTools.get('world_act').shouldRegister()}));
   assert.equal(disabled.act.ok,false);assert.equal(disabled.move.ok,false);assert.equal(disabled.registered,false);assert.deepEqual((await read()).document,localOnly.document);
   assert.equal(await page.evaluate(async()=>{try{await fetch('/api/backends/chat-completions/generate',{method:'POST'});return false;}catch{return true;}}),true);
-  await page.evaluate(async()=>{const {updateSettings}=await import('/ui-settings.mjs');updateSettings({intent:'propose',narration:'sync'});});
+  await page.evaluate(async()=>{const {updateSettings}=await import('/ui-settings.mjs');updateSettings({aiProfile:'T3'});});
   // Real reply review uses an offline client. Runtime must display replayed
   // templates and finish the UI turn without committing the narrator's tail.
   await page.evaluate(async()=>{

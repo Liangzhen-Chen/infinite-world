@@ -105,7 +105,7 @@ async function score(result,scenario,previous){
     for(const part of failed)if(scoringRequests.has(part.label))await client.rejectResponse(scoringRequests.get(part.label),part.error);
 }
 try{
-    server=await createPlaytestServer({plannerClient:client,directory:path.join(client.directory,'server')});
+    server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,plannerClient:client,directory:path.join(client.directory,'server')});
     if(proof&&!await readOptional(path.join(path.dirname(path.resolve(root,option('--budget-proof'))),'initial-probe.json'))){
         const initial=scenarios.find(s=>s.id==='npc_social')??scenarios[0];
         const result=await runPlaytest({scenario:{...initial,id:initial.id+'-probe',requirements:[],turns:initial.turns.slice(0,1)},api:server.api,client,bundle,processMessages:host.process,countTokens,stopOnFailure:true});

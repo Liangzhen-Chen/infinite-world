@@ -5,7 +5,7 @@ import {economyW3} from '../world/design/economy-w3.mjs';
 import {economyW3Trades} from '../world/design/economy-w3-trades.mjs';
 import {economyW3Journey} from '../world/design/economy-w3-journey.mjs';
 import {readApprovedContent,hashContent,approvalIncomplete,reportApprovalIncomplete} from './content-pipeline.mjs';
-import {getPath,setPath} from '../world/design/p1-revision-approval.mjs';
+import {getPath,setPath,sameValue} from '../world/design/p1-revision-approval.mjs';
 import {readApprovedSupersedes,applySupersedes,createTagSourceResolver,overlayFieldReverts,createRowReceiptResolver} from './approved-revisions.mjs';
 import {w3Context,w3Revision,validateW3Draft} from './w3-content.mjs';
 import {tradesRevision,validateTradesDraft} from './w3-trades.mjs';
@@ -108,7 +108,7 @@ export async function publishedW3(world){
  for(const s of supersedes){
   const x=entries.find(e=>e.id===s.targetId);
   if(!x||explained.some(a=>a.id===s.targetId&&JSON.stringify(a.parts)===JSON.stringify(s.parts)))continue;
-  if(hashContent(getPath(x.entity,s.parts)??null)===hashContent(s.after))explained.push({id:s.targetId,parts:s.parts,old:s.before,source:`修订回执 ${s.revision}：${s.receiptFile}#${s.targetId} ${s.label}`});
+  if(sameValue(getPath(x.entity,s.parts),s.after))explained.push({id:s.targetId,parts:s.parts,old:s.before,source:`修订回执 ${s.revision}：${s.receiptFile}#${s.targetId} ${s.label}`});
  }
  if(errors.length)throw new Error(errors.join('\n'));
  entries.sort((a,b)=>a.id.localeCompare(b.id));if(new Set(entries.map(x=>x.id)).size!==entries.length)throw new Error('W3条目重复');

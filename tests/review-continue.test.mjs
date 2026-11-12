@@ -16,7 +16,7 @@ const sample=(total,failed)=>[{id:'ratio',attempt:1,turns:Array.from({length:tot
  consistency:index<failed?{...clean,canCommit:false,status:'unverified',feedback:'拒绝理由',issues:[issue]}:clean}))}];
 
 test('拒绝后继续完整十回合，保留原文及付款，拒绝尾注不入账；stopOnFailure不截断审查失败',async t=>{
- const server=await createPlaytestServer({consistencyClient:null});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T2'/*review/narration records needed, consistencyClient stays null: no model call*/,consistencyClient:null});t.after(()=>server.close());
  let reviews=0,generated=0;
  const api=async(endpoint,body)=>{
   const result=await server.api(endpoint,body);
