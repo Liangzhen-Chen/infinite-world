@@ -5,6 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {uiSession} from './helpers/ui-script.mjs';
+import {handOatsScarcity} from './helpers/hand-targets.mjs';
 import {standing} from '../server-plugin/standing.mjs';
 import {variant,setPrice,openShop,scene,stack,tool,monthDayMinute,conserved,primed,held,legacy,dieOf,baseEngine,SEED,DAY,replayed} from './helpers/daily-b2.mjs';
 
@@ -14,11 +15,15 @@ test('D01 买馒头：基准4文、市场零售2文，100文买3个剩94文，�
  // 馒头→面包（item_bread）4 文；早点铺→青灯酒馆，辰初开柜；春季三月初五辰时；玩家 100 文。
  const world=variant(w=>{setPrice(w,'item_bread',4);openShop(w,LINSUI,INN,7*HOUR,19*HOUR);});
  const ui=await uiSession(t,{world,mutate:scene(INN,monthDayMinute(3,5,7,30),s=>{s.player.coins=100;s.npcs[LINSUI].inventory.item_bread=stack(8);s.inventory={...s.inventory};delete s.inventory.item_bread;})});
- // S5-02: household reserves 4 of 8; base4 * scarcity.5 * depth/grade/standing1 * 3 = 6, one truncation.
+ // 手推（农事目标持有规律）：零售价（3 个 ≤ 零售阈值，不积分）= 基价 4 × 夹取(食物池比值) × 深度 1 × 品质/价差/关系 1 × 3 个，整笔取整一次。
+ // 比值 = handOatsScarcity（需求 = 货架目标 + 公仓目标持有，供给 = 公仓存粮 + 经营者行囊里的食物，折燕麦件数），读买之前的状态。
  const before=await primed(ui),r=await ui.choose('trade.buy',{item:'item_bread',quantity:3},{target:LINSUI});assert.ok(r.ok,r.error);const after=await ui.read();
- assert.equal(before.state.player.coins,100);assert.equal(after.state.player.coins,94,'①100→94');
+ const eng=new WorldEngine(world),[lo,hi]=world.rules.economy.priceFactorLimits.region,ratio=handOatsScarcity(eng,before.state,before.state.settlements.loc_hw.food).ratio;
+ assert.ok(ratio>=lo&&ratio<hi,'前置：比值在夹取区间内');
+ const bill=Math.trunc(3*4*Math.min(hi,Math.max(lo,ratio)));
+ assert.equal(before.state.player.coins,100);assert.equal(after.state.player.coins,100-bill,'①100 − 实付');
  assert.equal(held(after.state.inventory,'item_bread'),3,'②背包 +3，不是 1');
- assert.equal(after.state.npcs[LINSUI].coins-before.state.npcs[LINSUI].coins,6,'③钱柜 +6');
+ assert.equal(after.state.npcs[LINSUI].coins-before.state.npcs[LINSUI].coins,bill,'③钱柜 + 实付');
  assert.equal(held(before.state.npcs[LINSUI].inventory,'item_bread')-held(after.state.npcs[LINSUI].inventory,'item_bread'),3,'④库存 −3');
  const spent=after.state.minute-before.state.minute;assert.equal(spent,5,'⑤约 5 分钟');assert.equal(Math.floor(before.state.minute%DAY/120),Math.floor(after.state.minute%DAY/120),'⑤不跨时辰');
  conserved(before,after,'D01',new WorldEngine(world));
