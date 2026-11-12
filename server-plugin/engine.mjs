@@ -1,4 +1,5 @@
 import {advanceHook} from './advance-hooks.mjs';
+import {npcCanPay,payFromNpc} from './npc-payment.mjs';
 import {sellLivestock} from './livestock-sale.mjs';
 import {ensureHoldings} from './holdings.mjs';
 import {isPhysicallyDead,aliveHoldings} from './holdings.mjs';
@@ -545,11 +546,11 @@ export class WorldEngine {
         }
         assertNpcObligationAction(d,this,[entity],{minutes:route.minutes,location:destination,kind:'move'});
         assertNpcAutonomyAction(d.get('state'),[entity],{minutes:route.minutes});
-        if((npc.coins??0)<route.cost)throw Error('Actor cannot afford this route');
+        if(!npcCanPay(d,this,entity,route.cost,npc.coins??0))throw Error('Actor cannot afford this route');
         facilityRuntime().recordFurnaceDeparture?.(d,this,entity,npc.location,start);
         if(route.cost){
-            transfer(d,{from:accountKey(entity,LEDGER_COIN,'purse'),to:accountKey('sink:export',LEDGER_COIN,'travel'),amount:route.cost,writer:'engine',eventId});
-            d.set([...path,'coins'],npc.coins-route.cost);
+            payFromNpc(d,this,{payer:entity,to:accountKey('sink:export',LEDGER_COIN,'travel'),amount:route.cost,writer:'engine',eventId});
+            d.set([...path,'coins'],d.get(...path,'coins')-route.cost);
         }
         if(path[1]==='npcs')movePets(d,this,npc.location,destination,route.movingMinutes,entity);
         d.set([...path,'scheduleTravel'],{from:npc.location,to:destination,depart:start,arrive:start+route.minutes,edges:route.edges});

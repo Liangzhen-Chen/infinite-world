@@ -40,12 +40,11 @@ const EXCEPTIONS={
  'obligation-runtime.mjs|from':[1,'通用清偿：付款前 topUpNpc（来源是本人钱袋时）；托管/质押来源不是户内钱袋'],
  'money.mjs|from':[1,'moveCoins 定义本身'],
  'money.mjs|books.account':[1,'bookSide：账本对方账户配平，成对另一边由调用方负责（financeChange 已补足）'],
- 'law.mjs|from':[1,'法院规费/没收/赔付的 books 助手：付方多为玩家；强制扣押按判决从当事人现钱扣，不是自愿付款；NPC 被判罚金走 npc-crime（已入口）'],
+ 'law.mjs|from':[1,'books 助手定义行。其调用点：报案/立案讼费（NPC 可能是付方）已改走 payFromNpc；其余 books 调用：付方是玩家字面量（罚金、悬赏、转账、牌照费），强制扣押（按判决从当事人现钱扣，非自愿付款）与受害人赔付（被判令的强制给付），收款方是基金/托管/玩家；NPC 自愿付款不再经 books'],
  'legal-appeal.mjs|account.account':[1,'公库返还：付方是法律公库，不是钱袋'],
  'legal-appeal.mjs|amount>0?purse(e,row.offender):fund(id)':[1,'上诉改判的转移：付款前 topUpNpc（本卡补）'],
  'environment.mjs|from':[1,'玩家敞开的钱袋容器取钱（transfer_purse）：付方是玩家的容器，不是 NPC'],
  'organizations.mjs|admissionEscrow(p)':[1,'入会费托管退还：付方是托管账户'],
- 'organizations.mjs|memberPurse(d,engine,feePayer??motion.member)':[1,'入会费托管：付方是入会申请人（玩家提出的议案），由组织规则校验其钱袋；不属 NPC 采购付款，另案'],
  'remote-generation.mjs|from':[1,'远方世界生成：开账与初始分配，不是付款']
 };
 // 提取每个 moveCoins(d,{from…,to 的付方表达式（含 from 简写、三元式、变量、partyAccount、purse）。

@@ -1,4 +1,5 @@
 import {recordsWhere,recordEntriesWhere} from './storage.mjs';
+import {topUpNpc,payFromNpc} from './npc-payment.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {changeLegacyHoldings,changeHolding,transition} from './transition.mjs';
 import {isEffective} from './lifecycle-state.mjs';
@@ -120,6 +121,7 @@ function move(d,engine,row,{kind,amount,party,minute,sourceEvent,reason,balance}
     row.ledger=[...row.ledger??[],{kind,amount,party,minute,sourceEvent,reason,balance}];
 }
 function pay(d,engine,who,amount){
+    topUpNpc(d,engine,memberOwner(d.get('state'),who),amount,`organization-pay:${who}`);// EC-1a 共用钱袋：NPC 入会者本人钱袋不够先从户池补足（玩家不补）
     const p=coinPath(engine,who,d.get('state')),have=d.get(...p)??0;if(have<amount)return false;d.set(p,have-amount);return true;
 }
 // New sponsored deposits belong to the already registered motion entity.
@@ -258,7 +260,7 @@ function propose(d,engine,org,motion,proposer,eventId,{escrow=0,feePayer,firstDu
     const id=`organization_proposal:${eventId}`;if(d.get('state','records',id))throw preconditionFailure('议案编号已占用');
     const {mode,people}=deciders(d.get('state'),org),minute=d.get('state','minute');
     const votes=people.includes(proposer)&&motion.action!=='admit'?[{voter:proposer,opinion:'approve',minute,sourceEvent:eventId,...(response?{basis:response.basis,decision:response.decision}:{})}]:[];
-    if(escrow)moveCoins(d,{from:memberPurse(d,engine,feePayer??motion.member),to:admissionEscrow({id,feePayer}),amount:escrow,writer:'organizations',eventId});
+    if(escrow)payFromNpc(d,engine,{payer:memberOwner(d.get('state'),feePayer??motion.member),to:admissionEscrow({id,feePayer}),amount:escrow,writer:'organizations',eventId});
     holdingSet(d,null,['state','records',id],{category:'organization_proposal',id,org:org.id,motion,proposer,mode,deciders:people,votes,escrow,...(feePayer?{feePayer,firstDues}:{}),content,status:'议事中',minute,sourceEvent:eventId},'organizations');
     return settle(d,engine,id,minute,eventId);
 }

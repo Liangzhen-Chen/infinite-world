@@ -2,6 +2,7 @@ import {readFileSync} from 'node:fs';
 import {takeNotedOffenses,noteOffense} from './offense-notes.mjs';
 import lawBalance from '../world/rules/tables/balance/law.json' with {type:'json'};
 import {preconditionFailure} from './precondition.mjs';
+import {npcCanPay,payFromNpc} from './npc-payment.mjs';
 import {goodsWorth,valuation} from './valuation.mjs';
 import {recordStandingEvidence} from './npc-state.mjs';
 import {vocabulary} from './domain-rules.mjs';
@@ -314,7 +315,7 @@ function decideFiling(d,engine,args,eventId){
  if(recorded?.version===FILING_VERSION){
   if(recorded.request.id!==id||recorded.request.decision?.sourceEvent!==eventId)throw Error('Filing decision replay source mismatch');
   if(recorded.fee){const account=request.actor==='player'?['state','player','coins']:['state','npcs',request.actor,'coins'],key=`legal_treasury:${recorded.law}`,fund=safeFund(d,key,'legal_treasury',{law:recorded.law});
-   books(d,purse(engine,request.actor),fundAccount(key),recorded.fee,eventId);d.set(account,d.get(...account)-recorded.fee);holdingSet(d,engine,path(key),{...fund,coins:fund.coins+recorded.fee},'law');}
+   payFromNpc(d,engine,{payer:request.actor,to:fundAccount(key),amount:recorded.fee,writer:'law',eventId});d.set(account,d.get(...account)-recorded.fee);holdingSet(d,engine,path(key),{...fund,coins:fund.coins+recorded.fee},'law');}
   if(recorded.case){const prior=d.get(...path(recorded.case.id));if(prior?.category==='legal_suspicion')holdingSet(d,engine,path(`legal_suspicion:${request.incident}`),{...prior,id:`legal_suspicion:${request.incident}`},'law');holdingSet(d,engine,path(recorded.case.id),structuredClone(recorded.case),'law');}
   for(const witness of recorded.witnesses)if(witness!=='player')knowledge(d,witness,recorded.case.id,recorded.minute);
   holdingSet(d,engine,path(id),structuredClone(recorded.request),'law');return {...structuredClone(recorded.result),filingDecision:structuredClone(recorded)};
@@ -353,7 +354,7 @@ function decideFiling(d,engine,args,eventId){
  if(!Number.isSafeInteger(fee)||fee<0||fee>1e9)return failRule('法典的讼费条目尚不完整，暂不能收费立案',['请官署核对讼费条目后再递件']);
  const prior=s.records[request.case],existing=prior?.category==='legal_case';
  const account=request.actor==='player'?['state','player','coins']:['state','npcs',request.actor,'coins'];
- if(!existing&&d.get(...account)<fee)return failRule('报案人的钱不足支付讼费，未立案',['请报案人备足法典规定的讼费后重新递件']);
+ if(!existing&&!npcCanPay(d,engine,request.actor,fee,d.get(...account)))return failRule('报案人的钱不足支付讼费，未立案',['请报案人备足法典规定的讼费后重新递件']);
  let source={kind:'player',actor:'player',choice:'accept'},reason='我决定受理这件报案';
  if(!player){
   const view=subjectiveView(engine,d.document,args.authority);
@@ -367,7 +368,7 @@ function decideFiling(d,engine,args,eventId){
   if(decision.outcome!=='agree')return refusal(reason,['可补充真实凭据、请人作保，或待经办人有空后再请求'],source,{outcome:decision.outcome,...(decision.outcome==='defer'?{accepted:null,due:decision.due}:{})});
  }
  if(prior&&!['legal_suspicion','legal_case'].includes(prior.category))throw preconditionFailure('案件编号已占用');
- if(!existing&&fee){const key=`legal_treasury:${code.id}`,fund=safeFund(d,key,'legal_treasury',{law:code.id});books(d,purse(engine,request.actor),fundAccount(key),fee,eventId);d.set(account,d.get(...account)-fee);holdingSet(d,engine,path(key),{...fund,coins:fund.coins+fee},'law');}
+ if(!existing&&fee){const key=`legal_treasury:${code.id}`,fund=safeFund(d,key,'legal_treasury',{law:code.id});payFromNpc(d,engine,{payer:request.actor,to:fundAccount(key),amount:fee,writer:'law',eventId});d.set(account,d.get(...account)-fee);holdingSet(d,engine,path(key),{...fund,coins:fund.coins+fee},'law');}
  const a=request.allegation,witnesses=request.submittedEvidence.filter(e=>e.kind==='eyewitness').map(e=>e.witness);
   // The incident already pinned its substantive law when the behavior occurred.
   // Filing supplies proof and current procedure, not a new date for punishment.
