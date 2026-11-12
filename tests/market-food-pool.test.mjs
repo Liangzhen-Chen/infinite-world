@@ -219,6 +219,32 @@ test('农事聚落目标持有随季节：收获后撑到下次收获，收获�
  }
 });
 
+test('冬荒钟阈值 = 系数 × 自己的储备视野：远方非农事聚落常态不触发、池跌到补给间隔一半以下才触发；农事村仍是 45 天',()=>{
+ // 推导：系数 = 规则阈值天数 ÷ reserveDays = 45 ÷ 90 = 0.5；非农事聚落储备视野 = 补给间隔 H = 2 × 最近农事聚落 walk 路程分钟 ÷ 1440（一年各月最快），阈值 = 0.5 × H；
+ // 开局存粮 = ceil(餐口 × H)，所以常态池持有天数 ≈ H ≥ 0.5 × H → 不触发；居民背包清空、公仓降到开局存粮的 40% 后天数 ≈ 0.4 × H < 0.5 × H → 触发（进入 famine 阶段）。
+ // 农事村 loc_hw：储备视野 = 自己的 reserveDays = 90，阈值 = 45 ÷ 90 × 90 = 45 天，与此前一致。
+ const {engine,doc}=setup('market-food-pool-famine-threshold'),d=engine.primitiveDraft(doc),cond={kind:'granary_short',days:45};
+ assert.ok(unfoldRemoteAt(d,engine,'loc_far_duanqi'));
+ const overlay=remoteEngine(engine,d.document,w=>new WorldEngine(w)),state=d.get('state'),seed=d.get('randomSeed')??'default-campaign';
+ const sid=Object.values(state.remote).flatMap(r=>r.skeleton.settlements.map(s=>s.id))[0];
+ let best=null;
+ for(const p of overlay.rules.agriculture.settlements)for(let m=0;m<12;m++){
+  let r=null;try{r=overlay.route(p.settlement,sid,'walk',m*30*1440,seed);}catch(e){if(!e.message.startsWith('没有当前季节'))throw e;}
+  if(r&&(best===null||r.minutes<best))best=r.minutes;
+ }
+ assert.ok(best>0);
+ const H=2*best/1440,check=document=>{const dd=overlay.primitiveDraft(document);return conditionMet(dd,overlay,{settlement:sid},cond,dd.get('state','minute'));};
+ const normal=check(d.document);
+ assert.ok(Math.abs(normal.threshold-0.5*H)<=1e-9*H);assert.equal(normal.met,false);
+ const low=structuredClone(d.document);
+ for(const n of Object.values(low.state.npcs))n.inventory={};
+ low.state.settlements[sid].food=Math.floor(0.4*state.settlements[sid].food);low.ledger=openLedger(overlay,low);
+ const dropped=check(low);
+ assert.ok(Math.abs(dropped.threshold-0.5*H)<=1e-9*H);assert.equal(dropped.met,true);assert.ok(dropped.value<0.5*H);
+ const farm=granaryFixture({food:1000,population:30}),fd=farm.engine.primitiveDraft(farm.doc);
+ assert.equal(conditionMet(fd,farm.engine,{settlement:'loc_hw'},cond,fd.get('state','minute')).threshold,45);
+});
+
 test('冬荒钟 granary_short 按可食池走：公仓空但池里有存粮不触发；池里也不足才触发',()=>{
  // 推导：存粮可撑天数 = 池实际持有 ÷ 餐口；人口 30 → 餐口 30（mealMouthsOf），阈值 days = 45（规则里的 granary_short 天数）→ 阈值 1350 份。
  // a) 公仓 0、经营者（客栈掌柜）手里 2000 燕麦：池 2000 ÷ 30 ≈ 66.7 天 ≥ 45 → 不触发（只看公仓会得 0 < 45 → 触发）；

@@ -342,6 +342,8 @@ function remoteHazards(county,seat,settlements,routes,profiles){
             {id:'cases',name:'零星病例',probability:water?0.2:0.06,condition:water?{kind:'hazard_phase',clock:`flood:${sid}`,stage:'crest'}:{kind:'always'},effects:[{kind:'epidemic',disease,settlement:sid,cases:1}]},
             {id:'spread',name:'疫病流行',probability:1,condition:{kind:'epidemic_cases',minimum:3},effects:[{kind:'price_shift',settlement:sid,items:['item_herb'],factor:1.4,minutes:30*DAY,reason:'疫病流行，药草紧缺'}]},
             {id:'wane',name:'疫退',probability:1,condition:{kind:'epidemic_clear'},effects:[{kind:'price_shift',settlement:sid,items:['item_herb'],factor:1,minutes:1,reason:'疫退，药价回落'}]}]});
+        // granary_short 的 days（45）按 ÷ reserveDays（90）折成系数 0.5，再乘该聚落自己的储备视野（非农事聚落 = 补给间隔 resupplyDays）得阈值天数
+        // （food-stock.mjs shortThresholdDays）：池持有跌到自己补给间隔的一半以下才进入冬荒，常态（池 = 目标 = 补给间隔）不触发。
         hazards.push({id:`famine:${sid}`,kind:'famine',name:'冬荒',settlement:sid,seasons:[3],intervalDays:7,stages:[
             {id:'famine',name:'冬荒',probability:1,condition:{kind:'granary_short',days:45},effects:[{kind:'famine',settlement:sid,minutes:120*DAY}]}]});
         const [up,high]=h.farm?[1.1,1.2]:[1.2,1.4];

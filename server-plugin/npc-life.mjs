@@ -674,6 +674,7 @@ function mobile(engine,state,id,constraints=null){
  return lifeActor(engine,state,id)&&Boolean(npcSchedule(engine,state,id,undefined,constraints))&&settled(state,id)&&!incapacitated(state,id)&&!n.caring&&!npcMigration(state,id);
 }
 // With no relative or friend to take them, a household elsewhere may still
+// （这里读公仓库存而不是 foodStockDays：它问的是公仓能否再供养一张嘴 foodDays 天——收留者吃公仓配给，是公仓配给容量，不是聚落"缺粮程度"；缺粮程度判断见 food-stock.mjs。）
 // take in someone fleeing hunger or harm: the settlement is not short of food
 // and has stores for one more mouth, the house is not full, and an adult
 // there bears the newcomer no grudge. Ties of any kind are not required.

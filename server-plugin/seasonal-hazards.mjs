@@ -30,7 +30,7 @@ import {droughtRelief,purifiedWaterFactor} from './magic-economy.mjs';
 import {hazardClocks,hazardKey,hazardRoll,isPureClock,isHazardTick,pureHazardFires,pureHazardPhase,pureHazardStages,pureConditionMet,hazardRouteClosed,PURE_CONDITIONS} from './hazard-calendar.mjs';
 import {pow} from './det-math.mjs';
 import {mealMouthsOf} from './primitives-body.mjs';
-import {foodStockDays} from './food-stock.mjs';
+import {foodStockDays,shortThresholdDays} from './food-stock.mjs';
 
 const DAY=1440,YEAR=360*DAY,int=(n,min,max)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
 const KINDS=['flood','famine','epidemic','price'],WEATHER=['clear','cloudy','rain','storm','snow','fog'];
@@ -210,9 +210,10 @@ export function conditionMet(d,engine,rule,c,at){
  case 'always':case 'weather':return pureConditionMet(engine,seed,rule,c,at/DAY);
  case 'hunger':{const s=state.settlements?.[rule.settlement],value=s?.starvation??0;return {met:value>0||Boolean(famineAt(state,rule.settlement,at)),value,evidence:`settlement:${rule.settlement}`};}
  case 'all':{const parts=c.conditions.map(x=>conditionMet(d,engine,rule,x,at));return {met:parts.every(x=>x.met),value:parts.map(x=>x.value??null),evidence:parts.map(x=>x.evidence??null)};}
- // 缺粮程度一律读 foodStockDays（可食池实际持有 ÷ 每日餐口，与定价同一来源）；阈值仍是规则里的 days（45/90），不是只看公仓。
+ // 缺粮程度一律读 foodStockDays（可食池实际持有 ÷ 每日餐口，与定价同一来源）；阈值 = 规则里的 days（45/90）÷ reserveDays × 该聚落自己的储备视野天数
+ // （shortThresholdDays：农事聚落取 reserveDays，阈值仍是 45/90 天；非农事聚落取补给间隔），不是绝对天数，也不是只看公仓。
  // hunger 不判库存：它读的是已发生的挨饿（settlement.starvation，公粮缺的餐数）与冬荒阶段，没有天数阈值，所以不改。
- case 'granary_short':{const value=foodStockDays(d,engine,rule.settlement);return {met:value!==null&&value<c.days,value,evidence:`settlement:${rule.settlement}`};}
+ case 'granary_short':{const value=foodStockDays(d,engine,rule.settlement),threshold=value===null?null:shortThresholdDays(d,engine,rule.settlement,c.days);return {met:value!==null&&value<threshold,value,threshold,evidence:`settlement:${rule.settlement}`};}
  case 'hazard_phase':{const other=hazardClocks(engine).find(r=>r.id===c.clock),value=phaseOf(d,engine,other,at);return {met:stageReached(d,engine,other,c.stage,at),value,evidence:hazardKey(c.clock)};}
  case 'epidemic_cases':{const ep=state.records?.[epidemicKey(rule.id,year)],value=ep?Object.keys(ep.households).length:0;return {met:value>=c.minimum,value,evidence:ep?.id??null};}
  case 'epidemic_clear':{const ep=state.records?.[epidemicKey(rule.id,year)];return {met:ep?.status==='平息',value:ep?.status??null,evidence:ep?.id??null};}
