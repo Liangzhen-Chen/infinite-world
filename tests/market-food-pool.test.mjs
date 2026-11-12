@@ -47,10 +47,13 @@ test('可食物资并池：自身有饱腹的货与可经配方加工成可食�
 
 test('不可食但带 food 标签的货不进可食池，可食池的供需计量不受它影响',()=>{
  const {engine,doc}=setup(),read=documentReader(doc),inn='bld_hw_qingdeng',pool='goods:food';
- // 推导：item_salt 标签 mineral、food，没有饱腹，也无配方可加工成可食品（盐不供能）→ 不可食 → 不进 goods:food，
+ // 推导：item_salt 原始标签 mineral、food；加载期由机制标注（world/meta/mechanics/items.json:14-18，经 runtime-world.mjs materializeRuntimeWorld，engine.mjs:251 调用）并入 salt 标签。
+ // 没有饱腹，也无配方可加工成可食品（盐不供能）→ 不可食 → 不进 goods:food。
  // 退类规则依次：自身其他 goods: 标签（无）→ goodsTags 表中非 food 的映射 → 物品 id。盐带 salt 标签，goodsTags 表（world/rules/tables/market.json:51）把 salt 映射到 salt，
  // 所以退到第二步，类 = goods:salt（不是退到物品 id）；权重按件 1。
  assert.ok(engine.byId.get('item_salt').tags.includes('food'));
+ assert.ok(engine.byId.get('item_salt').tags.includes('salt'),'加载期机制标注给盐加了 salt 标签');
+ assert.ok(!engine.byId.get('item_salt').tags.some(t=>t.startsWith('goods:')),'没有自带 goods: 标签，所以走表映射这一步');
  assert.ok(!(engine.byId.get('item_salt').nutrition?.satiety>0));
  assert.equal(engine.world.marketRules.goodsTags.salt,'salt');
  assert.equal(goodsClass(engine,'item_salt'),'goods:salt');assert.equal(goodsWeight(engine,'item_salt'),1);
