@@ -12,8 +12,7 @@ import {personBusinesses,placeSettlement} from '../server-plugin/entity-view.mjs
 import {marketSupply,goodsClass,goodsWeight,foodSatiety} from '../server-plugin/market.mjs';
 import {stageReached} from '../server-plugin/seasonal-hazards.mjs';
 import {forestWaterPriceFactor} from '../server-plugin/forest-water.mjs';
-import {openLedger} from '../server-plugin/ledger.mjs';
-import {mealMouthsOf} from '../server-plugin/primitives-body.mjs';
+import {openLedger} from '../server-plugin/ledger.mjs';import {mealMouthsOf} from '../server-plugin/primitives-body.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const quantity=v=>typeof v==='number'?v:v?.quantity??0;
@@ -193,4 +192,49 @@ test('私户背包变化不影响报价（I12）：非经营者多持多少货�
   const a=marketSupply(documentReader(doc),engine,item,inn),b=marketSupply(documentReader(given.document),engine,item,inn);
   assert.equal(b.supply,a.supply,item);assert.equal(b.demand,a.demand,item);assert.deepEqual(b.rows,a.rows,item);
  }
+});
+
+// 非农事聚落夹具：把 loc_bs_weiting 从农事表里拿掉（它成了非农事聚落，其余农事聚落是供粮聚落），居民背包清空，粮仓存粮、人口、日产粮可调。
+function nonFarmFixture({population,food,foodPerDay}){
+ const w=structuredClone(world);for(const n of w.npcs){delete n.schedule;delete n.tier;}
+ const engine=new WorldEngine(w),P='loc_bs_weiting',doc=engine.createCharacter(legacy,{},'market-food-pool-nonfarm');
+ engine.rules.agriculture.settlements=engine.rules.agriculture.settlements.filter(p=>p.settlement!==P);
+ delete doc.state.records[`agriculture:${P}`];
+ for(const n of Object.values(doc.state.npcs))n.inventory={};
+ doc.state.settlements[P]={...doc.state.settlements[P],population,granary:true,food,foodPerDay,woodPerDay:0};
+ doc.ledger=openLedger(engine,doc);
+ return {engine,doc,P};
+}
+
+test('非农事聚落的目标持有 = 餐口 × 补给间隔天数（最近供粮聚落的往返路程天数）；存量等于目标时稀缺度约为 1',()=>{
+ // 推导：周贸易班线（settlementTrade.lanes）两端都是农事聚落，不覆盖非农事聚落；非农事聚落的粮靠农事聚落运来，
+ // 补给间隔 = 2 × 最近供粮聚落的 walk 路程分钟 ÷ 1440（一年各月里最快的一条，route.minutes 已含每日歇息）。目标 = ceil(餐口 × 间隔天数)。
+ // 同一聚落、同一存粮，只改人口：货架目标与合同承诺（K）不随人口变，所以 需求之差 = 目标之差，不必知道 K。
+ const DAYMIN=1440,oats='item_oats',run=population=>{
+  const f=nonFarmFixture({population,food:0,foodPerDay:100}),read=documentReader(f.doc),seed=read.get('randomSeed');
+  let best=null;
+  for(const p of f.engine.rules.agriculture.settlements)for(let m=0;m<12;m++){
+   let r=null;try{r=f.engine.route(p.settlement,f.P,'walk',m*30*DAYMIN,seed);}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;}
+   if(r&&(best===null||r.minutes<best))best=r.minutes;
+  }
+  assert.ok(best>0,'非农事聚落应到得了某个供粮聚落');
+  const days=2*best/DAYMIN,target=Math.ceil(mealMouthsOf(f.engine,f.doc.state,f.P,population)*days);
+  return {f,read,days,target,s:marketSupply(read,f.engine,oats,f.P)};
+ };
+ const a=run(100),b=run(200);
+ assert.ok(a.target>0&&b.target>a.target);
+ const w=goodsWeight(a.f.engine,oats);
+ assert.ok(Math.abs((b.s.demand-a.s.demand)*w-(b.target-a.target))<=1e-6*b.target,'需求之差 = 目标之差（饱腹单位）');
+ // 平时存量约等于目标：粮仓存粮 = 目标（燕麦件数 = 目标 ÷ 权重），稀缺度 = 需求 ÷ 供给 ≥ 1，且 = 1 + K ÷ 目标（K = 货架目标 + 承诺，与存粮无关）。
+ const c=nonFarmFixture({population:100,food:Math.round(a.target/w),foodPerDay:100}),sc=marketSupply(documentReader(c.doc),c.engine,oats,c.P);
+ const K=a.s.demand*w-a.target;
+ assert.ok(K>=-1e-6);
+ assert.ok(Math.abs(sc.demand/sc.supply-(a.target+K)/(sc.supply*w))<=1e-6);
+ assert.ok(sc.demand/sc.supply>=1-1e-6);
+});
+
+test('没有日产粮的非农事聚落（觉醒部族骨架账）没有粮仓目标：不计该行，价格因子中性',()=>{
+ // 推导：原 forest-water 分支对 foodPerDay 缺失或 0 的非农事聚落直接返回因子 1；现在对应为不计粮仓行（存量与目标都不进供需）。
+ const f=nonFarmFixture({population:100,food:0,foodPerDay:undefined}),s=marketSupply(documentReader(f.doc),f.engine,'item_oats',f.P);
+ assert.ok(s.rows.every(r=>r.owner!==f.P),'没有粮仓行');
 });

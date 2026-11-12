@@ -217,9 +217,24 @@ const cheapestMemo=new WeakMap();
 // 稀缺度 = 目标持有 ÷ 实际持有，两边同一口径（持有量，存量对存量），随覆盖率连续单调（存量恰在目标时为 1）。
 // 这是世界客观的价格输入，不是某个 NPC 的主观视图；按 02-不变量 I12，只计定价方能公开知道的量：
 //  实际持有（供给）= 聚落粮仓/仓库公账的全部库存 + 经营者与居民卖方的存货（店铺货架、公开在售）；
-//  目标持有（需求）= 粮仓储备目标（餐口 × reserveDays；不在农事表里的聚落沿用周贸易规则的 targetDays）+ 货架目标（maximum+reserve）+ 合同承诺。
+//  目标持有（需求）= 粮仓储备目标（餐口 × reserveDays；不在农事表里的聚落 = 餐口 × 补给间隔天数 resupplyDays）+ 货架目标（maximum+reserve）+ 合同承诺。
 // 非经营者私户的背包（实际持有、目标留存、柴盐缺口、饱腹缺口）两边都不计：他人背包的客观余量不是定价方知道的事，也没有公开的求购/下单记录可读。
 // 供给近 0 时由调用方的分母保护（max(1,supply)）与 priceFactorLimits.region 夹取封顶，不会除零。
+// 非农事聚落的补给间隔（天）：粮从农事聚落（agriculture.settlements，唯一有粮食生产的聚落类）运来，间隔 = 最近供粮聚落的 walk 往返路程天数
+// （路线按季节开闭，取一年各月里最快的一条＝路开着时的正常路程；route.minutes 已含每日歇息）。周贸易班线（settlementTrade.lanes）两端都是农事聚落，
+// 不覆盖非农事聚落，所以不是这里的来源。一年里到不了任何供粮聚落：直接报错列出聚落，不编造天数。同一世界数据对象内按聚落记忆。
+const resupplyMemo=new WeakMap();
+function resupplyDays(d,engine,place){
+ const memo=resupplyMemo.get(engine.world)??new Map();resupplyMemo.set(engine.world,memo);
+ if(memo.has(place))return memo.get(place);
+ let best=null;
+ for(const p of engine.rules.agriculture?.settlements??[])for(let month=0;month<12;month++){
+  try{const r=engine.route(p.settlement,place,'walk',month*30*DAY,d.get('randomSeed'));if(best===null||r.minutes<best)best=r.minutes;}
+  catch(error){if(!error.message.startsWith('没有当前季节'))throw error;}
+ }
+ if(best===null)throw Error(`聚落 ${place} 到不了任何供粮（农事）聚落，推不出补给间隔`);
+ const days=2*best/DAY;memo.set(place,days);return days;
+}
 function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  const state=stateOf(d),place=settlementOf(engine,state,location),goods=goodsClass(engine,item),rows=[];
  // 供给与需求都按报价这件货的件数表达：池内每件货按权重（可食物资 = 饱腹）折算后再除以报价货的权重。
@@ -245,14 +260,16 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
   if(!settlement||!stockName)continue;
   // 没有公仓的聚落（D1 公库账）没有公仓行。
   if(stockName==='food'&&settlement.granary===false)continue;
+  // 不在农事表里、又没有日产粮（foodPerDay 缺失或为 0，如觉醒部族聚落的骨架账）的聚落没有可定价的粮仓目标：与原 forest-water 分支同一语义，价格因子中性（不计该行的存量与目标）。
+  if(stockName==='food'&&!profile&&!(settlement.foodPerDay>0))continue;
   const farm=state.records?.[`agriculture:${place}`],day=Math.floor(state.minute/DAY);
   const stock=stockName==='food'
    ?priceRead(d,{point:'region.grain',account:granary(engine,place),lots:{kind:'grain',after:day},legacy:()=>farm?.batches?.filter(b=>b.kind==='grain'&&b.expiresDay>day).reduce((n,b)=>n+b.amount,0)??settlement.food??0})
    :priceRead(d,{point:'region.material',account:settlementStock(engine,place,stockName),legacy:()=>settlement[stockName]??0});
   // 粮仓实际持有 = 全部库存；储备目标 = 餐口 × reserveDays（与口粮池、公粮扣采购同一份储备口径）。
-  // 不在农事表里的聚落没有 reserveDays，其目标日数取周贸易规则的 targetDays（原 forest-water 的燕麦缺口因子：餐口 × targetDays ÷ 存粮，已并入这里）。
+  // 不在农事表里的聚落没有 reserveDays：粮靠外来补给，目标日数 = 实际补给间隔（resupplyDays：最近供粮聚落的往返路程天数）。
   const mouths=stockName==='food'?mealMouthsOf(engine,state,place,settlement.population??0):0;
-  const target=stockName==='food'?Math.ceil(mouths*(profile?profile.reserveDays:engine.rules.settlementTrade?.targetDays??(engine.rules.economy?.tradeCycleDays??1))):0;
+  const target=stockName==='food'?Math.ceil(mouths*(profile?profile.reserveDays:resupplyDays(d,engine,place))):0;
   const committed=commitments(state,place,it.id);rows.push({owner:place,item:it.id,stock,target,committed,available:stock,unit:weight.get(it.id)/unit});
  }
  const supply=rows.reduce((n,r)=>n+r.available*r.unit,0);
