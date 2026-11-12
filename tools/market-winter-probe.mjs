@@ -388,8 +388,11 @@ async function caseRun(name,withShift,spec,days,control=false){
  return series;
 }
 // 旱情（R4，C3 灾害年与正常年）：drought-without = 灾害年（钟 price:loc_bs_liquan 保留），drought-noclock = 正常年（该钟及 hazard_phase 闭包整段移除）；
-// 同聚落、同种子、同日历、同初始持有（池 cov 1.0）。开局日 = 第 364 日 600 分钟（= (360 + sowDays[0] − 1) × DAY + 600，第二年播种窗起点前一天），之后全部真实推进。
-// 观测窗：受影响批次（第 386 日在田的批次）全部收割完（harvestedUnits = areaUnits）之后再 8 天（= 钟 intervalDays），且不超过第 719 日。
+// 同聚落、同种子、同日历、同初始持有（池 cov 1.0）。开局日 = 第 sowDays[0]−1 日 600 分钟（= (sowDays[0] − 1) × DAY + 600，开局年播种窗起点前一天），之后全部真实推进。
+// 依据（旧开局 skipTo 到第 364 日不行的原因）：开局种粮批次 expiresDay = initialHarvestDay + protectedStorageDays = −150 + 360 = 210（rules.agriculture.settlements，
+// agriculture-migration.mjs seedBatches），跳到第 364 日时种粮已过期、播种（agriculture.mjs sow：需 seed ≤ seedBank）播不下，没有在田批次；
+// 开局年播种窗 sowDays [5, 25]（rules.agriculture.crop）整个在 210 之前，所以在播种窗起点前一天落点、真实推进过播种窗，受旱那季作物就在田；成熟日 = 播种日 + growthDays 180。
+// 观测窗：受影响批次（播种窗结束后第 1 日 = sowDays[1] + 1 在田的批次）全部收割完（harvestedUnits = areaUnits）之后再 8 天（= 钟 intervalDays），且不超过该农事年末第 359 日。
 // 每天输出：天气、四物品持有与价格、聚落粮仓、在田批次（sownDay、readyDay、areaUnits、harvestedUnits）与农事记录 mode、钟阶段史；整年触发表由 pureHazardFires 预算。
 async function droughtRun(name,noclock){
  const spec=CASES.drought,mode=noclock?'noclock':'without',sid=spec.settlement,clockId=spec.clocks[0],b=buildWorld(true),w=b.w;
@@ -397,7 +400,7 @@ async function droughtRun(name,noclock){
  w.rules.hazardClock.clocks=w.rules.hazardClock.clocks.filter(r=>spec.clocks.includes(r.id)&&!(noclock&&closure.includes(r.id)));
  let engine;
  try{engine=new WorldEngine(w);}catch(e){emit({kind:'error',case:name,mode,constructFailed:true,verdict:'对照不可构造',clocksRemoved:noclock?closure:[],error:errorOf(e),validation:String(e?.message??e)});return;}
- const doc=engine.createCharacter(legacy,{},'mktw-winter-probe'),ctx={engine,doc},crop=engine.rules.agriculture.crop,startMinute=(360+crop.sowDays[0]-1)*DAY+600;
+ const doc=engine.createCharacter(legacy,{},'mktw-winter-probe'),ctx={engine,doc},crop=engine.rules.agriculture.crop,startMinute=(crop.sowDays[0]-1)*DAY+600,sowCheckDay=crop.sowDays[1]+1,capDay=359;
  const reached=await advanceTo(ctx,startMinute,'drought');
  const fixture=setPoolCoverage(engine,ctx.doc,sid,spec.level),seed=draftOf(engine,ctx.doc).get('randomSeed'),year=Math.floor(startMinute/DAY/360);
  let fires=null,firesError=null;try{fires=pureHazardFires(engine,seed,ruleSource,year).map(f=>({day:Math.floor(f.minute/DAY),minute:f.minute,phase:f.phase,stage:f.stage}));}catch(e){firesError=errorOf(e);}
@@ -410,15 +413,15 @@ async function droughtRun(name,noclock){
   const day=Math.floor(ctx.doc.state.minute/DAY),items=ITEMS.map(i=>itemView(engine,ctx.doc,i,sid)),cohorts=cohortsOf(),weather=weatherAt(engine,seed,sid,day*DAY+720);
   emit({kind:'day',case:name,mode,day,calendar:engine.calendar(ctx.doc.state.minute).text,weather:weather?.kind??null,weatherDetail:weather??null,poolCoverage:poolCoverageOf(items),granary:granaryView(engine,ctx.doc,sid),
    agriculture:{mode:ctx.doc.state.records?.[`agriculture:${sid}`]?.mode??null,cohorts},clocks:{[clockId]:clockStages(ctx.doc,clockId)},clockHistory:{[clockId]:clockHistory(ctx.doc,clockId)},items});
-  if(day===386){emit({kind:'sowcheck',case:name,mode,day,fieldBatches:cohorts.length,verdict:cohorts.length?null:'夹具不足（无在田批次）'});if(!cohorts.length)break;}
-  if(allDoneAt===null&&day>386&&cohorts.length&&cohorts.every(c=>c.harvestedUnits>=c.areaUnits)){allDoneAt=day;emit({kind:'harvestdone',case:name,mode,day,cohorts});}
+  if(day===sowCheckDay){emit({kind:'sowcheck',case:name,mode,day,fieldBatches:cohorts.length,verdict:cohorts.length?null:'夹具不足（无在田批次）'});if(!cohorts.length)break;}
+  if(allDoneAt===null&&day>sowCheckDay&&cohorts.length&&cohorts.every(c=>c.harvestedUnits>=c.areaUnits)){allDoneAt=day;emit({kind:'harvestdone',case:name,mode,day,cohorts});}
   if(allDoneAt!==null&&day>=allDoneAt+(ruleSource.intervalDays??8))stop=true;
-  if(day>=719)stop=true;
+  if(day>=capDay)stop=true;
   if(stop)break;
   const adv=await attempt(ctx,'world_time',{minutes:DAY},`probe-drought-${day}`);
   if(!adv.ok){emit({kind:'error',case:name,mode,day,error:adv.error});break;}
  }
- emit({kind:'meta',case:name,mode,window:{startDay:Math.floor(startMinute/DAY),harvestDoneDay:allDoneAt,endDay:Math.floor(ctx.doc.state.minute/DAY),capDay:719}});
+ emit({kind:'meta',case:name,mode,window:{startDay:Math.floor(startMinute/DAY),harvestDoneDay:allDoneAt,endDay:Math.floor(ctx.doc.state.minute/DAY),capDay,sowCheckDay}});
 }
 // 周贸易季节系数：四个季节各 skipTo 一次只读，每个（季节，买方聚落）立即输出一行。
 async function seasonRun(name,withShift){
@@ -466,7 +469,7 @@ for(const [tag,sid] of [['',HW],['yupo-',YP]])for(const season of ['winter','aut
  add(`${tag}${season}-without-${L}`,season==='winter'?'skipTo 到冬第 630 日 + 真实推进 8 天，约 5-10 分钟':'skipTo 到秋第 545 日 + 真实推进 8 天，约 5-10 分钟',name=>cellRun(name,'without',season==='winter'?'winter':'normal',L,sid));
 for(const [tag,sid] of [['',HW],['yupo-',YP]])for(const L of NOCLOCK_LEVELS)
  add(`${tag}winter-noclock-${L}`,'C2：钟及闭包整段移除；skipTo 到冬第 630 日 + 真实推进 8 天，约 5-10 分钟',name=>cellRun(name,'noclock','winter',L,sid),()=>closureStart(`famine:${sid}`));
-add('drought-without','C3 灾害年：第 364 日起真实推进至收割窗末，约 10-20 分钟（超过 8 分钟）',name=>droughtRun(name,false));
+add('drought-without','C3 灾害年：开局年播种窗前一日起真实推进至收割窗末，约 10-20 分钟（超过 8 分钟）',name=>droughtRun(name,false));
 add('drought-noclock','C3 正常年：钟整段移除，其余同上，约 10-20 分钟（超过 8 分钟）',name=>droughtRun(name,true),()=>closureStart(CASES.drought.clocks[0]));
 add('famine-hw-without','skipTo 到冬前一天 + 真实推进 10 天，约 5-10 分钟',name=>caseRun(name,false,CASES['famine-hw'],CASEDAYS));
 add('buys-1.0','池 cov 1.0；两物品各 10 件购买，约 3-6 分钟',name=>buyRun(name,1.0));
