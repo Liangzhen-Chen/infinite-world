@@ -8,10 +8,16 @@
 // tests/*.test.mjs 里 `import test from 'node:test'` 在内存里换成带过滤的 test（不匹配的用例不运行；node:test 的其余成员原样保留），文件本身一字不改。
 // keepTrace（情形 migration-turnip）：tests/npc-life-migration.test.mjs 只在出发前一段开账本钩子（`globalThis.__LEDGER_TRACE__=[]` … `delete`），之后到抵达的账本读不到。
 // 这里在内存里去掉这两处开关，并让它读 ec1-diag 全程收集的数组 globalThis.__EC1_FULL_TRACE__（同一份条目，含出发后到抵达的转移）；测试文件本身不改。
-let only=null,keepTrace=false;
-export function initialize(data){only=data?.only??null;keepTrace=Boolean(data?.keepTrace);}
+// snapshot（情形 assert-snap）：storage.mjs 的 applyPatches 返回前把结果文档存到 globalThis.__DIAG_DOC__（只记引用，不改返回值），
+// 断言失败时 ec1-diag 据此输出关注人物此刻的快照（最近一次 applyPatches 的结果，即测试里 s.doc 的最新值）。
+let only=null,keepTrace=false,snapshot=false;
+export function initialize(data){only=data?.only??null;keepTrace=Boolean(data?.keepTrace);snapshot=Boolean(data?.snapshot);}
 export async function load(url,context,nextLoad){
  const result=await nextLoad(url,context);
+ if(snapshot&&url.endsWith('/server-plugin/storage.mjs')&&result.source!=null){
+  const text=String(result.source),target='export function applyPatches(document, patches) {';
+  if(text.includes(target))return {...result,source:text.replace(target,'export function applyPatches(document, patches) { const __result = __applyPatchesInner(document, patches); globalThis.__DIAG_DOC__ = __result; return __result; }\nfunction __applyPatchesInner(document, patches) {')};
+ }
  if(keepTrace&&url.endsWith('/tests/npc-life-migration.test.mjs')&&result.source!=null){
   const text=String(result.source),a='globalThis.__LEDGER_TRACE__=[];',b='const trace=globalThis.__LEDGER_TRACE__;delete globalThis.__LEDGER_TRACE__;';
   if(text.includes(a)&&text.includes(b))return {...result,source:text.replace(a,'').replace(b,'const trace=globalThis.__EC1_FULL_TRACE__;')};

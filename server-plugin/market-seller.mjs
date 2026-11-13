@@ -27,10 +27,11 @@ export function residentSellers(d,engine,t,taken=new Set()){
   for(const id of Object.keys(state.npcs??{}).sort()){
     const npc=state.npcs[id];
     if(!npc||taken.has(id)||!isEffective(engine,state,id)||DOWN.includes(npc.status)||state.player?.companions?.includes(id))continue;
-    const goods=Object.entries(npc.inventory??{}).filter(([item,v])=>quantityOf(v)>0&&engine.byId.get(item)?.nutrition&&saleableStock(d,engine,id,item).available>=1).map(([item])=>item).sort();
-    if(!goods.length)continue;
+    // 窗口与可售货是合取条件，两者都只读（scheduleAt 与 saleableStock 不写状态），所以先判便宜的窗口：不在卖方窗口的人（夜里、值守别的岗位）不必再逐件读户预算，结果与原先同一。
     const slot=scheduleAt(engine,id,t,state);
     if(!sellingWindow(npc,slot))continue;
+    const goods=Object.entries(npc.inventory??{}).filter(([item,v])=>quantityOf(v)>0&&engine.byId.get(item)?.nutrition&&saleableStock(d,engine,id,item).available>=1).map(([item])=>item).sort();
+    if(!goods.length)continue;
     out.push({kind:'resident',id:`trader_${id}`,keeper:id,location:slot.location,until:slot.until,settlement:placeSettlement(engine,state,slot.location).value,markup:1,goods});
   }
   return out;

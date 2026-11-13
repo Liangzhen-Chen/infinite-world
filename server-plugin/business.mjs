@@ -660,8 +660,9 @@ const flowKey=(shop,day,t)=>["state","records",`customer_flow:${shop}:${day}:${t
 // 本次营业的商铺：玩家已开张的店（店主在场、租约有效、柜台在铺内），以及作息里此刻接待交易的商铺。
 function openShops(d,engine,t){
     const state=d.get('state'),out=[];
-    for(const shop of Object.values(state.records??{})){
-        if(shop.category!=='business'||shop.suspended||shop.status!=='营业'||(shop.openedAt??Infinity)>t)continue;
+    // recordsWhere(category) 与 Object.values(records).filter(category===…) 同一批记录、同一次序（storage.mjs 索引在检查模式下逐次对拍），只是不再扫全表。
+    for(const shop of recordsWhere(state.records,'category','business')){
+        if(shop.suspended||shop.status!=='营业'||(shop.openedAt??Infinity)>t)continue;
         if(state.buildings?.[shop.location]?.condition<=0||state.buildings?.[shop.location]?.burning)continue;
         if(shop.owner!=='player'){
             const npc=state.npcs?.[shop.owner],slot=npc&&scheduleAt(engine,shop.owner,t,state);
@@ -960,6 +961,27 @@ export function flowTimesOfDay(engine,state,day,seed=seedOf(engine)){
     return stateMemo(state,engine,[windowMemo,day,seed],()=>{
         // 作息读不含 market_trip 的状态副本：当日成交写入的出行既不改 scheduleAt 的出行覆盖，也不改生计分段（household-subsistence 读 market_trip），时刻集合因此与当日成交无关。
         const base={...state,records:withoutTrips(state.records)};
+        // 整表跨状态版本复用（读取作用域内当前草稿的最新状态才用）。时刻表只由这些输入决定，复用要求它们逐项未变：
+        //  · 全体居民（state.npcs 同一个对象：没有任何人的字段变过）；· 其余分区与排程相关记录、基础副本（sameScheduleInputs，含路程用的 effects/war_disruption/facility_region）；· 课程派生；
+        //  · 营业记录集合（category=business 的记录逐条同一个对象）与 currentShops 的店主集合（店主与窗口来源）；· 没有玩家开的店（玩家店窗口读 state.location、visits、租约合同，不在上面几项里，有就不复用）。
+        const cache=engine.scheduleReadCache,live=cache?.draft?.cursor?.root?.state===state,key=`${day}|${seed}`;
+        let bizRows=null,keepers=null,courses=null;
+        if(live){
+            bizRows=recordsWhere(state.records,'category','business');keepers=currentShops(engine,state).map(s=>s.keeper).sort().join('|');courses=coursesOfDay(cache,engine,state,day);
+            const prev=cache.flowTables?.get(key);
+            if(prev&&!prev.hasPlayerShop&&prev.state.npcs===state.npcs&&prev.keepers===keepers&&prev.biz.length===bizRows.length&&prev.biz.every((r,i)=>r===bizRows[i])
+                &&sameGlobalInputs(cache,prev.sched,base)&&sameCoursePair(prev.courses,courses)){
+                if(process.env.FIELDS_INDEX_CHECK==='1'&&!canonicalEqual(prev.times,computeFlowTimes(engine,state,day,seed,base)))throw Error(`flow table cache mismatch: day ${day}`);
+                cache.flowTables.set(key,{...prev,state,sched:base,biz:bizRows});return prev.times;
+            }
+        }
+        const times=computeFlowTimes(engine,state,day,seed,base);
+        if(live)(cache.flowTables??=new Map()).set(key,{state,sched:base,courses,keepers,biz:bizRows,hasPlayerShop:bizRows.some(r=>r.owner==='player'),times});
+        return times;
+    });
+}
+function computeFlowTimes(engine,state,day,seed,base){
+    {
         const customers=customerWindows(engine,state,day,base,seed),times=new Set();
         for(const {keeper,windows} of shopWindows(engine,state,day,base).values()){
             for(const [id,segments] of customers){
@@ -975,7 +997,7 @@ export function flowTimesOfDay(engine,state,day,seed=seedOf(engine)){
             }
         }
         return [...times].sort((a,b)=>a-b);
-    });
+    }
 }
 // (before, after] 内全部客流结算时刻，升序。shop.mjs 用它定时钟边界与补货/客流的先后。
 export function customerFlowTimes(engine,state,before,after,seed=seedOf(engine)){

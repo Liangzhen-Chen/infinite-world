@@ -27,7 +27,7 @@ import {register} from 'node:module';
 // 关注人参数（第 4 个参数，逗号分隔）里的 only:<项+项> = 只运行选定的测试（项 = 测试文件里第几个 test(...)，或用例名里的 ASCII 片段，如 only:10+11、only:S5F-4+S5F-8），不进关注人列表；见 ec1-diag-hooks.mjs。
 const onlyArg=(process.argv[4]??'').split(',').find(x=>x.startsWith('only:'))?.slice(5)||null;
 const watchList=()=>(process.argv[4]??'').split(',').filter(x=>x&&!x.startsWith('only:'));
-register('./ec1-diag-hooks.mjs',import.meta.url,{data:{only:onlyArg,keepTrace:process.argv[2]==='migration-turnip'}});
+register('./ec1-diag-hooks.mjs',import.meta.url,{data:{only:onlyArg,keepTrace:process.argv[2]==='migration-turnip',snapshot:process.argv[2]==='assert-snap'}});
 const [caseName,watchArg]=process.argv.slice(2);
 const out=o=>console.log(JSON.stringify(o));
 const DAY=1440;
@@ -265,6 +265,16 @@ async function w2s2PreBuy(){
 //  fn、actual（实际值）、expected（期望值）、message、at（调用栈里的测试文件行）、
 //  recentLedger（失败前最近 40 笔账本转移：from、to、amount、writer、eventId）、poolTopups（失败前累计的户池补足笔数与最近 8 笔）、
 //  recentStock（失败前最近 6 次可售量检查：卖方、买家、物品、数量、可售量各项、该户各持有行 stock/retained/committed/upkeep/available、报价摘要——即持有、留存、承诺、价格因子的来源分解）。
+// assert-snap 用：关注人物（关注人参数里的人物编号）在测试里最近一次 applyPatches 结果文档（ec1-diag-hooks snapshot 钩子存的 globalThis.__DIAG_DOC__）里的状态：
+// 位置、活动、状态、钱、在途（scheduleTravel）、照护、征役、迁居（residence），以及与他们有关的最近 6 条 market_trip。断言失败时随 assert-fail 输出，进程退出时再输出一次 snapshot-final（TypeError 一类非断言失败也能读到）。
+function snapshotOf(){
+ const ids=globalThis.__DIAG_SNAP_IDS__??[],doc=globalThis.__DIAG_DOC__;
+ if(!ids.length||!doc?.state)return null;
+ const state=doc.state;
+ return {minute:state.minute,playerLocation:state.location,
+  npcs:Object.fromEntries(ids.map(id=>{const n=state.npcs?.[id];return [id,n?{location:n.location,activity:n.activity,status:n.status,coins:n.coins,scheduleTravel:n.scheduleTravel??null,caring:n.caring??null,levy:n.levy??null,residence:n.residence??null}:null];})),
+  trips:Object.values(state.records??{}).filter(r=>r?.category==='market_trip'&&(ids.includes(r.actor)||ids.includes(r.keeper))).slice(-6).map(r=>({id:r.id,actor:r.actor,keeper:r.keeper,from:r.from,to:r.to,departAt:r.departAt,returnAt:r.returnAt}))};
+}
 async function assertCapture(file){
  const assertModule=(await import('node:assert/strict')).default,hb=await import('../server-plugin/household-budget.mjs');
  const ledger=[],stocks=[],pool=[];let fails=0;
@@ -288,12 +298,12 @@ async function assertCapture(file){
     const at=String(error?.stack??'').split('\n').filter(l=>l.includes('/tests/')).slice(0,3).map(l=>l.trim());
     const [actual,expected,message]=fn==='ok'?[args[0],true,args[1]]:args;
     out({type:'assert-fail',file,seq:fails,fn,actual:clip(actual),expected:clip(expected),message:typeof message==='string'?message:(message?.message??null),at,
-     recentLedger:ledger.slice(),poolTopups:{count:pool.length,last:pool.slice(-8)},recentStock:stocks.slice()});
+     recentLedger:ledger.slice(),poolTopups:{count:pool.length,last:pool.slice(-8)},recentStock:stocks.slice(),snapshot:snapshotOf()});
     throw error;
    }
   };
  }
- process.on('exit',()=>out({type:'assert-summary',file,failures:fails,poolTopups:pool.length}));
+ process.on('exit',()=>{out({type:'assert-summary',file,failures:fails,poolTopups:pool.length});const s=snapshotOf();if(s)out({type:'snapshot-final',file,snapshot:s});});
  await import(new URL(`../tests/${file}`,import.meta.url));
 }
 
@@ -443,6 +453,8 @@ const cases={
  'assert-food-habit':()=>assertCapture('food-habit.test.mjs'),
  'assert-npc-life-migration':()=>assertCapture('npc-life-migration.test.mjs'),
  'assert-npc-life-t164':()=>assertCapture('npc-life-t164.test.mjs'),
+ // 任意测试文件的断言取证 + 关注人物快照：第二个参数 = tests 下文件名，第三个参数 = 逗号分隔的人物编号（可含 only:<项+项>）。例：assert-snap npc-life-t164.test.mjs npc_hw_anhuai,npc_hw_jiaoyou,only:2+7
+ 'assert-snap':()=>{globalThis.__DIAG_SNAP_IDS__=watchList();return assertCapture(watchArg);},
  'assert-quest-sources':()=>assertCapture('quest-sources.test.mjs'),
  'assert-household-labor':()=>assertCapture('s5-law-household-labor.test.mjs')
 };
