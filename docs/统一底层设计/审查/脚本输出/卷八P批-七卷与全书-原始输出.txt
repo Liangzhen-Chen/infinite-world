@@ -1,0 +1,42 @@
+== node F:/dnd-tmp/vol2/check-vol2.mjs
+  OK 三段 JSON 可解析
+  维度 9 个，类别行 4，实体行 2；展平 class_workshop_hot = {"public":false,"lodging":false,"allowedMaterials":["subst_stone"],"wearPerDay":0.0006,"capacityBase":2,"services":["service_craft"],"fixtures":["fixture_forge","fixture_hearth"],"upkeepPerDay":{"class_fuel":12}}
+== 结果：PASS
+== node F:/dnd-tmp/vol2/check-vol2-ext.mjs
+== 34 接缝批
+  OK 心跳推进只投递请求、旧写法无残留；终止协议五步改序并含两个登记点、窗口期满、到期项撤销；建行写者与改写写者已定义；stockMode / remDenominator / struct:stockAnchor 与定点指数五项在位；六个封闭枚举与三个族已登记；§1.14 两处改名并写求值次序；存档码、导入 schema、槽位与候选键在位；单位表含 byte、ms；无已撤销的大类代号
+== 结果：PASS
+== node F:/dnd-tmp/vols/check-卷四.mjs
+统计  §7.3 处置代号分布 Z1=30 Z2=34 Z3=9 Z4=5 Z5=6 Z6=4（合计 88 行，65 个文件）
+统计  §7.3 中 Z4（常量定义行）各使用点的去向 Z3=3 Z5=2
+结论  全部通过
+== node F:/dnd-tmp/vols/check-卷六.mjs
+INFO  正文行数（不含本附录） = 2006
+INFO  子系统数 = 25；规则条数 = 218；开放问题数 = 22；验收断言数 = 75；扩展性测试数 = 14
+RESULT  全部通过
+== node F:/dnd-tmp/vols/check-卷八.mjs
+PASS 12 接口、入口表、规则表键、错误码、枚举附表、迁移清单落实
+PASS 13 运行态路径都在 §3.3 有写者与去留交代
+行数 1579；子系统 19；规则条数 146；json 块 1；待补清单 12 条；失败项 0
+== node F:/dnd-tmp/vols/check-卷八b.mjs
+PASS 14 扫描条引用都有定义
+PASS 15 一审 21 条真问题回归
+行数 1384；子系统 15；规则条数 153；json 块 1；待补清单 12 条；失败项 0
+== node F:/dnd-tmp/vols/check-卷二十七.mjs
+PASS  §7 含版本标记分支与 AI 写状态两行
+PASS  确定性断言已改写成验收测试并交卷十二  A27-1.3 A27-1.8 A27-2.2 A27-4.2 A27-4.3 A27-5.4 A27-7.5 A27-8.2 A27-8.4
+行数 1023；子系统 8；开放问题 19；失败 0
+== check-divisor
+合计：0 处（显式 0、隐式 0），涉及 0 卷
+按类：合计 0、比例 0、个数 0、加权平均 0、份额 0、归一 0、其他 0
+- 漏报：卷二十五（未找到该行）「常年容量之比」
+# 回归样本（应判已保护）：通过 29 / 29
+# 漏报写法回归（应识别到除法并判已保护）：通过 2 / 2
+== check-dualwrite
+甲 0 甲b 3行/10 乙 2 丙 2 丁 4 不计 4; 卷: 卷三乙,卷五,卷十九; recs 340
+== check-exemptrefs
+exemptrefs 核对 193，未找到 43
+{"悬空":17,"文件未登记":4,"登记位未落地（该卷未成卷）":10,"节悬空":4,"节号不符（小项）":6,"名单含角色描述":1,"登记未落地（只在请求/记账里出现）":1}
+== check-dupnames
+dupnames 列出 177，冲突级 91
+{"入口·重复定义":14,"签名·签名不一":2,"维度·低级提示":27,"维度·冲突":3,"族/枚举·重复定义":45,"族/枚举·重名":2,"代号·裸代号跨卷":78,"代号·同卷两节定义":6}
