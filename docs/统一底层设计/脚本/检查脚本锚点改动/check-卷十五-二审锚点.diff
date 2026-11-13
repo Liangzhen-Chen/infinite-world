@@ -1,0 +1,24 @@
+--- "check-\345\215\267\345\215\201\344\272\224.mjs.bak-pre-v2"	2026-11-13 23:15:50.260372500 +0000
++++ "check-\345\215\267\345\215\201\344\272\224.mjs"	2026-11-13 23:16:36.810283600 +0000
+@@ -29,7 +29,8 @@
+ const need2 = ['## §0 ', '## §1 ', '## §2 ', '## §3 ', '## §4 ', '## §5 ', '## §6 ', '## §7 ', '## §8 ', '## 附 术语与代号表', '## 附录 待补清单'];
+ const miss2 = need2.filter(p => !lines.some(l => l.startsWith(p)));
+ report('1 章节 §0–§8、术语表、待补清单齐全', miss2.length === 0, miss2.join(','));
+-report('1b 卷首模型行', lines.slice(0, 5).includes('起草 claude-fable-5-2 中档／审查 claude-opus-5-5 中档'));
++// 卷十五二审 11-13：锚点随第二版三段式卷首模型行更新（现文第 3 行原样）
++report('1b 卷首模型行', lines.slice(0, 5).includes('起草 claude-fable-5-2 中档／改稿 claude-opus-5-5 中档（第二版起）／审查 claude-opus-5-5 中档'));
+ const need0 = ['### 0.1 范围', '### 0.2 依赖卷', '### 0.3 覆盖的卷零行', '### 0.4 参照的五款游戏行', '### 0.5 读法'];
+ report('1c §0 五小节齐全', need0.every(p => lines.includes(p)), need0.filter(p => !lines.includes(p)).join(','));
+ 
+@@ -221,8 +222,9 @@
+ if (bCount !== 8) ar.push(`B表${bCount}`);
+ if (defs.X.size < 8) ar.push(`§6=${defs.X.size}`);
+ const matrix = sub(/^### 5\.4 /).filter(l => /^\| [a-z]+ \| `simform_/.test(l)).length;
+-if (matrix !== 5) ar.push(`矩阵${matrix}`);
+-const sysKeys = ['arcana', 'interaction', 'working', 'rite', 'shade'];
++// 卷十五二审 11-13：第二版按 T9 新增 aether、relic 两个系统键，矩阵 5→7 行，键表同步补两项
++if (matrix !== 7) ar.push(`矩阵${matrix}`);
++const sysKeys = ['arcana', 'aether', 'relic', 'interaction', 'working', 'rite', 'shade'];
+ for (const k of sysKeys) if (!sub(/^### 5\.4 /).some(l => l.startsWith(`| ${k} |`))) ar.push('矩阵缺' + k);
+ report(`11 算术复算与计数对账（效力例、封印例、卷零 12+8 行、§6 ${defs.X.size} 条、矩阵 ${matrix} 行）`, ar.length === 0, ar.join(' '));
+ 
