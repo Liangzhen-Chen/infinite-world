@@ -165,7 +165,12 @@ test('缺粮谋生：预告、沿实际路线走完全程，抵达后住户、�
  assert.equal(npc(s,mover).developments.at(-1).type,'迁居');
  // Property travels with the person; nobody is copied or newly created.
  // 这里逐项比较出发快照与抵达时的铜币和库存是否相等，比李白条件(b)“从出发到抵达现金加货物合计价值不减”更严，因此已覆盖(b)。
- assert.equal(npc(s,mover).coins,coins-go.routeCost);assert.deepEqual(npc(s,mover).inventory,goods);
+ // 途中经过一个午夜（出发到抵达之间）：不在灶边的人在所在之处自成一桌吃自己背包里的粮（EC-1 灶边判定，已批准），所以库存等于出发快照减去这一桌吃掉的量；
+ // 吃掉的量读该桌的午夜用餐记录（family.meals 里 household 带 @所在聚落、成员含迁居者的记录，consumed 里持有人为他的各行）。其余物品与铜币仍逐项相等。
+ const eaten=Object.values(s.doc.state.family.meals??{}).filter(r=>String(r.household).includes('@')&&r.members?.includes(mover)).flatMap(r=>r.consumed??[]).filter(c=>c.holder===mover);
+ const expectedInventory=structuredClone(goods);
+ for(const c of eaten){const v=expectedInventory[c.item],left=(typeof v==='number'?v:v?.quantity??0)-c.quantity;if(left>0)expectedInventory[c.item]=typeof v==='number'?left:{...v,quantity:left};else delete expectedInventory[c.item];}
+ assert.equal(npc(s,mover).coins,coins-go.routeCost);assert.deepEqual(npc(s,mover).inventory,expectedInventory);
  assert.equal(npc(s,host).coins,hostCoins);assert.deepEqual(npc(s,host).inventory,hostGoods);
  onlyLifeAdditions(s,ids,JSON.parse(people),JSON.parse(created));
  assert.equal(Object.values(s.doc.state.npcs).filter(n=>n.name===npc(s,mover).name).length,1);
