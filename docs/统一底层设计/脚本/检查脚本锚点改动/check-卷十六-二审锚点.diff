@@ -1,0 +1,42 @@
+--- "check-\345\215\267\345\215\201\345\205\255.mjs.bak-pre-v2"	2026-11-13 23:36:09.662710800 +0000
++++ "check-\345\215\267\345\215\201\345\205\255.mjs"	2026-11-13 23:39:29.304093000 +0000
+@@ -29,7 +29,8 @@
+ const need2 = ['## §0 ', '## §1 ', '## §2 ', '## §3 ', '## §4 ', '## §5 ', '## §6 ', '## §7 ', '## §8 ', '## 附 术语与代号表', '## 附录 待补清单'];
+ const miss2 = need2.filter(p => !lines.some(l => l.startsWith(p)));
+ report('1 章节 §0–§8、术语表、待补清单齐全', miss2.length === 0, miss2.join(','));
+-report('1b 卷首模型行', lines.slice(0, 5).includes('起草 claude-fable-5-2 中档／审查 claude-opus-5-5 中档'));
++// 卷十六二审 11-13：第二版卷首模型行加“改稿”一段，锚点照现文
++report('1b 卷首模型行', lines.slice(0, 5).includes('起草 claude-fable-5-2 中档／改稿 claude-opus-5-5 中档（第二版起）／审查 claude-opus-5-5 中档'));
+ const need0 = ['### 0.1 范围', '### 0.2 依赖卷', '### 0.3 覆盖的卷零行', '### 0.4 参照的五款游戏行', '### 0.5 读法'];
+ report('1c §0 五小节齐全', need0.every(p => lines.includes(p)), need0.filter(p => !lines.includes(p)).join(','));
+ 
+@@ -194,7 +195,8 @@
+ const siteUnused = sites.filter(s => !sec4.includes(s));
+ const dims = sub(/^### 2\.3 /).filter(l => /^\| (species|person|material|knowledge)/.test(l)).map(l => ticks(cells(l)[1])[0]);
+ const dimUnused = dims.filter(d => !sec4.includes('`' + d + '`'));
+-const noState = sub(/^### 2\.6 /).join('\n').includes('本卷不新增运行态键') && !/`state\.bestiary/.test(all);
++// 卷十六二审 11-13：Q16-4 裁定要求事件计数器，第二版只新增 `state.bestiary.named` 一个键；锚点照现文——§2.6 声明恰此一键、全文 state.bestiary 下不出现第二个键、§3.3 声明其写者
++const noState = sub(/^### 2\.6 /).join('\n').includes('本卷只新增一个运行态键 `state.bestiary.named`') && [...all.matchAll(/state\.bestiary\.([A-Za-z_]+)/g)].every(m => m[1] === 'named') && sec3.includes('`state.bestiary.named`');
+ report(`9 错误码、入口、钩子、规则表键、抽取点、维度落实（码 ${codes.length}、入口 ${entryNames.length}、钩子 ${hooks.length}、规则表键行 ${keyRows.length}、抽取点 ${sites.length}、维度 ${dims.length}）`,
+   codes.length >= 10 && codeUnused.length === 0 && entryUnused.length === 0 && hookUnused.length === 0 && keyUnused.length === 0 && siteUnused.length === 0 && dimUnused.length === 0 && noState,
+   [codeUnused.join(','), entryUnused.join(','), hookUnused.join(','), keyUnused.join(','), siteUnused.join(','), dimUnused.join(','), noState ? '' : '运行态声明'].join(' | '));
+@@ -216,7 +218,8 @@
+ if (!/S16-2：[^\n]*名字的任何一个字/.test(all)) red.push('S16-2');
+ if (!/S16-10：[^\n]*首领标记/.test(all)) red.push('S16-10');
+ // 物种生成阶段：after 自然量、before 开户
+-if (!/"gstage_bestiary": \{"phase": "worldgen", "scope": "world", "after": \["gstage_fields"\], "before": \["gstage_stocks"\]/.test(all)) red.push('gstage 条目');
++// 卷十六二审 11-13：一审 T8 后 after 改为水体、天气、矿物三阶段（深潭、地下群落须先在），锚点照现文
++if (!/"gstage_bestiary": \{"phase": "worldgen", "scope": "world", "after": \["gstage_water", "gstage_weather", "gstage_geology"\], "before": \["gstage_stocks"\]/.test(all)) red.push('gstage 条目');
+ report('10 红线：不派实现、不改别卷、不读墙钟、除数有下界、身体状态只经卷二十一、无怪物标记分支、不读名字、不另立委托、物种阶段登记', red.length === 0, red.slice(0, 8).join(' '));
+ 
+ // 11 算术复算与计数对账
+@@ -264,7 +267,8 @@
+ report(`12 接口表、配合项（${defs.C.size} 项）、迁移清单（${defs.M.size} 行）、五款游戏、待补清单（${todo} 条）、素材位置落实`, io.length === 0, io.join(' '));
+ 
+ // 13 关键条文在位
+-const must = ['怪物不是一类东西，是物种表里的行', '没有“怪物”这个标记', '首领是档加职位，不是实体类', '档不是稀缺度', '真假是读数，不是字段', '真相层就是事实本身', '两边用同一族标签', '过不来的事不在这里', '本卷不生成委托', '宁合不拆', '四个说法是显示归类', '生成槽给意图，其余推出来', '变体 = 模板套在原种上的继承行', '觉醒是补职位', '收容失效是前提失效', '本卷不新增运行态键', '材料属性', '意图', '须李白定'];
++// 卷十六二审 11-13：照现文换三条锚点——R16-2.2 标题按 Q16-3 改为“首领拆成四样”；“本卷不新增运行态键”按 Q16-4 改为只新增一键（旧锚点只靠修订记录里的引文命中，属失效锚点）；§8 四条待定已裁，“须李白定”改认“已定（李白 11-13）”
++const must = ['怪物不是一类东西，是物种表里的行', '没有“怪物”这个标记', '首领拆成四样，不是实体类', '档不是稀缺度', '真假是读数，不是字段', '真相层就是事实本身', '两边用同一族标签', '过不来的事不在这里', '本卷不生成委托', '宁合不拆', '四个说法是显示归类', '生成槽给意图，其余推出来', '变体 = 模板套在原种上的继承行', '觉醒是补职位', '收容失效是前提失效', '本卷只新增一个运行态键', '材料属性', '意图', '已定（李白 11-13）'];
+ const mustMiss = must.filter(s => !all.includes(s));
+ report(`13 关键条文在位（${must.length} 条）`, mustMiss.length === 0, mustMiss.join(' '));
+ 
