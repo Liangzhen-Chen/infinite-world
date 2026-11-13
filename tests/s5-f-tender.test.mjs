@@ -47,6 +47,9 @@ function fixture(){
   notes:id=>(id==='player'?f.document.state.inventory:f.document.state.npcs[id].inventory).item_banknote_hw?.quantity??0};
  return f;
 }
+// 账本转移记录（ledger 的 globalThis.__LEDGER_TRACE__ 调试钩子）：只在这一步开启，返回结果附上 trace；paidToHost = 该事件转入债权人铜钱袋的总额。
+const withTrace=async fn=>{globalThis.__LEDGER_TRACE__=[];try{const result=await fn();return {...result,trace:globalThis.__LEDGER_TRACE__};}finally{delete globalThis.__LEDGER_TRACE__;}};
+const paidToHost=(trace,eventId)=>trace.filter(t=>t.eventId===eventId&&t.to===`${host}|coin_river|purse`).reduce((n,t)=>n+t.amount,0);
 const clean=f=>assert.deepEqual(reconcile(f.engine,f.document),{mismatches:[],lots:[],drift:[],audit:[]});
 
 test('S5F-1 同一笔 25 文基准报价，在三个法域按各自法定单位给出，且都是整数',async()=>{
@@ -134,12 +137,14 @@ test('S5F-4 赊账合同冻结签约时的计价资源与数量；之后兑换�
  assert.deepEqual([same.resource,same.amount,same.paid,same.referenceCopper],[NOTE,1,0,5]);
  assert.equal(obligationView(f.document.state,debt).owed,1);
  // 用河湾铜钱还：按还款时的兑换率，1 张券 x rate1 文，向上取整成整枚铜钱（零头留给债权人，不找零）。
- const coinsBefore=f.document.state.player.coins,creditorBefore=f.document.state.npcs[host].coins;
+ const coinsBefore=f.document.state.player.coins;
  const owedCoins=3; // 1 张 x 3 文/张 = 3 枚铜钱，恰好整除
- const paid=await f.trade({payment:'repay',debt,payCurrency:'coin_river'},'f4-repay');
+ // 还款这一步的 5 分钟里世界照常运转：十点整的人物日常自主劳动（苏兰把织机苇卖给林穗，npc-labor 付 180，eventId npc_daily_0_npc_hw_sulan）也落在这段里，
+ // 所以债权人的钱袋净变动不只是还款；还款对债权人的入账按账本里这笔还款事件（eventId f4-repay）转入其钱袋的金额核对。
+ const paid=await withTrace(()=>f.trade({payment:'repay',debt,payCurrency:'coin_river'},'f4-repay'));
  assert.equal(paid.status,'已还清');
  assert.ok(paid.messages.some(m=>m.includes('欠款1河湾兑付券')));assert.equal(paid.resourceName,'河湾兑付券');
- assert.equal(coinsBefore-f.document.state.player.coins,owedCoins);assert.equal(f.document.state.npcs[host].coins-creditorBefore,owedCoins);
+ assert.equal(coinsBefore-f.document.state.player.coins,owedCoins);assert.equal(paidToHost(paid.trace,'f4-repay'),owedCoins);
  const settled=f.document.state.records[debt];
  assert.deepEqual([settled.resource,settled.amount,settled.paid,settled.status],[NOTE,1,1,'已还清']);
  // 若兑换率没变，同一笔债要付 1 x 10 = 10 枚；现在付 3 枚——差额是签约后兑换率变动的真实结果，不是本金被改写。
@@ -209,9 +214,10 @@ test('S5F-8 还款零头：按还款时兑换向上取整成整枚，差额留�
  // 手算：成交 25+6=31 文 → 3.1 张当量 / 活跃券 10 张 → 充裕度 .31 → 兑换率 10 x .31 = 3.1 文/张。
  assert.deepEqual(exchangeRate(f.draft(),f.engine,{from:NOTE,location:shop}).exact,{numerator:'31',denominator:'10'});
  // 还款：3 张 x 3.1 = 9.3 文 → 向上取整 10 枚；零头 0.7 枚留给债权人，不找零。
- const before=f.document.state.player.coins,creditor=f.document.state.npcs[host].coins;
- await f.trade({payment:'repay',debt:owed.debt,payCurrency:'coin_river'},'f8-repay');
- assert.equal(before-f.document.state.player.coins,10);assert.equal(f.document.state.npcs[host].coins-creditor,10);
+ // 债权人入账按账本里这笔还款事件核对（世界在这 5 分钟里照常运转，见 S5F-4 同处注释）。
+ const before=f.document.state.player.coins;
+ const repaid=await withTrace(()=>f.trade({payment:'repay',debt:owed.debt,payCurrency:'coin_river'},'f8-repay'));
+ assert.equal(before-f.document.state.player.coins,10);assert.equal(paidToHost(repaid.trace,'f8-repay'),10);
  const debt=f.document.state.records[owed.debt];assert.deepEqual([debt.resource,debt.amount,debt.paid,debt.status],[NOTE,3,3,'已还清']);
  clean(f);
 });

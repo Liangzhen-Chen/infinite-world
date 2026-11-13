@@ -89,12 +89,10 @@ test('M6–M8 正常HTTP：编辑改量、重生成单次记账、删除回滚�
 
 test('M9 正常HTTP旧世界导入后自动升级，关系、钱物及记忆保留并可继续行动',async t=>{
     const {server,session,result}=await offlineRun(t,upgrade);
-    // 新值 172：180−住宿6−面包账单1−面包账单1。第一笔：单价 2×供需比(25/45=0.555556，已离开下限.5)×关系 .99895=1.10994，零售，截断=1（旧：2×.5×.99895 截断=0）；
-    // 第二笔：供需比 25/44=0.568182，深度 1+.2/45，单价 2×0.568182×1.004444×.99895=1.14022，截断=1。180−6−1−1=172。
-    // 与 tests/playtests/world_upgrade.json 记录的 173（第一笔后）/172（第二笔后）一致（该文件按同一设计变化重推，提交 ad59698f、bb70871d，且同一次运行内通过）。
-    // 对应设计变化：面包饱腹改推导 + 卖家份额分摊使供需比离开下限（PLAN.md:584、591③、316③、563②）；李白 11-11 (a)（PLAN.md:540）。
-    // 证据：F:/dnd/docs/审查记录/市场价格-探针输出-mkt-5.txt，复算 市场价格-独立复算-A.md、-B.md（m3-acceptance-M9）。断言仍为精确相等。
-    assert.equal(result.finalDocument.state.player.coins,172);
+    // 期望 173：180−住宿6−面包账单0−面包账单1。EC-1a（已批准）起聚落公粮覆盖登记户的饱腹，户内自留归零，青灯酒馆同类食物需求只剩货架上限，供给大于需求的两倍，供需比低于下限 0.5，稀缺度取下限 0.5。
+    // 第一笔：单价 2×0.5×关系 .99895×深度 1=0.99895，零售截断=0。第二笔：成交使当日成交量进入深度（深度 >1），2×0.5×.99895×深度≈1.06，截断=1。180−6−0−1=173。
+    // 与 tests/playtests/world_upgrade.json 记录的 174（第一笔后）/173（第二笔后）一致。云上报价读数（供 52、需 14、深度 1.064）只用来核对前提，不是期望来源。断言仍为精确相等。
+    assert.equal(result.finalDocument.state.player.coins,173);
     assert.equal(result.finalDocument.state.inventory.item_bread.quantity,2);
     const view=await server.api('read',session),anchor='m9-followup-search';
     const begun=await server.api('review/begin',{...session,anchor,playerText:'（场外）检索更新前的住宿。',expectedSequence:view.reference.sequence,captureSearch:true});
