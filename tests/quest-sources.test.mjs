@@ -101,6 +101,10 @@ test('灾害事件任务：疫病求医、汛期修堤从公账托管，冬荒�
  // 疫病后再拨饥荒200会降至192，低于留底300，故不能发布。
  // K2（卡 E）依据：铁镰与食品不再从模拟范围外进货，公账收不到这 32 铜；开局公账改为 510+32=542，预算同为 312。
  document.state.settlements.loc_hw.treasury=542;
+ // 前提（下面核对店铺补货账的 K2 路径）：青灯酒馆的面包货架低于规则表上限，午夜补货才有缺口、才写 shop 账。原先缺口来自正午客流买走存货；EC-1b 起顾客在各自窗口起点来，
+ // 夹具从 540 开始，当天的起点已过，首个午夜前青灯没有成交（云上账本读数），货架满着就不补货、不写账。这里按规则表上限（restock 行 maximum）让货架少一件，不依赖顾客。
+ const bread=engine.rules.economy.shops.stores.find(s=>s.id==='shop_hw_qingdeng').restock.find(r=>r.item==='item_bread');
+ document.state.npcs[owner].inventory.item_bread=bread.maximum-1;
  Object.assign(document.state.records,{
   'hazard-famine:loc_hw':{category:'hazard_famine',settlement:board,since:540,until:540+60*DAY,sourceEvent:'hazard:famine:test'},
   'hazard-flood:loc_hw_dock':{category:'hazard_flood',location:'loc_hw_dock',since:540,until:540+5*DAY,soaked:[],sourceEvent:'hazard:flood:test'},
