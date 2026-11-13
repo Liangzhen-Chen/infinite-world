@@ -1,0 +1,42 @@
+--- check-divisor.mjs.bak-pre-namedvol	2026-11-13 22:52:41.385328800 +0000
++++ check-divisor.mjs	2026-11-13 22:53:06.248489100 +0000
+@@ -37,7 +37,8 @@
+ //      e. ⑥ 分支条件；
+ //      （李白 11-13）以上判据读的保护句若以"由（卷X 的 / §N 的）某维度或类型的取值域（下界）保证"为依据，先核实所引取值域：
+ //         该名在卷二或归属卷的登记行（表格首格或第二格）存在，且下界为正或排除 0（struct 维度查句中提到的字段自身取值域；
+-//         行内写明"NAME 的取值域：…"的按该段查）；核实不到则整句不作保护依据，除法按其余判据判（通常命中）。
++//         行内写明"NAME 的取值域：…"的按该段查）；句中点名了卷（"由卷X 的…域"）时只在该卷的登记行里核实；
++//         核实不到则整句不作保护依据，除法按其余判据判（通常命中）。
+ //      f. 隐式分母写明了维度/字段名（"占某流派 teaches 的比例""A 与 B 之比"）的，按 d 查该名的定义行与加载校验句
+ //         （保护写在定义处、除法在别处也认）。
+ //   6. 对照：三扫判定的真命中（卷 + 行内关键词，可带除数须匹配的式样），对当前全书报"命中/未命中（已修或漏报）"；
+@@ -206,6 +207,7 @@
+ // ---------------- 取值域引用核实（李白 11-13） ----------------
+ // 保护句的依据若是"由（卷X 的）某维度/类型的取值域（下界）保证"，须核实所引取值域确有登记（卷二或该名的归属卷：
+ // 表格行首格或第二格是该名）且下界为正或排除 0；struct 维度按句中提到的字段查该字段自身的取值域。
++// 句中点名了卷（"由卷X 的…域"）时只在点名卷的登记行里核实，别卷同名登记不算。
+ // 核实不到的，整句不作保护依据（从保护判定用的文本里抹掉），除法照常按其余判据判。
+ // 没点名卷、§或维度名的"由这条取值域保证"是本句自述，不算引用。
+ const rowIndex = new Map(); // 名字 → [{ vol, cells }]
+@@ -224,9 +226,9 @@
+   for (; j < cell.length; j++) { const c = cell[j]; if ('[({<'.includes(c)) d++; else if (')]}>'.includes(c)) { if (d === 0) break; d--; } else if (c === ',' && d === 0) break; out += c; }
+   return out.trim();
+ }
+-function domainVerified(name, sentence) {
+-  const rows = rowIndex.get(name);
+-  if (!rows) return false;
++function domainVerified(name, sentence, vols = null) { // vols：句中点名的卷（"由卷X 的…域"），只在这些卷的登记行里核实
++  const rows = (rowIndex.get(name) || []).filter(r => !vols || vols.some(n => r.vol === n || r.vol.replace(/[甲乙]$/, '') === n));
++  if (!rows.length) return false;
+   const ids = [...new Set(sentence.match(/[A-Za-z_]\w*/g) || [])].filter(x => x !== name);
+   return rows.some(r => {
+     const cl = r.cells.join('|').match(new RegExp(`(?<![\\w])${esc(name)}\\s*的?取值域\\s*[：:]([^|。]*)`)); // 行内写明"NAME 的取值域：…"
+@@ -252,7 +254,7 @@
+     let names = tail ? [tail[1].split('.').pop()] : [];
+     const sent = s.slice(0, m.index).split('。').pop() + s.slice(m.index).split('。')[0];
+     if (!names.length) names = [...new Set((s.slice(0, m.index).split('。').pop().match(/[A-Za-z_]\w{2,}/g) || []))];
+-    if (!names.length || !names.every(n => domainVerified(n, sent))) out.push({ ref: m[0], names, idx: m.index });
++    if (!names.length || !names.every(n => domainVerified(n, sent, vol))) out.push({ ref: m[0], names, idx: m.index });
+   }
+   return out;
+ }
