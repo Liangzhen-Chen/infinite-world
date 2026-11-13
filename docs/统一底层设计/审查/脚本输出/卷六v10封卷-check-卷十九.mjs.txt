@@ -1,0 +1,159 @@
+PASS  1 顶层节 §0
+PASS  1 顶层节 §1
+PASS  1 顶层节 §2
+PASS  1 顶层节 §3
+PASS  1 顶层节 §4
+PASS  1 顶层节 §5
+PASS  1 顶层节 §6
+PASS  1 顶层节 §7
+PASS  1 顶层节 §8
+PASS  1 附 术语与代号表
+PASS  2 子系统数  = 16
+PASS  2 子系统 4.1 六小节
+PASS  3 子系统 4.1 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.1 三类断言
+PASS  4 子系统 4.1 规则条数  = 11
+PASS  2 子系统 4.2 六小节
+PASS  3 子系统 4.2 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.2 三类断言
+PASS  4 子系统 4.2 规则条数  = 7
+PASS  2 子系统 4.3 六小节
+PASS  3 子系统 4.3 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.3 三类断言
+PASS  4 子系统 4.3 规则条数  = 7
+PASS  2 子系统 4.4 六小节
+PASS  3 子系统 4.4 数据实例  条数 4，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.4 三类断言
+PASS  4 子系统 4.4 规则条数  = 9
+PASS  2 子系统 4.5 六小节
+PASS  3 子系统 4.5 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.5 三类断言
+PASS  4 子系统 4.5 规则条数  = 5
+PASS  2 子系统 4.6 六小节
+PASS  3 子系统 4.6 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.6 三类断言
+PASS  4 子系统 4.6 规则条数  = 4
+PASS  2 子系统 4.7 六小节
+PASS  3 子系统 4.7 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.7 三类断言
+PASS  4 子系统 4.7 规则条数  = 8
+PASS  2 子系统 4.8 六小节
+PASS  3 子系统 4.8 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.8 三类断言
+PASS  4 子系统 4.8 规则条数  = 6
+PASS  2 子系统 4.9 六小节
+PASS  3 子系统 4.9 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.9 三类断言
+PASS  4 子系统 4.9 规则条数  = 5
+PASS  2 子系统 4.10 六小节
+PASS  3 子系统 4.10 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.10 三类断言
+PASS  4 子系统 4.10 规则条数  = 8
+PASS  2 子系统 4.11 六小节
+PASS  3 子系统 4.11 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.11 三类断言
+PASS  4 子系统 4.11 规则条数  = 6
+PASS  2 子系统 4.12 六小节
+PASS  3 子系统 4.12 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.12 三类断言
+PASS  4 子系统 4.12 规则条数  = 7
+PASS  2 子系统 4.13 六小节
+PASS  3 子系统 4.13 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.13 三类断言
+PASS  4 子系统 4.13 规则条数  = 5
+PASS  2 子系统 4.14 六小节
+PASS  3 子系统 4.14 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.14 三类断言
+PASS  4 子系统 4.14 规则条数  = 8
+PASS  2 子系统 4.15 六小节
+PASS  3 子系统 4.15 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.15 三类断言
+PASS  4 子系统 4.15 规则条数  = 7
+PASS  2 子系统 4.16 六小节
+PASS  3 子系统 4.16 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.16 三类断言
+PASS  4 子系统 4.16 规则条数  = 5
+PASS  5 具体实体 id 字面量
+PASS  5 本卷词表条目代号字面量
+PASS  6 用于判断的描述性文本（§1、§7 引述旧代码除外）
+PASS  6 规则小节不读 purpose
+PASS  6 具体地区名
+PASS  6 规则小节无裸系数
+PASS  7 台账概念：建筑实体、房间、condition、维护 → §4.1
+PASS  7 台账概念：设施类型表 → §4.2
+PASS  7 台账概念：工位（提供哪些服务的设施条件） → §4.3
+PASS  7 台账概念：建造需求 → §4.4
+PASS  7 台账概念：形制 → §4.5
+PASS  7 台账概念：布局模板 → §4.6
+PASS  7 台账概念：炉窑热量与燃料 → §4.7
+PASS  7 台账概念：住宿、租房、床位 → §4.8
+PASS  7 台账概念：公共设施维护 → §4.9
+PASS  7 台账概念：可移动建筑与龛祠 → §4.10
+PASS  7 台账概念：房间评价（美观聚合、清洁） → §4.11
+PASS  7 台账概念：场所 → §4.12
+PASS  7 台账概念：仓储 → §4.13
+PASS  7 台账概念：机关 → §4.14
+PASS  7 台账概念：设施运营成本 → §4.15
+PASS  7 台账概念：结构防御接口 → §4.16
+PASS  7 未重定义别卷词表族（service、site）
+PASS  7 §3/§5 给出入口名 facilityTypeView
+PASS  7 §3/§5 给出入口名 facilityView
+PASS  7 §3/§5 给出入口名 chooseForm
+PASS  7 §3/§5 给出入口名 buildPlan
+PASS  7 §3/§5 给出入口名 stationFor
+PASS  7 §3/§5 给出入口名 restSite
+PASS  7 §3/§5 给出入口名 kilnReach
+PASS  7 §3/§5 给出入口名 storeTarget
+PASS  7 §3/§5 给出入口名 damageFacility
+PASS  7 §3/§5 给出入口名 settleFacilities
+PASS  7 §7 列出 public-projects.mjs:119
+PASS  7 §7 列出 building-maintenance.mjs:49
+PASS  7 §7 列出 facility-state.mjs:35
+PASS  7 §7 列出 engine.mjs:423
+PASS  7 §7 列出 promotion.mjs:54
+PASS  7 §7 列出 06a
+PASS  7 §7 列出 06b
+PASS  9 裁定1 导热与隔声用卷三已登记的维度名
+PASS  9 裁定1 用料 = 面积 × 厚度 × 密度，附手算示例
+PASS  9 裁定1 手算示例质量复算
+PASS  9 裁定1 手算示例数值与正文一致
+PASS  9 裁定2 type 的输入不含运行时的量
+PASS  9 裁定2 functions 为已装能力，另立 effective，声明无环
+PASS  9 裁定3 accessDefault 单点定义并给出入口
+PASS  9 裁定4 住宿合同种类归卷六，本卷只引用
+PASS  9 裁定5 分类输入扫描规则与可判定的 S19-4
+PASS  9 裁定5 A19-4.3 改成可判定的形式
+PASS  9 裁定6 §7 列出 facilities.mjs:53
+PASS  9 裁定6 §7 列出 facilities.mjs:123
+PASS  9 裁定6 §7 列出 agriculture.mjs:60
+PASS  9 裁定6 §7 列出 `rooms`
+PASS  9 裁定6 §7 列出 `lodging`
+PASS  9 裁定6 §7 列出 520
+PASS  9 裁定6 §7 列出 fixtures.json
+PASS  9 裁定6 §7 列出 validateThermalModel
+PASS  9 裁定6 §7 列出 facility-types.json
+PASS  9 旧稿残留：rankWeights
+PASS  9 旧稿残留：laborHeads
+PASS  9 旧稿残留：soundCurve`
+PASS  9 旧稿残留：时段进入许可四类
+PASS  9 旧稿残留：登记为损耗
+PASS  9 卷末有影响面表与记账栏
+PASS  10 新1 修缮复用建造的用料式，按体积份额
+PASS  10 新2 使用磨损读使用强度，没有工位也适用
+PASS  10 新3 房间的有效档与开放时段有定义，时段读卷二十日历入口
+PASS  10 新4 S19-10 与缺省链、在建工程不再冲突
+PASS  10 新5 S19-9 按写者与类型划定，排除进入判定
+PASS  10 新6 可得度按体积定义，分母不依赖选料
+PASS  10 Q12 写明定义方与须别卷配合
+PASS  10 Q13 写明定义方与须别卷配合
+PASS  10 Q14 写明定义方与须别卷配合
+PASS  10 Q15 写明定义方与须别卷配合
+PASS  10 Q16 写明定义方与须别卷配合
+PASS  10 Q17 写明定义方与须别卷配合
+PASS  10 Q18 写明定义方与须别卷配合
+PASS  10 Q19 写明定义方与须别卷配合
+PASS  10 Q20 标为非真问题
+PASS  10 卷末有牵连清单，影响面表有第三版一行
+INFO  正文行数（不含本附录） = 1540
+INFO  子系统数 = 16；开放问题数 = 26；验收断言数 = 50；扩展性测试数 = 9；迁移行数 = 37
+RESULT  全部通过
