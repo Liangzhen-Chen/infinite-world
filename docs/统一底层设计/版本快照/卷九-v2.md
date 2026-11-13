@@ -132,6 +132,7 @@
 | `resolve_stage` | `shape` `capacity` `precondition` `consent` `quote` `check` `effects` `commit` `aftermath` | §4.3 |
 | `degree`（成功度） | `critical_failure` `failure` `partial` `success` `critical_success` | §4.3 |
 | `activity_end` | `done` `interrupted` `abandoned` `failed` | §4.1 |
+| `interrupt_cause`（中断原因） | `capability` `interrupt_rx` `consent` | R9-1.12（活动推进第一步重查哪一项不过；多项不过取此序第一项） |
 | `proposal_phase` | `previewed` `confirmed` `expired` `withdrawn` | §4.4 |
 | `landing_level` | `mark` `fact` `solidified` | §4.15 |
 | `authority_via` | `holding` `office` `disposal` `guardianship` `contract` `clause` | §4.8 |
@@ -197,7 +198,7 @@
 
 | 路径 | 值 | 写者 | 进哈希 | 实体终止时 |
 |---|---|---|---|---|
-| `state.activities[actorId]` | struct{actionId, slots, startedAt: integer:minute, workTotal: integer, workDone: integer, workDoneRem: integer, paceUnits: integer, paceSince: integer:minute, finishAt: integer:minute nullable} | `activity.mjs` | 是 | `clear` |
+| `state.activities[actorId]` | struct{actionId, slots, startedAt: integer:minute, workTotal: integer, workDone: integer, workDoneRem: integer, paceUnits: integer, paceSince: integer:minute, finishAt: integer:minute nullable, endCause: interrupt_cause nullable} | `activity.mjs` | 是 | `clear` |
 | `state.agendas[personId]` | list<struct{from: integer:minute, until: integer:minute, actionId, slots, sourceCandidate}>（按 `from` 升序、互不重叠） | `npc-agenda.mjs` | 是 | `clear` |
 | `state.proposals[actorId][proposalId]` | struct{intent, quote, phase: proposal_phase, previewedAt: integer:minute, expiresAt: integer:minute} | `open-actions.mjs` | 是 | `clear`（主体段：提案人） |
 | `state.marks[onId][markId]` | struct{by: actorId, markKind: ref vocab mark_kind, at: integer:minute, proposalId nullable, level: landing_level} | `mark-actions.mjs` | 是 | `clear`（主体段：留痕对象） |
@@ -260,6 +261,7 @@
 | `rules.control.seatKind` | ref vocab holding_kind | 本卷登记的玩家席位边种类 | R9-3.9 |
 | `rules.act.paceFloor` | number | [0, 1] | R9-1.4 |
 | `rules.act.resumeWindowMinutes` | integer:minute | ≥ 0 | R9-1.7 |
+| `rules.act.advanceMaxMinutes` | map<act_class, integer:minute> | 键全覆盖 `act_class`；每值 ≥ 1。每类活动推进间隔的最大值，首值未核（无出处，待标定） | R9-1.12 |
 | `rules.check.rollDist` | distribution | 卷二 §1.10（随机实例化）的首批分布之一 | R9-3.5 |
 | `rules.check.degreeBands` | list<number>，长度 4 | 严格升序 | R9-3.5 |
 | `rules.open.proposalAction` | ref action | 目录内 | §2.4 |
@@ -278,6 +280,7 @@
 | `rules.npc.grievanceVerbs` | set<ref vocab verb> | 非空 | R9-12.3 |
 | `rules.npc.stanceWeights` | map<ref vocab stance_axis, number> | 缺键即 0 | R9-12.3 |
 | `rules.npc.switchMargin` | number | ≥ 0 | R9-12.7 |
+| `rules.npc.idleAdvanceMinutes` | integer:minute | ≥ 1。空闲的人重新决策的推进间隔最大值，首值未核（无出处，待标定） | R9-12.7 |
 | `rules.npc.conditionalStep` | integer | 正整数 | R9-12.6 |
 | `rules.dialogue.maxRounds` | integer | ≥ 1 | R9-13.4 |
 | `rules.dialogue.idleMinutes` | integer:minute | ≥ 1 | R9-13.5 |
@@ -369,6 +372,7 @@
 | 提交段的那一条 | 动作代号 | 该行动者此刻没有更早的提交时取行动者 id；同一时刻已有提交时取 `state.lastCommit[actorId].eventId`（上一条事件 id，R27-8.5 的写法） | `pos.commit` |
 | 善后段的成长、事实、反噬三类事务 | 各自的登记代号 `aft.skill`、`aft.fact`、`aft.backlash` | 提交段那条事件的 id | 恒为 `pos.only`。同一类事务一次结算有多条时（`multi` 槽位里的多个对象，或效果族 `targetSelector` 算出、不对应槽位的对象），按各条所涉实体 id 升序排成一列（同一实体有多条时按动作行槽位的声明序）：第一条的主体 id 取提交段那条事件的 id，其后每条取前一条的事件 id（与提交段那一行“上一条事件 id”同一写法，R27-8.5），所以两两不同且不用计数 |
 | 推进钩子、反应规则经执行器的事件 | 钩子或反应规则的登记代号 | 触发它的事件 id，或钩子的主体 id | 由登记它的卷给固定代号 |
+| 活动推进点与 `finishAt` 到期的那一条（R9-1.12；执行器末步里的推进不另出事件，属该次提交） | 本卷登记的到期项代号 `due.activity` | 行动者 id | `pos.only`（每条活动至多一个待到的推进点，同一行动者同一分钟只有一条） |
 
 没有计数器，也不需要禁止同刻重复提交：同一行动者同一分钟内的第二次提交以第一次的事件 id 为主体，id 不同。
 
@@ -478,15 +482,20 @@
 - **R9-1.1 目录是数据**：一个动作就是一行。可用性由 `capability`、`requirement`、`whenRX`、`consent` 四个字段决定，行为由 `effects` 决定；没有与动作一一对应的处理器函数。
 - **R9-1.2 可做之事投影**：`affordances()` 遍历目录全部行，对每行的每个槽位用“实体类加 `target_filter` 的 `whenRX`”从 view 生成候选列表，再按 `shape`、`capacity`、`precondition`、`consent` 四段依次试算（不报价、不检定）；第一处不过的错误码写进 `blocked`。候选生成函数与 `resolve()` 的 `shape` 段是同一个函数。
 - **R9-1.3 活动是动作实例**：`baseMinutes` 大于 0 的动作在开工提交时写一条 `state.activities[actorId]`。“在做什么”只读 `activityOf()`；睡眠、昏迷是状态容器，不是活动；人物表上不存活动文字。
-- **R9-1.4 进度与节奏**：开工时 `workTotal = baseMinutes`。节奏 `paceUnits` 是 `process.workPace` 求值结果的定点整数（标度即 `rules.act.paceScale`）。节奏只在三种时刻重算：开工、续做、该活动的重查集合被写到的那次事务（R9-1.12）。重算前先用旧节奏结清 `paceSince` 到此刻的 `m` 分钟：`acc = workDoneRem + m × paceUnits`；`workDone += floor(acc ÷ paceScale)`；`workDoneRem = acc − floor(acc ÷ paceScale) × paceScale`。除数 `paceScale` 是正整数，由加载校验保证。然后写新的 `paceUnits`、`paceSince`，并算收工时刻：`need = workTotal × paceScale − workDone × paceScale − workDoneRem`；`paceUnits` 为 0 时不做除法，`finishAt` 置空，活动停滞；否则 `finishAt = paceSince + ceil(need ÷ paceUnits)`，交卷二十 §4.1（刻、同刻全序、调度器与到期语义）登记到期项。在 `finishAt` 之前的任一刻 `m < need ÷ paceUnits`，结清后 `acc` 小于 `need`，所以存下的 `workDone` 恒小于 `workTotal`；到期那一刻判为做完，不再结清、不写回 `workDone`，活动记录在收工事务里删除，多出的不足一个 `paceUnits` 的部分随之丢弃（它不对应任何产出）。
+- **R9-1.4 进度与节奏**：开工时 `workTotal = baseMinutes`。节奏 `paceUnits` 是 `process.workPace` 求值结果的定点整数（标度即 `rules.act.paceScale`）。节奏只在活动推进时重算（推进的时刻与步骤见 R9-1.12）。重算前先用旧节奏结清 `paceSince` 到此刻的 `m` 分钟：`acc = workDoneRem + m × paceUnits`；`workDone += floor(acc ÷ paceScale)`；`workDoneRem = acc − floor(acc ÷ paceScale) × paceScale`。除数 `paceScale` 是正整数，由加载校验保证。然后写新的 `paceUnits`、`paceSince`，并算收工时刻：`need = workTotal × paceScale − workDone × paceScale − workDoneRem`；`paceUnits` 为 0 时不做除法，`finishAt` 置空，活动停滞；否则 `finishAt = paceSince + ceil(need ÷ paceUnits)`，交卷二十 §4.1（刻、同刻全序、调度器与到期语义）登记到期项。在 `finishAt` 之前的任一刻 `m < need ÷ paceUnits`，结清后 `acc` 小于 `need`，所以存下的 `workDone` 恒小于 `workTotal`；到期那一刻判为做完，不再结清、不写回 `workDone`，活动记录在收工事务里删除，多出的不足一个 `paceUnits` 的部分随之丢弃（它不对应任何产出）。
 - **R9-1.5 阶段读时派生**：当前阶段是 `stages` 里满足 `workDone × 1000 ≥ atPermille × workTotal` 的最后一项（交叉相乘比较，不做除法）。阶段不落存储。
-- **R9-1.6 中断**：每次节奏重算与每次到期时，重算 `can(actor, capability)`、该动作类的 `interruptRX` 与动作行 `consent` 声明的配合（R9-8.8）；任一不过即结束本段，结束前按 R9-1.4 用旧节奏结清到此刻。`resumable` 为真的，记录保留、`paceUnits` 置 0、`finishAt` 置空，并登记 `rules.act.resumeWindowMinutes` 之后的到期项；到期仍未续做即以 `abandoned` 结束并清除。`resumable` 为假的，立即以 `interrupted` 结束并清除。中断阈值只出现在 `interruptRX` 引用的规则表键里。
+- **R9-1.6 中断**：每次活动推进的第一步（R9-1.12）重查 `can(actor, capability)`、该动作类的 `interruptRX` 与动作行 `consent` 声明的配合（R9-8.8）；任一不过即结束本段，结束前按 R9-1.4 用旧节奏结清到此刻，中断原因取 `interrupt_cause` 的代号写进本次事务的事件。`resumable` 为真的，记录保留、`paceUnits` 置 0、`finishAt` 置空、`endCause` 写中断原因（续做时清空），并登记 `rules.act.resumeWindowMinutes` 之后的到期项；到期仍未续做即以 `abandoned` 结束并清除。`resumable` 为假的，立即以 `interrupted` 结束并清除。中断阈值只出现在 `interruptRX` 引用的规则表键里。
 - **R9-1.7 续做**：续做是来路为 `resume` 的同一个意图，从 `capacity` 段重新走；通过后按 R9-1.4 重算节奏，已做的工不丢。
 - **R9-1.8 并行**：一个行动者同时只有一条当前活动。活动期间提交瞬时动作，须两者动作类的 `attention` 相加不超过 1，否则 E-ACT-BUSY；要做就先提交“停下当前活动”的意图。
 - **R9-1.9 预留与退还**：开工时代价里的实物按 `cost_row.reserve` 转入行动者名下“在作”用途的账户；收工时由效果消耗；中断结束时按 `cost_row.onEnd`（`refund` 或 `forfeit`）整笔处置，不按进度拆分。
 - **R9-1.10 日程**：`state.agendas[personId]` 的每个槽只存动作代号、槽位值与来源候选 id。空闲时段：把一日按 `rules.agenda.slotMinutes` 等分（加载校验保证它整除一日分钟数，所以段数是正整数），`freeSlotsOf(…, dayIndex)` 数出既不与任何日程槽的区间相交、也不与当前活动的 `[paceSince, finishAt)` 相交的段数；日的起止分钟取卷二十 `calendarMinuteOf`。聚合层的人（卷二十七 §4.1（三层模拟运行矩阵））没有活动记录也没有日程；实体化时怎样补建归卷二十七 §4.2（聚合变体、等价、钉住）。
 - **R9-1.11 同一世界**：目录没有“只给玩家”或“只给 NPC”的行，也没有这样的字段。玩家能做的每件事 NPC 都能经同一行做，反之亦然。
-- **R9-1.12 重查集合与触发**：每条活动的重查集合 K = 以下各节点经卷二 §2.3（记忆与依赖声明）`inputsOf` 得到的冻结依赖路径之并：该行动者实体类的 `modified:<kind>`（`process.workPace` 的修正项来源都在其内）、`can()` 所求能力的谓词节点、动作类 `interruptRX` 引用的 view、动作行 `consent` 所涉同意边的 `holdings` 路径；世界时钟键 `state.clock` 不入 K。K 在开工时按动作行与动作类算一次，不存（它只由数据决定）。触发不靠新的内核机制：一切世界写入都经执行器（S9-1；推进钩子与反应规则也只交输出清单，R9-2.6），执行器在每次事务提交前已知本批原语写到的路径集合 W（每个原语的适配器只写登记的目标路径），于是在同一事务的末步，对 K 与 W 相交的每条在世活动按行动者 id 升序依次做 R9-1.4 的结清与重算和 R9-1.6 的中断检查。随世界时刻变化的影响（昼夜、季节、天气越线）一律经卷二十登记的到期项与越线事件（全书概念台账 X-33）落成写入，所以变更点只由世界内在量决定，与推进怎样分段无关。
+- **R9-1.12 活动推进与重查**（李白 11-13 裁定；通则，覆盖一切持续活动，不按动作类开特例）：
+  - **一次活动推进**按固定三步做：① 重查全部前提——`can(actor, capability)`、动作类 `interruptRX`、动作行 `consent` 所涉每条同意边此刻仍现役且未过截止（R9-8.8）；只读数值维度与固定代号，不读任何文字。② 按 R9-1.4 用旧节奏结清 `paceSince` 到此刻。③ ① 有一项不过即按 R9-1.6 中断，中断原因取 `interrupt_cause` 的代号（多项不过取该枚举序第一项）；全过则按 R9-1.4 重算节奏与 `finishAt`，并登记下一个推进点。
+  - **推进时刻只有四种**：开工与续做；推进点；`finishAt` 到期（先做 ①，全过才判为做完）；执行器事务末步（见下）。推进点是卷二十 §4.1（刻、同刻全序、调度器与到期语义）的到期项，时刻 = `paceSince + rules.act.advanceMaxMinutes[该动作类]`，`finishAt` 不晚于它时不另登记；每次推进都撤下该活动尚未到的旧推进点再登记新的，所以每条活动至多一个待到的推进点；停滞的活动（`paceUnits` 为 0、`finishAt` 空）照样有推进点，节奏回升也在推进点生效。于是同一条活动相邻两次推进相隔不超过该类的推进间隔。
+  - **旁路直写的延迟上界**：卷二 §2.6（写者与三接口）许可推进钩子在内核事务里经 `writePath` 直写其登记写者范围（卷二 §2.7（系统声明表 `state-owners.json`）示例里 `body` 阶段的状态推进钩子即一例），同节的终止协议由内核清记录、关持有边；这些写入不经执行器，本卷不为它们另开回调。它们改变的前提最迟在受影响活动的下一个推进点被 ① 查到，所以旁路直写造成的延迟不超过一个推进间隔。延迟期内已发生的效果按现有结算规则处理：累计的工按 ② 结清到中断时刻，预留按 R9-1.9 的 `cost_row.onEnd` 处置，不回滚，不另造补偿；活动的产出只在收工时发生，而收工前必先过 ①，所以前提已失效的活动不会产出。
+  - **执行器末步**（保留，理由：经执行器的写入都出自某个意图，如撤回同意、捆绑、击伤，行动者在同一份回执里就该看到后果；这一款只是推进时刻的第四种，走同一个三步，不是第二套规则，也不与上款矛盾——上款只给不经执行器的写入定上界）：每条活动的重查集合 K = 以下节点经卷二 §2.3（记忆与依赖声明）`inputsOf` 得到的冻结依赖路径之并：行动者实体类的 `modified:<kind>`（`process.workPace` 的修正项来源都在其内）、`can()` 所读的 `view:bodyView` 与 `view:statusView`（卷二 §2.5（状态谓词单点））、`interruptRX` 引用的 view、`consent` 所涉同意边的 `holdings` 路径；`state.clock` 不入 K。K 在开工时按动作行与动作类算一次，不存。W = 本批原语写到的路径集合（每个原语的适配器只写登记的目标路径）。同一事务末步，对 K 与 W 相交的在世活动按行动者 id 升序单遍各做一次活动推进，每条至多一次；末步自身的写入（中断时的预留处置、活动记录的结束）不并入 W，受它们影响的活动按上款在各自下一个推进点重查。次序固定，结果确定。
+  - **确定性**：推进点与到期项都落在世界内在的分钟上，随世界时刻变化的影响（昼夜、季节、天气越线）一律经卷二十登记的到期项与越线事件（全书概念台账 X-33）落成写入，所以一次推进 N 分钟与分段推进合计 N 分钟遇到同一串推进时刻。重查的成本（每个推进点一次 ①）作为性能项交卷二十七（§5.3 勘10）。
 
 #### 4.1.4 交互
 
@@ -501,7 +510,7 @@
 #### 4.1.6 验收断言
 
 - 扫描式：A9-1.1 规则层读取人物的活动文字字段、或对活动与状态做文字比较的行数为 0；缺 `menu` 或缺 `intimate` 的动作行数为 0；与单个动作代号一一对应的处理器函数个数为 0。
-- 不变量式：A9-1.2 同一组节奏变更点下，把任意一段工作切成任意多次结清，`workDone`、`workDoneRem`、`finishAt` 与一次结清逐位相同；`workDoneRem` 恒在 `[0, paceScale)`；存下的 `workDone` 恒小于 `workTotal`，到期收工后记录不存在；一次推进 N 分钟与分段推进合计 N 分钟得到同一份存档摘要；对任一在世活动，若某次事务写到它的重查集合 K 里的路径，同一事务末步之后它的 `paceUnits` 等于此刻重新求值的结果，且 `can()`、`interruptRX` 与配合任一不过的活动在该事务后已结束（昏迷、被捆、死亡都在发生的那次事务里中断）。
+- 不变量式：A9-1.2 同一组节奏变更点下，把任意一段工作切成任意多次结清，`workDone`、`workDoneRem`、`finishAt` 与一次结清逐位相同；`workDoneRem` 恒在 `[0, paceScale)`；存下的 `workDone` 恒小于 `workTotal`，到期收工后记录不存在；一次推进 N 分钟与分段推进合计 N 分钟得到同一份存档摘要；对任一在世活动，相邻两次活动推进的时刻差不超过 `rules.act.advanceMaxMinutes[该动作类]`；若某次经执行器的事务写到它的重查集合 K 里的路径，同一事务末步之后它的 `paceUnits` 等于此刻重新求值的结果，且 `can()`、`interruptRX` 与配合任一不过的活动在该事务后已结束；前提由不经执行器的写入（推进钩子直写、终止协议）变为不过的，活动在该写入之后一个推进间隔之内结束，带对应的 `interrupt_cause`；任一活动收工的那次事务里，三项前提都过。
 - 扩展性式：A9-1.3 只加一条动作行、一条动作类条目与两条阶段条目（不改任何 .mjs），新动作出现在 `affordances()`、可由菜单提交、可开工、可中断、可续做。
 
 ### 4.2 原语目录与执行器
@@ -541,10 +550,10 @@
 
 - **R9-2.1 目录封闭**：原语集合是卷一 §3A（共享计算设施）第 3A.9 项列出的封闭项；增删原语须改本卷并报批。开放的是效果族行与动作行。
 - **R9-2.2 效果族回答做什么，原语回答怎么写**：效果族行算出对象集合、幅度与输出清单；执行器把输出清单按上面的固定展开变成原语列表。执行器不认识任何效果族代号。
-- **R9-2.3 一次事务**：`execute` 先逐个按契约校验（不合即 E-ACT-PRIMITIVE，整批不执行），再按“原语在目录中的固定序、同原语按列表下标”排定次序，在一次内核事务里逐个交给对应通道的适配器；任一适配器拒绝则整批回滚。事务末步按 R9-1.12 对受影响的活动做结清、重算与中断检查（它们的写入属同一事务）。成功后恰好产出一条事件，带原语列表、起因与骰值键，事件 id 按 §2.9 派生。
+- **R9-2.3 一次事务**：`execute` 先逐个按契约校验（不合即 E-ACT-PRIMITIVE，整批不执行），再按“原语在目录中的固定序、同原语按列表下标”排定次序，在一次内核事务里逐个交给对应通道的适配器；任一适配器拒绝则整批回滚。事务末步按 R9-1.12 对重查集合与本批写入相交的活动各做一次活动推进（它们的写入属同一事务）。成功后恰好产出一条事件，带原语列表、起因与骰值键，事件 id 按 §2.9 派生。
 - **R9-2.4 适配器按原语分，不按领域分**：每个原语一个适配器。适配器里没有实体 id、没有按类别名写的分支；领域差别只来自参数与目标写者。
 - **R9-2.5 参数只有代号与数值**：原语参数的类型是卷二 §1.5（类型清单）里除 `string` 之外的类型。`fact.set` 的目标必须是某张维度表里登记的非文字维度，并且该维度的写者声明允许经执行器写。
-- **R9-2.6 别卷的输出清单**：推进钩子与反应规则只返回输出清单（形状同效果族输出），由钩子的调度方交 `execute` 执行，`cause` 取钩子或反应规则的登记代号。它们自己不写状态。
+- **R9-2.6 别卷的输出清单**：推进钩子与反应规则返回的输出清单（形状同效果族输出）由钩子的调度方交 `execute` 执行，`cause` 取钩子或反应规则的登记代号。推进钩子另可按卷二 §2.6（写者与三接口）在其登记写者范围内经 `writePath` 直写；这类写入不经执行器，对活动与决策的影响按 R9-1.12、R9-12.7 的推进点上界处理，本卷不另设回调。
 - **R9-2.7 守恒**：实物与钱的增减只能是 `transfer`；`create`、`destroy` 涉及实物时，原语列表里必须有与之配对、指向登记源汇账户的 `transfer`，否则 E-ACT-PRIMITIVE。
 - **R9-2.8 `learn` 不含成长算法**：善后段按动作行 `skillGain` 组出 `learn` 原语：`skill`、`source` 取该字段；`minutes` 取本次实际工时（长时动作取开工到收工的世界分钟数，瞬时动作为 0，0 分钟怎样计归卷十四）；`difficulty` 取本次检定的 `difficulty`（不检定为空）。适配器把它原样组成卷十四的 `session = {minutes, source, difficulty}` 交 `gainSkill(engine, state, personId, skillId, session)`；技能涨多少归卷十四 §4.12（成长、经验与兼修负担），`teacher`、`carrier`、`group` 由登记该动作行的卷经槽位给出时一并原样转交。
 
@@ -802,7 +811,7 @@
 - **R9-8.5 亲密范围不可替代**：`scope` 的 `intimate` 为真或动作行 `intimate` 为真时，双方须各自通过卷十八的 `intimateEligible`、合起来通过 `intimateAllowed`，且只认 R9-8.2 的 ①。指向亲密范围的 `waive`、`substitute` 条款行在加载期即报错。这是未成年人保护里按数值判断的那一半；按文字判断的那一半在 §4.19。年龄只经卷十八 `intimateEligible` 读（它内部读卷四的成年与相对成熟度维度），本卷与守门都不直接读卷四的 `adult`。
 - **R9-8.6 权能怎样成立（只作读数）**：`authority()` 取 `power` 相同的全部 `authority_source` 行，逐行按 `via` 读对应卷的入口：`holding` 读行动者对 `over`（或包含它的地点、组织）有无该种类的在世持有边；`office` 读卷八 §4.2（职位、官职、俸禄、继任、代理追认）的职位权能与辖区；`disposal` 调卷八b的 `disposalRight`；`guardianship` 读卷十八 §4.2（家户、亲属、婚配、继承、分家、监护）的监护边；`contract` 读卷六 §4.16（合同状态机）的在效条款；`clause` 读条款行的 `whenRX`。任一行成立即为成立；返回全部成立的来源。结果只进报价、NPC 决策与善后事实，本管线不据它拦截；需要权能才写得进去的“设立身份的写入”（卷八b R8b-4.5 封闭清单）由各自的卷在写入处自查。
 - **R9-8.7 来源是行不是分支**：新增一种权能来源只加 `authority_source` 行；`via` 的六个取值是读入口的方式，不是内容。
-- **R9-8.8 时效与撤回**：同意边有截止时刻；`revocable` 的范围可由给出者随时关闭。撤回不追溯已提交的事；进行中的活动，其配合所依的同意边在它的重查集合里（R9-1.12），撤回的那次事务即重问一次，不成立即按 R9-1.6 中断。
+- **R9-8.8 时效与撤回**：同意边有截止时刻；`revocable` 的范围可由给出者随时关闭。撤回不追溯已提交的事；进行中的活动，其配合所依的同意边在它的重查集合里（R9-1.12）：撤回经执行器的 `holding.close`，撤回的那次事务即重问一次；到截止时刻或被终止协议关闭的，最迟在该活动下一个推进点重问。不成立即按 R9-1.6 中断，中断原因 `consent`。
 - **R9-8.9 比的是代号**：同意是否对得上只比 `scope` 代号与 `object` id，不比任何说明文字。
 
 #### 4.8.4 交互
@@ -972,11 +981,11 @@
 - **R9-12.4 效用**：`U = Σ_d driveWeight[d] × contrib[d] + w.reward × reward + w.relation × 立场读数 − w.grievance × 积怨读数 − w.money × cost.money − w.time × cost.minutes − w.risk × cost.risk + decisionJitter(主体, 决策时刻, candidateId)`。`w` 取 `rules.npc.utilityWeights`。`reward` 是非钱的得益（如人情、名声的数值读数）；凡是钱，一律进 `cost.money`（对方给钱是负的代价）。需求类驱力的 `contrib` 由 `needSatisfiers()` 给出；`cost.risk` 可含 `legalityOf()` 读出的不合法后果估值与报价里的未得同意、无权能读数。**各项代价保留正负号**：负的代价（抵扣、对方代付）抬高效用，不截成 0。全式只有加减乘。
 - **R9-12.5 应答式的结论**：`npcDecision` 对“答应”这个候选算 `U`。底线剔除即 `refuse`；`U` 不小于 0 且后两段无碍即 `agree`；`U` 小于 0 见 R9-12.6；后两段有碍见 R9-12.8。
 - **R9-12.6 有条件答应**：预付是钱，按效用式里钱的权重折算。`U` 小于 0 时，若 `w.money` 为 0，不做除法，结论为 `refuse`；否则所需预付 = `ceil(−U ÷ (w.money × rules.npc.conditionalStep)) × rules.npc.conditionalStep`（`conditionalStep` 是正整数，此时 `w.money` 为正，除数为正），结论为 `conditional`，决定卡 `prepay` 槽带这笔数。付了这笔，`cost.money` 减少同额，`U` 恰回到不小于 0。
-- **R9-12.7 主动式的选择**：`npcChoose` 在三种时刻被调度：日程槽结束、当前活动结束、没有当前活动的人其需求类状态实例被写入的那次事务（执行器在事务末步按 R9-1.12 同一做法发现：该人的重查集合取卷二十六 `needSatisfiers()` 与驱力权重所依的状态路径；需求越线由卷二十六的推进钩子以输出清单写成状态实例，本卷不另要到期项）。它取全部 `candidate_provider` 行（候选只来自登记的数据行，没有按代码写的提供者），各自按 `whenRX` 与 `slotGen` 生成不超过 `maxCandidates` 个候选，过 R9-12.2，按 R9-12.4 算 `U`，取最大者；`U` 相同时取 `candidateId` 码序最小者。已有承诺（`state.decisionCommit`）未到 `until` 时，新候选的 `U` 须比承诺候选此刻的 `U` 高出 `rules.npc.switchMargin` 才替换。`npcChoose` 自己不写状态；调度它的到期钩子据其结果以声明写者写日程槽与承诺，并把意图交 `resolve()`。
+- **R9-12.7 主动式的选择**：`npcChoose` 在四种时刻被调度：日程槽结束、当前活动结束、没有当前活动的人其需求类状态实例经执行器被写入的那次事务（执行器在事务末步按 R9-1.12 同一做法发现：该人的重查集合取卷二十六 `needSatisfiers()` 与驱力权重所依的状态路径）、没有当前活动的人的空闲推进点（每隔 `rules.npc.idleAdvanceMinutes` 一个到期项，有活动或日程槽时不登记）。需求越线若由推进钩子经 `writePath` 直写（卷二 §2.6（写者与三接口）许可），不经执行器，按 R9-1.12 同一上界最迟在下一个空闲推进点被发现，延迟不超过一个间隔。它取全部 `candidate_provider` 行（候选只来自登记的数据行，没有按代码写的提供者），各自按 `whenRX` 与 `slotGen` 生成不超过 `maxCandidates` 个候选，过 R9-12.2，按 R9-12.4 算 `U`，取最大者；`U` 相同时取 `candidateId` 码序最小者。已有承诺（`state.decisionCommit`）未到 `until` 时，新候选的 `U` 须比承诺候选此刻的 `U` 高出 `rules.npc.switchMargin` 才替换。`npcChoose` 自己不写状态；调度它的到期钩子据其结果以声明写者写日程槽与承诺，并把意图交 `resolve()`。
 - **R9-12.8 处境与冲突**：`circumstances` 段读 `can()`、`activityOf()` 的动作类注意力、日程槽占用：此刻做不了而稍后可以的，结论 `defer`，`due` 取最早的空闲时刻。`conflicts` 段读该人物在效的义务与职位职责：时间区间重叠或职责禁止的，结论 `refuse`。两段都只比较区间与代号。
 - **R9-12.9 决定先于对白**：`Decision` 算出后才有台词。决定卡代号与槽位进 `ReplyResult` 与场景卡；模型只管措辞，改不了结论。
 - **R9-12.10 走同一条管线**：NPC 对世界的一切改动只经 `resolve()`。日程槽与承诺是决策自己的记录，不是世界改动，由 `npc-agenda.mjs` 以声明写者写。候选提供者只返回意图，自己不写状态；违者 E-NPC-BYPASS。
-- **R9-12.11 不是每拍都想**：决策只在 R9-12.7 的三种时刻发生，它们都由世界内在量决定，不随推进步长变化；聚合层的人不逐人决策（卷二十七 §4.1（三层模拟运行矩阵））。
+- **R9-12.11 不是每拍都想**：决策只在 R9-12.7 的四种时刻发生，它们都由世界内在量决定，不随推进步长变化；聚合层的人不逐人决策（卷二十七 §4.1（三层模拟运行矩阵））。
 - **R9-12.12 契机不在这里**：隐藏职业契机（卷十四 §4.8（隐藏职业契机））是订阅事件的反应规则；它若给出“可以入行”，那只是多出一个候选，取舍仍按本节。
 
 #### 4.12.4 交互
@@ -1328,7 +1337,7 @@
 
 本节分两张表。甲表是封卷后勘误请求：本版只改卷九，不动别卷文件，下列各条待后批由对方卷的改稿者一次改清（行号按 2026-11-13 本版改稿时的文件）。乙表是对尚未成稿各卷与各领域卷的配合项（登记数据行、实现扫描），不属勘误。第一版的 15 项按一审第三节逐项处置，去向见表后。
 
-**甲 封卷后勘误请求（9 条）**
+**甲 封卷后勘误请求（10 条）**
 
 | # | 文件:行 | 全书读者（Grep） | 建议单点改法 | 必要理由 |
 |---|---|---|---|---|
@@ -1341,8 +1350,9 @@
 | 勘7 | 卷三乙-物态类别与物品.md:1160 一带（§4.8 `craftOutcome` 签名与 R-1、R-2）与 :1251（X-2） | 本卷 R9-4.4、R9-15.3 | 在 `craftOutcome` 内补一条“无配方即兴”：`recipeId` 为空时，产物模板取意图槽位给的物品类别（卷三乙 §4.3），材料继承、产率、工时、品质滚档按现有各步、取该类别的默认参数（由卷三乙规则表给），开工条件只查工具能力与 `capability`；不另设品质系数 | 本卷删了第二套品质算法（`process.quality`、`rules.cap.improvisedMod`），即兴制作的参数须由品质的唯一定义处给出 |
 | 勘8 | 卷六-经济.md:974、:990；卷十八-社会关系与家族.md:643（R18-3.1） | 本卷 §4.8 | “卷九 §4.5（同意）”“卷九 §4.6（同意与权能）”改为“卷九 §4.8（同意与权能）” | 引错节号（§4.5 是构造器、§4.6 是路由） |
 | 勘9 | 卷四-生物身体与人物.md:550（§4.4 交互） | 卷十八-社会关系与家族.md:286；本卷 R9-8.5 | “卷九 §4.19（守门读 `adult`）”改为“卷十八 §4.9（婚配制度、性风俗、儿童与老人）的 `intimateEligible` 读 `adult`；卷九 §4.8、§4.19 只调该谓词” | 卷九的数值半边不直接读 `adult`，写成卷九读会造成“第二处亲密资格判定”的误读（卷十八 S18-8） |
+| 勘10 | 卷二十七-离屏性能存档与确定性.md:148、:150（§2.2 规则表字段的 `coef`、`costSubjects` 行）、:389–391（R27-3.1 预计成本与块内拍数） | 本卷 R9-1.12、R9-12.7 | 登记一个性能项（新系统键，按该卷 X27-1 的做法补系统声明行、`coef` 行、`costSubjects` 行与基线行）：活动推进的重查。主体是有当前活动的个体，外加没有活动、按 `rules.npc.idleAdvanceMinutes` 登记空闲推进点的个体层的人；每个推进点一次重查（只读数值维度与固定代号：`can()` 的两个 view、`interruptRX` 引用的 view、同意边）。它的周期不是层节拍，而是 `rules.act.advanceMaxMinutes` 各值与 `rules.npc.idleAdvanceMinutes`，所以请该卷写明此系统的“块内拍数”按哪一个间隔折算（建议取各间隔中最短的一个，得上界；各间隔 ≥ 1 由本卷加载校验保证）；本卷不改该卷 | 李白 11-13 对二审 N1 的裁定：不经执行器的写入靠推进点重查兜住，延迟上界是一个推进间隔，代价是每个推进点一次重查，须进成本模型与性能门 |
 
-以上九条都不新增内核机制。T17（节奏重算与中断的触发）不需要卷二新增提交钩子：它由本卷的执行器在自己的事务末步完成（R9-1.12），用的是卷二已有的 `inputsOf` 与“一切世界写入经执行器”这条既有约束。
+以上十条都不新增内核机制。T17 与二审 N1（节奏重算与中断的触发）不需要卷二新增提交钩子：一切持续活动在每次活动推进的第一步重查全部前提（R9-1.12），推进点是卷二十已有的到期项；经执行器的写入另在执行器自己的事务末步用卷二已有的 `inputsOf` 求交、当次生效；推进钩子经 `writePath` 直写与终止协议的写入不经执行器，最迟在下一个推进点被查到。
 
 **乙 配合项（未成稿卷与各领域卷）**
 
@@ -1352,7 +1362,7 @@
 | P2 | 卷十二 | 实现 S9-1 至 S9-9 与各节断言；V-21、V-23、V-26、V-29 的判据取本卷 §4.5、§4.19；测试台装配注入 `replaySource()`；模型请求延迟在测试台外部量 | §3.5、§6、R9-18.3、R9-18.5 |
 | P3 | 卷二十八、卷二十九 | 作者工具读学习记录与候选卡；显示层按 `cards` 出模板对白；前端提供 `channel` 与节奏设置开关、结构化上行；`ReplyResult` 字段全集与本卷 §2.4 合并定稿 | §4.16、§4.5、§4.9、§2.4 |
 
-第一版 15 项的去向（按一审第三节）：1 → 勘1；2 中过程槽改由本卷在 `derived-process.json` 自己登记（§2.6），词表汇总按写卷须知收尾统一做，意图形态对齐 → 勘2；3 撤回（李白裁定不放开计时能力；旁路出口 `report` 已在卷二），录制出口 → 勘4；4 撤回（持有种类是开放项，本卷自己登记两行，§2.1）；5 撤回，改为本卷回答卷二十七 §8 第 7、16 条 → 勘5；6 撤回（需求越线触发改由本卷执行器末步完成，R9-12.7）；7 撤回（用 `valence` 档序，R9-12.2）；8 前半撤回（卷三乙 Q-2 已含检定余量），后半 → 勘6，另加 勘7；9 前半撤回（R8b-2.3 已由执行器调 `noteFact`），后半撤回（违卷八b R8b-4.5）；10 撤回（`session` 形状已定，R9-2.8 照用）；11 → P1；12 撤回（卷零:806、:814 已写由卷九登记）；13 撤回（卷一 §7 无 t3 用途表；改的是旧设计 AI-00 与 `ai-profile.mjs`，见 M9-18、M9-22）；14 → P2；15 → P3。
+第一版 15 项的去向（按一审第三节）：1 → 勘1；2 中过程槽改由本卷在 `derived-process.json` 自己登记（§2.6），词表汇总按写卷须知收尾统一做，意图形态对齐 → 勘2；3 撤回（李白裁定不放开计时能力；旁路出口 `report` 已在卷二），录制出口 → 勘4；4 撤回（持有种类是开放项，本卷自己登记两行，§2.1）；5 撤回，改为本卷回答卷二十七 §8 第 7、16 条 → 勘5；6 撤回（需求越线触发改由本卷执行器末步与空闲推进点完成，R9-12.7）；7 撤回（用 `valence` 档序，R9-12.2）；8 前半撤回（卷三乙 Q-2 已含检定余量），后半 → 勘6，另加 勘7；9 前半撤回（R8b-2.3 已由执行器调 `noteFact`），后半撤回（违卷八b R8b-4.5）；10 撤回（`session` 形状已定，R9-2.8 照用）；11 → P1；12 撤回（卷零:806、:814 已写由卷九登记）；13 撤回（卷一 §7 无 t3 用途表；改的是旧设计 AI-00 与 `ai-profile.mjs`，见 M9-18、M9-22）；14 → P2；15 → P3。
 
 ---
 
@@ -1467,6 +1477,8 @@
 | 难度行、能力行、上限行、豁免行、代价行 | `difficulty_row`、`ability_row`、`cap_row`、`cap_exempt_row`、`cost_row` | §4.7 |
 | 配合、同意、权能 | 动作行 `consent`、`consent()`、`authority()` | §4.8 |
 | 玩家席位边 | `rules.control.seatKind`、`controlledByPlayer()` | R9-3.9 |
+| 活动推进、推进点 | 三步（重查、结清、中断或重算）；`rules.act.advanceMaxMinutes` | R9-1.12 |
+| 中断原因 | `interrupt_cause`、记录的 `endCause` | R9-1.12、R9-1.6 |
 | 重查集合 | 活动的 K | R9-1.12 |
 | 会话命令 | 节奏设置、席位 | R9-6.8 |
 | `ReplyResult` 本卷字段 | `receipts`、`alternatives`、`ambiguous`、`missingSlots`、`cards` | §2.4 |
@@ -1511,7 +1523,7 @@
 | 4 | 已补（第二版）：卷零 §3.5 共 151 处的归属与 M 条目对照 | §0.3、§7 末段 | 已闭合 |
 | 5 | 未核：选择式判断模型的计价口径（输出 token 是否另计）、单题选项数上限、把握阈值 `rules.judge.minConfidencePermille` | §4.17、§4.18 | 供应方文档（交 Opus）；阈值交标定批 |
 | 6 | 待标定：`rules.check.rollDist` 的分布与 `degreeBands` 四个界；`rules.act.craftDegree` | R9-3.5、R9-4.4 | 标定批 |
-| 7 | 待标定：`rules.npc.utilityWeights` 七项、`redLineValence`、`grievanceVerbs`、`stanceWeights`、`switchMargin`；`rules.agenda.slotMinutes` | R9-12.2–R9-12.7、R9-1.10 | 标定批 |
+| 7 | 待标定：`rules.npc.utilityWeights` 七项、`redLineValence`、`grievanceVerbs`、`stanceWeights`、`switchMargin`；`rules.agenda.slotMinutes`；未核（无出处）：`rules.act.advanceMaxMinutes` 各类首值、`rules.npc.idleAdvanceMinutes` | R9-12.2–R9-12.7、R9-1.10、R9-1.12 | 标定批 |
 | 8 | 待标定：`rules.scene.promptBudget`、`staticBudget`（现测静态提示约一万零五百，口径是 token，需换算成码点） | R9-10.4、R9-10.8 | 标定批；换算交 Opus |
 | 9 | 待标定：`rules.ai.timeoutMs`、`budgetTokens`、`degradeMap` 各行；`rules.ai.modelClass`、`validateNameWindow`、`rules.i18n.nameCandidateCount`（李白 11-13：档位与量写成规则表键，待标定） | §4.14、§4.18、R9-19.10、R9-19.11 | 标定批 |
 | 10 | 待查（交 Opus）：卷十三 §4.1、§4.18，卷十五 §4.1、§4.4，卷二十二 §4.1、§4.7，卷二十八 §4.5、§4.7，卷二十九 §4.1–§4.3、§4.7，卷十二 §4.6 尚未成稿，引用的标题按台账写，成稿后对齐 | 全卷引用 | Opus 收尾 |
@@ -1555,7 +1567,7 @@
 
 | 编号 | 改在哪 | 怎样改 |
 |---|---|---|
-| 二审 N1 | — | 未改：推进钩子经 `writePath` 直写的事务不经执行器，本卷没有卷二现成接口能在那次事务末步做求交，待主会话定改法 |
+| 二审 N1 | §2.1 `interrupt_cause`；§2.3 `endCause`；§2.5 `rules.act.advanceMaxMinutes`、`rules.npc.idleAdvanceMinutes`；R9-1.4、R9-1.6、R9-1.12、R9-2.3、R9-2.6、R9-8.8、R9-12.7、R9-12.11、A9-1.2；§5.3 勘10 与表后段；术语表；待补第 7 条 | 按李白 11-13 裁定（选甲，不动卷二；改前快照 `版本快照/卷九-v2b.md`）：一切持续活动每次推进第一步重查全部前提（含同意边），不过即中断并写 `interrupt_cause`；推进点按各类 `advanceMaxMinutes`（未核）登记，推进钩子直写与终止协议的延迟上界为一个推进间隔，已发生效果按现结算规则、不回滚不补偿；执行器末步求交保留为第四种推进时刻（经执行器的写入当次生效），K 的 `can()` 成分改为 `view:bodyView`、`view:statusView`，末步单遍、id 升序、自身写入不并入 W；删“一切写入都经执行器”的前提；空闲 NPC 决策同法加空闲推进点；重查成本交卷二十七（勘10） |
 | 二审 N2 | §5.3 勘1 | 读者补卷一:619、:872、:946 与卷二:935、:939、:2541，改法写明同步删去 `records.*.text` |
 | 二审 N3 | §2.9 事件 id 表善后行 | 位次恒为 `pos.only`；同类多条按所涉实体 id 升序成链，主体 id 取前一条事件 id，删 `pos.party.<槽位代号>` |
 | 二审小项 | R9-3.9；§5.3 勘2、勘6、勘9 | 席位边种类行写全卷十八主列（传导系数 0、`functional` 假、`holderEnd` 三格关闭等）；勘2 补句覆盖通用槽位；勘6 加卷三乙:1211；勘9 卷十八行号改 :286 |
