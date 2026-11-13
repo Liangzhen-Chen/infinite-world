@@ -108,7 +108,12 @@ test('缺粮谋生：预告、沿实际路线走完全程，抵达后住户、�
   assert.ok(got>0,`${item}：货从卖家库存转到了迁居者手里，数量${got}`);
   paid+=b.amount;
  }
- assert.equal(coins0-npc(s,mover).coins,paid,'迁居者出发前少掉的钱恰为这些成交的货款，没有别的去向');
+ // EC-1b 起迁居者清醒的空闲段也是居民卖方：手里的口粮会卖给同聚落的邻居（trader_<编号>，customer 事件）并交商税，所以他的钱袋净变动 = 流入 − 流出，不再只有购粮。
+ // 核对按账本逐笔：流出只有两类（购粮货款；他自己卖货的商税，事件号 customer:trader_<他>:…），净变动恰等于账本里流入减流出（钱袋守恒）。
+ const purse=`${mover}|coin_river|`,outs=trace.filter(t=>String(t.from).startsWith(purse)&&t.amount>0),ins=trace.filter(t=>String(t.to).startsWith(purse)&&t.amount>0);
+ assert.ok(outs.filter(t=>!buys.includes(t)).every(t=>t.writer==='finance-tax'&&String(t.eventId).startsWith(`customer:trader_${mover}:`)),'除购粮货款外，迁居者的钱只用于交自己卖货的商税，没有别的去向');
+ assert.equal(coins0-npc(s,mover).coins,outs.reduce((n,t)=>n+t.amount,0)-ins.reduce((n,t)=>n+t.amount,0),'迁居者出发前钱袋净变动恰为账本里的流出减流入');
+ assert.ok(paid>0);
  // 探针（tools/probe-money-flow.mjs migration，本次）给出的这笔交易：t=15120，买方许苓，卖方林穗（悦灯客栈 shop_hw_qingdeng），
  // 1 铜买面包 item_bread ×1，7 铜买燕麦薄饼 item_oat_flatbread ×4，共 8 铜（57→49）；货转移 writer=items，货款 writer=shop；
  // 其中 4 张燕麦薄饼随后在 t=15840 被家里当晚饭吃掉（household-meal，早于出发），面包留在库存。

@@ -273,7 +273,10 @@ function snapshotOf(){
  const state=doc.state;
  return {minute:state.minute,playerLocation:state.location,
   npcs:Object.fromEntries(ids.map(id=>{const n=state.npcs?.[id];return [id,n?{location:n.location,activity:n.activity,status:n.status,coins:n.coins,scheduleTravel:n.scheduleTravel??null,caring:n.caring??null,levy:n.levy??null,residence:n.residence??null}:null];})),
-  trips:Object.values(state.records??{}).filter(r=>r?.category==='market_trip'&&(ids.includes(r.actor)||ids.includes(r.keeper))).slice(-6).map(r=>({id:r.id,actor:r.actor,keeper:r.keeper,from:r.from,to:r.to,departAt:r.departAt,returnAt:r.returnAt}))};
+  trips:Object.values(state.records??{}).filter(r=>r?.category==='market_trip'&&(ids.includes(r.actor)||ids.includes(r.keeper))).slice(-6).map(r=>({id:r.id,actor:r.actor,keeper:r.keeper,from:r.from,to:r.to,departAt:r.departAt,returnAt:r.returnAt})),
+  // 劳务合同（labor-market 招工）：谁受雇、通勤分钟、起算时刻、各日出勤分钟，用于出勤少算类失败（s5-04 #16）；与关注人物有关的最近 6 个自主任务。
+  jobs:Object.values(state.records??{}).filter(r=>r?.laborMarket===1).map(r=>({id:r.id,worker:r.worker,owner:r.owner,status:r.status,starts:r.starts,commuteMinutes:r.commuteMinutes,workMinutes:r.workMinutes,attendance:r.attendance,workedMinutes:r.workedMinutes})),
+  tasks:Object.values(state.npcAutonomy?.tasks??{}).filter(t=>ids.includes(t.npc)).slice(-6).map(t=>({id:t.id,npc:t.npc,status:t.status,start:t.start,finish:t.finish,kind:t.action?.kind}))};
 }
 async function assertCapture(file){
  const assertModule=(await import('node:assert/strict')).default,hb=await import('../server-plugin/household-budget.mjs');
