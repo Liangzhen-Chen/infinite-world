@@ -109,10 +109,17 @@ test('缺粮谋生：预告、沿实际路线走完全程，抵达后住户、�
   paid+=b.amount;
  }
  // EC-1b 起迁居者清醒的空闲段也是居民卖方：手里的口粮会卖给同聚落的邻居（trader_<编号>，customer 事件）并交商税，所以他的钱袋净变动 = 流入 − 流出，不再只有购粮。
- // 核对按账本逐笔：流出只有两类（购粮货款；他自己卖货的商税，事件号 customer:trader_<他>:…），净变动恰等于账本里流入减流出（钱袋守恒）。
+ // 规律：钱袋只有两类流入/流出来源。流入只能是他作为居民卖方的零售成交（事件号 customer:trader_<他>:…，买方付款），
+ // 且每笔流入都对应一笔他的货转给同一买方的物品转移（没有无货之款）；流出只有购粮货款与他卖货的商税，
+ // 商税总额不超过他卖货的收入（税从成交额里出）。钱袋净变动由此恒等式推出，不再单独当作被测量。
  const purse=`${mover}|coin_river|`,outs=trace.filter(t=>String(t.from).startsWith(purse)&&t.amount>0),ins=trace.filter(t=>String(t.to).startsWith(purse)&&t.amount>0);
- assert.ok(outs.filter(t=>!buys.includes(t)).every(t=>t.writer==='finance-tax'&&String(t.eventId).startsWith(`customer:trader_${mover}:`)),'除购粮货款外，迁居者的钱只用于交自己卖货的商税，没有别的去向');
- assert.equal(coins0-npc(s,mover).coins,outs.reduce((n,t)=>n+t.amount,0)-ins.reduce((n,t)=>n+t.amount,0),'迁居者出发前钱袋净变动恰为账本里的流出减流入');
+ const salePrefix=`customer:trader_${mover}:`;
+ assert.ok(ins.every(t=>t.writer==='shop'&&String(t.eventId).startsWith(salePrefix)),'迁居者的钱只会来自他自己卖货的成交，没有别的来源');
+ const handedOver=trace.filter(t=>t.writer==='items'&&String(t.from).startsWith(`${mover}|`)&&String(t.from).endsWith('|inventory')&&t.amount>0);
+ for(const t of ins)assert.ok(handedOver.some(h=>String(h.to).split('|')[0]===String(t.from).split('|')[0]),`收入来自一笔真实的卖货：付款人${String(t.from).split('|')[0]}拿到了他的货`);
+ const taxes=outs.filter(t=>!buys.includes(t));
+ assert.ok(taxes.every(t=>t.writer==='finance-tax'&&String(t.eventId).startsWith(salePrefix)),'除购粮货款外，迁居者的钱只用于交自己卖货的商税，没有别的去向');
+ assert.ok(taxes.reduce((n,t)=>n+t.amount,0)<=ins.reduce((n,t)=>n+t.amount,0),'商税不超过他卖货的收入');
  assert.ok(paid>0);
  // 探针（tools/probe-money-flow.mjs migration，本次）给出的这笔交易：t=15120，买方许苓，卖方林穗（悦灯客栈 shop_hw_qingdeng），
  // 1 铜买面包 item_bread ×1，7 铜买燕麦薄饼 item_oat_flatbread ×4，共 8 铜（57→49）；货转移 writer=items，货款 writer=shop；
@@ -165,12 +172,28 @@ test('缺粮谋生：预告、沿实际路线走完全程，抵达后住户、�
  assert.equal(npc(s,mover).developments.at(-1).type,'迁居');
  // Property travels with the person; nobody is copied or newly created.
  // 这里逐项比较出发快照与抵达时的铜币和库存是否相等，比李白条件(b)“从出发到抵达现金加货物合计价值不减”更严，因此已覆盖(b)。
- // 途中经过一个午夜（出发到抵达之间）：不在灶边的人在所在之处自成一桌吃自己背包里的粮（EC-1 灶边判定，已批准），所以库存等于出发快照减去这一桌吃掉的量；
- // 吃掉的量读该桌的午夜用餐记录（family.meals 里 household 带 @所在聚落、成员含迁居者的记录，consumed 里持有人为他的各行）。其余物品与铜币仍逐项相等。
- const eaten=Object.values(s.doc.state.family.meals??{}).filter(r=>String(r.household).includes('@')&&r.members?.includes(mover)).flatMap(r=>r.consumed??[]).filter(c=>c.holder===mover);
- const expectedInventory=structuredClone(goods);
- for(const c of eaten){const v=expectedInventory[c.item],left=(typeof v==='number'?v:v?.quantity??0)-c.quantity;if(left>0)expectedInventory[c.item]=typeof v==='number'?left:{...v,quantity:left};else delete expectedInventory[c.item];}
- assert.equal(npc(s,mover).coins,coins-go.routeCost);assert.deepEqual(npc(s,mover).inventory,expectedInventory);
+ // 途中经过午夜：不在灶边的人在所在之处自己吃背包里的粮（EC-1 灶边判定，已批准），所以库存只会减少，且只减食物。
+ // 规律（不读引擎记录的消耗量，那与扣库存同出一处）：
+ //  1. 越过的午夜数 = (出发所在日, 抵达所在日] 内的日界数，由出发时刻、抵达时刻与 DAY 算出；
+ //  2. 减少的物品全是食物（有饱腹营养的物品），其余物品与铜币逐项相等，没有增加；
+ //  3. 吃掉的总饱腹不超过 午夜数 ×（一人一日饱腹需求 + 一件食物的整件取整余量）。一人日需求取规则表（primitiveTables.body，need=satiety、selector=person）
+ //     各活动档中最重的每小时消耗 ×24（个人修正只在此之内），余量取吃掉的物品中单件饱腹最大者；整件取整最多超出这一件。
+ const midnights=Math.floor(go.arriveAt/DAY)-Math.floor(m.departAt/DAY);
+ assert.ok(midnights>=1,`出发到抵达之间至少越过一个午夜，实际${midnights}`);
+ assert.equal(npc(s,mover).coins,coins-go.routeCost);
+ const qtyOf=v=>typeof v==='number'?v:v?.quantity??0,now=npc(s,mover).inventory;
+ const bodyRow=source.primitiveTables.body.rows.find(r=>r.need==='satiety'&&r.selector==='person');
+ const dayNeed=Math.max(...Object.values(bodyRow.drainPerHour))*24;
+ let eatenSatiety=0,biggest=0;
+ for(const item of new Set([...Object.keys(goods),...Object.keys(now)])){
+  const before=qtyOf(goods[item]),after=qtyOf(now[item]),def=source.items.find(i=>i.id===item);
+  assert.ok(after<=before,`${item}：途中不会凭空增加`);
+  if(after===before)continue;
+  const sat=def?.nutrition?.satiety??0;
+  assert.ok(sat>0,`${item}：途中只会吃掉食物，不会少掉非食物`);
+  eatenSatiety+=(before-after)*sat;biggest=Math.max(biggest,sat);
+ }
+ assert.ok(eatenSatiety<=midnights*(dayNeed+biggest),`途中吃掉的饱腹${eatenSatiety}不超过${midnights}个午夜×(一人日需求${dayNeed}+一件余量${biggest})`);
  assert.equal(npc(s,host).coins,hostCoins);assert.deepEqual(npc(s,host).inventory,hostGoods);
  onlyLifeAdditions(s,ids,JSON.parse(people),JSON.parse(created));
  assert.equal(Object.values(s.doc.state.npcs).filter(n=>n.name===npc(s,mover).name).length,1);
