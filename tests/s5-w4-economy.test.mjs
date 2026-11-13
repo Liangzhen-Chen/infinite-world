@@ -103,7 +103,8 @@ test('F048 租金：房客与业主不在同处时不转账，形成应付且不
 
 // ---------------------------------------------------------------- F007 / F058
 test('F007 典当按整批清算估值而非目录基价，预支率 50%',async()=>{
-    const f=fixture();await f.act({operation:'deposit',seller:clerk,coins:10},'dep');
+    // 本用例的锚点（D=24 = 各户自家面包留存）只在没有聚落公粮时成立（同 finance-assets 抵押用例）：有公粮时需求只剩货架上限 14，清算值 floor(2×14×ln(1.5))=11、预支 5。
+    const f=fixture({publicRation:false});await f.act({operation:'deposit',seller:clerk,coins:10},'dep');
     const p=await f.act({operation:'pawn',seller:clerk,item:'item_bread',quantity:10,days:1},'pawn');
     // S=20、D=24，10>零售阈值5：清算值floor(2×24×ln(30/20))=floor(19.46)=19；预支floor(19×.5)=9。
     // （目录基价口径会得到 2 × 10 × 0.5 = 10 铜。旧锚点 D=18 → 14 → 7。）
