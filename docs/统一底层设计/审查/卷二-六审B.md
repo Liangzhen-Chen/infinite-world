@@ -1,3 +1,5 @@
+模型：claude-sonnet-5-5，中档（11-13 换 Opus 审查前的旧记录）（主会话 11-13 按运行记录补注）
+
 # 卷二六审 B（第六版，1606 行）
 
 静态阅读，未运行任何东西；input-view 对照了 F:/dnd/extension/input-view.mjs 全文。

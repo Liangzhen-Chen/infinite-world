@@ -1,3 +1,5 @@
+模型：claude-sonnet-5-5，中档（11-13 换 Opus 审查前的旧记录）（主会话 11-13 按运行记录补注）
+
 # 卷一 三审 B（第三版，755 行）
 
 只做静态阅读，未运行任何脚本。对照：复审B（卷一-复审B.md）；抽查代码 population.mjs、consistency-service.mjs 及三个文件的数量级。

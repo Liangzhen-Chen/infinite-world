@@ -1,3 +1,5 @@
+模型：claude-sonnet-5-5，中档（11-13 换 Opus 审查前的旧记录）（主会话 11-13 按运行记录补注）
+
 # 卷一 四审 B（第四版，774 行）
 
 只做静态阅读。对照：卷一-三审B.md；population.mjs 行号；卷二-v4.md 的 blocklist 位置。

@@ -1,3 +1,5 @@
+模型：claude-sonnet-5-5，中档（11-13 换 Opus 审查前的旧记录）（主会话 11-13 按运行记录补注）
+
 # 卷一 五审 B（第五版，844 行）
 
 只做静态阅读。对照：卷一-四审B.md；卷二-v5.md（§2.7 L405–416、S13 L1220–1221、S19 L1229）；代码 population.mjs、extension/input-view.mjs。
