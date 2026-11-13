@@ -249,6 +249,9 @@ async function openShop({coins={},bread={},campaignSeed='w4-flow'}={}){
     for(const [id,quantity] of Object.entries(bread))facts.push({path:['state','npcs',id,'inventory'],value:{item_bread:{quantity,quality:'木'}}});
     const prepared=applyIntentSetup(engine,initial,{minute:600,location:place,coins:300,inventory:{item_bread:5,item_parchment:1},present:[landlord],abilitiesByActor:{player:{skills:{skill_literacy:500}}},facts});
     assert.deepEqual(prepared.setupUnmet,[]);
+    // F026 客流各用例检验的是“居民按自己的口粮缺口、钱袋与路程买不买”。有聚落公粮时登记居民的饱腹缺口为 0（EC-1a 已批准），谁也没有口粮缺口、不上门；
+    // 夹具聚落不设公共粮库（granary:false，引擎既有开关，只影响配给），缺口才回到“靠自家与市场”的口径。
+    prepared.document.state.settlements.loc_hw.granary=false;
     const f={engine,document:prepared.document};
     f.act=async(action,slots,id)=>{const out=await engine.reduce(f.document,{tool:'world_act',args:{action,slots},eventId:id});f.document=applyPatches(f.document,out.patches);return out.result;};
     const leased=await engine.reduce(f.document,{tool:'world_trade',args:{operation:'lease',seller:landlord,consent:true,days:2},eventId:'w4-lease'});
