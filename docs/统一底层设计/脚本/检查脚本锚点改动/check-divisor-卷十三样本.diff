@@ -1,0 +1,19 @@
+--- /f/dnd-tmp/book/check-divisor.mjs.bak-pre-v13r2	2026-11-13 22:43:54.030291400 +0000
++++ /f/dnd-tmp/book/check-divisor.mjs	2026-11-13 22:49:31.952735400 +0000
+@@ -814,9 +814,14 @@
+   '除数恒为正（由 §2.5 capacity 的取值域保证）。'];                                              // 卷十四 capacity 的取值域：base 下限为正
+ const CITE_BAD = ['所以除数恒为正（由卷二的 noSuchDimXyz 取值域保证）。',                         // 卷二无此维度
+   '接触面积 a = contactArea，除数恒为正（物品一侧由卷二的 attacks 域保证）。'];                   // attacks.contactArea 无取值域
++// 卷十三二审 11-13：全书现行各卷里找不到真实存在的"引用不存在取值域"句（唯一一处是卷十三第一版 :523，已在第二版改掉，
++// 快照不在扫描范围），故补一条最小合成夹具：同句带除法、所引维度名全书无登记，应核实不到。
++CITE_BAD.push('打击强度 s = p ÷ q，除数恒为正（由卷二的 zzFixtureAreaV13r2 取值域保证）。');   // 合成夹具（卷十三二审 11-13），全书无此维度
+ const ck = [...CITE_OK.map(s => failedCites(s).length === 0), ...CITE_BAD.map(s => failedCites(s).length > 0)];
++// 卷十三二审 11-13：卷十三第二版在 §2.3 为 attacks 登记了下界并设加载校验 E-CBT-ATTACKS，R13-1.8 改引本卷校验，
++// 本卷登记下界后已修：s = p ÷ a 应判已保护（原样本"应判命中"针对第一版）
+ const r13 = evalSample(['卷十三', '打击强度 `s = p ÷ a`']);
+-const r13ok = r13.status === '命中' && r13.hits.some(h => /^a$/.test((h.divisor || '').trim()));
++const r13ok = r13.status === '已保护';
+ console.log(`\n# 取值域引用回归：通过 ${ck.filter(Boolean).length + (r13ok ? 1 : 0)} / ${ck.length + 1}`);
+ ck.forEach((ok, k) => { if (!ok) console.log(`- 失败：${k < CITE_OK.length ? '应核实通过' : '应核实不到'}「${[...CITE_OK, ...CITE_BAD][k]}」`); });
+-if (!r13ok) console.log(`- 失败：卷十三${r13.no ? ':' + r13.no : ''}「s = p ÷ a」应判命中，实为 ${r13.status}`);
++if (!r13ok) console.log(`- 失败：卷十三${r13.no ? ':' + r13.no : ''}「s = p ÷ a」应判已保护（本卷登记下界后已修），实为 ${r13.status}`);

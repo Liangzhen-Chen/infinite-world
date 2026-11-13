@@ -1,0 +1,69 @@
+--- "/f/dnd-tmp/vols/check-\345\215\267\345\215\201\344\270\211.mjs.bak-pre-v2"	2026-11-13 22:23:23.537030400 +0000
++++ "/f/dnd-tmp/vols/check-\345\215\267\345\215\201\344\270\211.mjs"	2026-11-13 22:48:31.363362300 +0000
+@@ -32,7 +32,8 @@
+ const need2 = ['## §0 ', '## §1 ', '## §2 ', '## §3 ', '## §4 ', '## §5 ', '## §6 ', '## §7 ', '## §8 ', '## 附 术语与代号表', '## 附录 待补清单'];
+ const miss2 = need2.filter(p => !lines.some(l => l.startsWith(p)));
+ report('1 章节 §0–§8、术语表、待补清单齐全', miss2.length === 0, miss2.join(','));
+-report('1b 卷首模型行', lines.slice(0, 5).includes('起草 claude-fable-5-2 中档／审查 claude-opus-5-5 中档'));
++// 卷十三二审 11-13：第二版卷首署名改为“起草／改稿／审查”三段，锚点照新署名行
++report('1b 卷首模型行', lines.slice(0, 5).includes('起草 claude-fable-5-2 中档／改稿 claude-opus-5-5 中档（第二版起）／审查 claude-opus-5-5 中档'));
+ const need0 = ['### 0.1 范围', '### 0.2 依赖卷', '### 0.3 覆盖的卷零行', '### 0.4 参照的五款游戏行', '### 0.5 读法'];
+ report('1c §0 五小节齐全', need0.every(p => lines.includes(p)), need0.filter(p => !lines.includes(p)).join(','));
+ 
+@@ -192,11 +193,19 @@
+ if (Math.floor(60 * 1.5) !== 90 || Math.floor(60 * 1.1) !== 66) c11.push('punch0');
+ ['`m = 1.2 + 3.5 = 4.7`', '`p = 4.7 × 12 = 56.4`', '`s = 56.4 ÷ 2 = 28.2`', '`punch0 = 90`', '`punch0 = 66`'].forEach(want);
+ // (b) 层律
+-const layerLaw = (q, d, layers, fb, carry, cap, taken) => {
+-  let absorbed = 0, tissueSeen = false; const res = [];
++// 卷十三二审 11-13：第二版按 Q13-2 改层律（护具层先减穿透再抽一次 RW 三段，组织层确定减法加转型），
++// 算例改为锁甲 100/40、承受量 100、armorScale 100、softenBps 5000；此处照 R13-3.4 现文真算复算，不放宽
++const layerLaw = (q, d, layers, fb, carry, cap, taken, us, armorScale = 100, softenBps = 5000) => {
++  let absorbed = 0, ui = 0; const res = [];
+   for (const L of layers) {
+     const before = q; let r;
+-    if (q >= L.prot[d]) { q -= L.prot[d]; r = 'passed'; }
++    if (!L.tissue) {
++      const E = Math.min(20000, Math.floor(Math.max(0, L.prot[d] - q) * 10000 / armorScale));
++      const u = us[ui++];
++      if (u < Math.floor(E / 2)) { q = 0; r = 'stopped'; }
++      else if (u < E) { q = Math.floor(q * softenBps / 10000); d = fb[d] ?? d; r = 'turned'; }
++      else r = 'passed';
++    } else if (q >= L.prot[d]) { q -= L.prot[d]; r = 'passed'; }
+     else if (fb[d]) { q = Math.floor(q * carry[d] / 10000); d = fb[d]; if (q >= L.prot[d]) { q -= L.prot[d]; r = 'turned'; } else { q = 0; r = 'stopped'; } }
+     else { q = 0; r = 'stopped'; }
+     if (L.tissue) absorbed += before - q;
+@@ -205,17 +214,24 @@
+   }
+   return { loss: Math.min(10000, Math.floor(absorbed * taken * 10000 / cap)), res, absorbed };
+ };
+-const arm = [{ prot: { cut: 70, blunt: 30 } }, { prot: { cut: 10, blunt: 12 } }, { tissue: true, prot: { cut: 4, blunt: 3 } }, { tissue: true, prot: { cut: 12, blunt: 8 } }, { tissue: true, prot: { cut: 40, blunt: 30 } }];
+-const steel = layerLaw(90, 'cut', arm, { cut: 'blunt' }, { cut: 5000 }, 50, 1);
+-const copper = layerLaw(66, 'cut', arm, { cut: 'blunt' }, { cut: 5000 }, 50, 1);
+-if (steel.loss !== 2000 || steel.absorbed !== 10 || steel.res.join() !== 'passed,passed,passed,stopped') c11.push(`钢刃 ${JSON.stringify(steel)}`);
+-if (copper.loss !== 0 || copper.res.join() !== 'turned,stopped') c11.push(`铜刃 ${JSON.stringify(copper)}`);
+-['`lossBps = floor(10 × 1 × 10000 ÷ 50) = 2000`', '`lossBps = 0`', '`33 − 30 = 3`'].forEach(want);
++const arm = [{ prot: { cut: 100, blunt: 40 } }, { prot: { cut: 10, blunt: 12 } }, { tissue: true, prot: { cut: 4, blunt: 3 } }, { tissue: true, prot: { cut: 12, blunt: 8 } }, { tissue: true, prot: { cut: 40, blunt: 30 } }];
++const fbm = { cut: 'blunt' }, carry = { cut: 5000 };
++const steel = layerLaw(90, 'cut', arm, fbm, carry, 100, 1, [7000, 9999]);
++const cuA = layerLaw(66, 'cut', arm, fbm, carry, 100, 1, [1200, 9999]);
++const cuB = layerLaw(66, 'cut', arm, fbm, carry, 100, 1, [2500, 9999]);
++const cuC = layerLaw(66, 'cut', arm, fbm, carry, 100, 1, [3400, 9999]);
++if (steel.loss !== 5600 || steel.absorbed !== 56 || steel.res.join() !== 'passed,passed,passed,passed,passed') c11.push(`钢刃 ${JSON.stringify(steel)}`);
++if (cuA.loss !== 0 || cuA.res.join() !== 'stopped') c11.push(`铜刃弹开 ${JSON.stringify(cuA)}`);
++if (cuB.loss !== 3300 || cuB.absorbed !== 33 || cuB.res.join() !== 'turned,passed,passed,passed,stopped') c11.push(`铜刃转钝 ${JSON.stringify(cuB)}`);
++if (cuC.loss !== 5600 || cuC.res.join() !== 'passed,passed,passed,passed,passed') c11.push(`铜刃穿透 ${JSON.stringify(cuC)}`);
++['`E = floor((100 − 90) × 10000 ÷ 100) = 1000`', '`lossBps = floor(56 × 1 × 10000 ÷ 100) = 5600`', '`E = floor((100 − 66) × 10000 ÷ 100) = 3400`', '`[0, 1700)`', '`[1700, 3400)`', '`lossBps = 0`', '`q = floor(66 × 5000 ÷ 10000) = 33`', '`22 < 30`', '`lossBps = 3300`', '`lossBps = 5600`'].forEach(want);
+ // (c) 伤亡式的切片不变
+-const D = 20000000000n * 30n; const step = (rem, span) => { const acc = rem + 12n * 200n * 11000n * 4000n * span; const d = acc / D; return [d, acc - d * D]; };
++// 卷十三二审 11-13：第二版按 T3 改定点（valueScale 100，strikePH 轮起点截断，D 含 valueScale），照 R13-11.5 现文真算复算
++const strikePH = 300000n / 250n;
++const D = 20000000000n * 30n * 100n; const step = (rem, span) => { const acc = rem + strikePH * 200n * 11000n * 4000n * span; const d = acc / D; return [d, acc - d * D]; };
+ const [d1, r1] = step(0n, 30n); const [da, ra] = step(0n, 15n); const [db, rb] = step(ra, 15n);
+-if (d1 !== 5n || r1 !== 168000000000n || da !== 2n || ra !== 384000000000n || db !== 3n || rb !== r1 || da + db !== d1) c11.push(`伤亡式 ${d1},${r1},${da},${ra},${db},${rb}`);
+-['`D = 600000000000`', '3168000000000', '`delta = 5`', '`168000000000`', '`384000000000`', '1968000000000'].forEach(want);
++if (strikePH !== 1200n || D !== 60000000000000n || d1 !== 5n || r1 !== 16800000000000n || da !== 2n || ra !== 38400000000000n || db !== 3n || rb !== r1 || da + db !== d1) c11.push(`伤亡式 ${strikePH},${D},${d1},${r1},${da},${ra},${db},${rb}`);
++['`strikePH = floor(300000 ÷ 250) = 1200`', '`D = 20000000000 × 30 × 100 = 60000000000000`', '`acc = 1200 × 200 × 11000 × 4000 × 30 = 316800000000000`', '`delta = 5`', '`16800000000000`', '`acc = 158400000000000`', '`38400000000000`', '`acc = 38400000000000 + 158400000000000 = 196800000000000`'].forEach(want);
+ // (d) 拆分末份取差、溃散交叉相乘、前列位数、份额
+ const a1 = Math.floor(1003 * 5000 / 10000), a2 = Math.floor(1003 * 3000 / 10000), a3 = 1003 - a1 - a2;
+ if (a1 !== 501 || a2 !== 300 || a3 !== 202) c11.push(`拆分 ${a1},${a2},${a3}`);
