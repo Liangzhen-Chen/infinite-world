@@ -1,0 +1,33 @@
+--- check-vol2-ext.mjs.bak-pre-k9	2026-11-13 23:18:21.205605700 +0000
++++ check-vol2-ext.mjs	2026-11-13 23:19:38.617248200 +0000
+@@ -284,12 +284,17 @@
+   // 出口表文字出口的输入列都是 Screened<Text>
+   const xi = lines.findIndex(l => l.includes('**登记出口表**'));
+   const xrows = []; for (let j = xi + 1; j < lines.length; j++) { if (/^\| /.test(lines[j]) && !/^\|---/.test(lines[j])) xrows.push(lines[j]); else if (xrows.length && !/^\|/.test(lines[j])) break; }
+-  for (const r of xrows.slice(1)) {
+-    const c = r.split('|'); const grp = c[2].trim().replace(/（.*$/, '');
++  // 卷九勘误 11-13：出口类型按正文登记区分——"文字出口（前N行）"登记的前 N 行是文字出口，须收 Screened<Text> 且有实际兜底；其余行是非文字出口，兜底列须写"不适用："并给理由
++  const cnN = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 }; const tm = (lines[xi] ?? '').match(/文字出口（前([一二三四五六七八九])行）/);
++  if (!tm) bad('登记出口表引言缺"文字出口（前N行）"的类型登记'); const nText = tm ? cnN[tm[1]] : 0;
++  xrows.slice(1).forEach((r, k) => {
++    const c = r.split('|'); const grp = c[2].trim().replace(/（.*$/, ''); const isText = k < nText;
++    if (isText && /^\s*不适用/.test(c[5] ?? '')) bad(`文字出口不得写兜底"不适用"：${c[1].trim()}`);
++    if (!isText && !/^\s*不适用：/.test(c[5] ?? '')) bad(`非文字出口行兜底列应写"不适用："并给理由（否则应登记为文字出口）：${c[1].trim()}`);
+     if (grp === 'kernel') { if (/`Text`（|输入.*release/.test(c[4]) || !/不含 `Text`/.test(c[4])) bad(`kernel 出口行应写明不含 Text：${c[1].trim()}`); }
+     else if (grp === 'host') { if (!c[4].includes('`RawText`') || !/不是 `Screened<Text>` 出口/.test(c[4])) bad(`host 上行出口应写明只带 RawText、不是显示出口：${c[1].trim()}`); } // 第十三版：客户端上行不是显示出口
+-    else if (!c[4].includes('`Screened<Text>`')) bad(`文字出口输入不是 Screened<Text>：${c[1].trim()}`);
+-  }
++    else if (isText && !c[4].includes('`Screened<Text>`')) bad(`文字出口输入不是 Screened<Text>：${c[1].trim()}`);
++  });
+   // 第十三版：kernelApi 是结构化条目的闭集（逐个导出名、无通配、限定写在机读字段里而不是中文括号里）
+   const ka = lines.findIndex(l => /^\s*"kernelApi":\s*\{"exports":\s*\[/.test(l));
+   const apiRows = []; for (let j = ka + 1; ka >= 0 && j < lines.length && !/^\s*\]\},/.test(lines[j]); j++) apiRows.push(lines[j]);
+@@ -667,7 +672,7 @@
+     if (mcell('outputGate', 'aiGate') || mcell('aiGate', 'outputGate')) bad('outputGate 与 aiGate 不得互相 import');
+     const n0 = lines.findIndex(l => l.includes('**菜单回合的叙述与对白（唯一定义）**')); if (!(n0 > d0 && n0 < s29b)) bad('回应通道项下没有"菜单回合的叙述与对白（唯一定义）"');
+     let n1 = n0 + 1; while (n1 < lines.length && /^ {4}\d\. /.test(lines[n1])) n1++; const nb = lines.slice(n0, n1).join('\n'); if (n1 - n0 - 1 !== 5) bad(`菜单回合的叙述与对白应写成五点，实得 ${n1 - n0 - 1}`);
+-    for (const kw of ['`narrate(result: ReplyResult)`', '`NarrateCap`', '`mountNarration`', '互不 import', '结果代号', '决定卡代号', 'T0 模板', '`records.*.text`', '至多发一次', '不得声明 `quote` 字段']) if (!nb.includes(kw)) bad('菜单回合的叙述与对白缺：' + kw);
++    for (const kw of ['`narrate(result: ReplyResult)`', '`NarrateCap`', '`mountNarration`', '互不 import', '结果代号', '决定卡代号', 'T0 模板', '运行期没有 AI 记录文字（卷九 R9-9.9）', '至多发一次', '不得声明 `quote` 字段']) if (!nb.includes(kw)) bad('菜单回合的叙述与对白缺：' + kw); // 卷九勘误 11-13：勘1 删 records.*.text，第 4 点锚点照现文
+     if (!ring('4')[1].includes('reply-composer') || !lines.some((l, i) => i > d0 && i < s29b && l.includes('第 4 环') && l.includes('`NarrateCap`'))) bad('第 4 环的规矩未写明 reply-composer 调 NarrateCap');
+     if (live(/后台叙述/).length) bad('残留"后台叙述"的旧说法：行 ' + live(/后台叙述/).join(','));
+     const ap = kApi.find(e => nameOf(e) === 'registerAdvancePlan'); if (!ap || !sameArr(ap.callers, ['rules']) || fileOf(ap) !== 'kernel/advance-registry.mjs') bad('kernelApi：registerAdvancePlan 应在 kernel/advance-registry.mjs 且只对规则层开放');
