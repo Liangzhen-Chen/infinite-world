@@ -1,0 +1,5 @@
+34c34,35
+< report('1b 卷首模型行', lines.slice(0, 5).includes('起草 claude-fable-5-2 中档／审查 claude-opus-5-5 中档'));
+---
+> // 卷十二 v2 合法改动（主会话 11-13）：署名行改为三段式，仍整行精确匹配
+> report('1b 卷首模型行', lines.slice(0, 5).includes('起草 claude-fable-5-2 中档／改稿 claude-opus-5-5 中档（第二版起）／审查 claude-opus-5-5 中档'));
