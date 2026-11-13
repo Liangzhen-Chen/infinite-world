@@ -1,6 +1,9 @@
 // 卷十一 自检脚本（只读成稿，逐项输出 PASS/FAIL）
-// 用法：node F:/dnd-tmp/vols/check-卷十一.mjs [成稿路径]
+// 用法：node F:/dnd/docs/统一底层设计/脚本/卷十一/check-卷十一.mjs [成稿路径]
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+// 生成器以仓库版为准：与本脚本同目录
+const GEN = fileURLToPath(new URL('./gen-卷十一-卡族.mjs', import.meta.url)).replace(/\\/g, '/');
 const path = process.argv[2] ?? 'F:/dnd/docs/统一底层设计/卷十一-迁移路线与卡清单.md';
 const all0 = readFileSync(path, 'utf8').split('\n').map(l => l.replace(/\r$/, ''));
 const cutAt = all0.findIndex(l => l.startsWith('## 附录 自检脚本输出'));
@@ -234,9 +237,9 @@ const r14 = [];
 {
   const { execFileSync } = await import('node:child_process');
   let gen = [];
-  try { gen = execFileSync(process.execPath, ['F:/dnd-tmp/vols/gen-卷十一-卡族.mjs'], { encoding: 'utf8' }).trimEnd().split(/\r?\n/); }
+  try { gen = execFileSync(process.execPath, [GEN], { encoding: 'utf8' }).trimEnd().split(/\r?\n/); }
   catch (e) { r14.push('生成器运行失败：' + String(e.message).split('\n')[0]); }
-  const a = all0.findIndex(l => l.startsWith('生成器 `F:/dnd-tmp/vols/gen-卷十一-卡族.mjs`'));
+  const a = all0.findIndex(l => l.startsWith('生成器 `' + GEN + '`'));
   const b = all0.findIndex((l, i) => i > a && l === '读法：');
   if (a < 0 || b < 0) r14.push('附录甲定位失败');
   else {
@@ -247,7 +250,7 @@ const r14 = [];
     for (let i = 0; i < Math.min(doc.length, gen.length); i++) if (doc[i] !== gen[i]) { r14.push(`第 ${i + 1} 行不同：附录「${doc[i].slice(0, 60)}」生成器「${gen[i].slice(0, 60)}」`); break; }
   }
   // 生成器代码里不得有卷名字面量（李白 11-13 裁定⑧）
-  const src = readFileSync('F:/dnd-tmp/vols/gen-卷十一-卡族.mjs', 'utf8').split('\n').filter(l => !/^\s*\/\//.test(l)).join('\n');
+  const src = readFileSync(GEN, 'utf8').split('\n').filter(l => !/^\s*\/\//.test(l)).join('\n');
   const lit = src.match(/卷[零一二三四五六七八九十]+[b甲乙]?/g) ?? [];
   if (lit.length) r14.push('生成器代码含卷名字面量 ' + [...new Set(lit)].join('、'));
 }

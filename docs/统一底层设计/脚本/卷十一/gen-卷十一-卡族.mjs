@@ -1,7 +1,7 @@
 // 卷十一 卡族表生成器（第二版）。只读各卷成稿，输出 markdown 到标准输出；不改任何卷。
 // 程序代码里没有卷名、表名的字面量（卷十一 §6 末段、R11-2.9）：
 //   输入位置取自同目录 gen-卷十一-inputs.json（R11-2.1 的输入清单，是数据）；
-//   写卷波取卷一依赖图；拆卷取卷零 §1 加卷记录表的机读列 splitFrom；表主取卷二各表节内的机读行 `owner`；
+//   写卷波取卷一依赖图；拆卷取卷零 §1 加卷记录表的机读列 splitFrom；表主取卷二各表节内的机读行 `owner`（卷零 §1 序号，按序号查卷）；
 //   卷零 A 表处理代号取机读列 zeroKind；§3.5 逐处处置取机读列 spotKey。
 //   这些字段未落地时，相应格子与汇总句写"待字段落地"并在末行列出，不回退为字面量。
 // 迁移行 = 带迁移行编号（M<卷>-<n>）的表格行（R11-2.2）；不带编号的表格不计。
@@ -98,7 +98,13 @@ const retireRows = countRows(charter, CFG.charter.retire);
 const reg = read(CFG.registry.file);
 const moveRows = countRows(reg, CFG.registry.filemoves);
 
-// 5 表主：卷二各表节内的机读行 `owner`
+// 5 表主：卷二各表节内的机读行 `owner` 写卷零 §1 加卷记录表的序号；按序号查该表的卷列，不读卷二节标题里的卷名
+const seqVol = new Map(); // 序号 → 卷
+for (const t of tables(cov, section(cov, CFG.coverage.addVol))) {
+  const qi = t.head.indexOf(CFG.fields.seq), vi = t.head.indexOf(CFG.fields.volCol);
+  if (qi < 0 || vi < 0) continue;
+  for (const c of t.rows) { const q = (c[qi] ?? '').trim(), v = firstVol(c[vi] ?? ''); if (/^\d+$/.test(q) && v) seqVol.set(+q, v); }
+}
 const tableOwner = new Map(); // 表代号 → 卷 或 null
 { let cur = null;
   for (const l of reg) {
@@ -107,7 +113,7 @@ const tableOwner = new Map(); // 表代号 → 卷 或 null
       if (l.startsWith(CFG.registry.tables)) { const m = l.match(/`([a-z_]+)`/); if (m) { cur = m[1]; tableOwner.set(cur, null); } }
       continue;
     }
-    if (cur && l.startsWith('- `' + CFG.fields.owner + '`')) tableOwner.set(cur, firstVol(l.slice(CFG.fields.owner.length + 4)));
+    if (cur && l.startsWith('- `' + CFG.fields.owner + '`')) { const m = l.slice(CFG.fields.owner.length + 4).match(/\d+/); tableOwner.set(cur, m ? seqVol.get(+m[0]) ?? null : null); }
   } }
 const ownerMissing = [...tableOwner].filter(([, v]) => !v).map(([t]) => t);
 const ownerLanded = ownerMissing.length === 0 && tableOwner.size > 0;
