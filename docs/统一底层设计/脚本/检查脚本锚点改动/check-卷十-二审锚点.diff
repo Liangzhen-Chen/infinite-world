@@ -1,0 +1,25 @@
+30c30,31
+< report('1b 卷首署名行', lines.slice(0, 5).includes('起草 claude-fable-5-2 中档／审查 claude-opus-5-5 中档'));
+---
+> // 卷十 v2 合法改动，二审 11-13：署名行改为三段（与卷七、卷八、卷九等改稿卷同式）
+> report('1b 卷首署名行', lines.slice(0, 5).includes('起草 claude-fable-5-2 中档／改稿 claude-opus-5-5 中档（第二版起）／审查 claude-opus-5-5 中档'));
+166c167
+<   ['阶段数', 13, 13, '十三个 `worldgen` 相阶段']
+---
+>   ['阶段数', 14, 14, '十四个 `worldgen` 相阶段'] // 卷十 v2 合法改动，二审 11-13：现文 §4.1.1 JSON worldgen 相条目实数 14（删 history/opening/species，增 edges/water/weather/siteform）
+204c205
+<   const visit = k => { if (stack.has(k)) { r12.push('阶段成环 ' + k); return; } if (seen.has(k)) return; stack.add(k); for (const a of stages[k].after) { if (!stages[a]) r12.push('after 悬空 ' + a); else { if (stages[k].phase === 'worldgen' && stages[a].phase === 'materialize') r12.push('相序颠倒 ' + k); visit(a); } } stack.delete(k); seen.add(k); };
+---
+>   const visit = k => { if (stack.has(k)) { r12.push('阶段成环 ' + k); return; } if (seen.has(k)) return; stack.add(k); for (const a of stages[k].after) { if (!stages[a]) r12.push('after 悬空 ' + a); else { if (stages[k].phase === 'worldgen' && stages[a].phase === 'expand') r12.push('相序颠倒 ' + k); visit(a); } } stack.delete(k); seen.add(k); };
+206,207c207,209
+<   for (const v of Object.values(stages)) { if (!['worldgen', 'materialize'].includes(v.phase)) r12.push('phase 越界'); if (!['world', 'region', 'unit', 'site', 'tract'].includes(v.scope)) r12.push('scope 越界'); }
+<   if (Object.values(stages).filter(v => v.phase === 'worldgen').length !== 13) r12.push('worldgen 阶段数不是 13');
+---
+>   // 卷十 v2 合法改动，二审 11-13：gen_phase 三值 worldgen/opening/expand（T2 增 opening；小项 5 materialize 改名 expand）；worldgen 阶段数照现文 14
+>   for (const v of Object.values(stages)) { if (!['worldgen', 'opening', 'expand'].includes(v.phase)) r12.push('phase 越界'); if (!['world', 'region', 'unit', 'site', 'tract'].includes(v.scope)) r12.push('scope 越界'); }
+>   if (Object.values(stages).filter(v => v.phase === 'worldgen').length !== 14) r12.push('worldgen 阶段数不是 14');
+222c224,225
+< for (const [name, needle] of [['第 0 日之后无来源', '第 0 日之后不再有任何来源腿'], ['物化只由种子与地点定', '物化出什么只由（世界种子、地点）定'], ['不重掷', '不合格即拒绝，不重掷'], ['时刻段', '时刻段恒取 `epochMinute`'], ['模型不写规则字段', '模型不写人物档的规则字段'], ['不按来源分支', '规则层按生成标记分支即 E-GEN-BRANCH-ORIGIN'], ['北极星 建筑', '每一栋怎么盖，由料、技能、意图推出'], ['北极星 器物', '器物的材料与品质由料、技能、意图推出'], ['无缺省出生地', '没有缺省出生地'], ['命名不重抽', '音节预算是筛选，不是重掷']]) if (!all.includes(needle)) r13.push('缺：' + name);
+---
+> // 卷十 v2 合法改动，二审 11-13：R10-3.8 收窄为形制类只由（种子、地点）定（T4），锚点照录现文；第 0 日时刻改名 genesisMinute（小项 5）
+> for (const [name, needle] of [['第 0 日之后无来源', '第 0 日之后不再有任何来源腿'], ['物化只由种子与地点定', '房间行与全部 id 只由（世界种子、地点）定'], ['不重掷', '不合格即拒绝，不重掷'], ['时刻段', '时刻段恒取 `genesisMinute`'], ['模型不写规则字段', '模型不写人物档的规则字段'], ['不按来源分支', '规则层按生成标记分支即 E-GEN-BRANCH-ORIGIN'], ['北极星 建筑', '每一栋怎么盖，由料、技能、意图推出'], ['北极星 器物', '器物的材料与品质由料、技能、意图推出'], ['无缺省出生地', '没有缺省出生地'], ['命名不重抽', '音节预算是筛选，不是重掷']]) if (!all.includes(needle)) r13.push('缺：' + name);

@@ -1,0 +1,24 @@
+30c30,31
+< report('1b 卷首署名行', lines.slice(0, 5).includes('起草 claude-fable-5-2 中档／审查 claude-opus-5-5 中档'));
+---
+> // 卷九 v2 合法改动，二审 11-13：卷首署名改为三段式（起草／改稿／审查），仍整行精确匹配
+> report('1b 卷首署名行', lines.slice(0, 5).includes('起草 claude-fable-5-2 中档／改稿 claude-opus-5-5 中档（第二版起）／审查 claude-opus-5-5 中档'));
+88c89
+< const kw = ['动作目录', '当前活动', '原语目录', '执行器', '统一裁决', '检定', '开放提案', '构造器', '路由', '幅度上限', '难度派生', '反噬', '同意与权能', '回合契约', '叙述投影', '一致性审查', 'NPC 决策', '对话与交涉', 'AI 档位', '降级', '三级落地', '学习回路', 'Jev 判断层', '录制回放', '费用账', '输入边译码器', '守门'];
+---
+> const kw = ['动作目录', '当前活动', '原语目录', '执行器', '统一裁决', '检定', '开放提案', '构造器', '路由', '幅度上限', '难度派生', '反噬', '同意与权能', '回合契约', '叙述投影', '一致性审查', 'NPC 决策', '对话与交涉', 'AI 档位', '降级', '三级落地', '学习回路', /* 卷九 v2 合法改动，二审 11-13：一审小项 3 统一名为“选择式判断层” */ '选择式判断层', '录制回放', '费用账', '输入边译码器', '守门'];
+139c140,141
+< for (const p of ['state.activities[actorId]', 'state.agendas[personId]', 'state.proposals[proposalId]', 'state.marks[markId]', 'state.dialogues[sessionId]', 'state.decisionCommit[personId]']) {
+---
+> // 卷九 v2 合法改动，二审 11-13：T10 提案、留痕改按主体分段（state.proposals[actorId][proposalId]、state.marks[onId][markId]）
+> for (const p of ['state.activities[actorId]', 'state.agendas[personId]', 'state.proposals[actorId][proposalId]', 'state.marks[onId][markId]', 'state.dialogues[sessionId]', 'state.decisionCommit[personId]']) {
+172c174,180
+<   ['预付', Math.ceil(0.3 / (0.02 * 5) - 1e-9) * 5, 15, 'ceil(0.3 ÷ (0.02 × 5)) × 5 = ceil(3) × 5 = 15'],
+---
+>   // 卷九 v2 合法改动，二审 11-13：T19 预付按 w.money 折算，例子改为 −U = 0.15、w.money = 0.01、步长 5；
+>   // 复算用整数（以 0.01 为单位：−U = 15、w.money = 1），ceil(a ÷ b) = (a + b − 1) 整除 b
+>   ['预付', Number(((15n + 1n * 5n - 1n) / (1n * 5n)) * 5n), 15, 'ceil(0.15 ÷ (0.01 × 5)) × 5 = ceil(3) × 5 = 15'],
+>   ['预付 步数', Number((15n + 1n * 5n - 1n) / (1n * 5n)), 3, 'ceil(3)'],
+>   ['骆驼 U', -1 * 30, -30, 'U = −0.01 × 30 = −0.3'], // 卷九 v2 合法改动，二审 11-13：以 0.01 为单位，−0.01 × 30 = −30 单位 = −0.3
+>   ['骆驼 还价', Number(((30n + 1n * 5n - 1n) / (1n * 5n)) * 5n), 30, 'ceil(0.3 ÷ (0.01 × 5)) × 5 = 30'], // 卷九 v2 合法改动，二审 11-13：−U = 30 单位、w.money = 1 单位
+>   ['骆驼 第二轮', 80 + 30, 110, '第二轮玩家加到 110'], // 卷九 v2 合法改动，二审 11-13
