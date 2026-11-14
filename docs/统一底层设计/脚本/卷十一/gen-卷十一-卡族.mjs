@@ -100,7 +100,7 @@ for (const t of tables(cov, section(cov, CFG.coverage.tableA))) {
     if (ki >= 0) { const k = (c[ki] ?? '').replace(/`/g, '').trim(); kindCount.set(k, (kindCount.get(k) ?? 0) + 1); } // 机读代号格同样写作 `code`
   }
 }
-if (!kindLanded) pending.add(`${V0} A 表机读列 ${CFG.fields.zeroKind}（rebuild、adopt、process；C11-1）`);
+if (!kindLanded) pending.add(`${V0} A 表机读列 ${CFG.fields.zeroKind}（rebuild、adopt、process、exclude；C11-1）`);
 
 // 4 卷零 §3.5 逐处处置（稳定行号）与 §4 已有项、卷一 §5.4、卷二 §6.11
 let spots = null;
