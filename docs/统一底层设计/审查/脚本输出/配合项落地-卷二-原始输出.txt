@@ -1,0 +1,219 @@
+# 卷二 跨卷配合项落地 封卷后勘误（李白 11-14）原始输出；改稿 claude-opus-5-5 中档；脚本未改；改前快照 版本快照/卷二-v17补26-勘误前-1114aq.md，改后覆盖 版本快照/卷二-v17补26-现行.md
+=== node F:/dnd-tmp/vol2/check-vol2.mjs
+== 1 错误码
+  正文错误码 147 个；登记表展开 259 个
+  OK 正文码全部已登记
+  注意 登记但正文未用到（含简写展开的候选）: E-ACC-BASELINE-EDIT, E-ACC-BASELINE-UP, E-ACC-BYPASS-REGRESSION, E-ACC-CODE-UNLISTED, E-ACC-COMMIT-MSG, E-ACC-CRITERION-LOOSENED, E-ACC-CRITERION-UNVERSIONED, E-ACC-DOC-SEAL, E-ACC-EXT-CODE-CHANGED, E-ACC-EXT-EXISTING-ROW, E-ACC-FIXTURE-INSTANCE, E-ACC-GATE-BYPASS, E-ACC-HIT-OPEN, E-ACC-ITEM-COUNT, E-ACC-ITEM-DOWNGRADE, E-ACC-ITEM-FORM, E-ACC-ITEM-ORPHAN, E-ACC-ITEM-PARAM, E-ACC-ITEM-UNIMPLEMENTED, E-ACC-ITEM-UNREGISTERED, E-ACC-NEWROW-UNANCHORED, E-ACC-REPORT-FORM, E-ACC-REVIEW-CHECKLIST, E-ACC-REVIEW-MISSING, E-ACC-REVIEW-SELF, E-ACC-REVIEW-STALE, E-ACC-REVIEW-VETO, E-ACC-ROWKEY-DRIFT, E-ACC-RUN-UNBOUND, E-ACC-SCAN-NAMELIST, E-ACC-SCAN-SELFNAME, E-ACC-ZERO-MISMATCH, E-AV-KEY, E-AV-NO-DEFAULT, E-BST-BANE-CLASH, E-BST-BODY-WRITE, E-BST-DUPLICATE, E-BST-GEN-SLOT, E-BST-LAIR, E-BST-LORE-SHAPE, E-BST-MONSTER-SCHEMA, E-BST-QUOTA, E-BST-SIM-DIMS, E-BST-TIER-ROWS, E-BST-TRANSFORM-ROWS, E-BST-VARIANT, E-BST-WARD-SHAPE, E-DISPLAY-BACKFLOW, E-DISPLAY-BRANCH-TEXT, E-DISPLAY-DICE, E-DISPLAY-HOST-CHAT, E-DISPLAY-LITERAL, E-DISPLAY-LOCALE-BRANCH, E-DISPLAY-UNSEEN, E-GEN-BRANCH-ORIGIN, E-GEN-BYPASS, E-GEN-DEFAULT, E-GEN-GROUP-CYCLE, E-GEN-GROUP-ROW, E-GEN-ID-COLLISION, E-GEN-LATE-SOURCE, E-GEN-MANIFEST-DRIFT, E-GEN-NAME-EMPTY, E-GEN-NOT-MATERIALIZED, E-GEN-OVERRIDE-AUTHORED, E-GEN-REJECT, E-GEN-RESPECT, E-GEN-ROW-INVALID, E-GEN-SKELETON, E-GEN-STAGE-CYCLE, E-GEN-STAGE-UNKNOWN, E-I18N-FORM, E-I18N-LABEL-FOREIGN, E-I18N-LABEL-ORPHAN, E-I18N-LOCALE, E-I18N-PLURAL, E-I18N-TPL-MISSING, E-I18N-TPL-SLOT, E-MAP-COMPASS, E-MIG-ACCEPT-FORM, E-MIG-BACKFILL, E-MIG-CARD-INCOMPLETE, E-MIG-CARD-INSTANCE, E-MIG-CARD-SCOPE, E-MIG-CARD-SIZE, E-MIG-DEFER-UNBOUND, E-MIG-DUAL-PATH, E-MIG-EVENT-SEQ, E-MIG-EXIT, E-MIG-FILEMOVE-GAP, E-MIG-FROZEN, E-MIG-ORDER, E-MIG-PARALLEL, E-MIG-PHASE-CONFLICT, E-MIG-PHASE-COUNT, E-MIG-RETIRE-MISMATCH, E-MIG-ROW-COUNT, E-MIG-ROW-MULTI, E-MIG-ROW-ORPHAN, E-MIG-SCAN-UNCLAIMED, E-MIG-SORTKEY-ORDER, E-MIG-STATE, E-MIG-TEST-PATCH, E-MIG-ZERO-UNCOVERED, E-PANEL-ACTION, E-PANEL-KIND, E-PANEL-PATH, E-PANEL-SOURCE, E-TPL-CYCLE, E-TPL-KEY, E-TPL-NO-FALLBACK, E-TPL-RX
+== 2 前缀登记
+  实体前缀 27，词表族前缀 125
+  注意 未登记前缀 card_: card_slot_type
+  注意 未登记前缀 q_: q_k
+  注意 未登记前缀 e_: e_a, e_k, e_x
+  注意 未登记前缀 entity_: entity_revived
+  注意 未登记前缀 orowk_: orowk_actual
+  注意 未登记前缀 aggk_: aggk_bonded
+  注意 未登记前缀 attach_: attach_slot
+== 2b 内核信号代号登记
+  小族登记 5 个: layout_change, naming_intent, note_intent, dimension_write_rejected, nil_seedpart
+  OK 正文发出的非词表代号均在小族登记
+  OK 引用小族的代号均已登记（核 32 卷）
+== 3 类型数
+  §1.5 表计 14 种；全文提到的类型数：14, 14, 14, 14, 14
+  OK 类型数一致
+== 4 附录 A 夹具
+  OK 三段 JSON 可解析
+  维度 9 个，类别行 4，实体行 2；展平 class_workshop_hot = {"public":false,"lodging":false,"allowedMaterials":["subst_stone"],"wearPerDay":0.0006,"capacityBase":2,"services":["service_craft"],"fixtures":["fixture_forge","fixture_hearth"],"upkeepPerDay":{"class_fuel":12}}
+== 结果：PASS
+=== node F:/dnd-tmp/vol2/check-vol2-ext.mjs
+== 5 族名登记
+  登记族 125，代码内封闭枚举 32，正文用到的族名 114
+  OK 全部族名已登记
+== 6 枚举值前缀
+  OK 示例中开放族值均带前缀、封闭枚举值均不带前缀
+== 7 附录 A 组件与引用解析
+  comp_service_host: table=facility_type, requires=["services"], 被引用=fac_forge
+  comp_facility: table=place, requires=["intendedType"], 被引用=无
+== 8 附录 G 锚点唯一性
+  锚点 55 个
+  OK 锚点与关键定义各出现一次
+== 8b D.1 关键词出现位置（供人工确认同步）
+  【六】字符串类型白名单 / 方法名清单: 行 2044,2375
+  【六】字符串类型白名单 / 闭集: 行 3,173,398,487,499,502,618,619,626,646,667,677,680,683,688,689,694,724,783,845,846,847,848,872,914,926,1010,1032,1058,1311,1317,1332,1962,2036,2043,2046,2051,2052,2074,2211,2231,2236,2237,2248,2251,2263,2283,2338,2350,2375,2405,2412,2462,2486,2505,2510,2512,2528,2592,2617,2626,2629,2747,2779,2788,2799,2809
+  【六】字符串类型白名单 / E-INPUT-FUZZY: 行 691,692,693,697,1308,2051,2052,2375
+  【六】输入规范化唯一定义 / 规范化: 行 45,252,658,668,691,694,696,891,926,930,958,966,1028,1029,1030,1044,1052,1308,1312,1943,2026,2051,2067,2071,2236,2252,2288,2318,2346,2354,2359,2365,2369,2376,2395,2414,2632,2658,2682,2741,2742,2744,2767
+  【六】输入规范化唯一定义 / toLowerCase: 行 252,2051,2346,2376
+  【六】输入规范化唯一定义 / White_Space: 行 45,252,2331,2346,2376
+  【六】输入规范化唯一定义 / casefold: 行 45,252,691,694,872,880,1030,2376
+  【六】权限表（判定/产出） / needle: 行 654,661,667,694,725,891,930,1028,1030,1034,1040,1042,1048,1308,2026,2052,2236,2352,2355,2365,2377,2386,2395,2422,2568,2569,2611,2629,2632,2646,2742,2799
+  【六】权限表（判定/产出） / matchBlocklist: 行 243,581,633,634,661,662,663,695,696,939,1030,1031,1036,1044,2026,2354,2377,2385,2494,2607,2656
+  【六】权限表（判定/产出） / 替换记号: 行 240,662,1031,1307,2026,2259,2377,2414,2657,2742
+  【六】权限表（判定/产出） / templates.mjs: 行 245,574,646,662,689,695,724,791,2043,2052,2333,2342,2368,2377,2443,2505,2511
+  【六】封闭代码枚举不带前缀 / stage_: 行 240,2378
+  【六】封闭代码枚举不带前缀 / scope_: 行 417,2378
+  【六】封闭代码枚举不带前缀 / effout_: 行 2378
+  【六】封闭代码枚举不带前缀 / consent_: 行 240,1252,2234,2345,2378,2515,2632
+  【六】组件 table 归属 / comp_facility: 行 163,232,1500,1501,1799,1904,2144,2161,2348,2368,2379,2560
+  【六】组件 table 归属 / comp_service_host: 行 2124,2143,2161,2348,2379,2559
+  【六】组件 table 归属 / E-DIM-COMPONENT-TABLE: 行 232,2348,2379
+  【六】pathTypes 与 E-TEXT-UNGATED / pathTypes: 行 3,100,193,200,441,443,456,465,598,608,647,648,650,651,676,951,981,1101,1161,1294,1309,2210,2232,2256,2284,2337,2340,2351,2358,2360,2366,2380,2389,2393,2399,2406,2413,2416,2462,2465,2489,2531,2617,2626,2654,2739,2797,2814,2821
+  【六】pathTypes 与 E-TEXT-UNGATED / E-TEXT-UNGATED: 行 179,443,648,973,1015,1309,2052,2327,2332,2351,2380,2406,2746,2776
+  【六】allowExplicit 与偏离行 / allowExplicit: 行 106,165,224,282,1271,1273,1303,1366,1367,2027,2323,2343,2381,2441,2765
+  【六】allowExplicit 与偏离行 / 偏离行: 行 58,106,118,125,126,145,165,179,197,240,282,447,465,608,1264,1269,1271,1350,1351,2016,2019,2023,2161,2214,2343,2381,2393,2455,2466,2479,2480,2687,2736,2793
+  【六】relation intimate / intimate: 行 324,669,2352,2382
+  【六】input-view 处置（第七版改为删除协议 + 新写） / input-view: 行 668,1943,2333,2352,2359,2383,2443,2661,2742
+== 9 码点口径
+  OK 全文无旧的码元口径
+== 10 权限表 needle 来源
+  OK 权限表 6 行，needle 来源只有 blocklist / 代号登记表
+== 11 示例代码逃逸写法
+  OK 规则层/kernel 示例与正例均无 any / as / @ts-* / eslint-disable / JSON.parse / fs 读取
+== 12 模块组计数口径
+  OK 全文无旧的模块组计数残留（现行口径：七组 + textcore / 六个非规则组）
+== 13 加载器外示例无 JSON.parse / fs
+  登记边界入口 34 个文件；OK 入口外示例无 JSON.parse / fs
+== 14 import 矩阵 textcore 列
+  OK kernel 不 import textcore
+  OK 规则层 不 import textcore
+== 15 Text 构造点
+  OK Text 构造点只在 §2.9
+== 16 运行态修正项无字串
+  OK struct:modifier 无 string/rx 文本字段
+  OK §3.2 运行态表达式为 RxId/rxTree
+== 17 入口/出口表对称
+  OK 入口 17 行（组：kernel,textcore,outputGate,gate,aiGate,inputEdge,host,tools），出口 7 行（组：outputGate,display,aiGate,host,kernel），列数对称
+== 18 全局对象白名单
+  OK 白名单覆盖 9 个组/层
+== 19 强转豁免文件表
+  OK 豁免表 17 个具体文件（textcore/brand.mjs、textcore/ops.mjs、kernel/handles/vocab-handle.mjs、kernel/handles/entity-id.mjs、kernel/handles/display-lang.mjs、kernel/handles/keys.mjs、kernel/sealed.mjs、kernel/credential.mjs、kernel/secret.mjs、kernel/transaction.mjs、kernel/validate/narrow.mjs、gate/screen.mjs、gate/load-blocklist.mjs、kernel/transport/router-caps.mjs、extension/textcore/narrow-wire.mjs、extension/textcore/open-envelope.mjs、extension/host/bootstrap.mjs）；表外无强转许可，旧的"唯一豁免点"说法已清
+== 20 模块组 glob 不相交
+  OK 9 组 9 个代表路径两两不相交（display 以 ! 排除 extension/host 与 extension/textcore）
+== 21 白名单闭集与 release 形参
+  OK 白名单段无"等"与省略号，禁 eval/Function/import()/with，专用项各归一处；release 带类型签名 1 处均为 Screened<Text>；出口表输入列一致；kernelApi 60 条均为结构化条目、无通配，issueCredential/writeSealed 限 aiGate、readSealed 限 outputGate，scope 常量 3 个各限一个写者文件
+== 22 文件归属
+  OK 78 个代表路径：六种代码扩展名都按目录归到原组，json/css/html 属登记数据，未登记类型判 E-FILE-UNASSIGNED，无文件同时落两组
+== 23 两进程分组与矩阵
+  OK 进程分组表 11 项与 JSON process 字段一致；服务端矩阵 9 行、客户端矩阵 3 行，互不含对方的组；矩阵引用名均已登记；node:* 清单两处一致
+== 24 宿主全局只在 bootstrap
+  OK 白名单表中 7 个浏览器宿主全局只在 host 行且全部限定到 bootstrap；display、clientTextcore 为"无"；10 个客户端能力对象的构造者都是 bootstrap；无旧宿主入口文件名残留
+== 25 定时器位置
+  OK 白名单表里定时器只在 kernel 行（限 kernel/scheduler.mjs）与 host 行（限 bootstrap）；正文 5 行提到定时器，均写明许可位置或为禁令；Date/performance 未开放
+== 26 摘要来源
+  OK node:crypto 只在 textcore 行并限 textcore/digest.mjs（正文 8 行提及，均指向它或为否定句）；kernel 无 node:crypto、用注入的 DigestCap；客户端 SubtleCrypto 只经 SubtleDigestCap 交 open-envelope.mjs；全文只有 sha256
+== 27 信封链条与装配文件
+  OK 下行出口、客户端入口、DOM 出口、信封校验、装配文件可缺行与两条上行入口都在 §2.9；客户端 Screened<Text> 只由 openEnvelope 产出；nameSlot 已清，起名为"规则层只发意图"
+== 28 引文同一性只在 aiGate
+  OK 例外清单恰三项（matchBlocklist、matchIdLeak、matchQuote）；matchQuote 带签名定义 1 处，在 §2.9 第 6 条，文件 ai-gate/quote-identity.mjs；全文 16 行提及，均在 aiGate 语境；未进 kernelApi，矩阵与 §2.8 其他组的行里不出现；§2.9 之外各处均为引用
+== 29 回应通路逐环核对
+  OK 通路 11 行逐环核对（含存档导出、导入支路 2c、2d、5s、6s；四条路由各有入口；NarrateCap 经 mountNarration 注入 reply-composer，narrate 不是跨组导出；registerAdvancePlan 已登记）：kernelApi 环的调用者在登记文件内且矩阵格写明，登记回调环不产生反向 import，能力对象环与能力对象表、入口表、出口表一致，HTTP 环与通道表一致；环环相接；进 outputGate 之前交出的类型不含文字；kernel 与 inputEdge 对 outputGate 的矩阵格为空
+== 30 子串函数签名
+  OK 子串函数 3 个与 gate/matcher.mjs 的 groupApi 导出一致；needle 类型只有 BlockNeedle、AiQuote 与代号，没有 Text；形参类型不出现 labels 或 Map；containsCodePoints 形参为 (turn: TurnText, quote: AiQuote)，只对 ai-gate/quote-identity.mjs 开放；labels 的值类型是 Text，读者不含 gate 与 aiGate
+== 31 本轮原文来路
+  OK TurnText 只由 brandTurn 产出且只对 input/http-entry.mjs 开放；形参带 TurnText 的函数恰 4 个（interpret、narrateTurn、matchQuote、containsCodePoints）；aiGate 对 inputEdge 的 4 个导出都限定到 input/http-entry.mjs 并与矩阵格一致；来路五步写全；旧签名无残留
+== 32 装配文件封闭清单
+  OK assembly.calls 11 个函数（createRouterCaps、createDigestCap、createWallTimer、mountKernel、registerSystems、mountOutput、mountAi、mountMenuEntry、mountSaveRoutes、mountNarration、mountInput）：每个都在 kernelApi 或 groupApi 登记为只对 index.mjs 开放，反向也无清单外的开放项；矩阵装配文件行、§2.9"装配文件"一项与清单三处一致；扫描规则写全，§2.8 与 S19 引用同一清单
+== 33 存量规则与 wsum 签名
+  OK 存量规则六条与两类断言写全；wsum 定义一处、正文 3 处调用全为三参、material 为多组列表；系统闭集字段 entryCallerFiles / entryJudges 在 §2.7 定义并进 JSON 示例；pathTypes 数值路径都带 §1.4 的单位；§1.14 与 event_role 已登记；facilityType 不再是存储维度
+== 34 接缝批
+  OK 心跳推进只投递请求、旧写法无残留；终止协议五步改序并含两个登记点、窗口期满、到期项撤销；建行写者与改写写者已定义；stockMode / remDenominator / struct:stockAnchor 与定点指数五项在位；六个封闭枚举与三个族已登记；§1.14 两处改名并写求值次序；存档码、导入 schema、槽位与候选键在位；单位表含 byte、ms；无已撤销的大类代号
+== 结果：PASS
+=== node F:/dnd-tmp/vols/check-c29-3-fs.mjs
+== 1 服务端矩阵 outputGate 行
+  OK 末列只有 node:fs
+  OK 末列无 npm 包
+  OK 限 display-load、写明只读
+== 2 全局对象白名单 outputGate 行
+  OK node 列与矩阵末列逐字相同
+  OK 宿主全局仍为"无"（不联网）
+  OK 只在 display-load 内可用
+== 3 outputGate 只读白名单定义
+  OK 许可函数只有 readFileSync、readdirSync
+  OK 白名单三项
+  OK 可读路径 7 个全在白名单内
+  OK 写明"存档"
+  OK 写明"state"
+  OK 写明"不写文件"
+  OK 写明"不联网"
+  OK 写明"规则层照旧不读语言包"
+== 4 登记边界入口表 display-load 行
+  OK 所属组 outputGate
+  OK 来源 4 个路径全在白名单内
+  OK 不产出 Text
+== 5 outputGate 无写权限
+  OK 无 output-gate 文件获 node:fs 写
+  OK 只有 display-load 行提到 node:fs
+== 6 规则层无语言包读取
+  OK 矩阵规则层 node 列为"无"
+  OK 白名单规则层 node 列为"无"
+  OK kernel 例外：kernel/load/display-langs.mjs 只读 world/i18n/locales.json、无写、不产出 Text
+  OK 读语言包的入口 textcore/labels.mjs 属 textcore
+  OK 读语言包的入口 output-gate/display-load.mjs 属 outputGate
+  OK 读语言包的入口 gate/load-blocklist.mjs 属 gate
+== 结果：PASS
+=== node F:/dnd-tmp/book/check-divisor.mjs
+# 全书除数下界检查（候选，须人工判定）
+
+## 卷三乙（卷三乙-物态类别与物品.md）：1 处（显式 0、隐式 1）
+- 卷三乙:569 [隐式·加权平均] 22，封卷后勘误，卷十七 C17-6 ①），调用方同样不自己按部件质量加权（除数是参加部件的质量之和，下界与为 0 时的处置在 M-2 ｜ 除数：隐式分母（按部件质量加权）
+
+合计：1 处（显式 0、隐式 1），涉及 1 卷
+按类：合计 0、比例 0、个数 0、加权平均 1、份额 0、归一 0、其他 0
+排除（按三扫原因类，处）：斜 11、例 110、词 27、常 121、均 27、测 52、献 28、说 110、删 10、引 15、份额 20、切 3、代 2、误差 60
+
+# 对照：三扫判定真命中：命中或已修 44 / 44（其中已修 44）
+- 已修：卷三乙:368「两批按质量加权平均」
+- 已修：卷三乙:369「残渣的初值：全部消耗项按质量加权的平均」
+- 已修：卷三乙:939「spoilage 与 taint 按质量加权平均」
+- 已修：卷三乙:940「赃物质量守恒记账」
+- 已修：卷三乙:1180「赃物份额（全部消耗项按质量加权平均」
+- 已修：卷三乙:1192「workDifficulty 的质量加权平均」
+- 已修：卷三乙:1253「耐用份额 workDifficulty 的质量加权」
+- 已修：卷三乙:1194「÷ rules.crafting.masterySpan」
+- 已修：卷三乙:857「fuelEnergyMJ ÷ massKg」
+- 已修：卷三乙:1179「件数 = M_out ÷」
+- 已修：卷三乙:1254「件数 = 质量 ÷ 该料模板」
+- 已修：卷三乙:1367「÷（质量 × specificHeat）」
+- 已修：卷三乙:1620「÷ 基础产出件数；」
+- 已修：卷三乙:1705「valueDensity = valueBase ÷ massKg」
+- 已修：卷三乙:1718「货值密度 = 总估值 ÷ 总质量」
+- 已修：卷三乙:1304「日均损耗件数 = 存量 ÷ lifeDays」
+- 已修：卷三乙:1424「shelfLifeDays = 1 ÷ 腐坏率」
+- 已修：卷三乙:538「Σ s×v ÷ Σ s」
+- 已修：卷三乙:540「Σ s ÷ Σ（s ÷ v）」
+- 已修：卷三乙:1622「材质项 = 实例材料聚合出的 valueMult ÷」
+- 已修：卷四:137「× 每年日数 ÷ birthIntervalDays」
+- 已修：卷四:556「fertilityByLiving, living) ÷ birthIntervalDays」
+- 已修：卷四:604「再求平均」
+- 已修：卷四:603「已知亲本该维度基值的平均」
+- 已修：卷四:648「carriedKg ÷ loadCapacityKg」
+- 已修：卷四:782「参与部位按大小加权」
+- 已修：卷六:866「exchangeRate(A, B) = coinValue(A) ÷ coinValue(B)」
+- 已修：卷十八:606「财产按继承制度的权重分割」
+- 已修：卷十八:719「) ÷ decayMinutes」
+- 已修：卷十八:774「÷ 好感轴条目的 max」
+- 已修：卷十八:823「知情成员对该对象在该轴上的读数均值」
+- 已修：卷十八:1163「÷ Σ_k w_k」
+- 已修：卷十九:510「按工时加权的参建者技能」
+- 已修：卷十九:874「按容积加权」
+- 已修：卷二十:737「÷ stepMinutes」
+- 已修：卷二十:934「各样点的算术平均」
+- 已修：卷二十:64「按距离平方衰减」
+- 已修：卷二十五:372「index = weatherKg ÷」
+- 已修：卷二十五:486「minutes ÷（minutesPerKg × availableKg）」
+- 已修：卷二十七:164「÷ step + 1」
+- 已修：卷二十七:288「两组均值之比减 1」
+- 已修：卷十四:1045「占某流派 teaches 的比例」
+- 已修：卷二十六:812「÷ 该维度取值域上界」
+- 已修：卷二十六:669「立场（归一到 [-1,1]）」
+
+# 误报（不在三扫真命中里的命中）：1 处
+- 卷三乙:569 [隐式] 22，封卷后勘误，卷十七 C17-6 ①），调用方同样不自己按部件质量加权（除数是参加部件的质量之和，下界与为 0 时的处置在 M-2 ｜ 除数：隐式分母（按部件质量加权）
+
+# 回归样本（应判已保护）：通过 29 / 29
+
+# 漏报写法回归（应识别到除法并判已保护）：通过 2 / 2
+
+# 取值域引用核实不到（所在句不作保护依据）：0 处
+
+# 取值域引用回归：通过 6 / 6
+
+# 字面常数除数回归（合成夹具）：通过 6 / 6
