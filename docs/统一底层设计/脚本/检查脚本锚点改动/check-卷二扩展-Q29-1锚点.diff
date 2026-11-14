@@ -1,0 +1,11 @@
+--- check-vol2-ext.mjs.20261114-021131.bak	2026-11-13 23:19:38.617248200 +0000
++++ ../../vol2/check-vol2-ext.mjs	2026-11-14 02:11:37.095080700 +0000
+@@ -693,7 +693,7 @@
+   const matcherExports = gApi.filter(e => fileOf(e) === 'gate/matcher.mjs').map(nameOf);
+   if (!sameArr(fns, ['matchBlocklist', 'matchIdLeak', 'containsCodePoints'])) bad('签名表应恰为 matchBlocklist、matchIdLeak、containsCodePoints，实得 ' + fns.join(','));
+   if (!sameArr(matcherExports, fns)) bad(`gate/matcher.mjs 在 groupApi 的导出（${matcherExports.join(',')}）与签名表不一致`);
+-  const NEEDLE_OK = ['BlockNeedle', 'AiQuote'], HAY_OK = ['Text', 'TurnText'], OTHER_OK = ['Handle<language>'];
++  const NEEDLE_OK = ['BlockNeedle', 'AiQuote'], HAY_OK = ['Text', 'TurnText'], OTHER_OK = ['DisplayLang']; // 锚点改：李白 11-14 Q29-1 裁定显示语言与世界内语言分开登记，matchBlocklist 的语言形参改为 DisplayLang（卷二封卷勘误 9886d430）；签名表无世界内语言形参，不再放行 Handle<language>
+   for (const r of rows) {
+     const fn = ticks(r[0])[0]; const sig = ticks(r[1])[0] ?? '';
+     if (/labels|Map</.test(r.join('|'))) bad(`${fn} 一行出现 labels 或 Map 类型`);
