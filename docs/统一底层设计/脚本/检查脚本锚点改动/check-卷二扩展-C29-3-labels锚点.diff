@@ -1,0 +1,13 @@
+--- F:/dnd-tmp/vols/backup/check-vol2-ext.mjs.20261114-025407.bak	2026-11-14 02:54:07.183806000 +0000
++++ F:/dnd-tmp/vol2/check-vol2-ext.mjs	2026-11-14 02:54:21.574748500 +0000
+@@ -720,7 +720,9 @@
+   const bq = gApi.find(x => nameOf(x) === 'brandQuote'); if (!bq || !sameArr(bq.callerFiles, ['ai-gate/parse.mjs'])) bad('groupApi：brandQuote 应只对 ai-gate/parse.mjs 开放');
+   // labels 的值类型是 Text；读 labels 的组里没有 gate 与 aiGate
+   const entryRows = tableAfterLine(lines.findIndex(l => l.startsWith('- **登记边界入口表**'))).map(cellsOf);
+-  const lr = lines.find((l, i) => i > s29a && i < s29b && l.startsWith('| `textcore/labels.mjs` |')); if (!lr || !/, Text>` 冻结/.test(lr)) bad('入口表：labels 的值类型应写明为 Text');
++  const lr = lines.find((l, i) => i > s29a && i < s29b && l.startsWith('| `textcore/labels.mjs` |')); { // 锚点改：李白 11-14 C29-3 恢复自然写法（49647434），值类型写成 `Map<EntityId|Handle, Map<形态, Text>>` 加"内外两层都冻结"；判据不变：值类型 Text 且冻结，并须写明两张冻结表形状与只读白名单
++    const rd = lr ? lr.slice(0, lr.indexOf('两张冻结表')) : ''; const out = lr ? lr.slice(lr.indexOf('两张冻结表'), lr.indexOf('labels schema')) : '';
++    if (!lr || !out.includes('Map<形态, Text>') || !/冻结/.test(out) || !out.includes('代号 → 形态 → `Text`') || !out.includes('模板代号 → 变体代号 → 段列表或选择结构') || !rd.includes('只读白名单')) bad('入口表：labels 的值类型应写明为 Text（Map<形态, Text> 冻结），并写明两张冻结表形状与只读白名单'); }
+   const le = gApi.find(x => nameOf(x) === 'labels'); if (!le || !sameArr(le.callers, ['inputEdge', 'outputGate'])) bad('groupApi：labels 的读者应只有 inputEdge 与 outputGate');
+   for (const g of ['gate', 'aiGate']) if (/labels/.test(mcell(g, 'textcore'))) bad(`矩阵 ${g} 行 textcore 格出现 labels`);
+   const br = entryRows.find(e => mjsIn(e[0]).includes('gate/load-blocklist.mjs')); if (!br || !br[3].includes('{word: BlockNeedle, category}')) bad('入口表：blocklist 词条的类型应为 BlockNeedle');
