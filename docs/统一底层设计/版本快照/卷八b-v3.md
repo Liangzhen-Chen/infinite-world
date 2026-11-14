@@ -2,7 +2,7 @@
 
 起草 claude-fable-5-2 中档／改稿 claude-opus-5-5 中档（第二版起）／审查 claude-opus-5-5 中档
 
-（2026-11-13 起草，快照存 `版本快照/卷八b-v1.md`；同日按 `审查/卷八b-一审.md` 改出第二版，快照存 `版本快照/卷八b-v2.md`，一审 21 条真问题的落点与需改已封卷的请求见 §8 Q14 至 Q18；同日按李白对 `审查/卷八b-二审.md` N1 的裁定（选乙：允许运行期新政权自立法典根）改出第三版，快照存 `版本快照/卷八b-v3.md`，只改：§2.2 前新增“法典引用 `lawRef`”唯一定义，`book`、`analogyOf`、`norm.book`、§2.5 各处原 `lawCodeId` 与入口签名改指它；运行态条目加 `enactedBy`，运行期法典根必填 `legislator`（所属政权），立法组织终止时其法典根记废止（R8b-1.16）；错误码 E-LAW-REF；已落地的已封卷改动（Q14、Q15）与撤回的 Q16 改状态句；二审小项 1 至 3。v3 只核 偏离/N1 按李白裁定改（`审查/卷八bv3-卷二卷五勘误-核.md`，不升版本号，改前快照另存 `版本快照/卷八b-v3a.md`）：R8b-1.16 补开局目录法典随政权失效后继任政权经 `enactLaw` 重立；`provisionView` 一处定义生效止日 = min(条目自身止日, 所属法典根废止日)，R8b-1.5、R8b-1.11 改为引它。lawCode 列表口径勘误（李白 11-13 批，不升版本号，改前快照另存 `版本快照/卷八b-v3b.md`）：卷二、卷五把 `lawCode` 定为 `lawSlots` 首项 `binding` 的只读列表 `lawRef[]`（按存储顺序）、`analogyOf` 定为 `lawRef nullable`，本卷 §2.3、R8b-1.13、§5.2 卷五行措辞随改，§8 Q19 已结。封卷前小项（按 `审查/卷八b收尾-lawCode勘误-核.md` 第四节 3，不升版本号，改前快照另存 `版本快照/卷八b-v3c.md`）：R8b-1.4 判法典根生效期改为引 `provisionView`，删去自写的扣除废止写法，结果不变。封卷后勘误（李白 11-13 批卷八 v5 合并只核 P1 与 R8b-10.4，不升版本号，改前快照另存 `版本快照/卷八b-v3d.md`）：§5.3 被奴役者聚合种类行的 `keyDims` 由集合型 `profession` 改为卷二 §5.5（个体 `person`）单值维度 `primaryProfession`（集合型不能作分组键，卷二十七 R27-2.8），`keyHoldings` 随之列入执业种类（实体化按主业键开执业边，卷二十七 R27-2.2；一致条件同卷八 §4.16（人口统计层、承载力、迁徙、移民波次））；R8b-10.4 写明按卷六 §4.22（源汇标记与月度经济报告）规则 5 新增的组织范围读报告（原卷六报告无组织范围）。必要理由：方案乙后运行期立的法典根不是目录表行，原各处 `ref law_code` 取不到它，按 R8b-1.10 同一校验器会拒收运行期条目，必须有一个同时容纳两种来源的引用类型。模板头硬约束，出自卷一 §0.4（写进每卷模板头部的硬约束）：① 规则里不出现任何实例 id，也不从 id 反推类别；② 规则层一行不读任何语言，字符串只许是登记过的代号；③ 不为具体的罪名、法典、刑罚、地区、身份、职业写专项规则；④ 常数只在规则表；⑤ 一个系统一个读入口、一个字段一个写者；⑥ 不读墙钟；⑦ 凡除法写明除数的正下界或为 0 时的分支；⑧ 凡逐次改写的数值存储量写明存法、余数与误差界，口径只引卷二 §3.3（求值管线）“存量与余数结转”；⑨ 规则不读可修剪的事件日志，凡规则要用的过去，都落在本卷登记的状态记录上。）
+（2026-11-13 起草，快照存 `版本快照/卷八b-v1.md`；同日按 `审查/卷八b-一审.md` 改出第二版，快照存 `版本快照/卷八b-v2.md`，一审 21 条真问题的落点与需改已封卷的请求见 §8 Q14 至 Q18；同日按李白对 `审查/卷八b-二审.md` N1 的裁定（选乙：允许运行期新政权自立法典根）改出第三版，快照存 `版本快照/卷八b-v3.md`，只改：§2.2 前新增“法典引用 `lawRef`”唯一定义，`book`、`analogyOf`、`norm.book`、§2.5 各处原 `lawCodeId` 与入口签名改指它；运行态条目加 `enactedBy`，运行期法典根必填 `legislator`（所属政权），立法组织终止时其法典根记废止（R8b-1.16）；错误码 E-LAW-REF；已落地的已封卷改动（Q14、Q15）与撤回的 Q16 改状态句；二审小项 1 至 3。v3 只核 偏离/N1 按李白裁定改（`审查/卷八bv3-卷二卷五勘误-核.md`，不升版本号，改前快照另存 `版本快照/卷八b-v3a.md`）：R8b-1.16 补开局目录法典随政权失效后继任政权经 `enactLaw` 重立；`provisionView` 一处定义生效止日 = min(条目自身止日, 所属法典根废止日)，R8b-1.5、R8b-1.11 改为引它。lawCode 列表口径勘误（李白 11-13 批，不升版本号，改前快照另存 `版本快照/卷八b-v3b.md`）：卷二、卷五把 `lawCode` 定为 `lawSlots` 首项 `binding` 的只读列表 `lawRef[]`（按存储顺序）、`analogyOf` 定为 `lawRef nullable`，本卷 §2.3、R8b-1.13、§5.2 卷五行措辞随改，§8 Q19 已结。封卷前小项（按 `审查/卷八b收尾-lawCode勘误-核.md` 第四节 3，不升版本号，改前快照另存 `版本快照/卷八b-v3c.md`）：R8b-1.4 判法典根生效期改为引 `provisionView`，删去自写的扣除废止写法，结果不变。封卷后勘误（李白 11-13 批卷八 v5 合并只核 P1 与 R8b-10.4，不升版本号，改前快照另存 `版本快照/卷八b-v3d.md`）：§5.3 被奴役者聚合种类行的 `keyDims` 由集合型 `profession` 改为卷二 §5.5（个体 `person`）单值维度 `primaryProfession`（集合型不能作分组键，卷二十七 R27-2.8），`keyHoldings` 随之列入执业种类（实体化按主业键开执业边，卷二十七 R27-2.2；一致条件同卷八 §4.16（人口统计层、承载力、迁徙、移民波次））；R8b-10.4 写明按卷六 §4.22（源汇标记与月度经济报告）规则 5 新增的组织范围读报告（原卷六报告无组织范围）。封卷后勘误（李白 11-13 裁定选乙，不升版本号，改前快照另存 `版本快照/卷八b-v3e.md`）：R8b-10.4 删去“真实税基与核到税基之差”一项——卷八 R8-11.9 不另算核到税基、漏损并入同一式，核定义务只记漏后应缴数，真实税基不落任何记录，卷六组织范围无从推出；4.10.1、4.10.4、§0 卷八行不再读 `taxesFor` 解释栏，4.10.5【非西陲】例改为应收实收差。封卷后勘误（李白 11-13 对卷九 N1-b 的裁定，不升版本号，改前快照另存 `版本快照/卷八b-v3f.md`）：R8b-12.2 末补一句——羁押、人质边的收押、移交、关闭由持有写者照卷十八 R18-1.11 发持有变化事件，复用同一事件类别，不另造事件（理由：卷九前提失效通知须在被捕当刻重查活动前提，原本收押没有任何事件）；同批按卷八封卷核记账，§5.2 卷八行残留的“征管差额”改为“应收实收差”，与上条已删税基差的口径一致。封卷后勘误（李白 11-14 批，卷二十二请求第 2 条，有条件批选“另存对照表”；不升版本号，改前快照另存 `版本快照/卷八b-v3-勘误前-1114.md`）：事实号的派生算法不动；§2.3 事实记录加 `event`（落定动作的事件 id），新增对照表 `state.offenseFactOfEvent[eventId] → factId`，与事实记录同写同删；R8b-5.2 写明 `event` 的来路；R8b-2.4“他知道这件事实”写明是对 `(event, 该记录的 event)` 调卷二十二 `knowsFact`；§3.3 写者表与去留说明、S8b-4 把对照表一并列入；`known` 闩不动。理由：卷二十二的事件事实以事件 id 为键，原事实号与事件 id 之间无对应，告发者知不知道这件事实不可判定；一个落定动作至多一条事实（R8b-5.2，查验所见对应那次查验动作），一一对应成立。读者：卷八b 告发、卷二十二 R22-7.1 `law` 路、卷十二 S22-7。必要理由：方案乙后运行期立的法典根不是目录表行，原各处 `ref law_code` 取不到它，按 R8b-1.10 同一校验器会拒收运行期条目，必须有一个同时容纳两种来源的引用类型。模板头硬约束，出自卷一 §0.4（写进每卷模板头部的硬约束）：① 规则里不出现任何实例 id，也不从 id 反推类别；② 规则层一行不读任何语言，字符串只许是登记过的代号；③ 不为具体的罪名、法典、刑罚、地区、身份、职业写专项规则；④ 常数只在规则表；⑤ 一个系统一个读入口、一个字段一个写者；⑥ 不读墙钟；⑦ 凡除法写明除数的正下界或为 0 时的分支；⑧ 凡逐次改写的数值存储量写明存法、余数与误差界，口径只引卷二 §3.3（求值管线）“存量与余数结转”；⑨ 规则不读可修剪的事件日志，凡规则要用的过去，都落在本卷登记的状态记录上。）
 
 ---
 
@@ -41,7 +41,7 @@
 | 卷五 | `placeView` 的 `lawSlots`、`tree`、`control`、`siteType`，见卷五 §4.11（法域槽派生）、卷五 §4.9（发展度与控制度）；`canEnter`，见卷五 §4.13（进入权与私宅许可）；`perceive`，见卷五 §4.2（分区、方位与感知通道）；行政层级族 |
 | 卷六 | `post`、`transfer`、`balance`；`contractStep`、`contractView`、`obligationsOf`；`priceFor`；`economyReport`；合同阶段与义务阶段两个封闭枚举 |
 | 卷七 | `evaluationOf`，见卷七 §4.26（美德、罪恶、罪行、羞耻（评价行））；`faithUnlocked`，见卷七 §4.2（教义组（开关加修正））；文化行的 `lawHabits`，见卷七 §4.28（文化偏好输出接口）；虔诚的去处行，见卷七 §4.10（虔诚账户与奉献等级（香火）） |
-| 卷八 | `orgView`、`officeView`、`polityView`、`hasPower`、`officesOf`、`governorOf`、`popView`、`taxesFor` 的解释栏，见卷八 §4.2（职位、官职、俸禄、继任、代理追认）、卷八 §4.5（领地持有权）、卷八 §4.11（税收全表与征管）、卷八 §4.16（人口统计层、承载力、迁徙、移民波次） |
+| 卷八 | `orgView`、`officeView`、`polityView`、`hasPower`、`officesOf`、`governorOf`、`popView`、`taxesFor`（R8b-11.5 读应缴数），见卷八 §4.2（职位、官职、俸禄、继任、代理追认）、卷八 §4.5（领地持有权）、卷八 §4.11（税收全表与征管）、卷八 §4.16（人口统计层、承载力、迁徙、移民波次） |
 | 卷九 | 动作结算后的事实、`consent()`、`authority()`、检定、决策管线 |
 | 卷十三 | 兵力读数、决斗结果事件、俘获结果事件 |
 | 卷十四 | `skillValue`、`certsOf`、`revoke`，见卷十四 §4.3（技能与熟练）、卷十四 §4.7（考试与认证） |
@@ -263,7 +263,8 @@
 | `state.lawBindings[holderId][]` | `{book: lawRef（法典根）, sinceDay: integer, untilDay: integer nullable}`；`holderId` 是地点或组织 | code.mjs | 原值 |
 | `state.enacted[provisionId]` | 与 `law_code` 表行逐字段相同的一条法典行（任一形态），外加 `enactedDay: integer`（创建时刻，世界日序号，按卷二 §2.2（签名与返回形状）时间只到日）与 `enactedBy: EntityId`（创建者，即 `enactLaw` 的提交者）；形态为法典根的，`legislator` 必填，即它的所属政权（R8b-1.10）。指向它的 `lawRef` 为 `{src: lawsrc_enacted, id: provisionId}` | code.mjs | 原值；写入后不改写 |
 | `state.repeals[src][id]` | `{day: integer, cause: 代号}`；两段键就是被废止条目的 `lawRef` 的 `src` 与 `id`，表行与运行期条目同一写法 | code.mjs | 原值；每个键至多写一次 |
-| `state.offenseFacts[factId]` | `{act, actor: EntityId nullable, actorKey: KeyId, target: EntityId nullable, place, at: integer minute, harm: integer, consent: boolean, entitled: boolean, deliberate: boolean, capable: boolean, intentForm: 代号 nullable, known: boolean, witnesses: list<{by: EntityId, margin: integer}>, traces: list<批次引用>, retainUntil: integer minute}` | offense.mjs | 原值；写入后只许追加 `witnesses`、`traces`，`known` 只许由假转真一次；`intentForm` 是卷九的意图形态代号，由执行器在 `noteFact` 时填 |
+| `state.offenseFacts[factId]` | `{act, actor: EntityId nullable, actorKey: KeyId, target: EntityId nullable, place, at: integer minute, harm: integer, consent: boolean, entitled: boolean, deliberate: boolean, capable: boolean, intentForm: 代号 nullable, known: boolean, witnesses: list<{by: EntityId, margin: integer}>, traces: list<批次引用>, retainUntil: integer minute, event: EventId}` | offense.mjs | 原值；写入后只许追加 `witnesses`、`traces`，`known` 只许由假转真一次；`intentForm` 是卷九的意图形态代号，由执行器在 `noteFact` 时填；`event` 是调 `noteFact` 的那次落定动作的事件 id，写入后不改 |
+| `state.offenseFactOfEvent[eventId]` | `factId` | offense.mjs | 原值；事件 id 到事实号的对照表，与事实记录在同一事务写入、同一事务删除（R8b-5.7）。事实号仍按下段派生，不取事件 id；一个落定动作至多记一条事实（R8b-5.2，查验所见的事实对应的是那次查验动作，R8b-2.3），所以对照是一一的。卷二十二的事件事实 `(event, eventId)` 经本表对到事实号 |
 | `state.cases[caseId]` | `{phase, book: lawRef, forumOffice: officeId nullable, complainant: EntityId, facts: list<factId>, charges: list<{provision: lawRef, accusedKey: KeyId, accused: EntityId nullable}>, evidence: list<{kind, about: factId, source: EntityId nullable, weight: integer}>, openedMinute, verdict: struct nullable, appeals: integer, due: 到期句柄 nullable, retainUntil: integer minute nullable}` | case.mjs | 原值；`retainUntil` 在结案时写入（结案时刻加 `rules.law.case.retainDays` 折成的分钟数） |
 | `state.criminalRecord[personId][]` | `{offense, provision: lawRef, case: caseId, at: integer minute, weight: integer}` | case.mjs | 原值，只追加 |
 | `state.legalFlags[subjectId][flagRow]` | `{since: integer minute, until: integer minute, juris: orgId, fact: factId}` | safety.mjs | 原值加起止时刻，不逐拍改写 |
@@ -462,6 +463,7 @@
 | `state.estates` | estate.mjs | 声明写者 |
 | `state.limitAnchors` | civil.mjs | 声明写者 |
 | `state.offenseFacts` | offense.mjs；提交者只有卷九的动作执行器与卷五的感知结算 | 声明写者 |
+| `state.offenseFactOfEvent` | offense.mjs；只随 `noteFact` 写入、随事实记录删除 | 声明写者 |
 | `state.cases`、`state.criminalRecord` | case.mjs | 声明写者 |
 | `state.legalFlags` | safety.mjs | 声明写者 |
 | `state.crimeLoad` | security.mjs，与同一条事实的写入同一事务 | 声明写者 |
@@ -494,7 +496,7 @@
 | `state.lastAudit[orgId]` | 组织一段 | 查账进度 | `clear` | — |
 | `state.estates[personId][orgId]` | 个体一段、组织一段 | 身份等级 | `clear` | — |
 
-`state.offenseFacts`、`state.cases`、`state.enacted`、`state.repeals`、`state.limitAnchors` 的键是事实号、案件号、条目号、请求引用，不是可终止实体的 id，不属去留表的登记范围：事实记录到 `retainUntil` 由到期项删除（被未结案件引用的顺延到结案）；案件先由下面的清理函数迁到结案，结案后到 `retainUntil` 由到期项删除（R8b-2.14）；运行期条目与废止记录同目录表行一样不删（旧案要按它了结）；时效锚点在请求了结或时效届满时由到期项删除（R8b-15.4）。记录里引用的实体已终止不算残余，实体 id 永不复用。
+`state.offenseFacts`、`state.offenseFactOfEvent`、`state.cases`、`state.enacted`、`state.repeals`、`state.limitAnchors` 的键是事实号、事件 id、案件号、条目号、请求引用，不是可终止实体的 id，不属去留表的登记范围：事实记录到 `retainUntil` 由到期项删除（被未结案件引用的顺延到结案），对照表的那一项同一事务删除；案件先由下面的清理函数迁到结案，结案后到 `retainUntil` 由到期项删除（R8b-2.14）；运行期条目与废止记录同目录表行一样不删（旧案要按它了结）；时效锚点在请求了结或时效届满时由到期项删除（R8b-15.4）。记录里引用的实体已终止不算残余，实体 id 永不复用。
 
 **清理函数**（登记在 `terminationCleanup`）：
 
@@ -515,7 +517,7 @@
 - S8b-1：规则层的 .mjs 里出现罪名、法典、地点、组织、职位的实例 id 字面量，或以本卷各族前缀开头的字符串字面量。句柄只从 `rules.law.roles`、法典行、条目字段里取。
 - S8b-2：本卷系统文件里出现对显示名、法典名、章程附言、职业名、错误消息文本的字符串比较、包含判断或正则。
 - S8b-3：读罪名、刑种、门控、正当事由、身份等级、请求权、救济的代号后与常量比较或作分支键（只许读条目字段；封闭枚举的分支只许出现在该枚举的定义文件里）。
-- S8b-4：除 `noteFact`、`addWitness` 外写 `state.offenseFacts`；除卷九的动作执行器与卷五的感知结算外调用这两个入口。
+- S8b-4：除 `noteFact`、`addWitness` 外写 `state.offenseFacts` 或 `state.offenseFactOfEvent`；除卷九的动作执行器与卷五的感知结算外调用这两个入口。
 - S8b-5：任何动作的可行性判断读本卷的入口后返回“不可行”（法律只产生后果，不拦物理动作）。封闭的例外清单，逐个白名单：设立权利或身份的写入（R8b-6.7 的许可、抵押、租约、用益；R8b-13.2 的奴役设立；卷八的任职写入与卷十八的婚姻写入，见 R8b-4.5）；R8b-12.4 的人身受制。
 - S8b-6：除 `caseStep` 外改案件阶段；除 `custodyStep`、`bondStep`、`estateStep`、`agencyStep`、`issueWanted`、`liftWanted` 与刑种执行外，提出 `rules.law.roles.kinds` 所列各种类的边提案。
 - S8b-7：除 `disposalRight` 外，任何文件自行由持有边推“能不能卖、能不能毁、能不能准人进入”；除 `lawGate` 外自行判年龄线、性别条件、身份条件。
@@ -589,7 +591,7 @@
 - **R8b-2.1 罪名是谓词**：一条罪名行说的是“什么样的事实算这个罪”，不是一个标签。事件类：事实的 `act` 与罪名的 `act` 是同一个动词句柄，且 `against` 对该事实为真。状态类：事实的 `act` 是查验所见（`rules.law.roles.verbs.inspectFound`），且 `stateRX` 对被查验者与所见批次为真。盗窃、伤人、纵火、欺诈、渎神、行贿、无照执业、持有违禁物、越境、逃役，都是行。火器之类若由扩展包引入，持有与私造同样只是两行。
 - **R8b-2.2 一件事实可以对上多条罪名**：`offensesOfFact(lawFrame, factId)` 列出所有谓词为真、且在 `lawFrame` 的栈里有罪刑条目的罪名，各带命中的条目。罪名行 `intentRequired` 为真而事实的 `deliberate` 为假的不列。事实的 `capable` 为假（行为人当时没有行为能力：失去意识、被操控、发作中，由执行器按卷二的 `capacity` 与卷十八的操控类边写入）的，只列 `intentRequired` 为假的罪名。正当事由见 R8b-3.5。
 - **R8b-2.3 状态类只在查验点成立**：持有违禁物、无照、在逃这类状态，不逐拍扫描全世界。它们只在有人查的时候成为事实：关卡查验（卷十七 §4.7（关卡、通行条款、引渡））、治安响应到场（§4.7）、收押时的搜检（§4.12）、固定刻上对在册执业者的例行查验。查验是动作，查不查得出走卷九的检定；查出了，由执行器调 `noteFact` 写一条查验所见的事实。
-- **R8b-2.4 两步立案之一：告发**：`caseStep(draft, 告发)`。告发者须满足三条：按卷二十二的知情查询他知道这件事实；他在准据法典下的身份等级 `mayFile` 为真（§4.14）；罪名 `privateOnly` 为真时他是受害方或其代理（§4.15）。不满足即 E-CASE-STANDING。准据法典取事实时刻与事发地点的 `provisionFor` 结果；指控从 `offensesOfFact` 的结果里由告发者挑（告哪几条是他的意图）。被告以身份键记在指控上（R8b-2.12）。事实已过条目的 `limitDays` 的，案件直接进时效消灭阶段。
+- **R8b-2.4 两步立案之一：告发**：`caseStep(draft, 告发)`。告发者须满足三条：按卷二十二的知情查询他知道这件事实（即 `knowsFact(告发者, (event, 该事实记录的 event))`，对照见 §2.3 `state.offenseFactOfEvent`）；他在准据法典下的身份等级 `mayFile` 为真（§4.14）；罪名 `privateOnly` 为真时他是受害方或其代理（§4.15）。不满足即 E-CASE-STANDING。准据法典取事实时刻与事发地点的 `provisionFor` 结果；指控从 `offensesOfFact` 的结果里由告发者挑（告哪几条是他的意图）。被告以身份键记在指控上（R8b-2.12）。事实已过条目的 `limitDays` 的，案件直接进时效消灭阶段。
 - **R8b-2.5 两步立案之二：受理**：对准据法典的承办组织（`forumOrgOf`，R8b-1.15）握有 `forum.intakePower`、辖及事发地点的任职者（读 `hasPower`）作出受理或驳回；裁断、执行两步的权能同样对承办组织求。规则只给一条硬边：`evidenceScore` 低于程序条目的 `intakeFloor` 时，受理迁移不可用。够门槛之后受不受，是受理者的决定，走卷九的决策管线（他的立场、手头在审数、有没有人打点都是输入）。`intakeDays` 期满未表示的，到期项把案件迁为驳回。同一职位在审数达到 `rules.law.case.maxOpenPerForum` 时新案排队，按告发时刻、再按案件号排序。当地没有这样的任职者，案件就停在告发阶段直到期满——这就是“无人受理”。
 - **R8b-2.6 证据是记录，分数是派生**：任何一方经 `caseStep(举证)` 加一条证据。证据种类是 `evidence` 族条目，来源只有四类，由条目的四个布尔字段区分：证言（事实记录 `witnesses` 里的人愿意作证）、物证（事实记录 `traces` 里的批次或其带赃物份额的下游批次被拿到庭上）、文书（合同记录、账本分录、认证边）、神判（卷七 §4.15（占卜、托梦、神谕、预兆）的结果事件）。加入时算出并冻结权重：`weight = floor(baseWeight × q × c ÷ 100000000)`，`q` 是取证者技能读数查 `rules.law.evidence.skillCurve` 的基点，`c` 对证言是作证者身份权重查 `credCurve` 的基点、对其余三类取一万；除数是常数一亿，恒为正。伪证是一条权重照算、但所指事实不成立的证据；被识破是另一件事实。
 - **R8b-2.7 证据分**：`evidenceScore(caseId, chargeIndex)` = 该指控所涉事实的各条证据权重，按条目的 `family` 分组后依卷二 §3.4（递减规则）叠加，钳在 [0, 100]。所需门槛 `required` = 罪刑条目的 `evidenceRequired`（缺则取程序条目的 `evidenceDefault`），再加双方讼师技能读数之差查 `advocateCurve` 的移动量。讼师是握有代理边的人（§4.15），没有讼师的一方读数取 0。
@@ -712,7 +714,7 @@
 #### 4.5.3 规则
 
 - **R8b-5.1 动作不问法**：一个动作可不可行，只看物理与能力（卷九的可行性判断读身体、位置、物品、技能）。任何可行性判断都不得读本卷的入口后返回“不可行”（S8b-5）。偷得走就能偷，闯得进就能闯。
-- **R8b-5.2 落定之后记事实**：动作落定的同一事务里，卷九的执行器对事实动词在“须记集合”里的动作调 `noteFact`（须记集合在加载期由罪名表各行的 `act` 与 `rules.law.fact.alwaysNote` 合成，是静态的；不在集合里的动作不记），写一条事实记录。字段的来路：`actor`、`actorKey`（行为人当时示人的身份键）、`target`、`place`、`at` 取自动作；`consent` 取卷九 `consent()` 的结果；`entitled` 取 `authority()`、`disposalRight`、`canEnter` 的结果；`deliberate`、`capable` 由执行器按动作的意图形态与卷二的 `capacity` 填，`intentForm` 填该意图形态的代号；`harm` 由执行器在落定当场算出并冻结为整数：涉及批次的，是所涉批次按 `rules.law.roles.puses.caseValue` 用途经卷六 `priceFor` 估出的值；涉及人身的（伤、杀，不涉批次），是事发地对受害者求数值类门控 `rules.law.roles.gates.wergild`（赔命价）得到的值——致死取全值，致伤取 `floor(全值 × s ÷ 10000)`，`s` 是卷二十一给出的这次伤势的严重度基点，除数是常数一万；门控返回未知时取 0。两者都有的相加。`traces` 是所涉批次的引用。别卷认定的“无权取用”“无权进入”“无权占用”“无权耕作”都是 `entitled` 为假的事实，不另设记录。执行器与感知结算之外的模块调本入口，运行期即 E-FACT-DIRECT。
+- **R8b-5.2 落定之后记事实**：动作落定的同一事务里，卷九的执行器对事实动词在“须记集合”里的动作调 `noteFact`（须记集合在加载期由罪名表各行的 `act` 与 `rules.law.fact.alwaysNote` 合成，是静态的；不在集合里的动作不记），写一条事实记录。字段的来路：`actor`、`actorKey`（行为人当时示人的身份键）、`target`、`place`、`at` 取自动作，`event` 取该动作落定事件的事件 id 并同时写 `state.offenseFactOfEvent`（§2.3）；`consent` 取卷九 `consent()` 的结果；`entitled` 取 `authority()`、`disposalRight`、`canEnter` 的结果；`deliberate`、`capable` 由执行器按动作的意图形态与卷二的 `capacity` 填，`intentForm` 填该意图形态的代号；`harm` 由执行器在落定当场算出并冻结为整数：涉及批次的，是所涉批次按 `rules.law.roles.puses.caseValue` 用途经卷六 `priceFor` 估出的值；涉及人身的（伤、杀，不涉批次），是事发地对受害者求数值类门控 `rules.law.roles.gates.wergild`（赔命价）得到的值——致死取全值，致伤取 `floor(全值 × s ÷ 10000)`，`s` 是卷二十一给出的这次伤势的严重度基点，除数是常数一万；门控返回未知时取 0。两者都有的相加。`traces` 是所涉批次的引用。别卷认定的“无权取用”“无权进入”“无权占用”“无权耕作”都是 `entitled` 为假的事实，不另设记录。执行器与感知结算之外的模块调本入口，运行期即 E-FACT-DIRECT。
 - **R8b-5.3 目击是感知的结果**：同一事务里，对卷五 `perceive` 判定感知到这次动作的在场者，按余量从大到小、同余量按 id 代号序，写进 `witnesses`，至多 `rules.law.fact.witnessMax` 人。事后经痕迹推知的人不进这个表，他们的知情归卷二十二。
 - **R8b-5.4 事实不带罪名**：事实记录里没有“这是什么罪”的字段。算不算罪、算什么罪，是 `offensesOfFact` 在给定 `lawFrame` 下的派生。同一条事实，在事发地的栈下是盗窃，在行为人本族的族规下可能只是“取用公物”，在无法之地什么都不是。
 - **R8b-5.5 没人知道就没有后果**：案件要有知情的告发者，旗标与响应要有行为人与受害者之外的当场目击者（R8b-7.6、§4.8），审计要有人去查（§4.10）。事实日后因案件引用而成为已知，只加治安负荷，不补设旗标、不补派响应。事实记录本身不触发任何惩罚。
@@ -899,7 +901,7 @@
 
 #### 4.10.1 维度
 
-`gapkind` 族；运行态 `state.lastAudit`；规则表 `law.audit.*`、`law.roles.powers.audit`。读别卷：卷六月报的指标、卷八 `taxesFor` 的解释栏。
+`gapkind` 族；运行态 `state.lastAudit`；规则表 `law.audit.*`、`law.roles.powers.audit`。读别卷：卷六月报的指标。
 
 #### 4.10.2 统一入口
 
@@ -910,19 +912,19 @@
 - **R8b-10.1 没有“腐败值”**：腐败不是一个量表。它是三类具体的事：收钱办事、把经手的公款挪走、少报应缴的数。每一类都是普通的转移或不作为，都留下事实记录或账上的差额。
 - **R8b-10.2 贿赂是一笔转移加一件事实**：给钱的动作是卷六的一笔转移，原因动词登记为“馈赠请托”；它在罪名表里有对应的行时就记一条事实。收钱者之后怎样受理、怎样裁断、放不放行，仍是他自己的决定：那笔钱是他决策里的一项收益，被查出的预期代价是一项成本（读 `crimeProspect`）。规则里没有“收了钱就必放人”。
 - **R8b-10.3 侵吞是无权的转移**：握有权能的任职者把托管、保管、公库分区里的钱物转到别处，是一笔照常成立的转移；`entitled` 为假时记事实（卷六 §4.19（公共工程与公库拨款）、卷六 §4.17（远期、托运与在途）已说明“可行但留痕”）。
-- **R8b-10.4 账上的差额**：`auditGaps(orgId, periodIndex)` 读卷六 `economyReport` 以该组织为范围（卷六 §4.22（源汇标记与月度经济报告）规则 5 的组织范围：工程按出资方、核定义务按债权人、收款按收款账户持有人归组）、该期的指标，对 `rules.law.audit.gapRows` 的每一行取其 `metric` 所指的差额（应收与实收之差、已拨与已用之差、真实税基与核到税基之差）。差额大于容许量 `floor(基数 × toleranceBps ÷ 10000)`（除数是常数一万，恒为正）的列出，`handlers` 是查账当时对该组织握有相应权能的职位（读卷八的现役任职边；本卷不保存过去各期的经手人，见 §1.3）。本入口只列差额，不判是谁、不判是不是舞弊：税收的自然漏损同样表现为差额。
+- **R8b-10.4 账上的差额**：`auditGaps(orgId, periodIndex)` 读卷六 `economyReport` 以该组织为范围（卷六 §4.22（源汇标记与月度经济报告）规则 5 的组织范围：工程按出资方、核定义务按债权人、收款按收款账户持有人归组）、该期的指标，对 `rules.law.audit.gapRows` 的每一行取其 `metric` 所指的差额（应收与实收之差、已拨与已用之差）。差额大于容许量 `floor(基数 × toleranceBps ÷ 10000)`（除数是常数一万，恒为正）的列出，`handlers` 是查账当时对该组织握有相应权能的职位（读卷八的现役任职边；本卷不保存过去各期的经手人，见 §1.3）。本入口只列差额，不判是谁、不判是不是舞弊：纳税人自己的欠缴同样表现为差额。
 - **R8b-10.5 查账**：`auditStep(orgId, periodIndex, ctx)` 的提交者须对该组织或其上级握有 `rules.law.roles.powers.audit` 权能，否则 E-AUDIT-POWER；同一组织同一期只查一次（`state.lastAudit` 记到哪一期）。对每条差额：`found = floor(amount × f ÷ 10000)`，`f` 是查账者 `rules.law.audit.skill` 的技能读数减 `handlers` 各职位现任者同一技能读数中的最大值（职位空缺的不计；全部空缺时减数取 0）、查 `findCurve` 得到的基点；除数是常数一万。比的是查账当时的现任者，不是该期的经手人（§1.3 的取舍）。然后按发生时刻从早到晚，把发生时刻落在该期内、`target` 为该组织、`entitled` 为假的转出事实逐条计入，直到它们的 `harm` 之和将要超过 `found` 为止；被计入的事实，查账者自此知情（经卷二十二的知情写入）。查账人本事不如做账人，就什么也查不出。
 - **R8b-10.6 查出之后**：知情的查账者可以告发（§4.2），账本分录作文书证据。他也可以不告、可以拿它要挟、可以收钱闭嘴——那又是 R8b-10.2。差额里对不上任何事实的部分只作为“查出差额”事件发出（载荷是差额行与数额），政治后果归卷八。
 - **R8b-10.7 审计不追溯到记录之外**：事实记录有保留期，查账只能查到保留期内的期次；更早的差额仍可由 `auditGaps` 列出，但已无事实可对。这是世界的性质：旧账难查。
 
 #### 4.10.4 交互
 
-卷六 §4.22（源汇标记与月度经济报告）、卷六 §4.19（公共工程与公库拨款）、卷六 §4.1（账本三元键与守恒）；卷八 §4.11（税收全表与征管）（解释栏）、卷八 §4.2（职位、官职、俸禄、继任、代理追认）；卷十四 §4.3（技能与熟练）、卷十四 §4.7（考试与认证）（请托）；卷二十二 §4.2（知情来源与通道）、卷二十二 §4.7（秘密）；卷九 §4.12（NPC 决策管线）；§4.2、§4.11。通道：派生读取、声明写者、事件。
+卷六 §4.22（源汇标记与月度经济报告）、卷六 §4.19（公共工程与公库拨款）、卷六 §4.1（账本三元键与守恒）；卷八 §4.11（税收全表与征管）（核定义务）、卷八 §4.2（职位、官职、俸禄、继任、代理追认）；卷十四 §4.3（技能与熟练）、卷十四 §4.7（考试与认证）（请托）；卷二十二 §4.2（知情来源与通道）、卷二十二 §4.7（秘密）；卷九 §4.12（NPC 决策管线）；§4.2、§4.11。通道：派生读取、声明写者、事件。
 
 #### 4.10.5 数据实例
 
 - 【西陲】一座城的修桥工程：已拨 5000 文，已用于采购与工钱 3800，托管余额 400，差额 800。容许量 200 基点即 `floor(5000 × 200 ÷ 10000) = 100`，列出。巡按的查账读数比经手的工房主事高 30，查曲线得 7500 基点：`found = floor(800 × 7500 ÷ 10000) = 600`。主事有三笔无权转出（300、250、250），前两笔合计 550 不超过 600，被查知；第三笔计入后 800 超过，查不到。
-- 【非西陲】一个商港盟会的关税：真实税基与核到税基之差很大，但盟会的税吏技能低，差额主要是漏损，没有对应的无权转出事实。查账只发出“查出差额”事件，盟会议事会据此换人，无人获罪。
+- 【非西陲】一个商港盟会按期核定的市舶税：应收与实收之差很大，但差额主要是船户欠缴，没有对应的无权转出事实。查账只发出“查出差额”事件，盟会议事会据此换人，无人获罪。
 - 【非人类】矮人山城的库藏按批次与秤重记账，查账读的技能是他们的计量技能（规则表的 `skill` 由该世界的数据指定）。机制相同，换的是数据。
 - 【超自然】一名受贿的裁断者被对手请来的占卜者“看见”了收钱的场面：这是卷七的占卜给了知情，不经查账；神判类证据可以进案件。两条路通向同一个事实记录。
 
@@ -984,7 +986,7 @@
 #### 4.12.3 规则
 
 - **R8b-12.1 囚犯与人质是两种边**：羁押边不需要被押者同意，来自俘获、逮捕或自由刑；人质边须经缔结（种类行 `concluded` 为真），有授予者（交出人质的一方，记在 `terms.grantor`），通常是一份条约的担保。两者的持有者是押方（个体或组织），标的是被押者；条款 `regime` 指向一条待遇制度，`site` 是关押的地点（可空，表示随队押解），`case` 是相关案件（可空）。两种边的 `intimate` 列都由本卷显式填假：卷十八 R18-9.1 把 `intimate` 为真的种类当作受检关系，要求双方身体都 `intimateEligible`（成年且成熟度达线），那样未成年人不能被押、作质，组织也不能当押方，与本节的实例相悖。对被押者的亲密动作，由动作目录条目的 `intimate` 与 R18-9.1 照常管住；人身依附的其余限制由待遇制度条目给出，不靠边的种类。
-- **R8b-12.2 收押**：`custodyStep(draft, 收押)` 的前提是被押者此刻受制：卷十三或卷九登记的制服、投降、就擒结果事件在同一事务里，或他已在另一条羁押边之下（移交）。`site` 非空时，该处设施的羁押位数（读 `facilityView().functions`）须大于现以它为 `site` 的羁押与人质边数，否则 E-CUSTODY-CAPACITY。收押是查验点（R8b-2.3）；被押者随身之物转入押方名下的保管分区（卷六已登记的保管用途，句柄 `rules.law.roles.purposes.custody`），不是没收，放还时转回。收押的同一事务里，`custodyStep` 对以被押者为一端、种类为 `rules.law.roles.kinds.companion` 的现役同行边（押方本人那一条除外）向持有写者提交关闭提案——旧表“做客—留置”变体的第一条钩子就是这件事，现由收押入口直接做，不在卷十八的同行种类行上加钩子；第二条钩子（脱逃后续）由 R8b-12.5 的脱逃事实与案件照常进行承接。
+- **R8b-12.2 收押**：`custodyStep(draft, 收押)` 的前提是被押者此刻受制：卷十三或卷九登记的制服、投降、就擒结果事件在同一事务里，或他已在另一条羁押边之下（移交）。`site` 非空时，该处设施的羁押位数（读 `facilityView().functions`）须大于现以它为 `site` 的羁押与人质边数，否则 E-CUSTODY-CAPACITY。收押是查验点（R8b-2.3）；被押者随身之物转入押方名下的保管分区（卷六已登记的保管用途，句柄 `rules.law.roles.purposes.custody`），不是没收，放还时转回。收押的同一事务里，`custodyStep` 对以被押者为一端、种类为 `rules.law.roles.kinds.companion` 的现役同行边（押方本人那一条除外）向持有写者提交关闭提案——旧表“做客—留置”变体的第一条钩子就是这件事，现由收押入口直接做，不在卷十八的同行种类行上加钩子；第二条钩子（脱逃后续）由 R8b-12.5 的脱逃事实与案件照常进行承接。羁押、人质边经 `custodyStep` 的收押（建立）、移交（转移）与各条出路的关闭（结束），以及到期项关闭，都由持有写者照卷十八 R18-1.11 在同一事务内发持有变化事件，复用这一个事件类别，本卷不另造事件（封卷后勘误，李白 11-13 对卷九 N1-b 的裁定；卷九前提失效通知订阅它）。
 - **R8b-12.3 待遇制度是数据**：`regime` 条目给出：供给占常人日需的基点、哪些动作类别受制、是否服劳役、可否赎、脱逃的难易。地牢、软禁、宾礼相待、枷号示众、战俘营都是条目。供给由押方的账户负担（卷六的家户日耗把被押者算在押方名下，按基点折减）；供不上，被押者的需要缺口与病弱由卷二十一、卷二十六照常产生，本节不另写“虐待”规则。
 - **R8b-12.4 人身受制是物理事实**：“看守”指：羁押边的持有者是个体时他本人；持有者是组织时，对该组织握有 `rules.law.roles.powers.guard` 权能的任职者。“在场看守”指此刻位于被押者所在地点、`awake` 且有行动能力（卷二的谓词）的看守。“围合完好”指 `site` 所在房间的 `aperture`（卷五 §2.1（place 表）登记、卷十九写值的围护开口比例）不大于 `rules.law.custody.breachApertureMax`；`site` 为空（随队押解）时没有围合。被押者位于 `site`（`site` 为空时不问位置）、且至少有一名在场看守或围合完好时，`regime` 条目 `barsActions` 所列的动作类别对他不可行。这是本卷唯一让动作“不可行”的地方（S8b-5 的例外），理由是它描述的是锁与看守，不是律条。条件不成立（看守全睡了、墙塌了）时，受制自动失效，不需要任何人“解除”。
 - **R8b-12.5 脱逃**：脱逃是被押者随时可选的动作，不在受制之列。成败走卷九的检定：被押者一方读 `rules.law.custody.escapeSkill` 的技能读数，押方读在场看守（R8b-12.4）`guardSkill` 读数之和，再加 `site` 所在房间的 `aperture` 查 `rules.law.custody.apertureCurve` 得到的基点修正（`site` 为空取曲线在开口比例为 1 处的值），制度条目的 `escapeEaseBps` 作修正项。成功则 `custodyStep(edgeId, 脱逃)` 关闭边，并记一条脱逃事实（算不算罪看栈）。外人劫狱是同一个检定，行为人不同。
@@ -1154,7 +1156,7 @@
 | 卷五 | 双向 | 拿 `lawSlots`、`lawCode`（定义在卷五）、`control` 当前存储值、`aperture`、`perceive` 结果、`canEnter`；给法典绑定记录（以地点 id 为键，经 `bindingsOf` 读）、治安值视图字段（卷五已按封卷后勘误登记为只读视图，§8 Q14 已结；`lawCode` 已按封卷后勘误登记为首项 `binding` 的只读列表 `lawRef[]`，§8 Q19 已结）、处分权判定（`disposalRight`）、行为能力门控（`legalCapacity`），并把“无权取用”“无权进入”事实接进 §4.5 | `placeView().security`、`disposalRight`、`legalCapacity` |
 | 卷六 | 双向 | 拿账本、合同、估价、月报；给违禁判定（`contrabandAt`）、治安值、法偿与铸币权与限价的门控（`lawGate`）、时效（`limitationOf`）、救济族与 `applyRemedy`、处分权；登记案值、损毁、赔偿三个价格用途、罚没入库一个用途分区与六种合同种类；保管、托管分区沿用卷六两行；卷六 §4.20（走私与违禁品（经济侧））与该卷 §5.2 判违禁已按封卷后勘误改调 `contrabandAt`（§8 Q15 已结） | §4.1、§4.4、§4.6、§4.7、§4.15 |
 | 卷七 | 双向 | 拿 `evaluationOf`、`faithUnlocked`、`lawHabits`、融入度、占卜结果事件、虔诚去处行；给 `norm` 族条目的含义、罪名代号（评价行的 `about` 可引）、赎罪流程（以虔诚计价的财产刑经 `post` 进卷七登记的赎罪去处，评价的了结由该去处处置；不发事件）、不葬与辱尸等是否成罪的条目位置 | §4.1、§4.2、§4.3 |
-| 卷八 | 双向 | 拿组织、职位、权能、政体行、统治边、人口统计、征管差额；给法律门控（任职、表决、继承）、处分权、身份等级（`estateOf`）、羁押状态（供摄政判断）、违约救济、对外表示的代理 | `lawGate`、`disposalRight`、`estateOf`、`custodyOf`、`applyRemedy` |
+| 卷八 | 双向 | 拿组织、职位、权能、政体行、统治边、人口统计、应收实收差；给法律门控（任职、表决、继承）、处分权、身份等级（`estateOf`）、羁押状态（供摄政判断）、违约救济、对外表示的代理 | `lawGate`、`disposalRight`、`estateOf`、`custodyOf`、`applyRemedy` |
 | 卷九 | 双向 | 拿动作落定、`consent()`、`authority()`、检定、决策管线；给事实入口（`noteFact`）、处分权作为权能来源、受制的动作类别、作案的账（`crimeProspect`）、事先可查的合法性（`attackLegality`、`legalityOf`） | §4.5、§4.6、§4.8、§4.11、§4.12 |
 | 卷十 | 给 | 两张表与各族的格式与不变量；开局的法典绑定、身份边由其按维度生成 | §2 |
 | 卷十三 | 双向 | 拿驻防读数、俘获与决斗结果事件；给决斗与复仇的法定地位（正当事由行与门控）、战俘的收押入口 | §4.3、§4.7、§4.12 |
