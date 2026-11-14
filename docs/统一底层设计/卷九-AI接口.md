@@ -210,7 +210,7 @@
 | `state.marks[onId][markId]` | struct{by: actorId, markKind: ref vocab mark_kind, at: integer:minute, proposalId nullable, level: landing_level} | `mark-actions.mjs` | 是 | `clear`（主体段：留痕对象） |
 | `state.dialogues[sessionId]` | struct{parties: list<entityId>, state: dialogue_state, round: integer, lastOffer: struct nullable, openedAt: integer:minute, idleUntil: integer:minute} | `dialogue.mjs` | 是 | 任一方终止即整条删除（清理函数，§3.3） |
 | `state.decisionCommit[personId]` | struct{candidateId, since: integer:minute, until: integer:minute} nullable | `npc-agenda.mjs` | 是 | `clear` |
-| `state.lastCommit[actorId]` | struct{at: integer:minute, eventId} | `primitives-runtime.mjs`（提交段） | 是 | `clear` |
+| `state.lastCommit[actorId]` | struct{at: integer:minute, eventId: EventId} | `primitives-runtime.mjs`（提交段） | 是 | `clear` |
 
 `state.lastCommit` 只为事件 id 派生服务（R9-3.8）：记该行动者最近一次提交的时刻与事件 id，下一次提交只在同一时刻时读它。
 
@@ -1658,6 +1658,7 @@
 | 封卷后勘误（李白 11-14 跨卷配合项落地，卷十七 C17-11） | §4.2.1 原语表 `move` 行；§5.2 卷十七行 | `move` 的写者由“位置写者”改为卷十七 `placeSubject`（`position.mjs`）。读者：卷十七 §3、R17-1.9、Q17-7；卷四 Q-16、卷十九 Q24、Q25（未改）。理由：位置写入口不填，写入有多条路，卷十七 S17-4 扫描无法成立 |
 | 封卷后勘误（李白 11-14 975aa068 跨卷机制项裁定；不升版本号，改前快照 `版本快照/卷九-v2-勘误前-1114a.md`，改后覆盖 `版本快照/卷九-v2.md`；本批五条同一快照） | §2.1 新族 `occasion`、`claim_kind.predicates`、封闭枚举 `slot_sourced`、`cap_term_ctx`；§2.2 `requirement`、`baseMinutes`、`check`（`opponentRows`）、`effects`、`backlash`、`skillGain`（`skillFrom`）、新字段 `shapeFrom` 与校验；§2.4 `claims.predicate`、`cards.reading`、`CardReading`；§2.5 `rules.card.persCuts`、`gaugeCuts`；§4.7 `cost_row.resource`、`cap_row.terms.dim`；R9-1.13、R9-1.14（新）；§4.1.4 卷十五六行；§4.2.1 `transition` 行；R9-2.8 末句、R9-2.9（新）；R9-3.6 末句；R9-7.3 末句；§4.11.1 `evidence_row.from`、§4.11.2 签名、R9-11.2、R9-11.3 末段；R9-12.5 末段、R9-12.13（新）；§5.3 乙表 P4–P10；术语表三行 | C29-5（决定卡读数：性格档、心情档由人格轴与心理量视图输出按切点派生为档序，关系代号读 `related`，场合代号用开放族 `occasion` 与固定空码 `occ_nil`）；C28-11（R9-11.3 增离线以声明加行数据调用，`evidence_row.from` 增 `row`）；C10-20（`predicates` 放宽到维度代号或读入口字段代号，加载核对字段在证据行读入口的返回形状里，不读文字）；C13-7（`check.opponentRows`、R9-3.6；成长技能可取自读入口字段 `skillGain.skillFrom`）；C15-1 ①–⑥（先 ① 后 ④：`from_slot` 与 `shapeFrom`、`cap_row` 的 `ctx_skill`、`transition` 两个状态机与产物引用、目录登记卷十五六行、活动结束事件 `verb_activity_ended`、配合类候选减 `process.consentBar`）。读者：卷二 §2.9 第 0 条（P4）；卷二十六 §3.1（读入口）（P5）；卷二十九 R29-2.8（P6）；卷十五 R15-1.2、R15-1.5、R15-1.8、R15-1.10、§3.2、R15-4.4、R15-7.2 至 R15-7.4、R15-7.11（P7）；卷十三 R13-1.2（P8）；卷十 §4.4.1（P9）；卷二十八 R28-5.4、R28-5.5（P10）。别卷未改。理由：李白 11-14 975aa068 裁定五条均批，各发出卷记“卷九答复前不加载”或“对方照此提供” |
 | 封卷后勘误（李白 11-14 bc698ed3 裁定；依 审查/机制项-卷九-只核.md 真问题 1 与第六节；不升版本号，改前快照 `版本快照/卷九-v2-勘误前-1114b.md`，改后覆盖 `版本快照/卷九-v2.md`） | §2.1 `occasion` 行 `whenRX` 括注；§2.1 `claim_kind.predicates` 括注；§2.2 `skillGain`、`shapeFrom` 两行与表后"校验"末句 | ① `occasion.whenRX` 删去读本回合 `turn`，改读已核定的回执与说话人所在地点视图，`dialogueView()` 的会话 id 取该决定所答意图所在的对话会话；② `shapeFrom`、`skillFrom`、`predicates` 三处"登记返回形状"核对改指卷二 §2.7（系统声明表 `state-owners.json`）"读入口返回形状登记"（`readShapes`）。读者：实现者、卷二十九（决定卡读数）、卷十五、卷十三、卷十（三处核对的入口所属卷，各按卷二 §2.7（系统声明表 `state-owners.json`）填自己入口的行）。理由：`turn` 是待核对的模型声明，组卡时尚未交回，读它等于让未核对输出决定卡读数（R9-9.3、R9-9.4）；三处核对原无机器可读的登记对象 |
+| 封卷后勘误（李白 11-14 745706f9 裁定 ①；依据 `审查/EventId-全书用处.md` 第二节第 3 条；不升版本号，改前快照 `版本快照/卷九-v2-勘误前-1114k.md`，改后覆盖 `版本快照/卷九-v2.md`） | §2.3 `state.lastCommit` 行 | 值的 `eventId` 字段写明类型 `EventId`，语义不变。读者：实现者、卷二十七（R27-4.12 按 pathTypes 认 `EventId` 路径）。理由：卷二 §1.5 已登记 `EventId`，字段未写类型则 pathTypes 认不到 |
 
 ## 附录 自检脚本输出
 

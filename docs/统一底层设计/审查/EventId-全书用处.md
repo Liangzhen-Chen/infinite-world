@@ -26,14 +26,14 @@
 
 | # | 卷:行 | 现写法 | 问题 | 建议 |
 |---|---|---|---|---|
-| 1 | 卷二十二:169 | `corroborated: set<身份键或 EventId 或 EntityId>` | 三种字串形态同列一个集合成员、无判别字段，违卷二 §1.5 `union` 行与 `EventId`"用法"条 | 拆成各自集合或成员带判别字段 |
-| 2 | 卷二十二:715 | 解释树节点 `ref: 事件 id、修正项来源代号或规则行代号` | 类型写成散文"事件 id"，且与别种代号混在一个字段、无判别 | 写 `EventId`，并按 §1.5 拆字段或加判别字段 |
-| 3 | 卷九:213 | `state.lastCommit[actorId]` 值 `struct{at: integer:minute, eventId}` | `eventId` 字段未写类型；卷二十七 R27-4.12 ② 按 pathTypes 认 `EventId` 路径，未写类型即认不到 | 写 `eventId: EventId` |
-| 4 | 卷二十一:231、433、1215 | 状态实例 `onset`："实例 id，即该实例出现事件的事件 id"（"与卷二十四 `startEvent` 同类型"） | 类型未写 `EventId`（散文）；且卷二 §1.5 `struct:statusInstance` 尚无 `onset`（随卷二十一 §5.3 回填请求待办，本批不加字段） | 写 `onset: EventId`；卷二回填 `struct:statusInstance` 时按 `EventId` 登记 |
-| 5 | 卷八b:267 | `state.offenseFactOfEvent[eventId] → factId` | 键段以占位名写，未写明类型 | 写明键为 `EventId` |
-| 6 | 卷二十六:297 | 想法条目 `eventRef?` | 未写类型，且用 `?` 表可缺，与卷二 `nullable` 写法不同 | 写 `eventRef: EventId nullable`（若确指事件） |
-| 7 | 卷十八:1318 | 附录"旧缺口只记：`EventId`、`EdgeId` 不在 §2.8 的品牌类型清单" | `EventId` 部分已由本批补登，说明过时（`EdgeId` 不在本批范围） | 卷十八下次勘误时注明 `EventId` 已登记 |
-| 8 | 卷二十三:150 | `subjects` 成员 `ref: EntityId 或 EventId 或身份键`，由同级 `kind` 判别 | 单个字段随同级 enum 变类型，不是卷二 §1.5 认可的"带判别字段的 struct"（`oneOf` 判别联合，成员各是 struct）；原列第一节"一致"判偏宽（卷二 EventId 只核小项，1114az 移入） | 按 §1.5 拆成各自可空、恰好一个非空的字段，或改为 `oneOf` 判别联合 |
+| 1 | 卷二十二:169 | `corroborated: set<身份键或 EventId 或 EntityId>` | 三种字串形态同列一个集合成员、无判别字段，违卷二 §1.5 `union` 行与 `EventId`"用法"条 | 拆成各自集合或成员带判别字段；已对齐（提交待入） |
+| 2 | 卷二十二:715 | 解释树节点 `ref: 事件 id、修正项来源代号或规则行代号` | 类型写成散文"事件 id"，且与别种代号混在一个字段、无判别 | 写 `EventId`，并按 §1.5 拆字段或加判别字段；已对齐（提交待入） |
+| 3 | 卷九:213 | `state.lastCommit[actorId]` 值 `struct{at: integer:minute, eventId}` | `eventId` 字段未写类型；卷二十七 R27-4.12 ② 按 pathTypes 认 `EventId` 路径，未写类型即认不到 | 写 `eventId: EventId`；已对齐（提交待入） |
+| 4 | 卷二十一:231、433、1215 | 状态实例 `onset`："实例 id，即该实例出现事件的事件 id"（"与卷二十四 `startEvent` 同类型"） | 类型未写 `EventId`（散文）；且卷二 §1.5 `struct:statusInstance` 尚无 `onset`（随卷二十一 §5.3 回填请求待办，本批不加字段） | 写 `onset: EventId`；卷二回填 `struct:statusInstance` 时按 `EventId` 登记；已对齐（提交待入） |
+| 5 | 卷八b:267 | `state.offenseFactOfEvent[eventId] → factId` | 键段以占位名写，未写明类型 | 写明键为 `EventId`；已对齐（提交待入） |
+| 6 | 卷二十六:297 | 想法条目 `eventRef?` | 未写类型，且用 `?` 表可缺，与卷二 `nullable` 写法不同 | 写 `eventRef: EventId nullable`（若确指事件）；已对齐（提交待入） |
+| 7 | 卷十八:1318 | 附录"旧缺口只记：`EventId`、`EdgeId` 不在 §2.8 的品牌类型清单" | `EventId` 部分已由本批补登，说明过时（`EdgeId` 不在本批范围） | 卷十八下次勘误时注明 `EventId` 已登记；下批 |
+| 8 | 卷二十三:150 | `subjects` 成员 `ref: EntityId 或 EventId 或身份键`，由同级 `kind` 判别 | 单个字段随同级 enum 变类型，不是卷二 §1.5 认可的"带判别字段的 struct"（`oneOf` 判别联合，成员各是 struct）；原列第一节"一致"判偏宽（卷二 EventId 只核小项，1114az 移入） | 按 §1.5 拆成各自可空、恰好一个非空的字段，或改为 `oneOf` 判别联合；已对齐（提交待入） |
 
 ## 三、卷二本卷内
 
