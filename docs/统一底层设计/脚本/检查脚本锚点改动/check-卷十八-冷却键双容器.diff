@@ -1,0 +1,20 @@
+--- "check-\345\215\267\345\215\201\345\205\253.mjs.bak-1114-\345\206\267\345\215\264\351\224\256"	2026-11-14 13:58:32.382515300 +0000
++++ "check-\345\215\267\345\215\201\345\205\253.mjs"	2026-11-14 13:58:37.660810400 +0000
+@@ -275,7 +275,7 @@
+ const s35 = sec('### 3.5');
+ if (!/按类型和写者判定，不按字段名/.test(s35) || !/签名扫描/.test(s35)) r13.push('S18-1 判据');
+ for (const h of ['## 附录 一审修改影响面表', '## 附录 记账栏']) if (!lines.some(l => l.startsWith(h))) r13.push('缺 ' + h);
+-if (!all.includes('state.opinion.lastFired[groupId][subjectRef][triggerRow]')) r13.push('舆论冷却键');
++for (const k of ['state.opinion.lastFired.byEntity[groupId][EntityId][triggerRow]', 'state.opinion.lastFired.byEvent[groupId][EventId][triggerRow]']) if (!all.includes(k)) r13.push('舆论冷却键 ' + k);
+ if (/group\.orgKind|fertilityFactor|heldBy\(|holds\(/.test(all.split('## 附录 记账栏')[0].split('## 附录 一审修改影响面表')[0])) r13.push('残留未定义引用');
+ report('13 一审裁定落实（检查点、错误码、固定刻、迁移清单、rx 运算集、断言判据）', r13.length === 0, r13.slice(0, 10).join(' | '));
+ 
+@@ -349,7 +349,7 @@
+ // 卷十九 Q22：记入 §8，不新增操作
+ if (!/换标的/.test(s8) || !/本版不新增设计/.test(s8)) r14.push('Q22 未记入 §8');
+ // 单通道 一-9：三条路径登记去留
+-for (const p of ['state.stance[observerId][targetId][]', 'state.opinion.lastFired[groupId][subjectRef][triggerRow]', 'state.esteemRem[holderId][resource]']) if (!new RegExp('\\| `' + p.replace(/[.[\]]/g, '\\$&') + '` \\|[^\\n]*`clear`').test(s33)) r14.push('一-9 去留 ' + p);
++for (const p of ['state.stance[observerId][targetId][]', 'state.opinion.lastFired.byEntity[groupId][EntityId][triggerRow]', 'state.opinion.lastFired.byEvent[groupId][EventId][triggerRow]', 'state.esteemRem[holderId][resource]']) if (!new RegExp('\\| `' + p.replace(/[.[\]]/g, '\\$&') + '` \\|[^\\n]*`clear`').test(s33)) r14.push('一-9 去留 ' + p);
+ // 判据绕过 二-4、二-5
+ if (/任何函数体内既读/.test(s35) || !/数据流分析/.test(s35) || !/P26-8/.test(s35)) r14.push('二-4 S18-8');
+ if (!/两个实体引用/.test(s35) || !/豁免表首版登记一条/.test(s35) || /豁免表首版为空/.test(body)) r14.push('二-5 S18-1');

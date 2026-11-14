@@ -1,0 +1,210 @@
+== node check-卷五.mjs
+PASS  1 顶层节 §0
+PASS  1 顶层节 §1
+PASS  1 顶层节 §2
+PASS  1 顶层节 §3
+PASS  1 顶层节 §4
+PASS  1 顶层节 §5
+PASS  1 顶层节 §6
+PASS  1 顶层节 §7
+PASS  1 顶层节 §8
+PASS  1 附 术语与代号表
+PASS  2 子系统数  = 16
+PASS  2 子系统 4.1 六小节
+PASS  3 子系统 4.1 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.1 三类断言
+PASS  2 子系统 4.2 六小节
+PASS  3 子系统 4.2 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.2 三类断言
+PASS  2 子系统 4.3 六小节
+PASS  3 子系统 4.3 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.3 三类断言
+PASS  2 子系统 4.4 六小节
+PASS  3 子系统 4.4 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.4 三类断言
+PASS  2 子系统 4.5 六小节
+PASS  3 子系统 4.5 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.5 三类断言
+PASS  2 子系统 4.6 六小节
+PASS  3 子系统 4.6 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.6 三类断言
+PASS  2 子系统 4.7 六小节
+PASS  3 子系统 4.7 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.7 三类断言
+PASS  2 子系统 4.8 六小节
+PASS  3 子系统 4.8 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.8 三类断言
+PASS  2 子系统 4.9 六小节
+PASS  3 子系统 4.9 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.9 三类断言
+PASS  2 子系统 4.10 六小节
+PASS  3 子系统 4.10 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.10 三类断言
+PASS  2 子系统 4.11 六小节
+PASS  3 子系统 4.11 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.11 三类断言
+PASS  2 子系统 4.12 六小节
+PASS  3 子系统 4.12 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.12 三类断言
+PASS  2 子系统 4.13 六小节
+PASS  3 子系统 4.13 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.13 三类断言
+PASS  2 子系统 4.14 六小节
+PASS  3 子系统 4.14 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.14 三类断言
+PASS  2 子系统 4.15 六小节
+PASS  3 子系统 4.15 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.15 三类断言
+PASS  2 子系统 4.16 六小节
+PASS  3 子系统 4.16 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.16 三类断言
+PASS  5 具体实体 id 字面量
+PASS  6 用于判断的描述性文本（§1、§7 引述旧代码除外）
+PASS  6 具体地区名
+PASS  6 规则小节无裸系数
+PASS  7 台账概念：包含树与边结构 → §4.1  规则条数 9
+PASS  7 台账概念：感知通道词表与感知判定 → §4.2  规则条数 10
+PASS  7 台账概念：地形群落海拔 → §4.3  规则条数 7
+PASS  7 台账概念：地质矿脉 → §4.4  规则条数 6
+PASS  7 台账概念：地下层 → §4.5  规则条数 6
+PASS  7 台账概念：站点类型 → §4.6  规则条数 6
+PASS  7 台账概念：资源场、再生律、栖地容量 → §4.7  规则条数 11
+PASS  7 台账概念：取用律 → §4.8  规则条数 8
+PASS  7 台账概念：发展度与控制度 → §4.9  规则条数 5
+PASS  7 台账概念：地形修正 → §4.10  规则条数 4
+PASS  7 台账概念：法域槽的解析 → §4.11  规则条数 5
+PASS  7 台账概念：文化槽的解析 → §4.12  规则条数 5
+PASS  7 台账概念：进入权 → §4.13  规则条数 6
+PASS  7 台账概念：行政层级词表与省郡骨架、邻省条款 → §4.14  规则条数 6
+PASS  7 台账概念：边境混居与迁徙表达 → §4.15  规则条数 5
+PASS  7 台账概念：环境状态读取 → §4.16  规则条数 4
+PASS  7 §5 给出入口名 placeView
+PASS  7 §5 给出入口名 routeView
+PASS  7 §5 给出入口名 perceive
+PASS  7 §5 给出入口名 canEnter
+PASS  7 §5 给出入口名 take
+PASS  7 §5 给出入口名 settleStocks
+PASS  7 §5 给出入口名 stepProgress
+PASS  7 §5 给出入口名 setBorderTerm
+PASS  7 §5 给出入口名 openStocks
+PASS  7 §5 给出入口名 setAspect
+PASS  9 卷末有小项记账栏
+PASS  9 卷末有第二版影响面表
+PASS  9 不写卷零行号（裁定 6）
+PASS  9 读入口不入账：无"首次读取"（裁定 3）
+PASS  9 旧族名与旧键只出现在改名说明里（裁定 1）
+PASS  9 本卷不重写环境规则（裁定 1）
+PASS  9 边上不再有 aperture（裁定 1）
+PASS  9 资源场类型行不列举方法（A-12）
+PASS  9 条款不再借用 term 族（A-19）
+PASS  9 §7 迁移清单补项（裁定 5、6）
+PASS  9 §3 扫描口径与写者（裁定 3、5）
+PASS  9 §2 登记（裁定 1、2、7）
+PASS  9 §4.7 挂层、开户、双向比例（裁定 2、3、4）
+PASS  9 §4.8 意图槽与除零分支（A-11、B-09）
+PASS  10 卷首写明与卷二十的分工
+PASS  10 已删的字段与旧表名不再出现（D-1、D-5、D-7、D-8、D-9、D-18）
+PASS  10 不再替卷二十写"读哪个维度"（P-1、D-2、D-4）
+PASS  10 气候键不再"暂记"（D-22）
+PASS  10 接口只引用卷二十 §5.4（D-2）
+PASS  10 §2 水体字段、组件类分工、修正目标键（D-15、D-16、D-17）
+PASS  10 §3 源强参数、钩子登记、改写写者声明、水体账户例外（D-10、D-20、R2、D-16）
+PASS  10 §4.2 源强从哪里来、可及距离（D-10、D-11）
+PASS  10 §4.7 再生律经 astroView 换算、季节读数值维度、两个修正键、水体是存量（F1、D-8、D-17、D-16）
+PASS  10 §4.8 取水同律（D-16）
+PASS  10 §7 接收 localSightClear 与水体静态数据（D-11、D-16）
+PASS  10 影响面表有第五版一行
+PASS  11 V-1 routeView 返回 edge 与 path；几何最短路的度量与并列取法在 §4.1 规则 5
+PASS  11 V-2 够不着时 margin 为未知，另设 rangeShortfallM
+PASS  11 V-3 water 族不再有饮用性字段
+PASS  11 V-4 水体行必须是存量单元（加载校验），井台与水是两行
+PASS  11 V-5 取水随带转出污染物登记写者，S5-4 随之写明
+PASS  11 V-10 两个修正目标键的条件可读当前维度，口径引卷二十
+PASS  11 V-8 aspect 的改写写者带行范围
+PASS  11 交互小节与组件类一段不再重列接口项（改引 §5.4 的编号）
+PASS  11 影响面表有第六版一行，记账栏有新一轮小项四行
+PASS  12 标题为第十一版（第七版至第十版专项各条仍在下面逐条查）
+PASS  12 裁定 1 距离只有一种算法，只在 §4.1 规则 5 定义
+PASS  12 裁定 1 正文不再有直线距离，也不再有"不连通取坐标"的第二种算法
+PASS  12 裁定 1 可及距离与边境指数都引 §4.1 规则 5 的距离，不另算
+PASS  12 裁定 2 并列取法与调用方向无关，去程回程同一条路径；边的唯一性有加载校验（第八版口径：两端加通路类型）
+PASS  12 裁定 3 缺数据或无法计算一律未知（通则），A5-2.2 不再写当且仅当
+PASS  12 影响面表有第七版一行，记账栏有第七版自记，卷末有第七版说明
+PASS  13 R-1 边境指数无可达站点时记为未知，引 §4.1 规则 5 的同一条规矩，不另写
+PASS  13 R-1 正文不再有"无可达站点取 0"与"不属于无法计算"的说法
+PASS  13 R-1 A5-15.2 只约束已知项，并有不连通站点为未知的用例
+PASS  13 R-2 正文不再有"一对地点只许一条边"的旧口径
+PASS  13 R-2 边按两端加通路类型唯一：规则 4 与 A5-1.2 的加载校验同改，通路类型即 waterway
+PASS  13 R-2 等长路径定序键加入通路类型，去程回程同一条路径不变
+PASS  13 R-2 routeView 的 edge 每种通路类型一项（§3.1 与 §5 卷十七行）
+PASS  13 R-2 §7 迁移写明陆路水路两条边都保留；Q1 的校验与错误码说明同改
+PASS  13 R-2 术语表有通路类型一行
+PASS  13 影响面表有第八版一行，记账栏有第八版自记，卷末有第八版说明
+PASS  14 N-1 平行边的通则只在 §4.1 规则 4 写一次：相邻按地点对算一次、读边属性须写明取法、扩散类取 openness 最大、流动不按边数重复计、指名的边按两端加通路类型定位
+PASS  14 N-1 存量扩散按地点对只算一次，不再逐边算流量（§4.7 规则 8 两句同改）
+PASS  14 N-1 发展度扩散的相邻站点按地点对各算一次
+PASS  14 N-3 规则 2 写全未知分支：邻方项不参加混合，explain 记未取到，指数本身仍是未知不写 0
+PASS  14 影响面表有第九版一行，记账栏有第九版自记，卷末有第九版说明
+PASS  15 卷首有起草与审查的模型档位一行
+PASS  15 清单 5-1、5-2 persistence 用扩展标度存，误差量按语法树递推写成确定式（每日、取用、累计、清零）
+PASS  15 清单 5-1、5-2 正文不再有百万分比的旧存法
+PASS  15 清单 5-3 账户余额只存原值、整数转移，账本账户的存法请卷二写明（Q15）
+PASS  15 清单 5-4、5-5 发展度与控制度用扩展标度存，误差界写成确定式
+PASS  15 三处验收断言补误差界与切片上的界（A5-7.2、A5-8.2、A5-9.2）
+PASS  15 误差界不再按截断次数写（旧口径）
+PASS  15 行改挂：七个位置量登记改写写者、行范围与 viaRelocate，全在单项登记名单
+PASS  15 行改挂：单根、坐标包含与面积和、边图、placeView、canEnter 各有离场行的口径
+PASS  15 A5-1.2 两条跨界边断言：边节里没有跨出离场子树的边；展开到另一处后旧落脚地与被改挂子树之间没有边、新边恰是 placement.edges 给出的那些（卷二补5 单核 N3）
+PASS  15 材料数值读法：liquid 行写明经 materialView 读有效值
+PASS  15 卷二十五复审 ①：两个键不适用于在田作物，毁田走 S25-5 第三个调用点并带毁因代号，外部通路按两类存量分写
+PASS  15 §5 收入 clearCultivation 请求（卷二十五行）、polityView 种类代号（卷八行）、行改挂（卷十九行）
+PASS  15 影响面表有第十版一行，记账栏有第十版自记，卷末有第十版说明与两点已批新增设计的补记
+INFO  正文行数（不含本附录） = 1359
+INFO  子系统数 = 16；开放问题数 = 17；验收断言数 = 48；扩展性测试数 = 12
+RESULT  全部通过
+exit=0
+== node check-卷十七.mjs
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首模型行
+PASS 1c §0 五小节齐全
+PASS 2 11 个子系统各六小节齐全
+PASS 3 数据实例至少三条，含非西陲、含非人类或超自然（共 45 条）
+PASS 4 验收断言三式齐全且编号规整
+PASS 5 正文无具体 id 字面量（含数据实例）
+PASS 6 无用于判断的描述性文本；纯代号无中文；枚举值 ASCII 且带中英显示名（枚举 8 个、值 34 个） —  
+PASS 7 台账各概念写全（十一节标题、台账裁定编号、关键概念、每节规则不少于五条且编号连续；规则共 86 条）
+PASS 8 本卷编号引用不悬空且连续（R 86、A 33、S 6、C 14、Q 10、M 19、X 10） —  
+PASS 9 跨卷章节引用带标题且与原卷标题相符（带标题引用 227 处）
+PASS 10 每个含除法的规则行都写明除数下界或“不做除法”的分支
+PASS 11 确定性、位置唯一写者、矩阵行、调用方义务等必备内容在场
+PASS 12 规则表各键写明类型与取值域（28 行）
+行数 1076；子系统 11；规则 86；断言 33；待补 20 条
+ALL PASS
+exit=0
+== node check-vol2.mjs
+== 1 错误码
+  正文错误码 148 个；登记表展开 260 个
+  OK 正文码全部已登记
+  注意 登记但正文未用到（含简写展开的候选）: E-ACC-BASELINE-EDIT, E-ACC-BASELINE-UP, E-ACC-BYPASS-REGRESSION, E-ACC-CODE-UNLISTED, E-ACC-COMMIT-MSG, E-ACC-CRITERION-LOOSENED, E-ACC-CRITERION-UNVERSIONED, E-ACC-DOC-SEAL, E-ACC-EXT-CODE-CHANGED, E-ACC-EXT-EXISTING-ROW, E-ACC-FIXTURE-INSTANCE, E-ACC-GATE-BYPASS, E-ACC-HIT-OPEN, E-ACC-ITEM-COUNT, E-ACC-ITEM-DOWNGRADE, E-ACC-ITEM-FORM, E-ACC-ITEM-ORPHAN, E-ACC-ITEM-PARAM, E-ACC-ITEM-UNIMPLEMENTED, E-ACC-ITEM-UNREGISTERED, E-ACC-NEWROW-UNANCHORED, E-ACC-REPORT-FORM, E-ACC-REVIEW-CHECKLIST, E-ACC-REVIEW-MISSING, E-ACC-REVIEW-SELF, E-ACC-REVIEW-STALE, E-ACC-REVIEW-VETO, E-ACC-ROWKEY-DRIFT, E-ACC-RUN-UNBOUND, E-ACC-SCAN-NAMELIST, E-ACC-SCAN-SELFNAME, E-ACC-ZERO-MISMATCH, E-AV-KEY, E-AV-NO-DEFAULT, E-BST-BANE-CLASH, E-BST-BODY-WRITE, E-BST-DUPLICATE, E-BST-GEN-SLOT, E-BST-LAIR, E-BST-LORE-SHAPE, E-BST-MONSTER-SCHEMA, E-BST-QUOTA, E-BST-SIM-DIMS, E-BST-TIER-ROWS, E-BST-TRANSFORM-ROWS, E-BST-VARIANT, E-BST-WARD-SHAPE, E-DISPLAY-BACKFLOW, E-DISPLAY-BRANCH-TEXT, E-DISPLAY-DICE, E-DISPLAY-HOST-CHAT, E-DISPLAY-LITERAL, E-DISPLAY-LOCALE-BRANCH, E-DISPLAY-UNSEEN, E-GEN-BRANCH-ORIGIN, E-GEN-BYPASS, E-GEN-DEFAULT, E-GEN-GROUP-CYCLE, E-GEN-GROUP-ROW, E-GEN-ID-COLLISION, E-GEN-LATE-SOURCE, E-GEN-MANIFEST-DRIFT, E-GEN-NAME-EMPTY, E-GEN-NOT-MATERIALIZED, E-GEN-OVERRIDE-AUTHORED, E-GEN-REJECT, E-GEN-RESPECT, E-GEN-ROW-INVALID, E-GEN-SKELETON, E-GEN-STAGE-CYCLE, E-GEN-STAGE-UNKNOWN, E-I18N-FORM, E-I18N-LABEL-FOREIGN, E-I18N-LABEL-ORPHAN, E-I18N-LOCALE, E-I18N-PLURAL, E-I18N-TPL-MISSING, E-I18N-TPL-SLOT, E-MAP-COMPASS, E-MIG-ACCEPT-FORM, E-MIG-BACKFILL, E-MIG-CARD-INCOMPLETE, E-MIG-CARD-INSTANCE, E-MIG-CARD-SCOPE, E-MIG-CARD-SIZE, E-MIG-DEFER-UNBOUND, E-MIG-DUAL-PATH, E-MIG-EVENT-SEQ, E-MIG-EXIT, E-MIG-FILEMOVE-GAP, E-MIG-FROZEN, E-MIG-ORDER, E-MIG-PARALLEL, E-MIG-PHASE-CONFLICT, E-MIG-PHASE-COUNT, E-MIG-RETIRE-MISMATCH, E-MIG-ROW-COUNT, E-MIG-ROW-MULTI, E-MIG-ROW-ORPHAN, E-MIG-SCAN-UNCLAIMED, E-MIG-SORTKEY-ORDER, E-MIG-STATE, E-MIG-TEST-PATCH, E-MIG-ZERO-UNCOVERED, E-PANEL-ACTION, E-PANEL-KIND, E-PANEL-PATH, E-PANEL-SOURCE, E-TPL-CYCLE, E-TPL-KEY, E-TPL-NO-FALLBACK, E-TPL-RX
+== 2 前缀登记
+  实体前缀 27，词表族前缀 125
+  注意 未登记前缀 rx_: rx_type
+  注意 未登记前缀 card_: card_slot_type
+  注意 未登记前缀 q_: q_k
+  注意 未登记前缀 e_: e_a, e_k, e_x
+  注意 未登记前缀 entity_: entity_revived
+  注意 未登记前缀 orowk_: orowk_actual
+  注意 未登记前缀 aggk_: aggk_bonded
+  注意 未登记前缀 attach_: attach_slot
+== 2b 内核信号代号登记
+  小族登记 5 个: layout_change, naming_intent, note_intent, dimension_write_rejected, nil_seedpart
+  OK 正文发出的非词表代号均在小族登记
+  OK 引用小族的代号均已登记（核 32 卷）
+== 3 类型数
+  §1.5 表计 14 种；全文提到的类型数：14, 14, 14, 14, 14
+  OK 类型数一致
+== 4 附录 A 夹具
+  OK 三段 JSON 可解析
+  维度 9 个，类别行 4，实体行 2；展平 class_workshop_hot = {"public":false,"lodging":false,"allowedMaterials":["subst_stone"],"wearPerDay":0.0006,"capacityBase":2,"services":["service_craft"],"fixtures":["fixture_forge","fixture_hearth"],"upkeepPerDay":{"class_fuel":12}}
+== 结果：PASS
+exit=0
