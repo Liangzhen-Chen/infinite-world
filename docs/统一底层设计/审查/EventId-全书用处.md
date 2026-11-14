@@ -20,7 +20,6 @@
 | 卷十八:419、462 | 边与亲子记录 `consentAct: EventId nullable` | 一致 |
 | 卷十八:1580 | 附录：`lieId` 取 `EventId` | 一致 |
 | 卷二十二:169、170 | 知情记录与公共知情 `root: EventId` | 一致 |
-| 卷二十三:150 | `subjects` 成员 `ref: EntityId 或 EventId 或身份键`，由同级 `kind` 判别 | 一致（带判别字段） |
 | 卷二十七:502、506、536、996 | 日志折叠：状态中类型为 `EventId` 的路径（含映射键）所引事件留原样；A27-4.8 | 一致（依赖 pathTypes 能写 `EventId`，本批已在卷二写明） |
 
 ## 二、与新定义不一致或待对齐（只列，不改；交下一批）
@@ -34,7 +33,8 @@
 | 5 | 卷八b:267 | `state.offenseFactOfEvent[eventId] → factId` | 键段以占位名写，未写明类型 | 写明键为 `EventId` |
 | 6 | 卷二十六:297 | 想法条目 `eventRef?` | 未写类型，且用 `?` 表可缺，与卷二 `nullable` 写法不同 | 写 `eventRef: EventId nullable`（若确指事件） |
 | 7 | 卷十八:1318 | 附录"旧缺口只记：`EventId`、`EdgeId` 不在 §2.8 的品牌类型清单" | `EventId` 部分已由本批补登，说明过时（`EdgeId` 不在本批范围） | 卷十八下次勘误时注明 `EventId` 已登记 |
+| 8 | 卷二十三:150 | `subjects` 成员 `ref: EntityId 或 EventId 或身份键`，由同级 `kind` 判别 | 单个字段随同级 enum 变类型，不是卷二 §1.5 认可的"带判别字段的 struct"（`oneOf` 判别联合，成员各是 struct）；原列第一节"一致"判偏宽（卷二 EventId 只核小项，1114az 移入） | 按 §1.5 拆成各自可空、恰好一个非空的字段，或改为 `oneOf` 判别联合 |
 
 ## 三、卷二本卷内
 
-本卷原无 `EventId` 字样；已同步的五处见卷首"定义处"。未处理一项：§2.9 第 2 条强转豁免文件表没有产出 `EventId` 的 kernel 文件（`EntityId` 有 `kernel/handles/entity-id.mjs`）；补哪个文件属新设计点，本批不加，报主会话定。
+本卷原无 `EventId` 字样；已同步的五处见卷首"定义处"。原未处理一项：§2.9 第 2 条强转豁免文件表没有产出 `EventId` 的 kernel 文件；已由 1114az 勘误并入 `kernel/handles/keys.mjs` 行，§2.8 第 1 条补构造函数 `kernel.eventId(…)`。
