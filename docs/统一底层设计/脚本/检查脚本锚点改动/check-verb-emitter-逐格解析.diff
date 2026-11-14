@@ -1,0 +1,63 @@
+--- "F:/dnd-tmp/book/check-verb-emitter.mjs.bak-1114-\351\200\220\346\240\274"	2026-11-14 16:04:17.102681500 +0000
++++ F:/dnd-tmp/book/check-verb-emitter.mjs	2026-11-14 16:05:35.970938600 +0000
+@@ -57,7 +57,41 @@
+   while (i >= 0) { out.push(t.slice(Math.max(0, i - w), i + key.length + w)); i = t.indexOf(key, i + 1); }
+   return out;
+ }
+-function analyze(name, occ, keys) {
++// 发出者声明的取窗（2026-11-14 逐格）：先按表格单元（| 分格）切，再按句号切句，窗口不跨格、不跨句；
++// 句柄形还要求该处是动词句柄（roles.verbs.<k>，或反引号裸写且不是状态字段用法）。
++// 状态字段用法：`x.k`（点号取字段）或 `k` 后接 为真/为假/取真/取假/置真/置假（布尔状态谓词）。
++const FIELD_AFTER = /^`\s*(为真|为假|取真|取假|置真|置假)/;
++function isVerbHandleAt(s, i, k) {
++  const pre = s.slice(Math.max(0, i - 12), i);
++  if (/roles\.verbs\.$/.test(pre)) return true;
++  if (!pre.endsWith('`') || !s.startsWith('`', i + k.length)) return false;
++  return !FIELD_AFTER.test(s.slice(i + k.length));
++}
++// 句子归属：下一句以指代开头（这/该/此/其/它/上述/两行/三行/二者/两者）时视为同一主语，并入本句窗口。
++// 表格行：键在行首格（行的主语格）时，同行其余各格都在说它，整行各格逐格加入窗口；键在其他格时只取本格本句。
++const ANAPHOR = /^\s*(这|该|此|其|它|上述|两行|三行|二者|两者)/;
++function emitWindows(t, key, w, handleForm) {
++  const isRow = t.startsWith('|');
++  const cells = isRow ? t.split('|').slice(1, -1) : [t];
++  const out = [];
++  cells.forEach((cell, ci) => {
++    const ss = cell.split(/(?<=。)/);
++    ss.forEach((s, si) => {
++      let i = s.indexOf(key);
++      while (i >= 0) {
++        const wordOk = !handleForm || (!/[A-Za-z_]/.test(s[i - 1] || '') && !/[A-Za-z_]/.test(s[i + key.length] || ''));
++        if (wordOk && (!handleForm || isVerbHandleAt(s, i, key))) {
++          out.push(s.slice(Math.max(0, i - w), i + key.length + w));
++          for (let j = si + 1; j < ss.length && ANAPHOR.test(ss[j]); j++) out.push(ss[j].slice(0, w));
++          if (isRow && ci === 0) cells.slice(1).forEach(c => out.push(c));
++        }
++        i = s.indexOf(key, i + 1);
++      }
++    });
++  });
++  return out;
++}
++function analyze(name, occ, keys, handleForm = false) {
+   const body = occ.filter(x => !x.log);
+   const reg = new Set(), regLines = [], emitters = [], emitStmts = [], kindOnlyLines = [], kfRefs = [];
+   for (const x of body) {
+@@ -66,7 +100,7 @@
+     const isReg = vrow ? keys.some(k => (t.split('|')[2] || '').includes(k))
+       : keys.some(k => windowAround(t, k, 60).some(w => /本卷(自)?登记|由本卷登记|verb 族条目|本卷登记的/.test(w)));
+     if (isReg) { reg.add(x.v); regLines.push(`${x.v}:${x.n}`); }
+-    for (const k of keys) for (const w of windowAround(t, k, 160)) {
++    for (const k of keys) for (const w of emitWindows(t, k, 160, handleForm)) {
+       for (const [rx, tag] of EMIT_RX) for (const m of w.matchAll(rx)) if (!/^零/.test(m[1].trim())) emitters.push(`${x.v}:${x.n} [${tag}] ${m[1].trim()}`);
+     }
+     // 发出语句：“发(出|一条)? <代号或别名>”，排除否定
+@@ -97,7 +131,7 @@
+ console.log(`kindOnly 成员（按登记行“三行 \`kindOnly\`”抽取）：${[...kindOnlySet].join('、') || '（无）'}`);
+ 
+ const results = [];
+-for (const [h, occ] of [...H].sort()) results.push({ form: 'handle', ...analyze(h, occ, [h]) });
++for (const [h, occ] of [...H].sort()) results.push({ form: 'handle', ...analyze(h, occ, [h], true) });
+ for (const [c, occ] of [...C].sort()) {
+   if (c.startsWith('verb_example_')) continue;
+   results.push({ form: 'code', ...analyze(c, occ, [c, ...(alias.get(c) || [])]), alias: alias.get(c) || [] });
