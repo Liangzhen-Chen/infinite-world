@@ -1,0 +1,14 @@
+--- "F:/dnd-tmp/vols/check-\345\215\267\345\215\201\344\270\211.mjs.bak-1114-\344\277\256\350\256\242\350\256\260\345\275\225\350\261\201\345\205\215"	2026-11-14 15:59:45.279245500 +0000
++++ "F:/dnd-tmp/vols/check-\345\215\267\345\215\201\344\270\211.mjs"	2026-11-14 16:00:06.190382100 +0000
+@@ -151,7 +151,10 @@
+   const ts = ticks(cells(l)[0]); const first = ts[0]; const pre = first.slice(0, first.lastIndexOf('.') + 1);
+   ts.forEach((t, i) => keyAll.add(i === 0 ? t : (t.startsWith('rules.') ? t : pre + t)));
+ }
+-uniq([...all.matchAll(/rules\.combat\.[A-Za-z]+\.[A-Za-z]+/g)].map(m => m[0])).forEach(k => { if (!keyAll.has(k)) c9.push(`键未定义:${k}`); });
++// 锚点修订 11-14：修订记录、勘误表是历史，可提已删键；按节标题跳过（## 或 ### 级标题含“修订记录”或“勘误表”），正文其余照扫
++const isHist = m => /^##+ .*(修订记录|勘误表)/.test(m.h2) || /^###+ .*(修订记录|勘误表)/.test(m.h3);
++const bodyNoHist = meta.filter(m => !isHist(m)).map(m => m.line).join('\n');
++uniq([...bodyNoHist.matchAll(/rules\.combat\.[A-Za-z]+\.[A-Za-z]+/g)].map(m => m[0])).forEach(k => { if (!keyAll.has(k)) c9.push(`键未定义:${k}`); });
+ const outside25 = meta.filter(m => !/^### 2\.5 /.test(m.h3)).map(m => m.line).join('\n');
+ for (const k of keyAll) { const leaf = k.split('.').pop(); const grp = k.split('.')[2]; if (!outside25.includes(k) && !new RegExp('`(?:' + grp + '\\.)?' + leaf + '[`\\[.]|[A-Za-z.]*' + leaf + '\\b').test(outside25)) c9.push(`键无消费者:${k}`); }
+ const stateDef = uniq(sub(/^### 2\.4 /).flatMap(l => ticks(cells(l)[0] || '')).map(t => (t.match(/^state\.([A-Za-z]+)/) || [])[1]).filter(Boolean));
