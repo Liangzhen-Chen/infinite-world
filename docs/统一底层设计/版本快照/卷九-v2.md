@@ -123,6 +123,7 @@
 | `decision_card`（决定卡） | `dcard_` | `outcome: enum decision_outcome`、`slots: map<槽位代号, enum card_slot_type>` | 加载失败 | 族名与前缀见卷二 §1.9（代号、显示名与语言边界），本卷只引用；条目与条目字段归本卷，首批六条与各自槽位见附录 |
 | `record_class`（记录类） | `rcls_` | 卷二 §2.6（写者与三接口）定 | 加载失败 | 族归卷二；本卷登记六条（§3.3） |
 | `holding_kind`（持有种类） | `hk_` | 卷十八 §4.1（持有种类表与两条转移协议）定 | 加载失败 | 族归卷十八；本卷登记“同意边”“玩家席位边”两行（R9-3.9、§4.8），由 `rules.consent.edgeKind`、`rules.control.seatKind` 指名 |
+| `record_kind`（记录种类：动作行 `code` 槽位以 `recordKind` 指向的已登记记录的种类；封卷后勘误 1114w2e） | `reckind_` | `stateKey`：该种记录所在状态表在 `state-owners.json` `stateKeys` 里已登记的键（只引用，不在 §2.7 加字段） | 加载失败 | 族名与前缀见卷二 §1.9（代号、显示名与语言边界）；条目只收各卷已定义的记录，由定义该记录的卷登记 |
 | `mark_kind`（留痕种类） | `mk_` | `onKinds: set<实体类>` | 加载失败 | 本卷首批；各卷可加 |
 | `menu_group`（菜单组） | `menu_` | `order: integer` | 加载失败 | 本卷首批；各卷可加 |
 | `cap_row`、`difficulty_row`、`ability_row`、`cost_row`、`evidence_row`、`scene_section`、`authority_source`、`consent_clause`、`candidate_provider`、`dialogue_move`、`intent_form`（规则表里的行表，见 §4 各节） | 各自表内行号 | 见各节 | 加载失败 | 各领域卷登记行；格式归本卷 |
@@ -180,7 +181,7 @@
 |---|---|---|---|---|---|
 | `id` | handle `act_` | — | 卷二 §1.9（代号、显示名与语言边界）的代号正则 | 加载失败 | 动作代号 |
 | `class` | ref `act_class` | — | 族内 | 加载失败 | 动作类 |
-| `slots` | map<槽位代号, struct{kind: slot_kind, multi: boolean, entityKind?: 实体类, vocab?: 词表族名, filter?: list<ref target_filter>, min?: number, max?: number, unit?: 单位代号, required: boolean}> | — | `kind` 为 `code` 时 `entityKind`、`vocab` 恰填一个；`kind` 为 `number` 时 `min`、`max` 必填；`multi` 只许与 `code` 同用 | 加载失败 | 槽位声明；候选由 §4.5 从 view 或词表生成；线上怎样传见 R9-6.7 |
+| `slots` | map<槽位代号, struct{kind: slot_kind, multi: boolean, entityKind?: 实体类, vocab?: 词表族名, recordKind?: ref vocab record_kind, filter?: list<ref target_filter>, min?: number, max?: number, unit?: 单位代号, required: boolean}> | — | `kind` 为 `code` 时 `entityKind`、`vocab`、`recordKind` 恰填一个；`recordKind` 非空时 `filter` 必填且非空；`kind` 为 `number` 时 `min`、`max` 必填；`multi` 只许与 `code` 同用 | 加载失败 | 槽位声明；候选由 §4.5 从 view 或词表生成；线上怎样传见 R9-6.7。**指向已登记记录的槽位**（封卷后勘误 1114w2e，李白 11-14 21:50 ③、21:57）：`recordKind` 非空的槽位，值是该记录种类（§2.1 `record_kind` 族）所指状态表里一条记录的键，候选取该表中经 `filter` 各项 `whenRX` 筛过、行动者主观视图可知的记录，线上同样只以候选编号传，不上线记录键；与通用槽位 `invite` 指向待应答记录同法（§4.19.1）。整类规则，不按记录种类分支 |
 | `capability` | ref vocab capability nullable | — | 卷二 §2.5（状态谓词单点）的能力族 | 空即不要求 | 行动能力要求 |
 | `requirement` | 需求块 nullable \| `from_slot` | — | 卷二 §1.13（需求块）的形状；`from_slot` 见 `shapeFrom` | 空即无前置 | 前置 |
 | `whenRX` | rx nullable | — | 只读 view 与槽位 | 空即恒真 | 可用条件 |
@@ -1682,6 +1683,7 @@
 | 封卷后勘误（李白 11-14 20:22 裁定 根因 G 总规矩、P-1、P-2、P-8；李白 11-14 20:59 裁定 ②5 与通则 1、2；不升版本号，改前快照 `版本快照/卷九-v2-勘误前-1114w2a.md`，改后覆盖 `版本快照/卷九-v2.md`） | §0.2 卷五行、加卷十六行与卷二十四行；§2.2 动作行表加 `sourceStrength` 列；§4.2.1 目录说明、加 `transform` 行、`emit` 行；新增 R9-2.10；§4.2.4 交互；附 术语与代号表"原语"行 | ① `emit` 在事务内调一次卷五 `perceiveEvent`（签名照卷五 §3.2），结果写进事件 `witnesses`，别处不另求；`visibility` 改引卷二十四表 A。② 动作行登记 `sourceStrength: map<ref vocab sense, number>`，作加性修正项叠加到卷五 `sense.sourceStrength[s]`，行上必写、没有写 `{}` 并写明含义（卷二 §1.6 无常量缺省）。③ 原语目录登记 `transform` 一行（族、原语、契约字段、通道、写者），求值入口仍是卷十六 `proposeTransform`（卷十六不改）；目录计数改为设计 20 个、15 族。读者：卷五、卷十六、卷二十四、卷二十二、卷十二（原语目录扫描）。理由（必要）：目击名单原无唯一求值处；卷五规则 7 已要求动作行此列而本卷无；卷十六 `roles.prims.transform` 指向本卷目录里不存在的原语。待别卷：`direction` 两值代号 `apply`、`revert` 由本卷给出，卷十六 R16-12.3 所称"转去／复原"对应之；卷一 §3A.9 只写"原语 op 封闭"，不需改 |
 | 封卷后勘误（同轮补项；不升版本号，改前快照 `版本快照/卷九-v2-勘误前-1114w2a2.md`，改后覆盖 `版本快照/卷九-v2.md`） | §5 内三处"卷二 §2.9"引用（原 :1318、:1334、:1460） | 补标题"（外部边界与 Text 模型）"。理由（必要）：自检第 8 项跨卷引用须带标题，同类收卷前清 |
 | 封卷后勘误（只核余项；依据 `审查/总审勘误-二波甲-只核.md` 问题 C；不升版本号，改前快照 `版本快照/卷九-v2-勘误前-1114w2a3.md`，改后覆盖 `版本快照/卷九-v2.md`） | R9-12.14 动词行（原 :1038） | `visibilityAllowed` 由"取 `emit` 的 `visibility` 全集"改为"取卷二十四 §2.2（维度）表 A `visibility` 的全集"；值集不变。理由（必要）：`visibility` 定义处已移到卷二十四表 A |
+| 封卷后勘误（李白 11-14 21:50 裁定 ③、21:57 定载体；不升版本号，改前快照 `版本快照/卷九-v2-勘误前-1114w2e.md`，改后覆盖 `版本快照/卷九-v2.md`） | §2.2 `slots` 行；§2.1 族表加 `record_kind` 行 | 动作槽位加通用的“指向已登记记录”写法：`code` 槽位沿用 `entityKind`/`vocab` 写法加 `recordKind`（三者恰填一个，`recordKind` 非空时 `filter` 必填），候选为该种记录中经筛选、行动者可知者，线上只传候选编号，先例为通用槽位 `invite`；`record_kind` 族条目字段只有 `stateKey`（引用已登记的 `stateKeys` 键），族名与前缀登记在卷二 §1.9，条目只收各卷已定义的记录。整类规则，不为谋划开特例。必要理由：不加则卷二十二 `act_plot_invite` 指不到谋划记录，NPC 永远不会邀人，R22-7.5 入伙等于空文 |
 
 ## 附录 自检脚本输出
 
