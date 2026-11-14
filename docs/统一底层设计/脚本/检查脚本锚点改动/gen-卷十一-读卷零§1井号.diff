@@ -1,0 +1,70 @@
+--- F:/dnd-tmp/vols/gen-orig.mjs	2026-11-14 11:07:06.020451600 +0000
++++ "gen-\345\215\267\345\215\201\344\270\200-\345\215\241\346\227\217.mjs"	2026-11-14 11:07:58.807249700 +0000
+@@ -1,7 +1,7 @@
+ // 卷十一 卡族表生成器（第二版）。只读各卷成稿，输出 markdown 到标准输出；不改任何卷。
+ // 程序代码里没有卷名、表名的字面量（卷十一 §6 末段、R11-2.9）：
+ //   输入位置取自同目录 gen-卷十一-inputs.json（R11-2.1 的输入清单，是数据）；
+-//   写卷波取卷一依赖图；拆卷取卷零 §1 加卷记录表的机读列 splitFrom；表主取卷二各表节内的机读行 `owner`（卷零 §1 序号，按序号查卷）；
++//   写卷波取卷一依赖图；拆卷取卷零 §1 加卷记录表的"#"列（卷主键）与机读列 splitFrom（写来源卷的"#"），按"#"查卷；表主取卷二各表节内的机读行 `owner`（卷零 §1 序号，按序号查卷）；
+ //   卷零 A 表处理代号取机读列 zeroKind；§3.5 逐处处置取机读列 spotKey。
+ //   这些字段未落地时，相应格子与汇总句写"待字段落地"并在末行列出，不回退为字面量。
+ // 迁移行 = 带迁移行编号（M<卷>-<n>）的表格行（R11-2.2）；不带编号的表格不计。
+@@ -63,16 +63,29 @@
+     if (w) { for (const n of acc) if (!wave.has(n)) wave.set(n, +w[1]); acc = []; }
+   } }
+ 
+-// 2 拆卷：卷零 §1 加卷记录表的机读列 vol、splitFrom
++// 2 拆卷：卷零 §1 加卷记录表的"#"列是卷主键，机读列 splitFrom 写来源卷的"#"；两者都按"#"查该表的卷列（李白 11-14）
+ const cov = read(CFG.coverage.file);
++const seqVol = new Map(); // 序号 → 卷
++for (const t of tables(cov, section(cov, CFG.coverage.addVol))) {
++  const qi = t.head.indexOf(CFG.fields.seq), vi = t.head.indexOf(CFG.fields.volCol);
++  if (qi < 0 || vi < 0) continue;
++  for (const c of t.rows) { const q = (c[qi] ?? '').trim(), v = firstVol(c[vi] ?? ''); if (/^\d+$/.test(q) && v) seqVol.set(+q, v); }
++}
+ const split = new Map(); let splitLanded = false;
+ for (const t of tables(cov, section(cov, CFG.coverage.addVol))) {
+-  const vi = t.head.indexOf(CFG.fields.vol), si = t.head.indexOf(CFG.fields.splitFrom);
+-  if (vi < 0 || si < 0) continue;
++  const hd = t.head.map(h => h.replace(/`/g, '')); // 机读列名在表头里带代码引号
++  const qi = hd.indexOf(CFG.fields.seq), si = hd.indexOf(CFG.fields.splitFrom);
++  if (qi < 0 || si < 0) continue;
+   splitLanded = true;
+-  for (const c of t.rows) { const v = firstVol(c[vi]), p = firstVol(c[si]); if (v && p) split.set(v, p); }
++  for (const c of t.rows) {
++    const q = (c[qi] ?? '').trim(), p = (c[si] ?? '').trim();
++    if (!/^\d+$/.test(q) || !/^\d+$/.test(p)) continue;
++    const v = seqVol.get(+q), pv = seqVol.get(+p);
++    if (v && pv) split.set(v, pv);
++    else pending.add(`${V0} ${sl(CFG.coverage.addVol)} 第 ${q} 行 ${CFG.fields.splitFrom} 的"${CFG.fields.seq}"查不到卷`);
++  }
+ }
+-if (!splitLanded) pending.add(`${V0} ${sl(CFG.coverage.addVol)} 加卷记录表机读列 ${CFG.fields.vol}、${CFG.fields.splitFrom}（C11-1）`);
++if (!splitLanded) pending.add(`${V0} ${sl(CFG.coverage.addVol)} 加卷记录表"${CFG.fields.seq}"列与机读列 ${CFG.fields.splitFrom}（C11-1）`);
+ 
+ // 3 卷零 A 表：主归卷与处理代号
+ const aRows = new Map(); let aTotal = 0, kindLanded = false; const kindCount = new Map();
+@@ -98,13 +111,7 @@
+ const reg = read(CFG.registry.file);
+ const moveRows = countRows(reg, CFG.registry.filemoves);
+ 
+-// 5 表主：卷二各表节内的机读行 `owner` 写卷零 §1 加卷记录表的序号；按序号查该表的卷列，不读卷二节标题里的卷名
+-const seqVol = new Map(); // 序号 → 卷
+-for (const t of tables(cov, section(cov, CFG.coverage.addVol))) {
+-  const qi = t.head.indexOf(CFG.fields.seq), vi = t.head.indexOf(CFG.fields.volCol);
+-  if (qi < 0 || vi < 0) continue;
+-  for (const c of t.rows) { const q = (c[qi] ?? '').trim(), v = firstVol(c[vi] ?? ''); if (/^\d+$/.test(q) && v) seqVol.set(+q, v); }
+-}
++// 5 表主：卷二各表节内的机读行 `owner` 写卷零 §1 加卷记录表的序号；按序号查该表的卷列（seqVol 见第 2 步），不读卷二节标题里的卷名
+ const tableOwner = new Map(); // 表代号 → 卷 或 null
+ { let cur = null;
+   for (const l of reg) {
+--- F:/dnd-tmp/vols/inputs-orig.json	2026-11-14 11:07:06.120289700 +0000
++++ "gen-\345\215\267\345\215\201\344\270\200-inputs.json"	2026-11-14 11:07:58.957183500 +0000
+@@ -8,5 +8,5 @@
+   "coverage": { "file": "卷零-覆盖表.md", "addVol": "## §1 ", "tableA": "## §2 ", "spots": "## §3.5 ", "existing": "## §4 " },
+   "charter": { "file": "卷一-总纲与分层.md", "graph": "### 11.2 ", "waveMark": "波\\s*(\\d)(?:（[^）]*）|\\s*$)", "retire": "### 5.4 " },
+   "registry": { "file": "卷二-维度表规范与统一入口.md", "tables": "### 5.", "filemoves": "### 6.11 " },
+-  "fields": { "vol": "vol", "splitFrom": "splitFrom", "zeroKind": "zeroKind", "spotKey": "spotKey", "owner": "owner", "seq": "#", "volCol": "卷" }
++  "fields": { "splitFrom": "splitFrom", "zeroKind": "zeroKind", "spotKey": "spotKey", "owner": "owner", "seq": "#", "volCol": "卷" }
+ }

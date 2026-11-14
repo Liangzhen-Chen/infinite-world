@@ -8,5 +8,5 @@
   "coverage": { "file": "卷零-覆盖表.md", "addVol": "## §1 ", "tableA": "## §2 ", "spots": "## §3.5 ", "existing": "## §4 " },
   "charter": { "file": "卷一-总纲与分层.md", "graph": "### 11.2 ", "waveMark": "波\\s*(\\d)(?:（[^）]*）|\\s*$)", "retire": "### 5.4 " },
   "registry": { "file": "卷二-维度表规范与统一入口.md", "tables": "### 5.", "filemoves": "### 6.11 " },
-  "fields": { "vol": "vol", "splitFrom": "splitFrom", "zeroKind": "zeroKind", "spotKey": "spotKey", "owner": "owner", "seq": "#", "volCol": "卷" }
+  "fields": { "splitFrom": "splitFrom", "zeroKind": "zeroKind", "spotKey": "spotKey", "owner": "owner", "seq": "#", "volCol": "卷" }
 }
