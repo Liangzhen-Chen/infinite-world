@@ -1,0 +1,13 @@
+--- check-vol2-ext.mjs.before
++++ check-vol2-ext.mjs
+@@ -722,7 +722,9 @@
+   const entryRows = tableAfterLine(lines.findIndex(l => l.startsWith('- **登记边界入口表**'))).map(cellsOf);
+   const lr = lines.find((l, i) => i > s29a && i < s29b && l.startsWith('| `textcore/labels.mjs` |')); { // 锚点改：李白 11-14 C29-3 恢复自然写法（49647434），值类型写成 `Map<EntityId|Handle, Map<形态, Text>>` 加"内外两层都冻结"；判据不变：值类型 Text 且冻结，并须写明两张冻结表形状与只读白名单
+     const rd = lr ? lr.slice(0, lr.indexOf('两张冻结表')) : ''; const out = lr ? lr.slice(lr.indexOf('两张冻结表'), lr.indexOf('labels schema')) : '';
+-    if (!lr || !out.includes('Map<形态, Text>') || !/冻结/.test(out) || !out.includes('代号 → 形态 → `Text`') || !out.includes('模板代号 → 变体代号 → 段列表或选择结构') || !rd.includes('只读白名单')) bad('入口表：labels 的值类型应写明为 Text（Map<形态, Text> 冻结），并写明两张冻结表形状与只读白名单'); }
++    // C29-3 余项 A1：冻结须落在值类型那一层——只查值类型 `Map<EntityId|Handle, Map<形态, Text>>` 之后到下一个"；"或格界之前的文字（现文为"内外两层都冻结"）
++    const vt = '`Map<EntityId|Handle, Map<形态, Text>>`'; const vi = out.indexOf(vt); const vtail = vi < 0 ? '' : out.slice(vi + vt.length); const vcut = vtail.search(/[；|]/); const vseg = vcut < 0 ? vtail : vtail.slice(0, vcut);
++    if (!lr || vi < 0 || !/冻结/.test(vseg) || !out.includes('代号 → 形态 → `Text`') || !out.includes('模板代号 → 变体代号 → 段列表或选择结构') || !rd.includes('只读白名单')) bad('入口表：labels 的值类型应写明为 Text（Map<形态, Text> 冻结），并写明两张冻结表形状与只读白名单'); }
+   const le = gApi.find(x => nameOf(x) === 'labels'); if (!le || !sameArr(le.callers, ['inputEdge', 'outputGate'])) bad('groupApi：labels 的读者应只有 inputEdge 与 outputGate');
+   for (const g of ['gate', 'aiGate']) if (/labels/.test(mcell(g, 'textcore'))) bad(`矩阵 ${g} 行 textcore 格出现 labels`);
+   const br = entryRows.find(e => mjsIn(e[0]).includes('gate/load-blocklist.mjs')); if (!br || !br[3].includes('{word: BlockNeedle, category}')) bad('入口表：blocklist 词条的类型应为 BlockNeedle');
