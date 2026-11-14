@@ -1,0 +1,571 @@
+# 卷十八收口批（4fd0fdf0）只核 脚本原始输出
+# 在 F:/dnd-tmp/vols、F:/dnd-tmp/book、F:/dnd-tmp/vol2 下各以 node 文件.mjs 运行；工作树卷十八、卷十三与 4fd0fdf0 一致
+=== check-卷十八.mjs
+PASS 1 章节 §0–§8 与术语表齐全
+PASS 2 十二个子系统各六小节齐全
+PASS 3 数据实例数量与两类覆盖
+PASS 4 验收断言三式齐全
+PASS 5 规则与正文无具体 id 字面量
+PASS 6 无用于判断的描述性文本
+PASS 7 台账十项概念写全
+PASS 8 跨卷引用带标题
+PASS 9 json 代码块可解析（14 块） — bad=0
+   持有种类 47 行（旧 42 + 新 5）
+PASS 10 持有种类表自洽、旧行逐格一致、旧表各字段都有去向
+PASS 11 家户 orgKind、intimate 字段、未成年硬下限在场且制度行不低于下限
+PASS 12 数据实例算术复算（29 项，系数取自表）
+FAIL 13 一审裁定落实（检查点、错误码、固定刻、迁移清单、rx 运算集、断言判据） — 舆论冷却键
+FAIL 14 二审余项与转来项落实（列出项逐条） — 一-9 去留 state.opinion.lastFired[groupId][subjectRef][triggerRow]
+PASS 15 余项单核 N4、N5（按 R18-1.5 模拟分家、迁户、接任；授予者可空）
+行数 1647；子系统 12；规则条数 81；json 块 14；失败项 2
+exit=1
+=== check-卷十三.mjs
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首模型行
+PASS 1c §0 五小节齐全
+PASS 2 20 个子系统各六小节齐全
+PASS 3 数据实例至少三条，含非西陲、含非人类或超自然（共 80 条）
+PASS 4 验收断言三式齐全且编号规整
+PASS 5 正文无具体 id 字面量（含数据实例）
+PASS 6 无用于判断的描述性文本；无带引号的中文字面量；纯代号无中文；枚举值 ASCII 且带中英显示名（枚举 13 个、值 54 个）
+PASS 7 台账各概念写全（二十节标题、台账裁定编号、关键概念、每节有规则且编号连续）
+PASS 8 编号引用不悬空且连续；跨卷章节引用处处带标题（447 处）
+PASS 9 错误码、入口、规则表键、状态键与写者、抽取点落实（码 20、入口 27、规则表键 76、状态键 9、抽取点 7）
+PASS 10 红线：不派实现、不改别卷、不读墙钟、除数有下界、身体状态只经卷二十一、无生命值、法律不拦、不写价格乘数
+PASS 11 算术复算与计数对账（打击量、层律两例、伤亡式切片不变、末份取差、交叉相乘、卷零 13+13 行、§6 八条、矩阵九行）
+PASS 12 接口表、配合项、迁移清单（33 行）、五款游戏、待补清单（27 条）、素材位置落实
+PASS 13 关键条文在位（61 条）
+行数 1664；子系统 20；规则条数 169；断言 60；扫描条 13；配合项 19；开放问题 12（须李白定 0）；迁移行 33；枚举 13 个、值 54 个；错误码 20；规则表键 76；数据实例 80；待补清单 27 条；失败项 0
+exit=0
+=== check-verb-emitter.mjs
+扫描卷文件 32 个：卷一、卷七、卷三乙、卷三甲、卷九、卷二、卷二十、卷二十一、卷二十七、卷二十三、卷二十九、卷二十二、卷二十五、卷二十八、卷二十六、卷二十四、卷五、卷八、卷八b、卷六、卷十、卷十一、卷十七、卷十三、卷十九、卷十二、卷十五、卷十八、卷十六、卷十四、卷四、卷零
+总行数 49699；记录行（卷首说明或修订/处置/自检/记账类附录下）7225，只列出不作判定
+
+== ① 动词清单：句柄形 roles.verbs.* 44 个，代号形 verb_* 51 个（其中 verb_example_* 示例 19 个，不计入判定）
+kindOnly 成员（按登记行“三行 `kindOnly`”抽取）：showAnnounced、showOpened、showEnded
+- [PASS] roles.verbs.actEnded：非 kindOnly；登记卷 卷二十三，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 卷二十三:201 卷二十三:454
+    声明 —
+    发出语句 卷二十三:445
+    kindOnly 行 卷二十三:201；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十三:201 卷二十三:445 卷二十三:454 卷二十三:457 卷二十三:608
+- [PASS] roles.verbs.adorned：非 kindOnly；登记卷 卷二十三，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 卷二十三:201
+    声明 —
+    发出语句 —
+    kindOnly 行 卷二十三:201；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十三:201
+- [PASS] roles.verbs.bankrupt：非 kindOnly；登记卷 卷八b(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷八b:1116
+- [需人工] roles.verbs.commissionPosted：非 kindOnly；登记卷 {卷二十四}；声明发出 1 处；发出语句所在卷 {}
+    登记行 卷二十四:535
+    声明 卷二十四:535 [发出系统为] 本卷委托系统
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十四:535 卷二十四:774 卷二十四:931 卷二十四:991* 卷八b:290 卷八b:5*
+- [PASS] roles.verbs.commissionRefuted：非 kindOnly；登记卷 卷二十四，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 卷二十四:543
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十四:543 卷二十四:932 卷八b:290 卷八b:5*
+- [PASS] roles.verbs.composed：非 kindOnly；登记卷 卷二十三，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 卷二十三:201
+    声明 —
+    发出语句 —
+    kindOnly 行 卷二十三:201；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十三:201
+- [需人工] roles.verbs.contact：非 kindOnly；登记卷 {未抽到}；声明发出 0 处；发出语句所在卷 {}
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷十五:219 卷十五:361 卷十五:507 卷十五:1341* 卷十五:143 卷十六:131 卷十六:562 卷十六:564 卷十六:933
+- [PASS] roles.verbs.copied：非 kindOnly；登记卷 卷二十三，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 卷二十三:201
+    声明 —
+    发出语句 —
+    kindOnly 行 卷二十三:201；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十三:201
+- [需人工] roles.verbs.damage：非 kindOnly；登记卷 {未抽到}；声明发出 0 处；发出语句所在卷 {}
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十一:288 卷二十一:1533* 卷十三:549 卷十三:1350 卷三乙:1462 卷三乙:1504 卷三甲:42 卷三甲:319 卷三甲:335 卷三甲:819 卷三甲:1265* 卷二十一:460 卷二十一:1101 卷十三:204 卷十三:230 卷十三:291 卷十三:411 卷十三:578 卷十三:587 卷十三:958 卷十三:1104 卷十三:1349 卷十三:1396 卷十三:1443 卷十三:1553 卷十三:1568 卷十五:143 卷四:213
+- [PASS] roles.verbs.dissolve：非 kindOnly；登记卷 卷八(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷八:491
+- [需人工] roles.verbs.duelOver：非 kindOnly；登记卷 {未抽到}；声明发出 0 处；发出语句所在卷 {}
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷八b:599 卷十三:1191 卷八b:5* 卷八b:1163 卷八b:1304 卷十三:341 卷十三:403 卷十三:1359 卷十三:1417 卷十三:1592*
+- [PASS] roles.verbs.estateChange：非 kindOnly；登记卷 卷八b(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷八b:1076
+- [需人工] roles.verbs.execute：非 kindOnly；登记卷 {未抽到}；声明发出 0 处；发出语句所在卷 {}
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷八b:485 卷九:589 卷九:592 卷九:610 卷二十四:946 卷十七:40 卷十七:695 卷十七:792
+- [PASS] roles.verbs.fateDecided：非 kindOnly；登记卷 卷十五(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 卷十五:805
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷十五:766 卷十五:805 卷十五:356 卷十五:1154 卷十五:1256
+- [PASS] roles.verbs.genesis：非 kindOnly；登记卷 卷二十四，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 卷二十四:609
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十四:609 卷二十四:934 卷十:783
+- [PASS] roles.verbs.inspectFound：非 kindOnly；登记卷 卷八b(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷八b:592 卷八b:290
+- [需人工] roles.verbs.instanceEnd：非 kindOnly；登记卷 {未抽到}；声明发出 1 处；发出语句所在卷 {}
+    登记行 —
+    声明 卷二十四:182 [发出系统为] 本卷实例系统
+    发出语句 —
+    kindOnly 行 卷二十四:182 卷二十三:201 卷二十四:926；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十四:182 卷二十四:498 卷二十三:201 卷二十四:776 卷二十四:926 卷二十四:1022*
+- [需人工] roles.verbs.instanceStage：非 kindOnly；登记卷 {未抽到}；声明发出 1 处；发出语句所在卷 {}
+    登记行 —
+    声明 卷二十四:182 [发出系统为] 本卷实例系统
+    发出语句 —
+    kindOnly 行 卷二十四:182 卷二十三:201 卷二十四:926；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十四:182 卷二十四:496 卷二十三:201 卷二十四:776 卷二十四:926 卷二十四:1022*
+- [需人工] roles.verbs.instanceStart：非 kindOnly；登记卷 {卷二十四}；声明发出 1 处；发出语句所在卷 {}
+    登记行 卷二十四:182
+    声明 卷二十四:182 [发出系统为] 本卷实例系统
+    发出语句 —
+    kindOnly 行 卷二十三:201 卷二十四:182 卷二十四:926 卷二十四:437 卷二十四:437；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十三:201 卷二十四:182 卷二十四:494 卷二十四:776 卷二十四:926 卷二十四:1022* 卷二十四:437 卷二十四:437
+- [PASS] roles.verbs.lairLeft：非 kindOnly；登记卷 卷十六(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 卷十六:600
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷十六:360 卷十六:452 卷十六:600 卷十六:641 卷十六:1005
+- [PASS] roles.verbs.lairSettled：非 kindOnly；登记卷 卷十六(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 卷十六:599
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷十六:360 卷十六:452 卷十六:599
+- [需人工] roles.verbs.lethal：非 kindOnly；登记卷 {未抽到}；声明发出 0 处；发出语句所在卷 {}
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷八b:877 卷二十一:358 卷二十五:323 卷二十五:328 卷二十五:328 卷八b:290
+- [PASS] roles.verbs.loreMinted：非 kindOnly；登记卷 卷十六(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 卷十六:525 卷十六:527
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷十六:525 卷十六:527
+- [PASS] roles.verbs.naturalize：非 kindOnly；登记卷 卷八b(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷八b:1074
+- [PASS] roles.verbs.orgAwakened：非 kindOnly；登记卷 卷十六(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 卷十六:896
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷十六:896
+- [PASS] roles.verbs.repeal：非 kindOnly；登记卷 卷八b(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷八b:555
+- [PASS] roles.verbs.rested：非 kindOnly；登记卷 卷十五(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷十五:771 卷十五:808
+- [PASS] roles.verbs.riteDone：非 kindOnly；登记卷 卷十五(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 卷十五:656
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷十五:656
+- [PASS] roles.verbs.routed：非 kindOnly；登记卷 卷十三，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 卷十三:821
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷十三:821
+- [PASS] roles.verbs.sacrificed：非 kindOnly；登记卷 卷十五(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷十五:668
+- [需人工] roles.verbs.seatJoin：非 kindOnly；登记卷 {卷二十四}；声明发出 1 处；发出语句所在卷 {}
+    登记行 卷二十四:499
+    声明 卷二十四:499 [发出系统为] 本卷实例系统
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十四:499 卷二十四:775 卷二十四:925 卷二十四:993*
+- [需人工] roles.verbs.seatLeave：非 kindOnly；登记卷 {卷二十四}；声明发出 1 处；发出语句所在卷 {}
+    登记行 卷二十四:499
+    声明 卷二十四:499 [发出系统为] 本卷实例系统
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十四:499 卷二十四:925 卷二十四:775 卷二十四:993*
+- [FAIL] roles.verbs.showAnnounced：kindOnly；声明发出 1 处；发出语句(非否定) 0 处；kindFrom/三栏引用 1 处
+    登记行 卷二十三:201
+    声明 卷二十三:201 [由…发出] 本卷动作或彩头结算
+    发出语句 —
+    kindOnly 行 卷二十三:201 卷二十三:202 卷二十三:445 卷二十四:822；kindFrom/三栏引用 卷二十三:202 startVerb
+    全部出现（*=记录行）卷二十三:201 卷二十三:202 卷二十三:445 卷二十三:928* 卷二十四:822 卷二十四:1022*
+- [需人工] roles.verbs.showBegun：非 kindOnly；登记卷 {卷二十三}；声明发出 1 处；发出语句所在卷 {卷二十三}
+    登记行 卷二十三:201
+    声明 卷二十三:201 [由…发出] 本卷动作或彩头结算
+    发出语句 卷二十三:204 卷二十三:445
+    kindOnly 行 卷二十三:201 卷二十三:202 卷二十三:445；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十三:201 卷二十三:202 卷二十三:204 卷二十三:445 卷二十三:916* 卷二十三:928*
+- [PASS] roles.verbs.showEnded：kindOnly；声明发出 0 处；发出语句(非否定) 0 处；kindFrom/三栏引用 1 处
+    登记行 卷二十三:201
+    声明 —
+    发出语句 —
+    kindOnly 行 卷二十三:201 卷二十三:202 卷二十三:445 卷二十四:822；kindFrom/三栏引用 卷二十三:202 endVerb
+    全部出现（*=记录行）卷二十三:201 卷二十三:202 卷二十三:445 卷二十三:928* 卷二十四:822 卷二十四:1022*
+- [PASS] roles.verbs.showJoined：非 kindOnly；登记卷 卷二十三，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 卷二十三:201
+    声明 —
+    发出语句 卷二十三:204 卷二十三:445
+    kindOnly 行 卷二十三:201 卷二十三:445；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十三:201 卷二十三:204 卷二十三:445 卷二十三:916*
+- [PASS] roles.verbs.showOpened：kindOnly；声明发出 0 处；发出语句(非否定) 0 处；kindFrom/三栏引用 1 处
+    登记行 卷二十三:201
+    声明 —
+    发出语句 —
+    kindOnly 行 卷二十三:201 卷二十三:202 卷二十三:445 卷二十四:822；kindFrom/三栏引用 卷二十三:202 stageVerb
+    全部出现（*=记录行）卷二十三:201 卷二十三:202 卷二十三:445 卷二十三:928* 卷二十四:822 卷二十四:1022*
+- [需人工] roles.verbs.subdued：非 kindOnly；登记卷 {未抽到}；声明发出 0 处；发出语句所在卷 {卷十三}
+    登记行 —
+    声明 —
+    发出语句 卷十三:489 卷十三:959 卷十三:1041
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷八b:990 卷十三:1243 卷八b:5* 卷八b:1163 卷八b:1304 卷十三:341 卷十三:403 卷十三:489 卷十三:959 卷十三:1041 卷十三:1359 卷十三:1417 卷十三:1592* 卷十三:1592*
+- [需人工] roles.verbs.transformed：非 kindOnly；登记卷 {未抽到}；声明发出 0 处；发出语句所在卷 {}
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十一:1537* 卷五:657 卷五:1332* 卷十六:342 卷十六:359 卷十六:361 卷十六:711 卷十六:732 卷十六:844 卷十六:877 卷十六:1005 卷十六:1014
+- [PASS] roles.verbs.vacate：非 kindOnly；登记卷 卷八(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷八:495
+- [PASS] roles.verbs.wagerLost：非 kindOnly；登记卷 卷二十三，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 卷二十三:201
+    声明 —
+    发出语句 —
+    kindOnly 行 卷二十三:201；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十三:201 卷二十三:933*
+- [PASS] roles.verbs.wagerSettled：非 kindOnly；登记卷 卷二十三，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 卷二十三:201
+    声明 —
+    发出语句 —
+    kindOnly 行 卷二十三:201；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十三:201
+- [PASS] roles.verbs.wagerWon：非 kindOnly；登记卷 卷二十三，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 卷二十三:201
+    声明 —
+    发出语句 —
+    kindOnly 行 卷二十三:201；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十三:201 卷二十三:933*
+- [PASS] roles.verbs.workingEnded：非 kindOnly；登记卷 卷十五(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 卷十五:419
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷十五:419
+- [PASS] verb_activity_ended（别名 活动结束事件）：非 kindOnly；登记卷 卷九，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 卷九:1559
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷九:529 卷九:1559 卷九:1659*
+- [PASS] verb_belief_contradicted：非 kindOnly；登记卷 卷二十二(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 卷二十二:407
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十二:396 卷二十二:407 卷二十二:796
+- [PASS] verb_cargo_fate（别名 货的结局事件）：非 kindOnly；登记卷 卷十七(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 卷十七:432 卷十七:593
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷十七:162 卷十七:428 卷十七:432 卷十七:451 卷十七:593 卷十七:919
+- [需人工] verb_domicile_changed（别名 常住变化事件）：非 kindOnly；登记卷 {卷十八}；声明发出 1 处；发出语句所在卷 {卷十七、卷十九}
+    登记行 卷十八:1487
+    声明 卷十七:385 [由…发出] 持有写者判定与
+    发出语句 卷十七:811 卷十七:811（否定句，不计） 卷十九:751 卷十九:762 卷十九:762（否定句，不计）
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷九:516 卷九:1366 卷二:2549* 卷十七:385 卷十七:413 卷十七:811 卷十七:1002* 卷十九:751 卷十九:762 卷十九:1588* 卷十八:1487 卷十八:1562* 卷十八:1569*
+- [PASS] verb_due_elapsed：非 kindOnly；登记卷 卷二十(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十:437 卷二十:967 卷二十:1256
+- [需人工] verb_entity_revived：非 kindOnly；登记卷 {卷二、卷四}；声明发出 1 处；发出语句所在卷 {卷四}
+    登记行 卷二:456 卷四:1060
+    声明 卷二:456 [发出者] 内核（§2.7"事件的发出系统与补充字段"第 ① 点 `ke
+    发出语句 卷四:790
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二:456 卷二:463 卷二:2246* 卷二:2514* 卷二十一:303 卷二十一:453 卷十五:366 卷十五:372 卷十五:812 卷十六:359 卷十六:366 卷十六:1203* 卷四:355 卷四:790 卷四:793 卷四:793 卷四:799 卷四:1060 卷四:1089 卷四:1089 卷四:1399 卷四:1399
+- [需人工] verb_entity_terminated：非 kindOnly；登记卷 {卷二、卷二十}；声明发出 2 处；发出语句所在卷 {卷四}
+    登记行 卷二:456 卷二:456 卷二十:892
+    声明 卷二:456 [发出者] 内核（§2.7"事件的发出系统与补充字段"第 ① 点 `ke ； 卷十九:1045 [由…发出] 内核
+    发出语句 卷二:469（否定句，不计） 卷四:787
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷九:515 卷九:529 卷九:1354 卷二:456 卷二:456 卷二:469 卷二:2246* 卷二:2514* 卷二十:892 卷二十一:301 卷二十一:453 卷二十一:1196 卷二十二:690 卷二十二:893 卷二十二:1075* 卷十七:325 卷十九:758 卷十九:766 卷十九:1039 卷十九:1045 卷十九:1263* 卷十五:365 卷十五:804 卷四:787 卷四:787 卷四:794 卷四:799 卷四:1089 卷四:1090 卷四:1104
+- [PASS] verb_fact_learned：非 kindOnly；登记卷 卷二十二(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 卷二十二:365
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十二:357 卷二十二:365 卷二十二:389 卷二十二:797 卷二十二:872
+- [PASS] verb_fact_told：非 kindOnly；登记卷 卷二十二(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 卷二十二:368
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十二:357 卷二十二:368 卷二十二:568 卷二十二:797
+- [PASS] verb_gate_checked（别名 过关事件）：非 kindOnly；登记卷 卷十七(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 卷十七:591
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷十七:162 卷十七:591 卷十七:611 卷十七:920
+- [PASS] verb_holding_changed（别名 持有变化事件）：非 kindOnly；登记卷 卷十八，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 卷十八:1488
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷九:517 卷九:518 卷九:1366 卷九:1394 卷九:1545 卷九:1642* 卷十七:325 卷十八:1488 卷十八:1564*
+- [PASS] verb_kill：非 kindOnly；登记卷 卷十四(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷十四:968
+- [需人工] verb_pace_set：非 kindOnly；登记卷 {卷二十}；声明发出 2 处；发出语句所在卷 {卷九、卷二十}
+    登记行 卷二十:892 卷二十:978
+    声明 卷二十:978 [登记卷≠发出卷] 本卷登记，别卷发出 ； 卷二十:999 [由…发出] 它
+    发出语句 卷九:1339 卷二十:999
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷九:42 卷九:758 卷九:773 卷九:1339 卷九:1368 卷九:1620* 卷二十:892 卷二十:978 卷二十:999 卷二十:1466* 卷二十:1685* 卷二十:1692* 卷二十:1711* 卷二十:1763*
+- [PASS] verb_place_explored（别名 发现事件）：非 kindOnly；登记卷 卷十七(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 卷十七:739
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷十七:162 卷十七:739 卷十七:921
+- [需人工] verb_quarantine_lifted：非 kindOnly；登记卷 {卷二十一(唯一出现卷)}；声明发出 1 处；发出语句所在卷 {}
+    登记行 —
+    声明 卷二十一:1119 [由…发出] 本卷
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十一:1113 卷二十一:1119
+- [PASS] verb_recurrence_started：非 kindOnly；登记卷 卷二十(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 卷二十:517
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十:517 卷二十:528 卷二十:969
+- [PASS] verb_research_done：非 kindOnly；登记卷 卷二十二(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 卷二十二:647
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十二:635 卷二十二:647 卷二十二:668 卷二十二:802
+- [PASS] verb_station_expired：非 kindOnly；登记卷 卷十九(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷十九:466 卷十九:1265* 卷十九:1360* 卷十九:1436*
+- [PASS] verb_station_released：非 kindOnly；登记卷 卷十九(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷十九:466 卷十九:1265* 卷十九:1360* 卷十九:1436*
+- [需人工] verb_status_onset：非 kindOnly；登记卷 {卷九、卷二十一}；声明发出 0 处；发出语句所在卷 {}
+    登记行 卷九:514 卷二十一:1336
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷九:514 卷九:1396 卷九:1646* 卷二十一:1336 卷二十一:1532* 卷十七:325 卷十七:326 卷十七:629
+- [PASS] verb_status_removed：非 kindOnly；登记卷 卷二十一，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 卷二十一:1336
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷九:514 卷九:1396 卷九:1646* 卷二十一:1336 卷二十一:1532* 卷十七:325
+- [需人工] verb_status_stage：非 kindOnly；登记卷 {卷九、卷二十一}；声明发出 0 处；发出语句所在卷 {}
+    登记行 卷九:514 卷二十一:1336
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷九:514 卷九:1396 卷九:1646* 卷二十一:1336 卷二十一:1532* 卷十七:325 卷十七:326
+- [PASS] verb_supply_short：非 kindOnly；登记卷 卷六，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 卷六:822
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷六:822 卷六:1430 卷六:1438 卷六:2001*
+- [PASS] verb_supply_short_：非 kindOnly；登记卷 卷六(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷六:822
+- [需人工] verb_supply_short_ritual：非 kindOnly；登记卷 {卷六}；声明发出 0 处；发出语句所在卷 {卷二十六}
+    登记行 卷六:822
+    声明 —
+    发出语句 卷二十六:639
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷二十六:622 卷二十六:639 卷六:822 卷六:826 卷六:1430 卷六:1438 卷六:2001*
+- [PASS] verb_tract_entered（别名 进入事件）：非 kindOnly；登记卷 卷十七，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 卷十七:162
+    声明 —
+    发出语句 卷十七:331
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷五:1337* 卷十七:162 卷十七:331 卷十七:778 卷十七:917 卷十六:357 卷十六:1209*
+- [PASS] verb_transfer：非 kindOnly；登记卷 卷一，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 卷一:369
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷一:369
+- [PASS] verb_treat：非 kindOnly；登记卷 卷十四(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷十四:967
+- [PASS] verb_trip_arrived：非 kindOnly；登记卷 卷十七(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷十七:162 卷十七:918
+- [PASS] verb_trip_departed：非 kindOnly；登记卷 卷十七，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 卷十七:162
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷十七:162 卷十七:918
+- [PASS] verb_trip_halted：非 kindOnly；登记卷 卷十七(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
+    登记行 —
+    声明 —
+    发出语句 —
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷十七:162 卷十七:918
+- [需人工] verb_trip_pace：非 kindOnly；登记卷 {未抽到}；声明发出 0 处；发出语句所在卷 {卷十七}
+    登记行 —
+    声明 —
+    发出语句 卷十七:325
+    kindOnly 行 —；kindFrom/三栏引用 —
+    全部出现（*=记录行）卷九:519 卷九:1365 卷九:1657* 卷十七:162 卷十七:325 卷十七:809 卷十七:924 卷十七:956*
+
+① 小计：PASS 52，FAIL 1，需人工 23（共 76）
+
+== ① 专项：kindOnly 行的 parent、表 C 三栏、通用动词 kindFrom = kind
+卷二十四表 C 三栏行 182：取值域含“kindOnly 为真” 是；通用动词 kindFrom = kind 是；发出系统为本卷实例系统 是
+R24-2.1 行 408：非 kindOnly 恰一个 有；kindOnly 零个且被引用 有；E-EVT-EMITTER 有
+E-EVT-EMITTER 错误码表登记行：290（应恰 1 行）
+A24-2.4 出现行：437
+卷二十三事件类型行 202：startVerb=showAnnounced，stageVerb=showOpened，endVerb=showEnded；三者皆 kindOnly：是
+卷二十三动词行 201：parent 依次 instanceStart、instanceStage、instanceEnd；载荷 kind 不是 showBegun 的说明 有
+  三行表 B 字段原文片段：三行的表 B 字段：`parent` 依次为卷二十四 `roles.verbs.instanceStart`、`instanceStage`、`instanceEnd`；`payloadShape` 空（事件载荷是通用动词的）；`kindFrom` 空；`worthSlots` 空表；`headSlot` null（不发事件，`heads` 不读它）；`sigBase` 0；`tallies` 空表；`perceivable` 真，`senses` {视、听}，`visibilityAllowed` {`public`、`witnessed`}。它们与“开演”动作的事件 `showBegun` 是不同的动词：起始事件的 `kind` 是 `showAnnounced`，不是 `showBegun`，所以不会被当作宣布阶段的催化。`sigBase` 取 0，`worthSlots` 只登记彩头结算的 `stake`（计入 `moved`）。作品完成、装饰完成、抄印完成、开演、应演、一出结束、彩头结算七行：`kindOnly` 为假（各由本卷动作或彩头结算发出，恰一个发出系统）；`tallies` 空表（本卷不读任何累计口径，§5.4 答 C24-17 不取）；`headSlot`：一出结束取 `audience`（`heads` 取该字段所指的观众人数，R24-2.4），其余六行 n
+通用动词 instanceStart：登记卷 {卷二十四}，声明 卷二十四:182 [发出系统为] 本卷实例系统
+通用动词 instanceStage：登记卷 {}，声明 卷二十四:182 [发出系统为] 本卷实例系统
+通用动词 instanceEnd：登记卷 {}，声明 卷二十四:182 [发出系统为] 本卷实例系统
+
+== ② 事件 id 位次代号
+pos.commit：卷九:382
+pos.kernel：卷九:387 卷九:529 卷九:589 卷九:1649* 卷九:1649* 卷九:1650* 卷二十四:366 卷二十四:1017* 卷二十四:1018*
+pos.only：卷九:383 卷九:385 卷九:386 卷九:387 卷九:1639* 卷九:1649* 卷二十四:366 卷二十四:1014* 卷二十四:1017* 卷二十四:1017*
+pos.party：卷九:1639*
+pos.strike：卷十三:379 卷十三:379
+卷九 §2.9 事件 id 表：表头 卷九:380，数据行 6
+  卷九:382 「提交段的那一条」 位次=pos.commit 固定规则代号=（取变量：动作代号） 链式=false
+  卷九:383 「善后段的成长、事实、反噬三类事务」 位次=pos.only 固定规则代号=aft.skill,aft.fact,aft.backlash 链式=true
+  卷九:384 「推进钩子、反应规则经执行器的事件」 位次=（非固定：由登记它的卷给固定代号） 固定规则代号=（取变量：钩子或反应规则的登记代号） 链式=false
+  卷九:385 「活动推进点与 `finishAt` 到期的那一条（R9-1.12；执行器末步里的」 位次=pos.only 固定规则代号=due.activity 链式=false
+  卷九:386 「前提失效通知触发的活动推进（R9-1.12）」 位次=pos.only 固定规则代号=ntf.activity 链式=true
+  卷九:387 「写者协议在事务内另发的事件（整类：定义卷的写入规则规定随某类写入在同一事务内一并」 位次=pos.kernel 固定规则代号=（取变量：所在事务那条事务事件的 `cause`；所在事务没有事务事件） 链式=true
+  pos.commit：独占 1 行（卷九:382）→ 与其他行不撞
+  pos.only：3 行共用，规则代号 aft.skill,aft.fact,aft.backlash,due.activity,ntf.activity；取变量规则的行 0；重复代号 无 → 规则代号两两不同，不撞
+  pos.kernel：独占 1 行（卷九:387）→ 与其他行不撞
+  非固定位次行：卷九:384 由登记它的卷给固定代号（由登记卷给固定代号）
+  别卷给钩子/反应规则事件指定 pos.commit/only/kernel 的行：无
+  pos.kernel 在 §2.9 该行与 R24-1.1 之外的正文用法：无
+  卷二十四 R24-1.1（卷二十四:366）：引 pos.kernel 是；写“不借 pos.only” 是；所涉实体按种类（edge/person） 是
+  卷九 §2.9 写者协议行与 R24-1.1 所涉实体口径一致：是
+  卷二十七 R27-8.9（卷二十七:707）：五成分含“固定的位次代号” 是；不得用计数 是
+  pos.party：不在事件 id 表；正文出现 仅记录行；已退役（只见于修订记录）
+  pos.strike：不在事件 id 表；正文出现 卷十三:379 卷十三:379；属骰值键对象段/抽取点位次，不是事件 id 位次，与事件 id 位次代号不同命名空间
+② 小计：共用位次的行组可能撞号 0 组
+
+结论行：① PASS 52 FAIL 1 需人工 23；② 可能撞号 0 组
+exit=0
+=== check-vol2.mjs
+== 1 错误码
+  正文错误码 148 个；登记表展开 260 个
+  OK 正文码全部已登记
+  注意 登记但正文未用到（含简写展开的候选）: E-ACC-BASELINE-EDIT, E-ACC-BASELINE-UP, E-ACC-BYPASS-REGRESSION, E-ACC-CODE-UNLISTED, E-ACC-COMMIT-MSG, E-ACC-CRITERION-LOOSENED, E-ACC-CRITERION-UNVERSIONED, E-ACC-DOC-SEAL, E-ACC-EXT-CODE-CHANGED, E-ACC-EXT-EXISTING-ROW, E-ACC-FIXTURE-INSTANCE, E-ACC-GATE-BYPASS, E-ACC-HIT-OPEN, E-ACC-ITEM-COUNT, E-ACC-ITEM-DOWNGRADE, E-ACC-ITEM-FORM, E-ACC-ITEM-ORPHAN, E-ACC-ITEM-PARAM, E-ACC-ITEM-UNIMPLEMENTED, E-ACC-ITEM-UNREGISTERED, E-ACC-NEWROW-UNANCHORED, E-ACC-REPORT-FORM, E-ACC-REVIEW-CHECKLIST, E-ACC-REVIEW-MISSING, E-ACC-REVIEW-SELF, E-ACC-REVIEW-STALE, E-ACC-REVIEW-VETO, E-ACC-ROWKEY-DRIFT, E-ACC-RUN-UNBOUND, E-ACC-SCAN-NAMELIST, E-ACC-SCAN-SELFNAME, E-ACC-ZERO-MISMATCH, E-AV-KEY, E-AV-NO-DEFAULT, E-BST-BANE-CLASH, E-BST-BODY-WRITE, E-BST-DUPLICATE, E-BST-GEN-SLOT, E-BST-LAIR, E-BST-LORE-SHAPE, E-BST-MONSTER-SCHEMA, E-BST-QUOTA, E-BST-SIM-DIMS, E-BST-TIER-ROWS, E-BST-TRANSFORM-ROWS, E-BST-VARIANT, E-BST-WARD-SHAPE, E-DISPLAY-BACKFLOW, E-DISPLAY-BRANCH-TEXT, E-DISPLAY-DICE, E-DISPLAY-HOST-CHAT, E-DISPLAY-LITERAL, E-DISPLAY-LOCALE-BRANCH, E-DISPLAY-UNSEEN, E-GEN-BRANCH-ORIGIN, E-GEN-BYPASS, E-GEN-DEFAULT, E-GEN-GROUP-CYCLE, E-GEN-GROUP-ROW, E-GEN-ID-COLLISION, E-GEN-LATE-SOURCE, E-GEN-MANIFEST-DRIFT, E-GEN-NAME-EMPTY, E-GEN-NOT-MATERIALIZED, E-GEN-OVERRIDE-AUTHORED, E-GEN-REJECT, E-GEN-RESPECT, E-GEN-ROW-INVALID, E-GEN-SKELETON, E-GEN-STAGE-CYCLE, E-GEN-STAGE-UNKNOWN, E-I18N-FORM, E-I18N-LABEL-FOREIGN, E-I18N-LABEL-ORPHAN, E-I18N-LOCALE, E-I18N-PLURAL, E-I18N-TPL-MISSING, E-I18N-TPL-SLOT, E-MAP-COMPASS, E-MIG-ACCEPT-FORM, E-MIG-BACKFILL, E-MIG-CARD-INCOMPLETE, E-MIG-CARD-INSTANCE, E-MIG-CARD-SCOPE, E-MIG-CARD-SIZE, E-MIG-DEFER-UNBOUND, E-MIG-DUAL-PATH, E-MIG-EVENT-SEQ, E-MIG-EXIT, E-MIG-FILEMOVE-GAP, E-MIG-FROZEN, E-MIG-ORDER, E-MIG-PARALLEL, E-MIG-PHASE-CONFLICT, E-MIG-PHASE-COUNT, E-MIG-RETIRE-MISMATCH, E-MIG-ROW-COUNT, E-MIG-ROW-MULTI, E-MIG-ROW-ORPHAN, E-MIG-SCAN-UNCLAIMED, E-MIG-SORTKEY-ORDER, E-MIG-STATE, E-MIG-TEST-PATCH, E-MIG-ZERO-UNCOVERED, E-PANEL-ACTION, E-PANEL-KIND, E-PANEL-PATH, E-PANEL-SOURCE, E-TPL-CYCLE, E-TPL-KEY, E-TPL-NO-FALLBACK, E-TPL-RX
+== 2 前缀登记
+  实体前缀 27，词表族前缀 125
+  注意 未登记前缀 rx_: rx_type
+  注意 未登记前缀 card_: card_slot_type
+  注意 未登记前缀 q_: q_k
+  注意 未登记前缀 e_: e_a, e_k, e_x
+  注意 未登记前缀 entity_: entity_revived
+  注意 未登记前缀 orowk_: orowk_actual
+  注意 未登记前缀 aggk_: aggk_bonded
+  注意 未登记前缀 attach_: attach_slot
+== 2b 内核信号代号登记
+  小族登记 5 个: layout_change, naming_intent, note_intent, dimension_write_rejected, nil_seedpart
+  OK 正文发出的非词表代号均在小族登记
+  OK 引用小族的代号均已登记（核 32 卷）
+== 3 类型数
+  §1.5 表计 14 种；全文提到的类型数：14, 14, 14, 14, 14
+  OK 类型数一致
+== 4 附录 A 夹具
+  OK 三段 JSON 可解析
+  维度 9 个，类别行 4，实体行 2；展平 class_workshop_hot = {"public":false,"lodging":false,"allowedMaterials":["subst_stone"],"wearPerDay":0.0006,"capacityBase":2,"services":["service_craft"],"fixtures":["fixture_forge","fixture_hearth"],"upkeepPerDay":{"class_fuel":12}}
+== 结果：PASS
+exit=0
