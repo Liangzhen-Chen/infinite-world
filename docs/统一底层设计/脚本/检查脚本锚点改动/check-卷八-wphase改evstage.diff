@@ -1,0 +1,26 @@
+--- "/f/temp/claude/d5f27397948f41bd/91a2ffab-45cc-4033-adab-94b22866f267/scratchpad/check-\345\215\267\345\205\253.orig.mjs"	2026-11-14 12:14:52.989150100 +0000
++++ "/f/dnd-tmp/vols/check-\345\215\267\345\205\253.mjs"	2026-11-14 12:19:07.578144600 +0000
+@@ -234,15 +234,21 @@
+ for (const e of usedErr) if (!s28.includes('| ' + e + ' |')) r13.push('§2.8 缺 ' + e);
+ // 封闭枚举附表
+ const app = meta.filter(m => /^## 附 术语/.test(m.h2)).map(m => m.line).join('\n');
+-const closedFam = [['tenuremode', 3], ['term', 3], ['accession', 7], ['mphase', 8], ['mtransition', 7], ['ballot', 3], ['addressee', 3], ['powerscope', 3], ['succsource', 5], ['actbasis', 2], ['ratifydefault', 2], ['legitform', 2], ['taxmeasure', 6], ['taxtrigger', 3], ['wphase', 4], ['casustarget', 4], ['casusprize', 5], ['migpart', 8], ['vitalside', 2], ['infperiod', 2]];
++const closedFam = [['tenuremode', 3], ['term', 3], ['accession', 7], ['mphase', 8], ['mtransition', 7], ['ballot', 3], ['addressee', 3], ['powerscope', 3], ['succsource', 5], ['actbasis', 2], ['ratifydefault', 2], ['legitform', 2], ['taxmeasure', 6], ['taxtrigger', 3], ['casustarget', 4], ['casusprize', 5], ['migpart', 8], ['vitalside', 2], ['infperiod', 2]];
+ for (const [e] of closedFam) if (!app.includes('| `' + e + '` |')) r13.push('附表缺 ' + e);
+ const cnt = (e) => ((app.split('\n').find(l => l.startsWith('| `' + e + '` |')) ?? '').match(/`[a-z]+_[a-z_]+`/g) ?? []).length;
+ for (const [e, n] of closedFam) if (cnt(e) !== n) r13.push(`附表 ${e} 项数 ${cnt(e)}≠${n}`);
+ // §2.4 每个族都有定义节；封闭族在 §2.4 写明的项数与附表一致
+ const s24 = meta.filter(m => /^### 2\.4 /.test(m.h3)).map(m => m.line).join('\n');
+-for (const f of ['orgkind', 'politykind', 'power', 'powerscope', 'salary', 'succession', 'succsource', 'election', 'term', 'accession', 'actbasis', 'ratifydefault', 'motion', 'ballot', 'addressee', 'mphase', 'mtransition', 'permit', 'tenuremode', 'legit', 'legitform', 'claimbasis', 'taxbase', 'taxmeasure', 'taxtrigger', 'fkind', 'diplostatus', 'casus', 'casustarget', 'casusprize', 'wphase', 'settletier', 'amenity', 'popflow', 'migpart', 'popband', 'vitalside', 'infsrc', 'infperiod']) if (!s24.includes('| `' + f + '` |')) r13.push('§2.4 缺族 ' + f);
++for (const f of ['orgkind', 'politykind', 'power', 'powerscope', 'salary', 'succession', 'succsource', 'election', 'term', 'accession', 'actbasis', 'ratifydefault', 'motion', 'ballot', 'addressee', 'mphase', 'mtransition', 'permit', 'tenuremode', 'legit', 'legitform', 'claimbasis', 'taxbase', 'taxmeasure', 'taxtrigger', 'fkind', 'diplostatus', 'casus', 'casustarget', 'casusprize', 'settletier', 'amenity', 'popflow', 'migpart', 'popband', 'vitalside', 'infsrc', 'infperiod']) if (!s24.includes('| `' + f + '` |')) r13.push('§2.4 缺族 ' + f);
+ const cn = { 两: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8 };
+ for (const [e, n] of closedFam) { const l = s24.split('\n').find(x => x.startsWith('| `' + e + '` |')) ?? ''; const mm = l.match(/封闭([两三四五六七八])项/); if (!mm || cn[mm[1]] !== n) r13.push(`§2.4 ${e} 项数与附表不符`); }
++// 战事阶段登记（卷二十四 C24-16：wphase 退役，改向 evstage 族登记）：登记段恰有这四个 evst_war_* 代号
++const evReg = meta.filter(m => /^### 本卷向卷二十四 `evstage` 族登记的条目/.test(m.h3) && m.fence === null).map(m => m.line).join('\n');
++if (!evReg) r13.push('缺 evstage 登记段');
++const evWar = new Set(evReg.match(/`evst_war_[a-z_]+`/g) ?? []);
++for (const c of ['evst_war_declared', 'evst_war_fighting', 'evst_war_settled', 'evst_war_lapsed']) if (!evWar.has('`' + c + '`')) r13.push('evstage 登记段缺 ' + c);
++if (evWar.size !== 4) r13.push(`evstage 登记段 evst_war_* 项数 ${evWar.size}≠4`);
+ // 待补清单条数
+ const todo = meta.filter(m => /^## 附录 待补清单/.test(m.h2) && /^\| \d+ \|/.test(m.line)).length;
+ if (todo < 5) r13.push('待补清单过少');
