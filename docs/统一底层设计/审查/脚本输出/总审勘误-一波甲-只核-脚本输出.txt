@@ -1,0 +1,127 @@
+== node check-vol2.mjs
+== 1 错误码
+  正文错误码 148 个；登记表展开 260 个
+  OK 正文码全部已登记
+  注意 登记但正文未用到（含简写展开的候选）: E-ACC-BASELINE-EDIT, E-ACC-BASELINE-UP, E-ACC-BYPASS-REGRESSION, E-ACC-CODE-UNLISTED, E-ACC-COMMIT-MSG, E-ACC-CRITERION-LOOSENED, E-ACC-CRITERION-UNVERSIONED, E-ACC-DOC-SEAL, E-ACC-EXT-CODE-CHANGED, E-ACC-EXT-EXISTING-ROW, E-ACC-FIXTURE-INSTANCE, E-ACC-GATE-BYPASS, E-ACC-HIT-OPEN, E-ACC-ITEM-COUNT, E-ACC-ITEM-DOWNGRADE, E-ACC-ITEM-FORM, E-ACC-ITEM-ORPHAN, E-ACC-ITEM-PARAM, E-ACC-ITEM-UNIMPLEMENTED, E-ACC-ITEM-UNREGISTERED, E-ACC-NEWROW-UNANCHORED, E-ACC-REPORT-FORM, E-ACC-REVIEW-CHECKLIST, E-ACC-REVIEW-MISSING, E-ACC-REVIEW-SELF, E-ACC-REVIEW-STALE, E-ACC-REVIEW-VETO, E-ACC-ROWKEY-DRIFT, E-ACC-RUN-UNBOUND, E-ACC-SCAN-NAMELIST, E-ACC-SCAN-SELFNAME, E-ACC-ZERO-MISMATCH, E-AV-KEY, E-AV-NO-DEFAULT, E-BST-BANE-CLASH, E-BST-BODY-WRITE, E-BST-DUPLICATE, E-BST-GEN-SLOT, E-BST-LAIR, E-BST-LORE-SHAPE, E-BST-MONSTER-SCHEMA, E-BST-QUOTA, E-BST-SIM-DIMS, E-BST-TIER-ROWS, E-BST-TRANSFORM-ROWS, E-BST-VARIANT, E-BST-WARD-SHAPE, E-DISPLAY-BACKFLOW, E-DISPLAY-BRANCH-TEXT, E-DISPLAY-DICE, E-DISPLAY-HOST-CHAT, E-DISPLAY-LITERAL, E-DISPLAY-LOCALE-BRANCH, E-DISPLAY-UNSEEN, E-GEN-BRANCH-ORIGIN, E-GEN-BYPASS, E-GEN-DEFAULT, E-GEN-GROUP-CYCLE, E-GEN-GROUP-ROW, E-GEN-ID-COLLISION, E-GEN-LATE-SOURCE, E-GEN-MANIFEST-DRIFT, E-GEN-NAME-EMPTY, E-GEN-NOT-MATERIALIZED, E-GEN-OVERRIDE-AUTHORED, E-GEN-REJECT, E-GEN-RESPECT, E-GEN-ROW-INVALID, E-GEN-SKELETON, E-GEN-STAGE-CYCLE, E-GEN-STAGE-UNKNOWN, E-I18N-FORM, E-I18N-LABEL-FOREIGN, E-I18N-LABEL-ORPHAN, E-I18N-LOCALE, E-I18N-PLURAL, E-I18N-TPL-MISSING, E-I18N-TPL-SLOT, E-MAP-COMPASS, E-MIG-ACCEPT-FORM, E-MIG-BACKFILL, E-MIG-CARD-INCOMPLETE, E-MIG-CARD-INSTANCE, E-MIG-CARD-SCOPE, E-MIG-CARD-SIZE, E-MIG-DEFER-UNBOUND, E-MIG-DUAL-PATH, E-MIG-EVENT-SEQ, E-MIG-EXIT, E-MIG-FILEMOVE-GAP, E-MIG-FROZEN, E-MIG-ORDER, E-MIG-PARALLEL, E-MIG-PHASE-CONFLICT, E-MIG-PHASE-COUNT, E-MIG-RETIRE-MISMATCH, E-MIG-ROW-COUNT, E-MIG-ROW-MULTI, E-MIG-ROW-ORPHAN, E-MIG-SCAN-UNCLAIMED, E-MIG-SORTKEY-ORDER, E-MIG-STATE, E-MIG-TEST-PATCH, E-MIG-ZERO-UNCOVERED, E-PANEL-ACTION, E-PANEL-KIND, E-PANEL-PATH, E-PANEL-SOURCE, E-TPL-CYCLE, E-TPL-KEY, E-TPL-NO-FALLBACK, E-TPL-RX
+== 2 前缀登记
+  实体前缀 27，词表族前缀 132
+  注意 未登记前缀 rx_: rx_type
+  注意 未登记前缀 tick_: tick_stage
+  注意 未登记前缀 doc_: doc_log, doc_state
+  注意 未登记前缀 part_: part_single
+  注意 未登记前缀 card_: card_slot_type
+  注意 未登记前缀 q_: q_k
+  注意 未登记前缀 e_: e_a, e_k, e_x
+  注意 未登记前缀 entity_: entity_revived
+  注意 未登记前缀 orowk_: orowk_actual
+  注意 未登记前缀 aggk_: aggk_bonded
+  注意 未登记前缀 attach_: attach_slot
+  注意 未登记前缀 requirement_: requirement_block
+  注意 未登记前缀 effect_: effect_call_list
+== 2b 内核信号代号登记
+  小族登记 5 个: layout_change, naming_intent, note_intent, dimension_write_rejected, nil_seedpart
+  OK 正文发出的非词表代号均在小族登记
+  OK 引用小族的代号均已登记（核 32 卷）
+== 2c readShapes 行格式
+  数据行 10 行
+== 3 类型数
+  §1.5 表计 14 种；全文提到的类型数：14, 14, 14, 14, 14, 14
+  OK 类型数一致
+== 4 附录 A 夹具
+  OK 三段 JSON 可解析
+  维度 9 个，类别行 4，实体行 2；展平 class_workshop_hot = {"functionNeeds":{"fn_shelter":1,"fn_work":2,"fn_hearth":1},"accessDefault":"access_private","wearPerDay":0.0006,"services":["service_craft"],"headline":"fn_work","envelopeWhere":"flammability < 0.5","upkeepPerDay":{"class_fuel":12}}
+== 结果：PASS
+exit=0
+== node check-vol2-ext.mjs
+== 5 族名登记
+  登记族 132，代码内封闭枚举 34，正文用到的族名 122
+  OK 全部族名已登记
+== 6 枚举值前缀
+  OK 示例中开放族值均带前缀、封闭枚举值均不带前缀
+== 7 附录 A 组件与引用解析
+  comp_service_host: table=facility_type, requires=["services"], 被引用=fac_forge
+  comp_facility: table=place, requires=["intendedType"], 被引用=无
+== 8 附录 G 锚点唯一性
+  锚点 55 个
+  OK 锚点与关键定义各出现一次
+== 8b D.1 关键词出现位置（供人工确认同步）
+  【六】字符串类型白名单 / 方法名清单: 行 2146,2477
+  【六】字符串类型白名单 / 闭集: 行 3,173,193,412,514,526,529,652,653,660,680,705,715,718,721,726,727,732,762,821,885,886,887,888,912,954,966,1050,1109,1135,1388,1394,1410,2064,2138,2145,2148,2153,2154,2176,2313,2333,2338,2339,2350,2353,2365,2385,2440,2452,2477,2507,2514,2564,2588,2607,2612,2614,2630,2643,2720,2745,2754,2757,2875,2907,2916,2927,2937
+  【六】字符串类型白名单 / E-INPUT-FUZZY: 行 729,730,731,735,1385,2153,2154,2477
+  【六】输入规范化唯一定义 / 规范化: 行 45,261,696,706,729,732,734,931,966,970,998,1006,1105,1106,1107,1121,1129,1385,1389,2045,2128,2153,2169,2173,2338,2354,2390,2420,2448,2456,2461,2467,2471,2478,2497,2516,2760,2786,2810,2869,2870,2872,2895
+  【六】输入规范化唯一定义 / toLowerCase: 行 261,2153,2448,2478
+  【六】输入规范化唯一定义 / White_Space: 行 45,261,2433,2448,2478
+  【六】输入规范化唯一定义 / casefold: 行 45,261,729,732,912,920,1107,2478
+  【六】权限表（判定/产出） / needle: 行 692,699,705,732,763,931,970,1105,1107,1111,1117,1119,1125,1385,2128,2154,2338,2454,2457,2467,2479,2488,2497,2524,2696,2697,2739,2757,2760,2774,2870,2927
+  【六】权限表（判定/产出） / matchBlocklist: 行 252,609,667,668,699,700,701,733,734,979,1107,1108,1113,1121,2128,2456,2479,2487,2596,2735,2784
+  【六】权限表（判定/产出） / 替换记号: 行 249,700,1108,1384,2128,2361,2479,2516,2785,2870
+  【六】权限表（判定/产出） / templates.mjs: 行 254,602,680,700,727,733,762,829,2145,2154,2435,2444,2470,2479,2545,2607,2613
+  【六】封闭代码枚举不带前缀 / stage_: 行 249,2480
+  【六】封闭代码枚举不带前缀 / scope_: 行 437,2480
+  【六】封闭代码枚举不带前缀 / effout_: 行 2480
+  【六】封闭代码枚举不带前缀 / consent_: 行 249,1329,2336,2447,2480,2617,2760
+  【六】组件 table 归属 / comp_facility: 行 163,241,1591,1592,1901,2006,2246,2263,2450,2470,2481,2688
+  【六】组件 table 归属 / comp_service_host: 行 2226,2245,2263,2450,2481,2687
+  【六】组件 table 归属 / E-DIM-COMPONENT-TABLE: 行 241,2450,2481
+  【六】pathTypes 与 E-TEXT-UNGATED / pathTypes: 行 3,100,197,199,206,336,461,463,482,491,626,637,685,686,688,689,714,991,1021,1178,1238,1371,1386,2312,2334,2358,2386,2439,2442,2453,2460,2462,2468,2482,2491,2495,2501,2508,2515,2518,2564,2567,2591,2633,2643,2644,2654,2745,2754,2782,2867,2925,2942,2949
+  【六】pathTypes 与 E-TEXT-UNGATED / E-TEXT-UNGATED: 行 179,463,686,1013,1056,1386,2154,2429,2434,2453,2482,2508,2874,2904
+  【六】allowExplicit 与偏离行 / allowExplicit: 行 106,165,233,291,1348,1350,1380,1451,1452,1465,2129,2425,2445,2483,2543,2893
+  【六】allowExplicit 与偏离行 / 偏离行: 行 58,106,118,125,126,145,165,179,203,249,291,473,491,637,1341,1346,1348,1428,1429,2118,2121,2125,2263,2316,2445,2483,2495,2557,2568,2581,2582,2815,2864,2921
+  【六】relation intimate / intimate: 行 333,335,707,2454,2484
+  【六】input-view 处置（第七版改为删除协议 + 新写） / input-view: 行 706,2045,2435,2454,2461,2485,2545,2789,2870
+== 9 码点口径
+  OK 全文无旧的码元口径
+== 10 权限表 needle 来源
+  OK 权限表 6 行，needle 来源只有 blocklist / 代号登记表
+== 11 示例代码逃逸写法
+  OK 规则层/kernel 示例与正例均无 any / as / @ts-* / eslint-disable / JSON.parse / fs 读取
+== 12 模块组计数口径
+  OK 全文无旧的模块组计数残留（现行口径：七组 + textcore / 六个非规则组）
+== 13 加载器外示例无 JSON.parse / fs
+  登记边界入口 34 个文件；OK 入口外示例无 JSON.parse / fs
+== 14 import 矩阵 textcore 列
+  OK kernel 不 import textcore
+  OK 规则层 不 import textcore
+== 15 Text 构造点
+  OK Text 构造点只在 §2.9
+== 16 运行态修正项无字串
+  OK struct:modifier 无 string/rx 文本字段
+  OK §3.2 运行态表达式为 RxId/rxTree
+== 17 入口/出口表对称
+  OK 入口 17 行（组：kernel,textcore,outputGate,gate,aiGate,inputEdge,host,tools），出口 7 行（组：outputGate,display,aiGate,host,kernel），列数对称
+== 18 全局对象白名单
+  OK 白名单覆盖 9 个组/层
+== 19 强转豁免文件表
+  OK 豁免表 17 个具体文件（textcore/brand.mjs、textcore/ops.mjs、kernel/handles/vocab-handle.mjs、kernel/handles/entity-id.mjs、kernel/handles/display-lang.mjs、kernel/handles/keys.mjs、kernel/sealed.mjs、kernel/credential.mjs、kernel/secret.mjs、kernel/transaction.mjs、kernel/validate/narrow.mjs、gate/screen.mjs、gate/load-blocklist.mjs、kernel/transport/router-caps.mjs、extension/textcore/narrow-wire.mjs、extension/textcore/open-envelope.mjs、extension/host/bootstrap.mjs）；表外无强转许可，旧的"唯一豁免点"说法已清
+== 20 模块组 glob 不相交
+  OK 9 组 9 个代表路径两两不相交（display 以 ! 排除 extension/host 与 extension/textcore）
+== 21 白名单闭集与 release 形参
+  OK 白名单段无"等"与省略号，禁 eval/Function/import()/with，专用项各归一处；release 带类型签名 1 处均为 Screened<Text>；出口表输入列一致；kernelApi 61 条均为结构化条目、无通配，issueCredential/writeSealed 限 aiGate、readSealed 限 outputGate，scope 常量 3 个各限一个写者文件
+== 22 文件归属
+  OK 78 个代表路径：六种代码扩展名都按目录归到原组，json/css/html 属登记数据，未登记类型判 E-FILE-UNASSIGNED，无文件同时落两组
+== 23 两进程分组与矩阵
+  OK 进程分组表 11 项与 JSON process 字段一致；服务端矩阵 9 行、客户端矩阵 3 行，互不含对方的组；矩阵引用名均已登记；node:* 清单两处一致
+== 24 宿主全局只在 bootstrap
+  OK 白名单表中 7 个浏览器宿主全局只在 host 行且全部限定到 bootstrap；display、clientTextcore 为"无"；10 个客户端能力对象的构造者都是 bootstrap；无旧宿主入口文件名残留
+== 25 定时器位置
+  OK 白名单表里定时器只在 kernel 行（限 kernel/scheduler.mjs）与 host 行（限 bootstrap）；正文 5 行提到定时器，均写明许可位置或为禁令；Date/performance 未开放
+== 26 摘要来源
+  OK node:crypto 只在 textcore 行并限 textcore/digest.mjs（正文 8 行提及，均指向它或为否定句）；kernel 无 node:crypto、用注入的 DigestCap；客户端 SubtleCrypto 只经 SubtleDigestCap 交 open-envelope.mjs；全文只有 sha256
+== 27 信封链条与装配文件
+  OK 下行出口、客户端入口、DOM 出口、信封校验、装配文件可缺行与两条上行入口都在 §2.9；客户端 Screened<Text> 只由 openEnvelope 产出；nameSlot 已清，起名为"规则层只发意图"
+== 28 引文同一性只在 aiGate
+  OK 例外清单恰三项（matchBlocklist、matchIdLeak、matchQuote）；matchQuote 带签名定义 1 处，在 §2.9 第 6 条，文件 ai-gate/quote-identity.mjs；全文 16 行提及，均在 aiGate 语境；未进 kernelApi，矩阵与 §2.8 其他组的行里不出现；§2.9 之外各处均为引用
+== 29 回应通路逐环核对
+  OK 通路 11 行逐环核对（含存档导出、导入支路 2c、2d、5s、6s；四条路由各有入口；NarrateCap 经 mountNarration 注入 reply-composer，narrate 不是跨组导出；registerAdvancePlan 已登记）：kernelApi 环的调用者在登记文件内且矩阵格写明，登记回调环不产生反向 import，能力对象环与能力对象表、入口表、出口表一致，HTTP 环与通道表一致；环环相接；进 outputGate 之前交出的类型不含文字；kernel 与 inputEdge 对 outputGate 的矩阵格为空
+== 30 子串函数签名
+  OK 子串函数 3 个与 gate/matcher.mjs 的 groupApi 导出一致；needle 类型只有 BlockNeedle、AiQuote 与代号，没有 Text；形参类型不出现 labels 或 Map；containsCodePoints 形参为 (turn: TurnText, quote: AiQuote)，只对 ai-gate/quote-identity.mjs 开放；labels 的值类型是 Text，读者不含 gate 与 aiGate
+== 31 本轮原文来路
+  OK TurnText 只由 brandTurn 产出且只对 input/http-entry.mjs 开放；形参带 TurnText 的函数恰 4 个（interpret、narrateTurn、matchQuote、containsCodePoints）；aiGate 对 inputEdge 的 4 个导出都限定到 input/http-entry.mjs 并与矩阵格一致；来路五步写全；旧签名无残留
+== 32 装配文件封闭清单
+  OK assembly.calls 11 个函数（createRouterCaps、createDigestCap、createWallTimer、mountKernel、registerSystems、mountOutput、mountAi、mountMenuEntry、mountSaveRoutes、mountNarration、mountInput）：每个都在 kernelApi 或 groupApi 登记为只对 index.mjs 开放，反向也无清单外的开放项；矩阵装配文件行、§2.9"装配文件"一项与清单三处一致；扫描规则写全，§2.8 与 S19 引用同一清单
+== 33 存量规则与 wsum 签名
+  OK 存量规则六条与两类断言写全；wsum 定义一处、正文 3 处调用全为三参、material 为多组列表；系统闭集字段 entryCallerFiles / entryJudges 在 §2.7 定义并进 JSON 示例；pathTypes 数值路径都带 §1.4 的单位；§1.14 与 event_role 已登记；facilityType 不再是存储维度
+== 34 接缝批
+  OK 心跳推进只投递请求、旧写法无残留；终止协议五步改序并含两个登记点、窗口期满、到期项撤销；建行写者与改写写者已定义；stockMode / remDenominator / struct:stockAnchor 与定点指数五项在位；六个封闭枚举与三个族已登记；§1.14 两处改名并写求值次序；存档码、导入 schema、槽位与候选键在位；单位表含 byte、ms；无已撤销的大类代号
+== 结果：PASS
+exit=0
