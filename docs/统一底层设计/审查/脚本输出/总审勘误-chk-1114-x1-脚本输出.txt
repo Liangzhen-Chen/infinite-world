@@ -1,0 +1,900 @@
+### check-卷二十二 (现行)
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首模型行
+PASS 1c §0 五小节齐全
+PASS 1d 状态行为成稿且无续写点残留
+PASS 2 12 个子系统各六小节齐全
+PASS 3 数据实例至少三条，含非西陲、含非人类或超自然（共 49 条）
+PASS 4 验收断言三式齐全且编号规整
+PASS 5 正文无具体 id 字面量（含数据实例；实例用‹指称›；pers_ 代号只准在代码块与数据实例内）
+PASS 6 无用于判断的描述性文本；纯代号无中文；枚举值 ASCII 且带中英显示名（枚举 12 个、值 48 个） —  
+PASS 7 台账各概念写全（十二节标题、台账裁定编号、关键概念、知识表各列、每节规则不少于五条且编号连续；规则共 87 条）
+PASS 8 本卷编号引用不悬空且连续（R 87、A 36、S 7、C 24、Q 13、M 18） —  
+PASS 9 跨卷章节引用带标题且与原卷标题相符（带标题引用 190 处）
+PASS 9b 别卷对本卷的带标题引用：相符 106 处，不符 8 处（卷十四→§4.6（阅读门槛读语言技能） 卷十四→§4.10（知识前置同格式；知识是"有没有"，技能是"多熟"） 卷十四→§4.6（读懂） 卷十四→§4.10（节点授予知识） 卷十四→§4.10（知识持有、失传） 卷十四→§4.9（研究结算） 卷零→§4.1（7 处）），不符项均已列入 §5.4
+PASS 10 每个含除法的规则行都写明除数下界或“不做除法”的分支（含除号的行 10 行）
+PASS 11 骰值键、分段无关、唯一写者、存法口径等必备内容在场
+PASS 12 规则表各键写明类型与取值域（43 行）；读入口 21 个
+PASS 13 读入口签名里没有文字形参
+行数 1205；子系统 12；规则 87；断言 36；枚举 12；配合项 24；开放问题 13；迁移项 18；待补 11 条
+ALL PASS
+exit=0
+### check-卷二十二 (勘误前 1114w2e6)
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首模型行
+PASS 1c §0 五小节齐全
+PASS 1d 状态行为成稿且无续写点残留
+PASS 2 12 个子系统各六小节齐全
+PASS 3 数据实例至少三条，含非西陲、含非人类或超自然（共 49 条）
+PASS 4 验收断言三式齐全且编号规整
+PASS 5 正文无具体 id 字面量（含数据实例；实例用‹指称›；pers_ 代号只准在代码块与数据实例内）
+PASS 6 无用于判断的描述性文本；纯代号无中文；枚举值 ASCII 且带中英显示名（枚举 12 个、值 48 个） —  
+PASS 7 台账各概念写全（十二节标题、台账裁定编号、关键概念、知识表各列、每节规则不少于五条且编号连续；规则共 87 条）
+PASS 8 本卷编号引用不悬空且连续（R 87、A 36、S 7、C 24、Q 13、M 18） —  
+PASS 9 跨卷章节引用带标题且与原卷标题相符（带标题引用 190 处）
+PASS 9b 别卷对本卷的带标题引用：相符 106 处，不符 8 处（卷十四→§4.6（阅读门槛读语言技能） 卷十四→§4.10（知识前置同格式；知识是"有没有"，技能是"多熟"） 卷十四→§4.6（读懂） 卷十四→§4.10（节点授予知识） 卷十四→§4.10（知识持有、失传） 卷十四→§4.9（研究结算） 卷零→§4.1（7 处）），不符项均已列入 §5.4
+PASS 10 每个含除法的规则行都写明除数下界或“不做除法”的分支（含除号的行 10 行）
+PASS 11 骰值键、分段无关、唯一写者、存法口径等必备内容在场
+PASS 12 规则表各键写明类型与取值域（43 行）；读入口 21 个
+PASS 13 读入口签名里没有文字形参
+行数 1204；子系统 12；规则 87；断言 36；枚举 12；配合项 24；开放问题 13；迁移项 18；待补 11 条
+ALL PASS
+exit=0
+### check-卷九 (现行)
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首署名行
+PASS 1c 没有残留的续写标记
+PASS 2 十九个子系统各六小节齐全
+PASS 3 数据实例至少三条，含非西陲、含非人类或超自然
+PASS 4 验收断言三式齐全且有编号
+PASS 5 规则与正文无具体 id 字面量
+PASS 6 无用于判断的描述性文本
+PASS 7 台账各概念写全（标题、关键代号、每节有规则且编号连续）
+PASS 8 跨卷引用带标题；规则与断言编号引用不悬空
+PASS 9 json 代码块可解析（2 块） — bad=0
+PASS 10 红线：不读墙钟、除数有下界或为 0 分支、存法与去留登记、不读事件日志
+PASS 11 数据实例算术与余数结转复算（25 项加 5 组余数）
+PASS 12 接口、入口表、规则表键、错误码、枚举、槽位表、迁移清单落实
+PASS 13 来路无关、默认不开模型、拒收三不条文在位
+行数 1688；子系统 19；规则条数 174；json 块 2；待补清单 10 条；失败项 0
+exit=0
+### check-vol2 (现行)
+== 1 错误码
+  正文错误码 151 个；登记表展开 263 个
+  OK 正文码全部已登记
+  注意 登记但正文未用到（含简写展开的候选）: E-ACC-BASELINE-EDIT, E-ACC-BASELINE-UP, E-ACC-BYPASS-REGRESSION, E-ACC-CODE-UNLISTED, E-ACC-COMMIT-MSG, E-ACC-CRITERION-LOOSENED, E-ACC-CRITERION-UNVERSIONED, E-ACC-DOC-SEAL, E-ACC-EXT-CODE-CHANGED, E-ACC-EXT-EXISTING-ROW, E-ACC-FIXTURE-INSTANCE, E-ACC-GATE-BYPASS, E-ACC-HIT-OPEN, E-ACC-ITEM-COUNT, E-ACC-ITEM-DOWNGRADE, E-ACC-ITEM-FORM, E-ACC-ITEM-ORPHAN, E-ACC-ITEM-PARAM, E-ACC-ITEM-UNIMPLEMENTED, E-ACC-ITEM-UNREGISTERED, E-ACC-NEWROW-UNANCHORED, E-ACC-REPORT-FORM, E-ACC-REVIEW-CHECKLIST, E-ACC-REVIEW-MISSING, E-ACC-REVIEW-SELF, E-ACC-REVIEW-STALE, E-ACC-REVIEW-VETO, E-ACC-ROWKEY-DRIFT, E-ACC-RUN-UNBOUND, E-ACC-SCAN-NAMELIST, E-ACC-SCAN-SELFNAME, E-ACC-ZERO-MISMATCH, E-AV-KEY, E-AV-NO-DEFAULT, E-BST-BANE-CLASH, E-BST-BODY-WRITE, E-BST-DUPLICATE, E-BST-GEN-SLOT, E-BST-LAIR, E-BST-LORE-SHAPE, E-BST-MONSTER-SCHEMA, E-BST-QUOTA, E-BST-SIM-DIMS, E-BST-TIER-ROWS, E-BST-TRANSFORM-ROWS, E-BST-VARIANT, E-BST-WARD-SHAPE, E-DISPLAY-BACKFLOW, E-DISPLAY-BRANCH-TEXT, E-DISPLAY-DICE, E-DISPLAY-HOST-CHAT, E-DISPLAY-LITERAL, E-DISPLAY-LOCALE-BRANCH, E-DISPLAY-UNSEEN, E-GEN-BRANCH-ORIGIN, E-GEN-BYPASS, E-GEN-DEFAULT, E-GEN-GROUP-CYCLE, E-GEN-GROUP-ROW, E-GEN-ID-COLLISION, E-GEN-LATE-SOURCE, E-GEN-MANIFEST-DRIFT, E-GEN-NAME-EMPTY, E-GEN-NOT-MATERIALIZED, E-GEN-OVERRIDE-AUTHORED, E-GEN-REJECT, E-GEN-RESPECT, E-GEN-ROW-INVALID, E-GEN-SKELETON, E-GEN-STAGE-CYCLE, E-GEN-STAGE-UNKNOWN, E-I18N-FORM, E-I18N-LABEL-FOREIGN, E-I18N-LABEL-ORPHAN, E-I18N-LOCALE, E-I18N-PLURAL, E-I18N-TPL-MISSING, E-I18N-TPL-SLOT, E-MAP-COMPASS, E-MIG-ACCEPT-FORM, E-MIG-BACKFILL, E-MIG-CARD-INCOMPLETE, E-MIG-CARD-INSTANCE, E-MIG-CARD-SCOPE, E-MIG-CARD-SIZE, E-MIG-DEFER-UNBOUND, E-MIG-DUAL-PATH, E-MIG-EVENT-SEQ, E-MIG-EXIT, E-MIG-FILEMOVE-GAP, E-MIG-FROZEN, E-MIG-ORDER, E-MIG-PARALLEL, E-MIG-PHASE-CONFLICT, E-MIG-PHASE-COUNT, E-MIG-RETIRE-MISMATCH, E-MIG-ROW-COUNT, E-MIG-ROW-MULTI, E-MIG-ROW-ORPHAN, E-MIG-SCAN-UNCLAIMED, E-MIG-SORTKEY-ORDER, E-MIG-STATE, E-MIG-TEST-PATCH, E-MIG-ZERO-UNCOVERED, E-PANEL-ACTION, E-PANEL-KIND, E-PANEL-PATH, E-PANEL-SOURCE, E-TPL-CYCLE, E-TPL-KEY, E-TPL-NO-FALLBACK, E-TPL-RX
+== 2 前缀登记
+  实体前缀 27，词表族前缀 134
+  注意 未登记前缀 record_: record_kind
+  注意 未登记前缀 act_: act_plot_invite
+  注意 未登记前缀 rx_: rx_type
+  注意 未登记前缀 tick_: tick_stage
+  注意 未登记前缀 doc_: doc_log, doc_state
+  注意 未登记前缀 part_: part_single
+  注意 未登记前缀 card_: card_slot_type
+  注意 未登记前缀 q_: q_k
+  注意 未登记前缀 e_: e_a, e_k, e_x
+  注意 未登记前缀 rule_: rule_key
+  注意 未登记前缀 entity_: entity_revived
+  注意 未登记前缀 orowk_: orowk_actual
+  注意 未登记前缀 aggk_: aggk_bonded
+  注意 未登记前缀 attach_: attach_slot
+  注意 未登记前缀 requirement_: requirement_block
+  注意 未登记前缀 effect_: effect_call_list
+  注意 未登记前缀 insul_: insul_grade
+  注意 未登记前缀 breath_: breath_grade
+== 2b 内核信号代号登记
+  小族登记 5 个: layout_change, naming_intent, note_intent, dimension_write_rejected, nil_seedpart
+  OK 正文发出的非词表代号均在小族登记
+  OK 引用小族的代号均已登记（核 32 卷）
+== 2c readShapes 行格式
+  数据行 10 行
+== 3 类型数
+  §1.5 表计 14 种；全文提到的类型数：14, 14, 14, 14, 14, 14
+  OK 类型数一致
+== 4 附录 A 夹具
+  OK 三段 JSON 可解析
+  维度 9 个，类别行 4，实体行 2；展平 class_workshop_hot = {"functionNeeds":{"fn_shelter":1,"fn_work":2,"fn_hearth":1},"accessDefault":"access_private","wearPerDay":0.0006,"services":["service_craft"],"headline":"fn_work","envelopeWhere":"flammability < 0.5","upkeepPerDay":{"class_fuel":12}}
+== 结果：PASS
+exit=0
+### check-vol2 (勘误前 1114w2e6)
+== 1 错误码
+  正文错误码 151 个；登记表展开 263 个
+  OK 正文码全部已登记
+  注意 登记但正文未用到（含简写展开的候选）: E-ACC-BASELINE-EDIT, E-ACC-BASELINE-UP, E-ACC-BYPASS-REGRESSION, E-ACC-CODE-UNLISTED, E-ACC-COMMIT-MSG, E-ACC-CRITERION-LOOSENED, E-ACC-CRITERION-UNVERSIONED, E-ACC-DOC-SEAL, E-ACC-EXT-CODE-CHANGED, E-ACC-EXT-EXISTING-ROW, E-ACC-FIXTURE-INSTANCE, E-ACC-GATE-BYPASS, E-ACC-HIT-OPEN, E-ACC-ITEM-COUNT, E-ACC-ITEM-DOWNGRADE, E-ACC-ITEM-FORM, E-ACC-ITEM-ORPHAN, E-ACC-ITEM-PARAM, E-ACC-ITEM-UNIMPLEMENTED, E-ACC-ITEM-UNREGISTERED, E-ACC-NEWROW-UNANCHORED, E-ACC-REPORT-FORM, E-ACC-REVIEW-CHECKLIST, E-ACC-REVIEW-MISSING, E-ACC-REVIEW-SELF, E-ACC-REVIEW-STALE, E-ACC-REVIEW-VETO, E-ACC-ROWKEY-DRIFT, E-ACC-RUN-UNBOUND, E-ACC-SCAN-NAMELIST, E-ACC-SCAN-SELFNAME, E-ACC-ZERO-MISMATCH, E-AV-KEY, E-AV-NO-DEFAULT, E-BST-BANE-CLASH, E-BST-BODY-WRITE, E-BST-DUPLICATE, E-BST-GEN-SLOT, E-BST-LAIR, E-BST-LORE-SHAPE, E-BST-MONSTER-SCHEMA, E-BST-QUOTA, E-BST-SIM-DIMS, E-BST-TIER-ROWS, E-BST-TRANSFORM-ROWS, E-BST-VARIANT, E-BST-WARD-SHAPE, E-DISPLAY-BACKFLOW, E-DISPLAY-BRANCH-TEXT, E-DISPLAY-DICE, E-DISPLAY-HOST-CHAT, E-DISPLAY-LITERAL, E-DISPLAY-LOCALE-BRANCH, E-DISPLAY-UNSEEN, E-GEN-BRANCH-ORIGIN, E-GEN-BYPASS, E-GEN-DEFAULT, E-GEN-GROUP-CYCLE, E-GEN-GROUP-ROW, E-GEN-ID-COLLISION, E-GEN-LATE-SOURCE, E-GEN-MANIFEST-DRIFT, E-GEN-NAME-EMPTY, E-GEN-NOT-MATERIALIZED, E-GEN-OVERRIDE-AUTHORED, E-GEN-REJECT, E-GEN-RESPECT, E-GEN-ROW-INVALID, E-GEN-SKELETON, E-GEN-STAGE-CYCLE, E-GEN-STAGE-UNKNOWN, E-I18N-FORM, E-I18N-LABEL-FOREIGN, E-I18N-LABEL-ORPHAN, E-I18N-LOCALE, E-I18N-PLURAL, E-I18N-TPL-MISSING, E-I18N-TPL-SLOT, E-MAP-COMPASS, E-MIG-ACCEPT-FORM, E-MIG-BACKFILL, E-MIG-CARD-INCOMPLETE, E-MIG-CARD-INSTANCE, E-MIG-CARD-SCOPE, E-MIG-CARD-SIZE, E-MIG-DEFER-UNBOUND, E-MIG-DUAL-PATH, E-MIG-EVENT-SEQ, E-MIG-EXIT, E-MIG-FILEMOVE-GAP, E-MIG-FROZEN, E-MIG-ORDER, E-MIG-PARALLEL, E-MIG-PHASE-CONFLICT, E-MIG-PHASE-COUNT, E-MIG-RETIRE-MISMATCH, E-MIG-ROW-COUNT, E-MIG-ROW-MULTI, E-MIG-ROW-ORPHAN, E-MIG-SCAN-UNCLAIMED, E-MIG-SORTKEY-ORDER, E-MIG-STATE, E-MIG-TEST-PATCH, E-MIG-ZERO-UNCOVERED, E-PANEL-ACTION, E-PANEL-KIND, E-PANEL-PATH, E-PANEL-SOURCE, E-TPL-CYCLE, E-TPL-KEY, E-TPL-NO-FALLBACK, E-TPL-RX
+== 2 前缀登记
+  实体前缀 27，词表族前缀 134
+  注意 未登记前缀 act_: act_plot_invite
+  注意 未登记前缀 rx_: rx_type
+  注意 未登记前缀 tick_: tick_stage
+  注意 未登记前缀 doc_: doc_log, doc_state
+  注意 未登记前缀 part_: part_single
+  注意 未登记前缀 card_: card_slot_type
+  注意 未登记前缀 q_: q_k
+  注意 未登记前缀 e_: e_a, e_k, e_x
+  注意 未登记前缀 rule_: rule_key
+  注意 未登记前缀 entity_: entity_revived
+  注意 未登记前缀 orowk_: orowk_actual
+  注意 未登记前缀 aggk_: aggk_bonded
+  注意 未登记前缀 attach_: attach_slot
+  注意 未登记前缀 requirement_: requirement_block
+  注意 未登记前缀 effect_: effect_call_list
+  注意 未登记前缀 insul_: insul_grade
+  注意 未登记前缀 breath_: breath_grade
+== 2b 内核信号代号登记
+  小族登记 5 个: layout_change, naming_intent, note_intent, dimension_write_rejected, nil_seedpart
+  OK 正文发出的非词表代号均在小族登记
+  OK 引用小族的代号均已登记（核 32 卷）
+== 2c readShapes 行格式
+  数据行 10 行
+== 3 类型数
+  §1.5 表计 14 种；全文提到的类型数：14, 14, 14, 14, 14, 14
+  OK 类型数一致
+== 4 附录 A 夹具
+  OK 三段 JSON 可解析
+  维度 9 个，类别行 4，实体行 2；展平 class_workshop_hot = {"functionNeeds":{"fn_shelter":1,"fn_work":2,"fn_hearth":1},"accessDefault":"access_private","wearPerDay":0.0006,"services":["service_craft"],"headline":"fn_work","envelopeWhere":"flammability < 0.5","upkeepPerDay":{"class_fuel":12}}
+== 结果：PASS
+exit=0
+### check-vol2-ext (现行)
+== 5 族名登记
+  登记族 134，代码内封闭枚举 34，正文用到的族名 122
+  OK 全部族名已登记
+== 6 枚举值前缀
+  OK 示例中开放族值均带前缀、封闭枚举值均不带前缀
+== 7 附录 A 组件与引用解析
+  comp_service_host: table=facility_type, requires=["services"], 被引用=fac_forge
+  comp_facility: table=place, requires=["intendedType"], 被引用=无
+== 8 附录 G 锚点唯一性
+  锚点 55 个
+  OK 锚点与关键定义各出现一次
+== 8b D.1 关键词出现位置（供人工确认同步）
+  【六】字符串类型白名单 / 方法名清单: 行 2157,2488
+  【六】字符串类型白名单 / 闭集: 行 3,173,193,418,520,532,535,658,659,666,686,711,721,724,727,732,733,738,768,827,891,892,893,894,918,960,972,1056,1115,1141,1395,1401,1418,2075,2149,2156,2159,2164,2165,2187,2324,2344,2349,2350,2361,2364,2376,2396,2451,2463,2488,2518,2525,2575,2599,2618,2623,2625,2641,2654,2675,2747,2772,2781,2784,2902,2934,2943,2954,2964
+  【六】字符串类型白名单 / E-INPUT-FUZZY: 行 735,736,737,741,1392,2164,2165,2488
+  【六】输入规范化唯一定义 / 规范化: 行 45,267,702,712,735,738,740,937,972,976,1004,1012,1111,1112,1113,1127,1135,1392,1396,2056,2139,2164,2180,2184,2349,2365,2401,2431,2459,2467,2472,2478,2482,2489,2508,2527,2787,2813,2837,2896,2897,2899,2922
+  【六】输入规范化唯一定义 / toLowerCase: 行 267,2164,2459,2489
+  【六】输入规范化唯一定义 / White_Space: 行 45,267,2444,2459,2489
+  【六】输入规范化唯一定义 / casefold: 行 45,267,735,738,918,926,1113,2489
+  【六】权限表（判定/产出） / needle: 行 698,705,711,738,769,937,976,1111,1113,1117,1123,1125,1131,1392,2139,2165,2349,2465,2468,2478,2490,2499,2508,2535,2723,2724,2766,2784,2787,2801,2897,2954
+  【六】权限表（判定/产出） / matchBlocklist: 行 258,615,673,674,705,706,707,739,740,985,1113,1114,1119,1127,2139,2467,2490,2498,2607,2762,2811
+  【六】权限表（判定/产出） / 替换记号: 行 255,706,1114,1391,2139,2372,2490,2527,2812,2897
+  【六】权限表（判定/产出） / templates.mjs: 行 260,608,686,706,733,739,768,835,2156,2165,2446,2455,2481,2490,2556,2618,2624
+  【六】封闭代码枚举不带前缀 / stage_: 行 255,2491
+  【六】封闭代码枚举不带前缀 / scope_: 行 443,2491
+  【六】封闭代码枚举不带前缀 / effout_: 行 2491
+  【六】封闭代码枚举不带前缀 / consent_: 行 255,1335,2347,2458,2491,2628,2787
+  【六】组件 table 归属 / comp_facility: 行 163,247,1600,1601,1912,2017,2257,2274,2461,2481,2492,2715
+  【六】组件 table 归属 / comp_service_host: 行 2237,2256,2274,2461,2492,2714
+  【六】组件 table 归属 / E-DIM-COMPONENT-TABLE: 行 247,2461,2492
+  【六】pathTypes 与 E-TEXT-UNGATED / pathTypes: 行 3,100,197,199,206,342,467,469,488,497,632,643,691,692,694,695,720,997,1027,1184,1244,1377,1393,2323,2345,2369,2397,2450,2453,2464,2471,2473,2479,2493,2502,2506,2512,2519,2526,2529,2575,2578,2602,2644,2654,2655,2665,2772,2781,2809,2894,2952,2969,2976
+  【六】pathTypes 与 E-TEXT-UNGATED / E-TEXT-UNGATED: 行 179,469,692,1019,1062,1393,2165,2440,2445,2464,2493,2519,2901,2931
+  【六】allowExplicit 与偏离行 / allowExplicit: 行 106,165,239,297,1354,1356,1387,1460,1473,2140,2436,2456,2494,2554,2674,2675,2920
+  【六】allowExplicit 与偏离行 / 偏离行: 行 58,106,118,125,126,145,165,179,203,255,297,479,497,643,1347,1352,1354,1436,1437,2129,2132,2136,2274,2327,2456,2494,2506,2568,2579,2592,2593,2842,2891,2948
+  【六】relation intimate / intimate: 行 339,341,713,2465,2495
+  【六】input-view 处置（第七版改为删除协议 + 新写） / input-view: 行 712,2056,2446,2465,2472,2496,2556,2816,2897
+== 9 码点口径
+  OK 全文无旧的码元口径
+== 10 权限表 needle 来源
+  OK 权限表 6 行，needle 来源只有 blocklist / 代号登记表
+== 11 示例代码逃逸写法
+  OK 规则层/kernel 示例与正例均无 any / as / @ts-* / eslint-disable / JSON.parse / fs 读取
+== 12 模块组计数口径
+  OK 全文无旧的模块组计数残留（现行口径：七组 + textcore / 六个非规则组）
+== 13 加载器外示例无 JSON.parse / fs
+  登记边界入口 34 个文件；OK 入口外示例无 JSON.parse / fs
+== 14 import 矩阵 textcore 列
+  OK kernel 不 import textcore
+  OK 规则层 不 import textcore
+== 15 Text 构造点
+  OK Text 构造点只在 §2.9
+== 16 运行态修正项无字串
+  OK struct:modifier 无 string/rx 文本字段
+  OK §3.2 运行态表达式为 RxId/rxTree
+== 17 入口/出口表对称
+  OK 入口 17 行（组：kernel,textcore,outputGate,gate,aiGate,inputEdge,host,tools），出口 7 行（组：outputGate,display,aiGate,host,kernel），列数对称
+== 18 全局对象白名单
+  OK 白名单覆盖 9 个组/层
+== 19 强转豁免文件表
+  OK 豁免表 17 个具体文件（textcore/brand.mjs、textcore/ops.mjs、kernel/handles/vocab-handle.mjs、kernel/handles/entity-id.mjs、kernel/handles/display-lang.mjs、kernel/handles/keys.mjs、kernel/sealed.mjs、kernel/credential.mjs、kernel/secret.mjs、kernel/transaction.mjs、kernel/validate/narrow.mjs、gate/screen.mjs、gate/load-blocklist.mjs、kernel/transport/router-caps.mjs、extension/textcore/narrow-wire.mjs、extension/textcore/open-envelope.mjs、extension/host/bootstrap.mjs）；表外无强转许可，旧的"唯一豁免点"说法已清
+== 20 模块组 glob 不相交
+  OK 9 组 9 个代表路径两两不相交（display 以 ! 排除 extension/host 与 extension/textcore）
+== 21 白名单闭集与 release 形参
+  OK 白名单段无"等"与省略号，禁 eval/Function/import()/with，专用项各归一处；release 带类型签名 1 处均为 Screened<Text>；出口表输入列一致；kernelApi 61 条均为结构化条目、无通配，issueCredential/writeSealed 限 aiGate、readSealed 限 outputGate，scope 常量 3 个各限一个写者文件
+== 22 文件归属
+  OK 78 个代表路径：六种代码扩展名都按目录归到原组，json/css/html 属登记数据，未登记类型判 E-FILE-UNASSIGNED，无文件同时落两组
+== 23 两进程分组与矩阵
+  OK 进程分组表 11 项与 JSON process 字段一致；服务端矩阵 9 行、客户端矩阵 3 行，互不含对方的组；矩阵引用名均已登记；node:* 清单两处一致
+== 24 宿主全局只在 bootstrap
+  OK 白名单表中 7 个浏览器宿主全局只在 host 行且全部限定到 bootstrap；display、clientTextcore 为"无"；10 个客户端能力对象的构造者都是 bootstrap；无旧宿主入口文件名残留
+== 25 定时器位置
+  OK 白名单表里定时器只在 kernel 行（限 kernel/scheduler.mjs）与 host 行（限 bootstrap）；正文 5 行提到定时器，均写明许可位置或为禁令；Date/performance 未开放
+== 26 摘要来源
+  OK node:crypto 只在 textcore 行并限 textcore/digest.mjs（正文 8 行提及，均指向它或为否定句）；kernel 无 node:crypto、用注入的 DigestCap；客户端 SubtleCrypto 只经 SubtleDigestCap 交 open-envelope.mjs；全文只有 sha256
+== 27 信封链条与装配文件
+  OK 下行出口、客户端入口、DOM 出口、信封校验、装配文件可缺行与两条上行入口都在 §2.9；客户端 Screened<Text> 只由 openEnvelope 产出；nameSlot 已清，起名为"规则层只发意图"
+== 28 引文同一性只在 aiGate
+  OK 例外清单恰三项（matchBlocklist、matchIdLeak、matchQuote）；matchQuote 带签名定义 1 处，在 §2.9 第 6 条，文件 ai-gate/quote-identity.mjs；全文 16 行提及，均在 aiGate 语境；未进 kernelApi，矩阵与 §2.8 其他组的行里不出现；§2.9 之外各处均为引用
+== 29 回应通路逐环核对
+  OK 通路 11 行逐环核对（含存档导出、导入支路 2c、2d、5s、6s；四条路由各有入口；NarrateCap 经 mountNarration 注入 reply-composer，narrate 不是跨组导出；registerAdvancePlan 已登记）：kernelApi 环的调用者在登记文件内且矩阵格写明，登记回调环不产生反向 import，能力对象环与能力对象表、入口表、出口表一致，HTTP 环与通道表一致；环环相接；进 outputGate 之前交出的类型不含文字；kernel 与 inputEdge 对 outputGate 的矩阵格为空
+== 30 子串函数签名
+  OK 子串函数 3 个与 gate/matcher.mjs 的 groupApi 导出一致；needle 类型只有 BlockNeedle、AiQuote 与代号，没有 Text；形参类型不出现 labels 或 Map；containsCodePoints 形参为 (turn: TurnText, quote: AiQuote)，只对 ai-gate/quote-identity.mjs 开放；labels 的值类型是 Text，读者不含 gate 与 aiGate
+== 31 本轮原文来路
+  OK TurnText 只由 brandTurn 产出且只对 input/http-entry.mjs 开放；形参带 TurnText 的函数恰 4 个（interpret、narrateTurn、matchQuote、containsCodePoints）；aiGate 对 inputEdge 的 4 个导出都限定到 input/http-entry.mjs 并与矩阵格一致；来路五步写全；旧签名无残留
+== 32 装配文件封闭清单
+  OK assembly.calls 11 个函数（createRouterCaps、createDigestCap、createWallTimer、mountKernel、registerSystems、mountOutput、mountAi、mountMenuEntry、mountSaveRoutes、mountNarration、mountInput）：每个都在 kernelApi 或 groupApi 登记为只对 index.mjs 开放，反向也无清单外的开放项；矩阵装配文件行、§2.9"装配文件"一项与清单三处一致；扫描规则写全，§2.8 与 S19 引用同一清单
+== 33 存量规则与 wsum 签名
+  OK 存量规则六条与两类断言写全；wsum 定义一处、正文 3 处调用全为三参、material 为多组列表；系统闭集字段 entryCallerFiles / entryJudges 在 §2.7 定义并进 JSON 示例；pathTypes 数值路径都带 §1.4 的单位；§1.14 与 event_role 已登记；facilityType 不再是存储维度
+== 34 接缝批
+  OK 心跳推进只投递请求、旧写法无残留；终止协议五步改序并含两个登记点、窗口期满、到期项撤销；建行写者与改写写者已定义；stockMode / remDenominator / struct:stockAnchor 与定点指数五项在位；六个封闭枚举与三个族已登记；§1.14 两处改名并写求值次序；存档码、导入 schema、槽位与候选键在位；单位表含 byte、ms；无已撤销的大类代号
+== 结果：PASS
+exit=0
+### check-vol2-ext (勘误前 1114w2e6)
+== 5 族名登记
+  登记族 134，代码内封闭枚举 34，正文用到的族名 122
+  OK 全部族名已登记
+== 6 枚举值前缀
+  OK 示例中开放族值均带前缀、封闭枚举值均不带前缀
+== 7 附录 A 组件与引用解析
+  comp_service_host: table=facility_type, requires=["services"], 被引用=fac_forge
+  comp_facility: table=place, requires=["intendedType"], 被引用=无
+== 8 附录 G 锚点唯一性
+  锚点 55 个
+  OK 锚点与关键定义各出现一次
+== 8b D.1 关键词出现位置（供人工确认同步）
+  【六】字符串类型白名单 / 方法名清单: 行 2157,2488
+  【六】字符串类型白名单 / 闭集: 行 3,173,193,418,520,532,535,658,659,666,686,711,721,724,727,732,733,738,768,827,891,892,893,894,918,960,972,1056,1115,1141,1395,1401,1418,2075,2149,2156,2159,2164,2165,2187,2324,2344,2349,2350,2361,2364,2376,2396,2451,2463,2488,2518,2525,2575,2599,2618,2623,2625,2641,2654,2675,2746,2771,2780,2783,2901,2933,2942,2953,2963
+  【六】字符串类型白名单 / E-INPUT-FUZZY: 行 735,736,737,741,1392,2164,2165,2488
+  【六】输入规范化唯一定义 / 规范化: 行 45,267,702,712,735,738,740,937,972,976,1004,1012,1111,1112,1113,1127,1135,1392,1396,2056,2139,2164,2180,2184,2349,2365,2401,2431,2459,2467,2472,2478,2482,2489,2508,2527,2786,2812,2836,2895,2896,2898,2921
+  【六】输入规范化唯一定义 / toLowerCase: 行 267,2164,2459,2489
+  【六】输入规范化唯一定义 / White_Space: 行 45,267,2444,2459,2489
+  【六】输入规范化唯一定义 / casefold: 行 45,267,735,738,918,926,1113,2489
+  【六】权限表（判定/产出） / needle: 行 698,705,711,738,769,937,976,1111,1113,1117,1123,1125,1131,1392,2139,2165,2349,2465,2468,2478,2490,2499,2508,2535,2722,2723,2765,2783,2786,2800,2896,2953
+  【六】权限表（判定/产出） / matchBlocklist: 行 258,615,673,674,705,706,707,739,740,985,1113,1114,1119,1127,2139,2467,2490,2498,2607,2761,2810
+  【六】权限表（判定/产出） / 替换记号: 行 255,706,1114,1391,2139,2372,2490,2527,2811,2896
+  【六】权限表（判定/产出） / templates.mjs: 行 260,608,686,706,733,739,768,835,2156,2165,2446,2455,2481,2490,2556,2618,2624
+  【六】封闭代码枚举不带前缀 / stage_: 行 255,2491
+  【六】封闭代码枚举不带前缀 / scope_: 行 443,2491
+  【六】封闭代码枚举不带前缀 / effout_: 行 2491
+  【六】封闭代码枚举不带前缀 / consent_: 行 255,1335,2347,2458,2491,2628,2786
+  【六】组件 table 归属 / comp_facility: 行 163,247,1600,1601,1912,2017,2257,2274,2461,2481,2492,2714
+  【六】组件 table 归属 / comp_service_host: 行 2237,2256,2274,2461,2492,2713
+  【六】组件 table 归属 / E-DIM-COMPONENT-TABLE: 行 247,2461,2492
+  【六】pathTypes 与 E-TEXT-UNGATED / pathTypes: 行 3,100,197,199,206,342,467,469,488,497,632,643,691,692,694,695,720,997,1027,1184,1244,1377,1393,2323,2345,2369,2397,2450,2453,2464,2471,2473,2479,2493,2502,2506,2512,2519,2526,2529,2575,2578,2602,2644,2654,2655,2665,2771,2780,2808,2893,2951,2968,2975
+  【六】pathTypes 与 E-TEXT-UNGATED / E-TEXT-UNGATED: 行 179,469,692,1019,1062,1393,2165,2440,2445,2464,2493,2519,2900,2930
+  【六】allowExplicit 与偏离行 / allowExplicit: 行 106,165,239,297,1354,1356,1387,1460,1473,2140,2436,2456,2494,2554,2674,2675,2919
+  【六】allowExplicit 与偏离行 / 偏离行: 行 58,106,118,125,126,145,165,179,203,255,297,479,497,643,1347,1352,1354,1436,1437,2129,2132,2136,2274,2327,2456,2494,2506,2568,2579,2592,2593,2841,2890,2947
+  【六】relation intimate / intimate: 行 339,341,713,2465,2495
+  【六】input-view 处置（第七版改为删除协议 + 新写） / input-view: 行 712,2056,2446,2465,2472,2496,2556,2815,2896
+== 9 码点口径
+  OK 全文无旧的码元口径
+== 10 权限表 needle 来源
+  OK 权限表 6 行，needle 来源只有 blocklist / 代号登记表
+== 11 示例代码逃逸写法
+  OK 规则层/kernel 示例与正例均无 any / as / @ts-* / eslint-disable / JSON.parse / fs 读取
+== 12 模块组计数口径
+  OK 全文无旧的模块组计数残留（现行口径：七组 + textcore / 六个非规则组）
+== 13 加载器外示例无 JSON.parse / fs
+  登记边界入口 34 个文件；OK 入口外示例无 JSON.parse / fs
+== 14 import 矩阵 textcore 列
+  OK kernel 不 import textcore
+  OK 规则层 不 import textcore
+== 15 Text 构造点
+  OK Text 构造点只在 §2.9
+== 16 运行态修正项无字串
+  OK struct:modifier 无 string/rx 文本字段
+  OK §3.2 运行态表达式为 RxId/rxTree
+== 17 入口/出口表对称
+  OK 入口 17 行（组：kernel,textcore,outputGate,gate,aiGate,inputEdge,host,tools），出口 7 行（组：outputGate,display,aiGate,host,kernel），列数对称
+== 18 全局对象白名单
+  OK 白名单覆盖 9 个组/层
+== 19 强转豁免文件表
+  OK 豁免表 17 个具体文件（textcore/brand.mjs、textcore/ops.mjs、kernel/handles/vocab-handle.mjs、kernel/handles/entity-id.mjs、kernel/handles/display-lang.mjs、kernel/handles/keys.mjs、kernel/sealed.mjs、kernel/credential.mjs、kernel/secret.mjs、kernel/transaction.mjs、kernel/validate/narrow.mjs、gate/screen.mjs、gate/load-blocklist.mjs、kernel/transport/router-caps.mjs、extension/textcore/narrow-wire.mjs、extension/textcore/open-envelope.mjs、extension/host/bootstrap.mjs）；表外无强转许可，旧的"唯一豁免点"说法已清
+== 20 模块组 glob 不相交
+  OK 9 组 9 个代表路径两两不相交（display 以 ! 排除 extension/host 与 extension/textcore）
+== 21 白名单闭集与 release 形参
+  OK 白名单段无"等"与省略号，禁 eval/Function/import()/with，专用项各归一处；release 带类型签名 1 处均为 Screened<Text>；出口表输入列一致；kernelApi 61 条均为结构化条目、无通配，issueCredential/writeSealed 限 aiGate、readSealed 限 outputGate，scope 常量 3 个各限一个写者文件
+== 22 文件归属
+  OK 78 个代表路径：六种代码扩展名都按目录归到原组，json/css/html 属登记数据，未登记类型判 E-FILE-UNASSIGNED，无文件同时落两组
+== 23 两进程分组与矩阵
+  OK 进程分组表 11 项与 JSON process 字段一致；服务端矩阵 9 行、客户端矩阵 3 行，互不含对方的组；矩阵引用名均已登记；node:* 清单两处一致
+== 24 宿主全局只在 bootstrap
+  OK 白名单表中 7 个浏览器宿主全局只在 host 行且全部限定到 bootstrap；display、clientTextcore 为"无"；10 个客户端能力对象的构造者都是 bootstrap；无旧宿主入口文件名残留
+== 25 定时器位置
+  OK 白名单表里定时器只在 kernel 行（限 kernel/scheduler.mjs）与 host 行（限 bootstrap）；正文 5 行提到定时器，均写明许可位置或为禁令；Date/performance 未开放
+== 26 摘要来源
+  OK node:crypto 只在 textcore 行并限 textcore/digest.mjs（正文 8 行提及，均指向它或为否定句）；kernel 无 node:crypto、用注入的 DigestCap；客户端 SubtleCrypto 只经 SubtleDigestCap 交 open-envelope.mjs；全文只有 sha256
+== 27 信封链条与装配文件
+  OK 下行出口、客户端入口、DOM 出口、信封校验、装配文件可缺行与两条上行入口都在 §2.9；客户端 Screened<Text> 只由 openEnvelope 产出；nameSlot 已清，起名为"规则层只发意图"
+== 28 引文同一性只在 aiGate
+  OK 例外清单恰三项（matchBlocklist、matchIdLeak、matchQuote）；matchQuote 带签名定义 1 处，在 §2.9 第 6 条，文件 ai-gate/quote-identity.mjs；全文 16 行提及，均在 aiGate 语境；未进 kernelApi，矩阵与 §2.8 其他组的行里不出现；§2.9 之外各处均为引用
+== 29 回应通路逐环核对
+  OK 通路 11 行逐环核对（含存档导出、导入支路 2c、2d、5s、6s；四条路由各有入口；NarrateCap 经 mountNarration 注入 reply-composer，narrate 不是跨组导出；registerAdvancePlan 已登记）：kernelApi 环的调用者在登记文件内且矩阵格写明，登记回调环不产生反向 import，能力对象环与能力对象表、入口表、出口表一致，HTTP 环与通道表一致；环环相接；进 outputGate 之前交出的类型不含文字；kernel 与 inputEdge 对 outputGate 的矩阵格为空
+== 30 子串函数签名
+  OK 子串函数 3 个与 gate/matcher.mjs 的 groupApi 导出一致；needle 类型只有 BlockNeedle、AiQuote 与代号，没有 Text；形参类型不出现 labels 或 Map；containsCodePoints 形参为 (turn: TurnText, quote: AiQuote)，只对 ai-gate/quote-identity.mjs 开放；labels 的值类型是 Text，读者不含 gate 与 aiGate
+== 31 本轮原文来路
+  OK TurnText 只由 brandTurn 产出且只对 input/http-entry.mjs 开放；形参带 TurnText 的函数恰 4 个（interpret、narrateTurn、matchQuote、containsCodePoints）；aiGate 对 inputEdge 的 4 个导出都限定到 input/http-entry.mjs 并与矩阵格一致；来路五步写全；旧签名无残留
+== 32 装配文件封闭清单
+  OK assembly.calls 11 个函数（createRouterCaps、createDigestCap、createWallTimer、mountKernel、registerSystems、mountOutput、mountAi、mountMenuEntry、mountSaveRoutes、mountNarration、mountInput）：每个都在 kernelApi 或 groupApi 登记为只对 index.mjs 开放，反向也无清单外的开放项；矩阵装配文件行、§2.9"装配文件"一项与清单三处一致；扫描规则写全，§2.8 与 S19 引用同一清单
+== 33 存量规则与 wsum 签名
+  OK 存量规则六条与两类断言写全；wsum 定义一处、正文 3 处调用全为三参、material 为多组列表；系统闭集字段 entryCallerFiles / entryJudges 在 §2.7 定义并进 JSON 示例；pathTypes 数值路径都带 §1.4 的单位；§1.14 与 event_role 已登记；facilityType 不再是存储维度
+== 34 接缝批
+  OK 心跳推进只投递请求、旧写法无残留；终止协议五步改序并含两个登记点、窗口期满、到期项撤销；建行写者与改写写者已定义；stockMode / remDenominator / struct:stockAnchor 与定点指数五项在位；六个封闭枚举与三个族已登记；§1.14 两处改名并写求值次序；存档码、导入 schema、槽位与候选键在位；单位表含 byte、ms；无已撤销的大类代号
+== 结果：PASS
+exit=0
+### check-卷十五 (现行)
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首模型行
+PASS 1c §0 五小节齐全
+PASS 2 17 个子系统各六小节齐全
+PASS 3 数据实例至少三条，含非西陲、含非人类或超自然（共 63 条）
+PASS 4 验收断言三式齐全且编号规整
+PASS 5 正文无具体 id 字面量（含数据实例）
+PASS 6 无用于判断的描述性文本；纯代号无中文；枚举值 ASCII 且带中英显示名（枚举 8 个、值 35 个） —  
+PASS 7 台账各概念写全（十七节标题、台账裁定编号、关键概念、每节有规则且编号连续）
+FAIL 8 编号引用不悬空且连续；跨卷章节引用处处带标题且与原卷相符（447 处） —   328:卷二 §2.7 无标题 ; 921:卷十八 §4.1 无标题 ; 1420:卷十八 §4.1 无标题 ; 1421:卷十八 §4.1 无标题 ; 1423:卷二 §1.5（维度类型）≠「类型清单（本卷唯一定义；封闭集合，扩展须改本卷并报李白；V1」 ; 1423:卷二 §1.5 无标题
+PASS 9 错误码、入口、规则表键、状态键与写者、抽取点落实（码 12、入口 18、规则表键行 38、状态键 3、抽取点 2） —  |  |  |  | 
+PASS 10 红线：不派实现、不改别卷、不读墙钟、除数有下界、身体状态只经卷二十一、无生命值写入、法律不拦、不写价格乘数、耗材不点名
+PASS 11 算术复算与计数对账（效力例、封印例、卷零 12+8 行、§6 12 条、矩阵 7 行）
+PASS 12 接口表、配合项（19 项）、迁移清单（30 行）、五款游戏、待补清单（14 条）、素材位置落实
+PASS 13 关键条文在位（15 条）
+行数 1427；子系统 17；规则条数 144；断言 51；扫描条 13；配合项 19；开放问题 12（须李白定 0）；迁移行 30；枚举 8 个、值 35 个；错误码 12；规则表键行 38；数据实例 63；待补清单 14 条；失败项 1
+exit=1
+### check-卷十六 (现行)
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首模型行
+PASS 1c §0 五小节齐全
+PASS 2 14 个子系统各六小节齐全
+PASS 3 数据实例至少三条，含非西陲、含非人类或超自然（共 56 条）
+PASS 4 验收断言三式齐全且编号规整
+PASS 5 正文无具体 id 字面量（含数据实例）
+PASS 6 无用于判断的描述性文本；纯代号无中文；枚举值 ASCII 且带中英显示名（枚举 5 个、值 16 个） —  
+PASS 7 台账各概念写全（十四节标题、台账裁定编号、关键概念、每节有规则且编号连续）
+PASS 8 编号引用不悬空且连续；跨卷章节引用处处带标题且与原卷相符（396 处） —   
+PASS 9 错误码、入口、钩子、规则表键、抽取点、维度落实（码 13、入口 24、钩子 7、规则表键行 44、抽取点 8、维度 19） —  |  |  |  |  |  | 
+PASS 10 红线：不派实现、不改别卷、不读墙钟、除数有下界、身体状态只经卷二十一、无怪物标记分支、不读名字、不另立委托、物种阶段登记
+PASS 11 算术复算与计数对账（路遇例、辟邪例、相似度例、存量转化例、卷零 9+6 行、§6 13 条、矩阵 4 行、错误码 13、族 5、动词 5）
+PASS 12 接口表、配合项（21 项）、迁移清单（30 行）、五款游戏、待补清单（22 条）、素材位置落实
+PASS 13 关键条文在位（19 条）
+行数 1257；子系统 14；规则条数 109；断言 42；扫描条 13；配合项 21；开放问题 14（须李白定 0）；迁移行 30；枚举 5 个、值 16 个；错误码 13；规则表键行 44；数据实例 56；待补清单 22 条；失败项 0
+exit=0
+### check-卷十六 (勘误前 1114w3c3)
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首模型行
+PASS 1c §0 五小节齐全
+PASS 2 14 个子系统各六小节齐全
+PASS 3 数据实例至少三条，含非西陲、含非人类或超自然（共 56 条）
+PASS 4 验收断言三式齐全且编号规整
+PASS 5 正文无具体 id 字面量（含数据实例）
+PASS 6 无用于判断的描述性文本；纯代号无中文；枚举值 ASCII 且带中英显示名（枚举 5 个、值 16 个） —  
+PASS 7 台账各概念写全（十四节标题、台账裁定编号、关键概念、每节有规则且编号连续）
+PASS 8 编号引用不悬空且连续；跨卷章节引用处处带标题且与原卷相符（396 处） —   
+PASS 9 错误码、入口、钩子、规则表键、抽取点、维度落实（码 13、入口 24、钩子 7、规则表键行 44、抽取点 8、维度 19） —  |  |  |  |  |  | 
+PASS 10 红线：不派实现、不改别卷、不读墙钟、除数有下界、身体状态只经卷二十一、无怪物标记分支、不读名字、不另立委托、物种阶段登记
+PASS 11 算术复算与计数对账（路遇例、辟邪例、相似度例、存量转化例、卷零 9+6 行、§6 13 条、矩阵 4 行、错误码 13、族 5、动词 5）
+PASS 12 接口表、配合项（21 项）、迁移清单（30 行）、五款游戏、待补清单（22 条）、素材位置落实
+PASS 13 关键条文在位（19 条）
+行数 1256；子系统 14；规则条数 109；断言 42；扫描条 13；配合项 21；开放问题 14（须李白定 0）；迁移行 30；枚举 5 个、值 16 个；错误码 13；规则表键行 44；数据实例 56；待补清单 22 条；失败项 0
+exit=0
+### check-卷十九 (现行)
+PASS  1 顶层节 §0
+PASS  1 顶层节 §1
+PASS  1 顶层节 §2
+PASS  1 顶层节 §3
+PASS  1 顶层节 §4
+PASS  1 顶层节 §5
+PASS  1 顶层节 §6
+PASS  1 顶层节 §7
+PASS  1 顶层节 §8
+PASS  1 附 术语与代号表
+PASS  2 子系统数  = 16
+PASS  2 子系统 4.1 六小节
+PASS  3 子系统 4.1 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.1 三类断言
+PASS  4 子系统 4.1 规则条数  = 11
+PASS  2 子系统 4.2 六小节
+PASS  3 子系统 4.2 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.2 三类断言
+PASS  4 子系统 4.2 规则条数  = 7
+PASS  2 子系统 4.3 六小节
+PASS  3 子系统 4.3 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.3 三类断言
+PASS  4 子系统 4.3 规则条数  = 7
+PASS  2 子系统 4.4 六小节
+PASS  3 子系统 4.4 数据实例  条数 4，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.4 三类断言
+PASS  4 子系统 4.4 规则条数  = 10
+PASS  2 子系统 4.5 六小节
+PASS  3 子系统 4.5 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.5 三类断言
+PASS  4 子系统 4.5 规则条数  = 5
+PASS  2 子系统 4.6 六小节
+PASS  3 子系统 4.6 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.6 三类断言
+PASS  4 子系统 4.6 规则条数  = 4
+PASS  2 子系统 4.7 六小节
+PASS  3 子系统 4.7 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.7 三类断言
+PASS  4 子系统 4.7 规则条数  = 8
+PASS  2 子系统 4.8 六小节
+PASS  3 子系统 4.8 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.8 三类断言
+PASS  4 子系统 4.8 规则条数  = 7
+PASS  2 子系统 4.9 六小节
+PASS  3 子系统 4.9 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.9 三类断言
+PASS  4 子系统 4.9 规则条数  = 6
+PASS  2 子系统 4.10 六小节
+PASS  3 子系统 4.10 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.10 三类断言
+PASS  4 子系统 4.10 规则条数  = 9
+PASS  2 子系统 4.11 六小节
+PASS  3 子系统 4.11 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.11 三类断言
+PASS  4 子系统 4.11 规则条数  = 6
+PASS  2 子系统 4.12 六小节
+PASS  3 子系统 4.12 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.12 三类断言
+PASS  4 子系统 4.12 规则条数  = 7
+PASS  2 子系统 4.13 六小节
+PASS  3 子系统 4.13 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.13 三类断言
+PASS  4 子系统 4.13 规则条数  = 5
+PASS  2 子系统 4.14 六小节
+PASS  3 子系统 4.14 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.14 三类断言
+PASS  4 子系统 4.14 规则条数  = 8
+PASS  2 子系统 4.15 六小节
+PASS  3 子系统 4.15 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.15 三类断言
+PASS  4 子系统 4.15 规则条数  = 7
+PASS  2 子系统 4.16 六小节
+PASS  3 子系统 4.16 数据实例  条数 3，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.16 三类断言
+PASS  4 子系统 4.16 规则条数  = 5
+PASS  5 具体实体 id 字面量
+PASS  5 本卷词表条目代号字面量
+PASS  6 用于判断的描述性文本（§1、§7 引述旧代码除外）
+PASS  6 前提：卷六 purpose 族词表行读到已登记代号
+PASS  6 规则小节不读 purpose（只许引用卷六已登记的固定代号）
+PASS  6 具体地区名
+PASS  6 规则小节无裸系数
+PASS  7 台账概念：建筑实体、房间、condition、维护 → §4.1
+PASS  7 台账概念：设施类型表 → §4.2
+PASS  7 台账概念：工位（提供哪些服务的设施条件） → §4.3
+PASS  7 台账概念：建造需求 → §4.4
+PASS  7 台账概念：形制 → §4.5
+PASS  7 台账概念：布局模板 → §4.6
+PASS  7 台账概念：炉窑热量与燃料 → §4.7
+PASS  7 台账概念：住宿、租房、床位 → §4.8
+PASS  7 台账概念：公共设施维护 → §4.9
+PASS  7 台账概念：可移动建筑与龛祠 → §4.10
+PASS  7 台账概念：房间评价（美观聚合、清洁） → §4.11
+PASS  7 台账概念：场所 → §4.12
+PASS  7 台账概念：仓储 → §4.13
+PASS  7 台账概念：机关 → §4.14
+PASS  7 台账概念：设施运营成本 → §4.15
+PASS  7 台账概念：结构防御接口 → §4.16
+PASS  7 未重定义别卷词表族（service、site）
+PASS  7 §3/§5 给出入口名 facilityTypeView
+PASS  7 §3/§5 给出入口名 facilityView
+PASS  7 §3/§5 给出入口名 chooseForm
+PASS  7 §3/§5 给出入口名 buildPlan
+PASS  7 §3/§5 给出入口名 stationFor
+PASS  7 §3/§5 给出入口名 restSite
+PASS  7 §3/§5 给出入口名 kilnReach
+PASS  7 §3/§5 给出入口名 storeTarget
+PASS  7 §3/§5 给出入口名 damageFacility
+PASS  7 §3/§5 给出入口名 settleFacilities
+PASS  7 §7 列出 public-projects.mjs:119
+PASS  7 §7 列出 building-maintenance.mjs:49
+PASS  7 §7 列出 facility-state.mjs:35
+PASS  7 §7 列出 engine.mjs:423
+PASS  7 §7 列出 promotion.mjs:54
+PASS  7 §7 列出 06a
+PASS  7 §7 列出 06b
+PASS  9 裁定1 导热与隔声用卷三已登记的维度名
+PASS  9 裁定1 用料 = 面积 × 厚度 × 密度，附手算示例
+PASS  9 裁定1 手算示例质量复算
+PASS  9 裁定1 手算示例数值与正文一致
+PASS  9 裁定2 type 的输入不含运行时的量
+PASS  9 裁定2 functions 为已装能力，另立 effective，声明无环
+PASS  9 裁定3 accessDefault 单点定义并给出入口
+PASS  9 裁定4 住宿合同种类归卷六，本卷只引用
+PASS  9 裁定5 分类输入扫描规则与可判定的 S19-4
+PASS  9 裁定5 A19-4.3 改成可判定的形式
+PASS  9 裁定6 §7 列出 facilities.mjs:53
+PASS  9 裁定6 §7 列出 facilities.mjs:123
+PASS  9 裁定6 §7 列出 agriculture.mjs:60
+PASS  9 裁定6 §7 列出 `rooms`
+PASS  9 裁定6 §7 列出 `lodging`
+PASS  9 裁定6 §7 列出 520
+PASS  9 裁定6 §7 列出 fixtures.json
+PASS  9 裁定6 §7 列出 validateThermalModel
+PASS  9 裁定6 §7 列出 facility-types.json
+PASS  9 旧稿残留：rankWeights
+PASS  9 旧稿残留：laborHeads
+PASS  9 旧稿残留：soundCurve`
+PASS  9 旧稿残留：时段进入许可四类
+PASS  9 旧稿残留：登记为损耗
+PASS  9 卷末有影响面表与记账栏
+PASS  10 新1 修缮复用建造的用料式，按体积份额
+PASS  10 新2 使用磨损读使用强度，没有工位也适用
+PASS  10 新3 房间的有效档与开放时段有定义，时段读卷二十日历入口
+PASS  10 新4 S19-10 与缺省链、在建工程不再冲突
+PASS  10 新5 S19-9 按写者与类型划定，排除进入判定
+PASS  10 新6 可得度按体积定义，分母不依赖选料
+PASS  10 Q12 写明定义方与须别卷配合
+PASS  10 Q13 写明定义方与须别卷配合
+PASS  10 Q14 写明定义方与须别卷配合
+PASS  10 Q15 写明定义方与须别卷配合
+PASS  10 Q16 写明定义方与须别卷配合
+PASS  10 Q17 写明定义方与须别卷配合
+PASS  10 Q18 写明定义方与须别卷配合
+FAIL  10 Q19 写明定义方与须别卷配合
+PASS  10 Q20 标为非真问题
+PASS  10 卷末有牵连清单，影响面表有第三版一行
+INFO  正文行数（不含本附录） = 1650
+INFO  子系统数 = 16；开放问题数 = 26；验收断言数 = 52；扩展性测试数 = 9；迁移行数 = 0
+RESULT  未通过 1 项
+exit=1
+### check-卷十九-余项 (现行)
+PASS  0 卷标题为第十五版
+PASS  1.1 §3.2 入口改名 buildProjectView(buildProjectId)
+PASS  1.1 正文不再出现旧名 projectView
+PASS  1.1 正文不再出现旧参名 projectId
+PASS  1.1 卷六没有同名入口 buildProjectView
+PASS  1.1 Q18 写明入口划分
+PASS  1.2 S19-9 改引 entryJudges
+PASS  1.2 卷二 §2.7 确有 entryJudges 字段定义
+PASS  1.2 §3.3 登记本卷五个进入判定函数
+PASS  1.2 Q19 提请卷五登记 canEnter
+PASS  1.3 建筑行存各料质量 materialKg（raw）
+PASS  1.3 份额与总质量不再是存储维度
+PASS  1.3 material、envelopeMassKg 是由 materialKg 派生的视图字段
+PASS  1.3 修缮体积带余数结转并登记分母
+PASS  1.3 condition 用扩展标度
+PASS  1.3 规则 6、7 逐条引卷二 §3.3 的存量规则
+PASS  1.3 不再由份额倒推体积
+PASS  1.3 A19-1.2 有切片不变、往返不变、误差界
+PASS  1.3 卷二确有 存量与余数结转
+PASS  1.3 卷二确有 stockMode
+PASS  1.3 卷二确有 extScale
+PASS  1.3 卷二确有 remDenominator
+PASS  2 A8 wsum 一律三参
+PASS  2 A6 S19-2 的 facilityType 禁令限 place 表
+PASS  2 族前缀 bldform_ 与卷三不撞
+PASS  2 C9 燃烧从存量里扣质量
+PASS  2 C10、C16 写进 §8 并写明定义方
+PASS  2 Q21 写明定义方
+PASS  3 前提：卷二 §2.6 有行改挂原语与登记字段
+PASS  3 正文没有直接改写 parent 的规定
+PASS  3 §3.3 位置量只经 relocate 改写，行范围限 comp_portable
+PASS  3 deployState 与 deploy 族已删
+PASS  3 收起、展开两条不含 terminate，终止只在规则 8
+PASS  3 §4.10 收起、展开走行改挂，不终止、不另建行
+PASS  3 Q5 写明定义方与须卷五、卷二十配合的事
+PASS  4 前提：卷二第 1 步定后继与领域清理、第 2 步标记
+PASS  4 引用的步骤号与卷二 v17 一致  共 3 处
+PASS  4 设施运行态按去留表登记
+PASS  5.1 §2.1 登记修缮配额 repairLot（原值）
+PASS  5.1 规则 7 开笔定配额、按累计量取料（引卷二）
+PASS  5.1 规则 7 不再重复定义排队算法
+PASS  5.1 卷二 §3.3 第 3 条写全分摊规则与四条性质
+PASS  5.1 规则 7 不再按本次 ΔL 拆料、不再靠封顶兜底
+PASS  5.1 A19-1.2 切片不变去掉单料限定并补多料断言
+PASS  5.1 §3.3 repairLot 有写者
+PASS  5.1 排队取料：各料累计单调、和等于累计量、做满等于配额（数值自证）
+PASS  5.1 对照：floor(累计×配额÷总数) 加末项取差在三料时会回落（改写法的理由成立）
+PASS  5.2 §2.1 建行存设计体积 envelopeVolumeL（第十三版：建成直接写现存升数 E，翻修同法整值重写；第十二版：扩建加现存升数的增加量）
+PASS  5.2 反向（第十三版）：§2.1、§4.4 规则 6、A19-4.2 不再把建成锚写成体积换算成升向下取整
+PASS  5.2 反向（第十二版）：§2.1 envelopeVolumeL 不再写"加上砌入的料的升数"
+PASS  5.2 反向：§2.1 envelopeVolumeL 不再写"此后不变（没有改写写者"
+PASS  5.2 反向（第十一版，新真问题）：正文别处不再说设计体积"此后不变/此后无人改写"
+PASS  5.2 规则 7 待办分补缺与换料，完好度回升分别计
+PASS  5.2 规则 7 设计体积与现存体积：建成锚取现存升数 E 的同一个式子（第十三版）
+PASS  5.2 无围护建筑不再由 materialKg 倒推体积
+PASS  5.2 燃烧不改设计体积
+PASS  5.2 建成时写入设计体积（含无围护；第十三版：写建成那一刻的现存升数 E，向上取整）
+PASS  5.2 A19-4.2 建成与翻修提交后设计体积逐位等于现存升数 E（第十三版）
+PASS  5.2 断言：设计体积不变、烧后可补回
+PASS  5.2 §3.3 设计体积两个写者：建行写者与扩建时的 facilities.mjs（第十二版：加 E_后 − E_前）
+PASS  5.2 反向（第十二版）：§3.3 不再写"加上砌入的料的升数"
+PASS  5.2 反向：§3.3 不再写"设计体积只有建行写者"
+PASS  5.3 收起：行离场，行上内容与边原地不动
+PASS  5.3 手列搬运清单已删
+PASS  5.3 展开：改挂到新地点，不建行、不重算
+PASS  5.3 规则 1 搬家不换行
+PASS  5.3 规则 7 长期引用照旧存 place id
+PASS  5.3 §3.2、§5.1 的 currentRowOf 退化为反查
+PASS  5.3 A19-10.2 改挂前后除位置量外逐位相同
+PASS  5.3 portableState、edgeSlots、zoneOrdinal 已删
+PASS  5.3 §2 登记 comp_portable 与视图字段 packed
+PASS  5.3 Q22 写明定义方与四卷配合
+PASS  5.3 §5 同步卷六、卷五、卷二十七
+PASS  5.3 §7 增第 36、37 行
+PASS  5.4 前提：卷二规定 remDenominator 只许 remainder 写
+PASS  5.4 §2.1 dirt 只按扩展标度登记
+PASS  5.4 dirt 的余数字段与分母已删（正文零出现）
+PASS  5.4 规则 4 增量整数乘加、清扫扩展标度
+PASS  5.4 A19-11.2 切片不变断言
+PASS  5.4 规则表键、Q23 齐
+PASS  5 影响面表有第五版、第六版各一行
+PASS  6.1 A19-10.2 写权限制只管建行事务之外
+PASS  6.1 前提：卷二 §2.6 第 7 点不挡建行写者
+PASS  6.2 §4.10 规则 8：carrierItem 终止时建筑行正常终止并写明后继
+PASS  6.2 A19-10.2 增承载物终止断言
+PASS  6.2 前提：卷二 §2.6 行改挂第 3 点有承载者终止一句
+PASS  6.3 前提：卷五 §4.1 规则 4 有平行边通则
+PASS  6.3 §4.1 规则 1 门洞：相邻只算一次、扩散取最通畅、指名按两端加通路类型
+PASS  6.3 §4.1 规则 6 挂在边一端的建筑：计人次只算指名的那条边
+PASS  6.3 §4.9 规则 3 桥塌：只断指名的那条边
+PASS  6.3 §4.14 规则 4 落闸：只改指名的边，扩散仍取最通畅
+PASS  6.3 §4.14 规则 8 轨道：指名的边与读路况的归属
+PASS  6.3 §4.14.5 吊闸例写明是哪条边
+PASS  6.4 §4.15 规则 1 删去离屏另给一句
+PASS  6.5 §4.1 规则 7 换下旧料的可回收量按累计量取差，比例取开笔时存的值
+PASS  6.5 §4.1 规则 7 开笔时写入 repairLot.salvage
+PASS  6.5 反向：规则 7 不再用每次重读的 salvageFraction_k 算累计可回收量
+PASS  6.5 §4.1 规则 7 不再按每次提交各自截断
+PASS  6.5 A19-1.2 换下旧料的可回收量按累计量取差、比例开笔定下、切分不变
+PASS  6.5 反向：A19-1.2 不再按重读的 salvageFraction 断言
+PASS  6.5 §2.1 repairLot 登记 salvage（第十一版）
+PASS  6.5 前提：卷二 §3.3 第 3 条有按累计量取差的写法
+PASS  6 影响面表有第七版两行
+PASS  7.0 卷首有起草与审查模型一行
+PASS  7.0 §4.10 规则 2、3、8 条目非空（单核小项 6：空串不得空过）
+PASS  7.1 规则 8 不再把"carrierItem 自己的后继"列为序位
+PASS  7.1 规则 8 后继只取地点行并写明标记之后仍可读
+PASS  7.1 §2.1 登记 carrierLastPlace
+PASS  7.1 §2.2 末可移动类别行 successorRX 照此写
+PASS  7.1 §3.3 登记清理函数与写者
+PASS  7.1 前提：卷二清理函数在标记之前调用，terminate 没有后继入参
+PASS  7.1 A19-10.2 后继与房间行断言
+PASS  7.2 §4.16 规则 4 房间行先终止（单点）
+PASS  7.2 发起房间行终止的规定全文只有一处
+PASS  7.2 §4.10 规则 8、§4.4 规则 3 引用该处
+PASS  7.2 A19-16.2 房间行断言
+PASS  7.3 §5.2 终止事件的订阅仍在接口表
+PASS  7.4 正文不再出现"作业分钟"
+PASS  7.4 依赖次序 ③、dirtPerWorkMinute 称工位占用分钟
+PASS  7.5 A19-1.2 不再只写"不超过"（由相等式推出，收紧）
+PASS  7.6 前提：卷二 §3.3 第 6 条 m 的口径与递推
+PASS  7.6 旧口径（k ×（2n + 7）、同式双精度参考值）零残留
+PASS  7.6 §2.1 condition 写明口径
+PASS  7.6 §2.1 dirt 写明口径
+PASS  7.6 §4.1 规则 6 四个改写式的确定式
+PASS  7.6 A19-1.2 误差界断言
+PASS  7.6 §4.11 规则 4 确定式
+PASS  7.6 A19-11.2 误差界断言
+PASS  7.6 §4.16 规则 2 除数下界不为正不做除法
+PASS  7.6 验算 condition（单料、倍率 1）：实际误差不超过各次 m 之和  写入 161 次，界 640 × 10⁻⁸，实际与界之比最大 0.1111
+PASS  7.6 验算 condition（两料、倍率 2.5）：实际误差不超过各次 m 之和  写入 201 次，界 1939 × 10⁻⁸，实际与界之比最大 0.4540
+PASS  7.6 验算 condition（三料、倍率 12）：实际误差不超过各次 m 之和  写入 26 次，界 1474 × 10⁻⁸，实际与界之比最大 0.2917
+PASS  7.6 验算 condition（五料、倍率 0.6）：实际误差不超过各次 m 之和  写入 269 次，界 1440 × 10⁻⁸，实际与界之比最大 0.3763
+PASS  7.6 对照：旧口径 k ×（2n + 7）在修正键倍率大于 1 的数据上被实际误差突破（换口径的理由成立）
+PASS  7.6 验算 dirt：实际误差不超过累计清扫分钟数  清扫 75 次，界 1451 × 10⁻⁸，实际与界之比最大 0.3500
+PASS  7 影响面表有第八版一行，Q24 写明定义方
+PASS  8.0 卷末有第十版修订记录
+PASS  8.1 §2.1 occupancy 视图字段：逐条、按日汇总，保留期外不留
+PASS  8.1 反向：occupancy 视图没有 olderMinutes
+PASS  8.1 §2.5 station.json 有 loadWindowDays、maxRows
+PASS  8.1 §3.3 stationLog、stationFold 一行：写者、折叠、补结交错、离屏补结也逐日结算
+PASS  8.1 反向：§3.3 无闭式残留（只许"劣化没有闭式"）
+PASS  8.1 反向：§3.3 没有 olderMinutes、olderCount 与旧标题"离屏闭式不读这份记录"
+PASS  8.1 §3.3 两条路径登记终止去留
+PASS  8.1 S19-6 写者扫描含 stationLog、stationFold
+PASS  8.1 §4.3 规则 4 四点：逐条记录、读视图、日结只读它、保留期与折叠
+PASS  8.1 反向：A19-3.2 不再有"有史以来总和"与 olderMinutes
+PASS  8.1 A19-3.2 逐条可查、折叠不变、补结不变
+PASS  8.1 Q21 定为逐条记录
+PASS  8.1 §5.1 卷六行：只读 occupancy，窗口读本卷键
+PASS  8.1 正文除删去、撤销说明句外不出现 stationMinutesToday、verb_station_released、verb_station_expired
+PASS  8.1 正文没有替卷六定腿的句子
+PASS  8.2 §4.1 规则 11 表恰十一行，事由依次齐全  行数 11
+PASS  8.2 表"物化建行"行：记砌入
+PASS  8.2 表"扩建"行：砌进去的记砌入
+PASS  8.2 表"承载物终止"行：记法同损毁
+PASS  8.2 表"原地翻修"行：翻修 = 拆除 + 新建
+PASS  8.2 §4.1 规则 11 守恒式与带事由代号 cause 的明细
+PASS  8.2 §2.1 wallFlowKg 一行
+PASS  8.2 A19-1.2 实物账守恒句
+PASS  8.3 §4.1 规则 7 收下分钟上限确定式（G3）、零值料不算份额（G6）
+PASS  8.3 A19-1.2 G3、G6 断言
+PASS  8.4 §4.4 规则 3：拆除一次截断（G4）；翻修四步（G2）与房间行按 roomRole 对应
+PASS  8.4 反向：正文不再出现未登记的"分区角色"（修订记录除外）
+PASS  8.4 §4.4 规则 8 扩建（第十二版：加 E_后 − E_前，同一向上取整口径，待补升数不变）
+PASS  8.4 反向（第十二版）：规则 8 不再按砌入质量向下取整加设计体积
+PASS  8.4 §4.4 规则 9 物化建行
+PASS  8.4 A19-4.2 拆除、翻修、扩建、物化断言（第十一版：扩建加设计体积、物化与世界日无关、房间对应与改写通道）
+PASS  8.4 反向：A19-4.2 不再说扩建前后设计体积不变
+PASS  8.4 反向（第十二版）：A19-4.2 不再按砌入的料的升数断言设计体积增加量
+PASS  8.5 §4.10 规则 8 承载物终止墙料进实物账
+PASS  8.5 §4.10 规则 2 收起 placement 为空、跨界边作废
+PASS  8.5 反向：正文不再把 placement.rows 写成数组（卷二定义为 map）
+PASS  8.5 §4.10 规则 3 展开给 placement.rows 与 placement.edges
+PASS  8.5 A19-10.2 跨界边与 placement 断言
+PASS  8.6 §4.16 规则 3 b 取 10⁸ 标度（G5）、燃烧与损毁分两个事务（G7）
+PASS  8.6 §4.16 规则 4 房间行先终止被承载物终止引用
+PASS  8.6 A19-16.2 三种终止起因同判、G5、G7
+PASS  9.0 卷末有第十一版修订记录
+PASS  9.1 §2.4 bform.rooms 登记房间角色与份额
+PASS  9.1 §2.4 roomrole 族
+PASS  9.1 §2.1 房间行维度 roomRole
+PASS  9.1 §3.3 建行写者写 roomRole、翻修是第二种调用（N2 ③）
+PASS  9.2 §4.4 规则 3 ④ 位置量走 relocate；面积由 construction.mjs 整值写，写权在卷五单项登记名单 areaM2 一行，只在翻修事务内写是代码路径约束（第十三版）
+PASS  9.2 反向（第十五版）：规则 3 ④ 不再说"写房间行 areaM2 的调用点"（嵌套设施行同在内）
+PASS  9.2 反向（第十二版）：规则 3 ④ 不再说位置量与面积同经统一通道
+PASS  9.2 反向（第十三版）：规则 3 ④ 不再有"仅限翻修事务内"可写的写权登记与"事务外写入一律被拒"句
+PASS  9.2 A19-10.2 面积写入只在建行与翻修事务内、调用点两处、写权引卷五单项登记名单（第十三版）
+PASS  9.2 反向（第十三版）：A19-10.2 不再是"事务外对它的写入计数为 0"的旧连写
+PASS  9.2 卷五 §3.3 单项登记名单 created.*.props.areaM2 一行：改写写者 construction.mjs，行范围只写 inside: [comp_facility]，圈建筑之内的行（房间与嵌套设施），最外层建筑行与聚落分区不在内（第十五版）
+PASS  9.2 反向（第十五版）：卷五名单 areaM2 一行不再写"聚落的分区都不在内"的旧括注
+FAIL  9.2 反向（第十四版）：卷五单项登记名单 areaM2 一行不再有 withComponent（含 `withComponent: [comp_zone]`）
+PASS  9.2 反向（第十四版）：卷五静态量声明不再写"挂 comp_zone 且在挂 comp_facility 的行之内"
+PASS  9.2 卷五 §3.3 静态量声明：建筑之内的行（房间与嵌套设施）的 areaM2 列在"有改写写者的"一项，最外层建筑行与聚落分区照旧只有建行写者（第十五版）
+PASS  9.2 卷五 §3.3 静态量声明："只有建行写者"一项把建筑之内的行（房间与嵌套设施）除外（第十五版）
+PASS  9.2 反向（第十五版）：卷五静态量声明不再写"只有房间行"的旧括注
+PASS  9.2 卷五 §2 组件类一段：面积写权引 §3.3 单项登记名单，面积不经 relocate（第十三版）
+PASS  9.2 反向（第十三版）：卷五组件类一段不再有"仅限翻修事务内"可写的登记与"比照 relocatableIn"括注
+PASS  9.2 反向（第十三版）：卷五正文没有"比照 relocatableIn"括注、"以组件类一段为准"的优先级句与"仅限翻修事务内"可写的登记
+PASS  9.2 反向：规则 3 ④ 不再有"保留而位置量须变的房间行判不可行"的临时限制
+PASS  9.2 前提：卷二 §2.6 第 1 点 ③、卷五 comp_zone 已登记 relocatableIn
+PASS  9.2 Q26 写明已裁定
+PASS  9.3 反向（新真问题）：规则 3 ④ 不让 relocate 写面积（面积不是位置量）
+PASS  9.4 反向（新真问题）：A19-10.2 的 relocate 拒绝句已按卷二【十七·补】㉒ 除去翻修事务
+PASS  9.5 §4.4 规则 9 物化用料只由种子与地点决定（N1）
+PASS  9.5 反向：规则 9 不再说物化行由世界日决定
+PASS  9.6 反向：正文不出现 olderMinutes、olderCount（修订记录除外）
+PASS  10.0 前提：卷五 §2.1 areaM2 必填 always（凡 place 行都带 areaM2，带不带只看能否位于建筑之内）
+PASS  10.1 前提：存量单元（含水体）不挂在建筑行之下、与建筑分区互斥，不计入
+PASS  10.2 可能位于 comp_facility 之内且带 areaM2 的行种类恰为 {comp_zone, comp_facility}（第十五版）  实得 {comp_zone, comp_facility}
+FAIL  10.3 卷五名单 areaM2 一行行范围为 inside:[comp_facility]，无 withComponent  `withComponent: []`、`inside: [comp_facil
+RESULT  未通过 2 项
+exit=1
+### check-卷六 (现行)
+PASS  1 顶层节 §0
+PASS  1 顶层节 §1
+PASS  1 顶层节 §2
+PASS  1 顶层节 §3
+PASS  1 顶层节 §4
+PASS  1 顶层节 §5
+PASS  1 顶层节 §6
+PASS  1 顶层节 §7
+PASS  1 顶层节 §8
+PASS  1 附 术语与代号表
+PASS  1 无残留续写标记
+PASS  2 子系统数  = 25
+PASS  2 25 个子系统六小节齐全
+PASS  3 每个子系统数据实例不少于 3 条且含非西陲、非人类或超自然
+PASS  4 每个子系统三类断言齐全
+PASS  4 每个子系统规则不少于 3 条
+PASS  5 具体实体 id 与内容代号字面量
+PASS  6 用于判断的描述性文本（§1、§7 引述旧代码除外）
+PASS  6 具体地区名
+PASS  6 规则小节不点名具体物品
+PASS  6 规则小节无裸系数
+PASS  7 台账概念：账本三元键、守恒、资源种类表（含非金账户机制） → §4.1
+PASS  7 台账概念：市场投影与价格形成 → §4.2
+PASS  7 台账概念：市场费用（非税） → §4.3
+PASS  7 台账概念：市场需求 demand → §4.4
+PASS  7 台账概念：店铺经营与补货 → §4.5
+PASS  7 台账概念：分销、商队 → §4.6
+PASS  7 台账概念：生产组织 → §4.7
+PASS  7 台账概念：初加工与精炼（不写产率规则） → §4.8
+PASS  7 台账概念：多级产业链 → §4.9
+PASS  7 台账概念：工位负荷与工费 → §4.10
+PASS  7 台账概念：劳动市场与工作分配 → §4.11
+PASS  7 台账概念：家户预算与日耗 → §4.12
+PASS  7 台账概念：货币、成色、汇率 → §4.13
+PASS  7 台账概念：多币与非铸币计价 → §4.14
+PASS  7 台账概念：信用、钱庄、典当 → §4.15
+PASS  7 台账概念：合同状态机与义务种类表 → §4.16
+PASS  7 台账概念：远期、托运、在途 → §4.17
+PASS  7 台账概念：资产、地产、租约、维护责任 → §4.18
+PASS  7 台账概念：公共工程与拨款 → §4.19
+PASS  7 台账概念：走私经济 → §4.20
+PASS  7 台账概念：价格四角色路由 → §4.21
+PASS  7 台账概念：源汇标记与月度报告 → §4.22
+PASS  7 台账概念：贸易枢纽涌现（验收） → §4.23
+PASS  7 台账概念：财富汇流 → §4.24
+PASS  7 台账概念：战时价格 → §4.25
+PASS  7 §3 给出全部 42 个入口名
+PASS  7 核心不变量：守恒式与推进路径无关写入 A6-1.2
+PASS  9 §4.1 规则 2 的符号与守恒式一致
+PASS  9 规则 2 手算校核（新式五例归零；旧式误拒）  新式不归零：无；旧式误拒：产出、消耗、转换投入、转换产出
+PASS  9 逐笔式累加得守恒式  余额和 -4 = 来源 7 − 去处 11
+PASS  9 族名沿用卷二的 resource（reskind 只在作废说明里出现）
+PASS  9 正文用到的规则表键都在 §2.5 目录里（键闭集）
+PASS  9 各子系统维度小节所列规则表键都在 §2.5 目录里
+PASS  9 裁定 2 买回渠道与钱外流上限 → §4.6
+PASS  9 裁定 2 外流上限键 → §4.6
+PASS  9 裁定 3 工位落地与归属 → §4.7
+PASS  9 裁定 3 归属 → §4.7
+PASS  9 裁定 4 单通道 → §4.12
+PASS  9 裁定 4 未满足供给量 → §4.12
+PASS  9 裁定 4 需要量随身体 → §4.12
+PASS  9 裁定 5 唯一定价来源 → §4.21
+PASS  9 裁定 5 禁两种回退 → §4.21
+PASS  9 裁定 6 建筑资产分录 → §4.1
+PASS  9 裁定 6 工程完工成对 → §4.19
+PASS  9 §4.12 不再调用缺量效果
+PASS  9 §4.21 源汇资格不再折成价值
+PASS  9 §7 列出读旧价位置与处置  §7 行号引用数 153
+PASS  9 卷末有「附 一审小项记账栏」
+PASS  9 卷末有「附 第二版影响面表」
+PASS  9 影响面表覆盖一审 A、B 各 19 条  缺 A：无；缺 B：无
+PASS  9 记账栏收齐小项（A 8 条、B 9 条）  = 17
+PASS  10 B12 急售曲线有表、补货批量有键字段
+PASS  10 N1 外流余量跨货共用、日终分配、无逐笔校验
+PASS  10 N2 燃料只转入炉膛，本卷不记消耗、不发燃烧事件
+PASS  10 N3 A6-25.2 改为逐笔成交单价复算
+PASS  10 N4 扩建只许现有持有人出资
+PASS  10 N5 毁损记 sink_loss，资产行 sinks 只有 sink_loss
+PASS  10 Q14 资产只一行资源种类；判据写明；旧措辞清零
+PASS  10 6-1 无"修缮耗材记消耗"
+PASS  10 6-2 costBasis 只存总成本原值、单价读时派生、往返不变断言
+PASS  10 6-牵 可移动建筑按行改挂，分录不动
+PASS  10 后门 S6-12 补状态容器档按族归属判
+PASS  10 后门牵连 §4.12 规则 7 引卷二十一白名单
+PASS  10 卷十四表 F：学费用途行与上下文路由
+PASS  10 Q21 旧的按服务按日存法不再出现
+PASS  10 Q21 正文除"已删去"说明句外不出现裸名 stationUse、stationMinutes(、stationEdges
+PASS  10 对旧卷三各节的引用已全部改指卷三甲、卷三乙  残留 0
+PASS  10 版本号不低于第三版且有第三版影响面表
+PASS  11 新真问题 1：旧写法不再出现；A6-10.2 指向 A19-3.2
+PASS  11 新真问题 2：旧写法不再出现
+PASS  11 新真问题 3：申请字段、按买方资金预缩减、写死全序、换序断言
+PASS  11 换序核对脚本输出已贴入附录且全部通过
+PASS  11 小项：泛称"卷三"已全部改为卷三甲、卷三乙（说拆卷本身的句子除外）
+PASS  11 小项：§0.2 与 §5.2 的表行分列卷三甲、卷三乙
+PASS  11 版本号不低于第四版；修订记录含三处新增设计的必要理由与卷十九跟改句
+PASS  11 小项：subjectCtx 写了类型；A6-25.2 核对成交总价
+PASS  12 新真问题 A：成交步与预备步同式，全序只定零头；贪心旧句清零
+PASS  12 新真问题 A：换序脚本每一步前打乱、多种子、不预先排序，且测得出贪心写法
+PASS  12 新真问题 B：拆除资产分录记 sink_loss；资产两边相等
+PASS  12 版本号为第十版；有第五至十版修订记录；卷首有起草与审查档位一行
+PASS  13 §4.1 规则 5 条目非空
+PASS  13 §4.1 规则 5 只读卷十九明细、按事由代号记
+PASS  13 规则 5"砌入的料记出"
+PASS  13 规则 5"取出的料记入"（G8 多人分法）
+PASS  13 规则 5"损失不记"
+PASS  13 规则 5"凡设施行终止"三种起因同一处理
+PASS  13 规则 5"原地翻修先拆再建"
+PASS  13 规则 5"物化建行"：未物化建筑份额成对转换
+PASS  13 规则 5"扩建"
+PASS  13 §2.1 resfam_asset 行末句指向未物化建筑份额
+PASS  13 术语表有"未物化建筑份额"一行
+PASS  13 §4.22 规则 3 物化不是来源
+PASS  13 A6-1.2 两卷对平只在这里、各事由断言
+PASS  13 A6-1.2 物化预置的余额只在专用分区上判（第八版）
+PASS  13 反向（语义）：A6-1.2 说聚合账户余额的分句都限定在 purpose_unmaterialized 分区，不说全部地点、各聚合账户
+PASS  14 N6 负荷分母 = 席数 × 窗口全部分钟，与卷十九利用率同口径
+PASS  14 N6 反向：§4.10 不再用开放分钟、可用分钟作分母
+PASS  14 N6 反向：§2.3 stationLoad 行不再读开放时段
+PASS  14 N6 反向：术语表"工位负荷"不再写"席数 × 可用分钟"（新真问题：跟改漏）
+PASS  14 N7 §2.2 purpose 族登记 purpose_unmaterialized（不可花、市场不可见）
+PASS  14 N7 §4.1 规则 5"物化建行"预置与记出都在专用分区
+PASS  14 复扫 §2.5 两键登记下限 1
+PASS  14 复扫 §2.5 statBatchGrain 登记下限 1
+PASS  14 复扫 §4.4 可得性 p 合计为 0 不做除法
+PASS  14 复扫 §4.12 满足量分配需要量之和为 0 不适用
+PASS  14 复扫 §4.21 急售折价日成交量为 0 不做除法
+PASS  14 复扫 §4.23 份额指标合计为 0 不报
+PASS  13 §4.10 负荷按窗口、按 workstation 装置类过滤、读逐条记录与 daily
+PASS  13 A6-10.2 折叠不变、按服务过滤、补结不变
+PASS  13 §2.3 stationLoad 行读卷十九视图与键
+PASS  13 §2.5 本卷规则表里没有窗口天数键
+PASS  15 前提：卷十九 §2.1 有 wallFlowKg 一行、§4.1 规则 11 非空
+PASS  15.1 卷十九 wallFlowKg 存 laidKg、takenKg、lostKg 三项，规则 11 明细带 cause 与逐料三项
+PASS  15.2 本卷 §2–§7 引用的 xxxKg 字段都是卷十九 wallFlowKg 与规则 11 明细里的真实字段（不读 materialKg）
+PASS  15.2 本卷引用了 wallFlowKg 与明细三项
+PASS  15.3 本卷 §2 登记表里没有存砌入、取出、损失或墙料质量的字段
+PASS  15.3 本卷不写 wallFlowKg
+PASS  15.4 规则 5"损失不记"点名 lostKg 并不记腿
+PASS  15.4 断言把出账对 laidKg、散料入账对 takenKg
+PASS  15.4 A6-1.2 两卷对平按明细三项分别判，守恒式引卷十九
+PASS  15.5 本卷规则 5 的各事由都在卷十九规则 11 表里有一行
+INFO  正文行数（不含本附录） = 2036
+INFO  子系统数 = 25；规则条数 = 218；开放问题数 = 22；验收断言数 = 75；扩展性测试数 = 14
+RESULT  全部通过
+exit=0
