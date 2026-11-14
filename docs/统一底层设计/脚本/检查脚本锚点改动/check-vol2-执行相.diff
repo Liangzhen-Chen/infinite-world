@@ -1,0 +1,64 @@
+--- "check-vol2.mjs.bak-1114-\346\211\247\350\241\214\347\233\270"	2026-11-14 14:30:49.727837500 +0000
++++ check-vol2.mjs	2026-11-14 14:31:11.596409900 +0000
+@@ -68,6 +68,9 @@
+ // 内核信号代号小族（§2.9 第 0 条，唯一登记处）：表行 | `代号` | 含义 | 唯一发出方 | 接收方（有序名单） | 定义处 |
+ // 接收名单（李白 11-14 裁定）：①②…连写，每项带"卷零 #N"（卷零 §1 加卷记录表"#"登记序号）与"所写字段：…"；
+ // 核四项：发出方唯一；名单非空且每项序号已登记、未退役、项内点到该序号的卷名；序号由小到大；各项所写字段两两无交集
++// 执行相（李白 11-14 执行相裁定，封卷后勘误 1114bb）：每项须写"执行相：事务内|提交后"（只此两值）；名单按相分组，
++// 事务内各项须全部排在提交后各项前；序号只在同一执行相内比较；事务内项所读字段（"读 `x`、`y`"）与提交后项所写字段有交集即 FAIL，
++// 某事务内项正文未写"读 …"时，以其所写字段代替所读字段作近似（即退化为所写字段交集）
+ const docsDir = process.argv[3] ?? 'F:/dnd/docs/统一底层设计';
+ const volReg = new Map(); // 卷零 §1 "#" -> { name, retired }
+ try {
+@@ -113,10 +116,19 @@
+     const { items, lead } = splitItems(cells[3]);
+     if (!items.length) { kRowProblems.push(`${code} 接收名单为空: ${core(cells[3]) || '（空）'}`); continue; }
+     if (lead) kRowProblems.push(`${code} 接收名单首个圈码前有多余文字: ${lead}`);
+-    const nums = [], fieldsOf = [];
++    const nums = [], fieldsOf = [], phaseOf = [], readsOf = [];
+     items.forEach((it, k) => {
+       const tag = `${code} 接收名单第 ${it.mark} 项`;
+       if (it.mark !== CIRC[k]) kRowProblems.push(`${tag} 圈码不连号（应为 ${CIRC[k]}）`);
++      // ⑤ 执行相：恰好一处"执行相：值"，值只许 事务内 / 提交后（值截到"；，,（("或项末）
++      const ph = [...it.text.matchAll(/执行相：\s*([^；，,（(]*)/g)].map(m => m[1].trim());
++      if (ph.length !== 1) { kRowProblems.push(`${tag} 须恰好登记一个"执行相"，现 ${ph.length} 个`); phaseOf.push(null); }
++      else if (ph[0] !== '事务内' && ph[0] !== '提交后') { kRowProblems.push(`${tag} 执行相取值须为"事务内"或"提交后"，现为"${ph[0]}"`); phaseOf.push(null); }
++      else phaseOf.push(ph[0]);
++      // ⑥ 所读字段："读 `x`、`y`"（"读取"同），取紧随其后连写的反引号代号；未写则为 null，下面以所写字段近似
++      const rd = new Set();
++      for (const m of it.text.matchAll(/读取?\s*((?:`[^`]+`\s*[、，,和与及]?\s*)+)/g)) for (const c of m[1].matchAll(/`([^`]+)`/g)) rd.add(c[1]);
++      readsOf.push(rd.size ? rd : null);
+       const ns = [...it.text.matchAll(/卷零\s*#\s*(\d+)/g)].map(m => Number(m[1]));
+       if (ns.length !== 1) { kRowProblems.push(`${tag} 须恰好写一个"卷零 #序号"，现 ${ns.length} 个`); nums.push(null); }
+       else {
+@@ -137,8 +149,20 @@
+       fs.add(ft.replace(/\s+/g, ''));
+       fieldsOf.push(fs);
+     });
+-    // ③ 顺序按卷零登记序号由小到大
+-    for (let k = 1; k < nums.length; k++) if (nums[k - 1] != null && nums[k] != null && nums[k] < nums[k - 1]) kRowProblems.push(`${code} 接收名单顺序违反卷零登记序号：${items[k - 1].mark} #${nums[k - 1]} 在 ${items[k].mark} #${nums[k]} 前`);
++    // ③ 按执行相分组：事务内各项全部在提交后各项前；组内按卷零登记序号由小到大（两组之间不比序号）
++    const firstPost = phaseOf.indexOf('提交后');
++    if (firstPost >= 0) for (let k = firstPost + 1; k < phaseOf.length; k++) if (phaseOf[k] === '事务内') kRowProblems.push(`${code} 接收名单未按执行相分组：事务内项 ${items[k].mark} 排在提交后项 ${items[firstPost].mark} 后`);
++    for (const g of ['事务内', '提交后']) {
++      const idx = phaseOf.map((p, k) => p === g ? k : -1).filter(k => k >= 0);
++      for (let j = 1; j < idx.length; j++) { const a = idx[j - 1], b = idx[j];
++        if (nums[a] != null && nums[b] != null && nums[b] < nums[a]) kRowProblems.push(`${code} 接收名单${g}组顺序违反卷零登记序号：${items[a].mark} #${nums[a]} 在 ${items[b].mark} #${nums[b]} 前`); }
++    }
++    // ⑥ 事务内项不读提交后项产物：事务内项所读（未写"读"则以其所写字段近似）∩ 提交后项所写 ≠ ∅ 即 FAIL
++    for (let a = 0; a < items.length; a++) if (phaseOf[a] === '事务内') for (let b = 0; b < items.length; b++) if (phaseOf[b] === '提交后') {
++      const rs = readsOf[a] ?? fieldsOf[a] ?? new Set();
++      const both = [...rs].filter(x => fieldsOf[b]?.has(x));
++      if (both.length) kRowProblems.push(`${code} 接收名单事务内项 ${items[a].mark} 读取提交后项 ${items[b].mark} 所写字段${readsOf[a] ? '' : '（未写所读字段，以所写字段近似）'}: ${both.join(', ')}`);
++    }
+     // ④ 同一字段无两个写者
+     for (let a = 0; a < fieldsOf.length; a++) for (let b = a + 1; b < fieldsOf.length; b++) {
+       const both = [...fieldsOf[a]].filter(x => fieldsOf[b].has(x));
+@@ -186,6 +210,7 @@
+ let citeBad = 0;
+ for (const [name, ls] of citeSrc) ls.forEach((l, i) => {
+   if (name === '卷二' && i === kHead) return;
++  if (name === '卷二' && apD >= 0 && i >= apD && (apDEnd < 0 || i < apDEnd)) return; // 附录 D 处置史/勘误行只是记录，不当作信号引用
+   if (!l.includes('内核信号代号')) return;
+   for (const m of l.slice(l.indexOf('内核信号代号')).matchAll(/`([a-z][a-z0-9]*_[a-z0-9_]+)/g)) {
+     if (kernelCodes.has(m[1]) || vocabPrefixes.has(m[1].split('_')[0] + '_')) continue;
