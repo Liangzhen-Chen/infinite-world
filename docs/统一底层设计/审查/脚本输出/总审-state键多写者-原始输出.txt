@@ -1,0 +1,9 @@
+=== 全书现文件 ===
+建议新码 E-STATE-MULTI-WRITER；state 顶层键 95 个；写者声明 160 条，涉及路径 126 个
+RESULT 无多写者撞键
+exit=0
+=== 注入（副本）卷二十二:355 写者表把 state.knowProjects 改回 state.projects（给卷六 projects.* 加第二写者）===
+建议新码 E-STATE-MULTI-WRITER；state 顶层键 96 个；写者声明 161 条，涉及路径 126 个
+FAIL E-STATE-MULTI-WRITER projects.*：projects.mjs（卷二十二:355） vs public-works.mjs（卷六:296）
+RESULT 撞键 1 个
+exit=1
