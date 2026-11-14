@@ -1,0 +1,138 @@
+### 只核原始输出 卷二十二 诚实轴与脚本 2026-11-14T11:24:42Z
+git HEAD: 956df1ce（所核提交 8fd66237、8e4617c2）
+
+=== 1 node F:/dnd-tmp/vols/check-卷二十二.mjs（现行成稿）
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首模型行
+PASS 1c §0 五小节齐全
+PASS 1d 状态行为成稿且无续写点残留
+PASS 2 12 个子系统各六小节齐全
+PASS 3 数据实例至少三条，含非西陲、含非人类或超自然（共 49 条）
+PASS 4 验收断言三式齐全且编号规整
+PASS 5 正文无具体 id 字面量（含数据实例；实例用‹指称›；pers_ 代号只准在代码块与数据实例内）
+PASS 6 无用于判断的描述性文本；纯代号无中文；枚举值 ASCII 且带中英显示名（枚举 12 个、值 48 个） —  
+PASS 7 台账各概念写全（十二节标题、台账裁定编号、关键概念、知识表各列、每节规则不少于五条且编号连续；规则共 87 条）
+PASS 8 本卷编号引用不悬空且连续（R 87、A 36、S 7、C 24、Q 13、M 18） —  
+PASS 9 跨卷章节引用带标题且与原卷标题相符（带标题引用 172 处）
+PASS 9b 别卷对本卷的带标题引用：相符 90 处，不符 16 处（卷二十三→§4.6（`writeContent`） 卷二十三→§4.1（主观视图、`recallFacts`、身份键） 卷二十三→§4.5（`publicShare`、群体条目的 `credenceBps`） 卷二十三→§4.5（`publicShare`） 卷二十九→§4.1（各入口的观察者裁剪） 卷二十四→§4.11（读 `payload.causedBy`、`cause`） 卷十四→§4.6（阅读门槛读语言技能） 卷十四→§4.10（知识前置同格式；知识是"有没有"，技能是"多熟"） 卷十四→§4.6（读懂） 卷十四→§4.10（节点授予知识） 卷十四→§4.10（知识持有、失传） 卷十四→§4.9（研究结算） 卷四→§4.1（按身份键存知情） 卷四→§4.1（知情按键号存；连结事实；熟悉度） 卷零→§4.1（7 处）），不符项均已列入 §5.4
+PASS 10 每个含除法的规则行都写明除数下界或“不做除法”的分支（含除号的行 10 行）
+PASS 11 骰值键、分段无关、唯一写者、存法口径等必备内容在场
+PASS 12 规则表各键写明类型与取值域（42 行）；读入口 21 个
+PASS 13 读入口签名里没有文字形参
+行数 1114；子系统 12；规则 87；断言 36；枚举 12；配合项 24；开放问题 13；迁移项 18；待补 12 条
+ALL PASS
+exit=0
+
+=== 2 node F:/dnd-tmp/book/check-divisor.mjs
+# 全书除数下界检查（候选，须人工判定）
+
+
+合计：0 处（显式 0、隐式 0），涉及 0 卷
+按类：合计 0、比例 0、个数 0、加权平均 0、份额 0、归一 0、其他 0
+排除（按三扫原因类，处）：斜 11、例 110、词 27、常 120、均 27、测 52、献 28、说 110、删 10、引 15、份额 20、切 3、代 2、误差 60
+
+# 对照：三扫判定真命中：命中或已修 44 / 44（其中已修 44）
+- 已修：卷三乙:368「两批按质量加权平均」
+- 已修：卷三乙:369「残渣的初值：全部消耗项按质量加权的平均」
+- 已修：卷三乙:937「spoilage 与 taint 按质量加权平均」
+- 已修：卷三乙:938「赃物质量守恒记账」
+- 已修：卷三乙:1178「赃物份额（全部消耗项按质量加权平均」
+- 已修：卷三乙:1190「workDifficulty 的质量加权平均」
+- 已修：卷三乙:1251「耐用份额 workDifficulty 的质量加权」
+- 已修：卷三乙:1192「÷ rules.crafting.masterySpan」
+- 已修：卷三乙:855「fuelEnergyMJ ÷ massKg」
+- 已修：卷三乙:1177「件数 = M_out ÷」
+- 已修：卷三乙:1252「件数 = 质量 ÷ 该料模板」
+- 已修：卷三乙:1365「÷（质量 × specificHeat）」
+- 已修：卷三乙:1618「÷ 基础产出件数；」
+- 已修：卷三乙:1703「valueDensity = valueBase ÷ massKg」
+- 已修：卷三乙:1716「货值密度 = 总估值 ÷ 总质量」
+- 已修：卷三乙:1302「日均损耗件数 = 存量 ÷ lifeDays」
+- 已修：卷三乙:1422「shelfLifeDays = 1 ÷ 腐坏率」
+- 已修：卷三乙:538「Σ s×v ÷ Σ s」
+- 已修：卷三乙:540「Σ s ÷ Σ（s ÷ v）」
+- 已修：卷三乙:1620「材质项 = 实例材料聚合出的 valueMult ÷」
+- 已修：卷四:137「× 每年日数 ÷ birthIntervalDays」
+- 已修：卷四:545「fertilityByLiving, living) ÷ birthIntervalDays」
+- 已修：卷四:593「再求平均」
+- 已修：卷四:592「已知亲本该维度基值的平均」
+- 已修：卷四:637「carriedKg ÷ loadCapacityKg」
+- 已修：卷四:771「参与部位按大小加权」
+- 已修：卷六:866「exchangeRate(A, B) = coinValue(A) ÷ coinValue(B)」
+- 已修：卷十八:603「财产按继承制度的权重分割」
+- 已修：卷十八:716「) ÷ decayMinutes」
+- 已修：卷十八:771「÷ 好感轴条目的 max」
+- 已修：卷十八:820「知情成员对该对象在该轴上的读数均值」
+- 已修：卷十八:1160「÷ Σ_k w_k」
+- 已修：卷十九:509「按工时加权的参建者技能」
+- 已修：卷十九:872「按容积加权」
+- 已修：卷二十:725「÷ stepMinutes」
+- 已修：卷二十:920「各样点的算术平均」
+- 已修：卷二十:64「按距离平方衰减」
+- 已修：卷二十五:372「index = weatherKg ÷」
+- 已修：卷二十五:486「minutes ÷（minutesPerKg × availableKg）」
+- 已修：卷二十七:164「÷ step + 1」
+- 已修：卷二十七:288「两组均值之比减 1」
+- 已修：卷十四:1045「占某流派 teaches 的比例」
+- 已修：卷二十六:812「÷ 该维度取值域上界」
+- 已修：卷二十六:669「立场（归一到 [-1,1]）」
+
+# 误报（不在三扫真命中里的命中）：0 处
+
+# 回归样本（应判已保护）：通过 29 / 29
+
+# 漏报写法回归（应识别到除法并判已保护）：通过 2 / 2
+
+# 取值域引用核实不到（所在句不作保护依据）：0 处
+
+# 取值域引用回归：通过 6 / 6
+
+# 字面常数除数回归（合成夹具）：通过 6 / 6
+exit=0
+
+=== 3 注入（scratch 副本，脚本 F:/temp/claude/d5f27397948f41bd/91a2ffab-45cc-4033-adab-94b22866f267/scratchpad/inject.mjs）
+写出 inj1-pers.md inj2-other.md inj3-verb.md
+--- node check-卷二十二.mjs F:/temp/claude/d5f27397948f41bd/91a2ffab-45cc-4033-adab-94b22866f267/scratchpad/inj1-pers.md（只列 FAIL 行与第 5 项）
+FAIL 5 正文无具体 id 字面量（含数据实例；实例用‹指称›；pers_ 代号只准在代码块与数据实例内） — 442:pers_honesty
+FAILS 1
+--- node check-卷二十二.mjs F:/temp/claude/d5f27397948f41bd/91a2ffab-45cc-4033-adab-94b22866f267/scratchpad/inj2-other.md（只列 FAIL 行与第 5 项）
+FAIL 5 正文无具体 id 字面量（含数据实例；实例用‹指称›；pers_ 代号只准在代码块与数据实例内） — 444:need_sleep
+FAILS 1
+--- node check-卷二十二.mjs F:/temp/claude/d5f27397948f41bd/91a2ffab-45cc-4033-adab-94b22866f267/scratchpad/inj3-verb.md（只列 FAIL 行与第 5 项）
+PASS 5 正文无具体 id 字面量（含数据实例；实例用‹指称›；pers_ 代号只准在代码块与数据实例内）
+
+=== 4 卷二 §1.9 全前缀对卷二十二正文的覆盖扫描（F:/temp/claude/d5f27397948f41bd/91a2ffab-45cc-4033-adab-94b22866f267/scratchpad/scanvocab.mjs）
+卷二 §1.9 前缀数 125 ；现行 idRe 未含（除 pers） 80 ： ability aesthetic aspect attr bank bcat bpart burial cap carrier category damage dcard descent dgroup diet doctrine efam election ethic ethos event evt fixture flayer heritage hk hostility identity juris kind know labor layer legit martial matcat mgroup norm nslot offering orgkind pattern penalty pkind pool power ppart quality rcls reaction route rxop salary sense service size soil source sphere subst succession taboo taxbase taxon tenet term tier tissue tradition transport uitok unitset uper usage valence verb vstat water word
+实体前缀未含： know event evt
+  未覆盖前缀命中 know_family 行 136,140,185,869 
+  未覆盖前缀命中 know_spread 行 163,473,483,846,975,1016 
+  未覆盖前缀命中 know_standing 行 118,263,674,985 
+  未覆盖前缀命中 rcls_knowing 行 138,287,288,862,892,892 …共7
+  未覆盖前缀命中 rcls_public 行 138,138,289,290,892,892 …共8
+  未覆盖前缀命中 source_kind 行 115,132,356,968,994,1022 
+  未覆盖前缀命中 verb_belief_contradicted 行 395,406,795 
+  未覆盖前缀命中 verb_entity_terminated 行 689,892,1074 
+  未覆盖前缀命中 verb_fact_learned 行 356,364,388,796,871 
+  未覆盖前缀命中 verb_fact_told 行 356,367,567,796 
+  未覆盖前缀命中 verb_research_done 行 634,646,667,801 
+
+=== 5 勘误快照核对
+勘误前快照 1114ag = 8fd66237^ 的卷二十二（忽略行尾 CR）
+封卷快照 = 现行成稿
+--- 卷二十二全卷 pers_ 出现处
+459:所经通道的失真行 `biasDim` 为 `pers_honesty`，他转
+--- 含“诚实轴（卷二十六 §4.1.5）”的行数
+6
+--- 脚本改动与登记 diff 一致性
+现行脚本相对备份的改动 = 登记 diff
+--- 他卷脚本 idRe 是否含 verb
+check-卷七.mjs
+check-卷八.mjs
+check-卷八b.mjs
+check-卷十八.mjs
+check-卷二十一.mjs
+check-卷二十四.mjs
+check-卷二十六.mjs
+check-卷二十八.mjs
+check-卷二十九.mjs
+58:const allowWords = new Set(['status_family', 'status_target', 'status_source', 'body_plan', 'body_part', 'body_need', 'law_code', 'verb_entity_terminated', 'verb_entity_revived']);
