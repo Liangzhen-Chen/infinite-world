@@ -1,0 +1,78 @@
+=== 改前 卷七 ===
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首署名行
+PASS 2 三十个子系统各六小节齐全
+PASS 3 数据实例数量与两类覆盖
+PASS 4 验收断言三式齐全且有编号
+FAIL 5 规则与正文无具体 id 字面量 — L125:flayer_faith L126:flayer_faith L127:flayer_faith L128:flayer_faith
+PASS 6 无用于判断的描述性文本
+PASS 7 台账各概念写全（标题、关键代号、每节有规则且编号连续）
+PASS 8 跨卷引用带标题；规则编号引用不悬空
+PASS 9 json 代码块可解析（7 块） — bad=0
+PASS 10 红线：不读墙钟、除数有下界或为 0 分支、存法与余数登记
+PASS 11 数据实例算术与余数结转复算（25 项加 7 组余数）
+PASS 12 热忱误差界验算（4 组行、各 3600 日；实际误差不超过 n × K × 10⁻⁸） — 最大“实际/界”= 0.5556
+PASS 13 接口、入口表、规则表键、错误码、枚举附表、迁移清单落实
+PASS 14 融入度误差界验算（7 组情形：默认数值 5 组各 200 年、速率取上端 2 组各 2000 年；k 钳到 kMax < 1；实际误差不超过 m·n × 10⁻⁸，且 level 恒小于上限；kMax 不小于 1 的两例被拒） — 最大“实际/界”= 0.4227
+行数 2013；子系统 30；规则条数 171；json 块 7；待补清单 13 条；失败项 1
+exit=1
+=== 改前 卷八 ===
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首署名行
+PASS 1c 无残留追加标记
+PASS 2 十九个子系统各六小节齐全
+PASS 3 数据实例数量与两类覆盖
+PASS 4 验收断言三式齐全且有编号
+PASS 5 规则与正文无具体 id 字面量
+PASS 6 无用于判断的描述性文本
+PASS 7 台账各概念写全（标题、关键代号、每节有规则且编号连续）
+PASS 8 跨卷引用带标题；规则编号引用不悬空
+PASS 9 json 代码块可解析（1 块） — bad=0
+PASS 10 红线：不读墙钟、除数有下界或为 0 分支、存法与余数登记
+PASS 11 数据实例算术与余数结转复算（26 项加 16 组）
+FAIL 12 接口、入口表、规则表键、错误码、枚举附表、迁移清单落实 — 卷二已定维度未照录: `charter` | rx（never | 卷二已定维度未照录: `seat` | ref place（a | 卷二已定维度未照录: `offices` | set<ref  | 卷二已定维度未照录: `orgKind` | enum org | 卷二已定维度未照录: `salaryTable` | ref  | 卷二已定维度未照录: `succession` | enum  | 卷二已定维度未照录: `jurisdictionLevel`  | 卷二已定维度未照录: `appointedBy` | ref  | 卷二已定维度未照录: `taxRules` | list<st | 卷二已定维度未照录: `levyRule` | rx（neve | 卷二已定维度未照录: `polityKind` | enum  | 卷二已定维度未照录: `successionDefault` 
+PASS 13 运行态路径都在 §3.3 有写者与去留交代
+行数 1624；子系统 19；规则条数 148；json 块 1；待补清单 12 条；失败项 1
+exit=1
+=== 改后 卷七 ===
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首署名行
+PASS 2 三十个子系统各六小节齐全
+PASS 3 数据实例数量与两类覆盖
+PASS 4 验收断言三式齐全且有编号
+PASS 5 规则与正文无具体 id 字面量
+PASS 6 无用于判断的描述性文本
+PASS 7 台账各概念写全（标题、关键代号、每节有规则且编号连续）
+PASS 8 跨卷引用带标题；规则编号引用不悬空
+PASS 9 json 代码块可解析（7 块） — bad=0
+PASS 10 红线：不读墙钟、除数有下界或为 0 分支、存法与余数登记
+PASS 11 数据实例算术与余数结转复算（25 项加 7 组余数）
+PASS 12 热忱误差界验算（4 组行、各 3600 日；实际误差不超过 n × K × 10⁻⁸） — 最大“实际/界”= 0.5556
+PASS 13 接口、入口表、规则表键、错误码、枚举附表、迁移清单落实
+PASS 14 融入度误差界验算（7 组情形：默认数值 5 组各 200 年、速率取上端 2 组各 2000 年；k 钳到 kMax < 1；实际误差不超过 m·n × 10⁻⁸，且 level 恒小于上限；kMax 不小于 1 的两例被拒） — 最大“实际/界”= 0.4227
+行数 2013；子系统 30；规则条数 171；json 块 7；待补清单 13 条；失败项 0
+exit=0
+=== 改后 卷八 ===
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首署名行
+PASS 1c 无残留追加标记
+PASS 2 十九个子系统各六小节齐全
+PASS 3 数据实例数量与两类覆盖
+PASS 4 验收断言三式齐全且有编号
+PASS 5 规则与正文无具体 id 字面量
+PASS 6 无用于判断的描述性文本
+PASS 7 台账各概念写全（标题、关键代号、每节有规则且编号连续）
+PASS 8 跨卷引用带标题；规则编号引用不悬空
+PASS 9 json 代码块可解析（1 块） — bad=0
+PASS 10 红线：不读墙钟、除数有下界或为 0 分支、存法与余数登记
+PASS 11 数据实例算术与余数结转复算（26 项加 16 组）
+FAIL 12 接口、入口表、规则表键、错误码、枚举附表、迁移清单落实 — 卷二照抄与本卷 §2 不一致 org.polity（卷二:1642 ref polity nullable／never；本卷 ref polity nullable／always） | 卷二照抄与本卷 §2 不一致 org.parent（卷二:1644 ref org nullable／never；本卷 ref org nullable／always） | 卷二照抄与本卷 §2 不一致 org.offices（卷二:1645 set<ref office>／never；本卷 set<ref office>／always） | 卷二照抄与本卷 §2 不一致 org.charter（卷二:1646 rx／never；本卷 rx／always） | 卷二照抄与本卷 §2 不一致 office.eligibility（卷二:1660 rx／never；本卷 rx／always） | 卷二照抄与本卷 §2 不一致 office.appointedBy（卷二:1662 ref refs[kind office, vocab election] nullable／never；本卷 ref refs[kind office, vocab election] nullable／always） | 卷二照抄与本卷 §2 不一致 polity.holderEligibility（卷二:1674 rx／never；本卷 rx／always） | 卷二照抄与本卷 §2 不一致 polity.councilOffices（卷二:1675 set<ref office>／never；本卷 set<ref office>／always）
+PASS 13 运行态路径都在 §3.3 有写者与去留交代
+行数 1624；子系统 19；规则条数 148；json 块 1；待补清单 12 条；失败项 1
+exit=1
+=== 注入① 卷七副本 :125 说明栏写入 flayer_faith ===
+FAIL 5 规则与正文无具体 id 字面量 — L125:flayer_faith
+行数 2013；子系统 30；规则条数 171；json 块 7；待补清单 13 条；失败项 1
+=== 注入② 卷八副本 seat 类型改为 ref org ===
+org.seat（卷二:1643 ref place／always；本卷 ref org／always） 
+失败项 1
