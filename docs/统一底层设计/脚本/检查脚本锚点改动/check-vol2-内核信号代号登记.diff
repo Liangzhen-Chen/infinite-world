@@ -1,0 +1,97 @@
+--- F:/dnd-tmp/vols/backup/check-vol2.mjs.20261114-114845.bak	2026-11-14 11:48:45.779588900 +0000
++++ check-vol2.mjs	2026-11-14 11:51:20.831198200 +0000
+@@ -1,6 +1,6 @@
+ // 卷二第五版自动对账脚本（只读 .md，纯算术与字串处理；不读项目代码）。
+-// 用法：node check-vol2.mjs <卷二路径>
+-import { readFileSync } from 'node:fs';
++// 用法：node check-vol2.mjs <卷二路径> [各卷目录，缺省 F:/dnd/docs/统一底层设计；第 2b 项跨卷核"内核信号代号"小族引用]
++import { readFileSync, readdirSync } from 'node:fs';
+ const path = process.argv[2] ?? 'F:/dnd/docs/统一底层设计/卷二-维度表规范与统一入口.md';
+ const md = readFileSync(path, 'utf8');
+ const lines = md.split('\n');
+@@ -61,14 +61,37 @@
+   'consent_mode','status_target','eff_output','error_code','basis_kind','rx_cmp','rx_clock','slot_kind', // 代码内封闭枚举的名字
+   'successor_mode','term_account','gate_verdict','wire_route','save_export', // 第十三版新增的代码内封闭枚举名与其值
+   'save_import','wire_body','event_role','thought_role', // 第十五版新增的代码内封闭枚举名与其值（thought_role 是卷二十六的旧枚举名，只在 D.1 牵连清单里提到）
+-  'naming_intent','note_intent', // 第十三版新增的事件动词（entity_terminated、entity_revived 第十六版改为 verb 族条目，已从忽略表删去）
++  'note_intent', // 第十三版新增的事件动词（entity_terminated、entity_revived 第十六版改为 verb 族条目，已从忽略表删去；naming_intent 封卷后勘误改为按 §2.9 第 0 条"内核信号代号"小族登记校验，见 2b）
+   'stock_mode','reply_result','narrate_result','term_record','revive_record','writer_role','save_unavailable','decision_card','record_class','due_kind', // due_kind 是卷二十的族名 // 第十六版新增的代码内封闭枚举名、枚举值与族名
+   'holding_kind','rx_op','stack_group','child_process','node_modules']); // 族名与非代号 snake 词
+ const ignorePrefix = new Set(['kg','m','mj','satiety','per','copper','class']); // 单位与 class 另算
++// 内核信号代号小族（§2.9 第 0 条，唯一登记处）：表行 | `代号` | 含义 | 唯一发出方 | 唯一接收方 | 定义处 |
++const kernelCodes = new Map(); // 代号 -> 行号
++const kHead = lines.findIndex(l => l.includes('**内核信号代号（小族；唯一登记处）**'));
++const kRowProblems = [];
++if (kHead >= 0) {
++  let i = kHead + 1;
++  while (i < lines.length && !lines[i].trim().startsWith('|')) { if (lines[i].trim() && !/^\s/.test(lines[i])) break; i++; }
++  for (; i < lines.length && lines[i].trim().startsWith('|'); i++) {
++    const cells = lines[i].trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim());
++    if (cells[0] === '代号' || /^-+$/.test(cells[0])) continue;
++    const code = cells[0].match(/^`([a-z][a-z0-9]*_[a-z0-9_]+)`$/)?.[1];
++    if (cells.length !== 5 || !code) { kRowProblems.push(`第 ${i + 1} 行格式不合（须 5 列、首列为单个反引号代号）`); continue; }
++    if (kernelCodes.has(code)) kRowProblems.push(`代号 ${code} 重复登记（第 ${kernelCodes.get(code)}、${i + 1} 行）`);
++    kernelCodes.set(code, i + 1);
++    // 唯一发出方/接收方：去掉括注与引号内的说明后，不得为空、不得并列多方
++    const core = s => { let t = s; for (let k = 0; k < 3; k++) t = t.replace(/（[^（）]*）|\([^()]*\)|"[^"]*"|“[^”]*”/g, ''); return t.trim(); };
++    for (const [ci, role] of [[2, '发出方'], [3, '接收方']]) {
++      const c = core(cells[ci]);
++      if (!c) kRowProblems.push(`${code} 缺${role}`);
++      else if (/、|或|；|(?:^|[^a-z.])和|与/.test(c)) kRowProblems.push(`${code} 的${role}不唯一: ${c}`);
++    }
++  }
++}
+ const unknown = new Map();
+ for (const m of md.matchAll(idRe)) {
+   const token = m[1] + '_' + m[2], p = m[1] + '_';
+-  if (registeredPrefixes.has(p)) continue;
++  if (registeredPrefixes.has(p) || kernelCodes.has(token)) continue;
+   if (ignoreFamilies.has(token) || ignorePrefix.has(m[1])) continue;
+   if (/_per_|_kg|_mm|_c$|_m$|_days?$|_minute|_year|_l$/.test(token) && /^(kg|m|mj|copper|satiety|per)/.test(m[1])) continue;
+   if (!unknown.has(p)) unknown.set(p, new Set());
+@@ -76,6 +99,45 @@
+ }
+ if (unknown.size) { for (const [p, ts] of unknown) log(`  注意 未登记前缀 ${p}: ${[...ts].slice(0, 6).join(', ')}`); } else log('  OK 全部候选 id 的前缀均已登记');
+ 
++// ---------- 2b. 内核信号代号小族 ----------
++log('== 2b 内核信号代号登记');
++if (kHead < 0) bad('§2.9 第 0 条未找到"内核信号代号（小族；唯一登记处）"');
++else if (!kernelCodes.size) bad('内核信号代号小族表为空');
++for (const p of kRowProblems) bad('内核信号代号表 ' + p);
++log(`  小族登记 ${kernelCodes.size} 个: ${[...kernelCodes.keys()].join(', ')}`);
++// 正文（附录 D 处置史除外）里作为事件发出、或带载荷写出的代号：前缀不属于 §1.9 词表族的，须在小族登记里
++const apD = lines.findIndex(l => l.startsWith('## 附录 D'));
++const apDEnd = apD < 0 ? -1 : lines.findIndex((l, i) => i > apD && /^## /.test(l));
++const sigRe = /(?:事件|代号|emit[^`\n]{0,3}|发)\s*`([a-z][a-z0-9]*_[a-z0-9_]+)(?: \{[^`]*\})?`|`([a-z][a-z0-9]*_[a-z0-9_]+) \{[^`]*\}`/g;
++const sigBad = new Map();
++lines.forEach((l, i) => {
++  if (apD >= 0 && i >= apD && (apDEnd < 0 || i < apDEnd)) return;
++  for (const m of l.matchAll(sigRe)) {
++    const token = m[1] ?? m[2];
++    // 事件/信号代号只可能是词表族代号或内核信号代号；实体前缀（id）不算登记
++    if (vocabPrefixes.has(token.split('_')[0] + '_') || kernelCodes.has(token)) continue;
++    if (!sigBad.has(token)) sigBad.set(token, []);
++    sigBad.get(token).push(i + 1);
++  }
++});
++for (const [t, ls] of sigBad) bad(`内核信号代号 ${t} 未在小族登记（行 ${ls.join(', ')}）`);
++if (!sigBad.size) log('  OK 正文发出的非词表代号均在小族登记');
++// 引用本小族的行（本卷全文与同目录各卷）：同一行里点到的 snake 代号须已登记
++const docsDir = process.argv[3] ?? 'F:/dnd/docs/统一底层设计';
++const citeSrc = [['卷二', lines]];
++try { for (const f of readdirSync(docsDir)) if (/^卷.*\.md$/.test(f) && !f.startsWith('卷二-')) citeSrc.push([f, readFileSync(docsDir + '/' + f, 'utf8').split('\n')]); } catch { log('  注意 未能读取 ' + docsDir + '，跨卷引用未核'); }
++let citeBad = 0;
++for (const [name, ls] of citeSrc) ls.forEach((l, i) => {
++  if (name === '卷二' && i === kHead) return;
++  if (!l.includes('内核信号代号')) return;
++  for (const m of l.slice(l.indexOf('内核信号代号')).matchAll(/`([a-z][a-z0-9]*_[a-z0-9_]+)/g)) {
++    if (kernelCodes.has(m[1]) || vocabPrefixes.has(m[1].split('_')[0] + '_')) continue;
++    if (ignoreFamilies.has(m[1]) && !sigBad.has(m[1])) continue; // 第 2 项已声明的非代号名（如封闭枚举名），且未被当信号发出
++    citeBad++; bad(`${name}:${i + 1} 引用内核信号代号小族的 ${m[1]} 未登记`);
++  }
++});
++if (!citeBad) log(`  OK 引用小族的代号均已登记（核 ${citeSrc.length} 卷）`);
++
+ // ---------- 3. 类型数 ----------
+ log('== 3 类型数');
+ const counts = [...md.matchAll(/(\d+)\s*种(?:\*\*)?类型|类型清单[^\n]*?(\d+)\s*种|共\s*\*\*(\d+)\s*种\*\*/g)].map(m => m[1] ?? m[2] ?? m[3]).filter(Boolean);
