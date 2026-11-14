@@ -208,7 +208,7 @@
 | `state.agendas[personId]` | list<struct{from: integer:minute, until: integer:minute, actionId, slots, sourceCandidate}>（按 `from` 升序、互不重叠） | `npc-agenda.mjs` | 是 | `clear` |
 | `state.proposals[actorId][proposalId]` | struct{intent, quote, phase: proposal_phase, previewedAt: integer:minute, expiresAt: integer:minute} | `open-actions.mjs` | 是 | `clear`（主体段：提案人） |
 | `state.marks[onId][markId]` | struct{by: actorId, markKind: ref vocab mark_kind, at: integer:minute, proposalId nullable, level: landing_level} | `mark-actions.mjs` | 是 | `clear`（主体段：留痕对象） |
-| `state.dialogues[sessionId]` | struct{parties: list<entityId>, state: dialogue_state, round: integer, lastOffer: struct nullable, openedAt: integer:minute, idleUntil: integer:minute} | `dialogue.mjs` | 是 | 任一方终止即整条删除（清理函数，§3.3） |
+| `state.dialogues[sessionId]` | struct{parties: list<entityId>, state: dialogue_state, round: integer, lastOffer: struct nullable, awaitedEvent: EventId nullable, openedAt: integer:minute, idleUntil: integer:minute} | `dialogue.mjs` | 是 | 任一方终止即整条删除（清理函数，§3.3） |
 | `state.decisionCommit[personId]` | struct{candidateId, since: integer:minute, until: integer:minute} nullable | `npc-agenda.mjs` | 是 | `clear` |
 | `state.lastCommit[actorId]` | struct{at: integer:minute, eventId: EventId} | `primitives-runtime.mjs`（提交段） | 是 | `clear` |
 
@@ -384,7 +384,7 @@
 | 推进钩子、反应规则经执行器的事件 | 钩子或反应规则的登记代号 | 触发它的事件 id，或钩子的主体 id | 由登记它的卷给固定代号 |
 | 活动推进点与 `finishAt` 到期的那一条（R9-1.12；执行器末步里的推进不另出事件，属该次提交） | 本卷登记的到期项代号 `due.activity` | 行动者 id | `pos.only`（每条活动至多一个待到的推进点，同一行动者同一分钟只有一条） |
 | 前提失效通知触发的活动推进（R9-1.12） | 本卷登记代号 `ntf.activity` | 一条通知涉及的各人按 id 升序成链：第一条取触发它的那条事件的 id，其后每条取前一条的事件 id（与善后行同一写法） | `pos.only`（触发事件 id 两两不同，链上主体 id 两两不同） |
-| 写者协议在事务内另发的事件（整类：定义卷的写入规则规定随某类写入在同一事务内一并发出的事件，含卷二 §2.6（写者与三接口）终止、复生的内核事件，卷十八 R18-1.11 持有变化、R18-1.10 常住变化事件；`primitives` 为空，R9-2.3、卷二十四 R24-1.1） | 所在事务那条事务事件的 `cause`；所在事务没有事务事件时（推进钩子经 `writePath` 的直写中触发这类写者协议）取该钩子的登记代号 | 第一条取所在事务那条事务事件的 id；同一事务有多条这类事件时按所涉实体 id 升序成链（所涉实体：终止、复生取该实体，持有变化取载荷 `edge`，常住变化取载荷 `person`；同一实体有多条时按发出先后），其后每条取前一条的事件 id（与善后行同一写法）；所在事务没有事务事件时，链首取本表“推进钩子”一行给该钩子的主体 id | `pos.kernel`（这类事件专用，不借 `pos.only`，以免与善后链的事件撞号） |
+| 写者协议在事务内另发的事件（整类：定义卷的写入规则规定随某类写入在同一事务内一并发出的事件，含卷二 §2.6（写者与三接口）终止、复生的内核事件，卷十八 R18-1.11 持有变化、R18-1.10 常住变化事件；`primitives` 为空，R9-2.3、卷二十四 R24-1.1） | 所在事务那条事务事件的 `cause`；所在事务没有事务事件时（推进钩子经 `writePath` 的直写中触发这类写者协议）取该钩子的登记代号 | 第一条取所在事务那条事务事件的 id；同一事务有多条这类事件时按所涉实体 id 升序成链（所涉实体：终止、复生取该实体，持有变化取载荷 `edge`，常住变化取载荷 `person`，拒绝应答（R9-12.14）取 `actor`；同一实体有多条时按发出先后），其后每条取前一条的事件 id（与善后行同一写法）；所在事务没有事务事件时，链首取本表“推进钩子”一行给该钩子的主体 id | `pos.kernel`（这类事件专用，不借 `pos.only`，以免与善后链的事件撞号） |
 
 没有计数器，也不需要禁止同刻重复提交：同一行动者同一分钟内的第二次提交以第一次的事件 id 为主体，id 不同。
 
@@ -431,7 +431,7 @@
 | `state.agendas`、`state.decisionCommit` | `npc-agenda.mjs` | 只由 `npcChoose` 的结果经 `resolve` 之外的声明写者接口写（日程本身不是世界改动的结算） |
 | `state.proposals` | `open-actions.mjs` | `preview`、`confirm`、`withdraw` |
 | `state.marks` | `mark-actions.mjs` | 只由执行器的 `create` 原语适配器调用（`create` 的 `kind` 取留痕，见 R9-15.2） |
-| `state.dialogues` | `dialogue.mjs` | 只由对话类动作的效果经执行器调用；终止清理见 §3.3 |
+| `state.dialogues` | `dialogue.mjs` | 只由对话类动作的效果经执行器调用；`awaitedEvent` 由把会话转入等待应答（R9-13.1，下一步归有席位边的应答者）的那笔事务写入该步提交段事件的 id，会话离开等待态的那笔事务清空（R9-12.14）；终止清理见 §3.3 |
 | `state.lastCommit` | `primitives-runtime.mjs` | 提交段与同一事务 |
 | 同意边、玩家席位边 | 卷十八 §4.1（持有种类表与两条转移协议）的转移协议 | 执行器的 `holding.open`、`holding.close` |
 | 技能值 | 卷十四的 `gainSkill` | 善后段调用，本卷不写 |
@@ -1025,6 +1025,7 @@
 - **R9-12.11 不是每拍都想**：决策只在 R9-12.7 的四种时刻发生，它们都由世界内在量决定，不随推进步长变化；聚合层的人不逐人决策（卷二十七 §4.1（三层模拟运行矩阵））。
 - **R9-12.12 契机不在这里**：隐藏职业契机（卷十四 §4.8（隐藏职业契机））是订阅事件的反应规则；它若给出“可以入行”，那只是多出一个候选，取舍仍按本节。
 - **R9-12.13 决定卡的读数**（C29-5）：每张进 `ReplyResult.cards` 与场景卡的决定卡带一份 `CardReading`（§2.4），供模板对白的变体条件读（卷二十九 R29-2.8），组卡时由规则层算出，只读数值维度与固定代号，不进存档、不进哈希，不改结论（R9-12.9）。`listener` 是该决定所答意图的行动者。`persBand` 对说话人 `personView().dims.personality` 的每一键、`gaugeBand` 对其 `personView().dims.psychOut` 的每一已知键（卷二十六 §3.1（读入口）的视图输出），档序 = 该值不小于 `rules.card.persCuts`（人格）或 `rules.card.gaugeCuts`（心理量）中几个切点，与 R9-3.5 数界的写法相同；值未知的键不进 map。性格档即人格各轴的档序，心情档即心情心理量那一键的档序。`relations` 是 relation 族全部条目中卷十八 `related(engine, state, 说话人, listener, rel)` 为真者，按代号升序，没有即空列表。`occasion` 是 `occasion` 族除 `occ_nil` 外 `whenRX` 此刻为真的条目中 `order` 最小者（同序取代号码序最小），无一成立取 `occ_nil`。代码里没有人格轴、心理量、关系或场合的代号。
+- **R9-12.14 拒绝应答事件**（封卷后勘误，李白 11-14 17:04 裁定）：凡须对方应答的邀约，即提给他人、由对方答应与否定成败的动作（征求同意，R9-8.3；对话里的请求、出价、还价，R9-13.1；别卷登记的决斗、交易、结盟、婚约等邀约类动作行都经这两路之一），应答落为拒绝的那笔事务在同一事务内发一条动词 `verb_invite_refused`，载荷 `{actor: 应答者, targets: [发起者], invite: EventId}`。落为拒绝只有两种：应答者是 NPC 时，`npcDecision` 对该邀约的结论为 `refuse`（R9-12.5、R9-12.6、R9-12.8 各路同此），在邀约动作自己的裁决事务里发，`invite` 取该事务提交段那条事件的 id；应答者有席位边时，他提交的应答一步按 `dialogue_move` 行把会话转到 `refused`，在这一步的裁决事务里发，`invite` 读该会话的 `awaitedEvent`（§2.3；由把会话转入等待应答的那笔事务写入其提交段事件 id，会话离开等待态时清空）。`defer`、`conditional`、`counter` 不是拒绝，不发。多人应答（R9-13.7）时每个拒绝者各发一条。不按动作代号、邀约种类分支；别卷订阅它只按载荷的代号与 id 匹配，认出是哪种邀约读 `invite` 所指事件的动作代号。它属“写者协议在事务内另发的事件”一类（R9-2.3、§2.9 该行）：`primitives` 为空，id 按该行取，位次 `pos.kernel`。动词行表 B 各栏（卷二十四 §2.2（维度）表 B，字段类型与取值域照该表，本卷只填值）：`parent` 空；`payloadShape` 为 `{invite: EventId}`（`actor`、`targets` 是公共栏位，不进 `payloadShape`）；`kindFrom` 空；`kindOnly` 假；`worthSlots` 为 `{destroyed: [], moved: [], stake: []}`；`headSlot` 为 null；`sigBase` 写 0（占位待标定）；`tallies` 写 `[]`；`perceivable` 真、`senses` {视、听}（经句柄 `roles.senses.sight`、`roles.senses.hearing`；两个发出点都是行为人动作的裁决事务，判据同卷十八 §2.3（本卷登记的资源种类行、合同种类行、事件动词））；`visibilityAllowed` 取 `emit` 的 `visibility` 全集 {`public`、`private`、`witnessed`}，当众程度由发出它的事务在集合内给出。
 
 #### 4.12.4 交互
 
@@ -1550,13 +1551,14 @@
 | 场景卡、焦点 | `sceneCard()`、`scene_section`、`focus` | §4.10 |
 | 叙述声明、声明种类 | `claims`、`claim_kind`（前缀 `ck_`） | §4.11 |
 | 决定、决定卡 | `Decision`、`decision_card`（前缀 `dcard_`） | §4.12 |
-| 对话会话 | `state.dialogues`、`dialogue_move` | §4.13 |
+| 对话会话 | `state.dialogues`、`dialogue_move`；待答事件 `state.dialogues[sessionId].awaitedEvent` | §4.13、R9-12.14 |
 | 档位、用途 | `ai_tier`、`ai_use` | §4.14 |
 | 落地级别、留痕 | `landing_level`、`state.marks` | §4.15 |
 | 学习记录 | `learn_event` | §4.16 |
 | 选择式判断 | 用途 `judge` | §4.17 |
 | 取自槽位 | `from_slot`、动作行 `shapeFrom` | R9-1.13 |
 | 活动结束事件 | `verb_activity_ended`（verb 族条目，本卷登记，`activity.mjs` 发） | R9-1.14 |
+| 拒绝应答事件 | `verb_invite_refused`（verb 族条目，本卷登记，执行器在应答落为拒绝的裁决事务内发） | R9-12.14 |
 | 决定卡读数、场合 | `CardReading`、`occasion`（前缀 `occ_`，固定空码 `occ_nil`）、`rules.card.persCuts`、`rules.card.gaugeCuts` | §2.4、R9-12.13 |
 | 旁路记录、录制、费用账 | §4.18.1 的结构 | §4.18 |
 | 译码结果、拒收代号、通用槽位 | `decode_result`、`reject_code`、`intent_slot` | §4.19 |
@@ -1659,6 +1661,7 @@
 | 封卷后勘误（李白 11-14 975aa068 跨卷机制项裁定；不升版本号，改前快照 `版本快照/卷九-v2-勘误前-1114a.md`，改后覆盖 `版本快照/卷九-v2.md`；本批五条同一快照） | §2.1 新族 `occasion`、`claim_kind.predicates`、封闭枚举 `slot_sourced`、`cap_term_ctx`；§2.2 `requirement`、`baseMinutes`、`check`（`opponentRows`）、`effects`、`backlash`、`skillGain`（`skillFrom`）、新字段 `shapeFrom` 与校验；§2.4 `claims.predicate`、`cards.reading`、`CardReading`；§2.5 `rules.card.persCuts`、`gaugeCuts`；§4.7 `cost_row.resource`、`cap_row.terms.dim`；R9-1.13、R9-1.14（新）；§4.1.4 卷十五六行；§4.2.1 `transition` 行；R9-2.8 末句、R9-2.9（新）；R9-3.6 末句；R9-7.3 末句；§4.11.1 `evidence_row.from`、§4.11.2 签名、R9-11.2、R9-11.3 末段；R9-12.5 末段、R9-12.13（新）；§5.3 乙表 P4–P10；术语表三行 | C29-5（决定卡读数：性格档、心情档由人格轴与心理量视图输出按切点派生为档序，关系代号读 `related`，场合代号用开放族 `occasion` 与固定空码 `occ_nil`）；C28-11（R9-11.3 增离线以声明加行数据调用，`evidence_row.from` 增 `row`）；C10-20（`predicates` 放宽到维度代号或读入口字段代号，加载核对字段在证据行读入口的返回形状里，不读文字）；C13-7（`check.opponentRows`、R9-3.6；成长技能可取自读入口字段 `skillGain.skillFrom`）；C15-1 ①–⑥（先 ① 后 ④：`from_slot` 与 `shapeFrom`、`cap_row` 的 `ctx_skill`、`transition` 两个状态机与产物引用、目录登记卷十五六行、活动结束事件 `verb_activity_ended`、配合类候选减 `process.consentBar`）。读者：卷二 §2.9 第 0 条（P4）；卷二十六 §3.1（读入口）（P5）；卷二十九 R29-2.8（P6）；卷十五 R15-1.2、R15-1.5、R15-1.8、R15-1.10、§3.2、R15-4.4、R15-7.2 至 R15-7.4、R15-7.11（P7）；卷十三 R13-1.2（P8）；卷十 §4.4.1（P9）；卷二十八 R28-5.4、R28-5.5（P10）。别卷未改。理由：李白 11-14 975aa068 裁定五条均批，各发出卷记“卷九答复前不加载”或“对方照此提供” |
 | 封卷后勘误（李白 11-14 bc698ed3 裁定；依 审查/机制项-卷九-只核.md 真问题 1 与第六节；不升版本号，改前快照 `版本快照/卷九-v2-勘误前-1114b.md`，改后覆盖 `版本快照/卷九-v2.md`） | §2.1 `occasion` 行 `whenRX` 括注；§2.1 `claim_kind.predicates` 括注；§2.2 `skillGain`、`shapeFrom` 两行与表后"校验"末句 | ① `occasion.whenRX` 删去读本回合 `turn`，改读已核定的回执与说话人所在地点视图，`dialogueView()` 的会话 id 取该决定所答意图所在的对话会话；② `shapeFrom`、`skillFrom`、`predicates` 三处"登记返回形状"核对改指卷二 §2.7（系统声明表 `state-owners.json`）"读入口返回形状登记"（`readShapes`）。读者：实现者、卷二十九（决定卡读数）、卷十五、卷十三、卷十（三处核对的入口所属卷，各按卷二 §2.7（系统声明表 `state-owners.json`）填自己入口的行）。理由：`turn` 是待核对的模型声明，组卡时尚未交回，读它等于让未核对输出决定卡读数（R9-9.3、R9-9.4）；三处核对原无机器可读的登记对象 |
 | 封卷后勘误（李白 11-14 745706f9 裁定 ①；依据 `审查/EventId-全书用处.md` 第二节第 3 条；不升版本号，改前快照 `版本快照/卷九-v2-勘误前-1114k.md`，改后覆盖 `版本快照/卷九-v2.md`） | §2.3 `state.lastCommit` 行 | 值的 `eventId` 字段写明类型 `EventId`，语义不变。读者：实现者、卷二十七（R27-4.12 按 pathTypes 认 `EventId` 路径）。理由：卷二 §1.5 已登记 `EventId`，字段未写类型则 pathTypes 认不到 |
+| 封卷后勘误（李白 11-14 17:04 卷十三停报③拒绝决斗裁定；依据 `收尾待办.md` 该节、`审查/卷十三-封前停报项.md` 第 8 节；不升版本号，改前快照 `版本快照/卷九-v2-勘误前-1114ad.md`，改后覆盖 `版本快照/卷九-v2.md`） | R9-12.14（新）；§2.9 事件 id 表“写者协议在事务内另发的事件”行所涉实体括注；附 术语与代号表新增“拒绝应答事件”行；§2.3 `state.dialogues` 行加 `awaitedEvent`；§3.2 唯一写者表 `state.dialogues` 行；术语表“对话会话”行 | 整类登记拒绝应答事件 `verb_invite_refused`：凡须对方应答的邀约（征求同意、对话请求出价还价，别卷决斗、交易、结盟、婚约等邀约类动作行经此两路），NPC 应答结论为 `refuse` 或席位应答者一步把会话转到 `refused` 时，在该裁决事务内发；载荷只带邀约事件引用 `invite`、应答者 `actor`、发起者 `targets`，不加别的栏；属写者协议另发事件类，位次 `pos.kernel`；表 B 各栏照卷二十四表 B 与卷十八 §2.3 写法填值。读者：卷十三 §2.8“拒绝决斗”来源行、R13-17.2；卷十八来源表事件行；卷二十二已知事件。理由（必要）：应答结论 `refuse` 与会话状态 `refused` 原先都不发事件，卷十三“拒绝决斗”来源行无事件可订，只能以此刻关系推当时应答而误判（未答、已答且同意边已结束、玩家晚答三种）；主会话裁定③（载荷每栏须有可读来源）：会话记录补 `awaitedEvent: EventId`（可空），由把会话转入等待应答的那笔事务写入、离开等待态时清空，席位路 `invite` 读它，NPC 路照旧取所裁邀约事件 id，否则席位拒绝的 `invite` 无值可取；同意族有“答应”（开立同意边，持有变化事件）而无“拒绝”的世界记录，不完整 |
 
 ## 附录 自检脚本输出
 
