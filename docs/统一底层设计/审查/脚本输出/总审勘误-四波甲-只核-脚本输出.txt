@@ -1,0 +1,190 @@
+=== node vols/check-卷二十一.mjs
+PASS 1 章节 §0–§8 与术语表齐全
+PASS 2 十一个子系统各六小节齐全
+PASS 3 数据实例数量与两类覆盖
+PASS 4 验收断言三式齐全
+PASS 5 规则与正文无具体 id 字面量
+PASS 6 无用于判断的描述性文本
+PASS 7 台账七项概念写全
+PASS 8 不越界（谓词定义、价格目标、生命值字段、非身体类行均为 0） — pred=0 price=0 hp=0 nonBody=0
+PASS 9 跨卷引用带标题
+PASS 10 json 代码块可解析（14 块） — bad=0
+PASS 11 状态行实例形状合规（20 行）
+PASS 12 实例所用状态族均已登记
+PASS 13 开放问题成表（20 条）
+PASS 14 效果族调用带目标行参数（17 处调用），无按状态命名的效果族
+PASS 15 浓度与严重度分开、过量阈值单点（3 条药性轴）
+PASS 16 六条裁定的单点定义齐全、旧写法已清
+PASS 17 迁移清单补全、记账栏与影响面表在卷末
+PASS 18 二审余项六条的定义在位、旧写法已清、影响面表有二审一行
+PASS 19 终核两条与同类清单本卷条目：定义在位、旧写法已清、数据不走被封的入口（亏空行 4 条）、影响面表有终核一行
+PASS 20 第五版三项裁定与卷二 §2.6 对齐：定义在位、旧写法已清、心理量归属只写一处、卷末有来路核对输出与影响面一行
+PASS 21 第六版裁定四条（第七版起禁填清单改白名单）：亏空行代入口径单点、白名单外字段一律锁死、倍率不作用、"饱足"不走倍率、三条路可机判、储备式只读身体
+PASS 22 第六版同类清单 21-1、21-2：严重度扩展标度与误差界在位；免疫、浓度为存量锚点，重设值 10⁸ 标度，旧字段名已清
+PASS 23 第七版：误差界计全部写入并分项写出；体重的幂引卷二的对数与指数、其误差为确定式；药性轴体重指数为 0.75；影响面表有第七版一行
+PASS 24 第八版：误差界改为误差量的确定式（浓度、严重度各类写入、免疫）、只引卷二的口径、旧的截断次数写法已清、附录六验算无失败项、影响面表有第八版一行
+行数 1658；子系统 11；规则条数 78；json 块 14；状态行实例 20；开放问题 20；失败项 0
+exit=0
+=== node vols/check-卷二十五.mjs
+PASS  1 顶层节 §0
+PASS  1 顶层节 §1
+PASS  1 顶层节 §2
+PASS  1 顶层节 §3
+PASS  1 顶层节 §4
+PASS  1 顶层节 §5
+PASS  1 顶层节 §6
+PASS  1 顶层节 §7
+PASS  1 顶层节 §8
+PASS  1 附 术语与代号表
+PASS  1 无残留占位标记
+PASS  2 子系统数  = 12
+PASS  2 子系统 4.1 六小节
+PASS  3 子系统 4.1 数据实例  条数 4，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.1 三类断言
+PASS  4 子系统 4.1 规则条数  = 10
+PASS  2 子系统 4.2 六小节
+PASS  3 子系统 4.2 数据实例  条数 4，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.2 三类断言
+PASS  4 子系统 4.2 规则条数  = 10
+PASS  2 子系统 4.3 六小节
+PASS  3 子系统 4.3 数据实例  条数 4，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.3 三类断言
+PASS  4 子系统 4.3 规则条数  = 8
+PASS  2 子系统 4.4 六小节
+PASS  3 子系统 4.4 数据实例  条数 4，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.4 三类断言
+PASS  4 子系统 4.4 规则条数  = 7
+PASS  2 子系统 4.5 六小节
+PASS  3 子系统 4.5 数据实例  条数 4，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.5 三类断言
+PASS  4 子系统 4.5 规则条数  = 10
+PASS  2 子系统 4.6 六小节
+PASS  3 子系统 4.6 数据实例  条数 4，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.6 三类断言
+PASS  4 子系统 4.6 规则条数  = 9
+PASS  2 子系统 4.7 六小节
+PASS  3 子系统 4.7 数据实例  条数 4，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.7 三类断言
+PASS  4 子系统 4.7 规则条数  = 8
+PASS  2 子系统 4.8 六小节
+PASS  3 子系统 4.8 数据实例  条数 4，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.8 三类断言
+PASS  4 子系统 4.8 规则条数  = 8
+PASS  2 子系统 4.9 六小节
+PASS  3 子系统 4.9 数据实例  条数 4，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.9 三类断言
+PASS  4 子系统 4.9 规则条数  = 7
+PASS  2 子系统 4.10 六小节
+PASS  3 子系统 4.10 数据实例  条数 4，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.10 三类断言
+PASS  4 子系统 4.10 规则条数  = 6
+PASS  2 子系统 4.11 六小节
+PASS  3 子系统 4.11 数据实例  条数 4，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.11 三类断言
+PASS  4 子系统 4.11 规则条数  = 6
+PASS  2 子系统 4.12 六小节
+PASS  3 子系统 4.12 数据实例  条数 4，非西陲 true，非人类或超自然 true
+PASS  4 子系统 4.12 三类断言
+PASS  4 子系统 4.12 规则条数  = 6
+PASS  5 具体实体 id 字面量
+PASS  6 用于判断的描述性文本（§1、§7 引述旧代码除外）
+PASS  6 规则小节无中文取值比较
+PASS  6 具体地名与具体主粮名
+PASS  6 规则小节无裸系数
+PASS  7 台账概念「作物参数与生长」落在 §4.1 规则
+PASS  7 台账概念「农事历、播种收割、歉收」落在 §4.2 规则
+PASS  7 台账概念「害兽」落在 §4.3 规则
+PASS  7 台账概念「土地肥力」落在 §4.4 规则
+PASS  7 台账概念「畜牧（饲料、产奶、剪毛、繁殖、淘汰）」落在 §4.5 规则
+PASS  7 台账概念「驯服、宠物、坐骑」落在 §4.6 规则
+PASS  7 台账概念「屠宰与收获产量」落在 §4.7 规则
+PASS  7 台账概念「狩猎、捕鱼、采集的方法行」落在 §4.8 规则
+PASS  7 台账概念「烹饪配方行与折损数据」落在 §4.9 规则
+PASS  7 台账概念「酿造配方行」落在 §4.10 规则
+PASS  7 台账概念「储藏腐坏接口」落在 §4.11 规则
+PASS  7 台账概念「伦理禁食禁屠」落在 §4.12 规则
+PASS  7 E-04 plant：卷二首批字段在 §2.1 逐行给出
+PASS  7 E-04 plant：sowSeasons / harvestSeasons 有处置
+PASS  7 §2.1 维度行九列齐全（含单位、取值域、onUnknown、出处）  异常 0
+PASS  7 产量三方面（地、天、人）在 §4.1 规则给出
+PASS  7 卷五存量、卷二十天气、卷三材料的维度未在本卷 §2 重定义
+PASS  7 §7 列入 agriculture.mjs:313
+PASS  7 §7 覆盖素材包 §3b 的写死与读文字位置
+PASS  8 骰值键不用全局计数器
+PASS  8 结果与推进路径无关有明文
+PASS  9 卷末有小项记账栏与第二版影响面表
+PASS  9 旧口径的字段与写法已从正文清除
+PASS  9 裁定1：另造的畜产字段只在"已删除"的说明里出现
+PASS  9 裁定1：§4.5 规则用卷四三入口并写明材料、技能、意图
+PASS  9 裁定1：§4.5 规则无待收入账
+PASS  9 裁定2：害兽只在卷五容量模型算一次，本卷只供 cropForage
+PASS  9 裁定2：§4.8 食物链含义不重复扣减
+PASS  9 裁定3：耕作记录键为（存量单元，plantingId）
+PASS  9 裁定3：按日累积、不追溯，有规则与断言
+PASS  9 裁定4：§2.1 有 restartKg、coverDim
+PASS  9 裁定4：方法行字段名与意图槽按卷五第三版
+PASS  9 裁定5：§7 逐处列出一审 B 第 11 条与卷二十移交的位置（30 项）
+PASS  9 裁定5：§7 每行都有去向  空 0
+PASS  9 扫描式改为白名单与全量口径（S25-9 至 S25-11；S25-3 无主题限定）
+PASS  9 驯服容器不施于有心智者；sapientShare 读 sourceSapient
+PASS  9 小项记账栏条数（A 12 + B 8）  = 20
+PASS  10 标题为现行版（第五版），卷末有第三版影响面表
+PASS  10 §2.3 各逐次改写的字段登记 stockMode（25-4、25-5、25-7、25-8）
+PASS  10 lostKg 不存储，改为派生（25-6）
+PASS  10 extScale 误差界按放大口径写，并有断言 A25-1.6
+PASS  10 stand、frostKeep 不再是逐日截断的百万分比
+PASS  10 N1：记录现存量每种变动只有一条写入路径，next 不含损耗
+PASS  10 N2：多年生丰歉累计按年周期重新起算，年周期读卷二十日历入口
+PASS  10 A 类：规则里不再有按单次比例分摊、同扣的写法（25-1 至 25-3）  命中 0
+PASS  10 A 类：三处都引卷二 §3.3 第 3 条，配额与累计已做量有存储键
+PASS  10 A 类：规则里没有自写的取整分摊式
+PASS  10 后门：两条封闭声明各有加载期校验（S25-12、S25-13）并在规则里单点写明
+PASS  10 后门：两条校验各有夹具断言
+PASS  10 卷四第六版：正文不再出现 feeds
+PASS  10 卷四第六版：可食引 edibleShareOf，primaryConsumer 注明派生
+PASS  10 restartKg 的含义单点归卷四，本卷只登记并引用
+PASS  10 satiety：饱腹值按干重总能、吸收率归卷四，三处规则对齐
+PASS  10 开放问题含 Q17（两条校验的错误码登记）
+PASS  11 第四版修订记录逐条写明新增设计的必要理由
+PASS  11 V3-2：§4.4.5 神迹实例与 S25-13 一致
+PASS  11 单通道二-3 后半：三处"无处可写"断言引卷二 §2.7 的 pathTypes 闭集判据
+PASS  11 三处断言不再以 S25-9 三模块白名单为判据
+PASS  11 V3-1：S25-5 第三入口接收毁因代号，不新增入口
+PASS  11 基值与有效值读法：两处命中按卷三乙 M-12 写明
+INFO  正文行数（不含自检附录） = 1090
+INFO  子系统数 = 12；开放问题数 = 17
+结果：全部通过
+exit=0
+=== node book/scan-sparse-map.mjs
+== 判据 E-DIM-MAP-SPARSE-NONSUM ==
+FAIL E-DIM-MAP-SPARSE-NONSUM 卷二十三-艺术文学与文化产物:377 ? 稀疏映射未标 combine=sum [缺键]
+RESULT 判据失败 1 条
+== 候选清单（宽口径，人工复核用，不判失败）==
+卷七-信仰与文化:1427	vector	[缺省值]	`value` 族（价值轴词表，全书唯一一张，台账 X-06）；文化行 `values`（各轴缺省值）；`ethic` 族条目 `{required, about: set<ref>, vector: map<ref vocab value, number>}`；文化行 `ethics`（对每类行为的态度，[−1, 1]）；`taboo` 族条目 `{acts: set<ref>（动作代号）, taxa: set<ref vocab taxon>, sapientShareMin: number nullable, kinDistanceMax: integer nullable, bondK
+卷九-AI接口:196	effects	[缺键]	| `effects` | map<degree, list<effectCall> nullable> \| `from_slot` | — | `from_slot` 见 `shapeFrom`，各档按 R9-1.13 折算；否则键全覆盖 `degree` 族五档，缺键即加载失败；`check` 为空时 `success` 非 null，其余四档显式写 null，表示无检定时此档不出现（R9-3.7 成功度恒为 `success`）；`check` 非空时五档都非 null，大成功、大失败与成功、失败同效的，显式写与 `success`、`failure` 相同的一列 | 加载失败 | 各
+卷九-AI接口:203	sourceStrength	[稀疏/缺键]	| `sourceStrength` | map<ref vocab sense, number> combine=sum | 随感官（到达量的单位，卷五 §4.2（分区、方位与感知通道） 规则 3） | 键为 `sense` 族代号（卷五 §4.2.1（维度）），各值为实数（可负）；叠加修正映射（卷二 §1.6（缺失处置）第 5 项），键集可稀疏，缺键即该感官不加修正项；行上必写，本动作不改任何感官的源强写 `{}` | 加载失败（必填） | 源强修正项（封卷后勘误，李白 11-14 20:22 根因 G P-8）：行为人做本动作期间，键 s 的值作加性修正项叠加到卷五修正目标键 `sens
+卷九-AI接口:276	rules.act.paceFloor	[取 0]	| `rules.act.paceFloor` | map<act_class, number> | 键全覆盖 `act_class`；每值 [0, 1]。按动作类取节奏下限，取 0 的类节奏可为 0（C17-1 第 2 点） | R9-1.4 |
+卷九-AI接口:290	rules.review.tolerance	[缺键]	| `rules.review.tolerance` | map<claim_kind, number ≥ 0> | 键全覆盖 `claim_kind` 族，缺键即加载失败；不设容差的种类显式写 0 | R9-11.4 |
+卷九-AI接口:295	rules.npc.stanceWeights	[缺键/不加项]	| `rules.npc.stanceWeights` | map<ref vocab stance_axis, number> combine=sum | 叠加修正映射（卷二 §1.6（缺失处置）第 5 项），缺键即该轴不加项 | R9-12.3 |
+卷九-AI接口:313	rules.gate.categoryMap	[缺键]	| `rules.gate.categoryMap` | map<屏蔽词类别代号, reject_code> | 键全覆盖屏蔽词类别族（卷二 §1.9（代号、显示名与语言边界）），缺键即加载失败；没有专门拒收代号的类别显式写 `reject:blocklist` | R9-19.5 |
+卷九-AI接口:537	degreeBps	[缺档]	- **R9-1.13 取自槽位**（C15-1 ①）：动作行的 `check.skill`、`requirement`、`baseMinutes`、`effects`、`backlash` 与其 `costRows` 所指行的 `resource` 写 `from_slot` 的，值不在行上，由本行 `shapeFrom` 的读入口按此刻意图的槽位给出。凡读到这些列之处（R9-1.2 试算、九段、R9-1.4 开工定工量、R9-1.12 ① 重查）都在读的那一刻以同一组实参调该入口，不缓存、不存储；该入口的 `inputsOf` 依赖并入 R9-1.12 的重查集合 K。取返回的键：`ski
+卷二十三-艺术文学与文化产物:377	?	[缺键]	  4. **角色**：每个抽中的对象配一个 `subjrole`，取意图槽位 `roles`（必传，`map<enum subjkind, ref vocab subjrole>`，键须覆盖该作品种类的 `subjectKinds`，缺键即动作不可选；R23-1.2 ③ 传创作动作专有槽位里的 `roles`，该槽位由提出动作的一方写定）里该对象种类的值。委托可以指定某对象担 `honors` 为真的角色（传奇的来处，§4.6）。
+卷二十三-艺术文学与文化产物:947	?	[缺省取]	| 封卷后勘误 1114w4b2（2026-11-14，改稿 claude-opus-5-5 中档；依据 `审查/总审勘误-四波乙-只核.md` 余项与主会话口径（台账 065d61f0：函数入参的缺省同按卷二 §1.6 通则 2 改为调用方必传）；版本号不升；改前快照 `版本快照/卷二十三-勘误前-1114w4b2.md`，改后覆盖 `版本快照/卷二十三-封卷.md`） | R23-2.2 ③“`slots` 缺省取 `min`”、④“缺省取规则表的缺省角色”（该规则表键全书未登记）、R23-7.2“`ctx.scope` 缺省全世界”都是入参常量缺省 | `slots` 改必传；角色改由必
+卷二十二-知识信息与传播:215	public.injectBoost	[缺键]	| `public.injectBoost` | `map<ref vocab kchan, integer ≥ 0>` | 一次注入加多少进度点。键集须覆盖 `sense` 非空的全部 `kchan` 行（亲身感知通道），加载期校验，缺键即加载失败；所以 R22-5.2 取最大时每个所经通道都有值，没有缺键情形（封卷后勘误 1114w2e3） |
+卷五-地点地形与资源场:137	deposits	[缺键]	| `deposits` | map<ref refs[kind material, kind plant], score nullable> | score | [0,100] | never（只许出现在 comp_tract 行） | skip | 否 | 丰度评分。展平后键全覆盖 `material` 与 `plant` 两表全部实体行（共同的 null 底由类别行 `extends` 给出，卷二 §1.6（缺失处置）第 4 项），缺键只表示未知、按 onUnknown 处置；矿物键非 null 表示"此处有此矿"，null 表示此处无此矿；植物键非 null 表示对群落丰度的偏离，nu
+卷五-地点地形与资源场:482	?	[缺键/不加项]	   - **一次性源**（一声吼、一下敲击、一道闪光）没有场可读。它以**行为人**（发出动静的实体）为主体，对感官 s 求修正目标键 `sense.sourceStrength[s]`（§2.3）经卷二 §3.3 管线的值：基值 = 行为人所在实体表的 `sourceStrength[s]` 列（`map<ref vocab sense, number>`，键全覆盖 `sense` 族）：个体取其物种行（卷四物种表登记）、物品取物品表（卷三乙登记）、地点取 place 表（§2.1，本卷登记）；各值经该表类别行的 `extends` 继承给出，由数据给值（基础类别行在数据里写全 `sens
+卷五-地点地形与资源场:521	envelope	[缺键/缺项]	| `envelope` | struct{tempC:[min,max], precipMm:[min,max], elevationM:[min,max], skyExposure:[min,max], depthM:[min,max], terrains: set<enum terrain>, waterAny: set<ref vocab water>, aspectMin: map<ref vocab sphere, score nullable>} | 该群落成立的条件包络；`aspectMin` 键全覆盖 `sphere` 族，缺键即加载失败，对某领域不设下限的该键显式写 nul
+卷五-地点地形与资源场:910	bySite	[缺 `]	- `terrain-modifiers.json`：`{byTerrain: map<enum terrain, list<修正项模板>>, byBiome: map<enum biome, list<…>>, bySite: map<enum site, list<…>>, slopeCurve}`。键全部是词表代号。本表不设湿滑曲线：路面因雨雪变得难走，是卷十七合成行程时读卷二十环境量的事，路况系数只描述路本身（规则 1）。`slopeCurve` 的值域严格大于 0（加载校验）。模板字段与卷二 §3.2 相同，缺 `source`（求值时填所在地点）；模板的 target 不得是群落包
+卷六-经济:220	household.json	[缺键]	| `household.json` | `selfSupplyTimeShare: fraction`；`tierOrder: list<必需档代号>`；`minShortageShare: fraction`；`shortVerb: map<用度类代号, ref vocab verb>`（某用度类缺量时发的动词；键全覆盖用度类族，缺键即加载失败；不设分动词的用度类显式写通用动词 `verb_supply_short`，§4.12 规则 6；封卷后勘误，卷七牵连） |
+卷六-经济:223	contract.json	[缺键]	| `contract.json` | `grace: map<obl, integer>`（分钟；键是 `obl` 条目 `graceKey` 所取的值）；`noticeDays: map<通知期键, integer>`（键是 `ckind` 条目 `noticeDaysKey` 所取的值）。两张表的键由登记该 `obl`、`ckind` 条目的卷连同条目一起登记，凡被条目引用的键必须在表里、值必写，缺键加载失败，不设缺省；现有别卷登记：卷二十二缄默合同的 `grace.obl_silence_keep`、`grace.obl_silence_pay`、`noticeDays.notice_
+卷十七-交通与路途:136	tmode	[缺键]	| `tmode`（`tmode_`，通行方式） | `ways: set<enum way_kind>`（非空；飞行取两者）；`gaits: set<ref vocab gait>`；`terrainPass: map<enum terrain, fraction nullable>`（必写；展平后键集须覆盖卷五 `terrain` 封闭清单的全部条目，缺键即加载失败 E-TRIP-MODE；与参照方式无差的地形显式写 1，0 即此种地形走不了，null 只表示该地形系数未知，按 `wsum` 未知传播使该段地形系数未知；含义见下）；`envCurves: list<struct{envKe
+卷十九-建筑与设施:163	ratingWeights	[缺键]	| `ratingWeights` | map<ref vocab raspect, fraction> | fraction | 值之和为 1 | always | error | 房间评价各项的权重；每个类型行必写，键须覆盖 `raspect` 族全部条目（权重为 0 的也写），缺键加载失败；建筑 `type` 为 null 时用 `rules.facility.rating.defaultWeights`（§4.11 规则 3，键同样须全覆盖） | RW#25 |
+卷十九-建筑与设施:190	bform	[缺省值]	| `bform` 形制 | `bldform_` | 开放 | `envelopeReq: ref requirement`（围护用料的选择器；各消耗项的 `qty` 是**体积份额**，和为 1，§4.4 规则 1）；`wallThicknessDefaultM`、`wallThicknessMinM`（意图未给墙厚时的缺省值、这种盖法允许的最薄值；建筑行上的 `wallThicknessM` 只有 §2.1 一个来源）；`storeyHeightM`；`perimeterFactor`；`roofCover: fraction`；`apertureBase: fraction`；`pro
+卷十九-建筑与设施:926	concealment	[缺键]	`fixture` 条目的 `mechanism: struct{trigger: struct{quantity: enum trigq, threshold: number, rearmMinutes: integer} nullable, powerOutRX: rx nullable, powerNeedW: number nullable, concealment: map<ref vocab sense, number> combine=sum, effects: list<effectCall>}`（`concealment` 是叠加修正映射，卷二 §1.6（缺失处置）第 5 项
+卷十五-法术与超自然:154	castmode	[缺键]	| `castmode`（`cmode_`） | `capBps: integer`；`costBps: integer`；`minutesBps: integer`；`sourceStrength: map<ref vocab sense, number> combine=sum`（叠加修正映射，卷二 §1.6（缺失处置）第 5 项；键为卷五 `sense` 族代号，各值为实数、可负，单位随感官，缺键即该感官不加修正项；行上必写，不改任何感官的源强写 `{}`；R15-4.6）；`difficultyAdd: number` | 施为方式（意图的一个槽位）：对上限、代价、工时、施为者源强、难
+卷十八-社会关系与家族:137	relation	[缺键/不加项/取 0]	| `relation`（`rel_`，卷二 §1.12（派生与聚合原语）已定基础字段 `from/to/via/inputs/intimate`） | 代号可加行，字段集合封闭（一审后裁定；牵连见卷末影响面表） | 社会字段组，由本卷单点定义。`kind` 非空即社会关系条目，整组必须填全（E-REL-SOCIAL-FIELDS）；聚合用的条目整组不填，也不得被 `terms.rel` 或史实记录引用。字段：`persistence: enum persistence_mode`（现役或史实，§4.1.1）；`kind: ref vocab holding_kind`（挂在哪个种类行下，该行
+卷十八-社会关系与家族:238	orgTraits	[缺键]	| `orgTraits` | map<ref vocab orgkind, struct{domestic, descentGroup: boolean}> | 家户类、世系类的判定；orgkind 族的每条条目在这里必须有同键的一行，两项行上必写（E-KIN-ORG-TRAITS；封卷后勘误 1114w3a，原“缺键即两项皆假”是隐性缺省，删） |
+卷十六-神怪与怪物:144	mtier	[缺键]	| `mtier`（`mtier_`） | `rank: integer`（各条目互不相同）；`minPower: integer ≥ 0`；`quota: map<enum juris, integer ≥ 0 nullable> nullable`（必写；null 即此档不设内容配额；非空时 `juris` 族每个条目各写一键，缺键加载失败，E-BST-QUOTA；值为 null 即该层级不设配额）；`maxAlive: map<enum juris, integer ≥ 0 nullable> nullable`（必写；null 即此档不设在世上限；非空时 `juris` 族每个条目各写
+卷四-生物身体与人物:288	diet	[缺键/没有键/取 0]	| `diet` | `eats: rx`；`assimilation: struct{bySubstance: map<ref vocab substance, fraction nullable>, other: fraction nullable}`；`eatsTaxa: set<ref vocab taxon>`；`primaryConsumer: boolean`（派生字段，数据行不得填写，第六版）；`fiberPenalty: number nullable`（取值域 [0,5]；李白 11-13 准加纤维含量后补） | 一种消化能力，不是一张食物名单（第五版，全书同类"选材与组合
+候选合计 26 条
+exit=1
