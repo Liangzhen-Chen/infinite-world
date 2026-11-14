@@ -1,0 +1,41 @@
+--- "backup/check-\345\215\267\345\205\253b.mjs.20261114-015125.bak"	2026-11-14 01:51:25.950822900 +0000
++++ "check-\345\215\267\345\205\253b.mjs"	2026-11-14 01:51:43.450198700 +0000
+@@ -91,8 +91,17 @@
+ const kw = ['规范栈', '法典按地区', '罪名谓词', '立案到执行', '刑罚', '流放', '赎罪', '复仇', '决斗', '法律门控', '合法性是后果', '处分权', '治安值', '治安力量响应', '安全状态', '通缉', '击杀权', '赏金', '腐败', '贿赂', '审计', '犯罪生态', '黑市', '走私罪名侧', '人质', '囚犯', '奴役', '赎身', '身份等级', '入籍', '民事', '救济'];
+ const missKw = kw.filter(k => !heads.includes(k));
+ const body4 = meta.filter(m => /^## §4 /.test(m.h2)).map(m => m.line).join('\n');
+-const codes = ['lawCodeView', 'offenseView', 'normStack', 'provisionFor', 'contrabandAt', 'enactLaw', 'repealLaw', 'bindLaw', 'state.lawBindings', 'offensesOfFact', 'noteFact', 'addWitness', 'caseStep', 'evidenceScore', 'convictionCount', 'state.offenseFacts', 'state.cases', 'state.criminalRecord', 'sentenceRange', 'commuteStep', 'justifications', 'lawGate', 'legalCapacity', 'legalityOf', 'validity', 'recognized', 'disposalRight', 'securityOf', 'responseOf', 'dispatchResponse', 'state.crimeLoad', 'safetyOf', 'attackLegality', 'settleFlags', 'issueWanted', 'liftWanted', 'state.legalFlags', 'bountiesOn', 'postBounty', 'claimBounty', 'auditGaps', 'auditStep', 'state.lastAudit', 'crimeProspect', 'settleCrime', 'state.crimeRem', 'custodyOf', 'custodyStep', 'bondOf', 'bondStep', 'estateOf', 'naturalizeOptions', 'estateStep', 'claimsOf', 'limitationOf', 'agencyOf', 'goodFaithOf', 'applyRemedy', 'agencyStep', 'breachHandler', '无权代理', '无权处分', '善意取得', '时效', '违禁'];
++const codes = ['lawCodeView', 'offenseView', 'normStack', 'provisionFor', 'contrabandAt', 'enactLaw', 'repealLaw', 'bindLaw', 'state.lawBindings', 'offensesOfFact', 'noteFact', 'addWitness', 'caseStep', 'evidenceScore', 'convictionCount', 'state.offenseFacts', 'state.cases', 'state.criminalRecord', 'sentenceRange', 'commuteStep', 'justifications', 'lawGate', 'legalCapacity', 'legalityOf', 'validity', 'recognized', 'disposalRight', 'securityOf', 'responseOf', 'dispatchResponse', 'state.crimeLoad', 'safetyOf', 'attackLegality', 'settleFlags', 'issueWanted', 'liftWanted', 'state.legalFlags', 'bountiesOn', 'commissionStep', 'auditGaps', 'auditStep', 'state.lastAudit', 'crimeProspect', 'settleCrime', 'state.crimeRem', 'custodyOf', 'custodyStep', 'bondOf', 'bondStep', 'estateOf', 'naturalizeOptions', 'estateStep', 'claimsOf', 'limitationOf', 'agencyOf', 'goodFaithOf', 'applyRemedy', 'agencyStep', 'breachHandler', '无权代理', '无权处分', '善意取得', '时效', '违禁'];
+ const missCode = codes.filter(c => !body4.includes(c));
++// 悬赏发布与领赏的入口出处（李白 11-14 卷二十四二审 T7 选甲：并入卷二十四委托，原 postBounty/claimBounty 删去）：
++// §4.9.2 统一入口须写明写者为卷二十四 commissionStep 并带卷二十四 §4.5 引用；R8b-9.1 发布、R8b-9.3 领赏须各自引卷二十四入口
++const s492 = meta.filter(m => m.h4 === '#### 4.9.2 统一入口').map(m => m.line).join('\n');
++if (!/卷二十四 §4\.5（[^）]+）[^\n]*发布[^\n]*交差[^\n]*`commissionStep`/.test(s492)) missCode.push('§4.9.2 未引卷二十四发布/交差入口 commissionStep');
++const r91 = meta.find(m => /^- \*\*R8b-9\.1 /.test(m.line))?.line ?? '';
++if (!/卷二十四/.test(r91) || !/发布/.test(r91)) missCode.push('R8b-9.1 发布未引卷二十四');
++const r93 = meta.find(m => /^- \*\*R8b-9\.3 /.test(m.line))?.line ?? '';
++if (!/卷二十四[^\n]*交差/.test(r93) || !/`commissionStep`/.test(r93)) missCode.push('R8b-9.3 领赏未引卷二十四交差/commissionStep');
++for (const gone of ['postBounty', 'claimBounty']) if (body4.includes(gone)) missCode.push('§4 仍用已删入口 ' + gone);
+ const ruleIds = new Set(body4.match(/R8b-\d+\.\d+/g) ?? []);
+ const gaps = [];
+ for (let n = 1; n <= N; n++) {
+@@ -200,8 +209,18 @@
+ for (const u of used) if (!s3.includes('`' + u) && !foreign.has(u) && !/^(rules|state)$/.test(u) && /[A-Z]/.test(u)) r13.push('入口未进 §3: ' + u);
+ // §3.1/§3.2 列的每个入口都在 §4 的某个“统一入口”或“规则”小节里出现
+ const entryNames = new Set();
+-meta.filter(m => /^### 3\.[12] /.test(m.h3) && /^\| `/.test(m.line)).forEach(m => { const cell = m.line.split('|')[1]; for (const x of cell.matchAll(/`([a-z][A-Za-z]+)/g)) entryNames.add(x[1]); });
++// 勘误删去的入口（第三栏为“已删去”）：不计入须在 §4 使用之列，但该行须写明去处为卷二十四 §4.5 委托的写者 commissionStep，且 §4 不再使用
++const deletedEntries = new Set();
++meta.filter(m => /^### 3\.[12] /.test(m.h3) && /^\| `/.test(m.line)).forEach(m => {
++  const cells = m.line.split('|'); const names = [...cells[1].matchAll(/`([a-z][A-Za-z]+)/g)].map(x => x[1]);
++  if (/^\s*—\s*$/.test(cells[2] ?? '') && /^\s*已删去/.test(cells[3] ?? '')) {
++    if (!/卷二十四 §4\.5（[^）]+）/.test(cells[3]) || !/`commissionStep`/.test(cells[3])) r13.push('§3 删去入口未写明卷二十四去处: ' + names.join('/'));
++    names.forEach(n => deletedEntries.add(n));
++  } else names.forEach(n => entryNames.add(n));
++});
+ for (const e of entryNames) if (!body4.includes(e)) r13.push('§3 入口未在 §4 使用: ' + e);
++for (const e of deletedEntries) if (body4.includes(e)) r13.push('§3 已删入口仍在 §4 使用: ' + e);
++for (const e of ['postBounty', 'claimBounty']) if (!deletedEntries.has(e) && !entryNames.has(e)) r13.push('§3 入口表缺 ' + e + ' 的去处行');
+ // 规则表键
+ const s26 = meta.filter(m => /^### 2\.6 /.test(m.h3)).map(m => m.line).join('\n');
+ const usedKeys = new Set((all.match(/rules\.law\.[A-Za-z]+(?:\.[A-Za-z]+)*/g) ?? []));
