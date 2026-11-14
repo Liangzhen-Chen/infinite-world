@@ -1,0 +1,749 @@
+# 总审 根因B/F 原始输出 11-14 19:11
+## B: node F:/dnd-tmp/book/scan-rootBF-B.mjs
+
+##### item  卷二 卷二-维度表规范与统一入口.md:1438-1478  定义卷 卷三乙-物态类别与物品.md:149-200 ; 卷三乙-物态类别与物品.md:201-244  卷二行43 定义卷行109
+[细差] massKg | 卷二 :1444 「number kg」 | 定义卷 卷三乙-物态类别与物品.md:155 「number」
+[细差] material | 卷二 :1445 「list<struct{group: ref vocab matgroup, materialRef: ref material, share: fraction}>不重复；第十五」 | 定义卷 卷三乙-物态类别与物品.md:156 「list<struct{group: ref vocab matgroup, materialRef: ref material, share: fraction}>」
+[细差] categoryKind | 卷二 :1449 「derived enum category: `first`，`allowExplicit:true`；未命中 → 实体行显式写 + basis」 | 定义卷 卷三乙-物态类别与物品.md:161 「enum category，derived」
+[细差] sourceMode | 卷二 :1450 「derived enum source: `first`，`allowExplicit:true`；未命中 → 显式写 + basis」 | 定义卷 卷三乙-物态类别与物品.md:162 「enum source，derived，allowExplicit」
+[缺列] origin | 卷二 :1451 类型「ref place nullable」必填「never」 | 定义卷§2小节表内无此行（小节正文提到）
+[缺列] seasonUseFactor | 卷二 :1455 类型「map<ref season, number>」必填「never」 | 定义卷§2小节表内无此行（小节正文提到）
+[细差] necessityTier | 卷二 :1456 「derived ordered enum tier: `max, -1))`，recursive:{relation: rel_downstream_recipes}」 | 定义卷 卷三乙-物态类别与物品.md:164 「ordered enum tier，derived」
+[缺列] produceSeason | 卷二 :1458 类型「set<ref season>」必填「never」 | 定义卷§2小节表内无此行（小节正文提到）
+[缺列] selfMakeRecipe | 卷二 :1459 类型「derived ref recipe nullable」必填「—」 | 定义卷§2小节表内无此行（小节正文提到）
+[差异] wearResistance | 卷二 :1460 「number score」req「byClass:comp_durable」 | 定义卷 卷三乙-物态类别与物品.md:167 「number，derived」unit「score」req「—」 | 派生:卷二否/定义卷是；必填:「byClass:comp_durable」vs「—」；onUnknown:「error」vs「gap」
+[细差] wearPerUse | 卷二 :1461 「number fraction」 | 定义卷 卷三乙-物态类别与物品.md:168 「number」
+[缺列] lifeDays | 卷二 :1462 类型「derived: `wearResistance / `」必填「—」 | 定义卷§2小节表内无此行（小节正文提到）
+[差异] shelfLifeDays | 卷二 :1463 「number day」req「byClass:comp_rottable」 | 定义卷 卷三乙-物态类别与物品.md:174 「number，derived，allowExplicit」unit「day」req「—」 | 派生:卷二否/定义卷是；必填:「byClass:comp_rottable」vs「—」；onUnknown:「error」vs「gap」
+[细差] fragility | 卷二 :1464 「number fraction」 | 定义卷 卷三乙-物态类别与物品.md:166 「number」
+[差异] valueDensity | 卷二 :1466 「derived copper_per_kg」req「—」 | 定义卷 卷三乙-物态类别与物品.md:175 「number copper_per_kg，derived」unit「—」req「—」 | 类型:「copper_per_kg」vs「number」
+[差异] valueBase | 卷二 :1467 「number copper」req「always」 | 定义卷 卷三乙-物态类别与物品.md:176 「number，derived」unit「copper」req「—」 | 派生:卷二否/定义卷是；必填:「always」vs「—」
+[细差] abilities | 卷二 :1468 「map<ref ability, integer 1–3>」 | 定义卷 卷三乙-物态类别与物品.md:177 「map<ref vocab ability, integer>」
+[差异] coverage | 卷二 :1469 「fraction」req「byClass:comp_wearable」 | 定义卷 卷三乙-物态类别与物品.md:186 「number」unit「fraction」req「byClass:comp_wearable」 | 类型:「fraction」vs「number」
+[差异] warmth | 卷二 :1469 「score」req「byClass:comp_wearable」 | 定义卷 卷三乙-物态类别与物品.md:190 「derived：score」unit「—」req「—」 | 派生:卷二否/定义卷是；必填:「byClass:comp_wearable」vs「—」；onUnknown:「error」vs「gap」
+[差异] breathability | 卷二 :1469 「fraction」req「byClass:comp_wearable」 | 定义卷 卷三乙-物态类别与物品.md:190 「fraction」unit「—」req「—」 | 派生:卷二否/定义卷是；必填:「byClass:comp_wearable」vs「—」；onUnknown:「error」vs「gap」
+[缺列] capacityL | 卷二 :1471 类型「number」必填「byClass:comp_container」 | 定义卷§2小节表内无此行（小节正文提到）
+[细差] maxLoadKg | 卷二 :1471 「number」 | 定义卷 卷三乙-物态类别与物品.md:179 「number kg」
+[缺列] parts | 卷二 :1473 类型「list<struct{part: ref item, qty: integer}>」必填「byClass:comp_vehicle」 | 定义卷§2小节表内无此行
+[缺列] fuelClass | 卷二 :1473 类型「ref vocab class」必填「byClass:comp_vehicle」 | 定义卷§2小节表内无此行
+[缺列] vform | 卷二 :1474 类型「ref vocab vform」必填「byClass:comp_vehicle」 | 定义卷§2小节表内无此行
+[缺列] vehicleLoadKg | 卷二 :1475 类型「derived number kg」必填「—」 | 定义卷§2小节表内无此行
+[缺列] speedCapMpm | 卷二 :1475 类型「derived number m_per_minute，均 `modifiable:true`」必填「—」 | 定义卷§2小节表内无此行
+[缺列] useEffects | 卷二 :1476 类型「list<effectCall>」必填「never」 | 定义卷§2小节表内无此行（小节正文提到）
+[缺列] instanceDimensions | 卷二 :1477 类型「`qualityTier`、`durability`、`maker`、`author / contentRef`、`be」必填「按组件」 | 定义卷§2小节表内无此行
+[回填未落] acceptsMaterial | 定义卷 卷三乙-物态类别与物品.md:157 | 卷二本表无同名行
+[回填未落] substituteKey | 定义卷 卷三乙-物态类别与物品.md:165 | 卷二本表无同名行
+[回填未落] volumeCapacity | 定义卷 卷三乙-物态类别与物品.md:178 | 卷二本表无同名行
+[回填未落] encumbrance | 定义卷 卷三乙-物态类别与物品.md:190 | 卷二本表无同名行
+[回填未落] protection | 定义卷 卷三乙-物态类别与物品.md:190 | 卷二本表无同名行
+[回填未落] rarity | 定义卷 卷三乙-物态类别与物品.md:225 | 卷二本表无同名行
+
+##### material  卷二 卷二-维度表规范与统一入口.md:1479-1506  定义卷 卷三甲-物质本源.md:100-166 ; 卷三乙-物态类别与物品.md:133-148  卷二行26 定义卷行59
+[差异] density | 卷二 :1485 「number kg_per_L」req「always」 | 定义卷 卷三甲-物质本源.md:110 「struct:byState<number>」unit「kg_per_L（`gas` 一栏为 kg_per_L_gas）」req「always：三栏至少填一栏」 | 类型:「number」vs「struct:byState」；单位:「kg_per_L」vs「kg_per_L,kg_per_L_gas」
+[差异] moisture | 卷二 :1486 「fraction」req「byClass:comp_edible」 | 定义卷 卷三甲-物质本源.md:145 「number」unit「fraction」req「byDigestible；byClass:comp_edible,comp_dr」 | 类型:「fraction」vs「number」；必填:「byClass:comp_edible」vs「byDigestible」
+[差异] edibleFraction | 卷二 :1486 「fraction」req「byClass:comp_edible」 | 定义卷 卷三甲-物质本源.md:146 「number」unit「fraction」req「byClass:comp_edible」 | 类型:「fraction」vs「number」
+[差异] energyDensity | 卷二 :1487 「number satiety_per_kg_dry」req「byClass:comp_edible」 | 定义卷 卷三甲-物质本源.md:147 「number」unit「satiety_per_kg_dry（卷二 §1.4）」req「byDigestible；byClass:comp_edible」 | 必填:「byClass:comp_edible」vs「byDigestible」
+[细差] mealCap | 卷二 :1488 「number g」 | 定义卷 卷三甲-物质本源.md:150 「number」
+[差异] heatValue | 卷二 :1489 「MJ_per_kg_dry」req「byClass:comp_burnable」 | 定义卷 卷三甲-物质本源.md:136 「number」unit「MJ_per_kg_dry」req「byClass:comp_burnable」 | 类型:「MJ_per_kg_dry」vs「number」
+[差异] charYield | 卷二 :1489 「fraction」req「byClass:comp_burnable」 | 定义卷 卷三乙-物态类别与物品.md:141 「number，derived」unit「fraction」req「—」 | 派生:卷二否/定义卷是；类型:「fraction」vs「number」；必填:「byClass:comp_burnable」vs「—」
+[差异] ignitePoint | 卷二 :1489 「celsius」req「byClass:comp_burnable」 | 定义卷 卷三甲-物质本源.md:137 「number」unit「celsius」req「byClass:comp_burnable」 | 类型:「celsius」vs「number」
+[差异] meltPoint | 卷二 :1490 「celsius」req「byClass:class_metal」 | 定义卷 卷三甲-物质本源.md:131 「number」unit「celsius」req「never」 | 类型:「celsius」vs「number」；必填:「byClass:class_metal」vs「never」
+[差异] specificHeat | 卷二 :1490 「number」req「byClass:class_metal」 | 定义卷 卷三甲-物质本源.md:124 「struct:byState<number>」unit「kJ_per_kg_K」req「never」 | 类型:「number」vs「struct:byState」；必填:「byClass:class_metal」vs「never」
+[差异] hardness | 卷二 :1491 「score ×3」req「never」 | 定义卷 卷三乙-物态类别与物品.md:139 「number，derived，固相量」unit「score」req「—」 | 派生:卷二否/定义卷是；类型:「score」vs「number」；必填:「never」vs「—」
+[差异] toughness | 卷二 :1491 「score ×3」req「never」 | 定义卷 卷三乙-物态类别与物品.md:140 「number，derived，固相量」unit「score」req「—」 | 派生:卷二否/定义卷是；类型:「score」vs「number」；必填:「never」vs「—」
+[差异] sharpnessMax | 卷二 :1491 「score ×3」req「never」 | 定义卷 卷三甲-物质本源.md:118 「number，固相量」unit「score」req「never」 | 类型:「score」vs「number」
+[差异] wearResistance | 卷二 :1492 「score」req「never」 | 定义卷 卷三甲-物质本源.md:119 「number，固相量」unit「score」req「never」 | 类型:「score」vs「number」
+[差异] flammability | 卷二 :1493 「fraction」req「always」 | 定义卷 卷三甲-物质本源.md:112 「number」unit「flam_index（§2.3）」req「always」 | 类型:「fraction」vs「number」；单位:「fraction」vs「flam_index」
+[差异] rotRate | 卷二 :1494 「per_day」req「byClass:comp_rottable」 | 定义卷 卷三甲-物质本源.md:152 「number」unit「per_day_rot」req「byClass:comp_rottable」 | 类型:「per_day」vs「number」；单位:「per_day」vs「per_day_rot」
+[差异] insulation | 卷二 :1495 「celsius」req「byClass:class_fabric,class_leather」 | 定义卷 卷三甲-物质本源.md:129 「number」unit「celsius」req「never」 | 类型:「celsius」vs「number」；必填:「byClass:class_fabric,class_leather」vs「never」
+[差异] breathabilityBase | 卷二 :1495 「fraction」req「byClass:class_fabric,class_leather」 | 定义卷 卷三甲-物质本源.md:130 「number」unit「fraction」req「never」 | 类型:「fraction」vs「number」；必填:「byClass:class_fabric,class_leather」vs「never」
+[细差] armorMult | 卷二 :1502 「map<ref damage, fraction>」 | 定义卷 卷三甲-物质本源.md:120 「map<ref vocab damage, number>，固相量」
+[细差] appearanceRefs | 卷二 :1503 「integer count」 | 定义卷 卷三甲-物质本源.md:156 「integer」
+[回填未落] thermalConductivity | 定义卷 卷三甲-物质本源.md:125 | 卷二本表无同名行
+
+##### species  卷二 卷二-维度表规范与统一入口.md:1507-1533  定义卷 卷四-生物身体与人物.md:119-167  卷二行25 定义卷行41
+[差异] maturityYears | 卷二 :1518 「number」req「byClass:comp_livestock,comp_sapient」 | 定义卷 卷四-生物身体与人物.md:127 「number year」unit「」req「always」 | 必填:「byClass:comp_livestock,comp_sapient」vs「always」
+[细差] gestationDays | 卷二 :1518 「number」 | 定义卷 卷四-生物身体与人物.md:128 「number day」
+[细差] litterSize | 卷二 :1518 「distribution」 | 定义卷 卷四-生物身体与人物.md:129 「distribution count」
+[缺列] products | 卷二 :1522 类型「map<ref item, number per_day>」必填「byClass:comp_livestock」 | 定义卷§2小节表内无此行（小节正文提到）
+[差异] attributesBase | 卷二 :1526 「map<ref vocab attr, distribution score>」req「byClass:comp_sapient」 | 定义卷 卷四-生物身体与人物.md:152 「map<ref vocab attr, distribution score>」unit「」req「always」 | 必填:「byClass:comp_sapient」vs「always」
+[差异] temperament | 卷二 :1527 「axis」req「always」 | 定义卷 卷四-生物身体与人物.md:154 「number axis」unit「」req「always」 | 类型:「axis」vs「number」
+[缺列] sxOrigin | 卷二 :1530 类型「ref vocab sxorigin」必填「byClass:comp_uncanny」 | 定义卷§2小节表内无此行
+[缺列] sxForm | 卷二 :1530 类型「ref vocab sxform」必填「byClass:comp_uncanny」 | 定义卷§2小节表内无此行
+[缺列] sxAnchors | 卷二 :1531 类型「set<ref vocab sxanchor>」必填「byClass:comp_uncanny」 | 定义卷§2小节表内无此行
+[缺列] sxDrives | 卷二 :1531 类型「set<ref vocab sxdrive>」必填「byClass:comp_uncanny」 | 定义卷§2小节表内无此行
+[缺列] sxPowers | 卷二 :1531 类型「set<ref vocab sxpower>」必填「byClass:comp_uncanny」 | 定义卷§2小节表内无此行
+[缺列] sxBounds | 卷二 :1531 类型「set<ref vocab sxbound>」必填「byClass:comp_uncanny」 | 定义卷§2小节表内无此行
+[缺列] sxCulture | 卷二 :1532 类型「ref culture nullable」必填「never」 | 定义卷§2小节表内无此行
+
+##### body_plan  卷二 卷二-维度表规范与统一入口.md:1534-1539  定义卷 卷四-生物身体与人物.md:168-179  卷二行0 定义卷行5
+
+##### person  卷二 卷二-维度表规范与统一入口.md:1540-1560  定义卷 卷四-生物身体与人物.md:180-222  卷二行12 定义卷行44
+[细差] culture | 卷二 :1548 「ref culture，聚合体成员实体化取其聚合体分组键中的文化；物种 `sapient` 为假的个体不写，记 gap；封卷后勘误，原"纯派生 `nearest`"作废）」 | 定义卷 卷四-生物身体与人物.md:204 「`culture` 是出生事实；`faith`、`profession` derived」
+[细差] faith | 卷二 :1549 「derived ref faith nullable」 | 定义卷 卷四-生物身体与人物.md:204 「`culture` 是出生事实；`faith`、`profession` derived」
+[细差] profession | 卷二 :1550 「derived set<ref profession>」 | 定义卷 卷四-生物身体与人物.md:204 「`culture` 是出生事实；`faith`、`profession` derived」
+[缺列] primaryProfession | 卷二 :1551 类型「derived ref profession nullable」必填「—」 | 定义卷§2小节表内无此行
+[细差] skills | 卷二 :1552 「map<ref skill, score 0–2700>」 | 定义卷 卷四-生物身体与人物.md:205 「map<ref skill, score>」
+[缺列] location | 卷二 :1558 类型「ref place」必填「always」 | 定义卷§2小节表内无此行
+
+##### place  卷二 卷二-维度表规范与统一入口.md:1561-1589  定义卷 卷五-地点地形与资源场.md:82-147  卷二行26 定义卷行59
+[细差] coord | 卷二 :1568 「struct{x:number m, y:number m}」 | 定义卷 卷五-地点地形与资源场.md:89 「struct{x,y}」
+[细差] elevationM | 卷二 :1570 「number m」 | 定义卷 卷五-地点地形与资源场.md:92 「number」
+[缺列] annualMeanTempC | 卷二 :1572 类型「derived: `nearest`」必填「—」 | 定义卷§2小节表内无此行
+[缺列] annualPrecipMm | 卷二 :1572 类型「derived: `nearest`」必填「—」 | 定义卷§2小节表内无此行
+[缺列] security | 卷二 :1580 类型「只读视图」必填「—」 | 定义卷§2小节表内无此行
+[细差] culture | 卷二 :1582 「derived ref culture: `mode`」 | 定义卷 卷五-地点地形与资源场.md:118 「derived ref culture」
+[缺列] intendedType | 卷二 :1583 类型「ref facility_type」必填「byClass:comp_facility」 | 定义卷§2小节表内无此行
+[缺列] hiddenness | 卷二 :1586 类型「score [0, 100]」必填「always」 | 定义卷§2小节表内无此行
+[缺列] gateTerms | 卷二 :1587 类型「struct{tollPerHead: integer, tollPerKg: integer, payResource」必填「never」 | 定义卷§2小节表内无此行
+[细差] edges | 卷二 :1588 「struct{from: ref place, to: ref place, distanceM: number, terrainMix: map<ref vocab terrai」 | 定义卷 卷五-地点地形与资源场.md:123 「struct{from,to,distanceM,terrainMix,waterway,speedFactor}」
+[细差] edges | 卷二 :1588 「struct{from: ref place, to: ref place, distanceM: number, terrainMix: map<ref vocab terrai」 | 定义卷 卷五-地点地形与资源场.md:123 「struct{from,to,distanceM,terrainMix,waterway,speedFactor}」
+
+##### facility_type  卷二 卷二-维度表规范与统一入口.md:1590-1609  定义卷 卷十九-建筑与设施.md:151-178  卷二行12 定义卷行16
+[缺列] fixtures | 卷二 :1597 类型「set<ref vocab fixture>」必填「never」 | 定义卷§2小节表内无此行
+[缺列] capacityBase | 卷二 :1598 类型「integer count」必填「always」 | 定义卷§2小节表内无此行
+[缺列] capacityPerFixture | 卷二 :1599 类型「integer count」必填「never」 | 定义卷§2小节表内无此行
+[缺列] lodging | 卷二 :1600 类型「boolean」必填「always」 | 定义卷§2小节表内无此行
+[缺列] public | 卷二 :1600 类型「boolean」必填「always」 | 定义卷§2小节表内无此行
+[缺列] allowedMaterials | 卷二 :1601 类型「set<ref vocab substance>」必填「always」 | 定义卷§2小节表内无此行
+[细差] upkeepPerDay | 卷二 :1602 「map<ref vocab class, number kg_per_day>」 | 定义卷 卷十九-建筑与设施.md:164 「map<ref vocab class, number>」
+[细差] laborPerDay | 卷二 :1603 「integer count」 | 定义卷 卷十九-建筑与设施.md:165 「integer」
+[差异] wearPerDay | 卷二 :1604 「fraction」req「always」 | 定义卷 卷十九-建筑与设施.md:167 「fraction」unit「per_day」req「always」 | 单位:「fraction」vs「fraction,per_day」
+[缺列] buildRequirement | 卷二 :1605 类型「ref vocab requirement」必填「never」 | 定义卷§2小节表内无此行
+
+##### org  卷二 卷二-维度表规范与统一入口.md:1610-1623  定义卷 卷八-政治与人口.md:121-146  卷二行6 定义卷行19
+
+##### office  卷二 卷二-维度表规范与统一入口.md:1624-1638  定义卷 卷八-政治与人口.md:147-181  卷二行8 定义卷行23
+[回填未落] domain | 定义卷 卷八-政治与人口.md:161 | 卷二本表无同名行
+[回填未落] revoked | 定义卷 卷八-政治与人口.md:167 | 卷二本表无同名行
+
+##### polity  卷二 卷二-维度表规范与统一入口.md:1639-1654  定义卷 卷八-政治与人口.md:182-205  卷二行7 定义卷行15
+
+##### deity  卷二 卷二-维度表规范与统一入口.md:1655-1669  定义卷 卷七-信仰与文化.md:138-150  卷二行8 定义卷行8
+[细差] miracleBudget | 卷二 :1663 「struct{perYear: integer, maxMagnitude: score}」 | 定义卷 卷七-信仰与文化.md:144 「struct{perYear: integer, maxMagnitude: number}」
+
+##### faith  卷二 卷二-维度表规范与统一入口.md:1670-1687  定义卷 卷七-信仰与文化.md:117-137  卷二行11 定义卷行16
+[差异] fervor | 卷二 :1682 「instanceDimensions score」req「never」 | 定义卷 卷七-信仰与文化.md:134 「derived number」unit「fraction」req「」 | 派生:卷二否/定义卷是；类型:「instanceDimensions score」vs「number」；单位:「score」vs「fraction」
+[差异] unlocks | 卷二 :1686 「set<ref vocab parameter>」req「never」 | 定义卷 卷七-信仰与文化.md:133 「derived set<ref vocab parameter>」unit「—」req「」 | 派生:卷二否/定义卷是
+
+##### culture  卷二 卷二-维度表规范与统一入口.md:1688-1707  定义卷 卷七-信仰与文化.md:151-176  卷二行15 定义卷行19
+[细差] ethics | 卷二 :1705 「map<ref vocab ethic, axis>」 | 定义卷 卷七-信仰与文化.md:168 「map<ref vocab ethic, number>」
+[细差] values | 卷二 :1705 「map<ref vocab value, axis>」 | 定义卷 卷七-信仰与文化.md:169 「map<ref vocab value, number>」
+[细差] acceptance | 卷二 :1706 「derived map<ref culture, score>；`bounds: [0, rules.culture.acceptance.scoreMax]`」 | 定义卷 卷七-信仰与文化.md:171 「derived map<ref culture, number>；`modifiable:true`；`bounds: [0, rules.culture.acceptance.s」
+
+##### profession  卷二 卷二-维度表规范与统一入口.md:1708-1724  定义卷 卷十四-职业技能与学艺.md:117-139  卷二行10 定义卷行20
+[细差] skills | 卷二 :1715 「map<ref skill, score>」 | 定义卷 卷十四-职业技能与学艺.md:122 「map<skillRef, score>；即**技能轮廓**」
+[差异] variantOf | 卷二 :1720 「ref profession nullable」req「never」 | 定义卷 卷十四-职业技能与学艺.md:129 「derived ref profession nullable：= 本行 `extends` 所指的职业行的继承统一实现，加载器展平时记下）」unit「」req「—」 | 派生:卷二否/定义卷是；必填:「never」vs「—」
+
+##### skill  卷二 卷二-维度表规范与统一入口.md:1725-1739  定义卷 卷十四-职业技能与学艺.md:140-164  卷二行8 定义卷行18
+[差异] prereqs | 卷二 :1732 「map<ref skill, score>」req「never」 | 定义卷 卷十四-职业技能与学艺.md:146 「union{anyOf:[ref vocab requirement, 人需求块内联]}」unit「」req「never」 | 类型:「map」vs「union」
+[差异] rustPerDay | 卷二 :1733 「fraction」req「never」 | 定义卷 卷十四-职业技能与学艺.md:151 「fraction，`per_day`」unit「」req「never」 | 单位:「fraction」vs「fraction,per_day」
+
+##### offense  卷二 卷二-维度表规范与统一入口.md:1740-1754  定义卷 卷八b-法律治安与刑罚.md:137-154  卷二行6 定义卷行11
+[细差] act | 卷二 :1746 「ref vocab verb」 | 定义卷 卷八b-法律治安与刑罚.md:142 「ref vocab verb nullable」
+[细差] against | 卷二 :1747 「rx」 | 定义卷 卷八b-法律治安与刑罚.md:143 「rx nullable」
+
+##### status  卷二 卷二-维度表规范与统一入口.md:1755-1760  定义卷 卷二十一-医疗疾病与身体状态.md:95-129  卷二行0 定义卷行26
+
+##### recipe  卷二 卷二-维度表规范与统一入口.md:1761-1782  定义卷 卷三乙-物态类别与物品.md:1130-1237  卷二行16 定义卷行15
+[缺列] inputs | 卷二 :1768 类型「union{anyOf:[ref vocab requirement, struct]}」必填「always」 | 定义卷§2小节表内无此行（小节正文提到）
+[差异] outputs | 卷二 :1769 「map<ref item, struct{qty: union[number, distribution], inheritMaterial」req「always」 | 定义卷 卷三乙-物态类别与物品.md:1138 「」unit「」req「」 | 类型:「map」vs「」
+[缺列] byproducts | 卷二 :1770 类型「map<ref item, number>」必填「never」 | 定义卷§2小节表内无此行（小节正文提到）
+[缺列] workstation | 卷二 :1771 类型「ref refs[kind facility_type, vocab fixture] nullable」必填「never」 | 定义卷§2小节表内无此行（小节正文提到）
+[缺列] toolAbilities | 卷二 :1772 类型「map<ref vocab ability, integer>」必填「never」 | 定义卷§2小节表内无此行（小节正文提到）
+[缺列] skill | 卷二 :1773 类型「ref skill」必填「always」 | 定义卷§2小节表内无此行（小节正文提到）
+[缺列] skillMin | 卷二 :1773 类型「score」必填「always」 | 定义卷§2小节表内无此行（小节正文提到）
+[缺列] minutes | 卷二 :1774 类型「integer minute」必填「always」 | 定义卷§2小节表内无此行（小节正文提到）
+[缺列] laborHeads | 卷二 :1775 类型「integer count」必填「never」 | 定义卷§2小节表内无此行
+[缺列] qualityCurve | 卷二 :1776 类型「curve{x: score, y: score}」必填「never」 | 定义卷§2小节表内无此行（小节正文提到）
+[缺列] failureRX | 卷二 :1777 类型「rx」必填「never」 | 定义卷§2小节表内无此行（小节正文提到）
+[缺列] wasteFraction | 卷二 :1777 类型「fraction」必填「never」 | 定义卷§2小节表内无此行（小节正文提到）
+[缺列] batchFactor | 卷二 :1778 类型「curve{x: count, y: fraction}」必填「never」 | 定义卷§2小节表内无此行
+[缺列] toolWear | 卷二 :1779 类型「fraction」必填「never」 | 定义卷§2小节表内无此行
+[缺列] learnFrom | 卷二 :1780 类型「set<ref knowledge>」必填「never」 | 定义卷§2小节表内无此行（小节正文提到）
+[缺列] season | 卷二 :1781 类型「set<ref vocab season>」必填「never」 | 定义卷§2小节表内无此行（小节正文提到）
+
+##### plant  卷二 卷二-维度表规范与统一入口.md:1783-1805  定义卷 卷二十五-农牧渔猎与食物链.md:91-124  卷二行16 定义卷行25
+[细差] growthDays | 卷二 :1792 「integer day」 | 定义卷 卷二十五-农牧渔猎与食物链.md:97 「integer」
+[缺列] sowSeasons | 卷二 :1793 类型「set<ref vocab season>」必填「always」 | 定义卷§2小节表内无此行（小节正文提到）
+[缺列] harvestSeasons | 卷二 :1793 类型「set<ref vocab season>」必填「always」 | 定义卷§2小节表内无此行（小节正文提到）
+[细差] yieldPerM2 | 卷二 :1794 「distribution kg」 | 定义卷 卷二十五-农牧渔猎与食物链.md:103 「distribution」
+[差异] growTempC | 卷二 :1796 「struct{min: celsius, max: celsius}」req「never」 | 定义卷 卷二十五-农牧渔猎与食物链.md:98 「struct{min: celsius, max: celsius}」unit「celsius」req「always」 | 必填:「never」vs「always」；onUnknown:「gap」vs「error」
+[差异] frostToleranceC | 卷二 :1797 「celsius」req「never」 | 定义卷 卷二十五-农牧渔猎与食物链.md:100 「number」unit「celsius」req「never」 | 类型:「celsius」vs「number」
+[差异] regrowRate | 卷二 :1804 「per_year」req「byClass:class_wild」 | 定义卷 卷二十五-农牧渔猎与食物链.md:115 「number」unit「per_year」req「byClass:class_wild」 | 类型:「per_year」vs「number」
+
+##### law_code  卷二 卷二-维度表规范与统一入口.md:1806-1820  定义卷 卷八b-法律治安与刑罚.md:155-214  卷二行8 定义卷行27
+[缺列] penalty | 卷二 :1814 类型「struct{kind: enum penalty, amountRX: rx}」必填「always」 | 定义卷§2小节表内无此行
+[缺列] appealTo | 卷二 :1816 类型「ref office nullable」必填「never」 | 定义卷§2小节表内无此行
+[细差] applicabilityRX | 卷二 :1817 「rx」 | 定义卷 卷八b-法律治安与刑罚.md:165 「rx nullable」
+[差异] legislator | 卷二 :1819 「ref org」req「always」 | 定义卷 卷八b-法律治安与刑罚.md:176 「ref org nullable」unit「—」req「」 | onUnknown:「error」vs「skip」
+
+##### knowledge  卷二 卷二-维度表规范与统一入口.md:1821-1849  定义卷 卷二十二-知识信息与传播.md:142-181  卷二行24 定义卷行14
+[差异] family | 卷二 :1830 「enum know_family」req「always」 | 定义卷 卷二十二-知识信息与传播.md:148 「」unit「」req「」 | 类型:「enum」vs「」
+[差异] prereqs | 卷二 :1831 「set<ref refs[kind knowledge, kind skill]>」req「never」 | 定义卷 卷二十二-知识信息与传播.md:149 「」unit「」req「」 | 类型:「set」vs「」
+[差异] difficulty | 卷二 :1832 「score」req「always」 | 定义卷 卷二十二-知识信息与传播.md:150 「」unit「」req「」 | 类型:「score」vs「」
+[差异] regionGate | 卷二 :1833 「set<ref place> nullable」req「never」 | 定义卷 卷二十二-知识信息与传播.md:151 「」unit「」req「」 | 类型:「set」vs「」
+[差异] carriers | 卷二 :1834 「set<enum carrier>」req「always」 | 定义卷 卷二十二-知识信息与传播.md:152 「」unit「」req「」 | 类型:「set」vs「」
+[差异] decayPerYear | 卷二 :1835 「fraction」req「never」 | 定义卷 卷二十二-知识信息与传播.md:153 「」unit「」req「」 | 类型:「fraction」vs「」
+[差异] grants | 卷二 :1836 「set<ref refs[kind recipe, kind skill, vocab ability]>」req「never」 | 定义卷 卷二十二-知识信息与传播.md:154 「」unit「」req「」 | 类型:「set」vs「」
+[差异] effectRef | 卷二 :1837 「effectCall nullable」req「byEnum:family=kfam_spell」 | 定义卷 卷二十二-知识信息与传播.md:155 「」unit「」req「」 | 类型:「effectCall」vs「」；onUnknown:「error」vs「见卷二」
+[差异] cost | 卷二 :1838 「struct{resource: ref vocab resource, amountRX: rx} nullable」req「never」 | 定义卷 卷二十二-知识信息与传播.md:155 「」unit「」req「」 | 类型:「struct」vs「」；onUnknown:「skip」vs「见卷二」
+[差异] cipher | 卷二 :1839 「boolean」req「always」 | 定义卷 卷二十二-知识信息与传播.md:157 「」unit「」req「」 | 类型:「boolean」vs「」；onUnknown:「error」vs「skip」
+[缺列] workkind | 卷二 :1840 类型「ref vocab workkind nullable」必填「never」 | 定义卷§2小节表内无此行
+[缺列] artform | 卷二 :1840 类型「ref vocab artform nullable」必填「never」 | 定义卷§2小节表内无此行
+[缺列] subjects | 卷二 :1841 类型「list<struct{role: ref vocab subjrole, kind: enum subjkind, e」必填「never」 | 定义卷§2小节表内无此行
+[缺列] composer | 卷二 :1842 类型「ref kinds[person, org] nullable」必填「never」 | 定义卷§2小节表内无此行
+[缺列] workTier | 卷二 :1843 类型「ordered enum quality」必填「ifPresent:workkind」 | 定义卷§2小节表内无此行
+[缺列] language | 卷二 :1844 类型「ref vocab language nullable」必填「never」 | 定义卷§2小节表内无此行
+[缺列] basedOn | 卷二 :1844 类型「ref knowledge nullable」必填「never」 | 定义卷§2小节表内无此行
+[缺列] arcSchool | 卷二 :1845 类型「ref vocab arcschool」必填「byEnum:family=kfam_spell」 | 定义卷§2小节表内无此行
+[缺列] arcClasses | 卷二 :1845 类型「set<ref vocab effclass>」必填「byEnum:family=kfam_spell」 | 定义卷§2小节表内无此行
+[缺列] technique | 卷二 :1846 类型「struct{weaponClasses: set<ref vocab class>, modifiers: list<」必填「byEnum:family=」 | 定义卷§2小节表内无此行
+[缺列] loreAbout | 卷二 :1847 类型「struct{kind: enum lore_about, ref}」必填「byEnum:family=」 | 定义卷§2小节表内无此行
+[缺列] loreClaims | 卷二 :1847 类型「list<struct{dim: ref dim, value}>」必填「byEnum:family=」 | 定义卷§2小节表内无此行
+[缺列] loreMotifs | 卷二 :1848 类型「set<ref vocab motif>」必填「never」 | 定义卷§2小节表内无此行
+[缺列] loreCultures | 卷二 :1848 类型「set<ref culture>」必填「never」 | 定义卷§2小节表内无此行
+
+##### event_type  卷二 卷二-维度表规范与统一入口.md:1850-1876  定义卷 卷二十四-事件叙事调度与历史.md:126-223  卷二行23 定义卷行66
+[缺列] family | 卷二 :1859 类型「enum evt_family」必填「always」 | 定义卷§2小节表内无此行
+[缺列] triggerRX | 卷二 :1860 类型「rx」必填「always」 | 定义卷§2小节表内无此行
+[缺列] weightRX | 卷二 :1860 类型「rx」必填「always」 | 定义卷§2小节表内无此行（小节正文提到）
+[缺列] cooldownDays | 卷二 :1861 类型「integer day」必填「never」 | 定义卷§2小节表内无此行
+[缺列] stages | 卷二 :1862 类型「list<struct{id: ref vocab evstage, durationDays: integer, mo」必填「always」 | 定义卷§2小节表内无此行
+[缺列] valuationRX | 卷二 :1863 类型「rx」必填「never」 | 定义卷§2小节表内无此行
+[缺列] subjectKinds | 卷二 :1864 类型「set<enum kind>」必填「always」 | 定义卷§2小节表内无此行（小节正文提到）
+[细差] onVerbs | 卷二 :1866 「list<ref vocab verb>」 | 定义卷 卷二十四-事件叙事调度与历史.md:193 「list&lt;ref vocab verb&gt;」
+[细差] maxConcurrent | 卷二 :1868 「integer count [1, ∞)」 | 定义卷 卷二十四-事件叙事调度与历史.md:196 「integer count」
+[细差] paramsShape | 卷二 :1869 「map<参数代号, 类型>」 | 定义卷 卷二十四-事件叙事调度与历史.md:197 「map&lt;参数代号, 类型&gt;」
+[细差] stageFlow | 卷二 :1870 「list<struct>」 | 定义卷 卷二十四-事件叙事调度与历史.md:198 「list&lt;struct{stage: ref vocab evstage, pace: enum pace_class, onExpire: ref vocab evstag」
+[细差] seatMoves | 卷二 :1871 「list<struct>」 | 定义卷 卷二十四-事件叙事调度与历史.md:199 「list&lt;struct{verb: ref vocab verb, role: ref vocab actrole, slot: 栏位代号, op: enum {join, 」
+[细差] roles | 卷二 :1871 「list<struct>」 | 定义卷 卷二十四-事件叙事调度与历史.md:201 「list&lt;struct{role: ref vocab actrole, whoRX, count: integer}&gt;」
+[细差] upkeep | 卷二 :1871 「list<struct>」 | 定义卷 卷二十四-事件叙事调度与历史.md:203 「list&lt;struct{stage, resource: ref, perHead: integer, perDay: boolean}&gt;」
+[细差] allowedTargets | 卷二 :1872 「list<修正键命名空间代号>」 | 定义卷 卷二十四-事件叙事调度与历史.md:200 「list&lt;修正键命名空间代号&gt;」
+
+候选合计 176
+
+## F（严格判据）: node F:/dnd-tmp/book/scan-rootBF-F2.mjs
+[F候选] 表=culture（定义卷 卷七） | gen.faithWeights | 声明 卷十-世界随机生成.md:135 [§2小节表行] | 定义卷§2表首列无；全卷首现 :1025 | ### 2.2 登记在别表上的生成维度 ‖ | `gen.faithWeights` | culture | map<ref faith, integer> | count | 各值 ≥ 0，至少一项 > 0 | nev
+[F候选] 表=culture（定义卷 卷七） | gen.homelandRX | 声明 卷十-世界随机生成.md:136 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.2 登记在别表上的生成维度 ‖ | `gen.homelandRX` | culture | rx nullable | — | 只读政区行的基值维度与其后代存量单元的群落、地形汇总 | never | sk
+[F候选] 表=culture（定义卷 卷七） | gen.homelandWeight | 声明 卷十-世界随机生成.md:137 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.2 登记在别表上的生成维度 ‖ | `gen.homelandWeight` | culture | integer | count | ≥ 1 | never | skip（同上） | 本卷 R10-4.2
+[F候选] 表=culture（定义卷 卷七） | gen.speciesWeights | 声明 卷十-世界随机生成.md:134 [§2小节表行] | 定义卷§2表首列无；全卷首现 :1025 | ### 2.2 登记在别表上的生成维度 ‖ | `gen.speciesWeights` | culture | map<ref species, integer> | count | 各值 ≥ 0，至少一项 > 0 |
+[F候选] 表=culture（定义卷 卷七） | inheritanceRegime | 声明 卷十八-社会关系与家族.md:110 [§2小节表行] | 定义卷§2表首列无；§2 正文提及 :175；全卷首现 :175 | ### 2.1 本卷定义含义的维度 ‖ | `inheritanceRegime` | culture | ref vocab inheritance_regime | — | 族内条目 | error | CK3 05
+[F候选] 表=culture（定义卷 卷七） | marriageRegime | 声明 卷十八-社会关系与家族.md:109 [§2小节表行] | 定义卷§2表首列无；§2 正文提及 :175；全卷首现 :175 | ### 2.1 本卷定义含义的维度 ‖ | `marriageRegime` | culture | ref vocab marriage_regime | — | 族内条目 | error | CK3 05 §6.1 
+[F候选] 表=event_type（定义卷 卷二十四） | kchan | 声明 卷十七-交通与路途.md:823 [句子] | 定义卷§2表首列无；全卷无 | | C17-12 | 卷二十二、卷二十四 | 通道行、知情写入口、事件类型行的登记格式 | 本卷 §4.4、§4.11 | 两卷已成稿（卷二十二 v2、卷二十四 第二版），格式以卷二十二 §2.2 `kchan` 字段与
+[F候选] 表=event_type（定义卷 卷二十四） | meritOf | 声明 卷十三-战斗.md:1336 [句子] | 定义卷§2表首列无；全卷无 | 卷十四（生平事迹取快照所记战斗事实中能经下列事件得到的部分，但不调 `meritOf`、不读 `state.merits`：经本卷已登记事件的载荷取——伤害结算事件（R13-1.11）、决斗结果事件（R13-17.5）、
+[F候选] 表=event_type（定义卷 卷二十四） | noteKnowing | 声明 卷十七-交通与路途.md:823 [句子] | 定义卷§2表首列无；全卷无 | | C17-12 | 卷二十二、卷二十四 | 通道行、知情写入口、事件类型行的登记格式 | 本卷 §4.4、§4.11 | 两卷已成稿（卷二十二 v2、卷二十四 第二版），格式以卷二十二 §2.2 `kchan` 字段与
+[F候选] 表=holding_kind（定义卷 卷十八） | bodyControl | 声明 卷九-AI接口.md:836 [句子] | 定义卷§2表首列无；全卷首现 :403 | 同意是持有边：种类由 `rules.consent.edgeKind` 指名，种类行由本卷登记进卷十八 §4.1（持有种类表与两条转移协议）的表（`intimate` 为假、`bodyControl` 为假、`terms
+[F候选] 表=holding_kind（定义卷 卷十八） | custodyStep | 声明 卷十三-战斗.md:424 [句子] | 定义卷§2表首列无；全卷首现 :486 | | 卷十八 §4.1（持有种类表与两条转移协议） | 手持、在编两个持有种类行（俘获不登记种类，经卷八b 的 `custodyStep` 收押） | §4.5、§4.10 |
+[F候选] 表=holding_kind（定义卷 卷十八） | domicile | 声明 卷十七-交通与路途.md:825 [句子] | 定义卷§2表首列无；全卷首现 :9 | | C17-14 | 卷十八 §4.1（持有种类表与两条转移协议） | 收下本卷登记的持有种类行：搭载、挽具、关卡放行、围方放行四行（`domicile` 均为假
+[F候选] 表=holding_kind（定义卷 卷十八） | edge_origin | 声明 卷十四-职业技能与学艺.md:1726 [句子] | 定义卷§2表首列无；全卷首现 :450 | | 把"执业"持有种类行登记到卷十八的种类表（卷十八 §4.1.4、§5.2） | §4.1.1 的种类行各列表 | §2.4 封闭枚举 `edge_origin`
+[F候选] 表=holding_kind（定义卷 卷十八） | entitled | 声明 卷五-地点地形与资源场.md:735 [句子] | 定义卷§2表首列无；全卷无 | 6. **合法与可行分开**：有没有取用权（林权、矿权、渔猎许可，是登记在卷十八 §4.1 的持有种类行）不影响 `take` 能否成功，只决定返回值里的 `entitled`
+[F候选] 表=holding_kind（定义卷 卷十八） | entryRankMax | 声明 卷五-地点地形与资源场.md:1063 [句子] | 定义卷§2表首列无；全卷无 | 请求种类表加 `grantsEntry`、`entryRankMax` 两列并登记取用权种类 | 读持有 |
+[F候选] 表=holding_kind（定义卷 卷十八） | grantsEntry | 声明 卷五-地点地形与资源场.md:1063 [句子] | 定义卷§2表首列无；全卷首现 :406 | 请求种类表加 `grantsEntry`、`entryRankMax` 两列并登记取用权种类 | 读持有 |
+[F候选] 表=holding_kind（定义卷 卷十八） | hk_practices | 声明 卷十四-职业技能与学艺.md:562 [句子] | 定义卷§2表首列无；全卷无 | `hk_practices` 是登记进卷十八 §4.1 种类表的"执业"行（主列与补充列合写
+[F候选] 表=holding_kind（定义卷 卷十八） | knows | 声明 卷二十二-知识信息与传播.md:874 [句子] | 定义卷§2表首列无；全卷首现 :422 | | C22-3 | 卷十八 §4.1、§4.5、§4.6 | 登记 `knows` 持有种类行
+[F候选] 表=holding_kind（定义卷 卷十八） | object | 声明 卷九-AI接口.md:836 [句子] | 定义卷§2表首列无；全卷无 | 同意是持有边：种类由 `rules.consent.edgeKind` 指名，种类行由本卷登记进卷十八 §4.1（持有种类表与两条转移协议）的表（`intimate` 为假、`bodyControl` 为假、`terms
+[F候选] 表=holding_kind（定义卷 卷十八） | revival | 声明 卷四-生物身体与人物.md:775 [句子] | 定义卷§2表首列无；全卷首现 :467 | 哪些持有种类算复生点不由规则表点名：本卷向持有种类表（卷十八 §4.1）登记一个维度 `revival: struct{cooldownDays: integer, cost: struct{resource, amou
+[F候选] 表=holding_kind（定义卷 卷十八） | scope | 声明 卷九-AI接口.md:836 [句子] | 定义卷§2表首列无；§2 正文提及 :253；全卷首现 :253 | 同意是持有边：种类由 `rules.consent.edgeKind` 指名，种类行由本卷登记进卷十八 §4.1（持有种类表与两条转移协议）的表（`intimate` 为假、`bodyControl` 为假、`terms
+[F候选] 表=holding_kind（定义卷 卷十八） | take | 声明 卷五-地点地形与资源场.md:735 [句子] | 定义卷§2表首列无；全卷无 | 6. **合法与可行分开**：有没有取用权（林权、矿权、渔猎许可，是登记在卷十八 §4.1 的持有种类行）不影响 `take` 能否成功，只决定返回值里的 `entitled`
+[F候选] 表=holding_kind（定义卷 卷十八） | termsKeys | 声明 卷九-AI接口.md:836 [句子] | 定义卷§2表首列无；§2 正文提及 :269；全卷首现 :269 | 同意是持有边：种类由 `rules.consent.edgeKind` 指名，种类行由本卷登记进卷十八 §4.1（持有种类表与两条转移协议）的表（`intimate` 为假、`bodyControl` 为假、`terms
+[F候选] 表=item（定义卷 卷三乙） | aetherStored | 声明 卷十五-法术与超自然.md:197 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | item 实例（`comp_relic`） | `aetherStored` | integer | aether | [0, 承载量] | never | skip | 本
+[F候选] 表=item（定义卷 卷三乙） | arcSchool | 声明 卷十五-法术与超自然.md:196 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | item 模板与实例（`comp_relic`） | `arcSchool` | ref vocab arcschool nullable | — | 族内；实例只写一次 |
+[F候选] 表=item（定义卷 卷三乙） | cargoVolumeL | 声明 卷十七-交通与路途.md:172 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 维度 ‖ | `cargoVolumeL` | item（挂 `comp_vehicle`） | derived number | L | ≥ 0 | gap | 本卷 | `vform.volumeCo
+[F候选] 表=item（定义卷 卷三乙） | dragPerM | 声明 卷十三-战斗.md:229 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | item | `dragPerM` | number per_m | [0, 1] | byClass:comp_missile | error | 投射物每米损失的冲量份额
+[F候选] 表=item（定义卷 卷三乙） | enchantLoad | 声明 卷十五-法术与超自然.md:195 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | item 实例（`comp_relic`） | `enchantLoad` | number（派生） | aether | [0, null] | — | — | 本卷 | 
+[F候选] 表=item（定义卷 卷三乙） | frameMassKg | 声明 卷十七-交通与路途.md:170 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 维度 ‖ | `frameMassKg` | item | derived number | kg | ≥ 0 | gap | 本卷 | 骨架槽所装部件质量之和，读卷三乙槽机制 |
+[F候选] 表=item（定义卷 卷三乙） | fuelClass | 声明 卷十七-交通与路途.md:174 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 维度 ‖ | `fuelClass` | item | ref vocab class nullable | — | — | skip | 卷二 §5.1（物品模板 item） | 沿用；只对含燃料来源推
+[F候选] 表=item（定义卷 卷三乙） | guard | 声明 卷十三-战斗.md:227 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | item | `guard` | struct{thicknessMm: number mm, coverBps: integer} | `thicknessMm` > 0；
+[F候选] 表=item（定义卷 卷三乙） | launch | 声明 卷十三-战斗.md:228 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | item | `launch` | struct{source: enum launchsrc, impulseCap: number kg_m_per_s, dispers
+[F候选] 表=item（定义卷 卷三乙） | speedCapMpm | 声明 卷十七-交通与路途.md:173 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 维度 ‖ | `speedCapMpm` | item（挂 `comp_vehicle`） | derived number，`modifiable:true` | m_per_minute | ≥ 0 
+[F候选] 表=item（定义卷 卷三乙） | sympathyOf | 声明 卷十五-法术与超自然.md:194 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | item 实例 | `sympathyOf` | ref person nullable | — | 只写一次 | never | skip | 本卷 | 这件东西是谁的交感
+[F候选] 表=item（定义卷 卷三乙） | vehicleLoadKg | 声明 卷十七-交通与路途.md:171 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 维度 ‖ | `vehicleLoadKg` | item（挂 `comp_vehicle`） | derived number，`modifiable:true` | kg | ≥ 0 | gap | 
+[F候选] 表=item（定义卷 卷三乙） | vform | 声明 卷十七-交通与路途.md:169 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 维度 ‖ | `vform` | item | ref vocab vform | — | 族内条目 | error | CDDA 02 §17 #30 | `byClass:comp_vehicle` 
+[F候选] 表=item（定义卷 卷三乙） | weaponClass | 声明 卷十三-战斗.md:226 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | item | `weaponClass` | ref vocab class | 带 `weapon` 字段组的条目 | byClass:comp_weapon | erro
+[F候选] 表=item（定义卷 卷三乙） | wieldHands | 声明 卷十三-战斗.md:241 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | item | `wieldHands` | derived integer count；`allowExplicit:true` | ≥ 1 | — | gap | 握持这件
+[F候选] 表=item（定义卷 卷三乙） | wielders | 声明 卷十三-战斗.md:242 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | item | `wielders` | derived integer count | ≥ 0 | — | gap | 以该物为标的的现役手持边条数（R13-5.2）；卷十八
+[F候选] 表=knowledge（定义卷 卷二十二） | arcClasses | 声明 卷十五-法术与超自然.md:186 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | knowledge | `arcClasses` | set<ref vocab effclass> | — | 须等于其 `effectRef` 所指族在 `familyR
+[F候选] 表=knowledge（定义卷 卷二十二） | arcSchool | 声明 卷十五-法术与超自然.md:185 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | knowledge（`family` 为法术类的行） | `arcSchool` | ref vocab arcschool | — | 族内 | byEnum | erro
+[F候选] 表=knowledge（定义卷 卷二十二） | familyRows | 声明 卷十五-法术与超自然.md:1174 [句子] | 定义卷§2表首列无；全卷无 | | C15-2 | 卷二 §3.9（效果族表 `_effects.json`）、卷二 §5.21（知识条目 `knowledge`）、卷二 §5.3（物种 `species`）、卷二 §3.7（旧派生槽的对照与过程主体槽
+[F候选] 表=knowledge（定义卷 卷二十二） | know_family | 声明 卷二-维度表规范与统一入口.md:1826 [句子] | 定义卷§2表首列无；§2 正文提及 :140；全卷首现 :140 | `know_family` 的取值由登记知识行的各卷给出（卷二十二 §2.1 末段），本卷不列条目
+[F候选] 表=knowledge（定义卷 卷二十二） | know_family | 声明 卷十三-战斗.md:1447 [句子] | 定义卷§2表首列无；§2 正文提及 :140；全卷首现 :140 | `knowledge` 表（卷二 §5.21（知识条目 `knowledge`））登记 `technique` 字段组（byEnum `family` = 技法族），`know_family` 增技法这一族值 | §2.
+[F候选] 表=knowledge（定义卷 卷二十二） | knowledge | 声明 卷十三-战斗.md:1447 [句子] | 定义卷§2表首列无；全卷首现 :34 | `knowledge` 表（卷二 §5.21（知识条目 `knowledge`））登记 `technique` 字段组（byEnum `family` = 技法族），`know_family` 增技法这一族值 | §2.
+[F候选] 表=knowledge（定义卷 卷二十二） | knowledge | 声明 卷十五-法术与超自然.md:1174 [句子] | 定义卷§2表首列无；全卷首现 :34 | | C15-2 | 卷二 §3.9（效果族表 `_effects.json`）、卷二 §5.21（知识条目 `knowledge`）、卷二 §5.3（物种 `species`）、卷二 §3.7（旧派生槽的对照与过程主体槽
+[F候选] 表=knowledge（定义卷 卷二十二） | loreAbout | 声明 卷十六-神怪与怪物.md:170 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | knowledge（`family` 为传说类的行） | `loreAbout` | struct{kind: enum lore_about, ref} | — | 引用闭
+[F候选] 表=knowledge（定义卷 卷二十二） | loreClaims | 声明 卷十六-神怪与怪物.md:171 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | knowledge | `loreClaims` | list<struct{dim: ref dim, value}> | — | `dim` 须在 `lore.claim
+[F候选] 表=knowledge（定义卷 卷二十二） | loreCultures | 声明 卷十六-神怪与怪物.md:173 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | knowledge | `loreCultures` | set<ref culture> | — | 表内 | never | skip | 本卷 | 哪些文化讲这个传说 
+[F候选] 表=knowledge（定义卷 卷二十二） | loreMotifs | 声明 卷十六-神怪与怪物.md:172 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | knowledge | `loreMotifs` | set<ref vocab motif> | — | 族内 | never | skip | 本卷 | 母题 / Mot
+[F候选] 表=knowledge（定义卷 卷二十二） | ref | 声明 卷二十三-艺术文学与文化产物.md:941 [句子] | 定义卷§2表首列无；§2 正文提及 :186；全卷首现 :186 | 不动机制） | 上一行读者栏漏列卷二：卷二 §5 知识表 `subjects` 登记行仍写拆分前的 `ref` | 上一行读者栏补"卷二（§5 知识表 `subjects` 登记行）"
+[F候选] 表=knowledge（定义卷 卷二十二） | species | 声明 卷十五-法术与超自然.md:1174 [句子] | 定义卷§2表首列无；全卷无 | | C15-2 | 卷二 §3.9（效果族表 `_effects.json`）、卷二 §5.21（知识条目 `knowledge`）、卷二 §5.3（物种 `species`）、卷二 §3.7（旧派生槽的对照与过程主体槽
+[F候选] 表=knowledge（定义卷 卷二十二） | subjects | 声明 卷二十三-艺术文学与文化产物.md:941 [句子] | 定义卷§2表首列无；全卷无 | 不动机制） | 上一行读者栏漏列卷二：卷二 §5 知识表 `subjects` 登记行仍写拆分前的 `ref` | 上一行读者栏补"卷二（§5 知识表 `subjects` 登记行）"
+[F候选] 表=knowledge（定义卷 卷二十二） | technique | 声明 卷二-维度表规范与统一入口.md:2613 [句子] | 定义卷§2表首列无；全卷无 | 知识表加 `technique` 字段组，技法族值由卷十三登记
+[F候选] 表=knowledge（定义卷 卷二十二） | technique | 声明 卷十三-战斗.md:1447 [句子] | 定义卷§2表首列无；全卷无 | `knowledge` 表（卷二 §5.21（知识条目 `knowledge`））登记 `technique` 字段组（byEnum `family` = 技法族），`know_family` 增技法这一族值 | §2.
+[F候选] 表=material（定义卷 卷三甲） | aetherCapacity | 声明 卷十五-法术与超自然.md:172 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | material（组件类 `comp_arcane`，本卷登记的超自然组件类顶层条目，`table` 为 material） | `aetherCapacity` | num
+[F候选] 表=material（定义卷 卷三甲） | agents | 声明 卷二十一-医疗疾病与身体状态.md:135 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.2 材料表新增（登记到卷三 §4.1（材料属性表）的材料表，读法同其 ‖ | `agents` | map<ref status, number> | dose_per_kg | 值 ≥ 0 | never 
+[F候选] 表=material（定义卷 卷三甲） | arcaneConduct | 声明 卷十五-法术与超自然.md:173 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | material | `arcaneConduct` | number | fraction | [0, 1] | byClass | error | 本卷 | 导引读数：经
+[F候选] 表=material（定义卷 卷三甲） | arcaneInsulate | 声明 卷十五-法术与超自然.md:174 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | material | `arcaneInsulate` | number | fraction | [0, 1] | byClass | error | 本卷 | 阻隔读数：
+[F候选] 表=material（定义卷 卷三甲） | classAffinity | 声明 卷十五-法术与超自然.md:175 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | material | `classAffinity` | map<ref vocab effclass, fraction> | fraction | 各值 [−1, 1] 
+[F候选] 表=material（定义卷 卷三甲） | derived | 声明 卷十-世界随机生成.md:188 [句子] | 定义卷§2表首列无；全卷无 | | `rules.gen.divinemetal.dimRows` | list<struct{dim: string, scale: distribution}> | `dim` 须是材料表上已登记、无 `derive
+[F候选] 表=material（定义卷 卷三甲） | dim | 声明 卷十-世界随机生成.md:188 [句子] | 定义卷§2表首列无；全卷无 | | `rules.gen.divinemetal.dimRows` | list<struct{dim: string, scale: distribution}> | `dim` 须是材料表上已登记、无 `derive
+[F候选] 表=material（定义卷 卷三甲） | fieldRegen | 声明 卷五-地点地形与资源场.md:627 [句子] | 定义卷§2表首列无；全卷无 | 读者卷十五 R15-13.7）：材料行 `fieldRegen`（卷十五 §2.3 登记的材料维度，经 `materialView` 读）大于 0 的材料是回补类材料
+[F候选] 表=material（定义卷 卷三甲） | fieldRegen | 声明 卷十五-法术与超自然.md:177 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | material | `fieldRegen` | number | per_day | [0, 1] | never | skip | 本卷 | 作为地点存量时每日回补到容
+[F候选] 表=material（定义卷 卷三甲） | materialView | 声明 卷五-地点地形与资源场.md:627 [句子] | 定义卷§2表首列无；全卷首现 :213 | 读者卷十五 R15-13.7）：材料行 `fieldRegen`（卷十五 §2.3 登记的材料维度，经 `materialView` 读）大于 0 的材料是回补类材料
+[F候选] 表=material（定义卷 卷三甲） | nutrient | 声明 卷三乙-物态类别与物品.md:247 [句子] | 定义卷§2表首列无；§2 正文提及 :151；全卷首现 :151 | 本源成分 `substance`、应力 `stress`、营养素 `nutrient`、反应 `reaction` 四族与材料表组件类的 requires 登记在卷三甲 §2.2，下表不重列
+[F候选] 表=material（定义卷 卷三甲） | pharm | 声明 卷二十一-医疗疾病与身体状态.md:134 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.2 材料表新增（登记到卷三 §4.1（材料属性表）的材料表，读法同其 ‖ | `pharm` | map<ref vocab pharm, number> | dose_per_kg | 值 ≥ 0 | 挂药
+[F候选] 表=material（定义卷 卷三甲） | plant_part | 声明 卷二十五-农牧渔猎与食物链.md:1068 [句子] | 定义卷§2表首列无；全卷首现 :13 | 李白对卷三植物部位与谷物的裁定，由卷三甲、卷三乙第五版作者改这几行）：§2.4 `plant_part` 一行写明它是全书唯一的植物部位词表、登记制、列出首批条目，卷三甲材料行的 `plantPart` 引用它
+[F候选] 表=material（定义卷 卷三甲） | reaction | 声明 卷三乙-物态类别与物品.md:247 [句子] | 定义卷§2表首列无；§2 正文提及 :153；全卷首现 :153 | 本源成分 `substance`、应力 `stress`、营养素 `nutrient`、反应 `reaction` 四族与材料表组件类的 requires 登记在卷三甲 §2.2，下表不重列
+[F候选] 表=material（定义卷 卷三甲） | sphereAffinity | 声明 卷十五-法术与超自然.md:176 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | material | `sphereAffinity` | map<ref vocab sphere, fraction> | fraction | 各值 [0, 1] | 
+[F候选] 表=material（定义卷 卷三甲） | stress | 声明 卷三乙-物态类别与物品.md:247 [句子] | 定义卷§2表首列无；§2 正文提及 :172；全卷首现 :172 | 本源成分 `substance`、应力 `stress`、营养素 `nutrient`、反应 `reaction` 四族与材料表组件类的 requires 登记在卷三甲 §2.2，下表不重列
+[F候选] 表=material（定义卷 卷三甲） | wardTags | 声明 卷十六-神怪与怪物.md:169 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | material、item | `wardTags` | set<ref vocab wardtag>（派生） | — | 族内 | — | — | 本卷 | 该行手写 `t
+[F候选] 表=material（定义卷 卷三甲） | wsum | 声明 卷二十三-艺术文学与文化产物.md:718 [句子] | 定义卷§2表首列无；§2 正文提及 :157；全卷首现 :157 | | C23-1 | 卷三甲（封卷后勘误） | 材料表收 `aesthetic` 一列（维度定义已由本卷 §2.2 登记），并给首批材料填值（数值待标定，不凭记忆填） | 读者：R23-1.4 的 `wsum`
+[F候选] 表=office（定义卷 卷八） | byEnum | 声明 卷二-维度表规范与统一入口.md:2560 [句子] | 定义卷§2表首列无；§2 正文提及 :177；全卷首现 :177 | `officeRowKind` 是卷八按 §5 段首"各卷只加行"在职位表登记的 enum 维度，`orowk_actual` 是卷八按 §1.9 登记前缀的 `officerowkind` 族代号，合 §1.2 `by
+[F候选] 表=office（定义卷 卷八） | orowk_actual | 声明 卷二-维度表规范与统一入口.md:2560 [句子] | 定义卷§2表首列无；§2 正文提及 :131；全卷首现 :131 | `officeRowKind` 是卷八按 §5 段首"各卷只加行"在职位表登记的 enum 维度，`orowk_actual` 是卷八按 §1.9 登记前缀的 `officerowkind` 族代号，合 §1.2 `by
+[F候选] 表=org（定义卷 卷八） | forceMorale | 声明 卷十三-战斗.md:245 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | org | `forceMorale` | derived number fraction | [0, 1] | — | gap | 军团士气（§4.8） | 台账 X-27
+[F候选] 表=org（定义卷 卷八） | forcePower | 声明 卷十三-战斗.md:243 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | org | `forcePower` | derived number score | ≥ 0 | — | gap | 兵力读数（§4.10）；卷八读它 | 卷八的开放问题 
+[F候选] 表=org（定义卷 卷八） | forceValues | 声明 卷十三-战斗.md:244 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | org | `forceValues` | derived map<enum forcevalue, integer>（定点，标度 `rules.combat.force.v
+[F候选] 表=org（定义卷 卷八） | kitReadiness | 声明 卷十三-战斗.md:246 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | org | `kitReadiness`、`supplyDays` | derived fraction；derived number day | [0, 1]；≥ 0 | 
+[F候选] 表=org（定义卷 卷八） | ownerRef | 声明 卷六-经济.md:624 [句子] | 定义卷§2表首列无；全卷无 | 再读该聚落组织行的保有方式维度（由卷八登记，封闭代号）：归组织公有的，`ownerRef` 是该组织
+[F候选] 表=org（定义卷 卷八） | supplyDays | 声明 卷十三-战斗.md:246 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | org | `kitReadiness`、`supplyDays` | derived fraction；derived number day | [0, 1]；≥ 0 | 
+[F候选] 表=person（定义卷 卷四） | aetherCap | 声明 卷十五-法术与超自然.md:187 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | person | `aetherCap` | number，`modifiable` | aether | [0, null] | never | skip | 本卷 | 灵
+[F候选] 表=person（定义卷 卷四） | believers | 声明 卷七-信仰与文化.md:1516 [句子] | 定义卷§2表首列无；全卷无 | 本卷只向它的修正键 `person.preference[键]` 登记修正项（卷二十六 §2.1（person 表中由本卷定义含义的维度）已声明该键可修正、`bounds [-1, 1]`）：加载器把 `pref.fai
+[F候选] 表=person（定义卷 卷四） | coldLimitC | 声明 卷二十一-医疗疾病与身体状态.md:151 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 个体表新增（登记到卷二 §5.5（个体 person）；全部 ` ‖ | `coldLimitC` / `heatLimitC` | number，derived | celsius | §4.7 | n
+[F候选] 表=person（定义卷 卷四） | crowding | 声明 卷二十一-医疗疾病与身体状态.md:1230 [句子] | 定义卷§2表首列无；全卷无 | 个体表登记 `needRecover`，地点表登记派生维度 `crowding`
+[F候选] 表=person（定义卷 卷四） | cultureMix | 声明 卷十五-法术与超自然.md:193 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | person | `cultureMix` | list<struct{culture: ref culture, weightBps: integer}>（派生） | — 
+[F候选] 表=person（定义卷 卷四） | decisionNoise | 声明 卷二十六-需求心理与情绪.md:124 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 person 表中由本卷定义含义的维度 ‖ | `decisionNoise` | number | fraction / [0,1]，精度 3 | — | gap | 派生（R26-9.3） | 是，s
+[F候选] 表=person（定义卷 卷四） | delta | 声明 卷七-信仰与文化.md:1516 [句子] | 定义卷§2表首列无；全卷无 | 本卷只向它的修正键 `person.preference[键]` 登记修正项（卷二十六 §2.1（person 表中由本卷定义含义的维度）已声明该键可修正、`bounds [-1, 1]`）：加载器把 `pref.fai
+[F候选] 表=person（定义卷 卷四） | dependent | 声明 卷十八-社会关系与家族.md:114 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 本卷定义含义的维度 ‖ | `dependent` | person | derived boolean | — | — | error | 本卷 | `first(rules.social.depend
+[F候选] 表=person（定义卷 卷四） | descent | 声明 卷十八-社会关系与家族.md:113 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 本卷定义含义的维度 ‖ | `descent` | person | derived enum descent；`modifiable:true, stacking:none` | — | 卷七登记的条目
+[F候选] 表=person（定义卷 卷四） | driveWeight | 声明 卷二十六-需求心理与情绪.md:123 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 person 表中由本卷定义含义的维度 ‖ | `driveWeight` | map<ref vocab drive, number> | score / [0, `rules.psych.driveM
+[F候选] 表=person（定义卷 卷四） | eduFocus | 声明 卷十四-职业技能与学艺.md:177 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 挂在个体 `person` 上的维度（本体归卷四 §4.10；以 ‖ | `eduFocus`（新） | ref vocab sphere nullable | never | skip | upbrin
+[F候选] 表=person（定义卷 卷四） | esteemTier | 声明 卷十八-社会关系与家族.md:118 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 本卷定义含义的维度 ‖ | `esteemTier` | person、org | derived enum esteem_tier | — | 有序 | gap | CK3 05 §6.5 #57 | 
+[F候选] 表=person（定义卷 卷四） | experience | 声明 卷十四-职业技能与学艺.md:172 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 挂在个体 `person` 上的维度（本体归卷四 §4.10；以 ‖ | `experience`（新） | number，`score`，≥0，precision 2 | never | gap | g
+[F候选] 表=person（定义卷 卷四） | exposureMult | 声明 卷二十一-医疗疾病与身体状态.md:147 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 个体表新增（登记到卷二 §5.5（个体 person）；全部 ` ‖ | `exposureMult` | map<ref vocab route, number> | — | 1 | penalized
+[F候选] 表=person（定义卷 卷四） | focus | 声明 卷十四-职业技能与学艺.md:175 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 挂在个体 `person` 上的维度（本体归卷四 §4.10；以 ‖ | `focus` / `focusSince`（新） | ref vocab lifestyle nullable / intege
+[F候选] 表=person（定义卷 卷四） | focusSince | 声明 卷十四-职业技能与学艺.md:175 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 挂在个体 `person` 上的维度（本体归卷四 §4.10；以 ‖ | `focus` / `focusSince`（新） | ref vocab lifestyle nullable / intege
+[F候选] 表=person（定义卷 卷四） | gaugeInflow | 声明 卷二十六-需求心理与情绪.md:122 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 person 表中由本卷定义含义的维度 ‖ | `gaugeInflow` | map<ref vocab gauge, number> | per_day / [-4,4] | — | skip | 派
+[F候选] 表=person（定义卷 卷四） | gaugeTarget | 声明 卷二十六-需求心理与情绪.md:121 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 person 表中由本卷定义含义的维度 ‖ | `gaugeTarget` | map<ref vocab gauge, number> | fraction / [-1,2] | — | skip | 
+[F候选] 表=person（定义卷 卷四） | graspLimbs | 声明 卷十三-战斗.md:239 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | person | `graspLimbs` | derived integer count | ≥ 0 | — | gap | 可用操持肢端数：身体图部位中，对 `rules
+[F候选] 表=person（定义卷 卷四） | handsHeld | 声明 卷十三-战斗.md:240 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | person | `handsHeld` | derived integer count | ≥ 0 | — | gap | 已占手数：该主体每条现役手持边各自占手数之和（R
+[F候选] 表=person（定义卷 卷四） | healMult | 声明 卷二十一-医疗疾病与身体状态.md:145 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 个体表新增（登记到卷二 §5.5（个体 person）；全部 ` ‖ | `healMult` | map<enum status_family, number> | — | 1 | penalized 
+[F候选] 表=person（定义卷 卷四） | heatLimitC | 声明 卷二十一-医疗疾病与身体状态.md:151 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 个体表新增（登记到卷二 §5.5（个体 person）；全部 ` ‖ | `coldLimitC` / `heatLimitC` | number，derived | celsius | §4.7 | n
+[F候选] 表=person（定义卷 卷四） | immuneGain | 声明 卷二十一-医疗疾病与身体状态.md:148 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 个体表新增（登记到卷二 §5.5（个体 person）；全部 ` ‖ | `immuneGain` | number，derived | — | `lookup(rules.health.immuneAg
+[F候选] 表=person（定义卷 卷四） | inheritanceRegime | 声明 卷十八-社会关系与家族.md:112 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 本卷定义含义的维度 ‖ | `inheritanceRegime` | person | derived，同上 | — | 同上 | error | 本卷 | 同上 |
+[F候选] 表=person（定义卷 卷四） | instantiatePerson | 声明 卷二十七-离屏性能存档与确定性.md:780 [句子] | 定义卷§2表首列无；§2 正文提及 :204；全卷首现 :204 | | 卷四 §2.6、卷二 §2.7（封卷后勘误，卷十 C10-8） | 须对方登记 | `memberRecomputable` | 请卷四把 `instantiatePerson` 由名册条目与所属聚合体分组键写出的个
+[F候选] 表=person（定义卷 卷四） | keyDims | 声明 卷八-政治与人口.md:1102 [句子] | 定义卷§2表首列无；全卷无 | 分组键 `keyDims` 为物种、文化、信仰、主业、公民五个已登记的单值引用维度（卷二 §5.5（个体 `person`）
+[F候选] 表=person（定义卷 卷四） | learnCapacity | 声明 卷十四-职业技能与学艺.md:174 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 挂在个体 `person` 上的维度（本体归卷四 §4.10；以 ‖ | `learnCapacity` / `learnLoad`（新） | derived score；`learnCapacity` 
+[F候选] 表=person（定义卷 卷四） | learnLoad | 声明 卷十四-职业技能与学艺.md:174 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 挂在个体 `person` 上的维度（本体归卷四 §4.10；以 ‖ | `learnCapacity` / `learnLoad`（新） | derived score；`learnCapacity` 
+[F候选] 表=person（定义卷 卷四） | level | 声明 卷十四-职业技能与学艺.md:173 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 挂在个体 `person` 上的维度（本体归卷四 §4.10；以 ‖ | `level`（新） | derived integer：`rules.growth.levelThresholds` 中不大于 
+[F候选] 表=person（定义卷 卷四） | location | 声明 卷十七-交通与路途.md:168 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 维度 ‖ | `location` | person | ref place | — | 未终止、不离场的地点行 | error | 现有 `npcs.*.location`（卷二只在作用域表里有路径，p
+[F候选] 表=person（定义卷 卷四） | marriageRegime | 声明 卷十八-社会关系与家族.md:111 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 本卷定义含义的维度 ‖ | `marriageRegime` | person | derived ref vocab marriage_regime；`modifiable:true, stacking
+[F候选] 表=person（定义卷 卷四） | memberRecomputable | 声明 卷二十七-离屏性能存档与确定性.md:780 [句子] | 定义卷§2表首列无；全卷首现 :1715 | | 卷四 §2.6、卷二 §2.7（封卷后勘误，卷十 C10-8） | 须对方登记 | `memberRecomputable` | 请卷四把 `instantiatePerson` 由名册条目与所属聚合体分组键写出的个
+[F候选] 表=person（定义卷 卷四） | needRecover | 声明 卷二十一-医疗疾病与身体状态.md:149 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 个体表新增（登记到卷二 §5.5（个体 person）；全部 ` ‖ | `needRecover` | map<ref vocab body_need, number> | 每日回补的日需量倍数 | 0
+[F候选] 表=person（定义卷 卷四） | perks | 声明 卷十四-职业技能与学艺.md:176 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 挂在个体 `person` 上的维度（本体归卷四 §4.10；以 ‖ | `perks`（新） | set<ref vocab perk> | never | skip | lifestyle.mjs |
+[F候选] 表=person（定义卷 卷四） | prefOffset | 声明 卷二十六-需求心理与情绪.md:119 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 person 表中由本卷定义含义的维度 ‖ | `prefOffset` | map<ref refs[vocab class, vocab matcat, vocab taxon, vocab aest
+[F候选] 表=person（定义卷 卷四） | preference | 声明 卷二十六-需求心理与情绪.md:120 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 person 表中由本卷定义含义的维度 ‖ | `preference` | 同上键域的 map<…, number> | axis / [-1,1] | — | gap | 派生（R26-2.4） | 
+[F候选] 表=person（定义卷 卷四） | psychOut | 声明 卷二十六-需求心理与情绪.md:125 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 person 表中由本卷定义含义的维度 ‖ | `psychOut` | map<ref vocab gauge, number> | fraction / [0,1] | — | gap | 派生：该心
+[F候选] 表=person（定义卷 卷四） | resistReading | 声明 卷十五-法术与超自然.md:188 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | person | `resistReading` | number，`modifiable` | score | — | never | skip | 本卷 | 对抗施为的守
+[F候选] 表=person（定义卷 卷四） | selfHeatC | 声明 卷二十一-医疗疾病与身体状态.md:150 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 个体表新增（登记到卷二 §5.5（个体 person）；全部 ` ‖ | `selfHeatC` | number，derived | celsius | §4.7 | none | gap | 自身产热
+[F候选] 表=person（定义卷 卷四） | sustainLoad | 声明 卷十五-法术与超自然.md:189 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | person | `sustainLoad` | number（派生） | score | [0, null] | — | — | 本卷 | 名下全部术式实例的 `poten
+[F候选] 表=person（定义卷 卷四） | tier | 声明 卷十六-神怪与怪物.md:168 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | person | `tier` | ref vocab mtier（派生） | — | 族内 | — | — | 本卷 | 个体的档：取其物种的档与其自身战力所落档中 `ra
+[F候选] 表=person（定义卷 卷四） | when | 声明 卷七-信仰与文化.md:1516 [句子] | 定义卷§2表首列无；§2 正文提及 :141；全卷首现 :141 | 本卷只向它的修正键 `person.preference[键]` 登记修正项（卷二十六 §2.1（person 表中由本卷定义含义的维度）已声明该键可修正、`bounds [-1, 1]`）：加载器把 `pref.fai
+[F候选] 表=person（定义卷 卷四） | workPriority | 声明 卷六-经济.md:765 [句子] | 定义卷§2表首列无；全卷无 | 个体维度（由本卷登记到卷二 §5.5 的 person 表）：`workPriority: map<ref vocab service, integer>`（工作优先级档，取值域见 `labor.json.priorit
+[F候选] 表=person（定义卷 卷四） | worsenMult | 声明 卷二十一-医疗疾病与身体状态.md:146 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 个体表新增（登记到卷二 §5.5（个体 person）；全部 ` ‖ | `worsenMult` | map<enum status_family, number> | — | 1 | penalize
+[F候选] 表=place（定义卷 卷五） | aetherDensity | 声明 卷十五-法术与超自然.md:199 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | place | `aetherDensity` | number（派生） | fraction | [0, 1] | — | — | 本卷 | 灵气读数 = 该存量单元灵气存
+[F候选] 表=place（定义卷 卷五） | aetherFieldCap | 声明 卷十五-法术与超自然.md:198 [§2小节表行] | 定义卷§2表首列无；全卷首现 :627 | ### 2.3 登记到别卷表上的维度 ‖ | place（存量单元） | `aetherFieldCap` | number，`modifiable` | kg | [0, null] | never | skip | 
+[F候选] 表=place（定义卷 卷五） | annualMeanTempC | 声明 卷二十-时间日历天气与环境.md:287 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `comp_weather_cell` | `annualMeanTempC` | number | celsius | — | 
+[F候选] 表=place（定义卷 卷五） | annualPrecipMm | 声明 卷二十-时间日历天气与环境.md:288 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `comp_weather_cell` | `annualPrecipMm` | number | mm | ≥ 0 | erro
+[F候选] 表=place（定义卷 卷五） | aspectBase | 声明 卷二十-时间日历天气与环境.md:297 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `comp_weather_cell` | `aspectBase` | map<ref vocab sphere, score>
+[F候选] 表=place（定义卷 卷五） | beds | 声明 卷十九-建筑与设施.md:141 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `beds` | list<struct{fixture: ref item, holder: ref person nullab
+[F候选] 表=place（定义卷 卷五） | bodyPart | 声明 卷二十一-医疗疾病与身体状态.md:428 [句子] | 定义卷§2表首列无；全卷无 | **用词**：本条的"部位重定"是登记写者 status.mjs 经普通 `writePath` 改写实例的 `bodyPart` 一个字段，不是卷二 §2.6（写者与三接口）的"行改挂"原语（该原语只对 place 表
+[F候选] 表=place（定义卷 卷五） | builder | 声明 卷十九-建筑与设施.md:110 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `builder` / `builtDay` | ref person nullable / integer | — / day 
+[F候选] 表=place（定义卷 卷五） | builtDay | 声明 卷十九-建筑与设施.md:110 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `builder` / `builtDay` | ref person nullable / integer | — / day 
+[F候选] 表=place（定义卷 卷五） | carrierItem | 声明 卷十九-建筑与设施.md:112 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `carrierItem` | ref item nullable | — | 物品实例 | byClass:comp_porta
+[F候选] 表=place（定义卷 卷五） | carrierLastPlace | 声明 卷十九-建筑与设施.md:113 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `carrierLastPlace` | ref place nullable | — | place 行 | never | s
+[F候选] 表=place（定义卷 卷五） | carryFacility | 声明 卷十九-建筑与设施.md:802 [句子] | 定义卷§2表首列无；全卷无 | - 【不变量】A19-10.2：**改挂前后除位置量外全部存储维度、边、状态实例、到期项逐位相同**（卷二 §2.6"行改挂"第 5 点）：对建筑行及每个房间行，`packFacility` 前后、`deployFaci
+[F候选] 表=place（定义卷 卷五） | comp_facility | 声明 卷二-维度表规范与统一入口.md:2245 [句子] | 定义卷§2表首列无；§2 正文提及 :144；全卷首现 :144 | `comp_facility` 归 place（requires `intendedType` 是 place 的维度），在此夹具中只作登记示例，不被 facility_type 的行引用，其 requires/enab
+[F候选] 表=place（定义卷 卷五） | comp_facility | 声明 卷十九-建筑与设施.md:173 [句子] | 定义卷§2表首列无；§2 正文提及 :144；全卷首现 :144 | 建筑的 `termination` 不在本表：卷二 §2.6 的终止原语读的是实体所属类别行，建筑是 place 行，所以 `termination`（残骸后继）登记在挂 `comp_facility` 的 place 
+[F候选] 表=place（定义卷 卷五） | contest | 声明 卷十三-战斗.md:247 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | place | `contest` | derived map<局势实例 id, integer> | 每项 ≥ 0 | — | skip | 争夺度（§4.11） | EV
+[F候选] 表=place（定义卷 卷五） | deployFacility | 声明 卷十九-建筑与设施.md:802 [句子] | 定义卷§2表首列无；全卷无 | - 【不变量】A19-10.2：**改挂前后除位置量外全部存储维度、边、状态实例、到期项逐位相同**（卷二 §2.6"行改挂"第 5 点）：对建筑行及每个房间行，`packFacility` 前后、`deployFaci
+[F候选] 表=place（定义卷 卷五） | derived | 声明 卷十-世界随机生成.md:109 [句子] | 定义卷§2表首列无；§2 正文提及 :187；全卷首现 :187 | 加载时核对它是 place 表或天气单元组件类上已登记、无 `derived` 的数值维度）、`slot: integer`（族内唯一的固定序位，新增条目取新值、已有条目不改
+[F候选] 表=place（定义卷 卷五） | dirt | 声明 卷十九-建筑与设施.md:111 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `dirt` | score | score | [0,100]；precision 8 | byClass:comp_zone,
+[F候选] 表=place（定义卷 卷五） | diurnalAmpC | 声明 卷二十-时间日历天气与环境.md:290 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `comp_weather_cell` | `diurnalAmpC` | number | celsius | ≥ 0 | er
+[F候选] 表=place（定义卷 卷五） | effective | 声明 卷十九-建筑与设施.md:137 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `effective` | map<ref vocab ffunc, number> | 同 `functions` | `fun
+[F候选] 表=place（定义卷 卷五） | env.climatePrecipMm | 声明 卷二十-时间日历天气与环境.md:262 [§2小节表行] | 定义卷§2表首列无；全卷首现 :1008 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `env.climatePrecipMm` | derived number | mm | ≥ 0 | 静态 | gap | 定义
+[F候选] 表=place（定义卷 卷五） | env.climateTempC | 声明 卷二十-时间日历天气与环境.md:261 [§2小节表行] | 定义卷§2表首列无；全卷首现 :1008 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `env.climateTempC` | derived number | celsius | — | 静态（可变行范围之外；建筑
+[F候选] 表=place（定义卷 卷五） | env.cloud | 声明 卷二十-时间日历天气与环境.md:267 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `env.precipMm` / `env.windMps` / `env.cloud` / `env.snowMm` | num
+[F候选] 表=place（定义卷 卷五） | env.daylightMinutes | 声明 卷二十-时间日历天气与环境.md:265 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `env.daylightMinutes` | integer | minute | [0, 1440] | day | erro
+[F候选] 表=place（定义卷 卷五） | env.fieldIntensity | 声明 卷二十-时间日历天气与环境.md:274 [§2小节表行] | 定义卷§2表首列无；§2 正文提及 :164；全卷首现 :164 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `env.fieldIntensity` | map<ref vocab field, number> | score | ≥ 0
+[F候选] 表=place（定义卷 卷五） | env.humidity | 声明 卷二十-时间日历天气与环境.md:269 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `env.humidity` | fraction | fraction | [0, 1] | day | gap | §4.3；
+[F候选] 表=place（定义卷 卷五） | env.lux | 声明 卷二十-时间日历天气与环境.md:272 [§2小节表行] | 定义卷§2表首列无；全卷首现 :1008 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `env.lux` / `env.sightM` | number | lux / m | ≥ 0 | 人工光源项为零（无场，也无
+[F候选] 表=place（定义卷 卷五） | env.phenomena | 声明 卷二十-时间日历天气与环境.md:270 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `env.phenomena` | set<ref vocab phenomenon> | — | — | day | skip 
+[F候选] 表=place（定义卷 卷五） | env.precipMm | 声明 卷二十-时间日历天气与环境.md:267 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `env.precipMm` / `env.windMps` / `env.cloud` / `env.snowMm` | num
+[F候选] 表=place（定义卷 卷五） | env.season | 声明 卷二十-时间日历天气与环境.md:264 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `env.season` | ref vocab season | — | — | day | gap | §4.4 | 按当日起
+[F候选] 表=place（定义卷 卷五） | env.sightM | 声明 卷二十-时间日历天气与环境.md:272 [§2小节表行] | 定义卷§2表首列无；全卷首现 :382 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `env.lux` / `env.sightM` | number | lux / m | ≥ 0 | 人工光源项为零（无场，也无
+[F候选] 表=place（定义卷 卷五） | env.snowMm | 声明 卷二十-时间日历天气与环境.md:267 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `env.precipMm` / `env.windMps` / `env.cloud` / `env.snowMm` | num
+[F候选] 表=place（定义卷 卷五） | env.solarPhase | 声明 卷二十-时间日历天气与环境.md:263 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `env.solarPhase` | fraction | fraction | [0, 1) | minute | error 
+[F候选] 表=place（定义卷 卷五） | env.soundDb | 声明 卷二十-时间日历天气与环境.md:273 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `env.soundDb` | number | dB | ≥ 0 | 底噪 day；有声场时 state | gap | §4.
+[F候选] 表=place（定义卷 卷五） | env.tempC | 声明 卷二十-时间日历天气与环境.md:271 [§2小节表行] | 定义卷§2表首列无；全卷首现 :1008 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `env.tempC` | number | celsius | — | 室外一支与地下一支 minute；围护一支 state 
+[F候选] 表=place（定义卷 卷五） | env.weather | 声明 卷二十-时间日历天气与环境.md:266 [§2小节表行] | 定义卷§2表首列无；全卷首现 :1008 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `env.weather` | ref vocab weather | — | — | day | gap | §4.3 | — 
+[F候选] 表=place（定义卷 卷五） | env.windDirDeg | 声明 卷二十-时间日历天气与环境.md:268 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `env.windDirDeg` | number | degree | [0, 360) | day | gap | §4.3 
+[F候选] 表=place（定义卷 卷五） | env.windMps | 声明 卷二十-时间日历天气与环境.md:267 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `env.precipMm` / `env.windMps` / `env.cloud` / `env.snowMm` | num
+[F候选] 表=place（定义卷 卷五） | envelopeAreaM2 | 声明 卷十九-建筑与设施.md:130 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `floorAreaM2` / `envelopeAreaM2` / `solidAreaM2` | number | m2 | 
+[F候选] 表=place（定义卷 卷五） | envelopeMassKg | 声明 卷十九-建筑与设施.md:132 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `envelopeMassKg` | number | kg | `materialKg`。各料质量之和（整数加法，无截断） | 
+[F候选] 表=place（定义卷 卷五） | envelopeUaWPerK | 声明 卷二十-时间日历天气与环境.md:298 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `comp_enclosure` | `envelopeUaWPerK` | derived number | W_per_K |
+[F候选] 表=place（定义卷 卷五） | envelopeUaWPerK | 声明 卷十九-建筑与设施.md:133 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `envelopeUaWPerK` | number | W_per_K | `envelopeAreaM2`、`aperture
+[F候选] 表=place（定义卷 卷五） | envelopeVolumeL | 声明 卷十九-建筑与设施.md:103 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `envelopeVolumeL` | integer | L | [1, null] | byClass:comp_facili
+[F候选] 表=place（定义卷 卷五） | facilityState | 声明 卷十九-建筑与设施.md:802 [句子] | 定义卷§2表首列无；全卷无 | - 【不变量】A19-10.2：**改挂前后除位置量外全部存储维度、边、状态实例、到期项逐位相同**（卷二 §2.6"行改挂"第 5 点）：对建筑行及每个房间行，`packFacility` 前后、`deployFaci
+[F候选] 表=place（定义卷 卷五） | floodL | 声明 卷二十-时间日历天气与环境.md:277 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `floodL` | number | L | ≥ 0 | state（读账本） | gap | §4.6 | 水体当日转入漫溢汇
+[F候选] 表=place（定义卷 卷五） | floorAreaM2 | 声明 卷十九-建筑与设施.md:130 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `floorAreaM2` / `envelopeAreaM2` / `solidAreaM2` | number | m2 | 
+[F候选] 表=place（定义卷 卷五） | form | 声明 卷十九-建筑与设施.md:99 [§2小节表行] | 定义卷§2表首列无；全卷首现 :480 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `form` | enum bform | — | 开放族 | byClass:comp_facility | error | 形
+[F候选] 表=place（定义卷 卷五） | functions | 声明 卷十九-建筑与设施.md:135 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `functions` | map<ref vocab ffunc, number> | 各功能条目的 `unit` | 已安装固
+[F候选] 表=place（定义卷 卷五） | gateTerms | 声明 卷十七-交通与路途.md:176 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 维度 ‖ | `gateTerms` | place（设施实例，提供查验服务者） | struct{tollPerHead: integer, tollPerKg: integer, payResourc
+[F候选] 表=place（定义卷 卷五） | gen.layout | 声明 卷十-世界随机生成.md:139 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.2 登记在别表上的生成维度 ‖ | `gen.layout` | place（站点） | ref vocab layout nullable | — | `layout` 族 | never | gap（物化
+[F候选] 表=place（定义卷 卷五） | gen.manifest | 声明 卷十-世界随机生成.md:140 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.2 登记在别表上的生成维度 ‖ | `gen.manifest` | place（站点） | list<struct:manifestRow> | — | 见 §2.4 | never | gap（物化时不建
+[F候选] 表=place（定义卷 卷五） | gen.open | 声明 卷十-世界随机生成.md:144 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.2 登记在别表上的生成维度 ‖ | `gen.open` | place | boolean | — | — | never | gap（读者取 `rules.gen.opening.runtimeOpen`
+[F候选] 表=place（定义卷 卷五） | gen.quota | 声明 卷十-世界随机生成.md:141 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.2 登记在别表上的生成维度 ‖ | `gen.quota` | place（站点） | map<ref profession, integer> | count | 各值 ≥ 0 | never | gap 
+[F候选] 表=place（定义卷 卷五） | gen.seatCulture | 声明 卷十-世界随机生成.md:138 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.2 登记在别表上的生成维度 ‖ | `gen.seatCulture` | place（`rules.gen.pop.cultureLevel` 一级的政区行） | ref culture | — | 文化行
+[F候选] 表=place（定义卷 卷五） | gen.share | 声明 卷十-世界随机生成.md:143 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.2 登记在别表上的生成维度 ‖ | `gen.share` | place（站点） | integer | 基点 | [0, 10000] | never | gap | 本卷 R10-3.3 | 只在世界创
+[F候选] 表=place（定义卷 卷五） | gen.shops | 声明 卷十-世界随机生成.md:142 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.2 登记在别表上的生成维度 ‖ | `gen.shops` | place（站点） | list<struct:shopRow> | — | 见 §2.4 | never | skip | 本卷 R10-7.
+[F候选] 表=place（定义卷 卷五） | heatOutW | 声明 卷十九-建筑与设施.md:143 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `heatOutW` | number | W | `kilns`、其余固定装置的燃烧放热 | §4.7 规则 4 |
+[F候选] 表=place（定义卷 卷五） | hiddenness | 声明 卷十七-交通与路途.md:175 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 维度 ‖ | `hiddenness` | place | score | 分 | [0, 100] | error | EVE 04 §9.3 #41 | `always` 必填（卷二 §5.6）；不显
+[F候选] 表=place（定义卷 卷五） | intendedType | 声明 卷二-维度表规范与统一入口.md:2245 [句子] | 定义卷§2表首列无；全卷首现 :912 | `comp_facility` 归 place（requires `intendedType` 是 place 的维度），在此夹具中只作登记示例，不被 facility_type 的行引用，其 requires/enab
+[F候选] 表=place（定义卷 卷五） | intendedType | 声明 卷十九-建筑与设施.md:98 [§2小节表行] | 定义卷§2表首列无；全卷首现 :912 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `intendedType` | ref facility_type | — | — | byClass:comp_facilit
+[F候选] 表=place（定义卷 卷五） | kilns | 声明 卷十九-建筑与设施.md:142 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `kilns` | list<struct{fixture: ref item, chamberTempC: number, fu
+[F候选] 表=place（定义卷 卷五） | lawRef | 声明 卷八b-法律治安与刑罚.md:1331 [句子] | 定义卷§2表首列无；全卷首现 :840 | 运行期立的法典根绑到地点后，`lawSlots` 首项可以是 `state.enacted` 里的法典根，类型应为本卷 §2.2 的 `lawRef`（法典根） | 本卷不改卷二、卷五：改卷五一行会与卷二 §5.6 的维
+[F候选] 表=place（定义卷 卷五） | layer | 声明 卷十五-法术与超自然.md:200 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | place | `layer` | ref place nullable（派生） | — | — | — | — | 本卷 | 所在的层：沿包含树向上第一个挂层根组件类 `c
+[F候选] 表=place（定义卷 卷五） | maintenance | 声明 卷十九-建筑与设施.md:145 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `maintenance` | struct{need: struct（内联需求块）, laborMinutes: integer
+[F候选] 表=place（定义卷 卷五） | materialKg | 声明 卷十九-建筑与设施.md:100 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `materialKg` | map<ref material, number> | kg | 各值 [0, null]；prec
+[F候选] 表=place（定义卷 卷五） | modifiable | 声明 卷二十一-医疗疾病与身体状态.md:153 [句子] | 定义卷§2表首列无；全卷首现 :434 | 地点表新增一个派生维度（登记到卷二的地点表）：`place.crowding`（number，人每平方米，derived，`modifiable:true`）= 此刻位于该地点的主体数 ÷ 该地点的 `areaM2`（卷
+[F候选] 表=place（定义卷 卷五） | occupancy | 声明 卷十九-建筑与设施.md:140 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `occupancy` | struct{rows: list<struct{fixture: ref item, kind: r
+[F候选] 表=place（定义卷 卷五） | openSpan | 声明 卷十九-建筑与设施.md:115 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `openSpan` | struct{fromMinute: integer, toMinute: integer} nulla
+[F候选] 表=place（定义卷 卷五） | ops | 声明 卷十九-建筑与设施.md:146 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `ops` | struct{inputs: map<ref vocab class, number>, laborRequire
+[F候选] 表=place（定义卷 卷五） | owner | 声明 卷十九-建筑与设施.md:802 [句子] | 定义卷§2表首列无；全卷无 | - 【不变量】A19-10.2：**改挂前后除位置量外全部存储维度、边、状态实例、到期项逐位相同**（卷二 §2.6"行改挂"第 5 点）：对建筑行及每个房间行，`packFacility` 前后、`deployFaci
+[F候选] 表=place（定义卷 卷五） | ownerFeeRate | 声明 卷十九-建筑与设施.md:114 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `ownerFeeRate` | fraction | fraction | [0,1] | never | gap | 业主对在
+[F候选] 表=place（定义卷 卷五） | packFacility | 声明 卷十九-建筑与设施.md:802 [句子] | 定义卷§2表首列无；全卷无 | - 【不变量】A19-10.2：**改挂前后除位置量外全部存储维度、边、状态实例、到期项逐位相同**（卷二 §2.6"行改挂"第 5 点）：对建筑行及每个房间行，`packFacility` 前后、`deployFaci
+[F候选] 表=place（定义卷 卷五） | packed | 声明 卷十九-建筑与设施.md:149 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `packed` | boolean | — | 建筑行的 `parent`（经 `placeView`）；房间行取所在建筑的值。
+[F候选] 表=place（定义卷 卷五） | pathTypes | 声明 卷十九-建筑与设施.md:802 [句子] | 定义卷§2表首列无；全卷首现 :236 | - 【不变量】A19-10.2：**改挂前后除位置量外全部存储维度、边、状态实例、到期项逐位相同**（卷二 §2.6"行改挂"第 5 点）：对建筑行及每个房间行，`packFacility` 前后、`deployFaci
+[F候选] 表=place（定义卷 卷五） | perennialSnowMm | 声明 卷二十-时间日历天气与环境.md:293 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `comp_weather_cell` | `perennialSnowMm` | number | mm | ≥ 0 | err
+[F候选] 表=place（定义卷 卷五） | plant_part | 声明 卷二十五-农牧渔猎与食物链.md:1008 [句子] | 定义卷§2表首列无；全卷首现 :728 | | 全书扫描（低） | dupnames 另报 `plant_part`、`soil`（与卷二族清单重名：卷二只列族名，条目字段在本卷）、`products`（与卷五 place 表的同名列不同表）：属族名登记与字段定义
+[F候选] 表=place（定义卷 卷五） | precipLiquid | 声明 卷二十-时间日历天气与环境.md:294 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `comp_weather_cell` | `precipLiquid` | ref material | — | — | err
+[F候选] 表=place（定义卷 卷五） | precipSeasonality | 声明 卷二十-时间日历天气与环境.md:291 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `comp_weather_cell` | `precipSeasonality` | curve（x：归一太阳相位，y：该相位的
+[F候选] 表=place（定义卷 卷五） | prevailingWindDeg | 声明 卷二十-时间日历天气与环境.md:292 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `comp_weather_cell` | `prevailingWindDeg` | number | degree | [0,
+[F候选] 表=place（定义卷 卷五） | qualityTier | 声明 卷十九-建筑与设施.md:109 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `qualityTier` | enum quality | — | 卷三 §4.5 七档 | byClass:comp_faci
+[F候选] 表=place（定义卷 卷五） | rating | 声明 卷十九-建筑与设施.md:144 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `rating` | struct{wealth, beauty, space, cleanliness, impression:
+[F候选] 表=place（定义卷 卷五） | ref | 声明 卷十九-建筑与设施.md:802 [句子] | 定义卷§2表首列无；全卷首现 :1332 | - 【不变量】A19-10.2：**改挂前后除位置量外全部存储维度、边、状态实例、到期项逐位相同**（卷二 §2.6"行改挂"第 5 点）：对建筑行及每个房间行，`packFacility` 前后、`deployFaci
+[F候选] 表=place（定义卷 卷五） | repairLot | 声明 卷十九-建筑与设施.md:104 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `repairLot` | struct{fillL: integer, replaceL: integer, doneL: in
+[F候选] 表=place（定义卷 卷五） | repairedVolumeL | 声明 卷十九-建筑与设施.md:102 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `repairedVolumeL` | integer | L | [0, null] | byClass:comp_facili
+[F候选] 表=place（定义卷 卷五） | roomRole | 声明 卷十九-建筑与设施.md:105 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `roomRole` | ref vocab roomrole nullable | — | `roomrole` 族 | nev
+[F候选] 表=place（定义卷 卷五） | seasonScheme | 声明 卷二十-时间日历天气与环境.md:295 [§2小节表行] | 定义卷§2表首列无；全卷首现 :650 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `comp_weather_cell` | `seasonScheme` | derived enum season_scheme
+[F候选] 表=place（定义卷 卷五） | services | 声明 卷十九-建筑与设施.md:138 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `services` | set<ref vocab service> | — | `type`、`facilityState.o
+[F候选] 表=place（定义卷 卷五） | slot | 声明 卷十-世界随机生成.md:109 [句子] | 定义卷§2表首列无；全卷无 | 加载时核对它是 place 表或天气单元组件类上已登记、无 `derived` 的数值维度）、`slot: integer`（族内唯一的固定序位，新增条目取新值、已有条目不改
+[F候选] 表=place（定义卷 卷五） | soil | 声明 卷二十五-农牧渔猎与食物链.md:1008 [句子] | 定义卷§2表首列无；§2 正文提及 :110；全卷首现 :110 | | 全书扫描（低） | dupnames 另报 `plant_part`、`soil`（与卷二族清单重名：卷二只列族名，条目字段在本卷）、`products`（与卷五 place 表的同名列不同表）：属族名登记与字段定义
+[F候选] 表=place（定义卷 卷五） | solidAreaM2 | 声明 卷十九-建筑与设施.md:130 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `floorAreaM2` / `envelopeAreaM2` / `solidAreaM2` | number | m2 | 
+[F候选] 表=place（定义卷 卷五） | soundLossDb | 声明 卷二十-时间日历天气与环境.md:299 [§2小节表行] | 定义卷§2表首列无；全卷首现 :1313 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `comp_enclosure` | `soundLossDb` | derived number | dB | ≥ 0 | ga
+[F候选] 表=place（定义卷 卷五） | soundLossDb | 声明 卷十九-建筑与设施.md:134 [§2小节表行] | 定义卷§2表首列无；全卷首现 :1313 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `soundLossDb` | number | dB | `material`、`wallThicknessM`、`apertu
+[F候选] 表=place（定义卷 卷五） | stations | 声明 卷十九-建筑与设施.md:139 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `stations` | list<struct{fixture: ref item, kind: ref vocab fixtu
+[F候选] 表=place（定义卷 卷五） | storage | 声明 卷十九-建筑与设施.md:148 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `storage` | struct{volumeCapacity: number, used: number, preserve
+[F候选] 表=place（定义卷 卷五） | storeFilter | 声明 卷十九-建筑与设施.md:116 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `storeFilter` | struct{classes: set<ref vocab class>, matcats: se
+[F候选] 表=place（定义卷 卷五） | storePriority | 声明 卷十九-建筑与设施.md:117 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `storePriority` | integer | — | [0,9] | ifPresent:storeFilter | g
+[F候选] 表=place（定义卷 卷五） | storeys | 声明 卷十九-建筑与设施.md:107 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `storeys` | integer | count | [1, 64] | byClass:comp_facility | e
+[F候选] 表=place（定义卷 卷五） | structure | 声明 卷十九-建筑与设施.md:147 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `structure` | struct{breachEnergyKJ: number, armorMult: map<ref v
+[F候选] 表=place（定义卷 卷五） | subjectRecords | 声明 卷十九-建筑与设施.md:802 [句子] | 定义卷§2表首列无；全卷无 | - 【不变量】A19-10.2：**改挂前后除位置量外全部存储维度、边、状态实例、到期项逐位相同**（卷二 §2.6"行改挂"第 5 点）：对建筑行及每个房间行，`packFacility` 前后、`deployFaci
+[F候选] 表=place（定义卷 卷五） | successorRX | 声明 卷十九-建筑与设施.md:11 [句子] | 定义卷§2表首列无；全卷首现 :336 | > 第八版（11-13）：只改第七版单核列出的项（李白已裁定）——§4.10 规则 8 的后继只取 `carrierItem` 终止前所在的地点行，由本卷登记的清理函数在终止标记写下之前记到建筑行上，可移动类别行的 `s
+[F候选] 表=place（定义卷 卷五） | tempAmpC | 声明 卷二十-时间日历天气与环境.md:289 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `comp_weather_cell` | `tempAmpC` | number | celsius | ≥ 0 | error
+[F候选] 表=place（定义卷 卷五） | termination | 声明 卷十九-建筑与设施.md:173 [句子] | 定义卷§2表首列无；全卷无 | 建筑的 `termination` 不在本表：卷二 §2.6 的终止原语读的是实体所属类别行，建筑是 place 行，所以 `termination`（残骸后继）登记在挂 `comp_facility` 的 place 
+[F候选] 表=place（定义卷 卷五） | type | 声明 卷十九-建筑与设施.md:136 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `type` | ref facility_type nullable | — | `functions`、`intendedTy
+[F候选] 表=place（定义卷 卷五） | wallFlowKg | 声明 卷十九-建筑与设施.md:101 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `wallFlowKg` | map<ref material, struct{laidKg: number, takenKg: 
+[F候选] 表=place（定义卷 卷五） | wallThicknessM | 声明 卷十九-建筑与设施.md:106 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.1 place 表上归本卷的维度（建筑实例 = 挂 `comp_fa ‖ | `wallThicknessM` | number | m | (0, 20] | byClass:comp_enclosure 
+[F候选] 表=place（定义卷 卷五） | weatherCommonality | 声明 卷二十-时间日历天气与环境.md:296 [§2小节表行] | 定义卷§2表首列无；全卷首现 :1280 | ### 2.7 地点表的环境维度（`place` 表；命名空间 `env.*`， ‖ | `comp_weather_cell` | `weatherCommonality` | map<ref vocab weathe
+[F候选] 表=place（定义卷 卷五） | writePath | 声明 卷二十一-医疗疾病与身体状态.md:428 [句子] | 定义卷§2表首列无；全卷首现 :255 | **用词**：本条的"部位重定"是登记写者 status.mjs 经普通 `writePath` 改写实例的 `bodyPart` 一个字段，不是卷二 §2.6（写者与三接口）的"行改挂"原语（该原语只对 place 表
+[F候选] 表=recipe（定义卷 卷三乙） | revival | 声明 卷四-生物身体与人物.md:1398 [句子] | 定义卷§2表首列无；全卷无 | | Q-18 | 三个权重与采收字段要落在别卷的表上：配方行、动作行、技能行、职业行的 `capabilityWeights / attrWeights`，持有种类表的 `revival` | 本卷写定形状与取值域（§4
+[F候选] 表=skill（定义卷 卷十四） | handlerSkill | 声明 卷二十五-农牧渔猎与食物链.md:803 [句子] | 定义卷§2表首列无；全卷无 | | 卷十四 | 本卷登记 | 役使类技能行（另带 `minTameSeverity`、`handlerSkill`、`handlerSkillMin` 三个字段）、农牧渔猎与厨酿的技能行 | 登记行→skill
+[F候选] 表=skill（定义卷 卷十四） | handlerSkillMin | 声明 卷二十五-农牧渔猎与食物链.md:803 [句子] | 定义卷§2表首列无；全卷无 | | 卷十四 | 本卷登记 | 役使类技能行（另带 `minTameSeverity`、`handlerSkill`、`handlerSkillMin` 三个字段）、农牧渔猎与厨酿的技能行 | 登记行→skill
+[F候选] 表=skill（定义卷 卷十四） | minTameSeverity | 声明 卷二十五-农牧渔猎与食物链.md:803 [句子] | 定义卷§2表首列无；全卷无 | | 卷十四 | 本卷登记 | 役使类技能行（另带 `minTameSeverity`、`handlerSkill`、`handlerSkillMin` 三个字段）、农牧渔猎与厨酿的技能行 | 登记行→skill
+[F候选] 表=skill（定义卷 卷十四） | mintskill | 声明 卷二十二-知识信息与传播.md:648 [句子] | 定义卷§2表首列无；全卷首现 :808 | `mintskill`：创出一条新技能行，由登记该 `rkind` 的卷（卷十四）给出生成规则，新行只能挂靠 `targetSkill` 所列的已登记技能族，经卷十 §4.9 写回 `state.created`（写者为
+[F候选] 表=skill（定义卷 卷十四） | rkind | 声明 卷二十二-知识信息与传播.md:648 [句子] | 定义卷§2表首列无；全卷首现 :808 | `mintskill`：创出一条新技能行，由登记该 `rkind` 的卷（卷十四）给出生成规则，新行只能挂靠 `targetSkill` 所列的已登记技能族，经卷十 §4.9 写回 `state.created`（写者为
+[F候选] 表=skill（定义卷 卷十四） | targetSkill | 声明 卷二十二-知识信息与传播.md:648 [句子] | 定义卷§2表首列无；全卷首现 :808 | `mintskill`：创出一条新技能行，由登记该 `rkind` 的卷（卷十四）给出生成规则，新行只能挂靠 `targetSkill` 所列的已登记技能族，经卷十 §4.9 写回 `state.created`（写者为
+[F候选] 表=species（定义卷 卷四） | applies | 声明 卷十八-社会关系与家族.md:1577 [句子] | 定义卷§2表首列无；全卷无 | 快照同上）：§2.4 变量表来源行 `applies`、`valueRX` 可读变量加观察者、对象所属物种行的基值维度（`observer.species.*`、`target.species.*`），及卷十六登记的克制
+[F候选] 表=species（定义卷 卷四） | comp_lairing | 声明 卷十六-神怪与怪物.md:149 [句子] | 定义卷§2表首列无；全卷无 | 本卷另登记进别卷词表与表的条目（字段含义归该卷）：物种表组件类 `comp_lairing`、`comp_shifter`（§2.3）
+[F候选] 表=species（定义卷 卷四） | comp_shifter | 声明 卷十六-神怪与怪物.md:149 [句子] | 定义卷§2表首列无；全卷无 | 本卷另登记进别卷词表与表的条目（字段含义归该卷）：物种表组件类 `comp_lairing`、`comp_shifter`（§2.3）
+[F候选] 表=species（定义卷 卷四） | comp_uncanny | 声明 卷十五-法术与超自然.md:702 [句子] | 定义卷§2表首列无；全卷无 | 物种行的六个维度 `sxOrigin`、`sxForm`、`sxAnchors`、`sxDrives`、`sxPowers`、`sxBounds`（挂载点归卷四 §2.1（物种 `species`），由组件类 `comp
+[F候选] 表=species（定义卷 卷四） | effectiveBanes | 声明 卷十六-神怪与怪物.md:160 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | species | `effectiveBanes` | map<ref vocab wardtag, integer>（派生） | bps | 各值 [0, 20000] 
+[F候选] 表=species（定义卷 卷四） | lairPlaceRX | 声明 卷十六-神怪与怪物.md:162 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | species（`comp_lairing`） | `lairPlaceRX` | rx | — | 只读存量单元与地点的维度 | byClass | error | 本卷 
+[F候选] 表=species（定义卷 卷四） | lairSites | 声明 卷十六-神怪与怪物.md:161 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | species（组件类 `comp_lairing`，本卷登记，`table` 为 species） | `lairSites` | set<ref vocab site> 
+[F候选] 表=species（定义卷 卷四） | personalityBias | 声明 卷二十六-需求心理与情绪.md:1301 [句子] | 定义卷§2表首列无；§2 正文提及 :154；全卷首现 :154 | | Q1 | 群体人格基线 `personalityBias` 挂在哪 | 物种行与文化行各加一个字段（本卷定含义，卷四、卷七挂载），由加载器生成常驻修正项
+[F候选] 表=species（定义卷 卷四） | placeView | 声明 卷五-地点地形与资源场.md:126 [句子] | 定义卷§2表首列无；全卷首现 :994 | 下列各量要读账本余额、人口统计层、物种表与植物表、或沿边求路程，超出卷二 §1.12 封闭原语的范围，所以不登记为 derived 维度，改由 `placeView` 的实现计算
+[F候选] 表=species（定义卷 卷四） | rangeM | 声明 卷十六-神怪与怪物.md:163 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | species（`comp_lairing`） | `rangeM` | number | m | [0, null] | byClass | error | 本卷 | 家域
+[F候选] 表=species（定义卷 卷四） | shiftStatus | 声明 卷十六-神怪与怪物.md:165 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | species（`comp_shifter`） | `shiftStatus` | ref status | — | 表内 | byClass | error | 本卷 | 
+[F候选] 表=species（定义卷 卷四） | shiftVariant | 声明 卷十六-神怪与怪物.md:164 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | species（组件类 `comp_shifter`，本卷登记，`table` 为 species） | `shiftVariant` | ref vocab mvarian
+[F候选] 表=species（定义卷 卷四） | speciesPower | 声明 卷十六-神怪与怪物.md:166 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | species | `speciesPower` | integer（派生） | score | [0, null] | — | — | 本卷 | 该物种均值个体的战力读数 
+[F候选] 表=species（定义卷 卷四） | speciesTier | 声明 卷十六-神怪与怪物.md:167 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | species | `speciesTier` | ref vocab mtier（派生） | — | 族内 | — | — | 本卷 | 物种的档 / Species ti
+[F候选] 表=species（定义卷 卷四） | stance | 声明 卷十八-社会关系与家族.md:1577 [句子] | 定义卷§2表首列无；全卷无 | 快照同上）：§2.4 变量表来源行 `applies`、`valueRX` 可读变量加观察者、对象所属物种行的基值维度（`observer.species.*`、`target.species.*`），及卷十六登记的克制
+[F候选] 表=species（定义卷 卷四） | sxAnchors | 声明 卷十五-法术与超自然.md:180 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | species | `sxAnchors` | set<ref vocab sxanchor> | — | 族内 | byClass | error | 本卷 | 依附 / 
+[F候选] 表=species（定义卷 卷四） | sxBounds | 声明 卷十五-法术与超自然.md:183 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | species | `sxBounds` | set<ref vocab sxbound> | — | 族内 | byClass | error | 本卷 | 规矩 / Bo
+[F候选] 表=species（定义卷 卷四） | sxCulture | 声明 卷十五-法术与超自然.md:184 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | species | `sxCulture` | ref culture nullable | — | 文化表内 | never | skip | 本卷；架构设计/13-超自然
+[F候选] 表=species（定义卷 卷四） | sxDrives | 声明 卷十五-法术与超自然.md:181 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | species | `sxDrives` | set<ref vocab sxdrive> | — | 族内，非空 | byClass | error | 本卷 | 驱力 /
+[F候选] 表=species（定义卷 卷四） | sxForm | 声明 卷十五-法术与超自然.md:179 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | species | `sxForm` | ref vocab sxform | — | 族内 | byClass | error | 本卷 | 形态 / Form |
+[F候选] 表=species（定义卷 卷四） | sxOrigin | 声明 卷十五-法术与超自然.md:178 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | species（组件类 `comp_uncanny`，本卷登记，`table` 为 species） | `sxOrigin` | ref vocab sxorigin | 
+[F候选] 表=species（定义卷 卷四） | sxPowers | 声明 卷十五-法术与超自然.md:182 [§2小节表行] | 定义卷§2表首列无；全卷无 | ### 2.3 登记到别卷表上的维度 ‖ | species | `sxPowers` | set<ref vocab sxpower> | — | 族内 | byClass | error | 本卷 | 能力 / Po
+[F候选] 表=species（定义卷 卷四） | table | 声明 卷十六-神怪与怪物.md:198 [句子] | 定义卷§2表首列无；§2 正文提及 :324；全卷首现 :324 | | `similarity.dims` | list<struct{table: 表代号（卷二的表登记，只许物种表或知识表）, dim: ref dim（须是该表的维度）, metric: enum sim_metric
+[F候选] 表=species（定义卷 卷四） | tameEase | 声明 卷二十五-农牧渔猎与食物链.md:916 [句子] | 定义卷§2表首列无；全卷无 | ①物种表新增 `tameEase`、`trainEase`（本卷不再登记任何产出字段，活体产出只用卷四的 `renewables`）
+[F候选] 表=species（定义卷 卷四） | tier | 声明 卷十六-神怪与怪物.md:1004 [句子] | 定义卷§2表首列无；全卷无 | | C16-2 | 卷四 §2.1（物种 `species`）、卷四 §4.1（物种统一 schema） | 按台账 X-11 由卷四在物种表上登记 `banes`、`wardImmune`、`containNeed`、
+[F候选] 表=species（定义卷 卷四） | trainEase | 声明 卷二十五-农牧渔猎与食物链.md:916 [句子] | 定义卷§2表首列无；全卷无 | ①物种表新增 `tameEase`、`trainEase`（本卷不再登记任何产出字段，活体产出只用卷四的 `renewables`）
+[F候选] 表=species（定义卷 卷四） | valueRX | 声明 卷十八-社会关系与家族.md:1577 [句子] | 定义卷§2表首列无；全卷首现 :457 | 快照同上）：§2.4 变量表来源行 `applies`、`valueRX` 可读变量加观察者、对象所属物种行的基值维度（`observer.species.*`、`target.species.*`），及卷十六登记的克制
+[F候选] 表=species（定义卷 卷四） | weightBps | 声明 卷十六-神怪与怪物.md:198 [句子] | 定义卷§2表首列无；全卷无 | | `similarity.dims` | list<struct{table: 表代号（卷二的表登记，只许物种表或知识表）, dim: ref dim（须是该表的维度）, metric: enum sim_metric
+
+候选合计 267
+
+## F（宽判据，参考）: node F:/dnd-tmp/book/scan-rootBF-F.mjs
+[F候选] 表定义卷=卷一(卷号) | 码 from | 声明 卷十八-社会关系与家族.md:1466 [句子] | 定义卷§2(65-275)无；全卷首现 卷一-总纲与分层.md:468 | | 端类型 | 种类行 `from`、`to` 的取值：实体模板（卷一的模板名）或目录行（卷二的实体表名，且不是可终止实体类） | §4.1.1
+[F候选] 表定义卷=卷一(卷号) | 码 to | 声明 卷十八-社会关系与家族.md:1466 [句子] | 定义卷§2(65-275)无；全卷首现 卷一-总纲与分层.md:122 | | 端类型 | 种类行 `from`、`to` 的取值：实体模板（卷一的模板名）或目录行（卷二的实体表名，且不是可终止实体类） | §4.1.1
+[F候选] 表定义卷=卷七(表名词) | 码 scope | 声明 卷二-维度表规范与统一入口.md:2558 [句子] | 定义卷§2(113-316)无；全卷首现 卷七-信仰与文化.md:557 | §1.9 代码内封闭枚举 `scope` 的值表删 `integrated` | 卷七第三版 R7-24.8 改用 `self`（逐人定值挂在文化行上会把一个人的值加给所有人），全书扫描（F:/dnd-tmp/vols/scan-integ
+[F候选] 表定义卷=卷七(表名词) | 码 integrated | 声明 卷二-维度表规范与统一入口.md:2558 [句子] | 定义卷§2(113-316)无；全卷首现 卷七-信仰与文化.md:1357 | §1.9 代码内封闭枚举 `scope` 的值表删 `integrated` | 卷七第三版 R7-24.8 改用 `self`（逐人定值挂在文化行上会把一个人的值加给所有人），全书扫描（F:/dnd-tmp/vols/scan-integ
+[F候选] 表定义卷=卷七(表名词) | 码 self | 声明 卷二-维度表规范与统一入口.md:2558 [句子] | 定义卷§2(113-316)无；全卷首现 卷七-信仰与文化.md:1146 | §1.9 代码内封闭枚举 `scope` 的值表删 `integrated` | 卷七第三版 R7-24.8 改用 `self`（逐人定值挂在文化行上会把一个人的值加给所有人），全书扫描（F:/dnd-tmp/vols/scan-integ
+[F候选] 表定义卷=卷七(卷号) | 码 to | 声明 卷八b-法律治安与刑罚.md:655 [句子] | 定义卷§2(113-316)无；全卷首现 卷七-信仰与文化.md:183 | - **R8b-3.8 赎罪**：赎罪就是易刑到一种计价资源取虔诚（卷七的点数类资源）的财产刑：易刑条目的 `to` 指向这样的刑种，`sink` 指向卷七 §4.10（虔诚账户与奉献等级（香火））登记的赎罪去处（加载校验两者相配，不配即 
+[F候选] 表定义卷=卷七(卷号) | 码 sink | 声明 卷八b-法律治安与刑罚.md:655 [句子] | 定义卷§2(113-316)无；全卷首现 卷七-信仰与文化.md:246 | - **R8b-3.8 赎罪**：赎罪就是易刑到一种计价资源取虔诚（卷七的点数类资源）的财产刑：易刑条目的 `to` 指向这样的刑种，`sink` 指向卷七 §4.10（虔诚账户与奉献等级（香火））登记的赎罪去处（加载校验两者相配，不配即 
+[F候选] 表定义卷=卷七(卷号) | 码 transferable | 声明 卷六-经济.md:379 [句子] | 定义卷§2(113-316)无；全卷首现 无 | - 超自然一座神祠：名下有一种点数类资源（信众奉献形成，种类行由卷七登记，`transferable` 为只许与发行者往来）
+[F候选] 表定义卷=卷七(表名词) | 码 gen | 声明 卷十-世界随机生成.md:135 [§2登记小节] | 定义卷§2(113-316)无；全卷首现 卷七-信仰与文化.md:483 | | `gen.faithWeights` | culture | map<ref faith, integer> | count | 各值 ≥ 0，至少一项 > 0 | never | gap（该文化的开局聚合体信仰键留空） | 卷七 R7
+[F候选] 表定义卷=卷三乙(卷号) | 码 choices | 声明 卷九-AI接口.md:1396 [句子] | 定义卷§2(129-323)无；全卷首现 卷三乙-物态类别与物品.md:1150 | | 勘6 | 卷三乙-物态类别与物品.md:1152 与 :1999（§8 Q-09）、:1211（交互表“意图槽位”） | 本卷 §4.19.1 | :1152、:1999 两处“登记进卷九 §4.19 的槽位枚举”与 :1211 交互表
+[F候选] 表定义卷=卷三乙(卷号) | 码 times | 声明 卷九-AI接口.md:1396 [句子] | 定义卷§2(129-323)无；全卷首现 卷三乙-物态类别与物品.md:1076 | | 勘6 | 卷三乙-物态类别与物品.md:1152 与 :1999（§8 Q-09）、:1211（交互表“意图槽位”） | 本卷 §4.19.1 | :1152、:1999 两处“登记进卷九 §4.19 的槽位枚举”与 :1211 交互表
+[F候选] 表定义卷=卷三乙(卷号) | 码 care | 声明 卷九-AI接口.md:1396 [句子] | 定义卷§2(129-323)无；全卷首现 卷三乙-物态类别与物品.md:298 | | 勘6 | 卷三乙-物态类别与物品.md:1152 与 :1999（§8 Q-09）、:1211（交互表“意图槽位”） | 本卷 §4.19.1 | :1152、:1999 两处“登记进卷九 §4.19 的槽位枚举”与 :1211 交互表
+[F候选] 表定义卷=卷三乙(卷号) | 码 comp_weather_cell | 声明 卷二十-时间日历天气与环境.md:294 [§2登记小节] | 定义卷§2(129-323)无；全卷首现 无 | | `comp_weather_cell` | `precipLiquid` | ref material | — | — | error | 降水的材料，熔点经卷三 `materialView` 读有效值（卷三乙 §4.1 M-12） |
+[F候选] 表定义卷=卷三乙(卷号) | 码 registerValuer | 声明 卷六-经济.md:1049 [句子] | 定义卷§2(129-323)无；全卷首现 卷三乙-物态类别与物品.md:1613 | 本卷为地点类实体向卷三乙的 `registerValuer` 登记估值器
+[F候选] 表定义卷=卷三乙(卷号) | 码 enchslot | 声明 卷十五-法术与超自然.md:164 [句子] | 定义卷§2(129-323)无；全卷首现 无 | | `enchslot`（`eslot_`，登记进卷三乙的 `attach_slot` 族） | 按卷三乙 §4.14（附件与改装槽）的条目字段 | 镶嵌位 |
+[F候选] 表定义卷=卷三乙(卷号) | 码 eslot_ | 声明 卷十五-法术与超自然.md:164 [句子] | 定义卷§2(129-323)无；全卷首现 无 | | `enchslot`（`eslot_`，登记进卷三乙的 `attach_slot` 族） | 按卷三乙 §4.14（附件与改装槽）的条目字段 | 镶嵌位 |
+[F候选] 表定义卷=卷三乙(卷号) | 码 attach_slot | 声明 卷十五-法术与超自然.md:164 [句子] | 定义卷§2(129-323)无；全卷首现 卷三乙-物态类别与物品.md:192 | | `enchslot`（`eslot_`，登记进卷三乙的 `attach_slot` 族） | 按卷三乙 §4.14（附件与改装槽）的条目字段 | 镶嵌位 |
+[F候选] 表定义卷=卷三甲(表名词) | 码 stress | 声明 卷三乙-物态类别与物品.md:247 [句子] | 定义卷§2(96-208)无；全卷首现 卷三甲-物质本源.md:117 | 本源成分 `substance`、应力 `stress`、营养素 `nutrient`、反应 `reaction` 四族与材料表组件类的 requires 登记在卷三甲 §2.2，下表不重列
+[F候选] 表定义卷=卷三甲(表名词) | 码 reaction | 声明 卷三乙-物态类别与物品.md:247 [句子] | 定义卷§2(96-208)无；全卷首现 卷三甲-物质本源.md:153 | 本源成分 `substance`、应力 `stress`、营养素 `nutrient`、反应 `reaction` 四族与材料表组件类的 requires 登记在卷三甲 §2.2，下表不重列
+[F候选] 表定义卷=卷三甲(卷三材料) | 码 pharm | 声明 卷二十一-医疗疾病与身体状态.md:134 [§2登记小节] | 定义卷§2(96-208)无；全卷首现 无 | | `pharm` | map<ref vocab pharm, number> | dose_per_kg | 值 ≥ 0 | 挂药用组件类时 | gap | CDDA 02 §8.3；RW 03 §7 | 药性含量 / Pharmaco
+[F候选] 表定义卷=卷三甲(卷三材料) | 码 agents | 声明 卷二十一-医疗疾病与身体状态.md:135 [§2登记小节] | 定义卷§2(96-208)无；全卷首现 无 | | `agents` | map<ref status, number> | dose_per_kg | 值 ≥ 0 | never | skip | CDDA#13 | 病原含量 / Pathogen load |
+[F候选] 表定义卷=卷九(表名词) | 码 consentClass | 声明 卷一-总纲与分层.md:253 [句子] | 定义卷§2(105-396)无；全卷首现 无 | 2. **未成年人情节检查**：按数值与代号判断的部分在**规则层**——动作目录条目带 `consentClass` 等标签代号、关系用结构化关系代号（`relation` 族条目字段 `intimate: boolean`，登记在卷二 
+[F候选] 表定义卷=卷九(表名词) | 码 install | 声明 卷三乙-物态类别与物品.md:1519 [句子] | 定义卷§2(105-396)无；全卷首现 无 | 装、拆是两个动作（登记在卷九 §4.1 动作目录），前置是槽位条目的 `install` 需求块
+[F候选] 表定义卷=卷九(表名词) | 码 verb_fact_told | 声明 卷二十二-知识信息与传播.md:570 [句子] | 定义卷§2(105-396)无；全卷首现 无 | 勒索是向对方提出一份缄默合同（本卷向卷六登记的合同种类）：己方义务是不转述该事实（转述即违约，事件订阅 `verb_fact_told`），对方义务是任何登记的给付或作为（卷九动作行）
+[F候选] 表定义卷=卷九(卷号) | 码 secretsOf | 声明 卷二十二-知识信息与传播.md:803 [句子] | 定义卷§2(105-396)无；全卷首现 无 | | `secretsOf`、`leverageOf`、缄默合同种类行 | 读入口、登记行 | 卷九 §4.12/§4.13、卷十八、卷六 | 派生读取、合同 |
+[F候选] 表定义卷=卷九(卷号) | 码 leverageOf | 声明 卷二十二-知识信息与传播.md:803 [句子] | 定义卷§2(105-396)无；全卷首现 无 | | `secretsOf`、`leverageOf`、缄默合同种类行 | 读入口、登记行 | 卷九 §4.12/§4.13、卷十八、卷六 | 派生读取、合同 |
+[F候选] 表定义卷=卷九(卷号) | 码 visibilityAllowed | 声明 卷十三-战斗.md:356 [句子] | 定义卷§2(105-396)无；全卷首现 卷九-AI接口.md:1033 | `visibilityAllowed` 一律取卷九 `emit` 的 `visibility` 全集 {`public`、`private`、`witnessed`}，当众程度由发出它的事务在集合内给出，本卷不收窄（同卷十八 §2.3（本卷
+[F候选] 表定义卷=卷九(卷号) | 码 emit | 声明 卷十三-战斗.md:356 [句子] | 定义卷§2(105-396)无；全卷首现 卷九-AI接口.md:578 | `visibilityAllowed` 一律取卷九 `emit` 的 `visibility` 全集 {`public`、`private`、`witnessed`}，当众程度由发出它的事务在集合内给出，本卷不收窄（同卷十八 §2.3（本卷
+[F候选] 表定义卷=卷九(卷号) | 码 visibility | 声明 卷十三-战斗.md:356 [句子] | 定义卷§2(105-396)无；全卷首现 卷九-AI接口.md:578 | `visibilityAllowed` 一律取卷九 `emit` 的 `visibility` 全集 {`public`、`private`、`witnessed`}，当众程度由发出它的事务在集合内给出，本卷不收窄（同卷十八 §2.3（本卷
+[F候选] 表定义卷=卷九(卷号) | 码 public | 声明 卷十三-战斗.md:356 [句子] | 定义卷§2(105-396)无；全卷首现 卷九-AI接口.md:578 | `visibilityAllowed` 一律取卷九 `emit` 的 `visibility` 全集 {`public`、`private`、`witnessed`}，当众程度由发出它的事务在集合内给出，本卷不收窄（同卷十八 §2.3（本卷
+[F候选] 表定义卷=卷九(卷号) | 码 private | 声明 卷十三-战斗.md:356 [句子] | 定义卷§2(105-396)无；全卷首现 卷九-AI接口.md:151 | `visibilityAllowed` 一律取卷九 `emit` 的 `visibility` 全集 {`public`、`private`、`witnessed`}，当众程度由发出它的事务在集合内给出，本卷不收窄（同卷十八 §2.3（本卷
+[F候选] 表定义卷=卷九(卷号) | 码 witnessed | 声明 卷十三-战斗.md:356 [句子] | 定义卷§2(105-396)无；全卷首现 卷九-AI接口.md:578 | `visibilityAllowed` 一律取卷九 `emit` 的 `visibility` 全集 {`public`、`private`、`witnessed`}，当众程度由发出它的事务在集合内给出，本卷不收窄（同卷十八 §2.3（本卷
+[F候选] 表定义卷=卷九(表名词) | 码 lairSuitability | 声明 卷十六-神怪与怪物.md:599 [句子] | 定义卷§2(105-396)无；全卷首现 无 | 运行期的“安家”是个体或族群经决策选的一条动作（向卷九登记的动作行），可行性读同一个 `lairSuitability`
+[F候选] 表定义卷=卷九(卷号) | 码 proposeTransform | 声明 卷十六-神怪与怪物.md:840 [句子] | 定义卷§2(105-396)无；全卷首现 无 | 它是一条原语 `roles.prims.transform`（登记进卷九原语目录，参数：主体、模板句柄、方向〔转去或复原〕、起因句柄），由转化效果族或本卷的钩子输出，执行器求值它时调本卷的 `proposeTransform`
+[F候选] 表定义卷=卷二十一(卷号) | 码 nutrient | 声明 卷三甲-物质本源.md:824 [句子] | 定义卷§2(91-259)无；全卷首现 卷二十一-医疗疾病与身体状态.md:623 | | 卷二十一 §4.4 | 营养维度值 | `nutrient` 条目需求（日参考量 `refAmountG` 登记在本卷的条目上） | X-09 |
+[F候选] 表定义卷=卷二十一(卷号) | 码 refAmountG | 声明 卷三甲-物质本源.md:824 [句子] | 定义卷§2(91-259)无；全卷首现 无 | | 卷二十一 §4.4 | 营养维度值 | `nutrient` 条目需求（日参考量 `refAmountG` 登记在本卷的条目上） | X-09 |
+[F候选] 表定义卷=卷二十一(表名词) | 码 effectOnBreach | 声明 卷六-经济.md:997 [句子] | 定义卷§2(91-259)无；全卷首现 无 | - 超自然一份与精魂订立的契约：种类行由卷十五登记，义务之一是"不作为"类，`effectOnBreach` 是一组施加状态容器的效果调用
+[F候选] 表定义卷=卷二十一(卷号) | 码 comp_shifter | 声明 卷十六-神怪与怪物.md:165 [§2登记小节] | 定义卷§2(91-259)无；全卷首现 无 | | species（`comp_shifter`） | `shiftStatus` | ref status | — | 表内 | byClass | error | 本卷 | 哪条状态行的档带出变身（行的格式与病程归卷二十一） / Shi
+[F候选] 表定义卷=卷二十一(卷号) | 码 skillValue | 声明 卷十四-职业技能与学艺.md:541 [句子] | 定义卷§2(91-259)无；全卷首现 无 | 技能与服务对身体的作用，只是服务条目的 `effect` 指向卷二十一 §5.1 登记的效果族行（七个通用效果族，名称与参数槽见该处），由 `effectCall` 的参数交出三样：施加哪个效果（效果族与目标行）、强度多少（幅度式读 `sk
+[F候选] 表定义卷=卷二十七(卷号) | 码 skill | 声明 卷二十三-艺术文学与文化产物.md:413 [句子] | 定义卷§2(100-202)无；全卷首现 无 | 各字段的抽取按卷二十七 R27-8.5 逐字段登记位次，每个位次是一个不同的抽取点代号，骰值键为 `(worldSeed, roles.streams.works, 该形式条目 id, genesisMinute, 该字段的位次)`：`sk
+[F候选] 表定义卷=卷二十七(卷号) | 码 site | 声明 卷二十二-知识信息与传播.md:849 [句子] | 定义卷§2(100-202)无；全卷首现 无 | 抽取点 `site.know.distort.op`、`site.know.distort.amount`、`site.know.distort.pick`、`site.know.public.offset`、`site.know.read
+[F候选] 表定义卷=卷二十七(卷号) | 码 pop | 声明 卷八-政治与人口.md:333 [句子] | 定义卷§2(100-202)无；全卷首现 卷二十七-离屏性能存档与确定性.md:86 | | `pop.aggKinds.resident` | ref（卷二十七聚合种类行） | 居民聚合种类句柄 |
+[F候选] 表定义卷=卷二十七(卷号) | 码 law | 声明 卷八b-法律治安与刑罚.md:333 [句子] | 定义卷§2(100-202)无；全卷首现 卷二十七-离屏性能存档与确定性.md:446 | | `law.crime.aggKinds` | struct{outlaw, detained, bonded: ref}（卷二十七聚合种类行） | 统计层作案者、在押者、被奴役者的聚合种类句柄 |
+[F候选] 表定义卷=卷二十七(卷号) | 码 force | 声明 卷十三-战斗.md:876 [句子] | 定义卷§2(100-202)无；全卷首现 无 | 比较的办法、样本组数、统计量与容差全部取卷二十七 R27-1.9 与 R27-6.5（`seedSampleSize`、`driftStat`、`driftTolerance`），本卷不另立容差键：本卷只向该卷的 `observables`
+[F候选] 表定义卷=卷二十七(卷号) | 码 org | 声明 卷十三-战斗.md:876 [句子] | 定义卷§2(100-202)无；全卷首现 无 | 比较的办法、样本组数、统计量与容差全部取卷二十七 R27-1.9 与 R27-6.5（`seedSampleSize`、`driftStat`、`driftTolerance`），本卷不另立容差键：本卷只向该卷的 `observables`
+[F候选] 表定义卷=卷二十七(卷号) | 码 battle | 声明 卷十三-战斗.md:876 [句子] | 定义卷§2(100-202)无；全卷首现 无 | 比较的办法、样本组数、统计量与容差全部取卷二十七 R27-1.9 与 R27-6.5（`seedSampleSize`、`driftStat`、`driftTolerance`），本卷不另立容差键：本卷只向该卷的 `observables`
+[F候选] 表定义卷=卷二十七(卷号) | 码 pins | 声明 卷十八-社会关系与家族.md:1318 [句子] | 定义卷§2(100-202)无；全卷首现 无 | | 卷二十七 §4.2（聚合变体、等价、钉住） | `keyHoldings` 只可引用 `pins` 不取“都不钉”的种类行
+[F候选] 表定义卷=卷二十九(卷号) | 码 lang | 声明 卷二-维度表规范与统一入口.md:2578 [句子] | 定义卷§2(114-409)无；全卷首现 卷二十九-显示层本地化与界面投影.md:198 | 附 D.3 "blocklist 的 `lang` 字段值写法"一行改为已核对 | 凡"语言"参数与"已发布语言"改指显示语言代号 `DisplayLang`（登记在卷二十九 §2.2 `world/i18n/locales.json`，不
+[F候选] 表定义卷=卷二十二(卷号) | 码 perceive | 声明 卷五-地点地形与资源场.md:380 [句子] | 定义卷§2(105-243)无；全卷首现 卷二十二-知识信息与传播.md:37 | 本卷向卷二十二 §4.2 的知情来源与通道词表登记一行"亲身感知"通道（台账"知情来源与通道词表"行的使用方式：登记通道行）：来源是 `perceive` 的判定结果，行上带所用的 `sense` 通道代号
+[F候选] 表定义卷=卷二十二(表名词) | 码 comp_relic | 声明 卷十五-法术与超自然.md:196 [§2登记小节] | 定义卷§2(105-243)无；全卷首现 无 | | item 模板与实例（`comp_relic`） | `arcSchool` | ref vocab arcschool nullable | — | 族内；实例只写一次 | never | skip | 本卷 | 出处流派：模板给缺省
+[F候选] 表定义卷=卷二十二(卷号) | 码 informedShare | 声明 卷十八-社会关系与家族.md:1567 [句子] | 定义卷§2(105-243)无；全卷首现 卷二十二-知识信息与传播.md:258 | 理由：卷二十二入口返回基点，`informedShare` 是 [0, 1] 比例，原文不写则单位差一万倍 | 卷二十二 §5.3（向卷二十七登记的矩阵行、聚合行与封卷后勘误请求）请求 3 | R18-6.1 | — | — |
+[F候选] 表定义卷=卷二十二(卷号) | 码 lies | 声明 卷十八-社会关系与家族.md:1568 [句子] | 定义卷§2(105-243)无；全卷首现 卷二十二-知识信息与传播.md:88 | 理由：原布尔无来源，表达不了“对范围内的人不设防” | 卷二十二 §5.3（向卷二十七登记的矩阵行、聚合行与封卷后勘误请求）请求 4 | §2.4 变量表 `lies.*` 一行 | R18-5.5 一处措辞 | — |
+[F候选] 表定义卷=卷二十五(表名词) | 码 plant_family | 声明 卷三甲-物质本源.md:261 [句子] | 定义卷§2(87-219)无；全卷首现 无 | 词表登记在本卷（§2.2 `plant_family`）：卷二十五的植物表眼下没有科这一项，别处也没有
+[F候选] 表定义卷=卷二十五(卷号) | 码 episode_feral | 声明 卷二十六-需求心理与情绪.md:956 [句子] | 定义卷§2(87-219)无；全卷首现 无 | - 【非人类】驯养的战象在压力极高时可能进入 `episode_feral`：它的容器档挂一条修正项，指向卷二十五登记的驯顺维度
+[F候选] 表定义卷=卷二十六(卷号) | 码 process | 声明 卷十五-法术与超自然.md:202 [句子] | 定义卷§2(109-286)无；全卷首现 卷二十六-需求心理与情绪.md:830 | 过程主体槽（登记进卷二 §3.7（旧派生槽的对照与过程主体槽））：`process.castNotice`（施为被察觉的读数）、`process.consentBar`（给出施术配合的门槛，卷二十六的压力档修正项以它为目标）、`proces
+[F候选] 表定义卷=卷二十六(卷号) | 码 seal | 声明 卷十五-法术与超自然.md:202 [句子] | 定义卷§2(109-286)无；全卷首现 无 | 过程主体槽（登记进卷二 §3.7（旧派生槽的对照与过程主体槽））：`process.castNotice`（施为被察觉的读数）、`process.consentBar`（给出施术配合的门槛，卷二十六的压力档修正项以它为目标）、`proces
+[F候选] 表定义卷=卷二十六(卷号) | 码 arcaneInsulate | 声明 卷十五-法术与超自然.md:202 [句子] | 定义卷§2(109-286)无；全卷首现 无 | 过程主体槽（登记进卷二 §3.7（旧派生槽的对照与过程主体槽））：`process.castNotice`（施为被察觉的读数）、`process.consentBar`（给出施术配合的门槛，卷二十六的压力档修正项以它为目标）、`proces
+[F候选] 表定义卷=卷二十六(卷号) | 码 potency | 声明 卷十五-法术与超自然.md:202 [句子] | 定义卷§2(109-286)无；全卷首现 无 | 过程主体槽（登记进卷二 §3.7（旧派生槽的对照与过程主体槽））：`process.castNotice`（施为被察觉的读数）、`process.consentBar`（给出施术配合的门槛，卷二十六的压力档修正项以它为目标）、`proces
+[F候选] 表定义卷=卷二十六(卷号) | 码 debt | 声明 卷十五-法术与超自然.md:780 [句子] | 定义卷§2(109-286)无；全卷首现 无 | 久不清偿的冤债使债权一方越来越倾向加害：修正来源登记在本卷规则表 `debt.driveRows`，每行给（合同种类、驱力、曲线），以“该合同逾期日数”为 x，产生一条以债权一方 `person.driveWeight[…]`（该行所指驱力
+[F候选] 表定义卷=卷二十四(表名词) | 码 untilEvent | 声明 卷二十一-医疗疾病与身体状态.md:1237 [句子] | 定义卷§2(105-319)无；全卷首现 无 | | 卷二十四（与卷八b 商定） | 牵连请求：带持续性修正项的公共措施（隔离令一类的事件类型行）须有一个"措施撤销"的事件动词，登记进卷二的 `verb` 族并写明发出者（撤销该措施的治理动作或事件阶段），本卷 §4.10.5 示例的 `u
+[F候选] 表定义卷=卷二十四(卷号) | 码 works | 声明 卷二十三-艺术文学与文化产物.md:536 [句子] | 定义卷§2(105-319)无；全卷首现 无 | `works.honorCoverage` 作为 RX 可读量须登记进卷二 §2.9 的 RX 命名空间（C23-16，先例卷二十四 C24-2）
+[F候选] 表定义卷=卷二十四(表名词) | 码 calendar | 声明 卷二十五-农牧渔猎与食物链.md:372 [句子] | 定义卷§2(105-319)无；全卷首现 卷二十四-事件叙事调度与历史.md:885 | 事件只在求值时点判一次：指数越过 `calendar.json.indexTiers` 的阈值（带滞回）时，由 `agri.mjs` 发一条事件（歉收、绝收、丰收的事件类型行向卷二十四登记），同一条记录同一个年周期至多一条
+[F候选] 表定义卷=卷二十四(表名词) | 码 agri | 声明 卷二十五-农牧渔猎与食物链.md:372 [句子] | 定义卷§2(105-319)无；全卷首现 无 | 事件只在求值时点判一次：指数越过 `calendar.json.indexTiers` 的阈值（带滞回）时，由 `agri.mjs` 发一条事件（歉收、绝收、丰收的事件类型行向卷二十四登记），同一条记录同一个年周期至多一条
+[F候选] 表定义卷=卷二十四(表名词) | 码 promotesTo | 声明 卷五-地点地形与资源场.md:551 [句子] | 定义卷§2(105-319)无；全卷首现 无 | `当日 − siteHoldSince ≥ site-rules.json.holdDays` 时，沿 `promotesTo` 或 `demotesTo` 改写 `siteType`、清空计时并发出事件（事件类型行由本卷向卷二十四 §4.
+[F候选] 表定义卷=卷二十四(表名词) | 码 demotesTo | 声明 卷五-地点地形与资源场.md:551 [句子] | 定义卷§2(105-319)无；全卷首现 无 | `当日 − siteHoldSince ≥ site-rules.json.holdDays` 时，沿 `promotesTo` 或 `demotesTo` 改写 `siteType`、清空计时并发出事件（事件类型行由本卷向卷二十四 §4.
+[F候选] 表定义卷=卷二十四(表名词) | 码 siteType | 声明 卷五-地点地形与资源场.md:551 [句子] | 定义卷§2(105-319)无；全卷首现 无 | `当日 − siteHoldSince ≥ site-rules.json.holdDays` 时，沿 `promotesTo` 或 `demotesTo` 改写 `siteType`、清空计时并发出事件（事件类型行由本卷向卷二十四 §4.
+[F候选] 表定义卷=卷二十四(卷号) | 码 wphase | 声明 卷八-政治与人口.md:1604 [句子] | 定义卷§2(105-319)无；全卷首现 卷二十四-事件叙事调度与历史.md:838 | 术语表删 `wphase` 行、新增“本卷向卷二十四 `evstage` 族登记的条目” | 战争局势的阶段改为本卷登记的四条 `evstage` 条目，封闭枚举 `wphase` 退役
+[F候选] 表定义卷=卷二十四(表名词) | 码 verb_trip_departed | 声明 卷十七-交通与路途.md:162 [句子] | 定义卷§2(105-319)无；全卷首现 无 | 事件动词（verb 族条目，登记到卷二十四 §4.2（事件类型注册与估值记录））：`verb_trip_departed`、`verb_tract_entered`、`verb_trip_halted`、`verb_trip_arrived
+[F候选] 表定义卷=卷二十四(表名词) | 码 verb_tract_entered | 声明 卷十七-交通与路途.md:162 [句子] | 定义卷§2(105-319)无；全卷首现 无 | 事件动词（verb 族条目，登记到卷二十四 §4.2（事件类型注册与估值记录））：`verb_trip_departed`、`verb_tract_entered`、`verb_trip_halted`、`verb_trip_arrived
+[F候选] 表定义卷=卷二十四(表名词) | 码 verb_trip_halted | 声明 卷十七-交通与路途.md:162 [句子] | 定义卷§2(105-319)无；全卷首现 无 | 事件动词（verb 族条目，登记到卷二十四 §4.2（事件类型注册与估值记录））：`verb_trip_departed`、`verb_tract_entered`、`verb_trip_halted`、`verb_trip_arrived
+[F候选] 表定义卷=卷二十四(表名词) | 码 verb_trip_arrived | 声明 卷十七-交通与路途.md:162 [句子] | 定义卷§2(105-319)无；全卷首现 无 | 事件动词（verb 族条目，登记到卷二十四 §4.2（事件类型注册与估值记录））：`verb_trip_departed`、`verb_tract_entered`、`verb_trip_halted`、`verb_trip_arrived
+[F候选] 表定义卷=卷二十四(表名词) | 码 verb_cargo_fate | 声明 卷十七-交通与路途.md:162 [句子] | 定义卷§2(105-319)无；全卷首现 无 | 事件动词（verb 族条目，登记到卷二十四 §4.2（事件类型注册与估值记录））：`verb_trip_departed`、`verb_tract_entered`、`verb_trip_halted`、`verb_trip_arrived
+[F候选] 表定义卷=卷二十四(表名词) | 码 verb_gate_checked | 声明 卷十七-交通与路途.md:162 [句子] | 定义卷§2(105-319)无；全卷首现 无 | 事件动词（verb 族条目，登记到卷二十四 §4.2（事件类型注册与估值记录））：`verb_trip_departed`、`verb_tract_entered`、`verb_trip_halted`、`verb_trip_arrived
+[F候选] 表定义卷=卷二十四(表名词) | 码 verb_place_explored | 声明 卷十七-交通与路途.md:162 [句子] | 定义卷§2(105-319)无；全卷首现 无 | 事件动词（verb 族条目，登记到卷二十四 §4.2（事件类型注册与估值记录））：`verb_trip_departed`、`verb_tract_entered`、`verb_trip_halted`、`verb_trip_arrived
+[F候选] 表定义卷=卷二十四(表名词) | 码 verb_trip_pace | 声明 卷十七-交通与路途.md:162 [句子] | 定义卷§2(105-319)无；全卷首现 无 | 事件动词（verb 族条目，登记到卷二十四 §4.2（事件类型注册与估值记录））：`verb_trip_departed`、`verb_tract_entered`、`verb_trip_halted`、`verb_trip_arrived
+[F候选] 表定义卷=卷二十四(表名词) | 码 verb_subject_tract_changed | 声明 卷十七-交通与路途.md:162 [句子] | 定义卷§2(105-319)无；全卷首现 无 | 事件动词（verb 族条目，登记到卷二十四 §4.2（事件类型注册与估值记录））：`verb_trip_departed`、`verb_tract_entered`、`verb_trip_halted`、`verb_trip_arrived
+[F候选] 表定义卷=卷五(表名词) | 码 floodL | 声明 卷二十-时间日历天气与环境.md:277 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `floodL` | number | L | ≥ 0 | state（读账本） | gap | §4.6 | 水体当日转入漫溢汇的量 |
+[F候选] 表定义卷=卷五(表名词) | 码 comp_weather_cell | 声明 卷二十-时间日历天气与环境.md:287 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 卷五-地点地形与资源场.md:1036 | | `comp_weather_cell` | `annualMeanTempC` | number | celsius | — | error | 单元所在地点海拔处的年均温；现各地区按季温度表折算 |
+[F候选] 表定义卷=卷五(表名词) | 码 fixture | 声明 卷二十三-艺术文学与文化产物.md:209 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `fixture`（卷十九 §2.3，开放族） | 一行“表面装饰” | `provides` 空、`abilities` 空、`stationSlots` 0、`footprintM2` 0：刻在地点表面的装饰件以它作固定装置（R23
+[F候选] 表定义卷=卷五(卷号) | 码 gen | 声明 卷十-世界随机生成.md:144 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 卷五-地点地形与资源场.md:235 | | `gen.open` | place | boolean | — | — | never | gap（读者取 `rules.gen.opening.runtimeOpen`） | 本卷 R10-12.7 | 开放范围：开局时这处地点是否
+[F候选] 表定义卷=卷五(表名词) | 码 intendedType | 声明 卷十九-建筑与设施.md:98 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 卷五-地点地形与资源场.md:912 | | `intendedType` | ref facility_type | — | — | byClass:comp_facility | error | 用途意图：建成或改用时由持有者登记；不是分类结果 | 北极星"意图" |
+[F候选] 表定义卷=卷五(表名词) | 码 form | 声明 卷十九-建筑与设施.md:99 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 卷五-地点地形与资源场.md:158 | | `form` | enum bform | — | 开放族 | byClass:comp_facility | error | 形制（§4.5） | 09 §13.4 |
+[F候选] 表定义卷=卷五(表名词) | 码 materialKg | 声明 卷十九-建筑与设施.md:100 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `materialKg` | map<ref material, number> | kg | 各值 [0, null]；precision 4 | byClass:comp_facility | error | 围护里每种料的质量，原
+[F候选] 表定义卷=卷五(表名词) | 码 repairedVolumeL | 声明 卷十九-建筑与设施.md:102 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `repairedVolumeL` | integer | L | [0, null] | byClass:comp_facility | error | 累计已换围护体积，整升，原值；修缮工时折成体积时带余数结转（卷二 §3.3 第 
+[F候选] 表定义卷=卷五(表名词) | 码 envelopeVolumeL | 声明 卷十九-建筑与设施.md:103 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `envelopeVolumeL` | integer | L | [1, null] | byClass:comp_facility | error | 围护的设计体积，整升，原值：建成时直接写入建成那一刻的现存升数 `E`（§4.1
+[F候选] 表定义卷=卷五(表名词) | 码 repairLot | 声明 卷十九-建筑与设施.md:104 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `repairLot` | struct{fillL: integer, replaceL: integer, doneL: integer, quotaL: map<ref material, integer>, salvage: m
+[F候选] 表定义卷=卷五(表名词) | 码 roomRole | 声明 卷十九-建筑与设施.md:105 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `roomRole` | ref vocab roomrole nullable | — | `roomrole` 族 | never | skip | 房间行在所属形制 `rooms` 列表里担的角色（第十一版）：建行函数生成房间行时
+[F候选] 表定义卷=卷五(表名词) | 码 wallThicknessM | 声明 卷十九-建筑与设施.md:106 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `wallThicknessM` | number | m | (0, 20] | byClass:comp_enclosure | error | 围护厚度；属于建造意图（`intent.wallThicknessM`），建成时写入，
+[F候选] 表定义卷=卷五(表名词) | 码 storeys | 声明 卷十九-建筑与设施.md:107 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `storeys` | integer | count | [1, 64] | byClass:comp_facility | error | 层数；上限由材料强度与墙厚推出（§4.4 规则 4） | — |
+[F候选] 表定义卷=卷五(表名词) | 码 qualityTier | 声明 卷十九-建筑与设施.md:109 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `qualityTier` | enum quality | — | 卷三 §4.5 七档 | byClass:comp_facility | error | 建成时滚一次，此后不变（卷三 Q-3） | 卷三 |
+[F候选] 表定义卷=卷五(表名词) | 码 builder | 声明 卷十九-建筑与设施.md:110 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `builder` / `builtDay` | ref person nullable / integer | — / day | — | never | skip | 主匠与建成日 | 卷三 `maker` 同义 |
+[F候选] 表定义卷=卷五(表名词) | 码 builtDay | 声明 卷十九-建筑与设施.md:110 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `builder` / `builtDay` | ref person nullable / integer | — / day | — | never | skip | 主匠与建成日 | 卷三 `maker` 同义 |
+[F候选] 表定义卷=卷五(表名词) | 码 dirt | 声明 卷十九-建筑与设施.md:111 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `dirt` | score | score | [0,100]；precision 8 | byClass:comp_zone, comp_facility | gap | 脏污（§4.11）；缺省按 0。运行期逐次改写的存量，只按卷
+[F候选] 表定义卷=卷五(表名词) | 码 carrierItem | 声明 卷十九-建筑与设施.md:112 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `carrierItem` | ref item nullable | — | 物品实例 | byClass:comp_portable | skip | 可移动建筑收起时代表它的那件物品实例（谁带着它、它有多重）；建行时写入，此后不变
+[F候选] 表定义卷=卷五(表名词) | 码 carrierLastPlace | 声明 卷十九-建筑与设施.md:113 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `carrierLastPlace` | ref place nullable | — | place 行 | never | skip | `carrierItem` 终止前所在的地点行。平时为空；只在 `carrierItem` 走
+[F候选] 表定义卷=卷五(表名词) | 码 ownerFeeRate | 声明 卷十九-建筑与设施.md:114 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `ownerFeeRate` | fraction | fraction | [0,1] | never | gap | 业主对在此提供的服务抽取的费率（§4.15）；缺省按 0 | EVE#62 |
+[F候选] 表定义卷=卷五(表名词) | 码 openSpan | 声明 卷十九-建筑与设施.md:115 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `openSpan` | struct{fromMinute: integer, toMinute: integer} nullable | minute | [0,1440) | never | skip | 对公众开放时段；缺省取类
+[F候选] 表定义卷=卷五(表名词) | 码 storeFilter | 声明 卷十九-建筑与设施.md:116 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `storeFilter` | struct{classes: set<ref vocab class>, matcats: set<ref vocab matcat>, where: rx nullable} nullable | —
+[F候选] 表定义卷=卷五(表名词) | 码 storePriority | 声明 卷十九-建筑与设施.md:117 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `storePriority` | integer | — | [0,9] | ifPresent:storeFilter | gap | 拣选优先级 | CDDA#60 |
+[F候选] 表定义卷=卷五(表名词) | 码 floorAreaM2 | 声明 卷十九-建筑与设施.md:130 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `floorAreaM2` / `envelopeAreaM2` / `solidAreaM2` | number | m2 | `areaM2`、`storeys`、形制条目的几何字段 | §4.1 规则 2 |
+[F候选] 表定义卷=卷五(表名词) | 码 envelopeAreaM2 | 声明 卷十九-建筑与设施.md:130 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `floorAreaM2` / `envelopeAreaM2` / `solidAreaM2` | number | m2 | `areaM2`、`storeys`、形制条目的几何字段 | §4.1 规则 2 |
+[F候选] 表定义卷=卷五(表名词) | 码 solidAreaM2 | 声明 卷十九-建筑与设施.md:130 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `floorAreaM2` / `envelopeAreaM2` / `solidAreaM2` | number | m2 | `areaM2`、`storeys`、形制条目的几何字段 | §4.1 规则 2 |
+[F候选] 表定义卷=卷五(表名词) | 码 envelopeMassKg | 声明 卷十九-建筑与设施.md:132 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `envelopeMassKg` | number | kg | `materialKg`。各料质量之和（整数加法，无截断） | §4.1 规则 7 |
+[F候选] 表定义卷=卷五(表名词) | 码 envelopeUaWPerK | 声明 卷十九-建筑与设施.md:133 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `envelopeUaWPerK` | number | W_per_K | `envelopeAreaM2`、`aperture`、`material`、`wallThicknessM`、`qualityTier`（经修正键） | §
+[F候选] 表定义卷=卷五(表名词) | 码 soundLossDb | 声明 卷十九-建筑与设施.md:134 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 卷五-地点地形与资源场.md:1313 | | `soundLossDb` | number | dB | `material`、`wallThicknessM`、`aperture`、`qualityTier`（经修正键） | §4.1 规则 5 |
+[F候选] 表定义卷=卷五(表名词) | 码 functions | 声明 卷十九-建筑与设施.md:135 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `functions` | map<ref vocab ffunc, number> | 各功能条目的 `unit` | 已安装固定装置的类条目（安装边）、形制条目、`floorAreaM2`。**已装能力**：不读 `conditio
+[F候选] 表定义卷=卷五(表名词) | 码 type | 声明 卷十九-建筑与设施.md:136 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 卷五-地点地形与资源场.md:164 | | `type` | ref facility_type nullable | — | `functions`、`intendedType`、形制条目的设计围合值、`material`、设施类型表。静态派生，不读任何运行时的量 | §4.2
+[F候选] 表定义卷=卷五(表名词) | 码 effective | 声明 卷十九-建筑与设施.md:137 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `effective` | map<ref vocab ffunc, number> | 同 `functions` | `functions`、`condition`、固定装置实例（`itemView`，经修正键）、`facility
+[F候选] 表定义卷=卷五(表名词) | 码 services | 声明 卷十九-建筑与设施.md:138 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `services` | set<ref vocab service> | — | `type`、`facilityState.opsLevel` | §4.3、§4.12 |
+[F候选] 表定义卷=卷五(表名词) | 码 stations | 声明 卷十九-建筑与设施.md:139 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `stations` | list<struct{fixture: ref item, kind: ref vocab fixture, slots: integer, free: integer, abilities: map<ref
+[F候选] 表定义卷=卷五(表名词) | 码 occupancy | 声明 卷十九-建筑与设施.md:140 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `occupancy` | struct{rows: list<struct{fixture: ref item, kind: ref vocab fixture, holder: ref person, fromMinute: int
+[F候选] 表定义卷=卷五(表名词) | 码 beds | 声明 卷十九-建筑与设施.md:141 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `beds` | list<struct{fixture: ref item, holder: ref person nullable, until: integer nullable}> | — | 固定装置实例、持有边 | §4.8
+[F候选] 表定义卷=卷五(表名词) | 码 kilns | 声明 卷十九-建筑与设施.md:142 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `kilns` | list<struct{fixture: ref item, chamberTempC: number, fuelMJ: number, heatOutW: number}> | celsius、MJ、W | 固定装
+[F候选] 表定义卷=卷五(表名词) | 码 heatOutW | 声明 卷十九-建筑与设施.md:143 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `heatOutW` | number | W | `kilns`、其余固定装置的燃烧放热 | §4.7 规则 4 |
+[F候选] 表定义卷=卷五(表名词) | 码 rating | 声明 卷十九-建筑与设施.md:144 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `rating` | struct{wealth, beauty, space, cleanliness, impression: number} | score | 室内物品与固定装置、`material`、`dirt`、在场人数 |
+[F候选] 表定义卷=卷五(表名词) | 码 maintenance | 声明 卷十九-建筑与设施.md:145 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `maintenance` | struct{need: struct（内联需求块）, laborMinutes: integer, responsible: ref nullable} | — | `condition`、`mater
+[F候选] 表定义卷=卷五(表名词) | 码 ops | 声明 卷十九-建筑与设施.md:146 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 卷五-地点地形与资源场.md:235 | | `ops` | struct{inputs: map<ref vocab class, number>, laborRequired: integer, laborPresent: integer, network: map<ref v
+[F候选] 表定义卷=卷五(表名词) | 码 structure | 声明 卷十九-建筑与设施.md:147 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `structure` | struct{breachEnergyKJ: number, armorMult: map<ref vocab damage, number>, fireLoadMJ: number} | kJ、fracti
+[F候选] 表定义卷=卷五(表名词) | 码 storage | 声明 卷十九-建筑与设施.md:148 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `storage` | struct{volumeCapacity: number, used: number, preserveMult: fraction} | L | 容器类固定装置、形制条目、账户 | §4.13 |
+[F候选] 表定义卷=卷五(表名词) | 码 packed | 声明 卷十九-建筑与设施.md:149 [§2登记小节] | 定义卷§2(80-197)无；全卷首现 无 | | `packed` | boolean | — | 建筑行的 `parent`（经 `placeView`）；房间行取所在建筑的值。建筑行离场即为真；不挂 `comp_portable` 的建筑恒为假 | §4.10 规则 2 |
+[F候选] 表定义卷=卷五(卷号) | 码 created | 声明 卷十九-建筑与设施.md:802 [句子] | 定义卷§2(80-197)无；全卷首现 卷五-地点地形与资源场.md:235 | 房间行 `areaM2` 的写入只出现在建行事务与翻修事务里，写者是 `construction.mjs`，这两种事务之外对它的写入计数为 0：`construction.mjs` 里写房间行 `areaM2` 的调用点只有建行函数与翻修一
+[F候选] 表定义卷=卷八(卷号) | 码 holyWarEligible | 声明 卷七-信仰与文化.md:1589 [句子] | 定义卷§2(117-394)无；全卷首现 卷八-政治与人口.md:38 | 两条理由代号登记到卷八 §4.15（宣战理由与宣告）的理由表，其资格条件一栏只写“调 `holyWarEligible`”
+[F候选] 表定义卷=卷八(卷号) | 码 keyHoldings | 声明 卷二十七-离屏性能存档与确定性.md:1001 [句子] | 定义卷§2(117-394)无；全卷首现 卷八-政治与人口.md:1102 | 卷八 §4.16 等登记聚合种类行的卷（不得把巢居种类列入 `keyHoldings`） |
+[F候选] 表定义卷=卷八(卷号) | 码 membership | 声明 卷二十四-事件叙事调度与历史.md:557 [句子] | 定义卷§2(117-394)无；全卷首现 卷八-政治与人口.md:555 | “在编成员”只读已登记的成员边：标的为该组织、种类行 `membership` 为真的边（卷八 R8-1.2
+[F候选] 表定义卷=卷八(卷号) | 码 pooledResources | 声明 卷八b-法律治安与刑罚.md:1237 [句子] | 定义卷§2(117-394)无；全卷首现 卷八-政治与人口.md:1102 | `pooledResources` 的资源代号是占位（与卷八 §5.3（本卷向别卷登记的行）居民聚合行同一写法）
+[F候选] 表定义卷=卷八(卷号) | 码 residentAggKind | 声明 卷十-世界随机生成.md:193 [句子] | 定义卷§2(117-394)无；全卷首现 无 | `residentAggKind`（卷八聚合种类行）
+[F候选] 表定义卷=卷八b(卷号) | 码 breachHandler | 声明 卷六-经济.md:981 [句子] | 定义卷§2(133-398)无；全卷首现 卷八b-法律治安与刑罚.md:459 | 任一义务违约且未在补正期内补足，合同转为已违约并调用种类行的 `breachHandler`（救济、赔偿、时效、代理、无权处分、善意取得全在卷八b §4.15，本卷不写）
+[F候选] 表定义卷=卷八b(卷号) | 码 custodyStep | 声明 卷十八-社会关系与家族.md:486 [句子] | 定义卷§2(133-398)无；全卷首现 卷八b-法律治安与刑罚.md:456 | “转移”指写者按一条处置在同一笔事务里关闭一条边、并为同一标的写同一种类、换了持有者的承接边——种类行的“按候补顺序移交”与“转给后继”格（R18-1.2、R18-1.8，终止第 4 步的转给后继亦然）、别卷经写者做的换持有者（如卷八b `
+[F候选] 表定义卷=卷八b(卷号) | 码 intimate | 声明 卷十八-社会关系与家族.md:495 [句子] | 定义卷§2(133-398)无；全卷首现 卷八b-法律治安与刑罚.md:774 | 卷八b（留置是人身依附，不是社会关系：旧表做客种类下的留置变体改为一条独立种类行，由卷八b 登记，`intimate` 必填）
+[F候选] 表定义卷=卷八b(卷号) | 码 guestExcluded | 声明 卷十八-社会关系与家族.md:1108 [句子] | 定义卷§2(133-398)无；全卷首现 无 | - `guestExcluded`：存在一条现役边，持有者是主方、标的是来客，种类行 `excludes` 为真（被逐、通缉这类种类由卷八b 登记并把该列填真）
+[F候选] 表定义卷=卷八b(卷号) | 码 excludes | 声明 卷十八-社会关系与家族.md:1108 [句子] | 定义卷§2(133-398)无；全卷首现 卷八b-法律治安与刑罚.md:651 | - `guestExcluded`：存在一条现役边，持有者是主方、标的是来客，种类行 `excludes` 为真（被逐、通缉这类种类由卷八b 登记并把该列填真）
+[F候选] 表定义卷=卷六(卷号) | 码 contractKind | 声明 卷二十四-事件叙事调度与历史.md:219 [句子] | 定义卷§2(91-233)无；全卷首现 无 | | `contractKind` | ref 合同种类行 | 卷六 §4.16 | error | 用哪种合同
+[F候选] 表定义卷=卷六(卷号) | 码 stake | 声明 卷二十四-事件叙事调度与历史.md:554 [句子] | 定义卷§2(91-233)无；全卷首现 无 | - **R24-5.4 出价**：派生出价 = `min(stake × quest.stakeShareBps ÷ 10000, 可动用余额 × quest.budgetShareBps ÷ 10000)`（两处除数均为常数 10000，
+[F候选] 表定义卷=卷六(卷号) | 码 applyRemedy | 声明 卷八b-法律治安与刑罚.md:459 [句子] | 定义卷§2(91-233)无；全卷首现 无 | | `applyRemedy` | `(breachRef, remedyHandle, ctx)` | 卷六合同种类行 `breachHandler` 的落点 | §4.15 |
+[F候选] 表定义卷=卷六(卷号) | 码 remedy | 声明 卷八b-法律治安与刑罚.md:1144 [句子] | 定义卷§2(91-233)无；全卷首现 无 | 卷六每一条合同种类行的 `breachHandler` 都在 `remedy` 族里
+[F候选] 表定义卷=卷六(卷号) | 码 genesisSource | 声明 卷十-世界随机生成.md:193 [句子] | 定义卷§2(91-233)无；全卷首现 无 | `genesisSource`（卷六源汇族条目）、`unmaterializedPurpose`（ref vocab purpose）、`unmaterializedShare`（卷六资源种类行）
+[F候选] 表定义卷=卷六(卷号) | 码 unmaterializedPurpose | 声明 卷十-世界随机生成.md:193 [句子] | 定义卷§2(91-233)无；全卷首现 无 | `genesisSource`（卷六源汇族条目）、`unmaterializedPurpose`（ref vocab purpose）、`unmaterializedShare`（卷六资源种类行）
+[F候选] 表定义卷=卷六(卷号) | 码 unmaterializedShare | 声明 卷十-世界随机生成.md:193 [句子] | 定义卷§2(91-233)无；全卷首现 无 | `genesisSource`（卷六源汇族条目）、`unmaterializedPurpose`（ref vocab purpose）、`unmaterializedShare`（卷六资源种类行）
+[F候选] 表定义卷=卷六(卷号) | 码 gen | 声明 卷十-世界随机生成.md:631 [句子] | 定义卷§2(91-233)无；全卷首现 卷六-经济.md:110 | ③ 店铺：对 `gen.shops` 每一行向卷六登记一家店（经营者、场所、货架账户），按 R10-7.7 上架
+[F候选] 表定义卷=卷六(卷号) | 码 wallFlowKg | 声明 卷十九-建筑与设施.md:101 [§2登记小节] | 定义卷§2(91-233)无；全卷首现 卷六-经济.md:348 | | `wallFlowKg` | map<ref material, struct{laidKg: number, takenKg: number, lostKg: number}> | kg | 各值 [0, null]；precisio
+[F候选] 表定义卷=卷六(卷号) | 码 maintenance | 声明 卷十九-建筑与设施.md:1054 [句子] | 定义卷§2(91-233)无；全卷首现 卷六-经济.md:1500 | 住宿与租房的合同种类行由卷六登记，本卷不登记 | 读 `maintenance`、`beds`、`rating`
+[F候选] 表定义卷=卷六(卷号) | 码 beds | 声明 卷十九-建筑与设施.md:1054 [句子] | 定义卷§2(91-233)无；全卷首现 无 | 住宿与租房的合同种类行由卷六登记，本卷不登记 | 读 `maintenance`、`beds`、`rating`
+[F候选] 表定义卷=卷六(卷号) | 码 rating | 声明 卷十九-建筑与设施.md:1054 [句子] | 定义卷§2(91-233)无；全卷首现 无 | 住宿与租房的合同种类行由卷六登记，本卷不登记 | 读 `maintenance`、`beds`、`rating`
+[F候选] 表定义卷=卷六(卷号) | 码 consentBy | 声明 卷十八-社会关系与家族.md:661 [句子] | 定义卷§2(91-233)无；全卷首现 无 | - **R18-2.3 婚约与成婚**：婚约是卷六合同种类行，当事方由制度行的 `consentBy` 决定（本人、户主、双方）
+[F候选] 表定义卷=卷十(卷号) | 码 gstage_polity | 声明 卷八-政治与人口.md:1187 [句子] | 定义卷§2(100-251)无；全卷首现 无 | 生成阶段条目 `gstage_polity` 与开局组织、职位的三条位次（本卷向卷十 `gstage`、`idslot` 两族自登记，R8-18.9
+[F候选] 表定义卷=卷十(卷号) | 码 seatVenues | 声明 卷八-政治与人口.md:1281 [句子] | 定义卷§2(100-251)无；全卷首现 无 | | 卷十 | 双向 | 卷八自登记阶段，卷十只管流水线：给开局政体、持有与职位阶段 `gstage_polity`（R8-18.9，卷十 C10-2）、治理席位所需场所读数 `seatVenues`（R8-18.10，卷十 R10-7.2 
+[F候选] 表定义卷=卷十(卷号) | 码 popApply | 声明 卷八-政治与人口.md:1281 [句子] | 定义卷§2(100-251)无；全卷首现 卷十-世界随机生成.md:37 | | 卷十 | 双向 | 卷八自登记阶段，卷十只管流水线：给开局政体、持有与职位阶段 `gstage_polity`（R8-18.9，卷十 C10-2）、治理席位所需场所读数 `seatVenues`（R8-18.10，卷十 R10-7.2 
+[F候选] 表定义卷=卷十(卷号) | 码 gstage_lawbind | 声明 卷八b-法律治安与刑罚.md:5 [句子] | 定义卷§2(100-251)无；全卷首现 无 | 不升版本号，改前快照另存 `版本快照/卷八b-勘误前-1114a.md`，改后覆盖 `版本快照/卷八b-v3.md`）：新增 R8b-1.17，向卷十 `gstage` 族自登记开局法典绑定与身份阶段 `gstage_lawbind`，本阶
+[F候选] 表定义卷=卷十(卷号) | 码 gstage_roads | 声明 卷十七-交通与路途.md:664 [句子] | 定义卷§2(100-251)无；全卷首现 无 | - **R17-9.1 路网阶段**：本卷向卷十 `gstage` 族登记一条阶段条目 `gstage_roads`：相位为世界生成，排在站点选址与站点面积两阶段之后，范围为政区，生成器 `worldgen/roads.mjs`，写地点类
+[F候选] 表定义卷=卷十七(卷号) | 码 passOf | 声明 卷十八-社会关系与家族.md:1578 [句子] | 定义卷§2(113-234)无；全卷首现 卷十七-交通与路途.md:246 | 理由：两放行行无持有种类行则过关无处落盘，卷十七 `passOf` 第 ②、⑤ 项求不出（围方放行口径李白已批）
+[F候选] 表定义卷=卷十三(卷号) | 码 seatMoves | 声明 卷八-政治与人口.md:1078 [句子] | 定义卷§2(136-475)无；全卷首现 无 | 加入是事件，经局势种类行的 `seatMoves` 入席（§4.15.1），兵力编成归卷十三
+[F候选] 表定义卷=卷十三(卷号) | 码 holder | 声明 卷十八-社会关系与家族.md:258 [句子] | 定义卷§2(136-475)无；全卷首现 卷十三-战斗.md:762 | 封卷后勘误，李白 11-14 1436 裁定） | `holder.graspLimbs`、`holder.handsHeld`、`subject.wieldHands`、`subject.wielders`（卷十三 §2.3（登记到别卷表
+[F候选] 表定义卷=卷十三(卷号) | 码 combatReadings | 声明 卷十八-社会关系与家族.md:258 [句子] | 定义卷§2(136-475)无；全卷首现 卷十三-战斗.md:487 | 封卷后勘误，李白 11-14 1436 裁定） | `holder.graspLimbs`、`holder.handsHeld`、`subject.wieldHands`、`subject.wielders`（卷十三 §2.3（登记到别卷表
+[F候选] 表定义卷=卷十三(卷号) | 码 personView | 声明 卷十八-社会关系与家族.md:258 [句子] | 定义卷§2(136-475)无；全卷首现 卷十三-战斗.md:53 | 封卷后勘误，李白 11-14 1436 裁定） | `holder.graspLimbs`、`holder.handsHeld`、`subject.wieldHands`、`subject.wielders`（卷十三 §2.3（登记到别卷表
+[F候选] 表定义卷=卷十三(卷号) | 码 itemView | 声明 卷十八-社会关系与家族.md:258 [句子] | 定义卷§2(136-475)无；全卷首现 卷十三-战斗.md:42 | 封卷后勘误，李白 11-14 1436 裁定） | `holder.graspLimbs`、`holder.handsHeld`、`subject.wieldHands`、`subject.wielders`（卷十三 §2.3（登记到别卷表
+[F候选] 表定义卷=卷十三(卷号) | 码 mul | 声明 卷十六-神怪与怪物.md:563 [句子] | 定义卷§2(136-475)无；全卷首现 卷十三-战斗.md:548 | - **R16-5.6 克制的后果之一，伤得更重**：本卷向卷十三的相克表登记一条通用修正项：目标是承受方的 `person.damageTaken`（各伤害类型的承受系数，卷十三 §4.2（伤害类型词表与相克表）），阶段 `mul`，条件
+[F候选] 表定义卷=卷十五(卷号) | 码 forDeceased | 声明 卷六-经济.md:970 [句子] | 定义卷§2(127-306)无；全卷首现 卷十五-法术与超自然.md:780 | 冤债条款键 `forDeceased` 由卷十五登记进 `cterm`）、借用许可与住宿（卷十九）、师徒（卷十四）、雇佣兵役、决斗赌注、索贡（卷十三）、缄默合同（卷二十二 R22-7.4）由各卷登记种类行（后三处封卷后勘误，C15-5、C1
+[F候选] 表定义卷=卷十五(卷号) | 码 cterm | 声明 卷六-经济.md:970 [句子] | 定义卷§2(127-306)无；全卷首现 无 | 冤债条款键 `forDeceased` 由卷十五登记进 `cterm`）、借用许可与住宿（卷十九）、师徒（卷十四）、雇佣兵役、决斗赌注、索贡（卷十三）、缄默合同（卷二十二 R22-7.4）由各卷登记种类行（后三处封卷后勘误，C15-5、C1
+[F候选] 表定义卷=卷十八(卷号) | 码 dailyUses | 声明 卷三乙-物态类别与物品.md:1304 [句子] | 定义卷§2(103-290)无；全卷首现 无 | | D-4 | 反应 / 声明写者 | **穿用**：处于穿戴持有关系的实例，每日按 `dailyUses` 次用损结算（穿戴关系的种类行登记在卷十八 §4.1） |
+[F候选] 表定义卷=卷十八(表名词) | 码 bodyControl | 声明 卷九-AI接口.md:836 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:403 | 同意是持有边：种类由 `rules.consent.edgeKind` 指名，种类行由本卷登记进卷十八 §4.1（持有种类表与两条转移协议）的表（`intimate` 为假、`bodyControl` 为假、`termsKeys` 为 `s
+[F候选] 表定义卷=卷十八(表名词) | 码 object | 声明 卷九-AI接口.md:836 [句子] | 定义卷§2(103-290)无；全卷首现 无 | 同意是持有边：种类由 `rules.consent.edgeKind` 指名，种类行由本卷登记进卷十八 §4.1（持有种类表与两条转移协议）的表（`intimate` 为假、`bodyControl` 为假、`termsKeys` 为 `s
+[F候选] 表定义卷=卷十八(卷号) | 码 functional | 声明 卷九-AI接口.md:1650 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:392 | §5.3 勘2、勘6、勘9 | 席位边种类行写全卷十八主列（传导系数 0、`functional` 假、`holderEnd` 三格关闭等）
+[F候选] 表定义卷=卷十八(卷号) | 码 holderEnd | 声明 卷九-AI接口.md:1650 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:392 | §5.3 勘2、勘6、勘9 | 席位边种类行写全卷十八主列（传导系数 0、`functional` 假、`holderEnd` 三格关闭等）
+[F候选] 表定义卷=卷十八(表名词) | 码 aggkind | 声明 卷二十七-离屏性能存档与确定性.md:112 [§2登记小节] | 定义卷§2(103-290)无；全卷首现 无 | | `aggkind` | 开放族（`closed:false`），前缀 `aggk_`；条目由聚合种类表的行键生成，各领域卷登记行即登记条目 | 聚合种类。与卷二 §1.9 的 `aggregate` 族（聚合原语）无关 |
+[F候选] 表定义卷=卷十八(表名词) | 码 knows | 声明 卷二十二-知识信息与传播.md:874 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:422 | | C22-3 | 卷十八 §4.1、§4.5、§4.6 | 登记 `knows` 持有种类行
+[F候选] 表定义卷=卷十八(卷号) | 码 since | 声明 卷二十四-事件叙事调度与历史.md:557 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:420 | 种类行字段与 `terms.since`、`terms.until` 见卷十八 §4.1.1），其 `since` 不晚于该事件时刻、`until` 为空或晚于该事件时刻
+[F候选] 表定义卷=卷十八(表名词) | 码 take | 声明 卷五-地点地形与资源场.md:735 [句子] | 定义卷§2(103-290)无；全卷首现 无 | 6. **合法与可行分开**：有没有取用权（林权、矿权、渔猎许可，是登记在卷十八 §4.1 的持有种类行）不影响 `take` 能否成功，只决定返回值里的 `entitled`
+[F候选] 表定义卷=卷十八(表名词) | 码 entitled | 声明 卷五-地点地形与资源场.md:735 [句子] | 定义卷§2(103-290)无；全卷首现 无 | 6. **合法与可行分开**：有没有取用权（林权、矿权、渔猎许可，是登记在卷十八 §4.1 的持有种类行）不影响 `take` 能否成功，只决定返回值里的 `entitled`
+[F候选] 表定义卷=卷十八(卷号) | 码 exclusive | 声明 卷八-政治与人口.md:171 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:392 | | `holder` | derived EntityId nullable | — | — | skip | 本卷 | 标的为本行的现役任职边的持有者（卷十八该种类行 `exclusive` 为真，至多一人） |
+[F候选] 表定义卷=卷十八(表名词) | 码 hooks | 声明 卷八-政治与人口.md:714 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:413 | 卷五的控制度骤降、卷十八持有种类行的 `hooks`、§4.7 的印记都订阅它
+[F候选] 表定义卷=卷十八(卷号) | 码 gone | 声明 卷八-政治与人口.md:822 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:392 | - **R8-8.4 继承与失效**：宣称边分两个种类行登记（§5.3）：可继承的一行（`gone` 取按候补顺序移交，`succeedBy` 取卷十八 `succession_source` 的继承顺位一项），不可继承的一行（`gone`
+[F候选] 表定义卷=卷十八(表名词) | 码 heirsOf | 声明 卷八-政治与人口.md:828 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:300 | 卷十八 §4.1（持有种类表与两条转移协议）（种类行与候补顺序）、卷十八 §4.2（家户、亲属、婚配、继承、分家、监护）（继承顺位 `heirsOf`）
+[F候选] 表定义卷=卷十八(卷号) | 码 revoked | 声明 卷八-政治与人口.md:1429 [句子] | 定义卷§2(103-290)无；全卷首现 无 | | Q7 | （第二版已结）职位表改为不可终止的目录表，撤销用 `revoked` 标志加 `revokeOffice`（§3.3），以职位为一端的各种类行按卷十八“端类型”的目录行解析 | 已落实 | — |
+[F候选] 表定义卷=卷十八(卷号) | 码 revokeOffice | 声明 卷八-政治与人口.md:1429 [句子] | 定义卷§2(103-290)无；全卷首现 无 | | Q7 | （第二版已结）职位表改为不可终止的目录表，撤销用 `revoked` 标志加 `revokeOffice`（§3.3），以职位为一端的各种类行按卷十八“端类型”的目录行解析 | 已落实 | — |
+[F候选] 表定义卷=卷十八(卷号) | 码 excludes | 声明 卷八b-法律治安与刑罚.md:651 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:406 | 被逐边的种类行 `excludes` 为真，卷十八的待遇表与卷五的进入判断自己读到它
+[F候选] 表定义卷=卷十八(表名词) | 码 grants | 声明 卷八b-法律治安与刑罚.md:759 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:406 | 卷十八持有种类行的 `grants`、`shareSum`、`transferable`、`grantsEntry` 列（只读）
+[F候选] 表定义卷=卷十八(表名词) | 码 shareSum | 声明 卷八b-法律治安与刑罚.md:759 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:415 | 卷十八持有种类行的 `grants`、`shareSum`、`transferable`、`grantsEntry` 列（只读）
+[F候选] 表定义卷=卷十八(表名词) | 码 transferable | 声明 卷八b-法律治安与刑罚.md:759 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:410 | 卷十八持有种类行的 `grants`、`shareSum`、`transferable`、`grantsEntry` 列（只读）
+[F候选] 表定义卷=卷十八(表名词) | 码 grantsEntry | 声明 卷八b-法律治安与刑罚.md:759 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:406 | 卷十八持有种类行的 `grants`、`shareSum`、`transferable`、`grantsEntry` 列（只读）
+[F候选] 表定义卷=卷十八(卷号) | 码 targetRX | 声明 卷八b-法律治安与刑罚.md:768 [句子] | 定义卷§2(103-290)无；全卷首现 无 | 不设单件粒度：向卷十八许可种类行加标的键的请求已撤回（§8 Q16），要把许可限到某一类标的，写在范围条目的 `targetRX` 里
+[F候选] 表定义卷=卷十八(表名词) | 码 heirsOf | 声明 卷八b-法律治安与刑罚.md:857 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:300 | 卷十八 §4.1（持有种类表与两条转移协议）（通缉、击杀权、被逐种类行）、卷十八 §4.10（外来者待遇与立场基线）（`excludes`）、卷十八 §4.2（家户、亲属、婚配、继承、分家、监护）（`heirsOf`）
+[F候选] 表定义卷=卷十八(卷号) | 码 custodyStep | 声明 卷八b-法律治安与刑罚.md:999 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:486 | 收押的同一事务里，`custodyStep` 对以被押者为一端、种类为 `rules.law.roles.kinds.companion` 的现役同行边（押方本人那一条除外）向持有写者提交关闭提案——旧表“做客—留置”变体的第一条钩子就是这
+[F候选] 表定义卷=卷十八(表名词) | 码 site | 声明 卷八b-法律治安与刑罚.md:1010 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:455 | 卷十八 §4.1（持有种类表与两条转移协议）（两条种类行、`site` 键）
+[F候选] 表定义卷=卷十八(卷号) | 码 estate | 声明 卷八b-法律治安与刑罚.md:1092 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:142 | 奴役种类行的 `estate` 键）、卷十八 §4.2（家户、亲属、婚配、继承、分家、监护）
+[F候选] 表定义卷=卷十八(卷号) | 码 hooks | 声明 卷八b-法律治安与刑罚.md:1319 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:413 | 清算承接实体按卷二 §2.6（写者与三接口）的清算后继与卷十八种类行 `hooks` 的 `ho_estate` 执行，本卷只发破产事件 | 已结 |
+[F候选] 表定义卷=卷十八(卷号) | 码 ho_estate | 声明 卷八b-法律治安与刑罚.md:1319 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:513 | 清算承接实体按卷二 §2.6（写者与三接口）的清算后继与卷十八种类行 `hooks` 的 `ho_estate` 执行，本卷只发破产事件 | 已结 |
+[F候选] 表定义卷=卷十八(表名词) | 码 besiegers | 声明 卷十七-交通与路途.md:315 [句子] | 定义卷§2(103-290)无；全卷首现 无 | ⑤ 段的任一端地点的被围标志为真（卷十三 `siegeView().phase`）时，对该地点 `besiegers` 列表中的每一围攻方逐个判定（与 ② 判关卡放行同法）：领队须持有一条该围攻方给出、`terms.until` 未过的围方
+[F候选] 表定义卷=卷十八(表名词) | 码 domicile | 声明 卷十七-交通与路途.md:825 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:9 | | C17-14 | 卷十八 §4.1（持有种类表与两条转移协议） | 收下本卷登记的持有种类行：搭载、挽具、关卡放行、围方放行四行（`domicile` 均为假
+[F候选] 表定义卷=卷十八(表名词) | 码 passOf | 声明 卷十七-交通与路途.md:825 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:1578 | 本卷 R17-1.3、R17-7.1、R17-7.3 | 关卡放行、围方放行若无持有种类行，过关成功无处落盘，被围地点的需求块读不到许可，`passOf` 第 ②、⑤ 项求不出 | §2.2、R17-1.3、R17-7.3 |
+[F候选] 表定义卷=卷十八(表名词) | 码 custodyStep | 声明 卷十三-战斗.md:424 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:486 | | 卷十八 §4.1（持有种类表与两条转移协议） | 手持、在编两个持有种类行（俘获不登记种类，经卷八b 的 `custodyStep` 收押） | §4.5、§4.10 |
+[F候选] 表定义卷=卷十八(表名词) | 码 popApply | 声明 卷十三-战斗.md:1003 [句子] | 定义卷§2(103-290)无；全卷首现 无 | 统计形态的俘获不另建表、不另立持有种类，“被俘”是聚合体分组（卷二十七 R27-2.1 的“聚合种类、所在单元、分组键取值”这一组）里的一个取值，落在聚合种类这一位：同一事务里经卷八 `popApply` 的改记提案，把 `captured
+[F候选] 表定义卷=卷十八(表名词) | 码 captured | 声明 卷十三-战斗.md:1003 [句子] | 定义卷§2(103-290)无；全卷首现 无 | 统计形态的俘获不另建表、不另立持有种类，“被俘”是聚合体分组（卷二十七 R27-2.1 的“聚合种类、所在单元、分组键取值”这一组）里的一个取值，落在聚合种类这一位：同一事务里经卷八 `popApply` 的改记提案，把 `captured
+[F候选] 表定义卷=卷十八(卷号) | 码 completion | 声明 卷十三-战斗.md:1089 [句子] | 定义卷§2(103-290)无；全卷首现 无 | `completion` 按条目 `objective` 取该目的的实际结算事件，全是事件类项（`fact` 取 `event`），读枚举 `objective` 而不读条目代号：取人（`take_person`）两项——制服与就擒事件（`
+[F候选] 表定义卷=卷十八(卷号) | 码 objective | 声明 卷十三-战斗.md:1089 [句子] | 定义卷§2(103-290)无；全卷首现 无 | `completion` 按条目 `objective` 取该目的的实际结算事件，全是事件类项（`fact` 取 `event`），读枚举 `objective` 而不读条目代号：取人（`take_person`）两项——制服与就擒事件（`
+[F候选] 表定义卷=卷十八(卷号) | 码 fact | 声明 卷十三-战斗.md:1089 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:253 | `completion` 按条目 `objective` 取该目的的实际结算事件，全是事件类项（`fact` 取 `event`），读枚举 `objective` 而不读条目代号：取人（`take_person`）两项——制服与就擒事件（`
+[F候选] 表定义卷=卷十八(卷号) | 码 take_person | 声明 卷十三-战斗.md:1089 [句子] | 定义卷§2(103-290)无；全卷首现 无 | `completion` 按条目 `objective` 取该目的的实际结算事件，全是事件类项（`fact` 取 `event`），读枚举 `objective` 而不读条目代号：取人（`take_person`）两项——制服与就擒事件（`
+[F候选] 表定义卷=卷十八(卷号) | 码 bind | 声明 卷十三-战斗.md:1089 [句子] | 定义卷§2(103-290)无；全卷首现 无 | `completion` 按条目 `objective` 取该目的的实际结算事件，全是事件类项（`fact` 取 `event`），读枚举 `objective` 而不读条目代号：取人（`take_person`）两项——制服与就擒事件（`
+[F候选] 表定义卷=卷十八(卷号) | 码 doerRole | 声明 卷十三-战斗.md:1089 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:1588 | `completion` 按条目 `objective` 取该目的的实际结算事件，全是事件类项（`fact` 取 `event`），读枚举 `objective` 而不读条目代号：取人（`take_person`）两项——制服与就擒事件（`
+[F候选] 表定义卷=卷十八(卷号) | 码 by | 声明 卷十三-战斗.md:1089 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:135 | `completion` 按条目 `objective` 取该目的的实际结算事件，全是事件类项（`fact` 取 `event`），读枚举 `objective` 而不读条目代号：取人（`take_person`）两项——制服与就擒事件（`
+[F候选] 表定义卷=卷十八(卷号) | 码 whenRX | 声明 卷十三-战斗.md:1089 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:1021 | `completion` 按条目 `objective` 取该目的的实际结算事件，全是事件类项（`fact` 取 `event`），读枚举 `objective` 而不读条目代号：取人（`take_person`）两项——制服与就擒事件（`
+[F候选] 表定义卷=卷十八(卷号) | 码 change | 声明 卷十三-战斗.md:1089 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:142 | `completion` 按条目 `objective` 取该目的的实际结算事件，全是事件类项（`fact` 取 `event`），读枚举 `objective` 而不读条目代号：取人（`take_person`）两项——制服与就擒事件（`
+[F候选] 表定义卷=卷十八(表名词) | 码 columns | 声明 卷十五-法术与超自然.md:900 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:499 | 种类行由本卷按卷十八 §4.1（持有种类表与两条转移协议）的种类表格式自登，列集与列义同卷十八 §4.1.5 两块（主列块 `columns` 与补充块 `defaults`/`overrides`）：
+[F候选] 表定义卷=卷十八(表名词) | 码 defaults | 声明 卷十五-法术与超自然.md:900 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:396 | 种类行由本卷按卷十八 §4.1（持有种类表与两条转移协议）的种类表格式自登，列集与列义同卷十八 §4.1.5 两块（主列块 `columns` 与补充块 `defaults`/`overrides`）：
+[F候选] 表定义卷=卷十八(表名词) | 码 overrides | 声明 卷十五-法术与超自然.md:900 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:499 | 种类行由本卷按卷十八 §4.1（持有种类表与两条转移协议）的种类表格式自登，列集与列义同卷十八 §4.1.5 两块（主列块 `columns` 与补充块 `defaults`/`overrides`）：
+[F候选] 表定义卷=卷十八(表名词) | 码 hk_relic_reclaim | 声明 卷十五-法术与超自然.md:1399 [句子] | 定义卷§2(103-290)无；全卷首现 无 | R15-12.8 改为本卷照卷十八 §4.1 种类表格式自登“失物追索”持有种类行 `hk_relic_reclaim`
+[F候选] 表定义卷=卷十八(表名词) | 码 hk_practices | 声明 卷十四-职业技能与学艺.md:562 [句子] | 定义卷§2(103-290)无；全卷首现 无 | `hk_practices` 是登记进卷十八 §4.1 种类表的"执业"行（主列与补充列合写
+[F候选] 表定义卷=卷十八(卷号) | 码 about | 声明 卷十四-职业技能与学艺.md:1501 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:495 | 卷十八现行稿的认证种类行标的只列职位，而本卷凭证的 `about` 可以是职业行、技能行、职位、组织，须放宽（职业行、技能行是目录行，同 Q-22）
+[F候选] 表定义卷=卷十八(表名词) | 码 practices | 声明 卷十四-职业技能与学艺.md:1629 [句子] | 定义卷§2(103-290)无；全卷首现 无 | | B 小 4 | 从业持有种类在卷二已定名 `practices`，本卷只写"从业" | 已随"执业"种类行的登记解决（§4.1.1 写明三个叫法指同一种类，代号在 §4.1.5） |
+[F候选] 表定义卷=卷十八(卷号) | 码 subjectEnd | 声明 卷十四-职业技能与学艺.md:1712 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:392 | 不选 (b)（终止当刻由认证边种类行处置）的理由：它要等卷二终止协议第 4 步收录 `subjectEnd` 才生效，眼下不可用，且属卷十八种类行的事
+[F候选] 表定义卷=卷十八(表名词) | 码 edge_origin | 声明 卷十四-职业技能与学艺.md:1726 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:450 | | 把"执业"持有种类行登记到卷十八的种类表（卷十八 §4.1.4、§5.2） | §4.1.1 的种类行各列表 | §2.4 封闭枚举 `edge_origin`
+[F候选] 表定义卷=卷十八(表名词) | 码 revive | 声明 卷四-生物身体与人物.md:793 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:467 | - **触发条件**：`requestRevive(subject, edgeId)` 在下列各项都成立时才调 `revive`（`revival` 指该边所属持有种类行的同名维度）：`edgeId` 是一条为该主体建立的复生点边
+[F候选] 表定义卷=卷十八(表名词) | 码 revival | 声明 卷四-生物身体与人物.md:793 [句子] | 定义卷§2(103-290)无；全卷首现 卷十八-社会关系与家族.md:467 | - **触发条件**：`requestRevive(subject, edgeId)` 在下列各项都成立时才调 `revive`（`revival` 指该边所属持有种类行的同名维度）：`edgeId` 是一条为该主体建立的复生点边
+[F候选] 表定义卷=卷十八(表名词) | 码 edgeId | 声明 卷四-生物身体与人物.md:793 [句子] | 定义卷§2(103-290)无；全卷首现 无 | - **触发条件**：`requestRevive(subject, edgeId)` 在下列各项都成立时才调 `revive`（`revival` 指该边所属持有种类行的同名维度）：`edgeId` 是一条为该主体建立的复生点边
+[F候选] 表定义卷=卷十四(表名词) | 码 gen | 声明 卷十-世界随机生成.md:141 [§2登记小节] | 定义卷§2(113-433)无；全卷首现 卷十四-职业技能与学艺.md:558 | | `gen.quota` | place（站点） | map<ref profession, integer> | count | 各值 ≥ 0 | never | gap | 本卷 R10-4.7 | 键是职业行 |
+[F候选] 表定义卷=卷十四(卷号) | 码 concluded | 声明 卷十八-社会关系与家族.md:479 [句子] | 定义卷§2(113-433)无；全卷首现 卷十四-职业技能与学艺.md:516 | 凡由生成路径事务带来、本应要求同意的边或史实记录，不论同意要求来自种类行的 `concluded` 为真，还是来自关系条目的 `consent`，一律记 `seeded` 代替 `consentAct`：边记在 `terms.origin`
+[F候选] 表定义卷=卷十四(卷号) | 码 consentAct | 声明 卷十八-社会关系与家族.md:479 [句子] | 定义卷§2(113-433)无；全卷首现 无 | 凡由生成路径事务带来、本应要求同意的边或史实记录，不论同意要求来自种类行的 `concluded` 为真，还是来自关系条目的 `consent`，一律记 `seeded` 代替 `consentAct`：边记在 `terms.origin`
+[F候选] 表定义卷=卷十四(表名词) | 码 termsKeys | 声明 卷十八-社会关系与家族.md:495 [句子] | 定义卷§2(113-433)无；全卷首现 卷十四-职业技能与学艺.md:525 | 认证种类行的标的按卷十四凭证条目的 `about` 放宽到职业行、技能行、职位、组织四种，`termsKeys` 收 `cert` 与 `origin`，数据见 §4.1.5
+[F候选] 表定义卷=卷四(卷二§5.5) | 码 healMult | 声明 卷二十一-医疗疾病与身体状态.md:145 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `healMult` | map<enum status_family, number> | — | 1 | penalized | error | 好转倍率 / Healing multiplier |
+[F候选] 表定义卷=卷四(卷二§5.5) | 码 worsenMult | 声明 卷二十一-医疗疾病与身体状态.md:146 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `worsenMult` | map<enum status_family, number> | — | 1 | penalized | error | 恶化倍率 / Worsening multiplier |
+[F候选] 表定义卷=卷四(卷二§5.5) | 码 exposureMult | 声明 卷二十一-医疗疾病与身体状态.md:147 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `exposureMult` | map<ref vocab route, number> | — | 1 | penalized | error | 暴露倍率 / Exposure multiplier |
+[F候选] 表定义卷=卷四(卷二§5.5) | 码 immuneGain | 声明 卷二十一-医疗疾病与身体状态.md:148 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `immuneGain` | number，derived | — | `lookup(rules.health.immuneAgeCurve, relAge)` | none | gap | 免疫增益 / Immune gain |
+[F候选] 表定义卷=卷四(卷二§5.5) | 码 needRecover | 声明 卷二十一-医疗疾病与身体状态.md:149 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `needRecover` | map<ref vocab body_need, number> | 每日回补的日需量倍数 | 0 | none（加法合计） | error | 需要回补率 / Need recovery |
+[F候选] 表定义卷=卷四(卷二§5.5) | 码 selfHeatC | 声明 卷二十一-医疗疾病与身体状态.md:150 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `selfHeatC` | number，derived | celsius | §4.7 | none | gap | 自身产热温差 / Self-heating |
+[F候选] 表定义卷=卷四(卷二§5.5) | 码 coldLimitC | 声明 卷二十一-医疗疾病与身体状态.md:151 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `coldLimitC` / `heatLimitC` | number，derived | celsius | §4.7 | none | gap | 耐寒下限 / 耐热上限 |
+[F候选] 表定义卷=卷四(卷二§5.5) | 码 heatLimitC | 声明 卷二十一-医疗疾病与身体状态.md:151 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `coldLimitC` / `heatLimitC` | number，derived | celsius | §4.7 | none | gap | 耐寒下限 / 耐热上限 |
+[F候选] 表定义卷=卷四(表名词) | 码 prefOffset | 声明 卷二十六-需求心理与情绪.md:119 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `prefOffset` | map<ref refs[vocab class, vocab matcat, vocab taxon, vocab aesthetic], number> | axis / [-1,1] | never 
+[F候选] 表定义卷=卷四(表名词) | 码 preference | 声明 卷二十六-需求心理与情绪.md:120 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `preference` | 同上键域的 map<…, number> | axis / [-1,1] | — | gap | 派生（R26-2.4） | 是，stacking none，bounds [-1,1] | DF#15 | 
+[F候选] 表定义卷=卷四(表名词) | 码 gaugeTarget | 声明 卷二十六-需求心理与情绪.md:121 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `gaugeTarget` | map<ref vocab gauge, number> | fraction / [-1,2] | — | skip | 派生：该心理量行的 `baseRX`（只对追随型） | 是，stacking n
+[F候选] 表定义卷=卷四(表名词) | 码 gaugeInflow | 声明 卷二十六-需求心理与情绪.md:122 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `gaugeInflow` | map<ref vocab gauge, number> | per_day / [-4,4] | — | skip | 派生：该心理量行的 `baseRX`（只对累积型） | 是，stacking no
+[F候选] 表定义卷=卷四(表名词) | 码 driveWeight | 声明 卷二十六-需求心理与情绪.md:123 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `driveWeight` | map<ref vocab drive, number> | score / [0, `rules.psych.driveMax`]，精度 3 | — | gap | 派生（R26-9.1） | 是，st
+[F候选] 表定义卷=卷四(表名词) | 码 decisionNoise | 声明 卷二十六-需求心理与情绪.md:124 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `decisionNoise` | number | fraction / [0,1]，精度 3 | — | gap | 派生（R26-9.3） | 是，stacking none，bounds [0,1] | 调研 09 3.10 |
+[F候选] 表定义卷=卷四(表名词) | 码 psychOut | 声明 卷二十六-需求心理与情绪.md:125 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `psychOut` | map<ref vocab gauge, number> | fraction / [0,1] | — | gap | 派生：该心理量最近一次整拍结算后的值（R26-4.4），读取时不另算；主体没有该心理量实例
+[F候选] 表定义卷=卷四(卷二§5.5) | 码 keyDims | 声明 卷八b-法律治安与刑罚.md:5 [句子] | 定义卷§2(115-327)无；全卷首现 无 | 封卷后勘误（李白 11-13 批卷八 v5 合并只核 P1 与 R8b-10.4，不升版本号，改前快照另存 `版本快照/卷八b-v3d.md`）：§5.3 被奴役者聚合种类行的 `keyDims` 由集合型 `profession` 改为卷
+[F候选] 表定义卷=卷四(卷二§5.5) | 码 primaryProfession | 声明 卷八b-法律治安与刑罚.md:5 [句子] | 定义卷§2(115-327)无；全卷首现 无 | 封卷后勘误（李白 11-13 批卷八 v5 合并只核 P1 与 R8b-10.4，不升版本号，改前快照另存 `版本快照/卷八b-v3d.md`）：§5.3 被奴役者聚合种类行的 `keyDims` 由集合型 `profession` 改为卷
+[F候选] 表定义卷=卷四(卷二§5.5) | 码 keyHoldings | 声明 卷八b-法律治安与刑罚.md:5 [句子] | 定义卷§2(115-327)无；全卷首现 无 | 封卷后勘误（李白 11-13 批卷八 v5 合并只核 P1 与 R8b-10.4，不升版本号，改前快照另存 `版本快照/卷八b-v3d.md`）：§5.3 被奴役者聚合种类行的 `keyDims` 由集合型 `profession` 改为卷
+[F候选] 表定义卷=卷四(卷号) | 码 terms | 声明 卷八b-法律治安与刑罚.md:850 [句子] | 定义卷§2(115-327)无；全卷首现 无 | 卷四 K-5 说通缉的对象一律是键号：通缉所针对的示人键就是 `terms.case` 所指案件那条指控的 `accusedKey`，显示层与查验读它，不另在边上存键（不改卷十八通缉种类行的键表）
+[F候选] 表定义卷=卷四(卷号) | 码 accusedKey | 声明 卷八b-法律治安与刑罚.md:850 [句子] | 定义卷§2(115-327)无；全卷首现 无 | 卷四 K-5 说通缉的对象一律是键号：通缉所针对的示人键就是 `terms.case` 所指案件那条指控的 `accusedKey`，显示层与查验读它，不另在边上存键（不改卷十八通缉种类行的键表）
+[F候选] 表定义卷=卷四(卷二§5.5) | 码 labor | 声明 卷六-经济.md:765 [句子] | 定义卷§2(115-327)无；全卷首现 卷四-生物身体与人物.md:1246 | 个体维度（由本卷登记到卷二 §5.5 的 person 表）：`workPriority: map<ref vocab service, integer>`（工作优先级档，取值域见 `labor.json.priorityLevels`，0
+[F候选] 表定义卷=卷四(表名词) | 码 gen | 声明 卷十-世界随机生成.md:134 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 卷四-生物身体与人物.md:101 | | `gen.speciesWeights` | culture | map<ref species, integer> | count | 各值 ≥ 0，至少一项 > 0 | never | gap（该文化不参加开局人口分配） | 环世界
+[F候选] 表定义卷=卷四(卷号) | 码 revival | 声明 卷十八-社会关系与家族.md:467 [句子] | 定义卷§2(115-327)无；全卷首现 卷四-生物身体与人物.md:107 | 卷四在本表登记“复生点”一类种类行时，行上的 `revival` 维度只含冷却日数、代价、效果，不含窗口长度（窗口在类别行的 `termination.reviveWindowDays`）
+[F候选] 表定义卷=卷四(表名词) | 码 comp_lairing | 声明 卷十六-神怪与怪物.md:149 [句子] | 定义卷§2(115-327)无；全卷首现 无 | 本卷另登记进别卷词表与表的条目（字段含义归该卷）：物种表组件类 `comp_lairing`、`comp_shifter`（§2.3）
+[F候选] 表定义卷=卷四(表名词) | 码 comp_shifter | 声明 卷十六-神怪与怪物.md:149 [句子] | 定义卷§2(115-327)无；全卷首现 无 | 本卷另登记进别卷词表与表的条目（字段含义归该卷）：物种表组件类 `comp_lairing`、`comp_shifter`（§2.3）
+[F候选] 表定义卷=卷四(表名词) | 码 experience | 声明 卷十四-职业技能与学艺.md:172 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `experience`（新） | number，`score`，≥0，precision 2 | never | gap | growth.mjs | §4.12；存于 `growth.<person>.experience` |
+[F候选] 表定义卷=卷四(表名词) | 码 level | 声明 卷十四-职业技能与学艺.md:173 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `level`（新） | derived integer：`rules.growth.levelThresholds` 中不大于 `experience` 的项数 | — | gap | — | §4.12 |
+[F候选] 表定义卷=卷四(表名词) | 码 learnCapacity | 声明 卷十四-职业技能与学艺.md:174 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `learnCapacity` / `learnLoad`（新） | derived score；`learnCapacity` 恒为正（由 §4.12 GR-4 的式子与 §2.5 `capacity` 的取值域保证），`learnL
+[F候选] 表定义卷=卷四(表名词) | 码 learnLoad | 声明 卷十四-职业技能与学艺.md:174 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `learnCapacity` / `learnLoad`（新） | derived score；`learnCapacity` 恒为正（由 §4.12 GR-4 的式子与 §2.5 `capacity` 的取值域保证），`learnL
+[F候选] 表定义卷=卷四(表名词) | 码 focus | 声明 卷十四-职业技能与学艺.md:175 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `focus` / `focusSince`（新） | ref vocab lifestyle nullable / integer day | never | skip | lifestyle.mjs | §4.9；存于 `lifes
+[F候选] 表定义卷=卷四(表名词) | 码 focusSince | 声明 卷十四-职业技能与学艺.md:175 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `focus` / `focusSince`（新） | ref vocab lifestyle nullable / integer day | never | skip | lifestyle.mjs | §4.9；存于 `lifes
+[F候选] 表定义卷=卷四(表名词) | 码 perks | 声明 卷十四-职业技能与学艺.md:176 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `perks`（新） | set<ref vocab perk> | never | skip | lifestyle.mjs | §4.9；存于 `lifestyle.<person>` |
+[F候选] 表定义卷=卷四(表名词) | 码 eduFocus | 声明 卷十四-职业技能与学艺.md:177 [§2登记小节] | 定义卷§2(115-327)无；全卷首现 无 | | `eduFocus`（新） | ref vocab sphere nullable | never | skip | upbringing.mjs | §4.11；只对未成年有意义；存于 `upbringing.<person>` |
+
+候选合计 250
