@@ -193,14 +193,14 @@
 | `stages` | list<struct{stage: ref act_stage, atPermille: integer [0,1000]}> | — | 按 `atPermille` 升序 | 空即无阶段 | 活动阶段 |
 | `resumable` | boolean | — | — | 加载失败 | 中断后可否续做 |
 | `check` | struct{skill: ref skill nullable \| `from_slot`, abilityRows: list<ref ability_row>, opponentRows: list<ref ability_row> nullable, difficultyRows: list<ref difficulty_row>, opposed: boolean} nullable | — | `skill` 为空时 `abilityRows` 非空；`opponentRows` 非空时 `opposed` 须为真（C13-7）；`from_slot` 见 `shapeFrom` | 空即不检定 | 检定声明；`opponentRows` 空即对手一侧用同一条式子（R9-3.6） |
-| `effects` | map<degree, list<effectCall>> \| `from_slot` | — | `from_slot` 见 `shapeFrom`，各档按 R9-1.13 折算；否则必含 `success`；`check` 非空时另必含 `failure` 与 `partial`；可缺的只有 `critical_success`（缺即取 `success` 那一列）与 `critical_failure`（缺即取 `failure` 那一列），别的缺档一律加载失败 | 加载失败 | 各成功度的效果；effectCall 形状归卷二 §3.9（效果族表 `_effects.json`） |
+| `effects` | map<degree, list<effectCall>> \| `from_slot` | — | `from_slot` 见 `shapeFrom`，各档按 R9-1.13 折算；否则 `check` 为空时键集为 `{success}`（R9-3.7 成功度恒为 `success`，不出现别的档）；`check` 非空时键全覆盖 `degree` 族五档，缺键即加载失败；大成功、大失败与成功、失败同效的，显式写与 `success`、`failure` 相同的一列 | 加载失败 | 各成功度的效果；effectCall 形状归卷二 §3.9（效果族表 `_effects.json`） |
 | `backlash` | list<effectCall> \| `from_slot` | — | `from_slot` 见 `shapeFrom` | 空即无 | 反噬 |
 | `costRows` | list<ref cost_row> | — | — | 空即无代价 | 身体与资源代价 |
 | `skillGain` | struct{skill: ref skill nullable, skillFrom: struct{entry: 读入口登记代号, field: 读入口字段代号} nullable, source: ref vocab learn_source} nullable | — | `skill`、`skillFrom` 恰填一个；`skillFrom.entry` 是以 `(engine, state, subjectId)` 调用的登记读入口，`field` 在其登记返回形状里（卷二 §2.7（系统声明表 `state-owners.json`）"读入口返回形状登记"的 `readShapes` 行）且类型为 `ref skill nullable`（C13-7）；`skill` 非空时 `source` 在该技能行的 `sources` 里 | 空即不成长 | 成长申报；善后段组出卷十四的 `session`（R9-2.8），只交卷十四入口 |
 | `decision` | struct{drives: map<ref drive, number [−1,1]>, candidateProviders: list<ref candidate_provider>} nullable | — | — | 空即 NPC 不主动选 | NPC 候选申报 |
 | `menu` | struct{group: ref vocab menu_group, order: integer} | — | — | 加载失败 | 菜单位置；每个动作必须有菜单位置（可达口径见 I9-1） |
 | `shapeFrom` | struct{entry: 读入口登记代号, args: map<参数名, 槽位代号>} nullable | — | `args` 的值都是本行的必填槽位；`entry` 是纯读的登记读入口，以 `(engine, state, {actor, …args 各参数取所指槽位的值})` 调用，其登记返回形状（卷二 §2.7（系统声明表 `state-owners.json`）"读入口返回形状登记"的 `readShapes` 行）须含本行（及本行 `costRows` 所指行）标为 `from_slot` 的各列对应的键（R9-1.13） | 空即本行没有 `from_slot` 列 | 随槽位变化的各列取自哪一个读入口（C15-1 ①） |
-| `sourceStrength` | map<ref vocab sense, number> | 随感官（到达量的单位，卷五 §4.2（分区、方位与感知通道） 规则 3） | 键为 `sense` 族代号（卷五 §4.2.1（维度）），各值为实数（可负）；行上必写，本动作不改任何感官的源强写 `{}` | 加载失败（必填） | 源强修正项（封卷后勘误，李白 11-14 20:22 根因 G P-8）：行为人做本动作期间，键 s 的值作加性修正项叠加到卷五修正目标键 `sense.sourceStrength[s]`（以行为人为主体）上；基值取被感知实体所在表的 `sourceStrength` 列，本列不进基值，叠加后的截断与求值只照卷五 §2.3（规则表） 与 §4.2 规则 7。`{}` 的含义：本动作对一切感官都不加修正项，行为人的一次性源强只取基值与别的修正项 |
+| `sourceStrength` | map<ref vocab sense, number> combine=sum | 随感官（到达量的单位，卷五 §4.2（分区、方位与感知通道） 规则 3） | 键为 `sense` 族代号（卷五 §4.2.1（维度）），各值为实数（可负）；叠加修正映射（卷二 §1.6（缺失处置）第 5 项），键集可稀疏，缺键即该感官不加修正项；行上必写，本动作不改任何感官的源强写 `{}` | 加载失败（必填） | 源强修正项（封卷后勘误，李白 11-14 20:22 根因 G P-8）：行为人做本动作期间，键 s 的值作加性修正项叠加到卷五修正目标键 `sense.sourceStrength[s]`（以行为人为主体）上；基值取被感知实体所在表的 `sourceStrength` 列，本列不进基值，叠加后的截断与求值只照卷五 §2.3（规则表） 与 §4.2 规则 7。`{}` 的含义：本动作对一切感官都不加修正项，行为人的一次性源强只取基值与别的修正项 |
 | `basis` | struct:basis | — | — | 加载失败 | 出处 |
 
 校验：`slots`、`effects` 引用闭合；`effects` 里每个 effectCall 的族都有至少一条 `cap_row` 或一条豁免行（§4.7）；`menu` 必填（I9-1）；`intimate` 必填，`intimate` 为真的行 `consent` 非空；`whenRX`、`interruptRX` 可编译且只读入口；`effects` 里含制作类效果（输出带品质档的实物，R9-4.4）的行，`check` 必须为空（检定在 `craftOutcome` 内做一次，不重复）；`workFromEdge` 非空的行，`slot` 须是本行的必填槽位，`refSpeed` 所指规则表键的取值域下限为 1（由登记该键的卷加载校验）；本行或本行 `costRows` 所指行有任一列写 `from_slot` 的，`shapeFrom` 必须非空，且其入口的登记返回形状（卷二 §2.7（系统声明表 `state-owners.json`）的 `readShapes`）含该列对应的键，否则 E-ACT-ROW（C15-1 ①）。
@@ -287,12 +287,12 @@
 | `rules.turn.maxExtraMinutes` | integer:minute | ≥ 1 | §2.4 |
 | `rules.scene.promptBudget` | integer（码点数） | ≥ 1 | R9-10.4 |
 | `rules.scene.staticBudget` | integer（码点数） | ≥ 0，且小于 `promptBudget` | R9-10.4 |
-| `rules.review.tolerance` | map<claim_kind, number ≥ 0> | 缺键即 0 | R9-11.4 |
+| `rules.review.tolerance` | map<claim_kind, number ≥ 0> | 键全覆盖 `claim_kind` 族，缺键即加载失败；不设容差的种类显式写 0 | R9-11.4 |
 | `rules.npc.utilityWeights` | struct{money, time, risk, relation, reward, need, grievance}，各 number ≥ 0 | — | R9-12.4 |
 | `rules.npc.commitMinutes` | integer:minute | ≥ 0 | R9-12.7 |
 | `rules.npc.redLineValence` | ref vocab valence | 卷七 `valence` 族内 | R9-12.2 |
 | `rules.npc.grievanceVerbs` | set<ref vocab verb> | 非空 | R9-12.3 |
-| `rules.npc.stanceWeights` | map<ref vocab stance_axis, number> | 缺键即 0 | R9-12.3 |
+| `rules.npc.stanceWeights` | map<ref vocab stance_axis, number> combine=sum | 叠加修正映射（卷二 §1.6（缺失处置）第 5 项），缺键即该轴不加项 | R9-12.3 |
 | `rules.npc.switchMargin` | number | ≥ 0 | R9-12.7 |
 | `rules.npc.idleAdvanceMinutes` | integer:minute | ≥ 1。空闲的人重新决策的推进间隔最大值，首值未核（无出处，待标定） | R9-12.7 |
 | `rules.npc.conditionalStep` | integer | 正整数 | R9-12.6 |
@@ -310,7 +310,7 @@
 | `rules.ai.degradeMap` | list<struct{level: integer, maxTier: ai_tier}>，按 `level` 升序 | — | R9-14.3 |
 | `rules.gate.retryLimit` | integer | [0, 1] | R9-19.6 |
 | `rules.gate.maxTextCodePoints` | map<文字字段代号, integer> | ≥ 1 | R9-19.5 |
-| `rules.gate.categoryMap` | map<屏蔽词类别代号, reject_code> | 缺键取 `reject:blocklist` | R9-19.5 |
+| `rules.gate.categoryMap` | map<屏蔽词类别代号, reject_code> | 键全覆盖屏蔽词类别族（卷二 §1.9（代号、显示名与语言边界）），缺键即加载失败；没有专门拒收代号的类别显式写 `reject:blocklist` | R9-19.5 |
 | `rules.gate.verdictMap` | map<validator_verdict, reject_code nullable> | 键全覆盖 | R9-19.5 |
 | `rules.ai.understandOrder` | list<ai_use> | 元素只取 `judge`、`understand` | R9-17.6 |
 | `rules.judge.minConfidencePermille` | integer | [0, 1000]（未核，待标定） | R9-17.3 |
@@ -534,7 +534,7 @@
   - **连续变化的前提**（（丙）路；没有写入事件、随时间连续变化）：每次推进第 ③ 步登记下一推进点时，对 ① 中能算出越界时刻的各项求最早越界时刻 `t*`，推进点取 `paceSince + rules.act.advanceMaxMinutes[该动作类]` 与 `t*` 中较早的一个（仍是 `due.activity` 到期项，每条活动至多一个待到的推进点不变）。能算出的只有两种：同意边的截止时刻，即持有边公共键 `terms.until`（整数分钟，直接取）；`interruptRX` 里对单个锚点量（卷二 §3.3（求值管线）“存量与余数结转”第 4 条，`stockMode: anchor`，存储为 `struct:stockAnchor`）与常数的比较、且该量的闭式在当前锚点下单调的（单调与否按该维度闭式的形状与锚点速率的符号判定，只读数值），按卷二同一条闭式（只用卷二“定点指数与整数次幂”的函数与定点加乘）在 `(此刻, paceSince + advanceMaxMinutes]` 内按整分钟二分，求比较首次不过的那一分钟。不单调、不是单个比较、或闭式之外的，算不出，归（丁）路。锚点被重设时：经执行器的走末步（锚点路径在 K 里即重算推进点）；不经执行器的，插好的推进点可能过时，该项退回（丁）路，最迟在下一推进点按新锚点重求。
   - **执行器末步**（保留，理由：经执行器的写入都出自某个意图，如撤回同意、捆绑、击伤，行动者在同一份回执里就该看到后果；这一款只是推进时刻的第四种，走同一个三步，不是第二套规则，与“抽查口径”的其余三路并列）：每条活动的重查集合 K = 以下节点经卷二 §2.3（记忆与依赖声明）`inputsOf` 得到的冻结依赖路径之并：行动者实体类的 `modified:<kind>`（`process.workPace` 的修正项来源都在其内）、`can()` 所读的 `view:bodyView` 与 `view:statusView`（卷二 §2.5（状态谓词单点））、`interruptRX` 引用的 view、`consent` 所涉同意边的 `holdings` 路径、①（a）的需求块求值与必填实体槽位终止判定所读的节点、①（b）的 `custodyOf` 与卷八b R8b-12.4 受制判定所读的节点；`state.clock` 不入 K。K 在开工时按动作行与动作类算一次，不存。W = 本批原语写到的路径集合（每个原语的适配器只写登记的目标路径）。同一事务末步，对 K 与 W 相交的在世活动按行动者 id 升序单遍各做一次活动推进，每条至多一次；末步自身的写入（中断时的预留处置、活动记录的结束）不并入 W，受它们影响的活动按“抽查口径”所属的那一路重查。次序固定，结果确定。
   - **确定性**：推进点与到期项都落在世界内在的分钟上，随世界时刻变化的影响（昼夜、季节、天气越线）一律经卷二十登记的到期项与越线事件（全书概念台账 X-33）落成写入，前提失效通知随触发它的事件落在该事件的世界时刻上，越界时刻 `t*` 只由推进那一刻的状态算出，所以一次推进 N 分钟与分段推进合计 N 分钟遇到同一串推进时刻。重查的成本（每个推进点一次 ①）作为性能项交卷二十七（§5.3 勘10）。
-- **R9-1.13 取自槽位**（C15-1 ①）：动作行的 `check.skill`、`requirement`、`baseMinutes`、`effects`、`backlash` 与其 `costRows` 所指行的 `resource` 写 `from_slot` 的，值不在行上，由本行 `shapeFrom` 的读入口按此刻意图的槽位给出。凡读到这些列之处（R9-1.2 试算、九段、R9-1.4 开工定工量、R9-1.12 ① 重查）都在读的那一刻以同一组实参调该入口，不缓存、不存储；该入口的 `inputsOf` 依赖并入 R9-1.12 的重查集合 K。取返回的键：`skill` 作检定技能（即检定上下文的 `ctx.skill`）；`requirement` 作前置；`minutes` 作 `baseMinutes`（取值域同该字段，越界即 E-ACT-ROW）；`costResource` 作代价行的 `resource`；`backlash` 作反噬；`effects` 一列取返回的 `effects: list<effectCall>` 与 `degreeBps: map<degree, integer [0, 10000]>`，某成功度的效果 = 这组效果调用、每个幅度参数 × `degreeBps[该成功度]` ÷ 10000（除数是常数一万，正整数），`degreeBps` 缺档照 §2.2 `effects` 的缺档规则。动作行与代码里都不按入口、槽位或条目代号分支。结构化列按卷二 §2.7（系统声明表 `state-owners.json`）"读入口返回形状登记"的 `shape` 行核对（`requirement` 列要求 `shape`/`struct:requirementBlock`，`effects` 列要求 `shape`/`struct:effectCallList`）。
+- **R9-1.13 取自槽位**（C15-1 ①）：动作行的 `check.skill`、`requirement`、`baseMinutes`、`effects`、`backlash` 与其 `costRows` 所指行的 `resource` 写 `from_slot` 的，值不在行上，由本行 `shapeFrom` 的读入口按此刻意图的槽位给出。凡读到这些列之处（R9-1.2 试算、九段、R9-1.4 开工定工量、R9-1.12 ① 重查）都在读的那一刻以同一组实参调该入口，不缓存、不存储；该入口的 `inputsOf` 依赖并入 R9-1.12 的重查集合 K。取返回的键：`skill` 作检定技能（即检定上下文的 `ctx.skill`）；`requirement` 作前置；`minutes` 作 `baseMinutes`（取值域同该字段，越界即 E-ACT-ROW）；`costResource` 作代价行的 `resource`；`backlash` 作反噬；`effects` 一列取返回的 `effects: list<effectCall>` 与 `degreeBps: map<degree, integer [0, 10000]>`，某成功度的效果 = 这组效果调用、每个幅度参数 × `degreeBps[该成功度]` ÷ 10000（除数是常数一万，正整数），`degreeBps` 键全覆盖 `degree` 族五档，缺档即 E-ACT-ROW。动作行与代码里都不按入口、槽位或条目代号分支。结构化列按卷二 §2.7（系统声明表 `state-owners.json`）"读入口返回形状登记"的 `shape` 行核对（`requirement` 列要求 `shape`/`struct:requirementBlock`，`effects` 列要求 `shape`/`struct:effectCallList`）。
 - **R9-1.14 活动结束事件**（C15-1 ⑤）：活动记录由 `activity.mjs` 删除的那次事务（收工、按 R9-1.6 以 `interrupted` 结束、续做窗口期满以 `abandoned` 清除、以 `failed` 结束）在同一事务内发一条动词 `verb_activity_ended`，载荷 `{actor, actionId, end: activity_end}`；一切结束方式同发这一条，不按动作代号分支；`resumable` 为真而只被中断、记录保留的，此时不发。它属“写者协议在事务内另发的事件”一类（R9-2.3、§2.9 该行）：`primitives` 为空，id 按该行取，位次 `pos.kernel`。实体终止时由终止协议清除的活动记录不经 `activity.mjs`，不发本事件（订阅方另订阅 `verb_entity_terminated`）。别卷订阅它只按载荷的代号与 id 匹配。
 
 #### 4.1.4 交互
@@ -987,7 +987,7 @@
 - **R9-11.1 只核代号与账面**：审查不读正文。它核三样：声明的结构与代号合不合法；声明的值与账面对不对得上；该有声明的地方有没有。
 - **R9-11.2 结构校验**：`kind` 在族内；`subject` 是登记的 id，其实体类在该种类的 `subjectKind` 里（由规则查登记表，不信自报）；`predicate` 在该种类的 `predicates` 里（维度代号或读入口字段代号，C10-20）；`value` 合 `valueType`；`references` 的 `sourceId` 已登记、区间合法；`segmentId` 存在。任一不合即 E-CLAIM-SCHEMA，整份声明作废。
 - **R9-11.3 按检出来源分三路**：`ledger` 类按该种类的 `evidence_row` 取账面值——`from: receipt` 取本回合回执的字段，`from: view` 取定义卷读入口的现值或登记的累计量——再按 `compare` 比较；对不上为 `mismatch`，取不到账面为 `unsourced`。`gate` 类由 §4.19 的守门在到达本函数之前检出，本函数只确认守门代号列表为空。`self` 类是模型自报，只能得 `warning`。 **离线调用**（C28-11）：卷二十八的内容构建校验器与模型审级不经运行期回合，以声明加行数据调同一函数：`claims` 是作者随行所附或模型交回的声明，`segments` 是被校验那段文字的分段（同 §2.4 形状，由调用方给出），`rows` 是被校验的数据行，`receipts` 为空列表，`turn`、`channel` 为空。`from: row` 的证据行取 `rows` 中 id 等于声明 `subject` 的那一行上 `entry` 所指维度的值；运行期 `rows` 为空、离线时 `receipts` 为空，取不到的一律按上文“取不到账面为 `unsourced`”。离线时没有守门，守门代号列表为空。
-- **R9-11.4 哪些声明要严格比**：只有 `modality` 为 `fact` 且 `time.mode` 为 `current` 或 `past` 的声明按 R9-11.3 比；`intention`、`question`、`hypothetical`、`figurative` 与 `future` 不比账面，只做结构校验。`polarity` 为 `deny` 时比较取反。数值比较的容差取 `rules.review.tolerance` 中该种类的值，缺键为 0。
+- **R9-11.4 哪些声明要严格比**：只有 `modality` 为 `fact` 且 `time.mode` 为 `current` 或 `past` 的声明按 R9-11.3 比；`intention`、`question`、`hypothetical`、`figurative` 与 `future` 不比账面，只做结构校验。`polarity` 为 `deny` 时比较取反。数值比较的容差取 `rules.review.tolerance` 中该种类的值（该表键全覆盖 `claim_kind` 族，§2.5）。
 - **R9-11.5 缺报**：本回合回执里属于 `mustClaim` 种类的每一项（一笔付款、一次收费、一次制作结果），若没有一条 `subject` 与之对应的声明，即对该项给 `unsourced`。这样漏报不比错报占便宜。
 - **R9-11.6 转述与谎言**：`modality` 为 `reported` 的声明须带 `source`。说话者是 NPC、内容与账面不符的 `fact` 声明，只有其 `references` 引到该说话者名下一条登记的谎言 id（卷十八 §4.5（关系、记忆、认知与谎言））时才不算 `mismatch`。
 - **R9-11.7 知情**：证据行 `compare` 为 `known` 的种类（某人说出某事实），核对说话者的已知集合（卷二十二 §4.1（主观视图四域与检索键））里有该事实 id；没有即 `mismatch`。
@@ -1025,7 +1025,7 @@
 
 - **R9-12.1 五段定序**：`red_lines`、`relations`、`utility`、`circumstances`、`conflicts`，顺序固定；每段往 `trace` 里写代号与数值。
 - **R9-12.2 底线**：候选的动作代号，或它在该人物所在法域与信仰下对应的罪名与评价行代号，调 `evaluationOf(engine, state, personId, aboutHandle)` 得 `{valence, vector, rows}`；`valence` 是卷七 `valence` 族的有序档，`order` 越小越重（卷七 R7-26.2），若它的 `order` 不大于 `rules.npc.redLineValence` 所指档的 `order`，该候选剔除；返回空即不剔。全程只比较档序整数。亲密类动作而本人不满足 `intimateEligible` 的，同样剔除。底线集合全由评价行与人物的价值有效值算出，人物档里不存底线文字。
-- **R9-12.3 关系**：立场读数 = `Σ_axis rules.npc.stanceWeights[axis] × stance(本人, 提出者, axis)`（`stance` 按轴取值，卷十八 §4.4（立场数轴（来源表、衰减、单入口））；缺键的轴权重为 0）；另读 `dread()`、`treatment()`。积怨读数按卷十八 R18-5.4 的写法：从本人的已知事件（卷二十二 §4.1（主观视图四域与检索键）的已知集合）里，取动词在 `rules.npc.grievanceVerbs` 里、提出者是行为人、本人是受事者的事件，逐条乘卷十八 `recall(本人, 事件)` 后求和。动词集合是规则表数据，规则里不点名任何一类。这些都以数值进下一段，不读记忆内容。
+- **R9-12.3 关系**：立场读数 = `Σ_axis rules.npc.stanceWeights[axis] × stance(本人, 提出者, axis)`（`stance` 按轴取值，卷十八 §4.4（立场数轴（来源表、衰减、单入口））；缺键按不加项处理）；另读 `dread()`、`treatment()`。积怨读数按卷十八 R18-5.4 的写法：从本人的已知事件（卷二十二 §4.1（主观视图四域与检索键）的已知集合）里，取动词在 `rules.npc.grievanceVerbs` 里、提出者是行为人、本人是受事者的事件，逐条乘卷十八 `recall(本人, 事件)` 后求和。动词集合是规则表数据，规则里不点名任何一类。这些都以数值进下一段，不读记忆内容。
 - **R9-12.4 效用**：`U = Σ_d driveWeight[d] × contrib[d] + w.reward × reward + w.relation × 立场读数 − w.grievance × 积怨读数 − w.money × cost.money − w.time × cost.minutes − w.risk × cost.risk + decisionJitter(主体, 决策时刻, candidateId)`。`w` 取 `rules.npc.utilityWeights`。`reward` 是非钱的得益（如人情、名声的数值读数）；凡是钱，一律进 `cost.money`（对方给钱是负的代价）。需求类驱力的 `contrib` 由 `needSatisfiers()` 给出；`cost.risk` 可含 `legalityOf()` 读出的不合法后果估值与报价里的未得同意、无权能读数。**各项代价保留正负号**：负的代价（抵扣、对方代付）抬高效用，不截成 0。全式只有加减乘。
 - **R9-12.5 应答式的结论**：`npcDecision` 对“答应”这个候选算 `U`。底线剔除即 `refuse`；`U` 不小于 0 且后两段无碍即 `agree`；`U` 小于 0 见 R9-12.6；后两段有碍见 R9-12.8。 **给出配合类候选**（C15-1 ⑥）：答应的那个候选，其动作行在 `success` 下的效果开立同意边（种类 `rules.consent.edgeKind` 的 `holding.open`，R9-8.3）时，下结论前先从 `U` 中减去过程主体槽 `process.consentBar`（卷十五登记，本卷是其读者）的求值结果，上下文为 `{actor: 本人（给出配合的对象）, target: 提出者（施为者）, slots: 所请意图的槽位}`，流派由该槽的基值行按槽位读出（卷十五 R15-4.4）；再按本条与 R9-12.6 下结论。不按动作或流派代号分支。
 - **R9-12.6 有条件答应**：预付是钱，按效用式里钱的权重折算。`U` 小于 0 时，若 `w.money` 为 0，不做除法，结论为 `refuse`；否则所需预付 = `ceil(−U ÷ (w.money × rules.npc.conditionalStep)) × rules.npc.conditionalStep`（`conditionalStep` 是正整数，此时 `w.money` 为正，除数为正），结论为 `conditional`，决定卡 `prepay` 槽带这笔数。付了这笔，`cost.money` 减少同额，`U` 恰回到不小于 0。
@@ -1276,7 +1276,7 @@
 
 #### 4.19.1 维度
 
-`decode_result`、`reject_code`、`intent_slot`、`request_kind`、`channel`（§2.1）；`rules.gate.retryLimit`、`rules.gate.maxTextCodePoints`；`rules.gate.categoryMap`（map<blocklist_category 代号, reject_code>，缺键取 `reject:blocklist`）；`rules.gate.verdictMap`（map<validator_verdict, reject_code nullable>）。通用槽位（路由与译码层共用，封闭）：
+`decode_result`、`reject_code`、`intent_slot`、`request_kind`、`channel`（§2.1）；`rules.gate.retryLimit`、`rules.gate.maxTextCodePoints`；`rules.gate.categoryMap`（map<blocklist_category 代号, reject_code>，键全覆盖屏蔽词类别族，见 §2.5）；`rules.gate.verdictMap`（map<validator_verdict, reject_code nullable>）。通用槽位（路由与译码层共用，封闭）：
 
 | 槽位 | 内部值类型 | 线上 `slot_kind`（R9-6.7） | 来自 |
 |---|---|---|---|
@@ -1685,6 +1685,7 @@
 | 封卷后勘误（只核余项；依据 `审查/总审勘误-二波甲-只核.md` 问题 C；不升版本号，改前快照 `版本快照/卷九-v2-勘误前-1114w2a3.md`，改后覆盖 `版本快照/卷九-v2.md`） | R9-12.14 动词行（原 :1038） | `visibilityAllowed` 由"取 `emit` 的 `visibility` 全集"改为"取卷二十四 §2.2（维度）表 A `visibility` 的全集"；值集不变。理由（必要）：`visibility` 定义处已移到卷二十四表 A |
 | 封卷后勘误（李白 11-14 21:50 裁定 ③、21:57 定载体；不升版本号，改前快照 `版本快照/卷九-v2-勘误前-1114w2e.md`，改后覆盖 `版本快照/卷九-v2.md`） | §2.2 `slots` 行；§2.1 族表加 `record_kind` 行 | 动作槽位加通用的“指向已登记记录”写法：`code` 槽位沿用 `entityKind`/`vocab` 写法加 `recordKind`（三者恰填一个，`recordKind` 非空时 `filter` 必填），候选为该种记录中经筛选、行动者可知者，线上只传候选编号，先例为通用槽位 `invite`；`record_kind` 族条目字段只有 `stateKey`（引用已登记的 `stateKeys` 键），族名与前缀登记在卷二 §1.9，条目只收各卷已定义的记录。整类规则，不为谋划开特例。必要理由：不加则卷二十二 `act_plot_invite` 指不到谋划记录，NPC 永远不会邀人，R22-7.5 入伙等于空文 |
 | 封卷后勘误（依据 `审查/总审勘误-recordKind-只核.md` 真问题 2；不升版本号，改前快照 `版本快照/卷九-v2-勘误前-1114w2e2.md`，改后覆盖 `版本快照/卷九-v2.md`） | §2.2 `slots` 行 | 删上一行写入的“`recordKind` 非空时 `filter` 必填且非空”，`filter` 与 `entityKind`、`vocab` 槽同样选填。必要理由：裁定只要求沿用 code 槽先例写法，先例里 `filter` 选填，必填是超出裁定的新规则 |
+| 封卷后勘误 1114w3f（依据：李白 11-14 22:49 第一条②，清单 `审查/总审-稀疏映射扫描.md`；版本号不升，不改卷首；改前快照 `版本快照/卷九-v2-勘误前-1114w3f.md`，改后覆盖 `版本快照/卷九-v2.md`） | §2.2 `effects`、`sourceStrength` 两行；§2.5 `rules.review.tolerance`、`rules.npc.stanceWeights`、`rules.gate.categoryMap` 三行；R9-1.13；R9-11.4；R9-12.3；§4.19.1 复述一句 | ① `sourceStrength`、`stanceWeights` 标 `combine=sum`（卷二 §1.6（缺失处置）第 5 项），R9-12.3 读处写“缺键按不加项处理”。② `effects`：`check` 为空时键集为 {success}，非空时键全覆盖 `degree` 五档，大成功、大失败显式写列，删“缺即取 success/failure 那一列”；R9-1.13 `degreeBps` 改为键全覆盖五档、缺档即 E-ACT-ROW。③ `tolerance` 键全覆盖 `claim_kind`、不设容差写 0，R9-11.4 删“缺键为 0”；`categoryMap` 键全覆盖屏蔽词类别族、通用者显式写 `reject:blocklist`，§4.19.1 复述同改。必要理由：卷二 §1.6 第 4–5 项，非 sum 映射不得靠缺键隐性缺省 |
 
 ## 附录 自检脚本输出
 
