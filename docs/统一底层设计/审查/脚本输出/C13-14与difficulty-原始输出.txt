@@ -1,0 +1,222 @@
+=== node check-卷十三.mjs
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首模型行
+PASS 1c §0 五小节齐全
+PASS 2 20 个子系统各六小节齐全
+PASS 3 数据实例至少三条，含非西陲、含非人类或超自然（共 80 条）
+PASS 4 验收断言三式齐全且编号规整
+PASS 5 正文无具体 id 字面量（含数据实例）
+PASS 6 无用于判断的描述性文本；无带引号的中文字面量；纯代号无中文；枚举值 ASCII 且带中英显示名（枚举 13 个、值 54 个）
+PASS 7 台账各概念写全（二十节标题、台账裁定编号、关键概念、每节有规则且编号连续）
+PASS 8 编号引用不悬空且连续；跨卷章节引用处处带标题（454 处）
+PASS 9 错误码、入口、规则表键、状态键与写者、抽取点落实（码 20、入口 27、规则表键 76、状态键 9、抽取点 7）
+PASS 10 红线：不派实现、不改别卷、不读墙钟、除数有下界、身体状态只经卷二十一、无生命值、法律不拦、不写价格乘数
+PASS 11 算术复算与计数对账（打击量、层律两例、伤亡式切片不变、末份取差、交叉相乘、卷零 13+13 行、§6 八条、矩阵九行）
+PASS 12 接口表、配合项、迁移清单（33 行）、五款游戏、待补清单（27 条）、素材位置落实
+PASS 13 关键条文在位（61 条）
+行数 1666；子系统 20；规则条数 169；断言 60；扫描条 13；配合项 19；开放问题 12（须李白定 0）；迁移行 33；枚举 13 个、值 54 个；错误码 20；规则表键 76；数据实例 80；待补清单 27 条；失败项 0
+exit 0
+=== node check-卷十四.mjs
+通过  章节 §0
+通过  章节 §1
+通过  章节 §2
+通过  章节 §3
+通过  章节 §4
+通过  章节 §5
+通过  章节 §6
+通过  章节 §7
+通过  章节 §8
+通过  章节 附 术语与代号表
+通过  附录 自检脚本输出
+通过  子系统数 = 12 且编号连续  实得 12
+通过  4.1 六小节齐全且顺序正确
+通过  4.1 数据实例 ≥3、含非西陲、含非人类或超自然  实例 4 条
+通过  4.1 断言含扫描式、不变量式、扩展性式
+通过  4.1 规则条数 ≥5  9 条
+通过  4.2 六小节齐全且顺序正确
+通过  4.2 数据实例 ≥3、含非西陲、含非人类或超自然  实例 3 条
+通过  4.2 断言含扫描式、不变量式、扩展性式
+通过  4.2 规则条数 ≥5  5 条
+通过  4.3 六小节齐全且顺序正确
+通过  4.3 数据实例 ≥3、含非西陲、含非人类或超自然  实例 4 条
+通过  4.3 断言含扫描式、不变量式、扩展性式
+通过  4.3 规则条数 ≥5  10 条
+通过  4.4 六小节齐全且顺序正确
+通过  4.4 数据实例 ≥3、含非西陲、含非人类或超自然  实例 4 条
+通过  4.4 断言含扫描式、不变量式、扩展性式
+通过  4.4 规则条数 ≥5  6 条
+通过  4.5 六小节齐全且顺序正确
+通过  4.5 数据实例 ≥3、含非西陲、含非人类或超自然  实例 4 条
+通过  4.5 断言含扫描式、不变量式、扩展性式
+通过  4.5 规则条数 ≥5  10 条
+通过  4.6 六小节齐全且顺序正确
+通过  4.6 数据实例 ≥3、含非西陲、含非人类或超自然  实例 4 条
+通过  4.6 断言含扫描式、不变量式、扩展性式
+通过  4.6 规则条数 ≥5  6 条
+通过  4.7 六小节齐全且顺序正确
+通过  4.7 数据实例 ≥3、含非西陲、含非人类或超自然  实例 4 条
+通过  4.7 断言含扫描式、不变量式、扩展性式
+通过  4.7 规则条数 ≥5  9 条
+通过  4.8 六小节齐全且顺序正确
+通过  4.8 数据实例 ≥3、含非西陲、含非人类或超自然  实例 4 条
+通过  4.8 断言含扫描式、不变量式、扩展性式
+通过  4.8 规则条数 ≥5  10 条
+通过  4.9 六小节齐全且顺序正确
+通过  4.9 数据实例 ≥3、含非西陲、含非人类或超自然  实例 4 条
+通过  4.9 断言含扫描式、不变量式、扩展性式
+通过  4.9 规则条数 ≥5  7 条
+通过  4.10 六小节齐全且顺序正确
+通过  4.10 数据实例 ≥3、含非西陲、含非人类或超自然  实例 4 条
+通过  4.10 断言含扫描式、不变量式、扩展性式
+通过  4.10 规则条数 ≥5  8 条
+通过  4.11 六小节齐全且顺序正确
+通过  4.11 数据实例 ≥3、含非西陲、含非人类或超自然  实例 4 条
+通过  4.11 断言含扫描式、不变量式、扩展性式
+通过  4.11 规则条数 ≥5  8 条
+通过  4.12 六小节齐全且顺序正确
+通过  4.12 数据实例 ≥3、含非西陲、含非人类或超自然  实例 4 条
+通过  4.12 断言含扫描式、不变量式、扩展性式
+通过  4.12 规则条数 ≥5  8 条
+通过  规则与表格正文无具体实体 id 字面量
+通过  规则与表格正文无本卷词表条目代号
+通过  正文无读中文或英文描述文本作判断的写法
+通过  正文无读英文描述句作判断的写法
+通过  规则小节无按具体职业分支的条文
+通过  §3.5 含"不得以从业某职业作条件分支"的禁令
+通过  本卷不定义 awake / can / capacity
+通过  台账概念写全：职业表
+通过  台账概念写全：服务词表 service
+通过  台账概念写全：职业文化变体（本卷内）
+通过  台账概念写全：技能与熟练
+通过  台账概念写全：熟练度依赖图
+通过  台账概念写全：学习来源、学费、教师意愿
+通过  台账概念写全：跨文化学艺（本卷内）
+通过  台账概念写全：考试与认证
+通过  台账概念写全：隐藏职业契机
+通过  台账概念写全：生活方式树
+通过  台账概念写全：传授限制维度（秘传、流派壁垒）
+通过  台账概念写全：教育与童年（本卷内）
+通过  台账概念写全：成长、经验、兼修负担
+通过  卷一、卷二引用均带标题  0 处  
+通过  §7.2 逐项表 28 行、编号连续  实得 28
+通过  §7.2 键集合 = hidden-passives.mjs matchers 键集合（28）  源码 28 键；缺 无；多 无
+通过  §7 处置了 escorting
+通过  §7 处置了 breachUnpaid
+通过  §7 处置了 compensateHidden
+通过  §7 处置了 hiddenPassives
+通过  §7 处置了 passiveDomain
+通过  §7 处置了 hiddenCheckBonus
+通过  §7 处置了 observationTime
+通过  §7 处置了 hiddenCombat
+通过  §7 处置了 petTrustGain
+通过  §7 处置了 contextReason
+通过  §7.3 处置了保持条件 peace
+通过  §7.3 处置了保持条件 maps
+通过  §7.3 处置了保持条件 restitution
+通过  §7.3 处置了保持条件 healthy_pets
+通过  §7.3 处置了保持条件 wind
+通过  §7.3 处置了保持条件 observations
+通过  §7.3 处置了保持条件 sealed_delivery
+通过  §7.3 处置了保持条件 surrender
+通过  数值复算：够格度：min(900÷600, 450÷300) = 1.5  算得 1.5
+通过  数值复算：够格度：柯博德 min(420÷600, 310÷300) = 0.7  算得 0.7
+通过  数值复算：生锈：闲置量 0.74  算得 0.74
+通过  数值复算：生锈：保留比例 0.48  算得 0.48
+通过  数值复算：生锈：读数基值 888  算得 888
+通过  数值复算：折算：888 × 0.8 = 710.4  算得 710.4
+通过  数值复算：增量：两小时受教 ≈ 10.78  算得 10.7775
+通过  数值复算：来源上限：1500 × 0.9 = 1350  算得 1350
+通过  数值复算：语言：共同读数 600 → 0.55  算得 0.55
+通过  数值复算：语言：观摩 1 − 0.2 × 0.45 = 0.91  算得 0.91
+通过  数值复算：语言：读数 200 → 0.2  算得 0.2
+通过  数值复算：档位权重：相对年龄 0.5 学徒 0.22  算得 0.2167
+通过  数值复算：档位权重：行家 0.87  算得 0.8667
+通过  数值复算：档位权重：大师 0.30  算得 0.3
+通过  数值复算：负担：2100 ÷ 3000 → 0.84  算得 0.84
+通过  数值复算：负担：4500 ÷ 3000 → 0.4  算得 0.4
+通过  数值复算：等级阈值表 = ceil(L⁴÷10)，L=1…10  1,2,9,26,63,130,241,410,657,1000
+通过  裁定1：§2.3 skills 行是存储的积累量、不是 derived
+通过  裁定1：§5.4 对卷二 §5.5 的回填写"保持存储"
+通过  裁定1：SK-5 写明 有效值 = 存储值 + 修正项
+通过  裁定2：提到 created.<person>.props 的每一行都是禁止或否定
+通过  裁定2：属性成长写成经 modifier.mjs 登记修正项
+通过  裁定3：没有"工钱按技能阶"的正面说法
+通过  裁定3：不引对方卷没有的概念（作息槽、学费价格槽、卷三授权）
+通过  裁定3：服务费定价归卷六（PF-8 与 须别卷配合）
+通过  裁定4：全文 9 条 RX 字串只用现有变体加 member，变量与关系都在 §2.8
+通过  裁定4：§2.8 登记的关系数与 §5.4 所称"二十三条"一致  实得 23
+通过  裁定4：写不出的变体列入 §8（member）
+通过  裁定5：B-7 禁调用方给的加值、理由、动作代号、技能；情境只认登记代号
+通过  裁定5：§7 列出并删除 args.context 两处
+通过  裁定6：§7.7 逐处处置按职业门控学与教、阶段与突破、技能融合
+通过  裁定6：§7 补列前缀反推各文件与隐藏加成的调用方
+通过  裁定7：事迹只读登记事件的载荷；表 B 是闭集；B-11 与 E-DEED-FILTER 把守
+通过  执业：§4.1.1 种类行各列填全
+通过  执业：§4.1.5 数据行可解析且卷十八主列齐全  主列 17 项齐
+通过  执业：§5.4 回填卷十八、须别卷配合、§8 Q-22 都已写
+通过  SK-5 步号引用与内容一致（③ 折算、④ 前置封顶、⑤ 身体折算）
+通过  影响面表：七条裁定、38 条真问题、"执业"登记都有行
+通过  附 须别卷配合、附 记账栏 两节在
+通过  skillGain when 只在表 F 定义（全书）  表 F 定义块 1 处；表 F 外定义 0 处
+通过  skillGain when：表 A 该行两栏都只写"见表 F"
+通过  第五版：SK-5 ⑤ 末句为预扫建议的措辞，旧的"只经卷四这一个入口"已撤
+通过  第五版：本卷不写身体状态（PF-7 单点、§4.1.6 扫描式、HO-6 说明；statuses.* 只以否定出现）
+通过  第五版：技能记录 stored、peak、dayGain 登记 extScale、precision 8（§2.3、§2.6、§5.4）
+通过  第五版："切成几段提交，结果相同"已撤，改为起算日判定与切段无关
+通过  第六版：SK-3 误差界是按语法树递推的确定式，旧的按截断次数的式子只以"作废"出现一次；§4.3.6 的断言同口径
+通过  第七版：三条读法只引卷二 §3.3 第 6 条、本卷无自写条文；适用区间、按取值域与按写入时的值两种给法都写明  读法条数 3；不止引用的 0 条；三类各 1/1/1；残留自写条文 无；卷二第 6 条两句 在
+通过  第六版：确定式里的常数与 SK-2 的式子对得上（因子数、13、ε_Σ 的 9）  因子 12；写出 12、13；各计 1 的查表因子 7；写出 9
+通过  误差界验算一：第 1、3 步（衰退后值 ≤ 2703，折算值 ≤ 2703 × transfer + 1；4000 例）  实际与界之比最大 0.818、0.817
+通过  误差界验算二：第 2 步乘式（e_乘 = Β ×（13 + ε_Σ × G₀）；4000 例）  实际与界之比最大 0.057；同批实际误差最大是旧界 27 的 191.2 倍
+
+统计  成稿正文 1732 行（不含附录里贴的本输出）；子系统 12；规则 96 条；数据实例 47 条；扩展性夹具 13 条；开放问题 22 条
+结论  全部通过
+exit 0
+=== node check-卷二十二.mjs
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首模型行
+PASS 1c §0 五小节齐全
+PASS 1d 状态行为成稿且无续写点残留
+PASS 2 12 个子系统各六小节齐全
+PASS 3 数据实例至少三条，含非西陲、含非人类或超自然（共 49 条）
+PASS 4 验收断言三式齐全且编号规整
+PASS 5 正文无具体 id 字面量（含数据实例；实例用‹指称›；pers_ 代号只准在代码块与数据实例内）
+PASS 6 无用于判断的描述性文本；纯代号无中文；枚举值 ASCII 且带中英显示名（枚举 12 个、值 48 个） —  
+PASS 7 台账各概念写全（十二节标题、台账裁定编号、关键概念、知识表各列、每节规则不少于五条且编号连续；规则共 87 条）
+PASS 8 本卷编号引用不悬空且连续（R 87、A 36、S 7、C 24、Q 13、M 18） —  
+PASS 9 跨卷章节引用带标题且与原卷标题相符（带标题引用 174 处）
+PASS 9b 别卷对本卷的带标题引用：相符 105 处，不符 8 处（卷十四→§4.6（阅读门槛读语言技能） 卷十四→§4.10（知识前置同格式；知识是"有没有"，技能是"多熟"） 卷十四→§4.6（读懂） 卷十四→§4.10（节点授予知识） 卷十四→§4.10（知识持有、失传） 卷十四→§4.9（研究结算） 卷零→§4.1（7 处）），不符项均已列入 §5.4
+PASS 10 每个含除法的规则行都写明除数下界或“不做除法”的分支（含除号的行 10 行）
+PASS 11 骰值键、分段无关、唯一写者、存法口径等必备内容在场
+PASS 12 规则表各键写明类型与取值域（43 行）；读入口 21 个
+PASS 13 读入口签名里没有文字形参
+行数 1118；子系统 12；规则 87；断言 36；枚举 12；配合项 24；开放问题 13；迁移项 18；待补 12 条
+ALL PASS
+exit 0
+=== node check-vol2.mjs
+== 1 错误码
+  正文错误码 148 个；登记表展开 260 个
+  OK 正文码全部已登记
+  注意 登记但正文未用到（含简写展开的候选）: E-ACC-BASELINE-EDIT, E-ACC-BASELINE-UP, E-ACC-BYPASS-REGRESSION, E-ACC-CODE-UNLISTED, E-ACC-COMMIT-MSG, E-ACC-CRITERION-LOOSENED, E-ACC-CRITERION-UNVERSIONED, E-ACC-DOC-SEAL, E-ACC-EXT-CODE-CHANGED, E-ACC-EXT-EXISTING-ROW, E-ACC-FIXTURE-INSTANCE, E-ACC-GATE-BYPASS, E-ACC-HIT-OPEN, E-ACC-ITEM-COUNT, E-ACC-ITEM-DOWNGRADE, E-ACC-ITEM-FORM, E-ACC-ITEM-ORPHAN, E-ACC-ITEM-PARAM, E-ACC-ITEM-UNIMPLEMENTED, E-ACC-ITEM-UNREGISTERED, E-ACC-NEWROW-UNANCHORED, E-ACC-REPORT-FORM, E-ACC-REVIEW-CHECKLIST, E-ACC-REVIEW-MISSING, E-ACC-REVIEW-SELF, E-ACC-REVIEW-STALE, E-ACC-REVIEW-VETO, E-ACC-ROWKEY-DRIFT, E-ACC-RUN-UNBOUND, E-ACC-SCAN-NAMELIST, E-ACC-SCAN-SELFNAME, E-ACC-ZERO-MISMATCH, E-AV-KEY, E-AV-NO-DEFAULT, E-BST-BANE-CLASH, E-BST-BODY-WRITE, E-BST-DUPLICATE, E-BST-GEN-SLOT, E-BST-LAIR, E-BST-LORE-SHAPE, E-BST-MONSTER-SCHEMA, E-BST-QUOTA, E-BST-SIM-DIMS, E-BST-TIER-ROWS, E-BST-TRANSFORM-ROWS, E-BST-VARIANT, E-BST-WARD-SHAPE, E-DISPLAY-BACKFLOW, E-DISPLAY-BRANCH-TEXT, E-DISPLAY-DICE, E-DISPLAY-HOST-CHAT, E-DISPLAY-LITERAL, E-DISPLAY-LOCALE-BRANCH, E-DISPLAY-UNSEEN, E-GEN-BRANCH-ORIGIN, E-GEN-BYPASS, E-GEN-DEFAULT, E-GEN-GROUP-CYCLE, E-GEN-GROUP-ROW, E-GEN-ID-COLLISION, E-GEN-LATE-SOURCE, E-GEN-MANIFEST-DRIFT, E-GEN-NAME-EMPTY, E-GEN-NOT-MATERIALIZED, E-GEN-OVERRIDE-AUTHORED, E-GEN-REJECT, E-GEN-RESPECT, E-GEN-ROW-INVALID, E-GEN-SKELETON, E-GEN-STAGE-CYCLE, E-GEN-STAGE-UNKNOWN, E-I18N-FORM, E-I18N-LABEL-FOREIGN, E-I18N-LABEL-ORPHAN, E-I18N-LOCALE, E-I18N-PLURAL, E-I18N-TPL-MISSING, E-I18N-TPL-SLOT, E-MAP-COMPASS, E-MIG-ACCEPT-FORM, E-MIG-BACKFILL, E-MIG-CARD-INCOMPLETE, E-MIG-CARD-INSTANCE, E-MIG-CARD-SCOPE, E-MIG-CARD-SIZE, E-MIG-DEFER-UNBOUND, E-MIG-DUAL-PATH, E-MIG-EVENT-SEQ, E-MIG-EXIT, E-MIG-FILEMOVE-GAP, E-MIG-FROZEN, E-MIG-ORDER, E-MIG-PARALLEL, E-MIG-PHASE-CONFLICT, E-MIG-PHASE-COUNT, E-MIG-RETIRE-MISMATCH, E-MIG-ROW-COUNT, E-MIG-ROW-MULTI, E-MIG-ROW-ORPHAN, E-MIG-SCAN-UNCLAIMED, E-MIG-SORTKEY-ORDER, E-MIG-STATE, E-MIG-TEST-PATCH, E-MIG-ZERO-UNCOVERED, E-PANEL-ACTION, E-PANEL-KIND, E-PANEL-PATH, E-PANEL-SOURCE, E-TPL-CYCLE, E-TPL-KEY, E-TPL-NO-FALLBACK, E-TPL-RX
+== 2 前缀登记
+  实体前缀 27，词表族前缀 125
+  注意 未登记前缀 rx_: rx_type
+  注意 未登记前缀 card_: card_slot_type
+  注意 未登记前缀 q_: q_k
+  注意 未登记前缀 e_: e_a, e_k, e_x
+  注意 未登记前缀 entity_: entity_revived
+  注意 未登记前缀 orowk_: orowk_actual
+  注意 未登记前缀 aggk_: aggk_bonded
+  注意 未登记前缀 attach_: attach_slot
+== 2b 内核信号代号登记
+  小族登记 5 个: layout_change, naming_intent, note_intent, dimension_write_rejected, nil_seedpart
+  OK 正文发出的非词表代号均在小族登记
+  OK 引用小族的代号均已登记（核 32 卷）
+== 3 类型数
+  §1.5 表计 14 种；全文提到的类型数：14, 14, 14, 14, 14
+  OK 类型数一致
+== 4 附录 A 夹具
+  OK 三段 JSON 可解析
+  维度 9 个，类别行 4，实体行 2；展平 class_workshop_hot = {"public":false,"lodging":false,"allowedMaterials":["subst_stone"],"wearPerDay":0.0006,"capacityBase":2,"services":["service_craft"],"fixtures":["fixture_forge","fixture_hearth"],"upkeepPerDay":{"class_fuel":12}}
+== 结果：PASS
+exit 0
