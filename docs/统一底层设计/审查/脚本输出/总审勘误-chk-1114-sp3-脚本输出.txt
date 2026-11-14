@@ -1,0 +1,281 @@
+== node F:/dnd-tmp/book/scan-sparse-map.mjs
+== 判据 E-DIM-MAP-SPARSE-NONSUM ==
+RESULT 判据失败 0
+== 候选清单（宽口径，人工复核用，不判失败）==
+卷七-信仰与文化:1427	vector	[缺省值]	`value` 族（价值轴词表，全书唯一一张，台账 X-06）；文化行 `values`（各轴缺省值）；`ethic` 族条目 `{required, about: set<ref>, vector: map<ref vocab value, number>}`；文化行 `ethics`（对每类行为的态度，[−1, 1]）；`taboo` 族条目 `{acts: set<ref>（动作代号）, taxa: set<ref vocab taxon>, sapientShareMin: number nullable, kinDistanceMax: integer nullable, bondK
+卷九-AI接口:196	effects	[缺键]	| `effects` | map<degree, list<effectCall> nullable> \| `from_slot` | — | `from_slot` 见 `shapeFrom`，各档按 R9-1.13 折算；否则键全覆盖 `degree` 族五档，缺键即加载失败；`check` 为空时 `success` 非 null，其余四档显式写 null，表示无检定时此档不出现（R9-3.7 成功度恒为 `success`）；`check` 非空时五档都非 null，大成功、大失败与成功、失败同效的，显式写与 `success`、`failure` 相同的一列 | 加载失败 | 各
+卷九-AI接口:203	sourceStrength	[稀疏/缺键]	| `sourceStrength` | map<ref vocab sense, number> combine=sum | 随感官（到达量的单位，卷五 §4.2（分区、方位与感知通道） 规则 3） | 键为 `sense` 族代号（卷五 §4.2.1（维度）），各值为实数（可负）；叠加修正映射（卷二 §1.6（缺失处置）第 5 项），键集可稀疏，缺键即该感官不加修正项；行上必写，本动作不改任何感官的源强写 `{}` | 加载失败（必填） | 源强修正项（封卷后勘误，李白 11-14 20:22 根因 G P-8）：行为人做本动作期间，键 s 的值作加性修正项叠加到卷五修正目标键 `sens
+卷九-AI接口:276	rules.act.paceFloor	[取 0]	| `rules.act.paceFloor` | map<act_class, number> | 键全覆盖 `act_class`；每值 [0, 1]。按动作类取节奏下限，取 0 的类节奏可为 0（C17-1 第 2 点） | R9-1.4 |
+卷九-AI接口:290	rules.review.tolerance	[缺键]	| `rules.review.tolerance` | map<claim_kind, number ≥ 0> | 键全覆盖 `claim_kind` 族，缺键即加载失败；不设容差的种类显式写 0 | R9-11.4 |
+卷九-AI接口:295	rules.npc.stanceWeights	[缺键/不加项]	| `rules.npc.stanceWeights` | map<ref vocab stance_axis, number> combine=sum | 叠加修正映射（卷二 §1.6（缺失处置）第 5 项），缺键即该轴不加项 | R9-12.3 |
+卷九-AI接口:313	rules.gate.categoryMap	[缺键]	| `rules.gate.categoryMap` | map<屏蔽词类别代号, reject_code> | 键全覆盖屏蔽词类别族（卷二 §1.9（代号、显示名与语言边界）），缺键即加载失败；没有专门拒收代号的类别显式写 `reject:blocklist` | R9-19.5 |
+卷九-AI接口:537	degreeBps	[缺档]	- **R9-1.13 取自槽位**（C15-1 ①）：动作行的 `check.skill`、`requirement`、`baseMinutes`、`effects`、`backlash` 与其 `costRows` 所指行的 `resource` 写 `from_slot` 的，值不在行上，由本行 `shapeFrom` 的读入口按此刻意图的槽位给出。凡读到这些列之处（R9-1.2 试算、九段、R9-1.4 开工定工量、R9-1.12 ① 重查）都在读的那一刻以同一组实参调该入口，不缓存、不存储；该入口的 `inputsOf` 依赖并入 R9-1.12 的重查集合 K。取返回的键：`ski
+卷二十一-医疗疾病与身体状态:163	pharm	[缺省 0]	| `pharm`（新） | `refDose: number`（dose_per_kg，> 0）；`massExp: number`（[0, 2]，缺省 0.75）；`bio: map<ref vocab route, fraction>`；`clearPerDay: number`（per_day，> 0）；`overdoseAt: number`（治疗阈倍数，> 1）；`better: enum（higher lower）` | 药性轴：使浓度恰为 1 倍治疗阈的剂量，按体重的 `massExp` 次幂每单位计（`massExp` 为 1 时即每公斤体重剂量）；体重指数（缺省 0.75，
+卷二十二-知识信息与传播:215	public.injectBoost	[缺键]	| `public.injectBoost` | `map<ref vocab kchan, integer ≥ 0>` | 一次注入加多少进度点。键集须覆盖 `sense` 非空的全部 `kchan` 行（亲身感知通道），加载期校验，缺键即加载失败；所以 R22-5.2 取最大时每个所经通道都有值，没有缺键情形（封卷后勘误 1114w2e3） |
+卷五-地点地形与资源场:137	deposits	[缺键]	| `deposits` | map<ref refs[kind material, kind plant], score nullable> | score | [0,100] | never（只许出现在 comp_tract 行） | skip | 否 | 丰度评分。展平后键全覆盖 `material` 与 `plant` 两表全部实体行（共同的 null 底由类别行 `extends` 给出，卷二 §1.6（缺失处置）第 4 项），缺键只表示未知、按 onUnknown 处置；矿物键非 null 表示"此处有此矿"，null 表示此处无此矿；植物键非 null 表示对群落丰度的偏离，nu
+卷五-地点地形与资源场:482	?	[缺键/不加项]	   - **一次性源**（一声吼、一下敲击、一道闪光）没有场可读。它以**行为人**（发出动静的实体）为主体，对感官 s 求修正目标键 `sense.sourceStrength[s]`（§2.3）经卷二 §3.3 管线的值：基值 = 行为人所在实体表的 `sourceStrength[s]` 列（`map<ref vocab sense, number>`，键全覆盖 `sense` 族）：个体取其物种行（卷四物种表登记）、物品取物品表（卷三乙登记）、地点取 place 表（§2.1，本卷登记）；各值经该表类别行的 `extends` 继承给出，由数据给值（基础类别行在数据里写全 `sens
+卷五-地点地形与资源场:521	envelope	[缺键/缺项]	| `envelope` | struct{tempC:[min,max], precipMm:[min,max], elevationM:[min,max], skyExposure:[min,max], depthM:[min,max], terrains: set<enum terrain>, waterAny: set<ref vocab water>, aspectMin: map<ref vocab sphere, score nullable>} | 该群落成立的条件包络；`aspectMin` 键全覆盖 `sphere` 族，缺键即加载失败，对某领域不设下限的该键显式写 nul
+卷五-地点地形与资源场:910	bySite	[缺 `]	- `terrain-modifiers.json`：`{byTerrain: map<enum terrain, list<修正项模板>>, byBiome: map<enum biome, list<…>>, bySite: map<enum site, list<…>>, slopeCurve}`。键全部是词表代号。本表不设湿滑曲线：路面因雨雪变得难走，是卷十七合成行程时读卷二十环境量的事，路况系数只描述路本身（规则 1）。`slopeCurve` 的值域严格大于 0（加载校验）。模板字段与卷二 §3.2 相同，缺 `source`（求值时填所在地点）；模板的 target 不得是群落包
+卷六-经济:220	household.json	[缺键]	| `household.json` | `selfSupplyTimeShare: fraction`；`tierOrder: list<必需档代号>`；`minShortageShare: fraction`；`shortVerb: map<用度类代号, ref vocab verb>`（某用度类缺量时发的动词；键全覆盖用度类族，缺键即加载失败；不设分动词的用度类显式写通用动词 `verb_supply_short`，§4.12 规则 6；封卷后勘误，卷七牵连） |
+卷六-经济:223	contract.json	[缺键]	| `contract.json` | `grace: map<obl, integer>`（分钟；键是 `obl` 条目 `graceKey` 所取的值）；`noticeDays: map<通知期键, integer>`（键是 `ckind` 条目 `noticeDaysKey` 所取的值）。两张表的键由登记该 `obl`、`ckind` 条目的卷连同条目一起登记，凡被条目引用的键必须在表里、值必写，缺键加载失败，不设缺省；现有别卷登记：卷二十二缄默合同的 `grace.obl_silence_keep`、`grace.obl_silence_pay`、`noticeDays.notice_
+卷十七-交通与路途:136	tmode	[缺键]	| `tmode`（`tmode_`，通行方式） | `ways: set<enum way_kind>`（非空；飞行取两者）；`gaits: set<ref vocab gait>`；`terrainPass: map<enum terrain, fraction nullable>`（必写；展平后键集须覆盖卷五 `terrain` 封闭清单的全部条目，缺键即加载失败 E-TRIP-MODE；与参照方式无差的地形显式写 1，0 即此种地形走不了，null 只表示该地形系数未知，按 `wsum` 未知传播使该段地形系数未知；含义见下）；`envCurves: list<struct{envKe
+卷十九-建筑与设施:163	ratingWeights	[缺键]	| `ratingWeights` | map<ref vocab raspect, fraction> | fraction | 值之和为 1 | always | error | 房间评价各项的权重；每个类型行必写，键须覆盖 `raspect` 族全部条目（权重为 0 的也写），缺键加载失败；建筑 `type` 为 null 时用 `rules.facility.rating.defaultWeights`（§4.11 规则 3，键同样须全覆盖） | RW#25 |
+卷十九-建筑与设施:190	bform	[缺省值]	| `bform` 形制 | `bldform_` | 开放 | `envelopeReq: ref requirement`（围护用料的选择器；各消耗项的 `qty` 是**体积份额**，和为 1，§4.4 规则 1）；`wallThicknessDefaultM`、`wallThicknessMinM`（意图未给墙厚时的缺省值、这种盖法允许的最薄值；建筑行上的 `wallThicknessM` 只有 §2.1 一个来源）；`storeyHeightM`；`perimeterFactor`；`roofCover: fraction`；`apertureBase: fraction`；`pro
+卷十九-建筑与设施:926	concealment	[缺键]	`fixture` 条目的 `mechanism: struct{trigger: struct{quantity: enum trigq, threshold: number, rearmMinutes: integer} nullable, powerOutRX: rx nullable, powerNeedW: number nullable, concealment: map<ref vocab sense, number> combine=sum, effects: list<effectCall>}`（`concealment` 是叠加修正映射，卷二 §1.6（缺失处置）第 5 项
+卷十五-法术与超自然:154	castmode	[缺键]	| `castmode`（`cmode_`） | `capBps: integer`；`costBps: integer`；`minutesBps: integer`；`sourceStrength: map<ref vocab sense, number> combine=sum`（叠加修正映射，卷二 §1.6（缺失处置）第 5 项；键为卷五 `sense` 族代号，各值为实数、可负，单位随感官，缺键即该感官不加修正项；行上必写，不改任何感官的源强写 `{}`；R15-4.6）；`difficultyAdd: number` | 施为方式（意图的一个槽位）：对上限、代价、工时、施为者源强、难
+卷十八-社会关系与家族:137	relation	[缺键/不加项/取 0]	| `relation`（`rel_`，卷二 §1.12（派生与聚合原语）已定基础字段 `from/to/via/inputs/intimate`） | 代号可加行，字段集合封闭（一审后裁定；牵连见卷末影响面表） | 社会字段组，由本卷单点定义。`kind` 非空即社会关系条目，整组必须填全（E-REL-SOCIAL-FIELDS）；聚合用的条目整组不填，也不得被 `terms.rel` 或史实记录引用。字段：`persistence: enum persistence_mode`（现役或史实，§4.1.1）；`kind: ref vocab holding_kind`（挂在哪个种类行下，该行
+卷十八-社会关系与家族:238	orgTraits	[缺键]	| `orgTraits` | map<ref vocab orgkind, struct{domestic, descentGroup: boolean}> | 家户类、世系类的判定；orgkind 族的每条条目在这里必须有同键的一行，两项行上必写（E-KIN-ORG-TRAITS；封卷后勘误 1114w3a，原“缺键即两项皆假”是隐性缺省，删） |
+卷十六-神怪与怪物:144	mtier	[缺键]	| `mtier`（`mtier_`） | `rank: integer`（各条目互不相同）；`minPower: integer ≥ 0`；`quota: map<enum juris, integer ≥ 0 nullable> nullable`（必写；null 即此档不设内容配额；非空时 `juris` 族每个条目各写一键，缺键加载失败，E-BST-QUOTA；值为 null 即该层级不设配额）；`maxAlive: map<enum juris, integer ≥ 0 nullable> nullable`（必写；null 即此档不设在世上限；非空时 `juris` 族每个条目各写
+卷四-生物身体与人物:288	diet	[缺键/没有键/取 0]	| `diet` | `eats: rx`；`assimilation: struct{bySubstance: map<ref vocab substance, fraction nullable>, other: fraction nullable}`；`eatsTaxa: set<ref vocab taxon>`；`primaryConsumer: boolean`（派生字段，数据行不得填写，第六版）；`fiberPenalty: number nullable`（取值域 [0,5]；李白 11-13 准加纤维含量后补） | 一种消化能力，不是一张食物名单（第五版，全书同类"选材与组合
+候选合计 25 条
+== exit 0
+
+== node F:/dnd-tmp/vol2/check-vol2.mjs
+== 1 错误码
+  正文错误码 151 个；登记表展开 263 个
+  OK 正文码全部已登记
+  注意 登记但正文未用到（含简写展开的候选）: E-ACC-BASELINE-EDIT, E-ACC-BASELINE-UP, E-ACC-BYPASS-REGRESSION, E-ACC-CODE-UNLISTED, E-ACC-COMMIT-MSG, E-ACC-CRITERION-LOOSENED, E-ACC-CRITERION-UNVERSIONED, E-ACC-DOC-SEAL, E-ACC-EXT-CODE-CHANGED, E-ACC-EXT-EXISTING-ROW, E-ACC-FIXTURE-INSTANCE, E-ACC-GATE-BYPASS, E-ACC-HIT-OPEN, E-ACC-ITEM-COUNT, E-ACC-ITEM-DOWNGRADE, E-ACC-ITEM-FORM, E-ACC-ITEM-ORPHAN, E-ACC-ITEM-PARAM, E-ACC-ITEM-UNIMPLEMENTED, E-ACC-ITEM-UNREGISTERED, E-ACC-NEWROW-UNANCHORED, E-ACC-REPORT-FORM, E-ACC-REVIEW-CHECKLIST, E-ACC-REVIEW-MISSING, E-ACC-REVIEW-SELF, E-ACC-REVIEW-STALE, E-ACC-REVIEW-VETO, E-ACC-ROWKEY-DRIFT, E-ACC-RUN-UNBOUND, E-ACC-SCAN-NAMELIST, E-ACC-SCAN-SELFNAME, E-ACC-ZERO-MISMATCH, E-AV-KEY, E-AV-NO-DEFAULT, E-BST-BANE-CLASH, E-BST-BODY-WRITE, E-BST-DUPLICATE, E-BST-GEN-SLOT, E-BST-LAIR, E-BST-LORE-SHAPE, E-BST-MONSTER-SCHEMA, E-BST-QUOTA, E-BST-SIM-DIMS, E-BST-TIER-ROWS, E-BST-TRANSFORM-ROWS, E-BST-VARIANT, E-BST-WARD-SHAPE, E-DISPLAY-BACKFLOW, E-DISPLAY-BRANCH-TEXT, E-DISPLAY-DICE, E-DISPLAY-HOST-CHAT, E-DISPLAY-LITERAL, E-DISPLAY-LOCALE-BRANCH, E-DISPLAY-UNSEEN, E-GEN-BRANCH-ORIGIN, E-GEN-BYPASS, E-GEN-DEFAULT, E-GEN-GROUP-CYCLE, E-GEN-GROUP-ROW, E-GEN-ID-COLLISION, E-GEN-LATE-SOURCE, E-GEN-MANIFEST-DRIFT, E-GEN-NAME-EMPTY, E-GEN-NOT-MATERIALIZED, E-GEN-OVERRIDE-AUTHORED, E-GEN-REJECT, E-GEN-RESPECT, E-GEN-ROW-INVALID, E-GEN-SKELETON, E-GEN-STAGE-CYCLE, E-GEN-STAGE-UNKNOWN, E-I18N-FORM, E-I18N-LABEL-FOREIGN, E-I18N-LABEL-ORPHAN, E-I18N-LOCALE, E-I18N-PLURAL, E-I18N-TPL-MISSING, E-I18N-TPL-SLOT, E-MAP-COMPASS, E-MIG-ACCEPT-FORM, E-MIG-BACKFILL, E-MIG-CARD-INCOMPLETE, E-MIG-CARD-INSTANCE, E-MIG-CARD-SCOPE, E-MIG-CARD-SIZE, E-MIG-DEFER-UNBOUND, E-MIG-DUAL-PATH, E-MIG-EVENT-SEQ, E-MIG-EXIT, E-MIG-FILEMOVE-GAP, E-MIG-FROZEN, E-MIG-ORDER, E-MIG-PARALLEL, E-MIG-PHASE-CONFLICT, E-MIG-PHASE-COUNT, E-MIG-RETIRE-MISMATCH, E-MIG-ROW-COUNT, E-MIG-ROW-MULTI, E-MIG-ROW-ORPHAN, E-MIG-SCAN-UNCLAIMED, E-MIG-SORTKEY-ORDER, E-MIG-STATE, E-MIG-TEST-PATCH, E-MIG-ZERO-UNCOVERED, E-PANEL-ACTION, E-PANEL-KIND, E-PANEL-PATH, E-PANEL-SOURCE, E-TPL-CYCLE, E-TPL-KEY, E-TPL-NO-FALLBACK, E-TPL-RX
+== 2 前缀登记
+  实体前缀 27，词表族前缀 136
+  注意 未登记前缀 record_: record_kind
+  注意 未登记前缀 act_: act_plot_invite
+  注意 未登记前缀 rx_: rx_type
+  注意 未登记前缀 tick_: tick_stage
+  注意 未登记前缀 doc_: doc_log, doc_state
+  注意 未登记前缀 part_: part_single
+  注意 未登记前缀 card_: card_slot_type
+  注意 未登记前缀 q_: q_k
+  注意 未登记前缀 e_: e_a, e_k, e_x
+  注意 未登记前缀 rule_: rule_key
+  注意 未登记前缀 entity_: entity_revived
+  注意 未登记前缀 orowk_: orowk_actual
+  注意 未登记前缀 aggk_: aggk_bonded
+  注意 未登记前缀 attach_: attach_slot
+  注意 未登记前缀 requirement_: requirement_block
+  注意 未登记前缀 effect_: effect_call_list
+  注意 未登记前缀 insul_: insul_grade
+  注意 未登记前缀 breath_: breath_grade
+  注意 未登记前缀 marriage_: marriage_regime
+  注意 未登记前缀 inheritance_: inheritance_regime
+== 2b 内核信号代号登记
+  小族登记 5 个: layout_change, naming_intent, note_intent, dimension_write_rejected, nil_seedpart
+  OK 正文发出的非词表代号均在小族登记
+  OK 引用小族的代号均已登记（核 32 卷）
+== 2c readShapes 行格式
+  数据行 10 行
+== 3 类型数
+  §1.5 表计 14 种；全文提到的类型数：14, 14, 14, 14, 14, 14
+  OK 类型数一致
+== 4 附录 A 夹具
+  OK 三段 JSON 可解析
+  维度 9 个，类别行 4，实体行 2；展平 class_workshop_hot = {"functionNeeds":{"fn_shelter":1,"fn_work":2,"fn_hearth":1},"accessDefault":"access_private","wearPerDay":0.0006,"services":["service_craft"],"headline":"fn_work","envelopeWhere":"flammability < 0.5","upkeepPerDay":{"class_fuel":12}}
+== 结果：PASS
+== exit 0
+
+== node F:/dnd-tmp/vol2/check-vol2-ext.mjs
+== 5 族名登记
+  登记族 136，代码内封闭枚举 34，正文用到的族名 123
+  OK 全部族名已登记
+== 6 枚举值前缀
+  OK 示例中开放族值均带前缀、封闭枚举值均不带前缀
+== 7 附录 A 组件与引用解析
+  comp_service_host: table=facility_type, requires=["services"], 被引用=fac_forge
+  comp_facility: table=place, requires=["intendedType"], 被引用=无
+== 8 附录 G 锚点唯一性
+  锚点 55 个
+  OK 锚点与关键定义各出现一次
+== 8b D.1 关键词出现位置（供人工确认同步）
+  【六】字符串类型白名单 / 方法名清单: 行 2167,2498
+  【六】字符串类型白名单 / 闭集: 行 3,173,193,418,520,532,535,658,659,666,686,711,721,724,727,732,733,738,768,827,891,892,893,894,918,960,972,1056,1115,1141,1395,1401,1418,2085,2159,2166,2169,2174,2175,2197,2334,2354,2359,2360,2371,2374,2386,2406,2461,2473,2498,2528,2535,2585,2609,2628,2633,2635,2651,2664,2685,2762,2787,2796,2799,2917,2949,2958,2969,2979
+  【六】字符串类型白名单 / E-INPUT-FUZZY: 行 735,736,737,741,1392,2174,2175,2498
+  【六】输入规范化唯一定义 / 规范化: 行 45,267,702,712,735,738,740,937,972,976,1004,1012,1111,1112,1113,1127,1135,1392,1396,2066,2149,2174,2190,2194,2359,2375,2411,2441,2469,2477,2482,2488,2492,2499,2518,2537,2802,2828,2852,2911,2912,2914,2937
+  【六】输入规范化唯一定义 / toLowerCase: 行 267,2174,2469,2499
+  【六】输入规范化唯一定义 / White_Space: 行 45,267,2454,2469,2499
+  【六】输入规范化唯一定义 / casefold: 行 45,267,735,738,918,926,1113,2499
+  【六】权限表（判定/产出） / needle: 行 698,705,711,738,769,937,976,1111,1113,1117,1123,1125,1131,1392,2149,2175,2359,2475,2478,2488,2500,2509,2518,2545,2738,2739,2781,2799,2802,2816,2912,2969
+  【六】权限表（判定/产出） / matchBlocklist: 行 258,615,673,674,705,706,707,739,740,985,1113,1114,1119,1127,2149,2477,2500,2508,2617,2777,2826
+  【六】权限表（判定/产出） / 替换记号: 行 255,706,1114,1391,2149,2382,2500,2537,2827,2912
+  【六】权限表（判定/产出） / templates.mjs: 行 260,608,686,706,733,739,768,835,2166,2175,2456,2465,2491,2500,2566,2628,2634
+  【六】封闭代码枚举不带前缀 / stage_: 行 255,2501
+  【六】封闭代码枚举不带前缀 / scope_: 行 443,2501
+  【六】封闭代码枚举不带前缀 / effout_: 行 2501
+  【六】封闭代码枚举不带前缀 / consent_: 行 255,1335,2357,2468,2501,2638,2802
+  【六】组件 table 归属 / comp_facility: 行 163,247,1600,1601,1922,2027,2267,2284,2471,2491,2502,2730
+  【六】组件 table 归属 / comp_service_host: 行 2247,2266,2284,2471,2502,2729
+  【六】组件 table 归属 / E-DIM-COMPONENT-TABLE: 行 247,2471,2502
+  【六】pathTypes 与 E-TEXT-UNGATED / pathTypes: 行 3,100,197,199,206,342,467,469,488,497,632,643,691,692,694,695,720,997,1027,1184,1244,1377,1393,2333,2355,2379,2407,2460,2463,2474,2481,2483,2489,2503,2512,2516,2522,2529,2536,2539,2585,2588,2612,2654,2664,2665,2675,2787,2796,2824,2909,2967,2984,2991
+  【六】pathTypes 与 E-TEXT-UNGATED / E-TEXT-UNGATED: 行 179,469,692,1019,1062,1393,2175,2450,2455,2474,2503,2529,2916,2946
+  【六】allowExplicit 与偏离行 / allowExplicit: 行 106,165,239,297,1354,1356,1387,1460,1473,2150,2446,2466,2504,2564,2684,2685,2935
+  【六】allowExplicit 与偏离行 / 偏离行: 行 58,106,118,125,126,145,165,179,203,255,297,479,497,643,1347,1352,1354,1436,1437,2139,2142,2146,2284,2337,2466,2504,2516,2578,2589,2602,2603,2857,2906,2963
+  【六】relation intimate / intimate: 行 339,341,713,2475,2505
+  【六】input-view 处置（第七版改为删除协议 + 新写） / input-view: 行 712,2066,2456,2475,2482,2506,2566,2831,2912
+== 9 码点口径
+  OK 全文无旧的码元口径
+== 10 权限表 needle 来源
+  OK 权限表 6 行，needle 来源只有 blocklist / 代号登记表
+== 11 示例代码逃逸写法
+  OK 规则层/kernel 示例与正例均无 any / as / @ts-* / eslint-disable / JSON.parse / fs 读取
+== 12 模块组计数口径
+  OK 全文无旧的模块组计数残留（现行口径：七组 + textcore / 六个非规则组）
+== 13 加载器外示例无 JSON.parse / fs
+  登记边界入口 34 个文件；OK 入口外示例无 JSON.parse / fs
+== 14 import 矩阵 textcore 列
+  OK kernel 不 import textcore
+  OK 规则层 不 import textcore
+== 15 Text 构造点
+  OK Text 构造点只在 §2.9
+== 16 运行态修正项无字串
+  OK struct:modifier 无 string/rx 文本字段
+  OK §3.2 运行态表达式为 RxId/rxTree
+== 17 入口/出口表对称
+  OK 入口 17 行（组：kernel,textcore,outputGate,gate,aiGate,inputEdge,host,tools），出口 7 行（组：outputGate,display,aiGate,host,kernel），列数对称
+== 18 全局对象白名单
+  OK 白名单覆盖 9 个组/层
+== 19 强转豁免文件表
+  OK 豁免表 17 个具体文件（textcore/brand.mjs、textcore/ops.mjs、kernel/handles/vocab-handle.mjs、kernel/handles/entity-id.mjs、kernel/handles/display-lang.mjs、kernel/handles/keys.mjs、kernel/sealed.mjs、kernel/credential.mjs、kernel/secret.mjs、kernel/transaction.mjs、kernel/validate/narrow.mjs、gate/screen.mjs、gate/load-blocklist.mjs、kernel/transport/router-caps.mjs、extension/textcore/narrow-wire.mjs、extension/textcore/open-envelope.mjs、extension/host/bootstrap.mjs）；表外无强转许可，旧的"唯一豁免点"说法已清
+== 20 模块组 glob 不相交
+  OK 9 组 9 个代表路径两两不相交（display 以 ! 排除 extension/host 与 extension/textcore）
+== 21 白名单闭集与 release 形参
+  OK 白名单段无"等"与省略号，禁 eval/Function/import()/with，专用项各归一处；release 带类型签名 1 处均为 Screened<Text>；出口表输入列一致；kernelApi 61 条均为结构化条目、无通配，issueCredential/writeSealed 限 aiGate、readSealed 限 outputGate，scope 常量 3 个各限一个写者文件
+== 22 文件归属
+  OK 78 个代表路径：六种代码扩展名都按目录归到原组，json/css/html 属登记数据，未登记类型判 E-FILE-UNASSIGNED，无文件同时落两组
+== 23 两进程分组与矩阵
+  OK 进程分组表 11 项与 JSON process 字段一致；服务端矩阵 9 行、客户端矩阵 3 行，互不含对方的组；矩阵引用名均已登记；node:* 清单两处一致
+== 24 宿主全局只在 bootstrap
+  OK 白名单表中 7 个浏览器宿主全局只在 host 行且全部限定到 bootstrap；display、clientTextcore 为"无"；10 个客户端能力对象的构造者都是 bootstrap；无旧宿主入口文件名残留
+== 25 定时器位置
+  OK 白名单表里定时器只在 kernel 行（限 kernel/scheduler.mjs）与 host 行（限 bootstrap）；正文 5 行提到定时器，均写明许可位置或为禁令；Date/performance 未开放
+== 26 摘要来源
+  OK node:crypto 只在 textcore 行并限 textcore/digest.mjs（正文 8 行提及，均指向它或为否定句）；kernel 无 node:crypto、用注入的 DigestCap；客户端 SubtleCrypto 只经 SubtleDigestCap 交 open-envelope.mjs；全文只有 sha256
+== 27 信封链条与装配文件
+  OK 下行出口、客户端入口、DOM 出口、信封校验、装配文件可缺行与两条上行入口都在 §2.9；客户端 Screened<Text> 只由 openEnvelope 产出；nameSlot 已清，起名为"规则层只发意图"
+== 28 引文同一性只在 aiGate
+  OK 例外清单恰三项（matchBlocklist、matchIdLeak、matchQuote）；matchQuote 带签名定义 1 处，在 §2.9 第 6 条，文件 ai-gate/quote-identity.mjs；全文 16 行提及，均在 aiGate 语境；未进 kernelApi，矩阵与 §2.8 其他组的行里不出现；§2.9 之外各处均为引用
+== 29 回应通路逐环核对
+  OK 通路 11 行逐环核对（含存档导出、导入支路 2c、2d、5s、6s；四条路由各有入口；NarrateCap 经 mountNarration 注入 reply-composer，narrate 不是跨组导出；registerAdvancePlan 已登记）：kernelApi 环的调用者在登记文件内且矩阵格写明，登记回调环不产生反向 import，能力对象环与能力对象表、入口表、出口表一致，HTTP 环与通道表一致；环环相接；进 outputGate 之前交出的类型不含文字；kernel 与 inputEdge 对 outputGate 的矩阵格为空
+== 30 子串函数签名
+  OK 子串函数 3 个与 gate/matcher.mjs 的 groupApi 导出一致；needle 类型只有 BlockNeedle、AiQuote 与代号，没有 Text；形参类型不出现 labels 或 Map；containsCodePoints 形参为 (turn: TurnText, quote: AiQuote)，只对 ai-gate/quote-identity.mjs 开放；labels 的值类型是 Text，读者不含 gate 与 aiGate
+== 31 本轮原文来路
+  OK TurnText 只由 brandTurn 产出且只对 input/http-entry.mjs 开放；形参带 TurnText 的函数恰 4 个（interpret、narrateTurn、matchQuote、containsCodePoints）；aiGate 对 inputEdge 的 4 个导出都限定到 input/http-entry.mjs 并与矩阵格一致；来路五步写全；旧签名无残留
+== 32 装配文件封闭清单
+  OK assembly.calls 11 个函数（createRouterCaps、createDigestCap、createWallTimer、mountKernel、registerSystems、mountOutput、mountAi、mountMenuEntry、mountSaveRoutes、mountNarration、mountInput）：每个都在 kernelApi 或 groupApi 登记为只对 index.mjs 开放，反向也无清单外的开放项；矩阵装配文件行、§2.9"装配文件"一项与清单三处一致；扫描规则写全，§2.8 与 S19 引用同一清单
+== 33 存量规则与 wsum 签名
+  OK 存量规则六条与两类断言写全；wsum 定义一处、正文 3 处调用全为三参、material 为多组列表；系统闭集字段 entryCallerFiles / entryJudges 在 §2.7 定义并进 JSON 示例；pathTypes 数值路径都带 §1.4 的单位；§1.14 与 event_role 已登记；facilityType 不再是存储维度
+== 34 接缝批
+  OK 心跳推进只投递请求、旧写法无残留；终止协议五步改序并含两个登记点、窗口期满、到期项撤销；建行写者与改写写者已定义；stockMode / remDenominator / struct:stockAnchor 与定点指数五项在位；六个封闭枚举与三个族已登记；§1.14 两处改名并写求值次序；存档码、导入 schema、槽位与候选键在位；单位表含 byte、ms；无已撤销的大类代号
+== 结果：PASS
+== exit 0
+
+== node F:/dnd-tmp/book/check-orgkind-codes.mjs
+     正式 orgkind 条目：orgkind_cult（卷七:246）、orgkind_order（卷七:247）、orgkind_state（卷八:265）、orgkind_town（卷八:266）、orgkind_village（卷八:267）、orgkind_guild（卷八:268）、orgkind_firm（卷八:269）、orgkind_caravan（卷八:286）、orgkind_army（卷八:287）、orgkind_faction（卷八:288）、orgkind_monster_band（卷八:289）、orgkind_household（卷十八:154）、orgkind_lineage（卷十八:155）
+PASS A 卷八登记句解析到别卷登记的 orgkind 4 种：教团、修会、家户、家族
+PASS A 种类"教团"→ orgkind_cult（卷七:241（按次序对应数据块）），有正式条目 卷七:246
+PASS A 种类"修会"→ orgkind_order（卷七:241（按次序对应数据块）），有正式条目 卷七:247
+PASS A 种类"家户"→ orgkind_household（卷十八:1506），有正式条目 卷十八:154
+PASS A 种类"家族"→ orgkind_lineage（卷十八:1507），有正式条目 卷十八:155
+PASS B 卷八 R8-1.1 列举的组织种类 13 种：国家、城镇、村社、行会、商号、商队、教团、修会、军团、家户、家族、派系、怪物族群
+PASS B 种类"国家"→ orgkind_state（卷八:260（按次序对应数据块）），有正式条目 卷八:265
+PASS B 种类"城镇"→ orgkind_town（卷八:260（按次序对应数据块）），有正式条目 卷八:266
+PASS B 种类"村社"→ orgkind_village（卷八:260（按次序对应数据块）），有正式条目 卷八:267
+PASS B 种类"行会"→ orgkind_guild（卷八:260（按次序对应数据块）），有正式条目 卷八:268
+PASS B 种类"商号"→ orgkind_firm（卷八:260（按次序对应数据块）），有正式条目 卷八:269
+PASS B 种类"商队"→ orgkind_caravan（卷八:281（按次序对应数据块）），有正式条目 卷八:286
+PASS B 种类"军团"→ orgkind_army（卷八:281（按次序对应数据块）），有正式条目 卷八:287
+PASS B 种类"派系"→ orgkind_faction（卷八:281（按次序对应数据块）），有正式条目 卷八:288
+PASS B 种类"怪物族群"→ orgkind_monster_band（卷八:281（按次序对应数据块）），有正式条目 卷八:289
+PASS C 代号 orgkind_cult（首见 卷七:246）有正式条目
+PASS C 代号 orgkind_order（首见 卷七:247）有正式条目
+PASS C 代号 orgkind_state（首见 卷八:265）有正式条目
+PASS C 代号 orgkind_town（首见 卷八:266）有正式条目
+PASS C 代号 orgkind_village（首见 卷八:267）有正式条目
+PASS C 代号 orgkind_guild（首见 卷八:268）有正式条目
+PASS C 代号 orgkind_firm（首见 卷八:269）有正式条目
+PASS C 代号 orgkind_caravan（首见 卷八:286）有正式条目
+PASS C 代号 orgkind_army（首见 卷八:287）有正式条目
+PASS C 代号 orgkind_faction（首见 卷八:288）有正式条目
+PASS C 代号 orgkind_monster_band（首见 卷八:289）有正式条目
+PASS C 代号 orgkind_household（首见 卷十八:154）有正式条目
+PASS C 代号 orgkind_lineage（首见 卷十八:155）有正式条目
+RESULT 失败 0
+== exit 0
+
+== node F:/dnd-tmp/vols/check-卷八.mjs
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首署名行
+PASS 1c 无残留追加标记
+PASS 2 十九个子系统各六小节齐全
+PASS 3 数据实例数量与两类覆盖
+PASS 4 验收断言三式齐全且有编号
+PASS 5 规则与正文无具体 id 字面量
+PASS 6 无用于判断的描述性文本
+PASS 7 台账各概念写全（标题、关键代号、每节有规则且编号连续）
+PASS 8 跨卷引用带标题；规则编号引用不悬空
+PASS 9 json 代码块可解析（3 块） — bad=0
+PASS 10 红线：不读墙钟、除数有下界或为 0 分支、存法与余数登记
+PASS 11 数据实例算术与余数结转复算（26 项加 16 组）
+PASS 12 接口、入口表、规则表键、错误码、枚举附表、迁移清单落实
+PASS 13 运行态路径都在 §3.3 有写者与去留交代
+行数 1668；子系统 19；规则条数 148；json 块 3；待补清单 12 条；失败项 0
+== exit 0
+
+== node F:/dnd-tmp/vols/check-卷八b.mjs
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首署名行
+PASS 1c 无残留追加标记
+PASS 2 十五个子系统各六小节齐全
+PASS 3 数据实例数量与两类覆盖
+PASS 4 验收断言三式齐全且有编号
+PASS 5 规则与正文无具体 id 字面量
+PASS 5b 数据实例不写实例 id
+PASS 6 无用于判断的描述性文本
+PASS 7 台账各概念写全（标题、关键代号、每节有规则且编号连续）
+PASS 8 跨卷引用带标题；规则编号引用不悬空；本卷节号不越界
+PASS 9 json 代码块可解析且种类行列数对齐（1 块） — bad=0 col=0
+PASS 10 红线：不读墙钟、除数有下界或为 0 分支、存法与余数登记、不读事件日志
+PASS 11 数据实例算术与余数结转复算（32 项加 9 组）
+PASS 12 接口、入口表、规则表键、错误码、枚举附表、迁移清单、卷零行号落实
+PASS 13 运行态路径都在 §3.3 有写者与去留交代
+PASS 14 扫描条引用都有定义
+PASS 15 一审 21 条真问题回归
+行数 1401；子系统 15；规则条数 155；json 块 1；待补清单 12 条；失败项 0
+== exit 0
+
+== node F:/dnd-tmp/vols/check-卷十八.mjs
+PASS 1 章节 §0–§8 与术语表齐全
+PASS 2 十二个子系统各六小节齐全
+PASS 3 数据实例数量与两类覆盖
+PASS 4 验收断言三式齐全
+PASS 5 规则与正文无具体 id 字面量
+PASS 6 无用于判断的描述性文本
+PASS 7 台账十项概念写全
+PASS 8 跨卷引用带标题
+PASS 9 json 代码块可解析（15 块） — bad=0
+   持有种类 47 行（旧 42 + 新 5）
+PASS 10 持有种类表自洽、旧行逐格一致、旧表各字段都有去向
+PASS 11 家户 orgKind、intimate 字段、未成年硬下限在场且制度行不低于下限
+PASS 12 数据实例算术复算（29 项，系数取自表）
+PASS 13 一审裁定落实（检查点、错误码、固定刻、迁移清单、rx 运算集、断言判据）
+PASS 14 二审余项与转来项落实（列出项逐条）
+PASS 15 余项单核 N4、N5（按 R18-1.5 模拟分家、迁户、接任；授予者可空）
+行数 1714；子系统 12；规则条数 82；json 块 15；失败项 0
+== exit 0
+
+== node F:/dnd-tmp/vols/check-卷十六.mjs
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首模型行
+PASS 1c §0 五小节齐全
+PASS 2 14 个子系统各六小节齐全
+PASS 3 数据实例至少三条，含非西陲、含非人类或超自然（共 56 条）
+PASS 4 验收断言三式齐全且编号规整
+PASS 5 正文无具体 id 字面量（含数据实例）
+PASS 6 无用于判断的描述性文本；纯代号无中文；枚举值 ASCII 且带中英显示名（枚举 5 个、值 16 个） —  
+PASS 7 台账各概念写全（十四节标题、台账裁定编号、关键概念、每节有规则且编号连续）
+PASS 8 编号引用不悬空且连续；跨卷章节引用处处带标题且与原卷相符（398 处） —   
+PASS 9 错误码、入口、钩子、规则表键、抽取点、维度落实（码 13、入口 24、钩子 7、规则表键行 44、抽取点 8、维度 19） —  |  |  |  |  |  | 
+PASS 10 红线：不派实现、不改别卷、不读墙钟、除数有下界、身体状态只经卷二十一、无怪物标记分支、不读名字、不另立委托、物种阶段登记
+PASS 11 算术复算与计数对账（路遇例、辟邪例、相似度例、存量转化例、卷零 9+6 行、§6 13 条、矩阵 4 行、错误码 13、族 5、动词 5）
+PASS 12 接口表、配合项（21 项）、迁移清单（30 行）、五款游戏、待补清单（22 条）、素材位置落实
+PASS 13 关键条文在位（19 条）
+行数 1258；子系统 14；规则条数 109；断言 42；扫描条 13；配合项 21；开放问题 14（须李白定 0）；迁移行 30；枚举 5 个、值 16 个；错误码 13；规则表键行 44；数据实例 56；待补清单 22 条；失败项 0
+== exit 0
+
