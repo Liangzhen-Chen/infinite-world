@@ -1,0 +1,42 @@
+--- "F:/dnd-tmp/vols/check-\345\215\267\345\215\201.mjs.bak-1114-\345\215\201\344\270\203\351\230\266\346\256\265"	2026-11-14 14:23:22.993620000 +0000
++++ "F:/dnd-tmp/vols/check-\345\215\267\345\215\201.mjs"	2026-11-14 14:23:42.994521800 +0000
+@@ -151,6 +151,13 @@
+ report('10 红线：不读墙钟、除数有下界或为 0 分支、存法与去留登记、不读事件日志', r10.length === 0, r10.slice(0, 10).join(' | '));
+ 
+ // 11 数据实例算术复算
++// 阶段数锚点修订 11-14（第0日生成内容提案定稿二：worldgen 阶段增为十七）：不写死个数。
++// 从 §4.1.1 主表（json 块）逐行解析 gstage 条目，worldgen 相行数须与 §4.1.5 例句“N个 `worldgen` 相阶段”的 N 相等；第 12 项再与 JSON 解析结果三方互核。
++const cnNum = s => { const d = { 零: 0, 一: 1, 二: 2, 两: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 }; let n = 0, cur = 0; for (const ch of s) { if (ch === '十') { n += (cur || 1) * 10; cur = 0; } else if (ch in d) cur = d[ch]; else return NaN; } return n + cur; };
++const stageLines = meta.filter(m => m.h4 === '#### 4.1.1 维度' && m.fence === 'json' && /^\s*"gstage_[a-z_]+":\s*\{/.test(m.line)).map(m => m.line);
++const wgLines = stageLines.filter(l => /"phase":\s*"worldgen"/.test(l));
++const exM = meta.filter(m => m.h4 === '#### 4.1.5 数据实例').map(m => m.line).join('\n').match(/([零一二两三四五六七八九十]+)个 `worldgen` 相阶段/);
++const exCount = exM ? cnNum(exM[1]) : NaN;
+ const calc = [
+   ['郡 列数', Math.ceil(Math.sqrt(4)), 2, '列数 `k = 2`'], ['郡 序位3 列', 3 % 2, 1, '序位 3 的郡在第 1 列第 1 行'], ['郡 序位3 行', Math.floor(3 / 2), 1, '第 1 列第 1 行'],
+   ['面积 W', 3 + 1 + 2 + 2, 8, '`W = 8`'], ['面积 一', Math.floor(80000 * 3 / 8), 30000, '30000、10000、20000'], ['面积 二', Math.floor(80000 * 1 / 8), 10000, '30000、10000、20000'], ['面积 三', Math.floor(80000 * 2 / 8), 20000, '30000、10000、20000'], ['面积 末', 80000 - 60000, 20000, '80000 − 60000 = 20000'],
+@@ -164,7 +171,7 @@
+   ['片一', Math.round(9600 / (0.5 * 0.4)), 48000, '9600 ÷ (0.5 × 0.4) = 48000'], ['片二', Math.round(3000 / (0.3 * 0.4)), 25000, '3000 ÷ (0.3 × 0.4) = 25000'], ['片三', Math.round(600 / (0.2 * 0.4)), 7500, '600 ÷ (0.2 × 0.4) = 7500'], ['站点面积', Math.max(48000, 25000, 7500), 48000, '站点面积取 48000'],
+   ['份数', Math.floor(160 * 900 / 1000), 144, 'floor(160 × 900 ÷ 1000) = 144'], ['余数', (160 * 900) % 1000, 0, '千分余数为 0'], ['件数', 144 * 2, 288, '共 288 件'],
+   ['分配一', Math.floor(37 * 5 / 10), 18, 'floor(37 × 5 ÷ 10) = 18'], ['分配二', Math.floor(37 * 3 / 10), 11, 'floor(37 × 3 ÷ 10) = 11'], ['分配末', 37 - 18 - 11, 8, '37 − 18 − 11 = 8'],
+-  ['阶段数', 14, 14, '十四个 `worldgen` 相阶段'] // 卷十 v2 合法改动，二审 11-13：现文 §4.1.1 JSON worldgen 相条目实数 14（删 history/opening/species，增 edges/water/weather/siteform）
++  ['阶段数（§4.1.1 主表行 = §4.1.5 例）', wgLines.length > 0 ? wgLines.length : -1, exCount, exM ? exM[0] : '§4.1.5 例句「N个 `worldgen` 相阶段」'] // 锚点修订 11-14：由写死 14 改为主表逐行解析与例句互核（现文均为 17）
+ ];
+ const badCalc = calc.filter(([, got, want]) => got !== want).map(([n]) => n);
+ const missNum = calc.filter(([, , , needle]) => !all.includes(needle)).map(([n, , , s]) => n + '缺原句:' + s);
+@@ -204,9 +211,14 @@
+   const seen = new Set(), stack = new Set();
+   const visit = k => { if (stack.has(k)) { r12.push('阶段成环 ' + k); return; } if (seen.has(k)) return; stack.add(k); for (const a of stages[k].after) { if (!stages[a]) r12.push('after 悬空 ' + a); else { if (stages[k].phase === 'worldgen' && stages[a].phase === 'expand') r12.push('相序颠倒 ' + k); visit(a); } } stack.delete(k); seen.add(k); };
+   Object.keys(stages).forEach(visit);
+-  // 卷十 v2 合法改动，二审 11-13：gen_phase 三值 worldgen/opening/expand（T2 增 opening；小项 5 materialize 改名 expand）；worldgen 阶段数照现文 14
++  // 卷十 v2 合法改动，二审 11-13：gen_phase 三值 worldgen/opening/expand（T2 增 opening；小项 5 materialize 改名 expand）
+   for (const v of Object.values(stages)) { if (!['worldgen', 'opening', 'expand'].includes(v.phase)) r12.push('phase 越界'); if (!['world', 'region', 'unit', 'site', 'tract'].includes(v.scope)) r12.push('scope 越界'); }
+-  if (Object.values(stages).filter(v => v.phase === 'worldgen').length !== 14) r12.push('worldgen 阶段数不是 14');
++  // 锚点修订 11-14：每条字段齐（§2.1 gstage 行必填字段 + labels 中英）
++  for (const [k, v] of Object.entries(stages)) { const miss = ['phase', 'scope', 'after', 'before', 'generator', 'writesKinds', 'whenRX', 'labels'].filter(f => !(f in v)); if (!Array.isArray(v.after) || !Array.isArray(v.before) || !Array.isArray(v.writesKinds) || typeof v.generator !== 'string' || !v.labels?.zh || !v.labels?.en) miss.push('类型'); if (miss.length) r12.push(k + ' 缺字段 ' + miss.join('/')); }
++  // 锚点修订 11-14：不写死 14；JSON 解析的 worldgen 条目数 = §4.1.1 主表逐行数 = §4.1.5 例句个数（现文 17）
++  const wgJson = Object.values(stages).filter(v => v.phase === 'worldgen').length;
++  if (Object.keys(stages).length !== stageLines.length) r12.push(`阶段条目 JSON ${Object.keys(stages).length} 与主表行 ${stageLines.length} 不符`);
++  if (wgJson !== wgLines.length || wgJson !== exCount) r12.push(`worldgen 阶段数不一致：JSON ${wgJson}、主表行 ${wgLines.length}、§4.1.5 例 ${exCount}`);
+ }
+ const s5 = sec(/^## §5 /);
+ for (const v of ['卷二', '卷三乙', '卷四', '卷五', '卷六', '卷七', '卷八', '卷九', '卷十四', '卷十八', '卷十九', '卷二十', '卷二十五', '卷二十七']) if (!new RegExp(`^\\| ${v} \\|`, 'm').test(s5)) r12.push('§5.2 缺 ' + v);
