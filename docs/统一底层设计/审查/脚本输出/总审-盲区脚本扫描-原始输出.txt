@@ -1,0 +1,100 @@
+### 盲区：候选标识符在目标卷 §2 与全书数据块都没有
+类别	声明卷:行	标识符	目标卷	目标卷他处有?	声明卷他处有?	上下文
+§5/8	卷七:1633	hostilityOf	卷十八/卷十三/卷八	卷八	有	`hostilityOf` 与敌意档条目的四个字段 | 入口加词表 | 卷十八、卷十三（含 §4.16 雇约条件式，R13-16.4）、卷八 | 派生读取 |
+散文	卷三乙:952	categoryDeviation	卷三甲	无	无	C-1 | 派生 / 读 view | **类别由材料与功能维度派生**：`categoryKind = first(rules.items.categoryRules)`。规则表
+散文	卷三乙:952	catdev	卷三甲	无	无	C-1 | 派生 / 读 view | **类别由材料与功能维度派生**：`categoryKind = first(rules.items.categoryRules)`。规则表
+§5/8	卷三乙:1888	valuation	卷十五	卷十五	有	卷十五 §4.13/§4.17 | 材料与物品字段、槽机制、`valuation` | 超自然材料行、法器行、仪式需求块 | X-35 |
+散文	卷九:1656	improviseClass	卷三乙/卷二/卷二十一/卷二十七	卷三乙	有	封卷前收尾（不升版本号；改前快照 `版本快照/卷九-v2i.md`） | §2.4 `cards` 表后句；R9-4.4；R9-1.12 `premise_break` 表 `st
+散文	卷九:1657	activityRecheck	卷二十七	卷二十七	有	卷二十七勘10 附落地（李白 11-13 批；不升版本号，改前快照 `版本快照/卷九-v2j.md`） | §5.3“勘10 附”状态一行 | 卷二十七已加通用字段 `cadenc
+散文	卷九:1673	dialogues	卷十三/卷六/卷二十四/卷十八/卷二十二	无	有	封卷后勘误（李白 11-14 17:30 卷九/卷十三邀约应答停报 acfddc94 裁定；依据 `收尾待办.md` 该节、`审查/卷九-拒绝应答-只核.md`；不升版本号，改前快
+散文	卷九:1673	awaitedEvent	卷十三/卷六/卷二十四/卷十八/卷二十二	卷十三	有	封卷后勘误（李白 11-14 17:30 卷九/卷十三邀约应答停报 acfddc94 裁定；依据 `收尾待办.md` 该节、`审查/卷九-拒绝应答-只核.md`；不升版本号，改前快
+散文	卷九:1673	pendingInvites	卷十三/卷六/卷二十四/卷十八/卷二十二	无	有	封卷后勘误（李白 11-14 17:30 卷九/卷十三邀约应答停报 acfddc94 裁定；依据 `收尾待办.md` 该节、`审查/卷九-拒绝应答-只核.md`；不升版本号，改前快
+散文	卷九:1675	requirement_block	卷二/卷十五	卷二/卷十五	无	封卷后勘误（李白 11-14 20:13 裁定 ②；不升版本号，改前快照 `版本快照/卷九-v2-勘误前-1114zs5.md`，改后覆盖 `版本快照/卷九-v2.md`） | R
+散文	卷九:1675	effect_call_list	卷二/卷十五	卷二/卷十五	无	封卷后勘误（李白 11-14 20:13 裁定 ②；不升版本号，改前快照 `版本快照/卷九-v2-勘误前-1114zs5.md`，改后覆盖 `版本快照/卷九-v2.md`） | R
+散文	卷二:2634	strikeOutcome	卷十三/卷二十七	卷十三	无	封卷后勘误（同上，卷十三 C13-1，部分） | §1.4 单位；§5.1 `attacks` 行；§5.21 `technique` 行；§1.9 前缀表加 `tactic` |
+散文	卷二:2659	settleStatBuild	卷十九/卷十一	卷十九	无	封卷后勘误 1114ac（李白 11-14 卷十九统计层提案三版裁定 fc7425b9；`审查/卷十九-统计层建筑增减提案.md` 第三版 ⑦ 牵连清单卷二行）：版本号不升，不改卷
+§5/8	卷二十:1231	recur_anchor	卷二/卷十一	无	有	5. **需要卷二登记的格式项**（按写卷须知补充裁定，本卷在 §2 定义，收尾时汇总进全书登记表；这里列清单）：词表族 `calendar`、`weather`、`phenome
+§5/8	卷二十:1231	intercal_mode	卷二/卷十一	无	无	5. **需要卷二登记的格式项**（按写卷须知补充裁定，本卷在 §2 定义，收尾时汇总进全书登记表；这里列清单）：词表族 `calendar`、`weather`、`phenome
+§5/8	卷二十:1231	day_start	卷二/卷十一	无	无	5. **需要卷二登记的格式项**（按写卷须知补充裁定，本卷在 §2 定义，收尾时汇总进全书登记表；这里列清单）：词表族 `calendar`、`weather`、`phenome
+§5/8	卷二十:1231	era_mode	卷二/卷十一	无	无	5. **需要卷二登记的格式项**（按写卷须知补充裁定，本卷在 §2 定义，收尾时汇总进全书登记表；这里列清单）：词表族 `calendar`、`weather`、`phenome
+§5/8	卷二十:1231	cal_source	卷二/卷十一	无	无	5. **需要卷二登记的格式项**（按写卷须知补充裁定，本卷在 §2 定义，收尾时汇总进全书登记表；这里列清单）：词表族 `calendar`、`weather`、`phenome
+§5/8	卷二十:1231	cycle_origin	卷二/卷十一	无	无	5. **需要卷二登记的格式项**（按写卷须知补充裁定，本卷在 §2 定义，收尾时汇总进全书登记表；这里列清单）：词表族 `calendar`、`weather`、`phenome
+§5/8	卷二十:1231	leap_policy	卷二/卷十一	无	无	5. **需要卷二登记的格式项**（按写卷须知补充裁定，本卷在 §2 定义，收尾时汇总进全书登记表；这里列清单）：词表族 `calendar`、`weather`、`phenome
+§5/8	卷二十:1231	anchor_point	卷二/卷十一	无	无	5. **需要卷二登记的格式项**（按写卷须知补充裁定，本卷在 §2 定义，收尾时汇总进全书登记表；这里列清单）：词表族 `calendar`、`weather`、`phenome
+§5/8	卷二十:1231	crop_source	卷二/卷十一	无	无	5. **需要卷二登记的格式项**（按写卷须知补充裁定，本卷在 §2 定义，收尾时汇总进全书登记表；这里列清单）：词表族 `calendar`、`weather`、`phenome
+§5/8	卷二十:1231	precip_phase_source	卷二/卷十一	无	无	5. **需要卷二登记的格式项**（按写卷须知补充裁定，本卷在 §2 定义，收尾时汇总进全书登记表；这里列清单）：词表族 `calendar`、`weather`、`phenome
+§5/8	卷二十:1231	accum_fold	卷二/卷十一	无	无	5. **需要卷二登记的格式项**（按写卷须知补充裁定，本卷在 §2 定义，收尾时汇总进全书登记表；这里列清单）：词表族 `calendar`、`weather`、`phenome
+§5/8	卷二十:1231	calendarBound	卷二/卷十一	无	有	5. **需要卷二登记的格式项**（按写卷须知补充裁定，本卷在 §2 定义，收尾时汇总进全书登记表；这里列清单）：词表族 `calendar`、`weather`、`phenome
+§5/8	卷二十:1231	clockView	卷二/卷十一	无	有	5. **需要卷二登记的格式项**（按写卷须知补充裁定，本卷在 §2 定义，收尾时汇总进全书登记表；这里列清单）：词表族 `calendar`、`weather`、`phenome
+§5/8	卷二十:1231	paceView	卷二/卷十一	无	有	5. **需要卷二登记的格式项**（按写卷须知补充裁定，本卷在 §2 定义，收尾时汇总进全书登记表；这里列清单）：词表族 `calendar`、`weather`、`phenome
+§5/8	卷二十:1243	calendarBound	卷二	无	有	- 卷二 §5.22：事件类型表加布尔字段 `calendarBound`。
+散文	卷二十:1852	nextEraId	卷二十七/卷二十九	无	有	15 | 封卷后勘误（依据 `审查/机制项-卷二十-纪元旬-只核.md` 真问题 1–3；主会话按李白“每个纪元一个固定数字 id”裁定定技术取舍；改稿 claude-opus-5
+§5/8	卷二十一:1230	pendingDose	卷二/卷二十六/卷十六/卷二十四/卷二十二	无	有	卷二 | 状态实例结构增加两个数值字段 `peak`（后遗判定要最大严重度）与 `quality`（照护实例的照护质量）；**免疫不进实例**，行级 `immunity` 的含义改
+§5/8	卷二十一:1230	epi	卷二/卷二十六/卷十六/卷二十四/卷二十二	无	有	卷二 | 状态实例结构增加两个数值字段 `peak`（后遗判定要最大严重度）与 `quality`（照护实例的照护质量）；**免疫不进实例**，行级 `immunity` 的含义改
+§5/8	卷二十七:783	eventCount	卷二十四	卷二十四	有	卷二十四 R24-2.7（封卷后勘误，卷二十四 C24-10、Q24-2） | 须对方写明 | `eventCount` 的筛选字段与时间段粒度 | 请写明 `scope` 读事件
+§5/8	卷二十七:783	span	卷二十四	卷二十四	无	卷二十四 R24-2.7（封卷后勘误，卷二十四 C24-10、Q24-2） | 须对方写明 | `eventCount` 的筛选字段与时间段粒度 | 请写明 `scope` 读事件
+§5/8	卷二十七:859	through	卷二	无	有	1 | 两进程建模与卷二第十五、十六版的回填。**已对齐**：跨进程归属（§1.3、R27-4.11）、分块之间让出执行权（R27-3.5，归 `kernel/scheduler.
+散文	卷二十七:993	advancePlan	卷二/卷二十/卷十二	卷二/卷二十	有	封卷后勘误（李白 11-14 事件 94cd4688 选甲；起点口径同日李白补定；不升版本号，快照 `版本快照/卷二十七-v4-勘误前-1114ab.md`，改后覆盖 `版本快照/
+散文	卷二十七:1008	eventCount	卷二十四/卷十/卷四/卷十九/卷二十二	卷二十四	有	封卷后勘误（李白 11-14 跨卷机制项待批清单 975aa068 裁定，清单第 179–180 行：卷二十四 C24-10（Q24-2，批：存档体量）、卷十 C10-8（批：同一
+§5/8	卷二十三:689	valuation	卷三乙	卷三乙	有	卷三乙 | `craftOutcome`、配方行、品质表的列、取向、附件、抄本配方、用度类、`valuation` | §4.1、§4.2、§4.5、§4.7 |
+散文	卷二十三:879	verbrole	卷二	无	有	2 | 事件角色另立值集；名望变量不合格式 | 动词行本卷自登，角色栏只用卷二事件角色；来源行 `role` 只取事件角色，作者经载荷字段（C23-7）；`amountRX` 只读
+散文	卷二十三:879	roleWeights	卷二	无	无	2 | 事件角色另立值集；名望变量不合格式 | 动词行本卷自登，角色栏只用卷二事件角色；来源行 `role` 只取事件角色，作者经载荷字段（C23-7）；`amountRX` 只读
+散文	卷二十三:879	tierOrder	卷二	卷二	有	2 | 事件角色另立值集；名望变量不合格式 | 动词行本卷自登，角色栏只用卷二事件角色；来源行 `role` 只取事件角色，作者经载荷字段（C23-7）；`amountRX` 只读
+§5/8	卷二十二:814	documentStanding	卷三乙	卷三乙	有	卷三乙 | `documentStanding`、可读组件字段、内容事实组、毁失事件；翻译配方的 `templateFrom` 与译本实例偏离行 `props.language`（
+§5/8	卷二十二:855	exploreGrade	卷十七/卷十二	卷十七	有	1 | 卷十七 R17-11.1、R17-4.3、R17-4.7、R17-11.5 | “传闻通道”改为“`hops` 大于 0 的听说类版本”；邮件、地图两行登记为 `sourc
+§5/8	卷二十二:879	evaluationOf	卷七	卷七	有	C22-8 | 卷七 §4.15、§4.26、§4.27 | 四条通道行按 `kchan` 字段登记；`queries` 取 `fclass` 代号；问事未抽中的偏离读数调本卷失真
+散文	卷二十二:1023	exploreGrade	卷十七	卷十七	有	T7 | 真问题 7 邮件、地图、托付通道 | 卷十七三行是读到类、听说类的子通道行；`exploreGrade` 改读通道行字段（新增 `kchan.exact`）与 `hops
+§5/8	卷二十五:803	minTameSeverity	卷十四	无	有	卷十四 | 本卷登记 | 役使类技能行（另带 `minTameSeverity`、`handlerSkill`、`handlerSkillMin` 三个字段）、农牧渔猎与厨酿的技能
+§5/8	卷二十五:803	handlerSkill	卷十四	无	有	卷十四 | 本卷登记 | 役使类技能行（另带 `minTameSeverity`、`handlerSkill`、`handlerSkillMin` 三个字段）、农牧渔猎与厨酿的技能
+§5/8	卷二十五:803	handlerSkillMin	卷十四	无	有	卷十四 | 本卷登记 | 役使类技能行（另带 `minTameSeverity`、`handlerSkill`、`handlerSkillMin` 三个字段）、农牧渔猎与厨酿的技能
+§5/8	卷二十五:803	skillView	卷十四	卷十四	无	卷十四 | 本卷登记 | 役使类技能行（另带 `minTameSeverity`、`handlerSkill`、`handlerSkillMin` 三个字段）、农牧渔猎与厨酿的技能
+§5/8	卷二十五:918	minTameSeverity	卷四/卷十四/卷二/卷十九	无	有	Q2 | 给卷四、卷十四的请求。①物种表新增 `tameEase`、`trainEase`（本卷不再登记任何产出字段，活体产出只用卷四的 `renewables`）。②`renew
+§5/8	卷二十五:918	handlerSkill	卷四/卷十四/卷二/卷十九	无	有	Q2 | 给卷四、卷十四的请求。①物种表新增 `tameEase`、`trainEase`（本卷不再登记任何产出字段，活体产出只用卷四的 `renewables`）。②`renew
+§5/8	卷二十五:918	handlerSkillMin	卷四/卷十四/卷二/卷十九	无	有	Q2 | 给卷四、卷十四的请求。①物种表新增 `tameEase`、`trainEase`（本卷不再登记任何产出字段，活体产出只用卷四的 `renewables`）。②`renew
+§5/8	卷二十五:924	forageOptions	卷五	无	有	Q8 | 被动器具的布设曲线现在放在本卷 `forage.json`，以方法代号为键（本卷不给卷五的方法行加字段）。它其实是取用方法的属性，是否并入卷五的方法行字段；另 `fora
+散文	卷二十六:366	switch	卷三乙/卷三甲	卷三乙	有	P26-8 | 心理内部字段被拿来做判断（码 E-PSY-INTERNAL-BRANCH）。判据是语法树上的污点分析：从心理内部字段取出的值，连同它的别名、解构、函数返回值、以它为
+散文	卷二十六:366	find	卷三乙/卷三甲	无	无	P26-8 | 心理内部字段被拿来做判断（码 E-PSY-INTERNAL-BRANCH）。判据是语法树上的污点分析：从心理内部字段取出的值，连同它的别名、解构、函数返回值、以它为
+散文	卷二十六:366	some	卷三乙/卷三甲	无	无	P26-8 | 心理内部字段被拿来做判断（码 E-PSY-INTERNAL-BRANCH）。判据是语法树上的污点分析：从心理内部字段取出的值，连同它的别名、解构、函数返回值、以它为
+§5/8	卷二十四:830	postBounty	卷八b	卷八b	有	C24-8 | 卷八b §4.9、§4.15、§4.2 | **已落实（李白 11-14 卷二十四二审 T7 选甲；卷八b 封卷后勘误，快照 `版本快照/卷八b-v3-勘误前-11
+§5/8	卷二十四:830	claimBounty	卷八b	卷八b	有	C24-8 | 卷八b §4.9、§4.15、§4.2 | **已落实（李白 11-14 卷二十四二审 T7 选甲；卷八b 封卷后勘误，快照 `版本快照/卷八b-v3-勘误前-11
+§5/8	卷二十四:909	eventCount	卷二十七	卷二十七	有	Q24-2 | 日志折叠、修剪后，低分量事件不在了，`eventCount` 与低档检索的结果会随之变吗 | **已闭合**：卷二十七 R27-4.12（封卷后勘误，李白 11-1
+§5/8	卷五:1149	rel_within	卷二	无	有	卷二 | 本卷还 | §2.1 新增维度、§2.2 新增词表族与条目字段、`comp_tract`、`comp_zone`、关系 `rel_contains`、`rel_withi
+§5/8	卷五:1149	rel_residents	卷二	无	有	卷二 | 本卷还 | §2.1 新增维度、§2.2 新增词表族与条目字段、`comp_tract`、`comp_zone`、关系 `rel_contains`、`rel_withi
+§5/8	卷五:1164	entryRankMax	卷十八	无	有	卷十八 | 本卷读 | 持有边；请求种类表加 `grantsEntry`、`entryRankMax` 两列并登记取用权种类 | 读持有 |
+§5/8	卷五:1245	perceivedAsleep	卷二十/卷二	无	有	Q1 | 本卷登记、收尾时汇总进全书登记表的项目：place 新增维度（`areaM2`、`skyExposure`、`aperture`、`enclosed`、`surfaceR
+§5/8	卷五:1249	entryRankMax	卷八b/卷十八	无	有	Q5 | 持有种类表需要 `grantsEntry`、`entryRankMax` 两列，并登记进入许可、取用权各种类；客人类持有不带处分权。处分权判定入口与行为能力门控的函数名以
+散文	卷五:1401	perceivedAsleep	卷四	无	有	B-06 | `sense` 条目加 `perceivedAsleep`、`capability` 两个判定字段 | §4.2.1、规则 1、3 | 卷四（能力代号） |
+散文	卷五:1437	meanMassKg	卷十六/卷四	卷十六/卷四	有	封卷后勘误（同批；卷十六 C16-3 ①，李白 11-13 Q16-4 裁定） | §4.7 规则 6 加"开户判据"一项：物种只在 `growthRate` 大于 0 且 `me
+散文	卷五:1448	perceiveEvent	卷十九/卷十七/卷十/卷十三/卷十五/卷二十一/卷四/卷九/卷二十二/卷二十九/卷二十四/卷八b/卷二/卷二十	无	有	封卷后勘误（依据：李白 11-14 20:22 根因F/G 裁定，`审查/总审-根因BF-扫描.md` F 节定义卷为卷五各行与根因 G 归卷五各项；版本号不升，不改卷首；改前快照
+散文	卷五:1450	cap_smell	卷四/卷九/卷十三/卷二十/卷二十二	无	有	封卷后勘误（依据：李白 11-14 20:59 ②10，并入第一波卷五路；版本号不升，不改卷首；改前快照 `版本快照/卷五-v11-勘误前-1114w1b3.md`，改后覆盖 `版
+散文	卷五:1450	cap_touch	卷四/卷九/卷十三/卷二十/卷二十二	无	有	封卷后勘误（依据：李白 11-14 20:59 ②10，并入第一波卷五路；版本号不升，不改卷首；改前快照 `版本快照/卷五-v11-勘误前-1114w1b3.md`，改后覆盖 `版
+§5/8	卷八:1276	governed	卷五	卷五	有	卷五 | 双向 | 拿 `placeView` 各字段与行政层级族、`siteType` 条目的 `governed`；给人口统计层（`popView`）、人口承载力余量、控制度目
+散文	卷八:1610	gstage_polity	卷十/卷二	无	有	封卷后勘误（李白 11-14 975aa068 裁定②第二轮；卷十 C10-1、C10-2；版本号不升，不改卷首；改前快照 `版本快照/卷八-v5-勘误前-1114b.md`，改后
+散文	卷六:321	valuation	卷三乙/卷十二	卷三乙	有	S6-13 | **调用图白名单**：import 卷三乙 `valuation` 模块、读物品的 `valueBase` 或旧的基础价格字段、调用 `post` 这三件事，各有一
+§5/8	卷六:1407	workPriority	卷二	无	有	卷二 | 本卷还 | §2.1–§2.6 的词表族、单位、person 表的 `workPriority`、`coin` 族条目字段、过程槽基线；`priceOf` 受控原语；`b
+§5/8	卷六:1407	priceOf	卷二	无	有	卷二 | 本卷还 | §2.1–§2.6 的词表族、单位、person 表的 `workPriority`、`coin` 族条目字段、过程槽基线；`priceOf` 受控原语；`b
+§5/8	卷六:1407	need_source	卷二	无	有	卷二 | 本卷还 | §2.1–§2.6 的词表族、单位、person 表的 `workPriority`、`coin` 族条目字段、过程槽基线；`priceOf` 受控原语；`b
+§5/8	卷六:1409	stockIn	卷三乙	无	有	卷三乙 | 对方读 | `demand`；资源种类登记 | 调入口。卷三乙稀缺度不再自己读 `stockIn`；用度类条目上的缺量效果字段本卷不用（§4.12 规则 7） |
+§5/8	卷六:1447	needSource	卷三乙	无	有	卷三乙 用度类条目 | 新增 `needSource`、`bodyNeed`、`appliesRX`、`scaleRX` 四个字段（§4.12 规则 1）；原拟的缺量效果字段撤下或
+§5/8	卷六:1447	bodyNeed	卷三乙	卷三乙	有	卷三乙 用度类条目 | 新增 `needSource`、`bodyNeed`、`appliesRX`、`scaleRX` 四个字段（§4.12 规则 1）；原拟的缺量效果字段撤下或
+§5/8	卷六:1447	scaleRX	卷三乙	无	有	卷三乙 用度类条目 | 新增 `needSource`、`bodyNeed`、`appliesRX`、`scaleRX` 四个字段（§4.12 规则 1）；原拟的缺量效果字段撤下或
+§5/8	卷六:1578	wage	卷二	无	有	Q1 | 卷二回填：§2.2 的十六个词表族与 `crole`、`cterm` 两个条款族；`coin` 族条目字段；person 表新增 `workPriority`；`proc
+散文	卷六:1750	supply	卷三乙	无	有	卷三乙 | 批次加 `costBasis`；用度类条目加四个字段、撤下缺量效果字段；稀缺度改读 `ctx.supply`；"旧价去向"指向本卷 |
+散文	卷十:473	kinView	卷九	卷九	有	所以 `predicates` 取 `kinView` 登记的关系列表字段代号（值为该列表的人数），并请卷九把 `predicates` 的类型扩为“维度代号或登记的读入口字段代号
+散文	卷十一:742	migBackfill	卷一	无	有	- 扩展性式：A11-9.3 卷零新增一行（卷一 §11.4（卷目可增长）补卷时），只要有卡的 `zeroRows` 含它，`migBackfill` 就能算出它的三列，不改代码
+§5/8	卷十一:778	zeroKind	卷三乙/卷三甲	无	有	C11-1 | 卷零 | ① 出机读导出：A 表加处理代号列 `zeroKind`（`rebuild`、`adopt`、`process`、`exclude`），文字处理列留作显示
+§5/8	卷十一:778	spotKey	卷三乙/卷三甲	无	有	C11-1 | 卷零 | ① 出机读导出：A 表加处理代号列 `zeroKind`（`rebuild`、`adopt`、`process`、`exclude`），文字处理列留作显示
+§5/8	卷十一:778	migBackfill	卷三乙/卷三甲	无	有	C11-1 | 卷零 | ① 出机读导出：A 表加处理代号列 `zeroKind`（`rebuild`、`adopt`、`process`、`exclude`），文字处理列留作显示
+§5/8	卷十一:778	splitFrom	卷三乙/卷三甲	无	有	C11-1 | 卷零 | ① 出机读导出：A 表加处理代号列 `zeroKind`（`rebuild`、`adopt`、`process`、`exclude`），文字处理列留作显示
+§5/8	卷十三:1447	strikeOutcome	卷二	卷二	有	C13-1 | 卷二 | 登记 §2.3 的修正键（含过程槽 `process.attackReading`、`process.guardReading`）、三个物品组件类（`co
+§5/8	卷十九:1088	envelopeUa	卷二/卷三乙/卷三甲	无	有	`facility.wear`、`facility.upkeep`、`facility.breach`、`facility.envelopeUa`、`facility.soundL
+§5/8	卷十九:1088	soundLoss	卷二/卷三乙/卷三甲	无	有	`facility.wear`、`facility.upkeep`、`facility.breach`、`facility.envelopeUa`、`facility.soundL
+§5/8	卷十九:1088	hearthLoss	卷二/卷三乙/卷三甲	无	有	`facility.wear`、`facility.upkeep`、`facility.breach`、`facility.envelopeUa`、`facility.soundL
+散文	卷十九:1136	names	卷八	无	无	M19-20 | 素材包 §3a | world/lore/promotion-facilities.json | 升格所需设施清单；其 `names` 字段是 promotion
+§5/8	卷十八:1322	scandal	卷二十四	无	有	卷二十四 §4.2（事件类型注册表） | 事件类型行加布尔字段 `scandal`；收录“关系中止”“关系恢复”两个动词 |
+散文	卷十八:1571	derives	卷八/卷二十七/卷七/卷十四	无	有	封卷后勘误（卷八牵连）：① 任职行 `conduct`、`conductBack` 由 0.4、0.2 改为 0（版本号不升，不改卷首）。理由：任职的标的是职位，属 §4.1.1“
+散文	卷十八:1599	escheat	卷四/卷二/卷八	无	有	封卷后勘误（依据李白 11-14 20:05 裁定 乙2；版本号不升，不改卷首；改前快照 `版本快照/卷十八-勘误前-1114zs2b.md`，改后覆盖 `版本快照/卷十八-v8.
+§5/8	卷十四:1270	fixedUnits8	卷二	卷二	有	卷二 §3.3（求值管线） | **请求补写 `modified()` 的 10⁸ 模式**（本卷不改卷二）。现行九步只按 10⁴ 定义，"存量与余数结转"第 6 条又规定扩展标度
+散文	卷十四:1679	canOffer	卷六	无	有	A-7 | 删"工价按阶"；`sband` 只供显示；`workPriority` 承载字段；`canOffer` 的使用者加卷六 §4.11 | 裁定 3 各处 |
+§5/8	卷四:1122	spec	卷十/卷二	卷十	有	卷十 R10-4.9（C10-13，列出不改） | `spec` 的实例 id 字段名为 `instanceId`，取 `struct:rosterSpec` 的同名成员（§4.1
+散文	卷四:1711	carcass	卷五	无	有	收卷前除数批（第十版，快照 v10） | §2.1 `birthIntervalDays`、`growthRate` 两行；§2.5 `rules.heredity.minPare
