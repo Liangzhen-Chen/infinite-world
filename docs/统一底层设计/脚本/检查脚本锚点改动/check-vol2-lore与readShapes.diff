@@ -1,0 +1,59 @@
+--- "F:/dnd-tmp/vol2/check-vol2.mjs.bak-1114-lore\344\270\216readShapes"	2026-11-14 16:03:51.008926200 +0000
++++ F:/dnd-tmp/vol2/check-vol2.mjs	2026-11-14 16:04:22.732648500 +0000
+@@ -63,6 +63,7 @@
+   'save_import','wire_body','event_role','thought_role', // 第十五版新增的代码内封闭枚举名与其值（thought_role 是卷二十六的旧枚举名，只在 D.1 牵连清单里提到）
+   // 第十三版新增的事件动词已全部移出（entity_terminated、entity_revived 第十六版改为 verb 族条目；naming_intent、note_intent 与 dimension_write_rejected 封卷后勘误改为按 §2.9 第 0 条"内核信号代号"小族登记校验，见 2b）
+   'stock_mode','reply_result','narrate_result','term_record','revive_record','writer_role','save_unavailable','decision_card','record_class','due_kind', // due_kind 是卷二十的族名 // 第十六版新增的代码内封闭枚举名、枚举值与族名
++  'kernel_signal', // 封卷后勘误 1114t 补登的代码内封闭枚举名（§1.9）
+   'holding_kind','rx_op','stack_group','child_process','node_modules']); // 族名与非代号 snake 词
+ const ignorePrefix = new Set(['kg','m','mj','satiety','per','copper','class']); // 单位与 class 另算
+ // 内核信号代号小族（§2.9 第 0 条，唯一登记处）：表行 | `代号` | 含义 | 唯一发出方 | 接收方（有序名单） | 定义处 |
+@@ -211,6 +212,7 @@
+ for (const [name, ls] of citeSrc) ls.forEach((l, i) => {
+   if (name === '卷二' && i === kHead) return;
+   if (name === '卷二' && apD >= 0 && i >= apD && (apDEnd < 0 || i < apDEnd)) return; // 附录 D 处置史/勘误行只是记录，不当作信号引用
++  if (name === '卷二' && l.includes('**词表族的键就是族名**') && l.includes('**代码内封闭枚举**')) return; // §1.9 族登记整段（一行），其中"内核信号代号"只是 kernel_signal 的说明，其后各族名不是信号引用；按内容锚定
+   if (!l.includes('内核信号代号')) return;
+   for (const m of l.slice(l.indexOf('内核信号代号')).matchAll(/`([a-z][a-z0-9]*_[a-z0-9_]+)/g)) {
+     if (kernelCodes.has(m[1]) || vocabPrefixes.has(m[1].split('_')[0] + '_')) continue;
+@@ -220,6 +222,40 @@
+ });
+ if (!citeBad) log(`  OK 引用小族的代号均已登记（核 ${citeSrc.length} 卷）`);
+ 
++// ---------- 2c. readShapes 行格式（§2.7"读入口返回形状登记"，李白 11-14 bc698ed3 及其后两项裁定）----------
++// 行格式五字段封闭：entry field type refFamily nullable；所指族、可空两栏每行必写。现无数据行时只核表头与字段说明在位
++log('== 2c readShapes 行格式');
++const RS_KEYS = ['entry', 'field', 'type', 'refFamily', 'nullable'];
++const rsHead = lines.findIndex(l => /"readShapes":/.test(l));
++if (rsHead < 0) bad('state-owners.json 骨架未找到 "readShapes"');
++else for (const k of ['refFamily', 'nullable']) if (!lines[rsHead].includes(`"${k}"`)) bad(`卷二:${rsHead + 1} readShapes 表头说明缺 "${k}"`);
++const rsDef = lines.findIndex(l => l.includes('**读入口返回形状登记（唯一定义）**'));
++if (rsDef < 0) bad('§2.7 未找到"读入口返回形状登记（唯一定义）"');
++else {
++  let rsEnd = rsDef + 1; while (rsEnd < lines.length && !/^(- |#)/.test(lines[rsEnd])) rsEnd++;
++  const fmt = lines.slice(rsDef + 1, rsEnd).find(l => /\*\*行格式\*\*/.test(l));
++  if (!fmt) bad('readShapes 定义缺"行格式"一项');
++  else {
++    const lit = fmt.match(/`(\{"entry":[^`]*\})`/)?.[1] ?? '';
++    const keys = [...lit.matchAll(/"([A-Za-z]+)":/g)].map(m => m[1]);
++    if (keys.join() !== RS_KEYS.join()) bad(`readShapes 行格式字段应为 ${RS_KEYS.join(', ')}，实为 ${keys.join(', ') || '（未找到）'}`);
++    if (!/\*\*所指族\*\*\s*`refFamily`/.test(fmt)) bad('readShapes 行格式缺所指族 refFamily 的字段说明');
++    if (!/\*\*可空\*\*\s*`nullable`/.test(fmt)) bad('readShapes 行格式缺可空 nullable 的字段说明');
++  }
++}
++// 数据行（各卷所填 {"entry": …} 行，格式定义本身除外）须写齐五字段
++let rsRows = 0;
++for (const [name, ls] of citeSrc) ls.forEach((l, i) => {
++  for (const m of l.matchAll(/\{"entry":[^}]*\}/g)) {
++    if (m[0].includes('<文件>#')) continue; // 格式定义里的模板
++    rsRows++;
++    const ks = [...m[0].matchAll(/"([A-Za-z]+)":/g)].map(x => x[1]);
++    for (const k of RS_KEYS) if (!ks.includes(k)) bad(`${name}:${i + 1} readShapes 行缺 ${k}`);
++    for (const k of ks) if (!RS_KEYS.includes(k)) bad(`${name}:${i + 1} readShapes 行多出字段 ${k}`);
++  }
++});
++log(`  数据行 ${rsRows} 行${rsRows ? '' : '（尚无，只核表头与字段说明）'}`);
++
+ // ---------- 3. 类型数 ----------
+ log('== 3 类型数');
+ const counts = [...md.matchAll(/(\d+)\s*种(?:\*\*)?类型|类型清单[^\n]*?(\d+)\s*种|共\s*\*\*(\d+)\s*种\*\*/g)].map(m => m[1] ?? m[2] ?? m[3]).filter(Boolean);
