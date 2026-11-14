@@ -1,0 +1,35 @@
+=== ① 改前 check-卷四 ===
+失败  第五版：可食由材料推出：feeds 退役
+
+结论  有 1 项失败
+=== ① 改后 check-卷四 ===
+
+结论  全部通过
+=== ① 注入（副本）:288 bySubstance 值类型改回 fraction（去掉 nullable）===
+失败  第五版：可食由材料推出：feeds 退役
+
+结论  有 1 项失败
+=== ② check-orgkind-codes 最终（卷七已补 orgkind_cult、orgkind_order 后）===
+     正式 orgkind 条目：orgkind_cult（卷七:246）、orgkind_order（卷七:247）
+PASS A 卷八登记句解析到别卷登记的 orgkind 4 种：教团、修会、家户、家族
+PASS A 种类"教团"→ orgkind_cult（卷七:241（按次序对应数据块）），有正式条目 卷七:246
+PASS A 种类"修会"→ orgkind_order（卷七:241（按次序对应数据块）），有正式条目 卷七:247
+FAIL A 种类"家户"→ orgkind_household（卷十八:1491），但全书没有该代号的正式条目定义
+FAIL A 种类"家族"→ orgkind_lineage（卷十八:1492），但全书没有该代号的正式条目定义
+PASS B 卷八 R8-1.1 列举的组织种类 13 种：国家、城镇、村社、行会、商号、商队、教团、修会、军团、家户、家族、派系、怪物族群
+FAIL B 种类"国家"没有 orgkind 代号
+FAIL B 种类"城镇"没有 orgkind 代号
+FAIL B 种类"村社"没有 orgkind 代号
+FAIL B 种类"行会"没有 orgkind 代号
+FAIL B 种类"商号"没有 orgkind 代号
+FAIL B 种类"商队"没有 orgkind 代号
+FAIL B 种类"军团"没有 orgkind 代号
+FAIL B 种类"派系"没有 orgkind 代号
+FAIL B 种类"怪物族群"没有 orgkind 代号
+PASS C 代号 orgkind_cult（首见 卷七:246）有正式条目
+PASS C 代号 orgkind_order（首见 卷七:247）有正式条目
+FAIL C 代号 orgkind_guild（首见 卷八:1343）没有正式条目定义
+FAIL C 代号 orgkind_household（首见 卷十八:154）没有正式条目定义
+FAIL C 代号 orgkind_lineage（首见 卷十八:155）没有正式条目定义
+RESULT 失败 14
+exit=1
