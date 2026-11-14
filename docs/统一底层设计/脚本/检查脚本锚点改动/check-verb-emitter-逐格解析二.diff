@@ -1,0 +1,39 @@
+--- "check-verb-emitter.mjs.bak-1114-\351\200\220\346\240\274\344\272\214"	2026-11-14 16:15:22.230318100 +0000
++++ check-verb-emitter.mjs	2026-11-14 16:15:42.557785600 +0000
+@@ -70,7 +70,17 @@
+ // 句子归属：下一句以指代开头（这/该/此/其/它/上述/两行/三行/二者/两者）时视为同一主语，并入本句窗口。
+ // 表格行：键在行首格（行的主语格）时，同行其余各格都在说它，整行各格逐格加入窗口；键在其他格时只取本格本句。
+ const ANAPHOR = /^\s*(这|该|此|其|它|上述|两行|三行|二者|两者)/;
+-function emitWindows(t, key, w, handleForm) {
++// 省略主语的发出声明（2026-11-14 逐格二）：下一句直接以发出声明句式开头、且该句没有别的动词键（本动词的键/别名之外的
++// roles.verbs.*、反引号裸写句柄、verb_* 代号）时，主语承上句，同样并入窗口。
++const EMIT_LEAD = /^\s*(发出系统为|发出者[是为]|唯一发出方|由[^，；。]{1,24}?发出)/;
++function hasOtherVerbKey(s, same) {
++  for (const m of s.matchAll(/roles\.verbs\.([A-Za-z]+)/g)) if (!same.includes(m[1])) return true;
++  for (const m of s.matchAll(/`([A-Za-z]+)`/g)) if (!same.includes(m[1]) && H.has(m[1])) return true;
++  for (const m of s.matchAll(/\bverb_[a-z0-9_]+[a-z0-9]/g)) if (!same.includes(m[0])) return true;
++  return false;
++}
++const continues = (s, same) => ANAPHOR.test(s) || (EMIT_LEAD.test(s) && !hasOtherVerbKey(s, same));
++function emitWindows(t, key, w, handleForm, same = [key]) {
+   const isRow = t.startsWith('|');
+   const cells = isRow ? t.split('|').slice(1, -1) : [t];
+   const out = [];
+@@ -82,7 +92,7 @@
+         const wordOk = !handleForm || (!/[A-Za-z_]/.test(s[i - 1] || '') && !/[A-Za-z_]/.test(s[i + key.length] || ''));
+         if (wordOk && (!handleForm || isVerbHandleAt(s, i, key))) {
+           out.push(s.slice(Math.max(0, i - w), i + key.length + w));
+-          for (let j = si + 1; j < ss.length && ANAPHOR.test(ss[j]); j++) out.push(ss[j].slice(0, w));
++          for (let j = si + 1; j < ss.length && continues(ss[j], same); j++) out.push(ss[j].slice(0, w));
+           if (isRow && ci === 0) cells.slice(1).forEach(c => out.push(c));
+         }
+         i = s.indexOf(key, i + 1);
+@@ -100,7 +110,7 @@
+     const isReg = vrow ? keys.some(k => (t.split('|')[2] || '').includes(k))
+       : keys.some(k => windowAround(t, k, 60).some(w => /本卷(自)?登记|由本卷登记|verb 族条目|本卷登记的/.test(w)));
+     if (isReg) { reg.add(x.v); regLines.push(`${x.v}:${x.n}`); }
+-    for (const k of keys) for (const w of emitWindows(t, k, 160, handleForm)) {
++    for (const k of keys) for (const w of emitWindows(t, k, 160, handleForm, keys)) {
+       for (const [rx, tag] of EMIT_RX) for (const m of w.matchAll(rx)) if (!/^零/.test(m[1].trim())) emitters.push(`${x.v}:${x.n} [${tag}] ${m[1].trim()}`);
+     }
+     // 发出语句：“发(出|一条)? <代号或别名>”，排除否定
