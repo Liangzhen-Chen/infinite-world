@@ -181,7 +181,7 @@
 |---|---|---|---|---|---|
 | `id` | handle `act_` | — | 卷二 §1.9（代号、显示名与语言边界）的代号正则 | 加载失败 | 动作代号 |
 | `class` | ref `act_class` | — | 族内 | 加载失败 | 动作类 |
-| `slots` | map<槽位代号, struct{kind: slot_kind, multi: boolean, entityKind?: 实体类, vocab?: 词表族名, recordKind?: ref vocab record_kind, filter?: list<ref target_filter>, min?: number, max?: number, unit?: 单位代号, required: boolean}> | — | `kind` 为 `code` 时 `entityKind`、`vocab`、`recordKind` 恰填一个；`recordKind` 非空时 `filter` 必填且非空；`kind` 为 `number` 时 `min`、`max` 必填；`multi` 只许与 `code` 同用 | 加载失败 | 槽位声明；候选由 §4.5 从 view 或词表生成；线上怎样传见 R9-6.7。**指向已登记记录的槽位**（封卷后勘误 1114w2e，李白 11-14 21:50 ③、21:57）：`recordKind` 非空的槽位，值是该记录种类（§2.1 `record_kind` 族）所指状态表里一条记录的键，候选取该表中经 `filter` 各项 `whenRX` 筛过、行动者主观视图可知的记录，线上同样只以候选编号传，不上线记录键；与通用槽位 `invite` 指向待应答记录同法（§4.19.1）。整类规则，不按记录种类分支 |
+| `slots` | map<槽位代号, struct{kind: slot_kind, multi: boolean, entityKind?: 实体类, vocab?: 词表族名, recordKind?: ref vocab record_kind, filter?: list<ref target_filter>, min?: number, max?: number, unit?: 单位代号, required: boolean}> | — | `kind` 为 `code` 时 `entityKind`、`vocab`、`recordKind` 恰填一个；`kind` 为 `number` 时 `min`、`max` 必填；`multi` 只许与 `code` 同用 | 加载失败 | 槽位声明；候选由 §4.5 从 view 或词表生成；线上怎样传见 R9-6.7。**指向已登记记录的槽位**（封卷后勘误 1114w2e，李白 11-14 21:50 ③、21:57）：`recordKind` 非空的槽位，值是该记录种类（§2.1 `record_kind` 族）所指状态表里一条记录的键，候选取该表中行动者主观视图可知的记录（声明了 `filter` 的再经各项 `whenRX` 筛过，与 `entityKind`、`vocab` 槽同样选填），线上同样只以候选编号传，不上线记录键；与通用槽位 `invite` 指向待应答记录同法（§4.19.1）。整类规则，不按记录种类分支 |
 | `capability` | ref vocab capability nullable | — | 卷二 §2.5（状态谓词单点）的能力族 | 空即不要求 | 行动能力要求 |
 | `requirement` | 需求块 nullable \| `from_slot` | — | 卷二 §1.13（需求块）的形状；`from_slot` 见 `shapeFrom` | 空即无前置 | 前置 |
 | `whenRX` | rx nullable | — | 只读 view 与槽位 | 空即恒真 | 可用条件 |
@@ -1684,6 +1684,7 @@
 | 封卷后勘误（同轮补项；不升版本号，改前快照 `版本快照/卷九-v2-勘误前-1114w2a2.md`，改后覆盖 `版本快照/卷九-v2.md`） | §5 内三处"卷二 §2.9"引用（原 :1318、:1334、:1460） | 补标题"（外部边界与 Text 模型）"。理由（必要）：自检第 8 项跨卷引用须带标题，同类收卷前清 |
 | 封卷后勘误（只核余项；依据 `审查/总审勘误-二波甲-只核.md` 问题 C；不升版本号，改前快照 `版本快照/卷九-v2-勘误前-1114w2a3.md`，改后覆盖 `版本快照/卷九-v2.md`） | R9-12.14 动词行（原 :1038） | `visibilityAllowed` 由"取 `emit` 的 `visibility` 全集"改为"取卷二十四 §2.2（维度）表 A `visibility` 的全集"；值集不变。理由（必要）：`visibility` 定义处已移到卷二十四表 A |
 | 封卷后勘误（李白 11-14 21:50 裁定 ③、21:57 定载体；不升版本号，改前快照 `版本快照/卷九-v2-勘误前-1114w2e.md`，改后覆盖 `版本快照/卷九-v2.md`） | §2.2 `slots` 行；§2.1 族表加 `record_kind` 行 | 动作槽位加通用的“指向已登记记录”写法：`code` 槽位沿用 `entityKind`/`vocab` 写法加 `recordKind`（三者恰填一个，`recordKind` 非空时 `filter` 必填），候选为该种记录中经筛选、行动者可知者，线上只传候选编号，先例为通用槽位 `invite`；`record_kind` 族条目字段只有 `stateKey`（引用已登记的 `stateKeys` 键），族名与前缀登记在卷二 §1.9，条目只收各卷已定义的记录。整类规则，不为谋划开特例。必要理由：不加则卷二十二 `act_plot_invite` 指不到谋划记录，NPC 永远不会邀人，R22-7.5 入伙等于空文 |
+| 封卷后勘误（依据 `审查/总审勘误-recordKind-只核.md` 真问题 2；不升版本号，改前快照 `版本快照/卷九-v2-勘误前-1114w2e2.md`，改后覆盖 `版本快照/卷九-v2.md`） | §2.2 `slots` 行 | 删上一行写入的“`recordKind` 非空时 `filter` 必填且非空”，`filter` 与 `entityKind`、`vocab` 槽同样选填。必要理由：裁定只要求沿用 code 槽先例写法，先例里 `filter` 选填，必填是超出裁定的新规则 |
 
 ## 附录 自检脚本输出
 
