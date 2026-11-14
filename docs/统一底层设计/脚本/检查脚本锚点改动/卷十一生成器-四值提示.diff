@@ -1,0 +1,11 @@
+--- "gen-\345\215\267\345\215\201\344\270\200-\345\215\241\346\227\217.mjs.bak-1114-\345\233\233\345\200\274\346\217\220\347\244\272"	2026-11-14 15:18:48.644888100 +0000
++++ "gen-\345\215\267\345\215\201\344\270\200-\345\215\241\346\227\217.mjs"	2026-11-14 15:18:48.728112800 +0000
+@@ -100,7 +100,7 @@
+     if (ki >= 0) { const k = (c[ki] ?? '').replace(/`/g, '').trim(); kindCount.set(k, (kindCount.get(k) ?? 0) + 1); } // 机读代号格同样写作 `code`
+   }
+ }
+-if (!kindLanded) pending.add(`${V0} A 表机读列 ${CFG.fields.zeroKind}（rebuild、adopt、process；C11-1）`);
++if (!kindLanded) pending.add(`${V0} A 表机读列 ${CFG.fields.zeroKind}（rebuild、adopt、process、exclude；C11-1）`);
+ 
+ // 4 卷零 §3.5 逐处处置（稳定行号）与 §4 已有项、卷一 §5.4、卷二 §6.11
+ let spots = null;
