@@ -1,0 +1,39 @@
+--- "backup/check-\345\215\267\345\215\201\345\205\253.mjs.20261114-103934.bak"	2026-11-14 10:39:35.185545300 +0000
++++ "check-\345\215\267\345\215\201\345\205\253.mjs"	2026-11-14 10:39:48.939007500 +0000
+@@ -52,7 +52,8 @@
+ 
+ // 5 正文无具体 id 字面量（允许区：代码块、数据实例小节、附与附录）
+ const idRe = /\b(?:npc|creature|item|mat|species|loc|bld|fac|recipe|org|orgkind|office|polity|law|deity|faith|culture|profession|skill|offense|status|etype|eff|mod|pers|value|need|gauge|thought|sfam|class|comp|verb|rel|sg|param|req|hk|ho|send|pside|saxis|stier|ftier|etier|treat|mreg|ireg|descent|honor|legacy|sact|ssrc|esrc|crowd|mobrow|sal|res|sex|lstage|sink|track)_[a-z0-9][a-z0-9_]*/g;
+-const allowWords = new Set(['status_family', 'status_target', 'body_plan', 'body_part', 'law_code', 'pers_', 'value_']);
++// 封卷前（李白 11-14，事件 a52836df T1）：封闭枚举 consent_mode 按卷二第十七版 A4 改名 rel_consent_mode，是枚举名不是关系条目 id（卷二 §1.9 前缀约束不管枚举名），同 status_target 先例
++const allowWords = new Set(['status_family', 'status_target', 'body_plan', 'body_part', 'law_code', 'pers_', 'value_', 'rel_consent_mode']);
+ const idHits = [];
+ meta.forEach((m, i) => {
+   if (m.fence !== null) return;
+@@ -146,12 +147,24 @@
+       const oldInc = (old.find(e => 'hk_' + e.id === r[0])?.incompatibleWith ?? []).map(x => 'hk_' + x.kind + ':' + x.policy);
+       incAdded += v.incompatible.filter(x => !oldInc.includes(incKey(x))).length;
+     }
++    // 封卷前（李白 11-14，事件 a52836df ②）：住宿行旧表 contest、capacity 两格裁定置空（旧值 capacity 不是登记维度，住宿非互斥）。
++    // 这两格不再比旧值，改为：新值必须为空；R18-1.5 必须写有容量满员拒写规则与 E-HK-CAPACITY；§2.5 登记该码；§7.2 去向行写明置空并引 Q17；Q17 在场。
++    const RULED_NULL = { lodges: ['contest', 'capacity'] };
++    {
++      const r15 = lines.find(l => l.startsWith('- **R18-1.5 '));
++      if (!r15 || !/`capacityKey` 非空的种类管标的一端/.test(r15) || !/现役边数须小于标的上该容量维度的值，否则拒写（E-HK-CAPACITY）/.test(r15) || !/已有的边不关，只拒新边/.test(r15)) hkErr.push('ruled-null:R18-1.5');
++      if (!lines.some(l => l.startsWith('| E-HK-CAPACITY |'))) hkErr.push('ruled-null:E-HK-CAPACITY');
++      const r72 = lines.find(l => l.startsWith('| `visibility`、`contest`、`capacity`'));
++      if (!r72 || !/住宿行旧表的 `contest`、`capacity` 两格封卷前改置空/.test(r72) || !/Q17/.test(r72)) hkErr.push('ruled-null:§7.2');
++      if (!lines.some(l => l.startsWith('| Q17 |'))) hkErr.push('ruled-null:Q17');
++    }
+     for (const e of old) {
+       const v = eff('hk_' + e.id);
+       if ((e.visibility ?? 'public') !== v.visibility) hkErr.push('vis:' + e.id);
+-      if ((e.contest ?? null) !== v.contest) hkErr.push('contest:' + e.id);
++      const ruled = RULED_NULL[e.id] ?? [];
++      if (ruled.includes('contest') ? v.contest !== null : (e.contest ?? null) !== v.contest) hkErr.push('contest:' + e.id);
+       if ((e.transferable ?? false) !== v.transferable) hkErr.push('transferable:' + e.id);
+-      if ((e.capacity ?? null) !== v.capacityKey) hkErr.push('capacity:' + e.id);
++      if (ruled.includes('capacity') ? v.capacityKey !== null : (e.capacity ?? null) !== v.capacityKey) hkErr.push('capacity:' + e.id);
+       // 第四版（余项单核第五节第 1 条）：原断言是“新旧条数相等”，连有据的新增也禁止了。
+       // 改为：旧条目逐条（种类与处置都相同）迁入，一条不丢；新增条数必须等于 §7.2 写明的条数（见循环后）。
+       for (const x of e.incompatibleWith ?? []) if (!v.incompatible.some(y => incKey(y) === 'hk_' + x.kind + ':' + x.policy)) hkErr.push('incompat-lost:' + e.id + '>' + x.kind);

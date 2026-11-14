@@ -1,0 +1,40 @@
+--- backup/check-c29-3-fs.mjs.20261114-103707.bak	2026-11-14 10:37:07.654336700 +0000
++++ check-c29-3-fs.mjs	2026-11-14 10:37:23.929251100 +0000
+@@ -3,7 +3,7 @@
+ // 查：① 服务端矩阵 outputGate 行末列只有 node:fs、仅 display-load、只读；② 全局对象白名单 outputGate 行与矩阵末列一致；
+ //     ③ "outputGate 只读白名单"一段：只许读函数、可读路径全在白名单内、写明不读存档/state；④ 入口表 display-load 行来源全在白名单内；
+ //     ⑤ 无写权限：凡同时提到 output-gate 文件与 node:fs 的行不得出现写/追加；⑥ 规则层矩阵与白名单行 node 列为"无"，
+-//     入口表里读 world/i18n/ 的只有 textcore、gate、outputGate 三组。
++//     入口表里读 world/i18n/ 的只有 textcore、gate、outputGate 三组；唯一例外 kernel/load/display-langs.mjs 只读 locales.json（李白 11-14 11:30 DisplayLang 甲）。
+ import { readFileSync } from 'node:fs';
+ 
+ const path = process.argv[2] ?? 'F:/dnd/docs/统一底层设计/卷二-维度表规范与统一入口.md';
+@@ -99,13 +99,27 @@
+ if (wRule && wRule[3] === '无') ok('白名单规则层 node 列为"无"'); else bad('白名单规则层 node 列：' + (wRule && wRule[3]));
+ const eHead = lines.findIndex((l) => l.startsWith('| 入口 | 所属组 | 来源 |'));
+ const allowedGroups = ['textcore', 'gate', 'outputGate'];
++// 唯一例外（李白 11-14 11:30 DisplayLang 方案甲，卷二提交 655c7975）：kernel 组仅 kernel/load/display-langs.mjs
++// 可只读 world/i18n/locales.json 一个文件（只取语言代号建名单）。其他 kernel 文件、其他 i18n 文件、带写的行一律不许。
++const KERNEL_LANGS = { file: 'kernel/load/display-langs.mjs', src: 'world/i18n/locales.json' };
+ let i18nReaders = 0;
+ for (let i = eHead + 2; i < lines.length && lines[i].startsWith('|'); i++) {
+   const c = cells(lines[i]);
+   if (!c[2].includes('world/i18n/') && !c[2].includes('/i18n/')) continue;
+   i18nReaders++;
+   const g = c[1].split(/[（(]/)[0].trim();
+-  if (allowedGroups.includes(g)) ok('读语言包的入口 ' + ticks(c[0])[0] + ' 属 ' + g); else bad('非许可组读语言包：' + c[0] + ' / ' + g);
++  const file = ticks(c[0])[0];
++  if (allowedGroups.includes(g)) { ok('读语言包的入口 ' + file + ' 属 ' + g); continue; }
++  if (g === 'kernel' && file === KERNEL_LANGS.file) {
++    const srcPaths = ticks(c[2]).filter((t) => t.includes('/') || t.endsWith('.json'));
++    const onlyLocales = srcPaths.length === 1 && srcPaths[0] === KERNEL_LANGS.src;
++    const noWrite = !/写/.test(lines[i]);
++    const noText = /不产出 `Text`/.test(c[3]);
++    if (onlyLocales && noWrite && noText) ok('kernel 例外：' + file + ' 只读 ' + KERNEL_LANGS.src + '、无写、不产出 Text');
++    else bad('kernel 例外越界：' + file + ' 来源 ' + JSON.stringify(srcPaths) + (noWrite ? '' : '，行内有"写"') + (noText ? '' : '，未写不产出 Text'));
++    continue;
++  }
++  bad('非许可组读语言包：' + c[0] + ' / ' + g);
+ }
+ if (i18nReaders === 0) bad('入口表没有读语言包的行，表结构可能变了');
+ 
