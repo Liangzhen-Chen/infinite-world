@@ -1,0 +1,46 @@
+源正文 F:/dnd/docs/统一底层设计/卷八-政治与人口.md
+脚本 F:/dnd-tmp/vols/check-卷八.mjs（未改，经 argv[2] 读副本）
+
+=== 0-现行正文副本（应 PASS）
+副本 F:/dnd-tmp/scratch/卷八-第12项-注入/0.md
+退出码 0
+PASS 12 接口、入口表、规则表键、错误码、枚举附表、迁移清单落实
+行数 1596；子系统 19；规则条数 146；json 块 1；待补清单 12 条；失败项 0
+
+=== 1a-登记段四项后追加 wphase 旧代号 `wphase_fighting`（应 FAIL）
+副本 F:/dnd-tmp/scratch/卷八-第12项-注入/1a.md
+退出码 0
+PASS 12 接口、入口表、规则表键、错误码、枚举附表、迁移清单落实
+行数 1596；子系统 19；规则条数 146；json 块 1；待补清单 12 条；失败项 0
+
+=== 1b-登记段 evst_war_fighting 写回 wphase_fighting（应 FAIL）
+副本 F:/dnd-tmp/scratch/卷八-第12项-注入/1b.md
+退出码 1
+FAIL 12 接口、入口表、规则表键、错误码、枚举附表、迁移清单落实 — evstage 登记段缺 evst_war_fighting | evstage 登记段 evst_war_* 项数 3≠4
+行数 1596；子系统 19；规则条数 146；json 块 1；待补清单 12 条；失败项 1
+
+=== 1c-§4.15.1 战事阶段处写回 wphase 旧封闭枚举句（应 FAIL）
+副本 F:/dnd-tmp/scratch/卷八-第12项-注入/1c.md
+退出码 1
+FAIL 5 规则与正文无具体 id 字面量 — L1056:wphase_declared L1056:wphase_fighting L1056:wphase_settled L1056:wphase_lapsed
+PASS 12 接口、入口表、规则表键、错误码、枚举附表、迁移清单落实
+行数 1596；子系统 19；规则条数 146；json 块 1；待补清单 12 条；失败项 1
+
+=== 1d-§2.4 与术语表写回 wphase 族行（旧判据要求的行，应 FAIL）
+副本 F:/dnd-tmp/scratch/卷八-第12项-注入/1d.md
+退出码 0
+PASS 12 接口、入口表、规则表键、错误码、枚举附表、迁移清单落实
+行数 1598；子系统 19；规则条数 146；json 块 1；待补清单 12 条；失败项 0
+
+=== 3-删去 `evst_war_lapsed`（应 FAIL）
+副本 F:/dnd-tmp/scratch/卷八-第12项-注入/3.md
+退出码 1
+FAIL 12 接口、入口表、规则表键、错误码、枚举附表、迁移清单落实 — evstage 登记段缺 evst_war_lapsed | evstage 登记段 evst_war_* 项数 3≠4
+行数 1596；子系统 19；规则条数 146；json 块 1；待补清单 12 条；失败项 1
+
+=== 4-追加第五项 `evst_war_truce`（应 FAIL）
+副本 F:/dnd-tmp/scratch/卷八-第12项-注入/4.md
+退出码 1
+FAIL 12 接口、入口表、规则表键、错误码、枚举附表、迁移清单落实 — evstage 登记段 evst_war_* 项数 5≠4
+行数 1596；子系统 19；规则条数 146；json 块 1；待补清单 12 条；失败项 1
+
