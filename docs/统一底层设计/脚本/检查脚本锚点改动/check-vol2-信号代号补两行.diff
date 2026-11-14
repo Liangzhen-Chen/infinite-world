@@ -1,0 +1,16 @@
+--- F:/dnd-tmp/vols/backup/check-vol2.mjs.20261114-signal2.bak	2026-11-14 12:04:18.800433800 +0000
++++ check-vol2.mjs	2026-11-14 12:04:53.466144900 +0000
+@@ -57,11 +57,11 @@
+ const idRe = /["`]([a-z][a-z0-9]*)_([a-z0-9_]+)["`,\]\)\}:\s]/g;
+ // 非代号的 snake 词：族名、实体类名、持有种类、行为代号、事件动词、数学记号、文件名
+ const ignoreFamilies = new Set(['status_family','body_part','doctrine_group','usage_per','faith_layer','know_family','evt_family','plant_part','eff_output','error_code','orgkind','politykind',
+-  'body_plan','facility_type','law_code','event_type','member_of','devotee_of','fuel_use','status_tick','dimension_write_rejected','personality_default','h_i','z_j','input_view','name_blocklist','check_vol2',
++  'body_plan','facility_type','law_code','event_type','member_of','devotee_of','fuel_use','status_tick','personality_default','h_i','z_j','input_view','name_blocklist','check_vol2',
+   'consent_mode','status_target','eff_output','error_code','basis_kind','rx_cmp','rx_clock','slot_kind', // 代码内封闭枚举的名字
+   'successor_mode','term_account','gate_verdict','wire_route','save_export', // 第十三版新增的代码内封闭枚举名与其值
+   'save_import','wire_body','event_role','thought_role', // 第十五版新增的代码内封闭枚举名与其值（thought_role 是卷二十六的旧枚举名，只在 D.1 牵连清单里提到）
+-  'note_intent', // 第十三版新增的事件动词（entity_terminated、entity_revived 第十六版改为 verb 族条目，已从忽略表删去；naming_intent 封卷后勘误改为按 §2.9 第 0 条"内核信号代号"小族登记校验，见 2b）
++  // 第十三版新增的事件动词已全部移出（entity_terminated、entity_revived 第十六版改为 verb 族条目；naming_intent、note_intent 与 dimension_write_rejected 封卷后勘误改为按 §2.9 第 0 条"内核信号代号"小族登记校验，见 2b）
+   'stock_mode','reply_result','narrate_result','term_record','revive_record','writer_role','save_unavailable','decision_card','record_class','due_kind', // due_kind 是卷二十的族名 // 第十六版新增的代码内封闭枚举名、枚举值与族名
+   'holding_kind','rx_op','stack_group','child_process','node_modules']); // 族名与非代号 snake 词
+ const ignorePrefix = new Set(['kg','m','mj','satiety','per','copper','class']); // 单位与 class 另算

@@ -1,0 +1,210 @@
+######## node check-vol2.mjs（现行卷二）
+== 1 错误码
+  正文错误码 146 个；登记表展开 146 个
+  OK 正文码全部已登记
+  OK 登记码全部有用到
+== 2 前缀登记
+  实体前缀 27，词表族前缀 94
+  注意 未登记前缀 card_: card_slot_type
+  注意 未登记前缀 q_: q_k
+  注意 未登记前缀 e_: e_a, e_k, e_x
+  注意 未登记前缀 entity_: entity_revived
+  注意 未登记前缀 orowk_: orowk_actual
+  注意 未登记前缀 aggk_: aggk_bonded
+== 2b 内核信号代号登记
+  小族登记 5 个: layout_change, naming_intent, note_intent, dimension_write_rejected, nil_seedpart
+  OK 正文发出的非词表代号均在小族登记
+  OK 引用小族的代号均已登记（核 32 卷）
+== 3 类型数
+  §1.5 表计 14 种；全文提到的类型数：14, 14, 14, 14, 14
+  OK 类型数一致
+== 4 附录 A 夹具
+  OK 三段 JSON 可解析
+  维度 9 个，类别行 4，实体行 2；展平 class_workshop_hot = {"public":false,"lodging":false,"allowedMaterials":["subst_stone"],"wearPerDay":0.0006,"capacityBase":2,"services":["service_craft"],"fixtures":["fixture_forge","fixture_hearth"],"upkeepPerDay":{"class_fuel":12}}
+== 结果：PASS
+exit=0
+######## node check-vol2-ext.mjs（现行卷二）
+== 5 族名登记
+  登记族 94，代码内封闭枚举 26，正文用到的族名 96
+  OK 全部族名已登记
+== 6 枚举值前缀
+  OK 示例中开放族值均带前缀、封闭枚举值均不带前缀
+== 7 附录 A 组件与引用解析
+  comp_service_host: table=facility_type, requires=["services"], 被引用=fac_forge
+  comp_facility: table=place, requires=["intendedType"], 被引用=无
+== 8 附录 G 锚点唯一性
+  锚点 55 个
+  OK 锚点与关键定义各出现一次
+== 8b D.1 关键词出现位置（供人工确认同步）
+  【六】字符串类型白名单 / 方法名清单: 行 1993,2324
+  【六】字符串类型白名单 / 闭集: 行 3,173,397,485,497,500,611,612,619,639,660,670,673,676,681,682,687,717,776,838,839,840,841,865,907,919,1003,1025,1051,1304,1310,1320,1921,1985,1992,1995,2000,2001,2023,2160,2180,2185,2186,2197,2200,2212,2232,2287,2299,2324,2354,2361,2411,2435,2454,2459,2461,2524,2549,2558,2561,2679,2711,2720,2731,2741
+  【六】字符串类型白名单 / E-INPUT-FUZZY: 行 684,685,686,690,1301,2000,2001,2324
+  【六】输入规范化唯一定义 / 规范化: 行 45,251,651,661,684,687,689,884,919,923,951,959,1021,1022,1023,1037,1045,1301,1305,1902,1975,2000,2016,2020,2185,2201,2237,2267,2295,2303,2308,2314,2318,2325,2344,2363,2564,2590,2614,2673,2674,2676,2699
+  【六】输入规范化唯一定义 / toLowerCase: 行 251,2000,2295,2325
+  【六】输入规范化唯一定义 / White_Space: 行 45,251,2280,2295,2325
+  【六】输入规范化唯一定义 / casefold: 行 45,251,684,687,865,873,1023,2325
+  【六】权限表（判定/产出） / needle: 行 647,654,660,687,718,884,923,1021,1023,1027,1033,1035,1041,1301,1975,2001,2185,2301,2304,2314,2326,2335,2344,2371,2500,2501,2543,2561,2564,2578,2674,2731
+  【六】权限表（判定/产出） / matchBlocklist: 行 242,576,626,627,654,655,656,688,689,932,1023,1024,1029,1037,1975,2303,2326,2334,2443,2539,2588
+  【六】权限表（判定/产出） / 替换记号: 行 239,655,1024,1300,1975,2208,2326,2363,2589,2674
+  【六】权限表（判定/产出） / templates.mjs: 行 244,569,639,655,682,688,717,784,1992,2001,2282,2291,2317,2326,2392,2454,2460
+  【六】封闭代码枚举不带前缀 / stage_: 行 2327
+  【六】封闭代码枚举不带前缀 / scope_: 行 415,2327
+  【六】封闭代码枚举不带前缀 / effout_: 行 2327
+  【六】封闭代码枚举不带前缀 / consent_: 行 239,1245,2183,2294,2327,2464,2564
+  【六】组件 table 归属 / comp_facility: 行 163,231,1482,1483,1759,1863,2093,2110,2297,2317,2328,2492
+  【六】组件 table 归属 / comp_service_host: 行 2073,2092,2110,2297,2328,2491
+  【六】组件 table 归属 / E-DIM-COMPONENT-TABLE: 行 231,2297,2328
+  【六】pathTypes 与 E-TEXT-UNGATED / pathTypes: 行 3,100,193,200,439,441,454,463,593,603,640,641,643,644,669,944,974,1094,1154,1287,1302,2159,2181,2205,2233,2286,2289,2300,2307,2309,2315,2329,2338,2342,2348,2355,2362,2365,2411,2414,2438,2549,2558,2586,2671,2729,2746,2753
+  【六】pathTypes 与 E-TEXT-UNGATED / E-TEXT-UNGATED: 行 179,441,641,966,1008,1302,2001,2276,2281,2300,2329,2355,2678,2708
+  【六】allowExplicit 与偏离行 / allowExplicit: 行 106,165,223,281,1264,1266,1296,1354,1355,1976,2272,2292,2330,2390,2697
+  【六】allowExplicit 与偏离行 / 偏离行: 行 58,106,118,125,126,145,165,179,197,239,281,445,463,603,1257,1262,1264,1338,1339,1965,1968,1972,2110,2163,2292,2330,2342,2404,2415,2428,2429,2619,2668,2725
+  【六】relation intimate / intimate: 行 323,662,2301,2331
+  【六】input-view 处置（第七版改为删除协议 + 新写） / input-view: 行 661,1902,2282,2301,2308,2332,2392,2593,2674
+== 9 码点口径
+  OK 全文无旧的码元口径
+== 10 权限表 needle 来源
+  OK 权限表 6 行，needle 来源只有 blocklist / 代号登记表
+== 11 示例代码逃逸写法
+  OK 规则层/kernel 示例与正例均无 any / as / @ts-* / eslint-disable / JSON.parse / fs 读取
+== 12 模块组计数口径
+  OK 全文无旧的模块组计数残留（现行口径：七组 + textcore / 六个非规则组）
+== 13 加载器外示例无 JSON.parse / fs
+  登记边界入口 34 个文件；OK 入口外示例无 JSON.parse / fs
+== 14 import 矩阵 textcore 列
+  OK kernel 不 import textcore
+  OK 规则层 不 import textcore
+== 15 Text 构造点
+  OK Text 构造点只在 §2.9
+== 16 运行态修正项无字串
+  OK struct:modifier 无 string/rx 文本字段
+  OK §3.2 运行态表达式为 RxId/rxTree
+== 17 入口/出口表对称
+  OK 入口 17 行（组：kernel,textcore,outputGate,gate,aiGate,inputEdge,host,tools），出口 7 行（组：outputGate,display,aiGate,host,kernel），列数对称
+== 18 全局对象白名单
+  OK 白名单覆盖 9 个组/层
+== 19 强转豁免文件表
+  OK 豁免表 17 个具体文件（textcore/brand.mjs、textcore/ops.mjs、kernel/handles/vocab-handle.mjs、kernel/handles/entity-id.mjs、kernel/handles/display-lang.mjs、kernel/handles/keys.mjs、kernel/sealed.mjs、kernel/credential.mjs、kernel/secret.mjs、kernel/transaction.mjs、kernel/validate/narrow.mjs、gate/screen.mjs、gate/load-blocklist.mjs、kernel/transport/router-caps.mjs、extension/textcore/narrow-wire.mjs、extension/textcore/open-envelope.mjs、extension/host/bootstrap.mjs）；表外无强转许可，旧的"唯一豁免点"说法已清
+== 20 模块组 glob 不相交
+  OK 9 组 9 个代表路径两两不相交（display 以 ! 排除 extension/host 与 extension/textcore）
+== 21 白名单闭集与 release 形参
+  OK 白名单段无"等"与省略号，禁 eval/Function/import()/with，专用项各归一处；release 带类型签名 1 处均为 Screened<Text>；出口表输入列一致；kernelApi 57 条均为结构化条目、无通配，issueCredential/writeSealed 限 aiGate、readSealed 限 outputGate，scope 常量 3 个各限一个写者文件
+== 22 文件归属
+  OK 78 个代表路径：六种代码扩展名都按目录归到原组，json/css/html 属登记数据，未登记类型判 E-FILE-UNASSIGNED，无文件同时落两组
+== 23 两进程分组与矩阵
+  OK 进程分组表 11 项与 JSON process 字段一致；服务端矩阵 9 行、客户端矩阵 3 行，互不含对方的组；矩阵引用名均已登记；node:* 清单两处一致
+== 24 宿主全局只在 bootstrap
+  OK 白名单表中 7 个浏览器宿主全局只在 host 行且全部限定到 bootstrap；display、clientTextcore 为"无"；10 个客户端能力对象的构造者都是 bootstrap；无旧宿主入口文件名残留
+== 25 定时器位置
+  OK 白名单表里定时器只在 kernel 行（限 kernel/scheduler.mjs）与 host 行（限 bootstrap）；正文 5 行提到定时器，均写明许可位置或为禁令；Date/performance 未开放
+== 26 摘要来源
+  OK node:crypto 只在 textcore 行并限 textcore/digest.mjs（正文 8 行提及，均指向它或为否定句）；kernel 无 node:crypto、用注入的 DigestCap；客户端 SubtleCrypto 只经 SubtleDigestCap 交 open-envelope.mjs；全文只有 sha256
+== 27 信封链条与装配文件
+  OK 下行出口、客户端入口、DOM 出口、信封校验、装配文件可缺行与两条上行入口都在 §2.9；客户端 Screened<Text> 只由 openEnvelope 产出；nameSlot 已清，起名为"规则层只发意图"
+== 28 引文同一性只在 aiGate
+  OK 例外清单恰三项（matchBlocklist、matchIdLeak、matchQuote）；matchQuote 带签名定义 1 处，在 §2.9 第 6 条，文件 ai-gate/quote-identity.mjs；全文 16 行提及，均在 aiGate 语境；未进 kernelApi，矩阵与 §2.8 其他组的行里不出现；§2.9 之外各处均为引用
+== 29 回应通路逐环核对
+  OK 通路 11 行逐环核对（含存档导出、导入支路 2c、2d、5s、6s；四条路由各有入口；NarrateCap 经 mountNarration 注入 reply-composer，narrate 不是跨组导出；registerAdvancePlan 已登记）：kernelApi 环的调用者在登记文件内且矩阵格写明，登记回调环不产生反向 import，能力对象环与能力对象表、入口表、出口表一致，HTTP 环与通道表一致；环环相接；进 outputGate 之前交出的类型不含文字；kernel 与 inputEdge 对 outputGate 的矩阵格为空
+== 30 子串函数签名
+  OK 子串函数 3 个与 gate/matcher.mjs 的 groupApi 导出一致；needle 类型只有 BlockNeedle、AiQuote 与代号，没有 Text；形参类型不出现 labels 或 Map；containsCodePoints 形参为 (turn: TurnText, quote: AiQuote)，只对 ai-gate/quote-identity.mjs 开放；labels 的值类型是 Text，读者不含 gate 与 aiGate
+== 31 本轮原文来路
+  OK TurnText 只由 brandTurn 产出且只对 input/http-entry.mjs 开放；形参带 TurnText 的函数恰 4 个（interpret、narrateTurn、matchQuote、containsCodePoints）；aiGate 对 inputEdge 的 4 个导出都限定到 input/http-entry.mjs 并与矩阵格一致；来路五步写全；旧签名无残留
+== 32 装配文件封闭清单
+  OK assembly.calls 11 个函数（createRouterCaps、createDigestCap、createWallTimer、mountKernel、registerSystems、mountOutput、mountAi、mountMenuEntry、mountSaveRoutes、mountNarration、mountInput）：每个都在 kernelApi 或 groupApi 登记为只对 index.mjs 开放，反向也无清单外的开放项；矩阵装配文件行、§2.9"装配文件"一项与清单三处一致；扫描规则写全，§2.8 与 S19 引用同一清单
+== 33 存量规则与 wsum 签名
+  OK 存量规则六条与两类断言写全；wsum 定义一处、正文 3 处调用全为三参、material 为多组列表；系统闭集字段 entryCallerFiles / entryJudges 在 §2.7 定义并进 JSON 示例；pathTypes 数值路径都带 §1.4 的单位；§1.14 与 event_role 已登记；facilityType 不再是存储维度
+== 34 接缝批
+  OK 心跳推进只投递请求、旧写法无残留；终止协议五步改序并含两个登记点、窗口期满、到期项撤销；建行写者与改写写者已定义；stockMode / remDenominator / struct:stockAnchor 与定点指数五项在位；六个封闭枚举与三个族已登记；§1.14 两处改名并写求值次序；存档码、导入 schema、槽位与候选键在位；单位表含 byte、ms；无已撤销的大类代号
+== 结果：PASS
+exit=0
+######## node check-divisor.mjs
+# 全书除数下界检查（候选，须人工判定）
+
+
+合计：0 处（显式 0、隐式 0），涉及 0 卷
+按类：合计 0、比例 0、个数 0、加权平均 0、份额 0、归一 0、其他 0
+排除（按三扫原因类，处）：斜 11、例 110、词 27、常 120、均 27、测 52、献 28、说 110、删 10、引 15、份额 20、切 3、代 2、误差 60
+
+# 对照：三扫判定真命中：命中或已修 44 / 44（其中已修 44）
+- 已修：卷三乙:368「两批按质量加权平均」
+- 已修：卷三乙:369「残渣的初值：全部消耗项按质量加权的平均」
+- 已修：卷三乙:937「spoilage 与 taint 按质量加权平均」
+- 已修：卷三乙:938「赃物质量守恒记账」
+- 已修：卷三乙:1178「赃物份额（全部消耗项按质量加权平均」
+- 已修：卷三乙:1190「workDifficulty 的质量加权平均」
+- 已修：卷三乙:1251「耐用份额 workDifficulty 的质量加权」
+- 已修：卷三乙:1192「÷ rules.crafting.masterySpan」
+- 已修：卷三乙:855「fuelEnergyMJ ÷ massKg」
+- 已修：卷三乙:1177「件数 = M_out ÷」
+- 已修：卷三乙:1252「件数 = 质量 ÷ 该料模板」
+- 已修：卷三乙:1365「÷（质量 × specificHeat）」
+- 已修：卷三乙:1618「÷ 基础产出件数；」
+- 已修：卷三乙:1703「valueDensity = valueBase ÷ massKg」
+- 已修：卷三乙:1716「货值密度 = 总估值 ÷ 总质量」
+- 已修：卷三乙:1302「日均损耗件数 = 存量 ÷ lifeDays」
+- 已修：卷三乙:1422「shelfLifeDays = 1 ÷ 腐坏率」
+- 已修：卷三乙:538「Σ s×v ÷ Σ s」
+- 已修：卷三乙:540「Σ s ÷ Σ（s ÷ v）」
+- 已修：卷三乙:1620「材质项 = 实例材料聚合出的 valueMult ÷」
+- 已修：卷四:137「× 每年日数 ÷ birthIntervalDays」
+- 已修：卷四:556「fertilityByLiving, living) ÷ birthIntervalDays」
+- 已修：卷四:604「再求平均」
+- 已修：卷四:603「已知亲本该维度基值的平均」
+- 已修：卷四:648「carriedKg ÷ loadCapacityKg」
+- 已修：卷四:782「参与部位按大小加权」
+- 已修：卷六:866「exchangeRate(A, B) = coinValue(A) ÷ coinValue(B)」
+- 已修：卷十八:606「财产按继承制度的权重分割」
+- 已修：卷十八:719「) ÷ decayMinutes」
+- 已修：卷十八:774「÷ 好感轴条目的 max」
+- 已修：卷十八:823「知情成员对该对象在该轴上的读数均值」
+- 已修：卷十八:1163「÷ Σ_k w_k」
+- 已修：卷十九:509「按工时加权的参建者技能」
+- 已修：卷十九:872「按容积加权」
+- 已修：卷二十:737「÷ stepMinutes」
+- 已修：卷二十:934「各样点的算术平均」
+- 已修：卷二十:64「按距离平方衰减」
+- 已修：卷二十五:372「index = weatherKg ÷」
+- 已修：卷二十五:486「minutes ÷（minutesPerKg × availableKg）」
+- 已修：卷二十七:164「÷ step + 1」
+- 已修：卷二十七:288「两组均值之比减 1」
+- 已修：卷十四:1045「占某流派 teaches 的比例」
+- 已修：卷二十六:812「÷ 该维度取值域上界」
+- 已修：卷二十六:669「立场（归一到 [-1,1]）」
+
+# 误报（不在三扫真命中里的命中）：0 处
+
+# 回归样本（应判已保护）：通过 29 / 29
+
+# 漏报写法回归（应识别到除法并判已保护）：通过 2 / 2
+
+# 取值域引用核实不到（所在句不作保护依据）：0 处
+
+# 取值域引用回归：通过 6 / 6
+
+# 字面常数除数回归（合成夹具）：通过 6 / 6
+exit=0
+######## 注入测试：node check-vol2.mjs（卷二副本加一句发 bogus_signal_probe 事件）
+== 1 错误码
+  正文错误码 146 个；登记表展开 146 个
+  OK 正文码全部已登记
+  OK 登记码全部有用到
+== 2 前缀登记
+  实体前缀 27，词表族前缀 94
+  注意 未登记前缀 card_: card_slot_type
+  注意 未登记前缀 q_: q_k
+  注意 未登记前缀 e_: e_a, e_k, e_x
+  注意 未登记前缀 bogus_: bogus_signal_probe
+  注意 未登记前缀 entity_: entity_revived
+  注意 未登记前缀 orowk_: orowk_actual
+  注意 未登记前缀 aggk_: aggk_bonded
+== 2b 内核信号代号登记
+  小族登记 5 个: layout_change, naming_intent, note_intent, dimension_write_rejected, nil_seedpart
+  FAIL 内核信号代号 bogus_signal_probe 未在小族登记（行 1257）
+  OK 引用小族的代号均已登记（核 32 卷）
+== 3 类型数
+  §1.5 表计 14 种；全文提到的类型数：14, 14, 14, 14, 14
+  OK 类型数一致
+== 4 附录 A 夹具
+  OK 三段 JSON 可解析
+  维度 9 个，类别行 4，实体行 2；展平 class_workshop_hot = {"public":false,"lodging":false,"allowedMaterials":["subst_stone"],"wearPerDay":0.0006,"capacityBase":2,"services":["service_craft"],"fixtures":["fixture_forge","fixture_hearth"],"upkeepPerDay":{"class_fuel":12}}
+== 结果：FAIL 1 项
+exit=0
