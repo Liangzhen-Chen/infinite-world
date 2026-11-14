@@ -145,7 +145,8 @@ for (const f of files) {
 }
 const waveCell = r => r.w !== undefined ? String(r.w) : splitLanded ? '不在依赖图' : `${PEND}（拆卷）`;
 const secCell = r => r.n ? r.secs.join('、') : r.has7 ? CFG.migSection.replace(/^#+ /, '').trim() + '（未编号）' : '—';
-const aCell = r => { const parent = split.get(r.v); if (parent) return `与 ${parent} 合计 ${aRows.get(parent) ?? 0}`; return String(aRows.get(r.v) ?? 0); };
+// 拆出卷先写本卷自己主归的行数；来源卷没有同名成稿（已退役）时，再附来源卷名下剩下的行数，由各拆出卷分担
+const aCell = r => { const own = String(aRows.get(r.v) ?? 0), parent = split.get(r.v); if (parent && !out.some(x => x.v === parent)) return `${own}（与 ${parent} 合计 ${aRows.get(parent) ?? 0}）`; return own; };
 const tabCell = r => !ownerLanded ? PEND : (owned(r.v).map(t => '`' + t + '`').join('、') || '—');
 const firstCell = r => !ownerLanded ? PEND : (owned(r.v).length ? String(owned(r.v).length) : (r.has7 ? '≥ 1（系统登记项）' : '—'));
 out.sort((x, y) => ((x.w ?? 99) - (y.w ?? 99)) || x.v.localeCompare(y.v, 'zh'));
