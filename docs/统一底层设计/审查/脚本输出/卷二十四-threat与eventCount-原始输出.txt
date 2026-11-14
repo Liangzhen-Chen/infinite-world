@@ -1,0 +1,211 @@
+== node F:/dnd-tmp/vols/check-卷二十四.mjs
+PASS 卷首模型行
+PASS 状态行
+PASS §0 存在
+PASS §1 存在
+PASS §2 存在
+PASS §3 存在
+PASS §4 存在
+PASS §5 存在
+PASS §6 存在
+PASS §7 存在
+PASS §8 存在
+PASS 附 术语与代号表
+PASS 附 待补清单
+PASS §4.1 存在
+PASS §4.1.1 维度
+PASS §4.1.2 统一入口
+PASS §4.1.3 规则
+PASS §4.1.4 交互
+PASS §4.1.5 数据实例
+PASS §4.1.6 验收断言
+PASS §4.1 数据实例 ≥ 3（实有 4）
+PASS §4.1 有非西陲实例
+PASS §4.1 有非人类或超自然实例
+PASS §4.1 断言含 扫描式：
+PASS §4.1 断言含 不变量式：
+PASS §4.1 断言含 扩展性式：
+PASS §4.1 有规则 R24-1.1
+PASS §4.2 存在
+PASS §4.2.1 维度
+PASS §4.2.2 统一入口
+PASS §4.2.3 规则
+PASS §4.2.4 交互
+PASS §4.2.5 数据实例
+PASS §4.2.6 验收断言
+PASS §4.2 数据实例 ≥ 3（实有 4）
+PASS §4.2 有非西陲实例
+PASS §4.2 有非人类或超自然实例
+PASS §4.2 断言含 扫描式：
+PASS §4.2 断言含 不变量式：
+PASS §4.2 断言含 扩展性式：
+PASS §4.2 有规则 R24-2.1
+PASS §4.3 存在
+PASS §4.3.1 维度
+PASS §4.3.2 统一入口
+PASS §4.3.3 规则
+PASS §4.3.4 交互
+PASS §4.3.5 数据实例
+PASS §4.3.6 验收断言
+PASS §4.3 数据实例 ≥ 3（实有 4）
+PASS §4.3 有非西陲实例
+PASS §4.3 有非人类或超自然实例
+PASS §4.3 断言含 扫描式：
+PASS §4.3 断言含 不变量式：
+PASS §4.3 断言含 扩展性式：
+PASS §4.3 有规则 R24-3.1
+PASS §4.4 存在
+PASS §4.4.1 维度
+PASS §4.4.2 统一入口
+PASS §4.4.3 规则
+PASS §4.4.4 交互
+PASS §4.4.5 数据实例
+PASS §4.4.6 验收断言
+PASS §4.4 数据实例 ≥ 3（实有 4）
+PASS §4.4 有非西陲实例
+PASS §4.4 有非人类或超自然实例
+PASS §4.4 断言含 扫描式：
+PASS §4.4 断言含 不变量式：
+PASS §4.4 断言含 扩展性式：
+PASS §4.4 有规则 R24-4.1
+PASS §4.5 存在
+PASS §4.5.1 维度
+PASS §4.5.2 统一入口
+PASS §4.5.3 规则
+PASS §4.5.4 交互
+PASS §4.5.5 数据实例
+PASS §4.5.6 验收断言
+PASS §4.5 数据实例 ≥ 3（实有 4）
+PASS §4.5 有非西陲实例
+PASS §4.5 有非人类或超自然实例
+PASS §4.5 断言含 扫描式：
+PASS §4.5 断言含 不变量式：
+PASS §4.5 断言含 扩展性式：
+PASS §4.5 有规则 R24-5.1
+PASS §4.6 存在
+PASS §4.6.1 维度
+PASS §4.6.2 统一入口
+PASS §4.6.3 规则
+PASS §4.6.4 交互
+PASS §4.6.5 数据实例
+PASS §4.6.6 验收断言
+PASS §4.6 数据实例 ≥ 3（实有 4）
+PASS §4.6 有非西陲实例
+PASS §4.6 有非人类或超自然实例
+PASS §4.6 断言含 扫描式：
+PASS §4.6 断言含 不变量式：
+PASS §4.6 断言含 扩展性式：
+PASS §4.6 有规则 R24-6.1
+PASS §4.7 存在
+PASS §4.7.1 维度
+PASS §4.7.2 统一入口
+PASS §4.7.3 规则
+PASS §4.7.4 交互
+PASS §4.7.5 数据实例
+PASS §4.7.6 验收断言
+PASS §4.7 数据实例 ≥ 3（实有 4）
+PASS §4.7 有非西陲实例
+PASS §4.7 有非人类或超自然实例
+PASS §4.7 断言含 扫描式：
+PASS §4.7 断言含 不变量式：
+PASS §4.7 断言含 扩展性式：
+PASS §4.7 有规则 R24-7.1
+PASS §4.8 存在
+PASS §4.8.1 维度
+PASS §4.8.2 统一入口
+PASS §4.8.3 规则
+PASS §4.8.4 交互
+PASS §4.8.5 数据实例
+PASS §4.8.6 验收断言
+PASS §4.8 数据实例 ≥ 3（实有 4）
+PASS §4.8 有非西陲实例
+PASS §4.8 有非人类或超自然实例
+PASS §4.8 断言含 扫描式：
+PASS §4.8 断言含 不变量式：
+PASS §4.8 断言含 扩展性式：
+PASS §4.8 有规则 R24-8.1
+PASS §4.9 存在
+PASS §4.9.1 维度
+PASS §4.9.2 统一入口
+PASS §4.9.3 规则
+PASS §4.9.4 交互
+PASS §4.9.5 数据实例
+PASS §4.9.6 验收断言
+PASS §4.9 数据实例 ≥ 3（实有 4）
+PASS §4.9 有非西陲实例
+PASS §4.9 有非人类或超自然实例
+PASS §4.9 断言含 扫描式：
+PASS §4.9 断言含 不变量式：
+PASS §4.9 断言含 扩展性式：
+PASS §4.9 有规则 R24-9.1
+PASS §4.10 存在
+PASS §4.10.1 维度
+PASS §4.10.2 统一入口
+PASS §4.10.3 规则
+PASS §4.10.4 交互
+PASS §4.10.5 数据实例
+PASS §4.10.6 验收断言
+PASS §4.10 数据实例 ≥ 3（实有 4）
+PASS §4.10 有非西陲实例
+PASS §4.10 有非人类或超自然实例
+PASS §4.10 断言含 扫描式：
+PASS §4.10 断言含 不变量式：
+PASS §4.10 断言含 扩展性式：
+PASS §4.10 有规则 R24-10.1
+PASS 正文无具体 id 字面量（命中 0）
+PASS 无用于判断的描述性文本（命中行 ）
+PASS 反引号内无带引号的中文字符串（命中行 ）
+PASS 台账概念：V24-01 事件主写与差分推导
+PASS 台账概念：差分只作验收
+PASS 台账概念：I-08 事件类型注册表（含动词登记）
+PASS 台账概念：事件估值字段（零#3 使用面、8.14）
+PASS 台账概念：V24-02 脉冲式加权抽取
+PASS 台账概念：叙事调度按世界状态不按玩家
+PASS 台账概念：V24-03 局势多阶段
+PASS 台账概念：I-14 委托与任务生成
+PASS 台账概念：难度与报酬派生
+PASS 台账概念：V24-04 活动
+PASS 台账概念：V24-05 历史生成与传奇模式浏览
+PASS 台账概念：历史事件内容（卷十裁定归本卷）
+PASS 台账概念：V24-06 编年史投影
+PASS 台账概念：§4.9 场外任务接口
+PASS 台账概念：V24-07 玩家来历接入
+PASS 台账概念：X-33 天气不是事件
+PASS 台账概念：S-12 事件动词种类表
+PASS 台账概念：X-24 传说与传奇
+PASS 除法共 5 行，均注明除数下界或零分支
+PASS 无玩家标记读数字段名（命中行 ）
+PASS 无年长字面量（命中行 ）
+PASS 续写点标记不多于 1 处（实有 0）
+INFO 行数 1046；字符数 89089；规则条 83；断言条 61；配合项 17；开放问题 12；迁移项 21
+RESULT 全部通过
+exit=0
+== node F:/dnd-tmp/vol2/check-vol2.mjs
+== 1 错误码
+  正文错误码 148 个；登记表展开 260 个
+  OK 正文码全部已登记
+  注意 登记但正文未用到（含简写展开的候选）: E-ACC-BASELINE-EDIT, E-ACC-BASELINE-UP, E-ACC-BYPASS-REGRESSION, E-ACC-CODE-UNLISTED, E-ACC-COMMIT-MSG, E-ACC-CRITERION-LOOSENED, E-ACC-CRITERION-UNVERSIONED, E-ACC-DOC-SEAL, E-ACC-EXT-CODE-CHANGED, E-ACC-EXT-EXISTING-ROW, E-ACC-FIXTURE-INSTANCE, E-ACC-GATE-BYPASS, E-ACC-HIT-OPEN, E-ACC-ITEM-COUNT, E-ACC-ITEM-DOWNGRADE, E-ACC-ITEM-FORM, E-ACC-ITEM-ORPHAN, E-ACC-ITEM-PARAM, E-ACC-ITEM-UNIMPLEMENTED, E-ACC-ITEM-UNREGISTERED, E-ACC-NEWROW-UNANCHORED, E-ACC-REPORT-FORM, E-ACC-REVIEW-CHECKLIST, E-ACC-REVIEW-MISSING, E-ACC-REVIEW-SELF, E-ACC-REVIEW-STALE, E-ACC-REVIEW-VETO, E-ACC-ROWKEY-DRIFT, E-ACC-RUN-UNBOUND, E-ACC-SCAN-NAMELIST, E-ACC-SCAN-SELFNAME, E-ACC-ZERO-MISMATCH, E-AV-KEY, E-AV-NO-DEFAULT, E-BST-BANE-CLASH, E-BST-BODY-WRITE, E-BST-DUPLICATE, E-BST-GEN-SLOT, E-BST-LAIR, E-BST-LORE-SHAPE, E-BST-MONSTER-SCHEMA, E-BST-QUOTA, E-BST-SIM-DIMS, E-BST-TIER-ROWS, E-BST-TRANSFORM-ROWS, E-BST-VARIANT, E-BST-WARD-SHAPE, E-DISPLAY-BACKFLOW, E-DISPLAY-BRANCH-TEXT, E-DISPLAY-DICE, E-DISPLAY-HOST-CHAT, E-DISPLAY-LITERAL, E-DISPLAY-LOCALE-BRANCH, E-DISPLAY-UNSEEN, E-GEN-BRANCH-ORIGIN, E-GEN-BYPASS, E-GEN-DEFAULT, E-GEN-GROUP-CYCLE, E-GEN-GROUP-ROW, E-GEN-ID-COLLISION, E-GEN-LATE-SOURCE, E-GEN-MANIFEST-DRIFT, E-GEN-NAME-EMPTY, E-GEN-NOT-MATERIALIZED, E-GEN-OVERRIDE-AUTHORED, E-GEN-REJECT, E-GEN-RESPECT, E-GEN-ROW-INVALID, E-GEN-SKELETON, E-GEN-STAGE-CYCLE, E-GEN-STAGE-UNKNOWN, E-I18N-FORM, E-I18N-LABEL-FOREIGN, E-I18N-LABEL-ORPHAN, E-I18N-LOCALE, E-I18N-PLURAL, E-I18N-TPL-MISSING, E-I18N-TPL-SLOT, E-MAP-COMPASS, E-MIG-ACCEPT-FORM, E-MIG-BACKFILL, E-MIG-CARD-INCOMPLETE, E-MIG-CARD-INSTANCE, E-MIG-CARD-SCOPE, E-MIG-CARD-SIZE, E-MIG-DEFER-UNBOUND, E-MIG-DUAL-PATH, E-MIG-EVENT-SEQ, E-MIG-EXIT, E-MIG-FILEMOVE-GAP, E-MIG-FROZEN, E-MIG-ORDER, E-MIG-PARALLEL, E-MIG-PHASE-CONFLICT, E-MIG-PHASE-COUNT, E-MIG-RETIRE-MISMATCH, E-MIG-ROW-COUNT, E-MIG-ROW-MULTI, E-MIG-ROW-ORPHAN, E-MIG-SCAN-UNCLAIMED, E-MIG-SORTKEY-ORDER, E-MIG-STATE, E-MIG-TEST-PATCH, E-MIG-ZERO-UNCOVERED, E-PANEL-ACTION, E-PANEL-KIND, E-PANEL-PATH, E-PANEL-SOURCE, E-TPL-CYCLE, E-TPL-KEY, E-TPL-NO-FALLBACK, E-TPL-RX
+== 2 前缀登记
+  实体前缀 27，词表族前缀 125
+  注意 未登记前缀 rx_: rx_type
+  注意 未登记前缀 doc_: doc_log, doc_state
+  注意 未登记前缀 part_: part_single
+  注意 未登记前缀 card_: card_slot_type
+  注意 未登记前缀 q_: q_k
+  注意 未登记前缀 e_: e_a, e_k, e_x
+  注意 未登记前缀 entity_: entity_revived
+  注意 未登记前缀 orowk_: orowk_actual
+  注意 未登记前缀 aggk_: aggk_bonded
+  注意 未登记前缀 attach_: attach_slot
+== 2b 内核信号代号登记
+  小族登记 5 个: layout_change, naming_intent, note_intent, dimension_write_rejected, nil_seedpart
+  OK 正文发出的非词表代号均在小族登记
+  OK 引用小族的代号均已登记（核 32 卷）
+== 3 类型数
+  §1.5 表计 14 种；全文提到的类型数：14, 14, 14, 14, 14, 14
+  OK 类型数一致
+== 4 附录 A 夹具
+  OK 三段 JSON 可解析
+  维度 9 个，类别行 4，实体行 2；展平 class_workshop_hot = {"public":false,"lodging":false,"allowedMaterials":["subst_stone"],"wearPerDay":0.0006,"capacityBase":2,"services":["service_craft"],"fixtures":["fixture_forge","fixture_hearth"],"upkeepPerDay":{"class_fuel":12}}
+== 结果：PASS
+exit=0
