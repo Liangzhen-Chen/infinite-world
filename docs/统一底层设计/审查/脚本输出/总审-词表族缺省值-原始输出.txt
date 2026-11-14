@@ -1,0 +1,185 @@
+### ① 他卷声明的条目字段/列，族主卷 §2 未列
+①表	卷二十三:201	verb	主=卷二十四	未列=actors,related,stake,private,witnessed,instanceStep,kind,instanceStage,instanceEnd,public,showBegun,showAnnounced,moved,audience,sense	`verb`（卷二十四 表 B） | `roles.verbs.composed`（作品完成）；`roles.verbs.adorned`（装饰完成）；`rol
+①表	卷二十三:203	evstage	主=卷二十四	未列=actrole,minCount	`evstage`、`endcode`、`actrole`（卷二十四 §2.1） | 两个阶段、三个结局（`cancelled`、`done`、`dispers
+①表	卷二十三:203	endcode	主=卷二十四	未列=actrole,minCount	`evstage`、`endcode`、`actrole`（卷二十四 §2.1） | 两个阶段、三个结局（`cancelled`、`done`、`dispers
+①表	卷二十三:203	actrole	主=卷二十四	未列=actrole	`evstage`、`endcode`、`actrole`（卷二十四 §2.1） | 两个阶段、三个结局（`cancelled`、`done`、`dispers
+①表	卷二十四:273	pref_kind	主=卷七	未列=prefs	卷七 `pref_kind` | `roles.prefKinds.activity` | `field` 为空（值在文化行 `prefs` 下）；`keyFa
+①表	卷二十三:206	kchan	主=卷二十二	未列=grantLore,via,work	`kchan`（卷二十二 §2.2） | `roles.kchans.audience`（按 `sense` 的映射表：键为卷五 `sense` 条目，值为观众
+①文	卷一:239	relation	主=卷十八	未列=intimate	为结构化关系代号——`relation` 族条目字段 `intimate: boolean`（登记在卷二 §1.12 relation 族），规则层按该字段与年
+①文	卷一:253	relation	主=卷十八	未列=intimate	系用结构化关系代号（`relation` 族条目字段 `intimate: boolean`，登记在卷二 §1.12；不在代码里列举哪些关系算亲密）、参与者年龄
+①文	卷二:335	relation	主=卷十八	未列=relation	**封闭的含义**：`relation` 族标 closed，指行的字段集合封闭（上条所列字段，不得另加）；行由领域卷自登记——该卷在正文写明每一行的 `{id
+①文	卷五:618	diet	主=卷四	未列=coverDim	须由拥有这两张表与 `diet` 词表的卷补上的（本卷不代为定义，只写用法，见 §8 Q3）：物种的 `growthRate`（每年）；植物与物种的 `rest
+①文	卷五:1175	diet	主=卷四	未列=coverDim	| 存量对象行与 `diet` 词表缺的字段，本卷只写用法，不代为定义。请卷四补：物种 `growthRate`（每年）、`restartKg`、`coverD
+### ② 登记的种类行/词条未给全列值；句柄指向不存在的行
+②列	卷十七:664	gstage_roads	gstage	主=卷十	给0/8	缺=phase,after,before,scope,generator,writesKinds,whenRX,writesFamilies	- **R17-9.1 路网阶段**：本卷向卷十 `gstage` 族登记一条阶段条目 `gstage_roads`：相位为世界生成，排在站
+②列	卷十四:564	hk_practices	holding_kind	主=卷十八	给0/71	缺=hyper,from,to,exclusive,holderEnd,subjectEnd,concluded,functional…	`hk_practices` 是登记进卷十八 §4.1 种类表的"执业"行（主列与补充列合写；没写的补充列取卷十八的缺省值）。
+②列	卷四:800	verb_entity_terminated	verb	主=卷二十四	给0/55	缺=id,minute,verb,actor,actorAs,targets,primitives,cause…	卷二 §2.6（写者与三接口）（`terminate` 与 `verb_entity_terminated`；本卷是个体终止的唯一发起方，并
+②句柄	卷一:368	V.status_family.sfam_sleep	行全书未见定义	1. **代号的合格判据（上下文白名单，按被比较维度的词表族；李白裁定，卷二 S13 (a)、A16
+②句柄	卷一:369	V.status_family.sfam_sleep	行全书未见定义	- **正例**（卷二 A16、§2.8 正反例表）：`if (st.dims.family.val
+②句柄	卷一:369	V.verb.verb_transfer	行全书未见定义	- **正例**（卷二 A16、§2.8 正反例表）：`if (st.dims.family.val
+②句柄	卷一:370	V.terrain.terrain_hill	行全书未见定义	- **反例**：`if (st.family === 'sleep')`、`x === 'sfam
+②句柄	卷二:741	V.status_family.sfam_sleep	行全书未见定义	| `if (fact.is(V.status_family.sfam_sleep))`、`x ==
+②句柄	卷二:741	V.status_family.sfam_sleep	行全书未见定义	| `if (fact.is(V.status_family.sfam_sleep))`、`x ==
+②句柄	卷二:753	V.status_family.sfam_sleep	行全书未见定义	| `const {family} = st.dims; family.value === V.st
+②句柄	卷二:753	V.status_family.sfam_sleep	行全书未见定义	| `const {family} = st.dims; family.value === V.st
+②句柄	卷二:754	V.a.x	族全书未登记	| `const h = cond ? V.a.x : V.a.y; h === v`、`[V.a.
+②句柄	卷二:754	V.a.y	族全书未登记	| `const h = cond ? V.a.x : V.a.y; h === v`、`[V.a.
+②句柄	卷二:754	V.a.x	族全书未登记	| `const h = cond ? V.a.x : V.a.y; h === v`、`[V.a.
+②句柄	卷二:754	V.a.y	族全书未登记	| `const h = cond ? V.a.x : V.a.y; h === v`、`[V.a.
+②句柄	卷二:755	V.a.x	族全书未登记	| `const h = cond ? V.a.x : 'y'`、`x ?? V.a.x`（x 为维
+②句柄	卷二:755	V.a.x	族全书未登记	| `const h = cond ? V.a.x : 'y'`、`x ?? V.a.x`（x 为维
+②句柄	卷二:2126	V.status_family.sfam_sleep	行全书未见定义	- A16 规则层代码出现裸代号字面量比较 `x === 'sfam_sleep'`（或 `'sle
+②句柄	卷二:2126	V.status_family.sfam_sleep	行全书未见定义	- A16 规则层代码出现裸代号字面量比较 `x === 'sfam_sleep'`（或 `'sle
+②句柄	卷二:2126	V.status_family.sfam_sleep	行全书未见定义	- A16 规则层代码出现裸代号字面量比较 `x === 'sfam_sleep'`（或 `'sle
+②句柄	卷二:2147	V.status_family.sfam_sleep	行全书未见定义	- **上下文白名单**（TB-N1；不是全表平铺集合）：(a) 规则层使用代号的**唯一合法形式*
+②句柄	卷二:2147	V.status_family.sfam_sleep	行全书未见定义	- **上下文白名单**（TB-N1；不是全表平铺集合）：(a) 规则层使用代号的**唯一合法形式*
+②句柄	卷二:2147	V.status_family.sfam_sleep	行全书未见定义	- **上下文白名单**（TB-N1；不是全表平铺集合）：(a) 规则层使用代号的**唯一合法形式*
+②句柄	卷二:2147	V.terrain.terrain_hill	行全书未见定义	- **上下文白名单**（TB-N1；不是全表平铺集合）：(a) 规则层使用代号的**唯一合法形式*
+②句柄	卷二:2147	V.status_family.sfam_sleep	行全书未见定义	- **上下文白名单**（TB-N1；不是全表平铺集合）：(a) 规则层使用代号的**唯一合法形式*
+②roles	卷九:314	roles.senses.sight,roles.senses.hearing	指向的行无代号（须核全书是否存在）	句柄 → ref vocab sense | 卷五 `sense` 族内（视、听两个感官条目） | R9-12.14（动词行 `senses
+②roles	卷二十三:180	roles.families.composition,roles.verbs.*,roles.types.show,roles.stages.*,roles.endcodes.*,roles.actroles.*,roles.kchans.*,audience,sense,roles.idslots.*,roles.streams.works,roles.sites.*,roles.senses.*,senses,sense	指向的行无代号（须核全书是否存在）	句柄 → 代号 | 规则引用别族代号的唯一途径（§2.5）
+②roles	卷二十二:188	roles.actions.plotInvite	指向的行无代号（须核全书是否存在）	`ref`（卷九动作行代号） | 邀人入伙的动作（R22-7.5）
+②roles	卷二十二:191	roles.dims.keyBearer,roles.dims.sameBearer,roles.dims.memberOf,roles.dims.plotOf	指向的行无代号（须核全书是否存在）	维度代号 | 键属何人、两键同属一人、成员身份、谋划存在四类命题用的维度
+②roles	卷二十二:193	roles.holdings.knows,roles.contracts.silence	指向的行无代号（须核全书是否存在）	种类代号 | 持有种类、缄默合同种类
+②roles	卷二十四:228	roles.families.*,roles.verbs.*,roles.tallies.*,roles.streams.*,roles.sites.*,roles.senses.*	指向的行无代号（须核全书是否存在）	句柄 → 代号 | 已登记代号 | 规则引用代号的唯一途径
+②roles	卷二十四:229	roles.ends.*	指向的行无代号（须核全书是否存在）	句柄 → `endcode` 代号 | 已登记代号 | R24-4.7（`subjectGone`）
+②roles	卷二十四:230	roles.dues.*	指向的行无代号（须核全书是否存在）	句柄 → `due_kind` 代号 | 已登记代号 | R24-4.4、R24-5.5、R24-6.4（§2.5）
+②roles	卷二十四:231	roles.records.*	指向的行无代号（须核全书是否存在）	句柄 → `record_class` 代号 | 已登记代号 | §2.4 去留
+②roles	卷二十四:232	roles.puses.eventWorth	指向的行无代号（须核全书是否存在）	句柄 → `puse` 代号 | 已登记代号 | R24-2.3（§2.5）
+②roles	卷二十四:233	roles.prefKinds.activity	指向的行无代号（须核全书是否存在）	句柄 → `pref_kind` 代号 | 已登记代号 | R24-6.8（§2.5）
+②roles	卷十七:192	roles.*	指向的行无代号（须核全书是否存在）	各族句柄 | 所指条目存在；类型与 §2.2 一致 | 规则引用别卷条目的唯一途径
+②roles	卷十五:221	roles.holdings.{possess, command, seal, dwell, cursedBy, cursedByOnce, enshrined, invited, reclaim}	指向的行无代号（须核全书是否存在）	持有种类代号 | §4.8、§4.9、§4.11、§4.12、§4.15；前八个句柄对应的行与关键列取值见 R15-9.1 后的表；`rec
+②roles	卷十五:227	roles.srcsinks.{regen, spent, overflow, offering, offeringRealm, relicCharge, relicDraw, shadeIn, shadeOut}	指向的行无代号（须核全书是否存在）	源汇代号 | 账本的登记源汇（R15-1.6、R15-10.3、R15-10.6、R15-16.2）
+②roles	卷十六:186	roles.holdings.den	指向的行无代号（须核全书是否存在）	持有种类代号 | 巢居边（R16-6.2）
+②roles	卷十六:189	roles.prims.transform	指向的行无代号（须核全书是否存在）	原语代号（卷九原语目录） | 转化原语（R16-12.3）
+②roles	卷十六:191	roles.knowledge.loreFamily	指向的行无代号（须核全书是否存在）	知识行的族代号 | 传说类知识行（R16-4.1）
+②d说明	卷十八 §4.1.5 主列行数=47	主列=hyper,from,to,exclusive,gone,vacated,defected,subjectEnd,concluded,functional,membership,headship,carriesRel,conduct,conductBack,adopt,pins
+②hk	卷九:1574	hk_consent	不在卷十八主列表	本行给主列0/17	删去，用别人的东西是社会上的同意）；`hk_consent`（同意边，由 `rules.consent.edgeKind` 指名）、`hk_
+②hk	卷九:1574	hk_player_seat	不在卷十八主列表	本行给主列0/17	sent.edgeKind` 指名）、`hk_player_seat`（玩家席位边，由 `rules.control.seatKind` 指
+②hk	卷八:1327	hk_acting_office	不在卷十八主列表	本行给主列0/17	["hk_acting_office", null, ["agent"], ["office"], true, "ho_close", "h
+②hk	卷八:1328	hk_title_claim	不在卷十八主列表	本行给主列0/17	["hk_title_claim", null, ["agent"], ["office"], false, "ho_close", "ho
+②hk	卷八:1329	hk_title_claim_heritable	不在卷十八主列表	本行给主列0/17	["hk_title_claim_heritable", "hk_title_claim", ["agent"], ["office"], 
+②hk	卷八:1338	hk_practices	不在卷十八主列表	本行给主列0/17	, "hk_devotee_of", "hk_practices", "hk_citizen_of", "hk_resident_of"],
+②hk	卷八b:1216	hk_detained	不在卷十八主列表	本行给主列0/17	["hk_detained", null, ["agent", "collective"], ["agent"], true, "ho_cl
+②hk	卷八b:1217	hk_hostage	不在卷十八主列表	本行给主列0/17	["hk_hostage", null, ["agent", "collective"], ["agent"], true, "ho_clo
+②hk	卷八b:1218	hk_bonded	不在卷十八主列表	本行给主列0/17	["hk_bonded", null, ["agent", "collective"], ["agent"], true, "ho_succ
+②hk	卷八b:1219	hk_kill_right	不在卷十八主列表	本行给主列0/17	["hk_kill_right", null, ["agent"], ["agent"], false, "ho_succeed", "ho
+②hk	卷八b:1220	hk_agent_for	不在卷十八主列表	本行给主列0/17	["hk_agent_for", null, ["agent"], ["agent", "collective"], false, "ho_
+②hk	卷八b:1232	hk_practices	不在卷十八主列表	本行给主列0/17	], "keyHoldings": ["hk_practices"], "pooledResources": [], "shareRule"
+②hk	卷十五:911	hk_relic_reclaim	不在卷十八主列表	本行给主列0/17	["hk_relic_reclaim", null, ["agent", "collective"], ["thing"], false, 
+②hk	卷十四:560	hk_practices	不在卷十八主列表	本行给主列8/17	"hk_practices": {"hyper":null,"from":["agent"],"to":["profession"],"ex
+②hk	卷十四:921	hk_apprenticed	不在卷十八主列表	本行给主列0/17	tenure":{"holding":"hk_apprenticed","days":1080}}]]},
+### ③ 字段定义里的“缺省X”写法
+③疑合规	卷一:152	默认值	生 > 采样 > 未知（卷二 §0 第 1 条）；代码里没有默认值。
+③	卷一:609	默认	`menu_fallback` | 结算、填候选外 id、填默认、猜 |
+③	卷一:771	默认	合内的文字必返回 `menu_fallback`；缺槽位不填默认（输出里无未由输入或候选确定的字段）；候选外
+③	卷七:287	默认	条） | 无 | R7-24.7：每次年度写入 m = 4（默认数值与恒等剂量形状下），累计 n 次后不超过
+③疑合规	卷三乙:298	默认	f vocab class, 即兴条目>`，按物品类别整类给默认参数，R-13）；失败：`failHard`、
+③疑合规	卷三乙:940	默认	| K-3 | 动作 / 账本转移 | 批次拆并：转出时默认先出腐坏进度最高的批次（先陈后新）；转入时，`
+③疑合规	卷三乙:1235	默认	`acceptsMaterial` 列了多个组的模板，用其默认配方做出的实例，`material` 的组集合
+③	卷三甲:353	缺省 0	种情形各有什么后果由卷三乙 §4.11 定。卷零 §5 写"缺省 0 的材料不爆"；卷二 §1.6 禁止常量缺
+③	卷三甲:389	默认	里，`volatility` 及一切字段的定义文字不含按某个默认温度定义的说法，标定条件只出现在 §2.3 的
+③	卷三甲:1001	留空按	族；只对草本植物质、木质行登记（bySubstance）；留空按 gap 记缺口；未知与留空都进警告、按非谷
+③疑合规	卷九:236	默认值	ing: turn_timing}`，四个字段全部必填，没有默认值。
+③疑合规	卷九:1094	默认	（作者边）。`judge` 首值不在任何档位里：选择式判断层默认关闭（李白 11-13 对 §8 第 7 条的
+③疑合规	卷九:1201	默认	达集合 C 内；不锁定供应方，供应方与模型代号在运行配置里；默认关闭（`judge` 首值不在任何档位，§4.
+③	卷九:1304	默认	- **R9-19.3 不猜、不填默认**：必填槽位译不出时，结果是 `ambigu
+③疑合规	卷九:1397	默认	.3），材料继承、产率、工时、品质滚档按现有各步、取该类别的默认参数（由卷三乙规则表给），开工条件只查工具能力
+③	卷九:1481	默认值	js:37；engine.mjs:397 | 正文尾注解析、默认值、场外前缀正则、数值 0 兼作标志 | 结构
+③	卷九:1481	默认值	n` 与 `channel`；`timing` 显式代号；无默认值 | R9-9.3–R9-9.8 |
+③	卷九:1488	默认	改写 T3 为 `draft`（作者边）、`judge` 默认关；两处运行期模型调用删除（`populati
+③	卷九:1514	默认	` 为 `t2` 加作者边 `draft`，`judge` 默认关；AI 不进逻辑（R9-14.8）；旧设计
+③疑合规	卷二:16	默认值	e 组从具体到一般）> 派生 > 采样 > 未知；**代码无默认值**，缺失处置由表头 `onUnknown`
+③	卷二:161	默认	- precedence 默认由 `broader` 深度派生（深者先）；手
+③	卷二:260	默认值	选编号的列表；翻不出、歧义、缺参数 → 退回菜单，不猜、不填默认值。
+③疑合规	卷二:291	默认	created[id].props[dim]`。**派生维度默认不接受偏离行**（E-DIM-DERIVED-
+③	卷二:421	默认	的裁断）须在调用处显式传空 `frame` 并写明原因，不靠默认。
+③	卷二:487	缺省为假	目的可选布尔字段 `relocatable`（本项单点定义；缺省为假），写真即表示挂这个组件类的行可以改挂。现
+③	卷二:717	默认	`??` 合流**（两分支同一品牌；`??` 用作对维度值的默认填充另按 E-VIEW-FALLBACK）；*
+③疑合规	卷二:1354	缺省假	合成）。每个键另带布尔 `packOverridable`，缺省假（该键能否被扩展包整值改写）。两个字段由表或
+③	卷二:1385	默认	| 输入边或显示层出现白名单外 string 操作 / 槽位默认填充 / 规范化散落 / 闸组白名单外 str
+③疑合规	卷二:1430	缺省 0	§1.6 禁止常量缺省，第十五版的"缺省按 `wreck`、缺省 0"作废；每个类别行显式写 `mode` 与
+③	卷二:2010	默认	ls 编号表 → `domains`；`cultures` 默认全文化。人物 profession：occup
+③	卷二:2153	默认	-INPUT-FUZZY；槽位值的 `??`/`||`/三元默认填充 → E-INPUT-DEFAULT；`n
+③	卷二:2153	默认	`（Map 由菜单生成；`?? MENU` 是退回菜单，不是默认填充）；反例：`Number(text)`、`
+③	卷二:2532	缺省 0	ination`（加 `reviveWindowDays`，缺省 0）；§2.7 JSON kernelApi
+③	卷二:2597	缺省假	erge`），每个键带 `packOverridable`（缺省假）；加载器按登记读，未登记的表或键加载报 E
+③	卷二:2637	缺省假	error`、行上必写、不是暗号的行显式写 false，删"缺省假"（原 `never`/`skip` 加"缺
+③	卷二:2637	缺省假	lse，删"缺省假"（原 `never`/`skip` 加"缺省假"是常量缺省，与 §1.6 不合，同 §5.
+③	卷二:2637	缺省假	6 `hiddenness` 口径）；同批 Grep 全卷"缺省假 / 缺省取 / skip（按…）"，维度表
+③	卷二:2657	默认	的内部读须在调用处显式传空 `frame` 并写明原因，不靠默认” | 视角参数 `frame` | 本卷是；
+③	卷二:2658	默认	的裁断）须在调用处显式传空 `frame` 并写明原因，不靠默认”；根因H行补必要理由与原文依据（§2.9 第
+③已知	卷二十一:114	缺省 0	` | number，可空 | per_day | ≥ 0，缺省 0 | skip | 新 | 只许带驱动的行
+③已知	卷二十一:163	缺省 0	> 0）；`massExp: number`（[0, 2]，缺省 0.75）；`bio: map<ref vo
+③已知	卷二十一:163	缺省 0	`massExp` 为 1 时即每公斤体重剂量）；体重指数（缺省 0.75，取代谢与清除随体重的异速生长指数，
+③	卷二十一:164	缺省 1	dim`；`needRatio: number`（> 0，缺省 1）；`reserveDaysRX: rx`
+③	卷二十一:202	未填即	R21-8.2），条目由内容数据填，上面示例所填是示意条目；未填即加载失败。
+③	卷二十一:232	默认	实例，不走病程律；定义处 R21-3.3；终止时保留，复生后默认保留（§3.3） |
+③疑合规	卷二十一:305	默认	为空，死前那一拍累计的剂量不会在复生后被判定）。**免疫记录默认保留**，复生者带着衰减后的免疫读数回来。复生
+③已知	卷二十一:425	缺省 0	raw`；`raw` 大于该行的 `driveOnset`（缺省 0）就以 `severity.initial
+③已知	卷二十一:652	默认	` 等都因不在白名单而被拦，不逐个设禁；状态表今后新加的字段默认锁住，要放开须改本白名单。出处注记 `basi
+③已知	卷二十一:809	缺省 0	Exp` 为 1 时即每公斤体重剂量）。`massExp` 缺省 0.75：清除与代谢随体重按四分之三次幂增长
+③已知	卷二十一:831	缺省 0	riveRX` 读浓度的行，`driveOnset` 只许取缺省 0。
+③	卷二十一:833	不写取	位，§2.6）；要封顶靠严重度自身的钳位（R21-1.2），不写取小；读浓度的行，回落常数只写在行的 `sev
+③疑合规	卷二十一:1291	缺省 1	| medicine.mjs:99（诊费 = 半日工钱折半（缺省 10）+ 药价 ×（1 + 预约数 ÷ 容量
+③	卷二十一:1540	默认	内删除，复生后从无记录起；免疫记录不属病程，终止时不动、复生默认保留，清不清由卷二的复生清理清单按类登记，本卷
+③已知	卷二十一:1544	默认	名单，亏空行只许填 8 个字段，其余一律锁死，今后新加的字段默认锁住；校验与自检都按白名单判，`persist
+③已知	卷二十一:1544	缺省 0	误差界写成确定式；`massExp` 取值域 [0, 2]、缺省 0.75，三条药性轴的数据由 1 改为 0.
+③疑合规	卷二十三:937	缺省 1	er | skip` 不一；同类 `coverShare`“缺省 1 / skip（按 1）”、`workCh
+③疑合规	卷二十三:937	缺省 0	oices`“skip（空集）”、`beautyForm`“缺省 0” | `subjects`、`langu
+③疑合规	卷二十三:937	缺省 0	r`，非固结附件写 1；`beautyForm` 根类别行“缺省 0”改为“无则行上写 0” | §2.2 |
+③	卷二十九:258	缺时按	≥ 0 | 拒收 | 该语言下的排序次序，由语言包作者写；缺时按代号序（R29-3.6）。仓库里没有生成它的
+③	卷二十九:568	默认	，看 `display.showCodes`：它是作者配置，默认关，关时只显示显示名。
+③	卷二十九:616	缺时按	法与排序条目上的 `ord`（§2.4；语言包作者写的整数，缺时按代号序）。服务端与客户端都不比较文字，仓库里
+③	卷二十九:1120	缺时按	让玩家在设置里点选；`ord` 改由语言包作者写整数，可缺，缺时按代号序，仓库里没有按文字生成它的程序 | §
+③已知	卷二十二:132	缺省假	ic: boolean`；`exact: boolean`（缺省假） | 一种得知方式。`firsthand`
+③已知	卷二十二:157	缺省假	| `cipher`（本卷新登记，`boolean`，缺省假） | 为真表示它是一套暗号或密文：以它为
+③	卷二十八:355	默认	- **R28-1.5 角色只影响“默认带不带”**：`example` 与 `fix
+③	卷二十八:355	默认	ample` 与 `fixture` 的包不在正式世界创建的默认包集合里，只有世界创建请求显式列出时才带上。带
+③	卷二十八:381	默认	色的包，只含一行新物种与它的 `tests` 数据：正式开局默认不带它；验收时由场景显式列出，按卷十二 R12
+③已知	卷二十八:411	缺省为假	able` 声明为真的规则表键打补丁（§2.11）；这个布尔缺省为假，由该键的归属卷逐键声明，本卷不点名任何键
+③疑合规	卷二十八:599	默认	各跑一次 §4.4 的七步，任何一个不过，库保持原样；另对“默认开局集合”（库里角色为 `content` 的
+③	卷二十八:600	默认是	-6.3 包集合在开局时冻结**：世界创建请求给出包集合——默认是库里角色为 `content` 的全部包，或
+③	卷二十八:854	默认	定死，不依赖本问 | **已裁定（李白 11-14）**：默认甲——老世界不换包，存档不动，数据副本只写一次
+③已知	卷二十八:855	缺省假	——规则表键登记加布尔 `packOverridable`，缺省假，由键的归属卷逐键声明；补丁只许打到声明为真
+③	卷二十八:935	默认	| 李白裁定 Q28-1 | 已有世界能否换包 | 默认不换包、副本只写一次；允许只增不删的追加：候选
+③已知	卷二十八:936	缺省假	表键 | 规则表登记加 `packOverridable`（缺省假，归属卷逐键声明），与 T3 的 `mult
+③	卷二十八:944	默认	每个在库包取“自身加 `requires` 闭包”各跑七步；默认开局集合只告知不阻断；`conflicts`、
+③	卷二十六:229	默认	` 等都因不在白名单而被拦，不逐个设禁；状态表今后新加的字段默认锁住，要放开须改本白名单。出处注记 `basi
+③	卷二十六:1281	缺省 6	| M26-19 | 个人士气字段：欠俸时直接扣；视图读它（缺省 60）；拼进给模型的文字 | `office
+③	卷二十四:1051	不写时取	kerRX` 同口径；③ 表 B `headSlot` 的“不写时取 `actor` 与 `targets`
+③	卷五:1347	默认	k/scan-single-edge.mjs` 扫了全书各卷默认"两地只有一条边"的写法，结果与别卷牵连见卷二
+③已知	卷八:140	缺省假	| `covert` | boolean | — | 缺省假 | skip | 卷二十二 §4.8（秘密
+③已知	卷八:1603	缺省假	十二行 | 组织行登记 `covert: boolean`（缺省假），含义、置真置假与读法只引卷二十二 R22
+③	卷八b:706	缺省假	读当事人物种行的一个布尔维度。别处的栈没有这条，取门控条目的缺省假。
+③	卷六:128	缺省假	lean`、`trackOutflow: boolean`（缺省假；为真的分区由账本内核记流出累计，§4.1
+③	卷六:440	默认是	2. **费用默认是转移**：`payee` 指向真实实体（场地
+③	卷六:1525	默认	:308、:341 | `marketQuote` 以旧价为默认基数并写进解释 | 基数改为 `priceFo
+③	卷六:2003	缺省假	5 末项 | 用途行加 `trackOutflow`（布尔，缺省假）；只对为真的分区账户，`post` 同一笔
+③	卷十:108	缺省为空	`writesFamilies: set<string>`（缺省为空集）：本阶段要新建条目的开放词表族名，加载
+③疑合规	卷十:319	缺省为空	e` 决定次序；可省字段 `writesFamilies` 缺省为空集，只有艺术形式生成阶段填非空值，其余条目
+③	卷十:711	缺省为空	目，以它的可省字段 `writesFamilies` 为准（缺省为空集，§2.1）；写回器在同一处拒绝两者范围
+③疑合规	卷十:1225	缺省空	stage` 加可省字段 `writesFamilies`（缺省空集，现有条目不补），R10-9.9、§4.9
+③	卷十三:1046	默认	队伍，粮的这一项就高）；权重来自决策主体的驱力权重，估值只是默认评分里的一项。按分数降序拿，同分按批次 id
+③	卷十九:111	缺省按 0	mp_facility | gap | 脏污（§4.11）；缺省按 0。运行期逐次改写的存量，只按卷二 §3.
+③	卷十九:114	缺省按 0	gap | 业主对在此提供的服务抽取的费率（§4.15）；缺省按 0 | EVE#62 |
+③	卷十九:187	缺省为假	位，§4.8）；`defense: boolean`（可选，缺省为假；这个功能是否算防御，§4.16 规则 5
+③	卷十九:529	默认	成建筑时，以当地可得料与居民技能为输入调同一个纯计算，不写"默认建筑"。开局建筑的墙料在第 0 日建行的同一事
+③疑合规	卷十九:1152	缺省按 0	入迁移报告；`repairLot` 一律为空；`dirt` 缺省按 0。`rating.json` 的 `di
+③	卷十九:1636	缺省为假	| `ffunc` 条目加可选布尔字段 `defense`（缺省为假，照同族 `rest` 写法）；规则 5
+③疑合规	卷十五:685	默认	` 与当事人得出的后果。显示层怎样呈现（是否出现在玩家菜单的默认分组、叙述怎样措辞）不在本卷，见 §8 Q15
+③	卷十八:1589	默认	18-6.2）。⑦ §2.3 原“按 onUnknown 取默认不致失败”一句改正：`sigBase` 写 0
+③已知	卷十六:158	未填按	含义本卷；CDDA 怪物组 | 结群数：路遇时一次物化几头；未填按 1 / Pack size |
+③	卷十四:952	缺省 1	为真，则该主体的计数 `count` 加 `weight`（缺省 1），`recent` 加同样的量，`las
+③	卷十四:1371	默认	rgetCulture`），要不要加由内容管线定，不在迁移里默认启用［`serviceLine`、`actor
+③已知	卷四:162	未填按	never | skip | 结群数：路遇时一次物化几头；未填按 1（含义卷十六，C16-2） | 卷十六
+③	卷零:959	默认值	**不填默认值**（李白裁定）：结构化 `turn` 后
+③	卷零:959	默认	**，缺失即按“未映射”报错重请（重请有上限），**不准再填默认 10 或 0**；turn.mjs:34 的
+③	卷零:972	默认	status:'pending'`，不合成 args、不给默认 extraMinutes/location
+③	卷零:978	默认	n,present}`，**必填，缺失即“未映射”重请，不填默认**；服务端只校验字段；turn.mjs:10
+③	卷零:1033	默认	的定义与签名（含 `minute=startMinute` 默认） | 删除 | 不运行 | 函数退役；由结构
+③	卷零:1033	默认值	构化 `turn` 校验器（纯字段类型/范围/一致性检查，无默认值）取代 | 卷九 §4.9 | `Z35-1
+③	卷零:1106	默认值	）；显示闸输出不进状态哈希；结构化 `turn` 缺字段时无默认值（扫描 extension/turn.mjs
+③	卷零:1212	缺省为 0	flagration`（爆燃阈值、释能、碎片系数）两组字段，缺省为 0 的材料不爆；卷三 §4.11 热属性与
+③	卷零:1311	默认	97，写明结构化 `turn` 必填、删 fallback 默认 10；claimSchema 加 hypot
+③	卷零:1311	默认	审B.md 必改 R1–R3、建议；李白裁定（两道闸、必填无默认） |
