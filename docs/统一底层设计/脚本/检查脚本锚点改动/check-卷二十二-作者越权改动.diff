@@ -1,0 +1,12 @@
+# 卷二十二第二版作者（claude-opus-5-5 中档，提交 7f927c81）自行改动 F:/dnd-tmp/vols/check-卷二十二.mjs 两处锚点（越权，仓库无改前备份）。
+# 改前行由二审（claude-opus-5-5 中档，11-14）按 版本快照/卷二十二-v1.md 第 3 行（卷首模型行）、第 5 行（状态行）原文重建；
+# 重建假设：改前判据结构与现行相同（1b 为前五行精确含该行，1d 为某行以“状态：第X版成稿”开头且全文无“续写点”），只锚字符串不同。
+# 逐行核：两处都只把锚字符串由第一版换成第二版原文，判据形式（精确行匹配 / startsWith / 续写点否定）不变，未放宽。
+--- a/check-卷二十二.mjs（改前，按 v1 快照重建）
++++ b/check-卷二十二.mjs（作者改后，现行）
+@@ -31 +31 @@
+-report('1b 卷首模型行', lines.slice(0, 5).includes('起草 claude-fable-5-2 中档／审查 claude-opus-5-5 中档'));
++report('1b 卷首模型行', lines.slice(0, 5).includes('起草 claude-fable-5-2 中档／改稿 claude-opus-5-5 中档（第二版起）／审查 claude-opus-5-5 中档'));
+@@ -34 +34 @@
+-report('1d 状态行为成稿且无续写点残留', lines.some(l => l.startsWith('状态：第一版成稿')) && !all.includes('续写点'));
++report('1d 状态行为成稿且无续写点残留', lines.some(l => l.startsWith('状态：第二版成稿')) && !all.includes('续写点'));
