@@ -1,0 +1,21 @@
+--- "check-\345\215\267\345\215\201\344\270\203.mjs.bak-pre-v2"	2026-11-13 23:51:45.281642300 +0000
++++ "check-\345\215\267\345\215\201\344\270\203.mjs"	2026-11-14 00:59:41.903170200 +0000
+@@ -27,7 +27,8 @@
+ const need2 = ['## §0 ', '## §1 ', '## §2 ', '## §3 ', '## §4 ', '## §5 ', '## §6 ', '## §7 ', '## §8 ', '## 附 术语与代号表', '## 附录 待补清单'];
+ const miss2 = need2.filter(p => !lines.some(l => l.startsWith(p)));
+ report('1 章节 §0–§8、术语表、待补清单齐全', miss2.length === 0, miss2.join(','));
+-report('1b 卷首模型行', lines.slice(0, 5).includes('起草 claude-fable-5-2 中档／审查 claude-opus-5-5 中档'));
++// 卷十七二审 11-14：第二版卷首加了改稿模型，锚点照现文
++report('1b 卷首模型行', lines.slice(0, 5).includes('起草 claude-fable-5-2 中档／改稿 claude-opus-5-5 中档（第二版起）／审查 claude-opus-5-5 中档'));
+ const need0 = ['### 0.1 范围', '### 0.2 依赖卷', '### 0.3 覆盖的卷零行', '### 0.4 参照的五款游戏行', '### 0.5 读法'];
+ report('1c §0 五小节齐全', need0.every(p => lines.includes(p)), need0.filter(p => !lines.includes(p)).join(','));
+ 
+@@ -88,7 +89,7 @@
+   if (vals.length < 2) badEnum.push(c[0]);
+   for (const v of vals) { enumVals++; if (!/^[a-z_]+$/.test(v[1]) || !/ \/ /.test(v[2]) || !cjk.test(v[2])) badEnum.push(`${c[0]}:${v[1]}`); }
+ }
+-report(`6 无用于判断的描述性文本；纯代号无中文；枚举值 ASCII 且带中英显示名（枚举 ${enumCount} 个、值 ${enumVals} 个）`, bad6.length === 0 && badEnum.length === 0 && enumCount === 7, bad6.slice(0, 6).join(' ') + ' ' + badEnum.join(' '));
++report(`6 无用于判断的描述性文本；纯代号无中文；枚举值 ASCII 且带中英显示名（枚举 ${enumCount} 个、值 ${enumVals} 个）`, bad6.length === 0 && badEnum.length === 0 && enumCount === 8 /* 卷十七二审 11-14：第二版按一审真问题 7 新增封闭枚举 way_kind，7→8 */, bad6.slice(0, 6).join(' ') + ' ' + badEnum.join(' '));
+ 
+ // 7 台账各概念写全（台账“卷十七 交通与路途”各行与第五节清单）
+ const ledger = {

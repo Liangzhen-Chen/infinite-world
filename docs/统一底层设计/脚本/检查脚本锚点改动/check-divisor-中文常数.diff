@@ -1,0 +1,59 @@
+--- check-divisor.mjs.bak-pre-cnconst	2026-11-13 22:53:06.248489100 +0000
++++ check-divisor.mjs	2026-11-14 00:58:20.769606900 +0000
+@@ -539,6 +539,18 @@
+   return null;
+ }
+ 
++// 常（11-14，李白核查③）：除数本身是字面正常数——阿拉伯数字（10000、100、0.5）或中文数字（一万、一千、二十）——排除。
++// 只认整段除数就是这个数：抽出的操作数去掉外层括号后恰为该数，且其后（跳过空白）不紧跟英文名或数字
++// （"除以一万倍的 X""除以一万的 j 次方""除以 X 一万次"的除数都不是纯常数，照常判）。不设例外名单。
++const CN_NUM = /^[〇零一二三四五六七八九十百千万亿两]+$/;
++function literalConstDivisor(s, divisor, end) {
++  const d = stripOuter(divisor).replace(/\s/g, '');
++  const arabic = /^(?:[1-9]\d*(?:\.\d+)?|0\.\d*[1-9]\d*)$/.test(d);
++  const chinese = CN_NUM.test(d) && /[一二三四五六七八九十百千万亿两]/.test(d);
++  if (!arabic && !chinese) return false;
++  return !/^[A-Za-z_\d]/.test(s.slice(end).trimStart());
++}
++
+ // ---------------- 识别除法 ----------------
+ const IMPLICIT = /按[^，。；（(]{0,12}?加权的?(?:算术)?平均|加权平均|质量加权|按[^，。；（(]{0,12}?加权|算术平均|时间平均|等权平均|均值之比|均值|人均|之比|比值|占比|占[^，。；]{0,15}?的?(?:份额|比例)|归一化?|按[^，。；]{0,15}?的?(?:权重|比例|份额)(?:分|摊|割|配)|按距离的?平方衰减|的平均|求平均|取平均|平均值/g;
+ 
+@@ -567,7 +579,7 @@
+     g.text = g.text.replace(/(?<=[㐀-鿿])后(?:查|取|再|按|乘|加|得)[\s\S]*$/, ''); // "除以面积后查 wealthCurve"
+     spans.push([m.index, g.end]);
+     out.push({ kind: m[0], at: m.index, summary: cut(s.slice(Math.max(0, m.index - 35), m.index + 40)), divisor: g.text,
+-      skip: explicitSkip(v, i, s, m.index, m[0].length, g.text) });
++      skip: explicitSkip(v, i, s, m.index, m[0].length, g.text) || (literalConstDivisor(s, g.text, g.end) ? '常' : null) });
+     // "对……则用其 X 估值/代入"：X 是另一种情形下的除数
+     const alt = s.slice(g.end).split(/[。；]/)[0].match(/(?:则|改)用其?\s*([A-Za-z_]\w*)/);
+     if (alt) out.push({ kind: m[0], at: m.index, summary: cut(s.slice(Math.max(0, m.index - 35), g.end + 40)), divisor: alt[1], skip: null });
+@@ -827,3 +839,28 @@
+ console.log(`\n# 取值域引用回归：通过 ${ck.filter(Boolean).length + (r13ok ? 1 : 0)} / ${ck.length + 1}`);
+ ck.forEach((ok, k) => { if (!ok) console.log(`- 失败：${k < CITE_OK.length ? '应核实通过' : '应核实不到'}「${[...CITE_OK, ...CITE_BAD][k]}」`); });
+ if (!r13ok) console.log(`- 失败：卷十三${r13.no ? ':' + r13.no : ''}「s = p ÷ a」应判已保护（本卷登记下界后已修），实为 ${r13.status}`);
++
++// ---------------- 字面常数除数回归（11-14，李白核查③） ----------------
++// 全书现行各卷已无"除以中文数字常数"的命中现例（原 3 处在卷二十二 v1 起草稿，已改写），故用最小合成夹具：
++// 每条夹具是一行合成正文，放进一个假卷"卷夹具"按正常流程判（不读任何真实卷）。所引英文名均为全书无登记的合成名。
++const fixVol = texts => {
++  const lines = texts.map((t, k) => ({ text: t, no: k + 1 }));
++  return { vol: '卷夹具', file: '（合成夹具）', lines, clean: lines.map(L => clean(L.text)), prot: lines.map(L => clean(L.text)) };
++};
++const CONST_OK = [   // 除以字面常数 → 须判"常"排除、不命中
++  '可信度为各前提可信度的最小值乘行的 credenceBps 再除以一万（除数是常数一万）；root 取最晚得知的那条前提的 root。', // 合成夹具，仿卷二十二 v1 起草稿原句
++  '倍率基点乘 zzFixtureAmtC 再除以一千，向最近整数取整。',                                                        // 合成夹具
++  '读数 = zzFixtureAmtD ÷ 10000，取整。',                                                                          // 合成夹具（阿拉伯数字）
++];
++const CONST_RISK = [ // 真风险：除数不是纯常数 → 须命中
++  '摊销额 = zzFixtureCostE 除以一万倍的 zzFixtureQtyE，取整。',   // 合成夹具：除以一万倍的 X
++  '平均额 = zzFixtureSumF 除以 zzFixtureQtyF 一万次，取整。',      // 合成夹具：除以 X 一万次
++  '读数 = zzFixtureAmtG 除以一万的 zzFixtureExpG 次方，取整。',    // 合成夹具：除以一万的 X 次方（非字面常数，照常判）
++];
++const fv = fixVol([...CONST_OK, ...CONST_RISK]);
++const cres = fv.lines.map((_, k) => analyzeLine(fv, k).filter(st => st.kind !== '隐式'));
++const constOk = cres.slice(0, CONST_OK.length).map(ss => ss.length > 0 && ss.every(st => !st.hit && st.excluded === '常'));
++const constRisk = cres.slice(CONST_OK.length).map(ss => ss.some(st => st.hit));
++console.log(`\n# 字面常数除数回归（合成夹具）：通过 ${[...constOk, ...constRisk].filter(Boolean).length} / ${constOk.length + constRisk.length}`);
++constOk.forEach((ok, k) => { if (!ok) console.log(`- 失败（应排除为字面常数）：「${CONST_OK[k]}」 ｜ ${cres[k].map(st => `${st.divisor}=${st.hit ? '命中' : st.excluded || '保护'}`).join('，')}`); });
++constRisk.forEach((ok, k) => { if (!ok) console.log(`- 失败（真风险应命中）：「${CONST_RISK[k]}」 ｜ ${cres[CONST_OK.length + k].map(st => `${st.divisor}=${st.hit ? '命中' : st.excluded || '保护'}`).join('，')}`); });
