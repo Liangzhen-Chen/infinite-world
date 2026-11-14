@@ -40,7 +40,8 @@ function tables(L, range) {
     if (/^```/.test(l)) { inCode = !inCode; cur = null; continue; }
     if (inCode) continue;
     if (/^\|/.test(l)) {
-      if (!cur) { cur = { head: cells(l), rows: [], sep: false }; out.push(cur); continue; }
+      // 表头单元格去代码引号后再按列名匹配（机读列名在表头里写作 `name`）；数据行不动
+      if (!cur) { cur = { head: cells(l).map(h => h.replace(/`/g, '')), rows: [], sep: false }; out.push(cur); continue; }
       if (!cur.sep && /^\|\s*:?-{3}/.test(l)) { cur.sep = true; continue; }
       if (cur.sep) cur.rows.push(cells(l));
     } else cur = null;
@@ -73,8 +74,7 @@ for (const t of tables(cov, section(cov, CFG.coverage.addVol))) {
 }
 const split = new Map(); let splitLanded = false;
 for (const t of tables(cov, section(cov, CFG.coverage.addVol))) {
-  const hd = t.head.map(h => h.replace(/`/g, '')); // 机读列名在表头里带代码引号
-  const qi = hd.indexOf(CFG.fields.seq), si = hd.indexOf(CFG.fields.splitFrom);
+  const qi = t.head.indexOf(CFG.fields.seq), si = t.head.indexOf(CFG.fields.splitFrom);
   if (qi < 0 || si < 0) continue;
   splitLanded = true;
   for (const c of t.rows) {
@@ -97,7 +97,7 @@ for (const t of tables(cov, section(cov, CFG.coverage.tableA))) {
     aTotal++;
     const mv = firstVol(c[1] ?? '') ?? '?';
     aRows.set(mv, (aRows.get(mv) ?? 0) + 1);
-    if (ki >= 0) kindCount.set(c[ki], (kindCount.get(c[ki]) ?? 0) + 1);
+    if (ki >= 0) { const k = (c[ki] ?? '').replace(/`/g, '').trim(); kindCount.set(k, (kindCount.get(k) ?? 0) + 1); } // 机读代号格同样写作 `code`
   }
 }
 if (!kindLanded) pending.add(`${V0} A 表机读列 ${CFG.fields.zeroKind}（rebuild、adopt、process；C11-1）`);
