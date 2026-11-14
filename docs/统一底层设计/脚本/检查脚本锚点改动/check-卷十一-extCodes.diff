@@ -1,0 +1,16 @@
+--- "\350\204\232\346\234\254/\345\215\267\345\215\201\344\270\200/check-\345\215\267\345\215\201\344\270\200.mjs.bak-1114-exclude"	2026-11-14 15:20:06.165488800 +0000
++++ "\350\204\232\346\234\254/\345\215\267\345\215\201\344\270\200/check-\345\215\267\345\215\201\344\270\200.mjs"	2026-11-14 15:20:12.080638200 +0000
+@@ -154,7 +154,12 @@
+ const enumNames = new Set(['card_kind', 'card_object', 'card_state', 'card_seg', 'mig_disp', 'tfail_kind', 'freeze_cause', 'mig_event', 'col3']);
+ const tableCodes = new Set(['item', 'material', 'species', 'body_plan', 'person', 'place', 'facility_type', 'org', 'office', 'polity', 'deity', 'faith', 'culture', 'profession', 'skill', 'offense', 'status', 'recipe', 'plant', 'law_code', 'knowledge', 'event_type', 'card', 'migrow', 'migevent']);
+ // 别卷登记、本卷只引用的代号（卷二声明表字段、卷零机读列、各卷钩子先后列）
+-const extCodes = new Set(['systems', 'tables', 'writers', 'entryCallerFiles', 'view', 'predicates', 'phase', 'sortKey', 'retired', 'owner', 'vol', 'splitFrom', 'zeroKind', 'spotKey', 'rebuild', 'adopt', 'process', 'after']);
++// 处理代号（zeroKind 取值）不在此写死，从卷零定义处解析：卷零-覆盖表.md 第 31 行“处理代号（A 表机读列 `zeroKind`…”
++const ZERO = (process.argv[3] ?? 'F:/dnd/docs/统一底层设计/卷零-覆盖表.md');
++const zeroDefLine = readFileSync(ZERO, 'utf8').split('\n').find(l => l.startsWith('处理代号（A 表机读列 `zeroKind`')) ?? '';
++const zeroKinds = (zeroDefLine.match(/= `([a-z_]+)`/g) ?? []).map(x => x.slice(3, -1));
++if (zeroKinds.length === 0) r9.push('卷零处理代号定义处未找到（' + ZERO + '）');
++const extCodes = new Set(['systems', 'tables', 'writers', 'entryCallerFiles', 'view', 'predicates', 'phase', 'sortKey', 'retired', 'owner', 'vol', 'splitFrom', 'zeroKind', 'spotKey', 'after', ...zeroKinds]);
+ for (const w of tickWords) if (!enumVals.has(w) && !fieldNames.has(w) && !enumNames.has(w) && !tableCodes.has(w) && !extCodes.has(w)) r9.push('未登记的代号 ' + w);
+ for (const f of ['tools/migrate/collect.mjs', 'tools/migrate/card-ledger.mjs']) if (!sub(/^### 3\.2 /).includes(f)) r9.push('§3.2 缺写者 ' + f);
+ report('9 错误码、入口、规则表键、枚举值、写者登记落实', r9.length === 0, r9.slice(0, 12).join(' | '));
