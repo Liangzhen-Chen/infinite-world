@@ -1,0 +1,375 @@
+===== node vols/check-卷十.mjs
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首署名行
+PASS 1c §0 五小节齐全
+PASS 2 十二个子系统各六小节齐全
+PASS 3 数据实例至少三条，含非西陲、含非人类或超自然
+PASS 4 验收断言三式齐全且编号规整
+PASS 5 规则与正文无具体 id 字面量
+PASS 6 无用于判断的描述性文本
+PASS 7 台账各概念写全（标题、关键代号、每节有规则且编号连续）
+PASS 8 跨卷引用带标题；R/A/S/C 编号引用不悬空
+PASS 9 json 代码块可解析且条目带中英 labels（6 块） — bad=0 labelMiss=0
+PASS 10 红线：不读墙钟、除数有下界或为 0 分支、存法与去留登记、不读事件日志
+PASS 11 数据实例算术复算（33 项加 6 组分摊恒等）
+PASS 12 接口、入口表、规则表键、错误码、枚举、生成维度、抽取点、阶段条目、迁移清单落实
+PASS 13 关键条文在位（无后来源、物化纯函数、不重掷、键的时刻段、模型不写规则字段、北极星两条）
+行数 1238；子系统 12；规则条数 128；断言 36；扫描条 10；配合项 21；json 块 6；待补清单 10 条；失败项 0
+exit=0
+===== node vols/check-卷二十三.mjs
+PASS 卷首模型行
+PASS 状态行
+PASS §0 存在
+PASS §1 存在
+PASS §2 存在
+PASS §3 存在
+PASS §4 存在
+PASS §5 存在
+PASS §6 存在
+PASS §7 存在
+PASS §8 存在
+PASS 附 术语与代号表
+PASS 附 待补清单
+PASS §4.1 存在
+PASS §4.1.1 维度
+PASS §4.1.2 统一入口
+PASS §4.1.3 规则
+PASS §4.1.4 交互
+PASS §4.1.5 数据实例
+PASS §4.1.6 验收断言
+PASS §4.1 数据实例 ≥ 3（实有 4）
+PASS §4.1 有非西陲实例
+PASS §4.1 有非人类或超自然实例
+PASS §4.1 断言含【扫描】
+PASS §4.1 断言含【不变量】
+PASS §4.1 断言含【扩展性】
+PASS §4.2 存在
+PASS §4.2.1 维度
+PASS §4.2.2 统一入口
+PASS §4.2.3 规则
+PASS §4.2.4 交互
+PASS §4.2.5 数据实例
+PASS §4.2.6 验收断言
+PASS §4.2 数据实例 ≥ 3（实有 4）
+PASS §4.2 有非西陲实例
+PASS §4.2 有非人类或超自然实例
+PASS §4.2 断言含【扫描】
+PASS §4.2 断言含【不变量】
+PASS §4.2 断言含【扩展性】
+PASS §4.3 存在
+PASS §4.3.1 维度
+PASS §4.3.2 统一入口
+PASS §4.3.3 规则
+PASS §4.3.4 交互
+PASS §4.3.5 数据实例
+PASS §4.3.6 验收断言
+PASS §4.3 数据实例 ≥ 3（实有 3）
+PASS §4.3 有非西陲实例
+PASS §4.3 有非人类或超自然实例
+PASS §4.3 断言含【扫描】
+PASS §4.3 断言含【不变量】
+PASS §4.3 断言含【扩展性】
+PASS §4.4 存在
+PASS §4.4.1 维度
+PASS §4.4.2 统一入口
+PASS §4.4.3 规则
+PASS §4.4.4 交互
+PASS §4.4.5 数据实例
+PASS §4.4.6 验收断言
+PASS §4.4 数据实例 ≥ 3（实有 4）
+PASS §4.4 有非西陲实例
+PASS §4.4 有非人类或超自然实例
+PASS §4.4 断言含【扫描】
+PASS §4.4 断言含【不变量】
+PASS §4.4 断言含【扩展性】
+PASS §4.5 存在
+PASS §4.5.1 维度
+PASS §4.5.2 统一入口
+PASS §4.5.3 规则
+PASS §4.5.4 交互
+PASS §4.5.5 数据实例
+PASS §4.5.6 验收断言
+PASS §4.5 数据实例 ≥ 3（实有 4）
+PASS §4.5 有非西陲实例
+PASS §4.5 有非人类或超自然实例
+PASS §4.5 断言含【扫描】
+PASS §4.5 断言含【不变量】
+PASS §4.5 断言含【扩展性】
+PASS §4.6 存在
+PASS §4.6.1 维度
+PASS §4.6.2 统一入口
+PASS §4.6.3 规则
+PASS §4.6.4 交互
+PASS §4.6.5 数据实例
+PASS §4.6.6 验收断言
+PASS §4.6 数据实例 ≥ 3（实有 4）
+PASS §4.6 有非西陲实例
+PASS §4.6 有非人类或超自然实例
+PASS §4.6 断言含【扫描】
+PASS §4.6 断言含【不变量】
+PASS §4.6 断言含【扩展性】
+PASS §4.7 存在
+PASS §4.7.1 维度
+PASS §4.7.2 统一入口
+PASS §4.7.3 规则
+PASS §4.7.4 交互
+PASS §4.7.5 数据实例
+PASS §4.7.6 验收断言
+PASS §4.7 数据实例 ≥ 3（实有 4）
+PASS §4.7 有非西陲实例
+PASS §4.7 有非人类或超自然实例
+PASS §4.7 断言含【扫描】
+PASS §4.7 断言含【不变量】
+PASS §4.7 断言含【扩展性】
+PASS §4.8 存在
+PASS §4.8.1 维度
+PASS §4.8.2 统一入口
+PASS §4.8.3 规则
+PASS §4.8.4 交互
+PASS §4.8.5 数据实例
+PASS §4.8.6 验收断言
+PASS §4.8 数据实例 ≥ 3（实有 4）
+PASS §4.8 有非西陲实例
+PASS §4.8 有非人类或超自然实例
+PASS §4.8 断言含【扫描】
+PASS §4.8 断言含【不变量】
+PASS §4.8 断言含【扩展性】
+PASS §4.9 存在
+PASS §4.9.1 维度
+PASS §4.9.2 统一入口
+PASS §4.9.3 规则
+PASS §4.9.4 交互
+PASS §4.9.5 数据实例
+PASS §4.9.6 验收断言
+PASS §4.9 数据实例 ≥ 3（实有 3）
+PASS §4.9 有非西陲实例
+PASS §4.9 有非人类或超自然实例
+PASS §4.9 断言含【扫描】
+PASS §4.9 断言含【不变量】
+PASS §4.9 断言含【扩展性】
+PASS 正文无具体 id 字面量（命中 0）
+PASS 无用于判断的描述性文本（命中行 ）
+PASS 反引号内无带引号的中文字符串（命中行 ）
+PASS 台账概念：作品实体与单件美观值 beauty
+PASS 台账概念：作品实体两层
+PASS 台账概念：表演与演出事件
+PASS 台账概念：出版、抄写、传播
+PASS 台账概念：累计需求新口径
+PASS 台账概念：传奇推广与升级
+PASS 台账概念：文物的唯一性与名气加成
+PASS 台账概念：§4.2 雕刻取材
+PASS 台账概念：§4.3 文学诗乐舞按文化
+PASS 台账概念：§4.8 娱乐
+PASS 台账概念：§4.9 美观需求接口
+PASS 台账概念：S-19 不设稀有度
+PASS 台账概念：X-24 传说与传奇两个概念
+PASS 除法共 5 行，均注明除数下界或零分支
+PASS 无对品质档的算术（命中行 ）
+INFO 行数 955；字符数 93528；规则条 59；断言条 35；配合项 13；开放问题 10
+RESULT 全部通过
+exit=0
+===== node vols/check-卷二十八.mjs
+PASS 卷首模型行
+PASS 状态行为成稿或已封卷
+PASS §0 存在
+PASS §1 存在
+PASS §2 存在
+PASS §3 存在
+PASS §4 存在
+PASS §5 存在
+PASS §6 存在
+PASS §7 存在
+PASS §8 存在
+PASS 附 术语与代号表
+PASS 附 待补清单
+PASS §0.1 范围
+PASS §0.2 依赖卷
+PASS §0.3 覆盖的卷零行
+PASS §0.4 参照的五款游戏行
+PASS §0.5 读法
+PASS §4.1 存在
+PASS §4.1.1 维度
+PASS §4.1.2 统一入口
+PASS §4.1.3 规则
+PASS §4.1.4 交互
+PASS §4.1.5 数据实例
+PASS §4.1.6 验收断言
+PASS §4.1 数据实例 ≥ 3（实有 4）
+PASS §4.1 有非西陲实例
+PASS §4.1 有非人类或超自然实例
+PASS §4.1 断言含 扫描式：
+PASS §4.1 断言含 不变量式：
+PASS §4.1 断言含 扩展性式：
+PASS §4.1 有规则 R28-1.1
+PASS §4.2 存在
+PASS §4.2.1 维度
+PASS §4.2.2 统一入口
+PASS §4.2.3 规则
+PASS §4.2.4 交互
+PASS §4.2.5 数据实例
+PASS §4.2.6 验收断言
+PASS §4.2 数据实例 ≥ 3（实有 4）
+PASS §4.2 有非西陲实例
+PASS §4.2 有非人类或超自然实例
+PASS §4.2 断言含 扫描式：
+PASS §4.2 断言含 不变量式：
+PASS §4.2 断言含 扩展性式：
+PASS §4.2 有规则 R28-2.1
+PASS §4.3 存在
+PASS §4.3.1 维度
+PASS §4.3.2 统一入口
+PASS §4.3.3 规则
+PASS §4.3.4 交互
+PASS §4.3.5 数据实例
+PASS §4.3.6 验收断言
+PASS §4.3 数据实例 ≥ 3（实有 4）
+PASS §4.3 有非西陲实例
+PASS §4.3 有非人类或超自然实例
+PASS §4.3 断言含 扫描式：
+PASS §4.3 断言含 不变量式：
+PASS §4.3 断言含 扩展性式：
+PASS §4.3 有规则 R28-3.1
+PASS §4.4 存在
+PASS §4.4.1 维度
+PASS §4.4.2 统一入口
+PASS §4.4.3 规则
+PASS §4.4.4 交互
+PASS §4.4.5 数据实例
+PASS §4.4.6 验收断言
+PASS §4.4 数据实例 ≥ 3（实有 4）
+PASS §4.4 有非西陲实例
+PASS §4.4 有非人类或超自然实例
+PASS §4.4 断言含 扫描式：
+PASS §4.4 断言含 不变量式：
+PASS §4.4 断言含 扩展性式：
+PASS §4.4 有规则 R28-4.1
+PASS §4.5 存在
+PASS §4.5.1 维度
+PASS §4.5.2 统一入口
+PASS §4.5.3 规则
+PASS §4.5.4 交互
+PASS §4.5.5 数据实例
+PASS §4.5.6 验收断言
+PASS §4.5 数据实例 ≥ 3（实有 4）
+PASS §4.5 有非西陲实例
+PASS §4.5 有非人类或超自然实例
+PASS §4.5 断言含 扫描式：
+PASS §4.5 断言含 不变量式：
+PASS §4.5 断言含 扩展性式：
+PASS §4.5 有规则 R28-5.1
+PASS §4.6 存在
+PASS §4.6.1 维度
+PASS §4.6.2 统一入口
+PASS §4.6.3 规则
+PASS §4.6.4 交互
+PASS §4.6.5 数据实例
+PASS §4.6.6 验收断言
+PASS §4.6 数据实例 ≥ 3（实有 4）
+PASS §4.6 有非西陲实例
+PASS §4.6 有非人类或超自然实例
+PASS §4.6 断言含 扫描式：
+PASS §4.6 断言含 不变量式：
+PASS §4.6 断言含 扩展性式：
+PASS §4.6 有规则 R28-6.1
+PASS §4.7 存在
+PASS §4.7.1 维度
+PASS §4.7.2 统一入口
+PASS §4.7.3 规则
+PASS §4.7.4 交互
+PASS §4.7.5 数据实例
+PASS §4.7.6 验收断言
+PASS §4.7 数据实例 ≥ 3（实有 4）
+PASS §4.7 有非西陲实例
+PASS §4.7 有非人类或超自然实例
+PASS §4.7 断言含 扫描式：
+PASS §4.7 断言含 不变量式：
+PASS §4.7 断言含 扩展性式：
+PASS §4.7 有规则 R28-7.1
+PASS §4.8 存在
+PASS §4.8.1 维度
+PASS §4.8.2 统一入口
+PASS §4.8.3 规则
+PASS §4.8.4 交互
+PASS §4.8.5 数据实例
+PASS §4.8.6 验收断言
+PASS §4.8 数据实例 ≥ 3（实有 4）
+PASS §4.8 有非西陲实例
+PASS §4.8 有非人类或超自然实例
+PASS §4.8 断言含 扫描式：
+PASS §4.8 断言含 不变量式：
+PASS §4.8 断言含 扩展性式：
+PASS §4.8 有规则 R28-8.1
+PASS 正文无具体 id 字面量（命中 0）
+PASS 无用于判断的描述性文本（命中行 ）
+PASS 反引号内无带引号的中文字符串（命中行 ）
+PASS 台账概念：V28-01 包形状
+PASS 台账概念：V28-01 清单 manifest
+PASS 台账概念：V28-01 命名空间
+PASS 台账概念：V28-01 冲突优先级
+PASS 台账概念：包序
+PASS 台账概念：V28-02 / X-39 补丁操作格式
+PASS 台账概念：X-39 补丁只产生偏离行
+PASS 台账概念：K-18 继承只引用卷二
+PASS 台账概念：零B 0.9 派生
+PASS 台账概念：词汇扩展（S-12）
+PASS 台账概念：V28-03 加载校验流水线
+PASS 台账概念：V28-03 报错码
+PASS 台账概念：V28-04 内容审批三级
+PASS 台账概念：X-04 离线屏蔽词校验
+PASS 台账概念：零A 3.14、15.3 人物档
+PASS 台账概念：V28-05 安装升级卸载
+PASS 台账概念：卷二十七 §8 第 12 条的回答
+PASS 台账概念：N-06 卸包终止对象
+PASS 台账概念：V28-06 作者工具
+PASS 台账概念：V28-06 示例包
+PASS 台账概念：C11-7 转换脚本留痕
+PASS 台账概念：V28-06 一方机制表加载
+PASS 台账概念：卷零核查问 20.5 是否带校验器
+PASS 正文无除法记号（命中行 ）
+PASS §2.8 规则表键 ≥ 4 行（实有 5）
+PASS §2.8 规则表键的取值域栏里没有两位以上的数字（不填标定值）
+PASS §2.9 登记的码数 ≥ 20（实有 25）
+PASS §2.9 的码都在正文别处用到（未用：）
+PASS 正文用到的本卷码都在 §2.9（未登记：）
+PASS 配合项 C28 编号连续（15 条）
+PASS 开放问题 Q28 编号连续（11 条）
+PASS 迁移行 M28 编号连续（16 条）
+PASS 扩展性条目 X28 编号连续（11 条）
+PASS 扫描条 S28 编号连续（9 条）
+PASS 引用的本卷编号都有定义（悬空：）
+PASS 待补清单引用序号都在 1–12 内
+PASS 审批旧称只在标明“旧称”的行出现（命中行 ）
+PASS 续写点标记不多于 1 处（实有 0）
+INFO 行数 959；字符数 73546；规则条 79；断言条 28；扫描条 9；配合项 15；开放问题 11；迁移行 16；本卷错误码 25
+RESULT 全部通过
+exit=0
+===== node book/scan-sparse-map.mjs
+== 判据 E-DIM-MAP-SPARSE-NONSUM ==
+RESULT 判据失败 0
+== 候选清单（宽口径，人工复核用，不判失败）==
+卷七-信仰与文化:1427	vector	[缺省值]	`value` 族（价值轴词表，全书唯一一张，台账 X-06）；文化行 `values`（各轴缺省值）；`ethic` 族条目 `{required, about: set<ref>, vector: map<ref vocab value, number>}`；文化行 `ethics`（对每类行为的态度，[−1, 1]）；`taboo` 族条目 `{acts: set<ref>（动作代号）, taxa: set<ref vocab taxon>, sapientShareMin: number nullable, kinDistanceMax: integer nullable, bondK
+卷九-AI接口:196	effects	[缺键]	| `effects` | map<degree, list<effectCall> nullable> \| `from_slot` | — | `from_slot` 见 `shapeFrom`，各档按 R9-1.13 折算；否则键全覆盖 `degree` 族五档，缺键即加载失败；`check` 为空时 `success` 非 null，其余四档显式写 null，表示无检定时此档不出现（R9-3.7 成功度恒为 `success`）；`check` 非空时五档都非 null，大成功、大失败与成功、失败同效的，显式写与 `success`、`failure` 相同的一列 | 加载失败 | 各
+卷九-AI接口:203	sourceStrength	[稀疏/缺键]	| `sourceStrength` | map<ref vocab sense, number> combine=sum | 随感官（到达量的单位，卷五 §4.2（分区、方位与感知通道） 规则 3） | 键为 `sense` 族代号（卷五 §4.2.1（维度）），各值为实数（可负）；叠加修正映射（卷二 §1.6（缺失处置）第 5 项），键集可稀疏，缺键即该感官不加修正项；行上必写，本动作不改任何感官的源强写 `{}` | 加载失败（必填） | 源强修正项（封卷后勘误，李白 11-14 20:22 根因 G P-8）：行为人做本动作期间，键 s 的值作加性修正项叠加到卷五修正目标键 `sens
+卷九-AI接口:276	rules.act.paceFloor	[取 0]	| `rules.act.paceFloor` | map<act_class, number> | 键全覆盖 `act_class`；每值 [0, 1]。按动作类取节奏下限，取 0 的类节奏可为 0（C17-1 第 2 点） | R9-1.4 |
+卷九-AI接口:290	rules.review.tolerance	[缺键]	| `rules.review.tolerance` | map<claim_kind, number ≥ 0> | 键全覆盖 `claim_kind` 族，缺键即加载失败；不设容差的种类显式写 0 | R9-11.4 |
+卷九-AI接口:295	rules.npc.stanceWeights	[缺键/不加项]	| `rules.npc.stanceWeights` | map<ref vocab stance_axis, number> combine=sum | 叠加修正映射（卷二 §1.6（缺失处置）第 5 项），缺键即该轴不加项 | R9-12.3 |
+卷九-AI接口:313	rules.gate.categoryMap	[缺键]	| `rules.gate.categoryMap` | map<屏蔽词类别代号, reject_code> | 键全覆盖屏蔽词类别族（卷二 §1.9（代号、显示名与语言边界）），缺键即加载失败；没有专门拒收代号的类别显式写 `reject:blocklist` | R9-19.5 |
+卷九-AI接口:537	degreeBps	[缺档]	- **R9-1.13 取自槽位**（C15-1 ①）：动作行的 `check.skill`、`requirement`、`baseMinutes`、`effects`、`backlash` 与其 `costRows` 所指行的 `resource` 写 `from_slot` 的，值不在行上，由本行 `shapeFrom` 的读入口按此刻意图的槽位给出。凡读到这些列之处（R9-1.2 试算、九段、R9-1.4 开工定工量、R9-1.12 ① 重查）都在读的那一刻以同一组实参调该入口，不缓存、不存储；该入口的 `inputsOf` 依赖并入 R9-1.12 的重查集合 K。取返回的键：`ski
+卷二十二-知识信息与传播:215	public.injectBoost	[缺键]	| `public.injectBoost` | `map<ref vocab kchan, integer ≥ 0>` | 一次注入加多少进度点。键集须覆盖 `sense` 非空的全部 `kchan` 行（亲身感知通道），加载期校验，缺键即加载失败；所以 R22-5.2 取最大时每个所经通道都有值，没有缺键情形（封卷后勘误 1114w2e3） |
+卷五-地点地形与资源场:137	deposits	[缺键]	| `deposits` | map<ref refs[kind material, kind plant], score nullable> | score | [0,100] | never（只许出现在 comp_tract 行） | skip | 否 | 丰度评分。展平后键全覆盖 `material` 与 `plant` 两表全部实体行（共同的 null 底由类别行 `extends` 给出，卷二 §1.6（缺失处置）第 4 项），缺键只表示未知、按 onUnknown 处置；矿物键非 null 表示"此处有此矿"，null 表示此处无此矿；植物键非 null 表示对群落丰度的偏离，nu
+卷五-地点地形与资源场:482	?	[缺键/不加项]	   - **一次性源**（一声吼、一下敲击、一道闪光）没有场可读。它以**行为人**（发出动静的实体）为主体，对感官 s 求修正目标键 `sense.sourceStrength[s]`（§2.3）经卷二 §3.3 管线的值：基值 = 行为人所在实体表的 `sourceStrength[s]` 列（`map<ref vocab sense, number>`，键全覆盖 `sense` 族）：个体取其物种行（卷四物种表登记）、物品取物品表（卷三乙登记）、地点取 place 表（§2.1，本卷登记）；各值经该表类别行的 `extends` 继承给出，由数据给值（基础类别行在数据里写全 `sens
+卷五-地点地形与资源场:521	envelope	[缺键/缺项]	| `envelope` | struct{tempC:[min,max], precipMm:[min,max], elevationM:[min,max], skyExposure:[min,max], depthM:[min,max], terrains: set<enum terrain>, waterAny: set<ref vocab water>, aspectMin: map<ref vocab sphere, score nullable>} | 该群落成立的条件包络；`aspectMin` 键全覆盖 `sphere` 族，缺键即加载失败，对某领域不设下限的该键显式写 nul
+卷五-地点地形与资源场:910	bySite	[缺 `]	- `terrain-modifiers.json`：`{byTerrain: map<enum terrain, list<修正项模板>>, byBiome: map<enum biome, list<…>>, bySite: map<enum site, list<…>>, slopeCurve}`。键全部是词表代号。本表不设湿滑曲线：路面因雨雪变得难走，是卷十七合成行程时读卷二十环境量的事，路况系数只描述路本身（规则 1）。`slopeCurve` 的值域严格大于 0（加载校验）。模板字段与卷二 §3.2 相同，缺 `source`（求值时填所在地点）；模板的 target 不得是群落包
+卷六-经济:220	household.json	[缺键]	| `household.json` | `selfSupplyTimeShare: fraction`；`tierOrder: list<必需档代号>`；`minShortageShare: fraction`；`shortVerb: map<用度类代号, ref vocab verb>`（某用度类缺量时发的动词；键全覆盖用度类族，缺键即加载失败；不设分动词的用度类显式写通用动词 `verb_supply_short`，§4.12 规则 6；封卷后勘误，卷七牵连） |
+卷六-经济:223	contract.json	[缺键]	| `contract.json` | `grace: map<obl, integer>`（分钟；键是 `obl` 条目 `graceKey` 所取的值）；`noticeDays: map<通知期键, integer>`（键是 `ckind` 条目 `noticeDaysKey` 所取的值）。两张表的键由登记该 `obl`、`ckind` 条目的卷连同条目一起登记，凡被条目引用的键必须在表里、值必写，缺键加载失败，不设缺省；现有别卷登记：卷二十二缄默合同的 `grace.obl_silence_keep`、`grace.obl_silence_pay`、`noticeDays.notice_
+卷十七-交通与路途:136	tmode	[缺键]	| `tmode`（`tmode_`，通行方式） | `ways: set<enum way_kind>`（非空；飞行取两者）；`gaits: set<ref vocab gait>`；`terrainPass: map<enum terrain, fraction nullable>`（必写；展平后键集须覆盖卷五 `terrain` 封闭清单的全部条目，缺键即加载失败 E-TRIP-MODE；与参照方式无差的地形显式写 1，0 即此种地形走不了，null 只表示该地形系数未知，按 `wsum` 未知传播使该段地形系数未知；含义见下）；`envCurves: list<struct{envKe
+卷十九-建筑与设施:163	ratingWeights	[缺键]	| `ratingWeights` | map<ref vocab raspect, fraction> | fraction | 值之和为 1 | always | error | 房间评价各项的权重；每个类型行必写，键须覆盖 `raspect` 族全部条目（权重为 0 的也写），缺键加载失败；建筑 `type` 为 null 时用 `rules.facility.rating.defaultWeights`（§4.11 规则 3，键同样须全覆盖） | RW#25 |
+卷十九-建筑与设施:190	bform	[缺省值]	| `bform` 形制 | `bldform_` | 开放 | `envelopeReq: ref requirement`（围护用料的选择器；各消耗项的 `qty` 是**体积份额**，和为 1，§4.4 规则 1）；`wallThicknessDefaultM`、`wallThicknessMinM`（意图未给墙厚时的缺省值、这种盖法允许的最薄值；建筑行上的 `wallThicknessM` 只有 §2.1 一个来源）；`storeyHeightM`；`perimeterFactor`；`roofCover: fraction`；`apertureBase: fraction`；`pro
+卷十九-建筑与设施:926	concealment	[缺键]	`fixture` 条目的 `mechanism: struct{trigger: struct{quantity: enum trigq, threshold: number, rearmMinutes: integer} nullable, powerOutRX: rx nullable, powerNeedW: number nullable, concealment: map<ref vocab sense, number> combine=sum, effects: list<effectCall>}`（`concealment` 是叠加修正映射，卷二 §1.6（缺失处置）第 5 项
+卷十五-法术与超自然:154	castmode	[缺键]	| `castmode`（`cmode_`） | `capBps: integer`；`costBps: integer`；`minutesBps: integer`；`sourceStrength: map<ref vocab sense, number> combine=sum`（叠加修正映射，卷二 §1.6（缺失处置）第 5 项；键为卷五 `sense` 族代号，各值为实数、可负，单位随感官，缺键即该感官不加修正项；行上必写，不改任何感官的源强写 `{}`；R15-4.6）；`difficultyAdd: number` | 施为方式（意图的一个槽位）：对上限、代价、工时、施为者源强、难
+卷十八-社会关系与家族:137	relation	[缺键/不加项/取 0]	| `relation`（`rel_`，卷二 §1.12（派生与聚合原语）已定基础字段 `from/to/via/inputs/intimate`） | 代号可加行，字段集合封闭（一审后裁定；牵连见卷末影响面表） | 社会字段组，由本卷单点定义。`kind` 非空即社会关系条目，整组必须填全（E-REL-SOCIAL-FIELDS）；聚合用的条目整组不填，也不得被 `terms.rel` 或史实记录引用。字段：`persistence: enum persistence_mode`（现役或史实，§4.1.1）；`kind: ref vocab holding_kind`（挂在哪个种类行下，该行
+卷十八-社会关系与家族:238	orgTraits	[缺键]	| `orgTraits` | map<ref vocab orgkind, struct{domestic, descentGroup: boolean}> | 家户类、世系类的判定；orgkind 族的每条条目在这里必须有同键的一行，两项行上必写（E-KIN-ORG-TRAITS；封卷后勘误 1114w3a，原“缺键即两项皆假”是隐性缺省，删） |
+卷十六-神怪与怪物:144	mtier	[缺键]	| `mtier`（`mtier_`） | `rank: integer`（各条目互不相同）；`minPower: integer ≥ 0`；`quota: map<enum juris, integer ≥ 0 nullable> nullable`（必写；null 即此档不设内容配额；非空时 `juris` 族每个条目各写一键，缺键加载失败，E-BST-QUOTA；值为 null 即该层级不设配额）；`maxAlive: map<enum juris, integer ≥ 0 nullable> nullable`（必写；null 即此档不设在世上限；非空时 `juris` 族每个条目各写
+卷四-生物身体与人物:288	diet	[缺键/没有键/取 0]	| `diet` | `eats: rx`；`assimilation: struct{bySubstance: map<ref vocab substance, fraction nullable>, other: fraction nullable}`；`eatsTaxa: set<ref vocab taxon>`；`primaryConsumer: boolean`（派生字段，数据行不得填写，第六版）；`fiberPenalty: number nullable`（取值域 [0,5]；李白 11-13 准加纤维含量后补） | 一种消化能力，不是一张食物名单（第五版，全书同类"选材与组合
+候选合计 24 条
+exit=0
