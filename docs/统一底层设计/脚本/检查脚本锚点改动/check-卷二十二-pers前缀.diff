@@ -1,0 +1,27 @@
+--- "F:/dnd-tmp/vols/backup/check-\345\215\267\344\272\214\345\215\201\344\272\214.mjs.20261114-111904.bak"	2026-11-14 11:19:04.925411200 +0000
++++ "F:/dnd-tmp/vols/check-\345\215\267\344\272\214\345\215\201\344\272\214.mjs"	2026-11-14 11:20:16.801420500 +0000
+@@ -65,11 +65,21 @@
+ report('4 验收断言三式齐全且编号规整', asr.length === 0, asr.join(','));
+ 
+ // 5 无具体 id 字面量（实体 id 前缀加下划线）
+-const idRe = /\b(item|mat|npc|creature|monster|boss|loc|spell|lore|deity|faith|org|species|status|skill|profession|office|culture|etype|recipe|plant|polity|offense|facility|site|player|biome|terrain|weather|season|lang|kfam|kchan|distort|fclass|infer|rkind|plot)_[a-z0-9_]+/g;
+-const idAllow = new Set(['distort_op', 'kchan_', 'distort_', 'fclass_', 'infer_', 'rkind_', 'plot_']);
++// 李白 11-14 补：卷二 §1.9 实体前缀表所缺 flora body bld fac law eff mod note，及他卷脚本（卷二十六第 5 项）登记的词表实例前缀 value need gauge thought episode drive sfam class comp rel sg param req agg res；
++// verb_ 不入：本卷 §4.2、§4.3 登记的事件动词代号是本卷接口（第 7 项台账要求在场），同 kchan_ 等本卷词表
++const idRe = /\b(item|mat|npc|creature|monster|boss|loc|spell|lore|deity|faith|org|species|status|skill|profession|office|culture|etype|recipe|plant|polity|offense|facility|site|player|biome|terrain|weather|season|lang|kfam|kchan|distort|fclass|infer|rkind|plot|flora|body|bld|fac|law|eff|mod|note|value|need|gauge|thought|episode|drive|sfam|class|comp|rel|sg|param|req|agg|res)_[a-z0-9_]+/g;
++const idAllow = new Set(['distort_op', 'kchan_', 'distort_', 'fclass_', 'infer_', 'rkind_', 'plot_', /* 新前缀下的词表族名，非实例：照卷二十六 allowWords */ 'body_plan', 'body_part', 'law_code', 'gauge_mode', 'thought_trigger', 'thought_role', 'episode_pick']);
+ const idHits = [];
+ lines.forEach((l, i) => { for (const m of l.matchAll(idRe)) if (!idAllow.has(m[0])) idHits.push(`${i + 1}:${m[0]}`); });
+-report('5 正文无具体 id 字面量（含数据实例；实例用‹指称›）', idHits.length === 0, idHits.slice(0, 8).join(' '));
++// 5 续 别卷词表 pers_ 代号（李白 11-14 机制项第一批第三节；写法照卷二十六第 5 项）：只准出现在代码块与各节数据实例小节内，正文其余处一律报
++const persRe = /\bpers_[a-z0-9][a-z0-9_]*/g;
++let fence5 = false;
++meta.forEach((m, i) => {
++  if (/^```/.test(m.line)) { fence5 = !fence5; return; }
++  if (fence5 || /^#### 4\.\d+\.5 数据实例$/.test(m.h4)) return;
++  for (const hit of m.line.match(persRe) ?? []) idHits.push(`${i + 1}:${hit}`);
++});
++report('5 正文无具体 id 字面量（含数据实例；实例用‹指称›；pers_ 代号只准在代码块与数据实例内）', idHits.length === 0, idHits.slice(0, 8).join(' '));
+ 
+ // 6 无用于判断的描述性文本；纯代号无中文；枚举值 ASCII 且带中英显示名
+ const bad6 = [];
