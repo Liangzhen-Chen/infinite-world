@@ -1,0 +1,17 @@
+--- "F:/dnd-tmp/vols/backup/check-\345\215\267\345\205\253.mjs.20261114-122719.bak"	2026-11-14 12:27:19.268519000 +0000
++++ "F:/dnd-tmp/vols/check-\345\215\267\345\205\253.mjs"	2026-11-14 12:27:25.662941900 +0000
+@@ -249,6 +249,14 @@
+ const evWar = new Set(evReg.match(/`evst_war_[a-z_]+`/g) ?? []);
+ for (const c of ['evst_war_declared', 'evst_war_fighting', 'evst_war_settled', 'evst_war_lapsed']) if (!evWar.has('`' + c + '`')) r13.push('evstage 登记段缺 ' + c);
+ if (evWar.size !== 4) r13.push(`evstage 登记段 evst_war_* 项数 ${evWar.size}≠4`);
++// 反向判据（卷二十四 C24-16：wphase 已退役）：全卷（含登记段、§2.4、附表）不得出现 wphase_* 代号或 `wphase` 族行；
++// 只豁免“## 附录 第N版修改记录”里的表格行（描述退役的历史行）。裸词 wphase 用于说明退役，不查。
++meta.forEach((m, i) => {
++  const histRow = /^## 附录 第[一二三四五六七八九十]+版修改记录$/.test(m.h2) && /^\| /.test(m.line);
++  if (histRow) return;
++  if (/\bwphase_[a-z0-9_]+/.test(m.line)) r13.push(`L${i + 1} 残留退役代号 ${m.line.match(/\bwphase_[a-z0-9_]+/)[0]}`);
++  if (/^\| `wphase` \|/.test(m.line)) r13.push(`L${i + 1} 残留退役族行 wphase`);
++});
+ // 待补清单条数
+ const todo = meta.filter(m => /^## 附录 待补清单/.test(m.h2) && /^\| \d+ \|/.test(m.line)).length;
+ if (todo < 5) r13.push('待补清单过少');
