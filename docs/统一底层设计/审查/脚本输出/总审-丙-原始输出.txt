@@ -1,0 +1,39 @@
+总审-丙 核对过程记录（Opus 5.5 中档，2026-11-14）
+
+一、交叉引用脚本（会话临时目录 xref.py，python -I 运行，只读）
+  sec 模式：本路七卷中 "卷X §n.n" 引用对照目标卷标题号
+    结果：1 条未命中——卷六:477 "卷二 §5 的 `lifeDays`"（§5 泛指整章，卷二标题为"五"）→ 排除，不是悬空。
+  id 模式：本路七卷中 "卷X …`标识符`"（12 字窗口）在目标卷是否出现
+    结果：60 条未命中，逐条人工复核：
+    真问题来源：卷二十五:401/1018 cropForage→卷五 0 处（丙-2）；卷二十五:370 planting→卷五 0 处（丙-4）；卷十九:908 storeTarget→卷二十五 0 处（丙-9）；卷二十:521 rateBasis→卷六 0 处（丙-8）；卷五:381 perceiveEvent→卷二十二 0 处（丙-11）；卷十九:1179 entryJudges→卷五 0 处（丙-1）。
+    排除（窗口误配到相邻卷名或本卷自有标识符）：卷五:136 areaM2/卷八；卷五:144、:1278 comp_tract/卷二（组件类由各卷自行登记）；卷五:1280 settleStocks/卷二十七；卷五:1310 latitudeDeg（原文"卷二十一个定义方"=卷二十 一个）；卷六:402/:423/:1409 stockIn/卷三乙（原文说的就是卷三乙不读它）；卷六:498 accounts/卷二；卷六:598 resourceFields/卷三乙（实为卷五）；卷六:970 cterm/卷十五；卷六:2008 wealth/卷十六；卷十:193 unmaterializedPurpose（卷十自有规则键）；卷十:277、:677、:1026 窗口误配；卷十七:426 tripView、:633 passOf、:656 popView、:660 tripPlan（卷十七自有或误配）；卷十七:460/:966 sealIntact/卷三乙（C17-6 请求，卷三乙 0 处——属别路卷三乙承接，本路不判，见三）；卷十七:586 borderTerms/卷八（实为卷五）；卷十七:1020 placeSubject/卷十九（卷十七自有）；卷十九:271/:1013/:1165 condition、:704 restSite、:791/:1182/:1279/:1281/:1283 carrierItem、:1139 damageFacility、:1161 accessDefault、:1279 portableState、:1511 comp_zone（均为卷十九自有标识符误配到别卷）；卷二十:675 feltTempC/卷四、:1143 mood/crop、:1242 perceive/卷九、:1689 clearCultivation/卷九、:1717 persistence/卷四（误配）；卷二十五:123 comp_cultivable/卷二（Q1 请卷二回填，卷二已定稿待汇总，按卷二十五 §8 Q1 记账，不报）；:373 sow/卷二十七、:497 husbandryStep/卷二十七（离屏调用方，卷二十七不必点名）；:724 edibleShareOf（实为卷四，卷四有 9 处）；:797 sow/卷六；:1019 cropGrowth/tend（见四）。
+
+二、Grep 定点核对（命令 → 命中摘要）
+  grep entryJudges 卷五 卷二 → 卷五 0；卷二 :506、:646 定义字段（丙-1）
+  grep "accessClassAt|accessDefaultOf|带到期的持有边|时段许可" 卷五 → 只 :906、:913、:1060 旧说法（丙-1）
+  sed 卷五 :606-616（§4.7 规则 2）→ 初级消费项只有 biome.faunaKgPerM2（丙-2）
+  grep "容量模型|取食|初级消费" 卷五 → 只 :610、:612，没有取食损耗转出（丙-2）
+  grep intent 卷五 → :712 意图槽 {parts, alive, sizeRange}（丙-4）
+  grep "requirement|需求块" 卷五；sed 卷五 :120-130；grep edges 卷二 → edges 节字段没有 requirement；卷二 :1582 同（丙-3）
+  grep "作物生长系数|一个生长季" 卷二十 → :939 "由卷二十五用一次 envAccum"（丙-5）；旱情行的作物系数已删（:1429、:1666），Q15 ① 已落，排除
+  grep qualityTier 卷三乙 → :353 写者只管 itemInstances（丙-6）
+  grep "settleStatBuild|统计劳动力|统计生产" 卷六；sed 卷六 :1441 → 只有三个钩子的 after（丙-7）
+  grep "利息|interestRate|计息|calendarSpan|rateBasis|日历入口" 卷六 → 计息/rateBasis/日历入口都是 0 处（丙-8）
+  grep "入仓|仓储|storeTarget" 卷二十五 → :719 普通批次，没有 storeTarget（丙-9）
+  grep shopkind 卷六/卷十 → 卷六 :132 已有 perShopVolume；卷十 :629 还写"尚缺"（丙-10）
+  grep "R22-2.2|perceive" 卷二十二 → :368 逐人调 perceive（丙-11）
+  追加点名：grep cultureLevel 卷八b 卷十 卷二 卷七 → 只在卷十 :170 定义，卷八b :299 是引用（误报）；grep "§7 第 n 行" 卷十九 → 14 个号都 ≤ M19-37，:294 指 M19-35 drafts（误报）
+
+三、排除的候选及理由
+  - 卷十 §3.2/§5.2 "卷二十五 生成期开群入口"、可耕地潜力（C10-11）：卷十写明"正文暂不派，李白第 0 日裁定 ①"，是有意后移，不报。
+  - 卷二十五 cropGrowth/commitCropDay/cultivationOf 在卷五里不点名：卷五 :620 写"照卷二十五生长函数的返回值转移"，:1265 自记"以卷二十五 §3.2、S25-5 为准"，口径已经接上，只是没写名字 → 不报（容量与取食这一半不在此列，见丙-2）。
+  - 卷十七 C17-6 sealIntact（卷三乙 0 处）：承接方卷三乙不在本路，归别路，不报。
+  - 卷十七 C17-7 → 卷六：routeRisk、gateQuote、raidAppraisal().taker 卷六 :1130、:1422、:2014 都已对齐；C17-3 → 卷十九 carryFacility 已落；C17-10 → 卷二十 waterAhead 已落；C17-5 → 卷二 :478、:1552 已落；C17-2/C17-4 → 卷四 :645、:669 已落。
+  - X-15 税：卷六 §4.3（:427–447）只算费，税读卷八，合台账。
+  - X-13 速度：卷六 §4.6 只读卷十七、卷四；卷十七 R17-1.4 乘卷五 speedFactor，合台账。
+  - X-38 市集日：卷二十 :16、:513、:521 只给格式，规则行归卷七，合台账。
+  - 液体与污染物账户的双写者：卷五 §3.3 与卷二十 §3.2 按流量种类分工，说法一致。
+  - 位置量与 viaRelocate：卷五单项登记名单与卷十九 §3.3 一致；卷十七不调 relocate，与卷二 :478 一致。
+  - 卷十九 buildProjectView 与卷六 projectView：已改为不同名，不报。
+  - 卷十九 租住持有边由卷六合同写者写：卷六 §4.18 规则 6 有租约条款，持有边经卷十八写者，属表述层面，不报。
+  - 卷十七 R17-1.10 没写卷四 typicalSpeedOf 的名字：语义已对上，属卷内措辞，不报。
