@@ -1,0 +1,12 @@
+--- "backup/check-\345\215\267\345\205\255.mjs.20261114-105546.bak"	2026-11-14 10:55:46.931602700 +0000
++++ "check-\345\215\267\345\205\255.mjs"	2026-11-14 10:55:52.158352700 +0000
+@@ -89,7 +89,8 @@
+   const p = partOf(sec, n, 3);
+   p.text.forEach((l, i) => {
+     if (GOODS.test(l)) goodsHits.push(p.start + i + 2);
+-    if (/(?<![\w.§])\d+\.\d+(?![\w.])/.test(l.replace(/§\d+(\.\d+)*/g, '').replace(/4\.\d+(\.\d+)?/g, ''))) constHits.push(p.start + i + 2);
++    // 遮掉条号：§x.y、4.x、以及 R/A/S/C/E 前缀的规则编号（如 R22-1.6、A6-1.2）
++    if (/(?<![\w.§])\d+\.\d+(?![\w.])/.test(l.replace(/(?<![A-Za-z])[RASCE]\d+-\d+(\.\d+)+/g, '').replace(/§\d+(\.\d+)*/g, '').replace(/4\.\d+(\.\d+)?/g, ''))) constHits.push(p.start + i + 2);
+   });
+ }
+ report(goodsHits.length === 0, '6 规则小节不点名具体物品', goodsHits.join(' '));
