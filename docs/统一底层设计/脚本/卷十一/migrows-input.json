@@ -6580,7 +6580,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "卷二十二 §4.6",
+   "target": "R22-6.2",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -6737,7 +6737,7 @@
    ],
    "disp": "replace_entry",
    "target": "R29-2.2、R29-2.4、R29-4.4",
-   "targetObject": "outputGate 组",
+   "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
   {
@@ -6758,7 +6758,7 @@
    ],
    "disp": "recode",
    "target": "R29-2.6",
-   "targetObject": "模板结构行",
+   "targetObject": "templates",
    "baseline": "d54c89a3"
   },
   {
@@ -6779,7 +6779,7 @@
    ],
    "disp": "replace_entry",
    "target": "R29-4.1（档取卷十七 exploreGrade；与 M17-12 同一处）",
-   "targetObject": "规则层（卷十七读入口）",
+   "targetObject": "rules",
    "baseline": "d54c89a3"
   },
   {
@@ -6812,7 +6812,7 @@
    ],
    "disp": "recode",
    "target": "R29-4.2、R29-4.6、R29-4.7",
-   "targetObject": "地图图层行、语言包",
+   "targetObject": "map",
    "baseline": "d54c89a3"
   },
   {
@@ -6845,7 +6845,7 @@
    ],
    "disp": "recode",
    "target": "R29-2.6、R29-2.12",
-   "targetObject": "模板结构行",
+   "targetObject": "templates",
    "baseline": "d54c89a3"
   },
   {
@@ -6866,7 +6866,7 @@
    ],
    "disp": "recode",
    "target": "R29-2.12（读可信度档代号）",
-   "targetObject": "模板结构行",
+   "targetObject": "templates",
    "baseline": "d54c89a3"
   },
   {
@@ -6887,7 +6887,7 @@
    ],
    "disp": "to_data",
    "target": "R29-1.13",
-   "targetObject": "语言包",
+   "targetObject": "labels",
    "baseline": "d54c89a3"
   },
   {
@@ -6926,7 +6926,7 @@
    ],
    "disp": "recode",
    "target": "R29-1.7、R29-7.11",
-   "targetObject": "语言包、display 组",
+   "targetObject": "labels",
    "baseline": "d54c89a3"
   },
   {
@@ -6971,7 +6971,7 @@
    ],
    "disp": "recode",
    "target": "R29-3.7",
-   "targetObject": "面板行、display 组",
+   "targetObject": "panels",
    "baseline": "d54c89a3"
   },
   {
@@ -6992,7 +6992,7 @@
    ],
    "disp": "to_data",
    "target": "R29-5.1、R29-5.2",
-   "targetObject": "素材选择行",
+   "targetObject": "assets",
    "baseline": "d54c89a3"
   },
   {
@@ -7013,7 +7013,7 @@
    ],
    "disp": "delete",
    "target": "R29-7.3（channel 开关）",
-   "targetObject": "display 组",
+   "targetObject": "display",
    "baseline": "d54c89a3"
   },
   {
@@ -7038,7 +7038,7 @@
    ],
    "disp": "recode",
    "target": "R29-7.3",
-   "targetObject": "display 组",
+   "targetObject": "display",
    "baseline": "d54c89a3"
   },
   {
@@ -7063,7 +7063,7 @@
    ],
    "disp": "recode",
    "target": "R29-7.3",
-   "targetObject": "host 组",
+   "targetObject": "host",
    "baseline": "d54c89a3"
   },
   {
@@ -7084,7 +7084,7 @@
    ],
    "disp": "delete",
    "target": "R29-7.4",
-   "targetObject": "host 组",
+   "targetObject": "host",
    "baseline": "d54c89a3"
   },
   {
@@ -7105,7 +7105,7 @@
    ],
    "disp": "recode",
    "target": "R29-7.4（读结构化 turn）",
-   "targetObject": "host 组",
+   "targetObject": "host",
    "baseline": "d54c89a3"
   },
   {
@@ -7126,7 +7126,7 @@
    ],
    "disp": "recode",
    "target": "R29-7.4（唯一来源）",
-   "targetObject": "host 组",
+   "targetObject": "host",
    "baseline": "d54c89a3"
   },
   {
@@ -7147,7 +7147,7 @@
    ],
    "disp": "recode",
    "target": "R29-7.4",
-   "targetObject": "host 组",
+   "targetObject": "host",
    "baseline": "d54c89a3"
   },
   {
@@ -7176,7 +7176,7 @@
    ],
    "disp": "delete",
    "target": "R29-7.4",
-   "targetObject": "display 组",
+   "targetObject": "display",
    "baseline": "d54c89a3"
   },
   {
@@ -7205,7 +7205,7 @@
    ],
    "disp": "recode",
    "target": "R29-7.4（按 lines 的说话人 id）",
-   "targetObject": "display 组",
+   "targetObject": "display",
    "baseline": "d54c89a3"
   },
   {
@@ -7230,7 +7230,7 @@
    ],
    "disp": "recode",
    "target": "R29-7.9",
-   "targetObject": "host 组",
+   "targetObject": "host",
    "baseline": "d54c89a3"
   },
   {
@@ -7251,7 +7251,7 @@
    ],
    "disp": "recode",
    "target": "R29-3.2（部件行绑读入口，状态读代号）",
-   "targetObject": "面板行",
+   "targetObject": "panels",
    "baseline": "d54c89a3"
   },
   {
@@ -7267,7 +7267,7 @@
    ],
    "disp": "to_data",
    "target": "R29-1.9（去处按卷二 §6.11）",
-   "targetObject": "语言包",
+   "targetObject": "labels",
    "baseline": "d54c89a3"
   },
   {
@@ -7283,7 +7283,7 @@
    ],
    "disp": "to_data",
    "target": "R29-2.11（与 M22-15 同一处；四个名字作内容进语言包，条件改通用持有率阈值，年份删去，李白 11-14 Q29-8；分工见 C29-12）",
-   "targetObject": "称呼行、语言包",
+   "targetObject": "epithets",
    "baseline": "d54c89a3"
   },
   {
@@ -7299,7 +7299,7 @@
    ],
    "disp": "to_data",
    "target": "R29-5.8",
-   "targetObject": "素材选择行、语言包",
+   "targetObject": "assets",
    "baseline": "d54c89a3"
   },
   {
@@ -7310,7 +7310,7 @@
    "anchors": [],
    "disp": "to_data",
    "target": "R29-1.13（锚点与处置以卷二十为准，本行只给落点）",
-   "targetObject": "语言包",
+   "targetObject": "labels",
    "baseline": "d54c89a3"
   },
   {
@@ -7330,7 +7330,7 @@
    ],
    "disp": "replace_entry",
    "target": "R29-2.2 的 notice 类",
-   "targetObject": "模板结构行",
+   "targetObject": "templates",
    "baseline": "d54c89a3"
   },
   {
@@ -7341,7 +7341,7 @@
    "anchors": [],
    "disp": "to_data",
    "target": "R29-2.1（拆成结构行加两种语言的文本；与 M9-21 同一处）",
-   "targetObject": "模板结构行、语言包",
+   "targetObject": "templates",
    "baseline": "d54c89a3"
   },
   {
@@ -7381,7 +7381,7 @@
    ],
    "disp": "replace_entry",
    "target": "R29-3.1、R29-3.10（卷二十二 M22-18 已接其中两个文件的读数）",
-   "targetObject": "面板行；各卷读入口",
+   "targetObject": "panels",
    "baseline": "d54c89a3"
   },
   {
@@ -7392,7 +7392,7 @@
    "anchors": [],
    "disp": "replace_entry",
    "target": "R29-3.1、R29-7.1（卷二 §6.11 已点名者按其去处；未点名者逐文件见 M29-34 至 M29-51）",
-   "targetObject": "display 组",
+   "targetObject": "display",
    "baseline": "d54c89a3"
   },
   {
@@ -7417,7 +7417,7 @@
    ],
    "disp": "recode",
    "target": "R29-7.4、S29-1",
-   "targetObject": "display 组",
+   "targetObject": "display",
    "baseline": "d54c89a3"
   },
   {
@@ -7438,7 +7438,7 @@
    ],
    "disp": "delete",
    "target": "R29-7.3（本行只确认显示层一侧不留调用）",
-   "targetObject": "display 组",
+   "targetObject": "display",
    "baseline": "d54c89a3"
   },
   {
@@ -7454,7 +7454,7 @@
    ],
    "disp": "move_out",
    "target": "R29-5.8（归离线作者工具，运行期不读）",
-   "targetObject": "离线工具组",
+   "targetObject": "tools",
    "baseline": "d54c89a3"
   },
   {
@@ -7475,7 +7475,7 @@
    ],
    "disp": "recode",
    "target": "R29-7.4（改读节点上的状态代号；客户端不读任何已显示的文字）",
-   "targetObject": "display 组",
+   "targetObject": "display",
    "baseline": "d54c89a3"
   },
   {
@@ -7491,7 +7491,7 @@
    ],
    "disp": "replace_entry",
    "target": "R29-3.1、R29-3.7（菜单部件行加通用呈现器）",
-   "targetObject": "面板行、display 组",
+   "targetObject": "panels",
    "baseline": "d54c89a3"
   },
   {
@@ -7507,7 +7507,7 @@
    ],
    "disp": "replace_entry",
    "target": "R29-3.1",
-   "targetObject": "面板行、display 组",
+   "targetObject": "panels",
    "baseline": "d54c89a3"
   },
   {
@@ -7523,7 +7523,7 @@
    ],
    "disp": "recode",
    "target": "R29-5.2、R29-5.5（选择改素材选择行；合成部分只作 host 音频能力按素材键播放的实现，不读任何文字）",
-   "targetObject": "host 组",
+   "targetObject": "host",
    "baseline": "d54c89a3"
   },
   {
@@ -7555,7 +7555,7 @@
    ],
    "disp": "move_out",
    "target": "R29-7.1（模型调用只在服务端 aiGate，归卷九；客户端不留）",
-   "targetObject": "卷九",
+   "targetObject": "aiGate",
    "baseline": "d54c89a3"
   },
   {
@@ -7571,7 +7571,7 @@
    ],
    "disp": "recode",
    "target": "R29-7.9、S29-13（只管呈现容器的分页，不读聊天内容判断任何状态）",
-   "targetObject": "host 组",
+   "targetObject": "host",
    "baseline": "d54c89a3"
   },
   {
@@ -7587,7 +7587,7 @@
    ],
    "disp": "replace_entry",
    "target": "R29-3.1",
-   "targetObject": "面板行、display 组",
+   "targetObject": "panels",
    "baseline": "d54c89a3"
   },
   {
@@ -7603,7 +7603,7 @@
    ],
    "disp": "replace_entry",
    "target": "R29-3.1",
-   "targetObject": "面板行、display 组",
+   "targetObject": "panels",
    "baseline": "d54c89a3"
   },
   {
@@ -7619,7 +7619,7 @@
    ],
    "disp": "replace_entry",
    "target": "R29-7.10（改由无界面前端读下行节点树；客户端不读状态）",
-   "targetObject": "无界面前端",
+   "targetObject": "display",
    "baseline": "d54c89a3"
   },
   {
@@ -7635,7 +7635,7 @@
    ],
    "disp": "replace_entry",
    "target": "R29-3.1、R29-1.13（部件行加 qty 格式模板）",
-   "targetObject": "面板行、display 组",
+   "targetObject": "panels",
    "baseline": "d54c89a3"
   },
   {
@@ -7651,7 +7651,7 @@
    ],
    "disp": "move_out",
    "target": "R29-2.13（说明文字迁 prompt 类模板）、R29-7.4（回合结构归卷九 §4.9）",
-   "targetObject": "卷九、语言包",
+   "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
   {
@@ -7763,7 +7763,7 @@
    ],
    "disp": "replace_entry",
    "target": "R29-3.1、R29-7.1（导航由面板行的 nav 与显示名给出；挂接由 host 经卷二各面板 mount(caps)）",
-   "targetObject": "host 组、display 组",
+   "targetObject": "host",
    "baseline": "d54c89a3"
   },
   {
@@ -14113,7 +14113,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "卷八 §4.11",
+   "target": "R8-11.1",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -14216,7 +14216,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§2.5 规则表读入口",
+   "target": "engine.rules（卷二 §1.3 规则表登记）",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -14356,7 +14356,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "卷九 §4.11",
+   "target": "R9-11.1",
    "targetObject": "aiGate",
    "baseline": "d54c89a3"
   },
@@ -14367,7 +14367,7 @@
    "anchorsText": "数据：balance 下 economy、credit、tax、transport、crafting、yields 各表；tables 下 market、currency、bargaining",
    "anchors": [],
    "disp": "to_data",
-   "target": "§2.5",
+   "target": "rules.market（§2.5）",
    "targetObject": "rules.market",
    "baseline": "d54c89a3"
   },
@@ -14676,7 +14676,7 @@
     }
    ],
    "disp": "delete",
-   "target": "§4.21",
+   "target": "§4.21 规则 1（priceFor）",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -15266,7 +15266,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§4.7",
+   "target": "craftOutcome（卷三乙 §4.8）",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -15523,7 +15523,7 @@
     }
    ],
    "disp": "delete",
-   "target": "§4.1、§4.3",
+   "target": "R10-1.1、R10-3.1",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -15611,7 +15611,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "§4.5",
+   "target": "R10-5.2、R10-5.3",
    "targetObject": "word",
    "baseline": "d54c89a3"
   },
@@ -15674,7 +15674,7 @@
     }
    ],
    "disp": "delete",
-   "target": "卷六",
+   "target": "marketQuote（卷六 §3.1）",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -15870,7 +15870,7 @@
     }
    ],
    "disp": "delete",
-   "target": "卷十七、卷二十",
+   "target": "R17-1.4（卷十七）；envAt（卷二十 §3.1）",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -15921,7 +15921,7 @@
     }
    ],
    "disp": "delete",
-   "target": "卷五、卷二十五",
+   "target": "卷五、卷二十五（疑点：未能定到规则号，见勘误行 1115y1b）",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -16170,7 +16170,7 @@
     }
    ],
    "disp": "delete",
-   "target": "§4.7",
+   "target": "R10-7.1",
    "targetObject": "content-scripts",
    "baseline": "d54c89a3"
   },
@@ -16186,7 +16186,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "§4.5",
+   "target": "R10-5.2",
    "targetObject": "bank",
    "baseline": "d54c89a3"
   },
@@ -16443,7 +16443,7 @@
    ],
    "disp": "delete",
    "target": "R11-1.5；卷二十七 M27-7",
-   "targetObject": "kernel",
+   "targetObject": "rules",
    "baseline": "d54c89a3"
   },
   {
@@ -16463,7 +16463,7 @@
    ],
    "disp": "delete",
    "target": "R11-1.5；卷十 §4.12；版本标记分支另见卷二十七的 M27-15",
-   "targetObject": "kernel",
+   "targetObject": "rules",
    "baseline": "d54c89a3"
   },
   {
@@ -16479,7 +16479,7 @@
    ],
    "disp": "delete",
    "target": "R11-1.9、R11-5.5；与卷九的 M9-2 合组",
-   "targetObject": "kernel",
+   "targetObject": "rules",
    "baseline": "d54c89a3"
   },
   {
@@ -16503,7 +16503,7 @@
    ],
    "disp": "delete",
    "target": "卷一 §6.5；R11-1.9",
-   "targetObject": "kernel",
+   "targetObject": "rules",
    "baseline": "d54c89a3"
   },
   {
@@ -16518,7 +16518,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "卷十二；卷零行 21.2",
+   "target": "R12-9.4",
    "targetObject": "tools",
    "baseline": "d54c89a3"
   },
@@ -16591,7 +16591,7 @@
    "anchors": [],
    "disp": "recode",
    "target": "R11-6.1 至 R11-6.9",
-   "targetObject": "tools",
+   "targetObject": "tests",
    "baseline": "d54c89a3"
   },
   {
@@ -16701,7 +16701,7 @@
     }
    ],
    "disp": "recode",
-   "target": "卷二 §3.2 谓词入口",
+   "target": "awake（卷二 §2.5）",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -16717,7 +16717,7 @@
     }
    ],
    "disp": "delete",
-   "target": "卷六迁移行（运价归卷六）",
+   "target": "priceFor（卷六 §4.21）",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -17111,7 +17111,7 @@
     }
    ],
    "disp": "recode",
-   "target": "卷二的 awake 谓词",
+   "target": "awake（卷二 §2.5）",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -17127,7 +17127,7 @@
     }
    ],
    "disp": "delete",
-   "target": "物种行与同一条律",
+   "target": "R16-1.1（物种行）",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -17261,7 +17261,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "卷二十一、卷十五的状态档修正项",
+   "target": "R15-2.4（状态行各档的修正项）",
    "targetObject": "status",
    "baseline": "d54c89a3"
   },
@@ -17502,7 +17502,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "卷九的难度行；本卷登记远程与工事各行",
+   "target": "difficulty_row（卷九 §2.2）",
    "targetObject": "difficulty_row",
    "baseline": "d54c89a3"
   },
@@ -17792,7 +17792,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§4.4、§4.9",
+   "target": "§4.4 规则 7；§4.9 规则 2",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -17813,7 +17813,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§4.1",
+   "target": "§4.1 规则 7",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -17890,7 +17890,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§4.2",
+   "target": "§4.2 规则 5",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -17915,7 +17915,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§4.2",
+   "target": "§4.2 规则 5",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -17936,7 +17936,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§4.12",
+   "target": "§4.12 规则 1",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -17969,7 +17969,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§4.2",
+   "target": "§4.2 规则 5",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -17990,7 +17990,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§4.2",
+   "target": "§4.2 规则 1",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -18102,7 +18102,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§4.8",
+   "target": "§4.8 规则 2",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -18192,7 +18192,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§3.4",
+   "target": "facilityView（§3.1）；§4.4 规则 7",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -18217,7 +18217,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§4.3",
+   "target": "§4.3 规则 1",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -18258,7 +18258,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "§4.2；卷二 §6.4",
+   "target": "§4.2 规则 2、A19-2.2；卷二 §6.4",
    "targetObject": "place",
    "baseline": "d54c89a3"
   },
@@ -18274,7 +18274,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "§2.3、§4.15",
+   "target": "§4.3 规则 1；§4.15 规则 1",
    "targetObject": "item",
    "baseline": "d54c89a3"
   },
@@ -18290,7 +18290,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "§2.5",
+   "target": "rules.facilities（§2.5）",
    "targetObject": "rules.facilities",
    "baseline": "d54c89a3"
   },
@@ -18343,7 +18343,7 @@
     }
    ],
    "disp": "recode",
-   "target": "§4.7",
+   "target": "§4.7 规则 2、3",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -18367,7 +18367,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "§4.6、§4.9",
+   "target": "§4.6 规则 1",
    "targetObject": "layout",
    "baseline": "d54c89a3"
   },
@@ -18492,7 +18492,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§4.1 规则 9、§4.13",
+   "target": "§4.1 规则 9；§4.13 规则 2",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -18508,7 +18508,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "§4.1",
+   "target": "§4.1 规则 1",
    "targetObject": "place",
    "baseline": "d54c89a3"
   },
@@ -18593,7 +18593,7 @@
    "anchorsText": "地点行的 workstations（6 处）、features（祭坛、容器、门、灯等物件）",
    "anchors": [],
    "disp": "to_data",
-   "target": "§2.3、§4.3",
+   "target": "§4.3 规则 1；§2.3",
    "targetObject": "item",
    "baseline": "d54c89a3"
   },
@@ -18609,7 +18609,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "§2.4",
+   "target": "§4.3 规则 1（fixture 族，§2.4）",
    "targetObject": "fixture",
    "baseline": "d54c89a3"
   },
@@ -18740,7 +18740,7 @@
    "anchorsText": "可移动建筑现无实现（§1.2）；第 28、29 行迁出的房间与住宿数据",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "§4.10",
+   "target": "§4.10 规则 1、2",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -18897,7 +18897,7 @@
    "srcLine": 1319,
    "anchorsText": "tests/invariants/ 下 5 个",
    "anchors": [],
-   "disp": "replace_entry",
+   "disp": "to_data",
    "target": "R12-5.4",
    "targetObject": "tools",
    "baseline": "d54c89a3"
@@ -18970,7 +18970,7 @@
    "anchorsText": "F:/dnd-tmp/book/ 下的全书一致性脚本",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "§4.12、§4.14",
+   "target": "R12-12.1、R12-14.2",
    "targetObject": "tools",
    "baseline": "d54c89a3"
   },
@@ -18993,7 +18993,7 @@
    "anchors": [],
    "disp": "replace_entry",
    "target": "§4.9、R12-4.4",
-   "targetObject": "门禁设施：现行云门禁（§2.11）",
+   "targetObject": "cloud-gate",
    "baseline": "d54c89a3"
   },
   {
@@ -19053,7 +19053,7 @@
    ],
    "disp": "replace_entry",
    "target": "R12-10.2",
-   "targetObject": "门禁设施：现行云门禁（§2.11）",
+   "targetObject": "cloud-gate",
    "baseline": "d54c89a3"
   },
   {
@@ -19064,7 +19064,7 @@
    "anchors": [],
    "disp": "delete",
    "target": "R12-14.1、R12-10.7",
-   "targetObject": "门禁设施：现行云门禁（§2.11）",
+   "targetObject": "cloud-gate",
    "baseline": "d54c89a3"
   },
   {
@@ -19753,7 +19753,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§4.10 订阅事件",
+   "target": "R24-2.1（订阅注册）",
    "targetObject": "rules",
    "baseline": "d54c89a3"
   },
@@ -21097,7 +21097,7 @@
      ]
     }
    ],
-   "disp": "delete",
+   "disp": "to_data",
    "target": "R16-1.4",
    "targetObject": "rules",
    "baseline": "d54c89a3"
