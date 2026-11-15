@@ -262,7 +262,7 @@ if (games !== 5) c12.push(`五款游戏行=${games}`);
 const s7 = sec(/^## §7 /).join('\n');
 for (const k of ['combat.mjs:72–73', 'combat.mjs:64', 'combat.mjs:77', 'combat-state.mjs:11', 'activities.mjs:176', 'creature-nature.mjs:9', 'action-limits.mjs:15', 'interactions.mjs:13', 'interactions.mjs:109', 'magic-status.mjs:34–36', 'duels.mjs:7', 'duels.mjs:19', 'deterrence.mjs:3', 'boss-negotiation.mjs:98', 'career-metrics.mjs:62', 'military.mjs', 'war-diplomacy.mjs', 'checks.mjs', 'balance/combat.json', 'combat.terrain', 'items.json', 'combat-professions.mjs', 'wildlife.mjs:48', 'quest-wildlife.mjs:20', 'facilities.mjs', 'bosses.mjs'])
   if (!s7.includes(k)) c12.push(`§7 缺素材位置:${k}`);
-const dispOk = defM.length >= 20 && sec(/^## §7 /).filter(l => /^\| M13-/.test(l)).every(l => /`(delete|recode|move_out|to_data|replace_entry)`/.test(cells(l)[4]));
+const dispOk = defM.length >= 20 && sec(/^## §7 /).filter(l => /^\| M13-/.test(l)).every(l => { const cs = cells(l); /* 别名行（与卷十一生成器同判：三格以上写"同 Mxx-y"）不单独计数、不查五值 */ if (cs.filter(x => /^同 (?:M|Z35-)\d/.test(x.replace(/`/g, '').trim())).length >= 3) return true; return /`(delete|recode|move_out|to_data|replace_entry)`/.test(cs[4]); });
 if (!dispOk) c12.push('迁移行处置未对到五种');
 const todo = sec(/^## 附录 待补清单/).filter(l => /^\| \d+ \|/.test(l));
 todo.forEach((l, i) => { if (+cells(l)[0] !== i + 1) c12.push('待补序号'); });
