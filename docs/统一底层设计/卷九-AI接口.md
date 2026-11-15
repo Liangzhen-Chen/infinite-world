@@ -1531,11 +1531,11 @@
 
 | # | 位置 | 现状 | 改法 | 本卷依据 | 处置（`mig_disp`） | 落点（规则号） | 落点对象 |
 |---|---|---|---|---|---|---|---|
-| M9-1 | 登记动作 337 条旧处理器外壳；action-affordances.mjs:310 | 外壳加处理器；活动与状态文字拼测 | 逐条改为 §2.2 数据行，处理器删除；可用性只读谓词单入口 | R9-1.1、R9-1.2 | `to_data` | R9-1.1 | `action` |
+| M9-1 | 登记动作 337 条旧处理器外壳；action-affordances.mjs:310 | 外壳加处理器；活动与状态文字拼测 | 逐条改为 §2.2 数据行，处理器删除；可用性只读谓词单入口 | R9-1.1、R9-1.2 | `to_data` | R9-1.1；原对象栏写 action | `sys.ai_interface` |
 | M9-2 | legacy-primitives.mjs:1、legacy-primitives.mjs:181 | 旧处理器仍是写者；按睡眠文字判活动 | 文件退役；睡眠是状态容器 | R9-2.4、R9-1.3 | `delete` | R9-2.4 | `sys.ai_interface` |
 | M9-3 | primitives-effects.mjs:294 | 用文字正则判练、教、演 | `learn` 原语参数改代号 | R9-2.5、R9-2.8 | `recode` | R9-2.5 | `sys.ai_interface` |
-| M9-4 | action-limits.mjs:247–289、action-limits.mjs:267–283、action-limits.mjs:15、action-limits.mjs:54 | 只为 9 类派生上限；即兴制作只认三种材料字面；材料抗性表硬编码 | 上限改读 `cap_row`；覆盖做成加载校验；品质走卷三乙入口 | R9-7.3、R9-7.5、R9-15.3 | `to_data` | R9-7.3 | `cap_row` |
-| M9-5 | 难度数字 26 处（06a §8） | 写在动作与代码里 | 迁成 `difficulty_row`，由各领域卷登记 | R9-7.1 | `to_data` | R9-7.1 | `difficulty_row` |
+| M9-4 | action-limits.mjs:247–289、action-limits.mjs:267–283、action-limits.mjs:15、action-limits.mjs:54 | 只为 9 类派生上限；即兴制作只认三种材料字面；材料抗性表硬编码 | 上限改读 `cap_row`；覆盖做成加载校验；品质走卷三乙入口 | R9-7.3、R9-7.5、R9-15.3 | `to_data` | R9-7.3；原对象栏写 cap_row | `sys.ai_interface` |
+| M9-5 | 难度数字 26 处（06a §8） | 写在动作与代码里 | 迁成 `difficulty_row`，由各领域卷登记 | R9-7.1 | `to_data` | R9-7.1；原对象栏写 difficulty_row | `sys.ai_interface` |
 | M9-6 | activities.mjs:176、activities.mjs:208、activities.mjs:232、activities.mjs:241、activities.mjs:297、activities.mjs:257、activities.mjs:293 | 退让阈值写死；项目阶段用中文；职位名字面；按报错文字判断 | 阈值进规则表经 `interruptRX`；阶段用 `act_stage`；权能走 `authority()`；只比错误码 | R9-1.5、R9-1.6、R9-8.6 | `recode` | R9-1.5 | `sys.ai_interface` |
 | M9-7 | npc-autonomy.mjs:61、npc-autonomy.mjs:176、npc-autonomy.mjs:48、npc-autonomy.mjs:50、npc-autonomy.mjs:89 | 自治旁路直写；按目标内容文字匹配 | 一律交 `resolve()`；候选改数据行 | R9-12.10、R9-12.7 | `replace_entry` | R9-12.10 | `sys.ai_interface` |
 | M9-8 | npc-decision.mjs:13、npc-decision.mjs:25、npc-decision.mjs:14、npc-decision.mjs:11 | 读记忆正文；按活动文字判忙；代价截成非负；底线文字包含判断 | 读记忆条数与事件类别代号；判忙用谓词与 `activityOf()`；代价保留正负；底线读评价行 | R9-12.2–R9-12.4、R9-12.8 | `recode` | R9-12.2 | `sys.ai_interface` |
@@ -1550,8 +1550,8 @@
 | M9-17 | population.mjs:407、population.mjs:409（文字半边）；population.mjs:33–36（运行时读 `defaultBlocklist`）、population.mjs:371（`checkGeneratedProfile` 的屏蔽词参数）——后两处与卷十、卷二十八共管，守门一侧归本卷 | 生成时用正则与词表拒收；规则层读屏蔽词 | 迁入库前守门；规则层不再读屏蔽词；数值半边留规则层 | R9-19.5、R9-19.9、R9-8.5 | `move_out` | R9-19.5 | `gate` |
 | M9-18 | ai-profile.mjs:4 | 用途表写在代码里，含模型替 NPC 规划与写人物档 | 改读 `rules.ai.tierUses`，移到 AI 边；两种用途删除（李白 11-13 裁定） | R9-14.2、R9-14.8 | `to_data` | R9-14.2 | `rules.ai.tierUses` |
 | M9-19 | sideband.mjs | 旁路记录自取墙钟、自写文件 | 按卷二 §6.11（显示字段、语言解析与派生槽的迁出）删除该文件；旁路改调 `report`，不量延迟；键用 `responseId` | R9-18.2、R9-18.5 | `delete` | R9-18.2 | `aiGate` |
-| M9-20 | world/rules/tables/open-actions.json、balance/action-costs.json、world/rules/open-reactions.json、open-tagging.json | 开放动作上限表、动作成本表、开放反应与标注 | 分别并入 `cap_row`、`cost_row`、留痕反应规则；标注表按代号重写或退役 | R9-7.3、R9-7.7、R9-15.2 | `to_data` | R9-7.3 | `cap_row` |
-| M9-21 | world/templates/dialogue/common/plain/*.json（8 个）；intentForms 1 条 | 模板对白与形式模板数量少 | 模板归卷二十九按决定卡代号补齐；形式模板迁 `intent_form` | R9-5.4、R9-5.7 | `to_data` | R9-5.4 | `intent_form` |
+| M9-20 | world/rules/tables/open-actions.json、balance/action-costs.json、world/rules/open-reactions.json、open-tagging.json | 开放动作上限表、动作成本表、开放反应与标注 | 分别并入 `cap_row`、`cost_row`、留痕反应规则；标注表按代号重写或退役 | R9-7.3、R9-7.7、R9-15.2 | `to_data` | R9-7.3；原对象栏写 cap_row | `sys.ai_interface` |
+| M9-21 | world/templates/dialogue/common/plain/*.json（8 个）；intentForms 1 条 | 模板对白与形式模板数量少 | 模板归卷二十九按决定卡代号补齐；形式模板迁 `intent_form` | R9-5.4、R9-5.7 | `to_data` | R9-5.4；原对象栏写 intent_form | `sys.ai_interface` |
 | M9-22 | `docs/世界设计/AI/AI-00-总纲：AI 的位置、档位与边界.md`:88（T3 = T2 + npcPlanning + profileDraft）、:79（assist 预设的两个开关）；`npc-planning-service.mjs`:7–26（每日离屏规划）；`population-service.mjs`（首次交谈档案起草两次调用） | 旧设计与代码里 T3 含模型替 NPC 规划、模型写人物档 | 旧设计文档按 R9-14.8 改写 T3 为 `draft`（作者边）、`judge` 默认关；两处运行期模型调用删除（`population-service.mjs` 的退役另见卷二十七 M27-16） | R9-14.8 | `delete` | R9-14.8 | `aiGate` |
 | M9-23 | primitive-schema.mjs:16–19 的 `learn` 必填字段（`subject`、`learningSource`） | 参数与卷十四 `session` 对不上 | 改为 `subject`、`skill`、`source`、`minutes`、`difficulty` | R9-2.8 | `recode` | R9-2.8 | `sys.ai_interface` |
 对应 06a、06b 行：06a §8（难度数字）、06a §6（本地清醒判断与睡眠正则）；06b 待定 1 的 74 行（卷零已扩为 151 处）、06b A 类 action-affordances:310、action-limits:54、legacy-primitives:181、npc-autonomy:48/89、npc-decision:25、primitives-effects:294，E 类 npc-decision:13、npc-autonomy:50，F 类 activities:293。
@@ -1756,6 +1756,7 @@
 | 封卷后勘误 1115y1（依据：乙-1、卷十一 C11-5 ⑤⑦、Q11-7；必要理由：卷十一转录各卷迁移行要读到统一的处置、落点与落点对象三列，并知道锚点所用的提交；版本号不升，不改卷首；改前快照 `版本快照/卷九-v2-勘误前-1115y1.md`，改后覆盖 `版本快照/卷九-v2.md`） | §7 表前一段；§7 表头与 M9-1 至 M9-23 | 表前补一句：锚点取卷零 §0.6（锚点写法）基线提交 d54c89a3（R11-2.3），本节无别的提交；表后加三列：处置（`mig_disp`，五值之一，取主去向）、落点（规则号）、落点对象（§2.3 六类代号之一，不写 rules）；原各栏原文不动，不改规则正文 |
 | 封卷后勘误 1115y1c（依据：李白 rules 口径裁定选乙（卷十一 §2.3（迁移行 `migrow`）六类封闭，不加新类）；必要理由：落点对象不能写规则层 rules，要取 §2.3 六类代号；不升版本号；改前快照 版本快照/卷九-v2-勘误前-1115y1c.md，改后覆盖 版本快照/卷九-v2.md）：落点对象为 rules 的 11 行按 审查/乙1c-rules对象改写规则.md 机械改写（系统登记项键用卷二 §2.7（系统声明表 `state-owners.json`）补全表的临时键名），其中 0 行推不出或对上多个对象、不猜、对象仍写 rules，列入 审查/脚本输出/乙1c-rules待裁清单.md 待李白逐行裁定；表前"模块组键或 rules"并列说法已删，改指 §2.3 六类。不改规则正文。 | — | — |
 | 封卷后勘误 1115y5（依据：李白 11-15 16:25 裁定第一至四条、chk-1115-y4；必要理由：落点对象不能写规则层 rules，要取 §2.3 六类代号，并按 1a 至 1j 分类、系统键定名；不升版本号；改前快照 版本快照/卷九-v2-勘误前-1115y5.md，改后覆盖 版本快照/卷九-v2.md）：本卷迁移表按 脚本/卷十一/apply-1115y5.mjs 机械改写（对象为 rules 的行按分类改系统键、规则表键或拆行、别名行；临时系统键按 审查/脚本输出/乙5-系统键替换表.md 替换），待裁行见 审查/脚本输出/乙5-rules待裁清单.md。不改规则正文。 | — | — |
+| 封卷后勘误 1115y7（依据：李白 11-15 17:0x 裁定第一至四条；必要理由：不在 §2.3 六类里的对象按整类规则改成规范键，待裁三行落点；不升版本号；改前快照 版本快照/卷九-v2-勘误前-1115y7.md，改后覆盖 版本快照/卷九-v2.md）：本卷落点对象里的旧表名（items、itemWear、materials）改现行表代号，其余认不出的对象改本卷系统键（旧写法保留在落点栏作说明），见 审查/脚本输出/乙7-改写记录.md；脚本 脚本/卷十一/apply-1115y7.mjs。不改规则正文。 | — | — |
 
 ## 附录 自检脚本输出
 
