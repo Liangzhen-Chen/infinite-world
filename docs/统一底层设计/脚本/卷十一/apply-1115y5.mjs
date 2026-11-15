@@ -171,10 +171,8 @@ for (const [k, d] of dec) {
   if (d.obj) { const a = cs.slice(); a[oi] = objCell(cs[oi], d.obj); if (d.disp && c.disp >= 0) a[c.disp + 1] = objCell(cs[c.disp + 1], d.disp); if (d.targetAppend && c.tgt >= 0) a[c.tgt + 1] = a[c.tgt + 1].replace(/\s*$/, '') + d.targetAppend + ' '; if (d.anchorAppend && c.anc >= 0 && !a[c.anc + 1].includes(d.anchorAppend.slice(1))) a[c.anc + 1] = a[c.anc + 1].replace(/\s*$/, '') + d.anchorAppend + ' '; out = [a.join('|')]; }
   else if (d.split) {
     out = d.split.map(([suf, o]) => mk(cs, k + suf, o));
-    // 卷十三的自检要求 §7 每个 M13 行的处置都是五值之一，汇总别名行过不了，所以 M13-23 的第一个子行沿用原编号
-    if (k === 'M13-23') { out[0] = mk(cs, k, d.split[0][1]); out[1] = mk(cs, k + 'b', d.split[1][1]); out[2] = mk(cs, k + 'c', d.split[2][1]); }
     // 拆行后保留原编号一行作汇总（别名行，不单独计数），免得各卷编号连续性检查把原编号当成悬空
-    else if (!(d.split.length === 1 && d.split[0][0] === '')) out.unshift(mk(cs, k, { alias: `${k}${d.split[0][0]} 至 ${k}${d.split[d.split.length - 1][0]}` }));
+    if (!(d.split.length === 1 && d.split[0][0] === '')) out.unshift(mk(cs, k, { alias: `${k}${d.split[0][0]} 至 ${k}${d.split[d.split.length - 1][0]}` }));
   }
   else if (d.f) {
     const r = rowsByKey.get(k), t = rowsByKey.get(d.f);

@@ -1,0 +1,87 @@
+{
+ "candidates": [
+  "M27-6",
+  "M27-7",
+  "M10-42",
+  "M11-2"
+ ],
+ "anchors": [
+  {
+   "path": "server-plugin/legacy/core.js",
+   "line": null,
+   "what": "legacy 目录里的文件",
+   "by": "M11-2",
+   "how": "点名文件"
+  },
+  {
+   "path": "server-plugin/legacy/seed.json",
+   "line": null,
+   "what": "legacy 目录里的文件",
+   "by": "M10-42",
+   "how": "点名文件"
+  },
+  {
+   "path": "server-plugin/compat/v2-phase1-activities.mjs",
+   "line": null,
+   "what": "compat 目录里的文件",
+   "by": "M27-6",
+   "how": "点名目录"
+  },
+  {
+   "path": "server-plugin/compat/v2-phase1-engine.mjs",
+   "line": null,
+   "what": "compat 目录里的文件",
+   "by": "M27-6",
+   "how": "点名目录"
+  },
+  {
+   "path": "server-plugin/migrations/r1.mjs",
+   "line": null,
+   "what": "migrations 目录里的文件",
+   "by": "M27-7",
+   "how": "点名目录"
+  },
+  {
+   "path": "server-plugin/campaign-reducer.mjs",
+   "line": 8,
+   "what": "initialFromLegacy 出现处",
+   "by": "M27-7",
+   "how": "点名文件"
+  },
+  {
+   "path": "server-plugin/character.mjs",
+   "line": 21,
+   "what": "initialFromLegacy 出现处",
+   "by": null,
+   "how": null
+  },
+  {
+   "path": "server-plugin/compat/v2-phase1-engine.mjs",
+   "line": 37,
+   "what": "initialFromLegacy 出现处",
+   "by": "M27-6",
+   "how": "所在文件已被覆盖（点名目录）"
+  },
+  {
+   "path": "server-plugin/engine.mjs",
+   "line": 278,
+   "what": "initialFromLegacy 出现处",
+   "by": null,
+   "how": null
+  },
+  {
+   "path": "server-plugin/engine.mjs",
+   "line": 279,
+   "what": "initialFromLegacy 出现处",
+   "by": null,
+   "how": null
+  },
+  {
+   "path": "server-plugin/index.mjs",
+   "line": 105,
+   "what": "initialFromLegacy 出现处",
+   "by": "M10-42",
+   "how": "点名文件"
+  }
+ ]
+}

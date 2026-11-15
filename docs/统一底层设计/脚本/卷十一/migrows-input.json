@@ -1,7 +1,7 @@
 {
  "_说明": "乙-4 H1：由 transcribe-migrows.mjs 从各卷 §7 迁移节生成；不手改。字段：编号、卷、卷文行号、锚点原文与解析、处置、落点、落点对象、基线提交。",
  "baseline": "d54c89a3",
- "count": 1131,
+ "count": 1137,
  "rows": [
   {
    "rowKey": "M1-1",
@@ -87,6 +87,36 @@
    "srcLine": 508,
    "anchorsText": "legacy/compat/migrations 读文字 3 处与 initialFromLegacy",
    "anchors": [],
+   "disp": "同 M1-7a 至 M1-7e",
+   "target": "同 M1-7a 至 M1-7e",
+   "targetObject": "同 M1-7a 至 M1-7e",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M1-7a 至 M1-7e"
+  },
+  {
+   "rowKey": "M1-7a",
+   "volume": "卷一",
+   "srcLine": 509,
+   "anchorsText": "compat/v2-phase1-activities.mjs、compat/v2-phase1-engine.mjs、compat/v2-phase1-engine.mjs:37",
+   "anchors": [
+    {
+     "file": "compat/v2-phase1-activities.mjs",
+     "lines": []
+    },
+    {
+     "file": "compat/v2-phase1-engine.mjs",
+     "lines": []
+    },
+    {
+     "file": "compat/v2-phase1-engine.mjs",
+     "lines": [
+      [
+       37,
+       37
+      ]
+     ]
+    }
+   ],
    "disp": "同 M27-6",
    "target": "同 M27-6",
    "targetObject": "同 M27-6",
@@ -94,9 +124,117 @@
    "aliasOf": "同 M27-6"
   },
   {
+   "rowKey": "M1-7b",
+   "volume": "卷一",
+   "srcLine": 510,
+   "anchorsText": "migrations/r1.mjs、campaign-reducer.mjs:8",
+   "anchors": [
+    {
+     "file": "migrations/r1.mjs",
+     "lines": []
+    },
+    {
+     "file": "campaign-reducer.mjs",
+     "lines": [
+      [
+       8,
+       8
+      ]
+     ]
+    }
+   ],
+   "disp": "同 M27-7",
+   "target": "同 M27-7",
+   "targetObject": "同 M27-7",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M27-7"
+  },
+  {
+   "rowKey": "M1-7c",
+   "volume": "卷一",
+   "srcLine": 511,
+   "anchorsText": "legacy/seed.json、index.mjs:105",
+   "anchors": [
+    {
+     "file": "legacy/seed.json",
+     "lines": []
+    },
+    {
+     "file": "index.mjs",
+     "lines": [
+      [
+       105,
+       105
+      ]
+     ]
+    }
+   ],
+   "disp": "同 M10-42",
+   "target": "同 M10-42",
+   "targetObject": "同 M10-42",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M10-42"
+  },
+  {
+   "rowKey": "M1-7d",
+   "volume": "卷一",
+   "srcLine": 512,
+   "anchorsText": "legacy/core.js",
+   "anchors": [
+    {
+     "file": "legacy/core.js",
+     "lines": []
+    }
+   ],
+   "disp": "同 M11-2",
+   "target": "同 M11-2",
+   "targetObject": "同 M11-2",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M11-2"
+  },
+  {
+   "rowKey": "M1-7e",
+   "volume": "卷一",
+   "srcLine": 513,
+   "anchorsText": "character.mjs:21、engine.mjs:278、engine.mjs:279",
+   "anchors": [
+    {
+     "file": "character.mjs",
+     "lines": [
+      [
+       21,
+       21
+      ]
+     ]
+    },
+    {
+     "file": "engine.mjs",
+     "lines": [
+      [
+       278,
+       278
+      ]
+     ]
+    },
+    {
+     "file": "engine.mjs",
+     "lines": [
+      [
+       279,
+       279
+      ]
+     ]
+    }
+   ],
+   "disp": "delete",
+   "target": "—",
+   "targetObject": "sys.worldgen",
+   "baseline": "d54c89a3"
+  },
+  {
    "rowKey": "M1-8",
    "volume": "卷一",
-   "srcLine": 509,
+   "srcLine": 514,
    "anchorsText": "deriveWorldEvents",
    "anchors": [],
    "disp": "同 M24-1",
@@ -108,7 +246,7 @@
   {
    "rowKey": "M1-9",
    "volume": "卷一",
-   "srcLine": 510,
+   "srcLine": 515,
    "anchorsText": "ledger.mjs:5 适配器双写与对账测试",
    "anchors": [
     {
@@ -129,7 +267,7 @@
   {
    "rowKey": "M1-10",
    "volume": "卷一",
-   "srcLine": 511,
+   "srcLine": 516,
    "anchorsText": "physicalMetal 名称字词匹配",
    "anchors": [],
    "disp": "delete",
@@ -7448,7 +7586,7 @@
    ],
    "disp": "move_out",
    "target": "R29-4.2、R29-4.6、R29-4.7",
-   "targetObject": "display",
+   "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
   {
@@ -7887,7 +8025,7 @@
    ],
    "disp": "move_out",
    "target": "R29-3.2（部件行绑读入口，状态读代号）",
-   "targetObject": "display",
+   "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
   {
@@ -8017,7 +8155,7 @@
    ],
    "disp": "move_out",
    "target": "R29-3.1、R29-3.10（卷二十二 M22-18 已接其中两个文件的读数）",
-   "targetObject": "display",
+   "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
   {
@@ -18801,6 +18939,23 @@
      "lines": []
     }
    ],
+   "disp": "同 M13-23a 至 M13-23c",
+   "target": "同 M13-23a 至 M13-23c",
+   "targetObject": "同 M13-23a 至 M13-23c",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M13-23a 至 M13-23c"
+  },
+  {
+   "rowKey": "M13-23a",
+   "volume": "卷十三",
+   "srcLine": 1531,
+   "anchorsText": "war-diplomacy.mjs",
+   "anchors": [
+    {
+     "file": "war-diplomacy.mjs",
+     "lines": []
+    }
+   ],
    "disp": "replace_entry",
    "target": "战争分值归 §4.11；立场归卷十八；外交归卷八",
    "targetObject": "sys.combat",
@@ -18809,7 +18964,7 @@
   {
    "rowKey": "M13-23b",
    "volume": "卷十三",
-   "srcLine": 1531,
+   "srcLine": 1532,
    "anchorsText": "war-diplomacy.mjs",
    "anchors": [
     {
@@ -18825,7 +18980,7 @@
   {
    "rowKey": "M13-23c",
    "volume": "卷十三",
-   "srcLine": 1532,
+   "srcLine": 1533,
    "anchorsText": "war-diplomacy.mjs",
    "anchors": [
     {
@@ -18841,7 +18996,7 @@
   {
    "rowKey": "M13-24",
    "volume": "卷十三",
-   "srcLine": 1533,
+   "srcLine": 1534,
    "anchorsText": "checks.mjs 中战斗相关的难度数字",
    "anchors": [
     {
@@ -18857,7 +19012,7 @@
   {
    "rowKey": "M13-25",
    "volume": "卷十三",
-   "srcLine": 1534,
+   "srcLine": 1535,
    "anchorsText": "world/rules/tables/balance/combat.json",
    "anchors": [
     {
@@ -18873,7 +19028,7 @@
   {
    "rowKey": "M13-26",
    "volume": "卷十三",
-   "srcLine": 1535,
+   "srcLine": 1536,
    "anchorsText": "world/meta/rules.json 的 combat 键（含 combat.terrain）、military、warDiplomacy、equipment",
    "anchors": [
     {
@@ -18889,7 +19044,7 @@
   {
    "rowKey": "M13-27",
    "volume": "卷十三",
-   "srcLine": 1536,
+   "srcLine": 1537,
    "anchorsText": "world/meta/items.json 的 12 样战斗用物品",
    "anchors": [
     {
@@ -18905,7 +19060,7 @@
   {
    "rowKey": "M13-28",
    "volume": "卷十三",
-   "srcLine": 1537,
+   "srcLine": 1538,
    "anchorsText": "world/design/combat-professions.mjs（117 行）",
    "anchors": [
     {
@@ -18921,7 +19076,7 @@
   {
    "rowKey": "M13-29",
    "volume": "卷十三",
-   "srcLine": 1538,
+   "srcLine": 1539,
    "anchorsText": "wildlife.mjs:48、quest-wildlife.mjs:20",
    "anchors": [
     {
@@ -18951,7 +19106,7 @@
   {
    "rowKey": "M13-30",
    "volume": "卷十三",
-   "srcLine": 1539,
+   "srcLine": 1540,
    "anchorsText": "facilities.mjs、environment.mjs 中的设施受损与火灾",
    "anchors": [
     {
@@ -18971,7 +19126,7 @@
   {
    "rowKey": "M13-31",
    "volume": "卷十三",
-   "srcLine": 1540,
+   "srcLine": 1541,
    "anchorsText": "war-diplomacy.mjs:63 写入；hazard-calendar.mjs:90（价格乘数）、:109–110（warRouteClosed、warClosedRoutes）；读者 engine.mjs:60、:864，transport-route.mjs:3、:15，household-subsistence.mjs:10、:113、:125、:159、:532、:610，finance-bank.mjs:160，education-state.mjs:80、:202",
    "anchors": [
     {
@@ -19082,7 +19237,7 @@
   {
    "rowKey": "M13-32",
    "volume": "卷十三",
-   "srcLine": 1541,
+   "srcLine": 1542,
    "anchorsText": "world/design/boss-foundation.mjs（17 行）",
    "anchors": [
     {
@@ -19098,7 +19253,7 @@
   {
    "rowKey": "M13-33",
    "volume": "卷十三",
-   "srcLine": 1542,
+   "srcLine": 1543,
    "anchorsText": "world/design/interaction-rules.mjs（39 行）",
    "anchors": [
     {

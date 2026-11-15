@@ -54,10 +54,6 @@
   "server-plugin/applied-effects.mjs",
   "server-plugin/engine.mjs",
   "server-plugin/state-notices.mjs",
-  "server-plugin/ui-map.mjs",
-  "server-plugin/ui-messages.mjs",
-  "server-plugin/ui-overview.mjs",
-  "server-plugin/ui-routes.mjs",
   "server-plugin/works.mjs"
  ],
  "due_kind": [
@@ -199,7 +195,11 @@
   "server-plugin/claim-unit.mjs",
   "server-plugin/lore.mjs",
   "server-plugin/return-summary.mjs",
-  "server-plugin/state-notices.mjs"
+  "server-plugin/state-notices.mjs",
+  "server-plugin/ui-map.mjs",
+  "server-plugin/ui-messages.mjs",
+  "server-plugin/ui-overview.mjs",
+  "server-plugin/ui-routes.mjs"
  ],
  "person": [],
  "place": [
@@ -841,6 +841,7 @@
  ],
  "sys.worldgen": [
   "server-plugin/character.mjs",
+  "server-plugin/engine.mjs",
   "server-plugin/high-nobility.mjs",
   "server-plugin/law-codes.mjs",
   "server-plugin/migrations.mjs",
