@@ -230,11 +230,12 @@ report('13 来路无关、默认不开模型、拒收三不条文在位', r13.le
 
 // 14 E-ACT-CAP-MISSING 按参数判（李白 ce6e990b ① (d)；R9-7.5 唯一定义，封卷后勘误 1115k4）
 // 先核三处口径一致：R9-7.5、§2.8 错误码行、§2.2 校验句都写"逐（按）参数"、cap_row 或豁免行、数值参数为空须显式声明。
-// 再对全书机判：效果族 = 卷九动作行 effects 调用到的族 ∪ 全书族表登记行（首格为 `eff_*`、表头有参数槽/params 一栏的表格行）。
-//  · 族的数值参数 = 登记行参数栏里类型为 number/integer 的 `param_*`；
-//  · 参数栏写 无/`{}`/空，或散文登记同一句写该族与"`params`…为空"/`params: {}`，算显式声明为空；
-//  · 数值参数为空：须显式声明，否则缺；数值参数非空：每个参数在全书须恰有一种——有 `cap_row` 写到（族、参数），或有 `cap_exempt_row` 写到（族、参数），
-//    两者皆无或两者都有即缺。第 3 个参数可给全书目录（注入测试用副本）。
+// 再对全书按结构机判（chk-1115-k5 B-1、B-2 改：不按单行、不按"同一行出现几个词"）：
+//  · 族登记 = 卷二 §3.9 形状的族行数据对象（可跨行），或表格式登记行，或散文显式声明 params 为空；
+//  · 调用处 = 全书带 family 的其余数据对象（effectCall）；被调用而无登记即报；
+//  · 数值参数 = 族行 params 的键（表格式取类型为 number/integer 的 param_*）；
+//  · 每个数值参数须恰有一种：cap_row 数据行（family、param、非空 terms 且每项有 curve），或 cap_exempt_row 数据行（family、param、reason）；
+//    两者皆无或都有即缺。第 3 个参数可给全书目录（注入测试用副本）。
 {
   const r14 = [];
   const r75 = lines.find(l => l.startsWith('- **R9-7.5 ')) ?? '';
@@ -247,12 +248,18 @@ report('13 来路无关、默认不开模型、拒收三不条文在位', r13.le
   const { readdirSync } = await import('node:fs');
   const book = readdirSync(BOOK).filter(f => /^卷.*\.md$/.test(f)).map(f => ({ v: f.replace(/-.*$/, ''), ls: readFileSync(BOOK + f, 'utf8').split(/\r?\n/).map(l => l.replace(/\r$/, '')) }));
   const LOG = /修订|处置|勘误|记账|影响面|审查意见|版本说明|自检/;
-  const fams = new Map(); // 族 -> {reg: [{at, params: [..], empty}], used}
-  const get = f => { if (!fams.has(f)) fams.set(f, { reg: [], used: false }); return fams.get(f); };
-  for (const m of all.matchAll(/"family"\s*:\s*"(eff_[a-z0-9_]+)"/g)) get(m[1]).used = true;
+  const fams = new Map(); // 族 -> {reg: [{at, nums, empty}], used: [at]}
+  const get = f => { if (!fams.has(f)) fams.set(f, { reg: [], used: [] }); return fams.get(f); };
+  const caps = new Map(), exempts = new Map(); // `${族}.${参数}` -> [at]
+  const push = (m, k, at) => { if (!m.has(k)) m.set(k, []); m.get(k).push(at); };
+  // 按结构取对象（可跨行）：从 "family": "eff_*" 处向左找包住它的 {，再按平衡括号向右取到 }，JSON 解析（容许 // 行注释）。
+  const enclosing = (t, k) => { let d = 0; for (let j = k; j >= 0; j--) { if (t[j] === '}') d++; else if (t[j] === '{') { if (d === 0) return j; d--; } } return -1; };
+  const balanced = (t, s) => { let d = 0; for (let j = s; j < t.length; j++) { if (t[j] === '{') d++; else if (t[j] === '}' && --d === 0) return t.slice(s, j + 1); } return null; };
+  const parse = src => { try { return JSON.parse(src); } catch {} try { return JSON.parse(src.replace(/(^|\s)\/\/[^\n]*/g, '$1')); } catch { return null; } };
   for (const { v, ls } of book) {
+    const t = ls.join('\n'); const at = k => `${v}:${t.slice(0, k).split('\n').length}`;
     let h2b = '', head = null;
-    ls.forEach((l, i) => {
+    ls.forEach((l, i) => { // 表格式登记（首格 `eff_*`、表头有参数槽/params 栏）
       if (/^## /.test(l)) h2b = l;
       if (!l.startsWith('|')) { head = null; return; }
       const cs = l.split('|').slice(1, -1).map(c => c.trim());
@@ -266,32 +273,36 @@ report('13 来路无关、默认不开模型、拒收三不条文在位', r13.le
       // 参数栏写 无/{}/空，或列出了参数而其中没有数值类型的，都是显式写明了数值参数为空；参数栏没写任何东西才算未声明
       get(f).reg.push({ at: `${v}:${i + 1}`, nums, empty: /^(无|`\{\}`|空)/.test(pc) || /`param_[a-z0-9_]+\s*:/.test(pc) });
     });
-    ls.forEach((l, i) => { // 散文登记：同一句写到族代号与“`params`…为空”或 `params: {}`；或数据式 `{id:eff_x, params:{}}`
+    ls.forEach((l, i) => { // 散文声明：同一句写到族代号与“`params`…为空”/`params: {}`，或 `{id:eff_x, params:{}}`
       if (l.startsWith('|')) return;
       for (const m of l.matchAll(/["`]?id["`]?\s*:\s*["`]?(eff_[a-z0-9_]+)["`]?[^{}]*?["`]?params["`]?\s*:\s*\{\s*\}/g)) get(m[1]).reg.push({ at: `${v}:${i + 1}`, nums: [], empty: true });
-      // 卷二 §3.9 定义的族行形状（一行写完的 JSON）：带 `family: eff_*` 与 `outputs`（效果族行独有，effectCall 只有 family、params），
-      // `params` 为必写的参数声明（键即数值参数，值为 {unit, domain}；无数值参数写 {}）。按形状认，不按名字。
-      for (const m of l.matchAll(/\{\s*"family"\s*:\s*"eff_[a-z0-9_]+"/g)) {
-        let d = 0, j = m.index; for (; j < l.length; j++) { if (l[j] === '{') d++; else if (l[j] === '}' && --d === 0) break; }
-        let o; try { o = JSON.parse(l.slice(m.index, j + 1)); } catch { continue; }
-        if (!('outputs' in o)) continue;
-        if (!o.params || typeof o.params !== 'object') { get(o.family).reg.push({ at: `${v}:${i + 1}`, nums: [], empty: false }); continue; }
-        const nums = Object.keys(o.params);
-        get(o.family).reg.push({ at: `${v}:${i + 1}`, nums, empty: nums.length === 0 });
-      }
       for (const s of l.split(/(?<=。)/)) if (/`params`[^。]{0,30}为空|`params:\s*\{\}`/.test(s)) for (const m of s.matchAll(/`(eff_[a-z0-9_]+)`/g)) get(m[1]).reg.push({ at: `${v}:${i + 1}`, nums: [], empty: true });
     });
+    // 数据对象按形状分四类（不按名字）：
+    //  族行（卷二 §3.9）：带 outputs；params 必写，键即数值参数，{} 为显式空。
+    //  cap_row（卷九 §4.7）：带 param 与非空 terms，每项有 curve（上限有取值）。
+    //  cap_exempt_row：带 param 与 reason，无 terms。
+    //  其余带 family 的为 effectCall（调用处）。
+    const seen = new Set();
+    for (const m of t.matchAll(/"family"\s*:\s*"(eff_[a-z0-9_]+)"/g)) {
+      const s = enclosing(t, m.index); if (s < 0 || seen.has(s)) continue; seen.add(s);
+      const src = balanced(t, s); const o = src && parse(src); if (!o || o.family !== m[1]) continue;
+      const a = at(s);
+      if ('outputs' in o) { const ok = o.params && typeof o.params === 'object' && !Array.isArray(o.params); const nums = ok ? Object.keys(o.params) : []; get(o.family).reg.push({ at: a, nums, empty: ok && nums.length === 0 }); }
+      else if (typeof o.param === 'string' && 'terms' in o) { if (Array.isArray(o.terms) && o.terms.length && o.terms.every(x => x && x.curve != null)) push(caps, `${o.family}.${o.param}`, a); else r14.push(`${a} cap_row ${o.family}.${o.param} 的 terms 为空或缺 curve`); }
+      else if (typeof o.param === 'string' && 'reason' in o) push(exempts, `${o.family}.${o.param}`, a);
+      else get(o.family).used.push(a);
+    }
   }
-  const capHit = (f, p, kind) => book.some(({ ls }) => ls.some(l => l.includes('`' + kind + '`') && l.includes(f) && l.includes(p) && !/^\| `(cap_row|cap_exempt_row)` \|/.test(l)));
   const famOut = [];
   for (const [f, x] of [...fams].sort()) {
-    if (!x.reg.length) { r14.push(`${f} 未见族登记（参数未声明）`); famOut.push(`${f}:未登记`); continue; }
+    if (!x.reg.length) { r14.push(`${f} 未见族登记（参数未声明；调用处 ${x.used.slice(0, 3).join(',')}）`); famOut.push(`${f}:未登记`); continue; }
     const nums = [...new Set(x.reg.flatMap(r => r.nums))];
     if (!nums.length) { if (!x.reg.some(r => r.empty)) r14.push(`${f} 数值参数为空而未显式声明（${x.reg.map(r => r.at).join(',')}）`); famOut.push(`${f}:空${x.reg.some(r => r.empty) ? '' : '(未声明)'}`); continue; }
-    for (const p of nums) { const c = capHit(f, p, 'cap_row'), e = capHit(f, p, 'cap_exempt_row'); if (c === e) r14.push(`${f}.${p} ${c ? 'cap_row 与豁免行都有' : '既无 cap_row 也无豁免行'}`); }
+    for (const p of nums) { const c = caps.has(`${f}.${p}`), e = exempts.has(`${f}.${p}`); if (c === e) r14.push(`${f}.${p}（${x.reg.map(r => r.at).join(',')}）${c ? 'cap_row 与豁免行都有' : '既无 cap_row 也无豁免行'}`); }
     famOut.push(`${f}:${nums.join('/')}`);
   }
-  console.log(`   效果族 ${fams.size} 个：${famOut.join('；')}`);
+  console.log(`   效果族 ${fams.size} 个：${famOut.join('；')}；cap_row ${[...caps.values()].flat().length} 行，豁免行 ${[...exempts.values()].flat().length} 行`);
   report('14 E-ACT-CAP-MISSING 按参数判：三处口径一致；各族数值参数逐项恰有上限行或豁免行，空参数族显式声明', r14.length === 0, r14.join(' | '));
 }
 
