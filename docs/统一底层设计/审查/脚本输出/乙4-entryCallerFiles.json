@@ -1,0 +1,3295 @@
+{
+ "_说明": "登记项 → 调用文件；脚本生成，勿手改",
+ "tree": "server-plugin 2998475680、extension b32997d4ae",
+ "count": 413,
+ "entries": [
+  {
+   "volume": "卷七",
+   "entry": "acceptance",
+   "srcLine": 407,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "acceptanceOfPerson",
+   "srcLine": 416,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "conversionOdds",
+   "srcLine": 421,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "cultureHead",
+   "srcLine": 408,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "culturePref",
+   "srcLine": 414,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "cultureView",
+   "srcLine": 391,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "customFor",
+   "srcLine": 406,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "deityView",
+   "srcLine": 391,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "divinationOptions",
+   "srcLine": 403,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "doctrineOf",
+   "srcLine": 394,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "evaluationOf",
+   "srcLine": 409,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "faithChain",
+   "srcLine": 392,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "faithCount",
+   "srcLine": 397,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "faithDistance",
+   "srcLine": 393,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "faithOf",
+   "srcLine": 396,
+   "defFiles": [
+    "server-plugin/faith-state.mjs",
+    "server-plugin/magic-ritual.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/entity-view.mjs",
+    "server-plugin/faith.mjs"
+   ]
+  },
+  {
+   "volume": "卷七",
+   "entry": "faithUnlocked",
+   "srcLine": 395,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "faithView",
+   "srcLine": 391,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "fervorOf",
+   "srcLine": 399,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "festivalsAt",
+   "srcLine": 405,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "holyWarEligible",
+   "srcLine": 427,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "hostilityOf",
+   "srcLine": 398,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "integrationOf",
+   "srcLine": 415,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "interpretedScore",
+   "srcLine": 412,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "languageCap",
+   "srcLine": 411,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "languageKin",
+   "srcLine": 426,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "miracleOptions",
+   "srcLine": 402,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "nameTable",
+   "srcLine": 413,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "nextFestival",
+   "srcLine": 423,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "pendingCustoms",
+   "srcLine": 424,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "pietyOf",
+   "srcLine": 400,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "reformOptions",
+   "srcLine": 420,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "respectTier",
+   "srcLine": 418,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "riteCount",
+   "srcLine": 417,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "shrineDemand",
+   "srcLine": 404,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "sphereAffinity",
+   "srcLine": 419,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "tabooBreach",
+   "srcLine": 410,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "traditionOptions",
+   "srcLine": 425,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "vowsOf",
+   "srcLine": 422,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷七",
+   "entry": "worshipTier",
+   "srcLine": 401,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "containerView",
+   "srcLine": 422,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "itemView",
+   "srcLine": 418,
+   "defFiles": [
+    "server-plugin/entity-view.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/traits.mjs"
+   ]
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "lotsView",
+   "srcLine": 421,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "materialView",
+   "srcLine": 419,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "recipeView",
+   "srcLine": 420,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷九",
+   "entry": "actionView",
+   "srcLine": 466,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷九",
+   "entry": "activityOf",
+   "srcLine": 468,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷九",
+   "entry": "affordances",
+   "srcLine": 467,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷九",
+   "entry": "agendaOf",
+   "srcLine": 469,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷九",
+   "entry": "aiAllows",
+   "srcLine": 483,
+   "defFiles": [
+    "server-plugin/ai-profile.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/index.mjs"
+   ]
+  },
+  {
+   "volume": "卷九",
+   "entry": "authority",
+   "srcLine": 475,
+   "defFiles": [
+    "server-plugin/action-authority.mjs",
+    "server-plugin/civic.mjs",
+    "server-plugin/governance.mjs",
+    "server-plugin/law.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/action-affordances.mjs",
+    "server-plugin/action-consent.mjs",
+    "server-plugin/action-limits.mjs",
+    "server-plugin/environment.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/items.mjs",
+    "server-plugin/open-actions.mjs",
+    "server-plugin/primitives-runtime.mjs",
+    "server-plugin/primitives.mjs",
+    "server-plugin/rx-library.mjs"
+   ]
+  },
+  {
+   "volume": "卷九",
+   "entry": "canEnter",
+   "srcLine": 477,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷九",
+   "entry": "check",
+   "srcLine": 471,
+   "defFiles": [
+    "extension/action-builder.mjs",
+    "server-plugin/action-affordances.mjs",
+    "server-plugin/action-rite.mjs",
+    "server-plugin/activities.mjs",
+    "server-plugin/checks.mjs",
+    "server-plugin/domain-rules.mjs",
+    "server-plugin/elections.mjs",
+    "server-plugin/environment.mjs",
+    "server-plugin/extraction.mjs",
+    "server-plugin/faction-clock.mjs",
+    "server-plugin/husbandry.mjs",
+    "server-plugin/item-class.mjs",
+    "server-plugin/local-exams.mjs",
+    "server-plugin/magic-object.mjs",
+    "server-plugin/monster-society.mjs",
+    "server-plugin/npc-schedule.mjs",
+    "server-plugin/primitives-effects.mjs",
+    "server-plugin/primitives-runtime.mjs",
+    "server-plugin/seasonal-hazards.mjs",
+    "server-plugin/sites.mjs",
+    "server-plugin/smuggling.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/agriculture.mjs",
+    "server-plugin/career-metrics.mjs",
+    "server-plugin/compat/v2-phase1-activities.mjs",
+    "server-plugin/compat/v2-phase1-engine.mjs",
+    "server-plugin/dialogue.mjs",
+    "server-plugin/engine.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/learning.mjs",
+    "server-plugin/manufacturing.mjs",
+    "server-plugin/npc-autonomy.mjs",
+    "server-plugin/npc-growth.mjs",
+    "server-plugin/pets.mjs",
+    "server-plugin/primitives-checks.mjs",
+    "server-plugin/professions.mjs",
+    "server-plugin/remote-generation.mjs",
+    "server-plugin/repair.mjs",
+    "server-plugin/wildlife.mjs",
+    "server-plugin/works.mjs"
+   ]
+  },
+  {
+   "volume": "卷九",
+   "entry": "consent",
+   "srcLine": 474,
+   "defFiles": [
+    "server-plugin/action-authority.mjs",
+    "server-plugin/action-consent.mjs",
+    "server-plugin/distribution.mjs",
+    "server-plugin/family-politics.mjs",
+    "server-plugin/magic-mind-space.mjs",
+    "server-plugin/magic-ritual.mjs",
+    "server-plugin/monster-society.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/action-limits.mjs",
+    "server-plugin/action-rite.mjs",
+    "server-plugin/environment.mjs",
+    "server-plugin/faith.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/learning.mjs",
+    "server-plugin/magic-consent.mjs",
+    "server-plugin/primitives-effects.mjs",
+    "server-plugin/primitives-learning.mjs",
+    "server-plugin/primitives-runtime.mjs",
+    "server-plugin/rx-library.mjs"
+   ]
+  },
+  {
+   "volume": "卷九",
+   "entry": "constructorTree",
+   "srcLine": 485,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷九",
+   "entry": "controlledByPlayer",
+   "srcLine": 476,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷九",
+   "entry": "dialogueView",
+   "srcLine": 481,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷九",
+   "entry": "difficultyOf",
+   "srcLine": 472,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷九",
+   "entry": "freeSlotsOf",
+   "srcLine": 470,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷九",
+   "entry": "labelKey",
+   "srcLine": 478,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷九",
+   "entry": "landingOf",
+   "srcLine": 484,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷九",
+   "entry": "landing_level",
+   "srcLine": 484,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷九",
+   "entry": "legalityOf",
+   "srcLine": 477,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷九",
+   "entry": "magnitudeCap",
+   "srcLine": 473,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷九",
+   "entry": "npcChoose",
+   "srcLine": 480,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷九",
+   "entry": "npcDecision",
+   "srcLine": 479,
+   "defFiles": [
+    "server-plugin/dialogue.mjs",
+    "server-plugin/npc-autonomy.mjs",
+    "server-plugin/npc-decision.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/action-consent.mjs",
+    "server-plugin/action-degrees.mjs",
+    "server-plugin/autonomy-candidates.mjs",
+    "server-plugin/building-maintenance.mjs",
+    "server-plugin/business.mjs",
+    "server-plugin/credit.mjs",
+    "server-plugin/distribution.mjs",
+    "server-plugin/festival.mjs",
+    "server-plugin/labor-market.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/learning.mjs",
+    "server-plugin/legal-representation.mjs",
+    "server-plugin/livestock-sale.mjs",
+    "server-plugin/magic-consent.mjs",
+    "server-plugin/npc-labor.mjs",
+    "server-plugin/organizations.mjs",
+    "server-plugin/primitives-runtime.mjs",
+    "server-plugin/public-projects.mjs",
+    "server-plugin/rx-library.mjs",
+    "server-plugin/shop.mjs",
+    "server-plugin/works.mjs"
+   ]
+  },
+  {
+   "volume": "卷九",
+   "entry": "primitiveContract",
+   "srcLine": 486,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷九",
+   "entry": "quoteOf",
+   "srcLine": 477,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷九",
+   "entry": "reviewClaims",
+   "srcLine": 482,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷九",
+   "entry": "route",
+   "srcLine": 488,
+   "defFiles": [
+    "extension/tools.mjs",
+    "server-plugin/building-maintenance.mjs",
+    "server-plugin/business.mjs",
+    "server-plugin/compat/v2-phase1-engine.mjs",
+    "server-plugin/engine.mjs",
+    "server-plugin/facility-state.mjs",
+    "server-plugin/labor-market.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/learning.mjs",
+    "server-plugin/magic-air.mjs",
+    "server-plugin/magic-light.mjs",
+    "server-plugin/magic-message.mjs",
+    "server-plugin/magic-movement.mjs",
+    "server-plugin/npc-cognition.mjs",
+    "server-plugin/npc-crime.mjs",
+    "server-plugin/npc-labor.mjs",
+    "server-plugin/npc-obligations.mjs",
+    "server-plugin/place-layout.mjs",
+    "server-plugin/primitives-movement.mjs",
+    "server-plugin/quest-board.mjs",
+    "server-plugin/remote-generation.mjs",
+    "server-plugin/settlement-trade.mjs",
+    "server-plugin/transition.mjs",
+    "server-plugin/ui-map.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/advance-registry.mjs",
+    "server-plugin/bounty.mjs",
+    "server-plugin/combat.mjs",
+    "server-plugin/household-subsistence.mjs",
+    "server-plugin/medicine.mjs",
+    "server-plugin/military.mjs",
+    "server-plugin/monster-society.mjs",
+    "server-plugin/npc-life.mjs",
+    "server-plugin/npc-schedule.mjs",
+    "server-plugin/public-projects.mjs",
+    "server-plugin/revival.mjs",
+    "server-plugin/shop.mjs",
+    "server-plugin/smuggling.mjs",
+    "server-plugin/transport.mjs"
+   ]
+  },
+  {
+   "volume": "卷九",
+   "entry": "sceneCard",
+   "srcLine": 478,
+   "defFiles": [
+    "server-plugin/scene-card.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/engine.mjs"
+   ]
+  },
+  {
+   "volume": "卷九",
+   "entry": "validateSegments",
+   "srcLine": 487,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷九",
+   "entry": "validateTurn",
+   "srcLine": 487,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十",
+   "entry": "astroView",
+   "srcLine": 426,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十",
+   "entry": "calendarAdd",
+   "srcLine": 424,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十",
+   "entry": "calendarDayIndex",
+   "srcLine": 421,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十",
+   "entry": "calendarMinuteOf",
+   "srcLine": 423,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十",
+   "entry": "calendarSpan",
+   "srcLine": 424,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十",
+   "entry": "calendarView",
+   "srcLine": 422,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十",
+   "entry": "clockView",
+   "srcLine": 420,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十",
+   "entry": "envAccum",
+   "srcLine": 431,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十",
+   "entry": "envAt",
+   "srcLine": 429,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十",
+   "entry": "eraView",
+   "srcLine": 425,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十",
+   "entry": "paceView",
+   "srcLine": 434,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十",
+   "entry": "placeView",
+   "srcLine": 430,
+   "defFiles": [
+    "server-plugin/entity-view.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/festival.mjs",
+    "server-plugin/settlement-profile.mjs",
+    "server-plugin/traits.mjs",
+    "server-plugin/ui-affairs.mjs"
+   ]
+  },
+  {
+   "volume": "卷二十",
+   "entry": "rateBasisView",
+   "srcLine": 427,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十",
+   "entry": "recurrenceNext",
+   "srcLine": 428,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十",
+   "entry": "waterAhead",
+   "srcLine": 433,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十一",
+   "entry": "careOptions",
+   "srcLine": 277,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十一",
+   "entry": "courseSummary",
+   "srcLine": 279,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十一",
+   "entry": "personView",
+   "srcLine": 275,
+   "defFiles": [
+    "server-plugin/entity-view.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/elections.mjs",
+    "server-plugin/faction-clock.mjs",
+    "server-plugin/magic-consent.mjs",
+    "server-plugin/magic-economy.mjs",
+    "server-plugin/monster-society.mjs",
+    "server-plugin/notables.mjs",
+    "server-plugin/organizations.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/ui-personal.mjs"
+   ]
+  },
+  {
+   "volume": "卷二十一",
+   "entry": "prevalenceOf",
+   "srcLine": 278,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十一",
+   "entry": "statusView",
+   "srcLine": 274,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十一",
+   "entry": "treatmentPreview",
+   "srcLine": 276,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "advancePlan",
+   "srcLine": 217,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "aggregateView",
+   "srcLine": 219,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "baseTierOf",
+   "srcLine": 215,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "costPlan",
+   "srcLine": 221,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "degradeLevelOf",
+   "srcLine": 222,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "legalKeyIdOf",
+   "srcLine": 220,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "pinned",
+   "srcLine": 218,
+   "defFiles": [
+    "server-plugin/advance-layers.mjs",
+    "server-plugin/compat/v2-phase1-engine.mjs",
+    "server-plugin/population.mjs",
+    "server-plugin/scene-card.mjs"
+   ],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "simTierOf",
+   "srcLine": 216,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "simUnitOf",
+   "srcLine": 214,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "actOutcome",
+   "srcLine": 243,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "adornCover",
+   "srcLine": 240,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "compositionOf",
+   "srcLine": 239,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "honorCoverage",
+   "srcLine": 247,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "itemRenown",
+   "srcLine": 248,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "itemUniqueness",
+   "srcLine": 249,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "itemView",
+   "srcLine": 237,
+   "defFiles": [
+    "server-plugin/entity-view.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/traits.mjs"
+   ]
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "knowledgeView",
+   "srcLine": 238,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "knownForms",
+   "srcLine": 242,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "legendStanding",
+   "srcLine": 246,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "pickSubjects",
+   "srcLine": 241,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "renownBonus",
+   "srcLine": 250,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "workCount",
+   "srcLine": 245,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "workReach",
+   "srcLine": 244,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十九",
+   "entry": "composeScreen",
+   "srcLine": 427,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十九",
+   "entry": "displayData",
+   "srcLine": 428,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十九",
+   "entry": "labelText",
+   "srcLine": 424,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十九",
+   "entry": "renderScreen",
+   "srcLine": 429,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十九",
+   "entry": "renderTpl",
+   "srcLine": 425,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十九",
+   "entry": "selectRows",
+   "srcLine": 426,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "beliefOf",
+   "srcLine": 345,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "chronicleKey",
+   "srcLine": 357,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "chronicleView",
+   "srcLine": 357,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "claimHolds",
+   "srcLine": 346,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "covertGrade",
+   "srcLine": 352,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "familiarityOf",
+   "srcLine": 344,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "guardFor",
+   "srcLine": 350,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "holdsLore",
+   "srcLine": 354,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "knowStanding",
+   "srcLine": 355,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "knowsFact",
+   "srcLine": 340,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "knowsKey",
+   "srcLine": 343,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "leverageOf",
+   "srcLine": 351,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "linkKnown",
+   "srcLine": 342,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "loreShare",
+   "srcLine": 356,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "publicShare",
+   "srcLine": 347,
+   "defFiles": [
+    "server-plugin/household-subsistence.mjs"
+   ],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "readOutcome",
+   "srcLine": 348,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "recallFacts",
+   "srcLine": 341,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "researchOptions",
+   "srcLine": 353,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "returnDigest",
+   "srcLine": 359,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "secretsOf",
+   "srcLine": 349,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "subjectiveView",
+   "srcLine": 339,
+   "defFiles": [
+    "server-plugin/dialogue.mjs",
+    "server-plugin/subjective-view.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/action-consent.mjs",
+    "server-plugin/action-degrees.mjs",
+    "server-plugin/action-rite.mjs",
+    "server-plugin/building-maintenance.mjs",
+    "server-plugin/business.mjs",
+    "server-plugin/credit.mjs",
+    "server-plugin/distribution.mjs",
+    "server-plugin/festival.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/household-budget.mjs",
+    "server-plugin/labor-market.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/learning.mjs",
+    "server-plugin/legal-reactions.mjs",
+    "server-plugin/legal-representation.mjs",
+    "server-plugin/livestock-sale.mjs",
+    "server-plugin/magic-consent.mjs",
+    "server-plugin/npc-autonomy.mjs",
+    "server-plugin/npc-labor.mjs",
+    "server-plugin/organizations.mjs",
+    "server-plugin/primitives-runtime.mjs",
+    "server-plugin/public-projects.mjs",
+    "server-plugin/routing-programs.mjs",
+    "server-plugin/rx-library.mjs",
+    "server-plugin/shop.mjs",
+    "server-plugin/works.mjs"
+   ]
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "why",
+   "srcLine": 358,
+   "defFiles": [
+    "server-plugin/npc-life.mjs"
+   ],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十五",
+   "entry": "arablePotential",
+   "srcLine": 235,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十五",
+   "entry": "butcherOutcome",
+   "srcLine": 239,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十五",
+   "entry": "canRide",
+   "srcLine": 238,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十五",
+   "entry": "cropForage",
+   "srcLine": 234,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十五",
+   "entry": "cropGrowth",
+   "srcLine": 233,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十五",
+   "entry": "cultivationOf",
+   "srcLine": 232,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十五",
+   "entry": "forageOptions",
+   "srcLine": 240,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十五",
+   "entry": "handlingOf",
+   "srcLine": 237,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十五",
+   "entry": "herdView",
+   "srcLine": 236,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十五",
+   "entry": "plantView",
+   "srcLine": 230,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十五",
+   "entry": "stapleCalendar",
+   "srcLine": 231,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十五",
+   "entry": "tabooFacts",
+   "srcLine": 241,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十八",
+   "entry": "loadWorld",
+   "srcLine": 296,
+   "defFiles": [],
+   "callerFiles": [
+    "server-plugin/index.mjs"
+   ]
+  },
+  {
+   "volume": "卷二十八",
+   "entry": "nsOf",
+   "srcLine": 298,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十八",
+   "entry": "packSet",
+   "srcLine": 299,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十八",
+   "entry": "packSetView",
+   "srcLine": 299,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十八",
+   "entry": "requiredTier",
+   "srcLine": 300,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十八",
+   "entry": "resolvePackSet",
+   "srcLine": 297,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十六",
+   "entry": "decisionJitter",
+   "srcLine": 301,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十六",
+   "entry": "needSatisfiers",
+   "srcLine": 302,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十六",
+   "entry": "personView",
+   "srcLine": 297,
+   "defFiles": [
+    "server-plugin/entity-view.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/elections.mjs",
+    "server-plugin/faction-clock.mjs",
+    "server-plugin/magic-consent.mjs",
+    "server-plugin/magic-economy.mjs",
+    "server-plugin/monster-society.mjs",
+    "server-plugin/notables.mjs",
+    "server-plugin/organizations.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/ui-personal.mjs"
+   ]
+  },
+  {
+   "volume": "卷二十六",
+   "entry": "preferenceOf",
+   "srcLine": 300,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "chronicleAll",
+   "srcLine": 345,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "commissionBrief",
+   "srcLine": 344,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "commissionView",
+   "srcLine": 343,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "commissionsAt",
+   "srcLine": 343,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "commissionsBy",
+   "srcLine": 343,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "epochView",
+   "srcLine": 346,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "eventCount",
+   "srcLine": 347,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "eventTypeView",
+   "srcLine": 338,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "instanceView",
+   "srcLine": 340,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "instancesOn",
+   "srcLine": 340,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "isA",
+   "srcLine": 339,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "legendsView",
+   "srcLine": 346,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "originEvents",
+   "srcLine": 348,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "storyView",
+   "srcLine": 341,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "tallyOf",
+   "srcLine": 342,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "verbView",
+   "srcLine": 339,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷五",
+   "entry": "placeView",
+   "srcLine": 287,
+   "defFiles": [
+    "server-plugin/entity-view.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/festival.mjs",
+    "server-plugin/settlement-profile.mjs",
+    "server-plugin/traits.mjs",
+    "server-plugin/ui-affairs.mjs"
+   ]
+  },
+  {
+   "volume": "卷五",
+   "entry": "routeView",
+   "srcLine": 290,
+   "defFiles": [
+    "server-plugin/ui-map.mjs"
+   ],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "agencyOf",
+   "srcLine": 464,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "attackLegality",
+   "srcLine": 454,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "auditGaps",
+   "srcLine": 456,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "bindingsOf",
+   "srcLine": 436,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "bondOf",
+   "srcLine": 459,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "bountiesOn",
+   "srcLine": 455,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "caseView",
+   "srcLine": 443,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "claimsOf",
+   "srcLine": 462,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "contrabandAt",
+   "srcLine": 441,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "convictionCount",
+   "srcLine": 445,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "crimeProspect",
+   "srcLine": 457,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "custodyOf",
+   "srcLine": 458,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "disposalRight",
+   "srcLine": 450,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "estateOf",
+   "srcLine": 460,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "evidenceScore",
+   "srcLine": 444,
+   "defFiles": [
+    "server-plugin/law.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/npc-crime.mjs"
+   ]
+  },
+  {
+   "volume": "卷八b",
+   "entry": "forumOrgOf",
+   "srcLine": 437,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "goodFaithOf",
+   "srcLine": 465,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "lawCodeView",
+   "srcLine": 434,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "lawGate",
+   "srcLine": 447,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "legalCapacity",
+   "srcLine": 448,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "legalityOf",
+   "srcLine": 449,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "limitationOf",
+   "srcLine": 463,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "naturalizeOptions",
+   "srcLine": 461,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "normStack",
+   "srcLine": 439,
+   "defFiles": [
+    "server-plugin/norm-stack.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/law-codes.mjs",
+    "server-plugin/law.mjs"
+   ]
+  },
+  {
+   "volume": "卷八b",
+   "entry": "offenseView",
+   "srcLine": 438,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "offensesOfFact",
+   "srcLine": 442,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "provisionFor",
+   "srcLine": 440,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "provisionView",
+   "srcLine": 435,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "responseOf",
+   "srcLine": 452,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "safetyOf",
+   "srcLine": 453,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "securityOf",
+   "srcLine": 451,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八b",
+   "entry": "sentenceRange",
+   "srcLine": 446,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "casusOptions",
+   "srcLine": 488,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "claimsOn",
+   "srcLine": 481,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "courtView",
+   "srcLine": 493,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "dejureOf",
+   "srcLine": 476,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "diploStatus",
+   "srcLine": 487,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "domainOf",
+   "srcLine": 479,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "electorate",
+   "srcLine": 495,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "factionView",
+   "srcLine": 486,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "governorOf",
+   "srcLine": 474,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "hasPower",
+   "srcLine": 472,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "holdingAllowed",
+   "srcLine": 478,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "influenceOf",
+   "srcLine": 497,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "legitimacy",
+   "srcLine": 480,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "migrationScore",
+   "srcLine": 492,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "motionView",
+   "srcLine": 470,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "officeView",
+   "srcLine": 468,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "officesOf",
+   "srcLine": 471,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "orgView",
+   "srcLine": 467,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "placeAuthority",
+   "srcLine": 475,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "polityView",
+   "srcLine": 469,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "popCapacity",
+   "srcLine": 490,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "popView",
+   "srcLine": 489,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "regencyOf",
+   "srcLine": 482,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "seatVenues",
+   "srcLine": 496,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "stratumSkill",
+   "srcLine": 491,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "successorsOf",
+   "srcLine": 473,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "taxLoad",
+   "srcLine": 485,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "taxesFor",
+   "srcLine": 484,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "tierOptions",
+   "srcLine": 494,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "usurpOptions",
+   "srcLine": 477,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷八",
+   "entry": "vassalTerms",
+   "srcLine": 483,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "accountsOf",
+   "srcLine": 254,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "balance",
+   "srcLine": 253,
+   "defFiles": [
+    "server-plugin/business.mjs",
+    "server-plugin/credit.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/household-budget.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/ledger.mjs",
+    "server-plugin/legal-appeal.mjs",
+    "server-plugin/obligation-runtime.mjs",
+    "server-plugin/office-salary.mjs",
+    "server-plugin/organizations.mjs",
+    "server-plugin/titles.mjs",
+    "server-plugin/transition.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/military.mjs",
+    "server-plugin/primitives.mjs"
+   ]
+  },
+  {
+   "volume": "卷六",
+   "entry": "chainOf",
+   "srcLine": 266,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "coinValue",
+   "srcLine": 270,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "contractView",
+   "srcLine": 273,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "creditStanding",
+   "srcLine": 272,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "demand",
+   "srcLine": 259,
+   "defFiles": [
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/forest-water.mjs",
+    "server-plugin/magic-air.mjs",
+    "server-plugin/market.mjs"
+   ],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "denomination",
+   "srcLine": 271,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "economyReport",
+   "srcLine": 278,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "exchangeRate",
+   "srcLine": 270,
+   "defFiles": [
+    "server-plugin/currency.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/tender.mjs"
+   ]
+  },
+  {
+   "volume": "卷六",
+   "entry": "feesFor",
+   "srcLine": 258,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "householdBudget",
+   "srcLine": 269,
+   "defFiles": [
+    "server-plugin/household-budget.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/building-maintenance.mjs",
+    "server-plugin/business.mjs",
+    "server-plugin/credit.mjs",
+    "server-plugin/distribution.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/shop.mjs"
+   ]
+  },
+  {
+   "volume": "卷六",
+   "entry": "incoming",
+   "srcLine": 274,
+   "defFiles": [
+    "server-plugin/archived-reducer.mjs",
+    "server-plugin/business.mjs",
+    "server-plugin/open-actions.mjs",
+    "server-plugin/world-upgrade.mjs"
+   ],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "laborOffers",
+   "srcLine": 268,
+   "defFiles": [
+    "server-plugin/labor-market.mjs"
+   ],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "landedCost",
+   "srcLine": 261,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "marketQuote",
+   "srcLine": 256,
+   "defFiles": [
+    "server-plugin/market.mjs",
+    "server-plugin/shop.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/business.mjs",
+    "server-plugin/compat/v2-phase1-engine.mjs",
+    "server-plugin/currency.mjs",
+    "server-plugin/distribution.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/labor-market.mjs",
+    "server-plugin/medicine.mjs",
+    "server-plugin/npc-labor.mjs",
+    "server-plugin/obligation-conditional.mjs",
+    "server-plugin/settlement-trade.mjs",
+    "server-plugin/tender.mjs",
+    "server-plugin/transport.mjs"
+   ]
+  },
+  {
+   "volume": "卷六",
+   "entry": "marketSupply",
+   "srcLine": 257,
+   "defFiles": [
+    "server-plugin/market.mjs"
+   ],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "obligationsOf",
+   "srcLine": 273,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "placeId",
+   "srcLine": 259,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "priceFor",
+   "srcLine": 277,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "productionPlanOf",
+   "srcLine": 263,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "projectView",
+   "srcLine": 276,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "propertyView",
+   "srcLine": 275,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "reachOf",
+   "srcLine": 259,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "scope",
+   "srcLine": 259,
+   "defFiles": [
+    "server-plugin/action-limits.mjs",
+    "server-plugin/bounty.mjs",
+    "server-plugin/consistency-evidence.mjs",
+    "server-plugin/environment-state.mjs",
+    "server-plugin/npc-cognition.mjs",
+    "server-plugin/primitive-policy.mjs",
+    "server-plugin/primitives-effects.mjs",
+    "server-plugin/primitives-runtime.mjs",
+    "server-plugin/read-scope.mjs",
+    "server-plugin/water-cycle.mjs"
+   ],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "shopView",
+   "srcLine": 260,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "stationFee",
+   "srcLine": 267,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "stationLoad",
+   "srcLine": 267,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "stationPlan",
+   "srcLine": 264,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "stockIn",
+   "srcLine": 255,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "tradeVolume",
+   "srcLine": 279,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "unmetSupply",
+   "srcLine": 265,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷六",
+   "entry": "wageQuote",
+   "srcLine": 268,
+   "defFiles": [
+    "server-plugin/obligation-state.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/derived.mjs"
+   ]
+  },
+  {
+   "volume": "卷六",
+   "entry": "wealth",
+   "srcLine": 280,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十",
+   "entry": "ageStructure",
+   "srcLine": 268,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十",
+   "entry": "ageWeights",
+   "srcLine": 267,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十",
+   "entry": "composeName",
+   "srcLine": 264,
+   "defFiles": [
+    "server-plugin/remote-generation.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/population.mjs"
+   ]
+  },
+  {
+   "volume": "卷十",
+   "entry": "genPlan",
+   "srcLine": 258,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十",
+   "entry": "genView",
+   "srcLine": 259,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十",
+   "entry": "instanceIdOf",
+   "srcLine": 265,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十",
+   "entry": "manifestOf",
+   "srcLine": 260,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十",
+   "entry": "materialized",
+   "srcLine": 269,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十",
+   "entry": "nameParts",
+   "srcLine": 264,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十",
+   "entry": "openingOf",
+   "srcLine": 270,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十",
+   "entry": "quotaOf",
+   "srcLine": 261,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十",
+   "entry": "rollGroup",
+   "srcLine": 266,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十",
+   "entry": "rosterOf",
+   "srcLine": 263,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十",
+   "entry": "seatOf",
+   "srcLine": 262,
+   "defFiles": [
+    "server-plugin/public-opinion.mjs",
+    "server-plugin/remote-generation.mjs"
+   ],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十一",
+   "entry": "cardId",
+   "srcLine": 309,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十一",
+   "entry": "cardIds",
+   "srcLine": 309,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十一",
+   "entry": "migBackfill",
+   "srcLine": 307,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十一",
+   "entry": "migCard",
+   "srcLine": 300,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十一",
+   "entry": "migCards",
+   "srcLine": 301,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十一",
+   "entry": "migEvents",
+   "srcLine": 309,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十一",
+   "entry": "migExit",
+   "srcLine": 306,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十一",
+   "entry": "migFrozen",
+   "srcLine": 308,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十一",
+   "entry": "migParallelOk",
+   "srcLine": 304,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十一",
+   "entry": "migPhaseCount",
+   "srcLine": 305,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十一",
+   "entry": "migReady",
+   "srcLine": 303,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十一",
+   "entry": "migReceiver",
+   "srcLine": 302,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十一",
+   "entry": "migRows",
+   "srcLine": 299,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十七",
+   "entry": "aboardOf",
+   "srcLine": 258,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十七",
+   "entry": "downhillMotion",
+   "srcLine": 260,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十七",
+   "entry": "exploreGrade",
+   "srcLine": 270,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十七",
+   "entry": "gateQuote",
+   "srcLine": 269,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十七",
+   "entry": "legSpeed",
+   "srcLine": 263,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十七",
+   "entry": "mapGeomView",
+   "srcLine": 271,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十七",
+   "entry": "partyView",
+   "srcLine": 261,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十七",
+   "entry": "passOf",
+   "srcLine": 262,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十七",
+   "entry": "raidAppraisal",
+   "srcLine": 268,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十七",
+   "entry": "routeRisk",
+   "srcLine": 267,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十七",
+   "entry": "towShareOf",
+   "srcLine": 259,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十七",
+   "entry": "tripMinutes",
+   "srcLine": 265,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十七",
+   "entry": "tripPlan",
+   "srcLine": 264,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十七",
+   "entry": "tripView",
+   "srcLine": 266,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十七",
+   "entry": "whereOf",
+   "srcLine": 257,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十三",
+   "entry": "battlePreview",
+   "srcLine": 494,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十三",
+   "entry": "battleView",
+   "srcLine": 495,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十三",
+   "entry": "combatReadings",
+   "srcLine": 488,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十三",
+   "entry": "commandOf",
+   "srcLine": 493,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十三",
+   "entry": "deterrenceOf",
+   "srcLine": 490,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十三",
+   "entry": "encounterOf",
+   "srcLine": 489,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十三",
+   "entry": "encounterView",
+   "srcLine": 489,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十三",
+   "entry": "forceView",
+   "srcLine": 491,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十三",
+   "entry": "garrisonOf",
+   "srcLine": 492,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十三",
+   "entry": "layersOf",
+   "srcLine": 485,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十三",
+   "entry": "lootCapacity",
+   "srcLine": 496,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十三",
+   "entry": "meritOf",
+   "srcLine": 498,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十三",
+   "entry": "meritsOf",
+   "srcLine": 498,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十三",
+   "entry": "missionView",
+   "srcLine": 497,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十三",
+   "entry": "siegeView",
+   "srcLine": 495,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十三",
+   "entry": "strikeOutcome",
+   "srcLine": 486,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十三",
+   "entry": "strikePreview",
+   "srcLine": 487,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十三",
+   "entry": "warView",
+   "srcLine": 495,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十九",
+   "entry": "facilityTypeView",
+   "srcLine": 229,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十九",
+   "entry": "facilityView",
+   "srcLine": 230,
+   "defFiles": [
+    "server-plugin/facility-state.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/building-maintenance.mjs",
+    "server-plugin/contract-state.mjs",
+    "server-plugin/education-state.mjs",
+    "server-plugin/education.mjs",
+    "server-plugin/engine.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/environment.mjs",
+    "server-plugin/facilities.mjs",
+    "server-plugin/faith.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/interactions.mjs",
+    "server-plugin/location-access.mjs",
+    "server-plugin/manufacturing.mjs",
+    "server-plugin/medicine-state.mjs",
+    "server-plugin/npc-autonomy.mjs",
+    "server-plugin/npc-labor.mjs",
+    "server-plugin/npc-schedule.mjs",
+    "server-plugin/npc-state.mjs",
+    "server-plugin/promotion.mjs",
+    "server-plugin/public-projects.mjs",
+    "server-plugin/repair.mjs",
+    "server-plugin/traits.mjs",
+    "server-plugin/workstation-services.mjs"
+   ]
+  },
+  {
+   "volume": "卷十二",
+   "entry": "accBaseline",
+   "srcLine": 540,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十二",
+   "entry": "accCases",
+   "srcLine": 542,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十二",
+   "entry": "accGate",
+   "srcLine": 544,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十二",
+   "entry": "accHits",
+   "srcLine": 541,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十二",
+   "entry": "accItem",
+   "srcLine": 538,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十二",
+   "entry": "accItems",
+   "srcLine": 537,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十二",
+   "entry": "accReport",
+   "srcLine": 545,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十二",
+   "entry": "accReviewOk",
+   "srcLine": 543,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十二",
+   "entry": "accScope",
+   "srcLine": 539,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十二",
+   "entry": "accZeroCheck",
+   "srcLine": 546,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十五",
+   "entry": "afterlifeOf",
+   "srcLine": 343,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十五",
+   "entry": "castPreview",
+   "srcLine": 335,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十五",
+   "entry": "castShape",
+   "srcLine": 334,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十五",
+   "entry": "classesOfFamily",
+   "srcLine": 336,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十五",
+   "entry": "efficacyOf",
+   "srcLine": 338,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十五",
+   "entry": "enchantRoom",
+   "srcLine": 344,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十五",
+   "entry": "interactionsFor",
+   "srcLine": 337,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十五",
+   "entry": "liminalOf",
+   "srcLine": 339,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十五",
+   "entry": "riteView",
+   "srcLine": 340,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十五",
+   "entry": "situationOf",
+   "srcLine": 342,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十五",
+   "entry": "spellsOf",
+   "srcLine": 333,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十五",
+   "entry": "workingView",
+   "srcLine": 341,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十五",
+   "entry": "workingsOf",
+   "srcLine": 341,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十八",
+   "entry": "compat",
+   "srcLine": 370,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十八",
+   "entry": "dread",
+   "srcLine": 365,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十八",
+   "entry": "esteemOf",
+   "srcLine": 368,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十八",
+   "entry": "heirsOf",
+   "srcLine": 363,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十八",
+   "entry": "holdingKind",
+   "srcLine": 360,
+   "defFiles": [
+    "server-plugin/holdings.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/action-authority.mjs",
+    "server-plugin/derived.mjs",
+    "server-plugin/holding-kinds.mjs",
+    "server-plugin/holding-sources.mjs",
+    "server-plugin/primitives-runtime.mjs",
+    "server-plugin/primitives.mjs",
+    "server-plugin/transition.mjs"
+   ]
+  },
+  {
+   "volume": "卷十八",
+   "entry": "kinDegree",
+   "srcLine": 362,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十八",
+   "entry": "kinView",
+   "srcLine": 361,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十八",
+   "entry": "opinionOf",
+   "srcLine": 367,
+   "defFiles": [
+    "server-plugin/public-opinion.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/promotion.mjs"
+   ]
+  },
+  {
+   "volume": "卷十八",
+   "entry": "recall",
+   "srcLine": 366,
+   "defFiles": [
+    "server-plugin/consistency-review.mjs"
+   ],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十八",
+   "entry": "stance",
+   "srcLine": 364,
+   "defFiles": [
+    "server-plugin/legal-appeal.mjs",
+    "server-plugin/magic-consent.mjs",
+    "server-plugin/tribal-awakening.mjs"
+   ],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十八",
+   "entry": "treatment",
+   "srcLine": 369,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十六",
+   "entry": "claimTruth",
+   "srcLine": 320,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十六",
+   "entry": "containReading",
+   "srcLine": 328,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十六",
+   "entry": "displayClassOf",
+   "srcLine": 329,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十六",
+   "entry": "encounterReading",
+   "srcLine": 325,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十六",
+   "entry": "lairOf",
+   "srcLine": 324,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十六",
+   "entry": "lairSuitability",
+   "srcLine": 323,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十六",
+   "entry": "loreOf",
+   "srcLine": 319,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十六",
+   "entry": "loreRegions",
+   "srcLine": 322,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十六",
+   "entry": "similarity",
+   "srcLine": 318,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十六",
+   "entry": "speciesThreat",
+   "srcLine": 314,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十六",
+   "entry": "threatBrief",
+   "srcLine": 326,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十六",
+   "entry": "threatOf",
+   "srcLine": 313,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十六",
+   "entry": "tierRoom",
+   "srcLine": 315,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十六",
+   "entry": "truthClaims",
+   "srcLine": 321,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十六",
+   "entry": "variantRowOf",
+   "srcLine": 327,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十六",
+   "entry": "wardReading",
+   "srcLine": 317,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十六",
+   "entry": "wardTagsOf",
+   "srcLine": 316,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十四",
+   "entry": "canOffer",
+   "srcLine": 484,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十四",
+   "entry": "certStanding",
+   "srcLine": 487,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十四",
+   "entry": "certsOf",
+   "srcLine": 487,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十四",
+   "entry": "deedsOf",
+   "srcLine": 488,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十四",
+   "entry": "initialSkills",
+   "srcLine": 491,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十四",
+   "entry": "learnOptions",
+   "srcLine": 485,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十四",
+   "entry": "lifestyleView",
+   "srcLine": 490,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十四",
+   "entry": "opportunitiesOf",
+   "srcLine": 489,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十四",
+   "entry": "professionView",
+   "srcLine": 477,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十四",
+   "entry": "professionsOf",
+   "srcLine": 483,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十四",
+   "entry": "qualifies",
+   "srcLine": 482,
+   "defFiles": [
+    "server-plugin/titles.mjs"
+   ],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十四",
+   "entry": "skillBand",
+   "srcLine": 481,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十四",
+   "entry": "skillValue",
+   "srcLine": 479,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十四",
+   "entry": "skillView",
+   "srcLine": 478,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十四",
+   "entry": "skillsOf",
+   "srcLine": 480,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷十四",
+   "entry": "teachWillingness",
+   "srcLine": 486,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷四",
+   "entry": "bodyView",
+   "srcLine": 410,
+   "defFiles": [],
+   "callerFiles": []
+  },
+  {
+   "volume": "卷四",
+   "entry": "personView",
+   "srcLine": 411,
+   "defFiles": [
+    "server-plugin/entity-view.mjs"
+   ],
+   "callerFiles": [
+    "server-plugin/elections.mjs",
+    "server-plugin/faction-clock.mjs",
+    "server-plugin/magic-consent.mjs",
+    "server-plugin/magic-economy.mjs",
+    "server-plugin/monster-society.mjs",
+    "server-plugin/notables.mjs",
+    "server-plugin/organizations.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/ui-personal.mjs"
+   ]
+  },
+  {
+   "volume": "卷四",
+   "entry": "speciesView",
+   "srcLine": 409,
+   "defFiles": [],
+   "callerFiles": []
+  }
+ ]
+}
