@@ -367,7 +367,9 @@ if (!defB || !defC || !defDue || !c12) {
     return out.length ? { sec: '§' + num, lines: out } : null;
   }
   // 指针行本身仍在单元里，另加被指的节
-  const expandPtr = ss => { const out = new Set(), how = []; for (const s of ss) { out.add(s); const p = pointed(s); if (p) { p.lines.forEach(y => out.add(y)); how.push(`${s.n}→${p.sec}`); } } return { lines: [...out], how }; };
+  // “下表……”：登记句所说的就是紧随其后（同一 ### 节内）的那张表，表头与各数据行并入单元（2026-11-15 判取值后补）
+  const nextTable = x => { const out = []; let i = x.i + 1; while (i < L.length && L[i].f === x.f && L[i].h3 === x.h3 && !L[i].t.startsWith('|')) i++; while (i < L.length && L[i].f === x.f && L[i].t.startsWith('|')) out.push(L[i++]); return out; };
+  const expandPtr = ss => { const out = new Set(), how = []; for (const s of ss) { out.add(s); const p = pointed(s); if (p) { p.lines.forEach(y => out.add(y)); how.push(`${s.n}→${p.sec}`); } if (/下表/.test(s.t)) nextTable(s).forEach(y => out.add(y)); } return { lines: [...out], how }; };
   // 同卷同 ### 节的行索引；表格行回溯到表头（栏名常写在表头）
   const bySec = new Map();
   L.forEach((x, i) => { x.i = i; const k = x.f + '\u0000' + x.h3; if (!bySec.has(k)) bySec.set(k, []); bySec.get(k).push(x); });
@@ -390,7 +392,64 @@ if (!defB || !defC || !defDue || !c12) {
     }
     return pool;
   }
-  const has = (pool, f) => [...pool].some(y => fieldWord(f).test(y.t));
+  const has = (pool, f) => [...pool].some(y => fieldWord(f).test(y.t)); // 只测栏名出现：用于分档（是不是表 C 行），不用于判"写了"
+  // ---- 判"该栏有取值"（2026-11-15 单核 chk-1115-j356-2：原以栏名出现即判齐，“`triggerRX` 未写”也算齐）----
+  // 一栏算写了，当且仅当单元某处给出了它的取值，三种写法：
+  //  (1) 表格列：单元所在表的表头有一格就是该栏名，单元数据行该列的格非空且不是占位；
+  //  (2) 表格键值行：一格只写该栏名，紧接的下一格非空且不是占位；
+  //  (3) 行内：栏名之后（可隔一个括注；“`a`、`b` 与 `c` 取……”这种并列先跳过同列的其他栏名）紧跟取值：
+  //      JSON `"栏": 值`、`栏: 值`、`栏 = 值`，连接词 取/为/填/写/是/按/读/引/沿用/照/依次/各取 之后的取值，或直接跟取值
+  //      （反引号片段、真/假、null、空、数字、[ 或 {）。取值以占位开头的不算：未定、待定、待补、待裁、未写、未填、不填、没有、推不出、
+  //      无法、空缺、暂缺、—、？。取值为空须显式写 null、`[]`、`{}` 或“空”。
+  //      连接词前可隔至多二十四字（不跨 ，。；| 与括号）的范围说明（“`scandal` 八行都取假”“`headSlot` 均为 null”“除掠夺、焚毁两行外一律写空表”）；括注可嵌套；
+  //      “行上必写/必填/须写”是对栏的要求不是取值，其后带冒号给出的（“行上必写：谎言揭穿取真”）才算；“即 X”“含 X”“列 X”算取值。
+  const PH = /^\s*[`"]?\s*(未定|待|待补|待裁|未写|未填|不填|没有|推不出|无法|空缺|暂缺|尚未|行上必写|必写|必填|须写|须填|—|–|？|\?|TBD)/;
+  const cellOk = c => { const s = (c || '').trim(); return s !== '' && !/^[-—–]+$/.test(s) && !PH.test(s); };
+  const DIRECT = /^\s*(`[^`]+`|真|假|null|空(?!缺)|-?\d|\[|\{|"[^"]*")/;
+  const CONN = /^\s*(?:[:=：]|取值?为?|为|填(?:写|作)?|写(?:作|成|为)?|是|即|含|列(?:出|为)?|按|读|引|沿用|照|依次(?:取|为)?|各(?:取|为|引|是)|对应)/;
+  const SCOPED = new RegExp('^\\s*[^，。；|（）]{1,24}?' + CONN.source.replace(/^\^\\s\*/, ''));
+  function inlineVal(t, f) {
+    const re = new RegExp('(?<![A-Za-z0-9_.])' + f + '(?![A-Za-z0-9_.])', 'g');
+    for (const m of t.matchAll(re)) {
+      let r = t.slice(m.index + f.length);
+      if (/^"\s*:/.test(r)) { if (cellOk(r.replace(/^"\s*:\s*/, ''))) return true; continue; } // JSON
+      r = r.replace(/^`/, '');
+      if (/^\s*[:=]/.test(r)) { const v = r.replace(/^\s*[:=]\s*/, ''); if (cellOk(v) && !/^[|，。；]/.test(v)) return true; continue; } // `栏: 值` / `栏 = 值`
+      for (let k = 0; k < 6; k++) { const n = r.match(/^\s*(?:、|与|和|及|\/)\s*`[A-Za-z][A-Za-z0-9]*`/); if (!n) break; r = r.slice(n[0].length); } // 并列栏名
+      if (/^\s*（/.test(r)) { let d = 0, i = r.indexOf('（'); for (; i < r.length; i++) { if (r[i] === '（') d++; else if (r[i] === '）' && --d === 0) break; } if (i < r.length) r = r.slice(i + 1); } // 一个括注（可嵌套）
+      r = r.replace(/^\s*(行上必写|必写|必填)\s*[：:]/, '');
+      if (PH.test(r)) continue; // “`triggerRX` 未写”
+      let v = null;
+      // 次序：紧跟的连接词 → 紧跟的取值 → 隔范围说明的连接词
+      let c = r.match(CONN); if (c) v = r.slice(c[0].length); else if (DIRECT.test(r)) v = r; else if ((c = r.match(SCOPED))) v = r.slice(c[0].length);
+      if (v === null) continue;
+      // “`stageFlow` 与 `stages` 逐段对应，……”：以对应关系给出取法，关系本身就是取值，后接标点也算
+      if (c && /对应$/.test(c[0]) ? !PH.test(v.replace(/^\s*[，：:]/, '')) : cellOk(v) && !/^\s*[|，。；]/.test(v)) return true;
+    }
+    return false;
+  }
+  function hasVal(pool, f) {
+    const fw = fieldWord(f);
+    for (const y of pool) {
+      if (!fw.test(y.t)) continue;
+      if (y.t.startsWith('|')) {
+        const cs = cellsOf(y.t);
+        const hi = cs.findIndex(c => c.replace(/`/g, '').trim() === f);
+        if (hi >= 0 && tableHead(y) === y) { // (1) 表头列
+          // 单元自己的数据行在池里时只看它们；单元是散文登记段（池里只有表头）时，看该表的数据行，有一行该列有值即算（各行另按带代号动词逐行核）
+          const isData = z => z !== y && tableHead(z) === y && !/^\|[\s|:-]+\|?$/.test(z.t);
+          const own = [...pool].filter(isData);
+          const rows = [];
+          if (!own.length) for (let i = y.i + 1; i < L.length && L[i].f === y.f && L[i].t.startsWith('|'); i++) if (isData(L[i])) rows.push(L[i]);
+          if (own.length ? own.some(z => cellOk(cellsOf(z.t)[hi])) : rows.some(z => cellOk(cellsOf(z.t)[hi]))) return true;
+          continue;
+        }
+        if (hi >= 0 && cellOk(cs[hi + 1])) return true; // (2) 键值行
+      }
+      if (inlineVal(y.t, f)) return true; // (3)
+    }
+    return false;
+  }
   const NOTREG = /不(登记|另登|另立)[^。；|]{0,8}`?(due_kind|verb)`?/;
   // 表 C 独有的栏（表 C 定义里有、表 B 定义里没有）：散文自称“事件类型行”而一栏表 C 字段都没写的，判不了是表 C 行还是动词行旧称
   const C_ONLY = [...new Set(cDef.map(r => r.nm))].filter(n => !bDef.some(r => r.nm === n));
@@ -424,7 +483,7 @@ if (!defB || !defC || !defDue || !c12) {
     // 条件必写栏：本单元把条件栏赋为触发取值（`mode` 取/为/=/： `onEvent`、JSON "mode": "onEvent"）才算必写；只在说明里提到该取值不算
     const condRx = c => new RegExp('[`"]' + c.on + '[`"]?\\s*(?:取|为|=|：|:)\\s*[`"]?' + c.val + '(?![A-Za-z0-9_])');
     const need = f => !K.cond?.[f] || [...pool].some(y => condRx(K.cond[f]).test(y.t));
-    const miss = K.req.filter(f => need(f) && !has(pool, f));
+    const miss = K.req.filter(f => need(f) && !hasVal(pool, f));
     missTotal += miss.length;
     if (miss.length) note(v, `${K.key}:${label}缺${miss.length}`);
     console.log(`  [${miss.length ? '缺栏' : '齐'}] ${v} ${label} 行 ${lines.map(x => x.n).join(',')}${miss.length ? `：缺 ${miss.join('、')}` : ''}`);
@@ -472,7 +531,7 @@ if (!defB || !defC || !defDue || !c12) {
           if (inDef.length === 1) { how = `（登记卷按 §2/代号表定；候选 ${cand.join('、')}）`; regs = inDef; }
           else {
             // 判不出登记卷：逐个候选卷算一遍缺栏，只列不计数，供人工定登记卷后照用
-            const per = cand.map(v => { const ls = occ.filter(x => x.v === v && usable(x)); if (!ls.length) return `${v}(无可登记节的行)`; const pool = poolOf(K, ls); prosePool(v).forEach(y => pool.add(y)); const m = K.req.filter(f => !has(pool, f)); return `${v}:${ls.map(x => x.n).join(',')} 缺${m.length}${m.length && m.length < K.req.length ? '[' + m.join('、') + ']' : ''}`; });
+            const per = cand.map(v => { const ls = occ.filter(x => x.v === v && usable(x)); if (!ls.length) return `${v}(无可登记节的行)`; const pool = poolOf(K, ls); prosePool(v).forEach(y => pool.add(y)); const m = K.req.filter(f => !hasVal(pool, f)); return `${v}:${ls.map(x => x.n).join(',')} 缺${m.length}${m.length && m.length < K.req.length ? '[' + m.join('、') + ']' : ''}`; });
             unres.push(`${label}{① 登记卷 ${r.reg.join('、') || '未抽到'}；§2/代号表写到的卷 ${inDef.join('、') || '无'}；各候选卷 ${per.join(' ')}}`); continue;
           }
         }
