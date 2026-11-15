@@ -43,7 +43,7 @@ const tableOwner = new Map();
     if (/^#+ /.test(l)) { cur = null; if (l.startsWith(CFG.registry.tables)) { const m = l.match(/`([a-z_]+)`/); if (m) { cur = m[1]; tableOwner.set(cur, null); } } continue; }
     if (cur && l.startsWith('- `' + CFG.fields.owner + '`')) { const m = l.match(/\d+/); if (m) tableOwner.set(cur, seqVol.get(+m[0]) ?? null); }
   } }
-const ownedBy = v => [...tableOwner].filter(([, o]) => o === v).map(([t]) => t).sort();
+const ownedBy = v => [...tableOwner].filter(([, o]) => o === v).map(([t]) => t);
 
 // ---- J1：systems 补全表。系统 = 一个领域卷的 §3.1 读入口集合 ----
 const byVol = new Map();
@@ -58,20 +58,20 @@ for (const [v, es] of [...byVol].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
   const tables = ownedBy(v);
   const first1 = es[0].defFiles.length ? es[0] : null; // view 只取系统键对应的那个入口；别的入口的同名旧定义只记在来源栏
   systems.push({
-    system: first, volume: v,
+    system: tables.length ? 'sys.' + tables[0] : first, tempKey: tables.length === 0, keyNote: tables.length ? '取卷二各表节 owner 行指向该卷的第一张表（按卷二登记顺序）' : '无主表卷，暂用该卷 §3.1 首个读入口名，拟名见 乙4补-无主表卷拟名表.md，待李白定名', volume: v,
     entries: es.map(e => e.entry),
     view: first1 ? `${first1.defFiles[0].replace(/^server-plugin\//, '')}#${first1.entry}` : '待补',
     tables,
     entryCallerFiles: Object.fromEntries(callerEntries.map(e => [e.entry, e.callerFiles])),
     defFiles: defUnion,
     callerUnion,
-    pending: ['predicates', 'writers', 'sources', 'sinks', 'entryJudges', 'phase', ...(first1 ? [] : ['view'])],
+    pending: ['predicates', 'writers', 'sources', 'sinks', 'entryJudges', ...(first1 ? [] : ['view'])],
     source: `${v} §3.1 读入口 ${es.length} 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 ${withDef.length} 项（只按名字对，可能是同名的别的函数）${defUnion.length ? '（' + defUnion.slice(0, 3).join('、') + (defUnion.length > 3 ? '等' : '') + '）' : ''}；有调用文件的入口 ${callerEntries.length} 项、调用文件 ${callerUnion.length} 个；tables 取卷二各表节 owner 行 ${tables.length} 张`,
   });
 }
 writeFileSync(`${OUT}/乙4补-systems补全.json`, JSON.stringify({ _说明: '卷二 §2.7 systems 补全（乙-4 补 J1）；脚本生成，勿手改。pending 列出推不出、不猜的字段。', count: systems.length, systems }, null, 1) + '\n');
 
-const mdRows = systems.map(s => `| ${s.system} | ${s.volume} | ${s.view} | ${s.tables.length ? s.tables.join('、') : '待补'} | ${Object.keys(s.entryCallerFiles).length} 项入口、${s.callerUnion.length} 个文件 | ${s.source} | ${s.pending.join('、')} |`);
+const mdRows = systems.map(s => `| ${s.system} | ${s.volume} | ${s.view} | ${s.tables.length ? s.tables.join('、') : '待补'} | ${Object.keys(s.entryCallerFiles).length} 项入口、${s.callerUnion.length} 个文件 | ${s.source}；系统键：${s.keyNote}；phase 按 R11-3.14 派生 | ${s.pending.join('、')} |`);
 writeFileSync(`${OUT}/乙4补-systems表.md`, [
   '| 系统键 | 归属卷 | view（文件#入口） | tables | entryCallerFiles（有调用文件的入口数、文件数） | 来源 | 待补字段 |',
   '|---|---|---|---|---|---|---|',
@@ -99,11 +99,11 @@ const groupsOf = files => {
   return n;
 };
 const runtime = f => /^(server-plugin|extension)\//.test(f);
-const objects = [...new Set(mig.rows.map(r => r.targetObject.replace(/`/g, '').trim() || '（空）'))].sort();
+const objects = [...new Set(mig.rows.filter(r => !r.aliasOf).map(r => r.targetObject.replace(/`/g, '').trim() || '（空）'))].sort();
 const res = [];
 for (const o of objects) {
   const c1 = (objFiles[o] ?? []).filter(runtime);
-  const sys = systems.filter(s => s.tables.includes(o));
+  const sys = systems.filter(s => s.tables.includes(o) || s.system === o);
   const c2 = [...new Set(sys.flatMap(s => s.callerUnion))].filter(runtime);
   const c3 = new Set();
   for (const s of sys) for (const d of s.defFiles) for (const i of importers.get(d) ?? []) if (runtime(i)) c3.add(i);
@@ -141,3 +141,17 @@ const md = [
 writeFileSync(`${OUT}/乙4补-消费者组②重算.md`, md);
 console.log(`systems ${systems.length}，读入口 ${systems.reduce((s, x) => s + x.entries.length, 0)}，有 tables 的系统 ${systems.filter(s => s.tables.length).length}`);
 console.log(`对象 ${res.length}，有系统的 ${withSys.length}；组 ①${sum('g1')} ①∪②${sum('g12')} ①∪②∪③${sum('g123')}；有②文件的对象 ${res.filter(r => r.c2 > 0).length}`);
+
+// ---- 无主表卷的拟名表（只列给李白过目，不落到卷文；定名后由 rename-sys-keys.mjs 整批替换）----
+const PROPOSED = { 卷六: 'economy', 卷九: 'ai_interface', 卷十: 'worldgen', 卷十一: 'migration', 卷十二: 'acceptance_scan', 卷十三: 'combat', 卷十五: 'arcana', 卷十六: 'monsters', 卷十七: 'travel', 卷十八: 'social', 卷二十: 'time_env', 卷二十三: 'arts', 卷二十六: 'psyche', 卷二十七: 'offscreen_save', 卷二十八: 'packs', 卷二十九: 'display_l10n' };
+const noTable = systems.filter(s => s.tempKey);
+writeFileSync(`${OUT}/乙4补-无主表卷拟名表.md`, [
+  '# 乙-4 补：无主表卷的系统键拟名表（脚本生成，勿手改；待李白过目，不先落）',
+  '',
+  '规则（李白 11-15 16:05 第 1 条）：系统键 = "sys." + 该卷主表代号（卷二各表节 owner 指向该卷的第一张表，按卷二登记顺序）；该卷没有主表的用 "sys." + 卷标题英文短名。下面是没有主表的卷，拟名取卷标题的英文短名，现在补全表与迁移行里仍用临时键（各卷 §3.1 首个读入口名），定名后整批替换。',
+  '',
+  '| 卷 | 临时键 | 拟名 |', '|---|---|---|',
+  ...noTable.map(s => `| ${s.volume} | ${s.system} | sys.${PROPOSED[s.volume] ?? '（待拟）'} |`),
+  '',
+].join('\n'));
+console.log(`无主表卷 ${noTable.length} 个，拟名表已写`);

@@ -137,7 +137,7 @@ for (const f of files) {
     if (/^```/.test(l)) { inCode = !inCode; continue; }
     if (inCode) continue;
     if (/^## /.test(l)) h2 = l.split(' ')[1];
-    if (/^\|/.test(l)) { const c = cells(l); if (migRe.test((c[0] ?? '').replace(/\*/g, ''))) { n++; secs.add(h2); } }
+    if (/^\|/.test(l)) { const c = cells(l); if (migRe.test((c[0] ?? '').replace(/\*/g, '')) && c.filter(x => /^同 (?:M|Z35-)\d/.test(x.replace(/`/g, ''))).length < 3) { n++; secs.add(h2); } } // 带"同 Mxx-y"别名格的行不单独计数（李白 11-15 16:05 总原则）
   }
   const w = wave.has(v) ? wave.get(v) : split.has(v) ? wave.get(split.get(v)) : undefined;
   const has7 = w !== 0 && L.some(l => l.startsWith(CFG.migSection)); // 波 0 是前置三卷，不是领域卷（R11-2.1 只收领域卷的迁移节）

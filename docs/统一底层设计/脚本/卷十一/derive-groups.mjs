@@ -16,7 +16,7 @@ const FILE = /[A-Za-z0-9_./*-]+\.(?:mjs|json|js)\b/g;
 
 // ---- 输入 ----
 const mig = JSON.parse(readFileSync(`${HERE}/migrows-input.json`, 'utf8'));
-const rows = mig.rows;
+const rows = mig.rows.filter(r => !r.aliasOf); // 别名行不单独计数
 const edgeLines = readFileSync(`${OUT}/乙4-import图-边表.tsv`, 'utf8').split('\n').slice(1).filter(Boolean).map(l => l.split('\t'));
 const callers = JSON.parse(readFileSync(`${OUT}/乙4-entryCallerFiles.json`, 'utf8'));
 

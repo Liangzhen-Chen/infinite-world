@@ -91,6 +91,10 @@ for (const f of files) {
     };
     // 行号写在单独的「代表位置」栏时（卷二十 T-3 表），只有一个文件锚点才把栏里的数字记为它的行
     if (col.rep >= 0 && row.anchors.length === 1 && row.anchors[0].lines.length === 0) for (const n of strip(c[col.rep] ?? '').matchAll(/\d+/g)) row.anchors[0].lines.push([+n[0], +n[0]]);
+    // 别名行：任一格写"同 Mxx-y"的行不单独计数，以所指的行为准（李白 11-15 16:05 总原则）；不查五值，不进后面的算数
+    // 别名行的判法：处置、落点、落点对象三格都写"同 Mxx-y"（或 Z35 的汇总引用）；只有落点一格写"同"的行是正常行（落点指向别行）
+    const aliasCells = c.map(strip).filter(x => /^同 (?:M|Z35-)\d/.test(x));
+    if (aliasCells.length >= 3) { row.aliasOf = aliasCells[0]; rows.push(row); continue; }
     if (!DISP.has(disp)) problems.push(`${row.rowKey} 行${row.srcLine}：处置不是五值之一（${disp.slice(0, 20)}）`);
     if (row.targetObject === '') problems.push(`${row.rowKey} 行${row.srcLine}：落点对象为空`);
     rows.push(row);
@@ -105,7 +109,7 @@ for (const r of rows) {
 }
 const out = { _说明: '乙-4 H1：由 transcribe-migrows.mjs 从各卷 §7 迁移节生成；不手改。字段：编号、卷、卷文行号、锚点原文与解析、处置、落点、落点对象、基线提交。', baseline: BASE, count: rows.length, rows };
 writeFileSync(`${HERE}/migrows-input.json`, JSON.stringify(out, null, 1) + '\n');
-console.log(`迁移行 ${rows.length} 行，${Object.keys(perVol).length} 卷`);
+console.log(`迁移行 ${rows.length} 行（其中别名行 ${rows.filter(r => r.aliasOf).length} 行不单独计数），${Object.keys(perVol).length} 卷`);
 console.log(Object.entries(perVol).map(([k, v]) => `${k}:${v}`).join(' '));
 const noAnchor = rows.filter(r => r.anchors.length === 0).length;
 console.log(`有解析出锚点文件的行 ${rows.length - noAnchor}，无文件锚点（纯数据行、跨文件说明或位置写在别栏）${noAnchor}`);
