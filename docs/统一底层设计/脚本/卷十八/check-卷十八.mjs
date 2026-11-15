@@ -424,7 +424,7 @@ report('15 余项单核 N4、N5（按 R18-1.5 模拟分家、迁户、接任；�
     const l = ls.join('\n'); const lineOf = k => l.slice(0, k).split('\n').length; const atk = k => `${v}:${lineOf(k)}`; // 数据对象可跨行，按全文取平衡括号
     // 种类行：主列行（卷十八 §4.1.5 的数组行 ["hk_*", …]，或别卷合写的带 from/to 的对象行）定存在；补充列对象行 "hk_*": {…} 合并进同一行
     const kr = k => { if (!kinds.has(k)) kinds.set(k, { o: {}, at: null }); return kinds.get(k); };
-    for (const m of l.matchAll(/\[\s*"(hk_[a-z0-9_]+)"\s*,/g)) { const r = kr(m[1]); r.at ??= atk(m.index); }
+    for (const m of l.matchAll(/^\s*\[\s*"(hk_[a-z0-9_]+)"\s*,/gm)) { const r = kr(m[1]); r.at ??= atk(m.index); } // 只认行首的主列数组行，不认 incompatible 等列表里的引用
     for (const m of l.matchAll(/"(hk_[a-z0-9_]+)"\s*:\s*\{/g)) { const o = objAt(l, m.index + m[0].length - 1); if (!o) continue; const r = kr(m[1]); Object.assign(r.o, o); if ('from' in o || 'to' in o || 'uniqueTriple' in o) r.at = atk(m.index); else r.at ??= atk(m.index); }
     for (const m of l.matchAll(/"(rules\.[A-Za-z0-9_.]+)"\s*:\s*\{/g)) { const o = objAt(l, m.index + m[0].length - 1); if (o) for (const [k, x] of Object.entries(o)) if (typeof x === 'string') rulesMap.set(`${m[1]}.${k}`, x); }
     if (v === '卷十八') for (const m of l.matchAll(/"defaults"\s*:\s*\{/g)) { const o = objAt(l, m.index + m[0].length - 1); if (o && 'uniqueTriple' in o) defaults = o; }
