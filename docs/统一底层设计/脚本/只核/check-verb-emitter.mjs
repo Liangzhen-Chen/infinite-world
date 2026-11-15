@@ -627,6 +627,10 @@ if (!defB || !defC || !defDue || !c12) {
       // 规则段 = 以上都不是的说明性段落（如"灾异行补填表 C 的字段"这种对一类行的填法规则、读取清单里的指针），只列出不断言。
       // 数据行的单元只取该行与其表头，不借同节的说明段。散文单行（②的非表格行）里三栏所指动词的代号属行数据：写了代号照核，没写不计。
       const KD = { ...K, expand: /(?!)/ };
+      const sfDef = defC.rows.find(r => namesIn(r.c[0]).includes('stageFlow'));
+      const sfm = (sfDef?.c.join('|') || '').match(/`catalysts` 为空的阶段 `advanceAt` 写 (\d+)、`advanceTo` 同 `onExpire`/);
+      const SF_RULE = sfm ? { at: Number(sfm[1]) } : null;
+      console.log(`  无催化阶段规则（表 C stageFlow 定义处）：${SF_RULE ? 'catalysts 为空 → advanceAt=' + SF_RULE.at + '、advanceTo=onExpire' : '定义处未写，不核'}`);
       const REGCODE = /`roles\.types\.[A-Za-z]+`|\betype_[a-z][a-z_]*/;
       const SELFDECL = new RegExp(DECL_C.source + '|本卷[^。；|]{0,12}登记[^。；|]{0,12}事件类型(行|表)');
       const DEFROW = s => s.t.startsWith('|') && new RegExp('^' + defC.at.v).test(cellsOf(s.t)[0] || '') && /事件类型|局势种类/.test(cellsOf(s.t)[0] || '');
@@ -660,6 +664,18 @@ if (!defB || !defC || !defDue || !c12) {
           }
           if (bad.length) { const li = listed(s.v, miss.unit, f); missTotal += bad.length; if (li) listedTotal += bad.length; note(s.v, `C:事件类型行 ${f} ${bad.join('/')}${li ? '（已入清单）' : ''}`); }
           console.log(`        [${bad.length ? '三栏不符' : '三栏符'}] ${f} → ${refs.join(',') || '—'}${bad.length ? '：' + bad.join('；') : ''}`);
+        }
+        // 无催化的阶段（李白 ce6e990b ②，卷二十四表 C `stageFlow` 行的整类规则，从定义处读）：`catalysts` 为空的阶段
+        // `advanceAt` 须为定义写的值、`advanceTo` 须同 `onExpire`；不符的每一阶段计 1 处。只核数据实例（JSON）里的 stageFlow。
+        if (SF_RULE) for (const y of miss.pool) for (const m of y.t.matchAll(/"stageFlow":\s*\[/g)) {
+          let d = 0, j = m.index + m[0].length - 1; for (; j < y.t.length; j++) { if (y.t[j] === '[') d++; else if (y.t[j] === ']' && --d === 0) break; }
+          let arr = null; try { arr = JSON.parse(y.t.slice(m.index + m[0].length - 1, j + 1)); } catch { console.log(`        [stageFlow 解析不了] ${y.v}:${y.n}`); continue; }
+          for (const st of arr) {
+            if (!Array.isArray(st.catalysts) || st.catalysts.length) continue;
+            const bad = []; if (st.advanceAt !== SF_RULE.at) bad.push(`advanceAt=${st.advanceAt}≠${SF_RULE.at}`); if (st.advanceTo !== st.onExpire) bad.push(`advanceTo=${st.advanceTo}≠onExpire=${st.onExpire}`);
+            if (bad.length) { missTotal++; note(s.v, `C:事件类型行 stageFlow ${st.stage} 无催化 ${bad.join('、')}`); }
+            console.log(`        [${bad.length ? '无催化阶段不符' : '无催化阶段符'}] ${y.v}:${y.n} ${st.stage}${bad.length ? '：' + bad.join('；') : ''}`);
+          }
         }
       }
       console.log(`  自称事件类型行、未写任何表 C 独有栏（${C_ONLY.length} 个：${C_ONLY.join('、')}）——是表 C 行还是动词行旧称需人工判，表 C 不计数（已在 ③B 按动词行计）：`);
