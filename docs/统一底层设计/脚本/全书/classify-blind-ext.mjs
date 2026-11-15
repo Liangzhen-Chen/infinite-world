@@ -11,6 +11,7 @@
 //    R2 列表/定义行首：行（去掉 - * 数字. ** 引用符等前缀后）以 `标识符` 开头，紧跟 ：/:/——/（/(/ 或 " 行"。
 //    R3 登记句：非表格行，同一分句（按 。；，,：|切）里含该反引号标识符，且含登记动词
 //       登记|新增|定义|声明|收录|增设|加入|加一行|加行，或标识符后紧跟 行/条目/字段/列/一行。
+//    （修订三：R3 动词须在标识符之前且分句不点名任何卷；另加 R4 字段列举"字段/列/维度/键：…"后的项，冒号前不点名任何卷。）
 //    提及区（其中出现一律不算登记/定义）：所在一级标题（## ）匹配
 //       §5|§7|§8|接口|迁移|开放问题|修订|勘误|记账|影响面|自检|输出|待补|审查意见|对齐的项|配合
 //    即请求表、迁移清单、开放问题、修订记录、勘误、记账栏、自检输出、待补清单——这些是对别处的请求或改动记录，不是登记本身。
@@ -77,10 +78,22 @@ function occ(f, i, id) {
   const body = l.replace(/^\s*(>\s*)*([-*+]\s+|\d+[.)、]\s*)?(\*\*)?/, '');
   const tk = '(`[^`]*\\b' + esc(id) + '\\b[^`]*`|\\b' + esc(id) + '\\b)';
   if (new RegExp('^' + tk + '(\\*\\*)?\\s*(：|:|——|（|\\(|行)').test(body)) return 'reg';
+  // 修订三（李白 07:00 批准，自检两条误分的整类缺陷）：
+  //  ①R3 登记动词须在标识符之前（"登记 `x`""新增 `x`"），且该分句不点名任何卷——
+  //    "只经卷二十二 `grantLore` 新增"这类动词在后、指向别卷的是提及；
+  //  ②R4 字段列举：句中（按 。；切）"字段/列/维度/键 + ：" 之后、到句末的列举项算定义，冒号前同样不得点名任何卷——
+  //    原按冒号切分句会漏认"条目字段：`popRange: [min,max]`"。
+  const VOLREF = /卷(零|[一二三四五六七八九十]+)/;
   for (const cl of l.split(/[。；;，,：:|]/)) {
-    if (!has(cl, id)) continue;
-    if (VERB.test(cl)) return 'reg';
+    if (!has(cl, id) || VOLREF.test(cl)) continue;
+    const at = cl.search(new RegExp(tk));
+    const vm = cl.match(VERB);
+    if (vm && at >= 0 && vm.index < at) return 'reg';
     if (new RegExp(tk + '\\s*(行|条目|字段|列|一行)').test(cl)) return 'reg';
+  }
+  for (const se of l.split(/[。；;]/)) {
+    const m = se.match(/^(.*?(字段|列|维度|键))\s*[：:](.*)$/);
+    if (m && !VOLREF.test(m[1]) && has(m[3], id)) return 'reg';
   }
   return 'prose';
 }
@@ -94,7 +107,7 @@ const src = fs.readFileSync(process.argv[2], 'utf8').split(/\r?\n/);
 const hits = src.filter(l => /^(散文|§5\/8)\t/.test(l)).map(l => { const c = l.split('\t'); const [v, ln] = c[1].split(':'); return { kind: c[0], v, line: +ln, id: c[2], tv: c[3].split('/'), raw: l }; });
 const out = []; const P = (...a) => out.push(a.join('\t'));
 P('档', '子因', '类别', '声明卷:行', '标识符', '目标卷', '依据位置（卷:行，最多 3 处）');
-const cnt = { A: 0, B: 0, C: 0, D: 0 }; const byTv = {}; const sub = {};
+const cnt = { A: 0, B: 0, C: 0, D: 0 }; const byTv = {}; const sub = {}; const rows = [];
 for (const h of hits) {
   const fd = BY[h.v]; let grade, why = '', where = [];
   const self = scanVol(fd, h.id, h.line - 1);
@@ -111,9 +124,19 @@ for (const h of hits) {
   cnt[grade]++; if (why) sub[why] = (sub[why] || 0) + 1;
   for (const t of h.tv) { byTv[t] = byTv[t] || { A: 0, B: 0, C: 0, D: 0 }; byTv[t][grade]++; }
   P(grade, why || '-', h.kind, h.v + ':' + h.line, h.id, h.tv.join('/'), where.slice(0, 3).join(' ') || '-');
+  rows.push({ grade, line: [h.v + ':' + h.line, h.id, h.tv.join('/'), where.slice(0, 3).join(' ') || '-'] });
+}
+// 抽查样本：第三参数为种子（整数），对 A、B 各抽 15 条。乱序用 32 位 LCG（a=1664525, c=1013904223）驱动的 Fisher–Yates，按命中原序起洗。
+const SEED = process.argv[3];
+function sample(g, n) {
+  let s = (+SEED) >>> 0; const rnd = () => (s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296;
+  const a = rows.filter(r => r.grade === g);
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a.slice(0, n);
 }
 out.push('');
 out.push('== 汇总 ' + JSON.stringify({ total: hits.length, ...cnt, sum: cnt.A + cnt.B + cnt.C + cnt.D, D_sub: sub }));
 out.push('== 按目标卷（多目标的命中在每个目标卷各计一次）');
 for (const t of Object.keys(byTv).sort((a, b) => (byTv[b].A + byTv[b].B + byTv[b].C + byTv[b].D) - (byTv[a].A + byTv[a].B + byTv[a].C + byTv[a].D))) out.push([t, 'A=' + byTv[t].A, 'B=' + byTv[t].B, 'C=' + byTv[t].C, 'D=' + byTv[t].D].join('\t'));
+if (SEED !== undefined) for (const g of ['A', 'B']) { out.push('== 抽查样本 ' + g + '（种子 ' + SEED + '）：声明卷:行、标识符、目标卷、他处登记位置'); for (const r of sample(g, 15)) out.push(g + '\t' + r.line.join('\t')); }
 fs.writeFileSync(1, out.join('\n') + '\n');
