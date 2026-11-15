@@ -2,16 +2,16 @@
  "_说明": "乙-6a：系统登记六列由各卷 §3.1–§3.3 等卷文转录；脚本 脚本/卷十一/extract-systems-six.mjs 生成，勿手改。每格带 src（出处节号）；value 为\"待补\"表示卷文没有写成条目，不猜。",
  "counts": {
   "total": 180,
-  "filled": 46,
-  "pending": 134,
+  "filled": 51,
+  "pending": 129,
   "byCol": {
    "predicates": {
-    "filled": 12,
-    "pending": 18
+    "filled": 15,
+    "pending": 15
    },
    "writers": {
-    "filled": 25,
-    "pending": 5
+    "filled": 27,
+    "pending": 3
    },
    "sources": {
     "filled": 2,
@@ -40,19 +40,7 @@
      "value": "待补"
     },
     "writers": {
-     "value": [
-      {
-       "item": "条目、检测器、类别、模板、场景、测试台、用例、判据版本、门禁设施各登记文件；离线组白名单",
-       "module": "tools/accept/register.mjs",
-       "kind": "text"
-      },
-      {
-       "item": "逐行清单、执行记录、报告与计时附表；合入关口上写基线现值与性能基线文件",
-       "module": "tools/accept/run.mjs",
-       "kind": "text"
-      }
-     ],
-     "src": "卷十二 §3.2（唯一写者与执行入口）"
+     "value": "待补"
     },
     "sources": {
      "value": "待补"
@@ -152,11 +140,6 @@
        "item": "state.afterlife",
        "module": "shade.mjs",
        "kind": "path"
-      },
-      {
-       "item": "tissueDelta、bodyPlanOverride、comp_relic、aetherStored、arcSchool",
-       "module": "status.mjs",
-       "kind": "path"
       }
      ],
      "src": "卷十五 §3.3（唯一写者与钩子）"
@@ -180,7 +163,12 @@
    "volume": "卷二十三",
    "cols": {
     "predicates": {
-     "value": "待补"
+     "value": [
+      "isWork",
+      "isComposition",
+      "isAdornment"
+     ],
+     "src": "卷二十三 §3.1（读入口与谓词）"
     },
     "writers": {
      "value": "待补"
@@ -377,7 +365,8 @@
      "value": "待补"
     },
     "writers": {
-     "value": "待补"
+     "value": [],
+     "src": "卷二十九 §3.2（本卷写明无）"
     },
     "sources": {
      "value": "待补"
@@ -483,12 +472,15 @@
    "volume": "卷二十四",
    "cols": {
     "predicates": {
-     "value": "待补"
+     "value": [
+      "isA"
+     ],
+     "src": "卷二十四 §3.1（读入口与谓词）"
     },
     "writers": {
      "value": [
       {
-       "item": "state.events.instances",
+       "item": "state.events.instances、lastStart、lastEnd",
        "module": null,
        "kind": "path"
       },
@@ -534,18 +526,18 @@
        "kind": "path"
       },
       {
-       "item": "comp_portable、carrierLastPlace",
+       "item": "parent、form、materialKg、wallFlowKg、envelopeVolumeL、wallThicknessM、storeys、builder、builtDay、carrierItem、roomRole",
+       "module": "construction.mjs",
+       "kind": "path"
+      },
+      {
+       "item": "carrierLastPlace",
        "module": "facilities.mjs",
        "kind": "path"
       },
       {
        "item": "materialKg、wallFlowKg、repairedVolumeL、repairedVolumeLRem、repairLot",
        "module": "facilities.mjs",
-       "kind": "path"
-      },
-      {
-       "item": "qualityTier",
-       "module": "construction.mjs",
        "kind": "path"
       },
       {
@@ -559,7 +551,12 @@
        "kind": "path"
       },
       {
-       "item": "stationLog.<建筑>、stationFold.<建筑>.{daily: map<integer, map<ref vocab fixture, integer>>}",
+       "item": "facilityState.<建筑>.{lastSettledDay, opsLevel, fireHeatMJ, burning, visitsToday}",
+       "module": "facilities.mjs",
+       "kind": "path"
+      },
+      {
+       "item": "stationLog.<建筑>、stationFold.<建筑>",
        "module": "facilities.mjs",
        "kind": "path"
       },
@@ -807,19 +804,7 @@
      "value": "待补"
     },
     "writers": {
-     "value": [
-      {
-       "item": "迁移行文件",
-       "module": "tools/migrate/collect.mjs",
-       "kind": "text"
-      },
-      {
-       "item": "卡记录文件、冻结状态文件、事件文件",
-       "module": "tools/migrate/card-ledger.mjs",
-       "kind": "text"
-      }
-     ],
-     "src": "卷十一 §3.2（唯一写者）"
+     "value": "待补"
     },
     "sources": {
      "value": "待补"
@@ -843,7 +828,14 @@
      "value": "待补"
     },
     "writers": {
-     "value": "待补"
+     "value": [
+      {
+       "item": "state.bestiary.named",
+       "module": "bestiary.mjs",
+       "kind": "path"
+      }
+     ],
+     "src": "卷十六 §3.3（唯一写者与钩子）"
     },
     "sources": {
      "value": "待补"
@@ -886,6 +878,11 @@
       {
        "item": "state.limitAnchors",
        "module": "civil.mjs",
+       "kind": "path"
+      },
+      {
+       "item": "state.offenseFacts",
+       "module": "offense.mjs",
        "kind": "path"
       },
       {
@@ -945,10 +942,25 @@
    "volume": "卷二十七",
    "cols": {
     "predicates": {
-     "value": "待补"
+     "value": [
+      "aggregate.mjs#pinned"
+     ],
+     "src": "卷二十七 §3.1（读入口与谓词）"
     },
     "writers": {
-     "value": "待补"
+     "value": [
+      {
+       "item": "simProgress.*、simDegrade.*",
+       "module": "sim-advance.mjs",
+       "kind": "path"
+      },
+      {
+       "item": "aggregates.*",
+       "module": "aggregate.mjs",
+       "kind": "path"
+      }
+     ],
+     "src": "卷二十七 §3.2（唯一写者）"
     },
     "sources": {
      "value": "待补"
@@ -981,6 +993,11 @@
       {
        "item": "offices、revoked",
        "module": "office.mjs",
+       "kind": "path"
+      },
+      {
+       "item": "seat",
+       "module": "org.mjs",
        "kind": "path"
       },
       {
@@ -1109,6 +1126,31 @@
        "item": "placeProgress.<地点>.{siteHoldSince, siteHoldDir, abandonSince, lastCulture}",
        "module": "place-progress.mjs",
        "kind": "path"
+      },
+      {
+       "item": "created.*.props.development",
+       "module": "place-progress.mjs",
+       "kind": "path"
+      },
+      {
+       "item": "created.*.props.control",
+       "module": "place-progress.mjs",
+       "kind": "path"
+      },
+      {
+       "item": "created.*.props.siteType",
+       "module": "place-progress.mjs",
+       "kind": "path"
+      },
+      {
+       "item": "created.*.props.borderTerms",
+       "module": "place-progress.mjs",
+       "kind": "path"
+      },
+      {
+       "item": "created.*.props.aspect",
+       "module": "place-progress.mjs",
+       "kind": "path"
       }
      ],
      "src": "卷五 §3.3（唯一写者）"
@@ -1186,19 +1228,14 @@
        "kind": "path"
       },
       {
-       "item": "growth.<person>、deeds.<person>.*",
-       "module": "skill.mjs",
+       "item": "growth.<person>",
+       "module": "growth.mjs",
        "kind": "path"
       },
       {
-       "item": "从业边的建立与解除",
-       "module": "practice.mjs",
-       "kind": "text"
-      },
-      {
-       "item": "不直接写；算出增量后调 gainSkill；学费经账本",
-       "module": "learning.mjs",
-       "kind": "text"
+       "item": "deeds.<person>.*",
+       "module": "deeds.mjs",
+       "kind": "path"
       },
       {
        "item": "examSessions.*",
@@ -1211,11 +1248,6 @@
        "kind": "path"
       },
       {
-       "item": "不写状态；契机由不成立变为成立时发事件",
-       "module": "opportunity.mjs",
-       "kind": "text"
-      },
-      {
        "item": "lifestyle.<person>、lifestyleXp.*",
        "module": "lifestyle.mjs",
        "kind": "path"
@@ -1223,11 +1255,6 @@
       {
        "item": "upbringing.<person>",
        "module": "upbringing.mjs",
-       "kind": "path"
-      },
-      {
-       "item": "growth.<person>、person.attributes[k]",
-       "module": "growth.mjs",
        "kind": "path"
       }
      ],
@@ -1256,7 +1283,8 @@
      "src": "卷二十六 §3.2（本卷写明无）"
     },
     "writers": {
-     "value": "待补"
+     "value": [],
+     "src": "卷二十六 §3.3（本卷写明无）"
     },
     "sources": {
      "value": "待补"
@@ -1340,19 +1368,9 @@
     "writers": {
      "value": [
       {
-       "item": "新个体偏离行",
+       "item": "species",
        "module": "person.mjs",
-       "kind": "text"
-      },
-      {
-       "item": "已有个体偏离行的 species 一项",
-       "module": "person.mjs",
-       "kind": "text"
-      },
-      {
-       "item": "调 instantiatePerson；初始给予经效果族",
-       "module": "chargen.mjs",
-       "kind": "text"
+       "kind": "path"
       },
       {
        "item": "conceptions.*、life.*",
@@ -1365,24 +1383,14 @@
        "kind": "path"
       },
       {
-       "item": "终止类状态实例；同一事务内调 terminate",
-       "module": "death.mjs",
-       "kind": "text"
-      },
-      {
        "item": "revivals.*",
        "module": "death.mjs",
        "kind": "path"
       },
       {
-       "item": "只做尸体产出，不写身份键。不删任何路径：本卷簿记的删除由内核按去留表做",
-       "module": "death.mjs",
-       "kind": "text"
-      },
-      {
-       "item": "只给被终止个体名下 until 为空的各身份键填 until；不建键、不删键、不动示人键记录",
+       "item": "until",
        "module": "identity.mjs",
-       "kind": "text"
+       "kind": "path"
       },
       {
        "item": "identities.*、presenting.*",

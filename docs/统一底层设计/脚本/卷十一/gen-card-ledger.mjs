@@ -7,6 +7,7 @@
 import { readFileSync, readdirSync, writeFileSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { PLACEHOLDER, receivingVolume } from './object-rules.mjs';
+import { scanVolume, TOK as ID_TOK, SHORT_RE } from './id-defs.mjs';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url)).replace(/\\/g, '/').replace(/\/$/, '');
 const CFG = JSON.parse(readFileSync(`${HERE}/gen-卷十一-inputs.json`, 'utf8'));
@@ -92,34 +93,40 @@ const dimKeys = [...regText.matchAll(/^\| `(rules\.dimfill\.[A-Za-z0-9]+)` \|/gm
 const camel = t => t.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
 const dimKeysOf = t => dimKeys.filter(k => k.slice('rules.dimfill.'.length).toLowerCase().startsWith(camel(t).toLowerCase()));
 
-// ---- 断言、扫描条、不变量定义索引（行首写法：列表加粗、表格首格）----
-const TOK = '[ASI][0-9]*-[0-9]+(?:\\.(?:[0-9]+|[A-Z]))?[a-z]?|I[0-9]+'; // 带 .S、.I、.X 后缀的断言号（如 A26-9.S）写全称
-const defRe = new RegExp('^(?:[-*]\\s*)?(?:\\|\\s*)?(?:【[^】]*】)?\\*{0,2}(' + TOK + ')(?![0-9A-Za-z])');
-const defined = new Map(); // 卷 → Set(编号)
-const assertText = new Map(); // 卷 → [{tok, text}]（断言定义行）
-for (const [f, ls] of volText) {
-  const v = volOfFile(f); if (!v) continue;
-  for (const l of ls) { const m = l.match(defRe); if (m) { (defined.get(v) ?? defined.set(v, new Set()).get(v)).add(m[1]); if (/^[AS]\d*-\d+(?:\.(?:\d+|[A-Z]))?$/.test(m[1])) (assertText.get(v) ?? assertText.set(v, []).get(v)).push({ tok: m[1], text: l }); } }
-}
-// 补验收判据（乙-6b）：卡的行落点没写编号时，取对象所在卷已有的断言号：断言正文提到本卡对象代号或本卡要接的入口名的
-function assertionsFor(vol, objCode, entryNames) {
-  const keys = [objCode, ...entryNames].filter(Boolean);
-  // 卷号为空的断言号（卷三乙的 A-1、S-1 一类）带卷名写，别处才查得到
-  return uniq((assertText.get(vol) ?? []).filter(a => keys.some(k => a.text.includes('`' + k + '`') || a.text.includes('`' + k + '('))).map(a => (/^[AS]-/.test(a.tok) ? `${vol}:${a.tok}` : a.tok))).sort();
+// ---- 编号定义索引（乙-6b，李白 11-15 18:50 第 1 条）：通用识别规则在 id-defs.mjs（写法清单见 审查/脚本输出/乙6b-编号写法清单.md）----
+// 定义位（表格首格、列表项开头含"X式："前缀、加粗段首）上的编号，按所在标题与表首列判性质；accept 只取"验收类"（断言号、扫描条代号、不变量号，卷十一 §2.2）。
+const defsOf = new Map(); // 卷 → [定义]
+for (const [f, ls] of volText) { const v = volOfFile(f); if (v) defsOf.set(v, scanVolume(ls, v).map(d => ({ ...d, file: f }))); }
+const defined = new Map(); // 卷 → Set(验收类编号)
+const assertText = new Map(); // 卷 → [验收类定义行]
+for (const [v, ds] of defsOf) for (const d of ds) {
+  if (d.nature !== '验收类') continue;
+  (defined.get(v) ?? defined.set(v, new Set()).get(v)).add(d.tok);
+  (assertText.get(v) ?? assertText.set(v, []).get(v)).push(d);
 }
 // 卷一 §9 "沿用 I1–I32（架构 02）"：区间写法定义区间内的不变量编号
 for (const [f, ls] of volText) { const v = volOfFile(f); for (const l of ls) { const m = l.match(/沿用 I(\d+)[–-]I(\d+)/); if (m && v) for (let i = +m[1]; i <= +m[2]; i++) (defined.get(v) ?? defined.set(v, new Set()).get(v)).add('I' + i); } }
+// 编号里没有卷序号的（A-1、T-1、I33）只在本卷有效，写成"卷名:编号"
+const bareTok = t => !/^[A-Z][A-Za-z]{0,3}?[0-9]+[a-z]?-/.test(t);
+const qual = (vol, t) => (bareTok(t) ? `${vol}:${t}` : t);
+// 补验收判据（乙-6b）：卡的行落点没写编号时，取对象所在卷的验收类编号：定义行提到本卡对象代号、要接或上线的入口名、文件名的
+function assertionsFor(vol, objCode, entryNames) {
+  const keys = [objCode, ...entryNames].filter(Boolean);
+  return uniq((assertText.get(vol) ?? []).filter(a => keys.some(k => a.text.includes('`' + k + '`') || a.text.includes('`' + k + '('))).map(a => qual(vol, a.tok))).sort();
+}
+const defIdx = new Map(); // 编号（没有卷序号的写"卷名:编号"）→ 它的全部定义（各种性质）
+for (const [v, ds] of defsOf) for (const d of ds) { const k = qual(v, d.tok); (defIdx.get(k) ?? defIdx.set(k, []).get(k)).push(d); }
 const dimKeySet = new Set(dimKeys);
-const tokRe = new RegExp('(?<![A-Za-z0-9])(' + TOK + ')(?![0-9A-Za-z])', 'g');
-// 编号在所指卷里有定义：限定写法 S19-4 在任一卷有定义；不带卷序号的 A-2 在行的来源卷有定义
-function acceptOk(tok, vol) {
-  if (dimKeySet.has(tok)) return true;
-  const m = tok.match(/^(?:卷[^:]+:)?(.+)$/); const bare = m[1];
-  const home = tok.includes(':') ? tok.split(':')[0] : null;
-  if (home) return defined.get(home)?.has(bare) ?? false;
-  for (const s of defined.values()) if (s.has(bare)) return true;
+const tokRe =new RegExp('(?<![A-Za-z0-9_])(' + ID_TOK + ')(?![0-9A-Za-z])', 'g');
+const splitQ = tok => { const i = tok.indexOf(':'); return i < 0 ? [null, tok] : [tok.slice(0, i), tok.slice(i + 1)]; };
+// 编号在所指卷里有定义：带卷序号的在任一卷有定义；不带卷序号的在所写卷名下有定义
+function inIndex(idx, tok) {
+  const [home, bare] = splitQ(tok);
+  if (home) return idx.get(home)?.has(bare) ?? false;
+  for (const s of idx.values()) if (s.has(bare)) return true;
   return false;
 }
+const acceptOk = tok => dimKeySet.has(tok) || inIndex(defined, tok);
 
 // ---- 卷十一自己的扫描条（清扫卡的判据：全部扫描）----
 const s11 = [...(defined.get('卷十一') ?? [])].filter(x => /^S11-/.test(x)).sort((a, b) => cmp(+a.slice(4), +b.slice(4)));
@@ -442,9 +449,18 @@ function acceptOfRows(rs, isFirstTable, tableCode) {
   if (isFirstTable) acc.push(...dimKeysOf(tableCode));
   for (const r of rs) for (const m of (r.target ?? '').matchAll(tokRe)) {
     if ((r.target ?? '').slice(Math.max(0, m.index - 3), m.index).includes('台账')) continue; // "台账 S-24"是素材台账条目，不是本卷或别卷的扫描号
-    const t = m[1];
-    const tok = /^[ASI]-[0-9]/.test(t) || /^I[0-9]+$/.test(t) ? `${r.volume}:${t}` : t;
-    acc.push(tok);
+    // 没有卷序号的编号：紧前写了卷名的（"卷三乙 R-4"）归那一卷，否则归行的来源卷
+    const before = (r.target ?? '').slice(0, m.index);
+    const vm = before.match(new RegExp('(' + CFG.volCode + ')\\s*$'));
+    const tok = qual(vm ? vm[1] : r.volume, m[1]);
+    // 落点里写的编号：按定义的性质取——只取验收类；规则、记录、其他类（R、C、M 一类）是引用，不取。
+    // 同一卷里同一个编号既是验收类又是别类（卷四 P-3 既是 §3.5 扫描条又是 §4.10 规则）的，紧前写了"§n"的按该节定，没写的分不清，不取。
+    // 哪类都查不到的照取（短写法除外），由形式核对报 E-MIG-ACCEPT-FORM
+    const ds = defIdx.get(tok) ?? [];
+    if (!ds.length) { if (!SHORT_RE.test(m[1]) || acceptOk(tok)) acc.push(tok); continue; }
+    let pick = ds;
+    if (new Set(ds.map(d => d.nature)).size > 1) { const sm = before.match(/§\s*([0-9]+(?:\.[0-9]+)*)\s*$/); pick = sm ? ds.filter(d => d.head.split(' / ').some(h => h.replace(/^§/, '').startsWith(sm[1] + ' '))) : []; }
+    if (pick.length && pick.every(d => d.nature === '验收类')) acc.push(tok);
   }
   return uniq(acc).sort();
 }
@@ -677,6 +693,25 @@ for (const c of cards) {
 }
 // 母卡验收：卷一 §6.5 的退出条件 ⑤ 写 I1、I2、I15 在 CORE
 if (parentCard) { const f = volFiles.find(x => x.startsWith('卷一-')); const l = volText.get(f).find(x => x.includes('**母卡** `LEDGER-1`')) ?? ''; const sec = l.slice(l.indexOf('⑤')); const toks = uniq([...sec.matchAll(/(?<![A-Za-z0-9])(I[0-9]+)(?![0-9A-Za-z])/g)].map(m => m[1])); parentCard.accept = toks.map(t => '卷一:' + t).filter(t => acceptOk(t, '卷一')).sort(); if (!parentCard.accept.length) parentCard.pending.push('accept:卷一 §6.5 退出条件 ⑤ 的不变量编号在卷一里查不到定义'); }
+// 疑点名单（accept 仍为空的卡）：原因只写有原文出处的——卷里有验收节、但定义位上没有一个验收类编号的，引该节标题行（文件:行）；
+// 卷里有验收类编号、只是没有一条提到本卡的，写不出原文证据，标"待查"并记脚本查过的范围
+// 验收断言节：标题含"验收断言"的节（各卷 §4.x.6"验收断言"、卷二"七 本卷的验收断言"一类）；节里定义位上一个编号都没有的，即"断言不带编号"
+const verdictOf = new Map(); // 卷 → {heads: [文件:行], numbered: 节内定义位编号数}
+for (const [f, ls] of volText) {
+  const v = volOfFile(f); if (!v) continue; const r = { heads: [], numbered: 0 };
+  ls.forEach((l, i) => { if (/^#{2,6} /.test(l) && /验收断言/.test(l)) r.heads.push(`${f}:${i + 1}`); });
+  r.numbered = (defsOf.get(v) ?? []).filter(d => d.nature === '验收类' && /验收断言/.test(d.head.split(' / ').pop() ?? '')).length;
+  verdictOf.set(v, r);
+}
+const suspects = cards.filter(c => !c.accept.length).map(c => {
+  const n = (assertText.get(c.volume) ?? []).length; const vd = verdictOf.get(c.volume);
+  let reason;
+  if (!c.volume) reason = '待查（卡没有归属卷）';
+  else if (vd?.heads.length && !vd.numbered) reason = `卷内验收断言不带编号：${vd.heads[0]}${vd.heads.length > 1 ? ` 等 ${vd.heads.length} 个验收节` : ''}，定义位上没有编号` + (n ? `；卷里另有 ${n} 条扫描或不变量编号，没有一条提到本卡（待查）` : '');
+  else if (n) reason = `待查（${c.volume} 的 ${n} 条验收类编号定义行里，没有一条提到本卡的对象代号、入口、上线入口或文件名）`;
+  else reason = `待查（${c.volume} 没有标题含"验收断言"的节，也没有验收类编号）`;
+  return { cardId: c.cardId, volume: c.volume, reason };
+});
 
 // ================= 行 → 卡的认领核对（R11-2.6 的纸面版）=================
 const claim = new Map();
@@ -767,9 +802,11 @@ const md = [
   '',
   `${nPend} 张卡带 pending（共 ${Object.values(pendKinds).reduce((a, b) => a + b, 0)} 条）；按类：${Object.entries(pendKinds).sort((a, b) => cmp(a[0], b[0])).map(([k, v]) => k + ' ' + v).join('、')}。`,
   '',
-  `- accept（乙-6b）：卡的行落点没写编号时，取对象所在卷里正文提到本卡对象代号、本卡要接或上线的入口名、本卡文件名的断言号与扫描号（只写编号；带 .S、.I、.X 后缀的写全称；"台账 S-n"是素材台账条目，不当扫描号）。取完 accept 仍为空的 ${cards.filter(c => !c.accept.length).length} 张卡列为疑点，不新造编号；按原因分开：`,
-  `  - 对象所在卷的断言不编号（卷里没有带编号的断言或扫描条）：${cards.filter(c => !c.accept.length && !(assertText.get(c.volume) ?? []).length).map(c => c.cardId).join('、') || '无'}。`,
-  `  - 卷里有带编号的断言，但没有一条提到本卡的对象、入口、上线入口或文件：${cards.filter(c => !c.accept.length && (assertText.get(c.volume) ?? []).length).map(c => c.cardId).join('、') || '无'}。`,
+  `- accept（乙-6b，李白 11-15 18:50 第 1 条）：编号按通用识别规则认（脚本/卷十一/id-defs.mjs；写法清单 审查/脚本输出/乙6b-编号写法清单.md），只取“验收类”（定义行最近的命中标题是验收、断言、扫描、旁路、不变量一类；影响面表、修订记录、记账栏等记录类的意见号与规则号不取）。卡的行落点没写编号时，取对象所在卷里验收类定义行提到本卡对象代号、要接或上线的入口名、文件名的编号（只写编号，带后缀的写全称，没有卷序号的写“卷名:编号”；"台账 S-n"是素材台账条目，不当扫描号）。取完 accept 仍为空的 ${suspects.length} 张卡列为疑点，不新造编号；原因有原文出处的写出处，写不出的标“待查”（${suspects.filter(x => x.reason.startsWith('待查')).length} 张）：`,
+  '',
+  '| 卡 | 卷 | 原因 |', '|---|---|---|',
+  ...suspects.map(x => `| ${x.cardId} | ${x.volume ?? '—'} | ${x.reason} |`),
+  '',
   `  - 另：卷二 §6.12 没有齐全率下限键的表首卡（accept 里无下限键，不一定为空）：${cards.filter(c => c.pending.some(p => p.startsWith('accept:卷二 §6.12'))).map(c => c.cardId).join('、') || '无'}。`,
   '- retire：登记退役数要逐行清单的行数，逐行清单待 G-3，全部"必"卡的 retire 为空并已登记。',
   '- zeroRows：迁移行没有 zeroRow 列（待补清单第 6 项已记），zeroRows 全部为空表（该字段矩阵里是"列"，可为空）。',
