@@ -313,16 +313,54 @@ function consumerFiles(entry) {
 }
 for (const e of objs.values()) {
   e.cons = consumerFiles(e);
-  if (e.obj.kind === 'module_group') e.groups = sliceFiles(e.cons.c1).map(g => ({ ...g, key: g.key })); // 搬迁卡：按要搬的文件切段
+  if (e.obj.kind === 'module_group') e.groups = []; // 搬迁卡：下面按 R11-7.5 切段
   else if (e.obj.kind === 'gate_facility') e.groups = [];
   else e.groups = sliceFiles(e.cons.all);
 }
-// 搬迁卡的段按"组键加段序号"重编：模块组对象的组键就是该组键加序号（文件按 25 个一段，不再按目录二次分组）
-for (const e of objs.values()) if (e.obj.kind === 'module_group') {
-  const fs = e.cons.c1, mjs = fs.filter(f => f.endsWith('.mjs')), rest = fs.filter(f => !f.endsWith('.mjs'));
-  const nSeg = Math.max(1, Math.ceil(mjs.length / MAXFILES)); e.groups = [];
-  for (let s = 0; s < nSeg; s++) e.groups.push({ key: `${e.obj.code}-${s + 1}`, mg: e.obj.code, files: [...mjs.slice(s * MAXFILES, (s + 1) * MAXFILES), ...(s === 0 ? rest : [])].sort() });
+// 搬迁卡切段（卷十一 R11-7.5，李白 11-15 18:22）：一组超过 rules.migration.maxFiles 个 .mjs 时拆成多张段卡，逐级细分，取第一个有数据的级别：
+//   ① 消费者组（consumer_group）：文件现所在的模块组（卷二 §2.7 的模块组登记，R11-3.4 第一步）；
+//   ② 目标子目录（target_subdir）：卷二 §6.11 文件级迁移表里该文件、落点对象为本组的行，其"落点"栏第一个路径所在目录；
+//   ③ 路径升序（path_order）兜底：没有 ② 数据的文件，或同一子目录仍超上限，按路径升序每满上限切一段。
+// 整类判：只看文件数与上述数据，不按组名或文件名特判。段号 segNo 按 ①键、②键（有子目录的在前、子目录名升序）、③段序升序编。
+const fileMoves = new Map(); // 现有文件 → [{obj, dir}]（卷二 §6.11 文件级迁移表，表内次序）
+{
+  const s = reg.findIndex(l => l.startsWith(CFG.registry.filemoves)); let e = reg.findIndex((l, i) => i > s && /^#{2,3} /.test(l)); if (e < 0) e = reg.length;
+  let head = null;
+  for (let i = s + 1; i < e; i++) {
+    const l = reg[i];
+    if (!/^\|/.test(l)) { head = null; continue; }
+    const c = cells(l);
+    if (!head) { head = c; continue; }
+    if (/^:?-{3}/.test(c[0])) continue;
+    const fi = head.indexOf('现有文件'), di = head.indexOf('落点'), oi = head.indexOf('落点对象');
+    if (fi < 0 || di < 0 || oi < 0) continue;
+    const obj = (c[oi] ?? '').replace(/`/g, '').trim();
+    const dest = [...(c[di] ?? '').matchAll(/`([^`]+)`/g)].map(m => m[1]).find(t => t.includes('/'));
+    if (!dest) continue;
+    const dir = dest.endsWith('/') ? dest.slice(0, -1) : dest.slice(0, dest.lastIndexOf('/'));
+    for (const m of (c[fi] ?? '').matchAll(/`([^`]+\.(?:mjs|js))`/g)) {
+      const x = resolveFile(m[1]); if (!x.path) continue;
+      (fileMoves.get(x.path) ?? fileMoves.set(x.path, []).get(x.path)).push({ obj, dir });
+    }
+  }
 }
+function relocateSegments(code, files) {
+  const isM = f => f.endsWith('.mjs');
+  const chunk = (fs, axis, tag, out) => { const m = fs.filter(isM), r = fs.filter(f => !isM(f)); const k = Math.max(1, Math.ceil(m.length / MAXFILES)); for (let s = 0; s < k; s++) out.push({ axis, tag: `${tag}#${s}`, files: [...m.slice(s * MAXFILES, (s + 1) * MAXFILES), ...(s === 0 ? r : [])] }); };
+  if (uniq(files).filter(isM).length <= MAXFILES) return [{ key: `${code}-1`, mg: code, files: uniq(files).sort(), splitAxis: 'whole', segNo: 1 }]; // 不超上限：整组一张
+  const segs = [];
+  const byMG = new Map(); for (const f of uniq(files).sort()) { const g = groupOf(f); (byMG.get(g) ?? byMG.set(g, []).get(g)).push(f); }
+  for (const g of [...byMG.keys()].sort()) {
+    const fs = byMG.get(g);
+    if (fs.filter(isM).length <= MAXFILES) { segs.push({ axis: 'consumer_group', tag: g, files: fs }); continue; }
+    const bySub = new Map(), none = [];
+    for (const f of fs) { const d = (fileMoves.get(f) ?? []).find(x => x.obj === code)?.dir; if (d) (bySub.get(d) ?? bySub.set(d, []).get(d)).push(f); else none.push(f); }
+    for (const d of [...bySub.keys()].sort()) { const ds = bySub.get(d); if (ds.filter(isM).length <= MAXFILES) segs.push({ axis: 'target_subdir', tag: `${g}/${d}`, files: ds }); else chunk(ds, 'path_order', `${g}/${d}`, segs); }
+    if (none.length) chunk(none, 'path_order', `${g}/~`, segs);
+  }
+  return segs.map((x, i) => ({ key: `${code}-${i + 1}`, mg: code, files: x.files.slice().sort(), splitAxis: x.axis, segNo: i + 1 }));
+}
+for (const e of objs.values()) if (e.obj.kind === 'module_group') e.groups = relocateSegments(e.obj.code, e.cons.c1);
 
 // ================= 行 → 卡（R11-2.5 第二步）=================
 function groupIndexOf(e, row) { // 位置组的锚点文件落在哪个消费者组：取位置组内最小文件所在的组
@@ -379,7 +417,7 @@ const entityKeyList = es => uniq(es).sort();
 
 function newCard(base) {
   return Object.assign({
-    cardId: '', cardKind: '', objectKind: null, objectCode: null, volume: null, phaseNo: null, groupKey: null,
+    cardId: '', cardKind: '', objectKind: null, objectCode: null, volume: null, phaseNo: null, groupKey: null, splitAxis: null, segNo: null,
     zeroRows: [], rowKeys: [], files: [], dataFiles: [], segs: [], entries: [], launches: [], retire: {}, accept: [],
     dependsOn: [], census: {}, testClass: {}, derivations: [], sortKeys: {}, state: 'drafted', approvals: [], mergeRef: '', fails: 0,
     pending: [],
@@ -436,7 +474,7 @@ for (const e of objList) {
       _g: g, _ord: gi + 1, _e: e,
     });
     if (kind === 'ledger_child') c.segs = FOLLOW_SEGS.slice();
-    if (kind === 'relocate') c.groupKey = null;
+    if (kind === 'relocate') { c.groupKey = null; c.splitAxis = g.splitAxis; c.segNo = g.segNo; }
     // 入口、上线
     if (kind !== 'relocate') {
       c.entries = entriesOfCard(e, g.files);
@@ -585,13 +623,13 @@ for (const h of hookNodes) {
 
 // ================= 必填矩阵（卷十一 §2.2）=================
 const MATRIX = {
-  gate: { volume: '必', objectKind: '必', objectCode: '必', groupKey: '—', zeroRows: '列', rowKeys: '列', files: '必', segs: '—', entries: '—', retire: '—', accept: '必' },
-  ledger_parent: { volume: '必', objectKind: '必', objectCode: '必', groupKey: '—', zeroRows: '列', rowKeys: '列', files: '列', segs: '—', entries: '必', retire: '列', accept: '必' },
-  ledger_child: { volume: '必', objectKind: '必', objectCode: '必', groupKey: '必', zeroRows: '列', rowKeys: '列', files: '必', segs: '必', entries: '必', retire: '必', accept: '必' },
-  relocate: { volume: '必', objectKind: '必', objectCode: '必', groupKey: '—', zeroRows: '列', rowKeys: '列', files: '必', segs: '—', entries: '—', retire: '列', accept: '必' },
-  first: { volume: '必', objectKind: '必', objectCode: '必', groupKey: '必', zeroRows: '列', rowKeys: '列', files: '必', segs: '必', entries: '列', retire: '必', accept: '必' },
-  follow: { volume: '必', objectKind: '必', objectCode: '必', groupKey: '必', zeroRows: '列', rowKeys: '列', files: '必', segs: '必', entries: '必', retire: '必', accept: '必' },
-  sweep: { volume: '—', objectKind: '—', objectCode: '—', groupKey: '—', zeroRows: '—', rowKeys: '—', files: '—', segs: '—', entries: '—', retire: '—', accept: '必' },
+  gate: { volume: '必', objectKind: '必', objectCode: '必', groupKey: '—', splitAxis: '—', segNo: '—', zeroRows: '列', rowKeys: '列', files: '必', segs: '—', entries: '—', retire: '—', accept: '必' },
+  ledger_parent: { volume: '必', objectKind: '必', objectCode: '必', groupKey: '—', splitAxis: '—', segNo: '—', zeroRows: '列', rowKeys: '列', files: '列', segs: '—', entries: '必', retire: '列', accept: '必' },
+  ledger_child: { volume: '必', objectKind: '必', objectCode: '必', groupKey: '必', splitAxis: '—', segNo: '—', zeroRows: '列', rowKeys: '列', files: '必', segs: '必', entries: '必', retire: '必', accept: '必' },
+  relocate: { volume: '必', objectKind: '必', objectCode: '必', groupKey: '—', splitAxis: '必', segNo: '必', zeroRows: '列', rowKeys: '列', files: '必', segs: '—', entries: '—', retire: '列', accept: '必' },
+  first: { volume: '必', objectKind: '必', objectCode: '必', groupKey: '必', splitAxis: '—', segNo: '—', zeroRows: '列', rowKeys: '列', files: '必', segs: '必', entries: '列', retire: '必', accept: '必' },
+  follow: { volume: '必', objectKind: '必', objectCode: '必', groupKey: '必', splitAxis: '—', segNo: '—', zeroRows: '列', rowKeys: '列', files: '必', segs: '必', entries: '必', retire: '必', accept: '必' },
+  sweep: { volume: '—', objectKind: '—', objectCode: '—', groupKey: '—', splitAxis: '—', segNo: '—', zeroRows: '—', rowKeys: '—', files: '—', segs: '—', entries: '—', retire: '—', accept: '必' },
 };
 const isEmpty = v => v === null || v === undefined || v === '' || (Array.isArray(v) ? v.length === 0 : typeof v === 'object' ? Object.keys(v).length === 0 : false);
 const matrixCheck = c => {
@@ -708,6 +746,8 @@ const md = [
   '| 阶段 | ' + kindOrder.map(k => kindName[k]).join(' | ') + ' | 合计 |', '|---|' + kindOrder.map(() => '---:').join('|') + '|---:|',
   ...phaseTable.map(r => '| ' + r.join(' | ') + ' |'), '',
   `对象：表 ${objCount.get('table')?.size ?? 0} 个、系统 ${objCount.get('system')?.size ?? 0} 个、模块组 ${objCount.get('module_group')?.size ?? 0} 个、门禁设施 ${objCount.get('gate_facility')?.size ?? 0} 个；首卡 ${firstCards.length} 张（账本系统的首卡职责由母卡承担，不另出首卡）；后续卡 ${byKind.follow ?? 0} 张 = 各对象消费者组数减一之和。`,
+  '',
+  `搬迁卡切段（R11-7.5，李白 11-15 18:22；splitAxis：consumer_group 消费者组、target_subdir 卷二 §6.11 目标子目录、path_order 路径升序兜底）：${uniq(cards.filter(c => c.cardKind === 'relocate').map(c => c.objectCode)).sort().map(o => { const cs = cards.filter(c => c.cardKind === 'relocate' && c.objectCode === o).sort((a, b) => a.segNo - b.segNo); return `${o} ${cs.length} 张（${cs.map(c => `${c.cardId} 段 ${c.segNo} ${c.splitAxis} ${c.files.filter(f => f.endsWith('.mjs')).length} 个 .mjs`).join('；')}）`; }).join('；')}。`,
   '',
   '## 二 三个错误码与核对',
   '',
