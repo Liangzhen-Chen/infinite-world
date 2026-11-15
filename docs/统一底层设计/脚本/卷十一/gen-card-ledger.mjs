@@ -26,7 +26,8 @@ const mig = JSON.parse(rd(`${HERE}/migrows-input.json`));
 const rows = mig.rows.filter(r => !r.aliasOf);
 const sysJ = JSON.parse(rd(`${OUT}/乙4补-systems补全.json`)).systems;
 // 系统登记项六列的卷文转录（乙-6a）：还待补的列
-const sixPending = new Map(JSON.parse(rd(`${OUT}/乙6a-系统登记六列.json`)).systems.map(s => [s.system, Object.keys(s.cols).filter(c => s.cols[c].value === '待补')]));
+const sixJ = JSON.parse(rd(`${OUT}/乙6a-系统登记六列.json`));
+const sixPending = new Map(sixJ.systems.map(s => [s.system, Object.keys(s.cols).filter(c => s.cols[c].value === '待补')]));
 const h2 = JSON.parse(rd(`${OUT}/乙4-entryCallerFiles.json`));
 const edges = rd(`${OUT}/乙4-import图-边表.tsv`).split('\n').slice(1).filter(Boolean).map(l => l.split('\t'));
 const importers = new Map();
@@ -201,8 +202,12 @@ for (const r of rows) {
 // ================= 对象体系 =================
 const sysByKey = new Map(sysJ.map(s => [s.system, s]));
 const sysOfVol = new Map(sysJ.map(s => [s.volume, s]));
-// 系统键 → 系统（含卷二 §2.7 JSON 里单列的、无卷主表的 sys.capacity，归卷二）
-if (!sysByKey.has('sys.capacity')) { const s = { system: 'sys.capacity', volume: '卷二', tables: [], entries: [], entryCallerFiles: {}, defFiles: [], callerUnion: [], pending: ['predicates', 'writers', 'sources', 'sinks', 'entryJudges', 'view'], synthetic: true }; sysByKey.set(s.system, s); }
+// 系统键 → 系统：sysJ（乙-4 补）加上乙-6a 转录里有、sysJ 没有的系统（卷二 §2.7 JSON 示例登记的系统，如 sys.capacity）；不在生成器里造对象。
+// 这类系统的归属卷、入口取乙-6a 转录里的值：入口 = 它的 predicates 的函数名（卷二 §2.7 说 view 与 predicates 是系统的读入口）。
+for (const x of sixJ.systems) if (!sysByKey.has(x.system)) {
+  const pv = Array.isArray(x.cols.predicates.value) ? x.cols.predicates.value : [];
+  sysByKey.set(x.system, { system: x.system, volume: x.volume, tables: [], entries: pv.map(p => p.slice(p.indexOf('#') + 1)), entryCallerFiles: {}, defFiles: [], callerUnion: [], pending: [], fromSix: true });
+}
 const sysOfTable = new Map(); // 表 → 系统（tables 含它）
 for (const s of sysJ) for (const t of s.tables) sysOfTable.set(t, s);
 const vocabSet = new Set([...regText.matchAll(/([a-z][a-z0-9_]*)→`[a-z]+_`/g)].map(m => m[1]));
@@ -339,7 +344,7 @@ for (const e of objs.values()) {
 }
 
 // ================= 读入口与上线 =================
-const entryKey = (vol, name) => `${vol}§3.1:${name}`;
+const entryKey = (vol, name) => `${vol}:${name}`;
 const entryRows = h2.entries.map(e => ({ vol: e.volume, sec: '§3.1', name: e.entry, callers: e.callerFiles ?? [] }));
 // 每个系统的读入口；表的视图入口（卷二 §2.1）
 const launchOwner = new Map(); // entryKey → 上线卡所属对象键
@@ -359,6 +364,7 @@ for (const s of sysByKey.values()) for (const name of s.entries ?? []) {
   if (!launchedBy.has(k)) launchedBy.set(k, leadObjOfSys.get(s.system));
 }
 const entryByKey = new Map(entryRows.map(e => [entryKey(e.vol, e.name), e]));
+for (const sy of sysByKey.values()) for (const name of sy.entries ?? []) if (!entryByKey.has(entryKey(sy.volume, name))) entryByKey.set(entryKey(sy.volume, name), { vol: sy.volume, sec: sy.fromSix ? '§2.7' : '§3.1', name, callers: [] });
 for (const ent of viewEntries.values()) if (!entryByKey.has(entryKey(ent.vol, ent.name))) entryByKey.set(entryKey(ent.vol, ent.name), ent);
 const launchesOfObj = new Map();
 for (const [k, ok] of launchedBy) (launchesOfObj.get(ok) ?? launchesOfObj.set(ok, []).get(ok)).push(k);
@@ -494,11 +500,11 @@ const ledgerFileSet = new Set(ledgerFiles);
 
 // 依赖与阶段：entriesOf(c) 给出卡要接的入口；主算用卡记录里的 entries（只含本对象的入口），灵敏度算再加上"文件里调用了别的对象读入口的旧调用方"
 function derive(entriesOf) {
-  const deps = new Map();
+  const deps = new Map(); const refDeps = new Map(cards.map(c => [c.cardId, new Set()]));
   for (const c of cards) {
     const dep = new Set();
     // 来源 1：必填引用
-    if (c.cardKind === 'first' && c.objectKind === 'table') for (const t of tableRefs.get(c.objectCode) ?? []) { const d = firstOfObj.get('table:' + t) ?? firstOfObj.get(objKey(tableObj(t))); if (d && d !== c) dep.add(d.cardId); }
+    if (c.cardKind === 'first' && c.objectKind === 'table') for (const t of tableRefs.get(c.objectCode) ?? []) { const d = firstOfObj.get('table:' + t) ?? firstOfObj.get(objKey(tableObj(t))); if (d && d !== c) { dep.add(d.cardId); refDeps.get(c.cardId).add(d.cardId); } }
     // 来源 2：要接的入口由另一张卡上线
     for (const en of entriesOf(c)) { const d = cardByLaunch.get(entryKey(en.vol, en.name)); if (d && d !== c) dep.add(d.cardId); }
     // 来源 3：同对象的后续卡依赖首卡
@@ -523,7 +529,7 @@ function derive(entriesOf) {
     for (const d of deps.get(id)) {
       visit(d, [...stack, id]);
       const dc = byId.get(d), dp = phase.get(d) ?? 1;
-      const uses = entriesOf(c).some(en => dc.launches.some(l => l.vol === en.vol && l.name === en.name));
+      const uses = refDeps.get(id).has(d) || entriesOf(c).some(en => dc.launches.some(l => l.vol === en.vol && l.name === en.name));
       L = Math.max(L, uses && c.launches.length ? dp + 1 : dp);
     }
     phase.set(id, L); state.set(id, 2);
@@ -641,8 +647,8 @@ for (const c of cards) {
   const { miss, extra } = matrixCheck(c);
   const pendMiss = miss.filter(f => c.pending.some(p => p.startsWith(f + ':')));
   const realMiss = miss.filter(f => !pendMiss.includes(f));
-  if (realMiss.length || extra.length) items.push('E-MIG-CARD-INCOMPLETE');
-  if (pendMiss.length) items.push('待补:必填项空位(' + pendMiss.join('、') + ')');
+  if (miss.length || extra.length) items.push('E-MIG-CARD-INCOMPLETE(' + [...miss, ...extra.map(x => x + '应为空')].join('、') + (realMiss.length ? '，无待补原因：' + realMiss.join('、') : '') + ')');
+  void pendMiss;
   if (c.pending.some(p => p.startsWith('row:'))) items.push('待补:迁移行处置');
   if (c.pending.some(p => p.startsWith('accept:未找到'))) items.push('E-MIG-ACCEPT-FORM');
   if (c.pending.some(p => p.startsWith('objectCode:') || p.startsWith('system:'))) items.push('待补:登记项字段');
@@ -658,7 +664,8 @@ cards.sort((a, b) => a.phaseNo - b.phaseNo || kindOrder.indexOf(a.cardKind) - ki
 const stat = (arr, f) => { const m = new Map(); for (const x of arr) m.set(f(x), (m.get(f(x)) ?? 0) + 1); return Object.fromEntries([...m].sort((a, b) => cmp(String(a[0]), String(b[0])))); };
 const nonSweep = cards.filter(c => c.cardKind !== 'sweep');
 const byKind = stat(cards, c => c.cardKind), byPhase = stat(cards, c => c.phaseNo);
-const matrixBad = cards.filter(c => matrixCheck(c).extra.length || matrixCheck(c).miss.some(f => !c.pending.some(p => p.startsWith(f + ':')))).map(c => c.cardId);
+const matrixBad = cards.filter(c => matrixCheck(c).extra.length || matrixCheck(c).miss.length).map(c => c.cardId);
+const matrixBadNoReason = cards.filter(c => matrixCheck(c).extra.length || matrixCheck(c).miss.some(f => !c.pending.some(p => p.startsWith(f + ':')))).map(c => c.cardId);
 const pendMissCards = cards.filter(c => matrixCheck(c).miss.some(f => c.pending.some(p => p.startsWith(f + ':'))));
 const nPend = cards.filter(c => c.pending.length).length;
 const pendKinds = {}; for (const c of cards) for (const p of c.pending) { const k = p.split(':')[0]; pendKinds[k] = (pendKinds[k] ?? 0) + 1; }
@@ -704,7 +711,7 @@ const md = [
   '',
   '## 二 三个错误码与核对',
   '',
-  `- E-MIG-CARD-INCOMPLETE：${matrixBad.length} 张（必填矩阵里"必"为空而又没有登记原因的、或"—"字段有值的卡${matrixBad.length ? '：' + matrixBad.slice(0, 10).join('、') + (matrixBad.length > 10 ? '…' : '') : ''}）。另有 ${pendMissCards.length} 张卡的"必"字段为空，但原因是推不出、已在 pending 里写明（不替它定值，见第三节）。`,
+  `- E-MIG-CARD-INCOMPLETE：${matrixBad.length} 张（按卷十一 §2.2 必填矩阵原定义：缺"必"或"列"字段、"—"字段有值，即计；有无待补原因不改数）。其中没有待补原因的 ${matrixBadNoReason.length} 张；其余 ${matrixBad.length - matrixBadNoReason.length} 张的空位都因推不出、已在 pending 里写明原因（不替它定值，见第三节）。这 ${matrixBad.length} 张不得转 \`ready\`。`,
   `- E-MIG-ACCEPT-FORM：${acceptBad.reduce((s, x) => s + x.bad.length, 0)} 个编号（${acceptBad.length} 张卡）在所指卷里查不到定义${acceptBad.length ? '：' + acceptBad.slice(0, 8).map(x => x.cardId + ' ' + x.bad.join('、')).join('；') : ''}；这些编号已从判据摘出并登记在该卡 pending。判据里只有编号（齐全率下限键 ${dimKeys.length} 个、各卷断言与扫描条、卷十一 ${s11.length} 条扫描条、卷十二 ${s12.length} 条）。`,
   `- E-MIG-SORTKEY-ORDER：钩子 ${hookNodes.length} 个（${hookNodes.join('、')}）；成环 ${hookCycle.length} 个；指向不存在（卷里没有登记行）的 ${hookMissing.length} 个${hookMissing.length ? '：' + hookMissing.join('、') : ''}；同一钩子两处写法不同 ${uniq(hookConflict).length} 个。机读 after 来源是各卷正文的 \`X.after = [..]\` 写法；排序键按拓扑加代号升序从 1 连续编号，v0 不分推进相位（卷二 §2.7 没有按钩子登记相位的机读列），落在登记该钩子的卷的领头卡的 sortKeys 上。`,
   `- dependsOn：无环${phaseCycle ? '（失败：' + phaseCycle.join('→') + '）' : ''}；指向不存在的卡 ${depMissing.length} 处；固定卡阶段冲突（E-MIG-PHASE-CONFLICT）${phaseConflicts.length} 处${phaseConflicts.length ? '：' + phaseConflicts.join('；') : ''}。`,
@@ -729,7 +736,7 @@ const md = [
   '',
   '## 四 与排期 v1 的对照（开工排期-v1定稿 §1）',
   '',
-  `- 阶段数 n：排期 ≈ 5–7；本表 ${n}。差异的原因：R11-7.2 来源 2（要接的入口由另一张卡上线）在 v0 只能用"本对象自己的入口"，因为别对象入口的使用没有机读来源——各卷"本卷使用的别卷接口"是按节号写的文字，没有入口名栏；旧代码里的调用方采集（H2）只按名字对、噪声大。所以 v0 的跨对象依赖只有来源 1（必填引用）、4（搬迁文件）、5（账本），都不触发"上线卡加一阶段"，阶段数是下界。灵敏度：把 H2 的旧调用方按名字对到别对象读入口后，n = ${alt.n}${alt.cycle ? '，依赖成环（' + alt.cycle.join('→') + '）' : '，无环'}，固定卡阶段冲突 ${alt.conflicts.length} 处——说明在那份噪声输入上算不出可用的阶段，待各卷迁移节写出按入口名的"要接的入口"栏后重算。`,
+  `- 阶段数 n：排期 ≈ 5–7；本表 ${n}。差异的原因：R11-7.2 来源 2（要接的入口由另一张卡上线）在 v0 只能用"本对象自己的入口"，因为别对象入口的使用没有机读来源——各卷"本卷使用的别卷接口"是按节号写的文字，没有入口名栏；旧代码里的调用方采集（H2）只按名字对、噪声大。所以 v0 的跨对象入口依赖没有算进去；表间必填引用（来源 1）按卷十一 §4.7.5 算（引用方首卡比被引用表首卡晚一个阶段：信仰晚于神祇、物种晚于身体图、人物晚于物种，等等），来源 4、5 同阶段。n 因此是下界（再加别对象入口依赖只会更大）。灵敏度：把 H2 的旧调用方按名字对到别对象读入口后，n = ${alt.n}${alt.cycle ? '，依赖成环（' + alt.cycle.join('→') + '）' : '，无环'}，固定卡阶段冲突 ${alt.conflicts.length} 处——说明在那份噪声输入上算不出可用的阶段，待各卷迁移节写出按入口名的"要接的入口"栏后重算。`,
   `- 实现卡（首卡、后续卡、搬迁卡、账本母卡与子卡）：排期 60–120；本表 ${nImpl}（其中首卡加后续卡 ${nDomain}），在区间内。`,
   `- 门禁卡 ${byKind.gate ?? 0}、清扫卡 ${byKind.sweep ?? 0}：与卷一 §6.3、R11-7.8 一致。`,
   '',
