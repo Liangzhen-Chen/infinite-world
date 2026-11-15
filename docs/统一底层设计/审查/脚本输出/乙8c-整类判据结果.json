@@ -1,0 +1,39 @@
+{
+ "judge1": [],
+ "judge2": [],
+ "mixed2": [
+  {
+   "k": "M29-8",
+   "o": "outputGate",
+   "files": [
+    "extension/message-view.mjs",
+    "extension/turn.mjs",
+    "server-plugin/action-text.mjs"
+   ]
+  },
+  {
+   "k": "M28-16",
+   "o": "kernel",
+   "files": [
+    "server-plugin/runtime-world.mjs",
+    "tools/kc-processing.mjs"
+   ]
+  }
+ ],
+ "toServer": [
+  {
+   "k": "M29-38",
+   "o": "aiGate",
+   "files": [
+    "extension/generation.mjs"
+   ]
+  },
+  {
+   "k": "M29-44",
+   "o": "outputGate",
+   "files": [
+    "extension/turn-contract.mjs"
+   ]
+  }
+ ]
+}

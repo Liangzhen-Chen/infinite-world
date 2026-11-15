@@ -50,11 +50,7 @@
   "extension/ui-history.mjs",
   "extension/ui-map.mjs",
   "extension/ui-messages.mjs",
-  "extension/ui-personal.mjs",
-  "server-plugin/applied-effects.mjs",
-  "server-plugin/engine.mjs",
-  "server-plugin/state-notices.mjs",
-  "server-plugin/works.mjs"
+  "extension/ui-personal.mjs"
  ],
  "due_kind": [
   "server-plugin/derived.mjs",
@@ -193,13 +189,15 @@
   "server-plugin/applied-effects.mjs",
   "server-plugin/chronicle.mjs",
   "server-plugin/claim-unit.mjs",
+  "server-plugin/engine.mjs",
   "server-plugin/lore.mjs",
   "server-plugin/return-summary.mjs",
   "server-plugin/state-notices.mjs",
   "server-plugin/ui-map.mjs",
   "server-plugin/ui-messages.mjs",
   "server-plugin/ui-overview.mjs",
-  "server-plugin/ui-routes.mjs"
+  "server-plugin/ui-routes.mjs",
+  "server-plugin/works.mjs"
  ],
  "person": [],
  "place": [

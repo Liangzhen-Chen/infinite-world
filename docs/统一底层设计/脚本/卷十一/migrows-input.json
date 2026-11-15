@@ -7179,7 +7179,7 @@
    ],
    "disp": "move_out",
    "target": "R29-2.6",
-   "targetObject": "display",
+   "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
   {
@@ -8801,7 +8801,7 @@
    ],
    "disp": "move_out",
    "target": "R22-9.7",
-   "targetObject": "display",
+   "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
   {
@@ -8872,7 +8872,7 @@
    ],
    "disp": "recode",
    "target": "R22-11.1",
-   "targetObject": "display",
+   "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
   {
@@ -11579,7 +11579,7 @@
    ],
    "disp": "move_out",
    "target": "R24-1.9",
-   "targetObject": "display",
+   "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
   {

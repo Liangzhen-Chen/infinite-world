@@ -2,11 +2,12 @@
 // 在 1115y6 改完的现行卷文上动手；先跑 transcribe-migrows.mjs 取现行 migrows。确定性、不手改。
 // 一、M2-10a 拆 a1 a2 a3，M2-10b→sys.org，M2-12b→content-scripts；
 // 二、旧表名 items、itemWear→item，materials→material（先核在卷二 22 个表代号里）；其余认不出的取落点锚点所在卷的系统键
-//     （迁/交别卷的取接收卷：M20-11→卷二十七键、M20-31→卷十七键、M13-24→sys.ai_interface），系统键从 乙4补-systems补全.json 读，原对象名写进落点作说明；
+//     （迁/交别卷的取接收卷，由 object-rules.mjs 从落点文字判），系统键从 乙4补-systems补全.json 读，原对象名写进落点作说明；
 // 三、M14-82 对不上的旧字段逐个写去向，点不出覆盖规则的汇成 审查/脚本输出/乙7-卷十四待补清单.md；
 // 四、恢复 y4c 勘误行被回改的旧数字（勘误记录是历史）。
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { receivingVolume } from './object-rules.mjs';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url)).replace(/\\/g, '/').replace(/\/$/, '');
 const CFG = JSON.parse(readFileSync(`${HERE}/gen-卷十一-inputs.json`, 'utf8'));
@@ -69,7 +70,7 @@ const noteAdd = (w, a, s) => { if (w.col.tgt >= 0) a[w.col.tgt + 1] = a[w.col.tg
 
 // ---- 二：认不出的对象整类改写 ----
 const OLD = { items: 'item', itemWear: 'item', materials: 'material' };
-const OVERRIDE = { 'M20-11': ['卷二十七', '迁卷二十七 §4.1 矩阵，取接收卷'], 'M20-31': ['卷十七', '交卷十七，取接收卷'], 'M13-24': [null, '锚点在卷九 §2.2，取 sys.ai_interface'] };
+// 1115y8c：原按行号的接收卷表删去，改由 object-rules.mjs 的 receivingVolume 从落点文字整类判（李白 11-15 17:28 第 1 条、chk-1115-y6）
 const skip = new Set(['M2-10a', 'M2-10b', 'M2-12b', 'M11-7']);
 const logTwo = []; const unresolved = [];
 for (const r of mig.rows) {
@@ -78,8 +79,7 @@ for (const r of mig.rows) {
   if (known(o)) continue;
   let nu = null, why = '';
   if (o in OLD) { if (tables.has(OLD[o])) { nu = OLD[o]; why = '旧表名改现行表代号'; } else { unresolved.push([r.rowKey, o, `${OLD[o]} 不在 22 个表代号里`]); continue; } }
-  else if (OVERRIDE[r.rowKey]) { const v = OVERRIDE[r.rowKey][0]; nu = v ? sysOf.get(v) : 'sys.ai_interface'; why = OVERRIDE[r.rowKey][1]; }
-  else { nu = sysOf.get(r.volume); why = '取落点锚点所在卷（本卷）的系统键'; }
+  else { const rv = receivingVolume(r.target, r.volume, CFG.volCode); nu = sysOf.get(rv.vol); why = `取落点锚点所在卷（${rv.vol === r.volume ? '本卷' : '接收卷' + rv.vol}）的系统键；${rv.how}`; }
   if (!nu) { unresolved.push([r.rowKey, o, why + '，系统键读不到']); continue; }
   const { w, cs } = lineOf(r.rowKey); const a = cs.slice();
   a[w.col.obj + 1] = objCell(cs[w.col.obj + 1], nu);
