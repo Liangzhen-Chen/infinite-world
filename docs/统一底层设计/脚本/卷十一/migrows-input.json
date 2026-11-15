@@ -1,7 +1,7 @@
 {
  "_说明": "乙-4 H1：由 transcribe-migrows.mjs 从各卷 §7 迁移节生成；不手改。字段：编号、卷、卷文行号、锚点原文与解析、处置、落点、落点对象、基线提交。",
  "baseline": "d54c89a3",
- "count": 1126,
+ "count": 1131,
  "rows": [
   {
    "rowKey": "M1-1",
@@ -134,7 +134,7 @@
    "anchors": [],
    "disp": "delete",
    "target": "—",
-   "targetObject": "rules",
+   "targetObject": "sys.material",
    "baseline": "d54c89a3"
   },
   {
@@ -5342,15 +5342,232 @@
      "lines": []
     }
    ],
+   "disp": "同 M20-88a 至 M20-88f",
+   "target": "同 M20-88a 至 M20-88f",
+   "targetObject": "同 M20-88a 至 M20-88f",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M20-88a 至 M20-88f"
+  },
+  {
+   "rowKey": "M20-88a",
+   "volume": "卷二十",
+   "srcLine": 1299,
+   "anchorsText": "education.mjs、finance-assets.mjs、finance-bank.mjs、medicine.mjs、pets.mjs、quest-sources.mjs 中把 360 用作天数上限之处",
+   "anchors": [
+    {
+     "file": "education.mjs",
+     "lines": []
+    },
+    {
+     "file": "finance-assets.mjs",
+     "lines": []
+    },
+    {
+     "file": "finance-bank.mjs",
+     "lines": []
+    },
+    {
+     "file": "medicine.mjs",
+     "lines": []
+    },
+    {
+     "file": "pets.mjs",
+     "lines": []
+    },
+    {
+     "file": "quest-sources.mjs",
+     "lines": []
+    }
+   ],
    "disp": "to_data",
    "target": "迁规则表（卷一常数入表的规矩）",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M20-88b",
+   "volume": "卷二十",
+   "srcLine": 1300,
+   "anchorsText": "education.mjs、finance-assets.mjs、finance-bank.mjs、medicine.mjs、pets.mjs、quest-sources.mjs 中把 360 用作天数上限之处",
+   "anchors": [
+    {
+     "file": "education.mjs",
+     "lines": []
+    },
+    {
+     "file": "finance-assets.mjs",
+     "lines": []
+    },
+    {
+     "file": "finance-bank.mjs",
+     "lines": []
+    },
+    {
+     "file": "medicine.mjs",
+     "lines": []
+    },
+    {
+     "file": "pets.mjs",
+     "lines": []
+    },
+    {
+     "file": "quest-sources.mjs",
+     "lines": []
+    }
+   ],
+   "disp": "to_data",
+   "target": "迁规则表（卷一常数入表的规矩）",
+   "targetObject": "sys.economy",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M20-88c",
+   "volume": "卷二十",
+   "srcLine": 1301,
+   "anchorsText": "education.mjs、finance-assets.mjs、finance-bank.mjs、medicine.mjs、pets.mjs、quest-sources.mjs 中把 360 用作天数上限之处",
+   "anchors": [
+    {
+     "file": "education.mjs",
+     "lines": []
+    },
+    {
+     "file": "finance-assets.mjs",
+     "lines": []
+    },
+    {
+     "file": "finance-bank.mjs",
+     "lines": []
+    },
+    {
+     "file": "medicine.mjs",
+     "lines": []
+    },
+    {
+     "file": "pets.mjs",
+     "lines": []
+    },
+    {
+     "file": "quest-sources.mjs",
+     "lines": []
+    }
+   ],
+   "disp": "to_data",
+   "target": "迁规则表（卷一常数入表的规矩）",
+   "targetObject": "sys.economy",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M20-88d",
+   "volume": "卷二十",
+   "srcLine": 1302,
+   "anchorsText": "education.mjs、finance-assets.mjs、finance-bank.mjs、medicine.mjs、pets.mjs、quest-sources.mjs 中把 360 用作天数上限之处",
+   "anchors": [
+    {
+     "file": "education.mjs",
+     "lines": []
+    },
+    {
+     "file": "finance-assets.mjs",
+     "lines": []
+    },
+    {
+     "file": "finance-bank.mjs",
+     "lines": []
+    },
+    {
+     "file": "medicine.mjs",
+     "lines": []
+    },
+    {
+     "file": "pets.mjs",
+     "lines": []
+    },
+    {
+     "file": "quest-sources.mjs",
+     "lines": []
+    }
+   ],
+   "disp": "to_data",
+   "target": "迁规则表（卷一常数入表的规矩）",
+   "targetObject": "sys.status",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M20-88e",
+   "volume": "卷二十",
+   "srcLine": 1303,
+   "anchorsText": "education.mjs、finance-assets.mjs、finance-bank.mjs、medicine.mjs、pets.mjs、quest-sources.mjs 中把 360 用作天数上限之处",
+   "anchors": [
+    {
+     "file": "education.mjs",
+     "lines": []
+    },
+    {
+     "file": "finance-assets.mjs",
+     "lines": []
+    },
+    {
+     "file": "finance-bank.mjs",
+     "lines": []
+    },
+    {
+     "file": "medicine.mjs",
+     "lines": []
+    },
+    {
+     "file": "pets.mjs",
+     "lines": []
+    },
+    {
+     "file": "quest-sources.mjs",
+     "lines": []
+    }
+   ],
+   "disp": "to_data",
+   "target": "迁规则表（卷一常数入表的规矩）",
+   "targetObject": "sys.species",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M20-88f",
+   "volume": "卷二十",
+   "srcLine": 1304,
+   "anchorsText": "education.mjs、finance-assets.mjs、finance-bank.mjs、medicine.mjs、pets.mjs、quest-sources.mjs 中把 360 用作天数上限之处",
+   "anchors": [
+    {
+     "file": "education.mjs",
+     "lines": []
+    },
+    {
+     "file": "finance-assets.mjs",
+     "lines": []
+    },
+    {
+     "file": "finance-bank.mjs",
+     "lines": []
+    },
+    {
+     "file": "medicine.mjs",
+     "lines": []
+    },
+    {
+     "file": "pets.mjs",
+     "lines": []
+    },
+    {
+     "file": "quest-sources.mjs",
+     "lines": []
+    }
+   ],
+   "disp": "to_data",
+   "target": "迁规则表（卷一常数入表的规矩）",
+   "targetObject": "sys.event_type",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M20-89",
    "volume": "卷二十",
-   "srcLine": 1299,
+   "srcLine": 1305,
    "anchorsText": "tests/、tools/、world/design/ 中的年历算术（本卷未检索）",
    "anchors": [],
    "disp": "replace_entry",
@@ -5361,12 +5578,12 @@
   {
    "rowKey": "M20-90",
    "volume": "卷二十",
-   "srcLine": 1300,
+   "srcLine": 1306,
    "anchorsText": "§8 第 5 条“需要卷二登记的格式项”清单（词表族、规则表键、struct 等；封卷后勘误 1115k2 已逐项核过卷二）",
    "anchors": [],
    "disp": "to_data",
-   "target": "卷二各登记节（单位 §1.4、命名 struct §1.5、词表 §1.9、原语与命名空间 §1.12、§2.9；清单见 §8 第 5 条）；1115k2 核后卷二已补登记的不重复登记",
-   "targetObject": "rules",
+   "target": "卷二各登记节（单位 §1.4、命名 struct §1.5、词表 §1.9、原语与命名空间 §1.12、§2.9；清单见 §8 第 5 条）；1115k2 核后卷二已补登记的不重复登记；验收只核\"清单每项在卷二都有登记行\"，卷二各登记节号写进验收判据",
+   "targetObject": "sys.time_env",
    "baseline": "d54c89a3"
   },
   {
@@ -11609,11 +11826,11 @@
      ]
     }
    ],
-   "disp": "同 M5-10a 至 M5-10b",
-   "target": "同 M5-10a 至 M5-10b",
-   "targetObject": "同 M5-10a 至 M5-10b",
+   "disp": "同 M5-10a 至 M5-10b2",
+   "target": "同 M5-10a 至 M5-10b2",
+   "targetObject": "同 M5-10a 至 M5-10b2",
    "baseline": "d54c89a3",
-   "aliasOf": "同 M5-10a 至 M5-10b"
+   "aliasOf": "同 M5-10a 至 M5-10b2"
   },
   {
    "rowKey": "M5-10a",
@@ -11649,42 +11866,9 @@
    "baseline": "d54c89a3"
   },
   {
-   "rowKey": "M5-10b",
-   "volume": "卷五",
-   "srcLine": 1238,
-   "anchorsText": "二版补（主会话裁定 6）：household-subsistence.mjs:26、:44–55、:249–253、:653–661",
-   "anchors": [
-    {
-     "file": "household-subsistence.mjs",
-     "lines": [
-      [
-       26,
-       26
-      ],
-      [
-       44,
-       55
-      ],
-      [
-       249,
-       253
-      ],
-      [
-       653,
-       661
-      ]
-     ]
-    }
-   ],
-   "disp": "replace_entry",
-   "target": "这套独立存量与再生全部删除。采集改为卷九动作调 take，存量并入 resource-field.mjs 的存量账户（§4.7、§4.8 规则 7）；家户去不去采的决策归卷六、卷九",
-   "targetObject": "待裁",
-   "baseline": "d54c89a3"
-  },
-  {
    "rowKey": "M5-11",
    "volume": "卷五",
-   "srcLine": 1239,
+   "srcLine": 1240,
    "anchorsText": "二版补（主会话裁定 6）：wildlife.mjs:133、:168–191、:244；ecology-dynamics.mjs:48、:52、:82、:93",
    "anchors": [
     {
@@ -11734,7 +11918,7 @@
   {
    "rowKey": "M5-12",
    "volume": "卷五",
-   "srcLine": 1240,
+   "srcLine": 1241,
    "anchorsText": "二版补：extraction.mjs:26、:56、:80–85",
    "anchors": [
     {
@@ -11763,7 +11947,7 @@
   {
    "rowKey": "M5-13",
    "volume": "卷五",
-   "srcLine": 1241,
+   "srcLine": 1242,
    "anchorsText": "二版补：forest-water.mjs:20–27、:135、:150",
    "anchors": [
     {
@@ -11792,7 +11976,7 @@
   {
    "rowKey": "M5-14",
    "volume": "卷五",
-   "srcLine": 1242,
+   "srcLine": 1243,
    "anchorsText": "二版补：stock.mjs:46、:218；husbandry.mjs:24；stock.mjs:312",
    "anchors": [
     {
@@ -11835,7 +12019,7 @@
   {
    "rowKey": "M5-15",
    "volume": "卷五",
-   "srcLine": 1243,
+   "srcLine": 1244,
    "anchorsText": "06b A：location-access.mjs:48/91/115；perception.mjs:61；sites.mjs:296/602；extraction.mjs:203",
    "anchors": [
     {
@@ -11884,7 +12068,7 @@
   {
    "rowKey": "M5-15a",
    "volume": "卷五",
-   "srcLine": 1244,
+   "srcLine": 1245,
    "anchorsText": "06b A：location-access.mjs:48/91/115；perception.mjs:61；sites.mjs:296/602；extraction.mjs:203",
    "anchors": [
     {
@@ -11932,7 +12116,7 @@
   {
    "rowKey": "M5-15b",
    "volume": "卷五",
-   "srcLine": 1245,
+   "srcLine": 1246,
    "anchorsText": "06b A：location-access.mjs:48/91/115；perception.mjs:61；sites.mjs:296/602；extraction.mjs:203",
    "anchors": [
     {
@@ -11980,7 +12164,7 @@
   {
    "rowKey": "M5-16",
    "volume": "卷五",
-   "srcLine": 1246,
+   "srcLine": 1247,
    "anchorsText": "二版补：extraction.mjs:31、:207、:262；sites.mjs:306、:572、:642；location-access.mjs:48、:91、:115；sites.mjs:296、:602；perception.mjs:61、:27",
    "anchors": [
     {
@@ -12069,7 +12253,7 @@
   {
    "rowKey": "M5-17",
    "volume": "卷五",
-   "srcLine": 1247,
+   "srcLine": 1248,
    "anchorsText": "二版补：place-layout.mjs:27、:30；perception.mjs:23",
    "anchors": [
     {
@@ -12103,7 +12287,7 @@
   {
    "rowKey": "M5-18",
    "volume": "卷五",
-   "srcLine": 1248,
+   "srcLine": 1249,
    "anchorsText": "二版补：place-layout.mjs:8–19",
    "anchors": [
     {
@@ -12124,7 +12308,7 @@
   {
    "rowKey": "M5-19",
    "volume": "卷五",
-   "srcLine": 1249,
+   "srcLine": 1250,
    "anchorsText": "06b D：extraction.mjs:165",
    "anchors": [
     {
@@ -12145,7 +12329,7 @@
   {
    "rowKey": "M5-20",
    "volume": "卷五",
-   "srcLine": 1250,
+   "srcLine": 1251,
    "anchorsText": "五版补：environment.mjs:227 的 localSightClear（卷二十 §7.1 同一行交来）",
    "anchors": [
     {
@@ -12166,7 +12350,7 @@
   {
    "rowKey": "M5-21",
    "volume": "卷五",
-   "srcLine": 1251,
+   "srcLine": 1252,
    "anchorsText": "五版补：water-cycle.mjs 的流域记录里的水体静态数据（容量、汇水面积、下游）",
    "anchors": [
     {
@@ -12182,7 +12366,7 @@
   {
    "rowKey": "M5-22",
    "volume": "卷五",
-   "srcLine": 1252,
+   "srcLine": 1253,
    "anchorsText": "06a §5：law-codes.mjs:114–115；titles.mjs:129、:131；noble-state.mjs:73；high-nobility.mjs:25；remote-generation.mjs:407、:423（二版把\"等 10 处\"展开）",
    "anchors": [
     {
@@ -12248,7 +12432,7 @@
   {
    "rowKey": "M5-22a",
    "volume": "卷五",
-   "srcLine": 1253,
+   "srcLine": 1254,
    "anchorsText": "06a §5：law-codes.mjs:114–115；titles.mjs:129、:131；noble-state.mjs:73；high-nobility.mjs:25；remote-generation.mjs:407、:423（二版把\"等 10 处\"展开）",
    "anchors": [
     {
@@ -12313,7 +12497,7 @@
   {
    "rowKey": "M5-22b",
    "volume": "卷五",
-   "srcLine": 1254,
+   "srcLine": 1255,
    "anchorsText": "06a §5：law-codes.mjs:114–115；titles.mjs:129、:131；noble-state.mjs:73；high-nobility.mjs:25；remote-generation.mjs:407、:423（二版把\"等 10 处\"展开）",
    "anchors": [
     {
@@ -12378,7 +12562,7 @@
   {
    "rowKey": "M5-22c",
    "volume": "卷五",
-   "srcLine": 1255,
+   "srcLine": 1256,
    "anchorsText": "06a §5：law-codes.mjs:114–115；titles.mjs:129、:131；noble-state.mjs:73；high-nobility.mjs:25；remote-generation.mjs:407、:423（二版把\"等 10 处\"展开）",
    "anchors": [
     {
@@ -12443,7 +12627,7 @@
   {
    "rowKey": "M5-22d",
    "volume": "卷五",
-   "srcLine": 1256,
+   "srcLine": 1257,
    "anchorsText": "06a §5：law-codes.mjs:114–115；titles.mjs:129、:131；noble-state.mjs:73；high-nobility.mjs:25；remote-generation.mjs:407、:423（二版把\"等 10 处\"展开）",
    "anchors": [
     {
@@ -12502,13 +12686,13 @@
    ],
    "disp": "recode",
    "target": "职位席位所在地（§4.11 规则 4）。分派：law-codes 两处归卷八b；titles、noble-state、high-nobility 归卷八；remote-generation 两处的人口特例归卷十与卷八 §4.16；本卷只提供\"不含任何地点 id 的解析\"",
-   "targetObject": "待裁",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M5-23",
    "volume": "卷五",
-   "srcLine": 1257,
+   "srcLine": 1258,
    "anchorsText": "06b E：law-codes.mjs:11/112/114/115、norm-stack.mjs:115、regions.mjs:58（与卷八共有）",
    "anchors": [
     {
@@ -12547,7 +12731,7 @@
   {
    "rowKey": "M5-24",
    "volume": "卷五",
-   "srcLine": 1258,
+   "srcLine": 1259,
    "anchorsText": "二版补：regions.mjs:5、:27、:33",
    "anchors": [
     {
@@ -12576,7 +12760,7 @@
   {
    "rowKey": "M5-25",
    "volume": "卷五",
-   "srcLine": 1259,
+   "srcLine": 1260,
    "anchorsText": "二版补：remote-generation.mjs:238、:245、:407、:450、:453；noble-state.mjs:73、:96",
    "anchors": [
     {
@@ -12626,7 +12810,7 @@
   {
    "rowKey": "M5-26",
    "volume": "卷五",
-   "srcLine": 1260,
+   "srcLine": 1261,
    "anchorsText": "二版补：remote-generation.mjs:270–272、:527–528、:555、:812；:259、:373、:552、:811",
    "anchors": [
     {
@@ -12675,7 +12859,7 @@
   {
    "rowKey": "M5-27",
    "volume": "卷五",
-   "srcLine": 1261,
+   "srcLine": 1262,
    "anchorsText": "卷零 A 4.7：faith-state.mjs:10、norm-stack.mjs:79、population.mjs:88、remote-generation.mjs:115",
    "anchors": [
     {
@@ -12723,7 +12907,7 @@
   {
    "rowKey": "M5-28",
    "volume": "卷五",
-   "srcLine": 1262,
+   "srcLine": 1263,
    "anchorsText": "06b E：map-state.mjs:6/8",
    "anchors": [
     {
@@ -12744,7 +12928,7 @@
   {
    "rowKey": "M5-29",
    "volume": "卷五",
-   "srcLine": 1263,
+   "srcLine": 1264,
    "anchorsText": "卷零 A 4.10：邻省条款文字",
    "anchors": [],
    "disp": "to_data",
@@ -12755,7 +12939,7 @@
   {
    "rowKey": "M5-30",
    "volume": "卷五",
-   "srcLine": 1264,
+   "srcLine": 1265,
    "anchorsText": "06a §1 与 06b E 中 remote-generation.mjs 的文化分支、命名库、店货单、人口与职业清单、名字与大纲文字判断",
    "anchors": [
     {
@@ -12772,7 +12956,7 @@
   {
    "rowKey": "M5-30a",
    "volume": "卷五",
-   "srcLine": 1265,
+   "srcLine": 1266,
    "anchorsText": "06a §1 与 06b E 中 remote-generation.mjs 的文化分支、命名库、店货单、人口与职业清单、名字与大纲文字判断",
    "anchors": [
     {
@@ -12788,7 +12972,7 @@
   {
    "rowKey": "M5-30b",
    "volume": "卷五",
-   "srcLine": 1266,
+   "srcLine": 1267,
    "anchorsText": "06a §1 与 06b E 中 remote-generation.mjs 的文化分支、命名库、店货单、人口与职业清单、名字与大纲文字判断",
    "anchors": [
     {
@@ -12805,7 +12989,7 @@
   {
    "rowKey": "M5-30c",
    "volume": "卷五",
-   "srcLine": 1267,
+   "srcLine": 1268,
    "anchorsText": "06a §1 与 06b E 中 remote-generation.mjs 的文化分支、命名库、店货单、人口与职业清单、名字与大纲文字判断",
    "anchors": [
     {
@@ -12815,13 +12999,13 @@
    ],
    "disp": "to_data",
    "target": "归卷十数据表（卷二 §6.3 末段）；本卷接手其中的地形、路速、站点类型三类（气候基准归卷二十的天气单元行）（卷十 M10-1）",
-   "targetObject": "待裁",
+   "targetObject": "sys.time_env",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M5-31",
    "volume": "卷五",
-   "srcLine": 1268,
+   "srcLine": 1269,
    "anchorsText": "二版补：新增必填维度 areaM2、skyExposure、accessClass，存量单元的 stratum，以及 comp_tract、comp_enclosure 的挂载",
    "anchors": [],
    "disp": "to_data",
@@ -12832,7 +13016,7 @@
   {
    "rowKey": "M5-32",
    "volume": "卷五",
-   "srcLine": 1269,
+   "srcLine": 1270,
    "anchorsText": "water-cycle.mjs:33、:185",
    "anchors": [
     {
@@ -12857,7 +13041,7 @@
   {
    "rowKey": "M5-33",
    "volume": "卷五",
-   "srcLine": 1270,
+   "srcLine": 1271,
    "anchorsText": "数据：geo/locations.json、regions.json、routes.json、biomes.json、settlements.json 的地形文本",
    "anchors": [
     {
@@ -17633,8 +17817,8 @@
     }
    ],
    "disp": "delete",
-   "target": "卷一 §6.5；R11-1.9",
-   "targetObject": "rules",
+   "target": "卷一 §6.5；R11-1.9；验收判据：R11-1.9",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -23715,7 +23899,7 @@
    ],
    "disp": "recode",
    "target": "同 M14-16、M14-27、M14-31、M14-37",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -24039,8 +24223,8 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "§2.5 规则表（本卷无规则号）",
-   "targetObject": "待裁",
+   "target": "practice（dailyCaps 每日练习增量上限、stageSize 阶段大小、maximum 总上限、repeatMultiplier 重复折减）→ rules.profession（kinds、lapseDays 是从业边的种类与失效天数；旧字段四项在 §2.5 没有同名或同义键，对不上，列给李白）",
+   "targetObject": "rules.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -24050,8 +24234,8 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "§2.5 规则表（本卷无规则号）",
-   "targetObject": "待裁",
+   "target": "levels（maximum 等级上限、noviceUntil、freeAttributePoints）→ rules.growth（levelThresholds、attrPointsPerLevel、freePerSkill）；levels.initial（初始属性总和与上下限）、levels.experience 在 §2.5 没有对应键，对不上，列给李白",
+   "targetObject": "rules.growth",
    "baseline": "d54c89a3"
   },
   {
@@ -24061,8 +24245,8 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "§2.5 规则表（本卷无规则号）",
-   "targetObject": "待裁",
+   "target": "education（minimumAge、maximumAge 就学年龄；examinations 各地课业）→ rules.learning；§2.5 的 learning 各键（attrCurve、ageCurve、challengeCurve、dailyTotalCurve 等）没有就学年龄与课业名单的对应，对不上，列给李白（课业名单是只对一地成立的数据行）",
+   "targetObject": "rules.learning",
    "baseline": "d54c89a3"
   },
   {
@@ -24072,8 +24256,8 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "§2.5 规则表（本卷无规则号）",
-   "targetObject": "待裁",
+   "target": "training（institutions：机构、教师、门规、入门费、仪式）→ rules.learning（instructEffect、gapCurves、groupCurves 管教学增量）；旧内容里没有\"教师肯不肯教\"的字段，没有拆 rules.teach 的子行；入门费、门规、仪式是只对一地成立的数据行，对不上，列给李白",
+   "targetObject": "rules.learning",
    "baseline": "d54c89a3"
   },
   {
@@ -24083,8 +24267,8 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "§2.5 规则表（本卷无规则号）",
-   "targetObject": "待裁",
+   "target": "books（grades 书的五档、minimumLiteracy、readingMinutes）→ rules.learning（carrierLevelCurve，从书这种载体学）；旧内容里没有考证书费用，没有拆 rules.cert 的子行；grades 与 minimumLiteracy 在 carrierLevelCurve 之外，对不上，列给李白",
+   "targetObject": "rules.learning",
    "baseline": "d54c89a3"
   },
   {
@@ -24094,8 +24278,8 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "§2.5 规则表（本卷无规则号）",
-   "targetObject": "待裁",
+   "target": "npcGrowth（maximumGain、maximumProficiency、minimumPractice、switchCooldownDays、teach、work、vocations）是日后升级成长（每日教学与工作增量），不是生成 NPC 时的初始技能，取 rules.growth；§2.5 的 growth 键只有 levelThresholds、xpPerPoint、capacity、freePerSkill、burdenCurve、attrPointsPerLevel，旧字段对不上，列给李白（vocations 是只对一地成立的名单，应成数据行）",
+   "targetObject": "rules.growth",
    "baseline": "d54c89a3"
   },
   {

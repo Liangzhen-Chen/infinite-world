@@ -317,17 +317,6 @@
   "server-plugin/family-state.mjs"
  ],
  "replay_verify": [],
- "rules": [
-  "server-plugin/finance-assets.mjs",
-  "server-plugin/finance-bank.mjs",
-  "server-plugin/hidden-passives.mjs",
-  "server-plugin/holding-sources.mjs",
-  "server-plugin/medicine.mjs",
-  "server-plugin/money.mjs",
-  "server-plugin/pets.mjs",
-  "server-plugin/quest-sources.mjs",
-  "server-plugin/stock.mjs"
- ],
  "rules.ai.tierUses": [
   "server-plugin/ai-profile.mjs"
  ],
@@ -363,6 +352,7 @@
   "server-plugin/advance-registry.mjs"
  ],
  "rules.gen.opening": [],
+ "rules.growth": [],
  "rules.health": [
   "server-plugin/population-health.mjs"
  ],
@@ -376,11 +366,13 @@
  "rules.law": [
   "server-plugin/law.mjs"
  ],
+ "rules.learning": [],
  "rules.life": [],
  "rules.market": [
   "server-plugin/market.mjs"
  ],
  "rules.polity": [],
+ "rules.profession": [],
  "rules.quality": [
   "server-plugin/item-class.mjs",
   "server-plugin/works.mjs"
@@ -574,6 +566,7 @@
   "server-plugin/finance-bank.mjs",
   "server-plugin/food-habit.mjs",
   "server-plugin/goods-escrow.mjs",
+  "server-plugin/holding-sources.mjs",
   "server-plugin/household-budget.mjs",
   "server-plugin/household-subsistence.mjs",
   "server-plugin/item-class.mjs",
@@ -588,8 +581,10 @@
   "server-plugin/npc-labor.mjs",
   "server-plugin/npc-obligations.mjs",
   "server-plugin/obligation-runtime.mjs",
+  "server-plugin/pets.mjs",
   "server-plugin/public-projects.mjs",
   "server-plugin/quest-board.mjs",
+  "server-plugin/quest-sources.mjs",
   "server-plugin/remote-generation.mjs",
   "server-plugin/settlement-trade.mjs",
   "server-plugin/shop.mjs",
@@ -607,7 +602,11 @@
   "server-plugin/effects.mjs",
   "server-plugin/entity-transitions.mjs",
   "server-plugin/festival.mjs",
+  "server-plugin/finance-assets.mjs",
+  "server-plugin/finance-bank.mjs",
   "server-plugin/hazard-calendar.mjs",
+  "server-plugin/medicine.mjs",
+  "server-plugin/pets.mjs",
   "server-plugin/quest-board.mjs",
   "server-plugin/quest-sources.mjs",
   "server-plugin/revival.mjs",
@@ -789,9 +788,11 @@
   "server-plugin/learning.mjs",
   "server-plugin/magic-care.mjs",
   "server-plugin/medicine-state.mjs",
+  "server-plugin/medicine.mjs",
   "server-plugin/pets.mjs",
   "server-plugin/primitives-effects.mjs",
   "server-plugin/primitives-learning.mjs",
+  "server-plugin/quest-sources.mjs",
   "server-plugin/works.mjs"
  ],
  "sys.psyche": [
@@ -847,13 +848,20 @@
  "sys.species": [
   "server-plugin/duels.mjs",
   "server-plugin/entity-view.mjs",
+  "server-plugin/finance-assets.mjs",
+  "server-plugin/finance-bank.mjs",
   "server-plugin/husbandry.mjs",
+  "server-plugin/medicine.mjs",
   "server-plugin/nation-founding.mjs",
   "server-plugin/npc-crime.mjs",
-  "server-plugin/population.mjs"
+  "server-plugin/pets.mjs",
+  "server-plugin/population.mjs",
+  "server-plugin/quest-sources.mjs"
  ],
  "sys.status": [
   "server-plugin/body-needs.mjs",
+  "server-plugin/finance-assets.mjs",
+  "server-plugin/finance-bank.mjs",
   "server-plugin/hazard-calendar.mjs",
   "server-plugin/household-subsistence.mjs",
   "server-plugin/items.mjs",
@@ -862,7 +870,9 @@
   "server-plugin/medicine-state.mjs",
   "server-plugin/medicine.mjs",
   "server-plugin/npc-life.mjs",
-  "server-plugin/primitives-body.mjs"
+  "server-plugin/pets.mjs",
+  "server-plugin/primitives-body.mjs",
+  "server-plugin/quest-sources.mjs"
  ],
  "sys.time_env": [
   "server-plugin/hazard-calendar.mjs",
@@ -884,12 +894,16 @@
  ],
  "sys.worldgen": [
   "server-plugin/character.mjs",
+  "server-plugin/high-nobility.mjs",
+  "server-plugin/law-codes.mjs",
   "server-plugin/migrations.mjs",
+  "server-plugin/noble-state.mjs",
   "server-plugin/npc-state.mjs",
   "server-plugin/population-service.mjs",
   "server-plugin/population.mjs",
   "server-plugin/regions.mjs",
   "server-plugin/remote-generation.mjs",
+  "server-plugin/titles.mjs",
   "server-plugin/wildlife-habitats.mjs",
   "server-plugin/world-upgrade.mjs"
  ],
@@ -915,12 +929,5 @@
   "server-plugin/remote-generation.mjs"
  ],
  "待补": [],
- "待裁": [
-  "server-plugin/high-nobility.mjs",
-  "server-plugin/household-subsistence.mjs",
-  "server-plugin/law-codes.mjs",
-  "server-plugin/noble-state.mjs",
-  "server-plugin/remote-generation.mjs",
-  "server-plugin/titles.mjs"
- ]
+ "待裁": []
 }
