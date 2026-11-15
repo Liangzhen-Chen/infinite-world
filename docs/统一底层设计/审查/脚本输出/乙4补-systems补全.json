@@ -1,0 +1,1645 @@
+{
+ "_说明": "卷二 §2.7 systems 补全（乙-4 补 J1）；脚本生成，勿手改。pending 列出推不出、不猜的字段。",
+ "count": 28,
+ "systems": [
+  {
+   "system": "acceptance",
+   "volume": "卷七",
+   "entries": [
+    "acceptance",
+    "acceptanceOfPerson",
+    "conversionOdds",
+    "cultureHead",
+    "culturePref",
+    "cultureView",
+    "customFor",
+    "deityView",
+    "divinationOptions",
+    "doctrineOf",
+    "evaluationOf",
+    "faithChain",
+    "faithCount",
+    "faithDistance",
+    "faithOf",
+    "faithUnlocked",
+    "faithView",
+    "fervorOf",
+    "festivalsAt",
+    "holyWarEligible",
+    "hostilityOf",
+    "integrationOf",
+    "interpretedScore",
+    "languageCap",
+    "languageKin",
+    "miracleOptions",
+    "nameTable",
+    "nextFestival",
+    "pendingCustoms",
+    "pietyOf",
+    "reformOptions",
+    "respectTier",
+    "riteCount",
+    "shrineDemand",
+    "sphereAffinity",
+    "tabooBreach",
+    "traditionOptions",
+    "vowsOf",
+    "worshipTier"
+   ],
+   "view": "待补",
+   "tables": [
+    "culture",
+    "deity",
+    "faith"
+   ],
+   "entryCallerFiles": {
+    "faithOf": [
+     "server-plugin/entity-view.mjs",
+     "server-plugin/faith.mjs"
+    ]
+   },
+   "defFiles": [
+    "server-plugin/faith-state.mjs",
+    "server-plugin/magic-ritual.mjs"
+   ],
+   "callerUnion": [
+    "server-plugin/entity-view.mjs",
+    "server-plugin/faith.mjs"
+   ],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷七 §3.1 读入口 39 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 1 项（只按名字对，可能是同名的别的函数）（server-plugin/faith-state.mjs、server-plugin/magic-ritual.mjs）；有调用文件的入口 1 项、调用文件 2 个；tables 取卷二各表节 owner 行 3 张"
+  },
+  {
+   "system": "containerView",
+   "volume": "卷三乙",
+   "entries": [
+    "containerView",
+    "itemView",
+    "lotsView",
+    "materialView",
+    "recipeView"
+   ],
+   "view": "待补",
+   "tables": [
+    "item",
+    "recipe"
+   ],
+   "entryCallerFiles": {
+    "itemView": [
+     "server-plugin/traits.mjs"
+    ]
+   },
+   "defFiles": [
+    "server-plugin/entity-view.mjs"
+   ],
+   "callerUnion": [
+    "server-plugin/traits.mjs"
+   ],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷三乙 §3.1 读入口 5 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 1 项（只按名字对，可能是同名的别的函数）（server-plugin/entity-view.mjs）；有调用文件的入口 1 项、调用文件 1 个；tables 取卷二各表节 owner 行 2 张"
+  },
+  {
+   "system": "actionView",
+   "volume": "卷九",
+   "entries": [
+    "actionView",
+    "activityOf",
+    "affordances",
+    "agendaOf",
+    "aiAllows",
+    "authority",
+    "canEnter",
+    "check",
+    "consent",
+    "constructorTree",
+    "controlledByPlayer",
+    "dialogueView",
+    "difficultyOf",
+    "freeSlotsOf",
+    "labelKey",
+    "landingOf",
+    "landing_level",
+    "legalityOf",
+    "magnitudeCap",
+    "npcChoose",
+    "npcDecision",
+    "primitiveContract",
+    "quoteOf",
+    "reviewClaims",
+    "route",
+    "sceneCard",
+    "validateSegments",
+    "validateTurn"
+   ],
+   "view": "待补",
+   "tables": [],
+   "entryCallerFiles": {
+    "aiAllows": [
+     "server-plugin/index.mjs"
+    ],
+    "authority": [
+     "server-plugin/action-affordances.mjs",
+     "server-plugin/action-consent.mjs",
+     "server-plugin/action-limits.mjs",
+     "server-plugin/environment.mjs",
+     "server-plugin/finance-bank.mjs",
+     "server-plugin/items.mjs",
+     "server-plugin/open-actions.mjs",
+     "server-plugin/primitives-runtime.mjs",
+     "server-plugin/primitives.mjs",
+     "server-plugin/rx-library.mjs"
+    ],
+    "check": [
+     "server-plugin/agriculture.mjs",
+     "server-plugin/career-metrics.mjs",
+     "server-plugin/compat/v2-phase1-activities.mjs",
+     "server-plugin/compat/v2-phase1-engine.mjs",
+     "server-plugin/dialogue.mjs",
+     "server-plugin/engine.mjs",
+     "server-plugin/law.mjs",
+     "server-plugin/learning.mjs",
+     "server-plugin/manufacturing.mjs",
+     "server-plugin/npc-autonomy.mjs",
+     "server-plugin/npc-growth.mjs",
+     "server-plugin/pets.mjs",
+     "server-plugin/primitives-checks.mjs",
+     "server-plugin/professions.mjs",
+     "server-plugin/remote-generation.mjs",
+     "server-plugin/repair.mjs",
+     "server-plugin/wildlife.mjs",
+     "server-plugin/works.mjs"
+    ],
+    "consent": [
+     "server-plugin/action-limits.mjs",
+     "server-plugin/action-rite.mjs",
+     "server-plugin/environment.mjs",
+     "server-plugin/faith.mjs",
+     "server-plugin/law.mjs",
+     "server-plugin/learning.mjs",
+     "server-plugin/magic-consent.mjs",
+     "server-plugin/primitives-effects.mjs",
+     "server-plugin/primitives-learning.mjs",
+     "server-plugin/primitives-runtime.mjs",
+     "server-plugin/rx-library.mjs"
+    ],
+    "npcDecision": [
+     "server-plugin/action-consent.mjs",
+     "server-plugin/action-degrees.mjs",
+     "server-plugin/autonomy-candidates.mjs",
+     "server-plugin/building-maintenance.mjs",
+     "server-plugin/business.mjs",
+     "server-plugin/credit.mjs",
+     "server-plugin/distribution.mjs",
+     "server-plugin/festival.mjs",
+     "server-plugin/labor-market.mjs",
+     "server-plugin/law.mjs",
+     "server-plugin/learning.mjs",
+     "server-plugin/legal-representation.mjs",
+     "server-plugin/livestock-sale.mjs",
+     "server-plugin/magic-consent.mjs",
+     "server-plugin/npc-labor.mjs",
+     "server-plugin/organizations.mjs",
+     "server-plugin/primitives-runtime.mjs",
+     "server-plugin/public-projects.mjs",
+     "server-plugin/rx-library.mjs",
+     "server-plugin/shop.mjs",
+     "server-plugin/works.mjs"
+    ],
+    "route": [
+     "server-plugin/advance-registry.mjs",
+     "server-plugin/bounty.mjs",
+     "server-plugin/combat.mjs",
+     "server-plugin/household-subsistence.mjs",
+     "server-plugin/medicine.mjs",
+     "server-plugin/military.mjs",
+     "server-plugin/monster-society.mjs",
+     "server-plugin/npc-life.mjs",
+     "server-plugin/npc-schedule.mjs",
+     "server-plugin/public-projects.mjs",
+     "server-plugin/revival.mjs",
+     "server-plugin/shop.mjs",
+     "server-plugin/smuggling.mjs",
+     "server-plugin/transport.mjs"
+    ],
+    "sceneCard": [
+     "server-plugin/engine.mjs"
+    ]
+   },
+   "defFiles": [
+    "extension/action-builder.mjs",
+    "extension/tools.mjs",
+    "server-plugin/action-affordances.mjs",
+    "server-plugin/action-authority.mjs",
+    "server-plugin/action-consent.mjs",
+    "server-plugin/action-rite.mjs",
+    "server-plugin/activities.mjs",
+    "server-plugin/ai-profile.mjs",
+    "server-plugin/building-maintenance.mjs",
+    "server-plugin/business.mjs",
+    "server-plugin/checks.mjs",
+    "server-plugin/civic.mjs",
+    "server-plugin/compat/v2-phase1-engine.mjs",
+    "server-plugin/dialogue.mjs",
+    "server-plugin/distribution.mjs",
+    "server-plugin/domain-rules.mjs",
+    "server-plugin/elections.mjs",
+    "server-plugin/engine.mjs",
+    "server-plugin/environment.mjs",
+    "server-plugin/extraction.mjs",
+    "server-plugin/facility-state.mjs",
+    "server-plugin/faction-clock.mjs",
+    "server-plugin/family-politics.mjs",
+    "server-plugin/governance.mjs",
+    "server-plugin/husbandry.mjs",
+    "server-plugin/item-class.mjs",
+    "server-plugin/labor-market.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/learning.mjs",
+    "server-plugin/local-exams.mjs",
+    "server-plugin/magic-air.mjs",
+    "server-plugin/magic-light.mjs",
+    "server-plugin/magic-message.mjs",
+    "server-plugin/magic-mind-space.mjs",
+    "server-plugin/magic-movement.mjs",
+    "server-plugin/magic-object.mjs",
+    "server-plugin/magic-ritual.mjs",
+    "server-plugin/monster-society.mjs",
+    "server-plugin/npc-autonomy.mjs",
+    "server-plugin/npc-cognition.mjs",
+    "server-plugin/npc-crime.mjs",
+    "server-plugin/npc-decision.mjs",
+    "server-plugin/npc-labor.mjs",
+    "server-plugin/npc-obligations.mjs",
+    "server-plugin/npc-schedule.mjs",
+    "server-plugin/place-layout.mjs",
+    "server-plugin/primitives-effects.mjs",
+    "server-plugin/primitives-movement.mjs",
+    "server-plugin/primitives-runtime.mjs",
+    "server-plugin/quest-board.mjs",
+    "server-plugin/remote-generation.mjs",
+    "server-plugin/scene-card.mjs",
+    "server-plugin/seasonal-hazards.mjs",
+    "server-plugin/settlement-trade.mjs",
+    "server-plugin/sites.mjs",
+    "server-plugin/smuggling.mjs",
+    "server-plugin/transition.mjs",
+    "server-plugin/ui-map.mjs"
+   ],
+   "callerUnion": [
+    "server-plugin/action-affordances.mjs",
+    "server-plugin/action-consent.mjs",
+    "server-plugin/action-degrees.mjs",
+    "server-plugin/action-limits.mjs",
+    "server-plugin/action-rite.mjs",
+    "server-plugin/advance-registry.mjs",
+    "server-plugin/agriculture.mjs",
+    "server-plugin/autonomy-candidates.mjs",
+    "server-plugin/bounty.mjs",
+    "server-plugin/building-maintenance.mjs",
+    "server-plugin/business.mjs",
+    "server-plugin/career-metrics.mjs",
+    "server-plugin/combat.mjs",
+    "server-plugin/compat/v2-phase1-activities.mjs",
+    "server-plugin/compat/v2-phase1-engine.mjs",
+    "server-plugin/credit.mjs",
+    "server-plugin/dialogue.mjs",
+    "server-plugin/distribution.mjs",
+    "server-plugin/engine.mjs",
+    "server-plugin/environment.mjs",
+    "server-plugin/faith.mjs",
+    "server-plugin/festival.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/household-subsistence.mjs",
+    "server-plugin/index.mjs",
+    "server-plugin/items.mjs",
+    "server-plugin/labor-market.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/learning.mjs",
+    "server-plugin/legal-representation.mjs",
+    "server-plugin/livestock-sale.mjs",
+    "server-plugin/magic-consent.mjs",
+    "server-plugin/manufacturing.mjs",
+    "server-plugin/medicine.mjs",
+    "server-plugin/military.mjs",
+    "server-plugin/monster-society.mjs",
+    "server-plugin/npc-autonomy.mjs",
+    "server-plugin/npc-growth.mjs",
+    "server-plugin/npc-labor.mjs",
+    "server-plugin/npc-life.mjs",
+    "server-plugin/npc-schedule.mjs",
+    "server-plugin/open-actions.mjs",
+    "server-plugin/organizations.mjs",
+    "server-plugin/pets.mjs",
+    "server-plugin/primitives-checks.mjs",
+    "server-plugin/primitives-effects.mjs",
+    "server-plugin/primitives-learning.mjs",
+    "server-plugin/primitives-runtime.mjs",
+    "server-plugin/primitives.mjs",
+    "server-plugin/professions.mjs",
+    "server-plugin/public-projects.mjs",
+    "server-plugin/remote-generation.mjs",
+    "server-plugin/repair.mjs",
+    "server-plugin/revival.mjs",
+    "server-plugin/rx-library.mjs",
+    "server-plugin/shop.mjs",
+    "server-plugin/smuggling.mjs",
+    "server-plugin/transport.mjs",
+    "server-plugin/wildlife.mjs",
+    "server-plugin/works.mjs"
+   ],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷九 §3.1 读入口 28 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 7 项（只按名字对，可能是同名的别的函数）（extension/action-builder.mjs、extension/tools.mjs、server-plugin/action-affordances.mjs等）；有调用文件的入口 7 项、调用文件 60 个；tables 取卷二各表节 owner 行 0 张"
+  },
+  {
+   "system": "astroView",
+   "volume": "卷二十",
+   "entries": [
+    "astroView",
+    "calendarAdd",
+    "calendarDayIndex",
+    "calendarMinuteOf",
+    "calendarSpan",
+    "calendarView",
+    "clockView",
+    "envAccum",
+    "envAt",
+    "eraView",
+    "paceView",
+    "placeView",
+    "rateBasisView",
+    "recurrenceNext",
+    "waterAhead"
+   ],
+   "view": "待补",
+   "tables": [],
+   "entryCallerFiles": {
+    "placeView": [
+     "server-plugin/festival.mjs",
+     "server-plugin/settlement-profile.mjs",
+     "server-plugin/traits.mjs",
+     "server-plugin/ui-affairs.mjs"
+    ]
+   },
+   "defFiles": [
+    "server-plugin/entity-view.mjs"
+   ],
+   "callerUnion": [
+    "server-plugin/festival.mjs",
+    "server-plugin/settlement-profile.mjs",
+    "server-plugin/traits.mjs",
+    "server-plugin/ui-affairs.mjs"
+   ],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷二十 §3.1 读入口 15 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 1 项（只按名字对，可能是同名的别的函数）（server-plugin/entity-view.mjs）；有调用文件的入口 1 项、调用文件 4 个；tables 取卷二各表节 owner 行 0 张"
+  },
+  {
+   "system": "careOptions",
+   "volume": "卷二十一",
+   "entries": [
+    "careOptions",
+    "courseSummary",
+    "personView",
+    "prevalenceOf",
+    "statusView",
+    "treatmentPreview"
+   ],
+   "view": "待补",
+   "tables": [
+    "status"
+   ],
+   "entryCallerFiles": {
+    "personView": [
+     "server-plugin/elections.mjs",
+     "server-plugin/faction-clock.mjs",
+     "server-plugin/magic-consent.mjs",
+     "server-plugin/magic-economy.mjs",
+     "server-plugin/monster-society.mjs",
+     "server-plugin/notables.mjs",
+     "server-plugin/organizations.mjs",
+     "server-plugin/standing.mjs",
+     "server-plugin/ui-personal.mjs"
+    ]
+   },
+   "defFiles": [
+    "server-plugin/entity-view.mjs"
+   ],
+   "callerUnion": [
+    "server-plugin/elections.mjs",
+    "server-plugin/faction-clock.mjs",
+    "server-plugin/magic-consent.mjs",
+    "server-plugin/magic-economy.mjs",
+    "server-plugin/monster-society.mjs",
+    "server-plugin/notables.mjs",
+    "server-plugin/organizations.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/ui-personal.mjs"
+   ],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷二十一 §3.1 读入口 6 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 1 项（只按名字对，可能是同名的别的函数）（server-plugin/entity-view.mjs）；有调用文件的入口 1 项、调用文件 9 个；tables 取卷二各表节 owner 行 1 张"
+  },
+  {
+   "system": "advancePlan",
+   "volume": "卷二十七",
+   "entries": [
+    "advancePlan",
+    "aggregateView",
+    "baseTierOf",
+    "costPlan",
+    "degradeLevelOf",
+    "legalKeyIdOf",
+    "pinned",
+    "simTierOf",
+    "simUnitOf"
+   ],
+   "view": "待补",
+   "tables": [],
+   "entryCallerFiles": {},
+   "defFiles": [
+    "server-plugin/advance-layers.mjs",
+    "server-plugin/compat/v2-phase1-engine.mjs",
+    "server-plugin/population.mjs",
+    "server-plugin/scene-card.mjs"
+   ],
+   "callerUnion": [],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷二十七 §3.1 读入口 9 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 1 项（只按名字对，可能是同名的别的函数）（server-plugin/advance-layers.mjs、server-plugin/compat/v2-phase1-engine.mjs、server-plugin/population.mjs等）；有调用文件的入口 0 项、调用文件 0 个；tables 取卷二各表节 owner 行 0 张"
+  },
+  {
+   "system": "actOutcome",
+   "volume": "卷二十三",
+   "entries": [
+    "actOutcome",
+    "adornCover",
+    "compositionOf",
+    "honorCoverage",
+    "itemRenown",
+    "itemUniqueness",
+    "itemView",
+    "knowledgeView",
+    "knownForms",
+    "legendStanding",
+    "pickSubjects",
+    "renownBonus",
+    "workCount",
+    "workReach"
+   ],
+   "view": "待补",
+   "tables": [],
+   "entryCallerFiles": {
+    "itemView": [
+     "server-plugin/traits.mjs"
+    ]
+   },
+   "defFiles": [
+    "server-plugin/entity-view.mjs"
+   ],
+   "callerUnion": [
+    "server-plugin/traits.mjs"
+   ],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷二十三 §3.1 读入口 14 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 1 项（只按名字对，可能是同名的别的函数）（server-plugin/entity-view.mjs）；有调用文件的入口 1 项、调用文件 1 个；tables 取卷二各表节 owner 行 0 张"
+  },
+  {
+   "system": "composeScreen",
+   "volume": "卷二十九",
+   "entries": [
+    "composeScreen",
+    "displayData",
+    "labelText",
+    "renderScreen",
+    "renderTpl",
+    "selectRows"
+   ],
+   "view": "待补",
+   "tables": [],
+   "entryCallerFiles": {},
+   "defFiles": [],
+   "callerUnion": [],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷二十九 §3.1 读入口 6 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 0 项（只按名字对，可能是同名的别的函数）；有调用文件的入口 0 项、调用文件 0 个；tables 取卷二各表节 owner 行 0 张"
+  },
+  {
+   "system": "beliefOf",
+   "volume": "卷二十二",
+   "entries": [
+    "beliefOf",
+    "chronicleKey",
+    "chronicleView",
+    "claimHolds",
+    "covertGrade",
+    "familiarityOf",
+    "guardFor",
+    "holdsLore",
+    "knowStanding",
+    "knowsFact",
+    "knowsKey",
+    "leverageOf",
+    "linkKnown",
+    "loreShare",
+    "publicShare",
+    "readOutcome",
+    "recallFacts",
+    "researchOptions",
+    "returnDigest",
+    "secretsOf",
+    "subjectiveView",
+    "why"
+   ],
+   "view": "待补",
+   "tables": [
+    "knowledge"
+   ],
+   "entryCallerFiles": {
+    "subjectiveView": [
+     "server-plugin/action-consent.mjs",
+     "server-plugin/action-degrees.mjs",
+     "server-plugin/action-rite.mjs",
+     "server-plugin/building-maintenance.mjs",
+     "server-plugin/business.mjs",
+     "server-plugin/credit.mjs",
+     "server-plugin/distribution.mjs",
+     "server-plugin/festival.mjs",
+     "server-plugin/finance-assets.mjs",
+     "server-plugin/finance-bank.mjs",
+     "server-plugin/household-budget.mjs",
+     "server-plugin/labor-market.mjs",
+     "server-plugin/law.mjs",
+     "server-plugin/learning.mjs",
+     "server-plugin/legal-reactions.mjs",
+     "server-plugin/legal-representation.mjs",
+     "server-plugin/livestock-sale.mjs",
+     "server-plugin/magic-consent.mjs",
+     "server-plugin/npc-autonomy.mjs",
+     "server-plugin/npc-labor.mjs",
+     "server-plugin/organizations.mjs",
+     "server-plugin/primitives-runtime.mjs",
+     "server-plugin/public-projects.mjs",
+     "server-plugin/routing-programs.mjs",
+     "server-plugin/rx-library.mjs",
+     "server-plugin/shop.mjs",
+     "server-plugin/works.mjs"
+    ]
+   },
+   "defFiles": [
+    "server-plugin/dialogue.mjs",
+    "server-plugin/household-subsistence.mjs",
+    "server-plugin/npc-life.mjs",
+    "server-plugin/subjective-view.mjs"
+   ],
+   "callerUnion": [
+    "server-plugin/action-consent.mjs",
+    "server-plugin/action-degrees.mjs",
+    "server-plugin/action-rite.mjs",
+    "server-plugin/building-maintenance.mjs",
+    "server-plugin/business.mjs",
+    "server-plugin/credit.mjs",
+    "server-plugin/distribution.mjs",
+    "server-plugin/festival.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/household-budget.mjs",
+    "server-plugin/labor-market.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/learning.mjs",
+    "server-plugin/legal-reactions.mjs",
+    "server-plugin/legal-representation.mjs",
+    "server-plugin/livestock-sale.mjs",
+    "server-plugin/magic-consent.mjs",
+    "server-plugin/npc-autonomy.mjs",
+    "server-plugin/npc-labor.mjs",
+    "server-plugin/organizations.mjs",
+    "server-plugin/primitives-runtime.mjs",
+    "server-plugin/public-projects.mjs",
+    "server-plugin/routing-programs.mjs",
+    "server-plugin/rx-library.mjs",
+    "server-plugin/shop.mjs",
+    "server-plugin/works.mjs"
+   ],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷二十二 §3.1 读入口 22 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 3 项（只按名字对，可能是同名的别的函数）（server-plugin/dialogue.mjs、server-plugin/household-subsistence.mjs、server-plugin/npc-life.mjs等）；有调用文件的入口 1 项、调用文件 27 个；tables 取卷二各表节 owner 行 1 张"
+  },
+  {
+   "system": "arablePotential",
+   "volume": "卷二十五",
+   "entries": [
+    "arablePotential",
+    "butcherOutcome",
+    "canRide",
+    "cropForage",
+    "cropGrowth",
+    "cultivationOf",
+    "forageOptions",
+    "handlingOf",
+    "herdView",
+    "plantView",
+    "stapleCalendar",
+    "tabooFacts"
+   ],
+   "view": "待补",
+   "tables": [
+    "plant"
+   ],
+   "entryCallerFiles": {},
+   "defFiles": [],
+   "callerUnion": [],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷二十五 §3.1 读入口 12 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 0 项（只按名字对，可能是同名的别的函数）；有调用文件的入口 0 项、调用文件 0 个；tables 取卷二各表节 owner 行 1 张"
+  },
+  {
+   "system": "loadWorld",
+   "volume": "卷二十八",
+   "entries": [
+    "loadWorld",
+    "nsOf",
+    "packSet",
+    "packSetView",
+    "requiredTier",
+    "resolvePackSet"
+   ],
+   "view": "待补",
+   "tables": [],
+   "entryCallerFiles": {
+    "loadWorld": [
+     "server-plugin/index.mjs"
+    ]
+   },
+   "defFiles": [],
+   "callerUnion": [
+    "server-plugin/index.mjs"
+   ],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷二十八 §3.1 读入口 6 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 0 项（只按名字对，可能是同名的别的函数）；有调用文件的入口 1 项、调用文件 1 个；tables 取卷二各表节 owner 行 0 张"
+  },
+  {
+   "system": "decisionJitter",
+   "volume": "卷二十六",
+   "entries": [
+    "decisionJitter",
+    "needSatisfiers",
+    "personView",
+    "preferenceOf"
+   ],
+   "view": "待补",
+   "tables": [],
+   "entryCallerFiles": {
+    "personView": [
+     "server-plugin/elections.mjs",
+     "server-plugin/faction-clock.mjs",
+     "server-plugin/magic-consent.mjs",
+     "server-plugin/magic-economy.mjs",
+     "server-plugin/monster-society.mjs",
+     "server-plugin/notables.mjs",
+     "server-plugin/organizations.mjs",
+     "server-plugin/standing.mjs",
+     "server-plugin/ui-personal.mjs"
+    ]
+   },
+   "defFiles": [
+    "server-plugin/entity-view.mjs"
+   ],
+   "callerUnion": [
+    "server-plugin/elections.mjs",
+    "server-plugin/faction-clock.mjs",
+    "server-plugin/magic-consent.mjs",
+    "server-plugin/magic-economy.mjs",
+    "server-plugin/monster-society.mjs",
+    "server-plugin/notables.mjs",
+    "server-plugin/organizations.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/ui-personal.mjs"
+   ],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷二十六 §3.1 读入口 4 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 1 项（只按名字对，可能是同名的别的函数）（server-plugin/entity-view.mjs）；有调用文件的入口 1 项、调用文件 9 个；tables 取卷二各表节 owner 行 0 张"
+  },
+  {
+   "system": "chronicleAll",
+   "volume": "卷二十四",
+   "entries": [
+    "chronicleAll",
+    "commissionBrief",
+    "commissionView",
+    "commissionsAt",
+    "commissionsBy",
+    "epochView",
+    "eventCount",
+    "eventTypeView",
+    "instanceView",
+    "instancesOn",
+    "isA",
+    "legendsView",
+    "originEvents",
+    "storyView",
+    "tallyOf",
+    "verbView"
+   ],
+   "view": "待补",
+   "tables": [
+    "event_type"
+   ],
+   "entryCallerFiles": {},
+   "defFiles": [],
+   "callerUnion": [],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷二十四 §3.1 读入口 16 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 0 项（只按名字对，可能是同名的别的函数）；有调用文件的入口 0 项、调用文件 0 个；tables 取卷二各表节 owner 行 1 张"
+  },
+  {
+   "system": "placeView",
+   "volume": "卷五",
+   "entries": [
+    "placeView",
+    "routeView"
+   ],
+   "view": "entity-view.mjs#placeView",
+   "tables": [
+    "place"
+   ],
+   "entryCallerFiles": {
+    "placeView": [
+     "server-plugin/festival.mjs",
+     "server-plugin/settlement-profile.mjs",
+     "server-plugin/traits.mjs",
+     "server-plugin/ui-affairs.mjs"
+    ]
+   },
+   "defFiles": [
+    "server-plugin/entity-view.mjs",
+    "server-plugin/ui-map.mjs"
+   ],
+   "callerUnion": [
+    "server-plugin/festival.mjs",
+    "server-plugin/settlement-profile.mjs",
+    "server-plugin/traits.mjs",
+    "server-plugin/ui-affairs.mjs"
+   ],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase"
+   ],
+   "source": "卷五 §3.1 读入口 2 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 2 项（只按名字对，可能是同名的别的函数）（server-plugin/entity-view.mjs、server-plugin/ui-map.mjs）；有调用文件的入口 1 项、调用文件 4 个；tables 取卷二各表节 owner 行 1 张"
+  },
+  {
+   "system": "casusOptions",
+   "volume": "卷八",
+   "entries": [
+    "casusOptions",
+    "claimsOn",
+    "courtView",
+    "dejureOf",
+    "diploStatus",
+    "domainOf",
+    "electorate",
+    "factionView",
+    "governorOf",
+    "hasPower",
+    "holdingAllowed",
+    "influenceOf",
+    "legitimacy",
+    "migrationScore",
+    "motionView",
+    "officeView",
+    "officesOf",
+    "orgView",
+    "placeAuthority",
+    "polityView",
+    "popCapacity",
+    "popView",
+    "regencyOf",
+    "seatVenues",
+    "stratumSkill",
+    "successorsOf",
+    "taxLoad",
+    "taxesFor",
+    "tierOptions",
+    "usurpOptions",
+    "vassalTerms"
+   ],
+   "view": "待补",
+   "tables": [
+    "office",
+    "org",
+    "polity"
+   ],
+   "entryCallerFiles": {},
+   "defFiles": [],
+   "callerUnion": [],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷八 §3.1 读入口 31 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 0 项（只按名字对，可能是同名的别的函数）；有调用文件的入口 0 项、调用文件 0 个；tables 取卷二各表节 owner 行 3 张"
+  },
+  {
+   "system": "agencyOf",
+   "volume": "卷八b",
+   "entries": [
+    "agencyOf",
+    "attackLegality",
+    "auditGaps",
+    "bindingsOf",
+    "bondOf",
+    "bountiesOn",
+    "caseView",
+    "claimsOf",
+    "contrabandAt",
+    "convictionCount",
+    "crimeProspect",
+    "custodyOf",
+    "disposalRight",
+    "estateOf",
+    "evidenceScore",
+    "forumOrgOf",
+    "goodFaithOf",
+    "lawCodeView",
+    "lawGate",
+    "legalCapacity",
+    "legalityOf",
+    "limitationOf",
+    "naturalizeOptions",
+    "normStack",
+    "offenseView",
+    "offensesOfFact",
+    "provisionFor",
+    "provisionView",
+    "responseOf",
+    "safetyOf",
+    "securityOf",
+    "sentenceRange"
+   ],
+   "view": "待补",
+   "tables": [
+    "law_code",
+    "offense"
+   ],
+   "entryCallerFiles": {
+    "evidenceScore": [
+     "server-plugin/npc-crime.mjs"
+    ],
+    "normStack": [
+     "server-plugin/law-codes.mjs",
+     "server-plugin/law.mjs"
+    ]
+   },
+   "defFiles": [
+    "server-plugin/law.mjs",
+    "server-plugin/norm-stack.mjs"
+   ],
+   "callerUnion": [
+    "server-plugin/law-codes.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/npc-crime.mjs"
+   ],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷八b §3.1 读入口 32 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 2 项（只按名字对，可能是同名的别的函数）（server-plugin/law.mjs、server-plugin/norm-stack.mjs）；有调用文件的入口 2 项、调用文件 3 个；tables 取卷二各表节 owner 行 2 张"
+  },
+  {
+   "system": "accountsOf",
+   "volume": "卷六",
+   "entries": [
+    "accountsOf",
+    "balance",
+    "chainOf",
+    "coinValue",
+    "contractView",
+    "creditStanding",
+    "demand",
+    "denomination",
+    "economyReport",
+    "exchangeRate",
+    "feesFor",
+    "householdBudget",
+    "incoming",
+    "laborOffers",
+    "landedCost",
+    "marketQuote",
+    "marketSupply",
+    "obligationsOf",
+    "placeId",
+    "priceFor",
+    "productionPlanOf",
+    "projectView",
+    "propertyView",
+    "reachOf",
+    "scope",
+    "shopView",
+    "stationFee",
+    "stationLoad",
+    "stationPlan",
+    "stockIn",
+    "tradeVolume",
+    "unmetSupply",
+    "wageQuote",
+    "wealth"
+   ],
+   "view": "待补",
+   "tables": [],
+   "entryCallerFiles": {
+    "balance": [
+     "server-plugin/military.mjs",
+     "server-plugin/primitives.mjs"
+    ],
+    "exchangeRate": [
+     "server-plugin/tender.mjs"
+    ],
+    "householdBudget": [
+     "server-plugin/building-maintenance.mjs",
+     "server-plugin/business.mjs",
+     "server-plugin/credit.mjs",
+     "server-plugin/distribution.mjs",
+     "server-plugin/finance-bank.mjs",
+     "server-plugin/shop.mjs"
+    ],
+    "marketQuote": [
+     "server-plugin/business.mjs",
+     "server-plugin/compat/v2-phase1-engine.mjs",
+     "server-plugin/currency.mjs",
+     "server-plugin/distribution.mjs",
+     "server-plugin/finance-assets.mjs",
+     "server-plugin/labor-market.mjs",
+     "server-plugin/medicine.mjs",
+     "server-plugin/npc-labor.mjs",
+     "server-plugin/obligation-conditional.mjs",
+     "server-plugin/settlement-trade.mjs",
+     "server-plugin/tender.mjs",
+     "server-plugin/transport.mjs"
+    ],
+    "wageQuote": [
+     "server-plugin/derived.mjs"
+    ]
+   },
+   "defFiles": [
+    "server-plugin/action-limits.mjs",
+    "server-plugin/archived-reducer.mjs",
+    "server-plugin/bounty.mjs",
+    "server-plugin/business.mjs",
+    "server-plugin/consistency-evidence.mjs",
+    "server-plugin/credit.mjs",
+    "server-plugin/currency.mjs",
+    "server-plugin/environment-state.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/forest-water.mjs",
+    "server-plugin/household-budget.mjs",
+    "server-plugin/labor-market.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/ledger.mjs",
+    "server-plugin/legal-appeal.mjs",
+    "server-plugin/magic-air.mjs",
+    "server-plugin/market.mjs",
+    "server-plugin/npc-cognition.mjs",
+    "server-plugin/obligation-runtime.mjs",
+    "server-plugin/obligation-state.mjs",
+    "server-plugin/office-salary.mjs",
+    "server-plugin/open-actions.mjs",
+    "server-plugin/organizations.mjs",
+    "server-plugin/primitive-policy.mjs",
+    "server-plugin/primitives-effects.mjs",
+    "server-plugin/primitives-runtime.mjs",
+    "server-plugin/read-scope.mjs",
+    "server-plugin/shop.mjs",
+    "server-plugin/titles.mjs",
+    "server-plugin/transition.mjs",
+    "server-plugin/water-cycle.mjs",
+    "server-plugin/world-upgrade.mjs"
+   ],
+   "callerUnion": [
+    "server-plugin/building-maintenance.mjs",
+    "server-plugin/business.mjs",
+    "server-plugin/compat/v2-phase1-engine.mjs",
+    "server-plugin/credit.mjs",
+    "server-plugin/currency.mjs",
+    "server-plugin/derived.mjs",
+    "server-plugin/distribution.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/labor-market.mjs",
+    "server-plugin/medicine.mjs",
+    "server-plugin/military.mjs",
+    "server-plugin/npc-labor.mjs",
+    "server-plugin/obligation-conditional.mjs",
+    "server-plugin/primitives.mjs",
+    "server-plugin/settlement-trade.mjs",
+    "server-plugin/shop.mjs",
+    "server-plugin/tender.mjs",
+    "server-plugin/transport.mjs"
+   ],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷六 §3.1 读入口 34 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 10 项（只按名字对，可能是同名的别的函数）（server-plugin/action-limits.mjs、server-plugin/archived-reducer.mjs、server-plugin/bounty.mjs等）；有调用文件的入口 5 项、调用文件 19 个；tables 取卷二各表节 owner 行 0 张"
+  },
+  {
+   "system": "ageStructure",
+   "volume": "卷十",
+   "entries": [
+    "ageStructure",
+    "ageWeights",
+    "composeName",
+    "genPlan",
+    "genView",
+    "instanceIdOf",
+    "manifestOf",
+    "materialized",
+    "nameParts",
+    "openingOf",
+    "quotaOf",
+    "rollGroup",
+    "rosterOf",
+    "seatOf"
+   ],
+   "view": "待补",
+   "tables": [],
+   "entryCallerFiles": {
+    "composeName": [
+     "server-plugin/population.mjs"
+    ]
+   },
+   "defFiles": [
+    "server-plugin/public-opinion.mjs",
+    "server-plugin/remote-generation.mjs"
+   ],
+   "callerUnion": [
+    "server-plugin/population.mjs"
+   ],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷十 §3.1 读入口 14 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 2 项（只按名字对，可能是同名的别的函数）（server-plugin/public-opinion.mjs、server-plugin/remote-generation.mjs）；有调用文件的入口 1 项、调用文件 1 个；tables 取卷二各表节 owner 行 0 张"
+  },
+  {
+   "system": "cardId",
+   "volume": "卷十一",
+   "entries": [
+    "cardId",
+    "cardIds",
+    "migBackfill",
+    "migCard",
+    "migCards",
+    "migEvents",
+    "migExit",
+    "migFrozen",
+    "migParallelOk",
+    "migPhaseCount",
+    "migReady",
+    "migReceiver",
+    "migRows"
+   ],
+   "view": "待补",
+   "tables": [],
+   "entryCallerFiles": {},
+   "defFiles": [],
+   "callerUnion": [],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷十一 §3.1 读入口 13 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 0 项（只按名字对，可能是同名的别的函数）；有调用文件的入口 0 项、调用文件 0 个；tables 取卷二各表节 owner 行 0 张"
+  },
+  {
+   "system": "aboardOf",
+   "volume": "卷十七",
+   "entries": [
+    "aboardOf",
+    "downhillMotion",
+    "exploreGrade",
+    "gateQuote",
+    "legSpeed",
+    "mapGeomView",
+    "partyView",
+    "passOf",
+    "raidAppraisal",
+    "routeRisk",
+    "towShareOf",
+    "tripMinutes",
+    "tripPlan",
+    "tripView",
+    "whereOf"
+   ],
+   "view": "待补",
+   "tables": [],
+   "entryCallerFiles": {},
+   "defFiles": [],
+   "callerUnion": [],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷十七 §3.1 读入口 15 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 0 项（只按名字对，可能是同名的别的函数）；有调用文件的入口 0 项、调用文件 0 个；tables 取卷二各表节 owner 行 0 张"
+  },
+  {
+   "system": "battlePreview",
+   "volume": "卷十三",
+   "entries": [
+    "battlePreview",
+    "battleView",
+    "combatReadings",
+    "commandOf",
+    "deterrenceOf",
+    "encounterOf",
+    "encounterView",
+    "forceView",
+    "garrisonOf",
+    "layersOf",
+    "lootCapacity",
+    "meritOf",
+    "meritsOf",
+    "missionView",
+    "siegeView",
+    "strikeOutcome",
+    "strikePreview",
+    "warView"
+   ],
+   "view": "待补",
+   "tables": [],
+   "entryCallerFiles": {},
+   "defFiles": [],
+   "callerUnion": [],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷十三 §3.1 读入口 18 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 0 项（只按名字对，可能是同名的别的函数）；有调用文件的入口 0 项、调用文件 0 个；tables 取卷二各表节 owner 行 0 张"
+  },
+  {
+   "system": "facilityTypeView",
+   "volume": "卷十九",
+   "entries": [
+    "facilityTypeView",
+    "facilityView"
+   ],
+   "view": "待补",
+   "tables": [
+    "facility_type"
+   ],
+   "entryCallerFiles": {
+    "facilityView": [
+     "server-plugin/building-maintenance.mjs",
+     "server-plugin/contract-state.mjs",
+     "server-plugin/education-state.mjs",
+     "server-plugin/education.mjs",
+     "server-plugin/engine.mjs",
+     "server-plugin/entity-view.mjs",
+     "server-plugin/environment.mjs",
+     "server-plugin/facilities.mjs",
+     "server-plugin/faith.mjs",
+     "server-plugin/finance-assets.mjs",
+     "server-plugin/interactions.mjs",
+     "server-plugin/location-access.mjs",
+     "server-plugin/manufacturing.mjs",
+     "server-plugin/medicine-state.mjs",
+     "server-plugin/npc-autonomy.mjs",
+     "server-plugin/npc-labor.mjs",
+     "server-plugin/npc-schedule.mjs",
+     "server-plugin/npc-state.mjs",
+     "server-plugin/promotion.mjs",
+     "server-plugin/public-projects.mjs",
+     "server-plugin/repair.mjs",
+     "server-plugin/traits.mjs",
+     "server-plugin/workstation-services.mjs"
+    ]
+   },
+   "defFiles": [
+    "server-plugin/facility-state.mjs"
+   ],
+   "callerUnion": [
+    "server-plugin/building-maintenance.mjs",
+    "server-plugin/contract-state.mjs",
+    "server-plugin/education-state.mjs",
+    "server-plugin/education.mjs",
+    "server-plugin/engine.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/environment.mjs",
+    "server-plugin/facilities.mjs",
+    "server-plugin/faith.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/interactions.mjs",
+    "server-plugin/location-access.mjs",
+    "server-plugin/manufacturing.mjs",
+    "server-plugin/medicine-state.mjs",
+    "server-plugin/npc-autonomy.mjs",
+    "server-plugin/npc-labor.mjs",
+    "server-plugin/npc-schedule.mjs",
+    "server-plugin/npc-state.mjs",
+    "server-plugin/promotion.mjs",
+    "server-plugin/public-projects.mjs",
+    "server-plugin/repair.mjs",
+    "server-plugin/traits.mjs",
+    "server-plugin/workstation-services.mjs"
+   ],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷十九 §3.1 读入口 2 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 1 项（只按名字对，可能是同名的别的函数）（server-plugin/facility-state.mjs）；有调用文件的入口 1 项、调用文件 23 个；tables 取卷二各表节 owner 行 1 张"
+  },
+  {
+   "system": "accBaseline",
+   "volume": "卷十二",
+   "entries": [
+    "accBaseline",
+    "accCases",
+    "accGate",
+    "accHits",
+    "accItem",
+    "accItems",
+    "accReport",
+    "accReviewOk",
+    "accScope",
+    "accZeroCheck"
+   ],
+   "view": "待补",
+   "tables": [],
+   "entryCallerFiles": {},
+   "defFiles": [],
+   "callerUnion": [],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷十二 §3.1 读入口 10 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 0 项（只按名字对，可能是同名的别的函数）；有调用文件的入口 0 项、调用文件 0 个；tables 取卷二各表节 owner 行 0 张"
+  },
+  {
+   "system": "afterlifeOf",
+   "volume": "卷十五",
+   "entries": [
+    "afterlifeOf",
+    "castPreview",
+    "castShape",
+    "classesOfFamily",
+    "efficacyOf",
+    "enchantRoom",
+    "interactionsFor",
+    "liminalOf",
+    "riteView",
+    "situationOf",
+    "spellsOf",
+    "workingView",
+    "workingsOf"
+   ],
+   "view": "待补",
+   "tables": [],
+   "entryCallerFiles": {},
+   "defFiles": [],
+   "callerUnion": [],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷十五 §3.1 读入口 13 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 0 项（只按名字对，可能是同名的别的函数）；有调用文件的入口 0 项、调用文件 0 个；tables 取卷二各表节 owner 行 0 张"
+  },
+  {
+   "system": "compat",
+   "volume": "卷十八",
+   "entries": [
+    "compat",
+    "dread",
+    "esteemOf",
+    "heirsOf",
+    "holdingKind",
+    "kinDegree",
+    "kinView",
+    "opinionOf",
+    "recall",
+    "stance",
+    "treatment"
+   ],
+   "view": "待补",
+   "tables": [],
+   "entryCallerFiles": {
+    "holdingKind": [
+     "server-plugin/action-authority.mjs",
+     "server-plugin/derived.mjs",
+     "server-plugin/holding-kinds.mjs",
+     "server-plugin/holding-sources.mjs",
+     "server-plugin/primitives-runtime.mjs",
+     "server-plugin/primitives.mjs",
+     "server-plugin/transition.mjs"
+    ],
+    "opinionOf": [
+     "server-plugin/promotion.mjs"
+    ]
+   },
+   "defFiles": [
+    "server-plugin/consistency-review.mjs",
+    "server-plugin/holdings.mjs",
+    "server-plugin/legal-appeal.mjs",
+    "server-plugin/magic-consent.mjs",
+    "server-plugin/public-opinion.mjs",
+    "server-plugin/tribal-awakening.mjs"
+   ],
+   "callerUnion": [
+    "server-plugin/action-authority.mjs",
+    "server-plugin/derived.mjs",
+    "server-plugin/holding-kinds.mjs",
+    "server-plugin/holding-sources.mjs",
+    "server-plugin/primitives-runtime.mjs",
+    "server-plugin/primitives.mjs",
+    "server-plugin/promotion.mjs",
+    "server-plugin/transition.mjs"
+   ],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷十八 §3.1 读入口 11 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 4 项（只按名字对，可能是同名的别的函数）（server-plugin/consistency-review.mjs、server-plugin/holdings.mjs、server-plugin/legal-appeal.mjs等）；有调用文件的入口 2 项、调用文件 8 个；tables 取卷二各表节 owner 行 0 张"
+  },
+  {
+   "system": "claimTruth",
+   "volume": "卷十六",
+   "entries": [
+    "claimTruth",
+    "containReading",
+    "displayClassOf",
+    "encounterReading",
+    "lairOf",
+    "lairSuitability",
+    "loreOf",
+    "loreRegions",
+    "similarity",
+    "speciesThreat",
+    "threatBrief",
+    "threatOf",
+    "tierRoom",
+    "truthClaims",
+    "variantRowOf",
+    "wardReading",
+    "wardTagsOf"
+   ],
+   "view": "待补",
+   "tables": [],
+   "entryCallerFiles": {},
+   "defFiles": [],
+   "callerUnion": [],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷十六 §3.1 读入口 17 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 0 项（只按名字对，可能是同名的别的函数）；有调用文件的入口 0 项、调用文件 0 个；tables 取卷二各表节 owner 行 0 张"
+  },
+  {
+   "system": "canOffer",
+   "volume": "卷十四",
+   "entries": [
+    "canOffer",
+    "certStanding",
+    "certsOf",
+    "deedsOf",
+    "initialSkills",
+    "learnOptions",
+    "lifestyleView",
+    "opportunitiesOf",
+    "professionView",
+    "professionsOf",
+    "qualifies",
+    "skillBand",
+    "skillValue",
+    "skillView",
+    "skillsOf",
+    "teachWillingness"
+   ],
+   "view": "待补",
+   "tables": [
+    "profession",
+    "skill"
+   ],
+   "entryCallerFiles": {},
+   "defFiles": [
+    "server-plugin/titles.mjs"
+   ],
+   "callerUnion": [],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷十四 §3.1 读入口 16 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 1 项（只按名字对，可能是同名的别的函数）（server-plugin/titles.mjs）；有调用文件的入口 0 项、调用文件 0 个；tables 取卷二各表节 owner 行 2 张"
+  },
+  {
+   "system": "bodyView",
+   "volume": "卷四",
+   "entries": [
+    "bodyView",
+    "personView",
+    "speciesView"
+   ],
+   "view": "待补",
+   "tables": [
+    "body_plan",
+    "person",
+    "species"
+   ],
+   "entryCallerFiles": {
+    "personView": [
+     "server-plugin/elections.mjs",
+     "server-plugin/faction-clock.mjs",
+     "server-plugin/magic-consent.mjs",
+     "server-plugin/magic-economy.mjs",
+     "server-plugin/monster-society.mjs",
+     "server-plugin/notables.mjs",
+     "server-plugin/organizations.mjs",
+     "server-plugin/standing.mjs",
+     "server-plugin/ui-personal.mjs"
+    ]
+   },
+   "defFiles": [
+    "server-plugin/entity-view.mjs"
+   ],
+   "callerUnion": [
+    "server-plugin/elections.mjs",
+    "server-plugin/faction-clock.mjs",
+    "server-plugin/magic-consent.mjs",
+    "server-plugin/magic-economy.mjs",
+    "server-plugin/monster-society.mjs",
+    "server-plugin/notables.mjs",
+    "server-plugin/organizations.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/ui-personal.mjs"
+   ],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "phase",
+    "view"
+   ],
+   "source": "卷四 §3.1 读入口 3 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 1 项（只按名字对，可能是同名的别的函数）（server-plugin/entity-view.mjs）；有调用文件的入口 1 项、调用文件 9 个；tables 取卷二各表节 owner 行 3 张"
+  }
+ ]
+}

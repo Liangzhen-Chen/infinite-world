@@ -142,11 +142,13 @@ function slice(files) {
   return groups;
 }
 const objTable = [];
+const objFiles = {}; // 对象 → ① 消费者文件（供 derive-systems.mjs 读）
 for (const [o, rs] of [...objects].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
   const c1 = new Set();
   for (const r of rs) for (const x of r.res) if (x.path && /^(server-plugin|extension)\//.test(x.path)) c1.add(x.path);
   const c3 = new Set(c1);
   for (const f of c1) for (const i of importers.get(f) ?? []) c3.add(i);
+  objFiles[o] = [...c1].sort();
   const g1 = slice([...c1]), g3 = slice([...c3]);
   objTable.push({
     o, rows: rs.length,
@@ -155,6 +157,7 @@ for (const [o, rs] of [...objects].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
   });
 }
 const sum = k => objTable.reduce((s, x) => s + x[k], 0);
+writeFileSync(`${OUT}/乙4-对象①文件.json`, JSON.stringify(objFiles, null, 1) + '\n');
 
 // ---- H5：卷零 41 项 ----
 const cov = readFileSync(`${CFG.dir}/${CFG.coverage.file}`, 'utf8').split(/\r?\n/);
