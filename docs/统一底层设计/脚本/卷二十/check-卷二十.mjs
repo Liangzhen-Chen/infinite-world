@@ -1,7 +1,9 @@
 // 卷二十自检脚本：node F:/dnd/docs/统一底层设计/脚本/卷二十/check-卷二十.mjs [--snapshot]
 import fs from 'node:fs';
 
-const SRC = 'F:/dnd/docs/统一底层设计/卷二十-时间日历天气与环境.md';
+const DIRARG = process.argv.find(a => a.startsWith('--dir='))?.slice(6); // --dir=<卷文目录>：注入测试用副本
+const BOOK = (DIRARG ?? 'F:/dnd/docs/统一底层设计') + '/';
+const SRC = BOOK + '卷二十-时间日历天气与环境.md';
 const SNAP = 'F:/dnd/docs/统一底层设计/版本快照/卷二十-v10.md';
 const text = fs.readFileSync(SRC, 'utf8');
 const all = text.split(/\r?\n/);
@@ -218,6 +220,52 @@ check('第九版 材料数值读法：四处熔点都写明经 materialView 读�
 check('第九版 毁田的通路：两个键不作用于在田作物，毁田只经卷二十五 clearCultivation 并带毁因代号，白名单列毁田请求', s473.includes('这两个键不适用于有耕作记录的在田作物') && s473.includes('`clearCultivation`') && s473.includes('带毁因代号') && body.includes('白名单为此列一项"毁田请求"'));
 check('第九版 verb_pace_set 写明登记族、载荷与发出方，并收入 §5.1、§5.2', s4102.includes('verb 族的一个条目，由本卷登记') && s4102.includes('发出方只有一个') && lineOf('| 节奏设置事件 `verb_pace_set`').includes('发出方') && lineOf('| 卷九 | 玩家节奏设置命令的受理方').includes('`verb_pace_set`') && lineOf('| 卷二十五 §3.2、S25-5 |').includes('`clearCultivation`'));
 check('第九版 附录丁有本轮各行、第九版牵连清单、说明与两点已批新增设计的补记', ['同类定稿清单 20-1（', '同类定稿清单 20-2（', '行改挂牵连（', '基值与有效值读法扫描（', '李白对卷二十五第三版复审 ①（', '`审查/全书-卷十九v7同类-预扫.md` 类别 3（'].every(w => allText.includes(`| 第九版：${w}`)) && allText.includes('**第九版牵连清单**') && all.some(l => l.startsWith('第九版说明：')) && all.some(l => l.startsWith('**此前两点已批的新增设计补记**') && l.includes('最通畅') && l.includes('两端加通路类型')));
+
+// 周期日规则行读不读地点（李白 11-15 12:05 ①；§4.2.3 第 9 条，封卷后勘误 1115k3e）
+// 判法照正文：读地点 ⇔ `calendarFrom` 取 place，或 appliesRX/锚点里的 rx 读 `place.*`，或锚点（含 relative 的 base 嵌套）为 agro，
+// 或解析到的历法 `dayStart` 取日出、日落；读地点的行 `ctx.placeId` 为空即 E-RECUR-PLACE-NULL。
+// 全书逐行机判周期日规则数据行（JSON 行里带 `recurrence` 的对象），再核全书给出的排程 ctx（JSON 的 {rule, ctx}，
+// 或散文同一句写到该行代号与"`ctx.placeId` 为空/置空/填 null"）：判为读地点的行，ctx.placeId 为空即不通过。
+{
+  const r9 = lines.find(l => /^9\. \*\*周期日到来事件\*\*/.test(l)) ?? '';
+  const crit = { place: /`calendarFrom` 取 `place`/.test(r9), rx: /读 `place\.\*`/.test(r9), agro: /锚点为 `agro`/.test(r9), day: /`dayStart` 取日出、日落/.test(r9), code: /`ctx\.placeId` 为空即 E-RECUR-PLACE-NULL/.test(r9) };
+  check('周期日读地点判法：第 9 条写明四条静态判据与 E-RECUR-PLACE-NULL', Object.values(crit).every(Boolean), Object.entries(crit).filter(([, v]) => !v).map(([k]) => k).join(','));
+  // day_start 取值读 §2 历法字段表（午夜、日出、日落依次三值），日出、日落即第 2、3 个
+  const dsRow = lines.find(l => /^\| `dayStart` \| enum day_start/.test(l)) ?? '';
+  const DS = (dsRow.match(/代码内封闭：([a-z ]+)）/)?.[1] ?? '').trim().split(/\s+/);
+  const SUN = new Set(DS.slice(1));
+  const bookFiles = fs.readdirSync(BOOK).filter(f => /^卷.*\.md$/.test(f));
+  const objs = [], ctxs = [], prose = [];
+  for (const f of bookFiles) {
+    const ls = fs.readFileSync(BOOK + f, 'utf8').split(/\r?\n/);
+    ls.forEach((l, i) => {
+      const m = l.match(/^\s*"([A-Za-z0-9_.]+)":\s*(\{.*\})\s*,?\s*$/);
+      if (m) { try { const o = JSON.parse(m[2]); objs.push({ id: m[1], o, at: f.replace(/-.*$/, '') + ':' + (i + 1) }); } catch {} }
+      const c = l.match(/\{\s*"rule":\s*"([^"]+)"[^{}]*"ctx":\s*(\{[^{}]*\})/);
+      if (c) { try { ctxs.push({ rule: c[1], ctx: JSON.parse(c[2]), at: f.replace(/-.*$/, '') + ':' + (i + 1) }); } catch {} }
+      if (/`ctx\.placeId`\s*(为空|置空|填\s*`?null`?)/.test(l)) prose.push({ l, at: f.replace(/-.*$/, '') + ':' + (i + 1) });
+    });
+  }
+  const calDS = new Map(objs.filter(x => typeof x.o.dayStart === 'string').map(x => [x.id, x.o.dayStart]));
+  const strs = (o, acc = []) => { if (typeof o === 'string') acc.push(o); else if (o && typeof o === 'object') for (const v of Object.values(o)) strs(v, acc); return acc; };
+  const kinds = (o, acc = []) => { if (o && typeof o === 'object') { if (typeof o.kind === 'string') acc.push(o.kind); for (const v of Object.values(o)) kinds(v, acc); } return acc; };
+  const readsPlace = r => {
+    const why = [];
+    if (r.calendarFrom === 'place') why.push('calendarFrom=place');
+    if ([r.appliesRX, ...strs(r.anchor)].some(s => typeof s === 'string' && /(^|[^A-Za-z0-9_.])place\./.test(s))) why.push('rx 读 place.*');
+    if (kinds(r.anchor).includes('agro')) why.push('agro 锚点');
+    const cal = r.calendarFrom === 'contract' ? (r.calendar ?? r.calendarId) : null;
+    if (cal && SUN.has(calDS.get(cal))) why.push(`历法 ${cal} dayStart=${calDS.get(cal)}`);
+    return why;
+  };
+  const rules = new Map();
+  for (const x of objs) { const r = x.o.recurrence ?? (x.o.anchor && x.o.calendarFrom ? x.o : null); if (r) rules.set(x.id, { at: x.at, why: readsPlace(r) }); }
+  out.push(`  周期日规则数据行 ${rules.size} 行：${[...rules].map(([id, r]) => `${id}（${r.at}）${r.why.length ? '读地点[' + r.why.join('、') + ']' : '不读地点'}`).join('；') || '无'}`);
+  const bad = [];
+  for (const c of ctxs) { const r = rules.get(c.rule); if (r?.why.length && (c.ctx.placeId ?? null) === null) bad.push(`${c.at} ${c.rule} ctx.placeId 为空（读地点：${r.why.join('、')}）`); }
+  for (const p of prose) for (const [id, r] of rules) if (r.why.length && p.l.includes('`' + id + '`')) bad.push(`${p.at} 写 ${id} 的 ctx.placeId 为空（读地点：${r.why.join('、')}）`);
+  check('周期日读地点的行 ctx.placeId 不为空（E-RECUR-PLACE-NULL）', bad.length === 0, bad.join('；'));
+}
 
 out.push(`正文行数（不含附录乙）${lines.length}；全文行数 ${all.length}；子系统 ${subs.length}；开放问题 ${lines.filter(l => /^\d+\. \*\*/.test(l) && sections[lines.indexOf(l)]?.top.startsWith('§8')).length}`);
 out.push(fail === 0 ? '结论：全部通过' : `结论：${fail} 项不通过`);
