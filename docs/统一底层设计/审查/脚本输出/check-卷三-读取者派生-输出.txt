@@ -1022,3 +1022,10 @@ PASS §4.1.5 写明成堆判定的依据来源分三种（直接证据、推算�
 子系统数：19；开放问题：38；扩展性测试：10；迁移行：30
 结果：全部通过
 exit=0
+=== WARN ② 被 B 级 refMaterial 引用的格算有读取者（改后，现文件）===
+     经 B 级参照算有读取者：mat_felt.insulation←mat_sheepskin.insulation
+WARN ② 非 null 而没有读取者读的格 2 个：mat_cotton_yarn.insulation、mat_cotton_cloth.insulation
+读取者派生检查：失败 0
+=== 注入（副本）羊皮保暖格改 A 级、去掉 refMaterial: mat_felt，毡保暖格应回到 WARN ===
+WARN ② 非 null 而没有读取者读的格 3 个：mat_felt.insulation、mat_cotton_yarn.insulation、mat_cotton_cloth.insulation
+读取者派生检查：失败 0
