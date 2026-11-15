@@ -1,5 +1,5 @@
 // 卷二第六版自动对账扩展（第 5–8 项）。只读 .md；用法：node check-vol2-ext.mjs <卷二路径>
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 const path = process.argv[2] ?? 'F:/dnd/docs/统一底层设计/卷二-维度表规范与统一入口.md';
 const md = readFileSync(path, 'utf8');
 const lines = md.split('\n');
@@ -24,7 +24,20 @@ if (missing.length) bad('族名未登记: ' + missing.join(', ')); else log('  O
 log('== 6 枚举值前缀');
 const prefixOf = Object.fromEntries([...s19.matchAll(/([a-z_]+)→`([a-z]+_)`/g)].map(m => [m[1], m[2]]));
 const closedValues = { stage: ['add','mul','max','min','set','post'], scope: ['self','holder','located','members','believers','jurisdiction','target','global'], eff_output: ['modifier','status','primitive','event','spawn'], consent_mode: ['none','target','holder','authority'], status_target: ['body','mind','place','org','faith'], onUnknown: ['skip','gap','error'] };
-const jsonBlocks = [...md.matchAll(/```json\n([\s\S]*?)```/g)].map(m => m[1]);
+// 按 LF 取块（工作区 CRLF 检出时原写法一块都取不到，本项空过；chk-1115-j7 A1 后修）；记下块前的说明段（块前 6 行内）
+const md6 = md.replace(/\r/g, '');
+const jsonBlockAt = [...md6.matchAll(/```json\n([\s\S]*?)```/g)].map(m => ({ b: m[1], pre: md6.slice(0, m.index).split('\n').slice(-6).join('\n') }));
+const jsonBlocks = jsonBlockAt.map(x => x.b);
+// 不要求带 §1.9 前缀的两类代号（卷九 §1.9 表与"代码内封闭枚举（值不带前缀）"表，读定义处、不列名字）：
+//  · 规则表行表的行 id：卷九 §1.9 表里前缀格写"各自表内行号"的那一行所列各表（cap_row、difficulty_row…）；块前说明段点到其中某表的，块顶层对象的键是行号；
+//  · 卷九"代码内封闭枚举（值不带前缀）"表各值（如 cap_term_ctx 的 ctx_skill）。
+const v9 = (() => { try { const d = path.replace(/[\\/][^\\/]*$/, ''); const f = readdirSync(d).find(x => /^卷九-.*\.md$/.test(x)); return readFileSync(d + '/' + f, 'utf8').replace(/\r/g, '').split('\n'); } catch { return []; } })();
+const rowTables = new Set((v9.find(l => l.startsWith('|') && l.split('|')[2]?.includes('各自表内行号'))?.split('|')[1] ?? '').match(/`([a-z_]+)`/g)?.map(s => s.slice(1, -1)) ?? []);
+const ce9 = v9.findIndex(l => /^代码内封闭枚举（值不带前缀/.test(l));
+const closedVals9 = new Set(); if (ce9 >= 0) for (let i = ce9 + 1; i < v9.length && (v9[i].startsWith('|') || !v9[i].trim()); i++) { const c = v9[i].split('|')[2] ?? ''; for (const m of c.matchAll(/`([a-z0-9_]+)`/g)) closedVals9.add(m[1]); }
+if (!rowTables.size || !closedVals9.size) bad(`未从卷九读到行表清单（${rowTables.size}）或代码内封闭枚举值（${closedVals9.size}）`);
+const rowIds = new Set();
+for (const { b, pre } of jsonBlockAt) if ([...rowTables].some(t => pre.includes('`' + t + '`'))) { try { for (const k of Object.keys(JSON.parse(b))) rowIds.add(k); } catch {} }
 const fieldFamily = { family: null, stage: 'stage', scope: 'scope', kind: 'eff_output', mode: 'consent_mode', target: null, onUnknown: 'onUnknown' };
 const KINDS = new Set(['item','material','species','plant','body_plan','person','place','facility_type','recipe','org','office','polity','law_code','deity','faith','culture','profession','skill','knowledge','offense','status','event_type','effect']);
 const NONCODE = new Set(['fuel_use','personality_default','status_tick']);
@@ -41,6 +54,7 @@ for (const b of jsonBlocks) {
 const prefixes = new Set(Object.values(prefixOf));
 for (const b of jsonBlocks) for (const m of b.matchAll(/"([a-z]+_[a-z0-9_]+)"/g)) {
   const p = m[1].match(/^[a-z]+_/)[0];
+  if (rowIds.has(m[1]) || closedVals9.has(m[1])) continue; // 行表行号、代码内封闭枚举值
   if (KINDS.has(m[1]) || NONCODE.has(m[1]) || /^(kg|m|mj|copper|satiety|per)_/.test(m[1])) continue; // 实体类名、行为代号、单位
   if (!prefixes.has(p) && !['item_','mat_','fac_','bld_','npc_','eff_','mod_','status_','faith_','deity_','body_','recipe_','species_','culture_'].includes(p)) { mixed++; bad(`JSON 示例中 "${m[1]}" 的前缀 ${p} 未登记`); }
 }
