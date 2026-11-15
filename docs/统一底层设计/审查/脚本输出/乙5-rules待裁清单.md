@@ -15,12 +15,16 @@
 | M14-82a | stageSize | 待补 |
 | M14-82a | maximum | 待补 |
 | M14-82a | repeatMultiplier | 待补 |
+| M14-82b | noviceUntil | 待补 |
 | M14-82b | experience | 退役，由卷十四 §4.12 GR-2（levelThresholds 冻结成表）覆盖 |
 | M14-82b | initial | 待补 |
+| M14-82c | version | 退役，由卷二十七 R27-7.1（删版本标记）覆盖 |
 | M14-82c | examinations | 转世界内容数据，不进规则表 |
 | M14-82c | minimumAge、maximumAge | 待补 |
 | M14-82d | institutions 的机构、教师、门规、入门费、仪式 | 转世界内容数据，不进规则表 |
 | M14-82e | grades、minimumLiteracy | 待补 |
+| M14-82f | institutionTeachersStay | 转世界内容数据，不进规则表 |
+| M14-82f | uncertifiedMaximumProficiency、qualificationRule | 待补 |
 | M14-82f | vocations | 转世界内容数据，不进规则表 |
 | M14-82f | maximumGain、maximumProficiency、minimumPractice、switchCooldownDays、teach、work | 待补 |
 
