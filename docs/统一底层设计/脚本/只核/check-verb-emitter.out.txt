@@ -1,5 +1,5 @@
 扫描卷文件 32 个：卷一、卷七、卷三乙、卷三甲、卷九、卷二、卷二十、卷二十一、卷二十七、卷二十三、卷二十九、卷二十二、卷二十五、卷二十八、卷二十六、卷二十四、卷五、卷八、卷八b、卷六、卷十、卷十一、卷十七、卷十三、卷十九、卷十二、卷十五、卷十八、卷十六、卷十四、卷四、卷零
-总行数 51316；记录行（卷首说明或修订/处置/自检/记账类附录下）7647，只列出不作判定
+总行数 51326；记录行（卷首说明或修订/处置/自检/记账类附录下）7657，只列出不作判定
 
 == ① 动词清单：句柄形 roles.verbs.* 50 个，代号形 verb_* 60 个（其中 verb_example_* 示例 22 个，不计入判定）
 kindOnly 成员（按登记行“三行 `kindOnly`”抽取）：showAnnounced、showOpened、showEnded
@@ -38,7 +38,7 @@ kindOnly 成员（按登记行“三行 `kindOnly`”抽取）：showAnnounced�
     声明 卷二十四:563 [发出系统为] 本卷委托系统
     发出语句 —
     kindOnly 行 —；kindFrom/三栏引用 —
-    全部出现（*=记录行）卷二十四:563 卷二十四:802 卷二十四:959 卷二十四:1019* 卷八b:291 卷二十四:182 卷八b:5*
+    全部出现（*=记录行）卷二十四:563 卷二十四:802 卷二十四:959 卷二十四:1019* 卷八b:291 卷二十四:182 卷二十四:1098* 卷八b:5*
 - [PASS] roles.verbs.commissionRefuted：非 kindOnly；登记卷 卷二十四，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
     登记行 卷二十四:571
     声明 —
@@ -128,7 +128,7 @@ kindOnly 成员（按登记行“三行 `kindOnly`”抽取）：showAnnounced�
     声明 卷二十四:204 [发出系统为] 本卷实例系统
     发出语句 —
     kindOnly 行 卷二十三:201 卷二十四:204 卷二十四:954 卷十五:1104 卷十六:955 卷二十四:465 卷二十四:465；kindFrom/三栏引用 —
-    全部出现（*=记录行）卷二十三:201 卷二十四:204 卷二十四:522 卷二十四:804 卷二十四:954 卷二十四:1050* 卷十五:1104 卷十六:955 卷二十四:178 卷二十四:465 卷二十四:465
+    全部出现（*=记录行）卷二十三:201 卷二十四:204 卷二十四:522 卷二十四:804 卷二十四:954 卷二十四:1050* 卷十五:1104 卷十六:955 卷二十四:178 卷二十四:465 卷二十四:465 卷二十四:1098*
 - [PASS] roles.verbs.lairLeft：非 kindOnly；登记卷 卷十六(唯一出现卷)，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
     登记行 —
     声明 —
@@ -140,7 +140,7 @@ kindOnly 成员（按登记行“三行 `kindOnly`”抽取）：showAnnounced�
     声明 —
     发出语句 卷十六:611
     kindOnly 行 —；kindFrom/三栏引用 —
-    全部出现（*=记录行）卷十六:372 卷十六:464 卷十六:611 卷十六:239
+    全部出现（*=记录行）卷十六:372 卷十六:464 卷十六:611 卷十六:239 卷十六:1243*
 - [需人工] roles.verbs.lethal：非 kindOnly；登记卷 {未抽到}；声明发出 0 处；发出语句所在卷 {}
     登记行 —
     声明 —
@@ -422,7 +422,7 @@ kindOnly 成员（按登记行“三行 `kindOnly`”抽取）：showAnnounced�
     声明 —
     发出语句 卷十七:757
     kindOnly 行 —；kindFrom/三栏引用 —
-    全部出现（*=记录行）卷十七:164 卷十七:176 卷十七:757 卷十七:940
+    全部出现（*=记录行）卷十七:164 卷十七:176 卷十七:757 卷十七:940 卷十七:1042*
 - [PASS] verb_recurrence_started（别名 周期日到来事件）：非 kindOnly；登记卷 卷二十，无另行声明的发出者，发出语句只在登记卷（登记者即发送者）→ 1 个
     登记行 卷二十:995 卷二十:995
     声明 —
@@ -541,7 +541,7 @@ E-EVT-EMITTER 错误码表登记行：318（应恰 1 行）
 A24-2.4 出现行：465
 卷二十三事件类型行 202：startVerb=showAnnounced，stageVerb=showOpened，endVerb=showEnded；三者皆 kindOnly：是
 卷二十三动词行 201：parent 依次 instanceStart、instanceStage、instanceEnd；载荷 kind 不是 showBegun 的说明 有
-  三行表 B 字段原文片段：三行的表 B 字段：`parent` 依次为卷二十四 `roles.verbs.instanceStart`、`instanceStage`、`instanceEnd`；`payloadShape` 空（事件载荷是通用动词的）；`kindFrom` 空；`worthSlots` 空表；`headSlot` null（不发事件，`heads` 不读它）；`sigBase` 0；`tallies` 空表；`perceivable` 真，`senses` {视、听}，`visibilityAllowed` {`public`、`witnessed`}。它们与“开演”动作的事件 `showBegun` 是不同的动词：起始事件的 `kind` 是 `showAnnounced`，不是 `showBegun`，所以不会被当作宣布阶段的催化。`sigBase` 取 0，`worthSlots` 只登记彩头结算的 `stake`（计入 `moved`）。作品完成、装饰完成、抄印完成、开演、应演、一出结束、彩头结算七行：`kindOnly` 为假（各由本卷动作或彩头结算发出，恰一个发出系统）；`tallies` 空表（本卷不读任何累计口径，§5.4 答 C24-17 不取）；`headSlot`：一出结束取 `audience`（`heads` 取该字段所指的观众人数，R24-2.4），其余六行 n
+  三行表 B 字段原文片段：三行的表 B 字段：`parent` 依次为卷二十四 `roles.verbs.instanceStart`、`instanceStage`、`instanceEnd`；`payloadShape` 空（事件载荷是通用动词的）；`kindFrom` 空；`worthSlots` 空表；`headSlot` null（不发事件，`heads` 不读它）；`sigBase` 0；`tallies` 空表；`perceivable` 假，`senses` `[]`（`kindOnly` 行没有发出点，一律取假；李白 10:36 第 30 条裁定五），`visibilityAllowed` {`public`、`witnessed`}。它们与“开演”动作的事件 `showBegun` 是不同的动词：起始事件的 `kind` 是 `showAnnounced`，不是 `showBegun`，所以不会被当作宣布阶段的催化。`sigBase` 取 0，`worthSlots` 只登记彩头结算的 `stake`（计入 `moved`）。作品完成、装饰完成、抄印完成、开演、应演、一出结束、彩头结算七行：`kindOnly` 为假（各由本卷动作或彩头结算发出，恰一个发出系统）；`tallies` 空表（本卷不读任何累计口径，§5.4 答 C24-17 不取）；`headSlot`：一出结束取 `aud
 通用动词 instanceStart：登记卷 {卷二十四}，声明 卷二十四:204 [发出系统为] 本卷实例系统
 通用动词 instanceStage：登记卷 {}，声明 卷二十四:204 [发出系统为] 本卷实例系统
 通用动词 instanceEnd：登记卷 {}，声明 卷二十四:204 [发出系统为] 本卷实例系统
@@ -585,7 +585,7 @@ due_kind 定义（卷二十:136）“行上必写”的栏：calendarBound；C24
 -- ③B 动词行（表 B）：必写栏 12
   [齐] 卷二十三 动词 roles.verbs.actEnded 行 201,446,455,458,609
   [齐] 卷二十三 动词 roles.verbs.adorned 行 201
-  [缺栏] 卷八b 动词 roles.verbs.bankrupt 行 1126：缺 payloadShape、kindOnly（已入清单）、worthSlots、headSlot、sigBase、tallies、perceivable、senses、visibilityAllowed、scandal、calendarBound、kindFrom
+  [缺栏] 卷八b 动词 roles.verbs.bankrupt 行 1126：缺 payloadShape（已入清单）、kindOnly（已入清单）、worthSlots（已入清单）、headSlot（已入清单）、sigBase（已入清单）、tallies（已入清单）、perceivable（已入清单）、senses（已入清单）、visibilityAllowed（已入清单）、scandal（已入清单）、calendarBound（已入清单）、kindFrom（已入清单）
   [齐] 卷十五 动词 roles.verbs.bodyPlanChanged 行 380,1025,218,273
   [齐] 卷十三 动词 roles.verbs.burned 行 444,1053,373,1037
   [齐] 卷二十四 动词 roles.verbs.commissionPosted 行 563,802,959,182
@@ -593,20 +593,20 @@ due_kind 定义（卷二十:136）“行上必写”的栏：calendarBound；C24
   [齐] 卷二十三 动词 roles.verbs.composed 行 201
   [齐] 卷二十三 动词 roles.verbs.copied 行 201
   [齐] 卷十三 动词 roles.verbs.duelOver（登记卷按 §2/代号表定；候选 卷八b、卷十三） 行 1238,344,365,433,1407
-  [缺栏] 卷八b 动词 roles.verbs.estateChange 行 1085：缺 payloadShape、kindOnly（已入清单）、worthSlots、headSlot、sigBase、tallies、perceivable、senses、visibilityAllowed、scandal、calendarBound、kindFrom
+  [缺栏] 卷八b 动词 roles.verbs.estateChange 行 1085：缺 payloadShape（已入清单）、kindOnly（已入清单）、worthSlots（已入清单）、headSlot（已入清单）、sigBase（已入清单）、tallies（已入清单）、perceivable（已入清单）、senses（已入清单）、visibilityAllowed（已入清单）、scandal（已入清单）、calendarBound（已入清单）、kindFrom（已入清单）
   [齐] 卷十五 动词 roles.verbs.fateDecided 行 815,854,271,389
   [齐] 卷二十四 动词 roles.verbs.genesis 行 637,962,184
-  [缺栏] 卷八b 动词 roles.verbs.inspectFound 行 601,291：缺 payloadShape、kindOnly（已入清单）、worthSlots、headSlot、sigBase、tallies、perceivable、senses、visibilityAllowed、scandal、calendarBound、kindFrom
+  [缺栏] 卷八b 动词 roles.verbs.inspectFound 行 601,291：缺 payloadShape（已入清单）、kindOnly（已入清单）、worthSlots（已入清单）、headSlot（已入清单）、sigBase（已入清单）、tallies（已入清单）、perceivable（已入清单）、senses（已入清单）、visibilityAllowed（已入清单）、scandal（已入清单）、calendarBound（已入清单）、kindFrom（已入清单）
   [齐] 卷二十四 动词 roles.verbs.instanceStart 行 522,804,954,178,465
   [齐] 卷十六 动词 roles.verbs.lairLeft 行 372,464,626,667,240
   [齐] 卷十六 动词 roles.verbs.lairSettled 行 372,464,611,239
-  [缺栏] 卷八b 动词 roles.verbs.lethal（登记卷按 §2/代号表定；候选 卷八b、卷二十一、卷二十五） 行 886,291：缺 payloadShape、kindOnly（已入清单）、worthSlots、headSlot、sigBase、tallies、perceivable、senses、visibilityAllowed、scandal、calendarBound、kindFrom
+  [缺栏] 卷八b 动词 roles.verbs.lethal（登记卷按 §2/代号表定；候选 卷八b、卷二十一、卷二十五） 行 886,291：缺 payloadShape（已入清单）、kindOnly（已入清单）、worthSlots（已入清单）、headSlot（已入清单）、sigBase（已入清单）、tallies（已入清单）、perceivable（已入清单）、senses（已入清单）、visibilityAllowed（已入清单）、scandal（已入清单）、calendarBound（已入清单）、kindFrom（已入清单）
   [齐] 卷十三 动词 roles.verbs.looted 行 443,1053,1090,372,1037
   [齐] 卷十六 动词 roles.verbs.loreMinted 行 537,539,242
   [齐] 卷十三 动词 roles.verbs.missionDone 行 1089,375
-  [缺栏] 卷八b 动词 roles.verbs.naturalize 行 1083：缺 payloadShape、kindOnly（已入清单）、worthSlots、headSlot、sigBase、tallies、perceivable、senses、visibilityAllowed、scandal、calendarBound、kindFrom
+  [缺栏] 卷八b 动词 roles.verbs.naturalize 行 1083：缺 payloadShape（已入清单）、kindOnly（已入清单）、worthSlots（已入清单）、headSlot（已入清单）、sigBase（已入清单）、tallies（已入清单）、perceivable（已入清单）、senses（已入清单）、visibilityAllowed（已入清单）、scandal（已入清单）、calendarBound（已入清单）、kindFrom（已入清单）
   [齐] 卷十六 动词 roles.verbs.orgAwakened 行 922,241
-  [缺栏] 卷八b 动词 roles.verbs.repeal 行 564：缺 payloadShape、kindOnly（已入清单）、worthSlots、headSlot、sigBase、tallies、perceivable、senses、visibilityAllowed、scandal、calendarBound、kindFrom
+  [缺栏] 卷八b 动词 roles.verbs.repeal 行 564：缺 payloadShape（已入清单）、kindOnly（已入清单）、worthSlots（已入清单）、headSlot（已入清单）、sigBase（已入清单）、tallies（已入清单）、perceivable（已入清单）、senses（已入清单）、visibilityAllowed（已入清单）、scandal（已入清单）、calendarBound（已入清单）、kindFrom（已入清单）
   [齐] 卷十五 动词 roles.verbs.rested 行 820,857,268
   [齐] 卷十五 动词 roles.verbs.riteDone 行 689,1104,265
   [齐] 卷十三 动词 roles.verbs.routed 行 865,880,259,366,896
@@ -651,8 +651,8 @@ due_kind 定义（卷二十:136）“行上必写”的栏：calendarBound；C24
   [齐] 卷二十一 动词 verb_status_removed 行 1368
   [齐] 卷二十一 动词 verb_status_stage（登记卷按 §2/代号表定；候选 卷九、卷二十一） 行 1368
   [齐] 卷十七 动词 verb_subject_tract_changed（登记卷按 §2/代号表定；候选 卷五、卷十七） 行 164,178,290,797,943
-  [缺栏] 卷六 动词 verb_supply_short 行 220,824,1438,1446：缺 payloadShape、kindOnly、worthSlots、headSlot、sigBase、tallies、perceivable、senses、visibilityAllowed、scandal、calendarBound、kindFrom
-  [缺栏] 卷六 动词 verb_supply_short_ritual 行 824,828,1438,1446：缺 payloadShape、kindOnly、worthSlots、headSlot、sigBase、tallies、perceivable、senses、visibilityAllowed、scandal、calendarBound、kindFrom
+  [缺栏] 卷六 动词 verb_supply_short 行 220,824,1438,1446：缺 payloadShape（已入清单）、kindOnly（已入清单）、worthSlots（已入清单）、headSlot（已入清单）、sigBase（已入清单）、tallies（已入清单）、perceivable（已入清单）、senses（已入清单）、visibilityAllowed（已入清单）、scandal（已入清单）、calendarBound（已入清单）、kindFrom（已入清单）
+  [缺栏] 卷六 动词 verb_supply_short_ritual 行 824,828,1438,1446：缺 payloadShape（已入清单）、kindOnly（已入清单）、worthSlots（已入清单）、headSlot（已入清单）、sigBase（已入清单）、tallies（已入清单）、perceivable（已入清单）、senses（已入清单）、visibilityAllowed（已入清单）、scandal（已入清单）、calendarBound（已入清单）、kindFrom（已入清单）
   [齐] 卷十七 动词 verb_tract_entered 行 164,171,349,796,936
   [齐] 卷十七 动词 verb_trip_arrived 行 164,173,937
   [齐] 卷十七 动词 verb_trip_departed 行 164,170,937
@@ -671,7 +671,7 @@ due_kind 定义（卷二十:136）“行上必写”的栏：calendarBound；C24
   只见于示例代码（不计数）：verb_transfer（卷一:369）
   模板前缀写法（不单列，随同族具体代号核）：verb_supply_short_（卷六:824）
   已撤销的代号（登记卷写到它的句子都是撤销说明，不计数）：verb_station_expired（卷十九:472）；verb_station_released（卷十九:472）
-  [缺栏] 卷七 散文登记（未带代号的动词） 行 228：缺 payloadShape、kindOnly、worthSlots、headSlot、sigBase、tallies、perceivable、senses、visibilityAllowed、scandal、calendarBound、kindFrom
+  [缺栏] 卷七 散文登记（未带代号的动词） 行 228：缺 payloadShape（已入清单）、kindOnly（已入清单）、worthSlots（已入清单）、headSlot（已入清单）、sigBase（已入清单）、tallies（已入清单）、perceivable（已入清单）、senses（已入清单）、visibilityAllowed（已入清单）、scandal（已入清单）、calendarBound（已入清单）、kindFrom（已入清单）
   [齐] 卷二 散文登记（未带代号的动词） 行 509
   [齐] 卷二十一 散文登记（未带代号的动词） 行 258,260
   [齐] 卷二十八 散文登记（未带代号的动词）（指针 591→§2.10） 行 591,263,265,266,267,269,271
@@ -684,28 +684,38 @@ due_kind 定义（卷二十:136）“行上必写”的栏：calendarBound；C24
   [齐] 卷十六 散文登记（未带代号的动词） 行 234,236,237,363,1003
   [齐] 卷十四 散文登记（未带代号的动词） 行 244,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261
   [并入] 卷七 旧称事件类型行 行 838 指针 838→§2.5 所指节已在上面按登记单元核
-  [缺栏] 卷三乙 旧称事件类型行（按动词行核） 行 1919：缺 payloadShape、kindOnly、worthSlots、headSlot、sigBase、tallies、perceivable、senses、visibilityAllowed、scandal、calendarBound、kindFrom
-  [缺栏] 卷八 旧称事件类型行（按动词行核） 行 1360：缺 payloadShape、kindOnly、worthSlots、headSlot、sigBase、tallies、perceivable、senses、visibilityAllowed、scandal、calendarBound、kindFrom
-  [缺栏] 卷八b 旧称事件类型行（按动词行核） 行 1201：缺 payloadShape、kindOnly（已入清单）、worthSlots、headSlot、sigBase、tallies、perceivable、senses、visibilityAllowed、scandal、calendarBound、kindFrom
-  [缺栏] 卷六 旧称事件类型行（按动词行核） 行 1436,1463：缺 payloadShape、kindOnly、worthSlots、headSlot、sigBase、tallies、perceivable、senses、visibilityAllowed、scandal、calendarBound、kindFrom
+  [缺栏] 卷三乙 旧称事件类型行（按动词行核） 行 1919：缺 payloadShape（已入清单）、kindOnly（已入清单）、worthSlots（已入清单）、headSlot（已入清单）、sigBase（已入清单）、tallies（已入清单）、perceivable（已入清单）、senses（已入清单）、visibilityAllowed（已入清单）、scandal（已入清单）、calendarBound（已入清单）、kindFrom（已入清单）
+  [缺栏] 卷八 旧称事件类型行（按动词行核） 行 1360：缺 payloadShape（已入清单）、kindOnly（已入清单）、worthSlots（已入清单）、headSlot（已入清单）、sigBase（已入清单）、tallies（已入清单）、perceivable（已入清单）、senses（已入清单）、visibilityAllowed（已入清单）、scandal（已入清单）、calendarBound（已入清单）、kindFrom（已入清单）
+  [缺栏] 卷八b 旧称事件类型行（按动词行核） 行 1201：缺 payloadShape（已入清单）、kindOnly（已入清单）、worthSlots（已入清单）、headSlot（已入清单）、sigBase（已入清单）、tallies（已入清单）、perceivable（已入清单）、senses（已入清单）、visibilityAllowed（已入清单）、scandal（已入清单）、calendarBound（已入清单）、kindFrom（已入清单）
+  [缺栏] 卷六 旧称事件类型行（按动词行核） 行 1436,1463：缺 payloadShape（已入清单）、kindOnly（已入清单）、worthSlots（已入清单）、headSlot（已入清单）、sigBase（已入清单）、tallies（已入清单）、perceivable（已入清单）、senses（已入清单）、visibilityAllowed（已入清单）、scandal（已入清单）、calendarBound（已入清单）、kindFrom（已入清单）
   [齐] 卷十三 旧称事件类型行（按动词行核） 行 1235
-  [缺栏] 卷四 旧称事件类型行（按动词行核） 行 1183：缺 payloadShape、kindOnly（已入清单）、worthSlots、headSlot、sigBase、tallies、perceivable、senses、visibilityAllowed、scandal、calendarBound、kindFrom
+  [缺栏] 卷四 旧称事件类型行（按动词行核） 行 1183：缺 payloadShape（已入清单）、kindOnly（已入清单）、worthSlots（已入清单）、headSlot（已入清单）、sigBase（已入清单）、tallies（已入清单）、perceivable（已入清单）、senses（已入清单）、visibilityAllowed（已入清单）、scandal（已入清单）、calendarBound（已入清单）、kindFrom（已入清单）
 
 -- ③C 事件类型行（表 C）：必写栏 23
   三栏所指动词须为 kindOnly 行的栏（表 C 定义取值域读出）：startVerb、stageVerb、endVerb
-  规则段与散文示意（不是数据行，不断言）：卷二十:876 卷二十一:1127 卷十五:1104 卷十六:947 卷十六:955
+  规则段与散文示意（不是数据行，不断言）：卷二十:876 卷十六:947
+  [缺栏] 卷二十一 事件类型行（并同节数据实例 1142） 行 1127,1142：缺 allowedTargets（已入清单）
+      卷二十一:1127 - **R21-10.6 疫病钟。** "某地爆发疫病"是事件类型行：触发式读患病率越阈、水体污染、病媒场强度、粮荒；后果阶段只指向维度（暴露倍率、劳动出勤、行旅通行），不指向价格。检查节拍与抽签沿用
+        [三栏符] startVerb → verb_outbreak_begun
+        [三栏符] stageVerb → verb_outbreak_staged
+        [三栏符] endVerb → verb_outbreak_over
   [缺栏] 卷二十三 事件类型行 行 202：缺 triggerRX（已入清单）
       卷二十三:202 | 事件类型表（卷二 §5.22 与卷二十四 表 C） | `roles.types.show`（一行，`family` 取卷二十四的活动句柄） | `mode: requested`（由卷九“举办活
         [三栏符] startVerb → showAnnounced
         [三栏符] stageVerb → showOpened
         [三栏符] endVerb → showEnded
-  [缺栏] 卷八 事件类型行 行 1361：缺 family、triggerRX、weightRX、cooldownDays、stages、valuationRX、subjectKinds、mode、polarity、scopeKind、startVerb、stageVerb、endVerb、maxConcurrent、stageFlow、allowedTargets、roles、venueRX、upkeep
+  [缺栏] 卷八 事件类型行 行 1361：缺 family、triggerRX、weightRX、cooldownDays、stages、valuationRX、subjectKinds、mode、polarity、scopeKind、startVerb、stageVerb、endVerb、maxConcurrent（已入清单）、stageFlow、allowedTargets、roles（已入清单）、venueRX（已入清单）、upkeep（已入清单）
       卷八:1361 | 卷二十四 局势种类 | 战争（`paramsShape` 含理由、标的、宣告分钟；发起方、应战方、参战者三个席位；`seatMoves` 列参战加入事件；§4.15.1） |
-  [缺栏] 卷二十一 事件类型行（数据实例） 行 1142：缺 allowedTargets（已入清单）
-      卷二十一:1142  "etype_outbreak": {"family": "efam_calamity", "triggerRX": "prevalence(place, family_disease) > 0.0
-        [三栏符] startVerb → verb_outbreak_begun
-        [三栏符] stageVerb → verb_outbreak_staged
-        [三栏符] endVerb → verb_outbreak_over
+  [缺栏] 卷十五 事件类型行 行 1104：缺 family（已入清单）、allowedTargets（已入清单）
+      卷十五:1104 - **R15-16.5 天劫是事件类型行**：天劫是卷二十四的一条事件类型行，`triggerRX` 读突破仪式完成的事件；各阶段的效果是卷十三的打击或投射效果族，幅度式读该凭证的次序与当事人名下相
+        [三栏代号随行数据] startVerb：散文单行未写代号，不计
+        [三栏代号随行数据] stageVerb：散文单行未写代号，不计
+        [三栏代号随行数据] endVerb：散文单行未写代号，不计
+  [缺栏] 卷十六 事件类型行 行 955：缺 family（已入清单）、allowedTargets（已入清单）
+      卷十六:955 - **R16-14.1 异象是事件类型行**：“某地出了怪事”——封印松动、深处的东西上来、阈限之夜群妖出行、一片林子的野兽忽然成群成精——各是本卷登记进事件类型表的一行：触发条件读世界状态（封印强
+        [三栏代号随行数据] startVerb：散文单行未写代号，不计
+        [三栏代号随行数据] stageVerb：散文单行未写代号，不计
+        [三栏代号随行数据] endVerb：散文单行未写代号，不计
   自称事件类型行、未写任何表 C 独有栏（23 个：family、triggerRX、weightRX、cooldownDays、stages、valuationRX、subjectKinds、mode、polarity、scopeKind、onVerbs、subjectFrom、startVerb、stageVerb、endVerb、maxConcurrent、paramsShape、stageFlow、seatMoves、allowedTargets、roles、venueRX、upkeep）——是表 C 行还是动词行旧称需人工判，表 C 不计数（已在 ③B 按动词行计）：
       卷七:838 - **R7-10.7 花销是去处行**。祈求神迹、圣地操作、创立仪轨、赎罪（由卷八b 的赎罪流程调用，R8b-3.8）各有去处代号；数额由各自规则给出。**赎罪的了结经一条通用事件**（封卷后勘误 
       卷三乙:1919 | 卷二十四 §4.2 事件类型表 | 制成、修好、毁坏、起火、爆燃、坏透、文书毁失 |
@@ -738,14 +748,16 @@ due_kind 定义（卷二十:136）“行上必写”的栏：calendarBound；C24
       卷十五:166 本卷另登记进别卷词表的条目（字段含义归该卷）：超自然组件类（§2.3）；`consent_scope` 的施术配合范围、`consent_clause` 行（§4.4）；`service` 族的法术服
 
 ③ 按卷汇总（缺栏的单元）：
-  卷八b：7 单元 B:动词 roles.verbs.bankrupt缺12（其中已入清单 1），B:动词 roles.verbs.estateChange缺12（其中已入清单 1），B:动词 roles.verbs.inspectFound缺12（其中已入清单 1），B:动词 roles.verbs.lethal（登记卷按 §2/代号表定；候选 卷八b、卷二十一、卷二十五）缺12（其中已入清单 1），B:动词 roles.verbs.naturalize缺12（其中已入清单 1），B:动词 roles.verbs.repeal缺12（其中已入清单 1），B:旧称事件类型行（按动词行核）缺12（其中已入清单 1）
-  卷六：3 单元 B:动词 verb_supply_short缺12，B:动词 verb_supply_short_ritual缺12，B:旧称事件类型行（按动词行核）缺12
-  卷七：1 单元 B:散文登记（未带代号的动词）缺12
-  卷三乙：1 单元 B:旧称事件类型行（按动词行核）缺12
-  卷八：2 单元 B:旧称事件类型行（按动词行核）缺12，C:事件类型行缺19
-  卷四：1 单元 B:旧称事件类型行（按动词行核）缺12（其中已入清单 1）
+  卷八b：7 单元 B:动词 roles.verbs.bankrupt缺12（其中已入清单 12），B:动词 roles.verbs.estateChange缺12（其中已入清单 12），B:动词 roles.verbs.inspectFound缺12（其中已入清单 12），B:动词 roles.verbs.lethal（登记卷按 §2/代号表定；候选 卷八b、卷二十一、卷二十五）缺12（其中已入清单 12），B:动词 roles.verbs.naturalize缺12（其中已入清单 12），B:动词 roles.verbs.repeal缺12（其中已入清单 12），B:旧称事件类型行（按动词行核）缺12（其中已入清单 12）
+  卷六：3 单元 B:动词 verb_supply_short缺12（其中已入清单 12），B:动词 verb_supply_short_ritual缺12（其中已入清单 12），B:旧称事件类型行（按动词行核）缺12（其中已入清单 12）
+  卷七：1 单元 B:散文登记（未带代号的动词）缺12（其中已入清单 12）
+  卷三乙：1 单元 B:旧称事件类型行（按动词行核）缺12（其中已入清单 12）
+  卷八：2 单元 B:旧称事件类型行（按动词行核）缺12（其中已入清单 12），C:事件类型行缺19（其中已入清单 4）
+  卷四：1 单元 B:旧称事件类型行（按动词行核）缺12（其中已入清单 12）
+  卷二十一：1 单元 C:事件类型行（并同节数据实例 1142）缺1（其中已入清单 1）
   卷二十三：1 单元 C:事件类型行缺1（其中已入清单 1）
-  卷二十一：1 单元 C:事件类型行（数据实例）缺1（其中已入清单 1）
-③ 小计：缺栏 189 处（卷×栏）
+  卷十五：1 单元 C:事件类型行缺2（其中已入清单 2）
+  卷十六：1 单元 C:事件类型行缺2（其中已入清单 2）
+③ 小计：缺栏 193 处（卷×栏）；其中已入清单 178 处
 
-结论行：① PASS 64 FAIL 0 需人工 24；② 可能撞号 0 组；③ 缺栏 189 处
+结论行：① PASS 64 FAIL 0 需人工 24；② 可能撞号 0 组；③ 缺栏 193 处
