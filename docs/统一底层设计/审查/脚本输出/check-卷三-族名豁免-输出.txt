@@ -1,0 +1,51 @@
+=== 改前 ===
+== 卷三甲 ==
+PASS 规则正文无具体实体 id 字面量（命中 0 处）
+PASS 正文无用于判断的中文或英文描述性文本（命中 0 处）
+PASS 全部 RX 条件文本不含实体 id（命中 0 处）
+PASS §2.1 没有派生字段（命中 0 行）
+PASS §2.1 字段行的取值域、必填条件不引用任何规则表键（命中 0 行）
+PASS 六个派生量不在本卷字段表里（命中 0）
+PASS 材料表没有物态字段、没有聚集形态字段（命中 0）
+PASS 全卷不出现"常温"（挥发度等定义不靠默认温度；命中 0 处）
+PASS 不再把 diet 族、T-4 引到卷四 §4.5，不再把导热与隔声引到卷十九 §4.3（命中 0 处）
+PASS §4.5.5 例 8 依据代号表没有"碳:推"，数据行里"碳:推"计数为 0（代号表已撤；碳水表命中 0；全卷 mat_ 行命中 0）
+== 卷三乙 ==
+FAIL 规则正文无具体实体 id 字面量（命中 1 处）
+PASS 正文无用于判断的中文或英文描述性文本（命中 0 处）
+PASS 全部 RX 条件文本不含实体 id（命中 0 处）
+PASS 数据实例里没有 map 形态的 material（命中 0 处）
+PASS inheritMaterialFrom 不再作为有效字段出现（命中 0 处）
+PASS 不再声明跳时用的 closedForm（命中 0 处）
+PASS 全卷不出现"常温"（命中 0 处）
+PASS 应得结果表不含任何数值格（材料数值只在卷三甲；命中 0 行）
+PASS 材料的数不再称"基值"（命中 0 处）
+PASS class_grain 的读者改读维度：陶瓮 accepts 撤掉谷物大类；卷二十五主食、含淀粉两组改读可食、干基碳水等维度；本卷与卷二十五的选择器里没有谷物大类或类别（命中 0）
+=== 改后 ===
+== 卷三甲 ==
+PASS 规则正文无具体实体 id 字面量（命中 0 处）
+== 卷三乙 ==
+PASS 规则正文无具体实体 id 字面量（命中 0 处）
+exit=0
+=== 注入（副本）卷三乙:291 body_need 改为不存在的族名 body_needx ===
+node:internal/modules/esm/load:195
+    throw new ERR_UNSUPPORTED_ESM_URL_SCHEME(parsed, schemes);
+          ^
+
+Error [ERR_UNSUPPORTED_ESM_URL_SCHEME]: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. On Windows, absolute paths must be valid file:// URLs. Received protocol 'f:'
+    at throwIfUnsupportedURLScheme (node:internal/modules/esm/load:195:11)
+    at defaultLoadSync (node:internal/modules/esm/load:142:3)
+    at #loadAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:796:12)
+    at #loadSync (node:internal/modules/esm/loader:816:49)
+    at ModuleLoader.load (node:internal/modules/esm/loader:781:26)
+    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:526:31)
+    at #getOrCreateModuleJobAfterResolve (node:internal/modules/esm/loader:577:36)
+    at afterResolve (node:internal/modules/esm/loader:625:52)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:631:12)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:160:33) {
+  code: 'ERR_UNSUPPORTED_ESM_URL_SCHEME'
+}
+
+Node.js v24.13.1
+=== 注入（重跑；上一段为副本脚本 import 路径写法错误，非检查结果）卷三乙:291 body_need → body_needx ===
+FAIL 规则正文无具体实体 id 字面量（命中 1 处）
