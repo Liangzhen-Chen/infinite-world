@@ -3232,3 +3232,9 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
   - Invalid party balance（playtest-lifecycle #3、s4-office-quests #6）：diff 中唯一碰钱的 distribution.mjs:109-111 cash() 已排除；倾向是长程动态变化暴露某条未核余额的扣款路径（mirrorPartyCoins 负数调用点 20 多处）。需 office 探针取栈。规则层方向：扣款统一走带余额判定的原语。
   - kd2-process #1：候选未新增 recordCraft 调用点，自采不记 craft；窗口挤掉假设约 50%，需 kd2 探针确认。
   - npc-schedule #11 静态排查：取柴排程（household-subsistence:525 按日幂等）、采集结算（:673、sites:462-465 固定午夜）、先采后烧（npc-life:111）、随机种子均已排除步长依赖。剩余嫌疑：逐日推进多切的日内段边界 + catchUpSubsistenceSchedules（npc-schedule:384）读当日计划行（约 40%）；coworkDay（npc-life:891）午夜回读昨天作息时计划行已被覆盖（约 30%）。须靠 cowork 探针二分定案。规则层方向：按世界日切片保留昨日计划行至午夜结算完毕。修后必带：npc-schedule、s5-law-subsistence、kd2-process、m3-language、playtest-lifecycle、education、record-index-check、agriculture、farm-pests-clock。
+
+## 11-15 当前步骤：全书加载修复批 甲-4（压缩实测第一轮载体）
+- 依据：统一底层设计/审查/开工排期-v1定稿.md、分阶段测试方案-v1定稿.md §5（chk-1115-v1-2 可定稿，bcbfc635）；设计要点表 统一底层设计/审查/甲4-设计要点表.md。
+- 当前步骤：甲-4 改卷六、卷七、卷八、卷八b（一个执行会话串行），按要点表 A、B、D 各项；完成后同一会话续接甲-6 末批（李白裁定第 14、24 条），再接阶段乙纸面卡，直到累计 3 次自然压缩。
+- 每次压缩后、第一次改文件前，重读：当前卡设计要点表、F:/dnd/AGENTS.md、本节。
+- 验收：check-verb-emitter 对四卷缺栏 0；四卷 check 无新增 FAIL；Opus 只核；压缩计数命令见 统一底层设计/审查/压缩实测-预查.md。
