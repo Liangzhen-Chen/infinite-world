@@ -213,6 +213,31 @@ const sysOfTable = new Map(); // 表 → 系统（tables 含它）
 for (const s of sysJ) for (const t of s.tables) sysOfTable.set(t, s);
 const vocabSet = new Set([...regText.matchAll(/([a-z][a-z0-9_]*)→`[a-z]+_`/g)].map(m => m[1]));
 
+// 卷二 §6.11 文件级迁移表（R11-7.5，李白 18:50 第 2 条）：搬迁卡的文件集合与行只取这张表里落点对象为该模块组的行。
+const moveRows = new Map(); // 编号 → {obj, files, dir}
+const fileMoves = new Map(); // 现有文件 → [{obj, dir}]（表内次序）
+{
+  const s = reg.findIndex(l => l.startsWith(CFG.registry.filemoves)); let e = reg.findIndex((l, i) => i > s && /^#{2,3} /.test(l)); if (e < 0) e = reg.length;
+  let head = null;
+  for (let i = s + 1; i < e; i++) {
+    const l = reg[i];
+    if (!/^\|/.test(l)) { head = null; continue; }
+    const c = cells(l);
+    if (!head) { head = c; continue; }
+    if (/^:?-{3}/.test(c[0])) continue;
+    const ki = head.indexOf('编号'), fi = head.indexOf('现有文件'), di = head.indexOf('落点'), oi = head.indexOf('落点对象');
+    if (ki < 0 || fi < 0 || di < 0 || oi < 0) continue;
+    const obj = (c[oi] ?? '').replace(/`/g, '').trim();
+    const dest = [...(c[di] ?? '').matchAll(/`([^`]+)`/g)].map(m => m[1]).find(t => t.includes('/'));
+    const dir = !dest ? null : dest.endsWith('/') ? dest.slice(0, -1) : dest.slice(0, dest.lastIndexOf('/'));
+    const files = [];
+    for (const m of (c[fi] ?? '').matchAll(/`([^`]+\.(?:mjs|js))`/g)) { const x = resolveFile(m[1]); if (x.path) files.push(x.path); }
+    moveRows.set(c[ki], { obj, files: uniq(files).sort(), dir });
+    if (dir) for (const f of files) (fileMoves.get(f) ?? fileMoves.set(f, []).get(f)).push({ obj, dir });
+  }
+}
+const isMoveRow = (r, code) => moveRows.get(r.rowKey)?.obj === code;
+
 // 一个对象 = {kind, code, volume, sys}；表对象的系统 = 含它的系统；系统对象 = 无 tables 的系统；账本系统另处理
 function tableObj(t) { return { kind: 'table', code: t, volume: tableOwner.get(t) ?? sysOfTable.get(t)?.volume ?? null, sys: sysOfTable.get(t) ?? null }; }
 function sysObj(s) { return s.tables.length ? tableObj(s.tables[0]) : { kind: 'system', code: s.system, volume: s.volume, sys: s }; }
@@ -223,7 +248,8 @@ function objectOfRow(r) {
   if (PLACEHOLDER.has(o)) return null;
   if (tables.has(o)) return tableObj(o);
   if (sysByKey.has(o)) return sysObj(sysByKey.get(o));
-  if (MODGROUPS.has(o)) return { kind: 'module_group', code: o, volume: null, sys: null };
+  // 落点是模块组、却不在卷二 §6.11 文件级迁移表里的行，是"改调该组入口"，不是搬迁：不进搬迁卡，按下面"其余"一条归接收卷的对象
+  if (MODGROUPS.has(o) && isMoveRow(r, o)) return { kind: 'module_group', code: o, volume: null, sys: null };
   if (GATEFAC.has(o)) return { kind: 'gate_facility', code: o, volume: null, sys: null };
   // 词表族条目、规则表键、其余：归来源卷的对象（有主表取第一张表，无主表取系统键）
   const rv = receivingVolume(r.target, r.volume, CFG.volCode);
@@ -322,28 +348,6 @@ for (const e of objs.values()) {
 //   ② 目标子目录（target_subdir）：卷二 §6.11 文件级迁移表里该文件、落点对象为本组的行，其"落点"栏第一个路径所在目录；
 //   ③ 路径升序（path_order）兜底：没有 ② 数据的文件，或同一子目录仍超上限，按路径升序每满上限切一段。
 // 整类判：只看文件数与上述数据，不按组名或文件名特判。段号 segNo 按 ①键、②键（有子目录的在前、子目录名升序）、③段序升序编。
-const fileMoves = new Map(); // 现有文件 → [{obj, dir}]（卷二 §6.11 文件级迁移表，表内次序）
-{
-  const s = reg.findIndex(l => l.startsWith(CFG.registry.filemoves)); let e = reg.findIndex((l, i) => i > s && /^#{2,3} /.test(l)); if (e < 0) e = reg.length;
-  let head = null;
-  for (let i = s + 1; i < e; i++) {
-    const l = reg[i];
-    if (!/^\|/.test(l)) { head = null; continue; }
-    const c = cells(l);
-    if (!head) { head = c; continue; }
-    if (/^:?-{3}/.test(c[0])) continue;
-    const fi = head.indexOf('现有文件'), di = head.indexOf('落点'), oi = head.indexOf('落点对象');
-    if (fi < 0 || di < 0 || oi < 0) continue;
-    const obj = (c[oi] ?? '').replace(/`/g, '').trim();
-    const dest = [...(c[di] ?? '').matchAll(/`([^`]+)`/g)].map(m => m[1]).find(t => t.includes('/'));
-    if (!dest) continue;
-    const dir = dest.endsWith('/') ? dest.slice(0, -1) : dest.slice(0, dest.lastIndexOf('/'));
-    for (const m of (c[fi] ?? '').matchAll(/`([^`]+\.(?:mjs|js))`/g)) {
-      const x = resolveFile(m[1]); if (!x.path) continue;
-      (fileMoves.get(x.path) ?? fileMoves.set(x.path, []).get(x.path)).push({ obj, dir });
-    }
-  }
-}
 function relocateSegments(code, files) {
   const isM = f => f.endsWith('.mjs');
   const chunk = (fs, axis, tag, out) => { const m = fs.filter(isM), r = fs.filter(f => !isM(f)); const k = Math.max(1, Math.ceil(m.length / MAXFILES)); for (let s = 0; s < k; s++) out.push({ axis, tag: `${tag}#${s}`, files: [...m.slice(s * MAXFILES, (s + 1) * MAXFILES), ...(s === 0 ? r : [])] }); };
@@ -360,11 +364,11 @@ function relocateSegments(code, files) {
   }
   return segs.map((x, i) => ({ key: `${code}-${i + 1}`, mg: code, files: x.files.slice().sort(), splitAxis: x.axis, segNo: i + 1 }));
 }
-for (const e of objs.values()) if (e.obj.kind === 'module_group') e.groups = relocateSegments(e.obj.code, e.cons.c1);
+for (const e of objs.values()) if (e.obj.kind === 'module_group') e.groups = relocateSegments(e.obj.code, uniq([...moveRows.values()].filter(m => m.obj === e.obj.code).flatMap(m => m.files.filter(isRuntime))));
 
 // ================= 行 → 卡（R11-2.5 第二步）=================
 function groupIndexOf(e, row) { // 位置组的锚点文件落在哪个消费者组：取位置组内最小文件所在的组
-  const fs = uniq(posGroups.get(row.posGroup).flatMap(r => r.files.filter(isRuntime))).sort();
+  const fs = uniq(posGroups.get(row.posGroup).flatMap(r => [...r.files, ...(e.obj.kind === 'module_group' ? moveRows.get(r.rowKey)?.files ?? [] : [])].filter(isRuntime))).sort(); // 搬迁卡：§6.11 的行以"现有文件"栏为锚点
   if (!fs.length || !e.groups.length) return { idx: 0, straddle: false };
   const ids = uniq(fs.map(f => e.groups.findIndex(g => g.files.includes(f))).filter(i => i >= 0)).sort((a, b) => a - b);
   if (!ids.length) return { idx: 0, straddle: false };
