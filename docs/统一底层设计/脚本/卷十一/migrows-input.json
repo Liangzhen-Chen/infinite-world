@@ -24390,7 +24390,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "levels → rules.growth（maximum 对 levelThresholds，freeAttributePoints 对 attrPointsPerLevel）；对不上的旧字段：experience → 退役，由卷十四 §4.12 GR-2（levelThresholds 冻结成表）覆盖；initial → 待补",
+   "target": "levels → rules.growth（maximum 对 levelThresholds，freeAttributePoints 对 attrPointsPerLevel）；对不上的旧字段：experience → 退役，由卷十四 §4.12 GR-1、GR-2（经验只来自技能增长、levelThresholds 冻结成表）覆盖；noviceUntil → 待补；initial → 待补",
    "targetObject": "rules.growth",
    "baseline": "d54c89a3"
   },
@@ -24401,7 +24401,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "education → rules.learning；对不上的旧字段：examinations → 转世界内容数据，不进规则表；minimumAge、maximumAge → 待补",
+   "target": "education → rules.learning；对不上的旧字段：version → 退役，由卷二十七 R27-7.1（删版本标记）覆盖；examinations → 转世界内容数据，不进规则表；minimumAge、maximumAge → 待补",
    "targetObject": "rules.learning",
    "baseline": "d54c89a3"
   },
@@ -24434,7 +24434,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "npcGrowth → rules.growth（日后升级成长，不是初始技能）；对不上的旧字段：vocations → 转世界内容数据，不进规则表；maximumGain、maximumProficiency、minimumPractice、switchCooldownDays、teach、work → 待补",
+   "target": "npcGrowth → rules.growth（日后升级成长，不是初始技能）；对不上的旧字段：vocations、institutionTeachersStay → 转世界内容数据，不进规则表；uncertifiedMaximumProficiency、qualificationRule → 待补；maximumGain、maximumProficiency、minimumPractice、switchCooldownDays、teach、work → 待补",
    "targetObject": "rules.growth",
    "baseline": "d54c89a3"
   },
