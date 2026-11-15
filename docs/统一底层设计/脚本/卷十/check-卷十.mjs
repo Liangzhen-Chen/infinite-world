@@ -226,7 +226,37 @@ if (definedC.size < 15) r12.push('配合项过少');
 const s7 = sec(/^## §7 /);
 for (const f of ['remote-generation.mjs:109–111', ':149–150', 'remote-generation.mjs:146', 'remote-generation.mjs:149', 'remote-generation.mjs:200–209', 'remote-generation.mjs:279–281', 'remote-generation.mjs:318', 'remote-generation.mjs:341', 'remote-generation.mjs:407', ':423', 'remote-generation.mjs:411', 'remote-generation.mjs:416–417', 'remote-generation.mjs:120', 'remote-generation.mjs:238', 'remote-generation.mjs:538', ':539', 'remote-generation.mjs:143', ':324', ':453', 'remote-generation.mjs:263', ':321', ':322', ':323', 'remote-generation.mjs:115', 'population.mjs:88', 'remote-generation.mjs:723', 'population.mjs:384', ':392', 'population.mjs:411', 'population.mjs:33–36', ':62', ':69', ':99', ':371', 'population.mjs:407', ':409', 'wildlife-habitats.mjs', 'habitatDerivation', 'regions.mjs:44', ':58', '06a §1', '06a §8', '06b C 类', '06b E 类', '06b 待定 1']) if (!s7.includes(f)) r12.push('§7 缺 ' + f);
 const s03 = sub(/^### 0\.3 /);
-for (const r of ['3.14', '15.1', '15.2', '15.3', '15.4', '15.5', '15.6', '15.8', '1.24', '6.1', '9.22', '19.1', '19.2', '合计 13 行']) if (!s03.includes(r)) r12.push('§0.3 缺 ' + r);
+// 第 12 项 §0.3 主归行（李白裁定第 21 条后不写死）：卷零 A、B 两表"主归卷"列第一个词为卷十的行号集合，
+// 须与本卷 §0.3"A 表主归 N 行：…""B 表主归 N 行：…"所列行号集合、两处 N 一致；"合计 N 行"与"卷十行 a/b/t"须等于卷零 §6 卷十行的三数，也等于两表实数。
+{
+  const DIR0 = path.replace(/[\/][^\/]*$/, '');
+  const f0 = (await import('node:fs')).readdirSync(DIR0).find(f => /^卷零.*\.md$/.test(f));
+  const z = f0 ? readFileSync(DIR0 + '/' + f0, 'utf8').split('\n').map(l => l.replace(/\r$/, '')) : [];
+  if (!z.length) r12.push('未找到卷零');
+  const own = { A: new Set(), B: new Set() }; let h2z = '', col = -1, tb = null;
+  for (const l of z) {
+    if (/^## /.test(l)) { h2z = l; tb = /^## §2 /.test(l) ? 'A' : /^## §3 /.test(l) ? 'B' : null; col = -1; continue; }
+    if (!tb || !l.startsWith('|')) { col = -1; continue; }
+    const cs = l.split('|').slice(1, -1).map(c => c.trim());
+    if (col < 0) { col = cs.findIndex(c => /主归/.test(c)); continue; }
+    if (/^[\s:-]+$/.test(cs.join(''))) continue;
+    const id = cs[0].match(/^(\d+\.\d+)/)?.[1];
+    if (id && /^卷十(?![一二三四五六七八九十])/.test(cs[col] ?? '')) own[tb].add(id);
+  }
+  const s6 = z.find(l => /^\| 卷十 /.test(l))?.split('|').slice(1, -1).map(c => c.trim()) ?? [];
+  const [a6, b6, t6] = [s6[1], s6[2], s6[3]].map(Number);
+  const list = k => { const m = s03.match(new RegExp(k + ' 表主归 (\\d+) 行：([^。；]*)')); return m ? { n: +m[1], ids: new Set([...m[2].replace(/（[^）]*）/g, '').matchAll(/(\d+\.\d+)/g)].map(x => x[1])) } : null; };
+  const LA = list('A'), LB = list('B');
+  const eq = (x, y) => x.size === y.size && [...x].every(e => y.has(e));
+  for (const [k, L, n6] of [['A', LA, a6], ['B', LB, b6]]) {
+    if (!L) { r12.push(`§0.3 缺"${k} 表主归 N 行：…"`); continue; }
+    if (!eq(L.ids, own[k])) r12.push(`§0.3 ${k} 表主归行 {${[...L.ids]}} ≠ 卷零${k}表主归卷十 {${[...own[k]]}}`);
+    if (L.n !== L.ids.size || L.n !== own[k].size || L.n !== n6) r12.push(`§0.3 ${k} 表主归 ${L.n} 行，列 ${L.ids.size}，卷零表实数 ${own[k].size}，卷零 §6 ${n6}`);
+  }
+  const tot = s03.match(/合计 (\d+) 行[^。]*?卷十行 (\d+)\/(\d+)\/(\d+)/);
+  if (!tot) r12.push('§0.3 缺"合计 N 行…卷十行 a/b/t"');
+  else if (+tot[1] !== t6 || +tot[2] !== a6 || +tot[3] !== b6 || +tot[4] !== t6 || a6 + b6 !== t6 || t6 !== own.A.size + own.B.size) r12.push(`§0.3 合计 ${tot[1]}（自报 ${tot[2]}/${tot[3]}/${tot[4]}）≠ 卷零 §6 ${a6}/${b6}/${t6}（两表实数 ${own.A.size}/${own.B.size}）`);
+}
 const todo = meta.filter(m => /^## 附录 待补清单/.test(m.h2) && /^\| \d+ \|/.test(m.line)).length;
 if (todo < 5) r12.push('待补清单过少');
 report('12 接口、入口表、规则表键、错误码、枚举、生成维度、抽取点、阶段条目、迁移清单落实', r12.length === 0, r12.slice(0, 14).join(' | '));
