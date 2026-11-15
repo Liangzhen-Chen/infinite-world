@@ -1,0 +1,143 @@
+diff --git "a/docs/\347\273\237\344\270\200\345\272\225\345\261\202\350\256\276\350\256\241/\350\204\232\346\234\254/\345\217\252\346\240\270/check-verb-emitter.mjs" "b/docs/\347\273\237\344\270\200\345\272\225\345\261\202\350\256\276\350\256\241/\350\204\232\346\234\254/\345\217\252\346\240\270/check-verb-emitter.mjs"
+index 2a228839..9c3053aa 100644
+--- "a/docs/\347\273\237\344\270\200\345\272\225\345\261\202\350\256\276\350\256\241/\350\204\232\346\234\254/\345\217\252\346\240\270/check-verb-emitter.mjs"
++++ "b/docs/\347\273\237\344\270\200\345\272\225\345\261\202\350\256\276\350\256\241/\350\204\232\346\234\254/\345\217\252\346\240\270/check-verb-emitter.mjs"
+@@ -311,9 +311,56 @@ if (!defB || !defC || !defDue || !c12) {
+   // 登记可能出现的二级节：排除卷首、读法、总述、扩展性测试、开放问题、迁移、验收断言与各附录（代号表、术语对照除外）。
+   // 用排除法是为了同样认得卷二那种“## 一 …”“## 二 …”编号的卷。
+   const OKSEC = x => { const h = x.h2 || ''; return !/§0 |§1 |卷首|读法|本卷的十个结论|领域总述|设计目标|扩展性测试|开放问题|迁移|验收/.test(h) && (!/^## 附/.test(h) || /术语/.test(h)); };
+-  const REQROW = /^\|\s*(C|Q|T|X|A|M|S|B|G|D|E|R|N|K|P|F)\d+[A-Za-z]?-?\d*/; // 配合项、问题、迁移、断言等编号行：是请求或记账，不是登记
++  // 配合项、问题、迁移、断言、勘误请求等编号行（首格是字母或一两个汉字前缀加编号，如 C24-12、勘11）：是请求或记账，不是登记
++  const REQROW = /^\|\s*((C|Q|T|X|A|M|S|B|G|D|E|R|N|K|P|F)\d+[A-Za-z]?-?\d*|[一-龥]{1,2}\d+[a-z]?\s*\|)/;
++  // 三级节是“本卷读取/使用别卷”“需别卷配合”“回填请求”“各卷指给本卷”的：读者侧与请求侧，不是本卷的登记处
++  // （2026-11-15 脚本误报修正：卷九 §5.2、§5.3 订阅与勘误请求行曾被当作本卷散文登记）
++  const NONREG_H3 = /本卷(读取|使用)|别卷配合|回填请求|指给本卷/;
+   const defLines = new Set([defB, defC, defDue].flatMap(d => [d.at, ...d.rows.map(r => r.x)]));
+-  const usable = x => !x.log && OKSEC(x) && !REQROW.test(x.t) && !defLines.has(x);
++  const usable = x => !x.log && OKSEC(x) && !NONREG_H3.test(x.h3 || '') && !REQROW.test(x.t) && !defLines.has(x);
++  // ---- 登记句与“引用/订阅说明”的区分（2026-11-15 脚本误报修正；以卷二十四表 B 的登记位为准：动词行由登记卷自登记，
++  //      登记处是该卷自己的 §2 或代号表；别卷的登记、本卷订阅别卷的动词、指向本卷另一节的指针都不是登记行本身）。
++  //      一处登记句式命中算“引用”，当且仅当满足下列之一：
++  //      (甲) 他卷归属：命中所在分句（按 ；。| 切）在命中之前点名了别卷（非本卷、非该表的定义卷）、命中之前没有“本卷”，
++  //           且该分句没有本卷登记或本卷发出的说法；
++  //      (乙) 他卷注释：命中落在“卷X[ §n]（…）”紧随的括注里（X 非本卷），即对所指别卷内容的注释；
++  //      (丙) 订阅：命中所在句（按 。切）写“订阅”，且无本卷登记或本卷发出的说法。
++  //      一行的全部命中都是引用时，该行不作登记处。
++  const VOLNAME = /卷([零一二三四五六七八九十]+)(b|甲|乙)?/g;
++  const OWNREG = /本卷(自行|自)?登记|由本卷[^。；|]{0,6}登记|本卷发出|本卷发一?条/;
++  const sameVol = (name, v) => name === v || (/^卷三$/.test(name) && /^卷三[甲乙]$/.test(v));
++  function refAt(t, i, v, owner) {
++    const cs = t.lastIndexOf('|', i) + 1; let ce = t.indexOf('|', i); if (ce < 0) ce = t.length;
++    const cell = t.slice(cs, ce), j = i - cs;
++    const sb = Math.max(cell.lastIndexOf('。', j - 1), -1) + 1; let se = cell.indexOf('。', j); if (se < 0) se = cell.length;
++    const sent = cell.slice(sb, se);
++    if (/订阅/.test(sent) && !OWNREG.test(sent)) return '丙';
++    const cb = Math.max(cell.lastIndexOf('；', j - 1), cell.lastIndexOf('。', j - 1)) + 1; let cE = cell.slice(j).search(/[；。]/); cE = cE < 0 ? cell.length : j + cE;
++    const clause = cell.slice(cb, cE), k = j - cb;
++    if (!OWNREG.test(clause) && !/本卷/.test(clause.slice(0, k)) && [...clause.slice(0, k).matchAll(VOLNAME)].some(m => !sameVol(m[0], v) && m[0] !== owner)) return '甲';
++    // (乙) 向前找未闭合的“（”，看它是否紧跟别卷名（可带 §节号）
++    let depth = 0;
++    for (let p = j - 1; p >= 0; p--) {
++      const ch = cell[p];
++      if (ch === '）') depth++;
++      else if (ch === '（') { if (depth) { depth--; continue; } const m = cell.slice(Math.max(0, p - 20), p).match(/(卷[零一二三四五六七八九十]+(?:b|甲|乙)?)(\s*§[\d.]+[^（）]{0,6})?\s*$/); if (m && !sameVol(m[1], v)) return '乙'; }
++    }
++    return '';
++  }
++  const allRef = (x, rx, owner) => { const ms = [...x.t.matchAll(new RegExp(rx.source, 'g'))]; return ms.length > 0 && ms.every(m => refAt(x.t, m.index, x.v, owner)); };
++  // 指针：登记句后紧跟本卷节号（“本卷登记的 verb 族条目（§2.10）”“动词由本卷登记，§2.5”），登记单元改取被指的那一节
++  // 只认指针所说的对象是动词（verb 族条目、事件动词、动词行）；“本卷登记到表 B 的字段，§2.1”之类说的是字段，不是动词登记处
++  const PTR = /(?:动词|verb 族条目)[^。；|（）§卷]{0,6}?由本卷(?:自行|自)?登记[，、]\s*§(\d+(?:\.\d+)*)|本卷(?:自行|自)?登记的\s*(?:verb 族条目|事件动词|动词行?)\s*（\s*§(\d+(?:\.\d+)*)）/;
++  const secRx = num => new RegExp('^#{2,5}\\s+§?' + num.replace(/\./g, '\\.') + '(\\s|（|$)');
++  function pointed(x) {
++    const m = x.t.match(PTR); if (!m) return null;
++    const num = m[1] || m[2]; const rx = secRx(num); const i0 = L.findIndex(y => y.f === x.f && rx.test(y.t)); if (i0 < 0) return null;
++    const lvl = L[i0].t.match(/^#+/)[0].length, out = [];
++    for (let i = i0 + 1; i < L.length && L[i].f === x.f; i++) { const h = L[i].t.match(/^(#+)\s/); if (h && h[1].length <= lvl) break; if (!L[i].log && L[i].t.trim()) out.push(L[i]); }
++    return out.length ? { sec: '§' + num, lines: out } : null;
++  }
++  // 指针行本身仍在单元里，另加被指的节
++  const expandPtr = ss => { const out = new Set(), how = []; for (const s of ss) { out.add(s); const p = pointed(s); if (p) { p.lines.forEach(y => out.add(y)); how.push(`${s.n}→${p.sec}`); } } return { lines: [...out], how }; };
+   // 同卷同 ### 节的行索引；表格行回溯到表头（栏名常写在表头）
+   const bySec = new Map();
+   L.forEach((x, i) => { x.i = i; const k = x.f + '\u0000' + x.h3; if (!bySec.has(k)) bySec.set(k, []); bySec.get(k).push(x); });
+@@ -341,14 +388,18 @@ if (!defB || !defC || !defDue || !c12) {
+   // 表 C 独有的栏（表 C 定义里有、表 B 定义里没有）：散文自称“事件类型行”而一栏表 C 字段都没写的，判不了是表 C 行还是动词行旧称
+   const C_ONLY = [...new Set(cDef.map(r => r.nm))].filter(n => !bDef.some(r => r.nm === n));
+   const DECL_C = /(?<!不)(是|为)(卷二十四的)?(一条)?事件类型行(?!上)/;
++  // 表 C 的散文登记句式（句式命中再经引用判别；表格行首格的结构判据不经判别）
++  const CPHRASE = new RegExp(DECL_C.source + '|本卷[^。；|]{0,12}登记[^。；|]{0,12}事件(类型)?行|事件类型表（卷二|灾异行补');
+   const KINDS = [
+     { key: 'B', name: '动词行（表 B）', req: REQ_B, ctx: /表 B|动词行/, expand: /^## §2 /,
+       // 散文登记句（未带固定代号的动词，如“事件动词（登记到卷二十四…）：甲、乙、丙”）
+-      site: x => /verb 族(的)?条目|`verb`（卷二十四|事件动词\**（(verb 族条目，)?登记到卷二十四|动词行(的)?表 ?B|按卷二十四表 B 登记|动词是 verb 族条目|本卷(自)?登记(的)?[^，。；|]{0,12}(事件)?动词(行)?[：:（]|[一二三四五六七八九十两]个事件动词/.test(x.t) },
++      // 句式命中后再经引用判别（他卷归属、他卷注释、订阅），全部命中都是引用的行不作登记处
++      site: x => { const rx = /verb 族(的)?条目|`verb`（卷二十四|事件动词\**（(verb 族条目，)?登记到卷二十四|动词行(的)?表 ?B|按卷二十四表 B 登记|动词是 verb 族条目|本卷(自)?登记(的)?[^，。；|]{0,12}(事件)?动词(行)?[：:（]|[一二三四五六七八九十两]个事件动词/;
++        return rx.test(x.t) && !allRef(x, rx, defB.at.v); } },
+     { key: 'C', name: '事件类型行（表 C）', req: REQ_C, ctx: /表 C|事件类型行|`event_type`|局势种类|灾异行/, expand: /^## §[24] /,
+       // 定义卷只认表格行；“卷X 登记一条事件类型行”而 X 不是本卷的，是在转述别卷，不算本卷登记处
+       site: x => (x.v !== defC.at.v || x.t.startsWith('|')) && ![...x.t.matchAll(/(卷[一二三四五六七八九十零]+b?)[^，。；|卷]{0,6}登记[^。；|]{0,8}事件类型行/g)].some(m => m[1] !== x.v) && (
+-        DECL_C.test(x.t) || /^事件类型行$/.test(cellsOf(x.t)[1] || '') || /本卷[^。；|]{0,12}登记[^。；|]{0,12}事件(类型)?行|事件类型表（卷二|灾异行补/.test(x.t)
++        /^事件类型行$/.test(cellsOf(x.t)[1] || '') || (CPHRASE.test(x.t) && !allRef(x, CPHRASE, defC.at.v))
+         || (/^\| 卷二十四/.test(x.t) && (/事件类型(行|表)|局势种类/.test(cellsOf(x.t)[0]) || /^(登记)?事件类型行[：；]/.test(cellsOf(x.t)[1] || '')))) },
+     { key: 'D', name: 'due_kind 行', req: REQ_DUE, ctx: /`due_kind`|roles\.dues/, expand: /^## §2 /,
+       // 写法：§2.5 式“| 卷二十 `due_kind` | 条目 |”；“本卷登记的到期项代号”；卷二十接收清单“- 卷X（…）：…N 行 `due_kind`”；
+@@ -390,11 +441,16 @@ if (!defB || !defC || !defDue || !c12) {
+       // 在 §2 或“附 术语与代号表”写到它的卷，恰一卷即定，否则需人工
+       const DEFSEC = x => /^## (§2 |附 术语与代号表)/.test(x.h2 || '');
+       // (a) 带固定代号或句柄的动词：按 ① 判出的登记卷，取该卷正文里写到它的行
+-      const unres = [], examples = [];
++      const unres = [], examples = [], templates = [], retired = [];
++      const RETIRE = /撤销|撤下|删去|退役|作废|废止/;
++      const retiredIn = (x, k) => x.t.split(/(?<=[。；])/).filter(s => s.includes(k)).every(s => RETIRE.test(s));
+       for (const r of results) {
+         let regs = r.reg.map(s => s.replace('(唯一出现卷)', ''));
+         const occ = (r.form === 'handle' ? H.get(r.name) : C.get(r.name)) || [];
+         const label = `${r.form === 'handle' ? 'roles.verbs.' : ''}${r.name}`;
++        // 模板前缀：代号以 _ 结尾（“`verb_x_` 后接用度类”“`verb_x_<类>`”），是一族代号的命名前缀，不是单独一个动词，
++        // 其登记随同族具体代号核（与盲区扫描 norm 的“前缀”口径相同；2026-11-15 脚本误报修正）
++        if (r.form === 'code' && r.name.endsWith('_')) { templates.push(`${label}（${occ.filter(x => !x.log).map(x => x.v + ':' + x.n).join(' ')}）`); continue; }
+         let how = '';
+         if (regs.length !== 1) {
+           const cand = regs.length ? regs : [...new Set(occ.filter(x => !x.log).map(x => x.v))];
+@@ -410,6 +466,8 @@ if (!defB || !defC || !defDue || !c12) {
+         let lines = occ.filter(x => x.v === v && usable(x));
+         if (!lines.length) lines = occ.filter(x => x.v === v && !x.log);
+         if (!lines.length) { unres.push(`${label}{${v} 无正文行}`); continue; }
++        // 已撤销：该卷写到它的每一句都是撤销/删去说明（“两个代号随之撤销”），不是登记（2026-11-15 脚本误报修正）
++        if (lines.every(x => retiredIn(x, r.name))) { retired.push(`${label}（${lines.map(x => x.v + ':' + x.n).join(' ')}）`); continue; }
+         lines.forEach(x => covered.add(x));
+         if (lines.every(x => codeOnly(x, r.name))) { examples.push(`${label}（${lines.map(x => x.v + ':' + x.n).join(' ')}）`); continue; }
+         report(K, v, `动词 ${label}${how}`, [...new Set(lines)], prosePool(v));
+@@ -417,13 +475,28 @@ if (!defB || !defC || !defDue || !c12) {
+       console.log(`  登记卷未定（① 判不出唯一登记卷，需人工，不计数）：${unres.length ? '' : '无'}`);
+       for (const u of unres) console.log(`    [需人工] ${u}`);
+       console.log(`  只见于示例代码（不计数）：${examples.join('；') || '无'}`);
+-      // (b) 散文登记处：已归入 (a) 某个带代号动词的行不再单报
+-      for (const [v, ss] of proseByVol) { const rest = ss.filter(s => !covered.has(s)); if (rest.length) report(K, v, '散文登记（未带代号的动词）', rest); }
++      console.log(`  模板前缀写法（不单列，随同族具体代号核）：${templates.join('；') || '无'}`);
++      console.log(`  已撤销的代号（登记卷写到它的句子都是撤销说明，不计数）：${retired.join('；') || '无'}`);
++      // (b) 散文登记处：已归入 (a) 某个带代号动词的行不再单报；指向本卷另一节的登记句改取被指的节
++      const done = new Set();
++      for (const [v, ss] of proseByVol) {
++        const rest = ss.filter(s => !covered.has(s)); if (!rest.length) continue;
++        const { lines, how } = expandPtr(rest); const ls = lines.filter(y => !covered.has(y));
++        if (!ls.length) continue;
++        ls.forEach(y => done.add(y));
++        report(K, v, `散文登记（未带代号的动词）${how.length ? '（指针 ' + how.join(' ') + '）' : ''}`, ls);
++      }
+       // (c) 旧称“事件类型行”、一栏表 C 字段都没写的登记（多为“本卷发出的各事件”清单）：不论日后判为表 C 行与否，
+       //     所列事件各须有动词行，先按动词行核表 B；是否另有表 C 行见 ③C 的需人工清单
+       const weakByVol = new Map();
+       for (const s of weakC) { if (covered.has(s)) continue; if (!weakByVol.has(s.v)) weakByVol.set(s.v, []); weakByVol.get(s.v).push(s); }
+-      for (const [v, ss] of weakByVol) report(K, v, '旧称事件类型行（按动词行核）', ss, prosePool(v));
++      for (const [v, ss] of weakByVol) {
++        // 指针所指的节里已有上面报过的登记单元（散文登记或带代号动词）时，指针就是指向那个单元，并入不另计
++        const { lines, how } = expandPtr(ss); const hit = how.length && lines.some(y => (covered.has(y) || done.has(y)) && !ss.includes(y));
++        const ls = hit ? [] : lines.filter(y => !covered.has(y) && !done.has(y));
++        if (!ls.length) { console.log(`  [并入] ${v} 旧称事件类型行 行 ${ss.map(x => x.n).join(',')} 指针 ${how.join(' ')} 所指节已在上面按登记单元核`); continue; }
++        report(K, v, `旧称事件类型行（按动词行核）${how.length ? '（指针 ' + how.join(' ') + '）' : ''}`, ls, prosePool(v));
++      }
+     } else if (K.key === 'C') {
+       for (const s of strongC) {
+         report(K, s.v, '事件类型行', [s]);

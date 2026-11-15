@@ -678,7 +678,12 @@ log('== 29 回应通路逐环核对');
     const ap = kApi.find(e => nameOf(e) === 'registerAdvancePlan'); if (!ap || !sameArr(ap.callers, ['rules']) || fileOf(ap) !== 'kernel/advance-registry.mjs') bad('kernelApi：registerAdvancePlan 应在 kernel/advance-registry.mjs 且只对规则层开放');
     // 第十六版：这一项分成多行（心跳推进四条另起行），取到下一个同级列表项为止的整块
     const pl0 = lines.findIndex((l, i) => i > d0 && i < s29b && l.includes('**推进计划与心跳推进**')); let pl1 = pl0 + 1; while (pl0 >= 0 && pl1 < lines.length && !/^ {0,2}- /.test(lines[pl1])) pl1++;
-    const pl = pl0 < 0 ? '' : lines.slice(pl0, pl1).join('\n'); for (const kw of ['`registerAdvancePlan(provider)`', '`kernel/scheduler.mjs`', '不 import 规则层', '`WallTimerCap.heartbeat`', '不回应', '下一次菜单响应']) if (!pl.includes(kw)) bad('推进计划与心跳推进缺：' + kw);
+    const pl = pl0 < 0 ? '' : lines.slice(pl0, pl1).join('\n'); for (const kw of ['`registerAdvancePlan(provider)`', '`kernel/scheduler.mjs`', '不 import 规则层', '`WallTimerCap.heartbeat`', '不回应']) if (!pl.includes(kw)) bad('推进计划与心跳推进缺：' + kw);
+    // 心跳推进的结果怎样带出（2026-11-15 脚本误报修正：原锚点写死“下一次菜单响应”五字，卷二按终核2 小项 2 改说法即误报）。
+    // 按结构核：本块有一句同时写“事件序号区间”与“下一次……响应的 `ReplyResult`”（哪一环的响应不限）；
+    // 且回应通道“三样东西”里 `ReplyResult` 的字段定义写着“心跳推进产生的事件序号区间”，两处说的是同一字段。
+    if (!pl.split(/(?<=。)/).some(s => s.includes('事件序号区间') && /下一次[^。；]{0,16}响应[^。；]{0,6}`ReplyResult`/.test(s))) bad('推进计划与心跳推进缺：心跳推进的事件序号区间随下一次响应的 `ReplyResult` 带出');
+    if (!/`ReplyResult`[^\n]*心跳推进产生的事件序号区间/.test(dl)) bad('回应通道"三样东西"：`ReplyResult` 的字段定义缺"心跳推进产生的事件序号区间"');
   }
   if (fail === before) log(`  OK 通路 ${rings.length} 行逐环核对（含存档导出、导入支路 2c、2d、5s、6s；四条路由各有入口；NarrateCap 经 mountNarration 注入 reply-composer，narrate 不是跨组导出；registerAdvancePlan 已登记）：kernelApi 环的调用者在登记文件内且矩阵格写明，登记回调环不产生反向 import，能力对象环与能力对象表、入口表、出口表一致，HTTP 环与通道表一致；环环相接；进 outputGate 之前交出的类型不含文字；kernel 与 inputEdge 对 outputGate 的矩阵格为空`);
 }

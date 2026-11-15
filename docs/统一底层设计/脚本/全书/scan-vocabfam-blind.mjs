@@ -1,19 +1,20 @@
 // 总审：盲区补扫（只读）——§5/§8 请求表反引号标识符 + 散文"登记/加/挂/新增"同句标识符，
-// 在目标卷 §2 列名与全书数据块里都查不到的列出
+// 在目标卷登记处（§2 与卷二所定的其他登记处，见下"登记处"段）与全书数据块里都查不到的列出
 // 用法：node scan-vocabfam-blind.mjs > out.txt        （基础：只取与"字段/列"同分句的标识符）
 //       node scan-vocabfam-blind.mjs ext > out.txt    （扩规则：再加"行/条目/登记/新增"同分句）
+//       另可加 --sites（stderr 列出 §2 以外的登记处）、--dir=<卷文目录>（注入测试用副本目录）
 // 扫描局限：
 //  1. 只认反引号里的标识符；不带反引号的字段名、中文名字段查不到。
 //  2. 只认同一分句（按 ，：|（）切）里的关键词；关键词与标识符跨分句、跨行就漏。
 //  3. 函数名、入口名、视图名、规则键、事件名、运行态路径都会被当成候选，误报多，须人工判。
-//  4. 同名词遮蔽：目标卷 §2、全书数据块或登记卷 §2 里只要出现同名词（哪怕含义不同、属于别的表）就算"有"，会漏报。
+//  4. 同名词遮蔽：目标卷登记处（§2 与卷二 §1.5 所指定义处）、全书数据块或登记卷 §2 里只要出现同名词（哪怕含义不同、属于别的表）就算"有"，会漏报。
 //  5. 点路径只比末段；`name: type` 只取 name。
 //  6. 目标卷靠同句"卷X"或所在标题推断；卷零不扫，指向卷零的会被误识（如"卷零"被当成别卷）。
 //  7. 只看"出现与否"，不核目标卷是否已改名落地、是否登记在正确的表。
 // 判定规则（李白 11-14 21:20）：声明给卷二的键（系统声明表顶层键、状态键等），只有在 收尾待办.md 的卷二条目
 //  或卷二 §8 请求表里已逐个写着该键名时，才能以"卷二收尾统一汇总"判误报；没写的一律判真缺失。
 import fs from 'fs';
-const D = 'F:/dnd/docs/统一底层设计/';
+const D = (process.argv.find(a => a.startsWith('--dir='))?.slice(6) ?? 'F:/dnd/docs/统一底层设计') + '/'; // --dir=<卷文目录> 供注入测试用副本
 const FILES = fs.readdirSync(D).filter(f => /^卷.*\.md$/.test(f) && !/^卷零/.test(f));
 const short = f => f.replace(/-.*$/, '');
 const DOC = {};
@@ -63,11 +64,50 @@ function norm(t) {
   if (/_$/.test(x)) return null; // 前缀
   return x;
 }
-// 目标卷 §2 内出现的全部标识符（含表格、散文、代码块）；卷二用"二""五"
+// 目标卷登记处内出现的全部标识符（含表格、散文、代码块）：§2（卷二用"二""五"）加上面所列 §2 以外的登记处
 const sec2Ids = {}; const allIds = {};
 const idsOfLine = l => { const s = new Set(); for (const [t] of ticks(l)) { const parts = t.split(/[\s、,，/|]+/); for (const p of [t, ...parts]) { const x = norm(p); if (x) s.add(x); } } for (const m of l.matchAll(/"([a-z][a-zA-Z0-9_]*)"/g)) s.add(m[1]); for (const m of l.matchAll(/\b([a-z][a-zA-Z0-9_]*)\s*:/g)) s.add(m[1]); return s; };
+// 登记处（2026-11-15 补全，按卷二对登记位的定义）：各卷 §2；卷二是“二”“五”两章，另加卷二自己的两张登记表——
+// §1.5“命名 struct 登记”（首句“新增命名 struct 须在此登记并说明定义处”）与 §1.9 族名登记；
+// §1.5 表“定义处”一栏所指的各节也是登记处：“卷X §n.n”取该卷该节，“卷X同段”沿用上一行该卷的节，
+// “R<卷>-<号>”取该规则条，“§n.n EX-3”只取该节里的那一条，不带卷名的 §n.n 指卷二本卷。只带卷名、不带节号的（如“卷十八”）不扩。
+const V2 = FILES.find(f => /^卷二-/.test(f));
+function subRange(f, num) { // 任一级标题 §?num 起，到同级或更高级标题止
+  const ls = DOC[f].ls; const rx = new RegExp('^(#{2,5})\\s+§?' + num.replace(/\./g, '\\.') + '(\\s|（|$)');
+  const a = ls.findIndex((l, i) => !DOC[f].inCode[i] && rx.test(l)); if (a < 0) return null;
+  const lv = ls[a].match(/^#+/)[0].length; let e = a + 1;
+  while (e < ls.length && !(!DOC[f].inCode[e] && /^(#+)\s/.test(ls[e]) && ls[e].match(/^#+/)[0].length <= lv)) e++;
+  return [a, e];
+}
+function ruleRange(f, rid, within) { // 条目：以 **<代号> 开头的列表项（R10-7.3、EX-3 等），到下一个列表项、标题或空行止；within 给出时只在该范围内找
+  const ls = DOC[f].ls; const [w0, w1] = within || [0, ls.length];
+  const a = ls.findIndex((l, i) => i >= w0 && i < w1 && new RegExp('^\\s*[-*]\\s+\\*\\*' + rid.replace(/[.-]/g, '\\$&') + '(?![\\d.])').test(l)); if (a < 0) return null;
+  let e = a + 1; while (e < ls.length && ls[e].trim() && !/^\s*[-*]\s|^#/.test(ls[e])) e++;
+  return [a, e];
+}
+const extraRanges = {}; const addR = (f, r) => { if (!r) return; (extraRanges[f] ||= []).push(r); };
+const regSites = []; // 供 stderr 报告
+if (V2) {
+  for (const n of ['1.5', '1.9']) { const r = subRange(V2, n); addR(V2, r); if (r) regSites.push(`卷二 §${n}`); }
+  const r15 = subRange(V2, '1.5'); const last = {};
+  if (r15) for (let i = r15[0]; i < r15[1]; i++) {
+    const l = DOC[V2].ls[i]; if (!/^\|\s*`struct:/.test(l)) continue;
+    const cells = l.split('|').slice(1, -1); const cell = cells[cells.length - 1] || '';
+    let cur = [V2]; const first = new Set(); // “同段”指上一行该卷的首个定义处；一格里后面的“变体见…”等附注不改它
+    for (const m of cell.matchAll(/(卷(零|[一二三四五六七八九十]+)(b|甲|乙)?)?\s*(同段|§(\d+(?:\.\d+)*)(?:\s*([A-Z]{1,4}-\d+))?|R(\d+[a-z]?-\d+(?:\.\d+)*))/g)) {
+      if (m[1]) cur = volFiles(m[2], m[3]);
+      for (const f of cur) {
+        let r = null, tag = ''; const isFirst = !first.has(f); first.add(f);
+        if (m[4] === '同段') { r = last[f]; tag = '同段'; }
+        else if (m[5]) { r = subRange(f, m[5]); tag = '§' + m[5]; if (r && m[6]) { r = ruleRange(f, m[6], r); tag += ' ' + m[6]; } if (r && isFirst) last[f] = r; } // “§4.7 EX-3”只取该条
+        else if (m[7]) { r = ruleRange(f, 'R' + m[7]); tag = 'R' + m[7]; }
+        if (r) { addR(f, r); regSites.push(`${short(f)} ${tag}(${short(V2)}:${i + 1})`); }
+      }
+    }
+  }
+}
 for (const f of FILES) {
-  const rs = /^卷二-/.test(f) ? topRange(f, /^## (二|五) /) : topRange(f, /^## §2 /);
+  const rs = (/^卷二-/.test(f) ? topRange(f, /^## (二|五) /) : topRange(f, /^## §2 /)).concat(extraRanges[f] || []);
   const s = new Set(); for (const [a, b] of rs) for (let i = a; i < b; i++) idsOfLine(DOC[f].ls[i]).forEach(x => s.add(x));
   sec2Ids[f] = s;
   const s2 = new Set(); DOC[f].ls.forEach(l => idsOfLine(l).forEach(x => s2.add(x))); allIds[f] = s2;
@@ -111,7 +151,7 @@ for (const f of FILES) {
 }
 // ---------- 比对 ----------
 const out = []; const P = (...a) => out.push(a.join('\t'));
-P('### 盲区：候选标识符在目标卷 §2 与全书数据块都没有');
+P('### 盲区：候选标识符在目标卷登记处（§2 与卷二所定的其他登记处）与全书数据块都没有');
 P('类别', '声明卷:行', '标识符', '目标卷', '目标卷他处有?', '声明卷他处有?', '上下文');
 let hit = 0;
 for (const c of cand) {
@@ -125,4 +165,5 @@ for (const c of cand) {
   P(c.kind, short(c.f) + ':' + c.line, c.id, c.tv.map(short).join('/'), tvElse, selfElse, cut(c.raw.replace(/^\|\s*/, ''), 90));
 }
 fs.writeFileSync(1, out.join('\n') + '\n');
-console.error(JSON.stringify({ candidates: cand.length, hits: hit, noTargetIds: noTarget }));
+console.error(JSON.stringify({ candidates: cand.length, hits: hit, noTargetIds: noTarget, extraRegSites: regSites.length }));
+if (process.argv.includes('--sites')) console.error('§2 以外的登记处：' + regSites.join('；'));
