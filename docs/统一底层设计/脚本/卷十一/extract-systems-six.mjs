@@ -43,22 +43,24 @@ const bt = s => [...s.matchAll(/`([^`]+)`/g)].map(m => m[1]);
 const modOf = s => (s.match(/[A-Za-z0-9_./-]+\.mjs/g) ?? []);
 const fnName = s => (s.match(/^([A-Za-z_][A-Za-z0-9_.]*)/) ?? [])[1] ?? null;
 
-// 本卷在该节明写"无"（节的第一行以"无"开头，或写"不导出任何""不定义任何""无运行期写者"）：转录为空表，不当作待补
+// 本卷在该节明写"无"（节的第一行写"无。""不新增""本卷不定义任何…""本卷不导出任何…""无运行期写者"）：转录为空表，不当作待补
+const NONE_RE = /^(?:无[。，：]|不新增|本卷不(?:导出|定义)任何|无运行期写者)/;
+const isNoneLine = l => NONE_RE.test(l.replace(/[*\s]/g, ''));
 function noneIn(sec, vol, no) {
   const first = sec.body.find(l => l.trim());
-  if (first && (/^无[。，：\s]/.test(first.trim()) || /不导出任何|不定义任何|无运行期写者/.test(first))) return { value: [], src: `${vol} §${no}（本卷写明无）` };
-  return null;
+  return first && isNoneLine(first) ? { value: [], src: `${vol} §${no}（本卷写明无）` } : null;
 }
 // ---- 各列的转录 ----
-// view：本系统领头表的读入口（卷二 §2.1）在本卷 §3.1 表里的"所在文件"栏
 const reg = readFileSync(`${DIR}/${CFG.registry.file}`, 'utf8').split(/\r?\n/);
+const regVol = CFG.registry.file.match(new RegExp(CFG.volCode))[0];
 const viewOf = new Map();
 { const s = reg.findIndex(l => /^### 2\.1 /.test(l)); let e = reg.findIndex((l, i) => i > s && /^#{2,3} /.test(l)); if (e < 0) e = reg.length;
   for (let i = s; i < e; i++) { if (!/^\|/.test(reg[i])) continue; const c = cells(reg[i]); if (!/^\d+$/.test(c[0] ?? '')) continue;
     const k = (c[1] ?? '').match(/^([a-z_]+)/), en = (c[2] ?? '').match(/`([A-Za-z_]\w*)/); if (k && en) viewOf.set(k[1], en[1]); } }
+// view：只有一张表的系统，取该表的读入口（卷二 §2.1）在本卷 §3.1 表里的"所在文件"栏；多表系统卷文没写系统的 view 是哪一个，不推断
 function colView(sys) {
-  const t = sys.tables[0]; if (!t) return null;
-  const name = viewOf.get(t); if (!name) return null;
+  if (sys.tables.length !== 1) return null;
+  const name = viewOf.get(sys.tables[0]); if (!name) return null;
   const sec = section(sys.volume, '3.1'); if (!sec) return null;
   for (const tb of tablesOf(sec.body)) for (const r of tb.rows) {
     if (fnName(bt(r[0])[0] ?? '') !== name) continue;
@@ -67,42 +69,88 @@ function colView(sys) {
   }
   return null;
 }
-// predicates：§3.2 标题含"谓词"的节里的条目（列表行 "- `名(" 或表格首格）；文件取节内唯一出现的 .mjs 或表内同行的 .mjs
-function colPredicates(sys) {
-  const sec = section(sys.volume, '3.2'); if (!sec || !sec.title.includes('谓词')) return null;
-  const names = [];
-  const mods = uniq(modOf(sec.body.join('\n')));
-  for (const l of sec.body) { const m = l.match(/^- `([A-Za-z_][A-Za-z0-9_]*)\(/); if (m) names.push({ name: m[1], file: mods.length === 1 ? mods[0] : null }); }
-  for (const tb of tablesOf(sec.body)) for (const r of tb.rows) { const n = fnName(bt(r[0])[0] ?? ''); if (n) { const mm = r.slice(1).map(modOf).find(x => x.length); names.push({ name: n, file: mm?.[0] ?? (mods.length === 1 ? mods[0] : null) }); } }
-  if (!names.length) return noneIn(sec, sys.volume, '3.2');
-  return { value: names.map(x => (x.file ? `${x.file}#${x.name}` : x.name)), src: `${sys.volume} §3.2`, fileUnknown: names.filter(x => !x.file).length };
+// 卷二 §2.7 JSON 示例登记的系统：解析示例里的对象
+function jsonExample(key) {
+  const txt = reg.join('\n'); const i = txt.indexOf('"' + key + '": {'); if (i < 0) return null;
+  let j = txt.indexOf('{', i), d = 0, k = j;
+  for (; k < txt.length; k++) { if (txt[k] === '{') d++; else if (txt[k] === '}') { d--; if (!d) break; } }
+  const raw = txt.slice(j, k + 1).split('\n').map(l => l.replace(/\s\/\/.*$/, '')).join('\n');
+  try { return JSON.parse(raw); } catch { return null; }
 }
-// writers：§3.2 或 §3.3 里标题含"写者"的节的表格；每行首格（状态路径或写入口）与同行的 .mjs 写者模块
-function colWriters(sys) {
-  const out = []; const srcs = [];
-  for (const no of ['3.2', '3.3']) {
-    const sec = section(sys.volume, no); if (!sec || !sec.title.includes('写者')) continue;
-    for (const tb of tablesOf(sec.body)) for (const r of tb.rows) {
-      let items = bt(r[0]); let m = r.slice(1).map(modOf).find(x => x.length);
-      if (!items.length && modOf(r[0]).length) { m = modOf(r[0]); items = bt(r[1] ?? '').map(x => fnName(x)).filter(Boolean); } // 首格是写者文件、第二格是入口
-      if (!items.length || !m) continue;
-      out.push({ item: items.join('、'), module: m[0] });
+const jsonKeys = uniq(reg.map(l => (l.match(/^\s{1,2}"(sys\.[a-z0-9_]+)": \{/) ?? [])[1]).filter(Boolean));
+const jsonEx = new Map(jsonKeys.map(k => [k, jsonExample(k)]).filter(([, v]) => v));
+// 别的系统已登记的谓词（卷二 §2.5 等）：别卷 import 它们，不算本卷导出
+const importedPreds = new Set([...jsonEx.values()].flatMap(ex => (ex.predicates ?? []).map(p => p.slice(p.indexOf('#') + 1))));
+// predicates：① §3.2 标题含"谓词"的节：列表行与表格首格；② 没有条目时取第一段第一句里的反引号标识符（去掉别的系统已登记的）；③ 明写"无"的为空表；④ §3.1 里以"谓词："开头的一行明写"无"的为空表
+function colPredicates(sys) {
+  const sec = section(sys.volume, '3.2');
+  if (sec && sec.title.includes('谓词')) {
+    const mods = uniq(modOf(sec.body.join('\n')));
+    const names = [];
+    for (const l of sec.body) { const m = l.match(/^- `([A-Za-z_][A-Za-z0-9_]*)\(/); if (m) names.push({ name: m[1], file: mods.length === 1 ? mods[0] : null }); }
+    for (const tb of tablesOf(sec.body)) for (const r of tb.rows) { const n = fnName(bt(r[0])[0] ?? ''); if (n) { const mm = r.slice(1).map(modOf).find(x => x.length); names.push({ name: n, file: mm?.[0] ?? (mods.length === 1 ? mods[0] : null) }); } }
+    if (!names.length) {
+      const para = sec.body.find(l => l.trim() && !/^[-|]/.test(l.trim()));
+      if (para && !isNoneLine(para)) {
+        const sentence = para.slice(0, para.indexOf('。') >= 0 ? para.indexOf('。') : para.length);
+        for (const t of bt(sentence)) { const n = fnName(t.replace(/\(.*$/, '')); if (n && /^[A-Za-z_]\w*$/.test(n) && !importedPreds.has(n)) names.push({ name: n, file: mods.length === 1 ? mods[0] : null }); }
+      }
     }
-    srcs.push(`${sys.volume} §${no}`);
+    if (names.length) return { value: uniq(names.map(x => (x.file ? `${x.file}#${x.name}` : x.name))), src: `${sys.volume} §3.2`, fileUnknown: names.filter(x => !x.file).length };
+    const none = noneIn(sec, sys.volume, '3.2'); if (none) return none;
   }
-  if (out.length) return { value: out, src: uniq(srcs).join('、') };
-  for (const no of ['3.2', '3.3']) { const sec = section(sys.volume, no); if (sec && sec.title.includes('写者')) { const r = noneIn(sec, sys.volume, no); if (r) return r; } }
+  const s1 = section(sys.volume, '3.1');
+  const pl = s1?.body.find(l => /^谓词[：:]/.test(l.trim()));
+  if (pl && isNoneLine(pl.trim().replace(/^谓词[：:]/, ''))) return { value: [], src: `${sys.volume} §3.1（本卷写明无）` };
   return null;
 }
-// sources、sinks：卷六 §4.22.1 登记的源汇代号（首格 `src_…`、`sink_…`）；系统是该卷对应的系统
+// writers：§3.2 或 §3.3 里标题含"写"的节的写者表（表头有"写者""所在模块"或"文件"栏、有"状态/路径/写什么"栏；表头有"怎样请求"的表是别系统的写者，主体段、记录类的表是去留登记，都不收）。
+// 只收本卷的写者：写者栏写"卷X的…"（X 不是本卷）或"本卷不写"的行不收；没有 .mjs 的行只收写"本卷…"的。
+// 条目取路径栏里的反引号路径（去掉括注、函数签名与结构类型）；首格是函数的表取"写什么"栏里带点或方括号的路径，没有路径的写文字。
+function colWriters(sys) {
+  const out = []; const srcs = []; const seen = new Set();
+  const VOLRE = new RegExp('(' + CFG.volCode.replace(/^\^|\$$/g, '') + ')的');
+  for (const no of ['3.2', '3.3']) {
+    const sec = section(sys.volume, no); if (!sec || !sec.title.includes('写')) continue;
+    for (const tb of tablesOf(sec.body)) {
+      const head = tb.head.map(h => h.replace(/`/g, ''));
+      if (head.some(h => h.includes('怎样请求')) || head.some(h => h.includes('主体段') || h.includes('记录类'))) continue;
+      let wi = head.findIndex(h => /写者|所在模块|模块（系统）/.test(h)); if (wi < 0 && head[0] === '文件') wi = 0;
+      const pi = head.findIndex(h => /^(状态路径|状态|路径|写什么)/.test(h));
+      if (wi < 0 || pi < 0) continue;
+      const pathFirst = pi === 0;
+      let used = false;
+      for (const r of tb.rows) {
+        const wc = r[wi] ?? '';
+        const other = wc.match(VOLRE); if ((other && other[1] !== sys.volume) || wc.includes('本卷不写')) continue;
+        const mods = modOf(wc);
+        if (!mods.length && !wc.startsWith('本卷')) continue;
+        const pc = (r[pi] ?? '').replace(/（[^）]*）/g, '');
+        let toks = bt(pc).filter(t => /^[A-Za-z_]/.test(t) && !/^[A-Za-z_]\w*\s*:/.test(t) && !t.includes('('));
+        if (!pathFirst) toks = toks.filter(t => /[.\[]/.test(t));
+        let item, kind = 'path';
+        if (toks.length) item = uniq(toks).join('、');
+        else if (!pathFirst && mods.length && pc.replace(/`/g, '').trim()) { item = pc.replace(/`/g, '').trim(); kind = 'text'; }
+        else continue;
+        const key = item + '→' + (mods[0] ?? ''); if (seen.has(key)) continue; seen.add(key);
+        out.push({ item, module: mods[0] ?? null, kind }); used = true;
+      }
+      if (used) srcs.push(`${sys.volume} §${no}`);
+    }
+  }
+  if (out.length) return { value: out, src: uniq(srcs).join('、') };
+  for (const no of ['3.2', '3.3']) { const sec = section(sys.volume, no); if (sec && sec.title.includes('写')) { const r = noneIn(sec, sys.volume, no); if (r) return r; } }
+  return null;
+}
+// sources、sinks：登记表里首格的 `src_…`、`sink_…`（一格里并列的多个代号都收）；系统是该卷对应的系统
 function colSrcSink(sys, prefix) {
   const ls = lin(sys.volume); const out = []; let head = null;
-  ls.forEach((l, i) => {
+  ls.forEach(l => {
     if (/^#{3,4} /.test(l)) head = l.match(/^#+ (\S+)/)[1];
-    const m = l.match(/^\| `(src|sink)_([A-Za-z0-9_]+)` \|/);
-    if (m && m[1] === prefix) out.push({ code: `${m[1]}_${m[2]}`, sec: head });
+    if (!/^\| `(?:src|sink)_/.test(l)) return;
+    for (const m of cells(l)[0].matchAll(/`(src|sink)_([A-Za-z0-9_]+)`/g)) if (m[1] === prefix) out.push({ code: `${m[1]}_${m[2]}`, sec: head });
   });
-  return out.length ? { value: out.map(x => x.code), src: `${sys.volume} §${uniq(out.map(x => x.sec))[0]}` } : null;
+  return out.length ? { value: uniq(out.map(x => x.code)), src: `${sys.volume} §${uniq(out.map(x => x.sec))[0]}` } : null;
 }
 // entryJudges：本卷正文里"entryJudges"一句列出的 文件#函数
 function colJudges(sys) {
@@ -134,28 +182,18 @@ for (const s of sysJ) {
   for (const c of COLS) r.cols[c] = got[c] ? { ...got[c] } : { value: '待补' };
   systems.push(r);
 }
-// 卷二 §2.7 的 JSON 示例已给出的系统（sys.status、sys.capacity）：解析示例里的对象，照字段转录；示例没写的字段待补
-function jsonExample(key) {
-  const txt = reg.join('\n'); const i = txt.indexOf('"' + key + '": {'); if (i < 0) return null;
-  let j = txt.indexOf('{', i), d = 0, k = j;
-  for (; k < txt.length; k++) { if (txt[k] === '{') d++; else if (txt[k] === '}') { d--; if (!d) break; } }
-  const raw = txt.slice(j, k + 1).split('\n').map(l => l.replace(/\s\/\/.*$/, '')).join('\n');
-  try { return JSON.parse(raw); } catch { return null; }
-}
+// 卷二 §2.7 JSON 示例登记的全部系统，一律同一判法：示例里写了的字段取示例（数据登记优先），示例没写的字段保持卷文转录或待补；
+// 示例里的系统不在 sysJ 时，归属卷取登记卷（JSON 所在的卷）
 const SRC = '卷二 §2.7 JSON 示例';
-function fromExample(sysKey, volume) {
-  const ex = jsonExample(sysKey); if (!ex) return null;
-  const r = { system: sysKey, volume, cols: {} };
-  const norm = (c, v) => {
-    if (!(c in ex)) return { value: '待补' };
-    if (c === 'writers') return { value: ex.writers.map(w => ({ item: w, module: null })), src: SRC };
-    return { value: ex[c], src: SRC };
-  };
-  for (const c of COLS) r.cols[c] = norm(c, ex[c]);
-  return r;
+for (const [key, ex] of jsonEx) {
+  let r = systems.find(x => x.system === key);
+  if (!r) { r = { system: key, volume: regVol, cols: Object.fromEntries(COLS.map(c => [c, { value: '待补' }])) }; systems.push(r); }
+  for (const c of COLS) {
+    if (!(c in ex)) continue;
+    if (c === 'writers') r.cols.writers = { value: ex.writers.map(w => ({ item: w, module: null, kind: 'path' })), src: SRC };
+    else r.cols[c] = { value: ex[c], src: SRC };
+  }
 }
-{ const st = fromExample('sys.status', '卷二十一'); const i = systems.findIndex(x => x.system === 'sys.status'); if (st && i >= 0) systems[i] = st;
-  const cap = fromExample('sys.capacity', '卷二'); if (cap) systems.push(cap); }
 for (const s of systems) for (const c of COLS) if (s.cols[c].src) s.cols[c].src = titled(s.cols[c].src);
 systems.sort((a, b) => (a.system < b.system ? -1 : 1));
 

@@ -2350,7 +2350,10 @@
     }
    ],
    "retire": {},
-   "accept": [],
+   "accept": [
+    "S9-2",
+    "S9-4"
+   ],
    "dependsOn": [
     "C-卷二十九-display-1",
     "C-卷二十九-host-1"
@@ -2364,13 +2367,12 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
     "system:sys.ai_interface 登记项待补 predicates、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
-     "E-MIG-CARD-INCOMPLETE(retire、accept)",
+     "E-MIG-CARD-INCOMPLETE(retire)",
      "待补:登记项字段"
     ],
     "stateItems": [
@@ -2695,7 +2697,7 @@
    "pending": [
     "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.time_env 登记项待补 predicates、sources、sinks、entryJudges、view"
+    "system:sys.time_env 登记项待补 sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -3103,7 +3105,16 @@
     }
    ],
    "retire": {},
-   "accept": [],
+   "accept": [
+    "A23-2.1",
+    "A23-2.2",
+    "A23-4.2",
+    "A23-5.2",
+    "A23-6.2",
+    "A23-7.1",
+    "A23-7.2",
+    "S23-3"
+   ],
    "dependsOn": [
     "C-卷二十-kernel-1",
     "LEDGER-1"
@@ -3117,13 +3128,12 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
     "system:sys.arts 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
-     "E-MIG-CARD-INCOMPLETE(retire、accept)",
+     "E-MIG-CARD-INCOMPLETE(retire)",
      "待补:登记项字段"
     ],
     "stateItems": [
@@ -3418,7 +3428,7 @@
    "pending": [
     "accept:卷二 §6.12 没有该表的齐全率下限键",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.knowledge 登记项待补 predicates、sources、sinks、entryJudges、view"
+    "system:sys.knowledge 登记项待补 sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -3495,6 +3505,7 @@
    ],
    "retire": {},
    "accept": [
+    "S28-1",
     "S28-3"
    ],
    "dependsOn": [
@@ -3615,7 +3626,8 @@
    ],
    "retire": {},
    "accept": [
-    "A26-9"
+    "A26-3.I",
+    "A26-9.S"
    ],
    "dependsOn": [
     "C-卷二十-kernel-1",
@@ -3631,7 +3643,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.psyche 登记项待补 predicates、sources、sinks、entryJudges、view"
+    "system:sys.psyche 登记项待补 writers、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -3815,7 +3827,7 @@
    "pending": [
     "accept:卷二 §6.12 没有该表的齐全率下限键",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.event_type 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.event_type 登记项待补 predicates、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -4023,7 +4035,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.org 登记项待补 predicates、sources、sinks、entryJudges"
+    "system:sys.org 登记项待补 predicates、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -4109,7 +4121,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.offense 登记项待补 predicates、sources、sinks、entryJudges"
+    "system:sys.offense 登记项待补 predicates、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -4374,7 +4386,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.offense 登记项待补 predicates、sources、sinks、entryJudges"
+    "system:sys.offense 登记项待补 predicates、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -4683,7 +4695,9 @@
     }
    ],
    "retire": {},
-   "accept": [],
+   "accept": [
+    "S11-10"
+   ],
    "dependsOn": [],
    "census": {},
    "testClass": {},
@@ -4694,15 +4708,14 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "files:该对象在旧代码里没有消费者文件（新对象或纯数据对象）",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
     "row:M11-6",
-    "system:sys.migration 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.migration 登记项待补 predicates、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
-     "E-MIG-CARD-INCOMPLETE(files、retire、accept)",
+     "E-MIG-CARD-INCOMPLETE(files、retire)",
      "待补:登记项字段",
      "待补:迁移行处置"
     ],
@@ -5278,7 +5291,7 @@
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
     "row:M12-3",
-    "system:sys.acceptance_scan 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.acceptance_scan 登记项待补 predicates、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -5581,7 +5594,18 @@
     }
    ],
    "retire": {},
-   "accept": [],
+   "accept": [
+    "A18-1.5",
+    "A18-10.1",
+    "A18-10.2",
+    "A18-11.2",
+    "A18-12.2",
+    "A18-2.5",
+    "A18-4.4",
+    "A18-5.2",
+    "A18-6.2",
+    "A18-9.3"
+   ],
    "dependsOn": [
     "C-卷二十-kernel-1",
     "LEDGER-1"
@@ -5595,13 +5619,12 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
     "system:sys.social 登记项待补 sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
-     "E-MIG-CARD-INCOMPLETE(retire、accept)",
+     "E-MIG-CARD-INCOMPLETE(retire)",
      "待补:登记项字段"
     ],
     "stateItems": [
@@ -5742,7 +5765,10 @@
     }
    ],
    "retire": {},
-   "accept": [],
+   "accept": [
+    "S16-11",
+    "S16-9"
+   ],
    "dependsOn": [
     "C-卷二十-kernel-3",
     "LEDGER-1"
@@ -5756,13 +5782,12 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
     "system:sys.monsters 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
-     "E-MIG-CARD-INCOMPLETE(retire、accept)",
+     "E-MIG-CARD-INCOMPLETE(retire)",
      "待补:登记项字段"
     ],
     "stateItems": [
@@ -5842,7 +5867,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.profession 登记项待补 predicates、sources、sinks、entryJudges、view"
+    "system:sys.profession 登记项待补 sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -7778,7 +7803,7 @@
    "launches": [],
    "retire": {},
    "accept": [
-    "A26-9"
+    "A26-9.S"
    ],
    "dependsOn": [
     "C-卷二十-kernel-1",
@@ -7869,7 +7894,7 @@
    "launches": [],
    "retire": {},
    "accept": [
-    "A26-9"
+    "A26-9.S"
    ],
    "dependsOn": [
     "C-卷九-aiGate-1",
@@ -8054,7 +8079,8 @@
     "A5-16.3",
     "A5-3.1",
     "S5-1",
-    "S5-4"
+    "S5-4",
+    "卷五:A-5"
    ],
    "dependsOn": [
     "C-卷二十-kernel-1",
@@ -8146,7 +8172,8 @@
     "A5-16.3",
     "A5-3.1",
     "S5-1",
-    "S5-4"
+    "S5-4",
+    "卷五:A-5"
    ],
    "dependsOn": [
     "C-卷九-aiGate-1",
@@ -8247,7 +8274,8 @@
     "A5-16.3",
     "A5-3.1",
     "S5-1",
-    "S5-4"
+    "S5-4",
+    "卷五:A-5"
    ],
    "dependsOn": [
     "C-卷二十-kernel-2",
@@ -8316,7 +8344,8 @@
     "A5-16.3",
     "A5-3.1",
     "S5-1",
-    "S5-4"
+    "S5-4",
+    "卷五:A-5"
    ],
    "dependsOn": [
     "C-卷五-place-1"
@@ -9221,7 +9250,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.item 登记项待补 predicates、sources、sinks、entryJudges、view"
+    "system:sys.item 登记项待补 sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -9285,7 +9314,7 @@
    "pending": [
     "files:该对象在旧代码里没有消费者文件（新对象或纯数据对象）",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.org 登记项待补 predicates、sources、sinks、entryJudges"
+    "system:sys.org 登记项待补 predicates、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -9527,7 +9556,7 @@
     "row:M14-82c",
     "row:M14-82e",
     "row:M14-82f",
-    "system:sys.profession 登记项待补 predicates、sources、sinks、entryJudges、view"
+    "system:sys.profession 登记项待补 sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -9824,7 +9853,9 @@
    ],
    "launches": [],
    "retire": {},
-   "accept": [],
+   "accept": [
+    "卷三乙:A-1"
+   ],
    "dependsOn": [
     "C-卷三乙-item-1",
     "C-卷九-aiGate-1",
@@ -9840,12 +9871,11 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
    ],
    "migReady": {
     "defects": [
-     "E-MIG-CARD-INCOMPLETE(retire、accept)"
+     "E-MIG-CARD-INCOMPLETE(retire)"
     ],
     "stateItems": [
      "依赖卡已 merged",
@@ -10314,7 +10344,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.item 登记项待补 predicates、sources、sinks、entryJudges、view"
+    "system:sys.item 登记项待补 sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -10769,7 +10799,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.org 登记项待补 predicates、sources、sinks、entryJudges"
+    "system:sys.org 登记项待补 predicates、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [

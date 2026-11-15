@@ -93,18 +93,19 @@ const camel = t => t.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
 const dimKeysOf = t => dimKeys.filter(k => k.slice('rules.dimfill.'.length).toLowerCase().startsWith(camel(t).toLowerCase()));
 
 // ---- 断言、扫描条、不变量定义索引（行首写法：列表加粗、表格首格）----
-const TOK = '[ASI][0-9]*-[0-9]+(?:\\.[0-9]+)?[a-z]?|I[0-9]+';
+const TOK = '[ASI][0-9]*-[0-9]+(?:\\.(?:[0-9]+|[A-Z]))?[a-z]?|I[0-9]+'; // 带 .S、.I、.X 后缀的断言号（如 A26-9.S）写全称
 const defRe = new RegExp('^(?:[-*]\\s*)?(?:\\|\\s*)?(?:【[^】]*】)?\\*{0,2}(' + TOK + ')(?![0-9A-Za-z])');
 const defined = new Map(); // 卷 → Set(编号)
 const assertText = new Map(); // 卷 → [{tok, text}]（断言定义行）
 for (const [f, ls] of volText) {
   const v = volOfFile(f); if (!v) continue;
-  for (const l of ls) { const m = l.match(defRe); if (m) { (defined.get(v) ?? defined.set(v, new Set()).get(v)).add(m[1]); if (/^[AS]\d+-\d+(?:\.\d+)?$/.test(m[1])) (assertText.get(v) ?? assertText.set(v, []).get(v)).push({ tok: m[1], text: l }); } }
+  for (const l of ls) { const m = l.match(defRe); if (m) { (defined.get(v) ?? defined.set(v, new Set()).get(v)).add(m[1]); if (/^[AS]\d*-\d+(?:\.(?:\d+|[A-Z]))?$/.test(m[1])) (assertText.get(v) ?? assertText.set(v, []).get(v)).push({ tok: m[1], text: l }); } }
 }
 // 补验收判据（乙-6b）：卡的行落点没写编号时，取对象所在卷已有的断言号：断言正文提到本卡对象代号或本卡要接的入口名的
 function assertionsFor(vol, objCode, entryNames) {
   const keys = [objCode, ...entryNames].filter(Boolean);
-  return uniq((assertText.get(vol) ?? []).filter(a => keys.some(k => a.text.includes('`' + k + '`') || a.text.includes('`' + k + '('))).map(a => a.tok)).sort();
+  // 卷号为空的断言号（卷三乙的 A-1、S-1 一类）带卷名写，别处才查得到
+  return uniq((assertText.get(vol) ?? []).filter(a => keys.some(k => a.text.includes('`' + k + '`') || a.text.includes('`' + k + '('))).map(a => (/^[AS]-/.test(a.tok) ? `${vol}:${a.tok}` : a.tok))).sort();
 }
 // 卷一 §9 "沿用 I1–I32（架构 02）"：区间写法定义区间内的不变量编号
 for (const [f, ls] of volText) { const v = volOfFile(f); for (const l of ls) { const m = l.match(/沿用 I(\d+)[–-]I(\d+)/); if (m && v) for (let i = +m[1]; i <= +m[2]; i++) (defined.get(v) ?? defined.set(v, new Set()).get(v)).add('I' + i); } }
@@ -443,7 +444,7 @@ for (const e of objList) {
     }
     // 验收判据
     c.accept = acceptOfRows(gRows, isFirst && o.kind === 'table', o.code);
-    if (!c.accept.length && vol) c.accept = assertionsFor(vol, o.code, [...c.entries.map(en => en.name), ...c.files.map(f => f.slice(f.lastIndexOf('/') + 1))]);
+    if (!c.accept.length && vol) c.accept = assertionsFor(vol, o.code, [...c.entries.map(en => en.name), ...c.launches.map(en => en.name), ...c.files.map(f => f.slice(f.lastIndexOf('/') + 1))]);
     c.pending.push(...pendingOfRows(gRows));
     c.cardId = `C-${vol ?? '无卷'}-${o.code}-${gi + 1}`;
     cards.push(c);
@@ -648,7 +649,6 @@ for (const c of cards) {
   const pendMiss = miss.filter(f => c.pending.some(p => p.startsWith(f + ':')));
   const realMiss = miss.filter(f => !pendMiss.includes(f));
   if (miss.length || extra.length) items.push('E-MIG-CARD-INCOMPLETE(' + [...miss, ...extra.map(x => x + '应为空')].join('、') + (realMiss.length ? '，无待补原因：' + realMiss.join('、') : '') + ')');
-  void pendMiss;
   if (c.pending.some(p => p.startsWith('row:'))) items.push('待补:迁移行处置');
   if (c.pending.some(p => p.startsWith('accept:未找到'))) items.push('E-MIG-ACCEPT-FORM');
   if (c.pending.some(p => p.startsWith('objectCode:') || p.startsWith('system:'))) items.push('待补:登记项字段');
@@ -723,11 +723,14 @@ const md = [
   '',
   `${nPend} 张卡带 pending（共 ${Object.values(pendKinds).reduce((a, b) => a + b, 0)} 条）；按类：${Object.entries(pendKinds).sort((a, b) => cmp(a[0], b[0])).map(([k, v]) => k + ' ' + v).join('、')}。`,
   '',
-  `- accept（乙-6b）：卡的行落点没写编号时，取对象所在卷里正文提到本卡对象代号、本卡要接的入口名或本卡文件名的断言号与扫描号（只写编号）；"台账 S-n"是素材台账条目，不当扫描号。仍无编号的 ${cards.filter(c => c.pending.some(p => p.startsWith('accept:'))).length} 张卡列为疑点（对象所在卷没有断言或扫描条提到它们，不新造编号）：${cards.filter(c => c.pending.some(p => p.startsWith('accept:'))).map(c => c.cardId).join('、')}。`,
+  `- accept（乙-6b）：卡的行落点没写编号时，取对象所在卷里正文提到本卡对象代号、本卡要接或上线的入口名、本卡文件名的断言号与扫描号（只写编号；带 .S、.I、.X 后缀的写全称；"台账 S-n"是素材台账条目，不当扫描号）。取完 accept 仍为空的 ${cards.filter(c => !c.accept.length).length} 张卡列为疑点，不新造编号；按原因分开：`,
+  `  - 对象所在卷的断言不编号（卷里没有带编号的断言或扫描条）：${cards.filter(c => !c.accept.length && !(assertText.get(c.volume) ?? []).length).map(c => c.cardId).join('、') || '无'}。`,
+  `  - 卷里有带编号的断言，但没有一条提到本卡的对象、入口、上线入口或文件：${cards.filter(c => !c.accept.length && (assertText.get(c.volume) ?? []).length).map(c => c.cardId).join('、') || '无'}。`,
+  `  - 另：卷二 §6.12 没有齐全率下限键的表首卡（accept 里无下限键，不一定为空）：${cards.filter(c => c.pending.some(p => p.startsWith('accept:卷二 §6.12'))).map(c => c.cardId).join('、') || '无'}。`,
   '- retire：登记退役数要逐行清单的行数，逐行清单待 G-3，全部"必"卡的 retire 为空并已登记。',
   '- zeroRows：迁移行没有 zeroRow 列（待补清单第 6 项已记），zeroRows 全部为空表（该字段矩阵里是"列"，可为空）。',
   '- census、testClass、derivations、approvals、mergeRef、fails 是做卡时才填的字段，v0 为空。',
-  '- 系统登记项的 predicates、writers、sources、sinks、entryJudges、view 六列待补（乙-4 补 J1），受影响的首卡与母卡逐张标注。',
+  `- 系统登记项的 predicates、writers、sources、sinks、entryJudges、view 六列已由卷文转录（乙-6a，卷二 §2.7 六列转录表）；仍待补的列逐张标在首卡与母卡的 pending 里（${[...sixPending.values()].reduce((a, b) => a + b.length, 0)} 格）。`,
   '',
   'migReady 逐卡计算（卷十一 :303）：缺陷项与状态项分开记。状态项是 drafted 阶段本来就不满足的——依赖卡已 merged、所在阶段已开、不在冻结中（要求写的是后两项；"依赖卡已 merged"是 R11-3.12 的第三个状态条件，一并列出）。缺陷项（除状态项外的不满足）：',
   '',
