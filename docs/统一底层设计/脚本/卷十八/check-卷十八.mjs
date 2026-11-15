@@ -408,5 +408,42 @@ const r15 = [];
 }
 report('15 余项单核 N4、N5（按 R18-1.5 模拟分家、迁户、接任；授予者可空）', r15.length === 0, r15.slice(0, 10).join(' | '));
 
+// 16 三元定位关边的种类行须声明 uniqueTriple（李白 k4r-1；R18-1.13 ③，E-HK-PROTOCOL）。全书机判，整类：
+//  调用处 = 数据里 op 为 holding.close 且 paramsRX 带 holdingKind、holder、subject 三键的原语输出；
+//          或散文同一句写 `holding.close` 与"三元定位"并写 `holdingKind` 取某值。
+//  种类 = holdingKind 的值：hk_* 字面量，或规则表句柄 `rules.*.<键>`（经全书 "rules.*": {...} 数据行解析成 hk_*）。
+//  种类行 = 全书 "hk_*": {...} 数据行；没写 uniqueTriple 取卷十八 §4.1.5 defaults 的值。为真才通过。--dir=<全书目录> 可给注入副本（第 3 个参数已用于卷二路径）。
+{
+  const r16 = [];
+  const { readdirSync } = await import('node:fs');
+  const BOOK = (process.argv.find(a => a.startsWith('--dir='))?.slice(6) ?? 'F:/dnd/docs/统一底层设计') + '/';
+  const book = readdirSync(BOOK).filter(f => /^卷.*\.md$/.test(f)).map(f => ({ v: f.replace(/-.*$/, ''), ls: readFileSync(BOOK + f, 'utf8').split(/\r?\n/) }));
+  const objAt = (l, k) => { let d = 0, j = k; for (; j < l.length; j++) { if (l[j] === '{') d++; else if (l[j] === '}' && --d === 0) break; } try { return JSON.parse(l.slice(k, j + 1)); } catch { return null; } };
+  const kinds = new Map(), rulesMap = new Map(), sites = []; let defaults = null;
+  for (const { v, ls } of book) {
+    const l = ls.join('\n'); const lineOf = k => l.slice(0, k).split('\n').length; const atk = k => `${v}:${lineOf(k)}`; // 数据对象可跨行，按全文取平衡括号
+    // 种类行：主列行（卷十八 §4.1.5 的数组行 ["hk_*", …]，或别卷合写的带 from/to 的对象行）定存在；补充列对象行 "hk_*": {…} 合并进同一行
+    const kr = k => { if (!kinds.has(k)) kinds.set(k, { o: {}, at: null }); return kinds.get(k); };
+    for (const m of l.matchAll(/\[\s*"(hk_[a-z0-9_]+)"\s*,/g)) { const r = kr(m[1]); r.at ??= atk(m.index); }
+    for (const m of l.matchAll(/"(hk_[a-z0-9_]+)"\s*:\s*\{/g)) { const o = objAt(l, m.index + m[0].length - 1); if (!o) continue; const r = kr(m[1]); Object.assign(r.o, o); if ('from' in o || 'to' in o || 'uniqueTriple' in o) r.at = atk(m.index); else r.at ??= atk(m.index); }
+    for (const m of l.matchAll(/"(rules\.[A-Za-z0-9_.]+)"\s*:\s*\{/g)) { const o = objAt(l, m.index + m[0].length - 1); if (o) for (const [k, x] of Object.entries(o)) if (typeof x === 'string') rulesMap.set(`${m[1]}.${k}`, x); }
+    if (v === '卷十八') for (const m of l.matchAll(/"defaults"\s*:\s*\{/g)) { const o = objAt(l, m.index + m[0].length - 1); if (o && 'uniqueTriple' in o) defaults = o; }
+    for (const m of l.matchAll(/\{\s*"kind"\s*:\s*"primitive"\s*,\s*"op"\s*:\s*"holding\.close"/g)) { const o = objAt(l, m.index); const q = o?.paramsRX ?? {}; if (['holdingKind', 'holder', 'subject'].every(k => k in q)) sites.push({ at: atk(m.index), kind: String(q.holdingKind).replace(/^"|"$/g, '') }); }
+    ls.forEach((ln, i) => { if (!/^\|/.test(ln)) for (const x of ln.split(/(?<=[。；])/)) if (/`holding\.close`/.test(x) && /三元定位/.test(x)) { const m = x.match(/`holdingKind` 取 `([^`]+)`/); if (m) sites.push({ at: `${v}:${i + 1}`, kind: m[1] }); } });
+  }
+  if (!defaults) r16.push('卷十八 defaults 未读到 uniqueTriple');
+  const out16 = [];
+  for (const s of sites) {
+    const hk = /^hk_/.test(s.kind) ? s.kind : rulesMap.get(s.kind);
+    const row = hk && kinds.get(hk);
+    if (!row) { r16.push(`${s.at} 三元关边的种类 ${s.kind}${hk ? '→' + hk : ''} 找不到种类行`); continue; }
+    const ut = 'uniqueTriple' in row.o ? row.o.uniqueTriple : defaults?.uniqueTriple;
+    out16.push(`${s.at} ${s.kind}→${hk}（${row.at}）uniqueTriple=${ut}${'uniqueTriple' in row.o ? '' : '（取 defaults）'}`);
+    if (ut !== true) r16.push(`${s.at} 按三元关 ${hk} 边，种类行（${row.at}）uniqueTriple 不为真`);
+  }
+  console.log(`   三元定位关边调用处 ${sites.length} 处：${out16.join('；') || '无'}`);
+  report('16 holding.close 三元定位调用处所涉种类行 uniqueTriple 为真（R18-1.13 ③）', r16.length === 0, r16.join(' | '));
+}
+
 console.log(`行数 ${lines.length}；子系统 ${N}；规则条数 ${ruleIds.size}；json 块 ${blocks.length}；失败项 ${fails}`);
 process.exit(fails ? 1 : 0);
