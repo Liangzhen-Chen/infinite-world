@@ -105,6 +105,29 @@ check('§3.2 声明不导出任何谓词', text.includes('本卷**不导出任�
 // 6 台账判给本卷的概念
 const subText = n => (subs.find(s => s.n === n)?.lines ?? []).join('\n');
 const s2 = body(sec('§2')).join('\n');
+// 去留表判定（见第二版"去留表"一项）：卷二路径可由第 3 个参数给（注入测试用副本）
+function holdTable() {
+  const err = [];
+  const v2p = process.argv[3] ?? 'F:/dnd/docs/统一底层设计/卷二-维度表规范与统一入口.md';
+  const v2 = readFileSync(v2p, 'utf8');
+  const en = name => { const m = v2.match(new RegExp('`' + name + '`（([a-z_ ]+)；')); return m ? m[1].trim().split(/\s+/) : null; };
+  const TERM = en('term_record'), REV = en('revive_record');
+  if (!TERM || !REV) { err.push('卷二未读到 term_record / revive_record 取值'); return { err }; }
+  const ls = s2.split('\n'); const h = ls.findIndex(l => /^\|/.test(l) && /`atTerminate`/.test(l) && /`atRevive`/.test(l));
+  if (h < 0) { err.push('§2 无去留表'); return { err }; }
+  const head = ls[h].split('|').slice(1, -1).map(c => c.trim()); const iT = head.indexOf('`atTerminate`'), iR = head.indexOf('`atRevive`');
+  const rows = []; for (let i = h + 2; i < ls.length && ls[i].startsWith('|'); i++) rows.push(ls[i].split('|').slice(1, -1).map(c => c.trim()));
+  const code = c => (c.match(/^`([a-z_]+)`$/) || [])[1] ?? null;
+  for (const r of rows) {
+    const t = code(r[iT]), v = code(r[iR]), p = r[0].slice(0, 40);
+    if (!TERM.includes(t)) err.push(`${p} atTerminate=${r[iT]} 不在 term_record{${TERM.join(',')}}`);
+    if (t === 'hold' ? !REV.includes(v) : r[iR] !== '—') err.push(`${p} atRevive=${r[iR]}（atTerminate=${t} 时${t === 'hold' ? '须取 revive_record{' + REV.join(',') + '}' : '不得写'}）`);
+  }
+  const reg = lines.find(l => /^- record_class（/.test(l)) || '';
+  const nReg = [...new Set([...reg.matchAll(/`(rcls_[a-z_]+)`/g)].map(m => m[1]))].length;
+  if (nReg !== rows.length) err.push(`去留表 ${rows.length} 行，record_class 登记 ${nReg} 个`);
+  return { err, rows: rows.length };
+}
 const need = [
   ['物种 schema', subText(1) + s2, ['taxon', 'bodyPlan', 'bodyMassKg', 'tissues', 'S-1', 'speciesView']],
   ['身体部件图、capability、body.* 的来源', subText(2) + subText(11) + s2, ['parts', 'contributes', 'capability', 'partIntegrity', 'B-7', '五项来源', 'body.consciousness', 'body.moving', 'body.manipulation', 'bodyView']],
@@ -198,7 +221,11 @@ const v5 = [
   ['终止步骤号：第 1 步定后继与领域清理、第 2 步标记', /第 1 步定后继与领域清理[^\n]*第 2 步写终止标记/.test(sub(8)) && !/第 1 步写终止标记|第 2 步按类别行的 `termination` 定后继|协议第 2 步(读|原地生成)/.test(text)],
   ['事件名带 verb_ 前缀，无裸旧名', !/(?<!verb_)entity_(terminated|revived)/.test(text)],
   ['termination 无缺省的旧写法已清', !/取协议缺省 `wreck`|其余取缺省 `wreck`|缺省 0，即终止不可逆|类别行未填 termination/.test(text)],
-  ['去留表：四类记录、只登记不自删', ['subjectRecords', 'rules.terminate.records', 'atTerminate', 'atRevive', '本卷只登记，不自己删'].every(k => s2.includes(k)) && /`revivals\.<person>\.\*` \|[^\n]*`hold` \| `keep`/.test(s2) && /`identities\.<person>\.\*` \|[^\n]*`keep`/.test(s2)],
+  // 2026-11-15 改判据（李白裁定：复生后复生点清掉；9717b642 拆出 revivals.<person>.points 记录类 hold/clear）：
+  // 原写死"revivals.* 为 hold/keep、identities.* 为 keep"，改为按去留表各行登记的取值判：取值域读卷二 §1.9 两个代码内封闭枚举
+  // term_record、revive_record；每行 atTerminate 在 term_record 内；atRevive 当且仅当 atTerminate 为 hold 时写、且在 revive_record 内
+  // （卷二 §2.6"领域清理的两个登记点"）；表的行数等于本卷 record_class 登记的条目数。
+  ['去留表：只登记不自删、各行取值合卷二两枚举、行数等于登记的记录类数', (() => { const r = holdTable(); if (r.err.length) console.error('去留表：' + r.err.join('；')); return ['subjectRecords', 'rules.terminate.records', 'atTerminate', 'atRevive', '本卷只登记，不自己删'].every(k => s2.includes(k)) && r.err.length === 0; })()],
   // 第六版改锚点：李白对余项单核 N-1 的裁定把身份键收尾移给 identity 系统，settleBody 由"两件事"变"一件事"；
   // 正向锚点随之改写并加查"两件事"不得再出现，原有两条禁用写法照查。
   ['settleBody 不删簿记', /`settleBody` 只做一件事/.test(sub(8)) && !/`settleBody` 只做两件事/.test(text) && !/`settleBody` 做三件事|删除本卷以该个体为键的簿记路径/.test(text)],
