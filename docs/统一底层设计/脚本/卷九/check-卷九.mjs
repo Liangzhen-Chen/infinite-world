@@ -269,6 +269,16 @@ report('13 来路无关、默认不开模型、拒收三不条文在位', r13.le
     ls.forEach((l, i) => { // 散文登记：同一句写到族代号与“`params`…为空”或 `params: {}`；或数据式 `{id:eff_x, params:{}}`
       if (l.startsWith('|')) return;
       for (const m of l.matchAll(/["`]?id["`]?\s*:\s*["`]?(eff_[a-z0-9_]+)["`]?[^{}]*?["`]?params["`]?\s*:\s*\{\s*\}/g)) get(m[1]).reg.push({ at: `${v}:${i + 1}`, nums: [], empty: true });
+      // 卷二 §3.9 定义的族行形状（一行写完的 JSON）：带 `family: eff_*` 与 `outputs`（效果族行独有，effectCall 只有 family、params），
+      // `params` 为必写的参数声明（键即数值参数，值为 {unit, domain}；无数值参数写 {}）。按形状认，不按名字。
+      for (const m of l.matchAll(/\{\s*"family"\s*:\s*"eff_[a-z0-9_]+"/g)) {
+        let d = 0, j = m.index; for (; j < l.length; j++) { if (l[j] === '{') d++; else if (l[j] === '}' && --d === 0) break; }
+        let o; try { o = JSON.parse(l.slice(m.index, j + 1)); } catch { continue; }
+        if (!('outputs' in o)) continue;
+        if (!o.params || typeof o.params !== 'object') { get(o.family).reg.push({ at: `${v}:${i + 1}`, nums: [], empty: false }); continue; }
+        const nums = Object.keys(o.params);
+        get(o.family).reg.push({ at: `${v}:${i + 1}`, nums, empty: nums.length === 0 });
+      }
       for (const s of l.split(/(?<=。)/)) if (/`params`[^。]{0,30}为空|`params:\s*\{\}`/.test(s)) for (const m of s.matchAll(/`(eff_[a-z0-9_]+)`/g)) get(m[1]).reg.push({ at: `${v}:${i + 1}`, nums: [], empty: true });
     });
   }
