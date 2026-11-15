@@ -27,16 +27,39 @@ for (const f of files) {
 console.log(`扫描卷文件 ${files.length} 个：${files.map(vol).join('、')}`);
 console.log(`总行数 ${L.length}；记录行（卷首说明或修订/处置/自检/记账类附录下）${L.filter(x => x.log).length}，只列出不作判定`);
 
+// 全书动词行的 kindFrom 字段名：`kindFrom = F` / `kindFrom` 取 `F`，或动词行表 `kindOnly` / `kindFrom` 一格写“假 / `F`”
+const KF = new Set();
+for (const x of L) {
+  if (x.log) continue;
+  for (const m of x.t.matchAll(/kindFrom`?\s*(?:=|取|为)\s*`?([a-z][A-Za-z0-9]*)`?/g)) if (m[1] !== 'null') KF.add(m[1]);
+  if (x.t.startsWith('|')) for (const c of x.t.split('|')) { const m = c.trim().match(/^(?:假|真) \/ `([a-z][A-Za-z0-9]*)`$/); if (m) KF.add(m[1]); }
+}
 // ---------- ① 动词清单 ----------
 const H = new Map(); // handle 名 -> 出现
+// 动词句柄（卷二十四表 B 登记位：句柄 → verb 代号，如该卷 §2.6 `roles.verbs.*`；各卷在自己的命名空间下同形登记，
+// 如卷六 `rules.economy.contract.verbs.*`、卷八 `rules.polity.roles.verbs.*`）：按"末二段 verbs.<名>"整类认，不列命名空间（chk-1115-j4 小项 5）
+const VH_SRC = '(?<![A-Za-z0-9_])(?:[a-z][A-Za-z0-9]*\\.)+verbs\\.'; // 至少一段命名空间（裸 verbs.json 是文件名）
+const VH_G = new RegExp(VH_SRC + '([A-Za-z]+)(?![A-Za-z0-9_.])', 'g'); // 后接 .ext 的是文件名（如 verbs.json），不是句柄
 const C = new Map(); // verb_ 代号 -> 出现
+// 可按反引号裸名认引用的句柄：在 roles.verbs 下出现过、或列在声明了句柄前缀的动词行表里的名。只以别的命名空间全路径出现的名
+// （如 `rules.economy.contract.verbs.done`）全书都写全路径，裸名 `done` 是别的意思，不并入
+const BARE_OK = new Set();
 const add = (m, k, x) => { if (!m.has(k)) m.set(k, []); m.get(k).push(x); };
 for (const x of L) {
-  for (const m of x.t.matchAll(/roles\.verbs\.([A-Za-z]+)/g)) add(H, m[1], x);
+  for (const m of x.t.matchAll(VH_G)) { add(H, m[1], x); if (/(^|\.)roles\.verbs\.[A-Za-z]+$/.test(m[0])) BARE_OK.add(m[1]); }
   for (const m of x.t.matchAll(/\bverb_([a-z0-9]+(?:_[a-z0-9]+)*)(_?)/g)) add(C, 'verb_' + m[1] + m[2], x);
 }
+// 表头首格声明句柄前缀（“动词（句柄 `X.verbs.*`）”）的表：数据行首格里反引号裸写的名即该句柄下的动词行
+{ let head = null;
+  for (const x of L) {
+    if (!x.t.startsWith('|')) { head = null; continue; }
+    if (!head) { head = x; continue; }
+    if (/^\|[\s|:-]+\|?$/.test(x.t)) continue;
+    if (!/句柄[^|]*`[^`|]*verbs\.\*`/.test(head.t.split('|')[1] || '')) continue;
+    for (const m of (x.t.split('|')[1] || '').matchAll(/`([A-Za-z]+)`/g)) { add(H, m[1], x); BARE_OK.add(m[1]); }
+  } }
 // 句柄名的裸写（反引号内）也算引用
-for (const x of L) for (const m of x.t.matchAll(/`([A-Za-z]+)`/g)) if (H.has(m[1]) && !x.t.includes('roles.verbs.' + m[1])) add(H, m[1], x);
+for (const x of L) for (const m of x.t.matchAll(/`([A-Za-z]+)`/g)) if (H.has(m[1]) && BARE_OK.has(m[1]) && !new RegExp(VH_SRC + m[1] + '(?![A-Za-z])').test(x.t)) add(H, m[1], x);
 
 // 别名：表格行首格是中文、同行恰一个 verb_ 代号 → 首格作别名（如“常住变化事件”）
 const alias = new Map();
@@ -67,7 +90,7 @@ function windowAround(t, key, w = 160) {
 const FIELD_AFTER = /^`\s*(为真|为假|取真|取假|置真|置假)/;
 function isVerbHandleAt(s, i, k) {
   const pre = s.slice(Math.max(0, i - 12), i);
-  if (/roles\.verbs\.$/.test(pre)) return true;
+  if (/\bverbs\.$/.test(pre)) return true;
   if (!pre.endsWith('`') || !s.startsWith('`', i + k.length)) return false;
   return !FIELD_AFTER.test(s.slice(i + k.length));
 }
@@ -78,7 +101,7 @@ const ANAPHOR = /^\s*(这|该|此|其|它|上述|两行|三行|二者|两者)/;
 // roles.verbs.*、反引号裸写句柄、verb_* 代号）时，主语承上句，同样并入窗口。
 const EMIT_LEAD = /^\s*(发出系统为|发出者[是为]|唯一发出方|由[^，；。]{1,24}?发出)/;
 function hasOtherVerbKey(s, same) {
-  for (const m of s.matchAll(/roles\.verbs\.([A-Za-z]+)/g)) if (!same.includes(m[1])) return true;
+  for (const m of s.matchAll(VH_G)) if (!same.includes(m[1])) return true;
   for (const m of s.matchAll(/`([A-Za-z]+)`/g)) if (!same.includes(m[1]) && H.has(m[1])) return true;
   for (const m of s.matchAll(/\bverb_[a-z0-9_]+[a-z0-9]/g)) if (!same.includes(m[0])) return true;
   return false;
@@ -126,8 +149,11 @@ function analyze(name, occ, keys, handleForm = false) {
       }
     }
     if (/kindOnly/.test(t) && keys.some(k => windowAround(t, k, 400).some(w => /kindOnly/.test(w)))) kindOnlyLines.push(`${x.v}:${x.n}`);
-    for (const m of t.matchAll(/`(startVerb|stageVerb|endVerb|kindFrom)`\s*(?:取|=|为)\s*`(?:roles\.verbs\.)?([A-Za-z_]+)`/g))
+    for (const m of t.matchAll(/`(startVerb|stageVerb|endVerb|kindFrom)`\s*(?:取|=|为)\s*`(?:(?:[a-z][A-Za-z0-9]*\.)*verbs\.)?([A-Za-z_]+)`/g))
       if (keys.includes(m[2])) kfRefs.push(`${x.v}:${x.n} ${m[1]}`);
+    // 动词行自述“只作 …`F`（的取值）”，且 F 是全书某动词行的 kindFrom 字段：即作为 kindFrom 所指字段的取值被引用（R24 表 B kindOnly）
+    if (t.startsWith('|') && keys.some(k => (t.split('|')[1] || '').includes('`' + k + '`')))
+      for (const m of t.matchAll(/作[^|。；）]{0,40}/g)) { const f = [...m[0].matchAll(/`([a-z][A-Za-z0-9]*)`/g)].map(y => y[1]).find(y => KF.has(y)); if (f) { kfRefs.push(`${x.v}:${x.n} 作 ${f}`); break; } }
   }
   // 未抽到登记句时：正文只在一卷出现，则该卷视为登记卷（句柄由各卷自登，roles.* 为本卷句柄）
   if (reg.size === 0) { const vs = new Set(body.map(x => x.v)); if (vs.size === 1) { reg.add([...vs][0] + '(唯一出现卷)'); } }
@@ -141,6 +167,15 @@ for (const x of L) {
   for (const m of x.t.matchAll(/((?:`roles\.verbs\.[A-Za-z]+`（[^）]*）、?){1,6})三行 `kindOnly`/g))
     for (const h of m[1].matchAll(/roles\.verbs\.([A-Za-z]+)/g)) kindOnlySet.add(h[1]);
 }
+// 动词行表格（表头首格声明 `X.verbs.*` 句柄、另有一格表头以 `kindOnly` 起首）：该格取值以 真/true 起首的行，首格所列各名都是 kindOnly
+{ let head = null, ko = -1;
+  for (const x of L) {
+    if (!x.t.startsWith('|')) { head = null; continue; }
+    const cs = x.t.split('|').slice(1, -1).map(c => c.trim());
+    if (!head) { head = x; ko = /句柄[^|]*`[^`|]*verbs\.\*`/.test(cs[0] || '') ? cs.findIndex(c => /^`kindOnly`/.test(c)) : -1; continue; }
+    if (ko < 0 || x.log || /^[\s:-]*$/.test(cs.join(''))) continue;
+    if (/^(真|`?true`?)/.test(cs[ko] || '')) for (const m of (cs[0] || '').matchAll(/`([A-Za-z]+)`/g)) kindOnlySet.add(m[1]);
+  } }
 console.log(`\n== ① 动词清单：句柄形 roles.verbs.* ${H.size} 个，代号形 verb_* ${C.size} 个（其中 verb_example_* 示例 ${[...C.keys()].filter(k => k.startsWith('verb_example_')).length} 个，不计入判定）`);
 console.log(`kindOnly 成员（按登记行“三行 \`kindOnly\`”抽取）：${[...kindOnlySet].join('、') || '（无）'}`);
 
@@ -452,6 +487,17 @@ if (!defB || !defC || !defDue || !c12) {
   }
   const NOTREG = /不(登记|另登|另立)[^。；|]{0,8}`?(due_kind|verb)`?/;
   // 表 C 独有的栏（表 C 定义里有、表 B 定义里没有）：散文自称“事件类型行”而一栏表 C 字段都没写的，判不了是表 C 行还是动词行旧称
+  // 按平衡括号取出行内每个带 "family" 与 "outputs" 两键的顶层 JSON 对象（效果族行），从文本里挖掉
+  const stripFamilyRows = t => {
+    let u = t;
+    for (let s = u.indexOf('{'); s >= 0; s = u.indexOf('{', s + 1)) {
+      let d = 0, e = s; for (; e < u.length; e++) { if (u[e] === '{') d++; else if (u[e] === '}' && --d === 0) break; }
+      if (e >= u.length) break;
+      let o = null; try { o = JSON.parse(u.slice(s, e + 1)); } catch {}
+      if (o && typeof o === 'object' && 'family' in o && 'outputs' in o) { u = u.slice(0, s) + u.slice(e + 1); s--; }
+    }
+    return u;
+  };
   const C_ONLY = [...new Set(cDef.map(r => r.nm))].filter(n => !bDef.some(r => r.nm === n));
   const DECL_C = /(?<!不)(是|为)(卷二十四的)?(一条)?事件类型行(?!上)/;
   // 表 C 的散文登记句式（句式命中再经引用判别；表格行首格的结构判据不经判别）
@@ -464,7 +510,8 @@ if (!defB || !defC || !defDue || !c12) {
         return rx.test(x.t) && !allRef(x, rx, defB.at.v); } },
     { key: 'C', name: '事件类型行（表 C）', req: REQ_C, cond: COND_C,
       // 同节的数据实例（JSON 行写出至少三个表 C 栏键）就是该行的取值，并入单元
-      rowJson: t => REQ_C.filter(f => t.includes('"' + f + '":')).length >= 3, ctx: /表 C|事件类型行|`event_type`|局势种类|灾异行/, expand: /^## §[24] /,
+      // 效果族行（卷二 §3.9 形状：带 "family" 与 "outputs"）不是事件类型行，其键不计（chk-1115-j4 后续：卷三乙 eff_seal_item 行误报）
+      rowJson: t => { const u = stripFamilyRows(t); return REQ_C.filter(f => u.includes('"' + f + '":')).length >= 3; }, ctx: /表 C|事件类型行|`event_type`|局势种类|灾异行/, expand: /^## §[24] /,
       // 定义卷只认表格行；“卷X 登记一条事件类型行”而 X 不是本卷的，是在转述别卷，不算本卷登记处
       site: x => (x.v !== defC.at.v || x.t.startsWith('|')) && ![...x.t.matchAll(/(卷[一二三四五六七八九十零]+b?)[^，。；|卷]{0,6}登记[^。；|]{0,8}事件类型行/g)].some(m => m[1] !== x.v) && (
         /^事件类型行$/.test(cellsOf(x.t)[1] || '') || (CPHRASE.test(x.t) && !allRef(x, CPHRASE, defC.at.v))
@@ -492,7 +539,7 @@ if (!defB || !defC || !defDue || !c12) {
       const rest = l.slice(m.index + v.length).split(/[|]|(?=卷[零一二三四五六七八九十])/)[0];
       for (const k of rest.matchAll(/^[:：](\d+)(?:\s*[–\-—]\s*(\d+))?((?:\s*[、,，]\s*\d+)*)/g)) { spans.push([+k[1], +(k[2] || k[1])]); for (const d of (k[3] || '').matchAll(/\d+/g)) spans.push([+d[0], +d[0]]); }
       for (const k of rest.matchAll(/行\s*((?:\d+\s*[,，、]\s*)*\d+)/g)) for (const d of k[1].matchAll(/\d+/g)) spans.push([+d[0], +d[0]]);
-      for (const k of rest.matchAll(/`(?:roles\.verbs\.)?([A-Za-z][A-Za-z0-9_]*)`/g)) if (H.has(k[1]) || C.has(k[1])) codes.add(k[1]);
+      for (const k of rest.matchAll(/`(?:(?:[a-z][A-Za-z0-9]*\.)*verbs\.)?([A-Za-z][A-Za-z0-9_]*)`/g)) if (H.has(k[1]) || C.has(k[1])) codes.add(k[1]);
     }
     return { spans, codes };
   }
