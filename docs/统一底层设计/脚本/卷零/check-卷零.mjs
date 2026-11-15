@@ -4,7 +4,8 @@
 import { readFileSync, readdirSync } from 'node:fs';
 
 const DIR = 'F:/dnd/docs/统一底层设计';
-const FILE = process.argv[2] ?? `${DIR}/卷零-覆盖表.md`;
+const FILE = process.argv.slice(2).find(a => a.endsWith('.md')) ?? `${DIR}/卷零-覆盖表.md`;
+const SKIP_REFS = process.argv.includes('--no-refs'); // 仅供注入自洽小副本时跳过第 7 项（小副本没有别卷引用的那些节）
 const L = readFileSync(FILE, 'utf8').split(/\r?\n/);
 const cells = l => l.split(/(?<!\\)\|/).slice(1, -1).map(x => x.trim());
 const plain = s => s.replace(/`/g, '').trim();
@@ -53,8 +54,12 @@ for (const t of tables(secB)) {
 const text6 = sec6 ? L.slice(sec6[0], sec6[1]).join('\n') : '';
 
 // 1 A 表行数
+const stat = [];
+for (const t of tables(sec6)) { if (!(t.head[0] === '卷' && t.head.length >= 4)) continue; for (const c of t.rows) { const m = plain(c[0]).match(VOLTOK); stat.push({ vol: m ? m[0] : null, a: +plain(c[1]).replace(/\*/g, ''), b: +plain(c[2]).replace(/\*/g, ''), label: plain(c[0]) }); } }
+const totalRow = stat.find(x => /合计/.test(x.label)), unfitRow = stat.find(x => /不适合/.test(x.label));
+const volSumA = stat.filter(x => x.vol).reduce((q, x) => q + x.a, 0), volSumB = stat.filter(x => x.vol).reduce((q, x) => q + x.b, 0);
 const titleA = L.slice(secA?.[0] ?? 0, (secA?.[0] ?? 0) + 3).join(' ').match(/(\d+)\s*个子系统/);
-check('1 A 表行数与标题、§6 合计一致', aRows.length === 234 && (!titleA || +titleA[1] === aRows.length) && new RegExp(`\\*\\*合计\\*\\*\\s*\\|\\s*\\*\\*${aRows.length}\\*\\*`).test(text6), `读到 ${aRows.length} 行；标题 ${titleA?.[1] ?? '无'}`);
+check('1 A 表行数与标题、§6 合计行、§6 各卷合计一致（都从卷零结构读取）', !!totalRow && aRows.length > 0 && aRows.length === totalRow.a && aRows.length === volSumA && (!titleA || +titleA[1] === aRows.length), `读到 ${aRows.length} 行；§6 合计 ${totalRow?.a ?? '无'}；§6 各卷合计 ${volSumA}；标题 ${titleA?.[1] ?? '无'}`);
 check('1b A 表条目编号不重复', new Set(aRows.map(r => r.no)).size === aRows.length, `不重复 ${new Set(aRows.map(r => r.no)).size}`);
 
 // 2 zeroKind 四值与计数
@@ -78,7 +83,8 @@ const items = [];
 for (const t of tables(sec4)) { const ai = t.head.findIndex(h => h === 'aRows'); if (ai < 0) continue; for (const c of t.rows) { if (/^\d+\.\d+$/.test(c[0] ?? '')) items.push({ no: c[0], a: [...(c[ai] ?? '').matchAll(/\d+\.\d+/g)].map(m => m[0]) }); } }
 const aSet = new Set(aRows.map(r => r.no));
 const missing = items.flatMap(i => i.a.filter(a => !aSet.has(a)).map(a => `${i.no}→${a}`));
-check('4 §4 共 41 项，每项 aRows 非空且都在 A 表里', items.length === 41 && items.every(i => i.a.length > 0) && missing.length === 0, `项数 ${items.length}；空 aRows ${items.filter(i => i.a.length === 0).length} 项；在 A 表找不到 ${missing.length} 个${missing.length ? '：' + missing.slice(0, 5).join('、') : ''}`);
+const decl4 = (L[sec4?.[0] ?? 0] ?? '').match(/已有\s*(\d+)\s*项/);
+check('4 §4 项数与标题声明一致，每项 aRows 非空且都在 A 表里', !!decl4 && items.length === +decl4[1] && items.every(i => i.a.length > 0) && missing.length === 0, `项数 ${items.length}；标题声明 ${decl4?.[1] ?? '无'}；空 aRows ${items.filter(i => i.a.length === 0).length} 项；在 A 表找不到 ${missing.length} 个${missing.length ? '：' + missing.slice(0, 5).join('、') : ''}`);
 
 // 5 §1 的 # 与 splitFrom
 const seqs = new Map(); const splits = [];
@@ -91,13 +97,12 @@ check('5 §1 卷记录的 "#" 不重复，splitFrom 都指到已有的 "#"', seq
 const cntA = new Map(), cntB = new Map();
 for (const r of aRows) cntA.set(r.vol, (cntA.get(r.vol) ?? 0) + 1);
 let bUn = 0; for (const r of bRows) { if (r.vol) cntB.set(r.vol, (cntB.get(r.vol) ?? 0) + 1); else bUn++; }
-const stat = [];
-for (const t of tables(sec6)) { if (!(t.head[0] === '卷' && t.head.length >= 4)) continue; for (const c of t.rows) { const m = plain(c[0]).match(VOLTOK); stat.push({ vol: m ? m[0] : null, a: +plain(c[1]).replace(/\*/g, ''), b: +plain(c[2]).replace(/\*/g, ''), label: plain(c[0]) }); } }
+// §6 统计表已在第 1 项前读入（stat）
 const diffs = [];
 for (const s of stat) { if (!s.vol) continue; if ((cntA.get(s.vol) ?? 0) !== s.a) diffs.push(`${s.vol} A 表 ${cntA.get(s.vol) ?? 0}≠${s.a}`); if ((cntB.get(s.vol) ?? 0) !== s.b) diffs.push(`${s.vol} B 表 ${cntB.get(s.vol) ?? 0}≠${s.b}`); }
 const inStat = new Set(stat.map(s => s.vol));
 for (const v of [...cntA.keys(), ...cntB.keys()]) if (!inStat.has(v)) diffs.push(`${v} 在 A/B 表有行但 §6 没有这一行`);
-check('6 §6 各卷子系统计数与 A、B 表主归行数一致', stat.length > 0 && diffs.length === 0 && bRows.length === 223 && bUn === 15, `§6 ${stat.length} 行；B 表 ${bRows.length} 行（不归卷 ${bUn}）；差异 ${diffs.length}${diffs.length ? '：' + diffs.slice(0, 4).join('；') : ''}`);
+check('6 §6 各卷子系统计数与 A、B 表主归行数一致，B 表总行数与不归卷行数与 §6 合计行、不适合行一致', stat.length > 0 && diffs.length === 0 && !!totalRow && !!unfitRow && bRows.length === totalRow.b && bUn === unfitRow.b && bRows.length === volSumB + unfitRow.b, `§6 ${stat.length} 行；B 表 ${bRows.length} 行（不归卷 ${bUn}）；§6 合计 B ${totalRow?.b ?? '无'}、不适合行 ${unfitRow?.b ?? '无'}；差异 ${diffs.length}${diffs.length ? '：' + diffs.slice(0, 4).join('；') : ''}`);
 
 // 7 别卷引用卷零的节号存在
 const heads = new Set();
@@ -107,7 +112,7 @@ const refs = []; const unknown = [];
 for (const f of readdirSync(DIR).filter(x => /^卷.+\.md$/.test(x) && !x.startsWith('卷零-'))) {
   readFileSync(`${DIR}/${f}`, 'utf8').split(/\r?\n/).forEach((l, i) => { for (const m of l.matchAll(/卷零\s*§(\d+(?:\.\d+)*)/g)) { refs.push(1); if (!have(m[1])) unknown.push(`${f.split('-')[0]}:${i + 1}:§${m[1]}`); } });
 }
-check('7 别卷引用卷零的节号在卷零里都有', refs.length > 0 && unknown.length === 0, `引用 ${refs.length} 处，找不到 ${unknown.length} 处${unknown.length ? '：' + unknown.slice(0, 5).join('、') : ''}`);
+check('7 别卷引用卷零的节号在卷零里都有', SKIP_REFS || (refs.length > 0 && unknown.length === 0), SKIP_REFS ? '已按 --no-refs 跳过' : `引用 ${refs.length} 处，找不到 ${unknown.length} 处${unknown.length ? '：' + unknown.slice(0, 5).join('、') : ''}`);
 
 for (const r of results) console.log(`${r.ok ? 'PASS' : 'FAIL'} ${r.name} — ${r.detail}`);
 const fails = results.filter(r => !r.ok).length;

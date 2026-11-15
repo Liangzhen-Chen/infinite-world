@@ -48,17 +48,23 @@ const ownedBy = v => [...tableOwner].filter(([, o]) => o === v).map(([t]) => t);
 // ---- J1：systems 补全表。系统 = 一个领域卷的 §3.1 读入口集合 ----
 const byVol = new Map();
 for (const e of h2.entries) (byVol.get(e.volume) ?? byVol.set(e.volume, []).get(e.volume)).push(e);
+// 李白 11-15 16:25 批准的无主表卷拟名（卷标题英文短名）
+const PROPOSED = { 卷六: 'economy', 卷九: 'ai_interface', 卷十: 'worldgen', 卷十一: 'migration', 卷十二: 'acceptance_scan', 卷十三: 'combat', 卷十五: 'arcana', 卷十六: 'monsters', 卷十七: 'travel', 卷十八: 'social', 卷二十: 'time_env', 卷二十三: 'arts', 卷二十六: 'psyche', 卷二十七: 'offscreen_save', 卷二十八: 'packs', 卷二十九: 'display_l10n' };
+// 有主表、但 §3.1 没有可取的入口记号的卷（卷三甲）：也算一个系统，入口集合为空
+for (const v of new Set([...tableOwner.values()].filter(Boolean))) if (!byVol.has(v)) byVol.set(v, []);
+const oldKeys = new Map(); // 原临时键（供拟名表对照）：取该卷 §3.1 首个读入口名
+for (const [v, es] of byVol) oldKeys.set(v, es[0]?.entry ?? '—');
 const systems = [];
 for (const [v, es] of [...byVol].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
-  const first = es[0].entry; // 系统键暂取该卷 §3.1 首个读入口名（命名待李白定，见本卡汇报）
+  const first = es[0]?.entry ?? ''; // 系统键暂取该卷 §3.1 首个读入口名（命名待李白定，见本卡汇报）
   const withDef = es.filter(e => e.defFiles.length);
   const callerEntries = es.filter(e => e.callerFiles.length);
   const callerUnion = [...new Set(es.flatMap(e => e.callerFiles))].sort();
   const defUnion = [...new Set(es.flatMap(e => e.defFiles))].sort();
   const tables = ownedBy(v);
-  const first1 = es[0].defFiles.length ? es[0] : null; // view 只取系统键对应的那个入口；别的入口的同名旧定义只记在来源栏
+  const first1 = es[0]?.defFiles.length ? es[0] : null; // view 只取系统键对应的那个入口；别的入口的同名旧定义只记在来源栏
   systems.push({
-    system: tables.length ? 'sys.' + tables[0] : first, tempKey: tables.length === 0, keyNote: tables.length ? '取卷二各表节 owner 行指向该卷的第一张表（按卷二登记顺序）' : '无主表卷，暂用该卷 §3.1 首个读入口名，拟名见 乙4补-无主表卷拟名表.md，待李白定名', volume: v,
+    system: tables.length ? 'sys.' + tables[0] : (PROPOSED[v] ? 'sys.' + PROPOSED[v] : first), tempKey: !tables.length && !PROPOSED[v], keyNote: tables.length ? '取卷二各表节 owner 行指向该卷的第一张表（按卷二登记顺序）' : '无主表卷，用李白 11-15 16:25 批准的拟名 sys. 加卷标题英文短名（乙4补-无主表卷拟名表.md）', volume: v,
     entries: es.map(e => e.entry),
     view: first1 ? `${first1.defFiles[0].replace(/^server-plugin\//, '')}#${first1.entry}` : '待补',
     tables,
@@ -143,15 +149,14 @@ console.log(`systems ${systems.length}，读入口 ${systems.reduce((s, x) => s 
 console.log(`对象 ${res.length}，有系统的 ${withSys.length}；组 ①${sum('g1')} ①∪②${sum('g12')} ①∪②∪③${sum('g123')}；有②文件的对象 ${res.filter(r => r.c2 > 0).length}`);
 
 // ---- 无主表卷的拟名表（只列给李白过目，不落到卷文；定名后由 rename-sys-keys.mjs 整批替换）----
-const PROPOSED = { 卷六: 'economy', 卷九: 'ai_interface', 卷十: 'worldgen', 卷十一: 'migration', 卷十二: 'acceptance_scan', 卷十三: 'combat', 卷十五: 'arcana', 卷十六: 'monsters', 卷十七: 'travel', 卷十八: 'social', 卷二十: 'time_env', 卷二十三: 'arts', 卷二十六: 'psyche', 卷二十七: 'offscreen_save', 卷二十八: 'packs', 卷二十九: 'display_l10n' };
-const noTable = systems.filter(s => s.tempKey);
+const noTable = systems.filter(s => s.keyNote.startsWith('无主表卷'));
 writeFileSync(`${OUT}/乙4补-无主表卷拟名表.md`, [
-  '# 乙-4 补：无主表卷的系统键拟名表（脚本生成，勿手改；待李白过目，不先落）',
+  '# 乙-4 补：无主表卷的系统键拟名表（脚本生成，勿手改；李白 11-15 16:25 已批准，现已落）',
   '',
   '规则（李白 11-15 16:05 第 1 条）：系统键 = "sys." + 该卷主表代号（卷二各表节 owner 指向该卷的第一张表，按卷二登记顺序）；该卷没有主表的用 "sys." + 卷标题英文短名。下面是没有主表的卷，拟名取卷标题的英文短名，现在补全表与迁移行里仍用临时键（各卷 §3.1 首个读入口名），定名后整批替换。',
   '',
-  '| 卷 | 临时键 | 拟名 |', '|---|---|---|',
-  ...noTable.map(s => `| ${s.volume} | ${s.system} | sys.${PROPOSED[s.volume] ?? '（待拟）'} |`),
+  '| 卷 | 原临时键 | 现用键 |', '|---|---|---|',
+  ...noTable.map(s => `| ${s.volume} | ${oldKeys.get(s.volume) ?? '—'} | ${s.system} |`),
   '',
 ].join('\n'));
 console.log(`无主表卷 ${noTable.length} 个，拟名表已写`);

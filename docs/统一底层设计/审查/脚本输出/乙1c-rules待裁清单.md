@@ -1,3 +1,4 @@
+（已被 乙5-rules待裁清单.md 取代，按 d4be2f94 时的 migrows 生成，只作历史记录。）
 # 乙-1 卡 1115y1c：落点对象 rules 改写后的待裁清单（脚本生成，勿手改）
 
 - 规则说明：审查/乙1c-rules对象改写规则.md；脚本：脚本/卷十一/rewrite-rules-object.mjs。

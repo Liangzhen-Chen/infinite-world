@@ -1,7 +1,7 @@
 {
  "_说明": "乙-4 H1：由 transcribe-migrows.mjs 从各卷 §7 迁移节生成；不手改。字段：编号、卷、卷文行号、锚点原文与解析、处置、落点、落点对象、基线提交。",
  "baseline": "d54c89a3",
- "count": 1079,
+ "count": 1126,
  "rows": [
   {
    "rowKey": "M1-1",
@@ -55,7 +55,7 @@
    "anchors": [],
    "disp": "recode",
    "target": "卷二 §2.5 状态谓词单点",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -87,10 +87,11 @@
    "srcLine": 508,
    "anchorsText": "legacy/compat/migrations 读文字 3 处与 initialFromLegacy",
    "anchors": [],
-   "disp": "delete",
-   "target": "—",
-   "targetObject": "kernel",
-   "baseline": "d54c89a3"
+   "disp": "同 M27-6",
+   "target": "同 M27-6",
+   "targetObject": "同 M27-6",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M27-6"
   },
   {
    "rowKey": "M1-8",
@@ -175,7 +176,7 @@
    ],
    "disp": "replace_entry",
    "target": "§3.4 退役旧入口",
-   "targetObject": "rules",
+   "targetObject": "sys.deity",
    "baseline": "d54c89a3"
   },
   {
@@ -196,7 +197,7 @@
    ],
    "disp": "replace_entry",
    "target": "§3.4 退役旧入口",
-   "targetObject": "rules",
+   "targetObject": "sys.deity",
    "baseline": "d54c89a3"
   },
   {
@@ -217,7 +218,7 @@
    ],
    "disp": "replace_entry",
    "target": "§3.4 退役旧入口",
-   "targetObject": "rules",
+   "targetObject": "sys.deity",
    "baseline": "d54c89a3"
   },
   {
@@ -495,7 +496,7 @@
    ],
    "disp": "replace_entry",
    "target": "卷二谓词（本卷无规则号）",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -516,7 +517,7 @@
    ],
    "disp": "replace_entry",
    "target": "卷二谓词（本卷无规则号）",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -738,7 +739,7 @@
    ],
    "disp": "recode",
    "target": "§4.17 S-3",
-   "targetObject": "rules",
+   "targetObject": "sys.item",
    "baseline": "d54c89a3"
   },
   {
@@ -763,7 +764,7 @@
    ],
    "disp": "recode",
    "target": "§4.3 C-6",
-   "targetObject": "rules",
+   "targetObject": "sys.item",
    "baseline": "d54c89a3"
   },
   {
@@ -966,7 +967,7 @@
    ],
    "disp": "recode",
    "target": "§4.1 M-9",
-   "targetObject": "rules",
+   "targetObject": "sys.item",
    "baseline": "d54c89a3"
   },
   {
@@ -989,15 +990,66 @@
      ]
     }
    ],
+   "disp": "同 M3b-13a 至 M3b-13b",
+   "target": "同 M3b-13a 至 M3b-13b",
+   "targetObject": "同 M3b-13a 至 M3b-13b",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M3b-13a 至 M3b-13b"
+  },
+  {
+   "rowKey": "M3b-13a",
+   "volume": "卷三乙",
+   "srcLine": 2044,
+   "anchorsText": "item-class.mjs 11 个十进制字面量；carry.mjs:8 等 10 模块 11 处直接 import balance",
+   "anchors": [
+    {
+     "file": "item-class.mjs",
+     "lines": []
+    },
+    {
+     "file": "carry.mjs",
+     "lines": [
+      [
+       8,
+       8
+      ]
+     ]
+    }
+   ],
    "disp": "to_data",
    "target": "§2.5 规则表（本卷无规则号）",
-   "targetObject": "rules",
+   "targetObject": "rules.items",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M3b-13b",
+   "volume": "卷三乙",
+   "srcLine": 2045,
+   "anchorsText": "item-class.mjs 11 个十进制字面量；carry.mjs:8 等 10 模块 11 处直接 import balance",
+   "anchors": [
+    {
+     "file": "item-class.mjs",
+     "lines": []
+    },
+    {
+     "file": "carry.mjs",
+     "lines": [
+      [
+       8,
+       8
+      ]
+     ]
+    }
+   ],
+   "disp": "to_data",
+   "target": "§2.5 规则表（本卷无规则号）",
+   "targetObject": "rules.body.carry",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M3b-14",
    "volume": "卷三乙",
-   "srcLine": 2044,
+   "srcLine": 2046,
    "anchorsText": "item-class.mjs:40",
    "anchors": [
     {
@@ -1012,13 +1064,13 @@
    ],
    "disp": "recode",
    "target": "§4.5 Q-1",
-   "targetObject": "rules",
+   "targetObject": "sys.item",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M3b-15",
    "volume": "卷三乙",
-   "srcLine": 2045,
+   "srcLine": 2047,
    "anchorsText": "finance-assets.mjs:234/302/537；:242",
    "anchors": [
     {
@@ -1043,7 +1095,7 @@
   {
    "rowKey": "M3b-16",
    "volume": "卷三乙",
-   "srcLine": 2046,
+   "srcLine": 2048,
    "anchorsText": "valuation.mjs:33",
    "anchors": [
     {
@@ -1064,7 +1116,7 @@
   {
    "rowKey": "M3b-17",
    "volume": "卷三乙",
-   "srcLine": 2047,
+   "srcLine": 2049,
    "anchorsText": "career-metrics.mjs:82",
    "anchors": [
     {
@@ -1079,13 +1131,13 @@
    ],
    "disp": "recode",
    "target": "§4.5 Q-2（成功度枚举在卷九 §4.3）",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M3b-18",
    "volume": "卷三乙",
-   "srcLine": 2048,
+   "srcLine": 2050,
    "anchorsText": "transition.mjs:579–591",
    "anchors": [
     {
@@ -1100,13 +1152,13 @@
    ],
    "disp": "recode",
    "target": "§4.1 M-5、§4.9 X-2",
-   "targetObject": "rules",
+   "targetObject": "sys.item",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M3b-19",
    "volume": "卷三乙",
-   "srcLine": 2049,
+   "srcLine": 2051,
    "anchorsText": "npc-life.mjs:75；232 个耐用参数无代码读",
    "anchors": [
     {
@@ -1127,7 +1179,7 @@
   {
    "rowKey": "M3b-20",
    "volume": "卷三乙",
-   "srcLine": 2050,
+   "srcLine": 2052,
    "anchorsText": "recipes.json 391 条；工位靠 purpose 文字；210 条投入不可再生",
    "anchors": [
     {
@@ -1143,18 +1195,18 @@
   {
    "rowKey": "M3b-21",
    "volume": "卷三乙",
-   "srcLine": 2051,
+   "srcLine": 2053,
    "anchorsText": "PLAN:2575 工具定价写死",
    "anchors": [],
    "disp": "recode",
    "target": "§4.16 V-1",
-   "targetObject": "rules",
+   "targetObject": "sys.item",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M3b-22",
    "volume": "卷三乙",
-   "srcLine": 2052,
+   "srcLine": 2054,
    "anchorsText": "learning.mjs:135 等识字技能 id 字面量",
    "anchors": [
     {
@@ -1175,7 +1227,7 @@
   {
    "rowKey": "M3b-23",
    "volume": "卷三乙",
-   "srcLine": 2053,
+   "srcLine": 2055,
    "anchorsText": "consistency-review.mjs 行 198、215–220、222、277",
    "anchors": [
     {
@@ -1185,13 +1237,13 @@
    ],
    "disp": "recode",
    "target": "§5.3（本卷无规则号；注册在卷九 §4.11）",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M3b-24",
    "volume": "卷三乙",
-   "srcLine": 2054,
+   "srcLine": 2056,
    "anchorsText": "items.json 的 unit（13 件）、durability 全同值、shelfLifeDays 198 个空值、333 件只有批次标签",
    "anchors": [
     {
@@ -1207,7 +1259,7 @@
   {
    "rowKey": "M3b-25",
    "volume": "卷三乙",
-   "srcLine": 2055,
+   "srcLine": 2057,
    "anchorsText": "works.mjs:30–31",
    "anchors": [
     {
@@ -1228,7 +1280,7 @@
   {
    "rowKey": "M3b-26",
    "volume": "卷三乙",
-   "srcLine": 2056,
+   "srcLine": 2058,
    "anchorsText": "works.mjs:32；:36",
    "anchors": [
     {
@@ -1253,7 +1305,7 @@
   {
    "rowKey": "M3b-27",
    "volume": "卷三乙",
-   "srcLine": 2057,
+   "srcLine": 2059,
    "anchorsText": "items.json 486 件的 basePrice",
    "anchors": [
     {
@@ -1269,7 +1321,7 @@
   {
    "rowKey": "M3b-28",
    "volume": "卷三乙",
-   "srcLine": 2058,
+   "srcLine": 2060,
    "anchorsText": "item-use-tags.json 的 10 个用途标签；43 种工具",
    "anchors": [
     {
@@ -1285,7 +1337,7 @@
   {
    "rowKey": "M3b-29",
    "volume": "卷三乙",
-   "srcLine": 2059,
+   "srcLine": 2061,
    "anchorsText": "market.mjs:35 goodsClass；:255 marketGrade",
    "anchors": [
     {
@@ -1310,7 +1362,7 @@
   {
    "rowKey": "M3b-30",
    "volume": "卷三乙",
-   "srcLine": 2060,
+   "srcLine": 2062,
    "anchorsText": "item-class.mjs:36、:59–63；balance/crafting 的 loses",
    "anchors": [
     {
@@ -1361,7 +1413,7 @@
    ],
    "disp": "recode",
    "target": "§4.1 M-14",
-   "targetObject": "rules",
+   "targetObject": "sys.material",
    "baseline": "d54c89a3"
   },
   {
@@ -1414,7 +1466,7 @@
    ],
    "disp": "delete",
    "target": "—（不设取代物；扫描 VA-4.1-S）",
-   "targetObject": "rules",
+   "targetObject": "sys.material",
    "baseline": "d54c89a3"
   },
   {
@@ -1503,7 +1555,7 @@
    ],
    "disp": "delete",
    "target": "R9-2.4",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
@@ -1524,7 +1576,7 @@
    ],
    "disp": "recode",
    "target": "R9-2.5",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
@@ -1658,7 +1710,7 @@
    ],
    "disp": "recode",
    "target": "R9-1.5",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
@@ -1715,7 +1767,7 @@
    ],
    "disp": "replace_entry",
    "target": "R9-12.10",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
@@ -1763,7 +1815,7 @@
    ],
    "disp": "recode",
    "target": "R9-12.2",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
@@ -2000,7 +2052,7 @@
    ],
    "disp": "recode",
    "target": "R9-10.1",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
@@ -2145,7 +2197,7 @@
    ],
    "disp": "recode",
    "target": "R9-11.1",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
@@ -2156,7 +2208,7 @@
    "anchors": [],
    "disp": "recode",
    "target": "R9-12.2",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
@@ -2213,7 +2265,7 @@
    ],
    "disp": "recode",
    "target": "R9-9.3",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
@@ -2251,7 +2303,7 @@
    ],
    "disp": "replace_entry",
    "target": "R9-8.1",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
@@ -2421,13 +2473,13 @@
    ],
    "disp": "recode",
    "target": "R9-2.8",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M2-1",
    "volume": "卷二",
-   "srcLine": 2188,
+   "srcLine": 2189,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2438,7 +2490,7 @@
   {
    "rowKey": "M2-2",
    "volume": "卷二",
-   "srcLine": 2189,
+   "srcLine": 2190,
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
@@ -2449,7 +2501,7 @@
   {
    "rowKey": "M2-3a",
    "volume": "卷二",
-   "srcLine": 2190,
+   "srcLine": 2191,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2460,7 +2512,7 @@
   {
    "rowKey": "M2-3b",
    "volume": "卷二",
-   "srcLine": 2191,
+   "srcLine": 2192,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M11-1",
@@ -2472,7 +2524,7 @@
   {
    "rowKey": "M2-4a",
    "volume": "卷二",
-   "srcLine": 2192,
+   "srcLine": 2193,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M2-31 至 M2-45",
@@ -2484,7 +2536,7 @@
   {
    "rowKey": "M2-4b",
    "volume": "卷二",
-   "srcLine": 2193,
+   "srcLine": 2194,
    "anchorsText": "",
    "anchors": [],
    "disp": "move_out",
@@ -2495,7 +2547,7 @@
   {
    "rowKey": "M2-5",
    "volume": "卷二",
-   "srcLine": 2194,
+   "srcLine": 2195,
    "anchorsText": "",
    "anchors": [],
    "disp": "move_out",
@@ -2506,7 +2558,7 @@
   {
    "rowKey": "M2-6",
    "volume": "卷二",
-   "srcLine": 2195,
+   "srcLine": 2196,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M9-22",
@@ -2518,7 +2570,7 @@
   {
    "rowKey": "M2-7",
    "volume": "卷二",
-   "srcLine": 2196,
+   "srcLine": 2197,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M27-16",
@@ -2530,7 +2582,7 @@
   {
    "rowKey": "M2-8",
    "volume": "卷二",
-   "srcLine": 2197,
+   "srcLine": 2198,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M9-19",
@@ -2542,7 +2594,7 @@
   {
    "rowKey": "M2-9",
    "volume": "卷二",
-   "srcLine": 2198,
+   "srcLine": 2199,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M9-17",
@@ -2554,7 +2606,7 @@
   {
    "rowKey": "M2-10a",
    "volume": "卷二",
-   "srcLine": 2199,
+   "srcLine": 2200,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2565,7 +2617,7 @@
   {
    "rowKey": "M2-10b",
    "volume": "卷二",
-   "srcLine": 2200,
+   "srcLine": 2201,
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
@@ -2576,7 +2628,7 @@
   {
    "rowKey": "M2-11",
    "volume": "卷二",
-   "srcLine": 2201,
+   "srcLine": 2202,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2587,7 +2639,7 @@
   {
    "rowKey": "M2-12a",
    "volume": "卷二",
-   "srcLine": 2202,
+   "srcLine": 2203,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2598,7 +2650,7 @@
   {
    "rowKey": "M2-12b",
    "volume": "卷二",
-   "srcLine": 2203,
+   "srcLine": 2204,
    "anchorsText": "",
    "anchors": [],
    "disp": "move_out",
@@ -2609,7 +2661,7 @@
   {
    "rowKey": "M2-13",
    "volume": "卷二",
-   "srcLine": 2204,
+   "srcLine": 2205,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2620,7 +2672,7 @@
   {
    "rowKey": "M2-14",
    "volume": "卷二",
-   "srcLine": 2205,
+   "srcLine": 2206,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M11-2",
@@ -2632,7 +2684,7 @@
   {
    "rowKey": "M2-15",
    "volume": "卷二",
-   "srcLine": 2206,
+   "srcLine": 2207,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2643,7 +2695,7 @@
   {
    "rowKey": "M2-16",
    "volume": "卷二",
-   "srcLine": 2207,
+   "srcLine": 2208,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2654,7 +2706,7 @@
   {
    "rowKey": "M2-17",
    "volume": "卷二",
-   "srcLine": 2208,
+   "srcLine": 2209,
    "anchorsText": "",
    "anchors": [],
    "disp": "move_out",
@@ -2665,7 +2717,7 @@
   {
    "rowKey": "M2-18",
    "volume": "卷二",
-   "srcLine": 2209,
+   "srcLine": 2210,
    "anchorsText": "",
    "anchors": [],
    "disp": "move_out",
@@ -2676,18 +2728,18 @@
   {
    "rowKey": "M2-19a",
    "volume": "卷二",
-   "srcLine": 2210,
+   "srcLine": 2211,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
    "target": "R9-9.3（卷九回合结构）",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M2-19b",
    "volume": "卷二",
-   "srcLine": 2211,
+   "srcLine": 2212,
    "anchorsText": "",
    "anchors": [],
    "disp": "move_out",
@@ -2698,7 +2750,7 @@
   {
    "rowKey": "M2-19c",
    "volume": "卷二",
-   "srcLine": 2212,
+   "srcLine": 2213,
    "anchorsText": "",
    "anchors": [],
    "disp": "move_out",
@@ -2709,7 +2761,7 @@
   {
    "rowKey": "M2-20",
    "volume": "卷二",
-   "srcLine": 2213,
+   "srcLine": 2214,
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
@@ -2720,7 +2772,7 @@
   {
    "rowKey": "M2-21",
    "volume": "卷二",
-   "srcLine": 2214,
+   "srcLine": 2215,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-33",
@@ -2732,7 +2784,7 @@
   {
    "rowKey": "M2-22",
    "volume": "卷二",
-   "srcLine": 2215,
+   "srcLine": 2216,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-34",
@@ -2744,7 +2796,7 @@
   {
    "rowKey": "M2-23",
    "volume": "卷二",
-   "srcLine": 2216,
+   "srcLine": 2217,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-36",
@@ -2756,7 +2808,7 @@
   {
    "rowKey": "M2-24",
    "volume": "卷二",
-   "srcLine": 2217,
+   "srcLine": 2218,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-37",
@@ -2768,7 +2820,7 @@
   {
    "rowKey": "M2-25",
    "volume": "卷二",
-   "srcLine": 2218,
+   "srcLine": 2219,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-38",
@@ -2780,7 +2832,7 @@
   {
    "rowKey": "M2-26",
    "volume": "卷二",
-   "srcLine": 2219,
+   "srcLine": 2220,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-39",
@@ -2792,7 +2844,7 @@
   {
    "rowKey": "M2-27",
    "volume": "卷二",
-   "srcLine": 2220,
+   "srcLine": 2221,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-42",
@@ -2804,7 +2856,7 @@
   {
    "rowKey": "M2-28",
    "volume": "卷二",
-   "srcLine": 2221,
+   "srcLine": 2222,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-44",
@@ -2816,7 +2868,7 @@
   {
    "rowKey": "M2-29",
    "volume": "卷二",
-   "srcLine": 2222,
+   "srcLine": 2223,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-45",
@@ -2828,7 +2880,7 @@
   {
    "rowKey": "M2-30",
    "volume": "卷二",
-   "srcLine": 2223,
+   "srcLine": 2224,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-51",
@@ -2840,7 +2892,7 @@
   {
    "rowKey": "M2-31",
    "volume": "卷二",
-   "srcLine": 2224,
+   "srcLine": 2225,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2851,7 +2903,7 @@
   {
    "rowKey": "M2-32",
    "volume": "卷二",
-   "srcLine": 2225,
+   "srcLine": 2226,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2862,7 +2914,7 @@
   {
    "rowKey": "M2-33",
    "volume": "卷二",
-   "srcLine": 2226,
+   "srcLine": 2227,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2873,7 +2925,7 @@
   {
    "rowKey": "M2-34",
    "volume": "卷二",
-   "srcLine": 2227,
+   "srcLine": 2228,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2884,7 +2936,7 @@
   {
    "rowKey": "M2-35",
    "volume": "卷二",
-   "srcLine": 2228,
+   "srcLine": 2229,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2895,7 +2947,7 @@
   {
    "rowKey": "M2-36",
    "volume": "卷二",
-   "srcLine": 2229,
+   "srcLine": 2230,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2906,7 +2958,7 @@
   {
    "rowKey": "M2-37",
    "volume": "卷二",
-   "srcLine": 2230,
+   "srcLine": 2231,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2917,7 +2969,7 @@
   {
    "rowKey": "M2-38",
    "volume": "卷二",
-   "srcLine": 2231,
+   "srcLine": 2232,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2928,7 +2980,7 @@
   {
    "rowKey": "M2-39",
    "volume": "卷二",
-   "srcLine": 2232,
+   "srcLine": 2233,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2939,7 +2991,7 @@
   {
    "rowKey": "M2-40",
    "volume": "卷二",
-   "srcLine": 2233,
+   "srcLine": 2234,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2950,7 +3002,7 @@
   {
    "rowKey": "M2-41",
    "volume": "卷二",
-   "srcLine": 2234,
+   "srcLine": 2235,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2961,7 +3013,7 @@
   {
    "rowKey": "M2-42",
    "volume": "卷二",
-   "srcLine": 2235,
+   "srcLine": 2236,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2972,7 +3024,7 @@
   {
    "rowKey": "M2-43",
    "volume": "卷二",
-   "srcLine": 2236,
+   "srcLine": 2237,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2983,7 +3035,7 @@
   {
    "rowKey": "M2-44",
    "volume": "卷二",
-   "srcLine": 2237,
+   "srcLine": 2238,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2994,7 +3046,7 @@
   {
    "rowKey": "M2-45",
    "volume": "卷二",
-   "srcLine": 2238,
+   "srcLine": 2239,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -3561,7 +3613,7 @@
    ],
    "disp": "replace_entry",
    "target": "调卷二 §2.5 谓词（另见卷五：perception.mjs:61 同类）",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -3649,7 +3701,7 @@
    ],
    "disp": "delete",
    "target": "删，不迁：卷十三不设价格乘数，战事对价格的影响由卷六从供需得出（卷六 §4.25；卷十三 M13-31、R13-11.13）；本卷不接",
-   "targetObject": "rules",
+   "targetObject": "sys.combat",
    "baseline": "d54c89a3"
   },
   {
@@ -3679,15 +3731,49 @@
      "lines": []
     }
    ],
+   "disp": "同 M20-29a 至 M20-29b",
+   "target": "同 M20-29a 至 M20-29b",
+   "targetObject": "同 M20-29a 至 M20-29b",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M20-29a 至 M20-29b"
+  },
+  {
+   "rowKey": "M20-29a",
+   "volume": "卷二十",
+   "srcLine": 1217,
+   "anchorsText": "hazard-calendar.mjs famineAt",
+   "anchors": [
+    {
+     "file": "hazard-calendar.mjs",
+     "lines": []
+    }
+   ],
+   "disp": "同 M21-14b",
+   "target": "同 M21-14b",
+   "targetObject": "同 M21-14b",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M21-14b"
+  },
+  {
+   "rowKey": "M20-29b",
+   "volume": "卷二十",
+   "srcLine": 1218,
+   "anchorsText": "hazard-calendar.mjs famineAt",
+   "anchors": [
+    {
+     "file": "hazard-calendar.mjs",
+     "lines": []
+    }
+   ],
    "disp": "delete",
    "target": "交卷二十一（饥荒是人群状态，卷二十一 M21-14b），其对产出的影响交卷二十五（卷二十五 §7）",
-   "targetObject": "rules",
+   "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M20-30",
    "volume": "卷二十",
-   "srcLine": 1217,
+   "srcLine": 1219,
    "anchorsText": "hazard-calendar.mjs hazardRouteClosure；warRouteClosed、warClosedRoutes；路线的 closedSeasons（weather.mjs:190、seasonal-hazards.mjs:306）",
    "anchors": [
     {
@@ -3713,15 +3799,86 @@
      ]
     }
    ],
-   "disp": "replace_entry",
-   "target": "交卷十七（通行由积雪、现象的维度推出，passOf，卷十七 M17-9）；战事封路改读卷十三 siegeView().phase、争夺度与卷十七的通行维度（卷十三 M13-31、R13-11.13）",
-   "targetObject": "rules",
-   "baseline": "d54c89a3"
+   "disp": "同 M20-30a 至 M20-30b",
+   "target": "同 M20-30a 至 M20-30b",
+   "targetObject": "同 M20-30a 至 M20-30b",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M20-30a 至 M20-30b"
+  },
+  {
+   "rowKey": "M20-30a",
+   "volume": "卷二十",
+   "srcLine": 1220,
+   "anchorsText": "hazard-calendar.mjs hazardRouteClosure；warRouteClosed、warClosedRoutes；路线的 closedSeasons（weather.mjs:190、seasonal-hazards.mjs:306）",
+   "anchors": [
+    {
+     "file": "hazard-calendar.mjs",
+     "lines": []
+    },
+    {
+     "file": "weather.mjs",
+     "lines": [
+      [
+       190,
+       190
+      ]
+     ]
+    },
+    {
+     "file": "seasonal-hazards.mjs",
+     "lines": [
+      [
+       306,
+       306
+      ]
+     ]
+    }
+   ],
+   "disp": "同 M17-9",
+   "target": "同 M17-9",
+   "targetObject": "同 M17-9",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M17-9"
+  },
+  {
+   "rowKey": "M20-30b",
+   "volume": "卷二十",
+   "srcLine": 1221,
+   "anchorsText": "hazard-calendar.mjs hazardRouteClosure；warRouteClosed、warClosedRoutes；路线的 closedSeasons（weather.mjs:190、seasonal-hazards.mjs:306）",
+   "anchors": [
+    {
+     "file": "hazard-calendar.mjs",
+     "lines": []
+    },
+    {
+     "file": "weather.mjs",
+     "lines": [
+      [
+       190,
+       190
+      ]
+     ]
+    },
+    {
+     "file": "seasonal-hazards.mjs",
+     "lines": [
+      [
+       306,
+       306
+      ]
+     ]
+    }
+   ],
+   "disp": "同 M13-31",
+   "target": "同 M13-31",
+   "targetObject": "同 M13-31",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M13-31"
   },
   {
    "rowKey": "M20-31",
    "volume": "卷二十",
-   "srcLine": 1218,
+   "srcLine": 1222,
    "anchorsText": "weather.mjs weatherTravel、weatherEdge；天气行上的 walk / horse / cart / boat 系数（:137–140）",
    "anchors": [
     {
@@ -3742,7 +3899,7 @@
   {
    "rowKey": "M20-32",
    "volume": "卷二十",
-   "srcLine": 1219,
+   "srcLine": 1223,
    "anchorsText": "天气行上的 hit / mood / crop（weather.mjs:137–140）",
    "anchors": [
     {
@@ -3763,7 +3920,7 @@
   {
    "rowKey": "M20-33",
    "volume": "卷二十",
-   "srcLine": 1220,
+   "srcLine": 1224,
    "anchorsText": "weather.mjs:211 cropProduction",
    "anchors": [
     {
@@ -3784,7 +3941,7 @@
   {
    "rowKey": "M20-34",
    "volume": "卷二十",
-   "srcLine": 1221,
+   "srcLine": 1225,
    "anchorsText": "weather.mjs:59 写死六种天气 id，:213 校验\"必须保持六类\"，:147 precipitationAt 点名三种；environment.mjs:71、:77 点名三种；seasonal-hazards.mjs:35 写死天气列表；forestWater.water.rainShare 以天气 id 为键",
    "anchors": [
     {
@@ -3835,7 +3992,7 @@
   {
    "rowKey": "M20-35",
    "volume": "卷二十",
-   "srcLine": 1222,
+   "srcLine": 1226,
    "anchorsText": "rules.weather.regions（22 个地区，各带地点名单、室内名单、按季节序号的温度、纬度）",
    "anchors": [],
    "disp": "to_data",
@@ -3846,7 +4003,7 @@
   {
    "rowKey": "M20-36",
    "volume": "卷二十",
-   "srcLine": 1223,
+   "srcLine": 1227,
    "anchorsText": "state.weather（engine.mjs:301 初始化；weather.mjs:151、subjective-view.mjs:97 读）；microclimate.humidityPercent",
    "anchors": [
     {
@@ -3885,7 +4042,7 @@
   {
    "rowKey": "M20-37",
    "volume": "卷二十",
-   "srcLine": 1224,
+   "srcLine": 1228,
    "anchorsText": "weather.mjs:151–157 humidityAt",
    "anchors": [
     {
@@ -3906,7 +4063,7 @@
   {
    "rowKey": "M20-38",
    "volume": "卷二十",
-   "srcLine": 1225,
+   "srcLine": 1229,
    "anchorsText": "world-clock.mjs clockDraw / clockRoll、hazard-calendar.mjs:20 hazardRoll 自拼抽签键",
    "anchors": [
     {
@@ -3931,7 +4088,7 @@
   {
    "rowKey": "M20-39",
    "volume": "卷二十",
-   "srcLine": 1226,
+   "srcLine": 1230,
    "anchorsText": "rules.worldClock 的行（world-clock.mjs:34 要求指向具体聚落、文化、派系）；rules.hazardClock 的行（seasonal-hazards.mjs:174 绑定聚落与季节序号 0..3）；effectTable.seasons（effects.mjs:203 按具体聚落登记）",
    "anchors": [
     {
@@ -3970,7 +4127,7 @@
   {
    "rowKey": "M20-40",
    "volume": "卷二十",
-   "srcLine": 1227,
+   "srcLine": 1231,
    "anchorsText": "world-clock.mjs:19–29 封闭的条件分支；:64 worldClockScene 在规则层拼中文",
    "anchors": [
     {
@@ -3995,7 +4152,7 @@
   {
    "rowKey": "M20-41",
    "volume": "卷二十",
-   "srcLine": 1228,
+   "srcLine": 1232,
    "anchorsText": "world/design/seasonal-hazards.mjs、world/design/m5-clock-rules.mjs 设计期生成脚本",
    "anchors": [
     {
@@ -4015,7 +4172,7 @@
   {
    "rowKey": "M20-42",
    "volume": "卷二十",
-   "srcLine": 1229,
+   "srcLine": 1233,
    "anchorsText": "effects.mjs 季节效果表入口；:207 季节起点按 360 与 90 自算",
    "anchors": [
     {
@@ -4036,7 +4193,7 @@
   {
    "rowKey": "M20-43",
    "volume": "卷二十",
-   "srcLine": 1230,
+   "srcLine": 1234,
    "anchorsText": "balance/pace.json 中文成员名单",
    "anchors": [
     {
@@ -4052,7 +4209,7 @@
   {
    "rowKey": "M20-44",
    "volume": "卷二十",
-   "srcLine": 1231,
+   "srcLine": 1235,
    "anchorsText": "environment.mjs、environment-state.mjs 本地读函数与未入表常数",
    "anchors": [
     {
@@ -4072,7 +4229,7 @@
   {
    "rowKey": "M20-45",
    "volume": "卷二十",
-   "srcLine": 1232,
+   "srcLine": 1236,
    "anchorsText": "environment.mjs:60–85 weather_exposure 记录：每天累加遮蔽分钟与放晴分钟，再与阈值比较",
    "anchors": [
     {
@@ -4093,7 +4250,7 @@
   {
    "rowKey": "M20-46",
    "volume": "卷二十",
-   "srcLine": 1233,
+   "srcLine": 1237,
    "anchorsText": "environment.mjs:227 localSightClear",
    "anchors": [
     {
@@ -4114,7 +4271,7 @@
   {
    "rowKey": "M20-47",
    "volume": "卷二十",
-   "srcLine": 1234,
+   "srcLine": 1238,
    "anchorsText": "magic-air.mjs 空气污染量；:149 airModel.windVector",
    "anchors": [
     {
@@ -4135,7 +4292,7 @@
   {
    "rowKey": "M20-48",
    "volume": "卷二十",
-   "srcLine": 1235,
+   "srcLine": 1239,
    "anchorsText": "water-cycle.mjs:12 turbidity / pathogenRisk",
    "anchors": [
     {
@@ -4156,7 +4313,7 @@
   {
    "rowKey": "M20-49",
    "volume": "卷二十",
-   "srcLine": 1245,
+   "srcLine": 1249,
    "anchorsText": "action-gateway.mjs",
    "anchors": [
     {
@@ -4181,7 +4338,7 @@
   {
    "rowKey": "M20-50",
    "volume": "卷二十",
-   "srcLine": 1246,
+   "srcLine": 1250,
    "anchorsText": "advance-registry.mjs",
    "anchors": [
     {
@@ -4195,14 +4352,14 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "astroView",
+   "target": "sys.time_env",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M20-51",
    "volume": "卷二十",
-   "srcLine": 1247,
+   "srcLine": 1251,
    "anchorsText": "agriculture-migration.mjs",
    "anchors": [
     {
@@ -4223,7 +4380,7 @@
   {
    "rowKey": "M20-52",
    "volume": "卷二十",
-   "srcLine": 1248,
+   "srcLine": 1252,
    "anchorsText": "agriculture.mjs",
    "anchors": [
     {
@@ -4276,7 +4433,7 @@
   {
    "rowKey": "M20-53",
    "volume": "卷二十",
-   "srcLine": 1249,
+   "srcLine": 1253,
    "anchorsText": "education-cohorts.mjs",
    "anchors": [
     {
@@ -4297,7 +4454,7 @@
   {
    "rowKey": "M20-54",
    "volume": "卷二十",
-   "srcLine": 1250,
+   "srcLine": 1254,
    "anchorsText": "effects.mjs",
    "anchors": [
     {
@@ -4334,7 +4491,7 @@
   {
    "rowKey": "M20-55",
    "volume": "卷二十",
-   "srcLine": 1251,
+   "srcLine": 1255,
    "anchorsText": "engine.mjs",
    "anchors": [
     {
@@ -4355,7 +4512,7 @@
   {
    "rowKey": "M20-56",
    "volume": "卷二十",
-   "srcLine": 1252,
+   "srcLine": 1256,
    "anchorsText": "faction-clock.mjs",
    "anchors": [
     {
@@ -4380,7 +4537,7 @@
   {
    "rowKey": "M20-57",
    "volume": "卷二十",
-   "srcLine": 1253,
+   "srcLine": 1257,
    "anchorsText": "faith.mjs",
    "anchors": [
     {
@@ -4401,7 +4558,7 @@
   {
    "rowKey": "M20-58",
    "volume": "卷二十",
-   "srcLine": 1254,
+   "srcLine": 1258,
    "anchorsText": "family-politics.mjs",
    "anchors": [
     {
@@ -4426,7 +4583,7 @@
   {
    "rowKey": "M20-59",
    "volume": "卷二十",
-   "srcLine": 1255,
+   "srcLine": 1259,
    "anchorsText": "festival.mjs",
    "anchors": [
     {
@@ -4455,7 +4612,7 @@
   {
    "rowKey": "M20-60",
    "volume": "卷二十",
-   "srcLine": 1256,
+   "srcLine": 1260,
    "anchorsText": "forest-water.mjs",
    "anchors": [
     {
@@ -4476,7 +4633,7 @@
   {
    "rowKey": "M20-61",
    "volume": "卷二十",
-   "srcLine": 1257,
+   "srcLine": 1261,
    "anchorsText": "hazard-calendar.mjs",
    "anchors": [
     {
@@ -4499,13 +4656,13 @@
    ],
    "disp": "delete",
    "target": "整文件退役（§7.1 M20-25 至 M20-30、M20-38）",
-   "targetObject": "rules",
+   "targetObject": "sys.time_env",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M20-62",
    "volume": "卷二十",
-   "srcLine": 1258,
+   "srcLine": 1262,
    "anchorsText": "high-nobility.mjs",
    "anchors": [
     {
@@ -4526,7 +4683,7 @@
   {
    "rowKey": "M20-63",
    "volume": "卷二十",
-   "srcLine": 1259,
+   "srcLine": 1263,
    "anchorsText": "labor-market.mjs",
    "anchors": [
     {
@@ -4551,7 +4708,7 @@
   {
    "rowKey": "M20-64",
    "volume": "卷二十",
-   "srcLine": 1260,
+   "srcLine": 1264,
    "anchorsText": "magic-economy.mjs",
    "anchors": [
     {
@@ -4572,7 +4729,7 @@
   {
    "rowKey": "M20-65",
    "volume": "卷二十",
-   "srcLine": 1261,
+   "srcLine": 1265,
    "anchorsText": "magic-water-earth.mjs",
    "anchors": [
     {
@@ -4593,7 +4750,7 @@
   {
    "rowKey": "M20-66",
    "volume": "卷二十",
-   "srcLine": 1262,
+   "srcLine": 1266,
    "anchorsText": "nation-founding.mjs",
    "anchors": [
     {
@@ -4614,7 +4771,7 @@
   {
    "rowKey": "M20-67",
    "volume": "卷二十",
-   "srcLine": 1263,
+   "srcLine": 1267,
    "anchorsText": "npc-life.mjs",
    "anchors": [
     {
@@ -4659,7 +4816,7 @@
   {
    "rowKey": "M20-68",
    "volume": "卷二十",
-   "srcLine": 1264,
+   "srcLine": 1268,
    "anchorsText": "npc-state.mjs",
    "anchors": [
     {
@@ -4684,7 +4841,7 @@
   {
    "rowKey": "M20-69",
    "volume": "卷二十",
-   "srcLine": 1265,
+   "srcLine": 1269,
    "anchorsText": "obligation-calendar.mjs",
    "anchors": [
     {
@@ -4705,7 +4862,7 @@
   {
    "rowKey": "M20-70",
    "volume": "卷二十",
-   "srcLine": 1266,
+   "srcLine": 1270,
    "anchorsText": "public-projects.mjs",
    "anchors": [
     {
@@ -4726,7 +4883,7 @@
   {
    "rowKey": "M20-71",
    "volume": "卷二十",
-   "srcLine": 1267,
+   "srcLine": 1271,
    "anchorsText": "seasonal-hazards.mjs",
    "anchors": [
     {
@@ -4753,13 +4910,13 @@
    ],
    "disp": "delete",
    "target": "整文件退役（§7.1 M20-24、M20-26、M20-30、M20-34、M20-39）",
-   "targetObject": "rules",
+   "targetObject": "sys.time_env",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M20-72",
    "volume": "卷二十",
-   "srcLine": 1268,
+   "srcLine": 1272,
    "anchorsText": "seasonal-migration.mjs",
    "anchors": [
     {
@@ -4780,7 +4937,7 @@
   {
    "rowKey": "M20-73",
    "volume": "卷二十",
-   "srcLine": 1269,
+   "srcLine": 1273,
    "anchorsText": "titles.mjs",
    "anchors": [
     {
@@ -4801,7 +4958,7 @@
   {
    "rowKey": "M20-74",
    "volume": "卷二十",
-   "srcLine": 1270,
+   "srcLine": 1274,
    "anchorsText": "transition.mjs",
    "anchors": [
     {
@@ -4822,7 +4979,7 @@
   {
    "rowKey": "M20-75",
    "volume": "卷二十",
-   "srcLine": 1271,
+   "srcLine": 1275,
    "anchorsText": "water-cycle.mjs",
    "anchors": [
     {
@@ -4836,14 +4993,14 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "astroView",
+   "target": "sys.time_env",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M20-76",
    "volume": "卷二十",
-   "srcLine": 1272,
+   "srcLine": 1276,
    "anchorsText": "weather.mjs",
    "anchors": [
     {
@@ -4874,13 +5031,13 @@
    ],
    "disp": "delete",
    "target": "整文件退役（§7.1 M20-12 至 M20-14、M20-30 至 M20-37）",
-   "targetObject": "rules",
+   "targetObject": "sys.time_env",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M20-77",
    "volume": "卷二十",
-   "srcLine": 1273,
+   "srcLine": 1277,
    "anchorsText": "wildlife-awakening.mjs",
    "anchors": [
     {
@@ -4917,7 +5074,7 @@
   {
    "rowKey": "M20-78",
    "volume": "卷二十",
-   "srcLine": 1274,
+   "srcLine": 1278,
    "anchorsText": "wildlife-society.mjs",
    "anchors": [
     {
@@ -4938,7 +5095,7 @@
   {
    "rowKey": "M20-79",
    "volume": "卷二十",
-   "srcLine": 1275,
+   "srcLine": 1279,
    "anchorsText": "wildlife.mjs",
    "anchors": [
     {
@@ -4967,7 +5124,7 @@
   {
    "rowKey": "M20-80",
    "volume": "卷二十",
-   "srcLine": 1276,
+   "srcLine": 1280,
    "anchorsText": "world-clock.mjs",
    "anchors": [
     {
@@ -4994,13 +5151,13 @@
    ],
    "disp": "delete",
    "target": "整文件退役（§7.1 M20-38 至 M20-40）",
-   "targetObject": "rules",
+   "targetObject": "sys.time_env",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M20-81",
    "volume": "卷二十",
-   "srcLine": 1282,
+   "srcLine": 1286,
    "anchorsText": "building-maintenance.mjs",
    "anchors": [
     {
@@ -5025,7 +5182,7 @@
   {
    "rowKey": "M20-82",
    "volume": "卷二十",
-   "srcLine": 1283,
+   "srcLine": 1287,
    "anchorsText": "business.mjs",
    "anchors": [
     {
@@ -5046,7 +5203,7 @@
   {
    "rowKey": "M20-83",
    "volume": "卷二十",
-   "srcLine": 1284,
+   "srcLine": 1288,
    "anchorsText": "facility-state.mjs",
    "anchors": [
     {
@@ -5067,7 +5224,7 @@
   {
    "rowKey": "M20-84",
    "volume": "卷二十",
-   "srcLine": 1285,
+   "srcLine": 1289,
    "anchorsText": "finance-assets.mjs",
    "anchors": [
     {
@@ -5104,7 +5261,7 @@
   {
    "rowKey": "M20-85",
    "volume": "卷二十",
-   "srcLine": 1286,
+   "srcLine": 1290,
    "anchorsText": "husbandry-traits.mjs",
    "anchors": [
     {
@@ -5125,7 +5282,7 @@
   {
    "rowKey": "M20-86",
    "volume": "卷二十",
-   "srcLine": 1287,
+   "srcLine": 1291,
    "anchorsText": "market.mjs",
    "anchors": [
     {
@@ -5141,7 +5298,7 @@
   {
    "rowKey": "M20-87",
    "volume": "卷二十",
-   "srcLine": 1288,
+   "srcLine": 1292,
    "anchorsText": "remote-generation.mjs",
    "anchors": [
     {
@@ -5157,7 +5314,7 @@
   {
    "rowKey": "M20-88",
    "volume": "卷二十",
-   "srcLine": 1294,
+   "srcLine": 1298,
    "anchorsText": "education.mjs、finance-assets.mjs、finance-bank.mjs、medicine.mjs、pets.mjs、quest-sources.mjs 中把 360 用作天数上限之处",
    "anchors": [
     {
@@ -5193,7 +5350,7 @@
   {
    "rowKey": "M20-89",
    "volume": "卷二十",
-   "srcLine": 1295,
+   "srcLine": 1299,
    "anchorsText": "tests/、tools/、world/design/ 中的年历算术（本卷未检索）",
    "anchors": [],
    "disp": "replace_entry",
@@ -5204,7 +5361,7 @@
   {
    "rowKey": "M20-90",
    "volume": "卷二十",
-   "srcLine": 1296,
+   "srcLine": 1300,
    "anchorsText": "§8 第 5 条“需要卷二登记的格式项”清单（词表族、规则表键、struct 等；封卷后勘误 1115k2 已逐项核过卷二）",
    "anchors": [],
    "disp": "to_data",
@@ -5301,7 +5458,7 @@
    ],
    "disp": "recode",
    "target": "R9-1.10",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
@@ -5322,7 +5479,7 @@
    ],
    "disp": "recode",
    "target": "R9-1.10",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
@@ -6037,7 +6194,7 @@
    ],
    "disp": "replace_entry",
    "target": "R27-1.1",
-   "targetObject": "advancePlan",
+   "targetObject": "sys.offscreen_save",
    "baseline": "d54c89a3"
   },
   {
@@ -6058,7 +6215,7 @@
    ],
    "disp": "delete",
    "target": "R27-2.3",
-   "targetObject": "advancePlan",
+   "targetObject": "sys.offscreen_save",
    "baseline": "d54c89a3"
   },
   {
@@ -6079,7 +6236,7 @@
    ],
    "disp": "delete",
    "target": "R27-2.4",
-   "targetObject": "advancePlan",
+   "targetObject": "sys.offscreen_save",
    "baseline": "d54c89a3"
   },
   {
@@ -6100,7 +6257,7 @@
    ],
    "disp": "delete",
    "target": "R27-2.4",
-   "targetObject": "advancePlan",
+   "targetObject": "sys.offscreen_save",
    "baseline": "d54c89a3"
   },
   {
@@ -6111,7 +6268,7 @@
    "anchors": [],
    "disp": "delete",
    "target": "R27-7.4",
-   "targetObject": "advancePlan",
+   "targetObject": "sys.offscreen_save",
    "baseline": "d54c89a3"
   },
   {
@@ -6188,7 +6345,7 @@
    ],
    "disp": "delete",
    "target": "R27-7.4",
-   "targetObject": "advancePlan",
+   "targetObject": "sys.offscreen_save",
    "baseline": "d54c89a3"
   },
   {
@@ -6351,7 +6508,7 @@
    ],
    "disp": "delete",
    "target": "R27-8.9",
-   "targetObject": "advancePlan",
+   "targetObject": "sys.offscreen_save",
    "baseline": "d54c89a3"
   },
   {
@@ -6372,7 +6529,7 @@
    ],
    "disp": "delete",
    "target": "R27-4.9",
-   "targetObject": "advancePlan",
+   "targetObject": "sys.offscreen_save",
    "baseline": "d54c89a3"
   },
   {
@@ -6483,7 +6640,7 @@
    ],
    "disp": "delete",
    "target": "R27-7.1",
-   "targetObject": "advancePlan",
+   "targetObject": "sys.offscreen_save",
    "baseline": "d54c89a3"
   },
   {
@@ -6504,7 +6661,7 @@
    ],
    "disp": "delete",
    "target": "R27-7.3",
-   "targetObject": "advancePlan",
+   "targetObject": "sys.offscreen_save",
    "baseline": "d54c89a3"
   },
   {
@@ -6624,7 +6781,7 @@
    ],
    "disp": "replace_entry",
    "target": "R23-5.5",
-   "targetObject": "actOutcome",
+   "targetObject": "sys.arts",
    "baseline": "d54c89a3"
   },
   {
@@ -6645,7 +6802,7 @@
    ],
    "disp": "recode",
    "target": "R23-1.2",
-   "targetObject": "actOutcome",
+   "targetObject": "sys.arts",
    "baseline": "d54c89a3"
   },
   {
@@ -6687,7 +6844,7 @@
    ],
    "disp": "delete",
    "target": "R23-1.2",
-   "targetObject": "actOutcome",
+   "targetObject": "sys.arts",
    "baseline": "d54c89a3"
   },
   {
@@ -6712,7 +6869,7 @@
    ],
    "disp": "recode",
    "target": "R23-4.3",
-   "targetObject": "actOutcome",
+   "targetObject": "sys.arts",
    "baseline": "d54c89a3"
   },
   {
@@ -6737,7 +6894,7 @@
    ],
    "disp": "delete",
    "target": "R23-6.3",
-   "targetObject": "actOutcome",
+   "targetObject": "sys.arts",
    "baseline": "d54c89a3"
   },
   {
@@ -6758,7 +6915,7 @@
    ],
    "disp": "recode",
    "target": "R23-4.4",
-   "targetObject": "actOutcome",
+   "targetObject": "sys.arts",
    "baseline": "d54c89a3"
   },
   {
@@ -6800,7 +6957,7 @@
    ],
    "disp": "recode",
    "target": "R23-1.2",
-   "targetObject": "actOutcome",
+   "targetObject": "sys.arts",
    "baseline": "d54c89a3"
   },
   {
@@ -6821,7 +6978,7 @@
    ],
    "disp": "replace_entry",
    "target": "R23-5.5",
-   "targetObject": "actOutcome",
+   "targetObject": "sys.arts",
    "baseline": "d54c89a3"
   },
   {
@@ -6888,7 +7045,7 @@
    ],
    "disp": "replace_entry",
    "target": "R23-1.2",
-   "targetObject": "actOutcome",
+   "targetObject": "sys.arts",
    "baseline": "d54c89a3"
   },
   {
@@ -6909,7 +7066,7 @@
    ],
    "disp": "recode",
    "target": "R23-5.6",
-   "targetObject": "actOutcome",
+   "targetObject": "sys.arts",
    "baseline": "d54c89a3"
   },
   {
@@ -6930,7 +7087,7 @@
    ],
    "disp": "recode",
    "target": "R23-5.6",
-   "targetObject": "actOutcome",
+   "targetObject": "sys.arts",
    "baseline": "d54c89a3"
   },
   {
@@ -6973,7 +7130,7 @@
    "anchors": [],
    "disp": "replace_entry",
    "target": "R23-9.1",
-   "targetObject": "actOutcome",
+   "targetObject": "sys.arts",
    "baseline": "d54c89a3"
   },
   {
@@ -7017,9 +7174,9 @@
      ]
     }
    ],
-   "disp": "recode",
+   "disp": "move_out",
    "target": "R29-2.6",
-   "targetObject": "templates",
+   "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
   {
@@ -7040,7 +7197,7 @@
    ],
    "disp": "replace_entry",
    "target": "R29-4.1（档取卷十七 exploreGrade；与 M17-12 同一处）",
-   "targetObject": "rules",
+   "targetObject": "sys.travel",
    "baseline": "d54c89a3"
   },
   {
@@ -7071,9 +7228,9 @@
      ]
     }
    ],
-   "disp": "recode",
+   "disp": "move_out",
    "target": "R29-4.2、R29-4.6、R29-4.7",
-   "targetObject": "map",
+   "targetObject": "display",
    "baseline": "d54c89a3"
   },
   {
@@ -7104,9 +7261,9 @@
      ]
     }
    ],
-   "disp": "recode",
+   "disp": "move_out",
    "target": "R29-2.6、R29-2.12",
-   "targetObject": "templates",
+   "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
   {
@@ -7125,9 +7282,9 @@
      ]
     }
    ],
-   "disp": "recode",
+   "disp": "move_out",
    "target": "R29-2.12（读可信度档代号）",
-   "targetObject": "templates",
+   "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
   {
@@ -7146,9 +7303,9 @@
      ]
     }
    ],
-   "disp": "to_data",
+   "disp": "move_out",
    "target": "R29-1.13",
-   "targetObject": "labels",
+   "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
   {
@@ -7185,9 +7342,9 @@
      ]
     }
    ],
-   "disp": "recode",
+   "disp": "move_out",
    "target": "R29-1.7、R29-7.11",
-   "targetObject": "labels",
+   "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
   {
@@ -7230,9 +7387,9 @@
      ]
     }
    ],
-   "disp": "recode",
+   "disp": "move_out",
    "target": "R29-3.7",
-   "targetObject": "panels",
+   "targetObject": "display",
    "baseline": "d54c89a3"
   },
   {
@@ -7251,9 +7408,9 @@
      ]
     }
    ],
-   "disp": "to_data",
+   "disp": "move_out",
    "target": "R29-5.1、R29-5.2",
-   "targetObject": "assets",
+   "targetObject": "display",
    "baseline": "d54c89a3"
   },
   {
@@ -7510,9 +7667,9 @@
      ]
     }
    ],
-   "disp": "recode",
+   "disp": "move_out",
    "target": "R29-3.2（部件行绑读入口，状态读代号）",
-   "targetObject": "panels",
+   "targetObject": "display",
    "baseline": "d54c89a3"
   },
   {
@@ -7526,9 +7683,9 @@
      "lines": []
     }
    ],
-   "disp": "to_data",
+   "disp": "move_out",
    "target": "R29-1.9（去处按卷二 §6.11）",
-   "targetObject": "labels",
+   "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
   {
@@ -7542,9 +7699,9 @@
      "lines": []
     }
    ],
-   "disp": "to_data",
+   "disp": "move_out",
    "target": "R29-2.11（与 M22-15 同一处；四个名字作内容进语言包，条件改通用持有率阈值，年份删去，李白 11-14 Q29-8；分工见 C29-12）",
-   "targetObject": "epithets",
+   "targetObject": "display",
    "baseline": "d54c89a3"
   },
   {
@@ -7558,9 +7715,9 @@
      "lines": []
     }
    ],
-   "disp": "to_data",
+   "disp": "move_out",
    "target": "R29-5.8",
-   "targetObject": "assets",
+   "targetObject": "display",
    "baseline": "d54c89a3"
   },
   {
@@ -7569,9 +7726,9 @@
    "srcLine": 1006,
    "anchorsText": "卷二十 §7 所列四处（调度器原因文字、日期前缀拼接、规则表里的月名纪元名旬名、时钟场景文字）",
    "anchors": [],
-   "disp": "to_data",
+   "disp": "move_out",
    "target": "R29-1.13（锚点与处置以卷二十为准，本行只给落点）",
-   "targetObject": "labels",
+   "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
   {
@@ -7589,9 +7746,9 @@
      "lines": []
     }
    ],
-   "disp": "replace_entry",
+   "disp": "move_out",
    "target": "R29-2.2 的 notice 类",
-   "targetObject": "templates",
+   "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
   {
@@ -7600,9 +7757,9 @@
    "srcLine": 1008,
    "anchorsText": "world/actions/locale/zh-CN/ 五个文件；world/templates/dialogue/common/plain/ 全部条目",
    "anchors": [],
-   "disp": "to_data",
+   "disp": "move_out",
    "target": "R29-2.1（拆成结构行加两种语言的文本；与 M9-21 同一处）",
-   "targetObject": "templates",
+   "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
   {
@@ -7640,9 +7797,9 @@
      "lines": []
     }
    ],
-   "disp": "replace_entry",
+   "disp": "move_out",
    "target": "R29-3.1、R29-3.10（卷二十二 M22-18 已接其中两个文件的读数）",
-   "targetObject": "panels",
+   "targetObject": "display",
    "baseline": "d54c89a3"
   },
   {
@@ -7715,7 +7872,7 @@
    ],
    "disp": "move_out",
    "target": "R29-5.8（归离线作者工具，运行期不读）",
-   "targetObject": "tools",
+   "targetObject": "sys.display_l10n",
    "baseline": "d54c89a3"
   },
   {
@@ -7750,9 +7907,9 @@
      "lines": []
     }
    ],
-   "disp": "replace_entry",
+   "disp": "move_out",
    "target": "R29-3.1、R29-3.7（菜单部件行加通用呈现器）",
-   "targetObject": "panels",
+   "targetObject": "display",
    "baseline": "d54c89a3"
   },
   {
@@ -7766,9 +7923,9 @@
      "lines": []
     }
    ],
-   "disp": "replace_entry",
+   "disp": "move_out",
    "target": "R29-3.1",
-   "targetObject": "panels",
+   "targetObject": "display",
    "baseline": "d54c89a3"
   },
   {
@@ -7846,9 +8003,9 @@
      "lines": []
     }
    ],
-   "disp": "replace_entry",
+   "disp": "move_out",
    "target": "R29-3.1",
-   "targetObject": "panels",
+   "targetObject": "display",
    "baseline": "d54c89a3"
   },
   {
@@ -7862,9 +8019,9 @@
      "lines": []
     }
    ],
-   "disp": "replace_entry",
+   "disp": "move_out",
    "target": "R29-3.1",
-   "targetObject": "panels",
+   "targetObject": "display",
    "baseline": "d54c89a3"
   },
   {
@@ -7894,9 +8051,9 @@
      "lines": []
     }
    ],
-   "disp": "replace_entry",
+   "disp": "move_out",
    "target": "R29-3.1、R29-1.13（部件行加 qty 格式模板）",
-   "targetObject": "panels",
+   "targetObject": "display",
    "baseline": "d54c89a3"
   },
   {
@@ -8473,7 +8630,7 @@
    ],
    "disp": "replace_entry",
    "target": "卷二 §2.5 谓词；S25-4",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -8544,7 +8701,7 @@
    ],
    "disp": "replace_entry",
    "target": "卷二 §2.5 谓词；S25-4",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -8732,8 +8889,8 @@
     }
    ],
    "disp": "recode",
-   "target": "卷五 §4.7 规则 2；S25-3",
-   "targetObject": "rules",
+   "target": "卷五 §4.7 规则 2；S25-3；S25-3 写进验收（同 R11-2.5 末句）",
+   "targetObject": "sys.place",
    "baseline": "d54c89a3"
   },
   {
@@ -8873,7 +9030,7 @@
    ],
    "disp": "replace_entry",
    "target": "卷二 §2.5 谓词",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -8923,7 +9080,7 @@
    ],
    "disp": "replace_entry",
    "target": "卷二 §2.5 谓词；S25-3、S25-9",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -9087,7 +9244,7 @@
    ],
    "disp": "replace_entry",
    "target": "卷二 §2.5 谓词；S25-4",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -9106,15 +9263,58 @@
      ]
     }
    ],
+   "disp": "同 M25-35a 至 M25-35b",
+   "target": "同 M25-35a 至 M25-35b",
+   "targetObject": "同 M25-35a 至 M25-35b",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M25-35a 至 M25-35b"
+  },
+  {
+   "rowKey": "M25-35a",
+   "volume": "卷二十五",
+   "srcLine": 892,
+   "anchorsText": "06b D：extraction.mjs:165",
+   "anchors": [
+    {
+     "file": "extraction.mjs",
+     "lines": [
+      [
+       165,
+       165
+      ]
+     ]
+    }
+   ],
    "disp": "recode",
    "target": "§4.8 规则 1（主归卷五、卷六）",
-   "targetObject": "rules",
+   "targetObject": "sys.place",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M25-35b",
+   "volume": "卷二十五",
+   "srcLine": 893,
+   "anchorsText": "06b D：extraction.mjs:165",
+   "anchors": [
+    {
+     "file": "extraction.mjs",
+     "lines": [
+      [
+       165,
+       165
+      ]
+     ]
+    }
+   ],
+   "disp": "recode",
+   "target": "§4.8 规则 1（主归卷五、卷六）",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M25-36",
    "volume": "卷二十五",
-   "srcLine": 892,
+   "srcLine": 894,
    "anchorsText": "extraction.mjs:169（本次复核）",
    "anchors": [
     {
@@ -9129,13 +9329,13 @@
    ],
    "disp": "recode",
    "target": "卷六 §4.16（本卷无规则号）",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M25-37",
    "volume": "卷二十五",
-   "srcLine": 893,
+   "srcLine": 895,
    "anchorsText": "06b A：extraction.mjs:203",
    "anchors": [
     {
@@ -9150,13 +9350,13 @@
    ],
    "disp": "replace_entry",
    "target": "卷二 §2.5 谓词",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M25-38",
    "volume": "卷二十五",
-   "srcLine": 894,
+   "srcLine": 896,
    "anchorsText": "extraction.mjs:279（本次复核）",
    "anchors": [
     {
@@ -9171,13 +9371,13 @@
    ],
    "disp": "recode",
    "target": "卷十八持有边（本卷无规则号）",
-   "targetObject": "compat",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M25-39",
    "volume": "卷二十五",
-   "srcLine": 895,
+   "srcLine": 897,
    "anchorsText": "extraction.mjs:282（本次复核）",
    "anchors": [
     {
@@ -9192,13 +9392,13 @@
    ],
    "disp": "replace_entry",
    "target": "卷二 §2.5 谓词",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M25-40",
    "volume": "卷二十五",
-   "srcLine": 896,
+   "srcLine": 898,
    "anchorsText": "extraction.mjs 的 fish、eatFish、releaseFish",
    "anchors": [
     {
@@ -9214,7 +9414,7 @@
   {
    "rowKey": "M25-41",
    "volume": "卷二十五",
-   "srcLine": 897,
+   "srcLine": 899,
    "anchorsText": "卷零 A 4.5、AUDIT2 G2",
    "anchors": [],
    "disp": "待定（补缺，非迁移）",
@@ -9225,7 +9425,7 @@
   {
    "rowKey": "M25-42",
    "volume": "卷二十五",
-   "srcLine": 898,
+   "srcLine": 900,
    "anchorsText": "06a §4：wildlife.mjs:314、:337（一审已核）；wildlife.mjs 按物种的掉落表",
    "anchors": [
     {
@@ -9254,7 +9454,7 @@
   {
    "rowKey": "M25-43",
    "volume": "卷二十五",
-   "srcLine": 899,
+   "srcLine": 901,
    "anchorsText": "wildlife.mjs:266、295、330、339–340（一审 B 已核；:266 本次复核）",
    "anchors": [
     {
@@ -9279,7 +9479,7 @@
   {
    "rowKey": "M25-44",
    "volume": "卷二十五",
-   "srcLine": 900,
+   "srcLine": 902,
    "anchorsText": "wildlife.mjs:266 的 corpseMinutes",
    "anchors": [
     {
@@ -9300,7 +9500,7 @@
   {
    "rowKey": "M25-45",
    "volume": "卷二十五",
-   "srcLine": 901,
+   "srcLine": 903,
    "anchorsText": "wildlife.mjs:72、106、316、339（一审 B 已核）",
    "anchors": [
     {
@@ -9315,13 +9515,13 @@
    ],
    "disp": "replace_entry",
    "target": "卷二 §2.5 谓词；S25-4",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M25-46",
    "volume": "卷二十五",
-   "srcLine": 902,
+   "srcLine": 904,
    "anchorsText": "household-subsistence.mjs 整体（存量部分沿用卷五 §7 的同一条）",
    "anchors": [
     {
@@ -9337,7 +9537,7 @@
   {
    "rowKey": "M25-47",
    "volume": "卷二十五",
-   "srcLine": 903,
+   "srcLine": 905,
    "anchorsText": "household-subsistence.mjs:373（本次复核）",
    "anchors": [
     {
@@ -9352,13 +9552,13 @@
    ],
    "disp": "recode",
    "target": "卷二 §2.5 谓词；S25-3、S25-4",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M25-48",
    "volume": "卷二十五",
-   "srcLine": 904,
+   "srcLine": 906,
    "anchorsText": "household-subsistence.mjs:425、453、471、474（一审 B 已核）",
    "anchors": [
     {
@@ -9373,13 +9573,13 @@
    ],
    "disp": "recode",
    "target": "卷九动作目录（本卷无规则号）",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M25-49",
    "volume": "卷二十五",
-   "srcLine": 905,
+   "srcLine": 907,
    "anchorsText": "household-subsistence.mjs:595（本次复核）",
    "anchors": [
     {
@@ -9394,13 +9594,13 @@
    ],
    "disp": "replace_entry",
    "target": "卷二 §2.5 谓词",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M25-50",
    "volume": "卷二十五",
-   "srcLine": 906,
+   "srcLine": 908,
    "anchorsText": "household-subsistence.mjs:301、543、608（一审 B 已核）",
    "anchors": [
     {
@@ -9421,7 +9621,7 @@
   {
    "rowKey": "M25-51",
    "volume": "卷二十五",
-   "srcLine": 907,
+   "srcLine": 909,
    "anchorsText": "household-subsistence.mjs:297、356（一审 B 已核）",
    "anchors": [
     {
@@ -9436,13 +9636,35 @@
    ],
    "disp": "recode",
    "target": "卷六 §4.16（本卷无规则号）",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M25-52",
    "volume": "卷二十五",
-   "srcLine": 908,
+   "srcLine": 910,
+   "anchorsText": "household-subsistence.mjs:320、535（一审 B 已核）",
+   "anchors": [
+    {
+     "file": "household-subsistence.mjs",
+     "lines": [
+      [
+       320,
+       320
+      ]
+     ]
+    }
+   ],
+   "disp": "同 M25-52a 至 M25-52b",
+   "target": "同 M25-52a 至 M25-52b",
+   "targetObject": "同 M25-52a 至 M25-52b",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M25-52a 至 M25-52b"
+  },
+  {
+   "rowKey": "M25-52a",
+   "volume": "卷二十五",
+   "srcLine": 911,
    "anchorsText": "household-subsistence.mjs:320、535（一审 B 已核）",
    "anchors": [
     {
@@ -9457,13 +9679,34 @@
    ],
    "disp": "recode",
    "target": "卷六、卷十八（本卷无规则号）",
-   "targetObject": "rules",
+   "targetObject": "sys.economy",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M25-52b",
+   "volume": "卷二十五",
+   "srcLine": 912,
+   "anchorsText": "household-subsistence.mjs:320、535（一审 B 已核）",
+   "anchors": [
+    {
+     "file": "household-subsistence.mjs",
+     "lines": [
+      [
+       320,
+       320
+      ]
+     ]
+    }
+   ],
+   "disp": "recode",
+   "target": "卷六、卷十八（本卷无规则号）",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M25-53",
    "volume": "卷二十五",
-   "srcLine": 909,
+   "srcLine": 913,
    "anchorsText": "household-subsistence.mjs 的食物按\"份\"计（portions）",
    "anchors": [
     {
@@ -9479,7 +9722,7 @@
   {
    "rowKey": "M25-54",
    "volume": "卷二十五",
-   "srcLine": 910,
+   "srcLine": 914,
    "anchorsText": "数据：rules.householdSubsistence、rules.forestWater 两个规则键",
    "anchors": [],
    "disp": "delete",
@@ -9490,7 +9733,7 @@
   {
    "rowKey": "M25-55",
    "volume": "卷二十五",
-   "srcLine": 911,
+   "srcLine": 915,
    "anchorsText": "magic-growth.mjs",
    "anchors": [
     {
@@ -9506,7 +9749,7 @@
   {
    "rowKey": "M25-56",
    "volume": "卷二十五",
-   "srcLine": 912,
+   "srcLine": 916,
    "anchorsText": "magic-growth.mjs:58（本次复核）",
    "anchors": [
     {
@@ -9521,13 +9764,13 @@
    ],
    "disp": "replace_entry",
    "target": "卷二 §2.5 谓词",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M25-57",
    "volume": "卷二十五",
-   "srcLine": 913,
+   "srcLine": 917,
    "anchorsText": "daily-actions.mjs 的营养派生与派生餐食",
    "anchors": [
     {
@@ -9543,7 +9786,7 @@
   {
    "rowKey": "M25-58",
    "volume": "卷二十五",
-   "srcLine": 914,
+   "srcLine": 918,
    "anchorsText": "数据：rules.json 的 agriculture、pets、petCare、wildlife 键；world/meta/mechanics/ 的 husbandry-pen、husbandry-takes；world/rules/tables/balance/yields.json；world/ecology/species.json 的 herds 段",
    "anchors": [
     {
@@ -9567,12 +9810,12 @@
   {
    "rowKey": "M25-59",
    "volume": "卷二十五",
-   "srcLine": 915,
+   "srcLine": 919,
    "anchorsText": "设计期脚本 agriculture-foundation、farm-pests-foundation、pet-foundation、high-wildlife-foundation（用途待核）",
    "anchors": [],
    "disp": "delete",
    "target": "—（不设取代物）",
-   "targetObject": "rules",
+   "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
   {
@@ -9981,7 +10224,7 @@
    ],
    "disp": "move_out",
    "target": "归卷二十九（显示层投影，同卷二十九 M29-1 的落点对象；同上）",
-   "targetObject": "outputGate 组",
+   "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
   {
@@ -10018,7 +10261,7 @@
    ],
    "disp": "delete",
    "target": "R26-1.1",
-   "targetObject": "decisionJitter",
+   "targetObject": "sys.psyche",
    "baseline": "d54c89a3"
   },
   {
@@ -10039,7 +10282,7 @@
    ],
    "disp": "delete",
    "target": "R26-9.6",
-   "targetObject": "decisionJitter",
+   "targetObject": "sys.psyche",
    "baseline": "d54c89a3"
   },
   {
@@ -10060,7 +10303,7 @@
    ],
    "disp": "delete",
    "target": "R26-9.6",
-   "targetObject": "decisionJitter",
+   "targetObject": "sys.psyche",
    "baseline": "d54c89a3"
   },
   {
@@ -10081,7 +10324,7 @@
    ],
    "disp": "delete",
    "target": "R26-9.6",
-   "targetObject": "decisionJitter",
+   "targetObject": "sys.psyche",
    "baseline": "d54c89a3"
   },
   {
@@ -10106,7 +10349,7 @@
    ],
    "disp": "recode",
    "target": "R26-9.1",
-   "targetObject": "decisionJitter",
+   "targetObject": "sys.psyche",
    "baseline": "d54c89a3"
   },
   {
@@ -10127,7 +10370,7 @@
    ],
    "disp": "delete",
    "target": "R26-9.1",
-   "targetObject": "decisionJitter",
+   "targetObject": "sys.psyche",
    "baseline": "d54c89a3"
   },
   {
@@ -10148,7 +10391,7 @@
    ],
    "disp": "delete",
    "target": "R26-1.1",
-   "targetObject": "decisionJitter",
+   "targetObject": "sys.psyche",
    "baseline": "d54c89a3"
   },
   {
@@ -10173,7 +10416,7 @@
    ],
    "disp": "delete",
    "target": "R26-1.1",
-   "targetObject": "decisionJitter",
+   "targetObject": "sys.psyche",
    "baseline": "d54c89a3"
   },
   {
@@ -10194,7 +10437,7 @@
    ],
    "disp": "delete",
    "target": "R26-1.1",
-   "targetObject": "decisionJitter",
+   "targetObject": "sys.psyche",
    "baseline": "d54c89a3"
   },
   {
@@ -10224,7 +10467,7 @@
    ],
    "disp": "recode",
    "target": "R26-9.1",
-   "targetObject": "decisionJitter",
+   "targetObject": "sys.psyche",
    "baseline": "d54c89a3"
   },
   {
@@ -10245,7 +10488,7 @@
    ],
    "disp": "delete",
    "target": "R26-9.1",
-   "targetObject": "decisionJitter",
+   "targetObject": "sys.psyche",
    "baseline": "d54c89a3"
   },
   {
@@ -10270,7 +10513,7 @@
    ],
    "disp": "recode",
    "target": "R26-9.1",
-   "targetObject": "decisionJitter",
+   "targetObject": "sys.psyche",
    "baseline": "d54c89a3"
   },
   {
@@ -10318,7 +10561,7 @@
    ],
    "disp": "delete",
    "target": "R26-9.1",
-   "targetObject": "decisionJitter",
+   "targetObject": "sys.psyche",
    "baseline": "d54c89a3"
   },
   {
@@ -10339,7 +10582,7 @@
    ],
    "disp": "delete",
    "target": "R26-9.4",
-   "targetObject": "decisionJitter",
+   "targetObject": "sys.psyche",
    "baseline": "d54c89a3"
   },
   {
@@ -10390,7 +10633,7 @@
    ],
    "disp": "replace_entry",
    "target": "R26-4.4",
-   "targetObject": "decisionJitter",
+   "targetObject": "sys.psyche",
    "baseline": "d54c89a3"
   },
   {
@@ -10429,7 +10672,7 @@
    ],
    "disp": "recode",
    "target": "R26-9.2",
-   "targetObject": "decisionJitter",
+   "targetObject": "sys.psyche",
    "baseline": "d54c89a3"
   },
   {
@@ -10459,7 +10702,7 @@
    ],
    "disp": "delete",
    "target": "R26-4.4",
-   "targetObject": "decisionJitter",
+   "targetObject": "sys.psyche",
    "baseline": "d54c89a3"
   },
   {
@@ -10498,7 +10741,7 @@
    ],
    "disp": "replace_entry",
    "target": "R26-8.2",
-   "targetObject": "decisionJitter",
+   "targetObject": "sys.psyche",
    "baseline": "d54c89a3"
   },
   {
@@ -10518,7 +10761,7 @@
    ],
    "disp": "recode",
    "target": "R26-8.1",
-   "targetObject": "decisionJitter",
+   "targetObject": "sys.psyche",
    "baseline": "d54c89a3"
   },
   {
@@ -10551,7 +10794,7 @@
    ],
    "disp": "delete",
    "target": "R26-4.4",
-   "targetObject": "decisionJitter",
+   "targetObject": "sys.psyche",
    "baseline": "d54c89a3"
   },
   {
@@ -10572,7 +10815,7 @@
    ],
    "disp": "delete",
    "target": "§4.4.5 示例想法行",
-   "targetObject": "rules",
+   "targetObject": "sys.psyche",
    "baseline": "d54c89a3"
   },
   {
@@ -10593,7 +10836,7 @@
    ],
    "disp": "delete",
    "target": "R26-3.6",
-   "targetObject": "decisionJitter",
+   "targetObject": "sys.psyche",
    "baseline": "d54c89a3"
   },
   {
@@ -11012,7 +11255,7 @@
    ],
    "disp": "delete",
    "target": "R27-7.4",
-   "targetObject": "advancePlan",
+   "targetObject": "sys.offscreen_save",
    "baseline": "d54c89a3"
   },
   {
@@ -11366,15 +11609,82 @@
      ]
     }
    ],
+   "disp": "同 M5-10a 至 M5-10b",
+   "target": "同 M5-10a 至 M5-10b",
+   "targetObject": "同 M5-10a 至 M5-10b",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M5-10a 至 M5-10b"
+  },
+  {
+   "rowKey": "M5-10a",
+   "volume": "卷五",
+   "srcLine": 1237,
+   "anchorsText": "二版补（主会话裁定 6）：household-subsistence.mjs:26、:44–55、:249–253、:653–661",
+   "anchors": [
+    {
+     "file": "household-subsistence.mjs",
+     "lines": [
+      [
+       26,
+       26
+      ],
+      [
+       44,
+       55
+      ],
+      [
+       249,
+       253
+      ],
+      [
+       653,
+       661
+      ]
+     ]
+    }
+   ],
    "disp": "replace_entry",
    "target": "这套独立存量与再生全部删除。采集改为卷九动作调 take，存量并入 resource-field.mjs 的存量账户（§4.7、§4.8 规则 7）；家户去不去采的决策归卷六、卷九",
-   "targetObject": "rules",
+   "targetObject": "sys.place",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M5-10b",
+   "volume": "卷五",
+   "srcLine": 1238,
+   "anchorsText": "二版补（主会话裁定 6）：household-subsistence.mjs:26、:44–55、:249–253、:653–661",
+   "anchors": [
+    {
+     "file": "household-subsistence.mjs",
+     "lines": [
+      [
+       26,
+       26
+      ],
+      [
+       44,
+       55
+      ],
+      [
+       249,
+       253
+      ],
+      [
+       653,
+       661
+      ]
+     ]
+    }
+   ],
+   "disp": "replace_entry",
+   "target": "这套独立存量与再生全部删除。采集改为卷九动作调 take，存量并入 resource-field.mjs 的存量账户（§4.7、§4.8 规则 7）；家户去不去采的决策归卷六、卷九",
+   "targetObject": "待裁",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M5-11",
    "volume": "卷五",
-   "srcLine": 1237,
+   "srcLine": 1239,
    "anchorsText": "二版补（主会话裁定 6）：wildlife.mjs:133、:168–191、:244；ecology-dynamics.mjs:48、:52、:82、:93",
    "anchors": [
     {
@@ -11418,13 +11728,13 @@
    ],
    "disp": "replace_entry",
    "target": "容量、出生、迁徙并入 settleStocks（§4.7 规则 2、3、4、8），原模块的这些算式删除。捕食改为捕食项容量加超额回落，不再保留独立的攻击率算式；共生若要保留，由卷十六以修正项作用于对象行的增长率，不在本卷另写式子；头目领地容量归卷十六的巢穴内容",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.place",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M5-12",
    "volume": "卷五",
-   "srcLine": 1238,
+   "srcLine": 1240,
    "anchorsText": "二版补：extraction.mjs:26、:56、:80–85",
    "anchors": [
     {
@@ -11453,7 +11763,7 @@
   {
    "rowKey": "M5-13",
    "volume": "卷五",
-   "srcLine": 1239,
+   "srcLine": 1241,
    "anchorsText": "二版补：forest-water.mjs:20–27、:135、:150",
    "anchors": [
     {
@@ -11482,7 +11792,7 @@
   {
    "rowKey": "M5-14",
    "volume": "卷五",
-   "srcLine": 1240,
+   "srcLine": 1242,
    "anchorsText": "二版补：stock.mjs:46、:218；husbandry.mjs:24；stock.mjs:312",
    "anchors": [
     {
@@ -11519,13 +11829,62 @@
    ],
    "disp": "recode",
    "target": "删除对照表；材料与产物读对象行与材料行；活体与否读 intent.alive 与卷四的个体（§4.8 规则 4）",
-   "targetObject": "sys.species",
+   "targetObject": "sys.place",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M5-15",
    "volume": "卷五",
-   "srcLine": 1241,
+   "srcLine": 1243,
+   "anchorsText": "06b A：location-access.mjs:48/91/115；perception.mjs:61；sites.mjs:296/602；extraction.mjs:203",
+   "anchors": [
+    {
+     "file": "location-access.mjs",
+     "lines": [
+      [
+       48,
+       48
+      ]
+     ]
+    },
+    {
+     "file": "perception.mjs",
+     "lines": [
+      [
+       61,
+       61
+      ]
+     ]
+    },
+    {
+     "file": "sites.mjs",
+     "lines": [
+      [
+       296,
+       296
+      ]
+     ]
+    },
+    {
+     "file": "extraction.mjs",
+     "lines": [
+      [
+       203,
+       203
+      ]
+     ]
+    }
+   ],
+   "disp": "同 M5-15a 至 M5-15b",
+   "target": "同 M5-15a 至 M5-15b",
+   "targetObject": "同 M5-15a 至 M5-15b",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M5-15a 至 M5-15b"
+  },
+  {
+   "rowKey": "M5-15a",
+   "volume": "卷五",
+   "srcLine": 1244,
    "anchorsText": "06b A：location-access.mjs:48/91/115；perception.mjs:61；sites.mjs:296/602；extraction.mjs:203",
    "anchors": [
     {
@@ -11567,13 +11926,61 @@
    ],
    "disp": "replace_entry",
    "target": "卷二 §2.5 谓词；在场读位置（perceive、canEnter，§4.2、§4.13）",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M5-15b",
+   "volume": "卷五",
+   "srcLine": 1245,
+   "anchorsText": "06b A：location-access.mjs:48/91/115；perception.mjs:61；sites.mjs:296/602；extraction.mjs:203",
+   "anchors": [
+    {
+     "file": "location-access.mjs",
+     "lines": [
+      [
+       48,
+       48
+      ]
+     ]
+    },
+    {
+     "file": "perception.mjs",
+     "lines": [
+      [
+       61,
+       61
+      ]
+     ]
+    },
+    {
+     "file": "sites.mjs",
+     "lines": [
+      [
+       296,
+       296
+      ]
+     ]
+    },
+    {
+     "file": "extraction.mjs",
+     "lines": [
+      [
+       203,
+       203
+      ]
+     ]
+    }
+   ],
+   "disp": "replace_entry",
+   "target": "卷二 §2.5 谓词；在场读位置（perceive、canEnter，§4.2、§4.13）",
+   "targetObject": "sys.place",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M5-16",
    "volume": "卷五",
-   "srcLine": 1242,
+   "srcLine": 1246,
    "anchorsText": "二版补：extraction.mjs:31、:207、:262；sites.mjs:306、:572、:642；location-access.mjs:48、:91、:115；sites.mjs:296、:602；perception.mjs:61、:27",
    "anchors": [
     {
@@ -11656,13 +12063,13 @@
    ],
    "disp": "replace_entry",
    "target": "一律改读卷二 §2.5 的 can、awake；本地判断清零（S5-5）",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M5-17",
    "volume": "卷五",
-   "srcLine": 1243,
+   "srcLine": 1247,
    "anchorsText": "二版补：place-layout.mjs:27、:30；perception.mjs:23",
    "anchors": [
     {
@@ -11690,13 +12097,13 @@
    ],
    "disp": "recode",
    "target": "人在哪个分区读人物位置；动作身份读卷九的动作 id（台账 S-24），不读活动文字",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M5-18",
    "volume": "卷五",
-   "srcLine": 1244,
+   "srcLine": 1248,
    "anchorsText": "二版补：place-layout.mjs:8–19",
    "anchors": [
     {
@@ -11717,7 +12124,7 @@
   {
    "rowKey": "M5-19",
    "volume": "卷五",
-   "srcLine": 1245,
+   "srcLine": 1249,
    "anchorsText": "06b D：extraction.mjs:165",
    "anchors": [
     {
@@ -11738,7 +12145,7 @@
   {
    "rowKey": "M5-20",
    "volume": "卷五",
-   "srcLine": 1246,
+   "srcLine": 1250,
    "anchorsText": "五版补：environment.mjs:227 的 localSightClear（卷二十 §7.1 同一行交来）",
    "anchors": [
     {
@@ -11759,7 +12166,7 @@
   {
    "rowKey": "M5-21",
    "volume": "卷五",
-   "srcLine": 1247,
+   "srcLine": 1251,
    "anchorsText": "五版补：water-cycle.mjs 的流域记录里的水体静态数据（容量、汇水面积、下游）",
    "anchors": [
     {
@@ -11775,7 +12182,73 @@
   {
    "rowKey": "M5-22",
    "volume": "卷五",
-   "srcLine": 1248,
+   "srcLine": 1252,
+   "anchorsText": "06a §5：law-codes.mjs:114–115；titles.mjs:129、:131；noble-state.mjs:73；high-nobility.mjs:25；remote-generation.mjs:407、:423（二版把\"等 10 处\"展开）",
+   "anchors": [
+    {
+     "file": "law-codes.mjs",
+     "lines": [
+      [
+       114,
+       115
+      ]
+     ]
+    },
+    {
+     "file": "titles.mjs",
+     "lines": [
+      [
+       129,
+       129
+      ],
+      [
+       131,
+       131
+      ]
+     ]
+    },
+    {
+     "file": "noble-state.mjs",
+     "lines": [
+      [
+       73,
+       73
+      ]
+     ]
+    },
+    {
+     "file": "high-nobility.mjs",
+     "lines": [
+      [
+       25,
+       25
+      ]
+     ]
+    },
+    {
+     "file": "remote-generation.mjs",
+     "lines": [
+      [
+       407,
+       407
+      ],
+      [
+       423,
+       423
+      ]
+     ]
+    }
+   ],
+   "disp": "同 M5-22a 至 M5-22d",
+   "target": "同 M5-22a 至 M5-22d",
+   "targetObject": "同 M5-22a 至 M5-22d",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M5-22a 至 M5-22d"
+  },
+  {
+   "rowKey": "M5-22a",
+   "volume": "卷五",
+   "srcLine": 1253,
    "anchorsText": "06a §5：law-codes.mjs:114–115；titles.mjs:129、:131；noble-state.mjs:73；high-nobility.mjs:25；remote-generation.mjs:407、:423（二版把\"等 10 处\"展开）",
    "anchors": [
     {
@@ -11834,13 +12307,208 @@
    ],
    "disp": "recode",
    "target": "职位席位所在地（§4.11 规则 4）。分派：law-codes 两处归卷八b；titles、noble-state、high-nobility 归卷八；remote-generation 两处的人口特例归卷十与卷八 §4.16；本卷只提供\"不含任何地点 id 的解析\"",
-   "targetObject": "rules",
+   "targetObject": "sys.place",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M5-22b",
+   "volume": "卷五",
+   "srcLine": 1254,
+   "anchorsText": "06a §5：law-codes.mjs:114–115；titles.mjs:129、:131；noble-state.mjs:73；high-nobility.mjs:25；remote-generation.mjs:407、:423（二版把\"等 10 处\"展开）",
+   "anchors": [
+    {
+     "file": "law-codes.mjs",
+     "lines": [
+      [
+       114,
+       115
+      ]
+     ]
+    },
+    {
+     "file": "titles.mjs",
+     "lines": [
+      [
+       129,
+       129
+      ],
+      [
+       131,
+       131
+      ]
+     ]
+    },
+    {
+     "file": "noble-state.mjs",
+     "lines": [
+      [
+       73,
+       73
+      ]
+     ]
+    },
+    {
+     "file": "high-nobility.mjs",
+     "lines": [
+      [
+       25,
+       25
+      ]
+     ]
+    },
+    {
+     "file": "remote-generation.mjs",
+     "lines": [
+      [
+       407,
+       407
+      ],
+      [
+       423,
+       423
+      ]
+     ]
+    }
+   ],
+   "disp": "recode",
+   "target": "职位席位所在地（§4.11 规则 4）。分派：law-codes 两处归卷八b；titles、noble-state、high-nobility 归卷八；remote-generation 两处的人口特例归卷十与卷八 §4.16；本卷只提供\"不含任何地点 id 的解析\"",
+   "targetObject": "sys.offense",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M5-22c",
+   "volume": "卷五",
+   "srcLine": 1255,
+   "anchorsText": "06a §5：law-codes.mjs:114–115；titles.mjs:129、:131；noble-state.mjs:73；high-nobility.mjs:25；remote-generation.mjs:407、:423（二版把\"等 10 处\"展开）",
+   "anchors": [
+    {
+     "file": "law-codes.mjs",
+     "lines": [
+      [
+       114,
+       115
+      ]
+     ]
+    },
+    {
+     "file": "titles.mjs",
+     "lines": [
+      [
+       129,
+       129
+      ],
+      [
+       131,
+       131
+      ]
+     ]
+    },
+    {
+     "file": "noble-state.mjs",
+     "lines": [
+      [
+       73,
+       73
+      ]
+     ]
+    },
+    {
+     "file": "high-nobility.mjs",
+     "lines": [
+      [
+       25,
+       25
+      ]
+     ]
+    },
+    {
+     "file": "remote-generation.mjs",
+     "lines": [
+      [
+       407,
+       407
+      ],
+      [
+       423,
+       423
+      ]
+     ]
+    }
+   ],
+   "disp": "recode",
+   "target": "职位席位所在地（§4.11 规则 4）。分派：law-codes 两处归卷八b；titles、noble-state、high-nobility 归卷八；remote-generation 两处的人口特例归卷十与卷八 §4.16；本卷只提供\"不含任何地点 id 的解析\"",
+   "targetObject": "sys.org",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M5-22d",
+   "volume": "卷五",
+   "srcLine": 1256,
+   "anchorsText": "06a §5：law-codes.mjs:114–115；titles.mjs:129、:131；noble-state.mjs:73；high-nobility.mjs:25；remote-generation.mjs:407、:423（二版把\"等 10 处\"展开）",
+   "anchors": [
+    {
+     "file": "law-codes.mjs",
+     "lines": [
+      [
+       114,
+       115
+      ]
+     ]
+    },
+    {
+     "file": "titles.mjs",
+     "lines": [
+      [
+       129,
+       129
+      ],
+      [
+       131,
+       131
+      ]
+     ]
+    },
+    {
+     "file": "noble-state.mjs",
+     "lines": [
+      [
+       73,
+       73
+      ]
+     ]
+    },
+    {
+     "file": "high-nobility.mjs",
+     "lines": [
+      [
+       25,
+       25
+      ]
+     ]
+    },
+    {
+     "file": "remote-generation.mjs",
+     "lines": [
+      [
+       407,
+       407
+      ],
+      [
+       423,
+       423
+      ]
+     ]
+    }
+   ],
+   "disp": "recode",
+   "target": "职位席位所在地（§4.11 规则 4）。分派：law-codes 两处归卷八b；titles、noble-state、high-nobility 归卷八；remote-generation 两处的人口特例归卷十与卷八 §4.16；本卷只提供\"不含任何地点 id 的解析\"",
+   "targetObject": "待裁",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M5-23",
    "volume": "卷五",
-   "srcLine": 1249,
+   "srcLine": 1257,
    "anchorsText": "06b E：law-codes.mjs:11/112/114/115、norm-stack.mjs:115、regions.mjs:58（与卷八共有）",
    "anchors": [
     {
@@ -11879,7 +12547,7 @@
   {
    "rowKey": "M5-24",
    "volume": "卷五",
-   "srcLine": 1250,
+   "srcLine": 1258,
    "anchorsText": "二版补：regions.mjs:5、:27、:33",
    "anchors": [
     {
@@ -11908,7 +12576,7 @@
   {
    "rowKey": "M5-25",
    "volume": "卷五",
-   "srcLine": 1251,
+   "srcLine": 1259,
    "anchorsText": "二版补：remote-generation.mjs:238、:245、:407、:450、:453；noble-state.mjs:73、:96",
    "anchors": [
     {
@@ -11958,7 +12626,7 @@
   {
    "rowKey": "M5-26",
    "volume": "卷五",
-   "srcLine": 1252,
+   "srcLine": 1260,
    "anchorsText": "二版补：remote-generation.mjs:270–272、:527–528、:555、:812；:259、:373、:552、:811",
    "anchors": [
     {
@@ -12007,7 +12675,7 @@
   {
    "rowKey": "M5-27",
    "volume": "卷五",
-   "srcLine": 1253,
+   "srcLine": 1261,
    "anchorsText": "卷零 A 4.7：faith-state.mjs:10、norm-stack.mjs:79、population.mjs:88、remote-generation.mjs:115",
    "anchors": [
     {
@@ -12055,7 +12723,7 @@
   {
    "rowKey": "M5-28",
    "volume": "卷五",
-   "srcLine": 1254,
+   "srcLine": 1262,
    "anchorsText": "06b E：map-state.mjs:6/8",
    "anchors": [
     {
@@ -12070,13 +12738,13 @@
    ],
    "disp": "replace_entry",
    "target": "归卷二十九 §4.4；本卷只供树与坐标（卷二十九 M29-3）",
-   "targetObject": "composeScreen",
+   "targetObject": "sys.display_l10n",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M5-29",
    "volume": "卷五",
-   "srcLine": 1255,
+   "srcLine": 1263,
    "anchorsText": "卷零 A 4.10：邻省条款文字",
    "anchors": [],
    "disp": "to_data",
@@ -12087,7 +12755,24 @@
   {
    "rowKey": "M5-30",
    "volume": "卷五",
-   "srcLine": 1256,
+   "srcLine": 1264,
+   "anchorsText": "06a §1 与 06b E 中 remote-generation.mjs 的文化分支、命名库、店货单、人口与职业清单、名字与大纲文字判断",
+   "anchors": [
+    {
+     "file": "remote-generation.mjs",
+     "lines": []
+    }
+   ],
+   "disp": "同 M5-30a 至 M5-30c",
+   "target": "同 M5-30a 至 M5-30c",
+   "targetObject": "同 M5-30a 至 M5-30c",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M5-30a 至 M5-30c"
+  },
+  {
+   "rowKey": "M5-30a",
+   "volume": "卷五",
+   "srcLine": 1265,
    "anchorsText": "06a §1 与 06b E 中 remote-generation.mjs 的文化分支、命名库、店货单、人口与职业清单、名字与大纲文字判断",
    "anchors": [
     {
@@ -12097,13 +12782,46 @@
    ],
    "disp": "to_data",
    "target": "归卷十数据表（卷二 §6.3 末段）；本卷接手其中的地形、路速、站点类型三类（气候基准归卷二十的天气单元行）（卷十 M10-1）",
-   "targetObject": "rules",
+   "targetObject": "place",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M5-30b",
+   "volume": "卷五",
+   "srcLine": 1266,
+   "anchorsText": "06a §1 与 06b E 中 remote-generation.mjs 的文化分支、命名库、店货单、人口与职业清单、名字与大纲文字判断",
+   "anchors": [
+    {
+     "file": "remote-generation.mjs",
+     "lines": []
+    }
+   ],
+   "disp": "同 M10-1",
+   "target": "同 M10-1",
+   "targetObject": "同 M10-1",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M10-1"
+  },
+  {
+   "rowKey": "M5-30c",
+   "volume": "卷五",
+   "srcLine": 1267,
+   "anchorsText": "06a §1 与 06b E 中 remote-generation.mjs 的文化分支、命名库、店货单、人口与职业清单、名字与大纲文字判断",
+   "anchors": [
+    {
+     "file": "remote-generation.mjs",
+     "lines": []
+    }
+   ],
+   "disp": "to_data",
+   "target": "归卷十数据表（卷二 §6.3 末段）；本卷接手其中的地形、路速、站点类型三类（气候基准归卷二十的天气单元行）（卷十 M10-1）",
+   "targetObject": "待裁",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M5-31",
    "volume": "卷五",
-   "srcLine": 1257,
+   "srcLine": 1268,
    "anchorsText": "二版补：新增必填维度 areaM2、skyExposure、accessClass，存量单元的 stratum，以及 comp_tract、comp_enclosure 的挂载",
    "anchors": [],
    "disp": "to_data",
@@ -12114,7 +12832,7 @@
   {
    "rowKey": "M5-32",
    "volume": "卷五",
-   "srcLine": 1258,
+   "srcLine": 1269,
    "anchorsText": "water-cycle.mjs:33、:185",
    "anchors": [
     {
@@ -12139,7 +12857,7 @@
   {
    "rowKey": "M5-33",
    "volume": "卷五",
-   "srcLine": 1259,
+   "srcLine": 1270,
    "anchorsText": "数据：geo/locations.json、regions.json、routes.json、biomes.json、settlements.json 的地形文本",
    "anchors": [
     {
@@ -12829,7 +13547,7 @@
    ],
    "disp": "replace_entry",
    "target": "卷二谓词（§4.1、§4.2）",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -12858,7 +13576,7 @@
    ],
    "disp": "delete",
    "target": "删；卷八自登记阶段，卷十只管流水线：开局人口由卷十开局人口阶段经本卷 popApply 开局建群提案写成聚合体（R8-16.2），开局政体、持有与职位由本卷 gstage_polity 阶段生成（R8-18.9）（封卷后勘误，卷十 C10-2）",
-   "targetObject": "rules",
+   "targetObject": "sys.org",
    "baseline": "d54c89a3"
   },
   {
@@ -12898,10 +13616,11 @@
      ]
     }
    ],
-   "disp": "delete",
-   "target": "退役这条写入；影响规则的字段由规则层按种子键采样，模型只写文字路径（经 aiGate）（R8-16.12；随卷二十七 M27-16）",
-   "targetObject": "rules",
-   "baseline": "d54c89a3"
+   "disp": "同 M27-16",
+   "target": "同 M27-16",
+   "targetObject": "同 M27-16",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M27-16"
   },
   {
    "rowKey": "M8-25",
@@ -13130,7 +13849,7 @@
    "rowKey": "M8b-4",
    "volume": "卷八b",
    "srcLine": 1319,
-   "anchorsText": "law.mjs:3",
+   "anchorsText": "law.mjs:3；world/rules/tables/law/",
    "anchors": [
     {
      "file": "law.mjs",
@@ -13144,7 +13863,7 @@
    ],
    "disp": "to_data",
    "target": "§2.6 规则表（本卷无规则号）",
-   "targetObject": "rules",
+   "targetObject": "rules.law",
    "baseline": "d54c89a3"
   },
   {
@@ -13281,7 +14000,7 @@
    ],
    "disp": "replace_entry",
    "target": "卷二谓词（本卷无规则号）",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -13306,7 +14025,7 @@
    ],
    "disp": "replace_entry",
    "target": "卷二谓词（本卷无规则号）",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -13409,7 +14128,7 @@
    ],
    "disp": "replace_entry",
    "target": "卷二谓词（本卷无规则号）",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -13430,7 +14149,7 @@
    ],
    "disp": "recode",
    "target": "待定（§4.11 正文没有写\"入口返回原因代号\"的规则）",
-   "targetObject": "rules",
+   "targetObject": "sys.offense",
    "baseline": "d54c89a3"
   },
   {
@@ -13455,7 +14174,7 @@
    ],
    "disp": "recode",
    "target": "卷二谓词；R8b-11.5",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -13550,7 +14269,7 @@
    ],
    "disp": "replace_entry",
    "target": "卷二谓词；R8b-6.1",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -13596,7 +14315,7 @@
    ],
    "disp": "replace_entry",
    "target": "卷二谓词；R8b-15.5",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -13625,7 +14344,7 @@
    ],
    "disp": "replace_entry",
    "target": "卷二谓词；R8b-15.2",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -13646,7 +14365,7 @@
    ],
    "disp": "recode",
    "target": "卷六 终态封闭枚举（本卷无规则号）",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -13774,7 +14493,7 @@
    ],
    "disp": "to_data",
    "target": "待定（§4.2 正文没有写动作目录迁移的规则）",
-   "targetObject": "rules",
+   "targetObject": "sys.offense",
    "baseline": "d54c89a3"
   },
   {
@@ -13827,7 +14546,7 @@
    ],
    "disp": "replace_entry",
    "target": "待定（归属未定，卷十一立卡时按调用方判定）",
-   "targetObject": "cardId",
+   "targetObject": "sys.migration",
    "baseline": "d54c89a3"
   },
   {
@@ -13848,7 +14567,7 @@
    ],
    "disp": "replace_entry",
    "target": "§4.1 规则 11",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -13868,7 +14587,7 @@
    ],
    "disp": "delete",
    "target": "§4.1 规则 11",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -13893,7 +14612,7 @@
    ],
    "disp": "replace_entry",
    "target": "§4.1 规则 10",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -13914,7 +14633,7 @@
    ],
    "disp": "recode",
    "target": "§4.12 规则 1",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -13952,7 +14671,7 @@
    ],
    "disp": "recode",
    "target": "§4.6 规则 2",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -13990,7 +14709,7 @@
    ],
    "disp": "recode",
    "target": "S6-5",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14022,7 +14741,7 @@
    "anchors": [],
    "disp": "replace_entry",
    "target": "§4.5 规则 2",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14058,7 +14777,7 @@
    "anchors": [],
    "disp": "delete",
    "target": "§4.2 规则 7",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14100,7 +14819,7 @@
    ],
    "disp": "recode",
    "target": "§4.11 规则 1",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14111,7 +14830,7 @@
    "anchors": [],
    "disp": "recode",
    "target": "§4.11 规则 2 至 4",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14278,7 +14997,7 @@
    ],
    "disp": "replace_entry",
    "target": "S6-6",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14311,7 +15030,7 @@
    ],
    "disp": "recode",
    "target": "§4.18 规则 1",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14354,7 +15073,7 @@
    ],
    "disp": "recode",
    "target": "§4.18 规则 5",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14396,7 +15115,7 @@
    ],
    "disp": "recode",
    "target": "§4.20 规则 8",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14417,7 +15136,7 @@
    ],
    "disp": "recode",
    "target": "§4.16 规则 1",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14428,7 +15147,7 @@
    "anchors": [],
    "disp": "recode",
    "target": "§4.14 规则 2",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14439,7 +15158,7 @@
    "anchors": [],
    "disp": "to_data",
    "target": "§4.16 规则 1",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14478,7 +15197,7 @@
    ],
    "disp": "replace_entry",
    "target": "engine.rules（卷二 §1.3 规则表登记）",
-   "targetObject": "rules",
+   "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
   {
@@ -14529,7 +15248,7 @@
    ],
    "disp": "to_data",
    "target": "§4.19 规则 4",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14563,7 +15282,7 @@
    ],
    "disp": "replace_entry",
    "target": "§4.21 规则 5",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14574,7 +15293,7 @@
    "anchors": [],
    "disp": "replace_entry",
    "target": "§4.4 规则 3",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14585,7 +15304,7 @@
    "anchors": [],
    "disp": "to_data",
    "target": "§4.9 规则 6",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14687,7 +15406,7 @@
    ],
    "disp": "replace_entry",
    "target": "priceFor（§4.21）",
-   "targetObject": "rules",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14708,7 +15427,7 @@
    ],
    "disp": "replace_entry",
    "target": "priceFor（§4.21）",
-   "targetObject": "rules",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14729,7 +15448,7 @@
    ],
    "disp": "delete",
    "target": "§4.21 规则 5、9",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14758,7 +15477,7 @@
    ],
    "disp": "replace_entry",
    "target": "priceFor（§4.21）",
-   "targetObject": "rules",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14795,7 +15514,7 @@
    ],
    "disp": "recode",
    "target": "§4.2 规则 5",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14820,7 +15539,7 @@
    ],
    "disp": "replace_entry",
    "target": "§4.2 规则 5",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14841,7 +15560,7 @@
    ],
    "disp": "replace_entry",
    "target": "sellable",
-   "targetObject": "rules",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14866,7 +15585,7 @@
    ],
    "disp": "replace_entry",
    "target": "§4.4 规则 4",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14887,7 +15606,7 @@
    ],
    "disp": "recode",
    "target": "§4.6 规则 2",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14917,7 +15636,7 @@
    ],
    "disp": "replace_entry",
    "target": "§4.5 规则 4",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14938,7 +15657,7 @@
    ],
    "disp": "delete",
    "target": "§4.21 规则 1（priceFor）",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -14959,7 +15678,7 @@
    ],
    "disp": "replace_entry",
    "target": "priceFor（§4.21）",
-   "targetObject": "rules",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15007,7 +15726,7 @@
    ],
    "disp": "replace_entry",
    "target": "priceFor（§4.21）",
-   "targetObject": "rules",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15028,7 +15747,7 @@
    ],
    "disp": "delete",
    "target": "§4.4 规则 2",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15080,7 +15799,7 @@
    ],
    "disp": "recode",
    "target": "S6-2",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15101,7 +15820,7 @@
    ],
    "disp": "delete",
    "target": "§4.16 规则 3",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15117,7 +15836,7 @@
    ],
    "disp": "delete",
    "target": "§4.14 规则 2",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15162,7 +15881,7 @@
    ],
    "disp": "recode",
    "target": "§4.16 规则 5、8",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15231,7 +15950,7 @@
    ],
    "disp": "recode",
    "target": "§4.16 规则 1、5、8",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15276,7 +15995,7 @@
    ],
    "disp": "recode",
    "target": "§4.19 规则 3、6",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15306,7 +16025,7 @@
    ],
    "disp": "recode",
    "target": "§4.16 规则 8",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15358,7 +16077,7 @@
    ],
    "disp": "replace_entry",
    "target": "S6-6",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15391,7 +16110,7 @@
    ],
    "disp": "replace_entry",
    "target": "S6-6",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15432,7 +16151,7 @@
    ],
    "disp": "recode",
    "target": "§4.11 规则 1",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15482,7 +16201,7 @@
    ],
    "disp": "replace_entry",
    "target": "§4.4 规则 3",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15512,7 +16231,7 @@
    ],
    "disp": "delete",
    "target": "§4.11 规则 2 至 4",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15544,7 +16263,7 @@
    ],
    "disp": "replace_entry",
    "target": "§4.5 规则 2",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15560,7 +16279,7 @@
    ],
    "disp": "to_data",
    "target": "§4.5 规则 1、3",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15576,7 +16295,7 @@
    ],
    "disp": "replace_entry",
    "target": "§4.4 规则 2",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15610,7 +16329,7 @@
    ],
    "disp": "replace_entry",
    "target": "priceFor（§4.21）",
-   "targetObject": "rules",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15643,7 +16362,7 @@
    ],
    "disp": "replace_entry",
    "target": "§4.6 规则 1、12",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15668,7 +16387,7 @@
    ],
    "disp": "delete",
    "target": "§4.25 规则 1",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15718,7 +16437,7 @@
    ],
    "disp": "replace_entry",
    "target": "§4.22 规则 3",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15739,7 +16458,7 @@
    ],
    "disp": "replace_entry",
    "target": "§4.1 规则 5",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15769,7 +16488,7 @@
    ],
    "disp": "replace_entry",
    "target": "§4.19 规则 5",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15785,7 +16504,7 @@
    ],
    "disp": "delete",
    "target": "R10-1.1、R10-3.1",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
@@ -15810,7 +16529,7 @@
    ],
    "disp": "delete",
    "target": "R10-4.2、R10-4.4",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
@@ -15831,7 +16550,7 @@
    ],
    "disp": "delete",
    "target": "R10-4.4",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
@@ -15852,7 +16571,7 @@
    ],
    "disp": "delete",
    "target": "R10-4.8",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
@@ -15894,7 +16613,7 @@
    ],
    "disp": "delete",
    "target": "R10-7.7",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
@@ -15915,7 +16634,7 @@
    ],
    "disp": "delete",
    "target": "R10-4.1",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
@@ -15936,7 +16655,7 @@
    ],
    "disp": "delete",
    "target": "marketQuote（卷六 §3.1）",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -15961,7 +16680,7 @@
    ],
    "disp": "delete",
    "target": "R10-4.1、R10-4.3",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
@@ -15982,7 +16701,7 @@
    ],
    "disp": "delete",
    "target": "R10-4.4",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
@@ -16003,7 +16722,7 @@
    ],
    "disp": "delete",
    "target": "R10-4.7",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
@@ -16024,7 +16743,7 @@
    ],
    "disp": "delete",
    "target": "R10-4.3",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
@@ -16045,7 +16764,7 @@
    ],
    "disp": "delete",
    "target": "R10-3.4",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
@@ -16070,7 +16789,7 @@
    ],
    "disp": "delete",
    "target": "R10-4.8、R10-4.9",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
@@ -16099,7 +16818,7 @@
    ],
    "disp": "delete",
    "target": "R10-4.7、R10-7.2",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
@@ -16130,15 +16849,82 @@
      ]
     }
    ],
+   "disp": "同 M10-16a 至 M10-16b",
+   "target": "同 M10-16a 至 M10-16b",
+   "targetObject": "同 M10-16a 至 M10-16b",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M10-16a 至 M10-16b"
+  },
+  {
+   "rowKey": "M10-16a",
+   "volume": "卷十",
+   "srcLine": 1028,
+   "anchorsText": "remote-generation.mjs:263、:321、:322、:323",
+   "anchors": [
+    {
+     "file": "remote-generation.mjs",
+     "lines": [
+      [
+       263,
+       263
+      ],
+      [
+       321,
+       321
+      ],
+      [
+       322,
+       322
+      ],
+      [
+       323,
+       323
+      ]
+     ]
+    }
+   ],
    "disp": "delete",
    "target": "R17-1.4（卷十七）；envAt（卷二十 §3.1）",
-   "targetObject": "rules",
+   "targetObject": "sys.travel",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M10-16b",
+   "volume": "卷十",
+   "srcLine": 1029,
+   "anchorsText": "remote-generation.mjs:263、:321、:322、:323",
+   "anchors": [
+    {
+     "file": "remote-generation.mjs",
+     "lines": [
+      [
+       263,
+       263
+      ],
+      [
+       321,
+       321
+      ],
+      [
+       322,
+       322
+      ],
+      [
+       323,
+       323
+      ]
+     ]
+    }
+   ],
+   "disp": "delete",
+   "target": "R17-1.4（卷十七）；envAt（卷二十 §3.1）",
+   "targetObject": "sys.time_env",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M10-17",
    "volume": "卷十",
-   "srcLine": 1028,
+   "srcLine": 1030,
    "anchorsText": "remote-generation.mjs:115 与 population.mjs:88",
    "anchors": [
     {
@@ -16162,13 +16948,35 @@
    ],
    "disp": "delete",
    "target": "R10-5.1",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M10-18",
    "volume": "卷十",
-   "srcLine": 1029,
+   "srcLine": 1031,
+   "anchorsText": "remote-generation.mjs:723",
+   "anchors": [
+    {
+     "file": "remote-generation.mjs",
+     "lines": [
+      [
+       723,
+       723
+      ]
+     ]
+    }
+   ],
+   "disp": "同 M10-18a 至 M10-18b",
+   "target": "同 M10-18a 至 M10-18b",
+   "targetObject": "同 M10-18a 至 M10-18b",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M10-18a 至 M10-18b"
+  },
+  {
+   "rowKey": "M10-18a",
+   "volume": "卷十",
+   "srcLine": 1032,
    "anchorsText": "remote-generation.mjs:723",
    "anchors": [
     {
@@ -16183,13 +16991,34 @@
    ],
    "disp": "delete",
    "target": "卷五、卷二十五（疑点：未能定到规则号，见勘误行 1115y1b）",
-   "targetObject": "rules",
+   "targetObject": "sys.place",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M10-18b",
+   "volume": "卷十",
+   "srcLine": 1033,
+   "anchorsText": "remote-generation.mjs:723",
+   "anchors": [
+    {
+     "file": "remote-generation.mjs",
+     "lines": [
+      [
+       723,
+       723
+      ]
+     ]
+    }
+   ],
+   "disp": "delete",
+   "target": "卷五、卷二十五（疑点：未能定到规则号，见勘误行 1115y1b）",
+   "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M10-19",
    "volume": "卷十",
-   "srcLine": 1030,
+   "srcLine": 1034,
    "anchorsText": "population.mjs:384、:392",
    "anchors": [
     {
@@ -16208,13 +17037,13 @@
    ],
    "disp": "recode",
    "target": "R10-4.11",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M10-20",
    "volume": "卷十",
-   "srcLine": 1031,
+   "srcLine": 1035,
    "anchorsText": "population.mjs:411",
    "anchors": [
     {
@@ -16229,13 +17058,13 @@
    ],
    "disp": "delete",
    "target": "R10-4.12",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M10-21",
    "volume": "卷十",
-   "srcLine": 1032,
+   "srcLine": 1036,
    "anchorsText": "population.mjs:33–36、:62、:69、:99、:371",
    "anchors": [
     {
@@ -16266,13 +17095,13 @@
    ],
    "disp": "delete",
    "target": "R10-4.12",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M10-22",
    "volume": "卷十",
-   "srcLine": 1033,
+   "srcLine": 1037,
    "anchorsText": "population.mjs:407、:409",
    "anchors": [
     {
@@ -16297,7 +17126,7 @@
   {
    "rowKey": "M10-23",
    "volume": "卷十",
-   "srcLine": 1034,
+   "srcLine": 1038,
    "anchorsText": "population.mjs 的人物档起草与入库",
    "anchors": [
     {
@@ -16307,13 +17136,13 @@
    ],
    "disp": "replace_entry",
    "target": "R10-4.11",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M10-24",
    "volume": "卷十",
-   "srcLine": 1035,
+   "srcLine": 1039,
    "anchorsText": "wildlife-habitats.mjs（101 行）",
    "anchors": [
     {
@@ -16323,13 +17152,13 @@
    ],
    "disp": "delete",
    "target": "R10-6.1、R10-6.7",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M10-25",
    "volume": "卷十",
-   "srcLine": 1036,
+   "srcLine": 1040,
    "anchorsText": "world/meta/rules.json 键 habitatDerivation",
    "anchors": [
     {
@@ -16339,13 +17168,13 @@
    ],
    "disp": "delete",
    "target": "R10-6.7",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M10-26",
    "volume": "卷十",
-   "srcLine": 1037,
+   "srcLine": 1041,
    "anchorsText": "regions.mjs:44、:58",
    "anchors": [
     {
@@ -16364,13 +17193,13 @@
    ],
    "disp": "delete",
    "target": "R10-2.7、R10-2.11",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M10-27",
    "volume": "卷十",
-   "srcLine": 1038,
+   "srcLine": 1042,
    "anchorsText": "character.mjs 的出生地缺省（固定地点）",
    "anchors": [
     {
@@ -16380,13 +17209,13 @@
    ],
    "disp": "delete",
    "target": "R10-12.6",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M10-28",
    "volume": "卷十",
-   "srcLine": 1039,
+   "srcLine": 1043,
    "anchorsText": "legacy、compat 3 处；migrations.mjs；world-upgrade.mjs 的历史 id 保留",
    "anchors": [
     {
@@ -16400,13 +17229,13 @@
    ],
    "disp": "delete",
    "target": "R10-12.8",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M10-29",
    "volume": "卷十",
-   "srcLine": 1040,
+   "srcLine": 1044,
    "anchorsText": "settlement-profile.mjs（71 行）",
    "anchors": [
     {
@@ -16422,7 +17251,7 @@
   {
    "rowKey": "M10-30",
    "volume": "卷十",
-   "srcLine": 1041,
+   "srcLine": 1045,
    "anchorsText": "place-layout.mjs（80 行）；world/design 下的布局、省郡、人物生成脚本",
    "anchors": [
     {
@@ -16438,7 +17267,7 @@
   {
    "rowKey": "M10-31",
    "volume": "卷十",
-   "srcLine": 1042,
+   "srcLine": 1046,
    "anchorsText": "world/lore/cultures.json 的 naming（18 处）",
    "anchors": [
     {
@@ -16454,7 +17283,7 @@
   {
    "rowKey": "M10-32",
    "volume": "卷十",
-   "srcLine": 1043,
+   "srcLine": 1047,
    "anchorsText": "world/geo/regions.json、settlements.json、locations.json",
    "anchors": [
     {
@@ -16478,7 +17307,7 @@
   {
    "rowKey": "M10-33",
    "volume": "卷十",
-   "srcLine": 1044,
+   "srcLine": 1048,
    "anchorsText": "world/people/baseline.json、households.json、residents.json",
    "anchors": [
     {
@@ -16502,7 +17331,7 @@
   {
    "rowKey": "M10-34",
    "volume": "卷十",
-   "srcLine": 1045,
+   "srcLine": 1049,
    "anchorsText": "world/rules/tables/seed-keys.json",
    "anchors": [
     {
@@ -16518,7 +17347,7 @@
   {
    "rowKey": "M10-35",
    "volume": "卷十",
-   "srcLine": 1046,
+   "srcLine": 1050,
    "anchorsText": "population.mjs:40",
    "anchors": [
     {
@@ -16533,13 +17362,13 @@
    ],
    "disp": "recode",
    "target": "R10-4.8、R10-12.2",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M10-36",
    "volume": "卷十",
-   "srcLine": 1047,
+   "srcLine": 1051,
    "anchorsText": "population-service.mjs:12",
    "anchors": [
     {
@@ -16554,13 +17383,13 @@
    ],
    "disp": "delete",
    "target": "R10-4.9、R10-4.11",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M10-37",
    "volume": "卷十",
-   "srcLine": 1048,
+   "srcLine": 1052,
    "anchorsText": "population.mjs:367、:380",
    "anchors": [
     {
@@ -16579,13 +17408,13 @@
    ],
    "disp": "delete",
    "target": "R10-4.11",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M10-38",
    "volume": "卷十",
-   "srcLine": 1049,
+   "srcLine": 1053,
    "anchorsText": "remote-generation.mjs:799",
    "anchors": [
     {
@@ -16600,13 +17429,13 @@
    ],
    "disp": "delete",
    "target": "R10-4.11",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M10-39",
    "volume": "卷十",
-   "srcLine": 1050,
+   "srcLine": 1054,
    "anchorsText": "world/geo/routes.json、biomes.json",
    "anchors": [
     {
@@ -16626,7 +17455,7 @@
   {
    "rowKey": "M10-40",
    "volume": "卷十",
-   "srcLine": 1051,
+   "srcLine": 1055,
    "anchorsText": "world/lore/eras.json、history.json",
    "anchors": [
     {
@@ -16646,7 +17475,7 @@
   {
    "rowKey": "M10-41",
    "volume": "卷十",
-   "srcLine": 1052,
+   "srcLine": 1056,
    "anchorsText": "server-plugin/npc-state.mjs（468 行）",
    "anchors": [
     {
@@ -16656,13 +17485,13 @@
    ],
    "disp": "replace_entry",
    "target": "R10-4.9",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M10-42",
    "volume": "卷十",
-   "srcLine": 1053,
+   "srcLine": 1057,
    "anchorsText": "legacy/seed.json 及其读者：index.mjs 读入后由遗留数据建新战役处（文件与读入处按卷十一 M11-2 在基线提交里定位，本行不另写行号）",
    "anchors": [
     {
@@ -16704,7 +17533,7 @@
    ],
    "disp": "delete",
    "target": "R11-1.5；卷二十七 M27-7",
-   "targetObject": "rules",
+   "targetObject": "sys.offscreen_save",
    "baseline": "d54c89a3"
   },
   {
@@ -16722,15 +17551,56 @@
      "lines": []
     }
    ],
+   "disp": "同 M11-2a 至 M11-2b",
+   "target": "同 M11-2a 至 M11-2b",
+   "targetObject": "同 M11-2a 至 M11-2b",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M11-2a 至 M11-2b"
+  },
+  {
+   "rowKey": "M11-2a",
+   "volume": "卷十一",
+   "srcLine": 815,
+   "anchorsText": "server-plugin/compat/v2-phase1-*.mjs、legacy/core.js、legacy/seed.json",
+   "anchors": [
+    {
+     "file": "legacy/core.js",
+     "lines": []
+    },
+    {
+     "file": "legacy/seed.json",
+     "lines": []
+    }
+   ],
    "disp": "delete",
    "target": "R11-1.5；卷十 §4.12；版本标记分支另见卷二十七的 M27-15",
-   "targetObject": "rules",
+   "targetObject": "sys.migration",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M11-2b",
+   "volume": "卷十一",
+   "srcLine": 816,
+   "anchorsText": "server-plugin/compat/v2-phase1-*.mjs、legacy/core.js、legacy/seed.json",
+   "anchors": [
+    {
+     "file": "legacy/core.js",
+     "lines": []
+    },
+    {
+     "file": "legacy/seed.json",
+     "lines": []
+    }
+   ],
+   "disp": "delete",
+   "target": "R11-1.5；卷十 §4.12；版本标记分支另见卷二十七的 M27-15",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M11-3",
    "volume": "卷十一",
-   "srcLine": 815,
+   "srcLine": 817,
    "anchorsText": "server-plugin/legacy-primitives.mjs",
    "anchors": [
     {
@@ -16740,13 +17610,13 @@
    ],
    "disp": "delete",
    "target": "R11-1.9、R11-5.5；与卷九的 M9-2 合组",
-   "targetObject": "rules",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M11-4",
    "volume": "卷十一",
-   "srcLine": 816,
+   "srcLine": 818,
    "anchorsText": "server-plugin/holding-sources.mjs、money.mjs、stock.mjs 的适配部分",
    "anchors": [
     {
@@ -16770,7 +17640,7 @@
   {
    "rowKey": "M11-5",
    "volume": "卷十一",
-   "srcLine": 817,
+   "srcLine": 819,
    "anchorsText": "tools/k8-guard.mjs",
    "anchors": [
     {
@@ -16780,24 +17650,24 @@
    ],
    "disp": "replace_entry",
    "target": "R12-9.4",
-   "targetObject": "tools",
+   "targetObject": "sys.acceptance_scan",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M11-6",
    "volume": "卷十一",
-   "srcLine": 818,
+   "srcLine": 820,
    "anchorsText": "tools/test-impact",
    "anchors": [],
    "disp": "待补（疑点：原写\"保留\"，五种 mig_disp 无对应值，见修订记录 1115y1）",
    "target": "R11-6.10",
-   "targetObject": "tools",
+   "targetObject": "sys.migration",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M11-7",
    "volume": "卷十一",
-   "srcLine": 819,
+   "srcLine": 821,
    "anchorsText": "tools/derived-scan.mjs、balance-metrics.mjs、content-pipeline.mjs、content-budget.mjs",
    "anchors": [
     {
@@ -16819,40 +17689,40 @@
    ],
    "disp": "待补（疑点：原写\"本卷不处置\"，认领在卷二十八 M28-11 与卷十二，本行不是迁移处置，见修订记录 1115y1）",
    "target": "C11-7",
-   "targetObject": "tools",
+   "targetObject": "待补",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M11-8",
    "volume": "卷十一",
-   "srcLine": 820,
+   "srcLine": 822,
    "anchorsText": "计划文档里手工维护的卡登记与\"归后续\"登记",
    "anchors": [],
    "disp": "replace_entry",
    "target": "R11-2.9、C11-10",
-   "targetObject": "tools",
+   "targetObject": "sys.migration",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M11-9",
    "volume": "卷十一",
-   "srcLine": 821,
+   "srcLine": 823,
    "anchorsText": "两条在旧形状上修补的在途分支（06a §五）",
    "anchors": [],
    "disp": "delete",
    "target": "R11-1.10",
-   "targetObject": "tools",
+   "targetObject": "sys.migration",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M11-10",
    "volume": "卷十一",
-   "srcLine": 822,
+   "srcLine": 824,
    "anchorsText": "tests/ 里按旧数值手推的期望值（06a §五：id 字面量 9554 处）",
    "anchors": [],
    "disp": "recode",
    "target": "R11-6.1 至 R11-6.9",
-   "targetObject": "tests",
+   "targetObject": "sys.migration",
    "baseline": "d54c89a3"
   },
   {
@@ -16903,7 +17773,7 @@
    ],
    "disp": "recode",
    "target": "R17-2.1",
-   "targetObject": "aboardOf",
+   "targetObject": "sys.travel",
    "baseline": "d54c89a3"
   },
   {
@@ -16924,7 +17794,7 @@
    ],
    "disp": "recode",
    "target": "R17-3.2",
-   "targetObject": "aboardOf",
+   "targetObject": "sys.travel",
    "baseline": "d54c89a3"
   },
   {
@@ -16963,7 +17833,7 @@
    ],
    "disp": "recode",
    "target": "awake（卷二 §2.5（状态谓词单点））",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -16979,7 +17849,7 @@
    ],
    "disp": "delete",
    "target": "priceFor（卷六 §4.21）",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -16999,7 +17869,7 @@
    ],
    "disp": "replace_entry",
    "target": "R17-1.8",
-   "targetObject": "aboardOf",
+   "targetObject": "sys.travel",
    "baseline": "d54c89a3"
   },
   {
@@ -17015,7 +17885,7 @@
    ],
    "disp": "to_data",
    "target": "R17-4.1",
-   "targetObject": "aboardOf",
+   "targetObject": "sys.travel",
    "baseline": "d54c89a3"
   },
   {
@@ -17040,7 +17910,7 @@
    ],
    "disp": "recode",
    "target": "R17-1.4",
-   "targetObject": "aboardOf",
+   "targetObject": "sys.travel",
    "baseline": "d54c89a3"
   },
   {
@@ -17065,7 +17935,7 @@
    ],
    "disp": "recode",
    "target": "R17-1.3",
-   "targetObject": "aboardOf",
+   "targetObject": "sys.travel",
    "baseline": "d54c89a3"
   },
   {
@@ -17090,7 +17960,7 @@
    ],
    "disp": "recode",
    "target": "R17-9.5",
-   "targetObject": "aboardOf",
+   "targetObject": "sys.travel",
    "baseline": "d54c89a3"
   },
   {
@@ -17111,7 +17981,7 @@
    ],
    "disp": "recode",
    "target": "R17-9.3",
-   "targetObject": "aboardOf",
+   "targetObject": "sys.travel",
    "baseline": "d54c89a3"
   },
   {
@@ -17140,7 +18010,7 @@
    ],
    "disp": "recode",
    "target": "R17-11.1",
-   "targetObject": "aboardOf",
+   "targetObject": "sys.travel",
    "baseline": "d54c89a3"
   },
   {
@@ -17161,7 +18031,7 @@
    ],
    "disp": "recode",
    "target": "R17-7.3",
-   "targetObject": "aboardOf",
+   "targetObject": "sys.travel",
    "baseline": "d54c89a3"
   },
   {
@@ -17177,7 +18047,7 @@
    ],
    "disp": "to_data",
    "target": "R17-7.2",
-   "targetObject": "aboardOf",
+   "targetObject": "sys.travel",
    "baseline": "d54c89a3"
   },
   {
@@ -17242,7 +18112,7 @@
    ],
    "disp": "recode",
    "target": "R17-1.1",
-   "targetObject": "aboardOf",
+   "targetObject": "sys.travel",
    "baseline": "d54c89a3"
   },
   {
@@ -17262,7 +18132,7 @@
    ],
    "disp": "replace_entry",
    "target": "R17-1.9",
-   "targetObject": "aboardOf",
+   "targetObject": "sys.travel",
    "baseline": "d54c89a3"
   },
   {
@@ -17294,7 +18164,7 @@
    ],
    "disp": "delete",
    "target": "卷九对抗检定不设钳位；R13-1.1",
-   "targetObject": "rules",
+   "targetObject": "sys.combat",
    "baseline": "d54c89a3"
   },
   {
@@ -17315,7 +18185,7 @@
    ],
    "disp": "recode",
    "target": "combatReadings；生命值退役（Q13-3）",
-   "targetObject": "rules",
+   "targetObject": "sys.combat",
    "baseline": "d54c89a3"
   },
   {
@@ -17336,7 +18206,7 @@
    ],
    "disp": "replace_entry",
    "target": "strikeOutcome、strikePreview；打法条目",
-   "targetObject": "rules",
+   "targetObject": "sys.combat",
    "baseline": "d54c89a3"
   },
   {
@@ -17352,7 +18222,7 @@
    ],
    "disp": "replace_entry",
    "target": "encounterStep、beatTick、R13-18.7",
-   "targetObject": "battlePreview",
+   "targetObject": "sys.combat",
    "baseline": "d54c89a3"
   },
   {
@@ -17373,7 +18243,7 @@
    ],
    "disp": "recode",
    "target": "awake（卷二 §2.5（状态谓词单点））",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -17389,7 +18259,7 @@
    ],
    "disp": "delete",
    "target": "R16-1.1（物种行）",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
   {
@@ -17414,7 +18284,7 @@
    ],
    "disp": "delete",
    "target": "R13-7.6（退让是决策）",
-   "targetObject": "battlePreview",
+   "targetObject": "sys.combat",
    "baseline": "d54c89a3"
   },
   {
@@ -17502,7 +18372,7 @@
    ],
    "disp": "recode",
    "target": "卷二的 kindOf",
-   "targetObject": "rules",
+   "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
   {
@@ -17544,7 +18414,7 @@
    ],
    "disp": "recode",
    "target": "卷二谓词（R13-17.7）",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -17565,7 +18435,7 @@
    ],
    "disp": "recode",
    "target": "决策管线读有效人格维度（R13-17.2）",
-   "targetObject": "battlePreview",
+   "targetObject": "sys.combat",
    "baseline": "d54c89a3"
   },
   {
@@ -17581,7 +18451,7 @@
    ],
    "disp": "replace_entry",
    "target": "遭遇种类条目（§4.17）",
-   "targetObject": "rules",
+   "targetObject": "sys.combat",
    "baseline": "d54c89a3"
   },
   {
@@ -17618,7 +18488,7 @@
    ],
    "disp": "replace_entry",
    "target": "deterrenceOf（R13-18.3）",
-   "targetObject": "battlePreview",
+   "targetObject": "sys.combat",
    "baseline": "d54c89a3"
   },
   {
@@ -17647,7 +18517,7 @@
    ],
    "disp": "recode",
    "target": "卷二谓词；普通遭遇（R13-18.11）",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -17716,7 +18586,7 @@
    ],
    "disp": "replace_entry",
    "target": "forceMorale（§4.8）",
-   "targetObject": "rules",
+   "targetObject": "sys.combat",
    "baseline": "d54c89a3"
   },
   {
@@ -17732,7 +18602,7 @@
    ],
    "disp": "replace_entry",
    "target": "组织行、在编边、卷六账本与合同（§4.10）",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -17748,13 +18618,45 @@
    ],
    "disp": "replace_entry",
    "target": "战争分值归 §4.11；立场归卷十八；外交归卷八",
-   "targetObject": "rules",
+   "targetObject": "sys.combat",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M13-23b",
+   "volume": "卷十三",
+   "srcLine": 1531,
+   "anchorsText": "war-diplomacy.mjs",
+   "anchors": [
+    {
+     "file": "war-diplomacy.mjs",
+     "lines": []
+    }
+   ],
+   "disp": "replace_entry",
+   "target": "战争分值归 §4.11；立场归卷十八；外交归卷八",
+   "targetObject": "sys.social",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M13-23c",
+   "volume": "卷十三",
+   "srcLine": 1532,
+   "anchorsText": "war-diplomacy.mjs",
+   "anchors": [
+    {
+     "file": "war-diplomacy.mjs",
+     "lines": []
+    }
+   ],
+   "disp": "replace_entry",
+   "target": "战争分值归 §4.11；立场归卷十八；外交归卷八",
+   "targetObject": "sys.org",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M13-24",
    "volume": "卷十三",
-   "srcLine": 1531,
+   "srcLine": 1533,
    "anchorsText": "checks.mjs 中战斗相关的难度数字",
    "anchors": [
     {
@@ -17770,7 +18672,7 @@
   {
    "rowKey": "M13-25",
    "volume": "卷十三",
-   "srcLine": 1532,
+   "srcLine": 1534,
    "anchorsText": "world/rules/tables/balance/combat.json",
    "anchors": [
     {
@@ -17786,7 +18688,7 @@
   {
    "rowKey": "M13-26",
    "volume": "卷十三",
-   "srcLine": 1533,
+   "srcLine": 1535,
    "anchorsText": "world/meta/rules.json 的 combat 键（含 combat.terrain）、military、warDiplomacy、equipment",
    "anchors": [
     {
@@ -17802,7 +18704,7 @@
   {
    "rowKey": "M13-27",
    "volume": "卷十三",
-   "srcLine": 1534,
+   "srcLine": 1536,
    "anchorsText": "world/meta/items.json 的 12 样战斗用物品",
    "anchors": [
     {
@@ -17818,7 +18720,7 @@
   {
    "rowKey": "M13-28",
    "volume": "卷十三",
-   "srcLine": 1535,
+   "srcLine": 1537,
    "anchorsText": "world/design/combat-professions.mjs（117 行）",
    "anchors": [
     {
@@ -17834,7 +18736,7 @@
   {
    "rowKey": "M13-29",
    "volume": "卷十三",
-   "srcLine": 1536,
+   "srcLine": 1538,
    "anchorsText": "wildlife.mjs:48、quest-wildlife.mjs:20",
    "anchors": [
     {
@@ -17858,13 +18760,13 @@
    ],
    "disp": "replace_entry",
    "target": "归卷十六；遭遇建立改调 encounterStep",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M13-30",
    "volume": "卷十三",
-   "srcLine": 1537,
+   "srcLine": 1539,
    "anchorsText": "facilities.mjs、environment.mjs 中的设施受损与火灾",
    "anchors": [
     {
@@ -17884,7 +18786,7 @@
   {
    "rowKey": "M13-31",
    "volume": "卷十三",
-   "srcLine": 1538,
+   "srcLine": 1540,
    "anchorsText": "war-diplomacy.mjs:63 写入；hazard-calendar.mjs:90（价格乘数）、:109–110（warRouteClosed、warClosedRoutes）；读者 engine.mjs:60、:864，transport-route.mjs:3、:15，household-subsistence.mjs:10、:113、:125、:159、:532、:610，finance-bank.mjs:160，education-state.mjs:80、:202",
    "anchors": [
     {
@@ -17989,13 +18891,13 @@
    ],
    "disp": "delete",
    "target": "记录与写入删除；价格乘数不迁（卷六自行定价，S13-9）；封路改读 siegeView().phase 与卷十七的通行维度，地点级影响改读争夺度（R13-11.13）；各读者逐文件改指这些读数（C13-19）",
-   "targetObject": "rules",
+   "targetObject": "sys.combat",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M13-32",
    "volume": "卷十三",
-   "srcLine": 1539,
+   "srcLine": 1541,
    "anchorsText": "world/design/boss-foundation.mjs（17 行）",
    "anchors": [
     {
@@ -18011,7 +18913,7 @@
   {
    "rowKey": "M13-33",
    "volume": "卷十三",
-   "srcLine": 1540,
+   "srcLine": 1542,
    "anchorsText": "world/design/interaction-rules.mjs（39 行）",
    "anchors": [
     {
@@ -18327,7 +19229,7 @@
    ],
    "disp": "recode",
    "target": "§4.4",
-   "targetObject": "rules",
+   "targetObject": "sys.facility_type",
    "baseline": "d54c89a3"
   },
   {
@@ -18700,7 +19602,7 @@
    ],
    "disp": "replace_entry",
    "target": "§4.4",
-   "targetObject": "rules",
+   "targetObject": "sys.facility_type",
    "baseline": "d54c89a3"
   },
   {
@@ -19018,7 +19920,7 @@
    ],
    "disp": "replace_entry",
    "target": "R12-9.4、§4.11；与卷十一 M11-5 合组",
-   "targetObject": "tools",
+   "targetObject": "sys.acceptance_scan",
    "baseline": "d54c89a3"
   },
   {
@@ -19038,7 +19940,7 @@
    ],
    "disp": "replace_entry",
    "target": "R12-14.1、R12-14.2；卷十一 S11-8",
-   "targetObject": "tools",
+   "targetObject": "sys.acceptance_scan",
    "baseline": "d54c89a3"
   },
   {
@@ -19049,7 +19951,7 @@
    "anchors": [],
    "disp": "待补（疑点：原写\"保留，只用于选受影响的测试\"，五种 mig_disp 无对应值，与卷十一 M11-6 同一处，见修订记录 1115y1）",
    "target": "R12-9.1；卷十一 M11-6",
-   "targetObject": "tools",
+   "targetObject": "sys.acceptance_scan",
    "baseline": "d54c89a3"
   },
   {
@@ -19069,7 +19971,7 @@
    ],
    "disp": "replace_entry",
    "target": "§4.3、R12-8.5；卷十一 M11-7",
-   "targetObject": "tools",
+   "targetObject": "sys.acceptance_scan",
    "baseline": "d54c89a3"
   },
   {
@@ -19085,7 +19987,7 @@
    ],
    "disp": "move_out",
    "target": "R12-3.6；卷二十七 §4.8（种子键与骰值键（确定性约束与验收））",
-   "targetObject": "tools",
+   "targetObject": "sys.acceptance_scan",
    "baseline": "d54c89a3"
   },
   {
@@ -19101,7 +20003,7 @@
    ],
    "disp": "replace_entry",
    "target": "R12-5.7",
-   "targetObject": "tools",
+   "targetObject": "sys.acceptance_scan",
    "baseline": "d54c89a3"
   },
   {
@@ -19160,7 +20062,7 @@
    "anchors": [],
    "disp": "to_data",
    "target": "R12-5.4",
-   "targetObject": "tools",
+   "targetObject": "sys.acceptance_scan",
    "baseline": "d54c89a3"
   },
   {
@@ -19171,7 +20073,7 @@
    "anchors": [],
    "disp": "to_data",
    "target": "R12-6.11",
-   "targetObject": "tools",
+   "targetObject": "sys.acceptance_scan",
    "baseline": "d54c89a3"
   },
   {
@@ -19182,7 +20084,7 @@
    "anchors": [],
    "disp": "replace_entry",
    "target": "R12-8.10、R12-6.8",
-   "targetObject": "tools",
+   "targetObject": "sys.acceptance_scan",
    "baseline": "d54c89a3"
   },
   {
@@ -19221,7 +20123,7 @@
    ],
    "disp": "recode",
    "target": "R12-9.12；c_text_tools",
-   "targetObject": "tools",
+   "targetObject": "sys.acceptance_scan",
    "baseline": "d54c89a3"
   },
   {
@@ -19232,7 +20134,7 @@
    "anchors": [],
    "disp": "replace_entry",
    "target": "R12-12.1、R12-14.2",
-   "targetObject": "tools",
+   "targetObject": "sys.acceptance_scan",
    "baseline": "d54c89a3"
   },
   {
@@ -19243,7 +20145,7 @@
    "anchors": [],
    "disp": "replace_entry",
    "target": "R12-12.11",
-   "targetObject": "tools",
+   "targetObject": "sys.acceptance_scan",
    "baseline": "d54c89a3"
   },
   {
@@ -19265,7 +20167,7 @@
    "anchors": [],
    "disp": "delete",
    "target": "R12-8.3",
-   "targetObject": "tools",
+   "targetObject": "sys.acceptance_scan",
    "baseline": "d54c89a3"
   },
   {
@@ -19276,7 +20178,7 @@
    "anchors": [],
    "disp": "replace_entry",
    "target": "R12-9.1、R12-9.7、R12-10.7、R12-14.1",
-   "targetObject": "tools",
+   "targetObject": "sys.acceptance_scan",
    "baseline": "d54c89a3"
   },
   {
@@ -19287,7 +20189,7 @@
    "anchors": [],
    "disp": "replace_entry",
    "target": "R12-8.10；卷二十七 §4.6",
-   "targetObject": "tools",
+   "targetObject": "sys.acceptance_scan",
    "baseline": "d54c89a3"
   },
   {
@@ -19298,7 +20200,7 @@
    "anchors": [],
    "disp": "replace_entry",
    "target": "R12-9.1；M12-2",
-   "targetObject": "tools",
+   "targetObject": "sys.acceptance_scan",
    "baseline": "d54c89a3"
   },
   {
@@ -19387,7 +20289,7 @@
    ],
    "disp": "replace_entry",
    "target": "R15-2.2",
-   "targetObject": "afterlifeOf",
+   "targetObject": "sys.arcana",
    "baseline": "d54c89a3"
   },
   {
@@ -19417,7 +20319,7 @@
    ],
    "disp": "recode",
    "target": "R15-13.4",
-   "targetObject": "afterlifeOf",
+   "targetObject": "sys.arcana",
    "baseline": "d54c89a3"
   },
   {
@@ -19463,7 +20365,7 @@
    ],
    "disp": "recode",
    "target": "R15-1.8",
-   "targetObject": "afterlifeOf",
+   "targetObject": "sys.arcana",
    "baseline": "d54c89a3"
   },
   {
@@ -19500,7 +20402,7 @@
    ],
    "disp": "replace_entry",
    "target": "R15-2.2",
-   "targetObject": "afterlifeOf",
+   "targetObject": "sys.arcana",
    "baseline": "d54c89a3"
   },
   {
@@ -19525,7 +20427,7 @@
    ],
    "disp": "recode",
    "target": "R15-4.6",
-   "targetObject": "afterlifeOf",
+   "targetObject": "sys.arcana",
    "baseline": "d54c89a3"
   },
   {
@@ -19546,7 +20448,7 @@
    ],
    "disp": "recode",
    "target": "R15-4.4",
-   "targetObject": "afterlifeOf",
+   "targetObject": "sys.arcana",
    "baseline": "d54c89a3"
   },
   {
@@ -19562,7 +20464,7 @@
    ],
    "disp": "replace_entry",
    "target": "R9-8.1",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
@@ -19587,7 +20489,7 @@
    ],
    "disp": "recode",
    "target": "R9-8.1",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
@@ -19608,7 +20510,7 @@
    ],
    "disp": "recode",
    "target": "R15-2.3",
-   "targetObject": "afterlifeOf",
+   "targetObject": "sys.arcana",
    "baseline": "d54c89a3"
   },
   {
@@ -19637,7 +20539,7 @@
    ],
    "disp": "replace_entry",
    "target": "R15-2.2",
-   "targetObject": "afterlifeOf",
+   "targetObject": "sys.arcana",
    "baseline": "d54c89a3"
   },
   {
@@ -19670,7 +20572,7 @@
    ],
    "disp": "recode",
    "target": "R15-2.3",
-   "targetObject": "afterlifeOf",
+   "targetObject": "sys.arcana",
    "baseline": "d54c89a3"
   },
   {
@@ -19703,7 +20605,7 @@
    ],
    "disp": "recode",
    "target": "R15-2.3",
-   "targetObject": "afterlifeOf",
+   "targetObject": "sys.arcana",
    "baseline": "d54c89a3"
   },
   {
@@ -19724,7 +20626,7 @@
    ],
    "disp": "replace_entry",
    "target": "move 原语（§4.15）",
-   "targetObject": "rules",
+   "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
   {
@@ -19749,7 +20651,7 @@
    ],
    "disp": "recode",
    "target": "R15-2.3",
-   "targetObject": "afterlifeOf",
+   "targetObject": "sys.arcana",
    "baseline": "d54c89a3"
   },
   {
@@ -19782,7 +20684,7 @@
    ],
    "disp": "replace_entry",
    "target": "process.riteDisturb（§4.7）",
-   "targetObject": "rules",
+   "targetObject": "sys.arcana",
    "baseline": "d54c89a3"
   },
   {
@@ -19803,7 +20705,7 @@
    ],
    "disp": "recode",
    "target": "riteStep（§4.7）",
-   "targetObject": "rules",
+   "targetObject": "sys.arcana",
    "baseline": "d54c89a3"
   },
   {
@@ -19849,7 +20751,7 @@
    ],
    "disp": "recode",
    "target": "R15-5.2",
-   "targetObject": "afterlifeOf",
+   "targetObject": "sys.arcana",
    "baseline": "d54c89a3"
   },
   {
@@ -19865,7 +20767,7 @@
    ],
    "disp": "replace_entry",
    "target": "R15-5.3",
-   "targetObject": "afterlifeOf",
+   "targetObject": "sys.arcana",
    "baseline": "d54c89a3"
   },
   {
@@ -19881,7 +20783,7 @@
    ],
    "disp": "replace_entry",
    "target": "R15-5.4",
-   "targetObject": "afterlifeOf",
+   "targetObject": "sys.arcana",
    "baseline": "d54c89a3"
   },
   {
@@ -19906,7 +20808,7 @@
    ],
    "disp": "delete",
    "target": "S15-10",
-   "targetObject": "afterlifeOf",
+   "targetObject": "sys.arcana",
    "baseline": "d54c89a3"
   },
   {
@@ -19995,7 +20897,7 @@
    ],
    "disp": "recode",
    "target": "R15-1.9",
-   "targetObject": "afterlifeOf",
+   "targetObject": "sys.arcana",
    "baseline": "d54c89a3"
   },
   {
@@ -20039,7 +20941,7 @@
    ],
    "disp": "replace_entry",
    "target": "R15-12.6",
-   "targetObject": "afterlifeOf",
+   "targetObject": "sys.arcana",
    "baseline": "d54c89a3"
   },
   {
@@ -20088,7 +20990,7 @@
    ],
    "disp": "recode",
    "target": "R18-4.2",
-   "targetObject": "compat",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
@@ -20132,7 +21034,7 @@
    "anchors": [],
    "disp": "replace_entry",
    "target": "R18-5.4、R18-5.5",
-   "targetObject": "compat",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
@@ -20216,7 +21118,7 @@
    ],
    "disp": "replace_entry",
    "target": "卷二 §2.5（状态谓词单点）谓词（本卷无规则号）",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -20259,7 +21161,7 @@
    ],
    "disp": "recode",
    "target": "R18-5.4、R18-5.5",
-   "targetObject": "compat",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
@@ -20280,7 +21182,7 @@
    ],
    "disp": "recode",
    "target": "R18-12.5",
-   "targetObject": "compat",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
@@ -20310,7 +21212,7 @@
    ],
    "disp": "recode",
    "target": "R18-2.7",
-   "targetObject": "compat",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
@@ -20362,7 +21264,7 @@
    ],
    "disp": "recode",
    "target": "R18-7.5",
-   "targetObject": "compat",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
@@ -20413,7 +21315,7 @@
    ],
    "disp": "delete",
    "target": "R18-9.7",
-   "targetObject": "compat",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
@@ -20486,7 +21388,7 @@
    ],
    "disp": "delete",
    "target": "R18-9.1（检查点 C7）",
-   "targetObject": "compat",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
@@ -20507,7 +21409,7 @@
    ],
    "disp": "recode",
    "target": "待定（亲属一致性改读亲子记录，正文无单列规则）",
-   "targetObject": "rules",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
@@ -20528,7 +21430,7 @@
    ],
    "disp": "replace_entry",
    "target": "R18-9.1（检查点 C2）",
-   "targetObject": "compat",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
@@ -20553,7 +21455,7 @@
    ],
    "disp": "replace_entry",
    "target": "R18-9.1（检查点 C1）",
-   "targetObject": "compat",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
@@ -20594,7 +21496,7 @@
    ],
    "disp": "delete",
    "target": "R18-9.1、R18-9.3",
-   "targetObject": "compat",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
@@ -20615,7 +21517,7 @@
    ],
    "disp": "delete",
    "target": "R18-9.1（检查点 C8）",
-   "targetObject": "compat",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
@@ -20645,7 +21547,7 @@
    ],
    "disp": "delete",
    "target": "R18-9.1（检查点 C7）",
-   "targetObject": "compat",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
@@ -20666,7 +21568,7 @@
    ],
    "disp": "recode",
    "target": "R18-9.1（读卷四 adult）",
-   "targetObject": "rules",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
@@ -20687,7 +21589,7 @@
    ],
    "disp": "to_data",
    "target": "待定（首版不设该限制，§8 Q12）",
-   "targetObject": "rules",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
@@ -20698,7 +21600,7 @@
    "anchors": [],
    "disp": "delete",
    "target": "R18-9.1",
-   "targetObject": "compat",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
@@ -20709,7 +21611,7 @@
    "anchors": [],
    "disp": "recode",
    "target": "卷十内容管线（本卷无规则号）",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
@@ -20826,15 +21728,106 @@
      ]
     }
    ],
+   "disp": "同 M18-27a 至 M18-27b",
+   "target": "同 M18-27a 至 M18-27b",
+   "targetObject": "同 M18-27a 至 M18-27b",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M18-27a 至 M18-27b"
+  },
+  {
+   "rowKey": "M18-27a",
+   "volume": "卷十八",
+   "srcLine": 1471,
+   "anchorsText": "family-diplomacy.mjs（整个文件：婚盟转联盟）；:12、:17、:30、:35、:37 中文状态；:25 写死联姻好感增量；:33 本地清醒判定",
+   "anchors": [
+    {
+     "file": "family-diplomacy.mjs",
+     "lines": [
+      [
+       12,
+       12
+      ],
+      [
+       17,
+       17
+      ],
+      [
+       30,
+       30
+      ],
+      [
+       35,
+       35
+      ],
+      [
+       37,
+       37
+      ],
+      [
+       25,
+       25
+      ],
+      [
+       33,
+       33
+      ]
+     ]
+    }
+   ],
    "disp": "recode",
    "target": "R18-4.7（外交后果归卷八 §4.14（外交与使节））",
-   "targetObject": "rules",
+   "targetObject": "sys.social",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M18-27b",
+   "volume": "卷十八",
+   "srcLine": 1472,
+   "anchorsText": "family-diplomacy.mjs（整个文件：婚盟转联盟）；:12、:17、:30、:35、:37 中文状态；:25 写死联姻好感增量；:33 本地清醒判定",
+   "anchors": [
+    {
+     "file": "family-diplomacy.mjs",
+     "lines": [
+      [
+       12,
+       12
+      ],
+      [
+       17,
+       17
+      ],
+      [
+       30,
+       30
+      ],
+      [
+       35,
+       35
+      ],
+      [
+       37,
+       37
+      ],
+      [
+       25,
+       25
+      ],
+      [
+       33,
+       33
+      ]
+     ]
+    }
+   ],
+   "disp": "recode",
+   "target": "R18-4.7（外交后果归卷八 §4.14（外交与使节））",
+   "targetObject": "sys.org",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M18-28",
    "volume": "卷十八",
-   "srcLine": 1471,
+   "srcLine": 1473,
    "anchorsText": "npc-relations.mjs:17–34 中文义务类型与状态；写死的立场增量；信任、好感、敬重、恋慕四维证据表",
    "anchors": [
     {
@@ -20849,13 +21842,13 @@
    ],
    "disp": "to_data",
    "target": "R18-4.2",
-   "targetObject": "compat",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M18-29",
    "volume": "卷十八",
-   "srcLine": 1472,
+   "srcLine": 1474,
    "anchorsText": "npc-life.mjs:209–212、:362、:368、:944 中文婚姻状态与关系类型比较；:992 kinTypes 含中文",
    "anchors": [
     {
@@ -20886,13 +21879,13 @@
    ],
    "disp": "recode",
    "target": "R18-2.4",
-   "targetObject": "compat",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M18-30",
    "volume": "卷十八",
-   "srcLine": 1473,
+   "srcLine": 1475,
    "anchorsText": "household-subsistence.mjs:303 本地状态列表",
    "anchors": [
     {
@@ -20907,13 +21900,13 @@
    ],
    "disp": "replace_entry",
    "target": "卷二 §2.5（状态谓词单点）谓词（本卷无规则号）",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M18-31",
    "volume": "卷十八",
-   "srcLine": 1474,
+   "srcLine": 1476,
    "anchorsText": "reputation.mjs:65 中文来源类型",
    "anchors": [
     {
@@ -20928,13 +21921,13 @@
    ],
    "disp": "recode",
    "target": "R18-7.1",
-   "targetObject": "compat",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M18-32",
    "volume": "卷十八",
-   "srcLine": 1475,
+   "srcLine": 1477,
    "anchorsText": "standing.mjs:17–20 列出的 7 份旧存储",
    "anchors": [
     {
@@ -20949,13 +21942,13 @@
    ],
    "disp": "to_data",
    "target": "R18-4.1、R18-4.6",
-   "targetObject": "compat",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M18-33",
    "volume": "卷十八",
-   "srcLine": 1476,
+   "srcLine": 1478,
    "anchorsText": "adjustStanding 的调用文件（grep 命中 18 个文件，含定义文件 standing.mjs；调用者 17 个：duels、effects、elections、engine、extraction、faith、family-diplomacy、lies、magic-economy、military、nation-founding、notables、organizations、quest-sources、tribal-awakening、war-diplomacy、works）",
    "anchors": [
     {
@@ -20965,18 +21958,18 @@
    ],
    "disp": "recode",
    "target": "R18-4.2、R18-4.7（同 M18-1）",
-   "targetObject": "compat",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M18-34",
    "volume": "卷十八",
-   "srcLine": 1477,
+   "srcLine": 1479,
    "anchorsText": "npc.memoryStream 的读写文件",
    "anchors": [],
    "disp": "delete",
    "target": "R18-5.4（同 M18-3）",
-   "targetObject": "compat",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
@@ -21053,7 +22046,7 @@
    ],
    "disp": "delete",
    "target": "R16-3.7",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
   {
@@ -21074,7 +22067,7 @@
    ],
    "disp": "delete",
    "target": "S16-2",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
   {
@@ -21099,7 +22092,7 @@
    ],
    "disp": "delete",
    "target": "R10-4.4",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
@@ -21120,7 +22113,7 @@
    ],
    "disp": "recode",
    "target": "R16-3.6",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
   {
@@ -21153,7 +22146,7 @@
    ],
    "disp": "recode",
    "target": "R16-3.5",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
   {
@@ -21186,7 +22179,7 @@
    ],
    "disp": "recode",
    "target": "R16-3.5",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
   {
@@ -21215,7 +22208,7 @@
    ],
    "disp": "recode",
    "target": "R16-13.1",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
   {
@@ -21231,7 +22224,7 @@
    ],
    "disp": "replace_entry",
    "target": "R16-3.1",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
   {
@@ -21256,7 +22249,7 @@
    ],
    "disp": "delete",
    "target": "R16-13.1",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
   {
@@ -21277,7 +22270,7 @@
    ],
    "disp": "recode",
    "target": "R16-6.3",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
   {
@@ -21306,7 +22299,7 @@
    ],
    "disp": "replace_entry",
    "target": "R16-7.1",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
   {
@@ -21360,7 +22353,7 @@
    ],
    "disp": "to_data",
    "target": "R16-1.4",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
   {
@@ -21380,7 +22373,7 @@
    ],
    "disp": "replace_entry",
    "target": "R16-2.2",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
   {
@@ -21400,7 +22393,7 @@
    ],
    "disp": "replace_entry",
    "target": "R16-6.4",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
   {
@@ -21416,7 +22409,7 @@
    ],
    "disp": "replace_entry",
    "target": "R16-6.9",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
   {
@@ -21441,7 +22434,7 @@
    ],
    "disp": "replace_entry",
    "target": "R16-6.5",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
   {
@@ -21477,7 +22470,7 @@
    ],
    "disp": "replace_entry",
    "target": "R16-3.1",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
   {
@@ -21497,7 +22490,7 @@
    ],
    "disp": "to_data",
    "target": "R16-12.1",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
   {
@@ -21513,7 +22506,7 @@
    ],
    "disp": "replace_entry",
    "target": "R16-13.5",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
   {
@@ -21529,7 +22522,7 @@
    ],
    "disp": "replace_entry",
    "target": "R16-5.8",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
   {
@@ -21545,7 +22538,7 @@
    ],
    "disp": "replace_entry",
    "target": "R16-11.7",
-   "targetObject": "claimTruth",
+   "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
   {
@@ -21650,7 +22643,7 @@
    ],
    "disp": "recode",
    "target": "HO-7",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -21671,7 +22664,7 @@
    ],
    "disp": "delete",
    "target": "HO-7",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -21692,7 +22685,7 @@
    ],
    "disp": "delete",
    "target": "HO-9",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -21713,7 +22706,7 @@
    ],
    "disp": "to_data",
    "target": "PF-2",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -21734,7 +22727,7 @@
    ],
    "disp": "to_data",
    "target": "SK-6",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -21755,7 +22748,7 @@
    ],
    "disp": "to_data",
    "target": "SK-6、SK-8",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -21815,7 +22808,7 @@
    ],
    "disp": "to_data",
    "target": "SK-6",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -21861,7 +22854,7 @@
    ],
    "disp": "recode",
    "target": "SK-8",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -21920,7 +22913,7 @@
    ],
    "disp": "replace_entry",
    "target": "PF-3、PF-6",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -21941,7 +22934,7 @@
    ],
    "disp": "replace_entry",
    "target": "PF-9",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -21952,7 +22945,7 @@
    "anchors": [],
    "disp": "recode",
    "target": "HO-8（合同状态代号归卷六 §4.16）",
-   "targetObject": "accountsOf",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
@@ -21963,7 +22956,7 @@
    "anchors": [],
    "disp": "replace_entry",
    "target": "HO-10",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -21974,7 +22967,7 @@
    "anchors": [],
    "disp": "replace_entry",
    "target": "HO-8（持有与耐久入口归卷三）",
-   "targetObject": "rules",
+   "targetObject": "sys.item",
    "baseline": "d54c89a3"
   },
   {
@@ -21996,7 +22989,7 @@
    "anchors": [],
    "disp": "delete",
    "target": "HO-8、HO-9",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22007,7 +23000,7 @@
    "anchors": [],
    "disp": "delete",
    "target": "HO-6、HO-8",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22018,7 +23011,7 @@
    "anchors": [],
    "disp": "recode",
    "target": "HO-8",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22084,7 +23077,7 @@
    "anchors": [],
    "disp": "delete",
    "target": "—（不设条件）",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22128,7 +23121,7 @@
    "anchors": [],
    "disp": "recode",
    "target": "HO-8",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22139,7 +23132,7 @@
    "anchors": [],
    "disp": "delete",
    "target": "HO-7",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22150,7 +23143,7 @@
    "anchors": [],
    "disp": "delete",
    "target": "HO-7",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22161,7 +23154,7 @@
    "anchors": [],
    "disp": "delete",
    "target": "HO-7、HO-10",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22172,7 +23165,7 @@
    "anchors": [],
    "disp": "recode",
    "target": "HO-7",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22183,7 +23176,7 @@
    "anchors": [],
    "disp": "delete",
    "target": "SK-6",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22194,7 +23187,7 @@
    "anchors": [],
    "disp": "delete",
    "target": "卷九 §4.3 检定接口（本卷无规则号）",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
@@ -22205,7 +23198,7 @@
    "anchors": [],
    "disp": "delete",
    "target": "卷九 §4.3（本卷无规则号）",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
@@ -22216,7 +23209,7 @@
    "anchors": [],
    "disp": "delete",
    "target": "HO-6",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22260,7 +23253,7 @@
    "anchors": [],
    "disp": "replace_entry",
    "target": "HO-6、HO-7",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22271,7 +23264,7 @@
    "anchors": [],
    "disp": "replace_entry",
    "target": "HO-6",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22282,7 +23275,7 @@
    "anchors": [],
    "disp": "replace_entry",
    "target": "HO-6、HO-10",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22293,7 +23286,7 @@
    "anchors": [],
    "disp": "delete",
    "target": "HO-6",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22302,10 +23295,11 @@
    "srcLine": 1469,
    "anchorsText": "",
    "anchors": [],
-   "disp": "delete",
-   "target": "HO-7（同 M14-32）",
-   "targetObject": "rules",
-   "baseline": "d54c89a3"
+   "disp": "同 M14-32",
+   "target": "同 M14-32",
+   "targetObject": "同 M14-32",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M14-32"
   },
   {
    "rowKey": "M14-46",
@@ -22313,10 +23307,11 @@
    "srcLine": 1470,
    "anchorsText": "",
    "anchors": [],
-   "disp": "delete",
-   "target": "HO-7（同 M14-32）",
-   "targetObject": "rules",
-   "baseline": "d54c89a3"
+   "disp": "同 M14-32",
+   "target": "同 M14-32",
+   "targetObject": "同 M14-32",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M14-32"
   },
   {
    "rowKey": "M14-47",
@@ -22326,7 +23321,7 @@
    "anchors": [],
    "disp": "replace_entry",
    "target": "HO-6",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22337,7 +23332,7 @@
    "anchors": [],
    "disp": "replace_entry",
    "target": "HO-6",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22348,7 +23343,7 @@
    "anchors": [],
    "disp": "delete",
    "target": "HO-6",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22359,7 +23354,7 @@
    "anchors": [],
    "disp": "delete",
    "target": "HO-5",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22447,7 +23442,7 @@
    "anchors": [],
    "disp": "delete",
    "target": "LF-4、EX-7",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22472,7 +23467,7 @@
    ],
    "disp": "recode",
    "target": "LS-7",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22493,7 +23488,7 @@
    ],
    "disp": "recode",
    "target": "LS-2",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22532,7 +23527,7 @@
    ],
    "disp": "replace_entry",
    "target": "卷二 awake（本卷无规则号）",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
@@ -22553,7 +23548,7 @@
    ],
    "disp": "recode",
    "target": "LS-9",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22574,7 +23569,7 @@
    ],
    "disp": "recode",
    "target": "LS-8",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22595,7 +23590,7 @@
    ],
    "disp": "replace_entry",
    "target": "LS-2",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22616,7 +23611,7 @@
    ],
    "disp": "recode",
    "target": "LS-9",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22641,7 +23636,7 @@
    ],
    "disp": "recode",
    "target": "LS-7",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22662,7 +23657,7 @@
    ],
    "disp": "recode",
    "target": "LS-2",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22683,7 +23678,7 @@
    ],
    "disp": "recode",
    "target": "卷二十三（本卷无规则号）",
-   "targetObject": "actOutcome",
+   "targetObject": "sys.arts",
    "baseline": "d54c89a3"
   },
   {
@@ -22764,10 +23759,11 @@
      ]
     }
    ],
-   "disp": "to_data",
+   "disp": "同 M14-8",
    "target": "同 M14-8",
-   "targetObject": "rules",
-   "baseline": "d54c89a3"
+   "targetObject": "同 M14-8",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M14-8"
   },
   {
    "rowKey": "M14-72",
@@ -22828,7 +23824,7 @@
    ],
    "disp": "recode",
    "target": "PF-6",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22881,7 +23877,7 @@
    ],
    "disp": "replace_entry",
    "target": "DG-2、DG-3（卷二 kindOf）",
-   "targetObject": "rules",
+   "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
   {
@@ -22914,7 +23910,7 @@
    ],
    "disp": "replace_entry",
    "target": "LS-7",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22969,7 +23965,7 @@
    ],
    "disp": "replace_entry",
    "target": "PF-3（professionsOf）；§3.5 B-8",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
@@ -22996,10 +23992,11 @@
      ]
     }
    ],
-   "disp": "delete",
-   "target": "LS-2 至 LS-5（同 M14-89）",
-   "targetObject": "rules",
-   "baseline": "d54c89a3"
+   "disp": "同 M14-89",
+   "target": "同 M14-89",
+   "targetObject": "同 M14-89",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M14-89"
   },
   {
    "rowKey": "M14-80",
@@ -23029,48 +24026,115 @@
    "srcLine": 1521,
    "anchorsText": "",
    "anchors": [],
+   "disp": "同 M14-82a 至 M14-82f",
+   "target": "同 M14-82a 至 M14-82f",
+   "targetObject": "同 M14-82a 至 M14-82f",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M14-82a 至 M14-82f"
+  },
+  {
+   "rowKey": "M14-82a",
+   "volume": "卷十四",
+   "srcLine": 1522,
+   "anchorsText": "",
+   "anchors": [],
    "disp": "to_data",
    "target": "§2.5 规则表（本卷无规则号）",
-   "targetObject": "rules",
+   "targetObject": "待裁",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M14-82b",
+   "volume": "卷十四",
+   "srcLine": 1523,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "to_data",
+   "target": "§2.5 规则表（本卷无规则号）",
+   "targetObject": "待裁",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M14-82c",
+   "volume": "卷十四",
+   "srcLine": 1524,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "to_data",
+   "target": "§2.5 规则表（本卷无规则号）",
+   "targetObject": "待裁",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M14-82d",
+   "volume": "卷十四",
+   "srcLine": 1525,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "to_data",
+   "target": "§2.5 规则表（本卷无规则号）",
+   "targetObject": "待裁",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M14-82e",
+   "volume": "卷十四",
+   "srcLine": 1526,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "to_data",
+   "target": "§2.5 规则表（本卷无规则号）",
+   "targetObject": "待裁",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M14-82f",
+   "volume": "卷十四",
+   "srcLine": 1527,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "to_data",
+   "target": "§2.5 规则表（本卷无规则号）",
+   "targetObject": "待裁",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M14-83",
    "volume": "卷十四",
-   "srcLine": 1522,
+   "srcLine": 1528,
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
    "target": "§5.3 十个模块（本卷无规则号）",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M14-84",
    "volume": "卷十四",
-   "srcLine": 1523,
+   "srcLine": 1529,
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
    "target": "DG-2；GR-6",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M14-85",
    "volume": "卷十四",
-   "srcLine": 1524,
+   "srcLine": 1530,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
    "target": "PF-6（canOffer）；SK-5（skillValue）",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M14-86",
    "volume": "卷十四",
-   "srcLine": 1525,
+   "srcLine": 1531,
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
@@ -23081,7 +24145,7 @@
   {
    "rowKey": "M14-87",
    "volume": "卷十四",
-   "srcLine": 1526,
+   "srcLine": 1532,
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
@@ -23092,7 +24156,7 @@
   {
    "rowKey": "M14-88",
    "volume": "卷十四",
-   "srcLine": 1534,
+   "srcLine": 1540,
    "anchorsText": "entity-view.mjs:123–126 personCertified",
    "anchors": [
     {
@@ -23107,13 +24171,13 @@
    ],
    "disp": "delete",
    "target": "DG-2、DG-3",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M14-89",
    "volume": "卷十四",
-   "srcLine": 1535,
+   "srcLine": 1541,
    "anchorsText": "entity-view.mjs:127–140 personTeaching",
    "anchors": [
     {
@@ -23128,13 +24192,13 @@
    ],
    "disp": "replace_entry",
    "target": "LS-2 至 LS-5",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M14-90",
    "volume": "卷十四",
-   "srcLine": 1536,
+   "srcLine": 1542,
    "anchorsText": "professions.mjs:25–26 certifiedForSkill；:22（无证者读数压到 299）",
    "anchors": [
     {
@@ -23159,7 +24223,7 @@
   {
    "rowKey": "M14-91",
    "volume": "卷十四",
-   "srcLine": 1537,
+   "srcLine": 1543,
    "anchorsText": "engine.mjs:1124",
    "anchors": [
     {
@@ -23174,13 +24238,13 @@
    ],
    "disp": "replace_entry",
    "target": "§3.5 B-8",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M14-92",
    "volume": "卷十四",
-   "srcLine": 1538,
+   "srcLine": 1544,
    "anchorsText": "engine.mjs:1107；career-metrics.mjs:203；learning.mjs:79",
    "anchors": [
     {
@@ -23213,13 +24277,13 @@
    ],
    "disp": "delete",
    "target": "DG-2、DG-3",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M14-93",
    "volume": "卷十四",
-   "srcLine": 1539,
+   "srcLine": 1545,
    "anchorsText": "engine.mjs:1126",
    "anchors": [
     {
@@ -23234,13 +24298,13 @@
    ],
    "disp": "delete",
    "target": "SK-3、DG-3",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M14-94",
    "volume": "卷十四",
-   "srcLine": 1540,
+   "srcLine": 1546,
    "anchorsText": "npc-growth.mjs:39；primitives-learning.mjs:83、:147",
    "anchors": [
     {
@@ -23274,7 +24338,7 @@
   {
    "rowKey": "M14-95",
    "volume": "卷十四",
-   "srcLine": 1541,
+   "srcLine": 1547,
    "anchorsText": "education.mjs:63；learning.mjs:101；primitives-effects.mjs:279；action-affordances.mjs:208",
    "anchors": [
     {
@@ -23316,13 +24380,13 @@
    ],
    "disp": "replace_entry",
    "target": "LS-2、LS-5",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M14-96",
    "volume": "卷十四",
-   "srcLine": 1542,
+   "srcLine": 1548,
    "anchorsText": "career-metrics.mjs:186",
    "anchors": [
     {
@@ -23337,13 +24401,13 @@
    ],
    "disp": "delete",
    "target": "同 M14-58",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M14-97",
    "volume": "卷十四",
-   "srcLine": 1543,
+   "srcLine": 1549,
    "anchorsText": "works.mjs:274 的 stage: floor(熟练度 ÷ 300)；各处 stage × 300 门槛（education.mjs:63、primitives-learning.mjs:83）",
    "anchors": [
     {
@@ -23376,13 +24440,13 @@
    ],
    "disp": "delete",
    "target": "SK-7",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M14-98",
    "volume": "卷十四",
-   "srcLine": 1544,
+   "srcLine": 1550,
    "anchorsText": "engine.mjs:1095–1111、:1132–1133；career-metrics.mjs:145、:203–213（evidenceBreakthrough、breakthroughPaths）；状态字段 breakthroughs；learning.mjs:168",
    "anchors": [
     {
@@ -23423,13 +24487,13 @@
    ],
    "disp": "delete",
    "target": "—（不并入别处；§8 Q-18）",
-   "targetObject": "rules",
+   "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M14-99",
    "volume": "卷十四",
-   "srcLine": 1545,
+   "srcLine": 1551,
    "anchorsText": "works.mjs:258–279 技能融合",
    "anchors": [
     {
@@ -23465,7 +24529,7 @@
    ],
    "disp": "delete",
    "target": "卷十（本卷只供 speciesView，无规则号）",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
@@ -23486,7 +24550,7 @@
    ],
    "disp": "recode",
    "target": "卷十（本卷无规则号）",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
@@ -23505,15 +24569,84 @@
      ]
     }
    ],
+   "disp": "同 M4-3a 至 M4-3b",
+   "target": "同 M4-3a 至 M4-3b",
+   "targetObject": "同 M4-3a 至 M4-3b",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M4-3a 至 M4-3b"
+  },
+  {
+   "rowKey": "M4-3a",
+   "volume": "卷四",
+   "srcLine": 1265,
+   "anchorsText": "remote-generation.mjs:411",
+   "anchors": [
+    {
+     "file": "remote-generation.mjs",
+     "lines": [
+      [
+       411,
+       411
+      ]
+     ]
+    }
+   ],
    "disp": "delete",
    "target": "卷十、卷七（本卷无规则号）",
-   "targetObject": "rules",
+   "targetObject": "sys.worldgen",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M4-3b",
+   "volume": "卷四",
+   "srcLine": 1266,
+   "anchorsText": "remote-generation.mjs:411",
+   "anchors": [
+    {
+     "file": "remote-generation.mjs",
+     "lines": [
+      [
+       411,
+       411
+      ]
+     ]
+    }
+   ],
+   "disp": "delete",
+   "target": "卷十、卷七（本卷无规则号）",
+   "targetObject": "sys.deity",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-4",
    "volume": "卷四",
-   "srcLine": 1265,
+   "srcLine": 1267,
+   "anchorsText": "remote-generation.mjs:407/:423",
+   "anchors": [
+    {
+     "file": "remote-generation.mjs",
+     "lines": [
+      [
+       407,
+       407
+      ],
+      [
+       423,
+       423
+      ]
+     ]
+    }
+   ],
+   "disp": "同 M4-4a 至 M4-4b",
+   "target": "同 M4-4a 至 M4-4b",
+   "targetObject": "同 M4-4a 至 M4-4b",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M4-4a 至 M4-4b"
+  },
+  {
+   "rowKey": "M4-4a",
+   "volume": "卷四",
+   "srcLine": 1268,
    "anchorsText": "remote-generation.mjs:407/:423",
    "anchors": [
     {
@@ -23532,24 +24665,49 @@
    ],
    "disp": "delete",
    "target": "卷十、卷八 §4.16（本卷无规则号）",
-   "targetObject": "rules",
+   "targetObject": "sys.worldgen",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M4-4b",
+   "volume": "卷四",
+   "srcLine": 1269,
+   "anchorsText": "remote-generation.mjs:407/:423",
+   "anchors": [
+    {
+     "file": "remote-generation.mjs",
+     "lines": [
+      [
+       407,
+       407
+      ],
+      [
+       423,
+       423
+      ]
+     ]
+    }
+   ],
+   "disp": "delete",
+   "target": "卷十、卷八 §4.16（本卷无规则号）",
+   "targetObject": "sys.org",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-5",
    "volume": "卷四",
-   "srcLine": 1266,
+   "srcLine": 1270,
    "anchorsText": "06a §6 本地 awake 31 处、睡眠正则、状态字列表 118 处/81 文件",
    "anchors": [],
    "disp": "replace_entry",
    "target": "卷二 §2.5（状态谓词单点）谓词；C-1（本卷供值）；逐行见 §7.3（不另编号）、M4-20 至 M4-33、M4-55",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-6",
    "volume": "卷四",
-   "srcLine": 1267,
+   "srcLine": 1271,
    "anchorsText": "06a §6 duels.mjs:19、npc-crime.mjs:42、nation-founding.mjs:223",
    "anchors": [
     {
@@ -23582,13 +24740,13 @@
    ],
    "disp": "recode",
    "target": "P-3",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-7",
    "volume": "卷四",
-   "srcLine": 1268,
+   "srcLine": 1272,
    "anchorsText": "06a §7 combat.mjs:72–73、activities.mjs:176/:208",
    "anchors": [
     {
@@ -23616,13 +24774,13 @@
    ],
    "disp": "to_data",
    "target": "卷十三（本卷无规则号；生命值随 Q-7 退役）",
-   "targetObject": "battlePreview",
+   "targetObject": "sys.combat",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-8",
    "volume": "卷四",
-   "srcLine": 1269,
+   "srcLine": 1273,
    "anchorsText": "06a §7 creature-nature.mjs:9",
    "anchors": [
     {
@@ -23643,29 +24801,29 @@
   {
    "rowKey": "M4-9",
    "volume": "卷四",
-   "srcLine": 1270,
+   "srcLine": 1274,
    "anchorsText": "06a §8 出生地缺省",
    "anchors": [],
    "disp": "delete",
    "target": "G-2",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-10",
    "volume": "卷四",
-   "srcLine": 1271,
+   "srcLine": 1275,
    "anchorsText": "06a §8 直接 import 平衡表",
    "anchors": [],
    "disp": "replace_entry",
    "target": "§3.5 P-4（扫描）",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-11",
    "volume": "卷四",
-   "srcLine": 1277,
+   "srcLine": 1281,
    "anchorsText": "entity-view.mjs:142–146",
    "anchors": [
     {
@@ -23680,13 +24838,13 @@
    ],
    "disp": "replace_entry",
    "target": "P-2（personView().occupation）",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-12",
    "volume": "卷四",
-   "srcLine": 1278,
+   "srcLine": 1282,
    "anchorsText": "finance-assets.mjs:241/:243、finance-bank.mjs:100、transport.mjs:183",
    "anchors": [
     {
@@ -23729,7 +24887,7 @@
   {
    "rowKey": "M4-13",
    "volume": "卷四",
-   "srcLine": 1279,
+   "srcLine": 1283,
    "anchorsText": "entity-view.mjs:165",
    "anchors": [
     {
@@ -23744,13 +24902,13 @@
    ],
    "disp": "recode",
    "target": "P-2",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-14",
    "volume": "卷四",
-   "srcLine": 1280,
+   "srcLine": 1284,
    "anchorsText": "husbandry.mjs:45",
    "anchors": [
     {
@@ -23765,13 +24923,13 @@
    ],
    "disp": "recode",
    "target": "T-4（edibleBy）",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-15",
    "volume": "卷四",
-   "srcLine": 1281,
+   "srcLine": 1285,
    "anchorsText": "remote-generation.mjs:538/:539",
    "anchors": [
     {
@@ -23790,13 +24948,13 @@
    ],
    "disp": "recode",
    "target": "G-6；卷十",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-16",
    "volume": "卷四",
-   "srcLine": 1282,
+   "srcLine": 1286,
    "anchorsText": "population.mjs:384",
    "anchors": [
     {
@@ -23811,13 +24969,35 @@
    ],
    "disp": "recode",
    "target": "卷十 §4.4（本卷 §5.4 登记 predicate，无规则号）",
-   "targetObject": "ageStructure",
+   "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-17",
    "volume": "卷四",
-   "srcLine": 1283,
+   "srcLine": 1287,
+   "anchorsText": "population.mjs:392",
+   "anchors": [
+    {
+     "file": "population.mjs",
+     "lines": [
+      [
+       392,
+       392
+      ]
+     ]
+    }
+   ],
+   "disp": "同 M4-17a 至 M4-17b",
+   "target": "同 M4-17a 至 M4-17b",
+   "targetObject": "同 M4-17a 至 M4-17b",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M4-17a 至 M4-17b"
+  },
+  {
+   "rowKey": "M4-17a",
+   "volume": "卷四",
+   "srcLine": 1288,
    "anchorsText": "population.mjs:392",
    "anchors": [
     {
@@ -23832,13 +25012,34 @@
    ],
    "disp": "recode",
    "target": "卷十 §4.4、卷十八（本卷无规则号）",
-   "targetObject": "rules",
+   "targetObject": "sys.worldgen",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M4-17b",
+   "volume": "卷四",
+   "srcLine": 1289,
+   "anchorsText": "population.mjs:392",
+   "anchors": [
+    {
+     "file": "population.mjs",
+     "lines": [
+      [
+       392,
+       392
+      ]
+     ]
+    }
+   ],
+   "disp": "recode",
+   "target": "卷十 §4.4、卷十八（本卷无规则号）",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-18",
    "volume": "卷四",
-   "srcLine": 1284,
+   "srcLine": 1290,
    "anchorsText": "population.mjs:407",
    "anchors": [
     {
@@ -23853,13 +25054,13 @@
    ],
    "disp": "recode",
    "target": "L-7",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-19",
    "volume": "卷四",
-   "srcLine": 1285,
+   "srcLine": 1291,
    "anchorsText": "population.mjs:409/:411",
    "anchors": [
     {
@@ -23884,29 +25085,29 @@
   {
    "rowKey": "M4-20",
    "volume": "卷四",
-   "srcLine": 1405,
+   "srcLine": 1411,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
    "target": "Z1（卷二 §2.5（状态谓词单点）谓词）",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-21",
    "volume": "卷四",
-   "srcLine": 1406,
+   "srcLine": 1412,
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
    "target": "Z7（卷九 §4.1 动作代号）",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-22",
    "volume": "卷四",
-   "srcLine": 1407,
+   "srcLine": 1413,
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
@@ -23917,7 +25118,7 @@
   {
    "rowKey": "M4-23",
    "volume": "卷四",
-   "srcLine": 1408,
+   "srcLine": 1414,
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
@@ -23928,260 +25129,307 @@
   {
    "rowKey": "M4-24",
    "volume": "卷四",
-   "srcLine": 1409,
+   "srcLine": 1415,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
    "target": "Z2",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-25",
    "volume": "卷四",
-   "srcLine": 1410,
+   "srcLine": 1416,
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
    "target": "卷九 §4.19（本卷无规则号）",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-26",
    "volume": "卷四",
-   "srcLine": 1411,
+   "srcLine": 1417,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
    "target": "Z2",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-27",
    "volume": "卷四",
-   "srcLine": 1412,
+   "srcLine": 1418,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "同 M4-27a 至 M4-27b",
+   "target": "同 M4-27a 至 M4-27b",
+   "targetObject": "同 M4-27a 至 M4-27b",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M4-27a 至 M4-27b"
+  },
+  {
+   "rowKey": "M4-27a",
+   "volume": "卷四",
+   "srcLine": 1419,
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
    "target": "卷九 §4.19、卷二十一（本卷无规则号）",
-   "targetObject": "rules",
+   "targetObject": "sys.ai_interface",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M4-27b",
+   "volume": "卷四",
+   "srcLine": 1420,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "recode",
+   "target": "卷九 §4.19、卷二十一（本卷无规则号）",
+   "targetObject": "sys.status",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-28",
    "volume": "卷四",
-   "srcLine": 1413,
+   "srcLine": 1421,
    "anchorsText": "",
    "anchors": [],
-   "disp": "recode",
-   "target": "随 §7.3 第 11、18、57、58、60 行",
-   "targetObject": "rules",
-   "baseline": "d54c89a3"
+   "disp": "同 M4-5",
+   "target": "同 M4-5",
+   "targetObject": "同 M4-5",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M4-5"
   },
   {
    "rowKey": "M4-29",
    "volume": "卷四",
-   "srcLine": 1414,
+   "srcLine": 1422,
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
    "target": "卷九 §4.1（本卷无规则号）",
-   "targetObject": "actionView",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-30",
    "volume": "卷四",
-   "srcLine": 1415,
+   "srcLine": 1423,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "同 M4-30a 至 M4-30b",
+   "target": "同 M4-30a 至 M4-30b",
+   "targetObject": "同 M4-30a 至 M4-30b",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M4-30a 至 M4-30b"
+  },
+  {
+   "rowKey": "M4-30a",
+   "volume": "卷四",
+   "srcLine": 1424,
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
    "target": "卷九 §4.1、卷十九 §4.3（本卷无规则号）",
-   "targetObject": "rules",
+   "targetObject": "sys.ai_interface",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M4-30b",
+   "volume": "卷四",
+   "srcLine": 1425,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "recode",
+   "target": "卷九 §4.1、卷十九 §4.3（本卷无规则号）",
+   "targetObject": "sys.facility_type",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-31",
    "volume": "卷四",
-   "srcLine": 1416,
+   "srcLine": 1426,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
    "target": "Z6",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-32",
    "volume": "卷四",
-   "srcLine": 1417,
+   "srcLine": 1427,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
    "target": "待定（Z2、Z3、Z5 之一，原文写建卡时逐行定）",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-33",
    "volume": "卷四",
-   "srcLine": 1418,
+   "srcLine": 1428,
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
    "target": "—（不设取代物）",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-34",
    "volume": "卷四",
-   "srcLine": 1426,
+   "srcLine": 1436,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
    "target": "P-2（personView().occupation）",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-35",
    "volume": "卷四",
-   "srcLine": 1427,
+   "srcLine": 1437,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
    "target": "personView().dims.ageYears（入口名）",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-36",
    "volume": "卷四",
-   "srcLine": 1428,
+   "srcLine": 1438,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
    "target": "bodyView（入口名）",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-37",
    "volume": "卷四",
-   "srcLine": 1429,
+   "srcLine": 1439,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
    "target": "卷二 §2.5（状态谓词单点）的 can、awake、capacity（本卷无规则号）",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-38",
    "volume": "卷四",
-   "srcLine": 1430,
+   "srcLine": 1440,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
    "target": "D-2（terminated）",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-39",
    "volume": "卷四",
-   "srcLine": 1431,
+   "srcLine": 1441,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
    "target": "M-1、M-3（loadOf）",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-40",
    "volume": "卷四",
-   "srcLine": 1432,
+   "srcLine": 1442,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
    "target": "M-3（loadOf）；生命值见 Q-7",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-41",
    "volume": "卷四",
-   "srcLine": 1433,
+   "srcLine": 1443,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
    "target": "T-1、T-2",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-42",
    "volume": "卷四",
-   "srcLine": 1434,
+   "srcLine": 1444,
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
    "target": "C-3",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-43",
    "volume": "卷四",
-   "srcLine": 1435,
+   "srcLine": 1445,
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
    "target": "K-1、K-2",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-44",
    "volume": "卷四",
-   "srcLine": 1436,
+   "srcLine": 1446,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
    "target": "D-6",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-45",
    "volume": "卷四",
-   "srcLine": 1437,
+   "srcLine": 1447,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
    "target": "D-1、D-3a、D-4",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-46",
    "volume": "卷四",
-   "srcLine": 1438,
+   "srcLine": 1448,
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
    "target": "G-1 至 G-7",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-47",
    "volume": "卷四",
-   "srcLine": 1439,
+   "srcLine": 1449,
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
@@ -24192,7 +25440,7 @@
   {
    "rowKey": "M4-48",
    "volume": "卷四",
-   "srcLine": 1440,
+   "srcLine": 1450,
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
@@ -24203,7 +25451,7 @@
   {
    "rowKey": "M4-49",
    "volume": "卷四",
-   "srcLine": 1441,
+   "srcLine": 1451,
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
@@ -24214,7 +25462,7 @@
   {
    "rowKey": "M4-50",
    "volume": "卷四",
-   "srcLine": 1442,
+   "srcLine": 1452,
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
@@ -24225,7 +25473,7 @@
   {
    "rowKey": "M4-51",
    "volume": "卷四",
-   "srcLine": 1443,
+   "srcLine": 1453,
    "anchorsText": "",
    "anchors": [],
    "disp": "move_out",
@@ -24236,7 +25484,7 @@
   {
    "rowKey": "M4-52",
    "volume": "卷四",
-   "srcLine": 1444,
+   "srcLine": 1454,
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
@@ -24247,7 +25495,7 @@
   {
    "rowKey": "M4-53",
    "volume": "卷四",
-   "srcLine": 1445,
+   "srcLine": 1455,
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
@@ -24258,29 +25506,29 @@
   {
    "rowKey": "M4-54",
    "volume": "卷四",
-   "srcLine": 1446,
+   "srcLine": 1456,
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
    "target": "—（不迁移，新世界生成）",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-55",
    "volume": "卷四",
-   "srcLine": 1465,
+   "srcLine": 1475,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
    "target": "D-2、C-1（卷二 §2.5（状态谓词单点）谓词）",
-   "targetObject": "rules",
+   "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M4-56",
    "volume": "卷四",
-   "srcLine": 1466,
+   "srcLine": 1476,
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
@@ -24291,12 +25539,12 @@
   {
    "rowKey": "M4-57",
    "volume": "卷四",
-   "srcLine": 1467,
+   "srcLine": 1477,
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
    "target": "D-2；§3.5 P-7",
-   "targetObject": "rules",
+   "targetObject": "sys.species",
    "baseline": "d54c89a3"
   }
  ]

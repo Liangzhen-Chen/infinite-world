@@ -35,6 +35,8 @@ let e = s; while (e < R.length && R[e].startsWith('|')) e++;
 const table = readFileSync(`${OUT}/乙4补-systems表.md`, 'utf8').split('\n').filter(l => l.startsWith('|'));
 if (s < 0) throw new Error('卷二里找不到补全表');
 R.splice(s, e - s, ...table);
+// 卷二 §2.7 JSON 里原有的两个示例系统键并入 sys. 命名（李白 11-15 16:25）：status 即补全表里卷二十一的 sys.status，capacity 改 sys.capacity
+for (const [from, to] of [['  "status": {"view"', '  "sys.status": {"view"'], ['  "capacity": {"view"', '  "sys.capacity": {"view"']]) { const i = R.findIndex(l => l.startsWith(from)); if (i >= 0) R[i] = R[i].replace(from, to); }
 writeFileSync(reg, R.join('\n'));
-writeFileSync(`${OUT}/乙4补-系统键替换表.md`, ['# 乙-4 补：系统键整批替换（脚本生成，勿手改）', '', `替换 ${map.size} 个系统键，改动迁移行落点对象格 ${cells} 格（按卷：${JSON.stringify(per)}）；卷二 §2.7 补全表整块重生成。`, '', '| 旧键 | 新键 |', '|---|---|', ...[...map].map(([a, b]) => `| ${a} | ${b} |`), ''].join('\n'));
+writeFileSync(`${OUT}/乙5-系统键替换表.md`, ['# 乙-4 补：系统键整批替换（脚本生成，勿手改）', '', `替换 ${map.size} 个系统键，改动迁移行落点对象格 ${cells} 格（按卷：${JSON.stringify(per)}）；卷二 §2.7 补全表整块重生成。`, '', '| 旧键 | 新键 |', '|---|---|', ...[...map].map(([a, b]) => `| ${a} | ${b} |`), ''].join('\n'));
 console.log(`替换 ${map.size} 个键，${cells} 格`, JSON.stringify(per));

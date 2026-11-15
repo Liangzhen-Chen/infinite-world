@@ -1,6 +1,6 @@
 {
  "_说明": "卷二 §2.7 systems 补全（乙-4 补 J1）；脚本生成，勿手改。pending 列出推不出、不猜的字段。",
- "count": 28,
+ "count": 29,
  "systems": [
   {
    "system": "sys.deity",
@@ -117,9 +117,32 @@
    "source": "卷三乙 §3.1 读入口 5 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 1 项（只按名字对，可能是同名的别的函数）（server-plugin/entity-view.mjs）；有调用文件的入口 1 项、调用文件 1 个；tables 取卷二各表节 owner 行 2 张"
   },
   {
-   "system": "actionView",
-   "tempKey": true,
-   "keyNote": "无主表卷，暂用该卷 §3.1 首个读入口名，拟名见 乙4补-无主表卷拟名表.md，待李白定名",
+   "system": "sys.material",
+   "tempKey": false,
+   "keyNote": "取卷二各表节 owner 行指向该卷的第一张表（按卷二登记顺序）",
+   "volume": "卷三甲",
+   "entries": [],
+   "view": "待补",
+   "tables": [
+    "material"
+   ],
+   "entryCallerFiles": {},
+   "defFiles": [],
+   "callerUnion": [],
+   "pending": [
+    "predicates",
+    "writers",
+    "sources",
+    "sinks",
+    "entryJudges",
+    "view"
+   ],
+   "source": "卷三甲 §3.1 读入口 0 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 0 项（只按名字对，可能是同名的别的函数）；有调用文件的入口 0 项、调用文件 0 个；tables 取卷二各表节 owner 行 1 张"
+  },
+  {
+   "system": "sys.ai_interface",
+   "tempKey": false,
+   "keyNote": "无主表卷，用李白 11-15 16:25 批准的拟名 sys. 加卷标题英文短名（乙4补-无主表卷拟名表.md）",
    "volume": "卷九",
    "entries": [
     "actionView",
@@ -378,9 +401,9 @@
    "source": "卷九 §3.1 读入口 28 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 7 项（只按名字对，可能是同名的别的函数）（extension/action-builder.mjs、extension/tools.mjs、server-plugin/action-affordances.mjs等）；有调用文件的入口 7 项、调用文件 60 个；tables 取卷二各表节 owner 行 0 张"
   },
   {
-   "system": "astroView",
-   "tempKey": true,
-   "keyNote": "无主表卷，暂用该卷 §3.1 首个读入口名，拟名见 乙4补-无主表卷拟名表.md，待李白定名",
+   "system": "sys.time_env",
+   "tempKey": false,
+   "keyNote": "无主表卷，用李白 11-15 16:25 批准的拟名 sys. 加卷标题英文短名（乙4补-无主表卷拟名表.md）",
    "volume": "卷二十",
    "entries": [
     "astroView",
@@ -483,9 +506,9 @@
    "source": "卷二十一 §3.1 读入口 6 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 1 项（只按名字对，可能是同名的别的函数）（server-plugin/entity-view.mjs）；有调用文件的入口 1 项、调用文件 9 个；tables 取卷二各表节 owner 行 1 张"
   },
   {
-   "system": "advancePlan",
-   "tempKey": true,
-   "keyNote": "无主表卷，暂用该卷 §3.1 首个读入口名，拟名见 乙4补-无主表卷拟名表.md，待李白定名",
+   "system": "sys.offscreen_save",
+   "tempKey": false,
+   "keyNote": "无主表卷，用李白 11-15 16:25 批准的拟名 sys. 加卷标题英文短名（乙4补-无主表卷拟名表.md）",
    "volume": "卷二十七",
    "entries": [
     "advancePlan",
@@ -519,9 +542,9 @@
    "source": "卷二十七 §3.1 读入口 9 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 1 项（只按名字对，可能是同名的别的函数）（server-plugin/advance-layers.mjs、server-plugin/compat/v2-phase1-engine.mjs、server-plugin/population.mjs等）；有调用文件的入口 0 项、调用文件 0 个；tables 取卷二各表节 owner 行 0 张"
   },
   {
-   "system": "actOutcome",
-   "tempKey": true,
-   "keyNote": "无主表卷，暂用该卷 §3.1 首个读入口名，拟名见 乙4补-无主表卷拟名表.md，待李白定名",
+   "system": "sys.arts",
+   "tempKey": false,
+   "keyNote": "无主表卷，用李白 11-15 16:25 批准的拟名 sys. 加卷标题英文短名（乙4补-无主表卷拟名表.md）",
    "volume": "卷二十三",
    "entries": [
     "actOutcome",
@@ -563,9 +586,9 @@
    "source": "卷二十三 §3.1 读入口 14 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 1 项（只按名字对，可能是同名的别的函数）（server-plugin/entity-view.mjs）；有调用文件的入口 1 项、调用文件 1 个；tables 取卷二各表节 owner 行 0 张"
   },
   {
-   "system": "composeScreen",
-   "tempKey": true,
-   "keyNote": "无主表卷，暂用该卷 §3.1 首个读入口名，拟名见 乙4补-无主表卷拟名表.md，待李白定名",
+   "system": "sys.display_l10n",
+   "tempKey": false,
+   "keyNote": "无主表卷，用李白 11-15 16:25 批准的拟名 sys. 加卷标题英文短名（乙4补-无主表卷拟名表.md）",
    "volume": "卷二十九",
    "entries": [
     "composeScreen",
@@ -736,9 +759,9 @@
    "source": "卷二十五 §3.1 读入口 12 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 0 项（只按名字对，可能是同名的别的函数）；有调用文件的入口 0 项、调用文件 0 个；tables 取卷二各表节 owner 行 1 张"
   },
   {
-   "system": "loadWorld",
-   "tempKey": true,
-   "keyNote": "无主表卷，暂用该卷 §3.1 首个读入口名，拟名见 乙4补-无主表卷拟名表.md，待李白定名",
+   "system": "sys.packs",
+   "tempKey": false,
+   "keyNote": "无主表卷，用李白 11-15 16:25 批准的拟名 sys. 加卷标题英文短名（乙4补-无主表卷拟名表.md）",
    "volume": "卷二十八",
    "entries": [
     "loadWorld",
@@ -770,9 +793,9 @@
    "source": "卷二十八 §3.1 读入口 6 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 0 项（只按名字对，可能是同名的别的函数）；有调用文件的入口 1 项、调用文件 1 个；tables 取卷二各表节 owner 行 0 张"
   },
   {
-   "system": "decisionJitter",
-   "tempKey": true,
-   "keyNote": "无主表卷，暂用该卷 §3.1 首个读入口名，拟名见 乙4补-无主表卷拟名表.md，待李白定名",
+   "system": "sys.psyche",
+   "tempKey": false,
+   "keyNote": "无主表卷，用李白 11-15 16:25 批准的拟名 sys. 加卷标题英文短名（乙4补-无主表卷拟名表.md）",
    "volume": "卷二十六",
    "entries": [
     "decisionJitter",
@@ -1029,9 +1052,9 @@
    "source": "卷八b §3.1 读入口 32 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 2 项（只按名字对，可能是同名的别的函数）（server-plugin/law.mjs、server-plugin/norm-stack.mjs）；有调用文件的入口 2 项、调用文件 3 个；tables 取卷二各表节 owner 行 2 张"
   },
   {
-   "system": "accountsOf",
-   "tempKey": true,
-   "keyNote": "无主表卷，暂用该卷 §3.1 首个读入口名，拟名见 乙4补-无主表卷拟名表.md，待李白定名",
+   "system": "sys.economy",
+   "tempKey": false,
+   "keyNote": "无主表卷，用李白 11-15 16:25 批准的拟名 sys. 加卷标题英文短名（乙4补-无主表卷拟名表.md）",
    "volume": "卷六",
    "entries": [
     "accountsOf",
@@ -1171,9 +1194,9 @@
    "source": "卷六 §3.1 读入口 34 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 10 项（只按名字对，可能是同名的别的函数）（server-plugin/action-limits.mjs、server-plugin/archived-reducer.mjs、server-plugin/bounty.mjs等）；有调用文件的入口 5 项、调用文件 19 个；tables 取卷二各表节 owner 行 0 张"
   },
   {
-   "system": "ageStructure",
-   "tempKey": true,
-   "keyNote": "无主表卷，暂用该卷 §3.1 首个读入口名，拟名见 乙4补-无主表卷拟名表.md，待李白定名",
+   "system": "sys.worldgen",
+   "tempKey": false,
+   "keyNote": "无主表卷，用李白 11-15 16:25 批准的拟名 sys. 加卷标题英文短名（乙4补-无主表卷拟名表.md）",
    "volume": "卷十",
    "entries": [
     "ageStructure",
@@ -1216,9 +1239,9 @@
    "source": "卷十 §3.1 读入口 14 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 2 项（只按名字对，可能是同名的别的函数）（server-plugin/public-opinion.mjs、server-plugin/remote-generation.mjs）；有调用文件的入口 1 项、调用文件 1 个；tables 取卷二各表节 owner 行 0 张"
   },
   {
-   "system": "cardId",
-   "tempKey": true,
-   "keyNote": "无主表卷，暂用该卷 §3.1 首个读入口名，拟名见 乙4补-无主表卷拟名表.md，待李白定名",
+   "system": "sys.migration",
+   "tempKey": false,
+   "keyNote": "无主表卷，用李白 11-15 16:25 批准的拟名 sys. 加卷标题英文短名（乙4补-无主表卷拟名表.md）",
    "volume": "卷十一",
    "entries": [
     "cardId",
@@ -1251,9 +1274,9 @@
    "source": "卷十一 §3.1 读入口 13 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 0 项（只按名字对，可能是同名的别的函数）；有调用文件的入口 0 项、调用文件 0 个；tables 取卷二各表节 owner 行 0 张"
   },
   {
-   "system": "aboardOf",
-   "tempKey": true,
-   "keyNote": "无主表卷，暂用该卷 §3.1 首个读入口名，拟名见 乙4补-无主表卷拟名表.md，待李白定名",
+   "system": "sys.travel",
+   "tempKey": false,
+   "keyNote": "无主表卷，用李白 11-15 16:25 批准的拟名 sys. 加卷标题英文短名（乙4补-无主表卷拟名表.md）",
    "volume": "卷十七",
    "entries": [
     "aboardOf",
@@ -1288,9 +1311,9 @@
    "source": "卷十七 §3.1 读入口 15 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 0 项（只按名字对，可能是同名的别的函数）；有调用文件的入口 0 项、调用文件 0 个；tables 取卷二各表节 owner 行 0 张"
   },
   {
-   "system": "battlePreview",
-   "tempKey": true,
-   "keyNote": "无主表卷，暂用该卷 §3.1 首个读入口名，拟名见 乙4补-无主表卷拟名表.md，待李白定名",
+   "system": "sys.combat",
+   "tempKey": false,
+   "keyNote": "无主表卷，用李白 11-15 16:25 批准的拟名 sys. 加卷标题英文短名（乙4补-无主表卷拟名表.md）",
    "volume": "卷十三",
    "entries": [
     "battlePreview",
@@ -1406,9 +1429,9 @@
    "source": "卷十九 §3.1 读入口 2 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 1 项（只按名字对，可能是同名的别的函数）（server-plugin/facility-state.mjs）；有调用文件的入口 1 项、调用文件 23 个；tables 取卷二各表节 owner 行 1 张"
   },
   {
-   "system": "accBaseline",
-   "tempKey": true,
-   "keyNote": "无主表卷，暂用该卷 §3.1 首个读入口名，拟名见 乙4补-无主表卷拟名表.md，待李白定名",
+   "system": "sys.acceptance_scan",
+   "tempKey": false,
+   "keyNote": "无主表卷，用李白 11-15 16:25 批准的拟名 sys. 加卷标题英文短名（乙4补-无主表卷拟名表.md）",
    "volume": "卷十二",
    "entries": [
     "accBaseline",
@@ -1438,9 +1461,9 @@
    "source": "卷十二 §3.1 读入口 10 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 0 项（只按名字对，可能是同名的别的函数）；有调用文件的入口 0 项、调用文件 0 个；tables 取卷二各表节 owner 行 0 张"
   },
   {
-   "system": "afterlifeOf",
-   "tempKey": true,
-   "keyNote": "无主表卷，暂用该卷 §3.1 首个读入口名，拟名见 乙4补-无主表卷拟名表.md，待李白定名",
+   "system": "sys.arcana",
+   "tempKey": false,
+   "keyNote": "无主表卷，用李白 11-15 16:25 批准的拟名 sys. 加卷标题英文短名（乙4补-无主表卷拟名表.md）",
    "volume": "卷十五",
    "entries": [
     "afterlifeOf",
@@ -1473,9 +1496,9 @@
    "source": "卷十五 §3.1 读入口 13 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 0 项（只按名字对，可能是同名的别的函数）；有调用文件的入口 0 项、调用文件 0 个；tables 取卷二各表节 owner 行 0 张"
   },
   {
-   "system": "compat",
-   "tempKey": true,
-   "keyNote": "无主表卷，暂用该卷 §3.1 首个读入口名，拟名见 乙4补-无主表卷拟名表.md，待李白定名",
+   "system": "sys.social",
+   "tempKey": false,
+   "keyNote": "无主表卷，用李白 11-15 16:25 批准的拟名 sys. 加卷标题英文短名（乙4补-无主表卷拟名表.md）",
    "volume": "卷十八",
    "entries": [
     "compat",
@@ -1535,9 +1558,9 @@
    "source": "卷十八 §3.1 读入口 11 项（H2：脚本/卷十一/collect-entry-callers.mjs）；旧代码里有同名定义的入口 4 项（只按名字对，可能是同名的别的函数）（server-plugin/consistency-review.mjs、server-plugin/holdings.mjs、server-plugin/legal-appeal.mjs等）；有调用文件的入口 2 项、调用文件 8 个；tables 取卷二各表节 owner 行 0 张"
   },
   {
-   "system": "claimTruth",
-   "tempKey": true,
-   "keyNote": "无主表卷，暂用该卷 §3.1 首个读入口名，拟名见 乙4补-无主表卷拟名表.md，待李白定名",
+   "system": "sys.monsters",
+   "tempKey": false,
+   "keyNote": "无主表卷，用李白 11-15 16:25 批准的拟名 sys. 加卷标题英文短名（乙4补-无主表卷拟名表.md）",
    "volume": "卷十六",
    "entries": [
     "claimTruth",

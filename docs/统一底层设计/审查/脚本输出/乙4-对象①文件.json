@@ -1,134 +1,8 @@
 {
- "aboardOf": [
-  "server-plugin/advance-layers.mjs",
-  "server-plugin/hazard-calendar.mjs",
-  "server-plugin/map-state.mjs",
-  "server-plugin/pets.mjs",
-  "server-plugin/post.mjs",
-  "server-plugin/primitives-movement.mjs",
-  "server-plugin/remote-generation.mjs",
-  "server-plugin/smuggling.mjs",
-  "server-plugin/transport-route.mjs",
-  "server-plugin/weather.mjs"
- ],
- "accountsOf": [
-  "server-plugin/building-maintenance.mjs",
-  "server-plugin/business.mjs",
-  "server-plugin/contracts.mjs",
-  "server-plugin/credit.mjs",
-  "server-plugin/distribution.mjs",
-  "server-plugin/extraction.mjs",
-  "server-plugin/finance-assets.mjs",
-  "server-plugin/finance-bank.mjs",
-  "server-plugin/food-habit.mjs",
-  "server-plugin/goods-escrow.mjs",
-  "server-plugin/household-budget.mjs",
-  "server-plugin/household-subsistence.mjs",
-  "server-plugin/item-class.mjs",
-  "server-plugin/labor-market.mjs",
-  "server-plugin/law.mjs",
-  "server-plugin/legacy-primitives.mjs",
-  "server-plugin/market.mjs",
-  "server-plugin/military.mjs",
-  "server-plugin/money.mjs",
-  "server-plugin/npc-labor.mjs",
-  "server-plugin/npc-obligations.mjs",
-  "server-plugin/obligation-runtime.mjs",
-  "server-plugin/public-projects.mjs",
-  "server-plugin/quest-board.mjs",
-  "server-plugin/remote-generation.mjs",
-  "server-plugin/settlement-trade.mjs",
-  "server-plugin/shop.mjs",
-  "server-plugin/smuggling.mjs",
-  "server-plugin/stock.mjs",
-  "server-plugin/tender.mjs",
-  "server-plugin/titles.mjs",
-  "server-plugin/transition.mjs",
-  "server-plugin/valuation.mjs"
- ],
- "actOutcome": [
-  "server-plugin/civic.mjs",
-  "server-plugin/notables.mjs",
-  "server-plugin/works.mjs"
- ],
  "action": [
   "server-plugin/action-affordances.mjs"
  ],
- "actionView": [
-  "extension/prompt.mjs",
-  "extension/turn.mjs",
-  "server-plugin/action-authority-sources.mjs",
-  "server-plugin/action-authority.mjs",
-  "server-plugin/action-consent.mjs",
-  "server-plugin/action-text.mjs",
-  "server-plugin/career-metrics.mjs",
-  "server-plugin/chronicle.mjs",
-  "server-plugin/consistency-evidence.mjs",
-  "server-plugin/consistency-review.mjs",
-  "server-plugin/consistency-service.mjs",
-  "server-plugin/engine.mjs",
-  "server-plugin/household-subsistence.mjs",
-  "server-plugin/legacy-primitives.mjs",
-  "server-plugin/magic-consent.mjs",
-  "server-plugin/medicine.mjs",
-  "server-plugin/npc-autonomy.mjs",
-  "server-plugin/npc-decision.mjs",
-  "server-plugin/perception.mjs",
-  "server-plugin/place-layout.mjs",
-  "server-plugin/primitive-schema.mjs",
-  "server-plugin/primitives-effects.mjs",
-  "server-plugin/scene-card.mjs"
- ],
  "actkind": [],
- "advancePlan": [
-  "server-plugin/advance-layers.mjs",
-  "server-plugin/advance-registry.mjs",
-  "server-plugin/agriculture-migration.mjs",
-  "server-plugin/archived-reducer.mjs",
-  "server-plugin/boss-migration.mjs",
-  "server-plugin/campaign-reducer.mjs",
-  "server-plugin/engine.mjs",
-  "server-plugin/farm-pests-migration.mjs",
-  "server-plugin/migrations.mjs",
-  "server-plugin/npc-memory.mjs",
-  "server-plugin/npc-obligations.mjs",
-  "server-plugin/obligation-runtime.mjs",
-  "server-plugin/population-service.mjs",
-  "server-plugin/record-cleanup.mjs",
-  "server-plugin/rule-state-migration.mjs",
-  "server-plugin/sideband.mjs",
-  "server-plugin/storage.mjs",
-  "server-plugin/wildlife-migration.mjs",
-  "server-plugin/world-upgrade.mjs"
- ],
- "afterlifeOf": [
-  "server-plugin/engine.mjs",
-  "server-plugin/learning.mjs",
-  "server-plugin/magic-care.mjs",
-  "server-plugin/magic-consent.mjs",
-  "server-plugin/magic-context.mjs",
-  "server-plugin/magic-light.mjs",
-  "server-plugin/magic-marks.mjs",
-  "server-plugin/magic-message.mjs",
-  "server-plugin/magic-mind-space.mjs",
-  "server-plugin/magic-object.mjs",
-  "server-plugin/magic.mjs",
-  "server-plugin/npc-intelligence.mjs",
-  "server-plugin/spell-research.mjs",
-  "server-plugin/summons.mjs",
-  "server-plugin/wildlife-awakening.mjs"
- ],
- "ageStructure": [
-  "server-plugin/character.mjs",
-  "server-plugin/migrations.mjs",
-  "server-plugin/npc-state.mjs",
-  "server-plugin/population-service.mjs",
-  "server-plugin/population.mjs",
-  "server-plugin/regions.mjs",
-  "server-plugin/remote-generation.mjs",
-  "server-plugin/wildlife-habitats.mjs",
-  "server-plugin/world-upgrade.mjs"
- ],
  "aiGate": [
   "extension/generation.mjs",
   "server-plugin/consistency-review.mjs",
@@ -141,18 +15,10 @@
  "assembly": [
   "server-plugin/index.mjs"
  ],
- "assets": [
-  "extension/ambient-audio.mjs"
- ],
  "banes": [],
  "bank": [
   "server-plugin/population.mjs",
   "server-plugin/remote-generation.mjs"
- ],
- "battlePreview": [
-  "server-plugin/combat.mjs",
-  "server-plugin/deterrence.mjs",
-  "server-plugin/duels.mjs"
  ],
  "calendar": [
   "server-plugin/character.mjs",
@@ -164,60 +30,13 @@
  "cap_row": [
   "server-plugin/action-limits.mjs"
  ],
- "cardId": [
-  "server-plugin/family-politics.mjs"
- ],
  "cert": [
   "server-plugin/local-exams.mjs"
  ],
  "claim": [
   "server-plugin/family-law.mjs"
  ],
- "claimTruth": [
-  "server-plugin/boss-abilities.mjs",
-  "server-plugin/boss-cognition.mjs",
-  "server-plugin/boss-migration.mjs",
-  "server-plugin/boss-negotiation.mjs",
-  "server-plugin/bosses.mjs",
-  "server-plugin/combat-state.mjs",
-  "server-plugin/creature-nature.mjs",
-  "server-plugin/ecology-dynamics.mjs",
-  "server-plugin/interactions.mjs",
-  "server-plugin/monster-society.mjs",
-  "server-plugin/npc-intelligence.mjs",
-  "server-plugin/population.mjs",
-  "server-plugin/quest-board.mjs",
-  "server-plugin/quest-wildlife.mjs",
-  "server-plugin/remote-generation.mjs",
-  "server-plugin/standing.mjs",
-  "server-plugin/tribal-awakening.mjs",
-  "server-plugin/wildlife-awakening.mjs",
-  "server-plugin/wildlife-range.mjs",
-  "server-plugin/wildlife-society.mjs",
-  "server-plugin/wildlife.mjs"
- ],
  "cloud-gate": [],
- "compat": [
-  "server-plugin/action-consent.mjs",
-  "server-plugin/duels.mjs",
-  "server-plugin/extraction.mjs",
-  "server-plugin/family-law.mjs",
-  "server-plugin/family-politics.mjs",
-  "server-plugin/lies.mjs",
-  "server-plugin/notables.mjs",
-  "server-plugin/npc-cognition.mjs",
-  "server-plugin/npc-decision.mjs",
-  "server-plugin/npc-life.mjs",
-  "server-plugin/npc-relations.mjs",
-  "server-plugin/population-service.mjs",
-  "server-plugin/population.mjs",
-  "server-plugin/remote-generation.mjs",
-  "server-plugin/reputation.mjs",
-  "server-plugin/standing.mjs"
- ],
- "composeScreen": [
-  "server-plugin/map-state.mjs"
- ],
  "content-approve": [],
  "content-build-check": [
   "server-plugin/population.mjs"
@@ -227,33 +46,6 @@
  ],
  "culture": [
   "server-plugin/remote-generation.mjs"
- ],
- "decisionJitter": [
-  "server-plugin/action-limits.mjs",
-  "server-plugin/autonomy-candidates.mjs",
-  "server-plugin/contracts.mjs",
-  "server-plugin/duels.mjs",
-  "server-plugin/entity-view.mjs",
-  "server-plugin/finance-assets.mjs",
-  "server-plugin/finance-bank.mjs",
-  "server-plugin/magic-consent.mjs",
-  "server-plugin/magic-mind-space.mjs",
-  "server-plugin/magic-ritual.mjs",
-  "server-plugin/military.mjs",
-  "server-plugin/nation-founding.mjs",
-  "server-plugin/npc-autonomy.mjs",
-  "server-plugin/npc-cognition.mjs",
-  "server-plugin/npc-crime.mjs",
-  "server-plugin/npc-decision.mjs",
-  "server-plugin/npc-intelligence.mjs",
-  "server-plugin/npc-memory.mjs",
-  "server-plugin/office-salary.mjs",
-  "server-plugin/pets.mjs",
-  "server-plugin/population-service.mjs",
-  "server-plugin/population.mjs",
-  "server-plugin/remote-generation.mjs",
-  "server-plugin/subjective-view.mjs",
-  "server-plugin/war-diplomacy.mjs"
  ],
  "deed": [
   "server-plugin/career-metrics.mjs"
@@ -272,10 +64,16 @@
   "server-plugin/war-diplomacy.mjs"
  ],
  "display": [
+  "extension/actions-view.mjs",
+  "extension/affairs-panels.mjs",
+  "extension/ambient-audio.mjs",
   "extension/core.js",
+  "extension/ledger-view.mjs",
   "extension/message-view.mjs",
+  "extension/personal-panels.mjs",
   "extension/prompt.mjs",
   "extension/state-read.mjs",
+  "extension/topbar.mjs",
   "extension/turn-contract.mjs",
   "extension/turn.mjs",
   "extension/ui-actions.mjs",
@@ -288,6 +86,10 @@
   "server-plugin/applied-effects.mjs",
   "server-plugin/engine.mjs",
   "server-plugin/state-notices.mjs",
+  "server-plugin/ui-map.mjs",
+  "server-plugin/ui-messages.mjs",
+  "server-plugin/ui-overview.mjs",
+  "server-plugin/ui-routes.mjs",
   "server-plugin/works.mjs"
  ],
  "due_kind": [
@@ -297,7 +99,6 @@
  "end_reason": [
   "server-plugin/family-inheritance.mjs"
  ],
- "epithets": [],
  "event_type": [
   "server-plugin/effects.mjs",
   "server-plugin/faction-clock.mjs",
@@ -375,6 +176,7 @@
   "server-plugin/building-maintenance.mjs",
   "server-plugin/business.mjs",
   "server-plugin/catalog.mjs",
+  "server-plugin/currency.mjs",
   "server-plugin/det-math.mjs",
   "server-plugin/education-cohorts.mjs",
   "server-plugin/effects.mjs",
@@ -385,13 +187,16 @@
   "server-plugin/farm-pests.mjs",
   "server-plugin/festival.mjs",
   "server-plugin/finance-assets.mjs",
+  "server-plugin/finance-bank.mjs",
   "server-plugin/forest-water.mjs",
   "server-plugin/hazard-calendar.mjs",
   "server-plugin/high-nobility.mjs",
   "server-plugin/husbandry-traits.mjs",
   "server-plugin/husbandry.mjs",
+  "server-plugin/interactions.mjs",
   "server-plugin/item-class.mjs",
   "server-plugin/ledger.mjs",
+  "server-plugin/magic-movement.mjs",
   "server-plugin/magic-water-earth.mjs",
   "server-plugin/market.mjs",
   "server-plugin/military.mjs",
@@ -417,20 +222,11 @@
   "server-plugin/works.mjs",
   "server-plugin/world-registry.mjs"
  ],
- "labels": [
-  "extension/message-view.mjs",
-  "extension/turn.mjs",
-  "server-plugin/action-text.mjs",
-  "server-plugin/claim-unit.mjs"
- ],
  "law_code": [
   "server-plugin/law-codes.mjs",
   "server-plugin/norm-stack.mjs"
  ],
  "layout": [],
- "map": [
-  "server-plugin/ui-map.mjs"
- ],
  "material": [
   "server-plugin/action-limits.mjs",
   "server-plugin/medicine-state.mjs",
@@ -455,21 +251,16 @@
   "server-plugin/organizations.mjs"
  ],
  "outputGate": [
+  "extension/message-view.mjs",
   "extension/turn-contract.mjs",
-  "server-plugin/action-text.mjs"
- ],
- "outputGate 组": [
-  "server-plugin/lore.mjs"
- ],
- "panels": [
-  "extension/actions-view.mjs",
-  "extension/affairs-panels.mjs",
-  "extension/ledger-view.mjs",
-  "extension/personal-panels.mjs",
-  "extension/topbar.mjs",
-  "server-plugin/ui-messages.mjs",
-  "server-plugin/ui-overview.mjs",
-  "server-plugin/ui-routes.mjs"
+  "extension/turn.mjs",
+  "server-plugin/action-text.mjs",
+  "server-plugin/applied-effects.mjs",
+  "server-plugin/chronicle.mjs",
+  "server-plugin/claim-unit.mjs",
+  "server-plugin/lore.mjs",
+  "server-plugin/return-summary.mjs",
+  "server-plugin/state-notices.mjs"
  ],
  "person": [],
  "place": [
@@ -527,103 +318,15 @@
  ],
  "replay_verify": [],
  "rules": [
-  "server-plugin/action-affordances.mjs",
-  "server-plugin/action-rite.mjs",
-  "server-plugin/agriculture.mjs",
-  "server-plugin/boss-negotiation.mjs",
-  "server-plugin/bounty.mjs",
-  "server-plugin/business.mjs",
-  "server-plugin/career-metrics.mjs",
-  "server-plugin/carry.mjs",
-  "server-plugin/combat-state.mjs",
-  "server-plugin/combat.mjs",
-  "server-plugin/credit.mjs",
-  "server-plugin/currency.mjs",
-  "server-plugin/derived.mjs",
-  "server-plugin/duels.mjs",
-  "server-plugin/education-state.mjs",
-  "server-plugin/engine.mjs",
-  "server-plugin/entity-view.mjs",
-  "server-plugin/environment.mjs",
-  "server-plugin/extraction.mjs",
-  "server-plugin/facilities.mjs",
-  "server-plugin/family-diplomacy.mjs",
-  "server-plugin/family-politics.mjs",
-  "server-plugin/family-state.mjs",
-  "server-plugin/farm-pests.mjs",
-  "server-plugin/festival.mjs",
   "server-plugin/finance-assets.mjs",
   "server-plugin/finance-bank.mjs",
-  "server-plugin/governance.mjs",
-  "server-plugin/hazard-calendar.mjs",
   "server-plugin/hidden-passives.mjs",
-  "server-plugin/high-nobility.mjs",
   "server-plugin/holding-sources.mjs",
-  "server-plugin/household-subsistence.mjs",
-  "server-plugin/husbandry.mjs",
-  "server-plugin/interactions.mjs",
-  "server-plugin/item-class.mjs",
-  "server-plugin/law-codes.mjs",
-  "server-plugin/law.mjs",
-  "server-plugin/learning.mjs",
-  "server-plugin/legacy-primitives.mjs",
-  "server-plugin/lies.mjs",
-  "server-plugin/livestock-sale.mjs",
-  "server-plugin/local-exams.mjs",
-  "server-plugin/location-access.mjs",
-  "server-plugin/magic-care.mjs",
-  "server-plugin/magic-growth.mjs",
-  "server-plugin/magic-marks.mjs",
-  "server-plugin/magic-movement.mjs",
-  "server-plugin/magic-object.mjs",
-  "server-plugin/magic-ritual.mjs",
-  "server-plugin/map-state.mjs",
-  "server-plugin/market.mjs",
-  "server-plugin/medicine-state.mjs",
   "server-plugin/medicine.mjs",
-  "server-plugin/migrations.mjs",
-  "server-plugin/migrations/r1.mjs",
-  "server-plugin/military.mjs",
   "server-plugin/money.mjs",
-  "server-plugin/monster-society.mjs",
-  "server-plugin/nation-founding.mjs",
-  "server-plugin/noble-state.mjs",
-  "server-plugin/norm-stack.mjs",
-  "server-plugin/notables.mjs",
-  "server-plugin/npc-cognition.mjs",
-  "server-plugin/npc-crime.mjs",
-  "server-plugin/npc-labor.mjs",
-  "server-plugin/npc-memory.mjs",
-  "server-plugin/npc-rumors.mjs",
-  "server-plugin/obligation-runtime.mjs",
-  "server-plugin/perception.mjs",
   "server-plugin/pets.mjs",
-  "server-plugin/population-service.mjs",
-  "server-plugin/population.mjs",
-  "server-plugin/post.mjs",
-  "server-plugin/primitives-effects.mjs",
-  "server-plugin/primitives-learning.mjs",
-  "server-plugin/promotion.mjs",
-  "server-plugin/public-projects.mjs",
   "server-plugin/quest-sources.mjs",
-  "server-plugin/remote-generation.mjs",
-  "server-plugin/reputation.mjs",
-  "server-plugin/rule-state-migration.mjs",
-  "server-plugin/settlement-trade.mjs",
-  "server-plugin/sites.mjs",
-  "server-plugin/smuggling.mjs",
-  "server-plugin/stock.mjs",
-  "server-plugin/titles.mjs",
-  "server-plugin/training.mjs",
-  "server-plugin/transition.mjs",
-  "server-plugin/transport-route.mjs",
-  "server-plugin/war-diplomacy.mjs",
-  "server-plugin/weather.mjs",
-  "server-plugin/wildlife.mjs",
-  "server-plugin/works.mjs",
-  "server-plugin/world-clock.mjs",
-  "server-plugin/world-events.mjs",
-  "server-plugin/world-upgrade.mjs"
+  "server-plugin/stock.mjs"
  ],
  "rules.ai.tierUses": [
   "server-plugin/ai-profile.mjs"
@@ -642,6 +345,10 @@
  ],
  "rules.attr": [],
  "rules.bench": [],
+ "rules.body.carry": [
+  "server-plugin/carry.mjs",
+  "server-plugin/item-class.mjs"
+ ],
  "rules.clock": [
   "server-plugin/advance-registry.mjs",
   "server-plugin/scheduler.mjs"
@@ -659,8 +366,15 @@
  "rules.health": [
   "server-plugin/population-health.mjs"
  ],
+ "rules.items": [
+  "server-plugin/carry.mjs",
+  "server-plugin/item-class.mjs"
+ ],
  "rules.labor": [
   "server-plugin/labor-market.mjs"
+ ],
+ "rules.law": [
+  "server-plugin/law.mjs"
  ],
  "rules.life": [],
  "rules.market": [
@@ -729,10 +443,162 @@
   "server-plugin/magic-status.mjs",
   "server-plugin/medicine-state.mjs"
  ],
+ "sys.acceptance_scan": [
+  "server-plugin/digest-exclude.mjs",
+  "server-plugin/seed-keys.mjs"
+ ],
+ "sys.ai_interface": [
+  "extension/prompt.mjs",
+  "extension/turn.mjs",
+  "server-plugin/action-authority-sources.mjs",
+  "server-plugin/action-authority.mjs",
+  "server-plugin/action-consent.mjs",
+  "server-plugin/action-text.mjs",
+  "server-plugin/career-metrics.mjs",
+  "server-plugin/chronicle.mjs",
+  "server-plugin/consistency-evidence.mjs",
+  "server-plugin/consistency-review.mjs",
+  "server-plugin/consistency-service.mjs",
+  "server-plugin/engine.mjs",
+  "server-plugin/household-subsistence.mjs",
+  "server-plugin/legacy-primitives.mjs",
+  "server-plugin/magic-consent.mjs",
+  "server-plugin/medicine.mjs",
+  "server-plugin/npc-autonomy.mjs",
+  "server-plugin/npc-decision.mjs",
+  "server-plugin/perception.mjs",
+  "server-plugin/place-layout.mjs",
+  "server-plugin/primitive-schema.mjs",
+  "server-plugin/primitives-effects.mjs",
+  "server-plugin/scene-card.mjs"
+ ],
+ "sys.arcana": [
+  "server-plugin/action-rite.mjs",
+  "server-plugin/engine.mjs",
+  "server-plugin/learning.mjs",
+  "server-plugin/magic-care.mjs",
+  "server-plugin/magic-consent.mjs",
+  "server-plugin/magic-context.mjs",
+  "server-plugin/magic-light.mjs",
+  "server-plugin/magic-marks.mjs",
+  "server-plugin/magic-message.mjs",
+  "server-plugin/magic-mind-space.mjs",
+  "server-plugin/magic-object.mjs",
+  "server-plugin/magic-ritual.mjs",
+  "server-plugin/magic.mjs",
+  "server-plugin/npc-intelligence.mjs",
+  "server-plugin/spell-research.mjs",
+  "server-plugin/summons.mjs",
+  "server-plugin/wildlife-awakening.mjs"
+ ],
+ "sys.arts": [
+  "server-plugin/civic.mjs",
+  "server-plugin/notables.mjs",
+  "server-plugin/works.mjs"
+ ],
+ "sys.capacity": [
+  "server-plugin/agriculture.mjs",
+  "server-plugin/boss-negotiation.mjs",
+  "server-plugin/bounty.mjs",
+  "server-plugin/combat-state.mjs",
+  "server-plugin/credit.mjs",
+  "server-plugin/duels.mjs",
+  "server-plugin/education-state.mjs",
+  "server-plugin/entity-view.mjs",
+  "server-plugin/environment.mjs",
+  "server-plugin/extraction.mjs",
+  "server-plugin/family-politics.mjs",
+  "server-plugin/festival.mjs",
+  "server-plugin/finance-bank.mjs",
+  "server-plugin/governance.mjs",
+  "server-plugin/high-nobility.mjs",
+  "server-plugin/household-subsistence.mjs",
+  "server-plugin/law.mjs",
+  "server-plugin/lies.mjs",
+  "server-plugin/local-exams.mjs",
+  "server-plugin/location-access.mjs",
+  "server-plugin/magic-growth.mjs",
+  "server-plugin/monster-society.mjs",
+  "server-plugin/notables.mjs",
+  "server-plugin/npc-cognition.mjs",
+  "server-plugin/npc-crime.mjs",
+  "server-plugin/npc-memory.mjs",
+  "server-plugin/npc-rumors.mjs",
+  "server-plugin/obligation-runtime.mjs",
+  "server-plugin/perception.mjs",
+  "server-plugin/pets.mjs",
+  "server-plugin/post.mjs",
+  "server-plugin/promotion.mjs",
+  "server-plugin/reputation.mjs",
+  "server-plugin/sites.mjs",
+  "server-plugin/smuggling.mjs",
+  "server-plugin/titles.mjs",
+  "server-plugin/training.mjs",
+  "server-plugin/wildlife.mjs",
+  "server-plugin/world-events.mjs"
+ ],
+ "sys.combat": [
+  "server-plugin/combat.mjs",
+  "server-plugin/deterrence.mjs",
+  "server-plugin/duels.mjs",
+  "server-plugin/education-state.mjs",
+  "server-plugin/engine.mjs",
+  "server-plugin/finance-bank.mjs",
+  "server-plugin/hazard-calendar.mjs",
+  "server-plugin/household-subsistence.mjs",
+  "server-plugin/military.mjs",
+  "server-plugin/transport-route.mjs",
+  "server-plugin/war-diplomacy.mjs"
+ ],
  "sys.deity": [
   "server-plugin/faith-state.mjs",
   "server-plugin/festival.mjs",
+  "server-plugin/norm-stack.mjs",
+  "server-plugin/population.mjs",
+  "server-plugin/remote-generation.mjs",
   "server-plugin/water-cycle.mjs"
+ ],
+ "sys.display_l10n": [
+  "server-plugin/map-state.mjs"
+ ],
+ "sys.economy": [
+  "server-plugin/boss-negotiation.mjs",
+  "server-plugin/building-maintenance.mjs",
+  "server-plugin/business.mjs",
+  "server-plugin/contracts.mjs",
+  "server-plugin/credit.mjs",
+  "server-plugin/derived.mjs",
+  "server-plugin/distribution.mjs",
+  "server-plugin/extraction.mjs",
+  "server-plugin/finance-assets.mjs",
+  "server-plugin/finance-bank.mjs",
+  "server-plugin/food-habit.mjs",
+  "server-plugin/goods-escrow.mjs",
+  "server-plugin/household-budget.mjs",
+  "server-plugin/household-subsistence.mjs",
+  "server-plugin/item-class.mjs",
+  "server-plugin/labor-market.mjs",
+  "server-plugin/law.mjs",
+  "server-plugin/legacy-primitives.mjs",
+  "server-plugin/livestock-sale.mjs",
+  "server-plugin/market.mjs",
+  "server-plugin/medicine.mjs",
+  "server-plugin/military.mjs",
+  "server-plugin/money.mjs",
+  "server-plugin/npc-labor.mjs",
+  "server-plugin/npc-obligations.mjs",
+  "server-plugin/obligation-runtime.mjs",
+  "server-plugin/public-projects.mjs",
+  "server-plugin/quest-board.mjs",
+  "server-plugin/remote-generation.mjs",
+  "server-plugin/settlement-trade.mjs",
+  "server-plugin/shop.mjs",
+  "server-plugin/smuggling.mjs",
+  "server-plugin/stock.mjs",
+  "server-plugin/tender.mjs",
+  "server-plugin/titles.mjs",
+  "server-plugin/transition.mjs",
+  "server-plugin/valuation.mjs"
  ],
  "sys.event_type": [
   "server-plugin/career-metrics.mjs",
@@ -772,7 +638,13 @@
  ],
  "sys.item": [
   "server-plugin/daily-actions.mjs",
-  "server-plugin/npc-labor.mjs"
+  "server-plugin/item-class.mjs",
+  "server-plugin/magic-marks.mjs",
+  "server-plugin/magic-object.mjs",
+  "server-plugin/npc-labor.mjs",
+  "server-plugin/settlement-trade.mjs",
+  "server-plugin/stock.mjs",
+  "server-plugin/transition.mjs"
  ],
  "sys.knowledge": [
   "server-plugin/book-gates.mjs",
@@ -788,34 +660,104 @@
   "server-plugin/subjective-view.mjs",
   "server-plugin/works.mjs"
  ],
+ "sys.material": [
+  "server-plugin/item-class.mjs"
+ ],
+ "sys.migration": [
+  "server-plugin/family-politics.mjs"
+ ],
+ "sys.monsters": [
+  "server-plugin/boss-abilities.mjs",
+  "server-plugin/boss-cognition.mjs",
+  "server-plugin/boss-migration.mjs",
+  "server-plugin/boss-negotiation.mjs",
+  "server-plugin/bosses.mjs",
+  "server-plugin/combat-state.mjs",
+  "server-plugin/creature-nature.mjs",
+  "server-plugin/interactions.mjs",
+  "server-plugin/monster-society.mjs",
+  "server-plugin/npc-intelligence.mjs",
+  "server-plugin/population.mjs",
+  "server-plugin/quest-board.mjs",
+  "server-plugin/quest-wildlife.mjs",
+  "server-plugin/remote-generation.mjs",
+  "server-plugin/standing.mjs",
+  "server-plugin/tribal-awakening.mjs",
+  "server-plugin/wildlife-awakening.mjs",
+  "server-plugin/wildlife-range.mjs",
+  "server-plugin/wildlife-society.mjs",
+  "server-plugin/wildlife.mjs"
+ ],
  "sys.offense": [
   "server-plugin/action-authority-sources.mjs",
   "server-plugin/action-authority.mjs",
   "server-plugin/bounty.mjs",
   "server-plugin/duels.mjs",
+  "server-plugin/high-nobility.mjs",
   "server-plugin/law-codes.mjs",
   "server-plugin/law.mjs",
   "server-plugin/legal-appeal.mjs",
   "server-plugin/legal-reactions.mjs",
   "server-plugin/legal-representation.mjs",
+  "server-plugin/noble-state.mjs",
   "server-plugin/norm-stack.mjs",
   "server-plugin/npc-crime.mjs",
   "server-plugin/offense-notes.mjs",
+  "server-plugin/remote-generation.mjs",
+  "server-plugin/titles.mjs",
   "server-plugin/transition.mjs"
  ],
+ "sys.offscreen_save": [
+  "server-plugin/advance-layers.mjs",
+  "server-plugin/advance-registry.mjs",
+  "server-plugin/agriculture-migration.mjs",
+  "server-plugin/archived-reducer.mjs",
+  "server-plugin/boss-migration.mjs",
+  "server-plugin/campaign-reducer.mjs",
+  "server-plugin/engine.mjs",
+  "server-plugin/farm-pests-migration.mjs",
+  "server-plugin/migrations.mjs",
+  "server-plugin/migrations/r1.mjs",
+  "server-plugin/npc-memory.mjs",
+  "server-plugin/npc-obligations.mjs",
+  "server-plugin/obligation-runtime.mjs",
+  "server-plugin/population-service.mjs",
+  "server-plugin/record-cleanup.mjs",
+  "server-plugin/rule-state-migration.mjs",
+  "server-plugin/sideband.mjs",
+  "server-plugin/storage.mjs",
+  "server-plugin/wildlife-migration.mjs",
+  "server-plugin/world-upgrade.mjs"
+ ],
  "sys.org": [
+  "server-plugin/family-diplomacy.mjs",
   "server-plugin/finance-tax.mjs",
-  "server-plugin/remote-generation.mjs"
+  "server-plugin/high-nobility.mjs",
+  "server-plugin/law-codes.mjs",
+  "server-plugin/noble-state.mjs",
+  "server-plugin/remote-generation.mjs",
+  "server-plugin/titles.mjs",
+  "server-plugin/war-diplomacy.mjs"
  ],
  "sys.place": [
+  "server-plugin/ecology-dynamics.mjs",
   "server-plugin/environment.mjs",
   "server-plugin/extraction.mjs",
+  "server-plugin/farm-pests.mjs",
   "server-plugin/forest-water.mjs",
+  "server-plugin/high-nobility.mjs",
+  "server-plugin/household-subsistence.mjs",
   "server-plugin/husbandry.mjs",
+  "server-plugin/law-codes.mjs",
+  "server-plugin/location-access.mjs",
+  "server-plugin/noble-state.mjs",
+  "server-plugin/perception.mjs",
   "server-plugin/remote-generation.mjs",
   "server-plugin/renewable.mjs",
   "server-plugin/sites.mjs",
-  "server-plugin/stock.mjs"
+  "server-plugin/stock.mjs",
+  "server-plugin/titles.mjs",
+  "server-plugin/wildlife.mjs"
  ],
  "sys.plant": [
   "server-plugin/agriculture-migration.mjs",
@@ -830,17 +772,85 @@
   "server-plugin/livestock-sale.mjs",
   "server-plugin/magic-growth.mjs",
   "server-plugin/pets.mjs",
+  "server-plugin/remote-generation.mjs",
   "server-plugin/weather.mjs",
   "server-plugin/wildlife.mjs"
  ],
  "sys.profession": [
+  "server-plugin/action-affordances.mjs",
   "server-plugin/career-metrics.mjs",
+  "server-plugin/credit.mjs",
+  "server-plugin/education-state.mjs",
+  "server-plugin/engine.mjs",
+  "server-plugin/entity-view.mjs",
   "server-plugin/finance-assets.mjs",
-  "server-plugin/finance-bank.mjs"
+  "server-plugin/finance-bank.mjs",
+  "server-plugin/hidden-passives.mjs",
+  "server-plugin/learning.mjs",
+  "server-plugin/magic-care.mjs",
+  "server-plugin/medicine-state.mjs",
+  "server-plugin/pets.mjs",
+  "server-plugin/primitives-effects.mjs",
+  "server-plugin/primitives-learning.mjs",
+  "server-plugin/works.mjs"
+ ],
+ "sys.psyche": [
+  "server-plugin/action-limits.mjs",
+  "server-plugin/autonomy-candidates.mjs",
+  "server-plugin/contracts.mjs",
+  "server-plugin/duels.mjs",
+  "server-plugin/entity-view.mjs",
+  "server-plugin/finance-assets.mjs",
+  "server-plugin/finance-bank.mjs",
+  "server-plugin/magic-consent.mjs",
+  "server-plugin/magic-mind-space.mjs",
+  "server-plugin/magic-ritual.mjs",
+  "server-plugin/military.mjs",
+  "server-plugin/nation-founding.mjs",
+  "server-plugin/npc-autonomy.mjs",
+  "server-plugin/npc-cognition.mjs",
+  "server-plugin/npc-crime.mjs",
+  "server-plugin/npc-decision.mjs",
+  "server-plugin/npc-intelligence.mjs",
+  "server-plugin/npc-memory.mjs",
+  "server-plugin/office-salary.mjs",
+  "server-plugin/pets.mjs",
+  "server-plugin/population-service.mjs",
+  "server-plugin/population.mjs",
+  "server-plugin/remote-generation.mjs",
+  "server-plugin/subjective-view.mjs",
+  "server-plugin/war-diplomacy.mjs",
+  "server-plugin/weather.mjs"
+ ],
+ "sys.social": [
+  "server-plugin/action-consent.mjs",
+  "server-plugin/duels.mjs",
+  "server-plugin/extraction.mjs",
+  "server-plugin/family-diplomacy.mjs",
+  "server-plugin/family-law.mjs",
+  "server-plugin/family-politics.mjs",
+  "server-plugin/family-state.mjs",
+  "server-plugin/household-subsistence.mjs",
+  "server-plugin/lies.mjs",
+  "server-plugin/notables.mjs",
+  "server-plugin/npc-cognition.mjs",
+  "server-plugin/npc-decision.mjs",
+  "server-plugin/npc-life.mjs",
+  "server-plugin/npc-relations.mjs",
+  "server-plugin/population-service.mjs",
+  "server-plugin/population.mjs",
+  "server-plugin/remote-generation.mjs",
+  "server-plugin/reputation.mjs",
+  "server-plugin/standing.mjs",
+  "server-plugin/war-diplomacy.mjs"
  ],
  "sys.species": [
+  "server-plugin/duels.mjs",
+  "server-plugin/entity-view.mjs",
   "server-plugin/husbandry.mjs",
-  "server-plugin/stock.mjs"
+  "server-plugin/nation-founding.mjs",
+  "server-plugin/npc-crime.mjs",
+  "server-plugin/population.mjs"
  ],
  "sys.status": [
   "server-plugin/body-needs.mjs",
@@ -854,30 +864,47 @@
   "server-plugin/npc-life.mjs",
   "server-plugin/primitives-body.mjs"
  ],
+ "sys.time_env": [
+  "server-plugin/hazard-calendar.mjs",
+  "server-plugin/remote-generation.mjs",
+  "server-plugin/weather.mjs",
+  "server-plugin/world-clock.mjs"
+ ],
+ "sys.travel": [
+  "server-plugin/advance-layers.mjs",
+  "server-plugin/hazard-calendar.mjs",
+  "server-plugin/map-state.mjs",
+  "server-plugin/pets.mjs",
+  "server-plugin/post.mjs",
+  "server-plugin/primitives-movement.mjs",
+  "server-plugin/remote-generation.mjs",
+  "server-plugin/smuggling.mjs",
+  "server-plugin/transport-route.mjs",
+  "server-plugin/weather.mjs"
+ ],
+ "sys.worldgen": [
+  "server-plugin/character.mjs",
+  "server-plugin/migrations.mjs",
+  "server-plugin/npc-state.mjs",
+  "server-plugin/population-service.mjs",
+  "server-plugin/population.mjs",
+  "server-plugin/regions.mjs",
+  "server-plugin/remote-generation.mjs",
+  "server-plugin/wildlife-habitats.mjs",
+  "server-plugin/world-upgrade.mjs"
+ ],
  "tax": [
   "server-plugin/finance-tax.mjs"
- ],
- "templates": [
-  "server-plugin/action-text.mjs",
-  "server-plugin/applied-effects.mjs",
-  "server-plugin/chronicle.mjs",
-  "server-plugin/return-summary.mjs",
-  "server-plugin/state-notices.mjs"
  ],
  "terrain": [
   "server-plugin/remote-generation.mjs"
  ],
- "tests": [],
  "title": [
   "server-plugin/noble-state.mjs",
   "server-plugin/titles.mjs"
  ],
  "tmode": [
   "server-plugin/weather.mjs"
- ],
- "tools": [
-  "server-plugin/digest-exclude.mjs",
-  "server-plugin/seed-keys.mjs"
  ],
  "verb": [],
  "weather": [
@@ -887,5 +914,13 @@
  "word": [
   "server-plugin/remote-generation.mjs"
  ],
- "待裁": []
+ "待补": [],
+ "待裁": [
+  "server-plugin/high-nobility.mjs",
+  "server-plugin/household-subsistence.mjs",
+  "server-plugin/law-codes.mjs",
+  "server-plugin/noble-state.mjs",
+  "server-plugin/remote-generation.mjs",
+  "server-plugin/titles.mjs"
+ ]
 }
