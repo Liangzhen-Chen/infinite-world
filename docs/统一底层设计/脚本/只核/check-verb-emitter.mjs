@@ -1,11 +1,14 @@
 // 只核用（2026-11-14，claude-opus-5-5 中档）：李白 11-14 ③ kind-only 与 ab8e3bcf ②④ 只核
 // ① 全书动词：登记行、声明的发出系统、kindOnly、kindFrom 引用；核"非 kindOnly 恰一个发出系统、kindOnly 零发出且被至少一条 kindFrom 取值引用"
 // ② 事件 id 位次代号（pos.*）无撞号：卷九 §2.9 事件 id 表、卷二十四 R24-1.1、卷二十七 R27-8.9
+// ③ 行上必写栏（2026-11-15 甲-0 扩展）：各卷登记的动词行补没补表 B 必写栏、事件类型行补没补表 C 六栏、due_kind 行补没补
+//    calendarBound。栏名从定义处读（卷二十四 §2.2 表 B / 表 C、C24-12 行、卷二十 §2.1 词表族 due_kind 表），不写死。
 // 只读正文，不改任何文件。正文是散文，"发出系统"抽取是启发式：判不了的列"需人工"，由报告给人工结果。
+// 用法：node check-verb-emitter.mjs [卷文目录]   （目录缺省为仓库 docs/统一底层设计；注入测试时给副本目录）
 import fs from 'fs';
 import path from 'path';
 
-const ROOT = 'F:/dnd/docs/统一底层设计';
+const ROOT = process.argv[2] ?? 'F:/dnd/docs/统一底层设计';
 const files = fs.readdirSync(ROOT).filter(f => /^卷.*\.md$/.test(f)).sort();
 const vol = f => f.replace(/-.*$/, '').replace(/\.md$/, '');
 const LOGHEAD = /修订|处置|自检|记账|影响面|审查意见|版本说明|改动|勘误/;
@@ -14,10 +17,11 @@ const LOGHEAD = /修订|处置|自检|记账|影响面|审查意见|版本说明
 const L = []; // {f, v, n, t, log}
 for (const f of files) {
   const lines = fs.readFileSync(path.join(ROOT, f), 'utf8').split(/\r?\n/);
-  let head = null;
+  let head = null, sub = null;
   lines.forEach((t, i) => {
-    if (/^## /.test(t)) head = t;
-    L.push({ f, v: vol(f), n: i + 1, t, log: head === null || LOGHEAD.test(head) });
+    if (/^## /.test(t)) { head = t; sub = t; }
+    else if (/^### /.test(t)) sub = t;
+    L.push({ f, v: vol(f), n: i + 1, t, log: head === null || LOGHEAD.test(head), h2: head, h3: sub });
   });
 }
 console.log(`扫描卷文件 ${files.length} 个：${files.map(vol).join('、')}`);
@@ -57,7 +61,51 @@ function windowAround(t, key, w = 160) {
   while (i >= 0) { out.push(t.slice(Math.max(0, i - w), i + key.length + w)); i = t.indexOf(key, i + 1); }
   return out;
 }
-function analyze(name, occ, keys) {
+// 发出者声明的取窗（2026-11-14 逐格）：先按表格单元（| 分格）切，再按句号切句，窗口不跨格、不跨句；
+// 句柄形还要求该处是动词句柄（roles.verbs.<k>，或反引号裸写且不是状态字段用法）。
+// 状态字段用法：`x.k`（点号取字段）或 `k` 后接 为真/为假/取真/取假/置真/置假（布尔状态谓词）。
+const FIELD_AFTER = /^`\s*(为真|为假|取真|取假|置真|置假)/;
+function isVerbHandleAt(s, i, k) {
+  const pre = s.slice(Math.max(0, i - 12), i);
+  if (/roles\.verbs\.$/.test(pre)) return true;
+  if (!pre.endsWith('`') || !s.startsWith('`', i + k.length)) return false;
+  return !FIELD_AFTER.test(s.slice(i + k.length));
+}
+// 句子归属：下一句以指代开头（这/该/此/其/它/上述/两行/三行/二者/两者）时视为同一主语，并入本句窗口。
+// 表格行：键在行首格（行的主语格）时，同行其余各格都在说它，整行各格逐格加入窗口；键在其他格时只取本格本句。
+const ANAPHOR = /^\s*(这|该|此|其|它|上述|两行|三行|二者|两者)/;
+// 省略主语的发出声明（2026-11-14 逐格二）：下一句直接以发出声明句式开头、且该句没有别的动词键（本动词的键/别名之外的
+// roles.verbs.*、反引号裸写句柄、verb_* 代号）时，主语承上句，同样并入窗口。
+const EMIT_LEAD = /^\s*(发出系统为|发出者[是为]|唯一发出方|由[^，；。]{1,24}?发出)/;
+function hasOtherVerbKey(s, same) {
+  for (const m of s.matchAll(/roles\.verbs\.([A-Za-z]+)/g)) if (!same.includes(m[1])) return true;
+  for (const m of s.matchAll(/`([A-Za-z]+)`/g)) if (!same.includes(m[1]) && H.has(m[1])) return true;
+  for (const m of s.matchAll(/\bverb_[a-z0-9_]+[a-z0-9]/g)) if (!same.includes(m[0])) return true;
+  return false;
+}
+const continues = (s, same) => ANAPHOR.test(s) || (EMIT_LEAD.test(s) && !hasOtherVerbKey(s, same));
+function emitWindows(t, key, w, handleForm, same = [key]) {
+  const isRow = t.startsWith('|');
+  const cells = isRow ? t.split('|').slice(1, -1) : [t];
+  const out = [];
+  cells.forEach((cell, ci) => {
+    const ss = cell.split(/(?<=。)/);
+    ss.forEach((s, si) => {
+      let i = s.indexOf(key);
+      while (i >= 0) {
+        const wordOk = !handleForm || (!/[A-Za-z_]/.test(s[i - 1] || '') && !/[A-Za-z_]/.test(s[i + key.length] || ''));
+        if (wordOk && (!handleForm || isVerbHandleAt(s, i, key))) {
+          out.push(s.slice(Math.max(0, i - w), i + key.length + w));
+          for (let j = si + 1; j < ss.length && continues(ss[j], same); j++) out.push(ss[j].slice(0, w));
+          if (isRow && ci === 0) cells.slice(1).forEach(c => out.push(c));
+        }
+        i = s.indexOf(key, i + 1);
+      }
+    });
+  });
+  return out;
+}
+function analyze(name, occ, keys, handleForm = false) {
   const body = occ.filter(x => !x.log);
   const reg = new Set(), regLines = [], emitters = [], emitStmts = [], kindOnlyLines = [], kfRefs = [];
   for (const x of body) {
@@ -66,7 +114,7 @@ function analyze(name, occ, keys) {
     const isReg = vrow ? keys.some(k => (t.split('|')[2] || '').includes(k))
       : keys.some(k => windowAround(t, k, 60).some(w => /本卷(自)?登记|由本卷登记|verb 族条目|本卷登记的/.test(w)));
     if (isReg) { reg.add(x.v); regLines.push(`${x.v}:${x.n}`); }
-    for (const k of keys) for (const w of windowAround(t, k, 160)) {
+    for (const k of keys) for (const w of emitWindows(t, k, 160, handleForm, keys)) {
       for (const [rx, tag] of EMIT_RX) for (const m of w.matchAll(rx)) if (!/^零/.test(m[1].trim())) emitters.push(`${x.v}:${x.n} [${tag}] ${m[1].trim()}`);
     }
     // 发出语句：“发(出|一条)? <代号或别名>”，排除否定
@@ -97,7 +145,7 @@ console.log(`\n== ① 动词清单：句柄形 roles.verbs.* ${H.size} 个，代
 console.log(`kindOnly 成员（按登记行“三行 \`kindOnly\`”抽取）：${[...kindOnlySet].join('、') || '（无）'}`);
 
 const results = [];
-for (const [h, occ] of [...H].sort()) results.push({ form: 'handle', ...analyze(h, occ, [h]) });
+for (const [h, occ] of [...H].sort()) results.push({ form: 'handle', ...analyze(h, occ, [h], true) });
 for (const [c, occ] of [...C].sort()) {
   if (c.startsWith('verb_example_')) continue;
   results.push({ form: 'code', ...analyze(c, occ, [c, ...(alias.get(c) || [])]), alias: alias.get(c) || [] });
@@ -207,4 +255,200 @@ for (const p of [...posOcc.keys()].filter(p => !fixedPos.has(p))) {
   console.log(`  ${p}：不在事件 id 表；正文出现 ${occ.map(x => x.v + ':' + x.n).join(' ') || '仅记录行'}；${occ.length === 0 ? '已退役（只见于修订记录）' : roll ? '属骰值键对象段/抽取点位次，不是事件 id 位次，与事件 id 位次代号不同命名空间' : '需人工'}`);
 }
 console.log(`② 小计：共用位次的行组可能撞号 ${collide} 组`);
-console.log(`\n结论行：① PASS ${pass} FAIL ${fail} 需人工 ${manual}；② 可能撞号 ${collide} 组`);
+
+// ---------- ③ 行上必写栏 ----------
+// 栏名一律从定义处读：表 B / 表 C 定义表的 onUnknown 与“行上必写”、C24-12 行列出的栏、词表族 due_kind 定义表的“行上必写”。
+// 登记处（site）：§2 至 §5 与“附 术语与代号表”里、非配合/问题编号行上，按登记句式认出的动词行、事件类型行、due_kind 行。
+// 某栏算“写了”：该栏名（ASCII 词边界）出现在登记行本身，或出现在同卷同一 ### 节里谈同一张表的行上；
+// 一卷有多处登记时按全卷合看（代号表 + 正文登记节常分两处）。散文判定是启发式，结果供人工逐条核。
+console.log('\n== ③ 行上必写栏（表 B、表 C、due_kind）');
+const cellsOf = t => t.split('|').slice(1, -1).map(s => s.trim());
+const namesIn = s => [...s.matchAll(/`([A-Za-z][A-Za-z0-9]*)`/g)].map(m => m[1]);
+function defTableAfter(anchorRx) {
+  const i0 = L.findIndex(x => !x.log && anchorRx.test(x.t));
+  if (i0 < 0) return null;
+  let i = i0 + 1;
+  while (i < L.length && L[i].f === L[i0].f && !L[i].t.startsWith('|')) i++;
+  const head = cellsOf(L[i].t); i += 2;
+  const rows = [];
+  for (; i < L.length && L[i].f === L[i0].f && L[i].t.startsWith('|'); i++) rows.push({ x: L[i], c: cellsOf(L[i].t) });
+  return { at: L[i0], head, rows };
+}
+const fieldWord = f => new RegExp('(?<![A-Za-z0-9_.])' + f + '(?![A-Za-z0-9_.])');
+const defB = defTableAfter(/^\*\*表 B 动词行/);
+const defC = defTableAfter(/^\*\*表 C `event_type` 行/);
+const defDue = defTableAfter(/^词表族 `due_kind`/);
+const c12 = L.find(x => !x.log && /^\| C24-12 \|/.test(x.t));
+let missTotal = 0;
+if (!defB || !defC || !defDue || !c12) {
+  console.log(`定义处缺：表 B ${!!defB}、表 C ${!!defC}、due_kind ${!!defDue}、C24-12 ${!!c12} → ③ 不判`); missTotal = -1;
+} else {
+  const col = (d, name) => d.head.indexOf(name);
+  const reqByDef = (d) => {
+    const iu = col(d, 'onUnknown'), out = [];
+    for (const r of d.rows) for (const nm of namesIn(r.c[0])) out.push({ nm, err: r.c[iu] === 'error', must: /行上必写/.test(r.c.join('|')) });
+    return out;
+  };
+  const bDef = reqByDef(defB), cDef = reqByDef(defC), dueDef = reqByDef(defDue);
+  const c12t = c12.t;
+  const seg = (a, b) => { const i = c12t.indexOf(a); const j = i < 0 ? -1 : c12t.indexOf(b, i + a.length); return i < 0 || j < 0 ? '' : c12t.slice(i + a.length, j); };
+  const c12B = namesIn(seg('表 B 的', '与表 C 的'));
+  const c12C = namesIn(seg('与表 C 的', '都是行上必写'));
+  const c12Bx = namesIn(seg('动词行逐行补', '与上列表 B 各栏'));
+  const c12Due = namesIn(seg('`due_kind` 的卷另须逐行补', '（'));
+  const bErr = bDef.filter(r => r.err).map(r => r.nm);
+  const REQ_B = [...new Set([...bErr, ...c12B, ...c12Bx])].filter(n => bDef.some(r => r.nm === n));
+  const REQ_C = c12C.filter(n => cDef.some(r => r.nm === n));
+  const REQ_DUE = dueDef.filter(r => r.must).map(r => r.nm);
+  console.log(`表 B 定义（${defB.at.v}:${defB.at.n}）onUnknown=error 的栏：${bErr.join('、')}`);
+  console.log(`C24-12（${c12.v}:${c12.n}）列为行上必写的表 B 栏：${c12B.join('、')}；“动词行逐行补”另列：${c12Bx.join('、')}`);
+  console.log(`  两处对照：定义为 error 而 C24-12 未列 {${bErr.filter(n => !c12B.includes(n) && !c12Bx.includes(n)).join('、') || '无'}}；C24-12 列而定义非 error {${[...c12B, ...c12Bx].filter(n => !bErr.includes(n)).map(n => n + '(' + (bDef.find(r => r.nm === n)?.err === false ? '定义为 gap/nullable' : '定义表无此栏') + ')').join('、') || '无'}}`);
+  console.log(`→ 表 B 必写栏 ${REQ_B.length}：${REQ_B.join('、')}`);
+  console.log(`表 C 定义（${defC.at.v}:${defC.at.n}）；C24-12 列的表 C 栏：${c12C.join('、')}；其中定义表有“行上必写”或 error 的 ${c12C.filter(n => cDef.some(r => r.nm === n && (r.must || r.err))).length}/${c12C.length}`);
+  console.log(`→ 表 C 必写栏 ${REQ_C.length}：${REQ_C.join('、')}`);
+  console.log(`due_kind 定义（${defDue.at.v}:${defDue.at.n}）“行上必写”的栏：${REQ_DUE.join('、')}；C24-12 另列 ${c12Due.join('、') || '—'}`);
+
+  // 登记可能出现的二级节：排除卷首、读法、总述、扩展性测试、开放问题、迁移、验收断言与各附录（代号表、术语对照除外）。
+  // 用排除法是为了同样认得卷二那种“## 一 …”“## 二 …”编号的卷。
+  const OKSEC = x => { const h = x.h2 || ''; return !/§0 |§1 |卷首|读法|本卷的十个结论|领域总述|设计目标|扩展性测试|开放问题|迁移|验收/.test(h) && (!/^## 附/.test(h) || /术语/.test(h)); };
+  const REQROW = /^\|\s*(C|Q|T|X|A|M|S|B|G|D|E|R|N|K|P|F)\d+[A-Za-z]?-?\d*/; // 配合项、问题、迁移、断言等编号行：是请求或记账，不是登记
+  const defLines = new Set([defB, defC, defDue].flatMap(d => [d.at, ...d.rows.map(r => r.x)]));
+  const usable = x => !x.log && OKSEC(x) && !REQROW.test(x.t) && !defLines.has(x);
+  // 同卷同 ### 节的行索引；表格行回溯到表头（栏名常写在表头）
+  const bySec = new Map();
+  L.forEach((x, i) => { x.i = i; const k = x.f + '\u0000' + x.h3; if (!bySec.has(k)) bySec.set(k, []); bySec.get(k).push(x); });
+  const tableHead = x => {
+    if (!x.t.startsWith('|')) return null;
+    let i = x.i; while (i > 0 && L[i - 1].f === x.f && L[i - 1].t.startsWith('|')) i--;
+    return L[i];
+  };
+  // 一个登记单元“写了哪些栏”：单元各行与其表头；单元行在 K.expand 所列的二级节内的，再加同卷同 ### 节里
+  // 谈同一张表（K.ctx）的行与其表头。“附”节（代号表）只看单元行本身。
+  function poolOf(K, lines) {
+    const pool = new Set();
+    const put = y => { pool.add(y); const h = tableHead(y); if (h) pool.add(h); };
+    for (const s of lines) {
+      put(s);
+      if (!K.expand.test(s.h2 || '')) continue;
+      // 单元行是表格行时，同一张表的别的数据行是别的登记行，不借它们的栏（表头另由 put 带上）
+      const sh = tableHead(s);
+      for (const y of bySec.get(s.f + '\u0000' + s.h3) || []) if (!y.log && K.ctx.test(y.t) && !(sh && y !== s && y !== sh && tableHead(y) === sh)) put(y);
+    }
+    return pool;
+  }
+  const has = (pool, f) => [...pool].some(y => fieldWord(f).test(y.t));
+  const NOTREG = /不(登记|另登|另立)[^。；|]{0,8}`?(due_kind|verb)`?/;
+  // 表 C 独有的栏（表 C 定义里有、表 B 定义里没有）：散文自称“事件类型行”而一栏表 C 字段都没写的，判不了是表 C 行还是动词行旧称
+  const C_ONLY = [...new Set(cDef.map(r => r.nm))].filter(n => !bDef.some(r => r.nm === n));
+  const DECL_C = /(?<!不)(是|为)(卷二十四的)?(一条)?事件类型行(?!上)/;
+  const KINDS = [
+    { key: 'B', name: '动词行（表 B）', req: REQ_B, ctx: /表 B|动词行/, expand: /^## §2 /,
+      // 散文登记句（未带固定代号的动词，如“事件动词（登记到卷二十四…）：甲、乙、丙”）
+      site: x => /verb 族(的)?条目|`verb`（卷二十四|事件动词\**（(verb 族条目，)?登记到卷二十四|动词行(的)?表 ?B|按卷二十四表 B 登记|动词是 verb 族条目|本卷(自)?登记(的)?[^，。；|]{0,12}(事件)?动词(行)?[：:（]|[一二三四五六七八九十两]个事件动词/.test(x.t) },
+    { key: 'C', name: '事件类型行（表 C）', req: REQ_C, ctx: /表 C|事件类型行|`event_type`|局势种类|灾异行/, expand: /^## §[24] /,
+      // 定义卷只认表格行；“卷X 登记一条事件类型行”而 X 不是本卷的，是在转述别卷，不算本卷登记处
+      site: x => (x.v !== defC.at.v || x.t.startsWith('|')) && ![...x.t.matchAll(/(卷[一二三四五六七八九十零]+b?)[^，。；|卷]{0,6}登记[^。；|]{0,8}事件类型行/g)].some(m => m[1] !== x.v) && (
+        DECL_C.test(x.t) || /^事件类型行$/.test(cellsOf(x.t)[1] || '') || /本卷[^。；|]{0,12}登记[^。；|]{0,12}事件(类型)?行|事件类型表（卷二|灾异行补/.test(x.t)
+        || (/^\| 卷二十四/.test(x.t) && (/事件类型(行|表)|局势种类/.test(cellsOf(x.t)[0]) || /^(登记)?事件类型行[：；]/.test(cellsOf(x.t)[1] || '')))) },
+    { key: 'D', name: 'due_kind 行', req: REQ_DUE, ctx: /`due_kind`|roles\.dues/, expand: /^## §2 /,
+      // 写法：§2.5 式“| 卷二十 `due_kind` | 条目 |”；“本卷登记的到期项代号”；卷二十接收清单“- 卷X（…）：…N 行 `due_kind`”；
+      // 以及同行写出 `due_kind` 与具体 due_ 代号的登记句
+      site: x => !NOTREG.test(x.t) && (/^卷\S+ `due_kind`$/.test(cellsOf(x.t)[0] || '')
+        || /本卷登记的到期项代号/.test(x.t) || /^- 卷.*[一二三四五六七八九十两\d]+行 `due_kind`/.test(x.t)
+        || (/`due_kind`/.test(x.t) && /`due_(?!kind`)[a-z][a-z_]*`/.test(x.t))) },
+  ];
+  const byGroup = new Map();
+  const note = (v, s) => { if (!byGroup.has(v)) byGroup.set(v, []); byGroup.get(v).push(s); };
+  const report = (K, v, label, lines, extraPool = []) => {
+    const pool = poolOf(K, lines); for (const y of extraPool) pool.add(y);
+    const miss = K.req.filter(f => !has(pool, f));
+    missTotal += miss.length;
+    if (miss.length) note(v, `${K.key}:${label}缺${miss.length}`);
+    console.log(`  [${miss.length ? '缺栏' : '齐'}] ${v} ${label} 行 ${lines.map(x => x.n).join(',')}${miss.length ? `：缺 ${miss.join('、')}` : ''}`);
+    return miss;
+  };
+  const codeOnly = (x, k) => { // 该行里 k 只出现在含比较、分支写法的代码片段里（示例代码，不是登记）
+    const spans = [...x.t.matchAll(/`[^`]+`/g)].map(m => m[0]).filter(s => s.includes(k));
+    return spans.length > 0 && spans.every(s => /===|switch \(|case /.test(s)) && !x.t.replace(/`[^`]+`/g, '').includes(k);
+  };
+  // 表 C 登记处先分两档：写了表 C 独有栏的、或明说“X 是（一条）事件类型行”的计入 ③C；其余为“旧称”档
+  const KC = KINDS.find(k => k.key === 'C');
+  const cSites = L.filter(x => usable(x) && KC.site(x));
+  const strongC = cSites.filter(s => C_ONLY.some(f => has(poolOf(KC, [s]), f)) || DECL_C.test(s.t));
+  const weakC = cSites.filter(s => !strongC.includes(s));
+  for (const K of KINDS) {
+    console.log(`\n-- ③${K.key} ${K.name}：必写栏 ${K.req.length}`);
+    const sites = L.filter(x => usable(x) && K.site(x));
+    if (K.key === 'B') {
+      // 散文登记处（按卷）：既单独报，也作该卷带代号动词的共同取值来源（一卷多处登记合看）
+      const proseByVol = new Map();
+      for (const s of sites) { if (!proseByVol.has(s.v)) proseByVol.set(s.v, []); proseByVol.get(s.v).push(s); }
+      // 共同取值只认 §2 的散文登记处（“各行共同取值”段落都在 §2；§4 规则里的单个动词说明不外推到全卷）
+      const prosePool = v => [...poolOf(K, (proseByVol.get(v) || []).filter(s => K.expand.test(s.h2 || '')))];
+      const covered = new Set();
+      // 登记卷：① 判出唯一的取之；判出多卷或未抽到时，在候选卷（① 的登记卷，未抽到则取全部出现卷）里取
+      // 在 §2 或“附 术语与代号表”写到它的卷，恰一卷即定，否则需人工
+      const DEFSEC = x => /^## (§2 |附 术语与代号表)/.test(x.h2 || '');
+      // (a) 带固定代号或句柄的动词：按 ① 判出的登记卷，取该卷正文里写到它的行
+      const unres = [], examples = [];
+      for (const r of results) {
+        let regs = r.reg.map(s => s.replace('(唯一出现卷)', ''));
+        const occ = (r.form === 'handle' ? H.get(r.name) : C.get(r.name)) || [];
+        const label = `${r.form === 'handle' ? 'roles.verbs.' : ''}${r.name}`;
+        let how = '';
+        if (regs.length !== 1) {
+          const cand = regs.length ? regs : [...new Set(occ.filter(x => !x.log).map(x => x.v))];
+          const inDef = cand.filter(v => occ.some(x => x.v === v && !x.log && DEFSEC(x)));
+          if (inDef.length === 1) { how = `（登记卷按 §2/代号表定；候选 ${cand.join('、')}）`; regs = inDef; }
+          else {
+            // 判不出登记卷：逐个候选卷算一遍缺栏，只列不计数，供人工定登记卷后照用
+            const per = cand.map(v => { const ls = occ.filter(x => x.v === v && usable(x)); if (!ls.length) return `${v}(无可登记节的行)`; const pool = poolOf(K, ls); prosePool(v).forEach(y => pool.add(y)); const m = K.req.filter(f => !has(pool, f)); return `${v}:${ls.map(x => x.n).join(',')} 缺${m.length}${m.length && m.length < K.req.length ? '[' + m.join('、') + ']' : ''}`; });
+            unres.push(`${label}{① 登记卷 ${r.reg.join('、') || '未抽到'}；§2/代号表写到的卷 ${inDef.join('、') || '无'}；各候选卷 ${per.join(' ')}}`); continue;
+          }
+        }
+        const v = regs[0];
+        let lines = occ.filter(x => x.v === v && usable(x));
+        if (!lines.length) lines = occ.filter(x => x.v === v && !x.log);
+        if (!lines.length) { unres.push(`${label}{${v} 无正文行}`); continue; }
+        lines.forEach(x => covered.add(x));
+        if (lines.every(x => codeOnly(x, r.name))) { examples.push(`${label}（${lines.map(x => x.v + ':' + x.n).join(' ')}）`); continue; }
+        report(K, v, `动词 ${label}${how}`, [...new Set(lines)], prosePool(v));
+      }
+      console.log(`  登记卷未定（① 判不出唯一登记卷，需人工，不计数）：${unres.length ? '' : '无'}`);
+      for (const u of unres) console.log(`    [需人工] ${u}`);
+      console.log(`  只见于示例代码（不计数）：${examples.join('；') || '无'}`);
+      // (b) 散文登记处：已归入 (a) 某个带代号动词的行不再单报
+      for (const [v, ss] of proseByVol) { const rest = ss.filter(s => !covered.has(s)); if (rest.length) report(K, v, '散文登记（未带代号的动词）', rest); }
+      // (c) 旧称“事件类型行”、一栏表 C 字段都没写的登记（多为“本卷发出的各事件”清单）：不论日后判为表 C 行与否，
+      //     所列事件各须有动词行，先按动词行核表 B；是否另有表 C 行见 ③C 的需人工清单
+      const weakByVol = new Map();
+      for (const s of weakC) { if (covered.has(s)) continue; if (!weakByVol.has(s.v)) weakByVol.set(s.v, []); weakByVol.get(s.v).push(s); }
+      for (const [v, ss] of weakByVol) report(K, v, '旧称事件类型行（按动词行核）', ss, prosePool(v));
+    } else if (K.key === 'C') {
+      for (const s of strongC) {
+        report(K, s.v, '事件类型行', [s]);
+        console.log(`      ${s.v}:${s.n} ${s.t.replace(/\s+/g, ' ').slice(0, 100)}`);
+      }
+      console.log(`  自称事件类型行、未写任何表 C 独有栏（${C_ONLY.length} 个：${C_ONLY.join('、')}）——是表 C 行还是动词行旧称需人工判，表 C 不计数（已在 ③B 按动词行计）：`);
+      for (const x of weakC) console.log(`      ${x.v}:${x.n} ${x.t.replace(/\s+/g, ' ').slice(0, 100)}`);
+    } else {
+      // 接收清单（“- 卷X（C..）：…一行 `due_kind`…”写在别卷）：登记卷自己没有登记行时，算该卷的一处缺栏
+      const own = new Set(sites.filter(s => !/^- 卷/.test(s.t)).map(s => s.v));
+      for (const s of sites) {
+        const m = s.t.match(/^- (卷[^（：\s]+)[（：]/);
+        if (m && m[1] !== s.v) {
+          if (own.has(m[1])) { console.log(`  [接收清单] ${s.v}:${s.n} 记 ${m[1]} 的 due_kind 行，${m[1]} 有本卷登记行，按登记卷判`); continue; }
+          missTotal += K.req.length; note(m[1], `D:无本卷登记行缺${K.req.length}`);
+          console.log(`  [缺栏] ${m[1]} due_kind 行 只见于 ${s.v}:${s.n} 接收清单，本卷无登记行：缺 ${K.req.join('、')}`);
+          continue;
+        }
+        report(K, s.v, 'due_kind 行', [s]);
+        console.log(`      ${s.v}:${s.n} ${s.t.replace(/\s+/g, ' ').slice(0, 100)}`);
+      }
+    }
+  }
+  console.log(`\n③ 按卷汇总（缺栏的单元）：`);
+  for (const [v, a] of byGroup) console.log(`  ${v}：${a.length} 单元 ${a.join('，')}`);
+}
+console.log(`③ 小计：缺栏 ${missTotal} 处（卷×栏）`);
+console.log(`\n结论行：① PASS ${pass} FAIL ${fail} 需人工 ${manual}；② 可能撞号 ${collide} 组；③ 缺栏 ${missTotal} 处`);
