@@ -1,0 +1,58 @@
+diff --git "a/docs/\347\273\237\344\270\200\345\272\225\345\261\202\350\256\276\350\256\241/\350\204\232\346\234\254/\345\217\252\346\240\270/check-verb-emitter.mjs" "b/docs/\347\273\237\344\270\200\345\272\225\345\261\202\350\256\276\350\256\241/\350\204\232\346\234\254/\345\217\252\346\240\270/check-verb-emitter.mjs"
+index 00657601..a5e4679d 100644
+--- "a/docs/\347\273\237\344\270\200\345\272\225\345\261\202\350\256\276\350\256\241/\350\204\232\346\234\254/\345\217\252\346\240\270/check-verb-emitter.mjs"
++++ "b/docs/\347\273\237\344\270\200\345\272\225\345\261\202\350\256\276\350\256\241/\350\204\232\346\234\254/\345\217\252\346\240\270/check-verb-emitter.mjs"
+@@ -476,6 +476,10 @@ if (!defB || !defC || !defDue || !c12) {
+         || /本卷登记的到期项代号/.test(x.t) || /^- 卷.*[一二三四五六七八九十两\d]+行 `due_kind`/.test(x.t)
+         || (/`due_kind`/.test(x.t) && /`due_(?!kind`)[a-z][a-z_]*`/.test(x.t))) },
+   ];
++  // 待裁清单：卷文目录下 审查/全书加载修复批-待裁清单.md（注入副本目录没有时读仓库那份）
++  const PENDING = (() => { for (const p of [path.join(ROOT, '审查/全书加载修复批-待裁清单.md'), 'F:/dnd/docs/统一底层设计/审查/全书加载修复批-待裁清单.md']) { try { return fs.readFileSync(p, 'utf8').split(/\r?\n/); } catch {} } return []; })();
++  const volRx = v => new RegExp(v + '(?![一二三四五六七八九十零b甲乙])');
++  const listed = (v, f) => PENDING.some(l => volRx(v).test(l) && fieldWord(f).test(l));
+   const byGroup = new Map();
+   const note = (v, s) => { if (!byGroup.has(v)) byGroup.set(v, []); byGroup.get(v).push(s); };
+   const report = (K, v, label, lines, extraPool = []) => {
+@@ -485,8 +489,11 @@ if (!defB || !defC || !defDue || !c12) {
+     const need = f => !K.cond?.[f] || [...pool].some(y => condRx(K.cond[f]).test(y.t));
+     const miss = K.req.filter(f => need(f) && !hasVal(pool, f));
+     missTotal += miss.length;
+-    if (miss.length) note(v, `${K.key}:${label}缺${miss.length}`);
+-    console.log(`  [${miss.length ? '缺栏' : '齐'}] ${v} ${label} 行 ${lines.map(x => x.n).join(',')}${miss.length ? `：缺 ${miss.join('、')}` : ''}`);
++    // 缺栏照计；待裁清单已记着的（同一行写到本卷与该栏名）标“已入清单”（李白 11-15 第 31 条）
++    const tagged = miss.map(f => f + (listed(v, f) ? '（已入清单）' : ''));
++    const nListed = miss.filter(f => listed(v, f)).length;
++    if (miss.length) note(v, `${K.key}:${label}缺${miss.length}${nListed ? `（其中已入清单 ${nListed}）` : ''}`);
++    console.log(`  [${miss.length ? '缺栏' : '齐'}] ${v} ${label} 行 ${lines.map(x => x.n).join(',')}${miss.length ? `：缺 ${tagged.join('、')}` : ''}`);
+     miss.pool = pool;
+     return miss;
+   };
+@@ -582,8 +589,17 @@ if (!defB || !defC || !defDue || !c12) {
+       const isKO = name => kindOnlySet.has(name) || verbOcc(name).some(x => !x.log && (x.t.split('|').some(c => c.includes(name) && KOTRUE.test(c) && !KOFALSE.test(c))
+         || (x.t.startsWith('|') && /`kindOnly`/.test(cellsOf(x.t)[0] || '') && !KOFALSE.test(cellsOf(x.t)[0]) && cellsOf(x.t).slice(1).some(c => c.includes(name)))));
+       console.log(`  三栏所指动词须为 kindOnly 行的栏（表 C 定义取值域读出）：${KO_COLS.join('、') || '无'}`);
+-      for (const s of strongC) {
+-        const miss = report(K, s.v, '事件类型行', [s]);
++      // 只对数据行断言（李白 11-15 裁定第 27、31 条）：数据行 = ① 带栏取值的表格行（该行连同表头就给出至少一个表 C 独有栏的取值），
++      // ② 数据实例（JSON 行写出至少三个表 C 栏键）。数据行的单元只取该行与其表头，不借同节的说明段。
++      // 规则段与散文示意（列表项、正文段落）只列出，不作缺栏与三栏断言。
++      const KD = { ...K, expand: /(?!)/ };
++      const isDataRow = s => s.t.startsWith('|') && C_ONLY.some(f => hasVal(poolOf(KD, [s]), f));
++      const dataRows = strongC.filter(isDataRow);
++      const jsonRows = L.filter(x => usable(x) && K.rowJson(x.t) && !dataRows.includes(x));
++      const ruleSegs = strongC.filter(s => !isDataRow(s));
++      console.log(`  规则段与散文示意（不是数据行，不断言）：${ruleSegs.map(s => s.v + ':' + s.n).join(' ') || '无'}`);
++      for (const s of [...dataRows, ...jsonRows]) {
++        const miss = report(KD, s.v, jsonRows.includes(s) ? '事件类型行（数据实例）' : '事件类型行', [s]);
+         console.log(`      ${s.v}:${s.n} ${s.t.replace(/\s+/g, ' ').slice(0, 100)}`);
+         const text = [...miss.pool].map(y => y.t).join('\n');
+         for (const f of KO_COLS) {
+@@ -596,7 +612,7 @@ if (!defB || !defC || !defDue || !c12) {
+             if (!verbOcc(v).some(x => !x.log && !miss.pool.has(x)) || retiredSet.has(v)) bad.push(`${v} 无动词登记`);
+             else if (!isKO(v)) bad.push(`${v} 登记未写 kindOnly 为真`);
+           }
+-          if (bad.length) { missTotal += bad.length; note(s.v, `C:事件类型行 ${f} ${bad.join('/')}`); }
++          if (bad.length) { missTotal += bad.length; note(s.v, `C:事件类型行 ${f} ${bad.join('/')}${listed(s.v, f) ? '（已入清单）' : ''}`); }
+           console.log(`        [${bad.length ? '三栏不符' : '三栏符'}] ${f} → ${refs.join(',') || '—'}${bad.length ? '：' + bad.join('；') : ''}`);
+         }
+       }

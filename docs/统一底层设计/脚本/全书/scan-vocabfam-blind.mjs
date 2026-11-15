@@ -87,11 +87,20 @@ function ruleRange(f, rid, within) { // 条目：以 **<代号> 开头的列表�
 }
 const extraRanges = {}; const addR = (f, r) => { if (!r) return; (extraRanges[f] ||= []).push(r); };
 const regSites = []; // 供 stderr 报告
+// 卷二（李白 11-15 第 31 条：按"请卷二登记"语句全书机判，不按章节号）：卷二的登记处 = 卷二全卷去掉按标题内容认出的非登记区
+// （读法、结论、迁移、验收断言、示例夹具、审查意见处置、自检输出、须对齐项、修订勘误、台账），不再按"二""五"、§1.5、§1.9 等章节号取。
+const V2_NONREG = /读法|结论|迁移|验收|夹具|示例|审查意见|处置|输出|须对齐|修订|勘误|台账/;
+const v2Zone = [];
+if (V2) { const ls = DOC[V2].ls; let h2 = '', a = -1;
+  ls.forEach((l, i) => { if (DOC[V2].inCode[i] || !/^## /.test(l)) return; if (a >= 0 && !V2_NONREG.test(h2)) v2Zone.push([a, i]); h2 = l; a = i; });
+  if (a >= 0 && !V2_NONREG.test(h2)) v2Zone.push([a, ls.length]);
+  regSites.push(`卷二 登记区 ${v2Zone.length} 段（按标题内容排除非登记区）`); }
 if (V2) {
-  for (const n of ['1.5', '1.9']) { const r = subRange(V2, n); addR(V2, r); if (r) regSites.push(`卷二 §${n}`); }
-  const r15 = subRange(V2, '1.5'); const last = {};
-  if (r15) for (let i = r15[0]; i < r15[1]; i++) {
+  // 命名 struct 登记表按内容认：表格行首格为 `struct:…`、表头有"定义处"一格的，取末格定义处
+  const last = {};
+  for (const [za, zb] of v2Zone) for (let i = za; i < zb; i++) {
     const l = DOC[V2].ls[i]; if (!/^\|\s*`struct:/.test(l)) continue;
+    let h = i; while (h > 0 && DOC[V2].ls[h - 1].startsWith('|')) h--; if (!/\|\s*定义处\s*\|/.test(DOC[V2].ls[h])) continue;
     const cells = l.split('|').slice(1, -1); const cell = cells[cells.length - 1] || '';
     let cur = [V2]; const first = new Set(); // “同段”指上一行该卷的首个定义处；一格里后面的“变体见…”等附注不改它
     for (const m of cell.matchAll(/(卷(零|[一二三四五六七八九十]+)(b|甲|乙)?)?\s*(同段|§(\d+(?:\.\d+)*)(?:\s*([A-Z]{1,4}-\d+))?|R(\d+[a-z]?-\d+(?:\.\d+)*))/g)) {
@@ -107,7 +116,7 @@ if (V2) {
   }
 }
 for (const f of FILES) {
-  const rs = (/^卷二-/.test(f) ? topRange(f, /^## (二|五) /) : topRange(f, /^## §2 /)).concat(extraRanges[f] || []);
+  const rs = (/^卷二-/.test(f) ? v2Zone : topRange(f, /^## §2 /)).concat(extraRanges[f] || []);
   const s = new Set(); for (const [a, b] of rs) for (let i = a; i < b; i++) idsOfLine(DOC[f].ls[i]).forEach(x => s.add(x));
   sec2Ids[f] = s;
   const s2 = new Set(); DOC[f].ls.forEach(l => idsOfLine(l).forEach(x => s2.add(x))); allIds[f] = s2;
