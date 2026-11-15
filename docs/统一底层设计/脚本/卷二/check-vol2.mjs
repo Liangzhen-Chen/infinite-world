@@ -353,4 +353,61 @@ if (fx) {
   if (!Object.keys(rows).length) bad('rows 为空');
   log(`  维度 ${Object.keys(dims).length} 个，类别行 ${Object.keys(classes).length}，实体行 ${Object.keys(rows).length}；展平 class_workshop_hot = ${JSON.stringify(flat.class_workshop_hot)}`);
 }
+// ---------- 2d. 准入 cause = protocol 只限登记的内核协议（李白 k5-A1；§2.6"准入与协议内部写"，E-ADMIT-CAUSE 静态核） ----------
+// 登记处：§2.6 该条"现有 N 项：名（`kernel/x.mjs`，…）、…；"，每项取名与模块路径。
+// 调用处（全书，处置史/勘误/日志各节与错误码表行除外）：
+//  · 数据对象（按平衡括号取，可跨行）里 "cause": "protocol" 的，对象里须有字串值等于某登记模块路径；
+//  · 散文：一句里写 `cause` 取值 protocol（= / : / 为 / 取），且不是条件句（"…时"）、不是取值域说明（同句并列 intent），即为调用断言，
+//    同句须点到某登记项的名或模块路径。否则 FAIL。
+log('== 2d 准入 cause = protocol 只限登记的内核协议');
+{
+  const before = fail;
+  const def = lines.find(l => l.includes('**准入与协议内部写（唯一定义）**')) ?? '';
+  const clause = def.slice(def.indexOf('**准入与协议内部写（唯一定义）**'));
+  const reg = clause.match(/现有(\S+?)项：([^；]+)；/);
+  const protos = [];
+  if (!reg) bad('§2.6"准入与协议内部写"缺"现有 N 项：…；"登记');
+  else {
+    let d = 0, cur = '';
+    for (const ch of reg[2]) { if (ch === '（') d++; if (ch === '）') d--; if (ch === '、' && d === 0) { protos.push(cur); cur = ''; } else cur += ch; }
+    if (cur) protos.push(cur);
+    const N = { 一: 1, 两: 2, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6 }[reg[1]] ?? Number(reg[1]);
+    if (N !== protos.length) bad(`登记写"现有 ${reg[1]} 项"，实列 ${protos.length} 项`);
+  }
+  const P = protos.map(s => ({ name: s.replace(/（[\s\S]*$/, '').trim(), mod: s.match(/`(kernel\/[a-z0-9_\/-]+\.mjs)`/)?.[1] }));
+  for (const p of P) if (!p.mod) bad(`登记项"${p.name}"未写模块路径`);
+  if (!/E-ADMIT-CAUSE/.test(clause)) bad('§2.6"准入与协议内部写"未写 E-ADMIT-CAUSE');
+  const mods = new Set(P.map(p => p.mod).filter(Boolean));
+  const names = P.flatMap(p => [p.name, p.name.replace('协议', '')]).filter(Boolean);
+  const SKIP = /修订|处置|勘误|记账|影响面|审查意见|版本说明|自检|附录 D/;
+  const book = readdirSync(docsDir).filter(f => /^卷.*\.md$/.test(f));
+  const sites = [];
+  for (const f of book) {
+    const v = f.replace(/-.*$/, '');
+    const ls = (f === path.replace(/^.*[\/]/, '') ? md : readFileSync(docsDir + '/' + f, 'utf8')).split('\n').map(l => l.replace(/\r$/, ''));
+    const t = ls.join('\n'); const lineOf = k => t.slice(0, k).split('\n').length;
+    let h2 = '', skip = []; ls.forEach(l => { if (/^## /.test(l)) h2 = l; skip.push(SKIP.test(h2)); });
+    // 数据对象
+    for (const m of t.matchAll(/"cause"\s*:\s*"protocol"/g)) {
+      let d = 0, s = -1; for (let j = m.index; j >= 0; j--) { if (t[j] === '}') d++; else if (t[j] === '{') { if (d === 0) { s = j; break; } d--; } }
+      if (s < 0) continue; let e = s; for (d = 0; e < t.length; e++) { if (t[e] === '{') d++; else if (t[e] === '}' && --d === 0) break; }
+      const ln = lineOf(s); if (skip[ln - 1]) continue;
+      const vals = [...t.slice(s, e + 1).matchAll(/"([^"]*)"/g)].map(x => x[1]);
+      sites.push(`${v}:${ln}`);
+      if (!vals.some(x => mods.has(x))) bad(`${v}:${ln} 数据对象以 cause = protocol 调准入，调用方不是登记的内核协议（E-ADMIT-CAUSE）`);
+    }
+    // 散文
+    ls.forEach((l, i) => {
+      if (skip[i] || /^\| [EW]-/.test(l) || l.includes('**准入与协议内部写（唯一定义）**') || /"cause"\s*:/.test(l)) return;
+      for (const s of l.split(/(?<=[。；])/)) {
+        const a = s.match(/`cause`?\s*(?:=|:|＝|为|取)\s*`?protocol`?|`cause\s*[=:]\s*protocol`/);
+        if (!a) continue;
+        if (/^[^，。；]{0,12}时/.test(s.slice(a.index + a[0].length)) || /`intent`/.test(s)) continue; // 条件句、取值域说明
+        sites.push(`${v}:${i + 1}`);
+        if (![...mods].some(m => s.includes(m)) && !names.some(n => s.includes(n))) bad(`${v}:${i + 1} 以 cause = protocol 调准入而未点到登记的内核协议（E-ADMIT-CAUSE）：${s.trim().slice(0, 60)}`);
+      }
+    });
+  }
+  if (fail === before) log(`  OK 登记 ${P.length} 项（${P.map(p => p.name + ' ' + p.mod).join('；')}）；全书调用处 ${sites.length} 处均为登记协议`);
+}
 log(`== 结果：${fail === 0 ? 'PASS' : 'FAIL ' + fail + ' 项'}`);
