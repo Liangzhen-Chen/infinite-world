@@ -2,7 +2,7 @@
 // 用法：node F:/dnd/docs/统一底层设计/脚本/卷十九/check-卷十九-余项.mjs    只读文件，不改任何卷。
 import {readFileSync} from 'node:fs';
 
-const DIR = 'F:/dnd/docs/统一底层设计/';
+const DIR = (process.argv.find(x => x.startsWith('--dir='))?.slice(6) ?? 'F:/dnd/docs/统一底层设计') + '/'; // --dir=<卷文目录>：注入测试用副本
 const read = f => readFileSync(DIR + f, 'utf8');
 const all = read('卷十九-建筑与设施.md').split(/\r?\n/);
 const cutApp = all.findIndex(l => l.startsWith('## 附 第二版影响面表'));
@@ -231,7 +231,11 @@ need(r108, ['只有一个', '`carrierLastPlace`', '终止清理函数', '终止�
 need(dimRow('carrierLastPlace'), ['ref place nullable', '清理函数', '照样可读', 'successorRX'], '7.1 §2.1 登记 carrierLastPlace');
 need(s2, ['① `carrierLastPlace` 非空时取它', '② 否则取 `carrierItem`', '`first`'], '7.1 §2.2 末可移动类别行 successorRX 照此写');
 need(s3, ['`carrierLastPlace` 偏离行', 'terminationCleanup', '不调 `terminate`'], '7.1 §3.3 登记清理函数与写者');
-report(v2.includes('registerTerminationCleanup') && v2.includes('这时实体还没有终止标记') && /`terminate\(state, entityId, cause\)`/.test(v2), '7.1 前提：卷二清理函数在标记之前调用，terminate 没有后继入参');
+// 2026-11-15 改：不写死旧签名 terminate(state, entityId, cause)。读卷二"内核原语 `terminate(…)`"定义处的现行签名（现含可空 source，eec7da6c），
+// 核：签名读得到；参数里没有后继一类的入参（名字含 succ/successor/heir/next，或定义处说参数是后继）；清理函数在标记之前调用两句仍在。
+{ const sig = v2.match(/内核原语 `terminate\(([^)`]*)\)`/); const ps = sig ? sig[1].split(',').map(x => x.trim()) : [];
+  const succ = ps.filter(x => /succ|successor|heir|next/i.test(x));
+  report(v2.includes('registerTerminationCleanup') && v2.includes('这时实体还没有终止标记') && sig && ps[0] === 'state' && succ.length === 0, `7.1 前提：卷二清理函数在标记之前调用，terminate 没有后继入参（现行签名 terminate(${ps.join(', ')})${succ.length ? '；后继类入参 ' + succ.join(',') : ''}）`); }
 need(a102, ['逐位等于终止前建筑行上的 `carrierLastPlace`', '终止标记写下之前已写入', '房间行都先于建筑行终止'], '7.1 A19-10.2 后继与房间行断言');
 // 7.2 新真问题 2：房间行先终止，只写一处
 const r164 = rule(16, 4);

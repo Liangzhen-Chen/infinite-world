@@ -1,0 +1,212 @@
+PASS  0 卷标题为第十五版
+PASS  1.1 §3.2 入口改名 buildProjectView(buildProjectId)
+PASS  1.1 正文不再出现旧名 projectView
+PASS  1.1 正文不再出现旧参名 projectId
+PASS  1.1 卷六没有同名入口 buildProjectView
+PASS  1.1 Q18 写明入口划分
+PASS  1.2 S19-9 改引 entryJudges
+PASS  1.2 卷二 §2.7 确有 entryJudges 字段定义
+PASS  1.2 §3.3 登记本卷五个进入判定函数
+PASS  1.2 Q19 提请卷五登记 canEnter
+PASS  1.3 建筑行存各料质量 materialKg（raw）
+PASS  1.3 份额与总质量不再是存储维度
+PASS  1.3 material、envelopeMassKg 是由 materialKg 派生的视图字段
+PASS  1.3 修缮体积带余数结转并登记分母
+PASS  1.3 condition 用扩展标度
+PASS  1.3 规则 6、7 逐条引卷二 §3.3 的存量规则
+PASS  1.3 不再由份额倒推体积
+PASS  1.3 A19-1.2 有切片不变、往返不变、误差界
+PASS  1.3 卷二确有 存量与余数结转
+PASS  1.3 卷二确有 stockMode
+PASS  1.3 卷二确有 extScale
+PASS  1.3 卷二确有 remDenominator
+PASS  2 A8 wsum 一律三参
+PASS  2 A6 S19-2 的 facilityType 禁令限 place 表
+PASS  2 族前缀 bldform_ 与卷三不撞
+PASS  2 C9 燃烧从存量里扣质量
+PASS  2 C10、C16 写进 §8 并写明定义方
+PASS  2 Q21 写明定义方
+PASS  3 前提：卷二 §2.6 有行改挂原语与登记字段
+PASS  3 正文没有直接改写 parent 的规定
+PASS  3 §3.3 位置量只经 relocate 改写，行范围限 comp_portable
+PASS  3 deployState 与 deploy 族已删
+PASS  3 收起、展开两条不含 terminate，终止只在规则 8
+PASS  3 §4.10 收起、展开走行改挂，不终止、不另建行
+PASS  3 Q5 写明定义方与须卷五、卷二十配合的事
+PASS  4 前提：卷二第 1 步定后继与领域清理、第 2 步标记
+PASS  4 引用的步骤号与卷二 v17 一致  共 3 处
+PASS  4 设施运行态按去留表登记
+PASS  5.1 §2.1 登记修缮配额 repairLot（原值）
+PASS  5.1 规则 7 开笔定配额、按累计量取料（引卷二）
+PASS  5.1 规则 7 不再重复定义排队算法
+PASS  5.1 卷二 §3.3 第 3 条写全分摊规则与四条性质
+PASS  5.1 规则 7 不再按本次 ΔL 拆料、不再靠封顶兜底
+PASS  5.1 A19-1.2 切片不变去掉单料限定并补多料断言
+PASS  5.1 §3.3 repairLot 有写者
+PASS  5.1 排队取料：各料累计单调、和等于累计量、做满等于配额（数值自证）
+PASS  5.1 对照：floor(累计×配额÷总数) 加末项取差在三料时会回落（改写法的理由成立）
+PASS  5.2 §2.1 建行存设计体积 envelopeVolumeL（第十三版：建成直接写现存升数 E，翻修同法整值重写；第十二版：扩建加现存升数的增加量）
+PASS  5.2 反向（第十三版）：§2.1、§4.4 规则 6、A19-4.2 不再把建成锚写成体积换算成升向下取整
+PASS  5.2 反向（第十二版）：§2.1 envelopeVolumeL 不再写"加上砌入的料的升数"
+PASS  5.2 反向：§2.1 envelopeVolumeL 不再写"此后不变（没有改写写者"
+PASS  5.2 反向（第十一版，新真问题）：正文别处不再说设计体积"此后不变/此后无人改写"
+PASS  5.2 规则 7 待办分补缺与换料，完好度回升分别计
+PASS  5.2 规则 7 设计体积与现存体积：建成锚取现存升数 E 的同一个式子（第十三版）
+PASS  5.2 无围护建筑不再由 materialKg 倒推体积
+PASS  5.2 燃烧不改设计体积
+PASS  5.2 建成时写入设计体积（含无围护；第十三版：写建成那一刻的现存升数 E，向上取整）
+PASS  5.2 A19-4.2 建成与翻修提交后设计体积逐位等于现存升数 E（第十三版）
+PASS  5.2 断言：设计体积不变、烧后可补回
+PASS  5.2 §3.3 设计体积两个写者：建行写者与扩建时的 facilities.mjs（第十二版：加 E_后 − E_前）
+PASS  5.2 反向（第十二版）：§3.3 不再写"加上砌入的料的升数"
+PASS  5.2 反向：§3.3 不再写"设计体积只有建行写者"
+PASS  5.3 收起：行离场，行上内容与边原地不动
+PASS  5.3 手列搬运清单已删
+PASS  5.3 展开：改挂到新地点，不建行、不重算
+PASS  5.3 规则 1 搬家不换行
+PASS  5.3 规则 7 长期引用照旧存 place id
+PASS  5.3 §3.2、§5.1 的 currentRowOf 退化为反查
+PASS  5.3 A19-10.2 改挂前后除位置量外逐位相同
+PASS  5.3 portableState、edgeSlots、zoneOrdinal 已删
+PASS  5.3 §2 登记 comp_portable 与视图字段 packed
+PASS  5.3 Q22 写明定义方与四卷配合
+PASS  5.3 §5 同步卷六、卷五、卷二十七
+PASS  5.3 §7 增第 36、37 行
+PASS  5.4 前提：卷二规定 remDenominator 只许 remainder 写
+PASS  5.4 §2.1 dirt 只按扩展标度登记
+PASS  5.4 dirt 的余数字段与分母已删（正文零出现）
+PASS  5.4 规则 4 增量整数乘加、清扫扩展标度
+PASS  5.4 A19-11.2 切片不变断言
+PASS  5.4 规则表键、Q23 齐
+PASS  5 影响面表有第五版、第六版各一行
+PASS  6.1 A19-10.2 写权限制只管建行事务之外
+PASS  6.1 前提：卷二 §2.6 第 7 点不挡建行写者
+PASS  6.2 §4.10 规则 8：carrierItem 终止时建筑行正常终止并写明后继
+PASS  6.2 A19-10.2 增承载物终止断言
+PASS  6.2 前提：卷二 §2.6 行改挂第 3 点有承载者终止一句
+PASS  6.3 前提：卷五 §4.1 规则 4 有平行边通则
+PASS  6.3 §4.1 规则 1 门洞：相邻只算一次、扩散取最通畅、指名按两端加通路类型
+PASS  6.3 §4.1 规则 6 挂在边一端的建筑：计人次只算指名的那条边
+PASS  6.3 §4.9 规则 3 桥塌：只断指名的那条边
+PASS  6.3 §4.14 规则 4 落闸：只改指名的边，扩散仍取最通畅
+PASS  6.3 §4.14 规则 8 轨道：指名的边与读路况的归属
+PASS  6.3 §4.14.5 吊闸例写明是哪条边
+PASS  6.4 §4.15 规则 1 删去离屏另给一句
+PASS  6.5 §4.1 规则 7 换下旧料的可回收量按累计量取差，比例取开笔时存的值
+PASS  6.5 §4.1 规则 7 开笔时写入 repairLot.salvage
+PASS  6.5 反向：规则 7 不再用每次重读的 salvageFraction_k 算累计可回收量
+PASS  6.5 §4.1 规则 7 不再按每次提交各自截断
+PASS  6.5 A19-1.2 换下旧料的可回收量按累计量取差、比例开笔定下、切分不变
+PASS  6.5 反向：A19-1.2 不再按重读的 salvageFraction 断言
+PASS  6.5 §2.1 repairLot 登记 salvage（第十一版）
+PASS  6.5 前提：卷二 §3.3 第 3 条有按累计量取差的写法
+PASS  6 影响面表有第七版两行
+PASS  7.0 卷首有起草与审查模型一行
+PASS  7.0 §4.10 规则 2、3、8 条目非空（单核小项 6：空串不得空过）
+PASS  7.1 规则 8 不再把"carrierItem 自己的后继"列为序位
+PASS  7.1 规则 8 后继只取地点行并写明标记之后仍可读
+PASS  7.1 §2.1 登记 carrierLastPlace
+PASS  7.1 §2.2 末可移动类别行 successorRX 照此写
+PASS  7.1 §3.3 登记清理函数与写者
+PASS  7.1 前提：卷二清理函数在标记之前调用，terminate 没有后继入参（现行签名 terminate(state, entityId, cause, source)）
+PASS  7.1 A19-10.2 后继与房间行断言
+PASS  7.2 §4.16 规则 4 房间行先终止（单点）
+PASS  7.2 发起房间行终止的规定全文只有一处
+PASS  7.2 §4.10 规则 8、§4.4 规则 3 引用该处
+PASS  7.2 A19-16.2 房间行断言
+PASS  7.3 §5.2 终止事件的订阅仍在接口表
+PASS  7.4 正文不再出现"作业分钟"
+PASS  7.4 依赖次序 ③、dirtPerWorkMinute 称工位占用分钟
+PASS  7.5 A19-1.2 不再只写"不超过"（由相等式推出，收紧）
+PASS  7.6 前提：卷二 §3.3 第 6 条 m 的口径与递推
+PASS  7.6 旧口径（k ×（2n + 7）、同式双精度参考值）零残留
+PASS  7.6 §2.1 condition 写明口径
+PASS  7.6 §2.1 dirt 写明口径
+PASS  7.6 §4.1 规则 6 四个改写式的确定式
+PASS  7.6 A19-1.2 误差界断言
+PASS  7.6 §4.11 规则 4 确定式
+PASS  7.6 A19-11.2 误差界断言
+PASS  7.6 §4.16 规则 2 除数下界不为正不做除法
+PASS  7.6 验算 condition（单料、倍率 1）：实际误差不超过各次 m 之和  写入 161 次，界 640 × 10⁻⁸，实际与界之比最大 0.1111
+PASS  7.6 验算 condition（两料、倍率 2.5）：实际误差不超过各次 m 之和  写入 201 次，界 1939 × 10⁻⁸，实际与界之比最大 0.4540
+PASS  7.6 验算 condition（三料、倍率 12）：实际误差不超过各次 m 之和  写入 26 次，界 1474 × 10⁻⁸，实际与界之比最大 0.2917
+PASS  7.6 验算 condition（五料、倍率 0.6）：实际误差不超过各次 m 之和  写入 269 次，界 1440 × 10⁻⁸，实际与界之比最大 0.3763
+PASS  7.6 对照：旧口径 k ×（2n + 7）在修正键倍率大于 1 的数据上被实际误差突破（换口径的理由成立）
+PASS  7.6 验算 dirt：实际误差不超过累计清扫分钟数  清扫 75 次，界 1451 × 10⁻⁸，实际与界之比最大 0.3500
+PASS  7 影响面表有第八版一行，Q24 写明定义方
+PASS  8.0 卷末有第十版修订记录
+PASS  8.1 §2.1 occupancy 视图字段：逐条、按日汇总，保留期外不留
+PASS  8.1 反向：occupancy 视图没有 olderMinutes
+PASS  8.1 §2.5 station.json 有 loadWindowDays、maxRows
+PASS  8.1 §3.3 stationLog、stationFold 一行：写者、折叠、补结交错、离屏补结也逐日结算
+PASS  8.1 反向：§3.3 无闭式残留（只许"劣化没有闭式"）
+PASS  8.1 反向：§3.3 没有 olderMinutes、olderCount 与旧标题"离屏闭式不读这份记录"
+PASS  8.1 §3.3 两条路径登记终止去留
+PASS  8.1 S19-6 写者扫描含 stationLog、stationFold
+PASS  8.1 §4.3 规则 4 四点：逐条记录、读视图、日结只读它、保留期与折叠
+PASS  8.1 反向：A19-3.2 不再有"有史以来总和"与 olderMinutes
+PASS  8.1 A19-3.2 逐条可查、折叠不变、补结不变
+PASS  8.1 Q21 定为逐条记录
+PASS  8.1 §5.1 卷六行：只读 occupancy，窗口读本卷键
+PASS  8.1 正文除删去、撤销说明句外不出现 stationMinutesToday、verb_station_released、verb_station_expired
+PASS  8.1 正文没有替卷六定腿的句子
+PASS  8.2 §4.1 规则 11 表恰十一行，事由依次齐全  行数 11
+PASS  8.2 表"物化建行"行：记砌入
+PASS  8.2 表"扩建"行：砌进去的记砌入
+PASS  8.2 表"承载物终止"行：记法同损毁
+PASS  8.2 表"原地翻修"行：翻修 = 拆除 + 新建
+PASS  8.2 §4.1 规则 11 守恒式与带事由代号 cause 的明细
+PASS  8.2 §2.1 wallFlowKg 一行
+PASS  8.2 A19-1.2 实物账守恒句
+PASS  8.3 §4.1 规则 7 收下分钟上限确定式（G3）、零值料不算份额（G6）
+PASS  8.3 A19-1.2 G3、G6 断言
+PASS  8.4 §4.4 规则 3：拆除一次截断（G4）；翻修四步（G2）与房间行按 roomRole 对应
+PASS  8.4 反向：正文不再出现未登记的"分区角色"（修订记录除外）
+PASS  8.4 §4.4 规则 8 扩建（第十二版：加 E_后 − E_前，同一向上取整口径，待补升数不变）
+PASS  8.4 反向（第十二版）：规则 8 不再按砌入质量向下取整加设计体积
+PASS  8.4 §4.4 规则 9 物化建行
+PASS  8.4 A19-4.2 拆除、翻修、扩建、物化断言（第十一版：扩建加设计体积、物化与世界日无关、房间对应与改写通道）
+PASS  8.4 反向：A19-4.2 不再说扩建前后设计体积不变
+PASS  8.4 反向（第十二版）：A19-4.2 不再按砌入的料的升数断言设计体积增加量
+PASS  8.5 §4.10 规则 8 承载物终止墙料进实物账
+PASS  8.5 §4.10 规则 2 收起 placement 为空、跨界边作废
+PASS  8.5 反向：正文不再把 placement.rows 写成数组（卷二定义为 map）
+PASS  8.5 §4.10 规则 3 展开给 placement.rows 与 placement.edges
+PASS  8.5 A19-10.2 跨界边与 placement 断言
+PASS  8.6 §4.16 规则 3 b 取 10⁸ 标度（G5）、燃烧与损毁分两个事务（G7）
+PASS  8.6 §4.16 规则 4 房间行先终止被承载物终止引用
+PASS  8.6 A19-16.2 三种终止起因同判、G5、G7
+PASS  9.0 卷末有第十一版修订记录
+PASS  9.1 §2.4 bform.rooms 登记房间角色与份额
+PASS  9.1 §2.4 roomrole 族
+PASS  9.1 §2.1 房间行维度 roomRole
+PASS  9.1 §3.3 建行写者写 roomRole、翻修是第二种调用（N2 ③）
+PASS  9.2 §4.4 规则 3 ④ 位置量走 relocate；面积由 construction.mjs 整值写，写权在卷五单项登记名单 areaM2 一行，只在翻修事务内写是代码路径约束（第十三版）
+PASS  9.2 反向（第十五版）：规则 3 ④ 不再说"写房间行 areaM2 的调用点"（嵌套设施行同在内）
+PASS  9.2 反向（第十二版）：规则 3 ④ 不再说位置量与面积同经统一通道
+PASS  9.2 反向（第十三版）：规则 3 ④ 不再有"仅限翻修事务内"可写的写权登记与"事务外写入一律被拒"句
+PASS  9.2 A19-10.2 面积写入只在建行与翻修事务内、调用点两处、写权引卷五单项登记名单（第十三版）
+PASS  9.2 反向（第十三版）：A19-10.2 不再是"事务外对它的写入计数为 0"的旧连写
+PASS  9.2 卷五 §3.3 单项登记名单 created.*.props.areaM2 一行：改写写者 construction.mjs，行范围只写 inside: [comp_facility]，圈建筑之内的行（房间与嵌套设施），最外层建筑行与聚落分区不在内（第十五版）
+PASS  9.2 反向（第十五版）：卷五名单 areaM2 一行不再写"聚落的分区都不在内"的旧括注
+FAIL  9.2 反向（第十四版）：卷五单项登记名单 areaM2 一行不再有 withComponent（含 `withComponent: [comp_zone]`）
+PASS  9.2 反向（第十四版）：卷五静态量声明不再写"挂 comp_zone 且在挂 comp_facility 的行之内"
+PASS  9.2 卷五 §3.3 静态量声明：建筑之内的行（房间与嵌套设施）的 areaM2 列在"有改写写者的"一项，最外层建筑行与聚落分区照旧只有建行写者（第十五版）
+PASS  9.2 卷五 §3.3 静态量声明："只有建行写者"一项把建筑之内的行（房间与嵌套设施）除外（第十五版）
+PASS  9.2 反向（第十五版）：卷五静态量声明不再写"只有房间行"的旧括注
+PASS  9.2 卷五 §2 组件类一段：面积写权引 §3.3 单项登记名单，面积不经 relocate（第十三版）
+PASS  9.2 反向（第十三版）：卷五组件类一段不再有"仅限翻修事务内"可写的登记与"比照 relocatableIn"括注
+PASS  9.2 反向（第十三版）：卷五正文没有"比照 relocatableIn"括注、"以组件类一段为准"的优先级句与"仅限翻修事务内"可写的登记
+PASS  9.2 反向：规则 3 ④ 不再有"保留而位置量须变的房间行判不可行"的临时限制
+PASS  9.2 前提：卷二 §2.6 第 1 点 ③、卷五 comp_zone 已登记 relocatableIn
+PASS  9.2 Q26 写明已裁定
+PASS  9.3 反向（新真问题）：规则 3 ④ 不让 relocate 写面积（面积不是位置量）
+PASS  9.4 反向（新真问题）：A19-10.2 的 relocate 拒绝句已按卷二【十七·补】㉒ 除去翻修事务
+PASS  9.5 §4.4 规则 9 物化用料只由种子与地点决定（N1）
+PASS  9.5 反向：规则 9 不再说物化行由世界日决定
+PASS  9.6 反向：正文不出现 olderMinutes、olderCount（修订记录除外）
+PASS  10.0 前提：卷五 §2.1 areaM2 必填 always（凡 place 行都带 areaM2，带不带只看能否位于建筑之内）
+PASS  10.1 前提：存量单元（含水体）不挂在建筑行之下、与建筑分区互斥，不计入
+PASS  10.2 可能位于 comp_facility 之内且带 areaM2 的行种类恰为 {comp_zone, comp_facility}（第十五版）  实得 {comp_zone, comp_facility}
+FAIL  10.3 卷五名单 areaM2 一行行范围为 inside:[comp_facility]，无 withComponent  `withComponent: []`、`inside: [comp_facil
+RESULT  未通过 2 项
