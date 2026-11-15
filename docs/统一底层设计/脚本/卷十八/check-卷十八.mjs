@@ -111,11 +111,19 @@ const CATALOG = new Set(['office', 'profession', 'skill']);
 if (!hkBlock) hkErr.push('no-table'); else {
   const ids = new Set(hkBlock.rows.map(r => r[0]));
   const HO = new Set(['ho_vacate', 'ho_stay', 'ho_succeed', 'ho_estate', 'ho_close', 'ho_revert', 'ho_retain_disputed', 'ho_suspend', null]);
-  const SE = new Set(['send_close', 'send_stay', 'send_estate', 'send_reparent']);
+  // subjectEnd 的许可取值从卷二 §2.6 终止协议第 4 步读（2026-11-15，李白裁定第 1 条：现只许 send_close，其余三值未启用）：
+  // 卷二中写到 `subjectEnd` 且有"只许取 …"的那一句，取"只许取"之后到句读前的反引号代号为许可集；不再写死四值、不再与旧表逐格比
+  const v2path = process.argv[3] ?? 'F:/dnd/docs/统一底层设计/卷二-维度表规范与统一入口.md';
+  const v2 = readFileSync(v2path, 'utf8').split('\n');
+  const seRule = v2.map(l => l.match(/`subjectEnd`[^。]*?只许取([^。，；]*)/)).find(Boolean);
+  const SE = new Set(seRule ? [...seRule[1].matchAll(/`([a-z][a-z_]*)`/g)].map(m => m[1]) : []);
+  if (!SE.size) hkErr.push('subjectEnd-rule:卷二未写许可取值');
+  console.log(`   subjectEnd 许可取值（卷二终止第 4 步）：${[...SE].join('、') || '未读到'}`);
   for (const r of hkBlock.rows) {
     if (r.length !== hkBlock.columns.length) hkErr.push('len:' + r[0]);
     if (r[1] !== null && !ids.has(r[1])) hkErr.push('hyper:' + r[0]);
-    if (![r[5], r[6], r[7]].every(x => HO.has(x)) || !SE.has(r[8])) hkErr.push('proto:' + r[0]);
+    if (![r[5], r[6], r[7]].every(x => HO.has(x))) hkErr.push('proto:' + r[0]);
+    if (!SE.has(r[8])) hkErr.push('subjectEnd:' + r[0] + '=' + r[8]);
     if (r[5] === 'ho_stay' || r[5] === null) hkErr.push('gone:' + r[0]);
   }
   if (ids.size !== hkBlock.rows.length) hkErr.push('dup');
@@ -126,7 +134,8 @@ if (!hkBlock) hkErr.push('no-table'); else {
     const row = hkBlock.rows.find(r => r[0] === 'hk_' + e.id);
     if (!row) { hkErr.push('missing:' + e.id); continue; }
     const h = e.handover ?? {}; const f = x => (x ? 'ho_' + x : null);
-    if (row[5] !== f(h.gone) || row[6] !== f(h.vacated) || row[7] !== f(h.defected) || row[8] !== 'send_' + e.onSubjectGone || row[4] !== e.exclusive || row[9] !== e.concluded || row[10] !== e.functional) hkErr.push('diff:' + e.id);
+    // subjectEnd（row[8]）不与旧表 onSubjectGone 比：按现行规则只核在许可集内（上面逐行已核）
+    if (row[5] !== f(h.gone) || row[6] !== f(h.vacated) || row[7] !== f(h.defected) || row[4] !== e.exclusive || row[9] !== e.concluded || row[10] !== e.functional) hkErr.push('diff:' + e.id);
   }
   console.log(`   持有种类 ${hkBlock.rows.length} 行（旧 ${old.length} + 新 ${hkBlock.rows.length - old.length}）`);
   // 一审后：补充列（稀疏块）对照旧表逐字段核对，旧字段不得无声丢失
@@ -194,7 +203,7 @@ if (!hkBlock) hkErr.push('no-table'); else {
     if (incAdded !== incDeclared) hkErr.push(`incompat-added:${incAdded}≠§7.2 写明的 ${incDeclared}`);
   }
 }
-report('10 持有种类表自洽、旧行逐格一致、旧表各字段都有去向', hkErr.length === 0, hkErr.slice(0, 12).join(' '));
+report('10 持有种类表自洽、旧行逐格一致（subjectEnd 按卷二许可集）、旧表各字段都有去向', hkErr.length === 0, hkErr.slice(0, 12).join(' '));
 
 // 11 结构性代号在场：家户 orgKind、intimate 字段、硬下限
 const all = lines.join('\n');
