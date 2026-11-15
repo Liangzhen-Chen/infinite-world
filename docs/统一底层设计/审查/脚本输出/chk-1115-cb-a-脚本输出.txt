@@ -1,0 +1,1685 @@
+核对标识 chk-1115-cb-a；所核提交 5ebf3a28；工作树各卷（甲路十二卷与 5ebf3a28 同）
+
+===== node F:/dnd-tmp/vol2/check-vol2.mjs   exit=0
+== 1 错误码
+  正文错误码 152 个；登记表展开 264 个
+  OK 正文码全部已登记
+  注意 登记但正文未用到（含简写展开的候选）: E-ACC-BASELINE-EDIT, E-ACC-BASELINE-UP, E-ACC-BYPASS-REGRESSION, E-ACC-CODE-UNLISTED, E-ACC-COMMIT-MSG, E-ACC-CRITERION-LOOSENED, E-ACC-CRITERION-UNVERSIONED, E-ACC-DOC-SEAL, E-ACC-EXT-CODE-CHANGED, E-ACC-EXT-EXISTING-ROW, E-ACC-FIXTURE-INSTANCE, E-ACC-GATE-BYPASS, E-ACC-HIT-OPEN, E-ACC-ITEM-COUNT, E-ACC-ITEM-DOWNGRADE, E-ACC-ITEM-FORM, E-ACC-ITEM-ORPHAN, E-ACC-ITEM-PARAM, E-ACC-ITEM-UNIMPLEMENTED, E-ACC-ITEM-UNREGISTERED, E-ACC-NEWROW-UNANCHORED, E-ACC-REPORT-FORM, E-ACC-REVIEW-CHECKLIST, E-ACC-REVIEW-MISSING, E-ACC-REVIEW-SELF, E-ACC-REVIEW-STALE, E-ACC-REVIEW-VETO, E-ACC-ROWKEY-DRIFT, E-ACC-RUN-UNBOUND, E-ACC-SCAN-NAMELIST, E-ACC-SCAN-SELFNAME, E-ACC-ZERO-MISMATCH, E-AV-KEY, E-AV-NO-DEFAULT, E-BST-BANE-CLASH, E-BST-BODY-WRITE, E-BST-DUPLICATE, E-BST-GEN-SLOT, E-BST-LAIR, E-BST-LORE-SHAPE, E-BST-MONSTER-SCHEMA, E-BST-QUOTA, E-BST-SIM-DIMS, E-BST-TIER-ROWS, E-BST-TRANSFORM-ROWS, E-BST-VARIANT, E-BST-WARD-SHAPE, E-DISPLAY-BACKFLOW, E-DISPLAY-BRANCH-TEXT, E-DISPLAY-DICE, E-DISPLAY-HOST-CHAT, E-DISPLAY-LITERAL, E-DISPLAY-LOCALE-BRANCH, E-DISPLAY-UNSEEN, E-GEN-BRANCH-ORIGIN, E-GEN-BYPASS, E-GEN-DEFAULT, E-GEN-GROUP-CYCLE, E-GEN-GROUP-ROW, E-GEN-ID-COLLISION, E-GEN-LATE-SOURCE, E-GEN-MANIFEST-DRIFT, E-GEN-NAME-EMPTY, E-GEN-NOT-MATERIALIZED, E-GEN-OVERRIDE-AUTHORED, E-GEN-REJECT, E-GEN-RESPECT, E-GEN-ROW-INVALID, E-GEN-SKELETON, E-GEN-STAGE-CYCLE, E-GEN-STAGE-UNKNOWN, E-I18N-FORM, E-I18N-LABEL-FOREIGN, E-I18N-LABEL-ORPHAN, E-I18N-LOCALE, E-I18N-PLURAL, E-I18N-TPL-MISSING, E-I18N-TPL-SLOT, E-MAP-COMPASS, E-MIG-ACCEPT-FORM, E-MIG-BACKFILL, E-MIG-CARD-INCOMPLETE, E-MIG-CARD-INSTANCE, E-MIG-CARD-SCOPE, E-MIG-CARD-SIZE, E-MIG-DEFER-UNBOUND, E-MIG-DUAL-PATH, E-MIG-EVENT-SEQ, E-MIG-EXIT, E-MIG-FILEMOVE-GAP, E-MIG-FROZEN, E-MIG-ORDER, E-MIG-PARALLEL, E-MIG-PHASE-CONFLICT, E-MIG-PHASE-COUNT, E-MIG-RETIRE-MISMATCH, E-MIG-ROW-COUNT, E-MIG-ROW-MULTI, E-MIG-ROW-ORPHAN, E-MIG-SCAN-UNCLAIMED, E-MIG-SORTKEY-ORDER, E-MIG-STATE, E-MIG-TEST-PATCH, E-MIG-ZERO-UNCOVERED, E-PANEL-ACTION, E-PANEL-KIND, E-PANEL-PATH, E-PANEL-SOURCE, E-TPL-CYCLE, E-TPL-KEY, E-TPL-NO-FALLBACK, E-TPL-RX
+== 2 前缀登记
+  实体前缀 27，词表族前缀 138
+  注意 未登记前缀 record_: record_kind
+  注意 未登记前缀 act_: act_plot_invite
+  注意 未登记前缀 rx_: rx_type
+  注意 未登记前缀 tick_: tick_stage
+  注意 未登记前缀 doc_: doc_log, doc_state
+  注意 未登记前缀 part_: part_single
+  注意 未登记前缀 card_: card_slot_type
+  注意 未登记前缀 q_: q_k
+  注意 未登记前缀 e_: e_a, e_k, e_x
+  注意 未登记前缀 rule_: rule_key
+  注意 未登记前缀 entity_: entity_revived
+  注意 未登记前缀 orowk_: orowk_actual
+  注意 未登记前缀 aggk_: aggk_bonded
+  注意 未登记前缀 attach_: attach_slot
+  注意 未登记前缀 requirement_: requirement_block
+  注意 未登记前缀 effect_: effect_call_list
+  注意 未登记前缀 insul_: insul_grade
+  注意 未登记前缀 breath_: breath_grade
+  注意 未登记前缀 marriage_: marriage_regime
+  注意 未登记前缀 inheritance_: inheritance_regime
+== 2b 内核信号代号登记
+  小族登记 5 个: layout_change, naming_intent, note_intent, dimension_write_rejected, nil_seedpart
+  OK 正文发出的非词表代号均在小族登记
+  OK 引用小族的代号均已登记（核 32 卷）
+== 2c readShapes 行格式
+  数据行 10 行
+== 3 类型数
+  §1.5 表计 14 种；全文提到的类型数：14, 14, 14, 14, 14, 14
+  OK 类型数一致
+== 4 附录 A 夹具
+  OK 三段 JSON 可解析
+  维度 9 个，类别行 4，实体行 2；展平 class_workshop_hot = {"functionNeeds":{"fn_shelter":1,"fn_work":2,"fn_hearth":1},"accessDefault":"access_private","wearPerDay":0.0006,"services":["service_craft"],"headline":"fn_work","envelopeWhere":"flammability < 0.5","upkeepPerDay":{"class_fuel":12}}
+== 结果：PASS
+
+===== node F:/dnd-tmp/vol2/check-vol2-ext.mjs   exit=0
+== 5 族名登记
+  登记族 138，代码内封闭枚举 34，正文用到的族名 125
+  OK 全部族名已登记
+== 6 枚举值前缀
+  OK 示例中开放族值均带前缀、封闭枚举值均不带前缀
+== 7 附录 A 组件与引用解析
+  comp_service_host: table=facility_type, requires=["services"], 被引用=fac_forge
+  comp_facility: table=place, requires=["intendedType"], 被引用=无
+== 8 附录 G 锚点唯一性
+  锚点 55 个
+  OK 锚点与关键定义各出现一次
+== 8b D.1 关键词出现位置（供人工确认同步）
+  【六】字符串类型白名单 / 方法名清单: 行 2180,2511
+  【六】字符串类型白名单 / 闭集: 行 3,173,193,418,520,532,535,659,660,667,687,712,722,725,728,733,734,739,769,828,892,893,894,895,919,961,973,1057,1117,1143,1399,1405,1422,2098,2172,2179,2182,2187,2188,2210,2347,2367,2372,2373,2384,2387,2399,2419,2474,2486,2511,2541,2548,2598,2622,2641,2646,2648,2664,2677,2698,2778,2803,2812,2815,2933,2965,2974,2985,2995
+  【六】字符串类型白名单 / E-INPUT-FUZZY: 行 736,737,738,742,1396,2187,2188,2511
+  【六】输入规范化唯一定义 / 规范化: 行 45,267,703,713,736,739,741,938,973,977,1005,1013,1113,1114,1115,1129,1137,1396,1400,2079,2162,2187,2203,2207,2372,2388,2424,2454,2482,2490,2495,2501,2505,2512,2531,2550,2818,2844,2868,2927,2928,2930,2953
+  【六】输入规范化唯一定义 / toLowerCase: 行 267,2187,2482,2512
+  【六】输入规范化唯一定义 / White_Space: 行 45,267,2467,2482,2512
+  【六】输入规范化唯一定义 / casefold: 行 45,267,736,739,919,927,1115,2512
+  【六】权限表（判定/产出） / needle: 行 699,706,712,739,770,938,977,1113,1115,1119,1125,1127,1133,1396,2162,2188,2372,2488,2491,2501,2513,2522,2531,2558,2754,2755,2797,2815,2818,2832,2928,2985
+  【六】权限表（判定/产出） / matchBlocklist: 行 258,615,674,675,706,707,708,740,741,986,1115,1116,1121,1129,2162,2490,2513,2521,2630,2793,2842
+  【六】权限表（判定/产出） / 替换记号: 行 255,707,1116,1395,2162,2395,2513,2550,2843,2928
+  【六】权限表（判定/产出） / templates.mjs: 行 260,608,687,707,734,740,769,836,2179,2188,2469,2478,2504,2513,2579,2641,2647
+  【六】封闭代码枚举不带前缀 / stage_: 行 255,2514
+  【六】封闭代码枚举不带前缀 / scope_: 行 443,2514
+  【六】封闭代码枚举不带前缀 / effout_: 行 2514
+  【六】封闭代码枚举不带前缀 / consent_: 行 255,1338,2370,2481,2514,2651,2818
+  【六】组件 table 归属 / comp_facility: 行 163,247,1605,1606,1935,2040,2280,2297,2484,2504,2515,2746
+  【六】组件 table 归属 / comp_service_host: 行 2260,2279,2297,2484,2515,2745
+  【六】组件 table 归属 / E-DIM-COMPONENT-TABLE: 行 247,2484,2515
+  【六】pathTypes 与 E-TEXT-UNGATED / pathTypes: 行 3,100,197,199,206,342,467,469,488,497,632,644,692,693,695,696,721,998,1028,1186,1246,1380,1397,2346,2368,2392,2420,2473,2476,2487,2494,2496,2502,2516,2525,2529,2535,2542,2549,2552,2598,2601,2625,2667,2677,2678,2688,2803,2812,2840,2925,2983,3000,3007
+  【六】pathTypes 与 E-TEXT-UNGATED / E-TEXT-UNGATED: 行 179,469,693,1020,1063,1397,2188,2463,2468,2487,2516,2542,2932,2962
+  【六】allowExplicit 与偏离行 / allowExplicit: 行 106,165,239,297,1357,1359,1391,1464,1477,2163,2459,2479,2517,2577,2697,2698,2951
+  【六】allowExplicit 与偏离行 / 偏离行: 行 58,106,118,125,126,145,165,179,203,255,297,479,497,644,1350,1355,1357,1440,1441,2152,2155,2159,2297,2350,2479,2517,2529,2591,2602,2615,2616,2873,2922,2979
+  【六】relation intimate / intimate: 行 339,341,714,2488,2518
+  【六】input-view 处置（第七版改为删除协议 + 新写） / input-view: 行 713,2079,2469,2488,2495,2519,2579,2847,2928
+== 9 码点口径
+  OK 全文无旧的码元口径
+== 10 权限表 needle 来源
+  OK 权限表 6 行，needle 来源只有 blocklist / 代号登记表
+== 11 示例代码逃逸写法
+  OK 规则层/kernel 示例与正例均无 any / as / @ts-* / eslint-disable / JSON.parse / fs 读取
+== 12 模块组计数口径
+  OK 全文无旧的模块组计数残留（现行口径：七组 + textcore / 六个非规则组）
+== 13 加载器外示例无 JSON.parse / fs
+  登记边界入口 34 个文件；OK 入口外示例无 JSON.parse / fs
+== 14 import 矩阵 textcore 列
+  OK kernel 不 import textcore
+  OK 规则层 不 import textcore
+== 15 Text 构造点
+  OK Text 构造点只在 §2.9
+== 16 运行态修正项无字串
+  OK struct:modifier 无 string/rx 文本字段
+  OK §3.2 运行态表达式为 RxId/rxTree
+== 17 入口/出口表对称
+  OK 入口 17 行（组：kernel,textcore,outputGate,gate,aiGate,inputEdge,host,tools），出口 7 行（组：outputGate,display,aiGate,host,kernel），列数对称
+== 18 全局对象白名单
+  OK 白名单覆盖 9 个组/层
+== 19 强转豁免文件表
+  OK 豁免表 17 个具体文件（textcore/brand.mjs、textcore/ops.mjs、kernel/handles/vocab-handle.mjs、kernel/handles/entity-id.mjs、kernel/handles/display-lang.mjs、kernel/handles/keys.mjs、kernel/sealed.mjs、kernel/credential.mjs、kernel/secret.mjs、kernel/transaction.mjs、kernel/validate/narrow.mjs、gate/screen.mjs、gate/load-blocklist.mjs、kernel/transport/router-caps.mjs、extension/textcore/narrow-wire.mjs、extension/textcore/open-envelope.mjs、extension/host/bootstrap.mjs）；表外无强转许可，旧的"唯一豁免点"说法已清
+== 20 模块组 glob 不相交
+  OK 9 组 9 个代表路径两两不相交（display 以 ! 排除 extension/host 与 extension/textcore）
+== 21 白名单闭集与 release 形参
+  OK 白名单段无"等"与省略号，禁 eval/Function/import()/with，专用项各归一处；release 带类型签名 1 处均为 Screened<Text>；出口表输入列一致；kernelApi 61 条均为结构化条目、无通配，issueCredential/writeSealed 限 aiGate、readSealed 限 outputGate，scope 常量 3 个各限一个写者文件
+== 22 文件归属
+  OK 78 个代表路径：六种代码扩展名都按目录归到原组，json/css/html 属登记数据，未登记类型判 E-FILE-UNASSIGNED，无文件同时落两组
+== 23 两进程分组与矩阵
+  OK 进程分组表 11 项与 JSON process 字段一致；服务端矩阵 9 行、客户端矩阵 3 行，互不含对方的组；矩阵引用名均已登记；node:* 清单两处一致
+== 24 宿主全局只在 bootstrap
+  OK 白名单表中 7 个浏览器宿主全局只在 host 行且全部限定到 bootstrap；display、clientTextcore 为"无"；10 个客户端能力对象的构造者都是 bootstrap；无旧宿主入口文件名残留
+== 25 定时器位置
+  OK 白名单表里定时器只在 kernel 行（限 kernel/scheduler.mjs）与 host 行（限 bootstrap）；正文 5 行提到定时器，均写明许可位置或为禁令；Date/performance 未开放
+== 26 摘要来源
+  OK node:crypto 只在 textcore 行并限 textcore/digest.mjs（正文 8 行提及，均指向它或为否定句）；kernel 无 node:crypto、用注入的 DigestCap；客户端 SubtleCrypto 只经 SubtleDigestCap 交 open-envelope.mjs；全文只有 sha256
+== 27 信封链条与装配文件
+  OK 下行出口、客户端入口、DOM 出口、信封校验、装配文件可缺行与两条上行入口都在 §2.9；客户端 Screened<Text> 只由 openEnvelope 产出；nameSlot 已清，起名为"规则层只发意图"
+== 28 引文同一性只在 aiGate
+  OK 例外清单恰三项（matchBlocklist、matchIdLeak、matchQuote）；matchQuote 带签名定义 1 处，在 §2.9 第 6 条，文件 ai-gate/quote-identity.mjs；全文 16 行提及，均在 aiGate 语境；未进 kernelApi，矩阵与 §2.8 其他组的行里不出现；§2.9 之外各处均为引用
+== 29 回应通路逐环核对
+  OK 通路 11 行逐环核对（含存档导出、导入支路 2c、2d、5s、6s；四条路由各有入口；NarrateCap 经 mountNarration 注入 reply-composer，narrate 不是跨组导出；registerAdvancePlan 已登记）：kernelApi 环的调用者在登记文件内且矩阵格写明，登记回调环不产生反向 import，能力对象环与能力对象表、入口表、出口表一致，HTTP 环与通道表一致；环环相接；进 outputGate 之前交出的类型不含文字；kernel 与 inputEdge 对 outputGate 的矩阵格为空
+== 30 子串函数签名
+  OK 子串函数 3 个与 gate/matcher.mjs 的 groupApi 导出一致；needle 类型只有 BlockNeedle、AiQuote 与代号，没有 Text；形参类型不出现 labels 或 Map；containsCodePoints 形参为 (turn: TurnText, quote: AiQuote)，只对 ai-gate/quote-identity.mjs 开放；labels 的值类型是 Text，读者不含 gate 与 aiGate
+== 31 本轮原文来路
+  OK TurnText 只由 brandTurn 产出且只对 input/http-entry.mjs 开放；形参带 TurnText 的函数恰 4 个（interpret、narrateTurn、matchQuote、containsCodePoints）；aiGate 对 inputEdge 的 4 个导出都限定到 input/http-entry.mjs 并与矩阵格一致；来路五步写全；旧签名无残留
+== 32 装配文件封闭清单
+  OK assembly.calls 11 个函数（createRouterCaps、createDigestCap、createWallTimer、mountKernel、registerSystems、mountOutput、mountAi、mountMenuEntry、mountSaveRoutes、mountNarration、mountInput）：每个都在 kernelApi 或 groupApi 登记为只对 index.mjs 开放，反向也无清单外的开放项；矩阵装配文件行、§2.9"装配文件"一项与清单三处一致；扫描规则写全，§2.8 与 S19 引用同一清单
+== 33 存量规则与 wsum 签名
+  OK 存量规则六条与两类断言写全；wsum 定义一处、正文 3 处调用全为三参、material 为多组列表；系统闭集字段 entryCallerFiles / entryJudges 在 §2.7 定义并进 JSON 示例；pathTypes 数值路径都带 §1.4 的单位；§1.14 与 event_role 已登记；facilityType 不再是存储维度
+== 34 接缝批
+  OK 心跳推进只投递请求、旧写法无残留；终止协议五步改序并含两个登记点、窗口期满、到期项撤销；建行写者与改写写者已定义；stockMode / remDenominator / struct:stockAnchor 与定点指数五项在位；六个封闭枚举与三个族已登记；§1.14 两处改名并写求值次序；存档码、导入 schema、槽位与候选键在位；单位表含 byte、ms；无已撤销的大类代号
+== 结果：PASS
+
+===== node F:/dnd-tmp/vols/check-卷三.mjs 甲  exit=0
+PASS 章节 §0 存在
+PASS 章节 §1 存在
+PASS 章节 §2 存在
+PASS 章节 §3 存在
+PASS 章节 §4 存在
+PASS 章节 §5 存在
+PASS 章节 §6 存在
+PASS 章节 §7 存在
+PASS 章节 §8 存在
+PASS 附 术语与代号表 存在
+PASS 标题为现行版本（第七版）
+PASS 子系统 4.1 六小节齐全且顺序正确
+PASS 子系统 4.1 数据实例 5 条（需≥3，含非西陲、含非人类或超自然）
+PASS 子系统 4.1 验收断言含扫描式、不变量式、扩展性式
+PASS 子系统 4.2 六小节齐全且顺序正确
+PASS 子系统 4.2 数据实例 5 条（需≥3，含非西陲、含非人类或超自然）
+PASS 子系统 4.2 验收断言含扫描式、不变量式、扩展性式
+PASS 子系统 4.3 六小节齐全且顺序正确
+PASS 子系统 4.3 数据实例 5 条（需≥3，含非西陲、含非人类或超自然）
+PASS 子系统 4.3 验收断言含扫描式、不变量式、扩展性式
+PASS 子系统 4.4 六小节齐全且顺序正确
+PASS 子系统 4.4 数据实例 4 条（需≥3，含非西陲、含非人类或超自然）
+PASS 子系统 4.4 验收断言含扫描式、不变量式、扩展性式
+PASS 子系统 4.5 六小节齐全且顺序正确
+PASS 子系统 4.5 数据实例 11 条（需≥3，含非西陲、含非人类或超自然）
+PASS 子系统 4.5 验收断言含扫描式、不变量式、扩展性式
+PASS 子系统数恰为 5
+PASS 规则正文无具体实体 id 字面量（命中 0 处）
+PASS 正文无用于判断的中文或英文描述性文本（命中 0 处）
+PASS 全部 RX 条件文本不含实体 id（命中 0 处）
+PASS 台账概念「材料属性·数值字段（含打捞比例维度）」在 §4.1/§4.2/§4.3/§4.4 写全
+PASS 台账概念「材料数据全集」在 §4.5 写全
+PASS ### 2.1 至 ### 2.2 之前的字段行都带中英 labels（53 行，缺 0）
+PASS §2 字段键全部为 ASCII 代号（79 行）
+PASS §7 迁移与退役清单 8 行
+PASS §6 扩展性测试 7 条
+PASS §8 开放问题 18 条
+PASS §5.2 声明本卷不提供函数入口
+PASS §2.1 没有派生字段（命中 0 行）
+PASS §2.1 字段行的取值域、必填条件不引用任何规则表键（命中 0 行）
+PASS 六个派生量不在本卷字段表里（命中 0）
+PASS 材料表没有物态字段、没有聚集形态字段（命中 0）
+PASS 全卷不出现"常温"（挥发度等定义不靠默认温度；命中 0 处）
+PASS 挥发度的定义行不含温度数值，标定条件在单位定义里
+PASS §2.3 单位定义带四个标定条件（腐坏、挥发、气体密度、易燃度）
+PASS 饱腹单位不在本卷登记，只引卷二 §1.4（总能口径）
+PASS `ignitePoint` 写明是自燃点，另有 `flashPoint` 一栏
+PASS 易燃度有可测定义（由极限氧浓度换算）
+PASS 不再把 diet 族、T-4 引到卷四 §4.5，不再把导热与隔声引到卷十九 §4.3（命中 0 处）
+PASS 本源成分不得借记：表里没有"借记""暂归"的行
+PASS 本卷不设规则表（没有以规则表键开头的表行）
+PASS 规则小节 17 条全部是校验，没有派生、反应、时钟、动作
+PASS 营养维度的必填条件按可消化成分写（卷四余项 N-2）
+PASS 本源成分词表十二项（含水、动物产物）
+PASS `plantPart` 引卷二十五 §2.4 的 plant_part 词表；只对草本植物质、木质两项的行必填（bySubstance）；缺了按 gap 记缺口、进加载警告清单
+PASS 必填条件 bySubstance 有定义；AP-6 禁止另立植物部位词表
+PASS M-17 校验存在：部位须在卷二十五 plant_part 族、植物质行必填而缺了只记缺口进警告、别的行不适用写了报错、不得借记
+PASS `flammabilityRange` 是出处区间（不是成堆值），M-18 校验存在（min ≤ 点值 ≤ max、两栏同有同无、不可燃行不得填）
+PASS §3.5 加载警告清单列三类：植物质行缺部位、依据"未核"的值（含山羊毛、毡的极限氧）、规则表里的假设常数 reliefMax
+PASS §2.3 易燃度的测法写明火向下、最难方向（卷三乙燃料判定读这个单件值）
+PASS §4.5.5 例 6 部位表的行集合恰是草本植物质、木质的 18 行（表内 18 行；本源成分不符 0，代号不在卷二十五 plant_part 族 0）
+     部位留空、进加载警告清单的行 1：mat_nightcap_mushroom
+PASS §4.5.5 例 7 易燃度出处区间表存在（5 行；逐行 M-18 数值核对在 check-卷三-全集.mjs）
+PASS §2.2 plant_family 族是闭集、登记制，只在材料行 plantFamily 上填，有表示未知的一项（pfam_unknown），新条目须带科名出处，规则只读代号（族内 8 项）
+PASS `plantFamily` 引本卷 plant_family 族；只对草本植物质、木质行登记（bySubstance）；留空按 gap 记缺口；未知与留空都进警告、按非谷物处理；逐行出处在例 9
+PASS M-20 校验存在：科须在 plant_family 族、只对植物质行必填、缺了记缺口、未知一项进警告、别的行写了报错、不得借记
+PASS §4.5.5 例 9 植物科表只登记植物质行：行集合恰是草本植物质、木质的 18 行（表内 18 行；代号不在 plant_family 族 0；没带出处 0）
+     植物科记未知或留空、按非谷物处理并进加载警告清单的行 5：mat_dry_grass、mat_leaf_litter、mat_nightcap_mushroom、mat_moon_berry、mat_marsh_bark
+PASS `carbContent` 是 [0,1] 的质量比例（差减法总碳水），必填范围同营养（byDigestible 或可食），没核到出处的不填数、按 gap 记缺口进警告
+PASS M-19 校验存在：值在 [0,1]、不小于纤维含量、缺了记缺口进警告、不拿同类的数顶替、未知行不算谷物
+PASS §4.5.5 例 8 碳水表：行集合同例 5 纤维表（30 对 30 行），逐行注依据代号与出处，"碳:未核"的行留空不填数，值都在 [0,1] 且不小于同行纤维（不符 0）
+     干基碳水未核到、按未知记缺口进加载警告清单的行 3：mat_mash、mat_nightcap_mushroom、mat_moon_berry
+PASS §4.5.5 例 8 依据代号表没有"碳:推"，数据行里"碳:推"计数为 0（代号表已撤；碳水表命中 0；全卷 mat_ 行命中 0）
+PASS 扫描式：§2.1 类型为 number、map、struct、分态的 43 个字段，卷三乙 rules.items.aggregation 聚合口径表全部覆盖（缺 0）
+PASS §2.2 burn_evidence 族登记了成堆燃烧直接证据的出处代号（6 项），分木垛实验与长期作燃料记载两类；出处文字规则层不读；只有摘录的不登记
+PASS `pileBurnEvidence` 引 burn_evidence 族；同类料的证据不算；留空不表示烧不住；用法在卷三乙 T-15
+PASS M-21 校验存在：代号须已登记、只在可燃行、同类证据不算、不随继承带下来、不读出处文字
+PASS AP-7 禁止规则层读证据与科名的文字、禁止按材料 id 认柴认粮
+PASS §4.5.5 例 10 直接证据表 7 行：代号都在 burn_evidence 族、都挂可燃组件类、没有继承行、逐行带出处（不符 0）
+----
+正文行数（不含附录输出）：1032
+子系统数：5；开放问题：18；扩展性测试：7；迁移行：8
+结果：全部通过
+-- 卷三甲 §2.6 读取者派生必填 --
+PASS §2.6 物性格读取登记表解析到 3 个读取者
+     byReader 字段：insulation、breathabilityBase；材料全集 93 行；逐格表 36 格
+PASS §2.6 第 1 行判定引用的代号都有定义
+PASS §2.6 第 1 行读的物性格都是 §2.1 的 byReader 字段
+PASS §2.6 第 2 行判定引用的代号都有定义
+PASS §2.6 第 2 行读的物性格都是 §2.1 的 byReader 字段
+PASS §2.6 第 3 行判定引用的代号都有定义
+PASS §2.6 第 3 行读的物性格都是 §2.1 的 byReader 字段
+     第 1 行：挂 comp_wearable 的物品模板 item_ox_yoke、item_pack_pannier、item_sheepskin_coat、item_silk_robe、item_horse_barding
+PASS §2.6 第 1 行材料行判定可求值
+     第 2 行：rules.health.thermal.coverDepth = 1；物种组织映射 tissue_stone→mat_granite；身体图 tissueOverride 无数据
+PASS §2.6 第 2 行材料行判定可求值
+PASS §2.6 第 3 行 req_dressing 的派生大类 matcat_textile 有定义
+     第 3 行：req_dressing 第 0 组 接受 mat_silk、mat_hemp_cord、mat_felt、mat_cotton_yarn、mat_cotton_cloth
+PASS §2.6 第 3 行材料行判定可求值
+PASS ① 派生必填 19 格都非 null
+     派生必填：mat_elm.insulation、mat_elm.breathabilityBase、mat_rawhide.insulation、mat_rawhide.breathabilityBase、mat_wicker.insulation、mat_wicker.breathabilityBase、mat_sheepskin.insulation、mat_sheepskin.breathabilityBase、mat_silk.insulation、mat_silk.breathabilityBase、mat_wrought_iron.insulation、mat_wrought_iron.breathabilityBase、mat_leather.insulation、mat_leather.breathabilityBase、mat_granite.insulation、mat_hemp_cord.breathabilityBase、mat_felt.breathabilityBase、mat_cotton_yarn.breathabilityBase、mat_cotton_cloth.breathabilityBase
+WARN ② 非 null 而没有读取者读的格 3 个：mat_felt.insulation、mat_cotton_yarn.insulation、mat_cotton_cloth.insulation
+
+===== node F:/dnd-tmp/vols/check-卷三-全集.mjs   exit=0
+== 甲0 读入 ==
+卷三乙阈值：charDecomposeMin=1000 charHeatMin=25 fatMeltMax=200 fatHeatMin=30 volatileMin=0.005 grainMoistureMax=0.15 grainEnergyMin=17 grainCarbMin=0.55 forgeMinMelt=600 forgeMalleabilityMin=30 fuelHeatMin=10 fuelFlammabilityMin=0.5 reliefMax=0.0619 minCount=3 saltContentMin=100 envMin=-60 envMax=60；冷焰组件类热值乘子=0.05；谷物部位键 grainPart=ppart_seed；谷物科键 grainFamily=pfam_poaceae
+卷三乙对照：本源成分→类别 9 对，派生大类→类别 6 对，来料反应→派生大类 5 对；卷三甲本源成分词表 12 项；密度域 固液[0.01,25] 气[0.00001,0.1]
+PASS 阈值、环境温度域、密度域全部读到
+PASS 谷物部位键 rules.materials.grainPart 读到，且是卷二十五 §2.4 plant_part 族里登记过的代号（族内 7 项）
+PASS 谷物科键 rules.materials.grainFamily 读到，是卷三甲 §2.2 plant_family 族里登记过的代号且不是"未知"一项（族内 8 项，未知一项 pfam_unknown）
+PASS 卷三甲 §2.2 burn_evidence 族读到（6 项）
+PASS 规则文本自检：八条派生大类条件仍是脚本所实现的写法；蜡脂条件含热值下限与挥发度上限，不含物态；谷物条件含部位为种子、干基碳水下限、植物科
+PASS 谷物条件栏含"部位为种子"，不含纤维含量（第五版：纤维不参与谷物判定）
+PASS 谷物条件栏含"干基碳水不低于 grainCarbMin""植物科等于 grainFamily"（第六版七条件）
+PASS 规则文本自检：T-15 的式子（成堆 G 取 1）、出处区间、碰线通则、参考堆按成堆计、各曲线待标定不生效；C-8 燃料类读 pileFlammability 按碰线通则比；单件值是向下最难方向的值，仍是脚本所实现的写法
+PASS 规则文本自检：T-15 第 ⑤ 款（成堆且各份可燃材料都登记了直接证据即判烧得住，优先于推算、不依赖 reliefMax、不改数值、不让单件成燃料）；C-8 燃料类读第 ⑤ 款，仍是脚本所实现的写法
+PASS reliefMax 是唯一生效的成堆常数，带"假设、待标定"标记（方向迁移假设），加载进警告清单
+PASS 派生大类条件栏不读物温、当时物态、可能物态集（命中 0 条）
+PASS 卷三乙规则表（§2.5）里没有物态用的全局参考温度键，也没有材料类别规则表（裁定 1）
+PASS 卷三甲、卷三乙全文没有固态类、液态类两个类别代号（命中 0 行）
+PASS 卷三甲反应词表含擀毡、煅烧
+PASS 全集里没有冰的行、没有水中病原的行，有蛋壳的行
+全集：93 种材料，来料反应 22 条
+PASS 表自洽：列数齐、反应表引用的材料都在、应得结果表与数据表逐行对应（列数不对 0，坏引用 0）
+PASS 应得结果自洽：预期类别 = 本源成分的类别 + 预期派生大类的类别（不一致 0 种）
+PASS 卷三甲例 6 部位表的行集合恰是本源成分为草本植物质、木质的 18 行（表内 18 行，表里有而大表没有的 0）；其余行不登记部位
+PASS 卷三甲例 7 易燃度出处区间 5 行：都是可燃材料，两端由极限氧上下界按 §2.3 换算得出（不符 0）；M-18 逐行在甲组加载校验里核
+PASS 卷三甲例 9 植物科表只登记植物质行：行集合恰是本源成分为草本植物质、木质的 18 行（表内 18 行，表里有而大表没有的 0）；逐行代号与出处在甲组加载校验里核
+PASS 卷三甲例 8 碳水表 30 行、例 10 直接证据表 7 行，引用的材料都在大表里（碳水表多出 0，证据表多出 0）
+加载警告清单 ① 植物质行缺植物部位（gap）1 行：夜帽菇；② 极限氧依据"未核" 22 行：松脂、木炭、竹炭、雷击木炭、纸、干草、茶叶、硫磺、樟脑、毡、山羊毛、动物脂肪（肥膘）、蜂蜡、酥油、牛粪饼、煤、桐油、焦炭、菜籽油、牛油（炼过）、秸秆、落叶；③ 假设常数：rules.thermal.pile.reliefMax（方向迁移假设、待标定）；④ 干基碳水未核到（gap，不算谷物）3 行：夜帽菇、醪、月华浆果；⑤ 植物科留空或未知（按非谷物处理）5 行：干草、夜帽菇、沼泽树皮、月华浆果、落叶
+
+== 甲 逐种计算 ==
+对 mat_wrought_iron 熟铁：加载，可能[固]，大类[]，类别[class_metal]
+对 mat_cold_iron 冷铁：加载，可能[固]，大类[]，类别[class_metal]
+对 mat_test_alloy 测试合金：加载，可能[固]，大类[]，类别[class_metal]
+对 mat_potter_clay 陶土（干料）：加载，可能[固]，大类[]，类别[class_mineral]
+对 mat_stoneware 炻器：加载，可能[固]，大类[matcat_ceramic]，类别[class_mineral class_ceramic]
+对 mat_halite 岩盐：加载，可能[固]，大类[]，类别[class_mineral]
+对 mat_resin 松脂：加载，可能[固]，大类[matcat_wax_fat]，类别[class_fat]
+对 mat_ghost_fire_oil 鬼火油：加载，可能[固 液]，大类[matcat_wax_fat matcat_supernatural]，类别[class_fat]
+对 mat_bamboo 竹：加载，可能[固]，大类[]，类别[class_wood]
+对 mat_oak 橡木：加载，可能[固]，大类[]，类别[class_wood]
+对 mat_elm 榆木：加载，可能[固]，大类[]，类别[class_wood]
+对 mat_wicker 柳条：加载，可能[固]，大类[]，类别[class_wood]
+对 mat_charcoal 木炭：加载，可能[固]，大类[matcat_char]，类别[class_char]
+对 mat_bamboo_charcoal 竹炭：加载，可能[固]，大类[matcat_char]，类别[class_char]
+对 mat_thunderstruck_char 雷击木炭：加载，可能[固]，大类[matcat_char matcat_supernatural]，类别[class_char]
+对 mat_leather 熟皮：加载，可能[固]，大类[]，类别[class_leather]
+对 mat_rawhide 生皮：加载，可能[固]，大类[]，类别[class_leather]
+对 mat_sheepskin 羊皮：加载，可能[固]，大类[]，类别[class_leather]
+对 mat_raw_silk 生丝：加载，可能[固]，大类[]，类别[]
+对 mat_silk 丝绸：加载，可能[固]，大类[matcat_textile]，类别[class_fabric]
+对 mat_hemp_fiber 麻纤维：加载，可能[固]，大类[]，类别[]
+对 mat_hemp_cord 麻绳：加载，可能[固]，大类[matcat_textile]，类别[class_fabric]
+对 mat_paper 纸：加载，可能[固]，大类[matcat_paper]，类别[class_paper]
+对 mat_dry_grass 干草：加载，可能[固]，大类[]，类别[class_plant]
+对 mat_tea_leaf 茶叶：加载，可能[固]，大类[]，类别[class_plant]
+对 mat_black_powder 黑火药：加载，可能[固]，大类[]，类别[class_mineral]
+对 mat_test_blast 测试爆燃料：加载，可能[固]，大类[]，类别[class_mineral]
+对 mat_water 水：加载，可能[固 液]，大类[]，类别[]
+对 mat_goat_milk 羊乳：加载，可能[固 液]，大类[]，类别[]
+对 mat_cheese 乳酪：加载，可能[固 液]，大类[]，类别[]
+对 mat_egg 蛋（蛋液）：加载，可能[固 液]，大类[]，类别[]
+对 mat_honey 蜜：加载，可能[固 液]，大类[]，类别[]
+对 mat_blood 血：加载，可能[固 液]，大类[]，类别[]
+对 mat_sulfur 硫磺：加载，可能[固]，大类[]，类别[class_mineral]
+对 mat_camphor 樟脑：加载，可能[固]，大类[matcat_volatile_fuel]，类别[]
+对 mat_gold 金：加载，可能[固]，大类[]，类别[class_metal]
+对 mat_lead 铅：加载，可能[固]，大类[]，类别[class_metal]
+对 mat_nephrite 软玉：加载，可能[固]，大类[]，类别[class_stone]
+对 mat_felt 毡：加载，可能[固]，大类[matcat_textile]，类别[class_fabric]
+对 mat_millet 粟：加载，可能[固]，大类[matcat_grain]，类别[class_plant class_grain]
+对 mat_fresh_greens 鲜菜：加载，可能[固]，大类[]，类别[class_plant]
+对 mat_granite 花岗岩：加载，可能[固]，大类[]，类别[class_stone]
+对 mat_goat_hair 山羊毛：加载，可能[固]，大类[]，类别[]
+对 mat_flesh 肉：加载，可能[固]，大类[]，类别[class_flesh]
+对 mat_bone 骨：加载，可能[固]，大类[]，类别[class_bone]
+对 mat_fat 动物脂肪（肥膘）：加载，可能[固 液]，大类[matcat_wax_fat]，类别[class_flesh class_fat]
+对 mat_raw_river_fish 生河鱼：加载，可能[固]，大类[]，类别[class_flesh]
+对 mat_cooked_river_fish 熟河鱼：加载，可能[固]，大类[]，类别[class_flesh]
+对 mat_nightcap_mushroom 夜帽菇：加载，可能[固]，大类[]，类别[class_plant]
+对 mat_marsh_bark 沼泽树皮：加载，可能[固]，大类[]，类别[class_wood]
+对 mat_mash 醪：加载，可能[固 液]，大类[]，类别[class_plant]
+对 mat_rice_wine 酒：加载，可能[固 液]，大类[]，类别[]
+对 mat_vinegar 醋：加载，可能[固 液]，大类[]，类别[]
+对 mat_koumiss 马奶酒：加载，可能[固 液]，大类[]，类别[]
+对 mat_pickled_greens 渍菜：加载，可能[固]，大类[]，类别[class_plant]
+对 mat_soybean 大豆：加载，可能[固]，大类[]，类别[class_plant]
+对 mat_wheat 麦：加载，可能[固]，大类[matcat_grain]，类别[class_plant class_grain]
+对 mat_dried_greens 干菜：加载，可能[固]，大类[]，类别[class_plant]
+对 mat_beeswax 蜂蜡：加载，可能[固]，大类[matcat_wax_fat]，类别[class_fat]
+对 mat_butter 酥油：加载，可能[固 液]，大类[matcat_wax_fat]，类别[class_fat]
+对 mat_dung_cake 牛粪饼：加载，可能[固]，大类[]，类别[]
+对 mat_seawater 海水：加载，可能[固 液]，大类[]，类别[]
+对 mat_iron_ore 铁矿石：加载，可能[固]，大类[]，类别[class_mineral]
+对 mat_coal 煤：加载，可能[固]，大类[]，类别[class_stone]
+对 mat_limestone 石灰石：加载，可能[固]，大类[]，类别[class_stone]
+对 mat_brick 砖：加载，可能[固]，大类[matcat_ceramic]，类别[class_mineral class_ceramic]
+对 mat_quicklime 生石灰：加载，可能[固]，大类[]，类别[class_mineral]
+对 mat_soil 黏土（夯土、砖坯料）：加载，可能[固]，大类[]，类别[class_mineral]
+对 mat_silt 泥沙：加载，可能[固]，大类[]，类别[class_mineral]
+对 mat_silver 银：加载，可能[固]，大类[]，类别[class_metal]
+对 mat_copper 铜：加载，可能[固]，大类[]，类别[class_metal]
+对 mat_bronze 青铜：加载，可能[固]，大类[]，类别[class_metal]
+对 mat_cowrie 贝：加载，可能[固]，大类[]，类别[class_bone]
+对 mat_steel 钢：加载，可能[固]，大类[]，类别[class_metal]
+对 mat_cast_iron 生铁：加载，可能[固]，大类[]，类别[class_metal]
+对 mat_moon_berry 月华浆果：加载，可能[固]，大类[matcat_supernatural]，类别[class_plant]
+对 mat_cinnabar 朱砂：加载，可能[固]，大类[]，类别[class_mineral]
+对 mat_tung_oil 桐油：加载，可能[固 液]，大类[matcat_wax_fat]，类别[class_fat]
+对 mat_coke 焦炭：加载，可能[固]，大类[matcat_char]，类别[class_char]
+对 mat_spirits 烧酒：加载，可能[固 液]，大类[matcat_volatile_fuel]，类别[]
+对 mat_rapeseed_oil 菜籽油：加载，可能[固 液]，大类[matcat_wax_fat]，类别[class_fat]
+对 mat_tallow 牛油（炼过）：加载，可能[固 液]，大类[matcat_wax_fat]，类别[class_fat]
+对 mat_natural_gas 火井气：加载，可能[气]，大类[matcat_volatile_fuel]，类别[]
+对 mat_mercury 水银：加载，可能[固 液]，大类[]，类别[class_metal]
+对 mat_glass 玻璃：加载，可能[固]，大类[]，类别[class_glass]
+对 mat_bitumen 沥青：加载，可能[固 液]，大类[matcat_wax_fat]，类别[class_mineral class_fat]
+对 mat_cotton 棉纤维：加载，可能[固]，大类[]，类别[]
+对 mat_cotton_yarn 棉纱：加载，可能[固]，大类[matcat_textile]，类别[class_fabric]
+对 mat_cotton_cloth 棉布：加载，可能[固]，大类[matcat_textile]，类别[class_fabric]
+对 mat_tin 锡：加载，可能[固]，大类[]，类别[class_metal]
+对 mat_eggshell 蛋壳：加载，可能[固]，大类[]，类别[class_bone]
+对 mat_straw 秸秆：加载，可能[固]，大类[]，类别[class_plant]
+对 mat_leaf_litter 落叶：加载，可能[固]，大类[]，类别[class_plant]
+PASS 甲 小计：93 种，推对 93，推错 0
+
+== 乙 测试温度逐例（当时物态，T-2 材料级判法） ==
+对 mat_water @ -5℃ → 固；预期 固
+对 mat_water @ 0℃ → 液；预期 液
+对 mat_water @ 20℃ → 液；预期 液
+对 mat_water @ 100℃ → 气；预期 气
+对 mat_butter @ 20℃ → 固；预期 固
+对 mat_butter @ 40℃ → 液；预期 液
+对 mat_mercury @ -40℃ → 固；预期 固
+对 mat_mercury @ 20℃ → 液；预期 液
+对 mat_natural_gas @ 20℃ → 气；预期 气
+对 mat_natural_gas @ -170℃ → 液；预期 液
+对 mat_ghost_fire_oil @ -30℃ → 固；预期 固
+对 mat_ghost_fire_oil @ 20℃ → 液；预期 液
+对 mat_oak @ 20℃ → 固；预期 固
+对 mat_oak @ 300℃ → 固；预期 固
+对 mat_nephrite @ 1100℃ → 固；预期 固
+对 mat_egg @ 20℃ → 液；预期 液
+对 mat_egg @ 70℃ → 液（已过分解点）；预期 液（已过分解点）
+对 mat_wrought_iron @ 20℃ → 固；预期 固
+对 mat_wrought_iron @ 1600℃ → 液；预期 液
+对 mat_cheese @ 20℃ → 固；预期 固
+PASS 乙 小计：20 例，错 0
+PASS 水在 −5℃ 推为固、20℃ 推为液，同一行材料，没有冰的行
+PASS 派生大类的计算只收材料一个参数，不收温度：任一材料在任何温度下大类相同
+
+== 丙 物品层选料（按"只由这一种材料做成的物品"判；燃料按参考堆判） ==
+锻料（熔点+延展性）：预期是 8 种；错选 0；漏选 0
+燃料类（可燃、每千克折合热量过线、参考堆成堆烧得住：先看直接证据（T-15 第 ⑤ 款，第六版），没有的按碰线通则推算（有出处区间的按区间、无区间按点值）；热值取 M-12 有效值）：预期是 32 种；错选 0；漏选 0
+盐类（收到基盐分过线）：预期是 1 种；错选 0；漏选 0
+PASS 丙 小计：三条选料规则错选、漏选合计 0
+
+== 丁 每条派生规则的正例、反例（按预期数；"算出"是规则命中数） ==
+PASS 可能为固：正例 92，反例 1，算出 92
+PASS 可能为液：正例 20，反例 73，算出 20
+PASS 可能为气：正例 1，反例 92，算出 1
+PASS matcat_char：正例 4，反例 89，算出 4
+PASS matcat_wax_fat：正例 9，反例 84，算出 9
+PASS matcat_volatile_fuel：正例 3，反例 90，算出 3
+PASS matcat_grain：正例 2，反例 91，算出 2
+PASS matcat_textile：正例 5，反例 88，算出 5
+PASS matcat_paper：正例 1，反例 92，算出 1
+PASS matcat_ceramic：正例 2，反例 91，算出 2
+PASS matcat_supernatural：正例 3，反例 90，算出 3
+PASS subst_metal → 类别：正例 12，反例 81，算出 12
+PASS subst_stone → 类别：正例 4，反例 89，算出 4
+PASS subst_mineral → 类别：正例 13，反例 80，算出 13
+PASS subst_glass → 类别：正例 1，反例 92，算出 1
+PASS subst_wood → 类别：正例 5，反例 88，算出 5
+PASS subst_plant → 类别：正例 13，反例 80，算出 13
+PASS subst_fiber → 类别：正例 10，反例 83，算出 10
+PASS subst_hide → 类别：正例 3，反例 90，算出 3
+PASS subst_bone → 类别：正例 3，反例 90，算出 3
+PASS subst_flesh → 类别：正例 4，反例 89，算出 4
+PASS subst_water → 类别：正例 5，反例 88，算出 5
+PASS subst_animal_product → 类别：正例 9，反例 84，算出 9
+PASS M-9 身份非空（本源成分留空、靠派生大类过）：正例 11，反例 82，算出 11
+PASS 锻料（熔点+延展性）：正例 8，反例 85，算出 8
+PASS 燃料类（可燃、每千克折合热量过线、参考堆成堆烧得住：先看直接证据（T-15 第 ⑤ 款，第六版），没有的按碰线通则推算（有出处区间的按区间、无区间按点值）；热值取 M-12 有效值）：正例 32，反例 61，算出 32
+PASS 盐类（收到基盐分过线）：正例 1，反例 92，算出 1
+PASS 丁 小计：27 条规则，缺正例或反例的 0，算出数与预期数不等的 0
+
+== 戊 体系装不下：规则可读的物性全同、预期却不同 ==
+比较的维度：本源成分、组件类、热值、自燃点、闪点、熔点、沸点、分解点、挥发度、含水率、干基饱腹、盐分、易燃度、易燃度出处区间、植物部位、干基碳水、植物科、成堆燃烧直接证据、来料反应；密度各栏不比（分态栏是同一行里的几组数）
+PASS 戊 小计：同输入不同预期的组 0 个
+
+== 己 落空与双归（全量） ==
+取样：每种材料在 [-60,60] 内每 0.5℃ 一点，共 22413 点
+PASS 落空 0 种（身份为空、某温度下无物态、可能物态缺密度栏，三种都算）
+PASS 双归 0 种（同一温度判成两种物态、蜡脂与挥发可燃物同归、形态必填判定不唯一，三种都算）
+PASS 可能物态集：逐温度取样的并集 = 区间算法的结果（不一致 0 种）
+可能物态集多于一项（要登记越阈日，T-12）的 20 种：鬼火油、水、羊乳、乳酪、蛋（蛋液）、蜜、血、动物脂肪（肥膘）、醪、酒、醋、马奶酒、酥油、海水、桐油、烧酒、菜籽油、牛油（炼过）、水银、沥青
+
+== 庚 与全集审查预期对照（审查/卷三-参考材料全集.md 第二节的预期栏） ==
+审查全集 92 种：与本卷应得结果相同 85 种；不同 5 种：樟脑（派生大类：裁定 2：新派生大类挥发可燃物（审查预期为空，身份落空））；大豆（派生大类、类别：第六版（李白裁定）：谷物加"干基碳水不低于 0.55""禾本科"两条，大豆碳水 0.333、豆科，都不过，不再是谷物）；牛粪饼（类别：卷三甲一审第 11 条：本源成分改记动物产物，不再借记草本，所以不带草本的类别）；烧酒（派生大类：裁定 2 的直接后果：可燃且挥发度过线（审查预期为空））；火井气（派生大类：裁定 2：同上）
+按裁定删去的行 2 种：冰、水中病原；本版新增的行 3 种：蛋壳、秸秆、落叶
+PASS 庚 小计：与审查预期不同而没写裁定依据的 0 种；新增行都写了依据
+PASS 删去的恰是冰与水中病原两行
+
+== 辛 卷四余项 N-2：营养维度按可消化成分必填；食草取食按卷四 T-4 可算 ==
+卷四食性条目 4 条：diet_graze、diet_piscivore、diet_omnivore、diet_root；满足 byDigestible 的材料 30 行；可消化成分集（汇总）：subst_mineral、subst_plant、subst_animal_product、subst_flesh、subst_water
+PASS byDigestible 逐行求得出；汇总出的可消化成分集都在卷三甲本源成分词表内
+PASS 各食性吸收率的键都是本源成分代号，值都在 [0,1]
+PASS 有食性吃得了的材料 30 种，含水率、干基饱腹、营养素（盐分项）无一缺失（缺 0 种）
+PASS 卷三甲例 8 碳水表的行集合恰是 M-19 的必填范围（byDigestible 或挂可食）30 行（表内 30 行；范围内表里没有的 0，表里有而范围外的 0）
+PASS 干草、秸秆、落叶三种饲料不挂可食组件类，仍在必填范围内且数值齐全
+PASS 牛粪饼没有任何食性吃得了（一审第 11 条：本源成分不再借记草本）
+diet_graze：eats 成立的材料 13 种，吃 1 kg 的能量摄入（satiety）算得出的 13 种，缺口 0 种；例：干草 11.98、茶叶 13.28、粟 12.24、鲜菜 0.99、夜帽菇 1.32、醪 2.81
+diet_piscivore：eats 成立的材料 3 种，吃 1 kg 的能量摄入（satiety）算得出的 3 种，缺口 0 种；例：肉 5.98、生河鱼 4.35、熟河鱼 5.93
+diet_omnivore：eats 成立的材料 26 种，吃 1 kg 的能量摄入（satiety）算得出的 26 种，缺口 0 种；例：岩盐 0.00、羊乳 2.88、乳酪 15.59、蛋（蛋液） 6.32、蜜 11.51、血 4.14
+diet_root：eats 成立的材料 13 种，吃 1 kg 的能量摄入（satiety）算得出的 13 种，缺口 0 种；例：干草 14.57、茶叶 16.15、粟 14.89、鲜菜 1.20、夜帽菇 1.61、醪 3.42
+PASS 辛 小计：各食性按卷四 T-4 的摄入全部算得出，缺口 0
+
+== 壬 碰线报告（只打印，不判失败） ==
+参考堆易燃度碰线或端点距门槛 0.5 小于 0.01 的 2 行：
+  mat_raw_silk 生丝：单件 [0.4381, 0.4524]（出处区间），成堆 + 0.0619 = [0.5000, 0.5143]，判碰线（未知，不算燃料，待标定）（依据：未知）；应得结果表预期燃料 否
+  mat_silk 丝绸：单件 [0.4381, 0.4524]（出处区间），成堆 + 0.0619 = [0.5000, 0.5143]，判碰线（未知，不算燃料，待标定）（依据：未知）；应得结果表预期燃料 否
+谷物候选（草本、部位为种子、可食、含水率不过上限、碳水与科过线）2 行；总能距 17 小于本行文献误差的 0 行
+谷物候选里查不到文献范围、无从比的 1 行：粟 18.8
+
+== 癸 纤维与木竹类：单件可燃 / 成堆可燃两栏（T-15；单件读向下最难方向的单件值；成堆先看直接证据，没有的加 reliefMax 推算，有出处区间的按区间比，碰线判未知不算燃料） ==
+PASS 纤维行与断言表一一对应：全集纤维行 10，表外 0，表里有而全集没有或不是纤维 0
+PASS 全集木竹类（本源成分为木质）5 行
+| 组别 | 代号 | 名称 | 单件易燃度 | 单件可燃 | 成堆易燃度（推算） | 成堆可燃 | 依据来源 | 警告清单 | 应得结果表预期燃料 |
+| 植物纤维 | mat_hemp_fiber | 麻纤维 | 0.4800 | 非燃料 | 0.5419 | 燃料 | 推算 | — | 是 |
+| 植物纤维 | mat_hemp_cord | 麻绳 | 0.4800 | 非燃料 | 0.5419 | 燃料 | 推算 | — | 是 |
+| 植物纤维 | mat_paper | 纸 | 0.7100 | 燃料 | 0.7719 | 燃料 | 推算 | 在 | 是 |
+| 植物纤维 | mat_cotton | 棉纤维 | [0.5595, 0.5714] | 燃料 | [0.6214, 0.6333] | 燃料 | 推算 | — | 是 |
+| 植物纤维 | mat_cotton_yarn | 棉纱 | [0.5595, 0.5714] | 燃料 | [0.6214, 0.6333] | 燃料 | 推算 | — | 是 |
+| 植物纤维 | mat_cotton_cloth | 棉布 | [0.5595, 0.5714] | 燃料 | [0.6214, 0.6333] | 燃料 | 推算 | — | 是 |
+| 动物纤维 | mat_raw_silk | 生丝 | [0.4381, 0.4524] | 非燃料 | [0.5000, 0.5143] | 碰线（未知，不算燃料，待标定） | 未知 | — | 否 |
+| 动物纤维 | mat_silk | 丝绸 | [0.4381, 0.4524] | 非燃料 | [0.5000, 0.5143] | 碰线（未知，不算燃料，待标定） | 未知 | — | 否 |
+| 动物纤维 | mat_felt | 毡 | 0.4000 | 非燃料 | 0.4619 | 非燃料 | 推算 | 在 | 否 |
+| 动物纤维 | mat_goat_hair | 山羊毛 | 0.4000 | 非燃料 | 0.4619 | 非燃料 | 推算 | 在 | 否 |
+| 木竹类 | mat_bamboo | 竹 | 0.4900 | 非燃料 | 0.5519 | 燃料 | 直接证据 | — | 是 |
+| 木竹类 | mat_oak | 橡木 | 0.4600 | 非燃料 | 0.5219 | 燃料 | 直接证据 | — | 是 |
+| 木竹类 | mat_elm | 榆木 | 0.4600 | 非燃料 | 0.5219 | 燃料 | 直接证据 | — | 是 |
+| 木竹类 | mat_wicker | 柳条 | 0.4600 | 非燃料 | 0.5219 | 燃料 | 推算 | — | 是 |
+| 木竹类 | mat_marsh_bark | 沼泽树皮 | 0.4600 | 非燃料 | 0.5219 | 燃料 | 推算 | — | 是 |
+| 动物纤维（演算，全集无行） | — | 绵羊毛（极限氧 23.6–25.2） | [0.4000, 0.4381] | 非燃料 | [0.4619, 0.5000] | 碰线（未知，不算燃料，待标定） | 未知 | — | — |
+PASS 羊毛（绵羊毛，按卷三乙 §4.1.5 引的文献值演算）单件非燃料、成堆碰线待标定；全集里没有这一行
+PASS 癸 小计：木竹类单件非燃料、成堆燃料；棉单件燃料；丝单件非燃料、成堆碰线待标定；山羊毛、毡非燃料且在警告清单；不符 0 行
+
+== 子 谷物名单（卷三乙 M-9 谷物一行，第六版七条件） ==
+正文：谷物 2 行（粟、麦）；七条件独立求得：mat_millet mat_wheat；派生规则算出：mat_millet mat_wheat；应得结果表：mat_millet mat_wheat
+PASS 判为谷物的恰是正文所列的 粟、麦：派生规则、七条件独立求值、应得结果表三方一致
+  菜籽油：挡住它的条件：本源成分草本植物质、部位为种子、干基碳水不低于 0.55（未知不过）、植物科为 pfam_poaceae（留空或未知不过）；派生规则不判谷物
+  酒：挡住它的条件：本源成分草本植物质、部位为种子、含水率不高于 0.15、干基碳水不低于 0.55（未知不过）、植物科为 pfam_poaceae（留空或未知不过）；派生规则不判谷物
+  烧酒：挡住它的条件：本源成分草本植物质、部位为种子、含水率不高于 0.15、干基碳水不低于 0.55（未知不过）、植物科为 pfam_poaceae（留空或未知不过）；派生规则不判谷物
+  醋：挡住它的条件：本源成分草本植物质、部位为种子、含水率不高于 0.15、干基总能不低于 17、干基碳水不低于 0.55（未知不过）、植物科为 pfam_poaceae（留空或未知不过）；派生规则不判谷物
+  醪：挡住它的条件：含水率不高于 0.15、干基碳水不低于 0.55（未知不过）；派生规则不判谷物
+  大豆：挡住它的条件：干基碳水不低于 0.55（未知不过）、植物科为 pfam_poaceae（留空或未知不过）；派生规则不判谷物
+  竹：挡住它的条件：本源成分草本植物质、部位为种子、可食、干基碳水不低于 0.55（未知不过）；派生规则不判谷物
+  竹炭：挡住它的条件：本源成分草本植物质、部位为种子、可食、干基总能不低于 17、干基碳水不低于 0.55（未知不过）、植物科为 pfam_poaceae（留空或未知不过）；派生规则不判谷物
+  全集里没有行、不查的：油菜籽、花生、荞麦、藜麦、苋籽、竹笋、竹叶、竹米
+PASS 菜籽油、酒、烧酒、醋、醪、大豆、竹的各行（2 行）都不是谷物，各有挡住它的条件，应得结果表也不列谷物（不符 0）
+PASS 大豆被碳水、植物科两条各自挡住（第六版裁定）
+PASS 不存在醪↔酒的谷物自生环：来料反应表无环（成环 0），醪到酒单向；没有哪个来料反应推出谷物（0）；醪、酒都不是谷物
+
+== 丑 燃料三来源：单件判定 / 成堆判定 / 依据来源（T-15 第 ⑤ 款直接证据优先，没有的按 ② 至 ④ 推算，推算碰线判未知） ==
+| 代号 | 名称 | 单件判定 | 成堆判定 | 依据来源 | 推算结论 | reliefMax 归 0 后成堆判定 | 燃料（含折合热量） | 应得结果表预期燃料 |
+| mat_resin | 松脂 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 是 | 是 |
+| mat_ghost_fire_oil | 鬼火油 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 否 | 否 |
+| mat_bamboo | 竹 | 非燃料 | 燃料 | 直接证据 bev_fao_bamboo_fuel | 燃料 | 燃料 | 是 | 是 |
+| mat_oak | 橡木 | 非燃料 | 燃料 | 直接证据 bev_uaex_firewood | 燃料 | 燃料 | 是 | 是 |
+| mat_elm | 榆木 | 非燃料 | 燃料 | 直接证据 bev_uaex_firewood | 燃料 | 燃料 | 是 | 是 |
+| mat_wicker | 柳条 | 非燃料 | 燃料 | 推算 | 燃料 | 非燃料 | 是 | 是 |
+| mat_charcoal | 木炭 | 燃料 | 燃料 | 直接证据 bev_fao_charcoal | 燃料 | 燃料 | 是 | 是 |
+| mat_bamboo_charcoal | 竹炭 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 是 | 是 |
+| mat_thunderstruck_char | 雷击木炭 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 是 | 是 |
+| mat_leather | 熟皮 | 非燃料 | 非燃料 | 推算 | 非燃料 | 非燃料 | 否 | 否 |
+| mat_rawhide | 生皮 | 非燃料 | 非燃料 | 推算 | 非燃料 | 非燃料 | 否 | 否 |
+| mat_sheepskin | 羊皮 | 非燃料 | 非燃料 | 推算 | 非燃料 | 非燃料 | 否 | 否 |
+| mat_raw_silk | 生丝 | 非燃料 | 碰线（未知，不算燃料，待标定） | 未知 | 碰线（未知，不算燃料，待标定） | 非燃料 | 否 | 否 |
+| mat_silk | 丝绸 | 非燃料 | 碰线（未知，不算燃料，待标定） | 未知 | 碰线（未知，不算燃料，待标定） | 非燃料 | 否 | 否 |
+| mat_hemp_fiber | 麻纤维 | 非燃料 | 燃料 | 推算 | 燃料 | 非燃料 | 是 | 是 |
+| mat_hemp_cord | 麻绳 | 非燃料 | 燃料 | 推算 | 燃料 | 非燃料 | 是 | 是 |
+| mat_paper | 纸 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 是 | 是 |
+| mat_dry_grass | 干草 | 燃料 | 燃料 | 直接证据 bev_nebraska_keeping_warm | 燃料 | 燃料 | 是 | 是 |
+| mat_tea_leaf | 茶叶 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 是 | 是 |
+| mat_black_powder | 黑火药 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 否 | 否 |
+| mat_test_blast | 测试爆燃料 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 否 | 否 |
+| mat_sulfur | 硫磺 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 否 | 否 |
+| mat_camphor | 樟脑 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 是 | 是 |
+| mat_felt | 毡 | 非燃料 | 非燃料 | 推算 | 非燃料 | 非燃料 | 否 | 否 |
+| mat_goat_hair | 山羊毛 | 非燃料 | 非燃料 | 推算 | 非燃料 | 非燃料 | 否 | 否 |
+| mat_fat | 动物脂肪（肥膘） | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 是 | 是 |
+| mat_marsh_bark | 沼泽树皮 | 非燃料 | 燃料 | 推算 | 燃料 | 非燃料 | 是 | 是 |
+| mat_beeswax | 蜂蜡 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 是 | 是 |
+| mat_butter | 酥油 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 是 | 是 |
+| mat_dung_cake | 牛粪饼 | 燃料 | 燃料 | 直接证据 bev_fao_ubet | 燃料 | 燃料 | 是 | 是 |
+| mat_coal | 煤 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 是 | 是 |
+| mat_tung_oil | 桐油 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 是 | 是 |
+| mat_coke | 焦炭 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 是 | 是 |
+| mat_spirits | 烧酒 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 是 | 是 |
+| mat_rapeseed_oil | 菜籽油 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 是 | 是 |
+| mat_tallow | 牛油（炼过） | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 是 | 是 |
+| mat_natural_gas | 火井气 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 是 | 是 |
+| mat_bitumen | 沥青 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 是 | 是 |
+| mat_cotton | 棉纤维 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 是 | 是 |
+| mat_cotton_yarn | 棉纱 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 是 | 是 |
+| mat_cotton_cloth | 棉布 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 是 | 是 |
+| mat_straw | 秸秆 | 燃料 | 燃料 | 直接证据 bev_fao_straw_residue | 燃料 | 燃料 | 是 | 是 |
+| mat_leaf_litter | 落叶 | 燃料 | 燃料 | 推算 | 燃料 | 燃料 | 是 | 是 |
+依据来源：直接证据 7 行，推算 34 行，未知 2 行（可燃材料共 43 行）
+PASS 丑 逐行：直接证据行成堆燃料且 reliefMax 归 0 结论不变；未登记行等于推算；单件不受证据影响；燃料与应得结果表一致（不符 0 行）
+PASS 依据为直接证据的行恰是卷三乙 §4.1.5 列出、卷三甲例 10 登记的 7 行（算出 7：竹、橡木、榆木、木炭、干草、牛粪饼、秸秆）
+PASS 依据为未知的行恰是卷三乙 §4.1.5 列出的推算碰线行（算出 2：生丝、丝绸）
+PASS 橡木、竹成堆燃料且依据直接证据；柳条、沼泽树皮依据推算、成堆燃料（同类证据不算）；雷击木炭依据推算或未知（证据不随继承带下来）（不符 0）
+----
+合计：全集 93 种；推错 0 种；测试温度 20 例错 0；选料错 0；落空 0 种；双归 0 种；同输入不同预期 0 组；N-2 缺口 0；碰线（只报）易燃 2 行、谷物 0 行；纤维木竹两栏不符 0 行；燃料三来源不符 0 行（直接证据 7、推算 34、未知 2）；未通过断言 0 项
+
+===== node F:/dnd-tmp/vols/check-卷三-整类.mjs   exit=0
+PASS 甲1 行上手写的 class 族类别 0 处（卷三甲 1403 行、卷三乙 2944 行逐行扫，未排除任何行；查到成员声明 29 处，其中带 class 族条目 0 处）
+PASS 甲2 数据行里的偏离字段（任何 …Deviation 取值）0 处
+PASS 甲2 维度表、词表、规则表里没有偏离字段、原因代号族、偏离上限的登记行
+PASS 甲2 数据行里显式写经济大类 0 处
+PASS 甲3 派生来源表 2 张（材料一张、物品一张，都在卷三乙）
+PASS 甲3 两卷正文引用到的类别代号 23 个，都在派生来源表里（扩展性测试自带派生条件的 class_test_ 条目除外）；没有来源的 0 个
+     有来源的类别：class_bone class_ceramic class_char class_fabric class_fat class_flesh class_formed class_fuel class_glass class_grain class_incense class_leather class_metal class_mineral class_paper class_plant class_powder class_salt class_stone class_vessel class_wood
+     被引用的类别：class_bone class_ceramic class_char class_fabric class_fat class_flesh class_formed class_fuel class_glass class_grain class_incense class_leather class_metal class_mineral class_paper class_plant class_powder class_salt class_stone class_test_ class_test_lamp_oil class_vessel class_wood
+     需求块选择器里的类别引用（读，不是声明）：4 处
+PASS 甲3 派生来源表与引用里没有物态类（固态类、液态类两个代号 0 处）
+PASS 乙1 赃物份额写者的单点定义恰有 1 段（卷三乙 §3.3 表后）
+PASS 乙1 §3.3 唯一写者表里赃物份额的状态路径只占 1 行，写者栏只有账本模块一个（第 414 行：kernel/ledger.mjs）
+PASS 乙1 卷三乙单点定义之外，没有哪一行把赃物份额交给账本以外的模块（命中 0 处）
+PASS 乙1 卷三乙单点定义之外，没有"经声明写者写赃物份额"的说法（命中 0 处）
+PASS 乙2 全书其余 31 卷里提到赃物份额 20 行，其中写入点 0 处（命中 0 处）
+     扫描的卷：卷一 卷七 卷三甲 卷九 卷二 卷二十 卷二十一 卷二十七 卷二十三 卷二十九 卷二十二 卷二十五 卷二十八 卷二十六 卷二十四 卷五 卷八 卷八b 卷六 卷十 卷十一 卷十七 卷十三 卷十九 卷十二 卷十五 卷十八 卷十六 卷十四 卷四 卷零
+PASS 丙1 全集核对脚本退出码 0，未通过断言 0 项
+     合计：全集 93 种；推错 0 种；测试温度 20 例错 0；选料错 0；落空 0 种；双归 0 种；同输入不同预期 0 组；N-2 缺口 0；碰线（只报）易燃 2 行、谷物 0 行；纤维木竹两栏不符 0 行；燃料三来源不符 0 行（直接证据 7、推算 34、未知 2）；未通过断言 0 项
+PASS 丙2 全集表覆盖两卷出现的全部材料：两卷全文出现 93 种，表内 93 行，表外漏掉 0 种
+PASS 丙3 手写的派生大类 0 处（全集表本源成分栏里的大类代号 0 处，两卷数据行里手写 categories 0 处）
+PASS 丙4 第四版缺口甲的 15 种材料都有分解点、没有熔点（按分解点判，任何温度下为固），密度填在固态栏（未满足 0 种）
+PASS 丁1 聚集形态登记在物品表（卷三乙 §2.2，1 行），卷三甲材料表与卷三乙材料派生量表都没有这一维（0 行），材料数据行里写它的 0 处
+PASS 丁2 物品模板例子 20 条都写了聚集形态的固定代号（缺 0 条）
+----
+结果：全部通过
+
+[stderr]
+卷末已贴输出与本次一致：否
+
+===== node F:/dnd-tmp/vols/check-卷三-读取者.mjs   exit=0
+PASS §2.6 物性格读取登记表解析到 3 个读取者
+     byReader 字段：insulation、breathabilityBase；材料全集 93 行；逐格表 36 格
+PASS §2.6 第 1 行判定引用的代号都有定义
+PASS §2.6 第 1 行读的物性格都是 §2.1 的 byReader 字段
+PASS §2.6 第 2 行判定引用的代号都有定义
+PASS §2.6 第 2 行读的物性格都是 §2.1 的 byReader 字段
+PASS §2.6 第 3 行判定引用的代号都有定义
+PASS §2.6 第 3 行读的物性格都是 §2.1 的 byReader 字段
+     第 1 行：挂 comp_wearable 的物品模板 item_ox_yoke、item_pack_pannier、item_sheepskin_coat、item_silk_robe、item_horse_barding
+PASS §2.6 第 1 行材料行判定可求值
+     第 2 行：rules.health.thermal.coverDepth = 1；物种组织映射 tissue_stone→mat_granite；身体图 tissueOverride 无数据
+PASS §2.6 第 2 行材料行判定可求值
+PASS §2.6 第 3 行 req_dressing 的派生大类 matcat_textile 有定义
+     第 3 行：req_dressing 第 0 组 接受 mat_silk、mat_hemp_cord、mat_felt、mat_cotton_yarn、mat_cotton_cloth
+PASS §2.6 第 3 行材料行判定可求值
+PASS ① 派生必填 19 格都非 null
+     派生必填：mat_elm.insulation、mat_elm.breathabilityBase、mat_rawhide.insulation、mat_rawhide.breathabilityBase、mat_wicker.insulation、mat_wicker.breathabilityBase、mat_sheepskin.insulation、mat_sheepskin.breathabilityBase、mat_silk.insulation、mat_silk.breathabilityBase、mat_wrought_iron.insulation、mat_wrought_iron.breathabilityBase、mat_leather.insulation、mat_leather.breathabilityBase、mat_granite.insulation、mat_hemp_cord.breathabilityBase、mat_felt.breathabilityBase、mat_cotton_yarn.breathabilityBase、mat_cotton_cloth.breathabilityBase
+WARN ② 非 null 而没有读取者读的格 3 个：mat_felt.insulation、mat_cotton_yarn.insulation、mat_cotton_cloth.insulation
+读取者派生检查：失败 0
+
+===== node F:/dnd-tmp/vols/check-卷三-成分.mjs   exit=0
+PASS 子0 本源成分词表只登记在卷三甲，派生大类词表只登记在卷三乙（没有两卷各写一遍）
+PASS 子1 第五版快照里手写的成分大类 16 项（读自 版本快照/卷三-v5.md 的词表行）
+     木质 石质 金属 织物 皮革 骨角 陶瓷 玻璃 纸 蜡脂 液体 谷物 肉类 植物 矿物 超自然
+PASS 子2 归属表 16 行，与十六项一一对应（漏 0 项，多 0 项，重复 0 项）
+PASS 子3 每项的归属都是"规则推出"或"基础维度"二者之一（不合 0 项）
+PASS 子3 每项都写了理由（缺或不足十字的 0 项）
+PASS 子4 标"规则推出"的 7 项，每项在卷三乙正文里都有一条推导规则（派生大类条件表，或当时物态的唯一定义；缺 0 项）
+     规则推出：液体→matter_liquid 蜡脂→matcat_wax_fat 谷物→matcat_grain 织物→matcat_textile 纸→matcat_paper 陶瓷→matcat_ceramic 超自然→matcat_supernatural
+PASS 子5 标"基础维度"的 9 项，每项对到卷三甲本源成分词表里的一个固定代号，互不重复（不在词表 0 项，重复 0 项）
+     基础维度：金属→subst_metal 石质→subst_stone 矿物→subst_mineral 玻璃→subst_glass 木质→subst_wood 植物→subst_plant 皮革→subst_hide 骨角→subst_bone 肉类→subst_flesh
+PASS 子6 合计：规则推出 7 项，基础维度 9 项，共 16 项
+PASS 丑1 本源成分词表 12 项，派生大类词表 8 项，两边没有同义条目（代号后缀相同 0 个，中文名相同 0 个）
+     本源成分：subst_metal subst_stone subst_mineral subst_glass subst_wood subst_plant subst_fiber subst_hide subst_bone subst_flesh subst_water subst_animal_product
+     派生大类：matcat_char matcat_wax_fat matcat_volatile_fuel matcat_grain matcat_textile matcat_paper matcat_ceramic matcat_supernatural
+PASS 丑2 派生大类条件表 8 条，与词表逐项对应（词表里没条件的 0 项，有条件没登记的 0 项）
+PASS 丑2 没有只读本源成分、等于换名重写一遍的派生大类（命中 0 条）
+PASS 丑3 材料类别的两条来源互不相交：本源成分给 9 个，派生大类给 6 个，出自两条来源的 0 个；第三条来源（物态类的规则表）0 处；来源表与核对值表所列类别一致（差 0 个）
+PASS 丑4 数据行里手写 categories 0 处（卷三甲 1403 行、卷三乙 2944 行逐行扫，未排除任何行；命中 0 处）
+PASS 丑4 数据行里写 substance 的 9 行，每行只有一个值；两卷全文的 subst_ 代号都在封闭词表里（一行多值 0 处，词表外代号 0 个）
+PASS 丑4 两卷全文的 matcat_ 代号都是派生大类；第五版成分大类的旧代号 0 处（词表外代号 0 个）
+PASS 丑5 卷三甲全集表 93 行：本源成分栏里写派生大类的 0 行，表里的派生结果列 0 个；卷三乙应得结果表 93 行：推出栏里出现本源成分代号的 0 行（既有本源成分又另推出派生大类的 16 行，两者说的不是一件事）
+PASS 丑6 substance 只登记在卷三甲材料表（1 行；卷三乙材料派生量、物品、实例、批次各表 0 行）；categories 只在卷三乙登记、为派生（卷三甲 0 行）
+PASS 寅1 手写的 class 族类别仍为 0（整类核对甲组 7 项全过）
+     PASS 甲1 行上手写的 class 族类别 0 处（卷三甲 1403 行、卷三乙 2944 行逐行扫，未排除任何行；查到成员声明 29 处，其中带 class 族条目 0 处）
+     PASS 甲2 数据行里的偏离字段（任何 …Deviation 取值）0 处
+     PASS 甲2 维度表、词表、规则表里没有偏离字段、原因代号族、偏离上限的登记行
+     PASS 甲2 数据行里显式写经济大类 0 处
+     PASS 甲3 派生来源表 2 张（材料一张、物品一张，都在卷三乙）
+     PASS 甲3 两卷正文引用到的类别代号 23 个，都在派生来源表里（扩展性测试自带派生条件的 class_test_ 条目除外）；没有来源的 0 个
+     PASS 甲3 派生来源表与引用里没有物态类（固态类、液态类两个代号 0 处）
+PASS 寅2 赃物份额仍只有一个写者（整类核对乙组 5 项全过）
+     PASS 乙1 赃物份额写者的单点定义恰有 1 段（卷三乙 §3.3 表后）
+     PASS 乙1 §3.3 唯一写者表里赃物份额的状态路径只占 1 行，写者栏只有账本模块一个（第 414 行：kernel/ledger.mjs）
+     PASS 乙1 卷三乙单点定义之外，没有哪一行把赃物份额交给账本以外的模块（命中 0 处）
+     PASS 乙1 卷三乙单点定义之外，没有"经声明写者写赃物份额"的说法（命中 0 处）
+     PASS 乙2 全书其余 31 卷里提到赃物份额 20 行，其中写入点 0 处（命中 0 处）
+PASS 寅3 全集材料逐种重算仍全过（整类核对丙组 4 项），整类核对退出码 0
+----
+结果：全部通过
+
+[stderr]
+卷末已贴输出与本次一致：否
+
+===== node F:/dnd-tmp/vols/check-卷三-实得能量.mjs   exit=0
+== 读入 ==
+卷四食性条目 4 条（带 fiberPenalty 的：diet_graze=0.88，diet_root=1.88）；食性配置：人=diet_omnivore，牛=diet_graze，猪=diet_omnivore+diet_root
+卷三甲纤维含量表 30 行
+PASS 人、牛、猪的食性配置读得出，引用的食性条目都在
+PASS 六种吃食在卷三甲全集里都有干基总能、含水率与来源类别
+
+== 实得能量（每千克干物质，MJ）= 干基总能 × 利用比例；利用比例 = 吸收率 − fiberPenalty × 纤维含量（卷四 §2.4、T-4 第八版） ==
+物种 | 吃食 | 干基总能 | 纤维含量 | 纤维依据 | 取用食性 | 吸收率 | fiberPenalty | 利用比例 | 实得 | 资料参考 | 参考出处 | 差 | 相对误差
+人 | 粮食（粟） | 18.8 | 0.089 | 纤:饲 | diet_omnivore | 0.8 | — | 0.8000 | 15.04 | 17.3 | USDA169702 | -2.26 | -13%
+人 | 肉 | 26.7 | 0 | 纤:定 | diet_omnivore | 0.82 | — | 0.8200 | 21.89 | 21.1 | FAO-肉 | +0.79 | 4%
+人 | 油（菜籽油） | 39.5 | 0 | 纤:定 | diet_omnivore | 0.94 | — | 0.9400 | 37.13 | 37.0 | FAO-油 | +0.13 | 0%
+人 | 干草 | 18.4 | 0.3 | 纤:饲 | （不可食） | — | — | — | 0.00 | 未核到 | — | 不比 | —
+人 | 秸秆 | 18 | 0.415 | 纤:饲 | （不可食） | — | — | — | 0.00 | 未核到 | — | 不比 | —
+人 | 木头（橡木） | 19.8 | — | — | （不可食） | — | — | — | 0.00 | 未核到 | — | 不比 | —
+牛 | 粮食（粟） | 18.8 | 0.089 | 纤:饲 | diet_graze | 0.74 | 0.88 | 0.6617 | 12.44 | 未核到 | — | 不比 | —
+牛 | 肉 | 26.7 | 0 | 纤:定 | （不可食） | — | — | — | 0.00 | 0.0 | 定义 | +0.00 | 0
+PASS 牛不采食肉：实得为 0
+牛 | 油（菜籽油） | 39.5 | 0 | 纤:定 | （不可食） | — | — | — | 0.00 | 0.0 | 定义 | +0.00 | 0
+PASS 牛不采食油（菜籽油）：实得为 0
+牛 | 干草 | 18.4 | 0.3 | 纤:饲 | diet_graze | 0.74 | 0.88 | 0.4760 | 8.76 | 8.9 | FP11990 | -0.14 | -2%
+牛 | 秸秆 | 18 | 0.415 | 纤:饲 | diet_graze | 0.74 | 0.88 | 0.3748 | 6.75 | 6.8 | FP12758 | -0.05 | -1%
+牛 | 木头（橡木） | 19.8 | — | — | （不可食） | — | — | — | 0.00 | 未核到 | — | 不比 | —
+猪 | 粮食（粟） | 18.8 | 0.089 | 纤:饲 | diet_omnivore | 0.8 | — | 0.8000 | 15.04 | 13.8 | FP12108 | +1.24 | 9%
+猪 | 肉 | 26.7 | 0 | 纤:定 | diet_omnivore | 0.82 | — | 0.8200 | 21.89 | 未核到 | — | 不比 | —
+猪 | 油（菜籽油） | 39.5 | 0 | 纤:定 | diet_omnivore | 0.94 | — | 0.9400 | 37.13 | 32.10–37.25 | AJAS-豆油 | +0.00 | 0%
+猪 | 干草 | 18.4 | 0.3 | 纤:饲 | diet_root | 0.9 | 1.88 | 0.3360 | 6.18 | 未核到 | — | 不比 | —
+猪 | 秸秆 | 18 | 0.415 | 纤:饲 | diet_root | 0.9 | 1.88 | 0.1198 | 2.16 | 2.0 | FP12758 | +0.16 | 8%
+猪 | 木头（橡木） | 19.8 | — | — | （不可食） | — | — | — | 0.00 | 未核到 | — | 不比 | —
+
+== 误差汇总（"定义"为 0 的两项不计；"不比"的 8 项不计：人吃干草、人吃秸秆、人吃木头（橡木）、牛吃粮食（粟）、牛吃木头（橡木）、猪吃肉、猪吃干草、猪吃木头（橡木）） ==
+绝对误差最大：人吃粮食（粟），实得 15.04，资料 17.3，差 -2.26 MJ/kg 干物质
+相对误差最大（资料值不小于 2 的各项里）：人吃粮食（粟），实得 15.04，资料 17.3，偏 -13%
+差不超过"1 MJ 或 15%"的 8 项，超过的 0 项
+说明：猪吃粮取到的是杂食食性（与人共用、不扣纤维）的吸收率，拱食食性按纤维扣减后的值较小未被取用（卷四 §4.7.5 记为未解决，卷三甲 §8 Q-A12）。本脚本如实列出，不调数据去凑。
+PASS 人吃干草、秸秆、木头实得为 0
+PASS 牛吃干草的实得与资料代谢能相差不到 0.5 MJ（吸收率 = 代谢能 ÷ 总能，按纤维扣减）
+PASS 干草与粮食的干基总能相近（总能与物种无关，差别在吸收率）
+PASS 人吃粮、肉、油的实得落在真实量级内
+PASS 凡要按纤维扣减的吃食，卷三甲纤维含量表里都有值
+----
+合计：8 项计入误差，8 项未核到不比；未通过断言 0 项
+
+===== node F:/dnd-tmp/vols/check-卷九.mjs   exit=0
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首署名行
+PASS 1c 没有残留的续写标记
+PASS 2 十九个子系统各六小节齐全
+PASS 3 数据实例至少三条，含非西陲、含非人类或超自然
+PASS 4 验收断言三式齐全且有编号
+PASS 5 规则与正文无具体 id 字面量
+PASS 6 无用于判断的描述性文本
+PASS 7 台账各概念写全（标题、关键代号、每节有规则且编号连续）
+PASS 8 跨卷引用带标题；规则与断言编号引用不悬空
+PASS 9 json 代码块可解析（2 块） — bad=0
+PASS 10 红线：不读墙钟、除数有下界或为 0 分支、存法与去留登记、不读事件日志
+PASS 11 数据实例算术与余数结转复算（25 项加 5 组余数）
+PASS 12 接口、入口表、规则表键、错误码、枚举、槽位表、迁移清单落实
+PASS 13 来路无关、默认不开模型、拒收三不条文在位
+行数 1691；子系统 19；规则条数 174；json 块 2；待补清单 10 条；失败项 0
+
+===== node F:/dnd-tmp/vols/check-卷二十.mjs   exit=0
+通过  §0 存在
+通过  §1 存在
+通过  §2 存在
+通过  §3 存在
+通过  §4 存在
+通过  §5 存在
+通过  §6 存在
+通过  §7 存在
+通过  §8 存在
+通过  附 术语与代号表 存在
+通过  子系统数 = 11  实际 11
+通过  4.1 六小节齐全
+通过  4.1 数据实例 ≥ 3，含非西陲与非人类/超自然  条数 3
+通过  4.1 验收三式齐全
+通过  4.2 六小节齐全
+通过  4.2 数据实例 ≥ 3，含非西陲与非人类/超自然  条数 3
+通过  4.2 验收三式齐全
+通过  4.3 六小节齐全
+通过  4.3 数据实例 ≥ 3，含非西陲与非人类/超自然  条数 3
+通过  4.3 验收三式齐全
+通过  4.4 六小节齐全
+通过  4.4 数据实例 ≥ 3，含非西陲与非人类/超自然  条数 3
+通过  4.4 验收三式齐全
+通过  4.5 六小节齐全
+通过  4.5 数据实例 ≥ 3，含非西陲与非人类/超自然  条数 3
+通过  4.5 验收三式齐全
+通过  4.6 六小节齐全
+通过  4.6 数据实例 ≥ 3，含非西陲与非人类/超自然  条数 3
+通过  4.6 验收三式齐全
+通过  4.7 六小节齐全
+通过  4.7 数据实例 ≥ 3，含非西陲与非人类/超自然  条数 3
+通过  4.7 验收三式齐全
+通过  4.8 六小节齐全
+通过  4.8 数据实例 ≥ 3，含非西陲与非人类/超自然  条数 3
+通过  4.8 验收三式齐全
+通过  4.9 六小节齐全
+通过  4.9 数据实例 ≥ 3，含非西陲与非人类/超自然  条数 3
+通过  4.9 验收三式齐全
+通过  4.10 六小节齐全
+通过  4.10 数据实例 ≥ 3，含非西陲与非人类/超自然  条数 3
+通过  4.10 验收三式齐全
+通过  4.11 六小节齐全
+通过  4.11 数据实例 ≥ 3，含非西陲与非人类/超自然  条数 3
+通过  4.11 验收三式齐全
+通过  规则与入口正文无具体 id 字面量
+通过  正文无用于判断的中英文描述性文本
+通过  台账概念「调度器」在 4.1 写全  规则小节 33 行
+通过  台账概念「到期语义」在 4.1 写全  规则小节 33 行
+通过  台账概念「历法」在 4.2 写全  规则小节 24 行
+通过  台账概念「周期日」在 4.2 写全  规则小节 24 行
+通过  台账概念「天气状态」在 4.3 写全  规则小节 23 行
+通过  台账概念「季节词表」在 4.4 写全  规则小节 12 行
+通过  台账概念「温度」在 4.5 写全  规则小节 35 行
+通过  台账概念「热交换」在 4.5 写全  规则小节 35 行
+通过  台账概念「水循环」在 4.6 写全  规则小节 17 行
+通过  台账概念「环境场」在 4.7 写全  规则小节 37 行
+通过  台账概念「光」在 4.8 写全  规则小节 22 行
+通过  台账概念「声」在 4.8 写全  规则小节 22 行
+通过  台账概念「气味」在 4.8 写全  规则小节 22 行
+通过  台账概念「灾异」在 4.9 写全  规则小节 18 行
+通过  台账概念「世界节奏」在 4.10 写全  规则小节 11 行
+通过  §2–§4 未出现别卷概念的字段名（弱检查，仍须人工审）
+通过  算例 历法闰周期 6929 日 235 月
+通过  算例 纯朔望历年漂移 10.68 日
+通过  算例 到期 3 日 = 4320 分
+通过  算例 室内稳态 15 度
+通过  算例 海拔修正 -13 度
+通过  算例 水塘期末 370000 升
+通过  算例 场衰减 33.75
+通过  算例 照度 19.89
+通过  算例 声 50 分贝
+通过  算例 日照：纬度 70 冬至 0 分、纬度 35 冬至约 579 分、分点 720 分  35 度冬至 578.6
+通过  算例 积温 25
+通过  算例 季节项：最冷在相位 5/6（冬至后 1/12 年）、最暖在 1/3
+通过  算例 季节项：数值扫描的最冷相位 = 5/6  扫描得 0.8333
+通过  算例 季节项：春分 −0.5、秋分 +0.5、冬至 −0.866 倍半幅
+通过  算例 隘口冬至 −9.66 度、最冷 −11 度
+通过  算例 不置闰历法年长 360 日
+通过  全文（含附录）不再出现 8 个退役用语（清单在脚本内，含序号类抽签键用语）
+通过  抽取键五段格式写入正文
+通过  §7.2 甲表列出 32 个文件  实际 32
+通过  §7.2 乙列出 7 个文件  实际 7
+通过  §7 列入 scheduler.mjs:46
+通过  §7 列入 character.mjs:29
+通过  §7 列入 world/meta/rules.json
+通过  §7 列入 localSightClear
+通过  §7 列入 derived.mjs:247
+通过  §7 列入 config_set
+通过  T-3 写成"除日历模块外，禁止对时间值做年月日算术"
+通过  附录丙 记账栏、附录丁 影响面表 存在
+通过  第三版 §2.0 存在，四类各有一行定义
+通过  第三版 四类的定义行只在 §2.0（别处无同名表行）
+通过  第三版 N1 旧口径已清（修正项不再写成纯函数的参数；粒度不再自带纯函数定义）
+通过  第三版 N2 旧口径已清（静态不再写成"存储值或只由存储值派生"）
+通过  第三版 N3 热源依赖四条，含卷三燃烧
+通过  第三版 N4 T-3 豁免四个文件，含周期日求值器
+通过  第三版 §8 问题 1 已回填裁定
+通过  第三版 §4.2.5 已回填裁定
+通过  算例 闰年 383 日
+通过  第三版 §2.7 并入两个气候键，定义方卷二十
+通过  第三版 卷五的年均温维度不再被引用
+通过  第三版 地下基准温度只在一处定义
+通过  算例 地火洞穴 8.9 度
+通过  第三版 洞穴不再写成围护
+通过  第三版 光照算法三项只在一处定义
+通过  第三版 附录丁有本轮各行
+通过  第四版 §5.4 两卷接口表存在且只有一节
+通过  第四版 P-1 分工不再指向卷五（无"卷五 §4.5 规则 3"）
+通过  第四版 分支规则四行，§4.5.3 仍是 6 条
+通过  第四版 R1 修正项分两种，有常态值一栏
+通过  第四版 R2 静态按行判，分建行写者与改写写者
+通过  第四版 R3 combustionFed 一行；地点热源功率只定义一处
+通过  第四版 体感式不再把露天比例乘两次
+通过  第四版 R4 开口采光加地下条件，外侧地点按包含树
+通过  第四版 R5 声过边曲线在 openness 为 1 时为 0；跨越围护只扣隔声量
+通过  第四版 R6 照度纯函数的条件改为人工光源项为零
+通过  第四版 R7 rx 变量域有 calendar.weekDays
+通过  第四版 R8 不变量 ⑥ 改为比较常年气温
+通过  第四版 天气频度在单元行，不在群落行
+通过  第四版 水体地物字段不在本卷组件表；取水只经卷五 take
+通过  第四版 白名单列入存量的两个修正目标键，去掉作物生长系数
+通过  第四版 取用方法行可挂 emits；propagate 的 sourceLevel 可空
+通过  第四版 卷五不登记环境键（不再写"只登记表头"）
+通过  第四版 §8 与卷五的对齐项已清（无"请卷五回填"）
+通过  第四版 附录丁有本轮各行
+通过  第五版 V-1 路径读卷五的几何最短路，并列取法不在本卷（点光的距离见第六版裁定 1）
+通过  第五版 V-4、V-5 水体必有账户；污染物随带转出在写者表登记
+通过  第五版 V-6 辐射热项三支同一式，不再有"围护一支取 0"
+通过  第五版 V-7 到达量取沿路与直穿中大的一个；删边致不连通不会更响（第六版起不连通为未知）
+通过  第五版 V-8 推论 5 给出行范围的三种处置；粒度栏注明只对范围之外的行成立
+通过  第五版 V-9 推论 4 分栏规则；递推输入不接受数据行修正项
+通过  第五版 V-10 白名单每项带 forecast；只在结算时读的目标条件可读当前维度
+通过  第五版 §2.0 写明五条推论，条号 1 至 5 各一条
+通过  第五版 接口项不在 §5.4 之外重列（组件类分工、几何量、水体地物改引编号）
+通过  第五版 附录丁有本轮各行与牵连清单
+通过  第五版 附录丙记入新一轮小项与作者自记
+通过  第六版 标题已改为第十版（第六版至第九版专项各条仍在下面逐条查）
+通过  第六版 裁定 1 光与声的距离都读卷五 §4.1 规则 5 的距离，本卷不另算
+通过  第六版 裁定 1 正文不再有直线距离
+通过  第六版 裁定 2 去程回程同一条路径（定序只在卷五），本卷有对称的不变量
+通过  第六版 裁定 3 propagate 返回未知是一条通则；两地不连通到达量为未知
+通过  第六版 附录丁有本轮三行、牵连清单与说明；附录丙有第六版自记
+通过  第七版 §8 第 15 条：透过实墙的声光传播待专门设计，本卷不含，不加规则（第八版措辞）
+通过  第七版 距离与"无路相通为未知"保持第六版现状（正文没有墙体透声透光的新规则）
+通过  第七版 R-2 全文（含附录丁的牵连清单）不再有"一对地点只许一条边"的旧口径
+通过  第七版 R-2 本卷不另写边的唯一性与定序（只在卷五）
+通过  第七版 附录丁有本轮三行、第七版牵连清单与说明
+通过  第八版 N-1 场蔓延：一对相邻地点只算一个目标，读 openness 最大的那条边，通则引卷五 §4.1 规则 4
+通过  第八版 N-1 声音沿路过边同样取最大的 openness，距离仍取路径的
+通过  第八版 N-1 平行边的通则不在本卷另写（只在卷五）
+通过  第八版 N-2 §8 第 15 条与直穿项对齐：两地无路相通时透过实体的传播与按墙体材料定量待设计，现直穿项只用 solidLossDb
+通过  第八版 N-3 牵连清单卷十一行改为照卷五规则 2 执行；卷八一行保留
+通过  第八版 附录丁有本轮三行、第八版牵连清单（含卷十九一行）与说明
+通过  第九版 卷首有起草与审查的模型档位一行
+通过  第九版 清单 20-1 分配取整的余数不再待卷六定，引卷二 §3.3 第 3 条（末份取差；分次领取按顺序照累计量分摊）
+通过  第九版 清单 20-2 场实例存锚点 struct:stockAnchor，stockMode: anchor，value 在 10⁸ 标度写入；不再用 fieldInstance 作存储类型
+通过  第九版 清单 20-2 蔓延分配按拆分末份取差，各目标之和与蔓延出逐位相等
+通过  第九版 扩展标度误差界按新口径（误差量按语法树递推）写成确定式：闭式读数、压制、蔓延出、蔓延入、一次写入与累计
+通过  第九版 行改挂：parent 与位置量在改挂行范围内的行上不是静态；推论 5 不另列例外；离场行的环境读作未知
+通过  第九版 材料数值读法：四处熔点都写明经 materialView 读有效值
+通过  第九版 毁田的通路：两个键不作用于在田作物，毁田只经卷二十五 clearCultivation 并带毁因代号，白名单列毁田请求
+通过  第九版 verb_pace_set 写明登记族、载荷与发出方，并收入 §5.1、§5.2
+通过  第九版 附录丁有本轮各行、第九版牵连清单、说明与两点已批新增设计的补记
+正文行数（不含附录乙）1305；全文行数 1857；子系统 11；开放问题 17
+结论：全部通过
+
+===== node F:/dnd-tmp/vols/check-卷二十三.mjs   exit=0
+PASS 卷首模型行
+PASS 状态行
+PASS §0 存在
+PASS §1 存在
+PASS §2 存在
+PASS §3 存在
+PASS §4 存在
+PASS §5 存在
+PASS §6 存在
+PASS §7 存在
+PASS §8 存在
+PASS 附 术语与代号表
+PASS 附 待补清单
+PASS §4.1 存在
+PASS §4.1.1 维度
+PASS §4.1.2 统一入口
+PASS §4.1.3 规则
+PASS §4.1.4 交互
+PASS §4.1.5 数据实例
+PASS §4.1.6 验收断言
+PASS §4.1 数据实例 ≥ 3（实有 4）
+PASS §4.1 有非西陲实例
+PASS §4.1 有非人类或超自然实例
+PASS §4.1 断言含【扫描】
+PASS §4.1 断言含【不变量】
+PASS §4.1 断言含【扩展性】
+PASS §4.2 存在
+PASS §4.2.1 维度
+PASS §4.2.2 统一入口
+PASS §4.2.3 规则
+PASS §4.2.4 交互
+PASS §4.2.5 数据实例
+PASS §4.2.6 验收断言
+PASS §4.2 数据实例 ≥ 3（实有 4）
+PASS §4.2 有非西陲实例
+PASS §4.2 有非人类或超自然实例
+PASS §4.2 断言含【扫描】
+PASS §4.2 断言含【不变量】
+PASS §4.2 断言含【扩展性】
+PASS §4.3 存在
+PASS §4.3.1 维度
+PASS §4.3.2 统一入口
+PASS §4.3.3 规则
+PASS §4.3.4 交互
+PASS §4.3.5 数据实例
+PASS §4.3.6 验收断言
+PASS §4.3 数据实例 ≥ 3（实有 3）
+PASS §4.3 有非西陲实例
+PASS §4.3 有非人类或超自然实例
+PASS §4.3 断言含【扫描】
+PASS §4.3 断言含【不变量】
+PASS §4.3 断言含【扩展性】
+PASS §4.4 存在
+PASS §4.4.1 维度
+PASS §4.4.2 统一入口
+PASS §4.4.3 规则
+PASS §4.4.4 交互
+PASS §4.4.5 数据实例
+PASS §4.4.6 验收断言
+PASS §4.4 数据实例 ≥ 3（实有 4）
+PASS §4.4 有非西陲实例
+PASS §4.4 有非人类或超自然实例
+PASS §4.4 断言含【扫描】
+PASS §4.4 断言含【不变量】
+PASS §4.4 断言含【扩展性】
+PASS §4.5 存在
+PASS §4.5.1 维度
+PASS §4.5.2 统一入口
+PASS §4.5.3 规则
+PASS §4.5.4 交互
+PASS §4.5.5 数据实例
+PASS §4.5.6 验收断言
+PASS §4.5 数据实例 ≥ 3（实有 4）
+PASS §4.5 有非西陲实例
+PASS §4.5 有非人类或超自然实例
+PASS §4.5 断言含【扫描】
+PASS §4.5 断言含【不变量】
+PASS §4.5 断言含【扩展性】
+PASS §4.6 存在
+PASS §4.6.1 维度
+PASS §4.6.2 统一入口
+PASS §4.6.3 规则
+PASS §4.6.4 交互
+PASS §4.6.5 数据实例
+PASS §4.6.6 验收断言
+PASS §4.6 数据实例 ≥ 3（实有 4）
+PASS §4.6 有非西陲实例
+PASS §4.6 有非人类或超自然实例
+PASS §4.6 断言含【扫描】
+PASS §4.6 断言含【不变量】
+PASS §4.6 断言含【扩展性】
+PASS §4.7 存在
+PASS §4.7.1 维度
+PASS §4.7.2 统一入口
+PASS §4.7.3 规则
+PASS §4.7.4 交互
+PASS §4.7.5 数据实例
+PASS §4.7.6 验收断言
+PASS §4.7 数据实例 ≥ 3（实有 4）
+PASS §4.7 有非西陲实例
+PASS §4.7 有非人类或超自然实例
+PASS §4.7 断言含【扫描】
+PASS §4.7 断言含【不变量】
+PASS §4.7 断言含【扩展性】
+PASS §4.8 存在
+PASS §4.8.1 维度
+PASS §4.8.2 统一入口
+PASS §4.8.3 规则
+PASS §4.8.4 交互
+PASS §4.8.5 数据实例
+PASS §4.8.6 验收断言
+PASS §4.8 数据实例 ≥ 3（实有 4）
+PASS §4.8 有非西陲实例
+PASS §4.8 有非人类或超自然实例
+PASS §4.8 断言含【扫描】
+PASS §4.8 断言含【不变量】
+PASS §4.8 断言含【扩展性】
+PASS §4.9 存在
+PASS §4.9.1 维度
+PASS §4.9.2 统一入口
+PASS §4.9.3 规则
+PASS §4.9.4 交互
+PASS §4.9.5 数据实例
+PASS §4.9.6 验收断言
+PASS §4.9 数据实例 ≥ 3（实有 3）
+PASS §4.9 有非西陲实例
+PASS §4.9 有非人类或超自然实例
+PASS §4.9 断言含【扫描】
+PASS §4.9 断言含【不变量】
+PASS §4.9 断言含【扩展性】
+PASS 正文无具体 id 字面量（命中 0）
+PASS 无用于判断的描述性文本（命中行 ）
+PASS 反引号内无带引号的中文字符串（命中行 ）
+PASS 台账概念：作品实体与单件美观值 beauty
+PASS 台账概念：作品实体两层
+PASS 台账概念：表演与演出事件
+PASS 台账概念：出版、抄写、传播
+PASS 台账概念：累计需求新口径
+PASS 台账概念：传奇推广与升级
+PASS 台账概念：文物的唯一性与名气加成
+PASS 台账概念：§4.2 雕刻取材
+PASS 台账概念：§4.3 文学诗乐舞按文化
+PASS 台账概念：§4.8 娱乐
+PASS 台账概念：§4.9 美观需求接口
+PASS 台账概念：S-19 不设稀有度
+PASS 台账概念：X-24 传说与传奇两个概念
+PASS 除法共 5 行，均注明除数下界或零分支
+PASS 无对品质档的算术（命中行 ）
+INFO 行数 958；字符数 96013；规则条 59；断言条 35；配合项 13；开放问题 10
+RESULT 全部通过
+
+===== node F:/dnd-tmp/vols/check-卷二十八.mjs   exit=0
+PASS 卷首模型行
+PASS 状态行为成稿或已封卷
+PASS §0 存在
+PASS §1 存在
+PASS §2 存在
+PASS §3 存在
+PASS §4 存在
+PASS §5 存在
+PASS §6 存在
+PASS §7 存在
+PASS §8 存在
+PASS 附 术语与代号表
+PASS 附 待补清单
+PASS §0.1 范围
+PASS §0.2 依赖卷
+PASS §0.3 覆盖的卷零行
+PASS §0.4 参照的五款游戏行
+PASS §0.5 读法
+PASS §4.1 存在
+PASS §4.1.1 维度
+PASS §4.1.2 统一入口
+PASS §4.1.3 规则
+PASS §4.1.4 交互
+PASS §4.1.5 数据实例
+PASS §4.1.6 验收断言
+PASS §4.1 数据实例 ≥ 3（实有 4）
+PASS §4.1 有非西陲实例
+PASS §4.1 有非人类或超自然实例
+PASS §4.1 断言含 扫描式：
+PASS §4.1 断言含 不变量式：
+PASS §4.1 断言含 扩展性式：
+PASS §4.1 有规则 R28-1.1
+PASS §4.2 存在
+PASS §4.2.1 维度
+PASS §4.2.2 统一入口
+PASS §4.2.3 规则
+PASS §4.2.4 交互
+PASS §4.2.5 数据实例
+PASS §4.2.6 验收断言
+PASS §4.2 数据实例 ≥ 3（实有 4）
+PASS §4.2 有非西陲实例
+PASS §4.2 有非人类或超自然实例
+PASS §4.2 断言含 扫描式：
+PASS §4.2 断言含 不变量式：
+PASS §4.2 断言含 扩展性式：
+PASS §4.2 有规则 R28-2.1
+PASS §4.3 存在
+PASS §4.3.1 维度
+PASS §4.3.2 统一入口
+PASS §4.3.3 规则
+PASS §4.3.4 交互
+PASS §4.3.5 数据实例
+PASS §4.3.6 验收断言
+PASS §4.3 数据实例 ≥ 3（实有 4）
+PASS §4.3 有非西陲实例
+PASS §4.3 有非人类或超自然实例
+PASS §4.3 断言含 扫描式：
+PASS §4.3 断言含 不变量式：
+PASS §4.3 断言含 扩展性式：
+PASS §4.3 有规则 R28-3.1
+PASS §4.4 存在
+PASS §4.4.1 维度
+PASS §4.4.2 统一入口
+PASS §4.4.3 规则
+PASS §4.4.4 交互
+PASS §4.4.5 数据实例
+PASS §4.4.6 验收断言
+PASS §4.4 数据实例 ≥ 3（实有 4）
+PASS §4.4 有非西陲实例
+PASS §4.4 有非人类或超自然实例
+PASS §4.4 断言含 扫描式：
+PASS §4.4 断言含 不变量式：
+PASS §4.4 断言含 扩展性式：
+PASS §4.4 有规则 R28-4.1
+PASS §4.5 存在
+PASS §4.5.1 维度
+PASS §4.5.2 统一入口
+PASS §4.5.3 规则
+PASS §4.5.4 交互
+PASS §4.5.5 数据实例
+PASS §4.5.6 验收断言
+PASS §4.5 数据实例 ≥ 3（实有 4）
+PASS §4.5 有非西陲实例
+PASS §4.5 有非人类或超自然实例
+PASS §4.5 断言含 扫描式：
+PASS §4.5 断言含 不变量式：
+PASS §4.5 断言含 扩展性式：
+PASS §4.5 有规则 R28-5.1
+PASS §4.6 存在
+PASS §4.6.1 维度
+PASS §4.6.2 统一入口
+PASS §4.6.3 规则
+PASS §4.6.4 交互
+PASS §4.6.5 数据实例
+PASS §4.6.6 验收断言
+PASS §4.6 数据实例 ≥ 3（实有 4）
+PASS §4.6 有非西陲实例
+PASS §4.6 有非人类或超自然实例
+PASS §4.6 断言含 扫描式：
+PASS §4.6 断言含 不变量式：
+PASS §4.6 断言含 扩展性式：
+PASS §4.6 有规则 R28-6.1
+PASS §4.7 存在
+PASS §4.7.1 维度
+PASS §4.7.2 统一入口
+PASS §4.7.3 规则
+PASS §4.7.4 交互
+PASS §4.7.5 数据实例
+PASS §4.7.6 验收断言
+PASS §4.7 数据实例 ≥ 3（实有 4）
+PASS §4.7 有非西陲实例
+PASS §4.7 有非人类或超自然实例
+PASS §4.7 断言含 扫描式：
+PASS §4.7 断言含 不变量式：
+PASS §4.7 断言含 扩展性式：
+PASS §4.7 有规则 R28-7.1
+PASS §4.8 存在
+PASS §4.8.1 维度
+PASS §4.8.2 统一入口
+PASS §4.8.3 规则
+PASS §4.8.4 交互
+PASS §4.8.5 数据实例
+PASS §4.8.6 验收断言
+PASS §4.8 数据实例 ≥ 3（实有 4）
+PASS §4.8 有非西陲实例
+PASS §4.8 有非人类或超自然实例
+PASS §4.8 断言含 扫描式：
+PASS §4.8 断言含 不变量式：
+PASS §4.8 断言含 扩展性式：
+PASS §4.8 有规则 R28-8.1
+PASS 正文无具体 id 字面量（命中 0）
+PASS 无用于判断的描述性文本（命中行 ）
+PASS 反引号内无带引号的中文字符串（命中行 ）
+PASS 台账概念：V28-01 包形状
+PASS 台账概念：V28-01 清单 manifest
+PASS 台账概念：V28-01 命名空间
+PASS 台账概念：V28-01 冲突优先级
+PASS 台账概念：包序
+PASS 台账概念：V28-02 / X-39 补丁操作格式
+PASS 台账概念：X-39 补丁只产生偏离行
+PASS 台账概念：K-18 继承只引用卷二
+PASS 台账概念：零B 0.9 派生
+PASS 台账概念：词汇扩展（S-12）
+PASS 台账概念：V28-03 加载校验流水线
+PASS 台账概念：V28-03 报错码
+PASS 台账概念：V28-04 内容审批三级
+PASS 台账概念：X-04 离线屏蔽词校验
+PASS 台账概念：零A 3.14、15.3 人物档
+PASS 台账概念：V28-05 安装升级卸载
+PASS 台账概念：卷二十七 §8 第 12 条的回答
+PASS 台账概念：N-06 卸包终止对象
+PASS 台账概念：V28-06 作者工具
+PASS 台账概念：V28-06 示例包
+PASS 台账概念：C11-7 转换脚本留痕
+PASS 台账概念：V28-06 一方机制表加载
+PASS 台账概念：卷零核查问 20.5 是否带校验器
+PASS 正文无除法记号（命中行 ）
+PASS §2.8 规则表键 ≥ 4 行（实有 5）
+PASS §2.8 规则表键的取值域栏里没有两位以上的数字（不填标定值）
+PASS §2.9 登记的码数 ≥ 20（实有 25）
+PASS §2.9 的码都在正文别处用到（未用：）
+PASS 正文用到的本卷码都在 §2.9（未登记：）
+PASS 配合项 C28 编号连续（15 条）
+PASS 开放问题 Q28 编号连续（11 条）
+PASS 迁移行 M28 编号连续（16 条）
+PASS 扩展性条目 X28 编号连续（11 条）
+PASS 扫描条 S28 编号连续（9 条）
+PASS 引用的本卷编号都有定义（悬空：）
+PASS 待补清单引用序号都在 1–12 内
+PASS 审批旧称只在标明“旧称”的行出现（命中行 ）
+PASS 续写点标记不多于 1 处（实有 0）
+INFO 行数 961；字符数 74308；规则条 79；断言条 28；扫描条 9；配合项 15；开放问题 11；迁移行 16；本卷错误码 25
+RESULT 全部通过
+
+===== node F:/dnd-tmp/vols/check-卷二十四.mjs   exit=0
+PASS 卷首模型行
+PASS 状态行
+PASS §0 存在
+PASS §1 存在
+PASS §2 存在
+PASS §3 存在
+PASS §4 存在
+PASS §5 存在
+PASS §6 存在
+PASS §7 存在
+PASS §8 存在
+PASS 附 术语与代号表
+PASS 附 待补清单
+PASS §4.1 存在
+PASS §4.1.1 维度
+PASS §4.1.2 统一入口
+PASS §4.1.3 规则
+PASS §4.1.4 交互
+PASS §4.1.5 数据实例
+PASS §4.1.6 验收断言
+PASS §4.1 数据实例 ≥ 3（实有 4）
+PASS §4.1 有非西陲实例
+PASS §4.1 有非人类或超自然实例
+PASS §4.1 断言含 扫描式：
+PASS §4.1 断言含 不变量式：
+PASS §4.1 断言含 扩展性式：
+PASS §4.1 有规则 R24-1.1
+PASS §4.2 存在
+PASS §4.2.1 维度
+PASS §4.2.2 统一入口
+PASS §4.2.3 规则
+PASS §4.2.4 交互
+PASS §4.2.5 数据实例
+PASS §4.2.6 验收断言
+PASS §4.2 数据实例 ≥ 3（实有 4）
+PASS §4.2 有非西陲实例
+PASS §4.2 有非人类或超自然实例
+PASS §4.2 断言含 扫描式：
+PASS §4.2 断言含 不变量式：
+PASS §4.2 断言含 扩展性式：
+PASS §4.2 有规则 R24-2.1
+PASS §4.3 存在
+PASS §4.3.1 维度
+PASS §4.3.2 统一入口
+PASS §4.3.3 规则
+PASS §4.3.4 交互
+PASS §4.3.5 数据实例
+PASS §4.3.6 验收断言
+PASS §4.3 数据实例 ≥ 3（实有 4）
+PASS §4.3 有非西陲实例
+PASS §4.3 有非人类或超自然实例
+PASS §4.3 断言含 扫描式：
+PASS §4.3 断言含 不变量式：
+PASS §4.3 断言含 扩展性式：
+PASS §4.3 有规则 R24-3.1
+PASS §4.4 存在
+PASS §4.4.1 维度
+PASS §4.4.2 统一入口
+PASS §4.4.3 规则
+PASS §4.4.4 交互
+PASS §4.4.5 数据实例
+PASS §4.4.6 验收断言
+PASS §4.4 数据实例 ≥ 3（实有 4）
+PASS §4.4 有非西陲实例
+PASS §4.4 有非人类或超自然实例
+PASS §4.4 断言含 扫描式：
+PASS §4.4 断言含 不变量式：
+PASS §4.4 断言含 扩展性式：
+PASS §4.4 有规则 R24-4.1
+PASS §4.5 存在
+PASS §4.5.1 维度
+PASS §4.5.2 统一入口
+PASS §4.5.3 规则
+PASS §4.5.4 交互
+PASS §4.5.5 数据实例
+PASS §4.5.6 验收断言
+PASS §4.5 数据实例 ≥ 3（实有 4）
+PASS §4.5 有非西陲实例
+PASS §4.5 有非人类或超自然实例
+PASS §4.5 断言含 扫描式：
+PASS §4.5 断言含 不变量式：
+PASS §4.5 断言含 扩展性式：
+PASS §4.5 有规则 R24-5.1
+PASS §4.6 存在
+PASS §4.6.1 维度
+PASS §4.6.2 统一入口
+PASS §4.6.3 规则
+PASS §4.6.4 交互
+PASS §4.6.5 数据实例
+PASS §4.6.6 验收断言
+PASS §4.6 数据实例 ≥ 3（实有 4）
+PASS §4.6 有非西陲实例
+PASS §4.6 有非人类或超自然实例
+PASS §4.6 断言含 扫描式：
+PASS §4.6 断言含 不变量式：
+PASS §4.6 断言含 扩展性式：
+PASS §4.6 有规则 R24-6.1
+PASS §4.7 存在
+PASS §4.7.1 维度
+PASS §4.7.2 统一入口
+PASS §4.7.3 规则
+PASS §4.7.4 交互
+PASS §4.7.5 数据实例
+PASS §4.7.6 验收断言
+PASS §4.7 数据实例 ≥ 3（实有 4）
+PASS §4.7 有非西陲实例
+PASS §4.7 有非人类或超自然实例
+PASS §4.7 断言含 扫描式：
+PASS §4.7 断言含 不变量式：
+PASS §4.7 断言含 扩展性式：
+PASS §4.7 有规则 R24-7.1
+PASS §4.8 存在
+PASS §4.8.1 维度
+PASS §4.8.2 统一入口
+PASS §4.8.3 规则
+PASS §4.8.4 交互
+PASS §4.8.5 数据实例
+PASS §4.8.6 验收断言
+PASS §4.8 数据实例 ≥ 3（实有 4）
+PASS §4.8 有非西陲实例
+PASS §4.8 有非人类或超自然实例
+PASS §4.8 断言含 扫描式：
+PASS §4.8 断言含 不变量式：
+PASS §4.8 断言含 扩展性式：
+PASS §4.8 有规则 R24-8.1
+PASS §4.9 存在
+PASS §4.9.1 维度
+PASS §4.9.2 统一入口
+PASS §4.9.3 规则
+PASS §4.9.4 交互
+PASS §4.9.5 数据实例
+PASS §4.9.6 验收断言
+PASS §4.9 数据实例 ≥ 3（实有 4）
+PASS §4.9 有非西陲实例
+PASS §4.9 有非人类或超自然实例
+PASS §4.9 断言含 扫描式：
+PASS §4.9 断言含 不变量式：
+PASS §4.9 断言含 扩展性式：
+PASS §4.9 有规则 R24-9.1
+PASS §4.10 存在
+PASS §4.10.1 维度
+PASS §4.10.2 统一入口
+PASS §4.10.3 规则
+PASS §4.10.4 交互
+PASS §4.10.5 数据实例
+PASS §4.10.6 验收断言
+PASS §4.10 数据实例 ≥ 3（实有 4）
+PASS §4.10 有非西陲实例
+PASS §4.10 有非人类或超自然实例
+PASS §4.10 断言含 扫描式：
+PASS §4.10 断言含 不变量式：
+PASS §4.10 断言含 扩展性式：
+PASS §4.10 有规则 R24-10.1
+PASS 正文无具体 id 字面量（命中 0）
+PASS 无用于判断的描述性文本（命中行 ）
+PASS 反引号内无带引号的中文字符串（命中行 ）
+PASS 台账概念：V24-01 事件主写与差分推导
+PASS 台账概念：差分只作验收
+PASS 台账概念：I-08 事件类型注册表（含动词登记）
+PASS 台账概念：事件估值字段（零#3 使用面、8.14）
+PASS 台账概念：V24-02 脉冲式加权抽取
+PASS 台账概念：叙事调度按世界状态不按玩家
+PASS 台账概念：V24-03 局势多阶段
+PASS 台账概念：I-14 委托与任务生成
+PASS 台账概念：难度与报酬派生
+PASS 台账概念：V24-04 活动
+PASS 台账概念：V24-05 历史生成与传奇模式浏览
+PASS 台账概念：历史事件内容（卷十裁定归本卷）
+PASS 台账概念：V24-06 编年史投影
+PASS 台账概念：§4.9 场外任务接口
+PASS 台账概念：V24-07 玩家来历接入
+PASS 台账概念：X-33 天气不是事件
+PASS 台账概念：S-12 事件动词种类表
+PASS 台账概念：X-24 传说与传奇
+PASS 除法共 5 行，均注明除数下界或零分支
+PASS 无玩家标记读数字段名（命中行 ）
+PASS 无年长字面量（命中行 ）
+PASS 续写点标记不多于 1 处（实有 0）
+INFO 行数 1087；字符数 101375；规则条 83；断言条 61；配合项 17；开放问题 12；迁移项 21
+RESULT 全部通过
+
+===== node F:/dnd-tmp/vols/check-卷十三.mjs   exit=0
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首模型行
+PASS 1c §0 五小节齐全
+PASS 2 20 个子系统各六小节齐全
+PASS 3 数据实例至少三条，含非西陲、含非人类或超自然（共 80 条）
+PASS 4 验收断言三式齐全且编号规整
+PASS 5 正文无具体 id 字面量（含数据实例）
+PASS 6 无用于判断的描述性文本；无带引号的中文字面量；纯代号无中文；枚举值 ASCII 且带中英显示名（枚举 13 个、值 54 个）
+PASS 7 台账各概念写全（二十节标题、台账裁定编号、关键概念、每节有规则且编号连续）
+PASS 8 编号引用不悬空且连续；跨卷章节引用处处带标题（491 处）
+PASS 9 错误码、入口、规则表键、状态键与写者、抽取点落实（码 20、入口 27、规则表键 78、状态键 9、抽取点 7）
+PASS 10 红线：不派实现、不改别卷、不读墙钟、除数有下界、身体状态只经卷二十一、无生命值、法律不拦、不写价格乘数
+PASS 11 算术复算与计数对账（打击量、层律两例、伤亡式切片不变、末份取差、交叉相乘、卷零 13+13 行、§6 八条、矩阵九行）
+PASS 12 接口表、配合项、迁移清单（33 行）、五款游戏、待补清单（27 条）、素材位置落实
+PASS 13 关键条文在位（61 条）
+行数 1728；子系统 20；规则条数 173；断言 60；扫描条 13；配合项 20；开放问题 12（须李白定 0）；迁移行 33；枚举 13 个、值 54 个；错误码 20；规则表键 78；数据实例 80；待补清单 27 条；失败项 0
+
+===== node F:/dnd-tmp/vols/check-卷十五.mjs   exit=0
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首模型行
+PASS 1c §0 五小节齐全
+PASS 2 17 个子系统各六小节齐全
+PASS 3 数据实例至少三条，含非西陲、含非人类或超自然（共 63 条）
+PASS 4 验收断言三式齐全且编号规整
+PASS 5 正文无具体 id 字面量（含数据实例）
+PASS 6 无用于判断的描述性文本；纯代号无中文；枚举值 ASCII 且带中英显示名（枚举 8 个、值 35 个） —  
+PASS 7 台账各概念写全（十七节标题、台账裁定编号、关键概念、每节有规则且编号连续）
+PASS 8 编号引用不悬空且连续；跨卷章节引用处处带标题且与原卷相符（450 处） —   
+PASS 9 错误码、入口、规则表键、状态键与写者、抽取点落实（码 12、入口 18、规则表键行 38、状态键 3、抽取点 2） —  |  |  |  | 
+PASS 10 红线：不派实现、不改别卷、不读墙钟、除数有下界、身体状态只经卷二十一、无生命值写入、法律不拦、不写价格乘数、耗材不点名
+PASS 11 算术复算与计数对账（效力例、封印例、卷零 12+8 行、§6 12 条、矩阵 7 行）
+PASS 12 接口表、配合项（19 项）、迁移清单（30 行）、五款游戏、待补清单（14 条）、素材位置落实
+PASS 13 关键条文在位（15 条）
+行数 1429；子系统 17；规则条数 144；断言 51；扫描条 13；配合项 19；开放问题 12（须李白定 0）；迁移行 30；枚举 8 个、值 35 个；错误码 12；规则表键行 38；数据实例 63；待补清单 14 条；失败项 0
+
+===== node F:/dnd-tmp/vols/check-卷十六.mjs   exit=0
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首模型行
+PASS 1c §0 五小节齐全
+PASS 2 14 个子系统各六小节齐全
+PASS 3 数据实例至少三条，含非西陲、含非人类或超自然（共 56 条）
+PASS 4 验收断言三式齐全且编号规整
+PASS 5 正文无具体 id 字面量（含数据实例）
+PASS 6 无用于判断的描述性文本；纯代号无中文；枚举值 ASCII 且带中英显示名（枚举 5 个、值 16 个） —  
+PASS 7 台账各概念写全（十四节标题、台账裁定编号、关键概念、每节有规则且编号连续）
+PASS 8 编号引用不悬空且连续；跨卷章节引用处处带标题且与原卷相符（401 处） —   
+PASS 9 错误码、入口、钩子、规则表键、抽取点、维度落实（码 13、入口 24、钩子 7、规则表键行 44、抽取点 8、维度 19） —  |  |  |  |  |  | 
+PASS 10 红线：不派实现、不改别卷、不读墙钟、除数有下界、身体状态只经卷二十一、无怪物标记分支、不读名字、不另立委托、物种阶段登记
+PASS 11 算术复算与计数对账（路遇例、辟邪例、相似度例、存量转化例、卷零 9+6 行、§6 13 条、矩阵 4 行、错误码 13、族 5、动词 5）
+PASS 12 接口表、配合项（21 项）、迁移清单（30 行）、五款游戏、待补清单（22 条）、素材位置落实
+PASS 13 关键条文在位（19 条）
+行数 1260；子系统 14；规则条数 109；断言 42；扫描条 13；配合项 21；开放问题 14（须李白定 0）；迁移行 30；枚举 5 个、值 16 个；错误码 13；规则表键行 44；数据实例 56；待补清单 22 条；失败项 0
+
+===== node F:/dnd-tmp/vols/check-卷四.mjs   exit=0
+通过  章节 §0
+通过  章节 §1
+通过  章节 §2
+通过  章节 §3
+通过  章节 §4
+通过  章节 §5
+通过  章节 §6
+通过  章节 §7
+通过  章节 §8
+通过  章节 附 术语与代号表
+通过  附录 自检脚本输出
+通过  子系统数 = 12 且编号连续  实得 12
+通过  4.1 六小节齐全且顺序正确
+通过  4.1 数据实例 ≥3、含非西陲、含非人类或超自然  实例 4 条
+通过  4.1 断言含扫描式、不变量式、扩展性式
+通过  4.1 规则条数 ≥3  6 条
+通过  4.2 六小节齐全且顺序正确
+通过  4.2 数据实例 ≥3、含非西陲、含非人类或超自然  实例 3 条
+通过  4.2 断言含扫描式、不变量式、扩展性式
+通过  4.2 规则条数 ≥3  10 条
+通过  4.3 六小节齐全且顺序正确
+通过  4.3 数据实例 ≥3、含非西陲、含非人类或超自然  实例 3 条
+通过  4.3 断言含扫描式、不变量式、扩展性式
+通过  4.3 规则条数 ≥3  6 条
+通过  4.4 六小节齐全且顺序正确
+通过  4.4 数据实例 ≥3、含非西陲、含非人类或超自然  实例 3 条
+通过  4.4 断言含扫描式、不变量式、扩展性式
+通过  4.4 规则条数 ≥3  7 条
+通过  4.5 六小节齐全且顺序正确
+通过  4.5 数据实例 ≥3、含非西陲、含非人类或超自然  实例 3 条
+通过  4.5 断言含扫描式、不变量式、扩展性式
+通过  4.5 规则条数 ≥3  5 条
+通过  4.6 六小节齐全且顺序正确
+通过  4.6 数据实例 ≥3、含非西陲、含非人类或超自然  实例 3 条
+通过  4.6 断言含扫描式、不变量式、扩展性式
+通过  4.6 规则条数 ≥3  7 条
+通过  4.7 六小节齐全且顺序正确
+通过  4.7 数据实例 ≥3、含非西陲、含非人类或超自然  实例 6 条
+通过  4.7 断言含扫描式、不变量式、扩展性式
+通过  4.7 规则条数 ≥3  9 条
+通过  4.8 六小节齐全且顺序正确
+通过  4.8 数据实例 ≥3、含非西陲、含非人类或超自然  实例 5 条
+通过  4.8 断言含扫描式、不变量式、扩展性式
+通过  4.8 规则条数 ≥3  8 条
+通过  4.9 六小节齐全且顺序正确
+通过  4.9 数据实例 ≥3、含非西陲、含非人类或超自然  实例 4 条
+通过  4.9 断言含扫描式、不变量式、扩展性式
+通过  4.9 规则条数 ≥3  7 条
+通过  4.10 六小节齐全且顺序正确
+通过  4.10 数据实例 ≥3、含非西陲、含非人类或超自然  实例 3 条
+通过  4.10 断言含扫描式、不变量式、扩展性式
+通过  4.10 规则条数 ≥3  8 条
+通过  4.11 六小节齐全且顺序正确
+通过  4.11 数据实例 ≥3、含非西陲、含非人类或超自然  实例 6 条
+通过  4.11 断言含扫描式、不变量式、扩展性式
+通过  4.11 规则条数 ≥3  8 条
+通过  4.12 六小节齐全且顺序正确
+通过  4.12 数据实例 ≥3、含非西陲、含非人类或超自然  实例 4 条
+通过  4.12 断言含扫描式、不变量式、扩展性式
+通过  4.12 规则条数 ≥3  7 条
+通过  规则与表格正文无具体实体 id 字面量
+通过  正文无读中文或英文描述文本作判断的写法
+通过  本卷未定义 can / awake / capacity / dead
+通过  §3.2 声明不导出任何谓词
+通过  台账概念写全：物种 schema
+通过  台账概念写全：身体部件图、capability、body.* 的来源
+通过  台账概念写全：attr 词表
+通过  台账概念写全：年龄寿命与成年年龄
+通过  台账概念写全：承载能力与负重公式
+通过  台账概念写全：代谢
+通过  台账概念写全：死亡结算与尸体产出
+通过  台账概念写全：身份键与认出
+通过  台账概念写全：人物本体
+通过  台账概念写全：角色创建、出身、母语
+通过  台账概念写全：外貌与遗传（本卷内）
+通过  卷一、卷二引用均带标题  0 处  
+通过  §7.3 逐行表 88 行、编号连续  实得 88
+通过  §7.3 涉及 65 个文件  实得 65
+通过  §7.3 无重复的 文件:行
+通过  第二版：裁定1 死亡用卷二 §2.6 终止协议（terminate、entity_terminated、E-TERM-RESIDUE、三种后继）
+通过  第二版：裁定1 写明本卷的终止收尾由协议后继步骤内、标记之前触发
+通过  第二版：Q-19 裁定：没有"终止后再清理"
+通过  第二版：裁定1 旧写法已清（后继类型为遗产、两段式、rules.death.revival）
+通过  第二版：裁定2 lookKey 不用哈希、改元组键
+通过  第二版：裁定3 成长与漂移走修正项、不写偏离行
+通过  第二版：裁定4 部位折算项各用各的来源 id
+通过  第二版：裁定5 谓词禁令按 import 图与调用图
+通过  第二版：裁定5 88 行清零改为按模式类别扫描
+通过  第二版：裁定6 magic-ritual:41 已列
+通过  第二版：裁定6 非正则睡眠文字 18 行已列
+通过  第二版：裁定6 状态字列表、年龄 18、hp 比较三组各有检索式与处置
+通过  第二版：裁定6 npc-growth:28 改为 Z4 → Z3
+通过  第二版：裁定7 活体产出（renewables、renewableOf、takeRenewable）
+通过  第二版：裁定7 身体能力参与制作与劳作（workInputs）并交卷三、卷十四使用
+通过  第二版：其余：阶段表为数值结构、E-SPECIES-MATURITY
+通过  第二版：其余：示人键可选（presenting、presentIdentity）
+通过  第二版：其余：不泄密断言为等式
+通过  第二版：其余：容差键、群体需要入口、体重遗传参数、生育状态字段
+通过  第二版：其余：moveSpeedOf 只接受个体
+通过  第二版：其余：母语前提读 sapient
+通过  第二版：Q-10 已结
+通过  第二版：卷末有小项记账栏与影响面表
+通过  第三版：B-13 living 由卷六定义、本卷只引用，Q-1 已结
+通过  第三版：B-13 旧写法已清（无定义方、待指定、待定、本卷自定未知处置）
+通过  第三版：B-13 单点在 §0.2 并附牵连清单
+通过  第三版：N-1 判死单点在 §3.2 并附牵连清单
+通过  第三版：N-1 D-2、Y1、Y3、§7.5 都调 terminated
+通过  第三版：N-1 旧判死写法已清（读终止类实例是否存在、并上 state.terminated）
+通过  第三版：N-1 P-5 禁读 terminal 保留且不为判死开豁免
+通过  第三版：影响面表有第三版一行
+通过  第五版：标题为现行版本（第十版）
+通过  第五版：终止步骤号：第 1 步定后继与领域清理、第 2 步标记
+通过  第五版：事件名带 verb_ 前缀，无裸旧名
+通过  第五版：termination 无缺省的旧写法已清
+通过  第五版：去留表：四类记录、只登记不自删
+通过  第五版：settleBody 不删簿记
+通过  第五版：复生只引用卷二：本卷无自设窗口或待复生状态的写法
+通过  第五版：Q-19 已结、Q-20 只余 (a)
+通过  第五版：物种维度已登记（卷二十一、卷五 Q3）
+通过  第五版：个体维度 sensitivity、fatKg 已登记
+通过  第五版：性情由本卷定义、一切物种必填、带反号校验
+通过  第五版：可食由材料推出：feeds 退役
+通过  第五版：可食：T-4 按份判、有 edibleShareOf 与阈值键
+通过  第五版：部位完好度判据按目标判（加载期与运行期）
+通过  第五版：§2.7 新错误码四个
+通过  第五版：开放问题 Q-21 至 Q-23 在册
+通过  第五版：影响面表有第五版一行
+通过  第六版：N-1 identity 系统另登记清理函数（§3.3、D-3a、§5.3、§5.4 四处都有）
+通过  第六版：N-1 settleBody 只做尸体产出：§3.3 该行不写 identities、通道只有物品写者
+通过  第六版：N-1 closeIdentities 归 identity.mjs、只填 until
+通过  第六版：N-1 旧写法已清（death 的清理函数写身份键）
+通过  第六版：N-3 无手填：数据实例里没有 primaryConsumer 键，diet 行写明派生、写了即报错
+通过  第六版：N-3 无双写：派生式只在 §2.4 写一次，规则表键在 §2.5 登记，Q-22 已结
+通过  第六版：Q-21 已由李白裁定交卷三甲乙
+通过  第六版：影响面表有第六版一行
+通过  第七版：吸收率按食性 × 本源成分：diet 行写明 bySubstance、other 与查不到按不可食
+通过  第七版：T-4 按本源成分查吸收率
+通过  第七版：数据实例里每条食性的 assimilation 都是新结构、值在 [0,1]，没有只写一个数的旧写法
+通过  第七版：数据实例给出人、牛、猪的食性配置（实得能量核对读）
+通过  第七版：影响面表有第七版一行
+通过  数值复算：承载：人 70 kg → 25  算得 25
+通过  数值复算：承载：负重比 1.2 → 速度系数 0.54  算得 0.54
+通过  数值复算：承载：驮象 3000 kg × 1.2 → 约 344  算得 344
+通过  数值复算：承载：石质守卫 400 kg × 2 → 约 157  算得 157.4419
+通过  数值复算：代谢：70 kg → 1.00  算得 1
+通过  数值复算：代谢：3000 kg → 15.62  算得 15.6222
+通过  数值复算：代谢：2 象 + 40 人 → 71.24  算得 71.2444
+通过  数值复算：遗传余量系数 h²=0.5 → 0.9354  算得 0.9354
+通过  数值复算：遗传余量系数 h²=0.8 → 0.8246  算得 0.8246
+通过  数值复算：遗传余量系数 h²=0.9 → 0.7714  算得 0.7714
+通过  数值复算：遗传示例 → 0.366  算得 0.3662
+通过  数值复算：方差守恒 h⁴/2 + r² = 1（h²=0.8）  算得 1
+通过  数值复算：年龄：17870400 分钟 → 34.5 岁（每年 518400 分钟）  算得 34.4722
+通过  数值复算：寿命 62 × 0.7 → 约 43 岁入老年段  算得 43.4
+通过  数值复算：能力：左手丧失 → 操作 0.7  算得 0.7
+通过  数值复算：能力：腿完好度 0.5、贡献 0.5 → 移动 0.75  算得 0.75
+通过  数值复算：尸体材料份额之和 = 1  算得 1
+通过  数值复算：人形组织份额之和 = 1  算得 1
+通过  数值复算：能力：双手丧失（两条来源各自生效）→ 操作 0.4  算得 0.4
+通过  数值复算：阶段校验：人 16 < 30 × 0.7  算得 21
+通过  数值复算：阶段校验：龟 25 < 90 × 0.7  算得 63
+通过  数值复算：阶段校验反例：12 × 0.7 = 8.4 ≤ 10  算得 8.4
+通过  数值复算：活体产出：45 kg × 0.03 × 1 日 → 1.35 kg  算得 1.35
+通过  数值复算：活体产出：采得比例 0.6 → 0.81 kg  算得 0.81
+通过  数值复算：活体产出：消化能力 0.5 → 0.675 kg  算得 0.675
+通过  数值复算：身体投入：0.8×0.7 + 0.2×1 → 0.76  算得 0.76
+
+统计  成稿正文 1521 行（不含附录里贴的本输出）；子系统 12；数据实例 47 条；开放问题 23 条
+统计  §7.3 处置代号分布 Z1=30 Z2=34 Z3=9 Z4=5 Z5=6 Z6=4（合计 88 行，65 个文件）
+统计  §7.3 中 Z4（常量定义行）各使用点的去向 Z3=3 Z5=2
+结论  全部通过
+
+===== node F:/dnd-tmp/book/scan-sparse-map.mjs   exit=0
+== 判据 E-DIM-MAP-SPARSE-NONSUM ==
+RESULT 判据失败 0
+== 候选清单（宽口径，人工复核用，不判失败）==
+卷七-信仰与文化:1427	vector	[缺省值]	`value` 族（价值轴词表，全书唯一一张，台账 X-06）；文化行 `values`（各轴缺省值）；`ethic` 族条目 `{required, about: set<ref>, vector: map<ref vocab value, number>}`；文化行 `ethics`（对每类行为的态度，[−1, 1]）；`taboo` 族条目 `{acts: set<ref>（动作代号）, taxa: set<ref vocab taxon>, sapientShareMin: number nullable, kinDistanceMax: integer nullable, bondK
+卷九-AI接口:196	effects	[缺键]	| `effects` | map<degree, list<effectCall> nullable> \| `from_slot` | — | `from_slot` 见 `shapeFrom`，各档按 R9-1.13 折算；否则键全覆盖 `degree` 族五档，缺键即加载失败；`check` 为空时 `success` 非 null，其余四档显式写 null，表示无检定时此档不出现（R9-3.7 成功度恒为 `success`）；`check` 非空时五档都非 null，大成功、大失败与成功、失败同效的，显式写与 `success`、`failure` 相同的一列 | 加载失败 | 各
+卷九-AI接口:203	sourceStrength	[稀疏/缺键]	| `sourceStrength` | map<ref vocab sense, number> combine=sum | 随感官（到达量的单位，卷五 §4.2（分区、方位与感知通道） 规则 3） | 键为 `sense` 族代号（卷五 §4.2.1（维度）），各值为实数（可负）；叠加修正映射（卷二 §1.6（缺失处置）第 5 项），键集可稀疏，缺键即该感官不加修正项；行上必写，本动作不改任何感官的源强写 `{}` | 加载失败（必填） | 源强修正项（封卷后勘误，李白 11-14 20:22 根因 G P-8）：行为人做本动作期间，键 s 的值作加性修正项叠加到卷五修正目标键 `sens
+卷九-AI接口:276	rules.act.paceFloor	[取 0]	| `rules.act.paceFloor` | map<act_class, number> | 键全覆盖 `act_class`；每值 [0, 1]。按动作类取节奏下限，取 0 的类节奏可为 0（C17-1 第 2 点） | R9-1.4 |
+卷九-AI接口:290	rules.review.tolerance	[缺键]	| `rules.review.tolerance` | map<claim_kind, number ≥ 0> | 键全覆盖 `claim_kind` 族，缺键即加载失败；不设容差的种类显式写 0 | R9-11.4 |
+卷九-AI接口:295	rules.npc.stanceWeights	[缺键/不加项]	| `rules.npc.stanceWeights` | map<ref vocab stance_axis, number> combine=sum | 叠加修正映射（卷二 §1.6（缺失处置）第 5 项），缺键即该轴不加项 | R9-12.3 |
+卷九-AI接口:313	rules.gate.categoryMap	[缺键]	| `rules.gate.categoryMap` | map<屏蔽词类别代号, reject_code> | 键全覆盖屏蔽词类别族（卷二 §1.9（代号、显示名与语言边界）），缺键即加载失败；没有专门拒收代号的类别显式写 `reject:blocklist` | R9-19.5 |
+卷九-AI接口:537	degreeBps	[缺档]	- **R9-1.13 取自槽位**（C15-1 ①）：动作行的 `check.skill`、`requirement`、`baseMinutes`、`effects`、`backlash` 与其 `costRows` 所指行的 `resource` 写 `from_slot` 的，值不在行上，由本行 `shapeFrom` 的读入口按此刻意图的槽位给出。凡读到这些列之处（R9-1.2 试算、九段、R9-1.4 开工定工量、R9-1.12 ① 重查）都在读的那一刻以同一组实参调该入口，不缓存、不存储；该入口的 `inputsOf` 依赖并入 R9-1.12 的重查集合 K。取返回的键：`ski
+卷二十三-艺术文学与文化产物:947	?	[缺省取]	| 封卷后勘误 1114w4b2（2026-11-14，改稿 claude-opus-5-5 中档；依据 `审查/总审勘误-四波乙-只核.md` 余项与主会话口径（台账 065d61f0：函数入参的缺省同按卷二 §1.6 通则 2 改为调用方必传）；版本号不升；改前快照 `版本快照/卷二十三-勘误前-1114w4b2.md`，改后覆盖 `版本快照/卷二十三-封卷.md`） | R23-2.2 ③“`slots` 缺省取 `min`”、④“缺省取规则表的缺省角色”（该规则表键全书未登记）、R23-7.2“`ctx.scope` 缺省全世界”都是入参常量缺省 | `slots` 改必传；角色改由必
+卷二十二-知识信息与传播:215	public.injectBoost	[缺键]	| `public.injectBoost` | `map<ref vocab kchan, integer ≥ 0>` | 一次注入加多少进度点。键集须覆盖 `sense` 非空的全部 `kchan` 行（亲身感知通道），加载期校验，缺键即加载失败；所以 R22-5.2 取最大时每个所经通道都有值，没有缺键情形（封卷后勘误 1114w2e3） |
+卷二十六-需求心理与情绪:129	personalityBias	[缺键/不加项]	群体基线字段（含义归本卷，挂载表归对方卷，见 §8 Q1）：`personalityBias: map<ref vocab pers, number> combine=sum`（叠加映射：每键加到该人格轴上，缺键即该轴不加项），axis，required never，onUnknown skip；挂在物种行与文化行。它不进采样参数，由加载器生成常驻修正项（R26-1.2），所以基础值是纯先天值。
+卷二十六-需求心理与情绪:139	pers	[缺键/不加项]	| `pers`（已登记） | `valueLoad: map<ref vocab value, number> combine=sum`（叠加映射，缺键即该价值轴不加项；行上必写，可写空映射 `{}`（即该轴不牵引））；`noiseLoad: number` | 一条人格轴。`valueLoad` 是该轴对个人价值的牵引（由加载器生成修正项，R26-2.2）；`noiseLoad` 是该轴对决策噪声的贡献 |
+卷二十六-需求心理与情绪:140	drive	[缺键/不加项]	| `drive`（新，`drive_`） | `base: number`；`persLoad: map<ref vocab pers, number> combine=sum`；`valueLoad: map<ref vocab value, number> combine=sum`（两者都是叠加映射，只进 R26-9.1 的求和，缺键即该轴不加项；行上必写，空映射即不加项） | 一种驱力（行动动机的计量单位），本卷与卷九之间的唯一公共量纲 |
+卷二十六-需求心理与情绪:165	persScale	[缺键/不加项]	| `persScale` | map<ref vocab pers, number> combine=sum | 是（可写空映射） | 人格缩放系数：按键叠加进 R26-4.2 的 P，缺键即该轴不加项；空映射即 P = 1 |
+卷二十六-需求心理与情绪:166	valueScale	[缺键/不加项]	| `valueScale` | map<ref vocab value, number> combine=sum nullable | 是（可写 null） | 价值缩放系数（带符号，可使同一件事对不同人方向相反）：按键叠加成 R26-4.2 的 V，缺键即该轴不加项；**null 即本行不受价值影响，V = 1** |
+卷五-地点地形与资源场:137	deposits	[缺键]	| `deposits` | map<ref refs[kind material, kind plant], score nullable> | score | [0,100] | never（只许出现在 comp_tract 行） | skip | 否 | 丰度评分。展平后键全覆盖 `material` 与 `plant` 两表全部实体行（共同的 null 底由类别行 `extends` 给出，卷二 §1.6（缺失处置）第 4 项），缺键只表示未知、按 onUnknown 处置；矿物键非 null 表示"此处有此矿"，null 表示此处无此矿；植物键非 null 表示对群落丰度的偏离，nu
+卷五-地点地形与资源场:482	?	[缺键/不加项]	   - **一次性源**（一声吼、一下敲击、一道闪光）没有场可读。它以**行为人**（发出动静的实体）为主体，对感官 s 求修正目标键 `sense.sourceStrength[s]`（§2.3）经卷二 §3.3 管线的值：基值 = 行为人所在实体表的 `sourceStrength[s]` 列（`map<ref vocab sense, number>`，键全覆盖 `sense` 族）：个体取其物种行（卷四物种表登记）、物品取物品表（卷三乙登记）、地点取 place 表（§2.1，本卷登记）；各值经该表类别行的 `extends` 继承给出，由数据给值（基础类别行在数据里写全 `sens
+卷五-地点地形与资源场:521	envelope	[缺键/缺项]	| `envelope` | struct{tempC:[min,max], precipMm:[min,max], elevationM:[min,max], skyExposure:[min,max], depthM:[min,max], terrains: set<enum terrain>, waterAny: set<ref vocab water>, aspectMin: map<ref vocab sphere, score nullable>} | 该群落成立的条件包络；`aspectMin` 键全覆盖 `sphere` 族，缺键即加载失败，对某领域不设下限的该键显式写 nul
+卷五-地点地形与资源场:910	bySite	[缺 `]	- `terrain-modifiers.json`：`{byTerrain: map<enum terrain, list<修正项模板>>, byBiome: map<enum biome, list<…>>, bySite: map<enum site, list<…>>, slopeCurve}`。键全部是词表代号。本表不设湿滑曲线：路面因雨雪变得难走，是卷十七合成行程时读卷二十环境量的事，路况系数只描述路本身（规则 1）。`slopeCurve` 的值域严格大于 0（加载校验）。模板字段与卷二 §3.2 相同，缺 `source`（求值时填所在地点）；模板的 target 不得是群落包
+卷六-经济:220	household.json	[缺键]	| `household.json` | `selfSupplyTimeShare: fraction`；`tierOrder: list<必需档代号>`；`minShortageShare: fraction`；`shortVerb: map<用度类代号, ref vocab verb>`（某用度类缺量时发的动词；键全覆盖用度类族，缺键即加载失败；不设分动词的用度类显式写通用动词 `verb_supply_short`，§4.12 规则 6；封卷后勘误，卷七牵连） |
+卷六-经济:223	contract.json	[缺键]	| `contract.json` | `grace: map<obl, integer>`（分钟；键是 `obl` 条目 `graceKey` 所取的值）；`noticeDays: map<通知期键, integer>`（键是 `ckind` 条目 `noticeDaysKey` 所取的值）。两张表的键由登记该 `obl`、`ckind` 条目的卷连同条目一起登记，凡被条目引用的键必须在表里、值必写，缺键加载失败，不设缺省；现有别卷登记：卷二十二缄默合同的 `grace.obl_silence_keep`、`grace.obl_silence_pay`、`noticeDays.notice_
+卷十七-交通与路途:137	tmode	[缺键]	| `tmode`（`tmode_`，通行方式） | `ways: set<enum way_kind>`（非空；飞行取两者）；`gaits: set<ref vocab gait>`；`terrainPass: map<enum terrain, fraction nullable>`（必写；展平后键集须覆盖卷五 `terrain` 封闭清单的全部条目，缺键即加载失败 E-TRIP-MODE；与参照方式无差的地形显式写 1，0 即此种地形走不了，null 只表示该地形系数未知，按 `wsum` 未知传播使该段地形系数未知；含义见下）；`envCurves: list<struct{envKe
+卷十九-建筑与设施:163	ratingWeights	[缺键]	| `ratingWeights` | map<ref vocab raspect, fraction> | fraction | 值之和为 1 | always | error | 房间评价各项的权重；每个类型行必写，键须覆盖 `raspect` 族全部条目（权重为 0 的也写），缺键加载失败；建筑 `type` 为 null 时用 `rules.facility.rating.defaultWeights`（§4.11 规则 3，键同样须全覆盖） | RW#25 |
+卷十九-建筑与设施:190	bform	[缺省值]	| `bform` 形制 | `bldform_` | 开放 | `envelopeReq: ref requirement`（围护用料的选择器；各消耗项的 `qty` 是**体积份额**，和为 1，§4.4 规则 1）；`wallThicknessDefaultM`、`wallThicknessMinM`（意图未给墙厚时的缺省值、这种盖法允许的最薄值；建筑行上的 `wallThicknessM` 只有 §2.1 一个来源）；`storeyHeightM`；`perimeterFactor`；`roofCover: fraction`；`apertureBase: fraction`；`pro
+卷十九-建筑与设施:926	concealment	[缺键]	`fixture` 条目的 `mechanism: struct{trigger: struct{quantity: enum trigq, threshold: number, rearmMinutes: integer} nullable, powerOutRX: rx nullable, powerNeedW: number nullable, concealment: map<ref vocab sense, number> combine=sum, effects: list<effectCall>}`（`concealment` 是叠加修正映射，卷二 §1.6（缺失处置）第 5 项
+卷十五-法术与超自然:154	castmode	[缺键]	| `castmode`（`cmode_`） | `capBps: integer`；`costBps: integer`；`minutesBps: integer`；`sourceStrength: map<ref vocab sense, number> combine=sum`（叠加修正映射，卷二 §1.6（缺失处置）第 5 项；键为卷五 `sense` 族代号，各值为实数、可负，单位随感官，缺键即该感官不加修正项；行上必写，不改任何感官的源强写 `{}`；R15-4.6）；`difficultyAdd: number` | 施为方式（意图的一个槽位）：对上限、代价、工时、施为者源强、难
+卷十八-社会关系与家族:138	relation	[缺键/不加项/取 0]	| `relation`（`rel_`，卷二 §1.12（派生与聚合原语）已定基础字段 `from/to/via/inputs/intimate`） | 代号可加行，字段集合封闭（一审后裁定；牵连见卷末影响面表） | 社会字段组，由本卷单点定义。`kind` 非空即社会关系条目，整组必须填全（E-REL-SOCIAL-FIELDS）；聚合用的条目整组不填，也不得被 `terms.rel` 或史实记录引用。字段：`persistence: enum persistence_mode`（现役或史实，§4.1.1）；`kind: ref vocab holding_kind`（挂在哪个种类行下，该行
+卷十八-社会关系与家族:239	orgTraits	[缺键]	| `orgTraits` | map<ref vocab orgkind, struct{domestic, descentGroup: boolean}> | 家户类、世系类的判定；orgkind 族的每条条目在这里必须有同键的一行，两项行上必写（E-KIN-ORG-TRAITS；封卷后勘误 1114w3a，原“缺键即两项皆假”是隐性缺省，删） |
+卷十六-神怪与怪物:145	mtier	[缺键]	| `mtier`（`mtier_`） | `rank: integer`（各条目互不相同）；`minPower: integer ≥ 0`；`quota: map<enum juris, integer ≥ 0 nullable> nullable`（必写；null 即此档不设内容配额；非空时 `juris` 族每个条目各写一键，缺键加载失败，E-BST-QUOTA；值为 null 即该层级不设配额）；`maxAlive: map<enum juris, integer ≥ 0 nullable> nullable`（必写；null 即此档不设在世上限；非空时 `juris` 族每个条目各写
+卷四-生物身体与人物:288	diet	[缺键/没有键/取 0]	| `diet` | `eats: rx`；`assimilation: struct{bySubstance: map<ref vocab substance, fraction nullable>, other: fraction nullable}`；`eatsTaxa: set<ref vocab taxon>`；`primaryConsumer: boolean`（派生字段，数据行不得填写，第六版）；`fiberPenalty: number nullable`（取值域 [0,5]；李白 11-13 准加纤维含量后补） | 一种消化能力，不是一张食物名单（第五版，全书同类"选材与组合
+候选合计 30 条
+
+===== node F:/dnd-tmp/book/check-orgkind-codes.mjs   exit=0
+     正式 orgkind 条目：orgkind_cult（卷七:246）、orgkind_order（卷七:247）、orgkind_state（卷八:265）、orgkind_town（卷八:266）、orgkind_village（卷八:267）、orgkind_guild（卷八:268）、orgkind_firm（卷八:269）、orgkind_caravan（卷八:286）、orgkind_army（卷八:287）、orgkind_faction（卷八:288）、orgkind_monster_band（卷八:289）、orgkind_household（卷十八:155）、orgkind_lineage（卷十八:156）
+PASS A 卷八登记句解析到别卷登记的 orgkind 4 种：教团、修会、家户、家族
+PASS A 种类"教团"→ orgkind_cult（卷七:241（按次序对应数据块）），有正式条目 卷七:246
+PASS A 种类"修会"→ orgkind_order（卷七:241（按次序对应数据块）），有正式条目 卷七:247
+PASS A 种类"家户"→ orgkind_household（卷十八:1508），有正式条目 卷十八:155
+PASS A 种类"家族"→ orgkind_lineage（卷十八:1509），有正式条目 卷十八:156
+PASS B 卷八 R8-1.1 列举的组织种类 13 种：国家、城镇、村社、行会、商号、商队、教团、修会、军团、家户、家族、派系、怪物族群
+PASS B 种类"国家"→ orgkind_state（卷八:260（按次序对应数据块）），有正式条目 卷八:265
+PASS B 种类"城镇"→ orgkind_town（卷八:260（按次序对应数据块）），有正式条目 卷八:266
+PASS B 种类"村社"→ orgkind_village（卷八:260（按次序对应数据块）），有正式条目 卷八:267
+PASS B 种类"行会"→ orgkind_guild（卷八:260（按次序对应数据块）），有正式条目 卷八:268
+PASS B 种类"商号"→ orgkind_firm（卷八:260（按次序对应数据块）），有正式条目 卷八:269
+PASS B 种类"商队"→ orgkind_caravan（卷八:281（按次序对应数据块）），有正式条目 卷八:286
+PASS B 种类"军团"→ orgkind_army（卷八:281（按次序对应数据块）），有正式条目 卷八:287
+PASS B 种类"派系"→ orgkind_faction（卷八:281（按次序对应数据块）），有正式条目 卷八:288
+PASS B 种类"怪物族群"→ orgkind_monster_band（卷八:281（按次序对应数据块）），有正式条目 卷八:289
+PASS C 代号 orgkind_cult（首见 卷七:246）有正式条目
+PASS C 代号 orgkind_order（首见 卷七:247）有正式条目
+PASS C 代号 orgkind_state（首见 卷八:265）有正式条目
+PASS C 代号 orgkind_town（首见 卷八:266）有正式条目
+PASS C 代号 orgkind_village（首见 卷八:267）有正式条目
+PASS C 代号 orgkind_guild（首见 卷八:268）有正式条目
+PASS C 代号 orgkind_firm（首见 卷八:269）有正式条目
+PASS C 代号 orgkind_caravan（首见 卷八:286）有正式条目
+PASS C 代号 orgkind_army（首见 卷八:287）有正式条目
+PASS C 代号 orgkind_faction（首见 卷八:288）有正式条目
+PASS C 代号 orgkind_monster_band（首见 卷八:289）有正式条目
+PASS C 代号 orgkind_household（首见 卷十八:155）有正式条目
+PASS C 代号 orgkind_lineage（首见 卷十八:156）有正式条目
+RESULT 失败 0
+
+===== node F:/dnd-tmp/book/check-statekey-writers.mjs   exit=0
+建议新码 E-STATE-MULTI-WRITER；state 顶层键 95 个；写者声明 160 条，涉及路径 126 个
+RESULT 无多写者撞键
