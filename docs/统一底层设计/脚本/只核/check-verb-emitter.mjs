@@ -285,8 +285,10 @@ if (!defB || !defC || !defDue || !c12) {
 } else {
   const col = (d, name) => d.head.indexOf(name);
   const reqByDef = (d) => {
-    const iu = col(d, 'onUnknown'), out = [];
-    for (const r of d.rows) for (const nm of namesIn(r.c[0])) out.push({ nm, err: r.c[iu] === 'error', must: /行上必写/.test(r.c.join('|')) });
+    const iu = col(d, 'onUnknown'), id = col(d, '取值域'), out = [];
+    // 条件必写：取值域写“`X` 为 `v` 时……”的栏，只在该行写了取值 v 时才必写（如 `onVerbs`、`subjectFrom` 只在 `mode` 为 `onEvent` 时）
+    for (const r of d.rows) { const cm = (r.c[id] || '').match(/`([A-Za-z]\w*)` 为 `([A-Za-z]\w*)` 时/);
+      for (const nm of namesIn(r.c[0])) out.push({ nm, err: r.c[iu] === 'error', must: /行上必写/.test(r.c.join('|')), cond: cm ? { on: cm[1], val: cm[2] } : null }); }
     return out;
   };
   const bDef = reqByDef(defB), cDef = reqByDef(defC), dueDef = reqByDef(defDue);
@@ -298,14 +300,19 @@ if (!defB || !defC || !defDue || !c12) {
   const c12Due = namesIn(seg('`due_kind` 的卷另须逐行补', '（'));
   const bErr = bDef.filter(r => r.err).map(r => r.nm);
   const REQ_B = [...new Set([...bErr, ...c12B, ...c12Bx])].filter(n => bDef.some(r => r.nm === n));
-  const REQ_C = c12C.filter(n => cDef.some(r => r.nm === n));
+  // 表 C 必写栏（2026-11-15 扩，只核 chk-1115-j35）：表 C 定义表 onUnknown 为 error 的全部栏，并上 C24-12 所列；
+  // 原只取 C24-12 所列六栏，漏了 startVerb/stageVerb/endVerb、mode、polarity、scopeKind、stageFlow 等缺即加载失败的栏
+  const cErr = cDef.filter(r => r.err).map(r => r.nm);
+  const REQ_C = [...new Set([...cErr, ...c12C])].filter(n => cDef.some(r => r.nm === n));
+  const COND_C = Object.fromEntries(cDef.filter(r => r.cond).map(r => [r.nm, r.cond]));
   const REQ_DUE = dueDef.filter(r => r.must).map(r => r.nm);
   console.log(`表 B 定义（${defB.at.v}:${defB.at.n}）onUnknown=error 的栏：${bErr.join('、')}`);
   console.log(`C24-12（${c12.v}:${c12.n}）列为行上必写的表 B 栏：${c12B.join('、')}；“动词行逐行补”另列：${c12Bx.join('、')}`);
   console.log(`  两处对照：定义为 error 而 C24-12 未列 {${bErr.filter(n => !c12B.includes(n) && !c12Bx.includes(n)).join('、') || '无'}}；C24-12 列而定义非 error {${[...c12B, ...c12Bx].filter(n => !bErr.includes(n)).map(n => n + '(' + (bDef.find(r => r.nm === n)?.err === false ? '定义为 gap/nullable' : '定义表无此栏') + ')').join('、') || '无'}}`);
   console.log(`→ 表 B 必写栏 ${REQ_B.length}：${REQ_B.join('、')}`);
   console.log(`表 C 定义（${defC.at.v}:${defC.at.n}）；C24-12 列的表 C 栏：${c12C.join('、')}；其中定义表有“行上必写”或 error 的 ${c12C.filter(n => cDef.some(r => r.nm === n && (r.must || r.err))).length}/${c12C.length}`);
-  console.log(`→ 表 C 必写栏 ${REQ_C.length}：${REQ_C.join('、')}`);
+  console.log(`表 C 定义 onUnknown=error 的栏 ${cErr.length}；C24-12 列而定义非 error 的 {${c12C.filter(n => !cErr.includes(n)).join('、') || '无'}}`);
+  console.log(`→ 表 C 必写栏 ${REQ_C.length}：${REQ_C.join('、')}；其中条件必写 ${Object.entries(COND_C).map(([k, c]) => `${k}（${c.on} 为 ${c.val} 时）`).join('、') || '无'}`);
   console.log(`due_kind 定义（${defDue.at.v}:${defDue.at.n}）“行上必写”的栏：${REQ_DUE.join('、')}；C24-12 另列 ${c12Due.join('、') || '—'}`);
 
   // 登记可能出现的二级节：排除卷首、读法、总述、扩展性测试、开放问题、迁移、验收断言与各附录（代号表、术语对照除外）。
@@ -379,7 +386,7 @@ if (!defB || !defC || !defDue || !c12) {
       if (!K.expand.test(s.h2 || '')) continue;
       // 单元行是表格行时，同一张表的别的数据行是别的登记行，不借它们的栏（表头另由 put 带上）
       const sh = tableHead(s);
-      for (const y of bySec.get(s.f + '\u0000' + s.h3) || []) if (!y.log && K.ctx.test(y.t) && !(sh && y !== s && y !== sh && tableHead(y) === sh)) put(y);
+      for (const y of bySec.get(s.f + '\u0000' + s.h3) || []) if (!y.log && (K.ctx.test(y.t) || (K.rowJson && K.rowJson(y.t))) && !(sh && y !== s && y !== sh && tableHead(y) === sh)) put(y);
     }
     return pool;
   }
@@ -396,7 +403,9 @@ if (!defB || !defC || !defDue || !c12) {
       // 句式命中后再经引用判别（他卷归属、他卷注释、订阅），全部命中都是引用的行不作登记处
       site: x => { const rx = /verb 族(的)?条目|`verb`（卷二十四|事件动词\**（(verb 族条目，)?登记到卷二十四|动词行(的)?表 ?B|按卷二十四表 B 登记|动词是 verb 族条目|本卷(自)?登记(的)?[^，。；|]{0,12}(事件)?动词(行)?[：:（]|[一二三四五六七八九十两]个事件动词/;
         return rx.test(x.t) && !allRef(x, rx, defB.at.v); } },
-    { key: 'C', name: '事件类型行（表 C）', req: REQ_C, ctx: /表 C|事件类型行|`event_type`|局势种类|灾异行/, expand: /^## §[24] /,
+    { key: 'C', name: '事件类型行（表 C）', req: REQ_C, cond: COND_C,
+      // 同节的数据实例（JSON 行写出至少三个表 C 栏键）就是该行的取值，并入单元
+      rowJson: t => REQ_C.filter(f => t.includes('"' + f + '":')).length >= 3, ctx: /表 C|事件类型行|`event_type`|局势种类|灾异行/, expand: /^## §[24] /,
       // 定义卷只认表格行；“卷X 登记一条事件类型行”而 X 不是本卷的，是在转述别卷，不算本卷登记处
       site: x => (x.v !== defC.at.v || x.t.startsWith('|')) && ![...x.t.matchAll(/(卷[一二三四五六七八九十零]+b?)[^，。；|卷]{0,6}登记[^。；|]{0,8}事件类型行/g)].some(m => m[1] !== x.v) && (
         /^事件类型行$/.test(cellsOf(x.t)[1] || '') || (CPHRASE.test(x.t) && !allRef(x, CPHRASE, defC.at.v))
@@ -412,10 +421,14 @@ if (!defB || !defC || !defDue || !c12) {
   const note = (v, s) => { if (!byGroup.has(v)) byGroup.set(v, []); byGroup.get(v).push(s); };
   const report = (K, v, label, lines, extraPool = []) => {
     const pool = poolOf(K, lines); for (const y of extraPool) pool.add(y);
-    const miss = K.req.filter(f => !has(pool, f));
+    // 条件必写栏：本单元把条件栏赋为触发取值（`mode` 取/为/=/： `onEvent`、JSON "mode": "onEvent"）才算必写；只在说明里提到该取值不算
+    const condRx = c => new RegExp('[`"]' + c.on + '[`"]?\\s*(?:取|为|=|：|:)\\s*[`"]?' + c.val + '(?![A-Za-z0-9_])');
+    const need = f => !K.cond?.[f] || [...pool].some(y => condRx(K.cond[f]).test(y.t));
+    const miss = K.req.filter(f => need(f) && !has(pool, f));
     missTotal += miss.length;
     if (miss.length) note(v, `${K.key}:${label}缺${miss.length}`);
     console.log(`  [${miss.length ? '缺栏' : '齐'}] ${v} ${label} 行 ${lines.map(x => x.n).join(',')}${miss.length ? `：缺 ${miss.join('、')}` : ''}`);
+    miss.pool = pool;
     return miss;
   };
   const codeOnly = (x, k) => { // 该行里 k 只出现在含比较、分支写法的代码片段里（示例代码，不是登记）
@@ -427,6 +440,7 @@ if (!defB || !defC || !defDue || !c12) {
   const cSites = L.filter(x => usable(x) && KC.site(x));
   const strongC = cSites.filter(s => C_ONLY.some(f => has(poolOf(KC, [s]), f)) || DECL_C.test(s.t));
   const weakC = cSites.filter(s => !strongC.includes(s));
+  const retiredSet = new Set(); // ③B 判出的已撤销代号，供 ③C 核三栏所指动词
   for (const K of KINDS) {
     console.log(`\n-- ③${K.key} ${K.name}：必写栏 ${K.req.length}`);
     const sites = L.filter(x => usable(x) && K.site(x));
@@ -467,7 +481,7 @@ if (!defB || !defC || !defDue || !c12) {
         if (!lines.length) lines = occ.filter(x => x.v === v && !x.log);
         if (!lines.length) { unres.push(`${label}{${v} 无正文行}`); continue; }
         // 已撤销：该卷写到它的每一句都是撤销/删去说明（“两个代号随之撤销”），不是登记（2026-11-15 脚本误报修正）
-        if (lines.every(x => retiredIn(x, r.name))) { retired.push(`${label}（${lines.map(x => x.v + ':' + x.n).join(' ')}）`); continue; }
+        if (lines.every(x => retiredIn(x, r.name))) { retiredSet.add(r.name); retired.push(`${label}（${lines.map(x => x.v + ':' + x.n).join(' ')}）`); continue; }
         lines.forEach(x => covered.add(x));
         if (lines.every(x => codeOnly(x, r.name))) { examples.push(`${label}（${lines.map(x => x.v + ':' + x.n).join(' ')}）`); continue; }
         report(K, v, `动词 ${label}${how}`, [...new Set(lines)], prosePool(v));
@@ -498,9 +512,34 @@ if (!defB || !defC || !defDue || !c12) {
         report(K, v, `旧称事件类型行（按动词行核）${how.length ? '（指针 ' + how.join(' ') + '）' : ''}`, ls, prosePool(v));
       }
     } else if (K.key === 'C') {
+      // 三栏所指动词（2026-11-15 扩，只核 chk-1115-j35）：哪几栏要指 kindOnly 动词行，从表 C 定义的取值域读（写“`kindOnly` 为真”的栏）；
+      // 本单元写了该栏时，抽出所指动词（`栏` 取/为/=/： `roles.verbs.X` 或 `verb_x`），核三件：抽得到、该动词在全书有登记（不是已撤销）、
+      // 其登记写着 kindOnly 为真（登记行“三行 `kindOnly`”句式，或同一格写 `kindOnly` 为真/取真/true）。每一处不成立计 1 处缺栏。
+      const KO_COLS = defC.rows.filter(r => /`kindOnly` 为真/.test(r.c[col(defC, '取值域')] || '')).flatMap(r => namesIn(r.c[0]));
+      const verbOcc = name => H.get(name) || C.get(name) || [];
+      const KOTRUE = /`kindOnly`[^。；|`]{0,8}(为真|取真|真|[=:：]\s*`?true`?)/;
+      const KOFALSE = /kindOnly`[^。；|`]{0,8}(为假|取假|假|false)/;
+      // 表格行首格（行的主语格）标明 `kindOnly`（如“| 子类型动词（`kindOnly`） | `verb_a`、`verb_b` |”）时，同行所列代号都算
+      const isKO = name => kindOnlySet.has(name) || verbOcc(name).some(x => !x.log && (x.t.split('|').some(c => c.includes(name) && KOTRUE.test(c) && !KOFALSE.test(c))
+        || (x.t.startsWith('|') && /`kindOnly`/.test(cellsOf(x.t)[0] || '') && !KOFALSE.test(cellsOf(x.t)[0]) && cellsOf(x.t).slice(1).some(c => c.includes(name)))));
+      console.log(`  三栏所指动词须为 kindOnly 行的栏（表 C 定义取值域读出）：${KO_COLS.join('、') || '无'}`);
       for (const s of strongC) {
-        report(K, s.v, '事件类型行', [s]);
+        const miss = report(K, s.v, '事件类型行', [s]);
         console.log(`      ${s.v}:${s.n} ${s.t.replace(/\s+/g, ' ').slice(0, 100)}`);
+        const text = [...miss.pool].map(y => y.t).join('\n');
+        for (const f of KO_COLS) {
+          if (!fieldWord(f).test(text)) continue; // 栏都没写的已在上面按缺栏计
+          const refs = [...text.matchAll(new RegExp('`' + f + '`\\s*(?:取|为|=|：|:)\\s*`(?:roles\\.verbs\\.)?([A-Za-z][A-Za-z0-9_]*)`|"' + f + '":\\s*"(?:roles\\.verbs\\.)?([A-Za-z][A-Za-z0-9_]*)"', 'g'))].map(m => m[1] || m[2]);
+          const bad = [];
+          if (!refs.length) bad.push('未写所指动词');
+          for (const v of new Set(refs)) {
+            // 存在性：除本单元（引用它的事件类型行）之外，正文另有写到它的行；只在引用处出现的不算有登记
+            if (!verbOcc(v).some(x => !x.log && !miss.pool.has(x)) || retiredSet.has(v)) bad.push(`${v} 无动词登记`);
+            else if (!isKO(v)) bad.push(`${v} 登记未写 kindOnly 为真`);
+          }
+          if (bad.length) { missTotal += bad.length; note(s.v, `C:事件类型行 ${f} ${bad.join('/')}`); }
+          console.log(`        [${bad.length ? '三栏不符' : '三栏符'}] ${f} → ${refs.join(',') || '—'}${bad.length ? '：' + bad.join('；') : ''}`);
+        }
       }
       console.log(`  自称事件类型行、未写任何表 C 独有栏（${C_ONLY.length} 个：${C_ONLY.join('、')}）——是表 C 行还是动词行旧称需人工判，表 C 不计数（已在 ③B 按动词行计）：`);
       for (const x of weakC) console.log(`      ${x.v}:${x.n} ${x.t.replace(/\s+/g, ' ').slice(0, 100)}`);
