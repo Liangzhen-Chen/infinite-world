@@ -205,6 +205,41 @@
 
 校验：`slots`、`effects` 引用闭合；`effects` 里每个 effectCall 的族都有至少一条 `cap_row` 或一条豁免行（§4.7）；`menu` 必填（I9-1）；`intimate` 必填，`intimate` 为真的行 `consent` 非空；`whenRX`、`interruptRX` 可编译且只读入口；`effects` 里含制作类效果（输出带品质档的实物，R9-4.4）的行，`check` 必须为空（检定在 `craftOutcome` 内做一次，不重复）；`workFromEdge` 非空的行，`slot` 须是本行的必填槽位，`refSpeed` 所指规则表键的取值域下限为 1（由登记该键的卷加载校验）；本行或本行 `costRows` 所指行有任一列写 `from_slot` 的，`shapeFrom` 必须非空，且其入口的登记返回形状（卷二 §2.7（系统声明表 `state-owners.json`）的 `readShapes`）含该列对应的键，否则 E-ACT-ROW（C15-1 ①）。
 
+**本卷登记的从业与生活方式动作行**（封卷后勘误 1115k4，李白裁定第 29 条）：卷十四的四个写入口 `takeUp`、`giveUp`（PF-3、PF-4）、`setFocus`（LF-1）、`takePerk`（LF-3）由下面四条动作行提起，玩家与居民同经本目录（居民经 §4.12 决策管线）。四行同一形状：`baseMinutes` 0（瞬时）、一个必填 `code` 槽位、`check` 为空、`effects.success` 调卷十四登记的对应效果族（卷十四 §5.1（本卷导出的入口（使用卷不得自拟别名））末段，经卷二 §3.9（效果族表 `_effects.json`）登记），其余四档按本节 `effects` 行写显式 null；前提（够格、切换间隔、点数）都由卷十四入口自己判，本行 `whenRX` 为空，够格与否在 `resolve()` 提交段由卷十四入口判，不过即拒。四行共用一个新动作类（`exertion` 0、`attention` 0、`social` 假、`interruptRX` 恒假：瞬时动作没有推进，不会被中断）与一个新菜单组，条目见第三个代码块。`decision.drives` 取卷二十六 §4.9（决策噪声接口）数据实例驱力清单中与收入、地位相关的两项，各 0.5（李白裁定第 29 条首值，待标定，见附录待补清单第 11 条）；四条候选提供行 `slotGen` 为该行唯一槽位映到空筛选表（候选取该族条目），`whenRX` 恒真，`maxCandidates` 写 4（占位，标定批，同卷二十二 §2.6（本卷向别卷表登记的行（代号与全部列））③ 的候选提供行）。效用与取舍照 R9-12.4、R9-12.7 原文，不另设数值。
+
+```json
+{
+ "act_take_up": {"class":"acls_decide","slots":{"profession":{"kind":"code","multi":false,"vocab":"profession","required":true}},"capability":null,"requirement":null,"whenRX":null,"consent":[],"answer":null,"intimate":false,"baseMinutes":0,"workFromEdge":null,"stages":[],"resumable":false,"check":null,
+   "effects":{"critical_failure":null,"failure":null,"partial":null,"success":[{"family":"eff_take_up","params":{}}],"critical_success":null},"backlash":[],"costRows":[],"skillGain":null,"decision":{"drives":{"drive_wealth":0.5,"drive_status":0.5},"candidateProviders":["take_up_profession"]},"menu":{"group":"menu_career","order":0},"shapeFrom":null,"sourceStrength":{},"basis":"卷十四 PF-3 从业；decision.drives 为李白裁定第 29 条首值，待标定"},
+ "act_give_up": {"class":"acls_decide","slots":{"profession":{"kind":"code","multi":false,"vocab":"profession","required":true}},"capability":null,"requirement":null,"whenRX":null,"consent":[],"answer":null,"intimate":false,"baseMinutes":0,"workFromEdge":null,"stages":[],"resumable":false,"check":null,
+   "effects":{"critical_failure":null,"failure":null,"partial":null,"success":[{"family":"eff_give_up","params":{}}],"critical_success":null},"backlash":[],"costRows":[],"skillGain":null,"decision":{"drives":{"drive_wealth":0.5,"drive_status":0.5},"candidateProviders":["give_up_profession"]},"menu":{"group":"menu_career","order":1},"shapeFrom":null,"sourceStrength":{},"basis":"卷十四 PF-3、PF-4 放弃从业；decision.drives 为李白裁定第 29 条首值，待标定"},
+ "act_set_focus": {"class":"acls_decide","slots":{"lifestyle":{"kind":"code","multi":false,"vocab":"lifestyle","required":true}},"capability":null,"requirement":null,"whenRX":null,"consent":[],"answer":null,"intimate":false,"baseMinutes":0,"workFromEdge":null,"stages":[],"resumable":false,"check":null,
+   "effects":{"critical_failure":null,"failure":null,"partial":null,"success":[{"family":"eff_set_focus","params":{}}],"critical_success":null},"backlash":[],"costRows":[],"skillGain":null,"decision":{"drives":{"drive_wealth":0.5,"drive_status":0.5},"candidateProviders":["set_focus_lifestyle"]},"menu":{"group":"menu_career","order":2},"shapeFrom":null,"sourceStrength":{},"basis":"卷十四 LF-1 设专注；decision.drives 为李白裁定第 29 条首值，待标定"},
+ "act_take_perk": {"class":"acls_decide","slots":{"perk":{"kind":"code","multi":false,"vocab":"perk","required":true}},"capability":null,"requirement":null,"whenRX":null,"consent":[],"answer":null,"intimate":false,"baseMinutes":0,"workFromEdge":null,"stages":[],"resumable":false,"check":null,
+   "effects":{"critical_failure":null,"failure":null,"partial":null,"success":[{"family":"eff_take_perk","params":{}}],"critical_success":null},"backlash":[],"costRows":[],"skillGain":null,"decision":{"drives":{"drive_wealth":0.5,"drive_status":0.5},"candidateProviders":["take_perk_node"]},"menu":{"group":"menu_career","order":3},"shapeFrom":null,"sourceStrength":{},"basis":"卷十四 LF-3 取节点；decision.drives 为李白裁定第 29 条首值，待标定"}
+}
+```
+
+候选提供行（登记进 §4.12 `candidate_provider` 行表，字段照该表）：
+
+```json
+{
+ "take_up_profession": {"actionId":"act_take_up","slotGen":{"profession":[]},"whenRX":"true","maxCandidates":4,"basis":"李白裁定第 29 条；maxCandidates 占位，标定批"},
+ "give_up_profession": {"actionId":"act_give_up","slotGen":{"profession":[]},"whenRX":"true","maxCandidates":4,"basis":"李白裁定第 29 条；maxCandidates 占位，标定批"},
+ "set_focus_lifestyle": {"actionId":"act_set_focus","slotGen":{"lifestyle":[]},"whenRX":"true","maxCandidates":4,"basis":"李白裁定第 29 条；maxCandidates 占位，标定批"},
+ "take_perk_node": {"actionId":"act_take_perk","slotGen":{"perk":[]},"whenRX":"true","maxCandidates":4,"basis":"李白裁定第 29 条；maxCandidates 占位，标定批"}
+}
+```
+
+动作类与菜单组条目（登记进 §2.1 `act_class`、`menu_group`）：
+
+```json
+{
+ "acls_decide": {"exertion":0,"attention":0,"social":false,"interruptRX":"false","basis":"李白裁定第 29 条：瞬时决定类动作，没有推进，不会被中断"},
+ "menu_career": {"order":0,"basis":"李白裁定第 29 条：从业与生活方式动作的菜单组"}
+}
+```
+
 ### 2.3 运行态路径
 
 | 路径 | 值 | 写者 | 进哈希 | 实体终止时 |
@@ -396,6 +431,16 @@
 
 没有计数器，也不需要禁止同刻重复提交：同一行动者同一分钟内的第二次提交以第一次的事件 id 为主体，id 不同。
 
+**到期项种类行**（登记进卷二十 §2.1（规则表 `rules.clock`（调度））的词表族 `due_kind`，字段照该族，写法同卷二十四 §2.5（本卷向别族登记的条目）；封卷后勘误 1115k4，李白裁定第 11 条：本卷凡登记到期项处都有一行）：
+
+| 族 | 条目 | 字段 | 说明 |
+|---|---|---|---|
+| 卷二十 `due_kind` | `due.activity` | `paceClass` = equilibrium；`rank` 见卷二十 §2.1（规则表 `rules.clock`（调度））`rank` 分配表；`floorRX` null；`calendarBound` 假 | 活动推进点与 `finishAt` 到期（R9-1.4、R9-1.12）；按世界分钟算，推进间隔是动作自身的耗时，不随节奏缩放（卷二十 §4.10.3（世界节奏 pace 规则）第 5 条） |
+| 卷二十 `due_kind` | `due.activityResume` | `paceClass` = equilibrium；`rank` 见卷二十 §2.1（规则表 `rules.clock`（调度））`rank` 分配表；`floorRX` null；`calendarBound` 假 | 续做窗口期满（R9-1.6）：中断后 `rules.act.resumeWindowMinutes` 到期仍未续做即以 `abandoned` 清除 |
+| 卷二十 `due_kind` | `due.npcIdle` | `paceClass` = equilibrium；`rank` 见卷二十 §2.1（规则表 `rules.clock`（调度））`rank` 分配表；`floorRX` null；`calendarBound` 假 | 空闲推进点（R9-12.7）：每隔 `rules.npc.idleAdvanceMinutes` 一个；是再次检查间隔，按卷二十 §4.10.3（世界节奏 pace 规则）第 3 条（b）强制均衡类 |
+| 卷二十 `due_kind` | `due.dialogueIdle` | `paceClass` = equilibrium；`rank` 见卷二十 §2.1（规则表 `rules.clock`（调度））`rank` 分配表；`floorRX` null；`calendarBound` 假 | 冷场关闭（R9-13.5）：`idleUntil` 到期未续即 `closed`，只按世界分钟 |
+| 卷二十 `due_kind` | `due.inviteExpire` | `paceClass` = equilibrium；`rank` 见卷二十 §2.1（规则表 `rules.clock`（调度））`rank` 分配表；`floorRX` null；`calendarBound` 假 | 待应答记录失效中的超时（R9-12.15）：此刻加 `rules.invite.expireMinutes` 到期时记录仍在即删除 |
+
 ---
 
 ## §3 统一入口
@@ -505,7 +550,7 @@
 - **R9-1.3 活动是动作实例**：开工时工量（R9-1.4）大于 0 的动作在开工提交时写一条 `state.activities[actorId]`。“在做什么”只读 `activityOf()`；睡眠、昏迷是状态容器，不是活动；人物表上不存活动文字。
 - **R9-1.4 进度与节奏**：开工时 `workTotal = baseMinutes`；动作行声明了 `workFromEdge` 的，`workTotal = ceil(distanceM ÷ refSpeed)`，`distanceM` 是该槽位所指边的长度（米，卷五 `routeView().edge`），`refSpeed` 是该字段指名的规则表键的值（除数下限 1，加载校验），这样取得的工量不受 `rules.act.maxBaseMinutes` 截断，为 0 即瞬时（C17-1 第 1 点）。节奏 `paceUnits` 是 `process.workPace` 求值结果的定点整数（标度即 `rules.act.paceScale`），下限取 `rules.act.paceFloor[该动作类]`；下限为 0 的动作类节奏可为 0，为 0 时活动停滞而不结束，推进点照登记（R9-1.12；C17-1 第 2 点）。节奏只在活动推进时重算（推进的时刻与步骤见 R9-1.12）。重算前先用旧节奏结清 `paceSince` 到此刻的 `m` 分钟：`acc = workDoneRem + m × paceUnits`；`workDone += floor(acc ÷ paceScale)`；`workDoneRem = acc − floor(acc ÷ paceScale) × paceScale`。除数 `paceScale` 是正整数，由加载校验保证。然后写新的 `paceUnits`、`paceSince`，并算收工时刻：`need = workTotal × paceScale − workDone × paceScale − workDoneRem`；`paceUnits` 为 0 时不做除法，`finishAt` 置空，活动停滞；否则 `finishAt = paceSince + ceil(need ÷ paceUnits)`，交卷二十 §4.1（刻、同刻全序、调度器与到期语义）登记到期项。在 `finishAt` 之前的任一刻 `m < need ÷ paceUnits`，结清后 `acc` 小于 `need`，所以存下的 `workDone` 恒小于 `workTotal`；到期那一刻判为做完，不再结清、不写回 `workDone`，活动记录在收工事务里删除，多出的不足一个 `paceUnits` 的部分随之丢弃（它不对应任何产出）。
 - **R9-1.5 阶段读时派生**：当前阶段是 `stages` 里满足 `workDone × 1000 ≥ atPermille × workTotal` 的最后一项（交叉相乘比较，不做除法）。阶段不落存储。
-- **R9-1.6 中断**：每次活动推进的第一步（R9-1.12）重查 `can(actor, capability)`、该动作类的 `interruptRX`、动作行 `consent` 声明的配合（R9-8.8）、动作行 `requirement` 的非消耗项与必填实体槽位、行动者是否在使该动作类受制的羁押下（两项定义见 R9-1.12 ①）；任一不过即结束本段，结束前按 R9-1.4 用旧节奏结清到此刻，中断原因取 `interrupt_cause` 的代号写进本次事务的事件。`resumable` 为真的，记录保留、`paceUnits` 置 0、`finishAt` 置空、`endCause` 写中断原因（续做时清空），并登记 `rules.act.resumeWindowMinutes` 之后的到期项；到期仍未续做即以 `abandoned` 结束并清除。`resumable` 为假的，立即以 `interrupted` 结束并清除。中断阈值只出现在 `interruptRX` 引用的规则表键里。
+- **R9-1.6 中断**：每次活动推进的第一步（R9-1.12）重查 `can(actor, capability)`、该动作类的 `interruptRX`、动作行 `consent` 声明的配合（R9-8.8）、动作行 `requirement` 的非消耗项与必填实体槽位、行动者是否在使该动作类受制的羁押下（两项定义见 R9-1.12 ①）；任一不过即结束本段，结束前按 R9-1.4 用旧节奏结清到此刻，中断原因取 `interrupt_cause` 的代号写进本次事务的事件。`resumable` 为真的，记录保留、`paceUnits` 置 0、`finishAt` 置空、`endCause` 写中断原因（续做时清空），并登记 `rules.act.resumeWindowMinutes` 之后的到期项（种类 `due.activityResume`，§2.9）；到期仍未续做即以 `abandoned` 结束并清除。`resumable` 为假的，立即以 `interrupted` 结束并清除。中断阈值只出现在 `interruptRX` 引用的规则表键里。
 - **R9-1.7 续做**：续做是来路为 `resume` 的同一个意图，从 `capacity` 段重新走；通过后按 R9-1.4 重算节奏，已做的工不丢。
 - **R9-1.8 并行**：一个行动者同时只有一条当前活动。活动期间提交瞬时动作，须两者动作类的 `attention` 相加不超过 1，否则 E-ACT-BUSY；要做就先提交“停下当前活动”的意图。
 - **R9-1.9 预留与退还**：开工时代价里的实物按 `cost_row.reserve` 转入行动者名下“在作”用途的账户；收工时由效果消耗；中断结束时按 `cost_row.onEnd`（`refund` 或 `forfeit`）整笔处置，不按进度拆分。
@@ -1029,7 +1074,7 @@
 - **R9-12.4 效用**：`U = Σ_d driveWeight[d] × contrib[d] + w.reward × reward + w.relation × 立场读数 − w.grievance × 积怨读数 − w.money × cost.money − w.time × cost.minutes − w.risk × cost.risk + decisionJitter(主体, 决策时刻, candidateId)`。`w` 取 `rules.npc.utilityWeights`。`reward` 是非钱的得益（如人情、名声的数值读数）；凡是钱，一律进 `cost.money`（对方给钱是负的代价）。需求类驱力的 `contrib` 由 `needSatisfiers()` 给出；`cost.risk` 可含 `legalityOf()` 读出的不合法后果估值与报价里的未得同意、无权能读数。**各项代价保留正负号**：负的代价（抵扣、对方代付）抬高效用，不截成 0。全式只有加减乘。
 - **R9-12.5 应答式的结论**：`npcDecision` 对“答应”这个候选算 `U`。底线剔除即 `refuse`；`U` 不小于 0 且后两段无碍即 `agree`；`U` 小于 0 见 R9-12.6；后两段有碍见 R9-12.8。 **给出配合类候选**（C15-1 ⑥）：答应的那个候选，其动作行在 `success` 下的效果开立同意边（种类 `rules.consent.edgeKind` 的 `holding.open`，R9-8.3）时，下结论前先从 `U` 中减去过程主体槽 `process.consentBar`（卷十五登记，本卷是其读者）的求值结果，上下文为 `{actor: 本人（给出配合的对象）, target: 提出者（施为者）, slots: 所请意图的槽位}`，流派由该槽的基值行按槽位读出（卷十五 R15-4.4）；再按本条与 R9-12.6 下结论。不按动作或流派代号分支。
 - **R9-12.6 有条件答应**：预付是钱，按效用式里钱的权重折算。`U` 小于 0 时，若 `w.money` 为 0，不做除法，结论为 `refuse`；否则所需预付 = `ceil(−U ÷ (w.money × rules.npc.conditionalStep)) × rules.npc.conditionalStep`（`conditionalStep` 是正整数，此时 `w.money` 为正，除数为正），结论为 `conditional`，决定卡 `prepay` 槽带这笔数。付了这笔，`cost.money` 减少同额，`U` 恰回到不小于 0。
-- **R9-12.7 主动式的选择**：`npcChoose` 在四种时刻被调度：日程槽结束、当前活动结束、没有当前活动的人其需求类状态实例经执行器被写入的那次事务（执行器在事务末步按 R9-1.12 同一做法发现：该人的重查集合取卷二十六 `needSatisfiers()` 与驱力权重所依的状态路径）、没有当前活动的人的空闲推进点（每隔 `rules.npc.idleAdvanceMinutes` 一个到期项，有活动或日程槽时不登记）。需求越线若由推进钩子经 `writePath` 直写（卷二 §2.6（写者与三接口）许可），不经执行器，按 R9-1.12 同一上界最迟在下一个空闲推进点被发现，延迟不超过一个间隔。它取全部 `candidate_provider` 行（候选只来自登记的数据行，没有按代码写的提供者），各自按 `whenRX` 与 `slotGen` 生成不超过 `maxCandidates` 个候选，过 R9-12.2，按 R9-12.4 算 `U`，取最大者；`U` 相同时取 `candidateId` 码序最小者。已有承诺（`state.decisionCommit`）未到 `until` 时，新候选的 `U` 须比承诺候选此刻的 `U` 高出 `rules.npc.switchMargin` 才替换。`npcChoose` 自己不写状态；调度它的到期钩子据其结果以声明写者写日程槽与承诺，并把意图交 `resolve()`。
+- **R9-12.7 主动式的选择**：`npcChoose` 在四种时刻被调度：日程槽结束、当前活动结束、没有当前活动的人其需求类状态实例经执行器被写入的那次事务（执行器在事务末步按 R9-1.12 同一做法发现：该人的重查集合取卷二十六 `needSatisfiers()` 与驱力权重所依的状态路径）、没有当前活动的人的空闲推进点（每隔 `rules.npc.idleAdvanceMinutes` 一个到期项（种类 `due.npcIdle`，§2.9），有活动或日程槽时不登记）。需求越线若由推进钩子经 `writePath` 直写（卷二 §2.6（写者与三接口）许可），不经执行器，按 R9-1.12 同一上界最迟在下一个空闲推进点被发现，延迟不超过一个间隔。它取全部 `candidate_provider` 行（候选只来自登记的数据行，没有按代码写的提供者），各自按 `whenRX` 与 `slotGen` 生成不超过 `maxCandidates` 个候选，过 R9-12.2，按 R9-12.4 算 `U`，取最大者；`U` 相同时取 `candidateId` 码序最小者。已有承诺（`state.decisionCommit`）未到 `until` 时，新候选的 `U` 须比承诺候选此刻的 `U` 高出 `rules.npc.switchMargin` 才替换。`npcChoose` 自己不写状态；调度它的到期钩子据其结果以声明写者写日程槽与承诺，并把意图交 `resolve()`。
 - **R9-12.8 处境与冲突**：`circumstances` 段读 `can()`、`activityOf()` 的动作类注意力、日程槽占用：此刻做不了而稍后可以的，结论 `defer`，`due` 取最早的空闲时刻。`conflicts` 段读该人物在效的义务与职位职责：时间区间重叠或职责禁止的，结论 `refuse`。两段都只比较区间与代号。
 - **R9-12.9 决定先于对白**：`Decision` 算出后才有台词。决定卡代号与槽位进 `ReplyResult` 与场景卡；模型只管措辞，改不了结论。
 - **R9-12.10 走同一条管线**：NPC 对世界的一切改动只经 `resolve()`。日程槽与承诺是决策自己的记录，不是世界改动，由 `npc-agenda.mjs` 以声明写者写。候选提供者只返回意图，自己不写状态；违者 E-NPC-BYPASS。
@@ -1037,7 +1082,7 @@
 - **R9-12.12 契机不在这里**：隐藏职业契机（卷十四 §4.8（隐藏职业契机））是订阅事件的反应规则；它若给出“可以入行”，那只是多出一个候选，取舍仍按本节。
 - **R9-12.13 决定卡的读数**（C29-5）：每张进 `ReplyResult.cards` 与场景卡的决定卡带一份 `CardReading`（§2.4），供模板对白的变体条件读（卷二十九 R29-2.8），组卡时由规则层算出，只读数值维度与固定代号，不进存档、不进哈希，不改结论（R9-12.9）。`listener` 是该决定所答意图的行动者。`persBand` 对说话人 `personView().dims.personality` 的每一键、`gaugeBand` 对其 `personView().dims.psychOut` 的每一已知键（卷二十六 §3.1（读入口）的视图输出），档序 = 该值不小于 `rules.card.persCuts`（人格）或 `rules.card.gaugeCuts`（心理量）中几个切点，与 R9-3.5 数界的写法相同；值未知的键不进 map。性格档即人格各轴的档序，心情档即心情心理量那一键的档序。`relations` 是 relation 族全部条目中卷十八 `related(engine, state, 说话人, listener, rel)` 为真者，按代号升序，没有即空列表。`occasion` 是 `occasion` 族除 `occ_nil` 外 `whenRX` 此刻为真的条目中 `order` 最小者（同序取代号码序最小），无一成立取 `occ_nil`。代码里没有人格轴、心理量、关系或场合的代号。
 - **R9-12.14 拒绝应答事件**（封卷后勘误，李白 11-14 17:04 裁定）：凡须对方应答的邀约，即提给他人、由对方答应与否定成败的动作（征求同意，R9-8.3；对话里的请求、出价、还价，R9-13.1；别卷登记的决斗、交易、结盟、婚约等邀约类动作行都经这两路之一），应答落为拒绝的那笔事务在同一事务内发一条动词 `verb_invite_refused`，载荷 `{actor: 应答者, targets: [发起者], invite: EventId, inviteAction: 邀约动作代号}`。落为拒绝只有两种：应答者是 NPC 时，`npcDecision` 对该邀约的结论为 `refuse`（R9-12.5、R9-12.6、R9-12.8 各路同此），在邀约动作自己的裁决事务里发，`invite` 取该事务提交段那条事件的 id、`targets` 取该意图的 `actor`、`inviteAction` 取该意图的 `actionId`，由该裁决事务直写；应答者有席位边时，他提交的 `answer` 为 `refuse` 的一步（对话里的拒绝行；§4.8 的拒绝给予同意，R9-8.3）答复一条待应答记录（R9-12.15），在这一步的裁决事务里发并删该记录，`invite` 取该记录的键 `inviteId`、`targets` 取 [该记录的发起者]、`actor` 取应答者（本步行动者）、`inviteAction` 取该记录的邀约动作代号，由记录直写。`defer`、`conditional`、`counter` 不是拒绝，不发；待应答记录失效（超时、轮数耗尽，R9-12.15）也不是拒绝，不发。多人应答（R9-13.7）时每个拒绝者各发一条。不按动作代号、邀约种类分支；别卷订阅它只按载荷的代号与 id 匹配，认出是哪种邀约读载荷 `inviteAction`（别卷以句柄登记所认的邀约动作代号）。它属“写者协议在事务内另发的事件”一类（R9-2.3、§2.9 该行）：`primitives` 为空，id 按该行取，位次 `pos.kernel`。动词行表 B 各栏（卷二十四 §2.2（维度）表 B，字段类型与取值域照该表，本卷只填值）：`parent` 空；`payloadShape` 为 `{invite: EventId, inviteAction: ref action}`（`actor`、`targets` 是公共栏位，不进 `payloadShape`）；`kindFrom` 空；`kindOnly` 假；`worthSlots` 为 `{destroyed: [], moved: [], stake: []}`；`headSlot` 为 null；`sigBase` 写 0（占位待标定）；`tallies` 写 `[]`；`perceivable` 真、`senses` {视、听}（经句柄 `roles.senses.sight`、`roles.senses.hearing`；两个发出点都是行为人动作的裁决事务，判据同卷十八 §2.3（本卷登记的资源种类行、合同种类行、事件动词））；`visibilityAllowed` 取卷二十四 §2.2（维度）表 A `visibility` 的全集 {`public`、`private`、`witnessed`}，当众程度由发出它的事务在集合内给出；`scandal` 取假（拒绝邀约不是应答者的丑闻；卷二十四表 B 该列，封卷后勘误 1115c1）；`calendarBound` 取假（不是周期日到来或按历法锚定的到期；卷二十四表 B 该列，封卷后勘误 1115cb）。
-- **R9-12.15 待应答记录**（封卷后勘误，李白 11-14 17:30 裁定）：凡提给有席位边（R9-3.9）者的邀约，即管线须取应答者结论的那一步（对 NPC 即调 `npcDecision()` 应答的同一处：征求同意，R9-8.3；对话里的请求、出价、还价，R9-13.1、R9-13.4；别卷登记的决斗、交易、结盟、婚约等邀约类动作行）而该应答者有席位边的，不调 `npcDecision()`，在该邀约的裁决事务里为每个有席位的应答者开一条待应答记录 `state.pendingInvites[inviteId][respondentId]`（§2.3）：`inviteId` 取该事务提交段那条事件的 id，发起者 `inviter` 取该意图的 `actor`，邀约动作代号 `inviteAction` 取该意图的 `actionId`。对话里 NPC 在对方这一步之内还价（结论 `counter`，R9-13.4）而对方有席位边时，这也是提给席位者的邀约，同一事务开一条记录：发起者取还价的 NPC，应答者取对方，`inviteId` 与 `inviteAction` 取本步提交段那条事件的 id 与本步的动作代号。对话会话只是来源之一，记录不挂在会话上。席位应答者以带通用槽位 `invite` 的一步作答，`invite` 指明所答记录（候选取应答者名下的打开记录，§4.19.1），结论取该行的 `answer`（§2.2）；不带 `invite` 的一步不是应答。记录只以三种方式结束，都由 `invites.mjs` 在那一笔事务里删除：① 一步作答：`answer` 为 `agree` 或 `counter` 的一步，即接受或还价（还价既非接受也非拒绝；它本身又是提给对方的邀约，对方有席位边时按本条另开记录）；② 一步拒绝：`answer` 为 `refuse` 的一步，同一事务发拒绝应答事件（R9-12.14）；③ 失效：超时，即开记录的事务登记一个到期项，时刻为此刻加 `rules.invite.expireMinutes`（§2.5），到期时记录仍在即删除；或轮数耗尽，即本步使会话 `round` 达到 `rules.dialogue.maxRounds` 而转 `refused`（R9-13.4），本步所答的记录按失效删除，本步不再开记录。失效不发拒绝应答事件，也不发别的事件，只删记录。发起者或应答者终止时由 §3.3 的清理函数删除，是存档去留，不是应答。不按动作代号、邀约种类分支。
+- **R9-12.15 待应答记录**（封卷后勘误，李白 11-14 17:30 裁定）：凡提给有席位边（R9-3.9）者的邀约，即管线须取应答者结论的那一步（对 NPC 即调 `npcDecision()` 应答的同一处：征求同意，R9-8.3；对话里的请求、出价、还价，R9-13.1、R9-13.4；别卷登记的决斗、交易、结盟、婚约等邀约类动作行）而该应答者有席位边的，不调 `npcDecision()`，在该邀约的裁决事务里为每个有席位的应答者开一条待应答记录 `state.pendingInvites[inviteId][respondentId]`（§2.3）：`inviteId` 取该事务提交段那条事件的 id，发起者 `inviter` 取该意图的 `actor`，邀约动作代号 `inviteAction` 取该意图的 `actionId`。对话里 NPC 在对方这一步之内还价（结论 `counter`，R9-13.4）而对方有席位边时，这也是提给席位者的邀约，同一事务开一条记录：发起者取还价的 NPC，应答者取对方，`inviteId` 与 `inviteAction` 取本步提交段那条事件的 id 与本步的动作代号。对话会话只是来源之一，记录不挂在会话上。席位应答者以带通用槽位 `invite` 的一步作答，`invite` 指明所答记录（候选取应答者名下的打开记录，§4.19.1），结论取该行的 `answer`（§2.2）；不带 `invite` 的一步不是应答。记录只以三种方式结束，都由 `invites.mjs` 在那一笔事务里删除：① 一步作答：`answer` 为 `agree` 或 `counter` 的一步，即接受或还价（还价既非接受也非拒绝；它本身又是提给对方的邀约，对方有席位边时按本条另开记录）；② 一步拒绝：`answer` 为 `refuse` 的一步，同一事务发拒绝应答事件（R9-12.14）；③ 失效：超时，即开记录的事务登记一个到期项（种类 `due.inviteExpire`，§2.9），时刻为此刻加 `rules.invite.expireMinutes`（§2.5），到期时记录仍在即删除；或轮数耗尽，即本步使会话 `round` 达到 `rules.dialogue.maxRounds` 而转 `refused`（R9-13.4），本步所答的记录按失效删除，本步不再开记录。失效不发拒绝应答事件，也不发别的事件，只删记录。发起者或应答者终止时由 §3.3 的清理函数删除，是存档去留，不是应答。不按动作代号、邀约种类分支。
 
 #### 4.12.4 交互
 
@@ -1071,7 +1116,7 @@
 - **R9-13.2 转移查表**：一步合法当且仅当会话当前状态在该行的 `from` 里，否则 E-DIALOGUE-STATE；新状态 = `onOutcome[应答结论]`。`opens` 的行新建会话，`closes` 的行置 `closed` 并清除。代码里没有按动作代号写的转移。
 - **R9-13.3 话题是检索键**：问什么由槽位 `mentions`（实体 id 列表）与 `dims`（维度代号列表）给出，`kind` 取 `ask` 或 `request`。答什么由规则定：从应答者的已知集合里取与检索键相合的事实 id，去掉对提问者保密的（卷二十二 §4.7（秘密、钩子、阴谋），读保留度 `guard`，卷十八 R18-5.5；C22-15）与 `treatment()` 不许告知的，写进决定卡槽位。
 - **R9-13.4 交涉**：出价是结构化的 `offer`。应答者按卷六 §4.21（价格四角色）的估值入口、以自己的主观视图给双方物项估值，差额（应答者所得估值减所付估值，以钱计）取负后进 `cost.money`，代入 R9-12.4。按 R9-12.6 得出 `conditional` 时，在交涉里它写成还价：结论记为 `counter`，在对方的 `give` 上加一笔 R9-12.6 的数，决定卡取 `outcome` 为 `counter` 的那一张、槽位 `extra` 带这笔数、`offer` 指向对方这次出价。每出一次价 `round` 加 1；达到 `rules.dialogue.maxRounds` 仍未 `agreed` 即转 `refused`；轮数耗尽不是哪一方的拒绝：不发拒绝应答事件，本步所答的待应答记录按失效删除，本步不再开记录（R9-12.15）。两个还价方案效用相等时取 `candidateId` 码序最小者，与 R9-12.7 同一做法，不抽随机。
-- **R9-13.5 冷场关闭**：每一步把 `idleUntil` 设为此刻加 `rules.dialogue.idleMinutes` 并登记到期项；到期未续即 `closed`。只按世界分钟。
+- **R9-13.5 冷场关闭**：每一步把 `idleUntil` 设为此刻加 `rules.dialogue.idleMinutes` 并登记到期项（种类 `due.dialogueIdle`，§2.9）；到期未续即 `closed`。只按世界分钟。
 - **R9-13.6 成交即动作**：`agreed` 之后的交付（买卖、雇佣、跟随、借贷）是另外的目录动作，其 `whenRX` 要求双方有一场 `agreed` 的会话；状态机自己不转移任何钱物。
 - **R9-13.7 多人应答**：槽位 `respondents` 列出多个应答者时，各人按 id 升序分别调 `npcDecision()`，互不读对方本轮的结论。
 - **R9-13.8 威吓**：威吓一步的效用项读 `dread()` 与卷十三 §4.18（遭遇与谈判结算）登记的威慑量来源行；没有专门的威吓算法。
@@ -1610,6 +1655,7 @@
 | 8 | 待标定：`rules.scene.promptBudget`、`staticBudget`（现测静态提示约一万零五百，口径是 token，需换算成码点） | R9-10.4、R9-10.8 | 标定批；换算交 Opus |
 | 9 | 待标定：`rules.ai.timeoutMs`、`budgetTokens`、`degradeMap` 各行；`rules.ai.modelClass`、`validateNameWindow`、`rules.i18n.nameCandidateCount`（李白 11-13：档位与量写成规则表键，待标定） | §4.14、§4.18、R9-19.10、R9-19.11 | 标定批 |
 | 10 | 待查（交 Opus）：卷十三 §4.1、§4.18，卷十五 §4.1、§4.4，卷二十二 §4.1、§4.7，卷二十八 §4.5、§4.7，卷二十九 §4.1–§4.3、§4.7，卷十二 §4.6 尚未成稿，引用的标题按台账写，成稿后对齐；其中卷二十二 §4.1、§4.7 标题已定并已对齐，销账（C22-15，11-14 封卷后勘误） | 全卷引用 | Opus 收尾 |
+| 11 | 待标定：§2.2 末四条从业与生活方式动作行的 `decision.drives`（`drive_wealth`、`drive_status` 各 0.5，李白裁定第 29 条首值，未核）与四条候选提供行的 `maxCandidates` 4 | §2.2 | 标定批 |
 
 ## 附录 修订记录
 
@@ -1690,6 +1736,7 @@
 | 封卷后勘误 1115c1（依据：二波丙只核与收尾待办 :630（`basis` 写法）、recordKind 只核小项 a、李白 11-14 19:55 丁11、四波乙二轮配合项（收尾待办 :690）、22:32 裁定表 B `scandal`；`审查/收卷批-按卷清单.md` 9-1 至 9-4 与 24-2；版本号不升，不改卷首；改前快照 `版本快照/卷九-v2-勘误前-1115c1.md`，改后覆盖 `版本快照/卷九-v2.md`） | §2.2 `basis` 行；R9-1.2；§2.9 `stream.check` 两行的对象段；§4.19.1 动作专有槽位段；R9-12.14 动词行表 B 栏 | ① 数据行 `basis` 类型由 `struct:basis`（那是运行态偏离行的结构）改为卷二数据行写法：说明文字 string（display 登记）；② R9-1.2 补候选来源：`entityKind`、`vocab`、`recordKind` 三种槽各从哪里取；③ `stream.check` 对象段补多主体时按 R27-8.5 复合对象段拼主体 id（通用写法，不按动作分支）；④ 写明卷二十三创作动作的专有槽位 `slots`、`roles` 必传、由提出方写定；⑤ `verb_invite_refused` 补 `scandal` 假。必要理由：类型与卷二不合；候选单点定义漏两类槽；多人合演逐演者检定会撞键；卷二十三已把两项改为必传；表 B 新增列须行上必写 |
 | 封卷后勘误 1115cb（依据：李白 11-15 01:00 ①，`审查/收卷批-按卷清单.md` 2-7；版本号不升，不改卷首；改前快照 `版本快照/卷九-勘误前-1115cb.md`，改后覆盖 `版本快照/卷九-v2.md`） | R9-12.14 动词行表 B 栏 | `verb_invite_refused` 补 `calendarBound` 假。必要理由：卷二十四表 B 新增行上必写列 |
 | 封卷后勘误 1115j3（依据：全书加载修复批 甲-3，`审查/全书加载修复批-甲0-缺栏清单.md` §3.1 卷九三项、`审查/全书加载修复批-前置盘点定性.md` 310b；李白 11-15 07:00 批阶段甲；版本号不升，不改卷首；改前快照 `版本快照/卷九-v2-勘误前-1115j3.md`，改后覆盖 `版本快照/卷九-v2.md`） | R9-1.14；§2.9 事件 id 表 `due.activity` 行；§5.2 卷二十一行；§5.3 勘10 附载体条 | ① R9-1.14 `verb_activity_ended` 补表 B 全部必写栏（`perceivable`、`senses` 按卷十八 §2.3 整类判据，`scandal` 按卷十八 §2.1 含义，`calendarBound` 按卷二十 §4.2.6 不变量③）；② `due.activity` 的 `due_kind` 行补 `calendarBound` 假（按世界分钟）；③ 勘10 附载体条“规则键”改为卷二十七:153 的“规则表键”；④ §5.2 卷二十一行“代号待登记”改为已登记的三个代号。必要理由：卷二十四表 B、卷二十 §2.1 `due_kind` 的这些栏行上必写、无缺省，缺一栏加载即报错（C24-12）；③④ 是与定义处不一致的旧称与过时句。前提失效通知表与 §5.2、§5.3 订阅说明里写到的别卷动词（卷二十一的实例出现、换档、移除三个动词与卷二的终止动词等）是订阅、不是本卷登记，不在本卷补栏 |
+| 封卷后勘误 1115k4（依据：李白裁定第 11、29 条（`收尾待办.md`“李白裁定（待裁清单 ad349e21）”条），`审查/全书加载修复批-待裁清单.md` 第一节卷九冷场/超时行、第六节卷九动作目录行；版本号不升，不改卷首；改前快照 `版本快照/卷九-v2-勘误前-1115k4.md`，改后覆盖 `版本快照/卷九-v2.md`） | §2.9 末新增到期项种类行表；R9-1.6、R9-12.7、R9-12.15、R9-13.5 括注种类代号；§2.2 末新增四条动作行与四条候选提供行；§2.1 `act_class` 加 `acls_decide`、`menu_group` 加 `menu_career`（条目，在 §2.2 末段写明字段）；附录待补清单第 11 条 | ① 第 11 条：本卷登记到期项的五处（活动推进点与收工 `due.activity`、续做窗口期满、空闲推进点、冷场关闭、待应答记录超时）各有一行 `due_kind`，`paceClass` equilibrium、`floorRX` null、`calendarBound` 假、`rank` 指卷二十 §2.1 `rank` 分配表（新增四种待该表补号，已交主会话）；原先只有 `due.activity` 写了 `calendarBound`，其余四处无行。必要理由：卷二十 §2.1 要求每类到期项有 `due_kind` 行（缺 `paceClass` 即 E-PACE-UNCLASSIFIED），缺行加载失败。② 第 29 条：补从业、放弃从业、设专注、取节点四条动作行（瞬时、一个必填槽位、无检定、`effects` 调卷十四登记的效果族），`decision.drives` 取卷二十六的 `drive_wealth`、`drive_status` 各 0.5 并记待补第 11 条。必要理由：卷十四这四个写入口的提起方写的是“经卷九动作目录的一条动作”，目录里原本没有这些行，属无据断言（待裁清单第六节） |
 
 ## 附录 自检脚本输出
 
