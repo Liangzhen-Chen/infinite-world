@@ -30,11 +30,12 @@ export function headingNum(text) {
 const EXCL_H2 = /^(附|附录)|迁移|开放问题|修订记录|术语/;
 const EXCL_ANY = /本卷使用|记账|影响面|牵连|修改记录|自检脚本|核算脚本|审查意见|处置对照|对账脚本|开放问题|迁移与退役/;
 
-export function loadVolumes() {
-  const files = fs.readdirSync(DIR).filter(f => /^卷.+\.md$/.test(f)).sort();
+// dir 缺省为本书目录；注入测试可传临时目录
+export function loadVolumes(dir = DIR) {
+  const files = fs.readdirSync(dir).filter(f => /^卷.+\.md$/.test(f)).sort();
   return files.map(f => {
     const vol = f.split('-')[0];
-    const raw = fs.readFileSync(path.join(DIR, f), 'utf8').split(/\r?\n/);
+    const raw = fs.readFileSync(path.join(dir, f), 'utf8').split(/\r?\n/);
     const lines = [];
     let h2 = '', h3 = '', h4 = '', inCode = false, header = null, prevTable = false;
     let n2 = null, n3 = null, n4 = null;
