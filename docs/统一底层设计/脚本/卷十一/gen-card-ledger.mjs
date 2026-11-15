@@ -25,6 +25,8 @@ const VOL = new RegExp(CFG.volCode);
 const mig = JSON.parse(rd(`${HERE}/migrows-input.json`));
 const rows = mig.rows.filter(r => !r.aliasOf);
 const sysJ = JSON.parse(rd(`${OUT}/乙4补-systems补全.json`)).systems;
+// 系统登记项六列的卷文转录（乙-6a）：还待补的列
+const sixPending = new Map(JSON.parse(rd(`${OUT}/乙6a-系统登记六列.json`)).systems.map(s => [s.system, Object.keys(s.cols).filter(c => s.cols[c].value === '待补')]));
 const h2 = JSON.parse(rd(`${OUT}/乙4-entryCallerFiles.json`));
 const edges = rd(`${OUT}/乙4-import图-边表.tsv`).split('\n').slice(1).filter(Boolean).map(l => l.split('\t'));
 const importers = new Map();
@@ -601,7 +603,8 @@ for (const c of cards) {
   }
   // 系统登记项的待补字段（systems 补全表）
   const s = c.objectKind === 'system' ? sysByKey.get(c.objectCode) : c.objectKind === 'table' ? sysOfTable.get(c.objectCode) : null;
-  if (s && (c.cardKind === 'first' || c.cardKind === 'ledger_parent') && s.pending?.length) c.pending.push(`system:${s.system} 登记项待补 ${s.pending.join('、')}`);
+  const remain = s ? sixPending.get(s.system) ?? s.pending ?? [] : [];
+  if (s && (c.cardKind === 'first' || c.cardKind === 'ledger_parent') && remain.length) c.pending.push(`system:${s.system} 登记项待补 ${remain.join('、')}`);
   if (c.cardKind === 'first' && c.objectKind === 'table' && dimKeysOf(c.objectCode).length === 0) c.pending.push('accept:卷二 §6.12 没有该表的齐全率下限键');
   c.pending = uniq(c.pending).sort();
 }

@@ -595,7 +595,7 @@
    "fails": 0,
    "pending": [
     "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
-    "system:sys.economy 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.economy 登记项待补 predicates、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -2057,7 +2057,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.deity 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.deity 登记项待补 sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -2354,7 +2354,7 @@
    "pending": [
     "accept:卷二 §6.12 没有该表的齐全率下限键",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.deity 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.deity 登记项待补 sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -2434,7 +2434,7 @@
    "pending": [
     "accept:卷二 §6.12 没有该表的齐全率下限键",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.deity 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.deity 登记项待补 sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -2558,7 +2558,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.item 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.item 登记项待补 predicates、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -2654,7 +2654,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.item 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.item 登记项待补 predicates、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -2738,7 +2738,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.material 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.material 登记项待补 sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -2948,7 +2948,7 @@
    "pending": [
     "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.ai_interface 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.ai_interface 登记项待补 predicates、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -3085,7 +3085,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.capacity 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.capacity 登记项待补 sources、sinks、entryJudges"
    ],
    "migReady": {
     "defects": [
@@ -3251,7 +3251,7 @@
    "pending": [
     "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.time_env 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.time_env 登记项待补 predicates、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -3384,13 +3384,11 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
-    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.status 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
    ],
    "migReady": {
     "defects": [
-     "待补:必填项空位(retire)",
-     "待补:登记项字段"
+     "待补:必填项空位(retire)"
     ],
     "stateItems": [
      "依赖卡已 merged",
@@ -3975,7 +3973,7 @@
     "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "accept:卷二 §6.12 没有该表的齐全率下限键",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.knowledge 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.knowledge 登记项待补 predicates、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -4173,7 +4171,7 @@
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
     "row:M25-23",
     "row:M25-41",
-    "system:sys.plant 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.plant 登记项待补 predicates、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -4265,7 +4263,7 @@
    "pending": [
     "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.packs 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.packs 登记项待补 predicates、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -4385,7 +4383,7 @@
    "pending": [
     "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.psyche 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.psyche 登记项待补 predicates、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -4698,7 +4696,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.place 登记项待补 predicates、writers、sources、sinks、entryJudges"
+    "system:sys.place 登记项待补 predicates、sources、sinks、view"
    ],
    "migReady": {
     "defects": [
@@ -4774,7 +4772,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.org 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.org 登记项待补 predicates、sources、sinks、entryJudges"
    ],
    "migReady": {
     "defects": [
@@ -5030,7 +5028,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.org 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.org 登记项待补 predicates、sources、sinks、entryJudges"
    ],
    "migReady": {
     "defects": [
@@ -5094,7 +5092,7 @@
    "pending": [
     "files:该对象在旧代码里没有消费者文件（新对象或纯数据对象）",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.org 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.org 登记项待补 predicates、sources、sinks、entryJudges"
    ],
    "migReady": {
     "defects": [
@@ -5180,7 +5178,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.offense 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.offense 登记项待补 predicates、sources、sinks、entryJudges"
    ],
    "migReady": {
     "defects": [
@@ -5445,7 +5443,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.offense 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.offense 登记项待补 predicates、sources、sinks、entryJudges"
    ],
    "migReady": {
     "defects": [
@@ -5647,7 +5645,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.worldgen 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.worldgen 登记项待补 predicates、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -5918,7 +5916,7 @@
    "pending": [
     "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.travel 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.travel 登记项待补 sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -6087,7 +6085,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.combat 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.combat 登记项待补 predicates、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -6229,7 +6227,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.facility_type 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.facility_type 登记项待补 predicates、sources、sinks、view"
    ],
    "migReady": {
     "defects": [
@@ -6523,7 +6521,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.arcana 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.arcana 登记项待补 predicates、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -6668,7 +6666,7 @@
    "pending": [
     "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.social 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.social 登记项待补 sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -7071,7 +7069,7 @@
     "row:M14-82c",
     "row:M14-82e",
     "row:M14-82f",
-    "system:sys.profession 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.profession 登记项待补 predicates、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -7156,7 +7154,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.profession 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.profession 登记项待补 predicates、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -7246,7 +7244,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.species 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.species 登记项待补 sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -7343,7 +7341,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.species 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.species 登记项待补 sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -7478,7 +7476,7 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.species 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+    "system:sys.species 登记项待补 sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
