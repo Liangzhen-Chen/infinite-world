@@ -228,6 +228,63 @@ if (!/`t0` 下不发任何模型请求/.test(all)) r13.push('缺 t0 条');
 if (!/不入库，不进哈希，不进后续提示/.test(all)) r13.push('缺三不条');
 report('13 来路无关、默认不开模型、拒收三不条文在位', r13.length === 0, r13.join(' | '));
 
+// 14 E-ACT-CAP-MISSING 按参数判（李白 ce6e990b ① (d)；R9-7.5 唯一定义，封卷后勘误 1115k4）
+// 先核三处口径一致：R9-7.5、§2.8 错误码行、§2.2 校验句都写"逐（按）参数"、cap_row 或豁免行、数值参数为空须显式声明。
+// 再对全书机判：效果族 = 卷九动作行 effects 调用到的族 ∪ 全书族表登记行（首格为 `eff_*`、表头有参数槽/params 一栏的表格行）。
+//  · 族的数值参数 = 登记行参数栏里类型为 number/integer 的 `param_*`；
+//  · 参数栏写 无/`{}`/空，或散文登记同一句写该族与"`params`…为空"/`params: {}`，算显式声明为空；
+//  · 数值参数为空：须显式声明，否则缺；数值参数非空：每个参数在全书须恰有一种——有 `cap_row` 写到（族、参数），或有 `cap_exempt_row` 写到（族、参数），
+//    两者皆无或两者都有即缺。第 3 个参数可给全书目录（注入测试用副本）。
+{
+  const r14 = [];
+  const r75 = lines.find(l => l.startsWith('- **R9-7.5 ')) ?? '';
+  const e28 = lines.find(l => l.startsWith('| E-ACT-CAP-MISSING |')) ?? '';
+  const s22 = lines.find(l => /^校验：.*`effects` 里每个 effectCall 的族/.test(l)) ?? '';
+  if (!/按参数判/.test(r75) || !/两者皆无、或两者都有/.test(r75) || !/显式声明数值参数为空/.test(r75)) r14.push('R9-7.5 未写按参数判三要件');
+  if (!/逐参数判|按 R9-7\.5/.test(e28) || !/数值参数为空而未显式声明为空/.test(e28)) r14.push('§2.8 E-ACT-CAP-MISSING 行口径');
+  if (!/按 R9-7\.5 逐个数值参数/.test(s22) || !/数值参数为空的族须显式声明为空/.test(s22)) r14.push('§2.2 校验句口径');
+  const BOOK = (process.argv[3] ?? 'F:/dnd/docs/统一底层设计') + '/';
+  const { readdirSync } = await import('node:fs');
+  const book = readdirSync(BOOK).filter(f => /^卷.*\.md$/.test(f)).map(f => ({ v: f.replace(/-.*$/, ''), ls: readFileSync(BOOK + f, 'utf8').split(/\r?\n/).map(l => l.replace(/\r$/, '')) }));
+  const LOG = /修订|处置|勘误|记账|影响面|审查意见|版本说明|自检/;
+  const fams = new Map(); // 族 -> {reg: [{at, params: [..], empty}], used}
+  const get = f => { if (!fams.has(f)) fams.set(f, { reg: [], used: false }); return fams.get(f); };
+  for (const m of all.matchAll(/"family"\s*:\s*"(eff_[a-z0-9_]+)"/g)) get(m[1]).used = true;
+  for (const { v, ls } of book) {
+    let h2b = '', head = null;
+    ls.forEach((l, i) => {
+      if (/^## /.test(l)) h2b = l;
+      if (!l.startsWith('|')) { head = null; return; }
+      const cs = l.split('|').slice(1, -1).map(c => c.trim());
+      if (!head) { head = cs; return; }
+      if (/^[\s:-]+$/.test(cs.join(''))) return;
+      if (LOG.test(h2b)) return;
+      const f = cs[0].match(/^`(eff_[a-z0-9_]+)`$/)?.[1]; const pi = head.findIndex(c => /参数槽|params/.test(c));
+      if (!f || pi < 0) return;
+      const pc = cs[pi] ?? '';
+      const nums = [...pc.matchAll(/`(param_[a-z0-9_]+)\s*:\s*(number|integer)[^`]*`/g)].map(m => m[1]);
+      // 参数栏写 无/{}/空，或列出了参数而其中没有数值类型的，都是显式写明了数值参数为空；参数栏没写任何东西才算未声明
+      get(f).reg.push({ at: `${v}:${i + 1}`, nums, empty: /^(无|`\{\}`|空)/.test(pc) || /`param_[a-z0-9_]+\s*:/.test(pc) });
+    });
+    ls.forEach((l, i) => { // 散文登记：同一句写到族代号与“`params`…为空”或 `params: {}`；或数据式 `{id:eff_x, params:{}}`
+      if (l.startsWith('|')) return;
+      for (const m of l.matchAll(/["`]?id["`]?\s*:\s*["`]?(eff_[a-z0-9_]+)["`]?[^{}]*?["`]?params["`]?\s*:\s*\{\s*\}/g)) get(m[1]).reg.push({ at: `${v}:${i + 1}`, nums: [], empty: true });
+      for (const s of l.split(/(?<=。)/)) if (/`params`[^。]{0,30}为空|`params:\s*\{\}`/.test(s)) for (const m of s.matchAll(/`(eff_[a-z0-9_]+)`/g)) get(m[1]).reg.push({ at: `${v}:${i + 1}`, nums: [], empty: true });
+    });
+  }
+  const capHit = (f, p, kind) => book.some(({ ls }) => ls.some(l => l.includes('`' + kind + '`') && l.includes(f) && l.includes(p) && !/^\| `(cap_row|cap_exempt_row)` \|/.test(l)));
+  const famOut = [];
+  for (const [f, x] of [...fams].sort()) {
+    if (!x.reg.length) { r14.push(`${f} 未见族登记（参数未声明）`); famOut.push(`${f}:未登记`); continue; }
+    const nums = [...new Set(x.reg.flatMap(r => r.nums))];
+    if (!nums.length) { if (!x.reg.some(r => r.empty)) r14.push(`${f} 数值参数为空而未显式声明（${x.reg.map(r => r.at).join(',')}）`); famOut.push(`${f}:空${x.reg.some(r => r.empty) ? '' : '(未声明)'}`); continue; }
+    for (const p of nums) { const c = capHit(f, p, 'cap_row'), e = capHit(f, p, 'cap_exempt_row'); if (c === e) r14.push(`${f}.${p} ${c ? 'cap_row 与豁免行都有' : '既无 cap_row 也无豁免行'}`); }
+    famOut.push(`${f}:${nums.join('/')}`);
+  }
+  console.log(`   效果族 ${fams.size} 个：${famOut.join('；')}`);
+  report('14 E-ACT-CAP-MISSING 按参数判：三处口径一致；各族数值参数逐项恰有上限行或豁免行，空参数族显式声明', r14.length === 0, r14.join(' | '));
+}
+
 const ruleCount = defined.size;
 console.log(`行数 ${lines.length}；子系统 ${N}；规则条数 ${ruleCount}；json 块 ${blocks.length}；待补清单 ${todo} 条；失败项 ${fails}`);
 process.exit(fails ? 1 : 0);

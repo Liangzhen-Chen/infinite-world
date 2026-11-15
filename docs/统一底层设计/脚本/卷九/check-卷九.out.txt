@@ -1,0 +1,18 @@
+PASS 1 章节 §0–§8、术语表、待补清单齐全
+PASS 1b 卷首署名行
+PASS 1c 没有残留的续写标记
+PASS 2 十九个子系统各六小节齐全
+PASS 3 数据实例至少三条，含非西陲、含非人类或超自然
+PASS 4 验收断言三式齐全且有编号
+PASS 5 规则与正文无具体 id 字面量
+PASS 6 无用于判断的描述性文本
+PASS 7 台账各概念写全（标题、关键代号、每节有规则且编号连续）
+PASS 8 跨卷引用带标题；规则与断言编号引用不悬空
+PASS 9 json 代码块可解析（6 块） — bad=0
+PASS 10 红线：不读墙钟、除数有下界或为 0 分支、存法与去留登记、不读事件日志
+PASS 11 数据实例算术与余数结转复算（25 项加 5 组余数）
+PASS 12 接口、入口表、规则表键、错误码、枚举、槽位表、迁移清单落实
+PASS 13 来路无关、默认不开模型、拒收三不条文在位
+   效果族 12 个：eff_care:空；eff_diagnosis:空；eff_expose:param_dose；eff_give_up:空；eff_ingest:空；eff_seal_item:空；eff_set_focus:空；eff_status_add:param_amount/param_per_day；eff_status_clear:空；eff_status_reduce:param_amount；eff_take_perk:空；eff_take_up:空
+FAIL 14 E-ACT-CAP-MISSING 按参数判：三处口径一致；各族数值参数逐项恰有上限行或豁免行，空参数族显式声明 — eff_expose.param_dose 既无 cap_row 也无豁免行 | eff_status_add.param_amount 既无 cap_row 也无豁免行 | eff_status_add.param_per_day 既无 cap_row 也无豁免行 | eff_status_reduce.param_amount 既无 cap_row 也无豁免行
+行数 1753；子系统 19；规则条数 174；json 块 6；待补清单 11 条；失败项 1
