@@ -66,17 +66,26 @@ const covLines = readFileSync(`${DIR}/${CFG.coverage.file}`, 'utf8').split(/\r?\
 const covSection = prefix => { const s = covLines.findIndex(l => l.startsWith(prefix)); let e = covLines.findIndex((l, i) => i > s + 3 && /^## /.test(l)); if (e < 0) e = covLines.length; return covLines.slice(s, e).filter(l => /^\|/.test(l)).map(cells); };
 const A_NUMS = new Set(covSection(CFG.coverage.tableA).map(c => (c[0] ?? '').match(/^(\d+\.\d+)\b/)?.[1]).filter(Boolean));
 const S4_ROWS = new Map(covSection(CFG.coverage.existing).filter(c => /^\d+\.\d+$/.test(c[0] ?? '')).map(c => [c[0], [...(c[c.length - 1] ?? '').matchAll(/\d+\.\d+/g)].map(m => m[0])]));
-const NUMLIST = '(\\d+\\.\\d+(?![\\d.])(?:\\s*[、,，]\\s*\\d+\\.\\d+(?![\\d.]))*)';
-const Z_A = [new RegExp('卷零\\s*A\\s*表?\\s*(?:条目\\s*)?' + NUMLIST, 'g'), new RegExp('(?<![A-Za-z])A\\s*表\\s*(?:条目\\s*)?' + NUMLIST, 'g'), new RegExp('卷零[^|；。`]{0,6}?A' + NUMLIST, 'g')];
-const Z_S4 = [new RegExp('卷零\\s*§4\\s*行?\\s*' + NUMLIST, 'g'), new RegExp('卷零\\s*核查栏(?:行)?\\s*' + NUMLIST, 'g'), new RegExp('§4\\s*行\\s*' + NUMLIST, 'g')];
-const Z_BARE = new RegExp('卷零\\s*' + NUMLIST, 'g');
-const nums = s => s.split(/[、,，]/).map(x => x.trim());
+// 引用片段：从卷零的标记词（"卷零 A""A 表""卷零 §4 行""核查栏""卷零"）起，标记词与编号、分隔符（、，,与和及或/ 与空白）连成的一串；片段里每个编号的种类取它前面最近的标记词。
+// 遇到别的字符片段就结束，所以"卷五 §4.3"这类节号不会被当成卷零编号。
+const Z_TOKEN = /(卷零\s*A\s*表?|(?<![A-Za-z])A\s*表|卷零\s*核查栏行?|核查栏行?|卷零\s*§4\s*行?|§4\s*行)|(卷零)|(\d+\.\d+(?![\d.]))|([、，,与和及或/\s]+)|([\s\S])/g;
+const kindOfMarker = s => (/A/.test(s) ? 'A' : /核查栏|§4/.test(s) ? 'S4' : 'bare');
 function zeroRowsOf(text, key, problems) {
-  const a = new Set(), src = [], taken = new Set();
-  const take = (m, kind) => { for (let i = m.index; i < m.index + m[0].length; i++) taken.add(i); return kind; };
-  for (const re of Z_A) for (const m of text.matchAll(re)) { take(m, 'A'); for (const n of nums(m[1])) if (A_NUMS.has(n)) { a.add(n); src.push(`A ${n}`); } else problems.push(`${key}：写了卷零 A 表编号 ${n}，A 表里没有`); }
-  for (const re of Z_S4) for (const m of text.matchAll(re)) { take(m, '§4'); for (const n of nums(m[1])) { if (S4_ROWS.has(n)) { for (const x of S4_ROWS.get(n)) a.add(x); src.push(`§4 ${n}`); } else problems.push(`${key}：写了卷零 §4 行 ${n}，§4 里没有`); } }
-  for (const m of text.matchAll(Z_BARE)) { if ([...Array(m[0].length).keys()].some(k => taken.has(m.index + k))) continue; for (const n of nums(m[1])) { const inA = A_NUMS.has(n), inS = S4_ROWS.has(n); if (inA && !inS) { a.add(n); src.push(`裸 ${n}`); } else problems.push(`${key}：裸写"卷零 ${n}"，${inA && inS ? 'A 表与 §4 都有这个编号，分不清指哪张表，未转录' : '两张表里都没有'}`); } }
+  const a = new Set(), src = []; let inFrag = false, kind = null, sawNum = false;
+  const bad = (n, why) => problems.push(`${key}：卷零编号样式 ${n}（${why}）；原文「${text.slice(Math.max(0, text.indexOf(n) - 12), text.indexOf(n) + 12).replace(/\s+/g, ' ')}」`);
+  for (const m of text.matchAll(Z_TOKEN)) {
+    if (m[1] || m[2]) { inFrag = true; kind = m[1] ? kindOfMarker(m[1]) : 'bare'; sawNum = false; continue; }
+    if (m[4]) continue; // 分隔符：片段里保持，片段外无影响
+    if (m[3]) {
+      if (!inFrag) continue;
+      const n = m[3]; sawNum = true;
+      if (kind === 'A') { if (A_NUMS.has(n)) { a.add(n); src.push(`A ${n}`); } else bad(n, 'A 表里没有这个编号'); }
+      else if (kind === 'S4') { if (S4_ROWS.has(n)) { for (const x of S4_ROWS.get(n)) a.add(x); src.push(`§4 ${n}`); } else bad(n, '§4 里没有这个行号'); }
+      else { const inA = A_NUMS.has(n), inS = S4_ROWS.has(n); if (inA && !inS) { a.add(n); src.push(`裸 ${n}`); } else bad(n, inA && inS ? 'A 表与 §4 都有这个编号，分不清指哪张表，未转录' : 'A 表与 §4 里都没有这个编号'); }
+      continue;
+    }
+    inFrag = false; // 别的字符：片段结束
+  }
   return { zeroRow: [...a].sort((x, y) => { const [p, q] = x.split('.').map(Number), [r, s] = y.split('.').map(Number); return p - r || q - s; }), zeroSrc: [...new Set(src)] };
 }
 const files = readdirSync(DIR).filter(f => new RegExp(CFG.volFile).test(f)).sort();

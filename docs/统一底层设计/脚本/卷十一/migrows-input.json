@@ -23155,10 +23155,12 @@
    "targetObject": "sys.monsters",
    "baseline": "d54c89a3",
    "zeroRow": [
+    "7.13",
     "10.3"
    ],
    "zeroSrc": [
-    "裸 10.3"
+    "裸 10.3",
+    "§4 13.11"
    ]
   },
   {
@@ -23229,10 +23231,12 @@
    "targetObject": "sys.monsters",
    "baseline": "d54c89a3",
    "zeroRow": [
+    "7.7",
     "7.13"
    ],
    "zeroSrc": [
-    "§4 13.11"
+    "§4 13.11",
+    "§4 10.26"
    ]
   },
   {
