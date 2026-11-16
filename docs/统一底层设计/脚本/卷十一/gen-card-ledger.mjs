@@ -211,6 +211,7 @@ function rowSection(r) {
 const secNamesCache = new Map();
 // 入口名的登记卷：本卷登记了就是本卷；否则别卷 §3（主办卷）登记的取那一卷（不止一卷取卷名次序最前的，并记歧义）；都没有取卷二登记处
 const ownerAmbig = new Set();
+const directHits = []; // 直接指称计入的外卷名（卷:名，按节计算时记）
 function ownerVolOf(name, vol) {
   if ((entryIdx.get(vol) ?? []).some(x => x.name === name)) return vol;
   const vs = [...entryIdx].filter(([v, xs]) => v !== REGVOL && xs.some(x => x.name === name)).map(([v]) => v).sort(cmp);
@@ -245,8 +246,12 @@ function namesInSection(vol, sec) {
       if (!depth) { depth = new Array(body.length); let dd = 0; for (let i = 0; i < body.length; i++) { const ch = body[i]; if (ch === '（' || ch === '(') dd++; else if ((ch === '）' || ch === ')') && dd > 0) dd--; else if (ch === '\n') dd = 0; depth[i] = dd; } }
       let st = m.index; for (; st > 0; st--) { if (isDelim(body[st - 1]) && (depth[st - 1] === 0 || body[st - 1] === '\n')) break; }
       let en = m.index + m[0].length; for (; en < body.length; en++) { if (isDelim(body[en]) && (depth[en] === 0 || body[en] === '\n')) break; }
+      // 直接指称（李白 11-16 08:xx，与 04:53"读：x"同一条规则扩到正文）：括注之外，"读 `x`""经 `x`""取 `x`""`x` 的结果/返回"把入口当读取来源或调用结果的，计入
+      const bef = body.slice(Math.max(0, m.index - 3), m.index).replace(/\s/g, ''); const aft = body.slice(m.index + m[0].length, m.index + m[0].length + 4).replace(/\s/g, '');
+      const direct = depth[m.index] === 0 && (/(读|经|取)$/.test(bef) || /^(的结果|的返回)/.test(aft));
       const clause = body.slice(st, en);
       if (/调|入口/.test(clause) || mentionsVol(clause, ov)) hit.add(n); // 分句明说调用、称其为入口、或点名其登记卷（按卷名别名表）
+      else if (direct) { hit.add(n); directHits.push(`${vol} §${sec}:${n}`); }
     }
     out = [...hit].sort().map(n => ({ name: n, vol: ownerVolOf(n, vol) }));
   }
@@ -1211,6 +1216,7 @@ const md = [
   `- dependsOn：${phaseCycle ? '成环（首个：' + phaseCycle.join('→') + '；全部环见下面两条）' : '无环'}；指向不存在的卡 ${depMissing.length} 处；固定卡阶段冲突（E-MIG-PHASE-CONFLICT）${phaseConflicts.length} 处${phaseConflicts.length ? '：' + phaseConflicts.join('；') : ''}。`,
   ...[['主卡族', cyclesMain], ['子进程卡族（不并组改判，R11-2.5 第一步所用次序的来源）', childCycles]].map(([nm, cy]) => `- 环（${nm}，强连通分量，只报不改归属）：${cy.length ? cy.map((x, i) => `环 ${i + 1}：${x.cards.join('、')}；边：${x.edges.map(e => `${e.from}→${e.to}〔${e.why.join('；')}〕`).join('，')}`).join('。') : '无'}${nm.startsWith('子') && cy.length ? '。子进程卡族有环，R11-2.5 第一步的次序在环上没有定义，挡封、报李白（02:45 ②）' : ''}${!nm.startsWith('子') && cy.length ? '。其中' + cy.map((x, i) => `环 ${i + 1}${childCycles.some(z => x.cards.filter(c => z.cards.includes(c)).length > 1) ? '在不并组改判的卡族上同样成环，挡封、报李白' : '只因合组改判才出现（不并组改判的卡族上无环），记读数暂缺（等 zeroRow），不挡封（02:45 ②）'}`).join('；') : ''}。`),
   `- 两表成环（李白 11-16 02:00 Q2）：${cyc2.length ? cyc2.map(x => x.ok ? `${x.pair}：一向来源 1、一向来源 2，来源 2 的行 ${x.rows.join('、')} 应改归 ${x.to}，退回来源卷勘误` : `${x.pair}：不是"来源 1 对来源 2"的搭配，停下报李白`).join('；') : '无'}。`,
+  `- 直接指称（李白 11-16 08:xx）：落点节正文里"读/经/取 \`x\`"或"\`x\` 的结果/返回"（括注外）把外卷登记入口当读取来源或调用结果、原先未计而本条新计入的 ${uniq(directHits).length} 处：${uniq(directHits).sort().join('、') || '无'}。`,
   `- 未上线入口按登记处写明的对象上线（李白 11-16 03:5x ③）：补上线 ${objAssigned.length} 个；entries 待查新类"入口对象未定" ${objUndetermined.length} 个（${objUndetermined.map(x => `${x.vol}:${x.name}（${x.why}）`).join('、') || '无'}）。同名入口登记在不止一个主办卷、按卷名次序取前者的：${[...ownerAmbig].join('；') || '无'}。`,
   `- §3 拒收（李白 11-16 01:30 第 3 条）：不在该卷 §3 入口表里的名字从 entries 摘出 ${rejected.entries.length} 个、从 launches 摘出 ${rejected.launches.length} 个${rejected.launches.length ? '（' + rejected.launches.slice(0, 8).join('、') + (rejected.launches.length > 8 ? '…' : '') + '）' : ''}。`,
   `- launches：每个入口恰一张卡上线——重复上线 ${launchDup.length} 个${launchDup.length ? '：' + launchDup.slice(0, 5).join('、') : ''}；没有卡上线的入口 ${notLaunched.length} 个${notLaunched.length ? '（' + notLaunched.slice(0, 5).join('、') + '…）' : ''}。`,
