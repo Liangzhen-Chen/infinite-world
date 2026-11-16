@@ -42,21 +42,14 @@ const VOLS = volFiles.map(volOfFile).filter(Boolean);
 const regText = rd(`${DIR}/${CFG.registry.file}`);
 const reg = regText.split(/\r?\n/);
 
-// ---- 位置组定对象用的"首卡在 R11-7.2 次序"（李白 11-16 01:25 第 5 条，R11-2.5 原文）----
-// 次序要等卡与阶段算完才有，而对象又影响卡：本脚本先以子进程反复运行（GEN_CHILD=1，只打印各对象首卡的次序号、不写文件），
-// 把上一轮的次序交给下一轮，直到次序不再变（不动点）；不动点上的取法就是 R11-2.5 原文。6 轮内不收敛即"算不出"，在摘要里报。
+// ---- 位置组定对象用的"首卡在 R11-7.2 次序"（李白 11-16 02:00 Q1，R11-2.5、R11-7.2）----
+// 次序在不并组改判的卡族上算一次：每行取自己的 targetObject 排出卡族（子进程 GEN_CHILD=1，只打印各对象首卡的次序号、不写文件），
+// 按 R11-7.2 五种来源排序；然后据此定各位置组的对象，不回代、不迭代。
 const CHILD = process.env.GEN_CHILD === '1';
-let ORDER = new Map(); let orderStable = true, orderRounds = 0;
-if (CHILD) ORDER = new Map(Object.entries(JSON.parse(process.env.GEN_ORDER || '{}')));
-else {
-  let ord = {}; orderStable = false;
-  for (orderRounds = 1; orderRounds <= 6; orderRounds++) {
-    const out = execFileSync(process.execPath, [fileURLToPath(import.meta.url)], { env: { ...process.env, GEN_CHILD: '1', GEN_ORDER: JSON.stringify(ord) }, encoding: 'utf8', maxBuffer: 1 << 26 });
-    const nx = JSON.parse(out.trim().split(/\r?\n/).pop());
-    if (JSON.stringify(nx) === JSON.stringify(ord)) { orderStable = true; break; }
-    ord = nx;
-  }
-  ORDER = new Map(Object.entries(ord));
+let ORDER = new Map();
+if (!CHILD) {
+  const out = execFileSync(process.execPath, [fileURLToPath(import.meta.url)], { env: { ...process.env, GEN_CHILD: '1' }, encoding: 'utf8', maxBuffer: 1 << 26 });
+  ORDER = new Map(Object.entries(JSON.parse(out.trim().split(/\r?\n/).pop())));
 }
 
 // ---- 各卷 §3 入口表（李白 11-16 01:30 第 1、3 条：entries 只认 §3 入口表登记的名字）----
@@ -413,8 +406,8 @@ for (const [k, rs] of [...posGroups].sort((a, b) => a[0] - b[0])) {
   }
   for (const r of rs) {
     r.posGroup = k;
-    r.recvObj = pick;
-    if (!pick) unassigned.push(r.rowKey);
+    r.recvObj = CHILD ? r.obj : pick; // 子进程：不并组改判，每行取自己的对象
+    if (!r.recvObj) unassigned.push(r.rowKey);
   }
 }
 
@@ -767,6 +760,18 @@ const alt = derive(crossOf);
 const phase = main.phase, phaseCycle = main.cycle, phaseConflicts = main.conflicts;
 for (const c of cards) { c.dependsOn = main.deps.get(c.cardId); c.phaseNo = phase.get(c.cardId) ?? null; }
 const n = main.n;
+// 两表成环的整类判（李白 11-16 02:00 Q2，R11-7.2"成环即拒收，退回有关各卷改迁移节"）：两张表首卡互相依赖，一向是来源 1（必填维度引用对方表）、
+// 另一向是来源 2（要接对方上线的入口）时，来源 2 那几行应改归来源 1 的引用方，退回该行来源卷勘误；别的搭配停下报李白
+const cyc2 = [];
+{ const firsts = cards.filter(c => c.cardKind === 'first' && c.objectKind === 'table');
+  const s1 = (a, b) => (tableRefs.get(a.objectCode) ?? new Set()).has(b.objectCode);
+  const s2rows = (a, b) => a.rowKeys.filter(k => { const r = rows.find(x => x.rowKey === k); const en = r ? entryOfRow(r) : null; return en && b.launches.some(l => l.vol === en.vol && l.name === en.name); });
+  for (const a of firsts) for (const b of firsts) if (cmp(a.cardId, b.cardId) < 0 && main.deps.get(a.cardId).includes(b.cardId) && main.deps.get(b.cardId).includes(a.cardId)) {
+    const ab = { s1: s1(a, b), s2: s2rows(a, b) }, ba = { s1: s1(b, a), s2: s2rows(b, a) };
+    if (ab.s1 && !ba.s1 && ba.s2.length) cyc2.push({ pair: `${a.cardId}⇄${b.cardId}`, rows: ba.s2, to: `table:${a.objectCode}`, ok: true });
+    else if (ba.s1 && !ab.s1 && ab.s2.length) cyc2.push({ pair: `${a.cardId}⇄${b.cardId}`, rows: ab.s2, to: `table:${b.objectCode}`, ok: true });
+    else cyc2.push({ pair: `${a.cardId}⇄${b.cardId}`, rows: [], ok: false });
+  } }
 // R11-7.2 次序：按阶段，阶段内按依赖拓扑排序，没有依赖关系的按卡号升序；各对象首卡（门禁对象取其门禁卡）在其中的序号
 const order72 = []; for (const ph of uniq(cards.map(c => c.phaseNo)).sort((a, b) => a - b)) {
   const cs = cards.filter(c => c.phaseNo === ph), ids = new Set(cs.map(c => c.cardId)); const done = new Set();
@@ -784,9 +789,12 @@ for (const [k, m] of [...mechRows].sort((a, b) => cmp(a[0], b[0]))) {
   const re = new RegExp('(?<![A-Za-z0-9_$])' + m.ident.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![A-Za-z0-9_$])');
   const fs = all.filter(f => isRuntime(f) && /\.(?:mjs|js)$/.test(f) && re.test(rd(`${REPO}/${f}`))).sort();
   const ph = Math.max(1, ...cards.filter(c => c.cardKind === 'relocate' && c.objectCode === m.obj).map(c => c.phaseNo ?? 1));
+  // accept 写该替换所消除的扫描代号（行落点里写的验收类编号）；找不到的不合"可脚本复核"，不算机械替换类，退回来源卷（李白 11-16 02:00 Q3）
+  const row = rows.find(r => r.rowKey === k); const scan = row ? acceptOfRows([row], false, null) : [];
+  if (!scan.length) { mechInfo.push({ rowKey: k, ident: m.ident, files: fs.length, sweep: null, returned: true }); continue; }
   const sw = cards.find(c => c.cardId === `SWEEP-${Math.min(ph, Math.max(1, n))}`);
-  if (sw) { sw.files = uniq([...sw.files, ...fs]).sort(); sw._mech = true; (sw._mechRows ??= []).push(k); }
-  mechInfo.push({ rowKey: k, ident: m.ident, files: fs.length, sweep: sw?.cardId ?? null });
+  if (sw) { sw.files = uniq([...sw.files, ...fs]).sort(); sw._mech = true; (sw._mechRows ??= []).push(k); sw._scan = uniq([...(sw._scan ?? []), ...scan]).sort(); }
+  mechInfo.push({ rowKey: k, ident: m.ident, files: fs.length, sweep: sw?.cardId ?? null, scan });
 }
 // 不豁免文件上限（卷一 §6.6；李白 11-16 01:25 第 2 条）：机械替换类清扫卡按 R11-7.5 次序 ①消费者组 ③路径升序拆成同阶段的段卡；
 // 替换的迁移行由 segNo 最小的段卡认领，四件核对（accept 的全部扫描）只由 segNo 最大的段卡做
@@ -800,8 +808,7 @@ for (const sw of cards.filter(c => c.cardKind === 'sweep' && c._mech)) {
     if (m.length <= MAXFILES) { segs.push({ axis: 'consumer_group', files: fs }); continue; }
     for (let s = 0; s < Math.ceil(m.length / MAXFILES); s++) segs.push({ axis: 'path_order', files: [...m.slice(s * MAXFILES, (s + 1) * MAXFILES), ...(s === 0 ? r : [])] });
   }
-  const idx = cards.indexOf(sw); const out = segs.map((x, i) => newCard({ cardId: `${sw.cardId}-${i + 1}`, cardKind: 'sweep', phaseNo: sw.phaseNo, splitAxis: x.axis, segNo: i + 1, files: x.files.slice().sort(), rowKeys: i === 0 ? sw._mechRows.slice().sort() : [], accept: i === segs.length - 1 ? sw.accept : [], _mech: true }));
-  for (const c of out) if (!c.accept.length) c.pending.push('accept:机械替换段卡不做四件核对（只由该阶段 segNo 最大的段卡做），本段的验收判据卷十一未写，待裁');
+  const idx = cards.indexOf(sw); const out = segs.map((x, i) => newCard({ cardId: `${sw.cardId}-${i + 1}`, cardKind: 'sweep', phaseNo: sw.phaseNo, splitAxis: x.axis, segNo: i + 1, files: x.files.slice().sort(), rowKeys: i === 0 ? sw._mechRows.slice().sort() : [], accept: uniq([...sw._scan, ...(i === segs.length - 1 ? sw.accept : [])]).sort(), _mech: true })); // 每段：所消除的扫描（范围即本段 files）；末段另加四件核对
   cards.splice(idx, 1, ...out);
   for (const x of mechInfo) if (x.sweep === sw.cardId) x.sweep = `${out[0].cardId} 至 ${out[out.length - 1].cardId}（${out.length} 张段卡）`;
 }
@@ -990,12 +997,13 @@ const md = [
   `- E-MIG-ACCEPT-FORM：${acceptBad.reduce((s, x) => s + x.bad.length, 0)} 个编号（${acceptBad.length} 张卡）在所指卷里查不到定义${acceptBad.length ? '：' + acceptBad.slice(0, 8).map(x => x.cardId + ' ' + x.bad.join('、')).join('；') : ''}；这些编号已从判据摘出并登记在该卡 pending。判据里只有编号（齐全率下限键 ${dimKeys.length} 个、各卷断言与扫描条、卷十一 ${s11.length} 条扫描条、卷十二 ${s12.length} 条）。`,
   `- E-MIG-SORTKEY-ORDER：钩子 ${hookNodes.length} 个（${hookNodes.join('、')}）；成环 ${hookCycle.length} 个；指向不存在（卷里没有登记行）的 ${hookMissing.length} 个${hookMissing.length ? '：' + hookMissing.join('、') : ''}；同一钩子两处写法不同 ${uniq(hookConflict).length} 个。机读 after 来源是各卷正文的 \`X.after = [..]\` 写法；排序键按拓扑加代号升序从 1 连续编号，v0 不分推进相位（卷二 §2.7 没有按钩子登记相位的机读列），落在登记该钩子的卷的领头卡的 sortKeys 上。`,
   `- dependsOn：无环${phaseCycle ? '（失败：' + phaseCycle.join('→') + '）' : ''}；指向不存在的卡 ${depMissing.length} 处；固定卡阶段冲突（E-MIG-PHASE-CONFLICT）${phaseConflicts.length} 处${phaseConflicts.length ? '：' + phaseConflicts.join('；') : ''}。`,
+  `- 两表成环（李白 11-16 02:00 Q2）：${cyc2.length ? cyc2.map(x => x.ok ? `${x.pair}：一向来源 1、一向来源 2，来源 2 的行 ${x.rows.join('、')} 应改归 ${x.to}，退回来源卷勘误` : `${x.pair}：不是"来源 1 对来源 2"的搭配，停下报李白`).join('；') : '无'}。`,
   `- §3 拒收（李白 11-16 01:30 第 3 条）：不在该卷 §3 入口表里的名字从 entries 摘出 ${rejected.entries.length} 个、从 launches 摘出 ${rejected.launches.length} 个${rejected.launches.length ? '（' + rejected.launches.slice(0, 8).join('、') + (rejected.launches.length > 8 ? '…' : '') + '）' : ''}。`,
   `- launches：每个入口恰一张卡上线——重复上线 ${launchDup.length} 个${launchDup.length ? '：' + launchDup.slice(0, 5).join('、') : ''}；没有卡上线的入口 ${notLaunched.length} 个${notLaunched.length ? '（' + notLaunched.slice(0, 5).join('、') + '…）' : ''}。`,
   `- 迁移行认领：没有接收卡 ${orphanRows.length} 行${orphanRows.length ? '（' + orphanRows.slice(0, 12).join('、') + (orphanRows.length > 12 ? '…' : '') + '）' : ''}；多于一张 ${multiRows.length} 行。位置组 ${posGroups.size} 个，其中锚点跨两个以上消费者组的位置组行 ${nStraddle} 行（取最小组，待裁）；位置组内对象不一致 ${nObjConflict} 组（按 R11-2.5 原文取首卡在 R11-7.2 次序中最前的候选，见下两条，列在第五节）。`,
-  `- 全仓库机械替换类（卷十一 R11-7.8 例外，李白 11-15 19:12）：${mechInfo.map(x => `${x.rowKey}（\`${x.ident}\`，脚本列出 ${x.files} 个文件，进 ${x.sweep}）`).join('；') || '无'}；替换的迁移行列在 segNo 最小的段卡的 rowKeys（李白 11-16 01:25 第 2 条）。`,
+  `- 全仓库机械替换类（卷十一 R11-7.8 例外，李白 11-15 19:12）：${mechInfo.map(x => `${x.rowKey}（\`${x.ident}\`，脚本列出 ${x.files} 个文件，${x.returned ? '落点没有所消除的扫描代号，不算机械替换类，退回来源卷' : `所消除的扫描 ${x.scan.join('、')}，进 ${x.sweep}`}）`).join('；') || '无'}；替换的迁移行列在 segNo 最小的段卡的 rowKeys（李白 11-16 01:25 第 2 条）。`,
   `- 对象按登记卷定（李白 11-16 01:25 第 1 条：规则表键、词表族条目有登记处的按登记卷，不读落点文字）：与判据一结果不同的 ${regMoved.length} 行${regMoved.length ? '：' + regMoved.map(x => `${x.k}（\`${x.o}\` 登记在${x.reg}，判据一原取${x.j1}）`).join('；') : ''}。`,
-  `- 位置组定对象（R11-2.5 原文，李白 11-16 01:25 第 5 条）：zeroRow 未转录，按"没有这样的行"取首卡在 R11-7.2 次序中最前的候选；次序取不动点，${orderStable ? `第 ${orderRounds} 轮收敛` : '6 轮未收敛，算不出（报主会话）'}；候选不在次序里的组 ${objConflicts.filter(x => x.unranked.length).length} 组。与旧取法（行数最多）相比改了接收对象的行 ${pickMoved.length} 行。`,
+  `- 位置组定对象（R11-2.5 原文，李白 11-16 01:25 第 5 条）：zeroRow 未转录，按"没有这样的行"取首卡在 R11-7.2 次序中最前的候选；次序在不并组改判的卡族（每行取自身对象）上按 R11-7.2 算一次，不回代、不迭代（李白 11-16 02:00 Q1）；候选不在次序里的组 ${objConflicts.filter(x => x.unranked.length).length} 组。与旧取法（行数最多）相比改了接收对象的行 ${pickMoved.length} 行。`,
   `- 并组后接收对象不是本行自己对象的行，列待查（zeroRow 补上后复判）：${mergedRecheck.length} 行${mergedRecheck.length ? '：' + mergedRecheck.map(x => `${x.k}（${x.own}→${x.pick}）`).join('；') : ''}。`,
   `- entries（李白 11-16 01:30）：按各行"卷、节"到该卷 §3 入口表取恰一个入口；§3 入口表共登记 ${entryNames.size} 个入口名，不在表里的名字不收。待查：一节对应多个入口 ${uniq(entryMulti.map(x => x.k)).length} 行（${uniq(entryMulti.map(x => x.k)).join('、')}）；该节在 §3 找不到入口 ${uniq(entryNone.map(x => x.k)).length} 行（${uniq(entryNone.map(x => x.k)).join('、')}）；落点没有节号或规则编号 ${uniq(entryNoSec).length} 行。`,
   `- 账本子卡 ${ledgerChildren.length} 张${ledgerChildLimit ? '，超过卷一 §6.5 的 ≤ 8 上限，报李白' : '（≤ 8）'}。`,

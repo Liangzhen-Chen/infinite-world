@@ -4,10 +4,10 @@
  "maxFiles": 25,
  "n": 8,
  "counts": {
-  "cards": 119,
+  "cards": 120,
   "byKind": {
    "first": 38,
-   "follow": 51,
+   "follow": 52,
    "gate": 3,
    "ledger_child": 7,
    "ledger_parent": 1,
@@ -16,16 +16,16 @@
   },
   "byPhase": {
    "0": 3,
-   "1": 57,
-   "2": 18,
-   "3": 16,
-   "4": 7,
+   "1": 55,
+   "2": 24,
+   "3": 12,
+   "4": 6,
    "5": 6,
    "6": 2,
-   "7": 5,
+   "7": 7,
    "8": 5
   },
-  "nonSweep": 105
+  "nonSweep": 106
  },
  "cards": [
   {
@@ -1082,11 +1082,18 @@
    "segNo": null,
    "zeroRows": [],
    "rowKeys": [
+    "M13-21",
+    "M13-22",
+    "M13-23a",
+    "M13-23b",
+    "M13-23c",
+    "M26-10",
     "M6-31",
     "M6-32",
     "M6-33",
     "M6-57",
-    "M6-62"
+    "M6-62",
+    "M8-27"
    ],
    "files": [
     "server-plugin/legal-representation.mjs",
@@ -1125,6 +1132,11 @@
      "vol": "卷六",
      "sec": "§3.1",
      "name": "priceFor"
+    },
+    {
+     "vol": "卷十三",
+     "sec": "§3.2",
+     "name": "noteRout"
     }
    ],
    "launches": [],
@@ -1847,117 +1859,6 @@
    }
   },
   {
-   "cardId": "C-卷二-sys.capacity-1",
-   "cardKind": "first",
-   "objectKind": "system",
-   "objectCode": "sys.capacity",
-   "volume": "卷二",
-   "phaseNo": 1,
-   "groupKey": "rules层-1",
-   "splitAxis": null,
-   "segNo": null,
-   "zeroRows": [],
-   "rowKeys": [
-    "M1-5",
-    "M13-5",
-    "M14-61",
-    "M18-30",
-    "M25-25",
-    "M25-27",
-    "M25-34",
-    "M25-37",
-    "M25-39",
-    "M25-45",
-    "M25-49",
-    "M25-5",
-    "M25-56",
-    "M25-8",
-    "M4-20",
-    "M4-37",
-    "M4-38",
-    "M4-5",
-    "M4-55",
-    "M5-15a",
-    "M5-15b",
-    "M5-16",
-    "M7-16",
-    "M7-17",
-    "M8b-10",
-    "M8b-11",
-    "M8b-14",
-    "M8b-19"
-   ],
-   "files": [
-    "server-plugin/agriculture.mjs",
-    "server-plugin/bounty.mjs",
-    "server-plugin/combat-state.mjs",
-    "server-plugin/education-state.mjs",
-    "server-plugin/extraction.mjs",
-    "server-plugin/faith.mjs",
-    "server-plugin/festival.mjs",
-    "server-plugin/household-subsistence.mjs",
-    "server-plugin/law.mjs",
-    "server-plugin/local-exams.mjs",
-    "server-plugin/location-access.mjs",
-    "server-plugin/magic-growth.mjs",
-    "server-plugin/npc-crime.mjs",
-    "server-plugin/perception.mjs",
-    "server-plugin/pets.mjs",
-    "server-plugin/sites.mjs",
-    "server-plugin/training.mjs",
-    "server-plugin/wildlife.mjs"
-   ],
-   "dataFiles": [],
-   "segs": [
-    "seg_rows",
-    "seg_data",
-    "seg_readers",
-    "seg_delete"
-   ],
-   "entries": [
-    {
-     "vol": "卷八b",
-     "sec": "§3.1",
-     "name": "disposalRight"
-    }
-   ],
-   "launches": [],
-   "retire": {},
-   "accept": [
-    "S25-3",
-    "S25-4",
-    "S25-9",
-    "S5-5"
-   ],
-   "dependsOn": [
-    "C-卷八b-offense-1",
-    "LEDGER-1"
-   ],
-   "census": {},
-   "testClass": {},
-   "derivations": [],
-   "sortKeys": {},
-   "state": "drafted",
-   "approvals": [],
-   "mergeRef": "",
-   "fails": 0,
-   "pending": [
-    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.capacity 登记项待补 sources、sinks、entryJudges"
-   ],
-   "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(retire)",
-     "待补:登记项字段"
-    ],
-    "stateItems": [
-     "依赖卡已 merged",
-     "所在阶段已开",
-     "不在冻结中"
-    ]
-   }
-  },
-  {
    "cardId": "C-卷二十-sys.time_env-1",
    "cardKind": "first",
    "objectKind": "system",
@@ -2047,95 +1948,6 @@
     "defects": [
      "E-MIG-CARD-INCOMPLETE(retire)",
      "待补:登记项字段"
-    ],
-    "stateItems": [
-     "依赖卡已 merged",
-     "所在阶段已开",
-     "不在冻结中"
-    ]
-   }
-  },
-  {
-   "cardId": "C-卷二十一-status-1",
-   "cardKind": "first",
-   "objectKind": "table",
-   "objectCode": "status",
-   "volume": "卷二十一",
-   "phaseNo": 1,
-   "groupKey": "rules层-1",
-   "splitAxis": null,
-   "segNo": null,
-   "zeroRows": [],
-   "rowKeys": [
-    "M20-34",
-    "M20-45",
-    "M21-15",
-    "M21-17",
-    "M21-19",
-    "M21-8",
-    "M21-9",
-    "M4-22",
-    "M4-23",
-    "M4-27b"
-   ],
-   "files": [
-    "server-plugin/action-affordances.mjs",
-    "server-plugin/action-authority-sources.mjs",
-    "server-plugin/action-authority.mjs",
-    "server-plugin/advance-registry.mjs",
-    "server-plugin/body-needs.mjs",
-    "server-plugin/bounty.mjs",
-    "server-plugin/business.mjs",
-    "server-plugin/civic.mjs",
-    "server-plugin/credit.mjs",
-    "server-plugin/currency.mjs",
-    "server-plugin/distribution.mjs",
-    "server-plugin/education-state.mjs",
-    "server-plugin/education.mjs",
-    "server-plugin/elections.mjs",
-    "server-plugin/engine.mjs",
-    "server-plugin/entity-transitions.mjs",
-    "server-plugin/environment.mjs",
-    "server-plugin/extraction.mjs",
-    "server-plugin/faction-clock.mjs",
-    "server-plugin/faith.mjs",
-    "server-plugin/family-politics.mjs",
-    "server-plugin/festival.mjs",
-    "server-plugin/finance-assets.mjs",
-    "server-plugin/finance-bank.mjs",
-    "server-plugin/finance-tax.mjs"
-   ],
-   "dataFiles": [],
-   "segs": [
-    "seg_rows",
-    "seg_data",
-    "seg_readers",
-    "seg_delete"
-   ],
-   "entries": [],
-   "launches": [],
-   "retire": {},
-   "accept": [
-    "rules.dimfill.statusAll"
-   ],
-   "dependsOn": [
-    "C-卷二-kernel-1",
-    "LEDGER-1"
-   ],
-   "census": {},
-   "testClass": {},
-   "derivations": [],
-   "sortKeys": {},
-   "state": "drafted",
-   "approvals": [],
-   "mergeRef": "",
-   "fails": 0,
-   "pending": [
-    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
-   ],
-   "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(retire)"
     ],
     "stateItems": [
      "依赖卡已 merged",
@@ -2484,7 +2296,12 @@
    "segNo": null,
    "zeroRows": [],
    "rowKeys": [
+    "M13-16",
+    "M13-18",
     "M14-9",
+    "M18-10",
+    "M18-4",
+    "M18-7",
     "M2-12c",
     "M22-1",
     "M22-10",
@@ -2494,7 +2311,10 @@
     "M22-3",
     "M22-4",
     "M22-5",
-    "M3b-22"
+    "M22-8",
+    "M3b-22",
+    "M8b-18",
+    "M8b-32"
    ],
    "files": [
     "server-plugin/action-consent.mjs",
@@ -2504,24 +2324,24 @@
     "server-plugin/advance-registry.mjs",
     "server-plugin/autonomy-candidates.mjs",
     "server-plugin/book-gates.mjs",
+    "server-plugin/boss-negotiation.mjs",
     "server-plugin/building-maintenance.mjs",
     "server-plugin/business.mjs",
     "server-plugin/civic.mjs",
     "server-plugin/credit.mjs",
+    "server-plugin/deterrence.mjs",
     "server-plugin/dialogue.mjs",
     "server-plugin/distribution.mjs",
     "server-plugin/documents.mjs",
     "server-plugin/education-state.mjs",
+    "server-plugin/family-law.mjs",
     "server-plugin/family-politics.mjs",
     "server-plugin/festival.mjs",
     "server-plugin/finance-assets.mjs",
     "server-plugin/finance-bank.mjs",
     "server-plugin/forest-water.mjs",
     "server-plugin/governance.mjs",
-    "server-plugin/high-nobility.mjs",
-    "server-plugin/household-budget.mjs",
-    "server-plugin/husbandry.mjs",
-    "server-plugin/labor-market.mjs"
+    "server-plugin/high-nobility.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -2819,22 +2639,23 @@
    "zeroRows": [],
    "rowKeys": [
     "M10-33",
-    "M15-14",
-    "M15-17",
-    "M15-6",
-    "M15-8",
+    "M13-13",
+    "M13-14",
     "M18-13",
-    "M18-5",
-    "M21-21",
+    "M18-6",
     "M26-1",
-    "M26-17",
     "M26-18",
     "M26-19",
+    "M26-2",
+    "M26-22",
     "M26-23",
-    "M26-5",
+    "M26-3",
+    "M26-4",
     "M26-7",
-    "M26-8",
-    "M9-8"
+    "M4-6",
+    "M8-14",
+    "M8b-13",
+    "M8b-17"
    ],
    "files": [
     "server-plugin/action-affordances.mjs",
@@ -2846,10 +2667,10 @@
     "server-plugin/bounty.mjs",
     "server-plugin/business.mjs",
     "server-plugin/civic.mjs",
-    "server-plugin/contracts.mjs",
     "server-plugin/credit.mjs",
     "server-plugin/currency.mjs",
     "server-plugin/distribution.mjs",
+    "server-plugin/duels.mjs",
     "server-plugin/education-state.mjs",
     "server-plugin/education.mjs",
     "server-plugin/elections.mjs",
@@ -2875,6 +2696,7 @@
    "retire": {},
    "accept": [
     "A26-3.I",
+    "A26-9.S",
     "P26-7"
    ],
    "dependsOn": [
@@ -2892,182 +2714,6 @@
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
     "system:sys.psyche 登记项待补 sources、sinks、entryJudges、view"
-   ],
-   "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(retire)",
-     "待补:登记项字段"
-    ],
-    "stateItems": [
-     "依赖卡已 merged",
-     "所在阶段已开",
-     "不在冻结中"
-    ]
-   }
-  },
-  {
-   "cardId": "C-卷二十四-event_type-1",
-   "cardKind": "first",
-   "objectKind": "table",
-   "objectCode": "event_type",
-   "volume": "卷二十四",
-   "phaseNo": 1,
-   "groupKey": "rules层-1",
-   "splitAxis": null,
-   "segNo": null,
-   "zeroRows": [],
-   "rowKeys": [
-    "M20-24",
-    "M20-39",
-    "M20-40",
-    "M20-41",
-    "M20-80",
-    "M24-1",
-    "M24-10",
-    "M24-15",
-    "M24-16",
-    "M24-17",
-    "M24-2",
-    "M24-21",
-    "M24-3",
-    "M24-4",
-    "M24-5",
-    "M24-7",
-    "M24-9",
-    "M8-18"
-   ],
-   "files": [
-    "server-plugin/career-metrics.mjs",
-    "server-plugin/effects.mjs",
-    "server-plugin/environment.mjs",
-    "server-plugin/faction-clock.mjs",
-    "server-plugin/family-diplomacy.mjs",
-    "server-plugin/festival.mjs",
-    "server-plugin/seasonal-hazards.mjs",
-    "server-plugin/world-clock.mjs",
-    "server-plugin/world-events.mjs"
-   ],
-   "dataFiles": [],
-   "segs": [
-    "seg_rows",
-    "seg_data",
-    "seg_readers",
-    "seg_delete"
-   ],
-   "entries": [
-    {
-     "vol": "卷二十四",
-     "sec": "§3.1",
-     "name": "chronicleAll"
-    },
-    {
-     "vol": "卷二十四",
-     "sec": "§3.1",
-     "name": "verbView"
-    }
-   ],
-   "launches": [
-    {
-     "vol": "卷二十四",
-     "sec": "§3.1",
-     "name": "chronicleAll"
-    },
-    {
-     "vol": "卷二十四",
-     "sec": "§3.1",
-     "name": "commissionBrief"
-    },
-    {
-     "vol": "卷二十四",
-     "sec": "§3.1",
-     "name": "commissionView"
-    },
-    {
-     "vol": "卷二十四",
-     "sec": "§3.1",
-     "name": "commissionsAt"
-    },
-    {
-     "vol": "卷二十四",
-     "sec": "§3.1",
-     "name": "commissionsBy"
-    },
-    {
-     "vol": "卷二十四",
-     "sec": "§3.1",
-     "name": "epochView"
-    },
-    {
-     "vol": "卷二十四",
-     "sec": "§3.1",
-     "name": "eventCount"
-    },
-    {
-     "vol": "卷二十四",
-     "sec": "§3.1",
-     "name": "instanceView"
-    },
-    {
-     "vol": "卷二十四",
-     "sec": "§3.1",
-     "name": "instancesOn"
-    },
-    {
-     "vol": "卷二十四",
-     "sec": "§3.1",
-     "name": "legendsView"
-    },
-    {
-     "vol": "卷二十四",
-     "sec": "§3.1",
-     "name": "originEvents"
-    },
-    {
-     "vol": "卷二十四",
-     "sec": "§3.1",
-     "name": "storyView"
-    },
-    {
-     "vol": "卷二十四",
-     "sec": "§3.1",
-     "name": "tallyOf"
-    },
-    {
-     "vol": "卷二十四",
-     "sec": "§3.1",
-     "name": "verbView"
-    }
-   ],
-   "retire": {},
-   "accept": [
-    "A24-10.2",
-    "A24-2.1",
-    "A24-2.2",
-    "A24-2.4",
-    "A24-3.1",
-    "A24-5.1",
-    "A24-7.1",
-    "A24-7.2",
-    "A24-8.2",
-    "S24-2",
-    "S24-3",
-    "S24-7"
-   ],
-   "dependsOn": [
-    "LEDGER-1"
-   ],
-   "census": {},
-   "testClass": {},
-   "derivations": [],
-   "sortKeys": {},
-   "state": "drafted",
-   "approvals": [],
-   "mergeRef": "",
-   "fails": 0,
-   "pending": [
-    "accept:卷二 §6.12 没有该表的齐全率下限键",
-    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.event_type 登记项待补 sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
@@ -3152,58 +2798,23 @@
    }
   },
   {
-   "cardId": "C-卷八b-offense-1",
+   "cardId": "C-卷十一-sys.migration-1",
    "cardKind": "first",
-   "objectKind": "table",
-   "objectCode": "offense",
-   "volume": "卷八b",
+   "objectKind": "system",
+   "objectCode": "sys.migration",
+   "volume": "卷十一",
    "phaseNo": 1,
-   "groupKey": "rules层-1",
+   "groupKey": "无文件-1",
    "splitAxis": null,
    "segNo": null,
    "zeroRows": [],
    "rowKeys": [
-    "M19-7",
-    "M4-56",
-    "M8b-1",
-    "M8b-12",
-    "M8b-15",
-    "M8b-2",
-    "M8b-23",
-    "M8b-25",
-    "M8b-26",
-    "M8b-29",
-    "M8b-4",
-    "M8b-5",
-    "M8b-8",
-    "M8b-9"
+    "M11-10",
+    "M11-6",
+    "M11-8",
+    "M11-9"
    ],
-   "files": [
-    "server-plugin/activities.mjs",
-    "server-plugin/advance-registry.mjs",
-    "server-plugin/bounty.mjs",
-    "server-plugin/credit.mjs",
-    "server-plugin/elections.mjs",
-    "server-plugin/engine.mjs",
-    "server-plugin/extraction.mjs",
-    "server-plugin/finance-assets.mjs",
-    "server-plugin/finance-bank.mjs",
-    "server-plugin/labor-market.mjs",
-    "server-plugin/law-codes.mjs",
-    "server-plugin/law.mjs",
-    "server-plugin/legal-appeal.mjs",
-    "server-plugin/legal-reactions.mjs",
-    "server-plugin/legal-representation.mjs",
-    "server-plugin/magic-consent.mjs",
-    "server-plugin/magic-economy.mjs",
-    "server-plugin/magic-message.mjs",
-    "server-plugin/magic-movement.mjs",
-    "server-plugin/norm-stack.mjs",
-    "server-plugin/npc-crime.mjs",
-    "server-plugin/offense-notes.mjs",
-    "server-plugin/sites.mjs",
-    "server-plugin/smuggling.mjs"
-   ],
+   "files": [],
    "dataFiles": [],
    "segs": [
     "seg_rows",
@@ -3211,178 +2822,74 @@
     "seg_readers",
     "seg_delete"
    ],
-   "entries": [
-    {
-     "vol": "卷十九",
-     "sec": "§3.2",
-     "name": "accessClassAt"
-    }
-   ],
+   "entries": [],
    "launches": [
     {
-     "vol": "卷八b",
+     "vol": "卷十一",
      "sec": "§3.1",
-     "name": "agencyOf"
+     "name": "migBackfill"
     },
     {
-     "vol": "卷八b",
+     "vol": "卷十一",
      "sec": "§3.1",
-     "name": "attackLegality"
+     "name": "migCard"
     },
     {
-     "vol": "卷八b",
+     "vol": "卷十一",
      "sec": "§3.1",
-     "name": "auditGaps"
+     "name": "migCards"
     },
     {
-     "vol": "卷八b",
+     "vol": "卷十一",
      "sec": "§3.1",
-     "name": "bindingsOf"
+     "name": "migEvents"
     },
     {
-     "vol": "卷八b",
+     "vol": "卷十一",
      "sec": "§3.1",
-     "name": "bondOf"
+     "name": "migExit"
     },
     {
-     "vol": "卷八b",
+     "vol": "卷十一",
      "sec": "§3.1",
-     "name": "bountiesOn"
+     "name": "migFrozen"
     },
     {
-     "vol": "卷八b",
+     "vol": "卷十一",
      "sec": "§3.1",
-     "name": "caseView"
+     "name": "migParallelOk"
     },
     {
-     "vol": "卷八b",
+     "vol": "卷十一",
      "sec": "§3.1",
-     "name": "claimsOf"
+     "name": "migPhaseCount"
     },
     {
-     "vol": "卷八b",
+     "vol": "卷十一",
      "sec": "§3.1",
-     "name": "contrabandAt"
+     "name": "migReady"
     },
     {
-     "vol": "卷八b",
+     "vol": "卷十一",
      "sec": "§3.1",
-     "name": "convictionCount"
+     "name": "migReceiver"
     },
     {
-     "vol": "卷八b",
+     "vol": "卷十一",
      "sec": "§3.1",
-     "name": "crimeProspect"
-    },
-    {
-     "vol": "卷八b",
-     "sec": "§3.1",
-     "name": "custodyOf"
-    },
-    {
-     "vol": "卷八b",
-     "sec": "§3.1",
-     "name": "disposalRight"
-    },
-    {
-     "vol": "卷八b",
-     "sec": "§3.1",
-     "name": "estateOf"
-    },
-    {
-     "vol": "卷八b",
-     "sec": "§3.1",
-     "name": "evidenceScore"
-    },
-    {
-     "vol": "卷八b",
-     "sec": "§3.1",
-     "name": "forumOrgOf"
-    },
-    {
-     "vol": "卷八b",
-     "sec": "§3.1",
-     "name": "goodFaithOf"
-    },
-    {
-     "vol": "卷八b",
-     "sec": "§3.1",
-     "name": "lawGate"
-    },
-    {
-     "vol": "卷八b",
-     "sec": "§3.1",
-     "name": "legalCapacity"
-    },
-    {
-     "vol": "卷八b",
-     "sec": "§3.1",
-     "name": "legalityOf"
-    },
-    {
-     "vol": "卷八b",
-     "sec": "§3.1",
-     "name": "limitationOf"
-    },
-    {
-     "vol": "卷八b",
-     "sec": "§3.1",
-     "name": "naturalizeOptions"
-    },
-    {
-     "vol": "卷八b",
-     "sec": "§3.1",
-     "name": "normStack"
-    },
-    {
-     "vol": "卷八b",
-     "sec": "§3.1",
-     "name": "offenseView"
-    },
-    {
-     "vol": "卷八b",
-     "sec": "§3.1",
-     "name": "offensesOfFact"
-    },
-    {
-     "vol": "卷八b",
-     "sec": "§3.1",
-     "name": "provisionFor"
-    },
-    {
-     "vol": "卷八b",
-     "sec": "§3.1",
-     "name": "provisionView"
-    },
-    {
-     "vol": "卷八b",
-     "sec": "§3.1",
-     "name": "responseOf"
-    },
-    {
-     "vol": "卷八b",
-     "sec": "§3.1",
-     "name": "safetyOf"
-    },
-    {
-     "vol": "卷八b",
-     "sec": "§3.1",
-     "name": "securityOf"
-    },
-    {
-     "vol": "卷八b",
-     "sec": "§3.1",
-     "name": "sentenceRange"
+     "name": "migRows"
     }
    ],
    "retire": {},
    "accept": [
-    "rules.dimfill.offenseAll"
+    "A11-4.3",
+    "A11-5.1",
+    "A11-5.3",
+    "A11-7.3",
+    "A11-9.3",
+    "S11-10"
    ],
-   "dependsOn": [
-    "C-卷二-kernel-1",
-    "LEDGER-1"
-   ],
+   "dependsOn": [],
    "census": {},
    "testClass": {},
    "derivations": [],
@@ -3392,13 +2899,16 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
+    "files:该对象在旧代码里没有消费者文件（新对象或纯数据对象）",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.offense 登记项待补 predicates、sources、sinks、entryJudges、view"
+    "row:M11-6",
+    "system:sys.migration 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
-     "E-MIG-CARD-INCOMPLETE(retire)",
-     "待补:登记项字段"
+     "E-MIG-CARD-INCOMPLETE(files、retire)",
+     "待补:登记项字段",
+     "待补:迁移行处置"
     ],
     "stateItems": [
      "依赖卡已 merged",
@@ -3709,6 +3219,168 @@
    }
   },
   {
+   "cardId": "C-卷十八-sys.social-1",
+   "cardKind": "first",
+   "objectKind": "system",
+   "objectCode": "sys.social",
+   "volume": "卷十八",
+   "phaseNo": 1,
+   "groupKey": "rules层-1",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [
+    "M18-19",
+    "M18-23",
+    "M18-3",
+    "M18-34",
+    "M18-8",
+    "M2-43b"
+   ],
+   "files": [
+    "server-plugin/action-authority-sources.mjs",
+    "server-plugin/action-authority.mjs",
+    "server-plugin/action-capacity.mjs",
+    "server-plugin/action-consent.mjs",
+    "server-plugin/action-limits.mjs",
+    "server-plugin/action-rejection.mjs",
+    "server-plugin/action-rite.mjs",
+    "server-plugin/action-router.mjs",
+    "server-plugin/activities.mjs",
+    "server-plugin/advance-registry.mjs",
+    "server-plugin/body-needs.mjs",
+    "server-plugin/boss-migration.mjs",
+    "server-plugin/bosses.mjs",
+    "server-plugin/bounty.mjs",
+    "server-plugin/business.mjs",
+    "server-plugin/career-metrics.mjs",
+    "server-plugin/checks.mjs",
+    "server-plugin/civic.mjs",
+    "server-plugin/combat-state.mjs",
+    "server-plugin/combat.mjs",
+    "server-plugin/consistency-service.mjs",
+    "server-plugin/contracts.mjs",
+    "server-plugin/credit.mjs",
+    "server-plugin/currency.mjs",
+    "server-plugin/derived.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_rows",
+    "seg_data",
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [
+    {
+     "vol": "卷十八",
+     "sec": "§3.2",
+     "name": "intimateEligible"
+    }
+   ],
+   "launches": [
+    {
+     "vol": "卷十八",
+     "sec": "§3.1",
+     "name": "compat"
+    },
+    {
+     "vol": "卷十八",
+     "sec": "§3.1",
+     "name": "dread"
+    },
+    {
+     "vol": "卷十八",
+     "sec": "§3.1",
+     "name": "esteemOf"
+    },
+    {
+     "vol": "卷十八",
+     "sec": "§3.1",
+     "name": "heirsOf"
+    },
+    {
+     "vol": "卷十八",
+     "sec": "§3.1",
+     "name": "holdingKind"
+    },
+    {
+     "vol": "卷十八",
+     "sec": "§3.1",
+     "name": "kinDegree"
+    },
+    {
+     "vol": "卷十八",
+     "sec": "§3.1",
+     "name": "kinView"
+    },
+    {
+     "vol": "卷十八",
+     "sec": "§3.1",
+     "name": "opinionOf"
+    },
+    {
+     "vol": "卷十八",
+     "sec": "§3.1",
+     "name": "recall"
+    },
+    {
+     "vol": "卷十八",
+     "sec": "§3.1",
+     "name": "stance"
+    },
+    {
+     "vol": "卷十八",
+     "sec": "§3.1",
+     "name": "treatment"
+    }
+   ],
+   "retire": {},
+   "accept": [
+    "A18-1.5",
+    "A18-10.1",
+    "A18-10.2",
+    "A18-11.2",
+    "A18-12.2",
+    "A18-2.5",
+    "A18-4.4",
+    "A18-5.2",
+    "A18-6.2",
+    "A18-9.1",
+    "A18-9.2",
+    "A18-9.3",
+    "S18-8"
+   ],
+   "dependsOn": [
+    "C-卷二-aiGate-1",
+    "C-卷二-kernel-1",
+    "LEDGER-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
+    "system:sys.social 登记项待补 sources、sinks、entryJudges、view"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(retire)",
+     "待补:登记项字段"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
    "cardId": "C-卷十六-sys.monsters-1",
    "cardKind": "first",
    "objectKind": "system",
@@ -3730,11 +3402,9 @@
     "M16-22",
     "M16-24",
     "M16-29",
-    "M16-7",
     "M16-8",
     "M16-9",
     "M4-8",
-    "M8-21",
     "M8-29"
    ],
    "files": [
@@ -3744,12 +3414,7 @@
     "server-plugin/boss-negotiation.mjs",
     "server-plugin/bosses.mjs",
     "server-plugin/creature-nature.mjs",
-    "server-plugin/entity-view.mjs",
-    "server-plugin/governance.mjs",
-    "server-plugin/high-nobility.mjs",
     "server-plugin/monster-society.mjs",
-    "server-plugin/promotion.mjs",
-    "server-plugin/titles.mjs",
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/wildlife-society.mjs"
    ],
@@ -4392,266 +4057,6 @@
    }
   },
   {
-   "cardId": "C-卷二十一-status-2",
-   "cardKind": "follow",
-   "objectKind": "table",
-   "objectCode": "status",
-   "volume": "卷二十一",
-   "phaseNo": 1,
-   "groupKey": "rules层-2",
-   "splitAxis": null,
-   "segNo": null,
-   "zeroRows": [],
-   "rowKeys": [
-    "M13-12",
-    "M14-5",
-    "M15-4",
-    "M19-6",
-    "M20-28",
-    "M20-29b",
-    "M20-38",
-    "M21-1",
-    "M21-10",
-    "M21-12",
-    "M21-14",
-    "M21-14b",
-    "M21-16",
-    "M21-2",
-    "M21-22",
-    "M21-23",
-    "M21-24",
-    "M21-25",
-    "M21-26",
-    "M21-27",
-    "M21-3",
-    "M21-6",
-    "M21-7",
-    "M24-8",
-    "M25-11",
-    "M25-12",
-    "M25-50"
-   ],
-   "files": [
-    "server-plugin/food-habit.mjs",
-    "server-plugin/governance.mjs",
-    "server-plugin/hazard-calendar.mjs",
-    "server-plugin/hidden-passives.mjs",
-    "server-plugin/high-nobility.mjs",
-    "server-plugin/household-budget.mjs",
-    "server-plugin/household-subsistence.mjs",
-    "server-plugin/items.mjs",
-    "server-plugin/labor-market.mjs",
-    "server-plugin/law-codes.mjs",
-    "server-plugin/law.mjs",
-    "server-plugin/learning.mjs",
-    "server-plugin/legal-appeal.mjs",
-    "server-plugin/legal-reactions.mjs",
-    "server-plugin/legal-representation.mjs",
-    "server-plugin/local-exams.mjs",
-    "server-plugin/location-access.mjs",
-    "server-plugin/magic-consent.mjs",
-    "server-plugin/magic-economy.mjs",
-    "server-plugin/magic-mind-space.mjs",
-    "server-plugin/magic-ritual.mjs",
-    "server-plugin/magic-status.mjs",
-    "server-plugin/market.mjs",
-    "server-plugin/medicine-state.mjs",
-    "server-plugin/medicine.mjs"
-   ],
-   "dataFiles": [],
-   "segs": [
-    "seg_readers",
-    "seg_delete"
-   ],
-   "entries": [],
-   "launches": [],
-   "retire": {},
-   "accept": [],
-   "dependsOn": [
-    "C-卷二十一-status-1",
-    "LEDGER-1"
-   ],
-   "census": {},
-   "testClass": {},
-   "derivations": [],
-   "sortKeys": {},
-   "state": "drafted",
-   "approvals": [],
-   "mergeRef": "",
-   "fails": 0,
-   "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
-    "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
-    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
-   ],
-   "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
-    ],
-    "stateItems": [
-     "依赖卡已 merged",
-     "所在阶段已开",
-     "不在冻结中"
-    ]
-   }
-  },
-  {
-   "cardId": "C-卷二十一-status-3",
-   "cardKind": "follow",
-   "objectKind": "table",
-   "objectCode": "status",
-   "volume": "卷二十一",
-   "phaseNo": 1,
-   "groupKey": "rules层-3",
-   "splitAxis": null,
-   "segNo": null,
-   "zeroRows": [],
-   "rowKeys": [
-    "M21-13",
-    "M21-20"
-   ],
-   "files": [
-    "server-plugin/monster-society.mjs",
-    "server-plugin/nation-founding.mjs",
-    "server-plugin/notables.mjs",
-    "server-plugin/npc-autonomy.mjs",
-    "server-plugin/npc-cognition.mjs",
-    "server-plugin/npc-crime.mjs",
-    "server-plugin/npc-growth.mjs",
-    "server-plugin/npc-intelligence.mjs",
-    "server-plugin/npc-labor.mjs",
-    "server-plugin/npc-life.mjs",
-    "server-plugin/npc-memory.mjs",
-    "server-plugin/npc-obligations.mjs",
-    "server-plugin/npc-planning-service.mjs",
-    "server-plugin/npc-schedule.mjs",
-    "server-plugin/npc-state.mjs",
-    "server-plugin/obligation-runtime.mjs",
-    "server-plugin/office-salary.mjs",
-    "server-plugin/organizations.mjs",
-    "server-plugin/population-health.mjs",
-    "server-plugin/primitives-body.mjs",
-    "server-plugin/primitives-effects.mjs",
-    "server-plugin/primitives-learning.mjs",
-    "server-plugin/primitives-runtime.mjs",
-    "server-plugin/professions.mjs",
-    "server-plugin/promotion.mjs"
-   ],
-   "dataFiles": [],
-   "segs": [
-    "seg_readers",
-    "seg_delete"
-   ],
-   "entries": [],
-   "launches": [],
-   "retire": {},
-   "accept": [],
-   "dependsOn": [
-    "C-卷二-kernel-1",
-    "C-卷二十一-status-1",
-    "LEDGER-1"
-   ],
-   "census": {},
-   "testClass": {},
-   "derivations": [],
-   "sortKeys": {},
-   "state": "drafted",
-   "approvals": [],
-   "mergeRef": "",
-   "fails": 0,
-   "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
-    "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
-    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
-   ],
-   "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
-    ],
-    "stateItems": [
-     "依赖卡已 merged",
-     "所在阶段已开",
-     "不在冻结中"
-    ]
-   }
-  },
-  {
-   "cardId": "C-卷二十一-status-4",
-   "cardKind": "follow",
-   "objectKind": "table",
-   "objectCode": "status",
-   "volume": "卷二十一",
-   "phaseNo": 1,
-   "groupKey": "rules层-4",
-   "splitAxis": null,
-   "segNo": null,
-   "zeroRows": [],
-   "rowKeys": [],
-   "files": [
-    "server-plugin/public-projects.mjs",
-    "server-plugin/quest-board.mjs",
-    "server-plugin/quest-sources.mjs",
-    "server-plugin/reputation-registry.mjs",
-    "server-plugin/return-summary.mjs",
-    "server-plugin/scene-card.mjs",
-    "server-plugin/seasonal-hazards.mjs",
-    "server-plugin/settlement-profile.mjs",
-    "server-plugin/shop.mjs",
-    "server-plugin/sites.mjs",
-    "server-plugin/standing.mjs",
-    "server-plugin/subjective-view.mjs",
-    "server-plugin/titles.mjs",
-    "server-plugin/training.mjs",
-    "server-plugin/traits.mjs",
-    "server-plugin/transition.mjs",
-    "server-plugin/transport.mjs",
-    "server-plugin/tribal-awakening.mjs",
-    "server-plugin/ui-affairs.mjs",
-    "server-plugin/ui-history.mjs",
-    "server-plugin/ui-personal.mjs",
-    "server-plugin/weather.mjs",
-    "server-plugin/workstation-services.mjs",
-    "server-plugin/world-clock.mjs",
-    "server-plugin/world-events.mjs"
-   ],
-   "dataFiles": [],
-   "segs": [
-    "seg_readers",
-    "seg_delete"
-   ],
-   "entries": [],
-   "launches": [],
-   "retire": {},
-   "accept": [],
-   "dependsOn": [
-    "C-卷二十一-status-1",
-    "LEDGER-1"
-   ],
-   "census": {},
-   "testClass": {},
-   "derivations": [],
-   "sortKeys": {},
-   "state": "drafted",
-   "approvals": [],
-   "mergeRef": "",
-   "fails": 0,
-   "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
-    "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
-    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
-   ],
-   "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
-    ],
-    "stateItems": [
-     "依赖卡已 merged",
-     "所在阶段已开",
-     "不在冻结中"
-    ]
-   }
-  },
-  {
    "cardId": "C-卷二十三-sys.arts-2",
    "cardKind": "follow",
    "objectKind": "system",
@@ -4901,126 +4306,6 @@
    }
   },
   {
-   "cardId": "C-卷二十九-sys.display_l10n-2",
-   "cardKind": "follow",
-   "objectKind": "system",
-   "objectCode": "sys.display_l10n",
-   "volume": "卷二十九",
-   "phaseNo": 1,
-   "groupKey": "rules层-1",
-   "splitAxis": null,
-   "segNo": null,
-   "zeroRows": [],
-   "rowKeys": [
-    "M10-40",
-    "M17-12",
-    "M20-4",
-    "M22-15",
-    "M22-6",
-    "M22-7",
-    "M23-6",
-    "M24-13",
-    "M24-14",
-    "M24-18",
-    "M28-19",
-    "M29-1",
-    "M29-2",
-    "M29-21",
-    "M29-23",
-    "M29-26",
-    "M29-28",
-    "M29-3",
-    "M29-4",
-    "M29-5",
-    "M29-6",
-    "M29-7",
-    "M5-28",
-    "M9-12"
-   ],
-   "files": [
-    "server-plugin/action-text.mjs",
-    "server-plugin/applied-effects.mjs",
-    "server-plugin/chronicle.mjs",
-    "server-plugin/claim-unit.mjs",
-    "server-plugin/engine.mjs",
-    "server-plugin/lore.mjs",
-    "server-plugin/map-state.mjs",
-    "server-plugin/return-summary.mjs",
-    "server-plugin/scene-card.mjs",
-    "server-plugin/scheduler.mjs",
-    "server-plugin/state-notices.mjs",
-    "server-plugin/ui-map.mjs",
-    "server-plugin/ui-messages.mjs",
-    "server-plugin/ui-overview.mjs",
-    "server-plugin/ui-routes.mjs",
-    "server-plugin/works.mjs"
-   ],
-   "dataFiles": [],
-   "segs": [
-    "seg_readers",
-    "seg_delete"
-   ],
-   "entries": [
-    {
-     "vol": "卷二十九",
-     "sec": "§3.1",
-     "name": "labelText"
-    },
-    {
-     "vol": "卷二十九",
-     "sec": "§3.1",
-     "name": "selectRows"
-    },
-    {
-     "vol": "卷二十二",
-     "sec": "§3.1",
-     "name": "researchOptions"
-    },
-    {
-     "vol": "卷二十二",
-     "sec": "§3.1",
-     "name": "returnDigest"
-    },
-    {
-     "vol": "卷二十四",
-     "sec": "§3.1",
-     "name": "chronicleAll"
-    }
-   ],
-   "launches": [],
-   "retire": {},
-   "accept": [
-    "A29-4.2"
-   ],
-   "dependsOn": [
-    "C-卷二十九-sys.display_l10n-1",
-    "C-卷二十二-knowledge-1",
-    "C-卷二十四-event_type-1",
-    "LEDGER-1"
-   ],
-   "census": {},
-   "testClass": {},
-   "derivations": [],
-   "sortKeys": {},
-   "state": "drafted",
-   "approvals": [],
-   "mergeRef": "",
-   "fails": 0,
-   "pending": [
-    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
-   ],
-   "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(retire)"
-    ],
-    "stateItems": [
-     "依赖卡已 merged",
-     "所在阶段已开",
-     "不在冻结中"
-    ]
-   }
-  },
-  {
    "cardId": "C-卷二十二-knowledge-2",
    "cardKind": "follow",
    "objectKind": "table",
@@ -5033,16 +4318,17 @@
    "zeroRows": [],
    "rowKeys": [
     "M15-20",
-    "M17-7",
-    "M22-11",
-    "M22-12",
-    "M22-14"
+    "M22-12"
    ],
    "files": [
+    "server-plugin/household-budget.mjs",
+    "server-plugin/husbandry.mjs",
+    "server-plugin/labor-market.mjs",
     "server-plugin/law.mjs",
     "server-plugin/learning.mjs",
     "server-plugin/legal-reactions.mjs",
     "server-plugin/legal-representation.mjs",
+    "server-plugin/lies.mjs",
     "server-plugin/livestock-sale.mjs",
     "server-plugin/magic-air.mjs",
     "server-plugin/magic-care.mjs",
@@ -5050,20 +4336,16 @@
     "server-plugin/magic.mjs",
     "server-plugin/medicine.mjs",
     "server-plugin/military.mjs",
+    "server-plugin/notables.mjs",
     "server-plugin/npc-autonomy.mjs",
+    "server-plugin/npc-cognition.mjs",
     "server-plugin/npc-decision.mjs",
     "server-plugin/npc-labor.mjs",
     "server-plugin/npc-life.mjs",
     "server-plugin/npc-memory.mjs",
+    "server-plugin/npc-rumors.mjs",
     "server-plugin/organizations.mjs",
-    "server-plugin/pets.mjs",
-    "server-plugin/post.mjs",
-    "server-plugin/primitives-learning.mjs",
-    "server-plugin/primitives-runtime.mjs",
-    "server-plugin/public-opinion.mjs",
-    "server-plugin/public-projects.mjs",
-    "server-plugin/quest-sources.mjs",
-    "server-plugin/remote-generation.mjs"
+    "server-plugin/pets.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -5074,28 +4356,13 @@
     {
      "vol": "卷二十二",
      "sec": "§3.1",
-     "name": "publicShare"
-    },
-    {
-     "vol": "卷二十二",
-     "sec": "§3.1",
-     "name": "readOutcome"
-    },
-    {
-     "vol": "卷二十二",
-     "sec": "§3.1",
      "name": "researchOptions"
     }
    ],
    "launches": [],
    "retire": {},
-   "accept": [
-    "A22-5.2",
-    "A22-6.2",
-    "A22-8.2"
-   ],
+   "accept": [],
    "dependsOn": [
-    "C-卷二-kernel-1",
     "C-卷二十二-knowledge-1",
     "LEDGER-1"
    ],
@@ -5108,11 +4375,12 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
+    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
    ],
    "migReady": {
     "defects": [
-     "E-MIG-CARD-INCOMPLETE(retire)"
+     "E-MIG-CARD-INCOMPLETE(retire、accept)"
     ],
     "stateItems": [
      "依赖卡已 merged",
@@ -5149,16 +4417,16 @@
     "server-plugin/legal-appeal.mjs",
     "server-plugin/legal-reactions.mjs",
     "server-plugin/legal-representation.mjs",
-    "server-plugin/lies.mjs",
     "server-plugin/local-exams.mjs",
     "server-plugin/location-access.mjs",
-    "server-plugin/magic-care.mjs",
     "server-plugin/magic-consent.mjs",
     "server-plugin/magic-economy.mjs",
     "server-plugin/magic-mind-space.mjs",
     "server-plugin/magic-ritual.mjs",
     "server-plugin/market.mjs",
-    "server-plugin/medicine.mjs"
+    "server-plugin/medicine.mjs",
+    "server-plugin/monster-society.mjs",
+    "server-plugin/nation-founding.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -5168,7 +4436,9 @@
    "entries": [],
    "launches": [],
    "retire": {},
-   "accept": [],
+   "accept": [
+    "A26-9.S"
+   ],
    "dependsOn": [
     "C-卷二十六-sys.psyche-1",
     "LEDGER-1"
@@ -5182,13 +4452,12 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
    ],
    "migReady": {
     "defects": [
-     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
+     "E-MIG-CARD-INCOMPLETE(entries、retire)"
     ],
     "stateItems": [
      "依赖卡已 merged",
@@ -5219,8 +4488,6 @@
     "M26-9"
    ],
    "files": [
-    "server-plugin/monster-society.mjs",
-    "server-plugin/nation-founding.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/npc-autonomy.mjs",
     "server-plugin/npc-cognition.mjs",
@@ -5243,7 +4510,9 @@
     "server-plugin/population.mjs",
     "server-plugin/primitives-effects.mjs",
     "server-plugin/primitives-learning.mjs",
-    "server-plugin/primitives-runtime.mjs"
+    "server-plugin/primitives-runtime.mjs",
+    "server-plugin/professions.mjs",
+    "server-plugin/promotion.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -5304,8 +4573,6 @@
     "M26-20"
    ],
    "files": [
-    "server-plugin/professions.mjs",
-    "server-plugin/promotion.mjs",
     "server-plugin/public-projects.mjs",
     "server-plugin/quest-board.mjs",
     "server-plugin/quest-sources.mjs",
@@ -5328,7 +4595,8 @@
     "server-plugin/ui-history.mjs",
     "server-plugin/ui-personal.mjs",
     "server-plugin/weather.mjs",
-    "server-plugin/workstation-services.mjs"
+    "server-plugin/workstation-services.mjs",
+    "server-plugin/world-events.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -5368,19 +4636,135 @@
    }
   },
   {
-   "cardId": "C-卷二十六-sys.psyche-5",
+   "cardId": "C-卷十八-sys.social-2",
    "cardKind": "follow",
    "objectKind": "system",
-   "objectCode": "sys.psyche",
-   "volume": "卷二十六",
+   "objectCode": "sys.social",
+   "volume": "卷十八",
    "phaseNo": 1,
-   "groupKey": "rules层-5",
+   "groupKey": "rules层-2",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [
+    "M18-21",
+    "M18-22",
+    "M18-25",
+    "M18-26",
+    "M18-27a",
+    "M18-27b",
+    "M25-38"
+   ],
+   "files": [
+    "server-plugin/dialogue.mjs",
+    "server-plugin/distribution.mjs",
+    "server-plugin/documents.mjs",
+    "server-plugin/ecology-dynamics.mjs",
+    "server-plugin/education-state.mjs",
+    "server-plugin/education.mjs",
+    "server-plugin/effects.mjs",
+    "server-plugin/elections.mjs",
+    "server-plugin/engine.mjs",
+    "server-plugin/environment-state.mjs",
+    "server-plugin/environment.mjs",
+    "server-plugin/extraction.mjs",
+    "server-plugin/facilities.mjs",
+    "server-plugin/facility-state.mjs",
+    "server-plugin/faction-clock.mjs",
+    "server-plugin/faith.mjs",
+    "server-plugin/family-diplomacy.mjs",
+    "server-plugin/family-inheritance.mjs",
+    "server-plugin/family-law.mjs",
+    "server-plugin/family-politics.mjs",
+    "server-plugin/family-state.mjs",
+    "server-plugin/festival.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/finance-tax.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [
+    {
+     "vol": "卷十八",
+     "sec": "§3.2",
+     "name": "intimateEligible"
+    }
+   ],
+   "launches": [],
+   "retire": {},
+   "accept": [
+    "A18-9.1",
+    "A18-9.2",
+    "S18-8"
+   ],
+   "dependsOn": [
+    "C-卷十八-sys.social-1",
+    "LEDGER-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(retire)"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
+   "cardId": "C-卷十八-sys.social-3",
+   "cardKind": "follow",
+   "objectKind": "system",
+   "objectCode": "sys.social",
+   "volume": "卷十八",
+   "phaseNo": 1,
+   "groupKey": "rules层-3",
    "splitAxis": null,
    "segNo": null,
    "zeroRows": [],
    "rowKeys": [],
    "files": [
-    "server-plugin/world-events.mjs"
+    "server-plugin/governance.mjs",
+    "server-plugin/group-account.mjs",
+    "server-plugin/high-nobility.mjs",
+    "server-plugin/holding-kinds.mjs",
+    "server-plugin/holding-sources.mjs",
+    "server-plugin/husbandry.mjs",
+    "server-plugin/items.mjs",
+    "server-plugin/labor-market.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/legal-appeal.mjs",
+    "server-plugin/lifecycle-state.mjs",
+    "server-plugin/livestock-sale.mjs",
+    "server-plugin/location-access.mjs",
+    "server-plugin/magic-area.mjs",
+    "server-plugin/magic-care.mjs",
+    "server-plugin/magic-consent.mjs",
+    "server-plugin/magic-economy.mjs",
+    "server-plugin/magic-message.mjs",
+    "server-plugin/magic-mind-space.mjs",
+    "server-plugin/magic-object.mjs",
+    "server-plugin/magic-ritual.mjs",
+    "server-plugin/magic-targeting.mjs",
+    "server-plugin/magic.mjs",
+    "server-plugin/mark-actions.mjs",
+    "server-plugin/market.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -5392,7 +4776,253 @@
    "retire": {},
    "accept": [],
    "dependsOn": [
-    "C-卷二十六-sys.psyche-1"
+    "C-卷二-kernel-1",
+    "C-卷十八-sys.social-1",
+    "LEDGER-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
+    "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
+   "cardId": "C-卷十八-sys.social-4",
+   "cardKind": "follow",
+   "objectKind": "system",
+   "objectCode": "sys.social",
+   "volume": "卷十八",
+   "phaseNo": 1,
+   "groupKey": "rules层-4",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [
+    "M16-10",
+    "M16-12",
+    "M18-11",
+    "M18-17",
+    "M18-18",
+    "M18-2",
+    "M18-20",
+    "M18-28",
+    "M18-29",
+    "M18-32",
+    "M8-19"
+   ],
+   "files": [
+    "server-plugin/medicine.mjs",
+    "server-plugin/military.mjs",
+    "server-plugin/money.mjs",
+    "server-plugin/monster-society.mjs",
+    "server-plugin/nation-founding.mjs",
+    "server-plugin/npc-autonomy.mjs",
+    "server-plugin/npc-crime.mjs",
+    "server-plugin/npc-growth.mjs",
+    "server-plugin/npc-labor.mjs",
+    "server-plugin/npc-life.mjs",
+    "server-plugin/npc-memory.mjs",
+    "server-plugin/npc-obligations.mjs",
+    "server-plugin/npc-relations.mjs",
+    "server-plugin/npc-schedule.mjs",
+    "server-plugin/obligation-claims.mjs",
+    "server-plugin/obligation-conditional.mjs",
+    "server-plugin/obligation-runtime.mjs",
+    "server-plugin/obligation-state.mjs",
+    "server-plugin/office-salary.mjs",
+    "server-plugin/organizations.mjs",
+    "server-plugin/pets.mjs",
+    "server-plugin/population-service.mjs",
+    "server-plugin/population.mjs",
+    "server-plugin/primitives-body.mjs",
+    "server-plugin/primitives-checks.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [
+    {
+     "vol": "卷十八",
+     "sec": "§3.2",
+     "name": "intimateEligible"
+    },
+    {
+     "vol": "卷十六",
+     "sec": "§3.2",
+     "name": "awakenOrg"
+    }
+   ],
+   "launches": [],
+   "retire": {},
+   "accept": [
+    "A18-9.1",
+    "A18-9.2",
+    "S18-8"
+   ],
+   "dependsOn": [
+    "C-卷二-kernel-1",
+    "C-卷十八-sys.social-1",
+    "LEDGER-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(retire)"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
+   "cardId": "C-卷十八-sys.social-5",
+   "cardKind": "follow",
+   "objectKind": "system",
+   "objectCode": "sys.social",
+   "volume": "卷十八",
+   "phaseNo": 1,
+   "groupKey": "rules层-5",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [
+    "M18-1",
+    "M18-31",
+    "M18-33"
+   ],
+   "files": [
+    "server-plugin/primitives-effects.mjs",
+    "server-plugin/primitives-learning.mjs",
+    "server-plugin/primitives-movement.mjs",
+    "server-plugin/primitives-runtime.mjs",
+    "server-plugin/primitives.mjs",
+    "server-plugin/professions.mjs",
+    "server-plugin/promotion.mjs",
+    "server-plugin/public-projects.mjs",
+    "server-plugin/quest-board.mjs",
+    "server-plugin/remote-generation.mjs",
+    "server-plugin/repair.mjs",
+    "server-plugin/reputation.mjs",
+    "server-plugin/routing-programs.mjs",
+    "server-plugin/rx-library.mjs",
+    "server-plugin/scene-card.mjs",
+    "server-plugin/seasonal-migration.mjs",
+    "server-plugin/service-queue.mjs",
+    "server-plugin/settlement-trade.mjs",
+    "server-plugin/sites.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/subjective-view.mjs",
+    "server-plugin/tender.mjs",
+    "server-plugin/titles.mjs",
+    "server-plugin/training.mjs",
+    "server-plugin/transition.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [],
+   "launches": [],
+   "retire": {},
+   "accept": [],
+   "dependsOn": [
+    "C-卷二-kernel-1",
+    "C-卷十八-sys.social-1",
+    "LEDGER-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
+    "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
+   "cardId": "C-卷十八-sys.social-6",
+   "cardKind": "follow",
+   "objectKind": "system",
+   "objectCode": "sys.social",
+   "volume": "卷十八",
+   "phaseNo": 1,
+   "groupKey": "rules层-6",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [],
+   "files": [
+    "server-plugin/transport.mjs",
+    "server-plugin/tribal-awakening.mjs",
+    "server-plugin/war-diplomacy.mjs",
+    "server-plugin/wildlife-awakening.mjs",
+    "server-plugin/wildlife-society.mjs",
+    "server-plugin/wildlife.mjs",
+    "server-plugin/works.mjs",
+    "server-plugin/workstation-services.mjs",
+    "server-plugin/world-events.mjs",
+    "server-plugin/world-upgrade.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [],
+   "launches": [],
+   "retire": {},
+   "accept": [],
+   "dependsOn": [
+    "C-卷十八-sys.social-1",
+    "LEDGER-1"
    ],
    "census": {},
    "testClass": {},
@@ -5668,7 +5298,9 @@
    "entries": [],
    "launches": [],
    "retire": {},
-   "accept": [],
+   "accept": [
+    "卷二:S13"
+   ],
    "dependsOn": [],
    "census": {},
    "testClass": {},
@@ -5678,14 +5310,9 @@
    "approvals": [],
    "mergeRef": "",
    "fails": 0,
-   "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
-    "accept:机械替换段卡不做四件核对（只由该阶段 segNo 最大的段卡做），本段的验收判据卷十一未写，待裁"
-   ],
+   "pending": [],
    "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(accept)"
-    ],
+    "defects": [],
     "stateItems": [
      "依赖卡已 merged",
      "所在阶段已开",
@@ -5738,7 +5365,9 @@
    "entries": [],
    "launches": [],
    "retire": {},
-   "accept": [],
+   "accept": [
+    "卷二:S13"
+   ],
    "dependsOn": [],
    "census": {},
    "testClass": {},
@@ -5748,14 +5377,9 @@
    "approvals": [],
    "mergeRef": "",
    "fails": 0,
-   "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
-    "accept:机械替换段卡不做四件核对（只由该阶段 segNo 最大的段卡做），本段的验收判据卷十一未写，待裁"
-   ],
+   "pending": [],
    "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(accept)"
-    ],
+    "defects": [],
     "stateItems": [
      "依赖卡已 merged",
      "所在阶段已开",
@@ -5807,7 +5431,9 @@
    "entries": [],
    "launches": [],
    "retire": {},
-   "accept": [],
+   "accept": [
+    "卷二:S13"
+   ],
    "dependsOn": [],
    "census": {},
    "testClass": {},
@@ -5817,14 +5443,9 @@
    "approvals": [],
    "mergeRef": "",
    "fails": 0,
-   "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
-    "accept:机械替换段卡不做四件核对（只由该阶段 segNo 最大的段卡做），本段的验收判据卷十一未写，待裁"
-   ],
+   "pending": [],
    "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(accept)"
-    ],
+    "defects": [],
     "stateItems": [
      "依赖卡已 merged",
      "所在阶段已开",
@@ -5876,7 +5497,9 @@
    "entries": [],
    "launches": [],
    "retire": {},
-   "accept": [],
+   "accept": [
+    "卷二:S13"
+   ],
    "dependsOn": [],
    "census": {},
    "testClass": {},
@@ -5886,14 +5509,9 @@
    "approvals": [],
    "mergeRef": "",
    "fails": 0,
-   "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
-    "accept:机械替换段卡不做四件核对（只由该阶段 segNo 最大的段卡做），本段的验收判据卷十一未写，待裁"
-   ],
+   "pending": [],
    "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(accept)"
-    ],
+    "defects": [],
     "stateItems": [
      "依赖卡已 merged",
      "所在阶段已开",
@@ -5945,7 +5563,9 @@
    "entries": [],
    "launches": [],
    "retire": {},
-   "accept": [],
+   "accept": [
+    "卷二:S13"
+   ],
    "dependsOn": [],
    "census": {},
    "testClass": {},
@@ -5955,14 +5575,9 @@
    "approvals": [],
    "mergeRef": "",
    "fails": 0,
-   "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
-    "accept:机械替换段卡不做四件核对（只由该阶段 segNo 最大的段卡做），本段的验收判据卷十一未写，待裁"
-   ],
+   "pending": [],
    "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(accept)"
-    ],
+    "defects": [],
     "stateItems": [
      "依赖卡已 merged",
      "所在阶段已开",
@@ -6014,7 +5629,9 @@
    "entries": [],
    "launches": [],
    "retire": {},
-   "accept": [],
+   "accept": [
+    "卷二:S13"
+   ],
    "dependsOn": [],
    "census": {},
    "testClass": {},
@@ -6024,14 +5641,9 @@
    "approvals": [],
    "mergeRef": "",
    "fails": 0,
-   "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
-    "accept:机械替换段卡不做四件核对（只由该阶段 segNo 最大的段卡做），本段的验收判据卷十一未写，待裁"
-   ],
+   "pending": [],
    "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(accept)"
-    ],
+    "defects": [],
     "stateItems": [
      "依赖卡已 merged",
      "所在阶段已开",
@@ -6063,6 +5675,9 @@
    "retire": {},
    "accept": [
     "S11-1",
+    "S11-10",
+    "S11-11",
+    "S11-12",
     "S11-2",
     "S11-3",
     "S11-4",
@@ -6071,9 +5686,7 @@
     "S11-7",
     "S11-8",
     "S11-9",
-    "S11-10",
-    "S11-11",
-    "S11-12"
+    "卷二:S13"
    ],
    "dependsOn": [],
    "census": {},
@@ -6095,10 +5708,10 @@
    }
   },
   {
-   "cardId": "C-卷三乙-recipe-1",
+   "cardId": "C-卷三乙-item-1",
    "cardKind": "first",
    "objectKind": "table",
-   "objectCode": "recipe",
+   "objectCode": "item",
    "volume": "卷三乙",
    "phaseNo": 2,
    "groupKey": "rules层-1",
@@ -6106,8 +5719,16 @@
    "segNo": null,
    "zeroRows": [],
    "rowKeys": [
-    "M19-32",
-    "M3b-20"
+    "M1-3",
+    "M13-27",
+    "M14-15",
+    "M19-18",
+    "M19-30",
+    "M23-19",
+    "M25-57",
+    "M3b-10",
+    "M3b-24",
+    "M6-29"
    ],
    "files": [
     "server-plugin/action-affordances.mjs",
@@ -6119,6 +5740,7 @@
     "server-plugin/civic.mjs",
     "server-plugin/credit.mjs",
     "server-plugin/currency.mjs",
+    "server-plugin/daily-actions.mjs",
     "server-plugin/distribution.mjs",
     "server-plugin/education-state.mjs",
     "server-plugin/education.mjs",
@@ -6133,8 +5755,7 @@
     "server-plugin/finance-assets.mjs",
     "server-plugin/finance-bank.mjs",
     "server-plugin/finance-tax.mjs",
-    "server-plugin/food-habit.mjs",
-    "server-plugin/governance.mjs"
+    "server-plugin/food-habit.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -6143,28 +5764,48 @@
     "seg_readers",
     "seg_delete"
    ],
-   "entries": [],
+   "entries": [
+    {
+     "vol": "卷六",
+     "sec": "§3.1",
+     "name": "priceFor"
+    }
+   ],
    "launches": [
     {
      "vol": "卷三乙",
      "sec": "§3.1",
-     "name": "recipeView"
+     "name": "containerView"
+    },
+    {
+     "vol": "卷三乙",
+     "sec": "§3.1",
+     "name": "itemView"
+    },
+    {
+     "vol": "卷三乙",
+     "sec": "§3.1",
+     "name": "lotsView"
     }
    ],
    "retire": {},
    "accept": [
-    "rules.dimfill.recipeQualityCurve"
+    "rules.dimfill.itemFragility",
+    "rules.dimfill.itemMaterial",
+    "rules.dimfill.itemProduceSeason"
    ],
    "dependsOn": [
-    "C-卷三乙-item-1",
+    "C-卷三甲-material-1",
     "C-卷二-kernel-1",
-    "C-卷十四-skill-1",
     "LEDGER-1"
    ],
    "census": {},
    "testClass": {},
    "derivations": [],
-   "sortKeys": {},
+   "sortKeys": {
+    "itemRot": 2,
+    "itemThermal": 1
+   },
    "state": "drafted",
    "approvals": [],
    "mergeRef": "",
@@ -6404,6 +6045,124 @@
    }
   },
   {
+   "cardId": "C-卷二十一-status-1",
+   "cardKind": "first",
+   "objectKind": "table",
+   "objectCode": "status",
+   "volume": "卷二十一",
+   "phaseNo": 2,
+   "groupKey": "rules层-1",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [
+    "M13-1",
+    "M13-4",
+    "M13-6",
+    "M13-7",
+    "M14-62",
+    "M14-63",
+    "M14-64",
+    "M15-14",
+    "M15-17",
+    "M15-19",
+    "M15-6",
+    "M15-8",
+    "M18-5",
+    "M20-34",
+    "M20-45",
+    "M21-15",
+    "M21-17",
+    "M21-18",
+    "M21-19",
+    "M21-21",
+    "M21-8",
+    "M21-9",
+    "M26-17",
+    "M26-5",
+    "M26-8",
+    "M4-22",
+    "M4-23",
+    "M4-27b",
+    "M4-7",
+    "M8-3",
+    "M9-6",
+    "M9-8"
+   ],
+   "files": [
+    "server-plugin/action-affordances.mjs",
+    "server-plugin/action-authority-sources.mjs",
+    "server-plugin/action-authority.mjs",
+    "server-plugin/activities.mjs",
+    "server-plugin/advance-registry.mjs",
+    "server-plugin/body-needs.mjs",
+    "server-plugin/bounty.mjs",
+    "server-plugin/business.mjs",
+    "server-plugin/civic.mjs",
+    "server-plugin/combat-state.mjs",
+    "server-plugin/combat.mjs",
+    "server-plugin/contracts.mjs",
+    "server-plugin/credit.mjs",
+    "server-plugin/currency.mjs",
+    "server-plugin/distribution.mjs",
+    "server-plugin/education-state.mjs",
+    "server-plugin/education.mjs",
+    "server-plugin/elections.mjs",
+    "server-plugin/engine.mjs",
+    "server-plugin/entity-transitions.mjs",
+    "server-plugin/environment.mjs",
+    "server-plugin/extraction.mjs",
+    "server-plugin/faction-clock.mjs",
+    "server-plugin/faith.mjs",
+    "server-plugin/family-politics.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_rows",
+    "seg_data",
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [
+    {
+     "vol": "卷九",
+     "sec": "§3.1",
+     "name": "freeSlotsOf"
+    }
+   ],
+   "launches": [],
+   "retire": {},
+   "accept": [
+    "rules.dimfill.statusAll"
+   ],
+   "dependsOn": [
+    "C-卷九-sys.ai_interface-1",
+    "C-卷二-kernel-1",
+    "LEDGER-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(retire)"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
    "cardId": "C-卷八-polity-1",
    "cardKind": "first",
    "objectKind": "table",
@@ -6454,6 +6213,157 @@
    "migReady": {
     "defects": [
      "E-MIG-CARD-INCOMPLETE(files、retire)",
+     "待补:登记项字段"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
+   "cardId": "C-卷十三-sys.combat-1",
+   "cardKind": "first",
+   "objectKind": "system",
+   "objectCode": "sys.combat",
+   "volume": "卷十三",
+   "phaseNo": 2,
+   "groupKey": "rules层-1",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [
+    "M13-10",
+    "M13-11",
+    "M13-15",
+    "M13-17",
+    "M13-2",
+    "M13-25",
+    "M13-3",
+    "M13-33",
+    "M15-23",
+    "M16-25"
+   ],
+   "files": [
+    "server-plugin/combat.mjs",
+    "server-plugin/deterrence.mjs",
+    "server-plugin/duels.mjs",
+    "server-plugin/interactions.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_rows",
+    "seg_data",
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [
+    {
+     "vol": "卷十五",
+     "sec": "§3.1",
+     "name": "interactionsFor"
+    }
+   ],
+   "launches": [
+    {
+     "vol": "卷十三",
+     "sec": "§3.1",
+     "name": "battlePreview"
+    },
+    {
+     "vol": "卷十三",
+     "sec": "§3.1",
+     "name": "battleView"
+    },
+    {
+     "vol": "卷十三",
+     "sec": "§3.1",
+     "name": "combatReadings"
+    },
+    {
+     "vol": "卷十三",
+     "sec": "§3.1",
+     "name": "commandOf"
+    },
+    {
+     "vol": "卷十三",
+     "sec": "§3.1",
+     "name": "deterrenceOf"
+    },
+    {
+     "vol": "卷十三",
+     "sec": "§3.1",
+     "name": "encounterView"
+    },
+    {
+     "vol": "卷十三",
+     "sec": "§3.1",
+     "name": "forceView"
+    },
+    {
+     "vol": "卷十三",
+     "sec": "§3.1",
+     "name": "garrisonOf"
+    },
+    {
+     "vol": "卷十三",
+     "sec": "§3.1",
+     "name": "layersOf"
+    },
+    {
+     "vol": "卷十三",
+     "sec": "§3.1",
+     "name": "lootCapacity"
+    },
+    {
+     "vol": "卷十三",
+     "sec": "§3.1",
+     "name": "meritOf"
+    },
+    {
+     "vol": "卷十三",
+     "sec": "§3.1",
+     "name": "missionView"
+    },
+    {
+     "vol": "卷十三",
+     "sec": "§3.1",
+     "name": "strikeOutcome"
+    },
+    {
+     "vol": "卷十三",
+     "sec": "§3.1",
+     "name": "strikePreview"
+    }
+   ],
+   "retire": {},
+   "accept": [
+    "A13-1.2",
+    "A13-10.3",
+    "A13-12.2",
+    "A13-20.3",
+    "A13-3.3",
+    "S13-4"
+   ],
+   "dependsOn": [
+    "C-卷十五-sys.arcana-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
+    "system:sys.combat 登记项待补 predicates、sources、sinks、entryJudges、view"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(retire)",
      "待补:登记项字段"
     ],
     "stateItems": [
@@ -6591,22 +6501,28 @@
    }
   },
   {
-   "cardId": "C-卷三乙-recipe-2",
+   "cardId": "C-卷三乙-item-2",
    "cardKind": "follow",
    "objectKind": "table",
-   "objectCode": "recipe",
+   "objectCode": "item",
    "volume": "卷三乙",
    "phaseNo": 2,
    "groupKey": "rules层-2",
    "splitAxis": null,
    "segNo": null,
    "zeroRows": [],
-   "rowKeys": [],
+   "rowKeys": [
+    "M3b-14",
+    "M3b-29",
+    "M3b-30"
+   ],
    "files": [
+    "server-plugin/governance.mjs",
     "server-plugin/hidden-passives.mjs",
     "server-plugin/high-nobility.mjs",
     "server-plugin/household-budget.mjs",
     "server-plugin/household-subsistence.mjs",
+    "server-plugin/item-class.mjs",
     "server-plugin/labor-market.mjs",
     "server-plugin/law-codes.mjs",
     "server-plugin/law.mjs",
@@ -6625,9 +6541,7 @@
     "server-plugin/monster-society.mjs",
     "server-plugin/nation-founding.mjs",
     "server-plugin/notables.mjs",
-    "server-plugin/npc-autonomy.mjs",
-    "server-plugin/npc-cognition.mjs",
-    "server-plugin/npc-crime.mjs"
+    "server-plugin/npc-autonomy.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -6637,12 +6551,9 @@
    "entries": [],
    "launches": [],
    "retire": {},
-   "accept": [
-    "V3-4.8-S",
-    "卷三乙:P-10"
-   ],
+   "accept": [],
    "dependsOn": [
-    "C-卷三乙-recipe-1",
+    "C-卷三乙-item-1",
     "LEDGER-1"
    ],
    "census": {},
@@ -6654,12 +6565,13 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
+    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
    ],
    "migReady": {
     "defects": [
-     "E-MIG-CARD-INCOMPLETE(entries、retire)"
+     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
     ],
     "stateItems": [
      "依赖卡已 merged",
@@ -6669,18 +6581,23 @@
    }
   },
   {
-   "cardId": "C-卷三乙-recipe-3",
+   "cardId": "C-卷三乙-item-3",
    "cardKind": "follow",
    "objectKind": "table",
-   "objectCode": "recipe",
+   "objectCode": "item",
    "volume": "卷三乙",
    "phaseNo": 2,
    "groupKey": "rules层-3",
    "splitAxis": null,
    "segNo": null,
    "zeroRows": [],
-   "rowKeys": [],
+   "rowKeys": [
+    "M3b-19",
+    "M6-58"
+   ],
    "files": [
+    "server-plugin/npc-cognition.mjs",
+    "server-plugin/npc-crime.mjs",
     "server-plugin/npc-growth.mjs",
     "server-plugin/npc-intelligence.mjs",
     "server-plugin/npc-labor.mjs",
@@ -6703,9 +6620,7 @@
     "server-plugin/quest-sources.mjs",
     "server-plugin/reputation-registry.mjs",
     "server-plugin/return-summary.mjs",
-    "server-plugin/scene-card.mjs",
-    "server-plugin/settlement-profile.mjs",
-    "server-plugin/shop.mjs"
+    "server-plugin/scene-card.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -6715,12 +6630,9 @@
    "entries": [],
    "launches": [],
    "retire": {},
-   "accept": [
-    "V3-4.8-S",
-    "卷三乙:P-10"
-   ],
+   "accept": [],
    "dependsOn": [
-    "C-卷三乙-recipe-1",
+    "C-卷三乙-item-1",
     "C-卷二-kernel-1",
     "LEDGER-1"
    ],
@@ -6733,12 +6645,13 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
+    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
    ],
    "migReady": {
     "defects": [
-     "E-MIG-CARD-INCOMPLETE(entries、retire)"
+     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
     ],
     "stateItems": [
      "依赖卡已 merged",
@@ -6748,18 +6661,22 @@
    }
   },
   {
-   "cardId": "C-卷三乙-recipe-4",
+   "cardId": "C-卷三乙-item-4",
    "cardKind": "follow",
    "objectKind": "table",
-   "objectCode": "recipe",
+   "objectCode": "item",
    "volume": "卷三乙",
    "phaseNo": 2,
    "groupKey": "rules层-4",
    "splitAxis": null,
    "segNo": null,
    "zeroRows": [],
-   "rowKeys": [],
+   "rowKeys": [
+    "M3b-16"
+   ],
    "files": [
+    "server-plugin/settlement-profile.mjs",
+    "server-plugin/shop.mjs",
     "server-plugin/sites.mjs",
     "server-plugin/standing.mjs",
     "server-plugin/subjective-view.mjs",
@@ -6772,6 +6689,7 @@
     "server-plugin/ui-affairs.mjs",
     "server-plugin/ui-history.mjs",
     "server-plugin/ui-personal.mjs",
+    "server-plugin/valuation.mjs",
     "server-plugin/workstation-services.mjs",
     "server-plugin/world-events.mjs"
    ],
@@ -6784,12 +6702,10 @@
    "launches": [],
    "retire": {},
    "accept": [
-    "V3-4.2-S",
-    "V3-4.8-S",
-    "卷三乙:P-10"
+    "V3-4.2-S"
    ],
    "dependsOn": [
-    "C-卷三乙-recipe-1",
+    "C-卷三乙-item-1",
     "LEDGER-1"
    ],
    "census": {},
@@ -7392,6 +7308,325 @@
    }
   },
   {
+   "cardId": "C-卷二十一-status-2",
+   "cardKind": "follow",
+   "objectKind": "table",
+   "objectCode": "status",
+   "volume": "卷二十一",
+   "phaseNo": 2,
+   "groupKey": "rules层-2",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [
+    "M20-28",
+    "M20-29b",
+    "M20-38",
+    "M21-14",
+    "M21-14b",
+    "M21-24",
+    "M21-27",
+    "M24-8",
+    "M25-11",
+    "M25-12",
+    "M25-50"
+   ],
+   "files": [
+    "server-plugin/festival.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/finance-tax.mjs",
+    "server-plugin/food-habit.mjs",
+    "server-plugin/governance.mjs",
+    "server-plugin/hazard-calendar.mjs",
+    "server-plugin/hidden-passives.mjs",
+    "server-plugin/high-nobility.mjs",
+    "server-plugin/household-budget.mjs",
+    "server-plugin/household-subsistence.mjs",
+    "server-plugin/items.mjs",
+    "server-plugin/labor-market.mjs",
+    "server-plugin/law-codes.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/learning.mjs",
+    "server-plugin/legal-appeal.mjs",
+    "server-plugin/legal-reactions.mjs",
+    "server-plugin/legal-representation.mjs",
+    "server-plugin/lies.mjs",
+    "server-plugin/local-exams.mjs",
+    "server-plugin/location-access.mjs",
+    "server-plugin/magic-care.mjs",
+    "server-plugin/magic-consent.mjs",
+    "server-plugin/magic-economy.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [],
+   "launches": [],
+   "retire": {},
+   "accept": [],
+   "dependsOn": [
+    "C-卷二十一-status-1",
+    "LEDGER-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
+    "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
+   "cardId": "C-卷二十一-status-3",
+   "cardKind": "follow",
+   "objectKind": "table",
+   "objectCode": "status",
+   "volume": "卷二十一",
+   "phaseNo": 2,
+   "groupKey": "rules层-3",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [
+    "M13-12",
+    "M14-5",
+    "M15-4",
+    "M19-6",
+    "M21-1",
+    "M21-10",
+    "M21-12",
+    "M21-16",
+    "M21-2",
+    "M21-20",
+    "M21-22",
+    "M21-23",
+    "M21-25",
+    "M21-26",
+    "M21-3",
+    "M21-6",
+    "M21-7"
+   ],
+   "files": [
+    "server-plugin/magic-mind-space.mjs",
+    "server-plugin/magic-ritual.mjs",
+    "server-plugin/magic-status.mjs",
+    "server-plugin/market.mjs",
+    "server-plugin/medicine-state.mjs",
+    "server-plugin/medicine.mjs",
+    "server-plugin/monster-society.mjs",
+    "server-plugin/nation-founding.mjs",
+    "server-plugin/notables.mjs",
+    "server-plugin/npc-autonomy.mjs",
+    "server-plugin/npc-cognition.mjs",
+    "server-plugin/npc-crime.mjs",
+    "server-plugin/npc-decision.mjs",
+    "server-plugin/npc-growth.mjs",
+    "server-plugin/npc-intelligence.mjs",
+    "server-plugin/npc-labor.mjs",
+    "server-plugin/npc-life.mjs",
+    "server-plugin/npc-memory.mjs",
+    "server-plugin/npc-obligations.mjs",
+    "server-plugin/npc-planning-service.mjs",
+    "server-plugin/npc-schedule.mjs",
+    "server-plugin/npc-state.mjs",
+    "server-plugin/obligation-runtime.mjs",
+    "server-plugin/office-salary.mjs",
+    "server-plugin/organizations.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [],
+   "launches": [],
+   "retire": {},
+   "accept": [],
+   "dependsOn": [
+    "C-卷二十一-status-1",
+    "LEDGER-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
+    "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
+   "cardId": "C-卷二十一-status-4",
+   "cardKind": "follow",
+   "objectKind": "table",
+   "objectCode": "status",
+   "volume": "卷二十一",
+   "phaseNo": 2,
+   "groupKey": "rules层-4",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [
+    "M21-13"
+   ],
+   "files": [
+    "server-plugin/population-health.mjs",
+    "server-plugin/primitives-body.mjs",
+    "server-plugin/primitives-effects.mjs",
+    "server-plugin/primitives-learning.mjs",
+    "server-plugin/primitives-runtime.mjs",
+    "server-plugin/professions.mjs",
+    "server-plugin/promotion.mjs",
+    "server-plugin/public-projects.mjs",
+    "server-plugin/quest-board.mjs",
+    "server-plugin/quest-sources.mjs",
+    "server-plugin/reputation-registry.mjs",
+    "server-plugin/return-summary.mjs",
+    "server-plugin/scene-card.mjs",
+    "server-plugin/seasonal-hazards.mjs",
+    "server-plugin/settlement-profile.mjs",
+    "server-plugin/shop.mjs",
+    "server-plugin/sites.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/subjective-view.mjs",
+    "server-plugin/titles.mjs",
+    "server-plugin/training.mjs",
+    "server-plugin/traits.mjs",
+    "server-plugin/transition.mjs",
+    "server-plugin/transport.mjs",
+    "server-plugin/tribal-awakening.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [],
+   "launches": [],
+   "retire": {},
+   "accept": [],
+   "dependsOn": [
+    "C-卷二-kernel-1",
+    "C-卷二十一-status-1",
+    "LEDGER-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
+    "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
+   "cardId": "C-卷二十一-status-5",
+   "cardKind": "follow",
+   "objectKind": "table",
+   "objectCode": "status",
+   "volume": "卷二十一",
+   "phaseNo": 2,
+   "groupKey": "rules层-5",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [],
+   "files": [
+    "server-plugin/ui-affairs.mjs",
+    "server-plugin/ui-history.mjs",
+    "server-plugin/ui-personal.mjs",
+    "server-plugin/weather.mjs",
+    "server-plugin/workstation-services.mjs",
+    "server-plugin/world-clock.mjs",
+    "server-plugin/world-events.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [],
+   "launches": [],
+   "retire": {},
+   "accept": [],
+   "dependsOn": [
+    "C-卷二十一-status-1",
+    "LEDGER-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
+    "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
    "cardId": "C-卷四-species-2",
    "cardKind": "follow",
    "objectKind": "table",
@@ -7663,10 +7898,10 @@
    }
   },
   {
-   "cardId": "C-卷三乙-item-1",
+   "cardId": "C-卷三乙-recipe-1",
    "cardKind": "first",
    "objectKind": "table",
-   "objectCode": "item",
+   "objectCode": "recipe",
    "volume": "卷三乙",
    "phaseNo": 3,
    "groupKey": "rules层-1",
@@ -7674,18 +7909,10 @@
    "segNo": null,
    "zeroRows": [],
    "rowKeys": [
-    "M1-3",
-    "M13-27",
-    "M14-15",
-    "M19-18",
-    "M19-30",
-    "M23-19",
-    "M25-57",
-    "M3b-10",
+    "M19-32",
+    "M3b-20",
     "M3b-21",
-    "M3b-24",
-    "M3b-27",
-    "M6-29"
+    "M3b-27"
    ],
    "files": [
     "server-plugin/action-affordances.mjs",
@@ -7697,7 +7924,6 @@
     "server-plugin/civic.mjs",
     "server-plugin/credit.mjs",
     "server-plugin/currency.mjs",
-    "server-plugin/daily-actions.mjs",
     "server-plugin/distribution.mjs",
     "server-plugin/education-state.mjs",
     "server-plugin/education.mjs",
@@ -7712,7 +7938,8 @@
     "server-plugin/finance-assets.mjs",
     "server-plugin/finance-bank.mjs",
     "server-plugin/finance-tax.mjs",
-    "server-plugin/food-habit.mjs"
+    "server-plugin/food-habit.mjs",
+    "server-plugin/governance.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -7726,49 +7953,29 @@
      "vol": "卷三乙",
      "sec": "§3.1",
      "name": "recipeView"
-    },
-    {
-     "vol": "卷六",
-     "sec": "§3.1",
-     "name": "priceFor"
     }
    ],
    "launches": [
     {
      "vol": "卷三乙",
      "sec": "§3.1",
-     "name": "containerView"
-    },
-    {
-     "vol": "卷三乙",
-     "sec": "§3.1",
-     "name": "itemView"
-    },
-    {
-     "vol": "卷三乙",
-     "sec": "§3.1",
-     "name": "lotsView"
+     "name": "recipeView"
     }
    ],
    "retire": {},
    "accept": [
-    "rules.dimfill.itemFragility",
-    "rules.dimfill.itemMaterial",
-    "rules.dimfill.itemProduceSeason"
+    "rules.dimfill.recipeQualityCurve"
    ],
    "dependsOn": [
-    "C-卷三乙-recipe-1",
-    "C-卷三甲-material-1",
+    "C-卷三乙-item-1",
     "C-卷二-kernel-1",
+    "C-卷十四-skill-1",
     "LEDGER-1"
    ],
    "census": {},
    "testClass": {},
    "derivations": [],
-   "sortKeys": {
-    "itemRot": 2,
-    "itemThermal": 1
-   },
+   "sortKeys": {},
    "state": "drafted",
    "approvals": [],
    "mergeRef": "",
@@ -7790,54 +7997,73 @@
    }
   },
   {
-   "cardId": "C-卷八b-law_code-1",
+   "cardId": "C-卷二-sys.capacity-1",
    "cardKind": "first",
-   "objectKind": "table",
-   "objectCode": "law_code",
-   "volume": "卷八b",
+   "objectKind": "system",
+   "objectCode": "sys.capacity",
+   "volume": "卷二",
    "phaseNo": 3,
    "groupKey": "rules层-1",
    "splitAxis": null,
    "segNo": null,
    "zeroRows": [],
    "rowKeys": [
-    "M10-16a",
-    "M10-16b",
-    "M10-26",
-    "M17-10",
-    "M20-20",
-    "M5-1",
-    "M5-23",
-    "M8-15",
-    "M8b-27",
-    "M8b-7"
+    "M1-5",
+    "M13-5",
+    "M14-61",
+    "M16-7",
+    "M18-30",
+    "M25-25",
+    "M25-27",
+    "M25-34",
+    "M25-37",
+    "M25-39",
+    "M25-45",
+    "M25-49",
+    "M25-5",
+    "M25-56",
+    "M25-8",
+    "M4-20",
+    "M4-37",
+    "M4-38",
+    "M4-5",
+    "M4-55",
+    "M5-15a",
+    "M5-15b",
+    "M5-16",
+    "M7-16",
+    "M7-17",
+    "M8-21",
+    "M8b-10",
+    "M8b-11",
+    "M8b-14",
+    "M8b-19"
    ],
    "files": [
-    "server-plugin/activities.mjs",
-    "server-plugin/advance-registry.mjs",
-    "server-plugin/credit.mjs",
-    "server-plugin/elections.mjs",
-    "server-plugin/engine.mjs",
+    "server-plugin/agriculture.mjs",
+    "server-plugin/bounty.mjs",
+    "server-plugin/combat-state.mjs",
+    "server-plugin/education-state.mjs",
+    "server-plugin/entity-view.mjs",
     "server-plugin/extraction.mjs",
-    "server-plugin/finance-assets.mjs",
-    "server-plugin/finance-bank.mjs",
-    "server-plugin/forest-water.mjs",
+    "server-plugin/faith.mjs",
+    "server-plugin/festival.mjs",
+    "server-plugin/governance.mjs",
     "server-plugin/high-nobility.mjs",
-    "server-plugin/labor-market.mjs",
-    "server-plugin/law-codes.mjs",
+    "server-plugin/household-subsistence.mjs",
     "server-plugin/law.mjs",
-    "server-plugin/magic-consent.mjs",
-    "server-plugin/magic-economy.mjs",
-    "server-plugin/magic-message.mjs",
-    "server-plugin/magic-movement.mjs",
-    "server-plugin/norm-stack.mjs",
+    "server-plugin/local-exams.mjs",
+    "server-plugin/location-access.mjs",
+    "server-plugin/magic-growth.mjs",
+    "server-plugin/monster-society.mjs",
     "server-plugin/npc-crime.mjs",
-    "server-plugin/regions.mjs",
-    "server-plugin/remote-generation.mjs",
+    "server-plugin/perception.mjs",
+    "server-plugin/pets.mjs",
+    "server-plugin/promotion.mjs",
     "server-plugin/sites.mjs",
-    "server-plugin/smuggling.mjs",
-    "server-plugin/traits.mjs",
-    "server-plugin/water-cycle.mjs"
+    "server-plugin/titles.mjs",
+    "server-plugin/training.mjs",
+    "server-plugin/wildlife.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -7848,30 +8074,479 @@
    ],
    "entries": [
     {
-     "vol": "卷五",
-     "sec": "§3.2",
-     "name": "setAspect"
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "disposalRight"
+    }
+   ],
+   "launches": [],
+   "retire": {},
+   "accept": [
+    "S25-3",
+    "S25-4",
+    "S25-9",
+    "S5-5"
+   ],
+   "dependsOn": [
+    "C-卷八b-offense-1",
+    "LEDGER-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
+    "system:sys.capacity 登记项待补 sources、sinks、entryJudges"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(retire)",
+     "待补:登记项字段"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
+   "cardId": "C-卷二十五-plant-1",
+   "cardKind": "first",
+   "objectKind": "table",
+   "objectCode": "plant",
+   "volume": "卷二十五",
+   "phaseNo": 3,
+   "groupKey": "rules层-1",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [
+    "M14-4",
+    "M20-33",
+    "M20-52",
+    "M25-10",
+    "M25-14",
+    "M25-15",
+    "M25-16",
+    "M25-17",
+    "M25-19",
+    "M25-2",
+    "M25-22",
+    "M25-23",
+    "M25-24",
+    "M25-26",
+    "M25-3",
+    "M25-33",
+    "M25-4",
+    "M25-40",
+    "M25-41",
+    "M25-43",
+    "M25-44",
+    "M25-46",
+    "M25-53",
+    "M25-54",
+    "M25-55",
+    "M25-59",
+    "M25-6",
+    "M25-7",
+    "M25-9",
+    "M4-53"
+   ],
+   "files": [
+    "server-plugin/agriculture-migration.mjs",
+    "server-plugin/agriculture.mjs",
+    "server-plugin/extraction.mjs",
+    "server-plugin/farm-pests-migration.mjs",
+    "server-plugin/farm-pests.mjs",
+    "server-plugin/household-subsistence.mjs",
+    "server-plugin/husbandry-traits.mjs",
+    "server-plugin/husbandry.mjs",
+    "server-plugin/livestock-sale.mjs",
+    "server-plugin/magic-growth.mjs",
+    "server-plugin/pets.mjs",
+    "server-plugin/weather.mjs",
+    "server-plugin/wildlife.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_rows",
+    "seg_data",
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [
+    {
+     "vol": "卷二十五",
+     "sec": "§3.1",
+     "name": "butcherOutcome"
     },
     {
-     "vol": "卷八",
+     "vol": "卷二十五",
      "sec": "§3.1",
-     "name": "polityView"
+     "name": "cropForage"
+    },
+    {
+     "vol": "卷二十五",
+     "sec": "§3.1",
+     "name": "forageOptions"
+    }
+   ],
+   "launches": [
+    {
+     "vol": "卷二十五",
+     "sec": "§3.1",
+     "name": "arablePotential"
+    },
+    {
+     "vol": "卷二十五",
+     "sec": "§3.1",
+     "name": "butcherOutcome"
+    },
+    {
+     "vol": "卷二十五",
+     "sec": "§3.1",
+     "name": "canRide"
+    },
+    {
+     "vol": "卷二十五",
+     "sec": "§3.1",
+     "name": "cropForage"
+    },
+    {
+     "vol": "卷二十五",
+     "sec": "§3.1",
+     "name": "cropGrowth"
+    },
+    {
+     "vol": "卷二十五",
+     "sec": "§3.1",
+     "name": "cultivationOf"
+    },
+    {
+     "vol": "卷二十五",
+     "sec": "§3.1",
+     "name": "forageOptions"
+    },
+    {
+     "vol": "卷二十五",
+     "sec": "§3.1",
+     "name": "handlingOf"
+    },
+    {
+     "vol": "卷二十五",
+     "sec": "§3.1",
+     "name": "herdView"
+    },
+    {
+     "vol": "卷二十五",
+     "sec": "§3.1",
+     "name": "plantView"
+    },
+    {
+     "vol": "卷二十五",
+     "sec": "§3.1",
+     "name": "stapleCalendar"
+    },
+    {
+     "vol": "卷二十五",
+     "sec": "§3.1",
+     "name": "tabooFacts"
+    }
+   ],
+   "retire": {},
+   "accept": [
+    "rules.dimfill.plantFrostToleranceC"
+   ],
+   "dependsOn": [
+    "C-卷三乙-item-1",
+    "LEDGER-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
+    "row:M25-23",
+    "row:M25-41",
+    "system:sys.plant 登记项待补 predicates、sources、sinks、entryJudges、view"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(retire)",
+     "待补:登记项字段",
+     "待补:迁移行处置"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
+   "cardId": "C-卷八b-offense-1",
+   "cardKind": "first",
+   "objectKind": "table",
+   "objectCode": "offense",
+   "volume": "卷八b",
+   "phaseNo": 3,
+   "groupKey": "rules层-1",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [
+    "M15-10",
+    "M18-12",
+    "M18-16",
+    "M19-7",
+    "M4-56",
+    "M8b-1",
+    "M8b-12",
+    "M8b-15",
+    "M8b-2",
+    "M8b-23",
+    "M8b-24",
+    "M8b-25",
+    "M8b-26",
+    "M8b-29",
+    "M8b-31",
+    "M8b-4",
+    "M8b-5",
+    "M8b-8",
+    "M8b-9",
+    "M9-16"
+   ],
+   "files": [
+    "server-plugin/action-authority-sources.mjs",
+    "server-plugin/action-authority.mjs",
+    "server-plugin/action-consent.mjs",
+    "server-plugin/activities.mjs",
+    "server-plugin/advance-registry.mjs",
+    "server-plugin/bounty.mjs",
+    "server-plugin/credit.mjs",
+    "server-plugin/elections.mjs",
+    "server-plugin/engine.mjs",
+    "server-plugin/extraction.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/labor-market.mjs",
+    "server-plugin/law-codes.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/legal-appeal.mjs",
+    "server-plugin/legal-reactions.mjs",
+    "server-plugin/legal-representation.mjs",
+    "server-plugin/magic-consent.mjs",
+    "server-plugin/magic-economy.mjs",
+    "server-plugin/magic-message.mjs",
+    "server-plugin/magic-movement.mjs",
+    "server-plugin/norm-stack.mjs",
+    "server-plugin/npc-crime.mjs",
+    "server-plugin/offense-notes.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_rows",
+    "seg_data",
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [
+    {
+     "vol": "卷九",
+     "sec": "§3.1",
+     "name": "consent"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "disposalRight"
+    },
+    {
+     "vol": "卷十九",
+     "sec": "§3.2",
+     "name": "accessClassAt"
+    },
+    {
+     "vol": "卷十八",
+     "sec": "§3.2",
+     "name": "intimateEligible"
     }
    ],
    "launches": [
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "lawCodeView"
+     "name": "agencyOf"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "attackLegality"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "auditGaps"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "bindingsOf"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "bondOf"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "bountiesOn"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "caseView"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "claimsOf"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "contrabandAt"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "convictionCount"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "crimeProspect"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "custodyOf"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "disposalRight"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "estateOf"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "evidenceScore"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "forumOrgOf"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "goodFaithOf"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "lawGate"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "legalCapacity"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "legalityOf"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "limitationOf"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "naturalizeOptions"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "normStack"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "offenseView"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "offensesOfFact"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "provisionFor"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "provisionView"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "responseOf"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "safetyOf"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "securityOf"
+    },
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "sentenceRange"
     }
    ],
    "retire": {},
    "accept": [
-    "rules.dimfill.lawCodeAll"
+    "rules.dimfill.offenseAll"
    ],
    "dependsOn": [
+    "C-卷九-sys.ai_interface-1",
     "C-卷二-kernel-1",
-    "C-卷八-polity-1",
     "LEDGER-1"
    ],
    "census": {},
@@ -7912,6 +8587,7 @@
    "rowKeys": [
     "M10-32",
     "M10-39",
+    "M13-31",
     "M17-1",
     "M17-14",
     "M17-15",
@@ -7920,8 +8596,10 @@
     "M17-18",
     "M17-19",
     "M17-8",
+    "M17-9",
     "M19-17",
     "M19-28",
+    "M20-27",
     "M3b-13a",
     "M3b-13b",
     "M5-33",
@@ -7930,10 +8608,17 @@
    "files": [
     "server-plugin/advance-layers.mjs",
     "server-plugin/carry.mjs",
+    "server-plugin/education-state.mjs",
+    "server-plugin/engine.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/hazard-calendar.mjs",
+    "server-plugin/household-subsistence.mjs",
     "server-plugin/item-class.mjs",
     "server-plugin/pets.mjs",
     "server-plugin/primitives-movement.mjs",
+    "server-plugin/transport-route.mjs",
     "server-plugin/transport.mjs",
+    "server-plugin/war-diplomacy.mjs",
     "server-plugin/weather.mjs"
    ],
    "dataFiles": [],
@@ -8039,7 +8724,8 @@
    ],
    "retire": {},
    "accept": [
-    "A19-2.2"
+    "A19-2.2",
+    "S13-9"
    ],
    "dependsOn": [
     "C-卷二-kernel-1",
@@ -8209,210 +8895,22 @@
    }
   },
   {
-   "cardId": "C-卷十八-sys.social-1",
-   "cardKind": "first",
-   "objectKind": "system",
-   "objectCode": "sys.social",
-   "volume": "卷十八",
-   "phaseNo": 3,
-   "groupKey": "rules层-1",
-   "splitAxis": null,
-   "segNo": null,
-   "zeroRows": [],
-   "rowKeys": [
-    "M15-10",
-    "M18-12",
-    "M18-16",
-    "M18-19",
-    "M18-23",
-    "M18-3",
-    "M18-34",
-    "M18-8",
-    "M2-43b",
-    "M8b-24",
-    "M8b-31",
-    "M9-16"
-   ],
-   "files": [
-    "server-plugin/action-authority-sources.mjs",
-    "server-plugin/action-authority.mjs",
-    "server-plugin/action-capacity.mjs",
-    "server-plugin/action-consent.mjs",
-    "server-plugin/action-limits.mjs",
-    "server-plugin/action-rejection.mjs",
-    "server-plugin/action-rite.mjs",
-    "server-plugin/action-router.mjs",
-    "server-plugin/activities.mjs",
-    "server-plugin/advance-registry.mjs",
-    "server-plugin/body-needs.mjs",
-    "server-plugin/boss-migration.mjs",
-    "server-plugin/bosses.mjs",
-    "server-plugin/bounty.mjs",
-    "server-plugin/business.mjs",
-    "server-plugin/career-metrics.mjs",
-    "server-plugin/checks.mjs",
-    "server-plugin/civic.mjs",
-    "server-plugin/combat-state.mjs",
-    "server-plugin/combat.mjs",
-    "server-plugin/consistency-service.mjs",
-    "server-plugin/contracts.mjs",
-    "server-plugin/credit.mjs",
-    "server-plugin/currency.mjs",
-    "server-plugin/derived.mjs"
-   ],
-   "dataFiles": [],
-   "segs": [
-    "seg_rows",
-    "seg_data",
-    "seg_readers",
-    "seg_delete"
-   ],
-   "entries": [
-    {
-     "vol": "卷九",
-     "sec": "§3.1",
-     "name": "consent"
-    },
-    {
-     "vol": "卷八b",
-     "sec": "§3.1",
-     "name": "disposalRight"
-    },
-    {
-     "vol": "卷十八",
-     "sec": "§3.2",
-     "name": "intimateEligible"
-    }
-   ],
-   "launches": [
-    {
-     "vol": "卷十八",
-     "sec": "§3.1",
-     "name": "compat"
-    },
-    {
-     "vol": "卷十八",
-     "sec": "§3.1",
-     "name": "dread"
-    },
-    {
-     "vol": "卷十八",
-     "sec": "§3.1",
-     "name": "esteemOf"
-    },
-    {
-     "vol": "卷十八",
-     "sec": "§3.1",
-     "name": "heirsOf"
-    },
-    {
-     "vol": "卷十八",
-     "sec": "§3.1",
-     "name": "holdingKind"
-    },
-    {
-     "vol": "卷十八",
-     "sec": "§3.1",
-     "name": "kinDegree"
-    },
-    {
-     "vol": "卷十八",
-     "sec": "§3.1",
-     "name": "kinView"
-    },
-    {
-     "vol": "卷十八",
-     "sec": "§3.1",
-     "name": "opinionOf"
-    },
-    {
-     "vol": "卷十八",
-     "sec": "§3.1",
-     "name": "recall"
-    },
-    {
-     "vol": "卷十八",
-     "sec": "§3.1",
-     "name": "stance"
-    },
-    {
-     "vol": "卷十八",
-     "sec": "§3.1",
-     "name": "treatment"
-    }
-   ],
-   "retire": {},
-   "accept": [
-    "A18-1.5",
-    "A18-1.8",
-    "A18-10.1",
-    "A18-10.2",
-    "A18-11.2",
-    "A18-12.2",
-    "A18-2.5",
-    "A18-4.4",
-    "A18-5.2",
-    "A18-5.4",
-    "A18-6.2",
-    "A18-9.1",
-    "A18-9.2",
-    "A18-9.3",
-    "S18-8"
-   ],
-   "dependsOn": [
-    "C-卷九-sys.ai_interface-1",
-    "C-卷二-aiGate-1",
-    "C-卷二-kernel-1",
-    "C-卷八b-offense-1",
-    "LEDGER-1"
-   ],
-   "census": {},
-   "testClass": {},
-   "derivations": [],
-   "sortKeys": {},
-   "state": "drafted",
-   "approvals": [],
-   "mergeRef": "",
-   "fails": 0,
-   "pending": [
-    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.social 登记项待补 sources、sinks、entryJudges、view"
-   ],
-   "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(retire)",
-     "待补:登记项字段"
-    ],
-    "stateItems": [
-     "依赖卡已 merged",
-     "所在阶段已开",
-     "不在冻结中"
-    ]
-   }
-  },
-  {
-   "cardId": "C-卷三乙-item-2",
+   "cardId": "C-卷三乙-recipe-2",
    "cardKind": "follow",
    "objectKind": "table",
-   "objectCode": "item",
+   "objectCode": "recipe",
    "volume": "卷三乙",
    "phaseNo": 3,
    "groupKey": "rules层-2",
    "splitAxis": null,
    "segNo": null,
    "zeroRows": [],
-   "rowKeys": [
-    "M3b-14",
-    "M3b-29",
-    "M3b-30"
-   ],
+   "rowKeys": [],
    "files": [
-    "server-plugin/governance.mjs",
     "server-plugin/hidden-passives.mjs",
     "server-plugin/high-nobility.mjs",
     "server-plugin/household-budget.mjs",
     "server-plugin/household-subsistence.mjs",
-    "server-plugin/item-class.mjs",
     "server-plugin/labor-market.mjs",
     "server-plugin/law-codes.mjs",
     "server-plugin/law.mjs",
@@ -8431,7 +8929,9 @@
     "server-plugin/monster-society.mjs",
     "server-plugin/nation-founding.mjs",
     "server-plugin/notables.mjs",
-    "server-plugin/npc-autonomy.mjs"
+    "server-plugin/npc-autonomy.mjs",
+    "server-plugin/npc-cognition.mjs",
+    "server-plugin/npc-crime.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -8441,9 +8941,12 @@
    "entries": [],
    "launches": [],
    "retire": {},
-   "accept": [],
+   "accept": [
+    "V3-4.8-S",
+    "卷三乙:P-10"
+   ],
    "dependsOn": [
-    "C-卷三乙-item-1",
+    "C-卷三乙-recipe-1",
     "LEDGER-1"
    ],
    "census": {},
@@ -8455,13 +8958,12 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
    ],
    "migReady": {
     "defects": [
-     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
+     "E-MIG-CARD-INCOMPLETE(entries、retire)"
     ],
     "stateItems": [
      "依赖卡已 merged",
@@ -8471,23 +8973,18 @@
    }
   },
   {
-   "cardId": "C-卷三乙-item-3",
+   "cardId": "C-卷三乙-recipe-3",
    "cardKind": "follow",
    "objectKind": "table",
-   "objectCode": "item",
+   "objectCode": "recipe",
    "volume": "卷三乙",
    "phaseNo": 3,
    "groupKey": "rules层-3",
    "splitAxis": null,
    "segNo": null,
    "zeroRows": [],
-   "rowKeys": [
-    "M3b-19",
-    "M6-58"
-   ],
+   "rowKeys": [],
    "files": [
-    "server-plugin/npc-cognition.mjs",
-    "server-plugin/npc-crime.mjs",
     "server-plugin/npc-growth.mjs",
     "server-plugin/npc-intelligence.mjs",
     "server-plugin/npc-labor.mjs",
@@ -8510,7 +9007,133 @@
     "server-plugin/quest-sources.mjs",
     "server-plugin/reputation-registry.mjs",
     "server-plugin/return-summary.mjs",
-    "server-plugin/scene-card.mjs"
+    "server-plugin/scene-card.mjs",
+    "server-plugin/settlement-profile.mjs",
+    "server-plugin/shop.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [],
+   "launches": [],
+   "retire": {},
+   "accept": [
+    "V3-4.8-S",
+    "卷三乙:P-10"
+   ],
+   "dependsOn": [
+    "C-卷三乙-recipe-1",
+    "C-卷二-kernel-1",
+    "LEDGER-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(entries、retire)"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
+   "cardId": "C-卷三乙-recipe-4",
+   "cardKind": "follow",
+   "objectKind": "table",
+   "objectCode": "recipe",
+   "volume": "卷三乙",
+   "phaseNo": 3,
+   "groupKey": "rules层-4",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [],
+   "files": [
+    "server-plugin/sites.mjs",
+    "server-plugin/standing.mjs",
+    "server-plugin/subjective-view.mjs",
+    "server-plugin/titles.mjs",
+    "server-plugin/training.mjs",
+    "server-plugin/traits.mjs",
+    "server-plugin/transition.mjs",
+    "server-plugin/transport.mjs",
+    "server-plugin/tribal-awakening.mjs",
+    "server-plugin/ui-affairs.mjs",
+    "server-plugin/ui-history.mjs",
+    "server-plugin/ui-personal.mjs",
+    "server-plugin/workstation-services.mjs",
+    "server-plugin/world-events.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [],
+   "launches": [],
+   "retire": {},
+   "accept": [
+    "V3-4.2-S",
+    "V3-4.8-S",
+    "卷三乙:P-10"
+   ],
+   "dependsOn": [
+    "C-卷三乙-recipe-1",
+    "LEDGER-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(entries、retire)"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
+   "cardId": "C-卷八b-offense-2",
+   "cardKind": "follow",
+   "objectKind": "table",
+   "objectCode": "offense",
+   "volume": "卷八b",
+   "phaseNo": 3,
+   "groupKey": "rules层-2",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [],
+   "files": [
+    "server-plugin/sites.mjs",
+    "server-plugin/smuggling.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -8522,8 +9145,7 @@
    "retire": {},
    "accept": [],
    "dependsOn": [
-    "C-卷三乙-item-1",
-    "C-卷二-kernel-1",
+    "C-卷八b-offense-1",
     "LEDGER-1"
    ],
    "census": {},
@@ -8542,129 +9164,6 @@
    "migReady": {
     "defects": [
      "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
-    ],
-    "stateItems": [
-     "依赖卡已 merged",
-     "所在阶段已开",
-     "不在冻结中"
-    ]
-   }
-  },
-  {
-   "cardId": "C-卷三乙-item-4",
-   "cardKind": "follow",
-   "objectKind": "table",
-   "objectCode": "item",
-   "volume": "卷三乙",
-   "phaseNo": 3,
-   "groupKey": "rules层-4",
-   "splitAxis": null,
-   "segNo": null,
-   "zeroRows": [],
-   "rowKeys": [
-    "M3b-16"
-   ],
-   "files": [
-    "server-plugin/settlement-profile.mjs",
-    "server-plugin/shop.mjs",
-    "server-plugin/sites.mjs",
-    "server-plugin/standing.mjs",
-    "server-plugin/subjective-view.mjs",
-    "server-plugin/titles.mjs",
-    "server-plugin/training.mjs",
-    "server-plugin/traits.mjs",
-    "server-plugin/transition.mjs",
-    "server-plugin/transport.mjs",
-    "server-plugin/tribal-awakening.mjs",
-    "server-plugin/ui-affairs.mjs",
-    "server-plugin/ui-history.mjs",
-    "server-plugin/ui-personal.mjs",
-    "server-plugin/valuation.mjs",
-    "server-plugin/workstation-services.mjs",
-    "server-plugin/world-events.mjs"
-   ],
-   "dataFiles": [],
-   "segs": [
-    "seg_readers",
-    "seg_delete"
-   ],
-   "entries": [],
-   "launches": [],
-   "retire": {},
-   "accept": [
-    "V3-4.2-S"
-   ],
-   "dependsOn": [
-    "C-卷三乙-item-1",
-    "LEDGER-1"
-   ],
-   "census": {},
-   "testClass": {},
-   "derivations": [],
-   "sortKeys": {},
-   "state": "drafted",
-   "approvals": [],
-   "mergeRef": "",
-   "fails": 0,
-   "pending": [
-    "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
-    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
-   ],
-   "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(entries、retire)"
-    ],
-    "stateItems": [
-     "依赖卡已 merged",
-     "所在阶段已开",
-     "不在冻结中"
-    ]
-   }
-  },
-  {
-   "cardId": "C-卷八b-law_code-2",
-   "cardKind": "follow",
-   "objectKind": "table",
-   "objectCode": "law_code",
-   "volume": "卷八b",
-   "phaseNo": 3,
-   "groupKey": "rules层-2",
-   "splitAxis": null,
-   "segNo": null,
-   "zeroRows": [],
-   "rowKeys": [],
-   "files": [
-    "server-plugin/wildlife-habitats.mjs"
-   ],
-   "dataFiles": [],
-   "segs": [
-    "seg_readers",
-    "seg_delete"
-   ],
-   "entries": [],
-   "launches": [],
-   "retire": {},
-   "accept": [
-    "A8b-1.1"
-   ],
-   "dependsOn": [
-    "C-卷八b-law_code-1"
-   ],
-   "census": {},
-   "testClass": {},
-   "derivations": [],
-   "sortKeys": {},
-   "state": "drafted",
-   "approvals": [],
-   "mergeRef": "",
-   "fails": 0,
-   "pending": [
-    "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
-    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
-   ],
-   "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(entries、retire)"
     ],
     "stateItems": [
      "依赖卡已 merged",
@@ -8753,419 +9252,6 @@
    }
   },
   {
-   "cardId": "C-卷十八-sys.social-2",
-   "cardKind": "follow",
-   "objectKind": "system",
-   "objectCode": "sys.social",
-   "volume": "卷十八",
-   "phaseNo": 3,
-   "groupKey": "rules层-2",
-   "splitAxis": null,
-   "segNo": null,
-   "zeroRows": [],
-   "rowKeys": [
-    "M18-21",
-    "M18-22",
-    "M18-25",
-    "M18-26",
-    "M18-27a",
-    "M18-27b",
-    "M25-38"
-   ],
-   "files": [
-    "server-plugin/dialogue.mjs",
-    "server-plugin/distribution.mjs",
-    "server-plugin/documents.mjs",
-    "server-plugin/ecology-dynamics.mjs",
-    "server-plugin/education-state.mjs",
-    "server-plugin/education.mjs",
-    "server-plugin/effects.mjs",
-    "server-plugin/elections.mjs",
-    "server-plugin/engine.mjs",
-    "server-plugin/environment-state.mjs",
-    "server-plugin/environment.mjs",
-    "server-plugin/extraction.mjs",
-    "server-plugin/facilities.mjs",
-    "server-plugin/facility-state.mjs",
-    "server-plugin/faction-clock.mjs",
-    "server-plugin/faith.mjs",
-    "server-plugin/family-diplomacy.mjs",
-    "server-plugin/family-inheritance.mjs",
-    "server-plugin/family-law.mjs",
-    "server-plugin/family-politics.mjs",
-    "server-plugin/family-state.mjs",
-    "server-plugin/festival.mjs",
-    "server-plugin/finance-assets.mjs",
-    "server-plugin/finance-bank.mjs",
-    "server-plugin/finance-tax.mjs"
-   ],
-   "dataFiles": [],
-   "segs": [
-    "seg_readers",
-    "seg_delete"
-   ],
-   "entries": [
-    {
-     "vol": "卷十八",
-     "sec": "§3.2",
-     "name": "intimateEligible"
-    }
-   ],
-   "launches": [],
-   "retire": {},
-   "accept": [
-    "A18-9.1",
-    "A18-9.2",
-    "S18-8"
-   ],
-   "dependsOn": [
-    "C-卷十八-sys.social-1",
-    "LEDGER-1"
-   ],
-   "census": {},
-   "testClass": {},
-   "derivations": [],
-   "sortKeys": {},
-   "state": "drafted",
-   "approvals": [],
-   "mergeRef": "",
-   "fails": 0,
-   "pending": [
-    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
-   ],
-   "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(retire)"
-    ],
-    "stateItems": [
-     "依赖卡已 merged",
-     "所在阶段已开",
-     "不在冻结中"
-    ]
-   }
-  },
-  {
-   "cardId": "C-卷十八-sys.social-3",
-   "cardKind": "follow",
-   "objectKind": "system",
-   "objectCode": "sys.social",
-   "volume": "卷十八",
-   "phaseNo": 3,
-   "groupKey": "rules层-3",
-   "splitAxis": null,
-   "segNo": null,
-   "zeroRows": [],
-   "rowKeys": [],
-   "files": [
-    "server-plugin/governance.mjs",
-    "server-plugin/group-account.mjs",
-    "server-plugin/high-nobility.mjs",
-    "server-plugin/holding-kinds.mjs",
-    "server-plugin/holding-sources.mjs",
-    "server-plugin/husbandry.mjs",
-    "server-plugin/items.mjs",
-    "server-plugin/labor-market.mjs",
-    "server-plugin/law.mjs",
-    "server-plugin/legal-appeal.mjs",
-    "server-plugin/lifecycle-state.mjs",
-    "server-plugin/livestock-sale.mjs",
-    "server-plugin/location-access.mjs",
-    "server-plugin/magic-area.mjs",
-    "server-plugin/magic-care.mjs",
-    "server-plugin/magic-consent.mjs",
-    "server-plugin/magic-economy.mjs",
-    "server-plugin/magic-message.mjs",
-    "server-plugin/magic-mind-space.mjs",
-    "server-plugin/magic-object.mjs",
-    "server-plugin/magic-ritual.mjs",
-    "server-plugin/magic-targeting.mjs",
-    "server-plugin/magic.mjs",
-    "server-plugin/mark-actions.mjs",
-    "server-plugin/market.mjs"
-   ],
-   "dataFiles": [],
-   "segs": [
-    "seg_readers",
-    "seg_delete"
-   ],
-   "entries": [],
-   "launches": [],
-   "retire": {},
-   "accept": [],
-   "dependsOn": [
-    "C-卷二-kernel-1",
-    "C-卷十八-sys.social-1",
-    "LEDGER-1"
-   ],
-   "census": {},
-   "testClass": {},
-   "derivations": [],
-   "sortKeys": {},
-   "state": "drafted",
-   "approvals": [],
-   "mergeRef": "",
-   "fails": 0,
-   "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
-    "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
-    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
-   ],
-   "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
-    ],
-    "stateItems": [
-     "依赖卡已 merged",
-     "所在阶段已开",
-     "不在冻结中"
-    ]
-   }
-  },
-  {
-   "cardId": "C-卷十八-sys.social-4",
-   "cardKind": "follow",
-   "objectKind": "system",
-   "objectCode": "sys.social",
-   "volume": "卷十八",
-   "phaseNo": 3,
-   "groupKey": "rules层-4",
-   "splitAxis": null,
-   "segNo": null,
-   "zeroRows": [],
-   "rowKeys": [
-    "M16-10",
-    "M16-12",
-    "M18-11",
-    "M18-17",
-    "M18-18",
-    "M18-2",
-    "M18-20",
-    "M18-28",
-    "M18-29",
-    "M18-32",
-    "M8-19"
-   ],
-   "files": [
-    "server-plugin/medicine.mjs",
-    "server-plugin/military.mjs",
-    "server-plugin/money.mjs",
-    "server-plugin/monster-society.mjs",
-    "server-plugin/nation-founding.mjs",
-    "server-plugin/npc-autonomy.mjs",
-    "server-plugin/npc-crime.mjs",
-    "server-plugin/npc-growth.mjs",
-    "server-plugin/npc-labor.mjs",
-    "server-plugin/npc-life.mjs",
-    "server-plugin/npc-memory.mjs",
-    "server-plugin/npc-obligations.mjs",
-    "server-plugin/npc-relations.mjs",
-    "server-plugin/npc-schedule.mjs",
-    "server-plugin/obligation-claims.mjs",
-    "server-plugin/obligation-conditional.mjs",
-    "server-plugin/obligation-runtime.mjs",
-    "server-plugin/obligation-state.mjs",
-    "server-plugin/office-salary.mjs",
-    "server-plugin/organizations.mjs",
-    "server-plugin/pets.mjs",
-    "server-plugin/population-service.mjs",
-    "server-plugin/population.mjs",
-    "server-plugin/primitives-body.mjs",
-    "server-plugin/primitives-checks.mjs"
-   ],
-   "dataFiles": [],
-   "segs": [
-    "seg_readers",
-    "seg_delete"
-   ],
-   "entries": [
-    {
-     "vol": "卷十八",
-     "sec": "§3.2",
-     "name": "intimateEligible"
-    },
-    {
-     "vol": "卷十六",
-     "sec": "§3.2",
-     "name": "awakenOrg"
-    }
-   ],
-   "launches": [],
-   "retire": {},
-   "accept": [
-    "A18-9.1",
-    "A18-9.2",
-    "S18-8"
-   ],
-   "dependsOn": [
-    "C-卷二-kernel-1",
-    "C-卷十八-sys.social-1",
-    "LEDGER-1"
-   ],
-   "census": {},
-   "testClass": {},
-   "derivations": [],
-   "sortKeys": {},
-   "state": "drafted",
-   "approvals": [],
-   "mergeRef": "",
-   "fails": 0,
-   "pending": [
-    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
-   ],
-   "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(retire)"
-    ],
-    "stateItems": [
-     "依赖卡已 merged",
-     "所在阶段已开",
-     "不在冻结中"
-    ]
-   }
-  },
-  {
-   "cardId": "C-卷十八-sys.social-5",
-   "cardKind": "follow",
-   "objectKind": "system",
-   "objectCode": "sys.social",
-   "volume": "卷十八",
-   "phaseNo": 3,
-   "groupKey": "rules层-5",
-   "splitAxis": null,
-   "segNo": null,
-   "zeroRows": [],
-   "rowKeys": [
-    "M18-1",
-    "M18-31",
-    "M18-33"
-   ],
-   "files": [
-    "server-plugin/primitives-effects.mjs",
-    "server-plugin/primitives-learning.mjs",
-    "server-plugin/primitives-movement.mjs",
-    "server-plugin/primitives-runtime.mjs",
-    "server-plugin/primitives.mjs",
-    "server-plugin/professions.mjs",
-    "server-plugin/promotion.mjs",
-    "server-plugin/public-projects.mjs",
-    "server-plugin/quest-board.mjs",
-    "server-plugin/remote-generation.mjs",
-    "server-plugin/repair.mjs",
-    "server-plugin/reputation.mjs",
-    "server-plugin/routing-programs.mjs",
-    "server-plugin/rx-library.mjs",
-    "server-plugin/scene-card.mjs",
-    "server-plugin/seasonal-migration.mjs",
-    "server-plugin/service-queue.mjs",
-    "server-plugin/settlement-trade.mjs",
-    "server-plugin/sites.mjs",
-    "server-plugin/standing.mjs",
-    "server-plugin/subjective-view.mjs",
-    "server-plugin/tender.mjs",
-    "server-plugin/titles.mjs",
-    "server-plugin/training.mjs",
-    "server-plugin/transition.mjs"
-   ],
-   "dataFiles": [],
-   "segs": [
-    "seg_readers",
-    "seg_delete"
-   ],
-   "entries": [],
-   "launches": [],
-   "retire": {},
-   "accept": [],
-   "dependsOn": [
-    "C-卷二-kernel-1",
-    "C-卷十八-sys.social-1",
-    "LEDGER-1"
-   ],
-   "census": {},
-   "testClass": {},
-   "derivations": [],
-   "sortKeys": {},
-   "state": "drafted",
-   "approvals": [],
-   "mergeRef": "",
-   "fails": 0,
-   "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
-    "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
-    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
-   ],
-   "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
-    ],
-    "stateItems": [
-     "依赖卡已 merged",
-     "所在阶段已开",
-     "不在冻结中"
-    ]
-   }
-  },
-  {
-   "cardId": "C-卷十八-sys.social-6",
-   "cardKind": "follow",
-   "objectKind": "system",
-   "objectCode": "sys.social",
-   "volume": "卷十八",
-   "phaseNo": 3,
-   "groupKey": "rules层-6",
-   "splitAxis": null,
-   "segNo": null,
-   "zeroRows": [],
-   "rowKeys": [],
-   "files": [
-    "server-plugin/transport.mjs",
-    "server-plugin/tribal-awakening.mjs",
-    "server-plugin/war-diplomacy.mjs",
-    "server-plugin/wildlife-awakening.mjs",
-    "server-plugin/wildlife-society.mjs",
-    "server-plugin/wildlife.mjs",
-    "server-plugin/works.mjs",
-    "server-plugin/workstation-services.mjs",
-    "server-plugin/world-events.mjs",
-    "server-plugin/world-upgrade.mjs"
-   ],
-   "dataFiles": [],
-   "segs": [
-    "seg_readers",
-    "seg_delete"
-   ],
-   "entries": [],
-   "launches": [],
-   "retire": {},
-   "accept": [],
-   "dependsOn": [
-    "C-卷十八-sys.social-1",
-    "LEDGER-1"
-   ],
-   "census": {},
-   "testClass": {},
-   "derivations": [],
-   "sortKeys": {},
-   "state": "drafted",
-   "approvals": [],
-   "mergeRef": "",
-   "fails": 0,
-   "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
-    "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
-    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
-   ],
-   "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
-    ],
-    "stateItems": [
-     "依赖卡已 merged",
-     "所在阶段已开",
-     "不在冻结中"
-    ]
-   }
-  },
-  {
    "cardId": "SWEEP-3",
    "cardKind": "sweep",
    "objectKind": null,
@@ -9209,185 +9295,6 @@
    "pending": [],
    "migReady": {
     "defects": [],
-    "stateItems": [
-     "依赖卡已 merged",
-     "所在阶段已开",
-     "不在冻结中"
-    ]
-   }
-  },
-  {
-   "cardId": "C-卷二十五-plant-1",
-   "cardKind": "first",
-   "objectKind": "table",
-   "objectCode": "plant",
-   "volume": "卷二十五",
-   "phaseNo": 4,
-   "groupKey": "rules层-1",
-   "splitAxis": null,
-   "segNo": null,
-   "zeroRows": [],
-   "rowKeys": [
-    "M14-4",
-    "M20-33",
-    "M20-52",
-    "M25-10",
-    "M25-14",
-    "M25-15",
-    "M25-16",
-    "M25-17",
-    "M25-19",
-    "M25-2",
-    "M25-22",
-    "M25-23",
-    "M25-24",
-    "M25-26",
-    "M25-3",
-    "M25-33",
-    "M25-4",
-    "M25-40",
-    "M25-41",
-    "M25-43",
-    "M25-44",
-    "M25-46",
-    "M25-53",
-    "M25-54",
-    "M25-55",
-    "M25-59",
-    "M25-6",
-    "M25-7",
-    "M25-9",
-    "M4-53"
-   ],
-   "files": [
-    "server-plugin/agriculture-migration.mjs",
-    "server-plugin/agriculture.mjs",
-    "server-plugin/extraction.mjs",
-    "server-plugin/farm-pests-migration.mjs",
-    "server-plugin/farm-pests.mjs",
-    "server-plugin/household-subsistence.mjs",
-    "server-plugin/husbandry-traits.mjs",
-    "server-plugin/husbandry.mjs",
-    "server-plugin/livestock-sale.mjs",
-    "server-plugin/magic-growth.mjs",
-    "server-plugin/pets.mjs",
-    "server-plugin/weather.mjs",
-    "server-plugin/wildlife.mjs"
-   ],
-   "dataFiles": [],
-   "segs": [
-    "seg_rows",
-    "seg_data",
-    "seg_readers",
-    "seg_delete"
-   ],
-   "entries": [
-    {
-     "vol": "卷二十五",
-     "sec": "§3.1",
-     "name": "butcherOutcome"
-    },
-    {
-     "vol": "卷二十五",
-     "sec": "§3.1",
-     "name": "cropForage"
-    },
-    {
-     "vol": "卷二十五",
-     "sec": "§3.1",
-     "name": "forageOptions"
-    }
-   ],
-   "launches": [
-    {
-     "vol": "卷二十五",
-     "sec": "§3.1",
-     "name": "arablePotential"
-    },
-    {
-     "vol": "卷二十五",
-     "sec": "§3.1",
-     "name": "butcherOutcome"
-    },
-    {
-     "vol": "卷二十五",
-     "sec": "§3.1",
-     "name": "canRide"
-    },
-    {
-     "vol": "卷二十五",
-     "sec": "§3.1",
-     "name": "cropForage"
-    },
-    {
-     "vol": "卷二十五",
-     "sec": "§3.1",
-     "name": "cropGrowth"
-    },
-    {
-     "vol": "卷二十五",
-     "sec": "§3.1",
-     "name": "cultivationOf"
-    },
-    {
-     "vol": "卷二十五",
-     "sec": "§3.1",
-     "name": "forageOptions"
-    },
-    {
-     "vol": "卷二十五",
-     "sec": "§3.1",
-     "name": "handlingOf"
-    },
-    {
-     "vol": "卷二十五",
-     "sec": "§3.1",
-     "name": "herdView"
-    },
-    {
-     "vol": "卷二十五",
-     "sec": "§3.1",
-     "name": "plantView"
-    },
-    {
-     "vol": "卷二十五",
-     "sec": "§3.1",
-     "name": "stapleCalendar"
-    },
-    {
-     "vol": "卷二十五",
-     "sec": "§3.1",
-     "name": "tabooFacts"
-    }
-   ],
-   "retire": {},
-   "accept": [
-    "rules.dimfill.plantFrostToleranceC"
-   ],
-   "dependsOn": [
-    "C-卷三乙-item-1",
-    "LEDGER-1"
-   ],
-   "census": {},
-   "testClass": {},
-   "derivations": [],
-   "sortKeys": {},
-   "state": "drafted",
-   "approvals": [],
-   "mergeRef": "",
-   "fails": 0,
-   "pending": [
-    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "row:M25-23",
-    "row:M25-41",
-    "system:sys.plant 登记项待补 predicates、sources、sinks、entryJudges、view"
-   ],
-   "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(retire)",
-     "待补:登记项字段",
-     "待补:迁移行处置"
-    ],
     "stateItems": [
      "依赖卡已 merged",
      "所在阶段已开",
@@ -10910,6 +10817,133 @@
    }
   },
   {
+   "cardId": "C-卷八b-law_code-1",
+   "cardKind": "first",
+   "objectKind": "table",
+   "objectCode": "law_code",
+   "volume": "卷八b",
+   "phaseNo": 7,
+   "groupKey": "rules层-1",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [
+    "M10-16a",
+    "M10-16b",
+    "M10-25",
+    "M10-26",
+    "M13-26",
+    "M16-27",
+    "M17-10",
+    "M19-19",
+    "M20-15",
+    "M20-20",
+    "M5-1",
+    "M5-23",
+    "M8-15",
+    "M8-32",
+    "M8b-27",
+    "M8b-28",
+    "M8b-7"
+   ],
+   "files": [
+    "server-plugin/activities.mjs",
+    "server-plugin/advance-registry.mjs",
+    "server-plugin/credit.mjs",
+    "server-plugin/elections.mjs",
+    "server-plugin/engine.mjs",
+    "server-plugin/extraction.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/forest-water.mjs",
+    "server-plugin/high-nobility.mjs",
+    "server-plugin/labor-market.mjs",
+    "server-plugin/law-codes.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/magic-consent.mjs",
+    "server-plugin/magic-economy.mjs",
+    "server-plugin/magic-message.mjs",
+    "server-plugin/magic-movement.mjs",
+    "server-plugin/norm-stack.mjs",
+    "server-plugin/npc-crime.mjs",
+    "server-plugin/regions.mjs",
+    "server-plugin/remote-generation.mjs",
+    "server-plugin/sites.mjs",
+    "server-plugin/smuggling.mjs",
+    "server-plugin/traits.mjs",
+    "server-plugin/water-cycle.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_rows",
+    "seg_data",
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [
+    {
+     "vol": "卷七",
+     "sec": "§3.1",
+     "name": "riteCount"
+    },
+    {
+     "vol": "卷五",
+     "sec": "§3.2",
+     "name": "setAspect"
+    },
+    {
+     "vol": "卷八",
+     "sec": "§3.1",
+     "name": "polityView"
+    },
+    {
+     "vol": "卷十三",
+     "sec": "§3.2",
+     "name": "setMuster"
+    }
+   ],
+   "launches": [
+    {
+     "vol": "卷八b",
+     "sec": "§3.1",
+     "name": "lawCodeView"
+    }
+   ],
+   "retire": {},
+   "accept": [
+    "rules.dimfill.lawCodeAll"
+   ],
+   "dependsOn": [
+    "C-卷七-deity-1",
+    "C-卷二-kernel-1",
+    "C-卷八-polity-1",
+    "LEDGER-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
+    "system:sys.offense 登记项待补 predicates、sources、sinks、entryJudges、view"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(retire)",
+     "待补:登记项字段"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
    "cardId": "C-卷十-sys.worldgen-1",
    "cardKind": "first",
    "objectKind": "system",
@@ -10930,15 +10964,17 @@
     "M10-2",
     "M10-23",
     "M10-24",
-    "M10-27",
     "M10-3",
     "M10-30",
     "M10-31",
     "M10-35",
     "M10-4",
     "M10-41",
+    "M10-42",
     "M10-5",
     "M10-7",
+    "M11-2a",
+    "M11-2b",
     "M16-21",
     "M16-26",
     "M16-4",
@@ -10946,7 +10982,6 @@
     "M16-6",
     "M18-24",
     "M20-87",
-    "M24-19",
     "M4-1",
     "M4-15",
     "M4-2",
@@ -10968,6 +11003,8 @@
     "server-plugin/engine.mjs",
     "server-plugin/faith-state.mjs",
     "server-plugin/governance.mjs",
+    "server-plugin/index.mjs",
+    "server-plugin/legacy/core.js",
     "server-plugin/norm-stack.mjs",
     "server-plugin/npc-memory.mjs",
     "server-plugin/npc-state.mjs",
@@ -10982,7 +11019,9 @@
     "server-plugin/wildlife-habitats.mjs",
     "server-plugin/wildlife-migration.mjs"
    ],
-   "dataFiles": [],
+   "dataFiles": [
+    "server-plugin/legacy/seed.json"
+   ],
    "segs": [
     "seg_rows",
     "seg_data",
@@ -10994,11 +11033,6 @@
      "vol": "卷七",
      "sec": "§3.1",
      "name": "culturePref"
-    },
-    {
-     "vol": "卷二十四",
-     "sec": "§3.1",
-     "name": "originEvents"
     },
     {
      "vol": "卷十",
@@ -11081,7 +11115,7 @@
    ],
    "dependsOn": [
     "C-卷七-deity-1",
-    "C-卷二十四-event_type-1",
+    "C-卷二-kernel-1",
     "LEDGER-1"
    ],
    "census": {},
@@ -11109,699 +11143,12 @@
    }
   },
   {
-   "cardId": "C-卷十三-sys.combat-1",
-   "cardKind": "first",
-   "objectKind": "system",
-   "objectCode": "sys.combat",
-   "volume": "卷十三",
-   "phaseNo": 7,
-   "groupKey": "rules层-1",
-   "splitAxis": null,
-   "segNo": null,
-   "zeroRows": [],
-   "rowKeys": [
-    "M10-25",
-    "M13-1",
-    "M13-10",
-    "M13-11",
-    "M13-13",
-    "M13-14",
-    "M13-15",
-    "M13-17",
-    "M13-2",
-    "M13-21",
-    "M13-22",
-    "M13-23a",
-    "M13-23b",
-    "M13-23c",
-    "M13-25",
-    "M13-26",
-    "M13-3",
-    "M13-31",
-    "M13-33",
-    "M13-4",
-    "M13-6",
-    "M13-7",
-    "M14-62",
-    "M14-63",
-    "M14-64",
-    "M15-19",
-    "M15-23",
-    "M16-25",
-    "M16-27",
-    "M17-9",
-    "M18-6",
-    "M19-19",
-    "M20-15",
-    "M20-27",
-    "M21-18",
-    "M26-10",
-    "M26-2",
-    "M26-22",
-    "M26-3",
-    "M26-4",
-    "M4-6",
-    "M4-7",
-    "M8-14",
-    "M8-27",
-    "M8-3",
-    "M8-32",
-    "M8b-13",
-    "M8b-17",
-    "M8b-28",
-    "M9-6"
-   ],
-   "files": [
-    "server-plugin/activities.mjs",
-    "server-plugin/combat-state.mjs",
-    "server-plugin/combat.mjs",
-    "server-plugin/deterrence.mjs",
-    "server-plugin/duels.mjs",
-    "server-plugin/education-state.mjs",
-    "server-plugin/engine.mjs",
-    "server-plugin/finance-bank.mjs",
-    "server-plugin/hazard-calendar.mjs",
-    "server-plugin/household-subsistence.mjs",
-    "server-plugin/interactions.mjs",
-    "server-plugin/learning.mjs",
-    "server-plugin/military.mjs",
-    "server-plugin/nation-founding.mjs",
-    "server-plugin/npc-crime.mjs",
-    "server-plugin/transport-route.mjs",
-    "server-plugin/war-diplomacy.mjs"
-   ],
-   "dataFiles": [],
-   "segs": [
-    "seg_rows",
-    "seg_data",
-    "seg_readers",
-    "seg_delete"
-   ],
-   "entries": [
-    {
-     "vol": "卷七",
-     "sec": "§3.1",
-     "name": "riteCount"
-    },
-    {
-     "vol": "卷九",
-     "sec": "§3.1",
-     "name": "freeSlotsOf"
-    },
-    {
-     "vol": "卷十三",
-     "sec": "§3.2",
-     "name": "noteRout"
-    },
-    {
-     "vol": "卷十三",
-     "sec": "§3.2",
-     "name": "setMuster"
-    },
-    {
-     "vol": "卷十五",
-     "sec": "§3.1",
-     "name": "interactionsFor"
-    }
-   ],
-   "launches": [
-    {
-     "vol": "卷十三",
-     "sec": "§3.1",
-     "name": "battlePreview"
-    },
-    {
-     "vol": "卷十三",
-     "sec": "§3.1",
-     "name": "battleView"
-    },
-    {
-     "vol": "卷十三",
-     "sec": "§3.1",
-     "name": "combatReadings"
-    },
-    {
-     "vol": "卷十三",
-     "sec": "§3.1",
-     "name": "commandOf"
-    },
-    {
-     "vol": "卷十三",
-     "sec": "§3.1",
-     "name": "deterrenceOf"
-    },
-    {
-     "vol": "卷十三",
-     "sec": "§3.1",
-     "name": "encounterView"
-    },
-    {
-     "vol": "卷十三",
-     "sec": "§3.1",
-     "name": "forceView"
-    },
-    {
-     "vol": "卷十三",
-     "sec": "§3.1",
-     "name": "garrisonOf"
-    },
-    {
-     "vol": "卷十三",
-     "sec": "§3.1",
-     "name": "layersOf"
-    },
-    {
-     "vol": "卷十三",
-     "sec": "§3.1",
-     "name": "lootCapacity"
-    },
-    {
-     "vol": "卷十三",
-     "sec": "§3.1",
-     "name": "meritOf"
-    },
-    {
-     "vol": "卷十三",
-     "sec": "§3.1",
-     "name": "missionView"
-    },
-    {
-     "vol": "卷十三",
-     "sec": "§3.1",
-     "name": "strikeOutcome"
-    },
-    {
-     "vol": "卷十三",
-     "sec": "§3.1",
-     "name": "strikePreview"
-    }
-   ],
-   "retire": {},
-   "accept": [
-    "S13-9"
-   ],
-   "dependsOn": [
-    "C-卷七-deity-1",
-    "C-卷九-sys.ai_interface-1",
-    "C-卷十五-sys.arcana-1",
-    "LEDGER-1"
-   ],
-   "census": {},
-   "testClass": {},
-   "derivations": [],
-   "sortKeys": {},
-   "state": "drafted",
-   "approvals": [],
-   "mergeRef": "",
-   "fails": 0,
-   "pending": [
-    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.combat 登记项待补 predicates、sources、sinks、entryJudges、view"
-   ],
-   "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(retire)",
-     "待补:登记项字段"
-    ],
-    "stateItems": [
-     "依赖卡已 merged",
-     "所在阶段已开",
-     "不在冻结中"
-    ]
-   }
-  },
-  {
-   "cardId": "C-卷二十二-knowledge-3",
-   "cardKind": "follow",
-   "objectKind": "table",
-   "objectCode": "knowledge",
-   "volume": "卷二十二",
-   "phaseNo": 7,
-   "groupKey": "rules层-3",
-   "splitAxis": null,
-   "segNo": null,
-   "zeroRows": [],
-   "rowKeys": [
-    "M10-29",
-    "M22-13",
-    "M22-17",
-    "M22-9",
-    "M23-14",
-    "M23-15",
-    "M26-6"
-   ],
-   "files": [
-    "server-plugin/routing-programs.mjs",
-    "server-plugin/rx-library.mjs",
-    "server-plugin/scene-card.mjs",
-    "server-plugin/seasonal-hazards.mjs",
-    "server-plugin/settlement-profile.mjs",
-    "server-plugin/shop.mjs",
-    "server-plugin/sites.mjs",
-    "server-plugin/spell-research.mjs",
-    "server-plugin/subjective-view.mjs",
-    "server-plugin/ui-history.mjs",
-    "server-plugin/water-cycle.mjs",
-    "server-plugin/works.mjs"
-   ],
-   "dataFiles": [],
-   "segs": [
-    "seg_readers",
-    "seg_delete"
-   ],
-   "entries": [
-    {
-     "vol": "卷二十二",
-     "sec": "§3.1",
-     "name": "claimHolds"
-    },
-    {
-     "vol": "卷二十二",
-     "sec": "§3.1",
-     "name": "readOutcome"
-    },
-    {
-     "vol": "卷十",
-     "sec": "§3.1",
-     "name": "instanceIdOf"
-    }
-   ],
-   "launches": [],
-   "retire": {},
-   "accept": [
-    "A22-4.1",
-    "A22-6.2"
-   ],
-   "dependsOn": [
-    "C-卷二十二-knowledge-1",
-    "C-卷十-sys.worldgen-1",
-    "LEDGER-1"
-   ],
-   "census": {},
-   "testClass": {},
-   "derivations": [],
-   "sortKeys": {},
-   "state": "drafted",
-   "approvals": [],
-   "mergeRef": "",
-   "fails": 0,
-   "pending": [
-    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
-   ],
-   "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(retire)"
-    ],
-    "stateItems": [
-     "依赖卡已 merged",
-     "所在阶段已开",
-     "不在冻结中"
-    ]
-   }
-  },
-  {
-   "cardId": "SWEEP-7",
-   "cardKind": "sweep",
-   "objectKind": null,
-   "objectCode": null,
-   "volume": null,
-   "phaseNo": 7,
-   "groupKey": null,
-   "splitAxis": null,
-   "segNo": null,
-   "zeroRows": [],
-   "rowKeys": [],
-   "files": [],
-   "dataFiles": [],
-   "segs": [],
-   "entries": [],
-   "launches": [],
-   "retire": {},
-   "accept": [
-    "S11-1",
-    "S11-2",
-    "S11-3",
-    "S11-4",
-    "S11-5",
-    "S11-6",
-    "S11-7",
-    "S11-8",
-    "S11-9",
-    "S11-10",
-    "S11-11",
-    "S11-12"
-   ],
-   "dependsOn": [],
-   "census": {},
-   "testClass": {},
-   "derivations": [],
-   "sortKeys": {},
-   "state": "drafted",
-   "approvals": [],
-   "mergeRef": "",
-   "fails": 0,
-   "pending": [],
-   "migReady": {
-    "defects": [],
-    "stateItems": [
-     "依赖卡已 merged",
-     "所在阶段已开",
-     "不在冻结中"
-    ]
-   }
-  },
-  {
-   "cardId": "C-卷二十七-sys.offscreen_save-1",
-   "cardKind": "first",
-   "objectKind": "system",
-   "objectCode": "sys.offscreen_save",
-   "volume": "卷二十七",
-   "phaseNo": 8,
-   "groupKey": "rules层-1",
-   "splitAxis": null,
-   "segNo": null,
-   "zeroRows": [],
-   "rowKeys": [
-    "M10-28",
-    "M10-34",
-    "M11-1",
-    "M2-15c",
-    "M2-20",
-    "M20-11",
-    "M24-20",
-    "M27-1",
-    "M27-10",
-    "M27-11",
-    "M27-12",
-    "M27-14",
-    "M27-15",
-    "M27-16",
-    "M27-17",
-    "M27-18",
-    "M27-2",
-    "M27-3",
-    "M27-4",
-    "M27-5",
-    "M27-6",
-    "M27-7",
-    "M27-8",
-    "M27-9"
-   ],
-   "files": [
-    "server-plugin/advance-layers.mjs",
-    "server-plugin/advance-registry.mjs",
-    "server-plugin/agriculture-migration.mjs",
-    "server-plugin/archived-reducer.mjs",
-    "server-plugin/boss-migration.mjs",
-    "server-plugin/campaign-reducer.mjs",
-    "server-plugin/det-math.mjs",
-    "server-plugin/education-state.mjs",
-    "server-plugin/education.mjs",
-    "server-plugin/engine.mjs",
-    "server-plugin/facilities.mjs",
-    "server-plugin/farm-pests-migration.mjs",
-    "server-plugin/finance-assets.mjs",
-    "server-plugin/index.mjs",
-    "server-plugin/labor-market.mjs",
-    "server-plugin/legacy/core.js",
-    "server-plugin/migrations.mjs",
-    "server-plugin/migrations/r1.mjs",
-    "server-plugin/military.mjs",
-    "server-plugin/npc-life.mjs",
-    "server-plugin/npc-memory.mjs",
-    "server-plugin/npc-obligations.mjs",
-    "server-plugin/npc-schedule.mjs",
-    "server-plugin/obligation-runtime.mjs",
-    "server-plugin/population-service.mjs",
-    "server-plugin/population.mjs"
-   ],
-   "dataFiles": [],
-   "segs": [
-    "seg_rows",
-    "seg_data",
-    "seg_readers",
-    "seg_delete"
-   ],
-   "entries": [
-    {
-     "vol": "卷二十七",
-     "sec": "§3.1",
-     "name": "legalKeyIdOf"
-    },
-    {
-     "vol": "卷十",
-     "sec": "§3.1",
-     "name": "instanceIdOf"
-    }
-   ],
-   "launches": [
-    {
-     "vol": "卷二十七",
-     "sec": "§3.1",
-     "name": "advancePlan"
-    },
-    {
-     "vol": "卷二十七",
-     "sec": "§3.1",
-     "name": "aggregateView"
-    },
-    {
-     "vol": "卷二十七",
-     "sec": "§3.1",
-     "name": "baseTierOf"
-    },
-    {
-     "vol": "卷二十七",
-     "sec": "§3.1",
-     "name": "costPlan"
-    },
-    {
-     "vol": "卷二十七",
-     "sec": "§3.1",
-     "name": "degradeLevelOf"
-    },
-    {
-     "vol": "卷二十七",
-     "sec": "§3.1",
-     "name": "legalKeyIdOf"
-    },
-    {
-     "vol": "卷二十七",
-     "sec": "§3.1",
-     "name": "pinned"
-    },
-    {
-     "vol": "卷二十七",
-     "sec": "§3.1",
-     "name": "simTierOf"
-    },
-    {
-     "vol": "卷二十七",
-     "sec": "§3.1",
-     "name": "simUnitOf"
-    }
-   ],
-   "retire": {},
-   "accept": [
-    "A27-2.2"
-   ],
-   "dependsOn": [
-    "C-卷二-kernel-1",
-    "C-卷十-sys.worldgen-1",
-    "LEDGER-1"
-   ],
-   "census": {},
-   "testClass": {},
-   "derivations": [],
-   "sortKeys": {},
-   "state": "drafted",
-   "approvals": [],
-   "mergeRef": "",
-   "fails": 0,
-   "pending": [
-    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "system:sys.offscreen_save 登记项待补 sources、sinks、entryJudges、view"
-   ],
-   "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(retire)",
-     "待补:登记项字段"
-    ],
-    "stateItems": [
-     "依赖卡已 merged",
-     "所在阶段已开",
-     "不在冻结中"
-    ]
-   }
-  },
-  {
-   "cardId": "C-卷十一-sys.migration-1",
-   "cardKind": "first",
-   "objectKind": "system",
-   "objectCode": "sys.migration",
-   "volume": "卷十一",
-   "phaseNo": 8,
-   "groupKey": "rules层-1",
-   "splitAxis": null,
-   "segNo": null,
-   "zeroRows": [],
-   "rowKeys": [
-    "M10-42",
-    "M11-10",
-    "M11-2a",
-    "M11-2b",
-    "M11-6",
-    "M11-8",
-    "M11-9",
-    "M13-16",
-    "M13-18",
-    "M18-10",
-    "M18-4",
-    "M18-7",
-    "M22-8",
-    "M8b-18",
-    "M8b-32"
-   ],
-   "files": [
-    "server-plugin/boss-negotiation.mjs",
-    "server-plugin/deterrence.mjs",
-    "server-plugin/family-law.mjs",
-    "server-plugin/family-politics.mjs",
-    "server-plugin/index.mjs",
-    "server-plugin/legacy/core.js",
-    "server-plugin/lies.mjs",
-    "server-plugin/notables.mjs",
-    "server-plugin/npc-cognition.mjs",
-    "server-plugin/npc-memory.mjs",
-    "server-plugin/npc-rumors.mjs",
-    "server-plugin/reputation.mjs"
-   ],
-   "dataFiles": [
-    "server-plugin/legacy/seed.json"
-   ],
-   "segs": [
-    "seg_rows",
-    "seg_data",
-    "seg_readers",
-    "seg_delete"
-   ],
-   "entries": [
-    {
-     "vol": "卷二十二",
-     "sec": "§3.1",
-     "name": "claimHolds"
-    },
-    {
-     "vol": "卷十",
-     "sec": "§3.1",
-     "name": "instanceIdOf"
-    }
-   ],
-   "launches": [
-    {
-     "vol": "卷十一",
-     "sec": "§3.1",
-     "name": "migBackfill"
-    },
-    {
-     "vol": "卷十一",
-     "sec": "§3.1",
-     "name": "migCard"
-    },
-    {
-     "vol": "卷十一",
-     "sec": "§3.1",
-     "name": "migCards"
-    },
-    {
-     "vol": "卷十一",
-     "sec": "§3.1",
-     "name": "migEvents"
-    },
-    {
-     "vol": "卷十一",
-     "sec": "§3.1",
-     "name": "migExit"
-    },
-    {
-     "vol": "卷十一",
-     "sec": "§3.1",
-     "name": "migFrozen"
-    },
-    {
-     "vol": "卷十一",
-     "sec": "§3.1",
-     "name": "migParallelOk"
-    },
-    {
-     "vol": "卷十一",
-     "sec": "§3.1",
-     "name": "migPhaseCount"
-    },
-    {
-     "vol": "卷十一",
-     "sec": "§3.1",
-     "name": "migReady"
-    },
-    {
-     "vol": "卷十一",
-     "sec": "§3.1",
-     "name": "migReceiver"
-    },
-    {
-     "vol": "卷十一",
-     "sec": "§3.1",
-     "name": "migRows"
-    }
-   ],
-   "retire": {},
-   "accept": [
-    "A11-4.3",
-    "A11-5.1",
-    "A11-5.3",
-    "A11-7.3",
-    "A11-9.3",
-    "S11-10"
-   ],
-   "dependsOn": [
-    "C-卷二-kernel-1",
-    "C-卷二十二-knowledge-1",
-    "C-卷十-sys.worldgen-1",
-    "LEDGER-1"
-   ],
-   "census": {},
-   "testClass": {},
-   "derivations": [],
-   "sortKeys": {},
-   "state": "drafted",
-   "approvals": [],
-   "mergeRef": "",
-   "fails": 0,
-   "pending": [
-    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "row:M11-6",
-    "system:sys.migration 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
-   ],
-   "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(retire)",
-     "待补:登记项字段",
-     "待补:迁移行处置"
-    ],
-    "stateItems": [
-     "依赖卡已 merged",
-     "所在阶段已开",
-     "不在冻结中"
-    ]
-   }
-  },
-  {
    "cardId": "C-卷十四-profession-1",
    "cardKind": "first",
    "objectKind": "table",
    "objectCode": "profession",
    "volume": "卷十四",
-   "phaseNo": 8,
+   "phaseNo": 7,
    "groupKey": "rules层-1",
    "splitAxis": null,
    "segNo": null,
@@ -12047,6 +11394,571 @@
    }
   },
   {
+   "cardId": "C-卷二十二-knowledge-3",
+   "cardKind": "follow",
+   "objectKind": "table",
+   "objectCode": "knowledge",
+   "volume": "卷二十二",
+   "phaseNo": 7,
+   "groupKey": "rules层-3",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [
+    "M10-29",
+    "M17-7",
+    "M22-11",
+    "M22-13",
+    "M22-14",
+    "M22-17",
+    "M22-9",
+    "M23-14",
+    "M23-15",
+    "M26-6"
+   ],
+   "files": [
+    "server-plugin/post.mjs",
+    "server-plugin/primitives-learning.mjs",
+    "server-plugin/primitives-runtime.mjs",
+    "server-plugin/public-opinion.mjs",
+    "server-plugin/public-projects.mjs",
+    "server-plugin/quest-sources.mjs",
+    "server-plugin/remote-generation.mjs",
+    "server-plugin/reputation.mjs",
+    "server-plugin/routing-programs.mjs",
+    "server-plugin/rx-library.mjs",
+    "server-plugin/scene-card.mjs",
+    "server-plugin/seasonal-hazards.mjs",
+    "server-plugin/settlement-profile.mjs",
+    "server-plugin/shop.mjs",
+    "server-plugin/sites.mjs",
+    "server-plugin/spell-research.mjs",
+    "server-plugin/subjective-view.mjs",
+    "server-plugin/ui-history.mjs",
+    "server-plugin/water-cycle.mjs",
+    "server-plugin/works.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [
+    {
+     "vol": "卷二十二",
+     "sec": "§3.1",
+     "name": "claimHolds"
+    },
+    {
+     "vol": "卷二十二",
+     "sec": "§3.1",
+     "name": "publicShare"
+    },
+    {
+     "vol": "卷二十二",
+     "sec": "§3.1",
+     "name": "readOutcome"
+    },
+    {
+     "vol": "卷十",
+     "sec": "§3.1",
+     "name": "instanceIdOf"
+    }
+   ],
+   "launches": [],
+   "retire": {},
+   "accept": [
+    "A22-4.1",
+    "A22-5.2",
+    "A22-6.2",
+    "A22-8.2"
+   ],
+   "dependsOn": [
+    "C-卷二-kernel-1",
+    "C-卷二十二-knowledge-1",
+    "C-卷十-sys.worldgen-1",
+    "LEDGER-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(retire)"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
+   "cardId": "C-卷八b-law_code-2",
+   "cardKind": "follow",
+   "objectKind": "table",
+   "objectCode": "law_code",
+   "volume": "卷八b",
+   "phaseNo": 7,
+   "groupKey": "rules层-2",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [],
+   "files": [
+    "server-plugin/wildlife-habitats.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [],
+   "launches": [],
+   "retire": {},
+   "accept": [
+    "A8b-1.1"
+   ],
+   "dependsOn": [
+    "C-卷八b-law_code-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(entries、retire)"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
+   "cardId": "SWEEP-7",
+   "cardKind": "sweep",
+   "objectKind": null,
+   "objectCode": null,
+   "volume": null,
+   "phaseNo": 7,
+   "groupKey": null,
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [],
+   "files": [],
+   "dataFiles": [],
+   "segs": [],
+   "entries": [],
+   "launches": [],
+   "retire": {},
+   "accept": [
+    "S11-1",
+    "S11-2",
+    "S11-3",
+    "S11-4",
+    "S11-5",
+    "S11-6",
+    "S11-7",
+    "S11-8",
+    "S11-9",
+    "S11-10",
+    "S11-11",
+    "S11-12"
+   ],
+   "dependsOn": [],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [],
+   "migReady": {
+    "defects": [],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
+   "cardId": "C-卷二十七-sys.offscreen_save-1",
+   "cardKind": "first",
+   "objectKind": "system",
+   "objectCode": "sys.offscreen_save",
+   "volume": "卷二十七",
+   "phaseNo": 8,
+   "groupKey": "rules层-1",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [
+    "M10-28",
+    "M10-34",
+    "M11-1",
+    "M2-15c",
+    "M2-20",
+    "M20-11",
+    "M24-20",
+    "M27-1",
+    "M27-10",
+    "M27-11",
+    "M27-12",
+    "M27-14",
+    "M27-15",
+    "M27-16",
+    "M27-17",
+    "M27-18",
+    "M27-2",
+    "M27-3",
+    "M27-4",
+    "M27-5",
+    "M27-6",
+    "M27-7",
+    "M27-8",
+    "M27-9"
+   ],
+   "files": [
+    "server-plugin/advance-layers.mjs",
+    "server-plugin/advance-registry.mjs",
+    "server-plugin/agriculture-migration.mjs",
+    "server-plugin/archived-reducer.mjs",
+    "server-plugin/boss-migration.mjs",
+    "server-plugin/campaign-reducer.mjs",
+    "server-plugin/det-math.mjs",
+    "server-plugin/education-state.mjs",
+    "server-plugin/education.mjs",
+    "server-plugin/engine.mjs",
+    "server-plugin/facilities.mjs",
+    "server-plugin/farm-pests-migration.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/index.mjs",
+    "server-plugin/labor-market.mjs",
+    "server-plugin/legacy/core.js",
+    "server-plugin/migrations.mjs",
+    "server-plugin/migrations/r1.mjs",
+    "server-plugin/military.mjs",
+    "server-plugin/npc-life.mjs",
+    "server-plugin/npc-memory.mjs",
+    "server-plugin/npc-obligations.mjs",
+    "server-plugin/npc-schedule.mjs",
+    "server-plugin/obligation-runtime.mjs",
+    "server-plugin/population-service.mjs",
+    "server-plugin/population.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_rows",
+    "seg_data",
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [
+    {
+     "vol": "卷二十七",
+     "sec": "§3.1",
+     "name": "legalKeyIdOf"
+    },
+    {
+     "vol": "卷十",
+     "sec": "§3.1",
+     "name": "instanceIdOf"
+    }
+   ],
+   "launches": [
+    {
+     "vol": "卷二十七",
+     "sec": "§3.1",
+     "name": "advancePlan"
+    },
+    {
+     "vol": "卷二十七",
+     "sec": "§3.1",
+     "name": "aggregateView"
+    },
+    {
+     "vol": "卷二十七",
+     "sec": "§3.1",
+     "name": "baseTierOf"
+    },
+    {
+     "vol": "卷二十七",
+     "sec": "§3.1",
+     "name": "costPlan"
+    },
+    {
+     "vol": "卷二十七",
+     "sec": "§3.1",
+     "name": "degradeLevelOf"
+    },
+    {
+     "vol": "卷二十七",
+     "sec": "§3.1",
+     "name": "legalKeyIdOf"
+    },
+    {
+     "vol": "卷二十七",
+     "sec": "§3.1",
+     "name": "pinned"
+    },
+    {
+     "vol": "卷二十七",
+     "sec": "§3.1",
+     "name": "simTierOf"
+    },
+    {
+     "vol": "卷二十七",
+     "sec": "§3.1",
+     "name": "simUnitOf"
+    }
+   ],
+   "retire": {},
+   "accept": [
+    "A27-2.2"
+   ],
+   "dependsOn": [
+    "C-卷二-kernel-1",
+    "C-卷十-sys.worldgen-1",
+    "LEDGER-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
+    "system:sys.offscreen_save 登记项待补 sources、sinks、entryJudges、view"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(retire)",
+     "待补:登记项字段"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
+   "cardId": "C-卷二十四-event_type-1",
+   "cardKind": "first",
+   "objectKind": "table",
+   "objectCode": "event_type",
+   "volume": "卷二十四",
+   "phaseNo": 8,
+   "groupKey": "rules层-1",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [
+    "M10-27",
+    "M20-24",
+    "M20-39",
+    "M20-40",
+    "M20-41",
+    "M20-80",
+    "M24-1",
+    "M24-10",
+    "M24-15",
+    "M24-16",
+    "M24-17",
+    "M24-19",
+    "M24-2",
+    "M24-21",
+    "M24-3",
+    "M24-4",
+    "M24-5",
+    "M24-7",
+    "M24-9",
+    "M8-18"
+   ],
+   "files": [
+    "server-plugin/career-metrics.mjs",
+    "server-plugin/character.mjs",
+    "server-plugin/effects.mjs",
+    "server-plugin/environment.mjs",
+    "server-plugin/faction-clock.mjs",
+    "server-plugin/family-diplomacy.mjs",
+    "server-plugin/festival.mjs",
+    "server-plugin/seasonal-hazards.mjs",
+    "server-plugin/world-clock.mjs",
+    "server-plugin/world-events.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_rows",
+    "seg_data",
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [
+    {
+     "vol": "卷二十四",
+     "sec": "§3.1",
+     "name": "chronicleAll"
+    },
+    {
+     "vol": "卷二十四",
+     "sec": "§3.1",
+     "name": "originEvents"
+    },
+    {
+     "vol": "卷二十四",
+     "sec": "§3.1",
+     "name": "verbView"
+    },
+    {
+     "vol": "卷十",
+     "sec": "§3.1",
+     "name": "instanceIdOf"
+    }
+   ],
+   "launches": [
+    {
+     "vol": "卷二十四",
+     "sec": "§3.1",
+     "name": "chronicleAll"
+    },
+    {
+     "vol": "卷二十四",
+     "sec": "§3.1",
+     "name": "commissionBrief"
+    },
+    {
+     "vol": "卷二十四",
+     "sec": "§3.1",
+     "name": "commissionView"
+    },
+    {
+     "vol": "卷二十四",
+     "sec": "§3.1",
+     "name": "commissionsAt"
+    },
+    {
+     "vol": "卷二十四",
+     "sec": "§3.1",
+     "name": "commissionsBy"
+    },
+    {
+     "vol": "卷二十四",
+     "sec": "§3.1",
+     "name": "epochView"
+    },
+    {
+     "vol": "卷二十四",
+     "sec": "§3.1",
+     "name": "eventCount"
+    },
+    {
+     "vol": "卷二十四",
+     "sec": "§3.1",
+     "name": "instanceView"
+    },
+    {
+     "vol": "卷二十四",
+     "sec": "§3.1",
+     "name": "instancesOn"
+    },
+    {
+     "vol": "卷二十四",
+     "sec": "§3.1",
+     "name": "legendsView"
+    },
+    {
+     "vol": "卷二十四",
+     "sec": "§3.1",
+     "name": "originEvents"
+    },
+    {
+     "vol": "卷二十四",
+     "sec": "§3.1",
+     "name": "storyView"
+    },
+    {
+     "vol": "卷二十四",
+     "sec": "§3.1",
+     "name": "tallyOf"
+    },
+    {
+     "vol": "卷二十四",
+     "sec": "§3.1",
+     "name": "verbView"
+    }
+   ],
+   "retire": {},
+   "accept": [
+    "A24-10.2",
+    "A24-2.1",
+    "A24-2.2",
+    "A24-2.4",
+    "A24-3.1",
+    "A24-5.1",
+    "A24-7.1",
+    "A24-7.2",
+    "A24-8.2",
+    "S24-2",
+    "S24-3",
+    "S24-7"
+   ],
+   "dependsOn": [
+    "C-卷十-sys.worldgen-1",
+    "LEDGER-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "accept:卷二 §6.12 没有该表的齐全率下限键",
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
+    "system:sys.event_type 登记项待补 sources、sinks、entryJudges、view"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(retire)",
+     "待补:登记项字段"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
    "cardId": "C-卷二十七-sys.offscreen_save-2",
    "cardKind": "follow",
    "objectKind": "system",
@@ -12103,6 +12015,126 @@
    "migReady": {
     "defects": [
      "E-MIG-CARD-INCOMPLETE(entries、retire)"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
+   "cardId": "C-卷二十九-sys.display_l10n-2",
+   "cardKind": "follow",
+   "objectKind": "system",
+   "objectCode": "sys.display_l10n",
+   "volume": "卷二十九",
+   "phaseNo": 8,
+   "groupKey": "rules层-1",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [
+    "M10-40",
+    "M17-12",
+    "M20-4",
+    "M22-15",
+    "M22-6",
+    "M22-7",
+    "M23-6",
+    "M24-13",
+    "M24-14",
+    "M24-18",
+    "M28-19",
+    "M29-1",
+    "M29-2",
+    "M29-21",
+    "M29-23",
+    "M29-26",
+    "M29-28",
+    "M29-3",
+    "M29-4",
+    "M29-5",
+    "M29-6",
+    "M29-7",
+    "M5-28",
+    "M9-12"
+   ],
+   "files": [
+    "server-plugin/action-text.mjs",
+    "server-plugin/applied-effects.mjs",
+    "server-plugin/chronicle.mjs",
+    "server-plugin/claim-unit.mjs",
+    "server-plugin/engine.mjs",
+    "server-plugin/lore.mjs",
+    "server-plugin/map-state.mjs",
+    "server-plugin/return-summary.mjs",
+    "server-plugin/scene-card.mjs",
+    "server-plugin/scheduler.mjs",
+    "server-plugin/state-notices.mjs",
+    "server-plugin/ui-map.mjs",
+    "server-plugin/ui-messages.mjs",
+    "server-plugin/ui-overview.mjs",
+    "server-plugin/ui-routes.mjs",
+    "server-plugin/works.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [
+    {
+     "vol": "卷二十九",
+     "sec": "§3.1",
+     "name": "labelText"
+    },
+    {
+     "vol": "卷二十九",
+     "sec": "§3.1",
+     "name": "selectRows"
+    },
+    {
+     "vol": "卷二十二",
+     "sec": "§3.1",
+     "name": "researchOptions"
+    },
+    {
+     "vol": "卷二十二",
+     "sec": "§3.1",
+     "name": "returnDigest"
+    },
+    {
+     "vol": "卷二十四",
+     "sec": "§3.1",
+     "name": "chronicleAll"
+    }
+   ],
+   "launches": [],
+   "retire": {},
+   "accept": [
+    "A29-4.2"
+   ],
+   "dependsOn": [
+    "C-卷二十九-sys.display_l10n-1",
+    "C-卷二十二-knowledge-1",
+    "C-卷二十四-event_type-1",
+    "LEDGER-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(retire)"
     ],
     "stateItems": [
      "依赖卡已 merged",

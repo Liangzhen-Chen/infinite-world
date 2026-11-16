@@ -1338,7 +1338,7 @@
    "anchors": [],
    "disp": "recode",
    "target": "§4.16 V-1",
-   "targetObject": "sys.item",
+   "targetObject": "recipe",
    "baseline": "d54c89a3"
   },
   {
@@ -1453,7 +1453,7 @@
    ],
    "disp": "to_data",
    "target": "§4.16 V-1",
-   "targetObject": "item",
+   "targetObject": "recipe",
    "baseline": "d54c89a3"
   },
   {
@@ -2920,7 +2920,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "kernelApi clone；清扫卡机械替换类（卷十一 R11-7.8）",
+   "target": "kernelApi clone；清扫卡机械替换类（卷十一 R11-7.8），所消除的扫描：S13 (c)（§2.9 第 1 条内建闭集，§4.3 E-GLOBAL-UNLISTED）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
