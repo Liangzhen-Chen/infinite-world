@@ -14381,7 +14381,7 @@
   {
    "rowKey": "M8b-1",
    "volume": "卷八b",
-   "srcLine": 1318,
+   "srcLine": 1320,
    "anchorsText": "law.mjs:281",
    "anchors": [
     {
@@ -14402,7 +14402,7 @@
   {
    "rowKey": "M8b-2",
    "volume": "卷八b",
-   "srcLine": 1319,
+   "srcLine": 1321,
    "anchorsText": "law.mjs:104",
    "anchors": [
     {
@@ -14423,7 +14423,7 @@
   {
    "rowKey": "M8b-3",
    "volume": "卷八b",
-   "srcLine": 1320,
+   "srcLine": 1322,
    "anchorsText": "law.mjs:484",
    "anchors": [
     {
@@ -14444,7 +14444,7 @@
   {
    "rowKey": "M8b-4",
    "volume": "卷八b",
-   "srcLine": 1321,
+   "srcLine": 1323,
    "anchorsText": "law.mjs:3；world/rules/tables/law/",
    "anchors": [
     {
@@ -14465,7 +14465,7 @@
   {
    "rowKey": "M8b-5",
    "volume": "卷八b",
-   "srcLine": 1322,
+   "srcLine": 1324,
    "anchorsText": "罪名字面量 118 处，17 个文件",
    "anchors": [],
    "disp": "recode",
@@ -14476,7 +14476,7 @@
   {
    "rowKey": "M8b-6",
    "volume": "卷八b",
-   "srcLine": 1323,
+   "srcLine": 1325,
    "anchorsText": "law-codes.mjs:114、:115",
    "anchors": [
     {
@@ -14501,7 +14501,7 @@
   {
    "rowKey": "M8b-7",
    "volume": "卷八b",
-   "srcLine": 1324,
+   "srcLine": 1326,
    "anchorsText": "law-codes.mjs:11、:112；norm-stack.mjs:115",
    "anchors": [
     {
@@ -14535,7 +14535,7 @@
   {
    "rowKey": "M8b-8",
    "volume": "卷八b",
-   "srcLine": 1325,
+   "srcLine": 1327,
    "anchorsText": "law-codes.mjs:35",
    "anchors": [
     {
@@ -14556,7 +14556,7 @@
   {
    "rowKey": "M8b-9",
    "volume": "卷八b",
-   "srcLine": 1326,
+   "srcLine": 1328,
    "anchorsText": "law-codes.mjs:59",
    "anchors": [
     {
@@ -14577,7 +14577,7 @@
   {
    "rowKey": "M8b-10",
    "volume": "卷八b",
-   "srcLine": 1327,
+   "srcLine": 1329,
    "anchorsText": "law.mjs:85、:571",
    "anchors": [
     {
@@ -14602,7 +14602,7 @@
   {
    "rowKey": "M8b-11",
    "volume": "卷八b",
-   "srcLine": 1328,
+   "srcLine": 1330,
    "anchorsText": "bounty.mjs:45、:46",
    "anchors": [
     {
@@ -14627,7 +14627,7 @@
   {
    "rowKey": "M8b-12",
    "volume": "卷八b",
-   "srcLine": 1329,
+   "srcLine": 1331,
    "anchorsText": "bounty.mjs:117；:122、:150、:164、:182、:184、:200、:297、:304、:354、:355",
    "anchors": [
     {
@@ -14688,7 +14688,7 @@
   {
    "rowKey": "M8b-13",
    "volume": "卷八b",
-   "srcLine": 1330,
+   "srcLine": 1332,
    "anchorsText": "npc-crime.mjs:42",
    "anchors": [
     {
@@ -14709,7 +14709,7 @@
   {
    "rowKey": "M8b-14",
    "volume": "卷八b",
-   "srcLine": 1331,
+   "srcLine": 1333,
    "anchorsText": "npc-crime.mjs:27",
    "anchors": [
     {
@@ -14730,7 +14730,7 @@
   {
    "rowKey": "M8b-15",
    "volume": "卷八b",
-   "srcLine": 1332,
+   "srcLine": 1334,
    "anchorsText": "npc-crime.mjs:86",
    "anchors": [
     {
@@ -14751,7 +14751,7 @@
   {
    "rowKey": "M8b-16",
    "volume": "卷八b",
-   "srcLine": 1333,
+   "srcLine": 1335,
    "anchorsText": "smuggling.mjs:18；:38",
    "anchors": [
     {
@@ -14776,7 +14776,7 @@
   {
    "rowKey": "M8b-17",
    "volume": "卷八b",
-   "srcLine": 1334,
+   "srcLine": 1336,
    "anchorsText": "duels.mjs:19；:7",
    "anchors": [
     {
@@ -14801,7 +14801,7 @@
   {
    "rowKey": "M8b-18",
    "volume": "卷八b",
-   "srcLine": 1335,
+   "srcLine": 1337,
    "anchorsText": "family-law.mjs:19、:42、:77、:80、:81、:83",
    "anchors": [
     {
@@ -14842,7 +14842,7 @@
   {
    "rowKey": "M8b-19",
    "volume": "卷八b",
-   "srcLine": 1336,
+   "srcLine": 1338,
    "anchorsText": "location-access.mjs:48、:91、:115",
    "anchors": [
     {
@@ -14871,7 +14871,7 @@
   {
    "rowKey": "M8b-20",
    "volume": "卷八b",
-   "srcLine": 1337,
+   "srcLine": 1339,
    "anchorsText": "credit.mjs:54、:78、:288；finance-bank.mjs:358、:364；:100",
    "anchors": [
     {
@@ -14917,7 +14917,7 @@
   {
    "rowKey": "M8b-21",
    "volume": "卷八b",
-   "srcLine": 1338,
+   "srcLine": 1340,
    "anchorsText": "obligation-runtime.mjs:44、:163、:191",
    "anchors": [
     {
@@ -14946,7 +14946,7 @@
   {
    "rowKey": "M8b-22",
    "volume": "卷八b",
-   "srcLine": 1339,
+   "srcLine": 1341,
    "anchorsText": "transition.mjs:122",
    "anchors": [
     {
@@ -14967,7 +14967,7 @@
   {
    "rowKey": "M8b-23",
    "volume": "卷八b",
-   "srcLine": 1340,
+   "srcLine": 1342,
    "anchorsText": "offense-notes.mjs（noteOffense、takeNotedOffenses）",
    "anchors": [
     {
@@ -14983,7 +14983,7 @@
   {
    "rowKey": "M8b-24",
    "volume": "卷八b",
-   "srcLine": 1341,
+   "srcLine": 1343,
    "anchorsText": "action-authority.mjs、action-authority-sources.mjs",
    "anchors": [
     {
@@ -15003,7 +15003,7 @@
   {
    "rowKey": "M8b-25",
    "volume": "卷八b",
-   "srcLine": 1342,
+   "srcLine": 1344,
    "anchorsText": "legal-appeal.mjs、legal-reactions.mjs、legal-representation.mjs",
    "anchors": [
     {
@@ -15027,7 +15027,7 @@
   {
    "rowKey": "M8b-26",
    "volume": "卷八b",
-   "srcLine": 1343,
+   "srcLine": 1345,
    "anchorsText": "norm-stack.mjs（normStack、casePenalty 等）",
    "anchors": [
     {
@@ -15043,7 +15043,7 @@
   {
    "rowKey": "M8b-27",
    "volume": "卷八b",
-   "srcLine": 1344,
+   "srcLine": 1346,
    "anchorsText": "world/law/bindings.json（180 条）",
    "anchors": [
     {
@@ -15059,7 +15059,7 @@
   {
    "rowKey": "M8b-28",
    "volume": "卷八b",
-   "srcLine": 1345,
+   "srcLine": 1347,
    "anchorsText": "world/meta/rules.json 的 law 节；world/rules/tables/balance/law.json",
    "anchors": [
     {
@@ -15079,7 +15079,7 @@
   {
    "rowKey": "M8b-29",
    "volume": "卷八b",
-   "srcLine": 1346,
+   "srcLine": 1348,
    "anchorsText": "world/actions/law.json",
    "anchors": [
     {
@@ -15095,7 +15095,7 @@
   {
    "rowKey": "M8b-30",
    "volume": "卷八b",
-   "srcLine": 1347,
+   "srcLine": 1349,
    "anchorsText": "transition.mjs 的公民种类",
    "anchors": [
     {
@@ -15111,7 +15111,7 @@
   {
    "rowKey": "M8b-31",
    "volume": "卷八b",
-   "srcLine": 1348,
+   "srcLine": 1350,
    "anchorsText": "world/ontology/holdings.json 做客种类的留置变体与其两条钩子",
    "anchors": [
     {
@@ -15127,7 +15127,7 @@
   {
    "rowKey": "M8b-32",
    "volume": "卷八b",
-   "srcLine": 1349,
+   "srcLine": 1351,
    "anchorsText": "family-politics.mjs:20",
    "anchors": [
     {
@@ -18255,10 +18255,11 @@
    "srcLine": 831,
    "anchorsText": "tools/test-impact",
    "anchors": [],
-   "disp": "待补（疑点：原写\"保留\"，五种 mig_disp 无对应值，见修订记录 1115y1）",
+   "disp": "—（保留类，不算迁移行；李白 11-16 11:36 ①：工具保留，同 M11-7 按 R11-2.2 归保留类，不进计数）",
    "target": "R11-6.10",
-   "targetObject": "sys.migration",
-   "baseline": "d54c89a3"
+   "targetObject": "—",
+   "baseline": "d54c89a3",
+   "keepClass": true
   },
   {
    "rowKey": "M11-7",

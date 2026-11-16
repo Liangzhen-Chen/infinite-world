@@ -4250,7 +4250,6 @@
    "zeroRows": [],
    "rowKeys": [
     "M11-10",
-    "M11-6",
     "M11-8",
     "M11-9"
    ],
@@ -4381,14 +4380,12 @@
    "pending": [
     "files:该对象在旧代码里没有消费者文件（新对象或纯数据对象）",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "row:M11-6",
     "system:sys.migration 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
      "E-MIG-CARD-INCOMPLETE(files、retire)",
-     "待补:登记项字段",
-     "待补:迁移行处置"
+     "待补:登记项字段"
     ],
     "stateItems": [
      "依赖卡已 merged",
