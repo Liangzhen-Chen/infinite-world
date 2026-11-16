@@ -352,17 +352,21 @@ const s11 = [...(defined.get('卷十一') ?? [])].filter(x => /^S11-/.test(x)).s
 // ---- 卷十二的门禁自身条目（卷十二 line：S12-1 至 S12-16 随门禁卡 G-1 至 G-3 进必过集合）----
 const s12 = [...(defined.get('卷十二') ?? [])].filter(x => /^S12-\d+$/.test(x)).sort((a, b) => cmp(+a.slice(4), +b.slice(4)));
 // ---- 门禁设施登记（卷十二 §2.11 登记表，登记次序）----
-const gateFacilities = []; const gateOwner = new Map();
+const gateFacilities = []; const gateOwner = new Map(); const gateFacInfo = new Map(); // 设施 → {paths, gateCard, entries}
 { const f = volFiles.find(x => x.startsWith('卷十二-')); const ls = volText.get(f);
   const s = ls.findIndex(l => /^### 2\.11 /.test(l)); let e = ls.findIndex((l, i) => i > s && /^#{2,3} /.test(l)); if (e < 0) e = ls.length;
   let head = null;
   for (let i = s; i < e; i++) {
     if (!/^\|/.test(ls[i])) { head = null; continue; }
     const c = cells(ls[i]);
-    if (!head) { head = c; continue; }
+    if (!head) { head = c.map(x => x.replace(/`/g, '')); continue; }
     if (/^:?-{3}/.test(c[0])) continue;
     const m = c[0].match(/^`([a-z][a-z0-9-]*)`/);
-    if (m && head[0].includes('facCode')) { gateFacilities.push(m[1]); gateOwner.set(m[1], (c[3] ?? '').match(VOL)?.[0] ?? null); }
+    if (!m || head[0] !== 'facCode') continue;
+    const col = k => c[head.indexOf(k)] ?? '';
+    gateFacilities.push(m[1]); gateOwner.set(m[1], col('ownerVol').match(VOL)?.[0] ?? null);
+    // 卷十二 §2.11 的机读列 gateCard、entries（封卷后勘误 1116k7，李白终核卷十一 挡-1、挡-2）
+    gateFacInfo.set(m[1], { paths: [...col('paths').matchAll(/`([^`]+)`/g)].map(x => x[1]), gateCard: (col('gateCard').match(/^G-\d+$/) ?? [null])[0], entries: col('entries').trim() });
   } }
 
 // ================= 仓库文件索引（只读，锚点解析，与乙-4 同口径）=================
@@ -544,7 +548,8 @@ const posGroups = new Map();
 rows.forEach((r, i) => { const k = find(i); (posGroups.get(k) ?? posGroups.set(k, []).get(k)).push(r); });
 const kindRank = { gate_facility: 0, module_group: 1, table: 2, system: 3 };
 // 账本所在的系统登记项：账本类迁移行的对象来源由卷六 §3.3 的系统登记表给出；本卷按数据取"卷六的系统登记项"（sys.economy）。
-const ledgerSysKey = (() => { const s = sysOfVol.get('卷六'); return s ? s.system : null; })();
+// 账本系统取卷二 §2.7 登记项上的机读标记 `ledgerSystem: <系统键>`（封卷后勘误 1116k7，李白终核卷十一 挡-2 第 4 条；不按卷名）
+const ledgerSysKey = (() => { const m = regText.match(/`ledgerSystem:\s*(sys\.[a-z_]+)`/); return m && sysByKey.has(m[1]) ? m[1] : null; })();
 const isFixedObj = o => o.kind === 'gate_facility' || (o.kind === 'system' && o.code === ledgerSysKey) || (o.kind === 'table' && o.sys?.system === ledgerSysKey);
 let nObjConflict = 0; const objConflicts = []; const pickMoved = []; const mergedRecheck = [];
 const unassigned = [];
@@ -846,20 +851,46 @@ if (ledgerSys) {
   cards.push(parentCard);
 }
 
-// ---- 门禁卡 G-1 … G-3：按卷十二 §2.11 登记次序配 gate_facility（卷一 §6.3、卷十二都没写 G-n 与设施的对应，待裁，见 pending）----
+// ---- 门禁卡：卡号出自卷一 §6.3 图里的 G-n；对象与所属卷取卷十二 §2.11 `gateCard` 列指向本卡的设施（李白终核卷十一 挡-2 第 1 条）----
+// 一张卡建几件设施的，对象取登记次序第一件，其余设施的文件与行一并归本卡；accept 取法同领域卡：所属卷里定义行写到本卡设施代号或其路径、文件名的验收编号（挡-2 第 3 条）
+const gateIds = (() => { const f = volFiles.find(x => x.startsWith('卷一-')); const ls = volText.get(f); const s = ls.findIndex(l => /^### 6\.3 /.test(l)); let e = ls.findIndex((l, i) => i > s && /^#{2,3} /.test(l)); if (e < 0) e = ls.length; return uniq(ls.slice(s, e).join('\n').match(/G-\d+/g) ?? []).sort(); })();
 const gateRowsByFac = new Map(); // 门禁设施 → 位置组接收对象是它的行（R11-2.5）
 for (const r of rows) if (r.recvObj?.kind === 'gate_facility') (gateRowsByFac.get(r.recvObj.code) ?? gateRowsByFac.set(r.recvObj.code, []).get(r.recvObj.code)).push(r);
-gateFacilities.slice(0, 3).forEach((fac, i) => {
-  const rs = (gateRowsByFac.get(fac) ?? []).slice().sort((a, b) => cmp(a.rowKey, b.rowKey));
+const gateFacsOf = id => gateFacilities.filter(f => gateFacInfo.get(f)?.gateCard === id);
+for (const id of gateIds) {
+  const facs = gateFacsOf(id); const fac = facs[0] ?? null;
+  const rs = facs.flatMap(f => gateRowsByFac.get(f) ?? []).sort((a, b) => cmp(a.rowKey, b.rowKey));
+  const facFiles = facs.flatMap(f => gateFacInfo.get(f).paths).filter(p => /\.(?:mjs|js)$/.test(p) && !/\*/.test(p));
+  const vol = fac ? gateOwner.get(fac) : null;
+  const keys = facs.flatMap(f => [f, ...gateFacInfo.get(f).paths, ...gateFacInfo.get(f).paths.map(p => p.slice(p.lastIndexOf('/') + 1))]);
+  // 定义行里的反引号路径与设施路径相合（相同、文件名相同，或一方是另一方所在目录）即算写到其路径
+  const pathHit = (t, p) => { const d = p.replace(/\*\*?$/, ''); return t === p || t === p.slice(p.lastIndexOf('/') + 1) || (t.endsWith('/') && p.startsWith(t)) || (d.endsWith('/') && t.startsWith(d)); };
+  const acc = uniq(facs.flatMap(f => (assertText.get(gateOwner.get(f)) ?? []).filter(a => [...a.text.matchAll(/`([^`]+)`/g)].some(m => m[1] === f || gateFacInfo.get(f).paths.some(p => pathHit(m[1], p)))).map(a => qual(gateOwner.get(f), a.tok)))).sort();
   const c = newCard({
-    cardId: `G-${i + 1}`, cardKind: 'gate', objectKind: 'gate_facility', objectCode: fac, volume: gateOwner.get(fac) ?? '卷十二',
-    rowKeys: rs.map(r => r.rowKey), files: uniq(rs.flatMap(r => r.files.filter(f => f.endsWith('.mjs') || f.endsWith('.js')))).sort(),
-    dataFiles: uniq(rs.flatMap(r => r.files.filter(f => f.endsWith('.json')))).sort(), accept: s12.slice(), _fixedPhase: 0,
+    cardId: id, cardKind: 'gate', objectKind: fac ? 'gate_facility' : null, objectCode: fac, volume: vol,
+    rowKeys: rs.map(r => r.rowKey), files: uniq([...rs.flatMap(r => r.files.filter(f => f.endsWith('.mjs') || f.endsWith('.js'))), ...facFiles]).sort(),
+    dataFiles: uniq(rs.flatMap(r => r.files.filter(f => f.endsWith('.json')))).sort(), accept: acc, _fixedPhase: 0, _facs: facs,
   });
-  c.pending.push('objectCode:G-n 与门禁设施代号的对应卷一 §6.3、卷十二 §2.11 均未写，按 §2.11 登记次序暂配');
+  if (!fac) c.pending.push(`objectKind:同下（对象未登记）`, `volume:同下（对象未登记，所属卷取不到）`);
+  if (!fac) c.pending.push(`objectCode:卷十二 §2.11 没有 gateCard 为 ${id} 的门禁设施（卷一 §6.3 写了 ${id} 建什么，但未登记为门禁设施），待补`);
+  if (facs.length > 1) c.pending.push(`objectCode:本卡建 ${facs.length} 件设施（${facs.join('、')}），对象取登记次序第一件`);
+  if (!acc.length) c.pending.push('accept:所属卷的验收类定义行里没有写到本卡设施代号或其路径的编号，待各卷分配');
   c.pending.push(...pendingOfRows(rs));
   cards.push(c);
-});
+}
+// R11-7.1 第 1 步（封卷后勘误 1116k7，挡-1 第 2 条）：入口实现文件落在某门禁设施 paths 内的，由该门禁卡上线，所在卷系统首卡只接不上线；
+// 设施实现哪些入口取卷十二 §2.11 `entries` 列（"卷X §n" 为该卷该节入口表登记的全部入口，或逐个入口名）
+const gateLaunchMoved = [];
+for (const g of cards.filter(c => c.cardKind === 'gate')) for (const f of g._facs ?? []) {
+  const spec = gateFacInfo.get(f).entries; if (!spec || spec === '—') continue;
+  const vs = spec.match(new RegExp(`^(${V_RE})\\s*§\\s*([0-9]+(?:\\.[0-9]+)*)(?:（[^）]*）)?$`));
+  const list = vs ? (entryIdx.get(vs[1]) ?? []).filter(x => x.sec === '§' + vs[2]).map(x => ({ vol: vs[1], sec: x.sec, name: x.name }))
+    : [...spec.matchAll(/`([A-Za-z_$][A-Za-z0-9_$]*)`/g)].map(m => { const v = ownerVolOf(m[1], gateOwner.get(f)); return { vol: v, sec: (entryIdx.get(v) ?? []).find(x => x.name === m[1])?.sec ?? '§3', name: m[1] }; });
+  for (const en of list) {
+    for (const c of cards) if (c !== g) { const i = c.launches.findIndex(l => l.name === en.name && l.vol === en.vol); if (i >= 0) { c.launches.splice(i, 1); if (!c.entries.some(x => x.name === en.name && x.vol === en.vol)) c.entries.push({ vol: en.vol, sec: en.sec, name: en.name }); gateLaunchMoved.push(`${en.vol}:${en.name} ${c.cardId}→${g.cardId}`); } }
+    if (!g.launches.some(l => l.name === en.name && l.vol === en.vol)) g.launches.push(en);
+  }
+}
 
 // 同一拒收检查覆盖全部卡的 entries 与 launches（李白 11-16 01:30 第 3 条、chk-1116-y17 T5）：不在该卷 §3 入口表里的名字不收
 const rejected = { entries: [], launches: [] };

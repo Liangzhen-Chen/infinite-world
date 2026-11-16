@@ -2617,7 +2617,7 @@
   {
    "rowKey": "M2-1",
    "volume": "卷二",
-   "srcLine": 2226,
+   "srcLine": 2228,
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
@@ -2628,7 +2628,7 @@
   {
    "rowKey": "M2-1b",
    "volume": "卷二",
-   "srcLine": 2227,
+   "srcLine": 2229,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2639,7 +2639,7 @@
   {
    "rowKey": "M2-2",
    "volume": "卷二",
-   "srcLine": 2228,
+   "srcLine": 2230,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-28",
@@ -2651,7 +2651,7 @@
   {
    "rowKey": "M2-3a",
    "volume": "卷二",
-   "srcLine": 2229,
+   "srcLine": 2231,
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
@@ -2662,7 +2662,7 @@
   {
    "rowKey": "M2-3b",
    "volume": "卷二",
-   "srcLine": 2230,
+   "srcLine": 2232,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M11-1",
@@ -2674,7 +2674,7 @@
   {
    "rowKey": "M2-3c",
    "volume": "卷二",
-   "srcLine": 2231,
+   "srcLine": 2233,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M27-8、M27-17",
@@ -2686,7 +2686,7 @@
   {
    "rowKey": "M2-4a",
    "volume": "卷二",
-   "srcLine": 2232,
+   "srcLine": 2234,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M2-31 至 M2-45",
@@ -2698,7 +2698,7 @@
   {
    "rowKey": "M2-4b",
    "volume": "卷二",
-   "srcLine": 2233,
+   "srcLine": 2235,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-1",
@@ -2710,7 +2710,7 @@
   {
    "rowKey": "M2-5",
    "volume": "卷二",
-   "srcLine": 2234,
+   "srcLine": 2236,
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
@@ -2721,7 +2721,7 @@
   {
    "rowKey": "M2-5b",
    "volume": "卷二",
-   "srcLine": 2235,
+   "srcLine": 2237,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2732,7 +2732,7 @@
   {
    "rowKey": "M2-6",
    "volume": "卷二",
-   "srcLine": 2236,
+   "srcLine": 2238,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M9-22",
@@ -2744,7 +2744,7 @@
   {
    "rowKey": "M2-7",
    "volume": "卷二",
-   "srcLine": 2237,
+   "srcLine": 2239,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M27-16",
@@ -2756,7 +2756,7 @@
   {
    "rowKey": "M2-8",
    "volume": "卷二",
-   "srcLine": 2238,
+   "srcLine": 2240,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M9-19",
@@ -2768,7 +2768,7 @@
   {
    "rowKey": "M2-9",
    "volume": "卷二",
-   "srcLine": 2239,
+   "srcLine": 2241,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M9-17",
@@ -2780,7 +2780,7 @@
   {
    "rowKey": "M2-10a",
    "volume": "卷二",
-   "srcLine": 2240,
+   "srcLine": 2242,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M2-10a1 至 M2-10a3",
@@ -2792,7 +2792,7 @@
   {
    "rowKey": "M2-10a1",
    "volume": "卷二",
-   "srcLine": 2241,
+   "srcLine": 2243,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2803,7 +2803,7 @@
   {
    "rowKey": "M2-10a2",
    "volume": "卷二",
-   "srcLine": 2242,
+   "srcLine": 2244,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2814,7 +2814,7 @@
   {
    "rowKey": "M2-10a3",
    "volume": "卷二",
-   "srcLine": 2243,
+   "srcLine": 2245,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2825,7 +2825,7 @@
   {
    "rowKey": "M2-10b",
    "volume": "卷二",
-   "srcLine": 2244,
+   "srcLine": 2246,
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
@@ -2836,7 +2836,7 @@
   {
    "rowKey": "M2-11",
    "volume": "卷二",
-   "srcLine": 2245,
+   "srcLine": 2247,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M2-11a 至 M2-11c",
@@ -2848,7 +2848,7 @@
   {
    "rowKey": "M2-11a",
    "volume": "卷二",
-   "srcLine": 2246,
+   "srcLine": 2248,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M6-21",
@@ -2860,7 +2860,7 @@
   {
    "rowKey": "M2-11b",
    "volume": "卷二",
-   "srcLine": 2247,
+   "srcLine": 2249,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M3b-13a 至 M3b-13b",
@@ -2872,7 +2872,7 @@
   {
    "rowKey": "M2-11c",
    "volume": "卷二",
-   "srcLine": 2248,
+   "srcLine": 2250,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2883,7 +2883,7 @@
   {
    "rowKey": "M2-12a",
    "volume": "卷二",
-   "srcLine": 2249,
+   "srcLine": 2251,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2894,7 +2894,7 @@
   {
    "rowKey": "M2-12b",
    "volume": "卷二",
-   "srcLine": 2250,
+   "srcLine": 2252,
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
@@ -2905,7 +2905,7 @@
   {
    "rowKey": "M2-12c",
    "volume": "卷二",
-   "srcLine": 2251,
+   "srcLine": 2253,
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
@@ -2916,7 +2916,7 @@
   {
    "rowKey": "M2-13",
    "volume": "卷二",
-   "srcLine": 2252,
+   "srcLine": 2254,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2927,7 +2927,7 @@
   {
    "rowKey": "M2-14",
    "volume": "卷二",
-   "srcLine": 2253,
+   "srcLine": 2255,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M11-2",
@@ -2939,7 +2939,7 @@
   {
    "rowKey": "M2-15",
    "volume": "卷二",
-   "srcLine": 2254,
+   "srcLine": 2256,
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
@@ -2950,7 +2950,7 @@
   {
    "rowKey": "M2-15b",
    "volume": "卷二",
-   "srcLine": 2255,
+   "srcLine": 2257,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2961,7 +2961,7 @@
   {
    "rowKey": "M2-15c",
    "volume": "卷二",
-   "srcLine": 2256,
+   "srcLine": 2258,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2972,7 +2972,7 @@
   {
    "rowKey": "M2-15d",
    "volume": "卷二",
-   "srcLine": 2257,
+   "srcLine": 2259,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2983,7 +2983,7 @@
   {
    "rowKey": "M2-16",
    "volume": "卷二",
-   "srcLine": 2258,
+   "srcLine": 2260,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2994,7 +2994,7 @@
   {
    "rowKey": "M2-17",
    "volume": "卷二",
-   "srcLine": 2259,
+   "srcLine": 2261,
    "anchorsText": "",
    "anchors": [],
    "disp": "move_out",
@@ -3005,7 +3005,7 @@
   {
    "rowKey": "M2-18",
    "volume": "卷二",
-   "srcLine": 2260,
+   "srcLine": 2262,
    "anchorsText": "",
    "anchors": [],
    "disp": "move_out",
@@ -3016,7 +3016,7 @@
   {
    "rowKey": "M2-19a",
    "volume": "卷二",
-   "srcLine": 2261,
+   "srcLine": 2263,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -3027,7 +3027,7 @@
   {
    "rowKey": "M2-19b",
    "volume": "卷二",
-   "srcLine": 2262,
+   "srcLine": 2264,
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
@@ -3038,7 +3038,7 @@
   {
    "rowKey": "M2-19c",
    "volume": "卷二",
-   "srcLine": 2263,
+   "srcLine": 2265,
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
@@ -3049,7 +3049,7 @@
   {
    "rowKey": "M2-20",
    "volume": "卷二",
-   "srcLine": 2264,
+   "srcLine": 2266,
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
@@ -3060,7 +3060,7 @@
   {
    "rowKey": "M2-21",
    "volume": "卷二",
-   "srcLine": 2265,
+   "srcLine": 2267,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-33",
@@ -3072,7 +3072,7 @@
   {
    "rowKey": "M2-22",
    "volume": "卷二",
-   "srcLine": 2266,
+   "srcLine": 2268,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-34",
@@ -3084,7 +3084,7 @@
   {
    "rowKey": "M2-23",
    "volume": "卷二",
-   "srcLine": 2267,
+   "srcLine": 2269,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-36",
@@ -3096,7 +3096,7 @@
   {
    "rowKey": "M2-24",
    "volume": "卷二",
-   "srcLine": 2268,
+   "srcLine": 2270,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-37",
@@ -3108,7 +3108,7 @@
   {
    "rowKey": "M2-25",
    "volume": "卷二",
-   "srcLine": 2269,
+   "srcLine": 2271,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-38",
@@ -3120,7 +3120,7 @@
   {
    "rowKey": "M2-26",
    "volume": "卷二",
-   "srcLine": 2270,
+   "srcLine": 2272,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-39",
@@ -3132,7 +3132,7 @@
   {
    "rowKey": "M2-27",
    "volume": "卷二",
-   "srcLine": 2271,
+   "srcLine": 2273,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-42",
@@ -3144,7 +3144,7 @@
   {
    "rowKey": "M2-28",
    "volume": "卷二",
-   "srcLine": 2272,
+   "srcLine": 2274,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-44",
@@ -3156,7 +3156,7 @@
   {
    "rowKey": "M2-29",
    "volume": "卷二",
-   "srcLine": 2273,
+   "srcLine": 2275,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-45",
@@ -3168,7 +3168,7 @@
   {
    "rowKey": "M2-30",
    "volume": "卷二",
-   "srcLine": 2274,
+   "srcLine": 2276,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-51",
@@ -3180,7 +3180,7 @@
   {
    "rowKey": "M2-31",
    "volume": "卷二",
-   "srcLine": 2275,
+   "srcLine": 2277,
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
@@ -3191,7 +3191,7 @@
   {
    "rowKey": "M2-32",
    "volume": "卷二",
-   "srcLine": 2276,
+   "srcLine": 2278,
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
@@ -3202,7 +3202,7 @@
   {
    "rowKey": "M2-33",
    "volume": "卷二",
-   "srcLine": 2277,
+   "srcLine": 2279,
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
@@ -3213,7 +3213,7 @@
   {
    "rowKey": "M2-34",
    "volume": "卷二",
-   "srcLine": 2278,
+   "srcLine": 2280,
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
@@ -3224,7 +3224,7 @@
   {
    "rowKey": "M2-35",
    "volume": "卷二",
-   "srcLine": 2279,
+   "srcLine": 2281,
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
@@ -3235,7 +3235,7 @@
   {
    "rowKey": "M2-36",
    "volume": "卷二",
-   "srcLine": 2280,
+   "srcLine": 2282,
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
@@ -3246,7 +3246,7 @@
   {
    "rowKey": "M2-37",
    "volume": "卷二",
-   "srcLine": 2281,
+   "srcLine": 2283,
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
@@ -3257,7 +3257,7 @@
   {
    "rowKey": "M2-38",
    "volume": "卷二",
-   "srcLine": 2282,
+   "srcLine": 2284,
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
@@ -3268,7 +3268,7 @@
   {
    "rowKey": "M2-39",
    "volume": "卷二",
-   "srcLine": 2283,
+   "srcLine": 2285,
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
@@ -3279,7 +3279,7 @@
   {
    "rowKey": "M2-40",
    "volume": "卷二",
-   "srcLine": 2284,
+   "srcLine": 2286,
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
@@ -3290,7 +3290,7 @@
   {
    "rowKey": "M2-41",
    "volume": "卷二",
-   "srcLine": 2285,
+   "srcLine": 2287,
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
@@ -3301,7 +3301,7 @@
   {
    "rowKey": "M2-41b",
    "volume": "卷二",
-   "srcLine": 2286,
+   "srcLine": 2288,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M12-6",
@@ -3313,7 +3313,7 @@
   {
    "rowKey": "M2-42",
    "volume": "卷二",
-   "srcLine": 2287,
+   "srcLine": 2289,
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
@@ -3324,7 +3324,7 @@
   {
    "rowKey": "M2-42b",
    "volume": "卷二",
-   "srcLine": 2288,
+   "srcLine": 2290,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -3335,7 +3335,7 @@
   {
    "rowKey": "M2-43",
    "volume": "卷二",
-   "srcLine": 2289,
+   "srcLine": 2291,
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
@@ -3346,7 +3346,7 @@
   {
    "rowKey": "M2-43b",
    "volume": "卷二",
-   "srcLine": 2290,
+   "srcLine": 2292,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -3357,7 +3357,7 @@
   {
    "rowKey": "M2-44",
    "volume": "卷二",
-   "srcLine": 2291,
+   "srcLine": 2293,
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
@@ -3368,7 +3368,7 @@
   {
    "rowKey": "M2-44b",
    "volume": "卷二",
-   "srcLine": 2292,
+   "srcLine": 2294,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M11-4",
@@ -3380,7 +3380,7 @@
   {
    "rowKey": "M2-45",
    "volume": "卷二",
-   "srcLine": 2293,
+   "srcLine": 2295,
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
@@ -3391,7 +3391,7 @@
   {
    "rowKey": "M2-45b",
    "volume": "卷二",
-   "srcLine": 2294,
+   "srcLine": 2296,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M12-5",
@@ -20523,7 +20523,7 @@
   {
    "rowKey": "M12-1",
    "volume": "卷十二",
-   "srcLine": 1312,
+   "srcLine": 1319,
    "anchorsText": "tools/k8-guard.mjs",
    "anchors": [
     {
@@ -20539,7 +20539,7 @@
   {
    "rowKey": "M12-2",
    "volume": "卷十二",
-   "srcLine": 1313,
+   "srcLine": 1320,
    "anchorsText": "tests/overfit-guard.test.mjs 与它的例外名单 tests/fixtures/overfit-allowlist.json；仓库外的提交前守门脚本调它（M12-18）",
    "anchors": [
     {
@@ -20559,7 +20559,7 @@
   {
    "rowKey": "M12-3",
    "volume": "卷十二",
-   "srcLine": 1314,
+   "srcLine": 1321,
    "anchorsText": "tools/test-impact（用途写在目录内说明文件）",
    "anchors": [],
    "disp": "待补（疑点：原写\"保留，只用于选受影响的测试\"，五种 mig_disp 无对应值，与卷十一 M11-6 同一处，见修订记录 1115y1）",
@@ -20570,7 +20570,7 @@
   {
    "rowKey": "M12-4",
    "volume": "卷十二",
-   "srcLine": 1315,
+   "srcLine": 1322,
    "anchorsText": "tools/derived-scan.mjs（文件头写明：派生字段黑名单扫描，卷零 I10）与它的基线文件 tests/metrics/derived-scan.baseline.json（可用写基线参数手写）",
    "anchors": [
     {
@@ -20590,7 +20590,7 @@
   {
    "rowKey": "M12-5",
    "volume": "卷十二",
-   "srcLine": 1316,
+   "srcLine": 1323,
    "anchorsText": "server-plugin/seed-keys.mjs 的源码扫描部分",
    "anchors": [
     {
@@ -20606,7 +20606,7 @@
   {
    "rowKey": "M12-6",
    "volume": "卷十二",
-   "srcLine": 1317,
+   "srcLine": 1324,
    "anchorsText": "server-plugin/digest-exclude.mjs 的排除表校验",
    "anchors": [
     {
@@ -20622,7 +20622,7 @@
   {
    "rowKey": "M12-7",
    "volume": "卷十二",
-   "srcLine": 1318,
+   "srcLine": 1325,
    "anchorsText": "server-plugin/agriculture.mjs:305、weather.mjs:215、military.mjs:48、farm-pests.mjs:70 等各模块自带的加载期规则校验",
    "anchors": [
     {
@@ -20670,7 +20670,7 @@
   {
    "rowKey": "M12-8",
    "volume": "卷十二",
-   "srcLine": 1319,
+   "srcLine": 1326,
    "anchorsText": "tests/invariants/ 下 5 个",
    "anchors": [],
    "disp": "to_data",
@@ -20681,7 +20681,7 @@
   {
    "rowKey": "M12-9",
    "volume": "卷十二",
-   "srcLine": 1320,
+   "srcLine": 1327,
    "anchorsText": "docs/probes/ 的 11 套题集与两份提示词",
    "anchors": [],
    "disp": "to_data",
@@ -20692,7 +20692,7 @@
   {
    "rowKey": "M12-10",
    "volume": "卷十二",
-   "srcLine": 1321,
+   "srcLine": 1328,
    "anchorsText": "tools/ 下的试玩、浸泡、指标脚本（素材包 §3a 所列各个）",
    "anchors": [],
    "disp": "replace_entry",
@@ -20703,7 +20703,7 @@
   {
    "rowKey": "M12-11",
    "volume": "卷十二",
-   "srcLine": 1322,
+   "srcLine": 1329,
    "anchorsText": "tools/content-pipeline.mjs:344、content-budget.mjs:218、playtest-budget.mjs:122",
    "anchors": [
     {
@@ -20742,7 +20742,7 @@
   {
    "rowKey": "M12-12",
    "volume": "卷十二",
-   "srcLine": 1323,
+   "srcLine": 1330,
    "anchorsText": "F:/dnd-tmp/book/ 下的全书一致性脚本",
    "anchors": [],
    "disp": "replace_entry",
@@ -20753,7 +20753,7 @@
   {
    "rowKey": "M12-13",
    "volume": "卷十二",
-   "srcLine": 1324,
+   "srcLine": 1331,
    "anchorsText": "F:/dnd-tmp/vols/ 下各卷手写的自检与验算脚本",
    "anchors": [],
    "disp": "replace_entry",
@@ -20764,7 +20764,7 @@
   {
    "rowKey": "M12-14",
    "volume": "卷十二",
-   "srcLine": 1325,
+   "srcLine": 1332,
    "anchorsText": "现有云门禁设施",
    "anchors": [],
    "disp": "replace_entry",
@@ -20775,7 +20775,7 @@
   {
    "rowKey": "M12-15",
    "volume": "卷十二",
-   "srcLine": 1326,
+   "srcLine": 1333,
    "anchorsText": "卷一用过的机械核算脚本",
    "anchors": [],
    "disp": "delete",
@@ -20786,7 +20786,7 @@
   {
    "rowKey": "M12-16",
    "volume": "卷十二",
-   "srcLine": 1327,
+   "srcLine": 1334,
    "anchorsText": "仓库外工具目录的合入门禁 merge-gate.sh",
    "anchors": [],
    "disp": "replace_entry",
@@ -20797,7 +20797,7 @@
   {
    "rowKey": "M12-17",
    "volume": "卷十二",
-   "srcLine": 1328,
+   "srcLine": 1335,
    "anchorsText": "仓库外工具目录的性能门 perf-gate.sh",
    "anchors": [],
    "disp": "replace_entry",
@@ -20808,7 +20808,7 @@
   {
    "rowKey": "M12-18",
    "volume": "卷十二",
-   "srcLine": 1329,
+   "srcLine": 1336,
    "anchorsText": "仓库外工具目录的提交前守门 guard-commit.sh",
    "anchors": [],
    "disp": "replace_entry",
@@ -20819,7 +20819,7 @@
   {
    "rowKey": "M12-19",
    "volume": "卷十二",
-   "srcLine": 1330,
+   "srcLine": 1337,
    "anchorsText": "仓库外工具目录的卡门禁入口 card-gate.mjs",
    "anchors": [
     {
@@ -20835,7 +20835,7 @@
   {
    "rowKey": "M12-20",
    "volume": "卷十二",
-   "srcLine": 1331,
+   "srcLine": 1338,
    "anchorsText": "仓库外工具目录的跳过名单 gate-skips.txt（注释 1 行加 6 条，\"文件加匹配串\"形式；合入门禁第 47 行与单文件运行脚本第 6 行在读）",
    "anchors": [],
    "disp": "delete",

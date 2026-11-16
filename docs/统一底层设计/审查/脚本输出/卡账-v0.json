@@ -29,41 +29,25 @@
    "cardId": "G-1",
    "cardKind": "gate",
    "objectKind": "gate_facility",
-   "objectCode": "cloud-gate",
-   "volume": "卷十二",
+   "objectCode": "mig-ledger-writer",
+   "volume": "卷十一",
    "phaseNo": 0,
    "groupKey": null,
    "splitAxis": null,
    "segNo": null,
    "zeroRows": [],
-   "rowKeys": [
-    "M12-14",
-    "M12-19",
-    "M12-20"
+   "rowKeys": [],
+   "files": [
+    "tools/migrate/card-ledger.mjs",
+    "tools/migrate/collect.mjs"
    ],
-   "files": [],
    "dataFiles": [],
    "segs": [],
    "entries": [],
    "launches": [],
    "retire": {},
    "accept": [
-    "S12-1",
-    "S12-2",
-    "S12-3",
-    "S12-4",
-    "S12-5",
-    "S12-6",
-    "S12-7",
-    "S12-8",
-    "S12-9",
-    "S12-10",
-    "S12-11",
-    "S12-12",
-    "S12-13",
-    "S12-14",
-    "S12-15",
-    "S12-16"
+    "S11-1"
    ],
    "dependsOn": [],
    "census": {},
@@ -75,12 +59,10 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
-    "files:门禁卡的封闭文件清单待开工时登记",
-    "objectCode:G-n 与门禁设施代号的对应卷一 §6.3、卷十二 §2.11 均未写，按 §2.11 登记次序暂配"
+    "objectCode:本卡建 2 件设施（mig-ledger-writer、mig-collector），对象取登记次序第一件"
    ],
    "migReady": {
     "defects": [
-     "E-MIG-CARD-INCOMPLETE(files)",
      "待补:登记项字段"
     ],
     "stateItems": [
@@ -93,45 +75,22 @@
   {
    "cardId": "G-2",
    "cardKind": "gate",
-   "objectKind": "gate_facility",
-   "objectCode": "content-build-check",
-   "volume": "卷二十八",
+   "objectKind": null,
+   "objectCode": null,
+   "volume": null,
    "phaseNo": 0,
    "groupKey": null,
    "splitAxis": null,
    "segNo": null,
    "zeroRows": [],
-   "rowKeys": [
-    "M28-15",
-    "M28-7"
-   ],
-   "files": [
-    "server-plugin/population.mjs",
-    "tools/npc-profile-validation.mjs"
-   ],
+   "rowKeys": [],
+   "files": [],
    "dataFiles": [],
    "segs": [],
    "entries": [],
    "launches": [],
    "retire": {},
-   "accept": [
-    "S12-1",
-    "S12-2",
-    "S12-3",
-    "S12-4",
-    "S12-5",
-    "S12-6",
-    "S12-7",
-    "S12-8",
-    "S12-9",
-    "S12-10",
-    "S12-11",
-    "S12-12",
-    "S12-13",
-    "S12-14",
-    "S12-15",
-    "S12-16"
-   ],
+   "accept": [],
    "dependsOn": [],
    "census": {},
    "testClass": {},
@@ -142,10 +101,19 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
-    "objectCode:G-n 与门禁设施代号的对应卷一 §6.3、卷十二 §2.11 均未写，按 §2.11 登记次序暂配"
+    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
+    "accept:所属卷的验收类定义行里没有写到本卡设施代号或其路径的编号，待各卷分配",
+    "files:门禁卡的封闭文件清单待开工时登记",
+    "objectCode:卷十二 §2.11 没有 gateCard 为 G-2 的门禁设施（卷一 §6.3 写了 G-2 建什么，但未登记为门禁设施），待补",
+    "objectCode:推不出",
+    "objectKind:同下（对象未登记）",
+    "objectKind:推不出",
+    "volume:同下（对象未登记，所属卷取不到）",
+    "volume:对象没有登记的归属卷"
    ],
    "migReady": {
     "defects": [
+     "E-MIG-CARD-INCOMPLETE(volume、objectKind、objectCode、files、accept)",
      "待补:登记项字段"
     ],
     "stateItems": [
@@ -159,40 +127,41 @@
    "cardId": "G-3",
    "cardKind": "gate",
    "objectKind": "gate_facility",
-   "objectCode": "content-approve",
-   "volume": "卷二十八",
+   "objectCode": "acc-runner",
+   "volume": "卷十二",
    "phaseNo": 0,
    "groupKey": null,
    "splitAxis": null,
    "segNo": null,
    "zeroRows": [],
-   "rowKeys": [
-    "M28-10",
-    "M28-13"
+   "rowKeys": [],
+   "files": [
+    "tools/accept/run.mjs"
    ],
-   "files": [],
    "dataFiles": [],
    "segs": [],
    "entries": [],
-   "launches": [],
+   "launches": [
+    {
+     "vol": "卷十二",
+     "sec": "§3.2",
+     "name": "accRun",
+     "detail": [
+      "§4.1.2",
+      "§4.2.2",
+      "§4.3.2",
+      "§4.4.2",
+      "§4.5.2",
+      "§4.6.2",
+      "§4.10.2",
+      "§4.12.2",
+      "§4.13.2"
+     ]
+    }
+   ],
    "retire": {},
    "accept": [
-    "S12-1",
-    "S12-2",
-    "S12-3",
-    "S12-4",
-    "S12-5",
-    "S12-6",
-    "S12-7",
-    "S12-8",
-    "S12-9",
-    "S12-10",
-    "S12-11",
-    "S12-12",
-    "S12-13",
-    "S12-14",
-    "S12-15",
-    "S12-16"
+    "S12-1"
    ],
    "dependsOn": [],
    "census": {},
@@ -204,12 +173,10 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
-    "files:门禁卡的封闭文件清单待开工时登记",
-    "objectCode:G-n 与门禁设施代号的对应卷一 §6.3、卷十二 §2.11 均未写，按 §2.11 登记次序暂配"
+    "objectCode:本卡建 2 件设施（acc-runner、commit-hook），对象取登记次序第一件"
    ],
    "migReady": {
     "defects": [
-     "E-MIG-CARD-INCOMPLETE(files)",
      "待补:登记项字段"
     ],
     "stateItems": [
