@@ -854,13 +854,20 @@ if (ledgerSys) {
 }
 
 // ---- 门禁卡：卡号出自卷一 §6.3 图里的 G-n；对象与所属卷取卷十二 §2.11 `gateCard` 列指向本卡的设施（李白终核卷十一 挡-2 第 1 条）----
-// 一张卡建几件设施的，对象取登记次序第一件，其余设施的文件与行一并归本卡；accept 取法同领域卡：所属卷里定义行写到本卡设施代号或其路径、文件名的验收编号（挡-2 第 3 条）
+// 一张卡建或改几件设施的，对象取卷一 §6.3 句里本卡所「建」的最先写出的一件，其余设施的文件与行一并归本卡；accept 取法同领域卡：所属卷里定义行写到本卡设施代号或其路径、文件名的验收编号（挡-2 第 3 条）
+// 卷一 §6.3「哪张门禁卡建哪件设施」句：逐卡取「建」字后、「改」字前写出的设施路径，保留书写次序（卷一是此事的唯一定义，卷十一 R11-3.10）
+const gateBuildPaths = (() => { const out = new Map(); const l = volText.get(CFG.charter.file).find(x => /哪张门禁卡建哪件设施/.test(x)) ?? '';
+  for (const cl of l.split(/[；。]/)) { const m = cl.match(/(G-\d+)\s*建(.*)$/); if (!m) continue; const b = m[2].split(/，?并改/)[0]; out.set(m[1], [...b.matchAll(/`([^`]+)`/g)].map(x => x[1])); }
+  return out; })();
 const gateIds = (() => { const f = volFiles.find(x => x.startsWith('卷一-')); const ls = volText.get(f); const s = ls.findIndex(l => /^### 6\.3 /.test(l)); let e = ls.findIndex((l, i) => i > s && /^#{2,3} /.test(l)); if (e < 0) e = ls.length; return uniq(ls.slice(s, e).join('\n').match(/G-\d+/g) ?? []).sort(); })();
 const gateRowsByFac = new Map(); // 门禁设施 → 位置组接收对象是它的行（R11-2.5）
 for (const r of rows) if (r.recvObj?.kind === 'gate_facility') (gateRowsByFac.get(r.recvObj.code) ?? gateRowsByFac.set(r.recvObj.code, []).get(r.recvObj.code)).push(r);
 const gateFacsOf = id => gateFacilities.filter(f => gateFacInfo.get(f)?.gateCard === id);
 for (const id of gateIds) {
-  const facs = gateFacsOf(id); const fac = facs[0] ?? null;
+  // 对象：卷一 §6.3「哪张门禁卡建哪件设施」句里本卡所「建」的设施中最先写出的那一件（只「改」不「建」的不取；李白终核卷十一复核批裁定第 1 条）
+  const facs = gateFacsOf(id); const bp = gateBuildPaths.get(id) ?? [];
+  const built = bp.map(p => facs.find(f => gateFacInfo.get(f).paths.includes(p))).filter(Boolean);
+  const fac = built[0] ?? null;
   const rs = facs.flatMap(f => gateRowsByFac.get(f) ?? []).sort((a, b) => cmp(a.rowKey, b.rowKey));
   const facFiles = facs.flatMap(f => gateFacInfo.get(f).paths).filter(p => /\.(?:mjs|js)$/.test(p) && !/\*/.test(p));
   const vol = fac ? gateOwner.get(fac) : null;
@@ -873,8 +880,7 @@ for (const id of gateIds) {
     dataFiles: uniq(rs.flatMap(r => r.files.filter(f => f.endsWith('.json')))).sort(), accept: acc, _fixedPhase: 0, _facs: facs,
   });
   if (!fac) c.pending.push(`objectKind:同下（对象未登记）`, `volume:同下（对象未登记，所属卷取不到）`);
-  if (!fac) c.pending.push(`objectCode:卷十二 §2.11 没有 gateCard 为 ${id} 的门禁设施（卷一 §6.3 写了 ${id} 建什么，但未登记为门禁设施），待补`);
-  if (facs.length > 1) c.pending.push(`objectCode:本卡建 ${facs.length} 件设施（${facs.join('、')}），对象取登记次序第一件`);
+  if (!fac) c.pending.push(`objectCode:卷一 §6.3 句里 ${id} 所「建」的设施没有一件登记在卷十二 §2.11（按路径对），待补`);
   if (!acc.length) c.pending.push('accept:所属卷的验收类定义行里没有写到本卡设施代号或其路径的编号，待各卷分配');
   c.pending.push(...pendingOfRows(rs));
   cards.push(c);

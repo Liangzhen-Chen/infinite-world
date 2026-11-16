@@ -152,13 +152,9 @@
    "approvals": [],
    "mergeRef": "",
    "fails": 0,
-   "pending": [
-    "objectCode:本卡建 3 件设施（mig-ledger-writer、mig-collector、mig-read），对象取登记次序第一件"
-   ],
+   "pending": [],
    "migReady": {
-    "defects": [
-     "待补:登记项字段"
-    ],
+    "defects": [],
     "stateItems": [
      "依赖卡已 merged",
      "所在阶段已开",
@@ -186,7 +182,10 @@
    "entries": [],
    "launches": [],
    "retire": {},
-   "accept": [],
+   "accept": [
+    "卷二:A7",
+    "卷二:A8"
+   ],
    "dependsOn": [],
    "census": {},
    "testClass": {},
@@ -196,14 +195,9 @@
    "approvals": [],
    "mergeRef": "",
    "fails": 0,
-   "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
-    "accept:所属卷的验收类定义行里没有写到本卡设施代号或其路径的编号，待各卷分配"
-   ],
+   "pending": [],
    "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(accept)"
-    ],
+    "defects": [],
     "stateItems": [
      "依赖卡已 merged",
      "所在阶段已开",
@@ -215,7 +209,7 @@
    "cardId": "G-3",
    "cardKind": "gate",
    "objectKind": "gate_facility",
-   "objectCode": "cloud-gate",
+   "objectCode": "acc-runner",
    "volume": "卷十二",
    "phaseNo": 0,
    "groupKey": null,
@@ -371,13 +365,9 @@
    "approvals": [],
    "mergeRef": "",
    "fails": 0,
-   "pending": [
-    "objectCode:本卡建 5 件设施（cloud-gate、acc-runner、acc-register、acc-read、commit-hook），对象取登记次序第一件"
-   ],
+   "pending": [],
    "migReady": {
-    "defects": [
-     "待补:登记项字段"
-    ],
+    "defects": [],
     "stateItems": [
      "依赖卡已 merged",
      "所在阶段已开",
