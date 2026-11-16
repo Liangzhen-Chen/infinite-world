@@ -4,9 +4,9 @@
  "maxFiles": 25,
  "n": 5,
  "counts": {
-  "cards": 115,
+  "cards": 116,
   "byKind": {
-   "first": 38,
+   "first": 39,
    "follow": 50,
    "gate": 3,
    "ledger_child": 7,
@@ -16,13 +16,13 @@
   },
   "byPhase": {
    "0": 3,
-   "1": 80,
+   "1": 81,
    "2": 17,
    "3": 11,
    "4": 2,
    "5": 2
   },
-  "nonSweep": 104
+  "nonSweep": 105
  },
  "cards": [
   {
@@ -2305,6 +2305,61 @@
      "E-MIG-CARD-INCOMPLETE(retire)",
      "待补:登记项字段",
      "待补:迁移行处置"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
+   "cardId": "C-卷二-sys.dimension_entry-1",
+   "cardKind": "first",
+   "objectKind": "system",
+   "objectCode": "sys.dimension_entry",
+   "volume": "卷二",
+   "phaseNo": 1,
+   "groupKey": "无文件-1",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [
+    "M2-11c",
+    "M2-12a",
+    "M2-16"
+   ],
+   "files": [],
+   "dataFiles": [],
+   "segs": [
+    "seg_rows",
+    "seg_data",
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [],
+   "launches": [],
+   "retire": {},
+   "accept": [],
+   "dependsOn": [],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
+    "files:该对象在旧代码里没有消费者文件（新对象或纯数据对象）",
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
+    "system:sys.dimension_entry 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(files、retire、accept)",
+     "待补:登记项字段"
     ],
     "stateItems": [
      "依赖卡已 merged",
