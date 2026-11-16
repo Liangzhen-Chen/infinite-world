@@ -23255,7 +23255,7 @@
     }
    ],
    "disp": "recode",
-   "target": "HO-7（§4.8.3）",
+   "target": "HO-7（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23276,7 +23276,7 @@
     }
    ],
    "disp": "delete",
-   "target": "HO-7（§4.8.3）",
+   "target": "HO-7（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23297,7 +23297,7 @@
     }
    ],
    "disp": "delete",
-   "target": "HO-9（§4.8.3）",
+   "target": "HO-9（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23318,7 +23318,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "PF-2（§4.1.3）",
+   "target": "PF-2（§4.1.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23339,7 +23339,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "SK-6（§4.3.3）",
+   "target": "SK-6（§4.3.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23360,7 +23360,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "SK-6、SK-8（§4.3.3）",
+   "target": "SK-6、SK-8（§4.3.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23399,7 +23399,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "SK-6；原对象栏写 hmethod（§4.3.3）",
+   "target": "SK-6；原对象栏写 hmethod（§4.3.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23420,7 +23420,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "SK-6（§4.3.3）",
+   "target": "SK-6（§4.3.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23466,7 +23466,7 @@
     }
    ],
    "disp": "recode",
-   "target": "SK-8（§4.3.3）",
+   "target": "SK-8（§4.3.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23477,7 +23477,7 @@
    "anchorsText": "五个名字（occupation 数据 843 行、profession、job、career、role）",
    "anchors": [],
    "disp": "to_data",
-   "target": "PF-3（§4.1.3）",
+   "target": "PF-3（§4.1.3）（入口名待补）",
    "targetObject": "profession",
    "baseline": "d54c89a3"
   },
@@ -23525,7 +23525,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "PF-3、PF-6（§4.1.3）",
+   "target": "PF-3、PF-6（§4.1.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23546,7 +23546,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "PF-9（§4.1.3）",
+   "target": "PF-9（§4.1.3）（入口 qualifies）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23557,7 +23557,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "HO-8（合同状态代号归卷六 §4.16）",
+   "target": "HO-8（合同状态代号归卷六 §4.16）（入口名待补）",
    "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
@@ -23568,7 +23568,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "HO-10（§4.8.3）",
+   "target": "HO-10（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23579,7 +23579,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "HO-8（持有与耐久入口归卷三）（§4.8.3）",
+   "target": "HO-8（持有与耐久入口归卷三）（§4.8.3）（入口名待补）",
    "targetObject": "sys.item",
    "baseline": "d54c89a3"
   },
@@ -23601,7 +23601,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "HO-8、HO-9（§4.8.3）",
+   "target": "HO-8、HO-9（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23612,7 +23612,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "HO-6、HO-8（§4.8.3）",
+   "target": "HO-6、HO-8（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23623,7 +23623,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "HO-8（§4.8.3）",
+   "target": "HO-8（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23634,7 +23634,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "HO-8（§4.8.3）",
+   "target": "HO-8（§4.8.3）（入口名待补）",
    "targetObject": "profession",
    "baseline": "d54c89a3"
   },
@@ -23645,7 +23645,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "HO-8（§4.8.3）",
+   "target": "HO-8（§4.8.3）（入口名待补）",
    "targetObject": "profession",
    "baseline": "d54c89a3"
   },
@@ -23667,7 +23667,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "HO-8（§4.8.3）",
+   "target": "HO-8（§4.8.3）（入口名待补）",
    "targetObject": "profession",
    "baseline": "d54c89a3"
   },
@@ -23678,7 +23678,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "HO-8（§4.8.3）",
+   "target": "HO-8（§4.8.3）（入口名待补）",
    "targetObject": "profession",
    "baseline": "d54c89a3"
   },
@@ -23700,7 +23700,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "HO-8（§4.8.3）",
+   "target": "HO-8（§4.8.3）（入口名待补）",
    "targetObject": "profession",
    "baseline": "d54c89a3"
   },
@@ -23722,7 +23722,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "HO-1、HO-2；原对象栏写 deed（§4.8.3）",
+   "target": "HO-1、HO-2；原对象栏写 deed（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23733,7 +23733,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "HO-8（§4.8.3）",
+   "target": "HO-8（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23744,7 +23744,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "HO-7（§4.8.3）",
+   "target": "HO-7（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23755,7 +23755,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "HO-7（§4.8.3）",
+   "target": "HO-7（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23766,7 +23766,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "HO-7、HO-10（§4.8.3）",
+   "target": "HO-7、HO-10（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23777,7 +23777,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "HO-7（§4.8.3）",
+   "target": "HO-7（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23788,7 +23788,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "SK-6（§4.3.3）",
+   "target": "SK-6（§4.3.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23799,7 +23799,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "卷九 §4.3 检定接口（本卷无规则号）",
+   "target": "卷九 §4.3 检定接口（本卷无规则号）（入口名待补）",
    "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
@@ -23810,7 +23810,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "卷九 §4.3（本卷无规则号）",
+   "target": "卷九 §4.3（本卷无规则号）（入口名待补）",
    "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
@@ -23821,7 +23821,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "HO-6（§4.8.3）",
+   "target": "HO-6（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23854,7 +23854,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "HO-6、HO-10（§4.8.3）",
+   "target": "HO-6、HO-10（§4.8.3）（入口名待补）",
    "targetObject": "profession",
    "baseline": "d54c89a3"
   },
@@ -23865,7 +23865,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "HO-6、HO-7（§4.8.3）",
+   "target": "HO-6、HO-7（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23876,7 +23876,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "HO-6（§4.8.3）",
+   "target": "HO-6（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23887,7 +23887,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "HO-6、HO-10（§4.8.3）",
+   "target": "HO-6、HO-10（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23898,7 +23898,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "HO-6（§4.8.3）",
+   "target": "HO-6（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23933,7 +23933,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "HO-6（§4.8.3）",
+   "target": "HO-6（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23944,7 +23944,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "HO-6（§4.8.3）",
+   "target": "HO-6（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23955,7 +23955,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "HO-6（§4.8.3）",
+   "target": "HO-6（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23966,7 +23966,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "HO-5（§4.8.3）",
+   "target": "HO-5（§4.8.3）（入口 takeUp）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23977,7 +23977,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "HO-1、HO-2；原对象栏写 deed（§4.8.3）",
+   "target": "HO-1、HO-2；原对象栏写 deed（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23988,7 +23988,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "HO-2；原对象栏写 deed（§4.8.3）",
+   "target": "HO-2；原对象栏写 deed（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23999,7 +23999,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "HO-2；原对象栏写 deed（§4.8.3）",
+   "target": "HO-2；原对象栏写 deed（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24010,7 +24010,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "HO-2；原对象栏写 deed（§4.8.3）",
+   "target": "HO-2；原对象栏写 deed（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24021,7 +24021,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "HO-2；原对象栏写 deed（§4.8.3）",
+   "target": "HO-2；原对象栏写 deed（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24032,7 +24032,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "HO-2；原对象栏写 deed（§4.8.3）",
+   "target": "HO-2；原对象栏写 deed（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24043,7 +24043,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "HO-2；原对象栏写 deed（§4.8.3）",
+   "target": "HO-2；原对象栏写 deed（§4.8.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24079,7 +24079,7 @@
     }
    ],
    "disp": "recode",
-   "target": "LS-7（§4.5.3）",
+   "target": "LS-7（§4.5.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24100,7 +24100,7 @@
     }
    ],
    "disp": "recode",
-   "target": "LS-2（§4.5.3）",
+   "target": "LS-2（§4.5.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24160,7 +24160,7 @@
     }
    ],
    "disp": "recode",
-   "target": "LS-9（§4.5.3）",
+   "target": "LS-9（§4.5.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24181,7 +24181,7 @@
     }
    ],
    "disp": "recode",
-   "target": "LS-8（§4.5.3）",
+   "target": "LS-8（§4.5.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24202,7 +24202,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "LS-2（§4.5.3）",
+   "target": "LS-2（§4.5.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24223,7 +24223,7 @@
     }
    ],
    "disp": "recode",
-   "target": "LS-9（§4.5.3）",
+   "target": "LS-9（§4.5.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24248,7 +24248,7 @@
     }
    ],
    "disp": "recode",
-   "target": "LS-7（§4.5.3）",
+   "target": "LS-7（§4.5.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24269,7 +24269,7 @@
     }
    ],
    "disp": "recode",
-   "target": "LS-2（§4.5.3）",
+   "target": "LS-2（§4.5.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24390,7 +24390,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "EX-3、EX-4；原对象栏写 cert（§4.7.3）",
+   "target": "EX-3、EX-4；原对象栏写 cert（§4.7.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24415,7 +24415,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§3.5 B-1（卷二 kindOf）",
+   "target": "§3.5 B-1（卷二 kindOf）（入口名待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -24436,7 +24436,7 @@
     }
    ],
    "disp": "recode",
-   "target": "PF-6（§4.1.3）",
+   "target": "PF-6（§4.1.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24489,7 +24489,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "DG-2、DG-3（卷二 kindOf）（§4.4.3）",
+   "target": "DG-2、DG-3（卷二 kindOf）（§4.4.3）（入口名待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -24522,7 +24522,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "LS-7（§4.5.3）",
+   "target": "LS-7（§4.5.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24552,7 +24552,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§3.5 B-1（卷二 kindOf）",
+   "target": "§3.5 B-1（卷二 kindOf）（入口名待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -24577,7 +24577,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "PF-3（professionsOf）；§3.5 B-8",
+   "target": "PF-3（professionsOf）；§3.5 B-8（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24652,7 +24652,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "practice → rules.profession（kinds、lapseDays）；对不上的旧字段：dailyCaps → 退役，由卷十四 §4.3 SK-3（当日单项上限 dailyCap）覆盖；stageSize → 待补；maximum → 待补；repeatMultiplier → 待补",
+   "target": "practice → rules.profession（kinds、lapseDays）；对不上的旧字段：dailyCaps → 退役，由卷十四 §4.3 SK-3（当日单项上限 dailyCap）覆盖；stageSize → 待补；maximum → 待补；repeatMultiplier → 待补（入口名待补）",
    "targetObject": "rules.profession",
    "baseline": "d54c89a3"
   },
@@ -24663,7 +24663,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "levels → rules.growth（maximum 对 levelThresholds，freeAttributePoints 对 attrPointsPerLevel）；对不上的旧字段：experience → 退役，由卷十四 §4.12 GR-1、GR-2（经验只来自技能增长、levelThresholds 冻结成表）覆盖；noviceUntil → 待补；initial → 待补",
+   "target": "levels → rules.growth（maximum 对 levelThresholds，freeAttributePoints 对 attrPointsPerLevel）；对不上的旧字段：experience → 退役，由卷十四 §4.12 GR-1、GR-2（经验只来自技能增长、levelThresholds 冻结成表）覆盖；noviceUntil → 待补；initial → 待补（入口名待补）",
    "targetObject": "rules.growth",
    "baseline": "d54c89a3"
   },
@@ -24718,7 +24718,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "§5.3 十个模块（本卷无规则号）",
+   "target": "§5.3 十个模块（本卷无规则号）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24783,7 +24783,7 @@
     }
    ],
    "disp": "delete",
-   "target": "DG-2、DG-3（§4.4.3）",
+   "target": "DG-2、DG-3（§4.4.3）（入口 qualifies）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24804,7 +24804,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "LS-2 至 LS-5（§4.5.3）",
+   "target": "LS-2 至 LS-5（§4.5.3）（入口 canOffer）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24829,7 +24829,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "DG-2（§4.4.3）",
+   "target": "DG-2（§4.4.3）（入口名待补）",
    "targetObject": "skill",
    "baseline": "d54c89a3"
   },
@@ -24850,7 +24850,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§3.5 B-8",
+   "target": "§3.5 B-8（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24889,7 +24889,7 @@
     }
    ],
    "disp": "delete",
-   "target": "DG-2、DG-3（§4.4.3）",
+   "target": "DG-2、DG-3（§4.4.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24944,7 +24944,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "DG-2（§4.4.3）",
+   "target": "DG-2（§4.4.3）（入口名待补）",
    "targetObject": "skill",
    "baseline": "d54c89a3"
   },
@@ -24992,7 +24992,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "LS-2、LS-5（§4.5.3）",
+   "target": "LS-2、LS-5（§4.5.3）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -25052,7 +25052,7 @@
     }
    ],
    "disp": "delete",
-   "target": "SK-7（§4.3.3）",
+   "target": "SK-7（§4.3.3）（入口 skillBand）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -25099,7 +25099,7 @@
     }
    ],
    "disp": "delete",
-   "target": "—（不并入别处；§8 Q-18）",
+   "target": "—（不并入别处；§8 Q-18）（入口名待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -25120,7 +25120,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "LS-8（§4.5.3）",
+   "target": "LS-8（§4.5.3）（入口名待补）",
    "targetObject": "skill",
    "baseline": "d54c89a3"
   },
