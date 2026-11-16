@@ -2,7 +2,9 @@
 // 只读卷文与 脚本/卷十一/migrows-input.json，确定性；不按行号、条目号、卷名特判。
 // 名单（N1）：与 gen-card-ledger.mjs 的 rowSection 同口径——落点里没有节号（"§n"）也没有能对上卷的规则编号（R<卷>-a.b）的非别名行。
 // 判定（N2/N3）：只看本行原文已写出的依据——
-//   ① 本行写的规则编号 R<卷序号>-…：在该卷里按 id-defs.mjs 的定义位认定义，定义行所在标题的节号恰一个，即为该节；
+//   ① 本行落点栏写的规则号：在该卷里按 id-defs.mjs 的定义位认定义，定义行所在标题的节号恰一个，即为该节。"规则号"指定义性质为
+//      规则类或验收类的编号（规则号、断言号、扫描号、扫描式验收号；李白 11-16 03:2x 规则号范围）；记录类、其他类（别卷迁移行号、
+//      事项号、开放问题号、分类代号这类登记标签）不算，只记不挡；
 //   ② 本行写的、登记在某卷 §3 入口表里的入口名（与生成器同口径收入口）：该入口的定义节（"节"栏，无此栏取本行节号）恰一个，即为该节。
 //   一行所有依据给出的（卷、节）合起来恰一个才补；零个或多个都标"节号待补"。落点栏写"同 Mxx"的行指向别行，不借别行的节号，标待补。
 // 写法：补节号的节在本行所在卷写"（§x.y）"，在别卷写"（卷X §x.y）"（生成器对裸"§n"取来源卷，别卷须带卷名才落得对）。
@@ -89,6 +91,8 @@ function titleOf(vol, sec) {
 
 // ---- 迁移表落点栏：与 transcribe-migrows.mjs 同口径找栏 ----
 const strip = s => s.replace(/`/g, '').trim();
+// 规则号：定义性质为规则类或验收类（李白 11-16 03:2x）；记录类、其他类是登记标签，不定节
+const isRuleNo = nature => nature === '规则类' || nature === '验收类';
 function tgtCol(head) {
   const h = head.map(strip);
   const a = h.findIndex(x => /落点/.test(x) && !/落点对象/.test(x)); if (a >= 0) return a;
@@ -109,11 +113,10 @@ for (const r of nosec) {
   const ti = tgtCol(headOf(ls, r.srcLine)); const tcell = c[ti] ?? '';
   const ev = []; // {by, vol, sec}
   const bad = []; // 挡补：依据本身落不到唯一一节
-  const note = []; // 只记不挡：不是规则编号的编号
-  const nrEv = [], nrBad = []; // 落点栏里非规则类的本卷编号（断言号等）各自的唯一定义节 / 落不到唯一节的
+  const note = []; // 只记不挡：不是规则号的编号（登记标签）
   if (/^同\s*M/.test(strip(tcell))) bad.push('落点指向别行');
   else {
-    // ① 规则编号（落点栏）：编号写了卷序号的到该卷找定义，没写的在本行所在卷找；只认规则类定义（id-defs.mjs 性质判法）
+    // ① 规则号（落点栏）：编号写了卷序号的到该卷找定义，没写的在本行所在卷找；只认规则类、验收类定义（id-defs.mjs 性质判法）
     for (const m of tcell.matchAll(new RegExp('(?<![A-Za-z0-9])' + TOK + '(?![0-9A-Za-z])', 'g'))) {
       const t = m[0]; const vm = t.match(/^[A-Z][A-Za-z]{0,3}?([0-9]+)([a-z]?)-/);
       // 编号前紧跟卷名（"卷三乙 R-4"）的取该卷，与生成器"卷X §n"同口径
@@ -121,13 +124,8 @@ for (const r of nosec) {
       const vol = vm ? byVolNo.get(vm[1] + vm[2]) : pv ? pv[1] : r.volume; if (!vol || !volText.has(vol)) { bad.push(`${t} 对不上卷`); continue; }
       const ds = rulesOf(vol).get(t) ?? [];
       if (!ds.length) { bad.push(`${t} 在${vol}无定义`); continue; }
-      // 定义全不是规则类的（断言号、扫描号等）不作本步依据也不挡；但它在落点栏写着，若下面要靠依据栏反查，
-      // 须先看它：落点栏有定义的编号时以落点栏为准（李白 11-16 03:10），记在 nrEv
-      if (!ds.some(d => d.nature === '规则类')) {
-        note.push(`${t} 不是规则编号（${uniq(ds.map(d => d.nature)).join('、')}）`);
-        const nrs = uniq(ds.map(d => d.sec)); if (nrs.length === 1 && nrs[0]) nrEv.push({ by: t, vol, sec: nrs[0] }); else nrBad.push(t);
-        continue;
-      }
+      // 定义全是登记标签（记录类、其他类）的不作依据也不挡
+      if (!ds.some(d => isRuleNo(d.nature))) { note.push(`${t} 不是规则编号（${uniq(ds.map(d => d.nature)).join('、')}）`); continue; }
       const secs = uniq(ds.map(d => d.sec));
       if (secs.length === 1 && secs[0]) ev.push({ by: t, vol, sec: secs[0] }); else bad.push(`${t} 在${vol}定义于 ${secs.length} 节`);
     }
@@ -139,7 +137,7 @@ for (const r of nosec) {
     }
   }
   let pairs = uniq(ev.map(e => e.vol + ' §' + e.sec));
-  // ③ 依据栏反查（李白 11-16 02:53 L1）：落点栏没给出任何节、也没有挡补项时，读本行表头含"依据"的栏里的规则号；
+  // ③ 依据栏反查（李白 11-16 02:53 L1、03:10 第 2 条）：落点栏没有可用的规则号或入口名（没给出任何节）、也没有挡补项时，读本行表头含"依据"的栏里的规则号；
   //   规则号须全书只定义在一节（各卷定义合起来恰一个"卷、节"），且该栏所有规则号给出同一节；否则仍待补
   let via = '';
   const ji = headOf(ls, r.srcLine).findIndex(h => /依据/.test(h) && !/落点/.test(h));
@@ -149,17 +147,12 @@ for (const r of nosec) {
       const t = m[0]; const vm = t.match(/^[A-Z][A-Za-z]{0,3}?([0-9]+)([a-z]?)-/);
       const vols = vm ? [byVolNo.get(vm[1] + vm[2])].filter(Boolean) : VOLS; // 写了卷序号的只在该卷有定义；没写的查全书
       const ds = vols.flatMap(v => (rulesOf(v).get(t) ?? []).map(d => ({ ...d, vol: v })));
-      if (!ds.some(d => d.nature === '规则类')) continue;
+      if (!ds.some(d => isRuleNo(d.nature))) continue;
       const ps = uniq(ds.map(d => d.vol + ' §' + d.sec));
       if (ps.length === 1 && ds[0].sec) jev.push({ by: t + '（依据栏）', vol: ds[0].vol, sec: ds[0].sec }); else jbad.push(`依据栏 ${t} 全书定义于 ${ps.length} 处`);
     }
     const jp = uniq(jev.map(e => e.vol + ' §' + e.sec));
-    const np = uniq(nrEv.map(e => e.vol + ' §' + e.sec));
-    if (!jbad.length && jp.length === 1 && (nrEv.length || nrBad.length)) {
-      // 落点栏写了本卷编号：以落点栏为准，两处指向不同节也不记冲突（李白 11-16 03:10）；落点栏的编号落不到唯一一节则待补
-      if (!nrBad.length && np.length === 1) { ev.push(...nrEv); pairs = np; } else note.push(`落点栏编号 ${[...nrBad, ...nrEv.map(e => e.by)].join('、')} 落不到唯一一节`);
-    }
-    else if (!jbad.length && jp.length === 1) { ev.push(...jev); pairs = jp; via = '，依据栏反查'; }
+    if (!jbad.length && jp.length === 1) { ev.push(...jev); pairs = jp; via = '，依据栏反查'; }
     else if (jbad.length || jp.length > 1) note.push(...jbad, ...(jp.length > 1 ? ['依据栏给出多节：' + jp.join('、')] : []));
   }
   const ok = !bad.length && pairs.length === 1;
