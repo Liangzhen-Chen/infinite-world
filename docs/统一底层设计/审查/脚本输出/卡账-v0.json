@@ -16,10 +16,10 @@
   },
   "byPhase": {
    "0": 3,
-   "1": 68,
+   "1": 67,
    "2": 13,
    "3": 19,
-   "4": 11,
+   "4": 12,
    "5": 2
   },
   "nonSweep": 105
@@ -6135,110 +6135,6 @@
    "accept": [],
    "dependsOn": [
     "C-卷九-sys.ai_interface-1",
-    "LEDGER-1"
-   ],
-   "census": {},
-   "testClass": {},
-   "derivations": [],
-   "sortKeys": {},
-   "state": "drafted",
-   "approvals": [],
-   "mergeRef": "",
-   "fails": 0,
-   "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
-    "entries:本卡各行的落点栏没有明写登记过的入口名（正文推断的只作转录候选，见摘要）",
-    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
-   ],
-   "migReady": {
-    "defects": [
-     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
-    ],
-    "stateItems": [
-     "依赖卡已 merged",
-     "所在阶段已开",
-     "不在冻结中"
-    ]
-   }
-  },
-  {
-   "cardId": "C-卷二十一-status-2",
-   "cardKind": "follow",
-   "objectKind": "table",
-   "objectCode": "status",
-   "volume": "卷二十一",
-   "phaseNo": 1,
-   "groupKey": "rules层-2",
-   "splitAxis": null,
-   "segNo": null,
-   "zeroRows": [],
-   "rowKeys": [
-    "M13-12",
-    "M14-5",
-    "M15-4",
-    "M19-6",
-    "M20-28",
-    "M20-29b",
-    "M20-38",
-    "M21-1",
-    "M21-10",
-    "M21-12",
-    "M21-14",
-    "M21-14b",
-    "M21-16",
-    "M21-2",
-    "M21-22",
-    "M21-23",
-    "M21-24",
-    "M21-25",
-    "M21-26",
-    "M21-27",
-    "M21-3",
-    "M21-6",
-    "M21-7",
-    "M24-8",
-    "M25-11",
-    "M25-12",
-    "M25-50"
-   ],
-   "files": [
-    "server-plugin/governance.mjs",
-    "server-plugin/hazard-calendar.mjs",
-    "server-plugin/hidden-passives.mjs",
-    "server-plugin/high-nobility.mjs",
-    "server-plugin/household-budget.mjs",
-    "server-plugin/household-subsistence.mjs",
-    "server-plugin/items.mjs",
-    "server-plugin/labor-market.mjs",
-    "server-plugin/law-codes.mjs",
-    "server-plugin/law.mjs",
-    "server-plugin/learning.mjs",
-    "server-plugin/legal-appeal.mjs",
-    "server-plugin/legal-reactions.mjs",
-    "server-plugin/legal-representation.mjs",
-    "server-plugin/local-exams.mjs",
-    "server-plugin/location-access.mjs",
-    "server-plugin/magic-consent.mjs",
-    "server-plugin/magic-economy.mjs",
-    "server-plugin/magic-mind-space.mjs",
-    "server-plugin/magic-ritual.mjs",
-    "server-plugin/magic-status.mjs",
-    "server-plugin/market.mjs",
-    "server-plugin/medicine-state.mjs",
-    "server-plugin/medicine.mjs",
-    "server-plugin/monster-society.mjs"
-   ],
-   "dataFiles": [],
-   "segs": [
-    "seg_readers",
-    "seg_delete"
-   ],
-   "entries": [],
-   "launches": [],
-   "retire": {},
-   "accept": [],
-   "dependsOn": [
-    "C-卷二十一-status-1",
     "LEDGER-1"
    ],
    "census": {},
@@ -13832,6 +13728,127 @@
      "vol": "卷二十",
      "sec": "§3.1",
      "name": "calendarSpan"
+    },
+    {
+     "vol": "卷二十",
+     "sec": "§3.1",
+     "name": "envAccum",
+     "detail": [
+      "§4.11.2"
+     ]
+    }
+   ],
+   "launches": [],
+   "retire": {},
+   "accept": [
+    "卷二十:T-9"
+   ],
+   "dependsOn": [
+    "C-卷二十-sys.time_env-1",
+    "LEDGER-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(retire)"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
+   "cardId": "C-卷二十一-status-2",
+   "cardKind": "follow",
+   "objectKind": "table",
+   "objectCode": "status",
+   "volume": "卷二十一",
+   "phaseNo": 4,
+   "groupKey": "rules层-2",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [
+    "M13-12",
+    "M14-5",
+    "M15-4",
+    "M19-6",
+    "M20-28",
+    "M20-29b",
+    "M20-38",
+    "M21-1",
+    "M21-10",
+    "M21-12",
+    "M21-14",
+    "M21-14b",
+    "M21-16",
+    "M21-2",
+    "M21-22",
+    "M21-23",
+    "M21-24",
+    "M21-25",
+    "M21-26",
+    "M21-27",
+    "M21-3",
+    "M21-6",
+    "M21-7",
+    "M24-8",
+    "M25-11",
+    "M25-12",
+    "M25-50"
+   ],
+   "files": [
+    "server-plugin/governance.mjs",
+    "server-plugin/hazard-calendar.mjs",
+    "server-plugin/hidden-passives.mjs",
+    "server-plugin/high-nobility.mjs",
+    "server-plugin/household-budget.mjs",
+    "server-plugin/household-subsistence.mjs",
+    "server-plugin/items.mjs",
+    "server-plugin/labor-market.mjs",
+    "server-plugin/law-codes.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/learning.mjs",
+    "server-plugin/legal-appeal.mjs",
+    "server-plugin/legal-reactions.mjs",
+    "server-plugin/legal-representation.mjs",
+    "server-plugin/local-exams.mjs",
+    "server-plugin/location-access.mjs",
+    "server-plugin/magic-consent.mjs",
+    "server-plugin/magic-economy.mjs",
+    "server-plugin/magic-mind-space.mjs",
+    "server-plugin/magic-ritual.mjs",
+    "server-plugin/magic-status.mjs",
+    "server-plugin/market.mjs",
+    "server-plugin/medicine-state.mjs",
+    "server-plugin/medicine.mjs",
+    "server-plugin/monster-society.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [
+    {
+     "vol": "卷二十",
+     "sec": "§3.1",
+     "name": "envAccum",
+     "detail": [
+      "§4.11.2"
+     ]
     }
    ],
    "launches": [],
@@ -13839,6 +13856,7 @@
    "accept": [],
    "dependsOn": [
     "C-卷二十-sys.time_env-1",
+    "C-卷二十一-status-1",
     "LEDGER-1"
    ],
    "census": {},

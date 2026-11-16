@@ -51,6 +51,8 @@ let src = readFileSync(genPath, 'utf8');
 const homeLine = "const HERE = fileURLToPath(new URL('.', import.meta.url)).replace(/\\\\/g, '/').replace(/\\/$/, '');";
 if (!src.includes(homeLine)) throw new Error('生成器 HERE 行变了，脚本需同步');
 src = src.replace(homeLine, `const HERE = ${JSON.stringify(GEN_DIR)};`);
+// 生成器其余按自身位置算的路径（DIR、REPO、子进程自调用）一并换成生成器文件本身的 URL，临时模块放在别处也与原位运行同义
+src = src.replaceAll('import.meta.url', JSON.stringify(new URL(`file:///${genPath}`).href));
 for (const m of ['./object-rules.mjs', './id-defs.mjs']) {
   if (!src.includes(`'${m}'`)) throw new Error(`生成器 import ${m} 变了，脚本需同步`);
   src = src.replace(`'${m}'`, JSON.stringify(new URL(`file:///${GEN_DIR}/${m.slice(2)}`).href));

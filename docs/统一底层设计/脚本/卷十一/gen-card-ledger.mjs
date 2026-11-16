@@ -220,6 +220,22 @@ function ownerVolOf(name, vol) {
   if (vs.length > 1) ownerAmbig.add(`${name}：${vs.join('、')}`);
   return vs[0] ?? REGVOL;
 }
+// 指称判据用的式样（与乙-8 候选脚本同口径）
+const SEE = new RegExp('见\\s*' + V_RE + '(?:\\s*§[0-9.]+)*', 'g'); // "，见卷X"只当出处标注（09:xx 二-3）
+const CONJ = /`[A-Za-z_$][A-Za-z0-9_$]*[^`]*`\s*[、与和及]\s*$/; // 并列的前一项（各计一次）
+const TRIG = /(取自|读|经|取|返回|给出)\s*[：:]?\s*$/; // 名字前的触发词
+const NEGV = /(不再|不得|不会|无需|不|未|无|勿|别)\s*再?\s*(调用|调|经由|经|读|取自|取|返回|给出)?\s*[：:]?\s*$/; // 名字前紧挨否定
+const NEG_WORD = /(不再|不得|不会|不必|不能|不可|不许|不准|不应|不该|无需|不用|不要|不|未|无|勿|别)(?!只|光|仅|单|止|但)/g;
+// 否定词后：副词若干 → 动作 → 卷名/登记修饰 → 名字（A）；或带主语"他处/别处"、介词短语"对它/为某某"、动作后紧跟的名词修饰（"读持有变化 `x`"）的同一动作（B，须有动作）
+const NEG_MODS = '(?:再|必|要|用|直接|去|可|另|单独|自行|自己|重复|重新|同时|仍|也|都|能|应|还)*';
+const NEG_VERB = '(?:调用|调|经由|经|读取|读|取自|取|返回|给出|查|走|访问|拿|用)';
+const NEG_REF = '\\s*[：:]?\\s*(?:' + V_RE + '(?:\\s*§[0-9.]+)*\\s*的?\\s*)?(?:各?卷?登记的|登记的|对外|只读)?\\s*(?:入口|函数)?';
+const NEG_PP = '(?:(?:对|为|给|向|替|从)[^\\s，。；;`、：:（()）]{1,8}?)?';
+const NEG_NOUN = '(?:(?!调|读|经|取|用|走|查|拿|返回|给出|就|再|后|并|且|而|或|和|与|的)[\\u4e00-\\u9fa5]){0,6}';
+const NEG_TAIL = new RegExp('^\\s*(?:' + NEG_MODS + '\\s*' + NEG_VERB + '?' + NEG_REF + '|(?:他处|别处)?\\s*' + NEG_PP + '\\s*' + NEG_MODS + '\\s*' + NEG_PP + '\\s*' + NEG_VERB + NEG_REF + '\\s*' + NEG_NOUN + ')\\s*[：:]?\\s*$');
+const negated = pre => { for (const m of pre.matchAll(NEG_WORD)) if (NEG_TAIL.test(pre.slice(m.index + m[0].length))) return true; return false; }; // 隔字否定：否定词管着带名字的动作（09:3x）
+const SUFFIX = /^(族|角色|字段|列|键|代号|词表|条目)/;
+const FILE_EXT = /^\.(?:mjs|cjs|js|ts|json|md|tsv|txt)\b/;
 function namesInSection(vol, sec) {
   const key = vol + '|' + sec; if (secNamesCache.has(key)) return secNamesCache.get(key);
   const f = volFiles.find(x => volOfFile(x) === vol); const ls = f ? volText.get(f) : [];
@@ -231,29 +247,34 @@ function namesInSection(vol, sec) {
     const body = ls.slice(hi, e).join('\n'); const hit = new Set();
     // 外卷登记名只在原句指的就是那个入口时计入（李白 11-16 04:1x ① K2）：写成调用形"`名(…)`"，或所在分句明说调用（含"调"）、点名该入口所在卷；
     // 名字后紧跟"族、角色、字段、列、键、代号、词表"一类的，不计。本卷登记名照旧出现即计
-    let depth = null; // 括号层级（按行清零），分句只在层级 0 的标点处切
+    // 判据与乙-8 候选脚本（脚本/全书/乙8-入口名候选.mjs 的 nameHit）同口径（李白 09:xx 第二条、09:2x、09:3x，kernel-1117 Y1–Y3）：
+    // 分句在括号层级 0 的"，。；"、换行与表格竖线处切（表格行内"；"同正文分号）；"，见卷X"只当出处标注、先剥掉；只点登记卷名不算指向入口；
+    // 否定句（名字前紧挨否定，或同一分句里否定词管着带名字的动作，隔字亦然）一律不计；"不只/不光/不仅/不单"不是否定；"、""与"并列的各计一次
+    let depth = null;
+    const isDelim = ch => ch === '，' || ch === '。' || ch === '；' || ch === ';' || ch === '\n' || ch === '|';
     for (const m of body.matchAll(/`([A-Za-z_$][A-Za-z0-9_$]*)([^`]*)`/g)) {
       const n = m[1]; if (!entryNames.has(n)) continue; const ov = ownerVolOf(n, vol);
-      if (ov === vol) { hit.add(n); continue; }
-      if (m[2].startsWith('(')) { hit.add(n); continue; }
-      if (m[2]) continue; // "`名.字段`"一类
-      const after = body.slice(m.index + m[0].length, m.index + m[0].length + 4).trim();
-      if (/^(族|角色|字段|列|键|代号|词表)/.test(after)) continue;
+      if (FILE_EXT.test(m[2])) continue; // "`名.mjs`"一类
+      if (!depth) { depth = new Array(body.length); let dd = 0; for (let i = 0; i < body.length; i++) { const ch = body[i]; if (ch === '（' || ch === '(') dd++; else if ((ch === '）' || ch === ')') && dd > 0) dd--; else if (ch === '\n') dd = 0; depth[i] = dd; } }
+      let st = m.index; for (; st > 0; st--) { if (isDelim(body[st - 1]) && (depth[st - 1] === 0 || body[st - 1] === '\n')) break; }
+      const end = m.index + m[0].length; let en = end; for (; en < body.length; en++) { if (isDelim(body[en]) && (depth[en] === 0 || body[en] === '\n')) break; }
+      let pre = body.slice(st, m.index).replace(/\s+$/, ''); while (CONJ.test(pre)) pre = pre.replace(CONJ, '').replace(/\s+$/, '');
+      if (NEGV.test(pre) || negated(pre)) continue; // 否定句：所有计入路径统一不计
+      if (ov === vol) { hit.add(n); continue; } // 本卷登记名：出现即计（04:1x ①）
+      const call = /^[(（]/.test(m[2]);
+      if (m[2] && !call) continue; // 别卷名："`名.字段`"一类不计
+      if (SUFFIX.test(body.slice(end, end + 4).trim())) continue; // 名字后紧跟"族、角色、字段、列、键、代号、词表、条目"
       if (primNames.has(n)) continue; // 外卷原语只引用、不收编（04:53 第 3 条）
+      if (call) { hit.add(n); continue; }
       // "统一入口"小节里列出的外卷入口（"读：`x`"一类）算明说调用、指向该入口（04:53 第 1 条）
       const hl = body.lastIndexOf('\n#', m.index); const headLine = hl >= 0 ? body.slice(hl + 1, body.indexOf('\n', hl + 1)) : body.slice(0, body.indexOf('\n'));
       if (/统一入口/.test(headLine)) { hit.add(n); continue; }
-      // 分句不在括注内部切（04:53 第 2 条）：从该名字向两边找括号层级为 0 的"，。；"或换行
-      const isDelim = ch => ch === '，' || ch === '。' || ch === '；' || ch === '\n';
-      if (!depth) { depth = new Array(body.length); let dd = 0; for (let i = 0; i < body.length; i++) { const ch = body[i]; if (ch === '（' || ch === '(') dd++; else if ((ch === '）' || ch === ')') && dd > 0) dd--; else if (ch === '\n') dd = 0; depth[i] = dd; } }
-      let st = m.index; for (; st > 0; st--) { if (isDelim(body[st - 1]) && (depth[st - 1] === 0 || body[st - 1] === '\n')) break; }
-      let en = m.index + m[0].length; for (; en < body.length; en++) { if (isDelim(body[en]) && (depth[en] === 0 || body[en] === '\n')) break; }
-      // 直接指称（李白 11-16 08:xx，与 04:53"读：x"同一条规则扩到正文）：括注之外，"读 `x`""经 `x`""取 `x`""`x` 的结果/返回"把入口当读取来源或调用结果的，计入
-      const bef = body.slice(Math.max(0, m.index - 3), m.index).replace(/\s/g, ''); const aft = body.slice(m.index + m[0].length, m.index + m[0].length + 4).replace(/\s/g, '');
-      const direct = depth[m.index] === 0 && (/(读|经|取)$/.test(bef) || /^(的结果|的返回)/.test(aft));
-      const clause = body.slice(st, en);
-      if (/调|入口/.test(clause) || mentionsVol(clause, ov)) hit.add(n); // 分句明说调用、称其为入口、或点名其登记卷（按卷名别名表）
-      else if (direct) { hit.add(n); directHits.push(`${vol} §${sec}:${n}`); }
+      const clause = body.slice(st, en).replace(SEE, '');
+      if (/调|入口/.test(clause)) { hit.add(n); continue; } // 分句明说调用或称其为入口
+      if (depth[m.index] !== 0) continue; // 括注内的直接指称不计
+      // 直接指称（08:xx、09:xx 二-1、09:2x）："读/经/取/取自/返回/给出"后写确切反引号名，"`x` 的结果/的返回/返回的/给出的"与名字后接裸"返回"
+      const aft = body.slice(end, end + 5).replace(/\s/g, '');
+      if (TRIG.test(pre) || /^(的结果|的返回|返回的|给出的|返回)/.test(aft)) { hit.add(n); directHits.push(`${vol} §${sec}:${n}`); }
     }
     out = [...hit].sort().map(n => ({ name: n, vol: ownerVolOf(n, vol) }));
   }
@@ -719,10 +740,22 @@ const splitCode = fs => ({ code: fs.filter(f => f.endsWith('.mjs') || f.endsWith
 const entryMulti = [], entryNone = [], entryNoSec = [], entryMismatch = [];
 const ENTRY_WORD = /(?<![A-Za-z0-9_$.])([A-Za-z_$][A-Za-z0-9_$]*)(?![A-Za-z0-9_$]|\.[A-Za-z_$])/g;
 const explicitCache = new Map();
+// 落点栏的入口名注"（入口 `名`）"（乙-8 补写；李白 09:13 ②，kernel-1117 Y4）：名在该行所在节的候选集合内、且全书已登记，该行 entries 取此名，
+// 归卷按候选集合解析（注里不带卷名，外卷入口亦然），不再列"一节多入口"待查；名不在候选内的报出、不收（也不按普通明写名收）
+const MARK = /（入口\s*([A-Za-z_$][A-Za-z0-9_$]*)）/g;
+const markTaken = [], markRejected = [];
 function entryOfRow(r) { // 返回该行落点栏明写的入口（数组，可为空）
   if (explicitCache.has(r.rowKey)) return explicitCache.get(r.rowKey);
   const out = [];
-  for (const m of String(r.target ?? '').matchAll(ENTRY_WORD)) {
+  const tgt = String(r.target ?? ''); const marks = [...tgt.matchAll(MARK)].map(m => m[1]);
+  if (marks.length) { const s = rowSection(r); const cands = s ? (namesInSection(s.vol, s.sec) ?? []) : [];
+    for (const mk of uniq(marks)) {
+      const c = cands.find(x => x.name === mk);
+      if (!c || !entryNames.has(mk) || !in3(c.vol, mk)) { markRejected.push({ k: r.rowKey, name: mk, at: s ? `${s.vol} §${s.sec}` : '落点无节号', cands: cands.map(x => x.name) }); continue; }
+      // 注是落点栏明写的要接入口，不是由卷节推断的，02:30"入口与对象不符"（只管推断）不适用：接别对象上线的入口正是依赖边的来源
+      if (!out.some(x => x.vol === c.vol && x.name === mk)) { out.push({ vol: c.vol, sec: (entryIdx.get(c.vol) ?? []).find(x => x.name === mk)?.sec ?? '§3', name: mk }); markTaken.push({ k: r.rowKey, vol: r.volume, name: mk }); }
+    } }
+  for (const m of tgt.replace(MARK, '').matchAll(ENTRY_WORD)) {
     const name = m[1]; if (!entryNames.has(name)) continue;
     const vol = ownerVolOf(name, r.volume); if (!in3(vol, name)) continue;
     // 入口所属对象（上线它的对象）不是该行自己的 targetObject 的，不算入口边，列待查"入口与对象不符"（李白 11-16 02:30 第 2 条）
@@ -748,7 +781,9 @@ function entriesOfRows(rs) {
   const m = new Map(); for (const r of rs) for (const x of entryOfRow(r)) if (in3(x.vol, x.name)) m.set(entryKey(x.vol, x.name), x);
   return [...m].sort((a, b) => cmp(a[0], b[0])).map(([, v]) => v);
 }
-for (const r of rows) if (!entryOfRow(r).length) { const x = entryCandOfRow(r); if (x) candRows.push(`${r.rowKey}→${x.vol}:${x.name}`); }
+// 节候选对全部行都算一遍（乙-8 候选脚本读 entryMulti 取"一节多入口"行及候选名，已注入口名的行也要在内，标 resolved）；摘要的待查只计落点栏没写出入口的行
+for (const r of rows) { const has = entryOfRow(r).length > 0; const n0 = entryMulti.length; const x = entryCandOfRow(r); for (let i = n0; i < entryMulti.length; i++) entryMulti[i].resolved = has; if (x && !has) candRows.push(`${r.rowKey}→${x.vol}:${x.name}`); }
+const multiOpen = entryMulti.filter(x => !x.resolved);
 // 摘掉的规则号（李白 11-16 19:24 第 1 条 b）：行落点里写的编号若定义在"规则"节，不进 accept；记下来，卡的 accept 取空时，
 // 到该规则所在小节的"验收断言"小节找文字里点名这条规则的断言号补上（须是验收类定义；找不到的保持空，进疑点名单）。
 function assertionsCovering(refs) {
@@ -1357,6 +1392,7 @@ const md = [
   `- 对象按登记卷定（李白 11-16 01:25 第 1 条：规则表键、词表族条目有登记处的按登记卷，不读落点文字）：与判据一结果不同的 ${regMoved.length} 行${regMoved.length ? '：' + regMoved.map(x => `${x.k}（\`${x.o}\` 登记在${x.reg}，判据一原取${x.j1}）`).join('；') : ''}。`,
   `- 位置组定对象（R11-2.5 原文，李白 11-16 01:25 第 5 条）：zeroRow 未转录，按"没有这样的行"取首卡在 R11-7.2 次序中最前的候选；次序在不并组改判的卡族（每行取自身对象）上按 R11-7.2 算一次，不回代、不迭代（李白 11-16 02:00 Q1）；候选不在次序里的组 ${objConflicts.filter(x => x.unranked.length).length} 组。与旧取法（行数最多）相比改了接收对象的行 ${pickMoved.length} 行。`,
   `- 并组后接收对象不是本行自己对象的行，列待查（zeroRow 补上后复判）：${mergedRecheck.length} 行${mergedRecheck.length ? '：' + mergedRecheck.map(x => `${x.k}（${x.own}→${x.pick}）`).join('；') : ''}。`,
+  `- 一节多入口（节正文按乙-8 同口径判据数出不止一个入口、落点栏又没写出入口名的行，待查）：一节对应多个入口 ${multiOpen.length} 行（按来源卷：${Object.entries(stat(multiOpen.map(x => rows.find(r => r.rowKey === x.k)), r => r.volume)).sort((a, b) => b[1] - a[1]).map(([v, n]) => `${v} ${n}`).join('、')}；${multiOpen.map(x => x.k).join('、')}）。落点栏入口名注"（入口 \`名\`）"生效 ${markTaken.length} 行（按来源卷：${Object.entries(stat(markTaken, x => x.vol)).map(([v, n]) => `${v} ${n}`).join('、') || '无'}）；注里的名不在该节候选内、不收的 ${markRejected.length} 处${markRejected.length ? '（' + markRejected.map(x => `${x.k}：${x.name}，${x.at} 候选 ${x.cands.join('、') || '无'}`).join('；') + '）' : ''}（李白 09:13 ②，kernel-1117 Y4）。`,
   `- entries（李白终核卷十一 二-2）：只取迁移行落点栏明写的入口名，登记处（各卷 §3 入口表与散文肯定句、卷二 §2.1、§2.7 view 与 predicates、"由卷X §n 登记"的委托句、卷十二 §2.11 设施入口）共登记 ${entryNames.size} 个入口名，不在登记处的名字不收。落点栏明写了入口名的 ${rows.filter(r => entryOfRow(r).length || entryMismatch.some(x => x.k === r.rowKey)).length} 行；没写的 ${rows.filter(r => !entryOfRow(r).length && !entryMismatch.some(x => x.k === r.rowKey)).length} 行（含删除、不设取代物等本无入口的行），其中正文推断出恰一个入口、只作转录候选而不进卡账的 ${candRows.length} 行${candRows.length ? '（' + candRows.slice(0, 12).join('、') + (candRows.length > 12 ? '…' : '') + '）' : ''}。待查：入口与对象不符（李白 11-16 02:30 第 2 条：推出的入口由别的对象上线，不计入口边）${uniq(entryMismatch.map(x => x.k)).length} 行（按来源卷：${Object.entries(stat(uniq(entryMismatch.map(x => x.k)).map(k => entryMismatch.find(x => x.k === k)), x => x.vol)).map(([v, n]) => `${v} ${n}`).join('、')}；${uniq(entryMismatch.map(x => x.k)).map(k => { const x = entryMismatch.find(y => y.k === k); return `${k}（${x.name} 属 ${x.owner}，行属 ${x.own}）`; }).join('、')}）。§3 散文写法收下的入口名（李白 11-16 03:00 第 1 条三条件）：${[...proseCount].sort((a, b) => cmp(a[0], b[0])).map(([v, ns]) => `${v} ${ns.length} 个（${ns.join('、')}）`).join('；') || '无'}；带入口属性标记的（否定分句转来，03:2x 第 1 条）：${[...entryIdx].flatMap(([v, xs]) => xs.filter(x => x.attrs).map(x => `${v}:${x.name}{${Object.entries(x.attrs).map(([k, val]) => `${k}=${val}`).join(',')}}`)).join('、') || '无'}；写明由别卷登记、主登记归该卷的（原处记引用，03:2x 第 2 条）：${delegInfo.map(d => `${d.name}→${d.vol} ${d.sec}（引自${d.from}${d.ok ? '' : '；该节正文没写这个名字，未建'}）`).join('、') || '无'}；散文候选因别卷已登记不收 ${uniq(proseRejected.map(x => x.v + ':' + x.name)).length} 个；卷二 §2.1 入口清单 ${reg21.length} 个读函数，主办卷 §3 都没登记、归卷二的 ${(entryIdx.get(REGVOL) ?? []).filter(x => x.reg21).length} 个（${(entryIdx.get(REGVOL) ?? []).filter(x => x.reg21).map(x => x.name).join('、') || '无'}；03:00 第 2 条）。`,
   `- 门禁卡（李白终核卷十一 挡-1、挡-2 与复核）：${cards.filter(c => c.cardKind === 'gate').map(c => `${c.cardId} 对象 ${c.objectCode ?? '—'}（${c.volume ?? '—'}，建 ${(c._facs ?? []).join('、') || '—'}），上线 ${c.launches.length} 个入口，accept ${c.accept.join('、') || '—'}`).join('；')}。门禁自身的条目 ${gateItems.length} 条归卡：${gateItemTo.join('、') || '无'}。`,
   `- 账本子卡 ${ledgerChildren.length} 张${ledgerChildLimit ? '，超过卷一 §6.5 的 ≤ 8 上限，报李白' : '（≤ 8）'}。`,
