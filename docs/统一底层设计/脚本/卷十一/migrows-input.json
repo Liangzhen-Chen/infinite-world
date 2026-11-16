@@ -227,7 +227,7 @@
     }
    ],
    "disp": "delete",
-   "target": "—",
+   "target": "—（节号待补）",
    "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
@@ -260,7 +260,7 @@
     }
    ],
    "disp": "delete",
-   "target": "—",
+   "target": "—（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -271,7 +271,7 @@
    "anchorsText": "physicalMetal 名称字词匹配",
    "anchors": [],
    "disp": "delete",
-   "target": "—",
+   "target": "—（节号待补）",
    "targetObject": "sys.material",
    "baseline": "d54c89a3"
   },
@@ -633,7 +633,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "卷二谓词（本卷无规则号）",
+   "target": "卷二谓词（本卷无规则号）（节号待补）",
    "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
@@ -654,7 +654,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "卷二谓词（本卷无规则号）",
+   "target": "卷二谓词（本卷无规则号）（节号待补）",
    "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
@@ -1247,7 +1247,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "卷二 kindOf（本卷无规则号）",
+   "target": "卷二 kindOf（本卷无规则号）（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -1603,7 +1603,7 @@
     }
    ],
    "disp": "delete",
-   "target": "—（不设取代物；扫描 VA-4.1-S）",
+   "target": "—（不设取代物；扫描 VA-4.1-S）（节号待补）",
    "targetObject": "sys.material",
    "baseline": "d54c89a3"
   },
@@ -2796,7 +2796,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "applyChainLaws 一个函数同时做据点储量与再生规划、拜师需求、价格底线",
+   "target": "applyChainLaws 一个函数同时做据点储量与再生规划、拜师需求、价格底线（节号待补）",
    "targetObject": "sys.place",
    "baseline": "d54c89a3"
   },
@@ -2807,7 +2807,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "applyChainLaws 一个函数同时做据点储量与再生规划、拜师需求、价格底线",
+   "target": "applyChainLaws 一个函数同时做据点储量与再生规划、拜师需求、价格底线（节号待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -2818,7 +2818,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "applyChainLaws 一个函数同时做据点储量与再生规划、拜师需求、价格底线",
+   "target": "applyChainLaws 一个函数同时做据点储量与再生规划、拜师需求、价格底线（节号待补）",
    "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
@@ -2829,7 +2829,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "居留、公民资格的天数、费用、贡献与工程点数等常数",
+   "target": "居留、公民资格的天数、费用、贡献与工程点数等常数（节号待补）",
    "targetObject": "sys.org",
    "baseline": "d54c89a3"
   },
@@ -4331,7 +4331,7 @@
     }
    ],
    "disp": "recode",
-   "target": "全删；改读天气行的维度（precipMm、precipPhaseFrom、相态）；rainShare 改为读降水量的曲线，交卷五资源场",
+   "target": "全删；改读天气行的维度（precipMm、precipPhaseFrom、相态）；rainShare 改为读降水量的曲线，交卷五资源场（节号待补）",
    "targetObject": "weather",
    "baseline": "d54c89a3"
   },
@@ -4402,7 +4402,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "由 env.humidity 取代（卷三腐坏与干燥改读它）",
+   "target": "由 env.humidity 取代（卷三腐坏与干燥改读它）（节号待补）",
    "targetObject": "place",
    "baseline": "d54c89a3"
   },
@@ -4511,7 +4511,7 @@
     }
    ],
    "disp": "delete",
-   "target": "随旧行一并退役，不再运行",
+   "target": "随旧行一并退役，不再运行（节号待补）",
    "targetObject": "event_type",
    "baseline": "d54c89a3"
   },
@@ -4677,7 +4677,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "calendarAdd",
+   "target": "calendarAdd（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -4698,7 +4698,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "sys.time_env",
+   "target": "sys.time_env（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -4719,7 +4719,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "astroView().yearIndex",
+   "target": "astroView().yearIndex（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -4772,7 +4772,7 @@
     }
    ],
    "disp": "recode",
-   "target": "卷二十五读 clock.season 维度与 envAccum",
+   "target": "卷二十五读 clock.season 维度与 envAccum（节号待补）",
    "targetObject": "season",
    "baseline": "d54c89a3"
   },
@@ -4793,7 +4793,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "calendarSpan",
+   "target": "calendarSpan（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -4830,7 +4830,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "calendarAdd；相位区间",
+   "target": "calendarAdd；相位区间（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -4851,7 +4851,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "calendarView",
+   "target": "calendarView（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -4876,7 +4876,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "astroView().yearIndex",
+   "target": "astroView().yearIndex（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -4897,7 +4897,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "calendarAdd",
+   "target": "calendarAdd（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -4922,7 +4922,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "calendarAdd",
+   "target": "calendarAdd（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -4951,7 +4951,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "recurrenceNext、calendarAdd",
+   "target": "recurrenceNext、calendarAdd（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -4972,7 +4972,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "astroView().perYearToPerStep",
+   "target": "astroView().perYearToPerStep（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -5022,7 +5022,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "calendarAdd",
+   "target": "calendarAdd（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -5047,7 +5047,7 @@
     }
    ],
    "disp": "recode",
-   "target": "读 clock.season 维度",
+   "target": "读 clock.season 维度（节号待补）",
    "targetObject": "season",
    "baseline": "d54c89a3"
   },
@@ -5068,7 +5068,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "calendarAdd",
+   "target": "calendarAdd（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -5089,7 +5089,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "astroView().yearIndex",
+   "target": "astroView().yearIndex（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -5110,7 +5110,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "calendarAdd",
+   "target": "calendarAdd（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -5155,7 +5155,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "calendarSpan、perYearToPerStep、calendarView",
+   "target": "calendarSpan、perYearToPerStep、calendarView（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -5180,7 +5180,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "calendarView",
+   "target": "calendarView（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -5201,7 +5201,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "rateBasisView",
+   "target": "rateBasisView（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -5222,7 +5222,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "calendarAdd",
+   "target": "calendarAdd（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -5276,7 +5276,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "周期日规则行（solar 或 season 锚点）",
+   "target": "周期日规则行（solar 或 season 锚点）（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -5297,7 +5297,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "calendarAdd",
+   "target": "calendarAdd（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -5318,7 +5318,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "calendarAdd",
+   "target": "calendarAdd（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -5339,7 +5339,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "sys.time_env",
+   "target": "sys.time_env（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -5413,7 +5413,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "calendarSpan、perYearToPerStep",
+   "target": "calendarSpan、perYearToPerStep（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -5434,7 +5434,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "周期日规则行",
+   "target": "周期日规则行（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -5463,7 +5463,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "perYearToPerStep",
+   "target": "perYearToPerStep（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -5726,7 +5726,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "迁规则表（卷一常数入表的规矩）",
+   "target": "迁规则表（卷一常数入表的规矩）（节号待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -5762,7 +5762,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "迁规则表（卷一常数入表的规矩）",
+   "target": "迁规则表（卷一常数入表的规矩）（节号待补）",
    "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
@@ -5798,7 +5798,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "迁规则表（卷一常数入表的规矩）",
+   "target": "迁规则表（卷一常数入表的规矩）（节号待补）",
    "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
@@ -5834,7 +5834,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "迁规则表（卷一常数入表的规矩）",
+   "target": "迁规则表（卷一常数入表的规矩）（节号待补）",
    "targetObject": "sys.status",
    "baseline": "d54c89a3"
   },
@@ -5870,7 +5870,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "迁规则表（卷一常数入表的规矩）",
+   "target": "迁规则表（卷一常数入表的规矩）（节号待补）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -5906,7 +5906,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "迁规则表（卷一常数入表的规矩）",
+   "target": "迁规则表（卷一常数入表的规矩）（节号待补）",
    "targetObject": "sys.event_type",
    "baseline": "d54c89a3"
   },
@@ -7259,7 +7259,7 @@
    "anchorsText": "素材包 §3b 提到的测试夹具：按旧数值手推的期望、id 字面量；凡涉及层判定、钉住、存档格式的（卷十一 C11-5 ⑦ 点名的测试重推；原写在本表后\"测试侧\"一句，现并入编号行）",
    "anchors": [],
    "disp": "recode",
-   "target": "A27-2.2；原对象栏写 replay_verify",
+   "target": "A27-2.2；原对象栏写 replay_verify（节号待补）",
    "targetObject": "sys.offscreen_save",
    "baseline": "d54c89a3"
   },
@@ -9933,7 +9933,7 @@
     }
    ],
    "disp": "recode",
-   "target": "卷十八持有边（本卷无规则号）",
+   "target": "卷十八持有边（本卷无规则号）（节号待补）",
    "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
@@ -10135,7 +10135,7 @@
     }
    ],
    "disp": "recode",
-   "target": "卷九动作目录（本卷无规则号）",
+   "target": "卷九动作目录（本卷无规则号）（节号待补）",
    "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
@@ -10177,7 +10177,7 @@
     }
    ],
    "disp": "recode",
-   "target": "卷二十一状态容器（本卷无规则号）",
+   "target": "卷二十一状态容器（本卷无规则号）（节号待补）",
    "targetObject": "sys.status",
    "baseline": "d54c89a3"
   },
@@ -10241,7 +10241,7 @@
     }
    ],
    "disp": "recode",
-   "target": "卷六、卷十八（本卷无规则号）",
+   "target": "卷六、卷十八（本卷无规则号）（节号待补）",
    "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
@@ -10262,7 +10262,7 @@
     }
    ],
    "disp": "recode",
-   "target": "卷六、卷十八（本卷无规则号）",
+   "target": "卷六、卷十八（本卷无规则号）（节号待补）",
    "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
@@ -10342,7 +10342,7 @@
     }
    ],
    "disp": "recode",
-   "target": "卷三乙 R-4（本卷无规则号）",
+   "target": "卷三乙 R-4（本卷无规则号）（卷三乙 §4.8.3（规则））",
    "targetObject": "sys.item",
    "baseline": "d54c89a3"
   },
@@ -10377,7 +10377,7 @@
    "anchorsText": "设计期脚本 agriculture-foundation、farm-pests-foundation、pet-foundation、high-wildlife-foundation（用途待核）",
    "anchors": [],
    "disp": "delete",
-   "target": "—（不设取代物）",
+   "target": "—（不设取代物）（节号待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -10786,7 +10786,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "归卷二十九（显示层投影，同卷二十九 M29-1 的落点对象；同上）",
+   "target": "归卷二十九（显示层投影，同卷二十九 M29-1 的落点对象；同上）（节号待补）",
    "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
@@ -11945,7 +11945,7 @@
     }
    ],
    "disp": "recode",
-   "target": "读代号；产业归卷六，食性读物种 diet（speciesView，卷四）",
+   "target": "读代号；产业归卷六，食性读物种 diet（speciesView，卷四）（卷四 §2.1（物种 species））",
    "targetObject": "species",
    "baseline": "d54c89a3"
   },
@@ -12692,7 +12692,7 @@
     }
    ],
    "disp": "recode",
-   "target": "人在哪个分区读人物位置；动作身份读卷九的动作 id（台账 S-24），不读活动文字",
+   "target": "人在哪个分区读人物位置；动作身份读卷九的动作 id（台账 S-24），不读活动文字（节号待补）",
    "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
@@ -13136,7 +13136,7 @@
     }
    ],
    "disp": "recode",
-   "target": "polityView 种类代号；本卷只负责 regions.mjs:58",
+   "target": "polityView 种类代号；本卷只负责 regions.mjs:58（卷八 §4.3（政体类型表））",
    "targetObject": "polity",
    "baseline": "d54c89a3"
   },
@@ -13446,7 +13446,7 @@
     }
    ],
    "disp": "recode",
-   "target": "归卷二十与卷十九，不在本卷（卷二十 M20-21、M20-22）",
+   "target": "归卷二十与卷十九，不在本卷（卷二十 M20-21、M20-22）（节号待补）",
    "targetObject": "place",
    "baseline": "d54c89a3"
   },
@@ -14381,7 +14381,7 @@
   {
    "rowKey": "M8b-1",
    "volume": "卷八b",
-   "srcLine": 1316,
+   "srcLine": 1318,
    "anchorsText": "law.mjs:281",
    "anchors": [
     {
@@ -14402,7 +14402,7 @@
   {
    "rowKey": "M8b-2",
    "volume": "卷八b",
-   "srcLine": 1317,
+   "srcLine": 1319,
    "anchorsText": "law.mjs:104",
    "anchors": [
     {
@@ -14423,7 +14423,7 @@
   {
    "rowKey": "M8b-3",
    "volume": "卷八b",
-   "srcLine": 1318,
+   "srcLine": 1320,
    "anchorsText": "law.mjs:484",
    "anchors": [
     {
@@ -14444,7 +14444,7 @@
   {
    "rowKey": "M8b-4",
    "volume": "卷八b",
-   "srcLine": 1319,
+   "srcLine": 1321,
    "anchorsText": "law.mjs:3；world/rules/tables/law/",
    "anchors": [
     {
@@ -14465,7 +14465,7 @@
   {
    "rowKey": "M8b-5",
    "volume": "卷八b",
-   "srcLine": 1320,
+   "srcLine": 1322,
    "anchorsText": "罪名字面量 118 处，17 个文件",
    "anchors": [],
    "disp": "recode",
@@ -14476,7 +14476,7 @@
   {
    "rowKey": "M8b-6",
    "volume": "卷八b",
-   "srcLine": 1321,
+   "srcLine": 1323,
    "anchorsText": "law-codes.mjs:114、:115",
    "anchors": [
     {
@@ -14501,7 +14501,7 @@
   {
    "rowKey": "M8b-7",
    "volume": "卷八b",
-   "srcLine": 1322,
+   "srcLine": 1324,
    "anchorsText": "law-codes.mjs:11、:112；norm-stack.mjs:115",
    "anchors": [
     {
@@ -14535,7 +14535,7 @@
   {
    "rowKey": "M8b-8",
    "volume": "卷八b",
-   "srcLine": 1323,
+   "srcLine": 1325,
    "anchorsText": "law-codes.mjs:35",
    "anchors": [
     {
@@ -14556,7 +14556,7 @@
   {
    "rowKey": "M8b-9",
    "volume": "卷八b",
-   "srcLine": 1324,
+   "srcLine": 1326,
    "anchorsText": "law-codes.mjs:59",
    "anchors": [
     {
@@ -14577,7 +14577,7 @@
   {
    "rowKey": "M8b-10",
    "volume": "卷八b",
-   "srcLine": 1325,
+   "srcLine": 1327,
    "anchorsText": "law.mjs:85、:571",
    "anchors": [
     {
@@ -14595,14 +14595,14 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "卷二谓词（本卷无规则号）",
+   "target": "卷二谓词（本卷无规则号）（节号待补）",
    "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M8b-11",
    "volume": "卷八b",
-   "srcLine": 1326,
+   "srcLine": 1328,
    "anchorsText": "bounty.mjs:45、:46",
    "anchors": [
     {
@@ -14620,14 +14620,14 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "卷二谓词（本卷无规则号）",
+   "target": "卷二谓词（本卷无规则号）（节号待补）",
    "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M8b-12",
    "volume": "卷八b",
-   "srcLine": 1327,
+   "srcLine": 1329,
    "anchorsText": "bounty.mjs:117；:122、:150、:164、:182、:184、:200、:297、:304、:354、:355",
    "anchors": [
     {
@@ -14688,7 +14688,7 @@
   {
    "rowKey": "M8b-13",
    "volume": "卷八b",
-   "srcLine": 1328,
+   "srcLine": 1330,
    "anchorsText": "npc-crime.mjs:42",
    "anchors": [
     {
@@ -14709,7 +14709,7 @@
   {
    "rowKey": "M8b-14",
    "volume": "卷八b",
-   "srcLine": 1329,
+   "srcLine": 1331,
    "anchorsText": "npc-crime.mjs:27",
    "anchors": [
     {
@@ -14723,14 +14723,14 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "卷二谓词（本卷无规则号）",
+   "target": "卷二谓词（本卷无规则号）（节号待补）",
    "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M8b-15",
    "volume": "卷八b",
-   "srcLine": 1330,
+   "srcLine": 1332,
    "anchorsText": "npc-crime.mjs:86",
    "anchors": [
     {
@@ -14751,7 +14751,7 @@
   {
    "rowKey": "M8b-16",
    "volume": "卷八b",
-   "srcLine": 1331,
+   "srcLine": 1333,
    "anchorsText": "smuggling.mjs:18；:38",
    "anchors": [
     {
@@ -14776,7 +14776,7 @@
   {
    "rowKey": "M8b-17",
    "volume": "卷八b",
-   "srcLine": 1332,
+   "srcLine": 1334,
    "anchorsText": "duels.mjs:19；:7",
    "anchors": [
     {
@@ -14801,7 +14801,7 @@
   {
    "rowKey": "M8b-18",
    "volume": "卷八b",
-   "srcLine": 1333,
+   "srcLine": 1335,
    "anchorsText": "family-law.mjs:19、:42、:77、:80、:81、:83",
    "anchors": [
     {
@@ -14842,7 +14842,7 @@
   {
    "rowKey": "M8b-19",
    "volume": "卷八b",
-   "srcLine": 1334,
+   "srcLine": 1336,
    "anchorsText": "location-access.mjs:48、:91、:115",
    "anchors": [
     {
@@ -14871,7 +14871,7 @@
   {
    "rowKey": "M8b-20",
    "volume": "卷八b",
-   "srcLine": 1335,
+   "srcLine": 1337,
    "anchorsText": "credit.mjs:54、:78、:288；finance-bank.mjs:358、:364；:100",
    "anchors": [
     {
@@ -14917,7 +14917,7 @@
   {
    "rowKey": "M8b-21",
    "volume": "卷八b",
-   "srcLine": 1336,
+   "srcLine": 1338,
    "anchorsText": "obligation-runtime.mjs:44、:163、:191",
    "anchors": [
     {
@@ -14946,7 +14946,7 @@
   {
    "rowKey": "M8b-22",
    "volume": "卷八b",
-   "srcLine": 1337,
+   "srcLine": 1339,
    "anchorsText": "transition.mjs:122",
    "anchors": [
     {
@@ -14960,14 +14960,14 @@
     }
    ],
    "disp": "recode",
-   "target": "卷六 终态封闭枚举（本卷无规则号）",
+   "target": "卷六 终态封闭枚举（本卷无规则号）（节号待补）",
    "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M8b-23",
    "volume": "卷八b",
-   "srcLine": 1338,
+   "srcLine": 1340,
    "anchorsText": "offense-notes.mjs（noteOffense、takeNotedOffenses）",
    "anchors": [
     {
@@ -14983,7 +14983,7 @@
   {
    "rowKey": "M8b-24",
    "volume": "卷八b",
-   "srcLine": 1339,
+   "srcLine": 1341,
    "anchorsText": "action-authority.mjs、action-authority-sources.mjs",
    "anchors": [
     {
@@ -15003,7 +15003,7 @@
   {
    "rowKey": "M8b-25",
    "volume": "卷八b",
-   "srcLine": 1340,
+   "srcLine": 1342,
    "anchorsText": "legal-appeal.mjs、legal-reactions.mjs、legal-representation.mjs",
    "anchors": [
     {
@@ -15027,7 +15027,7 @@
   {
    "rowKey": "M8b-26",
    "volume": "卷八b",
-   "srcLine": 1341,
+   "srcLine": 1343,
    "anchorsText": "norm-stack.mjs（normStack、casePenalty 等）",
    "anchors": [
     {
@@ -15043,7 +15043,7 @@
   {
    "rowKey": "M8b-27",
    "volume": "卷八b",
-   "srcLine": 1342,
+   "srcLine": 1344,
    "anchorsText": "world/law/bindings.json（180 条）",
    "anchors": [
     {
@@ -15059,7 +15059,7 @@
   {
    "rowKey": "M8b-28",
    "volume": "卷八b",
-   "srcLine": 1343,
+   "srcLine": 1345,
    "anchorsText": "world/meta/rules.json 的 law 节；world/rules/tables/balance/law.json",
    "anchors": [
     {
@@ -15079,7 +15079,7 @@
   {
    "rowKey": "M8b-29",
    "volume": "卷八b",
-   "srcLine": 1344,
+   "srcLine": 1346,
    "anchorsText": "world/actions/law.json",
    "anchors": [
     {
@@ -15095,7 +15095,7 @@
   {
    "rowKey": "M8b-30",
    "volume": "卷八b",
-   "srcLine": 1345,
+   "srcLine": 1347,
    "anchorsText": "transition.mjs 的公民种类",
    "anchors": [
     {
@@ -15111,7 +15111,7 @@
   {
    "rowKey": "M8b-31",
    "volume": "卷八b",
-   "srcLine": 1346,
+   "srcLine": 1348,
    "anchorsText": "world/ontology/holdings.json 做客种类的留置变体与其两条钩子",
    "anchors": [
     {
@@ -15127,7 +15127,7 @@
   {
    "rowKey": "M8b-32",
    "volume": "卷八b",
-   "srcLine": 1347,
+   "srcLine": 1349,
    "anchorsText": "family-politics.mjs:20",
    "anchors": [
     {
@@ -15141,7 +15141,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "待定（归属未定，卷十一立卡时按调用方判定）",
+   "target": "待定（归属未定，卷十一立卡时按调用方判定）（节号待补）",
    "targetObject": "sys.migration",
    "baseline": "d54c89a3"
   },
@@ -15304,7 +15304,7 @@
     }
    ],
    "disp": "recode",
-   "target": "S6-5",
+   "target": "S6-5（节号待补）",
    "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
@@ -15592,7 +15592,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "S6-6",
+   "target": "S6-6（节号待补）",
    "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
@@ -16155,7 +16155,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "sellable",
+   "target": "sellable（节号待补）",
    "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
@@ -16394,7 +16394,7 @@
     }
    ],
    "disp": "recode",
-   "target": "S6-2",
+   "target": "S6-2（节号待补）",
    "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
@@ -16672,7 +16672,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "S6-6",
+   "target": "S6-6（节号待补）",
    "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
@@ -16705,7 +16705,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "S6-6",
+   "target": "S6-6（节号待补）",
    "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
@@ -17003,7 +17003,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "卷二十四 灾异行（event_type）",
+   "target": "卷二十四 灾异行（event_type）（节号待补）",
    "targetObject": "event_type",
    "baseline": "d54c89a3"
   },
@@ -17586,7 +17586,7 @@
     }
    ],
    "disp": "delete",
-   "target": "卷五、卷二十五（疑点：未能定到规则号，见勘误行 1115y1b）",
+   "target": "卷五、卷二十五（疑点：未能定到规则号，见勘误行 1115y1b）（节号待补）",
    "targetObject": "sys.place",
    "baseline": "d54c89a3"
   },
@@ -17607,7 +17607,7 @@
     }
    ],
    "disp": "delete",
-   "target": "卷五、卷二十五（疑点：未能定到规则号，见勘误行 1115y1b）",
+   "target": "卷五、卷二十五（疑点：未能定到规则号，见勘误行 1115y1b）（节号待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -18780,7 +18780,7 @@
     }
    ],
    "disp": "recode",
-   "target": "combatReadings；生命值退役（Q13-3）",
+   "target": "combatReadings；生命值退役（Q13-3）（节号待补）",
    "targetObject": "sys.combat",
    "baseline": "d54c89a3"
   },
@@ -18801,7 +18801,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "strikeOutcome、strikePreview；打法条目",
+   "target": "strikeOutcome、strikePreview；打法条目（§4.1）",
    "targetObject": "sys.combat",
    "baseline": "d54c89a3"
   },
@@ -18925,7 +18925,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "材料行 armorMult；读 layersOf",
+   "target": "材料行 armorMult；读 layersOf（§4.3）",
    "targetObject": "material",
    "baseline": "d54c89a3"
   },
@@ -18946,7 +18946,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "rules.combat.taken.max 与修正键的界",
+   "target": "rules.combat.taken.max 与修正键的界（节号待补）",
    "targetObject": "rules.combat",
    "baseline": "d54c89a3"
   },
@@ -18967,7 +18967,7 @@
     }
    ],
    "disp": "recode",
-   "target": "卷二的 kindOf",
+   "target": "卷二的 kindOf（节号待补）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -19067,7 +19067,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "rules.combat.deterrence.* 经规则表入口",
+   "target": "rules.combat.deterrence.* 经规则表入口（节号待补）",
    "targetObject": "rules.combat",
    "baseline": "d54c89a3"
   },
@@ -19165,7 +19165,7 @@
     }
    ],
    "disp": "recode",
-   "target": "读遭遇结束事件的了结方式与杀降事件；该文件其余归卷十四",
+   "target": "读遭遇结束事件的了结方式与杀降事件；该文件其余归卷十四（节号待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -19326,7 +19326,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "补 attacks、weaponClass、guard、launch（内容卡）",
+   "target": "补 attacks、weaponClass、guard、launch（内容卡）（节号待补）",
    "targetObject": "item",
    "baseline": "d54c89a3"
   },
@@ -19372,7 +19372,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "归卷十六；遭遇建立改调 encounterStep",
+   "target": "归卷十六；遭遇建立改调 encounterStep（§4.18）",
    "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
@@ -19392,7 +19392,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "归卷十九；本卷只经 damageFacility",
+   "target": "归卷十九；本卷只经 damageFacility（卷十九 §4.16（结构防御接口））",
    "targetObject": "sys.facility_type",
    "baseline": "d54c89a3"
   },
@@ -20494,7 +20494,7 @@
    "anchorsText": "world/drafts 目录（199 个文件，purpose 2803 处）",
    "anchors": [],
    "disp": "delete",
-   "target": "S19-1",
+   "target": "S19-1（节号待补）",
    "targetObject": "content-scripts",
    "baseline": "d54c89a3"
   },
@@ -21420,7 +21420,7 @@
     }
    ],
    "disp": "delete",
-   "target": "S15-10",
+   "target": "S15-10（节号待补）",
    "targetObject": "sys.arcana",
    "baseline": "d54c89a3"
   },
@@ -21472,7 +21472,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "rules.arcana.*",
+   "target": "rules.arcana.*（节号待补）",
    "targetObject": "rules.arcana",
    "baseline": "d54c89a3"
   },
@@ -21581,7 +21581,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "待补清单（核实后改为生成知识行与效果族行）",
+   "target": "待补清单（核实后改为生成知识行与效果族行）（节号待补）",
    "targetObject": "content-scripts",
    "baseline": "d54c89a3"
   },
@@ -22021,7 +22021,7 @@
     }
    ],
    "disp": "recode",
-   "target": "待定（亲属一致性改读亲子记录，正文无单列规则）",
+   "target": "待定（亲属一致性改读亲子记录，正文无单列规则）（节号待补）",
    "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
@@ -22223,7 +22223,7 @@
    "anchorsText": "tools 下三份怪物社会内容脚本里的同名正则、m2 人物内容脚本里的关系名正则",
    "anchors": [],
    "disp": "recode",
-   "target": "卷十内容管线（本卷无规则号）",
+   "target": "卷十内容管线（本卷无规则号）（节号待补）",
    "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
@@ -22679,7 +22679,7 @@
     }
    ],
    "disp": "delete",
-   "target": "S16-2",
+   "target": "S16-2（节号待补）",
    "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
@@ -23166,7 +23166,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "mtier（minPower）",
+   "target": "mtier（minPower）（节号待补）",
    "targetObject": "mtier",
    "baseline": "d54c89a3"
   },
@@ -23255,7 +23255,7 @@
     }
    ],
    "disp": "recode",
-   "target": "HO-7",
+   "target": "HO-7（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23276,7 +23276,7 @@
     }
    ],
    "disp": "delete",
-   "target": "HO-7",
+   "target": "HO-7（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23297,7 +23297,7 @@
     }
    ],
    "disp": "delete",
-   "target": "HO-9",
+   "target": "HO-9（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23318,7 +23318,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "PF-2",
+   "target": "PF-2（§4.1.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23339,7 +23339,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "SK-6",
+   "target": "SK-6（§4.3.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23360,7 +23360,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "SK-6、SK-8",
+   "target": "SK-6、SK-8（§4.3.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23399,7 +23399,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "SK-6；原对象栏写 hmethod",
+   "target": "SK-6；原对象栏写 hmethod（§4.3.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23420,7 +23420,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "SK-6",
+   "target": "SK-6（§4.3.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23466,7 +23466,7 @@
     }
    ],
    "disp": "recode",
-   "target": "SK-8",
+   "target": "SK-8（§4.3.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23477,7 +23477,7 @@
    "anchorsText": "五个名字（occupation 数据 843 行、profession、job、career、role）",
    "anchors": [],
    "disp": "to_data",
-   "target": "PF-3",
+   "target": "PF-3（§4.1.3）",
    "targetObject": "profession",
    "baseline": "d54c89a3"
   },
@@ -23525,7 +23525,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "PF-3、PF-6",
+   "target": "PF-3、PF-6（§4.1.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23546,7 +23546,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "PF-9",
+   "target": "PF-9（§4.1.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23568,7 +23568,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "HO-10",
+   "target": "HO-10（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23579,7 +23579,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "HO-8（持有与耐久入口归卷三）",
+   "target": "HO-8（持有与耐久入口归卷三）（§4.8.3）",
    "targetObject": "sys.item",
    "baseline": "d54c89a3"
   },
@@ -23601,7 +23601,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "HO-8、HO-9",
+   "target": "HO-8、HO-9（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23612,7 +23612,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "HO-6、HO-8",
+   "target": "HO-6、HO-8（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23623,7 +23623,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "HO-8",
+   "target": "HO-8（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23634,7 +23634,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "HO-8",
+   "target": "HO-8（§4.8.3）",
    "targetObject": "profession",
    "baseline": "d54c89a3"
   },
@@ -23645,7 +23645,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "HO-8",
+   "target": "HO-8（§4.8.3）",
    "targetObject": "profession",
    "baseline": "d54c89a3"
   },
@@ -23667,7 +23667,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "HO-8",
+   "target": "HO-8（§4.8.3）",
    "targetObject": "profession",
    "baseline": "d54c89a3"
   },
@@ -23678,7 +23678,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "HO-8",
+   "target": "HO-8（§4.8.3）",
    "targetObject": "profession",
    "baseline": "d54c89a3"
   },
@@ -23689,7 +23689,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "—（不设条件）",
+   "target": "—（不设条件）（节号待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23700,7 +23700,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "HO-8",
+   "target": "HO-8（§4.8.3）",
    "targetObject": "profession",
    "baseline": "d54c89a3"
   },
@@ -23722,7 +23722,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "HO-1、HO-2；原对象栏写 deed",
+   "target": "HO-1、HO-2；原对象栏写 deed（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23733,7 +23733,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "HO-8",
+   "target": "HO-8（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23744,7 +23744,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "HO-7",
+   "target": "HO-7（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23755,7 +23755,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "HO-7",
+   "target": "HO-7（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23766,7 +23766,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "HO-7、HO-10",
+   "target": "HO-7、HO-10（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23777,7 +23777,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "HO-7",
+   "target": "HO-7（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23788,7 +23788,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "SK-6",
+   "target": "SK-6（§4.3.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23821,7 +23821,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "HO-6",
+   "target": "HO-6（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23854,7 +23854,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "HO-6、HO-10",
+   "target": "HO-6、HO-10（§4.8.3）",
    "targetObject": "profession",
    "baseline": "d54c89a3"
   },
@@ -23865,7 +23865,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "HO-6、HO-7",
+   "target": "HO-6、HO-7（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23876,7 +23876,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "HO-6",
+   "target": "HO-6（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23887,7 +23887,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "HO-6、HO-10",
+   "target": "HO-6、HO-10（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23898,7 +23898,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "HO-6",
+   "target": "HO-6（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23933,7 +23933,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "HO-6",
+   "target": "HO-6（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23944,7 +23944,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "HO-6",
+   "target": "HO-6（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23955,7 +23955,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "HO-6",
+   "target": "HO-6（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23966,7 +23966,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "HO-5",
+   "target": "HO-5（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23977,7 +23977,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "HO-1、HO-2；原对象栏写 deed",
+   "target": "HO-1、HO-2；原对象栏写 deed（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23988,7 +23988,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "HO-2；原对象栏写 deed",
+   "target": "HO-2；原对象栏写 deed（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -23999,7 +23999,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "HO-2；原对象栏写 deed",
+   "target": "HO-2；原对象栏写 deed（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24010,7 +24010,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "HO-2；原对象栏写 deed",
+   "target": "HO-2；原对象栏写 deed（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24021,7 +24021,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "HO-2；原对象栏写 deed",
+   "target": "HO-2；原对象栏写 deed（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24032,7 +24032,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "HO-2；原对象栏写 deed",
+   "target": "HO-2；原对象栏写 deed（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24043,7 +24043,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "HO-2；原对象栏写 deed",
+   "target": "HO-2；原对象栏写 deed（§4.8.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24054,7 +24054,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "LF-4、EX-7",
+   "target": "LF-4、EX-7（节号待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24079,7 +24079,7 @@
     }
    ],
    "disp": "recode",
-   "target": "LS-7",
+   "target": "LS-7（§4.5.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24100,7 +24100,7 @@
     }
    ],
    "disp": "recode",
-   "target": "LS-2",
+   "target": "LS-2（§4.5.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24139,7 +24139,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "卷二 awake（本卷无规则号）",
+   "target": "卷二 awake（本卷无规则号）（节号待补）",
    "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
@@ -24160,7 +24160,7 @@
     }
    ],
    "disp": "recode",
-   "target": "LS-9",
+   "target": "LS-9（§4.5.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24181,7 +24181,7 @@
     }
    ],
    "disp": "recode",
-   "target": "LS-8",
+   "target": "LS-8（§4.5.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24202,7 +24202,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "LS-2",
+   "target": "LS-2（§4.5.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24223,7 +24223,7 @@
     }
    ],
    "disp": "recode",
-   "target": "LS-9",
+   "target": "LS-9（§4.5.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24248,7 +24248,7 @@
     }
    ],
    "disp": "recode",
-   "target": "LS-7",
+   "target": "LS-7（§4.5.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24269,7 +24269,7 @@
     }
    ],
    "disp": "recode",
-   "target": "LS-2",
+   "target": "LS-2（§4.5.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24290,7 +24290,7 @@
     }
    ],
    "disp": "recode",
-   "target": "卷二十三（本卷无规则号）",
+   "target": "卷二十三（本卷无规则号）（节号待补）",
    "targetObject": "sys.arts",
    "baseline": "d54c89a3"
   },
@@ -24327,7 +24327,7 @@
     }
    ],
    "disp": "recode",
-   "target": "同 M14-16、M14-27、M14-31、M14-37",
+   "target": "同 M14-16、M14-27、M14-31、M14-37（节号待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24352,7 +24352,7 @@
     }
    ],
    "disp": "recode",
-   "target": "同 M14-52、M14-53；原对象栏写 deed",
+   "target": "同 M14-52、M14-53；原对象栏写 deed（节号待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24390,7 +24390,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "EX-3、EX-4；原对象栏写 cert",
+   "target": "EX-3、EX-4；原对象栏写 cert（§4.7.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24436,7 +24436,7 @@
     }
    ],
    "disp": "recode",
-   "target": "PF-6",
+   "target": "PF-6（§4.1.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24489,7 +24489,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "DG-2、DG-3（卷二 kindOf）",
+   "target": "DG-2、DG-3（卷二 kindOf）（§4.4.3）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
@@ -24522,7 +24522,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "LS-7",
+   "target": "LS-7（§4.5.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24685,7 +24685,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "training → rules.learning（instructEffect、gapCurves、groupCurves）；对不上的旧字段：institutions 的机构、教师、门规、入门费、仪式 → 转世界内容数据，不进规则表",
+   "target": "training → rules.learning（instructEffect、gapCurves、groupCurves）；对不上的旧字段：institutions 的机构、教师、门规、入门费、仪式 → 转世界内容数据，不进规则表（节号待补）",
    "targetObject": "rules.learning",
    "baseline": "d54c89a3"
   },
@@ -24696,7 +24696,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "books → rules.learning（readingMinutes 对 carrierLevelCurve）；对不上的旧字段：grades、minimumLiteracy → 待补",
+   "target": "books → rules.learning（readingMinutes 对 carrierLevelCurve）；对不上的旧字段：grades、minimumLiteracy → 待补（节号待补）",
    "targetObject": "rules.learning",
    "baseline": "d54c89a3"
   },
@@ -24707,7 +24707,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "npcGrowth → rules.growth（日后升级成长，不是初始技能）；对不上的旧字段：vocations、institutionTeachersStay → 转世界内容数据，不进规则表；uncertifiedMaximumProficiency、qualificationRule → 待补；maximumGain、maximumProficiency、minimumPractice、switchCooldownDays、teach、work → 待补",
+   "target": "npcGrowth → rules.growth（日后升级成长，不是初始技能）；对不上的旧字段：vocations、institutionTeachersStay → 转世界内容数据，不进规则表；uncertifiedMaximumProficiency、qualificationRule → 待补；maximumGain、maximumProficiency、minimumPractice、switchCooldownDays、teach、work → 待补（节号待补）",
    "targetObject": "rules.growth",
    "baseline": "d54c89a3"
   },
@@ -24729,7 +24729,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "DG-2；GR-6",
+   "target": "DG-2；GR-6（节号待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24740,7 +24740,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "PF-6（canOffer）；SK-5（skillValue）",
+   "target": "PF-6（canOffer）；SK-5（skillValue）（节号待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24762,7 +24762,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "SK-1；PF-3；HO-1",
+   "target": "SK-1；PF-3；HO-1（节号待补）",
    "targetObject": "skill",
    "baseline": "d54c89a3"
   },
@@ -24783,7 +24783,7 @@
     }
    ],
    "disp": "delete",
-   "target": "DG-2、DG-3",
+   "target": "DG-2、DG-3（§4.4.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24804,7 +24804,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "LS-2 至 LS-5",
+   "target": "LS-2 至 LS-5（§4.5.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24829,7 +24829,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "DG-2",
+   "target": "DG-2（§4.4.3）",
    "targetObject": "skill",
    "baseline": "d54c89a3"
   },
@@ -24889,7 +24889,7 @@
     }
    ],
    "disp": "delete",
-   "target": "DG-2、DG-3",
+   "target": "DG-2、DG-3（§4.4.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24910,7 +24910,7 @@
     }
    ],
    "disp": "delete",
-   "target": "SK-3、DG-3",
+   "target": "SK-3、DG-3（节号待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -24944,7 +24944,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "DG-2",
+   "target": "DG-2（§4.4.3）",
    "targetObject": "skill",
    "baseline": "d54c89a3"
   },
@@ -24992,7 +24992,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "LS-2、LS-5",
+   "target": "LS-2、LS-5（§4.5.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -25013,7 +25013,7 @@
     }
    ],
    "disp": "delete",
-   "target": "同 M14-58",
+   "target": "同 M14-58（节号待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -25052,7 +25052,7 @@
     }
    ],
    "disp": "delete",
-   "target": "SK-7",
+   "target": "SK-7（§4.3.3）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -25120,7 +25120,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "LS-8",
+   "target": "LS-8（§4.5.3）",
    "targetObject": "skill",
    "baseline": "d54c89a3"
   },
@@ -25141,7 +25141,7 @@
     }
    ],
    "disp": "delete",
-   "target": "卷十（本卷只供 speciesView，无规则号）",
+   "target": "卷十（本卷只供 speciesView，无规则号）（§2.1）",
    "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
@@ -25162,7 +25162,7 @@
     }
    ],
    "disp": "recode",
-   "target": "卷十（本卷无规则号）",
+   "target": "卷十（本卷无规则号）（节号待补）",
    "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
@@ -25205,7 +25205,7 @@
     }
    ],
    "disp": "delete",
-   "target": "卷十、卷七（本卷无规则号）",
+   "target": "卷十、卷七（本卷无规则号）（节号待补）",
    "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
@@ -25226,7 +25226,7 @@
     }
    ],
    "disp": "delete",
-   "target": "卷十、卷七（本卷无规则号）",
+   "target": "卷十、卷七（本卷无规则号）（节号待补）",
    "targetObject": "sys.deity",
    "baseline": "d54c89a3"
   },
@@ -25352,7 +25352,7 @@
     }
    ],
    "disp": "recode",
-   "target": "P-3",
+   "target": "P-3（节号待补）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -25386,7 +25386,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "卷十三（本卷无规则号；生命值随 Q-7 退役）",
+   "target": "卷十三（本卷无规则号；生命值随 Q-7 退役）（节号待补）",
    "targetObject": "sys.combat",
    "baseline": "d54c89a3"
   },
@@ -25418,7 +25418,7 @@
    "anchorsText": "06a §8 出生地缺省",
    "anchors": [],
    "disp": "delete",
-   "target": "G-2",
+   "target": "G-2（§4.12.3）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -25450,7 +25450,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "P-2（personView().occupation）",
+   "target": "P-2（personView().occupation）（节号待补）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -25493,7 +25493,7 @@
     }
    ],
    "disp": "recode",
-   "target": "P-2（职业行维度在卷十四）",
+   "target": "P-2（职业行维度在卷十四）（节号待补）",
    "targetObject": "sys.profession",
    "baseline": "d54c89a3"
   },
@@ -25514,7 +25514,7 @@
     }
    ],
    "disp": "recode",
-   "target": "P-2",
+   "target": "P-2（节号待补）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -25535,7 +25535,7 @@
     }
    ],
    "disp": "recode",
-   "target": "T-4（edibleBy）",
+   "target": "T-4（edibleBy）（§4.7.3）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -25560,7 +25560,7 @@
     }
    ],
    "disp": "recode",
-   "target": "G-6；卷十",
+   "target": "G-6；卷十（§4.12.3）",
    "targetObject": "sys.worldgen",
    "baseline": "d54c89a3"
   },
@@ -25666,7 +25666,7 @@
     }
    ],
    "disp": "recode",
-   "target": "L-7",
+   "target": "L-7（§4.4.3）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -25691,7 +25691,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "卷二闸（本卷无规则号）",
+   "target": "卷二闸（本卷无规则号）（节号待补）",
    "targetObject": "gate",
    "baseline": "d54c89a3"
   },
@@ -25724,7 +25724,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "Z8（卷二十一睡眠容器）",
+   "target": "Z8（卷二十一睡眠容器）（节号待补）",
    "targetObject": "sys.status",
    "baseline": "d54c89a3"
   },
@@ -25735,7 +25735,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "卷二十一 statusView（本卷无规则号）",
+   "target": "卷二十一 statusView（本卷无规则号）（节号待补）",
    "targetObject": "sys.status",
    "baseline": "d54c89a3"
   },
@@ -25746,7 +25746,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "Z2",
+   "target": "Z2（节号待补）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -25768,7 +25768,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "Z2",
+   "target": "Z2（节号待补）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -25870,7 +25870,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "Z6",
+   "target": "Z6（节号待补）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -25881,7 +25881,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "待定（Z2、Z3、Z5 之一，原文写建卡时逐行定）",
+   "target": "待定（Z2、Z3、Z5 之一，原文写建卡时逐行定）（节号待补）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -25892,7 +25892,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "—（不设取代物）",
+   "target": "—（不设取代物）（节号待补）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -25903,7 +25903,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "P-2（personView().occupation）",
+   "target": "P-2（personView().occupation）（节号待补）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -25914,7 +25914,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "personView().dims.ageYears（入口名）",
+   "target": "personView().dims.ageYears（入口名）（节号待补）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -25925,7 +25925,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "bodyView（入口名）",
+   "target": "bodyView（入口名）（节号待补）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -25947,7 +25947,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "D-2（terminated）",
+   "target": "D-2（terminated）（§4.8.3）",
    "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
@@ -25958,7 +25958,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "M-1、M-3（loadOf）",
+   "target": "M-1、M-3（loadOf）（§4.6.3）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -25969,7 +25969,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "M-3（loadOf）；生命值见 Q-7",
+   "target": "M-3（loadOf）；生命值见 Q-7（§4.6.3）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -25980,7 +25980,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "T-1、T-2",
+   "target": "T-1、T-2（§4.7.3）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -25991,7 +25991,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "C-3",
+   "target": "C-3（§4.11.3）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -26002,7 +26002,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "K-1、K-2",
+   "target": "K-1、K-2（§4.9.3）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -26013,7 +26013,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "D-6",
+   "target": "D-6（§4.8.3）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -26024,7 +26024,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "D-1、D-3a、D-4",
+   "target": "D-1、D-3a、D-4（§4.8.3）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -26035,7 +26035,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "G-1 至 G-7",
+   "target": "G-1 至 G-7（§4.12.3）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
@@ -26057,7 +26057,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "L-3 至 L-6",
+   "target": "L-3 至 L-6（§4.4.3）",
    "targetObject": "rules.life",
    "baseline": "d54c89a3"
   },
@@ -26068,7 +26068,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "L-3、L-5",
+   "target": "L-3、L-5（§4.4.3）",
    "targetObject": "species",
    "baseline": "d54c89a3"
   },
@@ -26079,7 +26079,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "A-1、A-2、A-3",
+   "target": "A-1、A-2、A-3（节号待补）",
    "targetObject": "rules.attr",
    "baseline": "d54c89a3"
   },
@@ -26090,7 +26090,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "move_out",
-   "target": "语言包（attr 族代号；本卷无规则号）",
+   "target": "语言包（attr 族代号；本卷无规则号）（节号待补）",
    "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
@@ -26101,7 +26101,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
-   "target": "S-1、S-6",
+   "target": "S-1、S-6（§4.1.3）",
    "targetObject": "species",
    "baseline": "d54c89a3"
   },
@@ -26123,7 +26123,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "delete",
-   "target": "—（不迁移，新世界生成）",
+   "target": "—（不迁移，新世界生成）（节号待补）",
    "targetObject": "sys.species",
    "baseline": "d54c89a3"
   },
