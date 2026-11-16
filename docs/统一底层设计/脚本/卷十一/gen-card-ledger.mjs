@@ -135,7 +135,8 @@ for (const [f, ls] of volText) {
     const secs = secOfRule(v, si >= 0 ? c[si] ?? '' : c.join(' '));
     // "入口"栏只写中文称呼、函数名写在"签名"栏的表（如"入口 | 签名 | 返回"），取签名栏
     const cols = [ei, ...head.map((h, i) => (/签名/.test(h) ? i : -1)).filter(i => i >= 0 && i !== ei)];
-    for (const ci of cols) { const ns = (c[ci] ?? '').split(/[、，/]/).map(leadName).filter(Boolean); if (!ns.length) continue; for (const n of ns) { list.push({ name: n, sec: sub, secs }); entryNames.add(n); } break; }
+    // 同格多名按分隔符拆（"、""，""/""；"），每段前可带不超过 8 字的中文称呼（如"准入入口 `admitPractice`"）（chk-1116-y26 记账，卷十四 :503）
+    for (const ci of cols) { const ns = (c[ci] ?? '').split(/[、，/；]/).map(p => { const t = p.trim(); const pre = t.match(/^([^`|]{1,8}?)(?=`)/)?.[1] ?? ''; return new RegExp(V_RE).test(pre) ? null : leadName(t.slice(pre.length)); }).filter(Boolean); /* 称呼里点名别卷的（"卷九 `move`"）是别卷的名字，不收 */ if (!ns.length) continue; for (const n of ns) { list.push({ name: n, sec: sub, secs, rowCells: c.filter((_, j) => j !== ci) }); entryNames.add(n); } break; }
   }
   flush();
   entryIdx.set(v, list);
@@ -188,6 +189,14 @@ function rowSection(r) {
 }
 // 一节对应几个入口，按该节正文（标题到下一个同级或更高级标题，含下级小节）里列出的本卷 §3 入口名算（chk-1116-y18 R2，李白 11-16 01:30"一节多入口列待查、不推定"）
 const secNamesCache = new Map();
+// 入口名的登记卷：本卷登记了就是本卷；否则别卷 §3（主办卷）登记的取那一卷（不止一卷取卷名次序最前的，并记歧义）；都没有取卷二登记处
+const ownerAmbig = new Set();
+function ownerVolOf(name, vol) {
+  if ((entryIdx.get(vol) ?? []).some(x => x.name === name)) return vol;
+  const vs = [...entryIdx].filter(([v, xs]) => v !== REGVOL && xs.some(x => x.name === name)).map(([v]) => v).sort(cmp);
+  if (vs.length > 1) ownerAmbig.add(`${name}：${vs.join('、')}`);
+  return vs[0] ?? REGVOL;
+}
 function namesInSection(vol, sec) {
   const key = vol + '|' + sec; if (secNamesCache.has(key)) return secNamesCache.get(key);
   const f = volFiles.find(x => volOfFile(x) === vol); const ls = f ? volText.get(f) : [];
@@ -195,9 +204,10 @@ function namesInSection(vol, sec) {
   let out = null;
   if (hi >= 0) {
     const lvl = ls[hi].match(/^#+/)[0].length; let e = ls.findIndex((l, i) => i > hi && /^#+\s/.test(l) && l.match(/^#+/)[0].length <= lvl); if (e < 0) e = ls.length;
-    const own = new Set((entryIdx.get(vol) ?? []).map(x => x.name)); const body = ls.slice(hi, e).join('\n'); const hit = new Set();
-    for (const m of body.matchAll(/`([A-Za-z_$][A-Za-z0-9_$]*)/g)) if (own.has(m[1])) hit.add(m[1]);
-    out = [...hit].sort();
+    // 全书任何一卷登记过的入口名（含卷二 §2.1、§2.9 等登记处）出现在该节，都计入这一节的入口；归属按本卷、主办卷 §3、卷二兜底（李白 11-16 03:5x ①，chk-1116-y26 T6）
+    const body = ls.slice(hi, e).join('\n'); const hit = new Set();
+    for (const m of body.matchAll(/`([A-Za-z_$][A-Za-z0-9_$]*)/g)) if (entryNames.has(m[1])) hit.add(m[1]);
+    out = [...hit].sort().map(n => ({ name: n, vol: ownerVolOf(n, vol) }));
   }
   secNamesCache.set(key, out); return out;
 }
@@ -652,13 +662,13 @@ const entryMulti = [], entryNone = [], entryNoSec = [], entryMismatch = [];
 function entryOfRow(r) {
   const s = rowSection(r); if (!s) { entryNoSec.push(r.rowKey); return null; }
   const hit = namesInSection(s.vol, s.sec) ?? [];
-  if (hit.length !== 1) { (hit.length ? entryMulti : entryNone).push({ k: r.rowKey, at: `${s.vol} §${s.sec}`, names: hit }); return null; }
-  // 入口归它所在的 §3 入口表的卷，不借别卷同名的上线键（chk-1116-y17 T4）
-  const name = hit[0];
+  if (hit.length !== 1) { (hit.length ? entryMulti : entryNone).push({ k: r.rowKey, at: `${s.vol} §${s.sec}`, names: hit.map(x => x.vol === s.vol ? x.name : `${x.vol}:${x.name}`) }); return null; }
+  // 入口归登记它的卷（本卷优先、主办卷 §3、卷二兜底），不借别卷同名的上线键（chk-1116-y17 T4）
+  const { name, vol } = hit[0];
   // 入口所属对象（上线它的对象）不是该行自己的 targetObject 的，不算入口边，列待查"入口与对象不符"（李白 11-16 02:30 第 2 条）
-  const owner = launchedBy.get(entryKey(s.vol, name)) ?? (s.vol === REGVOL ? [...viewEntries].filter(([, e]) => e.name === name).map(([t]) => objKey(tableObj(t)))[0] : undefined);
+  const owner = launchedBy.get(entryKey(vol, name)) ?? (vol === REGVOL ? [...viewEntries].filter(([, e]) => e.name === name).map(([t]) => objKey(tableObj(t)))[0] : undefined);
   if (owner && r.obj && owner !== objKey(r.obj)) { entryMismatch.push({ k: r.rowKey, vol: r.volume, at: `${s.vol} §${s.sec}`, name, owner, own: objKey(r.obj) }); return null; }
-  return { vol: s.vol, sec: (entryIdx.get(s.vol) ?? []).find(x => x.name === name)?.sec ?? '§3', name };
+  return { vol, sec: (entryIdx.get(vol) ?? []).find(x => x.name === name)?.sec ?? '§3', name };
 }
 function entriesOfRows(rs) {
   const m = new Map(); for (const r of rs) { const x = entryOfRow(r); if (x && in3(x.vol, x.name)) m.set(entryKey(x.vol, x.name), x); }
@@ -811,6 +821,22 @@ const rejected = { entries: [], launches: [] };
 // 改挂到卷二时：上线只许挂在 §2.1 该行那类实体（表）的对象上（03:00 第 2 条，chk-1116-y21 T2），要接的入口照挂
 const tableOfView = n => [...viewEntries].filter(([, e]) => e.name === n).map(([t]) => t)[0];
 for (const c of cards) for (const f of ['entries', 'launches']) { const keep = []; for (const x of c[f]) { if (in3(x.vol, x.name)) keep.push(x); else if (in3(REGVOL, x.name) && (f === 'entries' || (c.objectKind === 'table' && c.objectCode === tableOfView(x.name)))) keep.push({ ...x, vol: REGVOL, sec: '§2.1' }); else rejected[f].push(`${c.cardId}:${x.vol}:${x.name}`); } c[f] = uniq(keep.map(x => JSON.stringify(entryInfo(x)))).map(s => JSON.parse(s)); }
+// 未上线入口的归属对象（李白 11-16 03:5x ③）：以登记它的那一卷 §3 该行写明的对象为准（行里括注的表代号或系统键；重复登记取主办卷 §3，卷二 §2.1 兜底取该行的表），
+// 由该对象的首卡（账本系统为母卡）上线；§3 没写明对象、或写的不止一个的，标"入口对象未定"列待查，不推定，也不套 02:30 的对象核对
+const objUndetermined = [], objAssigned = [];
+{ const launchedNames = new Set(cards.flatMap(c => c.launches.map(l => l.name)));
+  const leadCardOf = ok => cards.find(c => (c.cardKind === 'first' || c.cardKind === 'ledger_parent') && `${c.objectKind}:${c.objectCode}` === ok);
+  const objOfCode = code => tables.has(code) ? objKey(tableObj(code)) : sysByKey.has(code) ? objKey(sysObj(sysByKey.get(code))) : sysByKey.has('sys.' + code) ? objKey(sysObj(sysByKey.get('sys.' + code))) : null;
+  for (const n of [...entryNames].sort()) {
+    if (launchedNames.has(n)) continue;
+    const vol = ownerVolOf(n, null); const rec = (entryIdx.get(vol) ?? []).find(x => x.name === n); if (!rec) continue;
+    let objs = [];
+    if (rec.reg21) { const t = tableOfView(n); if (t) objs = [objKey(tableObj(t))]; }
+    else objs = uniq([...(rec.rowCells ?? []).join(' ').matchAll(/[（(]\s*`?([a-z][a-z0-9_.]*)`?\s*[）)]/g)].map(m => objOfCode(m[1])).filter(Boolean));
+    const lead = objs.length === 1 ? leadCardOf(objs[0]) : null;
+    if (!lead) { objUndetermined.push({ vol, name: n, why: objs.length > 1 ? `写了 ${objs.length} 个对象` : objs.length ? `对象 ${objs[0]} 没有首卡` : '§3 没写明对象' }); continue; }
+    lead.launches.push(entryInfo({ vol, sec: rec.sec, name: n })); objAssigned.push(`${vol}:${n}→${lead.cardId}`);
+  } }
 // ================= 对象 → 表主、必填引用等的依赖 =================
 const firstOfObj = new Map(); // objKey → 首卡
 for (const c of cards) if (c.cardKind === 'first' || c.cardKind === 'relocate' && c._ord === 1) firstOfObj.set(`${c.objectKind}:${c.objectCode}`, c);
@@ -1140,6 +1166,7 @@ const md = [
   `- dependsOn：${phaseCycle ? '成环（首个：' + phaseCycle.join('→') + '；全部环见下面两条）' : '无环'}；指向不存在的卡 ${depMissing.length} 处；固定卡阶段冲突（E-MIG-PHASE-CONFLICT）${phaseConflicts.length} 处${phaseConflicts.length ? '：' + phaseConflicts.join('；') : ''}。`,
   ...[['主卡族', cyclesMain], ['子进程卡族（不并组改判，R11-2.5 第一步所用次序的来源）', childCycles]].map(([nm, cy]) => `- 环（${nm}，强连通分量，只报不改归属）：${cy.length ? cy.map((x, i) => `环 ${i + 1}：${x.cards.join('、')}；边：${x.edges.map(e => `${e.from}→${e.to}〔${e.why.join('；')}〕`).join('，')}`).join('。') : '无'}${nm.startsWith('子') && cy.length ? '。子进程卡族有环，R11-2.5 第一步的次序在环上没有定义，挡封、报李白（02:45 ②）' : ''}${!nm.startsWith('子') && cy.length ? '。其中' + cy.map((x, i) => `环 ${i + 1}${childCycles.some(z => x.cards.filter(c => z.cards.includes(c)).length > 1) ? '在不并组改判的卡族上同样成环，挡封、报李白' : '只因合组改判才出现（不并组改判的卡族上无环），记读数暂缺（等 zeroRow），不挡封（02:45 ②）'}`).join('；') : ''}。`),
   `- 两表成环（李白 11-16 02:00 Q2）：${cyc2.length ? cyc2.map(x => x.ok ? `${x.pair}：一向来源 1、一向来源 2，来源 2 的行 ${x.rows.join('、')} 应改归 ${x.to}，退回来源卷勘误` : `${x.pair}：不是"来源 1 对来源 2"的搭配，停下报李白`).join('；') : '无'}。`,
+  `- 未上线入口按登记处写明的对象上线（李白 11-16 03:5x ③）：补上线 ${objAssigned.length} 个；entries 待查新类"入口对象未定" ${objUndetermined.length} 个（${objUndetermined.map(x => `${x.vol}:${x.name}（${x.why}）`).join('、') || '无'}）。同名入口登记在不止一个主办卷、按卷名次序取前者的：${[...ownerAmbig].join('；') || '无'}。`,
   `- §3 拒收（李白 11-16 01:30 第 3 条）：不在该卷 §3 入口表里的名字从 entries 摘出 ${rejected.entries.length} 个、从 launches 摘出 ${rejected.launches.length} 个${rejected.launches.length ? '（' + rejected.launches.slice(0, 8).join('、') + (rejected.launches.length > 8 ? '…' : '') + '）' : ''}。`,
   `- launches：每个入口恰一张卡上线——重复上线 ${launchDup.length} 个${launchDup.length ? '：' + launchDup.slice(0, 5).join('、') : ''}；没有卡上线的入口 ${notLaunched.length} 个${notLaunched.length ? '（' + notLaunched.slice(0, 5).join('、') + '…）' : ''}。`,
   `- 迁移行认领：没有接收卡 ${orphanRows.length} 行${orphanRows.length ? '（' + orphanRows.slice(0, 12).join('、') + (orphanRows.length > 12 ? '…' : '') + '）' : ''}；多于一张 ${multiRows.length} 行。位置组 ${posGroups.size} 个，其中锚点跨两个以上消费者组的位置组行 ${nStraddle} 行（取最小组，待裁）；位置组内对象不一致 ${nObjConflict} 组（按 R11-2.5 原文取首卡在 R11-7.2 次序中最前的候选，见下两条，列在第五节）。`,
