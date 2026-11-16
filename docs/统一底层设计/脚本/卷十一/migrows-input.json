@@ -7259,7 +7259,7 @@
    "anchorsText": "素材包 §3b 提到的测试夹具：按旧数值手推的期望、id 字面量；凡涉及层判定、钉住、存档格式的（卷十一 C11-5 ⑦ 点名的测试重推；原写在本表后\"测试侧\"一句，现并入编号行）",
    "anchors": [],
    "disp": "recode",
-   "target": "A27-2.2；原对象栏写 replay_verify（节号待补）",
+   "target": "A27-2.2；原对象栏写 replay_verify（§4.8.3，依据栏反查）",
    "targetObject": "sys.offscreen_save",
    "baseline": "d54c89a3"
   },

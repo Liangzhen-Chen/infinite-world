@@ -132,10 +132,28 @@ for (const r of nosec) {
       if (pairs.length === 1) { const [vol, sec] = pairs[0].split(' §'); ev.push({ by: n, vol, sec }); } else bad.push(`${n} 定义节 ${pairs.length} 个`);
     }
   }
-  const pairs = uniq(ev.map(e => e.vol + ' §' + e.sec));
+  let pairs = uniq(ev.map(e => e.vol + ' §' + e.sec));
+  // ③ 依据栏反查（李白 11-16 02:53 L1）：落点栏没给出任何节、也没有挡补项时，读本行表头含"依据"的栏里的规则号；
+  //   规则号须全书只定义在一节（各卷定义合起来恰一个"卷、节"），且该栏所有规则号给出同一节；否则仍待补
+  let via = '';
+  const ji = headOf(ls, r.srcLine).findIndex(h => /依据/.test(h) && !/落点/.test(h));
+  if (!bad.length && !pairs.length && ji >= 0) {
+    const jcell = c[ji] ?? ''; const jev = [], jbad = [];
+    for (const m of jcell.matchAll(new RegExp('(?<![A-Za-z0-9])' + TOK + '(?![0-9A-Za-z])', 'g'))) {
+      const t = m[0]; const vm = t.match(/^[A-Z][A-Za-z]{0,3}?([0-9]+)([a-z]?)-/);
+      const vols = vm ? [byVolNo.get(vm[1] + vm[2])].filter(Boolean) : VOLS; // 写了卷序号的只在该卷有定义；没写的查全书
+      const ds = vols.flatMap(v => (rulesOf(v).get(t) ?? []).map(d => ({ ...d, vol: v })));
+      if (!ds.some(d => d.nature === '规则类')) continue;
+      const ps = uniq(ds.map(d => d.vol + ' §' + d.sec));
+      if (ps.length === 1 && ds[0].sec) jev.push({ by: t + '（依据栏）', vol: ds[0].vol, sec: ds[0].sec }); else jbad.push(`依据栏 ${t} 全书定义于 ${ps.length} 处`);
+    }
+    const jp = uniq(jev.map(e => e.vol + ' §' + e.sec));
+    if (!jbad.length && jp.length === 1) { ev.push(...jev); pairs = jp; via = '，依据栏反查'; }
+    else if (jbad.length || jp.length > 1) note.push(...jbad, ...(jp.length > 1 ? ['依据栏给出多节：' + jp.join('、')] : []));
+  }
   const ok = !bad.length && pairs.length === 1;
   // 别卷的节照各卷跨卷引用写法带该节标题（"卷X §n（标题）"，如 check-卷十三 第 8 项所查）
-  const add = ok ? (ev[0].vol === r.volume ? `（§${ev[0].sec}）` : `（${ev[0].vol} §${ev[0].sec}（${titleOf(ev[0].vol, ev[0].sec)}））`) : '（节号待补）';
+  const add = ok ? (ev[0].vol === r.volume ? `（§${ev[0].sec}${via}）` : `（${ev[0].vol} §${ev[0].sec}（${titleOf(ev[0].vol, ev[0].sec)}）${via}）`) : '（节号待补）';
   const why = ok ? ev.map(e => e.by).join('、') : [...bad, ...(pairs.length > 1 ? ['依据给出多节：' + pairs.join('、')] : []), ...(!bad.length && !pairs.length ? ['落点栏没有规则编号或 §3 入口名'] : []), ...note].join('；');
   out.push({ k: r.rowKey, vol: r.volume, f, line: r.srcLine, tcell, ok, add, ev, bad, why });
 }
