@@ -330,7 +330,7 @@ if (MERGE) {
     if (info.add.length) parts.push(`落点栏补写入口名 ${info.add.length} 行（${info.add.join('、')}；名字只取本行原文明写的，或所引规则正文里恰写出的本卷唯一入口）`);
     if (info.rmPend.length) parts.push(`撤去落点栏"（入口名待补）"标记 ${info.rmPend.length} 行（${info.rmPend.join('、')}；补不出名字的行不在卷文留标记，由脚本生成的待补名单并入 收尾待办.md "乙-8 入口名待补"段）`);
     if (info.rmFilled.length) parts.push(`撤回 ${info.rmFilled.join('、')} 的"（入口 \`名\`）"（行文写整个模块退役、名字只在括注里，归无入口；主会话技术裁定 1116 白天 B2）`);
-    const text = `封卷后勘误 ${info.tag}（依据：李白 11-16 10:xx 乙-8 改做法第 3、4 条；主会话技术裁定 1116 白天 B2–B4、E5；必要理由：迁移行落点所在节登记了多个入口，卡账 entries 取不到恰一个入口，改为只补能确定的名字、不在卷文留待补标记；不升版本号；改前快照 ${'版本快照/' + info.pre}，改后覆盖 ${after.join('、')}）：${parts.join('；')}。不改规则正文`;
+    const text = `封卷后勘误 ${info.tag}（依据：李白 11-16 10:xx 乙-8 改做法第 3、4 条；主会话技术裁定 1116 白天 B2–B4、E5；必要理由：迁移行落点所在节登记了多个入口，卡账 entries 取不到恰一个入口，改为只补能确定的名字、不在卷文留待补标记；不升版本号；改前快照 ${info.pre}，改后覆盖 ${after.join('、')}）：${parts.join('；')}。不改规则正文`;
     const l0 = L[last];
     if (l0.startsWith('|')) {
       let e = last; while (e + 1 < L.length && L[e + 1].startsWith('|')) e++;
