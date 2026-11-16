@@ -14,7 +14,7 @@ import { scanVolume, volNo, TOK } from '../卷十一/id-defs.mjs';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url)).replace(/\\/g, '/').replace(/\/$/, '');
 const CFG = JSON.parse(readFileSync(`${HERE}/../卷十一/gen-卷十一-inputs.json`, 'utf8'));
-const DIR = CFG.dir;
+const DIR = `${HERE}/../..`; // 脚本所在的统一底层设计目录（在哪个工作区运行就读写哪个工作区，不读 CFG.dir）
 // --at <提交>：卷文、迁移行转录、卡账都按该提交读（git show，只读）；候选清单是改卷文前的读数，在改后的任何提交上用
 //   --at <改前提交> 重跑都得出同一份清单（N4）。不带 --at 读工作区。
 const AT = (() => { const i = process.argv.indexOf('--at'); return i >= 0 ? process.argv[i + 1] : null; })();
@@ -110,6 +110,7 @@ for (const r of nosec) {
   const ev = []; // {by, vol, sec}
   const bad = []; // 挡补：依据本身落不到唯一一节
   const note = []; // 只记不挡：不是规则编号的编号
+  const nrEv = [], nrBad = []; // 落点栏里非规则类的本卷编号（断言号等）各自的唯一定义节 / 落不到唯一节的
   if (/^同\s*M/.test(strip(tcell))) bad.push('落点指向别行');
   else {
     // ① 规则编号（落点栏）：编号写了卷序号的到该卷找定义，没写的在本行所在卷找；只认规则类定义（id-defs.mjs 性质判法）
@@ -120,8 +121,13 @@ for (const r of nosec) {
       const vol = vm ? byVolNo.get(vm[1] + vm[2]) : pv ? pv[1] : r.volume; if (!vol || !volText.has(vol)) { bad.push(`${t} 对不上卷`); continue; }
       const ds = rulesOf(vol).get(t) ?? [];
       if (!ds.length) { bad.push(`${t} 在${vol}无定义`); continue; }
-      // 定义全不是规则类的（断言号、扫描号等）不是规则编号，不作依据也不挡；有规则类定义的，全部定义须恰在一节
-      if (!ds.some(d => d.nature === '规则类')) { note.push(`${t} 不是规则编号（${uniq(ds.map(d => d.nature)).join('、')}）`); continue; }
+      // 定义全不是规则类的（断言号、扫描号等）不作本步依据也不挡；但它在落点栏写着，若下面要靠依据栏反查，
+      // 须先看它：落点栏有定义的编号时以落点栏为准（李白 11-16 03:10），记在 nrEv
+      if (!ds.some(d => d.nature === '规则类')) {
+        note.push(`${t} 不是规则编号（${uniq(ds.map(d => d.nature)).join('、')}）`);
+        const nrs = uniq(ds.map(d => d.sec)); if (nrs.length === 1 && nrs[0]) nrEv.push({ by: t, vol, sec: nrs[0] }); else nrBad.push(t);
+        continue;
+      }
       const secs = uniq(ds.map(d => d.sec));
       if (secs.length === 1 && secs[0]) ev.push({ by: t, vol, sec: secs[0] }); else bad.push(`${t} 在${vol}定义于 ${secs.length} 节`);
     }
@@ -148,7 +154,12 @@ for (const r of nosec) {
       if (ps.length === 1 && ds[0].sec) jev.push({ by: t + '（依据栏）', vol: ds[0].vol, sec: ds[0].sec }); else jbad.push(`依据栏 ${t} 全书定义于 ${ps.length} 处`);
     }
     const jp = uniq(jev.map(e => e.vol + ' §' + e.sec));
-    if (!jbad.length && jp.length === 1) { ev.push(...jev); pairs = jp; via = '，依据栏反查'; }
+    const np = uniq(nrEv.map(e => e.vol + ' §' + e.sec));
+    if (!jbad.length && jp.length === 1 && (nrEv.length || nrBad.length)) {
+      // 落点栏写了本卷编号：以落点栏为准，两处指向不同节也不记冲突（李白 11-16 03:10）；落点栏的编号落不到唯一一节则待补
+      if (!nrBad.length && np.length === 1) { ev.push(...nrEv); pairs = np; } else note.push(`落点栏编号 ${[...nrBad, ...nrEv.map(e => e.by)].join('、')} 落不到唯一一节`);
+    }
+    else if (!jbad.length && jp.length === 1) { ev.push(...jev); pairs = jp; via = '，依据栏反查'; }
     else if (jbad.length || jp.length > 1) note.push(...jbad, ...(jp.length > 1 ? ['依据栏给出多节：' + jp.join('、')] : []));
   }
   const ok = !bad.length && pairs.length === 1;
