@@ -1,7 +1,7 @@
 {
  "_说明": "乙-4 H1：由 transcribe-migrows.mjs 从各卷 §7 迁移节生成；不手改。字段：编号、卷、卷文行号、锚点原文与解析、处置、落点、落点对象、基线提交。",
  "baseline": "d54c89a3",
- "count": 1152,
+ "count": 1157,
  "rows": [
   {
    "rowKey": "M1-1",
@@ -2788,6 +2788,39 @@
    "targetObject": "同 M2-10a1 至 M2-10a3",
    "baseline": "d54c89a3",
    "aliasOf": "同 M2-10a1 至 M2-10a3"
+  },
+  {
+   "rowKey": "M2-10a1",
+   "volume": "卷二",
+   "srcLine": 2239,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "replace_entry",
+   "target": "applyChainLaws 一个函数同时做据点储量与再生规划、拜师需求、价格底线",
+   "targetObject": "sys.place",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M2-10a2",
+   "volume": "卷二",
+   "srcLine": 2240,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "replace_entry",
+   "target": "applyChainLaws 一个函数同时做据点储量与再生规划、拜师需求、价格底线",
+   "targetObject": "sys.profession",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M2-10a3",
+   "volume": "卷二",
+   "srcLine": 2241,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "replace_entry",
+   "target": "applyChainLaws 一个函数同时做据点储量与再生规划、拜师需求、价格底线",
+   "targetObject": "sys.economy",
+   "baseline": "d54c89a3"
   },
   {
    "rowKey": "M2-10b",
@@ -12176,6 +12209,72 @@
    "disp": "replace_entry",
    "target": "这套独立存量与再生全部删除。采集改为卷九动作调 take，存量并入 resource-field.mjs 的存量账户（§4.7、§4.8 规则 7）；家户去不去采的决策归卷六、卷九",
    "targetObject": "sys.place",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M5-10b1",
+   "volume": "卷五",
+   "srcLine": 1238,
+   "anchorsText": "二版补（主会话裁定 6）：household-subsistence.mjs:26、:44–55、:249–253、:653–661",
+   "anchors": [
+    {
+     "file": "household-subsistence.mjs",
+     "lines": [
+      [
+       26,
+       26
+      ],
+      [
+       44,
+       55
+      ],
+      [
+       249,
+       253
+      ],
+      [
+       653,
+       661
+      ]
+     ]
+    }
+   ],
+   "disp": "replace_entry",
+   "target": "这套独立存量与再生全部删除。采集改为卷九动作调 take，存量并入 resource-field.mjs 的存量账户（§4.7、§4.8 规则 7）；家户去不去采的决策归卷六、卷九",
+   "targetObject": "sys.economy",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M5-10b2",
+   "volume": "卷五",
+   "srcLine": 1239,
+   "anchorsText": "二版补（主会话裁定 6）：household-subsistence.mjs:26、:44–55、:249–253、:653–661",
+   "anchors": [
+    {
+     "file": "household-subsistence.mjs",
+     "lines": [
+      [
+       26,
+       26
+      ],
+      [
+       44,
+       55
+      ],
+      [
+       249,
+       253
+      ],
+      [
+       653,
+       661
+      ]
+     ]
+    }
+   ],
+   "disp": "replace_entry",
+   "target": "这套独立存量与再生全部删除。采集改为卷九动作调 take，存量并入 resource-field.mjs 的存量账户（§4.7、§4.8 规则 7）；家户去不去采的决策归卷六、卷九",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {

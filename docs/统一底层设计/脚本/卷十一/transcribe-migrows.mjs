@@ -76,7 +76,8 @@ for (const f of files) {
     if (!head) { head = c; col = columns(head); continue; }
     if (/^:?-{3}/.test(c[0] ?? '')) continue;
     const key = strip(c[0] ?? '');
-    if (!rowKey.test(key)) continue;
+    // 首格像迁移行编号（M 加数字开头、含连字符）却不合编号格式的，报出来，不静默丢（chk-1116-y17 T7）
+    if (!rowKey.test(key)) { if (/^M\d+[A-Za-z]*-\d/.test(key)) problems.push(`${key} 行${i + 1}（${f.split('-')[0]}）：首格像迁移行编号但不合编号格式，未转录`); continue; }
     const disp = col.disp >= 0 ? strip(c[col.disp] ?? '') : '';
     const row = {
       rowKey: key,
