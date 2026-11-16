@@ -23,9 +23,18 @@ const arg = k => { const i = process.argv.indexOf(k); return i >= 0 ? process.ar
 
 // ---- 取"一节多入口"清单与候选名（生成器同口径）----
 const genPath = `${HERE}/../卷十一/gen-card-ledger.mjs`;
-const tmpMod = `${HERE}/../卷十一/.乙8-gen-tmp.mjs`;
-const dumpPath = `${TMP}/乙8-multi.json`;
+const GEN_DIR = `${HERE}/../卷十一`;
+// 临时模块与转储都放 F:/dnd-tmp（按卷名区分，不在卷十一目录写任何文件）；生成器按自身所在目录算路径与相对 import，这里换成卷十一目录的绝对路径
+const tmpMod = `${TMP}/乙8-gen-tmp-${VOLNAME}.mjs`;
+const dumpPath = `${TMP}/乙8-multi-${VOLNAME}.json`;
 let src = readFileSync(genPath, 'utf8');
+const homeLine = "const HERE = fileURLToPath(new URL('.', import.meta.url)).replace(/\\\\/g, '/').replace(/\\/$/, '');";
+if (!src.includes(homeLine)) throw new Error('生成器 HERE 行变了，脚本需同步');
+src = src.replace(homeLine, `const HERE = ${JSON.stringify(GEN_DIR)};`);
+for (const m of ['./object-rules.mjs', './id-defs.mjs']) {
+  if (!src.includes(`'${m}'`)) throw new Error(`生成器 import ${m} 变了，脚本需同步`);
+  src = src.replace(`'${m}'`, JSON.stringify(new URL(`file:///${GEN_DIR}/${m.slice(2)}`).href));
+}
 const impLine = "import { readFileSync, readdirSync, writeFileSync, statSync } from 'node:fs';";
 if (!src.includes(impLine)) throw new Error('生成器 import 行变了，脚本需同步');
 src = src.replace(impLine, "import { readFileSync, readdirSync, writeFileSync as __wfs, statSync } from 'node:fs';\nconst writeFileSync = (p, d) => { if (String(p).replace(/\\\\/g, '/').includes('/审查/脚本输出/')) return; return __wfs(p, d); };");
@@ -59,7 +68,7 @@ function uniqueEndingAt(l, end, suffix, min = 6) {
   for (let s = Math.max(0, end - min); s >= 0; s--) { const cand = l.slice(s, end) + suffix; if (count(txt, cand) === 1) return cand; }
   return null;
 }
-const mentions = (text, name) => new RegExp('(?<![A-Za-z0-9_$.])' + name.replace(/\$/g, '\\$') + '(?![A-Za-z0-9_$])').test(text);
+const mentions = (text, name) => new RegExp('(?<![A-Za-z0-9_$.])' + name.replace(/\$/g, '\\$') + '(?![A-Za-z0-9_$])(?!\\.(?:mjs|cjs|js|ts|json|md|tsv|txt)\\b)').test(text);
 
 const out = [];
 for (const r of rows) {
@@ -69,15 +78,17 @@ for (const r of rows) {
   // 本行原文：除编号栏（第 0 栏）外的各栏（落点、做什么、去处、锚点等所写的）；落点对象栏是对象代号不是入口名，不计
   const objI = head.map(strip).findIndex(x => /落点对象/.test(x));
   const body = c.filter((x, i) => i !== 0 && i !== objI).join(' | ');
-  // 别卷登记的候选（"卷X:名"）与生成器对外卷登记名的口径一致：本行原文写成调用形"`名(…)`"或写出该卷卷名才算明写，只是同名的普通词不算；
+  // 别卷登记的候选（"卷X:名"）按 K2 口径：本行原文写成调用形"名(…)"或原句明说调用才算明写；只写出卷名、只是同名的普通词都不算；
   // 名字后紧跟"族、角色、字段、列、键、代号、词表"一类的，不计（同生成器）
   const hit = names.filter(nm => {
     const n = nm.replace(/^.*:/, ''); if (!mentions(body, n)) return false;
     const m = body.match(new RegExp('(?<![A-Za-z0-9_$.])' + n.replace(/\$/g, '\\$') + '(?![A-Za-z0-9_$])`?\\s*(.{0,2})'));
-    if (m && /^(族|角色|字段|列|键|代号|词表)/.test(m[1])) return false;
+    if (m && /^(族|角色|字段|列|键|代号|词表|条目)/.test(m[1])) return false;
     if (!/:/.test(nm)) return true;
-    const vol = nm.slice(0, nm.indexOf(':'));
-    return new RegExp('`' + n.replace(/\$/g, '\\$') + '\\(').test(body) || body.includes(vol);
+    // 外卷登记的候选（李白 11-16 04:1x ① K2）：只有写成调用形（名字后跟括号签名），或原句（按"；""。"切分）明说调用、该名字就在这句里，才算明写；只写出卷名不算
+    const esc = n.replace(/\$/g, '\\$');
+    if (new RegExp('(?<![A-Za-z0-9_$.])' + esc + '`?\\s*[(（]').test(body)) return true;
+    return body.split(/[；;。]/).some(cl => mentions(cl, n) && /调用/.test(cl));
   }).map(nm => nm.replace(/^.*:/, ''));
   const ok = hit.length === 1;
   out.push({ k: r.rowKey, line: r.srcLine, at: multiByKey.get(r.rowKey).at, names, hit, ok, ti, add: ok ? `（入口 \`${hit[0]}\`）` : '（入口名待补）', tcell: c[ti] ?? '',

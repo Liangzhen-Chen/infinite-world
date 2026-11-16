@@ -9108,7 +9108,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "§4.1 规则 1",
+   "target": "§4.1 规则 1（入口名待补）",
    "targetObject": "plant",
    "baseline": "d54c89a3"
   },
@@ -9129,7 +9129,7 @@
     }
    ],
    "disp": "delete",
-   "target": "§4.2 规则 8",
+   "target": "§4.2 规则 8（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9150,7 +9150,7 @@
     }
    ],
    "disp": "delete",
-   "target": "§4.11 规则 2",
+   "target": "§4.11 规则 2（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9171,7 +9171,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "§4.2 规则 1、规则 4",
+   "target": "§4.2 规则 1、规则 4（入口名待补）",
    "targetObject": "plant",
    "baseline": "d54c89a3"
   },
@@ -9192,7 +9192,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "卷二 §2.5 谓词；S25-4",
+   "target": "卷二 §2.5 谓词；S25-4（入口名待补）",
    "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
@@ -9217,7 +9217,7 @@
     }
    ],
    "disp": "recode",
-   "target": "§4.2 规则 3",
+   "target": "§4.2 规则 3（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9242,7 +9242,7 @@
     }
    ],
    "disp": "recode",
-   "target": "§4.2 规则 4、6、7",
+   "target": "§4.2 规则 4、6、7（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9263,7 +9263,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "卷二 §2.5 谓词；S25-4",
+   "target": "卷二 §2.5 谓词；S25-4（入口名待补）",
    "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
@@ -9284,7 +9284,7 @@
     }
    ],
    "disp": "delete",
-   "target": "§4.2 规则 1、规则 2",
+   "target": "§4.2 规则 1、规则 2（入口 plantView）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9305,7 +9305,7 @@
     }
    ],
    "disp": "delete",
-   "target": "§4.1 规则 5",
+   "target": "§4.1 规则 5（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9321,7 +9321,7 @@
     }
    ],
    "disp": "delete",
-   "target": "§4.2 规则 9",
+   "target": "§4.2 规则 9（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9337,7 +9337,7 @@
     }
    ],
    "disp": "delete",
-   "target": "§4.2 规则 9",
+   "target": "§4.2 规则 9（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9358,7 +9358,7 @@
     }
    ],
    "disp": "delete",
-   "target": "§4.2 规则 9",
+   "target": "§4.2 规则 9（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9374,7 +9374,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§4.1 规则 6；§4.11 规则 1",
+   "target": "§4.1 规则 6；§4.11 规则 1（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9390,7 +9390,7 @@
     }
    ],
    "disp": "delete",
-   "target": "§4.2 规则 4",
+   "target": "§4.2 规则 4（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9410,7 +9410,7 @@
     }
    ],
    "disp": "delete",
-   "target": "§4.3 规则 2、3",
+   "target": "§4.3 规则 2、3（入口 cropForage）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9431,7 +9431,7 @@
     }
    ],
    "disp": "recode",
-   "target": "§4.3 规则 1",
+   "target": "§4.3 规则 1（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9452,7 +9452,7 @@
     }
    ],
    "disp": "recode",
-   "target": "卷五 §4.7 规则 2；S25-3；S25-3 写进验收（同 R11-2.5 末句）",
+   "target": "卷五 §4.7 规则 2；S25-3；S25-3 写进验收（同 R11-2.5 末句）（入口名待补）",
    "targetObject": "sys.place",
    "baseline": "d54c89a3"
   },
@@ -9473,7 +9473,7 @@
     }
    ],
    "disp": "delete",
-   "target": "§4.3 规则 3",
+   "target": "§4.3 规则 3（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9494,7 +9494,7 @@
     }
    ],
    "disp": "delete",
-   "target": "§4.5 规则 3",
+   "target": "§4.5 规则 3（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9515,7 +9515,7 @@
     }
    ],
    "disp": "recode",
-   "target": "§4.5 规则 3",
+   "target": "§4.5 规则 3（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9539,7 +9539,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§4.5 规则 5、规则 8",
+   "target": "§4.5 规则 5、规则 8（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9550,7 +9550,7 @@
    "anchorsText": "卷零 A 2.9：NPC 淘汰未合",
    "anchors": [],
    "disp": "待定（补缺，非迁移）",
-   "target": "§4.5 规则 8",
+   "target": "§4.5 规则 8（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9571,7 +9571,7 @@
     }
    ],
    "disp": "delete",
-   "target": "§4.6 规则 5",
+   "target": "§4.6 规则 5（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9592,7 +9592,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "卷二 §2.5 谓词",
+   "target": "卷二 §2.5 谓词（入口名待补）",
    "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
@@ -9617,7 +9617,7 @@
     }
    ],
    "disp": "recode",
-   "target": "§4.6 规则 2",
+   "target": "§4.6 规则 2（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9642,7 +9642,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "卷二 §2.5 谓词；S25-3、S25-9",
+   "target": "卷二 §2.5 谓词；S25-3、S25-9（入口名待补）",
    "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
@@ -9658,7 +9658,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§4.6 规则 1、2、3",
+   "target": "§4.6 规则 1、2、3（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9679,7 +9679,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "§4.8 规则 1、2；原对象栏写 hmethod",
+   "target": "§4.8 规则 1、2；原对象栏写 hmethod（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9700,7 +9700,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "§4.9 规则 3",
+   "target": "§4.9 规则 3（入口名待补）",
    "targetObject": "recipe",
    "baseline": "d54c89a3"
   },
@@ -9739,7 +9739,7 @@
     }
    ],
    "disp": "recode",
-   "target": "§4.8 规则 5；原对象栏写 hmethod",
+   "target": "§4.8 规则 5；原对象栏写 hmethod（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9764,7 +9764,7 @@
     }
    ],
    "disp": "delete",
-   "target": "§4.8 规则 4；S25-1",
+   "target": "§4.8 规则 4；S25-1（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9785,7 +9785,7 @@
     }
    ],
    "disp": "recode",
-   "target": "§4.8 规则 1",
+   "target": "§4.8 规则 1（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9806,7 +9806,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "卷二 §2.5 谓词；S25-4",
+   "target": "卷二 §2.5 谓词；S25-4（入口名待补）",
    "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
@@ -9849,7 +9849,7 @@
     }
    ],
    "disp": "recode",
-   "target": "§4.8 规则 1（主归卷五、卷六）",
+   "target": "§4.8 规则 1（主归卷五、卷六）（入口名待补）",
    "targetObject": "sys.place",
    "baseline": "d54c89a3"
   },
@@ -9870,7 +9870,7 @@
     }
    ],
    "disp": "recode",
-   "target": "§4.8 规则 1（主归卷五、卷六）",
+   "target": "§4.8 规则 1（主归卷五、卷六）（入口名待补）",
    "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
@@ -9891,7 +9891,7 @@
     }
    ],
    "disp": "recode",
-   "target": "卷六 §4.16（本卷无规则号）",
+   "target": "卷六 §4.16（本卷无规则号）（入口名待补）",
    "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
@@ -9912,7 +9912,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "卷二 §2.5 谓词",
+   "target": "卷二 §2.5 谓词（入口名待补）",
    "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
@@ -9954,7 +9954,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "卷二 §2.5 谓词",
+   "target": "卷二 §2.5 谓词（入口名待补）",
    "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
@@ -9970,7 +9970,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§4.8 规则 6",
+   "target": "§4.8 规则 6（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9981,7 +9981,7 @@
    "anchorsText": "卷零 A 4.5、AUDIT2 G2",
    "anchors": [],
    "disp": "待定（补缺，非迁移）",
-   "target": "§4.8 规则 6",
+   "target": "§4.8 规则 6（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -10010,7 +10010,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "§4.7 规则 1、2",
+   "target": "§4.7 规则 1、2（入口 butcherOutcome）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -10035,7 +10035,7 @@
     }
    ],
    "disp": "delete",
-   "target": "§4.7 规则 5",
+   "target": "§4.7 规则 5（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -10056,7 +10056,7 @@
     }
    ],
    "disp": "delete",
-   "target": "§4.7 规则 2",
+   "target": "§4.7 规则 2（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -10077,7 +10077,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "卷二 §2.5 谓词；S25-4",
+   "target": "卷二 §2.5 谓词；S25-4（入口名待补）",
    "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
@@ -10093,7 +10093,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§4.8 规则 6",
+   "target": "§4.8 规则 6（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -10114,7 +10114,7 @@
     }
    ],
    "disp": "recode",
-   "target": "卷二 §2.5 谓词；S25-3、S25-4",
+   "target": "卷二 §2.5 谓词；S25-3、S25-4（入口名待补）",
    "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
@@ -10156,7 +10156,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "卷二 §2.5 谓词",
+   "target": "卷二 §2.5 谓词（入口名待补）",
    "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
@@ -10198,7 +10198,7 @@
     }
    ],
    "disp": "recode",
-   "target": "卷六 §4.16（本卷无规则号）",
+   "target": "卷六 §4.16（本卷无规则号）（入口名待补）",
    "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
@@ -10278,7 +10278,7 @@
     }
    ],
    "disp": "recode",
-   "target": "§4.11 规则 2",
+   "target": "§4.11 规则 2（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -10289,7 +10289,7 @@
    "anchorsText": "数据：rules.householdSubsistence、rules.forestWater 两个规则键",
    "anchors": [],
    "disp": "delete",
-   "target": "§4.8 规则 1",
+   "target": "§4.8 规则 1（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -10305,7 +10305,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "§4.1 规则 2",
+   "target": "§4.1 规则 2（入口名待补）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -10326,7 +10326,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "卷二 §2.5 谓词",
+   "target": "卷二 §2.5 谓词（入口名待补）",
    "targetObject": "sys.capacity",
    "baseline": "d54c89a3"
   },
@@ -10342,7 +10342,7 @@
     }
    ],
    "disp": "recode",
-   "target": "卷三乙 R-4（本卷无规则号）（卷三乙 §4.8.3（规则））",
+   "target": "卷三乙 R-4（本卷无规则号）（卷三乙 §4.8.3（规则））（入口名待补）",
    "targetObject": "sys.item",
    "baseline": "d54c89a3"
   },
@@ -10366,7 +10366,7 @@
     }
    ],
    "disp": "to_data",
-   "target": "§4.1 规则 1",
+   "target": "§4.1 规则 1（入口名待补）",
    "targetObject": "plant",
    "baseline": "d54c89a3"
   },
