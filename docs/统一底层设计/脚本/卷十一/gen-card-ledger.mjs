@@ -78,7 +78,13 @@ const leadName = s => { const m = s.trim().match(/^`([A-Za-z_$][A-Za-z0-9_$]*)(\
 const NEG = /没有|不是|并非|不算|不设|不另|不为|不再|不得|无须|无需|不属/;
 // 原语目录登记的原语（标题写着"原语目录"的小节里，表格首格的名字）：原语不是 §3 入口（04:1x ④ K1）
 const primNames = new Set(); const primHome = new Map(); // 原语名 → 登记原语目录的卷
-for (const [f, ls] of volText) { let on = false, lvl = 0; for (const l of ls) { const h = l.match(/^(#+)\s+(.*)$/); if (h) { if (/原语目录/.test(h[2])) { on = true; lvl = h[1].length; } else if (on && h[1].length <= lvl) on = false; continue; } if (on && /^\|/.test(l)) { const m = (cells(l)[0] ?? '').match(/^`([a-z][A-Za-z0-9]*)`/); if (m) { primNames.add(m[1]); primHome.set(m[1], volOfFile(f)); } } } }
+const primLand = new Map(); // 原语名 → 原语目录该行"落到……"栏里点名的卷（原语落到/实现于该卷的入口）
+for (const [f, ls] of volText) { let on = false, lvl = 0, head = null; for (const l of ls) { const h = l.match(/^(#+)\s+(.*)$/); if (h) { if (/原语目录/.test(h[2])) { on = true; lvl = h[1].length; } else if (on && h[1].length <= lvl) on = false; head = null; continue; } if (!on) continue; if (!/^\|/.test(l)) { head = null; continue; } const c = cells(l); if (!head) { head = c; continue; } if (/^:?-{3}/.test(c[0] ?? '')) continue;
+  const ni = head.findIndex(x => /原语/.test(x)); const ns = uniq([(c[0] ?? '').match(/^`([a-z][A-Za-z0-9]*)`/)?.[1], ni >= 0 ? (c[ni] ?? '').match(/^`([a-z][A-Za-z0-9]*)`/)?.[1] : null].filter(Boolean)); if (!ns.length) continue;
+  const li = head.findIndex(x => /落到/.test(x)); const land = li >= 0 ? new Set([...(c[li] ?? '').matchAll(new RegExp(V_RE, 'g'))].map(x => x[0])) : new Set();
+  for (const n of ns) { primNames.add(n); primHome.set(n, volOfFile(f)); primLand.set(n, land); } } }
+// 外卷原语只引用、不收编（04:53 第 3 条），但原语目录写明该原语落到某卷（"落到谁的写者"栏点名该卷）、且该卷 §3 自己登记了它的，是该卷的真入口，照收（chk-1116-y31）
+const foreignPrim = (n, v) => primNames.has(n) && primHome.get(n) !== v && !(primLand.get(n)?.has(v));
 const proseCand = []; // {v, name, sec, line, how, attrs}
 const delegated = []; // {vol, sec, name, from, attrs}：本卷 §3 写明"由卷X §n 登记"的名字
 const proseCount = new Map(); // 卷 → 散文写法收下的名字
@@ -141,7 +147,7 @@ for (const [f, ls] of volText) {
     // "入口"栏只写中文称呼、函数名写在"签名"栏的表（如"入口 | 签名 | 返回"），取签名栏
     const cols = [ei, ...head.map((h, i) => (/签名/.test(h) ? i : -1)).filter(i => i >= 0 && i !== ei)];
     // 同格多名按分隔符拆（"、""，""/""；"），每段前可带不超过 8 字的中文称呼（如"准入入口 `admitPractice`"）（chk-1116-y26 记账，卷十四 :503）
-    for (const ci of cols) { const ns = (c[ci] ?? '').split(/[、，/；]/).map(p => { const t = p.trim(); const pre = t.match(/^([^`|]{1,8}?)(?=`)/)?.[1] ?? ''; if (!pre) { const n0 = leadName(t); return n0 && primNames.has(n0) && primHome.get(n0) !== v ? null : n0; } /* 外卷原语只引用、不收编（04:53 第 3 条） */ if (new RegExp(V_RE).test(pre) || /由/.test(pre)) return null; const n = leadName(t.slice(pre.length)); return n && !/^`[^`]*`\s*原语/.test(t.slice(pre.length)) ? n : null; }).filter(Boolean).filter(n => !(primNames.has(n) && !(c[ci] ?? '').trim().startsWith('`' + n)));
+    for (const ci of cols) { const ns = (c[ci] ?? '').split(/[、，/；]/).map(p => { const t = p.trim(); const pre = t.match(/^([^`|]{1,8}?)(?=`)/)?.[1] ?? ''; if (!pre) { const n0 = leadName(t); return n0 && foreignPrim(n0, v) ? null : n0; } /* 外卷原语只引用、不收编（04:53 第 3 条） */ if (new RegExp(V_RE).test(pre) || /由/.test(pre)) return null; const n = leadName(t.slice(pre.length)); return n && !/^`[^`]*`\s*原语/.test(t.slice(pre.length)) ? n : null; }).filter(Boolean).filter(n => !(primNames.has(n) && !(c[ci] ?? '').trim().startsWith('`' + n)));
     /* 称呼前缀（李白 11-16 04:1x ④ K1）：称呼里点名别卷的、写着"由"（"只由……的 `x`……调用"，x 是调用方）的、名字后紧跟"原语"的，以及原语目录登记的原语，都不收 */ /* 称呼里点名别卷的（"卷九 `move`"）是别卷的名字，不收 */ if (!ns.length) continue; for (const n of ns) { list.push({ name: n, sec: sub, secs, rowCells: c.filter((_, j) => j !== ci) }); entryNames.add(n); } break; }
   }
   flush();
@@ -184,7 +190,7 @@ const proseRejected = [];
 // (b) 函数名：本卷某处写成过调用形"`名(…)`"的才是函数；只以字段、参数、状态路径出现的名字（如视图返回的 tree、zones、effects）不是
 const callNames = new Map(); for (const [f, ls] of volText) { const v = volOfFile(f); const s = new Set(); for (const l of ls) for (const m of l.matchAll(/`([a-z][A-Za-z0-9]*)\(/g)) s.add(m[1]); callNames.set(v, s); }
 for (const p of proseCand) {
-  if (primNames.has(p.name) && primHome.get(p.name) !== p.v) { proseRejected.push({ ...p, why: '外卷原语，只引用不收编' }); continue; }
+  if (foreignPrim(p.name, p.v)) { proseRejected.push({ ...p, why: '外卷原语，只引用不收编' }); continue; }
   if (!callNames.get(p.v)?.has(p.name)) { proseRejected.push({ ...p, why: '本卷没有写成调用形，不是函数名' }); continue; }
   const elsewhere = formalVols(p.name).filter(v => v !== p.v); const in21 = reg21.includes(p.name) && p.v !== REGVOL;
   if (elsewhere.length || in21) { proseRejected.push({ ...p, why: elsewhere.length ? `别卷已登记（${elsewhere.join('、')}）` : '卷二 §2.1 已登记' }); continue; }
