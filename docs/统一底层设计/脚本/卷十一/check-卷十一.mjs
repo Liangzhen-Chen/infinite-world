@@ -262,12 +262,12 @@ const r14 = [];
   const lit = src.match(/卷[零一二三四五六七八九十]+[b甲乙]?/g) ?? [];
   if (lit.length) r14.push('生成器代码含卷名字面量 ' + [...new Set(lit)].join('、'));
   // 扩到脚本/卷十一/ 下全部生成脚本 gen-*.mjs（李白终核卷十一 三-4）：
-  // ① 逻辑位置（startsWith、includes、相等比较、正则开头、Map 的 get/has 取键）不得出现卷名字面量；输出给人看的说明文字、注释里的卷名不算；
+  // ① 逻辑位置（startsWith、includes、相等比较、正则开头、Map 的 get/has 取键，以及整个字符串就是卷名或"卷名加冒号"的字面量、"卷名加冒号再拼变量"的写法如 `卷一:${t}`）不得出现卷名字面量；输出给人看的说明文字、注释里的卷名不算；
   // ② 代码里不得写盘符路径字面量（本机路径）；③ 连跑两次，标准输出逐行一致；
   // ④ 读规则表键的上限值不得在脚本里另写成数字常量（MAXFILES 一类：不许出现"= 数字"的 MAXFILES 赋值）
   const { readdirSync } = await import('node:fs');
   const gens = readdirSync(SCRDIR).filter(f => /^gen-.*\.mjs$/.test(f)).sort();
-  const LOGIC = /(?:startsWith|endsWith|includes|indexOf|\.get|\.has)\(\s*['"`]卷[零一二三四五六七八九十]|[=!]==?\s*['"`]卷[零一二三四五六七八九十]|\/\^卷[零一二三四五六七八九十]/g;
+  const LOGIC = /(?:startsWith|endsWith|includes|indexOf|\.get|\.has)\(\s*['"`]卷[零一二三四五六七八九十]|[=!]==?\s*['"`]卷[零一二三四五六七八九十]|\/\^卷[零一二三四五六七八九十]|['"`]卷[零一二三四五六七八九十]+[b甲乙]?[:：]?['"`]|`卷[零一二三四五六七八九十]+[b甲乙]?[:：]\$\{/g;
   for (const g of gens) {
     const p = `${SCRDIR}/${g}`;
     const code = readFileSync(p, 'utf8').split('\n').filter(l => !/^\s*\/\//.test(l)).join('\n');

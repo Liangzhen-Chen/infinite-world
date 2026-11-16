@@ -877,19 +877,81 @@ if (ledgerSys) {
 
 // ---- 门禁卡：卡号出自卷一 §6.3 图里的 G-n；对象与所属卷取卷十二 §2.11 `gateCard` 列指向本卡的设施（李白终核卷十一 挡-2 第 1 条）----
 // 一张卡建或改几件设施的，对象取卷一 §6.3 句里本卡所「建」的最先写出的一件，其余设施的文件与行一并归本卡；accept 取法同领域卡：所属卷里定义行写到本卡设施代号或其路径、文件名的验收编号（挡-2 第 3 条）
-// 卷一 §6.3「哪张门禁卡建哪件设施」句：逐卡取「建」字后、「改」字前写出的设施路径，保留书写次序（卷一是此事的唯一定义，卷十一 R11-3.10）
-const gateBuildPaths = (() => { const out = new Map(); const l = volText.get(CFG.charter.file).find(x => /哪张门禁卡建哪件设施/.test(x)) ?? '';
-  for (const cl of l.split(/[；。]/)) { const m = cl.match(/(G-\d+)\s*建(.*)$/); if (!m) continue; const b = m[2].split(/，?并改/)[0]; out.set(m[1], [...b.matchAll(/`([^`]+)`/g)].map(x => x[1])); }
-  return out; })();
-const gateIds = (() => { const f = volFiles.find(x => x === CFG.charter.file); const ls = volText.get(f); const s = ls.findIndex(l => /^### 6\.3 /.test(l)); let e = ls.findIndex((l, i) => i > s && /^#{2,3} /.test(l)); if (e < 0) e = ls.length; return uniq(ls.slice(s, e).join('\n').match(/G-\d+/g) ?? []).sort(); })();
+// 卷一 §6.3「哪张门禁卡建哪件设施」句（卷一是此事的唯一定义，卷十一 R11-3.10）按完整句法解析，不按单个关键词：
+//   子句 = "G-n" 紧跟动词「建」或「改」；一个子句里可并列多个设施（以、与、及、和、逗号隔开），设施后可再接 "，并改"、"，另改"、"，又建" 这类带连接词的动词，
+//   动词只有「建」「改」两个，连接词只有 并、另、又、同时、再；括注与反引号里的字不分句、不当动词；同一张卡的几个子句（含不同句子里的）按书写次序合并，不覆盖；
+//   一个设施的路径取它写出的第一个反引号路径；对不上登记、没写路径、或遇到别的写法，一律报错进该卡 pending，不静默跳过、不跳到下一件。
+// 段落按节号定位，取卷一的方式与别处读卷处一致（按 CFG.charter.file 取行，按节号取节，围栏代码块内的行不当正文）。
+const sectionLines = (file, no, withFences = false) => {
+  const ls = volText.get(file) ?? [];
+  const s = ls.findIndex(l => new RegExp('^#{2,4} ' + no.replace(/\./g, '\\.') + '(?:\\s|$)').test(l));
+  if (s < 0) return [];
+  const lv = ls[s].match(/^#+/)[0].length;
+  let e = ls.findIndex((l, i) => i > s && /^#{1,6} /.test(l) && l.match(/^#+/)[0].length <= lv); if (e < 0) e = ls.length;
+  if (withFences) return ls.slice(s + 1, e);
+  const out = []; let fence = false;
+  for (const l of ls.slice(s + 1, e)) { if (/^\s*```/.test(l)) { fence = !fence; continue; } if (!fence) out.push(l); }
+  return out;
+};
+const GATE_VERB = '建改', GATE_MOD = ['并', '另', '又', '同时', '再'];
+function parseGateSentence(lines) {
+  const byCard = new Map(); // 卡号 → {items:[{verb,text,path}], errs:[]}
+  const get = id => byCard.get(id) ?? byCard.set(id, { items: [], errs: [] }).get(id);
+  // 深度（括注、反引号）：返回每个字符位置是否在括注或反引号之外
+  const outside = line => { const o = []; let d = 0, t = false; for (const ch of line) { if (ch === '`') { t = !t; o.push(false); continue; } if (!t) { if (ch === '（' || ch === '(') { d++; o.push(false); continue; } if (ch === '）' || ch === ')') { d = Math.max(0, d - 1); o.push(false); continue; } } o.push(!t && d === 0); } return o; };
+  for (const line of lines) {
+    const out = outside(line);
+    const starts = [];
+    for (let i = 0; i < line.length; i++) if (out[i] && line[i] === 'G') { const m = line.slice(i).match(/^(G-\d+)\s*(?=[建改])/); if (m) starts.push({ i, id: m[1], len: m[0].length }); }
+    starts.forEach((st, k) => {
+      const lim = k + 1 < starts.length ? starts[k + 1].i : line.length;
+      let end = lim; for (let j = st.i + st.len; j < lim; j++) if (out[j] && line[j] === '。') { end = j; break; }
+      const b0 = st.i + st.len;
+      // 动词位置：子句开头，或深度 0 的分隔符之后的 [连接词]动词
+      const marks = [{ at: b0, verb: line[b0], body: b0 + 1 }];
+      for (let j = b0 + 1; j < end; j++) {
+        if (!out[j] || !'，；,、'.includes(line[j])) continue;
+        const rest = line.slice(j + 1, end).replace(/^\s+/, ''); const skip = line.slice(j + 1, end).length - rest.length;
+        const mod = GATE_MOD.find(x => rest.startsWith(x)); const after = mod ? rest.slice(mod.length) : rest;
+        if (after && GATE_VERB.includes(after[0]) && (mod || line[j] !== '、')) marks.push({ at: j, verb: after[0], body: j + 1 + skip + (mod ? mod.length : 0) + 1 });
+      }
+      const cl = get(st.id);
+      marks.forEach((m, q) => {
+        const bEnd = q + 1 < marks.length ? marks[q + 1].at : end;
+        const seg = line.slice(m.body, bEnd); const so = out.slice(m.body, bEnd);
+        // 括注、反引号之外出现别的「建」「改」字：无法识别的写法
+        for (let x = 0; x < seg.length; x++) if (so[x] && GATE_VERB.includes(seg[x])) { cl.errs.push(`无法识别的写法：「${seg.slice(Math.max(0, x - 4), x + 4)}」（动词只认 建、改，连接词只认 ${GATE_MOD.join('、')}）`); break; }
+        // 并列的设施：深度 0 的 、，与 及 和 隔开
+        const items = []; let cur = '';
+        for (let x = 0; x < seg.length; x++) { if (so[x] && ('、，,'.includes(seg[x]) || '与及和'.includes(seg[x]))) { if (cur.trim()) items.push(cur.trim()); cur = ''; } else cur += seg[x]; }
+        if (cur.trim()) items.push(cur.trim());
+        for (const t of items) { const p = [...t.matchAll(/`([^`]+)`/g)].map(y => y[1]).find(y => /[/.]/.test(y)) ?? null; cl.items.push({ verb: m.verb, text: t.replace(/`/g, ''), path: p }); }
+      });
+    });
+  }
+  return byCard;
+}
+// 卷一 §6.3 里含"G-n 建|改"子句的行（围栏代码块外）；子句所在的段不靠标题字样找
+const gateClauses = parseGateSentence(sectionLines(CFG.charter.file, '6.3').filter(l => /G-\d+\s*[建改]/.test(l)));
+const gateIds = uniq(sectionLines(CFG.charter.file, '6.3', true).join('\n').match(/G-\d+/g) ?? []).sort();
 const gateRowsByFac = new Map(); // 门禁设施 → 位置组接收对象是它的行（R11-2.5）
 for (const r of rows) if (r.recvObj?.kind === 'gate_facility') (gateRowsByFac.get(r.recvObj.code) ?? gateRowsByFac.set(r.recvObj.code, []).get(r.recvObj.code)).push(r);
 const gateFacsOf = id => gateFacilities.filter(f => gateFacInfo.get(f)?.gateCard === id);
 for (const id of gateIds) {
   // 对象：卷一 §6.3「哪张门禁卡建哪件设施」句里本卡所「建」的设施中最先写出的那一件（只「改」不「建」的不取；李白终核卷十一复核批裁定第 1 条）
-  const facs = gateFacsOf(id); const bp = gateBuildPaths.get(id) ?? [];
-  const built = bp.map(p => facs.find(f => gateFacInfo.get(f).paths.includes(p))).filter(Boolean);
-  const fac = built[0] ?? null;
+  const facs = gateFacsOf(id); const clause = gateClauses.get(id);
+  const built = (clause?.items ?? []).filter(x => x.verb === '建');
+  const objErrs = [...(clause?.errs ?? [])];
+  const regOf = p => facs.find(f => gateFacInfo.get(f).paths.includes(p)) ?? null;
+  if (!clause) objErrs.push(`卷一 §6.3 句里没有找到 ${id} 的建或改子句，取不到对象`);
+  else if (!built.length) objErrs.push(`卷一 §6.3 句里 ${id} 没有所「建」的设施，取不到对象`);
+  // 对象：最先写出的所建设施；它没写路径、或路径对不上卷十二 §2.11 登记的本卡设施，报错进 pending，不跳到下一件
+  let fac = null;
+  if (built.length) {
+    if (!built[0].path) objErrs.push(`${id} 最先建的设施「${built[0].text}」没写路径，取不到对象，不跳到下一件`);
+    else { fac = regOf(built[0].path); if (!fac) objErrs.push(`${id} 最先建的设施路径 ${built[0].path} 没有在卷十二 §2.11 登记为本卡的设施`); }
+    for (const x of built.slice(1)) if (x.path && !regOf(x.path)) objErrs.push(`${id} 所建设施路径 ${x.path} 没有在卷十二 §2.11 登记为本卡的设施`);
+  }
   const rs = facs.flatMap(f => gateRowsByFac.get(f) ?? []).sort((a, b) => cmp(a.rowKey, b.rowKey));
   const facFiles = facs.flatMap(f => gateFacInfo.get(f).paths).filter(p => /\.(?:mjs|js)$/.test(p) && !/\*/.test(p));
   const vol = fac ? gateOwner.get(fac) : null;
@@ -902,7 +964,7 @@ for (const id of gateIds) {
     dataFiles: uniq(rs.flatMap(r => r.files.filter(f => f.endsWith('.json')))).sort(), accept: acc, _fixedPhase: 0, _facs: facs,
   });
   if (!fac) c.pending.push(`objectKind:同下（对象未登记）`, `volume:同下（对象未登记，所属卷取不到）`);
-  if (!fac) c.pending.push(`objectCode:卷一 §6.3 句里 ${id} 所「建」的设施没有一件登记在卷十二 §2.11（按路径对），待补`);
+  for (const e of objErrs) c.pending.push(`objectCode:${e}`);
   if (!acc.length) c.pending.push('accept:所属卷的验收类定义行里没有写到本卡设施代号或其路径的编号，待各卷分配');
   c.pending.push(...pendingOfRows(rs));
   cards.push(c);
@@ -1181,7 +1243,14 @@ for (const c of cards) {
   c.pending = uniq(c.pending).sort();
 }
 // 母卡验收：卷一 §6.5 的退出条件 ⑤ 写 I1、I2、I15 在 CORE
-if (parentCard) { const f = volFiles.find(x => x === CFG.charter.file); const l = volText.get(f).find(x => x.includes('**母卡** `LEDGER-1`')) ?? ''; const sec = l.slice(l.indexOf('⑤')); const toks = uniq([...sec.matchAll(/(?<![A-Za-z0-9])(I[0-9]+)(?![0-9A-Za-z])/g)].map(m => m[1])); parentCard.accept = toks.map(t => '卷一:' + t).filter(t => acceptOk(t, '卷一')).sort(); if (!parentCard.accept.length) parentCard.pending.push('accept:卷一 §6.5 退出条件 ⑤ 的不变量编号在卷一里查不到定义'); }
+// 母卡验收：卷一 §6.5（账本母卡）里列出的不变量编号；按节号取节、所属卷取卷一的文件名对应的卷代号，不在代码里写卷名
+if (parentCard) {
+  const charterVol = volOfFile(CFG.charter.file);
+  const sec = sectionLines(CFG.charter.file, '6.5').join('\n');
+  const toks = uniq([...sec.matchAll(/(?<![A-Za-z0-9])(I[0-9]+)(?![0-9A-Za-z])/g)].map(m => m[1]));
+  parentCard.accept = toks.map(t => `${charterVol}:${t}`).filter(t => acceptOk(t, charterVol)).sort();
+  if (!parentCard.accept.length) parentCard.pending.push(`accept:${charterVol} §6.5 退出条件的不变量编号在${charterVol}里查不到定义`);
+}
 // 疑点名单（accept 仍为空的卡）：原因只写有原文出处的——卷里有验收节、但定义位上没有一个验收类编号的，引该节标题行（文件:行）；
 // 卷里有验收类编号、只是没有一条提到本卡的，写不出原文证据，标"待查"并记脚本查过的范围
 // 验收断言节：标题含"验收断言"的节（各卷 §4.x.6"验收断言"、卷二"七 本卷的验收断言"一类）；节里定义位上一个编号都没有的，即"断言不带编号"
