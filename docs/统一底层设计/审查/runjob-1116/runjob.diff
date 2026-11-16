@@ -1,0 +1,31 @@
+diff --git a/runjob.sh.orig b/runjob.sh.new
+index b07c191..01aaaa2 100644
+--- a/runjob.sh.orig
++++ b/runjob.sh.new
+@@ -17,6 +17,13 @@ mkdir -p .out .tmp
+ export TEMP=$PWD/.tmp TMPDIR=$PWD/.tmp
+ # the job may run as another user than the one that built .git: trust it for this job only (no global git config)
+ export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0='*'
++# optional per-file timeout: regular file .job-timeout in the (hash-approved) tree holding exactly a positive integer <= 14400 (+ optional one newline); anything else -> 3600
++JOB_TIMEOUT=3600
++if [ -f .job-timeout ] && [ ! -L .job-timeout ]; then
++  t=$(head -c 7 .job-timeout; printf x); t=${t%x}; n=${#t}; t=${t%$'\n'}   # exact content only: digits plus at most one trailing newline; n = chars read (bash drops NUL bytes)
++  if [[ $t =~ ^[1-9][0-9]{0,4}$ ]] && [ "$t" -le 14400 ] && [ "$(wc -c < .job-timeout)" -eq "$n" ]; then JOB_TIMEOUT=$t; fi
++fi
++export JOB_TIMEOUT
+ if [ "$mode" = full ]; then
+   P=$1; shift; out=/work/$d.full; rm -f $out; echo "# hash=$h" > $out
+   # Longest-first ordering from past runs. Read-only: only regular, non-symlink /work/*.full (never this job's own), only strictly
+@@ -33,10 +40,10 @@ if [ "$mode" = full ]; then
+     fi
+     cat $l; rm -f $l $l.2 $hh
+   }
+-  if [ "${1:-}" = --all ]; then ls tests/*.test.mjs; else printf '%s\n' "$@"; fi | order_by_history | xargs -P $P -I{} bash -c 'f={}; b=$(basename $f); s=$(date +%s); timeout -k 30 3600 node --test --test-reporter=tap $f > .out/$b.tap 2>&1; e=$?; p=$(grep -m1 "^# pass" .out/$b.tap | cut -d" " -f3); n=$(grep -m1 "^# fail" .out/$b.tap | cut -d" " -f3); echo "$f pass=${p:-?} fail=${n:-?} exit=$e secs=$(( $(date +%s)-s ))"' >> $out
++  if [ "${1:-}" = --all ]; then ls tests/*.test.mjs; else printf '%s\n' "$@"; fi | order_by_history | xargs -P $P -I{} bash -c 'f={}; b=$(basename $f); s=$(date +%s); timeout -k 30 $JOB_TIMEOUT node --test --test-reporter=tap $f > .out/$b.tap 2>&1; e=$?; p=$(grep -m1 "^# pass" .out/$b.tap | cut -d" " -f3); n=$(grep -m1 "^# fail" .out/$b.tap | cut -d" " -f3); echo "$f pass=${p:-?} fail=${n:-?} exit=$e secs=$(( $(date +%s)-s ))"' >> $out
+   echo FINISHED >> $out
+ else
+   out=/work/$d.script.out; rm -f $out; echo "# hash=$h" > $out
+-  timeout -k 30 3600 node "$@" >> $out 2>&1; echo "EXIT=$?" >> $out; echo FINISHED >> $out
++  timeout -k 30 $JOB_TIMEOUT node "$@" >> $out 2>&1; echo "EXIT=$?" >> $out; echo FINISHED >> $out
+ fi
+ echo "end=$(date -u +%FT%TZ)" >> $G/$d.job
