@@ -74,6 +74,9 @@ const leadName = s => { const m = s.trim().match(/^`([A-Za-z_$][A-Za-z0-9_$]*)(\
 // (b) 是函数名：标题判据下须写成"名(参数)"的调用形；主语判据下整段反引号只是一个名字；都不含"."，不是状态路径、字段、参数；
 // (c) 没有在别卷 §3（卷二为 §2.1）作为该卷入口登记（表格、列表写法的登记先全书收齐，再判散文）
 const NEG = /没有|不是|并非|不算|不设|不另|不为|不再|不得|无须|无需|不属/;
+// 原语目录登记的原语（标题写着"原语目录"的小节里，表格首格的名字）：原语不是 §3 入口（04:1x ④ K1）
+const primNames = new Set();
+for (const ls of volText.values()) { let on = false, lvl = 0; for (const l of ls) { const h = l.match(/^(#+)\s+(.*)$/); if (h) { if (/原语目录/.test(h[2])) { on = true; lvl = h[1].length; } else if (on && h[1].length <= lvl) on = false; continue; } if (on && /^\|/.test(l)) { const m = (cells(l)[0] ?? '').match(/^`([a-z][A-Za-z0-9]*)`/); if (m) primNames.add(m[1]); } } }
 const proseCand = []; // {v, name, sec, line, how, attrs}
 const delegated = []; // {vol, sec, name, from, attrs}：本卷 §3 写明"由卷X §n 登记"的名字
 const proseCount = new Map(); // 卷 → 散文写法收下的名字
@@ -136,7 +139,8 @@ for (const [f, ls] of volText) {
     // "入口"栏只写中文称呼、函数名写在"签名"栏的表（如"入口 | 签名 | 返回"），取签名栏
     const cols = [ei, ...head.map((h, i) => (/签名/.test(h) ? i : -1)).filter(i => i >= 0 && i !== ei)];
     // 同格多名按分隔符拆（"、""，""/""；"），每段前可带不超过 8 字的中文称呼（如"准入入口 `admitPractice`"）（chk-1116-y26 记账，卷十四 :503）
-    for (const ci of cols) { const ns = (c[ci] ?? '').split(/[、，/；]/).map(p => { const t = p.trim(); const pre = t.match(/^([^`|]{1,8}?)(?=`)/)?.[1] ?? ''; return new RegExp(V_RE).test(pre) ? null : leadName(t.slice(pre.length)); }).filter(Boolean); /* 称呼里点名别卷的（"卷九 `move`"）是别卷的名字，不收 */ if (!ns.length) continue; for (const n of ns) { list.push({ name: n, sec: sub, secs, rowCells: c.filter((_, j) => j !== ci) }); entryNames.add(n); } break; }
+    for (const ci of cols) { const ns = (c[ci] ?? '').split(/[、，/；]/).map(p => { const t = p.trim(); const pre = t.match(/^([^`|]{1,8}?)(?=`)/)?.[1] ?? ''; if (!pre) return leadName(t); if (new RegExp(V_RE).test(pre) || /由/.test(pre)) return null; const n = leadName(t.slice(pre.length)); return n && !/^`[^`]*`\s*原语/.test(t.slice(pre.length)) ? n : null; }).filter(Boolean).filter(n => !(primNames.has(n) && !(c[ci] ?? '').trim().startsWith('`' + n)));
+    /* 称呼前缀（李白 11-16 04:1x ④ K1）：称呼里点名别卷的、写着"由"（"只由……的 `x`……调用"，x 是调用方）的、名字后紧跟"原语"的，以及原语目录登记的原语，都不收 */ /* 称呼里点名别卷的（"卷九 `move`"）是别卷的名字，不收 */ if (!ns.length) continue; for (const n of ns) { list.push({ name: n, sec: sub, secs, rowCells: c.filter((_, j) => j !== ci) }); entryNames.add(n); } break; }
   }
   flush();
   entryIdx.set(v, list);
@@ -206,7 +210,20 @@ function namesInSection(vol, sec) {
     const lvl = ls[hi].match(/^#+/)[0].length; let e = ls.findIndex((l, i) => i > hi && /^#+\s/.test(l) && l.match(/^#+/)[0].length <= lvl); if (e < 0) e = ls.length;
     // 全书任何一卷登记过的入口名（含卷二 §2.1、§2.9 等登记处）出现在该节，都计入这一节的入口；归属按本卷、主办卷 §3、卷二兜底（李白 11-16 03:5x ①，chk-1116-y26 T6）
     const body = ls.slice(hi, e).join('\n'); const hit = new Set();
-    for (const m of body.matchAll(/`([A-Za-z_$][A-Za-z0-9_$]*)/g)) if (entryNames.has(m[1])) hit.add(m[1]);
+    // 外卷登记名只在原句指的就是那个入口时计入（李白 11-16 04:1x ① K2）：写成调用形"`名(…)`"，或所在分句明说调用（含"调"）、点名该入口所在卷；
+    // 名字后紧跟"族、角色、字段、列、键、代号、词表"一类的，不计。本卷登记名照旧出现即计
+    for (const m of body.matchAll(/`([A-Za-z_$][A-Za-z0-9_$]*)([^`]*)`/g)) {
+      const n = m[1]; if (!entryNames.has(n)) continue; const ov = ownerVolOf(n, vol);
+      if (ov === vol) { hit.add(n); continue; }
+      if (m[2].startsWith('(')) { hit.add(n); continue; }
+      if (m[2]) continue; // "`名.字段`"一类
+      const after = body.slice(m.index + m[0].length, m.index + m[0].length + 4).trim();
+      if (/^(族|角色|字段|列|键|代号|词表)/.test(after)) continue;
+      const st = Math.max(body.lastIndexOf('，', m.index), body.lastIndexOf('。', m.index), body.lastIndexOf('；', m.index), body.lastIndexOf('\n', m.index)) + 1;
+      const ends = ['，', '。', '；', '\n'].map(ch => body.indexOf(ch, m.index + m[0].length)).filter(i => i >= 0); const en = ends.length ? Math.min(...ends) : body.length;
+      const clause = body.slice(st, en);
+      if (/调|入口/.test(clause) || clause.includes(ov)) hit.add(n); // 分句明说调用、称其为入口、或点名其登记卷
+    }
     out = [...hit].sort().map(n => ({ name: n, vol: ownerVolOf(n, vol) }));
   }
   secNamesCache.set(key, out); return out;
@@ -832,7 +849,8 @@ const objUndetermined = [], objAssigned = [];
     const vol = ownerVolOf(n, null); const rec = (entryIdx.get(vol) ?? []).find(x => x.name === n); if (!rec) continue;
     let objs = [];
     if (rec.reg21) { const t = tableOfView(n); if (t) objs = [objKey(tableObj(t))]; }
-    else objs = uniq([...(rec.rowCells ?? []).join(' ').matchAll(/[（(]\s*`?([a-z][a-z0-9_.]*)`?\s*[）)]/g)].map(m => objOfCode(m[1])).filter(Boolean));
+    // 只有 §3 该入口行明说"归属/调用方/对象是某表代号或 sys 键"才算写明对象；"模块文件（模块代号）"括注、被写状态所在的行（"person 行"）都不算（04:1x ②③）
+    else objs = uniq([...(rec.rowCells ?? []).join(' ').matchAll(/(?:归属|调用方|对象)\s*(?:是|为|：|:)?\s*`?([a-z][a-z0-9_.]*)`?/g)].map(m => objOfCode(m[1])).filter(Boolean));
     const lead = objs.length === 1 ? leadCardOf(objs[0]) : null;
     if (!lead) { objUndetermined.push({ vol, name: n, why: objs.length > 1 ? `写了 ${objs.length} 个对象` : objs.length ? `对象 ${objs[0]} 没有首卡` : '§3 没写明对象' }); continue; }
     lead.launches.push(entryInfo({ vol, sec: rec.sec, name: n })); objAssigned.push(`${vol}:${n}→${lead.cardId}`);

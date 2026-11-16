@@ -1898,7 +1898,29 @@
     "seg_readers",
     "seg_delete"
    ],
-   "entries": [],
+   "entries": [
+    {
+     "vol": "卷九",
+     "sec": "§3.1",
+     "name": "replaySource",
+     "attrs": {
+      "boundary_side": true,
+      "rule_layer_callable": false,
+      "formal_assembly": false
+     },
+     "detail": [
+      "§4.18.2"
+     ]
+    },
+    {
+     "vol": "卷九",
+     "sec": "§3.1",
+     "name": "sceneCard",
+     "detail": [
+      "§4.10.2"
+     ]
+    }
+   ],
    "launches": [
     {
      "vol": "卷九",
@@ -2242,7 +2264,17 @@
     "seg_readers",
     "seg_delete"
    ],
-   "entries": [],
+   "entries": [
+    {
+     "vol": "卷十六",
+     "sec": "§3.1",
+     "name": "lairOf",
+     "detail": [
+      "§4.3.2",
+      "§4.6.2"
+     ]
+    }
+   ],
    "launches": [],
    "retire": {},
    "accept": [
@@ -2252,6 +2284,7 @@
     "S5-5"
    ],
    "dependsOn": [
+    "C-卷十六-sys.monsters-1",
     "LEDGER-1"
    ],
    "census": {},
@@ -3640,7 +3673,16 @@
     "seg_readers",
     "seg_delete"
    ],
-   "entries": [],
+   "entries": [
+    {
+     "vol": "卷二十四",
+     "sec": "§3.1",
+     "name": "originEvents",
+     "detail": [
+      "§4.10.2"
+     ]
+    }
+   ],
    "launches": [
     {
      "vol": "卷二十四",
@@ -5652,7 +5694,17 @@
     "seg_readers",
     "seg_delete"
    ],
-   "entries": [],
+   "entries": [
+    {
+     "vol": "卷十六",
+     "sec": "§3.1",
+     "name": "lairOf",
+     "detail": [
+      "§4.3.2",
+      "§4.6.2"
+     ]
+    }
+   ],
    "launches": [
     {
      "vol": "卷十六",
@@ -5878,15 +5930,6 @@
       "§4.3.2",
       "§4.4.2"
      ]
-    },
-    {
-     "vol": "卷十四",
-     "sec": "§3.3",
-     "name": "gainSkill",
-     "detail": [
-      "§4.3.2",
-      "§4.5.2"
-     ]
     }
    ],
    "retire": {},
@@ -6111,7 +6154,16 @@
     "seg_readers",
     "seg_delete"
    ],
-   "entries": [],
+   "entries": [
+    {
+     "vol": "卷九",
+     "sec": "§3.1",
+     "name": "sceneCard",
+     "detail": [
+      "§4.10.2"
+     ]
+    }
+   ],
    "launches": [],
    "retire": {},
    "accept": [
@@ -6131,12 +6183,11 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
-    "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
    ],
    "migReady": {
     "defects": [
-     "E-MIG-CARD-INCOMPLETE(entries、retire)"
+     "E-MIG-CARD-INCOMPLETE(retire)"
     ],
     "stateItems": [
      "依赖卡已 merged",
@@ -6631,10 +6682,26 @@
     "seg_readers",
     "seg_delete"
    ],
-   "entries": [],
+   "entries": [
+    {
+     "vol": "卷九",
+     "sec": "§3.1",
+     "name": "replaySource",
+     "attrs": {
+      "boundary_side": true,
+      "rule_layer_callable": false,
+      "formal_assembly": false
+     },
+     "detail": [
+      "§4.18.2"
+     ]
+    }
+   ],
    "launches": [],
    "retire": {},
-   "accept": [],
+   "accept": [
+    "A9-18.1"
+   ],
    "dependsOn": [
     "C-卷九-sys.ai_interface-1",
     "LEDGER-1"
@@ -6648,13 +6715,11 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
-    "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
    ],
    "migReady": {
     "defects": [
-     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
+     "E-MIG-CARD-INCOMPLETE(retire)"
     ],
     "stateItems": [
      "依赖卡已 merged",
@@ -8006,7 +8071,27 @@
     "seg_readers",
     "seg_delete"
    ],
-   "entries": [],
+   "entries": [
+    {
+     "vol": "卷五",
+     "sec": "§3.1",
+     "name": "placeView",
+     "detail": [
+      "§4.1.2",
+      "§4.3.2",
+      "§4.4.2",
+      "§4.5.2",
+      "§4.6.2",
+      "§4.7.2",
+      "§4.9.2",
+      "§4.11.2",
+      "§4.12.2",
+      "§4.14.2",
+      "§4.15.2",
+      "§4.16.2"
+     ]
+    }
+   ],
    "launches": [],
    "retire": {},
    "accept": [
@@ -8026,12 +8111,11 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
-    "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
    ],
    "migReady": {
     "defects": [
-     "E-MIG-CARD-INCOMPLETE(entries、retire)"
+     "E-MIG-CARD-INCOMPLETE(retire)"
     ],
     "stateItems": [
      "依赖卡已 merged",
@@ -9829,6 +9913,15 @@
       "§4.1.2",
       "§4.2.2"
      ]
+    },
+    {
+     "vol": "卷十六",
+     "sec": "§3.1",
+     "name": "lairOf",
+     "detail": [
+      "§4.3.2",
+      "§4.6.2"
+     ]
     }
    ],
    "launches": [
@@ -9956,6 +10049,7 @@
    "dependsOn": [
     "C-卷二-kernel-1",
     "C-卷十一-sys.migration-1",
+    "C-卷十六-sys.monsters-1",
     "LEDGER-1"
    ],
    "census": {},
@@ -12063,25 +12157,6 @@
       "§4.4.2",
       "§4.5.2",
       "§4.7.2",
-      "§4.10.2"
-     ]
-    },
-    {
-     "vol": "卷四",
-     "sec": "§3.3",
-     "name": "instantiatePerson",
-     "detail": [
-      "§4.3.2",
-      "§4.5.2",
-      "§4.10.2",
-      "§4.12.2"
-     ]
-    },
-    {
-     "vol": "卷四",
-     "sec": "§3.3",
-     "name": "rewriteSpecies",
-     "detail": [
       "§4.10.2"
      ]
     }
