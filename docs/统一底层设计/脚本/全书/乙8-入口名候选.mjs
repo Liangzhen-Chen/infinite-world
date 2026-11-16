@@ -158,18 +158,23 @@ const sideOf = n => { // 本卷候选名登记在服务端还是客户端：看�
   return sv && !cl ? 'S' : cl && !sv ? 'C' : null;
 };
 // 原因码（待补原因分类；只依原文与处置栏，不推定）
-function reasonOf(x, ctx) {
-  const { hit, names, tcell, disp, anchorCell, rule } = ctx;
-  if (hit.length > 1) return { code: '多候选', note: `本行写出多个候选：${hit.join('、')}` };
-  const paren = names.map(nm => nm.replace(/^.*:/, '')).filter(n => ctx.parenNames.has(n));
-  if (paren.length) return { code: '仅括注', note: `候选只在括注内写出：${paren.join('、')}（括注不计）` };
-  if (rule.cited.length && rule.multi.length > 1) return { code: '规则正文多候选', note: `所引 ${rule.cited.join('、')} 的规则正文写出多个候选：${rule.multi.join('、')}` };
-  if (['delete', 'to_data', 'move_out', 'relocate_only'].includes(disp) && !/入口/.test(tcell)) return { code: '数据行迁移或删除无入口', note: `处置 ${disp}，落点栏没有入口语境` };
-  const own = names.filter(nm => !/:/.test(nm)); const sides = new Set(own.map(n => sideOf(n)).filter(Boolean));
-  if (sides.size === 2 && ctx.rule.multi.length === 0 && /server-plugin\/|extension\//.test(anchorCell)) return { code: '入口分端需锚点路径区分', note: `本卷候选分服务端、客户端（${own.map(n => n + (sideOf(n) === 'S' ? '〔服务端〕' : sideOf(n) === 'C' ? '〔客户端〕' : '')).join('、')}），行内只写锚点路径` };
-  if (rule.cited.length) return { code: '规则正文无候选', note: `所引 ${rule.cited.join('、')} 的规则正文没写出该节任何候选，本行也没写` };
-  if (!hit.length && !ctx.anyMention) return { code: '无候选写出', note: '本行原文没写出任何候选入口名，落点栏也没引有唯一定义的规则号' };
-  return { code: '其他', note: `候选名在本行出现但按判据不计（否定、字段来源、别卷名非调用形等）：${[...ctx.mentioned].join('、')}` };
+// 无入口（迁移/删除）单列一类，不算待补（05aad804 第 4 条）；其余为待补原因
+function reasonOf(ctx) {
+  const { hit, ownNames, disp, textMig, rule, parenNames, allNames, sides, sideMapOk, cited } = ctx;
+  if (hit.length > 1) return { code: '多候选', note: `本行写出多个本卷入口：${hit.join('、')}` };
+  if (['delete', 'to_data', 'move_out', 'relocate_only'].includes(disp) && textMig) return { code: '无入口（迁移/删除）', note: `处置 ${disp}，行文写明迁移或删除` };
+  const paren = allNames.map(nm => nm.replace(/^.*:/, '')).filter(n => parenNames.has(n));
+  if (paren.length) return { code: '仅括注', note: `候选只在括注内写出：${paren.join('、')}（括注不算写明）` };
+  if (!ownNames.length) return { code: '无本卷自有候选', note: '该节候选全是别卷只读入口，本卷没有自有入口（别卷入口不计）' };
+  if (cited.length && ownNames.length > 1 && !(sides[0] !== sides[1])) return { code: '规则正文无唯一入口', note: `所引 ${cited.join('、')} 的规则正文里本卷入口${rule.multi.length ? '写出多个：' + rule.multi.join('、') : '一个也没写'}，本行也没写` };
+  if (sides[0] !== sides[1] && ownNames.length > 1) {
+    const want = sides[0] ? 'C' : 'S';
+    const same = ownNames.filter(n => sideOf(n) === want);
+    return { code: '入口分端需锚点路径区分', note: `锚点在${sides[0] ? 'extension/（客户端）' : 'server-plugin/ 或 output-gate/（服务端）'}；${!sideMapOk[want === 'C' ? 0 : 1] ? '卷文没有写明该路径归哪一端；' : ''}该端本卷入口登记行写明的有 ${same.length} 个${same.length ? '：' + same.join('、') : ''}，不能唯一定到一个` };
+  }
+  if (cited.length) return { code: '规则正文无唯一入口', note: `所引 ${cited.join('、')} 的规则正文里本卷入口${rule.multi.length ? '写出多个：' + rule.multi.join('、') : '一个也没写'}，本行也没写` };
+  if (!ctx.mentioned.size) return { code: '无候选写出', note: '本行原文没写出任何候选入口名，落点栏也没引有唯一定义的规则号' };
+  return { code: '其他', note: `候选名在本行出现但按判据不计（否定、字段来源等）：${[...ctx.mentioned].join('、')}` };
 }
 function judgeRow(r) {
   const l = ls[r.srcLine - 1]; const c = cells(l); const head = headOf(r.srcLine);
@@ -183,11 +188,15 @@ function judgeRow(r) {
   // 本卷登记的候选：本行原文写出确切名字即计（括注、"某某 条目"之类的后缀与扩展名排除，同生成器本卷名"出现即计"的口径再加后缀排除）。
   // 别卷登记的候选（"卷X:名"）按 nameHit：调用形（名字紧跟括号签名）、原句明说调用/入口、读/经/取/返回/给出/取自 后写确切反引号名（并列各计）、"x 的结果/的返回/返回的/给出的/裸返回"；
   // 括注内的直接指称、所有路径上的否定句（"不调 x""不经 x""不读 x"）、字段来源说明、名字后跟"族、角色、字段、列、键、代号、词表、条目"、只点登记卷名未说调用、"，见卷X"只当出处、扩展名，都不计
+  // 李白 05aad804 第 2 条：别卷只读入口不计入候选，只认本卷自有入口；hitAll 只用来报"去掉别卷入口后判定变化"
   const why1 = {};
-  const hit = names.filter(nm => {
-    const n = nm.replace(/^.*:/, '');
-    const w = nameHit(n, /:/.test(nm), bodyCells); if (w) why1[n] = w; return !!w;
-  }).map(nm => nm.replace(/^.*:/, ''));
+  const allNames = names; const ownNames = names.filter(nm => !/:/.test(nm));
+  const hitAll = allNames.filter(nm => nameHit(nm.replace(/^.*:/, ''), /:/.test(nm), bodyCells)).map(nm => nm.replace(/^.*:/, ''));
+  const hit = ownNames.filter(nm => {
+    const w = nameHit(nm, false, bodyCells); if (w) why1[nm] = w; return !!w;
+  });
+  const extChange = (hitAll.length === 1 ? hitAll[0] : null) !== (hit.length === 1 ? hit[0] : null);
+  const extDir = hitAll.length === 1 && hit.length !== 1 ? '能补变不能补' : hit.length === 1 && hitAll.length !== 1 ? '不能补变能补' : '补的名字变了';
   // 规则正文兜底（李白 10:xx 主因①）：本行自身一个候选都没写出、落点栏引了全书唯一定义的规则号时，
   // 到这些规则正文里按同一明写判据找；恰写出该节候选之一则取它，多个或没有则不取
   const tcellRaw = (c[ti] ?? '').replace(/（入口 `[^`]+`）|（入口名待补）/g, '');
@@ -196,11 +205,25 @@ function judgeRow(r) {
   if (!hit.length && cited.length) {
     for (const id of cited) {
       const rc = ruleBodyCells(ruleDefs.get(id)[0]);
-      for (const nm of names) { const n = nm.replace(/^.*:/, ''); const w = nameHit(n, /:/.test(nm), rc); if (w) { if (!rule.multi.includes(n)) rule.multi.push(n); { const d = ruleDefs.get(id)[0]; const at = d.body.findIndex(bl => bl.includes('`' + n)); rule.from[n] = `规则正文 ${id}（${d.f.split('-')[0]} 第 ${d.i + 1 + Math.max(at, 0)} 行）：${w}`; } } }
+      for (const n of ownNames) { const w = nameHit(n, false, rc); if (w) { if (!rule.multi.includes(n)) rule.multi.push(n); { const d = ruleDefs.get(id)[0]; const at = d.body.findIndex(bl => bl.includes('`' + n)); rule.from[n] = `规则正文 ${id}（${d.f.split('-')[0]} 第 ${d.i + 1 + Math.max(at, 0)} 行）：${w}`; } } }
     }
   }
-  const viaRule = !hit.length && rule.multi.length === 1;
+  let viaRule = !hit.length && rule.multi.length === 1;
   if (viaRule) hit.push(rule.multi[0]);
+  // 服务端/客户端（05aad804 第 3 条）：本行没写出候选、规则正文也取不到时，按锚点路径定端；
+  // 路径与端的对应必须是卷文自己写明的（卷文有行同时写 extension/ 与客户端、server-plugin/ 或 output-gate/ 与服务端；候选的端取其登记行所写路径），且该端恰一个本卷入口才取
+  let viaPath = null;
+  const anchorI = head.map(strip).findIndex(x => /锚点|旧物|来源|路径/.test(x));
+  const anchorCell = anchorI >= 0 ? (c[anchorI] ?? '') : c.join(' ');
+  // 明写对应的句式："客户端入口：`extension/…`"、"`extension/…`（归/属于/是 客户端）"，服务端同
+  const mapRe = (side, dirs) => new RegExp(`${side}[^，。；\`|]{0,6}[：:]\\s*\`?(?:${dirs})|(?:${dirs})[^，。；|]{0,40}[（(]?(?:归|属于|属|是|为)${side}`);
+  const sideMap = { C: ls.findIndex(x => mapRe('客户端', 'extension\\/').test(x)), S: ls.findIndex(x => mapRe('服务端', 'server-plugin\\/|output-gate\\/').test(x)) };
+  const aC = /extension\//.test(anchorCell), aS = /server-plugin\/|output-gate\//.test(anchorCell);
+  if (!hit.length && !viaRule && ownNames.length > 1 && aC !== aS) {
+    const want = aC ? 'C' : 'S';
+    const same = ownNames.filter(n => sideOf(n) === want);
+    if (sideMap[want] >= 0 && same.length === 1) { hit.push(same[0]); viaPath = `锚点路径${aC ? 'extension/' : 'server-plugin/ 或 output-gate/'}，卷文第 ${sideMap[want] + 1} 行写明归${aC ? '客户端' : '服务端'}，该端本卷入口只有 ${same[0]}（登记行写明路径）`; }
+  }
   const ok = hit.length === 1;
   const mentionRe = n => new RegExp('`' + n.replace(/\$/g, '\\$') + '(?![A-Za-z0-9_$])[^`]*`', 'g');
   const parenNames = new Set(), mentioned = new Set();
@@ -211,17 +234,18 @@ function judgeRow(r) {
       if (d > 0) parenNames.add(n);
     }
   }
-  const anchorI = head.map(strip).findIndex(x => /锚点|旧物|来源|路径/.test(x));
-  const rs = ok ? null : reasonOf(null, { hit, names, tcell: tcellRaw, disp: r.disp, anchorCell: anchorI >= 0 ? (c[anchorI] ?? '') : c.join(' '), rule, parenNames, anyMention: mentioned.size > 0, mentioned });
-  out.push({ k: r.rowKey, vol: r.volume, line: r.srcLine, at: multiByKey.get(r.rowKey).at, names, hit, ok, ti, add: ok ? `（入口 \`${hit[0]}\`）` : '（入口名待补）', tcell: c[ti] ?? '', viaRule, ruleBasis: viaRule ? rule.from[hit[0]] : null,
+  // 行文本身写明是迁移或删除（只看处置值不够）：除编号栏、落点对象栏、处置值栏外的各栏里出现迁移/删除字样
+  const textMig = bodyCells.filter(x => strip(x) !== r.disp).some(x => /迁移|迁出|迁入|删除|删掉|搬出/.test(x));
+  const rs = ok ? null : reasonOf({ hit, ownNames, disp: r.disp, textMig, rule, parenNames, allNames, anchorCell, sides: [aC, aS], sideMapOk: [sideMap.C >= 0, sideMap.S >= 0], mentioned, cited });
+  out.push({ k: r.rowKey, vol: r.volume, line: r.srcLine, at: multiByKey.get(r.rowKey).at, names: ownNames, extNames: allNames.filter(nm => /:/.test(nm)), hit, ok, ti, add: ok ? `（入口 \`${hit[0]}\`）` : '（入口名待补）', tcell: c[ti] ?? '', viaRule, viaPath: !!viaPath, extChange, extDir, ruleBasis: viaRule ? rule.from[hit[0]] : null,
     code: rs?.code ?? null, note: rs?.note ?? null,
-    why: ok ? (viaRule ? `${rule.from[hit[0]]}` : `本行原文写明 ${hit[0]}：${why1[hit[0]] ?? ''}`) : rs.note });
+    why: ok ? (viaRule ? `${rule.from[hit[0]]}` : viaPath ? viaPath : `本行原文写明 ${hit[0]}：${why1[hit[0]] ?? ''}`) : rs.note });
   // 与已封卷文落点栏标记比较（差额表用）
   const mk = (c[ti] ?? '').match(/（入口 `([^`]+)`）|（入口名待补）/);
   out[out.length - 1].mark = mk ? (mk[1] ? 'filled' : 'pending') : null;
   if (mk) {
     const oldJ = mk[1] ? `补 \`${mk[1]}\`` : '待补'; const nu = ok ? `补 \`${hit[0]}\`` : '待补';
-    if (oldJ !== nu) diffs.push({ k: r.rowKey, vol: r.volume, line: r.srcLine, old: oldJ, nu, basis: ((ok ? (viaRule ? rule.from[hit[0]] : Object.entries(why1).filter(([n]) => n === hit[0]).map(([, w]) => w).join('') || `本卷登记名 ${hit[0]} 写明`) : rs.note) + `（卷文 ${r.srcLine} 行）`).replace(/\|/g, '\\|') });
+    if (oldJ !== nu) diffs.push({ k: r.rowKey, vol: r.volume, line: r.srcLine, old: oldJ, nu, basis: ((ok ? (viaRule ? rule.from[hit[0]] : viaPath ? viaPath : Object.entries(why1).filter(([n]) => n === hit[0]).map(([, w]) => w).join('') || `本卷登记名 ${hit[0]} 写明`) : rs.note) + `（卷文 ${r.srcLine} 行）`).replace(/\|/g, '\\|') });
   }
 }
 if (ALL) {
@@ -230,25 +254,28 @@ if (ALL) {
 } else for (const r of rows) judgeRow(r);
 if (ALL) {
   const todo = out.filter(x => x.mark !== 'filled'); const filled = out.filter(x => x.mark === 'filled');
-  const can = todo.filter(x => x.ok), pend = todo.filter(x => !x.ok);
+  const can = todo.filter(x => x.ok), noEnt = todo.filter(x => !x.ok && x.code === '无入口（迁移/删除）'), pend = todo.filter(x => !x.ok && x.code !== '无入口（迁移/删除）');
+  const extCan2No = out.filter(x => x.extChange && x.extDir === '能补变不能补'), extNo2Can = out.filter(x => x.extChange && x.extDir === '不能补变能补'), extOther = out.filter(x => x.extChange && x.extDir === '补的名字变了');
   const byCode = {}; for (const x of pend) byCode[x.code] = (byCode[x.code] || 0) + 1;
-  const volStat = new Map(); for (const x of todo) { const s = volStat.get(x.vol) || { n: 0, can: 0, pend: 0 }; s.n++; x.ok ? s.can++ : s.pend++; volStat.set(x.vol, s); }
+  const volStat = new Map(); for (const x of todo) { const s = volStat.get(x.vol) || { n: 0, can: 0, noEnt: 0, pend: 0 }; s.n++; x.ok ? s.can++ : x.code === '无入口（迁移/删除）' ? s.noEnt++ : s.pend++; volStat.set(x.vol, s); }
   const esc = s => String(s).replace(/\|/g, '\\|');
   const filledChanged = diffs.filter(d => d.old.startsWith('补'));
   const md = [
     '# 乙-8 全书"一节多入口"候选清单（脚本生成，勿手改）', '',
-    '依据：李白 11-16 10:xx 第 2、4 条（改做法②）；要点表 E3。脚本：脚本/全书/乙8-入口名候选.mjs --all。判据：本行原文明写（反引号名、调用形、直接指称；否定与括注不计，含隔字否定）；落点栏引了全书唯一定义的规则号且本行没写出任何候选时，取规则正文恰写出的那一个（多个或没有不取）。只读卷文，不改任何文件。', '',
+    '依据：李白 11-16 10:xx 第 2、4 条（改做法②）；要点表 E3。脚本：脚本/全书/乙8-入口名候选.mjs --all。判据：本行原文明写（反引号名、调用形、直接指称；否定与括注不计，含隔字否定）；只认本卷自有入口，别卷只读入口不计入候选（李白 05aad804 第 2 条）；落点栏引了全书唯一定义的规则号且本行没写出任何本卷入口时，取规则正文里恰写出的那一个本卷入口（零个或多个不取）；本行没写出时，锚点路径所属端（须卷文写明路径归哪一端）下恰一个本卷入口才取；行文写明迁移或删除的行单列"无入口（迁移/删除）"，不算待补；候选只在括注内的进名单。只读卷文，不改任何文件。', '',
     '## 汇总', '',
     `- 候选总数（当前卡账"一节多入口"行中，落点栏尚无"（入口 \`名\`）"的行）：${todo.length}；另有 ${filled.length} 行落点栏已有"（入口 \`名\`）"，不在清单内，只做比对。`,
-    `- 能补名：${can.length} 行（其中靠规则正文补的 ${can.filter(x => x.viaRule).length} 行）`,
+    `- 能补名：${can.length} 行：本行原文明写 ${can.filter(x => !x.viaRule && !x.viaPath).length}；①靠规则正文新增 ${can.filter(x => x.viaRule).length}；靠锚点路径定端 ${can.filter(x => x.viaPath).length}`,
+    `- ④无入口（迁移/删除）：${noEnt.length} 行（行文写明迁移或删除，单列，不算待补）`,
     `- 待补：${pend.length} 行；各原因码行数：${Object.entries(byCode).map(([k, v]) => `${k} ${v}`).join('；')}`,
+    `- ②去掉别卷只读入口（只认本卷自有入口）后，按本行原文判定有变化的行（全书 ${out.length} 行内，含已补行）：原能补、现不能补 ${extCan2No.length} 行${extCan2No.length ? '（' + extCan2No.map(x => x.vol + ' ' + x.k).join('、') + '）' : ''}；原不能补、现能补 ${extNo2Can.length} 行${extNo2Can.length ? '（' + extNo2Can.map(x => x.vol + ' ' + x.k).join('、') + '）' : ''}；补的名字变了 ${extOther.length} 行${extOther.length ? '（' + extOther.map(x => x.vol + ' ' + x.k).join('、') + '）' : ''}`,
     `- 已补行比对：落点栏已有"（入口 \`名\`）"的 ${filled.length} 行中，新判定与其不同的 ${filledChanged.length} 行${filledChanged.length ? '：' + filledChanged.map(d => `${d.vol} ${d.k}（${d.old}→${d.nu}）`).join('、') : ''}`,
-    '', '按卷分布：', '', '| 卷 | 候选行 | 能补名 | 待补 |', '|---|---|---|---|',
-    ...[...volStat].map(([v, s]) => `| ${v} | ${s.n} | ${s.can} | ${s.pend} |`), '',
+    '', '按卷分布：', '', '| 卷 | 候选行 | 能补名 | 无入口（迁移/删除） | 待补 |', '|---|---|---|---|---|',
+    ...[...volStat].map(([v, s]) => `| ${v} | ${s.n} | ${s.can} | ${s.noEnt} | ${s.pend} |`), '',
     '## 清单', '', '| 卷 | 迁移行号 | 卷文行 | 判定 |', '|---|---|---|---|',
-    ...todo.map(x => `| ${x.vol} | ${x.k} | ${x.line} | ${x.ok ? esc(`能补名：\`${x.hit[0]}\`；依据：${x.why.replace(/^本行原文写明 [^：]+：/, '本行原文：')}（本行卷文 ${x.line} 行）`) : esc(`待补：${x.code}；${x.note}`)} |`), ''].join('\n');
+    ...todo.map(x => `| ${x.vol} | ${x.k} | ${x.line} | ${x.ok ? esc(`能补名：\`${x.hit[0]}\`；依据：${x.why.replace(/^本行原文写明 [^：]+：/, '本行原文：')}（本行卷文 ${x.line} 行）`) : esc(`${x.code === '无入口（迁移/删除）' ? '' : '待补：'}${x.code}；${x.note}`)} |`), ''].join('\n');
   writeFileSync(`${DIR}/审查/脚本输出/乙8-全书候选清单.md`, md);
-  console.log(`全书：候选 ${todo.length}；能补名 ${can.length}（规则正文 ${can.filter(x => x.viaRule).length}）；待补 ${pend.length}；已补比对 ${filled.length} 行，变化 ${filledChanged.length}；原因码 ${JSON.stringify(byCode)}`);
+  console.log(`全书：候选 ${todo.length}；能补名 ${can.length}（规则正文 ${can.filter(x => x.viaRule).length}，锚点路径 ${can.filter(x => x.viaPath).length}）；无入口 ${noEnt.length}；待补 ${pend.length}；已补比对 ${filled.length} 行，变化 ${filledChanged.length}；去别卷入口变化 能补→不能 ${extCan2No.length} / 不能→能补 ${extNo2Can.length} / 改名 ${extOther.length}；原因码 ${JSON.stringify(byCode)}`);
   process.exit(0);
 }
 const okN = out.filter(x => x.ok).length;
@@ -273,8 +300,9 @@ if (process.argv.includes('--plan')) {
     plan.edits.push({ k: x.k, line: x.line, old, new: old.slice(0, old.length - l.slice(e, e + 2).length) + x.add + l.slice(e, e + 2) });
   }
   let last = -1; ls.forEach((l, i) => { if (/封卷后勘误 [0-9]{4}[A-Za-z0-9\u4e00-\u9fa5-]*（依据/.test(l) && !l.includes(TAG)) last = i; });
-  const vers = snaps.map(s => s.match(new RegExp(`^${VOLNAME}-v(\\d+)\\.md$`))).filter(Boolean).map(m => +m[1]);
-  const ver = Math.max(...vers);
+  // 版本标记取该卷最新的（数字加可选字母后缀，如 2f），不再只认纯数字
+  const vers = snaps.map(s => s.match(new RegExp(`^${VOLNAME}-v(\\d+)([a-z]?)\\.md$`))).filter(Boolean).map(m => ({ s: m[1] + m[2], k: +m[1] * 100 + (m[2] ? m[2].charCodeAt(0) - 96 : 0) }));
+  const ver = vers.sort((a, b) => b.k - a.k)[0].s;
   let after = null;
   for (const l of ls) { if (l.includes(TAG)) continue; const i = l.indexOf('改后覆盖'); if (/封卷后勘误/.test(l) && i >= 0) { const seg = l.slice(i).split(/[）)]/)[0]; after = [...seg.matchAll(/版本快照\/[^，、；\s）)]+?\.md/g)].map(m => m[0]); } }
   if (!after?.length) after = [`版本快照/${VOLNAME}-v${ver}.md`];
