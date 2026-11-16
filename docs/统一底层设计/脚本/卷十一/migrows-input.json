@@ -23,7 +23,13 @@
    "disp": "replace_entry",
    "target": "卷五 §4.3 地形、群落、海拔维度表的读入口",
    "targetObject": "terrain",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "4.3"
+   ],
+   "zeroSrc": [
+    "A 4.3"
+   ]
   },
   {
    "rowKey": "M1-3",
@@ -34,7 +40,13 @@
    "disp": "to_data",
    "target": "卷三乙 §4.3 类别",
    "targetObject": "item",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "1.1"
+   ],
+   "zeroSrc": [
+    "A 1.1"
+   ]
   },
   {
    "rowKey": "M1-4",
@@ -45,7 +57,13 @@
    "disp": "recode",
    "target": "卷三甲 §4.1 材料属性表",
    "targetObject": "material",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "1.2"
+   ],
+   "zeroSrc": [
+    "A 1.2"
+   ]
   },
   {
    "rowKey": "M1-5",
@@ -1291,7 +1309,13 @@
    "disp": "recode",
    "target": "§4.1 M-5、§4.9 X-2",
    "targetObject": "sys.item",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "2.7"
+   ],
+   "zeroSrc": [
+    "§4 8.8"
+   ]
   },
   {
    "rowKey": "M3b-19",
@@ -1312,7 +1336,13 @@
    "disp": "replace_entry",
    "target": "§4.10 D-1、D-2；原对象栏写 itemWear（入口 wearStep）",
    "targetObject": "item",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "1.6"
+   ],
+   "zeroSrc": [
+    "A 1.6"
+   ]
   },
   {
    "rowKey": "M3b-20",
@@ -1328,7 +1358,13 @@
    "disp": "to_data",
    "target": "§4.8 R-1、R-11",
    "targetObject": "recipe",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "1.9"
+   ],
+   "zeroSrc": [
+    "A 1.9"
+   ]
   },
   {
    "rowKey": "M3b-21",
@@ -1339,7 +1375,13 @@
    "disp": "recode",
    "target": "§4.16 V-1",
    "targetObject": "recipe",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "1.12"
+   ],
+   "zeroSrc": [
+    "A 1.12"
+   ]
   },
   {
    "rowKey": "M3b-22",
@@ -1360,7 +1402,13 @@
    "disp": "recode",
    "target": "§4.15 B-2（阅读判定在卷二十二 §4.6）",
    "targetObject": "sys.knowledge",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "1.13"
+   ],
+   "zeroSrc": [
+    "A 1.13"
+   ]
   },
   {
    "rowKey": "M3b-23",
@@ -1573,7 +1621,13 @@
    "disp": "to_data",
    "target": "§2.1 salvageFraction（规则在卷三乙 M-5、§4.9）",
    "targetObject": "material",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "2.7"
+   ],
+   "zeroSrc": [
+    "§4 8.8"
+   ]
   },
   {
    "rowKey": "M3a-4",
@@ -3706,7 +3760,13 @@
    "disp": "to_data",
    "target": "市集日迁卷七 §4.18 规则行；月名、纪元名、旬名迁语言包（卷二十九 M29-25，R29-1.13；月、旬、纪元的条目键见 §2.3 末段）；月长、年月数删，改读各历法行（§2.3）",
    "targetObject": "calendar",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "16.2"
+   ],
+   "zeroSrc": [
+    "A 16.2"
+   ]
   },
   {
    "rowKey": "M20-16",
@@ -4534,7 +4594,13 @@
    "disp": "to_data",
    "target": "迁季节行 modifiers；指向价格的项删除；起点由相位区间给出（§4.4.3）",
    "targetObject": "season",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "16.6"
+   ],
+   "zeroSrc": [
+    "§4 6.18"
+   ]
   },
   {
    "rowKey": "M20-43",
@@ -4570,7 +4636,13 @@
    "disp": "replace_entry",
    "target": "并入 envAt（§3.1）（入口 envAt）",
    "targetObject": "place",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "4.9"
+   ],
+   "zeroSrc": [
+    "A 4.9"
+   ]
   },
   {
    "rowKey": "M20-45",
@@ -7542,7 +7614,13 @@
    "disp": "replace_entry",
    "target": "R23-5.5",
    "targetObject": "sys.arts",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "12.7"
+   ],
+   "zeroSrc": [
+    "A 12.7"
+   ]
   },
   {
    "rowKey": "M23-14",
@@ -7609,7 +7687,13 @@
    "disp": "replace_entry",
    "target": "R23-1.2（入口 mintComposition）",
    "targetObject": "sys.arts",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "1.14"
+   ],
+   "zeroSrc": [
+    "A 1.14"
+   ]
   },
   {
    "rowKey": "M23-17",
@@ -7651,7 +7735,13 @@
    "disp": "recode",
    "target": "R23-5.6（入口 workCount）",
    "targetObject": "sys.arts",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "12.7"
+   ],
+   "zeroSrc": [
+    "A 12.7"
+   ]
   },
   {
    "rowKey": "M23-19",
@@ -7683,7 +7773,13 @@
    "disp": "to_data",
    "target": "R23-3.1；原对象栏写 actkind",
    "targetObject": "sys.arts",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "6.12"
+   ],
+   "zeroSrc": [
+    "A 6.12"
+   ]
   },
   {
    "rowKey": "M23-21",
@@ -9110,7 +9206,13 @@
    "disp": "to_data",
    "target": "§4.1 规则 1",
    "targetObject": "plant",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "16.8"
+   ],
+   "zeroSrc": [
+    "A 16.8"
+   ]
   },
   {
    "rowKey": "M25-2",
@@ -9131,7 +9233,13 @@
    "disp": "delete",
    "target": "§4.2 规则 8",
    "targetObject": "sys.plant",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "16.8"
+   ],
+   "zeroSrc": [
+    "A 16.8"
+   ]
   },
   {
    "rowKey": "M25-3",
@@ -9552,7 +9660,13 @@
    "disp": "待定（补缺，非迁移）",
    "target": "§4.5 规则 8",
    "targetObject": "sys.plant",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "2.9"
+   ],
+   "zeroSrc": [
+    "A 2.9"
+   ]
   },
   {
    "rowKey": "M25-24",
@@ -9573,7 +9687,13 @@
    "disp": "delete",
    "target": "§4.6 规则 5",
    "targetObject": "sys.plant",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "2.10"
+   ],
+   "zeroSrc": [
+    "A 2.10"
+   ]
   },
   {
    "rowKey": "M25-25",
@@ -9619,7 +9739,13 @@
    "disp": "recode",
    "target": "§4.6 规则 2",
    "targetObject": "sys.plant",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "2.10"
+   ],
+   "zeroSrc": [
+    "A 2.10"
+   ]
   },
   {
    "rowKey": "M25-27",
@@ -9983,7 +10109,13 @@
    "disp": "待定（补缺，非迁移）",
    "target": "§4.8 规则 6",
    "targetObject": "sys.plant",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "4.5"
+   ],
+   "zeroSrc": [
+    "A 4.5"
+   ]
   },
   {
    "rowKey": "M25-42",
@@ -12070,7 +12202,13 @@
    "disp": "to_data",
    "target": "矿物搬进存量单元的 deposits；动植物条目删除，改由群落派生；丰度偏离保留为 deposits 植物键（§4.4 规则 1、§4.7 规则 1）",
    "targetObject": "place",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "4.5"
+   ],
+   "zeroSrc": [
+    "A 4.5"
+   ]
   },
   {
    "rowKey": "M5-7",
@@ -12091,7 +12229,13 @@
    "disp": "to_data",
    "target": "方法行的 skill 与需求块（take，§4.8 规则 1）；原对象栏写 hmethod",
    "targetObject": "sys.place",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "2.11"
+   ],
+   "zeroSrc": [
+    "A 2.11"
+   ]
   },
   {
    "rowKey": "M5-8",
@@ -13314,7 +13458,13 @@
    "disp": "replace_entry",
    "target": "placeView().dims.culture（§4.12）",
    "targetObject": "place",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "4.7"
+   ],
+   "zeroSrc": [
+    "A 4.7"
+   ]
   },
   {
    "rowKey": "M5-28",
@@ -13346,7 +13496,13 @@
    "disp": "to_data",
    "target": "borderTerms，条款代号属 clause 族（§4.14）",
    "targetObject": "place",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "4.10"
+   ],
+   "zeroSrc": [
+    "A 4.10"
+   ]
   },
   {
    "rowKey": "M5-30",
@@ -13907,7 +14063,13 @@
    "disp": "recode",
    "target": "mphase 代号（motionView）；公库只经账本 post（§4.1）",
    "targetObject": "org",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "7.7"
+   ],
+   "zeroSrc": [
+    "§4 8.17"
+   ]
   },
   {
    "rowKey": "M8-17",
@@ -13969,7 +14131,13 @@
    "disp": "recode",
    "target": "卷二谓词；mphase；种类条目字段（orgView、motionView，§4.1）",
    "targetObject": "org",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "7.7"
+   ],
+   "zeroSrc": [
+    "§4 10.1"
+   ]
   },
   {
    "rowKey": "M8-18",
@@ -14007,7 +14175,13 @@
    "disp": "recode",
    "target": "关系档派生 diploStatus；同盟是合同加边（diplomacyStep，§4.14、§4.13）；原对象栏写 diplomacy（入口 diploStatus）",
    "targetObject": "sys.org",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "7.13"
+   ],
+   "zeroSrc": [
+    "§4 10.18"
+   ]
   },
   {
    "rowKey": "M8-19",
@@ -14057,7 +14231,14 @@
    "disp": "replace_entry",
    "target": "立场只读卷十八 stance；本卷不存（§4.14）；原对象栏写 diplomacy（入口 stance）",
    "targetObject": "sys.org",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "7.7",
+    "7.13"
+   ],
+   "zeroSrc": [
+    "§4 10.26"
+   ]
   },
   {
    "rowKey": "M8-20",
@@ -14078,7 +14259,13 @@
    "disp": "replace_entry",
    "target": "卷二谓词（§4.18）；原对象栏写 governance",
    "targetObject": "sys.org",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "7.8"
+   ],
+   "zeroSrc": [
+    "§4 10.27"
+   ]
   },
   {
    "rowKey": "M8-21",
@@ -14397,7 +14584,13 @@
    "disp": "delete",
    "target": "R8b-2.5（入口 evidenceScore）",
    "targetObject": "sys.offense",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "7.2"
+   ],
+   "zeroSrc": [
+    "A 7.2"
+   ]
   },
   {
    "rowKey": "M8b-2",
@@ -14622,7 +14815,13 @@
    "disp": "replace_entry",
    "target": "卷二谓词（本卷无规则号）（节号待补）",
    "targetObject": "sys.capacity",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "7.15"
+   ],
+   "zeroSrc": [
+    "§4 10.22"
+   ]
   },
   {
    "rowKey": "M8b-12",
@@ -14683,7 +14882,13 @@
    "disp": "recode",
    "target": "R8b-8.6、R8b-9.1（入口 issueWanted）",
    "targetObject": "sys.offense",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "7.15"
+   ],
+   "zeroSrc": [
+    "§4 10.22"
+   ]
   },
   {
    "rowKey": "M8b-13",
@@ -14837,7 +15042,13 @@
    "disp": "to_data",
    "target": "R8b-15.9；原对象栏写 claim",
    "targetObject": "sys.offense",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "7.3"
+   ],
+   "zeroSrc": [
+    "A 7.3"
+   ]
   },
   {
    "rowKey": "M8b-19",
@@ -14962,7 +15173,13 @@
    "disp": "recode",
    "target": "卷六 终态封闭枚举（本卷无规则号）（节号待补）",
    "targetObject": "sys.economy",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "12.2"
+   ],
+   "zeroSrc": [
+    "A 12.2"
+   ]
   },
   {
    "rowKey": "M8b-23",
@@ -15363,7 +15580,13 @@
    "disp": "to_data",
    "target": "§4.1 规则 1、12",
    "targetObject": "rules.market",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "5.3"
+   ],
+   "zeroSrc": [
+    "§4 8.1"
+   ]
   },
   {
    "rowKey": "M6-10",
@@ -15374,7 +15597,13 @@
    "disp": "delete",
    "target": "§4.2 规则 7",
    "targetObject": "sys.economy",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "16.6"
+   ],
+   "zeroSrc": [
+    "§4 6.18"
+   ]
   },
   {
    "rowKey": "M6-11",
@@ -15733,7 +15962,14 @@
    "disp": "recode",
    "target": "§4.16 规则 1",
    "targetObject": "sys.economy",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "5.13",
+    "12.2"
+   ],
+   "zeroSrc": [
+    "§4 8.4"
+   ]
   },
   {
    "rowKey": "M6-19",
@@ -16417,7 +16653,14 @@
    "disp": "delete",
    "target": "§4.16 规则 3",
    "targetObject": "sys.economy",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "5.13",
+    "12.2"
+   ],
+   "zeroSrc": [
+    "§4 8.4"
+   ]
   },
   {
    "rowKey": "M6-47",
@@ -18646,7 +18889,13 @@
    "disp": "to_data",
    "target": "R17-7.2",
    "targetObject": "sys.travel",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "11.6"
+   ],
+   "zeroSrc": [
+    "A 11.6"
+   ]
   },
   {
    "rowKey": "M17-15",
@@ -18904,7 +19153,13 @@
    "disp": "to_data",
    "target": "物种行 damageResist 与相克表修正项（R13-2.4）",
    "targetObject": "species",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "8.2"
+   ],
+   "zeroSrc": [
+    "§4 12.2"
+   ]
   },
   {
    "rowKey": "M13-9",
@@ -18929,7 +19184,15 @@
    "disp": "to_data",
    "target": "材料行 armorMult；读 layersOf（§4.3）（入口 layersOf）",
    "targetObject": "material",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "2.3",
+    "8.3"
+   ],
+   "zeroSrc": [
+    "裸 2.3",
+    "裸 8.3"
+   ]
   },
   {
    "rowKey": "M13-10",
@@ -18950,7 +19213,13 @@
    "disp": "to_data",
    "target": "rules.combat.taken.max 与修正键的界（节号待补）",
    "targetObject": "rules.combat",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "8.2"
+   ],
+   "zeroSrc": [
+    "§4 12.2"
+   ]
   },
   {
    "rowKey": "M13-11",
@@ -18971,7 +19240,13 @@
    "disp": "recode",
    "target": "卷二的 kindOf（节号待补）",
    "targetObject": "kernel",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "8.2"
+   ],
+   "zeroSrc": [
+    "§4 12.2"
+   ]
   },
   {
    "rowKey": "M13-12",
@@ -19071,7 +19346,13 @@
    "disp": "to_data",
    "target": "rules.combat.deterrence.* 经规则表入口（节号待补）",
    "targetObject": "rules.combat",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "8.10"
+   ],
+   "zeroSrc": [
+    "裸 8.10"
+   ]
   },
   {
    "rowKey": "M13-17",
@@ -19116,7 +19397,13 @@
    "disp": "recode",
    "target": "卷二谓词；普通遭遇（R13-18.11）",
    "targetObject": "sys.capacity",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "8.10"
+   ],
+   "zeroSrc": [
+    "裸 8.10"
+   ]
   },
   {
    "rowKey": "M13-19",
@@ -19185,7 +19472,13 @@
    "disp": "replace_entry",
    "target": "forceMorale（§4.8）",
    "targetObject": "sys.combat",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "7.12"
+   ],
+   "zeroSrc": [
+    "裸 7.12"
+   ]
   },
   {
    "rowKey": "M13-22",
@@ -19314,7 +19607,13 @@
    "disp": "to_data",
    "target": "卷五的地形修正模板（R13-9.4）；rules.combat.*；装备品质归卷三乙",
    "targetObject": "rules.combat",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "8.5"
+   ],
+   "zeroSrc": [
+    "裸 8.5"
+   ]
   },
   {
    "rowKey": "M13-27",
@@ -19330,7 +19629,13 @@
    "disp": "to_data",
    "target": "补 attacks、weaponClass、guard、launch（内容卡）（节号待补）",
    "targetObject": "item",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "8.7"
+   ],
+   "zeroSrc": [
+    "裸 8.7"
+   ]
   },
   {
    "rowKey": "M13-28",
@@ -19376,7 +19681,13 @@
    "disp": "replace_entry",
    "target": "归卷十六；遭遇建立改调 encounterStep（§4.18）（入口 encounterStep）",
    "targetObject": "sys.monsters",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "10.6"
+   ],
+   "zeroSrc": [
+    "裸 10.6"
+   ]
   },
   {
    "rowKey": "M13-30",
@@ -20885,7 +21196,13 @@
    "disp": "to_data",
    "target": "familyRows（§4.1）",
    "targetObject": "rules.arcana",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "9.1"
+   ],
+   "zeroSrc": [
+    "§4 13.1"
+   ]
   },
   {
    "rowKey": "M15-2",
@@ -20906,7 +21223,13 @@
    "disp": "replace_entry",
    "target": "R15-2.2",
    "targetObject": "sys.arcana",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "9.1"
+   ],
+   "zeroSrc": [
+    "A 9.1"
+   ]
   },
   {
    "rowKey": "M15-3",
@@ -21322,7 +21645,13 @@
    "disp": "recode",
    "target": "riteStep（§4.7）（入口 riteStep）",
    "targetObject": "sys.arcana",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "9.6"
+   ],
+   "zeroSrc": [
+    "A 9.6"
+   ]
   },
   {
    "rowKey": "M15-19",
@@ -21368,7 +21697,13 @@
    "disp": "recode",
    "target": "R15-5.2",
    "targetObject": "sys.arcana",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "9.4"
+   ],
+   "zeroSrc": [
+    "A 9.4"
+   ]
   },
   {
    "rowKey": "M15-20",
@@ -21425,7 +21760,13 @@
    "disp": "delete",
    "target": "S15-10（§3.5）（入口 priceFor）",
    "targetObject": "sys.arcana",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "5.21"
+   ],
+   "zeroSrc": [
+    "A 5.21"
+   ]
   },
   {
    "rowKey": "M15-23",
@@ -21445,7 +21786,13 @@
    "disp": "to_data",
    "target": "ixRows（§4.3）",
    "targetObject": "rules.arcana",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "9.1"
+   ],
+   "zeroSrc": [
+    "§4 13.1"
+   ]
   },
   {
    "rowKey": "M15-24",
@@ -21461,7 +21808,13 @@
    "disp": "to_data",
    "target": "R15-1.1",
    "targetObject": "rules.arcana",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "9.5"
+   ],
+   "zeroSrc": [
+    "A 9.5"
+   ]
   },
   {
    "rowKey": "M15-25",
@@ -21493,7 +21846,13 @@
    "disp": "to_data",
    "target": "familyRows（§4.2）",
    "targetObject": "rules.arcana",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "9.2"
+   ],
+   "zeroSrc": [
+    "A 9.2"
+   ]
   },
   {
    "rowKey": "M15-27",
@@ -21640,7 +21999,14 @@
    "disp": "to_data",
    "target": "R18-4.5",
    "targetObject": "rules.social",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "7.7",
+    "7.13"
+   ],
+   "zeroSrc": [
+    "§4 10.26"
+   ]
   },
   {
    "rowKey": "M18-3",
@@ -21829,7 +22195,13 @@
    "disp": "recode",
    "target": "R18-2.7",
    "targetObject": "sys.social",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "12.3"
+   ],
+   "zeroSrc": [
+    "§4 11.1"
+   ]
   },
   {
    "rowKey": "M18-8",
@@ -21881,7 +22253,13 @@
    "disp": "recode",
    "target": "R18-7.5",
    "targetObject": "sys.social",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "12.7"
+   ],
+   "zeroSrc": [
+    "§4 11.4"
+   ]
   },
   {
    "rowKey": "M18-10",
@@ -21911,7 +22289,13 @@
    "disp": "to_data",
    "target": "R18-11.3（入口 dread）",
    "targetObject": "rules.social",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "8.10"
+   ],
+   "zeroSrc": [
+    "§4 4.6"
+   ]
   },
   {
    "rowKey": "M18-11",
@@ -22622,7 +23006,13 @@
    "disp": "to_data",
    "target": "R16-2.2",
    "targetObject": "person",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "10.2"
+   ],
+   "zeroSrc": [
+    "裸 10.2"
+   ]
   },
   {
    "rowKey": "M16-3",
@@ -22763,7 +23153,13 @@
    "disp": "recode",
    "target": "R16-3.5",
    "targetObject": "sys.monsters",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "10.3"
+   ],
+   "zeroSrc": [
+    "裸 10.3"
+   ]
   },
   {
    "rowKey": "M16-9",
@@ -22796,7 +23192,13 @@
    "disp": "recode",
    "target": "R16-3.5",
    "targetObject": "sys.monsters",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "7.13"
+   ],
+   "zeroSrc": [
+    "§4 13.11"
+   ]
   },
   {
    "rowKey": "M16-10",
@@ -22825,7 +23227,13 @@
    "disp": "recode",
    "target": "R16-13.1",
    "targetObject": "sys.monsters",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "7.13"
+   ],
+   "zeroSrc": [
+    "§4 13.11"
+   ]
   },
   {
    "rowKey": "M16-11",
@@ -22866,7 +23274,14 @@
    "disp": "delete",
    "target": "R16-13.1",
    "targetObject": "sys.monsters",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "7.7",
+    "7.13"
+   ],
+   "zeroSrc": [
+    "§4 10.26"
+   ]
   },
   {
    "rowKey": "M16-13",
@@ -22887,7 +23302,13 @@
    "disp": "recode",
    "target": "R16-6.3（入口 leaveLair）",
    "targetObject": "sys.monsters",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "10.6"
+   ],
+   "zeroSrc": [
+    "裸 10.6"
+   ]
   },
   {
    "rowKey": "M16-14",
@@ -22916,7 +23337,13 @@
    "disp": "replace_entry",
    "target": "R16-7.1（入口 threatBrief）",
    "targetObject": "sys.monsters",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "10.7"
+   ],
+   "zeroSrc": [
+    "裸 10.7"
+   ]
   },
   {
    "rowKey": "M16-15",
@@ -23182,7 +23609,13 @@
    "disp": "to_data",
    "target": "R16-4.1",
    "targetObject": "species",
-   "baseline": "d54c89a3"
+   "baseline": "d54c89a3",
+   "zeroRow": [
+    "10.4"
+   ],
+   "zeroSrc": [
+    "裸 10.4"
+   ]
   },
   {
    "rowKey": "M16-29",

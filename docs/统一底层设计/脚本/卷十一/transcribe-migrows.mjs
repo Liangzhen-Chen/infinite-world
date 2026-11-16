@@ -58,6 +58,27 @@ function columns(head) {
   return { key: 0, anc, disp, tgt, obj, rep: pick(h, x => x === '代表位置') };
 }
 
+// ---- zeroRow（§2.3；李白终核卷十一 二-4）：只转录迁移行原文已写出的卷零编号，原文没写的留空，不推定 ----
+// 卷零的机读列（§0.8）：A 表第一列的条目编号；§4 每行的 10 # 与 aRows 列。迁移行里写出的编号分三类：
+//   A 表编号（"卷零 A 4.3""卷零 A1.6""A 表 5.21"，后面可接"、"并列的编号）；§4 行号（"卷零 §4 行 8.8""核查栏 8.8"）→ 取卷零 §4 该行的 aRows；
+//   裸"卷零 N.N"：只在 A 表里有这个编号才算 A 表编号，两表都有（或都没有）的不转录、列入问题。
+const covLines = readFileSync(`${DIR}/${CFG.coverage.file}`, 'utf8').split(/\r?\n/);
+const covSection = prefix => { const s = covLines.findIndex(l => l.startsWith(prefix)); let e = covLines.findIndex((l, i) => i > s + 3 && /^## /.test(l)); if (e < 0) e = covLines.length; return covLines.slice(s, e).filter(l => /^\|/.test(l)).map(cells); };
+const A_NUMS = new Set(covSection(CFG.coverage.tableA).map(c => (c[0] ?? '').match(/^(\d+\.\d+)\b/)?.[1]).filter(Boolean));
+const S4_ROWS = new Map(covSection(CFG.coverage.existing).filter(c => /^\d+\.\d+$/.test(c[0] ?? '')).map(c => [c[0], [...(c[c.length - 1] ?? '').matchAll(/\d+\.\d+/g)].map(m => m[0])]));
+const NUMLIST = '(\\d+\\.\\d+(?![\\d.])(?:\\s*[、,，]\\s*\\d+\\.\\d+(?![\\d.]))*)';
+const Z_A = [new RegExp('卷零\\s*A\\s*表?\\s*(?:条目\\s*)?' + NUMLIST, 'g'), new RegExp('(?<![A-Za-z])A\\s*表\\s*(?:条目\\s*)?' + NUMLIST, 'g'), new RegExp('卷零[^|；。`]{0,6}?A' + NUMLIST, 'g')];
+const Z_S4 = [new RegExp('卷零\\s*§4\\s*行?\\s*' + NUMLIST, 'g'), new RegExp('卷零\\s*核查栏(?:行)?\\s*' + NUMLIST, 'g'), new RegExp('§4\\s*行\\s*' + NUMLIST, 'g')];
+const Z_BARE = new RegExp('卷零\\s*' + NUMLIST, 'g');
+const nums = s => s.split(/[、,，]/).map(x => x.trim());
+function zeroRowsOf(text, key, problems) {
+  const a = new Set(), src = [], taken = new Set();
+  const take = (m, kind) => { for (let i = m.index; i < m.index + m[0].length; i++) taken.add(i); return kind; };
+  for (const re of Z_A) for (const m of text.matchAll(re)) { take(m, 'A'); for (const n of nums(m[1])) if (A_NUMS.has(n)) { a.add(n); src.push(`A ${n}`); } else problems.push(`${key}：写了卷零 A 表编号 ${n}，A 表里没有`); }
+  for (const re of Z_S4) for (const m of text.matchAll(re)) { take(m, '§4'); for (const n of nums(m[1])) { if (S4_ROWS.has(n)) { for (const x of S4_ROWS.get(n)) a.add(x); src.push(`§4 ${n}`); } else problems.push(`${key}：写了卷零 §4 行 ${n}，§4 里没有`); } }
+  for (const m of text.matchAll(Z_BARE)) { if ([...Array(m[0].length).keys()].some(k => taken.has(m.index + k))) continue; for (const n of nums(m[1])) { const inA = A_NUMS.has(n), inS = S4_ROWS.has(n); if (inA && !inS) { a.add(n); src.push(`裸 ${n}`); } else problems.push(`${key}：裸写"卷零 ${n}"，${inA && inS ? 'A 表与 §4 都有这个编号，分不清指哪张表，未转录' : '两张表里都没有'}`); } }
+  return { zeroRow: [...a].sort((x, y) => { const [p, q] = x.split('.').map(Number), [r, s] = y.split('.').map(Number); return p - r || q - s; }), zeroSrc: [...new Set(src)] };
+}
 const files = readdirSync(DIR).filter(f => new RegExp(CFG.volFile).test(f)).sort();
 const rows = [];
 const perVol = {};
@@ -90,6 +111,7 @@ for (const f of files) {
       targetObject: col.obj >= 0 ? strip(c[col.obj] ?? '') : '',
       baseline: BASE,
     };
+    { const z = zeroRowsOf(c.join(' | '), key, problems); if (z.zeroRow.length) { row.zeroRow = z.zeroRow; row.zeroSrc = z.zeroSrc; } }
     // 行号写在单独的「代表位置」栏时（卷二十 T-3 表），只有一个文件锚点才把栏里的数字记为它的行
     if (col.rep >= 0 && row.anchors.length === 1 && row.anchors[0].lines.length === 0) for (const n of strip(c[col.rep] ?? '').matchAll(/\d+/g)) row.anchors[0].lines.push([+n[0], +n[0]]);
     // 别名行：任一格写"同 Mxx-y"的行不单独计数，以所指的行为准（李白 11-15 16:05 总原则）；不查五值，不进后面的算数
