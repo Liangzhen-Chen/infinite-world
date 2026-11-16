@@ -9,19 +9,26 @@
 // 用法：node 乙7-无节号候选.mjs [--write]   不带参数只打印；--write 写 审查/脚本输出/乙7-无节号-候选清单.md
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 import { scanVolume, volNo, TOK } from '../卷十一/id-defs.mjs';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url)).replace(/\\/g, '/').replace(/\/$/, '');
 const CFG = JSON.parse(readFileSync(`${HERE}/../卷十一/gen-卷十一-inputs.json`, 'utf8'));
 const DIR = CFG.dir;
-const mig = JSON.parse(readFileSync(`${HERE}/../卷十一/migrows-input.json`, 'utf8'));
+// --at <提交>：卷文、迁移行转录、卡账都按该提交读（git show，只读）；候选清单是改卷文前的读数，在改后的任何提交上用
+//   --at <改前提交> 重跑都得出同一份清单（N4）。不带 --at 读工作区。
+const AT = (() => { const i = process.argv.indexOf('--at'); return i >= 0 ? process.argv[i + 1] : null; })();
+const git = (...a) => execFileSync('git', ['-c', 'core.quotepath=false', '-C', DIR, ...a], { encoding: 'utf8', maxBuffer: 1 << 28 });
+const rd = rel => AT ? git('show', `${AT}:./${rel}`) : readFileSync(`${DIR}/${rel}`, 'utf8');
+const lsDir = () => AT ? git('ls-tree', '--name-only', AT, './').split('\n').filter(Boolean) : readdirSync(DIR);
+const mig = JSON.parse(rd('脚本/卷十一/migrows-input.json'));
 const rows = mig.rows.filter(r => !r.aliasOf);
 const cells = l => l.split(/(?<!\\)\|/).slice(1, -1).map(x => x.trim());
 const uniq = a => [...new Set(a)];
 const V = CFG.volCode.replace(/^\^|\$$/g, '');
 
 const volText = new Map();
-for (const f of readdirSync(DIR).filter(f => new RegExp(CFG.volFile).test(f)).sort()) volText.set(f.split('-')[0], { f, ls: readFileSync(`${DIR}/${f}`, 'utf8').split(/\r?\n/) });
+for (const f of lsDir().filter(f => new RegExp(CFG.volFile).test(f)).sort()) volText.set(f.split('-')[0], { f, ls: rd(f).split(/\r?\n/) });
 const VOLS = [...volText.keys()];
 const byVolNo = new Map(); for (const v of VOLS) { const n = volNo(v); if (n) byVolNo.set(n.n + n.letter, v); }
 
@@ -91,7 +98,7 @@ function tgtCol(head) {
 function headOf(ls, line) { let i = line - 1; while (i > 0 && /^\|/.test(ls[i - 1])) i--; return cells(ls[i]); }
 
 // 名单与卡账摘要同口径：生成器只对领域对象卡（非搬迁卡，即 first、follow、ledger_child）的行取 entries
-const ledger = JSON.parse(readFileSync(`${DIR}/审查/脚本输出/卡账-v0.json`, 'utf8'));
+const ledger = JSON.parse(rd('审查/脚本输出/卡账-v0.json'));
 const inObjCard = new Set(ledger.cards.filter(c => ['first', 'follow', 'ledger_child'].includes(c.cardKind)).flatMap(c => c.rowKeys ?? []));
 const allNosec = rows.filter(r => !rowSection(r));
 const nosec = allNosec.filter(r => inObjCard.has(r.rowKey));
@@ -139,6 +146,8 @@ const lines = [
   '',
   `依据：李白 11-16 01:25 第 4 条；审查/乙7-无节号行-设计要点表.md N1–N4。脚本：脚本/全书/乙7-无节号候选.mjs。名单与 gen-card-ledger.mjs rowSection 同口径，共 ${out.length} 行；补节号 ${okN} 行，节号待补 ${out.length - okN} 行。`,
   '',
+  `生成：\`node 乙7-无节号候选.mjs${AT ? ' --at ' + AT : ''} --write\`${AT ? `（读提交 ${AT} 的卷文、迁移行转录与卡账，即改卷文前的读数；在之后任何提交上照此命令重跑得出同一份清单）` : '（读工作区）'}。别卷的节写"卷X §n（该节标题）"。`,
+  '',
   '| 编号 | 卷 | 卷文行 | 落点栏原文 | 处理 | 依据 |',
   '|---|---|---|---|---|---|',
   ...out.map(x => `| ${x.k} | ${x.vol} | ${x.line} | ${x.tcell.replace(/\|/g, '\\|')} | ${x.add} | ${x.why.replace(/\|/g, '\\|')} |`),
@@ -156,6 +165,14 @@ console.log(Object.entries(perVol).map(([v, [a, b]]) => `${v}:${a}/${b}`).join('
 const arg = k => { const i = process.argv.indexOf(k); return i >= 0 ? process.argv[i + 1] : null; };
 const TAG = '1116乙7';
 const PLAN = 'F:/dnd-tmp/乙7-plan.json';
+// 本卷勘误惯例（N5）：改后覆盖哪些快照，照该卷上一条（非本标签）写了"改后覆盖"的封卷后勘误
+function afterTargets(ls) {
+  let t = null;
+  for (const l of ls) { if (l.includes(TAG)) continue; const i = l.indexOf('改后覆盖'); if (/封卷后勘误/.test(l) && i >= 0) { const seg = l.slice(i).split(/[）)]/)[0]; t = [...seg.matchAll(/版本快照\/[^，、；\s）)]+?\.md/g)].map(m => m[0]); } }
+  return t?.length ? t : null;
+}
+// 迁移行所在节的写法：行上方最近的"## "标题的首词（"§5"、"六"、"§7"）
+function migSecOf(ls, line) { for (let i = line - 1; i >= 0; i--) { const h = ls[i].match(/^##\s+(\S+)/); if (h) return h[1].replace(/[、.．]$/, ''); } return '迁移节'; }
 function cellSpan(l, ti) { // 第 ti 栏（cells 下标）的内容在行内的 [起, 止)
   const bars = []; for (let i = 0; i < l.length; i++) if (l[i] === '|' && l[i - 1] !== '\\') bars.push(i);
   let s = bars[ti] + 1, e = bars[ti + 1]; while (l[s] === ' ') s++; while (e > s && l[e - 1] === ' ') e--; return [s, e];
@@ -185,8 +202,9 @@ if (process.argv.includes('--plan')) {
     const vers = snaps.map(s => s.match(new RegExp(`^${vol}-v(\\d+)\\.md$`))).filter(Boolean).map(m => +m[1]);
     const ver = vers.length ? Math.max(...vers) : null;
     const fill = xs.filter(x => x.ok), pend = xs.filter(x => !x.ok);
-    const main = `封卷后勘误 ${TAG}（依据：李白 11-16 01:25 第 4 条、乙-7；必要理由：迁移行落点栏没有节号，卡账 entries 取不到该行的卷节；不升版本号；改前快照 版本快照/${vol}-v${ver}-勘误前-${TAG}.md，改后覆盖 版本快照/${vol}-v${ver}.md）`;
-    const detail = `§7 迁移行落点栏补节号 ${fill.length} 行（${fill.map(x => x.k + x.add).join('、') || '无'}；节号取本行落点栏所写规则编号或 §3 入口名的唯一定义节）；落不到唯一一节的 ${pend.length} 行加"（节号待补）"（${pend.map(x => x.k).join('、') || '无'}），列入 收尾待办.md 乙-7 段。逐行依据见 审查/脚本输出/乙7-无节号-候选清单.md，脚本 脚本/全书/乙7-无节号候选.mjs`;
+    const after = afterTargets(ls) ?? [`版本快照/${vol}-v${ver}.md`];
+    const main = `封卷后勘误 ${TAG}（依据：李白 11-16 01:25 第 4 条、乙-7；必要理由：迁移行落点栏没有节号，卡账 entries 取不到该行的卷节；不升版本号；改前快照 版本快照/${vol}-v${ver}-勘误前-${TAG}.md，改后覆盖 ${after.join('、')}）`;
+    const detail = `${migSecOf(ls, xs[0].line)} 迁移行落点栏补节号 ${fill.length} 行（${fill.map(x => x.k + x.add).join('、') || '无'}；节号取本行落点栏所写规则编号或 §3 入口名的唯一定义节）；落不到唯一一节的 ${pend.length} 行加"（节号待补）"（${pend.map(x => x.k).join('、') || '无'}），列入 收尾待办.md 乙-7 段。逐行依据见 审查/脚本输出/乙7-无节号-候选清单.md，脚本 脚本/全书/乙7-无节号候选.mjs`;
     let row = null, anchor = null;
     let shape = null;
     if (last >= 0) {
@@ -204,7 +222,7 @@ if (process.argv.includes('--plan')) {
     plan.vols.push({ vol, file: `${DIR}/${f}`, ver, fill: fill.map(x => x.k), pend: pend.map(x => ({ k: x.k, why: x.why })) });
   }
   // 收尾待办段落
-  const todo = ['', `## 乙-7 节号待补（${TAG}；李白 11-16 01:25 第 4 条：查不到不推定）`, '', '各卷 §7 迁移行落点栏写不出唯一一节的行，已在落点栏后标"（节号待补）"；补法：由该卷作者写明落点的规则编号或 §3 入口名（且在本卷恰定义于一节）或直接写节号。逐行原因见 审查/脚本输出/乙7-无节号-候选清单.md。', ''];
+  const todo = ['', `## 乙-7 节号待补（${TAG}；李白 11-16 01:25 第 4 条：查不到不推定）`, '', '各卷迁移节落点栏写不出唯一一节的行，已在落点栏后标"（节号待补）"；补法：由该卷作者写明落点的规则编号或 §3 入口名（且在本卷恰定义于一节）或直接写节号。逐行原因见 审查/脚本输出/乙7-无节号-候选清单.md。', ''];
   for (const v of plan.vols.filter(v => v.pend.length)) todo.push(`- ${v.vol}（${v.pend.length} 行）：${v.pend.map(p => p.k).join('、')}`);
   if (plan.skipped.length) { const sv = uniq(plan.skipped.map(s => s.vol)); todo.push(`- 本卡不改的卷（${sv.join('、')}）里的无节号行，卷文未动，候选结果照列：${plan.skipped.map(s => s.k + s.add).join('、')}`); }
   plan.todo = todo.join('\n');
@@ -217,10 +235,16 @@ if (process.argv.includes('--print')) { // 只读打印 plan：卷文件、行�
   for (const e of plan.errata) console.log(`## 勘误 ${e.file} 行${e.afterLine} ${e.shape}\nANCHOR\t${e.anchor}\nROW\t${e.row}`);
 }
 const snap = arg('--snapshot');
-if (snap) {
+if (snap === 'pre') {
   const plan = JSON.parse(readFileSync(PLAN, 'utf8'));
-  for (const v of plan.vols) {
-    const to = snap === 'pre' ? `${DIR}/版本快照/${v.vol}-v${v.ver}-勘误前-${plan.tag}.md` : `${DIR}/版本快照/${v.vol}-v${v.ver}.md`;
-    writeFileSync(to, readFileSync(v.file, 'utf8')); console.log(`${snap} ${to}`);
+  for (const v of plan.vols) { const to = `${DIR}/版本快照/${v.vol}-v${v.ver}-勘误前-${plan.tag}.md`; writeFileSync(to, readFileSync(v.file, 'utf8')); console.log(`pre ${to}`); }
+}
+// post：只读工作区卷文；凡带本标签勘误的卷，照该卷上一条勘误的"改后覆盖"对象写现卷文（不按最大版本号）
+if (snap === 'post') {
+  if (AT) throw new Error('--snapshot post 只用于工作区');
+  for (const [vol, { f, ls }] of volText) {
+    if (!ls.some(l => l.includes(`封卷后勘误 ${TAG}`))) continue;
+    const t = afterTargets(ls); if (!t) { console.log(`${vol}：上一条勘误没写改后覆盖对象，未写`); continue; }
+    for (const p of t) { writeFileSync(`${DIR}/${p}`, readFileSync(`${DIR}/${f}`, 'utf8')); console.log(`post ${p}`); }
   }
 }
