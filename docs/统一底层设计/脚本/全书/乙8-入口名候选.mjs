@@ -13,8 +13,21 @@ import { execFileSync } from 'node:child_process';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url)).replace(/\\/g, '/').replace(/\/$/, '');
 const DIR = `${HERE}/../..`;
+// 差额表模式：node 乙8-入口名候选.mjs --report 卷A 卷B …（先对各卷跑过 --diff）。把各卷与"已封卷文判定"不同的行写成 审查/脚本输出/乙8-第1批-口径对齐差额.md
+if (process.argv[2] === '--report') {
+  const vs = process.argv.slice(3); const rowsOut = []; let n = 0;
+  for (const v of vs) {
+    const d = JSON.parse(readFileSync(`F:/dnd-tmp/乙8-diff-${v}.json`, 'utf8'));
+    for (const x of d.diffs) { n++; rowsOut.push(`| ${v} | ${x.k} | ${x.line} | ${x.old} | ${x.nu} | ${x.basis} |`); }
+  }
+  const md = ['# 乙-8 第 1 批 入口名候选脚本口径对齐差额（脚本生成，勿手改）', '',
+    '依据：李白 04:1x ① K2、04:53 第 1、2 条、08:xx 直接指称、09:xx 第二条（返回的、给出的、取自、并列各计；否定句不计；表格"；"切、"，见卷X"只当出处）。脚本：脚本/全书/乙8-入口名候选.mjs，外卷登记名的判定与 gen-card-ledger.mjs 的 namesInSection 同口径。',
+    `对象：${vs.join('、')}；列出新脚本判定与已封卷文落点栏标记（"（入口 \`名\`）"或"（入口名待补）"）不同的行，共 ${n} 行。本表只出读数，不改卷文。`, '',
+    '| 卷 | 编号 | 卷文行 | 原判（已封卷文） | 新判 | 依据（原句与行号） |', '|---|---|---|---|---|---|', ...rowsOut, ''].join('\n');
+  writeFileSync(`${DIR}/审查/脚本输出/乙8-第1批-口径对齐差额.md`, md); console.log(`差额 ${n} 行`); process.exit(0);
+}
 const VOLNAME = process.argv[2];
-if (!VOLNAME || VOLNAME.startsWith('--')) throw new Error('用法：node 乙8-入口名候选.mjs <卷名> [--write] [--plan]');
+if (!VOLNAME || VOLNAME.startsWith('--')) throw new Error('用法：node 乙8-入口名候选.mjs <卷名> [--write] [--plan] [--diff]；node 乙8-入口名候选.mjs --report <卷名…>');
 const TAG = '1116乙8-' + VOLNAME.replace(/^卷/, '');
 const TMP = 'F:/dnd-tmp';
 const cells = l => l.split(/(?<!\\)\|/).slice(1, -1).map(x => x.trim());
@@ -70,6 +83,41 @@ function uniqueEndingAt(l, end, suffix, min = 6) {
 }
 const mentions = (text, name) => new RegExp('(?<![A-Za-z0-9_$.])' + name.replace(/\$/g, '\\$') + '(?![A-Za-z0-9_$])(?!\\.(?:mjs|cjs|js|ts|json|md|tsv|txt)\\b)').test(text);
 
+// ---- 别卷登记名的判定（与生成器 namesInSection 同口径；李白 04:1x ① K2、04:53 第 1/2 条、08:xx、09:xx 第二条）----
+const VOLS = readdirSync(DIR).map(f => f.match(/^(卷[^-]+)-.*\.md$/)?.[1]).filter(Boolean);
+const V_RE = '卷[零一二三四五六七八九十]+[b甲乙]?';
+const mentionsVol = (text, vol) => [...String(text).matchAll(new RegExp(V_RE, 'g'))].some(m => m[0] === vol || (/[甲乙b]$/.test(vol) && vol.slice(0, -1) === m[0] && !VOLS.includes(m[0])));
+const SEE = new RegExp('见\\s*' + V_RE + '(?:\\s*§[0-9.]+)*', 'g'); // "，见卷X"只当出处标注（09:xx 第 3 条）
+const DELIM = new Set(['，', '。', '；', ';', '\n']);
+const CONJ = /`[A-Za-z_$][A-Za-z0-9_$]*[^`]*`\s*[、与和及]\s*$/; // 并列的前一项（各计一次）
+const TRIG = /(取自|读自|读|经|取|返回|给出)\s*[：:]?\s*$/;
+const NEG = /(不再|不得|不会|无需|不|未|无|勿|别)\s*$/;
+function extHit(n, vol, cellsText) {
+  const esc = n.replace(/\$/g, '\\$');
+  for (const cell of cellsText) {
+    const depth = new Array(cell.length); { let d = 0; for (let i = 0; i < cell.length; i++) { const ch = cell[i]; if (ch === '（' || ch === '(') d++; else if ((ch === '）' || ch === ')') && d > 0) d--; depth[i] = d; } }
+    for (const m of cell.matchAll(new RegExp('`' + esc + '([^`]*)`', 'g'))) {
+      if (/^[(（]/.test(m[1])) return `调用形 \`${n}${m[1].slice(0, 1)}…\``;
+      if (m[1]) continue; // "`名.字段`"、"`名.mjs`"一类
+      const end = m.index + m[0].length;
+      if (/^(族|角色|字段|列|键|代号|词表|条目)/.test(cell.slice(end, end + 4).trim())) continue;
+      let st = m.index; for (; st > 0; st--) if (DELIM.has(cell[st - 1]) && depth[st - 1] === 0) break;
+      let en = end; for (; en < cell.length; en++) if (DELIM.has(cell[en]) && depth[en] === 0) break;
+      const clause = cell.slice(st, en).replace(SEE, '');
+      if (/调|入口/.test(clause)) return `分句「${clause.trim()}」明说调用/入口`;
+      if (mentionsVol(clause, vol)) return `分句「${clause.trim()}」点名其登记卷 ${vol}`;
+      if (depth[m.index] !== 0) continue; // 括注内的直接指称不计
+      let pre = cell.slice(st, m.index).replace(/\s+$/, ''); while (CONJ.test(pre)) pre = pre.replace(CONJ, '').replace(/\s+$/, '');
+      const t = pre.match(TRIG);
+      const aft = cell.slice(end, end + 5).replace(/\s/g, '');
+      if (t) { if (NEG.test(pre.slice(0, t.index).replace(/\s+$/, ''))) continue; return `直接指称「${t[1]} \`${n}\`」（${clause.trim()}）`; }
+      if (/^(的结果|的返回|返回的|给出的|返回|给出)/.test(aft)) { if (NEG.test(cell.slice(Math.max(0, m.index - 2), m.index).replace(/\s+$/, ''))) continue; return `直接指称「\`${n}\` ${aft}」（${clause.trim()}）`; }
+    }
+    if (new RegExp('(?<![A-Za-z0-9_$.])' + esc + '`\\s*[(（]').test(cell)) return `调用形 \`${n}\`(…)`;
+  }
+  return null;
+}
+const diffs = [];
 const out = [];
 for (const r of rows) {
   const l = ls[r.srcLine - 1]; const c = cells(l); const head = headOf(r.srcLine);
@@ -77,22 +125,31 @@ for (const r of rows) {
   const names = multiByKey.get(r.rowKey).names; // "卷X:名" 或 "名"
   // 本行原文：除编号栏（第 0 栏）外的各栏（落点、做什么、去处、锚点等所写的）；落点对象栏是对象代号不是入口名，不计
   const objI = head.map(strip).findIndex(x => /落点对象/.test(x));
-  const body = c.filter((x, i) => i !== 0 && i !== objI).join(' | ');
-  // 别卷登记的候选（"卷X:名"）按 K2 口径：本行原文写成调用形"名(…)"或原句明说调用才算明写；只写出卷名、只是同名的普通词都不算；
-  // 名字后紧跟"族、角色、字段、列、键、代号、词表"一类的，不计（同生成器）
+  // 去掉已封卷文里本脚本补的标记，免得拿自己的输出当原文
+  const bodyCells = c.filter((x, i) => i !== 0 && i !== objI).map(x => x.replace(/（入口 `[^`]+`）|（入口名待补）/g, ''));
+  const body = bodyCells.join(' | ');
+  // 本卷登记的候选：本行原文写出确切名字即计（括注、"某某 条目"之类的后缀与扩展名排除，同生成器本卷名"出现即计"的口径再加后缀排除）。
+  // 别卷登记的候选（"卷X:名"）整类按生成器 namesInSection 的判据（extHit）：调用形、原句明说调用/入口/点名其登记卷、读/经/取/返回/给出/取自 后写确切反引号名（并列各计）、"x 的结果/返回的/给出的"；
+  // 括注内的直接指称、否定句"不读 x""不经 x"、字段来源说明、名字后跟"族、角色、字段、列、键、代号、词表、条目"、"，见卷X"只当出处、扩展名，都不计
+  const why1 = {};
   const hit = names.filter(nm => {
-    const n = nm.replace(/^.*:/, ''); if (!mentions(body, n)) return false;
-    const m = body.match(new RegExp('(?<![A-Za-z0-9_$.])' + n.replace(/\$/g, '\\$') + '(?![A-Za-z0-9_$])`?\\s*(.{0,2})'));
-    if (m && /^(族|角色|字段|列|键|代号|词表|条目)/.test(m[1])) return false;
-    if (!/:/.test(nm)) return true;
-    // 外卷登记的候选（李白 11-16 04:1x ① K2）：只有写成调用形（名字后跟括号签名），或原句（按"；""。"切分）明说调用、该名字就在这句里，才算明写；只写出卷名不算
-    const esc = n.replace(/\$/g, '\\$');
-    if (new RegExp('(?<![A-Za-z0-9_$.])' + esc + '`?\\s*[(（]').test(body)) return true;
-    return body.split(/[；;。]/).some(cl => mentions(cl, n) && /调用/.test(cl));
+    const n = nm.replace(/^.*:/, '');
+    if (!/:/.test(nm)) {
+      if (!mentions(body, n)) return false;
+      const m = body.match(new RegExp('(?<![A-Za-z0-9_$.])' + n.replace(/\$/g, '\\$') + '(?![A-Za-z0-9_$])`?\\s*(.{0,2})'));
+      return !(m && /^(族|角色|字段|列|键|代号|词表|条目)/.test(m[1]));
+    }
+    const w = extHit(n, nm.replace(/:.*$/, ''), bodyCells); if (w) why1[n] = w; return !!w;
   }).map(nm => nm.replace(/^.*:/, ''));
   const ok = hit.length === 1;
   out.push({ k: r.rowKey, line: r.srcLine, at: multiByKey.get(r.rowKey).at, names, hit, ok, ti, add: ok ? `（入口 \`${hit[0]}\`）` : '（入口名待补）', tcell: c[ti] ?? '',
     why: ok ? `本行原文写明 ${hit[0]}` : hit.length ? `本行原文写出多个候选：${hit.join('、')}` : '本行原文没写出任何候选入口名' });
+  // 与已封卷文落点栏标记比较（差额表用）
+  const mk = (c[ti] ?? '').match(/（入口 `([^`]+)`）|（入口名待补）/);
+  if (mk) {
+    const oldJ = mk[1] ? `补 \`${mk[1]}\`` : '待补'; const nu = ok ? `补 \`${hit[0]}\`` : '待补';
+    if (oldJ !== nu) diffs.push({ k: r.rowKey, line: r.srcLine, old: oldJ, nu, basis: ((ok ? Object.entries(why1).filter(([n]) => n === hit[0]).map(([, w]) => w).join('') || `本卷登记名 ${hit[0]} 写明` : hit.length ? `写出多个：${hit.join('、')}` : '无候选明写') + `（卷文 ${r.srcLine} 行）`).replace(/\|/g, '\\|') });
+  }
 }
 const okN = out.filter(x => x.ok).length;
 console.log(`${VOLNAME}：一节多入口 ${out.length} 行；补入口名 ${okN}；入口名待补 ${out.length - okN}`);
@@ -103,6 +160,7 @@ const lines = [
   '| 编号 | 卷文行 | 卷、节 | 该节候选入口 | 本行原文写出 | 处理 | 依据 |', '|---|---|---|---|---|---|---|',
   ...out.map(x => `| ${x.k} | ${x.line} | ${x.at} | ${x.names.join('、')} | ${x.hit.join('、') || '—'} | ${x.add} | ${x.why} |`), '',
 ];
+if (process.argv.includes('--diff')) writeFileSync(`${TMP}/乙8-diff-${VOLNAME}.json`, JSON.stringify({ vol: VOLNAME, diffs }, null, 1));
 if (process.argv.includes('--write')) writeFileSync(`${DIR}/审查/脚本输出/乙8-${VOLNAME}-候选清单.md`, lines.join('\n'));
 
 if (process.argv.includes('--plan')) {
