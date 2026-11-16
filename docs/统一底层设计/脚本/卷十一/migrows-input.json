@@ -2725,7 +2725,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "R9-18.2（卷九，report 的键）；narrate、narrateTurn（§2.9 第 0 条）",
+   "target": "R9-18.5（卷九，旁路只走 report）；narrate、narrateTurn（§2.9 第 0 条）",
    "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
@@ -2854,8 +2854,8 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "R9-2.8（卷九，原语参数）；kernel/validate/narrow.mjs",
-   "targetObject": "sys.ai_interface",
+   "target": "kernel/validate/narrow.mjs（§2.9）",
+   "targetObject": "待补",
    "baseline": "d54c89a3"
   },
   {
@@ -2954,8 +2954,8 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "R29-7.1（卷二十九，前端适配器）；NetCap、PrefCap、ClientTimerCap（§2.9 第 0 条）",
-   "targetObject": "sys.display_l10n",
+   "target": "NetCap、PrefCap、ClientTimerCap（§2.9 第 0 条）",
+   "targetObject": "待补",
    "baseline": "d54c89a3"
   },
   {
@@ -2976,7 +2976,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "move_out",
-   "target": "R9-9.3（卷九，回合结构）；outputGate 的 PromptRenderCap（§2.9 第 0 条）",
+   "target": "R9-10.8（卷九，提示的组成：静态指令块取自卷二十九 prompt 类模板）；outputGate 的 PromptRenderCap（§2.9 第 0 条）",
    "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
@@ -2998,7 +2998,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
-   "target": "outputGate 的 PromptRenderCap（§2.9 第 0 条能力对象表）",
+   "target": "outputGate 的 PromptRenderCap（§2.9 第 0 条能力对象表）：parseExamples、promptSections、staticMessages、injectToolExamples、actionNarrationContract",
    "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
@@ -3009,7 +3009,7 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "relocate_only",
-   "target": "ai-gate/prompt.mjs（§2.9 第 0 条）",
+   "target": "ai-gate/prompt.mjs（§2.9 第 0 条）：assembleMessages、modelContextProjection、modelToolResult",
    "targetObject": "aiGate",
    "baseline": "d54c89a3"
   },
@@ -3020,8 +3020,8 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "R29-7.3（卷二十九，上行只有代号）；bootstrap 的单调整数请求编号",
-   "targetObject": "sys.display_l10n",
+   "target": "R27-7.3（卷二十七，外来输入按 kernel 发的请求编号记进输入序列）；bootstrap 的单调整数请求编号",
+   "targetObject": "sys.offscreen_save",
    "baseline": "d54c89a3"
   },
   {

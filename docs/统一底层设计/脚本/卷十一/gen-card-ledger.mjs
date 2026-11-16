@@ -7,7 +7,8 @@
 import { readFileSync, readdirSync, writeFileSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { PLACEHOLDER, receivingVolume } from './object-rules.mjs';
-import { scanVolume, TOK as ID_TOK, SHORT_RE } from './id-defs.mjs';
+import { scanVolume, TOK as ID_TOK, SHORT_RE, volNo } from './id-defs.mjs';
+import { execFileSync } from 'node:child_process';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url)).replace(/\\/g, '/').replace(/\/$/, '');
 const CFG = JSON.parse(readFileSync(`${HERE}/gen-卷十一-inputs.json`, 'utf8'));
@@ -40,6 +41,58 @@ const volOfFile = f => { const m = f.match(VOL); return m ? m[0] : null; };
 const VOLS = volFiles.map(volOfFile).filter(Boolean);
 const regText = rd(`${DIR}/${CFG.registry.file}`);
 const reg = regText.split(/\r?\n/);
+
+// ---- 位置组定对象用的"首卡在 R11-7.2 次序"（李白 11-16 01:25 第 5 条，R11-2.5 原文）----
+// 次序要等卡与阶段算完才有，而对象又影响卡：本脚本先以子进程反复运行（GEN_CHILD=1，只打印各对象首卡的次序号、不写文件），
+// 把上一轮的次序交给下一轮，直到次序不再变（不动点）；不动点上的取法就是 R11-2.5 原文。6 轮内不收敛即"算不出"，在摘要里报。
+const CHILD = process.env.GEN_CHILD === '1';
+let ORDER = new Map(); let orderStable = true, orderRounds = 0;
+if (CHILD) ORDER = new Map(Object.entries(JSON.parse(process.env.GEN_ORDER || '{}')));
+else {
+  let ord = {}; orderStable = false;
+  for (orderRounds = 1; orderRounds <= 6; orderRounds++) {
+    const out = execFileSync(process.execPath, [fileURLToPath(import.meta.url)], { env: { ...process.env, GEN_CHILD: '1', GEN_ORDER: JSON.stringify(ord) }, encoding: 'utf8', maxBuffer: 1 << 26 });
+    const nx = JSON.parse(out.trim().split(/\r?\n/).pop());
+    if (JSON.stringify(nx) === JSON.stringify(ord)) { orderStable = true; break; }
+    ord = nx;
+  }
+  ORDER = new Map(Object.entries(ord));
+}
+
+// ---- 各卷 §3 入口表（李白 11-16 01:30 第 1、3 条：entries 只认 §3 入口表登记的名字）----
+// §3 下各小节里、首列表头含"入口"的表格；首格开头的反引号标识符（"、"分隔的多个都算，取括号前的名字）是入口名；
+// 入口的定义节：表头含"节"的栏里的节号，没有这一栏的取整行写的节号与规则编号（R<卷>-a.b 记为 §4.a）。
+const secOfRule = (vol, t) => { const out = []; for (const m of t.matchAll(/§\s*([0-9]+(?:\.[0-9]+)*)/g)) out.push(m[1]); for (const m of t.matchAll(/(?<![A-Za-z0-9])R([0-9]+)([a-z]?)-([0-9]+)\.[0-9]/g)) out.push('4.' + m[3]); return out; };
+const entryIdx = new Map(); // 卷 → [{name, sec, secs}]
+const entryNames = new Set();
+for (const [f, ls] of volText) {
+  const v = volOfFile(f); if (!v) continue; const list = [];
+  let in3 = false, sub = null, head = null, code = false;
+  for (const l of ls) {
+    if (/^```/.test(l)) { code = !code; head = null; continue; } if (code) continue;
+    if (/^## /.test(l)) { in3 = /^## §?3[ .]/.test(l); sub = null; head = null; continue; }
+    const h3 = l.match(/^### (?:§)?(3\.[0-9]+)/); if (h3) { in3 = true; sub = '§' + h3[1]; head = null; continue; }
+    if (/^### /.test(l)) { in3 = false; head = null; continue; }
+    if (!in3 || !sub) continue;
+    if (!/^\|/.test(l)) { head = null; continue; }
+    const c = cells(l); if (!head) { head = c; continue; } if (/^:?-{3}/.test(c[0] ?? '')) continue;
+    if (!/入口/.test(head[0] ?? '')) continue;
+    const si = head.findIndex(h => /节/.test(h));
+    const secs = secOfRule(v, si >= 0 ? c[si] ?? '' : c.join(' '));
+    const lead = (c[0] ?? '').split(/[、，]/);
+    for (const part of lead) { const m = part.trim().match(/^`([A-Za-z_$][A-Za-z0-9_$]*)/); if (m) { list.push({ name: m[1], sec: sub, secs }); entryNames.add(m[1]); } }
+  }
+  entryIdx.set(v, list);
+}
+// 迁移行的"卷、节"：落点里第一个节号或规则编号（"卷X §n"取卷X，裸"§n"取来源卷，R<卷>-a.b 取该卷 §4.a）
+const byVolNo = new Map(); for (const v of VOLS) { const n = volNo(v); if (n) byVolNo.set(n.n + n.letter, v); }
+function rowSection(r) {
+  const t = String(r.target ?? ''); const V = CFG.volCode.replace(/^\^|\$$/g, '');
+  const a = t.match(new RegExp(`(?:(${V})\\s*)?§\\s*([0-9]+(?:\\.[0-9]+)*)`)); const b = t.match(/(?<![A-Za-z0-9])R([0-9]+)([a-z]?)-([0-9]+)\.[0-9]/);
+  const ra = a ? { at: a.index, vol: a[1] ?? r.volume, sec: a[2] } : null, rb = b && byVolNo.get(b[1] + b[2]) ? { at: b.index, vol: byVolNo.get(b[1] + b[2]), sec: '4.' + b[3] } : null;
+  return [ra, rb].filter(Boolean).sort((x, y) => x.at - y.at)[0] ?? null;
+}
+const secMatch = (s, t) => s === t || s.startsWith(t + '.') || t.startsWith(s + '.');
 
 // ---- 表代号（卷二各表节，登记次序）与表主 ----
 const tableList = [];
@@ -257,6 +310,16 @@ const isMoveRow = (r, code) => moveRows.get(r.rowKey)?.obj === code;
 function tableObj(t) { return { kind: 'table', code: t, volume: tableOwner.get(t) ?? sysOfTable.get(t)?.volume ?? null, sys: sysOfTable.get(t) ?? null }; }
 function sysObj(s) { return s.tables.length ? tableObj(s.tables[0]) : { kind: 'system', code: s.system, volume: s.volume, sys: s }; }
 const objKey = o => `${o.kind}:${o.code}`;
+// 登记处：各卷表格首格开头写着该代号的行（规则表键取代号本身或以"代号."开头的键；词表族取族名本身）；只有卷二登记的不算（卷二是登记总表，没有系统登记项），
+// 别卷恰一卷时取该卷；不止一卷或没有时定不出登记处，交判据一
+const defTok = new Map(); // 首格代号 → Set(卷)
+for (const [f, ls] of volText) { const v = volOfFile(f); if (!v) continue; let code = false; for (const l of ls) { if (/^```/.test(l)) { code = !code; continue; } if (code || !/^\|/.test(l)) continue; const m = (cells(l)[0] ?? '').match(/^`([a-z][A-Za-z0-9_.]*)`/); if (m) (defTok.get(m[1]) ?? defTok.set(m[1], new Set()).get(m[1])).add(v); } }
+function regVolOf(o) {
+  const vs = new Set(); for (const [t, s] of defTok) if (t === o || (/^rules\./.test(o) && t.startsWith(o + '.'))) for (const v of s) vs.add(v);
+  const others = [...vs].filter(v => v !== CFG.registry.file.match(VOL)?.[0]);
+  return others.length === 1 ? others[0] : null;
+}
+const regMoved = []; // 按登记卷定、与判据一结果不同的行
 // 迁移行 → 对象（落点对象六类 → 卡的四种对象）
 function objectOfRow(r) {
   const o = r.obj0;
@@ -267,8 +330,13 @@ function objectOfRow(r) {
   // 落点是模块组、却不在卷二 §6.11 文件级迁移表里的行，是"改调该组入口"，不是搬迁：不进搬迁卡，按下面"其余"一条归接收卷的对象
   if (MODGROUPS.has(o) && isMoveRow(r, o)) return { kind: 'module_group', code: o, volume: null, sys: null };
   if (GATEFAC.has(o)) return { kind: 'gate_facility', code: o, volume: null, sys: null };
-  // 词表族条目、规则表键、其余：归来源卷的对象（有主表取第一张表，无主表取系统键）
+  // 规则表键、词表族条目：对象本身有登记处的，按登记卷定，不读落点文字（李白 11-16 01:25 第 1 条；卷十一 §2.3、:164"须在对应登记"）
   const rv = receivingVolume(r.target, r.volume, CFG.volCode, VOLS);
+  if (/^rules\./.test(o) || vocabSet.has(o)) {
+    const rvol = regVolOf(o);
+    if (rvol && sysOfVol.get(rvol)) { if (rvol !== rv.vol) regMoved.push({ k: r.rowKey, o, reg: rvol, j1: rv.vol }); return sysObj(sysOfVol.get(rvol)); }
+  }
+  // 定不出登记处的（其余）：判据一，归接收卷的对象（有主表取第一张表，无主表取系统键）
   const s = sysOfVol.get(rv.vol) ?? sysOfVol.get(r.volume);
   if (s) return sysObj(s);
   // 李白 11-15 16:55 第一条，19:08 第 2 条放宽："删除、锚点定不出系统"的行取被删概念的所属系统——锚点文件恰是一个系统登记项的定义文件时取该系统
@@ -298,7 +366,7 @@ const union = (a, b) => { a = find(a); b = find(b); if (a !== b) parent[Math.max
 const posGroups = new Map();
 rows.forEach((r, i) => { const k = find(i); (posGroups.get(k) ?? posGroups.set(k, []).get(k)).push(r); });
 const kindRank = { gate_facility: 0, module_group: 1, table: 2, system: 3 };
-let nObjConflict = 0; const objConflicts = [];
+let nObjConflict = 0; const objConflicts = []; const pickMoved = []; const mergedRecheck = [];
 const unassigned = [];
 for (const [k, rs] of [...posGroups].sort((a, b) => a[0] - b[0])) {
   const cand = rs.filter(r => r.obj);
@@ -306,12 +374,17 @@ for (const [k, rs] of [...posGroups].sort((a, b) => a[0] - b[0])) {
   let pick = null;
   if (cs.length === 1) pick = cand[0].obj;
   else if (cs.length > 1) {
-    // 第一步：同卷来源的行取其对象；仍不唯一时取首卡次序最前者（v0 以对象种类次序再代号升序近似，冲突单列）
+    // 第一步（R11-2.5 原文，李白 11-16 01:25 第 5 条）：取 zeroRow 所在卷零行主归卷等于来源卷的那一行的对象——zeroRow 还没转录，按"没有这样的行"处理；
+    // 于是取候选对象里首卡在 R11-7.2 次序中最前的那个（次序见文件头的不动点）；有候选不在次序里的，记"算不出"
     nObjConflict++;
+    const objsU = [...new Map(cand.map(r => [objKey(r.obj), r.obj])).values()];
+    const rk = o => (ORDER.has(objKey(o)) ? +ORDER.get(objKey(o)) : Infinity);
+    pick = objsU.sort((a, b) => rk(a) - rk(b) || cmp(objKey(a), objKey(b)))[0];
     const cnt = new Map(); for (const r of cand) cnt.set(objKey(r.obj), (cnt.get(objKey(r.obj)) ?? 0) + 1);
-    const sorted = [...new Map(cand.map(r => [objKey(r.obj), r.obj])).values()].sort((a, b) => cnt.get(objKey(b)) - cnt.get(objKey(a)) || kindRank[a.kind] - kindRank[b.kind] || cmp(a.code, b.code));
-    pick = sorted[0];
-    objConflicts.push({ rows: rs.map(r => r.rowKey), objs: cs, pick: objKey(pick) });
+    const old = objsU.slice().sort((a, b) => cnt.get(objKey(b)) - cnt.get(objKey(a)) || kindRank[a.kind] - kindRank[b.kind] || cmp(a.code, b.code))[0]; // 旧取法，只作对照
+    objConflicts.push({ rows: rs.map(r => r.rowKey), objs: cs, pick: objKey(pick), old: objKey(old), unranked: objsU.filter(o => !ORDER.has(objKey(o))).map(objKey) });
+    for (const r of rs) if (objKey(old) !== objKey(pick)) pickMoved.push(r.rowKey);
+    for (const r of cand) if (objKey(r.obj) !== objKey(pick)) mergedRecheck.push({ k: r.rowKey, own: objKey(r.obj), pick: objKey(pick) });
   }
   for (const r of rs) {
     r.posGroup = k;
@@ -447,6 +520,23 @@ function newCard(base) {
   }, base);
 }
 const splitCode = fs => ({ code: fs.filter(f => f.endsWith('.mjs') || f.endsWith('.js')), data: fs.filter(f => f.endsWith('.json')) });
+// entries（李白 11-16 01:30 第 1–3 条，卷十一 §2.2 entries"各卷 §3"）：每行的"卷、节"到该卷 §3 入口表取定义节对应的入口名；
+// 恰一个入口才取，一节多个入口或找不到的不推定，列待查；只认 §3 入口表登记的名字（别表视图里的维度别名不是入口）
+const entryMulti = [], entryNone = [], entryNoSec = [];
+const launchNames = new Map(); // 入口名 → 上线键
+function entryOfRow(r) {
+  if (!launchNames.size) for (const k of launchedBy.keys()) { const n = k.slice(k.indexOf(':') + 1); (launchNames.get(n) ?? launchNames.set(n, []).get(n)).push(k); }
+  const s = rowSection(r); if (!s) { entryNoSec.push(r.rowKey); return null; }
+  const hit = uniq((entryIdx.get(s.vol) ?? []).filter(x => x.secs.some(t => secMatch(t, s.sec))).map(x => x.name));
+  if (hit.length !== 1) { (hit.length ? entryMulti : entryNone).push({ k: r.rowKey, at: `${s.vol} §${s.sec}`, names: hit }); return null; }
+  const name = hit[0]; const keys = launchNames.get(name) ?? [];
+  const k = keys.find(x => x.startsWith(s.vol + ':')) ?? (keys.length === 1 ? keys[0] : entryKey(s.vol, name));
+  const [vol] = k.split(':'); return { vol, sec: (entryIdx.get(s.vol) ?? []).find(x => x.name === name)?.sec ?? '§3', name };
+}
+function entriesOfRows(rs) {
+  const m = new Map(); for (const r of rs) { const x = entryOfRow(r); if (x && entryNames.has(x.name)) m.set(entryKey(x.vol, x.name), x); }
+  return [...m].sort((a, b) => cmp(a[0], b[0])).map(([, v]) => v);
+}
 function entriesOfCard(e, files) {
   const set = new Map();
   const fset = new Set(files);
@@ -532,7 +622,7 @@ for (const e of objList) {
     if (kind === 'relocate') { c.groupKey = null; c.splitAxis = g.splitAxis; c.segNo = g.segNo; }
     // 入口、上线
     if (kind !== 'relocate') {
-      c.entries = entriesOfCard(e, g.files);
+      c.entries = entriesOfRows(gRows);
       if (isFirst) c.launches = (launchesOfObj.get(objKey(o)) ?? []).map(k => { const x = entryByKey.get(k); return { vol: x.vol, sec: x.sec, name: x.name }; }).sort((a, b) => cmp(a.vol + a.name, b.vol + b.name));
     }
     // 验收判据
@@ -610,6 +700,8 @@ function derive(entriesOf) {
     if (c.cardKind === 'follow') { const d = firstOfObj.get(`${c.objectKind}:${c.objectCode}`); if (d) dep.add(d.cardId); }
     // 来源 4：文件清单含某搬迁卡要搬的文件
     if (c.cardKind !== 'relocate' && c.cardKind !== 'sweep') for (const f of [...c.files, ...c.dataFiles]) for (const d of fileToReloc.get(f) ?? []) if (d !== c) dep.add(d.cardId);
+    // 搬迁卡之间文件相交的，按 R11-4.3 串行、先后按 R11-7.2（没有依赖时按卡号升序）：卡号在后的依赖卡号在前的（李白 11-16 01:25 第 3 条）
+    if (c.cardKind === 'relocate') for (const f of c.files) for (const d of fileToReloc.get(f) ?? []) if (d !== c && cmp(d.cardId, c.cardId) < 0) dep.add(d.cardId);
     // 来源 5：触及账本路径的卡依赖母卡（搬迁卡只搬文件、不改账本路径，不算）
     if (parentCard && c !== parentCard && c.cardKind !== 'gate' && c.cardKind !== 'sweep' && c.cardKind !== 'relocate' && c.files.some(f => ledgerFileSet.has(f))) dep.add(parentCard.cardId);
     deps.set(c.cardId, [...dep].sort(cmp));
@@ -650,6 +742,14 @@ const alt = derive(crossOf);
 const phase = main.phase, phaseCycle = main.cycle, phaseConflicts = main.conflicts;
 for (const c of cards) { c.dependsOn = main.deps.get(c.cardId); c.phaseNo = phase.get(c.cardId) ?? null; }
 const n = main.n;
+// R11-7.2 次序：按阶段，阶段内按依赖拓扑排序，没有依赖关系的按卡号升序；各对象首卡（门禁对象取其门禁卡）在其中的序号
+const order72 = []; for (const ph of uniq(cards.map(c => c.phaseNo)).sort((a, b) => a - b)) {
+  const cs = cards.filter(c => c.phaseNo === ph), ids = new Set(cs.map(c => c.cardId)); const done = new Set();
+  while (done.size < cs.length) { const ready = cs.filter(c => !done.has(c.cardId) && c.dependsOn.every(d => !ids.has(d) || done.has(d))).sort((a, b) => cmp(a.cardId, b.cardId)); if (!ready.length) { for (const c of cs.filter(c => !done.has(c.cardId)).sort((a, b) => cmp(a.cardId, b.cardId))) { done.add(c.cardId); order72.push(c); } break; } done.add(ready[0].cardId); order72.push(ready[0]); }
+}
+const rankOut = {}; for (const [k, c] of firstOfObj) rankOut[k] = order72.indexOf(c); for (const c of cards) if (c.cardKind === 'gate') rankOut[`gate_facility:${c.objectCode}`] = order72.indexOf(c);
+const rankSorted = Object.fromEntries(Object.entries(rankOut).sort((a, b) => cmp(a[0], b[0])));
+if (CHILD) { console.log(JSON.stringify(rankSorted)); process.exit(0); }
 // 清扫卡：阶段 1 至 n 各一张
 for (let k = 1; k <= n; k++) cards.push(newCard({ cardId: `SWEEP-${k}`, cardKind: 'sweep', phaseNo: k, accept: s11.slice() }));
 // 全仓库机械替换类（卷十一 R11-7.8 例外、必填矩阵清扫卡 files 栏；李白 11-15 19:08 第 1 条、19:12）：文件清单由本脚本按"现有文件"栏的标识符列出
@@ -660,8 +760,25 @@ for (const [k, m] of [...mechRows].sort((a, b) => cmp(a[0], b[0]))) {
   const fs = all.filter(f => isRuntime(f) && /\.(?:mjs|js)$/.test(f) && re.test(rd(`${REPO}/${f}`))).sort();
   const ph = Math.max(1, ...cards.filter(c => c.cardKind === 'relocate' && c.objectCode === m.obj).map(c => c.phaseNo ?? 1));
   const sw = cards.find(c => c.cardId === `SWEEP-${Math.min(ph, Math.max(1, n))}`);
-  if (sw) { sw.files = uniq([...sw.files, ...fs]).sort(); sw._mech = true; }
+  if (sw) { sw.files = uniq([...sw.files, ...fs]).sort(); sw._mech = true; (sw._mechRows ??= []).push(k); }
   mechInfo.push({ rowKey: k, ident: m.ident, files: fs.length, sweep: sw?.cardId ?? null });
+}
+// 不豁免文件上限（卷一 §6.6；李白 11-16 01:25 第 2 条）：机械替换类清扫卡按 R11-7.5 次序 ①消费者组 ③路径升序拆成同阶段的段卡；
+// 替换的迁移行由 segNo 最小的段卡认领，四件核对（accept 的全部扫描）只由 segNo 最大的段卡做
+for (const sw of cards.filter(c => c.cardKind === 'sweep' && c._mech)) {
+  const isM = f => f.endsWith('.mjs'); const segs = [];
+  const byG = new Map(); for (const f of sw.files) { const g = groupOf(f); (byG.get(g) ?? byG.set(g, []).get(g)).push(f); }
+  const whole = sw.files.filter(isM).length <= MAXFILES;
+  if (whole) segs.push({ axis: 'whole', files: sw.files });
+  else for (const g of [...byG.keys()].sort()) {
+    const fs = byG.get(g); const m = fs.filter(isM), r = fs.filter(f => !isM(f));
+    if (m.length <= MAXFILES) { segs.push({ axis: 'consumer_group', files: fs }); continue; }
+    for (let s = 0; s < Math.ceil(m.length / MAXFILES); s++) segs.push({ axis: 'path_order', files: [...m.slice(s * MAXFILES, (s + 1) * MAXFILES), ...(s === 0 ? r : [])] });
+  }
+  const idx = cards.indexOf(sw); const out = segs.map((x, i) => newCard({ cardId: `${sw.cardId}-${i + 1}`, cardKind: 'sweep', phaseNo: sw.phaseNo, splitAxis: x.axis, segNo: i + 1, files: x.files.slice().sort(), rowKeys: i === 0 ? sw._mechRows.slice().sort() : [], accept: i === segs.length - 1 ? sw.accept : [], _mech: true }));
+  for (const c of out) if (!c.accept.length) c.pending.push('accept:机械替换段卡不做四件核对（只由该阶段 segNo 最大的段卡做），本段的验收判据卷十一未写，待裁');
+  cards.splice(idx, 1, ...out);
+  for (const x of mechInfo) if (x.sweep === sw.cardId) x.sweep = `${out[0].cardId} 至 ${out[out.length - 1].cardId}（${out.length} 张段卡）`;
 }
 
 // ================= 推进钩子（R11-3.14）：`X.after = [..]` 机读写法 =================
@@ -706,7 +823,8 @@ const isEmpty = v => v === null || v === undefined || v === '' || (Array.isArray
 const matrixCheck = c => {
   const m = MATRIX[c.cardKind], miss = [], extra = [];
   for (const [f, rule0] of Object.entries(m)) {
-    const rule = c.cardKind === 'sweep' && f === 'files' && c._mech ? '必' : rule0; // 清扫卡 files：脚本生成清单（机械替换类）／其余仍为—（R11-7.8 例外，李白 19:12）
+    // 清扫卡机械替换类（R11-7.8 例外，李白 11-15 19:12、11-16 01:25 第 2 条）：files、splitAxis、segNo 必，rowKeys 列；其余仍为—
+    const rule = c.cardKind === 'sweep' && c._mech ? ({ files: '必', splitAxis: '必', segNo: '必', rowKeys: '列' }[f] ?? rule0) : rule0;
     const v = c[f];
     if (rule === '必' && isEmpty(v)) miss.push(f);
     if (rule === '—' && !isEmpty(v)) extra.push(f);
@@ -721,7 +839,7 @@ for (const c of cards) {
     if (f === 'retire') c.pending.push('retire:登记退役数要逐行清单的行数，逐行清单待 G-3');
     else if (f === 'files') c.pending.push(e && !e.cons?.all.length ? 'files:该对象在旧代码里没有消费者文件（新对象或纯数据对象）' : 'files:门禁卡的封闭文件清单待开工时登记');
     else if (f === 'accept') c.pending.push('accept:卡的行落点没有写验收编号，断言归属待各卷分配');
-    else if (f === 'entries') c.pending.push('entries:该组文件在旧代码里没有调用本系统读入口，要接哪些入口待设计');
+    else if (f === 'entries') c.pending.push('entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）');
     else if (f === 'groupKey') c.pending.push('groupKey:该对象没有消费者文件，首卡无消费者组');
     else if (f === 'volume') c.pending.push('volume:对象没有登记的归属卷');
     else c.pending.push(`${f}:推不出`);
@@ -848,8 +966,12 @@ const md = [
   `- E-MIG-SORTKEY-ORDER：钩子 ${hookNodes.length} 个（${hookNodes.join('、')}）；成环 ${hookCycle.length} 个；指向不存在（卷里没有登记行）的 ${hookMissing.length} 个${hookMissing.length ? '：' + hookMissing.join('、') : ''}；同一钩子两处写法不同 ${uniq(hookConflict).length} 个。机读 after 来源是各卷正文的 \`X.after = [..]\` 写法；排序键按拓扑加代号升序从 1 连续编号，v0 不分推进相位（卷二 §2.7 没有按钩子登记相位的机读列），落在登记该钩子的卷的领头卡的 sortKeys 上。`,
   `- dependsOn：无环${phaseCycle ? '（失败：' + phaseCycle.join('→') + '）' : ''}；指向不存在的卡 ${depMissing.length} 处；固定卡阶段冲突（E-MIG-PHASE-CONFLICT）${phaseConflicts.length} 处${phaseConflicts.length ? '：' + phaseConflicts.join('；') : ''}。`,
   `- launches：每个入口恰一张卡上线——重复上线 ${launchDup.length} 个${launchDup.length ? '：' + launchDup.slice(0, 5).join('、') : ''}；没有卡上线的入口 ${notLaunched.length} 个${notLaunched.length ? '（' + notLaunched.slice(0, 5).join('、') + '…）' : ''}。`,
-  `- 迁移行认领：没有接收卡 ${orphanRows.length} 行${orphanRows.length ? '（' + orphanRows.slice(0, 12).join('、') + (orphanRows.length > 12 ? '…' : '') + '）' : ''}；多于一张 ${multiRows.length} 行。位置组 ${posGroups.size} 个，其中锚点跨两个以上消费者组的位置组行 ${nStraddle} 行（取最小组，待裁）；位置组内对象不一致 ${nObjConflict} 组（取行数最多的对象，同数按对象种类次序再代号升序，列在下面）。`,
-  `- 全仓库机械替换类（卷十一 R11-7.8 例外，李白 11-15 19:12）：${mechInfo.map(x => `${x.rowKey}（\`${x.ident}\`，脚本列出 ${x.files} 个文件，进 ${x.sweep}）`).join('；') || '无'}；这类行不归领域卡、清扫卡的 rowKeys 按必填矩阵仍为"—"，所以计入上面"没有接收卡"的行（待裁）。`,
+  `- 迁移行认领：没有接收卡 ${orphanRows.length} 行${orphanRows.length ? '（' + orphanRows.slice(0, 12).join('、') + (orphanRows.length > 12 ? '…' : '') + '）' : ''}；多于一张 ${multiRows.length} 行。位置组 ${posGroups.size} 个，其中锚点跨两个以上消费者组的位置组行 ${nStraddle} 行（取最小组，待裁）；位置组内对象不一致 ${nObjConflict} 组（按 R11-2.5 原文取首卡在 R11-7.2 次序中最前的候选，见下两条，列在第五节）。`,
+  `- 全仓库机械替换类（卷十一 R11-7.8 例外，李白 11-15 19:12）：${mechInfo.map(x => `${x.rowKey}（\`${x.ident}\`，脚本列出 ${x.files} 个文件，进 ${x.sweep}）`).join('；') || '无'}；替换的迁移行列在 segNo 最小的段卡的 rowKeys（李白 11-16 01:25 第 2 条）。`,
+  `- 对象按登记卷定（李白 11-16 01:25 第 1 条：规则表键、词表族条目有登记处的按登记卷，不读落点文字）：与判据一结果不同的 ${regMoved.length} 行${regMoved.length ? '：' + regMoved.map(x => `${x.k}（\`${x.o}\` 登记在${x.reg}，判据一原取${x.j1}）`).join('；') : ''}。`,
+  `- 位置组定对象（R11-2.5 原文，李白 11-16 01:25 第 5 条）：zeroRow 未转录，按"没有这样的行"取首卡在 R11-7.2 次序中最前的候选；次序取不动点，${orderStable ? `第 ${orderRounds} 轮收敛` : '6 轮未收敛，算不出（报主会话）'}；候选不在次序里的组 ${objConflicts.filter(x => x.unranked.length).length} 组。与旧取法（行数最多）相比改了接收对象的行 ${pickMoved.length} 行。`,
+  `- 并组后接收对象不是本行自己对象的行，列待查（zeroRow 补上后复判）：${mergedRecheck.length} 行${mergedRecheck.length ? '：' + mergedRecheck.map(x => `${x.k}（${x.own}→${x.pick}）`).join('；') : ''}。`,
+  `- entries（李白 11-16 01:30）：按各行"卷、节"到该卷 §3 入口表取恰一个入口；§3 入口表共登记 ${entryNames.size} 个入口名，不在表里的名字不收。待查：一节对应多个入口 ${uniq(entryMulti.map(x => x.k)).length} 行（${uniq(entryMulti.map(x => x.k)).join('、')}）；该节在 §3 找不到入口 ${uniq(entryNone.map(x => x.k)).length} 行（${uniq(entryNone.map(x => x.k)).join('、')}）；落点没有节号或规则编号 ${uniq(entryNoSec).length} 行。`,
   `- 账本子卡 ${ledgerChildren.length} 张${ledgerChildLimit ? '，超过卷一 §6.5 的 ≤ 8 上限，报李白' : '（≤ 8）'}。`,
   '',
   '## 三 待补（K7）与 migReady',
