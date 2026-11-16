@@ -20564,10 +20564,11 @@
    "srcLine": 1324,
    "anchorsText": "tools/test-impact（用途写在目录内说明文件）",
    "anchors": [],
-   "disp": "待补（疑点：原写\"保留，只用于选受影响的测试\"，五种 mig_disp 无对应值，与卷十一 M11-6 同一处，见修订记录 1115y1）",
+   "disp": "—（保留类，不算迁移行；主会话技术裁定 1116 白天（用户授权）A2：工具保留，与卷十一 M11-6、M11-7 同口径，按卷十一 R11-2.2 归保留类，不进计数）",
    "target": "R12-9.1；卷十一 M11-6",
-   "targetObject": "sys.acceptance_scan",
-   "baseline": "d54c89a3"
+   "targetObject": "—",
+   "baseline": "d54c89a3",
+   "keepClass": true
   },
   {
    "rowKey": "M12-4",

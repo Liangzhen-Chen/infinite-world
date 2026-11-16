@@ -4680,7 +4680,6 @@
     "M12-17",
     "M12-18",
     "M12-2",
-    "M12-3",
     "M12-4",
     "M12-5",
     "M12-6",
@@ -4816,14 +4815,12 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
-    "row:M12-3",
     "system:sys.acceptance_scan 登记项待补 predicates、writers、sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
      "E-MIG-CARD-INCOMPLETE(retire)",
-     "待补:登记项字段",
-     "待补:迁移行处置"
+     "待补:登记项字段"
     ],
     "stateItems": [
      "依赖卡已 merged",

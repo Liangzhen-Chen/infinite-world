@@ -749,15 +749,6 @@ function entriesOfRows(rs) {
   return [...m].sort((a, b) => cmp(a[0], b[0])).map(([, v]) => v);
 }
 for (const r of rows) if (!entryOfRow(r).length) { const x = entryCandOfRow(r); if (x) candRows.push(`${r.rowKey}→${x.vol}:${x.name}`); }
-function entriesOfCard(e, files) {
-  const set = new Map();
-  const fset = new Set(files);
-  // 卡只接本对象的入口：表接自己的读入口；系统级入口归领头对象（系统登记项的 tables[0]，无表的系统取它自己）的卡
-  const own = e.obj.kind === 'table' ? sysJ.filter(s => s.tables[0] === e.obj.code) : e.obj.sys ? [e.obj.sys] : [];
-  for (const s of own) for (const name of s.entries ?? []) { const k = entryKey(s.volume, name), ent = entryByKey.get(k); if (ent && launchedBy.get(k) === objKey(e.obj) && (ent.callers ?? []).some(f => fset.has(f))) set.set(k, ent); }
-  if (e.obj.kind === 'table') { const v = viewEntries.get(e.obj.code); if (v) set.set(entryKey(v.vol, v.name), v); }
-  return [...set].sort((a, b) => cmp(a[0], b[0])).map(([, v]) => ({ vol: v.vol, sec: v.sec, name: v.name }));
-}
 // 摘掉的规则号（李白 11-16 19:24 第 1 条 b）：行落点里写的编号若定义在"规则"节，不进 accept；记下来，卡的 accept 取空时，
 // 到该规则所在小节的"验收断言"小节找文字里点名这条规则的断言号补上（须是验收类定义；找不到的保持空，进疑点名单）。
 function assertionsCovering(refs) {
