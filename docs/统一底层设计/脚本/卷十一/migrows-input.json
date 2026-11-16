@@ -7717,7 +7717,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "R29-2.2、R29-2.4、R29-4.4",
+   "target": "R29-2.2、R29-2.4、R29-4.4（入口名待补）",
    "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
@@ -7738,7 +7738,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "R29-2.6",
+   "target": "R29-2.6（入口名待补）",
    "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
@@ -7759,7 +7759,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "R29-4.1（档取卷十七 exploreGrade；与 M17-12 同一处）",
+   "target": "R29-4.1（档取卷十七 exploreGrade；与 M17-12 同一处）（入口名待补）",
    "targetObject": "sys.travel",
    "baseline": "d54c89a3"
   },
@@ -7792,7 +7792,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "R29-4.2、R29-4.6、R29-4.7",
+   "target": "R29-4.2、R29-4.6、R29-4.7（入口名待补）",
    "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
@@ -7825,7 +7825,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "R29-2.6、R29-2.12",
+   "target": "R29-2.6、R29-2.12（入口名待补）",
    "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
@@ -7846,7 +7846,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "R29-2.12（读可信度档代号）",
+   "target": "R29-2.12（读可信度档代号）（入口名待补）",
    "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
@@ -7867,7 +7867,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "R29-1.13",
+   "target": "R29-1.13（入口名待补）",
    "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
@@ -7906,7 +7906,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "R29-1.7、R29-7.11",
+   "target": "R29-1.7、R29-7.11（入口名待补）",
    "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
@@ -7951,7 +7951,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "R29-3.7",
+   "target": "R29-3.7（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -7972,7 +7972,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "R29-5.1、R29-5.2",
+   "target": "R29-5.1、R29-5.2（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -7993,7 +7993,7 @@
     }
    ],
    "disp": "delete",
-   "target": "R29-7.3（channel 开关）",
+   "target": "R29-7.3（channel 开关）（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8018,7 +8018,7 @@
     }
    ],
    "disp": "recode",
-   "target": "R29-7.3",
+   "target": "R29-7.3（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8043,7 +8043,7 @@
     }
    ],
    "disp": "recode",
-   "target": "R29-7.3",
+   "target": "R29-7.3（入口名待补）",
    "targetObject": "host",
    "baseline": "d54c89a3"
   },
@@ -8064,7 +8064,7 @@
     }
    ],
    "disp": "delete",
-   "target": "R29-7.4",
+   "target": "R29-7.4（入口名待补）",
    "targetObject": "host",
    "baseline": "d54c89a3"
   },
@@ -8085,7 +8085,7 @@
     }
    ],
    "disp": "recode",
-   "target": "R29-7.4（读结构化 turn）",
+   "target": "R29-7.4（读结构化 turn）（入口名待补）",
    "targetObject": "host",
    "baseline": "d54c89a3"
   },
@@ -8106,7 +8106,7 @@
     }
    ],
    "disp": "recode",
-   "target": "R29-7.4（唯一来源）",
+   "target": "R29-7.4（唯一来源）（入口名待补）",
    "targetObject": "host",
    "baseline": "d54c89a3"
   },
@@ -8127,7 +8127,7 @@
     }
    ],
    "disp": "recode",
-   "target": "R29-7.4",
+   "target": "R29-7.4（入口名待补）",
    "targetObject": "host",
    "baseline": "d54c89a3"
   },
@@ -8156,7 +8156,7 @@
     }
    ],
    "disp": "delete",
-   "target": "R29-7.4",
+   "target": "R29-7.4（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8185,7 +8185,7 @@
     }
    ],
    "disp": "recode",
-   "target": "R29-7.4（按 lines 的说话人 id）",
+   "target": "R29-7.4（按 lines 的说话人 id）（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8210,7 +8210,7 @@
     }
    ],
    "disp": "recode",
-   "target": "R29-7.9",
+   "target": "R29-7.9（入口名待补）",
    "targetObject": "host",
    "baseline": "d54c89a3"
   },
@@ -8231,7 +8231,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "R29-3.2（部件行绑读入口，状态读代号）",
+   "target": "R29-3.2（部件行绑读入口，状态读代号）（入口名待补）",
    "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
@@ -8247,7 +8247,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "R29-1.9（去处按卷二 §6.11）",
+   "target": "R29-1.9（去处按卷二 §6.11）（入口名待补）",
    "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
@@ -8263,7 +8263,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "R29-2.11（与 M22-15 同一处；四个名字作内容进语言包，条件改通用持有率阈值，年份删去，李白 11-14 Q29-8；分工见 C29-12）",
+   "target": "R29-2.11（与 M22-15 同一处；四个名字作内容进语言包，条件改通用持有率阈值，年份删去，李白 11-14 Q29-8；分工见 C29-12）（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8279,7 +8279,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "R29-5.8",
+   "target": "R29-5.8（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8290,7 +8290,7 @@
    "anchorsText": "卷二十 §7 所列四处（调度器原因文字、日期前缀拼接、规则表里的月名纪元名旬名、时钟场景文字）",
    "anchors": [],
    "disp": "move_out",
-   "target": "R29-1.13（锚点与处置以卷二十为准，本行只给落点）",
+   "target": "R29-1.13（锚点与处置以卷二十为准，本行只给落点）（入口名待补）",
    "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
@@ -8310,7 +8310,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "R29-2.2 的 notice 类",
+   "target": "R29-2.2 的 notice 类（入口名待补）",
    "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
@@ -8321,7 +8321,7 @@
    "anchorsText": "world/actions/locale/zh-CN/ 五个文件；world/templates/dialogue/common/plain/ 全部条目",
    "anchors": [],
    "disp": "move_out",
-   "target": "R29-2.1（拆成结构行加两种语言的文本；与 M9-21 同一处）",
+   "target": "R29-2.1（拆成结构行加两种语言的文本；与 M9-21 同一处）（入口名待补）",
    "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
@@ -8361,7 +8361,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "R29-3.1、R29-3.10（卷二十二 M22-18 已接其中两个文件的读数）",
+   "target": "R29-3.1、R29-3.10（卷二十二 M22-18 已接其中两个文件的读数）（入口名待补）",
    "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
@@ -8372,7 +8372,7 @@
    "anchorsText": "extension/ 下逐面板的视图文件与样式之外的逻辑",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "R29-3.1、R29-7.1（卷二 §6.11 已点名者按其去处；未点名者逐文件见 M29-34 至 M29-51）",
+   "target": "R29-3.1、R29-7.1（卷二 §6.11 已点名者按其去处；未点名者逐文件见 M29-34 至 M29-51）（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8397,7 +8397,7 @@
     }
    ],
    "disp": "recode",
-   "target": "R29-7.4、S29-1",
+   "target": "R29-7.4、S29-1（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8418,7 +8418,7 @@
     }
    ],
    "disp": "delete",
-   "target": "R29-7.3（本行只确认显示层一侧不留调用）",
+   "target": "R29-7.3（本行只确认显示层一侧不留调用）（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8434,7 +8434,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "R29-5.8（归离线作者工具，运行期不读）",
+   "target": "R29-5.8（归离线作者工具，运行期不读）（入口名待补）",
    "targetObject": "sys.display_l10n",
    "baseline": "d54c89a3"
   },
@@ -8455,7 +8455,7 @@
     }
    ],
    "disp": "recode",
-   "target": "R29-7.4（改读节点上的状态代号；客户端不读任何已显示的文字）",
+   "target": "R29-7.4（改读节点上的状态代号；客户端不读任何已显示的文字）（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8471,7 +8471,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "R29-3.1、R29-3.7（菜单部件行加通用呈现器）",
+   "target": "R29-3.1、R29-3.7（菜单部件行加通用呈现器）（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8487,7 +8487,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "R29-3.1",
+   "target": "R29-3.1（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8503,7 +8503,7 @@
     }
    ],
    "disp": "recode",
-   "target": "R29-5.2、R29-5.5（选择改素材选择行；合成部分只作 host 音频能力按素材键播放的实现，不读任何文字）",
+   "target": "R29-5.2、R29-5.5（选择改素材选择行；合成部分只作 host 音频能力按素材键播放的实现，不读任何文字）（入口名待补）",
    "targetObject": "host",
    "baseline": "d54c89a3"
   },
@@ -8519,7 +8519,7 @@
     }
    ],
    "disp": "delete",
-   "target": "R29-7.1（客户端不含规则、不保留世界数据；这些量由服务端各卷入口给）",
+   "target": "R29-7.1（客户端不含规则、不保留世界数据；这些量由服务端各卷入口给）（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8535,7 +8535,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "R29-7.1（模型调用只在服务端 aiGate，归卷九；客户端不留）",
+   "target": "R29-7.1（模型调用只在服务端 aiGate，归卷九；客户端不留）（入口名待补）",
    "targetObject": "aiGate",
    "baseline": "d54c89a3"
   },
@@ -8551,7 +8551,7 @@
     }
    ],
    "disp": "recode",
-   "target": "R29-7.9、S29-13（只管呈现容器的分页，不读聊天内容判断任何状态）",
+   "target": "R29-7.9、S29-13（只管呈现容器的分页，不读聊天内容判断任何状态）（入口名待补）",
    "targetObject": "host",
    "baseline": "d54c89a3"
   },
@@ -8567,7 +8567,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "R29-3.1",
+   "target": "R29-3.1（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8583,7 +8583,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "R29-3.1",
+   "target": "R29-3.1（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8599,7 +8599,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "R29-7.10（改由无界面前端读下行节点树；客户端不读状态）",
+   "target": "R29-7.10（改由无界面前端读下行节点树；客户端不读状态）（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8615,7 +8615,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "R29-3.1、R29-1.13（部件行加 qty 格式模板）",
+   "target": "R29-3.1、R29-1.13（部件行加 qty 格式模板）（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8631,7 +8631,7 @@
     }
    ],
    "disp": "move_out",
-   "target": "R29-2.13（说明文字迁 prompt 类模板）、R29-7.4（回合结构归卷九 §4.9）",
+   "target": "R29-2.13（说明文字迁 prompt 类模板）、R29-7.4（回合结构归卷九 §4.9）（入口名待补）",
    "targetObject": "outputGate",
    "baseline": "d54c89a3"
   },
@@ -8647,7 +8647,7 @@
     }
    ],
    "disp": "delete",
-   "target": "R29-3.1（面板由面板行登记）",
+   "target": "R29-3.1（面板由面板行登记）（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8663,7 +8663,7 @@
     }
    ],
    "disp": "delete",
-   "target": "R29-3.1",
+   "target": "R29-3.1（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8679,7 +8679,7 @@
     }
    ],
    "disp": "delete",
-   "target": "R29-3.1、R29-5.5",
+   "target": "R29-3.1、R29-5.5（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8695,7 +8695,7 @@
     }
    ],
    "disp": "delete",
-   "target": "R29-3.1",
+   "target": "R29-3.1（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8711,7 +8711,7 @@
     }
    ],
    "disp": "delete",
-   "target": "R29-3.1、R29-4.5",
+   "target": "R29-3.1、R29-4.5（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8727,7 +8727,7 @@
     }
    ],
    "disp": "delete",
-   "target": "R29-3.1",
+   "target": "R29-3.1（入口名待补）",
    "targetObject": "display",
    "baseline": "d54c89a3"
   },
@@ -8743,7 +8743,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "R29-3.1、R29-7.1（导航由面板行的 nav 与显示名给出；挂接由 host 经卷二各面板 mount(caps)）",
+   "target": "R29-3.1、R29-7.1（导航由面板行的 nav 与显示名给出；挂接由 host 经卷二各面板 mount(caps)）（入口名待补）",
    "targetObject": "host",
    "baseline": "d54c89a3"
   },
