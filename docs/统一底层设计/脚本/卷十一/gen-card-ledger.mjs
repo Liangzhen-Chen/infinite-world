@@ -444,7 +444,29 @@ function entriesOfCard(e, files) {
   if (e.obj.kind === 'table') { const v = viewEntries.get(e.obj.code); if (v) set.set(entryKey(v.vol, v.name), v); }
   return [...set].sort((a, b) => cmp(a[0], b[0])).map(([, v]) => ({ vol: v.vol, sec: v.sec, name: v.name }));
 }
-function acceptOfRows(rs, isFirstTable, tableCode) {
+// 摘掉的规则号（李白 11-16 19:24 第 1 条 b）：行落点里写的编号若定义在"规则"节，不进 accept；记下来，卡的 accept 取空时，
+// 到该规则所在小节的"验收断言"小节找文字里点名这条规则的断言号补上（须是验收类定义；找不到的保持空，进疑点名单）。
+function assertionsCovering(refs) {
+  const out = [], why = [];
+  for (const { tok, defs } of refs) {
+    const [, bare] = splitQ(tok);
+    const esc = bare.replace(/[.*+?^${}()|[\]\\-]/g, '\\$&');
+    const re = new RegExp('(?<![A-Za-z0-9-])' + esc + '(?![0-9A-Za-z]|\\.[0-9]|-[A-Z0-9])');
+    for (const d of defs) {
+      const home = volOfFile(d.file);
+      const parent = d.head.split(' / ').slice(0, -1).join(' / ');
+      for (const a of (assertText.get(home) ?? [])) {
+        if (a.file !== d.file) continue;
+        const hs = a.head.split(' / ');
+        if (!/验收断言/.test(hs[hs.length - 1]) || !(a.head.startsWith(parent + ' / ') || a.head === parent)) continue;
+        if (!re.test(a.text.replace(new RegExp('^.*?' + a.tok.replace(/[.*+?^${}()|[\]\\-]/g, '\\$&')), ''))) continue;
+        const q = qual(home, a.tok); if (!out.includes(q)) { out.push(q); why.push({ rule: tok, assertion: q, at: `${a.file}:${a.line}` }); }
+      }
+    }
+  }
+  return { toks: out.sort(), why };
+}
+function acceptOfRows(rs, isFirstTable, tableCode, refs) {
   const acc = [];
   if (isFirstTable) acc.push(...dimKeysOf(tableCode));
   for (const r of rs) for (const m of (r.target ?? '').matchAll(tokRe)) {
@@ -461,6 +483,7 @@ function acceptOfRows(rs, isFirstTable, tableCode) {
     let pick = ds;
     if (new Set(ds.map(d => d.nature)).size > 1) { const sm = before.match(/§\s*([0-9]+(?:\.[0-9]+)*)\s*$/); pick = sm ? ds.filter(d => d.head.split(' / ').some(h => h.replace(/^§/, '').startsWith(sm[1] + ' '))) : []; }
     if (pick.length && pick.every(d => d.nature === '验收类')) acc.push(tok);
+    else if (refs && !refs.some(x => x.tok === tok)) { const rd = ds.filter(d => d.nature === '规则类'); if (rd.length && !ds.some(d => d.nature === '验收类' && pick.includes(d))) refs.push({ tok, defs: rd }); }
   }
   return uniq(acc).sort();
 }
@@ -501,8 +524,12 @@ for (const e of objList) {
       if (isFirst) c.launches = (launchesOfObj.get(objKey(o)) ?? []).map(k => { const x = entryByKey.get(k); return { vol: x.vol, sec: x.sec, name: x.name }; }).sort((a, b) => cmp(a.vol + a.name, b.vol + b.name));
     }
     // 验收判据
-    c.accept = acceptOfRows(gRows, isFirst && o.kind === 'table', o.code);
+    const ruleRefs = [];
+    c.accept = acceptOfRows(gRows, isFirst && o.kind === 'table', o.code, ruleRefs);
     if (!c.accept.length && vol) c.accept = assertionsFor(vol, o.code, [...c.entries.map(en => en.name), ...c.launches.map(en => en.name), ...c.files.map(f => f.slice(f.lastIndexOf('/') + 1))]);
+    c._ruleRefs = ruleRefs;
+    if (!c.accept.length && ruleRefs.length) c._ruleEmpty = true;
+    if (!c.accept.length && ruleRefs.length) { const cv = assertionsCovering(ruleRefs); c.accept = cv.toks; c._coverWhy = cv.why; }
     c.pending.push(...pendingOfRows(gRows));
     c.cardId = `C-${vol ?? '无卷'}-${o.code}-${gi + 1}`;
     cards.push(c);
@@ -706,7 +733,8 @@ for (const [f, ls] of volText) {
 const suspects = cards.filter(c => !c.accept.length).map(c => {
   const n = (assertText.get(c.volume) ?? []).length; const vd = verdictOf.get(c.volume);
   let reason;
-  if (!c.volume) reason = '待查（卡没有归属卷）';
+  if (c._ruleRefs?.length) reason = '待查（原规则号 ' + c._ruleRefs.map(r => `${r.tok}（${r.defs[0].file}:${r.defs[0].line}，${r.defs[0].head.split(' / ').slice(0, -1).join(' / ') || r.defs[0].head}）`).join('、') + ' 已按卷十一 R11-3.8 摘出；该规则所在小节的验收断言小节里没有断言点名它，不新造编号）';
+  else if (!c.volume) reason = '待查（卡没有归属卷）';
   else if (vd?.heads.length && !vd.numbered) reason = `卷内验收断言不带编号：${vd.heads[0]}${vd.heads.length > 1 ? ` 等 ${vd.heads.length} 个验收节` : ''}，定义位上没有编号` + (n ? `；卷里另有 ${n} 条扫描或不变量编号，没有一条提到本卡（待查）` : '');
   else if (n) reason = `待查（${c.volume} 的 ${n} 条验收类编号定义行里，没有一条提到本卡的对象代号、入口、上线入口或文件名）`;
   else reason = `待查（${c.volume} 没有标题含"验收断言"的节，也没有验收类编号）`;
@@ -806,6 +834,11 @@ const md = [
   '',
   '| 卡 | 卷 | 原因 |', '|---|---|---|',
   ...suspects.map(x => `| ${x.cardId} | ${x.volume ?? '—'} | ${x.reason} |`),
+  '',
+  `  - 规则号摘出后按“规则所在小节的验收断言小节里点名该规则的断言”补回 accept（李白 11-16 19:24 第 1 条 b）：因摘规则号而 accept 取空的卡共 ${cards.filter(c => c._ruleEmpty).length} 张（其中补上 ${cards.filter(c => c._coverWhy?.length).length} 张，仍空 ${cards.filter(c => c._ruleRefs?.length && !c.accept.length).length} 张，已列入上表）：`,
+  '',
+  '| 卡 | 原规则号 | 补上的断言号 | 依据（断言所在文件:行，该行文字里点名原规则号） |', '|---|---|---|---|',
+  ...cards.filter(c => c._coverWhy?.length).map(c => `| ${c.cardId} | ${uniq(c._coverWhy.map(w => w.rule)).join('、')} | ${c.accept.join('、')} | ${c._coverWhy.map(w => `${w.assertion}：${w.at.replace(/^卷.*?\.md/, m => m)}`).join('；')} |`),
   '',
   `  - 另：卷二 §6.12 没有齐全率下限键的表首卡（accept 里无下限键，不一定为空）：${cards.filter(c => c.pending.some(p => p.startsWith('accept:卷二 §6.12'))).map(c => c.cardId).join('、') || '无'}。`,
   '- retire：登记退役数要逐行清单的行数，逐行清单待 G-3，全部"必"卡的 retire 为空并已登记。',

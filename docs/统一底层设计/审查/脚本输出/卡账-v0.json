@@ -7268,7 +7268,9 @@
    "entries": [],
    "launches": [],
    "retire": {},
-   "accept": [],
+   "accept": [
+    "A27-4.1"
+   ],
    "dependsOn": [
     "C-卷二-kernel-1",
     "C-卷二十七-sys.offscreen_save-1",
@@ -7283,13 +7285,12 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "entries:该组文件在旧代码里没有调用本系统读入口，要接哪些入口待设计",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
    ],
    "migReady": {
     "defects": [
-     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
+     "E-MIG-CARD-INCOMPLETE(entries、retire)"
     ],
     "stateItems": [
      "依赖卡已 merged",
@@ -7587,7 +7588,9 @@
    "entries": [],
    "launches": [],
    "retire": {},
-   "accept": [],
+   "accept": [
+    "A29-4.2"
+   ],
    "dependsOn": [
     "C-卷二-kernel-1",
     "C-卷二-outputGate-1",
@@ -7603,13 +7606,12 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "entries:该组文件在旧代码里没有调用本系统读入口，要接哪些入口待设计",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
    ],
    "migReady": {
     "defects": [
-     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
+     "E-MIG-CARD-INCOMPLETE(entries、retire)"
     ],
     "stateItems": [
      "依赖卡已 merged",
@@ -8568,7 +8570,9 @@
    "entries": [],
    "launches": [],
    "retire": {},
-   "accept": [],
+   "accept": [
+    "A18-9.2"
+   ],
    "dependsOn": [
     "C-卷十八-sys.social-1",
     "LEDGER-1"
@@ -8582,13 +8586,12 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "entries:该组文件在旧代码里没有调用本系统读入口，要接哪些入口待设计",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
    ],
    "migReady": {
     "defects": [
-     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
+     "E-MIG-CARD-INCOMPLETE(entries、retire)"
     ],
     "stateItems": [
      "依赖卡已 merged",
@@ -8733,7 +8736,9 @@
    "entries": [],
    "launches": [],
    "retire": {},
-   "accept": [],
+   "accept": [
+    "A18-9.2"
+   ],
    "dependsOn": [
     "C-卷二-kernel-1",
     "C-卷十八-sys.social-1",
@@ -8748,13 +8753,12 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
     "entries:该组文件在旧代码里没有调用本系统读入口，要接哪些入口待设计",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
    ],
    "migReady": {
     "defects": [
-     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
+     "E-MIG-CARD-INCOMPLETE(entries、retire)"
     ],
     "stateItems": [
      "依赖卡已 merged",
