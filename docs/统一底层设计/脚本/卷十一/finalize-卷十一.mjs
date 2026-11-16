@@ -11,7 +11,7 @@ const GEN = `${HERE}/gen-卷十一-卡族.mjs`, CHECK = `${HERE}/check-卷十一
 const P = 'F:/dnd/docs/统一底层设计/卷十一-迁移路线与卡清单.md';
 const SNAP = 'F:/dnd/docs/统一底层设计/版本快照/卷十一-v2.md';
 const mode = process.argv[2];
-let L = readFileSync(P, 'utf8').split('\n');
+let L = readFileSync(P, 'utf8').split(/\r?\n/); // 工作区可能是 CRLF（git 换行转换），按行读不受影响
 if (mode === 'gen') {
   const txt = execFileSync(process.execPath, [GEN], { encoding: 'utf8' });
   writeFileSync(`${HERE}/gen-卷十一-卡族.out.txt`, txt);

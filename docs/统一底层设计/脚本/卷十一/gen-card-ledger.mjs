@@ -349,8 +349,9 @@ const acceptOk = tok => { const t = String(tok).replace(/\s*\([a-z]\)$/, ''); re
 
 // ---- 卷十一自己的扫描条（清扫卡的判据：全部扫描）----
 const s11 = [...(defined.get('卷十一') ?? [])].filter(x => /^S11-/.test(x)).sort((a, b) => cmp(+a.slice(4), +b.slice(4)));
-// ---- 卷十二的门禁自身条目（卷十二 line：S12-1 至 S12-16 随门禁卡 G-1 至 G-3 进必过集合）----
-const s12 = [...(defined.get('卷十二') ?? [])].filter(x => /^S12-\d+$/.test(x)).sort((a, b) => cmp(+a.slice(4), +b.slice(4)));
+// ---- 门禁自身的条目：验收卷写明"A 至 B 是门禁自身的条目……随门禁卡……进必过集合"的那一段（李白终核卷十一复核第 4 条：明写的照写，一条不落空）----
+const gateItemTo = []; // 门禁自身条目 → 所归门禁卡（摘要用）
+const gateItems = (() => { const f = volFiles.find(x => x.startsWith('卷十二-')); const v = volOfFile(f); const l = volText.get(f).find(x => /门禁自身的条目/.test(x) && /随门禁卡/.test(x)) ?? ''; const m = l.match(/(S\d+-)(\d+) 至 S\d+-(\d+)/); if (!m) return []; const out = []; for (let i = +m[2]; i <= +m[3]; i++) if (defined.get(v)?.has(m[1] + i)) out.push({ tok: m[1] + i, vol: v }); return out; })();
 // ---- 门禁设施登记（卷十二 §2.11 登记表，登记次序）----
 const gateFacilities = []; const gateOwner = new Map(); const gateFacInfo = new Map(); // 设施 → {paths, gateCard, entries}
 { const f = volFiles.find(x => x.startsWith('卷十二-')); const ls = volText.get(f);
@@ -366,7 +367,7 @@ const gateFacilities = []; const gateOwner = new Map(); const gateFacInfo = new 
     const col = k => c[head.indexOf(k)] ?? '';
     gateFacilities.push(m[1]); gateOwner.set(m[1], col('ownerVol').match(VOL)?.[0] ?? null);
     // 卷十二 §2.11 的机读列 gateCard、entries（封卷后勘误 1116k7，李白终核卷十一 挡-1、挡-2）
-    gateFacInfo.set(m[1], { paths: [...col('paths').matchAll(/`([^`]+)`/g)].map(x => x[1]), gateCard: (col('gateCard').match(/^G-\d+$/) ?? [null])[0], entries: col('entries').trim() });
+    gateFacInfo.set(m[1], { paths: [...col('paths').matchAll(/`([^`]+)`/g)].map(x => x[1]), gateCard: (col('gateCard').match(/^G-\d+$/) ?? [null])[0], notByGate: col('gateCard').trim() === '—', entries: col('entries').trim() });
   } }
 
 // ================= 仓库文件索引（只读，锚点解析，与乙-4 同口径）=================
@@ -510,7 +511,8 @@ function objectOfRow(r) {
   if (sysByKey.has(o)) return sysObj(sysByKey.get(o));
   // 落点是模块组、却不在卷二 §6.11 文件级迁移表里的行，是"改调该组入口"，不是搬迁：不进搬迁卡，按下面"其余"一条归接收卷的对象
   if (MODGROUPS.has(o) && isMoveRow(r, o)) return { kind: 'module_group', code: o, volume: null, sys: null };
-  if (GATEFAC.has(o)) return { kind: 'gate_facility', code: o, volume: null, sys: null };
+  // 门禁设施代号按登记卷取对象（卷十一 R11-2.5，封卷后勘误 1116k9）：由门禁卡建的取该设施；不由门禁卡建的（gateCard 为"—"）取其 ownerVol 的系统登记项
+  if (GATEFAC.has(o)) { if (gateFacInfo.get(o)?.notByGate) { const s = sysOfVol.get(gateOwner.get(o)); return s ? sysObj(s) : null; } return { kind: 'gate_facility', code: o, volume: null, sys: null }; }
   // 规则表键、词表族条目：对象本身有登记处的，按登记卷定，不读落点文字（李白 11-16 01:25 第 1 条；卷十一 §2.3、:164"须在对应登记"）
   const rv = receivingVolume(r.target, r.volume, CFG.volCode, VOLS);
   if (/^rules\./.test(o) || vocabSet.has(o)) {
@@ -862,7 +864,6 @@ for (const id of gateIds) {
   const rs = facs.flatMap(f => gateRowsByFac.get(f) ?? []).sort((a, b) => cmp(a.rowKey, b.rowKey));
   const facFiles = facs.flatMap(f => gateFacInfo.get(f).paths).filter(p => /\.(?:mjs|js)$/.test(p) && !/\*/.test(p));
   const vol = fac ? gateOwner.get(fac) : null;
-  const keys = facs.flatMap(f => [f, ...gateFacInfo.get(f).paths, ...gateFacInfo.get(f).paths.map(p => p.slice(p.lastIndexOf('/') + 1))]);
   // 定义行里的反引号路径与设施路径相合（相同、文件名相同，或一方是另一方所在目录）即算写到其路径
   const pathHit = (t, p) => { const d = p.replace(/\*\*?$/, ''); return t === p || t === p.slice(p.lastIndexOf('/') + 1) || (t.endsWith('/') && p.startsWith(t)) || (d.endsWith('/') && t.startsWith(d)); };
   const acc = uniq(facs.flatMap(f => (assertText.get(gateOwner.get(f)) ?? []).filter(a => [...a.text.matchAll(/`([^`]+)`/g)].some(m => m[1] === f || gateFacInfo.get(f).paths.some(p => pathHit(m[1], p)))).map(a => qual(gateOwner.get(f), a.tok)))).sort();
@@ -878,6 +879,18 @@ for (const id of gateIds) {
   c.pending.push(...pendingOfRows(rs));
   cards.push(c);
 }
+// 门禁自身的条目归卡（李白终核卷十一复核第 4 条）：定义行写到某张门禁卡的设施代号或其路径（含"定义行写的目录包含设施路径"）的归那张卡；
+// 其余归建该条目所在卷设施最多的门禁卡（同数取卡号小者）；每条都落到一张卡
+{ const gcs = cards.filter(c => c.cardKind === 'gate');
+  const ph = (t, p) => { const d = p.replace(/\*\*?$/, ''); return t === p || t === p.slice(p.lastIndexOf('/') + 1) || (t.endsWith('/') && p.startsWith(t)) || (d.endsWith('/') && t.startsWith(d)); };
+  const hits = (g, a) => (g._facs ?? []).some(f => [...a.text.matchAll(/`([^`]+)`/g)].some(m => m[1] === f || gateFacInfo.get(f).paths.some(p => ph(m[1], p))));
+  for (const it of gateItems) {
+    const a = (assertText.get(it.vol) ?? []).find(x => x.tok === it.tok); const q = qual(it.vol, it.tok);
+    let to = a ? gcs.filter(g => hits(g, a)) : [];
+    if (!to.length) { const n = g => (g._facs ?? []).filter(f => gateOwner.get(f) === it.vol).length; to = [gcs.slice().sort((x, y) => n(y) - n(x) || cmp(x.cardId, y.cardId))[0]].filter(Boolean); }
+    for (const g of to) { g.accept = uniq([...g.accept, q]).sort(); g.pending = g.pending.filter(p => !p.startsWith('accept:所属卷的验收类')); }
+    gateItemTo.push(`${q}→${to.map(g => g.cardId).join('、')}`);
+  } }
 // R11-7.1 第 1 步（封卷后勘误 1116k7，挡-1 第 2 条）：入口实现文件落在某门禁设施 paths 内的，由该门禁卡上线，所在卷系统首卡只接不上线；
 // 设施实现哪些入口取卷十二 §2.11 `entries` 列（"卷X §n" 为该卷该节入口表登记的全部入口，或逐个入口名）
 const gateLaunchMoved = [];
@@ -1242,7 +1255,7 @@ const md = [
   '## 二 三个错误码与核对',
   '',
   `- E-MIG-CARD-INCOMPLETE：${matrixBad.length} 张（按卷十一 §2.2 必填矩阵原定义：缺"必"或"列"字段、"—"字段有值，即计；有无待补原因不改数）。其中没有待补原因的 ${matrixBadNoReason.length} 张；其余 ${matrixBad.length - matrixBadNoReason.length} 张的空位都因推不出、已在 pending 里写明原因（不替它定值，见第三节）。这 ${matrixBad.length} 张不得转 \`ready\`。`,
-  `- E-MIG-ACCEPT-FORM：${acceptBad.reduce((s, x) => s + x.bad.length, 0)} 个编号（${acceptBad.length} 张卡）在所指卷里查不到定义${acceptBad.length ? '：' + acceptBad.slice(0, 8).map(x => x.cardId + ' ' + x.bad.join('、')).join('；') : ''}；这些编号已从判据摘出并登记在该卡 pending。判据里只有编号（齐全率下限键 ${dimKeys.length} 个、各卷断言与扫描条、卷十一 ${s11.length} 条扫描条、卷十二 ${s12.length} 条）。`,
+  `- E-MIG-ACCEPT-FORM：${acceptBad.reduce((s, x) => s + x.bad.length, 0)} 个编号（${acceptBad.length} 张卡）在所指卷里查不到定义${acceptBad.length ? '：' + acceptBad.slice(0, 8).map(x => x.cardId + ' ' + x.bad.join('、')).join('；') : ''}；这些编号已从判据摘出并登记在该卡 pending。判据里只有编号（齐全率下限键 ${dimKeys.length} 个、各卷断言与扫描条、卷十一 ${s11.length} 条扫描条、门禁自身的条目 ${gateItems.length} 条）。`,
   `- E-MIG-SORTKEY-ORDER：钩子 ${hookNodes.length} 个（${hookNodes.join('、')}）；成环 ${hookCycle.length} 个；指向不存在（卷里没有登记行）的 ${hookMissing.length} 个${hookMissing.length ? '：' + hookMissing.join('、') : ''}；同一钩子两处写法不同 ${uniq(hookConflict).length} 个。机读 after 来源是各卷正文的 \`X.after = [..]\` 写法；排序键按拓扑加代号升序从 1 连续编号，v0 不分推进相位（卷二 §2.7 没有按钩子登记相位的机读列），落在登记该钩子的卷的领头卡的 sortKeys 上。`,
   `- dependsOn：${phaseCycle ? '成环（首个：' + phaseCycle.join('→') + '；全部环见下面两条）' : '无环'}；指向不存在的卡 ${depMissing.length} 处；固定卡阶段冲突（E-MIG-PHASE-CONFLICT）${phaseConflicts.length} 处${phaseConflicts.length ? '：' + phaseConflicts.join('；') : ''}。`,
   ...[['主卡族', cyclesMain], ['子进程卡族（不并组改判，R11-2.5 第一步所用次序的来源）', childCycles]].map(([nm, cy]) => `- 环（${nm}，强连通分量，只报不改归属）：${cy.length ? cy.map((x, i) => `环 ${i + 1}：${x.cards.join('、')}；边：${x.edges.map(e => `${e.from}→${e.to}〔${e.why.join('；')}〕`).join('，')}`).join('。') : '无'}${nm.startsWith('子') && cy.length ? '。子进程卡族有环，R11-2.5 第一步的次序在环上没有定义，挡封、报李白（02:45 ②）' : ''}${!nm.startsWith('子') && cy.length ? '。其中' + cy.map((x, i) => `环 ${i + 1}${childCycles.some(z => x.cards.filter(c => z.cards.includes(c)).length > 1) ? '在不并组改判的卡族上同样成环，挡封、报李白' : '只因合组改判才出现（不并组改判的卡族上无环），记读数暂缺（等 zeroRow），不挡封（02:45 ②）'}`).join('；') : ''}。`),
@@ -1257,6 +1270,7 @@ const md = [
   `- 位置组定对象（R11-2.5 原文，李白 11-16 01:25 第 5 条）：zeroRow 未转录，按"没有这样的行"取首卡在 R11-7.2 次序中最前的候选；次序在不并组改判的卡族（每行取自身对象）上按 R11-7.2 算一次，不回代、不迭代（李白 11-16 02:00 Q1）；候选不在次序里的组 ${objConflicts.filter(x => x.unranked.length).length} 组。与旧取法（行数最多）相比改了接收对象的行 ${pickMoved.length} 行。`,
   `- 并组后接收对象不是本行自己对象的行，列待查（zeroRow 补上后复判）：${mergedRecheck.length} 行${mergedRecheck.length ? '：' + mergedRecheck.map(x => `${x.k}（${x.own}→${x.pick}）`).join('；') : ''}。`,
   `- entries（李白 11-16 01:30）：按各行"卷、节"到该卷 §3 入口表取恰一个入口；§3 入口表共登记 ${entryNames.size} 个入口名，不在表里的名字不收。待查：一节对应多个入口 ${uniq(entryMulti.map(x => x.k)).length} 行（${uniq(entryMulti.map(x => x.k)).join('、')}）；该节在 §3 找不到入口 ${uniq(entryNone.map(x => x.k)).length} 行（${uniq(entryNone.map(x => x.k)).join('、')}）；落点没有节号或规则编号 ${uniq(entryNoSec).length} 行；入口与对象不符（李白 11-16 02:30 第 2 条：推出的入口由别的对象上线，不计入口边）${uniq(entryMismatch.map(x => x.k)).length} 行（按来源卷：${Object.entries(stat(uniq(entryMismatch.map(x => x.k)).map(k => entryMismatch.find(x => x.k === k)), x => x.vol)).map(([v, n]) => `${v} ${n}`).join('、')}；${uniq(entryMismatch.map(x => x.k)).map(k => { const x = entryMismatch.find(y => y.k === k); return `${k}（${x.name} 属 ${x.owner}，行属 ${x.own}）`; }).join('、')}）。§3 散文写法收下的入口名（李白 11-16 03:00 第 1 条三条件）：${[...proseCount].sort((a, b) => cmp(a[0], b[0])).map(([v, ns]) => `${v} ${ns.length} 个（${ns.join('、')}）`).join('；') || '无'}；带入口属性标记的（否定分句转来，03:2x 第 1 条）：${[...entryIdx].flatMap(([v, xs]) => xs.filter(x => x.attrs).map(x => `${v}:${x.name}{${Object.entries(x.attrs).map(([k, val]) => `${k}=${val}`).join(',')}}`)).join('、') || '无'}；写明由别卷登记、主登记归该卷的（原处记引用，03:2x 第 2 条）：${delegInfo.map(d => `${d.name}→${d.vol} ${d.sec}（引自${d.from}${d.ok ? '' : '；该节正文没写这个名字，未建'}）`).join('、') || '无'}；散文候选因别卷已登记不收 ${uniq(proseRejected.map(x => x.v + ':' + x.name)).length} 个；卷二 §2.1 入口清单 ${reg21.length} 个读函数，主办卷 §3 都没登记、归卷二的 ${(entryIdx.get(REGVOL) ?? []).filter(x => x.reg21).length} 个（${(entryIdx.get(REGVOL) ?? []).filter(x => x.reg21).map(x => x.name).join('、') || '无'}；03:00 第 2 条）。`,
+  `- 门禁卡（李白终核卷十一 挡-1、挡-2 与复核）：${cards.filter(c => c.cardKind === 'gate').map(c => `${c.cardId} 对象 ${c.objectCode ?? '—'}（${c.volume ?? '—'}，建 ${(c._facs ?? []).join('、') || '—'}），上线 ${c.launches.length} 个入口，accept ${c.accept.join('、') || '—'}`).join('；')}。门禁自身的条目 ${gateItems.length} 条归卡：${gateItemTo.join('、') || '无'}。`,
   `- 账本子卡 ${ledgerChildren.length} 张${ledgerChildLimit ? '，超过卷一 §6.5 的 ≤ 8 上限，报李白' : '（≤ 8）'}。`,
   '',
   '## 三 待补（K7）与 migReady',

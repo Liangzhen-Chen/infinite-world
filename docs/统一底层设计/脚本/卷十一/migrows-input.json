@@ -20523,7 +20523,7 @@
   {
    "rowKey": "M12-1",
    "volume": "卷十二",
-   "srcLine": 1319,
+   "srcLine": 1322,
    "anchorsText": "tools/k8-guard.mjs",
    "anchors": [
     {
@@ -20539,7 +20539,7 @@
   {
    "rowKey": "M12-2",
    "volume": "卷十二",
-   "srcLine": 1320,
+   "srcLine": 1323,
    "anchorsText": "tests/overfit-guard.test.mjs 与它的例外名单 tests/fixtures/overfit-allowlist.json；仓库外的提交前守门脚本调它（M12-18）",
    "anchors": [
     {
@@ -20559,7 +20559,7 @@
   {
    "rowKey": "M12-3",
    "volume": "卷十二",
-   "srcLine": 1321,
+   "srcLine": 1324,
    "anchorsText": "tools/test-impact（用途写在目录内说明文件）",
    "anchors": [],
    "disp": "待补（疑点：原写\"保留，只用于选受影响的测试\"，五种 mig_disp 无对应值，与卷十一 M11-6 同一处，见修订记录 1115y1）",
@@ -20570,7 +20570,7 @@
   {
    "rowKey": "M12-4",
    "volume": "卷十二",
-   "srcLine": 1322,
+   "srcLine": 1325,
    "anchorsText": "tools/derived-scan.mjs（文件头写明：派生字段黑名单扫描，卷零 I10）与它的基线文件 tests/metrics/derived-scan.baseline.json（可用写基线参数手写）",
    "anchors": [
     {
@@ -20590,7 +20590,7 @@
   {
    "rowKey": "M12-5",
    "volume": "卷十二",
-   "srcLine": 1323,
+   "srcLine": 1326,
    "anchorsText": "server-plugin/seed-keys.mjs 的源码扫描部分",
    "anchors": [
     {
@@ -20606,7 +20606,7 @@
   {
    "rowKey": "M12-6",
    "volume": "卷十二",
-   "srcLine": 1324,
+   "srcLine": 1327,
    "anchorsText": "server-plugin/digest-exclude.mjs 的排除表校验",
    "anchors": [
     {
@@ -20622,7 +20622,7 @@
   {
    "rowKey": "M12-7",
    "volume": "卷十二",
-   "srcLine": 1325,
+   "srcLine": 1328,
    "anchorsText": "server-plugin/agriculture.mjs:305、weather.mjs:215、military.mjs:48、farm-pests.mjs:70 等各模块自带的加载期规则校验",
    "anchors": [
     {
@@ -20670,7 +20670,7 @@
   {
    "rowKey": "M12-8",
    "volume": "卷十二",
-   "srcLine": 1326,
+   "srcLine": 1329,
    "anchorsText": "tests/invariants/ 下 5 个",
    "anchors": [],
    "disp": "to_data",
@@ -20681,7 +20681,7 @@
   {
    "rowKey": "M12-9",
    "volume": "卷十二",
-   "srcLine": 1327,
+   "srcLine": 1330,
    "anchorsText": "docs/probes/ 的 11 套题集与两份提示词",
    "anchors": [],
    "disp": "to_data",
@@ -20692,7 +20692,7 @@
   {
    "rowKey": "M12-10",
    "volume": "卷十二",
-   "srcLine": 1328,
+   "srcLine": 1331,
    "anchorsText": "tools/ 下的试玩、浸泡、指标脚本（素材包 §3a 所列各个）",
    "anchors": [],
    "disp": "replace_entry",
@@ -20703,7 +20703,7 @@
   {
    "rowKey": "M12-11",
    "volume": "卷十二",
-   "srcLine": 1329,
+   "srcLine": 1332,
    "anchorsText": "tools/content-pipeline.mjs:344、content-budget.mjs:218、playtest-budget.mjs:122",
    "anchors": [
     {
@@ -20742,7 +20742,7 @@
   {
    "rowKey": "M12-12",
    "volume": "卷十二",
-   "srcLine": 1330,
+   "srcLine": 1333,
    "anchorsText": "F:/dnd-tmp/book/ 下的全书一致性脚本",
    "anchors": [],
    "disp": "replace_entry",
@@ -20753,7 +20753,7 @@
   {
    "rowKey": "M12-13",
    "volume": "卷十二",
-   "srcLine": 1331,
+   "srcLine": 1334,
    "anchorsText": "F:/dnd-tmp/vols/ 下各卷手写的自检与验算脚本",
    "anchors": [],
    "disp": "replace_entry",
@@ -20764,7 +20764,7 @@
   {
    "rowKey": "M12-14",
    "volume": "卷十二",
-   "srcLine": 1332,
+   "srcLine": 1335,
    "anchorsText": "现有云门禁设施",
    "anchors": [],
    "disp": "replace_entry",
@@ -20775,7 +20775,7 @@
   {
    "rowKey": "M12-15",
    "volume": "卷十二",
-   "srcLine": 1333,
+   "srcLine": 1336,
    "anchorsText": "卷一用过的机械核算脚本",
    "anchors": [],
    "disp": "delete",
@@ -20786,7 +20786,7 @@
   {
    "rowKey": "M12-16",
    "volume": "卷十二",
-   "srcLine": 1334,
+   "srcLine": 1337,
    "anchorsText": "仓库外工具目录的合入门禁 merge-gate.sh",
    "anchors": [],
    "disp": "replace_entry",
@@ -20797,7 +20797,7 @@
   {
    "rowKey": "M12-17",
    "volume": "卷十二",
-   "srcLine": 1335,
+   "srcLine": 1338,
    "anchorsText": "仓库外工具目录的性能门 perf-gate.sh",
    "anchors": [],
    "disp": "replace_entry",
@@ -20808,7 +20808,7 @@
   {
    "rowKey": "M12-18",
    "volume": "卷十二",
-   "srcLine": 1336,
+   "srcLine": 1339,
    "anchorsText": "仓库外工具目录的提交前守门 guard-commit.sh",
    "anchors": [],
    "disp": "replace_entry",
@@ -20819,7 +20819,7 @@
   {
    "rowKey": "M12-19",
    "volume": "卷十二",
-   "srcLine": 1337,
+   "srcLine": 1340,
    "anchorsText": "仓库外工具目录的卡门禁入口 card-gate.mjs",
    "anchors": [
     {
@@ -20835,7 +20835,7 @@
   {
    "rowKey": "M12-20",
    "volume": "卷十二",
-   "srcLine": 1338,
+   "srcLine": 1341,
    "anchorsText": "仓库外工具目录的跳过名单 gate-skips.txt（注释 1 行加 6 条，\"文件加匹配串\"形式；合入门禁第 47 行与单文件运行脚本第 6 行在读）",
    "anchors": [],
    "disp": "delete",
