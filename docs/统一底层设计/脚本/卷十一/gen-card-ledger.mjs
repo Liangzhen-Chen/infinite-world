@@ -37,6 +37,7 @@ const volFiles = readdirSync(DIR).filter(f => new RegExp(CFG.volFile).test(f)).s
 const volText = new Map(); // 卷代号 → 行数组（卷零、卷一等）
 for (const f of volFiles) volText.set(f, rd(`${DIR}/${f}`).split(/\r?\n/));
 const volOfFile = f => { const m = f.match(VOL); return m ? m[0] : null; };
+const VOLS = volFiles.map(volOfFile).filter(Boolean);
 const regText = rd(`${DIR}/${CFG.registry.file}`);
 const reg = regText.split(/\r?\n/);
 
@@ -165,16 +166,14 @@ function resolveFile(spec) {
   if (/\*/.test(spec)) return { unresolved: true };
   if (exact.has(spec)) return { path: spec };
   const suf = all.filter(f => f.endsWith('/' + spec));
+  // 同名文件多于一个时，先走"优先取 server-plugin/、extension/ 下那个"再判歧义（李白 11-15 19:08 第 3 条，整类：后缀与裸文件名两条分支同一条优先规则）
+  const preferRuntime = c => { const sp = c.filter(f => f.startsWith('server-plugin/') || f.startsWith('extension/')); return sp.length === 1 ? { path: sp[0] } : { ambiguous: c }; };
   if (suf.length === 1) return { path: suf[0] };
-  if (suf.length > 1) return { ambiguous: suf };
+  if (suf.length > 1) return preferRuntime(suf);
   if (!spec.includes('/')) {
     const c = byBase.get(spec) ?? [];
     if (c.length === 1) return { path: c[0] };
-    if (c.length > 1) {
-      const sp = c.filter(f => f.startsWith('server-plugin/') || f.startsWith('extension/'));
-      if (sp.length === 1) return { path: sp[0] };
-      return { ambiguous: c };
-    }
+    if (c.length > 1) return preferRuntime(c);
   }
   return { unresolved: true };
 }
@@ -223,6 +222,8 @@ const vocabSet = new Set([...regText.matchAll(/([a-z][a-z0-9_]*)→`[a-z]+_`/g)]
 // 卷二 §6.11 文件级迁移表（R11-7.5，李白 18:50 第 2 条）：搬迁卡的文件集合与行只取这张表里落点对象为该模块组的行。
 const moveRows = new Map(); // 编号 → {obj, files, dir}
 const fileMoves = new Map(); // 现有文件 → [{obj, dir}]（表内次序）
+const mechRows = new Map(); // 编号 → {obj, ident}（全仓库机械替换类）
+const rowFilesOf = new Map(); let prevFiles = []; // 编号 → 现有文件（"同上"取上一行）
 {
   const s = reg.findIndex(l => l.startsWith(CFG.registry.filemoves)); let e = reg.findIndex((l, i) => i > s && /^#{2,3} /.test(l)); if (e < 0) e = reg.length;
   let head = null;
@@ -232,13 +233,20 @@ const fileMoves = new Map(); // 现有文件 → [{obj, dir}]（表内次序）
     const c = cells(l);
     if (!head) { head = c; continue; }
     if (/^:?-{3}/.test(c[0])) continue;
-    const ki = head.indexOf('编号'), fi = head.indexOf('现有文件'), di = head.indexOf('落点'), oi = head.indexOf('落点对象');
-    if (ki < 0 || fi < 0 || di < 0 || oi < 0) continue;
+    const ki = head.indexOf('编号'), fi = head.indexOf('现有文件'), di = head.indexOf('落点'), oi = head.indexOf('落点对象'), pi = head.findIndex(h => /mig_disp/.test(h));
+    if (ki < 0 || fi < 0 || di < 0 || oi < 0 || pi < 0) continue;
     const obj = (c[oi] ?? '').replace(/`/g, '').trim();
+    // "现有文件"栏写"同上"的行，文件取上一行的（表内写法，整类）
+    const own = []; for (const m of (c[fi] ?? '').matchAll(/`([^`]+\.(?:mjs|js))`/g)) { const x = resolveFile(m[1]); if (x.path) own.push(x.path); }
+    const rf = /^同上/.test((c[fi] ?? '').trim()) ? prevFiles : own; rowFilesOf.set(c[ki], rf); prevFiles = rf;
+    // 全仓库机械替换类（李白 11-15 19:08 第 1 条、19:12；卷十一 R11-7.8 例外）："现有文件"栏写"全仓库 `标识符`"的行，文件清单由本脚本按标识符列出，进清扫卡
+    const mm = (c[fi] ?? '').match(/^全仓库\s*`([^`]+)`/);
+    if (mm) { mechRows.set(c[ki], { obj, ident: mm[1] }); continue; }
+    // 搬迁卡只取处置为 relocate_only 的搬迁子行（R11-7.5，封卷后勘误 1115y12）；改调入口子行落点对象是消费方系统，走领域卡
+    if ((c[pi] ?? '').replace(/`/g, '').trim() !== 'relocate_only') continue;
     const dest = [...(c[di] ?? '').matchAll(/`([^`]+)`/g)].map(m => m[1]).find(t => t.includes('/'));
     const dir = !dest ? null : dest.endsWith('/') ? dest.slice(0, -1) : dest.slice(0, dest.lastIndexOf('/'));
-    const files = [];
-    for (const m of (c[fi] ?? '').matchAll(/`([^`]+\.(?:mjs|js))`/g)) { const x = resolveFile(m[1]); if (x.path) files.push(x.path); }
+    const files = rowFilesOf.get(c[ki]) ?? [];
     moveRows.set(c[ki], { obj, files: uniq(files).sort(), dir });
     if (dir) for (const f of files) (fileMoves.get(f) ?? fileMoves.set(f, []).get(f)).push({ obj, dir });
   }
@@ -253,15 +261,19 @@ const objKey = o => `${o.kind}:${o.code}`;
 function objectOfRow(r) {
   const o = r.obj0;
   if (PLACEHOLDER.has(o)) return null;
+  if (mechRows.has(r.rowKey)) return null; // 机械替换类不归领域卡，进清扫卡（见下）
   if (tables.has(o)) return tableObj(o);
   if (sysByKey.has(o)) return sysObj(sysByKey.get(o));
   // 落点是模块组、却不在卷二 §6.11 文件级迁移表里的行，是"改调该组入口"，不是搬迁：不进搬迁卡，按下面"其余"一条归接收卷的对象
   if (MODGROUPS.has(o) && isMoveRow(r, o)) return { kind: 'module_group', code: o, volume: null, sys: null };
   if (GATEFAC.has(o)) return { kind: 'gate_facility', code: o, volume: null, sys: null };
   // 词表族条目、规则表键、其余：归来源卷的对象（有主表取第一张表，无主表取系统键）
-  const rv = receivingVolume(r.target, r.volume, CFG.volCode);
+  const rv = receivingVolume(r.target, r.volume, CFG.volCode, VOLS);
   const s = sysOfVol.get(rv.vol) ?? sysOfVol.get(r.volume);
-  return s ? sysObj(s) : null;
+  if (s) return sysObj(s);
+  // 李白 11-15 16:55 第一条，19:08 第 2 条放宽："删除、锚点定不出系统"的行取被删概念的所属系统——锚点文件恰是一个系统登记项的定义文件时取该系统
+  if (r.disp === 'delete') { const own = sysJ.filter(x => (x.defFiles ?? []).some(f => r.files.includes(f))); if (own.length === 1) return sysObj(own[0]); }
+  return null;
 }
 for (const r of rows) r.obj = objectOfRow(r);
 
@@ -639,6 +651,17 @@ for (const c of cards) { c.dependsOn = main.deps.get(c.cardId); c.phaseNo = phas
 const n = main.n;
 // 清扫卡：阶段 1 至 n 各一张
 for (let k = 1; k <= n; k++) cards.push(newCard({ cardId: `SWEEP-${k}`, cardKind: 'sweep', phaseNo: k, accept: s11.slice() }));
+// 全仓库机械替换类（卷十一 R11-7.8 例外、必填矩阵清扫卡 files 栏；李白 11-15 19:08 第 1 条、19:12）：文件清单由本脚本按"现有文件"栏的标识符列出
+// （两个进程的运行时代码文件里出现该标识符的），进该行落点对象模块组搬迁卡所在阶段的清扫卡（没有搬迁卡的进阶段 1）；只读文件文字，不执行
+const mechInfo = [];
+for (const [k, m] of [...mechRows].sort((a, b) => cmp(a[0], b[0]))) {
+  const re = new RegExp('(?<![A-Za-z0-9_$])' + m.ident.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![A-Za-z0-9_$])');
+  const fs = all.filter(f => isRuntime(f) && /\.(?:mjs|js)$/.test(f) && re.test(rd(`${REPO}/${f}`))).sort();
+  const ph = Math.max(1, ...cards.filter(c => c.cardKind === 'relocate' && c.objectCode === m.obj).map(c => c.phaseNo ?? 1));
+  const sw = cards.find(c => c.cardId === `SWEEP-${Math.min(ph, Math.max(1, n))}`);
+  if (sw) { sw.files = uniq([...sw.files, ...fs]).sort(); sw._mech = true; }
+  mechInfo.push({ rowKey: k, ident: m.ident, files: fs.length, sweep: sw?.cardId ?? null });
+}
 
 // ================= 推进钩子（R11-3.14）：`X.after = [..]` 机读写法 =================
 const hookAfter = new Map(); const hookSrc = new Map(); const hookConflict = [];
@@ -681,7 +704,8 @@ const MATRIX = {
 const isEmpty = v => v === null || v === undefined || v === '' || (Array.isArray(v) ? v.length === 0 : typeof v === 'object' ? Object.keys(v).length === 0 : false);
 const matrixCheck = c => {
   const m = MATRIX[c.cardKind], miss = [], extra = [];
-  for (const [f, rule] of Object.entries(m)) {
+  for (const [f, rule0] of Object.entries(m)) {
+    const rule = c.cardKind === 'sweep' && f === 'files' && c._mech ? '必' : rule0; // 清扫卡 files：脚本生成清单（机械替换类）／其余仍为—（R11-7.8 例外，李白 19:12）
     const v = c[f];
     if (rule === '必' && isEmpty(v)) miss.push(f);
     if (rule === '—' && !isEmpty(v)) extra.push(f);
@@ -824,6 +848,7 @@ const md = [
   `- dependsOn：无环${phaseCycle ? '（失败：' + phaseCycle.join('→') + '）' : ''}；指向不存在的卡 ${depMissing.length} 处；固定卡阶段冲突（E-MIG-PHASE-CONFLICT）${phaseConflicts.length} 处${phaseConflicts.length ? '：' + phaseConflicts.join('；') : ''}。`,
   `- launches：每个入口恰一张卡上线——重复上线 ${launchDup.length} 个${launchDup.length ? '：' + launchDup.slice(0, 5).join('、') : ''}；没有卡上线的入口 ${notLaunched.length} 个${notLaunched.length ? '（' + notLaunched.slice(0, 5).join('、') + '…）' : ''}。`,
   `- 迁移行认领：没有接收卡 ${orphanRows.length} 行${orphanRows.length ? '（' + orphanRows.slice(0, 12).join('、') + (orphanRows.length > 12 ? '…' : '') + '）' : ''}；多于一张 ${multiRows.length} 行。位置组 ${posGroups.size} 个，其中锚点跨两个以上消费者组的位置组行 ${nStraddle} 行（取最小组，待裁）；位置组内对象不一致 ${nObjConflict} 组（取行数最多的对象，同数按对象种类次序再代号升序，列在下面）。`,
+  `- 全仓库机械替换类（卷十一 R11-7.8 例外，李白 11-15 19:12）：${mechInfo.map(x => `${x.rowKey}（\`${x.ident}\`，脚本列出 ${x.files} 个文件，进 ${x.sweep}）`).join('；') || '无'}；这类行不归领域卡、清扫卡的 rowKeys 按必填矩阵仍为"—"，所以计入上面"没有接收卡"的行（待裁）。`,
   `- 账本子卡 ${ledgerChildren.length} 张${ledgerChildLimit ? '，超过卷一 §6.5 的 ≤ 8 上限，报李白' : '（≤ 8）'}。`,
   '',
   '## 三 待补（K7）与 migReady',

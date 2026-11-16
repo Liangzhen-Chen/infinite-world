@@ -4,10 +4,10 @@
  "maxFiles": 25,
  "n": 5,
  "counts": {
-  "cards": 109,
+  "cards": 110,
   "byKind": {
    "first": 38,
-   "follow": 50,
+   "follow": 51,
    "gate": 3,
    "ledger_child": 7,
    "ledger_parent": 1,
@@ -16,13 +16,13 @@
   },
   "byPhase": {
    "0": 3,
-   "1": 80,
+   "1": 81,
    "2": 11,
    "3": 11,
    "4": 2,
    "5": 2
   },
-  "nonSweep": 104
+  "nonSweep": 105
  },
  "cards": [
   {
@@ -637,7 +637,7 @@
     "M16-14",
     "M16-15",
     "M16-20",
-    "M17-5",
+    "M2-11c",
     "M20-88a",
     "M20-88b",
     "M20-88c",
@@ -672,9 +672,6 @@
     "M6-43",
     "M6-45",
     "M6-47",
-    "M6-63",
-    "M6-64",
-    "M6-67",
     "M6-68",
     "M6-8",
     "M8b-3",
@@ -769,7 +766,6 @@
    "rowKeys": [
     "M25-36",
     "M6-21",
-    "M6-26",
     "M6-39",
     "M6-42",
     "M6-48",
@@ -870,6 +866,7 @@
    "segNo": null,
    "zeroRows": [],
    "rowKeys": [
+    "M1-9",
     "M25-51",
     "M25-52a",
     "M25-52b",
@@ -908,12 +905,12 @@
     "server-plugin/labor-market.mjs",
     "server-plugin/law.mjs",
     "server-plugin/learning.mjs",
+    "server-plugin/ledger.mjs",
     "server-plugin/legacy-primitives.mjs",
     "server-plugin/legal-appeal.mjs",
     "server-plugin/legal-representation.mjs",
     "server-plugin/livestock-sale.mjs",
-    "server-plugin/magic-consent.mjs",
-    "server-plugin/magic-economy.mjs"
+    "server-plugin/magic-consent.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -981,6 +978,7 @@
     "M6-57"
    ],
    "files": [
+    "server-plugin/magic-economy.mjs",
     "server-plugin/magic-message.mjs",
     "server-plugin/magic-mind-space.mjs",
     "server-plugin/magic-movement.mjs",
@@ -1004,8 +1002,7 @@
     "server-plugin/npc-labor.mjs",
     "server-plugin/npc-life.mjs",
     "server-plugin/npc-memory.mjs",
-    "server-plugin/npc-obligations.mjs",
-    "server-plugin/npc-relations.mjs"
+    "server-plugin/npc-obligations.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -1071,6 +1068,7 @@
     "M6-50"
    ],
    "files": [
+    "server-plugin/npc-relations.mjs",
     "server-plugin/npc-schedule.mjs",
     "server-plugin/obligation-claims.mjs",
     "server-plugin/obligation-conditional.mjs",
@@ -1094,8 +1092,7 @@
     "server-plugin/professions.mjs",
     "server-plugin/public-opinion.mjs",
     "server-plugin/public-projects.mjs",
-    "server-plugin/quest-board.mjs",
-    "server-plugin/quest-sources.mjs"
+    "server-plugin/quest-board.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -1159,14 +1156,17 @@
    "zeroRows": [],
    "rowKeys": [
     "M10-6",
+    "M17-5",
+    "M17-6",
     "M6-18",
     "M6-40",
-    "M6-41",
     "M6-59",
+    "M6-63",
     "M6-7",
     "M8b-22"
    ],
    "files": [
+    "server-plugin/quest-sources.mjs",
     "server-plugin/quest-wildlife.mjs",
     "server-plugin/remote-generation.mjs",
     "server-plugin/repair.mjs",
@@ -1186,12 +1186,11 @@
     "server-plugin/titles.mjs",
     "server-plugin/training.mjs",
     "server-plugin/transition.mjs",
+    "server-plugin/transport-route.mjs",
     "server-plugin/transport.mjs",
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/ui-affairs.mjs",
-    "server-plugin/ui-personal.mjs",
-    "server-plugin/valuation.mjs",
-    "server-plugin/war-diplomacy.mjs"
+    "server-plugin/ui-personal.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -1258,8 +1257,12 @@
    "splitAxis": null,
    "segNo": null,
    "zeroRows": [],
-   "rowKeys": [],
+   "rowKeys": [
+    "M6-41"
+   ],
    "files": [
+    "server-plugin/valuation.mjs",
+    "server-plugin/war-diplomacy.mjs",
     "server-plugin/wildlife-awakening.mjs",
     "server-plugin/wildlife-range.mjs",
     "server-plugin/wildlife-society.mjs",
@@ -1315,14 +1318,13 @@
    "segNo": 1,
    "zeroRows": [],
    "rowKeys": [
-    "M2-17",
     "M2-19c",
     "M2-5"
    ],
    "files": [
-    "extension/mail-view.mjs",
-    "extension/map-view.mjs",
-    "extension/people-history.mjs",
+    "extension/message-view.mjs",
+    "extension/prompt.mjs",
+    "extension/turn.mjs",
     "server-plugin/consistency-service.mjs"
    ],
    "dataFiles": [],
@@ -1412,18 +1414,11 @@
    "segNo": 1,
    "zeroRows": [],
    "rowKeys": [
-    "M2-15",
-    "M2-16",
-    "M2-20"
+    "M2-15"
    ],
    "files": [
-    "extension/action-builder.mjs",
-    "extension/background-view.mjs",
     "extension/index.js",
-    "extension/runtime.js",
-    "extension/start/play-town.js",
-    "extension/ui-messages.mjs",
-    "extension/ui-settings.mjs"
+    "extension/runtime.js"
    ],
    "dataFiles": [],
    "segs": [],
@@ -1467,10 +1462,6 @@
    "zeroRows": [],
    "rowKeys": [
     "M2-1",
-    "M2-11",
-    "M2-12a",
-    "M2-13",
-    "M2-2",
     "M2-31",
     "M2-32",
     "M2-33",
@@ -1491,15 +1482,12 @@
    "files": [
     "server-plugin/action-registry.mjs",
     "server-plugin/advance-registry.mjs",
-    "server-plugin/carry.mjs",
-    "server-plugin/currency.mjs",
     "server-plugin/derived.mjs",
     "server-plugin/digest-exclude.mjs",
     "server-plugin/holding-kinds.mjs",
     "server-plugin/holding-sources.mjs",
     "server-plugin/index.mjs",
     "server-plugin/ledger.mjs",
-    "server-plugin/primitive-schema.mjs",
     "server-plugin/primitives-body.mjs",
     "server-plugin/primitives-checks.mjs",
     "server-plugin/primitives-effects.mjs",
@@ -1508,8 +1496,7 @@
     "server-plugin/primitives-runtime.mjs",
     "server-plugin/primitives.mjs",
     "server-plugin/seed-keys.mjs",
-    "server-plugin/storage.mjs",
-    "server-plugin/ui-routes.mjs"
+    "server-plugin/storage.mjs"
    ],
    "dataFiles": [],
    "segs": [],
@@ -1552,13 +1539,12 @@
    "segNo": 1,
    "zeroRows": [],
    "rowKeys": [
-    "M2-18",
-    "M2-19b",
-    "M2-4b"
+    "M2-19b"
    ],
    "files": [
-    "extension/tools.mjs",
-    "server-plugin/action-text.mjs"
+    "extension/message-view.mjs",
+    "extension/prompt.mjs",
+    "extension/turn.mjs"
    ],
    "dataFiles": [],
    "segs": [],
@@ -1771,7 +1757,11 @@
    "rowKeys": [
     "M14-35",
     "M14-36",
+    "M2-12a",
+    "M2-15b",
+    "M2-18",
     "M2-19a",
+    "M2-5b",
     "M29-38",
     "M29-44",
     "M4-21",
@@ -1782,8 +1772,7 @@
     "M9-14",
     "M9-20",
     "M9-21",
-    "M9-5",
-    "M9-6"
+    "M9-5"
    ],
    "files": [
     "extension/action-builder.mjs",
@@ -2003,6 +1992,7 @@
     "M14-89",
     "M16-7",
     "M17-13",
+    "M17-3",
     "M17-4",
     "M18-10",
     "M18-30",
@@ -2017,7 +2007,6 @@
     "M25-47",
     "M25-49",
     "M25-5",
-    "M25-56",
     "M25-8",
     "M4-11",
     "M4-12",
@@ -2060,6 +2049,7 @@
     "server-plugin/education-state.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/extraction.mjs",
+    "server-plugin/faith.mjs",
     "server-plugin/family-law.mjs",
     "server-plugin/family-politics.mjs",
     "server-plugin/festival.mjs",
@@ -2072,8 +2062,7 @@
     "server-plugin/law.mjs",
     "server-plugin/lies.mjs",
     "server-plugin/local-exams.mjs",
-    "server-plugin/location-access.mjs",
-    "server-plugin/magic-growth.mjs"
+    "server-plugin/location-access.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -2168,9 +2157,6 @@
     "M20-53",
     "M20-54",
     "M20-55",
-    "M20-57",
-    "M20-64",
-    "M20-71",
     "M20-81",
     "M20-82",
     "M20-83",
@@ -2334,13 +2320,10 @@
    "segNo": null,
    "zeroRows": [],
    "rowKeys": [
-    "M13-4",
-    "M13-6",
     "M20-34",
     "M20-45",
     "M21-15",
     "M21-17",
-    "M21-18",
     "M21-19",
     "M21-8",
     "M21-9",
@@ -2357,8 +2340,6 @@
     "server-plugin/bounty.mjs",
     "server-plugin/business.mjs",
     "server-plugin/civic.mjs",
-    "server-plugin/combat-state.mjs",
-    "server-plugin/combat.mjs",
     "server-plugin/credit.mjs",
     "server-plugin/currency.mjs",
     "server-plugin/distribution.mjs",
@@ -2373,7 +2354,9 @@
     "server-plugin/faith.mjs",
     "server-plugin/family-politics.mjs",
     "server-plugin/festival.mjs",
-    "server-plugin/finance-assets.mjs"
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/finance-tax.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -2471,6 +2454,8 @@
     "M10-28",
     "M10-34",
     "M11-1",
+    "M14-82c",
+    "M2-15c",
     "M20-11",
     "M24-20",
     "M27-1",
@@ -2505,7 +2490,9 @@
     "server-plugin/facilities.mjs",
     "server-plugin/farm-pests-migration.mjs",
     "server-plugin/finance-assets.mjs",
+    "server-plugin/index.mjs",
     "server-plugin/labor-market.mjs",
+    "server-plugin/legacy/core.js",
     "server-plugin/migrations.mjs",
     "server-plugin/migrations/r1.mjs",
     "server-plugin/military.mjs",
@@ -2515,8 +2502,7 @@
     "server-plugin/npc-schedule.mjs",
     "server-plugin/obligation-runtime.mjs",
     "server-plugin/population-service.mjs",
-    "server-plugin/population.mjs",
-    "server-plugin/prompt-scope.mjs"
+    "server-plugin/population.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -2591,12 +2577,14 @@
    "fails": 0,
    "pending": [
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
+    "row:M14-82c",
     "system:sys.offscreen_save 登记项待补 sources、sinks、entryJudges、view"
    ],
    "migReady": {
     "defects": [
      "E-MIG-CARD-INCOMPLETE(retire)",
-     "待补:登记项字段"
+     "待补:登记项字段",
+     "待补:迁移行处置"
     ],
     "stateItems": [
      "依赖卡已 merged",
@@ -2774,6 +2762,11 @@
    "segNo": null,
    "zeroRows": [],
    "rowKeys": [
+    "M1-6b",
+    "M2-15d",
+    "M2-16",
+    "M2-17",
+    "M2-20",
     "M29-10",
     "M29-11",
     "M29-12",
@@ -2884,7 +2877,8 @@
     "S29-13"
    ],
    "dependsOn": [
-    "C-卷二-host-1"
+    "C-卷二-host-1",
+    "C-卷二-outputGate-1"
    ],
    "census": {},
    "testClass": {},
@@ -2923,6 +2917,7 @@
    "zeroRows": [],
    "rowKeys": [
     "M14-9",
+    "M2-12c",
     "M22-1",
     "M22-10",
     "M22-16",
@@ -3156,6 +3151,8 @@
    "segNo": null,
    "zeroRows": [],
    "rowKeys": [
+    "M2-1b",
+    "M2-42b",
     "M28-1",
     "M28-12",
     "M28-14",
@@ -3401,6 +3398,7 @@
     "M20-39",
     "M20-40",
     "M20-41",
+    "M20-71",
     "M20-80",
     "M22-15",
     "M24-1",
@@ -3420,6 +3418,7 @@
     "M24-9",
     "M29-23",
     "M29-26",
+    "M6-64",
     "M6-65",
     "M8-18"
    ],
@@ -3435,6 +3434,7 @@
     "server-plugin/festival.mjs",
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/remote-generation.mjs",
+    "server-plugin/seasonal-hazards.mjs",
     "server-plugin/state-notices.mjs",
     "server-plugin/world-clock.mjs",
     "server-plugin/world-events.mjs"
@@ -3599,6 +3599,9 @@
     "M19-28",
     "M19-29",
     "M19-36",
+    "M19-9",
+    "M20-21",
+    "M20-22",
     "M20-35",
     "M20-36",
     "M20-37",
@@ -3614,12 +3617,15 @@
     "M5-20",
     "M5-29",
     "M5-31",
+    "M5-32",
     "M5-33",
     "M5-6",
     "M5-8",
     "M5-9",
     "M6-11",
     "M6-66",
+    "M7-10",
+    "M7-11",
     "M8-34"
    ],
    "files": [
@@ -3729,8 +3735,7 @@
     "M8-1",
     "M8-13",
     "M8-2",
-    "M8-25",
-    "M8-3"
+    "M8-25"
    ],
    "files": [
     "server-plugin/elections.mjs",
@@ -4176,6 +4181,7 @@
     "M10-42",
     "M10-7",
     "M10-9",
+    "M11-2a",
     "M11-2b",
     "M16-4",
     "M16-5",
@@ -4214,7 +4220,9 @@
     "server-plugin/engine.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/high-nobility.mjs",
+    "server-plugin/index.mjs",
     "server-plugin/law-codes.mjs",
+    "server-plugin/legacy/core.js",
     "server-plugin/noble-state.mjs",
     "server-plugin/npc-memory.mjs",
     "server-plugin/npc-state.mjs",
@@ -4228,7 +4236,9 @@
     "server-plugin/titles.mjs",
     "server-plugin/tribal-awakening.mjs"
    ],
-   "dataFiles": [],
+   "dataFiles": [
+    "server-plugin/legacy/seed.json"
+   ],
    "segs": [
     "seg_rows",
     "seg_data",
@@ -4320,6 +4330,7 @@
     "S16-2"
    ],
    "dependsOn": [
+    "C-卷二-kernel-1",
     "LEDGER-1"
    ],
    "census": {},
@@ -4359,7 +4370,6 @@
    "zeroRows": [],
    "rowKeys": [
     "M11-10",
-    "M11-2a",
     "M11-6",
     "M11-8",
     "M11-9"
@@ -4494,9 +4504,6 @@
     "M17-17",
     "M17-18",
     "M17-19",
-    "M17-2",
-    "M17-3",
-    "M17-6",
     "M17-8",
     "M29-3",
     "M5-26",
@@ -4508,7 +4515,6 @@
     "server-plugin/pets.mjs",
     "server-plugin/primitives-movement.mjs",
     "server-plugin/remote-generation.mjs",
-    "server-plugin/transport-route.mjs",
     "server-plugin/weather.mjs"
    ],
    "dataFiles": [],
@@ -4656,12 +4662,23 @@
     "M13-25",
     "M13-3",
     "M13-31",
+    "M13-4",
+    "M13-6",
     "M13-7",
+    "M14-62",
+    "M14-63",
+    "M14-64",
+    "M15-19",
     "M17-9",
     "M20-27",
-    "M4-7"
+    "M21-18",
+    "M4-7",
+    "M8-3",
+    "M9-6"
    ],
    "files": [
+    "server-plugin/activities.mjs",
+    "server-plugin/combat-state.mjs",
     "server-plugin/combat.mjs",
     "server-plugin/deterrence.mjs",
     "server-plugin/duels.mjs",
@@ -4671,6 +4688,7 @@
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/household-subsistence.mjs",
     "server-plugin/interactions.mjs",
+    "server-plugin/learning.mjs",
     "server-plugin/transport-route.mjs",
     "server-plugin/war-diplomacy.mjs"
    ],
@@ -4820,6 +4838,7 @@
     "M14-59",
     "M14-69",
     "M14-76",
+    "M17-2",
     "M19-1",
     "M19-10",
     "M19-13",
@@ -4845,9 +4864,11 @@
     "M19-8",
     "M3b-15",
     "M3b-4",
+    "M3b-5",
     "M4-30b",
     "M6-14",
     "M6-22",
+    "M6-67",
     "M8-9",
     "M8b-9"
    ],
@@ -5136,10 +5157,12 @@
     "server-plugin/environment-state.mjs",
     "server-plugin/environment.mjs",
     "server-plugin/facilities.mjs",
+    "server-plugin/faith.mjs",
     "server-plugin/lies.mjs",
     "server-plugin/magic-care.mjs",
     "server-plugin/magic-consent.mjs",
     "server-plugin/magic-context.mjs",
+    "server-plugin/magic-economy.mjs",
     "server-plugin/magic-effects.mjs",
     "server-plugin/magic-light.mjs",
     "server-plugin/magic-message.mjs",
@@ -5151,9 +5174,7 @@
     "server-plugin/magic.mjs",
     "server-plugin/npc-cognition.mjs",
     "server-plugin/npc-decision.mjs",
-    "server-plugin/npc-intelligence.mjs",
-    "server-plugin/summons.mjs",
-    "server-plugin/wildlife-awakening.mjs"
+    "server-plugin/npc-intelligence.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -5279,7 +5300,8 @@
     "M18-23",
     "M18-3",
     "M18-34",
-    "M18-8"
+    "M18-8",
+    "M2-43b"
    ],
    "files": [
     "server-plugin/action-authority-sources.mjs",
@@ -5606,24 +5628,16 @@
    "segNo": null,
    "zeroRows": [],
    "rowKeys": [
-    "M14-68",
     "M14-81",
     "M14-87",
-    "M14-90",
-    "M14-94",
-    "M14-97",
-    "M14-99",
-    "M23-12"
+    "M14-90"
    ],
    "files": [
     "server-plugin/activities.mjs",
     "server-plugin/advance-registry.mjs",
     "server-plugin/military.mjs",
     "server-plugin/notables.mjs",
-    "server-plugin/npc-growth.mjs",
-    "server-plugin/primitives-learning.mjs",
-    "server-plugin/professions.mjs",
-    "server-plugin/works.mjs"
+    "server-plugin/professions.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -5863,7 +5877,6 @@
    "dependsOn": [
     "C-卷九-sys.ai_interface-1",
     "C-卷二-kernel-1",
-    "C-卷二-outputGate-1",
     "LEDGER-1"
    ],
    "census": {},
@@ -5902,6 +5915,7 @@
    "rowKeys": [
     "M13-24",
     "M3b-23",
+    "M6-26",
     "M9-13"
    ],
    "files": [
@@ -6534,9 +6548,11 @@
     "M25-25",
     "M25-27",
     "M25-45",
+    "M25-56",
     "M8b-14"
    ],
    "files": [
+    "server-plugin/magic-growth.mjs",
     "server-plugin/monster-society.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/npc-cognition.mjs",
@@ -6556,6 +6572,7 @@
     "server-plugin/smuggling.mjs",
     "server-plugin/titles.mjs",
     "server-plugin/training.mjs",
+    "server-plugin/transport.mjs",
     "server-plugin/wildlife.mjs"
    ],
    "dataFiles": [],
@@ -6612,6 +6629,7 @@
    "rowKeys": [
     "M20-25",
     "M20-56",
+    "M20-57",
     "M20-58",
     "M20-59",
     "M20-60",
@@ -6705,6 +6723,7 @@
    "rowKeys": [
     "M20-18",
     "M20-19",
+    "M20-64",
     "M20-65",
     "M20-66",
     "M20-67",
@@ -6793,7 +6812,6 @@
     "M20-1",
     "M20-2",
     "M20-3",
-    "M20-4",
     "M20-5",
     "M20-6",
     "M20-7",
@@ -6969,16 +6987,18 @@
     "M21-10",
     "M21-12",
     "M21-16",
+    "M21-22",
+    "M21-23",
     "M21-24",
     "M21-25",
+    "M21-26",
     "M21-27",
     "M21-3",
+    "M21-6",
     "M21-7",
     "M25-50"
    ],
    "files": [
-    "server-plugin/finance-bank.mjs",
-    "server-plugin/finance-tax.mjs",
     "server-plugin/food-habit.mjs",
     "server-plugin/governance.mjs",
     "server-plugin/hidden-passives.mjs",
@@ -7001,7 +7021,9 @@
     "server-plugin/magic-ritual.mjs",
     "server-plugin/magic-status.mjs",
     "server-plugin/market.mjs",
-    "server-plugin/medicine-state.mjs"
+    "server-plugin/medicine-state.mjs",
+    "server-plugin/medicine.mjs",
+    "server-plugin/monster-society.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -7065,15 +7087,9 @@
    "zeroRows": [],
    "rowKeys": [
     "M21-13",
-    "M21-20",
-    "M21-22",
-    "M21-23",
-    "M21-26",
-    "M21-6"
+    "M21-20"
    ],
    "files": [
-    "server-plugin/medicine.mjs",
-    "server-plugin/monster-society.mjs",
     "server-plugin/nation-founding.mjs",
     "server-plugin/notables.mjs",
     "server-plugin/npc-autonomy.mjs",
@@ -7096,7 +7112,9 @@
     "server-plugin/primitives-effects.mjs",
     "server-plugin/primitives-learning.mjs",
     "server-plugin/primitives-runtime.mjs",
-    "server-plugin/professions.mjs"
+    "server-plugin/professions.mjs",
+    "server-plugin/promotion.mjs",
+    "server-plugin/public-projects.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -7161,13 +7179,12 @@
    "zeroRows": [],
    "rowKeys": [],
    "files": [
-    "server-plugin/promotion.mjs",
-    "server-plugin/public-projects.mjs",
     "server-plugin/quest-board.mjs",
     "server-plugin/quest-sources.mjs",
     "server-plugin/reputation-registry.mjs",
     "server-plugin/return-summary.mjs",
     "server-plugin/scene-card.mjs",
+    "server-plugin/seasonal-hazards.mjs",
     "server-plugin/settlement-profile.mjs",
     "server-plugin/shop.mjs",
     "server-plugin/sites.mjs",
@@ -7251,6 +7268,7 @@
     "M28-20"
    ],
    "files": [
+    "server-plugin/prompt-scope.mjs",
     "server-plugin/record-cleanup.mjs",
     "server-plugin/rule-state-migration.mjs",
     "server-plugin/scene-card.mjs",
@@ -7477,7 +7495,6 @@
     "M23-3",
     "M23-4",
     "M23-5",
-    "M23-6",
     "M23-7",
     "M23-8",
     "M23-9",
@@ -7556,7 +7573,9 @@
    "segNo": null,
    "zeroRows": [],
    "rowKeys": [
+    "M20-4",
     "M22-6",
+    "M23-6",
     "M24-13",
     "M28-19",
     "M29-1",
@@ -7575,10 +7594,12 @@
     "server-plugin/engine.mjs",
     "server-plugin/lore.mjs",
     "server-plugin/scene-card.mjs",
+    "server-plugin/scheduler.mjs",
     "server-plugin/ui-map.mjs",
     "server-plugin/ui-messages.mjs",
     "server-plugin/ui-overview.mjs",
-    "server-plugin/ui-routes.mjs"
+    "server-plugin/ui-routes.mjs",
+    "server-plugin/works.mjs"
    ],
    "dataFiles": [],
    "segs": [
@@ -7592,8 +7613,6 @@
     "A29-4.2"
    ],
    "dependsOn": [
-    "C-卷二-kernel-1",
-    "C-卷二-outputGate-1",
     "C-卷二十九-sys.display_l10n-1",
     "LEDGER-1"
    ],
@@ -8268,15 +8287,10 @@
    "segNo": null,
    "zeroRows": [],
    "rowKeys": [
-    "M19-9",
-    "M20-21",
-    "M20-22",
     "M20-23",
     "M5-21",
     "M5-24",
-    "M5-32",
-    "M5-5",
-    "M7-10"
+    "M5-5"
    ],
    "files": [
     "server-plugin/promotion.mjs",
@@ -8461,6 +8475,7 @@
     "server-plugin/shop.mjs",
     "server-plugin/traits.mjs",
     "server-plugin/transport-route.mjs",
+    "server-plugin/transport.mjs",
     "server-plugin/workstation-services.mjs",
     "server-plugin/world-clock.mjs"
    ],
@@ -8509,6 +8524,59 @@
    "migReady": {
     "defects": [
      "E-MIG-CARD-INCOMPLETE(retire)"
+    ],
+    "stateItems": [
+     "依赖卡已 merged",
+     "所在阶段已开",
+     "不在冻结中"
+    ]
+   }
+  },
+  {
+   "cardId": "C-卷十五-sys.arcana-2",
+   "cardKind": "follow",
+   "objectKind": "system",
+   "objectCode": "sys.arcana",
+   "volume": "卷十五",
+   "phaseNo": 1,
+   "groupKey": "rules层-2",
+   "splitAxis": null,
+   "segNo": null,
+   "zeroRows": [],
+   "rowKeys": [],
+   "files": [
+    "server-plugin/summons.mjs",
+    "server-plugin/wildlife-awakening.mjs"
+   ],
+   "dataFiles": [],
+   "segs": [
+    "seg_readers",
+    "seg_delete"
+   ],
+   "entries": [],
+   "launches": [],
+   "retire": {},
+   "accept": [],
+   "dependsOn": [
+    "C-卷十五-sys.arcana-1",
+    "LEDGER-1"
+   ],
+   "census": {},
+   "testClass": {},
+   "derivations": [],
+   "sortKeys": {},
+   "state": "drafted",
+   "approvals": [],
+   "mergeRef": "",
+   "fails": 0,
+   "pending": [
+    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
+    "entries:该组文件在旧代码里没有调用本系统读入口，要接哪些入口待设计",
+    "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
+   ],
+   "migReady": {
+    "defects": [
+     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
     ],
     "stateItems": [
      "依赖卡已 merged",
@@ -9168,7 +9236,148 @@
    "segNo": null,
    "zeroRows": [],
    "rowKeys": [],
-   "files": [],
+   "files": [
+    "extension/action-builder.mjs",
+    "extension/core.js",
+    "extension/index.js",
+    "extension/map-view.mjs",
+    "extension/message-view.mjs",
+    "extension/people-history.mjs",
+    "extension/prompt.mjs",
+    "extension/runtime.js",
+    "extension/start/play-town.js",
+    "extension/tools.mjs",
+    "extension/turn.mjs",
+    "server-plugin/action-affordances.mjs",
+    "server-plugin/action-authority.mjs",
+    "server-plugin/action-boundary.mjs",
+    "server-plugin/action-consent.mjs",
+    "server-plugin/action-limits.mjs",
+    "server-plugin/action-rite.mjs",
+    "server-plugin/action-router.mjs",
+    "server-plugin/advance-registry.mjs",
+    "server-plugin/agriculture-migration.mjs",
+    "server-plugin/agriculture.mjs",
+    "server-plugin/autonomy-candidates.mjs",
+    "server-plugin/body-needs.mjs",
+    "server-plugin/boss-cognition.mjs",
+    "server-plugin/boss-migration.mjs",
+    "server-plugin/boss-negotiation.mjs",
+    "server-plugin/bosses.mjs",
+    "server-plugin/career-metrics.mjs",
+    "server-plugin/catalog.mjs",
+    "server-plugin/character.mjs",
+    "server-plugin/chronicle.mjs",
+    "server-plugin/compat/v2-phase1-activities.mjs",
+    "server-plugin/compat/v2-phase1-engine.mjs",
+    "server-plugin/consistency-evidence.mjs",
+    "server-plugin/consistency-review.mjs",
+    "server-plugin/consistency-service.mjs",
+    "server-plugin/contract-state.mjs",
+    "server-plugin/contracts.mjs",
+    "server-plugin/credit.mjs",
+    "server-plugin/dialogue.mjs",
+    "server-plugin/documents.mjs",
+    "server-plugin/ecology-dynamics.mjs",
+    "server-plugin/effects.mjs",
+    "server-plugin/engine.mjs",
+    "server-plugin/environment.mjs",
+    "server-plugin/extraction.mjs",
+    "server-plugin/faith-state.mjs",
+    "server-plugin/faith.mjs",
+    "server-plugin/family-inheritance.mjs",
+    "server-plugin/farm-pests.mjs",
+    "server-plugin/finance-assets.mjs",
+    "server-plugin/finance-bank.mjs",
+    "server-plugin/forest-water.mjs",
+    "server-plugin/governance.mjs",
+    "server-plugin/high-nobility.mjs",
+    "server-plugin/holdings.mjs",
+    "server-plugin/household-subsistence.mjs",
+    "server-plugin/husbandry.mjs",
+    "server-plugin/interactions.mjs",
+    "server-plugin/item-class.mjs",
+    "server-plugin/items.mjs",
+    "server-plugin/labor-market.mjs",
+    "server-plugin/law.mjs",
+    "server-plugin/ledger.mjs",
+    "server-plugin/legacy-primitives.mjs",
+    "server-plugin/legacy/core.js",
+    "server-plugin/legal-appeal.mjs",
+    "server-plugin/legal-reactions.mjs",
+    "server-plugin/lies.mjs",
+    "server-plugin/local-exams.mjs",
+    "server-plugin/magic-air.mjs",
+    "server-plugin/magic-area.mjs",
+    "server-plugin/magic-economy.mjs",
+    "server-plugin/magic-growth.mjs",
+    "server-plugin/magic-light.mjs",
+    "server-plugin/magic-object.mjs",
+    "server-plugin/magic-ritual.mjs",
+    "server-plugin/medicine.mjs",
+    "server-plugin/migrations.mjs",
+    "server-plugin/migrations/r1.mjs",
+    "server-plugin/military.mjs",
+    "server-plugin/money.mjs",
+    "server-plugin/monster-society.mjs",
+    "server-plugin/nation-founding.mjs",
+    "server-plugin/native-primitives.mjs",
+    "server-plugin/norm-stack.mjs",
+    "server-plugin/npc-autonomy.mjs",
+    "server-plugin/npc-cognition.mjs",
+    "server-plugin/npc-decision.mjs",
+    "server-plugin/npc-intelligence.mjs",
+    "server-plugin/npc-labor.mjs",
+    "server-plugin/npc-life.mjs",
+    "server-plugin/npc-obligations.mjs",
+    "server-plugin/npc-state.mjs",
+    "server-plugin/obligation-kinds.mjs",
+    "server-plugin/obligation-runtime.mjs",
+    "server-plugin/offense-notes.mjs",
+    "server-plugin/open-actions.mjs",
+    "server-plugin/organizations.mjs",
+    "server-plugin/pets.mjs",
+    "server-plugin/population.mjs",
+    "server-plugin/post.mjs",
+    "server-plugin/primitive-policy.mjs",
+    "server-plugin/primitives-checks.mjs",
+    "server-plugin/primitives-effects.mjs",
+    "server-plugin/primitives-runtime.mjs",
+    "server-plugin/primitives.mjs",
+    "server-plugin/public-projects.mjs",
+    "server-plugin/quest-sources.mjs",
+    "server-plugin/remote-generation.mjs",
+    "server-plugin/renewable.mjs",
+    "server-plugin/reputation-catalog.mjs",
+    "server-plugin/reputation.mjs",
+    "server-plugin/routing-programs.mjs",
+    "server-plugin/runtime-world.mjs",
+    "server-plugin/seasonal-hazards.mjs",
+    "server-plugin/seasonal-migration.mjs",
+    "server-plugin/settlement-profile.mjs",
+    "server-plugin/settlement-trade.mjs",
+    "server-plugin/shop.mjs",
+    "server-plugin/sites.mjs",
+    "server-plugin/spell-research.mjs",
+    "server-plugin/storage.mjs",
+    "server-plugin/subjective-view.mjs",
+    "server-plugin/summons.mjs",
+    "server-plugin/tender.mjs",
+    "server-plugin/training.mjs",
+    "server-plugin/transition.mjs",
+    "server-plugin/transport.mjs",
+    "server-plugin/tribal-awakening.mjs",
+    "server-plugin/ui-affairs.mjs",
+    "server-plugin/war-diplomacy.mjs",
+    "server-plugin/water-cycle.mjs",
+    "server-plugin/water-volume.mjs",
+    "server-plugin/wildlife-awakening.mjs",
+    "server-plugin/wildlife-migration.mjs",
+    "server-plugin/wildlife-society.mjs",
+    "server-plugin/wildlife.mjs",
+    "server-plugin/world-events.mjs",
+    "server-plugin/world-upgrade.mjs"
+   ],
    "dataFiles": [],
    "segs": [],
    "entries": [],
@@ -9199,7 +9408,9 @@
    "fails": 0,
    "pending": [],
    "migReady": {
-    "defects": [],
+    "defects": [
+     "E-MIG-CARD-SCOPE"
+    ],
     "stateItems": [
      "依赖卡已 merged",
      "所在阶段已开",
@@ -9457,12 +9668,10 @@
     "M14-57",
     "M14-58",
     "M14-60",
-    "M14-62",
-    "M14-63",
-    "M14-64",
     "M14-65",
     "M14-66",
     "M14-67",
+    "M14-68",
     "M14-70",
     "M14-72",
     "M14-73",
@@ -9474,7 +9683,6 @@
     "M14-80",
     "M14-82a",
     "M14-82b",
-    "M14-82c",
     "M14-82d",
     "M14-82e",
     "M14-82f",
@@ -9486,12 +9694,15 @@
     "M14-91",
     "M14-92",
     "M14-93",
+    "M14-94",
     "M14-95",
     "M14-96",
+    "M14-97",
     "M14-98",
-    "M15-19",
+    "M14-99",
     "M15-5",
     "M21-1",
+    "M23-12",
     "M7-28",
     "M9-3"
    ],
@@ -9503,6 +9714,7 @@
     "server-plugin/career-metrics.mjs",
     "server-plugin/credit.mjs",
     "server-plugin/education-state.mjs",
+    "server-plugin/education.mjs",
     "server-plugin/engine.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/hidden-passives.mjs",
@@ -9512,6 +9724,7 @@
     "server-plugin/medicine-state.mjs",
     "server-plugin/military.mjs",
     "server-plugin/notables.mjs",
+    "server-plugin/npc-growth.mjs",
     "server-plugin/primitives-effects.mjs",
     "server-plugin/primitives-learning.mjs",
     "server-plugin/works.mjs"
@@ -9631,7 +9844,6 @@
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3",
     "row:M14-82a",
     "row:M14-82b",
-    "row:M14-82c",
     "row:M14-82e",
     "row:M14-82f",
     "system:sys.profession 登记项待补 sources、sinks、entryJudges、view"
@@ -10357,8 +10569,7 @@
    "zeroRows": [],
    "rowKeys": [
     "M19-32",
-    "M3b-20",
-    "M3b-5"
+    "M3b-20"
    ],
    "files": [
     "server-plugin/action-affordances.mjs",
@@ -10523,6 +10734,7 @@
     "server-plugin/magic-growth.mjs",
     "server-plugin/pets.mjs",
     "server-plugin/remote-generation.mjs",
+    "server-plugin/seasonal-hazards.mjs",
     "server-plugin/sites.mjs",
     "server-plugin/stock.mjs",
     "server-plugin/weather.mjs",
@@ -11540,7 +11752,6 @@
     "M20-15",
     "M5-27",
     "M7-1",
-    "M7-11",
     "M7-12",
     "M7-13",
     "M7-14",

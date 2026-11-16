@@ -1,7 +1,7 @@
 {
  "_说明": "乙-4 H1：由 transcribe-migrows.mjs 从各卷 §7 迁移节生成；不手改。字段：编号、卷、卷文行号、锚点原文与解析、处置、落点、落点对象、基线提交。",
  "baseline": "d54c89a3",
- "count": 1137,
+ "count": 1152,
  "rows": [
   {
    "rowKey": "M1-1",
@@ -2617,32 +2617,44 @@
   {
    "rowKey": "M2-1",
    "volume": "卷二",
-   "srcLine": 2189,
+   "srcLine": 2224,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "relocate_only",
+   "target": "kernel/load/env.mjs（§2.9 第 0 条装配文件）",
+   "targetObject": "kernel",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M2-1b",
+   "volume": "卷二",
+   "srcLine": 2225,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "kernel/load/env.mjs、kernel/load/*（§2.9 第 0 条装配文件）",
-   "targetObject": "kernel",
+   "target": "R28-8.3（卷二十八，loadWorld）；kernel/load/*（§2.9 第 0 条装配文件）",
+   "targetObject": "sys.packs",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M2-2",
    "volume": "卷二",
-   "srcLine": 2190,
+   "srcLine": 2226,
    "anchorsText": "",
    "anchors": [],
-   "disp": "delete",
-   "target": "kernel/transport/router-caps.mjs",
-   "targetObject": "kernel",
-   "baseline": "d54c89a3"
+   "disp": "同 M29-28",
+   "target": "同 M29-28",
+   "targetObject": "同 M29-28",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M29-28"
   },
   {
    "rowKey": "M2-3a",
    "volume": "卷二",
-   "srcLine": 2191,
+   "srcLine": 2227,
    "anchorsText": "",
    "anchors": [],
-   "disp": "replace_entry",
+   "disp": "relocate_only",
    "target": "kernel/storage.mjs、kernel/save.mjs、kernel/load/save.mjs",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
@@ -2650,7 +2662,7 @@
   {
    "rowKey": "M2-3b",
    "volume": "卷二",
-   "srcLine": 2192,
+   "srcLine": 2228,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M11-1",
@@ -2660,9 +2672,21 @@
    "aliasOf": "同 M11-1"
   },
   {
+   "rowKey": "M2-3c",
+   "volume": "卷二",
+   "srcLine": 2229,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "同 M27-8、M27-17",
+   "target": "同 M27-8、M27-17",
+   "targetObject": "同 M27-8、M27-17",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M27-8、M27-17"
+  },
+  {
    "rowKey": "M2-4a",
    "volume": "卷二",
-   "srcLine": 2193,
+   "srcLine": 2230,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M2-31 至 M2-45",
@@ -2674,29 +2698,41 @@
   {
    "rowKey": "M2-4b",
    "volume": "卷二",
-   "srcLine": 2194,
+   "srcLine": 2231,
    "anchorsText": "",
    "anchors": [],
-   "disp": "move_out",
-   "target": "labels（卷二 §1.9 显示名文件）、outputGate 拼装",
-   "targetObject": "outputGate",
-   "baseline": "d54c89a3"
+   "disp": "同 M29-1",
+   "target": "同 M29-1",
+   "targetObject": "同 M29-1",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M29-1"
   },
   {
    "rowKey": "M2-5",
    "volume": "卷二",
-   "srcLine": 2195,
+   "srcLine": 2232,
    "anchorsText": "",
    "anchors": [],
-   "disp": "move_out",
+   "disp": "relocate_only",
    "target": "ai-gate/prompt.mjs、ai-gate/parse.mjs",
    "targetObject": "aiGate",
    "baseline": "d54c89a3"
   },
   {
+   "rowKey": "M2-5b",
+   "volume": "卷二",
+   "srcLine": 2233,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "replace_entry",
+   "target": "R9-18.2（卷九，report 的键）；narrate、narrateTurn（§2.9 第 0 条）",
+   "targetObject": "sys.ai_interface",
+   "baseline": "d54c89a3"
+  },
+  {
    "rowKey": "M2-6",
    "volume": "卷二",
-   "srcLine": 2196,
+   "srcLine": 2234,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M9-22",
@@ -2708,7 +2744,7 @@
   {
    "rowKey": "M2-7",
    "volume": "卷二",
-   "srcLine": 2197,
+   "srcLine": 2235,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M27-16",
@@ -2720,7 +2756,7 @@
   {
    "rowKey": "M2-8",
    "volume": "卷二",
-   "srcLine": 2198,
+   "srcLine": 2236,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M9-19",
@@ -2732,7 +2768,7 @@
   {
    "rowKey": "M2-9",
    "volume": "卷二",
-   "srcLine": 2199,
+   "srcLine": 2237,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M9-17",
@@ -2744,7 +2780,7 @@
   {
    "rowKey": "M2-10a",
    "volume": "卷二",
-   "srcLine": 2200,
+   "srcLine": 2238,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M2-10a1 至 M2-10a3",
@@ -2756,7 +2792,7 @@
   {
    "rowKey": "M2-10b",
    "volume": "卷二",
-   "srcLine": 2204,
+   "srcLine": 2242,
    "anchorsText": "",
    "anchors": [],
    "disp": "to_data",
@@ -2767,51 +2803,98 @@
   {
    "rowKey": "M2-11",
    "volume": "卷二",
-   "srcLine": 2205,
+   "srcLine": 2243,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "同 M2-11a 至 M2-11c",
+   "target": "同 M2-11a 至 M2-11c",
+   "targetObject": "同 M2-11a 至 M2-11c",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M2-11a 至 M2-11c"
+  },
+  {
+   "rowKey": "M2-11a",
+   "volume": "卷二",
+   "srcLine": 2244,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "同 M6-21",
+   "target": "同 M6-21",
+   "targetObject": "同 M6-21",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M6-21"
+  },
+  {
+   "rowKey": "M2-11b",
+   "volume": "卷二",
+   "srcLine": 2245,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "同 M3b-13a 至 M3b-13b",
+   "target": "同 M3b-13a 至 M3b-13b",
+   "targetObject": "同 M3b-13a 至 M3b-13b",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M3b-13a 至 M3b-13b"
+  },
+  {
+   "rowKey": "M2-11c",
+   "volume": "卷二",
+   "srcLine": 2246,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "kernel/load/rules.mjs、engine.rules",
-   "targetObject": "kernel",
+   "target": "卷六 §4.21（economy:*、lending:* 派生槽按本节上表迁 process.*）；kernel/load/rules.mjs、engine.rules",
+   "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M2-12a",
    "volume": "卷二",
-   "srcLine": 2206,
+   "srcLine": 2247,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "kernel/validate/narrow.mjs",
-   "targetObject": "kernel",
+   "target": "R9-2.8（卷九，原语参数）；kernel/validate/narrow.mjs",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M2-12b",
    "volume": "卷二",
-   "srcLine": 2207,
+   "srcLine": 2248,
    "anchorsText": "",
    "anchors": [],
-   "disp": "move_out",
+   "disp": "relocate_only",
    "target": "tools/（离线组，卷二 §2.9 进程表）",
    "targetObject": "content-scripts",
    "baseline": "d54c89a3"
   },
   {
+   "rowKey": "M2-12c",
+   "volume": "卷二",
+   "srcLine": 2249,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "delete",
+   "target": "R22-1.4（卷二十二，检索只按键）",
+   "targetObject": "sys.knowledge",
+   "baseline": "d54c89a3"
+  },
+  {
    "rowKey": "M2-13",
    "volume": "卷二",
-   "srcLine": 2208,
+   "srcLine": 2250,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "kernelApi clone",
+   "target": "kernelApi clone；清扫卡机械替换类（卷十一 R11-7.8）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M2-14",
    "volume": "卷二",
-   "srcLine": 2209,
+   "srcLine": 2251,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M11-2",
@@ -2823,51 +2906,84 @@
   {
    "rowKey": "M2-15",
    "volume": "卷二",
-   "srcLine": 2210,
+   "srcLine": 2252,
    "anchorsText": "",
    "anchors": [],
-   "disp": "replace_entry",
+   "disp": "relocate_only",
    "target": "extension/host/bootstrap.mjs（§2.9 第 0 条能力对象表）",
    "targetObject": "host",
    "baseline": "d54c89a3"
   },
   {
-   "rowKey": "M2-16",
+   "rowKey": "M2-15b",
    "volume": "卷二",
-   "srcLine": 2211,
+   "srcLine": 2253,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "NetCap、PrefCap、ClientTimerCap（§2.9 第 0 条）",
-   "targetObject": "host",
+   "target": "R9-9.2（卷九，叙述请求）；narrate、narrateTurn（§2.9 第 0 条）",
+   "targetObject": "sys.ai_interface",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M2-15c",
+   "volume": "卷二",
+   "srcLine": 2254,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "replace_entry",
+   "target": "R27-4.11（卷二十七，存档读写的进程归属）；存档四路（§2.9 第 0 条）",
+   "targetObject": "sys.offscreen_save",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M2-15d",
+   "volume": "卷二",
+   "srcLine": 2255,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "replace_entry",
+   "target": "R29-3.1（卷二十九，面板是数据行）",
+   "targetObject": "sys.display_l10n",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M2-16",
+   "volume": "卷二",
+   "srcLine": 2256,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "replace_entry",
+   "target": "R29-7.1（卷二十九，前端适配器）；NetCap、PrefCap、ClientTimerCap（§2.9 第 0 条）",
+   "targetObject": "sys.display_l10n",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M2-17",
    "volume": "卷二",
-   "srcLine": 2212,
+   "srcLine": 2257,
    "anchorsText": "",
    "anchors": [],
    "disp": "move_out",
-   "target": "playerNotes（§2.9 第 3 条；ai-gate/note-gate.mjs）",
-   "targetObject": "aiGate",
+   "target": "R29-7.9（卷二十九，认宿主对象只凭代号）；playerNotes（§2.9 第 3 条；ai-gate/note-gate.mjs）",
+   "targetObject": "sys.display_l10n",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M2-18",
    "volume": "卷二",
-   "srcLine": 2213,
+   "srcLine": 2258,
    "anchorsText": "",
    "anchors": [],
    "disp": "move_out",
-   "target": "outputGate 的 PromptRenderCap（§2.9 第 0 条）",
-   "targetObject": "outputGate",
+   "target": "R9-9.3（卷九，回合结构）；outputGate 的 PromptRenderCap（§2.9 第 0 条）",
+   "targetObject": "sys.ai_interface",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M2-19a",
    "volume": "卷二",
-   "srcLine": 2214,
+   "srcLine": 2259,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
@@ -2878,10 +2994,10 @@
   {
    "rowKey": "M2-19b",
    "volume": "卷二",
-   "srcLine": 2215,
+   "srcLine": 2260,
    "anchorsText": "",
    "anchors": [],
-   "disp": "move_out",
+   "disp": "relocate_only",
    "target": "outputGate 的 PromptRenderCap（§2.9 第 0 条能力对象表）",
    "targetObject": "outputGate",
    "baseline": "d54c89a3"
@@ -2889,10 +3005,10 @@
   {
    "rowKey": "M2-19c",
    "volume": "卷二",
-   "srcLine": 2216,
+   "srcLine": 2261,
    "anchorsText": "",
    "anchors": [],
-   "disp": "move_out",
+   "disp": "relocate_only",
    "target": "ai-gate/prompt.mjs（§2.9 第 0 条）",
    "targetObject": "aiGate",
    "baseline": "d54c89a3"
@@ -2900,18 +3016,18 @@
   {
    "rowKey": "M2-20",
    "volume": "卷二",
-   "srcLine": 2217,
+   "srcLine": 2262,
    "anchorsText": "",
    "anchors": [],
    "disp": "recode",
-   "target": "bootstrap 的单调整数请求编号",
-   "targetObject": "host",
+   "target": "R29-7.3（卷二十九，上行只有代号）；bootstrap 的单调整数请求编号",
+   "targetObject": "sys.display_l10n",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M2-21",
    "volume": "卷二",
-   "srcLine": 2218,
+   "srcLine": 2263,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-33",
@@ -2923,7 +3039,7 @@
   {
    "rowKey": "M2-22",
    "volume": "卷二",
-   "srcLine": 2219,
+   "srcLine": 2264,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-34",
@@ -2935,7 +3051,7 @@
   {
    "rowKey": "M2-23",
    "volume": "卷二",
-   "srcLine": 2220,
+   "srcLine": 2265,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-36",
@@ -2947,7 +3063,7 @@
   {
    "rowKey": "M2-24",
    "volume": "卷二",
-   "srcLine": 2221,
+   "srcLine": 2266,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-37",
@@ -2959,7 +3075,7 @@
   {
    "rowKey": "M2-25",
    "volume": "卷二",
-   "srcLine": 2222,
+   "srcLine": 2267,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-38",
@@ -2971,7 +3087,7 @@
   {
    "rowKey": "M2-26",
    "volume": "卷二",
-   "srcLine": 2223,
+   "srcLine": 2268,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-39",
@@ -2983,7 +3099,7 @@
   {
    "rowKey": "M2-27",
    "volume": "卷二",
-   "srcLine": 2224,
+   "srcLine": 2269,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-42",
@@ -2995,7 +3111,7 @@
   {
    "rowKey": "M2-28",
    "volume": "卷二",
-   "srcLine": 2225,
+   "srcLine": 2270,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-44",
@@ -3007,7 +3123,7 @@
   {
    "rowKey": "M2-29",
    "volume": "卷二",
-   "srcLine": 2226,
+   "srcLine": 2271,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-45",
@@ -3019,7 +3135,7 @@
   {
    "rowKey": "M2-30",
    "volume": "卷二",
-   "srcLine": 2227,
+   "srcLine": 2272,
    "anchorsText": "",
    "anchors": [],
    "disp": "同 M29-51",
@@ -3031,10 +3147,10 @@
   {
    "rowKey": "M2-31",
    "volume": "卷二",
-   "srcLine": 2228,
+   "srcLine": 2273,
    "anchorsText": "",
    "anchors": [],
-   "disp": "replace_entry",
+   "disp": "relocate_only",
    "target": "kernel/（§2.7 目录归组后的路径）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
@@ -3042,10 +3158,10 @@
   {
    "rowKey": "M2-32",
    "volume": "卷二",
-   "srcLine": 2229,
+   "srcLine": 2274,
    "anchorsText": "",
    "anchors": [],
-   "disp": "replace_entry",
+   "disp": "relocate_only",
    "target": "kernel/（§2.7 目录归组后的路径）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
@@ -3053,10 +3169,10 @@
   {
    "rowKey": "M2-33",
    "volume": "卷二",
-   "srcLine": 2230,
+   "srcLine": 2275,
    "anchorsText": "",
    "anchors": [],
-   "disp": "replace_entry",
+   "disp": "relocate_only",
    "target": "kernel/（§2.7 目录归组后的路径）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
@@ -3064,10 +3180,10 @@
   {
    "rowKey": "M2-34",
    "volume": "卷二",
-   "srcLine": 2231,
+   "srcLine": 2276,
    "anchorsText": "",
    "anchors": [],
-   "disp": "replace_entry",
+   "disp": "relocate_only",
    "target": "kernel/（§2.7 目录归组后的路径）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
@@ -3075,10 +3191,10 @@
   {
    "rowKey": "M2-35",
    "volume": "卷二",
-   "srcLine": 2232,
+   "srcLine": 2277,
    "anchorsText": "",
    "anchors": [],
-   "disp": "replace_entry",
+   "disp": "relocate_only",
    "target": "kernel/（§2.7 目录归组后的路径）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
@@ -3086,10 +3202,10 @@
   {
    "rowKey": "M2-36",
    "volume": "卷二",
-   "srcLine": 2233,
+   "srcLine": 2278,
    "anchorsText": "",
    "anchors": [],
-   "disp": "replace_entry",
+   "disp": "relocate_only",
    "target": "kernel/（§2.7 目录归组后的路径）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
@@ -3097,10 +3213,10 @@
   {
    "rowKey": "M2-37",
    "volume": "卷二",
-   "srcLine": 2234,
+   "srcLine": 2279,
    "anchorsText": "",
    "anchors": [],
-   "disp": "replace_entry",
+   "disp": "relocate_only",
    "target": "kernel/（§2.7 目录归组后的路径）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
@@ -3108,10 +3224,10 @@
   {
    "rowKey": "M2-38",
    "volume": "卷二",
-   "srcLine": 2235,
+   "srcLine": 2280,
    "anchorsText": "",
    "anchors": [],
-   "disp": "replace_entry",
+   "disp": "relocate_only",
    "target": "kernel/（§2.7 目录归组后的路径）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
@@ -3119,10 +3235,10 @@
   {
    "rowKey": "M2-39",
    "volume": "卷二",
-   "srcLine": 2236,
+   "srcLine": 2281,
    "anchorsText": "",
    "anchors": [],
-   "disp": "replace_entry",
+   "disp": "relocate_only",
    "target": "kernel/（§2.7 目录归组后的路径）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
@@ -3130,10 +3246,10 @@
   {
    "rowKey": "M2-40",
    "volume": "卷二",
-   "srcLine": 2237,
+   "srcLine": 2282,
    "anchorsText": "",
    "anchors": [],
-   "disp": "replace_entry",
+   "disp": "relocate_only",
    "target": "kernel/（§2.7 目录归组后的路径）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
@@ -3141,57 +3257,115 @@
   {
    "rowKey": "M2-41",
    "volume": "卷二",
-   "srcLine": 2238,
+   "srcLine": 2283,
    "anchorsText": "",
    "anchors": [],
-   "disp": "replace_entry",
+   "disp": "relocate_only",
    "target": "kernel/（§2.7 目录归组后的路径）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
   {
+   "rowKey": "M2-41b",
+   "volume": "卷二",
+   "srcLine": 2284,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "同 M12-6",
+   "target": "同 M12-6",
+   "targetObject": "同 M12-6",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M12-6"
+  },
+  {
    "rowKey": "M2-42",
    "volume": "卷二",
-   "srcLine": 2239,
+   "srcLine": 2285,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "relocate_only",
+   "target": "kernel/（§2.7 目录归组后的路径）",
+   "targetObject": "kernel",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M2-42b",
+   "volume": "卷二",
+   "srcLine": 2286,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "kernel/（§2.7 目录归组后的路径）",
-   "targetObject": "kernel",
+   "target": "R28-8.3（卷二十八，按登记加载，不按文件名）；kernel/load/*",
+   "targetObject": "sys.packs",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M2-43",
    "volume": "卷二",
-   "srcLine": 2240,
+   "srcLine": 2287,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "relocate_only",
+   "target": "kernel/（§2.7 目录归组后的路径）",
+   "targetObject": "kernel",
+   "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M2-43b",
+   "volume": "卷二",
+   "srcLine": 2288,
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "kernel/（§2.7 目录归组后的路径）",
-   "targetObject": "kernel",
+   "target": "卷十八 §3.1（holdingKind，种类表唯一读入口）；kernel/load/*",
+   "targetObject": "sys.social",
    "baseline": "d54c89a3"
   },
   {
    "rowKey": "M2-44",
    "volume": "卷二",
-   "srcLine": 2241,
+   "srcLine": 2289,
    "anchorsText": "",
    "anchors": [],
-   "disp": "replace_entry",
+   "disp": "relocate_only",
    "target": "kernel/（§2.7 目录归组后的路径）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
   },
   {
-   "rowKey": "M2-45",
+   "rowKey": "M2-44b",
    "volume": "卷二",
-   "srcLine": 2242,
+   "srcLine": 2290,
    "anchorsText": "",
    "anchors": [],
-   "disp": "replace_entry",
+   "disp": "同 M11-4",
+   "target": "同 M11-4",
+   "targetObject": "同 M11-4",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M11-4"
+  },
+  {
+   "rowKey": "M2-45",
+   "volume": "卷二",
+   "srcLine": 2291,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "relocate_only",
    "target": "kernel/（§2.7 目录归组后的路径）",
    "targetObject": "kernel",
    "baseline": "d54c89a3"
+  },
+  {
+   "rowKey": "M2-45b",
+   "volume": "卷二",
+   "srcLine": 2292,
+   "anchorsText": "",
+   "anchors": [],
+   "disp": "同 M12-5",
+   "target": "同 M12-5",
+   "targetObject": "同 M12-5",
+   "baseline": "d54c89a3",
+   "aliasOf": "同 M12-5"
   },
   {
    "rowKey": "M20-1",
@@ -17834,7 +18008,7 @@
   {
    "rowKey": "M11-1",
    "volume": "卷十一",
-   "srcLine": 813,
+   "srcLine": 824,
    "anchorsText": "server-plugin/migrations.mjs、migrations/r1.mjs、rule-state-migration.mjs、world-upgrade.mjs",
    "anchors": [
     {
@@ -17862,7 +18036,7 @@
   {
    "rowKey": "M11-2",
    "volume": "卷十一",
-   "srcLine": 814,
+   "srcLine": 825,
    "anchorsText": "server-plugin/compat/v2-phase1-*.mjs、legacy/core.js、legacy/seed.json",
    "anchors": [
     {
@@ -17883,7 +18057,7 @@
   {
    "rowKey": "M11-2a",
    "volume": "卷十一",
-   "srcLine": 815,
+   "srcLine": 826,
    "anchorsText": "server-plugin/compat/v2-phase1-*.mjs、legacy/core.js、legacy/seed.json",
    "anchors": [
     {
@@ -17903,7 +18077,7 @@
   {
    "rowKey": "M11-2b",
    "volume": "卷十一",
-   "srcLine": 816,
+   "srcLine": 827,
    "anchorsText": "server-plugin/compat/v2-phase1-*.mjs、legacy/core.js、legacy/seed.json",
    "anchors": [
     {
@@ -17923,7 +18097,7 @@
   {
    "rowKey": "M11-3",
    "volume": "卷十一",
-   "srcLine": 817,
+   "srcLine": 828,
    "anchorsText": "server-plugin/legacy-primitives.mjs",
    "anchors": [
     {
@@ -17939,7 +18113,7 @@
   {
    "rowKey": "M11-4",
    "volume": "卷十一",
-   "srcLine": 818,
+   "srcLine": 829,
    "anchorsText": "server-plugin/holding-sources.mjs、money.mjs、stock.mjs 的适配部分",
    "anchors": [
     {
@@ -17963,7 +18137,7 @@
   {
    "rowKey": "M11-5",
    "volume": "卷十一",
-   "srcLine": 819,
+   "srcLine": 830,
    "anchorsText": "tools/k8-guard.mjs",
    "anchors": [
     {
@@ -17979,7 +18153,7 @@
   {
    "rowKey": "M11-6",
    "volume": "卷十一",
-   "srcLine": 820,
+   "srcLine": 831,
    "anchorsText": "tools/test-impact",
    "anchors": [],
    "disp": "待补（疑点：原写\"保留\"，五种 mig_disp 无对应值，见修订记录 1115y1）",
@@ -17990,7 +18164,7 @@
   {
    "rowKey": "M11-7",
    "volume": "卷十一",
-   "srcLine": 821,
+   "srcLine": 832,
    "anchorsText": "tools/derived-scan.mjs、balance-metrics.mjs、content-pipeline.mjs、content-budget.mjs",
    "anchors": [
     {
@@ -18018,7 +18192,7 @@
   {
    "rowKey": "M11-8",
    "volume": "卷十一",
-   "srcLine": 822,
+   "srcLine": 833,
    "anchorsText": "计划文档里手工维护的卡登记与\"归后续\"登记",
    "anchors": [],
    "disp": "replace_entry",
@@ -18029,7 +18203,7 @@
   {
    "rowKey": "M11-9",
    "volume": "卷十一",
-   "srcLine": 823,
+   "srcLine": 834,
    "anchorsText": "两条在旧形状上修补的在途分支（06a §五）",
    "anchors": [],
    "disp": "delete",
@@ -18040,7 +18214,7 @@
   {
    "rowKey": "M11-10",
    "volume": "卷十一",
-   "srcLine": 824,
+   "srcLine": 835,
    "anchorsText": "tests/ 里按旧数值手推的期望值（06a §五：id 字面量 9554 处）",
    "anchors": [],
    "disp": "recode",

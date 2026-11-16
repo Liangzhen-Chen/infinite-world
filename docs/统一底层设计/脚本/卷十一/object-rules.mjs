@@ -5,17 +5,26 @@
 //  二、进程：锚点代码文件按卷二 §2.9 第 0 条进程分组表的根目录判进程（不带根目录的路径按同节"路径写法"取默认根目录）；
 //      模块组键按同表成员判进程。对象是客户端组、而全部代码锚点都在服务端的，取显示职责在服务端的对应组
 //      （display → outputGate，卷二 §2.7 outputGate 注"显示闸"）；没有对应组的列出。
+import { volNo } from './id-defs.mjs';
 export const PLACEHOLDER = new Set(['待补']); // 李白裁定"照旧待补，不进计数"的占位，不是对象
 
 // ---- 一：接收卷 ----
-export function receivingVolume(target, self, volCode) {
+// 引用写法（李白 11-15 17:28 判据一；19:08 第 2 条补认后两种）：节号"卷X §n"/裸"§n"、规则编号"R<卷序号>-"（R29-7.1 → 卷二十九）、括注"（卷X）"。
+// 落点里按出现次序取第一个引用。规则编号的卷序号按 id-defs.mjs 的 volNo 对到卷名，vols 是全书卷名表（不给时不认规则编号）。
+export function receivingVolume(target, self, volCode, vols = []) {
   const t = String(target ?? '').replace(/；原对象栏写[\s\S]*$/, '');
   const V = `(${volCode.replace(/^\^|\$$/g, '')})`;
   const verb = t.match(new RegExp(`(?:迁(?:到|至|入|往)?|交(?:给|由)?|归|移(?:交|到|至)?)\\s*${V}`));
   if (verb) return { vol: verb[1], how: `落点写"${verb[0]}"` };
+  const byNo = new Map(); for (const v of vols) { const n = volNo(v); if (n) byNo.set(n.n + n.letter, v); }
+  const refs = [];
   const sec = t.match(new RegExp(`(?:${V}\\s*)?§\\s*\\d`));
-  if (sec) return sec[1] ? { vol: sec[1], how: `落点第一个节号引用在${sec[1]}` } : { vol: self, how: '落点第一个节号引用是本卷' };
-  return { vol: self, how: '落点没有节号引用，取本卷' };
+  if (sec) refs.push({ at: sec.index, vol: sec[1] ?? self, how: sec[1] ? `落点第一个引用是${sec[1]}的节号` : '落点第一个引用是本卷节号' });
+  for (const m of t.matchAll(/(?<![A-Za-z0-9])R([0-9]+)([a-z]?)-[0-9]/g)) { const v = byNo.get(m[1] + m[2]); if (v) { refs.push({ at: m.index, vol: v, how: `落点第一个引用是规则编号 ${m[0].slice(0, -2)}-（${v}）` }); break; } }
+  const par = t.match(new RegExp(`（\\s*${V}\\s*）`));
+  if (par) refs.push({ at: par.index, vol: par[1], how: `落点第一个引用是括注"${par[0]}"` });
+  if (refs.length) { const r = refs.sort((a, b) => a.at - b.at)[0]; return { vol: r.vol, how: r.how }; }
+  return { vol: self, how: '落点没有节号、规则编号或卷名括注引用，取本卷' };
 }
 
 // ---- 二：进程分组（读卷二 §2.9 第 0 条进程分组表与"路径写法"）----

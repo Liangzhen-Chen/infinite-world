@@ -8,7 +8,7 @@ const HERE = fileURLToPath(new URL('.', import.meta.url)).replace(/\\/g, '/').re
 const CFG = JSON.parse(readFileSync(`${HERE}/gen-卷十一-inputs.json`, 'utf8'));
 const DIR = CFG.dir;
 const BASE = 'd54c89a3'; // 卷零 §0.6 的基线提交（R11-2.3）；各卷迁移节都写明所用基线均为此提交
-const DISP = new Set(['delete', 'recode', 'move_out', 'to_data', 'replace_entry']);
+const DISP = new Set(['delete', 'recode', 'move_out', 'to_data', 'replace_entry', 'relocate_only']); // relocate_only：卷十一 R11-1.3，封卷后勘误 1115y12
 const rowKey = new RegExp(CFG.migRow);
 const cells = l => l.split(/(?<!\\)\|/).slice(1, -1).map(x => x.trim());
 const strip = s => s.replace(/`/g, '').trim();
