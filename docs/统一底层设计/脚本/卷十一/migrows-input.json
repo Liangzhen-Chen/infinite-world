@@ -9321,7 +9321,7 @@
     }
    ],
    "disp": "delete",
-   "target": "§4.2 规则 9（入口名待补）",
+   "target": "§4.2 规则 9（入口 envAccum）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -9358,7 +9358,7 @@
     }
    ],
    "disp": "delete",
-   "target": "§4.2 规则 9（入口名待补）",
+   "target": "§4.2 规则 9（入口 envAccum）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -10093,7 +10093,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "§4.8 规则 6（入口名待补）",
+   "target": "§4.8 规则 6（入口 take）",
    "targetObject": "sys.plant",
    "baseline": "d54c89a3"
   },
@@ -16252,7 +16252,7 @@
     }
    ],
    "disp": "delete",
-   "target": "§4.21 规则 1（priceFor）（入口名待补）",
+   "target": "§4.21 规则 1（priceFor）（入口 priceFor）",
    "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
