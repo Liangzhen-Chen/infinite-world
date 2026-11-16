@@ -4,7 +4,10 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 // 生成器以仓库版为准：与本脚本同目录
 const GEN = fileURLToPath(new URL('./gen-卷十一-卡族.mjs', import.meta.url)).replace(/\\/g, '/');
-const path = process.argv[2] ?? 'F:/dnd/docs/统一底层设计/卷十一-迁移路线与卡清单.md';
+// 路径取自本脚本所在位置，不写死盘符（李白终核卷十一 三-4）
+const DOCDIR = fileURLToPath(new URL('../..', import.meta.url)).replace(/\\/g, '/').replace(/\/$/, '');
+const SCRDIR = fileURLToPath(new URL('.', import.meta.url)).replace(/\\/g, '/').replace(/\/$/, '');
+const path = process.argv[2] ?? `${DOCDIR}/卷十一-迁移路线与卡清单.md`;
 const all0 = readFileSync(path, 'utf8').split('\n').map(l => l.replace(/\r$/, ''));
 const cutAt = all0.findIndex(l => l.startsWith('## 附录 自检脚本输出'));
 const lines = cutAt >= 0 ? all0.slice(0, cutAt) : all0;
@@ -155,7 +158,7 @@ const enumNames = new Set(['card_kind', 'card_object', 'card_state', 'card_seg',
 const tableCodes = new Set(['item', 'material', 'species', 'body_plan', 'person', 'place', 'facility_type', 'org', 'office', 'polity', 'deity', 'faith', 'culture', 'profession', 'skill', 'offense', 'status', 'recipe', 'plant', 'law_code', 'knowledge', 'event_type', 'card', 'migrow', 'migevent']);
 // 别卷登记、本卷只引用的代号（卷二声明表字段、卷零机读列、各卷钩子先后列）
 // 处理代号（zeroKind 取值）不在此写死，从卷零定义处解析：卷零-覆盖表.md 第 31 行“处理代号（A 表机读列 `zeroKind`…”
-const ZERO = (process.argv[3] ?? 'F:/dnd/docs/统一底层设计/卷零-覆盖表.md');
+const ZERO = (process.argv[3] ?? `${DOCDIR}/卷零-覆盖表.md`);
 const zeroDefLine = readFileSync(ZERO, 'utf8').split('\n').find(l => l.startsWith('处理代号（A 表机读列 `zeroKind`')) ?? '';
 const zeroKinds = (zeroDefLine.match(/= `([a-z_]+)`/g) ?? []).map(x => x.slice(3, -1));
 if (zeroKinds.length === 0) r9.push('卷零处理代号定义处未找到（' + ZERO + '）');
@@ -258,8 +261,28 @@ const r14 = [];
   const src = readFileSync(GEN, 'utf8').split('\n').filter(l => !/^\s*\/\//.test(l)).join('\n');
   const lit = src.match(/卷[零一二三四五六七八九十]+[b甲乙]?/g) ?? [];
   if (lit.length) r14.push('生成器代码含卷名字面量 ' + [...new Set(lit)].join('、'));
+  // 扩到脚本/卷十一/ 下全部生成脚本 gen-*.mjs（李白终核卷十一 三-4）：
+  // ① 逻辑位置（startsWith、includes、相等比较、正则开头、Map 的 get/has 取键）不得出现卷名字面量；输出给人看的说明文字、注释里的卷名不算；
+  // ② 代码里不得写盘符路径字面量（本机路径）；③ 连跑两次，标准输出逐行一致；
+  // ④ 读规则表键的上限值不得在脚本里另写成数字常量（MAXFILES 一类：不许出现"= 数字"的 MAXFILES 赋值）
+  const { readdirSync } = await import('node:fs');
+  const gens = readdirSync(SCRDIR).filter(f => /^gen-.*\.mjs$/.test(f)).sort();
+  const LOGIC = /(?:startsWith|endsWith|includes|indexOf|\.get|\.has)\(\s*['"`]卷[零一二三四五六七八九十]|[=!]==?\s*['"`]卷[零一二三四五六七八九十]|\/\^卷[零一二三四五六七八九十]/g;
+  for (const g of gens) {
+    const p = `${SCRDIR}/${g}`;
+    const code = readFileSync(p, 'utf8').split('\n').filter(l => !/^\s*\/\//.test(l)).join('\n');
+    const hit = code.match(LOGIC) ?? [];
+    if (hit.length) r14.push(`${g} 逻辑位置含卷名字面量 ${[...new Set(hit)].slice(0, 3).join('、')}`);
+    const drive = code.match(/['"`][A-Za-z]:[\\/][^'"`\n]*/g) ?? [];
+    if (drive.length) r14.push(`${g} 代码含盘符路径字面量 ${[...new Set(drive)].slice(0, 2).join('、')}`);
+    if (/MAXFILES\s*=\s*\d/.test(code)) r14.push(`${g} 把 maxFiles 写成数字常量，应读规则表键 rules.migration.maxFiles`);
+    let o1 = '', o2 = '';
+    try { o1 = execFileSync(process.execPath, [p], { encoding: 'utf8', maxBuffer: 1 << 26 }); o2 = execFileSync(process.execPath, [p], { encoding: 'utf8', maxBuffer: 1 << 26 }); }
+    catch (e) { r14.push(`${g} 运行失败：` + String(e.message).split('\n')[0]); continue; }
+    if (o1 !== o2) r14.push(`${g} 两次运行输出不一致`);
+  }
 }
-report('14 重跑生成器与附录甲逐行比对；生成器代码无卷名字面量', r14.length === 0, r14.join(' | '));
+report('14 重跑全部生成脚本：卡族表与附录甲逐行比对；逻辑位置无卷名字面量、无盘符路径、两次运行一致', r14.length === 0, r14.join(' | '));
 
 console.log(`行数 ${lines.length}；子系统 ${N}；规则条数 ${defined.size}；断言 ${definedA.size}；扫描条 ${definedS.size}；配合项 ${definedC.size}；开放问题 ${definedQ.size}；本卷迁移行 ${definedM.size}；枚举值 ${enumRows.length}；错误码 ${regErr.length}；待补清单 ${todo} 条；附录甲卡族 ${gRows.length} 行；失败项 ${fails}`);
 process.exit(fails ? 1 : 0);

@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const CFG = JSON.parse(readFileSync(fileURLToPath(import.meta.url).replace(/-卡族\.mjs$/, '-inputs.json'), 'utf8'));
-const DIR = CFG.dir;
+const DIR = fileURLToPath(new URL('../..', import.meta.url)).replace(/\\/g, '/').replace(/\/$/, ''); // 取脚本所在位置，不写死盘符
 const files = readdirSync(DIR).filter(f => new RegExp(CFG.volFile).test(f)).sort();
 const read = f => readFileSync(`${DIR}/${f}`, 'utf8').split(/\r?\n/);
 const VOL = () => new RegExp(CFG.volCode, 'g');

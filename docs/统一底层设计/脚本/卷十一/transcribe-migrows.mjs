@@ -96,7 +96,9 @@ for (const f of files) {
     // 别名行的判法：处置、落点、落点对象三格都写"同 Mxx-y"（或 Z35 的汇总引用）；只有落点一格写"同"的行是正常行（落点指向别行）
     const aliasCells = c.map(strip).filter(x => /^同 (?:M|Z35-)\d/.test(x));
     if (aliasCells.length >= 3) { row.aliasOf = aliasCells[0]; rows.push(row); continue; }
-    if (!DISP.has(disp)) problems.push(`${row.rowKey} 行${row.srcLine}：处置不是五值之一（${disp.slice(0, 20)}）`);
+    // 保留类（R11-2.2，李白终核卷十一 三-2）：处置格以"—（保留类"开头的行不算迁移处置，照常转录（行数对账）但标 keepClass，生成器不计入
+    if (/^—（保留类/.test(disp)) row.keepClass = true;
+    else if (!DISP.has(disp)) problems.push(`${row.rowKey} 行${row.srcLine}：处置不是 mig_disp 的值（${disp.slice(0, 20)}）`);
     if (row.targetObject === '') problems.push(`${row.rowKey} 行${row.srcLine}：落点对象为空`);
     rows.push(row);
     perVol[row.volume] = (perVol[row.volume] ?? 0) + 1;
