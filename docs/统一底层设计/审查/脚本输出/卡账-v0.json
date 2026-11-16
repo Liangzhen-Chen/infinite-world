@@ -238,324 +238,526 @@
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "accountsOf"
+     "name": "accountsOf",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "balance"
+     "name": "balance",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "chainOf"
+     "name": "chainOf",
+     "detail": [
+      "§4.9.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "coinValue"
+     "name": "coinValue",
+     "detail": [
+      "§4.13.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "contractView"
+     "name": "contractView",
+     "detail": [
+      "§4.16.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "creditStanding"
+     "name": "creditStanding",
+     "detail": [
+      "§4.15.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "demand"
+     "name": "demand",
+     "detail": [
+      "§4.4.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "denomination"
+     "name": "denomination",
+     "detail": [
+      "§4.14.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "economyReport"
+     "name": "economyReport",
+     "detail": [
+      "§4.22.2",
+      "§4.23.2",
+      "§4.25.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "exchangeRate"
+     "name": "exchangeRate",
+     "detail": [
+      "§4.13.2",
+      "§4.14.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "feesFor"
+     "name": "feesFor",
+     "detail": [
+      "§4.3.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "householdBudget"
+     "name": "householdBudget",
+     "detail": [
+      "§4.12.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "incoming"
+     "name": "incoming",
+     "detail": [
+      "§4.17.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "laborOffers"
+     "name": "laborOffers",
+     "detail": [
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "landedCost"
+     "name": "landedCost",
+     "detail": [
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "marketQuote"
+     "name": "marketQuote",
+     "detail": [
+      "§4.2.2",
+      "§4.21.2",
+      "§4.25.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "marketSupply"
+     "name": "marketSupply",
+     "detail": [
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "obligationsOf"
+     "name": "obligationsOf",
+     "detail": [
+      "§4.16.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "priceFor"
+     "name": "priceFor",
+     "detail": [
+      "§4.21.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "productionPlanOf"
+     "name": "productionPlanOf",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "projectView"
+     "name": "projectView",
+     "detail": [
+      "§4.19.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "propertyView"
+     "name": "propertyView",
+     "detail": [
+      "§4.18.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "reachOf"
+     "name": "reachOf",
+     "detail": [
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "shopView"
+     "name": "shopView",
+     "detail": [
+      "§4.5.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "stationFee"
+     "name": "stationFee",
+     "detail": [
+      "§4.10.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "stationLoad"
+     "name": "stationLoad",
+     "detail": [
+      "§4.10.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "stationPlan"
+     "name": "stationPlan",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "stockIn"
+     "name": "stockIn",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "tradeVolume"
+     "name": "tradeVolume",
+     "detail": [
+      "§4.23.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "unmetSupply"
+     "name": "unmetSupply",
+     "detail": [
+      "§4.12.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "wageQuote"
+     "name": "wageQuote",
+     "detail": [
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "wealth"
+     "name": "wealth",
+     "detail": [
+      "§4.24.2"
+     ]
     }
    ],
    "launches": [
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "accountsOf"
+     "name": "accountsOf",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "balance"
+     "name": "balance",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "chainOf"
+     "name": "chainOf",
+     "detail": [
+      "§4.9.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "coinValue"
+     "name": "coinValue",
+     "detail": [
+      "§4.13.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "contractView"
+     "name": "contractView",
+     "detail": [
+      "§4.16.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "creditStanding"
+     "name": "creditStanding",
+     "detail": [
+      "§4.15.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "demand"
+     "name": "demand",
+     "detail": [
+      "§4.4.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "denomination"
+     "name": "denomination",
+     "detail": [
+      "§4.14.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "economyReport"
+     "name": "economyReport",
+     "detail": [
+      "§4.22.2",
+      "§4.23.2",
+      "§4.25.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "exchangeRate"
+     "name": "exchangeRate",
+     "detail": [
+      "§4.13.2",
+      "§4.14.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "feesFor"
+     "name": "feesFor",
+     "detail": [
+      "§4.3.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "householdBudget"
+     "name": "householdBudget",
+     "detail": [
+      "§4.12.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "incoming"
+     "name": "incoming",
+     "detail": [
+      "§4.17.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "laborOffers"
+     "name": "laborOffers",
+     "detail": [
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "landedCost"
+     "name": "landedCost",
+     "detail": [
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "marketQuote"
+     "name": "marketQuote",
+     "detail": [
+      "§4.2.2",
+      "§4.21.2",
+      "§4.25.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "marketSupply"
+     "name": "marketSupply",
+     "detail": [
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "obligationsOf"
+     "name": "obligationsOf",
+     "detail": [
+      "§4.16.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "priceFor"
+     "name": "priceFor",
+     "detail": [
+      "§4.21.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "productionPlanOf"
+     "name": "productionPlanOf",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "projectView"
+     "name": "projectView",
+     "detail": [
+      "§4.19.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "propertyView"
+     "name": "propertyView",
+     "detail": [
+      "§4.18.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "reachOf"
+     "name": "reachOf",
+     "detail": [
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "shopView"
+     "name": "shopView",
+     "detail": [
+      "§4.5.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "stationFee"
+     "name": "stationFee",
+     "detail": [
+      "§4.10.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "stationLoad"
+     "name": "stationLoad",
+     "detail": [
+      "§4.10.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "stationPlan"
+     "name": "stationPlan",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "stockIn"
+     "name": "stockIn",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "tradeVolume"
+     "name": "tradeVolume",
+     "detail": [
+      "§4.23.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "unmetSupply"
+     "name": "unmetSupply",
+     "detail": [
+      "§4.12.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "wageQuote"
+     "name": "wageQuote",
+     "detail": [
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "wealth"
+     "name": "wealth",
+     "detail": [
+      "§4.24.2"
+     ]
     }
    ],
    "retire": {},
@@ -677,7 +879,10 @@
     {
      "vol": "卷六",
      "sec": "§3.1",
-     "name": "priceFor"
+     "name": "priceFor",
+     "detail": [
+      "§4.21.2"
+     ]
     }
    ],
    "launches": [],
@@ -1519,7 +1724,13 @@
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "cultureView"
+     "name": "cultureView",
+     "detail": [
+      "§4.20.2",
+      "§4.21.2",
+      "§4.22.2",
+      "§4.25.2"
+     ]
     }
    ],
    "retire": {},
@@ -1602,7 +1813,12 @@
     {
      "vol": "卷三乙",
      "sec": "§3.1",
-     "name": "materialView"
+     "name": "materialView",
+     "detail": [
+      "§4.1.2",
+      "§4.12.2",
+      "§4.19.2"
+     ]
     }
    ],
    "retire": {},
@@ -1694,129 +1910,236 @@
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "sceneCard"
+     "name": "decode",
+     "attrs": {
+      "boundary_side": true,
+      "rule_layer_callable": false
+     },
+     "detail": [
+      "§4.19.2"
+     ]
+    },
+    {
+     "vol": "卷九",
+     "sec": "§3.1",
+     "name": "replaySource",
+     "attrs": {
+      "boundary_side": true,
+      "rule_layer_callable": false,
+      "formal_assembly": false
+     },
+     "detail": [
+      "§4.18.2"
+     ]
+    },
+    {
+     "vol": "卷九",
+     "sec": "§3.1",
+     "name": "sceneCard",
+     "detail": [
+      "§4.10.2"
+     ]
     }
    ],
    "launches": [
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "actionView"
+     "name": "actionView",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "activityOf"
+     "name": "activityOf",
+     "detail": [
+      "§4.1.2",
+      "§4.12.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "affordances"
+     "name": "affordances",
+     "detail": [
+      "§4.1.2",
+      "§4.5.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "agendaOf"
+     "name": "agendaOf",
+     "detail": [
+      "§4.1.2",
+      "§4.12.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "aiAllows"
+     "name": "aiAllows",
+     "detail": [
+      "§4.14.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "authority"
+     "name": "authority",
+     "detail": [
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "check"
+     "name": "check",
+     "detail": [
+      "§4.3.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "consent"
+     "name": "consent",
+     "detail": [
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "constructorTree"
+     "name": "constructorTree",
+     "detail": [
+      "§4.5.2",
+      "§4.17.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "controlledByPlayer"
+     "name": "controlledByPlayer",
+     "detail": [
+      "§4.3.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "dialogueView"
+     "name": "dialogueView",
+     "detail": [
+      "§4.13.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "difficultyOf"
+     "name": "difficultyOf",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "freeSlotsOf"
+     "name": "freeSlotsOf",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "landingOf"
+     "name": "landingOf",
+     "detail": [
+      "§4.4.2",
+      "§4.15.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "magnitudeCap"
+     "name": "magnitudeCap",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "npcChoose"
+     "name": "npcChoose",
+     "detail": [
+      "§4.12.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "npcDecision"
+     "name": "npcDecision",
+     "detail": [
+      "§4.12.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "primitiveContract"
+     "name": "primitiveContract",
+     "detail": [
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "quoteOf"
+     "name": "quoteOf",
+     "detail": [
+      "§4.3.2",
+      "§4.4.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "reviewClaims"
+     "name": "reviewClaims",
+     "detail": [
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "route"
+     "name": "route",
+     "detail": [
+      "§4.6.2",
+      "§4.17.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "sceneCard"
+     "name": "sceneCard",
+     "detail": [
+      "§4.10.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "validateSegments"
+     "name": "validateSegments",
+     "detail": [
+      "§4.9.2"
+     ]
     },
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "validateTurn"
+     "name": "validateTurn",
+     "detail": [
+      "§4.9.2"
+     ]
     }
    ],
    "retire": {},
@@ -1965,7 +2288,11 @@
     {
      "vol": "卷十六",
      "sec": "§3.1",
-     "name": "lairOf"
+     "name": "lairOf",
+     "detail": [
+      "§4.3.2",
+      "§4.6.2"
+     ]
     }
    ],
    "launches": [],
@@ -2060,32 +2387,63 @@
     "seg_readers",
     "seg_delete"
    ],
-   "entries": [],
+   "entries": [
+    {
+     "vol": "卷九",
+     "sec": "§3.1",
+     "name": "decode",
+     "attrs": {
+      "boundary_side": true,
+      "rule_layer_callable": false
+     },
+     "detail": [
+      "§4.19.2"
+     ]
+    }
+   ],
    "launches": [
     {
      "vol": "卷二十一",
      "sec": "§3.1",
-     "name": "careOptions"
+     "name": "careOptions",
+     "detail": [
+      "§4.8.2",
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷二十一",
      "sec": "§3.1",
-     "name": "courseSummary"
+     "name": "courseSummary",
+     "detail": [
+      "§4.10.2"
+     ]
     },
     {
      "vol": "卷二十一",
      "sec": "§3.1",
-     "name": "prevalenceOf"
+     "name": "prevalenceOf",
+     "detail": [
+      "§4.3.2",
+      "§4.10.2"
+     ]
     },
     {
      "vol": "卷二十一",
      "sec": "§3.1",
-     "name": "statusView"
+     "name": "statusView",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷二十一",
      "sec": "§3.1",
-     "name": "treatmentPreview"
+     "name": "treatmentPreview",
+     "detail": [
+      "§4.6.2",
+      "§4.8.2"
+     ]
     }
    ],
    "retire": {},
@@ -2190,32 +2548,56 @@
     "seg_readers",
     "seg_delete"
    ],
-   "entries": [],
+   "entries": [
+    {
+     "vol": "卷二十七",
+     "sec": "§3.1",
+     "name": "pinned",
+     "detail": [
+      "§4.2.2"
+     ]
+    }
+   ],
    "launches": [
     {
      "vol": "卷二十七",
      "sec": "§3.1",
-     "name": "advancePlan"
+     "name": "advancePlan",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷二十七",
      "sec": "§3.1",
-     "name": "aggregateView"
+     "name": "aggregateView",
+     "detail": [
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷二十七",
      "sec": "§3.1",
-     "name": "baseTierOf"
+     "name": "baseTierOf",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷二十七",
      "sec": "§3.1",
-     "name": "costPlan"
+     "name": "costPlan",
+     "detail": [
+      "§4.3.2"
+     ]
     },
     {
      "vol": "卷二十七",
      "sec": "§3.1",
-     "name": "degradeLevelOf"
+     "name": "degradeLevelOf",
+     "detail": [
+      "§4.3.2"
+     ]
     },
     {
      "vol": "卷二十七",
@@ -2225,17 +2607,27 @@
     {
      "vol": "卷二十七",
      "sec": "§3.1",
-     "name": "pinned"
+     "name": "pinned",
+     "detail": [
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷二十七",
      "sec": "§3.1",
-     "name": "simTierOf"
+     "name": "simTierOf",
+     "detail": [
+      "§4.1.2",
+      "§4.3.2"
+     ]
     },
     {
      "vol": "卷二十七",
      "sec": "§3.1",
-     "name": "simUnitOf"
+     "name": "simUnitOf",
+     "detail": [
+      "§4.1.2"
+     ]
     }
    ],
    "retire": {},
@@ -2330,69 +2722,110 @@
     {
      "vol": "卷二十三",
      "sec": "§3.1",
-     "name": "knownForms"
+     "name": "knownForms",
+     "detail": [
+      "§4.3.2"
+     ]
     }
    ],
    "launches": [
     {
      "vol": "卷二十三",
      "sec": "§3.1",
-     "name": "actOutcome"
+     "name": "actOutcome",
+     "detail": [
+      "§4.4.2",
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷二十三",
      "sec": "§3.1",
-     "name": "adornCover"
+     "name": "adornCover",
+     "detail": [
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷二十三",
      "sec": "§3.1",
-     "name": "compositionOf"
+     "name": "compositionOf",
+     "detail": [
+      "§4.1.2",
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷二十三",
      "sec": "§3.1",
-     "name": "honorCoverage"
+     "name": "honorCoverage",
+     "detail": [
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷二十三",
      "sec": "§3.1",
-     "name": "itemRenown"
+     "name": "itemRenown",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷二十三",
      "sec": "§3.1",
-     "name": "itemUniqueness"
+     "name": "itemUniqueness",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷二十三",
      "sec": "§3.1",
-     "name": "knownForms"
+     "name": "knownForms",
+     "detail": [
+      "§4.3.2"
+     ]
     },
     {
      "vol": "卷二十三",
      "sec": "§3.1",
-     "name": "legendStanding"
+     "name": "legendStanding",
+     "detail": [
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷二十三",
      "sec": "§3.1",
-     "name": "pickSubjects"
+     "name": "pickSubjects",
+     "detail": [
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷二十三",
      "sec": "§3.1",
-     "name": "renownBonus"
+     "name": "renownBonus",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷二十三",
      "sec": "§3.1",
-     "name": "workCount"
+     "name": "workCount",
+     "detail": [
+      "§4.5.2"
+     ]
     },
     {
      "vol": "卷二十三",
      "sec": "§3.1",
-     "name": "workReach"
+     "name": "workReach",
+     "detail": [
+      "§4.5.2"
+     ]
     }
    ],
    "retire": {},
@@ -2518,32 +2951,57 @@
     {
      "vol": "卷二十九",
      "sec": "§3.1",
-     "name": "composeScreen"
+     "name": "composeScreen",
+     "detail": [
+      "§4.3.2",
+      "§4.4.2",
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷二十九",
      "sec": "§3.1",
-     "name": "displayData"
+     "name": "displayData",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷二十九",
      "sec": "§3.1",
-     "name": "labelText"
+     "name": "labelText",
+     "detail": [
+      "§4.1.2",
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷二十九",
      "sec": "§3.1",
-     "name": "renderScreen"
+     "name": "renderScreen",
+     "detail": [
+      "§4.3.2",
+      "§4.5.2",
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷二十九",
      "sec": "§3.1",
-     "name": "renderTpl"
+     "name": "renderTpl",
+     "detail": [
+      "§4.2.2",
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷二十九",
      "sec": "§3.1",
-     "name": "selectRows"
+     "name": "selectRows",
+     "detail": [
+      "§4.2.2",
+      "§4.5.2"
+     ]
     }
    ],
    "retire": {},
@@ -2647,27 +3105,42 @@
     {
      "vol": "卷二十二",
      "sec": "§3.1",
-     "name": "beliefOf"
+     "name": "beliefOf",
+     "detail": [
+      "§4.3.2"
+     ]
     },
     {
      "vol": "卷二十二",
      "sec": "§3.1",
-     "name": "chronicleView"
+     "name": "chronicleView",
+     "detail": [
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷二十二",
      "sec": "§3.1",
-     "name": "claimHolds"
+     "name": "claimHolds",
+     "detail": [
+      "§4.4.2"
+     ]
     },
     {
      "vol": "卷二十二",
      "sec": "§3.1",
-     "name": "covertGrade"
+     "name": "covertGrade",
+     "detail": [
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷二十二",
      "sec": "§3.1",
-     "name": "familiarityOf"
+     "name": "familiarityOf",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷二十二",
@@ -2677,77 +3150,123 @@
     {
      "vol": "卷二十二",
      "sec": "§3.1",
-     "name": "holdsLore"
+     "name": "holdsLore",
+     "detail": [
+      "§4.10.2"
+     ]
     },
     {
      "vol": "卷二十二",
      "sec": "§3.1",
-     "name": "knowStanding"
+     "name": "knowStanding",
+     "detail": [
+      "§4.10.2"
+     ]
     },
     {
      "vol": "卷二十二",
      "sec": "§3.1",
-     "name": "knowsFact"
+     "name": "knowsFact",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷二十二",
      "sec": "§3.1",
-     "name": "knowsKey"
+     "name": "knowsKey",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷二十二",
      "sec": "§3.1",
-     "name": "leverageOf"
+     "name": "leverageOf",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷二十二",
      "sec": "§3.1",
-     "name": "linkKnown"
+     "name": "linkKnown",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷二十二",
      "sec": "§3.1",
-     "name": "loreShare"
+     "name": "loreShare",
+     "detail": [
+      "§4.5.2",
+      "§4.10.2"
+     ]
     },
     {
      "vol": "卷二十二",
      "sec": "§3.1",
-     "name": "publicShare"
+     "name": "publicShare",
+     "detail": [
+      "§4.5.2"
+     ]
     },
     {
      "vol": "卷二十二",
      "sec": "§3.1",
-     "name": "readOutcome"
+     "name": "readOutcome",
+     "detail": [
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷二十二",
      "sec": "§3.1",
-     "name": "recallFacts"
+     "name": "recallFacts",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷二十二",
      "sec": "§3.1",
-     "name": "researchOptions"
+     "name": "researchOptions",
+     "detail": [
+      "§4.9.2"
+     ]
     },
     {
      "vol": "卷二十二",
      "sec": "§3.1",
-     "name": "returnDigest"
+     "name": "returnDigest",
+     "detail": [
+      "§4.12.2"
+     ]
     },
     {
      "vol": "卷二十二",
      "sec": "§3.1",
-     "name": "secretsOf"
+     "name": "secretsOf",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷二十二",
      "sec": "§3.1",
-     "name": "subjectiveView"
+     "name": "subjectiveView",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷二十二",
      "sec": "§3.1",
-     "name": "why"
+     "name": "why",
+     "detail": [
+      "§4.11.2"
+     ]
     }
    ],
    "retire": {},
@@ -2848,39 +3367,69 @@
     {
      "vol": "卷二十八",
      "sec": "§3.1",
-     "name": "loadWorld"
+     "name": "loadWorld",
+     "detail": [
+      "§4.1.2",
+      "§4.2.2",
+      "§4.4.2",
+      "§4.7.2",
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷二十八",
      "sec": "§3.1",
-     "name": "requiredTier"
+     "name": "requiredTier",
+     "detail": [
+      "§4.5.2"
+     ]
     }
    ],
    "launches": [
     {
      "vol": "卷二十八",
      "sec": "§3.1",
-     "name": "loadWorld"
+     "name": "loadWorld",
+     "detail": [
+      "§4.1.2",
+      "§4.2.2",
+      "§4.4.2",
+      "§4.7.2",
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷二十八",
      "sec": "§3.1",
-     "name": "nsOf"
+     "name": "nsOf",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷二十八",
      "sec": "§3.1",
-     "name": "packSetView"
+     "name": "packSetView",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷二十八",
      "sec": "§3.1",
-     "name": "requiredTier"
+     "name": "requiredTier",
+     "detail": [
+      "§4.5.2"
+     ]
     },
     {
      "vol": "卷二十八",
      "sec": "§3.1",
-     "name": "resolvePackSet"
+     "name": "resolvePackSet",
+     "detail": [
+      "§4.1.2",
+      "§4.3.2"
+     ]
     }
    ],
    "retire": {},
@@ -2970,44 +3519,69 @@
     {
      "vol": "卷二十四",
      "sec": "§3.1",
-     "name": "originEvents"
+     "name": "originEvents",
+     "detail": [
+      "§4.10.2"
+     ]
     }
    ],
    "launches": [
     {
      "vol": "卷二十四",
      "sec": "§3.1",
-     "name": "chronicleAll"
+     "name": "chronicleAll",
+     "detail": [
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷二十四",
      "sec": "§3.1",
-     "name": "commissionBrief"
+     "name": "commissionBrief",
+     "detail": [
+      "§4.5.2"
+     ]
     },
     {
      "vol": "卷二十四",
      "sec": "§3.1",
-     "name": "commissionView"
+     "name": "commissionView",
+     "detail": [
+      "§4.5.2"
+     ]
     },
     {
      "vol": "卷二十四",
      "sec": "§3.1",
-     "name": "commissionsAt"
+     "name": "commissionsAt",
+     "detail": [
+      "§4.5.2"
+     ]
     },
     {
      "vol": "卷二十四",
      "sec": "§3.1",
-     "name": "commissionsBy"
+     "name": "commissionsBy",
+     "detail": [
+      "§4.5.2"
+     ]
     },
     {
      "vol": "卷二十四",
      "sec": "§3.1",
-     "name": "epochView"
+     "name": "epochView",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷二十四",
      "sec": "§3.1",
-     "name": "eventCount"
+     "name": "eventCount",
+     "detail": [
+      "§4.2.2",
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷二",
@@ -3017,37 +3591,60 @@
     {
      "vol": "卷二十四",
      "sec": "§3.1",
-     "name": "instanceView"
+     "name": "instanceView",
+     "detail": [
+      "§4.4.2",
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷二十四",
      "sec": "§3.1",
-     "name": "instancesOn"
+     "name": "instancesOn",
+     "detail": [
+      "§4.4.2",
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷二十四",
      "sec": "§3.1",
-     "name": "legendsView"
+     "name": "legendsView",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷二十四",
      "sec": "§3.1",
-     "name": "originEvents"
+     "name": "originEvents",
+     "detail": [
+      "§4.10.2"
+     ]
     },
     {
      "vol": "卷二十四",
      "sec": "§3.1",
-     "name": "storyView"
+     "name": "storyView",
+     "detail": [
+      "§4.3.2"
+     ]
     },
     {
      "vol": "卷二十四",
      "sec": "§3.1",
-     "name": "tallyOf"
+     "name": "tallyOf",
+     "detail": [
+      "§4.3.2"
+     ]
     },
     {
      "vol": "卷二十四",
      "sec": "§3.1",
-     "name": "verbView"
+     "name": "verbView",
+     "detail": [
+      "§4.2.2"
+     ]
     }
    ],
    "retire": {},
@@ -3188,29 +3785,69 @@
     {
      "vol": "卷五",
      "sec": "§3.2",
-     "name": "canEnter"
+     "name": "canEnter",
+     "detail": [
+      "§4.13.2"
+     ]
     },
     {
      "vol": "卷五",
      "sec": "§3.1",
-     "name": "placeView"
+     "name": "placeView",
+     "detail": [
+      "§4.1.2",
+      "§4.3.2",
+      "§4.4.2",
+      "§4.5.2",
+      "§4.6.2",
+      "§4.7.2",
+      "§4.9.2",
+      "§4.11.2",
+      "§4.12.2",
+      "§4.14.2",
+      "§4.15.2",
+      "§4.16.2"
+     ]
     },
     {
      "vol": "卷五",
      "sec": "§3.2",
-     "name": "take"
+     "name": "take",
+     "detail": [
+      "§4.7.2",
+      "§4.8.2"
+     ]
     }
    ],
    "launches": [
     {
      "vol": "卷五",
      "sec": "§3.1",
-     "name": "placeView"
+     "name": "placeView",
+     "detail": [
+      "§4.1.2",
+      "§4.3.2",
+      "§4.4.2",
+      "§4.5.2",
+      "§4.6.2",
+      "§4.7.2",
+      "§4.9.2",
+      "§4.11.2",
+      "§4.12.2",
+      "§4.14.2",
+      "§4.15.2",
+      "§4.16.2"
+     ]
     },
     {
      "vol": "卷五",
      "sec": "§3.1",
-     "name": "routeView"
+     "name": "routeView",
+     "detail": [
+      "§4.1.2",
+      "§4.5.2",
+      "§4.10.2"
+     ]
     }
    ],
    "retire": {},
@@ -3288,7 +3925,11 @@
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "officeView"
+     "name": "officeView",
+     "detail": [
+      "§4.2.2",
+      "§4.4.2"
+     ]
     }
    ],
    "retire": {},
@@ -3368,7 +4009,10 @@
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "lawCodeView"
+     "name": "lawCodeView",
+     "detail": [
+      "§4.1.2"
+     ]
     }
    ],
    "retire": {},
@@ -3470,157 +4114,251 @@
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "agencyOf"
+     "name": "agencyOf",
+     "detail": [
+      "§4.15.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "attackLegality"
+     "name": "attackLegality",
+     "detail": [
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "auditGaps"
+     "name": "auditGaps",
+     "detail": [
+      "§4.10.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "bindingsOf"
+     "name": "bindingsOf",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "bondOf"
+     "name": "bondOf",
+     "detail": [
+      "§4.13.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "bountiesOn"
+     "name": "bountiesOn",
+     "detail": [
+      "§4.9.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "caseView"
+     "name": "caseView",
+     "detail": [
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "claimsOf"
+     "name": "claimsOf",
+     "detail": [
+      "§4.15.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "contrabandAt"
+     "name": "contrabandAt",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "convictionCount"
+     "name": "convictionCount",
+     "detail": [
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "crimeProspect"
+     "name": "crimeProspect",
+     "detail": [
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "custodyOf"
+     "name": "custodyOf",
+     "detail": [
+      "§4.12.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "disposalRight"
+     "name": "disposalRight",
+     "detail": [
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "estateOf"
+     "name": "estateOf",
+     "detail": [
+      "§4.14.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "evidenceScore"
+     "name": "evidenceScore",
+     "detail": [
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "forumOrgOf"
+     "name": "forumOrgOf",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "goodFaithOf"
+     "name": "goodFaithOf",
+     "detail": [
+      "§4.15.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "lawGate"
+     "name": "lawGate",
+     "detail": [
+      "§4.4.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "legalCapacity"
+     "name": "legalCapacity",
+     "detail": [
+      "§4.4.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "legalityOf"
+     "name": "legalityOf",
+     "detail": [
+      "§4.5.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "limitationOf"
+     "name": "limitationOf",
+     "detail": [
+      "§4.15.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "naturalizeOptions"
+     "name": "naturalizeOptions",
+     "detail": [
+      "§4.14.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "normStack"
+     "name": "normStack",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "offenseView"
+     "name": "offenseView",
+     "detail": [
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "offensesOfFact"
+     "name": "offensesOfFact",
+     "detail": [
+      "§4.2.2",
+      "§4.5.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "provisionFor"
+     "name": "provisionFor",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "provisionView"
+     "name": "provisionView",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "responseOf"
+     "name": "responseOf",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "safetyOf"
+     "name": "safetyOf",
+     "detail": [
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "securityOf"
+     "name": "securityOf",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷八b",
      "sec": "§3.1",
-     "name": "sentenceRange"
+     "name": "sentenceRange",
+     "detail": [
+      "§4.3.2"
+     ]
     }
    ],
    "retire": {},
@@ -3687,69 +4425,115 @@
     {
      "vol": "卷十一",
      "sec": "§3.1",
-     "name": "migCard"
+     "name": "migCard",
+     "detail": [
+      "§4.3.2",
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷十一",
      "sec": "§3.1",
-     "name": "migRows"
+     "name": "migRows",
+     "detail": [
+      "§4.1.2",
+      "§4.2.2"
+     ]
     }
    ],
    "launches": [
     {
      "vol": "卷十一",
      "sec": "§3.1",
-     "name": "migBackfill"
+     "name": "migBackfill",
+     "detail": [
+      "§4.9.2"
+     ]
     },
     {
      "vol": "卷十一",
      "sec": "§3.1",
-     "name": "migCard"
+     "name": "migCard",
+     "detail": [
+      "§4.3.2",
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷十一",
      "sec": "§3.1",
-     "name": "migCards"
+     "name": "migCards",
+     "detail": [
+      "§4.3.2",
+      "§4.4.2",
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷十一",
      "sec": "§3.1",
-     "name": "migEvents"
+     "name": "migEvents",
+     "detail": [
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷十一",
      "sec": "§3.1",
-     "name": "migExit"
+     "name": "migExit",
+     "detail": [
+      "§4.5.2"
+     ]
     },
     {
      "vol": "卷十一",
      "sec": "§3.1",
-     "name": "migFrozen"
+     "name": "migFrozen",
+     "detail": [
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷十一",
      "sec": "§3.1",
-     "name": "migParallelOk"
+     "name": "migParallelOk",
+     "detail": [
+      "§4.4.2"
+     ]
     },
     {
      "vol": "卷十一",
      "sec": "§3.1",
-     "name": "migPhaseCount"
+     "name": "migPhaseCount",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷十一",
      "sec": "§3.1",
-     "name": "migReady"
+     "name": "migReady",
+     "detail": [
+      "§4.3.2",
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷十一",
      "sec": "§3.1",
-     "name": "migReceiver"
+     "name": "migReceiver",
+     "detail": [
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷十一",
      "sec": "§3.1",
-     "name": "migRows"
+     "name": "migRows",
+     "detail": [
+      "§4.1.2",
+      "§4.2.2"
+     ]
     }
    ],
    "retire": {},
@@ -3849,7 +4633,10 @@
     {
      "vol": "卷十七",
      "sec": "§3.1",
-     "name": "aboardOf"
+     "name": "aboardOf",
+     "detail": [
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷十七",
@@ -3859,17 +4646,27 @@
     {
      "vol": "卷十七",
      "sec": "§3.1",
-     "name": "exploreGrade"
+     "name": "exploreGrade",
+     "detail": [
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷十七",
      "sec": "§3.1",
-     "name": "gateQuote"
+     "name": "gateQuote",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷十七",
      "sec": "§3.1",
-     "name": "legSpeed"
+     "name": "legSpeed",
+     "detail": [
+      "§4.1.2",
+      "§4.5.2"
+     ]
     },
     {
      "vol": "卷十七",
@@ -3879,47 +4676,83 @@
     {
      "vol": "卷十七",
      "sec": "§3.1",
-     "name": "partyView"
+     "name": "partyView",
+     "detail": [
+      "§4.1.2",
+      "§4.2.2",
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷十七",
      "sec": "§3.1",
-     "name": "passOf"
+     "name": "passOf",
+     "detail": [
+      "§4.1.2",
+      "§4.5.2",
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷十七",
      "sec": "§3.1",
-     "name": "raidAppraisal"
+     "name": "raidAppraisal",
+     "detail": [
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷十七",
      "sec": "§3.1",
-     "name": "routeRisk"
+     "name": "routeRisk",
+     "detail": [
+      "§4.3.2",
+      "§4.6.2",
+      "§4.10.2"
+     ]
     },
     {
      "vol": "卷十七",
      "sec": "§3.1",
-     "name": "towShareOf"
+     "name": "towShareOf",
+     "detail": [
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷十七",
      "sec": "§3.1",
-     "name": "tripMinutes"
+     "name": "tripMinutes",
+     "detail": [
+      "§4.1.2",
+      "§4.4.2"
+     ]
     },
     {
      "vol": "卷十七",
      "sec": "§3.1",
-     "name": "tripPlan"
+     "name": "tripPlan",
+     "detail": [
+      "§4.1.2",
+      "§4.9.2"
+     ]
     },
     {
      "vol": "卷十七",
      "sec": "§3.1",
-     "name": "tripView"
+     "name": "tripView",
+     "detail": [
+      "§4.1.2",
+      "§4.3.2"
+     ]
     },
     {
      "vol": "卷十七",
      "sec": "§3.1",
-     "name": "whereOf"
+     "name": "whereOf",
+     "detail": [
+      "§4.1.2"
+     ]
     }
    ],
    "retire": {},
@@ -4034,12 +4867,27 @@
     {
      "vol": "卷十九",
      "sec": "§3.1",
-     "name": "facilityTypeView"
+     "name": "facilityTypeView",
+     "detail": [
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷十九",
      "sec": "§3.1",
-     "name": "facilityView"
+     "name": "facilityView",
+     "detail": [
+      "§4.1.2",
+      "§4.2.2",
+      "§4.3.2",
+      "§4.7.2",
+      "§4.9.2",
+      "§4.11.2",
+      "§4.12.2",
+      "§4.13.2",
+      "§4.15.2",
+      "§4.16.2"
+     ]
     }
    ],
    "retire": {},
@@ -4130,52 +4978,93 @@
     {
      "vol": "卷十二",
      "sec": "§3.1",
-     "name": "accBaseline"
+     "name": "accBaseline",
+     "detail": [
+      "§4.1.2",
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷十二",
      "sec": "§3.1",
-     "name": "accCases"
+     "name": "accCases",
+     "detail": [
+      "§4.13.2",
+      "§4.14.2"
+     ]
     },
     {
      "vol": "卷十二",
      "sec": "§3.1",
-     "name": "accGate"
+     "name": "accGate",
+     "detail": [
+      "§4.9.2"
+     ]
     },
     {
      "vol": "卷十二",
      "sec": "§3.1",
-     "name": "accHits"
+     "name": "accHits",
+     "detail": [
+      "§4.1.2",
+      "§4.2.2",
+      "§4.3.2",
+      "§4.4.2",
+      "§4.8.2",
+      "§4.12.2",
+      "§4.14.2"
+     ]
     },
     {
      "vol": "卷十二",
      "sec": "§3.1",
-     "name": "accItem"
+     "name": "accItem",
+     "detail": [
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷十二",
      "sec": "§3.1",
-     "name": "accItems"
+     "name": "accItems",
+     "detail": [
+      "§4.5.2",
+      "§4.6.2",
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷十二",
      "sec": "§3.1",
-     "name": "accReport"
+     "name": "accReport",
+     "detail": [
+      "§4.10.2"
+     ]
     },
     {
      "vol": "卷十二",
      "sec": "§3.1",
-     "name": "accReviewOk"
+     "name": "accReviewOk",
+     "detail": [
+      "§4.9.2"
+     ]
     },
     {
      "vol": "卷十二",
      "sec": "§3.1",
-     "name": "accScope"
+     "name": "accScope",
+     "detail": [
+      "§4.2.2",
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷十二",
      "sec": "§3.1",
-     "name": "accZeroCheck"
+     "name": "accZeroCheck",
+     "detail": [
+      "§4.7.2"
+     ]
     }
    ],
    "retire": {},
@@ -4275,67 +5164,113 @@
     {
      "vol": "卷十五",
      "sec": "§3.1",
-     "name": "afterlifeOf"
+     "name": "afterlifeOf",
+     "detail": [
+      "§4.10.2"
+     ]
     },
     {
      "vol": "卷十五",
      "sec": "§3.1",
-     "name": "castPreview"
+     "name": "castPreview",
+     "detail": [
+      "§4.1.2",
+      "§4.2.2",
+      "§4.17.2"
+     ]
     },
     {
      "vol": "卷十五",
      "sec": "§3.1",
-     "name": "castShape"
+     "name": "castShape",
+     "detail": [
+      "§4.1.2",
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷十五",
      "sec": "§3.1",
-     "name": "classesOfFamily"
+     "name": "classesOfFamily",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷十五",
      "sec": "§3.1",
-     "name": "efficacyOf"
+     "name": "efficacyOf",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷十五",
      "sec": "§3.1",
-     "name": "enchantRoom"
+     "name": "enchantRoom",
+     "detail": [
+      "§4.12.2"
+     ]
     },
     {
      "vol": "卷十五",
      "sec": "§3.1",
-     "name": "interactionsFor"
+     "name": "interactionsFor",
+     "detail": [
+      "§4.3.2"
+     ]
     },
     {
      "vol": "卷十五",
      "sec": "§3.1",
-     "name": "liminalOf"
+     "name": "liminalOf",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷十五",
      "sec": "§3.1",
-     "name": "riteView"
+     "name": "riteView",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷十五",
      "sec": "§3.1",
-     "name": "situationOf"
+     "name": "situationOf",
+     "detail": [
+      "§4.8.2",
+      "§4.9.2"
+     ]
     },
     {
      "vol": "卷十五",
      "sec": "§3.1",
-     "name": "spellsOf"
+     "name": "spellsOf",
+     "detail": [
+      "§4.1.2",
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷十五",
      "sec": "§3.1",
-     "name": "workingView"
+     "name": "workingView",
+     "detail": [
+      "§4.1.2",
+      "§4.9.2",
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷十五",
      "sec": "§3.1",
-     "name": "workingsOf"
+     "name": "workingsOf",
+     "detail": [
+      "§4.1.2"
+     ]
     }
    ],
    "retire": {},
@@ -4429,57 +5364,97 @@
     {
      "vol": "卷十八",
      "sec": "§3.1",
-     "name": "compat"
+     "name": "compat",
+     "detail": [
+      "§4.12.2"
+     ]
     },
     {
      "vol": "卷十八",
      "sec": "§3.1",
-     "name": "dread"
+     "name": "dread",
+     "detail": [
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷十八",
      "sec": "§3.1",
-     "name": "esteemOf"
+     "name": "esteemOf",
+     "detail": [
+      "§4.3.2",
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷十八",
      "sec": "§3.1",
-     "name": "heirsOf"
+     "name": "heirsOf",
+     "detail": [
+      "§4.1.2",
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷十八",
      "sec": "§3.1",
-     "name": "holdingKind"
+     "name": "holdingKind",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷十八",
      "sec": "§3.1",
-     "name": "kinDegree"
+     "name": "kinDegree",
+     "detail": [
+      "§4.1.2",
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷十八",
      "sec": "§3.1",
-     "name": "kinView"
+     "name": "kinView",
+     "detail": [
+      "§4.1.2",
+      "§4.2.2",
+      "§4.3.2",
+      "§4.9.2"
+     ]
     },
     {
      "vol": "卷十八",
      "sec": "§3.1",
-     "name": "opinionOf"
+     "name": "opinionOf",
+     "detail": [
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷十八",
      "sec": "§3.1",
-     "name": "recall"
+     "name": "recall",
+     "detail": [
+      "§4.5.2"
+     ]
     },
     {
      "vol": "卷十八",
      "sec": "§3.1",
-     "name": "stance"
+     "name": "stance",
+     "detail": [
+      "§4.4.2",
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷十八",
      "sec": "§3.1",
-     "name": "treatment"
+     "name": "treatment",
+     "detail": [
+      "§4.10.2"
+     ]
     }
    ],
    "retire": {},
@@ -4573,104 +5548,173 @@
     {
      "vol": "卷十六",
      "sec": "§3.2",
-     "name": "awakenOrg"
+     "name": "awakenOrg",
+     "detail": [
+      "§4.13.2"
+     ]
     },
     {
      "vol": "卷十六",
      "sec": "§3.1",
-     "name": "lairOf"
+     "name": "lairOf",
+     "detail": [
+      "§4.3.2",
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷十六",
      "sec": "§3.1",
-     "name": "speciesThreat"
+     "name": "speciesThreat",
+     "detail": [
+      "§4.1.2",
+      "§4.2.2",
+      "§4.10.2"
+     ]
     }
    ],
    "launches": [
     {
      "vol": "卷十六",
      "sec": "§3.1",
-     "name": "claimTruth"
+     "name": "claimTruth",
+     "detail": [
+      "§4.4.2"
+     ]
     },
     {
      "vol": "卷十六",
      "sec": "§3.1",
-     "name": "containReading"
+     "name": "containReading",
+     "detail": [
+      "§4.14.2"
+     ]
     },
     {
      "vol": "卷十六",
      "sec": "§3.1",
-     "name": "displayClassOf"
+     "name": "displayClassOf",
+     "detail": [
+      "§4.10.2"
+     ]
     },
     {
      "vol": "卷十六",
      "sec": "§3.1",
-     "name": "encounterReading"
+     "name": "encounterReading",
+     "detail": [
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷十六",
      "sec": "§3.1",
-     "name": "lairOf"
+     "name": "lairOf",
+     "detail": [
+      "§4.3.2",
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷十六",
      "sec": "§3.1",
-     "name": "lairSuitability"
+     "name": "lairSuitability",
+     "detail": [
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷十六",
      "sec": "§3.1",
-     "name": "loreOf"
+     "name": "loreOf",
+     "detail": [
+      "§4.4.2"
+     ]
     },
     {
      "vol": "卷十六",
      "sec": "§3.1",
-     "name": "loreRegions"
+     "name": "loreRegions",
+     "detail": [
+      "§4.4.2"
+     ]
     },
     {
      "vol": "卷十六",
      "sec": "§3.1",
-     "name": "similarity"
+     "name": "similarity",
+     "detail": [
+      "§4.8.2",
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷十六",
      "sec": "§3.1",
-     "name": "speciesThreat"
+     "name": "speciesThreat",
+     "detail": [
+      "§4.1.2",
+      "§4.2.2",
+      "§4.10.2"
+     ]
     },
     {
      "vol": "卷十六",
      "sec": "§3.1",
-     "name": "threatBrief"
+     "name": "threatBrief",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷十六",
      "sec": "§3.1",
-     "name": "threatOf"
+     "name": "threatOf",
+     "detail": [
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷十六",
      "sec": "§3.1",
-     "name": "tierRoom"
+     "name": "tierRoom",
+     "detail": [
+      "§4.2.2",
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷十六",
      "sec": "§3.1",
-     "name": "truthClaims"
+     "name": "truthClaims",
+     "detail": [
+      "§4.4.2"
+     ]
     },
     {
      "vol": "卷十六",
      "sec": "§3.1",
-     "name": "variantRowOf"
+     "name": "variantRowOf",
+     "detail": [
+      "§4.9.2",
+      "§4.12.2"
+     ]
     },
     {
      "vol": "卷十六",
      "sec": "§3.1",
-     "name": "wardReading"
+     "name": "wardReading",
+     "detail": [
+      "§4.5.2"
+     ]
     },
     {
      "vol": "卷十六",
      "sec": "§3.1",
-     "name": "wardTagsOf"
+     "name": "wardTagsOf",
+     "detail": [
+      "§4.5.2"
+     ]
     }
    ],
    "retire": {},
@@ -4749,7 +5793,11 @@
     {
      "vol": "卷十四",
      "sec": "§3.1",
-     "name": "skillView"
+     "name": "skillView",
+     "detail": [
+      "§4.3.2",
+      "§4.4.2"
+     ]
     }
    ],
    "retire": {},
@@ -4835,7 +5883,12 @@
     {
      "vol": "卷四",
      "sec": "§3.1",
-     "name": "bodyView"
+     "name": "bodyView",
+     "detail": [
+      "§4.2.2",
+      "§4.10.2",
+      "§4.11.2"
+     ]
     }
    ],
    "retire": {},
@@ -4933,7 +5986,10 @@
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "reviewClaims"
+     "name": "reviewClaims",
+     "detail": [
+      "§4.11.2"
+     ]
     }
    ],
    "launches": [],
@@ -5195,7 +6251,14 @@
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "aiAllows"
+     "name": "decode",
+     "attrs": {
+      "boundary_side": true,
+      "rule_layer_callable": false
+     },
+     "detail": [
+      "§4.19.2"
+     ]
     }
    ],
    "launches": [],
@@ -5358,10 +6421,26 @@
     "seg_readers",
     "seg_delete"
    ],
-   "entries": [],
+   "entries": [
+    {
+     "vol": "卷九",
+     "sec": "§3.1",
+     "name": "replaySource",
+     "attrs": {
+      "boundary_side": true,
+      "rule_layer_callable": false,
+      "formal_assembly": false
+     },
+     "detail": [
+      "§4.18.2"
+     ]
+    }
+   ],
    "launches": [],
    "retire": {},
-   "accept": [],
+   "accept": [
+    "A9-18.1"
+   ],
    "dependsOn": [
     "C-卷九-sys.ai_interface-1",
     "LEDGER-1"
@@ -5375,13 +6454,11 @@
    "mergeRef": "",
    "fails": 0,
    "pending": [
-    "accept:卡的行落点没有写验收编号，断言归属待各卷分配",
-    "entries:本卡各行的卷节在该卷 §3 入口表里没有对上唯一的入口（一节多入口、找不到或落点没有节号，见摘要待查）",
     "retire:登记退役数要逐行清单的行数，逐行清单待 G-3"
    ],
    "migReady": {
     "defects": [
-     "E-MIG-CARD-INCOMPLETE(entries、retire、accept)"
+     "E-MIG-CARD-INCOMPLETE(retire)"
     ],
     "stateItems": [
      "依赖卡已 merged",
@@ -5549,12 +6626,20 @@
     {
      "vol": "卷二十一",
      "sec": "§3.1",
-     "name": "careOptions"
+     "name": "careOptions",
+     "detail": [
+      "§4.8.2",
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷二十一",
      "sec": "§3.1",
-     "name": "treatmentPreview"
+     "name": "treatmentPreview",
+     "detail": [
+      "§4.6.2",
+      "§4.8.2"
+     ]
     }
    ],
    "launches": [],
@@ -5640,7 +6725,11 @@
     {
      "vol": "卷二十一",
      "sec": "§3.1",
-     "name": "prevalenceOf"
+     "name": "prevalenceOf",
+     "detail": [
+      "§4.3.2",
+      "§4.10.2"
+     ]
     }
    ],
    "launches": [],
@@ -6024,12 +7113,19 @@
     {
      "vol": "卷二十三",
      "sec": "§3.1",
-     "name": "actOutcome"
+     "name": "actOutcome",
+     "detail": [
+      "§4.4.2",
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷二十三",
      "sec": "§3.1",
-     "name": "knownForms"
+     "name": "knownForms",
+     "detail": [
+      "§4.3.2"
+     ]
     }
    ],
    "launches": [],
@@ -6120,7 +7216,12 @@
     {
      "vol": "卷二十九",
      "sec": "§3.1",
-     "name": "composeScreen"
+     "name": "composeScreen",
+     "detail": [
+      "§4.3.2",
+      "§4.4.2",
+      "§4.7.2"
+     ]
     }
    ],
    "launches": [],
@@ -6208,7 +7309,11 @@
     {
      "vol": "卷十七",
      "sec": "§3.1",
-     "name": "tripMinutes"
+     "name": "tripMinutes",
+     "detail": [
+      "§4.1.2",
+      "§4.4.2"
+     ]
     }
    ],
    "launches": [],
@@ -6389,7 +7494,21 @@
     {
      "vol": "卷五",
      "sec": "§3.1",
-     "name": "placeView"
+     "name": "placeView",
+     "detail": [
+      "§4.1.2",
+      "§4.3.2",
+      "§4.4.2",
+      "§4.5.2",
+      "§4.6.2",
+      "§4.7.2",
+      "§4.9.2",
+      "§4.11.2",
+      "§4.12.2",
+      "§4.14.2",
+      "§4.15.2",
+      "§4.16.2"
+     ]
     }
    ],
    "launches": [],
@@ -6553,7 +7672,12 @@
     {
      "vol": "卷五",
      "sec": "§3.1",
-     "name": "routeView"
+     "name": "routeView",
+     "detail": [
+      "§4.1.2",
+      "§4.5.2",
+      "§4.10.2"
+     ]
     }
    ],
    "launches": [],
@@ -6785,7 +7909,11 @@
     {
      "vol": "卷十八",
      "sec": "§3.1",
-     "name": "stance"
+     "name": "stance",
+     "detail": [
+      "§4.4.2",
+      "§4.11.2"
+     ]
     }
    ],
    "launches": [],
@@ -6960,12 +8088,19 @@
     {
      "vol": "卷十八",
      "sec": "§3.1",
-     "name": "stance"
+     "name": "stance",
+     "detail": [
+      "§4.4.2",
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷十六",
      "sec": "§3.2",
-     "name": "awakenOrg"
+     "name": "awakenOrg",
+     "detail": [
+      "§4.13.2"
+     ]
     }
    ],
    "launches": [],
@@ -7052,7 +8187,11 @@
     {
      "vol": "卷十八",
      "sec": "§3.1",
-     "name": "stance"
+     "name": "stance",
+     "detail": [
+      "§4.4.2",
+      "§4.11.2"
+     ]
     }
    ],
    "launches": [],
@@ -7870,17 +9009,33 @@
     {
      "vol": "卷三乙",
      "sec": "§3.1",
-     "name": "containerView"
+     "name": "containerView",
+     "detail": [
+      "§4.4.2"
+     ]
     },
     {
      "vol": "卷三乙",
      "sec": "§3.1",
-     "name": "itemView"
+     "name": "itemView",
+     "detail": [
+      "§4.2.2",
+      "§4.3.2",
+      "§4.5.2",
+      "§4.10.2",
+      "§4.14.2",
+      "§4.18.2",
+      "§4.19.2"
+     ]
     },
     {
      "vol": "卷三乙",
      "sec": "§3.1",
-     "name": "lotsView"
+     "name": "lotsView",
+     "detail": [
+      "§4.4.2",
+      "§4.12.2"
+     ]
     }
    ],
    "retire": {},
@@ -7979,24 +9134,39 @@
     {
      "vol": "卷十八",
      "sec": "§3.1",
-     "name": "stance"
+     "name": "stance",
+     "detail": [
+      "§4.4.2",
+      "§4.11.2"
+     ]
     }
    ],
    "launches": [
     {
      "vol": "卷二十六",
      "sec": "§3.1",
-     "name": "decisionJitter"
+     "name": "decisionJitter",
+     "detail": [
+      "§4.9.2"
+     ]
     },
     {
      "vol": "卷二十六",
      "sec": "§3.1",
-     "name": "needSatisfiers"
+     "name": "needSatisfiers",
+     "detail": [
+      "§4.3.2",
+      "§4.9.2"
+     ]
     },
     {
      "vol": "卷二十六",
      "sec": "§3.1",
-     "name": "preferenceOf"
+     "name": "preferenceOf",
+     "detail": [
+      "§4.2.2",
+      "§4.9.2"
+     ]
     }
    ],
    "retire": {},
@@ -8058,7 +9228,10 @@
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "polityView"
+     "name": "polityView",
+     "detail": [
+      "§4.3.2"
+     ]
     }
    ],
    "retire": {},
@@ -8162,89 +9335,151 @@
     {
      "vol": "卷十",
      "sec": "§3.1",
-     "name": "instanceIdOf"
+     "name": "instanceIdOf",
+     "detail": [
+      "§4.12.2"
+     ]
     },
     {
      "vol": "卷十一",
      "sec": "§3.1",
-     "name": "migRows"
+     "name": "migRows",
+     "detail": [
+      "§4.1.2",
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷十六",
      "sec": "§3.1",
-     "name": "lairOf"
+     "name": "lairOf",
+     "detail": [
+      "§4.3.2",
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷四",
      "sec": "§3.3",
-     "name": "instantiatePerson"
+     "name": "instantiatePerson",
+     "detail": [
+      "§4.3.2",
+      "§4.5.2",
+      "§4.10.2",
+      "§4.12.2"
+     ]
     }
    ],
    "launches": [
     {
      "vol": "卷十",
      "sec": "§3.1",
-     "name": "ageStructure"
+     "name": "ageStructure",
+     "detail": [
+      "§4.4.2"
+     ]
     },
     {
      "vol": "卷十",
      "sec": "§3.1",
-     "name": "ageWeights"
+     "name": "ageWeights",
+     "detail": [
+      "§4.4.2"
+     ]
     },
     {
      "vol": "卷十",
      "sec": "§3.1",
-     "name": "composeName"
+     "name": "composeName",
+     "detail": [
+      "§4.5.2"
+     ]
     },
     {
      "vol": "卷十",
      "sec": "§3.1",
-     "name": "genPlan"
+     "name": "genPlan",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷十",
      "sec": "§3.1",
-     "name": "genView"
+     "name": "genView",
+     "detail": [
+      "§4.3.2",
+      "§4.4.2",
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷十",
      "sec": "§3.1",
-     "name": "instanceIdOf"
+     "name": "instanceIdOf",
+     "detail": [
+      "§4.12.2"
+     ]
     },
     {
      "vol": "卷十",
      "sec": "§3.1",
-     "name": "manifestOf"
+     "name": "manifestOf",
+     "detail": [
+      "§4.3.2",
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷十",
      "sec": "§3.1",
-     "name": "materialized"
+     "name": "materialized",
+     "detail": [
+      "§4.3.2"
+     ]
     },
     {
      "vol": "卷十",
      "sec": "§3.1",
-     "name": "openingOf"
+     "name": "openingOf",
+     "detail": [
+      "§4.1.2",
+      "§4.11.2",
+      "§4.12.2"
+     ]
     },
     {
      "vol": "卷十",
      "sec": "§3.1",
-     "name": "quotaOf"
+     "name": "quotaOf",
+     "detail": [
+      "§4.4.2"
+     ]
     },
     {
      "vol": "卷十",
      "sec": "§3.1",
-     "name": "rollGroup"
+     "name": "rollGroup",
+     "detail": [
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷十",
      "sec": "§3.1",
-     "name": "rosterOf"
+     "name": "rosterOf",
+     "detail": [
+      "§4.4.2"
+     ]
     },
     {
      "vol": "卷十",
      "sec": "§3.1",
-     "name": "seatOf"
+     "name": "seatOf",
+     "detail": [
+      "§4.3.2",
+      "§4.4.2"
+     ]
     }
    ],
    "retire": {},
@@ -8327,49 +9562,83 @@
     {
      "vol": "卷十五",
      "sec": "§3.1",
-     "name": "interactionsFor"
+     "name": "interactionsFor",
+     "detail": [
+      "§4.3.2"
+     ]
     }
    ],
    "launches": [
     {
      "vol": "卷十三",
      "sec": "§3.1",
-     "name": "battlePreview"
+     "name": "battlePreview",
+     "detail": [
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷十三",
      "sec": "§3.1",
-     "name": "battleView"
+     "name": "battleView",
+     "detail": [
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷十三",
      "sec": "§3.1",
-     "name": "combatReadings"
+     "name": "combatReadings",
+     "detail": [
+      "§4.1.2",
+      "§4.5.2"
+     ]
     },
     {
      "vol": "卷十三",
      "sec": "§3.1",
-     "name": "commandOf"
+     "name": "commandOf",
+     "detail": [
+      "§4.14.2"
+     ]
     },
     {
      "vol": "卷十三",
      "sec": "§3.1",
-     "name": "deterrenceOf"
+     "name": "deterrenceOf",
+     "detail": [
+      "§4.18.2"
+     ]
     },
     {
      "vol": "卷十三",
      "sec": "§3.1",
-     "name": "encounterOf"
+     "name": "encounterOf",
+     "detail": [
+      "§4.18.2"
+     ]
     },
     {
      "vol": "卷十三",
      "sec": "§3.1",
-     "name": "encounterView"
+     "name": "encounterView",
+     "detail": [
+      "§4.9.2",
+      "§4.17.2",
+      "§4.18.2"
+     ]
     },
     {
      "vol": "卷十三",
      "sec": "§3.1",
-     "name": "forceView"
+     "name": "forceView",
+     "detail": [
+      "§4.8.2",
+      "§4.9.2",
+      "§4.10.2",
+      "§4.14.2",
+      "§4.16.2"
+     ]
     },
     {
      "vol": "卷十三",
@@ -8379,47 +9648,79 @@
     {
      "vol": "卷十三",
      "sec": "§3.1",
-     "name": "layersOf"
+     "name": "layersOf",
+     "detail": [
+      "§4.3.2"
+     ]
     },
     {
      "vol": "卷十三",
      "sec": "§3.1",
-     "name": "lootCapacity"
+     "name": "lootCapacity",
+     "detail": [
+      "§4.12.2"
+     ]
     },
     {
      "vol": "卷十三",
      "sec": "§3.1",
-     "name": "meritOf"
+     "name": "meritOf",
+     "detail": [
+      "§4.19.2"
+     ]
     },
     {
      "vol": "卷十三",
      "sec": "§3.1",
-     "name": "meritsOf"
+     "name": "meritsOf",
+     "detail": [
+      "§4.19.2"
+     ]
     },
     {
      "vol": "卷十三",
      "sec": "§3.1",
-     "name": "missionView"
+     "name": "missionView",
+     "detail": [
+      "§4.13.2"
+     ]
     },
     {
      "vol": "卷十三",
      "sec": "§3.1",
-     "name": "siegeView"
+     "name": "siegeView",
+     "detail": [
+      "§4.11.2",
+      "§4.15.2"
+     ]
     },
     {
      "vol": "卷十三",
      "sec": "§3.1",
-     "name": "strikeOutcome"
+     "name": "strikeOutcome",
+     "detail": [
+      "§4.1.2",
+      "§4.3.2",
+      "§4.4.2",
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷十三",
      "sec": "§3.1",
-     "name": "strikePreview"
+     "name": "strikePreview",
+     "detail": [
+      "§4.1.2",
+      "§4.4.2"
+     ]
     },
     {
      "vol": "卷十三",
      "sec": "§3.1",
-     "name": "warView"
+     "name": "warView",
+     "detail": [
+      "§4.11.2"
+     ]
     }
    ],
    "retire": {},
@@ -8578,84 +9879,134 @@
     {
      "vol": "卷十四",
      "sec": "§3.1",
-     "name": "professionsOf"
+     "name": "professionsOf",
+     "detail": [
+      "§4.1.2"
+     ]
     }
    ],
    "launches": [
     {
      "vol": "卷十四",
      "sec": "§3.1",
-     "name": "canOffer"
+     "name": "canOffer",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷十四",
      "sec": "§3.1",
-     "name": "certStanding"
+     "name": "certStanding",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷十四",
      "sec": "§3.1",
-     "name": "certsOf"
+     "name": "certsOf",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷十四",
      "sec": "§3.1",
-     "name": "deedsOf"
+     "name": "deedsOf",
+     "detail": [
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷十四",
      "sec": "§3.1",
-     "name": "initialSkills"
+     "name": "initialSkills",
+     "detail": [
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷十四",
      "sec": "§3.1",
-     "name": "learnOptions"
+     "name": "learnOptions",
+     "detail": [
+      "§4.5.2",
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷十四",
      "sec": "§3.1",
-     "name": "lifestyleView"
+     "name": "lifestyleView",
+     "detail": [
+      "§4.9.2"
+     ]
     },
     {
      "vol": "卷十四",
      "sec": "§3.1",
-     "name": "opportunitiesOf"
+     "name": "opportunitiesOf",
+     "detail": [
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷十四",
      "sec": "§3.1",
-     "name": "professionView"
+     "name": "professionView",
+     "detail": [
+      "§4.1.2",
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷十四",
      "sec": "§3.1",
-     "name": "professionsOf"
+     "name": "professionsOf",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷十四",
      "sec": "§3.1",
-     "name": "qualifies"
+     "name": "qualifies",
+     "detail": [
+      "§4.4.2"
+     ]
     },
     {
      "vol": "卷十四",
      "sec": "§3.1",
-     "name": "skillBand"
+     "name": "skillBand",
+     "detail": [
+      "§4.3.2"
+     ]
     },
     {
      "vol": "卷十四",
      "sec": "§3.1",
-     "name": "skillValue"
+     "name": "skillValue",
+     "detail": [
+      "§4.3.2"
+     ]
     },
     {
      "vol": "卷十四",
      "sec": "§3.1",
-     "name": "skillsOf"
+     "name": "skillsOf",
+     "detail": [
+      "§4.3.2"
+     ]
     },
     {
      "vol": "卷十四",
      "sec": "§3.1",
-     "name": "teachWillingness"
+     "name": "teachWillingness",
+     "detail": [
+      "§4.5.2"
+     ]
     }
    ],
    "retire": {},
@@ -8781,19 +10132,33 @@
     {
      "vol": "卷四",
      "sec": "§3.3",
-     "name": "instantiatePerson"
+     "name": "instantiatePerson",
+     "detail": [
+      "§4.3.2",
+      "§4.5.2",
+      "§4.10.2",
+      "§4.12.2"
+     ]
     },
     {
      "vol": "卷四",
      "sec": "§3.3",
-     "name": "typicalSpeedOf"
+     "name": "typicalSpeedOf",
+     "detail": [
+      "§4.6.2"
+     ]
     }
    ],
    "launches": [
     {
      "vol": "卷四",
      "sec": "§3.1",
-     "name": "speciesView"
+     "name": "speciesView",
+     "detail": [
+      "§4.1.2",
+      "§4.3.2",
+      "§4.6.2"
+     ]
     }
    ],
    "retire": {},
@@ -9209,7 +10574,11 @@
     {
      "vol": "卷二十六",
      "sec": "§3.1",
-     "name": "needSatisfiers"
+     "name": "needSatisfiers",
+     "detail": [
+      "§4.3.2",
+      "§4.9.2"
+     ]
     }
    ],
    "launches": [],
@@ -9650,7 +11019,11 @@
     {
      "vol": "卷三乙",
      "sec": "§3.1",
-     "name": "recipeView"
+     "name": "recipeView",
+     "detail": [
+      "§4.8.2",
+      "§4.19.2"
+     ]
     }
    ],
    "retire": {},
@@ -9771,7 +11144,10 @@
     {
      "vol": "卷十",
      "sec": "§3.1",
-     "name": "instanceIdOf"
+     "name": "instanceIdOf",
+     "detail": [
+      "§4.12.2"
+     ]
     }
    ],
    "launches": [
@@ -9808,17 +11184,30 @@
     {
      "vol": "卷二十",
      "sec": "§3.1",
-     "name": "clockView"
+     "name": "clockView",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷二十",
      "sec": "§3.1",
-     "name": "envAccum"
+     "name": "envAccum",
+     "detail": [
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷二十",
      "sec": "§3.1",
-     "name": "envAt"
+     "name": "envAt",
+     "detail": [
+      "§4.3.2",
+      "§4.4.2",
+      "§4.5.2",
+      "§4.7.2",
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷二十",
@@ -9828,7 +11217,10 @@
     {
      "vol": "卷二十",
      "sec": "§3.1",
-     "name": "paceView"
+     "name": "paceView",
+     "detail": [
+      "§4.10.2"
+     ]
     },
     {
      "vol": "卷二十",
@@ -9838,12 +11230,18 @@
     {
      "vol": "卷二十",
      "sec": "§3.1",
-     "name": "recurrenceNext"
+     "name": "recurrenceNext",
+     "detail": [
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷二十",
      "sec": "§3.1",
-     "name": "waterAhead"
+     "name": "waterAhead",
+     "detail": [
+      "§4.6.2"
+     ]
     }
    ],
    "retire": {},
@@ -9943,12 +11341,18 @@
     {
      "vol": "卷二十五",
      "sec": "§3.1",
-     "name": "butcherOutcome"
+     "name": "butcherOutcome",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷二十五",
      "sec": "§3.2",
-     "name": "clearCultivation"
+     "name": "clearCultivation",
+     "detail": [
+      "§4.2.2"
+     ]
     }
    ],
    "launches": [
@@ -9960,57 +11364,92 @@
     {
      "vol": "卷二十五",
      "sec": "§3.1",
-     "name": "butcherOutcome"
+     "name": "butcherOutcome",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷二十五",
      "sec": "§3.1",
-     "name": "canRide"
+     "name": "canRide",
+     "detail": [
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷二十五",
      "sec": "§3.1",
-     "name": "cropForage"
+     "name": "cropForage",
+     "detail": [
+      "§4.3.2"
+     ]
     },
     {
      "vol": "卷二十五",
      "sec": "§3.1",
-     "name": "cropGrowth"
+     "name": "cropGrowth",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷二十五",
      "sec": "§3.1",
-     "name": "cultivationOf"
+     "name": "cultivationOf",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷二十五",
      "sec": "§3.1",
-     "name": "forageOptions"
+     "name": "forageOptions",
+     "detail": [
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷二十五",
      "sec": "§3.1",
-     "name": "handlingOf"
+     "name": "handlingOf",
+     "detail": [
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷二十五",
      "sec": "§3.1",
-     "name": "herdView"
+     "name": "herdView",
+     "detail": [
+      "§4.3.2",
+      "§4.5.2"
+     ]
     },
     {
      "vol": "卷二十五",
      "sec": "§3.1",
-     "name": "plantView"
+     "name": "plantView",
+     "detail": [
+      "§4.1.2",
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷二十五",
      "sec": "§3.1",
-     "name": "stapleCalendar"
+     "name": "stapleCalendar",
+     "detail": [
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷二十五",
      "sec": "§3.1",
-     "name": "tabooFacts"
+     "name": "tabooFacts",
+     "detail": [
+      "§4.12.2"
+     ]
     }
    ],
    "retire": {},
@@ -10100,147 +11539,239 @@
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "casusOptions"
+     "name": "casusOptions",
+     "detail": [
+      "§4.15.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "claimsOn"
+     "name": "claimsOn",
+     "detail": [
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "courtView"
+     "name": "courtView",
+     "detail": [
+      "§4.17.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "dejureOf"
+     "name": "dejureOf",
+     "detail": [
+      "§4.4.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "diploStatus"
+     "name": "diploStatus",
+     "detail": [
+      "§4.13.2",
+      "§4.14.2",
+      "§4.15.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "domainOf"
+     "name": "domainOf",
+     "detail": [
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "electorate"
+     "name": "electorate",
+     "detail": [
+      "§4.18.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "factionView"
+     "name": "factionView",
+     "detail": [
+      "§4.12.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "governorOf"
+     "name": "governorOf",
+     "detail": [
+      "§4.5.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "hasPower"
+     "name": "hasPower",
+     "detail": [
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "holdingAllowed"
+     "name": "holdingAllowed",
+     "detail": [
+      "§4.5.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "influenceOf"
+     "name": "influenceOf",
+     "detail": [
+      "§4.19.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "legitimacy"
+     "name": "legitimacy",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "migrationScore"
+     "name": "migrationScore",
+     "detail": [
+      "§4.16.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "motionView"
+     "name": "motionView",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "officesOf"
+     "name": "officesOf",
+     "detail": [
+      "§4.2.2",
+      "§4.9.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "orgView"
+     "name": "orgView",
+     "detail": [
+      "§4.1.2",
+      "§4.13.2",
+      "§4.18.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "placeAuthority"
+     "name": "placeAuthority",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "popCapacity"
+     "name": "popCapacity",
+     "detail": [
+      "§4.16.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "popView"
+     "name": "popView",
+     "detail": [
+      "§4.16.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "regencyOf"
+     "name": "regencyOf",
+     "detail": [
+      "§4.9.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "seatVenues"
+     "name": "seatVenues",
+     "detail": [
+      "§4.18.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "stratumSkill"
+     "name": "stratumSkill",
+     "detail": [
+      "§4.16.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "successorsOf"
+     "name": "successorsOf",
+     "detail": [
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "taxLoad"
+     "name": "taxLoad",
+     "detail": [
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "taxesFor"
+     "name": "taxesFor",
+     "detail": [
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "tierOptions"
+     "name": "tierOptions",
+     "detail": [
+      "§4.18.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "usurpOptions"
+     "name": "usurpOptions",
+     "detail": [
+      "§4.4.2"
+     ]
     },
     {
      "vol": "卷八",
      "sec": "§3.1",
-     "name": "vassalTerms"
+     "name": "vassalTerms",
+     "detail": [
+      "§4.10.2"
+     ]
     }
    ],
    "retire": {},
@@ -10330,7 +11861,14 @@
     {
      "vol": "卷四",
      "sec": "§3.1",
-     "name": "personView"
+     "name": "personView",
+     "detail": [
+      "§4.3.2",
+      "§4.4.2",
+      "§4.5.2",
+      "§4.7.2",
+      "§4.10.2"
+     ]
     }
    ],
    "retire": {},
@@ -10696,22 +12234,28 @@
     {
      "vol": "卷九",
      "sec": "§3.1",
-     "name": "aiAllows"
-    },
-    {
-     "vol": "卷九",
-     "sec": "§3.1",
-     "name": "sceneCard"
+     "name": "sceneCard",
+     "detail": [
+      "§4.10.2"
+     ]
     },
     {
      "vol": "卷二十五",
      "sec": "§3.1",
-     "name": "butcherOutcome"
+     "name": "butcherOutcome",
+     "detail": [
+      "§4.7.2"
+     ]
     },
     {
      "vol": "卷十六",
      "sec": "§3.1",
-     "name": "speciesThreat"
+     "name": "speciesThreat",
+     "detail": [
+      "§4.1.2",
+      "§4.2.2",
+      "§4.10.2"
+     ]
     }
    ],
    "launches": [],
@@ -11097,7 +12641,14 @@
     {
      "vol": "卷二十",
      "sec": "§3.1",
-     "name": "envAt"
+     "name": "envAt",
+     "detail": [
+      "§4.3.2",
+      "§4.4.2",
+      "§4.5.2",
+      "§4.7.2",
+      "§4.8.2"
+     ]
     }
    ],
    "launches": [],
@@ -11453,7 +13004,10 @@
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "acceptance"
+     "name": "acceptance",
+     "detail": [
+      "§4.23.2"
+     ]
     },
     {
      "vol": "卷七",
@@ -11463,177 +13017,286 @@
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "conversionOdds"
+     "name": "conversionOdds",
+     "detail": [
+      "§4.9.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "cultureHead"
+     "name": "cultureHead",
+     "detail": [
+      "§4.24.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "culturePref"
+     "name": "culturePref",
+     "detail": [
+      "§4.21.2",
+      "§4.28.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "customFor"
+     "name": "customFor",
+     "detail": [
+      "§4.19.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "deityView"
+     "name": "deityView",
+     "detail": [
+      "§4.11.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "divinationOptions"
+     "name": "divinationOptions",
+     "detail": [
+      "§4.15.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "doctrineOf"
+     "name": "doctrineOf",
+     "detail": [
+      "§4.2.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "evaluationOf"
+     "name": "evaluationOf",
+     "detail": [
+      "§4.26.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "faithChain"
+     "name": "faithChain",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "faithCount"
+     "name": "faithCount",
+     "detail": [
+      "§4.9.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "faithDistance"
+     "name": "faithDistance",
+     "detail": [
+      "§4.1.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "faithOf"
+     "name": "faithOf",
+     "detail": [
+      "§4.1.2",
+      "§4.9.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "faithUnlocked"
+     "name": "faithUnlocked",
+     "detail": [
+      "§4.2.2",
+      "§4.3.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "fervorOf"
+     "name": "fervorOf",
+     "detail": [
+      "§4.5.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "festivalsAt"
+     "name": "festivalsAt",
+     "detail": [
+      "§4.18.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "holyWarEligible"
+     "name": "holyWarEligible",
+     "detail": [
+      "§4.30.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "hostilityOf"
+     "name": "hostilityOf",
+     "detail": [
+      "§4.6.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "integrationOf"
+     "name": "integrationOf",
+     "detail": [
+      "§4.24.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "interpretedScore"
+     "name": "interpretedScore",
+     "detail": [
+      "§4.27.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "languageCap"
+     "name": "languageCap",
+     "detail": [
+      "§4.27.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "languageKin"
+     "name": "languageKin",
+     "detail": [
+      "§4.27.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "miracleOptions"
+     "name": "miracleOptions",
+     "detail": [
+      "§4.14.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "nameTable"
+     "name": "nameTable",
+     "detail": [
+      "§4.27.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "nextFestival"
+     "name": "nextFestival",
+     "detail": [
+      "§4.18.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "pendingCustoms"
+     "name": "pendingCustoms",
+     "detail": [
+      "§4.19.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "pietyOf"
+     "name": "pietyOf",
+     "detail": [
+      "§4.10.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "reformOptions"
+     "name": "reformOptions",
+     "detail": [
+      "§4.3.2",
+      "§4.8.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "respectTier"
+     "name": "respectTier",
+     "detail": [
+      "§4.29.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "riteCount"
+     "name": "riteCount",
+     "detail": [
+      "§4.18.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "shrineDemand"
+     "name": "shrineDemand",
+     "detail": [
+      "§4.16.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "sphereAffinity"
+     "name": "sphereAffinity",
+     "detail": [
+      "§4.12.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "tabooBreach"
+     "name": "tabooBreach",
+     "detail": [
+      "§4.25.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "traditionOptions"
+     "name": "traditionOptions",
+     "detail": [
+      "§4.22.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "vowsOf"
+     "name": "vowsOf",
+     "detail": [
+      "§4.17.2"
+     ]
     },
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "worshipTier"
+     "name": "worshipTier",
+     "detail": [
+      "§4.13.2"
+     ]
     }
    ],
    "retire": {},
@@ -11781,7 +13444,16 @@
     {
      "vol": "卷七",
      "sec": "§3.1",
-     "name": "faithView"
+     "name": "faithView",
+     "detail": [
+      "§4.1.2",
+      "§4.2.2",
+      "§4.3.2",
+      "§4.4.2",
+      "§4.5.2",
+      "§4.6.2",
+      "§4.7.2"
+     ]
     }
    ],
    "retire": {},

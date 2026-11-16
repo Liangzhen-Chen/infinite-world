@@ -74,7 +74,8 @@ const leadName = s => { const m = s.trim().match(/^`([A-Za-z_$][A-Za-z0-9_$]*)(\
 // (b) 是函数名：标题判据下须写成"名(参数)"的调用形；主语判据下整段反引号只是一个名字；都不含"."，不是状态路径、字段、参数；
 // (c) 没有在别卷 §3（卷二为 §2.1）作为该卷入口登记（表格、列表写法的登记先全书收齐，再判散文）
 const NEG = /没有|不是|并非|不算|不设|不另|不为|不再|不得|无须|无需|不属/;
-const proseCand = []; // {v, name, sec, line, how}
+const proseCand = []; // {v, name, sec, line, how, attrs}
+const delegated = []; // {vol, sec, name, from, attrs}：本卷 §3 写明"由卷X §n 登记"的名字
 const proseCount = new Map(); // 卷 → 散文写法收下的名字
 for (const [f, ls] of volText) {
   const v = volOfFile(f); if (!v) continue; const list = [];
@@ -83,10 +84,35 @@ for (const [f, ls] of volText) {
   const addProse = (text) => {
     // 句中点名别卷（"卷X"不是本卷）的，所列名字是别卷的入口，不算本卷登记（(c) 的同类）
     const otherVol = s => [...s.matchAll(new RegExp(V_RE, 'g'))].some(m => m[0] !== v);
-    // 句中点名别卷的，只收本句写成调用形"`名(参数)`"的（本卷定义），裸名视为引用别卷
-    if (headEntry) for (const s of text.split(/[。\n]/)) { if (NEG.test(s)) continue; const re = otherVol(s) ? /`([a-z][A-Za-z0-9]*)\([^`]*\)`/g : /`([a-z][A-Za-z0-9]*)(?:\([^`]*\))?`/g; for (const m of s.matchAll(re)) proseCand.push({ v, name: m[1], sec: sub, line: s, how: '标题写明入口' }); }
-    for (const s of text.split(/[。；\n]/)) { if (!/入口/.test(s) || NEG.test(s) || otherVol(s)) continue; const m = s.match(/^(.*?)(?:是|均为|都是|皆为)[^是]*入口/); if (!m) continue;
-      for (const x of m[1].matchAll(/`([a-z][A-Za-z0-9]*)(?:\([^`]*\))?`/g)) proseCand.push({ v, name: x[1], sec: sub, line: s, how: '主语' }); }
+    // 否定按分句判（李白 11-16 03:2x 第 1 条，chk-1116-y23 T5）：句子按"；"分成几段，首段"："之前是全句的标签；每段再按"，"与括号分成分句。
+    // 否定词只作用于它所在的分句（属于、调用、在清单里），不吞掉同句别的分句列出的入口名；否定分句转成这些名字的入口属性标记。
+    // 分句写明"由卷X §n……登记"的，它前面列出的名字主登记归卷X §n（03:2x 第 2 条），本卷只是引用，不另建入口。
+    // 点名别卷的分句（登记归属分句除外）里只收写成调用形"`名(参数)`"的（本卷定义），裸名视为引用别卷。
+    const NAME_ANY = /`([a-z][A-Za-z0-9]*)(?:\([^`]*\))?`/g, NAME_CALL = /`([a-z][A-Za-z0-9]*)\([^`]*\)`/g;
+    const attrOf = cl => (/规则层/.test(cl) && /不属|不可|不得/.test(cl) ? { boundary_side: true, rule_layer_callable: false } : /装配/.test(cl) ? { formal_assembly: false } : { negated: cl.trim() });
+    // 分句：按"，"与括号切，反引号里的逗号、括号不算（保护调用形"`名(a, b)`"）
+    const clauseSplit = t => { const keep = []; const p = t.replace(/`[^`]*`/g, m => { keep.push(m); return `\u0000${keep.length - 1}\u0001`; }); return p.split(/[，,（）()]/).map(c => c.replace(/\u0000(\d+)\u0001/g, (_, i) => keep[+i])); };
+    const DELEG = new RegExp(`由\\s*(${V_RE})\\s*§\\s*([0-9]+(?:\\.[0-9]+)*)[^；]*?登记`);
+    if (headEntry) for (const s of text.split(/[。\n]/)) {
+      const ci = s.indexOf('：'); const label = ci >= 0 ? s.slice(0, ci) : ''; const body = ci >= 0 ? s.slice(ci + 1) : s;
+      const labelAttrs = clauseSplit(label).filter(c => NEG.test(c)).map(attrOf);
+      if (NEG.test(label.replace(/（[^）]*）/g, ''))) continue; // 标签本身被否定（不是括注里的属性）
+      for (const part of body.split('；')) {
+        const dg = part.match(DELEG); let rest = part;
+        if (dg) { // "名、名（几者由卷X §n……登记）、名"：括注前的名字归卷X，括注之后的照本卷判
+          const open = Math.max(0, part.lastIndexOf('（', dg.index)); const reg2 = part.indexOf('登记', dg.index); let close = part.indexOf('）', reg2); while (close >= 0 && part[close + 1] === '）') close++;
+          for (const m of part.slice(0, open).matchAll(NAME_ANY)) delegated.push({ vol: dg[1], sec: '§' + dg[2], name: m[1], from: v, attrs: labelAttrs });
+          rest = close >= 0 ? part.slice(close + 1) : ''; }
+        const clauses = clauseSplit(rest); const neg = clauses.filter(c => NEG.test(c)); const pos = clauses.filter(c => !NEG.test(c)).join('，');
+        const attrs = Object.assign({}, ...labelAttrs, ...neg.map(attrOf));
+        for (const m of pos.matchAll(otherVol(s) ? NAME_CALL : NAME_ANY)) proseCand.push({ v, name: m[1], sec: sub, line: s, how: '标题写明入口', attrs });
+      }
+    }
+    for (const s of text.split(/[。；\n]/)) {
+      if (!/入口/.test(s) || otherVol(s)) continue;
+      const entryClause = clauseSplit(s).find(c => /入口/.test(c)) ?? ''; if (NEG.test(entryClause)) continue; // "没有本卷的入口"一类：否定落在"入口"所在分句
+      const m = s.match(/^(.*?)(?:是|均为|都是|皆为)[^是]*入口/); if (!m) continue;
+      for (const x of m[1].matchAll(NAME_ANY)) proseCand.push({ v, name: x[1], sec: sub, line: s, how: '主语' }); }
   };
   const flush = () => { if (para.length) addProse(para.join('\n')); para = []; };
   for (const l of ls) {
@@ -122,6 +148,24 @@ const reg21 = []; // §2.1 的读函数名（不论归不归卷二）
   for (let i = s; i < e; i++) { if (!/^\|/.test(reg[i])) continue; const c = cells(reg[i]); if (!/^\d+$/.test(c[0] ?? '')) continue; const n = leadName(c[2] ?? ''); if (!n) continue; reg21.push(n); if (!formalVols(n).length && !list.some(x => x.name === n)) { list.push({ name: n, sec: '§2.1', secs: ['2.1'], reg21: true }); entryNames.add(n); } }
   entryIdx.set(REGVOL, list); }
 // 散文候选按 (c) 过滤：别卷（含卷二 §2.1）已登记的名字不收；同一卷同名只收一次
+// 写明"由卷X §n 登记"的名字：主登记归卷X §n（须在该节正文里写着这个名字），原处记引用，不重复建入口（李白 11-16 03:2x 第 2 条）
+const secBodyText = (vol, sec) => { const f = volFiles.find(x => volOfFile(x) === vol); const L = f ? volText.get(f) : []; const n = sec.replace(/^§/, ''); const hi = L.findIndex(l => new RegExp(`^#+\\s+§?${n.replace(/\./g, '\\.')}(?![0-9.])`).test(l)); if (hi < 0) return ''; const lv = L[hi].match(/^#+/)[0].length; let e = L.findIndex((l, i) => i > hi && /^#+\s/.test(l) && l.match(/^#+/)[0].length <= lv); if (e < 0) e = L.length; return L.slice(hi, e).join('\n'); };
+// 入口的细则节：本卷 §4 下标题写明"入口"的小节（只看该小节到下一个标题之间）里写着这个名字的（如 effectiveTier：§3.1 主登记，§4.14.2 细则；03:2x 第 3 条）
+const detailCache = new Map();
+function detailOf(vol, name) {
+  const key = vol + '|' + name; if (detailCache.has(key)) return detailCache.get(key);
+  const f = volFiles.find(x => volOfFile(x) === vol); const L = f ? volText.get(f) : []; const out = [];
+  L.forEach((l, i) => { const h = l.match(/^#+\s+§?(4(?:\.[0-9]+)+)\s+(.*)$/); if (!h || !/入口/.test(h[2])) return; let e = L.findIndex((x, j) => j > i && /^#+\s/.test(x)); if (e < 0) e = L.length; if (new RegExp('`' + name + '[`(]').test(L.slice(i + 1, e).join('\n'))) out.push('§' + h[1]); });
+  detailCache.set(key, out); return out;
+}
+const entryInfo = x => { const rec = (entryIdx.get(x.vol) ?? []).find(y => y.name === x.name) ?? {}; const d = detailOf(x.vol, x.name); return { ...x, ...(rec.attrs ? { attrs: rec.attrs } : {}), ...(d.length ? { detail: d } : {}) }; };
+const delegInfo = [];
+for (const d of delegated) {
+  const ok = new RegExp('`' + d.name + '[`(]').test(secBodyText(d.vol, d.sec)); delegInfo.push({ ...d, ok });
+  if (!ok) continue; const list = entryIdx.get(d.vol) ?? entryIdx.set(d.vol, []).get(d.vol);
+  if (!list.some(x => x.name === d.name)) { list.push({ name: d.name, sec: d.sec, secs: [d.sec.slice(1)], refFrom: [d.from], ...(Object.keys(Object.assign({}, ...d.attrs)).length ? { attrs: Object.assign({}, ...d.attrs) } : {}) }); entryNames.add(d.name); }
+  else { const x = list.find(y => y.name === d.name); x.refFrom = uniq([...(x.refFrom ?? []), d.from]); }
+}
 const proseRejected = [];
 // (b) 函数名：本卷某处写成过调用形"`名(…)`"的才是函数；只以字段、参数、状态路径出现的名字（如视图返回的 tree、zones、effects）不是
 const callNames = new Map(); for (const [f, ls] of volText) { const v = volOfFile(f); const s = new Set(); for (const l of ls) for (const m of l.matchAll(/`([a-z][A-Za-z0-9]*)\(/g)) s.add(m[1]); callNames.set(v, s); }
@@ -130,7 +174,7 @@ for (const p of proseCand) {
   const elsewhere = formalVols(p.name).filter(v => v !== p.v); const in21 = reg21.includes(p.name) && p.v !== REGVOL;
   if (elsewhere.length || in21) { proseRejected.push({ ...p, why: elsewhere.length ? `别卷已登记（${elsewhere.join('、')}）` : '卷二 §2.1 已登记' }); continue; }
   const list = entryIdx.get(p.v); if (list.some(x => x.name === p.name)) continue;
-  list.push({ name: p.name, sec: p.sec, secs: secOfRule(p.v, p.line), prose: true, how: p.how }); entryNames.add(p.name);
+  list.push({ name: p.name, sec: p.sec, secs: secOfRule(p.v, p.line), prose: true, how: p.how, ...(p.attrs && Object.keys(p.attrs).length ? { attrs: p.attrs } : {}) }); entryNames.add(p.name);
   (proseCount.get(p.v) ?? proseCount.set(p.v, []).get(p.v)).push(p.name);
 }
 const in3 = (vol, name) => (entryIdx.get(vol) ?? []).some(x => x.name === name);
@@ -766,7 +810,7 @@ const rejected = { entries: [], launches: [] };
 // 只登记在卷二 §2.1 入口清单的（各表视图），归登记处卷二（李白 11-16 02:45 ③）
 // 改挂到卷二时：上线只许挂在 §2.1 该行那类实体（表）的对象上（03:00 第 2 条，chk-1116-y21 T2），要接的入口照挂
 const tableOfView = n => [...viewEntries].filter(([, e]) => e.name === n).map(([t]) => t)[0];
-for (const c of cards) for (const f of ['entries', 'launches']) { const keep = []; for (const x of c[f]) { if (in3(x.vol, x.name)) keep.push(x); else if (in3(REGVOL, x.name) && (f === 'entries' || (c.objectKind === 'table' && c.objectCode === tableOfView(x.name)))) keep.push({ ...x, vol: REGVOL, sec: '§2.1' }); else rejected[f].push(`${c.cardId}:${x.vol}:${x.name}`); } c[f] = uniq(keep.map(x => JSON.stringify(x))).map(s => JSON.parse(s)); }
+for (const c of cards) for (const f of ['entries', 'launches']) { const keep = []; for (const x of c[f]) { if (in3(x.vol, x.name)) keep.push(x); else if (in3(REGVOL, x.name) && (f === 'entries' || (c.objectKind === 'table' && c.objectCode === tableOfView(x.name)))) keep.push({ ...x, vol: REGVOL, sec: '§2.1' }); else rejected[f].push(`${c.cardId}:${x.vol}:${x.name}`); } c[f] = uniq(keep.map(x => JSON.stringify(entryInfo(x)))).map(s => JSON.parse(s)); }
 // ================= 对象 → 表主、必填引用等的依赖 =================
 const firstOfObj = new Map(); // objKey → 首卡
 for (const c of cards) if (c.cardKind === 'first' || c.cardKind === 'relocate' && c._ord === 1) firstOfObj.set(`${c.objectKind}:${c.objectCode}`, c);
@@ -1103,7 +1147,7 @@ const md = [
   `- 对象按登记卷定（李白 11-16 01:25 第 1 条：规则表键、词表族条目有登记处的按登记卷，不读落点文字）：与判据一结果不同的 ${regMoved.length} 行${regMoved.length ? '：' + regMoved.map(x => `${x.k}（\`${x.o}\` 登记在${x.reg}，判据一原取${x.j1}）`).join('；') : ''}。`,
   `- 位置组定对象（R11-2.5 原文，李白 11-16 01:25 第 5 条）：zeroRow 未转录，按"没有这样的行"取首卡在 R11-7.2 次序中最前的候选；次序在不并组改判的卡族（每行取自身对象）上按 R11-7.2 算一次，不回代、不迭代（李白 11-16 02:00 Q1）；候选不在次序里的组 ${objConflicts.filter(x => x.unranked.length).length} 组。与旧取法（行数最多）相比改了接收对象的行 ${pickMoved.length} 行。`,
   `- 并组后接收对象不是本行自己对象的行，列待查（zeroRow 补上后复判）：${mergedRecheck.length} 行${mergedRecheck.length ? '：' + mergedRecheck.map(x => `${x.k}（${x.own}→${x.pick}）`).join('；') : ''}。`,
-  `- entries（李白 11-16 01:30）：按各行"卷、节"到该卷 §3 入口表取恰一个入口；§3 入口表共登记 ${entryNames.size} 个入口名，不在表里的名字不收。待查：一节对应多个入口 ${uniq(entryMulti.map(x => x.k)).length} 行（${uniq(entryMulti.map(x => x.k)).join('、')}）；该节在 §3 找不到入口 ${uniq(entryNone.map(x => x.k)).length} 行（${uniq(entryNone.map(x => x.k)).join('、')}）；落点没有节号或规则编号 ${uniq(entryNoSec).length} 行；入口与对象不符（李白 11-16 02:30 第 2 条：推出的入口由别的对象上线，不计入口边）${uniq(entryMismatch.map(x => x.k)).length} 行（按来源卷：${Object.entries(stat(uniq(entryMismatch.map(x => x.k)).map(k => entryMismatch.find(x => x.k === k)), x => x.vol)).map(([v, n]) => `${v} ${n}`).join('、')}；${uniq(entryMismatch.map(x => x.k)).map(k => { const x = entryMismatch.find(y => y.k === k); return `${k}（${x.name} 属 ${x.owner}，行属 ${x.own}）`; }).join('、')}）。§3 散文写法收下的入口名（李白 11-16 03:00 第 1 条三条件）：${[...proseCount].sort((a, b) => cmp(a[0], b[0])).map(([v, ns]) => `${v} ${ns.length} 个（${ns.join('、')}）`).join('；') || '无'}；散文候选因别卷已登记不收 ${uniq(proseRejected.map(x => x.v + ':' + x.name)).length} 个；卷二 §2.1 入口清单 ${reg21.length} 个读函数，主办卷 §3 都没登记、归卷二的 ${(entryIdx.get(REGVOL) ?? []).filter(x => x.reg21).length} 个（${(entryIdx.get(REGVOL) ?? []).filter(x => x.reg21).map(x => x.name).join('、') || '无'}；03:00 第 2 条）。`,
+  `- entries（李白 11-16 01:30）：按各行"卷、节"到该卷 §3 入口表取恰一个入口；§3 入口表共登记 ${entryNames.size} 个入口名，不在表里的名字不收。待查：一节对应多个入口 ${uniq(entryMulti.map(x => x.k)).length} 行（${uniq(entryMulti.map(x => x.k)).join('、')}）；该节在 §3 找不到入口 ${uniq(entryNone.map(x => x.k)).length} 行（${uniq(entryNone.map(x => x.k)).join('、')}）；落点没有节号或规则编号 ${uniq(entryNoSec).length} 行；入口与对象不符（李白 11-16 02:30 第 2 条：推出的入口由别的对象上线，不计入口边）${uniq(entryMismatch.map(x => x.k)).length} 行（按来源卷：${Object.entries(stat(uniq(entryMismatch.map(x => x.k)).map(k => entryMismatch.find(x => x.k === k)), x => x.vol)).map(([v, n]) => `${v} ${n}`).join('、')}；${uniq(entryMismatch.map(x => x.k)).map(k => { const x = entryMismatch.find(y => y.k === k); return `${k}（${x.name} 属 ${x.owner}，行属 ${x.own}）`; }).join('、')}）。§3 散文写法收下的入口名（李白 11-16 03:00 第 1 条三条件）：${[...proseCount].sort((a, b) => cmp(a[0], b[0])).map(([v, ns]) => `${v} ${ns.length} 个（${ns.join('、')}）`).join('；') || '无'}；带入口属性标记的（否定分句转来，03:2x 第 1 条）：${[...entryIdx].flatMap(([v, xs]) => xs.filter(x => x.attrs).map(x => `${v}:${x.name}{${Object.entries(x.attrs).map(([k, val]) => `${k}=${val}`).join(',')}}`)).join('、') || '无'}；写明由别卷登记、主登记归该卷的（原处记引用，03:2x 第 2 条）：${delegInfo.map(d => `${d.name}→${d.vol} ${d.sec}（引自${d.from}${d.ok ? '' : '；该节正文没写这个名字，未建'}）`).join('、') || '无'}；散文候选因别卷已登记不收 ${uniq(proseRejected.map(x => x.v + ':' + x.name)).length} 个；卷二 §2.1 入口清单 ${reg21.length} 个读函数，主办卷 §3 都没登记、归卷二的 ${(entryIdx.get(REGVOL) ?? []).filter(x => x.reg21).length} 个（${(entryIdx.get(REGVOL) ?? []).filter(x => x.reg21).map(x => x.name).join('、') || '无'}；03:00 第 2 条）。`,
   `- 账本子卡 ${ledgerChildren.length} 张${ledgerChildLimit ? '，超过卷一 §6.5 的 ≤ 8 上限，报李白' : '（≤ 8）'}。`,
   '',
   '## 三 待补（K7）与 migReady',
