@@ -69,26 +69,37 @@ const secOfRule = (vol, t) => {
 const entryIdx = new Map(); // 卷 → [{name, sec, secs}]
 const entryNames = new Set();
 const leadName = s => { const m = s.trim().match(/^`([A-Za-z_$][A-Za-z0-9_$]*)(\([^`]*\))?(\.[A-Za-z]|`?\.)?/); return m && !m[3] ? m[1] : null; };
-// 散文写法（李白 11-16 02:45 ①，chk-1116-y19 T1）：§3 内标题写着"入口"的小节里、或文字本身写着"入口"的段落（列表项各算一段），
-// 段内反引号里的函数名（整段反引号只是一个名字或"名(参数)"，小写开头、不含下划线与点）都收；表格行另按上面的表格写法
-const proseNames = t => [...t.matchAll(/`([a-z][A-Za-z0-9]*)(\([^`]*\))?`/g)].map(m => m[1]);
-const proseCount = new Map(); // 卷 → 散文写法新收的名字数
+// 散文写法（李白 11-16 03:00 第 1 条，取代 02:45 ①）：只收同时满足三条的名字——
+// (a) 在本卷 §3 的段落里，且段落所在小节的标题本身写明是入口，或句子是"X、Y 是……入口"的肯定句、名字在"是"之前作主语（否定句不收）；
+// (b) 是函数名：标题判据下须写成"名(参数)"的调用形；主语判据下整段反引号只是一个名字；都不含"."，不是状态路径、字段、参数；
+// (c) 没有在别卷 §3（卷二为 §2.1）作为该卷入口登记（表格、列表写法的登记先全书收齐，再判散文）
+const NEG = /没有|不是|并非|不算|不设|不另|不为|不再|不得|无须|无需|不属/;
+const proseCand = []; // {v, name, sec, line, how}
+const proseCount = new Map(); // 卷 → 散文写法收下的名字
 for (const [f, ls] of volText) {
   const v = volOfFile(f); if (!v) continue; const list = [];
   if (f === CFG.registry.file) { entryIdx.set(v, list); continue; } // 登记总表卷的 §3 是修正值体系，不是入口；它的入口登记处是 §2.1（见下，02:45 ③）
   let in3 = false, sub = null, head = null, code = false, retired = false, headEntry = false, para = [];
-  const addProse = (text, line) => { for (const n of proseNames(text)) if (!list.some(x => x.name === n)) { list.push({ name: n, sec: sub, secs: secOfRule(v, line), prose: true }); entryNames.add(n); proseCount.set(v, (proseCount.get(v) ?? 0) + 1); } };
-  const flush = () => { if (para.length && (headEntry || /入口/.test(para.join('')))) addProse(para.join('\n'), para.join(' ')); para = []; };
+  const addProse = (text) => {
+    // 句中点名别卷（"卷X"不是本卷）的，所列名字是别卷的入口，不算本卷登记（(c) 的同类）
+    const otherVol = s => [...s.matchAll(new RegExp(V_RE, 'g'))].some(m => m[0] !== v);
+    // 句中点名别卷的，只收本句写成调用形"`名(参数)`"的（本卷定义），裸名视为引用别卷
+    if (headEntry) for (const s of text.split(/[。\n]/)) { if (NEG.test(s)) continue; const re = otherVol(s) ? /`([a-z][A-Za-z0-9]*)\([^`]*\)`/g : /`([a-z][A-Za-z0-9]*)(?:\([^`]*\))?`/g; for (const m of s.matchAll(re)) proseCand.push({ v, name: m[1], sec: sub, line: s, how: '标题写明入口' }); }
+    for (const s of text.split(/[。；\n]/)) { if (!/入口/.test(s) || NEG.test(s) || otherVol(s)) continue; const m = s.match(/^(.*?)(?:是|均为|都是|皆为)[^是]*入口/); if (!m) continue;
+      for (const x of m[1].matchAll(/`([a-z][A-Za-z0-9]*)(?:\([^`]*\))?`/g)) proseCand.push({ v, name: x[1], sec: sub, line: s, how: '主语' }); }
+  };
+  const flush = () => { if (para.length) addProse(para.join('\n')); para = []; };
   for (const l of ls) {
     if (/^```/.test(l)) { flush(); code = !code; head = null; continue; } if (code) continue;
     if (/^## /.test(l)) { flush(); in3 = /^## §?3[ .]/.test(l); sub = null; head = null; continue; }
     const h3 = l.match(/^### (?:§)?(3\.[0-9]+)(.*)$/); if (h3) { flush(); in3 = true; sub = '§' + h3[1]; retired = /退役/.test(h3[2]); headEntry = /入口/.test(h3[2]); head = null; continue; }
     if (/^### /.test(l)) { flush(); in3 = false; head = null; continue; }
-    if (in3 && /^#{4,} /.test(l)) { flush(); headEntry = /入口/.test(l) || headEntry; head = null; continue; }
+    if (in3 && /^#{4,} /.test(l)) { flush(); headEntry = /入口/.test(l); head = null; continue; } // 段落所在小节（最近一级标题）本身写明入口
     if (!in3 || !sub || retired) continue;
     const li = l.match(/^[-*]\s+(`[^`]+`)/);
-    if (li) { flush(); head = null; const n = leadName(li[1]); if (n && /\(/.test(li[1])) { list.push({ name: n, sec: sub, secs: secOfRule(v, l) }); entryNames.add(n); } else if (headEntry || /入口/.test(l)) addProse(l, l); continue; }
-    if (/^[-*]\s/.test(l)) { flush(); if (headEntry || /入口/.test(l)) addProse(l, l); continue; }
+    if (li) { flush(); head = null; const n = leadName(li[1]); if (n && /\(/.test(li[1])) { list.push({ name: n, sec: sub, secs: secOfRule(v, l) }); entryNames.add(n); } else addProse(l); continue; }
+    if (/^[-*]\s/.test(l)) { flush(); addProse(l); continue; }
+    if (/^\s+[-*]\s/.test(l)) { flush(); continue; } // 缩进的子列表是上一条入口的返回字段说明，不是登记
     if (!/^\|/.test(l)) { head = null; if (l.trim()) para.push(l); else flush(); continue; }
     flush();
     const c = cells(l); if (!head) { head = c; continue; } if (/^:?-{3}/.test(c[0] ?? '')) continue;
@@ -96,16 +107,32 @@ for (const [f, ls] of volText) {
     const ei = head.findIndex(h => /入口/.test(h)); if (ei < 0) continue;
     const si = head.findIndex(h => /节/.test(h));
     const secs = secOfRule(v, si >= 0 ? c[si] ?? '' : c.join(' '));
-    for (const part of (c[ei] ?? '').split(/[、，/]/)) { const n = leadName(part); if (n) { list.push({ name: n, sec: sub, secs }); entryNames.add(n); } }
+    // "入口"栏只写中文称呼、函数名写在"签名"栏的表（如"入口 | 签名 | 返回"），取签名栏
+    const cols = [ei, ...head.map((h, i) => (/签名/.test(h) ? i : -1)).filter(i => i >= 0 && i !== ei)];
+    for (const ci of cols) { const ns = (c[ci] ?? '').split(/[、，/]/).map(leadName).filter(Boolean); if (!ns.length) continue; for (const n of ns) { list.push({ name: n, sec: sub, secs }); entryNames.add(n); } break; }
   }
   flush();
   entryIdx.set(v, list);
 }
-// 卷二的入口登记处是 §2.1 入口清单（李白 11-16 02:45 ③：卷二第二章即"统一入口"，§3 讲修正值体系）：取该表"读函数"栏首个反引号名
+// 卷二的入口登记处是 §2.1 入口清单（李白 11-16 02:45 ③），但重复登记以主办卷 §3 为准：§2.1 的名字只在别卷 §3 都没登记时才归卷二（03:00 第 2 条）
 const REGVOL = CFG.registry.file.match(VOL)?.[0];
+const formalVols = name => [...entryIdx].filter(([, xs]) => xs.some(x => x.name === name)).map(([v]) => v);
+const reg21 = []; // §2.1 的读函数名（不论归不归卷二）
 { const s = reg.findIndex(l => /^### 2\.1 /.test(l)); let e = reg.findIndex((l, i) => i > s && /^#{2,3} /.test(l)); if (e < 0) e = reg.length; const list = entryIdx.get(REGVOL) ?? [];
-  for (let i = s; i < e; i++) { if (!/^\|/.test(reg[i])) continue; const c = cells(reg[i]); if (!/^\d+$/.test(c[0] ?? '')) continue; const n = leadName(c[2] ?? ''); if (n && !list.some(x => x.name === n)) { list.push({ name: n, sec: '§2.1', secs: ['2.1'], reg21: true }); entryNames.add(n); } }
+  for (let i = s; i < e; i++) { if (!/^\|/.test(reg[i])) continue; const c = cells(reg[i]); if (!/^\d+$/.test(c[0] ?? '')) continue; const n = leadName(c[2] ?? ''); if (!n) continue; reg21.push(n); if (!formalVols(n).length && !list.some(x => x.name === n)) { list.push({ name: n, sec: '§2.1', secs: ['2.1'], reg21: true }); entryNames.add(n); } }
   entryIdx.set(REGVOL, list); }
+// 散文候选按 (c) 过滤：别卷（含卷二 §2.1）已登记的名字不收；同一卷同名只收一次
+const proseRejected = [];
+// (b) 函数名：本卷某处写成过调用形"`名(…)`"的才是函数；只以字段、参数、状态路径出现的名字（如视图返回的 tree、zones、effects）不是
+const callNames = new Map(); for (const [f, ls] of volText) { const v = volOfFile(f); const s = new Set(); for (const l of ls) for (const m of l.matchAll(/`([a-z][A-Za-z0-9]*)\(/g)) s.add(m[1]); callNames.set(v, s); }
+for (const p of proseCand) {
+  if (!callNames.get(p.v)?.has(p.name)) { proseRejected.push({ ...p, why: '本卷没有写成调用形，不是函数名' }); continue; }
+  const elsewhere = formalVols(p.name).filter(v => v !== p.v); const in21 = reg21.includes(p.name) && p.v !== REGVOL;
+  if (elsewhere.length || in21) { proseRejected.push({ ...p, why: elsewhere.length ? `别卷已登记（${elsewhere.join('、')}）` : '卷二 §2.1 已登记' }); continue; }
+  const list = entryIdx.get(p.v); if (list.some(x => x.name === p.name)) continue;
+  list.push({ name: p.name, sec: p.sec, secs: secOfRule(p.v, p.line), prose: true, how: p.how }); entryNames.add(p.name);
+  (proseCount.get(p.v) ?? proseCount.set(p.v, []).get(p.v)).push(p.name);
+}
 const in3 = (vol, name) => (entryIdx.get(vol) ?? []).some(x => x.name === name);
 // 迁移行的"卷、节"：落点里第一个节号或规则编号（"卷X §n"取卷X，裸"§n"取来源卷，R<卷>-a.b 取该卷 §4.a）
 const byVolNo = new Map(); for (const v of VOLS) { const n = volNo(v); if (n) byVolNo.set(n.n + n.letter, v); }
@@ -737,7 +764,9 @@ gateFacilities.slice(0, 3).forEach((fac, i) => {
 // 同一拒收检查覆盖全部卡的 entries 与 launches（李白 11-16 01:30 第 3 条、chk-1116-y17 T5）：不在该卷 §3 入口表里的名字不收
 const rejected = { entries: [], launches: [] };
 // 只登记在卷二 §2.1 入口清单的（各表视图），归登记处卷二（李白 11-16 02:45 ③）
-for (const c of cards) for (const f of ['entries', 'launches']) { const keep = []; for (const x of c[f]) { if (in3(x.vol, x.name)) keep.push(x); else if (in3(REGVOL, x.name)) keep.push({ ...x, vol: REGVOL, sec: '§2.1' }); else rejected[f].push(`${c.cardId}:${x.vol}:${x.name}`); } c[f] = uniq(keep.map(x => JSON.stringify(x))).map(s => JSON.parse(s)); }
+// 改挂到卷二时：上线只许挂在 §2.1 该行那类实体（表）的对象上（03:00 第 2 条，chk-1116-y21 T2），要接的入口照挂
+const tableOfView = n => [...viewEntries].filter(([, e]) => e.name === n).map(([t]) => t)[0];
+for (const c of cards) for (const f of ['entries', 'launches']) { const keep = []; for (const x of c[f]) { if (in3(x.vol, x.name)) keep.push(x); else if (in3(REGVOL, x.name) && (f === 'entries' || (c.objectKind === 'table' && c.objectCode === tableOfView(x.name)))) keep.push({ ...x, vol: REGVOL, sec: '§2.1' }); else rejected[f].push(`${c.cardId}:${x.vol}:${x.name}`); } c[f] = uniq(keep.map(x => JSON.stringify(x))).map(s => JSON.parse(s)); }
 // ================= 对象 → 表主、必填引用等的依赖 =================
 const firstOfObj = new Map(); // objKey → 首卡
 for (const c of cards) if (c.cardKind === 'first' || c.cardKind === 'relocate' && c._ord === 1) firstOfObj.set(`${c.objectKind}:${c.objectCode}`, c);
@@ -1019,7 +1048,9 @@ const nImpl = cards.filter(c => ['first', 'follow', 'relocate', 'ledger_child', 
 const nDomain = cards.filter(c => ['first', 'follow'].includes(c.cardKind)).length;
 // launches 恰一次
 const launchCount = new Map(); for (const c of cards) for (const l of c.launches) { const k = entryKey(l.vol, l.name); launchCount.set(k, (launchCount.get(k) ?? 0) + 1); }
-const launchDup = [...launchCount].filter(([, v]) => v > 1).map(([k]) => k);
+// 重复上线按入口名查（不含卷），同一个函数挂在两个卷下也查得出（03:00 第 5 条，chk-1116-y21）
+const launchByName = new Map(); for (const c of cards) for (const l of c.launches) (launchByName.get(l.name) ?? launchByName.set(l.name, []).get(l.name)).push(`${c.cardId}(${l.vol})`);
+const launchDup = [...launchByName].filter(([, v]) => v.length > 1).map(([k, v]) => `${k}：${v.join('、')}`);
 const notLaunched = uniq([...entryIdx].flatMap(([v, xs]) => xs.map(x => entryKey(v, x.name)))).sort().filter(k => !launchCount.has(k)); // 与 entries 同一口径：各卷 §3 入口表登记的入口
 // dependsOn 无环由阶段算法已查；再核对 dependsOn 里的卡存在
 const depMissing = cards.flatMap(c => c.dependsOn.filter(d => !byId.has(d)).map(d => `${c.cardId}→${d}`));
@@ -1072,7 +1103,7 @@ const md = [
   `- 对象按登记卷定（李白 11-16 01:25 第 1 条：规则表键、词表族条目有登记处的按登记卷，不读落点文字）：与判据一结果不同的 ${regMoved.length} 行${regMoved.length ? '：' + regMoved.map(x => `${x.k}（\`${x.o}\` 登记在${x.reg}，判据一原取${x.j1}）`).join('；') : ''}。`,
   `- 位置组定对象（R11-2.5 原文，李白 11-16 01:25 第 5 条）：zeroRow 未转录，按"没有这样的行"取首卡在 R11-7.2 次序中最前的候选；次序在不并组改判的卡族（每行取自身对象）上按 R11-7.2 算一次，不回代、不迭代（李白 11-16 02:00 Q1）；候选不在次序里的组 ${objConflicts.filter(x => x.unranked.length).length} 组。与旧取法（行数最多）相比改了接收对象的行 ${pickMoved.length} 行。`,
   `- 并组后接收对象不是本行自己对象的行，列待查（zeroRow 补上后复判）：${mergedRecheck.length} 行${mergedRecheck.length ? '：' + mergedRecheck.map(x => `${x.k}（${x.own}→${x.pick}）`).join('；') : ''}。`,
-  `- entries（李白 11-16 01:30）：按各行"卷、节"到该卷 §3 入口表取恰一个入口；§3 入口表共登记 ${entryNames.size} 个入口名，不在表里的名字不收。待查：一节对应多个入口 ${uniq(entryMulti.map(x => x.k)).length} 行（${uniq(entryMulti.map(x => x.k)).join('、')}）；该节在 §3 找不到入口 ${uniq(entryNone.map(x => x.k)).length} 行（${uniq(entryNone.map(x => x.k)).join('、')}）；落点没有节号或规则编号 ${uniq(entryNoSec).length} 行；入口与对象不符（李白 11-16 02:30 第 2 条：推出的入口由别的对象上线，不计入口边）${uniq(entryMismatch.map(x => x.k)).length} 行（按来源卷：${Object.entries(stat(uniq(entryMismatch.map(x => x.k)).map(k => entryMismatch.find(x => x.k === k)), x => x.vol)).map(([v, n]) => `${v} ${n}`).join('、')}；${uniq(entryMismatch.map(x => x.k)).map(k => { const x = entryMismatch.find(y => y.k === k); return `${k}（${x.name} 属 ${x.owner}，行属 ${x.own}）`; }).join('、')}）。§3 散文写法新收入口名（李白 11-16 02:45 ①）：${[...proseCount].sort((a, b) => cmp(a[0], b[0])).map(([v, n]) => `${v} ${n}`).join('、') || '无'}；卷二 §2.1 入口清单收 ${(entryIdx.get(REGVOL) ?? []).filter(x => x.reg21).length} 个（02:45 ③）。`,
+  `- entries（李白 11-16 01:30）：按各行"卷、节"到该卷 §3 入口表取恰一个入口；§3 入口表共登记 ${entryNames.size} 个入口名，不在表里的名字不收。待查：一节对应多个入口 ${uniq(entryMulti.map(x => x.k)).length} 行（${uniq(entryMulti.map(x => x.k)).join('、')}）；该节在 §3 找不到入口 ${uniq(entryNone.map(x => x.k)).length} 行（${uniq(entryNone.map(x => x.k)).join('、')}）；落点没有节号或规则编号 ${uniq(entryNoSec).length} 行；入口与对象不符（李白 11-16 02:30 第 2 条：推出的入口由别的对象上线，不计入口边）${uniq(entryMismatch.map(x => x.k)).length} 行（按来源卷：${Object.entries(stat(uniq(entryMismatch.map(x => x.k)).map(k => entryMismatch.find(x => x.k === k)), x => x.vol)).map(([v, n]) => `${v} ${n}`).join('、')}；${uniq(entryMismatch.map(x => x.k)).map(k => { const x = entryMismatch.find(y => y.k === k); return `${k}（${x.name} 属 ${x.owner}，行属 ${x.own}）`; }).join('、')}）。§3 散文写法收下的入口名（李白 11-16 03:00 第 1 条三条件）：${[...proseCount].sort((a, b) => cmp(a[0], b[0])).map(([v, ns]) => `${v} ${ns.length} 个（${ns.join('、')}）`).join('；') || '无'}；散文候选因别卷已登记不收 ${uniq(proseRejected.map(x => x.v + ':' + x.name)).length} 个；卷二 §2.1 入口清单 ${reg21.length} 个读函数，主办卷 §3 都没登记、归卷二的 ${(entryIdx.get(REGVOL) ?? []).filter(x => x.reg21).length} 个（${(entryIdx.get(REGVOL) ?? []).filter(x => x.reg21).map(x => x.name).join('、') || '无'}；03:00 第 2 条）。`,
   `- 账本子卡 ${ledgerChildren.length} 张${ledgerChildLimit ? '，超过卷一 §6.5 的 ≤ 8 上限，报李白' : '（≤ 8）'}。`,
   '',
   '## 三 待补（K7）与 migReady',
