@@ -1603,7 +1603,7 @@
     }
    ],
    "disp": "delete",
-   "target": "—（不设取代物；扫描 VA-4.1-S）（节号待补）",
+   "target": "—（不设取代物；扫描 VA-4.1-S）（§4.1.6）",
    "targetObject": "sys.material",
    "baseline": "d54c89a3"
   },
@@ -15304,7 +15304,7 @@
     }
    ],
    "disp": "recode",
-   "target": "S6-5（节号待补）",
+   "target": "S6-5（§3.5）",
    "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
@@ -15592,7 +15592,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "S6-6（节号待补）",
+   "target": "S6-6（§3.5）",
    "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
@@ -16394,7 +16394,7 @@
     }
    ],
    "disp": "recode",
-   "target": "S6-2（节号待补）",
+   "target": "S6-2（§3.5）",
    "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
@@ -16672,7 +16672,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "S6-6（节号待补）",
+   "target": "S6-6（§3.5）",
    "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
@@ -16705,7 +16705,7 @@
     }
    ],
    "disp": "replace_entry",
-   "target": "S6-6（节号待补）",
+   "target": "S6-6（§3.5）",
    "targetObject": "sys.economy",
    "baseline": "d54c89a3"
   },
@@ -20494,7 +20494,7 @@
    "anchorsText": "world/drafts 目录（199 个文件，purpose 2803 处）",
    "anchors": [],
    "disp": "delete",
-   "target": "S19-1（节号待补）",
+   "target": "S19-1（§3.5）",
    "targetObject": "content-scripts",
    "baseline": "d54c89a3"
   },
@@ -21420,7 +21420,7 @@
     }
    ],
    "disp": "delete",
-   "target": "S15-10（节号待补）",
+   "target": "S15-10（§3.5）",
    "targetObject": "sys.arcana",
    "baseline": "d54c89a3"
   },
@@ -22679,7 +22679,7 @@
     }
    ],
    "disp": "delete",
-   "target": "S16-2（节号待补）",
+   "target": "S16-2（§3.5）",
    "targetObject": "sys.monsters",
    "baseline": "d54c89a3"
   },
