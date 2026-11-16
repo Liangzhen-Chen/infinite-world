@@ -592,7 +592,8 @@ const cardByLaunch = new Map(); // entryKey → 卡
 for (const c of cards) for (const l of c.launches) cardByLaunch.set(entryKey(l.vol, l.name), c);
 const relocateCards = cards.filter(c => c.cardKind === 'relocate');
 const fileToReloc = new Map();
-for (const c of relocateCards) for (const f of c.files) fileToReloc.set(f, c);
+// 一个文件可在多张搬迁卡里（如 §6.11 同一组文件分搬两个模块组），依赖全部记上（chk-1116-y15 T3，整类）
+for (const c of relocateCards) for (const f of c.files) (fileToReloc.get(f) ?? fileToReloc.set(f, []).get(f)).push(c);
 const parentCard = cards.find(c => c.cardKind === 'ledger_parent');
 const ledgerFileSet = new Set(ledgerFiles);
 
@@ -608,13 +609,13 @@ function derive(entriesOf) {
     // 来源 3：同对象的后续卡依赖首卡
     if (c.cardKind === 'follow') { const d = firstOfObj.get(`${c.objectKind}:${c.objectCode}`); if (d) dep.add(d.cardId); }
     // 来源 4：文件清单含某搬迁卡要搬的文件
-    if (c.cardKind !== 'relocate' && c.cardKind !== 'sweep') for (const f of [...c.files, ...c.dataFiles]) { const d = fileToReloc.get(f); if (d && d !== c) dep.add(d.cardId); }
+    if (c.cardKind !== 'relocate' && c.cardKind !== 'sweep') for (const f of [...c.files, ...c.dataFiles]) for (const d of fileToReloc.get(f) ?? []) if (d !== c) dep.add(d.cardId);
     // 来源 5：触及账本路径的卡依赖母卡（搬迁卡只搬文件、不改账本路径，不算）
     if (parentCard && c !== parentCard && c.cardKind !== 'gate' && c.cardKind !== 'sweep' && c.cardKind !== 'relocate' && c.files.some(f => ledgerFileSet.has(f))) dep.add(parentCard.cardId);
     deps.set(c.cardId, [...dep].sort(cmp));
   }
   // 母卡依赖其子卡文件所在的搬迁卡（R11-7.1 说明：内核组搬迁卡因母卡依赖它落在阶段 1）
-  if (parentCard) { const s2 = new Set(deps.get(parentCard.cardId)); for (const f of ledgerFiles) { const d = fileToReloc.get(f); if (d) s2.add(d.cardId); } deps.set(parentCard.cardId, [...s2].sort(cmp)); }
+  if (parentCard) { const s2 = new Set(deps.get(parentCard.cardId)); for (const f of ledgerFiles) for (const d of fileToReloc.get(f) ?? []) s2.add(d.cardId); deps.set(parentCard.cardId, [...s2].sort(cmp)); }
   const phase = new Map(); let cycle = null;
   const state = new Map();
   const visit = (id, stack) => {

@@ -2843,8 +2843,8 @@
    "anchorsText": "",
    "anchors": [],
    "disp": "replace_entry",
-   "target": "卷六 §4.21（economy:*、lending:* 派生槽按本节上表迁 process.*）；kernel/load/rules.mjs、engine.rules",
-   "targetObject": "sys.economy",
+   "target": "kernel/load/rules.mjs、engine.rules",
+   "targetObject": "待补",
    "baseline": "d54c89a3"
   },
   {
