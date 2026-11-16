@@ -8,6 +8,8 @@
 
 封卷后勘误 1116s2（依据：李白 11-16 11:36 ⑤；不升版本号；改前快照 版本快照/卷八b-v3-勘误前-1116s2.md，改后覆盖 版本快照/卷八b-v3.md）：§7 迁移表前说明里处置（`mig_disp`）的"五值之一"改"六值之一"（处置值已是六值，见卷十一 §2.1（封闭枚举）），共 1 处；不改规则正文。
 
+封卷后勘误 1116乙8-3-八b（依据：李白 11-16 10:xx 乙-8 改做法第 3、4 条；主会话技术裁定 1116 白天 B2–B4、E5；必要理由：迁移行落点所在节登记了多个入口，卡账 entries 取不到恰一个入口，改为只补能确定的名字、不在卷文留待补标记；不升版本号；改前快照 版本快照/版本快照/卷八b-v3-勘误前-1116乙8-3-八b.md，改后覆盖 版本快照/卷八b-v3.md）：落点栏补写入口名 15 行（M8b-1、M8b-2、M8b-3、M8b-5、M8b-7、M8b-12、M8b-13、M8b-19、M8b-21、M8b-23、M8b-24、M8b-25、M8b-27、M8b-30、M8b-31；名字只取本行原文明写的，或所引规则正文里恰写出的本卷唯一入口）。不改规则正文。
+
 ---
 
 ## §0 卷首
@@ -1317,37 +1319,37 @@
 
 | 编号 | 来源 | 位置 | 现在怎样 | 处置 | 接手节 | 处置（`mig_disp`） | 落点（规则号） | 落点对象 |
 |---|---|---|---|---|---|---|---|---|
-| M8b-1 | 06a §5；卷零 A 表 7.2 | law.mjs:281 | 只受理两种盗窃的白名单 | 删；受理条件只读证据分与程序条目 | §4.2 | `delete` | R8b-2.5 | `sys.offense` |
-| M8b-2 | 06a §5 | law.mjs:104 | 罚则依次查四张表 | 删；罚则只在罪刑条目，经 `provisionFor` | §4.1、§4.3 | `replace_entry` | R8b-1.5 | `sys.offense` |
-| M8b-3 | 06a §5 | law.mjs:484 | 损毁估价回退到一种固定物品 | 删；案值经卷六 `priceFor` 的案值用途 | §4.5 | `replace_entry` | R8b-5.6 | `sys.offense` |
+| M8b-1 | 06a §5；卷零 A 表 7.2 | law.mjs:281 | 只受理两种盗窃的白名单 | 删；受理条件只读证据分与程序条目 | §4.2 | `delete` | R8b-2.5（入口 `evidenceScore`） | `sys.offense` |
+| M8b-2 | 06a §5 | law.mjs:104 | 罚则依次查四张表 | 删；罚则只在罪刑条目，经 `provisionFor` | §4.1、§4.3 | `replace_entry` | R8b-1.5（入口 `provisionFor`） | `sys.offense` |
+| M8b-3 | 06a §5 | law.mjs:484 | 损毁估价回退到一种固定物品 | 删；案值经卷六 `priceFor` 的案值用途 | §4.5 | `replace_entry` | R8b-5.6（入口 `priceFor`） | `sys.offense` |
 | M8b-4 | 06a §4 | law.mjs:3；world/rules/tables/law/ | 直接导入平衡常数文件 | 常数迁入 `world/rules/tables/law/` | §2.6 | `to_data` | §2.6 规则表（本卷无规则号） | `rules.law` |
-| M8b-5 | 06a §5 | 罪名字面量 118 处，17 个文件 | 以字符串判罪名 | 全部改读事实动词句柄与 `offenseView` | §4.2 | `recode` | R8b-2.1 | `offense` |
+| M8b-5 | 06a §5 | 罪名字面量 118 处，17 个文件 | 以字符串判罪名 | 全部改读事实动词句柄与 `offenseView` | §4.2 | `recode` | R8b-2.1（入口 `offenseView`） | `offense` |
 | M8b-6 | 06a §5；06b E | law-codes.mjs:114、:115 | 终审法院写死一个地点代号 | 删；上诉去向由职位行的任免链派生，场所读设施功能 | §4.2 | `delete` | R8b-2.10 | `sys.offense` |
-| M8b-7 | 06b E | law-codes.mjs:11、:112；norm-stack.mjs:115 | 政体以名称文字判 | 法典层由法典根行的 `layer` 给出 | §4.1 | `recode` | R8b-1.4 | `law_code` |
+| M8b-7 | 06b E | law-codes.mjs:11、:112；norm-stack.mjs:115 | 政体以名称文字判 | 法典层由法典根行的 `layer` 给出 | §4.1 | `recode` | R8b-1.4（入口 `normStack`） | `law_code` |
 | M8b-8 | 06b D | law-codes.mjs:35 | 以职业字段相等判执法人员 | 读权能（`hasPower`） | §4.2、§4.7 | `replace_entry` | R8b-7.3 | `sys.offense` |
 | M8b-9 | 06b D | law-codes.mjs:59 | 以用途文字判法庭所在 | 读 `forum.venue` 需求块与设施功能 | §4.2 | `recode` | R8b-2.8 | `sys.offense` |
 | M8b-10 | 06b A | law.mjs:85、:571 | 读活动文字判清醒 | 卷二谓词 | §4.2 | `replace_entry` | 卷二谓词（本卷无规则号）（节号待补） | `sys.capacity` |
 | M8b-11 | 卷零 §4 行 10.22 | bounty.mjs:45、:46 | 本地的濒死与清醒判定 | 卷二谓词 | §4.8、§4.9 | `replace_entry` | 卷二谓词（本卷无规则号）（节号待补） | `sys.capacity` |
-| M8b-12 | 卷零 §4 行 10.22 | bounty.mjs:117；:122、:150、:164、:182、:184、:200、:297、:304、:354、:355 | 历史种类与状态是中文枚举 | 通缉是持有边；悬赏是合同，阶段取卷六的封闭枚举 | §4.8、§4.9 | `recode` | R8b-8.6、R8b-9.1 | `sys.offense` |
-| M8b-13 | 06a §6；06b E | npc-crime.mjs:42 | 把人格序列化后做中文关键词正则 | 删；作案走决策管线，读人格有效值与 `crimeProspect` | §4.11 | `delete` | R8b-11.1、R8b-11.2 | `sys.offense` |
+| M8b-12 | 卷零 §4 行 10.22 | bounty.mjs:117；:122、:150、:164、:182、:184、:200、:297、:304、:354、:355 | 历史种类与状态是中文枚举 | 通缉是持有边；悬赏是合同，阶段取卷六的封闭枚举 | §4.8、§4.9 | `recode` | R8b-8.6、R8b-9.1（入口 `issueWanted`） | `sys.offense` |
+| M8b-13 | 06a §6；06b E | npc-crime.mjs:42 | 把人格序列化后做中文关键词正则 | 删；作案走决策管线，读人格有效值与 `crimeProspect` | §4.11 | `delete` | R8b-11.1、R8b-11.2（入口 `crimeProspect`） | `sys.offense` |
 | M8b-14 | 06b A | npc-crime.mjs:27 | 睡眠正则 | 卷二谓词 | §4.11 | `replace_entry` | 卷二谓词（本卷无规则号）（节号待补） | `sys.capacity` |
 | M8b-15 | 06b F | npc-crime.mjs:86 | 按错误消息文本分支 | 入口返回原因代号 | §4.11 | `recode` | 待定（§4.11 正文没有写"入口返回原因代号"的规则） | `sys.offense` |
 | M8b-16 | 06b A；06b E | smuggling.mjs:18；:38 | 睡眠正则；章程文字正则判是否许私运 | 卷二谓词；读章程 `permits` 的代号 | §4.11 | `recode` | 卷二谓词；R8b-11.5 | `sys.capacity` |
 | M8b-17 | 06a §6；06b E；06b A | duels.mjs:19；:7 | 人格文字正则判是否接受决斗；睡眠正则 | 接受与否走决策管线；法定地位读正当事由行 | §4.3 | `recode` | R8b-3.6 | `sys.offense` |
 | M8b-18 | 卷零 A 表 7.3 | family-law.mjs:19、:42、:77、:80、:81、:83 | 家事纠纷的中文种类 | 请求权条目与事实记录 | §4.15 | `to_data` | R8b-15.9；原对象栏写 claim | `sys.offense` |
-| M8b-19 | 06b A | location-access.mjs:48、:91、:115 | 读活动文字判在场 | 卷二谓词；许可人须有处分权 | §4.6 | `replace_entry` | 卷二谓词；R8b-6.1 | `sys.capacity` |
+| M8b-19 | 06b A | location-access.mjs:48、:91、:115 | 读活动文字判在场 | 卷二谓词；许可人须有处分权 | §4.6 | `replace_entry` | 卷二谓词；R8b-6.1（入口 `disposalRight`） | `sys.capacity` |
 | M8b-20 | 06b A；06b D | credit.mjs:54、:78、:288；finance-bank.mjs:358、:364；:100 | 睡眠正则；职业正则判钱庄代理 | 卷二谓词；代理读代理边 | §4.15 | `replace_entry` | 卷二谓词；R8b-15.5 | `sys.capacity` |
-| M8b-21 | 06b A | obligation-runtime.mjs:44、:163、:191 | 睡眠正则 | 卷二谓词（归卷六，违约之后转本卷） | §4.15 | `replace_entry` | 卷二谓词；R8b-15.2 | `sys.capacity` |
+| M8b-21 | 06b A | obligation-runtime.mjs:44、:163、:191 | 睡眠正则 | 卷二谓词（归卷六，违约之后转本卷） | §4.15 | `replace_entry` | 卷二谓词；R8b-15.2（入口 `applyRemedy`） | `sys.capacity` |
 | M8b-22 | 卷零 A 表 12.2 | transition.mjs:122 | 终态混用中文与代号 | 卷六的封闭枚举 | §4.15 | `recode` | 卷六 终态封闭枚举（本卷无规则号）（节号待补） | `sys.economy` |
-| M8b-23 | 09 7.4 | offense-notes.mjs（`noteOffense`、`takeNotedOffenses`） | 行为处理中记违规、落定后提交 | 保留骨架；改为 `noteFact`，记录不带罪名 | §4.5 | `replace_entry` | R8b-5.2 | `sys.offense` |
-| M8b-24 | 09 7.5 | action-authority.mjs、action-authority-sources.mjs | 处分权与权能来源 | 保留骨架；判定并入 `disposalRight` 一个函数 | §4.6 | `replace_entry` | R8b-6.1 | `sys.offense` |
-| M8b-25 | 09 7.2 | legal-appeal.mjs、legal-reactions.mjs、legal-representation.mjs | 审理、受理官、讼师各一个模块 | 并入 `caseStep` 的迁移；讼师是代理边 | §4.2、§4.15 | `replace_entry` | R8b-2.4 至 R8b-2.10；R8b-15.5 | `sys.offense` |
+| M8b-23 | 09 7.4 | offense-notes.mjs（`noteOffense`、`takeNotedOffenses`） | 行为处理中记违规、落定后提交 | 保留骨架；改为 `noteFact`，记录不带罪名 | §4.5 | `replace_entry` | R8b-5.2（入口 `noteFact`） | `sys.offense` |
+| M8b-24 | 09 7.5 | action-authority.mjs、action-authority-sources.mjs | 处分权与权能来源 | 保留骨架；判定并入 `disposalRight` 一个函数 | §4.6 | `replace_entry` | R8b-6.1（入口 `disposalRight`） | `sys.offense` |
+| M8b-25 | 09 7.2 | legal-appeal.mjs、legal-reactions.mjs、legal-representation.mjs | 审理、受理官、讼师各一个模块 | 并入 `caseStep` 的迁移；讼师是代理边 | §4.2、§4.15 | `replace_entry` | R8b-2.4 至 R8b-2.10；R8b-15.5（入口 `caseStep`） | `sys.offense` |
 | M8b-26 | 09 7.1 | norm-stack.mjs（`normStack`、`casePenalty` 等） | 规范栈入口 | 保留入口名 `normStack`；其余并入 `provisionFor` | §4.1 | `replace_entry` | R8b-1.4、R8b-1.5 | `sys.offense` |
-| M8b-27 | 现有数据 | world/law/bindings.json（180 条） | 地点到法典 id 的绑定 | 迁入 `state.lawBindings` 的开局值 | §4.1 | `to_data` | R8b-1.2 | `law_code` |
+| M8b-27 | 现有数据 | world/law/bindings.json（180 条） | 地点到法典 id 的绑定 | 迁入 `state.lawBindings` 的开局值 | §4.1 | `to_data` | R8b-1.2（入口 `bindingsOf`） | `law_code` |
 | M8b-28 | 现有数据 | world/meta/rules.json 的 law 节；world/rules/tables/balance/law.json | 法典内容、罚则、治安参数混在一处 | 法典与条目迁入 `law_code` 表；常数迁入规则表，键名 ASCII | §2.2、§2.6 | `to_data` | R8b-1.1；§2.6 规则表 | `law_code` |
 | M8b-29 | 现有数据 | world/actions/law.json | 法律动作目录 | 动作保留，参数改为迁移代号 | §4.2 | `to_data` | 待定（§4.2 正文没有写动作目录迁移的规则） | `sys.offense` |
-| M8b-30 | 现有数据 | transition.mjs 的公民种类 | 入籍只有一种边 | 公民边、居民边照卷十八现行行；等级记入 `state.estates` | §4.14 | `to_data` | R8b-14.1、R8b-14.6 | `sys.offense` |
-| M8b-31 | 现有数据 | world/ontology/holdings.json 做客种类的留置变体与其两条钩子 | 留置是做客的变体，钩子以文字事件串写 | 改为本卷的羁押种类行；第一条钩子并入收押入口，第二条由脱逃事实承接 | §4.12 | `to_data` | R8b-12.1、R8b-12.2、R8b-12.5 | `sys.offense` |
+| M8b-30 | 现有数据 | transition.mjs 的公民种类 | 入籍只有一种边 | 公民边、居民边照卷十八现行行；等级记入 `state.estates` | §4.14 | `to_data` | R8b-14.1、R8b-14.6（入口 `estateStep`） | `sys.offense` |
+| M8b-31 | 现有数据 | world/ontology/holdings.json 做客种类的留置变体与其两条钩子 | 留置是做客的变体，钩子以文字事件串写 | 改为本卷的羁押种类行；第一条钩子并入收押入口，第二条由脱逃事实承接 | §4.12 | `to_data` | R8b-12.1、R8b-12.2、R8b-12.5（入口 `custodyStep`） | `sys.offense` |
 | M8b-32 | 待核 | family-politics.mjs:20 | 睡眠正则，归属未定（卷八b 或卷十八） | 卷十一立卡时按调用方判定 | — | `replace_entry` | 待定（归属未定，卷十一立卡时按调用方判定）（节号待补） | `sys.migration` |
 
 本表各行的行号取自素材包，按卷零 §0.6（锚点写法）的基线提交 d54c89a3 取（卷十一 R11-2.3、C11-5 ⑤）；卷十一立卡时按 R11-2.3 与卷十二逐行清单的行键，对当时的代码重新定位复核（C11-5 ⑦；归属未定的睡眠正则一行见 M8b-32）。governance.mjs、elections.mjs、finance-tax.mjs 属卷八一侧，不在此表。

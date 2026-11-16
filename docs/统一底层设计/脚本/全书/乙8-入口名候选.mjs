@@ -7,7 +7,7 @@
 // 用法：node 乙8-入口名候选.mjs <卷名> [--write] [--plan] [--diff] [--batch <批次>]
 //   --write 写 审查/脚本输出/乙8-<卷名>-候选清单.md；--plan 写 F:/dnd-tmp/乙8-<批次>-<卷名>-plan.json（落点栏每处的唯一定位串、勘误行、待办段）；勘误标签、快照名与差额中间文件都带批次。
 //   --snapshot pre|post：pre 复制卷文到 版本快照/<卷>-v<N>-勘误前-<标签>.md（不覆盖），post 照该卷上一条勘误的"改后覆盖"对象写现卷文。
-import { readFileSync, readdirSync, writeFileSync, unlinkSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync, unlinkSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 
@@ -33,6 +33,7 @@ if (process.argv[2] === '--report') {
 }
 // 全书模式：node 乙8-入口名候选.mjs --all：对全书所有"一节多入口"行中、落点栏尚无"（入口 `名`）"的行一次出清单 审查/脚本输出/乙8-全书候选清单.md（李白 11-16 10:xx 第 2 条）
 // 两边比对模式：node 乙8-入口名候选.mjs --vs-gen <卷名…>：对所列各卷，逐行比脚本判定与生成器落点栏取到的入口名，差额写 审查/脚本输出/乙8-两边差额-<卷名…>.md，并给每行差别归类
+const MERGE = process.argv[2] === '--all' && process.argv.includes('--merge'); // 合并卡：--all --merge --batch <批次> [--skip 行,行] [--hold "行=原因;…"] [--dry]
 const VSGEN = process.argv[2] === '--vs-gen';
 const VSVOLS = VSGEN ? process.argv.slice(3).filter(x => !x.startsWith('--')) : null;
 const ALL = process.argv[2] === '--all' || VSGEN;
@@ -284,6 +285,96 @@ if (ALL) {
   const byVol = new Map(); for (const r of mig.rows) if (!r.aliasOf && multiByKey.has(r.rowKey) && (!VSVOLS || VSVOLS.includes(r.volume))) { if (!byVol.has(r.volume)) byVol.set(r.volume, []); byVol.get(r.volume).push(r); }
   for (const [v, rs] of byVol) { loadVol(v); for (const r of rs) judgeRow(r); }
 } else for (const r of rows) judgeRow(r);
+if (MERGE) {
+  // 乙-8 合并卡（李白 11-16 10:xx 改做法第 3、4 条；主会话技术裁定 B2–B4、E5）：对全书各卷落点栏一次落实——
+  //   能补名的行补"（入口 `名`）"（--skip 列出的行扣下不补）；已写的"（入口名待补）"标记一律撤掉；已补行若现判不是能补名（B2：M6-41 归无入口）撤回其"（入口 `名`）"；
+  //   补不出名字的行不在卷文里留标记，由本脚本生成待补名单替换 收尾待办.md "乙-8 入口名待补"段；每个改动卷追加勘误前快照、写一行封后勘误、改后覆盖上一条勘误写明的对象。
+  // 参数：--batch <批次>（快照标签）、--skip 行,行（扣下）、--hold "行=原因;行=原因"（待裁行与原因）、--dry（只算不写）
+  const DRYM = process.argv.includes('--dry');
+  const skip = new Set((arg('--skip') ?? '').split(',').filter(Boolean));
+  const hold = new Map((arg('--hold') ?? '').split(';').filter(Boolean).map(s => { const i = s.indexOf('='); return [s.slice(0, i), s.slice(i + 1)]; }));
+  const MARK = '（入口名待补）';
+  const START = /^(?:\|\s*(?:\d+\s*\|\s*)?(?:—\s*\|\s*—\s*\|\s*)?|- |### )?封卷后勘误/;
+  const rowsByFile = new Map(); for (const x of out) { const f = allFiles.find(g => g.startsWith(x.vol + '-')); if (!rowsByFile.has(f)) rowsByFile.set(f, []); rowsByFile.get(f).push(x); }
+  const marked = allFiles.filter(f => readFileSync(`${DIR}/${f}`, 'utf8').includes(MARK)); for (const f of marked) if (!rowsByFile.has(f)) rowsByFile.set(f, []);
+  const stat = []; const warns = [];
+  for (const [f, xs] of [...rowsByFile].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
+    const raw = readFileSync(`${DIR}/${f}`, 'utf8'); const crlf = raw.includes('\r\n'); const L = raw.replace(/\r\n/g, '\n').split('\n');
+    const info = { vol: f.split('-')[0], add: [], rmPend: [], rmFilled: [] }; const handled = new Set();
+    for (const x of xs) {
+      let l = L[x.line - 1]; handled.add(x.line - 1);
+      if (!/^\| M/.test(l)) { warns.push(`${x.k}：卷文 ${x.line} 行不是迁移行`); continue; }
+      const hadPend = l.includes(MARK); l = l.split(MARK).join('');
+      if (x.ok && !skip.has(x.k)) {
+        const want = `（入口 \`${x.hit[0]}\`）`; const t = cells(l)[x.ti] ?? '';
+        if (x.ti < 0) warns.push(`${x.k}：没有落点栏`);
+        else if (!t.includes(want)) { const [, e] = cellSpan(l, x.ti); l = l.slice(0, e) + want + l.slice(e); info.add.push(x.k); }
+      } else if (!x.ok && x.mark === 'filled') { l = l.replace(/（入口 `[^`]+`）/, ''); info.rmFilled.push(x.k); }
+      if (hadPend) info.rmPend.push(x.k);
+      L[x.line - 1] = l;
+    }
+    L.forEach((l, i) => { if (!handled.has(i) && /^\| M/.test(l) && l.includes(MARK)) { L[i] = l.split(MARK).join(''); info.rmPend.push(l.match(/^\| (M\S+) \|/)?.[1] ?? `行${i + 1}`); } });
+    if (!info.add.length && !info.rmPend.length && !info.rmFilled.length) continue;
+    info.file = f; info.L = L; info.crlf = crlf; stat.push(info);
+  }
+  // 快照名与"改后覆盖"对象：取该卷最后一条写了"改后覆盖"的勘误；勘误前快照名 = 改后覆盖第一项的文件名去掉 .md 加 -勘误前-<标签>
+  const tagOf = v => `1116乙8-${BATCH}-${v.replace(/^卷/, '')}`;
+  for (const info of stat) {
+    const L = info.L; let after = null;
+    for (const l of L) { if (!/封卷后勘误/.test(l)) continue; const i = l.indexOf('改后覆盖'); if (i < 0) continue; const seg = l.slice(i).split(/[）)]/)[0]; const a = [...seg.matchAll(/版本快照\/[^，、；\s）)]+?\.md/g)].map(m => m[0]); if (a.length) after = a; }
+    if (!after) { warns.push(`${info.vol}：找不到"改后覆盖"对象`); continue; }
+    info.after = after; info.tag = tagOf(info.vol); info.pre = after[0].replace(/\.md$/, '').replace(/-现行$/, '') + `-勘误前-${info.tag}.md`;
+    let last = -1; L.forEach((l, i) => { if (START.test(l)) last = i; });
+    if (last < 0) { warns.push(`${info.vol}：找不到封后勘误记录位置`); continue; }
+    const parts = [];
+    if (info.add.length) parts.push(`落点栏补写入口名 ${info.add.length} 行（${info.add.join('、')}；名字只取本行原文明写的，或所引规则正文里恰写出的本卷唯一入口）`);
+    if (info.rmPend.length) parts.push(`撤去落点栏"（入口名待补）"标记 ${info.rmPend.length} 行（${info.rmPend.join('、')}；补不出名字的行不在卷文留标记，由脚本生成的待补名单并入 收尾待办.md "乙-8 入口名待补"段）`);
+    if (info.rmFilled.length) parts.push(`撤回 ${info.rmFilled.join('、')} 的"（入口 \`名\`）"（行文写整个模块退役、名字只在括注里，归无入口；主会话技术裁定 1116 白天 B2）`);
+    const text = `封卷后勘误 ${info.tag}（依据：李白 11-16 10:xx 乙-8 改做法第 3、4 条；主会话技术裁定 1116 白天 B2–B4、E5；必要理由：迁移行落点所在节登记了多个入口，卡账 entries 取不到恰一个入口，改为只补能确定的名字、不在卷文留待补标记；不升版本号；改前快照 ${'版本快照/' + info.pre}，改后覆盖 ${after.join('、')}）：${parts.join('；')}。不改规则正文`;
+    const l0 = L[last];
+    if (l0.startsWith('|')) {
+      let e = last; while (e + 1 < L.length && L[e + 1].startsWith('|')) e++;
+      const cs = l0.split(/(?<!\\)\|/);
+      const cellsN = cs.slice(1, -1).map(c => (c.includes('封卷后勘误') ? ' ' + text + ' ' : /^\s*\d+\s*$/.test(c) ? ` ${+c.trim() + 1} ` : ' — '));
+      L.splice(e + 1, 0, '|' + cellsN.join('|') + '|');
+    } else if (l0.startsWith('- ')) L.splice(last + 1, 0, '- ' + text + '。');
+    else L.splice(last + 1, 0, '', text + '。');
+  }
+  // 待补名单（单一名单）：脚本判定不是能补名、又不是无入口的行；扣下的行单列待裁
+  const todoM = out.filter(x => x.mark !== 'filled');
+  const holdRows = todoM.filter(x => hold.has(x.k)), noEntM = todoM.filter(x => !x.ok && x.code === '无入口（迁移/删除）' && !hold.has(x.k));
+  const pendM = todoM.filter(x => !x.ok && x.code !== '无入口（迁移/删除）' && !hold.has(x.k));
+  const canM = todoM.filter(x => x.ok && !hold.has(x.k) && !skip.has(x.k));
+  const byV = new Map(); for (const x of pendM) { if (!byV.has(x.vol)) byV.set(x.vol, []); byV.get(x.vol).push(x); }
+  const shortCode = c => c.replace(/（.*$/, '');
+  const todo = [`## 乙-8 入口名待补（脚本生成；李白 11-16 10:xx 乙-8 改做法第 3、4 条，主会话技术裁定 1116 白天 B2–B4、E5）`, '',
+    `由 脚本/全书/乙8-入口名候选.mjs --all --merge --batch ${BATCH} 生成，不手抄；卷文落点栏不再留"入口名待补"标记，补不出名字的行只在这里。候选 ${todoM.length + out.filter(x => x.mark === 'filled').length} 行里：能补名且已补进卷文 ${canM.length} 行（不在本名单）、已补过 ${out.filter(x => x.mark === 'filled').length} 行、无入口（迁移/删除）${noEntM.length} 行（单列，不算待补）、待补 ${pendM.length} 行、待裁 ${holdRows.length} 行。`, '',
+    `### 待补（${pendM.length} 行；退回来源卷，由来源卷写明入口名；格式：编号（卷文行号））`, ''];
+  for (const [v, xs] of byV) { const byC = new Map(); for (const x of xs) { const c = shortCode(x.code); if (!byC.has(c)) byC.set(c, []); byC.get(c).push(`${x.k}（${x.line}）`); } todo.push(`#### ${v}（${xs.length} 行）`, ...[...byC].map(([c, ks]) => `- ${c}：${ks.join('、')}`), ''); }
+  const noV = new Map(); for (const x of noEntM) { if (!noV.has(x.vol)) noV.set(x.vol, []); noV.get(x.vol).push(`${x.k}（${x.line}）`); }
+  todo.push(`### 无入口（迁移/删除）（${noEntM.length} 行；行文写明迁移或删除、没有明写去处，不算待补）`, '', ...[...noV].map(([v, ks]) => `- ${v}：${ks.join('、')}`), '');
+  todo.push(`### 待裁（${holdRows.length} 行；合并卡扣下不补，等李白裁）`, '', ...holdRows.map(x => `- ${x.vol} ${x.k}（${x.line}）：${hold.get(x.k)}${x.ok ? `；脚本判能补 \`${x.hit[0]}\`` : `；脚本判 ${x.code}`}`), '');
+  console.log(`合并${DRYM ? '（dry）' : ''}：改动卷 ${stat.length} 个；补名 ${stat.reduce((s, i) => s + i.add.length, 0)} 行；撤待补标记 ${stat.reduce((s, i) => s + i.rmPend.length, 0)} 行；撤回已补 ${stat.reduce((s, i) => s + i.rmFilled.length, 0)} 行；待补名单 ${pendM.length}、无入口 ${noEntM.length}、待裁 ${holdRows.length}`);
+  for (const i of stat) console.log(`  ${i.vol}：补 ${i.add.length}、撤待补 ${i.rmPend.length}、撤回 ${i.rmFilled.length}${i.after ? `；快照 ${i.pre}；覆盖 ${i.after.join('、')}` : '（未写勘误）'}`);
+  for (const w of warns) console.log('  警告：' + w);
+  if (!DRYM) {
+    const snapDir = `${DIR}/版本快照`;
+    for (const i of stat) {
+      if (!i.after || !i.pre) continue;
+      const pre = `${snapDir}/${i.pre.replace(/^版本快照\//, '')}`; if (existsSync(pre)) throw new Error(`勘误前快照已存在，不覆盖：${pre}`);
+      writeFileSync(pre, readFileSync(`${DIR}/${i.file}`, 'utf8'));
+      const txt = i.L.join('\n').replace(/\n/g, i.crlf ? '\r\n' : '\n');
+      writeFileSync(`${DIR}/${i.file}`, txt);
+      for (const p of i.after) writeFileSync(`${DIR}/${p}`, txt);
+    }
+    const dutyF = `${DIR}/收尾待办.md`; const dRaw = readFileSync(dutyF, 'utf8'); const dCrlf = dRaw.includes('\r\n'); const D = dRaw.replace(/\r\n/g, '\n').split('\n');
+    const a = D.findIndex(l => l.startsWith('## 乙-8 入口名待补')); let b = D.findIndex((l, k) => k > a && /^## /.test(l)); if (b < 0) b = D.length;
+    if (a < 0) throw new Error('收尾待办里没有"乙-8 入口名待补"段');
+    D.splice(a, b - a, ...todo);
+    writeFileSync(dutyF, D.join('\n').replace(/\n/g, dCrlf ? '\r\n' : '\n'));
+  }
+  process.exit(0);
+}
 if (VSGEN) {
   // 脚本判定 vs 生成器落点栏取到的入口名（生成器读的是已封卷文，落点栏里已补的"（入口 `名`）"它照收）。每行差别归类：
   //   已定口径差：脚本扫整行（不限落点栏）、规则正文兜底只在脚本、B2–B4（明写多个不补、括注不算明写、先于④的明写）
