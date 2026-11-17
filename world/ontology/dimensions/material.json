@@ -2189,10 +2189,12 @@
      "name": "卷三甲 §4.2.5 例 2"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_wood，参照 mat_oak；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "strength": {
@@ -2228,16 +2230,20 @@
    "salvageFraction": 0,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -2246,10 +2252,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "valueMult": 1,
@@ -2276,16 +2284,20 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -2294,10 +2306,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_animal_product",
@@ -2326,16 +2340,20 @@
    "salvageFraction": 0,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -2344,10 +2362,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_mineral",
@@ -2450,28 +2470,34 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
      "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -2480,10 +2506,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_animal_product",
@@ -2535,10 +2563,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -2547,10 +2577,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "strength": {
@@ -2585,10 +2617,12 @@
    "salvageFraction": 0,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=3；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_bamboo、mat_bone；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "corrosionRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
@@ -2597,10 +2631,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -2609,10 +2645,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_mineral",
@@ -2638,10 +2676,12 @@
    "salvageFraction": 0.9,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "corrosionRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
@@ -2650,10 +2690,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_metal 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -2662,10 +2704,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "specificHeat": {
@@ -2707,34 +2751,42 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
      "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -2743,10 +2795,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_animal_product",
@@ -2780,10 +2834,12 @@
      "name": "卷三甲 §4.3.5 例 4"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -2792,10 +2848,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "valueMult": 1,
@@ -2821,10 +2879,12 @@
    "salvageFraction": 0.9,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "corrosionRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
@@ -2833,10 +2893,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_metal 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -2845,10 +2907,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "specificHeat": {
@@ -2878,16 +2942,20 @@
    "salvageFraction": 0,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -2896,10 +2964,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "valueMult": 1,
@@ -2933,28 +3003,34 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
      "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -2963,10 +3039,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_animal_product",
@@ -2986,10 +3064,12 @@
    "salvageFraction": 0,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -2998,10 +3078,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_mineral",
@@ -3046,22 +3128,28 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同反应已有产率中位数（组 reaction_char，n=1）；无卷文出处，暂定",
+     "basis": "P3-T1 同反应已有产率中位数（组 reaction_char，参照 mat_bamboo.reaction_char）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "reactionYield.reaction_char",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -3070,10 +3158,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_stone",
@@ -3100,16 +3190,20 @@
    "salvageFraction": 0,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -3118,10 +3212,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "valueMult": 1,
@@ -3146,10 +3242,12 @@
    "salvageFraction": 0.9,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "corrosionRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
@@ -3158,10 +3256,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_metal 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -3170,10 +3270,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "specificHeat": {
@@ -3208,28 +3310,34 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
      "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -3238,10 +3346,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_flesh",
@@ -3267,10 +3377,12 @@
    "salvageFraction": 0.9,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "corrosionRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
@@ -3279,10 +3391,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_metal 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -3291,10 +3405,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "specificHeat": {
@@ -3345,22 +3461,28 @@
    "salvageFraction": 0.6,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "basis": "P3-T1 同反应已有产率中位数（组内无值，取全部已有产率，参照 mat_bamboo.reaction_char、mat_goat_hair.reaction_felting、mat_limestone.reaction_calcine）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "reactionYield.reaction_spin",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_fiber，参照 mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_fiber 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -3369,10 +3491,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_fiber，参照 mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_fiber",
@@ -3404,16 +3528,20 @@
    "salvageFraction": 0.6,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_fiber，参照 mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_fiber 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -3422,10 +3550,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_fiber，参照 mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_fiber",
@@ -3476,22 +3606,28 @@
    "salvageFraction": 0.6,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "basis": "P3-T1 同反应已有产率中位数（组内无值，取全部已有产率，参照 mat_bamboo.reaction_char、mat_goat_hair.reaction_felting、mat_limestone.reaction_calcine）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "reactionYield.reaction_weave",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_fiber，参照 mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_fiber 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -3500,10 +3636,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_fiber，参照 mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_fiber",
@@ -3529,10 +3667,12 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_bone，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_bone，参照 mat_bone；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "corrosionRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
@@ -3541,10 +3681,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -3553,10 +3695,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_bone",
@@ -3590,28 +3734,34 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_plant，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
      "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -3620,10 +3770,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_plant",
@@ -3657,16 +3809,20 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -3675,10 +3831,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_plant",
@@ -3705,16 +3863,20 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -3723,10 +3885,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_animal_product",
@@ -3761,28 +3925,34 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
      "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -3791,10 +3961,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_animal_product",
@@ -3814,10 +3986,12 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -3826,10 +4000,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_bone",
@@ -3863,16 +4039,20 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_wood，参照 mat_oak；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_wood，参照 mat_bamboo；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "corrosionRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
@@ -3881,10 +4061,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_wood，参照 mat_bamboo；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_wood 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -3893,10 +4075,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_wood，参照 mat_bamboo；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_wood",
@@ -3955,40 +4139,50 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "basis": "P3-T1 同反应已有产率中位数（组内无值，取全部已有产率，参照 mat_bamboo.reaction_char、mat_goat_hair.reaction_felting、mat_limestone.reaction_calcine）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "reactionYield.reaction_cook",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
      "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -3997,10 +4191,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_flesh",
@@ -4028,16 +4224,20 @@
    "salvageFraction": 0.6,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_fiber，参照 mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_fiber 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -4046,10 +4246,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_fiber，参照 mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_fiber",
@@ -4082,28 +4284,34 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
      "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -4112,10 +4320,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_flesh",
@@ -4168,34 +4378,42 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_plant，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "basis": "P3-T1 同反应已有产率中位数（组内无值，取全部已有产率，参照 mat_bamboo.reaction_char、mat_goat_hair.reaction_felting、mat_limestone.reaction_calcine）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "reactionYield.reaction_pickle",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
      "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -4204,10 +4422,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_plant",
@@ -4278,10 +4498,12 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=3；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_bamboo、mat_bone；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "corrosionRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
@@ -4290,10 +4512,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -4302,10 +4526,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_glass",
@@ -4369,10 +4595,12 @@
      "name": "卷三甲 §4.1.5 例 4"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_fiber",
@@ -4427,34 +4655,42 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "basis": "P3-T1 同反应已有产率中位数（组内无值，取全部已有产率，参照 mat_bamboo.reaction_char、mat_goat_hair.reaction_felting、mat_limestone.reaction_calcine）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "reactionYield.reaction_ferment",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
      "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -4463,10 +4699,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_animal_product",
@@ -4492,10 +4730,12 @@
    "salvageFraction": 0.9,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "corrosionRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
@@ -4504,10 +4744,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_metal 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -4516,10 +4758,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "specificHeat": {
@@ -4550,10 +4794,12 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=3；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_bamboo、mat_bone；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "corrosionRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
@@ -4562,10 +4808,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -4574,10 +4822,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_stone",
@@ -4609,22 +4859,28 @@
    "salvageFraction": 0,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -4633,10 +4889,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_mineral",
@@ -4663,16 +4921,20 @@
    "salvageFraction": 0.6,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_fiber，参照 mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_fiber 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -4681,10 +4943,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_fiber，参照 mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_fiber",
@@ -4730,28 +4994,36 @@
    "salvageFraction": 0.6,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "basis": "P3-T1 同反应已有产率中位数（组内无值，取全部已有产率，参照 mat_bamboo.reaction_char、mat_goat_hair.reaction_felting、mat_limestone.reaction_calcine）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "reactionYield.reaction_spin",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "basis": "P3-T1 同反应已有产率中位数（组内无值，取全部已有产率，参照 mat_bamboo.reaction_char、mat_goat_hair.reaction_felting、mat_limestone.reaction_calcine）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "reactionYield.reaction_papermaking",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_fiber，参照 mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_fiber 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -4760,10 +5032,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_fiber，参照 mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_fiber",
@@ -4796,22 +5070,28 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -4820,10 +5100,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_animal_product",
@@ -4863,16 +5145,20 @@
    "salvageFraction": 0,
    "sources": [
     {
-     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "basis": "P3-T1 同反应已有产率中位数（组内无值，取全部已有产率，参照 mat_bamboo.reaction_char、mat_goat_hair.reaction_felting、mat_limestone.reaction_calcine）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "reactionYield.reaction_smelt",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -4881,10 +5167,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_mineral",
@@ -4919,28 +5207,34 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
      "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -4949,10 +5243,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_animal_product",
@@ -4978,10 +5274,12 @@
    "salvageFraction": 0.9,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "corrosionRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
@@ -4990,10 +5288,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_metal 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -5002,10 +5302,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "specificHeat": {
@@ -5027,6 +5329,7 @@
     "solid": 0.2
    },
    "energyDensity": 19,
+   "fiberContent": 0.3,
    "flammability": 0.69,
    "heatValue": 16,
    "ignitePoint": 250,
@@ -5040,16 +5343,28 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
-     "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "basis": "参照干草（mat_dry_grass，0.30）与秸秆（mat_straw，0.415）：凋落叶同为干枯的植物茎叶料，比禾草干草多木质化、比秸秆少茎秆，取两者中偏低的干草值；不大于本行干基碳水 0.73（M-19）",
+     "citation": null,
+     "code": "纤:设",
+     "dimension": "fiberContent",
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
+     "dimension": "burnRate",
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
+    },
+    {
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -5058,10 +5373,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_plant",
@@ -5092,16 +5409,20 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=3；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_bamboo、mat_bone；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "corrosionRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
@@ -5110,10 +5431,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -5122,10 +5445,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_hide",
@@ -5175,10 +5500,12 @@
      "name": "卷三甲 §4.1.5 例 5"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=3；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_bamboo、mat_bone；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "corrosionRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
@@ -5187,10 +5514,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -5199,10 +5528,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_stone",
@@ -5230,16 +5561,20 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_wood，参照 mat_oak；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_wood，参照 mat_bamboo；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_wood 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -5248,10 +5583,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_wood，参照 mat_bamboo；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_wood",
@@ -5262,6 +5599,7 @@
   "mat_mash": {
    "basis": "卷二十五｜能:推｜未核到：干基总能",
    "boilPoint": 100,
+   "carbContent": 0.6,
    "classes": [
     "comp_edible",
     "comp_rottable"
@@ -5272,6 +5610,7 @@
    },
    "edibleFraction": 0.925,
    "energyDensity": 19,
+   "fiberContent": 0.15,
    "flammability": 0,
    "mealCap": 1100,
    "meltPoint": -2,
@@ -5305,34 +5644,58 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "参照粟（mat_millet，0.089，醪由粟经发酵而成）：发酵把一部分淀粉耗成酒精与气体，粗纤维基本不动，干物质变少，纤维占比随之升高；取粟的约 1.7 倍",
+     "citation": null,
+     "code": "纤:设",
+     "dimension": "fiberContent",
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
+    },
+    {
+     "basis": "参照粟（mat_millet，0.796）：发酵把一部分糖与淀粉耗成酒精与气体，酒精按本字段口径仍算干物质，碳水占比低于原粮；取约四分之三。不小于本行纤维设定值 0.15（M-19）",
+     "citation": null,
+     "code": "碳:设",
+     "dimension": "carbContent",
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
+    },
+    {
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_plant，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "basis": "P3-T1 同反应已有产率中位数（组内无值，取全部已有产率，参照 mat_bamboo.reaction_char、mat_goat_hair.reaction_felting、mat_limestone.reaction_calcine）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "reactionYield.reaction_rot",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
      "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -5341,10 +5704,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_plant",
@@ -5365,10 +5730,12 @@
    "salvageFraction": 0.9,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_metal 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -5377,10 +5744,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "specificHeat": {
@@ -5446,22 +5815,28 @@
      "name": "卷三甲 §4.4.5 例 1"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "basis": "P3-T1 同反应已有产率中位数（组内无值，取全部已有产率，参照 mat_bamboo.reaction_char、mat_goat_hair.reaction_felting、mat_limestone.reaction_calcine）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "reactionYield.reaction_ferment",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -5470,10 +5845,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_plant",
@@ -5482,6 +5859,7 @@
   },
   "mat_moon_berry": {
    "basis": "卷二十五、卷十五｜能:推｜卷二十五月光浆果酒的原料",
+   "carbContent": 0.85,
    "classes": [
     "comp_edible",
     "comp_rottable"
@@ -5506,6 +5884,22 @@
    "salvageFraction": 0.4,
    "sources": [
     {
+     "basis": "卷三甲 §4.5.5 短表：假想料，无文献；值是设定的，同别的超自然材料一样不需要文献值",
+     "citation": null,
+     "code": "纤:设",
+     "dimension": "fiberContent",
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
+    },
+    {
+     "basis": "假想浆果，按设定是浆果（例 6 记果）：浆果的干物质以糖为主，取 0.85；不小于本行纤维设定值 0.1（M-19）",
+     "citation": null,
+     "code": "碳:设",
+     "dimension": "carbContent",
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
+    },
+    {
      "citation": "docs/统一底层设计/卷三甲-物质本源.md:480",
      "dimension": "edibleFraction",
      "name": "卷三甲 §4.4.5 例 4"
@@ -5516,16 +5910,20 @@
      "name": "卷三甲 §4.4.5 例 4"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -5534,10 +5932,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_plant",
@@ -5564,16 +5964,20 @@
    "salvageFraction": 0,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -5582,10 +5986,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "valueMult": 1,
@@ -5611,10 +6017,12 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=3；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_bamboo、mat_bone；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "corrosionRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
@@ -5623,10 +6031,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -5635,10 +6045,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_stone",
@@ -5647,6 +6059,7 @@
   },
   "mat_nightcap_mushroom": {
    "basis": "卷二十一｜能:推｜第七版：本世界的假想毒菇，没有对应的真实菌种（`审查/卷三-粟与夜帽菇出处.md` 第二节），依据由\"能:食\"改记\"能:推\"：总能是按 USDA fdcId 169251（白蘑菇）成分类推的设定值（按它重算 18.9，文献值上网核对 A 表），不是这一种自己的测值；菌类不是植物；十二项里没有对应的一项，按李白裁定第 15 条继续记草本（本源成分是来历的粗分，菌类就近并入，§8 Q-A9 已关闭；封卷后勘误 1115k3）",
+   "carbContent": 0.58,
    "classes": [
     "comp_edible",
     "comp_rottable"
@@ -5669,28 +6082,50 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "卷三甲 §4.5.5 短表：第七版依据重定：本世界的假想毒菇，没有对应的真实菌种（`审查/卷三-粟与夜帽菇出处.md` 第二节），没有文献；值是设定的，同月华浆果一行。设定时参照的是同表金针菇、香菇、平菇、木耳、蘑菇、草菇六行食用菌按水分折成的干基 3.7–14.0 %（中位 8.4 %），只是设定的参照，不是这一种的测值，也不当出处用",
+     "citation": null,
+     "code": "纤:设",
+     "dimension": "fiberContent",
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
+    },
+    {
+     "basis": "假想毒菇，没有对应的真实菌种；参照卷三甲例 8 第六版撤掉的食用菌六行类推值 0.58（白蘑菇等，见例 8 备注），此处作设定值，不作出处。不小于本行纤维 0.08（M-19）",
+     "citation": null,
+     "code": "碳:设",
+     "dimension": "carbContent",
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
+    },
+    {
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_plant，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
      "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -5699,10 +6134,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_plant",
@@ -5758,16 +6195,20 @@
      "name": "卷三甲 §4.3.5 例 1"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_wood，参照 mat_bamboo；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "corrosionRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同反应已有产率中位数（组 reaction_char，n=1）；无卷文出处，暂定",
+     "basis": "P3-T1 同反应已有产率中位数（组 reaction_char，参照 mat_bamboo.reaction_char）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "reactionYield.reaction_char",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
@@ -5776,10 +6217,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_wood，参照 mat_bamboo；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_wood 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -5788,10 +6231,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_wood，参照 mat_bamboo；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_wood",
@@ -5817,16 +6262,20 @@
    "salvageFraction": 0.6,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_fiber，参照 mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_fiber 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -5835,10 +6284,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_fiber，参照 mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_fiber",
@@ -5873,28 +6324,34 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_plant，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
      "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -5903,10 +6360,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_plant",
@@ -5946,16 +6405,20 @@
    "salvageFraction": 0,
    "sources": [
     {
-     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "basis": "P3-T1 同反应已有产率中位数（组内无值，取全部已有产率，参照 mat_bamboo.reaction_char、mat_goat_hair.reaction_felting、mat_limestone.reaction_calcine）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "reactionYield.reaction_firing",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -5964,10 +6427,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_mineral",
@@ -5988,10 +6453,12 @@
    "salvageFraction": 0,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -6000,10 +6467,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_mineral",
@@ -6040,28 +6509,36 @@
    "salvageFraction": 0,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -6070,10 +6547,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "valueMult": 1,
@@ -6124,34 +6603,42 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "basis": "P3-T1 同反应已有产率中位数（组内无值，取全部已有产率，参照 mat_bamboo.reaction_char、mat_goat_hair.reaction_felting、mat_limestone.reaction_calcine）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "reactionYield.reaction_cook",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
      "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -6160,10 +6647,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_flesh",
@@ -6211,22 +6700,28 @@
    "salvageFraction": 0.6,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "basis": "P3-T1 同反应已有产率中位数（组内无值，取全部已有产率，参照 mat_bamboo.reaction_char、mat_goat_hair.reaction_felting、mat_limestone.reaction_calcine）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "reactionYield.reaction_weave",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_fiber，参照 mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_fiber 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -6235,10 +6730,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_fiber，参照 mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_fiber",
@@ -6287,28 +6784,34 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "basis": "P3-T1 同反应已有产率中位数（组内无值，取全部已有产率，参照 mat_bamboo.reaction_char、mat_goat_hair.reaction_felting、mat_limestone.reaction_calcine）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "reactionYield.reaction_tan",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
      "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -6317,10 +6820,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_hide",
@@ -6348,16 +6853,20 @@
    "salvageFraction": 0,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -6366,10 +6875,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "valueMult": 1,
@@ -6423,34 +6934,42 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "basis": "P3-T1 同反应已有产率中位数（组内无值，取全部已有产率，参照 mat_bamboo.reaction_char、mat_goat_hair.reaction_felting、mat_limestone.reaction_calcine）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "reactionYield.reaction_rot",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
      "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -6459,10 +6978,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_water",
@@ -6505,16 +7026,20 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "basis": "P3-T1 同反应已有产率中位数（组内无值，取全部已有产率，参照 mat_bamboo.reaction_char、mat_goat_hair.reaction_felting、mat_limestone.reaction_calcine）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "reactionYield.reaction_cook",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -6523,10 +7048,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_water",
@@ -6556,16 +7083,20 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=3；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_bamboo、mat_bone；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "corrosionRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
@@ -6574,10 +7105,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -6586,10 +7119,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_hide",
@@ -6621,16 +7156,20 @@
    "salvageFraction": 0.6,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_fiber，参照 mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_fiber 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -6639,10 +7178,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_fiber，参照 mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_fiber",
@@ -6664,10 +7205,12 @@
    "salvageFraction": 0,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -6676,10 +7219,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_mineral",
@@ -6705,10 +7250,12 @@
    "salvageFraction": 0.9,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "corrosionRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
@@ -6717,10 +7264,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_metal 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -6729,10 +7278,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "specificHeat": {
@@ -6775,16 +7326,20 @@
    "salvageFraction": 0,
    "sources": [
     {
-     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "basis": "P3-T1 同反应已有产率中位数（组内无值，取全部已有产率，参照 mat_bamboo.reaction_char、mat_goat_hair.reaction_felting、mat_limestone.reaction_calcine）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "reactionYield.reaction_firing",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -6793,10 +7348,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_mineral",
@@ -6830,28 +7387,34 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_plant，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
      "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -6860,10 +7423,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_plant",
@@ -6901,28 +7466,36 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -6931,10 +7504,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_water",
@@ -6961,10 +7536,12 @@
    "salvageFraction": 0.9,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "corrosionRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
@@ -6973,10 +7550,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_metal 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -6985,10 +7564,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "specificHeat": {
@@ -7017,10 +7598,12 @@
    "salvageFraction": 0,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=3；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_bamboo、mat_bone；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "corrosionRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
@@ -7029,10 +7612,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -7041,10 +7626,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_mineral",
@@ -7078,16 +7665,20 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -7096,10 +7687,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_plant",
@@ -7128,16 +7721,20 @@
    "salvageFraction": 0,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -7146,10 +7743,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_mineral",
@@ -7187,28 +7786,36 @@
    "salvageFraction": 0,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -7217,10 +7824,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "valueMult": 1,
@@ -7253,16 +7862,20 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -7271,10 +7884,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_plant",
@@ -7300,10 +7915,12 @@
    "salvageFraction": 0.9,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "corrosionRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
@@ -7312,10 +7929,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_metal 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -7324,10 +7943,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "specificHeat": {
@@ -7359,34 +7980,44 @@
    "salvageFraction": 0,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "deflagEnergy",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "deflagThreshold",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "fragmentFactor",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -7395,10 +8026,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_mineral，参照 mat_black_powder；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_mineral",
@@ -7425,16 +8058,20 @@
    "salvageFraction": 0,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -7443,10 +8080,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "valueMult": 1,
@@ -7472,10 +8111,12 @@
    "salvageFraction": 0.9,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "corrosionRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
@@ -7484,10 +8125,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_metal 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -7496,10 +8139,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "specificHeat": {
@@ -7530,16 +8175,20 @@
    "salvageFraction": 0,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -7548,10 +8197,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 空，参照 mat_ghost_fire_oil；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "valueMult": 1,
@@ -7584,22 +8235,28 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -7608,10 +8265,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_water",
@@ -7666,10 +8325,12 @@
      "name": "卷三甲 §4.2.5 例 3"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -7678,10 +8339,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "specificHeat": {
@@ -7734,28 +8397,34 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_plant，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "edibleFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "basis": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "mealCap",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
      "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -7764,10 +8433,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_plant",
@@ -7800,16 +8471,20 @@
    "salvageFraction": 0.4,
    "sources": [
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_wood，参照 mat_oak；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "burnRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_wood，参照 mat_bamboo；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "corrosionRate",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
@@ -7818,10 +8493,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_wood，参照 mat_bamboo；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "salvageFraction",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     },
     {
      "citation": "P3-T4 同本源成分 subst_wood 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
@@ -7830,10 +8507,12 @@
      "status": "vstat_placeholder"
     },
     {
-     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "basis": "P3-T1 同本源成分已有值中位数（组 subst_wood，参照 mat_bamboo；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值",
+     "citation": null,
+     "code": "设",
      "dimension": "workDifficulty",
-     "name": "暂定，待试玩调",
-     "status": "vstat_placeholder"
+     "grade": "designed",
+     "name": "设定，可在试玩后调"
     }
    ],
    "substance": "subst_wood",

@@ -67,8 +67,21 @@ const R = (id, where) => { if (!rows[id]) { report.skipped.push(`${where}: 未�
 
 // 短表里写"—"的格是卷文明说的未知（纤:未核、碳:未核，M-19 与例 5 不许暂填），记下，后面的暂定规则不碰。
 const declaredUnknown = new Set();
-for (const c of between('FIBER-DATA')) { const r = R(c[0], '纤维'); if (r) setIf(r, 'fiberContent', num(c[2], c[0])); if (c[2] === '—') declaredUnknown.add(`${c[0]}.fiberContent`); }
-for (const c of between('CARB-DATA')) { const r = R(c[0], '碳水'); if (r) setIf(r, 'carbContent', num(c[2], c[0])); if (c[2] === '—') declaredUnknown.add(`${c[0]}.carbContent`); }
+// 来源级别 designed（卷三甲 §2.1 :170；cellGrades 无处可写，见 docs/问题.md）记在行 sources 的逐格条目里：{dimension, name, grade, code, basis, citation:null}。
+const DESIGNED_NAME = '设定，可在试玩后调';
+const designed = (r, dim, code, basis) => { r.sources = [...(r.sources || []), { dimension: dim, name: DESIGNED_NAME, grade: 'designed', code, basis, citation: null }]; };
+for (const [tag, dim] of [['FIBER-DATA', 'fiberContent'], ['CARB-DATA', 'carbContent']]) for (const c of between(tag)) {
+  const r = R(c[0], dim); if (!r) continue;
+  setIf(r, dim, num(c[2], c[0]));
+  if (c[2] === '—') declaredUnknown.add(`${c[0]}.${dim}`);
+  else if (/:设$/.test(c[3])) designed(r, dim, c[3], `卷三甲 §4.5.5 短表：${c[4]}`); // 卷文自己的"设"类格（§4.5.5 :528 折 C 级）
+}
+// 李白 11-17 补裁：卷文留空的格填设定值（tools/data/material-designed.json），只填空格，不覆盖。
+for (const d of JSON.parse(readFileSync(join(ROOT, 'tools/data/material-designed.json'), 'utf8')).cells) {
+  const r = R(d.row, '设定值'); if (!r) continue;
+  if (r[d.dim] !== undefined) { report.skipped.push(`${d.row}.${d.dim}: 已有值，设定值不覆盖`); continue; }
+  r[d.dim] = d.value; designed(r, d.dim, d.code, d.basis); declaredUnknown.delete(`${d.row}.${d.dim}`);
+}
 for (const c of between('PLANTPART-DATA')) { const r = R(c[0], '部位'); if (r && /^ppart_/.test(c[3])) r.plantPart = c[3]; else if (r) report.notes.push(`${c[0]}: 植物部位留空（卷文本格 "${c[3]}"）`); }
 for (const c of between('PLANTFAMILY-DATA')) { const r = R(c[0], '植物科'); if (r && /^pfam_/.test(c[3])) r.plantFamily = c[3]; else if (r) report.notes.push(`${c[0]}: 植物科留空（卷文本格 "${c[3]}"）`); }
 for (const c of between('PILE-EVIDENCE-DATA')) { const r = R(c[0], '成堆证据'); if (r) r.pileBurnEvidence = c[2]; }
@@ -286,7 +299,14 @@ const provisional = [];
 // 暂定标注：有卷文标定规则、待后续卡做的维度写明待哪一条（块 1 迁移体检）；其余待试玩。
 const PROVISIONAL_NAME = { rotRate: '暂定，待 M3a-4 标定（块 6 物品表首卡）', valueMult: '暂定，待 M3b-27 标定（块 6 物品表首卡）' };
 const nameOf = (dim) => PROVISIONAL_NAME[dim.split('.')[0]] || '暂定，待试玩调';
-const mark = (r, dim, citation) => { srcAdd(r, { dimension: dim, name: nameOf(dim), citation, status: 'vstat_placeholder' }); provisional.push(dim.split('.')[0]); };
+// 判据（审查/P-3-推导规则.md）：待某条卷文规则标定的维度（PROVISIONAL_NAME）保留暂定；引用代号格不带级别（卷三甲 §2.1 :166），保留暂定；
+// 其余由统一规则算出、没有卷文规则可等的数值格，按李白 11-17 补裁记 designed，basis 写所用规则与参照组。
+const designedDims = [];
+const mark = (r, dim, citation) => {
+  const d0 = dim.split('.')[0];
+  if (PROVISIONAL_NAME[d0] || dims[d0].type === 'ref') { srcAdd(r, { dimension: dim, name: nameOf(dim), citation, status: 'vstat_placeholder' }); provisional.push(d0); return; }
+  designed(r, dim, '设', citation.replace(/；?(数)?无卷文出处，暂定/, '；无卷文出处，设定值')); designedDims.push(d0);
+};
 for (const dim of Object.keys(dims).sort()) {
   const d = dims[dim];
   if (d.derived || NOT_PROVISIONAL[dim]) continue;
@@ -307,10 +327,10 @@ for (const dim of Object.keys(dims).sort()) {
     for (const id of holes) { const c = substanceClass[rows[id].r.substance]; if (!c) { report.skipped.push(`${id}.repairedWith: 本源成分无类别，T3 算不出`); continue; } rows[id].r[dim] = c; mark(rows[id].r, dim, 'P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）'); }
   } else if (dim === 'reactionYield') {
     // P3-T1（按反应分组）：同反应代号已有产率取中位数；无则取全部已有产率中位数。其余反应键写 null（卷二 §1.6 第 4 项映射全族）。
-    const all = ids.flatMap((id) => Object.entries(rows[id].r.reactionYield || {}).filter(([, x]) => typeof x === 'number').map(([k, x]) => [k, x]));
+    const all = ids.flatMap((id) => Object.entries(rows[id].r.reactionYield || {}).filter(([, x]) => typeof x === 'number').map(([k, x]) => [k, x, id]));
     for (const id of holes) {
       const y = {};
-      for (const rk of Object.keys(rows[id].r.reactionProducts)) { const g = all.filter(([k]) => k === rk).map(([, x]) => x); const base = g.length ? g : all.map(([, x]) => x); y[rk] = rnd(median(base), 4); mark(rows[id].r, `reactionYield.${rk}`, `P3-T1 同反应已有产率中位数（${g.length ? `组 ${rk}，n=${g.length}` : `组内无值，全部 n=${base.length}`}）；无卷文出处，暂定`); }
+      for (const rk of Object.keys(rows[id].r.reactionProducts)) { const g = all.filter(([k]) => k === rk); const base = g.length ? g : all; y[rk] = rnd(median(base.map(([, x]) => x)), 4); mark(rows[id].r, `reactionYield.${rk}`, `P3-T1 同反应已有产率中位数（${g.length ? `组 ${rk}` : '组内无值，取全部已有产率'}，参照 ${base.map(([k, , h]) => `${h}.${k}`).join('、')}）；无卷文出处，暂定`); }
       rows[id].r.reactionYield = y;
     }
   } else if (d.type === 'number') {
@@ -321,9 +341,9 @@ for (const dim of Object.keys(dims).sort()) {
     for (const id of holes) {
       const s = rows[id].r.substance || null;
       const g = have.filter((h) => (rows[h].r.substance || null) === s);
-      const base = (g.length ? g : have).map((h) => rows[h].r[dim]);
-      rows[id].r[dim] = rnd(median(base), d.precision ?? 4);
-      mark(rows[id].r, dim, `P3-T1 同本源成分已有值中位数（${g.length ? `组 ${s || '空'}，n=${g.length}` : `组内无值，全部 n=${base.length}`}；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定${note}`);
+      const refs = g.length ? g : have;
+      rows[id].r[dim] = rnd(median(refs.map((h) => rows[h].r[dim])), d.precision ?? 4);
+      mark(rows[id].r, dim, `P3-T1 同本源成分已有值中位数（${g.length ? `组 ${s || '空'}` : '组内无值，取该维全部已有值'}，参照 ${refs.join('、')}；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定${note}`);
     }
   } else report.skipped.push(`${dim}: 类型 ${d.type} 无暂定规则`);
 }
@@ -390,6 +410,7 @@ console.log(`rows=${ids.length} classes=${Object.keys(classes).length} classEntr
 const tally = (a) => Object.entries(a.reduce((o, k) => ({ ...o, [k]: (o[k] || 0) + 1 }), {})).sort().map(([k, n]) => `${k} ${n}`).join('、');
 console.log(`卷三甲 §4.1.5–§4.4.5 实例补格=${exampleTaken.length}：${tally(exampleTaken.map((x) => x.split('.').slice(1).join('.').split('.')[0]))}`);
 console.log(`暂定格=${provisional.length}：${tally(provisional)}`);
+console.log(`规则算出记 designed 的格=${designedDims.length}：${tally(designedDims)}`);
 console.log(`核对差异（易燃度换算、实例对全集）=${report.mismatch.length}`); report.mismatch.forEach((s) => console.log('  ' + s));
 console.log(`跳过/未转=${report.skipped.length}`); report.skipped.forEach((s) => console.log('  ' + s));
 console.log(`备注=${report.notes.length}`); report.notes.forEach((s) => console.log('  ' + s));
