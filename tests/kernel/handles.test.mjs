@@ -84,20 +84,37 @@ test('P：缺 pathTypes 键或空表时无成员；仓库 state-owners.json 现�
   assert.ok(Object.isFrozen(P));
 });
 
-test('P：每条模式一个构造函数，* 段按次序换实参；textPaths 与账本路径不生成', () => {
+test('P：成员名由模式派生（点换下划线、* 不进名字、按序成参数）；textPaths 与账本路径不生成；原串键不存在', () => {
   const decl = {
-    pathTypes: { 'npcs.*.coins': 'number:copper', 'modifiers.*': 'struct:modifier', 'holdings.*.*': 'struct:holding', 'narration.*': 'sealed' },
+    pathTypes: {
+      'npcs.*.coins': 'number:copper', 'modifiers.*': 'struct:modifier', 'holdings.*.*': 'struct:holding',
+      'narration.*': 'sealed', 'lot.*.spoilage': 'number:bps',
+    },
     textPaths: ['narration.*'],
   };
   const p = buildP(decl, { ledgerPaths: ['npcs.*.coins'] });
-  assert.deepEqual(Object.keys(p), ['holdings.*.*', 'modifiers.*']);
-  assert.equal(p['holdings.*.*']('gad_box', 'gad_hammer'), 'holdings.gad_box.gad_hammer');
-  assert.equal(p['modifiers.*']('gad_box'), 'modifiers.gad_box');
-  rejects(() => p['holdings.*.*']('gad_box'), 'E-PATH-UNDECLARED');
-  rejects(() => p['modifiers.*']('a.b'), 'E-DIM-ID-FORMAT');
-  rejects(() => p['modifiers.*'](''), 'E-DIM-ID-FORMAT');
+  assert.deepEqual(Object.keys(p), ['holdings', 'lot_spoilage', 'modifiers']);
+  assert.equal(p.lot_spoilage('gad_box'), 'lot.gad_box.spoilage');
+  assert.equal(p.holdings('gad_box', 'gad_hammer'), 'holdings.gad_box.gad_hammer');
+  assert.equal(p.modifiers('gad_box'), 'modifiers.gad_box');
+  assert.equal(p['lot.*.spoilage'], undefined);
+  assert.equal(p['holdings.*.*'], undefined);
+  assert.equal(p.npcs_coins, undefined);
+  assert.equal(p.narration, undefined);
+  rejects(() => p.holdings('gad_box'), 'E-PATH-UNDECLARED');
+  rejects(() => p.lot_spoilage('gad_box', 'x'), 'E-PATH-UNDECLARED');
+  rejects(() => p.modifiers('a.b'), 'E-DIM-ID-FORMAT');
+  rejects(() => p.modifiers(''), 'E-DIM-ID-FORMAT');
   rejects(() => statePathOf(new Set(['modifiers.*']), 'narration.*', ['x']), 'E-PATH-UNDECLARED');
   rejects(() => statePathOf(new Set(['modifiers.*']), 'modifier.*', ['x']), 'E-PATH-UNDECLARED');
+});
+
+test('P：两条模式派生同名即生成失败 E-PATH-NAME-CLASH，不静默覆盖；被排除的模式不参与查重', () => {
+  rejects(() => buildP({ pathTypes: { 'a_b.c': 'number:count', 'a.b_c': 'number:count' } }), 'E-PATH-NAME-CLASH');
+  rejects(() => buildP({ pathTypes: { 'lot.*.spoilage': 'number:bps', 'lot.spoilage': 'number:bps' } }), 'E-PATH-NAME-CLASH');
+  assert.deepEqual(Object.keys(buildP({ pathTypes: { 'a_b.c': 'number:count', 'a.b_c': 'number:count' } }, { ledgerPaths: ['a.b_c'] })), ['a_b_c']);
+  installHandles({ vocab: report.vocab, decl: {} });
+  assert.equal(E.E_PATH_NAME_CLASH, 'E-PATH-NAME-CLASH');
 });
 
 test('entityId：合文法且前缀属该 kind 才收；未登记 kind E-DIM-REF-MISSING', () => {

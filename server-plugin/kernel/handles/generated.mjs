@@ -2,10 +2,10 @@
 // 句柄值一律经 kernel/handles/* 的构造函数产生，本文件不强转；成员全部由登记数据生成，不列任何具体族、代号、错误码或路径。
 //   V.<族名>.<id>：_vocab.json 各族条目（loadVocab 结果）。
 //   E.<标识符>：错误码登记里的每个码，成员名按 §4.2 把连字符换成下划线。
-//   P：state-owners.json 的 pathTypes 每条模式一个构造函数（textPaths 与账本账户路径除外，§2.6 第 4 条）；缺 pathTypes 键视为空表，P 无成员。
+//   P.<派生名>：state-owners.json 的 pathTypes 每条模式一个构造函数，名字点换下划线、`*` 段变参数（textPaths 与账本账户路径除外，§2.6 第 4 条）；缺 pathTypes 键视为空表，P 无成员。
 // 加载入口在校验通过后调一次 installHandles；之前 V、E、P 都是空的冻结对象。
 
-import { handleOf, errorCodeOf, errorMemberName } from './vocab-handle.mjs';
+import { handleOf, errorCodeOf, errorMemberName, HandleError } from './vocab-handle.mjs';
 import { statePathOf } from './keys.mjs';
 import { ERROR_CODES } from '../error-codes.mjs';
 
@@ -48,8 +48,9 @@ export function buildE(codes = ERROR_CODES.map((e) => e.code)) {
 }
 
 /**
- * P：pathTypes 每条可生成的模式一个构造函数，形参个数等于模式里 `*` 段数，返回 StatePath<该模式>。
- * 成员键就是模式本身：卷二只写了 E 的成员名映射（§4.2），没写 P 的，待裁定。
+ * P：pathTypes 每条可生成的模式一个构造函数，返回 StatePath<该模式>（李白 11-17 句柄 P 成员名裁定，卷二 §2.6 第 1 条）。
+ * 成员名由模式机械派生：点换下划线，`*` 段不进名字、按出现顺序成为调用参数（'lot.*.spoilage' → P.lot_spoilage(id)）。
+ * 两条模式派生出同一成员名即生成失败（E-PATH-NAME-CLASH），不覆盖、不加序号。
  * @param {{pathTypes?: Record<string, string>, textPaths?: string[]}} decl state-owners.json
  * @param {{ledgerPaths?: string[]}} [opts] 账本账户路径模式（只经账本转移，不生成构造函数）
  */
@@ -58,7 +59,13 @@ export function buildP(decl, opts = {}) {
   const excluded = new Set([...(Array.isArray(decl && decl.textPaths) ? decl.textPaths : []), ...(opts.ledgerPaths || [])]);
   const patterns = new Set(sorted(Object.keys(pathTypes)).filter((p) => !excluded.has(p)));
   const out = {};
-  for (const pattern of patterns) out[pattern] = Object.freeze((...segs) => statePathOf(patterns, pattern, segs));
+  const origin = new Map();
+  for (const pattern of patterns) {
+    const name = pattern.split('.').filter((s) => s !== '*').join('_');
+    if (origin.has(name)) throw new HandleError('E-PATH-NAME-CLASH', `${JSON.stringify(origin.get(name))} and ${JSON.stringify(pattern)} both derive P member ${JSON.stringify(name)}`);
+    origin.set(name, pattern);
+    out[name] = Object.freeze((...segs) => statePathOf(patterns, pattern, segs));
+  }
   return Object.freeze(out);
 }
 
