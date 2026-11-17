@@ -1,5 +1,10 @@
 [
+ "server-plugin/kernel/clone.mjs",
  "server-plugin/kernel/det-math.mjs",
+ "server-plugin/kernel/handles/entity-id.mjs",
+ "server-plugin/kernel/handles/generated.mjs",
+ "server-plugin/kernel/handles/keys.mjs",
+ "server-plugin/kernel/handles/vocab-handle.mjs",
  "server-plugin/kernel/load/flatten.mjs",
  "server-plugin/kernel/load/json-text.mjs",
  "server-plugin/kernel/load/rules.mjs",
@@ -10,5 +15,6 @@
  "server-plugin/kernel/validate/dimensions-validate.mjs",
  "server-plugin/kernel/validate/named-conditions.mjs",
  "server-plugin/kernel/validate/rows.mjs",
- "server-plugin/kernel/validate/types.mjs"
+ "server-plugin/kernel/validate/types.mjs",
+ "server-plugin/kernel/vocab.mjs"
 ]
