@@ -90,7 +90,7 @@ export function globToRe(glob, codeExts) {
     if (c === '*') { re += '[^/]*'; continue; }
     re += /[.+^${}()|[\]\\?]/.test(c) ? '\\' + c : c;
   }
-  const out = new RegExp('^' + re + extAlt + '$');
+  const out = new RegExp('^' + (extAlt ? '(?!.*\\.d\\.[mc]?ts$)' : '') + re + extAlt + '$');
   reCache.set(key, out);
   return out;
 }
@@ -112,7 +112,9 @@ export function groupModel(decl) {
   return { codeExts, groups, offlineGroups, retired: decl.retired || [], processes: m.processes || {}, offline: offlineGroups.flatMap((g) => g.globs), matrix: m };
 }
 
-export function isCode(path, model) { return model.codeExts.some((e) => path.endsWith(e)); }
+// 声明文件（.d.ts/.d.mts/.d.cts，卷二 §2.9 第 2 条）只有类型、无运行代码，不算模块文件。
+export const isDeclFile = (path) => /\.d\.[mc]?ts$/.test(path);
+export function isCode(path, model) { return !isDeclFile(path) && model.codeExts.some((e) => path.endsWith(e)); }
 
 // 一个路径的归属：{group, process} | {retired} | {offline} | {data} | null（仓库外或无关）。
 export function classify(path, model) {
