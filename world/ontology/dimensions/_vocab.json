@@ -1,0 +1,229 @@
+{
+ "families": {
+  "burn_evidence": {
+   "closed": false,
+   "entries": {
+    "bev_fao_bamboo_fuel": {
+     "kind": "fuel_record"
+    },
+    "bev_fao_charcoal": {
+     "kind": "fuel_record"
+    },
+    "bev_fao_straw_residue": {
+     "kind": "fuel_record"
+    },
+    "bev_fao_ubet": {
+     "kind": "fuel_record"
+    },
+    "bev_nebraska_keeping_warm": {
+     "kind": "fuel_record"
+    },
+    "bev_uaex_firewood": {
+     "kind": "fuel_record"
+    }
+   },
+   "prefix": "bev_"
+  },
+  "class": {
+   "closed": false,
+   "entries": {
+    "class_bone": {},
+    "class_brass": {},
+    "class_carbon": {},
+    "class_ceramic": {},
+    "class_cheese": {},
+    "class_condiment_sauce": {},
+    "class_copper": {},
+    "class_cream": {},
+    "class_edible_fat": {},
+    "class_egg": {},
+    "class_fish": {},
+    "class_flesh": {},
+    "class_fresh_herb": {},
+    "class_fruit": {},
+    "class_glass": {},
+    "class_grain": {},
+    "class_iron": {},
+    "class_leather": {},
+    "class_legume": {},
+    "class_meat": {},
+    "class_metal": {},
+    "class_milk": {},
+    "class_mineral": {},
+    "class_mushroom": {},
+    "class_nut": {},
+    "class_paper": {},
+    "class_plant": {},
+    "class_salt": {},
+    "class_silver": {},
+    "class_spice_seed": {},
+    "class_steel": {},
+    "class_stone": {},
+    "class_sweetener": {},
+    "class_timber": {},
+    "class_tin": {},
+    "class_vegetable": {},
+    "class_vinegar": {},
+    "class_wax": {},
+    "class_wood": {}
+   },
+   "prefix": "class_"
+  },
+  "component": {
+   "closed": false,
+   "entries": {
+    "comp_burnable": {
+     "requires": [
+      "heatValue",
+      "ignitePoint",
+      "burnRate",
+      "moisture",
+      "volatility"
+     ],
+     "table": "material"
+    },
+    "comp_deflagrant": {
+     "requires": [
+      "deflagThreshold",
+      "deflagEnergy",
+      "fragmentFactor"
+     ],
+     "table": "material"
+    },
+    "comp_drinkable": {
+     "requires": [
+      "moisture"
+     ],
+     "table": "material"
+    },
+    "comp_durable": {
+     "requires": [
+      "repairedWith",
+      "corrosionRate"
+     ],
+     "table": "material"
+    },
+    "comp_edible": {
+     "requires": [
+      "moisture",
+      "edibleFraction",
+      "energyDensity",
+      "fiberContent"
+     ],
+     "table": "material"
+    },
+    "comp_rottable": {
+     "requires": [
+      "rotRate"
+     ],
+     "table": "material"
+    }
+   },
+   "prefix": "comp_"
+  },
+  "damage": {
+   "closed": false,
+   "entries": {},
+   "prefix": "damage_"
+  },
+  "diet": {
+   "closed": false,
+   "entries": {},
+   "prefix": "diet_"
+  },
+  "matcat": {
+   "closed": false,
+   "entries": {
+    "matcat_char": {},
+    "matcat_volatile_fuel": {},
+    "matcat_wax_fat": {}
+   },
+   "prefix": "matcat_"
+  },
+  "nutrient": {
+   "closed": false,
+   "entries": {
+    "nutr_salt": {
+     "refAmountG": 5
+    }
+   },
+   "prefix": "nutr_"
+  },
+  "plant_family": {
+   "closed": true,
+   "entries": {
+    "pfam_brassicaceae": {},
+    "pfam_fabaceae": {},
+    "pfam_fagaceae": {},
+    "pfam_poaceae": {},
+    "pfam_salicaceae": {},
+    "pfam_theaceae": {},
+    "pfam_ulmaceae": {},
+    "pfam_unknown": {}
+   },
+   "prefix": "pfam_"
+  },
+  "plant_part": {
+   "closed": false,
+   "entries": {
+    "ppart_aerial": {},
+    "ppart_flower": {},
+    "ppart_fruit": {},
+    "ppart_leaf": {},
+    "ppart_root": {},
+    "ppart_seed": {},
+    "ppart_stalk": {}
+   },
+   "prefix": "ppart_"
+  },
+  "reaction": {
+   "closed": false,
+   "entries": {
+    "reaction_calcine": {},
+    "reaction_char": {},
+    "reaction_cook": {},
+    "reaction_felting": {},
+    "reaction_ferment": {},
+    "reaction_firing": {},
+    "reaction_papermaking": {},
+    "reaction_pickle": {},
+    "reaction_rot": {},
+    "reaction_smelt": {},
+    "reaction_spin": {},
+    "reaction_tan": {},
+    "reaction_weave": {}
+   },
+   "prefix": "reaction_"
+  },
+  "stress": {
+   "closed": true,
+   "entries": {
+    "stress_bend": {},
+    "stress_compress": {},
+    "stress_impact": {},
+    "stress_shear": {},
+    "stress_tensile": {},
+    "stress_torsion": {}
+   },
+   "prefix": "stress_"
+  },
+  "substance": {
+   "closed": true,
+   "entries": {
+    "subst_animal_product": {},
+    "subst_bone": {},
+    "subst_fiber": {},
+    "subst_flesh": {},
+    "subst_glass": {},
+    "subst_hide": {},
+    "subst_metal": {},
+    "subst_mineral": {},
+    "subst_plant": {},
+    "subst_stone": {},
+    "subst_water": {},
+    "subst_wood": {}
+   },
+   "prefix": "subst_"
+  }
+ }
+}
