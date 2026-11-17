@@ -198,7 +198,7 @@ const dims = {
   moisture: N('fraction', [0, 1], ['byDigestible', BYC('comp_edible'), BYC('comp_drinkable'), BYC('comp_burnable')].join('；'), 'error'),
   edibleFraction: N('fraction', [0, 1], BYC('comp_edible'), 'error'),
   energyDensity: N('satiety_per_kg_dry', [0, 60], ['byDigestible', BYC('comp_edible')].join('；'), 'error'),
-  fiberContent: N('fraction', [0, 1], ['byDigestible', BYC('comp_edible')].join('；'), 'error'),
+  fiberContent: N('fraction', [0, 1], ['byDigestible', BYC('comp_edible')].join('；'), 'gap'), // 卷三甲封卷后勘误 1117p3：error → gap
   carbContent: N('fraction', [0, 1], ['byDigestible', BYC('comp_edible')].join('；'), 'gap'),
   mealCap: N('g', [0, 3000], BYC('comp_edible'), 'gap'),
   nutrients: D('map', { key: { type: 'ref', vocab: 'nutrient' }, value: { type: 'number', unit: 'daily_ref_per_kg_dry', domain: [0, 200], precision: 4 }, required: ['byDigestible', BYC('comp_edible')].join('；'), onUnknown: 'gap' }),
@@ -283,7 +283,10 @@ const substanceClass = Object.fromEntries([...classRuleLines.find((l) => l.inclu
 const derivedClassCodes = [...new Set(classRuleLines.join('\n').match(/class_\w+/g))];
 const MEAL_CAP_G = 1100; // 成人胃容量约 1.1 L、食物密度约 1（Geliebter 1988；旧 material-props.json mealCitation）。无卷文出处，暂定。
 const provisional = [];
-const mark = (r, dim, citation) => { srcAdd(r, { dimension: dim, name: '暂定，待试玩调', citation, status: 'vstat_placeholder' }); provisional.push(dim.split('.')[0]); };
+// 暂定标注：有卷文标定规则、待后续卡做的维度写明待哪一条（块 1 迁移体检）；其余待试玩。
+const PROVISIONAL_NAME = { rotRate: '暂定，待 M3a-4 标定（块 6 物品表首卡）', valueMult: '暂定，待 M3b-27 标定（块 6 物品表首卡）' };
+const nameOf = (dim) => PROVISIONAL_NAME[dim.split('.')[0]] || '暂定，待试玩调';
+const mark = (r, dim, citation) => { srcAdd(r, { dimension: dim, name: nameOf(dim), citation, status: 'vstat_placeholder' }); provisional.push(dim.split('.')[0]); };
 for (const dim of Object.keys(dims).sort()) {
   const d = dims[dim];
   if (d.derived || NOT_PROVISIONAL[dim]) continue;
@@ -297,8 +300,7 @@ for (const dim of Object.keys(dims).sort()) {
       const s = rows[id].r.substance;
       const g = s ? anchors.filter((h) => rows[h].r.substance === s).map((h) => rows[h].r[dim]).sort((x, y) => x - y) : [];
       rows[id].r[dim] = g.length ? g[(g.length - 1) >> 1] : 1;
-      srcAdd(rows[id].r, { dimension: dim, name: '暂定，待 M3b-27 标定', citation: `P3-T4 ${g.length ? `同本源成分 ${s} 例值下中位数（n=${g.length}）` : '本源成分无例值，取 1'}；卷三甲 §4.1.5/§4.3.5 例值；暂定`, status: 'vstat_placeholder' });
-      provisional.push(dim);
+      mark(rows[id].r, dim, `P3-T4 ${g.length ? `同本源成分 ${s} 例值下中位数（n=${g.length}）` : '本源成分无例值，取 1'}；卷三甲 §4.1.5/§4.3.5 例值；暂定`);
     }
   } else if (dim === 'repairedWith') {
     // P3-T3：修理用料类 = 本行本源成分在卷三乙 :559 的类别（卷三甲 §4.1.5 例 1、例 2 两例都等于自身类别）。

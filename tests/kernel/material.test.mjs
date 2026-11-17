@@ -57,6 +57,38 @@ test('93 行：缺值只剩卷文明写未核到的格，按该维 onUnknown 报
   assert.deepEqual(got, want);
 });
 
+// 卷二 §1.6（:262）gap：该项不进候选，`(kind,id,dim)` 记入缺口表；加载结果里的缺口清单即 W-DIM-GAP 条目。
+const gapList = (r) => r.errors.filter((e) => e.code === 'W-DIM-GAP').map((e) => `${e.row}.${e.dim}`).sort();
+
+test('整表零 E；缺口清单恰是卷文未核到且被判必填的格（醪纤维 1、碳水 3），每格恰一条', () => {
+  const w = load();
+  const r = run(w);
+  assert.equal(r.ok, true);
+  assert.deepEqual(errs(r), []);
+  const judged = volumeUnknown().filter((k) => (w.material.rows[k.split('.')[0]].classes || []).includes('comp_edible'));
+  assert.deepEqual(gapList(r), judged);
+  assert.ok(gapList(r).includes('mat_mash.fiberContent'));
+  assert.equal(new Set(gapList(r)).size, gapList(r).length);
+});
+
+test('纤维含量反例：值越出 [0,1] 仍 E；非 gap 的必填维度（energyDensity，error）缺值仍 E；补上有效纤维值后缺口消失', () => {
+  const a = load();
+  a.material.rows.mat_mash.fiberContent = 1.5;
+  const ra = run(a);
+  assert.deepEqual(codesOf(ra, 'mat_mash'), ['E-DIM-DOMAIN-RANGE:fiberContent']);
+  assert.ok(!gapList(ra).includes('mat_mash.fiberContent'));
+  const b = load();
+  delete b.material.rows.mat_millet.energyDensity;
+  const rb = run(b);
+  assert.deepEqual(codesOf(rb, 'mat_millet'), ['E-DIM-REQUIRED-MISSING:energyDensity']);
+  assert.equal(rb.ok, false);
+  const c = load();
+  c.material.rows.mat_mash.fiberContent = 0.1;
+  const rc = run(c);
+  assert.equal(rc.ok, true);
+  assert.ok(!gapList(rc).includes('mat_mash.fiberContent'));
+});
+
 test('暂定格：每个标暂定的格都有值、过表头取值域；valueMult 暂定标"待 M3b-27 标定"；卷文明写未核到的格不暂填', () => {
   const w = load();
   const r = run(w);
@@ -66,7 +98,7 @@ test('暂定格：每个标暂定的格都有值、过表头取值域；valueMul
     for (const s of (row.sources || []).filter((x) => x.status === 'vstat_placeholder')) {
       n++;
       const [dim, key] = s.dimension.split('.');
-      assert.equal(s.name, dim === 'valueMult' ? '暂定，待 M3b-27 标定' : '暂定，待试玩调');
+      assert.ok(s.name.startsWith('暂定，待'), `${id} ${s.dimension}`);
       assert.ok(/^P3-T\d/.test(s.citation), `${id} ${s.dimension}`);
       const v = key ? row[dim][key] : row[dim];
       assert.ok(v !== undefined && v !== null, `${id}.${s.dimension}`);

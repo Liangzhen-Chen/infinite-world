@@ -1417,7 +1417,7 @@
     1
    ],
    "modifiable": false,
-   "onUnknown": "error",
+   "onUnknown": "gap",
    "owner": "卷三甲 §2.1",
    "precision": 4,
    "required": "byDigestible；byClass:comp_edible",
@@ -2242,7 +2242,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -2290,7 +2290,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -2340,7 +2340,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -2464,7 +2464,7 @@
     {
      "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
-     "name": "暂定，待试玩调",
+     "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -2476,7 +2476,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -2543,7 +2543,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -2605,7 +2605,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -2658,7 +2658,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_metal 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -2727,7 +2727,7 @@
     {
      "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
-     "name": "暂定，待试玩调",
+     "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -2739,7 +2739,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -2788,7 +2788,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -2841,7 +2841,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_metal 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -2892,7 +2892,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -2947,7 +2947,7 @@
     {
      "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
-     "name": "暂定，待试玩调",
+     "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -2959,7 +2959,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -2994,7 +2994,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -3066,7 +3066,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -3114,7 +3114,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -3166,7 +3166,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_metal 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -3222,7 +3222,7 @@
     {
      "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
-     "name": "暂定，待试玩调",
+     "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -3234,7 +3234,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -3287,7 +3287,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_metal 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -3365,7 +3365,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_fiber 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -3418,7 +3418,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_fiber 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -3496,7 +3496,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_fiber 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -3549,7 +3549,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -3604,7 +3604,7 @@
     {
      "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
-     "name": "暂定，待试玩调",
+     "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -3616,7 +3616,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -3671,7 +3671,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -3719,7 +3719,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -3775,7 +3775,7 @@
     {
      "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
-     "name": "暂定，待试玩调",
+     "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -3787,7 +3787,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -3822,7 +3822,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -3889,7 +3889,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_wood 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -3981,7 +3981,7 @@
     {
      "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
-     "name": "暂定，待试玩调",
+     "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -3993,7 +3993,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -4042,7 +4042,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_fiber 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -4096,7 +4096,7 @@
     {
      "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
-     "name": "暂定，待试玩调",
+     "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -4108,7 +4108,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -4188,7 +4188,7 @@
     {
      "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
-     "name": "暂定，待试玩调",
+     "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -4200,7 +4200,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -4298,7 +4298,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -4447,7 +4447,7 @@
     {
      "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
-     "name": "暂定，待试玩调",
+     "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -4459,7 +4459,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -4512,7 +4512,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_metal 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -4570,7 +4570,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -4629,7 +4629,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -4677,7 +4677,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_fiber 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -4756,7 +4756,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_fiber 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -4816,7 +4816,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -4877,7 +4877,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -4933,7 +4933,7 @@
     {
      "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
-     "name": "暂定，待试玩调",
+     "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -4945,7 +4945,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -4998,7 +4998,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_metal 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -5054,7 +5054,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -5118,7 +5118,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -5195,7 +5195,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -5244,7 +5244,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_wood 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -5325,7 +5325,7 @@
     {
      "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
-     "name": "暂定，待试玩调",
+     "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -5337,7 +5337,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -5373,7 +5373,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_metal 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -5466,7 +5466,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -5530,7 +5530,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -5578,7 +5578,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -5631,7 +5631,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -5683,7 +5683,7 @@
     {
      "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
-     "name": "暂定，待试玩调",
+     "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -5695,7 +5695,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -5784,7 +5784,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_wood 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -5831,7 +5831,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_fiber 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -5887,7 +5887,7 @@
     {
      "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
-     "name": "暂定，待试玩调",
+     "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -5899,7 +5899,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -5960,7 +5960,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -5996,7 +5996,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -6066,7 +6066,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -6144,7 +6144,7 @@
     {
      "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
-     "name": "暂定，待试玩调",
+     "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -6156,7 +6156,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -6231,7 +6231,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_fiber 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -6301,7 +6301,7 @@
     {
      "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
-     "name": "暂定，待试玩调",
+     "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -6313,7 +6313,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -6362,7 +6362,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -6443,7 +6443,7 @@
     {
      "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
-     "name": "暂定，待试玩调",
+     "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -6455,7 +6455,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -6519,7 +6519,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -6582,7 +6582,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -6635,7 +6635,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_fiber 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -6672,7 +6672,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -6725,7 +6725,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_metal 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -6789,7 +6789,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -6844,7 +6844,7 @@
     {
      "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
-     "name": "暂定，待试玩调",
+     "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -6856,7 +6856,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -6927,7 +6927,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -6981,7 +6981,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_metal 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -7037,7 +7037,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -7092,7 +7092,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -7142,7 +7142,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -7213,7 +7213,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -7267,7 +7267,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -7320,7 +7320,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_metal 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -7391,7 +7391,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -7439,7 +7439,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -7492,7 +7492,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_metal 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -7544,7 +7544,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -7604,7 +7604,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -7674,7 +7674,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -7748,7 +7748,7 @@
     {
      "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
      "dimension": "rotRate",
-     "name": "暂定，待试玩调",
+     "name": "暂定，待 M3a-4 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -7760,7 +7760,7 @@
     {
      "citation": "P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
@@ -7826,7 +7826,7 @@
     {
      "citation": "P3-T4 同本源成分 subst_wood 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "dimension": "valueMult",
-     "name": "暂定，待 M3b-27 标定",
+     "name": "暂定，待 M3b-27 标定（块 6 物品表首卡）",
      "status": "vstat_placeholder"
     },
     {
