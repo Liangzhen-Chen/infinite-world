@@ -141,8 +141,9 @@ test('doc_struct 形式名前缀（裁定一）：只有列表项开头"登记�
 });
 
 test('doc_struct 列表项开头（裁定二）：列表符或加粗后紧跟编号才算，对所有族一样；别的字在前不算', () => {
-  const text = ['- S1 列表项', '* S2 星号列表', '1. S3 有序列表', '- **S4** 加粗', '- 说明 S5', '- (S6)', '段落中 S7 引用'].join('\n');
+  const text = ['- S1 列表项', '* S2 星号列表', '1. S3 有序列表', '- **S4** 加粗', '- 说明 S5', '- (S6)', '段落中 S7 引用', '- `S8` 反引号', '- 扫描式：`S9`'].join('\n');
   assert.deepEqual([...definedNumbers(text, ['S']).keys()], ['S1', 'S2', 'S3', 'S4']);
+  assert.equal(definedNumbers('- 扫描式：`S9`', ['S'], ['扫描式']).size, 0);
 });
 
 test('item_ledger 登记的形式名与 acc_form 的四个值一一对应', () => {

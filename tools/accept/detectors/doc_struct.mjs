@@ -20,9 +20,10 @@ export function definedNumbers(text, prefixes, formNames = []) {
   if (!prefixes.length) return out;
   // 行首须有定义处的记号：表格竖线、标题井号、列表符、加粗；纯段落开头的编号是引用，不算。
   const mark = '(?:\\*\\*|`)*';
+  const bold = '(?:\\*\\*)*';
   const list = '[ \\t>]*(?:[-*+]|\\d+\\.)[ \\t]*';
   const names = formNames.filter(Boolean).map(esc).join('|');
-  const lead = `(?:[ \\t>]*(?:#+|\\|)[ \\t]*${mark}|${list}${mark}|[ \\t>]*\\*\\*${names ? `|${list}(?:${names})：[ \\t]*${mark}` : ''})`;
+  const lead = `(?:[ \\t>]*(?:#+|\\|)[ \\t]*${mark}|${list}${bold}|[ \\t>]*\\*\\*${names ? `|${list}(?:${names})：[ \\t]*${bold}` : ''})`;
   const re = new RegExp(`^${lead}((?:${prefixes.map(esc).join('|')})\\d+(?:[.-]\\d+)*)(?![A-Za-z0-9_])`);
   text.split('\n').forEach((line, i) => {
     const m = re.exec(line);
