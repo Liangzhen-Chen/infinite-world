@@ -17,7 +17,7 @@ const vocabIndex = new Map([
   ['agx_exists', { family: 'aggregate', prefix: 'agx_' }],
   ['rel_part', { family: 'relation', prefix: 'rel_' }],
 ]);
-const ns = [{ ns: 'story', shape: '<字段>', type: 'number' }, { ns: 'pop.total', shape: 'count', type: 'number' }, { ns: 'ev', shape: '<字段>', type: 'field' }];
+const ns = [{ ns: 'story', shape: '<字段>', type: 'number' }, { ns: 'pop.total', shape: 'count', type: 'number' }, { ns: 'ev', shape: '<字段>，另有 tags（set，只作 member 的 set）', type: 'field' }];
 const SCOPE = { dims, vocabIndex, ns, maxDepth: 16 };
 const c = (text, scope = SCOPE) => compileRXInScope(text, 'data', scope);
 const code = (fn) => { try { fn(); return 'ok'; } catch (e) { return e.code || e.message; } };
@@ -90,6 +90,12 @@ test('卷文数据行写法（卷四 §4.7.5 eats）：and/or/not 单词、`集 
   assert.equal(c('tagset has grd_a').tree.op, 'member');
   assert.equal(code(() => c('mass has grd_a')), 'E-MOD-RX');
   assert.equal(code(() => c('story.wealth has grd_a')), 'E-MOD-RX');
+  // 窄规则（卷二 §2.9 第 4 条第 1 点）：只有登记为 set 型的 ns 字段可作 member 的 set，且只能作 member 的 set。
+  assert.equal(code(() => c('ev.qty has grd_a')), 'E-MOD-RX'); // 反例：非 set 字段作 member 的 set
+  assert.equal(code(() => c('ev.tags > 1')), 'E-MOD-RX'); // 反例：set 型 ns 字段用在 cmp
+  assert.equal(code(() => c('ev.tags == grd_a')), 'E-MOD-RX');
+  assert.equal(code(() => c('ev.tags + 1 > 1')), 'E-MOD-RX'); // 反例：set 型 ns 字段用在 add
+  assert.equal(code(() => c('ev.tags')), 'E-MOD-RX');
   // 只有四种读数类型：null 读数不收，求值失败（显式 null 由调用方按字段定义处的含义处理，见 grades-named.test.mjs）；缺读数的失败带缺的键。
   for (const t of ['ev.kind == grd_a', 'ev.kind != grd_a', 'ev.qty >= 0.5']) assert.equal(code(() => evaluateRX(c(t).tree, {}, { 'ev.kind': null, 'ev.qty': null })), 'E-MOD-RX', t);
   assert.throws(() => evaluateRX(c('ev.kind == grd_a').tree, {}, {}), (e) => e.code === 'E-MOD-RX' && e.key === 'ev.kind');

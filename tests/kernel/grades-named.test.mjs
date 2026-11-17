@@ -84,7 +84,7 @@ function named(fits) {
   f.vocab.families.grade.entries.grd_a.fits = fits;
   f.gadget.dimensions.size.required = 'byDigestible';
   f.gadget.namedConditions = { byDigestible: { family: 'grade', field: 'fits', rowNs: 'thing', reads: { 'env.heat': 0 } } };
-  const opts = { ...OPTIONS, ns: [...OPTIONS.ns, { ns: 'thing', shape: '<维度键>', type: 'field' }, { ns: 'env.heat', shape: 'number', type: 'number' }] };
+  const opts = { ...OPTIONS, ns: [...OPTIONS.ns, { ns: 'thing', shape: '<维度键>，另有 classes（set，只作 member 的 set）', type: 'field' }, { ns: 'env.heat', shape: 'number', type: 'number' }] };
   return { f, opts };
 }
 
