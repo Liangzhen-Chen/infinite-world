@@ -46,29 +46,51 @@ const shortTableUnknown = (tag, dim) => {
 };
 const volumeUnknown = () => [...shortTableUnknown('FIBER-DATA', 'fiberContent'), ...shortTableUnknown('CARB-DATA', 'carbContent')].sort();
 
-test('93 行：缺值只剩卷文明写未核到的格，按该维 onUnknown 报（gap → W-DIM-GAP，error → E）；别无错误', () => {
+// 卷二 §1.6（:262）gap：该项不进候选，`(kind,id,dim)` 记入缺口表；加载结果里的缺口清单即 W-DIM-GAP 条目。
+const gapList = (r) => r.errors.filter((e) => e.code === 'W-DIM-GAP').map((e) => `${e.row}.${e.dim}`).sort();
+const designedOf = (row) => (row.sources || []).filter((s) => s.grade === 'designed');
+
+test('93 行：整表零 E、零缺口；卷文短表留空（"未核"）的格都已填设定值（designed），不再留空（李白 11-17 补裁）', () => {
   const w = load();
   assert.equal(Object.keys(w.material.rows).length, 93);
   const r = run(w);
-  const got = r.errors.map((e) => `${e.code}|${e.row}.${e.dim}`).sort();
-  // 必填条件里 byDigestible 由 P-2 记 notCovered 不判（落叶的纤维即此），故期望只取 byClass:comp_edible 成立的行。
-  const judged = volumeUnknown().filter((k) => (w.material.rows[k.split('.')[0]].classes || []).includes('comp_edible'));
-  const want = judged.map((k) => `${w.material.dimensions[k.split('.')[1]].onUnknown === 'gap' ? 'W-DIM-GAP' : 'E-DIM-REQUIRED-MISSING'}|${k}`).sort();
-  assert.deepEqual(got, want);
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.errors, []);
+  for (const k of volumeUnknown()) {
+    const [id, dim] = k.split('.');
+    assert.ok(typeof w.material.rows[id][dim] === 'number', k);
+    assert.ok(designedOf(w.material.rows[id]).some((s) => s.dimension === dim), k);
+  }
 });
 
-// 卷二 §1.6（:262）gap：该项不进候选，`(kind,id,dim)` 记入缺口表；加载结果里的缺口清单即 W-DIM-GAP 条目。
-const gapList = (r) => r.errors.filter((e) => e.code === 'W-DIM-GAP').map((e) => `${e.row}.${e.dim}`).sort();
-
-test('整表零 E；缺口清单恰是卷文未核到且被判必填的格（醪纤维 1、碳水 3），每格恰一条', () => {
+test('1117p3 兜底：设定值撤掉后纤维缺值只记一条 W-DIM-GAP、零 E', () => {
   const w = load();
+  delete w.material.rows.mat_mash.fiberContent;
   const r = run(w);
-  assert.equal(r.ok, true);
   assert.deepEqual(errs(r), []);
-  const judged = volumeUnknown().filter((k) => (w.material.rows[k.split('.')[0]].classes || []).includes('comp_edible'));
-  assert.deepEqual(gapList(r), judged);
-  assert.ok(gapList(r).includes('mat_mash.fiberContent'));
-  assert.equal(new Set(gapList(r)).size, gapList(r).length);
+  assert.deepEqual(gapList(r), ['mat_mash.fiberContent']);
+});
+
+test('designed 格：有值、级别 designed、basis 非空、citation 为空、在表头取值域内；不标 measured', () => {
+  const w = load();
+  let n = 0;
+  for (const [id, row] of Object.entries(w.material.rows)) {
+    assert.ok(!(row.sources || []).some((s) => s.grade === 'measured' && !s.citation), id);
+    for (const s of designedOf(row)) {
+      n++;
+      const [dim, key] = s.dimension.split('.');
+      const v = key ? row[dim][key] : row[dim];
+      assert.ok(typeof v === 'number', `${id}.${s.dimension}`);
+      assert.ok(typeof s.basis === 'string' && s.basis.length > 0, `${id}.${s.dimension}`);
+      assert.equal(s.citation, null);
+      assert.ok(/设/.test(s.code), `${id}.${s.dimension}`);
+      const dom = w.material.dimensions[dim].domain || (w.material.dimensions[dim].value || {}).domain;
+      assert.ok(v >= dom[0] && (dom[1] === null || v <= dom[1]), `${id}.${s.dimension}=${v}`);
+    }
+    // M-19：两者都已知时 carbContent 不小于 fiberContent。
+    if (typeof row.carbContent === 'number' && typeof row.fiberContent === 'number') assert.ok(row.carbContent >= row.fiberContent, id);
+  }
+  assert.ok(n > 0);
 });
 
 test('纤维含量反例：值越出 [0,1] 仍 E；非 gap 的必填维度（energyDensity，error）缺值仍 E；补上有效纤维值后缺口消失', () => {
