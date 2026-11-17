@@ -20,7 +20,7 @@ const KIND_FAMILY = 'kind';
 const STACKING = ['none', 'penalized'];
 
 // sources：{units: 文本, vocab: 文本, effects?: 文本, tables: [{file, text}]}（file 为文件名，如 "<kind>.json"）。
-// options：{namespaces: [..], displaySet: [..], ns: [{ns, argCount, type}], limits: {extendsMaxDepth, rxMaxDepth}}。
+// options：{namespaces: [..], displaySet: [..], ns: [{ns, shape, type}], limits: {extendsMaxDepth, rxMaxDepth}}。
 export function validateDimensions(sources, options) {
   const errors = [];
   const err = (e) => errors.push(e);

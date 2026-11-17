@@ -191,7 +191,11 @@ function typeOf(n, scope) {
 }
 // 命名空间行的 arg 段数不另设列（§2.9 第 4 条第 1 点五列封闭）：由"返回形状"列推出——形状里每个 `<…>` 占位是一段 arg
 // （单值的形状如 fraction 不含占位，不带 arg；`<字段>.<句柄>` 两段）。
-export const nsArgCount = (row) => (typeof row.shape === 'string' ? (row.shape.match(/<[^<>]+>/g) || []).length : 0);
+// 无返回形状（推不出）即登记行违反第 1 点，按 §2.9 第 4 条第 3 点报 E-RX-NS-UNKNOWN，不取默认值。
+export const nsArgCount = (row) => {
+  if (!row || typeof row.shape !== 'string') return fail(`namespace row ${row && row.ns} has no return shape`, 'E-RX-NS-UNKNOWN');
+  return (row.shape.match(/<[^<>]+>/g) || []).length;
+};
 const sameKind =(a, b) => a === b || (a === 'codeOrHandle' && (b === 'code' || b === 'handle')) || (b === 'codeOrHandle' && (a === 'code' || a === 'handle'));
 
 // 维度类型 → RX 读数类型（第 1 点 dim 一项）；set 只许作 member 的 set。

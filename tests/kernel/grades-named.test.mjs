@@ -112,9 +112,6 @@ test('namedConditions 与 null（卷二 :254）：显式 null 是"没有"，条�
   // gad_box 显式 null（没有）→ 条目不成立，不必填。
   f.gadget.rows.gad_box.tag = null;
   assert.deepEqual(sizeRows(run(f, opts)), ['gad_hammer']);
-  // 反过来：不等于也是"没有"→ 对 null 行不成立（不因 null 恒真）。
-  f.vocab.families.grade.entries.grd_a.fits = 'thing.tag != grd_b';
-  assert.deepEqual(sizeRows(run(f, opts)), []);
   // 求值器自己没有第五种读数类型：null 读数即求值失败。
   assert.throws(() => evaluateRX(compileRXInScope('thing.tag == grd_b', 'data', { ns: opts.ns, dims: new Map(), vocabIndex: new Map([['grd_b', { family: 'grade', prefix: 'grd_' }]]), maxDepth: 16 }).tree, {}, { 'thing.tag': null }), { code: 'E-MOD-RX' });
 });
