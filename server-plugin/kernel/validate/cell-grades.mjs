@@ -13,12 +13,14 @@ const GRADE_KEYS = ['basis', 'citation', 'grade'];
 // 表里写物性格的各节：类别行（卷二 §6.2，类别的物性格同样带级别）、手写实体行、生成行。
 const SECTIONS = ['classes', 'rows', 'generated'];
 
+/** @param {Record<string, unknown>} doc 维度表文件 */
 export const gradeDecl = (doc) => {
   const d = isObj(doc.cellGrades) ? doc.cellGrades : null;
   return d && typeof d.field === 'string' ? d : null;
 };
 
 // 一行（展平后）填了值的格：Map<格键, 值>。
+/** @param {Record<string, unknown>} dims 表头维度 @param {Record<string, unknown>} flatRow 展平后的行 */
 export function gradedCells(dims, flatRow) {
   const out = new Map();
   for (const dim of Object.keys(dims).sort()) {
@@ -36,6 +38,7 @@ function declShapeOk(d) {
   return isObj(d) && typeof d.field === 'string' && d.field !== '' && (d.refDim === undefined || typeof d.refDim === 'string') && Object.keys(d).every((k) => k === 'field' || k === 'refDim');
 }
 
+/** @param {Record<string, unknown>} t 一张表 @param {(...args: unknown[]) => void} err */
 export function checkCellGrades(t, err) {
   const raw = t.doc.cellGrades;
   if (raw !== undefined && !declShapeOk(raw)) {

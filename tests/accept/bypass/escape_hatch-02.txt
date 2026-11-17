@@ -1,0 +1,2 @@
+/** @param {any} f @returns {Fact} */
+export function pass(f) { return f; }

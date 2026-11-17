@@ -46,6 +46,7 @@ function checkDefShape(def, merge, at) {
 }
 
 // 第一步：读登记与各表文件。返回 {errors, tables, rules}；rules 是冻结的 engine.rules（表代号 → 键或行 → 值）。
+/** @param {string} root 仓库根 @param {{rulesDir?: string}} [opts] */
 export function readRules(root, opts = {}) {
   const dir = opts.rulesDir || RULES_LAYOUT.dir;
   const regPath = `${dir}/${RULES_LAYOUT.registry}`;
@@ -125,6 +126,7 @@ function readTable(root, t, errors) {
 }
 
 // 第二步：类型定义（完整写法的）与表值按 L1/L2 同一套检查。env 取自维度加载（validateDimensions 的 env）。
+/** @param {{errors: unknown[], tables: unknown[], rules: Record<string, unknown>}} read readRules 的结果 @param {Record<string, unknown>} env */
 export function checkRules(read, env) {
   const errors = [];
   for (const t of read.tables) {
@@ -142,12 +144,14 @@ export function checkRules(read, env) {
 }
 
 // engine.rules 的取表口：未登记的表 → E-RULES-UNREGISTERED。
+/** @param {Record<string, unknown>} rules engine.rules @param {string} code 表代号 */
 export function ruleTable(rules, code) {
   if (!Object.hasOwn(rules, code)) throw Object.assign(new Error(`E-RULES-UNREGISTERED rules.${code}: no registry row`), { code: 'E-RULES-UNREGISTERED' });
   return rules[code];
 }
 
 // 统一报错格式（§4.2）：按 (table,row,dim,code,path) 排序，末行汇总。
+/** @param {Record<string, unknown>[]} errors */
 export function rulesReport(errors) {
   const out = errors.map((e) => ({
     code: e.code, severity: e.code.startsWith('W-') ? 'warning' : 'error', level: e.level || 'L1',

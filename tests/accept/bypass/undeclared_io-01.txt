@@ -1,0 +1,2 @@
+/** @param {State} state @returns {unknown} */
+export function all(state) { return Object.keys(state); }

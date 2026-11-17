@@ -1,0 +1,5 @@
+/**
+ * @param {unknown} z
+ * @returns {z is Handle}
+ */
+export function isHandle(z) { return Boolean(z); }

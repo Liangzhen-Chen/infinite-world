@@ -1,0 +1,6 @@
+// 正例：声明前的 @type 不是强转；类型里没有 any；注释正文提到 any 一词不算。
+/** @type {number} */
+let n = 0;
+
+/** @param {number} a @returns {number} */
+export function keep(a) { n = a; return n; }

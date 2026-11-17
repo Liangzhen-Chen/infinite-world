@@ -1,0 +1,2 @@
+/** @param {Status} st @returns {boolean} */
+export function asleep(st) { return st.family === 'sleep'; }

@@ -1,0 +1,3 @@
+// 路径实参不是 P 句柄成员：写入点归不到路径上（卷十二 R12-3.4）。
+/** @param {State} state @param {StatePath} path @returns {void} */
+export function put(state, path) { writePath(state, path, 0); }

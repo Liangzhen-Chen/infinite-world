@@ -1,0 +1,5 @@
+/** @param {Fact} f @returns {Fact} */
+export function pass(f) {
+  // @ts-ignore
+  return f.raw;
+}

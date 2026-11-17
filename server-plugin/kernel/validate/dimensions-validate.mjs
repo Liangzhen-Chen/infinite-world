@@ -21,6 +21,10 @@ const STACKING = ['none', 'penalized'];
 
 // sources：{units: 文本, vocab: 文本, effects?: 文本, tables: [{file, text}]}（file 为文件名，如 "<kind>.json"）。
 // options：{namespaces: [..], displaySet: [..], ns: [{ns, shape, type}], limits: {extendsMaxDepth, rxMaxDepth}}。
+/**
+ * @param {{units: string, vocab: string, effects?: string, tables: {file: string, text: string}[]}} sources
+ * @param {{namespaces: string[], displaySet: string[], ns: {ns: string, shape: string, type: string}[], limits: {extendsMaxDepth: number, rxMaxDepth: number}}} options
+ */
 export function validateDimensions(sources, options) {
   const errors = [];
   const err = (e) => errors.push(e);

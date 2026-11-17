@@ -92,7 +92,9 @@ test('S12-13、S12-16：手改检测器或条目三项而不走修订即拒；�
     const bump = (k, ref) => { const c = crit.get(k); return { scanClass: k, rev: c.rev + 1, log: [...c.log, { ref, rev: c.rev + 1 }] }; };
     const skip = register(dir, { criteria: [{ ...bump('crit_version', 'fx'), rev: crit.get('crit_version').rev + 2 }] });
     assert.match(skip.errors.join('\n'), /rev must stay or step by one/);
-    const ok = register(dir, { criteria: [bump('crit_version', 'fx 反转判定'), bump('const_literal', 'fx 关口改动')] });
+    // 改了 file_set 模块，凡登记里用到 file_set 的类别判据代码都变了，都要升版（按登记派生，不手列；块 2 第 2-3 张起 escape_hatch 也用它）。
+    const viaFileSet = readRegistry(dir, 'scanclasses').filter((c) => (c.detectors || []).includes('file_set') && c.scanClass !== 'crit_version').map((c) => bump(c.scanClass, 'fx file_set 改动'));
+    const ok = register(dir, { criteria: [bump('crit_version', 'fx 反转判定'), bump('const_literal', 'fx 关口改动'), ...viaFileSet] });
     assert.deepEqual(ok.errors, []);
     const after = failedOf((await accRun('pre_commit', 'P-1b', null, { root: dir })).report);
     assert.equal(after['vol12.S12-16'], undefined);

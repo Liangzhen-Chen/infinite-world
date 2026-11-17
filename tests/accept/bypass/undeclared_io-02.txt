@@ -1,0 +1,2 @@
+/** @param {State} state @param {Key} k @returns {unknown} */
+export function pick(state, k) { return state[k]; }

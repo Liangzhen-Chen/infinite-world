@@ -12,6 +12,7 @@ const CLASS_FAMILIES = ['class', 'component'];
 const STATUS_FAMILY = 'vstatus';
 
 // 一张表的行结构（L1）与类别、组件、标签引用（L2）。
+/** @param {Record<string, unknown>} t 一张表 @param {Record<string, unknown>} env @param {(...args: unknown[]) => void} err */
 export function checkRows(t, env, err) {
   const { doc, kind, file } = t;
   const dims = doc.dimensions || {};
@@ -60,6 +61,7 @@ export function checkRows(t, env, err) {
 }
 
 // precedence（L2）：组内各行存在、不含 abstract、与 broader 深度一致（深者先）。
+/** @param {Record<string, unknown>} t 一张表 @param {Record<string, unknown>} env @param {(...args: unknown[]) => void} err */
 export function checkPrecedence(t, env, err) {
   const { doc, kind, file } = t;
   const groups = isObj(doc.precedenceGroups) ? doc.precedenceGroups : {};
@@ -75,6 +77,7 @@ export function checkPrecedence(t, env, err) {
 }
 
 // 组件类条目（L2/L3）：requires 维度在其归属表、enables ⊆ 归属表 behaviors。
+/** @param {Map<string, Record<string, unknown>>} tablesByKind @param {Record<string, unknown>} env @param {(...args: unknown[]) => void} err */
 export function checkComponents(tablesByKind, env, err) {
   for (const [id, rec] of [...env.vocab.index].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
     if (rec.family !== CLASS_FAMILIES[1]) continue;
@@ -111,7 +114,9 @@ function valueOf(t, id, row, dim) {
 }
 
 const REQ_FORMS = /^(always|never|byClass:[a-z][a-z0-9_]*|ifPresent:[a-z][a-zA-Z0-9]*|byEnum:[a-z][a-zA-Z0-9]*=[a-z][a-z0-9_]*|anyOf:[a-zA-Z0-9.]+(,[a-zA-Z0-9.]+)+|byDigestible|byReader)$/;
+/** @param {unknown} s required 策略 @returns {string[]} */
 export const requiredTerms = (s) => (typeof s === 'string' ? s.split('；').map((x) => x.trim()) : []);
+/** @param {unknown} s required 策略 @returns {boolean} */
 export const requiredSyntaxOk = (s) => requiredTerms(s).length > 0 && requiredTerms(s).every((x) => REQ_FORMS.test(x));
 
 const CONDITIONAL_FORMS = ['byClass', 'ifPresent', 'byEnum'];
@@ -164,6 +169,10 @@ const knownPart = (t, id, row, item) => {
 // L3：required 策略、实体行 basis、映射键集（§1.6 第 4 项）；同时累计 known / applicable，
 // 并按表按维累计 L5 齐全率五列（§4.1 L5 :1493）：不适用 = 条件项都不满足（§1.3 :152）；
 // explicitFill = 带 allowExplicit 的派生维度在实体行上显式写了值（FA-N5）。派生、采样维度 P-2 未求值，按取值算法记为已知。
+/**
+ * @param {Record<string, unknown>} t 一张表 @param {Record<string, unknown>} env @param {(...args: unknown[]) => void} err
+ * @param {Record<string, unknown>} stats 齐全率累计
+ */
 export function checkRequired(t, env, err, stats) {
   const { doc, kind, file } = t;
   const dims = doc.dimensions || {};

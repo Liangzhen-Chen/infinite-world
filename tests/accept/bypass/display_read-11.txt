@@ -1,0 +1,3 @@
+// 正例：displayNames.*.seq 不在显示集合（只有 display 登记的 *.text 与 textPaths 是显示路径）。
+/** @param {State} state @param {EntityId} id @returns {unknown} */
+export function seqOf(state, id) { return state.displayNames[id].seq; }
