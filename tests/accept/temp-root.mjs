@@ -23,6 +23,7 @@ export function testTempRoot(prefix = 'test-') {
 // 临时根下的唯一写入口（李白 11-17 裁定四）：运行时断言 rel 规范化后不越出 root（非绝对、不含 ..），且不命中 §2.11 登记的受保护路径模式
 // （模式取自 scanclasses 里 registry_write 行的 guardedPaths，不手写）；通过才建父目录并写文件。返回写入的完整路径。
 export function writeUnderTempRoot(root, rel, data) {
+  if (inside(realpathSync(ROOT), realpathSync(root))) throw new Error(`temp root must be outside the repository: ${root}`);
   const n = normalize(String(rel)).split(sep).join('/');
   if (isAbsolute(String(rel)) || /^[A-Za-z]:/.test(n) || n.startsWith('/') || n === '..' || n.startsWith('../') || n === '.') {
     throw new Error(`write must stay inside the temp root: ${rel}`);

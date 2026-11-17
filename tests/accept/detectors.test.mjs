@@ -13,7 +13,7 @@ import { ENUM } from '../../tools/accept/lib/item-form.mjs';
 import { tempRepo } from './temp-repo.mjs';
 import { testTempRoot, writeUnderTempRoot } from './temp-root.mjs';
 import { relative, isAbsolute } from 'node:path';
-import { realpathSync, rmSync, readFileSync } from 'node:fs';
+import { realpathSync, rmSync, readFileSync, existsSync } from 'node:fs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const FIX = mergePrefixes(prefixesFromDir(join(ROOT, LAYOUT.bypassDimsDir)));
@@ -197,6 +197,13 @@ test('writeUnderTempRoot（裁定四）：`..`、绝对路径、命中 §2.11 �
     assert.ok(!relative(dir, p).startsWith('..'));
     assert.equal(readFileSync(join(dir, 'sub/dir/ok.json'), 'utf8'), 'hi');
   } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('writeUnderTempRoot（只核第 2 条）：root 在仓库内（仓库根、仓库内子目录）时抛错，且不落盘', () => {
+  for (const root of [ROOT, join(ROOT, 'server-plugin'), join(ROOT, 'tests')]) {
+    assert.throws(() => writeUnderTempRoot(root, 'wutr-should-not-exist.mjs', 'x'), /outside the repository/, root);
+    assert.ok(!existsSync(join(root, 'wutr-should-not-exist.mjs')), root);
+  }
 });
 
 test('test-temp-root 登记（裁定三、四）：entries 封闭为 testTempRoot、tempRepo、writeUnderTempRoot；tempRepo() 返回的目录在仓库外', () => {
