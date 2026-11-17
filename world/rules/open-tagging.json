@@ -1,6 +1,0 @@
-{
-  "version": 1,
-  "default": "mark:custom",
-  "traits": ["flammable", "wood", "paper", "cloth", "fiber", "stone", "metal", "wet", "frozen"],
-  "tags": ["mark:insult", "mark:satire", "mark:defacement", "mark:graffiti", "mark:warning", "mark:sacred_symbol", "mark:offering", "mark:memorial", "mark:petition", "mark:public_display", "mark:art", "mark:custom", "mark:invention", "mark:boundary", "mark:trap", "mark:decoy", "mark:shelter", "mark:omen", "mark:sword_carving"]
-}
