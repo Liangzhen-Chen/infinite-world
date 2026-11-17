@@ -4,7 +4,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests/*.test.mjs",
     "test:baseline": "node tools/run-baseline.mjs",
     "test:scenarios": "node tools/scenarios.mjs",
     "test:playtests": "node tools/playtests.mjs",
@@ -25,8 +24,6 @@
     "metrics:actions": "node tools/export-actions.mjs",
     "metrics:intents": "node tools/intent-score.mjs",
     "metrics:probes": "node tools/probe-score.mjs",
-    "test:s0": "node --test --test-isolation=none tests/ontology.test.mjs tests/arch-metrics.test.mjs tests/actions-catalog.test.mjs tests/intents.test.mjs",
-    "test:probes": "node --test --test-isolation=none tests/probes/run-001.test.mjs",
     "docs:gaps": "node tools/gap-list.mjs"
   },
   "devDependencies": {
