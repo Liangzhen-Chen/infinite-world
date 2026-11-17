@@ -2,13 +2,16 @@
 // 输入是各文件的原文；输出按 (table,row,dim) 排序、同 (code,table,row,dim) 只报一次，末行汇总（§4.2）。
 // 只读表头、词表、单位表与调用方给的登记；规则里不含实体 id 字面量，前缀表来自表头。
 // L5 齐全率报告见 coverageText（P-2b）。未做（P-2 汇报列出）：L4 不变量；distribution 参数；derived 公式编译与派生依赖图；修正项、效果族、需求块；
-// sources 推算与成员偏差；material 表专用命名条件 byDigestible、byReader（只记入 notCovered）。
+// sources 推算与成员偏差；表头没声明判据的命名条件（现为 byReader，只记入 notCovered）。
+// 表头声明的命名条件（namedConditions，如 byDigestible）与逐格来源级别（cellGrades，卷三甲 M-22）按声明通用处理。
 
 import { parseJsonStrict } from '../load/json-text.mjs';
 import { loadVocab, loadUnits } from '../load/vocab-load.mjs';
 import { flattenTable } from '../load/flatten.mjs';
 import { checkDef, CODE_RE, KEY_RE, CODE_ENUMS, TYPES, DOMAIN_OPTIONAL } from './types.mjs';
 import { checkRows, checkPrecedence, checkComponents, checkRequired, requiredSyntaxOk } from './rows.mjs';
+import { prepareNamedConditions } from './named-conditions.mjs';
+import { checkCellGrades } from './cell-grades.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
@@ -102,7 +105,7 @@ export function validateDimensions(sources, options) {
   const stats = { known: 0, applicable: 0, notCovered: new Set(), coverage: new Map() };
   for (const t of tables) { checkRows(t, env, err); checkPrecedence(t, env, err); }
   checkComponents(new Map(tables.map((t) => [t.kind, t])), env, err);
-  for (const t of tables) checkRequired(t, env, err, stats);
+  for (const t of tables) { t.named = prepareNamedConditions(t, env, err); checkRequired(t, env, err, stats); checkCellGrades(t, err); }
 
   return report(errors, tables, stats, env);
 }

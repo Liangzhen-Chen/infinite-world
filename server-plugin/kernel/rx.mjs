@@ -2,6 +2,7 @@
 // evaluateRX(tree, bindings, nsReads) 是全书唯一的求值函数，纯函数，不碰状态。
 // P-2 只做数据档（kernel/load 编 world/ 与 rules/ 文件）；显示档（slot、mod、broader）留到 outputGate 上线，调到即报错。
 // 文本文法卷二没写（记 docs/问题.md）：本文件只收中缀算术、比较、与或非、括号、数字、点分名字，以及与变体同名的调用 agg(…)、member(…)。
+// 与或非另收卷文数据行的单词写法 and、or、not（卷四 §4.7.5 diet `eats`）；`集 has 项` 是 member(项, 集) 的中缀写法（同处）。
 
 import { fixedUnits, fixedAdd, fixedSub, fixedMultiply, fixedDivide, fixedToNumber, FixedError } from './det-math.mjs';
 
@@ -17,6 +18,7 @@ const PROFILE_OPS = Object.freeze({
 const ARITH = { '+': 'add', '-': 'sub', '*': 'mul', '/': 'div', '%': 'mod' };
 const CMP = { '==': 'eq', '!=': 'ne', '<': 'lt', '<=': 'le', '>': 'gt', '>=': 'ge' };
 const CLOCK_FIELDS = new Set(['day', 'season']);
+const WORD_OPS = Object.freeze({ and: '&&', or: '||', not: '!', has: 'has' });
 
 function tokenize(text) {
   if (typeof text !== 'string') fail('expression must be text');
@@ -31,6 +33,7 @@ function tokenize(text) {
     at = re.lastIndex;
     const [, numTok, nameTok, opTok] = m;
     if (numTok !== undefined) out.push({ k: 'num', v: numTok });
+    else if (Object.hasOwn(WORD_OPS, nameTok)) out.push({ k: 'op', v: WORD_OPS[nameTok] });
     else if (nameTok !== undefined) out.push({ k: 'name', v: nameTok });
     else out.push({ k: 'op', v: opTok });
   }
@@ -64,6 +67,7 @@ function parse(text, profile, scope) {
     const left = addExpr();
     const t = peek();
     if (t.k === 'op' && CMP[t.v]) { i++; return node({ op: 'cmp', cmpOp: CMP[t.v], left, right: addExpr() }); }
+    if (isOp('has')) { i++; return node({ op: 'member', item: addExpr(), set: left }); }
     return left;
   }
   function addExpr() {
@@ -166,7 +170,9 @@ function typeOf(n, scope) {
     case 'not': want(n.item, 'boolean'); return 'boolean';
     case 'member':
       want(n.item, 'code', 'handle', 'codeOrHandle');
-      if (n.set.op !== 'dim' || dimRxType(scope.dims.get(n.set.key), n.set.key, true) !== 'set') fail('member set must read a set dimension');
+      // set 读 set 型维度；或读"随字段"的命名空间字段（如 material.classes），类型在求值时按读数核（须为列表）。
+      if (n.set.op === 'ns') { if (typeOf(n.set, scope) !== 'runtime') fail('member set must read a set dimension or a field namespace'); }
+      else if (n.set.op !== 'dim' || dimRxType(scope.dims.get(n.set.key), n.set.key, true) !== 'set') fail('member set must read a set dimension');
       return 'boolean';
     case 'agg': {
       if (n.filter) want(n.filter, 'boolean');
@@ -254,7 +260,9 @@ function readValue(v) {
   if (typeof v === 'number') return { t: 'number', v: fixedUnits(v) };
   if (typeof v === 'boolean') return { t: 'boolean', v };
   if (typeof v === 'string') return { t: 'code', v };
-  return fail('binding value must be a number, boolean or code');
+  // null 是"值为空"（如本源成分为空的料），不是未知：只能与别的值比相等，比相等恒假；排序与运算即求值失败。
+  if (v === null) return { t: 'null', v: null };
+  return fail('binding value must be a number, boolean, code or null');
 }
 
 export function evaluateRX(tree, bindings, nsReads) {
@@ -272,7 +280,7 @@ export function evaluateRX(tree, bindings, nsReads) {
       case 'cmp': {
         const a = run(n.left); const b = run(n.right);
         if (n.cmpOp === 'eq' || n.cmpOp === 'ne') {
-          if (a.t !== b.t) fail('eq/ne operands differ in type');
+          if (a.t !== b.t && a.t !== 'null' && b.t !== 'null') fail('eq/ne operands differ in type');
           return { t: 'boolean', v: (a.v === b.v) === (n.cmpOp === 'eq') };
         }
         if (a.t !== 'number' || b.t !== 'number') fail('ordering needs numbers');
@@ -284,7 +292,9 @@ export function evaluateRX(tree, bindings, nsReads) {
       case 'not': return { t: 'boolean', v: !bool(n.item) };
       case 'member': {
         const item = run(n.item);
-        const set = own(bindings && bindings.dim, n.set.key) ? bindings.dim[n.set.key] : fail(`no binding for dimension ${n.set.key}`);
+        const k = n.set.op === 'ns' ? nsKey(n.set) : null;
+        const set = k !== null ? (own(nsReads, k) ? nsReads[k] : fail(`no namespace read ${k}`))
+          : own(bindings && bindings.dim, n.set.key) ? bindings.dim[n.set.key] : fail(`no binding for dimension ${n.set.key}`);
         if (!Array.isArray(set)) fail('member set binding must be a list');
         return { t: 'boolean', v: set.includes(item.v) };
       }

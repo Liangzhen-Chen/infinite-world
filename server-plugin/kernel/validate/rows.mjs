@@ -2,6 +2,8 @@
 // 取值走 §1.3 唯一算法：own（实体行展平后的值）→ 本维所属 precedence 组内、实体所属的展平类别行 → 派生 / 采样 → 未知。
 
 import { checkValue, CODE_ENUMS, ROW_FIELDS, splitKey } from './types.mjs';
+import { gradeDecl } from './cell-grades.mjs';
+import { rowReads, namedHolds } from './named-conditions.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const SECTIONS = ['classes', 'rows', 'generated'];
@@ -13,6 +15,8 @@ const STATUS_FAMILY = 'vstatus';
 export function checkRows(t, env, err) {
   const { doc, kind, file } = t;
   const dims = doc.dimensions || {};
+  // 表头声明的逐格级别文档字段（cell-grades.mjs）：不是维度，不参与继承，各行只取自己的。
+  const gradeField = (gradeDecl(doc) || {}).field;
   for (const section of SECTIONS) {
     const rows = isObj(doc[section]) ? doc[section] : {};
     for (const id of Object.keys(rows).sort()) {
@@ -21,7 +25,7 @@ export function checkRows(t, env, err) {
       if (!isObj(row)) { err({ code: 'E-DIM-STRUCT-FIELD', level: 'L1', ...at(), got: typeof row, want: 'row object' }); continue; }
       for (const key of Object.keys(row).sort()) {
         const { dim, op } = splitKey(key);
-        if (ROW_FIELDS.includes(key)) {
+        if (ROW_FIELDS.includes(key) || key === gradeField) {
           if (key === 'abstract' && section !== 'classes') err({ code: 'E-DIM-STRUCT-FIELD', level: 'L1', ...at(key, key), got: key, want: 'abstract only on class rows' });
           continue;
         }
@@ -124,9 +128,29 @@ function requirement(t, id, row, dim) {
     else if (form === 'ifPresent') { if (valueOf(t, id, row, arg).known) out.applicable = true; }
     else if (form === 'byEnum') { const [d, v] = arg.split('='); if (valueOf(t, id, row, d).value === v) out.applicable = true; }
     else if (form === 'anyOf') { out.applicable = true; out.anyOf = arg.split(','); }
-    else if (form === 'byDigestible' || form === 'byReader') out.named.push(form);
+    else if (form === 'byDigestible' || form === 'byReader') {
+      // 表头声明了判据的命名条件按声明求值（named-conditions.mjs），属条件项；没声明的只记 notCovered。
+      const cond = t.named && t.named.get(form);
+      if (!cond) { out.named.push(form); continue; }
+      out.conditional = true;
+      if (namedOf(t, id, row, form, cond)) out.applicable = true;
+    }
   }
   return out;
+}
+
+// 一行对一个命名条件只求值一次（卷三甲 §2.1"每行材料各求值一次"）。
+function namedOf(t, id, row, form, cond) {
+  const memo = (t.namedMemo ||= new Map());
+  const k = `${id}\u0000${form}`;
+  if (!memo.has(k)) {
+    const known = [];
+    for (const d of Object.keys(t.doc.dimensions || {}).sort()) { const r = valueOf(t, id, row, d); if (r.known && r.value !== undefined) known.push([d, r.value]); }
+    const own = Array.isArray(row.classes) ? row.classes : [];
+    const classes = [...new Set(own.flatMap((c) => [c, ...t.env.vocab.ancestors(c)]))].sort();
+    memo.set(k, namedHolds(cond, rowReads(cond.rowNs, known, classes)));
+  }
+  return memo.get(k);
 }
 
 const knownPart = (t, id, row, item) => {

@@ -6,7 +6,9 @@
  "server-plugin/kernel/load/vocab-load.mjs",
  "server-plugin/kernel/load/world.mjs",
  "server-plugin/kernel/rx.mjs",
+ "server-plugin/kernel/validate/cell-grades.mjs",
  "server-plugin/kernel/validate/dimensions-validate.mjs",
+ "server-plugin/kernel/validate/named-conditions.mjs",
  "server-plugin/kernel/validate/rows.mjs",
  "server-plugin/kernel/validate/types.mjs"
 ]

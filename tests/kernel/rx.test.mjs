@@ -77,3 +77,21 @@ test('求值：定点算术逐位确定，ns 只查读数表，缺读数即失�
   assert.equal(evaluateRX(c('-mass + 1').tree, { dim: { mass: 0.00009 } }, {}), 1);
   assert.equal(code(() => evaluateRX(c('ev.qty > 1').tree, {}, { 'ev.qty': 'grd_a' })), 'E-MOD-RX');
 });
+
+test('卷文数据行写法（卷四 §4.7.5 eats）：and/or/not 单词、`集 has 项`、命名空间字段作集；null 读数比相等为假，排序即失败', () => {
+  assert.deepEqual(c('mass > 1 and open').tree, c('mass > 1 && open').tree);
+  assert.deepEqual(c('not open or mass < 2').tree, c('!open || mass < 2').tree);
+  const has = c('ev.tags has grd_a and mass <= 0.3').tree;
+  assert.equal(has.items[0].op, 'member');
+  assert.deepEqual(has.items[0].set, { op: 'ns', ns: 'ev', arg: ['tags'] });
+  assert.equal(evaluateRX(has, { dim: { mass: 0 } }, { 'ev.tags': ['grd_a'] }), true);
+  assert.equal(evaluateRX(has, { dim: { mass: 0 } }, { 'ev.tags': [] }), false);
+  assert.equal(code(() => evaluateRX(has, { dim: { mass: 0 } }, {})), 'E-MOD-RX');
+  assert.equal(c('tagset has grd_a').tree.op, 'member');
+  assert.equal(code(() => c('mass has grd_a')), 'E-MOD-RX');
+  assert.equal(code(() => c('story.wealth has grd_a')), 'E-MOD-RX');
+  const eq = c('ev.kind == grd_a and ev.qty >= 0.5').tree;
+  assert.equal(evaluateRX(eq, {}, { 'ev.kind': null, 'ev.qty': 1 }), false);
+  assert.equal(evaluateRX(c('ev.kind != grd_a').tree, {}, { 'ev.kind': null }), true);
+  assert.equal(code(() => evaluateRX(c('ev.qty >= 0.5').tree, {}, { 'ev.qty': null })), 'E-MOD-RX');
+});
