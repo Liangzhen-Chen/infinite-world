@@ -75,11 +75,10 @@ test('ErrorCode 构造：错拼 E-DIM-ID-FORMAT，未登记 E-DIM-REF-MISSING', 
   rejects(() => errorCodeOf('E-PATH-OVERLAP', new Set(['E-DIM-DOMAIN-RANGE'])), 'E-DIM-REF-MISSING');
 });
 
-test('P：缺 pathTypes 键或空表时无成员；仓库 state-owners.json 现无 pathTypes，P 无成员', () => {
+test('P：缺 pathTypes 键或空表时无成员（仓库 state-owners.json 建 pathTypes 后有成员，见 state-owners.test.mjs）', () => {
   assert.deepEqual(Object.keys(buildP({})), []);
   assert.deepEqual(Object.keys(buildP({ pathTypes: {} })), []);
-  const decl = JSON.parse(readFileSync(join(ROOT, 'world/ontology/state-owners.json'), 'utf8'));
-  installHandles({ vocab: report.vocab, decl });
+  installHandles({ vocab: report.vocab, decl: {} });
   assert.deepEqual(Object.keys(P), []);
   assert.ok(Object.isFrozen(P));
 });

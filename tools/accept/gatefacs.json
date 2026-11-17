@@ -50,6 +50,7 @@
    "ownerVol": "vol2",
    "paths": [
     "server-plugin/kernel/load/flatten.mjs",
+    "server-plugin/kernel/load/state-owners.mjs",
     "server-plugin/kernel/validate/dimensions-validate.mjs",
     "server-plugin/kernel/validate/rows.mjs",
     "server-plugin/kernel/validate/types.mjs"
