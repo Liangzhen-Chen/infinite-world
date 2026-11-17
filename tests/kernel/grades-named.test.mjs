@@ -102,18 +102,45 @@ test('namedConditions：条目条件对行为真即必填，为假不必填，�
   assert.deepEqual(run(f, opts).errors.filter((e) => e.dim === 'size').map((e) => e.row), ['gad_hammer']);
 });
 
-test('namedConditions 与 null（卷二 :254）：显式 null 是"没有"，条目对该行不成立；缺值才是未知，计为成立；求值器不收 null', () => {
-  const { f, opts } = named('thing.tag == grd_b and env.heat <= 0');
+// tag 的定义处（表头）写 nullMeans: 'none'，即"null = 没有"（卷二 :254）：显式 null 时 != 成立、== 不成立；缺值是未知，计为成立。
+function tagged(fits, nullMeans) {
+  const { f, opts } = named(fits);
   f.gadget.dimensions.tag = { type: 'ref', vocab: 'grade', nullable: true, required: 'never', onUnknown: 'skip', modifiable: false, source: 'test', owner: 'test' };
-  f.gadget.rows.gad_hammer.tag = 'grd_b';
-  const sizeRows = (r) => r.errors.filter((e) => e.dim === 'size').map((e) => e.row);
-  // gad_box 没写 tag（未知）→ 成立；gad_hammer tag = grd_b → 成立。
-  assert.deepEqual(sizeRows(run(f, opts)).sort(), ['gad_box', 'gad_hammer']);
-  // gad_box 显式 null（没有）→ 条目不成立，不必填。
-  f.gadget.rows.gad_box.tag = null;
-  assert.deepEqual(sizeRows(run(f, opts)), ['gad_hammer']);
+  if (nullMeans) f.gadget.dimensions.tag.nullMeans = nullMeans;
+  const rows = (r) => r.errors.filter((e) => e.dim === 'size').map((e) => e.row);
+  // 只让 gad_box 带被测的 tag 取值；gad_hammer 恒为 grd_a（!= grd_b 成立、== grd_b 不成立），作对照。
+  f.gadget.rows.gad_hammer.tag = 'grd_a';
+  return { f, opts, rows, setBox: (v) => { if (v === undefined) delete f.gadget.rows.gad_box.tag; else f.gadget.rows.gad_box.tag = v; } };
+}
+
+test('namedConditions 与 null（卷二 :254）：定义处写 null = 没有时，!= 成立、== 不成立；缺值是未知，两种比较都计为成立；等于别的值照常', () => {
+  const ne = tagged('thing.tag != grd_b and env.heat <= 0', 'none');
+  ne.setBox(null);
+  assert.deepEqual(ne.rows(run(ne.f, ne.opts)).sort(), ['gad_box', 'gad_hammer'], '!= 对显式 null 成立');
+  ne.setBox(undefined);
+  assert.deepEqual(ne.rows(run(ne.f, ne.opts)).sort(), ['gad_box', 'gad_hammer'], '!= 缺值（未知）成立');
+  ne.setBox('grd_b');
+  assert.deepEqual(ne.rows(run(ne.f, ne.opts)), ['gad_hammer'], '!= 等于 grd_b 不成立');
+  ne.setBox('grd_a');
+  assert.deepEqual(ne.rows(run(ne.f, ne.opts)).sort(), ['gad_box', 'gad_hammer'], '!= 等于别的值成立');
+
+  const eq = tagged('thing.tag == grd_b and env.heat <= 0', 'none');
+  eq.setBox(null);
+  assert.deepEqual(eq.rows(run(eq.f, eq.opts)), [], '== 对显式 null 不成立');
+  eq.setBox(undefined);
+  assert.deepEqual(eq.rows(run(eq.f, eq.opts)), ['gad_box'], '== 缺值（未知）成立');
+  eq.setBox('grd_b');
+  assert.deepEqual(eq.rows(run(eq.f, eq.opts)), ['gad_box'], '== 等于 grd_b 成立');
+  eq.setBox('grd_a');
+  assert.deepEqual(eq.rows(run(eq.f, eq.opts)), [], '== 等于别的值不成立');
+});
+
+test('namedConditions 与 null：定义处没写 nullMeans 的字段，显式 null 不作"没有"，条目保守地不成立；求值器不收 null', () => {
+  const ne = tagged('thing.tag != grd_b and env.heat <= 0');
+  ne.setBox(null);
+  assert.deepEqual(ne.rows(run(ne.f, ne.opts)), ['gad_hammer']);
   // 求值器自己没有第五种读数类型：null 读数即求值失败。
-  assert.throws(() => evaluateRX(compileRXInScope('thing.tag == grd_b', 'data', { ns: opts.ns, dims: new Map(), vocabIndex: new Map([['grd_b', { family: 'grade', prefix: 'grd_' }]]), maxDepth: 16 }).tree, {}, { 'thing.tag': null }), { code: 'E-MOD-RX' });
+  assert.throws(() => evaluateRX(compileRXInScope('thing.tag == grd_b', 'data', { ns: ne.opts.ns, dims: new Map(), vocabIndex: new Map([['grd_b', { family: 'grade', prefix: 'grd_' }]]), maxDepth: 16 }).tree, {}, { 'thing.tag': null }), { code: 'E-MOD-RX' });
 });
 
 test('namedConditions 反例：条目条件编不过报在词表条目上；族不存在报 E-DIM-REF-MISSING；未声明的命名条件只记 notCovered', () => {
