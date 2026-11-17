@@ -7,7 +7,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { LAYOUT, REGISTRY, readRegistry, readDecl, groupModel, loadContext, classPrint, matchGlobs } from './read.mjs';
-import { ENUM, itemChecks, keySets } from './lib/item-form.mjs';
+import { ENUM, itemChecks, keySets, itemPrint } from './lib/item-form.mjs';
 import { stableJson } from './run.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -119,6 +119,31 @@ function stampCriteria(root, prevRows, regs) {
   return { rows, errors };
 }
 
+// 非扫描式条目（没有 scanClass）的修订记录（S12-16；李白 11-17 裁定）：记在条目行自身。首次登记 rev 必为 1、带首条记录，不算降级；
+// 已登记条目内容（指纹不含 rev、revisions、print、state、impl）有任何改动，须 rev 加一、补该 rev 的修订记录，旧记录一条不删，否则 E-ACC-ITEM-DOWNGRADE；
+// 内容没变而 rev、记录动了，E-ACC-ITEM-FORM。通过的条目盖上内容指纹 print。
+function stampItems(prevRows, items) {
+  const errors = [];
+  const prev = new Map(prevRows.map((r) => [r.itemKey, r]));
+  const rows = items.map((it) => {
+    if (it.scanClass) return it;
+    const row = { ...it, print: itemPrint(it) };
+    const p = prev.get(it.itemKey);
+    if (!p || p.scanClass) {
+      if (it.rev !== 1) errors.push(`E-ACC-ITEM-FORM ${it.itemKey}: first registration must have rev 1`);
+      return row;
+    }
+    const kept = (p.revisions || []).every((r) => (it.revisions || []).some((x) => JSON.stringify(x) === JSON.stringify(r)));
+    if (itemPrint(p) === row.print) {
+      if (it.rev !== p.rev || !kept || (it.revisions || []).length !== (p.revisions || []).length) errors.push(`E-ACC-ITEM-FORM ${it.itemKey}: rev or revisions changed without any content change`);
+    } else if (it.rev !== p.rev + 1 || !kept) {
+      errors.push(`E-ACC-ITEM-DOWNGRADE ${it.itemKey}: content changed without rev+1 and an appended revision record (old records must stay)`);
+    }
+    return row;
+  });
+  return { rows, errors };
+}
+
 // input.itemStates：{条目键: 新状态}，只改状态（R12-11.7 的转移），其余字段照旧。
 export function register(root, input) {
   if (input.itemStates) {
@@ -142,7 +167,11 @@ export function register(root, input) {
   const stamped = stampCriteria(root, prevCrit, regs);
   regs.criteria = stamped.rows;
   if (stableJson({ rows: regs.criteria }) !== stableJson({ rows: prevCrit }) && !touched.includes('criteria')) touched.push('criteria');
-  const errors = [...transitions(readRegistry(root, 'items'), regs.items), ...stamped.errors, ...validate(root, regs)];
+  const prevItems = readRegistry(root, 'items');
+  const stampedItems = stampItems(prevItems, regs.items);
+  regs.items = stampedItems.rows;
+  if (stableJson({ rows: regs.items }) !== stableJson({ rows: prevItems }) && !touched.includes('items')) touched.push('items');
+  const errors = [...transitions(prevItems, regs.items), ...stamped.errors, ...stampedItems.errors, ...validate(root, regs)];
   if (errors.length) return { errors };
   mkdirSync(join(root, LAYOUT.accDir), { recursive: true });
   for (const kind of touched) writeFileSync(join(root, LAYOUT.accDir, REGISTRY[kind].file), stableJson({ rows: regs[kind] }));

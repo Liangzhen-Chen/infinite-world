@@ -1,0 +1,2 @@
+// @file tools/accept/items.json
+{"rows": [{"itemKey": "vol1.V-5", "volume": "vol1", "localNo": "V-5", "form": "invariant", "method": "load_check", "target": "data", "expect": "all_pass", "stage": 0, "gates": ["pre_merge"], "runsOn": "local_static", "source": "卷一 §12.2 V-5；S12-3 转录", "state": "implemented", "impl": "x/y.mjs", "zeroRows": [], "print": "79d37b90e91895bc5eaf650802492185d956c4819b43b50a23bbba6df6793d41", "rev": 1, "revisions": [{"rev": 1, "date": "2026-11-17", "summary": "首次登记（S12-3 非扫描式条目转录）", "card": "api-s1216"}]}]}

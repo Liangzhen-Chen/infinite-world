@@ -1,0 +1,2 @@
+// @file tools/accept/items.json
+{"rows": [{"itemKey": "fx.N1", "form": "invariant", "method": "unit_test", "expect": "all_pass", "stage": 0, "gates": ["pre_merge"], "rev": 1, "revisions": [{"rev": 1, "date": "2026-11-17", "summary": "首次登记", "card": "fx"}], "print": "0000"}]}

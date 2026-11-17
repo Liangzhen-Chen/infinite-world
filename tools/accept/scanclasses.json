@@ -2,6 +2,13 @@
  "rows": [
   {
    "detectors": [
+    "ledger_count"
+   ],
+   "scanClass": "baseline_monotone",
+   "source": "卷一 V-11（I43 基线只降）；李白 11-17 S12-3 扫描式条目三类问题裁定第 1 条（开放登记，卷十二 §2.4）"
+  },
+  {
+   "detectors": [
     "lit_scope"
    ],
    "litAllow": [
@@ -32,6 +39,20 @@
    ],
    "scanClass": "ext_code",
    "source": "卷十二 §3.4 S12-12、R12-6.2；P-1b 新登类别"
+  },
+  {
+   "detectors": [
+    "typed_pos"
+   ],
+   "scanClass": "fallback",
+   "source": "卷十二 §2.4 首批表（卷二 §1.6、S4）；S12-3 转录"
+  },
+  {
+   "detectors": [
+    "typed_pos"
+   ],
+   "scanClass": "id_parse",
+   "source": "卷十二 §2.4 首批表（卷二 S12）；S12-3 转录"
   },
   {
    "detectors": [
@@ -84,6 +105,20 @@
    },
    "scanClass": "item_ledger",
    "source": "卷十二 §3.4 S12-3、R12-11.3；P-1b 新登类别"
+  },
+  {
+   "detectors": [
+    "ledger_count"
+   ],
+   "scanClass": "ledger_tally",
+   "source": "卷十二 §4.1.6 至 §4.14.6 各节 A12-n.1（汇总计数）；李白 11-17 S12-3 扫描式条目三类问题裁定第 1 条（开放登记，卷十二 §2.4）"
+  },
+  {
+   "detectors": [
+    "sym_exists"
+   ],
+   "scanClass": "legacy_symbol",
+   "source": "卷十二 §2.4 首批表（卷二 S3、S6、S14）；S12-3 转录"
   },
   {
    "detectors": [

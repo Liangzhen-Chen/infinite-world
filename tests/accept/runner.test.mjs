@@ -19,7 +19,7 @@ test('新树上提交关口：必过条目计数全 0，用例全过，放行', 
   // 必过集合里的条目全过；不过的只许是已实现、未进必过集合的条目（P-1b 的 S12-2、S12-3 新树非零，见 P-1b 回报）。
   const core = new Set(readRegistry(ROOT, 'items').filter((it) => it.state === 'in_core').map((it) => it.itemKey));
   assert.ok(report.items.failed.every((f) => f.itemKey !== 'bypass' && !core.has(f.itemKey)));
-  assert.equal(report.items.pass + report.items.fail, report.items.total);
+  assert.equal(report.items.pass + report.items.fail + report.items.not_run + report.items.blocked, report.items.total);
   assert.ok(report.items.pass >= core.size);
   for (const c of Object.values(report.components)) assert.equal(c.current, 0);
   assert.ok(Object.values(report.cases).length >= 10);
@@ -53,7 +53,7 @@ test('门禁是拦：规则层或内核里出现一处违例即拒，行键不�
 test('登记器：形式、参数、门禁设施、状态转移不合即拒，不写盘', () => {
   const r = regs();
   const bad = (patch) => validate(ROOT, { ...r, ...patch });
-  const item = r.items[0];
+  const item = r.items.find((it) => it.itemKey === 'vol1.V-17');
   assert.match(bad({ items: [{ ...item, method: 'unit_test' }] }).join('\n'), /E-ACC-ITEM-FORM/);
   assert.match(bad({ items: [{ ...item, params: { ...item.params, files: ['server-plugin/a.mjs'] } }] }).join('\n'), /E-ACC-ITEM-PARAM/);
   assert.match(bad({ items: [{ ...item, params: { ...item.params, groups: ['nosuchgroup'] } }] }).join('\n'), /E-ACC-ITEM-PARAM/);

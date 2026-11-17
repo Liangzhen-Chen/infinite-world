@@ -2,6 +2,8 @@
 // 条目编号口径（李白 11-17 裁定二）：只数各卷"判定/验收"那一族编号，在定义处出现的才算——表格首列，或标题、加粗行开头
 // 或列表项开头（李白 11-17 门禁小修卡裁定二追认，对所有卷一样）；编号前只允许列表符、加粗（表格竖线、标题井号、反引号是另几种位置的记号）；
 // 列表项开头还允许"四种形式名之一＋全角冒号＋编号"（裁定一，卷十二的 A12 条）。纯段落开头的编号与段落中间的引用不算；条文下面的"第 n 条"也不算条目。
+// 作废条目（李白 11-17 S12-3 三类问题裁定第 3 条）：定义处在列表符之后、编号之前加删除线记号 ~~，不在上面允许的前导记号之内，所以不算定义处、不计入；
+// 该行文字照留作历史。拆行的原条目（跨两类，行上 part/parts）按原条目计，见 detect 内说明。
 // 每卷算哪几族是登记数据：扫描类别登记行 docFamilies：{卷代号: [编号前缀]}（编号 = 前缀 + 数字，数字间可带 . 或 -），卷文件在 docVolumes；
 // 四个形式名在同一行的 formNames：{acc_form 值: 中文名}（键取自 item-form 的 ENUM.form）；代码里没有卷名、前缀与形式名。
 // params.checks：
@@ -48,6 +50,15 @@ export function detect(ctx, params, cls) {
     }
     return defs.get(vol);
   };
+  // 原条目口径（李白 11-17 S12-3 三类问题裁定第 2 条）：跨两类的条目拆成几行，行上写 part 与全部 parts；登记表按"卷＋localNo"为一个原条目，
+  // 各行 parts 列的每一部分都有行在才算已登记（缺任一部分的原条目按未登记）；计数按原条目，不按行数重复计。
+  const complete = new Set();
+  for (const key of new Set(items.map((it) => `${it.volume}\n${it.localNo}`))) {
+    const rows = items.filter((it) => `${it.volume}\n${it.localNo}` === key);
+    const have = new Set(rows.map((r) => r.part));
+    if (rows.every((r) => !r.parts || r.parts.every((p) => have.has(p)))) complete.add(key);
+  }
+  const originalsOf = (vol) => new Set(items.filter((it) => it.volume === vol && complete.has(`${it.volume}\n${it.localNo}`)).map((it) => it.localNo));
   const hits = [];
   if (checks.has('orphan')) {
     for (const it of items) {
@@ -58,14 +69,13 @@ export function detect(ctx, params, cls) {
   for (const vol of Object.keys(vols).sort()) {
     const d = defsOf(vol);
     if (!d) continue;
-    const own = items.filter((it) => it.volume === vol);
+    const have = originalsOf(vol);
     if (checks.has('unregistered')) {
-      const have = new Set(own.map((it) => it.localNo));
       for (const [no, line] of [...d.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
         if (!have.has(no)) hits.push({ file: vols[vol], line, nodeKind: 'doc', symbolPath: `${vol}.${no}`, code: 'E-ACC-ITEM-UNREGISTERED' });
       }
     }
-    if (checks.has('count') && own.length !== d.size) hits.push({ file, line: 0, nodeKind: 'volume', symbolPath: vol, code: 'E-ACC-ITEM-COUNT' });
+    if (checks.has('count') && have.size !== d.size) hits.push({ file, line: 0, nodeKind: 'volume', symbolPath: vol, code: 'E-ACC-ITEM-COUNT' });
   }
   return hits;
 }

@@ -1,6 +1,156 @@
 {
  "rows": [
   {
+   "detector": "lit_scope",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol1.V-1.a",
+   "localNo": "V-1",
+   "method": "static_code",
+   "part": "a",
+   "parts": [
+    "a",
+    "b"
+   ],
+   "runsOn": "local_static",
+   "scanClass": "instance_name",
+   "source": "卷一 §12.2 V-1 前半（禁具体 id；卷二 S1）；S12-3 转录，拆 a/b 见李白 11-17 S12-3 裁定第 2 条",
+   "stage": 0,
+   "state": "registered",
+   "target": "runtime_code",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "detector": "typed_pos",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol1.V-1.b",
+   "localNo": "V-1",
+   "method": "static_code",
+   "part": "b",
+   "parts": [
+    "a",
+    "b"
+   ],
+   "runsOn": "local_static",
+   "scanClass": "id_parse",
+   "source": "卷一 §12.2 V-1 后半（id 反推；卷二 S12）；S12-3 转录，拆 a/b 见李白 11-17 S12-3 裁定第 2 条",
+   "stage": 0,
+   "state": "registered",
+   "target": "runtime_code",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "detector": "ledger_count",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol1.V-11",
+   "localNo": "V-11",
+   "method": "static_data",
+   "runsOn": "local_static",
+   "scanClass": "baseline_monotone",
+   "source": "卷一 §12.2 V-11（基线只降，I43）；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "registry",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol1.V-12",
+   "localNo": "V-12",
+   "method": "unit_test",
+   "print": "27d685cb37c3d72eb8ffa1facea1c0e2d6d11e63ca93326d23d7078e864879c7",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷一 §12.2 V-12（卷二 A1–A11）；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol1.V-13",
+   "localNo": "V-13",
+   "method": "scenario_run",
+   "print": "c859a59b07d9ae11f9c4c0044f2aa28b1913da99607d08bba5f0e2c4fde99d41",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "cloud_ref",
+   "source": "卷一 §12.2 V-13（AI 不入逻辑，T0 与 T2 各推 30 日）；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "world_run",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol1.V-14",
+   "localNo": "V-14",
+   "method": "scenario_run",
+   "print": "7104e90fa4f7a8a8eadb013ff3cfefb564d69a1f3bd1b7aeb2da17e06ad0afee",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "cloud_ref",
+   "source": "卷一 §12.3 V-14（I41 生成同格）；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "world_run",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
    "baseComp": "c_version_fork",
    "detector": "path_access",
    "expect": "zero",
@@ -33,6 +183,303 @@
    "stage": 0,
    "state": "in_core",
    "target": "runtime_code",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "expect": "zero",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol1.V-18",
+   "localNo": "V-18",
+   "method": "unit_test",
+   "print": "8d2126c1782f827cd824830678be53d3ecd2825502e11ecbea76e6de2d0e815a",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷一 §12.2 V-18（唯一求值；卷二 B3–B5）；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol1.V-21",
+   "localNo": "V-21",
+   "method": "scenario_run",
+   "print": "e02dfa57f8684f409ac605846e7093e1818a9aa06c82094d79acb3925e7bb869",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "cloud_ref",
+   "source": "卷一 §12.2 V-21（I46 输入边可拔；卷二 G4）；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "world_run",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol1.V-22",
+   "localNo": "V-22",
+   "method": "load_check",
+   "print": "22af8ddb7d9eaf5ae57e612a3dee5f8b29e84568dbe3d09c2200ebc015b7331e",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷一 §12.2 V-22（I47 语言包对等）；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "data",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol1.V-26",
+   "localNo": "V-26",
+   "method": "property_test",
+   "print": "07279848eccc5698aa635ba8c6fc920e0480d06381fe5846e5cc81b8ea3cea15",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷一 §12.2 V-26（输入边承诺的性质测试；卷二 §七 B10）；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "expect": "equal",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol1.V-27",
+   "localNo": "V-27",
+   "method": "digest_compare",
+   "print": "7e62548e54aabff78a72aac99a0cb8dcc310b6bfeb0f9cdb2e4f459fa6744333",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "cloud_ref",
+   "source": "卷一 §12.2 V-27（I50 同种子同输出；卷二 G3）；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "world_run",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol1.V-28",
+   "localNo": "V-28",
+   "method": "unit_test",
+   "print": "48fb57e818622da0965e9a9e14fa0120a5f6f19aeb8f24832d25bdcd087a3867",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷一 §12.2 V-28（结构化声明校验）；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol1.V-30",
+   "localNo": "V-30",
+   "method": "scenario_run",
+   "print": "e4c621f2083877ef415261f357492484000014f795d2b04c7f3506dea58eb953",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "cloud_ref",
+   "source": "卷一 §12.2 V-30（缺 labels 仍可玩；卷二 G5、G1）；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "world_run",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "expect": "equal",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol1.V-4",
+   "localNo": "V-4",
+   "method": "digest_compare",
+   "print": "8640a8ceeecbbb85342e6b9fbdec5e8061854717cdd4e2ef7f05dd6634583f6f",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "cloud_ref",
+   "source": "卷一 §12.2 V-4（附录甲；I40；口径卷二 §2.9 第 3 条）；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "world_run",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol1.V-5",
+   "localNo": "V-5",
+   "method": "load_check",
+   "print": "79d37b90e91895bc5eaf650802492185d956c4819b43b50a23bbba6df6793d41",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷一 §12.2 V-5；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "data",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol1.V-6",
+   "localNo": "V-6",
+   "method": "scenario_run",
+   "print": "889cdff6687abde9516a1cac536bcdfc402b8f9ae3babceff0ddd8e8c48b7a70",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "cloud_ref",
+   "source": "卷一 §12.3 V-6（卷二 §七 B1、B2、B13）；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "world_run",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol1.V-8",
+   "localNo": "V-8",
+   "method": "calc_check",
+   "print": "d304b903f2b814ab51f0540123ff5fc314b271b1de404bdeefb4024ed6a7dd87",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷一 §12.2 V-8（I1–I51 按 §9 分阶段进 CORE）；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "registry",
    "volume": "vol1",
    "zeroRows": []
   },
@@ -74,6 +521,1028 @@
    "state": "in_core",
    "target": "runtime_code",
    "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "detector": "ledger_count",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-1.1",
+   "localNo": "A12-1.1",
+   "method": "static_data",
+   "runsOn": "local_static",
+   "scanClass": "ledger_tally",
+   "source": "卷十二 §4.1.6 A12-1.1；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "registry",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-1.2",
+   "localNo": "A12-1.2",
+   "method": "property_test",
+   "print": "3f10af30ed14cf47bdff9f4f0d5e0dd0bd09acdf4f1bffcd98f2b95e4e5e4c78",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.1.6 A12-1.2；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-1.3",
+   "localNo": "A12-1.3",
+   "method": "scenario_run",
+   "print": "9c805d55c3a62b2ba41c5f28f513878be619cc995ab7e17038bbbbdac5398964",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.1.6 A12-1.3；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "ledger_count",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-10.1",
+   "localNo": "A12-10.1",
+   "method": "static_data",
+   "runsOn": "local_static",
+   "scanClass": "ledger_tally",
+   "source": "卷十二 §4.10.6 A12-10.1；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "registry",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-10.2",
+   "localNo": "A12-10.2",
+   "method": "property_test",
+   "print": "4270371c190596d9d742f6e6d0c6277667f36e913a91a72bd74fcb955745e3c1",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.10.6 A12-10.2；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-10.3",
+   "localNo": "A12-10.3",
+   "method": "scenario_run",
+   "print": "c693d4863aded170f11949c07293156b8d2fd036c56a6747f015ed9498556155",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.10.6 A12-10.3；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "ledger_count",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-11.1",
+   "localNo": "A12-11.1",
+   "method": "static_data",
+   "runsOn": "local_static",
+   "scanClass": "ledger_tally",
+   "source": "卷十二 §4.11.6 A12-11.1；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "registry",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-11.2",
+   "localNo": "A12-11.2",
+   "method": "property_test",
+   "print": "89d8a6960fbcb0a89d39e9fcc3ff183cb179269d9e33a237106fb286c1c43f98",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.11.6 A12-11.2；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-11.3",
+   "localNo": "A12-11.3",
+   "method": "scenario_run",
+   "print": "1e4cd9bbde6565936349130be3b5ca8c9e35a3b442f7d4922bf089d5be902756",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.11.6 A12-11.3；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "ledger_count",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-12.1",
+   "localNo": "A12-12.1",
+   "method": "static_data",
+   "runsOn": "local_static",
+   "scanClass": "ledger_tally",
+   "source": "卷十二 §4.12.6 A12-12.1；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "registry",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-12.2",
+   "localNo": "A12-12.2",
+   "method": "property_test",
+   "print": "4b172f6f7576d06d9d5a6f9322cf93ded879994de58ffa246cbdf21c203e0287",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.12.6 A12-12.2；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-12.3",
+   "localNo": "A12-12.3",
+   "method": "scenario_run",
+   "print": "2fe683c0903686f150111e92dcb68dd457c03d151c2b44646b89c3627b8c3669",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.12.6 A12-12.3；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "ledger_count",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-13.1",
+   "localNo": "A12-13.1",
+   "method": "static_data",
+   "runsOn": "local_static",
+   "scanClass": "ledger_tally",
+   "source": "卷十二 §4.13.6 A12-13.1；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "registry",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-13.2",
+   "localNo": "A12-13.2",
+   "method": "unit_test",
+   "print": "b080846b6e79918adb1ed3d9c3ef2e0624289cb437bb57e732ec101d0fb8eef0",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.13.6 A12-13.2；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-13.3",
+   "localNo": "A12-13.3",
+   "method": "scenario_run",
+   "print": "1fff5895bb96a66832744d3e7f93bcf874b9310b0397cdcadc74375ae4af9096",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.13.6 A12-13.3；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "ledger_count",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-14.1",
+   "localNo": "A12-14.1",
+   "method": "static_data",
+   "runsOn": "local_static",
+   "scanClass": "ledger_tally",
+   "source": "卷十二 §4.14.6 A12-14.1；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "registry",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-14.2",
+   "localNo": "A12-14.2",
+   "method": "unit_test",
+   "print": "b04c473a167671ce49c23bdd24320d4bdc7f6622f1b2880363d7a24935bc7a9c",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.14.6 A12-14.2；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-14.3",
+   "localNo": "A12-14.3",
+   "method": "scenario_run",
+   "print": "db685078f500fec7c8f994c211491bb481bccc783a7d98db0d8bd6f5a52fbda0",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.14.6 A12-14.3；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "ledger_count",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-2.1",
+   "localNo": "A12-2.1",
+   "method": "static_data",
+   "runsOn": "local_static",
+   "scanClass": "ledger_tally",
+   "source": "卷十二 §4.2.6 A12-2.1；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "registry",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-2.2",
+   "localNo": "A12-2.2",
+   "method": "property_test",
+   "print": "42b9332e7764e8882523c65ddd6f80e838a20c84c05f9f0048a3999780a7e48c",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.2.6 A12-2.2；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-2.3",
+   "localNo": "A12-2.3",
+   "method": "scenario_run",
+   "print": "2bead405e3850e10751eded9184b8496adfc7c3c739f9c6f92d4be1bfc347fda",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.2.6 A12-2.3；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "ledger_count",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-3.1",
+   "localNo": "A12-3.1",
+   "method": "static_data",
+   "runsOn": "local_static",
+   "scanClass": "ledger_tally",
+   "source": "卷十二 §4.3.6 A12-3.1；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "registry",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-3.2",
+   "localNo": "A12-3.2",
+   "method": "unit_test",
+   "print": "63794034a89d6307d41246f34a61664a61e6df645e904c55376a33abc8de089e",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.3.6 A12-3.2；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-3.3",
+   "localNo": "A12-3.3",
+   "method": "scenario_run",
+   "print": "10ea981fa1747ab2e3ecdc408c28e2597614b5aa545c568685a3992b561e7d0a",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.3.6 A12-3.3；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "ledger_count",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-4.1",
+   "localNo": "A12-4.1",
+   "method": "static_data",
+   "runsOn": "local_static",
+   "scanClass": "ledger_tally",
+   "source": "卷十二 §4.4.6 A12-4.1；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "registry",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-4.2",
+   "localNo": "A12-4.2",
+   "method": "unit_test",
+   "print": "0cab2286bda9038a5e252076d82adfefbc3ff1a5c6ec15d5aedc383c1db00d8a",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.4.6 A12-4.2；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-4.3",
+   "localNo": "A12-4.3",
+   "method": "scenario_run",
+   "print": "256bc07dcb765446f3771c41da5052f7fecbab98bb5cba71dce58e8bc49b95b2",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.4.6 A12-4.3；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "ledger_count",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-5.1",
+   "localNo": "A12-5.1",
+   "method": "static_data",
+   "runsOn": "local_static",
+   "scanClass": "ledger_tally",
+   "source": "卷十二 §4.5.6 A12-5.1；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "registry",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-5.2",
+   "localNo": "A12-5.2",
+   "method": "unit_test",
+   "print": "48f7a6dce33ec6d77399e8ec16f38e399f1091589c5cf51dcc520a5fcefa8962",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.5.6 A12-5.2；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-5.3",
+   "localNo": "A12-5.3",
+   "method": "scenario_run",
+   "print": "56d0b2cf0e6c6a6acd9d01be7ebc59357eca4f8c3a05008c10c1322124fdccd2",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.5.6 A12-5.3；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "ledger_count",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-6.1",
+   "localNo": "A12-6.1",
+   "method": "static_data",
+   "runsOn": "local_static",
+   "scanClass": "ledger_tally",
+   "source": "卷十二 §4.6.6 A12-6.1；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "registry",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-6.2",
+   "localNo": "A12-6.2",
+   "method": "unit_test",
+   "print": "60c763ab7882f3042dd706755cae9a4f889d92e3dd5c3006499cc19180d2b9e0",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.6.6 A12-6.2；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-6.3",
+   "localNo": "A12-6.3",
+   "method": "scenario_run",
+   "print": "a3e99b2ca9059b1d4241aa5281f1be8540b1233da3c14ecdcb4fe007100ee3b4",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.6.6 A12-6.3；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "ledger_count",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-7.1",
+   "localNo": "A12-7.1",
+   "method": "static_data",
+   "runsOn": "local_static",
+   "scanClass": "ledger_tally",
+   "source": "卷十二 §4.7.6 A12-7.1；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "registry",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-7.2",
+   "localNo": "A12-7.2",
+   "method": "calc_check",
+   "print": "cf4fe9782fd9157935e49c77f931f455d09c2526897eac40aae887cc90ebf962",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.7.6 A12-7.2；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-7.3",
+   "localNo": "A12-7.3",
+   "method": "scenario_run",
+   "print": "f039711e620fc1e151bb0696662484311f7633e5f511b81c9995a1974252c42d",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.7.6 A12-7.3；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "ledger_count",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-8.1",
+   "localNo": "A12-8.1",
+   "method": "static_data",
+   "runsOn": "local_static",
+   "scanClass": "ledger_tally",
+   "source": "卷十二 §4.8.6 A12-8.1；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "registry",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-8.2",
+   "localNo": "A12-8.2",
+   "method": "property_test",
+   "print": "4956fed5bb6ab00dfe8f6d197c96191717f0e5820ca08a5b6534b25bd9156214",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.8.6 A12-8.2；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-8.3",
+   "localNo": "A12-8.3",
+   "method": "scenario_run",
+   "print": "312a03b8972871397c52a95e474dbae05f37162724d4c35a1319d920ff332fac",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.8.6 A12-8.3；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "ledger_count",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-9.1",
+   "localNo": "A12-9.1",
+   "method": "static_data",
+   "runsOn": "local_static",
+   "scanClass": "ledger_tally",
+   "source": "卷十二 §4.9.6 A12-9.1；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "registry",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-9.2",
+   "localNo": "A12-9.2",
+   "method": "unit_test",
+   "print": "73900692022ee16c20045316fd464e7f3cdabae8148e4f9a51b1e5f4ed77cd13",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.9.6 A12-9.2；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-9.3",
+   "localNo": "A12-9.3",
+   "method": "scenario_run",
+   "print": "00b20c7d64efe212ac6655960f46403b2a891b740ff893b213650ade90f46881",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-s1216",
+     "date": "2026-11-17",
+     "rev": 1,
+     "summary": "首次登记（S12-3 非扫描式条目转录）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.9.6 A12-9.3；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
    "zeroRows": []
   },
   {
@@ -466,6 +1935,46 @@
    "zeroRows": []
   },
   {
+   "detector": "typed_pos",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol2.S12",
+   "localNo": "S12",
+   "method": "static_code",
+   "runsOn": "local_static",
+   "scanClass": "id_parse",
+   "source": "卷二 §7 S12（E-VIEW-ID-PARSE）；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "detector": "sym_exists",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol2.S14",
+   "localNo": "S14",
+   "method": "static_code",
+   "runsOn": "local_static",
+   "scanClass": "legacy_symbol",
+   "source": "卷二 §7 S14（旧符号残留）；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
    "detector": "import_edge",
    "expect": "zero",
    "form": "scan",
@@ -504,6 +2013,66 @@
    "source": "卷二 §2.7 两张 import 矩阵与读法、S16",
    "stage": 0,
    "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "detector": "typed_pos",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol2.S4",
+   "localNo": "S4",
+   "method": "static_code",
+   "runsOn": "local_static",
+   "scanClass": "fallback",
+   "source": "卷二 §7 S4（E-VIEW-FALLBACK）；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "detector": "sym_exists",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol2.S6",
+   "localNo": "S6",
+   "method": "static_code",
+   "runsOn": "local_static",
+   "scanClass": "legacy_symbol",
+   "source": "卷二 §7 S6（E-VIEW-BYPASS-CATALOG）；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "detector": "lit_scope",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol2.S8",
+   "localNo": "S8",
+   "method": "static_code",
+   "runsOn": "local_static",
+   "scanClass": "instance_name",
+   "source": "卷二 §7 S8（修正键字面量）；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
    "target": "runtime_code",
    "volume": "vol2",
    "zeroRows": []
