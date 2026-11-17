@@ -11,7 +11,7 @@ import { detect as callEdge } from '../../tools/accept/detectors/call_edge.mjs';
 import { detect as docStruct, definedNumbers } from '../../tools/accept/detectors/doc_struct.mjs';
 import { ENUM } from '../../tools/accept/lib/item-form.mjs';
 import { tempRepo } from './temp-repo.mjs';
-import { testTempRoot, writeUnderTempRoot } from './temp-root.mjs';
+import { testTempRoot, writeUnderTempRoot, assertRelUnderTempRoot } from './temp-root.mjs';
 import { relative, isAbsolute } from 'node:path';
 import { realpathSync, rmSync, readFileSync, existsSync } from 'node:fs';
 
@@ -178,12 +178,42 @@ test('call_edge 测试临时根：路径落在临时根加常量相对路径内�
   assert.equal(callEdge(ctxOf({ 'tools/x.mjs': head + "const d = testTempRoot(); writeFileSync(join(d, 'a'), 'x');" }), { groups: ['offline'], callers: [], callees: ['registry_write'] }, CLS.registry_write).length, 1);
 });
 
-test('call_edge 登记入口函数体（裁定四）：登记辅助文件里 entries 名下的函数体不计，同文件别的函数、别的文件同名函数照计', () => {
-  const body = (name) => `import { writeFileSync } from 'node:fs';\nexport function ${name}(p, d) { writeFileSync(p, d); }\n`;
+test('call_edge 写函数豁免（裁定四收窄）：只豁免 assertedWriters 里先调用断言再写入的函数体；缺断言、断言在写入后、tempRepo/testTempRoot 体内写入、同文件别的函数、别的文件同名函数都照计', () => {
+  const head = "import { writeFileSync } from 'node:fs';\nfunction assertRelUnderTempRoot(r, p) { return p; }\n";
+  const fn = (name, inner) => `${head}export function ${name}(r, p, d) { ${inner} }\n`;
   const run = (file, src) => callEdge(ctxOf({ [file]: src }), { groups: ['offline'], callers: [], callees: ['registry_write'], roots: ['test-temp-root'] }, CLS.registry_write).length;
-  assert.equal(run('tests/accept/temp-root.mjs', body('writeUnderTempRoot')), 0);
-  assert.equal(run('tests/accept/temp-root.mjs', body('otherWriter')), 1);
-  assert.equal(run('tests/accept/x.test.mjs', body('writeUnderTempRoot')), 1);
+  const T = 'tests/accept/temp-root.mjs';
+  const ok = 'const n = assertRelUnderTempRoot(r, p); writeFileSync(n, d);';
+  assert.equal(run(T, fn('writeUnderTempRoot', ok)), 0);
+  assert.equal(run(T, fn('writeUnderTempRoot', 'writeFileSync(p, d);')), 1);
+  assert.equal(run(T, fn('writeUnderTempRoot', 'writeFileSync(p, d); assertRelUnderTempRoot(r, p);')), 1);
+  assert.equal(run(T, fn('writeUnderTempRoot', 'if (d) { assertRelUnderTempRoot(r, p); } writeFileSync(p, d);')), 1);
+  assert.equal(run(T, fn('writeUnderTempRoot', 'assertNotListed(r, p); writeFileSync(p, d);')), 1);
+  assert.equal(run(T, fn('writeUnderTempRoot', 'obj.assertRelUnderTempRoot(r, p); writeFileSync(p, d);')), 1);
+  assert.equal(run(T, fn('tempRepo', ok)), 1);
+  assert.equal(run(T, fn('testTempRoot', ok)), 1);
+  assert.equal(run(T, fn('otherWriter', ok)), 1);
+  assert.equal(run(T, `${fn('writeUnderTempRoot', ok)}export function other(p, d) { writeFileSync(p, d); }\n`), 1);
+  assert.equal(run('tests/accept/x.test.mjs', fn('writeUnderTempRoot', ok)), 1);
+  const noDecl = `import { writeFileSync } from 'node:fs';\nexport function writeUnderTempRoot(r, p, d) { assertRelUnderTempRoot(r, p); writeFileSync(p, d); }\n`;
+  assert.equal(run(T, noDecl), 1);
+});
+
+test('writeUnderTempRoot 与断言函数（裁定四）：判据名取自登记数据，真实 temp-root.mjs 的写函数通过 call_edge，且体内先调用登记的断言', () => {
+  const ctx = loadContext(ROOT);
+  const fac = ctx.regs.gatefacs.find((g) => g.facCode === 'test-temp-root');
+  assert.deepEqual(fac.assertedWriters, ['writeUnderTempRoot']);
+  assert.deepEqual(fac.writerAsserts, ['assertRelUnderTempRoot']);
+  const hits = callEdge(ctx, { groups: ['offline'], callers: [], callees: ['registry_write'], roots: ['test-temp-root'] }, CLS.registry_write);
+  assert.deepEqual(hits.filter((h) => h.file === 'tests/accept/temp-root.mjs'), []);
+});
+
+test('assertRelUnderTempRoot（裁定四）：越出临时根与命中 §2.11 的路径直接抛错', () => {
+  const dir = testTempRoot('arutr-');
+  try {
+    for (const bad of ['../a', 'a/../../b', '/etc/x', 'C:/x', 'tools/accept/items.json']) assert.throws(() => assertRelUnderTempRoot(dir, bad), /temp root|§2\.11/, bad);
+    assert.equal(assertRelUnderTempRoot(dir, 'a/b.json'), 'a/b.json');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
 test('writeUnderTempRoot（裁定四）：`..`、绝对路径、命中 §2.11 受保护模式时抛错；合规相对路径写入临时根内', () => {
@@ -210,6 +240,7 @@ test('test-temp-root 登记（裁定三、四）：entries 封闭为 testTempRoo
   const fac = loadContext(ROOT).regs.gatefacs.find((g) => g.facCode === 'test-temp-root');
   assert.deepEqual([...fac.entries].sort(), ['tempRepo', 'testTempRoot', 'writeUnderTempRoot']);
   assert.equal(fac.inRepo, false);
+  assert.ok(fac.assertedWriters.every((w) => fac.entries.includes(w)));
   const dir = tempRepo();
   try {
     const r = relative(realpathSync(ROOT), realpathSync(dir));

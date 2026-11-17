@@ -5,7 +5,7 @@
 // 路径实参位置非空的（卷十二 S12-2 判法后半，`lit_scope` 一侧）：各位置的实参经常量折叠得出相对路径、且不落在本条目类别登记行
 // guardedPaths 的模式内，才不计；算不出常量（拼接、变量、调用）、绝对路径或越出仓库的 `..` 都计入。
 // 测试临时根（params.roots：gatefac 代号，inRepo 为假）：路径实参是临时根变量本身，或 join/resolve(临时根, 常量相对路径) 的，也不计
-// （李白 11-17 裁定三）；临时根变量只认 `const 名 = 登记函数(…)`，其余（拼接、变量路径、别的来源）一律计入。
+// （李白 11-17 裁定三）；登记写入口（gatefac 的 assertedWriters）的函数体，在先调用断言（writerAsserts）之后的部分不计（裁定四收窄）；临时根变量只认 `const 名 = 登记函数(…)`，其余（拼接、变量路径、别的来源）一律计入。
 // 局限：按词法读，`const w = fs.writeFileSync` 这类别名、require 解构、动态 import 取到的函数追不到（待块 2 类型检查）。
 
 import { tokenize, foldAt, buildEnv, importsOf, symbolPaths, isP, matchClose } from '../lib/js-scan.mjs';
@@ -30,7 +30,7 @@ export function detect(ctx, params, cls) {
     const sym = symbolPaths(toks);
     const bind = bindings(toks, table);
     const rootNames = rootBindings(toks, file, roots);
-    const exempt = entryBodies(toks, roots.get(file));
+    const exempt = assertedBodies(toks, roots.get(file));
     for (let i = 0; i < toks.length; i++) {
       const t = toks[i];
       if (t.t !== 'id' || isP(toks[i - 1], '.') || isP(toks[i - 1], '?.')) continue;
@@ -80,20 +80,40 @@ function rootFacilities(ctx, codes) {
   for (const c of codes || []) {
     const g = facs.get(c);
     if (!g || g.inRepo !== false || !Array.isArray(g.paths) || !Array.isArray(g.entries)) continue;
-    for (const p of g.paths) out.set(p, new Set([...(out.get(p) || []), ...g.entries]));
+    for (const p of g.paths) {
+      const cur = out.get(p) || { entries: new Set(), writers: new Set(), asserts: new Set() };
+      for (const e of g.entries) cur.entries.add(e);
+      for (const w of Array.isArray(g.assertedWriters) ? g.assertedWriters : []) cur.writers.add(w);
+      for (const a of Array.isArray(g.writerAsserts) ? g.writerAsserts : []) cur.asserts.add(a);
+      out.set(p, cur);
+    }
   }
   return out;
 }
 
-// 登记的辅助文件里，名字在该 gatefac 行 entries 内的函数声明，其函数体算登记入口自己的实现（入口在运行时断言路径，李白 11-17 裁定四）：
-// 体内的调用不计；入口名取自登记，文件里别的函数照常扫。返回函数体花括号的 [起, 止] 记号下标。
-function entryBodies(toks, entries) {
+// 写函数豁免（李白 11-17 裁定四之收窄）：登记辅助文件里，名字在该 gatefac 行 assertedWriters 内的函数声明，
+// 函数体内、首个"断言调用"之后的部分算登记写入口自己的实现不计；断言调用指函数体顶层语句里对 writerAsserts 所列、
+// 且本文件里有函数声明的名字的调用。找不到断言调用（缺断言、断言只在分支内、名字未声明）则整个函数体照计；断言之前的写入照计。
+// 判据只读登记数据，不写具体函数名；tempRepo、testTempRoot 这类只在 entries 里的函数体照常扫。返回豁免区间 [起, 止] 的记号下标。
+function assertedBodies(toks, fac) {
   const out = [];
-  if (!entries) return out;
+  if (!fac || !fac.writers.size) return out;
+  const declared = new Set();
+  for (let i = 0; i + 1 < toks.length; i++) if (toks[i].t === 'id' && toks[i].v === 'function' && toks[i + 1].t === 'id') declared.add(toks[i + 1].v);
   for (let i = 0; i + 2 < toks.length; i++) {
-    if (toks[i].t !== 'id' || toks[i].v !== 'function' || toks[i + 1].t !== 'id' || !entries.has(toks[i + 1].v) || !isP(toks[i + 2], '(')) continue;
+    if (toks[i].t !== 'id' || toks[i].v !== 'function' || toks[i + 1].t !== 'id' || !fac.writers.has(toks[i + 1].v) || !isP(toks[i + 2], '(')) continue;
     const pc = matchClose(toks, i + 2);
-    if (isP(toks[pc + 1], '{')) out.push([pc + 1, matchClose(toks, pc + 1)]);
+    if (!isP(toks[pc + 1], '{')) continue;
+    const end = matchClose(toks, pc + 1);
+    let depth = 0;
+    for (let k = pc + 2; k < end; k++) {
+      if (isP(toks[k], '{')) depth++;
+      else if (isP(toks[k], '}')) depth--;
+      else if (depth === 0 && toks[k].t === 'id' && fac.asserts.has(toks[k].v) && declared.has(toks[k].v) && !isP(toks[k - 1], '.') && !isP(toks[k - 1], '?.') && isP(toks[k + 1], '(')) {
+        out.push([matchClose(toks, k + 1), end]);
+        break;
+      }
+    }
   }
   return out;
 }
@@ -108,8 +128,8 @@ function rootBindings(toks, file, roots) {
   if (roots.size) {
     for (const imp of importsOf(toks)) {
       if (imp.kind !== 'static' || !imp.spec || !imp.spec.startsWith('.')) continue;
-      const entries = roots.get(posix.join(posix.dirname(file), imp.spec));
-      if (entries) for (const n of imp.names) if (entries.has(n.imported)) fns.add(n.local);
+      const fac = roots.get(posix.join(posix.dirname(file), imp.spec));
+      if (fac) for (const n of imp.names) if (fac.entries.has(n.imported)) fns.add(n.local);
     }
   }
   if (!fns.size) return new Set();
