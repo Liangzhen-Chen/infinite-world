@@ -52,12 +52,17 @@ export function rowReads(rowNs, known, classes) {
 const TRUE_NODE = { op: 'cmp', cmpOp: 'eq', left: { op: 'num', value: 0 }, right: { op: 'num', value: 0 } };
 const FALSE_NODE = { op: 'cmp', cmpOp: 'ne', left: { op: 'num', value: 0 }, right: { op: 'num', value: 0 } };
 
-// 显式 null 的读数参与 ==/!= 比较时按通则定值：== 不成立、!= 成立；其余用法（序比较、算术、member）不改，仍按读不到处理。
+// 显式 null 的读数参与 ==/!= 比较时按通则定值：null 只等于 null——两边都是显式 null 时 == 成立、!= 不成立；
+// 只一边是显式 null 时 == 不成立、!= 成立；其余用法（序比较、算术、member）不改，仍按读不到处理。
 function foldAbsent(n, absent) {
   if (!n || typeof n !== 'object') return n;
   if (n.op === 'cmp' && (n.cmpOp === 'eq' || n.cmpOp === 'ne')) {
-    const hit = [n.left, n.right].some((x) => x && x.op === 'ns' && absent.has(nsKey(x)));
-    if (hit) return n.cmpOp === 'ne' ? TRUE_NODE : FALSE_NODE;
+    const isNull = (x) => !!x && x.op === 'ns' && absent.has(nsKey(x));
+    const l = isNull(n.left), r = isNull(n.right);
+    if (l || r) {
+      const equal = l && r;
+      return (n.cmpOp === 'eq') === equal ? TRUE_NODE : FALSE_NODE;
+    }
   }
   const out = { ...n };
   for (const f of ['left', 'right', 'item', 'set', 'filter']) if (n[f]) out[f] = foldAbsent(n[f], absent);
