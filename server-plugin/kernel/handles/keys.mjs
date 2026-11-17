@@ -113,6 +113,41 @@ export function checkPathPattern(pattern) {
 }
 
 /**
+ * 拆 state 路径或路径模式为段（§2.7 路径模式匹配语义：按 `.` 分段）。kernel 组里 state 路径的字串拆分只在本文件做（§2.8 表 kernel 行），
+ * storage.mjs 读写时经它拿段，不自己切字串。不是非空字串、或有空段，返回 null。
+ * @param {unknown} path
+ * @returns {string[] | null}
+ */
+export function statePathSegments(path) {
+  if (typeof path !== 'string' || path === '') return null;
+  const segs = path.split('.');
+  return segs.includes('') ? null : segs;
+}
+
+/**
+ * @typedef {{base: 'number'|'integer'|'boolean'|'dimension'|'sealed'|'EventId'} | {base: 'ref'|'enum'|'struct', name: string} | {base: 'list', item: PathTypeShape}} PathTypeShape
+ */
+
+/**
+ * 解析 pathTypes 的值类型串为结构（文法同 kernel/load/state-owners.mjs 的核对：number[:单位]、integer[:单位]、boolean、ref:<kind>、enum:<族>、
+ * dimension、struct:<名>、sealed、EventId、list<…>）。类型文法的解析只在本文件（§2.8 表 kernel 行），storage.mjs 运行期按结构核对值。
+ * 不合文法返回 null（加载期已由合并器报，运行期按值类型不符处置）。
+ * @param {unknown} t
+ * @returns {PathTypeShape | null}
+ */
+export function pathTypeShape(t) {
+  if (typeof t !== 'string') return null;
+  const list = /^list<(.+)>$/.exec(t);
+  if (list) { const item = pathTypeShape(list[1]); return item ? { base: 'list', item } : null; }
+  const num = /^(number|integer)(?::.*)?$/.exec(t);
+  if (num) return { base: /** @type {'number'|'integer'} */ (num[1]) };
+  if (t === 'boolean' || t === 'dimension' || t === 'sealed' || t === 'EventId') return { base: t };
+  const named = /^(ref|enum|struct):([a-zA-Z][a-zA-Z0-9_<>]*)$/.exec(t);
+  if (named) { const [, base, name] = named; return { base: /** @type {'ref'|'enum'|'struct'} */ (base), name }; }
+  return null;
+}
+
+/**
  * 拼 StatePath<P>（§2.6 第 1 条）：pattern 必须是可生成 P 构造函数的模式（在 pathTypes 内、不是 textPath 与账本路径，由调用方给出集合），
  * 每个 `*` 段按次序换成一个实参；实参须是非空、不含 `.` 的字串（EntityId、EventId 或 Handle 的值形态），保证拼出的路径仍由该模式匹配。
  * 模式不在集合内或实参个数不符 E-PATH-UNDECLARED；段值不合 E-DIM-ID-FORMAT。
