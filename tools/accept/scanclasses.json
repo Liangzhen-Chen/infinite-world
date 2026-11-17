@@ -35,6 +35,63 @@
   },
   {
    "detectors": [
+    "path_access"
+   ],
+   "scanClass": "cross_write",
+   "source": "卷十二 §2.4 首批表、R12-3.2–3.4（卷二 §2.6 第 3 条、§2.7；S5）；writeEntries 照卷二 §2.7 kernelApi :581；块 2 第 2-3 张登记",
+   "writeEntries": [
+    "kernel/storage.mjs#writePath"
+   ]
+  },
+  {
+   "detectors": [
+    "path_access"
+   ],
+   "scanClass": "display_read",
+   "source": "卷十二 §2.4 首批表、R12-2.10（卷二 §2.4、S7）；块 2 第 2-3 张登记"
+  },
+  {
+   "detectors": [
+    "path_access",
+    "data_shape"
+   ],
+   "scanClass": "dual_write",
+   "source": "卷十二 §2.4 首批表、§4.3.1、R12-3.2（卷二 §2.7）；块 2 体检 P1-32；块 2 第 2-3 张登记（本卡无条目挂此类别）"
+  },
+  {
+   "castFiles": [
+    "server-plugin/textcore/brand.mjs",
+    "server-plugin/textcore/ops.mjs",
+    "server-plugin/kernel/handles/vocab-handle.mjs",
+    "server-plugin/kernel/handles/entity-id.mjs",
+    "server-plugin/kernel/handles/display-lang.mjs",
+    "server-plugin/kernel/handles/keys.mjs",
+    "server-plugin/kernel/sealed.mjs",
+    "server-plugin/kernel/credential.mjs",
+    "server-plugin/kernel/secret.mjs",
+    "server-plugin/kernel/transaction.mjs",
+    "server-plugin/kernel/validate/narrow.mjs",
+    "server-plugin/gate/screen.mjs",
+    "server-plugin/gate/load-blocklist.mjs",
+    "server-plugin/kernel/transport/router-caps.mjs",
+    "extension/textcore/narrow-wire.mjs",
+    "extension/textcore/open-envelope.mjs",
+    "extension/host/bootstrap.mjs"
+   ],
+   "checkCodes": {
+    "anyType": "E-TSC-ESCAPE-ANY",
+    "assertCast": "E-TSC-ESCAPE-ASSERT",
+    "directive": "E-TSC-ESCAPE-DIRECTIVE"
+   },
+   "detectors": [
+    "typed_pos",
+    "file_set"
+   ],
+   "scanClass": "escape_hatch",
+   "source": "卷十二 §2.4 首批表（卷二 §2.8 第 4a 条）；castFiles 照卷二 §2.9 第 2 条强转豁免文件表；块 2 第 2-3 张登记"
+  },
+  {
+   "detectors": [
     "ledger_count"
    ],
    "scanClass": "ext_code",
@@ -46,6 +103,13 @@
    ],
    "scanClass": "fallback",
    "source": "卷十二 §2.4 首批表（卷二 §1.6、S4）；S12-3 转录"
+  },
+  {
+   "detectors": [
+    "taint"
+   ],
+   "scanClass": "flow_taint",
+   "source": "卷十二 §2.4 首批表（各卷登记；卷二 S17 后半）；块 2 第 2-3 张登记"
   },
   {
    "detectors": [
@@ -453,6 +517,68 @@
    ],
    "scanClass": "self_name",
    "source": "卷十二 §3.4 S12-5、§2.3 :228、§1.3 第 2 条；P-1b 新登类别"
+  },
+  {
+   "checkCodes": {
+    "bareCompare": "E-VIEW-TEXT-MATCH",
+    "exportParams": "E-VIEW-FAMILY-UNRESOLVED",
+    "nonAscii": "E-VIEW-TEXT-MATCH",
+    "regex": "E-VIEW-TEXT-MATCH"
+   },
+   "detectors": [
+    "typed_pos"
+   ],
+   "groupCodes": {
+    "aiGate": {
+     "bareCompare": "E-GATE-FUZZY",
+     "nonAscii": "E-GATE-FUZZY",
+     "regex": "E-GATE-FUZZY"
+    },
+    "display": {
+     "bareCompare": "E-INPUT-FUZZY",
+     "nonAscii": "E-INPUT-FUZZY",
+     "regex": "E-INPUT-FUZZY"
+    },
+    "gate": {
+     "bareCompare": "E-GATE-FUZZY",
+     "nonAscii": "E-GATE-FUZZY",
+     "regex": "E-GATE-FUZZY"
+    },
+    "inputEdge": {
+     "bareCompare": "E-INPUT-FUZZY",
+     "nonAscii": "E-INPUT-FUZZY",
+     "regex": "E-INPUT-FUZZY"
+    },
+    "kernel": {
+     "bareCompare": "E-KERNEL-ONLY",
+     "nonAscii": "E-KERNEL-ONLY",
+     "regex": "E-KERNEL-ONLY"
+    },
+    "outputGate": {
+     "bareCompare": "E-GATE-FUZZY",
+     "nonAscii": "E-GATE-FUZZY",
+     "regex": "E-GATE-FUZZY"
+    },
+    "textcore": {
+     "bareCompare": "E-GATE-FUZZY",
+     "nonAscii": "E-GATE-FUZZY",
+     "regex": "E-GATE-FUZZY"
+    }
+   },
+   "regexFiles": [
+    "server-plugin/kernel/handles/*.mjs",
+    "server-plugin/kernel/validate/*.mjs",
+    "server-plugin/kernel/load/vocab-load.mjs"
+   ],
+   "scanClass": "text_judge",
+   "source": "卷十二 §2.4 首批表、§4.2（卷二 §2.8 第 2–4 条与各组表违例码列；S13 ①③④ 与 (b)(c)；S18、S19）；regexFiles 照卷二 S13 (b) 与 §2.8 表 kernel 行；块 2 第 2-3 张登记"
+  },
+  {
+   "detectors": [
+    "decl_cmp"
+   ],
+   "scanClass": "undeclared_io",
+   "source": "卷十二 §2.4 首批表、§4.3.1、R12-3.4、R12-3.5（卷二 §2.3；S9、S15）；块 2 体检 P1-32；块 2 第 2-3 张登记"
   },
   {
    "detectors": [

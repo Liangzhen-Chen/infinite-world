@@ -11,6 +11,7 @@ export class FixedError extends Error {
   constructor(code, message) { super(message); this.code = code; }
 }
 
+/** @param {bigint} v 定点整数 @returns {bigint} */
 export function checkedFixed(v) {
   if (v > LIMIT || v < -LIMIT) throw new FixedError('E-DIM-DOMAIN-RANGE', 'fixed overflow');
   return v;
@@ -18,8 +19,10 @@ export function checkedFixed(v) {
 
 const powBase = (p) => BASE ** BigInt(p);
 // 维度 precision 在 SCALE 可表示的小数位内（0 至 SCALE 的位数）。
+/** @param {number} p @returns {boolean} */
 export const precisionOk = (p) => Number.isInteger(p) && p >= 0 && SCALE % powBase(p) === 0n;
 // stockMode extScale 的 precision：BASE^p = SCALE²。
+/** @param {number} p @returns {boolean} */
 export function extPrecisionOk(p) {
   if (!Number.isInteger(p) || p < 0) return false;
   const q = powBase(p);
@@ -27,6 +30,7 @@ export function extPrecisionOk(p) {
 }
 
 // 十进制文本（含 JS 数的指数写法）→ 定点整数，小数超出位数的部分截断（不四舍五入）。
+/** @param {number | bigint | string} x @returns {bigint} */
 export function fixedUnits(x) {
   if (typeof x === 'bigint') return checkedFixed(x * SCALE);
   if (typeof x === 'number' && !Number.isFinite(x)) throw new FixedError('E-DIM-DOMAIN-RANGE', 'nonfinite');
@@ -44,24 +48,31 @@ export function fixedUnits(x) {
   return checkedFixed(sign ? -v : v);
 }
 
+/** @param {bigint} a @param {bigint} b @returns {bigint} */
 export const fixedAdd = (a, b) => checkedFixed(a + b);
+/** @param {bigint} a @param {bigint} b @returns {bigint} */
 export const fixedSub = (a, b) => checkedFixed(a - b);
+/** @param {bigint} a @param {bigint} b @returns {bigint} */
 export const fixedMultiply = (a, b) => checkedFixed((a * b) / SCALE);
+/** @param {bigint} a @param {bigint} b @returns {bigint} */
 export function fixedDivide(a, b) {
   if (b === 0n) throw new FixedError('E-MOD-RX', 'division by zero');
   return checkedFixed((a * SCALE) / b);
 }
 
 // 按维度 precision 向零截断。
+/** @param {bigint} v @param {number} precision @returns {bigint} */
 export function truncateTo(v, precision) {
   const step = SCALE / powBase(precision);
   return (v / step) * step;
 }
 
 // 定点整数 → JS 数（按十进制文本转换，不经浮点乘除）。小数部分加 SCALE 再去掉首位，得到补足前导零的各位。
+/** @param {bigint} v @returns {number} */
 export function fixedToNumber(v) {
   const neg = v < 0n; const a = neg ? -v : v;
   return Number(`${neg ? '-' : ''}${a / SCALE}.${String((a % SCALE) + SCALE).slice(1)}`);
 }
 
+/** @param {bigint} v @returns {boolean} */
 export const isWholeFixed = (v) => v % SCALE === 0n;

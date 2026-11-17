@@ -112,6 +112,113 @@
   },
   {
    "addedAtRev": 1,
+   "caseKey": "cross_write-01",
+   "expectCode": "E-VIEW-UNDECLARED-WRITE",
+   "fixture": "tests/accept/bypass/cross_write-01.txt",
+   "group": "rules",
+   "origin": "卷二 §2.6 第 3 条静态一道：非登记写者经 writePath 写",
+   "polarity": "must_fail",
+   "scanClass": "cross_write"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "cross_write-02",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/cross_write-02.txt",
+   "group": "rules",
+   "origin": "卷二 S5 直接改 state",
+   "polarity": "must_fail",
+   "scanClass": "cross_write"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "cross_write-03",
+   "expectCode": "E-VIEW-UNDECLARED-WRITE",
+   "fixture": "tests/accept/bypass/cross_write-03.txt",
+   "group": "rules",
+   "origin": "卷十二 R12-3.4 路径实参不是 P 句柄",
+   "polarity": "must_fail",
+   "scanClass": "cross_write"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "cross_write-11",
+   "fixture": "tests/accept/bypass/cross_write-11.txt",
+   "group": "rules",
+   "origin": "卷二 §2.7 :545 pendingPost.* 的登记写者 kernel/transaction.mjs 写自己的路径；规则层只读",
+   "polarity": "must_pass",
+   "scanClass": "cross_write"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "display_read-01",
+   "expectCode": "E-VIEW-DISPLAY-READ",
+   "fixture": "tests/accept/bypass/display_read-01.txt",
+   "group": "rules",
+   "origin": "卷二 S7 规则层读 displayNames.*.text",
+   "polarity": "must_fail",
+   "scanClass": "display_read"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "display_read-11",
+   "fixture": "tests/accept/bypass/display_read-11.txt",
+   "group": "rules",
+   "origin": "卷十二 R12-2.10 显示集合只取声明表（seq 不在其内）",
+   "polarity": "must_pass",
+   "scanClass": "display_read"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "escape_hatch-01",
+   "expectCode": "E-TSC-ESCAPE-DIRECTIVE",
+   "fixture": "tests/accept/bypass/escape_hatch-01.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 第 4a 条 // @ts-ignore",
+   "polarity": "must_fail",
+   "scanClass": "escape_hatch"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "escape_hatch-02",
+   "expectCode": "E-TSC-ESCAPE-ANY",
+   "fixture": "tests/accept/bypass/escape_hatch-02.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 第 4a 条 显式 any",
+   "polarity": "must_fail",
+   "scanClass": "escape_hatch"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "escape_hatch-03",
+   "expectCode": "E-TSC-ESCAPE-ASSERT",
+   "fixture": "tests/accept/bypass/escape_hatch-03.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 第 4a 条 豁免表外的 /** @type */ 强转",
+   "polarity": "must_fail",
+   "scanClass": "escape_hatch"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "escape_hatch-04",
+   "expectCode": "E-TSC-ESCAPE-ASSERT",
+   "fixture": "tests/accept/bypass/escape_hatch-04.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 第 4a 条 用户自定义类型谓词 x is T",
+   "polarity": "must_fail",
+   "scanClass": "escape_hatch"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "escape_hatch-11",
+   "fixture": "tests/accept/bypass/escape_hatch-11.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 第 4a 条 声明前的 @type 不是强转",
+   "polarity": "must_pass",
+   "scanClass": "escape_hatch"
+  },
+  {
+   "addedAtRev": 1,
    "caseKey": "ext_code-01",
    "expectCode": "E-ACC-EXT-CODE-CHANGED",
    "fixture": "tests/accept/bypass/ext_code-01.txt",
@@ -649,6 +756,114 @@
    "origin": "卷十二 S12-5：枚举值分支、名字只作值不分支",
    "polarity": "must_pass",
    "scanClass": "self_name"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "text_judge-01",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-01.txt",
+   "group": "rules",
+   "origin": "卷二 S13 (a) 反例 st.family === 'sleep'",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "text_judge-02",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-02.txt",
+   "group": "rules",
+   "origin": "卷二 S13 (a) 反例 ['sleep','dead'].includes(x)",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "text_judge-03",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-03.txt",
+   "group": "rules",
+   "origin": "卷二 S13 ① 正则字面量与 new RegExp",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "text_judge-04",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-04.txt",
+   "group": "rules",
+   "origin": "卷二 S13 ③ 非 ASCII 模板字面量",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "text_judge-05",
+   "expectCode": "E-VIEW-FAMILY-UNRESOLVED",
+   "fixture": "tests/accept/bypass/text_judge-05.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 第 4 条末句 无类型标注的导出参数（块 2 体检 K2-46）",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "text_judge-06",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-06.txt",
+   "group": "rules",
+   "origin": "卷二 S13 ④ 裸字面量作 switch case",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "text_judge-11",
+   "fixture": "tests/accept/bypass/text_judge-11.txt",
+   "group": "rules",
+   "origin": "卷二 S13 (a) 正例 fact.is(V…)、value === V…；(c) throw 文案",
+   "polarity": "must_pass",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "undeclared_io-01",
+   "expectCode": "E-VIEW-DYNAMIC-STATE",
+   "fixture": "tests/accept/bypass/undeclared_io-01.txt",
+   "group": "rules",
+   "origin": "卷二 S15 Object.keys(state)",
+   "polarity": "must_fail",
+   "scanClass": "undeclared_io"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "undeclared_io-02",
+   "expectCode": "E-VIEW-DYNAMIC-STATE",
+   "fixture": "tests/accept/bypass/undeclared_io-02.txt",
+   "group": "rules",
+   "origin": "卷二 S15 state[k]",
+   "polarity": "must_fail",
+   "scanClass": "undeclared_io"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "undeclared_io-03",
+   "expectCode": "E-VIEW-DYNAMIC-STATE",
+   "fixture": "tests/accept/bypass/undeclared_io-03.txt",
+   "group": "rules",
+   "origin": "卷二 S15 ...state",
+   "polarity": "must_fail",
+   "scanClass": "undeclared_io"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "undeclared_io-11",
+   "fixture": "tests/accept/bypass/undeclared_io-11.txt",
+   "group": "rules",
+   "origin": "卷二 S15 按登记路径读",
+   "polarity": "must_pass",
+   "scanClass": "undeclared_io"
   },
   {
    "addedAtRev": 1,

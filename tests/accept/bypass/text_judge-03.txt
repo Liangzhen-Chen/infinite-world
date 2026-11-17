@@ -1,0 +1,2 @@
+/** @param {Activity} x @returns {boolean} */
+export function dozing(x) { return new RegExp('sl(ee)?p').test(x.text) || /nap/.test(x.text); }

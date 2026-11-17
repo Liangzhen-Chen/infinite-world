@@ -11,6 +11,10 @@ const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 
 // table：已解析的表文件；groupsOf(classId) → 该类别行所在的 precedence 组键集合；maxDepth：链深上限。
 // 返回 {classes: Map<id, 有效行>, rows: Map<id, 有效行>, abstract: Set<id>}；有效行只含维度键，另带 `own`（该行自己的行字段）。
+/**
+ * @param {Record<string, unknown>} table @param {(classId: string) => Set<string>} groupsOf @param {number} maxDepth
+ * @param {(...args: unknown[]) => void} err
+ */
 export function flattenTable(table, groupsOf, maxDepth, err) {
   const kind = table.kind;
   const dims = table.dimensions || {};

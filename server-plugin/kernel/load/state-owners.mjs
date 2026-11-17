@@ -44,13 +44,13 @@ const exactKeys = (o, list) => isObj(o) && sorted(Object.keys(o)).join(',') === 
 
 // ---------- 路径模式匹配语义（§2.7 SA-P5；pathTypes、textPaths、textWriters、stateKeys.writers 共用） ----------
 
-/** 两条模式是否存在共同可匹配的具体路径（`*` 恰匹配一段）。 */
+/** 两条模式是否存在共同可匹配的具体路径（`*` 恰匹配一段）。 @param {string} a @param {string} b @returns {boolean} */
 export function patternsOverlap(a, b) {
   const x = segs(a), y = segs(b);
   return x.length === y.length && x.every((s, i) => s === '*' || y[i] === '*' || s === y[i]);
 }
 
-/** 模式 a 是否覆盖 b 的全部具体路径（a 的每段是 `*` 或与 b 同段）。 */
+/** 模式 a 是否覆盖 b 的全部具体路径（a 的每段是 `*` 或与 b 同段）。 @param {string} a @param {string} b @returns {boolean} */
 export function patternCovers(a, b) {
   const x = segs(a), y = segs(b);
   return x.length === y.length && x.every((s, i) => s === '*' || s === y[i]);
@@ -59,6 +59,7 @@ export function patternCovers(a, b) {
 /**
  * 具体程度比较：字面段数多者更具体；字面段数相同则 `*` 更靠后者更具体（逐个比较 `*` 的位置）。
  * 返回正数表示 a 更具体，0 表示同等具体。
+ * @param {string} a @param {string} b @returns {number}
  */
 export function compareSpecificity(a, b) {
   const x = segs(a), y = segs(b);
@@ -69,7 +70,7 @@ export function compareSpecificity(a, b) {
   return sx.length - sy.length;
 }
 
-/** 一组模式里具体程度相同且重叠的对（E-PATH-OVERLAP）。 */
+/** 一组模式里具体程度相同且重叠的对（E-PATH-OVERLAP）。 @param {string[]} patterns @returns {string[][]} */
 export function overlapPairs(patterns) {
   const out = [];
   for (let i = 0; i < patterns.length; i++) for (let j = i + 1; j < patterns.length; j++) {

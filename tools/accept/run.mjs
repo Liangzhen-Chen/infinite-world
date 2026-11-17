@@ -50,13 +50,15 @@ async function detectorOf(code) {
 }
 
 // 行键（R12-8.2）：分量、文件、符号链、节点种类、同符号内序号；不含行号。
+// 分量：命中自带的派生分量（卷十二 §2.5"写入归属类的分量不手列"，按声明项派生，块 2 体检 K2-13）优先，否则取条目登记的 baseComp。
+const compOf = (item, h) => h.comp || item.baseComp || '';
 function toRows(item, hits) {
   const seen = new Map();
   return hits.map((h) => {
-    const base = [item.baseComp || '', h.file, h.symbolPath, h.nodeKind].join('|');
+    const base = [compOf(item, h), h.file, h.symbolPath, h.nodeKind].join('|');
     const ordinal = seen.get(base) || 0;
     seen.set(base, ordinal + 1);
-    return { rowKey: `${base}|${ordinal}`, compCode: item.baseComp || '', file: h.file, symbolPath: h.symbolPath, nodeKind: h.nodeKind, ordinal, line: h.line, errorCode: h.code, itemKey: item.itemKey, state: 'open' };
+    return { rowKey: `${base}|${ordinal}`, compCode: compOf(item, h), file: h.file, symbolPath: h.symbolPath, nodeKind: h.nodeKind, ordinal, line: h.line, errorCode: h.code, itemKey: item.itemKey, state: 'open' };
   });
 }
 
@@ -126,7 +128,11 @@ export async function accRun(gate, subject, contentPrint, opts = {}) {
     const r = toRows(item, hits);
     rows = rows.concat(r);
     results[item.itemKey] = extChanged ? 'fail' : verdictOf(item, hits.length);
-    if (item.baseComp) components[item.baseComp] = (components[item.baseComp] || 0) + hits.length;
+    if (item.baseComp) components[item.baseComp] = components[item.baseComp] || 0;
+    // 检测器按登记数据派生的分量（如每个写者声明项一个，R12-3.3）：没有命中的也列出，现值 0。
+    const det = await detectorOf(item.detector);
+    if (typeof det.components === 'function') for (const c of det.components(ctx, item.params || {})) components[c] = components[c] || 0;
+    for (const x of r) if (x.compCode) components[x.compCode] = (components[x.compCode] || 0) + 1;
     if (results[item.itemKey] === 'fail') failed.push({ itemKey: item.itemKey, codes: [...new Set(r.map((x) => x.errorCode))].sort() });
   }
   rows.sort((a, b) => (a.rowKey < b.rowKey ? -1 : a.rowKey > b.rowKey ? 1 : 0));

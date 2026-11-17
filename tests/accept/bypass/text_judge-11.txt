@@ -1,0 +1,16 @@
+// 正例（卷二 S13 (a)、(c)）：句柄比较；throw new X(文案) 的文案不计；注释里的中文与正则写法 /x/ 不计。
+/**
+ * @param {{family: {is: (h: Handle) => boolean}}} st
+ * @param {Handles} V
+ * @param {{value: Handle}} fact
+ * @returns {boolean}
+ */
+export function asleep(st, V, fact) {
+  if (!st) throw new Error('缺状态');
+  return st.family.is(V.status_family.sfam_sleep) || fact.value === V.status_family.sfam_sleep;
+}
+
+/** @param {...Handle} xs @returns {number} */
+export function count(...xs) { return xs.length; }
+
+export const noArgs = () => true;

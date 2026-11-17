@@ -195,15 +195,18 @@ function typeOf(n, scope) {
 // 命名空间行的 arg 段数不另设列（§2.9 第 4 条第 1 点五列封闭）：由"返回形状"列推出——形状里每个 `<…>` 占位是一段 arg
 // （单值的形状如 fraction 不含占位，不带 arg；`<字段>.<句柄>` 两段）。
 // 无返回形状（推不出）即登记行违反第 1 点，按 §2.9 第 4 条第 3 点报 E-RX-NS-UNKNOWN，不取默认值。
+/** @param {{ns: string, shape: string}} row 命名空间登记行 @returns {number} */
 export const nsArgCount = (row) => {
   if (!row || typeof row.shape !== 'string') return fail(`namespace row ${row && row.ns} has no return shape`, 'E-RX-NS-UNKNOWN');
   return (row.shape.match(/<[^<>]+>/g) || []).length;
 };
 // 返回形状里写明"（set，只作 member 的 set）"的字段名：`<字段>（set，只作 member 的 set）`，由登记行判，不按命名空间名特判。
+/** @param {{ns: string, shape: string}} row 命名空间登记行 @returns {Set<string>} */
 export const nsSetFields = (row) => new Set([...String(row.shape).matchAll(/([A-Za-z_][\w]*)（set，只作 member 的 set）/g)].map((m) => m[1]));
 const sameKind =(a, b) => a === b || (a === 'codeOrHandle' && (b === 'code' || b === 'handle')) || (b === 'codeOrHandle' && (a === 'code' || a === 'handle'));
 
 // 维度类型 → RX 读数类型（第 1 点 dim 一项）；set 只许作 member 的 set。
+/** @param {Record<string, unknown>} def 维度类型定义 @param {string} key 维度键 @param {boolean} [allowSet] */
 export function dimRxType(def, key, allowSet = false) {
   if (!def) return fail(`unknown dimension ${key}`);
   if (def.ambiguous) return fail(`dimension ${key} has different types in different tables`);
@@ -235,6 +238,7 @@ function deepFreeze(v) {
 // 对外接口（卷二 :1222"compileRX(text, profile) 的公开签名不变"；kernelApi :609 只开给 output-gate/display-load.mjs 的显示档）。
 // 两档编译都要调用方给的闭集（数据档：维度、词表、命名空间登记与深度上限；显示档：绑定名闭集，:1166），两参拿不到，
 // 记 docs/问题.md。P-2：数据档由 kernel/validate 在加载期经 compileRXInScope 编；显示档未做。两种调用这里都报 E-MOD-RX。
+/** @param {unknown} text 表达式树 @param {string} profile 编译档 */
 export function compileRX(text, profile) {
   if (profile === 'data') return fail('data profile is compiled at load time by kernel/validate (compileRXInScope)');
   return fail(`profile ${profile} not available (P-2 builds the data profile only)`);
@@ -242,6 +246,10 @@ export function compileRX(text, profile) {
 
 // 加载期编译（只给 kernel/validate 用）。scope：{dims: Map<维度键, 类型定义>, vocabIndex: Map<代号, {family, prefix}>, ns: [{ns, type, shape, …}], maxDepth}。
 // 返回 {tree, nsRefs}；失败抛 RxError（E-MOD-RX；引用未登记命名空间时 code 为 E-RX-NS-UNKNOWN）。
+/**
+ * @param {unknown} text 表达式树 @param {string} profile 编译档
+ * @param {{dims: Map<string, Record<string, unknown>>, vocabIndex: Map<string, {family: string, prefix: string}>, ns: {ns: string, type: string, shape: string}[], maxDepth: number}} scope
+ */
 export function compileRXInScope(text, profile, scope) {
   if (!PROFILE_OPS[profile]) fail(`profile ${profile} not available (P-2 builds the data profile only)`);
   let tree;
@@ -261,6 +269,7 @@ export function compileRXInScope(text, profile, scope) {
   return deepFreeze({ tree, nsRefs: [...new Set(nsRefs)].sort() });
 }
 
+/** @param {{ns: string, arg?: string[]}} n 命名空间读数节点 @returns {string} */
 export const nsKey = (n) => (n.arg ? [n.ns, ...n.arg].join('.') : n.ns);
 
 // ---------- 求值 ----------
@@ -279,6 +288,11 @@ function readValue(v) {
   return fail('binding value must be a number, boolean or code');
 }
 
+/**
+ * @param {unknown} tree 编译后的表达式树
+ * @param {Record<string, number | boolean | string>} bindings 变量绑定
+ * @param {Record<string, number | boolean | string>} nsReads 命名空间读数（键为 nsKey）
+ */
 export function evaluateRX(tree, bindings, nsReads) {
   const run = (n) => {
     switch (n.op) {

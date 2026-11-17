@@ -4,6 +4,7 @@
 const WS = new Set([' ', '\t', '\n', '\r']);
 const escPtr = (k) => k.replace(/~/g, '~0').replace(/\//g, '~1');
 
+/** @param {string} text JSON 文本 */
 export function parseJsonStrict(text) {
   const errors = [];
   let i = 0;

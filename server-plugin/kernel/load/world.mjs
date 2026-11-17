@@ -24,6 +24,10 @@ export const LAYOUT = Object.freeze({
 
 const readText = (p) => readFileSync(p, 'utf8');
 
+/**
+ * @param {string} root 仓库根
+ * @param {{dimensionsDir?: string, rulesDir?: string, namespaces?: string[]}} [opts]
+ */
 export function loadWorld(root, opts = {}) {
   const dir = join(root, opts.dimensionsDir || LAYOUT.dimensionsDir);
   const read = readRules(root, { rulesDir: opts.rulesDir });

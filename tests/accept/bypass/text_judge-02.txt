@@ -1,0 +1,2 @@
+/** @param {Family} x @returns {boolean} */
+export function gone(x) { return ['sleep', 'dead'].includes(x); }

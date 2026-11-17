@@ -1,0 +1,2 @@
+/** @param {unknown} z @returns {Handle} */
+export function force(z) { return /** @type {Handle} */ (z); }

@@ -81,6 +81,105 @@
    }
   },
   {
+   "criterion": "写入点所在文件不是该路径的登记写者，也不经三条写通道即命中；路径、写者、通道全部来自声明表。",
+   "log": [
+    {
+     "ref": "块 2 第 2-3 张初版：path_access write 方式，按声明表 stateKeys.writers（最具体模式优先）核对 writeEntries 调用的 P 成员路径与所在文件，直接改 state 成员链计 E-VIEW-BYPASS；分量按状态顶层键派生 c_write_<键>",
+     "rev": 1
+    }
+   ],
+   "print": "b113a9b6b8b17db75728d35d809b4e3e9c2beb905c2e42ed671d69aefbd42b11",
+   "rev": 1,
+   "scanClass": "cross_write",
+   "source": "卷十二 R12-3.1–3.4；卷二 §2.6、§2.7、S5",
+   "terms": {
+    "vol1.V-3": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol2.S17.a": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol2.S5": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "规则层读到声明表登记为显示的路径即命中。",
+   "log": [
+    {
+     "ref": "块 2 第 2-3 张初版：path_access display 方式，显示集合取声明表 stateKeys.<键>.display 与 textPaths（R12-2.10），state 成员链落在其上即 E-VIEW-DISPLAY-READ；labels 读者（E-VIEW-LABEL-READ）未判",
+     "rev": 1
+    }
+   ],
+   "print": "b113a9b6b8b17db75728d35d809b4e3e9c2beb905c2e42ed671d69aefbd42b11",
+   "rev": 1,
+   "scanClass": "display_read",
+   "source": "卷十二 R12-2.10；卷二 S7",
+   "terms": {
+    "vol2.S7": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "一个路径模式有两个以上改写写者；或同一路径有两处不经同一写入口的写入。",
+   "log": [
+    {
+     "ref": "块 2 第 2-3 张登记类别（P1-32）；声明表一模式一写者由合并器加载期报 E-WRITER-DUPLICATE（kernel/load/state-owners.mjs），实现侧两处写入的扫描随首个挂此类别的条目实现",
+     "rev": 1
+    }
+   ],
+   "print": "dafcae0b4721ac557b0df5a0e121798b488ca42d5d2501c3990e80405cd67b19",
+   "rev": 1,
+   "scanClass": "dual_write",
+   "source": "卷十二 R12-3.2；卷二 §2.7",
+   "terms": {}
+  },
+  {
+   "criterion": "卷二 §2.8 第 4a 条的逃逸写法出现在强转豁免文件表之外即命中。",
+   "log": [
+    {
+     "ref": "块 2 第 2-3 张初版：typed_pos 判注释里的 @ts-ignore/@ts-expect-error/@ts-nocheck/eslint-disable、JSDoc 类型里的 any 与 *、castFiles 之外的 /** @type */ (…) 强转与 x is T、asserts、@overload；声明文件闭集（file_set）与隐式 any、as 断言（.mjs 无此语法）未判",
+     "rev": 1
+    }
+   ],
+   "print": "e75c6aa0c259e3039950cdc8c60f09985bec0a7136cf5e2b9e7ffe6d9bb99519",
+   "rev": 1,
+   "scanClass": "escape_hatch",
+   "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
+   "terms": {
+    "vol1.V-2.b": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
    "log": [
     {
      "ref": "P-1b",
@@ -115,14 +214,41 @@
     {
      "ref": "初版登记：S12-3 条目转录",
      "rev": 1
+    },
+    {
+     "ref": "块 2 第 2-3 张：typed_pos 检测器模块建成（本类别条目仍 registered，未用其检查项）；本类别判定口径不变",
+     "rev": 2
     }
    ],
-   "print": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rev": 1,
+   "print": "c0e2da3c790d3230f7abab5275b47c102ae16f5a7ccfdb0ca7feb7e0172c8e4f",
+   "rev": 2,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
     "vol2.S4": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "登记为只供显示或只供内部的量流进了规则判断即命中。",
+   "log": [
+    {
+     "ref": "块 2 第 2-3 张登记类别；taint 检测器模块未建，挂此类别的条目（卷二 S17 后半）留 registered",
+     "rev": 1
+    }
+   ],
+   "print": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rev": 1,
+   "scanClass": "flow_taint",
+   "source": "卷十二 §2.4；卷二 S17",
+   "terms": {
+    "vol2.S17.b": {
      "expect": "zero",
      "gates": [
       "pre_commit",
@@ -138,10 +264,14 @@
     {
      "ref": "初版登记：S12-3 条目转录",
      "rev": 1
+    },
+    {
+     "ref": "块 2 第 2-3 张：typed_pos 检测器模块建成（本类别条目仍 registered，未用其检查项）；本类别判定口径不变",
+     "rev": 2
     }
    ],
-   "print": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rev": 1,
+   "print": "c0e2da3c790d3230f7abab5275b47c102ae16f5a7ccfdb0ca7feb7e0172c8e4f",
+   "rev": 2,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -457,6 +587,14 @@
      ],
      "stage": 0
     },
+    "vol2.S3.b": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
     "vol2.S6": {
      "expect": "zero",
      "gates": [
@@ -524,12 +662,48 @@
     {
      "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
      "rev": 14
+    },
+    {
+     "ref": "块 2 第 2-3 张：共用的 path_access 加 write、display 两种方式与派生分量（新 lib/js-state.mjs）；本类别条目不用这两种方式，read、branch 判定口径不变；新增 V-24.b、V-25.b、V-29.b、V-31.b、S19.b 五行（import_edge，参数同 S16 的码）",
+     "rev": 15
     }
    ],
-   "print": "aca61efb967b57d7d182a6b768b81a8c81f6ce7fb86f136cd6a90f7d04edb347",
-   "rev": 14,
+   "print": "ece6796af1ec800ce0bf4b95313ccf43f864d4b129520443f16463a9c6c6b6f1",
+   "rev": 15,
    "scanClass": "module_edge",
    "terms": {
+    "vol1.V-24.b": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol1.V-25.b": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol1.V-29.b": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol1.V-31.b": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
     "vol12.S12-1": {
      "expect": "zero",
      "gates": [
@@ -539,6 +713,14 @@
      "stage": 0
     },
     "vol2.S16": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol2.S19.b": {
      "expect": "zero",
      "gates": [
       "pre_commit",
@@ -757,6 +939,148 @@
    }
   },
   {
+   "criterion": "规则层与各模块组里，字串出现在卷二 §2.8 节点位置白名单之外：正则（限 regexFiles）、非 ASCII 字面量、裸字串字面量参与判断、导出函数形参无类型标注即命中；码按类别行 checkCodes 与 groupCodes。",
+   "log": [
+    {
+     "ref": "块 2 第 2-3 张初版：typed_pos 词法级实现 S13 ①（regexFiles 之外的正则字面量与 RegExp 构造）、③（非 ASCII 字串与模板字面量，throw new X(…) 的文案除外）、④（裸字串字面量参与 ===/!==/==/!=、case、in、数组字面量 .includes、.get/.has 键）与 §2.8 第 4 条末句导出函数形参无 JSDoc 类型标注（K2-46）；S13 ②、无法归因比较、族不符要 tsc，未判",
+     "rev": 1
+    }
+   ],
+   "print": "c0e2da3c790d3230f7abab5275b47c102ae16f5a7ccfdb0ca7feb7e0172c8e4f",
+   "rev": 1,
+   "scanClass": "text_judge",
+   "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
+   "terms": {
+    "vol1.V-2.a": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol1.V-20": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol1.V-23": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol1.V-24.a": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol1.V-25.a": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol1.V-29.a": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol1.V-31.a": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol2.S13": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol2.S18": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol2.S19.a": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol2.S2": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol2.S3.a": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "调用图内的状态读写超出声明；动态访问状态即命中。",
+   "log": [
+    {
+     "ref": "块 2 第 2-3 张初版：decl_cmp dynamicState（state 计算属性、展开、Object.keys 等枚举、for…in）；inputs（declareInputs 叶子核对）待 2-5 建 declareInputs",
+     "rev": 1
+    }
+   ],
+   "print": "9a7f846c092caa2f11d3fac6743de556a8b8595c59da85ef44eab012f309c074",
+   "rev": 1,
+   "scanClass": "undeclared_io",
+   "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
+   "terms": {
+    "vol2.S15": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol2.S9": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
    "log": [
     {
      "ref": "P-1",
@@ -769,10 +1093,14 @@
     {
      "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
      "rev": 3
+    },
+    {
+     "ref": "块 2 第 2-3 张：共用的 path_access 加 write、display 两种方式与派生分量（新 lib/js-state.mjs）；本类别用 branch 方式，判定口径不变",
+     "rev": 4
     }
    ],
-   "print": "740aed1f07b10b38cf76b30e6b2da615b3d4dea819d8e411cebb7fe1c72ee205",
-   "rev": 3,
+   "print": "b113a9b6b8b17db75728d35d809b4e3e9c2beb905c2e42ed671d69aefbd42b11",
+   "rev": 4,
    "scanClass": "version_fork",
    "terms": {
     "vol1.V-17": {
@@ -834,10 +1162,14 @@
     {
      "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
      "rev": 12
+    },
+    {
+     "ref": "块 2 第 2-3 张：typed_pos 检测器模块建成（本类别条目只用 call_edge）；本类别判定口径不变",
+     "rev": 13
     }
    ],
-   "print": "c26664c9b16a1f6432b3ad4e029173b4360e55f9702f9f4a44e23096f6f79b47",
-   "rev": 12,
+   "print": "9de5a9f3104ef1904eb98c25efa0967b0c9d5b28e6c7a56c8f60c121b1b46a65",
+   "rev": 13,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

@@ -1,0 +1,2 @@
+/** @param {Fact} f @returns {Fact} */
+export function label(f) { return f.note ? f : { ...f, note: `状态：${f.code}` }; }

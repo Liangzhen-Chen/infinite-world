@@ -1,0 +1,2 @@
+/** @param {State} state @param {EntityId} id @returns {unknown} */
+export function nameOf(state, id) { return state.displayNames[id].text; }

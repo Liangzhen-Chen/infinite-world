@@ -1,0 +1,5 @@
+// 导出函数的形参没有类型标注（卷二 §2.8 第 4 条末句，E-VIEW-FAMILY-UNRESOLVED）。
+export function untyped(a, b) { return a === b; }
+
+/** @param {Handle} a */
+export const half = (a, b) => a === b;

@@ -43,6 +43,7 @@ const vocabOf = (def) => def.vocab !== undefined ? def.vocab : (isObj(def.domain
 const sizeOf = (def, k) => def[k] !== undefined ? def[k] : (isObj(def.domain) ? def.domain[k] : undefined);
 
 // 数值取值域 [min,max]，null 端为无界（§1.2）。
+/** @param {unknown} domain @returns {boolean} */
 export function rangeOk(domain) {
   const [lo, hi, ...rest] = Array.isArray(domain) ? domain : [];
   const okEnd = (x) => x === null || typeof x === 'number';
@@ -56,6 +57,10 @@ const SHAPE = { number: 'number', integer: 'number', boolean: 'boolean', string:
 
 // ---------- 类型定义 ----------
 // env：{units, vocab, kinds: Set, displaySet: Set}；at：报错定位（table、row、dim、path）。
+/**
+ * @param {Record<string, unknown>} def 类型定义 @param {Record<string, unknown>} env @param {Record<string, unknown>} at
+ * @param {(...args: unknown[]) => void} err @param {boolean} [top] 是否维度顶层定义
+ */
 export function checkDef(def, env, at, err, top) {
   if (!isObj(def) || !TYPES.includes(def.type)) { err({ code: 'E-DIM-SCHEMA-TYPE', level: 'L1', ...at, got: isObj(def) ? def.type : def, want: TYPES.join('|') }); return; }
   const t = def.type;
@@ -132,16 +137,22 @@ export function checkDef(def, env, at, err, top) {
 export const ROW_FIELDS = Object.freeze(['extends', 'abstract', 'classes', 'tags', 'basis', 'sources', 'selection', 'status', 'generated', 'termination', 'nameParts', 'memberLinks']);
 const KEY_OPS = ['+', '-', '~', '*'];
 // 一个行键拆成 {dim, op}；op 为 '' 表示整值写法。
+/** @param {string} key 行键 @returns {{dim: string, op: string}} */
 export function splitKey(key) {
   const last = key.slice(-1);
   return KEY_OPS.includes(last) ? { dim: key.slice(0, -1), op: last } : { dim: key, op: '' };
 }
 
 const fieldRequired = (def) => (Array.isArray(def.required) ? def.required : []);
+/** @param {Record<string, unknown>} def ref 类型定义 */
 export const refParts = (def) => (Array.isArray(def.refs) ? def.refs : [def]);
 
 // ---------- 取值 ----------
 // env 另带：idIndex: Map<id, kind>，tableDims: Map<kind, dimensions>，rxScope，compiled: Map（rx 编译结果的落点）。
+/**
+ * @param {Record<string, unknown>} def 类型定义 @param {unknown} v 值 @param {Record<string, unknown>} env
+ * @param {Record<string, unknown>} at 报错定位 @param {(...args: unknown[]) => void} err
+ */
 export function checkValue(def, v, env, at, err) {
   const bad = (code, got, want, level) => err({ code, level: level || 'L1', ...at, got, want });
   if (v === null) { if (!def.nullable) bad('E-DIM-DOMAIN-RANGE', null, `${def.type} (not nullable)`); return; }

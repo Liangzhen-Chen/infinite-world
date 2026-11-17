@@ -1,0 +1,118 @@
+// 块 2 第 2-3 张：S2（卷十二 §4.2 读文字）与 S3（§4.3 写入归属）各检测器的必须报与必须不报（卷十二 §4.14 R12-13.3），
+// 以及导出参数类型标注从第一个文件起全量适用（块 2 体检 K2-46，卷二 §2.8 第 4 条末句）。期望值一律手写字面量。
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { loadContext, readRegistry, readDecl } from '../../tools/accept/read.mjs';
+import { detect as typedPos } from '../../tools/accept/detectors/typed_pos.mjs';
+import { detect as pathAccess, components } from '../../tools/accept/detectors/path_access.mjs';
+import { detect as declCmp } from '../../tools/accept/detectors/decl_cmp.mjs';
+import { accRun } from '../../tools/accept/run.mjs';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const CLS = Object.fromEntries(readRegistry(ROOT, 'scanclasses').map((r) => [r.scanClass, r]));
+const SERVER = ['rules', 'kernel', 'textcore', 'inputEdge', 'gate', 'outputGate', 'aiGate', 'assembly'];
+
+function ctxOf(map) {
+  const files = new Map(Object.entries(map));
+  return loadContext(ROOT, { files: [...files.keys()].sort(), read: (p) => files.get(p) });
+}
+const text = (src, checks, file = 'server-plugin/a.mjs') => typedPos(ctxOf({ [file]: src }), { groups: SERVER, checks }, CLS.text_judge).map((h) => [h.code, h.line, h.nodeKind]);
+const esc = (src, file = 'server-plugin/a.mjs') => typedPos(ctxOf({ [file]: src }), { groups: SERVER, checks: ['directive', 'anyType', 'assertCast'] }, CLS.escape_hatch).map((h) => [h.code, h.line]);
+const writes = (map, codes = ['E-VIEW-UNDECLARED-WRITE', 'E-VIEW-BYPASS']) => pathAccess(ctxOf(map), { groups: SERVER, access: 'write', codes }, CLS.cross_write).map((h) => [h.code, h.file, h.comp || '']);
+const dyn = (src) => declCmp(ctxOf({ 'server-plugin/a.mjs': src }), { groups: ['rules'], checks: ['dynamicState'] }).map((h) => h.nodeKind);
+
+test('text_judge regex：正则字面量与 RegExp 构造计入，注释与字串里的斜杠不计；regexFiles 内的文件放行', () => {
+  assert.deepEqual(text("const r = /a+/;\nconst s = new RegExp('b');\nconst t = RegExp('c');", ['regex']), [['E-VIEW-TEXT-MATCH', 1, 'regex'], ['E-VIEW-TEXT-MATCH', 2, 'regex'], ['E-VIEW-TEXT-MATCH', 3, 'regex']]);
+  assert.deepEqual(text("// /x/ 在注释里\nconst a = 'a/b/c'; const q = 4 / 2 / 1;", ['regex']), []);
+  assert.deepEqual(text('const r = /a+/;', ['regex'], 'server-plugin/kernel/handles/x.mjs'), []);
+  assert.deepEqual(text('const r = /a+/;', ['regex'], 'server-plugin/kernel/x.mjs'), [['E-KERNEL-ONLY', 1, 'regex']]);
+});
+
+test('text_judge nonAscii：非 ASCII 字串与模板计入；throw new X(文案) 与注释不计；组码按 groupCodes', () => {
+  assert.deepEqual(text("const a = '睡';\nconst b = `x${y}醒`;", ['nonAscii']), [['E-VIEW-TEXT-MATCH', 1, 'literal_non_ascii'], ['E-VIEW-TEXT-MATCH', 2, 'literal_non_ascii']]);
+  assert.deepEqual(text("// 注释\nif (!x) throw new Error('缺', { cause: 1 });", ['nonAscii']), []);
+  assert.deepEqual(text("throw new Error('ok', '第二个实参');", ['nonAscii']), [['E-VIEW-TEXT-MATCH', 1, 'literal_non_ascii']]);
+  assert.deepEqual(text("const a = '睡';", ['nonAscii'], 'server-plugin/input/x.mjs'), [['E-INPUT-FUZZY', 1, 'literal_non_ascii']]);
+  assert.deepEqual(text("const a = '睡';", ['nonAscii'], 'server-plugin/gate/x.mjs'), [['E-GATE-FUZZY', 1, 'literal_non_ascii']]);
+});
+
+test('text_judge bareCompare：裸字面量参与 ===、case、in、includes 数组、get/has 键计入；句柄比较与普通实参不计', () => {
+  const src = [
+    "if (a === 'x') f();",
+    "if ('y' !== b) f();",
+    "switch (k) { case 'up': break; }",
+    "if ('k' in o) f();",
+    "if (['p', 'q'].includes(z)) f();",
+    "const v = m.get('key');",
+    "const ok = s.has(`lit`);",
+  ].join('\n');
+  assert.deepEqual(text(src, ['bareCompare']).map((h) => h[1]), [1, 2, 3, 4, 5, 5, 6, 7]);
+  assert.deepEqual(text("if (a === V.fam.x_y) f(); g('arg'); const o = { k: 'v' }; const t = [1, 'n'].length;", ['bareCompare']), []);
+});
+
+test('text_judge exportParams：导出函数每个形参要有 JSDoc 类型标注（含解构、箭头、默认值；@type 整体标注算）', () => {
+  const ok = [
+    '/** @param {A} a @param {{x: B}} [b] */ export function f(a, b = 1) {}',
+    '/**\n * @param {A} a\n */\nexport const g = (a) => a;',
+    '/** @type {(a: A) => void} */\nexport const h = (a) => {};',
+    '/** @param {Opts} opts */ export function k({ x, y }) {}',
+    'export function none() {}',
+    'function local(a) {}',
+  ].join('\n');
+  assert.deepEqual(text(ok, ['exportParams']), []);
+  const bad = 'export function f(a) {}\n/** @param {A} a */\nexport function g(a, b) {}\nexport const h = (q) => q;\nexport const i = q => q;';
+  assert.deepEqual(text(bad, ['exportParams']), [['E-VIEW-FAMILY-UNRESOLVED', 1, 'export_param'], ['E-VIEW-FAMILY-UNRESOLVED', 3, 'export_param'], ['E-VIEW-FAMILY-UNRESOLVED', 4, 'export_param'], ['E-VIEW-FAMILY-UNRESOLVED', 5, 'export_param']]);
+});
+
+test('escape_hatch：指令注释、JSDoc any 与 *、强转与类型谓词计入；声明前 @type、castFiles 内的强转不计', () => {
+  assert.deepEqual(esc('// @ts-ignore\nconst a = 1;\n/* eslint-disable */\n/** @param {any} x */\nfunction f(x) {}\n/** @type {*} */\nlet y;\nconst z = /** @type {T} */ (w);\n/** @returns {asserts v is T} */\nfunction g(v) {}'),
+    [['E-TSC-ESCAPE-DIRECTIVE', 1], ['E-TSC-ESCAPE-DIRECTIVE', 3], ['E-TSC-ESCAPE-ANY', 4], ['E-TSC-ESCAPE-ANY', 6], ['E-TSC-ESCAPE-ASSERT', 8], ['E-TSC-ESCAPE-ASSERT', 9]]);
+  assert.deepEqual(esc('/** @type {number} */\nlet n = 0;\n/** @param {Array<number>} xs 任何（any）数 */\nfunction f(xs) {}\nconst s = "/** @type {T} */ (x)";'), []);
+  assert.deepEqual(esc('const z = /** @type {T} */ (w);', 'server-plugin/kernel/handles/keys.mjs'), []);
+});
+
+test('cross_write：登记写者写自己的路径不计；越权写、非 P 实参、直写 state 计入，分量按声明项派生', () => {
+  assert.deepEqual(writes({ 'server-plugin/kernel/transaction.mjs': 'writePath(state, P.pendingPost(id), []);' }), []);
+  assert.deepEqual(writes({ 'server-plugin/sys/a.mjs': 'writePath(state, P.pendingPost(id), []);\nwritePath(state, p, 0);\nstate.terminated[id] = 1;\nengine.state.created.x = 2;\ndelete state.playerNotes[id];\nstate.other++;' }), [
+    ['E-VIEW-UNDECLARED-WRITE', 'server-plugin/sys/a.mjs', 'c_write_pendingPost'],
+    ['E-VIEW-UNDECLARED-WRITE', 'server-plugin/sys/a.mjs', ''],
+    ['E-VIEW-BYPASS', 'server-plugin/sys/a.mjs', 'c_write_terminated'],
+    ['E-VIEW-BYPASS', 'server-plugin/sys/a.mjs', 'c_write_created'],
+    ['E-VIEW-BYPASS', 'server-plugin/sys/a.mjs', 'c_write_playerNotes'],
+    ['E-VIEW-BYPASS', 'server-plugin/sys/a.mjs', ''],
+  ]);
+  assert.deepEqual(writes({ 'server-plugin/sys/a.mjs': 'const x = state.terminated[id]; if (state.created === y) f(state); const o = { state: 1 };' }), []);
+  assert.deepEqual(writes({ 'server-plugin/sys/a.mjs': 'writePath(state, P.pendingPost(id), []); state.x = 1;' }, ['E-VIEW-BYPASS']).map((h) => h[0]), ['E-VIEW-BYPASS']);
+  const decl = readDecl(ROOT);
+  assert.deepEqual(components(loadContext(ROOT, { files: [], read: () => '', decl }), { access: 'write' }), ['c_write_created', 'c_write_displayNames', 'c_write_pendingPost', 'c_write_playerNotes', 'c_write_terminated']);
+  assert.deepEqual(components(loadContext(ROOT, { files: [], read: () => '', decl }), { access: 'read' }), []);
+});
+
+test('display_read：读声明表显示集合（display 与 textPaths）计入，别的路径与写不计', () => {
+  const run = (src) => pathAccess(ctxOf({ 'server-plugin/a.mjs': src }), { groups: ['rules'], access: 'display', codes: ['E-VIEW-DISPLAY-READ'] }).map((h) => h.line);
+  assert.deepEqual(run('const a = state.displayNames[id].text;\nconst b = state.narration[k];\nconst c = state.playerNotes.n1.text;'), [1, 2, 3]);
+  assert.deepEqual(run('const a = state.displayNames[id].seq;\nconst b = other.displayNames[id].text;'), []);
+});
+
+test('undeclared_io dynamicState：计算属性、展开、Object 枚举、for…in 计入；按名读不计', () => {
+  assert.deepEqual(dyn('const a = state[k];\nconst b = { ...state };\nconst c = Object.keys(state);\nfor (const k in state) f(k);\nconst d = engine.state[key].x;'), ['state_computed', 'state_spread', 'state_enumerate', 'state_for_in', 'state_computed']);
+  assert.deepEqual(dyn('const a = state.created;\nconst b = state["created"];\nf(state);\nconst c = state.created[id].props;'), []);
+});
+
+test('K2-46：仓库现有服务端各组文件的导出函数形参全部带类型标注（从第一个文件起全量适用）', () => {
+  const ctx = loadContext(ROOT);
+  const hits = typedPos(ctx, { groups: SERVER, checks: ['exportParams'] }, CLS.text_judge).map((h) => `${h.file}:${h.line} ${h.symbolPath}`);
+  assert.deepEqual(hits, []);
+});
+
+test('S2、S3 条目在真实仓库上零命中（零基线），且条目状态照实', async () => {
+  const { report, rows } = await accRun('pre_commit', 'test', null, { root: ROOT });
+  const keys = ['vol1.V-2.a', 'vol1.V-2.b', 'vol1.V-3', 'vol1.V-20', 'vol1.V-23', 'vol2.S2', 'vol2.S3.a', 'vol2.S5', 'vol2.S7', 'vol2.S15', 'vol2.S18', 'vol2.S19.a', 'vol2.S19.b'];
+  assert.deepEqual(rows.filter((r) => keys.includes(r.itemKey)), []);
+  assert.deepEqual(report.gaps.filter((k) => ['vol2.S3.b', 'vol2.S9', 'vol2.S13', 'vol2.S17.a', 'vol2.S17.b'].includes(k)), ['vol2.S13', 'vol2.S17.a', 'vol2.S17.b', 'vol2.S3.b', 'vol2.S9']);
+  for (const c of ['text_judge', 'escape_hatch', 'display_read', 'cross_write', 'undeclared_io']) {
+    for (const k of Object.keys(report.cases).filter((x) => x.startsWith(`${c}-`))) assert.equal(report.cases[k], 'pass', k);
+  }
+});

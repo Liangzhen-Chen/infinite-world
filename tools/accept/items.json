@@ -230,6 +230,111 @@
    "zeroRows": []
   },
   {
+   "detector": "typed_pos",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/typed_pos.mjs",
+   "itemKey": "vol1.V-2.a",
+   "localNo": "V-2",
+   "method": "static_code",
+   "params": {
+    "checks": [
+     "regex",
+     "nonAscii",
+     "bareCompare",
+     "exportParams"
+    ],
+    "groups": [
+     "rules"
+    ]
+   },
+   "part": "a",
+   "parts": [
+    "a",
+    "b"
+   ],
+   "runsOn": "local_static",
+   "scanClass": "text_judge",
+   "source": "卷一 §12.1 V-2 语言判断部分（判定即 V-20；卷二 §2.8、S13）；拆 a/b 见李白 11-17 S12-3 裁定第 2 条",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "detector": "typed_pos",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/typed_pos.mjs",
+   "itemKey": "vol1.V-2.b",
+   "localNo": "V-2",
+   "method": "static_code",
+   "params": {
+    "checks": [
+     "directive",
+     "anyType",
+     "assertCast"
+    ],
+    "groups": [
+     "rules"
+    ]
+   },
+   "part": "b",
+   "parts": [
+    "a",
+    "b"
+   ],
+   "runsOn": "local_static",
+   "scanClass": "escape_hatch",
+   "source": "卷一 §12.1 V-2 逃逸口部分（卷二 §2.8 第 4a 条、§2.9）；拆 a/b 见李白 11-17 S12-3 裁定第 2 条",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "detector": "typed_pos",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/typed_pos.mjs",
+   "itemKey": "vol1.V-20",
+   "localNo": "V-20",
+   "method": "static_code",
+   "params": {
+    "checks": [
+     "regex",
+     "nonAscii",
+     "bareCompare",
+     "exportParams"
+    ],
+    "groups": [
+     "rules"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "text_judge",
+   "source": "卷一 §12.1 V-20 V-2 的判定规则（同 V-2 范围与清单）",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
    "expect": "all_pass",
    "form": "invariant",
    "gates": [
@@ -280,6 +385,188 @@
    "stage": 0,
    "state": "registered",
    "target": "data",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "detector": "typed_pos",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/typed_pos.mjs",
+   "itemKey": "vol1.V-23",
+   "localNo": "V-23",
+   "method": "static_code",
+   "params": {
+    "checks": [
+     "regex",
+     "nonAscii",
+     "bareCompare",
+     "exportParams"
+    ],
+    "groups": [
+     "inputEdge"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "text_judge",
+   "source": "卷一 §12.1 V-23 输入边扫描（= 卷二 S18；import 侧由 S16 判）",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "detector": "typed_pos",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/typed_pos.mjs",
+   "itemKey": "vol1.V-24.a",
+   "localNo": "V-24",
+   "method": "static_code",
+   "params": {
+    "checks": [
+     "regex",
+     "nonAscii",
+     "bareCompare",
+     "exportParams"
+    ],
+    "groups": [
+     "display",
+     "host"
+    ]
+   },
+   "part": "a",
+   "parts": [
+    "a",
+    "b"
+   ],
+   "runsOn": "local_static",
+   "scanClass": "text_judge",
+   "source": "卷一 §12.1 V-24 显示层组扫描字串部分（= 卷二 S13 显示层组、S19）；拆 a/b 照李白 11-17 S12-3 裁定第 2 条（同 S19）",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "detector": "import_edge",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/import_edge.mjs",
+   "itemKey": "vol1.V-24.b",
+   "localNo": "V-24",
+   "method": "static_code",
+   "params": {
+    "codes": [
+     "E-VIEW-INPUT-IMPORT",
+     "E-PROC-IMPORT",
+     "E-GLOBAL-UNLISTED",
+     "E-FILE-UNASSIGNED"
+    ],
+    "groups": [
+     "display",
+     "host"
+    ]
+   },
+   "part": "b",
+   "parts": [
+    "a",
+    "b"
+   ],
+   "runsOn": "local_static",
+   "scanClass": "module_edge",
+   "source": "卷一 §12.1 V-24 显示层组 import 与全局部分（卷二 §2.7 import 矩阵、§2.9 第 0 条）；拆 a/b 照李白 11-17 S12-3 裁定第 2 条",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "detector": "typed_pos",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/typed_pos.mjs",
+   "itemKey": "vol1.V-25.a",
+   "localNo": "V-25",
+   "method": "static_code",
+   "params": {
+    "checks": [
+     "regex",
+     "nonAscii",
+     "bareCompare",
+     "exportParams"
+    ],
+    "groups": [
+     "outputGate"
+    ]
+   },
+   "part": "a",
+   "parts": [
+    "a",
+    "b"
+   ],
+   "runsOn": "local_static",
+   "scanClass": "text_judge",
+   "source": "卷一 §12.1 V-25 显示闸扫描字串部分（= 卷二 S19）；拆 a/b 照李白 11-17 S12-3 裁定第 2 条",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "detector": "import_edge",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/import_edge.mjs",
+   "itemKey": "vol1.V-25.b",
+   "localNo": "V-25",
+   "method": "static_code",
+   "params": {
+    "codes": [
+     "E-VIEW-INPUT-IMPORT",
+     "E-PROC-IMPORT",
+     "E-GLOBAL-UNLISTED",
+     "E-TEXTCORE-IMPORT"
+    ],
+    "groups": [
+     "outputGate"
+    ]
+   },
+   "part": "b",
+   "parts": [
+    "a",
+    "b"
+   ],
+   "runsOn": "local_static",
+   "scanClass": "module_edge",
+   "source": "卷一 §12.1 V-25 显示闸 import 部分（= 卷二 S19）；拆 a/b 照李白 11-17 S12-3 裁定第 2 条",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
    "volume": "vol1",
    "zeroRows": []
   },
@@ -365,6 +652,118 @@
    "zeroRows": []
   },
   {
+   "detector": "typed_pos",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/typed_pos.mjs",
+   "itemKey": "vol1.V-29.a",
+   "localNo": "V-29",
+   "method": "static_code",
+   "params": {
+    "checks": [
+     "regex",
+     "nonAscii",
+     "bareCompare",
+     "exportParams"
+    ],
+    "groups": [
+     "aiGate"
+    ]
+   },
+   "part": "a",
+   "parts": [
+    "a",
+    "b"
+   ],
+   "runsOn": "local_static",
+   "scanClass": "text_judge",
+   "source": "卷一 §12.1 V-29 AI 输出边守门扫描字串部分（= 卷二 S19）；拆 a/b 照李白 11-17 S12-3 裁定第 2 条",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "detector": "import_edge",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/import_edge.mjs",
+   "itemKey": "vol1.V-29.b",
+   "localNo": "V-29",
+   "method": "static_code",
+   "params": {
+    "codes": [
+     "E-VIEW-INPUT-IMPORT",
+     "E-PROC-IMPORT",
+     "E-GLOBAL-UNLISTED",
+     "E-TEXTCORE-IMPORT"
+    ],
+    "groups": [
+     "aiGate"
+    ]
+   },
+   "part": "b",
+   "parts": [
+    "a",
+    "b"
+   ],
+   "runsOn": "local_static",
+   "scanClass": "module_edge",
+   "source": "卷一 §12.1 V-29 AI 输出边 import 部分（= 卷二 S19）；拆 a/b 照李白 11-17 S12-3 裁定第 2 条",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "detector": "path_access",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/path_access.mjs",
+   "itemKey": "vol1.V-3",
+   "localNo": "V-3",
+   "method": "static_code",
+   "params": {
+    "access": "write",
+    "codes": [
+     "E-VIEW-UNDECLARED-WRITE",
+     "E-VIEW-BYPASS"
+    ],
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "gate",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "cross_write",
+   "source": "卷一 §12.1 V-3 跨模块直写与未声明写（卷十二 §4.3）",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
    "expect": "all_pass",
    "form": "invariant",
    "gates": [
@@ -388,6 +787,80 @@
    "stage": 0,
    "state": "registered",
    "target": "world_run",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "detector": "typed_pos",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/typed_pos.mjs",
+   "itemKey": "vol1.V-31.a",
+   "localNo": "V-31",
+   "method": "static_code",
+   "params": {
+    "checks": [
+     "regex",
+     "nonAscii",
+     "bareCompare",
+     "exportParams"
+    ],
+    "groups": [
+     "gate"
+    ]
+   },
+   "part": "a",
+   "parts": [
+    "a",
+    "b"
+   ],
+   "runsOn": "local_static",
+   "scanClass": "text_judge",
+   "source": "卷一 §12.1 V-31 门禁扫描组字串部分（= 卷二 S19 gate 部分）；拆 a/b 照李白 11-17 S12-3 裁定第 2 条",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "detector": "import_edge",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/import_edge.mjs",
+   "itemKey": "vol1.V-31.b",
+   "localNo": "V-31",
+   "method": "static_code",
+   "params": {
+    "codes": [
+     "E-VIEW-INPUT-IMPORT",
+     "E-PROC-IMPORT",
+     "E-GLOBAL-UNLISTED",
+     "E-TEXTCORE-IMPORT"
+    ],
+    "groups": [
+     "gate"
+    ]
+   },
+   "part": "b",
+   "parts": [
+    "a",
+    "b"
+   ],
+   "runsOn": "local_static",
+   "scanClass": "module_edge",
+   "source": "卷一 §12.1 V-31 门禁扫描组 import 部分（卷二 §2.7 import 矩阵 gate 列）；拆 a/b 照李白 11-17 S12-3 裁定第 2 条",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
    "volume": "vol1",
    "zeroRows": []
   },
@@ -1971,6 +2444,42 @@
    "zeroRows": []
   },
   {
+   "detector": "typed_pos",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol2.S13",
+   "localNo": "S13",
+   "method": "static_code",
+   "params": {
+    "checks": [
+     "regex",
+     "nonAscii",
+     "bareCompare",
+     "exportParams"
+    ],
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "clientTextcore",
+     "display",
+     "host"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "text_judge",
+   "source": "卷二 §7 S13 语言判断扫描（规则层组、kernel 与共享库组、显示层组；卷十二 §4.2）",
+   "stage": 0,
+   "state": "registered",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
    "detector": "sym_exists",
    "expect": "zero",
    "form": "scan",
@@ -1986,6 +2495,35 @@
    "source": "卷二 §7 S14（旧符号残留）；S12-3 转录",
    "stage": 0,
    "state": "registered",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "detector": "decl_cmp",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/decl_cmp.mjs",
+   "itemKey": "vol2.S15",
+   "localNo": "S15",
+   "method": "static_code",
+   "params": {
+    "checks": [
+     "dynamicState"
+    ],
+    "groups": [
+     "rules"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "undeclared_io",
+   "source": "卷二 §7 S15 E-VIEW-DYNAMIC-STATE（卷十二 R12-3.4）",
+   "stage": 0,
+   "state": "implemented",
    "target": "runtime_code",
    "volume": "vol2",
    "zeroRows": []
@@ -2034,6 +2572,269 @@
    "zeroRows": []
   },
   {
+   "detector": "path_access",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol2.S17.a",
+   "localNo": "S17",
+   "method": "static_code",
+   "part": "a",
+   "parts": [
+    "a",
+    "b"
+   ],
+   "runsOn": "local_static",
+   "scanClass": "cross_write",
+   "source": "卷二 §7 S17 写入点闭集部分（卷十二 §2.4 落类表 cross_write）；拆 a/b 见李白 11-17 S12-3 裁定第 2 条；判据参数实现时登记（卷十二 :261）",
+   "stage": 0,
+   "state": "registered",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "detector": "taint",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol2.S17.b",
+   "localNo": "S17",
+   "method": "static_code",
+   "part": "b",
+   "parts": [
+    "a",
+    "b"
+   ],
+   "runsOn": "local_static",
+   "scanClass": "flow_taint",
+   "source": "卷二 §7 S17 屏蔽词命中流到种子部分（卷十二 §2.4 落类表 flow_taint）；拆 a/b 见李白 11-17 S12-3 裁定第 2 条；判据参数实现时登记（卷十二 :261）",
+   "stage": 0,
+   "state": "registered",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "detector": "typed_pos",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/typed_pos.mjs",
+   "itemKey": "vol2.S18",
+   "localNo": "S18",
+   "method": "static_code",
+   "params": {
+    "checks": [
+     "regex",
+     "nonAscii",
+     "bareCompare",
+     "exportParams"
+    ],
+    "groups": [
+     "inputEdge"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "text_judge",
+   "source": "卷二 §7 S18 inputEdge 组机器扫描（卷十二 §4.2 R12-2.6）",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "detector": "typed_pos",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/typed_pos.mjs",
+   "itemKey": "vol2.S19.a",
+   "localNo": "S19",
+   "method": "static_code",
+   "params": {
+    "checks": [
+     "regex",
+     "nonAscii",
+     "bareCompare",
+     "exportParams"
+    ],
+    "groups": [
+     "outputGate",
+     "gate",
+     "display",
+     "aiGate"
+    ]
+   },
+   "part": "a",
+   "parts": [
+    "a",
+    "b"
+   ],
+   "runsOn": "local_static",
+   "scanClass": "text_judge",
+   "source": "卷二 §7 S19 各组 string 操作部分（卷十二 §2.4 首批表 text_judge）；拆 a/b 见李白 11-17 S12-3 裁定第 2 条",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "detector": "import_edge",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/import_edge.mjs",
+   "itemKey": "vol2.S19.b",
+   "localNo": "S19",
+   "method": "static_code",
+   "params": {
+    "codes": [
+     "E-KERNEL-UPWARD-IMPORT",
+     "E-VIEW-INPUT-IMPORT",
+     "E-TEXTCORE-IMPORT",
+     "E-PROC-IMPORT",
+     "E-GLOBAL-UNLISTED",
+     "E-FILE-UNASSIGNED"
+    ],
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "gate",
+     "outputGate",
+     "aiGate",
+     "assembly",
+     "host",
+     "display",
+     "clientTextcore"
+    ]
+   },
+   "part": "b",
+   "parts": [
+    "a",
+    "b"
+   ],
+   "runsOn": "local_static",
+   "scanClass": "module_edge",
+   "source": "卷二 §7 S19 跨组 import、两进程互相 import、文件归属部分（卷十二 §2.4 module_edge）；拆 a/b 见李白 11-17 S12-3 裁定第 2 条",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "detector": "typed_pos",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/typed_pos.mjs",
+   "itemKey": "vol2.S2",
+   "localNo": "S2",
+   "method": "static_code",
+   "params": {
+    "checks": [
+     "regex",
+     "nonAscii",
+     "bareCompare",
+     "exportParams"
+    ],
+    "groups": [
+     "rules"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "text_judge",
+   "source": "卷二 §7 S2 E-VIEW-TEXT-MATCH（卷十二 §4.2）",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "detector": "typed_pos",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/typed_pos.mjs",
+   "itemKey": "vol2.S3.a",
+   "localNo": "S3",
+   "method": "static_code",
+   "params": {
+    "checks": [
+     "regex",
+     "bareCompare"
+    ],
+    "groups": [
+     "rules"
+    ]
+   },
+   "part": "a",
+   "parts": [
+    "a",
+    "b"
+   ],
+   "runsOn": "local_static",
+   "scanClass": "text_judge",
+   "source": "卷二 §7 S3 状态列表与睡眠正则部分（卷十二 §2.4 落类表 text_judge）；拆 a/b 见李白 11-17 S12-3 裁定第 2 条",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "detector": "sym_exists",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol2.S3.b",
+   "localNo": "S3",
+   "method": "static_code",
+   "part": "b",
+   "parts": [
+    "a",
+    "b"
+   ],
+   "runsOn": "local_static",
+   "scanClass": "legacy_symbol",
+   "source": "卷二 §7 S3 谓词只在登记的一处定义部分（卷十二 §2.4 落类表 legacy_symbol）；拆 a/b 见李白 11-17 S12-3 裁定第 2 条；判据参数实现时登记（卷十二 :261）",
+   "stage": 0,
+   "state": "registered",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
    "detector": "typed_pos",
    "expect": "zero",
    "form": "scan",
@@ -2049,6 +2850,36 @@
    "source": "卷二 §7 S4（E-VIEW-FALLBACK）；S12-3 转录",
    "stage": 0,
    "state": "registered",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "detector": "path_access",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/path_access.mjs",
+   "itemKey": "vol2.S5",
+   "localNo": "S5",
+   "method": "static_code",
+   "params": {
+    "access": "write",
+    "codes": [
+     "E-VIEW-BYPASS"
+    ],
+    "groups": [
+     "rules"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "cross_write",
+   "source": "卷二 §7 S5 E-VIEW-BYPASS（卷十二 §4.3）",
+   "stage": 0,
+   "state": "implemented",
    "target": "runtime_code",
    "volume": "vol2",
    "zeroRows": []
@@ -2074,6 +2905,36 @@
    "zeroRows": []
   },
   {
+   "detector": "path_access",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/path_access.mjs",
+   "itemKey": "vol2.S7",
+   "localNo": "S7",
+   "method": "static_code",
+   "params": {
+    "access": "display",
+    "codes": [
+     "E-VIEW-DISPLAY-READ"
+    ],
+    "groups": [
+     "rules"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "display_read",
+   "source": "卷二 §7 S7 E-VIEW-DISPLAY-READ（卷十二 §4.2、R12-2.10）",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
    "detector": "lit_scope",
    "expect": "zero",
    "form": "scan",
@@ -2087,6 +2948,26 @@
    "runsOn": "local_static",
    "scanClass": "instance_name",
    "source": "卷二 §7 S8（修正键字面量）；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "detector": "decl_cmp",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol2.S9",
+   "localNo": "S9",
+   "method": "static_code",
+   "runsOn": "local_static",
+   "scanClass": "undeclared_io",
+   "source": "卷二 §7 S9 declareInputs 与叶子核对（卷十二 R12-3.5）；判据参数实现时登记（卷十二 :261），declareInputs 待 2-5",
    "stage": 0,
    "state": "registered",
    "target": "runtime_code",

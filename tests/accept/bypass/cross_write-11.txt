@@ -1,0 +1,6 @@
+// 正例：规则层只读；登记写者（pendingPost.* 的写者 kernel/transaction.mjs）经 writePath 写自己的路径。
+/** @param {State} state @param {EntityId} id @returns {unknown} */
+export function look(state, id) { return readPath(state, P.terminated(id)); }
+// @file server-plugin/kernel/transaction.mjs
+/** @param {State} state @param {EventId} id @param {unknown} list @returns {void} */
+export function post(state, id, list) { writePath(state, P.pendingPost(id), list); }

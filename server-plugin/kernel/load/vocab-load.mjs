@@ -6,6 +6,11 @@ const CODE_RE = /^[a-z][a-z0-9_]{1,47}$/;
 // 一个前缀与另一个前缀冲突：相等、或一个是另一个的开头（§1.9"任何词表族前缀不得等于实体前缀、不得是实体前缀的前缀、也不得以实体前缀开头"）。
 const clash = (a, b) => a.startsWith(b) || b.startsWith(a);
 
+/**
+ * @param {unknown} vocabDoc 已解析的 _vocab.json
+ * @param {Iterable<string>} entityPrefixes 维度表登记的实体前缀
+ * @param {(...args: unknown[]) => void} err 报错回调
+ */
 export function loadVocab(vocabDoc, entityPrefixes, err) {
   const families = new Map();
   const index = new Map();
@@ -52,6 +57,7 @@ export function loadVocab(vocabDoc, entityPrefixes, err) {
 }
 
 // `_units.json`：{"units": [{id, dimension, si, calibrate?}]}（§1.4 每条的字段；外层写法卷二未定，见 docs/问题.md）。
+/** @param {unknown} unitsDoc 已解析的 _units.json @param {(...args: unknown[]) => void} err 报错回调 */
 export function loadUnits(unitsDoc, err) {
   const units = new Map();
   const rows = unitsDoc && Array.isArray(unitsDoc.units) ? unitsDoc.units : null;

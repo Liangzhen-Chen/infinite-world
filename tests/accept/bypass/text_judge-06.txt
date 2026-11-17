@@ -1,0 +1,7 @@
+/** @param {Direction} k @returns {number} */
+export function pick(k) {
+  switch (k) {
+    case 'up': return 0;
+    default: return -1;
+  }
+}

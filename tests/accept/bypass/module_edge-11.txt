@@ -1,2 +1,4 @@
 import { y } from '../sibling.mjs';
 export const z = y;
+// @file server-plugin/kernel/files.json
+["server-plugin/kernel/__case__/module_edge-11.mjs"]

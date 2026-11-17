@@ -9,6 +9,7 @@ import { compileRXInScope, evaluateRX, nsKey, RxError } from '../rx.mjs';
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 
 // 加载期每条目编译一次；编不过的条目报在词表条目上（E-MOD-RX / E-RX-NS-UNKNOWN），不参与判定。
+/** @param {Record<string, unknown>} t 一张表 @param {Record<string, unknown>} env @param {(...args: unknown[]) => void} err */
 export function prepareNamedConditions(t, env, err) {
   const decl = isObj(t.doc.namedConditions) ? t.doc.namedConditions : {};
   const out = new Map();
@@ -41,6 +42,7 @@ export function prepareNamedConditions(t, env, err) {
 // 条件比较里 null 只等于 null；序比较与 member 遇 null 不成立（见 foldAbsent）——整类通则，对所有 nullable 字段一样，不读字段说明文字。
 // 缺值才是未知，同样不给读数。求值器只有四种读数类型，null 不进求值器。
 // 未声明 nullable 的字段写 null，加载时已在类型与取值域校验层报 E-DIM-DOMAIN-RANGE（types.mjs checkValue），到不了这里。
+/** @param {Record<string, unknown>} rowNs 行的命名空间读数 @param {Set<string>} known 已知字段 @param {Set<string>} classes 行所挂类别 */
 export function rowReads(rowNs, known, classes) {
   const reads = {};
   const none = new Set();
@@ -78,6 +80,7 @@ function foldAbsent(n, absent) {
 
 // 条目求值遇到读数缺失：缺的是"没有"的字段但仍未被折叠（如算术里的 null），条目对本行不成立；缺的是未知的，
 // 按"未知"计入成立（卷三甲 §2.1 byDigestible"为真或为未知"）。
+/** @param {Record<string, unknown>} cond 已编译的条目 @param {{reads: Record<string, unknown>, none: Set<string>}} rr 行读数与"没有"的字段 */
 export function namedHolds(cond, { reads, none }) {
   const all = { ...reads, ...cond.reads };
   return cond.trees.some(({ tree }) => {
