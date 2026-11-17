@@ -99,7 +99,7 @@ test('命名空间 arg 段数由返回形状推出（五列封闭，无 argCount
   assert.equal(nsArgCount({ shape: 'fraction' }), 0);
   assert.equal(nsArgCount({ shape: '<维度键>，另有 classes' }), 1);
   assert.equal(nsArgCount({ shape: '<字段>.<句柄>' }), 2);
-  assert.equal(nsArgCount({}), 0);
+  assert.equal(code(() => nsArgCount({})), 'E-RX-NS-UNKNOWN');
   const scope = { ns: [{ ns: 'lot.x', shape: 'fraction', type: 'number' }, { ns: 'mat', shape: '<维度键>', type: 'field' }], dims: new Map(), vocabIndex: new Map(), maxDepth: 16 };
   assert.equal(compileRXInScope('lot.x <= 0.3', 'data', scope).tree.left.op, 'ns');
   assert.equal(compileRXInScope('mat.fiber > 0', 'data', scope).tree.left.arg[0], 'fiber');
