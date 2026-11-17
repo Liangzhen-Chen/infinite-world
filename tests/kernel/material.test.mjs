@@ -89,7 +89,7 @@ test('纤维含量反例：值越出 [0,1] 仍 E；非 gap 的必填维度（ene
   assert.ok(!gapList(rc).includes('mat_mash.fiberContent'));
 });
 
-test('暂定格：每个标暂定的格都有值、过表头取值域；valueMult 暂定标"待 M3b-27 标定"；卷文明写未核到的格不暂填', () => {
+test('暂定格：每个标暂定的格都有值、过表头取值域；valueMult 标"待 M3b-27 标定"、rotRate 标"待 M3a-4 标定"；卷文明写未核到的格不暂填', () => {
   const w = load();
   const r = run(w);
   assert.deepEqual(errs(r).filter((e) => e.code !== 'E-DIM-REQUIRED-MISSING'), []);
@@ -99,6 +99,8 @@ test('暂定格：每个标暂定的格都有值、过表头取值域；valueMul
       n++;
       const [dim, key] = s.dimension.split('.');
       assert.ok(s.name.startsWith('暂定，待'), `${id} ${s.dimension}`);
+      if (dim === 'valueMult') assert.ok(s.name.includes('待 M3b-27 标定'), `${id} valueMult`);
+      if (dim === 'rotRate') assert.ok(s.name.includes('待 M3a-4 标定'), `${id} rotRate`);
       assert.ok(/^P3-T\d/.test(s.citation), `${id} ${s.dimension}`);
       const v = key ? row[dim][key] : row[dim];
       assert.ok(v !== undefined && v !== null, `${id}.${s.dimension}`);
