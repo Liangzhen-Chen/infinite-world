@@ -21,7 +21,8 @@ export function detect(ctx, params) {
     }
     function judge(imp) {
       const spec = imp.spec;
-      if (spec === null) return m.globalCode;
+      // 动态 import() 不在全局闭集内，不论说明符是不是字面量、目标在不在矩阵内（卷二 §2.9 第 1 条）。
+      if (imp.kind === 'dynamic') return m.globalCode;
       if (spec.startsWith('./') || spec.startsWith('../')) {
         const target = resolveRel(file, spec);
         if (target.startsWith('../')) return allowedFor(row.external, spec) ? null : m.globalCode;

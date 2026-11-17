@@ -6,7 +6,6 @@
   "scripts": {
     "test": "node --test \"tests/accept/*.test.mjs\"",
     "accept": "node tools/accept/run.mjs pre_commit",
-    "test:baseline": "node tools/run-baseline.mjs",
     "test:scenarios": "node tools/scenarios.mjs",
     "test:playtests": "node tools/playtests.mjs",
     "test:settings": "node tools/compare-settings.mjs",
