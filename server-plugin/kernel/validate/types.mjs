@@ -33,6 +33,8 @@ export const CODE_ENUMS = Object.freeze({
   revive_record: ['clear', 'keep'],
   writer_role: ['create', 'rewrite'],
   rx_type: ['number', 'boolean', 'code', 'handle'],
+  // 卷三甲 §2.1"物性格的来源级别"：代码内封闭枚举，只有三个值（A 实测出处、B 参照材料、C 设计设定）。
+  cell_grade: ['measured', 'referenced', 'designed'],
 });
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
