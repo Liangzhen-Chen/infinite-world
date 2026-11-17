@@ -38,7 +38,7 @@ export function prepareNamedConditions(t, env, err) {
 
 // 本行的读数：rowNs.<维度键> 取本行按取值算法已知的值，rowNs.classes 取本行组件类与类别连同上位链。
 // 两种"读不到"分开（卷二 §1.6 第 2 点 :254）：显式 null 是已知值，表示没有任何条目，记入 none，不给读数；
-// 条件比较里 null 只等于 null（== 不成立、!= 成立）——整类通则，对所有 nullable 字段一样，不读字段说明文字。
+// 条件比较里 null 只等于 null；序比较与 member 遇 null 不成立（见 foldAbsent）——整类通则，对所有 nullable 字段一样，不读字段说明文字。
 // 缺值才是未知，同样不给读数。求值器只有四种读数类型，null 不进求值器。
 // 未声明 nullable 的字段写 null，加载时已在类型与取值域校验层报 E-DIM-DOMAIN-RANGE（types.mjs checkValue），到不了这里。
 export function rowReads(rowNs, known, classes) {
@@ -52,17 +52,23 @@ export function rowReads(rowNs, known, classes) {
 const TRUE_NODE = { op: 'cmp', cmpOp: 'eq', left: { op: 'num', value: 0 }, right: { op: 'num', value: 0 } };
 const FALSE_NODE = { op: 'cmp', cmpOp: 'ne', left: { op: 'num', value: 0 }, right: { op: 'num', value: 0 } };
 
-// 显式 null 的读数参与 ==/!= 比较时按通则定值：null 只等于 null——两边都是显式 null 时 == 成立、!= 不成立；
-// 只一边是显式 null 时 == 不成立、!= 成立；其余用法（序比较、算术、member）不改，仍按读不到处理。
+// 显式 null 是已知值（卷二 §1.6 第 2 点，勘误 1117rx2）：它参与比较类节点时按下表定值，之后外层 not/and/or 由求值器照常运算。
+// 表按节点类别给"某操作数是显式 null 时的取值"，不按字段、表名、运算逐个特判：
+//   eq/ne：null 只等于 null——两边都是显式 null 时 == 成立、!= 不成立；只一边是时 == 不成立、!= 成立；
+//   lt/le/gt/ge、member：null 没有大小、也不属于任何集合，任一操作数是显式 null 即不成立（外层 not 取反成立）。
+// 算术里的显式 null（如 null + 1 < 3）裁定未覆盖，不折叠，仍按读不到处理。缺值不在此处，走求值器抛 RxError 的未知路径。
+const NULL_RULES = {
+  cmp: { fields: ['left', 'right'], by: (n) => ({ eq: (l, r) => l && r, ne: (l, r) => !(l && r) }[n.cmpOp] || (() => false)) },
+  member: { fields: ['item', 'set'], by: () => () => false },
+};
+
 function foldAbsent(n, absent) {
   if (!n || typeof n !== 'object') return n;
-  if (n.op === 'cmp' && (n.cmpOp === 'eq' || n.cmpOp === 'ne')) {
+  const rule = NULL_RULES[n.op];
+  if (rule) {
     const isNull = (x) => !!x && x.op === 'ns' && absent.has(nsKey(x));
-    const l = isNull(n.left), r = isNull(n.right);
-    if (l || r) {
-      const equal = l && r;
-      return (n.cmpOp === 'eq') === equal ? TRUE_NODE : FALSE_NODE;
-    }
+    const [l, r] = rule.fields.map((f) => isNull(n[f]));
+    if (l || r) return rule.by(n)(l, r) ? TRUE_NODE : FALSE_NODE;
   }
   const out = { ...n };
   for (const f of ['left', 'right', 'item', 'set', 'filter']) if (n[f]) out[f] = foldAbsent(n[f], absent);
@@ -70,7 +76,7 @@ function foldAbsent(n, absent) {
   return out;
 }
 
-// 条目求值遇到读数缺失：缺的是"没有"的字段，条目对本行不成立（没有成分就不是任何成分）；缺的是未知的，
+// 条目求值遇到读数缺失：缺的是"没有"的字段但仍未被折叠（如算术里的 null），条目对本行不成立；缺的是未知的，
 // 按"未知"计入成立（卷三甲 §2.1 byDigestible"为真或为未知"）。
 export function namedHolds(cond, { reads, none }) {
   const all = { ...reads, ...cond.reads };
