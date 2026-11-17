@@ -31,6 +31,7 @@ const num = (c, where) => {
   return undefined;
 };
 const setIf = (o, k, v) => { if (v !== undefined) o[k] = v; };
+const requiredTerms = (s) => (typeof s === 'string' ? s.split('；').map((x) => x.trim()) : []);
 const sortObj = (o) => (Array.isArray(o) ? o.map(sortObj) : o && typeof o === 'object' ? Object.fromEntries(Object.keys(o).sort().map((k) => [k, sortObj(o[k])])) : o);
 
 // 组件类字母（卷三甲 §4.5.5 读表约定）；S、Sc 是卷十五登记的超自然组件类，本卡未载入卷十五词表，不写。
@@ -64,8 +65,10 @@ for (const c of main) {
 const ids = Object.keys(rows);
 const R = (id, where) => { if (!rows[id]) { report.skipped.push(`${where}: 未知材料 ${id}`); return null; } return rows[id].r; };
 
-for (const [id, , , v] of between('FIBER-DATA').map((c) => [c[0], c[1], c[2], num(c[2], 'fiber')])) { const r = R(id, '纤维'); if (r) setIf(r, 'fiberContent', v); }
-for (const c of between('CARB-DATA')) { const r = R(c[0], '碳水'); if (r) setIf(r, 'carbContent', num(c[2], c[0])); }
+// 短表里写"—"的格是卷文明说的未知（纤:未核、碳:未核，M-19 与例 5 不许暂填），记下，后面的暂定规则不碰。
+const declaredUnknown = new Set();
+for (const c of between('FIBER-DATA')) { const r = R(c[0], '纤维'); if (r) setIf(r, 'fiberContent', num(c[2], c[0])); if (c[2] === '—') declaredUnknown.add(`${c[0]}.fiberContent`); }
+for (const c of between('CARB-DATA')) { const r = R(c[0], '碳水'); if (r) setIf(r, 'carbContent', num(c[2], c[0])); if (c[2] === '—') declaredUnknown.add(`${c[0]}.carbContent`); }
 for (const c of between('PLANTPART-DATA')) { const r = R(c[0], '部位'); if (r && /^ppart_/.test(c[3])) r.plantPart = c[3]; else if (r) report.notes.push(`${c[0]}: 植物部位留空（卷文本格 "${c[3]}"）`); }
 for (const c of between('PLANTFAMILY-DATA')) { const r = R(c[0], '植物科'); if (r && /^pfam_/.test(c[3])) r.plantFamily = c[3]; else if (r) report.notes.push(`${c[0]}: 植物科留空（卷文本格 "${c[3]}"）`); }
 for (const c of between('PILE-EVIDENCE-DATA')) { const r = R(c[0], '成堆证据'); if (r) r.pileBurnEvidence = c[2]; }
@@ -89,18 +92,13 @@ for (const l of lines.slice(836, 884)) {
   if (f === 'specificHeat.solid' || f === 'specificHeat.liquid') r.specificHeat = { ...(r.specificHeat || {}), [f.split('.')[1]]: v };
   else if (f === 'insulation' || f === 'breathabilityBase') r[f] = v;
 }
-// refMaterial 行上必写：有参照的写代号，其余写 null（§2.1）。insulation / breathabilityBase：byReader 不满足的行写 null。
-for (const id of ids) {
-  const r = rows[id].r;
-  r.refMaterial = refs[id] || null;
-  if (r.insulation === undefined) r.insulation = null;
-  if (r.breathabilityBase === undefined) r.breathabilityBase = null;
-}
+// refMaterial 行上必写：有参照的写代号，其余写 null（§2.1 定义 null = 本行没有参照格）。
+// insulation / breathabilityBase 只照例 11 写（含例 11 明写的 null）；别的行 byReader 未判（P-2 notCovered），不写，验收单标"未核"。
+for (const id of ids) rows[id].r.refMaterial = refs[id] || null;
 // refs 里这一格的值取自卷文 B 级，但例 11 的 B 级格已在上表写出值，不重复。
 
 // ---------- 旧 material-props.json → 类别行（卷二 §6.2） ----------
 const old = JSON.parse(execFileSync('git', ['show', 'old-final-1117:world/meta/mechanics/material-props.json'], { cwd: ROOT, maxBuffer: 1e8 }).toString());
-const KCAL_MJ = 0.004184; // 1 kcal = 4.184 kJ；新口径 energyDensity 是干基总能 MJ/kg 干重（卷三甲 §2.1）
 const mean = (a) => a.reduce((x, y) => x + y, 0) / a.length;
 const rnd = (x, n) => Math.round(x * 10 ** n) / 10 ** n;
 const pick = (row) => { const s = row.sources || []; return (row.selection && row.selection.method === 'single') || !row.selection ? s.slice(0, 1) : s; };
@@ -114,12 +112,12 @@ for (const [k, row] of Object.entries(old.classes)) {
   const srcs = pick(row).filter(Boolean);
   const m = srcs.map((s) => s.moistureFraction).filter((x) => x !== undefined);
   const ed = srcs.filter((s) => s.refuseFraction !== undefined).map((s) => 1 - s.refuseFraction);
-  const en = srcs.filter((s) => s.kcalPer100gWet !== undefined && s.moistureFraction !== undefined && s.moistureFraction < 1).map((s) => (s.kcalPer100gWet * 10 / (1 - s.moistureFraction)) * KCAL_MJ);
-  const cap = srcs.filter((s) => s.mealGrams !== undefined).map((s) => (s.mealBasis === 'dryMatter' ? (s.mealGrams * (1 - (s.eatenMoistureFraction ?? s.moistureFraction))) / (1 - s.moistureFraction) : s.mealGrams));
   if (m.length) c.moisture = rnd(mean(m), 3);
   if (ed.length) c.edibleFraction = rnd(mean(ed), 3);
-  if (en.length) c.energyDensity = rnd(mean(en), 2);
-  if (cap.length) c.mealCap = rnd(mean(cap), 1);
+  // energyDensity 不转：旧 sources 只有 kcal（代谢能），新口径是干基总能（卷三甲 §2.1、M-15、§4.5.5"能:食"按三大营养素燃烧热折），缺成分输入。
+  // mealCap 不转：旧值标"凭记忆写入，待 L2 核对"（李白 11-17 裁定不沿用）。两项见 docs/问题.md。
+  if (srcs.some((s) => s.kcalPer100gWet !== undefined)) report.notes.push(`class_${k}: 旧 kcal 是代谢能，不折成 energyDensity`);
+  if (srcs.some((s) => s.mealGrams !== undefined)) report.notes.push(`class_${k}: 旧 mealCap 凭记忆，不转`);
   c.sources = row.sources;
   c.selection = row.selection;
   addBasis(c, row.basis || '');
@@ -219,6 +217,105 @@ const dims = {
   categories: D('set', { of: { type: 'ref', vocab: 'matcat' }, domain: { maxSize: 4 }, derived: '卷三乙 §2.1：派生大类规则', required: 'never', onUnknown: 'skip', owner: '卷三乙 §2.1' }),
 };
 
+// ---------- 卷三甲 §4.1.5–§4.4.5 数据实例（A 类补格） ----------
+// 实例写成 `mat_x`：`{键:值, …}`；整节读，凡键是本表已声明维度的都取，其余键（rawForm、tags、extends、带 * + 的继承写法）不取并记报告。
+// 行上已有值的格只核对，不改（全集表为准）；映射的键须是已登记的词表条目（armorMult 的 damage 族无条目，不取）。
+const srcAdd = (r, s) => { r.sources = [...(r.sources || []), s]; };
+const parseLoose = (s) => {
+  const toks = []; const re = /\s*("(?:[^"\\]|\\.)*"|[{}[\]:,]|-?\d+(?:\.\d+)?(?![\w])|[A-Za-z_][\w.]*[*+~-]?|[^\s{}[\]:,"]+)/gy; let m;
+  while ((m = re.exec(s)) && m[1] !== undefined) toks.push(m[1]);
+  let i = 0; const JUNK = Symbol('junk');
+  const val = () => {
+    const t = toks[i++];
+    if (t === '{') { const o = {}; while (toks[i] !== '}' && i < toks.length) { let k = toks[i++]; if (k === ',') continue; k = k.replace(/^"|"$/g, ''); i++; const v = val(); if (v !== JUNK) o[k] = v; } i++; return o; }
+    if (t === '[') { const a = []; while (toks[i] !== ']' && i < toks.length) { if (toks[i] === ',') { i++; continue; } const v = val(); if (v !== JUNK) a.push(v); } i++; return a; }
+    if (/^-?\d/.test(t)) return Number(t);
+    if (/^"/.test(t)) return t.slice(1, -1);
+    if (/^[A-Za-z_][\w.]*$/.test(t)) return t;
+    return JUNK;
+  };
+  return val();
+};
+const exampleLines = [];
+for (let n = 1; n <= 4; n++) {
+  const a = lines.findIndex((l) => l.startsWith(`#### 4.${n}.5 数据实例`));
+  for (let j = a + 1; j < lines.length && !lines[j].startsWith('#### '); j++) if (lines[j].startsWith('- 例')) exampleLines.push([j + 1, n, lines[j]]);
+}
+const vocabFamilyOf = (d) => d.vocab || (d.of && d.of.vocab) || (d.key && d.key.vocab);
+const exampleTaken = [];
+for (const [lineNo, sec, l] of exampleLines) {
+  const m = l.match(/^- 例 (\d+)[^`]*`(mat_\w+)`[^`]*`(\{.*?\})`/);
+  if (!m) continue;
+  const [, exNo, id, body] = m;
+  const r = rows[id] ? rows[id].r : null; if (!r) { report.skipped.push(`卷三甲 §4.${sec}.5 例 ${exNo}: ${id} 不在全集`); continue; }
+  const obj = parseLoose(body);
+  const where = `卷三甲 §4.${sec}.5 例 ${exNo}`;
+  for (const [k, v] of Object.entries(obj)) {
+    const d = dims[k];
+    if (k === 'classes' || k === 'substance') { const have = k === 'classes' ? (r.classes || []) : r.substance; const want = k === 'classes' ? [...new Set(v.map((c) => c))].filter((c) => Object.values(COMP).includes(c)).sort() : v; if (JSON.stringify(have) !== JSON.stringify(want)) report.mismatch.push(`${where} ${id}.${k}: 实例 ${JSON.stringify(want)} ≠ 全集 ${JSON.stringify(have)}`); continue; }
+    if (!d || d.derived) { report.notes.push(`${where} ${id}.${k}: 非本表已声明手填维度，不取`); continue; }
+    const fam = vocabFamilyOf(d);
+    if (d.type === 'map' && fam === 'damage') { report.notes.push(`${where} ${id}.${k}: 键属 damage 族，族无条目（卷十三 Q13-12），不取`); continue; }
+    if (fam === 'reaction') (Array.isArray(v) ? v : Object.keys(v)).forEach((x) => reactions.add(x));
+    const put = (key, val) => { r[key] = val; srcAdd(r, { dimension: key, name: where, citation: `docs/统一底层设计/卷三甲-物质本源.md:${lineNo}` }); exampleTaken.push(`${id}.${key}`); };
+    if (r[k] === undefined) put(k, v);
+    else if (d.type === 'struct' && typeof v === 'object') {
+      const add = Object.entries(v).filter(([s]) => r[k][s] === undefined || r[k][s] === null);
+      for (const [s, x] of Object.entries(v)) if (r[k][s] !== undefined && r[k][s] !== null && r[k][s] !== x) report.mismatch.push(`${where} ${id}.${k}.${s}: 实例 ${x} ≠ 全集 ${r[k][s]}`);
+      if (add.length) { r[k] = { ...r[k], ...Object.fromEntries(add) }; add.forEach(([s]) => { srcAdd(r, { dimension: `${k}.${s}`, name: where, citation: `docs/统一底层设计/卷三甲-物质本源.md:${lineNo}` }); exampleTaken.push(`${id}.${k}.${s}`); }); }
+    } else if (JSON.stringify(r[k]) !== JSON.stringify(v)) report.mismatch.push(`${where} ${id}.${k}: 实例 ${JSON.stringify(v)} ≠ 全集 ${JSON.stringify(r[k])}`);
+  }
+}
+
+// ---------- 仍缺的必填格：统一规则算出暂定值（李白 11-17 改令；规则说明见 审查/P-3-推导规则.md） ----------
+// 必填判定照表头：always、byClass:<组件类>、ifPresent:<维度>；byDigestible、byReader、anyOf 不在此补。
+// 不补的格：卷文短表明写未知的（declaredUnknown）；valueMult 归卷三乙 §7 M3b-27 离线标定（tools/calibrate-valuemult.mjs），不暂定。
+const NOT_PROVISIONAL = { valueMult: '卷三乙 §7 M3b-27 离线标定' };
+const RULE_NOTE = { rotRate: '卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定' };
+const needs = (r, d) => requiredTerms(d.required).some((t) => t === 'always' || (t.startsWith('byClass:') && (r.classes || []).includes(t.slice(8))) || (t.startsWith('ifPresent:') && r[t.slice(10)] !== undefined));
+const median = (a) => { const s = [...a].sort((x, y) => x - y); const h = s.length >> 1; return s.length % 2 ? s[h] : (s[h - 1] + s[h]) / 2; };
+// 卷三乙 §4.1.1（:559）本源成分 → 类别；名称到代号取卷三甲 §2.2（:182）。
+const vol3b = readFileSync(join(ROOT, 'docs/统一底层设计/卷三乙-物态类别与物品.md'), 'utf8').split('\n');
+const substByName = Object.fromEntries([...lines.find((l) => l.startsWith('| substance → ')).matchAll(/([一-龥]+) `(subst_\w+)`/g)].map((x) => [x[1], x[2]]));
+const classRuleLines = vol3b.slice(vol3b.findIndex((l) => l.includes('<!--CLASS-RULES-BEGIN material-->')), vol3b.findIndex((l) => l.includes('<!--CLASS-RULES-END material-->')));
+const substanceClass = Object.fromEntries([...classRuleLines.find((l) => l.includes('本源成分的类别')).matchAll(/([一-龥]+) → `(class_\w+)`/g)].filter((x) => substByName[x[1]]).map((x) => [substByName[x[1]], x[2]]));
+const derivedClassCodes = [...new Set(classRuleLines.join('\n').match(/class_\w+/g))];
+const MEAL_CAP_G = 1100; // 成人胃容量约 1.1 L、食物密度约 1（Geliebter 1988；旧 material-props.json mealCitation）。无卷文出处，暂定。
+const provisional = [];
+const mark = (r, dim, citation) => { srcAdd(r, { dimension: dim, name: '暂定，待试玩调', citation, status: 'vstat_placeholder' }); provisional.push(dim.split('.')[0]); };
+for (const dim of Object.keys(dims).sort()) {
+  const d = dims[dim];
+  if (d.derived || NOT_PROVISIONAL[dim]) continue;
+  const holes = ids.filter((id) => rows[id].r[dim] === undefined && needs(rows[id].r, d) && !declaredUnknown.has(`${id}.${dim}`));
+  if (!holes.length) continue;
+  const note = RULE_NOTE[dim] ? `；${RULE_NOTE[dim]}` : '';
+  if (dim === 'repairedWith') {
+    // P3-T3：修理用料类 = 本行本源成分在卷三乙 :559 的类别（卷三甲 §4.1.5 例 1、例 2 两例都等于自身类别）。
+    for (const id of holes) { const c = substanceClass[rows[id].r.substance]; if (!c) { report.skipped.push(`${id}.repairedWith: 本源成分无类别，T3 算不出`); continue; } rows[id].r[dim] = c; mark(rows[id].r, dim, 'P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）'); }
+  } else if (dim === 'reactionYield') {
+    // P3-T1（按反应分组）：同反应代号已有产率取中位数；无则取全部已有产率中位数。其余反应键写 null（卷二 §1.6 第 4 项映射全族）。
+    const all = ids.flatMap((id) => Object.entries(rows[id].r.reactionYield || {}).filter(([, x]) => typeof x === 'number').map(([k, x]) => [k, x]));
+    for (const id of holes) {
+      const y = {};
+      for (const rk of Object.keys(rows[id].r.reactionProducts)) { const g = all.filter(([k]) => k === rk).map(([, x]) => x); const base = g.length ? g : all.map(([, x]) => x); y[rk] = rnd(median(base), 4); mark(rows[id].r, `reactionYield.${rk}`, `P3-T1 同反应已有产率中位数（${g.length ? `组 ${rk}，n=${g.length}` : `组内无值，全部 n=${base.length}`}）；无卷文出处，暂定`); }
+      rows[id].r.reactionYield = y;
+    }
+  } else if (d.type === 'number') {
+    // P3-T1：同本源成分（空记一组）已有值的中位数；组内无值取该维全部已有值的中位数。方法同卷三甲 §4.5.5 依据代号"推"（:519、:523 同类推定）。
+    const have = ids.filter((id) => typeof rows[id].r[dim] === 'number');
+    if (!have.length && dim === 'mealCap') { for (const id of holes) { rows[id].r[dim] = MEAL_CAP_G; mark(rows[id].r, dim, 'P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定'); } continue; }
+    if (!have.length) { report.skipped.push(`${dim}: 无任何已有值，T1 算不出`); continue; }
+    for (const id of holes) {
+      const s = rows[id].r.substance || null;
+      const g = have.filter((h) => (rows[h].r.substance || null) === s);
+      const base = (g.length ? g : have).map((h) => rows[h].r[dim]);
+      rows[id].r[dim] = rnd(median(base), d.precision ?? 4);
+      mark(rows[id].r, dim, `P3-T1 同本源成分已有值中位数（${g.length ? `组 ${s || '空'}，n=${g.length}` : `组内无值，全部 n=${base.length}`}；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定${note}`);
+    }
+  } else report.skipped.push(`${dim}: 类型 ${d.type} 无暂定规则`);
+}
+// reactionYield 映射补全全族键（卷二 §1.6 第 4 项，见 docs/问题.md）：反应集合到这里才定，统一补 null。
+for (const id of ids) { const y = rows[id].r.reactionYield; if (y) for (const k of reactions) if (!(k in y)) y[k] = null; }
 const materialRows = {};
 for (const id of [...ids].sort()) materialRows[id] = rows[id].r;
 const material = {
@@ -237,7 +334,8 @@ const material = {
 
 // ---------- 词表 ----------
 const E = (list, extra) => Object.fromEntries(list.map((k) => [k, extra ? extra(k) : {}]));
-const classIds = [...new Set([...Object.keys(classes), ...['metal', 'stone', 'mineral', 'glass', 'wood', 'plant', 'leather', 'bone', 'flesh'].map(clsId)])].sort();
+// 卷三乙 §4.1.1（:559–560）两条来源列出的 15 个类别，加旧 material-props 的类别键（卷二 §6.2）。
+const classIds = [...new Set([...Object.keys(classes), ...derivedClassCodes])].sort();
 const vocab = {
   families: {
     substance: { closed: true, prefix: 'subst_', entries: E(['metal', 'stone', 'mineral', 'glass', 'wood', 'plant', 'fiber', 'hide', 'bone', 'flesh', 'water', 'animal_product'].map((k) => `subst_${k}`)) },
@@ -250,7 +348,7 @@ const vocab = {
     burn_evidence: { closed: false, prefix: 'bev_', entries: E([...new Set(between('PILE-EVIDENCE-DATA').map((c) => c[2]))].sort(), () => ({ kind: 'fuel_record' })) },
     // 卷二十五 §2.4：开放、登记制；首批七项，字段 seasonal / lethal 的值卷二十五没逐项写，不填。
     plant_part: { closed: false, prefix: 'ppart_', entries: E(['seed', 'stalk', 'leaf', 'root', 'fruit', 'flower', 'aerial'].map((k) => `ppart_${k}`)) },
-    // 卷三乙 §4.1.1：派生类别；首批代号取卷三乙 :559 的九项加旧 material-props.json 的类别键（卷二 §6.2）。
+    // 卷三乙 §4.1.1：派生类别；首批代号取卷三乙 :559–560 的十五项加旧 material-props.json 的类别键（卷二 §6.2）。
     class: { closed: false, prefix: 'class_', entries: E(classIds) },
     matcat: { closed: false, prefix: 'matcat_', entries: E(['matcat_char', 'matcat_wax_fat', 'matcat_volatile_fuel']) },
     // 卷十三 `damage`（damage_）：条目代号待内容管线定名（卷十三 Q13-12），本卡无可载条目。
@@ -276,7 +374,10 @@ const out = {
 };
 const fmt = (o) => JSON.stringify(sortObj(o), null, 1) + '\n';
 console.log(`rows=${ids.length} classes=${Object.keys(classes).length} classEntries=${classIds.length} labels=${Object.keys(labels).length}`);
-console.log(`易燃度核对差异=${report.mismatch.length}`); report.mismatch.forEach((s) => console.log('  ' + s));
+const tally = (a) => Object.entries(a.reduce((o, k) => ({ ...o, [k]: (o[k] || 0) + 1 }), {})).sort().map(([k, n]) => `${k} ${n}`).join('、');
+console.log(`卷三甲 §4.1.5–§4.4.5 实例补格=${exampleTaken.length}：${tally(exampleTaken.map((x) => x.split('.').slice(1).join('.').split('.')[0]))}`);
+console.log(`暂定格=${provisional.length}：${tally(provisional)}`);
+console.log(`核对差异（易燃度换算、实例对全集）=${report.mismatch.length}`); report.mismatch.forEach((s) => console.log('  ' + s));
 console.log(`跳过/未转=${report.skipped.length}`); report.skipped.forEach((s) => console.log('  ' + s));
 console.log(`备注=${report.notes.length}`); report.notes.forEach((s) => console.log('  ' + s));
 if (!CHECK) {
