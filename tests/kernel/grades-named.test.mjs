@@ -135,6 +135,18 @@ test('namedConditions 与 null（卷二 §1.6 第 2 点）：nullable 字段显�
   assert.deepEqual(eq.rows(run(eq.f, eq.opts)), [], '== 等于别的值不成立');
 });
 
+test('namedConditions 与 null：两边都是显式 null 时 == 成立、!= 不成立（null 只等于 null）', () => {
+  // gad_box 两边都是显式 null；gad_hammer 两边同为 grd_a（== 成立、!= 不成立），作对照。
+  for (const [op, expected] of [['==', ['gad_box', 'gad_hammer']], ['!=', []]]) {
+    const t = tagged(`thing.tag ${op} thing.tag2 and env.heat <= 0`);
+    t.f.gadget.dimensions.tag2 = { ...t.f.gadget.dimensions.tag };
+    t.f.gadget.rows.gad_hammer.tag2 = 'grd_a';
+    t.f.gadget.rows.gad_box.tag2 = null;
+    t.setBox(null);
+    assert.deepEqual(t.rows(run(t.f, t.opts)).sort(), expected, `${op} 两边显式 null`);
+  }
+});
+
 test('namedConditions 与 null：未声明 nullable 的字段写显式 null，加载时在取值域校验层报 E-DIM-DOMAIN-RANGE；求值器不收 null', () => {
   const bad = tagged('thing.tag != grd_b and env.heat <= 0', false);
   bad.setBox(null);
