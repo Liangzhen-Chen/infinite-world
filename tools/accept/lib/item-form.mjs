@@ -27,7 +27,7 @@ export const METHOD_TARGETS = { static_code: ['runtime_code', 'tools_code', 'tes
 // fac 门禁设施代号（§2.11 gatefac）；table §2.11 登记文件种类；class 扫描类别代号（§2.4）。
 export const PARAM_KINDS = {
   groups: 'group', readers: 'group', codes: 'code', code: 'code', paths: 'path', literal: 'word', access: 'word',
-  facs: 'fac', callers: 'fac', modules: 'table', tables: 'table', callees: 'class', checks: 'word', cond: 'word',
+  facs: 'fac', callers: 'fac', roots: 'fac', modules: 'table', tables: 'table', callees: 'class', checks: 'word', cond: 'word',
 };
 
 // keys：{groups, detectors, classes, facs}，各是 Set。返回 [{check, code, why}]。

@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
-import { readFileSync, rmSync } from 'node:fs';
+import { readFileSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { accRun } from '../../tools/accept/run.mjs';
 import { validate, register } from '../../tools/accept/register.mjs';
@@ -87,8 +87,10 @@ test('绕法用例回归：结果与极性不符即 E-ACC-BYPASS-REGRESSION，�
 test('提交钩子：新树放行（退出码 0），有违例拒绝（退出码 1）', () => {
   const ok = spawnSync(process.execPath, [HOOK], { cwd: ROOT, encoding: 'utf8' });
   assert.equal(ok.status, 0, ok.stderr);
-  const dir = tempRepo({ 'server-plugin/kernel/k.mjs': "import { r } from '../rules.mjs';\nexport const r2 = r;\n" });
+  const dir = tempRepo();
   try {
+    mkdirSync(join(dir, 'server-plugin/kernel'), { recursive: true });
+    writeFileSync(join(dir, 'server-plugin/kernel/k.mjs'), "import { r } from '../rules.mjs';\nexport const r2 = r;\n");
     const no = spawnSync(process.execPath, [HOOK, '--root', dir], { encoding: 'utf8' });
     assert.equal(no.status, 1);
     assert.match(no.stderr, /vol2\.S16 E-KERNEL-UPWARD-IMPORT/);

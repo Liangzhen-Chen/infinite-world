@@ -80,10 +80,14 @@
     {
      "ref": "P-1b：lit_scope、read.mjs 同 const_literal rev 3；data_shape 模块上线；本类别判定口径不变",
      "rev": 2
+    },
+    {
+     "ref": "门禁小修卡：共用的 item-form 加参数种类 roots；本类别判定口径不变",
+     "rev": 3
     }
    ],
-   "print": "4724ee2d44d5b5776a988978859fb4089cce450db95a0d2df95d28b6da7a9704",
-   "rev": 2,
+   "print": "476cbe562513e836e720a61eaed4cfa4a64ac21f1a72ad5f566db931d175e144",
+   "rev": 3,
    "scanClass": "instance_name",
    "terms": {
     "vol2.S1": {
@@ -122,10 +126,14 @@
     {
      "ref": "P-1b",
      "rev": 1
+    },
+    {
+     "ref": "门禁小修卡：item-form 参数种类加 roots（fac）；判定口径不变",
+     "rev": 2
     }
    ],
-   "print": "1c71379e7a91491b5dd64d5ab11e30ed42b0e3cd6fca3312c453792882f5eabd",
-   "rev": 1,
+   "print": "c9ec87b3649d7ba58a95c9b70512c230df58eba17af11c6a06e24f287b57bca4",
+   "rev": 2,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -143,10 +151,14 @@
     {
      "ref": "P-1b",
      "rev": 1
+    },
+    {
+     "ref": "门禁小修卡（李白 11-17 裁定二）：doc_struct 按登记的编号族只数定义处编号，补 unregistered、count 两项；orphan 改按定义处找",
+     "rev": 2
     }
    ],
-   "print": "24a7c6a005f06aff03af20c2cc43172a8f79f5108d69aaecdb069a462eaa5924",
-   "rev": 1,
+   "print": "01ad621e7089c678e3f80da0a44e45e8ebce0dee9e68938567264b0ca309291c",
+   "rev": 2,
    "scanClass": "item_ledger",
    "terms": {
     "vol12.S12-3": {
@@ -172,10 +184,14 @@
     {
      "ref": "P-1b：read.mjs 离线组带组键（classify 仍先判离线）、call_edge 模块上线；S12-1 登记于本类别；本类别判定口径不变",
      "rev": 3
+    },
+    {
+     "ref": "门禁小修卡：共用的 item-form 加参数种类 roots；本类别判定口径不变",
+     "rev": 4
     }
    ],
-   "print": "807787584f0abecb0a86bf13f5ffd23836fc1af286b7a4228d6d9422b58f1a96",
-   "rev": 3,
+   "print": "bb71d5bd5f15da7af6b73c14aaa9e6922e9ddf187049cac4bd5da456e90b3520",
+   "rev": 4,
    "scanClass": "module_edge",
    "terms": {
     "vol12.S12-1": {
@@ -201,10 +217,14 @@
     {
      "ref": "P-1b",
      "rev": 1
+    },
+    {
+     "ref": "门禁小修卡：共用的 item-form 加参数种类 roots；本类别判定口径不变",
+     "rev": 2
     }
    ],
-   "print": "1c71379e7a91491b5dd64d5ab11e30ed42b0e3cd6fca3312c453792882f5eabd",
-   "rev": 1,
+   "print": "c9ec87b3649d7ba58a95c9b70512c230df58eba17af11c6a06e24f287b57bca4",
+   "rev": 2,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -222,10 +242,14 @@
     {
      "ref": "P-1b",
      "rev": 1
+    },
+    {
+     "ref": "门禁小修卡（李白 11-17 裁定一、三）：call_edge 认测试临时根（params.roots，常量相对路径不计），命中码取条目参数 code；判定口径只放宽到裁定三的口子，其余路径仍计",
+     "rev": 2
     }
    ],
-   "print": "01b43df416f15954c2988e4833c6dc1e19d8d31b391764bcd81ab4ee678e5c0f",
-   "rev": 1,
+   "print": "07335d4abb0056c7060ff38af9eb3759a5d497a1976ea0bd5cd732b245d451a8",
+   "rev": 2,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -243,10 +267,14 @@
     {
      "ref": "P-1b（只登函数表）",
      "rev": 1
+    },
+    {
+     "ref": "门禁小修卡：call_edge 加临时根判法（本类别不用 roots）；判定口径不变",
+     "rev": 2
     }
    ],
-   "print": "de1af1a8b22a85b1a114eee1417ed9af0d2d5d2b3ed425e2b526093e1e3304b2",
-   "rev": 1,
+   "print": "3f41d7a0096dbd1dd51a764a5d55329c33100f245d7619b2bee0b66362ae899c",
+   "rev": 2,
    "scanClass": "rng_bypass",
    "terms": {}
   },
@@ -265,7 +293,7 @@
    "rev": 2,
    "scanClass": "rules_import",
    "terms": {
-    "vol1.R-6.5": {
+    "vol1.V-9": {
      "expect": "zero",
      "gates": [
       "pre_commit",
@@ -326,10 +354,14 @@
     {
      "ref": "P-1b",
      "rev": 1
+    },
+    {
+     "ref": "门禁小修卡（李白 11-17 裁定一）：call_edge 加临时根判法（本类别不用 roots），命中码取条目参数 code（E-ACC-TOOL-NONDET）；本类别判定口径不变",
+     "rev": 2
     }
    ],
-   "print": "de1af1a8b22a85b1a114eee1417ed9af0d2d5d2b3ed425e2b526093e1e3304b2",
-   "rev": 1,
+   "print": "3f41d7a0096dbd1dd51a764a5d55329c33100f245d7619b2bee0b66362ae899c",
+   "rev": 2,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

@@ -54,6 +54,20 @@
     "server-plugin/kernel/validate/rows.mjs",
     "server-plugin/kernel/validate/types.mjs"
    ]
+  },
+  {
+   "entries": [
+    "tempRepo",
+    "testTempRoot"
+   ],
+   "facCode": "test-temp-root",
+   "gateCard": "—",
+   "inRepo": false,
+   "ownerVol": "vol12",
+   "paths": [
+    "tests/accept/temp-repo.mjs",
+    "tests/accept/temp-root.mjs"
+   ]
   }
  ]
 }
