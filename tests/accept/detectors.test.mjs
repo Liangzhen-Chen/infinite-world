@@ -9,6 +9,10 @@ import { detect as importEdge } from '../../tools/accept/detectors/import_edge.m
 import { detect as pathAccess } from '../../tools/accept/detectors/path_access.mjs';
 import { detect as callEdge } from '../../tools/accept/detectors/call_edge.mjs';
 import { detect as docStruct, definedNumbers } from '../../tools/accept/detectors/doc_struct.mjs';
+import { ENUM } from '../../tools/accept/lib/item-form.mjs';
+import { tempRepo } from './temp-repo.mjs';
+import { relative, isAbsolute } from 'node:path';
+import { realpathSync, rmSync } from 'node:fs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const FIX = mergePrefixes(prefixesFromDir(join(ROOT, LAYOUT.bypassDimsDir)));
@@ -128,6 +132,24 @@ test('doc_struct 编号口径（裁定二）：只数定义处；引用、"第 n
   assert.equal(definedNumbers(text, []).size, 0);
 });
 
+test('doc_struct 形式名前缀（裁定一）：只有列表项开头"登记的形式名＋全角冒号＋编号"算定义处，形式名来自登记数据', () => {
+  const text = ['- 扫描式：A12-1.1 条', '- 不变量式：A12-1.2 条', '  - 流程式：A12-1.3', '- 某某式：A12-2.1 别的名', '- 扫描式:A12-2.2 半角冒号', '扫描式：A12-2.3 非列表项', '见 扫描式：A12-2.4', '- 扫描式：见 A12-2.5'].join('\n');
+  const names = ['扫描式', '不变量式', '扩展性式', '流程式'];
+  assert.deepEqual([...definedNumbers(text, ['A12-'], names).keys()], ['A12-1.1', 'A12-1.2', 'A12-1.3']);
+  assert.equal(definedNumbers(text, ['A12-']).size, 0);
+  assert.equal(definedNumbers(text, ['A12-'], ['别的']).size, 0);
+});
+
+test('doc_struct 列表项开头（裁定二）：列表符或加粗后紧跟编号才算，对所有族一样；别的字在前不算', () => {
+  const text = ['- S1 列表项', '* S2 星号列表', '1. S3 有序列表', '- **S4** 加粗', '- 说明 S5', '- (S6)', '段落中 S7 引用'].join('\n');
+  assert.deepEqual([...definedNumbers(text, ['S']).keys()], ['S1', 'S2', 'S3', 'S4']);
+});
+
+test('item_ledger 登记的形式名与 acc_form 的四个值一一对应', () => {
+  const row = loadContext(ROOT).regs.scanclasses.find((c) => c.scanClass === 'item_ledger');
+  assert.deepEqual(Object.keys(row.formNames).sort(), [...ENUM.form].sort());
+});
+
 test('doc_struct 三项：登记表缺的、定义处缺的、条数不等的卷各自报码', () => {
   const doc = 'docs/v.md';
   const cls = { docVolumes: { vx: doc, vy: 'docs/none.md' }, docFamilies: { vx: ['X-'], vy: ['Y-'] } };
@@ -147,8 +169,22 @@ test('call_edge 测试临时根：路径落在临时根加常量相对路径内�
   assert.equal(run("const d = testTempRoot(); writeFileSync(join(d, '../a'), 'x');"), 1);
   assert.equal(run("const d = testTempRoot(); const d = 1; writeFileSync(join(d, 'a'), 'x');"), 1);
   assert.equal(run("let d = testTempRoot(); d = '/etc'; writeFileSync(join(d, 'a'), 'x');"), 1);
+  assert.equal(run("let d = testTempRoot(); d += '..'; writeFileSync(join(d, 'a'), 'x');"), 1);
+  assert.equal(run("let d = testTempRoot(); d++; writeFileSync(join(d, 'a'), 'x');"), 1);
+  assert.equal(run("let d = testTempRoot(); writeFileSync(join(d, 'a'), 'x'); d ||= '/';"), 1);
   assert.equal(run("writeFileSync(join(testTempRoot(), 'a'), 'x');"), 1);
   assert.equal(callEdge(ctxOf({ 'tools/x.mjs': head + "const d = testTempRoot(); writeFileSync(join(d, 'a'), 'x');" }), { groups: ['offline'], callers: [], callees: ['registry_write'] }, CLS.registry_write).length, 1);
+});
+
+test('test-temp-root 登记（裁定三）：entries 封闭为 testTempRoot、tempRepo；tempRepo() 返回的目录在仓库外', () => {
+  const fac = loadContext(ROOT).regs.gatefacs.find((g) => g.facCode === 'test-temp-root');
+  assert.deepEqual([...fac.entries].sort(), ['tempRepo', 'testTempRoot']);
+  assert.equal(fac.inRepo, false);
+  const dir = tempRepo();
+  try {
+    const r = relative(realpathSync(ROOT), realpathSync(dir));
+    assert.ok(r.startsWith('..') || isAbsolute(r), `tempRepo() dir inside repo: ${dir}`);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
 test('kernel/files.json 与磁盘上的 kernel 组文件一致（排序、只列 .mjs）', () => {

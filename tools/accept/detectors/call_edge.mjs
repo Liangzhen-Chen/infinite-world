@@ -83,6 +83,9 @@ function rootFacilities(ctx, codes) {
   return out;
 }
 
+// 赋值与自增自减记号：变量被重新赋值（含复合赋值）就不再是临时根（李白 11-17 裁定三）。
+const ASSIGN = ['=', '+=', '-=', '*=', '/=', '%=', '**=', '<<=', '>>=', '>>>=', '&=', '|=', '^=', '&&=', '||=', '??=', '++', '--'];
+
 // 本文件里的临时根变量：名字的每一处声明都是 `const|let|var 名 = 临时根函数(…)`（函数是从登记的辅助文件 import 来的），
 // 且没有被别处赋值、没有同名的函数参数；任何一条不满足就不认。
 function rootBindings(toks, file, roots) {
@@ -104,7 +107,7 @@ function rootBindings(toks, file, roots) {
     const rooted = decl && isP(toks[i + 1], '=') && toks[i + 2] && fns.has(toks[i + 2].v) && isP(toks[i + 3], '(');
     if (params.has(t.v)) bad.add(t.v);
     else if (rooted) good.add(t.v);
-    else if (decl || isP(toks[i + 1], '=')) bad.add(t.v);
+    else if (decl || ASSIGN.some((o) => isP(toks[i + 1], o)) || isP(toks[i - 1], '++') || isP(toks[i - 1], '--')) bad.add(t.v);
   }
   return new Set([...good].filter((n) => !bad.has(n)));
 }
