@@ -7,6 +7,7 @@
 
 import { handleOf, errorCodeOf, errorMemberName } from './vocab-handle.mjs';
 import { statePathOf } from './keys.mjs';
+import { ERROR_CODES } from '../error-codes.mjs';
 
 const EMPTY = Object.freeze({});
 
@@ -34,14 +35,13 @@ export function buildV(vocab) {
 }
 
 /**
- * E：错误码登记里每个码一个成员。
- * @param {Iterable<string>} codes 错误码登记（卷二 §4.3）
+ * E：错误码登记表里每个码一个成员（kernel/error-codes.mjs，卷二 §4.3 加各卷错误码表）。
+ * @param {Iterable<string>} [codes] 默认取登记表全部码；只给登记表的子集或做测试用，不在表内的码拒收
  */
-export function buildE(codes) {
-  const registered = new Set(codes);
+export function buildE(codes = ERROR_CODES.map((e) => e.code)) {
   const out = {};
-  for (const c of sorted(registered)) {
-    const code = errorCodeOf(registered, c);
+  for (const c of sorted(new Set(codes))) {
+    const code = errorCodeOf(c);
     out[errorMemberName(code)] = code;
   }
   return Object.freeze(out);
@@ -64,10 +64,10 @@ export function buildP(decl, opts = {}) {
 
 /**
  * 加载期收下三组句柄。
- * @param {{vocab: any, errorCodes?: Iterable<string>, decl?: any, ledgerPaths?: string[]}} src
+ * @param {{vocab: any, decl?: any, ledgerPaths?: string[]}} src
  */
 export function installHandles(src) {
   V = buildV(src.vocab);
-  E = buildE(src.errorCodes || []);
+  E = buildE();
   P = buildP(src.decl || {}, { ledgerPaths: src.ledgerPaths });
 }

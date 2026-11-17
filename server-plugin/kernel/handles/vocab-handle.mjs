@@ -4,10 +4,11 @@
 
 /** @typedef {import('../types.d.ts').ErrorCode} ErrorCode */
 
-// 代号文法（§1.9 :278）：实体 id、类别 id、枚举值。
-export const CODE_RE = /^[a-z][a-z0-9_]{1,47}$/;
-// 错误码文法（§4.2）：`E-<区>-<名>` / `W-…`，区与名由大写字母、数字组成，以连字符相连；码里没有下划线，所以 §4.2 的成员名映射一一对应。
-const ERROR_CODE_RE = /^[EW]-[A-Z0-9]+(-[A-Z0-9]+)+$/;
+import { CODE_RE } from '../validate/types.mjs';
+import { ERROR_CODE_RE, REGISTERED_CODES } from '../error-codes.mjs';
+
+// 代号文法（§1.9 :278）：实体 id、类别 id、枚举值；定义在 validate/types.mjs，这里转出给 entity-id、keys 沿用。
+export { CODE_RE };
 
 /** 构造函数拒收时抛出；`code` 是卷二 §4.3 登记的码。 */
 export class HandleError extends Error {
@@ -36,13 +37,13 @@ export function handleOf(index, family, id) {
 }
 
 /**
- * string → ErrorCode：码合 §4.2 文法、在错误码登记集合内。
+ * string → ErrorCode：码合 §4.2 文法、在错误码登记表（kernel/error-codes.mjs）内。
  * 不合文法 E-DIM-ID-FORMAT；未登记 E-DIM-REF-MISSING。
- * @param {Set<string>} registered
  * @param {string} code
+ * @param {ReadonlySet<string>} [registered] 默认读错误码登记表
  * @returns {ErrorCode}
  */
-export function errorCodeOf(registered, code) {
+export function errorCodeOf(code, registered = REGISTERED_CODES) {
   if (typeof code !== 'string' || !ERROR_CODE_RE.test(code)) throw new HandleError('E-DIM-ID-FORMAT', `error code ${JSON.stringify(code)}: want E-<区>-<名> / W-…`);
   if (!registered.has(code)) throw new HandleError('E-DIM-REF-MISSING', `error code ${code}: not in error code registry`);
   return /** @type {ErrorCode} */ (code);
