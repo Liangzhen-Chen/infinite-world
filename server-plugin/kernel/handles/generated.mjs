@@ -6,7 +6,7 @@
 // 加载入口在校验通过后调一次 installHandles；之前 V、E、P 都是空的冻结对象。
 
 import { handleOf, errorCodeOf, errorMemberName, HandleError } from './vocab-handle.mjs';
-import { statePathOf } from './keys.mjs';
+import { statePathOf, checkPathPattern } from './keys.mjs';
 import { ERROR_CODES } from '../error-codes.mjs';
 
 const EMPTY = Object.freeze({});
@@ -51,11 +51,13 @@ export function buildE(codes = ERROR_CODES.map((e) => e.code)) {
  * P：pathTypes 每条可生成的模式一个构造函数，返回 StatePath<该模式>（李白 11-17 句柄 P 成员名裁定，卷二 §2.6 第 1 条）。
  * 成员名由模式机械派生：点换下划线，`*` 段不进名字、按出现顺序成为调用参数（'lot.*.spoilage' → P.lot_spoilage(id)）。
  * 两条模式派生出同一成员名即生成失败（E-PATH-NAME-CLASH），不覆盖、不加序号。
+ * 每条 pathTypes 模式（含被排除的）先过 checkPathPattern：字面段 ^[a-z][a-z0-9_]*$、至少一个字面段，违者 E-PATH-SEGMENT-GRAMMAR（李白 11-17 pathTypes 段文法裁定）。
  * @param {{pathTypes?: Record<string, string>, textPaths?: string[]}} decl state-owners.json
  * @param {{ledgerPaths?: string[]}} [opts] 账本账户路径模式（只经账本转移，不生成构造函数）
  */
 export function buildP(decl, opts = {}) {
   const pathTypes = decl && decl.pathTypes && typeof decl.pathTypes === 'object' ? decl.pathTypes : {};
+  for (const pattern of Object.keys(pathTypes)) checkPathPattern(pattern);
   const excluded = new Set([...(Array.isArray(decl && decl.textPaths) ? decl.textPaths : []), ...(opts.ledgerPaths || [])]);
   const patterns = new Set(sorted(Object.keys(pathTypes)).filter((p) => !excluded.has(p)));
   const out = {};
@@ -74,7 +76,8 @@ export function buildP(decl, opts = {}) {
  * @param {{vocab: any, decl?: any, ledgerPaths?: string[]}} src
  */
 export function installHandles(src) {
-  V = buildV(src.vocab);
-  E = buildE();
-  P = buildP(src.decl || {}, { ledgerPaths: src.ledgerPaths });
+  const v = buildV(src.vocab);
+  const e = buildE();
+  const p = buildP(src.decl || {}, { ledgerPaths: src.ledgerPaths });
+  V = v; E = e; P = p; // 三者都建好才一起赋值：任一抛错，V、E、P 保持原值
 }
