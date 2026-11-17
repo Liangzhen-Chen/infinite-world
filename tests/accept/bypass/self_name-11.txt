@@ -1,0 +1,7 @@
+// @file tools/accept/run.mjs
+import { join } from 'node:path';
+const NAME = 'vol12';
+export function modulePath(root, code, it) {
+  if (it.expect === 'zero') return join(root, 'detectors', code + '.mjs');
+  return { volume: NAME, file: 'run.mjs' };
+}

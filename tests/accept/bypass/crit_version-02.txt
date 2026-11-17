@@ -1,0 +1,2 @@
+// @file tools/accept/criteria.json
+{"rows": [{"scanClass": "const_literal", "rev": 3, "log": [{"rev": 3, "ref": "fx"}]}]}

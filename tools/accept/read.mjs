@@ -4,20 +4,24 @@
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { tokenize, importsOf } from './lib/js-scan.mjs';
 
-// 卷二 §1.1 的文件布局与卷十二 §2.11、§2.9 的登记位置（相对仓库根）。
+// 卷二 §1.1 的文件布局与卷十二 §2.11、§2.9、§2.3 的登记位置（相对仓库根）。
 export const LAYOUT = Object.freeze({
   stateOwners: 'world/ontology/state-owners.json',
   dimensionsDir: 'world/ontology/dimensions',
   accDir: 'tools/accept',
+  outDir: 'tools/accept/out',
+  detectorsDir: 'tools/accept/detectors',
   bypassDir: 'tests/accept/bypass',
   bypassDimsDir: 'tests/accept/bypass/dims',
 });
 
-// §2.11 登记文件：文件名 → 行主键字段。
+// §2.11 登记文件：文件名 → 行主键字段；moduleDir：每行对应一个代码模块（§2.3 :228，检测器一行一个模块）。
 export const REGISTRY = Object.freeze({
-  items: { file: 'items.json', key: 'itemKey' },
-  detectors: { file: 'detectors.json', key: 'detectorCode' },
+  items: { file: 'items.json', key: 'itemKey', itemRows: true },
+  detectors: { file: 'detectors.json', key: 'detectorCode', moduleDir: LAYOUT.detectorsDir },
   scanclasses: { file: 'scanclasses.json', key: 'scanClass' },
   cases: { file: 'cases.json', key: 'caseKey' },
   criteria: { file: 'criteria.json', key: 'scanClass' },
@@ -103,7 +107,9 @@ export function groupModel(decl) {
   const codeExts = m.codeExtensions || [];
   const groups = Object.keys(decl).filter((k) => decl[k] && (Array.isArray(decl[k].modules) || Array.isArray(decl[k].files))).sort()
     .map((k) => ({ key: k, globs: decl[k].modules || decl[k].files, process: decl[k].process }));
-  return { codeExts, groups, retired: decl.retired || [], processes: m.processes || {}, offline: (m.offline || {}).modules || [], matrix: m };
+  // 离线组（卷二 §2.9）：import 矩阵里带 modules 的项，键名即组键（P-1b：S12-2 的范围要能用组键写）。
+  const offlineGroups = Object.keys(m).sort().filter((k) => m[k] && Array.isArray(m[k].modules)).map((k) => ({ key: k, globs: m[k].modules }));
+  return { codeExts, groups, offlineGroups, retired: decl.retired || [], processes: m.processes || {}, offline: offlineGroups.flatMap((g) => g.globs), matrix: m };
 }
 
 export function isCode(path, model) { return model.codeExts.some((e) => path.endsWith(e)); }
@@ -111,7 +117,7 @@ export function isCode(path, model) { return model.codeExts.some((e) => path.end
 // 一个路径的归属：{group, process} | {retired} | {offline} | {data} | null（仓库外或无关）。
 export function classify(path, model) {
   if (model.retired.length && matchGlobs(path, model.retired, model.codeExts)) return { retired: true };
-  if (model.offline.length && matchGlobs(path, model.offline, model.codeExts)) return { offline: true };
+  for (const g of model.offlineGroups) if (matchGlobs(path, g.globs, model.codeExts)) return { offline: true, group: g.key };
   for (const g of model.groups) if (matchGlobs(path, g.globs, model.codeExts)) return { group: g.key, process: g.process };
   for (const [proc, p] of Object.entries(model.processes)) {
     if (path.startsWith(p.root)) return p.remainderGroup && isCode(path, model) ? { group: p.remainderGroup, process: proc } : { process: proc, foreign: true };
@@ -127,7 +133,7 @@ export function filesOfGroups(files, model, groupKeys) {
 
 // 组在源码树里的落位目录（绕法用例放进该组的临时文件，R12-13.4）。
 export function groupDir(model, groupKey) {
-  const g = model.groups.find((x) => x.key === groupKey);
+  const g = model.groups.concat(model.offlineGroups).find((x) => x.key === groupKey);
   if (g) { const inc = g.globs.find((x) => !x.startsWith('!')); return inc.slice(0, inc.indexOf('*') < 0 ? inc.lastIndexOf('/') + 1 : inc.indexOf('*')); }
   const p = Object.values(model.processes).find((x) => x.remainderGroup === groupKey);
   return p ? p.root : null;
@@ -167,10 +173,73 @@ export function loadContext(root, opts = {}) {
   for (const p of Object.keys(overrides)) blobs.delete(p);
   const decl = opts.decl || readDecl(root);
   const ents = opts.prefixes || mergePrefixes(prefixesFromDir(join(root, LAYOUT.dimensionsDir)));
-  return { root, files, read, raw: opts.read ? (p) => Buffer.from(opts.read(p)) : raw, blobs, decl, model: groupModel(decl), prefixes: ents };
+  // 判据输入（范围、类别数据）取自 §2.11 登记；被查内容里的登记文件另经 files/read 读（regContent）。
+  const regs = opts.regs || Object.fromEntries(Object.keys(REGISTRY).map((k) => [k, readRegistry(root, k)]));
+  return { root, files, read, raw: opts.read ? (p) => Buffer.from(opts.read(p)) : raw, blobs, decl, model: groupModel(decl), prefixes: ents, regs };
 }
 
 export const resolveRel = (from, spec) => posix.normalize(posix.join(posix.dirname(from), spec));
+
+// 被查内容里的一份登记文件（按 §2.11 位置）；不在文件清单里为 null。
+export function regContent(ctx, kind) {
+  const p = `${LAYOUT.accDir}/${REGISTRY[kind].file}`;
+  return ctx.files.includes(p) ? (JSON.parse(ctx.read(p)).rows || []) : null;
+}
+
+// 一张带 moduleDir 的登记表的各行对应、且在文件清单里的模块。
+export function registryModules(ctx, kind, codes) {
+  const R = REGISTRY[kind];
+  if (!R || !R.moduleDir) return [];
+  const all = new Set(ctx.files);
+  return (codes || (ctx.regs[kind] || []).map((r) => r[R.key])).map((c) => `${R.moduleDir}/${c}.mjs`).filter((f) => all.has(f)).sort();
+}
+
+// 种子文件加上它们经相对静态 import 能到达的、在文件清单里的代码文件（P-1b：设施与检测器的"源码"含其所 import 的共用模块）。
+export function importClosure(ctx, seeds) {
+  const all = new Set(ctx.files); const seen = new Set(); const stack = [...seeds];
+  while (stack.length) {
+    const f = stack.pop();
+    if (seen.has(f) || !all.has(f)) continue;
+    seen.add(f);
+    for (const imp of importsOf(tokenize(ctx.read(f)))) if (imp.spec && imp.spec.startsWith('.')) stack.push(resolveRel(f, imp.spec));
+  }
+  return [...seen].sort();
+}
+
+// 条目范围（accScope 的展开）：params.groups 组键展开；params.facs 门禁设施在仓库内的文件、params.modules 登记表各行的模块，
+// 两者连同其 import 闭包。
+export function scopeFiles(ctx, params) {
+  const out = new Set(filesOfGroups(ctx.files, ctx.model, params.groups || []));
+  const facs = new Map((ctx.regs.gatefacs || []).map((g) => [g.facCode, g]));
+  const seeds = [];
+  for (const code of params.facs || []) { const g = facs.get(code); if (g && g.inRepo === true && Array.isArray(g.paths)) seeds.push(...g.paths); }
+  for (const kind of params.modules || []) seeds.push(...registryModules(ctx, kind));
+  for (const f of importClosure(ctx, seeds)) out.add(f);
+  return [...out].sort();
+}
+
+// 设施文件集合（调用者闭集，call_edge 用）：只取设施登记的文件本身，不含闭包。
+export function facilityFiles(ctx, codes) {
+  const facs = new Map((ctx.regs.gatefacs || []).map((g) => [g.facCode, g]));
+  return new Set((codes || []).flatMap((c) => { const g = facs.get(c); return g && g.inRepo === true && Array.isArray(g.paths) ? g.paths : []; }));
+}
+
+// 代码指纹：按路径排序，各文件取词法 token 序列（去注释、空白与行号）摘要；判定逻辑不变的排版改动不改指纹（S12-13）。
+export function codePrint(ctx, files) {
+  const h = createHash('sha256');
+  for (const f of [...files].sort()) {
+    h.update(f + '\0');
+    h.update(JSON.stringify(tokenize(ctx.read(f)), (k, v) => (k === 'line' || k === 'nl' ? undefined : v)));
+    h.update('\n');
+  }
+  return h.digest('hex');
+}
+
+// 一个扫描类别的判据代码：类别登记的各检测器模块及其 import 闭包。
+export function classPrint(ctx, scanClass) {
+  const row = (ctx.regs.scanclasses || []).find((c) => c.scanClass === scanClass);
+  return codePrint(ctx, importClosure(ctx, registryModules(ctx, 'detectors', row ? row.detectors || [] : [])));
+}
 
 // ---------- §3.1 读入口 ----------
 
@@ -194,7 +263,7 @@ export function accScope(root, itemKey) {
   const item = accItem(root, itemKey);
   if (!item) return [];
   const ctx = loadContext(root);
-  return filesOfGroups(ctx.files, ctx.model, (item.params || {}).groups || []);
+  return scopeFiles(ctx, item.params || {});
 }
 
 export function accHits(root, filter = {}) {

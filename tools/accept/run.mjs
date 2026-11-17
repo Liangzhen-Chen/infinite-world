@@ -8,7 +8,7 @@ import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
-  LAYOUT, loadContext, readRegistry, accItems, accHits, accBaseline, prefixesFromDir, mergePrefixes, groupDir,
+  LAYOUT, loadContext, readRegistry, accItems, accHits, accBaseline, prefixesFromDir, mergePrefixes, groupDir, isCode, REGISTRY,
 } from './read.mjs';
 
 export const RUNNER_VERSION = 1;
@@ -36,9 +36,15 @@ export function contentPrintOf(ctx) {
   return h.digest('hex');
 }
 
+// 代码文件集合指纹：现读磁盘（不用本次执行开头的快照），只取代码扩展名的文件。
+function codeSetPrint(root) {
+  const c = loadContext(root);
+  return contentPrintOf({ ...c, files: c.files.filter((f) => isCode(f, c.model)) });
+}
+
 const detectorCache = new Map();
 async function detectorOf(code) {
-  if (!detectorCache.has(code)) detectorCache.set(code, await import(pathToFileURL(join(HERE, 'detectors', `${code}.mjs`)).href));
+  if (!detectorCache.has(code)) detectorCache.set(code, await import(pathToFileURL(join(HERE, '..', '..', REGISTRY.detectors.moduleDir, `${code}.mjs`)).href));
   return detectorCache.get(code);
 }
 
@@ -111,10 +117,14 @@ export async function accRun(gate, subject, contentPrint, opts = {}) {
   const results = {}; const failed = []; const components = {}; let rows = [];
   for (const item of items) {
     if (!RUNNABLE.includes(item.state)) { results[item.itemKey] = 'not_run'; continue; }
+    // 扩展性条目（R12-6.2 ①⑥）：执行前后各记一次代码文件集合指纹，不同即该条目不过、码 E-ACC-EXT-CODE-CHANGED（S12-12 数执行记录里的这类）。
+    const before = item.form === 'extend' ? codeSetPrint(root) : null;
     const hits = await runItem(ctx, item, classes);
+    const extChanged = before !== null && codeSetPrint(root) !== before;
+    if (extChanged) hits.push({ file: '', line: 0, nodeKind: 'run', symbolPath: '', code: 'E-ACC-EXT-CODE-CHANGED' });
     const r = toRows(item, hits);
     rows = rows.concat(r);
-    results[item.itemKey] = verdictOf(item, hits.length);
+    results[item.itemKey] = extChanged ? 'fail' : verdictOf(item, hits.length);
     if (item.baseComp) components[item.baseComp] = (components[item.baseComp] || 0) + hits.length;
     if (results[item.itemKey] === 'fail') failed.push({ itemKey: item.itemKey, codes: [...new Set(r.map((x) => x.errorCode))].sort() });
   }

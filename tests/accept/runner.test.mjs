@@ -1,39 +1,25 @@
 // P-1 执行器、登记器、提交钩子：零基线门禁是拦不是报（卷十二 §1.3 第 4 条），报告确定（R12-10.5），绕法用例回归（R12-13.6）。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { tmpdir } from 'node:os';
-import { mkdtempSync, mkdirSync, copyFileSync, writeFileSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+import { readFileSync, rmSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { accRun } from '../../tools/accept/run.mjs';
 import { validate, register } from '../../tools/accept/register.mjs';
 import { listFiles, readRegistry, REGISTRY, LAYOUT } from '../../tools/accept/read.mjs';
+import { ROOT, tempRepo } from './temp-repo.mjs';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const HOOK = join(ROOT, 'tools', 'accept', 'commit-hook.mjs');
 const regs = () => Object.fromEntries(Object.keys(REGISTRY).map((k) => [k, readRegistry(ROOT, k)]));
 
-// 只带登记、声明表与用例片段的临时仓库（非 git，按磁盘遍历）。
-function tempRepo(extra) {
-  const dir = mkdtempSync(join(tmpdir(), 'p1-accept-'));
-  const copy = (rel) => { mkdirSync(dirname(join(dir, rel)), { recursive: true }); copyFileSync(join(ROOT, rel), join(dir, rel)); };
-  copy(LAYOUT.stateOwners);
-  for (const r of Object.values(REGISTRY)) copy(`${LAYOUT.accDir}/${r.file}`);
-  for (const it of readRegistry(ROOT, 'items')) copy(it.impl);
-  for (const f of readdirSync(join(ROOT, LAYOUT.bypassDir), { recursive: true })) {
-    const rel = `${LAYOUT.bypassDir}/${String(f).replace(/\\/g, '/')}`;
-    if (rel.endsWith('.txt') || rel.endsWith('.json')) copy(rel);
-  }
-  for (const [rel, text] of Object.entries(extra || {})) { mkdirSync(dirname(join(dir, rel)), { recursive: true }); writeFileSync(join(dir, rel), text); }
-  return dir;
-}
-
-test('新树上提交关口：四项扫描计数全 0，用例全过，放行', async () => {
+test('新树上提交关口：必过条目计数全 0，用例全过，放行', async () => {
   const { report } = await accRun('pre_commit', 'P-1', null, { root: ROOT });
   assert.equal(report.verdict, 'pass');
-  assert.equal(report.items.fail, 0);
-  assert.equal(report.items.pass, report.items.total);
+  // 必过集合里的条目全过；不过的只许是已实现、未进必过集合的条目（P-1b 的 S12-2、S12-3 新树非零，见 P-1b 回报）。
+  const core = new Set(readRegistry(ROOT, 'items').filter((it) => it.state === 'in_core').map((it) => it.itemKey));
+  assert.ok(report.items.failed.every((f) => f.itemKey !== 'bypass' && !core.has(f.itemKey)));
+  assert.equal(report.items.pass + report.items.fail, report.items.total);
+  assert.ok(report.items.pass >= core.size);
   for (const c of Object.values(report.components)) assert.equal(c.current, 0);
   assert.ok(Object.values(report.cases).length >= 10);
   assert.ok(Object.values(report.cases).every((v) => v === 'pass'));
@@ -56,7 +42,8 @@ test('门禁是拦：规则层或内核里出现一处违例即拒，行键不�
   };
   const { report, rows } = await accRun('pre_commit', 'P-1', null, { root: ROOT, overrides: bad, prefixes: { prefixes: ['npc_'], singletons: [] } });
   assert.equal(report.verdict, 'fail');
-  const failed = Object.fromEntries(report.items.failed.map((f) => [f.itemKey, f.codes]));
+  const core = new Set(readRegistry(ROOT, 'items').filter((it) => it.state === 'in_core').map((it) => it.itemKey));
+  const failed = Object.fromEntries(report.items.failed.filter((f) => core.has(f.itemKey)).map((f) => [f.itemKey, f.codes]));
   assert.deepEqual(Object.keys(failed).sort(), ['vol1.V-17', 'vol2.S1', 'vol2.S10', 'vol2.S16']);
   assert.deepEqual(failed['vol2.S16'], ['E-KERNEL-UPWARD-IMPORT']);
   assert.equal(rows.find((r) => r.itemKey === 'vol2.S1').rowKey, 'c_instance_id|server-plugin/rules.mjs|f|str|0');
@@ -93,7 +80,7 @@ test('绕法用例回归：结果与极性不符即 E-ACC-BYPASS-REGRESSION，�
     assert.deepEqual(res.errors, []);
     const { report } = await accRun('pre_commit', 'P-1', null, { root: dir });
     assert.equal(report.verdict, 'fail');
-    assert.deepEqual(report.items.failed, [{ itemKey: 'bypass', codes: ['E-ACC-BYPASS-REGRESSION'], cases: ['instance_name-90'] }]);
+    assert.deepEqual(report.items.failed.filter((f) => f.itemKey === 'bypass'), [{ itemKey: 'bypass', codes: ['E-ACC-BYPASS-REGRESSION'], cases: ['instance_name-90'] }]);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 

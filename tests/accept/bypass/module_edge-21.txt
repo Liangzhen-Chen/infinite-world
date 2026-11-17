@@ -1,0 +1,2 @@
+import { accRun } from '../../tools/accept/run.mjs';
+export async function gateNow() { return accRun('pre_commit', '', null); }

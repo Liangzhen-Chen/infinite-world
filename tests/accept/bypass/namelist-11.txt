@@ -1,0 +1,2 @@
+// @file tools/accept/scanclasses.json
+{"rows": [{"scanClass": "fx", "detectors": ["lit_scope"], "litExempt": {"files": ["server-plugin/kernel/prng.mjs"], "table": "world/rules/tables/kernel-constants.json"}, "guardedPaths": ["tools/accept/*.json", "tools/accept/out/**"], "source": "卷二 S10 :2386；卷十二 §2.11"}]}

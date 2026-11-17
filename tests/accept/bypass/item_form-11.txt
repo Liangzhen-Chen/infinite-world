@@ -1,0 +1,2 @@
+// @file tools/accept/items.json
+{"rows": [{"itemKey": "fx.S1", "volume": "fx", "localNo": "S1", "form": "scan", "method": "static_code", "target": "runtime_code", "scanClass": "const_literal", "detector": "lit_scope", "params": {"groups": ["rules", "kernel"], "literal": "number"}, "expect": "zero", "stage": 0, "gates": ["pre_commit"], "runsOn": "local_static", "source": "fx", "state": "registered"}]}

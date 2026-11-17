@@ -1,0 +1,4 @@
+// @file tools/accept/items.json
+{"rows": [{"itemKey": "fx.S1", "scanClass": "fx", "expect": "zero", "stage": 0, "gates": ["pre_commit", "pre_merge"], "source": "改了来源说明不算降级"}]}
+// @file tools/accept/criteria.json
+{"rows": [{"scanClass": "fx", "rev": 1, "terms": {"fx.S1": {"gates": ["pre_commit", "pre_merge"], "stage": 0, "expect": "zero"}}}]}

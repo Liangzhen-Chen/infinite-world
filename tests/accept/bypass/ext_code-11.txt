@@ -1,0 +1,4 @@
+// @file tools/accept/out/fxprint/pre_merge.json
+{"items": {"failed": [{"itemKey": "bypass", "codes": ["E-ACC-BYPASS-REGRESSION"]}, {"itemKey": "fx.A1", "codes": []}]}}
+// @file tools/accept/fx-notes/pre_merge.json
+{"items": {"failed": [{"itemKey": "fx.A2", "codes": ["E-ACC-EXT-CODE-CHANGED"]}]}}

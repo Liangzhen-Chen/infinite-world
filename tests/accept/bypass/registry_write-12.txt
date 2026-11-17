@@ -1,0 +1,4 @@
+// @file tools/accept/register.mjs
+import { writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+export function write(root, kind, text) { writeFileSync(join(root, 'tools/accept', kind + '.json'), text); }

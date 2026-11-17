@@ -1,0 +1,4 @@
+// @file tools/accept/detectors/lit_scope.mjs
+export function detect() { return []; }
+// @file tools/accept/criteria.json
+{"rows": [{"scanClass": "const_literal", "rev": 3, "log": [{"rev": 3, "ref": "fx"}], "print": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}]}

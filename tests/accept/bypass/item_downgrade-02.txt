@@ -1,0 +1,4 @@
+// @file tools/accept/items.json
+{"rows": [{"itemKey": "fx.S1", "scanClass": "fx", "expect": "zero", "stage": 0, "gates": ["pre_commit"]}, {"itemKey": "fx.S2", "scanClass": "fx", "expect": "zero", "stage": 0, "gates": ["pre_commit"]}]}
+// @file tools/accept/criteria.json
+{"rows": [{"scanClass": "fx", "rev": 1, "terms": {"fx.S1": {"expect": "zero", "stage": 0, "gates": ["pre_commit"]}}}]}

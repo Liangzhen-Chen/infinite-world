@@ -1,0 +1,8 @@
+// @file tools/accept/run.mjs
+const V = 'vol12';
+export function pick(it) {
+  switch (it.volume) {
+    case V: return 1;
+    default: return 0;
+  }
+}

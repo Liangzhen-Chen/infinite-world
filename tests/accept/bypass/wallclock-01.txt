@@ -1,0 +1,6 @@
+// @file tools/accept/run.mjs
+export function stamp(r) {
+  r.at = Date.now();
+  r.id = new Date().toISOString();
+  return r;
+}

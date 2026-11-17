@@ -1,0 +1,6 @@
+import { writeFileSync, appendFileSync, readFileSync } from 'node:fs';
+const NOTES = 'notes';
+export function note(text) {
+  writeFileSync('notes/scan.txt', text);
+  appendFileSync(NOTES + '/' + 'log.txt', readFileSync('tools/accept/items.json', 'utf8'));
+}
