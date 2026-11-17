@@ -101,7 +101,8 @@ function main(argv) {
   const text = renderStateTypes(parsed.value);
   const target = join(repoRoot(), 'server-plugin', 'kernel', 'state-types.d.ts');
   let current = null;
-  try { current = readFileSync(target, 'utf8'); } catch { current = null; }
+  // 检出时行尾可能被换成 CRLF（core.autocrlf），比对前归一。
+  try { current = readFileSync(target, 'utf8').replace(/\r\n/g, '\n'); } catch { current = null; }
   if (argv.includes('--check')) {
     process.stdout.write(current === text ? 'state-types.d.ts up to date\n' : 'state-types.d.ts drifted from pathTypes\n');
     return current === text ? 0 : 1;
