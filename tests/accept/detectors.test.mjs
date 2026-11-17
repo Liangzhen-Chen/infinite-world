@@ -181,7 +181,7 @@ test('call_edge 测试临时根：路径落在临时根加常量相对路径内�
 test('call_edge 写函数豁免（裁定四收窄）：只豁免 assertedWriters 里先调用断言再写入的函数体；缺断言、断言在写入后、tempRepo/testTempRoot 体内写入、同文件别的函数、别的文件同名函数都照计', () => {
   const head = "import { writeFileSync } from 'node:fs';\nfunction assertRelUnderTempRoot(r, p) { return p; }\n";
   const fn = (name, inner) => `${head}export function ${name}(r, p, d) { ${inner} }\n`;
-  const run = (file, src) => callEdge(ctxOf({ [file]: src }), { groups: ['offline'], callers: [], callees: ['registry_write'], roots: ['test-temp-root'] }, CLS.registry_write).length;
+  const run = (file, src) => callEdge(ctxOf({ [file]: src }), { groups: ['offline'], callers: [], callees: ['registry_write'], roots: ['test-temp-root'] }, CLS.registry_write).filter((h) => h.nodeKind === 'call').length;
   const T = 'tests/accept/temp-root.mjs';
   const ok = 'const n = assertRelUnderTempRoot(r, p); writeFileSync(n, d);';
   assert.equal(run(T, fn('writeUnderTempRoot', ok)), 0);
@@ -193,8 +193,15 @@ test('call_edge 写函数豁免（裁定四收窄）：只豁免 assertedWriters
   assert.equal(run(T, fn('writeUnderTempRoot', 'if (d) assertRelUnderTempRoot(r, p); writeFileSync(p, d);')), 1);
   assert.equal(run(T, fn('writeUnderTempRoot', 'd && assertRelUnderTempRoot(r, p); writeFileSync(p, d);')), 1);
   assert.equal(run(T, fn('writeUnderTempRoot', 'const f = () => assertRelUnderTempRoot(r, p); writeFileSync(p, d);')), 1);
-  assert.equal(run(T, fn('writeUnderTempRoot', 'assertRelUnderTempRoot(r, p); writeFileSync(p, d);')), 0);
-  assert.equal(run(T, fn('writeUnderTempRoot', 'if (d) { x(); } assertRelUnderTempRoot(r, p); writeFileSync(p, d);')), 0);
+  assert.equal(run(T, fn('writeUnderTempRoot', 'if (d) { x(); } const n = assertRelUnderTempRoot(r, p); writeFileSync(n, d);')), 0);
+  // 裁定①：写入的路径实参须用到断言返回值绑定的变量；不绑返回值、字面量路径、别的变量、重新赋值后都照计。
+  assert.equal(run(T, fn('writeUnderTempRoot', 'assertRelUnderTempRoot(r, p); writeFileSync(p, d);')), 1);
+  assert.equal(run(T, fn('writeUnderTempRoot', 'const n = assertRelUnderTempRoot(r, p); writeFileSync("tools/accept/items.json", d);')), 1);
+  assert.equal(run(T, fn('writeUnderTempRoot', 'const n = assertRelUnderTempRoot(r, p); writeFileSync(p, d);')), 1);
+  assert.equal(run(T, fn('writeUnderTempRoot', 'const n = assertRelUnderTempRoot(r, p); writeFileSync(n, d); writeFileSync(p, d);')), 1);
+  assert.equal(run(T, fn('writeUnderTempRoot', 'const n = assertRelUnderTempRoot(r, p); n = p; writeFileSync(n, d);')), 1);
+  assert.equal(run(T, fn('writeUnderTempRoot', 'const n = assertRelUnderTempRoot(r, p); writeFileSync(o.n, d);')), 1);
+  assert.equal(run(T, fn('writeUnderTempRoot', 'const n = assertRelUnderTempRoot(r, p); mkdirSync(dirname(n)); writeFileSync(n, d);')), 0);
   assert.equal(run(T, fn('tempRepo', ok)), 1);
   assert.equal(run(T, fn('testTempRoot', ok)), 1);
   assert.equal(run(T, fn('otherWriter', ok)), 1);
@@ -213,11 +220,41 @@ test('writeUnderTempRoot 与断言函数（裁定四）：判据名取自登记�
   assert.deepEqual(hits.filter((h) => h.file === 'tests/accept/temp-root.mjs'), []);
 });
 
+test('必跑测试（李白 11-17 裁定②）：登记的断言应抛错测试存在、在门禁运行的测试集合里、未跳过；删除、skip、todo、only、套进分支都判不过', () => {
+  const ctx = loadContext(ROOT);
+  const fac = ctx.regs.gatefacs.find((g) => g.facCode === 'test-temp-root');
+  const params = { groups: ['offline'], callers: [], callees: ['registry_write'], roots: ['test-temp-root'], code: 'E-ACC-REGISTRY-WRITE' };
+  const req = fac.requiredTests[0];
+  assert.ok(req.names.length >= 3);
+  const bad = (c) => callEdge(c, params, CLS.registry_write).filter((h) => h.nodeKind === 'test');
+  assert.deepEqual(bad(ctx), []);
+  // 门禁运行的测试集合：package.json 的 test 脚本里确有登记的 glob。
+  const script = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).scripts.test;
+  for (const g of fac.testGlobs) assert.ok(script.includes(g), g);
+  const src = ctx.read(req.file);
+  const withSrc = (s) => ({ ...ctx, read: (p) => (p === req.file ? s : ctx.read(p)) });
+  const title = req.names[0];
+  const line = src.split('\n').find((l) => l.startsWith(`test('${title}`));
+  assert.ok(line, 'required test line');
+  assert.deepEqual(bad(withSrc(src.replace(line, line.replace(title, 'renamed')))).map((h) => h.symbolPath), [title]);
+  assert.equal(bad(withSrc(src.replace(line, line.replace("test('", "test.skip('")))).length, 1);
+  assert.equal(bad(withSrc(src.replace(line, line.replace("test('", "test.todo('")))).length, 1);
+  assert.equal(bad(withSrc(src.replace(line, line.replace("', () =>", "', { skip: true }, () =>")))).length, 1);
+  assert.equal(bad(withSrc(src.replace(line, `if (false) { ${line}`))).length >= 1, true);
+  assert.equal(bad(withSrc(src.replace(line, `if (false) ${line}`))).length, 1);
+  assert.equal(bad(withSrc(src + "\ntest.only('x', () => {});\n")).length, req.names.length);
+  assert.equal(bad(withSrc(src.replace("from 'node:test'", "from 'node:other'"))).length, req.names.length);
+  // 文件不在被扫文件里、或不在 testGlobs 内，也判不过。
+  assert.equal(bad({ ...ctx, files: ctx.files.filter((f) => f !== req.file) }).length, 1);
+  const noGlob = { ...ctx, regs: { ...ctx.regs, gatefacs: ctx.regs.gatefacs.map((g) => (g.facCode === fac.facCode ? { ...g, testGlobs: ['tests/other/*.mjs'] } : g)) } };
+  assert.equal(bad(noGlob).length, 1);
+});
+
 test('assertRelUnderTempRoot（裁定四）：越出临时根与命中 §2.11 的路径直接抛错', () => {
   const dir = testTempRoot('arutr-');
   try {
     for (const bad of ['../a', 'a/../../b', '/etc/x', 'C:/x', 'tools/accept/items.json']) assert.throws(() => assertRelUnderTempRoot(dir, bad), /temp root|§2\.11/, bad);
-    assert.equal(assertRelUnderTempRoot(dir, 'a/b.json'), 'a/b.json');
+    assert.equal(assertRelUnderTempRoot(dir, 'a/b.json'), join(dir, 'a/b.json'));
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
