@@ -25,6 +25,7 @@ const base = () => ({
   textPaths: ['memo.*'],
   textWriters: { 'memo.*': 'ai-gate/memo-gate.mjs' },
   pathTypes: { 'box.*': 'integer:count', 'memo.*': 'sealed' },
+  keyKinds: { 'box.*': ['gadget'] },
   phases: ['clock', 'body'],
   readShapes: [],
 });
@@ -73,6 +74,94 @@ test('E-PATH-SEGMENT-GRAMMAR：pathTypes 字面段不合文法、保留字、全
     const d = base(); d.pathTypes[p] = 'integer:count';
     assert.ok(codes(d).includes('E-PATH-SEGMENT-GRAMMAR'), p);
   }
+});
+
+// ---------- keyKinds（李白 11-17 pathTypes `*` 段 kind 字段裁定；卷二 §2.7，勘误 1117rx7） ----------
+
+test('keyKinds 三种项合法：(a) 单个 kind、(b) kind 列表、(c) event / dimKey；多 * 段按段顺序', () => {
+  const d = base();
+  d.pathTypes['box.*.props.*'] = 'dimension';
+  d.pathTypes['box.*.ev'] = 'list<struct:pendingPost>';
+  d.pathTypes['box.tag.*'] = 'integer:count';
+  d.keyKinds['box.*.props.*'] = [['gadget', 'person'], 'dimKey'];
+  d.keyKinds['box.*.ev'] = ['event'];
+  d.keyKinds['box.tag.*'] = ['person'];
+  assert.deepEqual(codes(d), []);
+  assert.deepEqual(mergeStateOwners(d, CTX).merged.keyKinds['box.*.props.*'], [['gadget', 'person'], 'dimKey']);
+});
+
+test('keyKinds (b) 列表：空、重复、通配、含 (c) 代号、未登记 kind 各报 E-PATH-KEYKINDS', () => {
+  for (const bad of [[[]], [['person', 'person']], [['*']], [['any']], [['person', 'event']], [['nosuchkind']], [[7]]]) {
+    const d = base(); d.keyKinds['box.*'] = bad;
+    assert.ok(codes(d).length >= 1 && codes(d).every((c) => c === 'E-PATH-KEYKINDS'), JSON.stringify(bad));
+  }
+});
+
+test('keyKinds (a)(c) 项：未登记 kind、非 event/dimKey 的非实体代号、非字符串非列表各报 E-PATH-KEYKINDS', () => {
+  for (const bad of ['nosuchkind', 'handle', 'EventId', '*', 7, null, { kind: 'person' }]) {
+    const d = base(); d.keyKinds['box.*'] = [bad];
+    assert.deepEqual(codes(d), ['E-PATH-KEYKINDS'], JSON.stringify(bad));
+  }
+});
+
+test('keyKinds 项数不等于 * 段数、填在无 * 段的条目上、非列表各报 E-PATH-KEYKINDS；键不在 pathTypes 报 E-PATH-UNDECLARED', () => {
+  const a = base(); a.keyKinds['box.*'] = ['person', 'dimKey']; assert.deepEqual(codes(a), ['E-PATH-KEYKINDS']);
+  const b = base(); b.keyKinds['box.*'] = []; assert.deepEqual(codes(b), ['E-PATH-KEYKINDS']);
+  const c = base(); c.pathTypes['box.flag'] = 'boolean'; c.keyKinds['box.flag'] = []; assert.deepEqual(codes(c), ['E-PATH-KEYKINDS']);
+  const c2 = base(); c2.pathTypes['box.flag'] = 'boolean'; assert.deepEqual(codes(c2), []);
+  const d = base(); d.keyKinds['box.*'] = 'person'; assert.deepEqual(codes(d), ['E-PATH-KEYKINDS']);
+  const e = base(); e.keyKinds['box.nothing.*'] = ['person']; assert.deepEqual(codes(e), ['E-PATH-UNDECLARED']);
+  const f = base(); f.keyKinds = ['person']; assert.deepEqual(codes(f), ['E-DIM-STRUCT-FIELD', 'E-PATH-KEYKINDS']);
+});
+
+test('keyKinds 非 textPaths 且有 * 段的条目缺了报 E-PATH-KEYKINDS；textPaths 缺了不报，填了也按文法核（整类豁免，不对单条特判）', () => {
+  const a = base(); delete a.keyKinds['box.*']; assert.deepEqual(codes(a), ['E-PATH-KEYKINDS']);
+  const b = base(); delete b.keyKinds; assert.deepEqual(codes(b), ['E-PATH-KEYKINDS']);
+  // base 的 memo.* 是 textPath 且没有 keyKinds：零错（上面 base 零错用例已含）。再加一条 textPath，也不强制。
+  const c = base();
+  c.textPaths.push('memo2.*.text'); c.textWriters['memo2.*.text'] = 'ai-gate/memo2-gate.mjs'; c.pathTypes['memo2.*.text'] = 'sealed';
+  assert.deepEqual(codes(c), []);
+  c.keyKinds['memo2.*.text'] = ['person']; assert.deepEqual(codes(c), []);
+  c.keyKinds['memo2.*.text'] = ['person', 'person']; assert.deepEqual(codes(c), ['E-PATH-KEYKINDS']);
+});
+
+test('E-TERM-RECORD-UNLISTED：含可终止实体类 * 段的模式须被 subjectRecords 覆盖；(c) 项、不可终止类、协议键、账户、textPaths 豁免', () => {
+  const ctx = { ...CTX, terminableKinds: ['gadget'] };
+  const run = (d) => mergeStateOwners(d, ctx).errors.map((e) => e.code).sort();
+  // 反例：(a) 单个可终止 kind，未登记去留
+  assert.deepEqual(run(base()), ['E-TERM-RECORD-UNLISTED']);
+  // 反例：(b) 列表里任一 kind 可终止
+  const b = base(); b.keyKinds['box.*'] = [['person', 'gadget']]; assert.deepEqual(run(b), ['E-TERM-RECORD-UNLISTED']);
+  // 反例：多 * 段里只有第二段是可终止主体
+  const m = base(); m.pathTypes['box.*.x.*'] = 'integer:count'; m.keyKinds['box.*.x.*'] = ['person', 'gadget'];
+  assert.deepEqual(run(m), ['E-TERM-RECORD-UNLISTED', 'E-TERM-RECORD-UNLISTED']);
+  // 正例：被 subjectRecords 覆盖（相对该顶层键写；通配覆盖具体）
+  const ok = base(); ok.stateKeys.box.subjectRecords = { '*': { recordClass: 'rcls_box', subjectSegments: [1] } }; assert.deepEqual(run(ok), []);
+  // 正例：只取得到其他实体类（不可终止）的段不算主体
+  const other = base(); other.keyKinds['box.*'] = ['person']; assert.deepEqual(run(other), []);
+  const other2 = base(); other2.keyKinds['box.*'] = [['person', 'skill']]; assert.deepEqual(run(other2), []);
+  // 正例：(c) 项永远不算主体（即便登记了名为 event/dimKey 的可终止类也一样）
+  const c = base(); c.pathTypes['box.ev.*'] = 'list<struct:pendingPost>'; c.keyKinds['box.ev.*'] = ['event'];
+  c.stateKeys.box.subjectRecords = { '*': { recordClass: 'rcls_box', subjectSegments: [1] } };
+  assert.deepEqual(mergeStateOwners(c, { ...ctx, terminableKinds: ['gadget', 'event', 'dimKey'] }).errors.map((e) => e.code), []);
+  const c2 = base(); c2.keyKinds['box.*'] = ['dimKey'];
+  assert.deepEqual(mergeStateOwners(c2, { ...ctx, terminableKinds: ['gadget', 'dimKey'] }).errors.map((e) => e.code), []);
+  // 正例：协议键（terminated、holdings、statuses、modifiers、due）豁免
+  for (const key of ['terminated', 'holdings', 'statuses', 'modifiers', 'due']) {
+    const p = base(); p.stateKeys[key] = { readers: [], writers: { '*': `kernel/${key}.mjs` } };
+    p.pathTypes[`${key}.*`] = 'integer:count'; p.keyKinds[`${key}.*`] = ['gadget'];
+    // box.* 本身仍须覆盖：给它一条 subjectRecords，让结果只反映协议键
+    p.stateKeys.box.subjectRecords = { '*': { recordClass: 'rcls_box', subjectSegments: [1] } };
+    assert.deepEqual(run(p), [], key);
+  }
+  // 正例：账户路径（改写写者是账本写者）豁免
+  const led = base(); led.stateKeys.box.writers = { '*': 'kernel/ledger.mjs' }; assert.deepEqual(run(led), []);
+  // 正例：textPaths 豁免（即便填了可终止 kind）
+  const t = base(); t.keyKinds['memo.*'] = ['gadget']; t.stateKeys.box.subjectRecords = { '*': { recordClass: 'rcls_box', subjectSegments: [1] } };
+  assert.deepEqual(run(t), []);
+  const t2 = base(); t2.keyKinds['memo.*'] = ['gadget']; assert.deepEqual(run(t2), ['E-TERM-RECORD-UNLISTED']); // 只有 box.* 报；memo.* 不报
+  // 没有可终止类（ctx 空）时一律不报
+  assert.deepEqual(codes(base()), []);
 });
 
 test('E-PATH-NAME-CLASH：两条模式派生同一 P 成员名', () => {
@@ -207,6 +296,7 @@ test('账本账户路径：改写写者是账本写者的模式不生成 P；tex
   d.stateKeys.purse = { readers: [], writers: { '*.coins': 'kernel/ledger.mjs', '*.mood': 'purse.mjs' } };
   d.pathTypes['purse.*.coins'] = 'integer:count';
   d.pathTypes['purse.*.mood'] = 'integer:count';
+  d.keyKinds['purse.*.coins'] = ['gadget']; d.keyKinds['purse.*.mood'] = ['gadget'];
   const m = mergeStateOwners(d, CTX);
   assert.deepEqual(m.errors, []);
   assert.deepEqual(m.merged.ledgerPaths, ['purse.*.coins']);
@@ -240,6 +330,16 @@ test('assignSortKeys：c after b、a；b after a；d after a → a1 b2 c3 d4', (
 test('assignSortKeys：同名钩子登记在两个系统、成环、after 不存在都记入 problems', () => {
   assert.equal(assignSortKeys({ 'sys.a': { phase: { x: hook('body', [], 0) } }, 'sys.b': { phase: { x: hook('body', [], 0) } } }).problems.length, 1);
   assert.match(assignSortKeys({ 'sys.a': { phase: { x: hook('body', ['x'], 0) } } }).problems[0], /after cycle: x -> x/);
+});
+
+test('合并器：同名钩子登记在两个系统，加载直接抛异常停下，不借 E-PHASE-DUPLICATE（用哪个码等李白裁定）', () => {
+  const d = base();
+  d.systems['sys.box'].phase = { dupHook: hook('body', [], 1) };
+  d.systems['sys.box2'] = { tables: [], entryCallerFiles: {}, entryJudges: [], phase: { dupHook: hook('body', [], 2) } };
+  assert.throws(() => mergeStateOwners(d, CTX), /hook name registered by two systems \(error code pending ruling\): hook dupHook registered by both sys\.box and sys\.box2/);
+  const ok = base();
+  ok.systems['sys.box'].phase = { oneHook: hook('body', [], 1) };
+  assert.deepEqual(codes(ok), []);
 });
 
 test('离线生成器 applySortKeys：按同一算法改写 sortKey 并列出变化；不改入参；有问题即抛错；对真实声明表是不动点', () => {
