@@ -1,9 +1,0 @@
-[
- {
-  "selector": {},
-  "maxRounds": 3,
-  "concession": [0, 0.05, 0.1],
-  "acceptAt": "quote(side) * (1 - concession(round))",
-  "impressOnHaggle": "bargain"
- }
-]
