@@ -6,7 +6,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { LAYOUT, REGISTRY, readRegistry, readDecl, groupModel, loadContext, classPrint } from './read.mjs';
+import { LAYOUT, REGISTRY, readRegistry, readDecl, groupModel, loadContext, classPrint, matchGlobs } from './read.mjs';
 import { ENUM, itemChecks, keySets } from './lib/item-form.mjs';
 import { stableJson } from './run.mjs';
 
@@ -63,6 +63,10 @@ export function validate(root, regs) {
   for (const g of regs.gatefacs) {
     for (const f of ['paths', 'inRepo', 'ownerVol', 'gateCard', 'entries']) if (g[f] === undefined || g[f] === '') err('E-ACC-GATEFAC-FORM', g.facCode, `${f} missing`);
     for (const w of g.assertedWriters || []) if (!(g.entries || []).includes(w) || !(g.writerAsserts || []).length) err('E-ACC-GATEFAC-FORM', g.facCode, `assertedWriters ${w} must be an entry and writerAsserts must be listed`);
+    for (const r of g.requiredTests || []) {
+      if (!(g.testGlobs || []).length || !r.file || !Array.isArray(r.names) || !r.names.length || r.names.some((n) => typeof n !== 'string' || !n)) err('E-ACC-GATEFAC-FORM', g.facCode, `requiredTests ${r.file} needs testGlobs, file and names`);
+      else if (!matchGlobs(r.file, g.testGlobs, [])) err('E-ACC-GATEFAC-FORM', g.facCode, `requiredTests ${r.file} not in testGlobs`);
+    }
     if (reserved.has(g.facCode)) err('E-ACC-GATEFAC-FORM', g.facCode, 'collides with a declared key');
     if (g.inRepo === true && (!Array.isArray(g.paths) || g.paths.some((p) => p.includes('*')))) err('E-ACC-GATEFAC-FORM', g.facCode, 'in-repo paths must be listed files (李白 11-17 四-1)');
   }

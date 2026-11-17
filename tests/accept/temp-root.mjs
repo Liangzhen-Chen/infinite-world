@@ -22,7 +22,7 @@ export function testTempRoot(prefix = 'test-') {
 
 // 临时根下的唯一写入口（李白 11-17 裁定四）：运行时断言 rel 规范化后不越出 root（非绝对、不含 ..），且不命中 §2.11 登记的受保护路径模式
 // （模式取自 scanclasses 里 registry_write 行的 guardedPaths，不手写）；通过才建父目录并写文件。返回写入的完整路径。
-// 断言函数（登记在 gatefac test-temp-root 的 writerAsserts）：root 在仓库外，rel 规范化后不越出 root 且不命中 §2.11 模式；返回规范化后的相对路径。
+// 断言函数（登记在 gatefac test-temp-root 的 writerAsserts）：root 在仓库外，rel 规范化后不越出 root 且不命中 §2.11 模式；返回规范化后的完整路径（root 拼规范化相对路径），写入只许用这个返回值（call_edge 按它判豁免，李白 11-17 裁定①）。
 export function assertRelUnderTempRoot(root, rel) {
   if (inside(realpathSync(ROOT), realpathSync(root))) throw new Error(`temp root must be outside the repository: ${root}`);
   const n = normalize(String(rel)).split(sep).join('/');
@@ -33,12 +33,11 @@ export function assertRelUnderTempRoot(root, rel) {
   const guarded = (rows.find((c) => c.scanClass === 'registry_write') || {}).guardedPaths;
   if (!Array.isArray(guarded) || !guarded.length) throw new Error('registry_write guardedPaths not registered');
   if (matchGlobs(n, guarded, [])) throw new Error(`write hits a registered path pattern (§2.11): ${rel}`);
-  return n;
+  return join(root, n);
 }
 
 export function writeUnderTempRoot(root, rel, data) {
-  const n = assertRelUnderTempRoot(root, rel);
-  const full = join(root, n);
+  const full = assertRelUnderTempRoot(root, rel);
   mkdirSync(dirname(full), { recursive: true });
   writeFileSync(full, data);
   return full;
