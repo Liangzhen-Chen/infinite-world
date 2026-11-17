@@ -92,8 +92,8 @@ function rootFacilities(ctx, codes) {
 }
 
 // 写函数豁免（李白 11-17 裁定四之收窄）：登记辅助文件里，名字在该 gatefac 行 assertedWriters 内的函数声明，
-// 函数体内、首个"断言调用"之后的部分算登记写入口自己的实现不计；断言调用指函数体顶层语句里对 writerAsserts 所列、
-// 且本文件里有函数声明的名字的调用。找不到断言调用（缺断言、断言只在分支内、名字未声明）则整个函数体照计；断言之前的写入照计。
+// 函数体内、首个"断言调用"之后的部分算登记写入口自己的实现不计；断言调用指函数体顶层、以语句开头（或 const 名 = 断言(…)）的对 writerAsserts 所列、
+// 且本文件里有函数声明的名字的调用。找不到断言调用（缺断言、断言只在分支内或无括号 if、&&、箭头函数里、名字未声明）则整个函数体照计；断言之前的写入照计。
 // 判据只读登记数据，不写具体函数名；tempRepo、testTempRoot 这类只在 entries 里的函数体照常扫。返回豁免区间 [起, 止] 的记号下标。
 function assertedBodies(toks, fac) {
   const out = [];
@@ -105,17 +105,27 @@ function assertedBodies(toks, fac) {
     const pc = matchClose(toks, i + 2);
     if (!isP(toks[pc + 1], '{')) continue;
     const end = matchClose(toks, pc + 1);
-    let depth = 0;
+    let depth = 0; let paren = 0;
     for (let k = pc + 2; k < end; k++) {
       if (isP(toks[k], '{')) depth++;
       else if (isP(toks[k], '}')) depth--;
-      else if (depth === 0 && toks[k].t === 'id' && fac.asserts.has(toks[k].v) && declared.has(toks[k].v) && !isP(toks[k - 1], '.') && !isP(toks[k - 1], '?.') && isP(toks[k + 1], '(')) {
+      else if (isP(toks[k], '(') || isP(toks[k], '[')) paren++;
+      else if (isP(toks[k], ')') || isP(toks[k], ']')) paren--;
+      else if (depth === 0 && paren === 0 && toks[k].t === 'id' && fac.asserts.has(toks[k].v) && declared.has(toks[k].v) && isP(toks[k + 1], '(') && stmtStart(toks, k, pc + 1)) {
         out.push([matchClose(toks, k + 1), end]);
         break;
       }
     }
   }
   return out;
+}
+
+// 断言调用须是顶层语句的开头（前一记号是函数体 `{`、`;` 或收尾的 `}`），或写成 `const|let|var 名 = 断言(…)`；
+// `if (c) 断言(…);`、`c && 断言(…)`、`() => 断言(…)`、`return 断言(…)` 之类前面还有别的记号，不算已断言。
+function stmtStart(toks, k, bodyOpen) {
+  const p = k - 1;
+  if (p === bodyOpen || isP(toks[p], ';') || isP(toks[p], '}')) return true;
+  return isP(toks[p], '=') && toks[p - 1] && toks[p - 1].t === 'id' && toks[p - 2] && toks[p - 2].t === 'id' && ['const', 'let', 'var'].includes(toks[p - 2].v);
 }
 
 // 赋值与自增自减记号：变量被重新赋值（含复合赋值）就不再是临时根（李白 11-17 裁定三）。
