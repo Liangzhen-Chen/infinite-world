@@ -1,5 +1,29 @@
 {
  "version": 1,
+ "stateKeys": {
+  "created": {"readers": ["dim:*"], "writers": {"*.props.*": "kernel/dimension-writers.mjs", "*.props.basis": "kernel/dimension-writers.mjs"}},
+  "displayNames": {"readers": [], "writers": {"*": "ai-gate/naming-gate.mjs"}, "display": ["*.text"]},
+  "pendingPost": {"readers": ["kernel/scheduler.mjs"], "writers": {"*": "kernel/transaction.mjs"}},
+  "playerNotes": {"readers": [], "writers": {"*": "ai-gate/note-gate.mjs"}, "display": ["*.text"]},
+  "terminated": {"readers": ["view:capacity"], "writers": {"*": "kernel/terminate.mjs"}}
+ },
+ "systems": {
+  "sys.dimension_entry": {"tables": [], "entryCallerFiles": {}, "entryJudges": []}
+ },
+ "textPaths": ["displayNames.*.text", "playerNotes.*.text", "narration.*"],
+ "textWriters": {"displayNames.*.text": "ai-gate/naming-gate.mjs", "playerNotes.*.text": "ai-gate/note-gate.mjs", "narration.*": "ai-gate/narration-gate.mjs"},
+ "pathTypes": {
+  "created.*.props.*": "dimension",
+  "created.*.props.basis": "struct:basis",
+  "displayNames.*.seq": "integer:count",
+  "displayNames.*.text": "sealed",
+  "narration.*": "sealed",
+  "pendingPost.*": "list<struct:pendingPost>",
+  "playerNotes.*.text": "sealed",
+  "terminated.*": "struct:terminated"
+ },
+ "readShapes": [],
+ "phases": ["clock", "environment", "body", "needs", "economy", "society", "events", "projection"],
  "rxNamespaces": [
   {"ns": "lot.spoilage","type": "number", "entry": "该份材料所在批次或实例的当日腐坏进度", "shape": "fraction", "volume": "卷四 §4.7.7（diet eats 的写法见 §4.7.5）"},
   {"ns": "material","type": "field", "entry": "被求值的那一份材料的维度（变量口径同卷三乙 §4.3 C-1）", "shape": "<维度键>，另有 classes（set，只作 member 的 set）", "volume": "卷四 §4.7.7（diet eats 的写法见 §4.7.5）"}
@@ -24,6 +48,9 @@
   {"export": "kernel/vocab.mjs#vocab", "callers": ["*"], "acceptsState": false},
   {"export": "kernel/vocab.mjs#kindOf", "callers": ["*"], "acceptsState": false},
   {"export": "kernel/vocab.mjs#idIndex", "callers": ["textcore", "gate", "outputGate", "aiGate", "inputEdge"], "acceptsState": false}
+ ]},
+ "groupApi": {"exports": [
+  {"export": "systems.mjs#registerSystems", "callerFiles": ["index.mjs"]}
  ]},
  "importMatrix": {
   "codeExtensions": [".mjs", ".js", ".cjs", ".ts", ".mts", ".cts"],
