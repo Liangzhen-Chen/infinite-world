@@ -154,7 +154,12 @@ export function checkRequired(t, env, err, stats) {
         if (r.known) stats.known++;
         if (req.anyOf) {
           if (!req.anyOf.some((item) => knownPart(t, id, row, item))) for (const item of req.anyOf) err({ code: 'E-DIM-REQUIRED-MISSING', level: 'L3', ...at(item.split('.')[0]), got: 'unknown', want: `at least one of ${req.anyOf.join(',')}` });
-        } else if (!r.known) err({ code: 'E-DIM-REQUIRED-MISSING', level: 'L3', ...at(dim), got: 'unknown', want: `required ${dims[dim].required}` });
+        } else if (!r.known) {
+          // onUnknown: gap 的维度缺值只记缺口、进加载警告，不让加载失败（卷三甲 §2.1、§6 EA-6；卷二 §5 开头"两处不一致以定义卷为准"，李白 11-17）。
+          // anyOf 组合条件不在此列：它表达的是"至少填一项"的硬约束（如卷三甲 M-11 ①），照旧 E。
+          const code = dims[dim].onUnknown === 'gap' ? 'W-DIM-GAP' : 'E-DIM-REQUIRED-MISSING';
+          err({ code, level: 'L3', ...at(dim), got: 'unknown', want: `required ${dims[dim].required}` });
+        }
       }
     }
   }

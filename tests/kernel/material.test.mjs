@@ -1,6 +1,6 @@
 // P-3 材料表验收：卷三甲 §3.5 AP-2 至 AP-6 的加载期部分、§6 EA-1/2/4/5/6 的加载部分、卷十二 R12-6.2 七步中能做的步骤。
 // 数据取自真实的 world/ontology/dimensions/{material,_vocab,_units}.json，每个用例在内存里拷一份改坏一处或加一行，再交 P-2 的校验器。
-// 整表期望：除卷文自己写明未核到的格与待 M3b-27 标定的 valueMult 外零错误；暂定格只验有值、在取值域内，不验具体数（李白 11-17 改令）。
+// 整表期望：缺值只剩卷文自己写明未核到的格，按该维 onUnknown 报 W-DIM-GAP 或 E；暂定格只验有值、在取值域内，不验具体数（李白 11-17）。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -46,21 +46,18 @@ const shortTableUnknown = (tag, dim) => {
 };
 const volumeUnknown = () => [...shortTableUnknown('FIBER-DATA', 'fiberContent'), ...shortTableUnknown('CARB-DATA', 'carbContent')].sort();
 
-test('93 行：除卷文明写未核到的格外，整表零错误（valueMult 另见下一项）', () => {
+test('93 行：缺值只剩卷文明写未核到的格，按该维 onUnknown 报（gap → W-DIM-GAP，error → E）；别无错误', () => {
   const w = load();
   assert.equal(Object.keys(w.material.rows).length, 93);
-  const got = errs(run(w)).filter((e) => e.dim !== 'valueMult').map((e) => `${e.code}|${e.row}.${e.dim}`).sort();
-  // carbContent 的 onUnknown 是 gap，卷文期望它进缺口表而不让加载失败；P-2 现行一律报 E（docs/问题.md），所以这里按 E 计。
+  const r = run(w);
+  const got = r.errors.map((e) => `${e.code}|${e.row}.${e.dim}`).sort();
   // 必填条件里 byDigestible 由 P-2 记 notCovered 不判（落叶的纤维即此），故期望只取 byClass:comp_edible 成立的行。
   const judged = volumeUnknown().filter((k) => (w.material.rows[k.split('.')[0]].classes || []).includes('comp_edible'));
-  assert.deepEqual(got, judged.map((k) => `E-DIM-REQUIRED-MISSING|${k}`));
+  const want = judged.map((k) => `${w.material.dimensions[k.split('.')[1]].onUnknown === 'gap' ? 'W-DIM-GAP' : 'E-DIM-REQUIRED-MISSING'}|${k}`).sort();
+  assert.deepEqual(got, want);
 });
 
-test('valueMult 全行有值（卷三乙 §7 M3b-27 离线标定）', { todo: 'M3b-27 缺物品的材料组成与 rules.valuation.unitValue，标定停在第 2 步，见 审查/P-3-valueMult-标定偏差报告.md' }, () => {
-  assert.deepEqual(errs(run(load())).filter((e) => e.dim === 'valueMult').map((e) => e.row), []);
-});
-
-test('暂定格：每个标"暂定，待试玩调"的格都有值、过表头取值域；valueMult 不暂定；卷文明写未核到的格不暂填', () => {
+test('暂定格：每个标暂定的格都有值、过表头取值域；valueMult 暂定标"待 M3b-27 标定"；卷文明写未核到的格不暂填', () => {
   const w = load();
   const r = run(w);
   assert.deepEqual(errs(r).filter((e) => e.code !== 'E-DIM-REQUIRED-MISSING'), []);
@@ -68,10 +65,9 @@ test('暂定格：每个标"暂定，待试玩调"的格都有值、过表头取
   for (const [id, row] of Object.entries(w.material.rows)) {
     for (const s of (row.sources || []).filter((x) => x.status === 'vstat_placeholder')) {
       n++;
-      assert.equal(s.name, '暂定，待试玩调');
-      assert.ok(/^P3-T\d/.test(s.citation), `${id} ${s.dimension}`);
       const [dim, key] = s.dimension.split('.');
-      assert.notEqual(dim, 'valueMult');
+      assert.equal(s.name, dim === 'valueMult' ? '暂定，待 M3b-27 标定' : '暂定，待试玩调');
+      assert.ok(/^P3-T\d/.test(s.citation), `${id} ${s.dimension}`);
       const v = key ? row[dim][key] : row[dim];
       assert.ok(v !== undefined && v !== null, `${id}.${s.dimension}`);
       const dom = w.material.dimensions[dim].domain || (w.material.dimensions[dim].value || {}).domain;
