@@ -59,6 +59,18 @@
    "detectors": [
     "doc_struct"
    ],
+   "docFamilies": {
+    "vol1": [
+     "V-"
+    ],
+    "vol12": [
+     "S12-",
+     "A12-"
+    ],
+    "vol2": [
+     "S"
+    ]
+   },
    "docVolumes": {
     "vol1": "docs/统一底层设计/卷一-总纲与分层.md",
     "vol12": "docs/统一底层设计/卷十二-验收与自动扫描.md",
@@ -343,8 +355,18 @@
     "tools/accept/gatefacs.json",
     "tools/whitelist.json"
    ],
+   "joinFns": {
+    "node:path": [
+     "join",
+     "resolve"
+    ],
+    "path": [
+     "join",
+     "resolve"
+    ]
+   },
    "scanClass": "registry_write",
-   "source": "卷十二 §3.4 S12-2、§2.11、§3.2；P-1b 新登类别（§2.4 开放登记）"
+   "source": "卷十二 §3.4 S12-2、§2.11、§3.2；P-1b 新登类别（§2.4 开放登记）；测试临时根口子（李白 11-17 裁定三）"
   },
   {
    "callees": {

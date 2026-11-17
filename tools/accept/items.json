@@ -1,46 +1,6 @@
 {
  "rows": [
   {
-   "baseComp": "c_rules_import",
-   "detector": "import_edge",
-   "expect": "zero",
-   "form": "scan",
-   "gates": [
-    "pre_commit",
-    "pre_merge"
-   ],
-   "impl": "tools/accept/detectors/import_edge.mjs",
-   "itemKey": "vol1.R-6.5",
-   "localNo": "R-6.5",
-   "method": "static_code",
-   "params": {
-    "codes": [
-     "E-TSC-PARSE"
-    ],
-    "groups": [
-     "rules",
-     "kernel",
-     "textcore",
-     "inputEdge",
-     "gate",
-     "outputGate",
-     "aiGate",
-     "assembly",
-     "host",
-     "display",
-     "clientTextcore"
-    ]
-   },
-   "runsOn": "local_static",
-   "scanClass": "rules_import",
-   "source": "卷一 R-6 第 5 条；卷二 §2.7 读法（JSON import）；卷十二 R12-4.3",
-   "stage": 0,
-   "state": "in_core",
-   "target": "runtime_code",
-   "volume": "vol1",
-   "zeroRows": []
-  },
-  {
    "baseComp": "c_version_fork",
    "detector": "path_access",
    "expect": "zero",
@@ -70,6 +30,46 @@
    "runsOn": "local_static",
    "scanClass": "version_fork",
    "source": "卷一 R-8 判定、附录甲 V-17；卷二十七 S27-5",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_rules_import",
+   "detector": "import_edge",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/import_edge.mjs",
+   "itemKey": "vol1.V-9",
+   "localNo": "V-9",
+   "method": "static_code",
+   "params": {
+    "codes": [
+     "E-TSC-PARSE"
+    ],
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "gate",
+     "outputGate",
+     "aiGate",
+     "assembly",
+     "host",
+     "display",
+     "clientTextcore"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "rules_import",
+   "source": "卷一 R-6 第 5 条（R-6 写明判定 V-9，:346）、附录甲 V-9（:756）；卷二 §2.7 读法（JSON import）；卷十二 R12-4.3。本行只覆盖 V-9 的 balance import 一项；白名单外字面量、缺 basis 两项未覆盖（记欠账）",
    "stage": 0,
    "state": "in_core",
    "target": "runtime_code",
@@ -132,6 +132,7 @@
      "wallclock",
      "rng_bypass"
     ],
+    "code": "E-ACC-TOOL-NONDET",
     "facs": [
      "acc-register",
      "acc-runner"
@@ -246,8 +247,12 @@
      "acc-register",
      "acc-runner"
     ],
+    "code": "E-ACC-REGISTRY-WRITE",
     "groups": [
      "offline"
+    ],
+    "roots": [
+     "test-temp-root"
     ]
    },
    "runsOn": "local_static",
@@ -273,12 +278,14 @@
    "method": "static_doc",
    "params": {
     "checks": [
-     "orphan"
+     "orphan",
+     "unregistered",
+     "count"
     ]
    },
    "runsOn": "local_static",
    "scanClass": "item_ledger",
-   "source": "卷十二 §3.4 S12-3；R12-11.3",
+   "source": "卷十二 §3.4 S12-3；R12-11.3；编号口径李白 11-17 裁定二（定义处、每卷编号族登记在扫描类别行）",
    "stage": 0,
    "state": "implemented",
    "target": "doc",

@@ -7,6 +7,8 @@ import { loadContext, prefixesFromDir, mergePrefixes, readRegistry, LAYOUT } fro
 import { detect as litScope } from '../../tools/accept/detectors/lit_scope.mjs';
 import { detect as importEdge } from '../../tools/accept/detectors/import_edge.mjs';
 import { detect as pathAccess } from '../../tools/accept/detectors/path_access.mjs';
+import { detect as callEdge } from '../../tools/accept/detectors/call_edge.mjs';
+import { detect as docStruct, definedNumbers } from '../../tools/accept/detectors/doc_struct.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const FIX = mergePrefixes(prefixesFromDir(join(ROOT, LAYOUT.bypassDimsDir)));
@@ -117,6 +119,36 @@ test('import_edge 成员闭集：按 filesList 清单判，清单外的组内文
   assert.deepEqual(unassigned({ ...files, 'server-plugin/kernel/files.json': '["server-plugin/kernel/a.mjs"]' }), ['server-plugin/kernel/load/b.mjs']);
   assert.deepEqual(unassigned({ ...files, 'server-plugin/kernel/files.json': '["server-plugin/kernel/a.mjs","server-plugin/kernel/load/b.mjs"]' }), []);
   assert.deepEqual(unassigned(files), ['server-plugin/kernel/a.mjs', 'server-plugin/kernel/load/b.mjs']);
+});
+
+test('doc_struct 编号口径（裁定二）：只数定义处；引用、"第 n 条"、条文中间的编号不算；编号族来自登记数据', () => {
+  const text = ['| V-1 | 条 |', '| **V-2** | 条 |', '### V-3 标题', '**V-8 分阶段**：见 V-4', '- V-5 列表项', '见 V-6 与 R-6 第 5 条', 'V-7 普通段落开头', '| 条 | V-9 在非首列 |', '| S12-1 | 别的族 |', '| V-1 | 重复定义 |'].join('\n');
+  assert.deepEqual([...definedNumbers(text, ['V-']).entries()], [['V-1', 1], ['V-2', 2], ['V-3', 3], ['V-8', 4], ['V-5', 5]]);
+  assert.deepEqual([...definedNumbers(text, ['S12-']).keys()], ['S12-1']);
+  assert.equal(definedNumbers(text, []).size, 0);
+});
+
+test('doc_struct 三项：登记表缺的、定义处缺的、条数不等的卷各自报码', () => {
+  const doc = 'docs/v.md';
+  const cls = { docVolumes: { vx: doc, vy: 'docs/none.md' }, docFamilies: { vx: ['X-'], vy: ['Y-'] } };
+  const run = (items, text) => docStruct(ctxOf({ [doc]: text, 'tools/accept/items.json': JSON.stringify({ rows: items }) }), { checks: ['orphan', 'unregistered', 'count'] }, cls).map((h) => `${h.code} ${h.symbolPath}`).sort();
+  const row = (no) => ({ itemKey: `vx.${no}`, localNo: no, volume: 'vx' });
+  assert.deepEqual(run([row('X-1'), row('X-2')], '| X-1 | a |\n| X-2 | b |'), []);
+  assert.deepEqual(run([row('X-1')], '| X-1 | a |\n| X-2 | b |'), ['E-ACC-ITEM-COUNT vx', 'E-ACC-ITEM-UNREGISTERED vx.X-2']);
+  assert.deepEqual(run([row('X-1'), row('X-9')], '| X-1 | a |\n见 X-9'), ['E-ACC-ITEM-COUNT vx', 'E-ACC-ITEM-ORPHAN vx.X-9']);
+  assert.deepEqual(run([{ ...row('Y-1'), volume: 'vy' }], '| X-1 | a |'), ['E-ACC-ITEM-COUNT vx', 'E-ACC-ITEM-ORPHAN vx.Y-1', 'E-ACC-ITEM-UNREGISTERED vx.X-1']);
+});
+
+test('call_edge 测试临时根：路径落在临时根加常量相对路径内才不计', () => {
+  const head = "import { join } from 'node:path';\nimport { writeFileSync } from 'node:fs';\nimport { testTempRoot } from '../tests/accept/temp-root.mjs';\n";
+  const run = (body) => callEdge(ctxOf({ 'tools/x.mjs': head + body }), { groups: ['offline'], callers: [], callees: ['registry_write'], roots: ['test-temp-root'] }, CLS.registry_write).length;
+  assert.equal(run("const d = testTempRoot(); writeFileSync(join(d, 'tools/accept/items.json'), 'x');"), 0);
+  assert.equal(run("const d = testTempRoot(); const p = join(d, 'a'); writeFileSync(p, 'x');"), 1);
+  assert.equal(run("const d = testTempRoot(); writeFileSync(join(d, '../a'), 'x');"), 1);
+  assert.equal(run("const d = testTempRoot(); const d = 1; writeFileSync(join(d, 'a'), 'x');"), 1);
+  assert.equal(run("let d = testTempRoot(); d = '/etc'; writeFileSync(join(d, 'a'), 'x');"), 1);
+  assert.equal(run("writeFileSync(join(testTempRoot(), 'a'), 'x');"), 1);
+  assert.equal(callEdge(ctxOf({ 'tools/x.mjs': head + "const d = testTempRoot(); writeFileSync(join(d, 'a'), 'x');" }), { groups: ['offline'], callers: [], callees: ['registry_write'] }, CLS.registry_write).length, 1);
 });
 
 test('kernel/files.json 与磁盘上的 kernel 组文件一致（排序、只列 .mjs）', () => {
