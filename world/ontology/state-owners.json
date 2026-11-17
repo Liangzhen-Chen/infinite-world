@@ -15,6 +15,16 @@
  "kernel": {"modules": ["server-plugin/kernel/**/*.mjs"], "process": "server", "filesList": "server-plugin/kernel/files.json"},
  "assembly": {"files": ["server-plugin/index.mjs"], "process": "server", "calls": ["createRouterCaps", "createDigestCap", "createWallTimer", "mountKernel", "registerSystems", "mountOutput", "mountAi", "mountMenuEntry", "mountSaveRoutes", "mountNarration", "mountInput"]},
  "retired": ["server-plugin/legacy/**", "server-plugin/compat/**", "server-plugin/migrations/**"],
+ "kernelApi": {"exports": [
+  {"export": "kernel/clone.mjs#clone", "callers": ["rules"], "acceptsState": false},
+  {"export": "kernel/handles/generated.mjs#V", "callers": ["*"], "acceptsState": false},
+  {"export": "kernel/handles/generated.mjs#E", "callers": ["*"], "acceptsState": false},
+  {"export": "kernel/handles/generated.mjs#P", "callers": ["rules"], "acceptsState": false},
+  {"export": "kernel/handles/entity-id.mjs#entityId", "callers": ["rules"], "acceptsState": false},
+  {"export": "kernel/vocab.mjs#vocab", "callers": ["*"], "acceptsState": false},
+  {"export": "kernel/vocab.mjs#kindOf", "callers": ["*"], "acceptsState": false},
+  {"export": "kernel/vocab.mjs#idIndex", "callers": ["textcore", "gate", "outputGate", "aiGate", "inputEdge"], "acceptsState": false}
+ ]},
  "importMatrix": {
   "codeExtensions": [".mjs", ".js", ".cjs", ".ts", ".mts", ".cts"],
   "processes": {
