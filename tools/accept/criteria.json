@@ -220,10 +220,14 @@
     {
      "ref": "P-2b 跟进小卡三（李白 11-17 两点裁定②）：①执行器真跑登记的 requiredTests（node --test 只跑登记名，失败、skip、todo、缺失判不过），仅命令行与提交钩子开；②写函数豁免只在 gatefac 行同时有非空 requiredTests 时给，登记器对 assertedWriters 无 requiredTests 报错；本类别判定口径不变",
      "rev": 10
+    },
+    {
+     "ref": "P-2b 跟进小卡四（李白 11-17 收紧裁定）：共用的 call_edge 写函数豁免对“用到断言返回变量”只认实参就是该变量、或以该变量开头往下拼 join/resolve 常量段，含 .. 、dirname 等上行写法、非常量段都不算；本类别不用 roots，判定口径不变",
+     "rev": 11
     }
    ],
-   "print": "65f1d117779b923ea282188a8d6255c5da0bd6986547347f502815d5b49b41fe",
-   "rev": 10,
+   "print": "f23441825e83fd0ebdc800ad2576e79b517513c4b7024c5674da2be28605b24d",
+   "rev": 11,
    "scanClass": "module_edge",
    "terms": {
     "vol12.S12-1": {
@@ -302,10 +306,14 @@
     {
      "ref": "P-2b 跟进小卡三（李白 11-17 两点裁定②）：①执行器真跑登记的 requiredTests（node --test 只跑登记名，失败、skip、todo、缺失判不过），仅命令行与提交钩子开；②写函数豁免只在 gatefac 行同时有非空 requiredTests 时给，登记器对 assertedWriters 无 requiredTests 报错；本类别判定口径不变",
      "rev": 8
+    },
+    {
+     "ref": "P-2b 跟进小卡四（李白 11-17 收紧裁定，S12-2）：写函数豁免对“用到断言返回变量”收紧为只认两种：路径实参就是该变量本身；或以该变量开头往下拼的 join/resolve（函数取自 joinFns 登记），其余各段为不含 .. 、非绝对的常量字符串。含 .. 、dirname 等上行写法、非常量段、别的调用都不豁免、照计",
+     "rev": 9
     }
    ],
-   "print": "7da5209368bb0375f2f907244062bd9a568f8383dd4c13210f2c064f860a9fc8",
-   "rev": 8,
+   "print": "10dcb89b14b12ca09d30a1f7bf80d07127362adc19b7bbe63f58333ba1077adf",
+   "rev": 9,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -351,10 +359,14 @@
     {
      "ref": "P-2b 跟进小卡三（李白 11-17 两点裁定②）：①执行器真跑登记的 requiredTests（node --test 只跑登记名，失败、skip、todo、缺失判不过），仅命令行与提交钩子开；②写函数豁免只在 gatefac 行同时有非空 requiredTests 时给，登记器对 assertedWriters 无 requiredTests 报错；本类别判定口径不变",
      "rev": 8
+    },
+    {
+     "ref": "P-2b 跟进小卡四（李白 11-17 收紧裁定）：共用的 call_edge 写函数豁免对“用到断言返回变量”只认实参就是该变量、或以该变量开头往下拼 join/resolve 常量段，含 .. 、dirname 等上行写法、非常量段都不算；本类别不用 roots，判定口径不变",
+     "rev": 9
     }
    ],
-   "print": "88ec24c4356f766a98fd711672f1b91b4d953e416b8b1d5d70c9338fa56d3ebb",
-   "rev": 8,
+   "print": "fe127fa3dc1b9227cd78998f0d422b14a6525da92f5c8a07de949bf81e0dd733",
+   "rev": 9,
    "scanClass": "rng_bypass",
    "terms": {}
   },
@@ -462,10 +474,14 @@
     {
      "ref": "P-2b 跟进小卡三（李白 11-17 两点裁定②）：①执行器真跑登记的 requiredTests（node --test 只跑登记名，失败、skip、todo、缺失判不过），仅命令行与提交钩子开；②写函数豁免只在 gatefac 行同时有非空 requiredTests 时给，登记器对 assertedWriters 无 requiredTests 报错；本类别判定口径不变",
      "rev": 8
+    },
+    {
+     "ref": "P-2b 跟进小卡四（李白 11-17 收紧裁定）：共用的 call_edge 写函数豁免对“用到断言返回变量”只认实参就是该变量、或以该变量开头往下拼 join/resolve 常量段，含 .. 、dirname 等上行写法、非常量段都不算；本类别不用 roots，判定口径不变",
+     "rev": 9
     }
    ],
-   "print": "88ec24c4356f766a98fd711672f1b91b4d953e416b8b1d5d70c9338fa56d3ebb",
-   "rev": 8,
+   "print": "fe127fa3dc1b9227cd78998f0d422b14a6525da92f5c8a07de949bf81e0dd733",
+   "rev": 9,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {
