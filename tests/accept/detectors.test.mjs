@@ -12,6 +12,7 @@ import { detect as docStruct, definedNumbers } from '../../tools/accept/detector
 import { ENUM } from '../../tools/accept/lib/item-form.mjs';
 import { tempRepo } from './temp-repo.mjs';
 import { testTempRoot, writeUnderTempRoot, assertRelUnderTempRoot } from './temp-root.mjs';
+import { repoRoot, safeSegment } from '../../tools/path-segment.mjs';
 import { relative, isAbsolute } from 'node:path';
 import { realpathSync, rmSync, readFileSync, existsSync } from 'node:fs';
 
@@ -257,10 +258,11 @@ test('必跑测试（李白 11-17 裁定②）：登记的断言应抛错测试�
   assert.equal(bad(withSrc(src.replace(line, line.replace("', () =>", "', { skip: true }, () =>")))).length, 1);
   assert.equal(bad(withSrc(src.replace(line, `if (false) { ${line}`))).length >= 1, true);
   assert.equal(bad(withSrc(src.replace(line, `if (false) ${line}`))).length, 1);
-  assert.equal(bad(withSrc(src + "\ntest.only('x', () => {});\n")).length, req.names.length);
-  assert.equal(bad(withSrc(src.replace("from 'node:test'", "from 'node:other'"))).length, req.names.length);
+  // 本文件里登记的必跑测试名共 5 个：test-temp-root 的 3 个加 offline-path-segment 的 2 个（李白 11-17 21:2x 裁定一）。
+  assert.equal(bad(withSrc(src + "\ntest.only('x', () => {});\n")).length, 5);
+  assert.equal(bad(withSrc(src.replace("from 'node:test'", "from 'node:other'"))).length, 5);
   // 文件不在被扫文件里、或不在 testGlobs 内，也判不过。
-  assert.equal(bad({ ...ctx, files: ctx.files.filter((f) => f !== req.file) }).length, 1);
+  assert.equal(bad({ ...ctx, files: ctx.files.filter((f) => f !== req.file) }).length, 2); // 两个 gatefac 行各登记了该文件
   const noGlob = { ...ctx, regs: { ...ctx.regs, gatefacs: ctx.regs.gatefacs.map((g) => (g.facCode === fac.facCode ? { ...g, testGlobs: ['tests/other/*.mjs'] } : g)) } };
   assert.equal(bad(noGlob).length, 1);
 });
@@ -322,4 +324,78 @@ test('kernel/files.json 与磁盘上的 kernel 组文件一致（排序、只列
   assert.deepEqual(listed, [...listed].sort());
   assert.ok(listed.every((f) => f.endsWith('.mjs')));
   assert.deepEqual(importEdge(ctx, { groups: ['kernel'], codes: ['E-FILE-UNASSIGNED'] }), []);
+});
+
+test('safeSegment（裁定一）：空串、点、分隔符、..、绝对路径、盘符一律抛错；单段原样返回', () => {
+  for (const bad of ['', '.', '..', 'a/b', 'a\\b', '../x', 'a/../b', '/etc', 'C:', 'C:x', 'x..y', 'a\0b']) assert.throws(() => safeSegment(bad), /unsafe path segment/, JSON.stringify(bad));
+  assert.equal(safeSegment('dimensions-coverage.2026-11-17.txt'), 'dimensions-coverage.2026-11-17.txt');
+  assert.equal(safeSegment('2026-11-17T01-02-03-123Z-manual'), '2026-11-17T01-02-03-123Z-manual');
+  assert.equal(safeSegment(5), '5');
+});
+
+test('repoRoot（裁定一）：返回仓库根，tools/path-segment.mjs 的上一级', () => {
+  assert.equal(realpathSync(repoRoot()), realpathSync(ROOT));
+  assert.ok(existsSync(join(repoRoot(), 'tools', 'path-segment.mjs')));
+});
+
+test('call_edge 离线路径段（裁定一）：仓库根＋不命中 §2.11 的常量前导段＋校验函数尾段不计；首段可变、尾段未过校验、前导段命中模式、根不是仓库根都计入', () => {
+  const head = "import { writeFileSync } from 'node:fs';\nimport { join, resolve } from 'node:path';\nimport { repoRoot, safeSegment } from './path-segment.mjs';\n";
+  const run = (body, file = 'tools/x.mjs') => callEdge(ctxOf({ [file]: head + body }), { groups: ['offline'], callers: [], callees: ['registry_write'], code: 'E-ACC-REGISTRY-WRITE' }, CLS.registry_write).filter((h) => h.nodeKind === 'call').length;
+  // 必须不报（§4.14）：logs/ 前缀＋日期尾段、backups/ 前缀＋时间尾段。
+  assert.equal(run("writeFileSync(join(repoRoot(), 'logs', safeSegment(`dimensions-coverage.${d}.txt`)), 'x');"), 0);
+  assert.equal(run("const r = repoRoot(); writeFileSync(join(r, 'backups', safeSegment(stamp)), 'x');"), 0);
+  assert.equal(run("writeFileSync(resolve(repoRoot(), 'backups', safeSegment(stamp), safeSegment(name)), 'x');"), 0);
+  assert.equal(run("writeFileSync(join(repoRoot(), 'logs/sub', safeSegment(d)), 'x');"), 0);
+  // 默认导入的 path.join 与命名空间导入的 path.join 同样认。
+  const viaNs = "import fs from 'node:fs/promises';\nimport path from 'node:path';\nimport * as nsp from 'node:path';\nimport { repoRoot, safeSegment } from './path-segment.mjs';\n";
+  const runNs = (body) => callEdge(ctxOf({ 'tools/x.mjs': viaNs + body }), { groups: ['offline'], callers: [], callees: ['registry_write'], code: 'E-ACC-REGISTRY-WRITE' }, CLS.registry_write).filter((h) => h.nodeKind === 'call').length;
+  assert.equal(runNs("await fs.writeFile(path.join(repoRoot(), 'backups', safeSegment(s), safeSegment(f)), b);"), 0);
+  assert.equal(runNs("await fs.writeFile(nsp.resolve(repoRoot(), 'backups', safeSegment(s)), b);"), 0);
+  assert.equal(runNs("await fs.writeFile(path.join(repoRoot(), 'tools', safeSegment(f)), b);"), 1);
+  assert.equal(runNs("await fs.writeFile(path.dirname(repoRoot(), 'backups', safeSegment(f)), b);"), 1);
+  // 必须报：首段可变（前导段为空）。
+  assert.equal(run("writeFileSync(join(repoRoot(), safeSegment(a), safeSegment(b)), 'x');"), 1);
+  // 必须报：尾段未过校验函数（变量、含分隔符的常量、含 .. 的常量、本文件自己声明的同名函数）。
+  assert.equal(run("writeFileSync(join(repoRoot(), 'logs', name), 'x');"), 1);
+  assert.equal(run("writeFileSync(join(repoRoot(), 'logs', 'a/b'), 'x');"), 1);
+  assert.equal(run("writeFileSync(join(repoRoot(), 'logs', '..', 'tools', 'accept', 'items.json'), 'x');"), 1);
+  assert.equal(run("writeFileSync(join(repoRoot(), 'logs', 'a/../../tools/whitelist.json'), 'x');"), 1);
+  assert.equal(run("function safeSegment2(x) { return x; }\nwriteFileSync(join(repoRoot(), 'logs', safeSegment2(n)), 'x');"), 1);
+  assert.equal(run("writeFileSync(join(repoRoot(), 'logs', safeSegment(n), 'x'), 'x');"), 1);
+  assert.equal(run("writeFileSync(join(repoRoot(), 'logs', ...parts), 'x');"), 1);
+  assert.equal(run("writeFileSync(join(repoRoot(), 'logs', o.safeSegment(n)), 'x');"), 1);
+  // 必须报：常量前导段命中 §2.11 模式（整个文件、目录、整目录模式、前导段是模式的祖先目录）。
+  assert.equal(run("writeFileSync(join(repoRoot(), 'tools/accept/items.json', safeSegment(n)), 'x');"), 1);
+  assert.equal(run("writeFileSync(join(repoRoot(), 'tools', 'accept', safeSegment(n)), 'x');"), 1);
+  assert.equal(run("writeFileSync(join(repoRoot(), 'tools', safeSegment('whitelist.json')), 'x');"), 1);
+  assert.equal(run("writeFileSync(join(repoRoot(), 'tools/accept/out', safeSegment(n), safeSegment(m)), 'x');"), 1);
+  // 必须报：根不是仓库根函数的返回值、函数不是从登记文件 import 来的。
+  assert.equal(run("writeFileSync(join(dir, 'logs', safeSegment(n)), 'x');"), 1);
+  assert.equal(run("writeFileSync(join(process.cwd(), 'logs', safeSegment(n)), 'x');"), 1);
+  assert.equal(run("let r = repoRoot(); r = '/'; writeFileSync(join(r, 'logs', safeSegment(n)), 'x');"), 1);
+  const other = "import { writeFileSync } from 'node:fs';\nimport { join } from 'node:path';\nimport { repoRoot, safeSegment } from './other.mjs';\n";
+  assert.equal(callEdge(ctxOf({ 'tools/x.mjs': `${other}writeFileSync(join(repoRoot(), 'logs', safeSegment(n)), 'x');` }), { groups: ['offline'], callers: [], callees: ['registry_write'], code: 'E-ACC-REGISTRY-WRITE' }, CLS.registry_write).filter((h) => h.nodeKind === 'call').length, 1);
+  // 删登记不能绕过：gatefac 行没有非空 requiredTests 就不认这条口子。
+  const ctx = ctxOf({ 'tools/x.mjs': `${head}writeFileSync(join(repoRoot(), 'logs', safeSegment(n)), 'x');` });
+  const strip = { ...ctx, regs: { ...ctx.regs, gatefacs: ctx.regs.gatefacs.map((g) => (g.segmentFns ? { ...g, requiredTests: [] } : g)) } };
+  assert.equal(callEdge(strip, { groups: ['offline'], callers: [], callees: ['registry_write'], code: 'E-ACC-REGISTRY-WRITE' }, CLS.registry_write).filter((h) => h.nodeKind === 'call').length, 1);
+});
+
+test('离线路径段登记（裁定一）：gatefac 行登记 rootFns、segmentFns 与必跑测试；必跑测试被改名即判不过；真实仓库里 S12-2 的调用命中为 0', () => {
+  const ctx = loadContext(ROOT);
+  const fac = ctx.regs.gatefacs.find((g) => g.segmentFns);
+  assert.deepEqual(fac.rootFns, ['repoRoot']);
+  assert.deepEqual(fac.segmentFns, ['safeSegment']);
+  assert.deepEqual(fac.paths, ['tools/path-segment.mjs']);
+  const params = { groups: ['offline'], callers: ['acc-register', 'acc-runner'], callees: ['registry_write'], roots: ['test-temp-root'], code: 'E-ACC-REGISTRY-WRITE' };
+  // 真实用到校验函数的离线工具（日志、备份报告写入）都不计。
+  const users = ['tools/dim-coverage.mjs', 'tools/backup.mjs'];
+  assert.deepEqual(callEdge(ctx, params, CLS.registry_write).filter((h) => users.includes(h.file)), []);
+  assert.deepEqual(callEdge(ctx, params, CLS.registry_write).filter((h) => h.nodeKind === 'test'), []);
+  const req = fac.requiredTests[0];
+  const src = ctx.read(req.file);
+  const line = src.split('\n').find((l) => l.startsWith(`test('${req.names[0]}`));
+  assert.ok(line, 'required test line');
+  const broken = { ...ctx, read: (p) => (p === req.file ? src.replace(line, line.replace(req.names[0], 'renamed')) : ctx.read(p)) };
+  assert.deepEqual(callEdge(broken, params, CLS.registry_write).filter((h) => h.nodeKind === 'test').map((h) => h.symbolPath), [req.names[0]]);
 });
