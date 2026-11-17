@@ -2,9 +2,9 @@
 // 反例在临时目录里拷一份真实登记与内核常数表再改坏一处；正例读真实 world/rules。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFileSync, rmSync } from 'node:fs';
 import { join, dirname } from 'node:path';
+import { testTempRoot, writeUnderTempRoot } from '../accept/temp-root.mjs';
 import { fileURLToPath } from 'node:url';
 import { readRules, checkRules, rulesReport, ruleTable } from '../../server-plugin/kernel/load/rules.mjs';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
@@ -16,17 +16,14 @@ const real = (f) => JSON.parse(readFileSync(join(ROOT, 'world/rules', f), 'utf8'
 
 // 临时规则目录：registry 取真实登记的 kernelConstants 行，另加 extra 行；files 为 {相对路径: 内容}。
 function withRules(extraRows, files, fn) {
-  const dir = mkdtempSync(join(tmpdir(), 'p2b-rules-'));
+  const tmpRoot = testTempRoot('p2b-rules-');
   try {
     const reg = real('registry.json');
     const rows = [reg.rows.find((r) => r.code === 'kernelConstants'), ...extraRows];
     const all = { 'registry.json': { rows }, 'tables/kernel-constants.json': real('tables/kernel-constants.json'), ...files };
-    for (const [f, v] of Object.entries(all)) {
-      mkdirSync(dirname(join(dir, f)), { recursive: true });
-      writeFileSync(join(dir, f), typeof v === 'string' ? v : JSON.stringify(v));
-    }
-    return fn(dir);
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+    for (const [f, v] of Object.entries(all)) writeUnderTempRoot(tmpRoot, f, typeof v === 'string' ? v : JSON.stringify(v));
+    return fn(tmpRoot);
+  } finally { rmSync(tmpRoot, { recursive: true, force: true }); }
 }
 const keyRow = (over = {}) => ({ code: 'demo', file: 'demo.json', structure: 'keys', type: { amount: 'number' }, domain: { amount: [0, 5] }, volume: '测试', multiSourceMerge: 'own_key_only', packOverridable: { amount: false }, ...over });
 const fullCodes = (dir) => {

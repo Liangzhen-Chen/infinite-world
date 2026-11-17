@@ -200,10 +200,14 @@
     {
      "ref": "门禁小修卡二：共用的 call_edge 临时根变量改认复合赋值与自增自减；本类别不用 roots，判定口径不变",
      "rev": 5
+    },
+    {
+     "ref": "门禁小修卡三：共用的 call_edge 加登记入口函数体豁免；本类别不用 roots，判定口径不变",
+     "rev": 6
     }
    ],
-   "print": "37e3bc1689d5bcd639e52faddc04c032b1b4d8d403ec5a0a03668b19f2079834",
-   "rev": 5,
+   "print": "3b7600eef732c9ae0eda39582aee19f42274a020dd8fb46f744e9febc3bed506",
+   "rev": 6,
    "scanClass": "module_edge",
    "terms": {
     "vol12.S12-1": {
@@ -262,10 +266,14 @@
     {
      "ref": "门禁小修卡二（李白 11-17 裁定三）：临时根变量被重新赋值（含 +=、++ 等复合赋值与自增自减）就不再认，照计入；临时根登记 entries 封闭为 testTempRoot、tempRepo",
      "rev": 3
+    },
+    {
+     "ref": "门禁小修卡三（李白 11-17 裁定四）：call_edge 认临时根登记行 entries 里的函数声明，其函数体算登记入口自己的实现不计（入口运行时断言路径）；临时根登记 entries 封闭为 testTempRoot、tempRepo、writeUnderTempRoot",
+     "rev": 4
     }
    ],
-   "print": "4e1ebfe62d9544c94fb53596a94f5ddd3e53891f335c4ecc2abaf9146487b3d4",
-   "rev": 3,
+   "print": "6764260a939bb3d9c38c5ef2a426b432d2913c90ef6b24561c00b29349a385de",
+   "rev": 4,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -291,10 +299,14 @@
     {
      "ref": "门禁小修卡二：共用的 call_edge 临时根变量改认复合赋值与自增自减；本类别不用 roots，判定口径不变",
      "rev": 3
+    },
+    {
+     "ref": "门禁小修卡三：共用的 call_edge 加登记入口函数体豁免；本类别不用 roots，判定口径不变",
+     "rev": 4
     }
    ],
-   "print": "5c5d20a1ff5924a67b093601ce4c720334cc85c72bcc226ca7c48ffd56553908",
-   "rev": 3,
+   "print": "11b713e2c885b3f81549c31696223047910d0f7e5cbe726a83f7253538851adb",
+   "rev": 4,
    "scanClass": "rng_bypass",
    "terms": {}
   },
@@ -382,10 +394,14 @@
     {
      "ref": "门禁小修卡二：共用的 call_edge 临时根变量改认复合赋值与自增自减；本类别不用 roots，判定口径不变",
      "rev": 3
+    },
+    {
+     "ref": "门禁小修卡三：共用的 call_edge 加登记入口函数体豁免；本类别不用 roots，判定口径不变",
+     "rev": 4
     }
    ],
-   "print": "5c5d20a1ff5924a67b093601ce4c720334cc85c72bcc226ca7c48ffd56553908",
-   "rev": 3,
+   "print": "11b713e2c885b3f81549c31696223047910d0f7e5cbe726a83f7253538851adb",
+   "rev": 4,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {
