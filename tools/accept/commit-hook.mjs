@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { accRun } from './run.mjs';
 
 export async function commitHook(root) {
-  const { report } = await accRun('pre_commit', 'commit', null, { root });
+  const { report } = await accRun('pre_commit', 'commit', null, { root, runRequired: true });
   return report;
 }
 

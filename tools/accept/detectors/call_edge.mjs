@@ -137,7 +137,8 @@ function rootFacilities(ctx, codes) {
     for (const p of g.paths) {
       const cur = out.get(p) || { entries: new Set(), writers: new Set(), asserts: new Set() };
       for (const e of g.entries) cur.entries.add(e);
-      for (const w of Array.isArray(g.assertedWriters) ? g.assertedWriters : []) cur.writers.add(w);
+      // 没有 requiredTests 就不给写函数豁免（删掉必跑测试登记不能绕过守卫）。
+      if (Array.isArray(g.requiredTests) && g.requiredTests.length) for (const w of Array.isArray(g.assertedWriters) ? g.assertedWriters : []) cur.writers.add(w);
       for (const a of Array.isArray(g.writerAsserts) ? g.writerAsserts : []) cur.asserts.add(a);
       cur.required = (Array.isArray(g.requiredTests) ? g.requiredTests : []).concat(cur.required || []);
       cur.testGlobs = (Array.isArray(g.testGlobs) ? g.testGlobs : []).concat(cur.testGlobs || []);

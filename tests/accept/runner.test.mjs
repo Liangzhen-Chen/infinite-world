@@ -8,6 +8,7 @@ import { accRun } from '../../tools/accept/run.mjs';
 import { validate, register } from '../../tools/accept/register.mjs';
 import { listFiles, readRegistry, REGISTRY, LAYOUT } from '../../tools/accept/read.mjs';
 import { ROOT, tempRepo } from './temp-repo.mjs';
+import { writeUnderTempRoot } from './temp-root.mjs';
 
 const HOOK = join(ROOT, 'tools', 'accept', 'commit-hook.mjs');
 const regs = () => Object.fromEntries(Object.keys(REGISTRY).map((k) => [k, readRegistry(ROOT, k)]));
@@ -96,5 +97,48 @@ test('提交钩子：新树放行（退出码 0），有违例拒绝（退出码
     assert.match(no.stderr, /vol2\.S16 E-KERNEL-UPWARD-IMPORT/);
     const clean = tempRepo();
     try { assert.equal(spawnSync(process.execPath, [HOOK, '--root', clean], { encoding: 'utf8' }).status, 0); } finally { rmSync(clean, { recursive: true, force: true }); }
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// 必跑测试真执行（李白 11-17 裁定②）：登记的 requiredTests 由执行器真跑 node --test（只跑登记名），失败、skip、todo、缺失都判不过，全过放行。
+const FAC = { facCode: 'fx-temp', paths: ['tests/accept/fx-helper.mjs'], inRepo: false, ownerVol: 'vol12', gateCard: '—', entries: ['w'], assertedWriters: ['w'], writerAsserts: ['a'], requiredTests: [{ file: 'tests/accept/fx.test.mjs', names: ['alpha'] }], testGlobs: ['tests/accept/*.test.mjs'] };
+const FXTEST = (body, other = '') => `import { test } from 'node:test';\nimport assert from 'node:assert/strict';\n${body}\n${other}`;
+async function requiredVerdict(testSrc) {
+  const dir = tempRepo();
+  try {
+    assert.deepEqual(register(dir, { gatefacs: [FAC] }).errors, []);
+    writeUnderTempRoot(dir, 'tests/accept/fx-helper.mjs', 'export function w() {}\n');
+    if (testSrc !== null) writeUnderTempRoot(dir, 'tests/accept/fx.test.mjs', testSrc);
+    const { report } = await accRun('pre_commit', 'x', null, { root: dir, runRequired: true });
+    return { verdict: report.verdict, failed: report.items.failed.filter((f) => f.itemKey === 'required-tests') };
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+}
+
+test('必跑测试真执行：全过放行；失败、skip、todo、缺失文件、缺失名字都判不过；只跑登记名', async () => {
+  assert.deepEqual(await requiredVerdict(FXTEST("test('alpha one', () => { assert.ok(true); });")), { verdict: 'pass', failed: [] });
+  // 未登记的测试失败不影响（只跑登记名）。
+  assert.equal((await requiredVerdict(FXTEST("test('alpha one', () => {});", "test('beta', () => { assert.fail('x'); });"))).verdict, 'pass');
+  for (const src of [
+    FXTEST("test('alpha one', () => { assert.fail('x'); });"),
+    FXTEST("test.skip('alpha one', () => {});"),
+    FXTEST("test('alpha one', { skip: true }, () => {});"),
+    FXTEST("test.todo('alpha one');"),
+    FXTEST("test('gamma', () => {});"),
+    null,
+  ]) {
+    const r = await requiredVerdict(src);
+    assert.equal(r.verdict, 'fail', String(src));
+    assert.deepEqual(r.failed.map((f) => f.codes), [['E-ACC-REQUIRED-TEST']], String(src));
+  }
+});
+
+test('删登记不能绕过：assertedWriters 必须同时有非空 requiredTests，否则登记报错', () => {
+  const dir = tempRepo();
+  try {
+    const { requiredTests, ...noReq } = FAC;
+    assert.match(register(dir, { gatefacs: [noReq] }).errors.join('\n'), /assertedWriters requires non-empty requiredTests/);
+    assert.match(register(dir, { gatefacs: [{ ...FAC, requiredTests: [] }] }).errors.join('\n'), /assertedWriters requires non-empty requiredTests/);
+    assert.deepEqual(register(dir, { gatefacs: [FAC] }).errors, []);
+    assert.deepEqual(register(dir, { gatefacs: [{ ...noReq, assertedWriters: [] }] }).errors, []);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });

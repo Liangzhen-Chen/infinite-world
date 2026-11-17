@@ -63,6 +63,8 @@ export function validate(root, regs) {
   for (const g of regs.gatefacs) {
     for (const f of ['paths', 'inRepo', 'ownerVol', 'gateCard', 'entries']) if (g[f] === undefined || g[f] === '') err('E-ACC-GATEFAC-FORM', g.facCode, `${f} missing`);
     for (const w of g.assertedWriters || []) if (!(g.entries || []).includes(w) || !(g.writerAsserts || []).length) err('E-ACC-GATEFAC-FORM', g.facCode, `assertedWriters ${w} must be an entry and writerAsserts must be listed`);
+    // 删登记不能绕过（李白 11-17 裁定②）：登记了 assertedWriters（写函数豁免）就必须同时登记非空 requiredTests。
+    if ((g.assertedWriters || []).length && !(Array.isArray(g.requiredTests) && g.requiredTests.length)) err('E-ACC-GATEFAC-FORM', g.facCode, 'assertedWriters requires non-empty requiredTests');
     for (const r of g.requiredTests || []) {
       if (!(g.testGlobs || []).length || !r.file || !Array.isArray(r.names) || !r.names.length || r.names.some((n) => typeof n !== 'string' || !n)) err('E-ACC-GATEFAC-FORM', g.facCode, `requiredTests ${r.file} needs testGlobs, file and names`);
       else if (!matchGlobs(r.file, g.testGlobs, [])) err('E-ACC-GATEFAC-FORM', g.facCode, `requiredTests ${r.file} not in testGlobs`);
