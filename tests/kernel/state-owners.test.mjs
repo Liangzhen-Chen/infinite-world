@@ -90,11 +90,28 @@ test('keyKinds 三种项合法：(a) 单个 kind、(b) kind 列表、(c) event /
   assert.deepEqual(mergeStateOwners(d, CTX).merged.keyKinds['box.*.props.*'], [['gadget', 'person'], 'dimKey']);
 });
 
-test('keyKinds (b) 列表：空、重复、通配、含 (c) 代号、未登记 kind 各报 E-PATH-KEYKINDS', () => {
-  for (const bad of [[[]], [['person', 'person']], [['*']], [['any']], [['person', 'event']], [['nosuchkind']], [[7]]]) {
+test('keyKinds (b) 列表：空、重复、通配、(c) 外的代号、未登记 kind 各报 E-PATH-KEYKINDS', () => {
+  for (const bad of [[[]], [['person', 'person']], [['person', 'identityKey', 'identityKey']], [['*']], [['any']], [['person', 'handle']], [['person', 'EventId']], [['nosuchkind']], [[7]]]) {
     const d = base(); d.keyKinds['box.*'] = bad;
     assert.ok(codes(d).length >= 1 && codes(d).every((c) => c === 'E-PATH-KEYKINDS'), JSON.stringify(bad));
   }
+});
+
+test('keyKinds (b) 列表可混列实体 kind 与 (c) 代号（并集）：[person, identityKey] 合法，单独 identityKey 也合法', () => {
+  const d = base(); d.keyKinds['box.*'] = [['person', 'identityKey']];
+  assert.deepEqual(codes(d), []);
+  assert.deepEqual(mergeStateOwners(d, CTX).merged.keyKinds['box.*'], [['person', 'identityKey']]);
+  const e = base(); e.keyKinds['box.*'] = ['identityKey']; assert.deepEqual(codes(e), []);
+});
+
+test('E-TERM-RECORD-UNLISTED 混列表只看实体 kind 项：[gadget, identityKey] 报；[person, identityKey]、[identityKey] 不报', () => {
+  const ctx = { ...CTX, terminableKinds: ['gadget'] };
+  const run = (d) => mergeStateOwners(d, ctx).errors.map((e) => e.code).sort();
+  const a = base(); a.keyKinds['box.*'] = [['gadget', 'identityKey']]; assert.deepEqual(run(a), ['E-TERM-RECORD-UNLISTED']);
+  const b = base(); b.keyKinds['box.*'] = [['person', 'identityKey']]; assert.deepEqual(run(b), []);
+  const c = base(); c.keyKinds['box.*'] = ['identityKey']; assert.deepEqual(run(c), []);
+  const d2 = base(); d2.keyKinds['box.*'] = [['gadget', 'identityKey']];
+  d2.stateKeys.box.subjectRecords = { '*': { recordClass: 'rcls_box', subjectSegments: [1] } }; assert.deepEqual(run(d2), []);
 });
 
 test('keyKinds (a)(c) 项：未登记 kind、非 event/dimKey 的非实体代号、非字符串非列表各报 E-PATH-KEYKINDS', () => {
