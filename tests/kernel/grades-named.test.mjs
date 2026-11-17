@@ -147,6 +147,41 @@ test('namedConditions 与 null：两边都是显式 null 时 == 成立、!= 不�
   }
 });
 
+// 李白 11-17 显式 null 遗留问题裁定第 2 条（卷二 §1.6 第 2 点，勘误 1117rx2 续）：序比较与 member 遇显式 null 不成立，外层 not 取反成立；
+// 缺值是未知，经 not 仍是未知，按"为真或为未知"计入成立。gad_hammer 的值恒让内层成立，作对照；期望值按裁定手写。
+function nullable(fits, dim, def, hammerVal) {
+  const { f, opts } = named(fits);
+  f.gadget.dimensions[dim] = { ...def, nullable: true, required: 'never', onUnknown: 'skip', modifiable: false, source: 'test', owner: 'test' };
+  f.gadget.rows.gad_hammer[dim] = hammerVal;
+  const o = { ...opts, ns: opts.ns.map((n) => (n.ns === 'thing' ? { ...n, shape: `${n.shape}、parts（set，只作 member 的 set）` } : n)) };
+  const rows = (r) => r.errors.filter((e) => e.dim === 'size').map((e) => e.row).sort();
+  return { f, opts: o, rows, setBox: (v) => { if (v === undefined) delete f.gadget.rows.gad_box[dim]; else f.gadget.rows.gad_box[dim] = v; } };
+}
+const QTY = { type: 'number', unit: 'kg', domain: [0, 100], precision: 1 };
+const PARTS = { type: 'set', of: { type: 'ref', vocab: 'grade' }, domain: { maxSize: 3 } };
+
+test('namedConditions 与显式 null 序比较：null < x 不成立，!(null < x) 成立；缺值经 not 仍是未知，计入成立', () => {
+  const lt = nullable('thing.qty < 3 and env.heat <= 0', 'qty', QTY, 1);
+  lt.setBox(null);
+  assert.deepEqual(lt.rows(run(lt.f, lt.opts)), ['gad_hammer'], 'null < 3 不成立');
+  const nt = nullable('!(thing.qty < 3) and env.heat <= 0', 'qty', QTY, 1);
+  nt.setBox(null);
+  assert.deepEqual(nt.rows(run(nt.f, nt.opts)), ['gad_box'], '!(null < 3) 成立；hammer 的 1 < 3 取反不成立');
+  nt.setBox(undefined);
+  assert.deepEqual(nt.rows(run(nt.f, nt.opts)), ['gad_box'], '缺值套 not 仍未知，计入成立');
+});
+
+test('namedConditions 与显式 null member：member 集合为 null 不成立，!(member) 成立；缺值套 not 仍未知', () => {
+  const m = nullable('thing.parts has grd_a and env.heat <= 0', 'parts', PARTS, ['grd_a']);
+  m.setBox(null);
+  assert.deepEqual(m.rows(run(m.f, m.opts)), ['gad_hammer'], 'member(grd_a, null) 不成立');
+  const nm = nullable('!(thing.parts has grd_a) and env.heat <= 0', 'parts', PARTS, ['grd_a']);
+  nm.setBox(null);
+  assert.deepEqual(nm.rows(run(nm.f, nm.opts)), ['gad_box'], '!(member(grd_a, null)) 成立；hammer 含 grd_a 取反不成立');
+  nm.setBox(undefined);
+  assert.deepEqual(nm.rows(run(nm.f, nm.opts)), ['gad_box'], '缺值套 not 仍未知，计入成立');
+});
+
 test('namedConditions 与 null：未声明 nullable 的字段写显式 null，加载时在取值域校验层报 E-DIM-DOMAIN-RANGE；求值器不收 null', () => {
   const bad = tagged('thing.tag != grd_b and env.heat <= 0', false);
   bad.setBox(null);
