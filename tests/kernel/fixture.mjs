@@ -42,7 +42,7 @@ export function fixture() {
   };
 }
 
-export const OPTIONS = Object.freeze({ namespaces: ['core'], displaySet: [], ns: [{ ns: 'story', argCount: 1, type: 'number' }], limits: { extendsMaxDepth: 4, rxMaxDepth: 16 } });
+export const OPTIONS = Object.freeze({ namespaces: ['core'], displaySet: [], ns: [{ ns: 'story', shape: '<字段>', type: 'number' }], limits: { extendsMaxDepth: 4, rxMaxDepth: 16 } });
 
 export function sourcesOf(f) {
   return {

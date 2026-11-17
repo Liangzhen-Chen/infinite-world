@@ -1,7 +1,7 @@
 // RX 数据档单项（卷二 §2.9 第 4 条）：编译成冻结 rxTree、两档变体限制、类型规则、命名空间登记，求值走定点算术。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { compileRX, compileRXInScope, evaluateRX } from '../../server-plugin/kernel/rx.mjs';
+import { compileRX, compileRXInScope, evaluateRX, nsArgCount } from '../../server-plugin/kernel/rx.mjs';
 
 const dims = new Map([
   ['mass', { type: 'number' }],
@@ -17,7 +17,7 @@ const vocabIndex = new Map([
   ['agx_exists', { family: 'aggregate', prefix: 'agx_' }],
   ['rel_part', { family: 'relation', prefix: 'rel_' }],
 ]);
-const ns = [{ ns: 'story', argCount: 1, type: 'number' }, { ns: 'pop.total', argCount: 0, type: 'number' }, { ns: 'ev', argCount: 1, type: 'field' }];
+const ns = [{ ns: 'story', shape: '<字段>', type: 'number' }, { ns: 'pop.total', shape: 'count', type: 'number' }, { ns: 'ev', shape: '<字段>', type: 'field' }];
 const SCOPE = { dims, vocabIndex, ns, maxDepth: 16 };
 const c = (text, scope = SCOPE) => compileRXInScope(text, 'data', scope);
 const code = (fn) => { try { fn(); return 'ok'; } catch (e) { return e.code || e.message; } };
@@ -78,7 +78,7 @@ test('求值：定点算术逐位确定，ns 只查读数表，缺读数即失�
   assert.equal(code(() => evaluateRX(c('ev.qty > 1').tree, {}, { 'ev.qty': 'grd_a' })), 'E-MOD-RX');
 });
 
-test('卷文数据行写法（卷四 §4.7.5 eats）：and/or/not 单词、`集 has 项`、命名空间字段作集；null 读数比相等为假，排序即失败', () => {
+test('卷文数据行写法（卷四 §4.7.5 eats）：and/or/not 单词、`集 has 项`、命名空间字段作集；null 读数不收（求值失败）', () => {
   assert.deepEqual(c('mass > 1 and open').tree, c('mass > 1 && open').tree);
   assert.deepEqual(c('not open or mass < 2').tree, c('!open || mass < 2').tree);
   const has = c('ev.tags has grd_a and mass <= 0.3').tree;
@@ -90,8 +90,19 @@ test('卷文数据行写法（卷四 §4.7.5 eats）：and/or/not 单词、`集 
   assert.equal(c('tagset has grd_a').tree.op, 'member');
   assert.equal(code(() => c('mass has grd_a')), 'E-MOD-RX');
   assert.equal(code(() => c('story.wealth has grd_a')), 'E-MOD-RX');
-  const eq = c('ev.kind == grd_a and ev.qty >= 0.5').tree;
-  assert.equal(evaluateRX(eq, {}, { 'ev.kind': null, 'ev.qty': 1 }), false);
-  assert.equal(evaluateRX(c('ev.kind != grd_a').tree, {}, { 'ev.kind': null }), true);
-  assert.equal(code(() => evaluateRX(c('ev.qty >= 0.5').tree, {}, { 'ev.qty': null })), 'E-MOD-RX');
+  // 只有四种读数类型：null 读数不收，求值失败（显式 null 由调用方按字段定义处的含义处理，见 grades-named.test.mjs）；缺读数的失败带缺的键。
+  for (const t of ['ev.kind == grd_a', 'ev.kind != grd_a', 'ev.qty >= 0.5']) assert.equal(code(() => evaluateRX(c(t).tree, {}, { 'ev.kind': null, 'ev.qty': null })), 'E-MOD-RX', t);
+  assert.throws(() => evaluateRX(c('ev.kind == grd_a').tree, {}, {}), (e) => e.code === 'E-MOD-RX' && e.key === 'ev.kind');
+});
+
+test('命名空间 arg 段数由返回形状推出（五列封闭，无 argCount 列）：每个 <…> 占位一段，单值形状不带 arg', () => {
+  assert.equal(nsArgCount({ shape: 'fraction' }), 0);
+  assert.equal(nsArgCount({ shape: '<维度键>，另有 classes' }), 1);
+  assert.equal(nsArgCount({ shape: '<字段>.<句柄>' }), 2);
+  assert.equal(nsArgCount({}), 0);
+  const scope = { ns: [{ ns: 'lot.x', shape: 'fraction', type: 'number' }, { ns: 'mat', shape: '<维度键>', type: 'field' }], dims: new Map(), vocabIndex: new Map(), maxDepth: 16 };
+  assert.equal(compileRXInScope('lot.x <= 0.3', 'data', scope).tree.left.op, 'ns');
+  assert.equal(compileRXInScope('mat.fiber > 0', 'data', scope).tree.left.arg[0], 'fiber');
+  assert.throws(() => compileRXInScope('lot.x.y <= 0.3', 'data', scope), { code: 'E-MOD-RX' });
+  assert.throws(() => compileRXInScope('mat > 0', 'data', scope), { code: 'E-MOD-RX' });
 });
