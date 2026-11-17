@@ -1,0 +1,10 @@
+{
+ "rows": [
+  {"key": "BASE", "value": 10, "file": "server-plugin/kernel/det-math.mjs", "source": "卷二 §3.3 定点算术（十进制标度的底）"},
+  {"key": "SCALE", "value": 10000, "file": "server-plugin/kernel/det-math.mjs", "source": "卷二 §3.3 定点算术 SCALE = 10⁴"},
+  {"key": "SCALE_DIGITS", "value": 4, "file": "server-plugin/kernel/det-math.mjs", "source": "卷二 §1.2 precision 0–4（由 SCALE 推出）"},
+  {"key": "SCALE8_DIGITS", "value": 8, "file": "server-plugin/kernel/det-math.mjs", "source": "卷二 §1.2 stockMode extScale precision 8；§3.3 10⁸ = SCALE²（由 SCALE 推出）"},
+  {"key": "extendsMaxDepth", "value": 4, "source": "卷二 §1.3 继承链深 ≤4"},
+  {"key": "rxMaxDepth", "value": 16, "source": "卷二 §1.5 struct:rxTree maxDepth 16；§2.9 第 4 条递归深度上限 16"}
+ ]
+}

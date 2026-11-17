@@ -1,0 +1,86 @@
+// L0 语法（卷二 §4.1）：JSON 可解析且无重复键，逐字符扫描。结构由本文件扫描，标量文本交给 JSON.parse 解码。
+// 返回 {value, errors}；errors 每项 {code, pointer, got, want}，pointer 为 JSON 指针。
+
+const WS = new Set([' ', '\t', '\n', '\r']);
+const escPtr = (k) => k.replace(/~/g, '~0').replace(/\//g, '~1');
+
+export function parseJsonStrict(text) {
+  const errors = [];
+  let i = 0;
+  const n = text.length;
+  const ws = () => { while (i < n && WS.has(text[i])) i++; };
+  class Stop extends Error {}
+  const bad = (pointer, want) => { errors.push({ code: 'E-DIM-DUPLICATE-KEY', pointer, got: text.slice(i, i + 1) || 'end of text', want, syntax: true }); throw new Stop(); };
+
+  function str(pointer) {
+    const start = i;
+    i++;
+    while (i < n && text[i] !== '"') { if (text[i] === '\\') i++; i++; }
+    if (i >= n) bad(pointer, 'closing quote');
+    i++;
+    return JSON.parse(text.slice(start, i));
+  }
+  function scalar(pointer) {
+    const m = /-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null/y;
+    m.lastIndex = i;
+    const r = m.exec(text);
+    if (!r) bad(pointer, 'JSON value');
+    i = m.lastIndex;
+    return JSON.parse(r[0]);
+  }
+  function value(pointer) {
+    ws();
+    const c = text[i];
+    if (c === '{') {
+      i++;
+      const out = {};
+      const seen = new Set();
+      ws();
+      if (text[i] === '}') { i++; return out; }
+      for (;;) {
+        ws();
+        if (text[i] !== '"') bad(pointer, 'object key');
+        const key = str(pointer);
+        const p = `${pointer}/${escPtr(key)}`;
+        if (seen.has(key)) errors.push({ code: 'E-DIM-DUPLICATE-KEY', pointer: p, got: key, want: 'unique key' });
+        seen.add(key);
+        ws();
+        if (text[i] !== ':') bad(p, ':');
+        i++;
+        const v = value(p);
+        Object.defineProperty(out, key, { value: v, enumerable: true, writable: true, configurable: true });
+        ws();
+        if (text[i] === ',') { i++; continue; }
+        if (text[i] === '}') { i++; return out; }
+        bad(p, ', or }');
+      }
+    }
+    if (c === '[') {
+      i++;
+      const out = [];
+      ws();
+      if (text[i] === ']') { i++; return out; }
+      for (;;) {
+        out.push(value(`${pointer}/${out.length}`));
+        ws();
+        if (text[i] === ',') { i++; continue; }
+        if (text[i] === ']') { i++; return out; }
+        bad(pointer, ', or ]');
+      }
+    }
+    if (c === '"') return str(pointer);
+    return scalar(pointer);
+  }
+  let result;
+  try {
+    result = value('');
+    ws();
+    if (i < n) bad('', 'end of text');
+  } catch (e) {
+    if (!(e instanceof Stop)) {
+      errors.push({ code: 'E-DIM-DUPLICATE-KEY', pointer: '', got: String(e.message), want: 'valid JSON', syntax: true });
+    }
+    return { value: undefined, errors };
+  }
+  return { value: result, errors };
+}

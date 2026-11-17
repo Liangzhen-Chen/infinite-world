@@ -41,6 +41,19 @@
    "paths": [
     "tools/accept/commit-hook.mjs"
    ]
+  },
+  {
+   "entries": "待补",
+   "facCode": "dim-validate",
+   "gateCard": "G-2",
+   "inRepo": true,
+   "ownerVol": "vol2",
+   "paths": [
+    "server-plugin/kernel/load/flatten.mjs",
+    "server-plugin/kernel/validate/dimensions-validate.mjs",
+    "server-plugin/kernel/validate/rows.mjs",
+    "server-plugin/kernel/validate/types.mjs"
+   ]
   }
  ]
 }

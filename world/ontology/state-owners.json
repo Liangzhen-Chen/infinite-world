@@ -22,6 +22,7 @@
   "procCode": "E-PROC-IMPORT",
   "globalCode": "E-GLOBAL-UNLISTED",
   "dataCode": "E-TSC-PARSE",
+  "unassignedCode": "E-FILE-UNASSIGNED",
   "dataLoaders": [],
   "cols": {"textcore": {"code": "E-TEXTCORE-IMPORT"}},
   "rows": {

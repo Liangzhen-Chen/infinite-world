@@ -9,8 +9,15 @@
     1,
     -1
    ],
+   "litExempt": {
+    "files": [
+     "server-plugin/kernel/det-math.mjs",
+     "server-plugin/kernel/prng.mjs"
+    ],
+    "table": "world/rules/tables/kernel-constants.json"
+   },
    "scanClass": "const_literal",
-   "source": "卷一 R-6 第 1 条（白名单）；卷二 S10；卷十二 §2.4"
+   "source": "卷一 R-6 第 1 条（白名单 ①②③）；卷二 S10（登记豁免：kernel/det-math.mjs、kernel/prng.mjs，逐个常数登记在 world/rules/tables/kernel-constants.json）；卷十二 §2.4"
   },
   {
    "detectors": [
