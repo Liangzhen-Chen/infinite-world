@@ -57,20 +57,22 @@ test('E：成员名按 §4.2 连字符换下划线，值是原码；空登记无
   assert.deepEqual({ ...buildE(['W-DIM-UNIT-DIM', 'E-DIM-DOMAIN-RANGE']) }, { E_DIM_DOMAIN_RANGE: 'E-DIM-DOMAIN-RANGE', W_DIM_UNIT_DIM: 'W-DIM-UNIT-DIM' });
   assert.equal(errorMemberName('E-HK-HOLD-WHILE'), 'E_HK_HOLD_WHILE');
   assert.deepEqual(Object.keys(buildE([])), []);
-  installHandles({ vocab: report.vocab, errorCodes: ['E-PATH-UNDECLARED'], decl: {} });
+  installHandles({ vocab: report.vocab, decl: {} });
   assert.equal(E.E_PATH_UNDECLARED, 'E-PATH-UNDECLARED');
-  assert.equal(E.E_PATH_OVERLAP, undefined);
+  assert.equal(E.E_PATH_OVERLAP, 'E-PATH-OVERLAP');
+  assert.equal(E.E_NOT_A_CODE, undefined);
   assert.ok(Object.isFrozen(E));
 });
 
 test('ErrorCode 构造：错拼 E-DIM-ID-FORMAT，未登记 E-DIM-REF-MISSING', () => {
-  const reg = new Set(['E-DIM-DOMAIN-RANGE']);
-  assert.equal(errorCodeOf(reg, 'E-DIM-DOMAIN-RANGE'), 'E-DIM-DOMAIN-RANGE');
-  rejects(() => errorCodeOf(reg, 'E-DIM-DOMAIN-RANGES'), 'E-DIM-REF-MISSING');
-  rejects(() => errorCodeOf(reg, 'E_DIM_DOMAIN_RANGE'), 'E-DIM-ID-FORMAT');
-  rejects(() => errorCodeOf(reg, 'E-dim-domain-range'), 'E-DIM-ID-FORMAT');
-  rejects(() => errorCodeOf(reg, 'E-DIM'), 'E-DIM-ID-FORMAT');
+  assert.equal(errorCodeOf('E-DIM-DOMAIN-RANGE'), 'E-DIM-DOMAIN-RANGE');
+  rejects(() => errorCodeOf('E-DIM-DOMAIN-RANGES'), 'E-DIM-REF-MISSING');
+  rejects(() => errorCodeOf('E_DIM_DOMAIN_RANGE'), 'E-DIM-ID-FORMAT');
+  rejects(() => errorCodeOf('E-dim-domain-range'), 'E-DIM-ID-FORMAT');
+  rejects(() => errorCodeOf('E-DIM'), 'E-DIM-ID-FORMAT');
   rejects(() => buildE(['E-DIM-DOMAIN-RANGE', 'X-DIM-FOO']), 'E-DIM-ID-FORMAT');
+  assert.equal(errorCodeOf('E-DIM-DOMAIN-RANGE', new Set(['E-DIM-DOMAIN-RANGE'])), 'E-DIM-DOMAIN-RANGE');
+  rejects(() => errorCodeOf('E-PATH-OVERLAP', new Set(['E-DIM-DOMAIN-RANGE'])), 'E-DIM-REF-MISSING');
 });
 
 test('P：缺 pathTypes 键或空表时无成员；仓库 state-owners.json 现无 pathTypes，P 无成员', () => {
