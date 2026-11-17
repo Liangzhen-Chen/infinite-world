@@ -212,10 +212,14 @@
     {
      "ref": "P-2b 只核必须改第 1 条：共用的 call_edge 断言调用须是顶层语句开头或 const 名 = 断言(…)；本类别不用 roots，判定口径不变",
      "rev": 8
+    },
+    {
+     "ref": "P-2b 跟进小卡二（李白 11-17 两点裁定）：共用的 call_edge 写函数豁免须路径实参用到断言返回值绑定的变量，并校验登记的必跑测试存在且未跳过；本类别不用 roots，判定口径不变",
+     "rev": 9
     }
    ],
-   "print": "c5e9e0b5e90cebbfeda1d39c7cc616b451100020cde84f6381933aae1bbf7854",
-   "rev": 8,
+   "print": "41aa967b1636d1ad2b52ea9063bff4b4b2bcc3e643bbf7acca671a1d01250409",
+   "rev": 9,
    "scanClass": "module_edge",
    "terms": {
     "vol12.S12-1": {
@@ -286,10 +290,14 @@
     {
      "ref": "P-2b 只核必须改第 1 条（李白裁定：函数体里确实先调用断言再调用写入）：断言调用须是顶层语句的开头或 const 名 = 断言(…)，if 无括号、&&、箭头函数里的断言不算，其后写入照计",
      "rev": 6
+    },
+    {
+     "ref": "P-2b 跟进小卡二（李白 11-17 两点裁定）：①写函数豁免须路径实参用到断言返回值绑定的变量（断言须写成 const 名 = 断言(…)，字面量路径、别的变量、重新赋值照计）；②豁免用得上时，gatefac 行 requiredTests 所列断言应抛错测试须存在、在 testGlobs 内、未 skip/todo/only，缺失或跳过各计一行",
+     "rev": 7
     }
    ],
-   "print": "76db7e67458d1def01947148cec38dc9ddce3b0c80ae5eb275c1eea1a770f0be",
-   "rev": 6,
+   "print": "6541aeb13ceaa677c955a36dab1d6c2b58339e938d1c23af31186609d161ffa4",
+   "rev": 7,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -327,10 +335,14 @@
     {
      "ref": "P-2b 只核必须改第 1 条：共用的 call_edge 断言调用须是顶层语句开头或 const 名 = 断言(…)；本类别不用 roots，判定口径不变",
      "rev": 6
+    },
+    {
+     "ref": "P-2b 跟进小卡二（李白 11-17 两点裁定）：共用的 call_edge 写函数豁免须路径实参用到断言返回值绑定的变量，并校验登记的必跑测试存在且未跳过；本类别不用 roots，判定口径不变",
+     "rev": 7
     }
    ],
-   "print": "a0235b3c082ff6e03714ed331402a32e7b6d329197d84e13a2e2081fc314c5ad",
-   "rev": 6,
+   "print": "1a15c2dfd012ac12c2d110ba65955ca472f0c4a7fc6791393fd2a6685eb3ae99",
+   "rev": 7,
    "scanClass": "rng_bypass",
    "terms": {}
   },
@@ -430,10 +442,14 @@
     {
      "ref": "P-2b 只核必须改第 1 条：共用的 call_edge 断言调用须是顶层语句开头或 const 名 = 断言(…)；本类别不用 roots，判定口径不变",
      "rev": 6
+    },
+    {
+     "ref": "P-2b 跟进小卡二（李白 11-17 两点裁定）：共用的 call_edge 写函数豁免须路径实参用到断言返回值绑定的变量，并校验登记的必跑测试存在且未跳过；本类别不用 roots，判定口径不变",
+     "rev": 7
     }
    ],
-   "print": "a0235b3c082ff6e03714ed331402a32e7b6d329197d84e13a2e2081fc314c5ad",
-   "rev": 6,
+   "print": "1a15c2dfd012ac12c2d110ba65955ca472f0c4a7fc6791393fd2a6685eb3ae99",
+   "rev": 7,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

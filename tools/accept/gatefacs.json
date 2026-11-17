@@ -72,6 +72,19 @@
     "tests/accept/temp-repo.mjs",
     "tests/accept/temp-root.mjs"
    ],
+   "requiredTests": [
+    {
+     "file": "tests/accept/detectors.test.mjs",
+     "names": [
+      "assertRelUnderTempRoot（裁定四）",
+      "writeUnderTempRoot（裁定四）",
+      "writeUnderTempRoot（只核第 2 条）"
+     ]
+    }
+   ],
+   "testGlobs": [
+    "tests/accept/*.test.mjs"
+   ],
    "writerAsserts": [
     "assertRelUnderTempRoot"
    ]

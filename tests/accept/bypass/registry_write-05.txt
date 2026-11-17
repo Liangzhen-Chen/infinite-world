@@ -1,0 +1,13 @@
+// 断言之后写另一个变量（没用断言返回值）：照计（裁定①）
+// @file tests/accept/temp-root.mjs
+import { writeFileSync } from 'node:fs';
+export function assertRelUnderTempRoot(root, rel) { return root + rel; }
+export function writeUnderTempRoot(root, rel, data) {
+  const full = assertRelUnderTempRoot(root, rel);
+  writeFileSync(rel, data);
+}
+// @file tests/accept/detectors.test.mjs
+import test from 'node:test';
+test('assertRelUnderTempRoot（裁定四）：x', () => {});
+test('writeUnderTempRoot（裁定四）：x', () => {});
+test('writeUnderTempRoot（只核第 2 条）：x', () => {});

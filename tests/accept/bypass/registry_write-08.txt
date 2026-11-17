@@ -1,0 +1,12 @@
+// 必跑测试用选项 { skip: true } 跳过，另一条被删：各计（裁定②）
+// @file tests/accept/temp-root.mjs
+import { writeFileSync } from 'node:fs';
+export function assertRelUnderTempRoot(root, rel) { return root + rel; }
+export function writeUnderTempRoot(root, rel, data) {
+  const full = assertRelUnderTempRoot(root, rel);
+  writeFileSync(full, data);
+}
+// @file tests/accept/detectors.test.mjs
+import test from 'node:test';
+test('assertRelUnderTempRoot（裁定四）：x', { skip: true }, () => {});
+test('writeUnderTempRoot（只核第 2 条）：x', () => {});

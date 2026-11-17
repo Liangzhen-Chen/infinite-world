@@ -483,6 +483,51 @@
    "scanClass": "registry_write"
   },
   {
+   "addedAtRev": 7,
+   "caseKey": "registry_write-04",
+   "fixture": "tests/accept/bypass/registry_write-04.txt",
+   "group": "offline",
+   "origin": "李白 11-17 P-2b 裁定①：断言后写字面量路径照计",
+   "polarity": "must_fail",
+   "scanClass": "registry_write"
+  },
+  {
+   "addedAtRev": 7,
+   "caseKey": "registry_write-05",
+   "fixture": "tests/accept/bypass/registry_write-05.txt",
+   "group": "offline",
+   "origin": "李白 11-17 P-2b 裁定①：断言后写别的变量照计",
+   "polarity": "must_fail",
+   "scanClass": "registry_write"
+  },
+  {
+   "addedAtRev": 7,
+   "caseKey": "registry_write-06",
+   "fixture": "tests/accept/bypass/registry_write-06.txt",
+   "group": "offline",
+   "origin": "李白 11-17 P-2b 裁定②：必跑测试文件缺失判不过",
+   "polarity": "must_fail",
+   "scanClass": "registry_write"
+  },
+  {
+   "addedAtRev": 7,
+   "caseKey": "registry_write-07",
+   "fixture": "tests/accept/bypass/registry_write-07.txt",
+   "group": "offline",
+   "origin": "李白 11-17 P-2b 裁定②：必跑测试被 test.skip 判不过",
+   "polarity": "must_fail",
+   "scanClass": "registry_write"
+  },
+  {
+   "addedAtRev": 7,
+   "caseKey": "registry_write-08",
+   "fixture": "tests/accept/bypass/registry_write-08.txt",
+   "group": "offline",
+   "origin": "李白 11-17 P-2b 裁定②：选项 skip、删除一条判不过",
+   "polarity": "must_fail",
+   "scanClass": "registry_write"
+  },
+  {
    "addedAtRev": 1,
    "caseKey": "registry_write-11",
    "fixture": "tests/accept/bypass/registry_write-11.txt",
@@ -497,6 +542,15 @@
    "fixture": "tests/accept/bypass/registry_write-12.txt",
    "group": "offline",
    "origin": "卷十二 S12-2：登记器自己写",
+   "polarity": "must_pass",
+   "scanClass": "registry_write"
+  },
+  {
+   "addedAtRev": 7,
+   "caseKey": "registry_write-13",
+   "fixture": "tests/accept/bypass/registry_write-13.txt",
+   "group": "offline",
+   "origin": "李白 11-17 P-2b 裁定①②：写断言返回的变量且必跑测试齐全不计",
    "polarity": "must_pass",
    "scanClass": "registry_write"
   },
