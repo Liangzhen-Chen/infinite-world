@@ -204,10 +204,14 @@
     {
      "ref": "门禁小修卡三：共用的 call_edge 加登记入口函数体豁免；本类别不用 roots，判定口径不变",
      "rev": 6
+    },
+    {
+     "ref": "P-2b 跟进小卡：共用的 call_edge 函数体豁免收窄为 assertedWriters 加先断言后写入；本类别不用 roots，判定口径不变",
+     "rev": 7
     }
    ],
-   "print": "3b7600eef732c9ae0eda39582aee19f42274a020dd8fb46f744e9febc3bed506",
-   "rev": 6,
+   "print": "9f8ba624976c15ce3fe5505b182d77bb8baea8a6643f7da8877c62ec3a572f9f",
+   "rev": 7,
    "scanClass": "module_edge",
    "terms": {
     "vol12.S12-1": {
@@ -270,10 +274,14 @@
     {
      "ref": "门禁小修卡三（李白 11-17 裁定四）：call_edge 认临时根登记行 entries 里的函数声明，其函数体算登记入口自己的实现不计（入口运行时断言路径）；临时根登记 entries 封闭为 testTempRoot、tempRepo、writeUnderTempRoot",
      "rev": 4
+    },
+    {
+     "ref": "P-2b 跟进小卡（李白 11-17 写函数豁免范围裁定，选 A）：函数体豁免收窄为只读 gatefac 行 assertedWriters（封闭，现仅 writeUnderTempRoot），且须函数体顶层先调用 writerAsserts 所列断言再写入，缺断言或断言在写入后即照计；tempRepo、testTempRoot 函数体照常扫；加入口须报李白裁",
+     "rev": 5
     }
    ],
-   "print": "6764260a939bb3d9c38c5ef2a426b432d2913c90ef6b24561c00b29349a385de",
-   "rev": 4,
+   "print": "f9880bbb29d1ebfd0894a1f47cf178eae87e5a8d63de9073fdb3ca750524fdc7",
+   "rev": 5,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -303,10 +311,14 @@
     {
      "ref": "门禁小修卡三：共用的 call_edge 加登记入口函数体豁免；本类别不用 roots，判定口径不变",
      "rev": 4
+    },
+    {
+     "ref": "P-2b 跟进小卡：共用的 call_edge 函数体豁免收窄为 assertedWriters 加先断言后写入；本类别不用 roots，判定口径不变",
+     "rev": 5
     }
    ],
-   "print": "11b713e2c885b3f81549c31696223047910d0f7e5cbe726a83f7253538851adb",
-   "rev": 4,
+   "print": "670e5b11faaa84f9b9f3483f74d64fb6bc730bdaeab56a454d00147d2c645c70",
+   "rev": 5,
    "scanClass": "rng_bypass",
    "terms": {}
   },
@@ -398,10 +410,14 @@
     {
      "ref": "门禁小修卡三：共用的 call_edge 加登记入口函数体豁免；本类别不用 roots，判定口径不变",
      "rev": 4
+    },
+    {
+     "ref": "P-2b 跟进小卡：共用的 call_edge 函数体豁免收窄为 assertedWriters 加先断言后写入；本类别不用 roots，判定口径不变",
+     "rev": 5
     }
    ],
-   "print": "11b713e2c885b3f81549c31696223047910d0f7e5cbe726a83f7253538851adb",
-   "rev": 4,
+   "print": "670e5b11faaa84f9b9f3483f74d64fb6bc730bdaeab56a454d00147d2c645c70",
+   "rev": 5,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

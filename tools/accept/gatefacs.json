@@ -56,6 +56,9 @@
    ]
   },
   {
+   "assertedWriters": [
+    "writeUnderTempRoot"
+   ],
    "entries": [
     "tempRepo",
     "testTempRoot",
@@ -68,6 +71,9 @@
    "paths": [
     "tests/accept/temp-repo.mjs",
     "tests/accept/temp-root.mjs"
+   ],
+   "writerAsserts": [
+    "assertRelUnderTempRoot"
    ]
   }
  ]
