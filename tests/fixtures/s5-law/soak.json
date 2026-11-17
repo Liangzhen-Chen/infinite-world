@@ -1,9 +1,0 @@
-{
-  "version": 1,
-  "seeds": ["K13-001", "K13-002", "K13-003", "K13-004", "K13-005", "K13-006", "K13-007", "K13-008", "K13-009", "K13-010"],
-  "scenarios": ["baseline", "poor-harvest"],
-  "shock": {"input": "rules.weather.states.*.crop", "multiplier": 0.5, "duration": "entire calendar year", "basis": "受控共同歉收：同种子、同初态、同天气序列，仅天气对作物的产量乘数减半；不是历史标定参数。"},
-  "sampling": "calendar month; cumulative event facts retained; no end-of-day intervention",
-  "persistent": "at least three consecutive month-end observations; not a claim of daily continuity",
-  "tailBands": [0.05, 0.10]
-}
