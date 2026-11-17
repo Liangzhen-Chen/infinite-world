@@ -30,9 +30,11 @@ export function detect(ctx, params, cls) {
     const sym = symbolPaths(toks);
     const bind = bindings(toks, table);
     const rootNames = rootBindings(toks, file, roots);
+    const exempt = entryBodies(toks, roots.get(file));
     for (let i = 0; i < toks.length; i++) {
       const t = toks[i];
       if (t.t !== 'id' || isP(toks[i - 1], '.') || isP(toks[i - 1], '?.')) continue;
+      if (exempt.some(([a, b]) => i > a && i < b)) continue;
       const segs = []; let k = i + 1;
       while ((isP(toks[k], '.') || isP(toks[k], '?.')) && toks[k + 1] && toks[k + 1].t === 'id') { segs.push(toks[k + 1].v); k += 2; }
       if (!isP(toks[k], '(')) continue;
@@ -79,6 +81,19 @@ function rootFacilities(ctx, codes) {
     const g = facs.get(c);
     if (!g || g.inRepo !== false || !Array.isArray(g.paths) || !Array.isArray(g.entries)) continue;
     for (const p of g.paths) out.set(p, new Set([...(out.get(p) || []), ...g.entries]));
+  }
+  return out;
+}
+
+// 登记的辅助文件里，名字在该 gatefac 行 entries 内的函数声明，其函数体算登记入口自己的实现（入口在运行时断言路径，李白 11-17 裁定四）：
+// 体内的调用不计；入口名取自登记，文件里别的函数照常扫。返回函数体花括号的 [起, 止] 记号下标。
+function entryBodies(toks, entries) {
+  const out = [];
+  if (!entries) return out;
+  for (let i = 0; i + 2 < toks.length; i++) {
+    if (toks[i].t !== 'id' || toks[i].v !== 'function' || toks[i + 1].t !== 'id' || !entries.has(toks[i + 1].v) || !isP(toks[i + 2], '(')) continue;
+    const pc = matchClose(toks, i + 2);
+    if (isP(toks[pc + 1], '{')) out.push([pc + 1, matchClose(toks, pc + 1)]);
   }
   return out;
 }

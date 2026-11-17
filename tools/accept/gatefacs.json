@@ -58,7 +58,8 @@
   {
    "entries": [
     "tempRepo",
-    "testTempRoot"
+    "testTempRoot",
+    "writeUnderTempRoot"
    ],
    "facCode": "test-temp-root",
    "gateCard": "—",

@@ -11,8 +11,9 @@ import { detect as callEdge } from '../../tools/accept/detectors/call_edge.mjs';
 import { detect as docStruct, definedNumbers } from '../../tools/accept/detectors/doc_struct.mjs';
 import { ENUM } from '../../tools/accept/lib/item-form.mjs';
 import { tempRepo } from './temp-repo.mjs';
+import { testTempRoot, writeUnderTempRoot } from './temp-root.mjs';
 import { relative, isAbsolute } from 'node:path';
-import { realpathSync, rmSync } from 'node:fs';
+import { realpathSync, rmSync, readFileSync } from 'node:fs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const FIX = mergePrefixes(prefixesFromDir(join(ROOT, LAYOUT.bypassDimsDir)));
@@ -177,9 +178,30 @@ test('call_edge 测试临时根：路径落在临时根加常量相对路径内�
   assert.equal(callEdge(ctxOf({ 'tools/x.mjs': head + "const d = testTempRoot(); writeFileSync(join(d, 'a'), 'x');" }), { groups: ['offline'], callers: [], callees: ['registry_write'] }, CLS.registry_write).length, 1);
 });
 
-test('test-temp-root 登记（裁定三）：entries 封闭为 testTempRoot、tempRepo；tempRepo() 返回的目录在仓库外', () => {
+test('call_edge 登记入口函数体（裁定四）：登记辅助文件里 entries 名下的函数体不计，同文件别的函数、别的文件同名函数照计', () => {
+  const body = (name) => `import { writeFileSync } from 'node:fs';\nexport function ${name}(p, d) { writeFileSync(p, d); }\n`;
+  const run = (file, src) => callEdge(ctxOf({ [file]: src }), { groups: ['offline'], callers: [], callees: ['registry_write'], roots: ['test-temp-root'] }, CLS.registry_write).length;
+  assert.equal(run('tests/accept/temp-root.mjs', body('writeUnderTempRoot')), 0);
+  assert.equal(run('tests/accept/temp-root.mjs', body('otherWriter')), 1);
+  assert.equal(run('tests/accept/x.test.mjs', body('writeUnderTempRoot')), 1);
+});
+
+test('writeUnderTempRoot（裁定四）：`..`、绝对路径、命中 §2.11 受保护模式时抛错；合规相对路径写入临时根内', () => {
+  const dir = testTempRoot('wutr-');
+  try {
+    for (const bad of ['../a.json', 'a/../../b.json', '..', '.', ROOT, '/etc/x', 'C:/x/y.json', 'tools/accept/items.json', 'tools/accept/out/x.json', 'tools/whitelist.json', 'a/../tools/accept/gatefacs.json']) {
+      assert.throws(() => writeUnderTempRoot(dir, bad, 'x'), /temp root|§2\.11/, bad);
+    }
+    const p = writeUnderTempRoot(dir, 'sub/dir/ok.json', 'hi');
+    assert.equal(readFileSync(p, 'utf8'), 'hi');
+    assert.ok(!relative(dir, p).startsWith('..'));
+    assert.equal(readFileSync(join(dir, 'sub/dir/ok.json'), 'utf8'), 'hi');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('test-temp-root 登记（裁定三、四）：entries 封闭为 testTempRoot、tempRepo、writeUnderTempRoot；tempRepo() 返回的目录在仓库外', () => {
   const fac = loadContext(ROOT).regs.gatefacs.find((g) => g.facCode === 'test-temp-root');
-  assert.deepEqual([...fac.entries].sort(), ['tempRepo', 'testTempRoot']);
+  assert.deepEqual([...fac.entries].sort(), ['tempRepo', 'testTempRoot', 'writeUnderTempRoot']);
   assert.equal(fac.inRepo, false);
   const dir = tempRepo();
   try {
