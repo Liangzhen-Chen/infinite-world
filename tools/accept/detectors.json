@@ -1,0 +1,56 @@
+{
+ "rows": [
+  {
+   "detectorCode": "call_edge",
+   "source": "卷十二 §2.3"
+  },
+  {
+   "detectorCode": "data_shape",
+   "source": "卷十二 §2.3"
+  },
+  {
+   "detectorCode": "decl_cmp",
+   "source": "卷十二 §2.3"
+  },
+  {
+   "detectorCode": "doc_candidate",
+   "source": "卷十二 §2.3"
+  },
+  {
+   "detectorCode": "doc_struct",
+   "source": "卷十二 §2.3"
+  },
+  {
+   "detectorCode": "file_set",
+   "source": "卷十二 §2.3"
+  },
+  {
+   "detectorCode": "import_edge",
+   "source": "卷十二 §2.3"
+  },
+  {
+   "detectorCode": "ledger_count",
+   "source": "卷十二 §2.3"
+  },
+  {
+   "detectorCode": "lit_scope",
+   "source": "卷十二 §2.3"
+  },
+  {
+   "detectorCode": "path_access",
+   "source": "卷十二 §2.3"
+  },
+  {
+   "detectorCode": "sym_exists",
+   "source": "卷十二 §2.3"
+  },
+  {
+   "detectorCode": "taint",
+   "source": "卷十二 §2.3"
+  },
+  {
+   "detectorCode": "typed_pos",
+   "source": "卷十二 §2.3"
+  }
+ ]
+}

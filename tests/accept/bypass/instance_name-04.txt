@@ -1,0 +1,2 @@
+const head = 'fx';
+export const id = head + 'a_beta';

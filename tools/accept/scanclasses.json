@@ -1,0 +1,47 @@
+{
+ "rows": [
+  {
+   "detectors": [
+    "lit_scope"
+   ],
+   "litAllow": [
+    0,
+    1,
+    -1
+   ],
+   "scanClass": "const_literal",
+   "source": "卷一 R-6 第 1 条（白名单）；卷二 S10；卷十二 §2.4"
+  },
+  {
+   "detectors": [
+    "lit_scope",
+    "data_shape"
+   ],
+   "scanClass": "instance_name",
+   "source": "卷一 R-4；卷二 S1；卷十二 §2.4"
+  },
+  {
+   "detectors": [
+    "import_edge",
+    "call_edge",
+    "path_access"
+   ],
+   "scanClass": "module_edge",
+   "source": "卷二 §2.7；S16、S19；卷十二 §2.4"
+  },
+  {
+   "detectors": [
+    "import_edge"
+   ],
+   "scanClass": "rules_import",
+   "source": "卷一 R-6 第 5 条；卷十二 §2.4"
+  },
+  {
+   "detectors": [
+    "path_access"
+   ],
+   "scanClass": "version_fork",
+   "source": "卷一 R-8、V-17；卷十二 §2.4"
+  }
+ ]
+}

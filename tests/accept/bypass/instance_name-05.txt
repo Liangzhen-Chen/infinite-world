@@ -1,0 +1,4 @@
+import { ROOT } from './consts.mjs';
+export const id = ROOT + 'oats';
+// @file consts.mjs
+export const ROOT = 'fx' + 'a_';

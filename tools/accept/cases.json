@@ -1,0 +1,267 @@
+{
+ "rows": [
+  {
+   "addedAtRev": 1,
+   "caseKey": "const_literal-01",
+   "fixture": "tests/accept/bypass/const_literal-01.txt",
+   "group": "rules",
+   "origin": "卷一 R-6 第 1 条 60*24",
+   "polarity": "must_fail",
+   "scanClass": "const_literal"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "const_literal-02",
+   "fixture": "tests/accept/bypass/const_literal-02.txt",
+   "group": "rules",
+   "origin": "卷二 S10 其余下标照计",
+   "polarity": "must_fail",
+   "scanClass": "const_literal"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "const_literal-03",
+   "fixture": "tests/accept/bypass/const_literal-03.txt",
+   "group": "rules",
+   "origin": "卷二 S10 [0,0,0].length",
+   "polarity": "must_fail",
+   "scanClass": "const_literal"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "const_literal-04",
+   "fixture": "tests/accept/bypass/const_literal-04.txt",
+   "group": "rules",
+   "origin": "卷二 S10 BigInt",
+   "polarity": "must_fail",
+   "scanClass": "const_literal"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "const_literal-05",
+   "fixture": "tests/accept/bypass/const_literal-05.txt",
+   "group": "rules",
+   "origin": "卷一 R-6 第 1 条 Math.floor(x/2)",
+   "polarity": "must_fail",
+   "scanClass": "const_literal"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "const_literal-11",
+   "fixture": "tests/accept/bypass/const_literal-11.txt",
+   "group": "rules",
+   "origin": "卷一 R-6 第 1 条白名单 ①②",
+   "polarity": "must_pass",
+   "scanClass": "const_literal"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "instance_name-01",
+   "fixture": "tests/accept/bypass/instance_name-01.txt",
+   "group": "rules",
+   "origin": "卷一 R-4 第 3 条；卷十二 §4.1.5 西陲",
+   "polarity": "must_fail",
+   "scanClass": "instance_name"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "instance_name-02",
+   "fixture": "tests/accept/bypass/instance_name-02.txt",
+   "group": "rules",
+   "origin": "卷十二 R12-1.3 模板",
+   "polarity": "must_fail",
+   "scanClass": "instance_name"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "instance_name-03",
+   "fixture": "tests/accept/bypass/instance_name-03.txt",
+   "group": "rules",
+   "origin": "卷十二 R12-1.3 从字符码构造",
+   "polarity": "must_fail",
+   "scanClass": "instance_name"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "instance_name-04",
+   "fixture": "tests/accept/bypass/instance_name-04.txt",
+   "group": "rules",
+   "origin": "卷十二 R12-1.3 拼接与别名",
+   "polarity": "must_fail",
+   "scanClass": "instance_name"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "instance_name-05",
+   "fixture": "tests/accept/bypass/instance_name-05.txt",
+   "group": "rules",
+   "origin": "卷十二 R12-1.3 跨文件 import 的常量",
+   "polarity": "must_fail",
+   "scanClass": "instance_name"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "instance_name-06",
+   "fixture": "tests/accept/bypass/instance_name-06.txt",
+   "group": "rules",
+   "origin": "卷十二 R12-1.2 单例 id",
+   "polarity": "must_fail",
+   "scanClass": "instance_name"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "instance_name-11",
+   "fixture": "tests/accept/bypass/instance_name-11.txt",
+   "group": "rules",
+   "origin": "卷十二 R12-13.3；卷一 §3.1 第 5 条（注释不计）",
+   "polarity": "must_pass",
+   "scanClass": "instance_name"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "module_edge-01",
+   "expectCode": "E-KERNEL-UPWARD-IMPORT",
+   "fixture": "tests/accept/bypass/module_edge-01.txt",
+   "group": "kernel",
+   "origin": "卷二 §2.7 kernel 行",
+   "polarity": "must_fail",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "module_edge-02",
+   "expectCode": "E-GLOBAL-UNLISTED",
+   "fixture": "tests/accept/bypass/module_edge-02.txt",
+   "group": "kernel",
+   "origin": "卷二 §2.7 读法 不带 node: 前缀的内建名",
+   "polarity": "must_fail",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "module_edge-03",
+   "expectCode": "E-PROC-IMPORT",
+   "fixture": "tests/accept/bypass/module_edge-03.txt",
+   "group": "kernel",
+   "origin": "卷二 §2.7 运行时文件 import tools",
+   "polarity": "must_fail",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "module_edge-04",
+   "expectCode": "E-KERNEL-UPWARD-IMPORT",
+   "fixture": "tests/accept/bypass/module_edge-04.txt",
+   "group": "kernel",
+   "origin": "卷二 §2.7 kernel 不 import 共享库",
+   "polarity": "must_fail",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "module_edge-05",
+   "expectCode": "E-PROC-IMPORT",
+   "fixture": "tests/accept/bypass/module_edge-05.txt",
+   "group": "rules",
+   "origin": "卷二 §4.3 E-PROC-IMPORT 待删目录；卷一 R-8",
+   "polarity": "must_fail",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "module_edge-06",
+   "expectCode": "E-TEXTCORE-IMPORT",
+   "fixture": "tests/accept/bypass/module_edge-06.txt",
+   "group": "rules",
+   "origin": "卷二 S16 规则层 import textcore",
+   "polarity": "must_fail",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "module_edge-07",
+   "expectCode": "E-VIEW-INPUT-IMPORT",
+   "fixture": "tests/accept/bypass/module_edge-07.txt",
+   "group": "rules",
+   "origin": "卷二 S16 规则层 import 非规则组",
+   "polarity": "must_fail",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "module_edge-11",
+   "fixture": "tests/accept/bypass/module_edge-11.txt",
+   "group": "kernel",
+   "origin": "卷二 §2.7 kernel 行 kernel 列",
+   "polarity": "must_pass",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "module_edge-12",
+   "fixture": "tests/accept/bypass/module_edge-12.txt",
+   "group": "rules",
+   "origin": "卷二 §2.7 规则层行 kernel 列",
+   "polarity": "must_pass",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "rules_import-01",
+   "expectCode": "E-TSC-PARSE",
+   "fixture": "tests/accept/bypass/rules_import-01.txt",
+   "group": "rules",
+   "origin": "卷一 R-6 第 5 条；卷二 §2.7 读法 JSON import",
+   "polarity": "must_fail",
+   "scanClass": "rules_import"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "rules_import-11",
+   "fixture": "tests/accept/bypass/rules_import-11.txt",
+   "group": "rules",
+   "origin": "卷二 §2.7 规则层经 kernel 读",
+   "polarity": "must_pass",
+   "scanClass": "rules_import"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "version_fork-01",
+   "expectCode": "E-REPLAY-VERSION-BRANCH",
+   "fixture": "tests/accept/bypass/version_fork-01.txt",
+   "group": "rules",
+   "origin": "卷一 R-8 判定 document.metadata.format",
+   "polarity": "must_fail",
+   "scanClass": "version_fork"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "version_fork-02",
+   "expectCode": "E-REPLAY-VERSION-BRANCH",
+   "fixture": "tests/accept/bypass/version_fork-02.txt",
+   "group": "rules",
+   "origin": "卷一 R-8 判定 worldVersion",
+   "polarity": "must_fail",
+   "scanClass": "version_fork"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "version_fork-03",
+   "expectCode": "E-REPLAY-VERSION-BRANCH",
+   "fixture": "tests/accept/bypass/version_fork-03.txt",
+   "group": "kernel",
+   "origin": "卷一 R-8 判定 version（内核同口径）",
+   "polarity": "must_fail",
+   "scanClass": "version_fork"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "version_fork-11",
+   "fixture": "tests/accept/bypass/version_fork-11.txt",
+   "group": "rules",
+   "origin": "卷一 R-8 例外 rulesDigest；只读不分支",
+   "polarity": "must_pass",
+   "scanClass": "version_fork"
+  }
+ ]
+}

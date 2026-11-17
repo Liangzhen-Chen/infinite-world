@@ -1,0 +1,7 @@
+import { helper } from './fxa_helpers.mjs';
+// 'fxa_oats' only in a comment
+export const tag = 'fxaoats';
+export const label = 'pre fxa_';
+export function same(a, b) {
+  return helper(a) === b;
+}

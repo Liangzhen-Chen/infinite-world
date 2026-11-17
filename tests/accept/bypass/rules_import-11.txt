@@ -1,0 +1,2 @@
+import { dim } from '../kernel/dimensions.mjs';
+export const read = dim;

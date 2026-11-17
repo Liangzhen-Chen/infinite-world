@@ -1,0 +1,46 @@
+{
+ "rows": [
+  {
+   "entries": "卷十二 §3.1",
+   "facCode": "acc-read",
+   "gateCard": "G-3",
+   "inRepo": true,
+   "ownerVol": "vol12",
+   "paths": [
+    "tools/accept/read.mjs"
+   ]
+  },
+  {
+   "entries": "待补",
+   "facCode": "acc-register",
+   "gateCard": "G-3",
+   "inRepo": true,
+   "ownerVol": "vol12",
+   "paths": [
+    "tools/accept/register.mjs"
+   ]
+  },
+  {
+   "entries": [
+    "accRun"
+   ],
+   "facCode": "acc-runner",
+   "gateCard": "G-3",
+   "inRepo": true,
+   "ownerVol": "vol12",
+   "paths": [
+    "tools/accept/run.mjs"
+   ]
+  },
+  {
+   "entries": "待补",
+   "facCode": "commit-hook",
+   "gateCard": "G-3",
+   "inRepo": true,
+   "ownerVol": "vol12",
+   "paths": [
+    "tools/accept/commit-hook.mjs"
+   ]
+  }
+ ]
+}

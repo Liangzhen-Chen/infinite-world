@@ -1,0 +1,56 @@
+{
+ "version": 1,
+ "inputEdge": {"modules": ["server-plugin/input/**/*.mjs"], "process": "server", "outputSchema": "schema:input-edge-v1"},
+ "display": {"modules": ["extension/**/*.mjs", "!extension/host/**", "!extension/textcore/**"], "process": "client"},
+ "gate": {"modules": ["server-plugin/gate/**/*.mjs"], "process": "server"},
+ "outputGate": {"modules": ["server-plugin/output-gate/**/*.mjs"], "process": "server"},
+ "aiGate": {"modules": ["server-plugin/ai-gate/**/*.mjs"], "process": "server"},
+ "host": {"modules": ["extension/host/**/*.mjs"], "process": "client"},
+ "textcore": {"modules": ["server-plugin/textcore/**/*.mjs"], "process": "server"},
+ "clientTextcore": {"modules": ["extension/textcore/**/*.mjs"], "process": "client"},
+ "kernel": {"modules": ["server-plugin/kernel/**/*.mjs"], "process": "server", "filesList": "server-plugin/kernel/files.json"},
+ "assembly": {"files": ["server-plugin/index.mjs"], "process": "server", "calls": ["createRouterCaps", "createDigestCap", "createWallTimer", "mountKernel", "registerSystems", "mountOutput", "mountAi", "mountMenuEntry", "mountSaveRoutes", "mountNarration", "mountInput"]},
+ "retired": ["server-plugin/legacy/**", "server-plugin/compat/**", "server-plugin/migrations/**"],
+ "importMatrix": {
+  "codeExtensions": [".mjs", ".js", ".cjs", ".ts", ".mts", ".cts"],
+  "processes": {
+   "server": {"root": "server-plugin/", "remainderGroup": "rules"},
+   "client": {"root": "extension/"}
+  },
+  "offline": {"modules": ["tools/**", "tests/**"]},
+  "defaultCode": "E-VIEW-INPUT-IMPORT",
+  "procCode": "E-PROC-IMPORT",
+  "globalCode": "E-GLOBAL-UNLISTED",
+  "dataCode": "E-TSC-PARSE",
+  "dataLoaders": [],
+  "cols": {"textcore": {"code": "E-TEXTCORE-IMPORT"}},
+  "rows": {
+   "kernel": {"code": "E-KERNEL-UPWARD-IMPORT", "groups": ["kernel"],
+    "builtins": {
+     "node:fs": ["server-plugin/kernel/load/*", "server-plugin/kernel/save.mjs", "server-plugin/kernel/report.mjs"],
+     "node:path": ["server-plugin/kernel/load/*", "server-plugin/kernel/save.mjs", "server-plugin/kernel/report.mjs"],
+     "node:url": ["server-plugin/kernel/load/*", "server-plugin/kernel/save.mjs", "server-plugin/kernel/report.mjs"]
+    },
+    "packages": {"ajv": ["server-plugin/kernel/validate/narrow.mjs"]}},
+   "rules": {"groups": ["kernel", "rules"]},
+   "textcore": {"groups": ["kernel", "textcore"],
+    "builtins": {
+     "node:fs": ["server-plugin/textcore/labels.mjs"],
+     "node:path": ["server-plugin/textcore/labels.mjs"],
+     "node:crypto": ["server-plugin/textcore/digest.mjs"]
+    }},
+   "inputEdge": {"groups": ["kernel", "rules", "textcore", "inputEdge", "aiGate"]},
+   "gate": {"groups": ["kernel", "textcore", "gate"],
+    "builtins": {"node:fs": ["server-plugin/gate/load-blocklist.mjs"], "node:path": ["server-plugin/gate/load-blocklist.mjs"]}},
+   "outputGate": {"groups": ["kernel", "rules", "textcore", "gate", "outputGate"],
+    "builtins": {"node:fs": ["server-plugin/output-gate/display-load.mjs"]}},
+   "aiGate": {"groups": ["kernel", "rules", "textcore", "gate", "aiGate"],
+    "builtins": {"node:fs": ["server-plugin/ai-gate/recorder.mjs"]}},
+   "assembly": {"groups": ["kernel", "rules", "textcore", "inputEdge", "outputGate", "aiGate"]},
+   "host": {"groups": ["host", "display", "clientTextcore"],
+    "external": {"../../../extensions.js": ["extension/host/bootstrap.mjs"]}},
+   "display": {"groups": ["display", "clientTextcore"]},
+   "clientTextcore": {"groups": ["clientTextcore"]}
+  }
+ }
+}

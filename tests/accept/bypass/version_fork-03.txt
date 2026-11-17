@@ -1,0 +1,6 @@
+export function route(state) {
+  switch (state.replay['version']) {
+    case 'a': return 1;
+    default: return 0;
+  }
+}

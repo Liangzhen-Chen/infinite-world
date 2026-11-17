@@ -1,0 +1,4 @@
+export function check(doc, d) {
+  if (doc.rulesDigest === d) return doc.formatted;
+  return doc.metadata.version;
+}

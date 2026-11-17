@@ -1,0 +1,1 @@
+export const k = String.fromCharCode(102, 120, 97, 95, 113);

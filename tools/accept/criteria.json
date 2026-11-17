@@ -1,0 +1,54 @@
+{
+ "rows": [
+  {
+   "log": [
+    {
+     "ref": "P-1",
+     "rev": 1
+    }
+   ],
+   "rev": 1,
+   "scanClass": "const_literal"
+  },
+  {
+   "log": [
+    {
+     "ref": "P-1",
+     "rev": 1
+    }
+   ],
+   "rev": 1,
+   "scanClass": "instance_name"
+  },
+  {
+   "log": [
+    {
+     "ref": "P-1",
+     "rev": 1
+    }
+   ],
+   "rev": 1,
+   "scanClass": "module_edge"
+  },
+  {
+   "log": [
+    {
+     "ref": "P-1",
+     "rev": 1
+    }
+   ],
+   "rev": 1,
+   "scanClass": "rules_import"
+  },
+  {
+   "log": [
+    {
+     "ref": "P-1",
+     "rev": 1
+    }
+   ],
+   "rev": 1,
+   "scanClass": "version_fork"
+  }
+ ]
+}
