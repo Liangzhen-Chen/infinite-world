@@ -54,10 +54,13 @@ const MAIN_COLS = { 密度固: 'density.solid', 密度液: 'density.liquid', 密
 const CODE_CELL = { 能: ['energyDensity'], 氧: ['flammability'], 纤: ['fiberContent'], 碳: ['carbContent'] };
 const A_CODES = new Set(['能:饲', '能:食', '能:纯', '能:木', '氧:试', '氧:汽', '纤:饲', '纤:食', '碳:饲', '碳:食']);
 const cellOf = (r, key) => { const [d, k] = key.split('.'); return k === undefined ? r[d] : (r[d] || {})[k]; };
+// 依据代号表里该代号的定义原文（卷三甲 :518 一带）。备注栏写的是别的格的出处（如能:木行的备注是极限氧文献）时，
+// 该代号所管的格以代号定义作 citation，不抄备注；没登记定义的代号照旧取备注。
+const CODE_DEF = { '能:木': '木质燃料资料里的干基高位热值' };
 const gradeByCode = (id, r, code, note, where) => {
   for (const key of CODE_CELL[code.split(':')[0]] || []) {
     if (cellOf(r, key) === undefined) continue;
-    if (A_CODES.has(code)) grade(id, key, 'measured', `${where} 依据 ${code}：${note}`);
+    if (A_CODES.has(code)) grade(id, key, 'measured', CODE_DEF[code] ? `${where} 依据代号表 ${code}：${CODE_DEF[code]}（卷文未给具体文献）` : `${where} 依据 ${code}：${note}`);
     else grade(id, key, 'designed', `${where} 依据 ${code}（:528 折 C 级）：${note}`);
   }
 };

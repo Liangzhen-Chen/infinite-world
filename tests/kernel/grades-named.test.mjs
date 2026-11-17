@@ -47,6 +47,16 @@ test('cellGrades ①：少一格、多一格、整个字段缺都是 E-MAT-GRADE
   assert.ok(run(d).errors.filter((e) => e.code === 'E-DIM-STRUCT-FIELD').length >= 5);
 });
 
+test('cellGrades 表头格式错（非对象、field 缺或非串、refDim 非串、多余键）→ 各报一条 E-DIM-STRUCT-FIELD，不静默跳过；正确声明零 E', () => {
+  for (const bad of ['cellGrades', ['field'], {}, { field: 7 }, { field: 'cellGrades', refDim: 3 }, { field: 'cellGrades', refDim: 'refGadget', extra: 1 }]) {
+    const f = graded(); f.gadget.cellGrades = bad;
+    const errs = run(f).errors.filter((e) => e.dim === 'cellGrades' && e.code === 'E-DIM-STRUCT-FIELD' && e.row === '');
+    assert.equal(errs.length, 1, JSON.stringify(bad));
+  }
+  const ok = graded(); ok.gadget.cellGrades = { field: 'cellGrades' };
+  assert.equal(run(ok).errors.filter((e) => e.row === '' && e.dim === 'cellGrades').length, 0);
+});
+
 test('cellGrades ②：measured 无 citation、designed 无 basis、级别不在三值内、条目字段不齐 → E-MAT-GRADE-FIELD', () => {
   for (const bad of [M(null), D(''), { grade: 'guessed', citation: null, basis: 'x' }, { grade: 'designed', basis: 'x' }]) {
     const f = graded(); f.gadget.rows.gad_box.cellGrades.size = bad;
