@@ -11,8 +11,8 @@ const rejects = (fn, code) => assert.throws(fn, (e) => e.code === code && e.mess
 const codes = ERROR_CODES.map((e) => e.code);
 
 test('码表条数：E 与 W 各为手数的字面量', () => {
-  assert.equal(codes.length, 575);
-  assert.equal(codes.filter((c) => c[0] === 'E').length, 558);
+  assert.equal(codes.length, 576);
+  assert.equal(codes.filter((c) => c[0] === 'E').length, 559);
   assert.equal(codes.filter((c) => c[0] === 'W').length, 17);
   assert.equal(REGISTERED_CODES.size, codes.length);
 });
@@ -42,6 +42,7 @@ test('抽 6 个跨卷码：E 成员名与值、出处', () => {
   const src = (c) => ERROR_CODES.find((e) => e.code === c).sources;
   assert.deepEqual(src('E-WRITER-DUPLICATE'), ['卷二 §4.3']);
   assert.deepEqual(src('E-PHASE-DUPLICATE'), ['卷二 §4.3']);
+  assert.deepEqual(src('E-PHASE-HOOK-DUPLICATE'), ['卷二 §4.3']);
   assert.deepEqual(src('E-ACC-REQUIRED-TEST'), ['卷二 §4.3', '卷十二 §2.12']);
   assert.deepEqual(src('E-CBT-ROUND'), ['卷十三 §2.9']);
   assert.deepEqual(src('E-FAITH-LAYER'), ['卷七 §2.8']);
