@@ -324,7 +324,7 @@ export function mergeStateOwners(decl, ctx = {}) {
   for (const [hook, syss] of hookSystems) {
     if (syss.length > 1) { err(E.E_PHASE_HOOK_DUPLICATE, hook, `#/systems/${sorted(syss)[0]}/phase/${hook}`, sorted(syss).join(', '), 'a hook name registered by exactly one system'); hooksOk = false; }
   }
-  // 同阶段同键（§2.7 :766；"键"即 sortKey）。同名钩子已报上一码的不再按同键重复报。
+  // 同阶段同键（§2.7 :766；"键"即 sortKey）。同名钩子又同键时，E-PHASE-HOOK-DUPLICATE 与本码两码都会报（不去重）。
   const seenKey = new Map();
   for (const h of hooks) {
     const k = JSON.stringify([h.phase, h.sortKey]);
