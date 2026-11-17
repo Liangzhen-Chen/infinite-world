@@ -11,9 +11,9 @@ const rejects = (fn, code) => assert.throws(fn, (e) => e.code === code && e.mess
 const codes = ERROR_CODES.map((e) => e.code);
 
 test('码表条数：E 与 W 各为手数的字面量', () => {
-  assert.equal(codes.length, 539);
-  assert.equal(codes.filter((c) => c[0] === 'E').length, 525);
-  assert.equal(codes.filter((c) => c[0] === 'W').length, 14);
+  assert.equal(codes.length, 572);
+  assert.equal(codes.filter((c) => c[0] === 'E').length, 555);
+  assert.equal(codes.filter((c) => c[0] === 'W').length, 17);
   assert.equal(REGISTERED_CODES.size, codes.length);
 });
 
@@ -46,6 +46,13 @@ test('抽 6 个跨卷码：E 成员名与值、出处', () => {
   assert.deepEqual(src('E-CBT-ROUND'), ['卷十三 §2.9']);
   assert.deepEqual(src('E-FAITH-LAYER'), ['卷七 §2.8']);
   assert.deepEqual(src('E-SAVE-TORN'), ['卷二 §4.3', '卷二十七 附·本卷新增错误码']);
+  // 勘误 1117ec20、1117ec2、1117ec12：卷二十自己的码表；卷三甲七码与 W-DIM-GAP 登在卷二 §4.3；卷十二两个新码同登卷二。
+  assert.deepEqual(src('E-ENV-TARGET'), ['卷二十 附·本卷错误码表']);
+  assert.deepEqual(src('E-SEED-KEY'), ['卷二 §4.3', '卷二十 附·本卷错误码表']);
+  assert.deepEqual(src('W-CAL-DRIFT'), ['卷二十 附·本卷错误码表']);
+  assert.deepEqual(src('E-MAT-GRADE-KEYS'), ['卷二 §4.3']);
+  assert.deepEqual(src('W-DIM-GAP'), ['卷二 §4.3']);
+  assert.deepEqual(src('E-ACC-REGISTRY-WRITE'), ['卷二 §4.3', '卷十二 §2.12']);
 });
 
 test('E 的成员与码表一一对应：条数相等、冻结、成员名把连字符换成下划线', () => {
