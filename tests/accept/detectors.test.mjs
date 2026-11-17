@@ -100,3 +100,30 @@ test('path_access 版本分叉：读到并据此分支才计', () => {
   assert.equal(forks('const v = doc.metadata.version;').length, 0);
   assert.equal(forks('if (version === 2) go();').length, 0);
 });
+
+test('lit_scope 登记豁免（卷二 S10）：只豁免登记文件里、登记表有同文件同值行的常数', () => {
+  const table = 'world/rules/tables/kernel-constants.json';
+  const rows = JSON.stringify({ rows: [{ key: 'S', value: 10000, file: 'server-plugin/kernel/det-math.mjs' }] });
+  const src = 'export const S = 10000n; const z = x * 77;';
+  const run = (map) => litScope(ctxOf(map), { groups: RT, literal: 'number' }, CLS.const_literal).length;
+  assert.equal(run({ 'server-plugin/kernel/det-math.mjs': src, [table]: rows }), 1);
+  assert.equal(run({ 'server-plugin/kernel/other.mjs': src, [table]: rows }), 2);
+  assert.equal(run({ 'server-plugin/kernel/det-math.mjs': src }), 2);
+});
+
+test('import_edge 成员闭集：按 filesList 清单判，清单外的组内文件计 E-FILE-UNASSIGNED', () => {
+  const files = { 'server-plugin/kernel/a.mjs': 'export const a = 0;', 'server-plugin/kernel/load/b.mjs': 'export const b = 0;' };
+  const unassigned = (map) => edges(map, ['E-FILE-UNASSIGNED']).map((h) => h.file);
+  assert.deepEqual(unassigned({ ...files, 'server-plugin/kernel/files.json': '["server-plugin/kernel/a.mjs"]' }), ['server-plugin/kernel/load/b.mjs']);
+  assert.deepEqual(unassigned({ ...files, 'server-plugin/kernel/files.json': '["server-plugin/kernel/a.mjs","server-plugin/kernel/load/b.mjs"]' }), []);
+  assert.deepEqual(unassigned(files), ['server-plugin/kernel/a.mjs', 'server-plugin/kernel/load/b.mjs']);
+});
+
+test('kernel/files.json 与磁盘上的 kernel 组文件一致（排序、只列 .mjs）', () => {
+  const ctx = loadContext(ROOT);
+  const listPath = ctx.decl.kernel.filesList;
+  const listed = JSON.parse(ctx.read(listPath));
+  assert.deepEqual(listed, [...listed].sort());
+  assert.ok(listed.every((f) => f.endsWith('.mjs')));
+  assert.deepEqual(importEdge(ctx, { groups: ['kernel'], codes: ['E-FILE-UNASSIGNED'] }), []);
+});

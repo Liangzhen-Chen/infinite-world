@@ -56,6 +56,7 @@ export function detect(ctx, params, cls) {
     return out;
   }
 
+  const exempt = exemptions(ctx, cls || {});
   const hits = [];
   for (const file of scoped) {
     const toks = tokensOf(file);
@@ -63,7 +64,9 @@ export function detect(ctx, params, cls) {
     const sym = symbolPaths(toks);
     const spec = specifierIndexes(toks);
     const emit = (nodeKind, line, symbolPath) => hits.push({ file, line, nodeKind, symbolPath, code: params.code || '' });
-    walk(toks, env, judge, spec, emit, (i) => sym[i]);
+    const own = exempt.get(file);
+    const judgeHere = own ? (v) => judge(v) && !own.has(Number(v.v)) : judge;
+    walk(toks, env, judgeHere, spec, emit, (i) => sym[i]);
     for (const imp of importsOf(toks)) {
       if (!imp.spec || !imp.spec.startsWith('.')) continue;
       const target = resolveRel(file, imp.spec);
@@ -76,6 +79,22 @@ export function detect(ctx, params, cls) {
     }
   }
   return hits;
+}
+
+// 登记豁免（卷二 S10、卷一 R-6 第 1 条白名单 ③）：扫描类别登记行 litExempt = {files, table}；
+// files 是可豁免的文件，table 是常数登记表（{"rows": [{key, value, file}]}）。某文件里的数值只有在登记表里有同文件、同值的行才不计，
+// 表外常数照报；登记表不在文件清单里（如绕法用例的虚拟上下文）即无豁免。
+function exemptions(ctx, cls) {
+  const out = new Map();
+  const ex = cls.litExempt;
+  if (!ex || !ctx.files.includes(ex.table)) return out;
+  const rows = (JSON.parse(ctx.read(ex.table)).rows) || [];
+  for (const r of rows) {
+    if (!r.file || !(ex.files || []).includes(r.file)) continue;
+    if (!out.has(r.file)) out.set(r.file, new Set());
+    out.get(r.file).add(Number(r.value));
+  }
+  return out;
 }
 
 function walk(toks, env, judge, spec, emit, symAt) {

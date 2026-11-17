@@ -11,6 +11,18 @@ export function detect(ctx, params) {
   const m = model.matrix;
   const want = new Set(params.codes || []);
   const hits = [];
+  // 成员闭集（卷二 §2.8 第 2 条 ①、§2.7 `filesList`）：组声明了成员清单的，按 modules 展开出的代码文件不在清单里即违例。
+  // 清单是一个 JSON 数组（仓库根相对路径，排序，只列 .mjs；李白 11-17 第 5 条）；清单文件不在文件全集里时组内文件全数计入。
+  if (m.unassignedCode && want.has(m.unassignedCode)) {
+    for (const g of params.groups || []) {
+      const listPath = (ctx.decl[g] || {}).filesList;
+      if (!listPath) continue;
+      const listed = new Set(ctx.files.includes(listPath) ? JSON.parse(ctx.read(listPath)) : []);
+      for (const file of filesOfGroups(ctx.files, model, [g])) {
+        if (!listed.has(file)) hits.push({ file, line: 0, nodeKind: 'file', symbolPath: '', code: m.unassignedCode });
+      }
+    }
+  }
   for (const file of filesOfGroups(ctx.files, model, params.groups || [])) {
     const own = classify(file, model);
     const row = (m.rows || {})[own.group] || {};

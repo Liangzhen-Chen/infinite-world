@@ -1,0 +1,25 @@
+{
+ "kind": "gadget", "namespace": "core", "version": 1,
+ "entity": {"idPrefix": ["gad_"], "classPrefix": "cls_", "singletonIds": [], "instanceTable": null},
+ "behaviors": ["use"],
+ "dimensions": {
+  "mass": {"type": "number", "unit": "kg", "domain": [0, 100], "precision": 2, "required": "always", "onUnknown": "error", "modifiable": false, "source": "test", "owner": "test"},
+  "grade": {"type": "enum", "vocab": "grade", "required": "byClass:cls_tool", "onUnknown": "error", "modifiable": false, "source": "test", "owner": "test"},
+  "parts": {"type": "set", "of": {"type": "ref", "kind": "gadget"}, "domain": {"maxSize": 3}, "required": "never", "onUnknown": "skip", "modifiable": false, "source": "test", "owner": "test"},
+  "weights": {"type": "map", "key": {"type": "ref", "vocab": "grade"}, "value": {"type": "number", "unit": "kg", "domain": [0, 10], "precision": 1}, "required": "never", "onUnknown": "error", "modifiable": false, "source": "test", "owner": "test"},
+  "rule": {"type": "rx", "nullable": true, "required": "never", "onUnknown": "skip", "modifiable": false, "source": "test", "owner": "test"},
+  "spec": {"type": "struct", "fields": {"low": {"type": "integer", "unit": "count", "domain": [0, 9]}, "high": {"type": "integer", "unit": "count", "domain": [0, 9]}}, "required": "never", "onUnknown": "gap", "modifiable": false, "source": "test", "owner": "test"},
+  "size": {"type": "number", "unit": "kg", "domain": [0, 100], "precision": 1, "required": "ifPresent:spec", "onUnknown": "gap", "modifiable": true, "stacking": "none", "bounds": [0, 100], "source": "test", "owner": "test"}
+ },
+ "precedenceGroups": {"default": ["cls_heavy_tool", "cls_tool"]},
+ "classes": {
+  "cls_base": {"abstract": true, "mass": 1, "basis": "b"},
+  "cls_tool": {"extends": "cls_base", "mass*": 2, "grade": "grd_a", "basis": "b"},
+  "cls_heavy_tool": {"extends": "cls_tool", "mass~": 3.5, "basis": "b"}
+ },
+ "rows": {
+  "gad_box": {"mass": 5, "parts": [], "basis": "b", "status": "vst_ok"},
+  "gad_hammer": {"classes": ["cls_heavy_tool"], "weights": {"grd_a": 1, "grd_b": null}, "rule": "mass > 2 && grade == grd_a", "parts": ["gad_box"], "basis": "b", "status": "vst_ok"}
+ },
+ "generated": {}
+}

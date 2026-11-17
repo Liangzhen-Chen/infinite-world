@@ -1,0 +1,8 @@
+{"families": {
+ "class": {"closed": false, "prefix": "cls_", "entries": {"cls_base": {}, "cls_tool": {}, "cls_heavy_tool": {"broader": "cls_tool"}}},
+ "component": {"closed": false, "prefix": "cmp_", "entries": {"cmp_sharp": {"table": "gadget", "requires": ["mass"], "enables": ["use"]}}},
+ "grade": {"closed": false, "prefix": "grd_", "entries": {"grd_a": {}, "grd_b": {}}},
+ "vstatus": {"closed": true, "prefix": "vst_", "entries": {"vst_ok": {}}},
+ "aggregate": {"closed": true, "prefix": "agx_", "entries": {"agx_count": {}, "agx_exists": {}}},
+ "relation": {"closed": false, "prefix": "rel_", "entries": {"rel_part": {}}}
+}}

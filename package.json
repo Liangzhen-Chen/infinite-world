@@ -6,6 +6,7 @@
   "scripts": {
     "test": "node --test \"tests/accept/*.test.mjs\"",
     "accept": "node tools/accept/run.mjs pre_commit",
+    "test:kernel": "node --test \"tests/kernel/*.test.mjs\"",
     "backup": "node tools/backup.mjs"
   },
   "devDependencies": {
