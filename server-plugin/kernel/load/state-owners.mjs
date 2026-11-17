@@ -30,8 +30,9 @@ const FIELD_RE = /^[a-z][a-zA-Z0-9_]*(\.[a-z][a-zA-Z0-9_]*)*$/;
 // 实体类登记（卷二 §2.1 入口清单的 22 类，一类一张实体表）：keyKinds 里 (a)(b) 项的 kind 只能取这些，或加载器已载入的表的 kind（ctx.kinds）。
 export const ENTITY_KINDS = Object.freeze(['item', 'material', 'species', 'plant', 'body_plan', 'person', 'place', 'facility_type', 'recipe', 'org', 'office', 'polity', 'law_code', 'deity', 'faith', 'culture', 'profession', 'skill', 'knowledge', 'offense', 'status', 'event_type']);
 // keyKinds 的 (c) 项：封闭的非实体键类型代号（李白 11-17 pathTypes `*` 段 kind 字段裁定）。event = EventId（卷二 :197 事件无 kind）；
-// dimKey = 维度键（如 created.*.props.* 的第二段）。再加新代号须登记进卷二并报李白，各卷不得自造。
-export const KEY_NONENTITY = Object.freeze(['event', 'dimKey']);
+// dimKey = 维度键（如 created.*.props.* 的第二段）；identityKey = 身份键键号（卷四 :927，全世界唯一整数、对规则不透明，非实体 kind；李白 11-17）。
+// (b) 列表可混列实体 kind 与 (c) 代号，表示并集。再加新代号须登记进卷二并报李白，各卷不得自造。
+export const KEY_NONENTITY = Object.freeze(['event', 'dimKey', 'identityKey']);
 // 去留表覆盖核对豁免的协议键顶层段（卷二 §2.6 :519"账户、holdings、statuses、modifiers、terminated、到期堆"；到期堆的键 `due` 见卷二十 :445）。账户由账本写者判（ledgerPaths）。
 const PROTOCOL_KEYS = new Set(['holdings', 'statuses', 'modifiers', 'terminated', 'due']);
 
@@ -165,7 +166,7 @@ function keyKindsIssues(v, nStars, kinds) {
     } else if (Array.isArray(it)) {
       if (it.length === 0) out.push({ got: it, want: `${at}: non-empty list of entity kinds` });
       if (new Set(it).size !== it.length) out.push({ got: it, want: `${at}: no duplicate kinds` });
-      for (const k of it) if (typeof k !== 'string' || !kinds.has(k)) out.push({ got: k, want: `${at}: each member a registered entity kind (no wildcard, no ${KEY_NONENTITY.join('/')})` });
+      for (const k of it) if (typeof k !== 'string' || !(kinds.has(k) || KEY_NONENTITY.includes(k))) out.push({ got: k, want: `${at}: each member a registered entity kind or one of ${KEY_NONENTITY.join(', ')} (union; no wildcard)` });
     } else out.push({ got: it, want: `${at}: entity kind, list of entity kinds, or one of ${KEY_NONENTITY.join(', ')}` });
   });
   return out;

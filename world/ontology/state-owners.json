@@ -25,7 +25,7 @@
  "keyKinds": {
   "created.*.props.*": [["item", "person", "place"], "dimKey"],
   "created.*.props.basis": [["item", "person", "place"]],
-  "displayNames.*.seq": ["person"],
+  "displayNames.*.seq": [["person", "identityKey"]],
   "pendingPost.*": ["event"],
   "terminated.*": [["item", "org", "person", "place"]]
  },
