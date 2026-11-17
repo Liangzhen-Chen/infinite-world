@@ -1,8 +1,0 @@
-import fs from 'node:fs/promises';
-import {hashContent,rowFingerprintShape,stampL4Notes,requireFlagValue} from './content-pipeline.mjs';
-const root='world/drafts/w1/villages',read=async p=>JSON.parse(await fs.readFile(p,'utf8')),write=(p,x)=>fs.writeFile(p,JSON.stringify(x,null,2)+'\n');
-const notes=await read(`${root}/l4-notes.json`),by=requireFlagValue(process.argv,'--by');// 用法：--by <L4审查者>
-
-for(const v of ['yp','wt','lq','sb'])for(const kind of ['npcs','residents','locations']){const directory=`${root}/${v}/${kind}`,summary=await read(`${directory}/summary.json`);for(const batch of summary.batches){const rows=await Promise.all(batch.ids.map(id=>read(`${directory}/${id}.json`)));if(rows.some(r=>r.status!=='passed'||r.errors.length||r.review.contradictions.some(c=>c.severity==='hard')))throw Error(`${v}/${kind}仍有未通过条目`);if(hashContent(rows.map(rowFingerprintShape))!==batch.fingerprint)throw Error(`${v}/${kind}审核指纹改变`);
- const required=[...new Set([...batch.flagged,...batch.sample])];for(const id of required){const row=rows.find(r=>r.id===id),note=notes[id];if(!note?.note||note.draftHash!==hashContent(row.draft)||note.reviewHash!==hashContent(row.review))throw Error(`${id}缺少当前文本实际抽读记录`);}batch.l4={approved:true,reviewedAt:new Date().toISOString(),notes:stampL4Notes(required.map(id=>({id,...notes[id]})),by,rows)};await write(`${directory}/batch-${batch.index}.json`,batch);}await write(`${directory}/summary.json`,summary);}
-console.log('四村全部固定抽样及标记条目L4完成，仍须 --candidate 验证。');
