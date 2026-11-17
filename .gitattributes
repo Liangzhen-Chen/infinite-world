@@ -11,3 +11,6 @@ world/drafts/w1/yp-depth-rest/read-first10.mjs -text
 world/drafts/w1/yp-depth-rest/read-next5.mjs -text
 world/drafts/w1/yp-depth-rest/rebind-verified-once.mjs -text
 world/drafts/w1/yp-depth-rest/review-failed-once.mjs -text
+
+# 提交钩子是 sh 脚本，检出须为 LF，否则 #!/bin/sh 行带 CR 无法执行
+.githooks/* text eol=lf
