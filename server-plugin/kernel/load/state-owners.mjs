@@ -72,8 +72,8 @@ export function overlapPairs(patterns) {
 // ---------- 推进钩子排序键（卷十一 R11-3.14 算法） ----------
 
 /**
- * 按 R11-3.14 分配 sortKey：每个推进相位内，对全部钩子按机读 `after` 列表拓扑排序，同序的按钩子代号升序，从 1 起连续编号。
- * "同序"取拓扑层次：没有 after 的钩子在第 0 层，其余在其 after 所指钩子的最大层次加 1。
+ * 按 R11-3.14 分配 sortKey：每个推进相位内，对全部钩子按机读 `after` 列表做拓扑排序（Kahn），就绪队列按钩子代号升序，
+ * 每次从当前无未编号前驱的钩子里取代号最小的一个编号（从 1 起连续），再更新就绪队列。
  * after 指向不在同一相位的钩子、成环、或两个系统登记同名钩子时记入 problems（不编号以外的处置交调用方）。
  * @param {Record<string, any>} systems state-owners.json 的 systems
  * @returns {{keys: Map<string, number>, problems: string[]}} keys：钩子代号 → sortKey
@@ -90,30 +90,38 @@ export function assignSortKeys(systems) {
       hooks.set(name, { system: sys, phase: h.phase, after: Array.isArray(h.after) ? h.after : [] });
     }
   }
-  const level = new Map();
-  const open = new Set();
-  const visit = (name, trail) => {
-    if (level.has(name)) return level.get(name);
-    if (open.has(name)) { problems.push(`after cycle: ${[...trail.slice(trail.indexOf(name)), name].join(' -> ')}`); return 0; }
-    open.add(name);
-    const h = hooks.get(name);
-    let lv = 0;
+  // 有效前驱：after 里同相位的已登记钩子（别的相位或不存在的记 problems 并忽略）。
+  const preds = new Map();
+  for (const [name, h] of hooks) {
+    const ok = new Set();
     for (const a of h.after) {
       const t = hooks.get(a);
       if (!t || t.phase !== h.phase) { problems.push(`${name}.after names ${JSON.stringify(a)}, not a hook of phase ${h.phase}`); continue; }
-      lv = Math.max(lv, visit(a, [...trail, name]) + 1);
+      ok.add(a);
     }
-    open.delete(name);
-    level.set(name, lv);
-    return lv;
-  };
-  for (const name of sorted(hooks.keys())) visit(name, []);
+    preds.set(name, ok);
+  }
   const keys = new Map();
   const phases = sorted(new Set([...hooks.values()].map((h) => String(h.phase))));
   for (const phase of phases) {
-    const names = [...hooks.keys()].filter((n) => String(hooks.get(n).phase) === phase);
-    names.sort((a, b) => level.get(a) - level.get(b) || (a < b ? -1 : a > b ? 1 : 0));
-    names.forEach((n, i) => keys.set(n, i + 1));
+    // Kahn：就绪队列（当前无未编号前驱的钩子）每次取代号最小者编号，再更新就绪队列。
+    const left = new Set([...hooks.keys()].filter((n) => String(hooks.get(n).phase) === phase));
+    let n = 0;
+    while (left.size) {
+      const ready = sorted([...left].filter((x) => [...preds.get(x)].every((p) => !left.has(p))));
+      if (!ready.length) {
+        const trail = [sorted(left)[0]];
+        for (;;) {
+          const next = sorted([...preds.get(trail[trail.length - 1])].filter((p) => left.has(p)))[0];
+          const at = trail.indexOf(next);
+          if (at >= 0) { problems.push(`after cycle: ${[...trail.slice(at), next].join(' -> ')}`); break; }
+          trail.push(next);
+        }
+        break;
+      }
+      keys.set(ready[0], ++n);
+      left.delete(ready[0]);
+    }
   }
   return { keys, problems: sorted(new Set(problems)) };
 }

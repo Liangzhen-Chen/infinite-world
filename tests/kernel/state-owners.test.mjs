@@ -198,9 +198,9 @@ test('账本账户路径：改写写者是账本写者的模式不生成 P；tex
 
 // ---------- sortKey 算法（卷十一 R11-3.14）与离线生成器 ----------
 
-test('assignSortKeys：每相位按 after 拓扑分层，同层按钩子代号升序，从 1 连续编号（期望值手算）', () => {
-  // environment 相位：alpha、itemThermal、zeta 无 after → 第 0 层；beta after zeta、itemRot after itemThermal → 第 1 层。
-  // 次序 alpha(0) itemThermal(0) zeta(0) beta(1) itemRot(1) → 1..5。society 相位另起编号：settlePopulation 1、settleStatBuild 2。
+test('assignSortKeys：每相位按 after 做 Kahn 拓扑排序，就绪队列按代号升序取最小者，从 1 连续编号（期望值手算）', () => {
+  // environment 相位：就绪 {alpha, itemThermal, zeta} → alpha 1；就绪 {itemThermal, zeta} → itemThermal 2；
+  // itemRot 就绪，就绪 {itemRot, zeta} → itemRot 3；zeta 4；beta 5。society 相位另起编号：settlePopulation 1、settleStatBuild 2。
   const systems = {
     'sys.a': { phase: { itemRot: hook('environment', ['itemThermal'], 0), itemThermal: hook('environment', [], 0), zeta: hook('environment', [], 0) } },
     'sys.b': { phase: { beta: hook('environment', ['zeta'], 0), alpha: hook('environment', [], 0), settleStatBuild: hook('society', ['settlePopulation'], 0) } },
@@ -208,12 +208,17 @@ test('assignSortKeys：每相位按 after 拓扑分层，同层按钩子代号�
   };
   const { keys, problems } = assignSortKeys(systems);
   assert.deepEqual(problems, []);
-  assert.deepEqual(Object.fromEntries(keys), { alpha: 1, itemThermal: 2, zeta: 3, beta: 4, itemRot: 5, settlePopulation: 1, settleStatBuild: 2 });
+  assert.deepEqual(Object.fromEntries(keys), { alpha: 1, itemThermal: 2, itemRot: 3, zeta: 4, beta: 5, settlePopulation: 1, settleStatBuild: 2 });
 });
 
-test('assignSortKeys：层次取 after 所指钩子的最大层次加 1（链长 3）', () => {
+test('assignSortKeys：b、z 无 after，m after b，a after z → b1 m2 z3 a4（卷文做法，非按层次）', () => {
+  const systems = { 'sys.a': { phase: { a: hook('body', ['z'], 0), b: hook('body', [], 0), m: hook('body', ['b'], 0), z: hook('body', [], 0) } } };
+  assert.deepEqual(Object.fromEntries(assignSortKeys(systems).keys), { b: 1, m: 2, z: 3, a: 4 });
+});
+
+test('assignSortKeys：c after b、a；b after a；d after a → a1 b2 c3 d4', () => {
   const systems = { 'sys.a': { phase: { c: hook('body', ['b', 'a'], 0), b: hook('body', ['a'], 0), a: hook('body', [], 0), d: hook('body', ['a'], 0) } } };
-  assert.deepEqual(Object.fromEntries(assignSortKeys(systems).keys), { a: 1, b: 2, d: 3, c: 4 });
+  assert.deepEqual(Object.fromEntries(assignSortKeys(systems).keys), { a: 1, b: 2, c: 3, d: 4 });
 });
 
 test('assignSortKeys：同名钩子登记在两个系统、成环、after 不存在都记入 problems', () => {
