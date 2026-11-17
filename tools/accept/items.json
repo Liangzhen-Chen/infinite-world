@@ -11,6 +11,22 @@
    "itemKey": "vol1.V-1.a",
    "localNo": "V-1",
    "method": "static_code",
+   "params": {
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "gate",
+     "outputGate",
+     "aiGate",
+     "assembly",
+     "host",
+     "display",
+     "clientTextcore"
+    ],
+    "literal": "entityPrefix"
+   },
    "part": "a",
    "parts": [
     "a",
