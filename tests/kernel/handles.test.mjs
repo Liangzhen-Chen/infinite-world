@@ -117,6 +117,37 @@ test('P：两条模式派生同名即生成失败 E-PATH-NAME-CLASH，不静默�
   assert.equal(E.E_PATH_NAME_CLASH, 'E-PATH-NAME-CLASH');
 });
 
+test('P：pathTypes 字面段文法 ^[a-z][a-z0-9_]*$ 且至少一个字面段（李白 11-17 裁定），违者 E-PATH-SEGMENT-GRAMMAR', () => {
+  const build = (pattern, opts) => buildP({ pathTypes: { [pattern]: 'number:count' } }, opts);
+  rejects(() => build('lot-x.*.spoilage'), 'E-PATH-SEGMENT-GRAMMAR');
+  rejects(() => build('lot.*.2nd'), 'E-PATH-SEGMENT-GRAMMAR');
+  rejects(() => build('__proto__.*'), 'E-PATH-SEGMENT-GRAMMAR');
+  rejects(() => build('lot._x'), 'E-PATH-SEGMENT-GRAMMAR');
+  rejects(() => build('lot.Name'), 'E-PATH-SEGMENT-GRAMMAR');
+  rejects(() => build('lot..x'), 'E-PATH-SEGMENT-GRAMMAR');
+  rejects(() => build('*'), 'E-PATH-SEGMENT-GRAMMAR');
+  rejects(() => build('*.*'), 'E-PATH-SEGMENT-GRAMMAR');
+  rejects(() => build('lot-x.*', { ledgerPaths: ['lot-x.*'] }), 'E-PATH-SEGMENT-GRAMMAR');
+  assert.deepEqual(Object.keys(build('a.*.b2_c')), ['a_b2_c']);
+  assert.deepEqual(Object.keys(build('a')), ['a']);
+  assert.equal(build('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.*')['aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa']('gad_box').endsWith('.gad_box'), true);
+  installHandles({ vocab: report.vocab, decl: {} });
+  assert.equal(E.E_PATH_SEGMENT_GRAMMAR, 'E-PATH-SEGMENT-GRAMMAR');
+});
+
+test('installHandles 原子赋值：P 生成抛错时 V、E、P 保持原值', () => {
+  installHandles({ vocab: report.vocab, decl: { pathTypes: { 'lot.*.spoilage': 'number:bps' } } });
+  const [v0, e0, p0] = [V, E, P];
+  assert.deepEqual(Object.keys(p0), ['lot_spoilage']);
+  const other = loadVocab({ families: { grade: { closed: false, prefix: 'grd_', entries: { grd_q: {} } } } }, [], () => {});
+  rejects(() => installHandles({ vocab: other, decl: { pathTypes: { 'bad-seg.*': 'number:count' } } }), 'E-PATH-SEGMENT-GRAMMAR');
+  assert.equal(V, v0);
+  assert.equal(E, e0);
+  assert.equal(P, p0);
+  assert.equal(V.grade.grd_q, undefined);
+  assert.equal(V.grade.grd_a, 'grd_a');
+});
+
 test('entityId：合文法且前缀属该 kind 才收；未登记 kind E-DIM-REF-MISSING', () => {
   assert.equal(entityId('gadget', 'gad_box'), 'gad_box');
   assert.equal(entityId('gadget', 'gad_new_one'), 'gad_new_one');

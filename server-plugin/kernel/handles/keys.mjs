@@ -95,6 +95,21 @@ export function wildcardCount(pattern) {
   return pattern.split('.').filter((s) => s === '*').length;
 }
 
+/** pathTypes 模式字面段文法（李白 11-17 pathTypes 段文法裁定，卷二 §2.7）：与代号文法同族——小写字母开头，只含小写字母、数字、下划线；不限长度（代号的 2–48 位限制不适用于路径段）。 */
+export const PATH_SEGMENT_RE = /^[a-z][a-z0-9_]*$/;
+
+/**
+ * 校验一条 pathTypes 模式：每个非 `*` 段合 PATH_SEGMENT_RE，且至少一个字面段（全 `*` 的模式派生成员名为空串）。
+ * 违者 E-PATH-SEGMENT-GRAMMAR。所有读 pathTypes 模式生成句柄的入口都经它（generated.mjs buildP）。
+ * @param {string} pattern
+ */
+export function checkPathPattern(pattern) {
+  const segs = typeof pattern === 'string' ? pattern.split('.') : [];
+  const bad = segs.find((s) => s !== '*' && !PATH_SEGMENT_RE.test(s));
+  if (!segs.length || bad !== undefined) throw new HandleError('E-PATH-SEGMENT-GRAMMAR', `pathTypes pattern ${JSON.stringify(pattern)}: literal segment ${JSON.stringify(bad)} not ^[a-z][a-z0-9_]*$`);
+  if (!segs.some((s) => s !== '*')) throw new HandleError('E-PATH-SEGMENT-GRAMMAR', `pathTypes pattern ${JSON.stringify(pattern)}: needs at least one literal segment`);
+}
+
 /**
  * 拼 StatePath<P>（§2.6 第 1 条）：pattern 必须是可生成 P 构造函数的模式（在 pathTypes 内、不是 textPath 与账本路径，由调用方给出集合），
  * 每个 `*` 段按次序换成一个实参；实参须是非空、不含 `.` 的字串（EntityId、EventId 或 Handle 的值形态），保证拼出的路径仍由该模式匹配。
