@@ -184,10 +184,14 @@
     {
      "ref": "api-s1216：共用的 item-form 加非扫描式条目修订记录与拆行的形式核对；本类别判定口径不变",
      "rev": 5
+    },
+    {
+     "ref": "api-s1216 只核改：卷一 V-1.a 补判据参数（同卷二 S1 的 groups 与 literal 参数，卷文已给）；其余判定口径不变（R12-14.3）",
+     "rev": 6
     }
    ],
    "print": "b797bb2d043950b182afa1d27a9d2da193ebcdc13e9f433e849cfaa170b59977",
-   "rev": 5,
+   "rev": 6,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
