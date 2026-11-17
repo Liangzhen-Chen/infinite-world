@@ -37,6 +37,14 @@
 - 密钥只从用户环境变量 CLAUDE_API_KEY 在子进程内读，不得打印、复制、写入仓库或日志。
 - PLAN 记每卡花费（total_cost_usd）、写的模型、只核的模型及原因；每天报一次 API 累计，到 150 美元单独报李白一次。
 - **今晚省钱方案（亮圳 11-17 23:11 批准，经李白，立即生效）**：① 只核照上节 23:04 新分档；② 写稿默认 Sonnet 5.5 中档，只有内核、加载器这类最底层的用 Opus 5.5 中档；③ 同一时间只跑一张卡，不两路并行（已在跑的跑完为止，之后一张接一张）；④ 今晚 API 累计到 150 美元即停开新卡，跑完手上那张就停，写明"等李白裁定"并发通知，不超过 150；⑤ 每张卡封卡回报写一句本卡花费与累计。
+- **引入 DeepSeek（亮圳 11-17 23:23 批准，经李白，立即生效）**：
+  1. 周四 11-19 10:00 重置前：代码主要由 DeepSeek（deepseek-flash）写；只核与复杂代码（内核、加载器、跨卷）仍用 Claude API，只核照 23:04 分档。
+  2. 重置后：混合、按难易动态分派。默认 Sonnet 加 DeepSeek，难的给 Opus；可让一个 Sonnet 或 Opus 负责一整块、自调 DeepSeek 写码提速，但封卡前只核仍按分档用另一个 Claude 会话。
+  3. 接法照 DeepSeek 官方 Claude Code 教程：派卡用 `sh F:/dnd-tools/api/run-card-ds.sh <worktree> <卡文文件>`；只在子进程环境设 ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic、ANTHROPIC_AUTH_TOKEN 取用户环境变量 DEEPSEEK_API_KEY，所有模型名一律 deepseek-flash（以 claude-opus 开头的名会转到更贵的 deepseek-v4-pro，派卡前确认）；子进程清掉 Claude 的 ANTHROPIC_API_KEY；不写全局设置、不改 C 盘、不打印不提交密钥。
+  4. 只发卡片相关的设计稿与代码，不带其他文件（卡文写明只读哪些文件）。
+  5. 先拿一张简单单卡试，回报能否跑通、返工几次、只核结论、DeepSeek 与 Claude 各花多少；不顺即停写"等李白裁定"。
+  6. 今晚 150 美元停卡线按 Claude API 花费算；DeepSeek 花费另记一行。
+  7. 通知李白（webhook）只在：封卡或封块、卡住需李白裁定、花费到线、重大异常。裁定回执、照录完毕、小进展不发，攒进封卡回报。
 
 ## 仓库与环境
 
