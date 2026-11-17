@@ -2,6 +2,7 @@
  "server-plugin/kernel/det-math.mjs",
  "server-plugin/kernel/load/flatten.mjs",
  "server-plugin/kernel/load/json-text.mjs",
+ "server-plugin/kernel/load/rules.mjs",
  "server-plugin/kernel/load/vocab-load.mjs",
  "server-plugin/kernel/load/world.mjs",
  "server-plugin/kernel/rx.mjs",

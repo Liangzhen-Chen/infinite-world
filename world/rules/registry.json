@@ -1,0 +1,24 @@
+{
+ "rows": [
+  {
+   "code": "kernelConstants",
+   "file": "tables/kernel-constants.json",
+   "structure": "keys",
+   "type": {"BASE": "integer", "SCALE": "integer", "extendsMaxDepth": "integer", "rxMaxDepth": "integer"},
+   "domain": {"BASE": [1, null], "SCALE": [1, null], "extendsMaxDepth": [1, null], "rxMaxDepth": [1, null]},
+   "volume": "卷二 §7 S10 :2386（kernel 定点文件常数登记豁免）、§3.3 :1333、§1.3、§1.5",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"BASE": false, "SCALE": false, "extendsMaxDepth": false, "rxMaxDepth": false}
+  },
+  {
+   "code": "valuation",
+   "file": "tables/valuation.json",
+   "structure": "keys",
+   "type": {"unitValue": "number"},
+   "domain": {"unitValue": [0, null]},
+   "volume": "卷三乙 §4.16 :346、:1693、V-1 :1707",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"unitValue": false}
+  }
+ ]
+}

@@ -1,13 +1,13 @@
 // 维度校验器（卷二 §4.1；门禁设施 dim-validate，卷十二 §2.11）：L0–L3，任一 error 即加载失败。
 // 输入是各文件的原文；输出按 (table,row,dim) 排序、同 (code,table,row,dim) 只报一次，末行汇总（§4.2）。
 // 只读表头、词表、单位表与调用方给的登记；规则里不含实体 id 字面量，前缀表来自表头。
-// 未做（P-2 汇报列出）：L4 不变量；L5 齐全率；distribution 参数；derived 公式编译与派生依赖图；修正项、效果族、需求块；
+// L5 齐全率报告见 coverageText（P-2b）。未做（P-2 汇报列出）：L4 不变量；distribution 参数；derived 公式编译与派生依赖图；修正项、效果族、需求块；
 // sources 推算与成员偏差；material 表专用命名条件 byDigestible、byReader（只记入 notCovered）。
 
 import { parseJsonStrict } from '../load/json-text.mjs';
 import { loadVocab, loadUnits } from '../load/vocab-load.mjs';
 import { flattenTable } from '../load/flatten.mjs';
-import { checkDef, CODE_RE, KEY_RE, CODE_ENUMS, TYPES } from './types.mjs';
+import { checkDef, CODE_RE, KEY_RE, CODE_ENUMS, TYPES, DOMAIN_OPTIONAL } from './types.mjs';
 import { checkRows, checkPrecedence, checkComponents, checkRequired, requiredSyntaxOk } from './rows.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -99,7 +99,7 @@ export function validateDimensions(sources, options) {
     t.flat = flattenTable(t.doc, groupsOf, options.limits.extendsMaxDepth, (e) => err({ ...e, path: `${t.file}${e.path}` }));
     t.env = env;
   }
-  const stats = { known: 0, applicable: 0, notCovered: new Set() };
+  const stats = { known: 0, applicable: 0, notCovered: new Set(), coverage: new Map() };
   for (const t of tables) { checkRows(t, env, err); checkPrecedence(t, env, err); }
   checkComponents(new Map(tables.map((t) => [t.kind, t])), env, err);
   for (const t of tables) checkRequired(t, env, err, stats);
@@ -129,7 +129,7 @@ function checkHeader(t, env, err) {
       if (typeof lo !== 'number' || typeof hi !== 'number' || rest.length || lo > hi) bad('E-MOD-BOUNDS', 'bounds', def.bounds, '[lo,hi]', 'L2');
     }
     if (def.sample !== undefined && def.derived !== undefined) bad('E-DIM-SAMPLE-DERIVED', 'sample', 'sample with derived', 'one of sample or derived');
-    if (def.domain === undefined && TYPES.includes(def.type) && !['boolean', 'rx', 'struct', 'map', 'union', 'distribution', 'curve', 'ref', 'enum'].includes(def.type)) bad('E-DIM-DOMAIN-RANGE', 'domain', 'missing', 'domain');
+    if (def.domain === undefined && TYPES.includes(def.type) && !DOMAIN_OPTIONAL.includes(def.type)) bad('E-DIM-DOMAIN-RANGE', 'domain', 'missing', 'domain');
     const sm = def.stockMode;
     if (sm !== undefined && !CODE_ENUMS.stock_mode.includes(sm)) bad('E-DIM-DOMAIN-ENUM', 'stockMode', sm, CODE_ENUMS.stock_mode.join('|'));
     if ((sm === 'remainder') !== (def.remDenominator !== undefined)) bad('E-DIM-STRUCT-FIELD', 'remDenominator', def.remDenominator, 'remDenominator exactly when stockMode is remainder');
@@ -162,9 +162,25 @@ function report(errors, tables, stats, env) {
     errors: out,
     notCovered: [...stats.notCovered].sort(),
     text: lines.join('\n') + '\n',
+    coverage: coverageText(stats.coverage),
     rx: env.compiled,
     tables: new Map(tables.map((t) => [t.kind, { doc: t.doc, flat: t.flat }])),
     vocab: env.vocab,
     idIndex: env.idIndex,
+    env,
   };
+}
+
+// L5 齐全率报告（§4.1 L5 :1493，不阻断）：每表每维一行五列，按 (table,dim) 排序；同一输入两次输出字节相同（A7）。
+// 写到 logs/dimensions-coverage.<date>.txt 由调用方做（kernel 不读墙钟）。
+function coverageText(coverage) {
+  const lines = ['table\tdim\tknown\tapplicable\tnotApplicable\tunknown\texplicitFill'];
+  for (const kind of [...coverage.keys()].sort()) {
+    const cov = coverage.get(kind);
+    for (const dim of Object.keys(cov).sort()) {
+      const c = cov[dim];
+      lines.push([kind, dim, c.known, c.applicable, c.notApplicable, c.unknown, c.explicitFill].join('\t'));
+    }
+  }
+  return lines.join('\n') + '\n';
 }

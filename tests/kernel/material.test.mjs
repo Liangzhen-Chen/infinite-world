@@ -8,12 +8,12 @@ import { createHash } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validateDimensions } from '../../server-plugin/kernel/validate/dimensions-validate.mjs';
-import { readConstants } from '../../server-plugin/kernel/load/world.mjs';
+import { readRules, ruleTable } from '../../server-plugin/kernel/load/rules.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DIR = join(ROOT, 'world/ontology/dimensions');
 const read = (f) => readFileSync(join(DIR, f), 'utf8');
-const C = readConstants(readFileSync(join(ROOT, 'world/rules/tables/kernel-constants.json'), 'utf8'));
+const C = ruleTable(readRules(ROOT).rules, 'kernelConstants');
 const OPTIONS = { namespaces: ['core'], displaySet: [], ns: [], limits: { extendsMaxDepth: C.extendsMaxDepth, rxMaxDepth: C.rxMaxDepth } };
 const load = () => ({ material: JSON.parse(read('material.json')), vocab: JSON.parse(read('_vocab.json')), units: JSON.parse(read('_units.json')) });
 const run = (w) => validateDimensions({ units: JSON.stringify(w.units), vocab: JSON.stringify(w.vocab), tables: [{ file: 'material.json', text: JSON.stringify(w.material) }] }, OPTIONS);

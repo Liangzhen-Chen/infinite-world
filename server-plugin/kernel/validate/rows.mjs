@@ -110,12 +110,15 @@ const REQ_FORMS = /^(always|never|byClass:[a-z][a-z0-9_]*|ifPresent:[a-z][a-zA-Z
 export const requiredTerms = (s) => (typeof s === 'string' ? s.split('；').map((x) => x.trim()) : []);
 export const requiredSyntaxOk = (s) => requiredTerms(s).length > 0 && requiredTerms(s).every((x) => REQ_FORMS.test(x));
 
-// 一个实体行对一个维度的必填判定：{applicable, anyOf?, named?}。
+const CONDITIONAL_FORMS = ['byClass', 'ifPresent', 'byEnum'];
+// 一个实体行对一个维度的必填判定：{applicable（必填）, anyOf?, named?, conditional}。
 function requirement(t, id, row, dim) {
   const terms = requiredTerms((t.doc.dimensions[dim] || {}).required);
-  const out = { applicable: false, anyOf: null, named: [] };
+  // conditional：策略里有 byClass/ifPresent/byEnum 条件项（§1.3 取值算法 :152，条件都不满足即"不适用"，RA-N5）。
+  const out = { applicable: false, anyOf: null, named: [], conditional: false };
   for (const term of terms) {
     const [form, arg] = [term.slice(0, term.indexOf(':') < 0 ? term.length : term.indexOf(':')), term.slice(term.indexOf(':') + 1)];
+    if (CONDITIONAL_FORMS.includes(form)) out.conditional = true;
     if (form === 'always') out.applicable = true;
     else if (form === 'byClass') { if (memberOf(row, arg, t.env)) out.applicable = true; }
     else if (form === 'ifPresent') { if (valueOf(t, id, row, arg).known) out.applicable = true; }
@@ -134,10 +137,15 @@ const knownPart = (t, id, row, item) => {
   return isObj(r.value) && r.value[col] !== undefined && r.value[col] !== null;
 };
 
-// L3：required 策略、实体行 basis、映射键集（§1.6 第 4 项）；同时累计 known / applicable。
+// L3：required 策略、实体行 basis、映射键集（§1.6 第 4 项）；同时累计 known / applicable，
+// 并按表按维累计 L5 齐全率五列（§4.1 L5 :1493）：不适用 = 条件项都不满足（§1.3 :152）；
+// explicitFill = 带 allowExplicit 的派生维度在实体行上显式写了值（FA-N5）。派生、采样维度 P-2 未求值，按取值算法记为已知。
 export function checkRequired(t, env, err, stats) {
   const { doc, kind, file } = t;
   const dims = doc.dimensions || {};
+  const cov = Object.create(null);
+  for (const dim of Object.keys(dims).sort()) cov[dim] = { known: 0, applicable: 0, notApplicable: 0, unknown: 0, explicitFill: 0 };
+  stats.coverage.set(kind, cov);
   for (const section of ['rows', 'generated']) {
     const rows = isObj(doc[section]) ? doc[section] : {};
     for (const id of Object.keys(rows).sort()) {
@@ -149,6 +157,12 @@ export function checkRequired(t, env, err, stats) {
         for (const n of req.named) stats.notCovered.add(`${kind}.${dim}:${n}`);
         const r = valueOf(t, id, row, dim);
         if (r.known && r.value !== undefined) checkMapKeys(dims[dim], r.value, env, at(dim), err);
+        const c = cov[dim];
+        if (req.applicable || !req.conditional) {
+          c.applicable++;
+          if (r.known) c.known++; else c.unknown++;
+          if (dims[dim].allowExplicit === true && dims[dim].derived !== undefined && r.source === 'instance') c.explicitFill++;
+        } else c.notApplicable++;
         if (!req.applicable) continue;
         stats.applicable++;
         if (r.known) stats.known++;
