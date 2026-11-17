@@ -74,19 +74,21 @@ export function overlapPairs(patterns) {
 /**
  * 按 R11-3.14 分配 sortKey：每个推进相位内，对全部钩子按机读 `after` 列表做拓扑排序（Kahn），就绪队列按钩子代号升序，
  * 每次从当前无未编号前驱的钩子里取代号最小的一个编号（从 1 起连续），再更新就绪队列。
- * after 指向不在同一相位的钩子、成环、或两个系统登记同名钩子时记入 problems（不编号以外的处置交调用方）。
+ * after 指向不在同一相位的钩子（别的相位按悬空处理，李白 11-17 裁定②）、指向不存在的钩子、成环、或两个系统登记同名钩子时记入 problems（不编号以外的处置交调用方）；
+ * 其中同名登记另记入 duplicates，其余（成环、悬空、跨相位）是 E-PHASE-SORTKEY-ORDER 的范围。
  * @param {Record<string, any>} systems state-owners.json 的 systems
- * @returns {{keys: Map<string, number>, problems: string[]}} keys：钩子代号 → sortKey
+ * @returns {{keys: Map<string, number>, problems: string[], duplicates: string[]}} keys：钩子代号 → sortKey
  */
 export function assignSortKeys(systems) {
   const hooks = new Map();
   const problems = [];
+  const duplicates = []; // problems 的子集：同名钩子登记在两个系统（不属 E-PHASE-SORTKEY-ORDER）
   for (const sys of sorted(Object.keys(isObj(systems) ? systems : {}))) {
     const ph = isObj(systems[sys]) ? systems[sys].phase : undefined;
     if (!isObj(ph)) continue;
     for (const name of sorted(Object.keys(ph))) {
       const h = isObj(ph[name]) ? ph[name] : {};
-      if (hooks.has(name)) { problems.push(`hook ${name} registered by both ${hooks.get(name).system} and ${sys}`); continue; }
+      if (hooks.has(name)) { const m = `hook ${name} registered by both ${hooks.get(name).system} and ${sys}`; problems.push(m); duplicates.push(m); continue; }
       hooks.set(name, { system: sys, phase: h.phase, after: Array.isArray(h.after) ? h.after : [] });
     }
   }
@@ -123,7 +125,7 @@ export function assignSortKeys(systems) {
       left.delete(ready[0]);
     }
   }
-  return { keys, problems: sorted(new Set(problems)) };
+  return { keys, problems: sorted(new Set(problems)), duplicates: sorted(new Set(duplicates)) };
 }
 
 // ---------- pathTypes 值类型文法（§2.7"E-TEXT-UNGATED 的机器判定"） ----------
@@ -278,12 +280,19 @@ export function mergeStateOwners(decl, ctx = {}) {
     else seenKey.set(k, h.hook);
   }
   // sortKey 重算比对（卷十一 R11-3.14；块 2 体检 K2-24）：只在钩子格式无误、无同阶段同键（已报 E-PHASE-DUPLICATE）时做。
-  // after 成环、指向不存在的钩子与"文件值≠重算值"的错误码尚无（原 E-MIG-SORTKEY-ORDER 随卷十一退役、改名未定，docs/问题.md 勘误批），
-  // 在码定下之前以异常中止加载，不借用别的码。
+  // 李白 11-17 块 2-2 裁定 ①②：after 成环、指向不存在的钩子、指向别的相位的钩子（按悬空处理）→ E-PHASE-SORTKEY-ORDER；
+  // 文件 sortKey 与重算不一致 → E-PHASE-SORTKEY-DRIFT。两码都直接报错、不静默修正（修正由离线生成器 tools/gen-sort-keys.mjs 做）。
+  // 有 ORDER 问题时重算键不完整，不再报 DRIFT。
   if (hooksOk && hooks.length) {
-    const { keys, problems } = assignSortKeys(systems);
-    const drift = hooks.filter((h) => keys.get(h.hook) !== h.sortKey).map((h) => `${h.hook}: file ${h.sortKey}, recomputed ${keys.get(h.hook)}`);
-    if (problems.length || drift.length) throw new Error(`state-owners sortKey check failed (error code pending ruling; run tools/gen-sort-keys.mjs): ${[...problems, ...drift].join('; ')}`);
+    const { keys, problems, duplicates } = assignSortKeys(systems);
+    const order = problems.filter((m) => !duplicates.includes(m));
+    for (const m of duplicates) err(E.E_PHASE_DUPLICATE, '', '#/systems', m, 'a hook name registered once');
+    for (const m of order) err(E.E_PHASE_SORTKEY_ORDER, '', '#/systems', m, 'after names only existing hooks of the same phase, acyclic');
+    if (!problems.length) {
+      for (const h of hooks) {
+        if (keys.get(h.hook) !== h.sortKey) err(E.E_PHASE_SORTKEY_DRIFT, h.hook, `#/systems/${h.system}/phase/${h.hook}/sortKey`, h.sortKey, `${keys.get(h.hook)} (recomputed by R11-3.14; run tools/gen-sort-keys.mjs)`);
+      }
+    }
   }
 
   // readShapes（§2.7"读入口返回形状登记"第 3 点）：不合即该文件加载失败，同其他字段的整体校验。
