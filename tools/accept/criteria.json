@@ -13,10 +13,14 @@
     {
      "ref": "P-1b：lit_scope 范围改走 scopeFiles、加 selfName 与分支计法，read.mjs 加离线组键与登记读入，S12-13 起盖判据代码指纹；本类别判定口径不变（原 must_fail 全报、must_pass 全不报）",
      "rev": 3
+    },
+    {
+     "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
+     "rev": 4
     }
    ],
-   "print": "242b53a5b9a0c96c62e53e8bfd0aebae3c13694a26f97a89e8d5ba435544f3bf",
-   "rev": 3,
+   "print": "a53ba9067a50eb28145ae0d19d571baf54a24b5784b3d4a29719f3634ce47b4b",
+   "rev": 4,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -34,10 +38,14 @@
     {
      "ref": "P-1b",
      "rev": 1
+    },
+    {
+     "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
+     "rev": 2
     }
    ],
-   "print": "ebcd3fd5cde92aba0db76d52cc4ac8c92658fb0bc8f3b0f705f9c8a2cd7bd272",
-   "rev": 1,
+   "print": "019c0f47b2a637cd8684006c733353c11aa8243b6897730d1761e3d99f0fabf7",
+   "rev": 2,
    "scanClass": "crit_version",
    "terms": {
     "vol12.S12-13": {
@@ -55,10 +63,14 @@
     {
      "ref": "P-1b",
      "rev": 1
+    },
+    {
+     "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
+     "rev": 2
     }
    ],
-   "print": "dc18b90f0b8019f97c828079ba9658f7bb1042b458b5af73bf844cf349f8a111",
-   "rev": 1,
+   "print": "de2a7057155fe9d8535ca560e5bd328fa1ed6fb453ae0cc9ff8cfce66ebe2cf1",
+   "rev": 2,
    "scanClass": "ext_code",
    "terms": {
     "vol12.S12-12": {
@@ -84,10 +96,14 @@
     {
      "ref": "门禁小修卡：共用的 item-form 加参数种类 roots；本类别判定口径不变",
      "rev": 3
+    },
+    {
+     "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
+     "rev": 4
     }
    ],
-   "print": "476cbe562513e836e720a61eaed4cfa4a64ac21f1a72ad5f566db931d175e144",
-   "rev": 3,
+   "print": "c55f926f47d76a722b348fb7623e5031d8153242a2fe6e40d573b2ebe50bb6b5",
+   "rev": 4,
    "scanClass": "instance_name",
    "terms": {
     "vol2.S1": {
@@ -105,10 +121,14 @@
     {
      "ref": "P-1b",
      "rev": 1
+    },
+    {
+     "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
+     "rev": 2
     }
    ],
-   "print": "dc18b90f0b8019f97c828079ba9658f7bb1042b458b5af73bf844cf349f8a111",
-   "rev": 1,
+   "print": "de2a7057155fe9d8535ca560e5bd328fa1ed6fb453ae0cc9ff8cfce66ebe2cf1",
+   "rev": 2,
    "scanClass": "item_downgrade",
    "terms": {
     "vol12.S12-16": {
@@ -130,10 +150,14 @@
     {
      "ref": "门禁小修卡：item-form 参数种类加 roots（fac）；判定口径不变",
      "rev": 2
+    },
+    {
+     "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
+     "rev": 3
     }
    ],
-   "print": "c9ec87b3649d7ba58a95c9b70512c230df58eba17af11c6a06e24f287b57bca4",
-   "rev": 2,
+   "print": "60feb47c029bac42b818949fbe568388717b88dd6c620f7f94b6fa316dc632ef",
+   "rev": 3,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -163,10 +187,14 @@
     {
      "ref": "门禁小修卡三（李白 11-17 裁定二）：列表项分支与形式名分支的编号前只许加粗，不再放过反引号；表首列与标题分支照旧可带反引号",
      "rev": 4
+    },
+    {
+     "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
+     "rev": 5
     }
    ],
-   "print": "c0b32976ca0b4b2799b9c9eb89d7768f42e9999ef373ce576df181d026282662",
-   "rev": 4,
+   "print": "fcf9bd27365a9568edf7ea5f991780113a645f5cc759e9ab75b83972b1ecd0c4",
+   "rev": 5,
    "scanClass": "item_ledger",
    "terms": {
     "vol12.S12-3": {
@@ -232,10 +260,14 @@
     {
      "ref": "清理卡三只核必须改（R12-14.3）：共用的 call_edge 路径段口子认同名遮蔽（本地名作函数参数、另行声明、被赋值即不认，复用 rootBindings 规则）、前导段比到 `**` 判可能落入、必跑测试检查只对有 guardedPaths 的类别启用；本类别无 guardedPaths、不用该口子，判定口径不变",
      "rev": 13
+    },
+    {
+     "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
+     "rev": 14
     }
    ],
-   "print": "0d4fdb61f440399dbda93a49660185c7cd08105f4ce082371417ce3d58956f9c",
-   "rev": 13,
+   "print": "aca61efb967b57d7d182a6b768b81a8c81f6ce7fb86f136cd6a90f7d04edb347",
+   "rev": 14,
    "scanClass": "module_edge",
    "terms": {
     "vol12.S12-1": {
@@ -265,10 +297,14 @@
     {
      "ref": "门禁小修卡：共用的 item-form 加参数种类 roots；本类别判定口径不变",
      "rev": 2
+    },
+    {
+     "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
+     "rev": 3
     }
    ],
-   "print": "c9ec87b3649d7ba58a95c9b70512c230df58eba17af11c6a06e24f287b57bca4",
-   "rev": 2,
+   "print": "60feb47c029bac42b818949fbe568388717b88dd6c620f7f94b6fa316dc632ef",
+   "rev": 3,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -326,10 +362,14 @@
     {
      "ref": "清理卡三只核必须改（R12-14.3）：离线路径段口子认同名遮蔽（仓库根函数、校验函数的本地名作函数参数、另行声明、被赋值即不认）；前导段与 guardedPaths 比到 `**` 段即判可能落入、计入；必跑测试检查只对有 guardedPaths 的类别（本类别）启用",
      "rev": 11
+    },
+    {
+     "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
+     "rev": 12
     }
    ],
-   "print": "b54bb07873e33d2232511a90f1789beaa0feaa09dfbf319db2a05c7fb762a066",
-   "rev": 11,
+   "print": "b2f3bc3d28939886243f05cb55b4f48976ca1d0f65b433f32a9ef2d743a25439",
+   "rev": 12,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -387,10 +427,14 @@
     {
      "ref": "清理卡三只核必须改（R12-14.3）：共用的 call_edge 路径段口子加同名遮蔽、`**` 判法，必跑测试检查只对有 guardedPaths 的类别启用；本类别无 guardedPaths、不用该口子，判定口径不变",
      "rev": 11
+    },
+    {
+     "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
+     "rev": 12
     }
    ],
-   "print": "32d13676adb30576e521242c554f2829b714196be9da39a4ea13e99a03f96e5d",
-   "rev": 11,
+   "print": "c26664c9b16a1f6432b3ad4e029173b4360e55f9702f9f4a44e23096f6f79b47",
+   "rev": 12,
    "scanClass": "rng_bypass",
    "terms": {}
   },
@@ -403,10 +447,14 @@
     {
      "ref": "P-1b：read.mjs 同 module_edge rev 3；本类别判定口径不变",
      "rev": 2
+    },
+    {
+     "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
+     "rev": 3
     }
    ],
-   "print": "8a3dca37e392ace9dff06745a98a3030b2589622677f3ae5a8294f552900db77",
-   "rev": 2,
+   "print": "f0c4c24afdad070e7f0f535682b70d45ebff7d26799e33a169e137f238b46c2e",
+   "rev": 3,
    "scanClass": "rules_import",
    "terms": {
     "vol1.V-9": {
@@ -424,10 +472,14 @@
     {
      "ref": "P-1b",
      "rev": 1
+    },
+    {
+     "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
+     "rev": 2
     }
    ],
-   "print": "242b53a5b9a0c96c62e53e8bfd0aebae3c13694a26f97a89e8d5ba435544f3bf",
-   "rev": 1,
+   "print": "a53ba9067a50eb28145ae0d19d571baf54a24b5784b3d4a29719f3634ce47b4b",
+   "rev": 2,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -449,10 +501,14 @@
     {
      "ref": "P-1b：read.mjs 同 module_edge rev 3；本类别判定口径不变",
      "rev": 2
+    },
+    {
+     "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
+     "rev": 3
     }
    ],
-   "print": "7d8f11696c73ed4affcb443cf50119cfcc5992d760ec314943318f4aa58a2ed7",
-   "rev": 2,
+   "print": "740aed1f07b10b38cf76b30e6b2da615b3d4dea819d8e411cebb7fe1c72ee205",
+   "rev": 3,
    "scanClass": "version_fork",
    "terms": {
     "vol1.V-17": {
@@ -510,10 +566,14 @@
     {
      "ref": "清理卡三只核必须改（R12-14.3）：共用的 call_edge 路径段口子加同名遮蔽、`**` 判法，必跑测试检查只对有 guardedPaths 的类别启用；本类别无 guardedPaths、不用该口子，判定口径不变",
      "rev": 11
+    },
+    {
+     "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
+     "rev": 12
     }
    ],
-   "print": "32d13676adb30576e521242c554f2829b714196be9da39a4ea13e99a03f96e5d",
-   "rev": 11,
+   "print": "c26664c9b16a1f6432b3ad4e029173b4360e55f9702f9f4a44e23096f6f79b47",
+   "rev": 12,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

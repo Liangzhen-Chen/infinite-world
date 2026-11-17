@@ -127,6 +127,14 @@ test('import_edge 成员闭集：按 filesList 清单判，清单外的组内文
   assert.deepEqual(unassigned(files), ['server-plugin/kernel/a.mjs', 'server-plugin/kernel/load/b.mjs']);
 });
 
+test('import_edge 声明文件（卷二 §2.9 第 2 条）：.d.ts 不算模块文件、不报 E-FILE-UNASSIGNED，未登记的 .mjs 仍报', () => {
+  const unassigned = (map) => edges(map, ['E-FILE-UNASSIGNED']).map((h) => h.file);
+  const map = { 'server-plugin/kernel/a.mjs': 'export const a = 0;', 'server-plugin/kernel/types.d.ts': 'export type T = string;', 'server-plugin/kernel/files.json': '["server-plugin/kernel/a.mjs"]' };
+  assert.deepEqual(unassigned(map), []);
+  assert.deepEqual(unassigned({ ...map, 'server-plugin/kernel/b.mjs': 'export const b = 0;' }), ['server-plugin/kernel/b.mjs']);
+  assert.deepEqual(unassigned({ ...map, 'server-plugin/kernel/c.d.mts': 'export type U = number;' }), []);
+});
+
 test('doc_struct 编号口径（裁定二）：只数定义处；引用、"第 n 条"、条文中间的编号不算；编号族来自登记数据', () => {
   const text = ['| V-1 | 条 |', '| **V-2** | 条 |', '### V-3 标题', '**V-8 分阶段**：见 V-4', '- V-5 列表项', '见 V-6 与 R-6 第 5 条', 'V-7 普通段落开头', '| 条 | V-9 在非首列 |', '| S12-1 | 别的族 |', '| V-1 | 重复定义 |'].join('\n');
   assert.deepEqual([...definedNumbers(text, ['V-']).entries()], [['V-1', 1], ['V-2', 2], ['V-3', 3], ['V-8', 4], ['V-5', 5]]);
