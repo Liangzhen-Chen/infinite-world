@@ -155,6 +155,8 @@ function typeOf(n, scope) {
       const argc = (n.arg || []).length;
       const want = nsArgCount(row);
       if (argc !== want) fail(`namespace ${n.ns} takes ${want} segments, got ${argc}`);
+      // 登记形状里写明的 set 型字段：这种读法不是读数，只许作 member 的 set（§2.9 第 4 条第 1 点）。
+      if (argc === 1 && nsSetFields(row).has(n.arg[0])) return 'set';
       return row.type === 'field' ? 'runtime' : row.type;
     }
     case 'add': case 'sub': case 'mul': case 'div':
@@ -162,6 +164,7 @@ function typeOf(n, scope) {
     case 'cmp': {
       if (n.cmpOp === 'eq' || n.cmpOp === 'ne') {
         const a = typeOf(n.left, scope); const b = typeOf(n.right, scope);
+        if (a === 'set' || b === 'set') fail('a set field is only a member set, not a value');
         if (a !== 'runtime' && b !== 'runtime' && !sameKind(a, b)) fail(`cannot compare ${a} with ${b}`);
         return 'boolean';
       }
@@ -171,8 +174,8 @@ function typeOf(n, scope) {
     case 'not': want(n.item, 'boolean'); return 'boolean';
     case 'member':
       want(n.item, 'code', 'handle', 'codeOrHandle');
-      // set 读 set 型维度；或读"随字段"的命名空间字段（如 material.classes），类型在求值时按读数核（须为列表）。
-      if (n.set.op === 'ns') { if (typeOf(n.set, scope) !== 'runtime') fail('member set must read a set dimension or a field namespace'); }
+      // set 读 set 型维度，或读已登记命名空间里一个登记为 set 型的字段（§2.9 第 4 条第 1 点）；别的一律编译失败。
+      if (n.set.op === 'ns') { if (typeOf(n.set, scope) !== 'set') fail('member set must read a set dimension or a registered set field'); }
       else if (n.set.op !== 'dim' || dimRxType(scope.dims.get(n.set.key), n.set.key, true) !== 'set') fail('member set must read a set dimension');
       return 'boolean';
     case 'agg': {
@@ -196,6 +199,8 @@ export const nsArgCount = (row) => {
   if (!row || typeof row.shape !== 'string') return fail(`namespace row ${row && row.ns} has no return shape`, 'E-RX-NS-UNKNOWN');
   return (row.shape.match(/<[^<>]+>/g) || []).length;
 };
+// 返回形状里写明"（set，只作 member 的 set）"的字段名：`<字段>（set，只作 member 的 set）`，由登记行判，不按命名空间名特判。
+export const nsSetFields = (row) => new Set([...String(row.shape).matchAll(/([A-Za-z_][\w]*)（set，只作 member 的 set）/g)].map((m) => m[1]));
 const sameKind =(a, b) => a === b || (a === 'codeOrHandle' && (b === 'code' || b === 'handle')) || (b === 'codeOrHandle' && (a === 'code' || a === 'handle'));
 
 // 维度类型 → RX 读数类型（第 1 点 dim 一项）；set 只许作 member 的 set。
@@ -244,7 +249,7 @@ export function compileRXInScope(text, profile, scope) {
     if (e instanceof FixedError) fail(e.message);
     throw e;
   }
-  typeOf(tree, scope);
+  if (typeOf(tree, scope) === 'set') fail('a set field is only a member set, not a value');
   if (!(depthOf(tree) <= scope.maxDepth)) fail(`depth exceeds ${scope.maxDepth}`);
   const nsRefs = [];
   const walk = (n) => {
