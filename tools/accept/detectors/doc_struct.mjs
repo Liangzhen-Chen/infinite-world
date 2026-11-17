@@ -1,7 +1,9 @@
 // 检测器 doc_struct（卷十二 §2.3、§4.12）：文稿的编号与登记表之间的结构关系。只数编号、比编号，不读文字（R12-11.3）。
 // 条目编号口径（李白 11-17 裁定二）：只数各卷"判定/验收"那一族编号，在定义处出现的才算——表格首列，或标题、加粗行开头
-// （前面可有列表符、表格竖线、反引号；卷二的 S 条是列表项开头，按定义处收）；纯段落开头的编号是引用；条文下面的"第 n 条"与别处的引用都不算条目。每卷算哪几族是登记数据：扫描类别登记行
-// docFamilies：{卷代号: [编号前缀]}（编号 = 前缀 + 数字，数字间可带 . 或 -），卷文件在 docVolumes；代码里没有卷名与前缀。
+// 或列表项开头（李白 11-17 门禁小修卡裁定二追认，对所有卷一样）；编号前只允许列表符、加粗（表格竖线、标题井号、反引号是另几种位置的记号）；
+// 列表项开头还允许"四种形式名之一＋全角冒号＋编号"（裁定一，卷十二的 A12 条）。纯段落开头的编号与段落中间的引用不算；条文下面的"第 n 条"也不算条目。
+// 每卷算哪几族是登记数据：扫描类别登记行 docFamilies：{卷代号: [编号前缀]}（编号 = 前缀 + 数字，数字间可带 . 或 -），卷文件在 docVolumes；
+// 四个形式名在同一行的 formNames：{acc_form 值: 中文名}（键取自 item-form 的 ENUM.form）；代码里没有卷名、前缀与形式名。
 // params.checks：
 //   orphan（E-ACC-ITEM-ORPHAN）  登记表里的条目，它的 localNo 不在所属卷的定义处编号里；卷没有登记卷文件或编号族的同样计入。
 //   unregistered（E-ACC-ITEM-UNREGISTERED）  卷里定义处有、登记表（该卷条目的 localNo）里没有的编号，每个编号一行。
@@ -13,11 +15,14 @@ import { LAYOUT, REGISTRY, regContent } from '../read.mjs';
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // 卷里定义处的编号 → 首次出现的行号（1 起）。
-export function definedNumbers(text, prefixes) {
+export function definedNumbers(text, prefixes, formNames = []) {
   const out = new Map();
   if (!prefixes.length) return out;
   // 行首须有定义处的记号：表格竖线、标题井号、列表符、加粗；纯段落开头的编号是引用，不算。
-  const lead = '(?:[ \\t>]*(?:[-*+]|\\d+\\.|#+|\\|)[ \\t]*(?:\\*\\*|`)*|[ \\t>]*\\*\\*)';
+  const mark = '(?:\\*\\*|`)*';
+  const list = '[ \\t>]*(?:[-*+]|\\d+\\.)[ \\t]*';
+  const names = formNames.filter(Boolean).map(esc).join('|');
+  const lead = `(?:[ \\t>]*(?:#+|\\|)[ \\t]*${mark}|${list}${mark}|[ \\t>]*\\*\\*${names ? `|${list}(?:${names})：[ \\t]*${mark}` : ''})`;
   const re = new RegExp(`^${lead}((?:${prefixes.map(esc).join('|')})\\d+(?:[.-]\\d+)*)(?![A-Za-z0-9_])`);
   text.split('\n').forEach((line, i) => {
     const m = re.exec(line);
@@ -30,6 +35,7 @@ export function detect(ctx, params, cls) {
   const checks = new Set(params.checks || []);
   const vols = (cls || {}).docVolumes || {};
   const fams = (cls || {}).docFamilies || {};
+  const formNames = Object.values((cls || {}).formNames || {});
   const all = new Set(ctx.files);
   const items = regContent(ctx, 'items') || [];
   const file = `${LAYOUT.accDir}/${REGISTRY.items.file}`;
@@ -37,7 +43,7 @@ export function detect(ctx, params, cls) {
   const defsOf = (vol) => {
     if (!defs.has(vol)) {
       const doc = vols[vol];
-      defs.set(vol, doc && all.has(doc) && fams[vol] ? definedNumbers(ctx.read(doc), fams[vol]) : null);
+      defs.set(vol, doc && all.has(doc) && fams[vol] ? definedNumbers(ctx.read(doc), fams[vol], formNames) : null);
     }
     return defs.get(vol);
   };

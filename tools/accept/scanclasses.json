@@ -76,6 +76,12 @@
     "vol12": "docs/统一底层设计/卷十二-验收与自动扫描.md",
     "vol2": "docs/统一底层设计/卷二-维度表规范与统一入口.md"
    },
+   "formNames": {
+    "extend": "扩展性式",
+    "invariant": "不变量式",
+    "process": "流程式",
+    "scan": "扫描式"
+   },
    "scanClass": "item_ledger",
    "source": "卷十二 §3.4 S12-3、R12-11.3；P-1b 新登类别"
   },

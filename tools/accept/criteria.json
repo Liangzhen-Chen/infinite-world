@@ -155,10 +155,14 @@
     {
      "ref": "门禁小修卡（李白 11-17 裁定二）：doc_struct 按登记的编号族只数定义处编号，补 unregistered、count 两项；orphan 改按定义处找",
      "rev": 2
+    },
+    {
+     "ref": "门禁小修卡二（李白 11-17 裁定一、二）：定义处加列表项开头的\"登记的形式名＋全角冒号＋编号\"（形式名读 scanclasses 行 formNames）；列表项开头紧跟编号追认为定义处，编号前只许列表符或加粗",
+     "rev": 3
     }
    ],
-   "print": "01ad621e7089c678e3f80da0a44e45e8ebce0dee9e68938567264b0ca309291c",
-   "rev": 2,
+   "print": "b36894d1672d7964cc93e6ce25892937d2ebc7edb237f9dc2eed54fe6eee7c24",
+   "rev": 3,
    "scanClass": "item_ledger",
    "terms": {
     "vol12.S12-3": {
@@ -188,10 +192,14 @@
     {
      "ref": "门禁小修卡：共用的 item-form 加参数种类 roots；本类别判定口径不变",
      "rev": 4
+    },
+    {
+     "ref": "门禁小修卡二：共用的 call_edge 临时根变量改认复合赋值与自增自减；本类别不用 roots，判定口径不变",
+     "rev": 5
     }
    ],
-   "print": "bb71d5bd5f15da7af6b73c14aaa9e6922e9ddf187049cac4bd5da456e90b3520",
-   "rev": 4,
+   "print": "37e3bc1689d5bcd639e52faddc04c032b1b4d8d403ec5a0a03668b19f2079834",
+   "rev": 5,
    "scanClass": "module_edge",
    "terms": {
     "vol12.S12-1": {
@@ -246,10 +254,14 @@
     {
      "ref": "门禁小修卡（李白 11-17 裁定一、三）：call_edge 认测试临时根（params.roots，常量相对路径不计），命中码取条目参数 code；判定口径只放宽到裁定三的口子，其余路径仍计",
      "rev": 2
+    },
+    {
+     "ref": "门禁小修卡二（李白 11-17 裁定三）：临时根变量被重新赋值（含 +=、++ 等复合赋值与自增自减）就不再认，照计入；临时根登记 entries 封闭为 testTempRoot、tempRepo",
+     "rev": 3
     }
    ],
-   "print": "07335d4abb0056c7060ff38af9eb3759a5d497a1976ea0bd5cd732b245d451a8",
-   "rev": 2,
+   "print": "4e1ebfe62d9544c94fb53596a94f5ddd3e53891f335c4ecc2abaf9146487b3d4",
+   "rev": 3,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -271,10 +283,14 @@
     {
      "ref": "门禁小修卡：call_edge 加临时根判法（本类别不用 roots）；判定口径不变",
      "rev": 2
+    },
+    {
+     "ref": "门禁小修卡二：共用的 call_edge 临时根变量改认复合赋值与自增自减；本类别不用 roots，判定口径不变",
+     "rev": 3
     }
    ],
-   "print": "3f41d7a0096dbd1dd51a764a5d55329c33100f245d7619b2bee0b66362ae899c",
-   "rev": 2,
+   "print": "5c5d20a1ff5924a67b093601ce4c720334cc85c72bcc226ca7c48ffd56553908",
+   "rev": 3,
    "scanClass": "rng_bypass",
    "terms": {}
   },
@@ -358,10 +374,14 @@
     {
      "ref": "门禁小修卡（李白 11-17 裁定一）：call_edge 加临时根判法（本类别不用 roots），命中码取条目参数 code（E-ACC-TOOL-NONDET）；本类别判定口径不变",
      "rev": 2
+    },
+    {
+     "ref": "门禁小修卡二：共用的 call_edge 临时根变量改认复合赋值与自增自减；本类别不用 roots，判定口径不变",
+     "rev": 3
     }
    ],
-   "print": "3f41d7a0096dbd1dd51a764a5d55329c33100f245d7619b2bee0b66362ae899c",
-   "rev": 2,
+   "print": "5c5d20a1ff5924a67b093601ce4c720334cc85c72bcc226ca7c48ffd56553908",
+   "rev": 3,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {
