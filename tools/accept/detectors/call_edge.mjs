@@ -48,7 +48,7 @@ export function detect(ctx, params, cls) {
       if (!Array.isArray(positions)) continue;
       const args = splitArgs(toks, k, close);
       // 写函数豁免：断言返回值绑定的变量须出现在每个路径实参里；字面量路径、别的变量照计。
-      if (ex && positions.length > 0 && positions.every((p) => args[p] && usesName(toks, args[p], ex[2]))) continue;
+      if (ex && positions.length > 0 && positions.every((p) => args[p] && usesName(toks, args[p], ex[2], env, joins))) continue;
       const provable = positions.length > 0 && positions.every((p) => {
         const a = args[p];
         if (!a) return false;
@@ -194,10 +194,26 @@ function boundName(toks, k, bodyOpen) {
   return null;
 }
 
-// 路径实参表达式里出现了绑定变量（不是别的对象的同名成员）。
-function usesName(toks, [s, e], name) {
-  for (let k = s; k < e; k++) if (toks[k].t === 'id' && toks[k].v === name && !isP(toks[k - 1], '.') && !isP(toks[k - 1], '?.')) return true;
-  return false;
+// 路径实参算"用到"断言返回变量只有两种（李白 11-17 裁定）：实参就是该变量本身；或以该变量为第一段的 join/resolve（函数取自 joinFns 登记、须 import 来），
+// 其余各段都是常量字符串且不含 `..`、不是绝对路径（只往下拼）。含 `..`、dirname 一类上行写法、非常量段、别的调用都不算。
+function usesName(toks, [s, e], name, env, joins) {
+  const isName = (k) => toks[k].t === 'id' && toks[k].v === name && !isP(toks[k - 1], '.') && !isP(toks[k - 1], '?.');
+  if (e - s === 1) return isName(s);
+  if (!isJoinCall(toks, s, e, joins)) return false;
+  const parts = splitArgs(toks, s + 1, e - 1);
+  if (parts.length < 1 || parts[0][1] - parts[0][0] !== 1 || !isName(parts[0][0])) return false;
+  return parts.slice(1).every((p) => {
+    const r = foldAt(toks, p[0], env);
+    if (!r || r.end !== p[1] || r.val.k !== 'str') return false;
+    const v = r.val.v.replace(/\\/g, '/');
+    return !v.includes('..') && !v.startsWith('/') && !/^[A-Za-z]:/.test(v);
+  });
+}
+
+// [s, e) 恰是一次 join/resolve 类调用：被调名是从 joinFns 登记的模块 import 来的登记函数。
+function isJoinCall(toks, s, e, joins) {
+  if (toks[s].t !== 'id' || !isP(toks[s + 1], '(') || matchClose(toks, s + 1) !== e - 1 || isP(toks[s - 1], '.') || isP(toks[s - 1], '?.')) return false;
+  return importsOf(toks).some((imp) => imp.kind === 'static' && Object.hasOwn(joins, imp.spec) && imp.names.some((n) => n.local === toks[s].v && joins[imp.spec].includes(n.imported)));
 }
 
 // 赋值与自增自减记号：变量被重新赋值（含复合赋值）就不再是临时根（李白 11-17 裁定三）。
@@ -249,9 +265,7 @@ function paramNames(toks) {
 function underRoot(toks, [s, e], env, rootNames, joins) {
   if (!rootNames.size) return false;
   if (e - s === 1) return toks[s].t === 'id' && rootNames.has(toks[s].v);
-  if (toks[s].t !== 'id' || !isP(toks[s + 1], '(') || matchClose(toks, s + 1) !== e - 1) return false;
-  const ok = importsOf(toks).some((imp) => imp.kind === 'static' && Object.hasOwn(joins, imp.spec) && imp.names.some((n) => n.local === toks[s].v && joins[imp.spec].includes(n.imported)));
-  if (!ok) return false;
+  if (!isJoinCall(toks, s, e, joins)) return false;
   const parts = splitArgs(toks, s + 1, e - 1);
   if (parts.length < 1 || parts[0][1] - parts[0][0] !== 1 || !rootNames.has(toks[parts[0][0]].v)) return false;
   const rel = [];

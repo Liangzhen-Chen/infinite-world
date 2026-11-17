@@ -211,6 +211,24 @@ test('call_edge 写函数豁免（裁定四收窄）：只豁免 assertedWriters
   assert.equal(run(T, noDecl), 1);
 });
 
+test('call_edge 写函数豁免"用到"（李白 11-17 收紧）：实参是绑定变量本身、或从它往下拼常量段才通过；带 .. 、dirname、非常量段、别的调用都判不过', () => {
+  const head = "import { writeFileSync } from 'node:fs';\nimport { join, resolve, dirname } from 'node:path';\nfunction assertRelUnderTempRoot(r, p) { return p; }\n";
+  const run = (w) => callEdge(ctxOf({ 'tests/accept/temp-root.mjs': `${head}export function writeUnderTempRoot(r, p, d) { const full = assertRelUnderTempRoot(r, p); ${w} }\n` }),
+    { groups: ['offline'], callers: [], callees: ['registry_write'], roots: ['test-temp-root'] }, CLS.registry_write).filter((h) => h.nodeKind === 'call').length;
+  assert.equal(run('writeFileSync(full, d);'), 0);
+  assert.equal(run("writeFileSync(join(full, 'sub.json'), d);"), 0);
+  assert.equal(run("writeFileSync(resolve(full, 'a', 'b.json'), d);"), 0);
+  assert.equal(run("writeFileSync(join(full, '..', 'x'), d);"), 1);
+  assert.equal(run("writeFileSync(join(full, 'a/../../x'), d);"), 1);
+  assert.equal(run("writeFileSync(join(full, '/etc/x'), d);"), 1);
+  assert.equal(run('writeFileSync(dirname(full), d);'), 1);
+  assert.equal(run("writeFileSync(join(dirname(full), 'x'), d);"), 1);
+  assert.equal(run('writeFileSync(join(full, p), d);'), 1);
+  assert.equal(run("writeFileSync(join('a', full), d);"), 1);
+  assert.equal(run("writeFileSync(other(full, 'x'), d);"), 1);
+  assert.equal(run("writeFileSync(full + '/x', d);"), 1);
+});
+
 test('writeUnderTempRoot 与断言函数（裁定四）：判据名取自登记数据，真实 temp-root.mjs 的写函数通过 call_edge，且体内先调用登记的断言', () => {
   const ctx = loadContext(ROOT);
   const fac = ctx.regs.gatefacs.find((g) => g.facCode === 'test-temp-root');
