@@ -361,6 +361,15 @@ test('call_edge 离线路径段（裁定一）：仓库根＋不命中 §2.11 �
   assert.equal(run("writeFileSync(join(repoRoot(), 'logs', '..', 'tools', 'accept', 'items.json'), 'x');"), 1);
   assert.equal(run("writeFileSync(join(repoRoot(), 'logs', 'a/../../tools/whitelist.json'), 'x');"), 1);
   assert.equal(run("function safeSegment2(x) { return x; }\nwriteFileSync(join(repoRoot(), 'logs', safeSegment2(n)), 'x');"), 1);
+  // 同名遮蔽：本文件声明的同名函数、参数遮蔽、局部 const 遮蔽、重新赋值（safeSegment 本身、repoRoot 本身）都不认，计入。
+  assert.equal(run("function safeSegment(x) { return x; }\nwriteFileSync(join(repoRoot(), 'logs', safeSegment(n)), 'x');"), 1);
+  assert.equal(run("function f(safeSegment, n) { writeFileSync(join(repoRoot(), 'logs', safeSegment(n)), 'x'); }"), 1);
+  assert.equal(run("const g = (safeSegment) => writeFileSync(join(repoRoot(), 'logs', safeSegment(n)), 'x');"), 1);
+  assert.equal(run("function f(n) { const safeSegment = (x) => x; writeFileSync(join(repoRoot(), 'logs', safeSegment(n)), 'x'); }"), 1);
+  assert.equal(run("safeSegment = (x) => x;\nwriteFileSync(join(repoRoot(), 'logs', safeSegment(n)), 'x');"), 1);
+  assert.equal(run("function f(repoRoot) { writeFileSync(join(repoRoot(), 'logs', safeSegment(n)), 'x'); }"), 1);
+  // 对照：没有遮蔽的同类写法不计。
+  assert.equal(run("function f(n) { writeFileSync(join(repoRoot(), 'logs', safeSegment(n)), 'x'); }"), 0);
   assert.equal(run("writeFileSync(join(repoRoot(), 'logs', safeSegment(n), 'x'), 'x');"), 1);
   assert.equal(run("writeFileSync(join(repoRoot(), 'logs', ...parts), 'x');"), 1);
   assert.equal(run("writeFileSync(join(repoRoot(), 'logs', o.safeSegment(n)), 'x');"), 1);
@@ -369,6 +378,12 @@ test('call_edge 离线路径段（裁定一）：仓库根＋不命中 §2.11 �
   assert.equal(run("writeFileSync(join(repoRoot(), 'tools', 'accept', safeSegment(n)), 'x');"), 1);
   assert.equal(run("writeFileSync(join(repoRoot(), 'tools', safeSegment('whitelist.json')), 'x');"), 1);
   assert.equal(run("writeFileSync(join(repoRoot(), 'tools/accept/out', safeSegment(n), safeSegment(m)), 'x');"), 1);
+  // 受保护模式含中间 `**`：前导段比到 `**` 即判可能落入，计入（夹具模式 a/**/c.json 与 a/b/c.json 一类）。
+  const starCtx = (body) => { const c = ctxOf({ 'tools/x.mjs': head + body }); return { ...c, regs: { ...c.regs, scanclasses: c.regs.scanclasses.map((s) => (s.scanClass === 'registry_write' ? { ...s, guardedPaths: ['logs/**/c.json', 'other/x.json'] } : s)) } }; };
+  const runStar = (body) => callEdge(starCtx(body), { groups: ['offline'], callers: [], callees: ['registry_write'], code: 'E-ACC-REGISTRY-WRITE' }, starCtx(body).regs.scanclasses.find((s) => s.scanClass === 'registry_write')).filter((h) => h.nodeKind === 'call').length;
+  assert.equal(runStar("writeFileSync(join(repoRoot(), 'logs', 'a', safeSegment(n)), 'x');"), 1);
+  assert.equal(runStar("writeFileSync(join(repoRoot(), 'logs', safeSegment(n)), 'x');"), 1);
+  assert.equal(runStar("writeFileSync(join(repoRoot(), 'elsewhere', safeSegment(n)), 'x');"), 0);
   // 必须报：根不是仓库根函数的返回值、函数不是从登记文件 import 来的。
   assert.equal(run("writeFileSync(join(dir, 'logs', safeSegment(n)), 'x');"), 1);
   assert.equal(run("writeFileSync(join(process.cwd(), 'logs', safeSegment(n)), 'x');"), 1);
@@ -398,4 +413,7 @@ test('离线路径段登记（裁定一）：gatefac 行登记 rootFns、segment
   assert.ok(line, 'required test line');
   const broken = { ...ctx, read: (p) => (p === req.file ? src.replace(line, line.replace(req.names[0], 'renamed')) : ctx.read(p)) };
   assert.deepEqual(callEdge(broken, params, CLS.registry_write).filter((h) => h.nodeKind === 'test').map((h) => h.symbolPath), [req.names[0]]);
+  // 没有 guardedPaths 的类别不检查路径段设施的必跑测试（修订记录称“判定口径不变”）。
+  assert.deepEqual(CLS.wallclock.guardedPaths, undefined);
+  assert.deepEqual(callEdge(broken, { ...params, callees: ['wallclock'] }, CLS.wallclock).filter((h) => h.nodeKind === 'test').map((h) => h.symbolPath).filter((s) => s === req.names[0]), []);
 });

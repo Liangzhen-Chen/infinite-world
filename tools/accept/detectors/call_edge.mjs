@@ -63,7 +63,7 @@ export function detect(ctx, params, cls) {
       if (!provable) hits.push({ file, line: t.line, nodeKind: 'call', symbolPath: sym[i], code: params.code || '' });
     }
   }
-  return hits.concat(requiredTestHits(ctx, new Map([...roots, ...segs]), params));
+  return hits.concat(requiredTestHits(ctx, new Map([...roots, ...(guarded.length ? segs : [])]), params));
 }
 
 // 离线路径段设施（gatefac 行带 rootFns、segmentFns；李白 11-17 21:2x 裁定一）：登记文件里的仓库根函数与路径段校验函数。
@@ -99,7 +99,13 @@ function segmentLocals(toks, file, segs) {
       }
     }
   }
-  const rootNames = rootCalls.size ? rootBindings(toks, file, new Map([...segs].map(([p, f]) => [p, { entries: f.entries }]))) : new Set();
+  // 同名遮蔽（函数参数、另行声明、被赋值）的本地名不认，规则同 rootBindings。
+  if (rootCalls.size || segCalls.size) {
+    const { bad } = classifyNames(toks, new Set());
+    for (const n of [...rootCalls]) if (bad.has(n)) rootCalls.delete(n);
+    for (const n of [...segCalls]) if (bad.has(n)) segCalls.delete(n);
+  }
+  const rootNames = rootCalls.size ?rootBindings(toks, file, new Map([...segs].map(([p, f]) => [p, { entries: f.entries }]))) : new Set();
   return { rootCalls, segCalls, rootNames };
 }
 
@@ -133,13 +139,16 @@ function underSegment(toks, [s, e], env, seg, joins, guarded) {
   return prefixClear(prefix, guarded);
 }
 
-// 前导段 prefix 加上任意尾段，都不可能落进 guarded 的任何模式：与每个模式逐段（模式段可含 *、**）比，必有一处对不上。
+// 前导段 prefix 加上任意尾段，都不可能落进 guarded 的任何模式：与每个模式逐段（模式段可含 *）比，必有一处对不上；比到 `**` 段即判可能落入。
 function prefixClear(prefix, guarded) {
   if (!prefix.length) return false;
   return guarded.every((g) => {
     const gs = g.replace(/\\/g, '/').split('/');
     const n = Math.min(gs.length, prefix.length);
-    for (let i = 0; i < n; i++) if (!matchGlobs(prefix[i], [gs[i]], [])) return true;
+    for (let i = 0; i < n; i++) {
+      if (gs[i] === '**') return false; // `**` 可吞任意多段，之后无法逐段比对，按可能落入处理
+      if (!matchGlobs(prefix[i], [gs[i]], [])) return true;
+    }
     return false;
   });
 }
@@ -328,18 +337,28 @@ function rootBindings(toks, file, roots) {
     }
   }
   if (!fns.size) return new Set();
+  const shadow = classifyNames(toks, new Set()).bad;
+  for (const n of [...fns]) if (shadow.has(n)) fns.delete(n);
+  if (!fns.size) return new Set();
+  const { good, bad } = classifyNames(toks, fns);
+  return new Set([...good].filter((n) => !bad.has(n)));
+}
+
+// 名字使用分类：good = 声明为 `const|let|var 名 = 登记函数(…)` 的名字；bad = 作函数参数、被别处声明（const/let/var/function/class）、被赋值或自增自减的名字。
+// 登记函数集合 fns 为空时没有 good，凡被声明、赋值、作参数的名字一律 bad（遮蔽判定用，segmentLocals 与 rootBindings 共用这一份）。
+function classifyNames(toks, fns) {
   const good = new Set(); const bad = new Set();
   const params = paramNames(toks);
   for (let i = 0; i < toks.length; i++) {
     const t = toks[i];
     if (t.t !== 'id' || isP(toks[i - 1], '.') || isP(toks[i - 1], '?.')) continue;
-    const decl = i > 0 && toks[i - 1].t === 'id' && ['const', 'let', 'var'].includes(toks[i - 1].v);
-    const rooted = decl && isP(toks[i + 1], '=') && toks[i + 2] && fns.has(toks[i + 2].v) && isP(toks[i + 3], '(');
+    const decl = i > 0 && toks[i - 1].t === 'id' && ['const', 'let', 'var', 'function', 'class'].includes(toks[i - 1].v);
+    const rooted = decl && toks[i - 1].v !== 'function' && toks[i - 1].v !== 'class' && isP(toks[i + 1], '=') && toks[i + 2] && fns.has(toks[i + 2].v) && isP(toks[i + 3], '(');
     if (params.has(t.v)) bad.add(t.v);
     else if (rooted) good.add(t.v);
     else if (decl || ASSIGN.some((o) => isP(toks[i + 1], o)) || isP(toks[i - 1], '++') || isP(toks[i - 1], '--')) bad.add(t.v);
   }
-  return new Set([...good].filter((n) => !bad.has(n)));
+  return { good, bad };
 }
 
 // 全部函数参数名（箭头函数、function）：多收不漏。
