@@ -190,6 +190,11 @@ test('call_edge 写函数豁免（裁定四收窄）：只豁免 assertedWriters
   assert.equal(run(T, fn('writeUnderTempRoot', 'if (d) { assertRelUnderTempRoot(r, p); } writeFileSync(p, d);')), 1);
   assert.equal(run(T, fn('writeUnderTempRoot', 'assertNotListed(r, p); writeFileSync(p, d);')), 1);
   assert.equal(run(T, fn('writeUnderTempRoot', 'obj.assertRelUnderTempRoot(r, p); writeFileSync(p, d);')), 1);
+  assert.equal(run(T, fn('writeUnderTempRoot', 'if (d) assertRelUnderTempRoot(r, p); writeFileSync(p, d);')), 1);
+  assert.equal(run(T, fn('writeUnderTempRoot', 'd && assertRelUnderTempRoot(r, p); writeFileSync(p, d);')), 1);
+  assert.equal(run(T, fn('writeUnderTempRoot', 'const f = () => assertRelUnderTempRoot(r, p); writeFileSync(p, d);')), 1);
+  assert.equal(run(T, fn('writeUnderTempRoot', 'assertRelUnderTempRoot(r, p); writeFileSync(p, d);')), 0);
+  assert.equal(run(T, fn('writeUnderTempRoot', 'if (d) { x(); } assertRelUnderTempRoot(r, p); writeFileSync(p, d);')), 0);
   assert.equal(run(T, fn('tempRepo', ok)), 1);
   assert.equal(run(T, fn('testTempRoot', ok)), 1);
   assert.equal(run(T, fn('otherWriter', ok)), 1);
