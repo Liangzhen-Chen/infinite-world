@@ -65,13 +65,14 @@ function verdictOf(item, n) {
 }
 
 // 绕法用例回归（R12-13.6）：片段放进该组的临时文件位置，按同类别各条目的参数判，结果须与极性相符。
-// 片段里 `// @file 名字` 起的段是同目录的另一个文件。
+// 片段里 `// @file 名字` 起的段是同目录的另一个文件；名字里带 `/` 的是仓库根相对路径（判据按文件路径判的用例要把文件放到原位，
+// 如 S10 登记豁免的文件与登记表）。
 export function splitFixture(text, mainPath) {
   const dir = mainPath.slice(0, mainPath.lastIndexOf('/') + 1);
   const files = new Map(); let cur = mainPath; let buf = [];
   for (const line of text.split('\n')) {
     const m = /^\/\/ @file (\S+)\s*$/.exec(line);
-    if (m) { files.set(cur, buf.join('\n')); cur = dir + m[1]; buf = []; continue; }
+    if (m) { files.set(cur, buf.join('\n')); cur = m[1].includes('/') ? m[1] : dir + m[1]; buf = []; continue; }
     buf.push(line);
   }
   files.set(cur, buf.join('\n'));

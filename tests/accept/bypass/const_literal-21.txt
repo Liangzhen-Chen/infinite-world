@@ -1,0 +1,6 @@
+export const a = 0;
+// @file server-plugin/kernel/det-math.mjs
+export const SCALE = 10000n;
+export const f = (x) => x * SCALE;
+// @file world/rules/tables/kernel-constants.json
+{"rows": [{"key": "SCALE", "value": 10000, "file": "server-plugin/kernel/det-math.mjs"}]}

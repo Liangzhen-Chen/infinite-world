@@ -213,9 +213,17 @@ function deepFreeze(v) {
   return v;
 }
 
-// scope：{dims: Map<维度键, 类型定义>, vocabIndex: Map<代号, {family, prefix}>, ns: [{ns, argCount, type}], maxDepth}。
+// 对外接口（卷二 :1222"compileRX(text, profile) 的公开签名不变"；kernelApi :609 只开给 output-gate/display-load.mjs 的显示档）。
+// 两档编译都要调用方给的闭集（数据档：维度、词表、命名空间登记与深度上限；显示档：绑定名闭集，:1166），两参拿不到，
+// 记 docs/问题.md。P-2：数据档由 kernel/validate 在加载期经 compileRXInScope 编；显示档未做。两种调用这里都报 E-MOD-RX。
+export function compileRX(text, profile) {
+  if (profile === 'data') return fail('data profile is compiled at load time by kernel/validate (compileRXInScope)');
+  return fail(`profile ${profile} not available (P-2 builds the data profile only)`);
+}
+
+// 加载期编译（只给 kernel/validate 用）。scope：{dims: Map<维度键, 类型定义>, vocabIndex: Map<代号, {family, prefix}>, ns: [{ns, argCount, type}], maxDepth}。
 // 返回 {tree, nsRefs}；失败抛 RxError（E-MOD-RX；引用未登记命名空间时 code 为 E-RX-NS-UNKNOWN）。
-export function compileRX(text, profile, scope) {
+export function compileRXInScope(text, profile, scope) {
   if (!PROFILE_OPS[profile]) fail(`profile ${profile} not available (P-2 builds the data profile only)`);
   let tree;
   try { tree = parse(text, profile, scope); } catch (e) {

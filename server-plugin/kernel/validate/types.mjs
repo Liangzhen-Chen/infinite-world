@@ -1,8 +1,8 @@
 // 类型清单（卷二 §1.5，封闭 14 种）：类型定义的 L1 检查与取值的 L1/L2 检查（取值域、形状、引用闭合、rx 编译）。
 // 只按维度定义通用处理；词表族、实体类都从加载结果查，不认任何具体表。
 
-import { SCALE_DIGITS, SCALE8_DIGITS } from '../det-math.mjs';
-import { compileRX } from '../rx.mjs';
+import { precisionOk, extPrecisionOk } from '../det-math.mjs';
+import { compileRXInScope } from '../rx.mjs';
 
 export const TYPES = Object.freeze(['number', 'integer', 'boolean', 'string', 'enum', 'ref', 'union', 'set', 'map', 'list', 'struct', 'curve', 'distribution', 'rx']);
 export const CODE_RE = /^[a-z][a-z0-9_]{1,47}$/;
@@ -52,8 +52,8 @@ export function checkDef(def, env, at, err, top) {
   if (t === 'number' || t === 'integer') {
     if (!env.units.has(def.unit)) bad('E-DIM-UNIT-UNKNOWN', def.unit, 'unit id in _units.json');
     const extScale = top && def.stockMode === 'extScale';
-    if (def.precision === undefined) { if (t === 'number') bad('E-DIM-SCHEMA-PRECISION', 'missing', `0..${SCALE_DIGITS}`); }
-    else if (extScale ? def.precision !== SCALE8_DIGITS : !(Number.isInteger(def.precision) && def.precision >= 0 && def.precision <= SCALE_DIGITS)) bad('E-DIM-SCHEMA-PRECISION', def.precision, extScale ? `${SCALE8_DIGITS} (stockMode extScale)` : `0..${SCALE_DIGITS}`);
+    if (def.precision === undefined) { if (t === 'number') bad('E-DIM-SCHEMA-PRECISION', 'missing', 'decimal places within SCALE'); }
+    else if (extScale ? !extPrecisionOk(def.precision) : !precisionOk(def.precision)) bad('E-DIM-SCHEMA-PRECISION', def.precision, extScale ? 'decimal places of SCALE² (stockMode extScale)' : 'decimal places within SCALE');
     if (def.domain !== undefined) {
       const [lo, hi, ...rest] = Array.isArray(def.domain) ? def.domain : [];
       const okEnd = (x) => x === null || typeof x === 'number';
@@ -118,6 +118,16 @@ export function checkDef(def, env, at, err, top) {
       });
     } else bad('E-DIM-UNION-SHAPE', 'none', 'anyOf or oneOf');
   }
+}
+
+// ---------- 行键文法（卷二 §1.3 继承写法；§2.8 表 kernel 行 :842 文法解析限 kernel/validate/* 等，故放在这里） ----------
+// §5.0 公共字段与 §1.3、§1.7 的行字段：不是维度，不参与继承（各行只取自己的）。
+export const ROW_FIELDS = Object.freeze(['extends', 'abstract', 'classes', 'tags', 'basis', 'sources', 'selection', 'status', 'generated', 'termination', 'nameParts', 'memberLinks']);
+const KEY_OPS = ['+', '-', '~', '*'];
+// 一个行键拆成 {dim, op}；op 为 '' 表示整值写法。
+export function splitKey(key) {
+  const last = key.slice(-1);
+  return KEY_OPS.includes(last) ? { dim: key.slice(0, -1), op: last } : { dim: key, op: '' };
 }
 
 const fieldRequired = (def) => (Array.isArray(def.required) ? def.required : []);
@@ -217,7 +227,7 @@ export function checkValue(def, v, env, at, err) {
     }
     case 'rx': {
       if (typeof v !== 'string') { bad('E-MOD-RX', typeof v, 'RX text', 'L2'); return; }
-      try { env.compiled.set(at.path, compileRX(v, 'data', env.rxScope)); } catch (e) {
+      try { env.compiled.set(at.path, compileRXInScope(v, 'data', env.rxScope)); } catch (e) {
         if (!e.code) throw e;
         bad(e.code, v, e.message, 'L2');
       }

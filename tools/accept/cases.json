@@ -55,6 +55,33 @@
    "scanClass": "const_literal"
   },
   {
+   "addedAtRev": 2,
+   "caseKey": "const_literal-21",
+   "fixture": "tests/accept/bypass/const_literal-21.txt",
+   "group": "kernel",
+   "origin": "卷二 S10 登记豁免：登记文件里的登记常数",
+   "polarity": "must_pass",
+   "scanClass": "const_literal"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "const_literal-22",
+   "fixture": "tests/accept/bypass/const_literal-22.txt",
+   "group": "kernel",
+   "origin": "卷二 S10 文件里出现表外常数照报",
+   "polarity": "must_fail",
+   "scanClass": "const_literal"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "const_literal-23",
+   "fixture": "tests/accept/bypass/const_literal-23.txt",
+   "group": "kernel",
+   "origin": "卷二 S10 豁免只限登记的两个文件：同值放别的文件照报",
+   "polarity": "must_fail",
+   "scanClass": "const_literal"
+  },
+  {
    "addedAtRev": 1,
    "caseKey": "instance_name-01",
    "fixture": "tests/accept/bypass/instance_name-01.txt",

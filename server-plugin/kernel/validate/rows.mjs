@@ -1,8 +1,7 @@
 // 行级检查（卷二 §4.1 L1 行结构、L2 引用与 precedence、L3 必填完整）。
 // 取值走 §1.3 唯一算法：own（实体行展平后的值）→ 本维所属 precedence 组内、实体所属的展平类别行 → 派生 / 采样 → 未知。
 
-import { ROW_FIELDS, splitKey } from '../load/flatten.mjs';
-import { checkValue, CODE_RE } from './types.mjs';
+import { checkValue, CODE_ENUMS, ROW_FIELDS, splitKey } from './types.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const SECTIONS = ['classes', 'rows', 'generated'];
@@ -168,7 +167,8 @@ function checkMapKeys(def, v, env, at, err) {
   const fam = k.vocab !== undefined ? k.vocab : undefined;
   let all = [];
   if (typeof fam === 'string' && env.vocab.families.has(fam)) all = Object.keys(env.vocab.families.get(fam).entries);
+  else if (k.type === 'enum' && Object.hasOwn(CODE_ENUMS, fam)) all = [...CODE_ENUMS[fam]]; // 代码内封闭枚举的全部取值（§1.6 第 4 项"enum 族的全部条目"）
   else if (k.kind !== undefined) all = [...env.idIndex].filter(([, kd]) => kd === k.kind).map(([id]) => id);
-  const missing = all.filter((x) => !Object.hasOwn(v, x) && CODE_RE.test(x)).sort();
+  const missing = all.filter((x) => !Object.hasOwn(v, x)).sort();
   if (missing.length) err({ code: 'E-DIM-MAP-SPARSE-NONSUM', level: 'L3', ...at, got: `missing ${missing.join(',')}`, want: 'every key of the family (write null for none)' });
 }

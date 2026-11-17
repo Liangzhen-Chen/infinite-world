@@ -5,9 +5,13 @@
     {
      "ref": "P-1",
      "rev": 1
+    },
+    {
+     "ref": "P-2：接卷二 S10 登记豁免（扫描类别行 litExempt；登记文件里、登记表有同文件同值行的常数不计，表外常数照报）",
+     "rev": 2
     }
    ],
-   "rev": 1,
+   "rev": 2,
    "scanClass": "const_literal"
   },
   {
