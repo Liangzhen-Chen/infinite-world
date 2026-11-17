@@ -36,32 +36,23 @@ export function prepareNamedConditions(t, env, err) {
   return out;
 }
 
-// 字段定义处写 null 的含义（卷二 §1.6 :254）：维度定义上的 `nullMeans`，取 'none' 即"null = 没有"。
-// 没写 nullMeans 的字段，null 的含义定义处未定，按保守处理（条目对本行不成立，同旧行为）。
-const NULL_IS_NONE = 'none';
-
 // 本行的读数：rowNs.<维度键> 取本行按取值算法已知的值，rowNs.classes 取本行组件类与类别连同上位链。
-// 两种"读不到"分开（卷二 §1.6 :254）：显式 null 是"没有"（含义在字段定义处），记入 none，不给读数；
-// 其中定义处写明 null = 没有的记入 absent（求值时 != 成立、== 不成立）；缺值才是未知，同样不给读数。
-// 求值器只有四种读数类型，null 不进求值器。dims = 本表维度定义（取各字段的 nullMeans）。
-export function rowReads(rowNs, known, classes, dims = {}) {
+// 两种"读不到"分开（卷二 §1.6 第 2 点 :254）：显式 null 是已知值，表示没有任何条目，记入 none，不给读数；
+// 条件比较里 null 只等于 null（== 不成立、!= 成立）——整类通则，对所有 nullable 字段一样，不读字段说明文字。
+// 缺值才是未知，同样不给读数。求值器只有四种读数类型，null 不进求值器。
+// 未声明 nullable 的字段写 null，加载时已在类型与取值域校验层报 E-DIM-DOMAIN-RANGE（types.mjs checkValue），到不了这里。
+export function rowReads(rowNs, known, classes) {
   const reads = {};
   const none = new Set();
-  const absent = new Set();
-  for (const [dim, v] of known) {
-    const key = `${rowNs}.${dim}`;
-    if (v !== null) { reads[key] = v; continue; }
-    none.add(key);
-    if (isObj(dims[dim]) && dims[dim].nullMeans === NULL_IS_NONE) absent.add(key);
-  }
+  for (const [dim, v] of known) { if (v === null) none.add(`${rowNs}.${dim}`); else reads[`${rowNs}.${dim}`] = v; }
   reads[`${rowNs}.classes`] = classes;
-  return { reads, none, absent };
+  return { reads, none };
 }
 
 const TRUE_NODE = { op: 'cmp', cmpOp: 'eq', left: { op: 'num', value: 0 }, right: { op: 'num', value: 0 } };
 const FALSE_NODE = { op: 'cmp', cmpOp: 'ne', left: { op: 'num', value: 0 }, right: { op: 'num', value: 0 } };
 
-// "没有"的读数参与 ==/!= 比较时按含义定值：== 不成立、!= 成立；其余用法（序比较、算术、member）不改，仍按读不到处理。
+// 显式 null 的读数参与 ==/!= 比较时按通则定值：== 不成立、!= 成立；其余用法（序比较、算术、member）不改，仍按读不到处理。
 function foldAbsent(n, absent) {
   if (!n || typeof n !== 'object') return n;
   if (n.op === 'cmp' && (n.cmpOp === 'eq' || n.cmpOp === 'ne')) {
@@ -76,10 +67,10 @@ function foldAbsent(n, absent) {
 
 // 条目求值遇到读数缺失：缺的是"没有"的字段，条目对本行不成立（没有成分就不是任何成分）；缺的是未知的，
 // 按"未知"计入成立（卷三甲 §2.1 byDigestible"为真或为未知"）。
-export function namedHolds(cond, { reads, none, absent = new Set() }) {
+export function namedHolds(cond, { reads, none }) {
   const all = { ...reads, ...cond.reads };
   return cond.trees.some(({ tree }) => {
-    const t = absent.size ? foldAbsent(tree, absent) : tree;
+    const t = none.size ? foldAbsent(tree, none) : tree;
     try { return evaluateRX(t, { dim: {} }, all) === true; } catch (e) {
       if (e instanceof RxError) return !none.has(e.key);
       throw e;
