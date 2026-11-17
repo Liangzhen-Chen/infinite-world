@@ -131,7 +131,96 @@
   },
   "diet": {
    "closed": false,
-   "entries": {},
+   "entries": {
+    "diet_graze": {
+     "assimilation": {
+      "bySubstance": {
+       "subst_animal_product": null,
+       "subst_bone": null,
+       "subst_fiber": null,
+       "subst_flesh": null,
+       "subst_glass": null,
+       "subst_hide": null,
+       "subst_metal": null,
+       "subst_mineral": null,
+       "subst_plant": 0.74,
+       "subst_stone": null,
+       "subst_water": null,
+       "subst_wood": null
+      },
+      "other": null
+     },
+     "eats": "material.substance == subst_plant and lot.spoilage <= 0.3",
+     "eatsTaxa": [],
+     "fiberPenalty": 0.88
+    },
+    "diet_omnivore": {
+     "assimilation": {
+      "bySubstance": {
+       "subst_animal_product": 0.9,
+       "subst_bone": 0.94,
+       "subst_fiber": 0.94,
+       "subst_flesh": 0.82,
+       "subst_glass": 0.94,
+       "subst_hide": 0.94,
+       "subst_metal": 0.94,
+       "subst_mineral": 0,
+       "subst_plant": 0.8,
+       "subst_stone": 0.94,
+       "subst_water": 0.97,
+       "subst_wood": 0.94
+      },
+      "other": 0.94
+     },
+     "eats": "material.classes has comp_edible and lot.spoilage <= 0.3",
+     "eatsTaxa": []
+    },
+    "diet_piscivore": {
+     "assimilation": {
+      "bySubstance": {
+       "subst_animal_product": null,
+       "subst_bone": null,
+       "subst_fiber": null,
+       "subst_flesh": 0.8,
+       "subst_glass": null,
+       "subst_hide": null,
+       "subst_metal": null,
+       "subst_mineral": null,
+       "subst_plant": null,
+       "subst_stone": null,
+       "subst_water": null,
+       "subst_wood": null
+      },
+      "other": null
+     },
+     "eats": "material.substance == subst_flesh and material.moisture >= 0.5 and lot.spoilage <= 0.2",
+     "eatsTaxa": [
+      "taxon_fish"
+     ]
+    },
+    "diet_root": {
+     "assimilation": {
+      "bySubstance": {
+       "subst_animal_product": null,
+       "subst_bone": null,
+       "subst_fiber": null,
+       "subst_flesh": null,
+       "subst_glass": null,
+       "subst_hide": null,
+       "subst_metal": null,
+       "subst_mineral": null,
+       "subst_plant": 0.9,
+       "subst_stone": null,
+       "subst_water": null,
+       "subst_wood": null
+      },
+      "other": null
+     },
+     "eats": "material.substance == subst_plant and lot.spoilage <= 0.5",
+     "eatsTaxa": [],
+     "fiberPenalty": 1.88
+    }
+   },
    "prefix": "diet_"
   },
   "matcat": {

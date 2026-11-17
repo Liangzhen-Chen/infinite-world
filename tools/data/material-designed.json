@@ -1,10 +1,28 @@
 {
- "note": "卷三甲 §2.1 物性格的来源级别 designed（C 设计设定）格。李白 11-17 卷三甲补裁（亮圳 15:56）：查不到合格出处的数据格不再留空，改填设定值，记 designed，basis 写参照哪一行、为什么这样取，依据代号用'设'类。tools/convert-material.mjs 读本文件整表套用；只填卷文留空的格，不覆盖已有值。可在试玩后调。",
+ "note": "卷三甲 §2.1 物性格的来源级别 designed（C 设计设定）格。李白 11-17 卷三甲补裁（亮圳 15:56）：查不到合格出处的数据格不再留空，改填设定值，记 designed，basis 写参照哪一行、为什么这样取，依据代号用'设'类。tools/convert-material.mjs 读本文件整表套用；只填卷文留空的格，不覆盖已有值。可在试玩后调。class_ 开头的是旧营养类别行的 energyDensity（李白 11-17 P3-06：不由旧千卡折算，旧值是代谢能，卷三甲 :148 口径是干基总能），数值单位 satiety_per_kg_dry（干基总能 MJ/kg）；按卷三甲 §4.5.5 :516'能:食'的燃烧热系数（蛋白 23.6、脂肪 39.3、碳水 17.5）或参照同类材料行取。",
  "cells": [
   { "row": "mat_mash", "dim": "fiberContent", "value": 0.15, "code": "纤:设", "basis": "参照粟（mat_millet，0.089，醪由粟经发酵而成）：发酵把一部分淀粉耗成酒精与气体，粗纤维基本不动，干物质变少，纤维占比随之升高；取粟的约 1.7 倍" },
   { "row": "mat_leaf_litter", "dim": "fiberContent", "value": 0.3, "code": "纤:设", "basis": "参照干草（mat_dry_grass，0.30）与秸秆（mat_straw，0.415）：凋落叶同为干枯的植物茎叶料，比禾草干草多木质化、比秸秆少茎秆，取两者中偏低的干草值；不大于本行干基碳水 0.73（M-19）" },
   { "row": "mat_mash", "dim": "carbContent", "value": 0.6, "code": "碳:设", "basis": "参照粟（mat_millet，0.796）：发酵把一部分糖与淀粉耗成酒精与气体，酒精按本字段口径仍算干物质，碳水占比低于原粮；取约四分之三。不小于本行纤维设定值 0.15（M-19）" },
   { "row": "mat_nightcap_mushroom", "dim": "carbContent", "value": 0.58, "code": "碳:设", "basis": "假想毒菇，没有对应的真实菌种；参照卷三甲例 8 第六版撤掉的食用菌六行类推值 0.58（白蘑菇等，见例 8 备注），此处作设定值，不作出处。不小于本行纤维 0.08（M-19）" },
-  { "row": "mat_moon_berry", "dim": "carbContent", "value": 0.85, "code": "碳:设", "basis": "假想浆果，按设定是浆果（例 6 记果）：浆果的干物质以糖为主，取 0.85；不小于本行纤维设定值 0.1（M-19）" }
+  { "row": "mat_moon_berry", "dim": "carbContent", "value": 0.85, "code": "碳:设", "basis": "假想浆果，按设定是浆果（例 6 记果）：浆果的干物质以糖为主，取 0.85；不小于本行纤维设定值 0.1（M-19）" },
+  { "row": "class_mushroom", "dim": "energyDensity", "value": 18.9, "code": "能:设", "basis": "参照卷三甲 §4.5.5 夜帽菇行备注：按 USDA FDC 169251（白蘑菇，本类别行含水率的同一条出处）成分重算的干基总能 18.9（文献值上网核对 A 表）；本类别只有栽培菇一种" },
+  { "row": "class_nut", "dim": "energyDensity", "value": 31, "code": "能:设", "basis": "去壳榛仁、核桃仁干物质约六成半是脂肪、一成五蛋白、一成五碳水，按 :516 燃烧热系数估得 31–33，取下端 31；落在大豆（mat_soybean 23.6，脂少）与菜籽油（mat_rapeseed_oil 39.5，纯油）之间" },
+  { "row": "class_fruit", "dim": "energyDensity", "value": 16.5, "code": "能:设", "basis": "参照月华浆果（mat_moon_berry 16.5）：鲜果干物质以糖为主（糖 16.5、纯糖 15.6，:516–517），另有少量蛋白与纤维，取 16.5" },
+  { "row": "class_vegetable", "dim": "energyDensity", "value": 16.7, "code": "能:设", "basis": "参照鲜菜（mat_fresh_greens 16.7，能:食，USDA FDC 169975 甘蓝重算 17.4）：本类别各条出处都是根茎与叶菜，干物质成分相近，取同值" },
+  { "row": "class_legume", "dim": "energyDensity", "value": 18.5, "code": "能:设", "basis": "扁豆、干豌豆、蚕豆干物质约蛋白两成五、碳水六成余、脂肪不到 2%，按 :516 燃烧热系数估约 18.4–18.6，取 18.5；比大豆（mat_soybean 23.6）低，因为这几种豆不含油" },
+  { "row": "class_grain", "dim": "energyDensity", "value": 18.5, "code": "能:设", "basis": "参照麦（mat_wheat 18.2，能:饲）与粟（mat_millet 18.8，能:饲）两行的平均；本类别出处是小麦、黑麦粉、燕麦、大麦，同为禾谷" },
+  { "row": "class_meat", "dim": "energyDensity", "value": 26.7, "code": "能:设", "basis": "参照肉（mat_flesh 26.7，能:食）：同为畜肉" },
+  { "row": "class_fish", "dim": "energyDensity", "value": 24.7, "code": "能:设", "basis": "参照生河鱼（mat_raw_river_fish 24.7，能:食，USDA FDC 171952 鲤鱼）：同为鱼肉" },
+  { "row": "class_egg", "dim": "energyDensity", "value": 28.1, "code": "能:设", "basis": "参照蛋（蛋液）（mat_egg 28.1，能:食，USDA FDC 171287 全蛋，即本类别行的同一条出处）" },
+  { "row": "class_milk", "dim": "energyDensity", "value": 24.6, "code": "能:设", "basis": "参照羊乳（mat_goat_milk 24.6，能:食，USDA FDC 171278）：牛乳、羊乳干物质成分相近" },
+  { "row": "class_edible_fat", "dim": "energyDensity", "value": 39.5, "code": "能:设", "basis": "参照菜籽油（mat_rapeseed_oil 39.5，能:纯）与牛油（炼过）（mat_tallow 39.8）：本类别出处是菜籽油与猪脂，几乎纯油脂（:517 油脂 39 至 40），取 39.5" },
+  { "row": "class_sweetener", "dim": "energyDensity", "value": 15.6, "code": "能:设", "basis": "参照蜜（mat_honey 15.6，能:纯）：本类别出处只有蜂蜜一条" },
+  { "row": "class_vinegar", "dim": "energyDensity", "value": 14.9, "code": "能:设", "basis": "参照醋（mat_vinegar 14.9，能:纯）：同为醋" },
+  { "row": "class_salt", "dim": "energyDensity", "value": 0, "code": "能:设", "basis": "参照岩盐（mat_halite 0，能:纯）：无机盐的燃烧热为 0（:517）" },
+  { "row": "class_fresh_herb", "dim": "energyDensity", "value": 16.7, "code": "能:设", "basis": "参照鲜菜（mat_fresh_greens 16.7）：鲜香草与叶菜同为鲜嫩茎叶，干物质成分相近" },
+  { "row": "class_spice_seed", "dim": "energyDensity", "value": 25, "code": "能:设", "basis": "黄芥籽、罂粟籽、香芹籽是油料籽，干物质脂肪约一成五到四成多，按 :516 燃烧热系数估在 21–28 之间，取中 25；高于大豆（mat_soybean 23.6）" },
+  { "row": "class_cream", "dim": "energyDensity", "value": 35, "code": "能:设", "basis": "高脂奶油干物质约八成半是乳脂、蛋白与乳糖各约 5%，按 :516 燃烧热系数估约 35.8，取 35；略低于酥油（mat_butter 38.2，脂更纯）" },
+  { "row": "class_cheese", "dim": "energyDensity", "value": 27.5, "code": "能:设", "basis": "参照乳酪（mat_cheese 27.5，能:食，USDA FDC 170899 切达）：本类别出处是硬乳酪（切达）" }
  ]
 }
