@@ -269,8 +269,9 @@ for (const [lineNo, sec, l] of exampleLines) {
 
 // ---------- 仍缺的必填格：统一规则算出暂定值（李白 11-17 改令；规则说明见 审查/P-3-推导规则.md） ----------
 // 必填判定照表头：always、byClass:<组件类>、ifPresent:<维度>；byDigestible、byReader、anyOf 不在此补。
-// 不补的格：卷文短表明写未知的（declaredUnknown）；valueMult 归卷三乙 §7 M3b-27 离线标定（tools/calibrate-valuemult.mjs），不暂定。
-const NOT_PROVISIONAL = { valueMult: '卷三乙 §7 M3b-27 离线标定' };
+// 不补的格：卷文短表明写未知的（declaredUnknown）。valueMult 正式值归卷三乙 §7 M3b-27 离线标定（tools/calibrate-valuemult.mjs，眼下做不了），
+// 先按 P3-T4 暂定（李白 11-17）。
+const NOT_PROVISIONAL = {};
 const RULE_NOTE = { rotRate: '卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定' };
 const needs = (r, d) => requiredTerms(d.required).some((t) => t === 'always' || (t.startsWith('byClass:') && (r.classes || []).includes(t.slice(8))) || (t.startsWith('ifPresent:') && r[t.slice(10)] !== undefined));
 const median = (a) => { const s = [...a].sort((x, y) => x - y); const h = s.length >> 1; return s.length % 2 ? s[h] : (s[h - 1] + s[h]) / 2; };
@@ -289,7 +290,17 @@ for (const dim of Object.keys(dims).sort()) {
   const holes = ids.filter((id) => rows[id].r[dim] === undefined && needs(rows[id].r, d) && !declaredUnknown.has(`${id}.${dim}`));
   if (!holes.length) continue;
   const note = RULE_NOTE[dim] ? `；${RULE_NOTE[dim]}` : '';
-  if (dim === 'repairedWith') {
+  if (dim === 'valueMult') {
+    // P3-T4：同本源成分的卷文例值（§4.1.5、§4.3.5 实例补进来的格）取下中位数；本源成分为空或该成分没有例值的一律 1。
+    const anchors = ids.filter((h) => typeof rows[h].r[dim] === 'number' && rows[h].r.substance);
+    for (const id of holes) {
+      const s = rows[id].r.substance;
+      const g = s ? anchors.filter((h) => rows[h].r.substance === s).map((h) => rows[h].r[dim]).sort((x, y) => x - y) : [];
+      rows[id].r[dim] = g.length ? g[(g.length - 1) >> 1] : 1;
+      srcAdd(rows[id].r, { dimension: dim, name: '暂定，待 M3b-27 标定', citation: `P3-T4 ${g.length ? `同本源成分 ${s} 例值下中位数（n=${g.length}）` : '本源成分无例值，取 1'}；卷三甲 §4.1.5/§4.3.5 例值；暂定`, status: 'vstat_placeholder' });
+      provisional.push(dim);
+    }
+  } else if (dim === 'repairedWith') {
     // P3-T3：修理用料类 = 本行本源成分在卷三乙 :559 的类别（卷三甲 §4.1.5 例 1、例 2 两例都等于自身类别）。
     for (const id of holes) { const c = substanceClass[rows[id].r.substance]; if (!c) { report.skipped.push(`${id}.repairedWith: 本源成分无类别，T3 算不出`); continue; } rows[id].r[dim] = c; mark(rows[id].r, dim, 'P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）'); }
   } else if (dim === 'reactionYield') {

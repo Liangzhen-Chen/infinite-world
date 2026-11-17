@@ -113,8 +113,26 @@ test('L1：取值域、集合、结构、映射键集', () => {
   f.gadget.rows.gad_box.spec = { high: 3, odd: 1 };
   f.gadget.rows.gad_hammer.weights = { grd_a: 1 };
   const r = run(f);
-  assert.deepEqual([...new Set(codes(r))].sort(), ['E-DIM-DOMAIN-RANGE', 'E-DIM-DOMAIN-SIZE', 'E-DIM-MAP-SPARSE-NONSUM', 'E-DIM-REQUIRED-MISSING', 'E-DIM-STRUCT-FIELD']);
-  assert.equal(errOf(r, 'E-DIM-REQUIRED-MISSING').dim, 'size'); // ifPresent:spec 成立
+  assert.deepEqual([...new Set(codes(r))].sort(), ['E-DIM-DOMAIN-RANGE', 'E-DIM-DOMAIN-SIZE', 'E-DIM-MAP-SPARSE-NONSUM', 'E-DIM-STRUCT-FIELD']);
+  assert.equal(errOf(r, 'W-DIM-GAP').dim, 'size'); // ifPresent:spec 成立；size 的 onUnknown 是 gap，缺值只报警告
+});
+
+test('W-DIM-GAP：onUnknown 为 gap 的必填维度缺值 → 警告、加载通过；非 gap 的必填缺值仍 E', () => {
+  const f = fixture();
+  f.gadget.rows.gad_box.spec = { low: 1, high: 2 }; // 使 size（ifPresent:spec，gap）成立而不填
+  const r = run(f);
+  assert.deepEqual(codes(r), []);
+  assert.equal(r.ok, true);
+  const w = r.errors.filter((e) => e.code === 'W-DIM-GAP');
+  assert.deepEqual(w.map((e) => `${e.severity}:${e.row}.${e.dim}`), ['warning:gad_box.size']);
+  f.gadget.rows.gad_box.size = 3;
+  assert.deepEqual(run(f).errors, []);
+  const g = fixture();
+  g.gadget.dimensions.size.onUnknown = 'error';
+  g.gadget.rows.gad_box.spec = { low: 1, high: 2 };
+  const rg = run(g);
+  assert.equal(rg.ok, false);
+  assert.deepEqual(rg.errors.filter((e) => e.row === 'gad_box').map((e) => e.code), ['E-DIM-REQUIRED-MISSING']);
 });
 
 test('§1.6 第 4 项：键为代码内封闭枚举的映射也须覆盖全部取值', () => {
