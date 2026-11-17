@@ -6,26 +6,7 @@
   "scripts": {
     "test": "node --test \"tests/accept/*.test.mjs\"",
     "accept": "node tools/accept/run.mjs pre_commit",
-    "test:scenarios": "node tools/scenarios.mjs",
-    "test:playtests": "node tools/playtests.mjs",
-    "test:settings": "node tools/compare-settings.mjs",
-    "build-world": "node tools/build-world.mjs",
-    "test:balance": "node tools/balance-combat.mjs",
-    "balance:tables": "node tools/balance-tables.mjs",
-    "balance:metrics": "node tools/balance-metrics.mjs",
-    "backup": "node tools/backup.mjs",
-    "build:release": "node tools/build-world.mjs --release",
-    "build:final": "node tools/build-world.mjs --final",
-    "build:card": "node tools/build-card.mjs",
-    "progress": "node tools/catalog-progress.mjs",
-    "metrics": "node tools/s0-metrics.mjs",
-    "metrics:ontology": "node tools/ontology.mjs",
-    "metrics:imports": "node tools/import-graph.mjs",
-    "metrics:derived": "node tools/derived-scan.mjs",
-    "metrics:actions": "node tools/export-actions.mjs",
-    "metrics:intents": "node tools/intent-score.mjs",
-    "metrics:probes": "node tools/probe-score.mjs",
-    "docs:gaps": "node tools/gap-list.mjs"
+    "backup": "node tools/backup.mjs"
   },
   "devDependencies": {
     "express": "4.22.1",

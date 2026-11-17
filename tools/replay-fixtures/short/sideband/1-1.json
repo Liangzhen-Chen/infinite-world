@@ -1,1 +1,0 @@
-{"turn":1,"seq":1,"role":"consistency","label":"consistency-rewrite:fd0a7c7e571194a06e23","requestHash":"3f188e0a1be32990dd3c7c0067c63f80edc7cce2b7096dd1541d1ef4bde42b15","model":null,"status":"ok","latencyMs":2,"costYuan":null,"response":{"choices":[{"finish_reason":"stop","message":{"content":"<q who=\"player\">我全都答应。</q>"}}]}}
