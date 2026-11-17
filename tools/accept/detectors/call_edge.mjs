@@ -6,6 +6,8 @@
 // guardedPaths 的模式内，才不计；算不出常量（拼接、变量、调用）、绝对路径或越出仓库的 `..` 都计入。
 // 测试临时根（params.roots：gatefac 代号，inRepo 为假）：路径实参是临时根变量本身，或 join/resolve(临时根, 常量相对路径) 的，也不计
 // （李白 11-17 裁定三）；登记写入口（gatefac 的 assertedWriters）的函数体，在先调用断言（writerAsserts）之后的部分不计（裁定四收窄）；临时根变量只认 `const 名 = 登记函数(…)`，其余（拼接、变量路径、别的来源）一律计入。
+// 离线路径段口子（李白 11-17 21:2x 裁定一）：路径实参是 join/resolve(仓库根, 常量前导段…, 校验函数(尾段)…) 时，常量前导段与 guardedPaths 逐段比对必分叉才不计
+// （两个函数取自 gatefac 行 rootFns、segmentFns，须 import 自登记文件，且该行须有非空 requiredTests）；首段可变、前导段命中模式、尾段未过校验函数一律计入。
 // 局限：按词法读，`const w = fs.writeFileSync` 这类别名、require 解构、动态 import 取到的函数追不到（待块 2 类型检查）。
 
 import { tokenize, foldAt, buildEnv, importsOf, symbolPaths, isP, matchClose } from '../lib/js-scan.mjs';
@@ -22,6 +24,7 @@ export function detect(ctx, params, cls) {
   const joins = (cls || {}).joinFns || {};
   const allowed = facilityFiles(ctx, params.callers);
   const roots = rootFacilities(ctx, params.roots);
+  const segs = segmentFacilities(ctx);
   const hits = [];
   for (const file of scopeFiles(ctx, params)) {
     if (allowed.has(file)) continue;
@@ -30,6 +33,7 @@ export function detect(ctx, params, cls) {
     const sym = symbolPaths(toks);
     const bind = bindings(toks, table);
     const rootNames = rootBindings(toks, file, roots);
+    const seg = segmentLocals(toks, file, segs);
     const exempt = assertedBodies(toks, roots.get(file));
     for (let i = 0; i < toks.length; i++) {
       const t = toks[i];
@@ -54,12 +58,90 @@ export function detect(ctx, params, cls) {
         if (!a) return false;
         const r = foldAt(toks, a[0], env);
         if (r && r.end === a[1] && r.val.k === 'str' && outside(r.val.v, guarded)) return true;
-        return underRoot(toks, a, env, rootNames, joins);
+        return underRoot(toks, a, env, rootNames, joins) || underSegment(toks, a, env, seg, joins, guarded);
       });
       if (!provable) hits.push({ file, line: t.line, nodeKind: 'call', symbolPath: sym[i], code: params.code || '' });
     }
   }
-  return hits.concat(requiredTestHits(ctx, roots, params));
+  return hits.concat(requiredTestHits(ctx, new Map([...roots, ...segs]), params));
+}
+
+// 离线路径段设施（gatefac 行带 rootFns、segmentFns；李白 11-17 21:2x 裁定一）：登记文件里的仓库根函数与路径段校验函数。
+// 没有非空 requiredTests 就不登（校验函数应抛错的测试守着它，删登记不能绕过）；writers 在这里取校验函数名，供必跑测试检查"用得上"。
+function segmentFacilities(ctx) {
+  const out = new Map();
+  for (const g of ctx.regs.gatefacs || []) {
+    if (!Array.isArray(g.paths) || !Array.isArray(g.rootFns) || !Array.isArray(g.segmentFns) || !g.rootFns.length || !g.segmentFns.length) continue;
+    if (!Array.isArray(g.requiredTests) || !g.requiredTests.length) continue;
+    for (const p of g.paths) {
+      const cur = out.get(p) || { entries: new Set(), writers: new Set(), asserts: new Set(), segFns: new Set(), required: [], testGlobs: [] };
+      for (const r of g.rootFns) cur.entries.add(r);
+      for (const s of g.segmentFns) { cur.segFns.add(s); cur.writers.add(s); }
+      cur.required = cur.required.concat(g.requiredTests);
+      cur.testGlobs = cur.testGlobs.concat(Array.isArray(g.testGlobs) ? g.testGlobs : []);
+      out.set(p, cur);
+    }
+  }
+  return out;
+}
+
+// 本文件里从登记文件 import 来的仓库根函数（rootCalls）、校验函数（segCalls）的本地名，及 `const 名 = 仓库根函数()` 绑定的变量（rootNames，规则同临时根变量）。
+function segmentLocals(toks, file, segs) {
+  const rootCalls = new Set(); const segCalls = new Set();
+  if (segs.size) {
+    for (const imp of importsOf(toks)) {
+      if (imp.kind !== 'static' || !imp.spec || !imp.spec.startsWith('.')) continue;
+      const fac = segs.get(posix.join(posix.dirname(file), imp.spec));
+      if (!fac) continue;
+      for (const n of imp.names) {
+        if (fac.entries.has(n.imported)) rootCalls.add(n.local);
+        if (fac.segFns.has(n.imported)) segCalls.add(n.local);
+      }
+    }
+  }
+  const rootNames = rootCalls.size ? rootBindings(toks, file, new Map([...segs].map(([p, f]) => [p, { entries: f.entries }]))) : new Set();
+  return { rootCalls, segCalls, rootNames };
+}
+
+// 写入路径实参 = join/resolve(仓库根, 常量前导段…, 校验函数(尾段)…)（joinFns 登记的函数、须 import 来）：
+// 仓库根是 `仓库根函数()` 或由它绑定的变量；常量前导段先于全部尾段、折叠成不含 `..`、非绝对的字符串；尾段至少一个、各自是校验函数的调用（校验函数运行时保证单段、逃不出前导目录）。
+// 常量前导段（整体）须与 guardedPaths 每个模式逐段比对即分叉：两者在较短的一方长度内全部对得上就算可能落进 §2.11，不证明、计入。前导段为空（首段可变）同样计入。
+function underSegment(toks, [s, e], env, seg, joins, guarded) {
+  if (!seg.rootCalls.size || !seg.segCalls.size) return false;
+  const open = joinOpen(toks, s, e, joins);
+  if (open < 0) return false;
+  const parts = splitArgs(toks, open, e - 1);
+  if (parts.length < 2) return false;
+  const [a, b] = parts[0];
+  const isRoot = (b - a === 1 && toks[a].t === 'id' && seg.rootNames.has(toks[a].v))
+    || (b - a === 3 && toks[a].t === 'id' && seg.rootCalls.has(toks[a].v) && !isP(toks[a - 1], '.') && !isP(toks[a - 1], '?.') && isP(toks[a + 1], '(') && isP(toks[a + 2], ')'));
+  if (!isRoot) return false;
+  const isSeg = ([x, y]) => toks[x].t === 'id' && seg.segCalls.has(toks[x].v) && !isP(toks[x - 1], '.') && !isP(toks[x - 1], '?.') && isP(toks[x + 1], '(') && matchClose(toks, x + 1) === y - 1;
+  const rest = parts.slice(1);
+  const firstSeg = rest.findIndex(isSeg);
+  if (firstSeg < 0 || !rest.slice(firstSeg).every(isSeg)) return false;
+  const prefix = [];
+  for (const p of rest.slice(0, firstSeg)) {
+    const r = foldAt(toks, p[0], env);
+    if (!r || r.end !== p[1] || r.val.k !== 'str') return false;
+    const v = r.val.v.replace(/\\/g, '/');
+    if (v.startsWith('/') || /^[A-Za-z]:/.test(v)) return false;
+    const segsOf = v.split('/').filter((x) => x !== '' && x !== '.');
+    if (segsOf.some((x) => x === '..')) return false;
+    prefix.push(...segsOf);
+  }
+  return prefixClear(prefix, guarded);
+}
+
+// 前导段 prefix 加上任意尾段，都不可能落进 guarded 的任何模式：与每个模式逐段（模式段可含 *、**）比，必有一处对不上。
+function prefixClear(prefix, guarded) {
+  if (!prefix.length) return false;
+  return guarded.every((g) => {
+    const gs = g.replace(/\\/g, '/').split('/');
+    const n = Math.min(gs.length, prefix.length);
+    for (let i = 0; i < n; i++) if (!matchGlobs(prefix[i], [gs[i]], [])) return true;
+    return false;
+  });
 }
 
 // 必跑测试（李白 11-17 裁定②）：写函数豁免靠断言函数"应抛错"的测试守着，所以豁免用得上时（登记辅助文件在、且里面声明了 assertedWriters 的函数），
@@ -199,8 +281,9 @@ function boundName(toks, k, bodyOpen) {
 function usesName(toks, [s, e], name, env, joins) {
   const isName = (k) => toks[k].t === 'id' && toks[k].v === name && !isP(toks[k - 1], '.') && !isP(toks[k - 1], '?.');
   if (e - s === 1) return isName(s);
-  if (!isJoinCall(toks, s, e, joins)) return false;
-  const parts = splitArgs(toks, s + 1, e - 1);
+  const open = joinOpen(toks, s, e, joins);
+  if (open < 0) return false;
+  const parts = splitArgs(toks, open, e - 1);
   if (parts.length < 1 || parts[0][1] - parts[0][0] !== 1 || !isName(parts[0][0])) return false;
   return parts.slice(1).every((p) => {
     const r = foldAt(toks, p[0], env);
@@ -211,9 +294,23 @@ function usesName(toks, [s, e], name, env, joins) {
 }
 
 // [s, e) 恰是一次 join/resolve 类调用：被调名是从 joinFns 登记的模块 import 来的登记函数。
-function isJoinCall(toks, s, e, joins) {
-  if (toks[s].t !== 'id' || !isP(toks[s + 1], '(') || matchClose(toks, s + 1) !== e - 1 || isP(toks[s - 1], '.') || isP(toks[s - 1], '?.')) return false;
-  return importsOf(toks).some((imp) => imp.kind === 'static' && Object.hasOwn(joins, imp.spec) && imp.names.some((n) => n.local === toks[s].v && joins[imp.spec].includes(n.imported)));
+// 返回括号下标（不是返回 -1）。两种写法：具名导入的函数 `join(…)`；默认或命名空间导入的模块 `path.join(…)`。
+function joinOpen(toks, s, e, joins) {
+  if (toks[s].t !== 'id' || isP(toks[s - 1], '.') || isP(toks[s - 1], '?.')) return -1;
+  const imps = importsOf(toks).filter((imp) => imp.kind === 'static' && Object.hasOwn(joins, imp.spec));
+  if (isP(toks[s + 1], '(')) {
+    if (matchClose(toks, s + 1) !== e - 1) return -1;
+    return imps.some((imp) => imp.names.some((n) => n.local === toks[s].v && joins[imp.spec].includes(n.imported))) ? s + 1 : -1;
+  }
+  if (isP(toks[s + 1], '.') && toks[s + 2] && toks[s + 2].t === 'id' && isP(toks[s + 3], '(') && matchClose(toks, s + 3) === e - 1) {
+    const ns = imps.some((imp) => {
+      const a = toks[imp.at + 1];
+      const bound = (a && a.t === 'id' && a.v !== 'from' && a.v === toks[s].v) || (isP(a, '*') && toks[imp.at + 2] && toks[imp.at + 2].v === 'as' && toks[imp.at + 3] && toks[imp.at + 3].v === toks[s].v);
+      return bound && joins[imp.spec].includes(toks[s + 2].v);
+    });
+    return ns ? s + 3 : -1;
+  }
+  return -1;
 }
 
 // 赋值与自增自减记号：变量被重新赋值（含复合赋值）就不再是临时根（李白 11-17 裁定三）。
@@ -265,8 +362,9 @@ function paramNames(toks) {
 function underRoot(toks, [s, e], env, rootNames, joins) {
   if (!rootNames.size) return false;
   if (e - s === 1) return toks[s].t === 'id' && rootNames.has(toks[s].v);
-  if (!isJoinCall(toks, s, e, joins)) return false;
-  const parts = splitArgs(toks, s + 1, e - 1);
+  const open = joinOpen(toks, s, e, joins);
+  if (open < 0) return false;
+  const parts = splitArgs(toks, open, e - 1);
   if (parts.length < 1 || parts[0][1] - parts[0][0] !== 1 || !rootNames.has(toks[parts[0][0]].v)) return false;
   const rel = [];
   for (const p of parts.slice(1)) {

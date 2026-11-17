@@ -56,6 +56,37 @@
    ]
   },
   {
+   "entries": [
+    "repoRoot",
+    "safeSegment"
+   ],
+   "facCode": "offline-path-segment",
+   "gateCard": "—",
+   "inRepo": true,
+   "ownerVol": "vol12",
+   "paths": [
+    "tools/path-segment.mjs"
+   ],
+   "requiredTests": [
+    {
+     "file": "tests/accept/detectors.test.mjs",
+     "names": [
+      "safeSegment（裁定一）",
+      "repoRoot（裁定一）"
+     ]
+    }
+   ],
+   "rootFns": [
+    "repoRoot"
+   ],
+   "segmentFns": [
+    "safeSegment"
+   ],
+   "testGlobs": [
+    "tests/accept/*.test.mjs"
+   ]
+  },
+  {
    "assertedWriters": [
     "writeUnderTempRoot"
    ],
