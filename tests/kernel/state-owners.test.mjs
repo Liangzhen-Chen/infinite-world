@@ -236,8 +236,8 @@ test('离线生成器 applySortKeys：按同一算法改写 sortKey 并列出变
 
 // ---------- state-types.d.ts ----------
 
-test('state-types.d.ts 与 pathTypes 生成结果逐字节一致（漂移即失败：改 pathTypes 后须重跑 tools/gen-state-types.mjs）', () => {
-  assert.equal(readFileSync(join(ROOT, 'server-plugin/kernel/state-types.d.ts'), 'utf8'), renderStateTypes(realDecl()));
+test('state-types.d.ts 与 pathTypes 生成结果一致（行尾归一后逐字符；漂移即失败：改 pathTypes 后须重跑 tools/gen-state-types.mjs）', () => {
+  assert.equal(readFileSync(join(ROOT, 'server-plugin/kernel/state-types.d.ts'), 'utf8').replace(/\r\n/g, '\n'), renderStateTypes(realDecl()));
   const drifted = realDecl(); drifted.pathTypes['terminated.*.extra'] = 'boolean';
   assert.notEqual(renderStateTypes(drifted), renderStateTypes(realDecl()));
 });
