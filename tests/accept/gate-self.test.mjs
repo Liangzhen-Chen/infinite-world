@@ -25,7 +25,7 @@ test('十条都登记、阶段 0、每条所属类别正反用例齐', () => {
 });
 
 test('S12-2、S12-11 的错误码登记在条目参数里，不留空码（李白 11-17 裁定一）', () => {
-  const by = Object.fromEntries(readRegistry(ROOT, 'items').map((it) => [it.itemKey, it.params.code]));
+  const by = Object.fromEntries(readRegistry(ROOT, 'items').map((it) => [it.itemKey, (it.params || {}).code]));
   assert.equal(by['vol12.S12-2'], 'E-ACC-REGISTRY-WRITE');
   assert.equal(by['vol12.S12-11'], 'E-ACC-TOOL-NONDET');
 });

@@ -1,6 +1,28 @@
 {
  "rows": [
   {
+   "criterion": "基线单调类：任一基线分量的现值高于上次合入的值即命中（卷一 V-11、I43；与 E-ACC-BASELINE-UP 同口径，只降不升）。",
+   "log": [
+    {
+     "ref": "初版登记：李白 11-17 S12-3 三类问题裁定第 1 条新登类别；判据见 criterion",
+     "rev": 1
+    }
+   ],
+   "print": "5cf773468b99ec7af40041bbdba05cd32aae2d99ae9128c70f4ec7ebc83257ad",
+   "rev": 1,
+   "scanClass": "baseline_monotone",
+   "source": "卷一 V-11（I43）；卷十二 §2.5、E-ACC-BASELINE-UP；李白 11-17 S12-3 裁定第 1 条",
+   "terms": {
+    "vol1.V-11": {
+     "expect": "zero",
+     "gates": [
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
    "log": [
     {
      "ref": "P-1",
@@ -67,13 +89,71 @@
     {
      "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
      "rev": 2
+    },
+    {
+     "ref": "api-s1216：共用的 item-form 加非扫描式条目修订记录（rev、revisions、print）与拆行（part、parts）的形式核对；本类别判定口径不变",
+     "rev": 3
     }
    ],
-   "print": "de2a7057155fe9d8535ca560e5bd328fa1ed6fb453ae0cc9ff8cfce66ebe2cf1",
-   "rev": 2,
+   "print": "5cf773468b99ec7af40041bbdba05cd32aae2d99ae9128c70f4ec7ebc83257ad",
+   "rev": 3,
    "scanClass": "ext_code",
    "terms": {
     "vol12.S12-12": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "对缺失的维度值用常量替代（卷十二 §2.4 首批表）。",
+   "log": [
+    {
+     "ref": "初版登记：S12-3 条目转录",
+     "rev": 1
+    }
+   ],
+   "print": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rev": 1,
+   "scanClass": "fallback",
+   "source": "卷十二 §2.4（卷二 §1.6、S4）",
+   "terms": {
+    "vol2.S4": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "对实体 id 做任何字符串操作来判类别（卷十二 §2.4 首批表）。",
+   "log": [
+    {
+     "ref": "初版登记：S12-3 条目转录",
+     "rev": 1
+    }
+   ],
+   "print": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rev": 1,
+   "scanClass": "id_parse",
+   "source": "卷十二 §2.4（卷二 S12）",
+   "terms": {
+    "vol1.V-1.b": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol2.S12": {
      "expect": "zero",
      "gates": [
       "pre_commit",
@@ -100,13 +180,33 @@
     {
      "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
      "rev": 4
+    },
+    {
+     "ref": "api-s1216：共用的 item-form 加非扫描式条目修订记录与拆行的形式核对；本类别判定口径不变",
+     "rev": 5
     }
    ],
-   "print": "c55f926f47d76a722b348fb7623e5031d8153242a2fe6e40d573b2ebe50bb6b5",
-   "rev": 4,
+   "print": "b797bb2d043950b182afa1d27a9d2da193ebcdc13e9f433e849cfaa170b59977",
+   "rev": 5,
    "scanClass": "instance_name",
    "terms": {
+    "vol1.V-1.a": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
     "vol2.S1": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol2.S8": {
      "expect": "zero",
      "gates": [
       "pre_commit",
@@ -125,10 +225,14 @@
     {
      "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
      "rev": 2
+    },
+    {
+     "ref": "api-s1216（李白 11-17 S12-16 非扫描式条目修订记录裁定第 1、3 条）：ledger_count 的 termsUnrevised 对没有 scanClass 的条目改读条目自身的 rev、revisions、登记器盖的 print；有 scanClass 的口径不变；新增 must_fail 用例 03、04 与 must_pass 用例 12",
+     "rev": 3
     }
    ],
-   "print": "de2a7057155fe9d8535ca560e5bd328fa1ed6fb453ae0cc9ff8cfce66ebe2cf1",
-   "rev": 2,
+   "print": "5cf773468b99ec7af40041bbdba05cd32aae2d99ae9128c70f4ec7ebc83257ad",
+   "rev": 3,
    "scanClass": "item_downgrade",
    "terms": {
     "vol12.S12-16": {
@@ -154,10 +258,14 @@
     {
      "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
      "rev": 3
+    },
+    {
+     "ref": "api-s1216（李白 11-17 S12-16 裁定第 2 条）：item-form 对没有 scanClass 的条目核 rev、revisions 形式，对 part、parts 核拆行形式；原有判定口径不变",
+     "rev": 4
     }
    ],
-   "print": "60feb47c029bac42b818949fbe568388717b88dd6c620f7f94b6fa316dc632ef",
-   "rev": 3,
+   "print": "246ea5401a19d5a41749e83ac7c6d1bf79b7861c13f01eacdfd8eeecc821c36a",
+   "rev": 4,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -191,13 +299,161 @@
     {
      "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
      "rev": 5
+    },
+    {
+     "ref": "api-s1216（李白 11-17 S12-3 三类问题裁定第 2、3 条）：按原条目计——跨两类拆 a/b 行的原条目，各行 parts 列的每一部分都有行才算已登记，计数按原条目不按行；定义处用删除线 ~~ 起首的作废条不计入；新增 must_fail 用例与 must_pass 用例各一",
+     "rev": 6
     }
    ],
-   "print": "fcf9bd27365a9568edf7ea5f991780113a645f5cc759e9ab75b83972b1ecd0c4",
-   "rev": 5,
+   "print": "708c1ca4f0c8471504804595cbceb34dacafd3f297148bd1ca5aa245114433b2",
+   "rev": 6,
    "scanClass": "item_ledger",
    "terms": {
     "vol12.S12-3": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "汇总类：把卷十二各节 A12-n.1 所列的来源条目计数、错误码计数、基线分量读数按该条所列汇总，汇总值为 0（A12-n.1 写的比较成立）；汇总的来源只读执行记录与登记，不读各卷正文文字（R12-11.3）。判据参数（各条汇总哪些来源）由各条实现时登记，本行不编。",
+   "log": [
+    {
+     "ref": "初版登记：李白 11-17 S12-3 三类问题裁定第 1 条新登类别；判据见 criterion",
+     "rev": 1
+    }
+   ],
+   "print": "5cf773468b99ec7af40041bbdba05cd32aae2d99ae9128c70f4ec7ebc83257ad",
+   "rev": 1,
+   "scanClass": "ledger_tally",
+   "source": "卷十二 §4.1.6 至 §4.14.6 A12-n.1；李白 11-17 S12-3 裁定第 1 条",
+   "terms": {
+    "vol12.A12-1.1": {
+     "expect": "zero",
+     "gates": [
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol12.A12-10.1": {
+     "expect": "zero",
+     "gates": [
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol12.A12-11.1": {
+     "expect": "zero",
+     "gates": [
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol12.A12-12.1": {
+     "expect": "zero",
+     "gates": [
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol12.A12-13.1": {
+     "expect": "zero",
+     "gates": [
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol12.A12-14.1": {
+     "expect": "zero",
+     "gates": [
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol12.A12-2.1": {
+     "expect": "zero",
+     "gates": [
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol12.A12-3.1": {
+     "expect": "zero",
+     "gates": [
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol12.A12-4.1": {
+     "expect": "zero",
+     "gates": [
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol12.A12-5.1": {
+     "expect": "zero",
+     "gates": [
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol12.A12-6.1": {
+     "expect": "zero",
+     "gates": [
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol12.A12-7.1": {
+     "expect": "zero",
+     "gates": [
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol12.A12-8.1": {
+     "expect": "zero",
+     "gates": [
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol12.A12-9.1": {
+     "expect": "zero",
+     "gates": [
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "一组登记的旧符号在某范围内仍有定义或引用；某谓词的定义点不在登记的唯一位置（卷十二 §2.4 首批表）。",
+   "log": [
+    {
+     "ref": "初版登记：S12-3 条目转录",
+     "rev": 1
+    }
+   ],
+   "print": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "rev": 1,
+   "scanClass": "legacy_symbol",
+   "source": "卷十二 §2.4（卷二 S3、S6、S14）",
+   "terms": {
+    "vol2.S14": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol2.S6": {
      "expect": "zero",
      "gates": [
       "pre_commit",
@@ -301,10 +557,14 @@
     {
      "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
      "rev": 3
+    },
+    {
+     "ref": "api-s1216：共用的 item-form 加非扫描式条目修订记录与拆行的形式核对；本类别判定口径不变",
+     "rev": 4
     }
    ],
-   "print": "60feb47c029bac42b818949fbe568388717b88dd6c620f7f94b6fa316dc632ef",
-   "rev": 3,
+   "print": "246ea5401a19d5a41749e83ac7c6d1bf79b7861c13f01eacdfd8eeecc821c36a",
+   "rev": 4,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {

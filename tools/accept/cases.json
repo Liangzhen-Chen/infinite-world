@@ -213,11 +213,40 @@
    "scanClass": "item_downgrade"
   },
   {
+   "addedAtRev": 3,
+   "caseKey": "item_downgrade-03",
+   "expectCode": "E-ACC-ITEM-DOWNGRADE",
+   "fixture": "tests/accept/bypass/item_downgrade-03.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-16；李白 11-17 S12-16 裁定：非扫描式条目内容与登记器盖的指纹不符（改了没走修订）",
+   "polarity": "must_fail",
+   "scanClass": "item_downgrade"
+  },
+  {
+   "addedAtRev": 3,
+   "caseKey": "item_downgrade-04",
+   "expectCode": "E-ACC-ITEM-DOWNGRADE",
+   "fixture": "tests/accept/bypass/item_downgrade-04.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-16；李白 11-17 S12-16 裁定：非扫描式条目 rev 升了而修订记录缺该 rev 一条",
+   "polarity": "must_fail",
+   "scanClass": "item_downgrade"
+  },
+  {
    "addedAtRev": 1,
    "caseKey": "item_downgrade-11",
    "fixture": "tests/accept/bypass/item_downgrade-11.txt",
    "group": "offline",
    "origin": "卷十二 S12-16：三项未变、键序不同、改其他字段不算",
+   "polarity": "must_pass",
+   "scanClass": "item_downgrade"
+  },
+  {
+   "addedAtRev": 3,
+   "caseKey": "item_downgrade-12",
+   "fixture": "tests/accept/bypass/item_downgrade-12.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-16；李白 11-17 S12-16 裁定：rev 为 1 的首次登记带首条记录与指纹不计；状态与实现文件的合法转移不算改动",
    "polarity": "must_pass",
    "scanClass": "item_downgrade"
   },
@@ -291,11 +320,30 @@
    "scanClass": "item_ledger"
   },
   {
+   "addedAtRev": 6,
+   "caseKey": "item_ledger-04",
+   "expectCode": "E-ACC-ITEM-UNREGISTERED",
+   "fixture": "tests/accept/bypass/item_ledger-04.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-3；李白 11-17 S12-3 裁定第 2 条：拆 a/b 的原条目缺 b 部分按未登记",
+   "polarity": "must_fail",
+   "scanClass": "item_ledger"
+  },
+  {
    "addedAtRev": 1,
    "caseKey": "item_ledger-11",
    "fixture": "tests/accept/bypass/item_ledger-11.txt",
    "group": "offline",
    "origin": "卷十二 S12-3：列表与表格里的编号都算定义处",
+   "polarity": "must_pass",
+   "scanClass": "item_ledger"
+  },
+  {
+   "addedAtRev": 6,
+   "caseKey": "item_ledger-12",
+   "fixture": "tests/accept/bypass/item_ledger-12.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-3；李白 11-17 S12-3 裁定第 2、3 条：拆 a/b 两行按一个原条目计；删除线起首的作废条不计",
    "polarity": "must_pass",
    "scanClass": "item_ledger"
   },

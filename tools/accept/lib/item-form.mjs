@@ -2,6 +2,7 @@
 // 对已在盘上的登记行复核）共用同一份判据，不各写一套。每条错误带 check 代号：expect（期望值不在 acc_expect）、
 // formMethod（方法与形式、方法与对象不相容）、param（参数含登记键以外的东西）、field（其余形式缺项）。
 
+import { createHash } from 'node:crypto';
 import { REGISTRY } from '../read.mjs';
 
 // §2.1 封闭枚举。
@@ -30,6 +31,30 @@ export const PARAM_KINDS = {
   facs: 'fac', callers: 'fac', roots: 'fac', modules: 'table', tables: 'table', callees: 'class', checks: 'word', cond: 'word',
 };
 
+// 非扫描式条目（没有 scanClass 的）的修订记录（卷十二 S12-16；李白 11-17 S12-16 非扫描式条目修订记录裁定）：记在条目行自身，以条目为单位。
+// rev 整数，首次登记为 1；revisions 每条含 rev、date、summary、card，rev 自 1 起连续到现 rev；print 是登记器盖的内容指纹。
+// 指纹只算内容：不含 rev、revisions、print，也不含状态机字段 state、impl（R12-11.7 的合法转移不算改动）。扫描式条目的修订记录仍在 criteria 行。
+const PRINT_SKIP = new Set(['rev', 'revisions', 'print', 'state', 'impl']);
+const canon = (v) => (Array.isArray(v) ? `[${v.map(canon).join(',')}]` : v && typeof v === 'object'
+  ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon(v[k])}`).join(',')}}` : JSON.stringify(v === undefined ? null : v));
+export function itemPrint(it) {
+  const body = Object.fromEntries(Object.entries(it).filter(([k]) => !PRINT_SKIP.has(k)));
+  return createHash('sha256').update(canon(body)).digest('hex');
+}
+// 修订记录自身的形式：rev 为正整数，revisions 恰好含 1..rev 各一条，每条字段齐。返回错误说明列表。
+export function revisionIssues(it) {
+  const out = [];
+  if (!Number.isInteger(it.rev) || it.rev < 1) { out.push('rev must be a positive integer'); return out; }
+  if (!Array.isArray(it.revisions)) { out.push('revisions missing'); return out; }
+  for (let n = 1; n <= it.rev; n++) {
+    const r = it.revisions.filter((x) => x && x.rev === n);
+    if (r.length !== 1) { out.push(`revisions must hold exactly one entry for rev ${n}`); continue; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(r[0].date || '')) || !r[0].summary || !r[0].card) out.push(`revisions rev ${n} needs date, summary, card`);
+  }
+  if (it.revisions.some((x) => !x || !Number.isInteger(x.rev) || x.rev > it.rev || x.rev < 1)) out.push('revisions entry beyond rev');
+  return out;
+}
+
 // keys：{groups, detectors, classes, facs}，各是 Set。返回 [{check, code, why}]。
 export function itemChecks(it, keys) {
   const out = [];
@@ -43,6 +68,8 @@ export function itemChecks(it, keys) {
   if (it.expect === 'report_only' && !it.reportOnlyMark) err('expect', 'E-ACC-ITEM-FORM', 'report_only without mark');
   if (it.expect === 'le_baseline' && !it.baseComp) err('expect', 'E-ACC-ITEM-FORM', 'le_baseline without baseComp');
   if (it.form === 'scan' && !keys.classes.has(it.scanClass)) err('field', 'E-ACC-ITEM-FORM', `scanClass ${it.scanClass} not registered`);
+  if (!it.scanClass) for (const w of revisionIssues(it)) err('field', 'E-ACC-ITEM-FORM', w);
+  if (it.parts !== undefined && (!Array.isArray(it.parts) || it.parts.length < 2 || typeof it.part !== 'string' || !it.parts.includes(it.part))) err('field', 'E-ACC-ITEM-FORM', 'parts/part: part must be one of a list of two or more parts');
   if (it.method && String(it.method).startsWith('static_') && !keys.detectors.has(it.detector)) err('field', 'E-ACC-ITEM-FORM', `detector ${it.detector} not registered`);
   const params = it.params && typeof it.params === 'object' && !Array.isArray(it.params) ? it.params : {};
   if (it.params !== undefined && params !== it.params) err('param', 'E-ACC-ITEM-PARAM', 'params not a map');

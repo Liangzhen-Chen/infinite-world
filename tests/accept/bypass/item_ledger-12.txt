@@ -1,0 +1,5 @@
+// @file docs/统一底层设计/卷十二-验收与自动扫描.md
+- **S12-1** 夹具条目（跨两类，拆 a、b 两行，按一个原条目计）。
+- ~~**S12-2** 作废条目，定义处用删除线起首，不计入。~~
+// @file tools/accept/items.json
+{"rows": [{"itemKey": "vol12.S12-1.a", "volume": "vol12", "localNo": "S12-1", "part": "a", "parts": ["a", "b"]}, {"itemKey": "vol12.S12-1.b", "volume": "vol12", "localNo": "S12-1", "part": "b", "parts": ["a", "b"]}]}
