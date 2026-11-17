@@ -148,7 +148,7 @@ function namedOf(t, id, row, form, cond) {
     for (const d of Object.keys(t.doc.dimensions || {}).sort()) { const r = valueOf(t, id, row, d); if (r.known && r.value !== undefined) known.push([d, r.value]); }
     const own = Array.isArray(row.classes) ? row.classes : [];
     const classes = [...new Set(own.flatMap((c) => [c, ...t.env.vocab.ancestors(c)]))].sort();
-    memo.set(k, namedHolds(cond, rowReads(cond.rowNs, known, classes, t.doc.dimensions)));
+    memo.set(k, namedHolds(cond, rowReads(cond.rowNs, known, classes)));
   }
   return memo.get(k);
 }
