@@ -4,7 +4,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { repoRoot, safeSegment } from './path-segment.mjs';
 
-// 备份写在 backups/<时间戳-标签-随机>/ 下，每个源文件落成该目录里的一个扁平文件（相对路径的分隔符换成 "__"，原路径记在 manifest.json）：
+// 备份写在 backups/<时间戳-标签-随机>/ 下，每个源文件落成该目录里的一个扁平文件（存储名 = 原相对路径（斜杠统一）的 sha256 十六进制，不会撞名、不含分隔符或 ..；原相对路径记在 manifest.json 的 path 字段）：
 // 写入路径都是 仓库根＋常量前导段 backups＋校验函数尾段，S12-2 可证明在 §2.11 之外（李白 11-17 21:2x 裁定一）。
 export const root = repoRoot();
 const sources = ['SillyTavern/data/default-user/chats', 'SillyTavern/data/default-user/characters',
@@ -13,7 +13,8 @@ const sources = ['SillyTavern/data/default-user/chats', 'SillyTavern/data/defaul
     'SillyTavern/public/scripts/extensions/third-party/infinite-fields',
     'SillyTavern/plugins/infinite-fields',
     'SillyTavern/public/play-town.html', 'SillyTavern/public/play-town.js', '启动酒馆.ps1', '启动酒馆.cmd'];
-const excluded = name => name === 'secrets.json' || name.startsWith('.env');
+export const storedName = relative => createHash('sha256').update(relative.replaceAll('\\', '/')).digest('hex');
+const excluded =name => name === 'secrets.json' || name.startsWith('.env');
 export async function backup(label = 'manual') {
     const stamp = `${new Date().toISOString().replace(/[:.]/g, '-')}-${label}-${randomUUID().slice(0, 6)}`;
     const directory = path.join(root, 'backups', safeSegment(stamp));
@@ -27,7 +28,7 @@ export async function backup(label = 'manual') {
             for (const name of await fs.readdir(source)) await copy(path.join(source, name), path.join(relative, name));
         } else {
             const bytes = await fs.readFile(source);
-            const flat = relative.replaceAll('\\', '/').replaceAll('/', '__');
+            const flat = storedName(relative);
             await fs.writeFile(path.join(repoRoot(), 'backups', safeSegment(stamp), safeSegment(flat)), bytes);
             const hash = value => createHash('sha256').update(value).digest('hex');
             const digest = hash(bytes);
@@ -39,7 +40,7 @@ export async function backup(label = 'manual') {
         try { await copy(path.join(root, relative), relative); }
         catch (error) { if (error.code !== 'ENOENT') throw error; }
     }
-    await fs.writeFile(path.join(repoRoot(), 'backups', safeSegment(stamp), safeSegment('manifest.json')), JSON.stringify({ format: 2, layout: 'flat', label, excludes: ['secrets.json', '.env*'], files }, null, 2));
+    await fs.writeFile(path.join(repoRoot(), 'backups', safeSegment(stamp), safeSegment('manifest.json')), JSON.stringify({ format: 3, layout: 'flat-sha256-of-path', label, excludes: ['secrets.json', '.env*'], files }, null, 2));
     console.log(JSON.stringify({ backup: directory, files: files.length, verified: true }));
     return directory;
 }
