@@ -223,7 +223,8 @@ function ownerVolOf(name, vol) {
 // 指称判据用的式样（与乙-8 候选脚本同口径）
 const SEE = new RegExp('见\\s*' + V_RE + '(?:\\s*§[0-9.]+)*', 'g'); // "，见卷X"只当出处标注（09:xx 二-3）
 const CONJ = /`[A-Za-z_$][A-Za-z0-9_$]*[^`]*`\s*[、与和及]\s*$/; // 并列的前一项（各计一次）
-const TRIG = /(取自|读|经|取|返回|给出)\s*[：:]?\s*$/; // 名字前的触发词
+// 名字前的触发词；触发词与名字之间可隔卷名（可带节号、"的"），如"取卷六 `x`""读卷四的 `x`"：卷名只是限定，x 仍是确切反引号名（主会话技术裁定 1116 白天 E4，与否定一侧 NEG_REF 对称）
+const TRIG = new RegExp('(取自|读|经|取|返回|给出)\\s*[：:]?\\s*(?:' + V_RE + '(?:\\s*§[0-9.]+)*\\s*的?\\s*)?$');
 const NEGV = /(不再|不得|不会|无需|不|未|无|勿|别)\s*再?\s*(调用|调|经由|经|读|取自|取|返回|给出)?\s*[：:]?\s*$/; // 名字前紧挨否定
 const NEG_WORD = /(不再|不得|不会|不必|不能|不可|不许|不准|不应|不该|无需|不用|不要|不|未|无|勿|别)(?!只|光|仅|单|止|但)/g;
 // 否定词后：副词若干 → 动作 → 卷名/登记修饰 → 名字（A）；或带主语"他处/别处"、介词短语"对它/为某某"、动作后紧跟的名词修饰（"读持有变化 `x`"）的同一动作（B，须有动作）
@@ -580,6 +581,11 @@ const kindRank = { gate_facility: 0, module_group: 1, table: 2, system: 3 };
 const ledgerSysKey = (() => { const m = regText.match(/`ledgerSystem:\s*(sys\.[a-z_]+)`/); return m && sysByKey.has(m[1]) ? m[1] : null; })();
 const isFixedObj = o => o.kind === 'gate_facility' || (o.kind === 'system' && o.code === ledgerSysKey) || (o.kind === 'table' && o.sys?.system === ledgerSysKey);
 let nObjConflict = 0; const objConflicts = []; const pickMoved = []; const mergedRecheck = [];
+const zeroPicked = [], zeroPending = [], mergedByZero = [], mergedByOrder = []; // R11-2.5 第一步按 zeroRow 定下的组、zeroRow 待查的组、按 zeroRow 定下的并组改判行、不读 zeroRow 时的并组改判行（对照）
+// 卷零 A 表（§2）：条目编号 → 主归卷（第二列"主归卷 §"开头的卷名）
+const zeroMainVol = new Map();
+{ const s = cov.findIndex(l => l.startsWith(CFG.coverage.tableA)); let e = cov.findIndex((l, i) => i > s && /^## /.test(l)); if (e < 0) e = cov.length;
+  for (let i = s + 1; i < e; i++) { if (!/^\|/.test(cov[i])) continue; const c = cells(cov[i]); const n = (c[0] ?? '').match(/^(\d+\.\d+)\b/)?.[1]; if (!n) continue; zeroMainVol.set(n, (c[1] ?? '').match(new RegExp('^' + V_RE))?.[0] ?? null); } }
 const unassigned = [];
 for (const [k, rs] of [...posGroups].sort((a, b) => a[0] - b[0])) {
   const cand = rs.filter(r => r.obj);
@@ -587,20 +593,31 @@ for (const [k, rs] of [...posGroups].sort((a, b) => a[0] - b[0])) {
   let pick = null;
   if (cs.length === 1) pick = cand[0].obj;
   else if (cs.length > 1) {
-    // 第一步（R11-2.5 原文，李白 11-16 01:25 第 5 条）：取 zeroRow 所在卷零行主归卷等于来源卷的那一行的对象——zeroRow 还没转录，按"没有这样的行"处理；
-    // 于是取候选对象里首卡在 R11-7.2 次序中最前的那个（次序见文件头的不动点）；有候选不在次序里的，记"算不出"
+    // 第一步（R11-2.5 原文，李白 11-16 01:25 第 5 条）：取 zeroRow 所在卷零行主归卷等于来源卷的那一行的对象。zeroRow 是迁移行原文写出的卷零 A 表编号列表（转录，不推定）：
+    // 行的列表里有编号的 A 表行主归卷等于该行来源卷，该行即"这样的行"；这样的行都指向同一对象则取之。指向不同对象、或列表编号在 A 表里查不到主归卷（无法定对象）的，不推定，列待查；
+    // 没有这样的行（或待查的组）取候选对象里首卡在 R11-7.2 次序中最前的那个（次序见文件头的不动点）；有候选不在次序里的，记"算不出"
     nObjConflict++;
     const objsU = [...new Map(cand.map(r => [objKey(r.obj), r.obj])).values()];
     const rk = o => (ORDER.has(objKey(o)) ? +ORDER.get(objKey(o)) : Infinity);
     // 固定卡（门禁、账本母卡与子卡，阶段出自卷一，卷十一 R11-7.1）不参加跨对象的位置组改判（李白 11-16 02:18 第 2 条 B1 选①）：
     // 本对象是固定卡对象的行留在本对象，别对象的行只在非固定的候选里取
     const free = objsU.filter(o => !isFixedObj(o));
-    pick = (free.length ? free : objsU).sort((a, b) => rk(a) - rk(b) || cmp(objKey(a), objKey(b)))[0];
+    const pool = free.length ? free : objsU; const inPool = o => pool.some(x => objKey(x) === objKey(o));
+    const orderPick = pool.slice().sort((a, b) => rk(a) - rk(b) || cmp(objKey(a), objKey(b)))[0];
+    const zUnres = cand.filter(r => (r.zeroRow ?? []).some(n => !zeroMainVol.get(n)));
+    const zRows = cand.filter(r => inPool(r.obj) && (r.zeroRow ?? []).some(n => zeroMainVol.get(n) === r.volume));
+    const zObjs = uniq(zRows.map(r => objKey(r.obj)));
+    if (zUnres.length) zeroPending.push({ rows: rs.map(r => r.rowKey), why: `zeroRow 编号查不到卷零 A 表主归卷：${zUnres.map(r => `${r.rowKey}（${r.zeroRow.join('、')}）`).join('、')}` });
+    else if (zObjs.length > 1) zeroPending.push({ rows: rs.map(r => r.rowKey), why: `zeroRow 所在卷零行主归卷等于来源卷的行指向不同对象：${zRows.map(r => `${r.rowKey}→${objKey(r.obj)}`).join('、')}` });
+    const byZero = !zUnres.length && zObjs.length === 1 && process.env.NOZERO !== '1';
+    if (byZero) { pick = zRows[0].obj; zeroPicked.push({ rows: rs.map(r => r.rowKey), by: zRows.map(r => `${r.rowKey}（${r.zeroRow.filter(n => zeroMainVol.get(n) === r.volume).join('、')}）`), pick: objKey(pick), orderPick: objKey(orderPick) }); }
+    else pick = orderPick;
     const cnt = new Map(); for (const r of cand) cnt.set(objKey(r.obj), (cnt.get(objKey(r.obj)) ?? 0) + 1);
     const old = objsU.slice().sort((a, b) => cnt.get(objKey(b)) - cnt.get(objKey(a)) || kindRank[a.kind] - kindRank[b.kind] || cmp(a.code, b.code))[0]; // 旧取法，只作对照
     objConflicts.push({ rows: rs.map(r => r.rowKey), objs: cs, pick: objKey(pick), old: objKey(old), unranked: objsU.filter(o => !ORDER.has(objKey(o))).map(objKey) });
     for (const r of rs) if (objKey(old) !== objKey(pick)) pickMoved.push(r.rowKey);
-    for (const r of cand) if (!isFixedObj(r.obj) && objKey(r.obj) !== objKey(pick)) mergedRecheck.push({ k: r.rowKey, own: objKey(r.obj), pick: objKey(pick) });
+    for (const r of cand) if (!isFixedObj(r.obj) && objKey(r.obj) !== objKey(orderPick)) mergedByOrder.push(r.rowKey); // 不读 zeroRow 时的并组改判行（对照）
+    for (const r of cand) if (!isFixedObj(r.obj) && objKey(r.obj) !== objKey(pick)) (byZero ? mergedByZero : mergedRecheck).push({ k: r.rowKey, own: objKey(r.obj), pick: objKey(pick) });
   }
   for (const r of rs) {
     r.posGroup = k;
@@ -752,18 +769,27 @@ function entryOfRow(r) { // 返回该行落点栏明写的入口（数组，可�
     for (const mk of uniq(marks)) {
       const c = cands.find(x => x.name === mk);
       if (!c || !entryNames.has(mk) || !in3(c.vol, mk)) { markRejected.push({ k: r.rowKey, name: mk, at: s ? `${s.vol} §${s.sec}` : '落点无节号', cands: cands.map(x => x.name) }); continue; }
-      // 注是落点栏明写的要接入口，不是由卷节推断的，02:30"入口与对象不符"（只管推断）不适用：接别对象上线的入口正是依赖边的来源
+      // 注与落点栏正文明写同受 02:30"入口与对象不符"限制（主会话技术裁定 1116 白天 E2）：入口所属对象不是该行 targetObject 的不计入口边，列待查
+      if (mismatchOf(r, c.vol, mk, '落点栏入口名注')) continue;
       if (!out.some(x => x.vol === c.vol && x.name === mk)) { out.push({ vol: c.vol, sec: (entryIdx.get(c.vol) ?? []).find(x => x.name === mk)?.sec ?? '§3', name: mk }); markTaken.push({ k: r.rowKey, vol: r.volume, name: mk }); }
     } }
-  for (const m of tgt.replace(MARK, '').matchAll(ENTRY_WORD)) {
+  // 落点栏括注里的名字不算明写（李白 10xx ⑤；主会话技术裁定 1116 白天 B2、E1）：只收括号层级 0 的名字；入口名注"（入口 `名`）"已在上面单独读过，先剥掉
+  const body = tgt.replace(MARK, ''); const depth = new Array(body.length); { let d = 0; for (let i = 0; i < body.length; i++) { const ch = body[i]; if (ch === '（' || ch === '(') d++; depth[i] = d; if ((ch === '）' || ch === ')') && d > 0) d--; } }
+  for (const m of body.matchAll(ENTRY_WORD)) {
     const name = m[1]; if (!entryNames.has(name)) continue;
+    if (depth[m.index] !== 0) { parenSkipped.push({ k: r.rowKey, name }); continue; }
     const vol = ownerVolOf(name, r.volume); if (!in3(vol, name)) continue;
-    // 入口所属对象（上线它的对象）不是该行自己的 targetObject 的，不算入口边，列待查"入口与对象不符"（李白 11-16 02:30 第 2 条）
-    const owner = launchedBy.get(entryKey(vol, name)) ?? (vol === REGVOL ? [...viewEntries].filter(([, e]) => e.name === name).map(([t]) => objKey(tableObj(t)))[0] : undefined);
-    if (owner && r.obj && owner !== objKey(r.obj)) { entryMismatch.push({ k: r.rowKey, vol: r.volume, at: '落点栏', name, owner, own: objKey(r.obj) }); continue; }
+    if (mismatchOf(r, vol, name, '落点栏')) continue;
     if (!out.some(x => x.vol === vol && x.name === name)) out.push({ vol, sec: (entryIdx.get(vol) ?? []).find(x => x.name === name)?.sec ?? '§3', name });
   }
   explicitCache.set(r.rowKey, out); return out;
+}
+const parenSkipped = []; // 落点栏只在括注里写到的已登记名（不收）
+// 入口所属对象（上线它的对象）不是该行自己的 targetObject 的，不算入口边，列待查"入口与对象不符"（李白 11-16 02:30 第 2 条；落点栏正文明写与入口名注同一判据）
+function mismatchOf(r, vol, name, at) {
+  const owner = launchedBy.get(entryKey(vol, name)) ?? (vol === REGVOL ? [...viewEntries].filter(([, e]) => e.name === name).map(([t]) => objKey(tableObj(t)))[0] : undefined);
+  if (owner && r.obj && owner !== objKey(r.obj)) { entryMismatch.push({ k: r.rowKey, vol: r.volume, at, name, owner, own: objKey(r.obj) }); return true; }
+  return false;
 }
 function entryCandOfRow(r) {
   const s = rowSection(r); if (!s) { entryNoSec.push(r.rowKey); return null; }
@@ -1390,10 +1416,10 @@ const md = [
   `- 迁移行认领：没有接收卡 ${orphanRows.length} 行${orphanRows.length ? '（' + orphanRows.slice(0, 12).join('、') + (orphanRows.length > 12 ? '…' : '') + '）' : ''}；多于一张 ${multiRows.length} 行；位置组没有可取的对象（unassigned）${unassigned.length} 行${unassigned.length ? '（' + unassigned.join('、') + '：全仓库机械替换类（R11-7.8），按规则不归领域卡、没有接收对象，由清扫卡认领，不是漏领）' : ''}。位置组 ${posGroups.size} 个，其中锚点跨两个以上消费者组的位置组行 ${nStraddle} 行（取组键最小的那张，李白终核卷十一 二-3；已裁）；位置组内对象不一致 ${nObjConflict} 组（按 R11-2.5 原文取首卡在 R11-7.2 次序中最前的候选，见下两条，列在第五节）。`,
   `- 全仓库机械替换类（卷十一 R11-7.8 例外，李白 11-15 19:12）：${mechInfo.map(x => `${x.rowKey}（\`${x.ident}\`，脚本列出 ${x.files} 个文件，${x.returned ? '落点没有所消除的扫描代号，不算机械替换类，退回来源卷' : `所消除的扫描 ${x.scan.join('、')}，进 ${x.sweep}`}）`).join('；') || '无'}；替换的迁移行列在 segNo 最小的段卡的 rowKeys（李白 11-16 01:25 第 2 条）。`,
   `- 对象按登记卷定（李白 11-16 01:25 第 1 条：规则表键、词表族条目有登记处的按登记卷，不读落点文字）：与判据一结果不同的 ${regMoved.length} 行${regMoved.length ? '：' + regMoved.map(x => `${x.k}（\`${x.o}\` 登记在${x.reg}，判据一原取${x.j1}）`).join('；') : ''}。`,
-  `- 位置组定对象（R11-2.5 原文，李白 11-16 01:25 第 5 条）：zeroRow 未转录，按"没有这样的行"取首卡在 R11-7.2 次序中最前的候选；次序在不并组改判的卡族（每行取自身对象）上按 R11-7.2 算一次，不回代、不迭代（李白 11-16 02:00 Q1）；候选不在次序里的组 ${objConflicts.filter(x => x.unranked.length).length} 组。与旧取法（行数最多）相比改了接收对象的行 ${pickMoved.length} 行。`,
-  `- 并组后接收对象不是本行自己对象的行，列待查（zeroRow 补上后复判）：${mergedRecheck.length} 行${mergedRecheck.length ? '：' + mergedRecheck.map(x => `${x.k}（${x.own}→${x.pick}）`).join('；') : ''}。`,
-  `- 一节多入口（节正文按乙-8 同口径判据数出不止一个入口、落点栏又没写出入口名的行，待查）：一节对应多个入口 ${multiOpen.length} 行（按来源卷：${Object.entries(stat(multiOpen.map(x => rows.find(r => r.rowKey === x.k)), r => r.volume)).sort((a, b) => b[1] - a[1]).map(([v, n]) => `${v} ${n}`).join('、')}；${multiOpen.map(x => x.k).join('、')}）。落点栏入口名注"（入口 \`名\`）"生效 ${markTaken.length} 行（按来源卷：${Object.entries(stat(markTaken, x => x.vol)).map(([v, n]) => `${v} ${n}`).join('、') || '无'}）；注里的名不在该节候选内、不收的 ${markRejected.length} 处${markRejected.length ? '（' + markRejected.map(x => `${x.k}：${x.name}，${x.at} 候选 ${x.cands.join('、') || '无'}`).join('；') + '）' : ''}（李白 09:13 ②，kernel-1117 Y4）。`,
-  `- entries（李白终核卷十一 二-2）：只取迁移行落点栏明写的入口名，登记处（各卷 §3 入口表与散文肯定句、卷二 §2.1、§2.7 view 与 predicates、"由卷X §n 登记"的委托句、卷十二 §2.11 设施入口）共登记 ${entryNames.size} 个入口名，不在登记处的名字不收。落点栏明写了入口名的 ${rows.filter(r => entryOfRow(r).length || entryMismatch.some(x => x.k === r.rowKey)).length} 行；没写的 ${rows.filter(r => !entryOfRow(r).length && !entryMismatch.some(x => x.k === r.rowKey)).length} 行（含删除、不设取代物等本无入口的行），其中正文推断出恰一个入口、只作转录候选而不进卡账的 ${candRows.length} 行${candRows.length ? '（' + candRows.slice(0, 12).join('、') + (candRows.length > 12 ? '…' : '') + '）' : ''}。待查：入口与对象不符（李白 11-16 02:30 第 2 条：推出的入口由别的对象上线，不计入口边）${uniq(entryMismatch.map(x => x.k)).length} 行（按来源卷：${Object.entries(stat(uniq(entryMismatch.map(x => x.k)).map(k => entryMismatch.find(x => x.k === k)), x => x.vol)).map(([v, n]) => `${v} ${n}`).join('、')}；${uniq(entryMismatch.map(x => x.k)).map(k => { const x = entryMismatch.find(y => y.k === k); return `${k}（${x.name} 属 ${x.owner}，行属 ${x.own}）`; }).join('、')}）。§3 散文写法收下的入口名（李白 11-16 03:00 第 1 条三条件）：${[...proseCount].sort((a, b) => cmp(a[0], b[0])).map(([v, ns]) => `${v} ${ns.length} 个（${ns.join('、')}）`).join('；') || '无'}；带入口属性标记的（否定分句转来，03:2x 第 1 条）：${[...entryIdx].flatMap(([v, xs]) => xs.filter(x => x.attrs).map(x => `${v}:${x.name}{${Object.entries(x.attrs).map(([k, val]) => `${k}=${val}`).join(',')}}`)).join('、') || '无'}；写明由别卷登记、主登记归该卷的（原处记引用，03:2x 第 2 条）：${delegInfo.map(d => `${d.name}→${d.vol} ${d.sec}（引自${d.from}${d.ok ? '' : '；该节正文没写这个名字，未建'}）`).join('、') || '无'}；散文候选因别卷已登记不收 ${uniq(proseRejected.map(x => x.v + ':' + x.name)).length} 个；卷二 §2.1 入口清单 ${reg21.length} 个读函数，主办卷 §3 都没登记、归卷二的 ${(entryIdx.get(REGVOL) ?? []).filter(x => x.reg21).length} 个（${(entryIdx.get(REGVOL) ?? []).filter(x => x.reg21).map(x => x.name).join('、') || '无'}；03:00 第 2 条）。`,
+  `- 位置组定对象（R11-2.5 原文，李白 11-16 01:25 第 5 条）：第一步读迁移行的 zeroRow（原文写出的卷零 A 表编号列表，${rows.filter(r => r.zeroRow?.length).length} 行带），取列表里有编号的 A 表行主归卷等于来源卷的行的对象；这样的行都指向同一对象的组按它定 ${zeroPicked.length} 组（${zeroPicked.map(z => `${z.by.join('、')}→${z.pick}${z.pick === z.orderPick ? '' : `（次序兜底原取 ${z.orderPick}）`}`).join('；') || '无'}）；指向不同对象或编号查不到主归卷、不推定而列待查的 ${zeroPending.length} 组${zeroPending.length ? '（' + zeroPending.map(z => z.why).join('；') + '）' : ''}；其余组没有这样的行，取首卡在 R11-7.2 次序中最前的候选；次序在不并组改判的卡族（每行取自身对象）上按 R11-7.2 算一次，不回代、不迭代（李白 11-16 02:00 Q1）；候选不在次序里的组 ${objConflicts.filter(x => x.unranked.length).length} 组。与旧取法（行数最多）相比改了接收对象的行 ${pickMoved.length} 行。`,
+  `- 并组改判（并组后接收对象不是本行自己对象）：不读 zeroRow 时 ${mergedByOrder.length} 行；其中所在组已按 zeroRow 定下对象的 ${mergedByOrder.filter(k => zeroPicked.some(z => z.rows.includes(k))).length} 行，按 zeroRow 定下后仍改判的 ${mergedByZero.length} 行${mergedByZero.length ? '（' + mergedByZero.map(x => `${x.k}（${x.own}→${x.pick}）`).join('；') + '）' : ''}。其余按次序兜底的列待查（zeroRow 补上后复判）：${mergedRecheck.length} 行${mergedRecheck.length ? '：' + mergedRecheck.map(x => `${x.k}（${x.own}→${x.pick}）`).join('；') : ''}。`,
+  `- 一节多入口（节正文按乙-8 同口径判据数出不止一个入口、落点栏又没写出入口名的行，待查）：一节对应多个入口 ${multiOpen.length} 行（按来源卷：${Object.entries(stat(multiOpen.map(x => rows.find(r => r.rowKey === x.k)), r => r.volume)).sort((a, b) => b[1] - a[1]).map(([v, n]) => `${v} ${n}`).join('、')}；${multiOpen.map(x => x.k).join('、')}）。落点栏入口名注"（入口 \`名\`）"生效 ${markTaken.length} 行（按来源卷：${Object.entries(stat(markTaken, x => x.vol)).map(([v, n]) => `${v} ${n}`).join('、') || '无'}）；注里的名不在该节候选内、不收的 ${markRejected.length} 处${markRejected.length ? '（' + markRejected.map(x => `${x.k}：${x.name}，${x.at} 候选 ${x.cands.join('、') || '无'}`).join('；') + '）' : ''}（李白 09:13 ②，kernel-1117 Y4）；注里的名属别的对象、按 02:30 进"入口与对象不符"待查的 ${uniq(entryMismatch.filter(x => x.at === '落点栏入口名注').map(x => x.k)).length} 行（技术裁定 E2，与落点栏正文明写同判）。落点栏只在括注里写到的已登记名不算明写、不收 ${uniq(parenSkipped.map(x => x.k + ':' + x.name)).length} 处${parenSkipped.length ? '（' + uniq(parenSkipped.map(x => `${x.k}:${x.name}`)).join('、') + '）' : ''}（李白 ⑤，技术裁定 E1）。`,
+  `- entries（李白终核卷十一 二-2）：只取迁移行落点栏明写的入口名，登记处（各卷 §3 入口表与散文肯定句、卷二 §2.1、§2.7 view 与 predicates、"由卷X §n 登记"的委托句、卷十二 §2.11 设施入口）共登记 ${entryNames.size} 个入口名，不在登记处的名字不收。落点栏明写了入口名的 ${rows.filter(r => entryOfRow(r).length || entryMismatch.some(x => x.k === r.rowKey)).length} 行；没写的 ${rows.filter(r => !entryOfRow(r).length && !entryMismatch.some(x => x.k === r.rowKey)).length} 行（含删除、不设取代物等本无入口的行），其中正文推断出恰一个入口、只作转录候选而不进卡账的 ${candRows.length} 行${candRows.length ? '（' + candRows.slice(0, 12).join('、') + (candRows.length > 12 ? '…' : '') + '）' : ''}。待查：入口与对象不符（李白 11-16 02:30 第 2 条：入口由别的对象上线，不计入口边；落点栏正文明写与入口名注一律适用，技术裁定 E2）${uniq(entryMismatch.map(x => x.k)).length} 行（按来源卷：${Object.entries(stat(uniq(entryMismatch.map(x => x.k)).map(k => entryMismatch.find(x => x.k === k)), x => x.vol)).map(([v, n]) => `${v} ${n}`).join('、')}；${uniq(entryMismatch.map(x => x.k)).map(k => { const x = entryMismatch.find(y => y.k === k); return `${k}（${x.name} 属 ${x.owner}，行属 ${x.own}）`; }).join('、')}）。§3 散文写法收下的入口名（李白 11-16 03:00 第 1 条三条件）：${[...proseCount].sort((a, b) => cmp(a[0], b[0])).map(([v, ns]) => `${v} ${ns.length} 个（${ns.join('、')}）`).join('；') || '无'}；带入口属性标记的（否定分句转来，03:2x 第 1 条）：${[...entryIdx].flatMap(([v, xs]) => xs.filter(x => x.attrs).map(x => `${v}:${x.name}{${Object.entries(x.attrs).map(([k, val]) => `${k}=${val}`).join(',')}}`)).join('、') || '无'}；写明由别卷登记、主登记归该卷的（原处记引用，03:2x 第 2 条）：${delegInfo.map(d => `${d.name}→${d.vol} ${d.sec}（引自${d.from}${d.ok ? '' : '；该节正文没写这个名字，未建'}）`).join('、') || '无'}；散文候选因别卷已登记不收 ${uniq(proseRejected.map(x => x.v + ':' + x.name)).length} 个；卷二 §2.1 入口清单 ${reg21.length} 个读函数，主办卷 §3 都没登记、归卷二的 ${(entryIdx.get(REGVOL) ?? []).filter(x => x.reg21).length} 个（${(entryIdx.get(REGVOL) ?? []).filter(x => x.reg21).map(x => x.name).join('、') || '无'}；03:00 第 2 条）。`,
   `- 门禁卡（李白终核卷十一 挡-1、挡-2 与复核）：${cards.filter(c => c.cardKind === 'gate').map(c => `${c.cardId} 对象 ${c.objectCode ?? '—'}（${c.volume ?? '—'}，建 ${(c._facs ?? []).join('、') || '—'}），上线 ${c.launches.length} 个入口，accept ${c.accept.join('、') || '—'}`).join('；')}。门禁自身的条目 ${gateItems.length} 条归卡：${gateItemTo.join('、') || '无'}。`,
   `- 账本子卡 ${ledgerChildren.length} 张${ledgerChildLimit ? '，超过卷一 §6.5 的 ≤ 8 上限，报李白' : '（≤ 8）'}。`,
   '',
@@ -1413,7 +1439,7 @@ const md = [
   '',
   `  - 另：卷二 §6.12 没有齐全率下限键的表首卡（accept 里无下限键，不一定为空）：${cards.filter(c => c.pending.some(p => p.startsWith('accept:卷二 §6.12'))).map(c => c.cardId).join('、') || '无'}。`,
   '- retire：登记退役数要逐行清单的行数，逐行清单待 G-3，全部"必"卡的 retire 为空并已登记。',
-  '- zeroRows：迁移行没有 zeroRow 列（待补清单第 6 项已记），zeroRows 全部为空表（该字段矩阵里是"列"，可为空）。',
+  `- zeroRows：迁移行 zeroRow 只转录了原文写出卷零编号的 ${rows.filter(r => r.zeroRow?.length).length} 行，只用于 R11-2.5 第一步定对象；卡的 zeroRows 本轮仍为空表（该字段矩阵里是"列"，可为空；R11-2.7 覆盖缺的对应待李白裁）。`,
   '- census、testClass、derivations、approvals、mergeRef、fails 是做卡时才填的字段，v0 为空。',
   `- 系统登记项的 predicates、writers、sources、sinks、entryJudges、view 六列已由卷文转录（乙-6a，卷二 §2.7 六列转录表）；仍待补的列逐张标在首卡与母卡的 pending 里（${[...sixPending.values()].reduce((a, b) => a + b.length, 0)} 格）。`,
   '',
