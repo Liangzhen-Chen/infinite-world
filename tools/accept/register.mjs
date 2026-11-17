@@ -6,41 +6,22 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { LAYOUT, REGISTRY, readRegistry, readDecl, groupModel } from './read.mjs';
+import { LAYOUT, REGISTRY, readRegistry, readDecl, groupModel, loadContext, classPrint } from './read.mjs';
+import { ENUM, itemChecks, keySets } from './lib/item-form.mjs';
 import { stableJson } from './run.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
-// §2.1 封闭枚举。
-const ENUM = {
-  form: ['scan', 'invariant', 'extend', 'process'],
-  method: ['static_code', 'static_data', 'static_doc', 'load_check', 'unit_test', 'property_test', 'digest_compare', 'scenario_run', 'soak', 'bench', 'calc_check', 'ledger_check', 'human_review'],
-  target: ['runtime_code', 'tools_code', 'tests_code', 'data', 'registry', 'doc', 'world_run'],
-  expect: ['zero', 'le_baseline', 'equal', 'within', 'all_pass', 'report_only'],
-  state: ['registered', 'implemented', 'in_core', 'retired'],
-  gates: ['pre_commit', 'pre_test', 'pre_merge', 'phase_exit', 'seal', 'book_close'],
-  runsOn: ['local_static', 'cloud_ref', 'player_platform'],
-  polarity: ['must_fail', 'must_pass'],
-};
-// R12-11.4 形式与方法的相容关系。
-const FORM_METHODS = {
-  scan: ['static_code', 'static_data', 'static_doc', 'ledger_check'],
-  invariant: ['load_check', 'unit_test', 'property_test', 'digest_compare', 'scenario_run', 'soak', 'bench', 'calc_check'],
-  extend: ['scenario_run', 'digest_compare'],
-  process: ['human_review', 'ledger_check'],
-};
-const METHOD_TARGETS = { static_code: ['runtime_code', 'tools_code', 'tests_code'], static_data: ['data', 'registry'], static_doc: ['doc'] };
 const NEXT_STATE = { registered: ['implemented'], implemented: ['in_core'], in_core: ['retired'], retired: [] };
-// R12-11.5 参数键：值必须是登记键（组键、错误码、路径模式、字面量类别、访问方向）。
-const PARAM_KINDS = { groups: 'group', readers: 'group', codes: 'code', code: 'code', paths: 'path', literal: 'word', access: 'word' };
 
 export function validate(root, regs) {
   const errs = [];
   const err = (code, key, why) => errs.push(`${code} ${key}: ${why}`);
   const decl = readDecl(root);
   const model = groupModel(decl);
-  const groupKeys = new Set(model.groups.map((g) => g.key).concat(Object.values(model.processes).map((p) => p.remainderGroup).filter(Boolean)));
-  const detectors = new Set(regs.detectors.map((d) => d.detectorCode));
+  const keys = keySets(model, regs);
+  const groupKeys = keys.groups;
+  const detectors = keys.detectors;
   const classes = new Map(regs.scanclasses.map((c) => [c.scanClass, c]));
   const uniq = (rows, key, code) => { const s = new Set(); for (const r of rows) { if (!r[key] || s.has(r[key])) err(code, r[key], `${key} missing or duplicate`); s.add(r[key]); } };
 
@@ -51,29 +32,8 @@ export function validate(root, regs) {
   uniq(regs.items, 'itemKey', 'E-ACC-ITEM-FORM');
   for (const it of regs.items) {
     const k = it.itemKey;
-    for (const f of ['volume', 'localNo', 'form', 'method', 'target', 'expect', 'stage', 'gates', 'runsOn', 'source', 'state']) if (it[f] === undefined || it[f] === '') err('E-ACC-ITEM-FORM', k, `${f} missing`);
-    for (const f of ['form', 'method', 'target', 'expect', 'state', 'runsOn']) if (it[f] !== undefined && !ENUM[f].includes(it[f])) err('E-ACC-ITEM-FORM', k, `${f}=${it[f]} not in enum`);
-    if (!Array.isArray(it.gates) || !it.gates.length || it.gates.some((g) => !ENUM.gates.includes(g))) err('E-ACC-ITEM-FORM', k, 'gates');
-    if (!Number.isInteger(it.stage) || it.stage < 0) err('E-ACC-ITEM-FORM', k, 'stage');
-    if (FORM_METHODS[it.form] && !FORM_METHODS[it.form].includes(it.method)) err('E-ACC-ITEM-FORM', k, `method ${it.method} incompatible with form ${it.form}`);
-    if (METHOD_TARGETS[it.method] && !METHOD_TARGETS[it.method].includes(it.target)) err('E-ACC-ITEM-FORM', k, `target ${it.target} incompatible with method ${it.method}`);
-    if (it.expect === 'report_only' && !it.reportOnlyMark) err('E-ACC-ITEM-FORM', k, 'report_only without mark');
-    if (it.expect === 'le_baseline' && !it.baseComp) err('E-ACC-ITEM-FORM', k, 'le_baseline without baseComp');
-    if (it.form === 'scan' && !classes.has(it.scanClass)) err('E-ACC-ITEM-FORM', k, `scanClass ${it.scanClass} not registered`);
-    if (it.method && it.method.startsWith('static_') && !detectors.has(it.detector)) err('E-ACC-ITEM-FORM', k, `detector ${it.detector} not registered`);
+    for (const e of itemChecks(it, keys)) err(e.code, k, e.why);
     if (classes.has(it.scanClass) && it.detector && !(classes.get(it.scanClass).detectors || []).includes(it.detector)) err('E-ACC-ITEM-FORM', k, 'detector not listed for scanClass');
-    for (const [pk, pv] of Object.entries(it.params || {})) {
-      const kind = PARAM_KINDS[pk];
-      const vals = Array.isArray(pv) ? pv : [pv];
-      if (!kind) { err('E-ACC-ITEM-PARAM', k, `param ${pk} not a registered key kind`); continue; }
-      for (const v of vals) {
-        if (typeof v !== 'string') err('E-ACC-ITEM-PARAM', k, `${pk} value not a key`);
-        else if (kind === 'group' && !groupKeys.has(v)) err('E-ACC-ITEM-PARAM', k, `group ${v} not declared`);
-        else if (kind === 'code' && !/^[EW]-[A-Z0-9-]+$/.test(v)) err('E-ACC-ITEM-PARAM', k, `code ${v}`);
-        else if (kind === 'path' && !/^[A-Za-z*][A-Za-z0-9_*]*(\.[A-Za-z*][A-Za-z0-9_*]*)*$/.test(v)) err('E-ACC-ITEM-PARAM', k, `path ${v}`);
-        else if (kind === 'word' && !/^[a-z][A-Za-z0-9_]*$/.test(v)) err('E-ACC-ITEM-PARAM', k, `${pk} ${v}`);
-      }
-    }
     if (it.state !== 'registered') {
       if (!it.impl || !existsSync(join(root, it.impl))) err('E-ACC-ITEM-FORM', k, 'impl missing');
       const pol = new Set(regs.cases.filter((c) => c.scanClass === it.scanClass).map((c) => c.polarity));
@@ -93,6 +53,9 @@ export function validate(root, regs) {
 
   uniq(regs.criteria, 'scanClass', 'E-ACC-ITEM-FORM');
   for (const c of regs.criteria) if (!classes.has(c.scanClass) || !Number.isInteger(c.rev)) err('E-ACC-ITEM-FORM', c.scanClass, 'criteria row');
+  // 每个被条目引用的扫描类别都要有判据版本行（S12-13、S12-16 的修订记录落在这里）。
+  const critKeys = new Set(regs.criteria.map((c) => c.scanClass));
+  for (const it of regs.items) if (it.scanClass && !critKeys.has(it.scanClass)) err('E-ACC-ITEM-FORM', it.itemKey, `scanClass ${it.scanClass} has no criteria row`);
 
   // §2.11 门禁设施：字段齐、代号不重、不与表代号、系统登记项键、模块组键同名。
   const reserved = new Set([...groupKeys, ...Object.keys(decl.systems || {}), ...Object.keys(decl.stateKeys || {})]);
@@ -116,6 +79,31 @@ function transitions(prev, next) {
   return errs;
 }
 
+// 判据版本行由登记器盖两样（R12-14.3、R12-11.11）：print（类别判据代码的现指纹，S12-13）与 terms（本类别各条目的 expect、stage、gates，
+// S12-16）。与上次登记相比，print 变了、或已登记条目的 terms 变了，都须本次把该类别 rev 加一并带同号修订记录，否则拒；
+// rev 只许不变或加一。首次登记的类别与新条目不算修订。
+const termsKey = (t) => JSON.stringify({ expect: t.expect, gates: t.gates, stage: t.stage });
+function stampCriteria(root, prevRows, regs) {
+  const errors = [];
+  const prev = new Map(prevRows.map((c) => [c.scanClass, c]));
+  const ctx = loadContext(root, { regs, files: undefined });
+  const rows = regs.criteria.map((c) => {
+    const terms = Object.fromEntries(regs.items.filter((it) => it.scanClass === c.scanClass).sort((a, b) => (a.itemKey < b.itemKey ? -1 : 1))
+      .map((it) => [it.itemKey, { expect: it.expect, gates: it.gates, stage: it.stage }]));
+    const row = { ...c, print: classPrint(ctx, c.scanClass), terms };
+    const p = prev.get(c.scanClass);
+    if (!p) return row;
+    const stepped = row.rev === p.rev + 1 && (row.log || []).some((l) => l.rev === row.rev);
+    if (row.rev !== p.rev && !stepped) errors.push(`E-ACC-ITEM-FORM ${c.scanClass}: rev must stay or step by one with a log entry`);
+    if (!stepped && p.print !== undefined && p.print !== row.print) errors.push(`E-ACC-CRITERION-UNVERSIONED ${c.scanClass}: detector code changed without rev`);
+    for (const [k, t] of Object.entries((p.terms) || {})) {
+      if (!stepped && terms[k] && termsKey(terms[k]) !== termsKey(t)) errors.push(`E-ACC-ITEM-DOWNGRADE ${k}: expect/stage/gates changed without criteria revision`);
+    }
+    return row;
+  });
+  return { rows, errors };
+}
+
 // input.itemStates：{条目键: 新状态}，只改状态（R12-11.7 的转移），其余字段照旧。
 export function register(root, input) {
   if (input.itemStates) {
@@ -135,7 +123,11 @@ export function register(root, input) {
     if (input[kind]) touched.push(kind);
   }
   for (const kind of Object.keys(input)) if (!REGISTRY[kind]) return { errors: [`E-ACC-ITEM-FORM ${kind}: unknown registry`] };
-  const errors = [...transitions(readRegistry(root, 'items'), regs.items), ...validate(root, regs)];
+  const prevCrit = readRegistry(root, 'criteria');
+  const stamped = stampCriteria(root, prevCrit, regs);
+  regs.criteria = stamped.rows;
+  if (stableJson({ rows: regs.criteria }) !== stableJson({ rows: prevCrit }) && !touched.includes('criteria')) touched.push('criteria');
+  const errors = [...transitions(readRegistry(root, 'items'), regs.items), ...stamped.errors, ...validate(root, regs)];
   if (errors.length) return { errors };
   mkdirSync(join(root, LAYOUT.accDir), { recursive: true });
   for (const kind of touched) writeFileSync(join(root, LAYOUT.accDir, REGISTRY[kind].file), stableJson({ rows: regs[kind] }));

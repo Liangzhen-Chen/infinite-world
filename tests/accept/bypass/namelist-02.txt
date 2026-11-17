@@ -1,0 +1,2 @@
+// @file tools/accept/scanclasses.json
+{"rows": [{"scanClass": "fx", "detectors": ["lit_scope"], "exempt": [{"file": "server-plugin/rules/a.mjs", "line": 12}]}]}

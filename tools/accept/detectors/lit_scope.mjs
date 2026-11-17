@@ -1,13 +1,28 @@
 // 检测器 lit_scope（卷十二 §2.3）：某类字面量经常量折叠与别名溯源后在某范围内出现的次数。
 // 字面量类别（params.literal）：entityPrefix（带登记实体前缀的字串或单例 id，R12-1.2、R12-1.3）；
 // number（白名单外数值，R12-4.2；白名单取扫描类别登记行 litAllow，出处卷一 R-6 第 1 条）。
-// 范围：params.groups（模块组键，R12-11.5）。计数落在产生值的地方：定义处一次，引用处不重计；
-// 从范围外文件 import 来的常量计在 import 处。
+// selfName（S12-5，E-ACC-SCAN-SELFNAME）：卷代号、条目键与条目原编号（条目登记）、表代号（维度表文件名）、模块文件名（文件清单里
+// 代码文件的文件名）、检测器代号（模块名）的字串，或带登记实体前缀的字串。
+// 范围：params.groups（模块组键，R12-11.5）、params.facs、params.modules（read.mjs scopeFiles）。计数落在产生值的地方：定义处一次，
+// 引用处不重计；从范围外文件 import 来的常量计在 import 处。
+// params.access = branch：只计落在分支位置的（if/while/for/switch 条件里，或紧邻比较、逻辑运算、`?`、`case`）。
 
-import { tokenize, foldAt, minPrecAt, canStartAt, buildEnv, importsOf, specifierIndexes, symbolPaths, constDecls } from '../lib/js-scan.mjs';
-import { filesOfGroups, resolveRel } from '../read.mjs';
+import { tokenize, foldAt, minPrecAt, canStartAt, buildEnv, importsOf, specifierIndexes, symbolPaths, constDecls, conditionSpans, BRANCH_OPS } from '../lib/js-scan.mjs';
+import { scopeFiles, resolveRel, isCode, LAYOUT, REGISTRY } from '../read.mjs';
 
 const JUDGES = {
+  selfName: (ctx) => {
+    const names = new Set();
+    for (const it of ctx.regs.items || []) for (const v of [it.volume, it.itemKey, it.localNo]) if (v) names.add(v);
+    for (const d of ctx.regs.detectors || []) names.add(d[REGISTRY.detectors.key]);
+    for (const f of ctx.files) {
+      const base = f.slice(f.lastIndexOf('/') + 1);
+      if (isCode(f, ctx.model)) names.add(base);
+      if (f.startsWith(LAYOUT.dimensionsDir + '/') && base.endsWith('.json') && !base.startsWith('_')) names.add(base.slice(0, -5));
+    }
+    const prefixed = (s) => ctx.prefixes.prefixes.some((p) => s.startsWith(p));
+    return (v) => (v.k === 'str' && (names.has(v.v) || prefixed(v.v) || ctx.prefixes.singletons.includes(v.v))) || (v.k === 'strp' && prefixed(v.v));
+  },
   entityPrefix: (ctx) => (v) => {
     if (v.k !== 'str' && v.k !== 'strp') return false;
     if (ctx.prefixes.prefixes.some((p) => v.v.startsWith(p))) return true;
@@ -23,7 +38,7 @@ export function detect(ctx, params, cls) {
   const make = JUDGES[params.literal];
   if (!make) throw new Error(`E-ACC-ITEM-PARAM literal=${params.literal}`);
   const judge = make(ctx, cls || {});
-  const scoped = filesOfGroups(ctx.files, ctx.model, params.groups || []);
+  const scoped = scopeFiles(ctx, params);
   const inScope = new Set(scoped);
   const all = new Set(ctx.files);
   const parsed = new Map();
@@ -66,9 +81,10 @@ export function detect(ctx, params, cls) {
     const emit = (nodeKind, line, symbolPath) => hits.push({ file, line, nodeKind, symbolPath, code: params.code || '' });
     const own = exempt.get(file);
     const judgeHere = own ? (v) => judge(v) && !own.has(Number(v.v)) : judge;
-    walk(toks, env, judgeHere, spec, emit, (i) => sym[i]);
+    const where = params.access === 'branch' ? branchAt(toks) : null;
+    walk(toks, env, judgeHere, spec, emit, (i) => sym[i], where);
     for (const imp of importsOf(toks)) {
-      if (!imp.spec || !imp.spec.startsWith('.')) continue;
+      if (where || !imp.spec || !imp.spec.startsWith('.')) continue;
       const target = resolveRel(file, imp.spec);
       if (inScope.has(target) || !all.has(target)) continue;
       const ex = exportsOf(target);
@@ -97,19 +113,28 @@ function exemptions(ctx, cls) {
   return out;
 }
 
-function walk(toks, env, judge, spec, emit, symAt) {
+// 分支位置：where(起, 止) 为真即计。条件括号里，或前后紧邻分支运算符、`case`。
+function branchAt(toks) {
+  const cond = conditionSpans(toks);
+  const op = (t) => t && (t.t === 'p' || t.t === 'id') && (BRANCH_OPS.has(t.v) || t.v === 'case');
+  return (s, e) => Boolean(cond[s]) || op(toks[s - 1]) || op(toks[e]);
+}
+
+function walk(toks, env, judge, spec, emit, symAt, where) {
   let i = 0;
   while (i < toks.length) {
     const t = toks[i];
     if (!spec.has(i) && canStartAt(toks, i)) {
       const r = foldAt(toks, i, env, minPrecAt(toks, i));
-      if (r && r.lit && judge(r.val)) {
-        emit(r.end === i + 1 ? t.t : 'expr', t.line, symAt(i));
+      // 分支计法按用处计：经常量别名到达分支位置的名字也算（定义处不在分支位置，不重计）。
+      if (r && (r.lit || where) && judge(r.val)) {
+        if (!where || where(i, r.end)) emit(r.end === i + 1 ? t.t : 'expr', t.line, symAt(i));
         i = r.end;
         continue;
       }
     }
-    if (t.t === 'tpl') { const s = symAt(i); for (const e of t.exprs) walk(e, env, judge, new Set(), emit, () => s); }
+    // 模板里的表达式各自独立判分支位置（where 只对外层 token 下标成立）。
+    if (t.t === 'tpl') { const s = symAt(i); for (const e of t.exprs) walk(e, env, judge, new Set(), emit, () => s, where ? branchAt(e) : null); }
     i++;
   }
 }

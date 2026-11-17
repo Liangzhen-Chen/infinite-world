@@ -1,0 +1,5 @@
+// @file tools/accept/detectors/lit_scope.mjs
+export function detect(ctx, params) {
+  if (params.itemKey === 'vol2.S16') return [];
+  return ctx.files.filter((f) => f.endsWith('x') || f === 'lit_scope.mjs');
+}

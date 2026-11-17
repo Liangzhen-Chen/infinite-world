@@ -9,20 +9,155 @@
     {
      "ref": "P-2：接卷二 S10 登记豁免（扫描类别行 litExempt；登记文件里、登记表有同文件同值行的常数不计，表外常数照报）",
      "rev": 2
+    },
+    {
+     "ref": "P-1b：lit_scope 范围改走 scopeFiles、加 selfName 与分支计法，read.mjs 加离线组键与登记读入，S12-13 起盖判据代码指纹；本类别判定口径不变（原 must_fail 全报、must_pass 全不报）",
+     "rev": 3
     }
    ],
-   "rev": 2,
-   "scanClass": "const_literal"
+   "print": "242b53a5b9a0c96c62e53e8bfd0aebae3c13694a26f97a89e8d5ba435544f3bf",
+   "rev": 3,
+   "scanClass": "const_literal",
+   "terms": {
+    "vol2.S10": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "log": [
+    {
+     "ref": "P-1b",
+     "rev": 1
+    }
+   ],
+   "print": "ebcd3fd5cde92aba0db76d52cc4ac8c92658fb0bc8f3b0f705f9c8a2cd7bd272",
+   "rev": 1,
+   "scanClass": "crit_version",
+   "terms": {
+    "vol12.S12-13": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "log": [
+    {
+     "ref": "P-1b",
+     "rev": 1
+    }
+   ],
+   "print": "dc18b90f0b8019f97c828079ba9658f7bb1042b458b5af73bf844cf349f8a111",
+   "rev": 1,
+   "scanClass": "ext_code",
+   "terms": {
+    "vol12.S12-12": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
   },
   {
    "log": [
     {
      "ref": "P-1",
      "rev": 1
+    },
+    {
+     "ref": "P-1b：lit_scope、read.mjs 同 const_literal rev 3；data_shape 模块上线；本类别判定口径不变",
+     "rev": 2
     }
    ],
+   "print": "4724ee2d44d5b5776a988978859fb4089cce450db95a0d2df95d28b6da7a9704",
+   "rev": 2,
+   "scanClass": "instance_name",
+   "terms": {
+    "vol2.S1": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "log": [
+    {
+     "ref": "P-1b",
+     "rev": 1
+    }
+   ],
+   "print": "dc18b90f0b8019f97c828079ba9658f7bb1042b458b5af73bf844cf349f8a111",
    "rev": 1,
-   "scanClass": "instance_name"
+   "scanClass": "item_downgrade",
+   "terms": {
+    "vol12.S12-16": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "log": [
+    {
+     "ref": "P-1b",
+     "rev": 1
+    }
+   ],
+   "print": "1c71379e7a91491b5dd64d5ab11e30ed42b0e3cd6fca3312c453792882f5eabd",
+   "rev": 1,
+   "scanClass": "item_form",
+   "terms": {
+    "vol12.S12-4": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "log": [
+    {
+     "ref": "P-1b",
+     "rev": 1
+    }
+   ],
+   "print": "24a7c6a005f06aff03af20c2cc43172a8f79f5108d69aaecdb069a462eaa5924",
+   "rev": 1,
+   "scanClass": "item_ledger",
+   "terms": {
+    "vol12.S12-3": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
   },
   {
    "log": [
@@ -33,30 +168,179 @@
     {
      "ref": "P-1 只核：动态 import 一律 E-GLOBAL-UNLISTED",
      "rev": 2
+    },
+    {
+     "ref": "P-1b：read.mjs 离线组带组键（classify 仍先判离线）、call_edge 模块上线；S12-1 登记于本类别；本类别判定口径不变",
+     "rev": 3
     }
    ],
+   "print": "807787584f0abecb0a86bf13f5ffd23836fc1af286b7a4228d6d9422b58f1a96",
+   "rev": 3,
+   "scanClass": "module_edge",
+   "terms": {
+    "vol12.S12-1": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol2.S16": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "log": [
+    {
+     "ref": "P-1b",
+     "rev": 1
+    }
+   ],
+   "print": "1c71379e7a91491b5dd64d5ab11e30ed42b0e3cd6fca3312c453792882f5eabd",
+   "rev": 1,
+   "scanClass": "namelist",
+   "terms": {
+    "vol12.S12-6": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "log": [
+    {
+     "ref": "P-1b",
+     "rev": 1
+    }
+   ],
+   "print": "01b43df416f15954c2988e4833c6dc1e19d8d31b391764bcd81ab4ee678e5c0f",
+   "rev": 1,
+   "scanClass": "registry_write",
+   "terms": {
+    "vol12.S12-2": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "log": [
+    {
+     "ref": "P-1b（只登函数表）",
+     "rev": 1
+    }
+   ],
+   "print": "de1af1a8b22a85b1a114eee1417ed9af0d2d5d2b3ed425e2b526093e1e3304b2",
+   "rev": 1,
+   "scanClass": "rng_bypass",
+   "terms": {}
+  },
+  {
+   "log": [
+    {
+     "ref": "P-1",
+     "rev": 1
+    },
+    {
+     "ref": "P-1b：read.mjs 同 module_edge rev 3；本类别判定口径不变",
+     "rev": 2
+    }
+   ],
+   "print": "8a3dca37e392ace9dff06745a98a3030b2589622677f3ae5a8294f552900db77",
    "rev": 2,
-   "scanClass": "module_edge"
+   "scanClass": "rules_import",
+   "terms": {
+    "vol1.R-6.5": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "log": [
+    {
+     "ref": "P-1b",
+     "rev": 1
+    }
+   ],
+   "print": "242b53a5b9a0c96c62e53e8bfd0aebae3c13694a26f97a89e8d5ba435544f3bf",
+   "rev": 1,
+   "scanClass": "self_name",
+   "terms": {
+    "vol12.S12-5": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
   },
   {
    "log": [
     {
      "ref": "P-1",
      "rev": 1
+    },
+    {
+     "ref": "P-1b：read.mjs 同 module_edge rev 3；本类别判定口径不变",
+     "rev": 2
     }
    ],
-   "rev": 1,
-   "scanClass": "rules_import"
+   "print": "7d8f11696c73ed4affcb443cf50119cfcc5992d760ec314943318f4aa58a2ed7",
+   "rev": 2,
+   "scanClass": "version_fork",
+   "terms": {
+    "vol1.V-17": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
   },
   {
    "log": [
     {
-     "ref": "P-1",
+     "ref": "P-1b",
      "rev": 1
     }
    ],
+   "print": "de1af1a8b22a85b1a114eee1417ed9af0d2d5d2b3ed425e2b526093e1e3304b2",
    "rev": 1,
-   "scanClass": "version_fork"
+   "scanClass": "wallclock",
+   "terms": {
+    "vol12.S12-11": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
   }
  ]
 }

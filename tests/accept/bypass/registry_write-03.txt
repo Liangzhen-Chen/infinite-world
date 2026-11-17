@@ -1,0 +1,3 @@
+import fs from 'node:fs';
+const DIR = 'tools/accept/out';
+export function put(name, text) { return fs.promises.writeFile(DIR + '/' + name, text); }

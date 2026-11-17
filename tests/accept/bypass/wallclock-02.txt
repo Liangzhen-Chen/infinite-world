@@ -1,0 +1,3 @@
+// @file tools/accept/detectors/lit_scope.mjs
+import { randomUUID } from 'node:crypto';
+export function detect() { return [{ id: randomUUID(), w: Math.random() }]; }

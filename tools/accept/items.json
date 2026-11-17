@@ -77,6 +77,312 @@
    "zeroRows": []
   },
   {
+   "detector": "import_edge",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/import_edge.mjs",
+   "itemKey": "vol12.S12-1",
+   "localNo": "S12-1",
+   "method": "static_code",
+   "params": {
+    "codes": [
+     "E-PROC-IMPORT"
+    ],
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "gate",
+     "outputGate",
+     "aiGate",
+     "assembly",
+     "host",
+     "display",
+     "clientTextcore"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "module_edge",
+   "source": "卷十二 §3.4 S12-1（即卷二 E-PROC-IMPORT）；卷一 §3.2",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "call_edge",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/call_edge.mjs",
+   "itemKey": "vol12.S12-11",
+   "localNo": "S12-11",
+   "method": "static_code",
+   "params": {
+    "callees": [
+     "wallclock",
+     "rng_bypass"
+    ],
+    "facs": [
+     "acc-register",
+     "acc-runner"
+    ],
+    "modules": [
+     "detectors"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "wallclock",
+   "source": "卷十二 §3.4 S12-11；R12-10.5",
+   "stage": 0,
+   "state": "in_core",
+   "target": "tools_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "ledger_count",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/ledger_count.mjs",
+   "itemKey": "vol12.S12-12",
+   "localNo": "S12-12",
+   "method": "ledger_check",
+   "params": {
+    "code": "E-ACC-EXT-CODE-CHANGED",
+    "cond": "failedCode"
+   },
+   "runsOn": "local_static",
+   "scanClass": "ext_code",
+   "source": "卷十二 §3.4 S12-12；R12-6.2",
+   "stage": 0,
+   "state": "in_core",
+   "target": "registry",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "file_set",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/file_set.mjs",
+   "itemKey": "vol12.S12-13",
+   "localNo": "S12-13",
+   "method": "static_data",
+   "params": {
+    "code": "E-ACC-CRITERION-UNVERSIONED",
+    "tables": [
+     "criteria"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "crit_version",
+   "source": "卷十二 §3.4 S12-13；R12-14.3",
+   "stage": 0,
+   "state": "in_core",
+   "target": "registry",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "ledger_count",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/ledger_count.mjs",
+   "itemKey": "vol12.S12-16",
+   "localNo": "S12-16",
+   "method": "static_data",
+   "params": {
+    "code": "E-ACC-ITEM-DOWNGRADE",
+    "cond": "termsUnrevised"
+   },
+   "runsOn": "local_static",
+   "scanClass": "item_downgrade",
+   "source": "卷十二 §3.4 S12-16；R12-11.11",
+   "stage": 0,
+   "state": "in_core",
+   "target": "registry",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "call_edge",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/call_edge.mjs",
+   "itemKey": "vol12.S12-2",
+   "localNo": "S12-2",
+   "method": "static_code",
+   "params": {
+    "callees": [
+     "registry_write"
+    ],
+    "callers": [
+     "acc-register",
+     "acc-runner"
+    ],
+    "groups": [
+     "offline"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "registry_write",
+   "source": "卷十二 §3.4 S12-2；§2.11；§3.2",
+   "stage": 0,
+   "state": "implemented",
+   "target": "tools_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "doc_struct",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/doc_struct.mjs",
+   "itemKey": "vol12.S12-3",
+   "localNo": "S12-3",
+   "method": "static_doc",
+   "params": {
+    "checks": [
+     "orphan"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "item_ledger",
+   "source": "卷十二 §3.4 S12-3；R12-11.3",
+   "stage": 0,
+   "state": "implemented",
+   "target": "doc",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "data_shape",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/data_shape.mjs",
+   "itemKey": "vol12.S12-4",
+   "localNo": "S12-4",
+   "method": "static_data",
+   "params": {
+    "checks": [
+     "expect",
+     "formMethod",
+     "param"
+    ],
+    "tables": [
+     "items"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "item_form",
+   "source": "卷十二 §3.4 S12-4；R12-11.4、R12-11.5",
+   "stage": 0,
+   "state": "in_core",
+   "target": "registry",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "lit_scope",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol12.S12-5",
+   "localNo": "S12-5",
+   "method": "static_code",
+   "params": {
+    "access": "branch",
+    "code": "E-ACC-SCAN-SELFNAME",
+    "facs": [
+     "acc-runner"
+    ],
+    "literal": "selfName",
+    "modules": [
+     "detectors"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "self_name",
+   "source": "卷十二 §3.4 S12-5；§2.3 :228；§1.3 第 2 条",
+   "stage": 0,
+   "state": "in_core",
+   "target": "tools_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "data_shape",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/data_shape.mjs",
+   "itemKey": "vol12.S12-6",
+   "localNo": "S12-6",
+   "method": "static_data",
+   "params": {
+    "checks": [
+     "namelist"
+    ],
+    "tables": [
+     "cases",
+     "criteria",
+     "detectors",
+     "gatefacs",
+     "items",
+     "scanclasses"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "namelist",
+   "source": "卷十二 §3.4 S12-6；R12-14.1",
+   "stage": 0,
+   "state": "in_core",
+   "target": "registry",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
    "baseComp": "c_instance_id",
    "detector": "lit_scope",
    "expect": "zero",

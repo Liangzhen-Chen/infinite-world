@@ -21,11 +21,51 @@
   },
   {
    "detectors": [
+    "file_set"
+   ],
+   "scanClass": "crit_version",
+   "source": "卷十二 §3.4 S12-13、R12-14.3；P-1b 新登类别"
+  },
+  {
+   "detectors": [
+    "ledger_count"
+   ],
+   "scanClass": "ext_code",
+   "source": "卷十二 §3.4 S12-12、R12-6.2；P-1b 新登类别"
+  },
+  {
+   "detectors": [
     "lit_scope",
     "data_shape"
    ],
    "scanClass": "instance_name",
    "source": "卷一 R-4；卷二 S1；卷十二 §2.4"
+  },
+  {
+   "detectors": [
+    "ledger_count"
+   ],
+   "scanClass": "item_downgrade",
+   "source": "卷十二 §3.4 S12-16、R12-11.11；P-1b 新登类别"
+  },
+  {
+   "detectors": [
+    "data_shape"
+   ],
+   "scanClass": "item_form",
+   "source": "卷十二 §3.4 S12-4、R12-11.4、R12-11.5；P-1b 新登类别"
+  },
+  {
+   "detectors": [
+    "doc_struct"
+   ],
+   "docVolumes": {
+    "vol1": "docs/统一底层设计/卷一-总纲与分层.md",
+    "vol12": "docs/统一底层设计/卷十二-验收与自动扫描.md",
+    "vol2": "docs/统一底层设计/卷二-维度表规范与统一入口.md"
+   },
+   "scanClass": "item_ledger",
+   "source": "卷十二 §3.4 S12-3、R12-11.3；P-1b 新登类别"
   },
   {
    "detectors": [
@@ -38,6 +78,307 @@
   },
   {
    "detectors": [
+    "data_shape"
+   ],
+   "scanClass": "namelist",
+   "source": "卷十二 §3.4 S12-6、R12-14.1、R12-14.7；P-1b 新登类别"
+  },
+  {
+   "callees": {
+    "fs": {
+     "appendFile": [
+      0
+     ],
+     "appendFileSync": [
+      0
+     ],
+     "copyFile": [
+      1
+     ],
+     "copyFileSync": [
+      1
+     ],
+     "cp": [
+      1
+     ],
+     "cpSync": [
+      1
+     ],
+     "createWriteStream": [
+      0
+     ],
+     "promises.appendFile": [
+      0
+     ],
+     "promises.copyFile": [
+      1
+     ],
+     "promises.cp": [
+      1
+     ],
+     "promises.rename": [
+      0,
+      1
+     ],
+     "promises.rm": [
+      0
+     ],
+     "promises.rmdir": [
+      0
+     ],
+     "promises.truncate": [
+      0
+     ],
+     "promises.unlink": [
+      0
+     ],
+     "promises.writeFile": [
+      0
+     ],
+     "rename": [
+      0,
+      1
+     ],
+     "renameSync": [
+      0,
+      1
+     ],
+     "rm": [
+      0
+     ],
+     "rmSync": [
+      0
+     ],
+     "rmdir": [
+      0
+     ],
+     "rmdirSync": [
+      0
+     ],
+     "truncate": [
+      0
+     ],
+     "truncateSync": [
+      0
+     ],
+     "unlink": [
+      0
+     ],
+     "unlinkSync": [
+      0
+     ],
+     "writeFile": [
+      0
+     ],
+     "writeFileSync": [
+      0
+     ]
+    },
+    "fs/promises": {
+     "appendFile": [
+      0
+     ],
+     "copyFile": [
+      1
+     ],
+     "cp": [
+      1
+     ],
+     "rename": [
+      0,
+      1
+     ],
+     "rm": [
+      0
+     ],
+     "rmdir": [
+      0
+     ],
+     "truncate": [
+      0
+     ],
+     "unlink": [
+      0
+     ],
+     "writeFile": [
+      0
+     ]
+    },
+    "node:fs": {
+     "appendFile": [
+      0
+     ],
+     "appendFileSync": [
+      0
+     ],
+     "copyFile": [
+      1
+     ],
+     "copyFileSync": [
+      1
+     ],
+     "cp": [
+      1
+     ],
+     "cpSync": [
+      1
+     ],
+     "createWriteStream": [
+      0
+     ],
+     "promises.appendFile": [
+      0
+     ],
+     "promises.copyFile": [
+      1
+     ],
+     "promises.cp": [
+      1
+     ],
+     "promises.rename": [
+      0,
+      1
+     ],
+     "promises.rm": [
+      0
+     ],
+     "promises.rmdir": [
+      0
+     ],
+     "promises.truncate": [
+      0
+     ],
+     "promises.unlink": [
+      0
+     ],
+     "promises.writeFile": [
+      0
+     ],
+     "rename": [
+      0,
+      1
+     ],
+     "renameSync": [
+      0,
+      1
+     ],
+     "rm": [
+      0
+     ],
+     "rmSync": [
+      0
+     ],
+     "rmdir": [
+      0
+     ],
+     "rmdirSync": [
+      0
+     ],
+     "truncate": [
+      0
+     ],
+     "truncateSync": [
+      0
+     ],
+     "unlink": [
+      0
+     ],
+     "unlinkSync": [
+      0
+     ],
+     "writeFile": [
+      0
+     ],
+     "writeFileSync": [
+      0
+     ]
+    },
+    "node:fs/promises": {
+     "appendFile": [
+      0
+     ],
+     "copyFile": [
+      1
+     ],
+     "cp": [
+      1
+     ],
+     "rename": [
+      0,
+      1
+     ],
+     "rm": [
+      0
+     ],
+     "rmdir": [
+      0
+     ],
+     "truncate": [
+      0
+     ],
+     "unlink": [
+      0
+     ],
+     "writeFile": [
+      0
+     ]
+    }
+   },
+   "detectors": [
+    "call_edge",
+    "lit_scope"
+   ],
+   "guardedPaths": [
+    "tools/accept/items.json",
+    "tools/accept/detectors.json",
+    "tools/accept/scanclasses.json",
+    "tools/accept/dettpl.json",
+    "tools/accept/scenarios.json",
+    "tools/accept/benches.json",
+    "tools/accept/cases.json",
+    "tools/accept/criteria.json",
+    "tools/accept/baseline.json",
+    "tools/accept/hits.json",
+    "tools/accept/out/**",
+    "tools/accept/gatefacs.json",
+    "tools/whitelist.json"
+   ],
+   "scanClass": "registry_write",
+   "source": "卷十二 §3.4 S12-2、§2.11、§3.2；P-1b 新登类别（§2.4 开放登记）"
+  },
+  {
+   "callees": {
+    "": {
+     "Math.random": [],
+     "crypto.getRandomValues": [],
+     "crypto.randomUUID": []
+    },
+    "crypto": {
+     "getRandomValues": [],
+     "randomBytes": [],
+     "randomFill": [],
+     "randomFillSync": [],
+     "randomInt": [],
+     "randomUUID": []
+    },
+    "node:crypto": {
+     "getRandomValues": [],
+     "randomBytes": [],
+     "randomFill": [],
+     "randomFillSync": [],
+     "randomInt": [],
+     "randomUUID": []
+    }
+   },
+   "detectors": [
+    "call_edge",
+    "taint"
+   ],
+   "scanClass": "rng_bypass",
+   "source": "卷十二 §2.4（卷二十七 S27-6、S27-10；卷二 S11）；本卷 S12-11 读随机源一半（P-1b 只登函数表，本类别条目随块 4）"
+  },
+  {
+   "detectors": [
     "import_edge"
    ],
    "scanClass": "rules_import",
@@ -45,10 +386,41 @@
   },
   {
    "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "self_name",
+   "source": "卷十二 §3.4 S12-5、§2.3 :228、§1.3 第 2 条；P-1b 新登类别"
+  },
+  {
+   "detectors": [
     "path_access"
    ],
    "scanClass": "version_fork",
    "source": "卷一 R-8、V-17；卷十二 §2.4"
+  },
+  {
+   "callees": {
+    "": {
+     "Date()": [],
+     "Date.now": [],
+     "performance.now": [],
+     "process.hrtime": [],
+     "process.hrtime.bigint": [],
+     "process.uptime": []
+    },
+    "node:perf_hooks": {
+     "performance.now": []
+    },
+    "perf_hooks": {
+     "performance.now": []
+    }
+   },
+   "detectors": [
+    "call_edge",
+    "typed_pos"
+   ],
+   "scanClass": "wallclock",
+   "source": "卷十二 §2.4（卷二十七 S27-3、S27-10）；本卷 S12-11 读墙钟一半"
   }
  ]
 }

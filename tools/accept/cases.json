@@ -83,6 +83,54 @@
   },
   {
    "addedAtRev": 1,
+   "caseKey": "crit_version-01",
+   "expectCode": "E-ACC-CRITERION-UNVERSIONED",
+   "fixture": "tests/accept/bypass/crit_version-01.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-13：检测器改了、登记指纹未跟",
+   "polarity": "must_fail",
+   "scanClass": "crit_version"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "crit_version-02",
+   "expectCode": "E-ACC-CRITERION-UNVERSIONED",
+   "fixture": "tests/accept/bypass/crit_version-02.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-13：判据版本行没有指纹",
+   "polarity": "must_fail",
+   "scanClass": "crit_version"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "crit_version-11",
+   "fixture": "tests/accept/bypass/crit_version-11.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-13：类别未登记的检测器模块不进该类指纹",
+   "polarity": "must_pass",
+   "scanClass": "crit_version"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "ext_code-01",
+   "expectCode": "E-ACC-EXT-CODE-CHANGED",
+   "fixture": "tests/accept/bypass/ext_code-01.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-12：执行记录里扩展性条目前后代码指纹不同",
+   "polarity": "must_fail",
+   "scanClass": "ext_code"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "ext_code-11",
+   "fixture": "tests/accept/bypass/ext_code-11.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-12：别的码、执行记录目录外的文件不算",
+   "polarity": "must_pass",
+   "scanClass": "ext_code"
+  },
+  {
+   "addedAtRev": 1,
    "caseKey": "instance_name-01",
    "fixture": "tests/accept/bypass/instance_name-01.txt",
    "group": "rules",
@@ -143,6 +191,113 @@
    "origin": "卷十二 R12-13.3；卷一 §3.1 第 5 条（注释不计）",
    "polarity": "must_pass",
    "scanClass": "instance_name"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "item_downgrade-01",
+   "expectCode": "E-ACC-ITEM-DOWNGRADE",
+   "fixture": "tests/accept/bypass/item_downgrade-01.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-16：期望、阶段、关口改松而无修订记录",
+   "polarity": "must_fail",
+   "scanClass": "item_downgrade"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "item_downgrade-02",
+   "expectCode": "E-ACC-ITEM-DOWNGRADE",
+   "fixture": "tests/accept/bypass/item_downgrade-02.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-16：条目没有登记过期望、阶段、关口",
+   "polarity": "must_fail",
+   "scanClass": "item_downgrade"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "item_downgrade-11",
+   "fixture": "tests/accept/bypass/item_downgrade-11.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-16：三项未变、键序不同、改其他字段不算",
+   "polarity": "must_pass",
+   "scanClass": "item_downgrade"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "item_form-01",
+   "expectCode": "E-ACC-ITEM-FORM",
+   "fixture": "tests/accept/bypass/item_form-01.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-4：期望值不在 acc_expect",
+   "polarity": "must_fail",
+   "scanClass": "item_form"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "item_form-02",
+   "expectCode": "E-ACC-ITEM-PARAM",
+   "fixture": "tests/accept/bypass/item_form-02.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-4：参数里列文件",
+   "polarity": "must_fail",
+   "scanClass": "item_form"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "item_form-03",
+   "expectCode": "E-ACC-ITEM-FORM",
+   "fixture": "tests/accept/bypass/item_form-03.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-4：不变量式配静态代码扫描",
+   "polarity": "must_fail",
+   "scanClass": "item_form"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "item_form-11",
+   "fixture": "tests/accept/bypass/item_form-11.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-4：合式条目",
+   "polarity": "must_pass",
+   "scanClass": "item_form"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "item_ledger-01",
+   "expectCode": "E-ACC-ITEM-ORPHAN",
+   "fixture": "tests/accept/bypass/item_ledger-01.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-3：定义处没有该编号",
+   "polarity": "must_fail",
+   "scanClass": "item_ledger"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "item_ledger-02",
+   "expectCode": "E-ACC-ITEM-ORPHAN",
+   "fixture": "tests/accept/bypass/item_ledger-02.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-3：长编号、带小节号的编号不算短编号",
+   "polarity": "must_fail",
+   "scanClass": "item_ledger"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "item_ledger-03",
+   "expectCode": "E-ACC-ITEM-ORPHAN",
+   "fixture": "tests/accept/bypass/item_ledger-03.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-3：卷代号没有登记卷文件",
+   "polarity": "must_fail",
+   "scanClass": "item_ledger"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "item_ledger-11",
+   "fixture": "tests/accept/bypass/item_ledger-11.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-3：列表与表格里的编号都算定义处",
+   "polarity": "must_pass",
+   "scanClass": "item_ledger"
   },
   {
    "addedAtRev": 1,
@@ -243,6 +398,109 @@
    "scanClass": "module_edge"
   },
   {
+   "addedAtRev": 3,
+   "caseKey": "module_edge-21",
+   "expectCode": "E-PROC-IMPORT",
+   "fixture": "tests/accept/bypass/module_edge-21.txt",
+   "group": "rules",
+   "origin": "卷十二 S12-1：运行时 import tools/accept",
+   "polarity": "must_fail",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 3,
+   "caseKey": "module_edge-22",
+   "fixture": "tests/accept/bypass/module_edge-22.txt",
+   "group": "rules",
+   "origin": "卷十二 S12-1：规则层 import kernel 不算",
+   "polarity": "must_pass",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "namelist-01",
+   "expectCode": "E-ACC-SCAN-NAMELIST",
+   "fixture": "tests/accept/bypass/namelist-01.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-6：路径加行号的排除",
+   "polarity": "must_fail",
+   "scanClass": "namelist"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "namelist-02",
+   "expectCode": "E-ACC-SCAN-NAMELIST",
+   "fixture": "tests/accept/bypass/namelist-02.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-6：文件与行号字段的排除",
+   "polarity": "must_fail",
+   "scanClass": "namelist"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "namelist-03",
+   "expectCode": "E-ACC-SCAN-NAMELIST",
+   "fixture": "tests/accept/bypass/namelist-03.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-6：按单条行键排除",
+   "polarity": "must_fail",
+   "scanClass": "namelist"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "namelist-11",
+   "fixture": "tests/accept/bypass/namelist-11.txt",
+   "group": "offline",
+   "origin": "卷十二 R12-14.7：结构登记（豁免文件表、路径模式）不是例外名单",
+   "polarity": "must_pass",
+   "scanClass": "namelist"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "registry_write-01",
+   "fixture": "tests/accept/bypass/registry_write-01.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-2：拼接路径算不出常量即计",
+   "polarity": "must_fail",
+   "scanClass": "registry_write"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "registry_write-02",
+   "fixture": "tests/accept/bypass/registry_write-02.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-2：常量路径落在 §2.11 模式内；改名第二实参",
+   "polarity": "must_fail",
+   "scanClass": "registry_write"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "registry_write-03",
+   "fixture": "tests/accept/bypass/registry_write-03.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-2：默认导入 fs.promises、常量加变量",
+   "polarity": "must_fail",
+   "scanClass": "registry_write"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "registry_write-11",
+   "fixture": "tests/accept/bypass/registry_write-11.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-2：常量折叠证明在模式外；读不算写",
+   "polarity": "must_pass",
+   "scanClass": "registry_write"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "registry_write-12",
+   "fixture": "tests/accept/bypass/registry_write-12.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-2：登记器自己写",
+   "polarity": "must_pass",
+   "scanClass": "registry_write"
+  },
+  {
    "addedAtRev": 1,
    "caseKey": "rules_import-01",
    "expectCode": "E-TSC-PARSE",
@@ -260,6 +518,35 @@
    "origin": "卷二 §2.7 规则层经 kernel 读",
    "polarity": "must_pass",
    "scanClass": "rules_import"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "self_name-01",
+   "expectCode": "E-ACC-SCAN-SELFNAME",
+   "fixture": "tests/accept/bypass/self_name-01.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-5：检测器按条目键、模块文件名分支",
+   "polarity": "must_fail",
+   "scanClass": "self_name"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "self_name-02",
+   "expectCode": "E-ACC-SCAN-SELFNAME",
+   "fixture": "tests/accept/bypass/self_name-02.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-5：执行器经常量别名按卷代号 case 分支",
+   "polarity": "must_fail",
+   "scanClass": "self_name"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "self_name-11",
+   "fixture": "tests/accept/bypass/self_name-11.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-5：枚举值分支、名字只作值不分支",
+   "polarity": "must_pass",
+   "scanClass": "self_name"
   },
   {
    "addedAtRev": 1,
@@ -299,6 +586,33 @@
    "origin": "卷一 R-8 例外 rulesDigest；只读不分支",
    "polarity": "must_pass",
    "scanClass": "version_fork"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "wallclock-01",
+   "fixture": "tests/accept/bypass/wallclock-01.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-11：执行器读墙钟",
+   "polarity": "must_fail",
+   "scanClass": "wallclock"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "wallclock-02",
+   "fixture": "tests/accept/bypass/wallclock-02.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-11：检测器读随机源",
+   "polarity": "must_fail",
+   "scanClass": "wallclock"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "wallclock-11",
+   "fixture": "tests/accept/bypass/wallclock-11.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-11：带实参的 Date、摘要函数不算",
+   "polarity": "must_pass",
+   "scanClass": "wallclock"
   }
  ]
 }

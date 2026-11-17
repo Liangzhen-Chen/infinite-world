@@ -1,0 +1,6 @@
+// @file tools/accept/register.mjs
+import { createHash } from 'node:crypto';
+export function print(s, d) {
+  const t = new Date(d.epoch);
+  return createHash('sha256').update(s + t.getTime()).digest('hex');
+}

@@ -1,0 +1,4 @@
+// @file docs/统一底层设计/卷十二-验收与自动扫描.md
+- **S12-11** 夹具条目；S12-1.5 与 S12-10 都是别的编号。
+// @file tools/accept/items.json
+{"rows": [{"itemKey": "vol12.S12-1", "volume": "vol12", "localNo": "S12-1"}]}

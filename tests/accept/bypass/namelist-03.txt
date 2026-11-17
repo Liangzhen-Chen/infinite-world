@@ -1,0 +1,2 @@
+// @file tools/accept/items.json
+{"rows": [{"itemKey": "fx.S1", "params": {"groups": ["rules"]}, "ignoreRows": ["c_const_literal|server-plugin/rules/a.mjs|f|num|0"]}]}
