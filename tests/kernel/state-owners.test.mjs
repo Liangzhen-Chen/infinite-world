@@ -154,13 +154,29 @@ test('推进钩子格式：阶段不在 phases 即 E-DIM-DOMAIN-ENUM；少字段
   const b = base(); b.systems['sys.box'].phase = { boxTick: { phase: 'body', sortKey: 1 } }; assert.deepEqual(codes(b), ['E-DIM-STRUCT-FIELD']);
 });
 
-test('sortKey 重算比对：文件值与 R11-3.14 重算不一致、after 成环、after 指向别的相位或不存在的钩子即加载中止', () => {
-  const run = (phase) => { const d = base(); d.systems['sys.box'].phase = phase; return () => mergeStateOwners(d, CTX); };
-  assert.doesNotThrow(run({ boxTick: hook('body', [], 1), boxTock: hook('body', ['boxTick'], 2) }));
-  assert.throws(run({ boxTick: hook('body', [], 2), boxTock: hook('body', ['boxTick'], 1) }), /sortKey check failed.*boxTick: file 2, recomputed 1/);
-  assert.throws(run({ boxTick: hook('body', ['boxTock'], 1), boxTock: hook('body', ['boxTick'], 2) }), /after cycle/);
-  assert.throws(run({ boxTick: hook('body', ['boxGone'], 1) }), /boxTick\.after names "boxGone"/);
-  assert.throws(run({ boxTick: hook('clock', [], 1), boxTock: hook('body', ['boxTick'], 1) }), /boxTock\.after names "boxTick", not a hook of phase body/);
+test('sortKey 重算比对（李白 11-17 裁定①②）：成环、悬空、跨相位报 E-PHASE-SORTKEY-ORDER，文件值漂移报 E-PHASE-SORTKEY-DRIFT，合规零错；都经 E 句柄报、不抛异常', () => {
+  const run = (phase) => { const d = base(); d.systems['sys.box'].phase = phase; return mergeStateOwners(d, CTX); };
+  assert.deepEqual(run({ boxTick: hook('body', [], 1), boxTock: hook('body', ['boxTick'], 2) }).errors, []);
+  // 漂移：boxTock after boxTick，重算 boxTick 1、boxTock 2，文件写反。
+  const drift = run({ boxTick: hook('body', [], 2), boxTock: hook('body', ['boxTick'], 1) });
+  assert.equal(drift.ok, false);
+  assert.deepEqual(drift.errors.map((e) => e.code), ['E-PHASE-SORTKEY-DRIFT', 'E-PHASE-SORTKEY-DRIFT']);
+  assert.deepEqual(drift.errors.map((e) => [e.row, e.got, e.want]), [
+    ['boxTick', 2, '1 (recomputed by R11-3.14; run tools/gen-sort-keys.mjs)'],
+    ['boxTock', 1, '2 (recomputed by R11-3.14; run tools/gen-sort-keys.mjs)'],
+  ]);
+  // 成环。
+  const cyc = run({ boxTick: hook('body', ['boxTock'], 1), boxTock: hook('body', ['boxTick'], 2) });
+  assert.deepEqual(cyc.errors.map((e) => e.code), ['E-PHASE-SORTKEY-ORDER']);
+  assert.match(cyc.errors[0].got, /after cycle: boxTick -> boxTock -> boxTick/);
+  // 悬空：after 指向不存在的钩子。
+  const gone = run({ boxTick: hook('body', ['boxGone'], 1) });
+  assert.deepEqual(gone.errors.map((e) => e.code), ['E-PHASE-SORTKEY-ORDER']);
+  assert.match(gone.errors[0].got, /boxTick\.after names "boxGone"/);
+  // 跨相位：指向别的相位的钩子按悬空处理。
+  const cross = run({ boxTick: hook('clock', [], 1), boxTock: hook('body', ['boxTick'], 1) });
+  assert.deepEqual(cross.errors.map((e) => e.code), ['E-PHASE-SORTKEY-ORDER']);
+  assert.match(cross.errors[0].got, /boxTock\.after names "boxTick", not a hook of phase body/);
 });
 
 test('E-PATH-OVERLAP：同等具体且重叠的模式；具体程度按字面段数、再按 * 靠后', () => {
