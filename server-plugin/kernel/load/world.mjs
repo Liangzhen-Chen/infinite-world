@@ -51,7 +51,9 @@ export function loadWorld(root, opts = {}) {
   const tail = rulesReport(checkRules(read, report.env));
   // 声明表合并与核对（卷二 §2.7；state-owners.json 的 L0 语法错误一并报出）。
   const families = report.vocab && report.vocab.families ? [...report.vocab.families.keys()] : [];
-  const owners = mergeStateOwners(decl, { units: report.env.units, kinds: new Set(report.tables.keys()), families: new Set(families) });
+  // 可终止实体类（卷二 §2.6 :516）：实体表的类别行写了 termination（整表一致由校验器另核）。
+  const terminableKinds = [...report.tables].filter(([, t]) => t.doc && t.doc.classes && typeof t.doc.classes === 'object' && Object.values(t.doc.classes).some((c) => c && typeof c === 'object' && c.termination !== undefined)).map(([k]) => k);
+  const owners = mergeStateOwners(decl, { units: report.env.units, kinds: new Set(report.tables.keys()), families: new Set(families), terminableKinds });
   const syntax = (parsed.errors || []).map((e) => ({ code: e.code, severity: 'error', level: 'L0', table: 'state-owners', row: '', dim: '', path: `#${e.pointer}`, got: e.got, want: e.want }));
   const ok = report.ok && tail.ok && owners.ok && syntax.length === 0;
   // 校验全部通过后收下注册表与句柄 V、E、P（kernel/vocab.mjs、kernel/handles/generated.mjs）；任一失败不收，句柄保持原值。

@@ -27,6 +27,14 @@ const SHAPE_FIELDS = ['entry', 'field', 'type', 'refFamily', 'nullable'];
 const SHAPE_TYPES = new Set(['number', 'boolean', 'code', 'handle', 'shape']);
 const FIELD_RE = /^[a-z][a-zA-Z0-9_]*(\.[a-z][a-zA-Z0-9_]*)*$/;
 
+// 实体类登记（卷二 §2.1 入口清单的 22 类，一类一张实体表）：keyKinds 里 (a)(b) 项的 kind 只能取这些，或加载器已载入的表的 kind（ctx.kinds）。
+export const ENTITY_KINDS = Object.freeze(['item', 'material', 'species', 'plant', 'body_plan', 'person', 'place', 'facility_type', 'recipe', 'org', 'office', 'polity', 'law_code', 'deity', 'faith', 'culture', 'profession', 'skill', 'knowledge', 'offense', 'status', 'event_type']);
+// keyKinds 的 (c) 项：封闭的非实体键类型代号（李白 11-17 pathTypes `*` 段 kind 字段裁定）。event = EventId（卷二 :197 事件无 kind）；
+// dimKey = 维度键（如 created.*.props.* 的第二段）。再加新代号须登记进卷二并报李白，各卷不得自造。
+export const KEY_NONENTITY = Object.freeze(['event', 'dimKey']);
+// 去留表覆盖核对豁免的协议键顶层段（卷二 §2.6 :519"账户、holdings、statuses、modifiers、terminated、到期堆"；到期堆的键 `due` 见卷二十 :445）。账户由账本写者判（ledgerPaths）。
+const PROTOCOL_KEYS = new Set(['holdings', 'statuses', 'modifiers', 'terminated', 'due']);
+
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const isStrList = (v) => Array.isArray(v) && v.every((s) => typeof s === 'string' && s !== '');
 const sorted = (xs) => [...xs].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
@@ -142,6 +150,29 @@ function typeIssue(t, units) {
   if (/^(ref|enum):[a-z][a-z0-9_]*$/.test(t) || /^struct:[a-zA-Z][a-zA-Z0-9_<>]*$/.test(t)) return null;
   return { code: E.E_DIM_STRUCT_FIELD, want: 'number:<u> | integer:<u> | boolean | ref:<kind> | enum:<family> | dimension | struct:<name> | sealed | EventId | list<…>' };
 }
+// ---------- keyKinds 文法（卷二 §2.7"pathTypes 的 `*` 段 kind 字段"，封卷后勘误 1117rx7） ----------
+
+// 返回问题列表 [{got, want}]。v：该模式的 keyKinds 值；nStars：模式里 `*` 段数；kinds：已登记实体类 Set。
+function keyKindsIssues(v, nStars, kinds) {
+  if (nStars === 0) return [{ got: v, want: 'no keyKinds on a pattern without * segments' }];
+  if (!Array.isArray(v)) return [{ got: v, want: 'list with one item per * segment' }];
+  if (v.length !== nStars) return [{ got: v.length, want: `${nStars} items (one per * segment)` }];
+  const out = [];
+  v.forEach((it, i) => {
+    const at = `item ${i}`;
+    if (typeof it === 'string') {
+      if (!KEY_NONENTITY.includes(it) && !kinds.has(it)) out.push({ got: it, want: `${at}: a registered entity kind or one of ${KEY_NONENTITY.join(', ')}` });
+    } else if (Array.isArray(it)) {
+      if (it.length === 0) out.push({ got: it, want: `${at}: non-empty list of entity kinds` });
+      if (new Set(it).size !== it.length) out.push({ got: it, want: `${at}: no duplicate kinds` });
+      for (const k of it) if (typeof k !== 'string' || !kinds.has(k)) out.push({ got: k, want: `${at}: each member a registered entity kind (no wildcard, no ${KEY_NONENTITY.join('/')})` });
+    } else out.push({ got: it, want: `${at}: entity kind, list of entity kinds, or one of ${KEY_NONENTITY.join(', ')}` });
+  });
+  return out;
+}
+// 一项里的全部实体 kind（(a) 单个、(b) 列表；(c) 不算）。
+const itemKinds = (it) => (typeof it === 'string' ? (KEY_NONENTITY.includes(it) ? [] : [it]) : Array.isArray(it) ? it.filter((k) => typeof k === 'string') : []);
+
 const mentionsSealed = (t) => typeof t === 'string' && /(^|<)sealed(>|$)/.test(t);
 
 // ---------- 合并与核对 ----------
@@ -149,9 +180,10 @@ const mentionsSealed = (t) => typeof t === 'string' && /(^|<)sealed(>|$)/.test(t
 /**
  * 合并并核对 state-owners.json。
  * @param {any} decl 已解析的 state-owners.json
- * @param {{units?: Map<string, any> | Set<string>, kinds?: Set<string>, families?: Set<string>}} [ctx]
+ * @param {{units?: Map<string, any> | Set<string>, kinds?: Set<string>, families?: Set<string>, entityKinds?: Iterable<string>, terminableKinds?: Iterable<string>}} [ctx]
  *   units：_units.json 的单位；kinds：已载入的实体类（维度表 kind）；families：词表族。readShapes 的 refFamily 按后两者核。
- * @returns {{ok: boolean, errors: any[], text: string, merged: {writers: any[], pathTypes: Record<string, string>, textPaths: string[], ledgerPaths: string[], displayPaths: string[], hooks: any[]}}}
+ *   entityKinds：keyKinds 额外认的实体类（默认 ENTITY_KINDS 加 kinds）；terminableKinds：写了 termination 的实体类（去留表覆盖核对用，默认空）。
+ * @returns {{ok: boolean, errors: any[], text: string, merged: {writers: any[], pathTypes: Record<string, string>, keyKinds: Record<string, any[]>, textPaths: string[], ledgerPaths: string[], displayPaths: string[], hooks: any[]}}}
  */
 export function mergeStateOwners(decl, ctx = {}) {
   const units = ctx.units || new Set();
@@ -179,6 +211,19 @@ export function mergeStateOwners(decl, ctx = {}) {
     else if (!textSet.has(p) && mentionsSealed(t)) err(E.E_TEXT_UNGATED, p, `#/pathTypes/${p}`, t, 'sealed only on textPaths');
   }
   for (const [a, b] of overlapPairs(Object.keys(pathTypes))) err(E.E_PATH_OVERLAP, a, '#/pathTypes', b, 'patterns of equal specificity must not overlap');
+
+  // keyKinds：同级顶层表 模式 → 按 `*` 段顺序的 kind 项列表（pathTypes 的值是类型串，无处挂字段）。有 `*` 段的非 textPaths 条目必填；
+  // 无 `*` 段的不得填；textPaths 整类不强制（卷二 :497 不生成 P、:519 不进去留覆盖核对；不对任何单条特判）。违者 E-PATH-KEYKINDS。
+  const entityKinds = new Set([...ENTITY_KINDS, ...(ctx.kinds || []), ...(ctx.entityKinds || [])]);
+  const keyKinds = opt('keyKinds', isObj, 'object pattern → list of key kinds') ? d.keyKinds : {};
+  const nStarsOf = (p) => segs(p).filter((s) => s === '*').length;
+  for (const p of sorted(Object.keys(keyKinds))) {
+    if (!Object.hasOwn(pathTypes, p)) { err(E.E_PATH_UNDECLARED, p, `#/keyKinds/${p}`, p, 'keyKinds pattern declared in pathTypes'); continue; }
+    for (const { got, want } of keyKindsIssues(keyKinds[p], nStarsOf(p), entityKinds)) err(E.E_PATH_KEYKINDS, p, `#/keyKinds/${p}`, got, want);
+  }
+  for (const p of sorted(Object.keys(pathTypes))) {
+    if (nStarsOf(p) > 0 && !textSet.has(p) && !Object.hasOwn(keyKinds, p)) err(E.E_PATH_KEYKINDS, p, `#/pathTypes/${p}`, undefined, 'keyKinds entry (one item per * segment) required for a non-textPath pattern with * segments');
+  }
 
   // textPaths 与 textWriters：每条 textPath 在 pathTypes 内、恰一个写者（E-WRITER-MISSING）；写者表只收 textPaths。
   for (const tp of textPaths) {
@@ -272,7 +317,7 @@ export function mergeStateOwners(decl, ctx = {}) {
       hooks.push({ system: name, hook, phase: h.phase, after: h.after, sortKey: h.sortKey });
     }
   }
-  // 同阶段同键（§2.7 :766）。
+  // 同阶段同键（§2.7 :766；"键"即 sortKey）。
   const seenKey = new Map();
   for (const h of hooks) {
     const k = JSON.stringify([h.phase, h.sortKey]);
@@ -286,7 +331,9 @@ export function mergeStateOwners(decl, ctx = {}) {
   if (hooksOk && hooks.length) {
     const { keys, problems, duplicates } = assignSortKeys(systems);
     const order = problems.filter((m) => !duplicates.includes(m));
-    for (const m of duplicates) err(E.E_PHASE_DUPLICATE, '', '#/systems', m, 'a hook name registered once');
+    // 同名钩子登记在两个系统：卷二 §2.7 :766"同阶段同键"指 sortKey，不含这一种，没有对应的码；加载直接抛异常停下，
+    // 用哪个码等李白裁定（11-17 只核），不借 E-PHASE-DUPLICATE。
+    if (duplicates.length) throw new Error(`state-owners hook name registered by two systems (error code pending ruling): ${duplicates.join('; ')}`);
     for (const m of order) err(E.E_PHASE_SORTKEY_ORDER, '', '#/systems', m, 'after names only existing hooks of the same phase, acyclic');
     if (!problems.length) {
       for (const h of hooks) {
@@ -321,6 +368,22 @@ export function mergeStateOwners(decl, ctx = {}) {
     const best = [...writers.values()].filter((w) => patternCovers(w.pattern, p)).sort((a, b) => compareSpecificity(b.pattern, a.pattern))[0];
     return best !== undefined && best.rewrite === LEDGER_WRITER;
   }));
+  // 去留表覆盖核对（卷二 §2.6 :516 第 ④ 点、:519）：模式里某 `*` 段的 keyKinds 项（(a) 单个 kind 或 (b) 列表里任一 kind）属于可终止实体类
+  // （ctx.terminableKinds：实体表类别行写了 termination 的类）就是主体段；(c) 项永不算主体。含主体段的模式必须被某条 subjectRecords 覆盖，
+  // 或属协议键（账户即 ledgerPaths、PROTOCOL_KEYS）与 textPaths，否则 E-TERM-RECORD-UNLISTED。keyKinds 本身有错的模式不再报（先报 E-PATH-KEYKINDS）。
+  const terminable = new Set(ctx.terminableKinds || []);
+  const subjectPatterns = [];
+  for (const key of sorted(Object.keys(stateKeys))) {
+    const sr = isObj(stateKeys[key]) ? stateKeys[key].subjectRecords : undefined;
+    if (isObj(sr)) for (const rel of Object.keys(sr)) subjectPatterns.push(`${key}.${rel}`);
+  }
+  for (const p of sorted(Object.keys(pathTypes))) {
+    if (textSet.has(p) || ledgerPaths.includes(p) || PROTOCOL_KEYS.has(segs(p)[0])) continue;
+    const kk = keyKinds[p];
+    if (!Array.isArray(kk) || keyKindsIssues(kk, nStarsOf(p), entityKinds).length) continue;
+    const subjects = kk.filter((it) => itemKinds(it).some((k) => terminable.has(k)));
+    if (subjects.length && !subjectPatterns.some((sp) => patternCovers(sp, p))) err(E.E_TERM_RECORD_UNLISTED, p, `#/pathTypes/${p}`, p, 'pattern with a terminable-entity * segment covered by a stateKeys.<key>.subjectRecords entry, or a protocol key / textPath');
+  }
   // P 成员名撞名（E-PATH-NAME-CLASH）由 2-1 的派生规则 buildP 判，这里只把它的拒收转成报错行。
   if (grammarOk) {
     try { buildP({ pathTypes, textPaths }, { ledgerPaths }); } catch (e) {
@@ -336,7 +399,7 @@ export function mergeStateOwners(decl, ctx = {}) {
     ok: nErr === 0,
     errors,
     text,
-    merged: { writers: sorted(writers.keys()).map((k) => writers.get(k)), pathTypes, textPaths, ledgerPaths, displayPaths: sorted(displayPaths), hooks },
+    merged: { writers: sorted(writers.keys()).map((k) => writers.get(k)), pathTypes, keyKinds, textPaths, ledgerPaths, displayPaths: sorted(displayPaths), hooks },
   };
 }
 

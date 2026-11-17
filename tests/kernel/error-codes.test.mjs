@@ -11,8 +11,8 @@ const rejects = (fn, code) => assert.throws(fn, (e) => e.code === code && e.mess
 const codes = ERROR_CODES.map((e) => e.code);
 
 test('码表条数：E 与 W 各为手数的字面量', () => {
-  assert.equal(codes.length, 574);
-  assert.equal(codes.filter((c) => c[0] === 'E').length, 557);
+  assert.equal(codes.length, 575);
+  assert.equal(codes.filter((c) => c[0] === 'E').length, 558);
   assert.equal(codes.filter((c) => c[0] === 'W').length, 17);
   assert.equal(REGISTERED_CODES.size, codes.length);
 });
