@@ -168,8 +168,6 @@
   "class_cheese": {
    "appearanceRefs": 3,
    "basis": "硬乳酪（Codex 食品分类 01.6）：按真实能量入表（取代统一密度兜底）；乳酪是一餐的蛋白与脂肪来源之一。单餐可食量上限：取 RACC 乳酪 30 g（原先写「不写上限」，按李白 2026-11-09 的整类决定改为有上限）。｜食物类别外观词组（只写材料本身的颜色、形状、质地、气味），不写密度，不写成品菜。各条带页面与原句。",
-   "energyDensity": 26.93,
-   "mealCap": 30,
    "moisture": 0.366,
    "selection": {
     "method": "single",
@@ -202,7 +200,6 @@
   },
   "class_condiment_sauce": {
    "basis": "调味酱（Codex 食品分类 12.6 酱汁与类似产品）：用量以汤匙计。只写单餐可食量上限，取 FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）（酱类 1 汤匙 15 g）。",
-   "mealCap": 15,
    "selection": {
     "method": "single",
     "reason": "调味酱（芥醋酱之类）只用单餐上限；其能量由配方投入推出，本类不写能量"
@@ -256,8 +253,6 @@
   },
   "class_cream": {
    "basis": "奶油（Codex 食品分类 01.4）：属乳制品，按真实能量入表（取代统一密度兜底）。稠乳是涂抹、调汤的佐餐用法，一餐的食用量以汤匙计，单餐可食量上限取 FDA 21 CFR 101.12 参照食用量（RACC，奶油类 1 汤匙 15 g）。",
-   "energyDensity": 33.63,
-   "mealCap": 15,
    "moisture": 0.577,
    "selection": {
     "method": "single",
@@ -275,8 +270,6 @@
   },
   "class_edible_fat": {
    "basis": "食用油脂（Codex 食品分类 02 油脂类）：近纯脂肪，能量约 880–900 kcal/100g，含水近 0。单餐可食量上限取 FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）（油脂类 1 汤匙 14 g）：油脂是烹调与佐餐用，一餐的食用量以汤匙计，不能靠它补满一餐的能量缺口。",
-   "energyDensity": 37.36,
-   "mealCap": 14,
    "moisture": 0,
    "selection": {
     "method": "mean",
@@ -302,8 +295,6 @@
   "class_egg": {
    "basis": "禽蛋，按可食内容计。蚕种纸（item_silkworm_eggs）虽带 egg 标签但不是食物，营养派生只读 food 类物品，不消费本类别值。",
    "edibleFraction": 0.88,
-   "energyDensity": 25.14,
-   "mealCap": 1100,
    "moisture": 0.762,
    "selection": {
     "method": "single",
@@ -323,8 +314,6 @@
   },
   "class_fish": {
    "basis": "淡水鱼鲜肉；腌制品的营养由配方按投入守恒派生，不读本类别值。",
-   "energyDensity": 22.23,
-   "mealCap": 1100,
    "moisture": 0.761,
    "selection": {
     "method": "single",
@@ -343,8 +332,6 @@
   },
   "class_fresh_herb": {
    "basis": "鲜香草（USDA 食物类别 Spices and Herbs）：含水高、能量低，只作香味。单餐可食量上限取 USDA 家用量（1 杯整枝约 9 g）。",
-   "energyDensity": 12.76,
-   "mealCap": 9,
    "moisture": 0.859,
    "selection": {
     "method": "single",
@@ -363,8 +350,6 @@
   "class_fruit": {
    "basis": "鲜果；干制品在物品行覆盖含水率。含水、能量与可食部分均由出处推出（可食部分 = 1 − 去核蒂等不可食比例，USDA refuse）。",
    "edibleFraction": 0.913,
-   "energyDensity": 15.02,
-   "mealCap": 140,
    "moisture": 0.856,
    "selection": {
     "method": "mean",
@@ -405,8 +390,6 @@
   },
   "class_grain": {
    "basis": "谷物与谷粉。",
-   "energyDensity": 16.28,
-   "mealCap": 344.5,
    "moisture": 0.106,
    "selection": {
     "method": "mean",
@@ -525,8 +508,6 @@
   },
   "class_legume": {
    "basis": "干豆。",
-   "energyDensity": 16.25,
-   "mealCap": 364,
    "moisture": 0.093,
    "selection": {
     "method": "mean",
@@ -567,8 +548,6 @@
   },
   "class_meat": {
    "basis": "家畜生肉（瘦肥混合）。",
-   "energyDensity": 24.38,
-   "mealCap": 1100,
    "moisture": 0.673,
    "selection": {
     "method": "mean",
@@ -603,8 +582,6 @@
   },
   "class_milk": {
    "basis": "鲜乳。",
-   "energyDensity": 21.83,
-   "mealCap": 240,
    "moisture": 0.876,
    "selection": {
     "method": "mean",
@@ -631,8 +608,6 @@
   },
   "class_mushroom": {
    "basis": "食用菇，新鲜状态；干制品在物品行覆盖含水率。",
-   "energyDensity": 12.11,
-   "mealCap": 85,
    "moisture": 0.924,
    "selection": {
     "method": "single",
@@ -652,8 +627,6 @@
   },
   "class_nut": {
    "basis": "去壳坚果仁。",
-   "energyDensity": 28.14,
-   "mealCap": 30,
    "moisture": 0.047,
    "selection": {
     "method": "mean",
@@ -726,8 +699,6 @@
   "class_salt": {
    "appearanceRefs": 3,
    "basis": "食盐：无能量，所以不能当口粮（饱腹为 0）；仍按类给单餐上限。依据是 WHO《Guideline: Sodium intake for adults and children》（2012）成人每日食盐 <5 g 的日上限，除以 mealsPerDay=3 折成每餐约 1.7 g；这是日上限折算出的每餐值，不是文献直接给的每餐量，也不是 RACC 或生理上限。｜食物类别外观词组（只写材料本身的颜色、形状、质地、气味），不写密度，不写成品菜。各条带页面与原句。",
-   "energyDensity": 0,
-   "mealCap": 1.7,
    "moisture": 0.002,
    "selection": {
     "method": "single",
@@ -795,8 +766,6 @@
   "class_spice_seed": {
    "appearanceRefs": 3,
    "basis": "香料籽（USDA 食物类别 Spices and Herbs）：含水约 6–10%，能量不低，但一餐只用一撮。单餐可食量上限取 USDA FoodData Central 的家用量（household measure：1 汤匙对应的克数，黄芥籽 10 g、罂粟籽 8.8 g、香芹籽 6.3 g），三者取平均 8.4 g；依据是家用量，不是 FDA 参照食用量（RACC）。黄芥籽取舍：USDA SR Legacy 没有整粒黄芥籽条目，NDB 2024 对应 Spices, mustard seed, ground（FDC 170929），这里用它近似世界里的整粒黄芥籽（磨粉不改变含水与能量的量级，已知取舍）。｜食物类别外观词组（只写材料本身的颜色、形状、质地、气味），不写密度，不写成品菜。三条都是三种代表籽粒（罂粟籽、芥籽、香芹籽）的并列词条，不是类别共性。各条带页面与原句。",
-   "energyDensity": 20.42,
-   "mealCap": 8.4,
    "moisture": 0.07,
    "selection": {
     "method": "mean",
@@ -861,8 +830,6 @@
   },
   "class_sweetener": {
    "basis": "甜味佐餐品（蜂蜜、果酱、蜜制酱）。蜂蜜含水约 17%，能量约 304 kcal/100g。单餐可食量上限取 FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）（蜂蜜、果酱类 1 汤匙 21 g）。",
-   "energyDensity": 15.34,
-   "mealCap": 21,
    "moisture": 0.171,
    "selection": {
     "method": "single",
@@ -973,8 +940,6 @@
   },
   "class_vegetable": {
    "basis": "鲜蔬与块根。",
-   "energyDensity": 14.25,
-   "mealCap": 85,
    "moisture": 0.907,
    "selection": {
     "method": "mean",
@@ -1033,8 +998,6 @@
   },
   "class_vinegar": {
    "basis": "食醋：含水约 94%，能量约 21 kcal/100g，单瓶（50 g）只有约半个饱腹。单餐可食量上限取 FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）（醋类 1 汤匙 15 g）。",
-   "energyDensity": 14.17,
-   "mealCap": 15,
    "moisture": 0.938,
    "selection": {
     "method": "single",
@@ -2138,11 +2101,12 @@
  "rows": {
   "mat_bamboo": {
    "basis": "卷三｜能:木 氧:试｜植物学上是禾本科，按功能记木质（卷三原例）；极限氧 21.5（小试样；初核所引竹片阻燃涂层研究的未处理对照样，另两项研究为 22.1、28.3，取最低；补核没有重开这三篇原文）",
-   "breathabilityBase": null,
+   "burnRate": 0.02,
    "classes": [
     "comp_burnable",
     "comp_durable"
    ],
+   "corrosionRate": 0.003,
    "decomposePoint": 240,
    "density": {
     "solid": 0.7
@@ -2151,7 +2115,6 @@
    "flammability": 0.49,
    "heatValue": 18,
    "ignitePoint": 280,
-   "insulation": null,
    "moisture": 0.12,
    "pileBurnEvidence": "bev_fao_bamboo_fuel",
    "plantFamily": "pfam_poaceae",
@@ -2159,13 +2122,96 @@
    "reactionProducts": {
     "reaction_char": "mat_bamboo_charcoal"
    },
+   "reactionYield": {
+    "reaction_calcine": null,
+    "reaction_char": 0.25,
+    "reaction_cook": null,
+    "reaction_felting": null,
+    "reaction_ferment": null,
+    "reaction_firing": null,
+    "reaction_forge": null,
+    "reaction_papermaking": null,
+    "reaction_pickle": null,
+    "reaction_rot": null,
+    "reaction_smelt": null,
+    "reaction_spin": null,
+    "reaction_tan": null,
+    "reaction_weave": null
+   },
    "refMaterial": null,
+   "repairedWith": "class_wood",
+   "salvageFraction": 0.4,
+   "sharpnessMax": 25,
+   "sources": [
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:345",
+     "dimension": "workDifficulty",
+     "name": "卷三甲 §4.1.5 例 2"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:345",
+     "dimension": "valueMult",
+     "name": "卷三甲 §4.1.5 例 2"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:345",
+     "dimension": "salvageFraction",
+     "name": "卷三甲 §4.1.5 例 2"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:345",
+     "dimension": "repairedWith",
+     "name": "卷三甲 §4.1.5 例 2"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:345",
+     "dimension": "reactionYield",
+     "name": "卷三甲 §4.1.5 例 2"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:389",
+     "dimension": "strength",
+     "name": "卷三甲 §4.2.5 例 2"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:389",
+     "dimension": "sharpnessMax",
+     "name": "卷三甲 §4.2.5 例 2"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:389",
+     "dimension": "wearResistance",
+     "name": "卷三甲 §4.2.5 例 2"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:389",
+     "dimension": "corrosionRate",
+     "name": "卷三甲 §4.2.5 例 2"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "strength": {
+    "stress_bend": 50,
+    "stress_compress": 40,
+    "stress_impact": 35,
+    "stress_shear": 22,
+    "stress_tensile": 55,
+    "stress_torsion": 25
+   },
    "substance": "subst_wood",
-   "volatility": 0
+   "valueMult": 1,
+   "volatility": 0,
+   "wearResistance": 22,
+   "workDifficulty": 15
   },
   "mat_bamboo_charcoal": {
    "basis": "卷三｜氧:未核｜未核到：极限氧",
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable"
    ],
@@ -2176,15 +2222,36 @@
    "flammability": 0.81,
    "heatValue": 29,
    "ignitePoint": 350,
-   "insulation": null,
    "malleability": 0,
    "moisture": 0.05,
    "refMaterial": null,
-   "volatility": 0
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "volatility": 0,
+   "workDifficulty": 5
   },
   "mat_beeswax": {
    "basis": "卷十九｜氧:未核｜卷十九蜂巢式巢室；未核到：极限氧",
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable"
    ],
@@ -2196,16 +2263,37 @@
    "flashPoint": 204,
    "heatValue": 42,
    "ignitePoint": 250,
-   "insulation": null,
    "meltPoint": 63,
    "moisture": 0,
    "refMaterial": null,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_animal_product",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 10
   },
   "mat_bitumen": {
    "basis": "卷三第六版｜氧:试｜卷三第六版自列为蜡脂",
-   "breathabilityBase": null,
+   "burnRate": 8,
    "classes": [
     "comp_burnable"
    ],
@@ -2218,37 +2306,105 @@
    "flashPoint": 230,
    "heatValue": 40,
    "ignitePoint": 400,
-   "insulation": null,
    "meltPoint": 60,
    "moisture": 0,
    "refMaterial": null,
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_mineral",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 10
   },
   "mat_black_powder": {
    "basis": "卷三｜氧:氧｜自燃点 464（GOEX 黑火药安全数据表 MSDS-BP，2005 年修订，第 2 页 FIRE AND EXPLOSION DATA 表：\"Auto ignition temperature Approx. 464°C (867°F)\"）",
-   "breathabilityBase": null,
+   "burnRate": 8,
    "classes": [
     "comp_burnable",
     "comp_deflagrant"
    ],
    "decomposePoint": 300,
+   "deflagEnergy": 2.8,
+   "deflagThreshold": 300,
    "density": {
     "solid": 1
    },
    "flammability": 1,
+   "fragmentFactor": 0.1,
    "heatValue": 3,
    "ignitePoint": 464,
-   "insulation": null,
    "moisture": 0.01,
+   "noiseFactor": 85,
    "refMaterial": null,
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:436",
+     "dimension": "workDifficulty",
+     "name": "卷三甲 §4.3.5 例 2"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:436",
+     "dimension": "burnRate",
+     "name": "卷三甲 §4.3.5 例 2"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:436",
+     "dimension": "deflagThreshold",
+     "name": "卷三甲 §4.3.5 例 2"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:436",
+     "dimension": "deflagEnergy",
+     "name": "卷三甲 §4.3.5 例 2"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:436",
+     "dimension": "fragmentFactor",
+     "name": "卷三甲 §4.3.5 例 2"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:436",
+     "dimension": "noiseFactor",
+     "name": "卷三甲 §4.3.5 例 2"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:436",
+     "dimension": "valueMult",
+     "name": "卷三甲 §4.3.5 例 2"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:436",
+     "dimension": "salvageFraction",
+     "name": "卷三甲 §4.3.5 例 2"
+    }
+   ],
    "substance": "subst_mineral",
-   "volatility": 0
+   "valueMult": 30,
+   "volatility": 0,
+   "workDifficulty": 10
   },
   "mat_blood": {
    "basis": "卷二十五、卷十六｜能:食｜总能对照 Feedipedia 血粉（node/11574）Main analysis 表\"Gross energy\"行 24.1（范围 17.7–24.9），本格在范围内（文献值上网核对 A 表）",
    "boilPoint": 100,
-   "breathabilityBase": null,
    "carbContent": 0.018,
    "classes": [
     "comp_edible",
@@ -2258,77 +2414,221 @@
     "liquid": 1.06,
     "solid": 0.98
    },
+   "edibleFraction": 0.925,
    "energyDensity": 23,
    "fiberContent": 0,
    "flammability": 0,
-   "insulation": null,
+   "mealCap": 1100,
    "meltPoint": -0.6,
    "moisture": 0.8,
    "nutrients": {
     "nutr_salt": 8
    },
    "refMaterial": null,
-   "substance": "subst_animal_product"
+   "rotRate": 0.101,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "dimension": "rotRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_animal_product",
+   "workDifficulty": 10
   },
   "mat_bone": {
    "basis": "卷四、卷二十五｜—",
-   "breathabilityBase": null,
    "classes": [
     "comp_durable"
    ],
+   "corrosionRate": 0.0005,
    "decomposePoint": 300,
    "density": {
     "solid": 1.9
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 0,
    "moisture": 0.1,
    "refMaterial": null,
-   "substance": "subst_bone"
+   "repairedWith": "class_bone",
+   "salvageFraction": 0.4,
+   "sharpnessMax": 40,
+   "sources": [
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:391",
+     "dimension": "strength",
+     "name": "卷三甲 §4.2.5 例 4"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:391",
+     "dimension": "sharpnessMax",
+     "name": "卷三甲 §4.2.5 例 4"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:391",
+     "dimension": "wearResistance",
+     "name": "卷三甲 §4.2.5 例 4"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:391",
+     "dimension": "corrosionRate",
+     "name": "卷三甲 §4.2.5 例 4"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "strength": {
+    "stress_bend": 38,
+    "stress_compress": 55,
+    "stress_impact": 35,
+    "stress_shear": 35,
+    "stress_tensile": 40,
+    "stress_torsion": 30
+   },
+   "substance": "subst_bone",
+   "wearResistance": 35,
+   "workDifficulty": 10
   },
   "mat_brick": {
    "basis": "卷十九｜—",
    "boilPoint": 2230,
-   "breathabilityBase": null,
    "classes": [
     "comp_durable"
    ],
+   "corrosionRate": 0.0008,
    "density": {
     "solid": 1.9
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 0,
    "meltPoint": 1400,
    "moisture": 0,
    "refMaterial": null,
-   "substance": "subst_mineral"
+   "repairedWith": "class_mineral",
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=3；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "corrosionRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_mineral",
+   "workDifficulty": 10
   },
   "mat_bronze": {
    "basis": "卷六、卷十三｜低锡青铜可热锻",
    "boilPoint": 2300,
-   "breathabilityBase": null,
    "classes": [
     "comp_durable"
    ],
+   "corrosionRate": 0.0008,
    "density": {
     "solid": 8.8
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 40,
    "meltPoint": 950,
    "moisture": 0,
    "refMaterial": null,
+   "repairedWith": "class_metal",
+   "salvageFraction": 0.9,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "corrosionRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "specificHeat": {
     "solid": 0.377
    },
-   "substance": "subst_metal"
+   "substance": "subst_metal",
+   "workDifficulty": 45
   },
   "mat_butter": {
    "basis": "卷二十五、卷六｜能:食 氧:未核｜酥油灯；总能按 USDA fdcId 173430（无盐黄油）的成分重算 38.3（文献值上网核对 A 表）；未核到：自燃点、闪点、极限氧",
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "carbContent": 0.002,
    "classes": [
     "comp_burnable",
@@ -2340,26 +2640,68 @@
     "liquid": 0.87,
     "solid": 0.91
    },
+   "edibleFraction": 0.925,
    "energyDensity": 38.2,
    "fiberContent": 0,
    "flammability": 0.69,
    "flashPoint": 280,
    "heatValue": 38,
    "ignitePoint": 350,
-   "insulation": null,
+   "mealCap": 1100,
    "meltPoint": 33,
    "moisture": 0.16,
    "nutrients": {
     "nutr_salt": 0
    },
    "refMaterial": null,
+   "rotRate": 0.101,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "dimension": "rotRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_animal_product",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 10
   },
   "mat_camphor": {
    "basis": "卷二十一｜氧:未核｜萜类酮，不是脂、不是蜡；放着会升华散掉，记在挥发度上；未核到：极限氧",
    "boilPoint": 209,
-   "breathabilityBase": null,
+   "burnRate": 0.2,
    "classes": [
     "comp_burnable"
    ],
@@ -2370,37 +2712,85 @@
    "flashPoint": 66,
    "heatValue": 38.9,
    "ignitePoint": 466,
-   "insulation": null,
    "malleability": 0,
    "meltPoint": 175,
    "moisture": 0,
    "refMaterial": null,
-   "volatility": 0.01
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:438",
+     "dimension": "burnRate",
+     "name": "卷三甲 §4.3.5 例 4"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "volatility": 0.01,
+   "workDifficulty": 5
   },
   "mat_cast_iron": {
    "basis": "卷五、卷十三｜脆，只能铸不能锻",
    "boilPoint": 2860,
-   "breathabilityBase": null,
    "classes": [
     "comp_durable"
    ],
+   "corrosionRate": 0.0008,
    "density": {
     "solid": 7.2
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 2,
    "meltPoint": 1200,
    "moisture": 0,
    "refMaterial": null,
+   "repairedWith": "class_metal",
+   "salvageFraction": 0.9,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "corrosionRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "specificHeat": {
     "solid": 0.46
    },
-   "substance": "subst_metal"
+   "substance": "subst_metal",
+   "workDifficulty": 45
   },
   "mat_charcoal": {
    "basis": "卷三｜氧:未核｜未核到：极限氧",
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable"
    ],
@@ -2411,16 +2801,36 @@
    "flammability": 0.81,
    "heatValue": 30,
    "ignitePoint": 350,
-   "insulation": null,
    "malleability": 0,
    "moisture": 0.05,
    "pileBurnEvidence": "bev_fao_charcoal",
    "refMaterial": null,
-   "volatility": 0
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "volatility": 0,
+   "workDifficulty": 5
   },
   "mat_cheese": {
    "basis": "卷二十五｜能:食｜卷二十五的\"酪\"；总能按 USDA fdcId 170899（切达）的成分重算 30.3，本格低 9%，判一致（文献值上网核对 A 表）",
-   "breathabilityBase": null,
    "carbContent": 0.031,
    "classes": [
     "comp_edible",
@@ -2431,35 +2841,85 @@
     "liquid": 1.05,
     "solid": 1.1
    },
+   "edibleFraction": 0.925,
    "energyDensity": 27.5,
    "fiberContent": 0,
    "flammability": 0,
-   "insulation": null,
+   "mealCap": 1100,
    "meltPoint": 60,
    "moisture": 0.37,
    "nutrients": {
     "nutr_salt": 5
    },
    "refMaterial": null,
-   "substance": "subst_animal_product"
+   "rotRate": 0.101,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "dimension": "rotRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_animal_product",
+   "workDifficulty": 10
   },
   "mat_cinnabar": {
    "basis": "卷十六、卷二十一｜580 ℃ 升华分解",
-   "breathabilityBase": null,
    "decomposePoint": 580,
    "density": {
     "solid": 8.1
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 0,
    "moisture": 0,
    "refMaterial": null,
-   "substance": "subst_mineral"
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_mineral",
+   "workDifficulty": 10
   },
   "mat_coal": {
    "basis": "卷五、卷六｜氧:未核｜未炭化完，炭质的反例；未核到：极限氧（查到的 14 是煤尘云的极限氧浓度，数相同而测法不是单件小试样）",
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable"
    ],
@@ -2470,19 +2930,62 @@
    "flammability": 0.67,
    "heatValue": 30,
    "ignitePoint": 450,
-   "insulation": null,
    "malleability": 0,
    "moisture": 0.08,
    "reactionProducts": {
     "reaction_char": "mat_coke"
    },
+   "reactionYield": {
+    "reaction_calcine": null,
+    "reaction_char": 0.25,
+    "reaction_cook": null,
+    "reaction_felting": null,
+    "reaction_ferment": null,
+    "reaction_firing": null,
+    "reaction_forge": null,
+    "reaction_papermaking": null,
+    "reaction_pickle": null,
+    "reaction_rot": null,
+    "reaction_smelt": null,
+    "reaction_spin": null,
+    "reaction_tan": null,
+    "reaction_weave": null
+   },
    "refMaterial": null,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同反应已有产率中位数（组 reaction_char，n=1）；无卷文出处，暂定",
+     "dimension": "reactionYield.reaction_char",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_stone",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 10
   },
   "mat_coke": {
    "basis": "卷五、卷六｜氧:未核｜难点着；未核到：极限氧",
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable"
    ],
@@ -2493,35 +2996,83 @@
    "flammability": 0.6,
    "heatValue": 29,
    "ignitePoint": 600,
-   "insulation": null,
    "malleability": 0,
    "moisture": 0.02,
    "refMaterial": null,
-   "volatility": 0
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "volatility": 0,
+   "workDifficulty": 5
   },
   "mat_cold_iron": {
    "basis": "卷三｜卷三例值",
    "boilPoint": 2862,
-   "breathabilityBase": null,
    "classes": [
     "comp_durable"
    ],
+   "corrosionRate": 0.0008,
    "density": {
     "solid": 7.8
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 55,
    "meltPoint": 1500,
    "refMaterial": "mat_wrought_iron",
+   "repairedWith": "class_metal",
+   "salvageFraction": 0.9,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "corrosionRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "specificHeat": {
     "solid": 0.5
    },
-   "substance": "subst_metal"
+   "substance": "subst_metal",
+   "workDifficulty": 45
   },
   "mat_cooked_river_fish": {
    "basis": "卷二十一、卷二十五｜能:食｜干基同生鱼，依据同上一行（USDA fdcId 171952，文献值上网核对 A 表）",
-   "breathabilityBase": null,
    "carbContent": 0,
    "classes": [
     "comp_edible",
@@ -2531,41 +3082,105 @@
    "density": {
     "solid": 1.05
    },
+   "edibleFraction": 0.925,
    "energyDensity": 24.7,
    "fiberContent": 0,
    "flammability": 0,
-   "insulation": null,
+   "mealCap": 1100,
    "moisture": 0.7,
    "nutrients": {
     "nutr_salt": 1
    },
    "refMaterial": null,
-   "substance": "subst_flesh"
+   "rotRate": 0.101,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "dimension": "rotRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_flesh",
+   "workDifficulty": 10
   },
   "mat_copper": {
    "basis": "卷六、卷十三｜—",
    "boilPoint": 2562,
-   "breathabilityBase": null,
    "classes": [
     "comp_durable"
    ],
+   "corrosionRate": 0.0008,
    "density": {
     "solid": 8.96
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 85,
    "meltPoint": 1085,
    "moisture": 0,
    "refMaterial": null,
+   "repairedWith": "class_metal",
+   "salvageFraction": 0.9,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "corrosionRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "specificHeat": {
     "solid": 0.385
    },
-   "substance": "subst_metal"
+   "substance": "subst_metal",
+   "workDifficulty": 45
   },
   "mat_cotton": {
    "basis": "卷二十五｜氧:试｜极限氧 18.4（IWTO《Wool & Fire》第 2 页表\"Key measures of flammability for common textile fibres\"：\"Cotton 18.4\"）；第五版补：别的出处在 18.0–18.5（Kakar, Singh & Sheikh 2023，Indian J. Fibre Text. Res. 48:475–494，第 476 页表 1\"18-18.5\"、第 483 页表 2 对照布 18），区间登记在例 7",
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable"
    ],
@@ -2580,18 +3195,62 @@
    },
    "heatValue": 16.5,
    "ignitePoint": 400,
-   "insulation": null,
    "moisture": 0.08,
    "reactionProducts": {
     "reaction_spin": "mat_cotton_yarn"
    },
+   "reactionYield": {
+    "reaction_calcine": null,
+    "reaction_char": null,
+    "reaction_cook": null,
+    "reaction_felting": null,
+    "reaction_ferment": null,
+    "reaction_firing": null,
+    "reaction_forge": null,
+    "reaction_papermaking": null,
+    "reaction_pickle": null,
+    "reaction_rot": null,
+    "reaction_smelt": null,
+    "reaction_spin": 0.56,
+    "reaction_tan": null,
+    "reaction_weave": null
+   },
    "refMaterial": null,
+   "salvageFraction": 0.6,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "dimension": "reactionYield.reaction_spin",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_fiber",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 8
   },
   "mat_cotton_cloth": {
    "basis": "卷二十五｜氧:试｜极限氧 18.4（同棉纤维的出处）",
    "breathabilityBase": 3,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable"
    ],
@@ -2609,12 +3268,35 @@
    "insulation": 5,
    "moisture": 0.08,
    "refMaterial": null,
+   "salvageFraction": 0.6,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_fiber",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 8
   },
   "mat_cotton_yarn": {
    "basis": "卷二十五｜氧:试｜极限氧 18.4（同棉纤维的出处）",
    "breathabilityBase": 4,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable"
    ],
@@ -2634,30 +3316,101 @@
    "reactionProducts": {
     "reaction_weave": "mat_cotton_cloth"
    },
+   "reactionYield": {
+    "reaction_calcine": null,
+    "reaction_char": null,
+    "reaction_cook": null,
+    "reaction_felting": null,
+    "reaction_ferment": null,
+    "reaction_firing": null,
+    "reaction_forge": null,
+    "reaction_papermaking": null,
+    "reaction_pickle": null,
+    "reaction_rot": null,
+    "reaction_smelt": null,
+    "reaction_spin": null,
+    "reaction_tan": null,
+    "reaction_weave": 0.56
+   },
    "refMaterial": null,
+   "salvageFraction": 0.6,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "dimension": "reactionYield.reaction_weave",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_fiber",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 8
   },
   "mat_cowrie": {
    "basis": "卷六｜矿化的动物组织",
-   "breathabilityBase": null,
    "classes": [
     "comp_durable"
    ],
+   "corrosionRate": 0.0005,
    "decomposePoint": 825,
    "density": {
     "solid": 2.7
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 0,
    "moisture": 0,
    "refMaterial": null,
-   "substance": "subst_bone"
+   "repairedWith": "class_bone",
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_bone，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "corrosionRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_bone",
+   "workDifficulty": 10
   },
   "mat_dried_greens": {
    "basis": "卷二十五｜能:食｜总能依据同鲜菜（USDA fdcId 169975 重算 17.4；晒干只去水，干基相同；文献值上网核对 A 表）。谷物的反例。第五版：它不是谷物是因为部位是叶（例 6），不再靠总能比 17 低 0.3 来分",
-   "breathabilityBase": null,
    "carbContent": 0.53,
    "classes": [
     "comp_edible",
@@ -2667,10 +3420,11 @@
    "density": {
     "solid": 0.5
    },
+   "edibleFraction": 0.925,
    "energyDensity": 16.7,
    "fiberContent": 0.12,
    "flammability": 0,
-   "insulation": null,
+   "mealCap": 1100,
    "moisture": 0.1,
    "nutrients": {
     "nutr_salt": 1
@@ -2678,11 +3432,46 @@
    "plantFamily": "pfam_brassicaceae",
    "plantPart": "ppart_leaf",
    "refMaterial": null,
-   "substance": "subst_plant"
+   "rotRate": 0.101,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "dimension": "rotRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_plant",
+   "workDifficulty": 10
   },
   "mat_dry_grass": {
    "basis": "卷三｜能:饲 氧:未核｜总能对照 Feedipedia 鸭茅干草 node/11990 为 18.0，羚羊草等干草 node/11771、node/11522 为 17.7–18.4（文献值上网核对 A 表）；人不吃、牲畜吃；谷物的反例；营养维度按 M-16 必填；总能同粮食相近，实得多少看食性与纤维含量；自燃点 406（Markova 等 2022，BioResources 17(4):6926 摘要页，热板法：\"The ignition temperature of the hay (406 °C)\"）；未核到：极限氧",
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "carbContent": 0.749,
    "classes": [
     "comp_burnable"
@@ -2696,7 +3485,6 @@
    "flammability": 0.69,
    "heatValue": 15,
    "ignitePoint": 406,
-   "insulation": null,
    "moisture": 0.12,
    "nutrients": {
     "nutr_salt": 0.4
@@ -2705,12 +3493,34 @@
    "plantFamily": "pfam_unknown",
    "plantPart": "ppart_aerial",
    "refMaterial": null,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_plant",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 10
   },
   "mat_dung_cake": {
    "basis": "卷十九｜氧:未核｜牲畜的排泄产物，记动物产物（不再借记草本）；没有食性吃它，不填营养；未核到：自燃点、极限氧",
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable"
    ],
@@ -2721,16 +3531,36 @@
    "flammability": 0.69,
    "heatValue": 15,
    "ignitePoint": 250,
-   "insulation": null,
    "moisture": 0.15,
    "pileBurnEvidence": "bev_fao_ubet",
    "refMaterial": null,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_animal_product",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 10
   },
   "mat_egg": {
    "basis": "卷四、卷二十五｜能:食｜65 ℃ 凝固变性；蛋壳另是一行材料；总能按 USDA fdcId 171287（全蛋）的成分重算 28.7（文献值上网核对 A 表）",
-   "breathabilityBase": null,
    "carbContent": 0.03,
    "classes": [
     "comp_edible",
@@ -2741,39 +3571,91 @@
     "liquid": 1.03,
     "solid": 0.95
    },
+   "edibleFraction": 0.925,
    "energyDensity": 28.1,
    "fiberContent": 0,
    "flammability": 0,
-   "insulation": null,
+   "mealCap": 1100,
    "meltPoint": -0.5,
    "moisture": 0.75,
    "nutrients": {
     "nutr_salt": 1
    },
    "refMaterial": null,
-   "substance": "subst_animal_product"
+   "rotRate": 0.101,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "dimension": "rotRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_animal_product",
+   "workDifficulty": 10
   },
   "mat_eggshell": {
    "basis": "卷四、卷二十五｜矿化的动物组织；整蛋的外壳组",
-   "breathabilityBase": null,
    "decomposePoint": 825,
    "density": {
     "solid": 2.2
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 0,
    "moisture": 0.01,
    "refMaterial": null,
-   "substance": "subst_bone"
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_bone",
+   "workDifficulty": 10
   },
   "mat_elm": {
    "basis": "卷三｜能:木 氧:试｜极限氧 22.5（小试样；White 1979 第 114 页表 1 没有榆木，用同表阔叶材的值代：糖槭 21.2、桦 20.5、杨 22.5，取\"杨 22.5\"；代用料，待补榆木自己的值）",
    "breathabilityBase": 1,
+   "burnRate": 0.02,
    "classes": [
     "comp_burnable",
     "comp_durable"
    ],
+   "corrosionRate": 0.003,
    "decomposePoint": 250,
    "density": {
     "solid": 0.65
@@ -2788,12 +3670,47 @@
    "plantFamily": "pfam_ulmaceae",
    "plantPart": "ppart_stalk",
    "refMaterial": null,
+   "repairedWith": "class_wood",
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "corrosionRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_wood",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 15
   },
   "mat_fat": {
    "basis": "卷四、卷二十五｜能:食 氧:未核｜总能按 USDA fdcId 167811（猪背膘）的成分重算 38.5（文献值上网核对 A 表）；自燃点 445、闪点 202（NOAA CAMEO Chemicals\"LARD\"条 chemical/18010：Autoignition Temperature\"833°F (USCG, 1999)\"，Flash Point\"395°F (USCG, 1999)\"）；未核到：极限氧",
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "carbContent": 0,
    "classes": [
     "comp_burnable",
@@ -2805,13 +3722,14 @@
     "liquid": 0.88,
     "solid": 0.92
    },
+   "edibleFraction": 0.925,
    "energyDensity": 37.7,
    "fiberContent": 0,
    "flammability": 0.69,
    "flashPoint": 202,
    "heatValue": 37,
    "ignitePoint": 445,
-   "insulation": null,
+   "mealCap": 1100,
    "meltPoint": 40,
    "moisture": 0.15,
    "nutrients": {
@@ -2820,13 +3738,77 @@
    "reactionProducts": {
     "reaction_cook": "mat_tallow"
    },
+   "reactionYield": {
+    "reaction_calcine": null,
+    "reaction_char": null,
+    "reaction_cook": 0.56,
+    "reaction_felting": null,
+    "reaction_ferment": null,
+    "reaction_firing": null,
+    "reaction_forge": null,
+    "reaction_papermaking": null,
+    "reaction_pickle": null,
+    "reaction_rot": null,
+    "reaction_smelt": null,
+    "reaction_spin": null,
+    "reaction_tan": null,
+    "reaction_weave": null
+   },
    "refMaterial": null,
+   "rotRate": 0.101,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "dimension": "reactionYield.reaction_cook",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "dimension": "rotRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_flesh",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 10
   },
   "mat_felt": {
    "basis": "卷十九、卷六｜氧:未核｜山羊毛擀压成片，不经纺织；来料反应是擀毡。第五版：未核到极限氧（同山羊毛，没有出处），依据由\"试\"改记\"未核\"，进加载警告清单",
    "breathabilityBase": 3,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable"
    ],
@@ -2840,12 +3822,33 @@
    "insulation": 4,
    "moisture": 0.1,
    "refMaterial": null,
+   "salvageFraction": 0.6,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_fiber",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 8
   },
   "mat_flesh": {
    "basis": "卷四、卷二十五｜能:食｜总能按 USDA 生山羊肉（nutritionvalue.org 转引）的成分重算 23.8（瘦肉；肥一些的肉更高），本格高 12%，判一致（文献值上网核对 A 表）",
-   "breathabilityBase": null,
    "carbContent": 0,
    "classes": [
     "comp_edible",
@@ -2855,20 +3858,55 @@
    "density": {
     "solid": 1.06
    },
+   "edibleFraction": 0.925,
    "energyDensity": 26.7,
    "fiberContent": 0,
    "flammability": 0,
-   "insulation": null,
+   "mealCap": 1100,
    "moisture": 0.72,
    "nutrients": {
     "nutr_salt": 1.5
    },
    "refMaterial": null,
-   "substance": "subst_flesh"
+   "rotRate": 0.101,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "dimension": "rotRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_flesh",
+   "workDifficulty": 10
   },
   "mat_fresh_greens": {
    "basis": "卷二十五｜能:食｜总能按 USDA fdcId 169975（生卷心菜）的成分重算 17.4，本格低 4%，判一致（文献值上网核对 A 表）",
-   "breathabilityBase": null,
    "carbContent": 0.53,
    "classes": [
     "comp_edible",
@@ -2878,10 +3916,11 @@
    "density": {
     "solid": 0.95
    },
+   "edibleFraction": 0.925,
    "energyDensity": 16.7,
    "fiberContent": 0.12,
    "flammability": 0,
-   "insulation": null,
+   "mealCap": 1100,
    "moisture": 0.92,
    "nutrients": {
     "nutr_salt": 0.5
@@ -2891,13 +3930,70 @@
    "reactionProducts": {
     "reaction_pickle": "mat_pickled_greens"
    },
+   "reactionYield": {
+    "reaction_calcine": null,
+    "reaction_char": null,
+    "reaction_cook": null,
+    "reaction_felting": null,
+    "reaction_ferment": null,
+    "reaction_firing": null,
+    "reaction_forge": null,
+    "reaction_papermaking": null,
+    "reaction_pickle": 0.56,
+    "reaction_rot": null,
+    "reaction_smelt": null,
+    "reaction_spin": null,
+    "reaction_tan": null,
+    "reaction_weave": null
+   },
    "refMaterial": null,
-   "substance": "subst_plant"
+   "rotRate": 0.101,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "dimension": "reactionYield.reaction_pickle",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "dimension": "rotRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_plant",
+   "workDifficulty": 10
   },
   "mat_ghost_fire_oil": {
    "basis": "卷三、卷十五｜氧:推｜它是一种油；行上的热值取油的值，冷焰由卷十五的组件类修正（卷三乙 M-12）；假想料，闪点、自燃点、极限氧按油类推定",
    "boilPoint": 180,
-   "breathabilityBase": null,
+   "burnRate": 0.3,
    "classes": [
     "comp_burnable"
    ],
@@ -2909,33 +4005,85 @@
    "flashPoint": 60,
    "heatValue": 38,
    "ignitePoint": 250,
-   "insulation": null,
    "meltPoint": -20,
    "moisture": 0,
    "refMaterial": null,
-   "volatility": 0.001
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:437",
+     "dimension": "workDifficulty",
+     "name": "卷三甲 §4.3.5 例 3"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:437",
+     "dimension": "burnRate",
+     "name": "卷三甲 §4.3.5 例 3"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:437",
+     "dimension": "valueMult",
+     "name": "卷三甲 §4.3.5 例 3"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:437",
+     "dimension": "salvageFraction",
+     "name": "卷三甲 §4.3.5 例 3"
+    }
+   ],
+   "valueMult": 60,
+   "volatility": 0.001,
+   "workDifficulty": 5
   },
   "mat_glass": {
    "basis": "卷十九、卷二十三｜—",
    "boilPoint": 2230,
-   "breathabilityBase": null,
    "classes": [
     "comp_durable"
    ],
+   "corrosionRate": 0.0008,
    "density": {
     "solid": 2.5
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 0,
    "meltPoint": 1400,
    "moisture": 0,
    "refMaterial": null,
-   "substance": "subst_glass"
+   "repairedWith": "class_glass",
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=3；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "corrosionRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_glass",
+   "workDifficulty": 10
   },
   "mat_goat_hair": {
    "basis": "卷四｜氧:未核｜毡的原料。第五版：未核到极限氧。栏里的 25 没有出处（查到的 23.6–25.2 是绵羊毛的值，不是山羊毛的；`审查/卷三-丝毛棉与成堆参数上网核对.md` §1.1），依据由\"试\"改记\"未核\"，进加载警告清单；卷三乙按这个数算出来不是燃料，补到出处以前不作正例也不作反例",
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable"
    ],
@@ -2946,19 +4094,64 @@
    "flammability": 0.4,
    "heatValue": 20,
    "ignitePoint": 570,
-   "insulation": null,
    "moisture": 0.12,
    "reactionProducts": {
     "reaction_felting": "mat_felt"
    },
+   "reactionYield": {
+    "reaction_calcine": null,
+    "reaction_char": null,
+    "reaction_cook": null,
+    "reaction_felting": 0.9,
+    "reaction_ferment": null,
+    "reaction_firing": null,
+    "reaction_forge": null,
+    "reaction_papermaking": null,
+    "reaction_pickle": null,
+    "reaction_rot": null,
+    "reaction_smelt": null,
+    "reaction_spin": null,
+    "reaction_tan": null,
+    "reaction_weave": null
+   },
    "refMaterial": null,
+   "salvageFraction": 0.6,
+   "sources": [
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:347",
+     "dimension": "workDifficulty",
+     "name": "卷三甲 §4.1.5 例 4"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:347",
+     "dimension": "valueMult",
+     "name": "卷三甲 §4.1.5 例 4"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:347",
+     "dimension": "salvageFraction",
+     "name": "卷三甲 §4.1.5 例 4"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:347",
+     "dimension": "reactionYield",
+     "name": "卷三甲 §4.1.5 例 4"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_fiber",
-   "volatility": 0
+   "valueMult": 2,
+   "volatility": 0,
+   "workDifficulty": 8
   },
   "mat_goat_milk": {
    "basis": "卷四、卷二十五｜能:食｜必列项\"乳\"；总能按 USDA SR Legacy fdcId 171278（羊奶）的成分重算 24.6（文献值上网核对 A 表）",
    "boilPoint": 100.5,
-   "breathabilityBase": null,
    "carbContent": 0.36,
    "classes": [
     "comp_drinkable",
@@ -2969,10 +4162,11 @@
     "liquid": 1.03,
     "solid": 0.95
    },
+   "edibleFraction": 0.925,
    "energyDensity": 24.6,
    "fiberContent": 0,
    "flammability": 0,
-   "insulation": null,
+   "mealCap": 1100,
    "meltPoint": -0.5,
    "moisture": 0.87,
    "nutrients": {
@@ -2981,29 +4175,114 @@
    "reactionProducts": {
     "reaction_ferment": "mat_cheese"
    },
+   "reactionYield": {
+    "reaction_calcine": null,
+    "reaction_char": null,
+    "reaction_cook": null,
+    "reaction_felting": null,
+    "reaction_ferment": 0.56,
+    "reaction_firing": null,
+    "reaction_forge": null,
+    "reaction_papermaking": null,
+    "reaction_pickle": null,
+    "reaction_rot": null,
+    "reaction_smelt": null,
+    "reaction_spin": null,
+    "reaction_tan": null,
+    "reaction_weave": null
+   },
    "refMaterial": null,
-   "substance": "subst_animal_product"
+   "rotRate": 0.101,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "dimension": "reactionYield.reaction_ferment",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "dimension": "rotRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_animal_product",
+   "workDifficulty": 10
   },
   "mat_gold": {
    "basis": "卷五、卷六｜卷五的砂金同此",
    "boilPoint": 2856,
-   "breathabilityBase": null,
    "classes": [
     "comp_durable"
    ],
+   "corrosionRate": 0.0008,
    "density": {
     "solid": 19.3
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 100,
    "meltPoint": 1064,
    "moisture": 0,
    "refMaterial": null,
+   "repairedWith": "class_metal",
+   "salvageFraction": 0.9,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "corrosionRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "specificHeat": {
     "solid": 0.129
    },
-   "substance": "subst_metal"
+   "substance": "subst_metal",
+   "workDifficulty": 45
   },
   "mat_granite": {
    "basis": "卷四、卷十九｜卷四石像的组织材料",
@@ -3012,6 +4291,7 @@
    "classes": [
     "comp_durable"
    ],
+   "corrosionRate": 0.0008,
    "density": {
     "solid": 2.7
    },
@@ -3021,12 +4301,40 @@
    "meltPoint": 1250,
    "moisture": 0,
    "refMaterial": null,
-   "substance": "subst_stone"
+   "repairedWith": "class_stone",
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=3；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "corrosionRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_stone",
+   "workDifficulty": 10
   },
   "mat_halite": {
    "basis": "卷三｜能:纯｜按终核2小项3补挂可食、填盐分",
    "boilPoint": 1413,
-   "breathabilityBase": null,
    "carbContent": 0,
    "classes": [
     "comp_edible"
@@ -3034,22 +4342,52 @@
    "density": {
     "solid": 2.16
    },
+   "edibleFraction": 0.925,
    "energyDensity": 0,
    "fiberContent": 0,
    "flammability": 0,
-   "insulation": null,
    "malleability": 0,
+   "mealCap": 1100,
    "meltPoint": 801,
    "moisture": 0.01,
    "nutrients": {
     "nutr_salt": 200
    },
    "refMaterial": null,
-   "substance": "subst_mineral"
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_mineral",
+   "workDifficulty": 10
   },
   "mat_hemp_cord": {
    "basis": "卷三｜氧:试｜极限氧 22（同麻纤维的出处：PMC10972381 表 5，未处理苎麻织物 22%）；未核到：自燃点",
    "breathabilityBase": 4,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable"
    ],
@@ -3063,12 +4401,34 @@
    "insulation": null,
    "moisture": 0.1,
    "refMaterial": null,
+   "salvageFraction": 0.6,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_fiber",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 8
   },
   "mat_hemp_fiber": {
    "basis": "卷三｜氧:试｜植物纤维素；极限氧 22（Materials 2024, 17:1416，PMC10972381，3.4 节与表 5 第 1 行：\"The LOI value of untreated ramie fabric is 22%\"；苎麻织物）；未核到：自燃点",
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable"
    ],
@@ -3079,19 +4439,67 @@
    "flammability": 0.48,
    "heatValue": 16,
    "ignitePoint": 260,
-   "insulation": null,
    "moisture": 0.1,
    "reactionProducts": {
     "reaction_papermaking": "mat_paper",
     "reaction_spin": "mat_hemp_cord"
    },
+   "reactionYield": {
+    "reaction_calcine": null,
+    "reaction_char": null,
+    "reaction_cook": null,
+    "reaction_felting": null,
+    "reaction_ferment": null,
+    "reaction_firing": null,
+    "reaction_forge": null,
+    "reaction_papermaking": 0.56,
+    "reaction_pickle": null,
+    "reaction_rot": null,
+    "reaction_smelt": null,
+    "reaction_spin": 0.56,
+    "reaction_tan": null,
+    "reaction_weave": null
+   },
    "refMaterial": null,
+   "salvageFraction": 0.6,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "dimension": "reactionYield.reaction_spin",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "dimension": "reactionYield.reaction_papermaking",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_fiber",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 8
   },
   "mat_honey": {
    "basis": "卷四｜能:纯｜熔点取玻璃化转变近似值；160 ℃ 焦化；结晶按液态近似（卷三乙 §8 Q-29）",
-   "breathabilityBase": null,
    "carbContent": 0.99,
    "classes": [
     "comp_edible"
@@ -3101,40 +4509,104 @@
     "liquid": 1.42,
     "solid": 1.45
    },
+   "edibleFraction": 0.925,
    "energyDensity": 15.6,
    "fiberContent": 0,
    "flammability": 0,
-   "insulation": null,
+   "mealCap": 1100,
    "meltPoint": -40,
    "moisture": 0.18,
    "nutrients": {
     "nutr_salt": 0
    },
    "refMaterial": null,
-   "substance": "subst_animal_product"
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_animal_product",
+   "workDifficulty": 10
   },
   "mat_iron_ore": {
    "basis": "卷五、卷六｜—",
    "boilPoint": 2600,
-   "breathabilityBase": null,
    "density": {
     "solid": 5
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 0,
    "meltPoint": 1565,
    "moisture": 0,
    "reactionProducts": {
     "reaction_smelt": "mat_cast_iron"
    },
+   "reactionYield": {
+    "reaction_calcine": null,
+    "reaction_char": null,
+    "reaction_cook": null,
+    "reaction_felting": null,
+    "reaction_ferment": null,
+    "reaction_firing": null,
+    "reaction_forge": null,
+    "reaction_papermaking": null,
+    "reaction_pickle": null,
+    "reaction_rot": null,
+    "reaction_smelt": 0.56,
+    "reaction_spin": null,
+    "reaction_tan": null,
+    "reaction_weave": null
+   },
    "refMaterial": null,
-   "substance": "subst_mineral"
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "dimension": "reactionYield.reaction_smelt",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_mineral",
+   "workDifficulty": 10
   },
   "mat_koumiss": {
    "basis": "卷二十五｜能:食｜总能按 Xue 等 2023（Frontiers in Nutrition 10:1270920）给出的成分范围取中值重算约 23.2，本格高 4%，判一致（文献值上网核对 A 表）",
    "boilPoint": 98,
-   "breathabilityBase": null,
    "carbContent": 0.32,
    "classes": [
     "comp_drinkable",
@@ -3145,42 +4617,106 @@
     "liquid": 1,
     "solid": 0.92
    },
+   "edibleFraction": 0.925,
    "energyDensity": 24.2,
    "fiberContent": 0,
    "flammability": 0,
-   "insulation": null,
+   "mealCap": 1100,
    "meltPoint": -1,
    "moisture": 0.9,
    "nutrients": {
     "nutr_salt": 1
    },
    "refMaterial": null,
-   "substance": "subst_animal_product"
+   "rotRate": 0.101,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "dimension": "rotRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_animal_product",
+   "workDifficulty": 10
   },
   "mat_lead": {
    "basis": "卷六、卷十三｜以铸为主，不入热锻",
    "boilPoint": 1749,
-   "breathabilityBase": null,
    "classes": [
     "comp_durable"
    ],
+   "corrosionRate": 0.0008,
    "density": {
     "solid": 11.34
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 80,
    "meltPoint": 327,
    "moisture": 0,
    "refMaterial": null,
+   "repairedWith": "class_metal",
+   "salvageFraction": 0.9,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "corrosionRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "specificHeat": {
     "solid": 0.129
    },
-   "substance": "subst_metal"
+   "substance": "subst_metal",
+   "workDifficulty": 45
   },
   "mat_leaf_litter": {
    "basis": "卷四｜能:饲 氧:未核｜饲料；营养维度按 M-16 必填；总能在出处范围内，未改（Feedipedia 五种树叶的\"Gross energy\"行：18.1、16.8、18.2、17.7、19.2，补核补读到咖啡叶 19.2）；未核到：自燃点、极限氧",
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "carbContent": 0.73,
    "classes": [
     "comp_burnable"
@@ -3193,7 +4729,6 @@
    "flammability": 0.69,
    "heatValue": 16,
    "ignitePoint": 250,
-   "insulation": null,
    "moisture": 0.15,
    "nutrients": {
     "nutr_salt": 0.2
@@ -3201,16 +4736,40 @@
    "plantFamily": "pfam_unknown",
    "plantPart": "ppart_leaf",
    "refMaterial": null,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_plant",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 10
   },
   "mat_leather": {
    "basis": "卷三｜氧:试｜自燃点 206（英文维基\"Autoignition temperature\"表：\"Leather / parchment 200–212\"，取中点）；极限氧同铬鞣革的文献值约 24 相差在 15% 内，未改；蛋白质，单件离火自熄",
    "breathabilityBase": 2,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable",
     "comp_durable"
    ],
+   "corrosionRate": 0.0008,
    "decomposePoint": 200,
    "density": {
     "solid": 0.86
@@ -3221,32 +4780,116 @@
    "insulation": 3,
    "moisture": 0.14,
    "refMaterial": null,
+   "repairedWith": "class_leather",
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=3；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "corrosionRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_hide",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 10
   },
   "mat_limestone": {
    "basis": "卷十九｜—",
-   "breathabilityBase": null,
    "classes": [
     "comp_durable"
    ],
+   "corrosionRate": 0.0008,
    "decomposePoint": 825,
    "density": {
     "solid": 2.7
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 0,
    "moisture": 0,
    "reactionProducts": {
     "reaction_calcine": "mat_quicklime"
    },
+   "reactionYield": {
+    "reaction_calcine": 0.56,
+    "reaction_char": null,
+    "reaction_cook": null,
+    "reaction_felting": null,
+    "reaction_ferment": null,
+    "reaction_firing": null,
+    "reaction_forge": null,
+    "reaction_papermaking": null,
+    "reaction_pickle": null,
+    "reaction_rot": null,
+    "reaction_smelt": null,
+    "reaction_spin": null,
+    "reaction_tan": null,
+    "reaction_weave": null
+   },
    "refMaterial": null,
-   "substance": "subst_stone"
+   "repairedWith": "class_stone",
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:348",
+     "dimension": "reactionYield",
+     "name": "卷三甲 §4.1.5 例 5"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=3；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "corrosionRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_stone",
+   "workDifficulty": 10
   },
   "mat_marsh_bark": {
    "basis": "卷二十一｜能:木 氧:试｜极限氧 22.5（小试样；White 1979 第 114 页表 1 的木材值\"杨 22.5\"，树皮没有自己的值，代用料，待补）",
-   "breathabilityBase": null,
+   "burnRate": 0.02,
    "classes": [
     "comp_burnable"
    ],
@@ -3258,18 +4901,38 @@
    "flammability": 0.46,
    "heatValue": 17,
    "ignitePoint": 300,
-   "insulation": null,
    "moisture": 0.15,
    "plantFamily": "pfam_unknown",
    "plantPart": "ppart_stalk",
    "refMaterial": null,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_wood",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 15
   },
   "mat_mash": {
    "basis": "卷二十五｜能:推｜未核到：干基总能",
    "boilPoint": 100,
-   "breathabilityBase": null,
    "classes": [
     "comp_edible",
     "comp_rottable"
@@ -3278,9 +4941,10 @@
     "liquid": 1.05,
     "solid": 0.97
    },
+   "edibleFraction": 0.925,
    "energyDensity": 19,
    "flammability": 0,
-   "insulation": null,
+   "mealCap": 1100,
    "meltPoint": -2,
    "moisture": 0.8,
    "nutrients": {
@@ -3291,30 +4955,100 @@
    "reactionProducts": {
     "reaction_rot": "mat_rice_wine"
    },
+   "reactionYield": {
+    "reaction_calcine": null,
+    "reaction_char": null,
+    "reaction_cook": null,
+    "reaction_felting": null,
+    "reaction_ferment": null,
+    "reaction_firing": null,
+    "reaction_forge": null,
+    "reaction_papermaking": null,
+    "reaction_pickle": null,
+    "reaction_rot": 0.56,
+    "reaction_smelt": null,
+    "reaction_spin": null,
+    "reaction_tan": null,
+    "reaction_weave": null
+   },
    "refMaterial": null,
-   "substance": "subst_plant"
+   "rotRate": 0.101,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "dimension": "reactionYield.reaction_rot",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "dimension": "rotRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_plant",
+   "workDifficulty": 10
   },
   "mat_mercury": {
    "basis": "卷二十一、卷十五｜—",
    "boilPoint": 357,
-   "breathabilityBase": null,
    "density": {
     "liquid": 13.53,
     "solid": 14.18
    },
    "flammability": 0,
-   "insulation": null,
    "meltPoint": -38.8,
    "moisture": 0,
    "refMaterial": null,
+   "salvageFraction": 0.9,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "specificHeat": {
     "liquid": 0.1395
    },
-   "substance": "subst_metal"
+   "substance": "subst_metal",
+   "workDifficulty": 45
   },
   "mat_millet": {
    "basis": "卷二十五｜能:饲｜第七版改为粟本种（Setaria italica）：总能 18.8（Feedipedia node/12108 粟粒，Main analysis 表\"Gross energy\"行：18.8，页面标星号，即按方程推算，没有范围；`审查/卷三-粟与夜帽菇出处.md` 第一节）。原 19.3 引的是黍（node/12007），撤出",
-   "breathabilityBase": null,
    "carbContent": 0.796,
    "classes": [
     "comp_edible",
@@ -3324,10 +5058,11 @@
    "density": {
     "solid": 1.3
    },
+   "edibleFraction": 0.9,
    "energyDensity": 18.8,
    "fiberContent": 0.089,
    "flammability": 0,
-   "insulation": null,
+   "mealCap": 1100,
    "moisture": 0.12,
    "nutrients": {
     "nutr_salt": 0
@@ -3337,12 +5072,66 @@
    "reactionProducts": {
     "reaction_ferment": "mat_mash"
    },
+   "reactionYield": {
+    "reaction_calcine": null,
+    "reaction_char": null,
+    "reaction_cook": null,
+    "reaction_felting": null,
+    "reaction_ferment": 0.56,
+    "reaction_firing": null,
+    "reaction_forge": null,
+    "reaction_papermaking": null,
+    "reaction_pickle": null,
+    "reaction_rot": null,
+    "reaction_smelt": null,
+    "reaction_spin": null,
+    "reaction_tan": null,
+    "reaction_weave": null
+   },
    "refMaterial": null,
-   "substance": "subst_plant"
+   "rotRate": 0.002,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:477",
+     "dimension": "edibleFraction",
+     "name": "卷三甲 §4.4.5 例 1"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:477",
+     "dimension": "rotRate",
+     "name": "卷三甲 §4.4.5 例 1"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "dimension": "reactionYield.reaction_ferment",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_plant",
+   "workDifficulty": 10
   },
   "mat_moon_berry": {
    "basis": "卷二十五、卷十五｜能:推｜卷二十五月光浆果酒的原料",
-   "breathabilityBase": null,
    "classes": [
     "comp_edible",
     "comp_rottable"
@@ -3351,10 +5140,11 @@
    "density": {
     "solid": 1
    },
+   "edibleFraction": 0.95,
    "energyDensity": 16.5,
    "fiberContent": 0.1,
    "flammability": 0,
-   "insulation": null,
+   "mealCap": 1100,
    "moisture": 0.85,
    "nutrients": {
     "nutr_salt": 0
@@ -3362,12 +5152,45 @@
    "plantFamily": "pfam_unknown",
    "plantPart": "ppart_fruit",
    "refMaterial": null,
-   "substance": "subst_plant"
+   "rotRate": 0.2,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:480",
+     "dimension": "edibleFraction",
+     "name": "卷三甲 §4.4.5 例 4"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:480",
+     "dimension": "rotRate",
+     "name": "卷三甲 §4.4.5 例 4"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_plant",
+   "workDifficulty": 10
   },
   "mat_natural_gas": {
    "basis": "卷五、卷六｜氧:汽｜蜀地火井煮盐；只有气态栏；闪点远在零下，遇火即着",
    "boilPoint": -161,
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable"
    ],
@@ -3378,33 +5201,81 @@
    "flashPoint": -188,
    "heatValue": 55,
    "ignitePoint": 580,
-   "insulation": null,
    "meltPoint": -182,
    "moisture": 0,
    "refMaterial": null,
-   "volatility": 1
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "volatility": 1,
+   "workDifficulty": 5
   },
   "mat_nephrite": {
    "basis": "卷六、卷二十三｜韧性极高而毫无延展性",
-   "breathabilityBase": null,
    "classes": [
     "comp_durable"
    ],
+   "corrosionRate": 0.0008,
    "decomposePoint": 1000,
    "density": {
     "solid": 2.95
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 0,
    "meltPoint": 1250,
    "moisture": 0,
    "refMaterial": null,
-   "substance": "subst_stone"
+   "repairedWith": "class_stone",
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=3；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "corrosionRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_stone",
+   "workDifficulty": 10
   },
   "mat_nightcap_mushroom": {
    "basis": "卷二十一｜能:推｜第七版：本世界的假想毒菇，没有对应的真实菌种（`审查/卷三-粟与夜帽菇出处.md` 第二节），依据由\"能:食\"改记\"能:推\"：总能是按 USDA fdcId 169251（白蘑菇）成分类推的设定值（按它重算 18.9，文献值上网核对 A 表），不是这一种自己的测值；菌类不是植物；十二项里没有对应的一项，按李白裁定第 15 条继续记草本（本源成分是来历的粗分，菌类就近并入，§8 Q-A9 已关闭；封卷后勘误 1115k3）",
-   "breathabilityBase": null,
    "classes": [
     "comp_edible",
     "comp_rottable"
@@ -3413,24 +5284,61 @@
    "density": {
     "solid": 0.9
    },
+   "edibleFraction": 0.925,
    "energyDensity": 17.9,
    "fiberContent": 0.08,
    "flammability": 0,
-   "insulation": null,
+   "mealCap": 1100,
    "moisture": 0.9,
    "nutrients": {
     "nutr_salt": 0
    },
    "refMaterial": null,
-   "substance": "subst_plant"
+   "rotRate": 0.101,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "dimension": "rotRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_plant",
+   "workDifficulty": 10
   },
   "mat_oak": {
    "basis": "卷三｜能:木 氧:试｜自燃点 482（Engineering ToolBox\"Fuels – ignition temperatures\"表：\"Oak Wood - dry\"482）；极限氧 22.7（小试样；White 1979，Wood Science 12(2):113–121，第 114 页表 1：\"Red oak 22.7\"，同表另有\"Oak, France 24.6\"）。同文第 114 页转引的 13.2–19（Rasbash & Langford 1966）混着火的方向与木销的排法两件事，不是单纯的成堆值，本卷不存；方向相同时成堆比单件约低 2.6 个氧点，由卷三乙 T-15 用（`审查/卷三-成堆易燃与谷物分界上网核对.md`）",
-   "breathabilityBase": null,
+   "burnRate": 0.02,
    "classes": [
     "comp_burnable",
     "comp_durable"
    ],
+   "corrosionRate": 0.003,
    "decomposePoint": 250,
    "density": {
     "solid": 0.75
@@ -3439,7 +5347,6 @@
    "flammability": 0.46,
    "heatValue": 17.5,
    "ignitePoint": 482,
-   "insulation": null,
    "moisture": 0.12,
    "pileBurnEvidence": "bev_uaex_firewood",
    "plantFamily": "pfam_fagaceae",
@@ -3447,13 +5354,69 @@
    "reactionProducts": {
     "reaction_char": "mat_charcoal"
    },
+   "reactionYield": {
+    "reaction_calcine": null,
+    "reaction_char": 0.25,
+    "reaction_cook": null,
+    "reaction_felting": null,
+    "reaction_ferment": null,
+    "reaction_firing": null,
+    "reaction_forge": null,
+    "reaction_papermaking": null,
+    "reaction_pickle": null,
+    "reaction_rot": null,
+    "reaction_smelt": null,
+    "reaction_spin": null,
+    "reaction_tan": null,
+    "reaction_weave": null
+   },
    "refMaterial": null,
+   "repairedWith": "class_wood",
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:435",
+     "dimension": "burnRate",
+     "name": "卷三甲 §4.3.5 例 1"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "corrosionRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同反应已有产率中位数（组 reaction_char，n=1）；无卷文出处，暂定",
+     "dimension": "reactionYield.reaction_char",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_wood",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 15
   },
   "mat_paper": {
    "basis": "卷三｜氧:未核｜未核到：极限氧",
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable"
    ],
@@ -3464,15 +5427,35 @@
    "flammability": 0.71,
    "heatValue": 15,
    "ignitePoint": 233,
-   "insulation": null,
    "moisture": 0.06,
    "refMaterial": null,
+   "salvageFraction": 0.6,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_fiber",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 8
   },
   "mat_pickled_greens": {
    "basis": "卷二十五｜能:食｜总能按 USDA fdcId 169279（酸菜）的成分重算 13.6，本格低 14%，判一致（文献值上网核对 A 表）",
-   "breathabilityBase": null,
    "carbContent": 0.48,
    "classes": [
     "comp_edible",
@@ -3482,10 +5465,11 @@
    "density": {
     "solid": 1
    },
+   "edibleFraction": 0.925,
    "energyDensity": 11.7,
    "fiberContent": 0.11,
    "flammability": 0,
-   "insulation": null,
+   "mealCap": 1100,
    "moisture": 0.9,
    "nutrients": {
     "nutr_salt": 60
@@ -3493,44 +5477,129 @@
    "plantFamily": "pfam_brassicaceae",
    "plantPart": "ppart_leaf",
    "refMaterial": null,
-   "substance": "subst_plant"
+   "rotRate": 0.101,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "dimension": "rotRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_plant",
+   "workDifficulty": 10
   },
   "mat_potter_clay": {
    "basis": "卷三｜湿泥的可塑来自掺水，是物品配比，不是这行材料的延展性",
    "boilPoint": 2230,
-   "breathabilityBase": null,
    "density": {
     "solid": 1.8
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 0,
    "meltPoint": 1300,
    "moisture": 0.02,
    "reactionProducts": {
     "reaction_firing": "mat_stoneware"
    },
+   "reactionYield": {
+    "reaction_calcine": null,
+    "reaction_char": null,
+    "reaction_cook": null,
+    "reaction_felting": null,
+    "reaction_ferment": null,
+    "reaction_firing": 0.56,
+    "reaction_forge": null,
+    "reaction_papermaking": null,
+    "reaction_pickle": null,
+    "reaction_rot": null,
+    "reaction_smelt": null,
+    "reaction_spin": null,
+    "reaction_tan": null,
+    "reaction_weave": null
+   },
    "refMaterial": null,
-   "substance": "subst_mineral"
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "dimension": "reactionYield.reaction_firing",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_mineral",
+   "workDifficulty": 10
   },
   "mat_quicklime": {
    "basis": "卷十九｜石灰石煅烧所得，不是陶瓷",
    "boilPoint": 2850,
-   "breathabilityBase": null,
    "density": {
     "solid": 3.3
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 0,
    "meltPoint": 2572,
    "moisture": 0,
    "refMaterial": null,
-   "substance": "subst_mineral"
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_mineral",
+   "workDifficulty": 10
   },
   "mat_rapeseed_oil": {
    "basis": "卷二十五｜能:纯 氧:未核｜自燃点与出处相符（Sels 精炼菜籽油安全数据表第 8 版第 3 页 9.1 节：\"Zündtemperatur: 410°C\"）；未核到：闪点（同表\">300\"与 Ullmann 百科\"275–290\"矛盾）、极限氧",
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "carbContent": 0,
    "classes": [
     "comp_burnable",
@@ -3541,24 +5610,58 @@
     "liquid": 0.92,
     "solid": 0.96
    },
+   "edibleFraction": 0.925,
    "energyDensity": 39.5,
    "fiberContent": 0,
    "flammability": 0.71,
    "flashPoint": 327,
    "heatValue": 39,
    "ignitePoint": 424,
-   "insulation": null,
+   "mealCap": 1100,
    "meltPoint": -10,
    "moisture": 0,
    "nutrients": {
     "nutr_salt": 0
    },
    "refMaterial": null,
-   "volatility": 0
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "volatility": 0,
+   "workDifficulty": 5
   },
   "mat_raw_river_fish": {
    "basis": "卷二十一｜能:食｜总能按 USDA fdcId 171952（鲤鱼）的成分重算 27.0，本格低 8.5%，判一致（文献值上网核对 A 表）",
-   "breathabilityBase": null,
    "carbContent": 0,
    "classes": [
     "comp_edible",
@@ -3568,10 +5671,11 @@
    "density": {
     "solid": 1.05
    },
+   "edibleFraction": 0.925,
    "energyDensity": 24.7,
    "fiberContent": 0,
    "flammability": 0,
-   "insulation": null,
+   "mealCap": 1100,
    "moisture": 0.78,
    "nutrients": {
     "nutr_salt": 1
@@ -3579,12 +5683,69 @@
    "reactionProducts": {
     "reaction_cook": "mat_cooked_river_fish"
    },
+   "reactionYield": {
+    "reaction_calcine": null,
+    "reaction_char": null,
+    "reaction_cook": 0.56,
+    "reaction_felting": null,
+    "reaction_ferment": null,
+    "reaction_firing": null,
+    "reaction_forge": null,
+    "reaction_papermaking": null,
+    "reaction_pickle": null,
+    "reaction_rot": null,
+    "reaction_smelt": null,
+    "reaction_spin": null,
+    "reaction_tan": null,
+    "reaction_weave": null
+   },
    "refMaterial": null,
-   "substance": "subst_flesh"
+   "rotRate": 0.101,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "dimension": "reactionYield.reaction_cook",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "dimension": "rotRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_flesh",
+   "workDifficulty": 10
   },
   "mat_raw_silk": {
    "basis": "卷三｜氧:试｜蛋白质纤维，极限氧指数高于空气含氧，单件火向下烧时离火自熄。第五版：有出处的值是 23.0（Alaybeyoglu, Duran & Körlü 2022，Mugla J. Sci. Technol. 8(2)，第 2 页转引\"23 for silk\"）、23.3（RSC Advances 2022 d2ra04873f 对照样，摘要级）、23.6（Zhang 等 2020，J. Clean. Prod. 250:119545 对照布，经 Kakar 等 2023 第 486 页转述），本格 23.5 在这个区间内，没有动；原备注里的\"另有 24–25\"出自商家博客，没有测法说明，撤出依据。出处区间登记在例 7；未核到：自燃点",
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable"
    ],
@@ -3599,18 +5760,62 @@
    },
    "heatValue": 20,
    "ignitePoint": 300,
-   "insulation": null,
    "moisture": 0.1,
    "reactionProducts": {
     "reaction_weave": "mat_silk"
    },
+   "reactionYield": {
+    "reaction_calcine": null,
+    "reaction_char": null,
+    "reaction_cook": null,
+    "reaction_felting": null,
+    "reaction_ferment": null,
+    "reaction_firing": null,
+    "reaction_forge": null,
+    "reaction_papermaking": null,
+    "reaction_pickle": null,
+    "reaction_rot": null,
+    "reaction_smelt": null,
+    "reaction_spin": null,
+    "reaction_tan": null,
+    "reaction_weave": 0.56
+   },
    "refMaterial": null,
+   "salvageFraction": 0.6,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "dimension": "reactionYield.reaction_weave",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_fiber",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 8
   },
   "mat_rawhide": {
    "basis": "卷三、卷四｜氧:推｜卷四的生皮组织材料同此行；自燃点同熟皮的出处，取 200–212 的中值",
    "breathabilityBase": 1,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable",
     "comp_rottable"
@@ -3627,13 +5832,64 @@
    "reactionProducts": {
     "reaction_tan": "mat_leather"
    },
+   "reactionYield": {
+    "reaction_calcine": null,
+    "reaction_char": null,
+    "reaction_cook": null,
+    "reaction_felting": null,
+    "reaction_ferment": null,
+    "reaction_firing": null,
+    "reaction_forge": null,
+    "reaction_papermaking": null,
+    "reaction_pickle": null,
+    "reaction_rot": null,
+    "reaction_smelt": null,
+    "reaction_spin": null,
+    "reaction_tan": 0.56,
+    "reaction_weave": null
+   },
    "refMaterial": "mat_leather",
+   "rotRate": 0.101,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "dimension": "reactionYield.reaction_tan",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "dimension": "rotRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_hide",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 10
   },
   "mat_resin": {
    "basis": "卷三｜氧:未核｜热值用卷三例值（实测松香约 37）；自燃点与出处相符（chem-page.de 化学品库\"Kolophonium\"条，标 GESTIS 编号 492147：\"Zündtemperatur: 340 °C\"）；闪点与出处相符（ICSC 0358 ROSIN：\"Flash point: 187°C\"）；未核到：极限氧",
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable"
    ],
@@ -3645,16 +5901,36 @@
    "flashPoint": 187,
    "heatValue": 30,
    "ignitePoint": 340,
-   "insulation": null,
    "meltPoint": 110,
    "moisture": 0.01,
    "refMaterial": null,
-   "volatility": 0.0005
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "volatility": 0.0005,
+   "workDifficulty": 5
   },
   "mat_rice_wine": {
    "basis": "卷二十五｜能:纯｜水溶液，溶剂是水，按溶剂记；非水部分主要是酒精；总能与按清酒成分重算的 26.5–26.7 相符（USDA SR Legacy fdcId 167723，每 100 g 水 78.4、乙醇 16.1、碳水 5.0、蛋白 0.5；取自转载页，摘录，原页未核）",
    "boilPoint": 90,
-   "breathabilityBase": null,
    "carbContent": 0.23,
    "classes": [
     "comp_drinkable",
@@ -3665,10 +5941,11 @@
     "liquid": 0.99,
     "solid": 0.92
    },
+   "edibleFraction": 0.925,
    "energyDensity": 27.1,
    "fiberContent": 0,
    "flammability": 0,
-   "insulation": null,
+   "mealCap": 1100,
    "meltPoint": -5,
    "moisture": 0.85,
    "nutrients": {
@@ -3677,19 +5954,74 @@
    "reactionProducts": {
     "reaction_rot": "mat_vinegar"
    },
+   "reactionYield": {
+    "reaction_calcine": null,
+    "reaction_char": null,
+    "reaction_cook": null,
+    "reaction_felting": null,
+    "reaction_ferment": null,
+    "reaction_firing": null,
+    "reaction_forge": null,
+    "reaction_papermaking": null,
+    "reaction_pickle": null,
+    "reaction_rot": 0.56,
+    "reaction_smelt": null,
+    "reaction_spin": null,
+    "reaction_tan": null,
+    "reaction_weave": null
+   },
    "refMaterial": null,
-   "substance": "subst_water"
+   "rotRate": 0.101,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "dimension": "reactionYield.reaction_rot",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "dimension": "rotRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_water",
+   "workDifficulty": 10
   },
   "mat_seawater": {
    "basis": "卷五｜干物质八成是盐，按干基算盐分很高",
    "boilPoint": 100.6,
-   "breathabilityBase": null,
    "density": {
     "liquid": 1.025,
     "solid": 0.93
    },
    "flammability": 0,
-   "insulation": null,
    "meltPoint": -1.9,
    "moisture": 0.965,
    "nutrients": {
@@ -3698,16 +6030,56 @@
    "reactionProducts": {
     "reaction_cook": "mat_halite"
    },
+   "reactionYield": {
+    "reaction_calcine": null,
+    "reaction_char": null,
+    "reaction_cook": 0.56,
+    "reaction_felting": null,
+    "reaction_ferment": null,
+    "reaction_firing": null,
+    "reaction_forge": null,
+    "reaction_papermaking": null,
+    "reaction_pickle": null,
+    "reaction_rot": null,
+    "reaction_smelt": null,
+    "reaction_spin": null,
+    "reaction_tan": null,
+    "reaction_weave": null
+   },
    "refMaterial": null,
-   "substance": "subst_water"
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "dimension": "reactionYield.reaction_cook",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_water",
+   "workDifficulty": 10
   },
   "mat_sheepskin": {
    "basis": "卷三｜氧:推｜自燃点同熟皮的出处，取 200–212 的中值",
    "breathabilityBase": 2,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable",
     "comp_durable"
    ],
+   "corrosionRate": 0.0008,
    "decomposePoint": 190,
    "density": {
     "solid": 0.8
@@ -3718,12 +6090,48 @@
    "insulation": 4,
    "moisture": 0.14,
    "refMaterial": "mat_felt",
+   "repairedWith": "class_leather",
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=3；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "corrosionRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_hide",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 10
   },
   "mat_silk": {
    "basis": "卷三｜氧:试｜同生丝（出处与区间同上，例 7）；生丝束与薄绸的极限氧本不该相同，各自的值未核到；未核到：自燃点",
    "breathabilityBase": 3,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable"
    ],
@@ -3741,66 +6149,165 @@
    "insulation": 4,
    "moisture": 0.1,
    "refMaterial": null,
+   "salvageFraction": 0.6,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_fiber，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_fiber",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 8
   },
   "mat_silt": {
    "basis": "卷二十｜卷二十水体浊度改成的污染物材料",
    "boilPoint": 2230,
-   "breathabilityBase": null,
    "density": {
     "solid": 2.6
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 0,
    "meltPoint": 1600,
    "moisture": 0.05,
    "refMaterial": null,
-   "substance": "subst_mineral"
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_mineral",
+   "workDifficulty": 10
   },
   "mat_silver": {
    "basis": "卷六｜—",
    "boilPoint": 2162,
-   "breathabilityBase": null,
    "classes": [
     "comp_durable"
    ],
+   "corrosionRate": 0.0008,
    "density": {
     "solid": 10.49
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 90,
    "meltPoint": 962,
    "moisture": 0,
    "refMaterial": null,
+   "repairedWith": "class_metal",
+   "salvageFraction": 0.9,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "corrosionRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "specificHeat": {
     "solid": 0.235
    },
-   "substance": "subst_metal"
+   "substance": "subst_metal",
+   "workDifficulty": 45
   },
   "mat_soil": {
    "basis": "卷十九｜—",
    "boilPoint": 2230,
-   "breathabilityBase": null,
    "density": {
     "solid": 1.6
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 0,
    "meltPoint": 1200,
    "moisture": 0.05,
    "reactionProducts": {
     "reaction_firing": "mat_brick"
    },
+   "reactionYield": {
+    "reaction_calcine": null,
+    "reaction_char": null,
+    "reaction_cook": null,
+    "reaction_felting": null,
+    "reaction_ferment": null,
+    "reaction_firing": 0.56,
+    "reaction_forge": null,
+    "reaction_papermaking": null,
+    "reaction_pickle": null,
+    "reaction_rot": null,
+    "reaction_smelt": null,
+    "reaction_spin": null,
+    "reaction_tan": null,
+    "reaction_weave": null
+   },
    "refMaterial": null,
-   "substance": "subst_mineral"
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "P3-T1 同反应已有产率中位数（组内无值，全部 n=3）；无卷文出处，暂定",
+     "dimension": "reactionYield.reaction_firing",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_mineral",
+   "workDifficulty": 10
   },
   "mat_soybean": {
    "basis": "卷二十五｜能:饲｜总能 23.6（Feedipedia node/12625 大豆整粒，Main analysis 表\"Gross energy\"行：23.6，范围 22.5–24.1；文献值上网核对 A 表）",
-   "breathabilityBase": null,
    "carbContent": 0.333,
    "classes": [
     "comp_edible",
@@ -3810,10 +6317,11 @@
    "density": {
     "solid": 1.2
    },
+   "edibleFraction": 0.925,
    "energyDensity": 23.6,
    "fiberContent": 0.062,
    "flammability": 0,
-   "insulation": null,
+   "mealCap": 1100,
    "moisture": 0.085,
    "nutrients": {
     "nutr_salt": 0
@@ -3821,12 +6329,47 @@
    "plantFamily": "pfam_fabaceae",
    "plantPart": "ppart_seed",
    "refMaterial": null,
-   "substance": "subst_plant"
+   "rotRate": 0.101,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "dimension": "rotRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_plant",
+   "workDifficulty": 10
   },
   "mat_spirits": {
    "basis": "卷二十五｜能:纯 氧:汽｜五成酒精的水溶液，按溶剂记水；闪点低，暖天遇明火即着，自燃点三百多度；敞放会跑味；极限氧 9.5（乙醇蒸气，氮气稀释：AIChE CEP《properly purge and inert storage vessels》表 10.5，Air Products 转引 NFPA 69 表 8.5，取中点；出处是纯乙醇蒸气，五成酒带水汽，真实值会偏高一些）",
    "boilPoint": 80,
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "carbContent": 0,
    "classes": [
     "comp_burnable",
@@ -3837,64 +6380,155 @@
     "liquid": 0.93,
     "solid": 0.9
    },
+   "edibleFraction": 0.925,
    "energyDensity": 29.7,
    "fiberContent": 0,
    "flammability": 0.77,
    "flashPoint": 24,
    "heatValue": 29.7,
    "ignitePoint": 365,
-   "insulation": null,
+   "mealCap": 1100,
    "meltPoint": -30,
    "moisture": 0.5,
    "nutrients": {
     "nutr_salt": 0
    },
    "refMaterial": null,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_water",
-   "volatility": 0.2
+   "volatility": 0.2,
+   "workDifficulty": 10
   },
   "mat_steel": {
    "basis": "卷十三｜—",
    "boilPoint": 2860,
-   "breathabilityBase": null,
    "classes": [
     "comp_durable"
    ],
+   "corrosionRate": 0.0008,
    "density": {
     "solid": 7.85
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 55,
    "meltPoint": 1450,
    "moisture": 0,
    "refMaterial": null,
+   "repairedWith": "class_metal",
+   "salvageFraction": 0.9,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "corrosionRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "specificHeat": {
     "solid": 0.49
    },
-   "substance": "subst_metal"
+   "substance": "subst_metal",
+   "workDifficulty": 45
   },
   "mat_stoneware": {
    "basis": "卷三｜卷三例值",
    "boilPoint": 2230,
-   "breathabilityBase": null,
    "classes": [
     "comp_durable"
    ],
+   "corrosionRate": 0.0008,
    "density": {
     "solid": 2.3
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 0,
    "meltPoint": 1600,
    "moisture": 0,
    "refMaterial": null,
-   "substance": "subst_mineral"
+   "repairedWith": "class_mineral",
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=3；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "corrosionRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_mineral",
+   "workDifficulty": 10
   },
   "mat_straw": {
    "basis": "卷四、卷二十五｜能:饲 氧:未核｜总能对照 Feedipedia 麦秸（node/12758）18.5（范围 16.0–18.5；文献值上网核对 A 表）；饲料；营养维度按 M-16 必填；自燃点 380（Markova 等 2023，Processes 11:2741，LAPSE:2024.0198 摘要页，辐射热法：\"hay … (407 °C) compared to straw (380 °C)\"）；未核到：极限氧",
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "carbContent": 0.877,
    "classes": [
     "comp_burnable"
@@ -3908,7 +6542,6 @@
    "flammability": 0.69,
    "heatValue": 15,
    "ignitePoint": 380,
-   "insulation": null,
    "moisture": 0.1,
    "nutrients": {
     "nutr_salt": 0.3
@@ -3917,13 +6550,35 @@
    "plantFamily": "pfam_poaceae",
    "plantPart": "ppart_stalk",
    "refMaterial": null,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_plant",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 10
   },
   "mat_sulfur": {
    "basis": "卷十六、卷二十一｜氧:未核｜无机物，不是蜡脂；未核到：极限氧",
    "boilPoint": 445,
-   "breathabilityBase": null,
+   "burnRate": 8,
    "classes": [
     "comp_burnable"
    ],
@@ -3934,17 +6589,38 @@
    "flashPoint": 207,
    "heatValue": 9.3,
    "ignitePoint": 232,
-   "insulation": null,
    "malleability": 0,
    "meltPoint": 115,
    "moisture": 0,
    "refMaterial": null,
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_mineral",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 10
   },
   "mat_tallow": {
    "basis": "卷二十五、卷十九｜能:纯 氧:未核｜闪点与出处相符（NOAA CAMEO Chemicals\"TALLOW\"条 chemical/18023：Flash Point\"509°F (USCG, 1999)\"，即 265；另两家安全数据表为 321、319）；未核到：自燃点（同条写 data unavailable）、极限氧",
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "carbContent": 0,
    "classes": [
     "comp_burnable",
@@ -3955,24 +6631,59 @@
     "liquid": 0.86,
     "solid": 0.9
    },
+   "edibleFraction": 0.925,
    "energyDensity": 39.8,
    "fiberContent": 0,
    "flammability": 0.71,
    "flashPoint": 265,
    "heatValue": 39.5,
    "ignitePoint": 340,
-   "insulation": null,
+   "mealCap": 1100,
    "meltPoint": 45,
    "moisture": 0,
    "nutrients": {
     "nutr_salt": 0
    },
    "refMaterial": null,
-   "volatility": 0
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "volatility": 0,
+   "workDifficulty": 5
   },
   "mat_tea_leaf": {
    "basis": "卷三｜能:推 氧:未核｜总能与绿茶渣颗粒的高位热值 19.18–19.86 相符（White Rose eprints 184761；摘录，原页未核）；未核到：自燃点、极限氧",
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "carbContent": 0.61,
    "classes": [
     "comp_burnable"
@@ -3986,7 +6697,6 @@
    "flammability": 0.67,
    "heatValue": 16,
    "ignitePoint": 250,
-   "insulation": null,
    "moisture": 0.08,
    "nutrients": {
     "nutr_salt": 0.2
@@ -3994,52 +6704,144 @@
    "plantFamily": "pfam_theaceae",
    "plantPart": "ppart_leaf",
    "refMaterial": null,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=4；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_plant",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 10
   },
   "mat_test_alloy": {
    "basis": "卷三｜卷三测试行",
    "boilPoint": 2500,
-   "breathabilityBase": null,
    "classes": [
     "comp_durable"
    ],
+   "corrosionRate": 0.0008,
    "density": {
     "solid": 8
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 50,
    "meltPoint": 1100,
    "refMaterial": "mat_wrought_iron",
+   "repairedWith": "class_metal",
+   "salvageFraction": 0.9,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "corrosionRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "specificHeat": {
     "solid": 0.5
    },
-   "substance": "subst_metal"
+   "substance": "subst_metal",
+   "workDifficulty": 45
   },
   "mat_test_blast": {
    "basis": "卷三｜氧:氧｜卷三测试行",
-   "breathabilityBase": null,
+   "burnRate": 8,
    "classes": [
     "comp_burnable",
     "comp_deflagrant"
    ],
    "decomposePoint": 250,
+   "deflagEnergy": 2.8,
+   "deflagThreshold": 300,
    "density": {
     "solid": 1
    },
    "flammability": 1,
+   "fragmentFactor": 0.1,
    "heatValue": 4,
    "ignitePoint": 250,
-   "insulation": null,
    "moisture": 0.01,
    "refMaterial": null,
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "deflagEnergy",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "deflagThreshold",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "fragmentFactor",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_mineral，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_mineral",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 10
   },
   "mat_thunderstruck_char": {
    "basis": "卷三、卷十五｜氧:未核｜展平继承后的值；未核到：极限氧",
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable"
    ],
@@ -4050,36 +6852,85 @@
    "flammability": 0.81,
    "heatValue": 30,
    "ignitePoint": 350,
-   "insulation": null,
    "malleability": 0,
    "moisture": 0.05,
    "refMaterial": null,
-   "volatility": 0
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "volatility": 0,
+   "workDifficulty": 5
   },
   "mat_tin": {
    "basis": "卷六｜熔点低，不入热锻",
    "boilPoint": 2602,
-   "breathabilityBase": null,
    "classes": [
     "comp_durable"
    ],
+   "corrosionRate": 0.0008,
    "density": {
     "solid": 7.29
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 70,
    "meltPoint": 232,
    "moisture": 0,
    "refMaterial": null,
+   "repairedWith": "class_metal",
+   "salvageFraction": 0.9,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "corrosionRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_metal，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "specificHeat": {
     "solid": 0.228
    },
-   "substance": "subst_metal"
+   "substance": "subst_metal",
+   "workDifficulty": 45
   },
   "mat_tung_oil": {
    "basis": "卷十七｜氧:未核｜不可食；自燃点与出处相符（Armourflex 纯桐油安全数据表：\"Auto-ignition temperature: 457 °C\"；另两家为 >400、343；摘录，原页未核）；未核到：极限氧",
-   "breathabilityBase": null,
+   "burnRate": 0.25,
    "classes": [
     "comp_burnable"
    ],
@@ -4092,16 +6943,36 @@
    "flashPoint": 289,
    "heatValue": 39,
    "ignitePoint": 457,
-   "insulation": null,
    "meltPoint": -2,
    "moisture": 0,
    "refMaterial": null,
-   "volatility": 0
+   "salvageFraction": 0,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 空，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "volatility": 0,
+   "workDifficulty": 5
   },
   "mat_vinegar": {
    "basis": "卷二十五｜能:纯｜同上；非水部分主要是乙酸",
    "boilPoint": 100,
-   "breathabilityBase": null,
    "carbContent": 0.15,
    "classes": [
     "comp_drinkable",
@@ -4111,22 +6982,50 @@
     "liquid": 1.01,
     "solid": 0.93
    },
+   "edibleFraction": 0.925,
    "energyDensity": 14.9,
    "fiberContent": 0,
    "flammability": 0,
-   "insulation": null,
+   "mealCap": 1100,
    "meltPoint": -2,
    "moisture": 0.94,
    "nutrients": {
     "nutr_salt": 0
    },
    "refMaterial": null,
-   "substance": "subst_water"
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_water",
+   "workDifficulty": 10
   },
   "mat_water": {
    "basis": "卷五、卷二十｜冰是它的固态：固态栏与固相量就是冰的值，不另立材料",
    "boilPoint": 100,
-   "breathabilityBase": null,
    "classes": [
     "comp_drinkable"
    ],
@@ -4136,7 +7035,6 @@
     "solid": 0.917
    },
    "flammability": 0,
-   "insulation": null,
    "malleability": 0,
    "meltPoint": 0,
    "moisture": 1,
@@ -4144,11 +7042,71 @@
     "nutr_salt": 0
    },
    "refMaterial": null,
-   "substance": "subst_water"
+   "salvageFraction": 0.4,
+   "sharpnessMax": 10,
+   "sources": [
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:390",
+     "dimension": "specificHeat",
+     "name": "卷三甲 §4.2.5 例 3"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:390",
+     "dimension": "thermalConductivity",
+     "name": "卷三甲 §4.2.5 例 3"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:390",
+     "dimension": "strength",
+     "name": "卷三甲 §4.2.5 例 3"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:390",
+     "dimension": "sharpnessMax",
+     "name": "卷三甲 §4.2.5 例 3"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:390",
+     "dimension": "wearResistance",
+     "name": "卷三甲 §4.2.5 例 3"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "specificHeat": {
+    "gas": 2,
+    "liquid": 4.18,
+    "solid": 2.1
+   },
+   "strength": {
+    "stress_bend": 8,
+    "stress_compress": 20,
+    "stress_impact": 8,
+    "stress_shear": 8,
+    "stress_tensile": 6,
+    "stress_torsion": 6
+   },
+   "substance": "subst_water",
+   "thermalConductivity": {
+    "gas": 0.025,
+    "liquid": 0.6,
+    "solid": 2.2
+   },
+   "wearResistance": 5,
+   "workDifficulty": 10
   },
   "mat_wheat": {
    "basis": "卷二十五｜能:饲｜总能 18.2（Feedipedia node/12754 小麦粒，Main analysis 表\"Gross energy\"行：18.2，范围 18.0–18.7）",
-   "breathabilityBase": null,
    "carbContent": 0.839,
    "classes": [
     "comp_edible",
@@ -4158,10 +7116,11 @@
    "density": {
     "solid": 1.3
    },
+   "edibleFraction": 0.925,
    "energyDensity": 18.2,
    "fiberContent": 0.026,
    "flammability": 0,
-   "insulation": null,
+   "mealCap": 1100,
    "moisture": 0.13,
    "nutrients": {
     "nutr_salt": 0
@@ -4169,15 +7128,52 @@
    "plantFamily": "pfam_poaceae",
    "plantPart": "ppart_seed",
    "refMaterial": null,
-   "substance": "subst_plant"
+   "rotRate": 0.101,
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "edibleFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，暂定",
+     "dimension": "mealCap",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_plant，n=2；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "dimension": "rotRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组内无值，全部 n=5；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
+   "substance": "subst_plant",
+   "workDifficulty": 10
   },
   "mat_wicker": {
    "basis": "卷三｜能:木 氧:试｜极限氧 22.5（小试样；White 1979 第 114 页表 1\"杨 22.5\"，柳与杨同科，代用料，待补柳木自己的值）",
    "breathabilityBase": 4,
+   "burnRate": 0.02,
    "classes": [
     "comp_burnable",
     "comp_durable"
    ],
+   "corrosionRate": 0.003,
    "decomposePoint": 240,
    "density": {
     "solid": 0.5
@@ -4191,8 +7187,43 @@
    "plantFamily": "pfam_salicaceae",
    "plantPart": "ppart_stalk",
    "refMaterial": "mat_elm",
+   "repairedWith": "class_wood",
+   "salvageFraction": 0.4,
+   "sources": [
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "burnRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "corrosionRate",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
+     "dimension": "repairedWith",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "salvageFraction",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    },
+    {
+     "citation": "P3-T1 同本源成分已有值中位数（组 subst_wood，n=1；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定",
+     "dimension": "workDifficulty",
+     "name": "暂定，待试玩调",
+     "status": "vstat_placeholder"
+    }
+   ],
    "substance": "subst_wood",
-   "volatility": 0
+   "volatility": 0,
+   "workDifficulty": 15
   },
   "mat_wrought_iron": {
    "basis": "卷三｜卷三例值",
@@ -4201,6 +7232,7 @@
    "classes": [
     "comp_durable"
    ],
+   "corrosionRate": 0.0008,
    "density": {
     "liquid": 6.9,
     "solid": 7.75
@@ -4209,11 +7241,75 @@
    "insulation": 1,
    "malleability": 60,
    "meltPoint": 1480,
+   "reactionClass": [
+    "reaction_forge"
+   ],
    "refMaterial": null,
+   "repairedWith": "class_metal",
+   "salvageFraction": 0.9,
+   "sharpnessMax": 68,
+   "sources": [
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:344",
+     "dimension": "workDifficulty",
+     "name": "卷三甲 §4.1.5 例 1"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:344",
+     "dimension": "valueMult",
+     "name": "卷三甲 §4.1.5 例 1"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:344",
+     "dimension": "salvageFraction",
+     "name": "卷三甲 §4.1.5 例 1"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:344",
+     "dimension": "repairedWith",
+     "name": "卷三甲 §4.1.5 例 1"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:344",
+     "dimension": "reactionClass",
+     "name": "卷三甲 §4.1.5 例 1"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:388",
+     "dimension": "strength",
+     "name": "卷三甲 §4.2.5 例 1"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:388",
+     "dimension": "sharpnessMax",
+     "name": "卷三甲 §4.2.5 例 1"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:388",
+     "dimension": "wearResistance",
+     "name": "卷三甲 §4.2.5 例 1"
+    },
+    {
+     "citation": "docs/统一底层设计/卷三甲-物质本源.md:388",
+     "dimension": "corrosionRate",
+     "name": "卷三甲 §4.2.5 例 1"
+    }
+   ],
    "specificHeat": {
     "solid": 0.5
    },
-   "substance": "subst_metal"
+   "strength": {
+    "stress_bend": 57,
+    "stress_compress": 70,
+    "stress_impact": 62,
+    "stress_shear": 60,
+    "stress_tensile": 58,
+    "stress_torsion": 55
+   },
+   "substance": "subst_metal",
+   "valueMult": 10,
+   "wearResistance": 60,
+   "workDifficulty": 45
   }
  },
  "version": 1

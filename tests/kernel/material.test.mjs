@@ -1,7 +1,6 @@
 // P-3 材料表验收：卷三甲 §3.5 AP-2 至 AP-6 的加载期部分、§6 EA-1/2/4/5/6 的加载部分、卷十二 R12-6.2 七步中能做的步骤。
 // 数据取自真实的 world/ontology/dimensions/{material,_vocab,_units}.json，每个用例在内存里拷一份改坏一处或加一行，再交 P-2 的校验器。
-// 材料表眼下有已知缺口（卷三甲 §4.5.5 没给 valueMult、salvageFraction、workDifficulty 等必填值，见 docs/统一底层设计/审查/P-3-验收单.md），
-// 所以"整表零 error"不在这里断言；这里断言的是：缺口以外没有别的错，新增一行不增加任何错。
+// 整表期望：除卷文自己写明未核到的格与待 M3b-27 标定的 valueMult 外零错误；暂定格只验有值、在取值域内，不验具体数（李白 11-17 改令）。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -26,7 +25,7 @@ const key = (e) => `${e.code}|${e.row}|${e.dim}`;
 const newMetal = () => ({
   basis: '测试：新金属行', classes: ['comp_durable'], substance: 'subst_metal', density: { solid: 8.1 }, valueMult: 3, flammability: 0, salvageFraction: 0.8,
   workDifficulty: 40, meltPoint: 1200, boilPoint: 2800, specificHeat: { solid: 0.4 }, repairedWith: 'class_metal', corrosionRate: 0.001,
-  refMaterial: null, insulation: null, breathabilityBase: null,
+  refMaterial: null,
 });
 
 test('四族词表：class、plant_part、damage、diet 都在 _vocab.json；diet 无 eats 来源，不载条目', () => {
@@ -38,12 +37,49 @@ test('四族词表：class、plant_part、damage、diet 都在 _vocab.json；die
   assert.equal(Object.keys(vocab.families.damage.entries).length, 0);
 });
 
-test('93 行：落表、词表与单位引用闭合；整表只有"必填缺值"一类错（已知缺口，见验收单）', () => {
+// 卷文自己写明"未核到、留空"的格：卷三甲 §4.5.5 例 5（纤维）、例 8（碳水）短表里值栏为"—"的行（VA-4.4-I、VA-4.5-I 明说这些行眼下不成立）。
+const VOL = readFileSync(join(ROOT, 'docs/统一底层设计/卷三甲-物质本源.md'), 'utf8').split('\n');
+const shortTableUnknown = (tag, dim) => {
+  const a = VOL.findIndex((l) => l.includes(`<!--${tag}-BEGIN-->`));
+  const b = VOL.findIndex((l) => l.includes(`<!--${tag}-END-->`));
+  return VOL.slice(a + 1, b).filter((l) => /^\| mat_/.test(l)).map((l) => l.split('|').map((c) => c.trim())).filter((c) => c[3] === '—').map((c) => `${c[1]}.${dim}`);
+};
+const volumeUnknown = () => [...shortTableUnknown('FIBER-DATA', 'fiberContent'), ...shortTableUnknown('CARB-DATA', 'carbContent')].sort();
+
+test('93 行：除卷文明写未核到的格外，整表零错误（valueMult 另见下一项）', () => {
   const w = load();
   assert.equal(Object.keys(w.material.rows).length, 93);
+  const got = errs(run(w)).filter((e) => e.dim !== 'valueMult').map((e) => `${e.code}|${e.row}.${e.dim}`).sort();
+  // carbContent 的 onUnknown 是 gap，卷文期望它进缺口表而不让加载失败；P-2 现行一律报 E（docs/问题.md），所以这里按 E 计。
+  // 必填条件里 byDigestible 由 P-2 记 notCovered 不判（落叶的纤维即此），故期望只取 byClass:comp_edible 成立的行。
+  const judged = volumeUnknown().filter((k) => (w.material.rows[k.split('.')[0]].classes || []).includes('comp_edible'));
+  assert.deepEqual(got, judged.map((k) => `E-DIM-REQUIRED-MISSING|${k}`));
+});
+
+test('valueMult 全行有值（卷三乙 §7 M3b-27 离线标定）', { todo: 'M3b-27 缺物品的材料组成与 rules.valuation.unitValue，标定停在第 2 步，见 审查/P-3-valueMult-标定偏差报告.md' }, () => {
+  assert.deepEqual(errs(run(load())).filter((e) => e.dim === 'valueMult').map((e) => e.row), []);
+});
+
+test('暂定格：每个标"暂定，待试玩调"的格都有值、过表头取值域；valueMult 不暂定；卷文明写未核到的格不暂填', () => {
+  const w = load();
   const r = run(w);
-  assert.ok(errs(r).length > 0);
-  assert.deepEqual([...new Set(errs(r).map((e) => e.code))], ['E-DIM-REQUIRED-MISSING']);
+  assert.deepEqual(errs(r).filter((e) => e.code !== 'E-DIM-REQUIRED-MISSING'), []);
+  let n = 0;
+  for (const [id, row] of Object.entries(w.material.rows)) {
+    for (const s of (row.sources || []).filter((x) => x.status === 'vstat_placeholder')) {
+      n++;
+      assert.equal(s.name, '暂定，待试玩调');
+      assert.ok(/^P3-T\d/.test(s.citation), `${id} ${s.dimension}`);
+      const [dim, key] = s.dimension.split('.');
+      assert.notEqual(dim, 'valueMult');
+      const v = key ? row[dim][key] : row[dim];
+      assert.ok(v !== undefined && v !== null, `${id}.${s.dimension}`);
+      const dom = w.material.dimensions[dim].domain || (w.material.dimensions[dim].value || {}).domain;
+      if (typeof v === 'number') assert.ok(v >= dom[0] && (dom[1] === null || v <= dom[1]), `${id}.${s.dimension}=${v}`);
+      assert.ok(!volumeUnknown().includes(`${id}.${dim}`));
+    }
+  }
+  assert.ok(n > 0);
 });
 
 test('R12-6.2 ①②③⑥⑦（④⑤ 无世界推进与行为运行时，not_run）：加一行不改代码，错误集合不增，撤掉后与从未加过相同', () => {
@@ -94,7 +130,7 @@ test('EA-1 反例：漏填 always 字段、固相量越界、重复代号', () =
 
 test('EA-6（加载部分）：植物料不填 plantPart 通过；填已登记部位通过；填未登记代号加载失败。警告清单（L5）未做，not_run', () => {
   const w = load();
-  w.material.rows.mat_test_new_herb = { basis: '测试：新植物料', substance: 'subst_plant', density: { solid: 0.3 }, valueMult: 1, flammability: 0.5, salvageFraction: 0.1, workDifficulty: 5, meltPoint: null, decomposePoint: 250, refMaterial: null, insulation: null, breathabilityBase: null };
+  w.material.rows.mat_test_new_herb = { basis: '测试：新植物料', substance: 'subst_plant', density: { solid: 0.3 }, valueMult: 1, flammability: 0.5, salvageFraction: 0.1, workDifficulty: 5, meltPoint: null, decomposePoint: 250, refMaterial: null };
   assert.deepEqual(codesOf(run(w), 'mat_test_new_herb'), ['E-DIM-DOMAIN-RANGE:meltPoint']);
   delete w.material.rows.mat_test_new_herb.meltPoint;
   assert.deepEqual(codesOf(run(w), 'mat_test_new_herb'), []);
