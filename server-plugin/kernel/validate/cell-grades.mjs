@@ -31,7 +31,17 @@ export function gradedCells(dims, flatRow) {
   return out;
 }
 
+// 表头写了 cellGrades 却不是 {field: string, refDim?: string}（多余键也算）：声明本身错，报 E-DIM-STRUCT-FIELD，不静默当作没声明。
+function declShapeOk(d) {
+  return isObj(d) && typeof d.field === 'string' && d.field !== '' && (d.refDim === undefined || typeof d.refDim === 'string') && Object.keys(d).every((k) => k === 'field' || k === 'refDim');
+}
+
 export function checkCellGrades(t, err) {
+  const raw = t.doc.cellGrades;
+  if (raw !== undefined && !declShapeOk(raw)) {
+    err({ code: 'E-DIM-STRUCT-FIELD', level: 'L1', table: t.kind, row: '', dim: 'cellGrades', path: `${t.file}#/cellGrades`, got: isObj(raw) ? Object.keys(raw).sort().join(',') : raw, want: '{field, refDim?}' });
+    return;
+  }
   const decl = gradeDecl(t.doc);
   if (!decl) return;
   const { doc, kind, file } = t;
