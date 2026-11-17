@@ -70,7 +70,9 @@ test('import_edge：按声明表的矩阵判，违例码各归其位', () => {
   assert.deepEqual(one({ 'server-plugin/r.mjs': "import { x } from './textcore/t.mjs';" }), ['E-TEXTCORE-IMPORT']);
   assert.deepEqual(one({ 'server-plugin/r.mjs': "import { x } from './gate/s.mjs';" }), ['E-VIEW-INPUT-IMPORT']);
   assert.deepEqual(one({ 'server-plugin/r.mjs': "import { x } from './legacy/o.mjs';" }), ['E-PROC-IMPORT']);
-  assert.deepEqual(one({ 'server-plugin/r.mjs': "const m = await import('../tools/accept/run.mjs');" }), ['E-PROC-IMPORT']);
+  assert.deepEqual(one({ 'server-plugin/r.mjs': "const m = await import('../tools/accept/run.mjs');" }), ['E-GLOBAL-UNLISTED']);
+  assert.deepEqual(one({ 'server-plugin/kernel/a.mjs': "const m = await import('./b.mjs');" }), ['E-GLOBAL-UNLISTED']);
+  assert.deepEqual(one({ 'server-plugin/kernel/a.mjs': "import { b } from './b.mjs';" }), []);
   assert.deepEqual(one({ 'extension/v.mjs': "import { k } from '../server-plugin/kernel/k.mjs';" }), ['E-PROC-IMPORT']);
   assert.deepEqual(one({ 'extension/host/h.mjs': "import { g } from '../../server-plugin/gate/s.mjs';" }), ['E-PROC-IMPORT']);
   assert.deepEqual(one({ 'server-plugin/kernel/a.mjs': "import fs from 'fs';" }), ['E-GLOBAL-UNLISTED']);

@@ -25,9 +25,13 @@
     {
      "ref": "P-1",
      "rev": 1
+    },
+    {
+     "ref": "P-1 只核：动态 import 一律 E-GLOBAL-UNLISTED",
+     "rev": 2
     }
    ],
-   "rev": 1,
+   "rev": 2,
    "scanClass": "module_edge"
   },
   {

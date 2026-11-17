@@ -140,10 +140,10 @@
   {
    "addedAtRev": 1,
    "caseKey": "module_edge-03",
-   "expectCode": "E-PROC-IMPORT",
+   "expectCode": "E-GLOBAL-UNLISTED",
    "fixture": "tests/accept/bypass/module_edge-03.txt",
    "group": "kernel",
-   "origin": "卷二 §2.7 运行时文件 import tools",
+   "origin": "卷二 §2.9 第 1 条 动态 import()（目标在 tools）",
    "polarity": "must_fail",
    "scanClass": "module_edge"
   },
@@ -184,6 +184,16 @@
    "fixture": "tests/accept/bypass/module_edge-07.txt",
    "group": "rules",
    "origin": "卷二 S16 规则层 import 非规则组",
+   "polarity": "must_fail",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "module_edge-08",
+   "expectCode": "E-GLOBAL-UNLISTED",
+   "fixture": "tests/accept/bypass/module_edge-08.txt",
+   "group": "kernel",
+   "origin": "卷二 §2.9 第 1 条 动态 import()（目标在矩阵内）；P-1 只核",
    "polarity": "must_fail",
    "scanClass": "module_edge"
   },
