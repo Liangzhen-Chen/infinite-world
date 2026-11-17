@@ -1,7 +1,7 @@
 // RX 数据档单项（卷二 §2.9 第 4 条）：编译成冻结 rxTree、两档变体限制、类型规则、命名空间登记，求值走定点算术。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { compileRX, evaluateRX } from '../../server-plugin/kernel/rx.mjs';
+import { compileRX, compileRXInScope, evaluateRX } from '../../server-plugin/kernel/rx.mjs';
 
 const dims = new Map([
   ['mass', { type: 'number' }],
@@ -19,7 +19,7 @@ const vocabIndex = new Map([
 ]);
 const ns = [{ ns: 'story', argCount: 1, type: 'number' }, { ns: 'pop.total', argCount: 0, type: 'number' }, { ns: 'ev', argCount: 1, type: 'field' }];
 const SCOPE = { dims, vocabIndex, ns, maxDepth: 16 };
-const c = (text, scope = SCOPE) => compileRX(text, 'data', scope);
+const c = (text, scope = SCOPE) => compileRXInScope(text, 'data', scope);
 const code = (fn) => { try { fn(); return 'ok'; } catch (e) { return e.code || e.message; } };
 
 test('编译：中缀式编成判别联合树，冻结，收集命名空间引用', () => {
@@ -38,7 +38,11 @@ test('编译：中缀式编成判别联合树，冻结，收集命名空间引�
 test('数据档不收 slot、mod、broader；显示档 P-2 未做', () => {
   assert.equal(code(() => c('mass % 2 == 0')), 'E-MOD-RX');
   assert.equal(code(() => c('broader(grade, grd_a)')), 'E-MOD-RX');
-  assert.equal(code(() => compileRX('1 + 1', 'display', SCOPE)), 'E-MOD-RX');
+  assert.equal(code(() => compileRXInScope('1 + 1', 'display', SCOPE)), 'E-MOD-RX');
+  // 两参对外接口：签名照卷二 :1222；两档在 P-2 都不经它编（数据档在加载期带作用域编）。
+  assert.equal(compileRX.length, 2);
+  assert.equal(code(() => compileRX('1 + 1', 'display')), 'E-MOD-RX');
+  assert.equal(code(() => compileRX('1 + 1', 'data')), 'E-MOD-RX');
 });
 
 test('类型规则在编译期核：算术要数值、与或非要布尔、eq 两边同类、string 维度不能读', () => {

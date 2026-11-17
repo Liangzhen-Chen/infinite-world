@@ -117,6 +117,20 @@ test('L1：取值域、集合、结构、映射键集', () => {
   assert.equal(errOf(r, 'E-DIM-REQUIRED-MISSING').dim, 'size'); // ifPresent:spec 成立
 });
 
+test('§1.6 第 4 项：键为代码内封闭枚举的映射也须覆盖全部取值', () => {
+  const withMap = (value) => {
+    const f = fixture();
+    f.gadget.dimensions.byClock = { type: 'map', key: { type: 'enum', vocab: 'rx_clock' }, value: { type: 'number', unit: 'count', domain: [0, 9], precision: 0 }, required: 'never', onUnknown: 'error', modifiable: false, source: 's', owner: 'o' };
+    f.gadget.rows.gad_box.byClock = value;
+    return run(f);
+  };
+  assert.deepEqual(codes(withMap({ day: 1, season: null })), []);
+  const r = withMap({ day: 1 });
+  assert.deepEqual(codes(r), ['E-DIM-MAP-SPARSE-NONSUM']);
+  assert.equal(errOf(r, 'E-DIM-MAP-SPARSE-NONSUM').got, 'missing season');
+  assert.deepEqual(codes(withMap({ day: 1, season: null, week: 2 })), ['E-DIM-DOMAIN-ENUM']);
+});
+
 test('继承写法：每维一种、~/* 要父值、偏离行禁继承、extends 目标与成环', () => {
   const f = fixture();
   f.gadget.classes.cls_tool['mass~'] = 1;

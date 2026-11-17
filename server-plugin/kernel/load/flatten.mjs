@@ -3,16 +3,8 @@
 // 失败码：E-DIM-EXTENDS-TARGET、E-DIM-EXTEND-CONFLICT、-NOPARENT、-ON-OVERRIDE、E-DIM-CYCLE。
 
 import { fixedUnits, fixedAdd, fixedMultiply, truncateTo, fixedToNumber, FixedError } from '../det-math.mjs';
-
-// §5.0 公共字段与 §1.3、§1.7 的行字段：不是维度，不参与继承（各行只取自己的）。
-export const ROW_FIELDS = Object.freeze(['extends', 'abstract', 'classes', 'tags', 'basis', 'sources', 'selection', 'status', 'generated', 'termination', 'nameParts', 'memberLinks']);
-const OPS = ['+', '-', '~', '*'];
-
-// 一个行键拆成 {dim, op}；op 为 '' 表示整值写法。
-export function splitKey(key) {
-  const last = key.slice(-1);
-  return OPS.includes(last) ? { dim: key.slice(0, -1), op: last } : { dim: key, op: '' };
-}
+// 行键的文法解析（`<维>+` 等）按卷二 §2.8 :842 只许在 kernel/validate/*，本文件只调用。
+import { ROW_FIELDS, splitKey } from '../validate/types.mjs';
 
 const sortUnique = (xs) => [...new Set(xs)].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
