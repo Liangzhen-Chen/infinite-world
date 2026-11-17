@@ -1,8 +1,8 @@
 {
  "version": 1,
  "rxNamespaces": [
-  {"ns": "lot.spoilage", "argCount": 0, "type": "number", "entry": "该份材料所在批次或实例的当日腐坏进度", "shape": "fraction", "volume": "卷四 §2.4 diet eats（卷四 §4.7.5 :808–811 数据行的写法）"},
-  {"ns": "material", "argCount": 1, "type": "field", "entry": "被求值的那一份材料的维度（变量口径同卷三乙 §4.3 C-1）", "shape": "<维度键>，另有 classes（组件类与类别）", "volume": "卷四 §2.4 diet eats（卷四 §4.7.5 :808–811 数据行的写法）"}
+  {"ns": "lot.spoilage", "argCount": 0, "type": "number", "entry": "该份材料所在批次或实例的当日腐坏进度", "shape": "fraction", "volume": "卷四 §2.4 diet eats（卷四 §4.7.5 :808–811 数据行的写法）；代卷四登记，待卷四勘误补（卷二 §2.9 第 4 条第 2 点）"},
+  {"ns": "material", "argCount": 1, "type": "field", "entry": "被求值的那一份材料的维度（变量口径同卷三乙 §4.3 C-1）", "shape": "<维度键>，另有 classes（组件类与类别）", "volume": "卷四 §2.4 diet eats（卷四 §4.7.5 :808–811 数据行的写法）；代卷四登记，待卷四勘误补（卷二 §2.9 第 4 条第 2 点）"}
  ],
  "inputEdge": {"modules": ["server-plugin/input/**/*.mjs"], "process": "server", "outputSchema": "schema:input-edge-v1"},
  "display": {"modules": ["extension/**/*.mjs", "!extension/host/**", "!extension/textcore/**"], "process": "client"},
