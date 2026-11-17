@@ -40,6 +40,15 @@ const ptr = (base, k) => `${base}/${String(k).replace(/~/g, '~0').replace(/\//g,
 const vocabOf = (def) => def.vocab !== undefined ? def.vocab : (isObj(def.domain) ? def.domain.vocab : undefined);
 const sizeOf = (def, k) => def[k] !== undefined ? def[k] : (isObj(def.domain) ? def.domain[k] : undefined);
 
+// 数值取值域 [min,max]，null 端为无界（§1.2）。
+export function rangeOk(domain) {
+  const [lo, hi, ...rest] = Array.isArray(domain) ? domain : [];
+  const okEnd = (x) => x === null || typeof x === 'number';
+  return Array.isArray(domain) && !rest.length && okEnd(lo) && okEnd(hi) && !(lo !== null && hi !== null && lo > hi);
+}
+// 不必写 domain 的类型（§1.2 表头；规则表登记的取值域同此写法，§4.1）。
+export const DOMAIN_OPTIONAL = Object.freeze(['boolean', 'rx', 'struct', 'map', 'union', 'distribution', 'curve', 'ref', 'enum']);
+
 // JSON 值形态（union anyOf 判别用，§1.5 union 行）。
 const SHAPE = { number: 'number', integer: 'number', boolean: 'boolean', string: 'string', enum: 'string', ref: 'string', rx: 'string', set: 'array', list: 'array', curve: 'array', map: 'object', struct: 'object', distribution: 'object' };
 
@@ -54,11 +63,7 @@ export function checkDef(def, env, at, err, top) {
     const extScale = top && def.stockMode === 'extScale';
     if (def.precision === undefined) { if (t === 'number') bad('E-DIM-SCHEMA-PRECISION', 'missing', 'decimal places within SCALE'); }
     else if (extScale ? !extPrecisionOk(def.precision) : !precisionOk(def.precision)) bad('E-DIM-SCHEMA-PRECISION', def.precision, extScale ? 'decimal places of SCALE² (stockMode extScale)' : 'decimal places within SCALE');
-    if (def.domain !== undefined) {
-      const [lo, hi, ...rest] = Array.isArray(def.domain) ? def.domain : [];
-      const okEnd = (x) => x === null || typeof x === 'number';
-      if (!Array.isArray(def.domain) || rest.length || !okEnd(lo) || !okEnd(hi) || (lo !== null && hi !== null && lo > hi)) bad('E-DIM-DOMAIN-RANGE', def.domain, '[min,max] (null = unbounded)');
-    }
+    if (def.domain !== undefined && !rangeOk(def.domain)) bad('E-DIM-DOMAIN-RANGE', def.domain, '[min,max] (null = unbounded)');
   }
   if (t === 'enum') {
     const fam = vocabOf(def);
