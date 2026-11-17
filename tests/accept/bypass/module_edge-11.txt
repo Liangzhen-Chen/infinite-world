@@ -1,0 +1,2 @@
+import { y } from '../sibling.mjs';
+export const z = y;

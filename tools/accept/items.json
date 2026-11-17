@@ -1,0 +1,199 @@
+{
+ "rows": [
+  {
+   "baseComp": "c_rules_import",
+   "detector": "import_edge",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/import_edge.mjs",
+   "itemKey": "vol1.R-6.5",
+   "localNo": "R-6.5",
+   "method": "static_code",
+   "params": {
+    "codes": [
+     "E-TSC-PARSE"
+    ],
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "gate",
+     "outputGate",
+     "aiGate",
+     "assembly",
+     "host",
+     "display",
+     "clientTextcore"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "rules_import",
+   "source": "卷一 R-6 第 5 条；卷二 §2.7 读法（JSON import）；卷十二 R12-4.3",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_version_fork",
+   "detector": "path_access",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/path_access.mjs",
+   "itemKey": "vol1.V-17",
+   "localNo": "V-17",
+   "method": "static_code",
+   "params": {
+    "access": "branch",
+    "code": "E-REPLAY-VERSION-BRANCH",
+    "groups": [
+     "rules",
+     "kernel"
+    ],
+    "paths": [
+     "metadata.format",
+     "version",
+     "*Version",
+     "legacy"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "version_fork",
+   "source": "卷一 R-8 判定、附录甲 V-17；卷二十七 S27-5",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_instance_id",
+   "detector": "lit_scope",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol2.S1",
+   "localNo": "S1",
+   "method": "static_code",
+   "params": {
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "gate",
+     "outputGate",
+     "aiGate",
+     "assembly",
+     "host",
+     "display",
+     "clientTextcore"
+    ],
+    "literal": "entityPrefix"
+   },
+   "runsOn": "local_static",
+   "scanClass": "instance_name",
+   "source": "卷二 §7 S1；卷十二 §4.1",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_const_literal",
+   "detector": "lit_scope",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol2.S10",
+   "localNo": "S10",
+   "method": "static_code",
+   "params": {
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "gate",
+     "outputGate",
+     "aiGate",
+     "assembly",
+     "host",
+     "display",
+     "clientTextcore"
+    ],
+    "literal": "number"
+   },
+   "runsOn": "local_static",
+   "scanClass": "const_literal",
+   "source": "卷二 §7 S10；卷十二 §4.4",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "detector": "import_edge",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/import_edge.mjs",
+   "itemKey": "vol2.S16",
+   "localNo": "S16",
+   "method": "static_code",
+   "params": {
+    "codes": [
+     "E-KERNEL-UPWARD-IMPORT",
+     "E-VIEW-INPUT-IMPORT",
+     "E-TEXTCORE-IMPORT",
+     "E-PROC-IMPORT",
+     "E-GLOBAL-UNLISTED"
+    ],
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "gate",
+     "outputGate",
+     "aiGate",
+     "assembly",
+     "host",
+     "display",
+     "clientTextcore"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "module_edge",
+   "source": "卷二 §2.7 两张 import 矩阵与读法、S16",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  }
+ ]
+}

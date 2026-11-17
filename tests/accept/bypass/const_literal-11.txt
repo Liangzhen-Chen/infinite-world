@@ -1,0 +1,4 @@
+export function f(a, x, n) {
+  if (a.length > 0 && a[0] === x) return n - 1;
+  return n === -1 ? 1 : 0;
+}

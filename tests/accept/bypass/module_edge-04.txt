@@ -1,0 +1,2 @@
+import { seal } from '../../textcore/seal.mjs';
+export const s = seal;

@@ -1,0 +1,1 @@
+export const grain = 'fxa_oats';

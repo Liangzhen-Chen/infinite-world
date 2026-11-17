@@ -1,0 +1,4 @@
+export function isSolo(who) {
+  if (who === 'fxsolo') return true;
+  return false;
+}

@@ -1,0 +1,1 @@
+export const minutesPerDay = 60 * 24;

@@ -1,0 +1,2 @@
+import { unseal } from '../textcore/seal.mjs';
+export const u = unseal;

@@ -1,0 +1,2 @@
+import { old } from '../legacy/old.mjs';
+export const o = old;

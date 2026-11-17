@@ -1,0 +1,5 @@
+{
+ "kind": "fixture", "namespace": "core", "version": 1,
+ "entity": {"idPrefix": ["fxa_"], "classPrefix": "fxclass_", "singletonIds": ["fxsolo"]},
+ "dimensions": {}, "classes": {}, "rows": {}, "generated": {}
+}
