@@ -32,7 +32,7 @@ test('S12-16：42 条非扫描式条目首次登记零报错，门禁不报降�
     const rows = nonScan().map(({ print, ...r }) => r);
     const path = join(dir, 'tools/accept/items.json');
     const all = JSON.parse(readFileSync(path, 'utf8'));
-    writeFileSync(path, JSON.stringify({ rows: all.rows.filter((r) => r.scanClass) }));
+    writeFileSync(join(dir, 'tools/accept/items.json'), JSON.stringify({ rows: all.rows.filter((r) => r.scanClass) }));
     const res = register(dir, { items: rows });
     assert.deepEqual(res.errors, []);
     const stored = readRegistry(dir, 'items').filter((r) => !r.scanClass);
@@ -53,7 +53,7 @@ test('S12-16：已登记条目被改弱而没有修订记录，登记器与门�
     const path = join(dir, 'tools/accept/items.json');
     const all = JSON.parse(readFileSync(path, 'utf8'));
     Object.assign(all.rows.find((r) => r.itemKey === V5), { stage: 3, gates: ['seal'] });
-    writeFileSync(path, JSON.stringify(all));
+    writeFileSync(join(dir, 'tools/accept/items.json'), JSON.stringify(all));
     const failed = failedOf((await accRun('pre_commit', 'S12-16', null, { root: dir })).report);
     assert.deepEqual(failed['vol12.S12-16'], ['E-ACC-ITEM-DOWNGRADE']);
   } finally { rmSync(dir, { recursive: true, force: true }); }
@@ -88,11 +88,11 @@ test('S12-3：拆 a/b 的原条目按一个原条目计，缺一部分按未登�
     mkdirSync(join(dir, 'docs/统一底层设计'), { recursive: true });
     writeFileSync(join(dir, 'docs/统一底层设计/卷一-总纲与分层.md'), '| V-1 | 夹具 |\n| V-11 | 夹具 |\n- ~~**V-2** 作废，不计~~\n');
     const keep = all.rows.filter((r) => (['V-1', 'V-11'].includes(r.localNo) && r.volume === 'vol1') || r.itemKey === 'vol12.S12-3');
-    writeFileSync(path, JSON.stringify({ rows: keep }));
+    writeFileSync(join(dir, 'tools/accept/items.json'), JSON.stringify({ rows: keep }));
     const rowsOf = async () => (await accRun('pre_commit', 'S12-3', null, { root: dir })).rows.filter((r) => r.itemKey === 'vol12.S12-3' && (r.symbolPath === 'vol1' || r.symbolPath.startsWith('vol1.')));
     assert.deepEqual((await rowsOf()).map((r) => `${r.symbolPath}|${r.errorCode}`), []);
     // 拿掉 V-1.b：原条目 V-1 缺 b 部分，按未登记；卷一计数按原条目少一条，也报。
-    writeFileSync(path, JSON.stringify({ rows: keep.filter((r) => r.itemKey !== 'vol1.V-1.b') }));
+    writeFileSync(join(dir, 'tools/accept/items.json'), JSON.stringify({ rows: keep.filter((r) => r.itemKey !== 'vol1.V-1.b') }));
     assert.deepEqual((await rowsOf()).map((r) => `${r.symbolPath}|${r.errorCode}`).sort(), ['vol1.V-1|E-ACC-ITEM-UNREGISTERED', 'vol1|E-ACC-ITEM-COUNT'].sort());
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
