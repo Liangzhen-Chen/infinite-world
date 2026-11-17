@@ -1,0 +1,132 @@
+{
+ "units": [
+  {
+   "dimension": "volume_per_mass",
+   "id": "L_per_kg",
+   "si": 0.001
+  },
+  {
+   "dimension": "energy_per_mass",
+   "id": "MJ_per_kg",
+   "si": 1000000
+  },
+  {
+   "dimension": "energy_per_mass_dry",
+   "id": "MJ_per_kg_dry",
+   "si": 1000000
+  },
+  {
+   "dimension": "thermal_conductivity",
+   "id": "W_per_m_K",
+   "si": 1
+  },
+  {
+   "calibrate": true,
+   "dimension": "grade",
+   "id": "breath_grade",
+   "si": 1
+  },
+  {
+   "dimension": "temperature",
+   "id": "celsius",
+   "si": 1
+  },
+  {
+   "dimension": "count",
+   "id": "count",
+   "si": 1
+  },
+  {
+   "dimension": "attenuation",
+   "id": "dB_per_cm",
+   "si": 100
+  },
+  {
+   "calibrate": true,
+   "dimension": "ref_dose_per_mass_dry",
+   "id": "daily_ref_per_kg_dry",
+   "si": 1
+  },
+  {
+   "dimension": "ratio",
+   "id": "dimensionless",
+   "si": 1
+  },
+  {
+   "calibrate": true,
+   "dimension": "index",
+   "id": "flam_index",
+   "si": 1
+  },
+  {
+   "dimension": "ratio",
+   "id": "fraction",
+   "si": 1
+  },
+  {
+   "dimension": "mass",
+   "id": "g",
+   "si": 0.001
+  },
+  {
+   "calibrate": true,
+   "dimension": "grade",
+   "id": "insul_grade",
+   "si": 1
+  },
+  {
+   "dimension": "specific_heat",
+   "id": "kJ_per_kg_K",
+   "si": 1000
+  },
+  {
+   "dimension": "density",
+   "id": "kg_per_L",
+   "si": 1000
+  },
+  {
+   "calibrate": true,
+   "dimension": "density",
+   "id": "kg_per_L_gas",
+   "si": 1000
+  },
+  {
+   "dimension": "luminous_per_mass",
+   "id": "lm_per_kg",
+   "si": 1
+  },
+  {
+   "dimension": "rate",
+   "id": "per_day",
+   "si": 0.000011574074074074073
+  },
+  {
+   "calibrate": true,
+   "dimension": "rate",
+   "id": "per_day_rot",
+   "si": 0.000011574074074074073
+  },
+  {
+   "calibrate": true,
+   "dimension": "rate",
+   "id": "per_day_volatile",
+   "si": 0.000011574074074074073
+  },
+  {
+   "dimension": "rate",
+   "id": "per_minute",
+   "si": 0.016666666666666666
+  },
+  {
+   "dimension": "energy_per_mass_dry",
+   "id": "satiety_per_kg_dry",
+   "si": 1000000
+  },
+  {
+   "calibrate": true,
+   "dimension": "score",
+   "id": "score",
+   "si": 1
+  }
+ ]
+}
