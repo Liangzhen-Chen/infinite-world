@@ -216,10 +216,14 @@
     {
      "ref": "P-2b 跟进小卡二（李白 11-17 两点裁定）：共用的 call_edge 写函数豁免须路径实参用到断言返回值绑定的变量，并校验登记的必跑测试存在且未跳过；本类别不用 roots，判定口径不变",
      "rev": 9
+    },
+    {
+     "ref": "P-2b 跟进小卡三（李白 11-17 两点裁定②）：①执行器真跑登记的 requiredTests（node --test 只跑登记名，失败、skip、todo、缺失判不过），仅命令行与提交钩子开；②写函数豁免只在 gatefac 行同时有非空 requiredTests 时给，登记器对 assertedWriters 无 requiredTests 报错；本类别判定口径不变",
+     "rev": 10
     }
    ],
-   "print": "41aa967b1636d1ad2b52ea9063bff4b4b2bcc3e643bbf7acca671a1d01250409",
-   "rev": 9,
+   "print": "65f1d117779b923ea282188a8d6255c5da0bd6986547347f502815d5b49b41fe",
+   "rev": 10,
    "scanClass": "module_edge",
    "terms": {
     "vol12.S12-1": {
@@ -294,10 +298,14 @@
     {
      "ref": "P-2b 跟进小卡二（李白 11-17 两点裁定）：①写函数豁免须路径实参用到断言返回值绑定的变量（断言须写成 const 名 = 断言(…)，字面量路径、别的变量、重新赋值照计）；②豁免用得上时，gatefac 行 requiredTests 所列断言应抛错测试须存在、在 testGlobs 内、未 skip/todo/only，缺失或跳过各计一行",
      "rev": 7
+    },
+    {
+     "ref": "P-2b 跟进小卡三（李白 11-17 两点裁定②）：①执行器真跑登记的 requiredTests（node --test 只跑登记名，失败、skip、todo、缺失判不过），仅命令行与提交钩子开；②写函数豁免只在 gatefac 行同时有非空 requiredTests 时给，登记器对 assertedWriters 无 requiredTests 报错；本类别判定口径不变",
+     "rev": 8
     }
    ],
-   "print": "6541aeb13ceaa677c955a36dab1d6c2b58339e938d1c23af31186609d161ffa4",
-   "rev": 7,
+   "print": "7da5209368bb0375f2f907244062bd9a568f8383dd4c13210f2c064f860a9fc8",
+   "rev": 8,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -339,10 +347,14 @@
     {
      "ref": "P-2b 跟进小卡二（李白 11-17 两点裁定）：共用的 call_edge 写函数豁免须路径实参用到断言返回值绑定的变量，并校验登记的必跑测试存在且未跳过；本类别不用 roots，判定口径不变",
      "rev": 7
+    },
+    {
+     "ref": "P-2b 跟进小卡三（李白 11-17 两点裁定②）：①执行器真跑登记的 requiredTests（node --test 只跑登记名，失败、skip、todo、缺失判不过），仅命令行与提交钩子开；②写函数豁免只在 gatefac 行同时有非空 requiredTests 时给，登记器对 assertedWriters 无 requiredTests 报错；本类别判定口径不变",
+     "rev": 8
     }
    ],
-   "print": "1a15c2dfd012ac12c2d110ba65955ca472f0c4a7fc6791393fd2a6685eb3ae99",
-   "rev": 7,
+   "print": "88ec24c4356f766a98fd711672f1b91b4d953e416b8b1d5d70c9338fa56d3ebb",
+   "rev": 8,
    "scanClass": "rng_bypass",
    "terms": {}
   },
@@ -446,10 +458,14 @@
     {
      "ref": "P-2b 跟进小卡二（李白 11-17 两点裁定）：共用的 call_edge 写函数豁免须路径实参用到断言返回值绑定的变量，并校验登记的必跑测试存在且未跳过；本类别不用 roots，判定口径不变",
      "rev": 7
+    },
+    {
+     "ref": "P-2b 跟进小卡三（李白 11-17 两点裁定②）：①执行器真跑登记的 requiredTests（node --test 只跑登记名，失败、skip、todo、缺失判不过），仅命令行与提交钩子开；②写函数豁免只在 gatefac 行同时有非空 requiredTests 时给，登记器对 assertedWriters 无 requiredTests 报错；本类别判定口径不变",
+     "rev": 8
     }
    ],
-   "print": "1a15c2dfd012ac12c2d110ba65955ca472f0c4a7fc6791393fd2a6685eb3ae99",
-   "rev": 7,
+   "print": "88ec24c4356f766a98fd711672f1b91b4d953e416b8b1d5d70c9338fa56d3ebb",
+   "rev": 8,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

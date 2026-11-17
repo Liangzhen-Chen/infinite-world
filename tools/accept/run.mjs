@@ -7,6 +7,7 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { runRequiredTests } from './lib/required-tests.mjs';
 import {
   LAYOUT, loadContext, readRegistry, accItems, accHits, accBaseline, prefixesFromDir, mergePrefixes, groupDir, isCode, REGISTRY,
 } from './read.mjs';
@@ -134,13 +135,20 @@ export async function accRun(gate, subject, contentPrint, opts = {}) {
   const caseFails = Object.keys(cases).filter((k) => cases[k] !== 'pass');
   if (caseFails.length) failed.push({ itemKey: 'bypass', codes: ['E-ACC-BYPASS-REGRESSION'], cases: caseFails });
 
+  // 必跑测试（李白 11-17 裁定②）：opts.runRequired 时真执行登记的 requiredTests，失败、跳过、缺失都算不过；
+  // 只有命令行与提交钩子开它（测试里直接调 accRun 不开，免得递归）。
+  if (opts.runRequired) {
+    const rf = runRequiredTests(root, ctx.regs.gatefacs);
+    if (rf.length) failed.push({ itemKey: 'required-tests', codes: ['E-ACC-REQUIRED-TEST'], cases: rf.map((f) => `${f.facCode}:${f.file}:${f.name}:${f.reason}`) });
+  }
+
   const prevKeys = new Set(accHits(root).map((h) => h.rowKey));
   const curKeys = new Set(rows.map((h) => h.rowKey));
   const base = Object.fromEntries(accBaseline(root).map((b) => [b.compCode, b]));
   const vs = Object.values(results);
   const count = (v) => vs.filter((x) => x === v).length;
   const mustPass = new Set(items.filter((it) => it.state === 'in_core').map((it) => it.itemKey));
-  const blocking = failed.filter((f) => f.itemKey === 'bypass' || mustPass.has(f.itemKey));
+  const blocking = failed.filter((f) => f.itemKey === 'bypass' || f.itemKey === 'required-tests' || mustPass.has(f.itemKey));
 
   const report = {
     contentPrint: print, gate, subject: subject || '', bench: opts.bench || '',
@@ -175,7 +183,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const write = args.includes('--write');
   const pos = args.filter((a) => a !== '--write');
   if (!pos[0]) { process.stderr.write('usage: run.mjs <gate> [subject] [--write] [--root dir]\n'); process.exit(2); }
-  const { report, text } = await accRun(pos[0], pos[1] || '', null, { root: root || undefined, write });
+  const { report, text } = await accRun(pos[0], pos[1] || '', null, { root: root || undefined, write, runRequired: true });
   process.stdout.write(text);
   process.exit(report.verdict === 'pass' ? 0 : 1);
 }
