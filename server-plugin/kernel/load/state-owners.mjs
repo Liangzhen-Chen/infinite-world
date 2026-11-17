@@ -317,7 +317,13 @@ export function mergeStateOwners(decl, ctx = {}) {
       hooks.push({ system: name, hook, phase: h.phase, after: h.after, sortKey: h.sortKey });
     }
   }
-  // 同阶段同键（§2.7 :766；"键"即 sortKey）。
+  // 同名钩子登记在两个及以上系统（李白 11-17 同名钩子裁定）：E-PHASE-HOOK-DUPLICATE，列钩子名与全部登记系统；整类适用。
+  const hookSystems = new Map();
+  for (const h of hooks) hookSystems.set(h.hook, [...(hookSystems.get(h.hook) || []), h.system]);
+  for (const [hook, syss] of hookSystems) {
+    if (syss.length > 1) { err(E.E_PHASE_HOOK_DUPLICATE, hook, `#/systems/${sorted(syss)[0]}/phase/${hook}`, sorted(syss).join(', '), 'a hook name registered by exactly one system'); hooksOk = false; }
+  }
+  // 同阶段同键（§2.7 :766；"键"即 sortKey）。同名钩子已报上一码的不再按同键重复报。
   const seenKey = new Map();
   for (const h of hooks) {
     const k = JSON.stringify([h.phase, h.sortKey]);
@@ -329,11 +335,9 @@ export function mergeStateOwners(decl, ctx = {}) {
   // 文件 sortKey 与重算不一致 → E-PHASE-SORTKEY-DRIFT。两码都直接报错、不静默修正（修正由离线生成器 tools/gen-sort-keys.mjs 做）。
   // 有 ORDER 问题时重算键不完整，不再报 DRIFT。
   if (hooksOk && hooks.length) {
-    const { keys, problems, duplicates } = assignSortKeys(systems);
-    const order = problems.filter((m) => !duplicates.includes(m));
-    // 同名钩子登记在两个系统：卷二 §2.7 :766"同阶段同键"指 sortKey，不含这一种，没有对应的码；加载直接抛异常停下，
-    // 用哪个码等李白裁定（11-17 只核），不借 E-PHASE-DUPLICATE。
-    if (duplicates.length) throw new Error(`state-owners hook name registered by two systems (error code pending ruling): ${duplicates.join('; ')}`);
+    // 同名钩子已在上面报 E-PHASE-HOOK-DUPLICATE 且 hooksOk 为假，走不到这里；assignSortKeys 的 duplicates 只供离线生成器用。
+    const { keys, problems } = assignSortKeys(systems);
+    const order = problems;
     for (const m of order) err(E.E_PHASE_SORTKEY_ORDER, '', '#/systems', m, 'after names only existing hooks of the same phase, acyclic');
     if (!problems.length) {
       for (const h of hooks) {

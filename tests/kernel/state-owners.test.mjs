@@ -332,11 +332,26 @@ test('assignSortKeys：同名钩子登记在两个系统、成环、after 不存
   assert.match(assignSortKeys({ 'sys.a': { phase: { x: hook('body', ['x'], 0) } } }).problems[0], /after cycle: x -> x/);
 });
 
-test('合并器：同名钩子登记在两个系统，加载直接抛异常停下，不借 E-PHASE-DUPLICATE（用哪个码等李白裁定）', () => {
+test('合并器：同名钩子登记在两个及以上系统 → E-PHASE-HOOK-DUPLICATE（李白 11-17 裁定），信息列钩子名与全部系统；E-PHASE-DUPLICATE 只管同阶段同 sortKey', () => {
   const d = base();
   d.systems['sys.box'].phase = { dupHook: hook('body', [], 1) };
   d.systems['sys.box2'] = { tables: [], entryCallerFiles: {}, entryJudges: [], phase: { dupHook: hook('body', [], 2) } };
-  assert.throws(() => mergeStateOwners(d, CTX), /hook name registered by two systems \(error code pending ruling\): hook dupHook registered by both sys\.box and sys\.box2/);
+  const r = mergeStateOwners(d, CTX);
+  assert.equal(r.ok, false);
+  assert.deepEqual(r.errors.map((e) => [e.code, e.row, e.got]), [['E-PHASE-HOOK-DUPLICATE', 'dupHook', 'sys.box, sys.box2']]);
+  assert.match(r.text, /E-PHASE-HOOK-DUPLICATE/);
+  assert.match(r.text, /sys\.box, sys\.box2/);
+  // 三个系统：全部列出（排序后）。
+  const t = base();
+  t.systems['sys.box'].phase = { dupHook: hook('body', [], 1) };
+  t.systems['sys.zed'] = { tables: [], entryCallerFiles: {}, entryJudges: [], phase: { dupHook: hook('body', [], 2) } };
+  t.systems['sys.box2'] = { tables: [], entryCallerFiles: {}, entryJudges: [], phase: { dupHook: hook('body', [], 3) } };
+  assert.deepEqual(mergeStateOwners(t, CTX).errors.map((e) => [e.code, e.got]), [['E-PHASE-HOOK-DUPLICATE', 'sys.box, sys.box2, sys.zed']]);
+  // 不同名但同阶段同 sortKey 仍是 E-PHASE-DUPLICATE。
+  const s = base();
+  s.systems['sys.box'].phase = { aHook: hook('body', [], 1) };
+  s.systems['sys.box2'] = { tables: [], entryCallerFiles: {}, entryJudges: [], phase: { bHook: hook('body', [], 1) } };
+  assert.deepEqual(codes(s), ['E-PHASE-DUPLICATE']);
   const ok = base();
   ok.systems['sys.box'].phase = { oneHook: hook('body', [], 1) };
   assert.deepEqual(codes(ok), []);
