@@ -37,19 +37,23 @@ export function prepareNamedConditions(t, env, err) {
 }
 
 // 本行的读数：rowNs.<维度键> 取本行按取值算法已知的值，rowNs.classes 取本行组件类与类别连同上位链。
-// 未知的维度不给读数：读到它的条目求值失败，按"未知"计入成立（卷三甲 §2.1 byDigestible"为真或为未知"）。
+// 两种"读不到"分开（卷二 §1.6 :254）：显式 null 是"没有"（含义在字段定义处，如卷三甲 §2.1 `substance`：没有本源成分），
+// 记入 none，不给读数；缺值才是未知，同样不给读数。求值器只有四种读数类型，null 不进求值器。
 export function rowReads(rowNs, known, classes) {
   const reads = {};
-  for (const [dim, v] of known) reads[`${rowNs}.${dim}`] = v;
+  const none = new Set();
+  for (const [dim, v] of known) { if (v === null) none.add(`${rowNs}.${dim}`); else reads[`${rowNs}.${dim}`] = v; }
   reads[`${rowNs}.classes`] = classes;
-  return reads;
+  return { reads, none };
 }
 
-export function namedHolds(cond, reads) {
+// 条目求值遇到读数缺失：缺的是"没有"的字段，条目对本行不成立（没有成分就不是任何成分）；缺的是未知的，
+// 按"未知"计入成立（卷三甲 §2.1 byDigestible"为真或为未知"）。
+export function namedHolds(cond, { reads, none }) {
   const all = { ...reads, ...cond.reads };
   return cond.trees.some(({ tree }) => {
     try { return evaluateRX(tree, { dim: {} }, all) === true; } catch (e) {
-      if (e instanceof RxError) return true;
+      if (e instanceof RxError) return !none.has(e.key);
       throw e;
     }
   });

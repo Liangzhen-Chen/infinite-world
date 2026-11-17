@@ -153,7 +153,8 @@ function typeOf(n, scope) {
     case 'ns': {
       const row = scope.ns.find((r) => r.ns === n.ns);
       const argc = (n.arg || []).length;
-      if (argc !== row.argCount) fail(`namespace ${n.ns} takes ${row.argCount} segments, got ${argc}`);
+      const want = nsArgCount(row);
+      if (argc !== want) fail(`namespace ${n.ns} takes ${want} segments, got ${argc}`);
       return row.type === 'field' ? 'runtime' : row.type;
     }
     case 'add': case 'sub': case 'mul': case 'div':
@@ -188,7 +189,10 @@ function typeOf(n, scope) {
     default: return fail(`unknown variant ${n.op}`);
   }
 }
-const sameKind = (a, b) => a === b || (a === 'codeOrHandle' && (b === 'code' || b === 'handle')) || (b === 'codeOrHandle' && (a === 'code' || a === 'handle'));
+// 命名空间行的 arg 段数不另设列（§2.9 第 4 条第 1 点五列封闭）：由"返回形状"列推出——形状里每个 `<…>` 占位是一段 arg
+// （单值的形状如 fraction 不含占位，不带 arg；`<字段>.<句柄>` 两段）。
+export const nsArgCount = (row) => (typeof row.shape === 'string' ? (row.shape.match(/<[^<>]+>/g) || []).length : 0);
+const sameKind =(a, b) => a === b || (a === 'codeOrHandle' && (b === 'code' || b === 'handle')) || (b === 'codeOrHandle' && (a === 'code' || a === 'handle'));
 
 // 维度类型 → RX 读数类型（第 1 点 dim 一项）；set 只许作 member 的 set。
 export function dimRxType(def, key, allowSet = false) {
@@ -227,7 +231,7 @@ export function compileRX(text, profile) {
   return fail(`profile ${profile} not available (P-2 builds the data profile only)`);
 }
 
-// 加载期编译（只给 kernel/validate 用）。scope：{dims: Map<维度键, 类型定义>, vocabIndex: Map<代号, {family, prefix}>, ns: [{ns, argCount, type}], maxDepth}。
+// 加载期编译（只给 kernel/validate 用）。scope：{dims: Map<维度键, 类型定义>, vocabIndex: Map<代号, {family, prefix}>, ns: [{ns, type, shape, …}], maxDepth}。
 // 返回 {tree, nsRefs}；失败抛 RxError（E-MOD-RX；引用未登记命名空间时 code 为 E-RX-NS-UNKNOWN）。
 export function compileRXInScope(text, profile, scope) {
   if (!PROFILE_OPS[profile]) fail(`profile ${profile} not available (P-2 builds the data profile only)`);
@@ -255,14 +259,15 @@ export const nsKey = (n) => (n.arg ? [n.ns, ...n.arg].join('.') : n.ns);
 // 数值一律按定点算（§3.3），结果按 JS 数交回。读数缺即求值失败（E-MOD-RX）。
 
 const own = (o, k) => o !== null && typeof o === 'object' && Object.hasOwn(o, k);
+// 缺读数的求值失败带上缺的读数键（RxError.key），让调用方分清"该键是已知的没有"与"该键未知"。
+const missing = (message, key) => { const e = new RxError(message); e.key = key; throw e; };
 
 function readValue(v) {
   if (typeof v === 'number') return { t: 'number', v: fixedUnits(v) };
   if (typeof v === 'boolean') return { t: 'boolean', v };
   if (typeof v === 'string') return { t: 'code', v };
-  // null 是"值为空"（如本源成分为空的料），不是未知：只能与别的值比相等，比相等恒假；排序与运算即求值失败。
-  if (v === null) return { t: 'null', v: null };
-  return fail('binding value must be a number, boolean, code or null');
+  // 只有四种读数类型（§2.9 第 4 条 :1174），没有第五种：显式 null（"没有"，§1.6 :254）由调用方按字段定义处的含义处理，不交进求值器。
+  return fail('binding value must be a number, boolean or code');
 }
 
 export function evaluateRX(tree, bindings, nsReads) {
@@ -270,9 +275,9 @@ export function evaluateRX(tree, bindings, nsReads) {
     switch (n.op) {
       case 'num': return { t: 'number', v: fixedUnits(n.value) };
       case 'handle': return { t: 'code', v: n.value };
-      case 'dim': return own(bindings && bindings.dim, n.key) ? readValue(bindings.dim[n.key]) : fail(`no binding for dimension ${n.key}`);
+      case 'dim': return own(bindings && bindings.dim, n.key) ? readValue(bindings.dim[n.key]) : missing(`no binding for dimension ${n.key}`, n.key);
       case 'clock': return own(bindings && bindings.clock, n.field) ? readValue(bindings.clock[n.field]) : fail(`no clock ${n.field}`);
-      case 'ns': { const k = nsKey(n); return own(nsReads, k) ? readValue(nsReads[k]) : fail(`no namespace read ${k}`); }
+      case 'ns': { const k = nsKey(n); return own(nsReads, k) ? readValue(nsReads[k]) : missing(`no namespace read ${k}`, k); }
       case 'add': return { t: 'number', v: fixedAdd(num(n.left), num(n.right)) };
       case 'sub': return { t: 'number', v: fixedSub(num(n.left), num(n.right)) };
       case 'mul': return { t: 'number', v: fixedMultiply(num(n.left), num(n.right)) };
@@ -280,7 +285,7 @@ export function evaluateRX(tree, bindings, nsReads) {
       case 'cmp': {
         const a = run(n.left); const b = run(n.right);
         if (n.cmpOp === 'eq' || n.cmpOp === 'ne') {
-          if (a.t !== b.t && a.t !== 'null' && b.t !== 'null') fail('eq/ne operands differ in type');
+          if (a.t !== b.t) fail('eq/ne operands differ in type');
           return { t: 'boolean', v: (a.v === b.v) === (n.cmpOp === 'eq') };
         }
         if (a.t !== 'number' || b.t !== 'number') fail('ordering needs numbers');
@@ -293,8 +298,8 @@ export function evaluateRX(tree, bindings, nsReads) {
       case 'member': {
         const item = run(n.item);
         const k = n.set.op === 'ns' ? nsKey(n.set) : null;
-        const set = k !== null ? (own(nsReads, k) ? nsReads[k] : fail(`no namespace read ${k}`))
-          : own(bindings && bindings.dim, n.set.key) ? bindings.dim[n.set.key] : fail(`no binding for dimension ${n.set.key}`);
+        const set = k !== null ? (own(nsReads, k) ? nsReads[k] : missing(`no namespace read ${k}`, k))
+          : own(bindings && bindings.dim, n.set.key) ? bindings.dim[n.set.key] : missing(`no binding for dimension ${n.set.key}`, n.set.key);
         if (!Array.isArray(set)) fail('member set binding must be a list');
         return { t: 'boolean', v: set.includes(item.v) };
       }

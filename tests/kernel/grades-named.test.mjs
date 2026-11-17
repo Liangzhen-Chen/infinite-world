@@ -3,6 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateDimensions } from '../../server-plugin/kernel/validate/dimensions-validate.mjs';
+import { compileRXInScope, evaluateRX } from '../../server-plugin/kernel/rx.mjs';
 import { gradedCells } from '../../server-plugin/kernel/validate/cell-grades.mjs';
 import { fixture, OPTIONS, sourcesOf } from './fixture.mjs';
 
@@ -83,7 +84,7 @@ function named(fits) {
   f.vocab.families.grade.entries.grd_a.fits = fits;
   f.gadget.dimensions.size.required = 'byDigestible';
   f.gadget.namedConditions = { byDigestible: { family: 'grade', field: 'fits', rowNs: 'thing', reads: { 'env.heat': 0 } } };
-  const opts = { ...OPTIONS, ns: [...OPTIONS.ns, { ns: 'thing', argCount: 1, type: 'field' }, { ns: 'env.heat', argCount: 0, type: 'number' }] };
+  const opts = { ...OPTIONS, ns: [...OPTIONS.ns, { ns: 'thing', shape: '<维度键>', type: 'field' }, { ns: 'env.heat', shape: 'number', type: 'number' }] };
   return { f, opts };
 }
 
@@ -99,6 +100,23 @@ test('namedConditions：条目条件对行为真即必填，为假不必填，�
   assert.equal(run(f, opts).errors.filter((e) => e.dim === 'size').length, 2);
   f.vocab.families.grade.entries.grd_a.fits = 'thing.classes has cls_tool';
   assert.deepEqual(run(f, opts).errors.filter((e) => e.dim === 'size').map((e) => e.row), ['gad_hammer']);
+});
+
+test('namedConditions 与 null（卷二 :254）：显式 null 是"没有"，条目对该行不成立；缺值才是未知，计为成立；求值器不收 null', () => {
+  const { f, opts } = named('thing.tag == grd_b and env.heat <= 0');
+  f.gadget.dimensions.tag = { type: 'ref', vocab: 'grade', nullable: true, required: 'never', onUnknown: 'skip', modifiable: false, source: 'test', owner: 'test' };
+  f.gadget.rows.gad_hammer.tag = 'grd_b';
+  const sizeRows = (r) => r.errors.filter((e) => e.dim === 'size').map((e) => e.row);
+  // gad_box 没写 tag（未知）→ 成立；gad_hammer tag = grd_b → 成立。
+  assert.deepEqual(sizeRows(run(f, opts)).sort(), ['gad_box', 'gad_hammer']);
+  // gad_box 显式 null（没有）→ 条目不成立，不必填。
+  f.gadget.rows.gad_box.tag = null;
+  assert.deepEqual(sizeRows(run(f, opts)), ['gad_hammer']);
+  // 反过来：不等于也是"没有"→ 对 null 行不成立（不因 null 恒真）。
+  f.vocab.families.grade.entries.grd_a.fits = 'thing.tag != grd_b';
+  assert.deepEqual(sizeRows(run(f, opts)), []);
+  // 求值器自己没有第五种读数类型：null 读数即求值失败。
+  assert.throws(() => evaluateRX(compileRXInScope('thing.tag == grd_b', 'data', { ns: opts.ns, dims: new Map(), vocabIndex: new Map([['grd_b', { family: 'grade', prefix: 'grd_' }]]), maxDepth: 16 }).tree, {}, { 'thing.tag': null }), { code: 'E-MOD-RX' });
 });
 
 test('namedConditions 反例：条目条件编不过报在词表条目上；族不存在报 E-DIM-REF-MISSING；未声明的命名条件只记 notCovered', () => {
