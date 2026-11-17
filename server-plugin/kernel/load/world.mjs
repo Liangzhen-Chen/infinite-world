@@ -10,6 +10,7 @@ import { validateDimensions } from '../validate/dimensions-validate.mjs';
 import { mergeStateOwners } from './state-owners.mjs';
 import { installVocab } from '../vocab.mjs';
 import { installHandles } from '../handles/generated.mjs';
+import { installStorage } from '../storage.mjs';
 
 export const LAYOUT = Object.freeze({
   dimensionsDir: 'world/ontology/dimensions',
@@ -60,6 +61,7 @@ export function loadWorld(root, opts = {}) {
   if (ok) {
     installVocab(report);
     installHandles({ vocab: report.vocab, decl, ledgerPaths: owners.merged.ledgerPaths });
+    installStorage(owners.merged); // readPath/writePath 运行期核对用的声明表合并结果（kernel/storage.mjs，块 2 第 2-3 张）
   }
   const syntaxText = syntax.map((e) => `${e.code}  ${e.table}/.  got ${JSON.stringify(e.got)}  want ${e.want}  — ${e.path}\n`).join('');
   return {

@@ -47,6 +47,9 @@
  "assembly": {"files": ["server-plugin/index.mjs"], "process": "server", "calls": ["createRouterCaps", "createDigestCap", "createWallTimer", "mountKernel", "registerSystems", "mountOutput", "mountAi", "mountMenuEntry", "mountSaveRoutes", "mountNarration", "mountInput"]},
  "retired": ["server-plugin/legacy/**", "server-plugin/compat/**", "server-plugin/migrations/**"],
  "kernelApi": {"exports": [
+  {"export": "kernel/storage.mjs#readPath", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/storage.mjs#writePath", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/transaction.mjs#registerHoldWhileRecompute", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/clone.mjs#clone", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/handles/generated.mjs#V", "callers": ["*"], "acceptsState": false},
   {"export": "kernel/handles/generated.mjs#E", "callers": ["*"], "acceptsState": false},
@@ -54,7 +57,12 @@
   {"export": "kernel/handles/entity-id.mjs#entityId", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/vocab.mjs#vocab", "callers": ["*"], "acceptsState": false},
   {"export": "kernel/vocab.mjs#kindOf", "callers": ["*"], "acceptsState": false},
-  {"export": "kernel/vocab.mjs#idIndex", "callers": ["textcore", "gate", "outputGate", "aiGate", "inputEdge"], "acceptsState": false}
+  {"export": "kernel/vocab.mjs#idIndex", "callers": ["textcore", "gate", "outputGate", "aiGate", "inputEdge"], "acceptsState": false},
+  {"export": "kernel/transaction.mjs#submitProposal", "callers": ["inputEdge"], "acceptsState": false},
+  {"export": "kernel/storage.mjs#readSealed", "callers": ["outputGate"], "acceptsState": true},
+  {"export": "kernel/storage.mjs#writeSealed", "callers": ["aiGate"], "acceptsState": true},
+  {"export": "kernel/report.mjs#report", "callers": ["*"], "acceptsState": false},
+  {"export": "kernel/errors.mjs#reportError", "callers": ["*"], "acceptsState": false}
  ]},
  "groupApi": {"exports": [
   {"export": "systems.mjs#registerSystems", "callerFiles": ["index.mjs"]}
