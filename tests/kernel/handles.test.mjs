@@ -117,8 +117,17 @@ test('P：两条模式派生同名即生成失败 E-PATH-NAME-CLASH，不静默�
   assert.equal(E.E_PATH_NAME_CLASH, 'E-PATH-NAME-CLASH');
 });
 
-test('P：pathTypes 字面段文法 ^[a-z][a-z0-9_]*$ 且至少一个字面段（李白 11-17 裁定），违者 E-PATH-SEGMENT-GRAMMAR', () => {
+test('P：pathTypes 字面段文法 ^[a-z][a-zA-Z0-9_]*$、constructor/prototype 保留、至少一个字面段（李白 11-17 裁定及修正），违者 E-PATH-SEGMENT-GRAMMAR', () => {
   const build = (pattern, opts) => buildP({ pathTypes: { [pattern]: 'number:count' } }, opts);
+  rejects(() => build('lot.constructor'), 'E-PATH-SEGMENT-GRAMMAR');
+  rejects(() => build('prototype.*'), 'E-PATH-SEGMENT-GRAMMAR');
+  rejects(() => build('lot.Foo'), 'E-PATH-SEGMENT-GRAMMAR');
+  assert.deepEqual(Object.keys(build('displayNames.*.text')), ['displayNames_text']);
+  assert.deepEqual(Object.keys(build('playerNotes.*.text')), ['playerNotes_text']);
+  assert.deepEqual(Object.keys(build('pendingPost.*')), ['pendingPost']);
+  assert.deepEqual(Object.keys(build('ledgerTotals')), ['ledgerTotals']);
+  assert.deepEqual(Object.keys(build('renewSinceRem')), ['renewSinceRem']);
+  assert.deepEqual(Object.keys(build('constructors.x')), ['constructors_x']);
   rejects(() => build('lot-x.*.spoilage'), 'E-PATH-SEGMENT-GRAMMAR');
   rejects(() => build('lot.*.2nd'), 'E-PATH-SEGMENT-GRAMMAR');
   rejects(() => build('__proto__.*'), 'E-PATH-SEGMENT-GRAMMAR');

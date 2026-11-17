@@ -95,8 +95,10 @@ export function wildcardCount(pattern) {
   return pattern.split('.').filter((s) => s === '*').length;
 }
 
-/** pathTypes 模式字面段文法（李白 11-17 pathTypes 段文法裁定，卷二 §2.7）：与代号文法同族——小写字母开头，只含小写字母、数字、下划线；不限长度（代号的 2–48 位限制不适用于路径段）。 */
-export const PATH_SEGMENT_RE = /^[a-z][a-z0-9_]*$/;
+/** pathTypes 模式字面段文法（李白 11-17 pathTypes 段文法裁定及其修正，卷二 §2.7）：小写字母开头，后面允许大小写字母、数字、下划线。 */
+export const PATH_SEGMENT_RE = /^[a-z][a-zA-Z0-9_]*$/;
+/** 保留字段名（防原型污染，与 __proto__ 同理）：整类拒收。 */
+export const PATH_SEGMENT_RESERVED = new Set(['constructor', 'prototype']);
 
 /**
  * 校验一条 pathTypes 模式：每个非 `*` 段合 PATH_SEGMENT_RE，且至少一个字面段（全 `*` 的模式派生成员名为空串）。
@@ -105,8 +107,8 @@ export const PATH_SEGMENT_RE = /^[a-z][a-z0-9_]*$/;
  */
 export function checkPathPattern(pattern) {
   const segs = typeof pattern === 'string' ? pattern.split('.') : [];
-  const bad = segs.find((s) => s !== '*' && !PATH_SEGMENT_RE.test(s));
-  if (!segs.length || bad !== undefined) throw new HandleError('E-PATH-SEGMENT-GRAMMAR', `pathTypes pattern ${JSON.stringify(pattern)}: literal segment ${JSON.stringify(bad)} not ^[a-z][a-z0-9_]*$`);
+  const bad = segs.find((s) => s !== '*' && (!PATH_SEGMENT_RE.test(s) || PATH_SEGMENT_RESERVED.has(s)));
+  if (!segs.length || bad !== undefined) throw new HandleError('E-PATH-SEGMENT-GRAMMAR', `pathTypes pattern ${JSON.stringify(pattern)}: literal segment ${JSON.stringify(bad)} not ^[a-z][a-zA-Z0-9_]*$ or reserved word`);
   if (!segs.some((s) => s !== '*')) throw new HandleError('E-PATH-SEGMENT-GRAMMAR', `pathTypes pattern ${JSON.stringify(pattern)}: needs at least one literal segment`);
 }
 

@@ -51,7 +51,7 @@ export function buildE(codes = ERROR_CODES.map((e) => e.code)) {
  * P：pathTypes 每条可生成的模式一个构造函数，返回 StatePath<该模式>（李白 11-17 句柄 P 成员名裁定，卷二 §2.6 第 1 条）。
  * 成员名由模式机械派生：点换下划线，`*` 段不进名字、按出现顺序成为调用参数（'lot.*.spoilage' → P.lot_spoilage(id)）。
  * 两条模式派生出同一成员名即生成失败（E-PATH-NAME-CLASH），不覆盖、不加序号。
- * 每条 pathTypes 模式（含被排除的）先过 checkPathPattern：字面段 ^[a-z][a-z0-9_]*$、至少一个字面段，违者 E-PATH-SEGMENT-GRAMMAR（李白 11-17 pathTypes 段文法裁定）。
+ * 每条 pathTypes 模式（含被排除的）先过 checkPathPattern：字面段 ^[a-z][a-zA-Z0-9_]*$（constructor、prototype 保留）、至少一个字面段，违者 E-PATH-SEGMENT-GRAMMAR（李白 11-17 pathTypes 段文法裁定）。
  * @param {{pathTypes?: Record<string, string>, textPaths?: string[]}} decl state-owners.json
  * @param {{ledgerPaths?: string[]}} [opts] 账本账户路径模式（只经账本转移，不生成构造函数）
  */
