@@ -1,0 +1,33 @@
+{
+ "rows": [
+  {
+   "key": "budget",
+   "value": {
+    "res_building_share": {
+     "src_genesis": {"activeFromDay": 0, "activeToDay": 0, "limit": null}
+    },
+    "res_unmaterialized_share": {
+     "src_genesis": {"activeFromDay": 0, "activeToDay": 0, "limit": null}
+    }
+   },
+   "source": "卷六 §2.5 :224（budget）；§4.22.1 :1239、§4.22 规则 3 :1260（src_genesis 只在第 0 日）；生效日窗口 activeFromDay/activeToDay 照李白 11-18 02:20 K3-40 裁定（卷六勘误另卡）",
+   "grade": "designed",
+   "basis": "只登限额通道 src_genesis（§4.22 规则 2 :1259 限额通道只 src_genesis、src_boundary；边界供货限额不在本表，§4.1 规则 6 :376）；窗口 [0,0] 即第 0 日之后不可用；窗口内 limit 空 = 不限（:224），第 0 日开局量全书无数，待整体经济验收标定"
+  },
+  {
+   "key": "alert",
+   "value": {
+    "res_building_share": {
+     "sink_loss": null,
+     "src_transform": null
+    },
+    "res_unmaterialized_share": {
+     "sink_transform": null
+    }
+   },
+   "source": "卷六 §2.5 :224（alert；空 = 不限）",
+   "grade": "designed",
+   "basis": "物理律通道各格写空（不预警）；全书无值，待整体经济验收标定（K3-08）"
+  }
+ ]
+}

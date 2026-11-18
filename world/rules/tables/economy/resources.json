@@ -1,0 +1,42 @@
+{
+ "rows": [
+  {
+   "key": "res_building_share",
+   "value": {
+    "countsAsWealth": true,
+    "counterpartRX": null,
+    "family": "resfam_asset",
+    "issuerBacked": false,
+    "onTerminate": "successor",
+    "salvageFraction": 0,
+    "sinks": ["sink_loss"],
+    "sources": ["src_genesis", "src_transform"],
+    "transferable": "tr_free",
+    "unit": "bps",
+    "unitOfAccount": false
+   },
+   "source": "卷六 §2.1 :112（family、unit 基点、sources、sinks 明写；一族只这一行，键为设施实例）",
+   "grade": "designed",
+   "basis": "family、unit、sources、sinks 照卷六 :112；transferable 取 tr_free（§4.1 规则 5 :368 '中间只有持有人之间的转移'、§4.18 规则 8 买卖）；其余五栏卷文未给值，设计值待整体经济验收标定：onTerminate successor（卷二 §2.6 第 3 步、卷六规则 9 不存在人死钱没）、salvageFraction 0（successor 时不读）、countsAsWealth 真、unitOfAccount 假、issuerBacked 假（无发行者）"
+  },
+  {
+   "key": "res_unmaterialized_share",
+   "value": {
+    "countsAsWealth": false,
+    "counterpartRX": null,
+    "family": "resfam_claim",
+    "issuerBacked": false,
+    "onTerminate": "successor",
+    "salvageFraction": 0,
+    "sinks": ["sink_transform"],
+    "sources": ["src_genesis"],
+    "transferable": "tr_restricted",
+    "unit": "bps",
+    "unitOfAccount": false
+   },
+   "source": "卷六 §4.1 规则 5 '物化建行' :371（resfam_claim 一行，键为地点，只许聚合账户持有，来源只 src_genesis、去处只 sink_transform）",
+   "grade": "designed",
+   "basis": "family、sources、sinks 照卷六 :371；unit 基点（每栋一万基点，:371）；transferable tr_restricted 且 counterpartRX 为空 = 无许可对手、不可转（:371 只在物化那一笔经 sink_transform 记出，无转移腿）；'只许聚合账户持有'的判据待卷二十七聚合体（块 7）；其余栏卷文未给值，设计值待整体经济验收标定：onTerminate successor、salvageFraction 0、countsAsWealth 假（物化后记为建筑份额，免重计）、unitOfAccount 假、issuerBacked 假"
+  }
+ ]
+}

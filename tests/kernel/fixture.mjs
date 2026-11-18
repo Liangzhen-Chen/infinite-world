@@ -1,5 +1,11 @@
 // 校验器自己的测试数据：造的最小词表、单位表与一张虚构表 gadget（不是世界内容，不对应任何真实维度表）。
 // 每个用例取一份新拷贝改坏一处，正反两极各跑一次。
+import { readFileSync, rmSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { testTempRoot, writeUnderTempRoot } from '../accept/temp-root.mjs';
+
+const REPO = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 export function fixture() {
   return {
@@ -50,4 +56,17 @@ export function sourcesOf(f) {
     vocab: JSON.stringify(f.vocab),
     tables: [{ file: 'gadget.json', text: JSON.stringify(f.gadget) }],
   };
+}
+
+// 造的维度表目录（tests/kernel/dims）配真实规则表时，真实规则表里按真实词表族登记的表（如卷六资源种类表按 resource 族取行键）在造的词表下必然报未登记族；
+// 所以用造的目录加载时，规则目录只放真实的内核常数表一行（同 rules.test.mjs 的 withRules 做法），在仓库外临时目录里，用完即删。
+export function withKernelConstantsRules(fn) {
+  const tmpRoot = testTempRoot('kc-rules-');
+  try {
+    const real = (f) => readFileSync(join(REPO, 'world/rules', f), 'utf8');
+    const row = JSON.parse(real('registry.json')).rows.find((r) => r.code === 'kernelConstants');
+    writeUnderTempRoot(tmpRoot, 'registry.json', JSON.stringify({ rows: [row] }));
+    writeUnderTempRoot(tmpRoot, row.file, real(row.file));
+    return fn(tmpRoot);
+  } finally { rmSync(tmpRoot, { recursive: true, force: true }); }
 }

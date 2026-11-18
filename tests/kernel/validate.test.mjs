@@ -5,7 +5,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validateDimensions } from '../../server-plugin/kernel/validate/dimensions-validate.mjs';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
-import { fixture, OPTIONS, sourcesOf } from './fixture.mjs';
+import { fixture, OPTIONS, sourcesOf, withKernelConstantsRules } from './fixture.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const run = (f, opts = OPTIONS) => validateDimensions(sourcesOf(f), opts);
@@ -200,7 +200,7 @@ test('L3：实体行 basis 与跨表 id 唯一', () => {
 });
 
 test('加载器：从目录读表与内核常数，结果同内存调用', () => {
-  const r = loadWorld(ROOT, { dimensionsDir: 'tests/kernel/dims' });
+  const r = withKernelConstantsRules((rulesDir) => loadWorld(ROOT, { dimensionsDir: 'tests/kernel/dims', rulesDir }));
   assert.deepEqual(r.errors, []);
   assert.equal(r.text, run(fixture(), { ...OPTIONS, ns: [] }).text);
 });

@@ -9,6 +9,7 @@
  "server-plugin/kernel/handles/generated.mjs",
  "server-plugin/kernel/handles/keys.mjs",
  "server-plugin/kernel/handles/vocab-handle.mjs",
+ "server-plugin/kernel/ledger.mjs",
  "server-plugin/kernel/load/flatten.mjs",
  "server-plugin/kernel/load/json-text.mjs",
  "server-plugin/kernel/load/rules.mjs",
