@@ -6,6 +6,9 @@
 import { KernelError } from './errors.mjs';
 import { isModuleFile, isLowerCamelCode } from './handles/keys.mjs';
 
+// typeof 结果记号（语言常量；本文件只用 function 一个，单一定义）。
+const TYPE = Object.freeze({ function: 'function' });
+
 /**
  * @typedef {(engine: any, state: any, id: string) => unknown} ViewReader
  * 一个视图读取函数：纯读，按主体 id 给出该视图的返回对象（没有这一条为 null 或 undefined）。
@@ -25,7 +28,7 @@ const views = new Map();
 export function registerViewReader(name, file, reader) {
   if (!isLowerCamelCode(name)) throw new KernelError('E-DIM-ID-FORMAT', {}, `registerViewReader: name ${JSON.stringify(name)} is not a view name`);
   if (!isModuleFile(file)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `registerViewReader ${name}: file must be a module path relative to server-plugin/`);
-  if (typeof reader !== 'function') throw new KernelError('E-DIM-STRUCT-FIELD', {}, `registerViewReader ${name}: reader must be a function`);
+  if (typeof reader !== TYPE.function) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `registerViewReader ${name}: reader must be a function`);
   if (views.has(name)) throw new KernelError('E-WRITER-DUPLICATE', {}, `registerViewReader: view ${name} already registered`);
   views.set(name, Object.freeze({ file, read: reader }));
 }
