@@ -18,6 +18,8 @@
 
 1. **4-3 已封（c146be9f）**：DeepSeek 写 9 提交；DeepSeek 只核 2 轮；Claude Sonnet 终审 $0.16。
 2. **4-4《detfn 表与离线生成脚本》待开**：测试先行；#22 detfn 在 registry.json det-numeric 行显式枚举七值；接 normal/lognormal 冻结表求值；照 docs/迁移体检/块4-余卡规矩检查对照.md。
-3. **B2-W3《派生式求值》待开**（依赖 4-3 已满足）。
-4. **块 2 验收**：收尾卡（B2-W3）合入后报开机方案。
-5. 其后：3-4 封块 3 → 4-4 封块 4 → 块 5 起。
+3. **B2-W3《派生式求值》卡住，等李白裁定**（11-18 20:10）：DeepSeek 写 2 轮（读时求值→只核判必须改→加载期按本表编译）、DeepSeek 只核 1 轮；真实世界六处派生写不成现行 RX，卷二 §2.9 rxTree 只有带 rel 的 agg 节点，四处推不出，见 docs/问题.md"B2-W3 等李白裁定"。实现留 ds/b2w3 工作区未提交（已推测试先行提交；补丁 F:/dnd-backup/b2w3-wip-1118.patch）。
+4. **4-4 拆两张**（已定：按李白 16:3x 收窄、竖切片）：4-4a 冻结表（_distributions.json、tools/gen-det-tables.mjs --check）、fixedExp/fixedLn/fixedPow 唯一实现、normal/lognormal 抽样——DeepSeek 在写；4-4b detfn（registry det-numeric 七值、fnTables 校验与插值、E-DET-DOMAIN）、E-DET-OVERFLOW 改码。数学成员扫描（#20）、sym_exists（#21）、排序扫描（#33）不在本两张，挂账待李白核是否属"跨文件静态才守得住"。
+5. **块 2 验收**：B2-W3 合入后报开机方案。
+6. 其后：3-4 封块 3 → 4-4b 封块 4 → 块 5 起。
+7. 副本备份后删（李白 19:35）已做完，清单见 docs/归档/清理记录-1118.md 末节。主会话 20:1x 一次误用输出重定向写 F:/dnd-tmp/null.txt，已认错并删除该文件。
