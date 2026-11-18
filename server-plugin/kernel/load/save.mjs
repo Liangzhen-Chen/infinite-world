@@ -17,11 +17,19 @@ import { canonicalEqual } from '../storage.mjs';
 import { KernelError, codeOf } from '../errors.mjs';
 import { report } from '../report.mjs';
 import { isHex64 } from '../handles/keys.mjs';
+import { T } from '../handles/markers.mjs';
+import { buildE } from '../handles/generated.mjs';
+
+const E = buildE();
+// 分片切分方式与文档部分、清单状态的固定记号（卷二十七 R27-4.1 :124、§1.9 族 partition/state）：单一定义，比较处引用。
+const PARTITION = Object.freeze({ byUnit: 'part_by_unit' });
+const DOC_PART = Object.freeze({ data: 'doc_data' });
+const MANIFEST_STATE = Object.freeze({ missing: 'missing', ok: 'ok', torn: 'torn' });
 
 /** 入库的摘要排除表（生成文件，取代旧的手写表；卷一 §8.3 :643 的文件名不变）。 */
 export const DIGEST_EXCLUDE_FILE = 'world/rules/tables/digest-exclude.json';
 
-const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+const isObj = (v) => v !== null && typeof v === T.js_type.object && !Array.isArray(v);
 
 /** 读并解析一个 JSON 文件；不存在或解析不过返回 undefined。 @param {string} file */
 function readJson(file) {
@@ -63,9 +71,9 @@ function manifestShapeOk(m) {
   const keys = Object.keys(m).sort();
   if (keys.length !== MANIFEST_FIELDS.length || keys.some((k, i) => k !== MANIFEST_FIELDS[i])) return false;
   return Array.isArray(m.shardDigests) && m.shardDigests.every(isHex64)
-    && Array.isArray(m.logSegments) && m.logSegments.every((s, i) => isObj(s) && Number.isInteger(s.count) && typeof s.digest === 'string' && typeof s.sealed === 'boolean' && (s.sealed || i === m.logSegments.length - 1))
+    && Array.isArray(m.logSegments) && m.logSegments.every((s, i) => isObj(s) && Number.isInteger(s.count) && typeof s.digest === T.js_type.string && typeof s.sealed === T.js_type.boolean && (s.sealed || i === m.logSegments.length - 1))
     && Array.isArray(m.snapshotIndex) && m.snapshotIndex.length > 0 && m.snapshotIndex.every((s) => isObj(s) && Number.isInteger(s.atEvent) && isObj(s.shards))
-    && typeof m.rulesDigest === 'string' && Number.isInteger(m.clockMinute) && Number.isInteger(m.slot);
+    && typeof m.rulesDigest === T.js_type.string && Number.isInteger(m.clockMinute) && Number.isInteger(m.slot);
 }
 
 /**
@@ -134,12 +142,12 @@ function assemble(m, texts, layout) {
       continue;
     }
     const row = rowOf.get(code);
-    const byUnit = row !== undefined && row.partition === 'part_by_unit';
-    if (!row || (byUnit ? !Array.isArray(ref) || !ref.every((d) => typeof d === 'string') : typeof ref !== 'string')) throw new KernelError('E-SAVE-SHARD-UNCOVERED', {}, `snapshot shard ${code} has no row in the layout`);
+    const byUnit = row !== undefined && row.partition === PARTITION.byUnit;
+    if (!row || (byUnit ? !Array.isArray(ref) || !ref.every((d) => typeof d === T.js_type.string) : typeof ref !== T.js_type.string)) throw new KernelError('E-SAVE-SHARD-UNCOVERED', {}, `snapshot shard ${code} has no row in the layout`);
     // part_by_unit 一行是各单元一片的摘要列表；每片是带完整路径的子树，逐片拼回。
     for (const d of byUnit ? ref : [ref]) {
       const content = parseShard(texts, d);
-      if (row.part === 'doc_data') { Object.assign(doc.doc_data.base, content); continue; }
+      if (row.part === DOC_PART.data) { Object.assign(doc.doc_data.base, content); continue; }
       walkPathTree(content, (segs, v, rec) => setIn(doc[row.part], segs, rec.sealed ? decodeSealedValue(v) : v));
     }
   }
@@ -188,20 +196,20 @@ export function loadSlot({ root, slot, layout, rulesDigest }) {
       const code = codeOf(e);
       if (code === null) throw e;
       // Sealed 字节与摘要不符是闭集里的拒读码（:1128），原样交回；其余拼回失败走回退。
-      if (code === 'E-SEAL-DIGEST') return { stop: { ok: false, code } };
+      if (code === E.E_SEAL_DIGEST) return { stop: { ok: false, code } };
       return { stop: null };
     }
   };
   const cur = checkManifest(dir, LAYOUT_NAMES.current);
   // 两份清单都不存在：槽位无存档，E-SAVE-EMPTY（不借用 E-SAVE-TORN；李白 11-18 块 2-4 三件裁定 b）。
-  if (cur.state === 'missing' && checkManifest(dir, LAYOUT_NAMES.previous).state === 'missing') return { ok: false, code: new KernelError('E-SAVE-EMPTY').code };
-  let wasCommitted = cur.state !== 'missing';
-  if (cur.state === 'ok') {
+  if (cur.state === MANIFEST_STATE.missing && checkManifest(dir, LAYOUT_NAMES.previous).state === MANIFEST_STATE.missing) return { ok: false, code: new KernelError('E-SAVE-EMPTY').code };
+  let wasCommitted = cur.state !== MANIFEST_STATE.missing;
+  if (cur.state === MANIFEST_STATE.ok) {
     const r = tryManifest(cur);
     if (r.stop) return r.stop;
-  } else if (cur.state === 'torn') report(new KernelError('E-SAVE-SHARD-DIGEST').code, fields);
+  } else if (cur.state === MANIFEST_STATE.torn) report(new KernelError('E-SAVE-SHARD-DIGEST').code, fields);
   const prev = checkManifest(dir, LAYOUT_NAMES.previous);
-  if (prev.state !== 'ok') return { ok: false, code: tornCode };
+  if (prev.state !== MANIFEST_STATE.ok) return { ok: false, code: tornCode };
   const r = tryManifest(prev);
   if (!r.stop) return { ok: false, code: tornCode };
   // 当前清单坏了才算残缺回退；当前清单不存在（提交改名之间中断）时上一个清单就是最近完好的清单。
