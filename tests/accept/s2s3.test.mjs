@@ -131,10 +131,12 @@ test('S2、S3 条目在真实仓库上零命中（零基线），且条目状态
   const { report, rows } = await accRun('pre_commit', 'test', null, { root: ROOT });
   const keys = ['vol1.V-2.a', 'vol1.V-2.b', 'vol1.V-3', 'vol1.V-20', 'vol1.V-23', 'vol2.S2', 'vol2.S3.a', 'vol2.S5', 'vol2.S7', 'vol2.S15', 'vol2.S18', 'vol2.S19.a', 'vol2.S19.b'];
   assert.deepEqual(rows.filter((r) => keys.includes(r.itemKey)), []);
-  // 卷十二 R12-11.7：text_judge 靠 tsc 才能判的反例现有词法检测器报不出，本类别条目全部退回 registered（不虚报 implemented）。
   assert.deepEqual(report.gaps.filter((k) => ['vol1.V-2.a', 'vol1.V-20', 'vol1.V-23', 'vol1.V-24.a', 'vol1.V-25.a', 'vol1.V-29.a', 'vol1.V-31.a', 'vol2.S2', 'vol2.S3.a', 'vol2.S18', 'vol2.S19.a', 'vol2.S3.b', 'vol2.S9', 'vol2.S13', 'vol2.S15', 'vol2.S17.a', 'vol2.S17.b'].includes(k)),
     ['vol1.V-2.a', 'vol1.V-20', 'vol1.V-23', 'vol1.V-24.a', 'vol1.V-25.a', 'vol1.V-29.a', 'vol1.V-31.a', 'vol2.S13', 'vol2.S15', 'vol2.S17.a', 'vol2.S17.b', 'vol2.S18', 'vol2.S19.a', 'vol2.S2', 'vol2.S3.a', 'vol2.S3.b', 'vol2.S9']);
-  assert.deepEqual(readRegistry(ROOT, 'items').filter((it) => it.scanClass === 'text_judge' && it.state !== 'registered').map((it) => it.itemKey), []);
+  // 卷十二 R12-11.7：text_judge 靠 tsc 才能判的反例现有词法检测器报不出，规则层组的条目全部退回 registered（不虚报 implemented）；
+  // kernel 组的三条走 le_baseline 逐行基线（B2-W2b，李白 11-18 08:18 第 1 条），词法可判，基线已登记，进必过集合。
+  assert.deepEqual(readRegistry(ROOT, 'items').filter((it) => it.scanClass === 'text_judge' && it.state !== 'registered').map((it) => it.itemKey),
+    ['vol2.S13.k1', 'vol2.S13.k3', 'vol2.S13.k4']);
   for (const c of ['escape_hatch', 'display_read', 'cross_write']) {
     for (const k of Object.keys(report.cases).filter((x) => x.startsWith(`${c}-`))) assert.equal(report.cases[k], 'pass', k);
   }
@@ -158,6 +160,8 @@ test('text_judge 用例集：§2.8 代表性正反例逐条录入；词法可判
     'text_judge-35': false, 'text_judge-36': true,
     'text_judge-41': false, 'text_judge-42': false, 'text_judge-43': false, 'text_judge-44': false, 'text_judge-45': false,
     'text_judge-46': false, 'text_judge-47': false, 'text_judge-48': false,
+    // B2-W2b kernel 组用例（组 kernel，按条目的 params.groups 判）：①③④ 词法可判，正例不报。
+    'text_judge_kernel-01': true, 'text_judge_kernel-02': true, 'text_judge_kernel-03': true, 'text_judge_kernel-11': false,
   });
   // 极性与上表一致的（must_fail 报出、must_pass 不报）才是现在能判的；其余的正是条目不得 implemented 的原因
   const cannot = cases.filter((c) => (c.polarity === 'must_fail') !== flagged[c.caseKey]).map((c) => c.caseKey);

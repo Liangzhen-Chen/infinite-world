@@ -1250,6 +1250,45 @@
   },
   {
    "addedAtRev": 1,
+   "caseKey": "text_judge_kernel-01",
+   "expectCode": "E-KERNEL-ONLY",
+   "fixture": "tests/accept/bypass/text_judge_kernel-01.txt",
+   "group": "kernel",
+   "origin": "卷二 S13 ④（:2412 裸字串字面量参与 ===）；B2-W2b kernel 组逐行基线条目的必须报用例",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "text_judge_kernel-02",
+   "expectCode": "E-KERNEL-ONLY",
+   "fixture": "tests/accept/bypass/text_judge_kernel-02.txt",
+   "group": "kernel",
+   "origin": "卷二 S13 ①（:2411 正则字面量）；B2-W2b kernel 组逐行基线条目的必须报用例",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "text_judge_kernel-03",
+   "expectCode": "E-KERNEL-ONLY",
+   "fixture": "tests/accept/bypass/text_judge_kernel-03.txt",
+   "group": "kernel",
+   "origin": "卷二 S13 ③（:2412 含非 ASCII 字符的字串字面量）；B2-W2b kernel 组逐行基线条目的必须报用例",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "text_judge_kernel-11",
+   "fixture": "tests/accept/bypass/text_judge_kernel-11.txt",
+   "group": "kernel",
+   "origin": "卷二 S13 (a)(c)（:2414 句柄比较合法、throw 文案豁免）；B2-W2b kernel 组逐行基线条目的必须不报用例",
+   "polarity": "must_pass",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 1,
    "caseKey": "undeclared_io-01",
    "expectCode": "E-VIEW-DYNAMIC-STATE",
    "fixture": "tests/accept/bypass/undeclared_io-01.txt",

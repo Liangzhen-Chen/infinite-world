@@ -1,0 +1,2 @@
+/** @param {Status} k @returns {boolean} */
+export function asleep(k) { return k === 'sleep'; }

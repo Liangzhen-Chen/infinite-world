@@ -1,0 +1,10 @@
+// 正例（卷二 S13 (a)、(c)）：句柄比较不计；throw new X(文案) 的文案不计。
+/**
+ * @param {{family: {is: (h: Handle) => boolean}}} st
+ * @param {Handles} V
+ * @returns {boolean}
+ */
+export function asleep(st, V) {
+  if (!st) throw new Error('缺状态');
+  return st.family.is(V.status_family.sfam_sleep);
+}

@@ -1,0 +1,2 @@
+// 卷二 S13 ①：kernel 组里 regexFiles 之外的正则字面量。
+export const RE = /^[a-z]+$/;

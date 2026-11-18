@@ -13,9 +13,11 @@ export function tempRepo() {
   const dir = testTempRoot('p1-accept-');
   cpSync(join(ROOT, 'world/ontology/state-owners.json'), join(dir, 'world/ontology/state-owners.json'));
   // 登记文件与整套门禁代码（S12-13 按类别登记的检测器模块及其 import 闭包算判据指纹；P-1b）。
+  // 基线文件 baseline.json 同属 §2.11 登记（执行器写、卷十二 §2.5 基线分量）：复制过来，临时仓库里的 V-11 才与真实仓库同口径
+  // （内核组的逐行基线分量不为零，不复制会按零基线拒）；内核文件只拷一部分，实测行数是基线的子集，只降判定照过。
   cpSync(join(ROOT, 'tools/accept'), join(dir, 'tools/accept'), {
     recursive: true,
-    filter: (src) => basename(src) !== 'out' && (extname(src) === '' || extname(src) === '.mjs' || REG_FILES.has(basename(src))),
+    filter: (src) => basename(src) !== 'out' && (extname(src) === '' || extname(src) === '.mjs' || REG_FILES.has(basename(src)) || basename(src) === 'baseline.json'),
   });
   // lit_scope 判修正键直接 import kernel/handles/keys.mjs，其 import 闭包要原样放进临时仓库，classPrint 才算得出同样的指纹（S12-13）。
   // 只许"临时根 + 常量相对路径"写（S12-2，李白 11-17 裁定三），所以逐条按字面路径复制，不用变量拼路径。

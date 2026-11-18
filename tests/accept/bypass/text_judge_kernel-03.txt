@@ -1,0 +1,2 @@
+// 卷二 S13 ③：kernel 组里的非 ASCII 字串字面量（throw 文案之外）。
+export const LABEL = '睡眠';

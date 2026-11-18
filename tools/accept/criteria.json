@@ -1798,6 +1798,30 @@
      ],
      "stage": 0
     },
+    "vol2.S13.k1": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol2.S13.k3": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol2.S13.k4": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
     "vol2.S18": {
      "expect": "zero",
      "gates": [
