@@ -13,11 +13,13 @@ const failedOf = (report) => Object.fromEntries(report.items.failed.map((f) => [
 const nonScan = () => readRegistry(ROOT, 'items').filter((it) => !it.scanClass);
 const V5 = 'vol1.V-5';
 
-test('登记的非扫描式条目共 44 条（卷一 14、卷十二 30），每条 rev 为 1、带首条修订记录', () => {
+// 块 3 第 3-3 张登卷六 4 条（A6-1.2 a/b/c、A6-1.3）。
+test('登记的非扫描式条目共 48 条（卷一 14、卷十二 30、卷六 4），每条 rev 为 1、带首条修订记录', () => {
   const rows = nonScan();
-  assert.equal(rows.length, 44);
+  assert.equal(rows.length, 48);
   assert.equal(rows.filter((r) => r.volume === 'vol1').length, 14);
   assert.equal(rows.filter((r) => r.volume === 'vol12').length, 30);
+  assert.equal(rows.filter((r) => r.volume === 'vol6').length, 4);
   for (const r of rows) {
     assert.equal(r.rev, 1, r.itemKey);
     assert.equal(r.revisions.length, 1, r.itemKey);
@@ -26,7 +28,7 @@ test('登记的非扫描式条目共 44 条（卷一 14、卷十二 30），每�
   }
 });
 
-test('S12-16：44 条非扫描式条目首次登记零报错，门禁不报降级', async () => {
+test('S12-16：48 条非扫描式条目首次登记零报错，门禁不报降级', async () => {
   const dir = tempRepo();
   try {
     const rows = nonScan().map(({ print, ...r }) => r);
@@ -36,7 +38,7 @@ test('S12-16：44 条非扫描式条目首次登记零报错，门禁不报降�
     const res = register(dir, { items: rows });
     assert.deepEqual(res.errors, []);
     const stored = readRegistry(dir, 'items').filter((r) => !r.scanClass);
-    assert.equal(stored.length, 44);
+    assert.equal(stored.length, 48);
     assert.ok(stored.every((r) => typeof r.print === 'string' && r.print.length === 64));
     const failed = failedOf((await accRun('pre_commit', 'S12-16', null, { root: dir })).report);
     assert.equal(failed['vol12.S12-16'], undefined);

@@ -361,6 +361,10 @@ test('kernelApi 登记账本已实现的入口（卷六 :351 六名加 alertGaps
     ['kernel/ledger.mjs#post', ['rules'], true],
     ['kernel/ledger.mjs#transfer', ['rules'], true],
     ['kernel/ledger.mjs#alertGaps', ['rules'], false],
+    // 3-3：限额通道分配（调用者 trade.mjs 的 settleTrade，卷六 §4.6 规则 8 :582）与月结账本侧（调用者 economy-report.mjs 的 closePeriod，§4.22 规则 4 :1261），块 7 接。
+    ['kernel/ledger.mjs#prorateCapped', ['rules'], false],
+    ['kernel/ledger.mjs#allocateCapped', ['rules'], false],
+    ['kernel/ledger.mjs#closeLedgerPeriod', ['rules'], true],
   ]);
   assert.deepEqual(decl.stateKeys.accounts.writers, { '*': 'kernel/ledger.mjs' });
   assert.deepEqual(decl.stateKeys.outflowTotals.writers, { '*': 'kernel/ledger.mjs' });
