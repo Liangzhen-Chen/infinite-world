@@ -5,7 +5,12 @@ import { checkValue, CODE_ENUMS, ROW_FIELDS, splitKey, markersOf, T } from './ty
 import { gradeDecl } from './cell-grades.mjs';
 import { rowReads, namedHolds } from './named-conditions.mjs';
 
-const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+const isObj = (v) => v !== null && typeof v === T.js_type.object && !Array.isArray(v);
+// required 策略（卷二 §1.2：always、byClass、ifPresent、byEnum、anyOf、byDigestible、byReader）与行来源值（§1.3）、map combine（§1.6）、空字串。
+const REQUIRED_FORM = Object.freeze({ always: 'always', byClass: 'byClass', ifPresent: 'ifPresent', byEnum: 'byEnum', anyOf: 'anyOf', byDigestible: 'byDigestible', byReader: 'byReader' });
+const SOURCE = Object.freeze({ instance: 'instance' });
+const COMBINE = Object.freeze({ sum: 'sum' });
+const SEG = Object.freeze({ empty: '' });
 const SECTIONS = ['classes', 'rows', 'generated'];
 // 节名句柄：成员由上面的节清单派生（三节即表文件的三个行区，§1.7）。
 const SECTION = markersOf('section', SECTIONS);
@@ -120,7 +125,7 @@ const REQ_FORMS = /^(always|never|byClass:[a-z][a-z0-9_]*|ifPresent:[a-z][a-zA-Z
 // 原 kernel/handles/patterns.mjs 搬入（S13 (b) 允许 validate/* 用正则；patterns.mjs 只留从 rx.mjs 搬来的正则）。
 const REQUIRED_TERM_SEPARATOR = /；/;
 /** @param {unknown} s @returns {string[]} */
-export const splitRequiredTerms = (s) => (typeof s === 'string' ? s.split(REQUIRED_TERM_SEPARATOR).map((x) => x.trim()) : []);
+export const splitRequiredTerms = (s) => (typeof s === T.js_type.string ? s.split(REQUIRED_TERM_SEPARATOR).map((x) => x.trim()) : []);
 /** @param {unknown} s required 策略 @returns {string[]} */
 export const requiredTerms = splitRequiredTerms;
 /** @param {unknown} s required 策略 @returns {boolean} */
@@ -135,12 +140,12 @@ function requirement(t, id, row, dim) {
   for (const term of terms) {
     const [form, arg] = [term.slice(0, term.indexOf(':') < 0 ? term.length : term.indexOf(':')), term.slice(term.indexOf(':') + 1)];
     if (CONDITIONAL_FORMS.includes(form)) out.conditional = true;
-    if (form === 'always') out.applicable = true;
-    else if (form === 'byClass') { if (memberOf(row, arg, t.env)) out.applicable = true; }
-    else if (form === 'ifPresent') { if (valueOf(t, id, row, arg).known) out.applicable = true; }
-    else if (form === 'byEnum') { const [d, v] = arg.split('='); if (valueOf(t, id, row, d).value === v) out.applicable = true; }
-    else if (form === 'anyOf') { out.applicable = true; out.anyOf = arg.split(','); }
-    else if (form === 'byDigestible' || form === 'byReader') {
+    if (form === REQUIRED_FORM.always) out.applicable = true;
+    else if (form === REQUIRED_FORM.byClass) { if (memberOf(row, arg, t.env)) out.applicable = true; }
+    else if (form === REQUIRED_FORM.ifPresent) { if (valueOf(t, id, row, arg).known) out.applicable = true; }
+    else if (form === REQUIRED_FORM.byEnum) { const [d, v] = arg.split('='); if (valueOf(t, id, row, d).value === v) out.applicable = true; }
+    else if (form === REQUIRED_FORM.anyOf) { out.applicable = true; out.anyOf = arg.split(','); }
+    else if (form === REQUIRED_FORM.byDigestible || form === REQUIRED_FORM.byReader) {
       // 表头声明了判据的命名条件按声明求值（named-conditions.mjs），属条件项；没声明的只记 notCovered。
       const cond = t.named && t.named.get(form);
       if (!cond) { out.named.push(form); continue; }
@@ -191,7 +196,7 @@ export function checkRequired(t, env, err, stats) {
     for (const id of Object.keys(rows).sort()) {
       const row = rows[id] || {};
       const at = (dim) => ({ table: kind, row: id, dim, path: `${file}#/${section}/${id}/${dim}` });
-      if (section === SECTION.rows && (typeof row.basis !== 'string' || row.basis === '')) err({ code: 'E-DIM-INSTANCE-BASIS', level: 'L3', ...at('basis'), got: row.basis === undefined ? 'missing' : row.basis, want: 'basis on entity rows' });
+      if (section === SECTION.rows && (typeof row.basis !== T.js_type.string || row.basis === SEG.empty)) err({ code: 'E-DIM-INSTANCE-BASIS', level: 'L3', ...at('basis'), got: row.basis === undefined ? 'missing' : row.basis, want: 'basis on entity rows' });
       for (const dim of Object.keys(dims).sort()) {
         const req = requirement(t, id, row, dim);
         for (const n of req.named) stats.notCovered.add(`${kind}.${dim}:${n}`);
@@ -201,7 +206,7 @@ export function checkRequired(t, env, err, stats) {
         if (req.applicable || !req.conditional) {
           c.applicable++;
           if (r.known) c.known++; else c.unknown++;
-          if (dims[dim].allowExplicit === true && dims[dim].derived !== undefined && r.source === 'instance') c.explicitFill++;
+          if (dims[dim].allowExplicit === true && dims[dim].derived !== undefined && r.source === SOURCE.instance) c.explicitFill++;
         } else c.notApplicable++;
         if (!req.applicable) continue;
         stats.applicable++;
@@ -221,11 +226,11 @@ export function checkRequired(t, env, err, stats) {
 
 // 未标 combine: sum 的映射展平后须覆盖键类型的全族；onUnknown 为 error 时缺键即加载失败（§1.6 第 4 项）。
 function checkMapKeys(def, v, env, at, err) {
-  if (def.type !== T.type.map || def.combine === 'sum' || def.onUnknown !== T.code_enum.onUnknown.error || !isObj(v) || !isObj(def.key)) return;
+  if (def.type !== T.type.map || def.combine === COMBINE.sum || def.onUnknown !== T.code_enum.onUnknown.error || !isObj(v) || !isObj(def.key)) return;
   const k = def.key;
   const fam = k.vocab !== undefined ? k.vocab : undefined;
   let all = [];
-  if (typeof fam === 'string' && env.vocab.families.has(fam)) all = Object.keys(env.vocab.families.get(fam).entries);
+  if (typeof fam === T.js_type.string && env.vocab.families.has(fam)) all = Object.keys(env.vocab.families.get(fam).entries);
   else if (k.type === T.type.enum && Object.hasOwn(CODE_ENUMS, fam)) all = [...CODE_ENUMS[fam]]; // 代码内封闭枚举的全部取值（§1.6 第 4 项"enum 族的全部条目"）
   else if (k.kind !== undefined) all = [...env.idIndex].filter(([, kd]) => kd === k.kind).map(([id]) => id);
   const missing = all.filter((x) => !Object.hasOwn(v, x)).sort();
