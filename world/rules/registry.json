@@ -19,6 +19,16 @@
    "volume": "卷三乙 §4.16 :346、:1693、V-1 :1707",
    "multiSourceMerge": "own_key_only",
    "packOverridable": {"unitValue": false}
+  },
+  {
+   "code": "saveLayout",
+   "file": "tables/save-layout.json",
+   "structure": "keys",
+   "type": {"snapshotEveryEvents": "integer", "segmentEvents": "integer", "keepSnapshots": "integer"},
+   "domain": {"snapshotEveryEvents": [1, null], "segmentEvents": [1, null], "keepSnapshots": [1, null]},
+   "volume": "卷二十七 §2.2、R27-4.5 :504、R27-4.8 :512；卷二 :1500",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"snapshotEveryEvents": false, "segmentEvents": false, "keepSnapshots": false}
   }
  ]
 }
