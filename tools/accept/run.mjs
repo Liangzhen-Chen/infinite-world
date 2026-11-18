@@ -7,7 +7,11 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { runRequiredTests } from './lib/required-tests.mjs';
+import { runRequiredTests, runTestFile } from './lib/required-tests.mjs';
+
+// 方法是测试的条目（卷十二 §4.5.1 :782 进必过集合的三种方法）：没有检测器（§2.2 :194 非静态条目可空），实现就是 `impl` 所指的测试文件
+// （§2.2 :203），期望 `all_pass`（§2.1"用例全过"）——执行器真跑该文件，全过才 pass。
+export const TEST_METHODS = ['load_check', 'unit_test', 'property_test'];
 import {
   LAYOUT, loadContext, readRegistry, accItems, accHits, accBaseline, prefixesFromDir, mergePrefixes, groupDir, isCode, REGISTRY,
 } from './read.mjs';
@@ -60,6 +64,20 @@ function toRows(item, hits) {
     seen.set(base, ordinal + 1);
     return { rowKey: `${base}|${ordinal}`, compCode: compOf(item, h), file: h.file, symbolPath: h.symbolPath, nodeKind: h.nodeKind, ordinal, line: h.line, errorCode: h.code, itemKey: item.itemKey, state: 'open' };
   });
+}
+
+// 方法是测试的条目（卷十二 §4.5.1 :782；§2.2 :194 detector 可空、:203 impl 是测试文件；期望 all_pass）：真跑 impl 所指的测试文件，
+// 全部用例通过才 pass（R12-11.7 :1100"在当前主干上为 pass"）；没跑出一条通过、有失败、有 skip/todo 都不过，不默认通过。
+// 文件缺失报 E-ACC-ITEM-FORM（§2.12：条目缺必填字段；impl 自 implemented 起必填）。测试失败卷十二 §2.12 没有专码，codes 空、cases 写原因。
+// runsOn 不是 local_static 的条目只在登记为该种类的测试台跑（R12-9.7 :990），本机不跑，记 not_run。
+// 同一次执行里同一文件只跑一次（几条条目可共用一个测试文件）。
+function runTestItem(root, item, bench, cache) {
+  if (item.runsOn !== 'local_static' && item.runsOn !== bench) return { verdict: 'not_run' };
+  if (!item.impl) return { verdict: 'fail', codes: ['E-ACC-ITEM-FORM'], cases: ['impl:missing'] };
+  if (!cache.has(item.impl)) cache.set(item.impl, runTestFile(root, item.impl).reason);
+  const reason = cache.get(item.impl);
+  if (reason === null) return { verdict: 'pass' };
+  return { verdict: 'fail', codes: reason === 'missing' ? ['E-ACC-ITEM-FORM'] : [], cases: [`${item.impl}:${reason}`] };
 }
 
 async function runItem(ctx, item, classes) {
@@ -118,8 +136,10 @@ export async function accRun(gate, subject, contentPrint, opts = {}) {
   const print = contentPrint || contentPrintOf(ctx);
   const classes = new Map(readRegistry(root, 'scanclasses').map((r) => [r.scanClass, r]));
   const criteria = Object.fromEntries(readRegistry(root, 'criteria').map((r) => [r.scanClass, r.rev]));
-  const items = accItems(root, { gate });
+  // 条目过滤参数（R12-10.2 :1028"要少跑，就用关口与条目过滤的参数，照样出执行记录"）：opts.filter 是 accItems 的过滤（§3.1），关口照旧。
+  const items = accItems(root, { ...(opts.filter || {}), gate });
   const runnable = items.filter((it) => RUNNABLE.includes(it.state));
+  const testCache = new Map();
 
   const results = {}; const failed = []; const components = {}; let rows = [];
   // 上次合入的值（R12-8.4、R12-8.5）：入库的 baseline.json，只在合入关口写；不读 out/ 下的本地记录。
@@ -128,13 +148,20 @@ export async function accRun(gate, subject, contentPrint, opts = {}) {
   // 要看本次分量现值才能判的条目（检测器导出 needsGateState，按条目参数定）排在其余条目之后，判时给 ctx 加 gateState（当次现值与上次合入值）。
   const lateKeys = new Set();
   for (const item of items) {
-    if (!RUNNABLE.includes(item.state)) continue;
+    if (!RUNNABLE.includes(item.state) || !item.detector) continue;
     const d = await detectorOf(item.detector);
     if (typeof d.needsGateState === 'function' && d.needsGateState(item.params || {})) lateKeys.add(item.itemKey);
   }
   const ordered = [...items.filter((i) => !lateKeys.has(i.itemKey)), ...items.filter((i) => lateKeys.has(i.itemKey))];
   for (const item of ordered) {
     if (!RUNNABLE.includes(item.state)) { results[item.itemKey] = 'not_run'; continue; }
+    // 没有检测器的条目：方法是测试的按 impl 真跑测试文件；其余方法（场景、模板、基准等，§2.8、§4.6）本路径不执行，记 not_run。
+    if (!item.detector) {
+      const t = TEST_METHODS.includes(item.method) ? runTestItem(root, item, opts.bench || '', testCache) : { verdict: 'not_run' };
+      results[item.itemKey] = t.verdict;
+      if (t.verdict === 'fail') failed.push({ itemKey: item.itemKey, codes: t.codes, cases: t.cases });
+      continue;
+    }
     // 扩展性条目（R12-6.2 ①⑥）：执行前后各记一次代码文件集合指纹，不同即该条目不过、码 E-ACC-EXT-CODE-CHANGED（S12-12 数执行记录里的这类）。
     const before = item.form === 'extend' ? codeSetPrint(root) : null;
     const itemCtx = lateKeys.has(item.itemKey)
@@ -171,6 +198,8 @@ export async function accRun(gate, subject, contentPrint, opts = {}) {
   const vs = Object.values(results);
   const count = (v) => vs.filter((x) => x === v).length;
   const mustPass = new Set(items.filter((it) => it.state === 'in_core').map((it) => it.itemKey));
+  // 必过集合里的 not_run 与 blocked 都当不过（R12-10.7 :1036），列进不过的条目（卷十二 §2.12 没有专码，codes 空、cases 写结论）。
+  for (const k of [...mustPass].sort()) if (results[k] === 'not_run' || results[k] === 'blocked') failed.push({ itemKey: k, codes: [], cases: [`verdict:${results[k]}`] });
   const blocking = failed.filter((f) => f.itemKey === 'bypass' || f.itemKey === 'required-tests' || mustPass.has(f.itemKey));
 
   const report = {

@@ -8,6 +8,9 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { LAYOUT, REGISTRY, readRegistry, readDecl, groupModel, loadContext, classPrint, matchGlobs } from './read.mjs';
 import { ENUM, itemChecks, keySets, itemPrint } from './lib/item-form.mjs';
+
+// §2.2 :203 `impl` 的取值域：`tools/accept/` 或 `tests/` 下的文件。
+const IMPL_DIRS = ['tools/accept/', 'tests/'];
 import { stableJson } from './run.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -36,7 +39,7 @@ export function validate(root, regs) {
     if (classes.has(it.scanClass) && it.detector && !(classes.get(it.scanClass).detectors || []).includes(it.detector)) err('E-ACC-ITEM-FORM', k, 'detector not listed for scanClass');
     if (it.state !== 'registered') {
       if (!it.impl || !existsSync(join(root, it.impl))) err('E-ACC-ITEM-FORM', k, 'impl missing');
-      const pol = new Set(regs.cases.filter((c) => c.scanClass === it.scanClass).map((c) => c.polarity));
+      else if (!IMPL_DIRS.some((d) => it.impl.startsWith(d)) || it.impl.split('/').includes('..')) err('E-ACC-ITEM-FORM', k, 'impl must be a file under tools/accept/ or tests/ (§2.2)');      const pol = new Set(regs.cases.filter((c) => c.scanClass === it.scanClass).map((c) => c.polarity));
       if (it.form === 'scan' && !(pol.has('must_fail') && pol.has('must_pass'))) err('E-ACC-ITEM-FORM', k, 'scanClass lacks both case polarities (R12-13.3)');
     }
   }

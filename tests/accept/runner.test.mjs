@@ -4,14 +4,16 @@ import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { readFileSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
-import { accRun } from '../../tools/accept/run.mjs';
+import { accRun, TEST_METHODS } from '../../tools/accept/run.mjs';
+import { ENUM } from '../../tools/accept/lib/item-form.mjs';
 import { validate, register } from '../../tools/accept/register.mjs';
 import { listFiles, readRegistry, REGISTRY, LAYOUT } from '../../tools/accept/read.mjs';
 import { ROOT, tempRepo } from './temp-repo.mjs';
 import { writeUnderTempRoot } from './temp-root.mjs';
 
 const HOOK = join(ROOT, 'tools', 'accept', 'commit-hook.mjs');
-const regs = () => Object.fromEntries(Object.keys(REGISTRY).map((k) => [k, readRegistry(ROOT, k)]));
+const NON_TEST_METHODS = { method: ENUM.method.filter((m) => !TEST_METHODS.includes(m)) };
+const regs = () =>Object.fromEntries(Object.keys(REGISTRY).map((k) => [k, readRegistry(ROOT, k)]));
 
 test('新树上提交关口：必过条目计数全 0，用例全过，放行', async () => {
   const { report } = await accRun('pre_commit', 'P-1', null, { root: ROOT });
@@ -129,8 +131,20 @@ test('提交钩子：新树放行（退出码 0），有违例拒绝（退出码
     const no = spawnSync(process.execPath, [HOOK, '--root', dir], { encoding: 'utf8' });
     assert.equal(no.status, 1);
     assert.match(no.stderr, /vol2\.S16 E-KERNEL-UPWARD-IMPORT/);
+    // 干净的临时仓库：只被必过集合里方法是测试的条目拒（它们的测试文件 import 内核与世界数据，临时仓库不带，见 temp-repo.mjs），
+    // 别的条目都不拒；违例那一份多出的正是 S16。
+    const items = readRegistry(ROOT, 'items');
+    const core = new Set(items.filter((it) => it.state === 'in_core').map((it) => it.itemKey));
+    const testCore = items.filter((it) => core.has(it.itemKey) && !it.detector && TEST_METHODS.includes(it.method)).map((it) => it.itemKey).sort();
+    // 钩子列出全部不过的条目；拦的是必过集合里的（R12-5.1），只比这些。
+    const keysOf = (stderr) => stderr.split('\n').filter((l) => l.startsWith('  ')).map((l) => l.trim().split(' ')[0]).filter((k) => core.has(k)).sort();
     const clean = tempRepo();
-    try { assert.equal(spawnSync(process.execPath, [HOOK, '--root', clean], { encoding: 'utf8' }).status, 0); } finally { rmSync(clean, { recursive: true, force: true }); }
+    try {
+      const c = spawnSync(process.execPath, [HOOK, '--root', clean], { encoding: 'utf8' });
+      assert.deepEqual(keysOf(c.stderr), testCore);
+      assert.ok(testCore.length > 0);
+    } finally { rmSync(clean, { recursive: true, force: true }); }
+    assert.deepEqual(keysOf(no.stderr), [...testCore, 'vol2.S16'].sort());
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
@@ -143,7 +157,8 @@ async function requiredVerdict(testSrc) {
     assert.deepEqual(register(dir, { gatefacs: [FAC] }).errors, []);
     writeUnderTempRoot(dir, 'tests/accept/fx-helper.mjs', 'export function w() {}\n');
     if (testSrc !== null) writeUnderTempRoot(dir, 'tests/accept/fx.test.mjs', testSrc);
-    const { report } = await accRun('pre_commit', 'x', null, { root: dir, runRequired: true });
+    // 条目过滤（R12-10.2）：只跑方法不是测试的条目——方法是测试的条目在临时仓库里必不过（temp-repo.mjs），这里只看必跑测试。
+    const { report } = await accRun('pre_commit', 'x', null, { root: dir, runRequired: true, filter: NON_TEST_METHODS });
     return { verdict: report.verdict, failed: report.items.failed.filter((f) => f.itemKey === 'required-tests') };
   } finally { rmSync(dir, { recursive: true, force: true }); }
 }

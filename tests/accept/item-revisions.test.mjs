@@ -24,14 +24,16 @@ test('登记的非扫描式条目共 48 条（卷一 14、卷十二 30、卷六 
     assert.equal(r.rev, 1, r.itemKey);
     assert.equal(r.revisions.length, 1, r.itemKey);
     assert.equal(r.revisions[0].rev, 1, r.itemKey);
-    assert.equal(r.state, 'registered', r.itemKey);
   }
+  // 状态：门禁设施卡（api-gatecore）把 A6-1.2 a、b 经执行器真跑测试文件为 pass 后流转进必过集合（R12-11.7），其余仍 registered。
+  assert.deepEqual(rows.filter((r) => r.state !== 'registered').map((r) => [r.itemKey, r.state]), [['vol6.A6-1.2.a', 'in_core'], ['vol6.A6-1.2.b', 'in_core']]);
 });
 
 test('S12-16：48 条非扫描式条目首次登记零报错，门禁不报降级', async () => {
   const dir = tempRepo();
   try {
-    const rows = nonScan().map(({ print, ...r }) => r);
+    // 首次登记一律从 registered 起（R12-11.7），已流转的条目按首次登记的样子交行。
+    const rows = nonScan().map(({ print, impl, ...r }) => ({ ...r, state: 'registered' }));
     const path = join(dir, 'tools/accept/items.json');
     const all = JSON.parse(readFileSync(path, 'utf8'));
     writeFileSync(join(dir, 'tools/accept/items.json'), JSON.stringify({ rows: all.rows.filter((r) => r.scanClass) }));
