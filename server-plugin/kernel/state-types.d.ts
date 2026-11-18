@@ -13,6 +13,8 @@ export type SealedValue = { readonly __brand: 'SealedValue' };
 /** pathTypes 每条模式的值类型。 */
 export interface PathTypes {
   readonly 'accounts.*': StructValue<'holderAccounts'>;
+  readonly 'clock.minute': number;
+  readonly 'clock.seq': number;
   readonly 'created.*.props.*': DimensionValue;
   readonly 'created.*.props.basis': StructValue<'basis'>;
   readonly 'displayNames.*.seq': number;
@@ -30,6 +32,10 @@ export type PathValue<P extends keyof PathTypes> = PathTypes[P];
 /** state 的形状：按 pathTypes 各模式展开，`*` 段为索引签名。 */
 export type State = {
   readonly accounts?: { readonly [segment: string]: StructValue<'holderAccounts'> };
+  readonly clock?: {
+    readonly minute?: number;
+    readonly seq?: number;
+  };
   readonly created?: { readonly [segment: string]: {
       readonly props?: {
         readonly basis?: StructValue<'basis'>;

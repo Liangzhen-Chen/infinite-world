@@ -1,0 +1,8 @@
+{
+ "rows": [
+  {"key": "reactionDepthMax", "value": 8, "file": "server-plugin/kernel/scheduler.mjs", "grade": "referenced", "source": "卷二十 §2.1 :132 出处栏“现 scheduler 常数”", "basis": "旧 server-plugin/scheduler.mjs DEFAULT_SCHEDULER_CONFIG.depthLimit = 8（old-final-1117）；超限即中止本刻（§4.1.3 第 7 条），读者随 4-2 反应队列"},
+  {"key": "proposalMax", "value": 12, "file": "server-plugin/kernel/scheduler.mjs", "grade": "referenced", "source": "卷二十 §2.1 :132 出处栏“现 scheduler 常数”", "basis": "旧 server-plugin/scheduler.mjs DEFAULT_SCHEDULER_CONFIG.proposalLimit = 12（old-final-1117）；超限即中止本刻（§4.1.3 第 7 条），读者随 4-2"},
+  {"key": "drawSites", "value": ["site.emit.chance", "site.weather.precip", "site.weather.state", "site.weather.windDir", "site.weather.windSpeed"], "file": "server-plugin/kernel/scheduler.mjs", "grade": "designed", "source": "卷二十 §2.1 :133、§4.1.3 第 6 条 :511（天气状态、降水量、风速、风向、排放几率五个抽取点）", "basis": "卷文只给五个抽取点的名称；代号拼写照卷二十二、卷二十三 site.<域>.<点> 写法由块 4 第 4-1 张定，待卷二十勘误照录；streamCode 段与登记行随卷二十七 R27-8.1 种子键登记表（4-3）"},
+  {"key": "contestDefault", "value": "lottery", "file": "server-plugin/kernel/scheduler.mjs", "grade": "referenced", "source": "方案 §1.2 第 10 行 :53“CONTEST_RULES 缺省表进规则表”", "basis": "旧 server-plugin/scheduler.mjs 争夺池缺省表“未声明 contest 的标的一律 lottery”（old-final-1117）；按标的种类的分派（旧 contestRuleFor）不转，由各标的所在卷的行声明 contest（卷十八 edge_contest 先例），待补见收尾待办"}
+ ]
+}

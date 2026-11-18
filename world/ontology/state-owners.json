@@ -2,6 +2,7 @@
  "version": 1,
  "stateKeys": {
   "accounts": {"readers": [], "writers": {"*": "kernel/ledger.mjs"}},
+  "clock": {"readers": [], "writers": {"minute": "kernel/scheduler.mjs", "seq": "kernel/scheduler.mjs"}},
   "created":{"readers": ["dim:*"], "writers": {"*.props.*": "kernel/dimension-writers.mjs", "*.props.basis": "kernel/dimension-writers.mjs"}},
   "displayNames": {"readers": [], "writers": {"*": "ai-gate/naming-gate.mjs"}, "display": ["*.text"]},
   "outflowTotals": {"readers": [], "writers": {"*": "kernel/ledger.mjs"}},
@@ -14,12 +15,15 @@
   "sys.economy": {"tables": [], "writers": ["accounts.*", "outflowTotals.*"],
    "sources": {"src_birth": {}, "src_boundary": {}, "src_genesis": {}, "src_issue": {}, "src_regrow": {}, "src_transform": {}},
    "sinks": ["sink_boundary", "sink_consume", "sink_death", "sink_decay", "sink_depart", "sink_loss", "sink_redeem", "sink_seized", "sink_transform"],
-   "entryCallerFiles": {}, "entryJudges": []}
+   "entryCallerFiles": {}, "entryJudges": []},
+  "sys.time_env": {"tables": ["clock"], "writers": ["clock.minute", "clock.seq"], "entryCallerFiles": {}, "entryJudges": []}
  },
  "textPaths": ["displayNames.*.text", "playerNotes.*.text", "narration.*"],
  "textWriters": {"displayNames.*.text": "ai-gate/naming-gate.mjs", "playerNotes.*.text": "ai-gate/note-gate.mjs", "narration.*": "ai-gate/narration-gate.mjs"},
  "pathTypes": {
   "accounts.*": "struct:holderAccounts",
+  "clock.minute": "integer:minute",
+  "clock.seq": "integer:count",
   "created.*.props.*": "dimension",
   "created.*.props.basis": "struct:basis",
   "displayNames.*.seq": "integer:count",
@@ -69,6 +73,9 @@
   {"export": "kernel/ledger.mjs#balance", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/ledger.mjs#accountsOf", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/ledger.mjs#stockIn", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/scheduler.mjs#schedule", "callers": ["rules"], "acceptsState": false},
+  {"export": "kernel/scheduler.mjs#cancel", "callers": ["rules"], "acceptsState": false},
+  {"export": "kernel/scheduler.mjs#clockView", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/transaction.mjs#registerHoldWhileRecompute", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/save.mjs#registerUnitOfPath", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/clone.mjs#clone", "callers": ["rules"], "acceptsState": false},
@@ -82,6 +89,7 @@
   {"export": "kernel/transaction.mjs#submitProposal", "callers": ["inputEdge"], "acceptsState": false},
   {"export": "kernel/storage.mjs#readSealed", "callers": ["outputGate"], "acceptsState": true},
   {"export": "kernel/storage.mjs#writeSealed", "callers": ["aiGate"], "acceptsState": true},
+  {"export": "kernel/scheduler.mjs#createWallTimer", "callerFiles": ["index.mjs"], "acceptsState": false},
   {"export": "kernel/report.mjs#report", "callers": ["*"], "acceptsState": false},
   {"export": "kernel/errors.mjs#reportError", "callers": ["*"], "acceptsState": false}
  ]},

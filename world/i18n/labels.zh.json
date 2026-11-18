@@ -50,6 +50,8 @@
  "class_wood.appearance.1": "早材色浅、晚材色深，现出年轮",
  "class_wood.appearance.2": "木色由草黄到深色乃至红色（因树种而异）",
  "class_wood.appearance.3": "纹理绕节而过，节疤色深近圆",
+ "due_recurrence": "周期日到来",
+ "due_revive_window": "复生窗口期满",
  "purpose_unmaterialized": "未物化预置",
  "res_building_share": "建筑份额",
  "res_unmaterialized_share": "未物化建筑份额",

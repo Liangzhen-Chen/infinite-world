@@ -84,6 +84,21 @@
    "volume": "卷六 §2.5 :224（budget、alert）；生效日窗口 activeFromDay/activeToDay 照李白 11-18 02:20 K3-40（卷六勘误另卡）；窗口与通道种类的跨字段校验在 kernel/ledger.mjs checkLedgerTables",
    "multiSourceMerge": "own_key_only",
    "packOverridable": {"budget": false, "alert": false}
+  },
+  {
+   "code": "clock",
+   "file": "tables/clock.json",
+   "structure": "keys",
+   "type": {
+    "reactionDepthMax": {"type": "integer", "unit": "count"},
+    "proposalMax": {"type": "integer", "unit": "count"},
+    "drawSites": {"type": "set", "of": {"type": "string"}},
+    "contestDefault": "string"
+   },
+   "domain": {"reactionDepthMax": [1, null], "proposalMax": [1, null], "drawSites": {}, "contestDefault": {}},
+   "volume": "卷二十 §2.1 :128–134（rules.clock；reactionDepthMax/proposalMax 只在本表，存档与输入事件不得覆盖 :132、§4.1.3 第 7 条 :513）；drawSites :133、:511；contestDefault 为方案 §1.2 第 10 行 :53 CONTEST_RULES 缺省表（卷一 R-6 :335，块 4 体检 4-1 条）；cadence、phaseOffset 随 4-2 钩子登记，paceSoakTol 随块 7 节奏卡（收尾待办）；跨字段与 due_kind、reaction_priority 条目校验在 kernel/scheduler.mjs checkClockTables",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"reactionDepthMax": false, "proposalMax": false, "drawSites": false, "contestDefault": false}
   }
  ]
 }

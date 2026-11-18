@@ -40,6 +40,36 @@ function rollback(tx) {
   invalidateMemo(tx.state); // 回滚改了 state，缓存作废（kernel/memo.mjs）
 }
 
+// ---------- 刻级回退能力（卷二十 §4.1.3 第 7 条"刻级回退点" :516：回退点由 kernel/scheduler.mjs 在每刻开始时持有，本文件只提供能力，不加 kernelApi 导出） ----------
+// 一刻内各项各是一笔事务；刻日志开着时，每笔提交成功的事务把自己的撤销项接到刻日志末尾。整刻作废时按倒序撤销全部已提交的写入，
+// state 回到这一刻开始处理前；正常收刻时丢弃刻日志。被拒请求的条目记在日志簿上、不在 state 里，不受影响（R27-7.3）。
+
+/** @type {null | {state: any, undo: Tx['undo']}} */
+let tickJournal = null;
+
+/**
+ * 开刻日志（kernel/scheduler.mjs 每刻开始处理时调；kernel 组内用）。已开着或正在事务中即 E-VIEW-UNDECLARED-WRITE（程序次序错）。
+ * @param {any} state
+ * @returns {void}
+ */
+export function openTickJournal(state) {
+  if (tickJournal || current) throw new KernelError('E-VIEW-UNDECLARED-WRITE', {}, 'tick journal already open or a transaction is running');
+  tickJournal = { state, undo: [] };
+}
+
+/** 收刻：这一刻全部提交保留，丢弃刻日志。 */
+export function closeTickJournal() {
+  tickJournal = null;
+}
+
+/** 整刻作废：按倒序撤销这一刻已提交的全部写入，再丢弃刻日志。没开即 E-VIEW-UNDECLARED-WRITE。 */
+export function rollbackTickJournal() {
+  if (!tickJournal) throw new KernelError('E-VIEW-UNDECLARED-WRITE', {}, 'no tick journal open');
+  const j = tickJournal;
+  tickJournal = null;
+  rollback(j);
+}
+
 /** @type {null | ((state: any, written: string[][]) => void)} */
 let holdWhileRecompute = null;
 
@@ -85,6 +115,7 @@ export function runTransaction(state, ctx, body) {
   if (tx.denied !== undefined) failure = tx.denied;
   if (failure === null) {
     current = null;
+    if (tickJournal && tickJournal.state === state) for (const u of tx.undo) tickJournal.undo.push(u);
     return { ok: true };
   }
   rollback(tx);
