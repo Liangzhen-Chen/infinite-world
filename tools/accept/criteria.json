@@ -72,10 +72,14 @@
     {
      "ref": "BigInt 指纹修复卡只核改：lit_scope 的 modifierKey 从被查内容的 _vocab.json 经 kernel/load/vocab-load.mjs 的 loadVocab 给 vocabIndex 填真数据（不列具体词表或代号）；口径按卷二 :1290 收严：map 下标须为已登记词表代号——带 vocab 的 map 维度下标为已登记代号才算修正键，未登记代号不算；与改前的差别：改前 vocabIndex 恒空，这类下标一律不算，现按登记词表放行已登记代号；数值下标照旧经 parseDimKey 转 Number 核准。本类别各条用 literal=number，不判修正键，本类别判据结果不变",
      "rev": 8
+    },
+    {
+     "ref": "master 上 error-codes.mjs 等闭包文件变化致指纹变，判定口径不变（R12-14.3）",
+     "rev": 9
     }
    ],
-   "print": "aeea4e39b6acf9a554f8e03feb93d632b99c6238dfaed00ee384bfc1881928b3",
-   "rev": 8,
+   "print": "7c22d0ad530c1acc3ca596073fa3fc132a1f451e6bb45b7a3e8561d0589b7ff0",
+   "rev": 9,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -458,10 +462,14 @@
     {
      "ref": "BigInt 指纹修复卡只核改：lit_scope 的 modifierKey 从被查内容的 _vocab.json 经 kernel/load/vocab-load.mjs 的 loadVocab 给 vocabIndex 填真数据（不列具体词表或代号）；口径按卷二 :1290 收严：map 下标须为已登记词表代号——带 vocab 的 map 维度下标为已登记代号才算修正键，未登记代号不算；与改前的差别：改前 vocabIndex 恒空，这类下标一律不算，现按登记词表放行已登记代号；数值下标照旧经 parseDimKey 转 Number 核准。本类别（S8 修正键字面量）据此收严",
      "rev": 10
+    },
+    {
+     "ref": "master 上 error-codes.mjs 等闭包文件变化致指纹变，判定口径不变（R12-14.3）",
+     "rev": 11
     }
    ],
-   "print": "34d7f8fa018d513bf5662843e5ff0f8945b2f2dfbf294f2c725ffeeffc38b532",
-   "rev": 10,
+   "print": "8d615f0cb8a11044851d3f6ab8a450ce26f6a4eaa2a71eb6759455ab46820e62",
+   "rev": 11,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1000,10 +1008,14 @@
     {
      "ref": "BigInt 指纹修复卡只核改：lit_scope 的 modifierKey 从被查内容的 _vocab.json 经 kernel/load/vocab-load.mjs 的 loadVocab 给 vocabIndex 填真数据（不列具体词表或代号）；口径按卷二 :1290 收严：map 下标须为已登记词表代号——带 vocab 的 map 维度下标为已登记代号才算修正键，未登记代号不算；与改前的差别：改前 vocabIndex 恒空，这类下标一律不算，现按登记词表放行已登记代号；数值下标照旧经 parseDimKey 转 Number 核准。本类别用 call_edge 与 lit_scope，不判修正键，本类别判据结果不变",
      "rev": 16
+    },
+    {
+     "ref": "master 上 error-codes.mjs 等闭包文件变化致指纹变，判定口径不变（R12-14.3）",
+     "rev": 17
     }
    ],
-   "print": "408376489a0c1ef52c3131413cdc4ac27988d9c804dc961f23ee0acb1f1f8d11",
-   "rev": 16,
+   "print": "6263ba62fbdc02b2c880e42bde2f76408f35751456e4563092591ce00a411c1b",
+   "rev": 17,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1134,10 +1146,14 @@
     {
      "ref": "BigInt 指纹修复卡只核改：lit_scope 的 modifierKey 从被查内容的 _vocab.json 经 kernel/load/vocab-load.mjs 的 loadVocab 给 vocabIndex 填真数据（不列具体词表或代号）；口径按卷二 :1290 收严：map 下标须为已登记词表代号——带 vocab 的 map 维度下标为已登记代号才算修正键，未登记代号不算；与改前的差别：改前 vocabIndex 恒空，这类下标一律不算，现按登记词表放行已登记代号；数值下标照旧经 parseDimKey 转 Number 核准。本类别用 literal=selfName，不判修正键，本类别判据结果不变",
      "rev": 6
+    },
+    {
+     "ref": "master 上 error-codes.mjs 等闭包文件变化致指纹变，判定口径不变（R12-14.3）",
+     "rev": 7
     }
    ],
-   "print": "aeea4e39b6acf9a554f8e03feb93d632b99c6238dfaed00ee384bfc1881928b3",
-   "rev": 6,
+   "print": "7c22d0ad530c1acc3ca596073fa3fc132a1f451e6bb45b7a3e8561d0589b7ff0",
+   "rev": 7,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
