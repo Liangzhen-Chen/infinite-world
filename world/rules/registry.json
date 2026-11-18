@@ -11,6 +11,16 @@
    "packOverridable": {"BASE": false, "SCALE": false, "extendsMaxDepth": false, "rxMaxDepth": false}
   },
   {
+   "code": "modifiers",
+   "file": "tables/modifiers.json",
+   "structure": "keys",
+   "type": {"stackingTable": {"type": "list", "of": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4}, "length": 9}},
+   "domain": {"stackingTable": {"maxSize": 9}},
+   "volume": "卷二 §3.3 :1356–1357（叠加惩罚系数表 S[0..8]，运行期只查表）",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"stackingTable": false}
+  },
+  {
    "code": "valuation",
    "file": "tables/valuation.json",
    "structure": "keys",
