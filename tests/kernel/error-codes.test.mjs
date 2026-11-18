@@ -19,8 +19,9 @@ test('码表条数：E 与 W 各为手数的字面量', () => {
   // 块 3-3b 加卷十二 §2.12 一码 E-ACC-INSTANCE-NAME（勘误 1118k15；李白 11-18 07:27 裁定①）：589 → 590、E 571 → 572。
   // 块 3-3b 续加卷十二 §2.12 一码 E-ACC-CONST-LITERAL（勘误 1118k16）：590 → 591、E 572 → 573。
   // 块 3 第 3-3c 张加卷六账本一码 E-LEDGER-CAPPED-DIRECT（勘误 1118k13 续、李白 11-18 07:02 选丙）：591 → 592、E 573 → 574。
-  assert.equal(codes.length, 592);
-  assert.equal(codes.filter((c) => c[0] === 'E').length, 574);
+  // B2-W1 加卷十二 §2.12 两码 E-ACC-PROMISE-UNREACHABLE、E-ACC-PARAM-UNCONSUMED（勘误 1118k18；李白 11-18 08:20 裁定①）：592 → 594、E 574 → 576。
+  assert.equal(codes.length, 594);
+  assert.equal(codes.filter((c) => c[0] === 'E').length, 576);
   assert.equal(codes.filter((c) => c[0] === 'W').length, 18);
   assert.equal(REGISTERED_CODES.size, codes.length);
 });

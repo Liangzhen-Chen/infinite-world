@@ -132,10 +132,14 @@
     {
      "ref": "块 3 第 3-3c 张（卷六 §4.1 规则 6 :376、码表 :1640，勘误 1118k13 续、李白 11-18 07:02 选丙）：error-codes.mjs 登 E-LEDGER-CAPPED-DIRECT 入检测器闭包，指纹重盖，本类别判定口径不变",
      "rev": 19
+    },
+    {
+     "ref": "B2-W1：error-codes.mjs 登 E-ACC-PROMISE-UNREACHABLE、E-ACC-PARAM-UNCONSUMED（卷十二 §2.12 勘误 1118k18）入检测器闭包，指纹重盖，本类别判定口径不变",
+     "rev": 20
     }
    ],
-   "print": "5a23ba6e85ca3bf41b73da1eae8208a31389a887e1bb982672ae80b9096f72f6",
-   "rev": 19,
+   "print": "4f92bd7e79a461a660ae7768f68ba75880b16fa0507ba64149b3a14da0fc1272",
+   "rev": 20,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -662,10 +666,14 @@
     {
      "ref": "块 3 第 3-3c 张（卷六 §4.1 规则 6 :376、码表 :1640，勘误 1118k13 续、李白 11-18 07:02 选丙）：error-codes.mjs 登 E-LEDGER-CAPPED-DIRECT 入检测器闭包，指纹重盖，本类别判定口径不变",
      "rev": 23
+    },
+    {
+     "ref": "B2-W1：error-codes.mjs 登 E-ACC-PROMISE-UNREACHABLE、E-ACC-PARAM-UNCONSUMED（卷十二 §2.12 勘误 1118k18）入检测器闭包，指纹重盖，本类别判定口径不变",
+     "rev": 24
     }
    ],
-   "print": "dc3d732161962cd0264c694f84c82c491d72f4aac40604abd4829e61ca6d2d97",
-   "rev": 23,
+   "print": "ad8dddc96deaaead759ec7737be9c755ae4e31063d63709a491a068358f1ecb9",
+   "rev": 24,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1256,6 +1264,29 @@
    }
   },
   {
+   "criterion": "登记参数（规则表键等登记键）没有消费者即命中。消费者＝规则层代码，或内核运行期代码经规则入口读到；加载器、校验器、测试读全表都不算（卷十二 A12-4.5）。",
+   "log": [
+    {
+     "ref": "B2-W1：新登类别；共用的 decl_cmp 加 paramConsumed（A12-4.5，消费者口径照卷十二 :784；范围与读者分类从 state-owners 登记派生，加载器/校验器按登记目录段 load/、validate/ 排除）；判据见 criterion",
+     "rev": 1
+    }
+   ],
+   "print": "216e8998f4eb46a9b4be3a89d022a7ad669cd9c51fa17e5c203d0f636f8c69fc",
+   "rev": 1,
+   "scanClass": "param_consumed",
+   "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
+   "terms": {
+    "vol12.A12-4.5": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
    "log": [
     {
      "ref": "P-1b",
@@ -1368,10 +1399,14 @@
     {
      "ref": "块 3 第 3-3c 张（卷六 §4.1 规则 6 :376、码表 :1640，勘误 1118k13 续、李白 11-18 07:02 选丙）：error-codes.mjs 登 E-LEDGER-CAPPED-DIRECT 入检测器闭包，指纹重盖，本类别判定口径不变",
      "rev": 28
+    },
+    {
+     "ref": "B2-W1：error-codes.mjs 登 E-ACC-PROMISE-UNREACHABLE、E-ACC-PARAM-UNCONSUMED（卷十二 §2.12 勘误 1118k18）入检测器闭包，指纹重盖，本类别判定口径不变",
+     "rev": 29
     }
    ],
-   "print": "fdb47b75ca4c55758e4ee1fec3c5b1982854cb137c3e5e3fbd33e6c54d33ed37",
-   "rev": 28,
+   "print": "4a4b64ee10fb463e0c2b1185b983f03ddd9ca54f5d3f199c290be4437aacbd8e",
+   "rev": 29,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1550,10 +1585,14 @@
     {
      "ref": "块 3 第 3-3c 张（卷六 §4.1 规则 6 :376、码表 :1640，勘误 1118k13 续、李白 11-18 07:02 选丙）：error-codes.mjs 登 E-LEDGER-CAPPED-DIRECT 入检测器闭包，指纹重盖，本类别判定口径不变",
      "rev": 17
+    },
+    {
+     "ref": "B2-W1：error-codes.mjs 登 E-ACC-PROMISE-UNREACHABLE、E-ACC-PARAM-UNCONSUMED（卷十二 §2.12 勘误 1118k18）入检测器闭包，指纹重盖，本类别判定口径不变",
+     "rev": 18
     }
    ],
-   "print": "5a23ba6e85ca3bf41b73da1eae8208a31389a887e1bb982672ae80b9096f72f6",
-   "rev": 17,
+   "print": "4f92bd7e79a461a660ae7768f68ba75880b16fa0507ba64149b3a14da0fc1272",
+   "rev": 18,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -1695,10 +1734,14 @@
     {
      "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
      "rev": 2
+    },
+    {
+     "ref": "B2-W1：共用的 decl_cmp 加 paramConsumed（A12-4.5）；error-codes.mjs 登 E-ACC-PROMISE-UNREACHABLE、E-ACC-PARAM-UNCONSUMED 入检测器闭包，指纹重盖；本类别用 dynamicState，判定口径不变",
+     "rev": 3
     }
    ],
-   "print": "5549260b2e3cf71b5241e44ab1695e4335e6cad44892606b16f6569546c01da8",
-   "rev": 2,
+   "print": "216e8998f4eb46a9b4be3a89d022a7ad669cd9c51fa17e5c203d0f636f8c69fc",
+   "rev": 3,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

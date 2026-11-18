@@ -208,6 +208,13 @@
    "source": "卷十二 §3.4 S12-6、R12-14.1、R12-14.7；P-1b 新登类别"
   },
   {
+   "detectors": [
+    "decl_cmp"
+   ],
+   "scanClass": "param_consumed",
+   "source": "卷十二 §4.4.6 A12-4.5（:784）；§2.4 开放登记；B2-W1 卡（李白 11-18 08:20 裁定②，勘误 1118k18）"
+  },
+  {
    "callees": {
     "fs": {
      "appendFile": [

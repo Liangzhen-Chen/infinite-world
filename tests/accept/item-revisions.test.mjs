@@ -13,34 +13,36 @@ const failedOf = (report) => Object.fromEntries(report.items.failed.map((f) => [
 const nonScan = () => readRegistry(ROOT, 'items').filter((it) => !it.scanClass);
 const V5 = 'vol1.V-5';
 
-// 块 3 第 3-3 张登卷六 4 条（A6-1.2 a/b/c、A6-1.3）。
-test('登记的非扫描式条目共 48 条（卷一 14、卷十二 30、卷六 4），每条 rev 为 1、带首条修订记录', () => {
+// 块 3 第 3-3 张登卷六 4 条（A6-1.2 a/b/c、A6-1.3）。B2-W1 起 vol12.A12-4.5 转扫描式（不再是非扫描条目，48 → 47）；
+// vol12.A12-4.4 改了 source（挂 B5-ACT），按 R12-11.11 已 rev 2 并补修订记录。
+test('登记的非扫描式条目共 47 条（卷一 14、卷十二 29、卷六 4），除 A12-4.4 外每条 rev 为 1、带首条修订记录', () => {
   const rows = nonScan();
-  assert.equal(rows.length, 48);
+  assert.equal(rows.length, 47);
   assert.equal(rows.filter((r) => r.volume === 'vol1').length, 14);
-  assert.equal(rows.filter((r) => r.volume === 'vol12').length, 30);
+  assert.equal(rows.filter((r) => r.volume === 'vol12').length, 29);
   assert.equal(rows.filter((r) => r.volume === 'vol6').length, 4);
   for (const r of rows) {
-    assert.equal(r.rev, 1, r.itemKey);
-    assert.equal(r.revisions.length, 1, r.itemKey);
+    assert.equal(r.rev, r.itemKey === 'vol12.A12-4.4' ? 2 : 1, r.itemKey);
+    assert.equal(r.revisions.length, r.itemKey === 'vol12.A12-4.4' ? 2 : 1, r.itemKey);
     assert.equal(r.revisions[0].rev, 1, r.itemKey);
   }
   // 状态：门禁设施卡（api-gatecore）把 A6-1.2 a、b 经执行器真跑测试文件为 pass 后流转进必过集合（R12-11.7），其余仍 registered。
   assert.deepEqual(rows.filter((r) => r.state !== 'registered').map((r) => [r.itemKey, r.state]), [['vol6.A6-1.2.a', 'in_core'], ['vol6.A6-1.2.b', 'in_core']]);
 });
 
-test('S12-16：48 条非扫描式条目首次登记零报错，门禁不报降级', async () => {
+test('S12-16：47 条非扫描式条目首次登记零报错，门禁不报降级', async () => {
   const dir = tempRepo();
   try {
-    // 首次登记一律从 registered 起（R12-11.7），已流转的条目按首次登记的样子交行。
-    const rows = nonScan().map(({ print, impl, ...r }) => ({ ...r, state: 'registered' }));
+    // 首次登记一律从 registered 起（R12-11.7），已流转的条目按首次登记的样子交行；已有修订记录的条目（A12-4.4）不走首次登记。
+    const rows = nonScan().filter((r) => r.rev === 1).map(({ print, impl, ...r }) => ({ ...r, state: 'registered' }));
     const path = join(dir, 'tools/accept/items.json');
     const all = JSON.parse(readFileSync(path, 'utf8'));
     writeFileSync(join(dir, 'tools/accept/items.json'), JSON.stringify({ rows: all.rows.filter((r) => r.scanClass) }));
     const res = register(dir, { items: rows });
     assert.deepEqual(res.errors, []);
     const stored = readRegistry(dir, 'items').filter((r) => !r.scanClass);
-    assert.equal(stored.length, 48);
+    // 临时仓库的初版只留扫描式条目，这里再登 46 条首登（A12-4.4 已有修订记录，不在首登输入里）。
+    assert.equal(stored.length, 46);
     assert.ok(stored.every((r) => typeof r.print === 'string' && r.print.length === 64));
     const failed = failedOf((await accRun('pre_commit', 'S12-16', null, { root: dir })).report);
     assert.equal(failed['vol12.S12-16'], undefined);
