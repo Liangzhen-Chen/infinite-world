@@ -1,12 +1,14 @@
 // 行级检查（卷二 §4.1 L1 行结构、L2 引用与 precedence、L3 必填完整）。
 // 取值走 §1.3 唯一算法：own（实体行展平后的值）→ 本维所属 precedence 组内、实体所属的展平类别行 → 派生 / 采样 → 未知。
 
-import { checkValue, CODE_ENUMS, ROW_FIELDS, splitKey } from './types.mjs';
+import { checkValue, CODE_ENUMS, ROW_FIELDS, splitKey, markersOf, T } from './types.mjs';
 import { gradeDecl } from './cell-grades.mjs';
 import { rowReads, namedHolds } from './named-conditions.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const SECTIONS = ['classes', 'rows', 'generated'];
+// 节名句柄：成员由上面的节清单派生（三节即表文件的三个行区，§1.7）。
+const SECTION = markersOf('section', SECTIONS);
 // 族键由卷二点名：类别行键与 classes 字段取 class 族与 component 族（§1.3、§1.8），status 取 vstatus 族（§5.0）。
 const CLASS_FAMILIES = ['class', 'component'];
 const STATUS_FAMILY = 'vstatus';
@@ -27,15 +29,15 @@ export function checkRows(t, env, err) {
       for (const key of Object.keys(row).sort()) {
         const { dim, op } = splitKey(key);
         if (ROW_FIELDS.includes(key) || key === gradeField) {
-          if (key === 'abstract' && section !== 'classes') err({ code: 'E-DIM-STRUCT-FIELD', level: 'L1', ...at(key, key), got: key, want: 'abstract only on class rows' });
+          if (key === T.row_field.abstract && section !== SECTION.classes) err({ code: 'E-DIM-STRUCT-FIELD', level: 'L1', ...at(key, key), got: key, want: 'abstract only on class rows' });
           continue;
         }
         if (!Object.hasOwn(dims, dim)) { err({ code: 'E-DIM-STRUCT-FIELD', level: 'L1', ...at(key, key), got: key, want: 'a declared dimension or row field' }); continue; }
         const def = dims[dim];
         if (def.derived !== undefined && def.allowExplicit !== true) err({ code: 'E-DIM-DERIVED-WRITTEN', level: 'L1', ...at(dim, key), got: key, want: 'derived dimensions are not written' });
-        if (op && section === 'generated') continue; // E-DIM-EXTEND-ON-OVERRIDE 已由展平报
+        if (op && section === SECTION.generated) continue; // E-DIM-EXTEND-ON-OVERRIDE 已由展平报
         // 值检查落在写它的那一行：整值写法查原值，继承写法查展平后的结果。
-        const flat = section === 'classes' ? t.flat.classes.get(id) : t.flat.rows.get(id);
+        const flat = section === SECTION.classes ? t.flat.classes.get(id) : t.flat.rows.get(id);
         const v = op ? flat[dim] : row[key];
         if (v !== undefined) checkValue(def, v, env, at(dim, key), err);
       }
@@ -52,7 +54,7 @@ export function checkRows(t, env, err) {
         const rec = env.vocab.index.get(row.status);
         if (!rec || rec.family !== STATUS_FAMILY) err({ code: 'E-DIM-DOMAIN-ENUM', level: 'L1', ...at('status', 'status'), got: row.status, want: `entry of vocab family ${STATUS_FAMILY}` });
       }
-      if (section === 'generated') {
+      if (section === SECTION.generated) {
         const g = row.generated;
         if (!isObj(g) || !['by', 'seedKey', 'at'].every((k) => Object.hasOwn(g, k))) err({ code: 'E-DIM-STRUCT-FIELD', level: 'L1', ...at('generated', 'generated'), got: isObj(g) ? Object.keys(g).sort().join(',') : g, want: 'generated {by, seedKey, at}' });
       }
@@ -189,7 +191,7 @@ export function checkRequired(t, env, err, stats) {
     for (const id of Object.keys(rows).sort()) {
       const row = rows[id] || {};
       const at = (dim) => ({ table: kind, row: id, dim, path: `${file}#/${section}/${id}/${dim}` });
-      if (section === 'rows' && (typeof row.basis !== 'string' || row.basis === '')) err({ code: 'E-DIM-INSTANCE-BASIS', level: 'L3', ...at('basis'), got: row.basis === undefined ? 'missing' : row.basis, want: 'basis on entity rows' });
+      if (section === SECTION.rows && (typeof row.basis !== 'string' || row.basis === '')) err({ code: 'E-DIM-INSTANCE-BASIS', level: 'L3', ...at('basis'), got: row.basis === undefined ? 'missing' : row.basis, want: 'basis on entity rows' });
       for (const dim of Object.keys(dims).sort()) {
         const req = requirement(t, id, row, dim);
         for (const n of req.named) stats.notCovered.add(`${kind}.${dim}:${n}`);
@@ -209,7 +211,7 @@ export function checkRequired(t, env, err, stats) {
         } else if (!r.known) {
           // onUnknown: gap 的维度缺值只记缺口、进加载警告，不让加载失败（卷三甲 §2.1、§6 EA-6；卷二 §5 开头"两处不一致以定义卷为准"，李白 11-17）。
           // anyOf 组合条件不在此列：它表达的是"至少填一项"的硬约束（如卷三甲 M-11 ①），照旧 E。
-          const code = dims[dim].onUnknown === 'gap' ? 'W-DIM-GAP' : 'E-DIM-REQUIRED-MISSING';
+          const code = dims[dim].onUnknown === T.code_enum.onUnknown.gap ? 'W-DIM-GAP' : 'E-DIM-REQUIRED-MISSING';
           err({ code, level: 'L3', ...at(dim), got: 'unknown', want: `required ${dims[dim].required}` });
         }
       }
@@ -219,12 +221,12 @@ export function checkRequired(t, env, err, stats) {
 
 // 未标 combine: sum 的映射展平后须覆盖键类型的全族；onUnknown 为 error 时缺键即加载失败（§1.6 第 4 项）。
 function checkMapKeys(def, v, env, at, err) {
-  if (def.type !== 'map' || def.combine === 'sum' || def.onUnknown !== 'error' || !isObj(v) || !isObj(def.key)) return;
+  if (def.type !== T.type.map || def.combine === 'sum' || def.onUnknown !== T.code_enum.onUnknown.error || !isObj(v) || !isObj(def.key)) return;
   const k = def.key;
   const fam = k.vocab !== undefined ? k.vocab : undefined;
   let all = [];
   if (typeof fam === 'string' && env.vocab.families.has(fam)) all = Object.keys(env.vocab.families.get(fam).entries);
-  else if (k.type === 'enum' && Object.hasOwn(CODE_ENUMS, fam)) all = [...CODE_ENUMS[fam]]; // 代码内封闭枚举的全部取值（§1.6 第 4 项"enum 族的全部条目"）
+  else if (k.type === T.type.enum && Object.hasOwn(CODE_ENUMS, fam)) all = [...CODE_ENUMS[fam]]; // 代码内封闭枚举的全部取值（§1.6 第 4 项"enum 族的全部条目"）
   else if (k.kind !== undefined) all = [...env.idIndex].filter(([, kd]) => kd === k.kind).map(([id]) => id);
   const missing = all.filter((x) => !Object.hasOwn(v, x)).sort();
   if (missing.length) err({ code: 'E-DIM-MAP-SPARSE-NONSUM', level: 'L3', ...at, got: `missing ${missing.join(',')}`, want: 'every key of the family (write null for none)' });
