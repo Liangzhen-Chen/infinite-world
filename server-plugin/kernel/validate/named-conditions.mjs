@@ -5,8 +5,9 @@
 // 只按声明通用处理，不认表名、族名与条目；未声明的命名条件照旧只记入 notCovered。
 
 import { compileRXInScope, evaluateRX, nsKey, RxError } from '../rx.mjs';
+import { T } from '../handles/markers.mjs';
 
-const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+const isObj = (v) => v !== null && typeof v === T.js_type.object && !Array.isArray(v);
 
 // 加载期每条目编译一次；编不过的条目报在词表条目上（E-MOD-RX / E-RX-NS-UNKNOWN），不参与判定。
 /** @param {Record<string, unknown>} t 一张表 @param {Record<string, unknown>} env @param {(...args: unknown[]) => void} err */
@@ -16,7 +17,7 @@ export function prepareNamedConditions(t, env, err) {
   for (const name of Object.keys(decl).sort()) {
     const d = decl[name];
     const at = { table: t.kind, row: '', dim: `namedConditions.${name}`, path: `${t.file}#/namedConditions/${name}` };
-    if (!isObj(d) || typeof d.family !== 'string' || typeof d.field !== 'string' || typeof d.rowNs !== 'string' || (d.reads !== undefined && !isObj(d.reads))) {
+    if (!isObj(d) || typeof d.family !== T.js_type.string || typeof d.field !== T.js_type.string || typeof d.rowNs !== T.js_type.string || (d.reads !== undefined && !isObj(d.reads))) {
       err({ code: 'E-DIM-STRUCT-FIELD', level: 'L1', ...at, got: isObj(d) ? Object.keys(d).sort().join(',') : d, want: '{family, field, rowNs, reads?}' });
       continue;
     }
@@ -26,7 +27,7 @@ export function prepareNamedConditions(t, env, err) {
     for (const id of Object.keys(fam.entries).sort()) {
       const text = (fam.entries[id] || {})[d.field];
       const eat = { table: '_vocab', row: id, dim: d.field, path: `_vocab.json#/families/${d.family}/entries/${id}/${d.field}` };
-      if (typeof text !== 'string') { err({ code: 'E-MOD-RX', level: 'L2', ...eat, got: typeof text, want: 'RX text' }); continue; }
+      if (typeof text !== T.js_type.string) { err({ code: 'E-MOD-RX', level: 'L2', ...eat, got: typeof text, want: 'RX text' }); continue; }
       try { trees.push({ id, tree: compileRXInScope(text, 'data', env.rxScope).tree }); } catch (e) {
         if (!e.code) throw e;
         err({ code: e.code, level: 'L2', ...eat, got: text, want: e.message });
@@ -65,10 +66,10 @@ const NULL_RULES = {
 };
 
 function foldAbsent(n, absent) {
-  if (!n || typeof n !== 'object') return n;
+  if (!n || typeof n !== T.js_type.object) return n;
   const rule = NULL_RULES[n.op];
   if (rule) {
-    const isNull = (x) => !!x && x.op === 'ns' && absent.has(nsKey(x));
+    const isNull = (x) => !!x && x.op === T.rx_op.ns && absent.has(nsKey(x));
     const [l, r] = rule.fields.map((f) => isNull(n[f]));
     if (l || r) return rule.by(n)(l, r) ? TRUE_NODE : FALSE_NODE;
   }
