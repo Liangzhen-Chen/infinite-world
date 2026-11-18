@@ -11,6 +11,8 @@ import { resolve } from 'node:path';
 import { parseJsonStrict } from './json-text.mjs';
 import { checkDef, checkValue, rangeOk, DOMAIN_OPTIONAL, TYPES, KEY_RE, CODE_RE, CODE_ENUMS } from '../validate/types.mjs';
 import { STACKING } from '../validate/dimensions-validate.mjs';
+import { isRuleTableFile } from '../handles/keys.mjs';
+import { escapeJsonPointer, keyPointerOf } from './vocab-load.mjs';
 
 export const RULES_LAYOUT = Object.freeze({ dir: 'world/rules', registry: 'registry.json' });
 
@@ -26,7 +28,6 @@ const MERGE = Object.freeze({
   take_min: (d) => ['number', 'integer', 'enum'].includes(d.type),
   take_max: (d) => ['number', 'integer', 'enum'].includes(d.type),
 });
-const FILE_RE = /^(?:[a-z0-9][a-z0-9_-]*\/)*[a-z0-9][a-z0-9_-]*\.json$/;
 // 独立格式：过程主体槽（卷二 §3.7 slots/consumers 嵌套格式；李白 11-18 块 2-5 裁定①）。登记行按文件登记，
 // 不写 type/domain（格式由 §3.7 定），packOverridable 写一个布尔；表值由下面的专用校验读，修正键是 process.<slot>（§3.1 :1291 额外命名空间）。
 const PROCESS_STRUCTURE = 'processSlots';
@@ -38,7 +39,7 @@ const CONSUMER_FIELDS = Object.freeze(['slot', 'base']);
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
-const esc = (k) => String(k).replace(/~/g, '~0').replace(/\//g, '~1');
+const esc = (k) => escapeJsonPointer(String(k));
 
 // 登记里一个键（或行表的行值）的类型定义：type 写类型名或完整类型定义，domain 并入（写法同维度表头）。
 function defOf(type, domain) {
@@ -80,7 +81,7 @@ export function readRules(root, opts = {}) {
     if (typeof r.code !== 'string' || !KEY_RE.test(r.code)) return at('code', r.code, 'lowerCamel table code', 'E-DIM-ID-FORMAT');
     if (seen.code.has(r.code)) return at('code', r.code, 'one registry row per table code', 'E-DIM-ID-DUPLICATE');
     seen.code.add(r.code);
-    if (typeof r.file !== 'string' || !FILE_RE.test(r.file) || r.file === RULES_LAYOUT.registry) return at('file', r.file, `relative .json path under ${dir}/`);
+    if (!isRuleTableFile(r.file) || r.file === RULES_LAYOUT.registry) return at('file', r.file, `relative .json path under ${dir}/`);
     if (seen.file.has(r.file)) return at('file', r.file, 'one file per registry row', 'E-DIM-ID-DUPLICATE');
     seen.file.add(r.file);
     if (typeof r.volume !== 'string' || r.volume === '') at('volume', r.volume, 'owning volume');
@@ -106,7 +107,7 @@ export function readRules(root, opts = {}) {
       if (typeof r.packOverridable !== 'boolean') at('packOverridable', r.packOverridable, 'true|false');
     } else if (r.structure === PROCESS_STRUCTURE) {
       // 文件级登记（§3.7 独立格式）：类型与取值域由格式本身定，登记行不写。
-      for (const f of ['type', 'domain']) if (r[f] !== undefined) at(f, f, `absent for structure "${PROCESS_STRUCTURE}" (format fixed by 卷二 §3.7)`);
+      for (const f of ['type', 'domain']) if (r[f] !== undefined) at(f, f, `absent for structure "${PROCESS_STRUCTURE}" (format fixed by vol2 s3.7)`);
       if (typeof r.packOverridable !== 'boolean') at('packOverridable', r.packOverridable, 'true|false');
       t.process = null;
     } else return at('structure', r.structure, `"keys", {"rows": <row key ref>} or "${PROCESS_STRUCTURE}"`);
@@ -154,7 +155,7 @@ function readProcessTable(root, t, errors) {
   for (const e of doc.errors) err(`${t.file}#${e.pointer}`, e.got, e.want, e.code, 'L0');
   if (doc.errors.length) return;
   const v = doc.value;
-  if (!isObj(v)) return err(t.file, typeof v, '{"version", "slots", "consumers"} (卷二 §3.7)');
+  if (!isObj(v)) return err(t.file, typeof v, '{"version", "slots", "consumers"} (vol2 s3.7)');
   // version 是 §3.7 格式里写着的顶层键，照收；不按它的值分支（规则只一版，不做版本分叉）。
   for (const k of Object.keys(v).sort()) if (!PROCESS_TOP.includes(k)) err(`${t.file}#/${esc(k)}`, k, PROCESS_TOP.join('|'));
   if (!isObj(v.slots)) err(`${t.file}#/slots`, v.slots, 'object: slot -> slot definition');
@@ -173,7 +174,7 @@ function checkProcessTable(t, env, err) {
     const s = slots[name];
     const base = `${file}#/slots/${esc(name)}`;
     const bad = (code, dim, got, want, level = 'L2') => err({ code, level, row: `process.${name}`, dim, path: dim ? `${base}/${dim}` : base, got, want });
-    if (!KEY_RE.test(name)) bad('E-DIM-ID-FORMAT', '', name, 'lowerCamel slot name (modifier key process.<slot>, 卷二 §3.1)', 'L1');
+    if (!KEY_RE.test(name)) bad('E-DIM-ID-FORMAT', '', name, 'lowerCamel slot name (modifier key process.<slot>, vol2 s3.1)', 'L1');
     if (!isObj(s)) { bad('E-DIM-STRUCT-FIELD', '', typeof s, 'slot definition object', 'L1'); continue; }
     for (const f of Object.keys(s).sort()) if (!SLOT_FIELDS.includes(f)) bad('E-DIM-STRUCT-FIELD', f, f, SLOT_FIELDS.join('|'), 'L1');
     checkDef({ type: 'number', unit: s.unit, precision: s.precision }, env, { row: `process.${name}`, dim: 'unit', path: base }, err, false);
@@ -233,7 +234,7 @@ export function checkRules(read, env) {
     for (const [k, def] of defs) if (def.type !== undefined && Object.keys(def).some((f) => f !== 'type' && f !== 'domain')) checkDef(def, env, { row: k, dim: 'type', path: `registry:${t.code}/${k}` }, err, false);
     for (const e of t.entries) {
       const at = { row: e.key, dim: '', path: e.path };
-      if (!t.keyed) checkValue(t.rowKey, e.key, env, { ...at, path: e.path.replace(/\/value$/, '/key') }, err);
+      if (!t.keyed) checkValue(t.rowKey, e.key, env, { ...at, path: keyPointerOf(e.path) }, err);
       const def = t.keyed ? t.defs.get(e.key) : t.rowDef;
       if (def && TYPES.includes(def.type)) checkValue(def, e.value, env, at, err);
     }
@@ -256,6 +257,6 @@ export function rulesReport(errors) {
     table: e.table || '', row: e.row || '', dim: e.dim || '', path: e.path || '',
     got: e.got === undefined ? null : e.got, want: e.want === undefined ? '' : String(e.want),
   })).sort((a, b) => cmp(a.table, b.table) || cmp(a.row, b.row) || cmp(a.dim, b.dim) || cmp(a.code, b.code) || cmp(a.path, b.path));
-  const lines = out.map((e) => `${e.code}  ${e.table}/${e.row}.${e.dim}  got ${JSON.stringify(e.got)}  want ${e.want}  — ${e.path}`);
+  const lines = out.map((e) => `${e.code}  ${e.table}/${e.row}.${e.dim}  got ${JSON.stringify(e.got)}  want ${e.want}  - ${e.path}`);
   return { ok: !out.some((e) => e.severity === 'error'), errors: out, text: lines.length ? lines.join('\n') + '\n' : '' };
 }

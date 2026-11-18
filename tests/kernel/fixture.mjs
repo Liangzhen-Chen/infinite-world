@@ -4,8 +4,12 @@ import { readFileSync, rmSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { testTempRoot, writeUnderTempRoot } from '../accept/temp-root.mjs';
+import { installFixedConstants } from '../../server-plugin/kernel/det-math.mjs';
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+
+// 直接跑校验器（不经 loadWorld）的测试先安装内核定点常数：值照 world/rules/tables/kernel-constants.json（卷二 S10 登记豁免表）。
+installFixedConstants({ BASE: 10, SCALE: 10000, PERMILLE: 1000, BPS: 10000 });
 
 export function fixture() {
   return {

@@ -2,6 +2,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { compileRX, compileRXInScope, evaluateRX, nsArgCount } from '../../server-plugin/kernel/rx.mjs';
+import { installFixedConstants } from '../../server-plugin/kernel/det-math.mjs';
+
+// 求值走定点算术，常数照 world/rules/tables/kernel-constants.json 在测试里安装（卷二 S10；不经 loadWorld）。
+installFixedConstants({ BASE: 10, SCALE: 10000, PERMILLE: 1000, BPS: 10000 });
 
 const dims = new Map([
   ['mass', { type: 'number' }],

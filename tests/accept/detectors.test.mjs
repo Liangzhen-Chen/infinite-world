@@ -599,16 +599,15 @@ test('param_consumed：范围经登记解析；被查内容里没有登记的键
   assert.deepEqual(declCmp({ ...ctx, decl: noKernel }, PC, CLS.param_consumed).map((h) => [h.nodeKind, h.code]), [['param', 'E-ACC-ITEM-PARAM']]);
 });
 
-test('param_consumed 真实仓库：如实报无运行期消费者的登记参数（待 S13 卡接上 det-math 常数），有读者的键不计', () => {
+test('param_consumed 真实仓库：如实报无运行期消费者的登记参数（B2-W2 起 det-math 常数已接上），有读者的键不计', () => {
   assert.ok(REGISTERED_CODES.has('E-ACC-PARAM-UNCONSUMED'));
   assert.ok(REGISTERED_CODES.has('E-ACC-PROMISE-UNREACHABLE'));
   const hits = declCmp(loadContext(ROOT), PC, CLS.param_consumed);
   assert.ok(hits.every((h) => h.code === 'E-ACC-PARAM-UNCONSUMED'));
   const keys = hits.map((h) => h.symbolPath).sort();
-  // det-math.mjs:5-6 自定 BASE/SCALE/PERMILLE/BPS，kernelConstants 这四键无读者，待 S13 卡（B2-W2）接上；
+  // B2-W2 起 det-math.mjs 的 BASE/SCALE/PERMILLE/BPS 经规则表 kernelConstants 读入（installFixedConstants），该四键已有消费者；
   // extendsMaxDepth/rxMaxDepth 只被加载器与校验器读到，按消费者口径不算；valuation.unitValue 只有测试读。
   assert.deepEqual(keys, [
-    'kernelConstants.BASE', 'kernelConstants.BPS', 'kernelConstants.PERMILLE', 'kernelConstants.SCALE',
     'kernelConstants.extendsMaxDepth', 'kernelConstants.rxMaxDepth', 'valuation.unitValue',
   ]);
   for (const k of ['kernelConstants.handleRadix', 'modifiers.stackingTable', 'economyLedger.budget', 'economyLedger.alert',

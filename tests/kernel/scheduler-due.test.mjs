@@ -325,7 +325,7 @@ test('kernelApi 两行与 files.json：registerAdvanceHook、registerAdvancePlan
   ]);
   assert.ok(JSON.parse(readFileSync(join(ROOT, 'server-plugin/kernel/files.json'), 'utf8')).includes('server-plugin/kernel/advance-registry.mjs'));
   const src = readFileSync(join(ROOT, 'server-plugin/kernel/advance-registry.mjs'), 'utf8');
-  assert.deepEqual([...src.matchAll(/^import .* from '([^']+)';$/gm)].map((m) => m[1]), ['./errors.mjs']);
+  assert.deepEqual([...src.matchAll(/^import .* from '([^']+)';$/gm)].map((m) => m[1]), ['./errors.mjs', './handles/keys.mjs']);
 });
 
 test('钩子节拍对齐绝对分钟：下一拍是 after 之后第一个满足 (m − phaseOffset) mod cadence = 0 的分钟', () => {

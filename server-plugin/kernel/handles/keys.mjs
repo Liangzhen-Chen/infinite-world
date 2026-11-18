@@ -67,7 +67,7 @@ export function dimKeyOf(reg, kind, dimension, key) {
 export function modKeyOf(reg, kind, dimension, key) {
   const def = dimDef(reg, kind, dimension);
   const valueType = def && def.type === 'map' ? (def.value || {}).type : def && def.type;
-  if (!def || def.modifiable !== true || !NUMERIC.includes(valueType)) throw new HandleError('E-MOD-KEY-UNREGISTERED', `${join(kind, dimension, key)}: not a modifiable number/integer/map<…,number> dimension`);
+  if (!def || def.modifiable !== true || !NUMERIC.includes(valueType)) throw new HandleError('E-MOD-KEY-UNREGISTERED', `${join(kind, dimension, key)}: not a modifiable number/integer/map<...,number> dimension`);
   if (def.type === 'map' && key === undefined) throw new HandleError('E-MOD-KEY-UNREGISTERED', `${join(kind, dimension)}: map dimension needs a subscript`);
   if (key !== undefined && (def.type !== 'map' || !subKeyOk(reg, def.key, key))) throw new HandleError('E-DIM-REF-MISSING', `${join(kind, dimension, key)}: subscript not a key of the map dimension`);
   return /** @type {ModKey} */ (join(kind, dimension, key));
@@ -191,3 +191,47 @@ export function statePathOf(patterns, pattern, segs) {
   });
   return /** @type {import('../types.d.ts').StatePath<P>} */ (out.join('.'));
 }
+
+// ---------- 文件路径、代号、节点名、摘要的格式文法 ----------
+// 原 kernel/handles/patterns.mjs 搬入（S13 (b) 允许 handles/* 用正则；patterns.mjs 只留从 rx.mjs 搬来的正则）。
+
+// 相对 server-plugin/ 的模块路径（registerAdvanceHook / registerViewReader 的 file：一段或多段目录 + .mjs）。
+const MODULE_FILE = /^(?:[a-z0-9][a-z0-9_-]*\/)*[a-z0-9][a-z0-9_.-]*\.mjs$/;
+/** @param {unknown} s @returns {boolean} */
+export const isModuleFile = (s) => typeof s === 'string' && MODULE_FILE.test(s);
+
+// 相对 world/rules/ 的规则表文件路径（一段或多段目录 + .json）。
+const RULE_TABLE_FILE = /^(?:[a-z0-9][a-z0-9_-]*\/)*[a-z0-9][a-z0-9_-]*\.json$/;
+/** @param {unknown} s @returns {boolean} */
+export const isRuleTableFile = (s) => typeof s === 'string' && RULE_TABLE_FILE.test(s);
+
+// 小驼峰代号：推进钩子名与视图读取名同用一条文法（advance-registry、view-registry）。
+const LOWER_CAMEL_CODE = /^[a-z][a-zA-Z0-9_]{0,47}$/;
+/** @param {unknown} s @returns {boolean} */
+export const isLowerCamelCode = (s) => typeof s === 'string' && LOWER_CAMEL_CODE.test(s);
+
+// 依赖声明的三类节点名（卷二 §2.3 :470）与加载器机器生成的两类（:470 末句）。
+const DECLARABLE_NODE = /^(view|relation|scope):[A-Za-z][A-Za-z0-9_]*$/;
+const GENERATED_NODE = /^(dim|modified):([a-z][a-z0-9_]{1,47})$/;
+const ANY_NODE = /^(view|relation|scope|dim|modified):[A-Za-z][A-Za-z0-9_]*$/;
+/** @param {unknown} s @returns {boolean} */
+export const isDeclarableNode = (s) => typeof s === 'string' && DECLARABLE_NODE.test(s);
+/** @param {unknown} s @returns {boolean} */
+export const isGeneratedNode = (s) => typeof s === 'string' && GENERATED_NODE.test(s);
+/** @param {unknown} s @returns {boolean} */
+export const isAnyNode = (s) => typeof s === 'string' && ANY_NODE.test(s);
+
+// state-owners 路径模式（pathTypes 的键）：点分的小驼峰段。
+const PATH_PATTERN = /^[a-z][a-zA-Z0-9_]*(\.[a-z][a-zA-Z0-9_]*)*$/;
+/** @param {unknown} s @returns {boolean} */
+export const isPathPattern = (s) => typeof s === 'string' && PATH_PATTERN.test(s);
+
+// 64 位小写十六进制摘要（存档清单与摘要；save、load/save）。
+const HEX64 = /^[0-9a-f]{64}$/;
+/** @param {unknown} s @returns {boolean} */
+export const isHex64 = (s) => typeof s === 'string' && HEX64.test(s);
+
+// 日志键的代号形（scheduler）：驼峰转下划线小写（卷二十 §4.1.3 第 7 条对照表）。
+const UPPER = /[A-Z]/g;
+/** @param {string} key @returns {string} */
+export const snakeCaseKey = (key) => key.replace(UPPER, (c) => `_${c.toLowerCase()}`);

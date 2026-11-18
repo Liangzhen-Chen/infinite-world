@@ -58,7 +58,7 @@ test('kernelApi 与 files.json：registerViewReader 只给规则层、不收 sta
   ]);
   assert.ok(JSON.parse(readFileSync(join(ROOT, 'server-plugin/kernel/files.json'), 'utf8')).includes('server-plugin/kernel/view-registry.mjs'));
   const src = readFileSync(join(ROOT, 'server-plugin/kernel/view-registry.mjs'), 'utf8');
-  assert.deepEqual([...src.matchAll(/^import .* from '([^']+)';$/gm)].map((m) => m[1]), ['./errors.mjs']);
+  assert.deepEqual([...src.matchAll(/^import .* from '([^']+)';$/gm)].map((m) => m[1]), ['./errors.mjs', './handles/keys.mjs']);
   assert.equal(SCHEMA.projectView, 'buildProjectView');
   assert.equal(SCHEMA.aggregateView, 'aggregateView');
   assert.equal(Object.hasOwn(SCHEMA, 'buildProject'), false);

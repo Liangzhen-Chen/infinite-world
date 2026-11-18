@@ -2,7 +2,8 @@
 // 条数、成员名与值、出处全是按卷文手写的字面量，不用被测函数算期望值。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ERROR_CODES, REGISTERED_CODES, ERROR_CODE_RE } from '../../server-plugin/kernel/error-codes.mjs';
+import { ERROR_CODES, REGISTERED_CODES } from '../../server-plugin/kernel/error-codes.mjs';
+import { isErrorCode } from '../../server-plugin/kernel/validate/types.mjs';
 import { installHandles, buildE, E } from '../../server-plugin/kernel/handles/generated.mjs';
 import { errorCodeOf, CODE_RE } from '../../server-plugin/kernel/handles/vocab-handle.mjs';
 import { CODE_RE as TYPES_CODE_RE } from '../../server-plugin/kernel/validate/types.mjs';
@@ -30,14 +31,22 @@ test('码表冻结、按 code 排序、无重复、每码合 §4.2 文法、每�
   assert.ok(Object.isFrozen(ERROR_CODES));
   for (const e of ERROR_CODES) {
     assert.ok(Object.isFrozen(e) && Object.isFrozen(e.sources), e.code);
-    assert.ok(ERROR_CODE_RE.test(e.code), e.code);
-    assert.ok(e.sources.length >= 1 && e.sources.every((s) => typeof s === 'string' && s.startsWith('卷')), e.code);
+    assert.ok(isErrorCode(e.code), e.code);
+    assert.ok(e.sources.length >= 1 && e.sources.every((s) => typeof s === 'string' && /^vol\d/.test(s)), e.code);
     assert.equal(new Set(e.sources).size, e.sources.length, e.code);
     assert.deepEqual(Object.keys(e), ['code', 'sources']);
   }
   assert.deepEqual(codes, [...codes].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)));
   assert.equal(new Set(codes).size, codes.length);
   assert.throws(() => { ERROR_CODES.push({}); }, TypeError);
+});
+
+test('错误码文法 E-/W- 两段及以上（原 patterns.test.mjs 搬入，定义在 validate/types.mjs）', () => {
+  assert.equal(isErrorCode('E-DIM-ID-FORMAT'), true);
+  assert.equal(isErrorCode('W-DIM-GAP'), true);
+  assert.equal(isErrorCode('E-X'), false);
+  assert.equal(isErrorCode('e-x-y'), false);
+  assert.equal(isErrorCode('E-a-b'), false);
 });
 
 test('抽 6 个跨卷码：E 成员名与值、出处', () => {
@@ -49,34 +58,34 @@ test('抽 6 个跨卷码：E 成员名与值、出处', () => {
   assert.equal(E.E_FAITH_LAYER, 'E-FAITH-LAYER');
   assert.equal(E.E_SAVE_TORN, 'E-SAVE-TORN');
   const src = (c) => ERROR_CODES.find((e) => e.code === c).sources;
-  assert.deepEqual(src('E-WRITER-DUPLICATE'), ['卷二 §4.3']);
-  assert.deepEqual(src('E-PHASE-DUPLICATE'), ['卷二 §4.3']);
-  assert.deepEqual(src('E-PHASE-HOOK-DUPLICATE'), ['卷二 §4.3']);
-  assert.deepEqual(src('E-ACC-REQUIRED-TEST'), ['卷二 §4.3', '卷十二 §2.12']);
-  assert.deepEqual(src('E-CBT-ROUND'), ['卷十三 §2.9']);
-  assert.deepEqual(src('E-FAITH-LAYER'), ['卷七 §2.8']);
-  assert.deepEqual(src('E-SAVE-TORN'), ['卷二 §4.3', '卷二十七 附·本卷新增错误码']);
+  assert.deepEqual(src('E-WRITER-DUPLICATE'), ['vol2.s4.3']);
+  assert.deepEqual(src('E-PHASE-DUPLICATE'), ['vol2.s4.3']);
+  assert.deepEqual(src('E-PHASE-HOOK-DUPLICATE'), ['vol2.s4.3']);
+  assert.deepEqual(src('E-ACC-REQUIRED-TEST'), ['vol2.s4.3', 'vol12.s2.12']);
+  assert.deepEqual(src('E-CBT-ROUND'), ['vol13.s2.9']);
+  assert.deepEqual(src('E-FAITH-LAYER'), ['vol7.s2.8']);
+  assert.deepEqual(src('E-SAVE-TORN'), ['vol2.s4.3', 'vol27.appendix.codes']);
   // 勘误 1118b24（李白 11-18 块 2-4 三件裁定 b）：E-SAVE-EMPTY 由卷二 §4.3 定义，卷二十七附表引用。
-  assert.deepEqual(src('E-SAVE-EMPTY'), ['卷二 §4.3', '卷二十七 附·本卷新增错误码']);
+  assert.deepEqual(src('E-SAVE-EMPTY'), ['vol2.s4.3', 'vol27.appendix.codes']);
   // 勘误 1117ec20、1117ec2、1117ec12：卷二十自己的码表；卷三甲七码与 W-DIM-GAP 登在卷二 §4.3；卷十二两个新码同登卷二。
-  assert.deepEqual(src('E-ENV-TARGET'), ['卷二十 附·本卷错误码表']);
-  assert.deepEqual(src('E-SEED-KEY'), ['卷二 §4.3', '卷二十 附·本卷错误码表']);
-  assert.deepEqual(src('W-CAL-DRIFT'), ['卷二十 附·本卷错误码表']);
+  assert.deepEqual(src('E-ENV-TARGET'), ['vol20.appendix.codes']);
+  assert.deepEqual(src('E-SEED-KEY'), ['vol2.s4.3', 'vol20.appendix.codes']);
+  assert.deepEqual(src('W-CAL-DRIFT'), ['vol20.appendix.codes']);
   // 勘误 1118k7：卷六自己的码表，账本六码。
-  assert.deepEqual(src('E-LEDGER-UNBALANCED'), ['卷六 附·本卷错误码表']);
-  assert.deepEqual(src('W-LEDGER-ALERT'), ['卷六 附·本卷错误码表']);
+  assert.deepEqual(src('E-LEDGER-UNBALANCED'), ['vol6.appendix.codes']);
+  assert.deepEqual(src('W-LEDGER-ALERT'), ['vol6.appendix.codes']);
   // 勘误 1118k8：卷六码表补两码。
-  assert.deepEqual(src('E-LEDGER-USEDBYDAY-ORDER'), ['卷六 附·本卷错误码表']);
-  assert.deepEqual(src('E-LEDGER-HOLDER-NOT-SUBJECT'), ['卷六 附·本卷错误码表']);
+  assert.deepEqual(src('E-LEDGER-USEDBYDAY-ORDER'), ['vol6.appendix.codes']);
+  assert.deepEqual(src('E-LEDGER-HOLDER-NOT-SUBJECT'), ['vol6.appendix.codes']);
   // 勘误 1118k9：卷六码表补一码。
-  assert.deepEqual(src('E-LEDGER-STAGING-SPONSOR'), ['卷六 附·本卷错误码表']);
+  assert.deepEqual(src('E-LEDGER-STAGING-SPONSOR'), ['vol6.appendix.codes']);
   // 勘误 1118k13 续（李白 11-18 07:02 选丙）：卷六码表补 E-LEDGER-CAPPED-DIRECT。
-  assert.deepEqual(src('E-LEDGER-CAPPED-DIRECT'), ['卷六 附·本卷错误码表']);
-  assert.deepEqual(src('E-MAT-GRADE-KEYS'), ['卷二 §4.3']);
-  assert.deepEqual(src('W-DIM-GAP'), ['卷二 §4.3']);
-  assert.deepEqual(src('E-ACC-REGISTRY-WRITE'), ['卷二 §4.3', '卷十二 §2.12']);
-  assert.deepEqual(src('E-ACC-TEST-FAIL'), ['卷十二 §2.12']);
-  assert.deepEqual(src('E-ACC-REQUIRED-NOT-RUN'), ['卷十二 §2.12']);
+  assert.deepEqual(src('E-LEDGER-CAPPED-DIRECT'), ['vol6.appendix.codes']);
+  assert.deepEqual(src('E-MAT-GRADE-KEYS'), ['vol2.s4.3']);
+  assert.deepEqual(src('W-DIM-GAP'), ['vol2.s4.3']);
+  assert.deepEqual(src('E-ACC-REGISTRY-WRITE'), ['vol2.s4.3', 'vol12.s2.12']);
+  assert.deepEqual(src('E-ACC-TEST-FAIL'), ['vol12.s2.12']);
+  assert.deepEqual(src('E-ACC-REQUIRED-NOT-RUN'), ['vol12.s2.12']);
 });
 
 test('E 的成员与码表一一对应：条数相等、冻结、成员名把连字符换成下划线', () => {

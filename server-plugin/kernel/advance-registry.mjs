@@ -5,6 +5,7 @@
 // 本文件不读这两处、不认任何具体钩子名，只收函数并在调度器要时交出。
 
 import { KernelError } from './errors.mjs';
+import { isModuleFile, isLowerCamelCode } from './handles/keys.mjs';
 
 /**
  * @typedef {(engine: any, state: any, beat: {unit: string, minute: number}) => void} HookHandler
@@ -20,8 +21,6 @@ const hooks = new Map();
 /** @type {PlanProvider | null} */
 let plan = null;
 
-const FILE_RE = /^(?:[a-z0-9][a-z0-9_-]*\/)*[a-z0-9][a-z0-9_.-]*\.mjs$/;
-
 /**
  * kernelApi `registerAdvanceHook(hook, file, handler)`：规则层交入一个推进钩子的函数。hook 是 state-owners.json 某系统 `phase` 下登记的钩子代号
  * （登记与否由调度器建钩子来源时对照声明表核对，这里只核形状）；同一钩子交两次即 E-PHASE-HOOK-DUPLICATE（与声明表同名钩子多系统登记同码，整类）。
@@ -29,8 +28,8 @@ const FILE_RE = /^(?:[a-z0-9][a-z0-9_-]*\/)*[a-z0-9][a-z0-9_.-]*\.mjs$/;
  * @returns {void}
  */
 export function registerAdvanceHook(hook, file, handler) {
-  if (typeof hook !== 'string' || !/^[a-z][a-zA-Z0-9_]{0,47}$/.test(hook)) throw new KernelError('E-DIM-ID-FORMAT', {}, `registerAdvanceHook: hook ${JSON.stringify(hook)} is not a hook code`);
-  if (typeof file !== 'string' || !FILE_RE.test(file)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `registerAdvanceHook ${hook}: file must be a module path relative to server-plugin/`);
+  if (!isLowerCamelCode(hook)) throw new KernelError('E-DIM-ID-FORMAT', {}, `registerAdvanceHook: hook ${JSON.stringify(hook)} is not a hook code`);
+  if (!isModuleFile(file)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `registerAdvanceHook ${hook}: file must be a module path relative to server-plugin/`);
   if (typeof handler !== 'function') throw new KernelError('E-DIM-STRUCT-FIELD', {}, `registerAdvanceHook ${hook}: handler must be a function`);
   if (hooks.has(hook)) throw new KernelError('E-PHASE-HOOK-DUPLICATE', {}, `registerAdvanceHook: hook ${hook} already registered`);
   hooks.set(hook, Object.freeze({ file, run: handler }));

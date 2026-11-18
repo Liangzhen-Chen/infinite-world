@@ -4,6 +4,7 @@
 // 不读 state，只收函数并在要时交出；查不到即 E-DIM-UNKNOWN-READ、不放行（裁定①第 3 条）。返回值的形状由调用方按所需字段核对。
 
 import { KernelError } from './errors.mjs';
+import { isModuleFile, isLowerCamelCode } from './handles/keys.mjs';
 
 /**
  * @typedef {(engine: any, state: any, id: string) => unknown} ViewReader
@@ -15,9 +16,6 @@ import { KernelError } from './errors.mjs';
 /** @type {Map<string, ViewEntry>} */
 const views = new Map();
 
-const NAME_RE = /^[a-z][a-zA-Z0-9_]{0,47}$/;
-const FILE_RE = /^(?:[a-z0-9][a-z0-9_-]*\/)*[a-z0-9][a-z0-9_.-]*\.mjs$/;
-
 /**
  * kernelApi `registerViewReader(name, file, reader)`：规则层交入一个视图读取函数（如卷十九 §3.2 :242 `buildProjectView`、卷二十七 §3.1 `aggregateView`）。
  * 同一名交两次即 E-WRITER-DUPLICATE（一视图一出口，同 registerAdvancePlan）。
@@ -25,8 +23,8 @@ const FILE_RE = /^(?:[a-z0-9][a-z0-9_-]*\/)*[a-z0-9][a-z0-9_.-]*\.mjs$/;
  * @returns {void}
  */
 export function registerViewReader(name, file, reader) {
-  if (typeof name !== 'string' || !NAME_RE.test(name)) throw new KernelError('E-DIM-ID-FORMAT', {}, `registerViewReader: name ${JSON.stringify(name)} is not a view name`);
-  if (typeof file !== 'string' || !FILE_RE.test(file)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `registerViewReader ${name}: file must be a module path relative to server-plugin/`);
+  if (!isLowerCamelCode(name)) throw new KernelError('E-DIM-ID-FORMAT', {}, `registerViewReader: name ${JSON.stringify(name)} is not a view name`);
+  if (!isModuleFile(file)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `registerViewReader ${name}: file must be a module path relative to server-plugin/`);
   if (typeof reader !== 'function') throw new KernelError('E-DIM-STRUCT-FIELD', {}, `registerViewReader ${name}: reader must be a function`);
   if (views.has(name)) throw new KernelError('E-WRITER-DUPLICATE', {}, `registerViewReader: view ${name} already registered`);
   views.set(name, Object.freeze({ file, read: reader }));

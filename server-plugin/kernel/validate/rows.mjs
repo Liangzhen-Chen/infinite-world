@@ -114,8 +114,13 @@ function valueOf(t, id, row, dim) {
 }
 
 const REQ_FORMS = /^(always|never|byClass:[a-z][a-z0-9_]*|ifPresent:[a-z][a-zA-Z0-9]*|byEnum:[a-z][a-zA-Z0-9]*=[a-z][a-z0-9_]*|anyOf:[a-zA-Z0-9.]+(,[a-zA-Z0-9.]+)+|byDigestible|byReader)$/;
+// required 策略的多条件分隔符（卷二 §1.2 :104：一个维度可并列多个条件，以"；"分隔）。
+// 原 kernel/handles/patterns.mjs 搬入（S13 (b) 允许 validate/* 用正则；patterns.mjs 只留从 rx.mjs 搬来的正则）。
+const REQUIRED_TERM_SEPARATOR = /；/;
+/** @param {unknown} s @returns {string[]} */
+export const splitRequiredTerms = (s) => (typeof s === 'string' ? s.split(REQUIRED_TERM_SEPARATOR).map((x) => x.trim()) : []);
 /** @param {unknown} s required 策略 @returns {string[]} */
-export const requiredTerms = (s) => (typeof s === 'string' ? s.split('；').map((x) => x.trim()) : []);
+export const requiredTerms = splitRequiredTerms;
 /** @param {unknown} s required 策略 @returns {boolean} */
 export const requiredSyntaxOk = (s) => requiredTerms(s).length > 0 && requiredTerms(s).every((x) => REQ_FORMS.test(x));
 

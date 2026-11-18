@@ -15,6 +15,7 @@ import { finalizeInputs, inputsBySystem, resetFinalized } from '../declare.mjs';
 import { codeOf } from '../errors.mjs';
 import { checkLedgerTables, checkSubjectFlagDims } from '../ledger.mjs';
 import { checkClockTables, checkHookCadence, installScheduler } from '../scheduler.mjs';
+import { installFixedConstants } from '../det-math.mjs';
 
 export const LAYOUT = Object.freeze({
   dimensionsDir: 'world/ontology/dimensions',
@@ -40,6 +41,8 @@ export function loadWorld(root, opts = {}) {
   // 校验器自己的上限取自内核常数表；登记了该表时缺键即加载失败（不设缺省）。
   const constants = ruleTable(read.rules, LAYOUT.constants);
   const need = (k) => { if (!Number.isInteger(constants[k])) throw new Error(`E-DIM-STRUCT-FIELD rules.${LAYOUT.constants}: ${k} missing`); return constants[k]; };
+  // 定点标度常数只从规则表来（卷二 S10 登记豁免表）：校验维度前收下，det-math 的全部算术读它（李白 11-18 08:20 第 2 条）。
+  installFixedConstants({ BASE: need('BASE'), SCALE: need('SCALE'), PERMILLE: need('PERMILLE'), BPS: need('BPS') });
   const declPath = join(root, LAYOUT.stateOwners);
   const parsed = existsSync(declPath) ? parseJsonStrict(readText(declPath)) : { value: {}, errors: [] };
   const decl = parsed.value || {};
@@ -81,8 +84,8 @@ export function loadWorld(root, opts = {}) {
     installScheduler(read.rules); // schedule 入堆缩放读 rules.clock（kernel/scheduler.mjs，块 4 第 4-2 张）
     owners.merged.systems = deps.systems;
   }
-  const syntaxText = syntax.map((e) => `${e.code}  ${e.table}/.  got ${JSON.stringify(e.got)}  want ${e.want}  — ${e.path}\n`).join('');
-  const depsText = deps.errors.map((e) => `${e.code}  ${e.table}/.  got ${JSON.stringify(e.got)}  want ${e.want}  — ${e.path}\n`).join('');
+  const syntaxText = syntax.map((e) => `${e.code}  ${e.table}/.  got ${JSON.stringify(e.got)}  want ${e.want}  - ${e.path}\n`).join('');
+  const depsText = deps.errors.map((e) => `${e.code}  ${e.table}/.  got ${JSON.stringify(e.got)}  want ${e.want}  - ${e.path}\n`).join('');
   return {
     ...report, ok, errors: [...report.errors, ...tail.errors, ...syntax, ...owners.errors, ...deps.errors], text: tail.text + report.text + syntaxText + owners.text + depsText,
     rules: read.rules, owners: owners.merged,

@@ -5,6 +5,7 @@
 // 与或非另收卷文数据行的单词写法 and、or、not（卷四 §4.7.5 diet `eats`）；`集 has 项` 是 member(项, 集) 的中缀写法（同处）。
 
 import { fixedUnits, fixedAdd, fixedSub, fixedMultiply, fixedDivide, fixedToNumber, FixedError } from './det-math.mjs';
+import { rxTokenAt, shapeArgCount, setFieldNames } from './handles/patterns.mjs';
 
 export class RxError extends Error {
   constructor(message, code) { super(message); this.code = code || 'E-MOD-RX'; }
@@ -22,16 +23,14 @@ const WORD_OPS = Object.freeze({ and: '&&', or: '||', not: '!', has: 'has' });
 
 function tokenize(text) {
   if (typeof text !== 'string') fail('expression must be text');
-  const re = /\s*(?:(\d+(?:\.\d+)?)|([a-z][A-Za-z0-9_]*(?:\.[A-Za-z0-9_]+)*)|(==|!=|<=|>=|&&|\|\||[-+*/%<>()!,]))/y;
   const out = [];
   let at = 0;
   const end = text.trimEnd().length;
   while (at < end) {
-    re.lastIndex = at;
-    const m = re.exec(text);
+    const m = rxTokenAt(text, at);
     if (!m) fail(`unexpected text at ${at}`);
-    at = re.lastIndex;
-    const [, numTok, nameTok, opTok] = m;
+    at = m.end;
+    const [numTok, nameTok, opTok] = m.groups;
     if (numTok !== undefined) out.push({ k: 'num', v: numTok });
     else if (Object.hasOwn(WORD_OPS, nameTok)) out.push({ k: 'op', v: WORD_OPS[nameTok] });
     else if (nameTok !== undefined) out.push({ k: 'name', v: nameTok });
@@ -198,11 +197,11 @@ function typeOf(n, scope) {
 /** @param {{ns: string, shape: string}} row 命名空间登记行 @returns {number} */
 export const nsArgCount = (row) => {
   if (!row || typeof row.shape !== 'string') return fail(`namespace row ${row && row.ns} has no return shape`, 'E-RX-NS-UNKNOWN');
-  return (row.shape.match(/<[^<>]+>/g) || []).length;
+  return shapeArgCount(row.shape);
 };
 // 返回形状里写明"（set，只作 member 的 set）"的字段名：`<字段>（set，只作 member 的 set）`，由登记行判，不按命名空间名特判。
 /** @param {{ns: string, shape: string}} row 命名空间登记行 @returns {Set<string>} */
-export const nsSetFields = (row) => new Set([...String(row.shape).matchAll(/([A-Za-z_][\w]*)（set，只作 member 的 set）/g)].map((m) => m[1]));
+export const nsSetFields = (row) => new Set(setFieldNames(row.shape));
 const sameKind =(a, b) => a === b || (a === 'codeOrHandle' && (b === 'code' || b === 'handle')) || (b === 'codeOrHandle' && (a === 'code' || a === 'handle'));
 
 // 维度类型 → RX 读数类型（第 1 点 dim 一项）；set 只许作 member 的 set。

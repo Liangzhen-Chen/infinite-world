@@ -8,6 +8,35 @@ export const TYPES = Object.freeze(['number', 'integer', 'boolean', 'string', 'e
 export const CODE_RE = /^[a-z][a-z0-9_]{1,47}$/;
 export const KEY_RE = /^[a-z][a-zA-Z0-9]{0,47}$/;
 
+// ---------- 错误码文法（卷二 §4.2）与 state-owners 的 pathTypes 值文法（§2.7） ----------
+// 原 kernel/handles/patterns.mjs 搬入（S13 (b) 允许 validate/* 用正则；patterns.mjs 只留从 rx.mjs 搬来的正则）。
+
+// 错误码文法：E-<区>-<名> / W-…（vocab-handle 构造 ErrorCode 前按它核对）。
+const ERROR_CODE = /^[EW]-[A-Z0-9]+(-[A-Z0-9]+)+$/;
+/** @param {unknown} s @returns {boolean} */
+export const isErrorCode = (s) => typeof s === 'string' && ERROR_CODE.test(s);
+
+const LIST_TYPE = /^list<(?<item>.+)>$/;
+const NUMBER_TYPE = /^(?<base>number|integer)(?::(?<unit>.*))?$/;
+const CLOSED_TYPE = /^(ref|enum):[a-z][a-z0-9_]*$/;
+const STRUCT_TYPE = /^struct:[a-zA-Z][a-zA-Z0-9_<>]*$/;
+/** list<…> 的内层类型；不是 list 返回 null。@param {string} t @returns {string | null} */
+export function listItemType(t) {
+  const m = LIST_TYPE.exec(t);
+  return m ? m.groups.item : null;
+}
+/** number[:unit] / integer[:unit] 的 base 与 unit；不是数值类型返回 null。@param {string} t @returns {{base: string, unit: string | undefined} | null} */
+export function parseNumberType(t) {
+  const m = NUMBER_TYPE.exec(t);
+  return m ? { base: m.groups.base, unit: m.groups.unit } : null;
+}
+/** ref:<kind> / enum:<family> / struct:<name> 三类封闭写法。@param {string} t @returns {boolean} */
+export const isClosedType = (t) => typeof t === 'string' && (CLOSED_TYPE.test(t) || STRUCT_TYPE.test(t));
+
+const SEALED_MENTION = /(^|<)sealed(>|$)/;
+/** 类型文法里是否出现 sealed（list<sealed>、struct 名含 sealed 段等）。@param {unknown} t @returns {boolean} */
+export const mentionsSealed = (t) => typeof t === 'string' && SEALED_MENTION.test(t);
+
 // 代码内封闭枚举（§1.9 末段；值不带前缀）。只收卷二 §1.9 写出取值的；别卷定义取值的（carrier、etmode 等）在此缺席，引用即报未登记。
 export const CODE_ENUMS = Object.freeze({
   stage: ['add', 'mul', 'max', 'min', 'set', 'post'],
@@ -69,7 +98,7 @@ export function checkDef(def, env, at, err, top) {
     if (!env.units.has(def.unit)) bad('E-DIM-UNIT-UNKNOWN', def.unit, 'unit id in _units.json');
     const extScale = top && def.stockMode === 'extScale';
     if (def.precision === undefined) { if (t === 'number') bad('E-DIM-SCHEMA-PRECISION', 'missing', 'decimal places within SCALE'); }
-    else if (extScale ? !extPrecisionOk(def.precision) : !precisionOk(def.precision)) bad('E-DIM-SCHEMA-PRECISION', def.precision, extScale ? 'decimal places of SCALE² (stockMode extScale)' : 'decimal places within SCALE');
+    else if (extScale ? !extPrecisionOk(def.precision) : !precisionOk(def.precision)) bad('E-DIM-SCHEMA-PRECISION', def.precision, extScale ? 'decimal places of SCALE^2 (stockMode extScale)' : 'decimal places within SCALE');
     if (def.domain !== undefined && !rangeOk(def.domain)) bad('E-DIM-DOMAIN-RANGE', def.domain, '[min,max] (null = unbounded)');
   }
   if (t === 'enum') {
@@ -228,7 +257,7 @@ export function checkValue(def, v, env, at, err) {
         const [x, y, ...rest] = p;
         return typeof x === 'number' && typeof y === 'number' && rest.length === 0;
       };
-      if (!Array.isArray(v) || !pts.every(pairOk)) { bad('E-DIM-DOMAIN-CURVE', v, '[[x,y],…]'); return; }
+      if (!Array.isArray(v) || !pts.every(pairOk)) { bad('E-DIM-DOMAIN-CURVE', v, '[[x,y],...]'); return; }
       if (pts.some((p, i) => i > 0 && !(p[0] > pts[i - 1][0]))) bad('E-DIM-DOMAIN-CURVE', pts.map((p) => p[0]), 'strictly increasing x');
       if (def.monotone === true) {
         const d = pts.slice(1).map((p, i) => Math.sign(p[1] - pts[i][1]));

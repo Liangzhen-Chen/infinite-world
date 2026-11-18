@@ -11,6 +11,8 @@ import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 import { mergeStateOwners, assignSortKeys, overlapPairs, compareSpecificity, patternsOverlap } from '../../server-plugin/kernel/load/state-owners.mjs';
 import { V, E, P } from '../../server-plugin/kernel/handles/generated.mjs';
 import { kindOf } from '../../server-plugin/kernel/vocab.mjs';
+import { listItemType, parseNumberType, isClosedType, mentionsSealed } from '../../server-plugin/kernel/validate/types.mjs';
+import { splitRequiredTerms } from '../../server-plugin/kernel/validate/rows.mjs';
 import { registerSystems } from '../../server-plugin/systems.mjs';
 import { applySortKeys } from '../../tools/gen-sort-keys.mjs';
 import { renderStateTypes, tsTypeOf } from '../../tools/gen-state-types.mjs';
@@ -424,6 +426,34 @@ test('state-types 类型映射按 §2.7 文法；文法外的值抛错', () => {
   assert.equal(tsTypeOf('dimension'), 'DimensionValue');
   assert.equal(tsTypeOf('EventId'), 'EventId');
   assert.throws(() => tsTypeOf('string'), /outside the §2.7 grammar/);
+});
+
+// ---------- pathTypes 值文法与 required 策略分隔（原 patterns.test.mjs 搬入：类型文法在 validate/types.mjs，分隔符在 validate/rows.mjs） ----------
+
+test('pathTypes 值文法：list / number / 封闭写法 / sealed', () => {
+  assert.equal(listItemType('list<number>'), 'number');
+  assert.equal(listItemType('list<struct:byState<number>>'), 'struct:byState<number>');
+  assert.equal(listItemType('number'), null);
+  assert.deepEqual(parseNumberType('number:kg'), { base: 'number', unit: 'kg' });
+  assert.deepEqual(parseNumberType('integer'), { base: 'integer', unit: undefined });
+  assert.equal(parseNumberType('ref:x'), null);
+  assert.equal(isClosedType('ref:item'), true);
+  assert.equal(isClosedType('enum:status_family'), true);
+  assert.equal(isClosedType('struct:byState<number>'), true);
+  assert.equal(isClosedType('struct:any-thing'), false);
+  assert.equal(isClosedType('string'), false);
+  assert.equal(mentionsSealed('sealed'), true);
+  assert.equal(mentionsSealed('list<sealed>'), true);
+  assert.equal(mentionsSealed('ref:sealed'), false);
+  assert.equal(mentionsSealed('struct:a>sealed'), false);
+  assert.equal(mentionsSealed('list<sealed>'), true);
+  assert.equal(mentionsSealed('number'), false);
+});
+
+test('required 策略分隔：全角分号分隔多个条件', () => {
+  assert.deepEqual(splitRequiredTerms('byDigestible；byClass:comp_edible； anyOf:a,b'), ['byDigestible', 'byClass:comp_edible', 'anyOf:a,b']);
+  assert.deepEqual(splitRequiredTerms('always'), ['always']);
+  assert.deepEqual(splitRequiredTerms(3), []);
 });
 
 // ---------- registerSystems 骨架 ----------

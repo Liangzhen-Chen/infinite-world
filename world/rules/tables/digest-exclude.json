@@ -1,6 +1,6 @@
 {
  "generatedBy": "tools/gen-digest-exclude.mjs",
- "rule": "卷二 §2.9 第 3 条：display 字段集合 ∪ displayNames.* ∪ playerNotes.*",
+ "rule": "vol2 s2.9 rule 3: display field set union displayNames.* union playerNotes.*",
  "paths": [
   "displayNames.*",
   "displayNames.*.text",
