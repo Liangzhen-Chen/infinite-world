@@ -1,4 +1,5 @@
 [
+ "server-plugin/kernel/advance-registry.mjs",
  "server-plugin/kernel/clone.mjs",
  "server-plugin/kernel/declare.mjs",
  "server-plugin/kernel/det-math.mjs",

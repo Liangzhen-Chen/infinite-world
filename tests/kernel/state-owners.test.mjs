@@ -42,8 +42,8 @@ test('真实 state-owners.json：合并零错；loadWorld 通过后 V、E、P �
   assert.ok(Object.keys(V).length > 0);
   assert.equal(E.E_WRITER_DUPLICATE, 'E-WRITER-DUPLICATE');
   assert.equal(E.E_PHASE_DUPLICATE, 'E-PHASE-DUPLICATE');
-  // clock.minute、clock.seq（写者 kernel/scheduler.mjs，块 4-1；卷二十 §3.2 :444）生成 P。
-  assert.deepEqual(Object.keys(P), ['clock_minute', 'clock_seq', 'created_props', 'created_props_basis', 'displayNames_seq', 'pendingPost', 'terminated']);
+  // clock.minute、clock.seq（写者 kernel/scheduler.mjs，块 4-1；卷二十 §3.2 :444）、due.*（块 4-2，:445）生成 P。
+  assert.deepEqual(Object.keys(P), ['clock_minute', 'clock_seq', 'created_props', 'created_props_basis', 'displayNames_seq', 'due', 'pendingPost', 'terminated']);
   assert.equal(P.created_props('mat_x', 'density'), 'created.mat_x.props.density');
   assert.equal(P.terminated('npc_x'), 'terminated.npc_x');
   assert.equal(P.displayNames_text, undefined);
@@ -93,7 +93,7 @@ test('keyKinds 三种项合法：(a) 单个 kind、(b) kind 列表、(c) event /
 });
 
 test('keyKinds (b) 列表：空、重复、通配、(c) 外的代号、未登记 kind 各报 E-PATH-KEYKINDS', () => {
-  for (const bad of [[[]], [['person', 'person']], [['person', 'identityKey', 'identityKey']], [['*']], [['any']], [['person', 'handle']], [['person', 'EventId']], [['nosuchkind']], [[7]]]) {
+  for (const bad of [[[]], [['person', 'person']], [['person', 'identityKey', 'identityKey']], [['*']], [['any']], [['person', 'Handle']], [['person', 'EventId']], [['nosuchkind']], [[7]]]) {
     const d = base(); d.keyKinds['box.*'] = bad;
     assert.ok(codes(d).length >= 1 && codes(d).every((c) => c === 'E-PATH-KEYKINDS'), JSON.stringify(bad));
   }
@@ -117,7 +117,8 @@ test('E-TERM-RECORD-UNLISTED 混列表只看实体 kind 项：[gadget, identityK
 });
 
 test('keyKinds (a)(c) 项：未登记 kind、非 event/dimKey 的非实体代号、非字符串非列表各报 E-PATH-KEYKINDS', () => {
-  for (const bad of ['nosuchkind', 'handle', 'EventId', '*', 7, null, { kind: 'person' }]) {
+  // handle 自块 4-2 起是 (c) 项（李白 11-18 03:22 裁定②），不再是反例；大小写不同的 Handle 仍不认。
+  for (const bad of ['nosuchkind', 'Handle', 'EventId', '*', 7, null, { kind: 'person' }]) {
     const d = base(); d.keyKinds['box.*'] = [bad];
     assert.deepEqual(codes(d), ['E-PATH-KEYKINDS'], JSON.stringify(bad));
   }

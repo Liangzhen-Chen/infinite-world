@@ -84,10 +84,14 @@
     {
      "ref": "master 上 error-codes.mjs 等闭包文件变化致指纹变，判定口径不变（R12-14.3）",
      "rev": 9
+    },
+    {
+     "ref": "块 4-2 加 E-CLOCK-REACTION-LIMIT（李白 11-18 03:22 裁定①）：码表闭包变化，口径不变",
+     "rev": 10
     }
    ],
-   "print": "7c22d0ad530c1acc3ca596073fa3fc132a1f451e6bb45b7a3e8561d0589b7ff0",
-   "rev": 9,
+   "print": "3a6f9c463e73117591658fde2028d31955a512e55ea211c4319fb7dd91bbc83f",
+   "rev": 10,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -482,10 +486,14 @@
     {
      "ref": "master 上 error-codes.mjs 等闭包文件变化致指纹变，判定口径不变（R12-14.3）",
      "rev": 11
+    },
+    {
+     "ref": "块 4-2 加 E-CLOCK-REACTION-LIMIT（李白 11-18 03:22 裁定①）：码表闭包变化，口径不变",
+     "rev": 12
     }
    ],
-   "print": "8d615f0cb8a11044851d3f6ab8a450ce26f6a4eaa2a71eb6759455ab46820e62",
-   "rev": 11,
+   "print": "a0f31b6e591bb458d1401724d3a41d1ebba8b7e784de36ca84ed41a41d873023",
+   "rev": 12,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1044,10 +1052,14 @@
     {
      "ref": "master 上 error-codes.mjs 等闭包文件变化致指纹变，判定口径不变（R12-14.3）",
      "rev": 17
+    },
+    {
+     "ref": "块 4-2 加 E-CLOCK-REACTION-LIMIT（李白 11-18 03:22 裁定①）：码表闭包变化，口径不变",
+     "rev": 18
     }
    ],
-   "print": "6263ba62fbdc02b2c880e42bde2f76408f35751456e4563092591ce00a411c1b",
-   "rev": 17,
+   "print": "cb3a6c6670c72138fdfb56c9d5c3f562708cf656ef440fcaf0c2c2858c153db1",
+   "rev": 18,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1182,10 +1194,14 @@
     {
      "ref": "master 上 error-codes.mjs 等闭包文件变化致指纹变，判定口径不变（R12-14.3）",
      "rev": 7
+    },
+    {
+     "ref": "块 4-2 加 E-CLOCK-REACTION-LIMIT（李白 11-18 03:22 裁定①）：码表闭包变化，口径不变",
+     "rev": 8
     }
    ],
-   "print": "7c22d0ad530c1acc3ca596073fa3fc132a1f451e6bb45b7a3e8561d0589b7ff0",
-   "rev": 7,
+   "print": "3a6f9c463e73117591658fde2028d31955a512e55ea211c4319fb7dd91bbc83f",
+   "rev": 8,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
