@@ -5,6 +5,7 @@
 // `inputsOf`（:574）由块 2 第 2-5 张建（主会话定归属）：依赖闭包在 kernel/declare.mjs 加载期定稿，这里只按名取。
 
 import { closureOf } from './declare.mjs';
+import { T } from './handles/markers.mjs';
 
 /**
  * kernelApi `inputsOf(node)`（§2.3 :471、§2.7 :574，acceptsState: false）：节点的最终依赖数组，加载期算一次、冻结，每次返回同一对象。
@@ -32,7 +33,7 @@ const VALUE = Symbol('memo value');
  * @returns {T}
  */
 export function stateMemo(state, scope, inputs, build) {
-  if (state === null || typeof state !== 'object') return build();
+  if (state === null || typeof state !== T.js_type.object) return build();
   let scopes = memos.get(state);
   if (!scopes) memos.set(state, (scopes = new Map()));
   let node = scopes.get(scope);
@@ -52,7 +53,7 @@ export function stateMemo(state, scope, inputs, build) {
  * @returns {void}
  */
 export function invalidateMemo(state) {
-  if (state !== null && typeof state === 'object') memos.delete(state);
+  if (state !== null && typeof state === T.js_type.object) memos.delete(state);
 }
 
 /** 测试与重新挂接用：清空全部缓存（kernel 组内用）。 */
