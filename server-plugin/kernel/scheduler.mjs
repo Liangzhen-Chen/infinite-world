@@ -28,7 +28,7 @@ import { report } from './report.mjs';
 import { registry } from './vocab.mjs';
 import { CODE_RE } from './validate/types.mjs';
 import { advanceHook, advanceHookNames } from './advance-registry.mjs';
-import { snakeCaseKey } from './handles/patterns.mjs';
+import { snakeCaseKey } from './handles/keys.mjs';
 
 // ---------- 代码内封闭枚举（卷二十 §8 问题 5 :1318 列为代码内封闭、不登卷二） ----------
 

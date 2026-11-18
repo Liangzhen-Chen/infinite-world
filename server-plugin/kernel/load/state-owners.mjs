@@ -7,7 +7,8 @@
 import { buildE, buildP } from '../handles/generated.mjs';
 import { checkPathPattern } from '../handles/keys.mjs';
 import { errorCodeOf, HandleError } from '../handles/vocab-handle.mjs';
-import { isClosedType, isPathPattern, listItemType, mentionsSealed, parseNumberType } from '../handles/patterns.mjs';
+import { isPathPattern } from '../handles/keys.mjs';
+import { isClosedType, listItemType, mentionsSealed, parseNumberType } from '../validate/types.mjs';
 
 const E = buildE();
 

@@ -5,7 +5,7 @@
 // 本文件不读这两处、不认任何具体钩子名，只收函数并在调度器要时交出。
 
 import { KernelError } from './errors.mjs';
-import { isModuleFile, isLowerCamelCode } from './handles/patterns.mjs';
+import { isModuleFile, isLowerCamelCode } from './handles/keys.mjs';
 
 /**
  * @typedef {(engine: any, state: any, beat: {unit: string, minute: number}) => void} HookHandler

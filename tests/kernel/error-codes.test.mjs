@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ERROR_CODES, REGISTERED_CODES } from '../../server-plugin/kernel/error-codes.mjs';
-import { isErrorCode } from '../../server-plugin/kernel/handles/patterns.mjs';
+import { isErrorCode } from '../../server-plugin/kernel/validate/types.mjs';
 import { installHandles, buildE, E } from '../../server-plugin/kernel/handles/generated.mjs';
 import { errorCodeOf, CODE_RE } from '../../server-plugin/kernel/handles/vocab-handle.mjs';
 import { CODE_RE as TYPES_CODE_RE } from '../../server-plugin/kernel/validate/types.mjs';
@@ -39,6 +39,14 @@ test('码表冻结、按 code 排序、无重复、每码合 §4.2 文法、每�
   assert.deepEqual(codes, [...codes].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)));
   assert.equal(new Set(codes).size, codes.length);
   assert.throws(() => { ERROR_CODES.push({}); }, TypeError);
+});
+
+test('错误码文法 E-/W- 两段及以上（原 patterns.test.mjs 搬入，定义在 validate/types.mjs）', () => {
+  assert.equal(isErrorCode('E-DIM-ID-FORMAT'), true);
+  assert.equal(isErrorCode('W-DIM-GAP'), true);
+  assert.equal(isErrorCode('E-X'), false);
+  assert.equal(isErrorCode('e-x-y'), false);
+  assert.equal(isErrorCode('E-a-b'), false);
 });
 
 test('抽 6 个跨卷码：E 成员名与值、出处', () => {

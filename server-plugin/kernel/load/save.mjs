@@ -16,7 +16,7 @@ import {
 import { canonicalEqual } from '../storage.mjs';
 import { KernelError, codeOf } from '../errors.mjs';
 import { report } from '../report.mjs';
-import { isHex64 } from '../handles/patterns.mjs';
+import { isHex64 } from '../handles/keys.mjs';
 
 /** 入库的摘要排除表（生成文件，取代旧的手写表；卷一 §8.3 :643 的文件名不变）。 */
 export const DIGEST_EXCLUDE_FILE = 'world/rules/tables/digest-exclude.json';

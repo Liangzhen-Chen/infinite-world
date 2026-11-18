@@ -4,7 +4,7 @@
 // 不读 state，只收函数并在要时交出；查不到即 E-DIM-UNKNOWN-READ、不放行（裁定①第 3 条）。返回值的形状由调用方按所需字段核对。
 
 import { KernelError } from './errors.mjs';
-import { isModuleFile, isLowerCamelCode } from './handles/patterns.mjs';
+import { isModuleFile, isLowerCamelCode } from './handles/keys.mjs';
 
 /**
  * @typedef {(engine: any, state: any, id: string) => unknown} ViewReader

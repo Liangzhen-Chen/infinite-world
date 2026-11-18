@@ -5,7 +5,7 @@
 // 卷三甲的七码登在卷二 §4.3（卷三甲 :982），卷二十有自己的"附 本卷错误码表"（李白 11-17 裁定，勘误 1117ec20）。
 // 不收：各卷已删的旧码与前缀写法（E-DEITY-CAP、E-ACT-AUTHORITY、E-ACT-DUPLICATE、E-EVT-NOEVENT、E-EVT-PACE、E-DIM-EXTEND-ON-INSTANCE、E-NAME-BLOCKLIST、E-PACK-PATCH-* 等缩写）。
 
-// 错误码文法（卷二 §4.2）的定义与判定在 kernel/handles/patterns.mjs#isErrorCode（本文件只登记码与出处）。
+// 错误码文法（卷二 §4.2）的定义与判定在 kernel/validate/types.mjs#isErrorCode（本文件只登记码与出处）。
 
 const V2 = 'vol2.s4.3';
 

@@ -11,7 +11,8 @@ import { resolve } from 'node:path';
 import { parseJsonStrict } from './json-text.mjs';
 import { checkDef, checkValue, rangeOk, DOMAIN_OPTIONAL, TYPES, KEY_RE, CODE_RE, CODE_ENUMS } from '../validate/types.mjs';
 import { STACKING } from '../validate/dimensions-validate.mjs';
-import { escapeJsonPointer, isRuleTableFile, keyPointerOf } from '../handles/patterns.mjs';
+import { isRuleTableFile } from '../handles/keys.mjs';
+import { escapeJsonPointer, keyPointerOf } from './vocab-load.mjs';
 
 export const RULES_LAYOUT = Object.freeze({ dir: 'world/rules', registry: 'registry.json' });
 

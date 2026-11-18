@@ -1,7 +1,7 @@
 // L0 语法（卷二 §4.1）：JSON 可解析且无重复键，逐字符扫描。结构由本文件扫描，标量文本交给 JSON.parse 解码。
 // 返回 {value, errors}；errors 每项 {code, pointer, got, want}，pointer 为 JSON 指针。
 
-import { escapeJsonPointer, jsonScalarAt } from '../handles/patterns.mjs';
+import { escapeJsonPointer, jsonScalarAt } from './vocab-load.mjs';
 
 const WS = new Set([' ', '\t', '\n', '\r']);
 const escPtr = escapeJsonPointer;

@@ -15,11 +15,10 @@ import { openSync, writeSync, fsyncSync, closeSync, renameSync, mkdirSync, exist
 import { join } from 'node:path';
 import { canonical, pathTypeOf, pathTypeHasDeeper, pathTypeRecords, isSealedValue, hasExactKeys } from './storage.mjs';
 
-import { statePathSegments } from './handles/keys.mjs';
+import { statePathSegments, isHex64 } from './handles/keys.mjs';
 import { KernelError, codeOf } from './errors.mjs';
 import { clone } from './clone.mjs';
 import { readManifestDigests, checkManifest } from './load/save.mjs';
-import { isHex64 } from './handles/patterns.mjs';
 
 // ---------- 存档布局的名字（S27-7：只在本文件与 kernel/load/save.mjs 出现） ----------
 

@@ -140,10 +140,14 @@
     {
      "ref": "B2-W2（卷十一 11-18 S13 kernel 清理）：检测器 import 闭包里的 kernel 文件改动（正则搬到 handles/patterns.mjs、error-codes 出处改 ASCII、det-math 常数改读规则表），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 21
+    },
+    {
+     "ref": "B2-W2（卷二 S13 正则叶子收窄）：patterns.mjs 只留从 rx.mjs 搬来的正则，其余格式正则按用途移入 handles/keys.mjs、validate/types.mjs、validate/rows.mjs、load/vocab-load.mjs，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 22
     }
    ],
-   "print": "b823531380de2daa786f58cb1ce2976493bcc274e1c728990e4e7109ee962056",
-   "rev": 21,
+   "print": "edf02a274271218e20a09a0afac98690875ad60ebb5bb23d714ce8853e02bf0d",
+   "rev": 22,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -329,10 +333,14 @@
     {
      "ref": "B2-W2（卷十一 11-18 S13 kernel 清理）：检测器 import 闭包里的 kernel 文件改动（正则搬到 handles/patterns.mjs、error-codes 出处改 ASCII、det-math 常数改读规则表），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 8
+    },
+    {
+     "ref": "B2-W2（卷二 S13 正则叶子收窄）：patterns.mjs 只留从 rx.mjs 搬来的正则，其余格式正则按用途移入 handles/keys.mjs、validate/types.mjs、validate/rows.mjs、load/vocab-load.mjs，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 9
     }
    ],
-   "print": "c7c4013d9814a4ec2b04125dc19e03ce852450736171e9e6b974f99552076714",
-   "rev": 8,
+   "print": "a5039e4e49ba5395be2623e81ddc924a5a8ccedd6030c43667c4e35220a32548",
+   "rev": 9,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -525,10 +533,14 @@
     {
      "ref": "B2-W2（卷十一 11-18 S13 kernel 清理）：检测器 import 闭包里的 kernel 文件改动（正则搬到 handles/patterns.mjs、error-codes 出处改 ASCII、det-math 常数改读规则表），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 9
+    },
+    {
+     "ref": "B2-W2（卷二 S13 正则叶子收窄）：patterns.mjs 只留从 rx.mjs 搬来的正则，其余格式正则按用途移入 handles/keys.mjs、validate/types.mjs、validate/rows.mjs、load/vocab-load.mjs，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 10
     }
    ],
-   "print": "7a0f4108abaf904f0db3515b0564bc19f9cb01014709019a710ad368e326f21f",
-   "rev": 9,
+   "print": "e5e038b363f96a78eb808ed1de72fd86031b3aa7f3902d0ac6a9ab8a3b2d106f",
+   "rev": 10,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -686,10 +698,14 @@
     {
      "ref": "B2-W2（卷十一 11-18 S13 kernel 清理）：检测器 import 闭包里的 kernel 文件改动（正则搬到 handles/patterns.mjs、error-codes 出处改 ASCII、det-math 常数改读规则表），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 25
+    },
+    {
+     "ref": "B2-W2（卷二 S13 正则叶子收窄）：patterns.mjs 只留从 rx.mjs 搬来的正则，其余格式正则按用途移入 handles/keys.mjs、validate/types.mjs、validate/rows.mjs、load/vocab-load.mjs，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 26
     }
    ],
-   "print": "b5b7b6de0158a062aa4faede9fd095332129984e7fc5ed59770bdb6fd5032cfe",
-   "rev": 25,
+   "print": "5c462b180399a6b304a76d8cbea4825c2f6ca0fbe091120e5f1e00ea59ad6cee",
+   "rev": 26,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -828,10 +844,14 @@
     {
      "ref": "B2-W2（卷十一 11-18 S13 kernel 清理）：检测器 import 闭包里的 kernel 文件改动（正则搬到 handles/patterns.mjs、error-codes 出处改 ASCII、det-math 常数改读规则表），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 10
+    },
+    {
+     "ref": "B2-W2（卷二 S13 正则叶子收窄）：patterns.mjs 只留从 rx.mjs 搬来的正则，其余格式正则按用途移入 handles/keys.mjs、validate/types.mjs、validate/rows.mjs、load/vocab-load.mjs，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 11
     }
    ],
-   "print": "7a0f4108abaf904f0db3515b0564bc19f9cb01014709019a710ad368e326f21f",
-   "rev": 10,
+   "print": "e5e038b363f96a78eb808ed1de72fd86031b3aa7f3902d0ac6a9ab8a3b2d106f",
+   "rev": 11,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1271,10 +1291,14 @@
     {
      "ref": "B2-W2（卷十一 11-18 S13 kernel 清理）：检测器 import 闭包里的 kernel 文件改动（正则搬到 handles/patterns.mjs、error-codes 出处改 ASCII、det-math 常数改读规则表），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 10
+    },
+    {
+     "ref": "B2-W2（卷二 S13 正则叶子收窄）：patterns.mjs 只留从 rx.mjs 搬来的正则，其余格式正则按用途移入 handles/keys.mjs、validate/types.mjs、validate/rows.mjs、load/vocab-load.mjs，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 11
     }
    ],
-   "print": "7a0f4108abaf904f0db3515b0564bc19f9cb01014709019a710ad368e326f21f",
-   "rev": 10,
+   "print": "e5e038b363f96a78eb808ed1de72fd86031b3aa7f3902d0ac6a9ab8a3b2d106f",
+   "rev": 11,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -1297,10 +1321,14 @@
     {
      "ref": "B2-W2（卷十一 11-18 S13 kernel 清理）：检测器 import 闭包里的 kernel 文件改动（正则搬到 handles/patterns.mjs、error-codes 出处改 ASCII、det-math 常数改读规则表），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 2
+    },
+    {
+     "ref": "B2-W2（卷二 S13 正则叶子收窄）：patterns.mjs 只留从 rx.mjs 搬来的正则，其余格式正则按用途移入 handles/keys.mjs、validate/types.mjs、validate/rows.mjs、load/vocab-load.mjs，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 3
     }
    ],
-   "print": "203c2621c614f82871fb1bd69f282eaf2c8b02f31c43f622c2cc0c7cff67e3cd",
-   "rev": 2,
+   "print": "6a54a351c345bfc503f86b975497ddd59ce1495aaf963d906607960a8e0c2c18",
+   "rev": 3,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -1435,10 +1463,14 @@
     {
      "ref": "B2-W2（卷十一 11-18 S13 kernel 清理）：检测器 import 闭包里的 kernel 文件改动（正则搬到 handles/patterns.mjs、error-codes 出处改 ASCII、det-math 常数改读规则表），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 30
+    },
+    {
+     "ref": "B2-W2（卷二 S13 正则叶子收窄）：patterns.mjs 只留从 rx.mjs 搬来的正则，其余格式正则按用途移入 handles/keys.mjs、validate/types.mjs、validate/rows.mjs、load/vocab-load.mjs，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 31
     }
    ],
-   "print": "9a73fb0a9b40fb2e43edc2b71be8a00d36af21d982c5478184260f5a97e2df96",
-   "rev": 30,
+   "print": "410ffae73b4926aab8d79b9e7a392d02898475998989eebb1478ac26ed0f2c94",
+   "rev": 31,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1625,10 +1657,14 @@
     {
      "ref": "B2-W2（卷十一 11-18 S13 kernel 清理）：检测器 import 闭包里的 kernel 文件改动（正则搬到 handles/patterns.mjs、error-codes 出处改 ASCII、det-math 常数改读规则表），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 19
+    },
+    {
+     "ref": "B2-W2（卷二 S13 正则叶子收窄）：patterns.mjs 只留从 rx.mjs 搬来的正则，其余格式正则按用途移入 handles/keys.mjs、validate/types.mjs、validate/rows.mjs、load/vocab-load.mjs，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 20
     }
    ],
-   "print": "b823531380de2daa786f58cb1ce2976493bcc274e1c728990e4e7109ee962056",
-   "rev": 19,
+   "print": "edf02a274271218e20a09a0afac98690875ad60ebb5bb23d714ce8853e02bf0d",
+   "rev": 20,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -1778,10 +1814,14 @@
     {
      "ref": "B2-W2（卷十一 11-18 S13 kernel 清理）：检测器 import 闭包里的 kernel 文件改动（正则搬到 handles/patterns.mjs、error-codes 出处改 ASCII、det-math 常数改读规则表），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 4
+    },
+    {
+     "ref": "B2-W2（卷二 S13 正则叶子收窄）：patterns.mjs 只留从 rx.mjs 搬来的正则，其余格式正则按用途移入 handles/keys.mjs、validate/types.mjs、validate/rows.mjs、load/vocab-load.mjs，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 5
     }
    ],
-   "print": "203c2621c614f82871fb1bd69f282eaf2c8b02f31c43f622c2cc0c7cff67e3cd",
-   "rev": 4,
+   "print": "6a54a351c345bfc503f86b975497ddd59ce1495aaf963d906607960a8e0c2c18",
+   "rev": 5,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

@@ -5,7 +5,7 @@
 // declareStateWriter、declareLedgerWriter（:576–577）本卡不需要，随用到它们的那张卡建。
 
 import { KernelError } from './errors.mjs';
-import { isDeclarableNode, isAnyNode } from './handles/patterns.mjs';
+import { isDeclarableNode, isAnyNode } from './handles/keys.mjs';
 
 // 可由代码声明的三类节点（:470）与加载器机器生成的两类（:470 末句）。
 

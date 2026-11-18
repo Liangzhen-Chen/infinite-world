@@ -71,3 +71,24 @@ export function loadUnits(unitsDoc, err) {
   }
   return units;
 }
+
+// ---------- JSON 文本（L0 语法）的指针与标量 ----------
+// 原 kernel/handles/patterns.mjs 搬入：kernel 行规定"JSON 文本解析只在 kernel/load/*"，而 S13 (b) 只许见名文件用正则，
+// 本文件是 load/* 里唯一列在 (b) 的文件（自身不 import 任何 kernel 文件，不成环）。
+
+/** JSON 指针转义（RFC 6901）：`~` → `~0`、`/` → `~1`。@param {string} k @returns {string} */
+export const escapeJsonPointer = (k) => k.replace(/~/g, '~0').replace(/\//g, '~1');
+
+// JSON 标量（数字、true/false/null）的粘性匹配：从 at 起匹配，返回原文与结束位；不匹配返回 null。
+const JSON_SCALAR = /-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null/y;
+/** @param {string} text @param {number} at @returns {{raw: string, end: number} | null} */
+export function jsonScalarAt(text, at) {
+  JSON_SCALAR.lastIndex = at;
+  const m = JSON_SCALAR.exec(text);
+  return m ? { raw: m[0], end: JSON_SCALAR.lastIndex } : null;
+}
+
+// 规则表键表的行值指针：登记行的 path 末段是 /value 时取键所在位置（load/rules）。
+const VALUE_SEGMENT_END = /\/value$/;
+/** @param {string} path @returns {string} */
+export const keyPointerOf = (path) => path.replace(VALUE_SEGMENT_END, '/key');
