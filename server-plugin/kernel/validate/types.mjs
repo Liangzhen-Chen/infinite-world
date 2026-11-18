@@ -3,10 +3,20 @@
 
 import { precisionOk, extPrecisionOk } from '../det-math.mjs';
 import { compileRXInScope } from '../rx.mjs';
+import { T, TYPES, DOMAIN_OPTIONAL, ROW_FIELDS, CODE_ENUMS, markersOf } from '../handles/markers.mjs';
 
-export const TYPES = Object.freeze(['number', 'integer', 'boolean', 'string', 'enum', 'ref', 'union', 'set', 'map', 'list', 'struct', 'curve', 'distribution', 'rx']);
+// 定义源与 T 派生在 kernel/handles/markers.mjs（协议标记叶子，0 import，见该文件头）；这里只引用并转出给既有 import 方，不留第二份。
+export { T, TYPES, DOMAIN_OPTIONAL, ROW_FIELDS, CODE_ENUMS, markersOf };
+
 export const CODE_RE = /^[a-z][a-z0-9_]{1,47}$/;
 export const KEY_RE = /^[a-z][a-zA-Z0-9]{0,47}$/;
+
+// 本文件的两处固定记号定义源（单一定义，比较处引用成员）：
+// VOCAB_ANY：ref 的 vocab 部分写 "*" 表示任一词表族（本文件实现口径；卷二 §1.5 ref 行只列 "<family>"/"refs"，未写这处通配，故不按 S13 上下文白名单豁免。
+// S13 白名单里的通配 `*` 是路径模式记号，见卷二 §2.7 :814；join 分隔串见 §1.10 :320；两者都属语言与文法常量，不计第 ④ 类，李白 11-18 13:05 裁定第 2 条）；
+// COMBINE：map 的 combine 取值封闭，只有 sum（卷二 §1.6 第 5、6 项 :263–:264）。
+const VOCAB_ANY = Object.freeze({ any: '*' });
+const COMBINE = Object.freeze({ sum: 'sum' });
 
 // ---------- 错误码文法（卷二 §4.2）与 state-owners 的 pathTypes 值文法（§2.7） ----------
 // 原 kernel/handles/patterns.mjs 搬入（S13 (b) 允许 validate/* 用正则；patterns.mjs 只留从 rx.mjs 搬来的正则）。
@@ -37,35 +47,6 @@ const SEALED_MENTION = /(^|<)sealed(>|$)/;
 /** 类型文法里是否出现 sealed（list<sealed>、struct 名含 sealed 段等）。@param {unknown} t @returns {boolean} */
 export const mentionsSealed = (t) => typeof t === 'string' && SEALED_MENTION.test(t);
 
-// 代码内封闭枚举（§1.9 末段；值不带前缀）。只收卷二 §1.9 写出取值的；别卷定义取值的（carrier、etmode 等）在此缺席，引用即报未登记。
-export const CODE_ENUMS = Object.freeze({
-  stage: ['add', 'mul', 'max', 'min', 'set', 'post'],
-  scope: ['self', 'holder', 'located', 'members', 'believers', 'jurisdiction', 'target', 'global', 'mounted'],
-  eff_output: ['modifier', 'status', 'primitive', 'event', 'spawn'],
-  consent_mode: ['none', 'target', 'holder', 'authority'],
-  status_target: ['body', 'mind', 'place', 'org', 'faith'],
-  onUnknown: ['skip', 'gap', 'error'],
-  basis_kind: ['generated', 'migrated', 'deviation'],
-  rx_cmp: ['eq', 'ne', 'lt', 'le', 'gt', 'ge'],
-  rx_clock: ['day', 'season'],
-  slot_kind: ['code', 'number', 'text'],
-  successor_mode: ['inherit', 'liquidate', 'wreck'],
-  term_account: ['successor', 'sink', 'remains'],
-  gate_verdict: ['pass', 'replace', 'block'],
-  wire_route: ['menu', 'input', 'save_export', 'save_import'],
-  wire_body: ['envelope', 'bytes'],
-  event_role: ['actor', 'target', 'witness', 'related', 'informed'],
-  stock_mode: ['raw', 'anchor', 'remainder', 'extScale'],
-  reply_result: ['ok', 'received', 'rejected', 'error', 'save_unavailable'],
-  narrate_result: ['written', 'skipped', 'rejected'],
-  term_record: ['clear', 'hold', 'keep'],
-  revive_record: ['clear', 'keep'],
-  writer_role: ['create', 'rewrite'],
-  rx_type: ['number', 'boolean', 'code', 'handle'],
-  // 卷三甲 §2.1"物性格的来源级别"：代码内封闭枚举，只有三个值（A 实测出处、B 参照材料、C 设计设定）。
-  cell_grade: ['measured', 'referenced', 'designed'],
-});
-
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const ptr = (base, k) => `${base}/${String(k).replace(/~/g, '~0').replace(/\//g, '~1')}`;
 const vocabOf = (def) => def.vocab !== undefined ? def.vocab : (isObj(def.domain) ? def.domain.vocab : undefined);
@@ -78,8 +59,7 @@ export function rangeOk(domain) {
   const okEnd = (x) => x === null || typeof x === 'number';
   return Array.isArray(domain) && !rest.length && okEnd(lo) && okEnd(hi) && !(lo !== null && hi !== null && lo > hi);
 }
-// 不必写 domain 的类型（§1.2 表头；规则表登记的取值域同此写法，§4.1）。
-export const DOMAIN_OPTIONAL = Object.freeze(['boolean', 'rx', 'struct', 'map', 'union', 'distribution', 'curve', 'ref', 'enum']);
+// 不必写 domain 的类型（§1.2 表头）的定义源在 handles/markers.mjs。
 
 // JSON 值形态（union anyOf 判别用，§1.5 union 行）。
 const SHAPE = { number: 'number', integer: 'number', boolean: 'boolean', string: 'string', enum: 'string', ref: 'string', rx: 'string', set: 'array', list: 'array', curve: 'array', map: 'object', struct: 'object', distribution: 'object' };
@@ -111,7 +91,7 @@ export function checkDef(def, env, at, err, top) {
     if (forms.length !== 1) bad('E-DIM-STRUCT-FIELD', forms.join(',') || 'none', 'exactly one of kind/kinds/vocab/dim/refs');
     for (const part of refParts(def)) {
       if (part.kind !== undefined && !env.kinds.has(part.kind)) bad('E-DIM-REF-MISSING', part.kind, 'a loaded table kind or effect');
-      if (part.vocab !== undefined && part.vocab !== '*' && !env.vocab.families.has(part.vocab)) bad('E-DIM-REF-MISSING', part.vocab, 'registered vocab family');
+      if (part.vocab !== undefined && part.vocab !== VOCAB_ANY.any && !env.vocab.families.has(part.vocab)) bad('E-DIM-REF-MISSING', part.vocab, 'registered vocab family');
       if (part.dim !== undefined && !env.kinds.has(part.dim)) bad('E-DIM-REF-DIM', part.dim, 'a loaded table kind');
     }
   }
@@ -129,7 +109,7 @@ export function checkDef(def, env, at, err, top) {
     if (!isObj(def.value)) bad('E-DIM-STRUCT-FIELD', def.value, 'value: <type>');
     else checkDef(def.value, env, { ...at, path: `${at.path}/value` }, err, false);
     const valueType = isObj(def.value) ? def.value.type : undefined;
-    if (def.combine !== undefined && (def.combine !== 'sum' || !(valueType === T.type.number || valueType === T.type.integer))) bad('E-DIM-MAP-SPARSE-NONSUM', def.combine, 'combine "sum" on a number/integer valued map');
+    if (def.combine !== undefined && (def.combine !== COMBINE.sum || !(valueType === T.type.number || valueType === T.type.integer))) bad('E-DIM-MAP-SPARSE-NONSUM', def.combine, 'combine "sum" on a number/integer valued map');
   }
   if (t === T.type.struct) {
     if (!isObj(def.fields)) { bad('E-DIM-STRUCT-FIELD', def.fields, 'fields object'); return; }
@@ -163,8 +143,7 @@ export function checkDef(def, env, at, err, top) {
 }
 
 // ---------- 行键文法（卷二 §1.3 继承写法；§2.8 表 kernel 行 :842 文法解析限 kernel/validate/* 等，故放在这里） ----------
-// §5.0 公共字段与 §1.3、§1.7 的行字段：不是维度，不参与继承（各行只取自己的）。
-export const ROW_FIELDS = Object.freeze(['extends', 'abstract', 'classes', 'tags', 'basis', 'sources', 'selection', 'status', 'generated', 'termination', 'nameParts', 'memberLinks']);
+// §5.0 公共字段与 §1.3、§1.7 的行字段的定义源在 handles/markers.mjs。
 const KEY_OPS = ['+', '-', '~', '*'];
 // 一个行键拆成 {dim, op}；op 为 '' 表示整值写法。
 /** @param {string} key 行键 @returns {{dim: string, op: string}} */
@@ -177,52 +156,7 @@ const fieldRequired = (def) => (Array.isArray(def.required) ? def.required : [])
 /** @param {Record<string, unknown>} def ref 类型定义 */
 export const refParts = (def) => (Array.isArray(def.refs) ? def.refs : [def]);
 
-// ---------- 协议标记句柄（卷二 §7 S13 (a) 上下文白名单、李白 11-18 08:18 B2-W2 kernel 组第 3 条） ----------
-// 由该族的定义源（本文件的 TYPES、CODE_ENUMS、DOMAIN_OPTIONAL、ROW_FIELDS，其他模块各自的数组）在模块加载期派生，
-// 成员值与顺序都取自定义源，不另写名单；族对象冻结、带族名，提供 is(值) 与未定义成员的 E-DIM-REF-MISSING。
-// 语言自身的协议键（不是协议标记）：then 给 thenable 探测、toJSON 给 JSON 序列化，其余是对象自带成员名。
-const MARKER_PROTOCOL_KEYS = Object.freeze({ 'then': true, 'toJSON': true, 'constructor': true, 'prototype': true, 'toString': true, 'valueOf': true, 'hasOwnProperty': true, 'is': true, 'family': true });
-
-function markerMiss(family, key) {
-  const e = new Error(`E-DIM-REF-MISSING marker ${JSON.stringify(key)} not defined in family ${family}`);
-  e.code = 'E-DIM-REF-MISSING';
-  return e;
-}
-
-/**
- * 由定义源派生一个族的冻结标记句柄：成员值即定义源里的字串，族名与 is 只作诊断与运行期核对。
- * @param {string} family 族名
- * @param {readonly string[]} values 定义源
- * @returns {Readonly<Record<string, string>>}
- */
-export function markersOf(family, values) {
-  const target = { family, is: (x) => values.includes(x) };
-  for (const value of values) {
-    if (!value || value.length === 0) throw new Error(`E-DIM-ID-FORMAT marker family ${family}: non-empty strings only`);
-    if (Object.hasOwn(target, value)) throw new Error(`E-DIM-ID-DUPLICATE marker family ${family}: duplicate ${value}`);
-    target[value] = value;
-  }
-  Object.freeze(target);
-  // 未定义标记的读取抛 E-DIM-REF-MISSING；语言自身的协议键（then、toJSON 等）照常取 undefined。
-  // symbol 键没有 length，按协议键原样放行（console、迭代器等内部读取）。
-  return new Proxy(target, {
-    get(t, key) {
-      if (key.length === undefined || Object.hasOwn(t, key) || Object.hasOwn(MARKER_PROTOCOL_KEYS, key)) return t[key];
-      throw markerMiss(family, key);
-    },
-  });
-}
-
-const codeEnumFamilies = {};
-for (const fam of Object.keys(CODE_ENUMS)) codeEnumFamilies[fam] = markersOf(`code_enum.${fam}`, CODE_ENUMS[fam]);
-
-// 协议标记句柄根：T.<族>.<标记>，例如 T.type.number、T.code_enum.rx_cmp.eq。族名与定义源同在，不手写成员。
-export const T = Object.freeze({
-  type: markersOf('type', TYPES),
-  domain_optional: markersOf('domain_optional', DOMAIN_OPTIONAL),
-  row_field: markersOf('row_field', ROW_FIELDS),
-  code_enum: Object.freeze(codeEnumFamilies),
-});
+// 协议标记句柄（卷二 §7 S13 (a) 上下文白名单）的 markersOf/T 在 handles/markers.mjs，此处不再定义。
 
 // ---------- 取值 ----------
 // env 另带：idIndex: Map<id, kind>，tableDims: Map<kind, dimensions>，rxScope，compiled: Map（rx 编译结果的落点）。
@@ -260,7 +194,7 @@ export function checkValue(def, v, env, at, err) {
       if (typeof v !== 'string' || !CODE_RE.test(v)) { bad('E-DIM-ID-FORMAT', v, 'ASCII code ^[a-z][a-z0-9_]{1,47}$'); return; }
       const parts = refParts(def);
       const ok = parts.some((p) => {
-        if (p.vocab !== undefined) { const r = env.vocab.index.get(v); return Boolean(r) && (p.vocab === '*' || r.family === p.vocab); }
+        if (p.vocab !== undefined) { const r = env.vocab.index.get(v); return Boolean(r) && (p.vocab === VOCAB_ANY.any || r.family === p.vocab); }
         if (p.kind !== undefined) return env.idIndex.get(v) === p.kind;
         if (p.kinds !== undefined) return p.kinds.includes(env.idIndex.get(v));
         if (p.dim !== undefined) { const d = (env.tableDims.get(p.dim) || {})[v]; return Boolean(d) && (d.type === T.type.number || d.type === T.type.integer); }

@@ -5,6 +5,7 @@
 // 只按声明通用处理，不认表名、族名与条目；未声明的命名条件照旧只记入 notCovered。
 
 import { compileRXInScope, evaluateRX, nsKey, RxError } from '../rx.mjs';
+import { T } from '../handles/markers.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 
@@ -68,7 +69,7 @@ function foldAbsent(n, absent) {
   if (!n || typeof n !== 'object') return n;
   const rule = NULL_RULES[n.op];
   if (rule) {
-    const isNull = (x) => !!x && x.op === 'ns' && absent.has(nsKey(x));
+    const isNull = (x) => !!x && x.op === T.rx_op.ns && absent.has(nsKey(x));
     const [l, r] = rule.fields.map((f) => isNull(n[f]));
     if (l || r) return rule.by(n)(l, r) ? TRUE_NODE : FALSE_NODE;
   }

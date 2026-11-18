@@ -70,7 +70,9 @@ const SCHEMA = Object.freeze({
 });
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
-const isCode = (v) => typeof v === 'string' && v !== '';
+// 空字串（本文件内部）。
+const SEG = Object.freeze({ empty: '' });
+const isCode = (v) => typeof v === 'string' && v !== SEG.empty;
 
 // ---------- 同刻全序键（§4.1.3 第 4 条） ----------
 

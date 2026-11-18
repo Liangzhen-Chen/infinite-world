@@ -14,6 +14,14 @@ import { compareSpecificity, KEY_NONENTITY, KEY_DIMKEY, KEY_SEEDKEY, KEY_HANDLE 
 import { registry } from './vocab.mjs';
 import { KernelError, codeOf } from './errors.mjs';
 import { currentTransaction } from './transaction.mjs';
+import { T } from './handles/markers.mjs';
+
+// pathTypes 值文法里超出 §1.5 类型名的固定记号：定义源在 kernel/handles/markers.mjs（卷二 §2.7 :811 的 EventId、dimension 与 sealed 行），
+// 这里只引用；§2.9 第 3 条 Sealed 的 bytes/digest 字段、本文件内部 Patch 的 op 取值与 JS 原型污染防护键在本文件定义，比较处引用成员。
+const TYPE_EXTRA = T.path_type_extra;
+const SEALED_FIELD_LIST = ['bytes', 'digest'];
+const PATCH = Object.freeze({ set: 'set', delete: 'delete' });
+const UNSAFE_KEY_LIST = ['__proto__', 'prototype', 'constructor'];
 
 /**
  * @typedef {{pattern: string, segs: string[], type: string, shape: import('./handles/keys.mjs').PathTypeShape | null, entitySlots: number[], entityKinds: string[][], dimSlot: number, seedSlots: {slot: number, kinds: string[]}[]}} PathRec
@@ -138,15 +146,15 @@ function plainValue(v) {
 function typeOk(shape, v) {
   if (!shape) return false;
   switch (shape.base) {
-    case 'number': return typeof v === 'number'; // 非有限值、负零在此之前已按 R27-5.1 拒写（E-DET-NONFINITE）
-    case 'integer': return Number.isInteger(v);
-    case 'boolean': return typeof v === 'boolean';
-    case 'EventId': return isCode(v);
-    case 'ref': return isCode(v) && registry().idIndex.get(v) === shape.name;
-    case 'enum': { const rec = isCode(v) ? registry().vocabIndex.get(v) : undefined; return rec !== undefined && rec.family === shape.name; }
-    case 'dimension': return plainValue(v);
-    case 'struct': return v !== null && typeof v === 'object' && !Array.isArray(v) && plainValue(v);
-    case 'list': return Array.isArray(v) && v.every((x) => typeOk(shape.item, x));
+    case T.type.number: return typeof v === 'number'; // 非有限值、负零在此之前已按 R27-5.1 拒写（E-DET-NONFINITE）
+    case T.type.integer: return Number.isInteger(v);
+    case T.type.boolean: return typeof v === 'boolean';
+    case TYPE_EXTRA.EventId: return isCode(v);
+    case T.type.ref: return isCode(v) && registry().idIndex.get(v) === shape.name;
+    case T.type.enum: { const rec = isCode(v) ? registry().vocabIndex.get(v) : undefined; return rec !== undefined && rec.family === shape.name; }
+    case TYPE_EXTRA.dimension: return plainValue(v);
+    case T.type.struct: return v !== null && typeof v === 'object' && !Array.isArray(v) && plainValue(v);
+    case T.type.list: return Array.isArray(v) && v.every((x) => typeOk(shape.item, x));
     default: return false; // sealed：文字只走 writeSealed
   }
 }
@@ -216,7 +224,7 @@ function stringDimension(rec, ids) {
   const id = rec.entitySlots.length ? ids[rec.entitySlots[0]] : null;
   const known = id === null ? undefined : reg.idIndex.get(id);
   const kinds = known !== undefined ? [known] : rec.entityKinds.length ? rec.entityKinds[0] : [];
-  return kinds.some((k) => { const dims = reg.tableDims.get(k); return !!dims && Object.hasOwn(dims, name) && dims[name] && dims[name].type === 'string'; });
+  return kinds.some((k) => { const dims = reg.tableDims.get(k); return !!dims && Object.hasOwn(dims, name) && dims[name] && dims[name].type === T.type.string; });
 }
 
 // 写入被拒时先在当前事务上记"已被拒"（卷二 :499、:1033）：规则层即使 catch 住这次拒写，runTransaction 见标记仍整笔回滚。
@@ -242,7 +250,7 @@ function writePathChecked(state, path, value) {
   // 卷二十七 R27-5.1：非有限值、负零不得进入状态（E-DET-NONFINITE）；被拒走同一上抛通路，由事务整笔回滚（卷二 §2.6 :499）。
   if (hasNonFinite(value)) throw new KernelError('E-DET-NONFINITE', { entity }, `non-finite number or negative zero written to ${rec.pattern}`);
   // 卷二 §2.7 :804 pathTypes 文法 dimension 行：运行期写 string 维度即 E-TEXT-UNGATED（dimension 路径上存不进自然语言）。
-  if (rec.shape && rec.shape.base === 'dimension' && stringDimension(rec, ids)) throw new KernelError('E-TEXT-UNGATED', { entity }, `${rec.pattern}: string dimension is not a dimension path`);
+  if (rec.shape && rec.shape.base === TYPE_EXTRA.dimension && stringDimension(rec, ids)) throw new KernelError('E-TEXT-UNGATED', { entity }, `${rec.pattern}: string dimension is not a dimension path`);
   if (!typeOk(rec.shape, value)) throw new KernelError('E-TEXT-UNGATED', { entity }, `value does not match pathTypes ${rec.pattern}: ${rec.type}`);
   const marks = getAt(state, [TERMINATED_KEY]);
   for (const slot of rec.entitySlots) {
@@ -309,7 +317,7 @@ function writeSealedChecked(state, credential, path, sealed) {
   if (!w || w.rewrite !== tx.file) throw new KernelError('E-TEXT-UNGATED', { entity: null }, 'caller is not the textWriters writer of this path');
   if (!credentialCheck || credentialCheck(credential, path) !== true) throw new KernelError('E-TEXT-UNGATED', { entity: null }, 'credential rejected');
   const shapeOk = sealed !== null && typeof sealed === 'object' && !Array.isArray(sealed)
-    && Object.keys(sealed).every((k) => k === 'bytes' || k === 'digest') && typeof sealed.bytes === 'string' && typeof sealed.digest === 'string';
+    && Object.keys(sealed).every((k) => SEALED_FIELD_LIST.includes(k)) && typeof sealed.bytes === 'string' && typeof sealed.digest === 'string';
   if (!shapeOk) throw new KernelError('E-TEXT-UNGATED', { entity: null }, 'value is not a Sealed {bytes, digest}');
   setAt(tx, segs, clone(sealed));
 }
@@ -331,7 +339,7 @@ export function pathTypeRecords() {
  */
 export function pathTypeOf(segs) {
   const rec = mostSpecific(need().paths, segs);
-  return rec ? { pattern: rec.pattern, segs: [...rec.segs], type: rec.type, sealed: rec.shape !== null && rec.shape.base === 'sealed' } : null;
+  return rec ? { pattern: rec.pattern, segs: [...rec.segs], type: rec.type, sealed: rec.shape !== null && rec.shape.base === TYPE_EXTRA.sealed } : null;
 }
 
 /**
@@ -351,7 +359,7 @@ export function pathTypeHasDeeper(segs) {
 export function valueFitsPathType(pattern, v) {
   const rec = need().paths.find((r) => r.pattern === pattern);
   if (!rec) return false;
-  if (rec.shape && rec.shape.base === 'sealed') return isSealedValue(v);
+  if (rec.shape && rec.shape.base === TYPE_EXTRA.sealed) return isSealedValue(v);
   return typeOk(rec.shape, v);
 }
 
@@ -366,7 +374,7 @@ export function hasExactKeys(v, keys) {
   return ks.length === keys.length && ks.every((k, i) => k === keys[i]);
 }
 
-const SEALED_KEYS = Object.freeze(['bytes', 'digest']);
+const SEALED_KEYS = Object.freeze(SEALED_FIELD_LIST);
 
 /**
  * state 里 Sealed 的形态 {bytes, digest}（两项都是字串，再无别的键）。
@@ -451,7 +459,7 @@ export function canonicalEqual(a, b) {
 
 /** @typedef {{op: 'set', path: string[], value: unknown} | {op: 'delete', path: string[]}} Patch */
 
-const UNSAFE_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
+const UNSAFE_KEYS = new Set(UNSAFE_KEY_LIST);
 
 /**
  * 依次施加补丁，返回新文档；原文档不动（只复制被写路径上的祖先，其余子树共享）。补丁格式不对、路径含不安全键、中途不是对象即抛错。
@@ -471,7 +479,7 @@ export function applyPatches(document, patches) {
   };
   const next = writable(document);
   for (const p of patches) {
-    if (p === null || typeof p !== 'object' || (p.op !== 'set' && p.op !== 'delete') || !Array.isArray(p.path) || p.path.length === 0) throw new Error('applyPatches: malformed patch');
+    if (p === null || typeof p !== 'object' || (p.op !== PATCH.set && p.op !== PATCH.delete) || !Array.isArray(p.path) || p.path.length === 0) throw new Error('applyPatches: malformed patch');
     if (p.path.some((k) => typeof k !== 'string' || UNSAFE_KEYS.has(k))) throw new Error('applyPatches: unsafe or non-string path key');
     let target = next;
     for (const k of p.path.slice(0, -1)) {
@@ -479,7 +487,7 @@ export function applyPatches(document, patches) {
       target = target[k];
     }
     const last = p.path[p.path.length - 1];
-    if (p.op === 'delete') delete target[last];
+    if (p.op === PATCH.delete) delete target[last];
     else target[last] = clone(p.value);
   }
   return next;

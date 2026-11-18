@@ -23,10 +23,25 @@ import { clone } from './clone.mjs';
 import { dim } from './dimensions.mjs';
 import { clockView } from './scheduler.mjs';
 import { readView } from './view-registry.mjs';
+import { buildE } from './handles/generated.mjs';
+import { T } from './handles/markers.mjs';
+
+const E = buildE();
+// 三元键与登记行的字段名（卷二 §2.7 路径段、卷六 §2.5 :224 账本行 {day,used}、§3.1 :? 账户过滤字段）：定义源只写一份，比较处引用。
+const RESOURCE_KEY_FIELDS = ['key', 'kind'];
+const DAY_USED_FIELDS = ['day', 'used'];
+const ACCOUNT_FILTER_FIELDS = ['family', 'purpose'];
+// 入账腿 lot 的三种键集写法：{attrs}、{splitFrom}、{project, splitFrom}（物品类的资源键是批次，卷六 §2.1 :104；批次属性归卷三乙 §4.4）。
+// attrs、splitFrom 是 post 批次腿的协议字段，定义源在 kernel/handles/markers.mjs 的 T.lot_leg_key（卷文待回补：卷三乙 post 批次腿字段（主会话另派勘误））；
+// project 引用本文件的 SCHEMA.project（卷三乙 §2.3 :280）。单一定义源，比较处引用成员（S13 ④，李白 11-18 13:05 裁定第 2 条）。
+// 路径模式的空段（卷二 §2.7 writers 写法："" = 整个键）。
+const PATH = Object.freeze({ empty: '' });
 
 // ---------- 卷六定义的结构常量 ----------
 
 export const SCHEMA = Object.freeze({
+  // 账本行的两条通道（卷六 §2.5 :224：budget 限额通道、alert 物理律通道）。
+  budget: 'budget',
   // 规则表代号（world/rules/registry.json；文件 world/rules/tables/economy/ resources.json、ledger.json，卷六 §2.1 :108、§2.5 :224）。
   resourcesTable: 'economyResources',
   ledgerTable: 'economyLedger',
@@ -70,6 +85,10 @@ export const SCHEMA = Object.freeze({
   grades: Object.freeze(['designed', 'measured', 'referenced']),
 });
 
+// 入账腿 lot 的键集（定义源见本文件顶部注释）：成员只引用 markers 的 T.lot_leg_key 与 SCHEMA.project，不另写字面键名。
+const LOT_KEYS = Object.freeze({ attrs: T.lot_leg_key.attrs, splitFrom: T.lot_leg_key.splitFrom, project: SCHEMA.project });
+const LOT_KEY_SHAPES = Object.freeze([LOT_KEYS.attrs, LOT_KEYS.splitFrom, `${LOT_KEYS.project},${LOT_KEYS.splitFrom}`]);
+
 // src / sink 条目字段（§2.2 :131–132，四字段每行必写；reportGroup 在 indicator 族上线前显式写 null，李白 11-18 02:20 K3-41）。
 const FLOW_FIELDS = Object.freeze(['budgetMode', 'families', 'pairedWith', 'reportGroup']);
 // purpose 条目字段（§2.2 :130，四字段每行必写，不设缺省）。
@@ -95,7 +114,7 @@ export function accountKey(holder, resource, purpose) {
   const r = isObj(resource) ? resource : {};
   const segs = [holder, purpose, r.kind, r.key];
   const bad = segs.findIndex((s) => typeof s !== 'string' || !CODE_RE.test(s));
-  if (!isObj(resource) || Object.keys(resource).sort().join(',') !== 'key,kind') throw new KernelError('E-DIM-ID-FORMAT', { entity: codeOrNull(holder) }, 'resource must be {kind, key}');
+  if (!isObj(resource) || Object.keys(resource).sort().join(',') !== [...RESOURCE_KEY_FIELDS].sort().join(',')) throw new KernelError('E-DIM-ID-FORMAT', { entity: codeOrNull(holder) }, 'resource must be {kind, key}');
   if (bad >= 0) throw new KernelError('E-DIM-ID-FORMAT', { entity: codeOrNull(holder) }, `account key segment ${bad} is not a code`);
   return Object.freeze(segs);
 }
@@ -207,7 +226,7 @@ export function checkLedgerTables(rules, env) {
         const e = flows.get(code);
         if (e && e.budgetMode !== mode) push('E-DIM-DOMAIN-ENUM', ledTable, key, dim, e.budgetMode, `${key} holds ${mode} channels only (vol6 s2.5 :224)`);
         const c = cells[code];
-        if (key === 'budget' && isObj(c) && Number.isInteger(c.activeFromDay) && Number.isInteger(c.activeToDay) && c.activeFromDay > c.activeToDay) {
+        if (key === SCHEMA.budget && isObj(c) && Number.isInteger(c.activeFromDay) && Number.isInteger(c.activeToDay) && c.activeFromDay > c.activeToDay) {
           push('E-DIM-DOMAIN-RANGE', ledTable, key, `${dim}/activeFromDay`, [c.activeFromDay, c.activeToDay], 'activeFromDay <= activeToDay (world days)');
         }
       }
@@ -258,7 +277,7 @@ function entryOf(engine, family, code, holder) {
 
 // 资源引用 struct{kind, key}：种类有行、键是代号形。键所指对象（物品批次、存量对象、设施实例、地点等，§2.1 :104）的存在核对待块 6/7（登收尾待办）。
 function checkResource(engine, resource, holder) {
-  if (!isObj(resource) || Object.keys(resource).sort().join(',') !== 'key,kind') throw new KernelError('E-DIM-ID-FORMAT', { entity: codeOrNull(holder) }, 'resource must be {kind, key}');
+  if (!isObj(resource) || Object.keys(resource).sort().join(',') !== [...RESOURCE_KEY_FIELDS].sort().join(',')) throw new KernelError('E-DIM-ID-FORMAT', { entity: codeOrNull(holder) }, 'resource must be {kind, key}');
   const row = resourceRow(engine, resource.kind, holder);
   if (typeof resource.key !== 'string' || !CODE_RE.test(resource.key)) throw new KernelError('E-DIM-ID-FORMAT', { entity: codeOrNull(holder) }, 'resource key is not a code');
   return row;
@@ -308,7 +327,7 @@ function checkSubject(engine, state, holderId) {
   if (typeof holderId !== 'string' || !CODE_RE.test(holderId)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'holder id is not a code');
   let kind;
   try { kind = kindOf(holderId); } catch (e) {
-    if (codeOf(e) !== 'E-DIM-REF-MISSING') throw e;
+    if (codeOf(e) !== E.E_DIM_REF_MISSING) throw e;
     // 先查实体，不是已载入实体再查居民聚合体：经登记的视图读取函数 aggregateView 取该聚合体（视图未登记 E-DIM-UNKNOWN-READ，不放行），
     // 按其 ledgerHolder 标记判（§2.1 :103、S6-14、卷三乙 K-2 :1031；无标记或非真同为 E-LEDGER-HOLDER-NOT-SUBJECT，卷二十七 :200），
     // 不按聚合种类或名字推断；视图给不出这一条（null/undefined）才是读到未知，给出的不是对象即形状不合，同报 E-DIM-UNKNOWN-READ。
@@ -417,7 +436,7 @@ function parseAccountLeg(engine, leg, i) {
     const l = leg.lot;
     // 拆分可另带 project：供料时拆出新批次并把新批次的 project 设为该工程（卷十九 §4.4 规则 7 :531、卷三乙 K-2 :1031）；其余属性原样带出。
     const ks = isObj(l) ? Object.keys(l).sort(cmp).join(',') : '';
-    if (!['attrs', 'splitFrom', 'project,splitFrom'].includes(ks)) throw structErr(`leg ${i}: lot is {splitFrom, project?} or {attrs}`);
+    if (!LOT_KEY_SHAPES.includes(ks)) throw structErr(`leg ${i}: lot is {splitFrom, project?} or {attrs}`);
     if (Object.hasOwn(l, 'splitFrom') && (typeof l.splitFrom !== 'string' || !CODE_RE.test(l.splitFrom))) throw new KernelError('E-DIM-ID-FORMAT', { entity: a.holder }, `leg ${i}: splitFrom is not a lot key`);
     if (Object.hasOwn(l, SCHEMA.project) && !projectOk(l[SCHEMA.project])) throw new KernelError('E-DIM-ID-FORMAT', { entity: a.holder }, `leg ${i}: project is null or a buildProject id`);
     if (Object.hasOwn(l, 'attrs')) checkLotAttrs(l.attrs, a.holder, i);
@@ -456,7 +475,7 @@ function stagingFault(engine, state, holder, attrs) {
   if (!projectOk(p)) return { code: 'E-DIM-ID-FORMAT', why: `${SCHEMA.project} is null or a buildProject id` };
   let view;
   try { view = readView(SCHEMA.projectView, engine, state, p); } catch (e) {
-    if (codeOf(e) !== 'E-DIM-UNKNOWN-READ') throw e;
+    if (codeOf(e) !== E.E_DIM_UNKNOWN_READ) throw e;
     return { code: 'E-DIM-UNKNOWN-READ', why: e.message };
   }
   if (view === null || view === undefined) return { code: 'E-LEDGER-STAGING-SPONSOR', why: `lot of ${SCHEMA.project} ${p}: ${SCHEMA.projectView}(${p}) has no such project` };
@@ -768,7 +787,7 @@ function usedByDayFault(list) {
   if (!Array.isArray(list)) return { code: 'E-DIM-STRUCT-FIELD', why: `${SCHEMA.usedByDay} is a list of {day, used}` };
   for (let i = 0; i < list.length; i++) {
     const d = list[i];
-    if (!isObj(d) || Object.keys(d).sort().join(',') !== 'day,used' || !Number.isSafeInteger(d.day) || d.day < 0 || !Number.isSafeInteger(d.used) || d.used < 0) {
+    if (!isObj(d) || Object.keys(d).sort().join(',') !== [...DAY_USED_FIELDS].sort().join(',') || !Number.isSafeInteger(d.day) || d.day < 0 || !Number.isSafeInteger(d.used) || d.used < 0) {
       return { code: 'E-DIM-STRUCT-FIELD', why: `${SCHEMA.usedByDay}[${i}] is {day, used} with non-negative integers` };
     }
     if (i > 0 && !(list[i - 1].day < d.day)) return { code: 'E-LEDGER-USEDBYDAY-ORDER', why: `${SCHEMA.usedByDay}[${i}].day ${d.day} does not follow day ${list[i - 1].day} strictly` };
@@ -942,7 +961,7 @@ export function balance(engine, state, holderId, resourceRef, purposeCode) {
 export function accountsOf(engine, state, holderId, filter = {}) {
   if (typeof holderId !== 'string' || !CODE_RE.test(holderId)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'holder id is not a code');
   const f = isObj(filter) ? filter : {};
-  for (const k of Object.keys(f)) if (k !== 'family' && k !== 'purpose') throw new KernelError('E-DIM-STRUCT-FIELD', { entity: holderId }, `accountsOf filter field ${k}`);
+  for (const k of Object.keys(f)) if (!ACCOUNT_FILTER_FIELDS.includes(k)) throw new KernelError('E-DIM-STRUCT-FIELD', { entity: holderId }, `accountsOf filter field ${k}`);
   if (f.family !== undefined) entryOf(engine, SCHEMA.resfam, f.family, holderId);
   if (f.purpose !== undefined) entryOf(engine, SCHEMA.purpose, f.purpose, holderId);
   const byPurpose = readAt(state, [SCHEMA.accounts, holderId]);
@@ -973,7 +992,7 @@ export function accountsOf(engine, state, holderId, filter = {}) {
 export function stockIn(engine, state, scopePlaceId, resourceFilter) {
   if (typeof scopePlaceId !== 'string' || !CODE_RE.test(scopePlaceId)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'scope place id is not a code');
   const rf = isObj(resourceFilter) ? resourceFilter : null;
-  if (!rf || Object.keys(rf).some((k) => k !== 'kind' && k !== 'key')) throw new KernelError('E-DIM-STRUCT-FIELD', { entity: scopePlaceId }, 'resourceFilter is {kind, key?}');
+  if (!rf || Object.keys(rf).some((k) => !RESOURCE_KEY_FIELDS.includes(k))) throw new KernelError('E-DIM-STRUCT-FIELD', { entity: scopePlaceId }, 'resourceFilter is {kind, key?}');
   resourceRow(engine, rf.kind, scopePlaceId);
   if (rf.key !== undefined && (typeof rf.key !== 'string' || !CODE_RE.test(rf.key))) throw new KernelError('E-DIM-ID-FORMAT', { entity: scopePlaceId }, 'resource key is not a code');
   const all = readAt(state, [SCHEMA.accounts]);
@@ -1017,7 +1036,7 @@ export function budgetOn(engine, resourceKind, code, day) {
 // 申请键：申请主体 id（规则 6），或按全序细分的元组（§4.6 规则 8 :582"（买方 id、计价资源键、货的资源键）"，第一键即申请主体 id）。
 function requestKey(k, i) {
   const t = typeof k === 'string' ? [k] : k;
-  if (!Array.isArray(t) || t.length === 0 || t.some((s) => typeof s !== 'string' || s === '')) throw structErr(`request ${i}: key is a non-empty string or a list of them`);
+  if (!Array.isArray(t) || t.length === 0 || t.some((s) => typeof s !== 'string' || s === PATH.empty)) throw structErr(`request ${i}: key is a non-empty string or a list of them`);
   return t;
 }
 const cmpKey = (a, b) => {

@@ -6,7 +6,6 @@
 
 import { CODE_RE, isErrorCode } from '../validate/types.mjs';
 import { REGISTERED_CODES } from '../error-codes.mjs';
-
 // 代号文法（§1.9 :278）：实体 id、类别 id、枚举值；定义在 validate/types.mjs，这里转出给 entity-id、keys 沿用。
 export { CODE_RE };
 

@@ -1,5 +1,7 @@
 // L0 语法（卷二 §4.1）：JSON 可解析且无重复键，逐字符扫描。结构由本文件扫描，标量文本交给 JSON.parse 解码。
 // 返回 {value, errors}；errors 每项 {code, pointer, got, want}，pointer 为 JSON 指针。
+// JSON 文法记号（`{ } [ ] , : " \` 与空白字符）是语言与文法常量，出处见卷二 §7 S13 上下文白名单 :2413 (d)（李白 11-18 13:05 裁定第 2 条），
+// 不计第 ④ 类。
 
 import { escapeJsonPointer, jsonScalarAt } from './vocab-load.mjs';
 

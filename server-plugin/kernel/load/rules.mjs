@@ -40,6 +40,12 @@ const SLOT_FIELDS = Object.freeze(['unit', 'precision', 'stacking', 'bounds', 'b
 const BUDGET_FIELDS = Object.freeze(['maxModifiers', 'totalBounds', 'stageBounds']);
 const CONSUMER_FIELDS = Object.freeze(['slot', 'base']);
 
+// 规则表文件结构与登记字段的固定记号（卷二 §4.1 :1495–:1497）；单一定义，比较处引用。
+const RULES_DOC = Object.freeze({ rows: 'rows', empty: '' });
+const STRUCTURE = Object.freeze({ keys: 'keys' });
+const SEVERITY = Object.freeze({ error: 'error' });
+const TYPE_FIELD = Object.freeze({ type: 'type', domain: 'domain' });
+
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const esc = (k) => escapeJsonPointer(String(k));
@@ -53,7 +59,7 @@ function defOf(type, domain) {
 
 function checkDefShape(def, merge, at) {
   if (!def || !TYPES.includes(def.type)) return at('type', def ? def.type : def, TYPES.join('|'), 'E-DIM-SCHEMA-TYPE');
-  if (['number', 'integer'].includes(def.type) && def.domain !== undefined && !rangeOk(def.domain)) at('domain', def.domain, '[min,max] (null = unbounded)', 'E-DIM-DOMAIN-RANGE');
+  if ((def.type === T.type.number || def.type === T.type.integer) && def.domain !== undefined && !rangeOk(def.domain)) at('domain', def.domain, '[min,max] (null = unbounded)', 'E-DIM-DOMAIN-RANGE');
   if (def.domain === undefined && !DOMAIN_OPTIONAL.includes(def.type)) at('domain', 'missing', 'domain', 'E-DIM-DOMAIN-RANGE');
   if (Object.hasOwn(MERGE, merge) && !MERGE[merge](def)) at('multiSourceMerge', `${merge} on ${def.type}`, 'merge mode fitting the value type', 'E-PACK-RULEKEY');
   return def;
@@ -87,11 +93,11 @@ export function readRules(root, opts = {}) {
     if (!isRuleTableFile(r.file) || r.file === RULES_LAYOUT.registry) return at('file', r.file, `relative .json path under ${dir}/`);
     if (seen.file.has(r.file)) return at('file', r.file, 'one file per registry row', 'E-DIM-ID-DUPLICATE');
     seen.file.add(r.file);
-    if (typeof r.volume !== 'string' || r.volume === '') at('volume', r.volume, 'owning volume');
+    if (typeof r.volume !== 'string' || r.volume === RULES_DOC.empty) at('volume', r.volume, 'owning volume');
     if (!Object.hasOwn(MERGE, r.multiSourceMerge)) at('multiSourceMerge', r.multiSourceMerge, Object.keys(MERGE).join('|'), 'E-PACK-RULEKEY');
 
     // 结构：键表 "keys"（type/domain/packOverridable 逐键写）；行表 {"rows": <行键的引用写法>}（三者各写一个）。
-    const t = { code: r.code, file: `${dir}/${r.file}`, keyed: r.structure === 'keys', defs: new Map(), rowDef: null, rowKey: null, entries: [] };
+    const t = { code: r.code, file: `${dir}/${r.file}`, keyed: r.structure === STRUCTURE.keys, defs: new Map(), rowDef: null, rowKey: null, entries: [] };
     if (t.keyed) {
       if (!isObj(r.type) || !Object.keys(r.type).length) return at('type', r.type, 'object: key -> type');
       if (r.domain !== undefined && !isObj(r.domain)) at('domain', r.domain, 'object: key -> domain');
@@ -133,7 +139,7 @@ function readTable(root, t, errors) {
   const doc = parseJsonStrict(readFileSync(resolve(root, t.file), 'utf8'));
   for (const e of doc.errors) err('', `${t.file}#${e.pointer}`, e.got, e.want, e.code, 'L0');
   if (!isObj(doc.value) || !Array.isArray(doc.value.rows)) { if (!doc.errors.length) err('', t.file, typeof doc.value, '{"rows": [...]}'); return; }
-  for (const k of Object.keys(doc.value)) if (k !== 'rows') err('', `${t.file}#/${esc(k)}`, k, 'only "rows" at top level');
+  for (const k of Object.keys(doc.value)) if (k !== RULES_DOC.rows) err('', `${t.file}#/${esc(k)}`, k, 'only "rows" at top level');
   const seen = new Set();
   doc.value.rows.forEach((row, i) => {
     const path = `${t.file}#/rows/${i}`;
@@ -234,7 +240,7 @@ export function checkRules(read, env) {
     const err = (e) => errors.push({ ...e, table: `rules.${t.code}` });
     if (Object.hasOwn(t, 'process')) { checkProcessTable(t, env, err); continue; }
     const defs = t.keyed ? [...t.defs] : t.rowDef ? [['', t.rowDef]] : [];
-    for (const [k, def] of defs) if (def.type !== undefined && Object.keys(def).some((f) => f !== 'type' && f !== 'domain')) checkDef(def, env, { row: k, dim: 'type', path: `registry:${t.code}/${k}` }, err, false);
+    for (const [k, def] of defs) if (def.type !== undefined && Object.keys(def).some((f) => f !== TYPE_FIELD.type && f !== TYPE_FIELD.domain)) checkDef(def, env, { row: k, dim: 'type', path: `registry:${t.code}/${k}` }, err, false);
     for (const e of t.entries) {
       const at = { row: e.key, dim: '', path: e.path };
       if (!t.keyed) checkValue(t.rowKey, e.key, env, { ...at, path: keyPointerOf(e.path) }, err);
@@ -261,5 +267,5 @@ export function rulesReport(errors) {
     got: e.got === undefined ? null : e.got, want: e.want === undefined ? '' : String(e.want),
   })).sort((a, b) => cmp(a.table, b.table) || cmp(a.row, b.row) || cmp(a.dim, b.dim) || cmp(a.code, b.code) || cmp(a.path, b.path));
   const lines = out.map((e) => `${e.code}  ${e.table}/${e.row}.${e.dim}  got ${JSON.stringify(e.got)}  want ${e.want}  - ${e.path}`);
-  return { ok: !out.some((e) => e.severity === 'error'), errors: out, text: lines.length ? lines.join('\n') + '\n' : '' };
+  return { ok: !out.some((e) => e.severity === SEVERITY.error), errors: out, text: lines.length ? lines.join('\n') + '\n' : '' };
 }

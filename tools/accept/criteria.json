@@ -152,10 +152,34 @@
     {
      "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 24
+    },
+    {
+     "ref": "B2-W4 第二步（卷二 S13 ④）：协议标记叶子 handles/markers.mjs 落地（标记定义源与 T 移入、0 import，rx.mjs 与 validate/types.mjs 都从它取），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 25
+    },
+    {
+     "ref": "B2-W4 第二步续（卷二 S13 ④）：rx.mjs 裸字面量改由 markers.mjs 的 T 句柄（rxTree 变体、RX 类型、typeof 常量），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 26
+    },
+    {
+     "ref": "B2-W4 第二步再续（卷二 S13 ④）：validate/types.mjs、dimensions.mjs、named-conditions.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 27
+    },
+    {
+     "ref": "B2-W4 第二步四续（卷二 S13 ④）：handles/keys.mjs、handles/vocab-handle.mjs、load/vocab-load.mjs、det-math.mjs 的 typeof 比较与字元记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 28
+    },
+    {
+     "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 29
+    },
+    {
+     "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 30
     }
    ],
-   "print": "b5b329c1dc5ab88d5cb9405f98fe02e8dfa8923bc0d8fa052aab2fb258b1b46f",
-   "rev": 24,
+   "print": "7f4c4bb66002e2ee937d443b8701470ffc74228db7f0c8803bb37b06e7f81769",
+   "rev": 30,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -353,10 +377,42 @@
     {
      "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 11
+    },
+    {
+     "ref": "B2-W4 第二步（卷二 S13 ④）：协议标记叶子 handles/markers.mjs 落地（标记定义源与 T 移入、0 import，rx.mjs 与 validate/types.mjs 都从它取），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 12
+    },
+    {
+     "ref": "B2-W4 第二步续（卷二 S13 ④）：rx.mjs 裸字面量改由 markers.mjs 的 T 句柄（rxTree 变体、RX 类型、typeof 常量），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 13
+    },
+    {
+     "ref": "B2-W4 第二步再续（卷二 S13 ④）：validate/types.mjs、dimensions.mjs、named-conditions.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 14
+    },
+    {
+     "ref": "B2-W4 第二步四续（卷二 S13 ④）：handles/keys.mjs、handles/vocab-handle.mjs、load/vocab-load.mjs、det-math.mjs 的 typeof 比较与字元记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 15
+    },
+    {
+     "ref": "B2-W4 第二步五续（卷二 S13 ④）：load/rules.mjs、load/flatten.mjs 的 typeof 比较与文档结构/行键 op 记号改 T 句柄与本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 16
+    },
+    {
+     "ref": "B2-W4 第二步六续（卷二 S13 ④）：validate/rows.mjs、cell-grades.mjs、dimensions-validate.mjs 与 scheduler.mjs、save.mjs、load/save.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 17
+    },
+    {
+     "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 18
+    },
+    {
+     "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 19
     }
    ],
-   "print": "b3f9dba95348689e0e02cfa75bfb0506525437199de129587b0604d330c2e0ac",
-   "rev": 11,
+   "print": "8d1cb3fc7bb616e74a09837d16282aa6336c0430679b6ea43f353659aa9707fb",
+   "rev": 19,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -561,10 +617,42 @@
     {
      "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 12
+    },
+    {
+     "ref": "B2-W4 第二步（卷二 S13 ④）：协议标记叶子 handles/markers.mjs 落地（标记定义源与 T 移入、0 import，rx.mjs 与 validate/types.mjs 都从它取），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 13
+    },
+    {
+     "ref": "B2-W4 第二步续（卷二 S13 ④）：rx.mjs 裸字面量改由 markers.mjs 的 T 句柄（rxTree 变体、RX 类型、typeof 常量），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 14
+    },
+    {
+     "ref": "B2-W4 第二步再续（卷二 S13 ④）：validate/types.mjs、dimensions.mjs、named-conditions.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 15
+    },
+    {
+     "ref": "B2-W4 第二步四续（卷二 S13 ④）：handles/keys.mjs、handles/vocab-handle.mjs、load/vocab-load.mjs、det-math.mjs 的 typeof 比较与字元记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 16
+    },
+    {
+     "ref": "B2-W4 第二步五续（卷二 S13 ④）：load/rules.mjs、load/flatten.mjs 的 typeof 比较与文档结构/行键 op 记号改 T 句柄与本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 17
+    },
+    {
+     "ref": "B2-W4 第二步六续（卷二 S13 ④）：validate/rows.mjs、cell-grades.mjs、dimensions-validate.mjs 与 scheduler.mjs、save.mjs、load/save.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 18
+    },
+    {
+     "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 19
+    },
+    {
+     "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 20
     }
    ],
-   "print": "955e161ebf64752444ddaffb3c3b37554fa81b620835f2d396d0a39fc34bd457",
-   "rev": 12,
+   "print": "3dae3bcb17bf6ced5c29ac68e02ba70c5a5d7bcd142133a3ed63aaf32e9f1e33",
+   "rev": 20,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -734,10 +822,42 @@
     {
      "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 28
+    },
+    {
+     "ref": "B2-W4 第二步（卷二 S13 ④）：协议标记叶子 handles/markers.mjs 落地（标记定义源与 T 移入、0 import，rx.mjs 与 validate/types.mjs 都从它取），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 29
+    },
+    {
+     "ref": "B2-W4 第二步续（卷二 S13 ④）：rx.mjs 裸字面量改由 markers.mjs 的 T 句柄（rxTree 变体、RX 类型、typeof 常量），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 30
+    },
+    {
+     "ref": "B2-W4 第二步再续（卷二 S13 ④）：validate/types.mjs、dimensions.mjs、named-conditions.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 31
+    },
+    {
+     "ref": "B2-W4 第二步四续（卷二 S13 ④）：handles/keys.mjs、handles/vocab-handle.mjs、load/vocab-load.mjs、det-math.mjs 的 typeof 比较与字元记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 32
+    },
+    {
+     "ref": "B2-W4 第二步五续（卷二 S13 ④）：load/rules.mjs、load/flatten.mjs 的 typeof 比较与文档结构/行键 op 记号改 T 句柄与本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 33
+    },
+    {
+     "ref": "B2-W4 第二步六续（卷二 S13 ④）：validate/rows.mjs、cell-grades.mjs、dimensions-validate.mjs 与 scheduler.mjs、save.mjs、load/save.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 34
+    },
+    {
+     "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 35
+    },
+    {
+     "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 36
     }
    ],
-   "print": "e7c270eb825fb61ab52c2410086c772a161faee8aeb9ce4b2b894058767385cb",
-   "rev": 28,
+   "print": "1cc6019056e8f38a27163f4ab4a8a08975b84071f097d1d03cd17d17a27a9a47",
+   "rev": 36,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -888,10 +1008,42 @@
     {
      "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 13
+    },
+    {
+     "ref": "B2-W4 第二步（卷二 S13 ④）：协议标记叶子 handles/markers.mjs 落地（标记定义源与 T 移入、0 import，rx.mjs 与 validate/types.mjs 都从它取），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 14
+    },
+    {
+     "ref": "B2-W4 第二步续（卷二 S13 ④）：rx.mjs 裸字面量改由 markers.mjs 的 T 句柄（rxTree 变体、RX 类型、typeof 常量），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 15
+    },
+    {
+     "ref": "B2-W4 第二步再续（卷二 S13 ④）：validate/types.mjs、dimensions.mjs、named-conditions.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 16
+    },
+    {
+     "ref": "B2-W4 第二步四续（卷二 S13 ④）：handles/keys.mjs、handles/vocab-handle.mjs、load/vocab-load.mjs、det-math.mjs 的 typeof 比较与字元记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 17
+    },
+    {
+     "ref": "B2-W4 第二步五续（卷二 S13 ④）：load/rules.mjs、load/flatten.mjs 的 typeof 比较与文档结构/行键 op 记号改 T 句柄与本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 18
+    },
+    {
+     "ref": "B2-W4 第二步六续（卷二 S13 ④）：validate/rows.mjs、cell-grades.mjs、dimensions-validate.mjs 与 scheduler.mjs、save.mjs、load/save.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 19
+    },
+    {
+     "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 20
+    },
+    {
+     "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "955e161ebf64752444ddaffb3c3b37554fa81b620835f2d396d0a39fc34bd457",
-   "rev": 13,
+   "print": "3dae3bcb17bf6ced5c29ac68e02ba70c5a5d7bcd142133a3ed63aaf32e9f1e33",
+   "rev": 21,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1343,10 +1495,42 @@
     {
      "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 13
+    },
+    {
+     "ref": "B2-W4 第二步（卷二 S13 ④）：协议标记叶子 handles/markers.mjs 落地（标记定义源与 T 移入、0 import，rx.mjs 与 validate/types.mjs 都从它取），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 14
+    },
+    {
+     "ref": "B2-W4 第二步续（卷二 S13 ④）：rx.mjs 裸字面量改由 markers.mjs 的 T 句柄（rxTree 变体、RX 类型、typeof 常量），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 15
+    },
+    {
+     "ref": "B2-W4 第二步再续（卷二 S13 ④）：validate/types.mjs、dimensions.mjs、named-conditions.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 16
+    },
+    {
+     "ref": "B2-W4 第二步四续（卷二 S13 ④）：handles/keys.mjs、handles/vocab-handle.mjs、load/vocab-load.mjs、det-math.mjs 的 typeof 比较与字元记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 17
+    },
+    {
+     "ref": "B2-W4 第二步五续（卷二 S13 ④）：load/rules.mjs、load/flatten.mjs 的 typeof 比较与文档结构/行键 op 记号改 T 句柄与本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 18
+    },
+    {
+     "ref": "B2-W4 第二步六续（卷二 S13 ④）：validate/rows.mjs、cell-grades.mjs、dimensions-validate.mjs 与 scheduler.mjs、save.mjs、load/save.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 19
+    },
+    {
+     "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 20
+    },
+    {
+     "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "955e161ebf64752444ddaffb3c3b37554fa81b620835f2d396d0a39fc34bd457",
-   "rev": 13,
+   "print": "3dae3bcb17bf6ced5c29ac68e02ba70c5a5d7bcd142133a3ed63aaf32e9f1e33",
+   "rev": 21,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -1381,10 +1565,42 @@
     {
      "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 5
+    },
+    {
+     "ref": "B2-W4 第二步（卷二 S13 ④）：协议标记叶子 handles/markers.mjs 落地（标记定义源与 T 移入、0 import，rx.mjs 与 validate/types.mjs 都从它取），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 6
+    },
+    {
+     "ref": "B2-W4 第二步续（卷二 S13 ④）：rx.mjs 裸字面量改由 markers.mjs 的 T 句柄（rxTree 变体、RX 类型、typeof 常量），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 7
+    },
+    {
+     "ref": "B2-W4 第二步再续（卷二 S13 ④）：validate/types.mjs、dimensions.mjs、named-conditions.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 8
+    },
+    {
+     "ref": "B2-W4 第二步四续（卷二 S13 ④）：handles/keys.mjs、handles/vocab-handle.mjs、load/vocab-load.mjs、det-math.mjs 的 typeof 比较与字元记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 9
+    },
+    {
+     "ref": "B2-W4 第二步五续（卷二 S13 ④）：load/rules.mjs、load/flatten.mjs 的 typeof 比较与文档结构/行键 op 记号改 T 句柄与本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 10
+    },
+    {
+     "ref": "B2-W4 第二步六续（卷二 S13 ④）：validate/rows.mjs、cell-grades.mjs、dimensions-validate.mjs 与 scheduler.mjs、save.mjs、load/save.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 11
+    },
+    {
+     "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 12
+    },
+    {
+     "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 13
     }
    ],
-   "print": "c828a3cc35468b6adaee5e58efe62f3476dbdedd8709761923b1288ff5ba51d9",
-   "rev": 5,
+   "print": "1f192d978282f48c477d12f3e4b033072ba7cc692e90cbd2aa7a53e2292e8c01",
+   "rev": 13,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -1531,10 +1747,34 @@
     {
      "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 33
+    },
+    {
+     "ref": "B2-W4 第二步（卷二 S13 ④）：协议标记叶子 handles/markers.mjs 落地（标记定义源与 T 移入、0 import，rx.mjs 与 validate/types.mjs 都从它取），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 34
+    },
+    {
+     "ref": "B2-W4 第二步续（卷二 S13 ④）：rx.mjs 裸字面量改由 markers.mjs 的 T 句柄（rxTree 变体、RX 类型、typeof 常量），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 35
+    },
+    {
+     "ref": "B2-W4 第二步再续（卷二 S13 ④）：validate/types.mjs、dimensions.mjs、named-conditions.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 36
+    },
+    {
+     "ref": "B2-W4 第二步四续（卷二 S13 ④）：handles/keys.mjs、handles/vocab-handle.mjs、load/vocab-load.mjs、det-math.mjs 的 typeof 比较与字元记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 37
+    },
+    {
+     "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 38
+    },
+    {
+     "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 39
     }
    ],
-   "print": "9a64ff23a0f5f4b93e7e3b64f7d7ee161608643b86d1a8d5704ab46fcd35a43b",
-   "rev": 33,
+   "print": "1e68376767f43b8bda54a1643358b0099b2c05af5c873589d337efea436966ba",
+   "rev": 39,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1733,10 +1973,34 @@
     {
      "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 22
+    },
+    {
+     "ref": "B2-W4 第二步（卷二 S13 ④）：协议标记叶子 handles/markers.mjs 落地（标记定义源与 T 移入、0 import，rx.mjs 与 validate/types.mjs 都从它取），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
+    },
+    {
+     "ref": "B2-W4 第二步续（卷二 S13 ④）：rx.mjs 裸字面量改由 markers.mjs 的 T 句柄（rxTree 变体、RX 类型、typeof 常量），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 24
+    },
+    {
+     "ref": "B2-W4 第二步再续（卷二 S13 ④）：validate/types.mjs、dimensions.mjs、named-conditions.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 25
+    },
+    {
+     "ref": "B2-W4 第二步四续（卷二 S13 ④）：handles/keys.mjs、handles/vocab-handle.mjs、load/vocab-load.mjs、det-math.mjs 的 typeof 比较与字元记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 26
+    },
+    {
+     "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 27
+    },
+    {
+     "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 28
     }
    ],
-   "print": "b5b329c1dc5ab88d5cb9405f98fe02e8dfa8923bc0d8fa052aab2fb258b1b46f",
-   "rev": 22,
+   "print": "7f4c4bb66002e2ee937d443b8701470ffc74228db7f0c8803bb37b06e7f81769",
+   "rev": 28,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -1922,10 +2186,42 @@
     {
      "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 7
+    },
+    {
+     "ref": "B2-W4 第二步（卷二 S13 ④）：协议标记叶子 handles/markers.mjs 落地（标记定义源与 T 移入、0 import，rx.mjs 与 validate/types.mjs 都从它取），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 8
+    },
+    {
+     "ref": "B2-W4 第二步续（卷二 S13 ④）：rx.mjs 裸字面量改由 markers.mjs 的 T 句柄（rxTree 变体、RX 类型、typeof 常量），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 9
+    },
+    {
+     "ref": "B2-W4 第二步再续（卷二 S13 ④）：validate/types.mjs、dimensions.mjs、named-conditions.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 10
+    },
+    {
+     "ref": "B2-W4 第二步四续（卷二 S13 ④）：handles/keys.mjs、handles/vocab-handle.mjs、load/vocab-load.mjs、det-math.mjs 的 typeof 比较与字元记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 11
+    },
+    {
+     "ref": "B2-W4 第二步五续（卷二 S13 ④）：load/rules.mjs、load/flatten.mjs 的 typeof 比较与文档结构/行键 op 记号改 T 句柄与本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 12
+    },
+    {
+     "ref": "B2-W4 第二步六续（卷二 S13 ④）：validate/rows.mjs、cell-grades.mjs、dimensions-validate.mjs 与 scheduler.mjs、save.mjs、load/save.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 13
+    },
+    {
+     "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 14
+    },
+    {
+     "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 15
     }
    ],
-   "print": "c828a3cc35468b6adaee5e58efe62f3476dbdedd8709761923b1288ff5ba51d9",
-   "rev": 7,
+   "print": "1f192d978282f48c477d12f3e4b033072ba7cc692e90cbd2aa7a53e2292e8c01",
+   "rev": 15,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

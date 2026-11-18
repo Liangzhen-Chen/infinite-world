@@ -4,7 +4,6 @@
 
 import { CODE_RE, HandleError } from './vocab-handle.mjs';
 import { registry } from '../vocab.mjs';
-
 /**
  * @template {string} K
  * @param {Map<string, {idPrefix: string[], singletonIds: string[]}>} kindIds kind → 表头登记的前缀与单例 id

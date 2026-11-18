@@ -38,6 +38,10 @@ const STACKING_TABLE = Object.freeze({ table: 'modifiers', key: 'stackingTable' 
 const MEMO_SCOPE = 'kernel/dimensions.mjs#modified';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+// required 策略取值（卷二 §1.2）与 precedence 缺省组名（§3.2 修正项次序）：本文件用的固定记号，单一定义。
+const REQUIRED_POLICY = Object.freeze({ byClass: 'byClass', ifPresent: 'ifPresent' });
+// 空字串作为"无来源"的标记（本文件内部）。
+const SEG = Object.freeze({ empty: '' });
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
 // ---------- 修正项来源 ----------
@@ -102,8 +106,8 @@ function applicable(engine, t, state, kind, id, def) {
   const colon = req.indexOf(':');
   const policy = colon < 0 ? req : req.slice(0, colon);
   const arg = colon < 0 ? '' : req.slice(colon + 1);
-  if (policy === 'byClass') return memberClasses(engine, t, state, id).has(arg);
-  if (policy === 'ifPresent') return readBase(engine, state, kind, id, arg, undefined).known;
+  if (policy === REQUIRED_POLICY.byClass) return memberClasses(engine, t, state, id).has(arg);
+  if (policy === REQUIRED_POLICY.ifPresent) return readBase(engine, state, kind, id, arg, undefined).known;
   return true;
 }
 
@@ -180,7 +184,7 @@ export function rxBindings(engine, state, kind, id, tree, clock) {
   const keys = new Set();
   const walk = (n) => {
     if (!isObj(n)) return;
-    if (n.op === 'dim' && typeof n.key === 'string') keys.add(n.key);
+    if (n.op === T.rx_op.dim && typeof n.key === 'string') keys.add(n.key);
     for (const k of ['left', 'right', 'item', 'set', 'filter']) walk(n[k]);
     if (Array.isArray(n.items)) n.items.forEach(walk);
   };
@@ -272,7 +276,7 @@ function prepareRow(engine, state, kind, id, row, clock) {
 function dedupe(rows) {
   const bySource = new Map();
   for (const r of rows) {
-    const k = `${r.stage}\u0000${r.sourceId === '' ? `\u0000${r.id}` : r.sourceId}`;
+    const k = `${r.stage}\u0000${r.sourceId === SEG.empty ? `\u0000${r.id}` : r.sourceId}`;
     const old = bySource.get(k);
     if (!old || orderOf(r.stage)(r, old) < 0) bySource.set(k, r);
   }

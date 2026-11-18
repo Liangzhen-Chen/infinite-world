@@ -8,7 +8,6 @@
 import { handleOf, errorCodeOf, errorMemberName, HandleError } from './vocab-handle.mjs';
 import { statePathOf, checkPathPattern } from './keys.mjs';
 import { ERROR_CODES } from '../error-codes.mjs';
-
 const EMPTY = Object.freeze({});
 
 /** @type {Readonly<Record<string, Readonly<Record<string, string>>>>} */

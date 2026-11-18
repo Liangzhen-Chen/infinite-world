@@ -6,6 +6,11 @@ import { gradeDecl } from './cell-grades.mjs';
 import { rowReads, namedHolds } from './named-conditions.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+// required 策略（卷二 §1.2：always、byClass、ifPresent、byEnum、anyOf、byDigestible、byReader）与行来源值（§1.3）、map combine（§1.6）、空字串。
+const REQUIRED_FORM = Object.freeze({ always: 'always', byClass: 'byClass', ifPresent: 'ifPresent', byEnum: 'byEnum', anyOf: 'anyOf', byDigestible: 'byDigestible', byReader: 'byReader' });
+const SOURCE = Object.freeze({ instance: 'instance' });
+const COMBINE = Object.freeze({ sum: 'sum' });
+const SEG = Object.freeze({ empty: '' });
 const SECTIONS = ['classes', 'rows', 'generated'];
 // 节名句柄：成员由上面的节清单派生（三节即表文件的三个行区，§1.7）。
 const SECTION = markersOf('section', SECTIONS);
@@ -135,12 +140,12 @@ function requirement(t, id, row, dim) {
   for (const term of terms) {
     const [form, arg] = [term.slice(0, term.indexOf(':') < 0 ? term.length : term.indexOf(':')), term.slice(term.indexOf(':') + 1)];
     if (CONDITIONAL_FORMS.includes(form)) out.conditional = true;
-    if (form === 'always') out.applicable = true;
-    else if (form === 'byClass') { if (memberOf(row, arg, t.env)) out.applicable = true; }
-    else if (form === 'ifPresent') { if (valueOf(t, id, row, arg).known) out.applicable = true; }
-    else if (form === 'byEnum') { const [d, v] = arg.split('='); if (valueOf(t, id, row, d).value === v) out.applicable = true; }
-    else if (form === 'anyOf') { out.applicable = true; out.anyOf = arg.split(','); }
-    else if (form === 'byDigestible' || form === 'byReader') {
+    if (form === REQUIRED_FORM.always) out.applicable = true;
+    else if (form === REQUIRED_FORM.byClass) { if (memberOf(row, arg, t.env)) out.applicable = true; }
+    else if (form === REQUIRED_FORM.ifPresent) { if (valueOf(t, id, row, arg).known) out.applicable = true; }
+    else if (form === REQUIRED_FORM.byEnum) { const [d, v] = arg.split('='); if (valueOf(t, id, row, d).value === v) out.applicable = true; }
+    else if (form === REQUIRED_FORM.anyOf) { out.applicable = true; out.anyOf = arg.split(','); }
+    else if (form === REQUIRED_FORM.byDigestible || form === REQUIRED_FORM.byReader) {
       // 表头声明了判据的命名条件按声明求值（named-conditions.mjs），属条件项；没声明的只记 notCovered。
       const cond = t.named && t.named.get(form);
       if (!cond) { out.named.push(form); continue; }
@@ -191,7 +196,7 @@ export function checkRequired(t, env, err, stats) {
     for (const id of Object.keys(rows).sort()) {
       const row = rows[id] || {};
       const at = (dim) => ({ table: kind, row: id, dim, path: `${file}#/${section}/${id}/${dim}` });
-      if (section === SECTION.rows && (typeof row.basis !== 'string' || row.basis === '')) err({ code: 'E-DIM-INSTANCE-BASIS', level: 'L3', ...at('basis'), got: row.basis === undefined ? 'missing' : row.basis, want: 'basis on entity rows' });
+      if (section === SECTION.rows && (typeof row.basis !== 'string' || row.basis === SEG.empty)) err({ code: 'E-DIM-INSTANCE-BASIS', level: 'L3', ...at('basis'), got: row.basis === undefined ? 'missing' : row.basis, want: 'basis on entity rows' });
       for (const dim of Object.keys(dims).sort()) {
         const req = requirement(t, id, row, dim);
         for (const n of req.named) stats.notCovered.add(`${kind}.${dim}:${n}`);
@@ -201,7 +206,7 @@ export function checkRequired(t, env, err, stats) {
         if (req.applicable || !req.conditional) {
           c.applicable++;
           if (r.known) c.known++; else c.unknown++;
-          if (dims[dim].allowExplicit === true && dims[dim].derived !== undefined && r.source === 'instance') c.explicitFill++;
+          if (dims[dim].allowExplicit === true && dims[dim].derived !== undefined && r.source === SOURCE.instance) c.explicitFill++;
         } else c.notApplicable++;
         if (!req.applicable) continue;
         stats.applicable++;
@@ -221,7 +226,7 @@ export function checkRequired(t, env, err, stats) {
 
 // 未标 combine: sum 的映射展平后须覆盖键类型的全族；onUnknown 为 error 时缺键即加载失败（§1.6 第 4 项）。
 function checkMapKeys(def, v, env, at, err) {
-  if (def.type !== T.type.map || def.combine === 'sum' || def.onUnknown !== T.code_enum.onUnknown.error || !isObj(v) || !isObj(def.key)) return;
+  if (def.type !== T.type.map || def.combine === COMBINE.sum || def.onUnknown !== T.code_enum.onUnknown.error || !isObj(v) || !isObj(def.key)) return;
   const k = def.key;
   const fam = k.vocab !== undefined ? k.vocab : undefined;
   let all = [];

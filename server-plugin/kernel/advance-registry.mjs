@@ -7,6 +7,9 @@
 import { KernelError } from './errors.mjs';
 import { isModuleFile, isLowerCamelCode } from './handles/keys.mjs';
 
+// typeof 结果记号（语言常量；本文件只用 function 一个，单一定义）。
+const TYPE = Object.freeze({ function: 'function' });
+
 /**
  * @typedef {(engine: any, state: any, beat: {unit: string, minute: number}) => void} HookHandler
  * 一个钩子在一个单元的一拍上执行一次（卷二十 §4.1.3 第 2、3 条；单元取推进计划 struct:advancePlanItem.unit）。
@@ -30,7 +33,7 @@ let plan = null;
 export function registerAdvanceHook(hook, file, handler) {
   if (!isLowerCamelCode(hook)) throw new KernelError('E-DIM-ID-FORMAT', {}, `registerAdvanceHook: hook ${JSON.stringify(hook)} is not a hook code`);
   if (!isModuleFile(file)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `registerAdvanceHook ${hook}: file must be a module path relative to server-plugin/`);
-  if (typeof handler !== 'function') throw new KernelError('E-DIM-STRUCT-FIELD', {}, `registerAdvanceHook ${hook}: handler must be a function`);
+  if (typeof handler !== TYPE.function) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `registerAdvanceHook ${hook}: handler must be a function`);
   if (hooks.has(hook)) throw new KernelError('E-PHASE-HOOK-DUPLICATE', {}, `registerAdvanceHook: hook ${hook} already registered`);
   hooks.set(hook, Object.freeze({ file, run: handler }));
 }
@@ -41,7 +44,7 @@ export function registerAdvanceHook(hook, file, handler) {
  * @returns {void}
  */
 export function registerAdvancePlan(provider) {
-  if (typeof provider !== 'function') throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'registerAdvancePlan: provider must be a function');
+  if (typeof provider !== TYPE.function) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'registerAdvancePlan: provider must be a function');
   if (plan) throw new KernelError('E-WRITER-DUPLICATE', {}, 'advance plan provider already registered');
   plan = provider;
 }

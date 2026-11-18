@@ -7,6 +7,12 @@
 import { CODE_RE, HandleError } from './vocab-handle.mjs';
 import { T } from '../validate/types.mjs';
 
+// pathTypes 值类型里超出 §1.5 类型名的固定记号：定义源在 kernel/handles/markers.mjs（卷二 §2.7 :811 dimension、sealed、EventId 行），这里只引用。
+const TYPE_EXTRA = T.path_type_extra;
+// 路径模式的空段与宿主对象保留段名（卷二 §2.7 writers 写法 "" = 整个键；pathTypes 段文法保留 constructor、prototype，李白 11-17 裁定）。
+const SEG = Object.freeze({ empty: '' });
+const PATH_SEGMENT_RESERVED_LIST = ['constructor', 'prototype'];
+
 /** @typedef {import('../types.d.ts').DimKey} DimKey */
 /** @typedef {import('../types.d.ts').ModKey} ModKey */
 /**
@@ -89,8 +95,10 @@ export function parseDimKey(reg, text) {
   return { key: dimKeyOf(reg, kind, dimension, sub), kind, dimension, sub };
 }
 
+// 通配 `*` 与路径分隔符 `.` 是卷二文法记号（卷二 §2.7 :814：路径按 `.` 分段、`*` 恰匹配一段）；S13 上下文白名单的语言与文法常量，
+// 不计第 ④ 类（李白 11-18 13:05 裁定第 2 条）。
 /**
- * 模式的 `*` 段数（§2.7 路径模式匹配语义：按 `.` 分段，`*` 恰匹配一段）。
+ * 模式的 `*` 段数（§2.7 路径模式匹配语义 :814：按 `.` 分段，`*` 恰匹配一段）。
  * @param {string} pattern
  */
 export function wildcardCount(pattern) {
@@ -100,7 +108,7 @@ export function wildcardCount(pattern) {
 /** pathTypes 模式字面段文法（李白 11-17 pathTypes 段文法裁定及其修正，卷二 §2.7）：小写字母开头，后面允许大小写字母、数字、下划线。 */
 export const PATH_SEGMENT_RE = /^[a-z][a-zA-Z0-9_]*$/;
 /** 保留字段名（防原型污染，与 __proto__ 同理）：整类拒收。 */
-export const PATH_SEGMENT_RESERVED = new Set(['constructor', 'prototype']);
+export const PATH_SEGMENT_RESERVED = new Set(PATH_SEGMENT_RESERVED_LIST);
 
 /**
  * 校验一条 pathTypes 模式：每个非 `*` 段合 PATH_SEGMENT_RE，且至少一个字面段（全 `*` 的模式派生成员名为空串）。
@@ -119,6 +127,7 @@ export function checkPathPattern(pattern) {
  * 卷二 §1.10 :320 种子键各部件"按代号规范"，派生 id 即 §1.9 代号文法 CODE_RE（与 handle 段同一文法，不另立宽松正则；卷二 :234 `ownerKey.aggregate: SeedKey`、
  * 卷二十七 :348 聚合体 id 由 §1.10 派生函数得出、登记为 role_id）；且它既不是词表代号（词表代号段走命名 struct，02:55 裁定，不借 seedKey 兜底），
  * 也不是已载入的带 kind 实体 id（那类段写实体 kind，keyKinds (a)(b)）。
+ * 种子键各段以 `|` 相连（同 :320）；join 分隔串是卷二文法记号，S13 上下文白名单的语言与文法常量，不计第 ④ 类（李白 11-18 13:05 裁定第 2 条）。
  * @param {KeyRegistry} reg @param {unknown} text
  * @returns {boolean}
  */
@@ -143,7 +152,7 @@ export function seedKeyOf(reg, text) {
  * @returns {string[] | null}
  */
 export function statePathSegments(path) {
-  if (typeof path !== 'string' || path === '') return null;
+  if (typeof path !== 'string' || path === SEG.empty) return null;
   const segs = path.split('.');
   return segs.includes('') ? null : segs;
 }
@@ -165,7 +174,7 @@ export function pathTypeShape(t) {
   if (list) { const item = pathTypeShape(list[1]); return item ? { base: 'list', item } : null; }
   const num = /^(number|integer)(?::.*)?$/.exec(t);
   if (num) return { base: /** @type {'number'|'integer'} */ (num[1]) };
-  if (t === 'boolean' || t === 'dimension' || t === 'sealed' || t === 'EventId') return { base: t };
+  if (t === T.type.boolean || t === TYPE_EXTRA.dimension || t === TYPE_EXTRA.sealed || t === TYPE_EXTRA.EventId) return { base: t };
   const named = /^(ref|enum|struct):([a-zA-Z][a-zA-Z0-9_<>]*)$/.exec(t);
   if (named) { const [, base, name] = named; return { base: /** @type {'ref'|'enum'|'struct'} */ (base), name }; }
   return null;
@@ -187,7 +196,7 @@ export function statePathOf(patterns, pattern, segs) {
   const out = parts.map((p) => {
     if (p !== '*') return p;
     const s = segs[i++];
-    if (typeof s !== 'string' || s === '' || s.includes('.')) throw new HandleError('E-DIM-ID-FORMAT', `${pattern}: segment ${JSON.stringify(s)} not a single path segment`);
+    if (typeof s !== 'string' || s === SEG.empty || s.includes('.')) throw new HandleError('E-DIM-ID-FORMAT', `${pattern}: segment ${JSON.stringify(s)} not a single path segment`);
     return s;
   });
   return /** @type {import('../types.d.ts').StatePath<P>} */ (out.join('.'));
@@ -199,38 +208,38 @@ export function statePathOf(patterns, pattern, segs) {
 // 相对 server-plugin/ 的模块路径（registerAdvanceHook / registerViewReader 的 file：一段或多段目录 + .mjs）。
 const MODULE_FILE = /^(?:[a-z0-9][a-z0-9_-]*\/)*[a-z0-9][a-z0-9_.-]*\.mjs$/;
 /** @param {unknown} s @returns {boolean} */
-export const isModuleFile = (s) => typeof s === 'string' && MODULE_FILE.test(s);
+export const isModuleFile = (s) => typeof s === 'string' &&MODULE_FILE.test(s);
 
 // 相对 world/rules/ 的规则表文件路径（一段或多段目录 + .json）。
 const RULE_TABLE_FILE = /^(?:[a-z0-9][a-z0-9_-]*\/)*[a-z0-9][a-z0-9_-]*\.json$/;
 /** @param {unknown} s @returns {boolean} */
-export const isRuleTableFile = (s) => typeof s === 'string' && RULE_TABLE_FILE.test(s);
+export const isRuleTableFile = (s) => typeof s === 'string' &&RULE_TABLE_FILE.test(s);
 
 // 小驼峰代号：推进钩子名与视图读取名同用一条文法（advance-registry、view-registry）。
 const LOWER_CAMEL_CODE = /^[a-z][a-zA-Z0-9_]{0,47}$/;
 /** @param {unknown} s @returns {boolean} */
-export const isLowerCamelCode = (s) => typeof s === 'string' && LOWER_CAMEL_CODE.test(s);
+export const isLowerCamelCode = (s) => typeof s === 'string' &&LOWER_CAMEL_CODE.test(s);
 
 // 依赖声明的三类节点名（卷二 §2.3 :470）与加载器机器生成的两类（:470 末句）。
 const DECLARABLE_NODE = /^(view|relation|scope):[A-Za-z][A-Za-z0-9_]*$/;
 const GENERATED_NODE = /^(dim|modified):([a-z][a-z0-9_]{1,47})$/;
 const ANY_NODE = /^(view|relation|scope|dim|modified):[A-Za-z][A-Za-z0-9_]*$/;
 /** @param {unknown} s @returns {boolean} */
-export const isDeclarableNode = (s) => typeof s === 'string' && DECLARABLE_NODE.test(s);
+export const isDeclarableNode = (s) => typeof s === 'string' &&DECLARABLE_NODE.test(s);
 /** @param {unknown} s @returns {boolean} */
-export const isGeneratedNode = (s) => typeof s === 'string' && GENERATED_NODE.test(s);
+export const isGeneratedNode = (s) => typeof s === 'string' &&GENERATED_NODE.test(s);
 /** @param {unknown} s @returns {boolean} */
-export const isAnyNode = (s) => typeof s === 'string' && ANY_NODE.test(s);
+export const isAnyNode = (s) => typeof s === 'string' &&ANY_NODE.test(s);
 
 // state-owners 路径模式（pathTypes 的键）：点分的小驼峰段。
 const PATH_PATTERN = /^[a-z][a-zA-Z0-9_]*(\.[a-z][a-zA-Z0-9_]*)*$/;
 /** @param {unknown} s @returns {boolean} */
-export const isPathPattern = (s) => typeof s === 'string' && PATH_PATTERN.test(s);
+export const isPathPattern = (s) => typeof s === 'string' &&PATH_PATTERN.test(s);
 
 // 64 位小写十六进制摘要（存档清单与摘要；save、load/save）。
 const HEX64 = /^[0-9a-f]{64}$/;
 /** @param {unknown} s @returns {boolean} */
-export const isHex64 = (s) => typeof s === 'string' && HEX64.test(s);
+export const isHex64 = (s) => typeof s === 'string' &&HEX64.test(s);
 
 // 日志键的代号形（scheduler）：驼峰转下划线小写（卷二十 §4.1.3 第 7 条对照表）。
 const UPPER = /[A-Z]/g;

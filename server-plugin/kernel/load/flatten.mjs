@@ -8,6 +8,10 @@ import { ROW_FIELDS, splitKey, T } from '../validate/types.mjs';
 
 const sortUnique = (xs) => [...new Set(xs)].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+// 行键四种写法的 op（卷二 §1.3"继承"：`<维>+ / - / ~ / *`）；单一定义，比较处引用。
+const KEY_OP = Object.freeze({ plus: '+', minus: '-', tilde: '~' });
+// 表文件的两节（卷二 §1.3：类别行 classes、普通行 rows）。
+const SECTION = Object.freeze({ classes: 'classes' });
 
 // table：已解析的表文件；groupsOf(classId) → 该类别行所在的 precedence 组键集合；maxDepth：链深上限。
 // 返回 {classes: Map<id, 有效行>, rows: Map<id, 有效行>, abstract: Set<id>}；有效行只含维度键，另带 `own`（该行自己的行字段）。
@@ -34,7 +38,7 @@ export function flattenTable(table, groupsOf, maxDepth, err) {
   }
 
   function targetOk(section, id, target) {
-    if (section === 'classes') {
+    if (section === SECTION.classes) {
       if (!Object.hasOwn(classes, target)) return 'a class row of this table';
       if (abstract.has(target)) return null;
       const mine = groupsOf(id);
@@ -48,7 +52,7 @@ export function flattenTable(table, groupsOf, maxDepth, err) {
   function resolve(section, id, stack) {
     const memoKey = `${section}/${id}`;
     if (done.has(memoKey)) return done.get(memoKey);
-    const src = (section === 'classes' ? classes : rows)[id] || {};
+    const src = (section === SECTION.classes ? classes : rows)[id] || {};
     let parent = {};
     if (src.extends !== undefined) {
       const target = src.extends;
@@ -73,12 +77,12 @@ export function flattenTable(table, groupsOf, maxDepth, err) {
       const base = parent[dim];
       const t = def.type;
       try {
-        if (op === '+') {
+        if (op === KEY_OP.plus) {
           if (t === T.type.set) out[dim] = sortUnique([...(Array.isArray(base) ? base : []), ...(Array.isArray(v) ? v : [])]);
           else if (t === T.type.list) out[dim] = [...(Array.isArray(base) ? base : []), ...(Array.isArray(v) ? v : [])];
           else if (t === T.type.map) out[dim] = { ...(isObj(base) ? base : {}), ...(isObj(v) ? v : {}) };
           else throw new TypeError('extend needs set/map/list');
-        } else if (op === '-') {
+        } else if (op === KEY_OP.minus) {
           const drop = new Set(Array.isArray(v) ? v : []);
           if (t === T.type.set || t === T.type.list) out[dim] = (Array.isArray(base) ? base : []).filter((x) => !drop.has(x));
           else if (t === T.type.map) out[dim] = Object.fromEntries(Object.entries(isObj(base) ? base : {}).filter(([k]) => !drop.has(k)));
@@ -86,7 +90,7 @@ export function flattenTable(table, groupsOf, maxDepth, err) {
         } else {
           if (t !== T.type.number && t !== T.type.integer) throw new TypeError(`${op} needs number/integer`);
           if (typeof base !== 'number') { err({ code: 'E-DIM-EXTEND-NOPARENT', level: 'L1', ...at(section, id, dim), got: base === undefined ? 'no parent value' : base, want: 'parent number value' }); delete out[dim]; continue; }
-          const r = op === '~' ? fixedAdd(fixedUnits(base), fixedUnits(v)) : fixedMultiply(fixedUnits(base), fixedUnits(v));
+          const r = op === KEY_OP.tilde ? fixedAdd(fixedUnits(base), fixedUnits(v)) : fixedMultiply(fixedUnits(base), fixedUnits(v));
           out[dim] = fixedToNumber(truncateTo(r, Number.isInteger(def.precision) ? def.precision : 0));
         }
       } catch (e) {

@@ -9,6 +9,10 @@ import { CODE_ENUMS, T } from './types.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const scalar = (v) => typeof v === 'number' || typeof v === 'boolean';
+// 卷三甲 §2.1 物性格单元格声明的两个字段名与表文件节名（§1.7）：单一定义，比较处引用。
+const GRADE_FIELD = Object.freeze({ field: 'field', refDim: 'refDim' });
+const SEG = Object.freeze({ empty: '' });
+const SECTION = Object.freeze({ classes: 'classes' });
 const GRADE_KEYS = ['basis', 'citation', 'grade'];
 // 表里写物性格的各节：类别行（卷二 §6.2，类别的物性格同样带级别）、手写实体行、生成行。
 const SECTIONS = ['classes', 'rows', 'generated'];
@@ -35,7 +39,7 @@ export function gradedCells(dims, flatRow) {
 
 // 表头写了 cellGrades 却不是 {field: string, refDim?: string}（多余键也算）：声明本身错，报 E-DIM-STRUCT-FIELD，不静默当作没声明。
 function declShapeOk(d) {
-  return isObj(d) && typeof d.field === 'string' && d.field !== '' && (d.refDim === undefined || typeof d.refDim === 'string') && Object.keys(d).every((k) => k === 'field' || k === 'refDim');
+  return isObj(d) && typeof d.field === 'string' && d.field !== SEG.empty && (d.refDim === undefined || typeof d.refDim === 'string') && Object.keys(d).every((k) => k === GRADE_FIELD.field || k === GRADE_FIELD.refDim);
 }
 
 /** @param {Record<string, unknown>} t 一张表 @param {(...args: unknown[]) => void} err */
@@ -51,7 +55,7 @@ export function checkCellGrades(t, err) {
   const dims = doc.dimensions || {};
   const gradesOf = new Map();
   for (const section of SECTIONS) for (const id of Object.keys(isObj(doc[section]) ? doc[section] : {})) gradesOf.set(id, { section, g: (doc[section][id] || {})[decl.field] });
-  const flatOf = (id) => (gradesOf.has(id) && gradesOf.get(id).section === 'classes' ? t.flat.classes.get(id) : t.flat.rows.get(id)) || {};
+  const flatOf = (id) => (gradesOf.has(id) && gradesOf.get(id).section === SECTION.classes ? t.flat.classes.get(id) : t.flat.rows.get(id)) || {};
   for (const [id, { section, g }] of [...gradesOf].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
     const at = (cell) => ({ table: kind, row: id, dim: cell ? `${decl.field}.${cell}` : decl.field, path: `${file}#/${section}/${id}/${decl.field}${cell ? '/' + cell : ''}` });
     const flat = flatOf(id);

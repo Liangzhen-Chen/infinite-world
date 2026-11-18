@@ -75,6 +75,8 @@ export function loadUnits(unitsDoc, err) {
 // ---------- JSON 文本（L0 语法）的指针与标量 ----------
 // 原 kernel/handles/patterns.mjs 搬入：kernel 行规定"JSON 文本解析只在 kernel/load/*"，而 S13 (b) 只许见名文件用正则，
 // 本文件是 load/* 里唯一列在 (b) 的文件（自身不 import 任何 kernel 文件，不成环）。
+// JSON 文法记号（标点的字面字符与 true/false/null）是语言与文法常量，出处见卷二 §7 S13 上下文白名单 :2413 (d)（李白 11-18 13:05 裁定第 2 条），
+// 不计第 ④ 类；本文件的 JSON_SCALAR 正则与 load/json-text.mjs 的结构字符扫描都按这条口径。
 
 /** JSON 指针转义（RFC 6901）：`~` → `~0`、`/` → `~1`。@param {string} k @returns {string} */
 export const escapeJsonPointer = (k) => k.replace(/~/g, '~0').replace(/\//g, '~1');

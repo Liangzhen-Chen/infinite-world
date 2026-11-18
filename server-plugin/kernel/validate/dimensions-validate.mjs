@@ -14,6 +14,10 @@ import { prepareNamedConditions } from './named-conditions.mjs';
 import { checkCellGrades } from './cell-grades.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+// required 策略（卷二 §1.2）与类别族名（§1.3）、报错 severity（§4.1）：单一定义，比较处引用。
+const REQUIRED = Object.freeze({ always: 'always' });
+const FAMILY = Object.freeze({ class: 'class' });
+const SEVERITY = Object.freeze({ error: 'error' });
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 // 词表族键 kind（§1.9 "kind→kind_，22 类代号本身作枚举时用"）：表头 kind 须是该族条目去前缀后的名字。
 const KIND_FAMILY = 'kind';
@@ -84,7 +88,7 @@ export function validateDimensions(sources, options) {
     for (const id of Object.keys(isObj(t.doc.classes) ? t.doc.classes : {}).sort()) {
       const at = { table: t.kind, row: id, dim: '', path: `${t.file}#/classes/${id}` };
       if (!CODE_RE.test(id) || typeof t.entity.classPrefix !== 'string' || !id.startsWith(t.entity.classPrefix)) err({ code: 'E-DIM-ID-FORMAT', level: 'L0', ...at, got: id, want: `class id with prefix ${t.entity.classPrefix}` });
-      else if (!vocab.index.has(id) || vocab.index.get(id).family !== 'class') err({ code: 'E-DIM-CLASS-UNKNOWN', level: 'L2', ...at, got: id, want: 'entry of vocab family class' });
+      else if (!vocab.index.has(id) || vocab.index.get(id).family !== FAMILY.class) err({ code: 'E-DIM-CLASS-UNKNOWN', level: 'L2', ...at, got: id, want: 'entry of vocab family class' });
     }
   }
 
@@ -128,7 +132,7 @@ function checkHeader(t, env, err) {
     checkDef(def, env, at(key), err, true);
     if (!isObj(def)) continue;
     if (!requiredSyntaxOk(def.required)) bad('E-DIM-STRUCT-FIELD', 'required', def.required, 'always|never|byClass:<c>|ifPresent:<d>|byEnum:<d>=<v>|anyOf:<a>,<b>|byDigestible|byReader, joined by ;');
-    if (def.required !== 'always' && def.onUnknown === undefined) bad('E-DIM-ONUNKNOWN-MISSING', 'onUnknown', 'missing', CODE_ENUMS.onUnknown.join('|'));
+    if (def.required !== REQUIRED.always && def.onUnknown === undefined) bad('E-DIM-ONUNKNOWN-MISSING', 'onUnknown', 'missing', CODE_ENUMS.onUnknown.join('|'));
     else if (def.onUnknown !== undefined && !CODE_ENUMS.onUnknown.includes(def.onUnknown)) bad('E-DIM-DOMAIN-ENUM', 'onUnknown', def.onUnknown, CODE_ENUMS.onUnknown.join('|'));
     if (typeof def.modifiable !== 'boolean') bad('E-DIM-MODIFIABLE-TYPE', 'modifiable', def.modifiable, 'true|false');
     else if (def.modifiable) {
@@ -163,7 +167,7 @@ function report(errors, tables, stats, env) {
   norm.sort((a, b) => cmp(a.table, b.table) || cmp(a.row, b.row) || cmp(a.dim, b.dim) || cmp(a.code, b.code) || cmp(a.path, b.path));
   const seen = new Set();
   const out = norm.filter((e) => { const k = [e.code, e.table, e.row, e.dim].join('\u0000'); if (seen.has(k)) return false; seen.add(k); return true; });
-  const nErr = out.filter((e) => e.severity === 'error').length;
+  const nErr = out.filter((e) => e.severity === SEVERITY.error).length;
   const rows = tables.reduce((n, t) => n + Object.keys(isObj(t.doc.rows) ? t.doc.rows : {}).length + Object.keys(isObj(t.doc.generated) ? t.doc.generated : {}).length, 0);
   const lines = out.map((e) => `${e.code}  ${e.table}/${e.row}.${e.dim}  got ${JSON.stringify(e.got)}  want ${e.want}  - ${e.path}`);
   lines.push(`errors=${nErr} warnings=${out.length - nErr} tables=${tables.length} rows=${rows} known=${stats.known} applicable=${stats.applicable}`);

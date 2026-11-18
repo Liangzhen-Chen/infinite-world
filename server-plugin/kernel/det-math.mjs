@@ -4,6 +4,8 @@
 // 小数位数上限不另设常数：precision p 合法当且仅当 BASE^p 整除 SCALE（§1.2 的 0–4）；扩展标度 p 须使 BASE^p = SCALE²（§1.2、§3.3 第 6 条的 8）。
 
 const LIMIT = BigInt(Number.MAX_SAFE_INTEGER);
+// 十进制文本文法的字元记号（逐字符解析，见文件头；单一定义）。
+const CH = Object.freeze({ minus: '-', dot: '.', expLower: 'e', expUpper: 'E', plus: '+' });
 
 export class FixedError extends Error {
   constructor(code, message) { super(message); this.code = code; }
@@ -71,13 +73,13 @@ export function parseDecimalLiteral(x) {
   const s = String(x);
   let i = 0;
   let sign = '';
-  if (s[i] === '-') { sign = '-'; i += 1; }
+  if (s[i] === CH.minus) { sign = '-'; i += 1; }
   const wholeStart = i;
   while (isDigit(s[i])) i += 1;
   if (i === wholeStart) return null;
   const whole = s.slice(wholeStart, i);
   let fraction;
-  if (s[i] === '.') {
+  if (s[i] === CH.dot) {
     i += 1;
     const fractionStart = i;
     while (isDigit(s[i])) i += 1;
@@ -85,10 +87,10 @@ export function parseDecimalLiteral(x) {
     fraction = s.slice(fractionStart, i);
   }
   let exponent;
-  if (s[i] === 'e' || s[i] === 'E') {
+  if (s[i] === CH.expLower || s[i] === CH.expUpper) {
     i += 1;
     const expStart = i;
-    if (s[i] === '+' || s[i] === '-') i += 1;
+    if (s[i] === CH.plus || s[i] === CH.minus) i += 1;
     const expDigits = i;
     while (isDigit(s[i])) i += 1;
     if (i === expDigits) return null;

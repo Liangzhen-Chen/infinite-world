@@ -6,6 +6,7 @@
 
 import { KernelError } from './errors.mjs';
 import { isDeclarableNode, isAnyNode } from './handles/keys.mjs';
+const SEG = Object.freeze({ empty: '' });
 
 // 可由代码声明的三类节点（:470）与加载器机器生成的两类（:470 末句）。
 
@@ -18,7 +19,7 @@ let declared = new Map();
 let closures = null;
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
-const strList = (v) => Array.isArray(v) && v.every((x) => typeof x === 'string' && x !== '');
+const strList = (v) => Array.isArray(v) && v.every((x) => typeof x === 'string' && x !== SEG.empty);
 
 // own 的一项规整成一个依赖串（路径段以 `.` 相连；带 categories 的在后面附 `[cat,…]`），供闭包求并、排序与比对。
 function ownKey(item) {
