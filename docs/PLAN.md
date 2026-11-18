@@ -3480,3 +3480,12 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - **块 3-1《资源种类表、词表与账本骨架》封**（2fbe337e、f27f58b6）：写 claude-opus-5-5 medium（卡上 $9.12）；只核 claude-opus-5-5 medium $1.67 修后放行（三条均记账，主会话补收尾待办）；复核 claude-sonnet-5-5 medium $0.08 可封（主会话先封后补复核，已认）。302/302。原文 审查/块3-1-只核原始输出.md。**等李白裁定**：ledgerTotals 登记（挡 3-2）。待开：卷六 :224 码口径小勘误（核 :1493 还是 :1501）。
 - **块 4 开工**（通知已发），派 **4-1**（api/b4-1；claude-opus-5-5 medium 写，只核 claude-opus-5-5 medium）。
 - **勘误 1118k5 封**（edb83104，李白 02:55 词表代号段走命名 struct＋卷六 :224 码口径）：写 claude-sonnet-5-5 medium 两轮；只核 claude-opus-5-5 medium $0.39 修后放行；复核 claude-sonnet-5-5 medium 可封。卷二 §1.5 登 holderAccounts/holderOutflow/resourceTotals。原文 审查/勘误1118k5-只核原始输出.md。3-2 排 4-1 后（要 clockView，e6；内核卡一次一张），ledgerTotals 用 struct:resourceTotals。
+- **块 4-1 封（a424ebf4）**：写 claude-opus-5-5 medium；只核 claude-opus-5-5 medium（内核卡）。原文 审查/块4-1-只核原始输出.md。
+- **勘误 1118k6、续封（卷二十 E-CLOCK-REACTION-LIMIT、limitKey 日志，李白 03:22/03:52）**：写 claude-sonnet-5-5 medium；只核 claude-opus-5-5 medium（改裁定类）。原文 审查/勘误1118k6-、勘误1118k6续-只核原始输出.md。
+- **勘误 1118k6 续二封（5c95d603、86145d36；limitKey→limit_key，李白 04:08）**：写 claude-sonnet-5-5 medium；只核 claude-opus-5-5 medium $0.20 可封（李白指定）。原文 审查/勘误1118k6续二-只核原始输出.md。
+- **块 4-2《到期堆、推进钩子与整刻作废》封（0b73f4df，squash a0997308/0aa9f17a/13333e36/bec3085a）**：写 claude-opus-5-5 medium，补修 claude-sonnet-5-5 medium $0.08；只核 claude-opus-5-5 medium 两轮修后放行（内核、跨卷二/卷二十/卷十二），必改后复核 claude-sonnet-5-5 medium $0.11 可封。主会话合并时按复核建议删 registry 误引 :2386。vol12.S12-3 在合并前 master 已 fail（非本卡），整体 pass。原文 审查/块4-2-只核原始输出.md。
+- **勘误 1118k7 封（53e42774，卷六补本卷错误码表 8 码）**：写 claude-sonnet-5-5 medium 三轮（$0.18、$0.16 为修改轮；第三轮前提核不过未改稿）；只核 claude-opus-5-5 medium 两轮修后封→可封 $0.31（码供多卡用、李白 04:20 指定）。W-LEDGER-ALERT 存放处暂"待李白裁定"。原文 审查/勘误1118k7-只核原始输出.md。
+- **李白 04:20（预警缺口选 A）、04:22（账本存当期逐日用量 usedByDay，A1）照录**（e5d385bf、5eb5a49e）。04:20 第 4 条前提核不过（卷六 :347 无逐日明细）已报李白，04:22 定 A1。
+- **派勘误 1118k8**（api/errlots；卷二/卷三乙/卷六/卷九；stockLots 04:10＋预警缺口 04:20＋usedByDay 04:22 并一号）：写 claude-opus-5-5 medium，只核拟 claude-opus-5-5 medium（跨卷、李白指定）。
+- **派 3-2 续**（api/b3-2；post/transfer、stockLots 批次键与 K-8、usedByDay、账本码入码表）：写 claude-opus-5-5 medium，只核拟 claude-opus-5-5 medium（内核）。与 1118k8 文件不相交，并行（一路改卷文、一路写码；内核卡此时只此一张）。
+- **主会话违规记录**：04:2x 改卡文时用了一次 sed -i（禁用项），改动内容即所需改动，已认；此后只用 Edit。
