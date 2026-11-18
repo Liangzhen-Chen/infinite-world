@@ -2,7 +2,7 @@
 // 卷二十七 R27-4.3、R27-4.8、R27-7.5、A27-4.4、A27-4.6）。JSON 文本解析只在 kernel/load/*（§2.8 表 kernel 行 :844）。
 // 读档只读不写：任何失败都不改、不删存档目录下的文件（A27-4.6）。
 // 规则指纹：读档入口对 rulesDigest 只做一次相等比较，不等即 E-SAVE-RULES-MISMATCH 拒读，不迁移、不修补（R27-4.3、R27-7.5；体检 K2-21）。
-// 清单引用的分片缺失或摘要不符：报 E-SAVE-SHARD-DIGEST，回退到上一个完好清单并报 E-SAVE-TORN（R27-4.8）；两份都不完好即 E-SAVE-TORN 拒读。
+// 清单引用的分片缺失或摘要不符：报 E-SAVE-SHARD-DIGEST，回退到上一个完好清单并报 E-SAVE-TORN（R27-4.8）；两份都不完好即 E-SAVE-TORN 拒读；两份都不存在是空槽，E-SAVE-EMPTY（首启自动读档视为新档，见 autoLoadSlot）。
 // 恢复 = 最近一个完好快照 + 其后日志里的请求重跑（R27-4.5）；重跑是块 4 的复演，本文件交回快照与其后的日志条目，不重跑。
 // 摘要排除表：读入库生成文件，与按声明表生成的结果逐值比对，不一致 E-DIGEST-EXCLUDE-DRIFT（卷二十七 R27-5.8；卷二 :826）。
 
@@ -134,10 +134,14 @@ function assemble(m, texts, layout) {
       continue;
     }
     const row = rowOf.get(code);
-    if (!row || typeof ref !== 'string') throw new KernelError('E-SAVE-SHARD-UNCOVERED', {}, `snapshot shard ${code} has no row in the layout`);
-    const content = parseShard(texts, ref);
-    if (row.part === 'doc_data') { Object.assign(doc.doc_data.base, content); continue; }
-    walkPathTree(content, (segs, v, rec) => setIn(doc[row.part], segs, rec.sealed ? decodeSealedValue(v) : v));
+    const byUnit = row !== undefined && row.partition === 'part_by_unit';
+    if (!row || (byUnit ? !Array.isArray(ref) || !ref.every((d) => typeof d === 'string') : typeof ref !== 'string')) throw new KernelError('E-SAVE-SHARD-UNCOVERED', {}, `snapshot shard ${code} has no row in the layout`);
+    // part_by_unit 一行是各单元一片的摘要列表；每片是带完整路径的子树，逐片拼回。
+    for (const d of byUnit ? ref : [ref]) {
+      const content = parseShard(texts, d);
+      if (row.part === 'doc_data') { Object.assign(doc.doc_data.base, content); continue; }
+      walkPathTree(content, (segs, v, rec) => setIn(doc[row.part], segs, rec.sealed ? decodeSealedValue(v) : v));
+    }
   }
   /** @type {import('../save.mjs').Segment[]} */
   const segments = [];
@@ -162,7 +166,8 @@ function assemble(m, texts, layout) {
 /**
  * 从槽位读档（菜单"读档"动作经 menu-entry 在 kernel 组内调用；导入写盘后同一流程，卷二 :944 第 5 条）。只读不写。
  * 成功：{ok: true, doc（快照处四个部分 + 全部日志）, atEvent（快照所在的事件序号）, logTail（其后待重跑的条目）, clockMinute, book, fellBack}。
- * 失败：{ok: false, code}，code ∈ E-SAVE-SLOT-INVALID、E-SAVE-TORN、E-SAVE-RULES-MISMATCH、E-SEAL-DIGEST、E-SAVE-SHARD-DIGEST 等。
+ * 失败：{ok: false, code}，code ∈ E-SAVE-SLOT-INVALID、E-SAVE-EMPTY（槽位无存档：当前与上一个清单都不存在）、E-SAVE-TORN、E-SAVE-RULES-MISMATCH、E-SEAL-DIGEST、E-SAVE-SHARD-DIGEST 等。
+ * 本函数是"明确要求载入某个已有存档"的一路（菜单读档、导入后读档），空槽即 E-SAVE-EMPTY。
  * @param {{root: string, slot: number, layout: import('../save.mjs').SaveLayout, rulesDigest: string}} args
  * @returns {{ok: true, doc: any, atEvent: number, logTail: any[], clockMinute: number, book: import('../save.mjs').LogBook, fellBack: boolean} | {ok: false, code: import('../types.d.ts').ErrorCode}}
  */
@@ -188,6 +193,8 @@ export function loadSlot({ root, slot, layout, rulesDigest }) {
     }
   };
   const cur = checkManifest(dir, LAYOUT_NAMES.current);
+  // 两份清单都不存在：槽位无存档，E-SAVE-EMPTY（不借用 E-SAVE-TORN；李白 11-18 块 2-4 三件裁定 b）。
+  if (cur.state === 'missing' && checkManifest(dir, LAYOUT_NAMES.previous).state === 'missing') return { ok: false, code: new KernelError('E-SAVE-EMPTY').code };
   let wasCommitted = cur.state !== 'missing';
   if (cur.state === 'ok') {
     const r = tryManifest(cur);
@@ -205,10 +212,13 @@ export function loadSlot({ root, slot, layout, rulesDigest }) {
 /**
  * 启动时自动读档（卷二 :942 第 2 条）：没有请求也就没有回应句柄，失败时先 report(code, {slot})，交回失败结果；
  * 调用方据此记下"存档不可用"（reply_result 的 save_unavailable），第一次菜单响应带上它。
+ * 首次启动读到空槽（E-SAVE-EMPTY）视为新档、不报错：不 report，交回 {ok: true, fresh: true}，调用方开新世界（李白 11-18 块 2-4 三件裁定 b）。
  * @param {{root: string, slot: number, layout: import('../save.mjs').SaveLayout, rulesDigest: string}} args
+ * @returns {ReturnType<typeof loadSlot> | {ok: true, fresh: true}}
  */
 export function autoLoadSlot(args) {
   const r = loadSlot(args);
+  if (!r.ok && r.code === new KernelError('E-SAVE-EMPTY').code) return { ok: true, fresh: true };
   if (!r.ok) report(r.code, { slot: Number.isInteger(args.slot) ? args.slot : null });
   return r;
 }

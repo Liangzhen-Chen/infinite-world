@@ -16,6 +16,7 @@ import { stateMemo } from '../../server-plugin/kernel/memo.mjs';
 import { useReportSink } from '../../server-plugin/kernel/report.mjs';
 import {
   installDigestCap, installDigestExclude, digestExcludeOf, saveDigest, createLogBook, appendLogEntry, tickEnd, saveToSlot, compileLayout, MANIFEST_FIELDS,
+  registerUnitOfPath, resetUnitOfPath,
 } from '../../server-plugin/kernel/save.mjs';
 import { loadSlot, autoLoadSlot, loadDigestExclude } from '../../server-plugin/kernel/load/save.mjs';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
@@ -313,6 +314,65 @@ test('分片表：每条 pathTypes 模式恰被一行完全覆盖；没盖、两
   assert.throws(() => createLogBook(LAYOUT, misplaced), uncovered);
 });
 
+// part_by_unit（李白 11-18 块 2-4 三件裁定 a）：gauge 一行按模拟单元分片；单元映射是测试造的虚构函数（gad_one 归 unt_north，其余归 unt_south）。
+const LAYOUT_UNIT = {
+  ...LAYOUT,
+  shards: LAYOUT.shards.map((r) => (r.shard === 'shd_gauge' ? { ...r, partition: 'part_by_unit' } : r)),
+};
+const docUnit = () => {
+  const d = doc0();
+  d.doc_state.gauge.gad_two = { level: 4 };
+  return d;
+};
+
+test('part_by_unit 已登记映射：每个单元一片、按单元代号升序列在快照里，片内是带完整路径的子树；存盘读回逐值相同', () => {
+  const seen = [];
+  registerUnitOfPath((segs) => { seen.push(segs.join('.')); return segs[1] === 'gad_one' ? 'unt_north' : 'unt_south'; });
+  try {
+    assert.throws(() => registerUnitOfPath(() => 'unt_x'), (e) => e.code === 'E-WRITER-DUPLICATE');
+    const root = testTempRoot('save-');
+    const s = saveToSlot({ root, slot: 0, book: createLogBook(LAYOUT_UNIT, docUnit()), doc: docUnit(), rulesDigest: RULES, clockMinute: 0 });
+    assert.equal(s.ok, true);
+    assert.deepEqual(seen, ['gauge.gad_one.dims.mass', 'gauge.gad_one.level', 'gauge.gad_two.level']);
+    const ref = s.manifest.snapshotIndex[0].shards.shd_gauge;
+    assert.equal(Array.isArray(ref) && ref.length, 2);
+    const shard = (d) => JSON.parse(readFileSync(join(root, 'slot-0', 'shards', `${d}.json`), 'utf8'));
+    assert.deepEqual(shard(ref[0]), { gauge: { gad_one: { dims: { mass: 2.5 }, level: 3 } } });
+    assert.deepEqual(shard(ref[1]), { gauge: { gad_two: { level: 4 } } });
+    const r = loadSlot({ root, slot: 0, layout: LAYOUT_UNIT, rulesDigest: RULES });
+    assert.equal(r.ok, true);
+    assert.deepEqual(r.doc, withLog(docUnit(), []));
+    // 分片方式不进存档摘要（A27-4.2）：与单片存法的摘要相同。
+    const plain = saveToSlot({ root: testTempRoot('save-'), slot: 0, book: createLogBook(LAYOUT, docUnit()), doc: docUnit(), rulesDigest: RULES, clockMinute: 0 });
+    assert.equal(s.manifest.saveDigest, plain.manifest.saveDigest);
+  } finally {
+    resetUnitOfPath();
+  }
+});
+
+test('part_by_unit 未登记映射即按未覆盖拒；登记了而某路径返回空（null、空串、非字串）也按未覆盖拒，不猜', () => {
+  const uncovered = (e) => e.code === 'E-SAVE-SHARD-UNCOVERED';
+  resetUnitOfPath();
+  assert.throws(() => compileLayout(LAYOUT_UNIT), uncovered);
+  assert.throws(() => createLogBook(LAYOUT_UNIT, docUnit()), uncovered);
+  for (const empty of [null, undefined, '', 7]) {
+    registerUnitOfPath((segs) => (segs[1] === 'gad_two' ? empty : 'unt_north'));
+    try {
+      assert.equal(compileLayout(LAYOUT_UNIT).pathRows.length, 4);
+      assert.throws(() => createLogBook(LAYOUT_UNIT, docUnit()), uncovered);
+    } finally {
+      resetUnitOfPath();
+    }
+  }
+  // doc_data 不是状态路径，part_by_unit 用在 doc_data 行登记了映射也拒。
+  registerUnitOfPath(() => 'unt_north');
+  try {
+    assert.throws(() => compileLayout({ ...LAYOUT, shards: [...LAYOUT.shards, { shard: 'shd_x', part: 'doc_data', paths: ['tbl_c'], partition: 'part_by_unit' }] }), uncovered);
+  } finally {
+    resetUnitOfPath();
+  }
+});
+
 // ---------- 存读档往返、快照与日志（R27-4.5、R27-4.7、R27-4.8） ----------
 
 test('存读档往返：开局快照存盘读回，四个部分逐值相同、读回文档的存档摘要等于清单里的', () => {
@@ -418,7 +478,7 @@ test('A27-4.6 / R27-4.3：rulesDigest 不符即 E-SAVE-RULES-MISMATCH 拒读，�
   assert.deepEqual(snapshotDir(root), before);
 });
 
-test('R27-4.8：清单引用的分片摘要不符 → 报 E-SAVE-SHARD-DIGEST，回退上一个完好清单并报 E-SAVE-TORN；两份都坏或空槽位 E-SAVE-TORN', () => {
+test('R27-4.8：清单引用的分片摘要不符 → 报 E-SAVE-SHARD-DIGEST，回退上一个完好清单并报 E-SAVE-TORN；两份都坏 E-SAVE-TORN', () => {
   const root = testTempRoot('save-');
   const book = createLogBook(LAYOUT, doc0());
   saveToSlot({ root, slot: 0, book, doc: doc0(), rulesDigest: RULES, clockMinute: 1 });
@@ -437,7 +497,23 @@ test('R27-4.8：清单引用的分片摘要不符 → 报 E-SAVE-SHARD-DIGEST，
   const shared = s2.manifest.snapshotIndex[0].shards.shd_gauge;
   writeUnderTempRoot(root, `slot-0/shards/${shared}.json`, '{}');
   assert.deepEqual(loadSlot({ root, slot: 0, layout: LAYOUT, rulesDigest: RULES }), { ok: false, code: 'E-SAVE-TORN' });
-  assert.deepEqual(loadSlot({ root, slot: 1, layout: LAYOUT, rulesDigest: RULES }), { ok: false, code: 'E-SAVE-TORN' });
+});
+
+test('空槽位（李白 11-18 块 2-4 三件裁定 b）：显式载入空槽即 E-SAVE-EMPTY、不报 E-SAVE-TORN；首启自动读档读到空槽视为新档、不报错', () => {
+  const root = testTempRoot('save-');
+  saveToSlot({ root, slot: 0, book: createLogBook(LAYOUT, doc0()), doc: doc0(), rulesDigest: RULES, clockMinute: 1 });
+  logs.length = 0;
+  // 槽位 1 从未存过（目录都没有）。
+  assert.deepEqual(loadSlot({ root, slot: 1, layout: LAYOUT, rulesDigest: RULES }), { ok: false, code: 'E-SAVE-EMPTY' });
+  assert.deepEqual(autoLoadSlot({ root, slot: 1, layout: LAYOUT, rulesDigest: RULES }), { ok: true, fresh: true });
+  assert.deepEqual(logs, []);
+  // 目录在、两份清单都不在（只有分片）也是空槽。
+  writeUnderTempRoot(root, 'slot-2/shards/x.json', '{}');
+  assert.deepEqual(loadSlot({ root, slot: 2, layout: LAYOUT, rulesDigest: RULES }), { ok: false, code: 'E-SAVE-EMPTY' });
+  assert.deepEqual(autoLoadSlot({ root, slot: 2, layout: LAYOUT, rulesDigest: RULES }), { ok: true, fresh: true });
+  assert.deepEqual(logs, []);
+  // 有存档的槽位照常读出。
+  assert.equal(autoLoadSlot({ root, slot: 0, layout: LAYOUT, rulesDigest: RULES }).clockMinute, 1);
 });
 
 // 把当前清单改成"分片都在、摘要都对，但快照里多一个分片表没有的分片代号"：读得出、拼不回。
@@ -525,6 +601,8 @@ test('槽位编号越界 E-SAVE-SLOT-INVALID；写盘失败 E-SAVE-WRITE-FAIL；
   const file = writeUnderTempRoot(root, 'not-a-dir', 'x');
   assert.deepEqual(saveToSlot({ root: file, slot: 0, book, doc: doc0(), rulesDigest: RULES, clockMinute: 0 }), { ok: false, code: 'E-SAVE-WRITE-FAIL' });
   logs.length = 0;
+  // 槽位 2 有一份读不出的清单、没有上一个清单：残缺（不是空槽），自动读档先 report 再交回失败。
+  writeUnderTempRoot(root, 'slot-2/manifest.json', '{"tor');
   assert.deepEqual(autoLoadSlot({ root, slot: 2, layout: LAYOUT, rulesDigest: RULES }), { ok: false, code: 'E-SAVE-TORN' });
   assert.deepEqual(logs.map((x) => [x.code, x.fields.slot]), [['E-SAVE-TORN', 2]]);
 });
