@@ -2,9 +2,12 @@
 // §2.9 第 3 条 :1130 文字只走 readSealed/writeSealed）。卷二十七 R27-4.4：未在 pathTypes 声明的路径写不进状态。
 // 运行期核对一律按加载期收下的声明表合并结果（kernel/load/state-owners.mjs 的 merged）：路径模式、值类型、写者、keyKinds；不认任何具体顶层键、路径或文件。
 // 写只在事务内（kernel/transaction.mjs）：每次写前记撤销项，任何一次写入被拒由事务整笔回滚（§2.6"事务内拒写的处置"）。
-// 本卡（块 2 第 2-3 张）只建这四个函数；canonical、applyPatches、atomicJSON 等存档部分随 2-4 并入本文件。
+// 块 2 第 2-4 张并入：规范序列化 canonical、canonicalEqual、applyPatches/diffPatches（体检 K2-01、K2-03；从 old-final-1117 server-plugin/storage.mjs 改写搬入），
+// 以及存档序列化用的 pathTypes 查询（pathTypeRecords、pathTypeOf、valueFitsPathType；卷二十七 R27-4.4 存什么、存成什么类型唯一依据 pathTypes）。
+// atomicJSON 要 node:fs，按卷二 §2.7 import 矩阵 kernel 行（:779）只许在 kernel/save.mjs，故落在 save.mjs，不在本文件。
 
 import { clone } from './clone.mjs';
+import { invalidateMemo } from './memo.mjs';
 import { statePathSegments, pathTypeShape } from './handles/keys.mjs';
 import { CODE_RE } from './handles/vocab-handle.mjs';
 import { compareSpecificity, KEY_NONENTITY } from './load/state-owners.mjs';
@@ -149,6 +152,7 @@ function setAt(tx, segs, value) {
   tx.undo.push({ segs, existed: Object.hasOwn(cur, last), prev: cur[last] });
   cur[last] = value;
   tx.written.push([...segs]);
+  invalidateMemo(tx.state); // state 变了，按它算的 stateMemo 一律作废（kernel/memo.mjs）
 }
 
 /**
@@ -264,4 +268,199 @@ function writeSealedChecked(state, credential, path, sealed) {
     && Object.keys(sealed).every((k) => k === 'bytes' || k === 'digest') && typeof sealed.bytes === 'string' && typeof sealed.digest === 'string';
   if (!shapeOk) throw new KernelError('E-TEXT-UNGATED', { entity: null }, 'value is not a Sealed {bytes, digest}');
   setAt(tx, segs, clone(sealed));
+}
+
+// ---------- 存档序列化用的 pathTypes 查询（卷二十七 R27-4.4；kernel 组内用，不在 kernelApi） ----------
+
+/**
+ * 加载期收下的全部 pathTypes 模式（含 textPaths 与账本路径），按模式串升序。
+ * @returns {ReadonlyArray<{pattern: string, segs: string[], type: string}>}
+ */
+export function pathTypeRecords() {
+  return need().paths.map((p) => ({ pattern: p.pattern, segs: [...p.segs], type: p.type }));
+}
+
+/**
+ * 具体路径段落在哪条 pathTypes 模式上（最具体模式优先，§2.7）；没有即 null。
+ * @param {string[]} segs
+ * @returns {{pattern: string, segs: string[], type: string, sealed: boolean} | null}
+ */
+export function pathTypeOf(segs) {
+  const rec = mostSpecific(need().paths, segs);
+  return rec ? { pattern: rec.pattern, segs: [...rec.segs], type: rec.type, sealed: rec.shape !== null && rec.shape.base === 'sealed' } : null;
+}
+
+/**
+ * 某条模式下有没有更长的模式（即这一层还只是中间对象，值在更深处）。
+ * @param {string[]} segs 具体路径段（前缀）
+ * @returns {boolean}
+ */
+export function pathTypeHasDeeper(segs) {
+  return need().paths.some((r) => r.segs.length > segs.length && segs.every((s, i) => r.segs[i] === '*' || r.segs[i] === s));
+}
+
+/**
+ * 值是否符合该模式在 pathTypes 声明的类型（与 writePath 的类型核对同一判断；sealed 按 {bytes, digest} 形态）。
+ * @param {string} pattern @param {unknown} v
+ * @returns {boolean}
+ */
+export function valueFitsPathType(pattern, v) {
+  const rec = need().paths.find((r) => r.pattern === pattern);
+  if (!rec) return false;
+  if (rec.shape && rec.shape.base === 'sealed') return isSealedValue(v);
+  return typeOk(rec.shape, v);
+}
+
+/**
+ * 普通对象的键集恰好是 keys（keys 须已升序）。
+ * @param {any} v @param {ReadonlyArray<string>} keys
+ * @returns {boolean}
+ */
+export function hasExactKeys(v, keys) {
+  if (!isPlainObject(v)) return false;
+  const ks = Object.keys(v).sort();
+  return ks.length === keys.length && ks.every((k, i) => k === keys[i]);
+}
+
+const SEALED_KEYS = Object.freeze(['bytes', 'digest']);
+
+/**
+ * state 里 Sealed 的形态 {bytes, digest}（两项都是字串，再无别的键）。
+ * @param {unknown} v
+ * @returns {boolean}
+ */
+export function isSealedValue(v) {
+  return hasExactKeys(v, SEALED_KEYS) && typeof v.bytes === 'string' && typeof v.digest === 'string';
+}
+
+// ---------- 规范序列化（体检 K2-03、第三节第 3 条：卷一 §8.3 :643"算法 storage.mjs:14 digest() 作用于排除后的文档"，序列化规则写在这里、由测试钉住） ----------
+// 规则（tests/kernel/save.test.mjs 逐条有用例）：
+//  1. null、true、false 照 JSON 字面量；
+//  2. 有限数照 JSON.stringify（ECMAScript Number::toString 最短往返；-0 写成 0）；
+//  3. 字串照 JSON.stringify 的转义（不加不减空白）；
+//  4. 数组按下标次序 `[a,b]`，无空白；
+//  5. 普通对象（原型为 Object.prototype 或 null）按键名 UTF-16 码元升序 `{"k":v}`，无空白；
+//  6. 其余（undefined、函数、symbol、bigint、非有限数、稀疏数组、Map、Date、Uint8Array 等非普通对象）不是存档数据，抛错，不静默写成 null 或略去。
+// 旧实现对 undefined 写出非 JSON 文本、对非有限数写成 null，新底子改为拒收（同版确定性只要求同输入同输出；存档里本不该有这些值）。
+
+const isPlainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v) && (Object.getPrototypeOf(v) === Object.prototype || Object.getPrototypeOf(v) === null);
+
+function notData(v) {
+  return new Error(`canonical: not save data (${v === null ? 'null' : Array.isArray(v) ? 'sparse array' : typeof v})`);
+}
+
+function canonicalAtom(v) {
+  if (v === null || typeof v === 'boolean' || typeof v === 'string') return JSON.stringify(v);
+  if (typeof v === 'number' && Number.isFinite(v)) return JSON.stringify(v);
+  throw notData(v);
+}
+
+/**
+ * 规范序列化：同一数据恒得同一字串（规则见上）。存档摘要、分片内容寻址与 canonicalEqual 共用这一种写法。
+ * @param {unknown} value
+ * @returns {string}
+ */
+export function canonical(value) {
+  if (Array.isArray(value)) {
+    const parts = [];
+    for (let i = 0; i < value.length; i++) {
+      if (!Object.hasOwn(value, i)) throw notData(value);
+      parts.push(canonical(value[i]));
+    }
+    return `[${parts.join(',')}]`;
+  }
+  if (value !== null && typeof value === 'object') {
+    if (!isPlainObject(value)) throw notData(value);
+    return `{${Object.keys(value).sort().map((k) => `${JSON.stringify(k)}:${canonical(value[k])}`).join(',')}}`;
+  }
+  return canonicalAtom(value);
+}
+
+/**
+ * canonical(a) === canonical(b)，但不拼出两个字串：同一引用的子树立即判等，遇到第一处不同即停；比到的非存档数据同样抛错。
+ * @param {unknown} a @param {unknown} b
+ * @returns {boolean}
+ */
+export function canonicalEqual(a, b) {
+  const objA = a !== null && typeof a === 'object', objB = b !== null && typeof b === 'object';
+  if (!objA && !objB) return canonicalAtom(a) === canonicalAtom(b);
+  if (a === b) return true; // 同一引用：子树共享，不再下探
+  if (objA !== objB || Array.isArray(a) !== Array.isArray(b)) return false;
+  if (Array.isArray(a)) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (!Object.hasOwn(a, i)) throw notData(a);
+      if (!Object.hasOwn(b, i)) throw notData(b);
+      if (!canonicalEqual(a[i], b[i])) return false;
+    }
+    return true;
+  }
+  if (!isPlainObject(a)) throw notData(a);
+  if (!isPlainObject(b)) throw notData(b);
+  const keys = Object.keys(a);
+  if (keys.length !== Object.keys(b).length) return false;
+  for (const k of keys) if (!Object.hasOwn(b, k) || !canonicalEqual(a[k], b[k])) return false;
+  return true;
+}
+
+// ---------- 补丁（体检 K2-01；旧 storage.mjs applyPatches/diffPatches 改写：不搬 deadPatchValues 提速与 12 段上限） ----------
+
+/** @typedef {{op: 'set', path: string[], value: unknown} | {op: 'delete', path: string[]}} Patch */
+
+const UNSAFE_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
+
+/**
+ * 依次施加补丁，返回新文档；原文档不动（只复制被写路径上的祖先，其余子树共享）。补丁格式不对、路径含不安全键、中途不是对象即抛错。
+ * set 的值按副本放入。
+ * @param {any} document @param {Patch[]} patches
+ * @returns {any}
+ */
+export function applyPatches(document, patches) {
+  if (!Array.isArray(patches)) throw new Error('applyPatches: patches must be a list');
+  const owned = new WeakSet();
+  const writable = (v) => {
+    if (v === null || typeof v !== 'object') throw new Error('applyPatches: path runs through a non-object');
+    if (owned.has(v)) return v;
+    const copy = Array.isArray(v) ? [...v] : { ...v };
+    owned.add(copy);
+    return copy;
+  };
+  const next = writable(document);
+  for (const p of patches) {
+    if (p === null || typeof p !== 'object' || (p.op !== 'set' && p.op !== 'delete') || !Array.isArray(p.path) || p.path.length === 0) throw new Error('applyPatches: malformed patch');
+    if (p.path.some((k) => typeof k !== 'string' || UNSAFE_KEYS.has(k))) throw new Error('applyPatches: unsafe or non-string path key');
+    let target = next;
+    for (const k of p.path.slice(0, -1)) {
+      target[k] = writable(Object.hasOwn(target, k) ? target[k] : {});
+      target = target[k];
+    }
+    const last = p.path[p.path.length - 1];
+    if (p.op === 'delete') delete target[last];
+    else target[last] = clone(p.value);
+  }
+  return next;
+}
+
+/**
+ * 两份文档的净差：对象逐键递归；数组整体（下标不拆）；新加的键整值写入。applyPatches(before, diffPatches(before, after)) 与 after 规范相等。
+ * @param {any} before @param {any} after
+ * @returns {Patch[]}
+ */
+export function diffPatches(before, after) {
+  /** @type {Patch[]} */
+  const out = [];
+  const visit = (a, b, path) => {
+    if (isPlainObject(a) && isPlainObject(b)) {
+      for (const k of Object.keys(a).sort()) if (!Object.hasOwn(b, k)) out.push({ op: 'delete', path: [...path, k] });
+      for (const k of Object.keys(b).sort()) {
+        if (!Object.hasOwn(a, k)) out.push({ op: 'set', path: [...path, k], value: b[k] });
+        else visit(a[k], b[k], [...path, k]);
+      }
+    } else if (!canonicalEqual(a, b)) {
+      if (path.length === 0) throw new Error('diffPatches: documents must both be objects at the root');
+      out.push({ op: 'set', path, value: b });
+    }
+  };
+  visit(before, after, []);
+  return out;
 }

@@ -7,6 +7,8 @@
 
 import { KernelError, codeOf } from './errors.mjs';
 import { report } from './report.mjs';
+import { invalidateMemo } from './memo.mjs';
+import { appendLogEntry } from './save.mjs';
 
 /**
  * @typedef {{node: string, file: string, request?: number | string | null, tick?: number, stage?: number}} TxContext
@@ -35,6 +37,7 @@ function rollback(tx) {
     if (existed) cur[last] = prev; else delete cur[last];
   }
   tx.undo.length = 0;
+  invalidateMemo(tx.state); // 回滚改了 state，缓存作废（kernel/memo.mjs）
 }
 
 /** @type {null | ((state: any, written: string[][]) => void)} */
@@ -97,7 +100,8 @@ export function runTransaction(state, ctx, body) {
 
 /**
  * @typedef {{node: string, file: string, handler: (state: any, proposal: any) => void}} ProposalRoute
- * @typedef {{state: any, resolve: (proposal: any) => ProposalRoute}} ProposalSession
+ * @typedef {{state: any, resolve: (proposal: any) => ProposalRoute, book: import('./save.mjs').LogBook}} ProposalSession
+ * book：当前存档的事件日志簿（kernel/save.mjs createLogBook），请求条目记进它的 doc_log。
  */
 
 /** @type {ProposalSession | null} */
@@ -121,8 +125,10 @@ export function installProposalSession(s) {
 export function submitProposal(proposal) {
   if (!session) throw new Error('kernel/transaction.mjs: submitProposal before the kernel is mounted');
   const route = session.resolve(proposal);
-  // 由 2-4 接入：请求受理时先单独提交一笔，把这条请求条目记入 doc_log，再开始处理（卷二 §2.6 :503、卷二十七 R27-7.3 :668）；
-  // 那一笔在下面这笔处理事务的回滚范围之外。doc_log 属 2-4（kernel/save.mjs），本卡不建、不造替身。
+  // 请求受理时先单独提交一笔，把这条请求条目记入 doc_log，再开始处理（卷二 §2.6 :503、卷二十七 R27-7.3 :668；块 2 第 2-4 张接入）。
+  // 这一笔记在日志簿上、不在 state 里，下面这笔处理事务整笔回滚也不抹它：被拒的请求按请求编号留在输入序列里。
+  const { reply: _reply, ...entry } = proposal;
+  appendLogEntry(session.book, entry);
   const r = runTransaction(session.state, { node: route.node, file: route.file, request: proposal.request }, (st) => route.handler(st, proposal));
   if (r.ok) return r;
   return proposal.reply === undefined || proposal.reply === null ? { ok: false } : { ok: false, code: r.code };

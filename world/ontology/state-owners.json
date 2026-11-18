@@ -47,6 +47,7 @@
  "assembly": {"files": ["server-plugin/index.mjs"], "process": "server", "calls": ["createRouterCaps", "createDigestCap", "createWallTimer", "mountKernel", "registerSystems", "mountOutput", "mountAi", "mountMenuEntry", "mountSaveRoutes", "mountNarration", "mountInput"]},
  "retired": ["server-plugin/legacy/**", "server-plugin/compat/**", "server-plugin/migrations/**"],
  "kernelApi": {"exports": [
+  {"export": "kernel/memo.mjs#stateMemo", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/storage.mjs#readPath", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/storage.mjs#writePath", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/transaction.mjs#registerHoldWhileRecompute", "callers": ["rules"], "acceptsState": false},
@@ -65,6 +66,8 @@
   {"export": "kernel/errors.mjs#reportError", "callers": ["*"], "acceptsState": false}
  ]},
  "groupApi": {"exports": [
+  {"export": "textcore/digest.mjs#digestHex", "callerFiles": ["output-gate/envelope-exit.mjs"]},
+  {"export": "textcore/digest.mjs#createDigestCap", "callerFiles": ["index.mjs"]},
   {"export": "systems.mjs#registerSystems", "callerFiles": ["index.mjs"]}
  ]},
  "importMatrix": {

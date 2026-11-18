@@ -1,0 +1,507 @@
+// 存档写盘（卷二 §2.9 第 0 条"存档四路" :940–944、登记出口表 kernel/save.mjs 行 :1065；卷二十七 §4.4、R27-4.1–4.10 :495–514）。
+// 读档入口在 kernel/load/save.mjs（JSON 文本解析只许在 kernel/load/*，§2.8 表 kernel 行 :844）；分片文件名与清单字段只在这两个文件出现（S27-7）。
+//
+// 逻辑文档五个部分（族 docpart，R27-4.1）：doc_data（世界数据副本 {base: {<表代号>: 值}, appends: [追加段…]}）、
+// doc_state、doc_holdings、doc_ledger（三者都是按 pathTypes 路径组织的对象树）、doc_log（事件日志，条目列表；以日志簿 LogBook 为准）。
+// 存档摘要对逻辑文档算，只此一种（R27-4.1）：排除表按卷二 §2.9 第 3 条（:1137）生成，见 digestExcludeOf；物理分片不影响摘要（A27-4.2）。
+// 存哪些路径、存成什么类型唯一依据 pathTypes（R27-4.4）：序列化逐层按 kernel/storage.mjs 的 pathTypes 查询走，不认任何具体路径名；
+// 未声明的路径 E-PATH-UNDECLARED；sealed 类型写成 {"$sealed": 1, "bytes", "digest"}（:1128）。
+// 事件日志加快照（R27-4.5）：日志只追加；封段与快照只在一刻全部处理完时（tickEnd）做；快照是除日志外四个部分的分片集合。
+// 分片（R27-4.6）、写时复制（R27-4.7：分片文件按内容摘要寻址，已有即不重写）、原子提交（R27-4.8：先写齐分片，最后原子改名提交清单）、
+// 修剪只管日志与快照、不碰状态（R27-4.9）、清单无墙钟（R27-4.10：显示字段只有 clockMinute 与槽位编号）。
+// 摘要经装配文件注入的 DigestCap（:987；kernel 不 import node:crypto），注入前调用即抛错（启动失败）。
+
+import { openSync, writeSync, fsyncSync, closeSync, renameSync, mkdirSync, existsSync, readdirSync, unlinkSync } from 'node:fs';
+import { join } from 'node:path';
+import { canonical, pathTypeOf, pathTypeHasDeeper, pathTypeRecords, isSealedValue, hasExactKeys } from './storage.mjs';
+import { statePathSegments } from './handles/keys.mjs';
+import { KernelError, codeOf } from './errors.mjs';
+import { clone } from './clone.mjs';
+import { readManifestDigests } from './load/save.mjs';
+
+// ---------- 存档布局的名字（S27-7：只在本文件与 kernel/load/save.mjs 出现） ----------
+
+/** 逻辑文档五个部分（族 docpart 的条目，卷二十七 §1.9 表 :124）。 */
+export const DOC_PARTS = Object.freeze(['doc_data', 'doc_state', 'doc_holdings', 'doc_ledger', 'doc_log']);
+/** 按 pathTypes 路径组织的三个部分（R27-4.6"状态路径的匹配语义用卷二 §2.7"）。 */
+export const PATH_PARTS = Object.freeze(['doc_state', 'doc_holdings', 'doc_ledger']);
+/** 分片切分方式（族 partition，:126）。 */
+export const PARTITIONS = Object.freeze(['part_single', 'part_by_unit', 'part_by_segment']);
+/** 槽位目录、分片目录与两份清单（当前与上一个完好清单，R27-4.8 回退用）。 */
+export const LAYOUT_NAMES = Object.freeze({ slotPrefix: 'slot-', shardsDir: 'shards', current: 'manifest.json', previous: 'manifest.prev.json', shardExt: '.json', tmpExt: '.tmp' });
+/** 清单字段（§4.4.1 :487；另加槽位编号 slot，R27-4.10 显示字段之一）。没有墙钟字段。 */
+export const MANIFEST_FIELDS = Object.freeze(['clockMinute', 'dataDigest', 'logSegments', 'rulesDigest', 'saveDigest', 'shardDigests', 'slot', 'snapshotIndex']);
+
+const SEALED_TAG = '$sealed';
+const HEX64 = /^[0-9a-f]{64}$/;
+
+// ---------- 摘要能力（:981、:987） ----------
+
+/** @typedef {{sha256Hex: (data: string, encoding: 'utf8' | 'base64') => string}} DigestCap 结构类型（构造者 textcore/digest.mjs，不为取类型 import 它，:984） */
+
+/** @type {DigestCap | null} */
+let digestCap = null;
+
+/**
+ * 装配时注入 DigestCap（mountKernel 那张卡在挂接时调；kernel 组内用，不在 kernelApi）。
+ * @param {DigestCap | null} cap
+ */
+export function installDigestCap(cap) {
+  digestCap = cap && typeof cap.sha256Hex === 'function' ? cap : null;
+}
+
+function cap() {
+  if (!digestCap) throw new Error('kernel/save.mjs: DigestCap not injected (startup failure, 卷二 :1128)');
+  return digestCap;
+}
+
+/** sha256(UTF-8(text)) 十六进制（kernel 组内：存档摘要、分片内容寻址）。 @param {string} text @returns {string} */
+export function sha256Text(text) {
+  return cap().sha256Hex(text, 'utf8');
+}
+
+/** sha256(base64 解出的字节) 十六进制（kernel 组内：Sealed 读档重算）。 @param {string} b64 @returns {string} */
+export function sha256Base64(b64) {
+  return cap().sha256Hex(b64, 'base64');
+}
+
+// ---------- 摘要排除表（卷二 §2.9 第 3 条 :1137、:824；卷一 §8.3 :644；卷二十七 R27-5.8） ----------
+
+/** 排除表里除 display 字段集合之外的两项（卷二 :1137 原文列名：玩家起名与玩家手记，整键排除）。 */
+export const EXCLUDE_WHOLE_KEYS = Object.freeze(['displayNames.*', 'playerNotes.*']);
+
+/**
+ * 生成排除表：state-owners.json 各顶层键的 display 字段集合（合并器已转成绝对模式的 displayPaths）∪ displayNames.* ∪ playerNotes.*，去重后升序。
+ * 生成器（tools/gen-digest-exclude.mjs）与读档比对（kernel/load/save.mjs loadDigestExclude）共用这一个函数。
+ * @param {{displayPaths?: string[]}} merged 声明表合并结果
+ * @returns {string[]}
+ */
+export function digestExcludeOf(merged) {
+  const all = new Set([...(merged.displayPaths || []), ...EXCLUDE_WHOLE_KEYS]);
+  return [...all].sort();
+}
+
+/**
+ * 入库生成文件的内容（tools/gen-digest-exclude.mjs 写出；读档前 kernel/load/save.mjs 逐值比对，不一致 E-DIGEST-EXCLUDE-DRIFT）。
+ * @param {{displayPaths?: string[]}} merged
+ * @returns {{generatedBy: string, rule: string, paths: string[]}}
+ */
+export function digestExcludeDoc(merged) {
+  return { generatedBy: 'tools/gen-digest-exclude.mjs', rule: '卷二 §2.9 第 3 条：display 字段集合 ∪ displayNames.* ∪ playerNotes.*', paths: digestExcludeOf(merged) };
+}
+
+/** @type {string[][] | null} */
+let excludeSegs = null;
+
+/**
+ * 收下（已与生成结果比对过的）排除表（kernel/load/save.mjs loadDigestExclude 调；kernel 组内用）。
+ * @param {string[] | null} patterns
+ */
+export function installDigestExclude(patterns) {
+  excludeSegs = patterns === null ? null : patterns.map((p) => {
+    const s = statePathSegments(p);
+    if (!s) throw new KernelError('E-DIGEST-EXCLUDE-DRIFT', {}, `bad exclude pattern ${p}`);
+    return s;
+  });
+}
+
+const segMatch = (pat, segs) => pat.length === segs.length && pat.every((s, i) => s === '*' || s === segs[i]);
+const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+const OMIT = Symbol('omit');
+
+// 按排除表剔除；某层对象的子项全被剔除而变空的，这一层也剔除（有没有起名、写没写手记都不改摘要，卷一 §8.3 三条性质第 2 条）。
+function excludeTree(node, segs, pats) {
+  if (segs.length && pats.some((p) => segMatch(p, segs))) return OMIT;
+  if (!isObj(node)) return node;
+  const out = {};
+  let dropped = false;
+  for (const k of Object.keys(node)) {
+    const v = excludeTree(node[k], [...segs, k], pats);
+    if (v === OMIT) dropped = true; else out[k] = v;
+  }
+  return dropped && Object.keys(out).length === 0 && segs.length ? OMIT : out;
+}
+
+// ---------- 按 pathTypes 序列化（R27-4.4） ----------
+
+/**
+ * 走一棵按 pathTypes 组织的树：每个值落在恰一条声明模式上（最具体者），交给 leaf(segs, value, rec)；中间层只能是对象。
+ * 没有声明的路径 E-PATH-UNDECLARED。
+ * @param {any} tree @param {(segs: string[], value: any, rec: {pattern: string, sealed: boolean}) => void} leaf
+ */
+export function walkPathTree(tree, leaf) {
+  if (!isObj(tree)) throw new KernelError('E-PATH-UNDECLARED', { entity: null }, 'part root must be an object');
+  const visit = (node, segs) => {
+    for (const k of Object.keys(node).sort()) {
+      const here = [...segs, k];
+      const rec = pathTypeOf(here);
+      if (rec) { leaf(here, node[k], rec); continue; }
+      if (isObj(node[k]) && pathTypeHasDeeper(here)) { visit(node[k], here); continue; }
+      throw new KernelError('E-PATH-UNDECLARED', { entity: null }, `no pathTypes pattern for ${here.join('.')}`);
+    }
+  };
+  visit(tree, []);
+}
+
+function setIn(root, segs, value) {
+  let cur = root;
+  for (const s of segs.slice(0, -1)) {
+    if (!Object.hasOwn(cur, s)) cur[s] = {};
+    cur = cur[s];
+  }
+  cur[segs[segs.length - 1]] = value;
+}
+
+/** Sealed 的存档形态（:1128）。 @param {any} v */
+function encodeSealedValue(v) {
+  if (!isSealedValue(v)) throw new KernelError('E-TEXT-UNGATED', { entity: null }, 'sealed path holds a non-Sealed value');
+  return { [SEALED_TAG]: 1, bytes: v.bytes, digest: v.digest };
+}
+
+const SEALED_STORE_KEYS = Object.freeze([SEALED_TAG, 'bytes', 'digest'].sort());
+
+/**
+ * 存档里 Sealed 的形态 {"$sealed": 1, bytes, digest}（:1128）。
+ * @param {any} v
+ * @returns {boolean}
+ */
+export function isSealedStoreForm(v) {
+  return hasExactKeys(v, SEALED_STORE_KEYS) && v[SEALED_TAG] === 1 && typeof v.bytes === 'string' && typeof v.digest === 'string';
+}
+
+/**
+ * 一个按路径组织的部分 → 存档形态（sealed 换成存档形态，其余值原样复制）。
+ * @param {any} tree
+ * @returns {any}
+ */
+export function serializePathTree(tree) {
+  const out = {};
+  walkPathTree(tree, (segs, v, rec) => setIn(out, segs, rec.sealed ? encodeSealedValue(v) : clone(v)));
+  return out;
+}
+
+/**
+ * 存档摘要（R27-4.1，只此一种）：五个部分的存档形态，三个路径部分按排除表剔除后，sha256(UTF-8(canonical(文档)))。
+ * 排除表须先经 kernel/load/save.mjs loadDigestExclude 比对收下。
+ * @param {{doc_data: any, doc_state: any, doc_holdings: any, doc_ledger: any, doc_log: any[]}} doc
+ * @returns {string}
+ */
+export function saveDigest(doc) {
+  if (!excludeSegs) throw new Error('kernel/save.mjs: digest exclude table not installed (load order)');
+  /** @type {Record<string, any>} */
+  const view = {};
+  for (const part of DOC_PARTS) {
+    if (PATH_PARTS.includes(part)) {
+      const v = excludeTree(serializePathTree(doc[part]), [], excludeSegs);
+      view[part] = v === OMIT ? {} : v;
+    } else view[part] = doc[part];
+  }
+  return sha256Text(canonical(view));
+}
+
+/** 世界数据副本的摘要 dataDigest（R27-4.2：覆盖原有部分加全部追加段）。 @param {any} docData @returns {string} */
+export function dataDigestOf(docData) {
+  return sha256Text(canonical(docData));
+}
+
+// ---------- 存档布局参数与分片表（规则表 save-layout、host，卷二十七 §2.2 :161–164、:184） ----------
+
+/**
+ * @typedef {{shard: string, part: string, paths: string[], partition: string}} ShardRow
+ * @typedef {{shards: ShardRow[], segmentEvents: number, snapshotEveryEvents: number, keepSnapshots: number, saveSlotCount: number}} SaveLayout
+ * 由挂接方从规则表 rules.saveLayout 与 rules.host 取值交入；本文件不设任何缺省值。
+ */
+
+const posInt = (v) => Number.isInteger(v) && v >= 1;
+
+// 分片行的路径模式完全覆盖某条 pathTypes 模式：段数不多于它，逐段相同或为 `*`；在它是 `*` 的段上分片行也必须是 `*`（否则只盖住一部分）。
+function rowCovers(rowSegs, typeSegs) {
+  if (rowSegs.length > typeSegs.length) return 'none';
+  let partial = false;
+  for (let i = 0; i < rowSegs.length; i++) {
+    if (rowSegs[i] === '*') continue;
+    if (typeSegs[i] === '*') { partial = true; continue; }
+    if (rowSegs[i] !== typeSegs[i]) return 'none';
+  }
+  return partial ? 'partial' : 'full';
+}
+
+/**
+ * 核对存档布局并把分片表编成查找表（R27-4.6；A27-4.1 逐条核对的模式一级）。
+ * 每条 pathTypes 模式恰被一行完全覆盖；只盖住一部分、没盖住、被两行盖住，都是 E-SAVE-SHARD-UNCOVERED。
+ * doc_log 恰一行且为 part_by_segment；doc_data 的 part_by_segment 行至多一行（追加段）。
+ * part_by_segment 用在路径部分：pathTypes 还没有"只追加"标记（卷二十七 §5 登记未落），没有可用的路径，按未覆盖处理；
+ * part_by_unit：卷文未写路径怎样归到模拟单元，推不出，按未覆盖处理（等李白裁定）。
+ * @param {SaveLayout} layout
+ * @returns {{rowOfPattern: Map<string, ShardRow>, dataRows: {row: ShardRow, segs: string[][]}[], appendRow: ShardRow | null, logRow: ShardRow, pathRows: ShardRow[]}}
+ */
+export function compileLayout(layout) {
+  if (!isObj(layout)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'save layout must be an object');
+  for (const k of ['segmentEvents', 'snapshotEveryEvents', 'keepSnapshots', 'saveSlotCount']) {
+    if (!posInt(layout[k])) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `save layout ${k} must be an integer ≥ 1`);
+  }
+  if (layout.segmentEvents > layout.snapshotEveryEvents) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'segmentEvents must be ≤ snapshotEveryEvents');
+  if (!Array.isArray(layout.shards)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'save layout shards must be a list');
+  const codes = new Set();
+  const uncovered = (detail) => new KernelError('E-SAVE-SHARD-UNCOVERED', {}, detail);
+  /** @type {ShardRow[]} */ const pathRows = [];
+  /** @type {{row: ShardRow, segs: string[][]}[]} */ const dataRows = [];
+  let appendRow = null;
+  const logRows = [];
+  for (const row of layout.shards) {
+    if (!isObj(row) || typeof row.shard !== 'string' || !DOC_PARTS.includes(row.part) || !PARTITIONS.includes(row.partition) || !Array.isArray(row.paths)) {
+      throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'shard row must be {shard, part: docpart, paths: list, partition}');
+    }
+    if (codes.has(row.shard)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `duplicate shard code ${row.shard}`);
+    codes.add(row.shard);
+    if (row.part === 'doc_log') { logRows.push(row); continue; }
+    if (row.partition === 'part_by_unit') throw uncovered(`${row.shard}: part_by_unit has no defined unit mapping`);
+    if (row.part === 'doc_data') {
+      if (row.partition === 'part_by_segment') {
+        if (appendRow) throw uncovered(`two doc_data append rows: ${appendRow.shard}, ${row.shard}`);
+        appendRow = row;
+      } else dataRows.push({ row, segs: row.paths.map((p) => statePathSegments(p)).map((s) => (s && s.length === 1 ? s : null)) });
+      continue;
+    }
+    if (row.partition === 'part_by_segment') throw uncovered(`${row.shard}: part_by_segment on a ${row.part} row needs append-only paths (none registered)`);
+    pathRows.push(row);
+  }
+  if (logRows.length !== 1 || logRows[0].partition !== 'part_by_segment') throw uncovered('doc_log must be covered by exactly one part_by_segment row');
+  for (const d of dataRows) if (d.segs.some((s) => s === null)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `${d.row.shard}: doc_data paths are single table codes or *`);
+  /** @type {Map<string, ShardRow>} */
+  const rowOfPattern = new Map();
+  for (const t of pathTypeRecords()) {
+    const full = [];
+    for (const row of pathRows) for (const p of row.paths) {
+      const rs = statePathSegments(p);
+      if (!rs) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `${row.shard}: bad path pattern ${p}`);
+      const c = rowCovers(rs, t.segs);
+      if (c === 'partial') throw uncovered(`${row.shard}: ${p} covers only part of ${t.pattern}`);
+      if (c === 'full' && !full.includes(row)) full.push(row);
+    }
+    if (full.length === 0) throw uncovered(`${t.pattern} is not covered by any shard row`);
+    if (full.length > 1) throw uncovered(`${t.pattern} is covered by ${full.map((r) => r.shard).join(', ')}`);
+    rowOfPattern.set(t.pattern, full[0]);
+  }
+  return { rowOfPattern, dataRows, appendRow, logRow: logRows[0], pathRows };
+}
+
+// ---------- 快照与日志簿（R27-4.5、R27-4.9、R27-7.3） ----------
+
+/**
+ * @typedef {{text: string, digest: string}} ShardFile
+ * @typedef {{atEvent: number, shards: Record<string, string | string[]>, files: ShardFile[]}} Snapshot shards：分片代号 → 文件摘要（追加段一行是摘要列表）
+ * @typedef {{count: number, text: string, digest: string}} Segment
+ * @typedef {{layout: SaveLayout, compiled: ReturnType<typeof compileLayout>, entries: any[], segments: Segment[], sealedCount: number, snapshots: Snapshot[]}} LogBook
+ */
+
+const fileOf = (value) => { const text = canonical(value); return { text, digest: sha256Text(text) }; };
+
+/**
+ * 一个快照：逻辑文档除日志外四个部分按分片表切成分片文件（R27-4.6"快照不是第六个部分"）。
+ * 路径部分的每个值归它所在模式的那一行；值所在的部分与该行的 part 不同即 E-SAVE-SHARD-UNCOVERED。
+ * @param {ReturnType<typeof compileLayout>} compiled @param {any} doc @param {number} atEvent
+ * @returns {Snapshot}
+ */
+function takeSnapshot(compiled, doc, atEvent) {
+  /** @type {Record<string, any>} */
+  const content = {};
+  for (const row of compiled.pathRows) content[row.shard] = {};
+  for (const part of PATH_PARTS) {
+    walkPathTree(doc[part], (segs, v, rec) => {
+      const row = compiled.rowOfPattern.get(rec.pattern);
+      if (!row || row.part !== part) throw new KernelError('E-SAVE-SHARD-UNCOVERED', {}, `${segs.join('.')} found in ${part}, shard row is ${row ? row.part : 'none'}`);
+      setIn(content[row.shard], segs, rec.sealed ? encodeSealedValue(v) : clone(v));
+    });
+  }
+  const data = doc.doc_data;
+  if (!isObj(data) || !isObj(data.base) || !Array.isArray(data.appends)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'doc_data must be {base: object, appends: list}');
+  for (const { row } of compiled.dataRows) content[row.shard] = {};
+  for (const table of Object.keys(data.base).sort()) {
+    const hit = compiled.dataRows.filter((d) => d.segs.some((s) => s[0] === '*' || s[0] === table));
+    if (hit.length !== 1) throw new KernelError('E-SAVE-SHARD-UNCOVERED', {}, `data table ${table} covered by ${hit.length} rows`);
+    content[hit[0].row.shard][table] = clone(data.base[table]);
+  }
+  if (data.appends.length && !compiled.appendRow) throw new KernelError('E-SAVE-SHARD-UNCOVERED', {}, 'doc_data appends present but no part_by_segment doc_data row');
+  /** @type {Record<string, string | string[]>} */
+  const shards = {};
+  const files = [];
+  for (const code of Object.keys(content).sort()) {
+    const f = fileOf(content[code]);
+    shards[code] = f.digest;
+    files.push(f);
+  }
+  if (compiled.appendRow) {
+    const fs = data.appends.map(fileOf);
+    shards[compiled.appendRow.shard] = fs.map((f) => f.digest);
+    files.push(...fs);
+  }
+  return { atEvent, shards, files };
+}
+
+/**
+ * 新世界的日志簿：核对布局，并在第 0 条事件处做第一个快照（恢复 = 最近完好快照 + 其后的日志，R27-4.5；没有快照就无处可恢复）。
+ * @param {SaveLayout} layout
+ * @param {{doc_data: any, doc_state: any, doc_holdings: any, doc_ledger: any}} doc 开局时的四个部分
+ * @returns {LogBook}
+ */
+export function createLogBook(layout, doc) {
+  const compiled = compileLayout(layout);
+  return { layout, compiled, entries: [], segments: [], sealedCount: 0, snapshots: [takeSnapshot(compiled, doc, 0)] };
+}
+
+/**
+ * 由读档结果重建日志簿（kernel/load/save.mjs 用；kernel 组内）。
+ * @param {SaveLayout} layout @param {any[]} entries @param {Segment[]} segments @param {Snapshot[]} snapshots
+ * @returns {LogBook}
+ */
+export function bookFrom(layout, entries, segments, snapshots) {
+  const sealedCount = segments.reduce((n, s) => n + s.count, 0);
+  return { layout, compiled: compileLayout(layout), entries: [...entries], segments: [...segments], sealedCount, snapshots: [...snapshots] };
+}
+
+/**
+ * 把一条请求条目单独记入 doc_log（R27-7.3 :668"条目先单独提交"；卷二 §2.6 :503）。日志只追加；条目须是存档数据（canonical 可写），按副本记。
+ * 由 kernel/transaction.mjs submitProposal 在处理事务之前调；处理事务回滚不抹它。
+ * @param {LogBook} book @param {any} entry
+ * @returns {number} 这条条目的序号（从 0 起）
+ */
+export function appendLogEntry(book, entry) {
+  if (!book || !Array.isArray(book.entries)) throw new Error('kernel/save.mjs: appendLogEntry without a log book (mount order)');
+  canonical(entry);
+  book.entries.push(clone(entry));
+  return book.entries.length - 1;
+}
+
+/**
+ * 一刻全部处理完时调（R27-4.5"快照与封段只在一刻全部处理完时做；条数已到而这一刻还没处理完的，顺延到该刻末"）：
+ * 未封条目 ≥ segmentEvents 即把它们封成一段；距上一个快照 ≥ snapshotEveryEvents 条即做快照，并只留最近 keepSnapshots 个（R27-4.9）。
+ * 修剪只动快照与日志簿，不碰 state；更早的日志段原样保留（折叠归 R27-4.12，不在本卡）。
+ * @param {LogBook} book @param {{doc_data: any, doc_state: any, doc_holdings: any, doc_ledger: any}} doc 此刻的四个部分
+ * @returns {{sealed: boolean, snapshot: boolean}}
+ */
+export function tickEnd(book, doc) {
+  const { segmentEvents, snapshotEveryEvents, keepSnapshots } = book.layout;
+  let sealed = false, snapshot = false;
+  const open = book.entries.length - book.sealedCount;
+  if (open >= segmentEvents) {
+    const f = fileOf(book.entries.slice(book.sealedCount));
+    book.segments.push({ count: open, text: f.text, digest: f.digest });
+    book.sealedCount = book.entries.length;
+    sealed = true;
+  }
+  const last = book.snapshots[book.snapshots.length - 1];
+  if (book.entries.length - last.atEvent >= snapshotEveryEvents) {
+    book.snapshots.push(takeSnapshot(book.compiled, doc, book.entries.length));
+    while (book.snapshots.length > keepSnapshots) book.snapshots.shift();
+    snapshot = true;
+  }
+  return { sealed, snapshot };
+}
+
+// ---------- 写盘（R27-4.7、R27-4.8） ----------
+
+/**
+ * 原子写一个文件：先写临时文件并落盘，再改名覆盖（体检 K2-01 搬旧 atomicJSON；临时名确定，不用随机标识，R27-4.10）。
+ * @param {string} file @param {string} text
+ */
+function atomicWriteText(file, text) {
+  const tmp = file + LAYOUT_NAMES.tmpExt;
+  const fd = openSync(tmp, 'w');
+  try {
+    writeSync(fd, text);
+    fsyncSync(fd);
+  } finally {
+    closeSync(fd);
+  }
+  renameSync(tmp, file);
+}
+
+/**
+ * 原子写 JSON（规范序列化，同值同字节）。
+ * @param {string} file @param {unknown} value
+ */
+export function atomicJSON(file, value) {
+  atomicWriteText(file, canonical(value));
+}
+
+/** 槽位编号合法：整数且在 [0, saveSlotCount)。 @param {unknown} slot @param {SaveLayout} layout */
+export function slotOk(slot, layout) {
+  return Number.isInteger(slot) && slot >= 0 && slot < layout.saveSlotCount;
+}
+
+/** 槽位目录。 @param {string} root @param {number} slot */
+export function slotDir(root, slot) {
+  return join(root, LAYOUT_NAMES.slotPrefix + slot);
+}
+
+/** 分片文件路径。 @param {string} dir @param {string} digest */
+export function shardPath(dir, digest) {
+  return join(dir, LAYOUT_NAMES.shardsDir, digest + LAYOUT_NAMES.shardExt);
+}
+
+/**
+ * 存档写盘（菜单"存档"动作经 menu-entry 在 kernel 组内调用，卷二 :940 第 1 条）。
+ * 存下：保留的各快照的分片、已封的日志段、尚未封段的日志尾（作一段写，下次存档封段后不再引用）、清单。
+ * 写时复制：分片文件以内容摘要为名，已有即不写。先写齐分片，再把当前清单改名为上一个清单，最后原子改名提交新清单；
+ * 中断在任一步，读档得到新清单或上一个清单的完整状态（A27-4.4）。提交后回收两份清单都不引用的分片文件（R27-4.9）。
+ * 结果：成功 {ok: true, written, manifest}；槽位越界 E-SAVE-SLOT-INVALID；写盘失败 E-SAVE-WRITE-FAIL。
+ * @param {{root: string, slot: number, book: LogBook, doc: {doc_data: any, doc_state: any, doc_holdings: any, doc_ledger: any}, rulesDigest: string, clockMinute: number}} args
+ * @returns {{ok: true, written: number, manifest: Record<string, any>} | {ok: false, code: import('./types.d.ts').ErrorCode}}
+ */
+export function saveToSlot({ root, slot, book, doc, rulesDigest, clockMinute }) {
+  if (!slotOk(slot, book.layout)) return { ok: false, code: new KernelError('E-SAVE-SLOT-INVALID').code };
+  if (typeof rulesDigest !== 'string' || !HEX64.test(rulesDigest)) throw new Error('saveToSlot: rulesDigest must be a 64-hex digest');
+  if (!Number.isInteger(clockMinute)) throw new Error('saveToSlot: clockMinute must be an integer');
+  const full = { doc_data: doc.doc_data, doc_state: doc.doc_state, doc_holdings: doc.doc_holdings, doc_ledger: doc.doc_ledger, doc_log: book.entries };
+  /** @type {Map<string, string>} */
+  const files = new Map();
+  for (const s of book.snapshots) for (const f of s.files) files.set(f.digest, f.text);
+  // logSegments 每项 {count, digest, sealed}：sealed 为假的是存档时尚未封段的日志尾（至多一项、在末尾）。
+  const logSegments = book.segments.map((s) => ({ count: s.count, digest: s.digest, sealed: true }));
+  for (const s of book.segments) files.set(s.digest, s.text);
+  const tail = book.entries.slice(book.sealedCount);
+  if (tail.length) {
+    const f = fileOf(tail);
+    files.set(f.digest, f.text);
+    logSegments.push({ count: tail.length, digest: f.digest, sealed: false });
+  }
+  const manifest = {
+    clockMinute,
+    dataDigest: dataDigestOf(doc.doc_data),
+    logSegments,
+    rulesDigest,
+    saveDigest: saveDigest(full),
+    shardDigests: [...files.keys()].sort(),
+    slot,
+    snapshotIndex: book.snapshots.map((s) => ({ atEvent: s.atEvent, shards: s.shards })),
+  };
+  const dir = slotDir(root, slot);
+  let written = 0;
+  try {
+    mkdirSync(join(dir, LAYOUT_NAMES.shardsDir), { recursive: true });
+    for (const [digest, text] of files) {
+      const p = shardPath(dir, digest);
+      if (existsSync(p)) continue;
+      atomicWriteText(p, text);
+      written++;
+    }
+    const cur = join(dir, LAYOUT_NAMES.current);
+    if (existsSync(cur)) renameSync(cur, join(dir, LAYOUT_NAMES.previous));
+    atomicJSON(cur, manifest);
+  } catch (e) {
+    if (codeOf(e) !== null) throw e;
+    return { ok: false, code: new KernelError('E-SAVE-WRITE-FAIL').code };
+  }
+  // 提交之后才回收；回收出错不改"已存好"的结果，错误原样抛出（不是存档失败，不吞）。
+  reclaim(dir, manifest.shardDigests);
+  return { ok: true, written, manifest };
+}
+
+// 回收当前清单与上一个清单都不引用的分片文件（R27-4.9"不被任何保留清单引用的分片文件才可回收"）。
+function reclaim(dir, currentDigests) {
+  const keep = new Set(currentDigests.map((d) => d + LAYOUT_NAMES.shardExt));
+  for (const d of readManifestDigests(join(dir, LAYOUT_NAMES.previous))) keep.add(d + LAYOUT_NAMES.shardExt);
+  const sdir = join(dir, LAYOUT_NAMES.shardsDir);
+  for (const name of readdirSync(sdir)) if (!keep.has(name)) unlinkSync(join(sdir, name));
+}
