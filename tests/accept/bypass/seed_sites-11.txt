@@ -1,7 +1,7 @@
 // @file world/rules/registry.json
 {"rows":[{"code":"seedKeys","file":"tables/seed-keys.json","structure":"keys","type":{"entries":"list"},"domain":{},"volume":"卷二 §1.10 :320、卷二十七 §4.8","multiSourceMerge":"own_key_only","packOverridable":false}]}
 // @file world/rules/tables/seed-keys.json
-{"version":1,"entries":[{"file":"advance.mjs","stream":"clock","site":"dice","role":"seed","purpose":"夹具：时钟骰序键"},{"file":"weather.mjs","stream":"weather","site":"daily","role":"seed","purpose":"夹具：天气日抽"}]}
+{"rows":[{"key":"entries","value":[{"file":"advance.mjs","stream":"clock","site":"dice","role":"seed","purpose":"夹具：时钟骰序键"},{"file":"weather.mjs","stream":"weather","site":"daily","role":"seed","purpose":"夹具：天气日抽"}]}]}
 // @file server-plugin/advance.mjs
 export function clockDice(bag) {
   return bag.draw('clock', 'dice');
