@@ -1,1 +1,0 @@
-补独立金额锚点，修总额向零取整及议价精度；净资产接市场value。改market/engine/finance-assets、tests、world审批稿及迁移清单。单文件node --test --test-isolation=none：s5-02 14过，CORE/arch/system-map过，静态10587；ledger全跑11过1败，漏登记修后定点过。affected429：47对照+新增1，381待跑（matrix/pending）；A3双边败，performance耗时败，overfit spawn/master目录EPERM。审批未获L2，publish/verify拒绝；未提交、无付费调用。商户口粮保留及区域价/补货/NPC自治等未完；下卡先补保留，再续验/审批。

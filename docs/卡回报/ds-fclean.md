@@ -9,7 +9,7 @@
 | 3 | 每个限额/校验都试过特殊值（不限/0/空），无法绕过 | 是 | 本卡不新增限额或校验，不改门禁实现；无"不限/0/空"旁路可试。 |
 | 4 | 新测试不依赖仓库当前偶然数字 | 是 | 未新增测试；验收只跑卡文命令。 |
 | 5 | 没有为降计数改写允许的代码、没有假常量 | 是 | 无代码逻辑改动、无假常量；只删文件、改路径引用与 `.gitattributes` 失效行。 |
-| 6 | 只改了卡文列出的文件；diff 共 __ 行 | 是 | 本轮提交：`docs/测试报告/` 298 个文件（29057 行删除）＋ `.gitattributes` 1 行删除；均在卡文文件所有权内（"上列删除与移动对象、引用它们的路径行"）。 |
+| 6 | 只改了卡文列出的文件；diff 共 __ 行 | 是 | 累计：`docs/测试报告/` 298 个文件（29057 行删除）、`logs/sessions/` 1251 个旧记录（35543 行删除）、`.gitattributes` 1 行删除；均在卡文文件所有权内（"上列删除与移动对象、引用它们的路径行"）。 |
 | 7 | 全量测试已跑：命令＋pass/fail 数 | 是 | `node --test tests/*.test.mjs tests/kernel/*.test.mjs tests/accept/*.test.mjs` → `ℹ tests 480`、`ℹ pass 480`、`ℹ fail 0`；`node tools/accept/run.mjs pre_commit` → `"verdict": "pass"`；`node tools/accept/commit-hook.mjs` → `pre_commit pass 1aca3bc1…`。 |
 | 8 | 这张卡让块 6 哪一步更近了（一句话），且没有为此违背北极星任何一条 | 是 | 仓库去掉 551M 旧引擎回放、旧草稿与过时文档，审查记录只有一处，找现行规矩与证据更快；未写死、未加特例、未跳过规则引擎、未缩小世界规模。 |
 
@@ -18,6 +18,7 @@
 ### 已完成
 
 1. **docs/测试报告/**（551M，298 个跟踪文件）：`git grep -n "docs/测试报告"` 在 `tools/ tests/ server-plugin/ schemas/ .githooks/ package.json` 无命中，无程序读；引用只在历史文档与 `docs/待办.md:5` 的后续报告路径约定里，不读现有文件。`git rm -r` 删除；`.gitattributes:1` 的 `docs/测试报告/*.txt` 规则随之删除。
+2. **logs/sessions/**（7.3M，1264 个跟踪文件，全是 `.md` 派卡 prompt/body）：`git grep -n "logs/sessions"` 在代码目录无命中；保留被尚未解决事项或现行文档点名的 13 个：`A3-astra-plan.md`、`A3-owner-plan2.md`、`A3D-sol.body.md`、`FABSCAN.body.md`、`MKTDESIGN.body.md`、`PR02-cc-001.deferred.md`、`S2C-astra-plan.md`、`S5CT.final.md`、`WM1-inclusion.md`、`a4llm-research.final.md`、`jev-audit.final.md`、`s5-plan.final.md`、`s5w8-survey.md`；其余 1251 个删除。被引用的 `.txt/.json` 证据本就不入库（`.gitignore` 只放行 `*.md`），不受影响。
 
 ### 待评估/未完成
 

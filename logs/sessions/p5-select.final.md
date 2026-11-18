@@ -1,1 +1,0 @@
-selectChanges双集附原因；gate.json.selection记mode/generation/shadow.omittedFiles；默认shadow。顶层/导出/注册/动态/schema/共享契约/数据/extension全量；helper失效消费者，空集补加载者+静态闭包。TTL24h、Node/lock、脏树、原子分代完成。impact23/lifecycle43通过。偏离：仅同形字面量可裁剪。宿主补CORE、collect-host、续采及影子全扫；未提交。

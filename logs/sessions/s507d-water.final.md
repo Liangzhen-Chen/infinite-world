@@ -1,1 +1,0 @@
-门禁未留失败明细；已复现N17随机前提缺陷：UUID种子允许全成功，却断言必须有失败。改tests/m3-consistency-integration.test.mjs：固定生产原生场景种子，保留全部断言，增8份木料/16铜手算锚点（10天扣1集日1休日，8×2）。逐文件node --test --test-isolation=none：m3 8/0，CORE 21/0+12/0+7/0；performance单独3/0，未改耗时阈值。未动内容/dist、未付费、未提交。

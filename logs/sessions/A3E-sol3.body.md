@@ -1,3 +1,0 @@
-卡 A3-E 第 3 轮（判分工具支持逐条前置场景）。项目《无限原野》Node 规则引擎。工作区 F:/dnd-wt/A3E（分支 a3e）。你是验收工具作者：不得修改引擎实现。
-语料 F:/dnd/logs/sessions/a3-intents-v2.json 将为每条加 setup 字段：{location, present:[id], inventory:{id:n}, coins, minute?, status?, facts?}。任务：tools/a3-score.mjs 对每条意图从同一初始存档复制一份，按 setup 建立真实前置状态（用引擎已有的正式手段或测试夹具已有的状态构造方式：玩家移到 location、把 present 中的人物/生灵置于同地且清醒在场、发放 inventory 与 coins 并经账本开账/对账一致、设置时刻与特殊状态），再走两阶段协议判分；无法建立的 setup 项记入 setupUnmet 并在汇总中单列（不计入通过）。另：在每条结果中保存 preview 回执的 status 与 reason/ambiguities，便于定位。
-补 tests/a3-score-self.test.mjs：至少 2 条用 setup 的条目判定正确。跑 a3-score-self、CORE。报告 F:/dnd/logs/sessions/A3E-sol3.final.txt；回复 ≤120 字。

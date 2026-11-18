@@ -1,1 +1,0 @@
-﻿市场核、零售/NPC店、议价/路由/审查已接，含扣保留承诺、分档、积分/取整、深度、原子转移。改market/shop/engine/settlement-trade、接点、world及测试；清单docs/S5-02-价格迁移.md，金融等待续。node --test --test-isolation=none逐文件：s5-02/CORE/arch-metrics/system-map/performance及接点PASS；静态10587。affected工具EPERM；429仅18对照完成，411待续。w4-b2失败单例复跑过；ledger旧轮9/3、重点3过，待全复验；overfit双方2败（git子进程）。规则待审批。偏离：短暂4进程。未提交、模型0；下一步补齐对照/审批。

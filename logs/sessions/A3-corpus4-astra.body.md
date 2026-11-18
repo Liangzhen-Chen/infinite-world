@@ -1,2 +1,0 @@
-你是 A3 意图语料的原出题者，现在做独立复审。项目《无限原野》。工作区 F:/dnd-wt/A3CORPUS（只读参考）。仍不读 server-plugin/、extension/ 代码；可读 docs/架构设计/、docs/待用户确认.md、world/，以及判分结果与差距报告 F:/dnd/logs/sessions/a3-score-v2d.json、F:/dnd/logs/sessions/a3-gap-v2d.md（其中“语料预期存疑”21 条附有实现侧的异议）。
-任务：逐条复审这 21 条（见 F:/dnd/logs/sessions/a3-gap-v2d.md 的“语料预期存疑”簇与 F:/dnd/logs/sessions/a3-score-v2d.json 中对应条目的 expected/actual），判定：维持原预期（写设计依据）或修改预期（写设计依据，不得为迎合实现而改）。直接改 F:/dnd/logs/sessions/a3-intents-v2.json 中被改条目的 expected，并在 F:/dnd/logs/sessions/a3-intents-v2.md 追加“复审记录”表（id、原预期、裁定、依据）。回复 ≤120 字：维持数、修改数。

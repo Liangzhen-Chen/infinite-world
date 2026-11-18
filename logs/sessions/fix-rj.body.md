@@ -1,5 +1,0 @@
-回归修复（接续你的 a3rj-refusal 改动；你的改动已合入 a3a）。新工作区 F:/dnd-wt/A3F1（分支 t-a3f1，自最新 a3a）。主会话做了全量扫描并逐个二分：下列 10 个测试文件在 master 与本会话开始前的 a3a 上都通过，第一次失败出现在合入 a3rj-refusal 的那次合并：
-tests/finance-assets.test.mjs、governance-titles、learning、r06-bs-craft（现在超时）、repair（TypeError: Cannot read properties of undefined (reading 'mechanic' / 'success')）、runtime-invention、verbs-extra、w2-s4（现在超时）、wildlife-society、world-events（K10 订阅者顺序 deep-equal 不符）。
-特别注意性能：r06-bs-craft 与 w2-s4 由通过变超时。怀疑每次拒绝都对备选动作做真实预览（checkedAlternative / markFallback）使大量拒绝的测试变慢。请先测量（单文件用时 before/after，可用 git show 取旧文件做对照），若属实，在不降低“推荐的下一步须经当前状态核对”这一保证的前提下降低成本（例如按需/惰性生成备选、限制数量、复用同一次预览、或只在面向玩家的入口生成），并说明取舍。
-规则：先读 docs/产品原则.md。修根因，不放宽断言、不删/跳过测试、不写特判；如果旧测试的期望与 A3 新设计冲突（例如业务失败现在返回 rejected 回执而非抛错），按设计更新断言并保留原意图、逐处写依据；如果是产品被改坏，修产品。TEMP/TMP=F:/dnd-tmp，最多 2 个 node 进程，--test-isolation=none，输出过滤为摘要；单个失败只看最后 30 行。题集与判分器冻结。不改 docs/。不再启动其他会话或子代理。CORE 由主会话沙箱外跑。
-验收：node --test --test-isolation=none 以上 10 个文件全部通过（逐文件报 pass/fail 与用时）；再跑 tests/a3-refusal-contract.test.mjs tests/a3-policy.test.mjs tests/a3-open-actions.test.mjs tests/a3-builder.test.mjs。最后回复不超过 10 行（每个文件的根因一句、改动文件、验收结果与用时对比），同样写到 F:/dnd/logs/sessions/fix-rj.final.txt。

@@ -1,2 +1,0 @@
-续做 s408-quota（同一工作区 F:/dnd-wt/S408；主会话已把未完成改动提交为 WIP，并合入最新 s4a，含 03 法域规范栈与 A3 回归修复）。你报告“改任被 org_join 的真实同意前提阻塞，最小接点为 server-plugin/action-registry.mjs:65–104 与组织同意入口”。主会话授权你修改 action-registry.mjs 与组织同意入口所在模块（逐处列出）：按设计决定 B（任免只走章程里明确的任免链），任命/改任由有任免权的机关作出，被任命者以真实动作表示接受（或章程规定的同意来源），不得用调用参数代填同意，不放宽同意校验。然后完成原卡剩余验收（原卡 F:/dnd/logs/sessions/s408-quota.body.md 与 s4-plan 第 08 节），逐文件单独运行；浏览器类列出交主会话。
-锁定：tools/arch-layers.mjs、tools/system-map.mjs、server-plugin/environment*.mjs（另一张集成卡在改）。最后回复不超过 8 行，同样写到 F:/dnd/logs/sessions/s408b-quota.final.txt。不再启动其他会话或子代理。

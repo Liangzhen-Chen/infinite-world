@@ -1,1 +1,0 @@
-快照属合法老化/健康日钟、rainShare变化，UPDATE_ADVANCE_GOLDEN后5/0。迁居漏跨夜前提并暴露健康重算缺陷，补区间/日钟19/0。faith三处直写缺陷改holdingSet，持有守卫3/0。改faith/npc-life、两测试/golden及world审批脚本、rules/items/locations。逐文件node --test --test-isolation=none：s5-07、CORE、健康、arch-metrics、system-map全过；overfit 2/2受spawn git限制待外跑。三条L1-L4审批发布；费用上界0.011076元。
