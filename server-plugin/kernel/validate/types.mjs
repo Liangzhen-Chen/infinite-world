@@ -94,19 +94,19 @@ export function checkDef(def, env, at, err, top) {
   if (!isObj(def) || !TYPES.includes(def.type)) { err({ code: 'E-DIM-SCHEMA-TYPE', level: 'L1', ...at, got: isObj(def) ? def.type : def, want: TYPES.join('|') }); return; }
   const t = def.type;
   const bad = (code, got, want) => err({ code, level: 'L1', ...at, got, want });
-  if (t === 'number' || t === 'integer') {
+  if (t === T.type.number || t === T.type.integer) {
     if (!env.units.has(def.unit)) bad('E-DIM-UNIT-UNKNOWN', def.unit, 'unit id in _units.json');
-    const extScale = top && def.stockMode === 'extScale';
-    if (def.precision === undefined) { if (t === 'number') bad('E-DIM-SCHEMA-PRECISION', 'missing', 'decimal places within SCALE'); }
+    const extScale = top && def.stockMode === T.code_enum.stock_mode.extScale;
+    if (def.precision === undefined) { if (t === T.type.number) bad('E-DIM-SCHEMA-PRECISION', 'missing', 'decimal places within SCALE'); }
     else if (extScale ? !extPrecisionOk(def.precision) : !precisionOk(def.precision)) bad('E-DIM-SCHEMA-PRECISION', def.precision, extScale ? 'decimal places of SCALE^2 (stockMode extScale)' : 'decimal places within SCALE');
     if (def.domain !== undefined && !rangeOk(def.domain)) bad('E-DIM-DOMAIN-RANGE', def.domain, '[min,max] (null = unbounded)');
   }
-  if (t === 'enum') {
+  if (t === T.type.enum) {
     const fam = vocabOf(def);
     if (Array.isArray(def.values) || Array.isArray(def.enum) || Array.isArray(def.domain)) bad('E-DIM-DOMAIN-ENUM', 'inline enum', 'vocab family (no inline enums)');
     else if (typeof fam !== 'string' || !(env.vocab.families.has(fam) || Object.hasOwn(CODE_ENUMS, fam))) bad('E-DIM-REF-MISSING', fam, 'registered vocab family or code enum');
   }
-  if (t === 'ref') {
+  if (t === T.type.ref) {
     const forms = ['kind', 'kinds', 'vocab', 'dim', 'refs'].filter((k) => def[k] !== undefined);
     if (forms.length !== 1) bad('E-DIM-STRUCT-FIELD', forms.join(',') || 'none', 'exactly one of kind/kinds/vocab/dim/refs');
     for (const part of refParts(def)) {
@@ -115,22 +115,23 @@ export function checkDef(def, env, at, err, top) {
       if (part.dim !== undefined && !env.kinds.has(part.dim)) bad('E-DIM-REF-DIM', part.dim, 'a loaded table kind');
     }
   }
-  if (t === 'string') {
+  if (t === T.type.string) {
     if (top && !env.displaySet.has(at.dim)) bad('E-DIM-STRING-NOT-DISPLAY', at.dim, 'dimension registered in the display set');
   }
-  if (t === 'set' || t === 'list') {
+  if (t === T.type.set || t === T.type.list) {
     if (!isObj(def.of)) bad('E-DIM-STRUCT-FIELD', def.of, 'of: <type>');
     else checkDef(def.of, env, { ...at, path: `${at.path}/of` }, err, false);
   }
-  if (t === 'map') {
+  if (t === T.type.map) {
     const k = def.key;
-    if (!isObj(k) || (k.type !== 'ref' && k.type !== 'enum')) bad('E-DIM-SCHEMA-TYPE', isObj(k) ? k.type : k, 'map key ref or enum');
+    if (!isObj(k) || (k.type !== T.type.ref && k.type !== T.type.enum)) bad('E-DIM-SCHEMA-TYPE', isObj(k) ? k.type : k, 'map key ref or enum');
     else checkDef(k, env, { ...at, path: `${at.path}/key` }, err, false);
     if (!isObj(def.value)) bad('E-DIM-STRUCT-FIELD', def.value, 'value: <type>');
     else checkDef(def.value, env, { ...at, path: `${at.path}/value` }, err, false);
-    if (def.combine !== undefined && (def.combine !== 'sum' || !isObj(def.value) || !['number', 'integer'].includes(def.value.type))) bad('E-DIM-MAP-SPARSE-NONSUM', def.combine, 'combine "sum" on a number/integer valued map');
+    const valueType = isObj(def.value) ? def.value.type : undefined;
+    if (def.combine !== undefined && (def.combine !== 'sum' || !(valueType === T.type.number || valueType === T.type.integer))) bad('E-DIM-MAP-SPARSE-NONSUM', def.combine, 'combine "sum" on a number/integer valued map');
   }
-  if (t === 'struct') {
+  if (t === T.type.struct) {
     if (!isObj(def.fields)) { bad('E-DIM-STRUCT-FIELD', def.fields, 'fields object'); return; }
     for (const f of Object.keys(def.fields).sort()) {
       if (!KEY_RE.test(f)) bad('E-DIM-ID-FORMAT', f, 'lowerCamel field name');
@@ -139,22 +140,22 @@ export function checkDef(def, env, at, err, top) {
     // struct 的字段必填与维度的 required 策略同名（§1.5 struct 行与 §1.2，见 docs/问题.md）：维度顶层的 struct 取字符串为策略，嵌套的取数组。
     for (const r of fieldRequired(def)) if (!Object.hasOwn(def.fields, r)) bad('E-DIM-STRUCT-FIELD', r, 'required names a declared field');
   }
-  if (t === 'curve') {
+  if (t === T.type.curve) {
     for (const ax of ['x', 'y']) if (!env.units.has(def[ax])) bad('E-DIM-UNIT-UNKNOWN', def[ax], `curve ${ax} unit`);
   }
-  if (t === 'union') {
+  if (t === T.type.union) {
     if (Array.isArray(def.anyOf)) {
       const seen = new Set();
       def.anyOf.forEach((m, i) => {
         checkDef(m, env, { ...at, path: `${at.path}/anyOf/${i}` }, err, false);
         const s = isObj(m) && SHAPE[m.type];
-        if (!s || m.type === 'union' || seen.has(s)) bad('E-DIM-UNION-SHAPE', isObj(m) ? m.type : m, 'members distinguishable by JSON shape');
+        if (!s || m.type === T.type.union || seen.has(s)) bad('E-DIM-UNION-SHAPE', isObj(m) ? m.type : m, 'members distinguishable by JSON shape');
         seen.add(s);
       });
     } else if (Array.isArray(def.oneOf)) {
       if (typeof def.discriminator !== 'string') bad('E-DIM-UNION-SHAPE', def.discriminator, 'discriminator field name');
       def.oneOf.forEach((m, i) => {
-        if (!isObj(m) || m.type !== 'struct' || !isObj(m.fields) || !Object.hasOwn(m.fields, def.discriminator)) bad('E-DIM-UNION-SHAPE', isObj(m) ? m.type : m, 'struct member carrying the discriminator');
+        if (!isObj(m) || m.type !== T.type.struct || !isObj(m.fields) || !Object.hasOwn(m.fields, def.discriminator)) bad('E-DIM-UNION-SHAPE', isObj(m) ? m.type : m, 'struct member carrying the discriminator');
         else checkDef(m, env, { ...at, path: `${at.path}/oneOf/${i}` }, err, false);
       });
     } else bad('E-DIM-UNION-SHAPE', 'none', 'anyOf or oneOf');
@@ -176,6 +177,53 @@ const fieldRequired = (def) => (Array.isArray(def.required) ? def.required : [])
 /** @param {Record<string, unknown>} def ref 类型定义 */
 export const refParts = (def) => (Array.isArray(def.refs) ? def.refs : [def]);
 
+// ---------- 协议标记句柄（卷二 §7 S13 (a) 上下文白名单、李白 11-18 08:18 B2-W2 kernel 组第 3 条） ----------
+// 由该族的定义源（本文件的 TYPES、CODE_ENUMS、DOMAIN_OPTIONAL、ROW_FIELDS，其他模块各自的数组）在模块加载期派生，
+// 成员值与顺序都取自定义源，不另写名单；族对象冻结、带族名，提供 is(值) 与未定义成员的 E-DIM-REF-MISSING。
+// 语言自身的协议键（不是协议标记）：then 给 thenable 探测、toJSON 给 JSON 序列化，其余是对象自带成员名。
+const MARKER_PROTOCOL_KEYS = Object.freeze({ 'then': true, 'toJSON': true, 'constructor': true, 'prototype': true, 'toString': true, 'valueOf': true, 'hasOwnProperty': true, 'is': true, 'family': true });
+
+function markerMiss(family, key) {
+  const e = new Error(`E-DIM-REF-MISSING marker ${JSON.stringify(key)} not defined in family ${family}`);
+  e.code = 'E-DIM-REF-MISSING';
+  return e;
+}
+
+/**
+ * 由定义源派生一个族的冻结标记句柄：成员值即定义源里的字串，族名与 is 只作诊断与运行期核对。
+ * @param {string} family 族名
+ * @param {readonly string[]} values 定义源
+ * @returns {Readonly<Record<string, string>>}
+ */
+export function markersOf(family, values) {
+  const target = { family, is: (x) => values.includes(x) };
+  for (const value of values) {
+    if (!value || value.length === 0) throw new Error(`E-DIM-ID-FORMAT marker family ${family}: non-empty strings only`);
+    if (Object.hasOwn(target, value)) throw new Error(`E-DIM-ID-DUPLICATE marker family ${family}: duplicate ${value}`);
+    target[value] = value;
+  }
+  Object.freeze(target);
+  // 未定义标记的读取抛 E-DIM-REF-MISSING；语言自身的协议键（then、toJSON 等）照常取 undefined。
+  // symbol 键没有 length，按协议键原样放行（console、迭代器等内部读取）。
+  return new Proxy(target, {
+    get(t, key) {
+      if (key.length === undefined || Object.hasOwn(t, key) || Object.hasOwn(MARKER_PROTOCOL_KEYS, key)) return t[key];
+      throw markerMiss(family, key);
+    },
+  });
+}
+
+const codeEnumFamilies = {};
+for (const fam of Object.keys(CODE_ENUMS)) codeEnumFamilies[fam] = markersOf(`code_enum.${fam}`, CODE_ENUMS[fam]);
+
+// 协议标记句柄根：T.<族>.<标记>，例如 T.type.number、T.code_enum.rx_cmp.eq。族名与定义源同在，不手写成员。
+export const T = Object.freeze({
+  type: markersOf('type', TYPES),
+  domain_optional: markersOf('domain_optional', DOMAIN_OPTIONAL),
+  row_field: markersOf('row_field', ROW_FIELDS),
+  code_enum: Object.freeze(codeEnumFamilies),
+});
+
 // ---------- 取值 ----------
 // env 另带：idIndex: Map<id, kind>，tableDims: Map<kind, dimensions>，rxScope，compiled: Map（rx 编译结果的落点）。
 /**
@@ -186,54 +234,54 @@ export function checkValue(def, v, env, at, err) {
   const bad = (code, got, want, level) => err({ code, level: level || 'L1', ...at, got, want });
   if (v === null) { if (!def.nullable) bad('E-DIM-DOMAIN-RANGE', null, `${def.type} (not nullable)`); return; }
   switch (def.type) {
-    case 'number': case 'integer': {
-      if (typeof v !== 'number' || !Number.isFinite(v) || (def.type === 'integer' && !Number.isInteger(v))) { bad('E-DIM-DOMAIN-RANGE', v, def.type); return; }
+    case T.type.number: case T.type.integer: {
+      if (typeof v !== 'number' || !Number.isFinite(v) || (def.type === T.type.integer && !Number.isInteger(v))) { bad('E-DIM-DOMAIN-RANGE', v, def.type); return; }
       if (Array.isArray(def.domain)) {
         const [lo, hi] = def.domain;
         if ((lo !== null && v < lo) || (hi !== null && v > hi)) bad('E-DIM-DOMAIN-RANGE', v, `[${lo},${hi}] ${def.unit || ''}`.trim());
       }
       return;
     }
-    case 'boolean': if (typeof v !== 'boolean') bad('E-DIM-DOMAIN-RANGE', v, 'boolean'); return;
-    case 'string': {
+    case T.type.boolean: if (typeof v !== 'boolean') bad('E-DIM-DOMAIN-RANGE', v, 'boolean'); return;
+    case T.type.string: {
       const max = sizeOf(def, 'maxLength');
       if (typeof v !== 'string') bad('E-DIM-DOMAIN-RANGE', v, 'string');
       else if (max !== undefined && [...v].length > max) bad('E-DIM-DOMAIN-SIZE', v.length, `maxLength ${max}`);
       return;
     }
-    case 'enum': {
+    case T.type.enum: {
       const fam = vocabOf(def);
       if (Object.hasOwn(CODE_ENUMS, fam) && !env.vocab.families.has(fam)) { if (!CODE_ENUMS[fam].includes(v)) bad('E-DIM-DOMAIN-ENUM', v, `code enum ${fam}`); return; }
       const rec = typeof v === 'string' && CODE_RE.test(v) ? env.vocab.index.get(v) : undefined;
       if (!rec || rec.family !== fam) bad('E-DIM-DOMAIN-ENUM', v, `entry of vocab family ${fam}`);
       return;
     }
-    case 'ref': {
+    case T.type.ref: {
       if (typeof v !== 'string' || !CODE_RE.test(v)) { bad('E-DIM-ID-FORMAT', v, 'ASCII code ^[a-z][a-z0-9_]{1,47}$'); return; }
       const parts = refParts(def);
       const ok = parts.some((p) => {
         if (p.vocab !== undefined) { const r = env.vocab.index.get(v); return Boolean(r) && (p.vocab === '*' || r.family === p.vocab); }
         if (p.kind !== undefined) return env.idIndex.get(v) === p.kind;
         if (p.kinds !== undefined) return p.kinds.includes(env.idIndex.get(v));
-        if (p.dim !== undefined) { const d = (env.tableDims.get(p.dim) || {})[v]; return Boolean(d) && (d.type === 'number' || d.type === 'integer'); }
+        if (p.dim !== undefined) { const d = (env.tableDims.get(p.dim) || {})[v]; return Boolean(d) && (d.type === T.type.number || d.type === T.type.integer); }
         return false;
       });
       if (!ok) bad(parts.some((p) => p.dim !== undefined) ? 'E-DIM-REF-DIM' : 'E-DIM-REF-MISSING', v, describeRef(parts), 'L2');
       return;
     }
-    case 'set': case 'list': {
+    case T.type.set: case T.type.list: {
       if (!Array.isArray(v)) { bad('E-DIM-DOMAIN-RANGE', typeof v, def.type); return; }
       const max = sizeOf(def, 'maxSize');
       if (max !== undefined && v.length > max) bad('E-DIM-DOMAIN-SIZE', v.length, `maxSize ${max}`);
-      if (def.type === 'list' && def.length !== undefined && v.length !== def.length) bad('E-DIM-DOMAIN-SIZE', v.length, `length ${def.length}`);
-      if (def.type === 'set') {
+      if (def.type === T.type.list && def.length !== undefined && v.length !== def.length) bad('E-DIM-DOMAIN-SIZE', v.length, `length ${def.length}`);
+      if (def.type === T.type.set) {
         const sorted = [...new Set(v.map((x) => JSON.stringify(x)))].sort();
         if (sorted.length !== v.length || sorted.some((x, i) => x !== JSON.stringify(v[i]))) bad('E-DIM-DOMAIN-SIZE', v, 'sorted array without duplicates');
       }
       v.forEach((x, i) => checkValue(def.of, x, env, { ...at, path: ptr(at.path, i) }, err));
       return;
     }
-    case 'map': {
+    case T.type.map: {
       if (!isObj(v)) { bad('E-DIM-DOMAIN-RANGE', typeof v, 'map object'); return; }
       for (const k of Object.keys(v).sort()) {
         checkValue({ ...def.key, nullable: false }, k, env, { ...at, path: ptr(at.path, k) }, err);
@@ -241,7 +289,7 @@ export function checkValue(def, v, env, at, err) {
       }
       return;
     }
-    case 'struct': {
+    case T.type.struct: {
       if (!isObj(v)) { bad('E-DIM-STRUCT-FIELD', typeof v, 'struct object'); return; }
       for (const f of Object.keys(v).sort()) {
         if (!Object.hasOwn(def.fields, f)) bad('E-DIM-STRUCT-FIELD', f, `field of ${Object.keys(def.fields).sort().join(',')}`);
@@ -250,7 +298,7 @@ export function checkValue(def, v, env, at, err) {
       for (const r of fieldRequired(def)) if (!Object.hasOwn(v, r)) bad('E-DIM-STRUCT-FIELD', `missing ${r}`, 'required struct field');
       return;
     }
-    case 'curve': {
+    case T.type.curve: {
       const pts = Array.isArray(v) ? v : [];
       const pairOk = (p) => {
         if (!Array.isArray(p)) return false;
@@ -265,14 +313,14 @@ export function checkValue(def, v, env, at, err) {
       }
       return;
     }
-    case 'union': {
+    case T.type.union: {
       const members = def.anyOf || def.oneOf || [];
       const fits = members.filter((m) => { let ok = true; checkValue(m, v, env, at, () => { ok = false; }); return ok; }).length;
       if (fits === 0) bad('E-DIM-UNION-NONE', v, 'exactly one union member');
       else if (fits > 1) bad('E-DIM-UNION-AMBIGUOUS', v, 'exactly one union member');
       return;
     }
-    case 'rx': {
+    case T.type.rx: {
       if (typeof v !== 'string') { bad('E-MOD-RX', typeof v, 'RX text', 'L2'); return; }
       try { env.compiled.set(at.path, compileRXInScope(v, 'data', env.rxScope)); } catch (e) {
         if (!e.code) throw e;

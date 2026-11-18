@@ -8,7 +8,7 @@ import { buildE, buildP } from '../handles/generated.mjs';
 import { checkPathPattern } from '../handles/keys.mjs';
 import { errorCodeOf, HandleError } from '../handles/vocab-handle.mjs';
 import { isPathPattern } from '../handles/keys.mjs';
-import { isClosedType, listItemType, mentionsSealed, parseNumberType } from '../validate/types.mjs';
+import { isClosedType, listItemType, mentionsSealed, parseNumberType, T } from '../validate/types.mjs';
 
 const E = buildE();
 
@@ -153,7 +153,7 @@ export function assignSortKeys(systems) {
 // 返回 null 或 {code, want}。units：_units.json 已载入的单位（Map 或 Set）。
 function typeIssue(t, units) {
   if (typeof t !== 'string') return { code: E.E_DIM_STRUCT_FIELD, want: 'type string' };
-  if (t === 'string') return { code: E.E_TEXT_UNGATED, want: 'no path may be typed string' };
+  if (t === T.type.string) return { code: E.E_TEXT_UNGATED, want: 'no path may be typed string' };
   const item = listItemType(t);
   if (item !== null) return typeIssue(item, units);
   const num = parseNumberType(t);
@@ -248,7 +248,7 @@ export function mergeStateOwners(decl, ctx = {}) {
       const dims = tableDims.get(k);
       if (!isObj(dims)) continue;
       for (const name of sorted(Object.keys(dims))) {
-        if ((literalDim === null || literalDim === name) && isObj(dims[name]) && dims[name].type === 'string') err(E.E_TEXT_UNGATED, p, `#/pathTypes/${p}`, `${k}.${name}`, 'string dimensions are excluded from dimension paths');
+        if ((literalDim === null || literalDim === name) && isObj(dims[name]) && dims[name].type === T.type.string) err(E.E_TEXT_UNGATED, p, `#/pathTypes/${p}`, `${k}.${name}`, 'string dimensions are excluded from dimension paths');
       }
     }
   }

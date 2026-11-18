@@ -5,6 +5,7 @@
 // 注册表全部来自加载结果（维度表表头、idIndex、词表索引、pathTypes），不认任何具体表、维度或路径。
 
 import { CODE_RE, HandleError } from './vocab-handle.mjs';
+import { T } from '../validate/types.mjs';
 
 /** @typedef {import('../types.d.ts').DimKey} DimKey */
 /** @typedef {import('../types.d.ts').ModKey} ModKey */
@@ -18,12 +19,11 @@ const DIM_RE = /^[a-z][a-zA-Z0-9]{0,47}$/;
 // `<kind>.<dimension>[<key>]`（§2.8 第 1 条 DimKey；§5.0 下标键语法 :1586）。
 const DIM_KEY_RE = /^([a-z][a-z0-9_]{1,47})\.([a-z][a-zA-Z0-9]{0,47})(?:\[([^[\]]+)\])?$/;
 const DECIMAL_RE = /^-?(0|[1-9][0-9]*)(\.[0-9]+)?$/;
-const NUMERIC = ['number', 'integer'];
 
 // 下标是否合该 map 维度的键定义：数值键收有限数；代号键按键定义的族或 kind 查注册表，没写族与 kind 的查 idIndex 或词表。
 function subKeyOk(reg, keyDef, key) {
   const kd = keyDef && typeof keyDef === 'object' ? keyDef : {};
-  if (typeof key === 'number') return Number.isFinite(key) && NUMERIC.includes(kd.type);
+  if (typeof key === 'number') return Number.isFinite(key) && (kd.type === T.type.number || kd.type === T.type.integer);
   if (typeof key !== 'string' || !CODE_RE.test(key)) return false;
   const fam = kd.vocab !== undefined ? kd.vocab : (kd.domain && typeof kd.domain === 'object' ? kd.domain.vocab : undefined);
   if (fam !== undefined) return reg.vocabIndex.has(key) && reg.vocabIndex.get(key).family === fam;
@@ -53,7 +53,7 @@ function join(kind, dimension, key) {
 export function dimKeyOf(reg, kind, dimension, key) {
   const def = dimDef(reg, kind, dimension);
   if (!def) throw new HandleError('E-DIM-REF-MISSING', `${join(kind, dimension)}: dimension not registered`);
-  if (key !== undefined && (def.type !== 'map' || !subKeyOk(reg, def.key, key))) throw new HandleError('E-DIM-REF-MISSING', `${join(kind, dimension, key)}: subscript not a key of a map dimension`);
+  if (key !== undefined && (def.type !== T.type.map || !subKeyOk(reg, def.key, key))) throw new HandleError('E-DIM-REF-MISSING', `${join(kind, dimension, key)}: subscript not a key of a map dimension`);
   return /** @type {DimKey} */ (join(kind, dimension, key));
 }
 
@@ -66,10 +66,10 @@ export function dimKeyOf(reg, kind, dimension, key) {
  */
 export function modKeyOf(reg, kind, dimension, key) {
   const def = dimDef(reg, kind, dimension);
-  const valueType = def && def.type === 'map' ? (def.value || {}).type : def && def.type;
-  if (!def || def.modifiable !== true || !NUMERIC.includes(valueType)) throw new HandleError('E-MOD-KEY-UNREGISTERED', `${join(kind, dimension, key)}: not a modifiable number/integer/map<...,number> dimension`);
-  if (def.type === 'map' && key === undefined) throw new HandleError('E-MOD-KEY-UNREGISTERED', `${join(kind, dimension)}: map dimension needs a subscript`);
-  if (key !== undefined && (def.type !== 'map' || !subKeyOk(reg, def.key, key))) throw new HandleError('E-DIM-REF-MISSING', `${join(kind, dimension, key)}: subscript not a key of the map dimension`);
+  const valueType = def && def.type === T.type.map ? (def.value || {}).type : def && def.type;
+  if (!def || def.modifiable !== true || !(valueType === T.type.number || valueType === T.type.integer)) throw new HandleError('E-MOD-KEY-UNREGISTERED', `${join(kind, dimension, key)}: not a modifiable number/integer/map<...,number> dimension`);
+  if (def.type === T.type.map && key === undefined) throw new HandleError('E-MOD-KEY-UNREGISTERED', `${join(kind, dimension)}: map dimension needs a subscript`);
+  if (key !== undefined && (def.type !== T.type.map || !subKeyOk(reg, def.key, key))) throw new HandleError('E-DIM-REF-MISSING', `${join(kind, dimension, key)}: subscript not a key of the map dimension`);
   return /** @type {ModKey} */ (join(kind, dimension, key));
 }
 
@@ -83,7 +83,8 @@ export function parseDimKey(reg, text) {
   if (!m) throw new HandleError('E-DIM-ID-FORMAT', `dim key ${JSON.stringify(text)}: want <kind>.<dimension>[<key>]`);
   const [, kind, dimension, raw] = m;
   const def = dimDef(reg, kind, dimension);
-  const numericKey = def && def.type === 'map' && NUMERIC.includes((def.key || {}).type);
+  const keyType = def && def.type === T.type.map ? (def.key || {}).type : undefined;
+  const numericKey = keyType === T.type.number || keyType === T.type.integer;
   const sub = raw === undefined ? undefined : (numericKey && DECIMAL_RE.test(raw) ? Number(raw) : raw);
   return { key: dimKeyOf(reg, kind, dimension, sub), kind, dimension, sub };
 }

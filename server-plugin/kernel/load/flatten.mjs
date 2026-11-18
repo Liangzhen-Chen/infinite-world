@@ -4,7 +4,7 @@
 
 import { fixedUnits, fixedAdd, fixedMultiply, truncateTo, fixedToNumber, FixedError } from '../det-math.mjs';
 // 行键的文法解析（`<维>+` 等）按卷二 §2.8 :842 只许在 kernel/validate/*，本文件只调用。
-import { ROW_FIELDS, splitKey } from '../validate/types.mjs';
+import { ROW_FIELDS, splitKey, T } from '../validate/types.mjs';
 
 const sortUnique = (xs) => [...new Set(xs)].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -29,7 +29,7 @@ export function flattenTable(table, groupsOf, maxDepth, err) {
   for (const id of Object.keys(generated).sort()) {
     const row = generated[id] || {};
     for (const key of Object.keys(row).sort()) {
-      if (key === 'extends' || key === 'abstract' || splitKey(key).op) err({ code: 'E-DIM-EXTEND-ON-OVERRIDE', level: 'L1', ...at('generated', id, key), got: key, want: 'whole values only' });
+      if (key === T.row_field.extends || key === T.row_field.abstract || splitKey(key).op) err({ code: 'E-DIM-EXTEND-ON-OVERRIDE', level: 'L1', ...at('generated', id, key), got: key, want: 'whole values only' });
     }
   }
 
@@ -74,17 +74,17 @@ export function flattenTable(table, groupsOf, maxDepth, err) {
       const t = def.type;
       try {
         if (op === '+') {
-          if (t === 'set') out[dim] = sortUnique([...(Array.isArray(base) ? base : []), ...(Array.isArray(v) ? v : [])]);
-          else if (t === 'list') out[dim] = [...(Array.isArray(base) ? base : []), ...(Array.isArray(v) ? v : [])];
-          else if (t === 'map') out[dim] = { ...(isObj(base) ? base : {}), ...(isObj(v) ? v : {}) };
+          if (t === T.type.set) out[dim] = sortUnique([...(Array.isArray(base) ? base : []), ...(Array.isArray(v) ? v : [])]);
+          else if (t === T.type.list) out[dim] = [...(Array.isArray(base) ? base : []), ...(Array.isArray(v) ? v : [])];
+          else if (t === T.type.map) out[dim] = { ...(isObj(base) ? base : {}), ...(isObj(v) ? v : {}) };
           else throw new TypeError('extend needs set/map/list');
         } else if (op === '-') {
           const drop = new Set(Array.isArray(v) ? v : []);
-          if (t === 'set' || t === 'list') out[dim] = (Array.isArray(base) ? base : []).filter((x) => !drop.has(x));
-          else if (t === 'map') out[dim] = Object.fromEntries(Object.entries(isObj(base) ? base : {}).filter(([k]) => !drop.has(k)));
+          if (t === T.type.set || t === T.type.list) out[dim] = (Array.isArray(base) ? base : []).filter((x) => !drop.has(x));
+          else if (t === T.type.map) out[dim] = Object.fromEntries(Object.entries(isObj(base) ? base : {}).filter(([k]) => !drop.has(k)));
           else throw new TypeError('delete needs set/map/list');
         } else {
-          if (t !== 'number' && t !== 'integer') throw new TypeError(`${op} needs number/integer`);
+          if (t !== T.type.number && t !== T.type.integer) throw new TypeError(`${op} needs number/integer`);
           if (typeof base !== 'number') { err({ code: 'E-DIM-EXTEND-NOPARENT', level: 'L1', ...at(section, id, dim), got: base === undefined ? 'no parent value' : base, want: 'parent number value' }); delete out[dim]; continue; }
           const r = op === '~' ? fixedAdd(fixedUnits(base), fixedUnits(v)) : fixedMultiply(fixedUnits(base), fixedUnits(v));
           out[dim] = fixedToNumber(truncateTo(r, Number.isInteger(def.precision) ? def.precision : 0));

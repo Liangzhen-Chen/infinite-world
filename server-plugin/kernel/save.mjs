@@ -18,6 +18,7 @@ import { canonical, pathTypeOf, pathTypeHasDeeper, pathTypeRecords, isSealedValu
 import { statePathSegments, isHex64 } from './handles/keys.mjs';
 import { KernelError, codeOf } from './errors.mjs';
 import { clone } from './clone.mjs';
+import { markersOf } from './validate/types.mjs';
 import { readManifestDigests, checkManifest } from './load/save.mjs';
 
 // ---------- 存档布局的名字（S27-7：只在本文件与 kernel/load/save.mjs 出现） ----------
@@ -28,6 +29,9 @@ export const DOC_PARTS = Object.freeze(['doc_data', 'doc_state', 'doc_holdings',
 export const PATH_PARTS = Object.freeze(['doc_state', 'doc_holdings', 'doc_ledger']);
 /** 分片切分方式（族 partition，:126）。 */
 export const PARTITIONS = Object.freeze(['part_single', 'part_by_unit', 'part_by_segment']);
+// 文档部分与切分方式的族句柄：成员由上面的 DOC_PARTS、PARTITIONS 派生。
+const PART = markersOf('doc_part', DOC_PARTS);
+const PARTITION = markersOf('partition', PARTITIONS);
 /** 槽位目录、分片目录与两份清单（当前与上一个完好清单，R27-4.8 回退用）。 */
 export const LAYOUT_NAMES = Object.freeze({ slotPrefix: 'slot-', shardsDir: 'shards', current: 'manifest.json', previous: 'manifest.prev.json', shardExt: '.json', tmpExt: '.tmp' });
 /** 清单字段（§4.4.1 :487；另加槽位编号 slot，R27-4.10 显示字段之一）。没有墙钟字段。 */
@@ -286,22 +290,22 @@ export function compileLayout(layout) {
     }
     if (codes.has(row.shard)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `duplicate shard code ${row.shard}`);
     codes.add(row.shard);
-    if (row.part === 'doc_log') { logRows.push(row); continue; }
-    if (row.partition === 'part_by_unit') {
-      if (row.part === 'doc_data') throw uncovered(`${row.shard}: part_by_unit on doc_data (data tables are not state paths)`);
+    if (row.part === PART.doc_log) { logRows.push(row); continue; }
+    if (row.partition === PARTITION.part_by_unit) {
+      if (row.part === PART.doc_data) throw uncovered(`${row.shard}: part_by_unit on doc_data (data tables are not state paths)`);
       if (!unitOfPath) throw uncovered(`${row.shard}: part_by_unit without a registered unit mapping`);
     }
-    if (row.part === 'doc_data') {
-      if (row.partition === 'part_by_segment') {
+    if (row.part === PART.doc_data) {
+      if (row.partition === PARTITION.part_by_segment) {
         if (appendRow) throw uncovered(`two doc_data append rows: ${appendRow.shard}, ${row.shard}`);
         appendRow = row;
       } else dataRows.push({ row, segs: row.paths.map((p) => statePathSegments(p)).map((s) => (s && s.length === 1 ? s : null)) });
       continue;
     }
-    if (row.partition === 'part_by_segment') throw uncovered(`${row.shard}: part_by_segment on a ${row.part} row needs append-only paths (none registered)`);
+    if (row.partition === PARTITION.part_by_segment) throw uncovered(`${row.shard}: part_by_segment on a ${row.part} row needs append-only paths (none registered)`);
     pathRows.push(row);
   }
-  if (logRows.length !== 1 || logRows[0].partition !== 'part_by_segment') throw uncovered('doc_log must be covered by exactly one part_by_segment row');
+  if (logRows.length !== 1 || logRows[0].partition !== PARTITION.part_by_segment) throw uncovered('doc_log must be covered by exactly one part_by_segment row');
   for (const d of dataRows) if (d.segs.some((s) => s === null)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `${d.row.shard}: doc_data paths are single table codes or *`);
   /** @type {Map<string, ShardRow>} */
   const rowOfPattern = new Map();
@@ -347,7 +351,7 @@ function takeSnapshot(compiled, doc, atEvent) {
       const row = compiled.rowOfPattern.get(rec.pattern);
       if (!row || row.part !== part) throw new KernelError('E-SAVE-SHARD-UNCOVERED', {}, `${segs.join('.')} found in ${part}, shard row is ${row ? row.part : 'none'}`);
       const value = rec.sealed ? encodeSealedValue(v) : clone(v);
-      if (row.partition === 'part_by_unit') {
+      if (row.partition === PARTITION.part_by_unit) {
         // 按单元各成一片：content[行] 是 单元代号 → 该单元的路径子树。
         const u = unitOf(row, segs);
         if (!Object.hasOwn(content[row.shard], u)) content[row.shard][u] = {};
@@ -367,7 +371,7 @@ function takeSnapshot(compiled, doc, atEvent) {
   /** @type {Record<string, string | string[]>} */
   const shards = {};
   const files = [];
-  const byUnit = new Set(compiled.pathRows.filter((r) => r.partition === 'part_by_unit').map((r) => r.shard));
+  const byUnit = new Set(compiled.pathRows.filter((r) => r.partition === PARTITION.part_by_unit).map((r) => r.shard));
   for (const code of Object.keys(content).sort()) {
     if (byUnit.has(code)) {
       // part_by_unit 一行是摘要列表，按单元代号升序，每个单元一片（片里是带完整路径的子树，读回直接拼）。

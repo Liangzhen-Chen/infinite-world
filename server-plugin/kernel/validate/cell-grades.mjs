@@ -5,7 +5,7 @@
 // 子值为数值或布尔才算；引用代号、集合、写 null 的格不带级别；派生维度不在行上。规则层与校验都不读 citation、basis 的文字。
 // 只按表头声明通用处理，不认表名。
 
-import { CODE_ENUMS } from './types.mjs';
+import { CODE_ENUMS, T } from './types.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const scalar = (v) => typeof v === 'number' || typeof v === 'boolean';
@@ -27,8 +27,8 @@ export function gradedCells(dims, flatRow) {
     const def = dims[dim];
     const v = flatRow[dim];
     if (v === undefined || v === null || def.derived !== undefined) continue;
-    if (['number', 'integer', 'boolean'].includes(def.type)) { if (scalar(v)) out.set(dim, v); continue; }
-    if ((def.type === 'struct' || def.type === 'map') && isObj(v)) for (const k of Object.keys(v).sort()) if (scalar(v[k])) out.set(`${dim}.${k}`, v[k]);
+    if (def.type === T.type.number || def.type === T.type.integer || def.type === T.type.boolean) { if (scalar(v)) out.set(dim, v); continue; }
+    if ((def.type === T.type.struct || def.type === T.type.map) && isObj(v)) for (const k of Object.keys(v).sort()) if (scalar(v[k])) out.set(`${dim}.${k}`, v[k]);
   }
   return out;
 }
@@ -67,9 +67,9 @@ export function checkCellGrades(t, err) {
       if (!isObj(e) || Object.keys(e).sort().join(',') !== GRADE_KEYS.join(',')) { bad(isObj(e) ? Object.keys(e).sort().join(',') : e, GRADE_KEYS.join(',')); continue; }
       if (!CODE_ENUMS.cell_grade.includes(e.grade)) { bad(e.grade, CODE_ENUMS.cell_grade.join('|')); continue; }
       if (![e.citation, e.basis].every((x) => x === null || typeof x === 'string')) { bad('non-string text', 'citation, basis string or null'); continue; }
-      if (e.grade === 'measured' && !e.citation) bad('measured without citation', 'citation');
-      if (e.grade === 'designed' && !e.basis) bad('designed without basis', 'basis');
-      if (e.grade !== 'referenced' || !cells.has(k)) continue;
+      if (e.grade === T.code_enum.cell_grade.measured && !e.citation) bad('measured without citation', 'citation');
+      if (e.grade === T.code_enum.cell_grade.designed && !e.basis) bad('designed without basis', 'basis');
+      if (e.grade !== T.code_enum.cell_grade.referenced || !cells.has(k)) continue;
       referenced++;
       const ref = decl.refDim === undefined ? null : flat[decl.refDim];
       const target = typeof ref === 'string' && gradesOf.has(ref) ? gradesOf.get(ref).g : undefined;
@@ -77,7 +77,7 @@ export function checkCellGrades(t, err) {
       const tv = gradedCells(dims, flatOf(ref)).get(k);
       if (typeof ref !== 'string') err({ code: 'E-MAT-GRADE-REF', level: 'L3', ...at(k), got: ref === undefined ? 'missing' : ref, want: `${decl.refDim} naming the reference row` });
       else if (!gradesOf.has(ref)) err({ code: 'E-MAT-GRADE-REF', level: 'L3', ...at(k), got: ref, want: 'existing reference row' });
-      else if (!isObj(tg) || tg.grade !== 'measured') err({ code: 'E-MAT-GRADE-REF', level: 'L3', ...at(k), got: isObj(tg) ? tg.grade : 'ungraded', want: `measured cell on ${ref}` });
+      else if (!isObj(tg) || tg.grade !== T.code_enum.cell_grade.measured) err({ code: 'E-MAT-GRADE-REF', level: 'L3', ...at(k), got: isObj(tg) ? tg.grade : 'ungraded', want: `measured cell on ${ref}` });
       else if (tv !== cells.get(k)) err({ code: 'E-MAT-GRADE-REF', level: 'L3', ...at(k), got: `${cells.get(k)} vs ${tv}`, want: `value equal to ${ref}` });
     }
     if (decl.refDim !== undefined && typeof flat[decl.refDim] === 'string' && referenced === 0) err({ code: 'W-MAT-REF-UNUSED', level: 'L3', ...at(), got: flat[decl.refDim], want: `a referenced cell when ${decl.refDim} is set` });

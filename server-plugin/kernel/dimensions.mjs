@@ -13,6 +13,8 @@ import { stateMemo } from './memo.mjs';
 import { evaluateRX } from './rx.mjs';
 import { KernelError } from './errors.mjs';
 import { ruleTable } from './load/rules.mjs';
+import { markersOf, T } from './validate/types.mjs';
+import { STACKING_MARKERS } from './validate/dimensions-validate.mjs';
 
 /** @typedef {import('./types.d.ts').ModKey} ModKey */
 /**
@@ -29,6 +31,8 @@ import { ruleTable } from './load/rules.mjs';
 
 // 修正阶段（§3.2 stage 即运算；代码内封闭枚举 stage，§1.9）。
 const STAGES = Object.freeze(['add', 'mul', 'max', 'min', 'set', 'post']);
+// 修正阶段句柄：成员由上面的 STAGES 派生（与 CODE_ENUMS.stage 同一组取值）。
+const STAGE = markersOf('stage', STAGES);
 // 叠加惩罚表所在规则表与键（§3.3 :1356 rules.modifiers.stackingTable）。
 const STACKING_TABLE = Object.freeze({ table: 'modifiers', key: 'stackingTable' });
 const MEMO_SCOPE = 'kernel/dimensions.mjs#modified';
@@ -104,7 +108,7 @@ function applicable(engine, t, state, kind, id, def) {
 }
 
 function unitOf(def) {
-  if (def.type === 'map') return isObj(def.value) && typeof def.value.unit === 'string' ? def.value.unit : undefined;
+  if (def.type === T.type.map) return isObj(def.value) && typeof def.value.unit === 'string' ? def.value.unit : undefined;
   return typeof def.unit === 'string' ? def.unit : undefined;
 }
 
@@ -200,11 +204,11 @@ function orderOf(stage) {
   return (a, b) => {
     const p = b.priority - a.priority;
     if (p !== 0) return p;
-    if (stage !== 'set' && stage !== 'post') {
+    if (stage !== STAGE.set && stage !== STAGE.post) {
       const d = absBig(b.fixed) - absBig(a.fixed);
       if (d !== 0n) return d > 0n ? 1 : -1;
     }
-    if (stage !== 'post') { const s = cmp(a.sourceId, b.sourceId); if (s !== 0) return s; }
+    if (stage !== STAGE.post) { const s = cmp(a.sourceId, b.sourceId); if (s !== 0) return s; }
     return cmp(a.id, b.id);
   };
 }
@@ -232,8 +236,8 @@ function lookupCurve(curve, v) {
 }
 
 function precisionOf(def) {
-  const d = def.type === 'map' ? def.value || {} : def;
-  if (d.type === 'integer') return 0;
+  const d = def.type === T.type.map ? def.value || {} : def;
+  if (d.type === T.type.integer) return 0;
   return Number.isInteger(d.precision) ? d.precision : 0;
 }
 
@@ -248,7 +252,7 @@ function prepareRow(engine, state, kind, id, row, clock) {
   }
   let fixed = 0n;
   let value = null;
-  if (row.stage !== 'post') {
+  if (row.stage !== STAGE.post) {
     value = row.valueRX !== undefined && row.valueRX !== null ? evaluateRX(row.valueRX, rxBindings(engine, state, kind, id, row.valueRX, clock), {}) : row.value;
     if (typeof value !== 'number') throw new KernelError('E-MOD-RX', { entity: id }, `modifier ${row.id}: value is not a number`);
     fixed = fixedUnits(value);
@@ -294,15 +298,15 @@ const num = (v) => fixedToNumber(v);
 export function runPipeline(engine, base, rows, def, subjectKind) {
   if (!rows.length) return { value: base, steps: [] };
   const S = stackingTable(engine);
-  const penalized = def.stacking === 'penalized';
+  const penalized = def.stacking === STACKING_MARKERS.penalized;
   const steps = [];
   const baseFixed = fixedUnits(base);
   let v = baseFixed;
   const push = (r, penalty, before, after) => steps.push(Object.freeze({ stage: r.stage, id: r.id, source: r.source, value: r.value, penalty, before: num(before), after: num(after) }));
   // 第 2 步 add：绝对量，不受罚。
-  for (const r of rows.filter((x) => x.stage === 'add')) { const b = v; v = fixedAdd(v, r.fixed); push(r, null, b, v); }
+  for (const r of rows.filter((x) => x.stage === STAGE.add)) { const b = v; v = fixedAdd(v, r.fixed); push(r, null, b, v); }
   // 第 3 步 mul：正负分开，各侧按全序键施加；受罚序号各侧从 0 起，unpenalized 乘 S[0] 且不占序号；stacking:none 全部用 S[0]。
-  const mul = rows.filter((x) => x.stage === 'mul');
+  const mul = rows.filter((x) => x.stage === STAGE.mul);
   for (const side of [mul.filter((x) => x.fixed >= 0n), mul.filter((x) => x.fixed < 0n)]) {
     let pen = 0;
     for (const r of side) {
@@ -313,13 +317,13 @@ export function runPipeline(engine, base, rows, def, subjectKind) {
     }
   }
   // 第 4、5 步 max、min。
-  for (const r of rows.filter((x) => x.stage === 'max')) { const b = v; if (r.fixed > v) v = r.fixed; push(r, null, b, v); }
-  for (const r of rows.filter((x) => x.stage === 'min')) { const b = v; if (r.fixed < v) v = r.fixed; push(r, null, b, v); }
+  for (const r of rows.filter((x) => x.stage === STAGE.max)) { const b = v; if (r.fixed > v) v = r.fixed; push(r, null, b, v); }
+  for (const r of rows.filter((x) => x.stage === STAGE.min)) { const b = v; if (r.fixed < v) v = r.fixed; push(r, null, b, v); }
   // 第 6 步 set：只取序最前的一条。
-  const set = rows.filter((x) => x.stage === 'set');
+  const set = rows.filter((x) => x.stage === STAGE.set);
   if (set.length) { const b = v; v = set[0].fixed; push(set[0], null, b, v); }
   // 第 7 步 post：依序查曲线。
-  for (const r of rows.filter((x) => x.stage === 'post')) { const b = v; v = lookupCurve(r.curve, v); push(r, null, b, v); }
+  for (const r of rows.filter((x) => x.stage === STAGE.post)) { const b = v; v = lookupCurve(r.curve, v); push(r, null, b, v); }
   // 第 8 步 clamp：boundsByKind[主体种类] 优先于 bounds；boundsRelative 时区间乘基值；null 端无界。
   const byKind = isObj(def.boundsByKind) && Array.isArray(def.boundsByKind[subjectKind]) ? def.boundsByKind[subjectKind] : null;
   const bounds = byKind || (Array.isArray(def.bounds) ? def.bounds : null);

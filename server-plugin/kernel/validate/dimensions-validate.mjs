@@ -8,7 +8,7 @@
 import { parseJsonStrict } from '../load/json-text.mjs';
 import { loadVocab, loadUnits } from '../load/vocab-load.mjs';
 import { flattenTable } from '../load/flatten.mjs';
-import { checkDef, CODE_RE, KEY_RE, CODE_ENUMS, TYPES, DOMAIN_OPTIONAL } from './types.mjs';
+import { checkDef, CODE_RE, KEY_RE, CODE_ENUMS, TYPES, DOMAIN_OPTIONAL, T, markersOf } from './types.mjs';
 import { checkRows, checkPrecedence, checkComponents, checkRequired, requiredSyntaxOk } from './rows.mjs';
 import { prepareNamedConditions } from './named-conditions.mjs';
 import { checkCellGrades } from './cell-grades.mjs';
@@ -19,6 +19,8 @@ const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const KIND_FAMILY = 'kind';
 // 叠加方式（§1.2 `.stacking`）；过程主体槽的专用校验（kernel/load/rules.mjs，§3.7）同读此处。
 export const STACKING = Object.freeze(['none', 'penalized']);
+/** 叠加方式的族句柄：成员由上面的 STACKING 派生（过程主体槽与修正求值共用）。 */
+export const STACKING_MARKERS = markersOf('stacking', STACKING);
 
 // sources：{units: 文本, vocab: 文本, effects?: 文本, tables: [{file, text}]}（file 为文件名，如 "<kind>.json"）。
 // options：{namespaces: [..], displaySet: [..], ns: [{ns, shape, type}], limits: {extendsMaxDepth, rxMaxDepth}}。
@@ -130,8 +132,8 @@ function checkHeader(t, env, err) {
     else if (def.onUnknown !== undefined && !CODE_ENUMS.onUnknown.includes(def.onUnknown)) bad('E-DIM-DOMAIN-ENUM', 'onUnknown', def.onUnknown, CODE_ENUMS.onUnknown.join('|'));
     if (typeof def.modifiable !== 'boolean') bad('E-DIM-MODIFIABLE-TYPE', 'modifiable', def.modifiable, 'true|false');
     else if (def.modifiable) {
-      const numeric = (d) => isObj(d) && (d.type === 'number' || d.type === 'integer');
-      if (!(numeric(def) || (def.type === 'map' && numeric(def.value))) || def.type === 'string') bad('E-DIM-MODIFIABLE-TYPE', 'modifiable', def.type, 'number, integer or map<..., number>');
+      const numeric = (d) => isObj(d) && (d.type === T.type.number || d.type === T.type.integer);
+      if (!(numeric(def) || (def.type === T.type.map && numeric(def.value))) || def.type === T.type.string) bad('E-DIM-MODIFIABLE-TYPE', 'modifiable', def.type, 'number, integer or map<..., number>');
       if (!STACKING.includes(def.stacking)) bad('E-MOD-STACKING', 'stacking', def.stacking, STACKING.join('|'), 'L2');
       const [lo, hi, ...rest] = Array.isArray(def.bounds) ? def.bounds : [];
       if (typeof lo !== 'number' || typeof hi !== 'number' || rest.length || lo > hi) bad('E-MOD-BOUNDS', 'bounds', def.bounds, '[lo,hi]', 'L2');
@@ -140,7 +142,7 @@ function checkHeader(t, env, err) {
     if (def.domain === undefined && TYPES.includes(def.type) && !DOMAIN_OPTIONAL.includes(def.type)) bad('E-DIM-DOMAIN-RANGE', 'domain', 'missing', 'domain');
     const sm = def.stockMode;
     if (sm !== undefined && !CODE_ENUMS.stock_mode.includes(sm)) bad('E-DIM-DOMAIN-ENUM', 'stockMode', sm, CODE_ENUMS.stock_mode.join('|'));
-    if ((sm === 'remainder') !== (def.remDenominator !== undefined)) bad('E-DIM-STRUCT-FIELD', 'remDenominator', def.remDenominator, 'remDenominator exactly when stockMode is remainder');
+    if ((sm === T.code_enum.stock_mode.remainder) !== (def.remDenominator !== undefined)) bad('E-DIM-STRUCT-FIELD', 'remDenominator', def.remDenominator, 'remDenominator exactly when stockMode is remainder');
     if (def.source === undefined || def.owner === undefined) bad('W-DIM-SOURCE', 'source', [def.source, def.owner].map(String).join(','), 'source and owner');
   }
   const groups = doc.precedenceGroups;
