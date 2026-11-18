@@ -157,16 +157,41 @@ test('doc_struct 列表项开头（裁定二）：列表符或加粗后紧跟编
   assert.equal(definedNumbers('- 扫描式：`S9`', ['S'], ['扫描式']).size, 0);
 });
 
-test('lit_scope 修正键族（卷二 S8）：键集取自维度表 modifiable 声明，折叠后的同名值计入', () => {
+test('lit_scope 修正键族（卷二 S8、§3.1 :1290）：按 <kind>.<dimension>[<key>] 键形与数值类型判，裸维度名不报', () => {
   const dims = 'world/ontology/dimensions/fx.json';
-  const table = JSON.stringify({ dimensions: { fxSharpness: { modifiable: true }, fxFixed: { modifiable: false } } });
-  const run = (src) => litScope(ctxOf({ 'server-plugin/a.mjs': src, [dims]: table }), { groups: RT, literal: 'modifierKey' }, CLS.instance_name).length;
-  assert.equal(run("const k = 'fxSharpness';"), 1);
-  assert.equal(run("const k = 'fxSharp' + 'ness';"), 1);
+  const table = JSON.stringify({ kind: 'fx', dimensions: {
+    fxSharpness: { type: 'number', modifiable: true },
+    fxFixed: { type: 'number', modifiable: false },
+    fxLabel: { type: 'string', modifiable: true },
+    fxFlag: { type: 'boolean', modifiable: true },
+    fxWeights: { type: 'map', value: { type: 'number' }, key: { type: 'integer' }, modifiable: true },
+  } });
+  const run = (src, extra = {}) => litScope(ctxOf({ 'server-plugin/a.mjs': src, [dims]: table, ...extra }), { groups: RT, literal: 'modifierKey' }, CLS.instance_name).length;
+  assert.equal(run("const k = 'fx.fxSharpness';"), 1);
+  assert.equal(run("const k = 'fx.' + 'fxSharpness';"), 1);
+  assert.equal(run("const k = 'fx.fxWeights[3]';"), 1);
+  assert.equal(run("const k = 'fxSharpness';"), 0); // 裸维度名不是修正键
+  assert.equal(run("const k = 'fxSharp' + 'ness';"), 0);
   assert.equal(run('const k = `fx${n}`;'), 0);
-  assert.equal(run("const k = 'fxFixed';"), 0);
-  assert.equal(run("// 'fxSharpness' 在注释里\nconst k = 'fxSharpnes';"), 0);
-  assert.equal(litScope(ctxOf({ 'server-plugin/a.mjs': "const k = 'fxSharpness';" }), { groups: RT, literal: 'modifierKey' }, CLS.instance_name).length, 0);
+  assert.equal(run("const k = 'fx.fxFixed';"), 0); // 不可修改
+  assert.equal(run("const k = 'fx.fxLabel';"), 0); // 数值类型以外
+  assert.equal(run("const k = 'fx.fxFlag';"), 0);
+  assert.equal(run("const k = 'fx.fxWeights';"), 0); // map 维度要下标
+  assert.equal(run("const k = 'zz.fxSharpness';"), 0); // 没登记的 kind
+  assert.equal(run("// 'fx.fxSharpness' 在注释里\nconst k = 'fx.fxSharpnes';"), 0);
+  assert.equal(litScope(ctxOf({ 'server-plugin/a.mjs': "const k = 'fx.fxSharpness';" }), { groups: RT, literal: 'modifierKey' }, CLS.instance_name).length, 0);
+  // 卷二 §3.6：body_plan 表头的 capabilities 段注册为 body.<capability>。
+  const body = JSON.stringify({ kind: 'body_plan', capabilities: { moving: { type: 'number', modifiable: true } }, dimensions: {} });
+  const bodyRun = (src) => litScope(ctxOf({ 'server-plugin/a.mjs': src, 'world/ontology/dimensions/body_plan.json': body }), { groups: RT, literal: 'modifierKey' }, CLS.instance_name).length;
+  assert.equal(bodyRun("const k = 'body.moving';"), 1);
+  assert.equal(bodyRun("const k = 'body.unknown';"), 0);
+  assert.equal(bodyRun("const k = 'moving';"), 0);
+  // 卷二 §3.7：derived-process.json 的 slots 注册为 process.<slot>。
+  const proc = 'world/rules/tables/derived-process.json';
+  const procTable = JSON.stringify({ slots: { price: {}, wage: {} } });
+  const procRun = (src) => litScope(ctxOf({ 'server-plugin/a.mjs': src, [proc]: procTable }), { groups: RT, literal: 'modifierKey' }, CLS.instance_name).length;
+  assert.equal(procRun("const k = 'process.price';"), 1);
+  assert.equal(procRun("const k = 'process.unknown';"), 0);
 });
 
 test('ledger_count 基线单调（V-11、E-ACC-BASELINE-UP）：记录里现值高于该次执行时上次合入的值即计一条，一记录一分量一条', () => {

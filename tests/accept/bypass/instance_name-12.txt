@@ -1,4 +1,0 @@
-// 'fxSharpness' only in a comment
-export const k = 'fxFixed';
-// @file world/ontology/dimensions/fxmods.json
-{"dimensions": {"fxSharpness": {"modifiable": true}, "fxFixed": {"modifiable": false}}}

@@ -25,8 +25,9 @@ test('新树上提交关口：必过条目计数全 0，用例全过，放行', 
   assert.ok(Object.values(report.cases).length >= 10);
   // text_judge 类别下没有已实现条目（靠 tsc 才能判的反例报不出，卷十二 R12-11.7）：它的用例不跑，记 not_run；其余用例全过。
   const notRun = Object.keys(report.cases).filter((k) => report.cases[k] === 'not_run');
-  // undeclared_io 同理（S15 的"传给登记之外的函数"未判，R12-3.4）。
-  const gap = (k) => k.startsWith('text_judge-') || k.startsWith('undeclared_io-');
+  // undeclared_io 同理（S15 的"传给登记之外的函数"未判，R12-3.4）；baseline_monotone 同理（V-11 退回 registered：
+  // 提交钩子不写执行记录，当次上升拦不住，R12-8.4）。
+  const gap = (k) => k.startsWith('text_judge-') || k.startsWith('undeclared_io-') || k.startsWith('baseline_monotone-');
   assert.ok(notRun.length > 0 && notRun.every(gap));
   assert.ok(Object.entries(report.cases).every(([k, v]) => v === 'pass' || gap(k)));
 });

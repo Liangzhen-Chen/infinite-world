@@ -8,16 +8,20 @@
      "rev": 1
     },
     {
-     "ref": "块 2 第 4 张（门禁新类别实现卡）：ledger_count 加 baselineMonotone 判定——读执行记录 runrec 的 components，某分量的现值 current 高于该次执行时上次合入的值 last 即计一条，码 E-ACC-BASELINE-UP；补必须报用例 baseline_monotone-01 与必须不报用例 baseline_monotone-11；条目 vol1.V-11 转 implemented",
+     "ref": "门禁新类别实现卡：ledger_count 加 baselineMonotone 判定——读执行记录 runrec 的 components，某分量的现值 current 高于该次执行时上次合入的值 last 即计一条，码 E-ACC-BASELINE-UP；补必须报用例 baseline_monotone-01 与必须不报用例 baseline_monotone-11；条目 vol1.V-11 转 implemented",
      "rev": 2
     },
     {
-     "ref": "块 2 第 4 张补：条目 vol1.V-11 的关口按卷一 I43（提交钩子）与卷十二 R12-8.4（提交关口上判定）补 pre_commit，原登记的 pre_merge 照留（收紧，不减关口）",
+     "ref": "门禁新类别实现卡补：条目 vol1.V-11 的关口按卷一 I43（提交钩子）与卷十二 R12-8.4（提交关口上判定）补 pre_commit，原登记的 pre_merge 照留（收紧，不减关口）",
      "rev": 3
+    },
+    {
+     "ref": "门禁新类别实现卡只核改：V-11 退回 registered（提交钩子只调 accRun、不写执行记录，当次上升在提交关口拦不住，与 R12-8.4“提交关口上即拒”不符；照 master 写回 state，不经状态转移）；baselineMonotone 判定代码保留，本类别无已实现条目，用例 baseline_monotone-01/11 记 not_run",
+     "rev": 4
     }
    ],
    "print": "feb9c1fdc34630b9b7c33261e40a0c50930baff128f94651a8d3ffce214c62ca",
-   "rev": 3,
+   "rev": 4,
    "scanClass": "baseline_monotone",
    "source": "卷一 V-11（I43）；卷十二 §2.5、E-ACC-BASELINE-UP；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -50,12 +54,16 @@
      "rev": 4
     },
     {
-     "ref": "块 2 第 4 张（门禁新类别实现卡）：共用的 lit_scope 加修正键族判定类 modifierKey（卷二 S8 用）；本类别判定口径不变",
+     "ref": "门禁新类别实现卡：共用的 lit_scope 加修正键族判定类 modifierKey（卷二 S8 用）；本类别判定口径不变",
      "rev": 5
+    },
+    {
+     "ref": "门禁新类别实现卡只核改：lit_scope 的 modifierKey 改按修正键键形 `<kind>.<dimension>[<key>]` 与数值类型判（卷二 §3.1 :1290；键形与类型照 kernel/handles/keys.mjs 的 DIM_KEY_RE 与 modKeyOf，该模块不能直接 import：其 import 闭包含 BigInt，classPrint 序列化不了，理由见 lit_scope.mjs 注释），裸维度名不报；另纳入 body.<capability>、process.<slot>；本类别判定口径不变",
+     "rev": 6
     }
    ],
-   "print": "5d08fc80f3e180229f8399a1c9f7408e7e660d9e1f47b799e46f499db5d5d106",
-   "rev": 5,
+   "print": "5f78aa6e9fc488ad1285a8bdec82d0265d611777088975c0a605a250909c91b8",
+   "rev": 6,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -219,7 +227,7 @@
      "rev": 3
     },
     {
-     "ref": "块 2 第 4 张（门禁新类别实现卡）：共用的 ledger_count 加 baselineMonotone 判定（V-11）；本类别判定口径不变",
+     "ref": "门禁新类别实现卡：共用的 ledger_count 加 baselineMonotone 判定（V-11）；本类别判定口径不变",
      "rev": 4
     }
    ],
@@ -292,19 +300,23 @@
    }
   },
   {
-   "criterion": "数据表里按规则应由派生算出的字段又带手填的数值即命中：派生字段按卷一 R-6 第 5 条（`difficulty:数字` 由派生算出）与派生登记（`world/ontology/derived-fields.json` 的派生黑名单、维度表里的 `derived` 声明）判，不按表名、文件名或具体条目特判；每处手填计一行，进分量 `c_difficulty`，旧基线 26 取自卷一 R-6“判定”一段，不升（R12-4.6）。检测器 data_shape 读数据表与派生登记。",
+   "criterion": "数据表里按卷一 R-6 第 5 条“`difficulty:数字` 由派生算出”的字段又带手填的数值即命中：判据只取卷一 R-6 第 5 条与卷十二 R12-4.6 的原句（R12-4.6：“数据表里按规则应由派生算出、却手填了数的字段，由 `data_shape` 报出”），不按表名、文件名或具体条目特判；每处手填计一行，进分量 `c_difficulty`，旧基线 26 取自卷一 R-6“判定”一段，不升（R12-4.6）。检测器 data_shape 读数据表。其余应由派生算出的字段名单，卷一 R-6、卷十二 R12-4.6 未给出（未找到）。",
    "log": [
     {
      "ref": "初版登记：块 2 体检 P1-32 挂 M12-4（derived-scan）；判据见 criterion",
      "rev": 1
     },
     {
-     "ref": "块 2 第 4 张（2-3 复核记账）：判据文字写实，照卷一 R-6 第 5 条与卷十二 R12-4.6 写明 data_shape 查什么（派生登记列出的字段被手填数值）、每处一行、进分量 c_difficulty、旧基线 26；判定口径未变，条目 vol1.V-9.b 仍 registered",
+     "ref": "门禁新类别实现卡（2-3 复核记账）：判据文字写实，照卷一 R-6 第 5 条与卷十二 R12-4.6 写明 data_shape 查什么（派生登记列出的字段被手填数值）、每处一行、进分量 c_difficulty、旧基线 26；判定口径未变，条目 vol1.V-9.b 仍 registered",
      "rev": 2
+    },
+    {
+     "ref": "门禁新类别实现卡只核改：删去编造的出处（`world/ontology/derived-fields.json` 是 I10 存档派生黑名单，卷一 R-6、卷十二 R12-4.6 都没提）；判据只照卷一 R-6 第 5 条与卷十二 R12-4.6 原句写，其余派生字段名单未找到；判定口径未变，条目 vol1.V-9.b 仍 registered",
+     "rev": 3
     }
    ],
    "print": "246ea5401a19d5a41749e83ac7c6d1bf79b7861c13f01eacdfd8eeecc821c36a",
-   "rev": 2,
+   "rev": 3,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -384,12 +396,16 @@
      "rev": 6
     },
     {
-     "ref": "块 2 第 4 张（门禁新类别实现卡）：lit_scope 加修正键族判定类 modifierKey，卷二 S8 用（键集取自被查内容里的维度表 dimensions[*].modifiable，代码里不列键）；补必须报用例 instance_name-07 与必须不报用例 instance_name-12；S8 转 implemented；原有判定口径不变",
+     "ref": "门禁新类别实现卡：lit_scope 加修正键族判定类 modifierKey，卷二 S8 用（键集取自被查内容里的维度表 dimensions[*].modifiable，代码里不列键）；补必须报用例 instance_name-07 与必须不报用例 instance_name-12；S8 转 implemented；原有判定口径不变",
      "rev": 7
+    },
+    {
+     "ref": "门禁新类别实现卡只核改：modifierKey 改按卷二 §3.1 :1290 的键形 `<kind>.<dimension>[<key>]` 与数值类型判（键形与类型照 kernel/handles/keys.mjs 的 DIM_KEY_RE 与 modKeyOf，该模块不能直接 import：其 import 闭包含 BigInt，classPrint 序列化不了），裸维度名、非数值维度不报；stock.* 键集登记在卷五 §2.3、被查内容里没有对应数据登记（未找到），词表键的 map 下标取不到，判不全；S8 照 master 写回 registered（不经状态转移），撤回上一轮为 S8 加的 instance_name-07/12 两行用例（该类别已无 modifierKey 可跑条目，留着 must_fail 会造成误报回归）",
+     "rev": 8
     }
    ],
-   "print": "71fa694e8914ab72b21cf5cc8c9947d91090a9a9ded3e915d84075a5ebd7f210",
-   "rev": 7,
+   "print": "b58c89736f18483e2b449bed019eadf49ef44a08a4649de4b2635573e7b52fbf",
+   "rev": 8,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -433,7 +449,7 @@
      "rev": 3
     },
     {
-     "ref": "块 2 第 4 张（门禁新类别实现卡）：共用的 ledger_count 加 baselineMonotone 判定（V-11）；本类别判定口径不变",
+     "ref": "门禁新类别实现卡：共用的 ledger_count 加 baselineMonotone 判定（V-11）；本类别判定口径不变",
      "rev": 4
     }
    ],
@@ -533,7 +549,7 @@
      "rev": 1
     },
     {
-     "ref": "块 2 第 4 张（门禁新类别实现卡）：共用的 ledger_count 模块有改动（加 baselineMonotone 判定）；本类别判据仍未实现（逐条的汇总来源未登记，A12-n.1 里还有三类来源以外的比较），判定口径不变，14 条条目留 registered，等李白裁定",
+     "ref": "门禁新类别实现卡：共用的 ledger_count 模块有改动（加 baselineMonotone 判定）；本类别判据仍未实现（逐条的汇总来源未登记，A12-n.1 里还有三类来源以外的比较），判定口径不变，14 条条目留 registered，等李白裁定",
      "rev": 2
     }
    ],
@@ -890,12 +906,16 @@
      "rev": 12
     },
     {
-     "ref": "块 2 第 4 张（门禁新类别实现卡）：共用的 lit_scope 加修正键族判定类 modifierKey（本类别不用）；判定口径不变",
+     "ref": "门禁新类别实现卡：共用的 lit_scope 加修正键族判定类 modifierKey（本类别不用）；判定口径不变",
      "rev": 13
+    },
+    {
+     "ref": "门禁新类别实现卡只核改：lit_scope 的 modifierKey 改按修正键键形与数值类型判（卷二 §3.1 :1290），裸维度名不报；本类别判定口径不变",
+     "rev": 14
     }
    ],
-   "print": "acdabbbddaff4850148b15e3ad818637eaa8d5a8149255e9f7739f00af0c09db",
-   "rev": 13,
+   "print": "65f3c540db335bb5be988ad769e2ce04866e3545e6fa106b4345a857bcdfd999",
+   "rev": 14,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1004,12 +1024,16 @@
      "rev": 2
     },
     {
-     "ref": "块 2 第 4 张（门禁新类别实现卡）：共用的 lit_scope 加修正键族判定类 modifierKey（本类别不用）；判定口径不变",
+     "ref": "门禁新类别实现卡：共用的 lit_scope 加修正键族判定类 modifierKey（本类别不用）；判定口径不变",
      "rev": 3
+    },
+    {
+     "ref": "门禁新类别实现卡只核改：lit_scope 的 modifierKey 改按修正键键形与数值类型判（卷二 §3.1 :1290），裸维度名不报；本类别判定口径不变",
+     "rev": 4
     }
    ],
-   "print": "5d08fc80f3e180229f8399a1c9f7408e7e660d9e1f47b799e46f499db5d5d106",
-   "rev": 3,
+   "print": "5f78aa6e9fc488ad1285a8bdec82d0265d611777088975c0a605a250909c91b8",
+   "rev": 4,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {

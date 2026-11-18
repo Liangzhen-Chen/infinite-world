@@ -359,29 +359,11 @@
    "scanClass": "instance_name"
   },
   {
-   "addedAtRev": 7,
-   "caseKey": "instance_name-07",
-   "fixture": "tests/accept/bypass/instance_name-07.txt",
-   "group": "rules",
-   "origin": "卷二 §7 S8（修正键字面量在 .mjs = 0）；卷十二 §2.4 :267、R12-1.7：族键集取自登记（维度表的 modifiable 声明），拼接到达同值也计",
-   "polarity": "must_fail",
-   "scanClass": "instance_name"
-  },
-  {
    "addedAtRev": 1,
    "caseKey": "instance_name-11",
    "fixture": "tests/accept/bypass/instance_name-11.txt",
    "group": "rules",
    "origin": "卷十二 R12-13.3；卷一 §3.1 第 5 条（注释不计）",
-   "polarity": "must_pass",
-   "scanClass": "instance_name"
-  },
-  {
-   "addedAtRev": 7,
-   "caseKey": "instance_name-12",
-   "fixture": "tests/accept/bypass/instance_name-12.txt",
-   "group": "rules",
-   "origin": "卷十二 R12-14.3；卷二 §7 S8：注释里的同名串与不可修改的维度不计（必须不报用例）",
    "polarity": "must_pass",
    "scanClass": "instance_name"
   },
