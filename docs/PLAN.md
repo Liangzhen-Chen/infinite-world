@@ -22,4 +22,5 @@
 4. **4-4 拆两张**（已定：按李白 16:3x 收窄、竖切片）：4-4a 已封（978bbb41；DeepSeek 写 3 提交、DeepSeek 只核 1 轮、Sonnet 终核可封 $0.32；合入时发现 autocrlf 使冻结表 --check 不过，.gitattributes 定 eol=lf）；4-4b 在写（DeepSeek，ds-44b）： detfn（registry det-numeric 七值、fnTables 校验与插值、E-DET-DOMAIN）、E-DET-OVERFLOW 改码。数学成员扫描（#20）、sym_exists（#21）、排序扫描（#33）不在本两张，挂账待李白核是否属"跨文件静态才守得住"。
 5. **块 2 验收**：B2-W3 合入后报开机方案。
 6. **3-4 已封，块 3 封块**（DeepSeek 写 4 轮含接主线、DeepSeek 只核 2 轮、Sonnet 中档终核可封 $0.25；vol6.S6-14 转 in_core；已定：fieldRoles role:payable 由卷六 §2.4 :200 推出，接受；temp-repo 补拷 named-structs 与维度表属必需接点，接受）。其后：4-4b（李白 21:3x 裁定 detfn 去前缀、勘误 1118k24）封块 4 → 块 2/3/4 合并验收（李白开关机）→ 块 5（体检与对照表在写，报李白核过才开写）。
+8. **执行者违规记过**：4-4b 只核改轮测试先行提交误带 `--no-verify`（a341168a→rebase 后 5eb776c2；自报，该提交只有测试与回报，后续提交均过钩子，历史不回改）；块 5 体检执行者用 echo 作命令分隔（超出工具清单，未写文件）。今后卡文已重申禁 echo 分隔。
 7. 副本备份后删（李白 19:35）已做完，清单见 docs/归档/清理记录-1118.md 末节。主会话 20:1x 一次误用输出重定向写 F:/dnd-tmp/null.txt，已认错并删除该文件。
