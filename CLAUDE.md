@@ -28,7 +28,7 @@
 ## 回报
 
 - 每次回报李白写明照的是哪一卷，带卷标题（如"卷三甲《物质本源》"）。
-- 每卡封进 master 都发通知：`D:/Anaconda/python.exe F:/dnd-tools/notify/enqueue.py <delivered|blocked|answer> "<≤300字>" "<≤300字>" < /dev/null`，再跑 `D:/Anaconda/python.exe F:/dnd-tools/notify/notify.py < /dev/null`（必须带 `< /dev/null`）。
+- 通知只在三种情况发（封整块或进新阶段；卡住要李白或亮圳拍板；花费到线或重大异常；李白 11-18 01:40，见下"API 派卡"第 7 条），发法：`D:/Anaconda/python.exe F:/dnd-tools/notify/enqueue.py <delivered|blocked|answer> "<≤300字>" "<≤300字>" < /dev/null`，再跑 `D:/Anaconda/python.exe F:/dnd-tools/notify/notify.py < /dev/null`（必须带 `< /dev/null`）。
 - 卷文推不出、卷文矛盾、要改裁定方向的：停下报李白，不自补、不自选。
 
 ## API 派卡（周四 2026-11-19 10:00 前）
@@ -44,7 +44,7 @@
   4. 只发卡片相关的设计稿与代码，不带其他文件（卡文写明只读哪些文件）。
   5. 先拿一张简单单卡试，回报能否跑通、返工几次、只核结论、DeepSeek 与 Claude 各花多少；不顺即停写"等李白裁定"。
   6. 今晚 150 美元停卡线按 Claude API 花费算；DeepSeek 花费另记一行。
-  7. 通知李白（webhook）只在：封卡或封块、卡住需李白裁定、花费到线、重大异常。裁定回执、照录完毕、小进展不发，攒进封卡回报。
+  7. 通知李白（webhook）只在三种情况发（李白 11-18 01:40 收紧，亮圳 t515u 批准，取代此前"每卡封卡都发"）：① 封了一整块或进入新阶段；② 卡住、要李白或亮圳拍板；③ 花费到线（API 150 美元）或重大异常（测试大面积失败、门禁失效、数据丢失、主线回退等）。单张小卡封卡、裁定回执、照录、小进展一律不发，照常提交、只核原文入库、PLAN 记账，李白巡查 GitHub 时核。
   8. （李白 11-17 晚，取代省钱方案③对这类卡的限制）DeepSeek 写、Claude 只核的卡可多路并行，条件：只并行排期里注明互不依赖且有设计文档出处的卡；内核、加载器等 Opus 写的卡仍一次一张；Claude 审核花费计入 150 美元线，DeepSeek 另记；DeepSeek 试跑第一张若不顺，先停多路，写"等李白裁定"。
   9. （李白 11-18 00:35）DeepSeek 卡文三条硬要求：(a) 每个出处写到"卷:行"，查不到写"未找到"，不许编；(b) 不许标"已实现"，除非附可复现测试证据（命令＋输出）；(c) 动手前把要照做的卷文原句逐条摘出放在回报开头。DeepSeek 先只跑一路，再一次过审一张后才放开多路；DeepSeek 卡二次不过审改由 Sonnet 写。DeepSeek 实价以其账户为准，CLI 按 Claude 价目显示的数不当花费报。
 
