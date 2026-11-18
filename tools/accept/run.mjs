@@ -97,7 +97,9 @@ async function runCases(root, ctx, items, classes) {
     const dir = groupDir(ctx.model, c.group);
     const main = `${dir}__case__/${c.caseKey}.mjs`;
     const files = splitFixture(readFileSync(join(root, c.fixture), 'utf8'), main);
-    const cctx = { ...ctx, files: [...files.keys()].sort(), read: (p) => files.get(p), prefixes };
+    // 夹具正文若是 JSON，同时当 gateState（{components, baseline}）给要看当次分量的判定用（baseline_monotone 用例）。
+    let gateState; try { gateState = JSON.parse(files.get(main)); } catch { gateState = undefined; }
+    const cctx = { ...ctx, files: [...files.keys()].sort(), read: (p) => files.get(p), prefixes, gateState };
     const own = items.filter((it) => it.scanClass === c.scanClass);
     // 类别下没有已实现的条目（全是 registered，如 text_judge 靠 tsc 才能判的反例还报不出，卷十二 R12-11.7）：用例不跑，记 not_run，不算回归。
     if (!own.length) { out[c.caseKey] = 'not_run'; continue; }
@@ -120,11 +122,25 @@ export async function accRun(gate, subject, contentPrint, opts = {}) {
   const runnable = items.filter((it) => RUNNABLE.includes(it.state));
 
   const results = {}; const failed = []; const components = {}; let rows = [];
+  // 上次合入的值（R12-8.4、R12-8.5）：入库的 baseline.json，只在合入关口写；不读 out/ 下的本地记录。
+  // opts.baselineRows 只供测试代入（测试不得写登记路径 baseline.json，§2.11）；真实执行不传。
+  const base = Object.fromEntries((opts.baselineRows || accBaseline(root)).map((b) => [b.compCode, b]));
+  // 要看本次分量现值才能判的条目（检测器导出 needsGateState，按条目参数定）排在其余条目之后，判时给 ctx 加 gateState（当次现值与上次合入值）。
+  const lateKeys = new Set();
   for (const item of items) {
+    if (!RUNNABLE.includes(item.state)) continue;
+    const d = await detectorOf(item.detector);
+    if (typeof d.needsGateState === 'function' && d.needsGateState(item.params || {})) lateKeys.add(item.itemKey);
+  }
+  const ordered = [...items.filter((i) => !lateKeys.has(i.itemKey)), ...items.filter((i) => lateKeys.has(i.itemKey))];
+  for (const item of ordered) {
     if (!RUNNABLE.includes(item.state)) { results[item.itemKey] = 'not_run'; continue; }
     // 扩展性条目（R12-6.2 ①⑥）：执行前后各记一次代码文件集合指纹，不同即该条目不过、码 E-ACC-EXT-CODE-CHANGED（S12-12 数执行记录里的这类）。
     const before = item.form === 'extend' ? codeSetPrint(root) : null;
-    const hits = await runItem(ctx, item, classes);
+    const itemCtx = lateKeys.has(item.itemKey)
+      ? { ...ctx, gateState: { components: { ...components }, baseline: Object.fromEntries(Object.entries(base).map(([k, b]) => [k, b.current])) } }
+      : ctx;
+    const hits = await runItem(itemCtx, item, classes);
     const extChanged = before !== null && codeSetPrint(root) !== before;
     if (extChanged) hits.push({ file: '', line: 0, nodeKind: 'run', symbolPath: '', code: 'E-ACC-EXT-CODE-CHANGED' });
     const r = toRows(item, hits);
@@ -152,7 +168,6 @@ export async function accRun(gate, subject, contentPrint, opts = {}) {
 
   const prevKeys = new Set(accHits(root).map((h) => h.rowKey));
   const curKeys = new Set(rows.map((h) => h.rowKey));
-  const base = Object.fromEntries(accBaseline(root).map((b) => [b.compCode, b]));
   const vs = Object.values(results);
   const count = (v) => vs.filter((x) => x === v).length;
   const mustPass = new Set(items.filter((it) => it.state === 'in_core').map((it) => it.itemKey));

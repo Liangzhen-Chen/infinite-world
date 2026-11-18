@@ -25,9 +25,8 @@ test('新树上提交关口：必过条目计数全 0，用例全过，放行', 
   assert.ok(Object.values(report.cases).length >= 10);
   // text_judge 类别下没有已实现条目（靠 tsc 才能判的反例报不出，卷十二 R12-11.7）：它的用例不跑，记 not_run；其余用例全过。
   const notRun = Object.keys(report.cases).filter((k) => report.cases[k] === 'not_run');
-  // undeclared_io 同理（S15 的"传给登记之外的函数"未判，R12-3.4）；baseline_monotone 同理（V-11 退回 registered：
-  // 提交钩子不写执行记录，当次上升拦不住，R12-8.4）。
-  const gap = (k) => k.startsWith('text_judge-') || k.startsWith('undeclared_io-') || k.startsWith('baseline_monotone-');
+  // undeclared_io 同理（S15 的"传给登记之外的函数"未判，R12-3.4）。baseline_monotone 的用例现在真跑（V-11 当次判，R12-8.4）。
+  const gap = (k) => k.startsWith('text_judge-') || k.startsWith('undeclared_io-');
   assert.ok(notRun.length > 0 && notRun.every(gap));
   assert.ok(Object.entries(report.cases).every(([k, v]) => v === 'pass' || gap(k)));
 });
@@ -51,9 +50,32 @@ test('门禁是拦：规则层或内核里出现一处违例即拒，行键不�
   assert.equal(report.verdict, 'fail');
   const core = new Set(readRegistry(ROOT, 'items').filter((it) => it.state === 'in_core').map((it) => it.itemKey));
   const failed = Object.fromEntries(report.items.failed.filter((f) => core.has(f.itemKey)).map((f) => [f.itemKey, f.codes]));
-  assert.deepEqual(Object.keys(failed).sort(), ['vol1.V-17', 'vol2.S1', 'vol2.S10', 'vol2.S16']);
+  assert.deepEqual(Object.keys(failed).sort(), ['vol1.V-11', 'vol1.V-17', 'vol2.S1', 'vol2.S10', 'vol2.S16']);
+  // 无基线按零基线：注入的 c_instance_id 行使 V-11 也拒（方案 R13、R12-8.9）。
+  assert.deepEqual(failed['vol1.V-11'], ['E-ACC-BASELINE-UP']);
   assert.deepEqual(failed['vol2.S16'], ['E-KERNEL-UPWARD-IMPORT']);
   assert.equal(rows.find((r) => r.itemKey === 'vol2.S1').rowKey, 'c_instance_id|server-plugin/rules.mjs|f|str|0');
+});
+
+test('V-11 提交关口当次判：当次分量高于入库基线（上次合入）即拒；持平、下降通过，无基线按零基线（现值大于 0 即拒）；out/ 的旧上升记录不误挡', async () => {
+  const dir = tempRepo();
+  try {
+    const bad = { 'server-plugin/rules.mjs': "\n\nexport function f(doc) { return 'npc_' + doc.id; }\n" };
+    const opts = { root: dir, overrides: bad, prefixes: { prefixes: ['npc_'], singletons: [] } };
+    const rows = (cur) => [{ compCode: 'c_instance_id', b0: 0, current: cur }];
+    const v11 = (report) => report.items.failed.find((f) => f.itemKey === 'vol1.V-11');
+    // 无基线：没有上次合入的值按零基线（方案 R13、R12-8.9），本次 1 个行即拒。
+    assert.deepEqual(v11((await accRun('pre_commit', 'x', null, opts)).report).codes, ['E-ACC-BASELINE-UP']);
+    // 上次合入为 0，本次 1 个 c_instance_id 行：当次上升，V-11 不过，整次拒绝。
+    const up = (await accRun('pre_commit', 'x', null, { ...opts, baselineRows: rows(0) })).report;
+    assert.deepEqual(v11(up).codes, ['E-ACC-BASELINE-UP']);
+    assert.equal(up.verdict, 'fail');
+    // 持平与下降：不拦。
+    assert.equal(v11((await accRun('pre_commit', 'x', null, { ...opts, baselineRows: rows(1) })).report), undefined);
+    assert.equal(v11((await accRun('pre_commit', 'x', null, { ...opts, baselineRows: rows(5) })).report), undefined);
+    // out/ 旧上升记录不误挡：测试不能往登记路径 out/ 写，由用例 baseline_monotone-12 与检测器单测覆盖。
+    assert.equal((await accRun('pre_commit', 'x', null, { root: dir, baselineRows: rows(0) })).report.cases['baseline_monotone-12'], 'pass');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
 test('登记器：形式、参数、门禁设施、状态转移不合即拒，不写盘', () => {

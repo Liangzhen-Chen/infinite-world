@@ -22,10 +22,18 @@
     {
      "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
      "rev": 5
+    },
+    {
+     "ref": "V-11 当次上升判定卡（李白 11-18 00:35 裁定一第 5 条）：baselineMonotone 改为提交关口当次判——现值取本次执行数出的分量，上次合入的值取入库 baseline.json（R12-8.5 只在合入关口写），不再读 out/ 下的执行记录；执行器把需看分量现值的条目排后并给 ctx 加 gateState；补不误挡用例 baseline_monotone-12；条目 vol1.V-11 转 implemented",
+     "rev": 6
+    },
+    {
+     "ref": "无上次合入值按零基线（依方案 R13、R12-8.9；卷十二 R12-8.4 首句、卷一 I43 的零基线特例）：baselineMonotone 对没有上次合入值的分量（新分量、尚无 baseline.json）按 0 比较，现值大于 0 即计一条；用例 baseline_monotone-11 的 c_new 改为必须报",
+     "rev": 7
     }
    ],
-   "print": "c7124c14521bfe3ccf87a661b78ec370603be45deda4fa0b755d1e72bfc83492",
-   "rev": 5,
+   "print": "3901adf3f3e26fc25806a8da214ed473ac14b58e2c20186664bb70eaf842e5f8",
+   "rev": 7,
    "scanClass": "baseline_monotone",
    "source": "卷一 V-11（I43）；卷十二 §2.5、E-ACC-BASELINE-UP；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -269,10 +277,18 @@
     {
      "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
      "rev": 5
+    },
+    {
+     "ref": "V-11 当次上升判定卡：共用的 ledger_count 改 baselineMonotone 为当次判、导出 needsGateState；本类别判定口径不变",
+     "rev": 6
+    },
+    {
+     "ref": "共用的 ledger_count 的 baselineMonotone 无上次合入值按零基线（方案 R13、R12-8.9）；本类别判定口径不变",
+     "rev": 7
     }
    ],
-   "print": "c7124c14521bfe3ccf87a661b78ec370603be45deda4fa0b755d1e72bfc83492",
-   "rev": 5,
+   "print": "3901adf3f3e26fc25806a8da214ed473ac14b58e2c20186664bb70eaf842e5f8",
+   "rev": 7,
    "scanClass": "ext_code",
    "terms": {
     "vol12.S12-12": {
@@ -519,10 +535,18 @@
     {
      "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
      "rev": 5
+    },
+    {
+     "ref": "V-11 当次上升判定卡：共用的 ledger_count 改 baselineMonotone 为当次判、导出 needsGateState；本类别判定口径不变",
+     "rev": 6
+    },
+    {
+     "ref": "共用的 ledger_count 的 baselineMonotone 无上次合入值按零基线（方案 R13、R12-8.9）；本类别判定口径不变",
+     "rev": 7
     }
    ],
-   "print": "c7124c14521bfe3ccf87a661b78ec370603be45deda4fa0b755d1e72bfc83492",
-   "rev": 5,
+   "print": "3901adf3f3e26fc25806a8da214ed473ac14b58e2c20186664bb70eaf842e5f8",
+   "rev": 7,
    "scanClass": "item_downgrade",
    "terms": {
     "vol12.S12-16": {
@@ -631,10 +655,18 @@
     {
      "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
      "rev": 3
+    },
+    {
+     "ref": "V-11 当次上升判定卡：共用的 ledger_count 改 baselineMonotone 为当次判、导出 needsGateState；本类别判定口径不变",
+     "rev": 4
+    },
+    {
+     "ref": "共用的 ledger_count 的 baselineMonotone 无上次合入值按零基线（方案 R13、R12-8.9）；本类别判定口径不变",
+     "rev": 5
     }
    ],
-   "print": "c7124c14521bfe3ccf87a661b78ec370603be45deda4fa0b755d1e72bfc83492",
-   "rev": 3,
+   "print": "3901adf3f3e26fc25806a8da214ed473ac14b58e2c20186664bb70eaf842e5f8",
+   "rev": 5,
    "scanClass": "ledger_tally",
    "source": "卷十二 §4.1.6 至 §4.14.6 A12-n.1；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
