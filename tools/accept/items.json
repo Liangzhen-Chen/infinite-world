@@ -1711,6 +1711,60 @@
    "zeroRows": []
   },
   {
+   "expect": "zero",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-4.4",
+   "localNo": "A12-4.4",
+   "method": "property_test",
+   "print": "31088112cf94f7ba963daad474900158f2ec3dbdd36fecfad251af9f2e147f27",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "A12-4.4/4.5 补登卡",
+     "date": "2026-11-18",
+     "rev": 1,
+     "summary": "首次登记，扫描待实现"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.4.6 A12-4.4（卷十二:773）；A12-4.4/4.5 补登卡",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "expect": "zero",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-4.5",
+   "localNo": "A12-4.5",
+   "method": "property_test",
+   "print": "5a905c9c2f087f8246283ef6f88df10f6d2997882d1ce0aa2489b94f8c822841",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "A12-4.4/4.5 补登卡",
+     "date": "2026-11-18",
+     "rev": 1,
+     "summary": "首次登记，扫描待实现"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷十二 §4.4.6 A12-4.5（卷十二:774）；A12-4.4/4.5 补登卡",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
    "detector": "ledger_count",
    "expect": "zero",
    "form": "scan",
