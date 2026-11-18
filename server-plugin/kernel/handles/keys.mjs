@@ -1,7 +1,8 @@
 // 维度键、修正键、state 路径的拼接与核对（卷二 §2.8 表 kernel 行"种子键与维度键拼接只在 kernel/handles/keys.mjs"；
 // §2.9 第 2 条强转豁免文件表 keys.mjs 行：按各自文法解析并查注册表，StatePath 另核对模式在 pathTypes 内且不是 textPath 与账本路径）。
 // 本文件做 DimKey、ModKey、StatePath 三种（块 2 第 2-1 张）与 SeedKey 段的文法核对（块 3-2，李白 11-18 05:28 裁定②）；
-// SeedKey 的派生（§1.10 派生函数）、NodeName、RxId、TextScope、EventId 的构造随各自那张卡加。
+// 种子键派生串（§1.10 :320）、h_i 的输入串（:323）与骰值键五段（卷二十七 R27-8.5 :721–:733）的拼接也在本文件（卷二 §2.8 :852）；
+// NodeName、RxId、TextScope、EventId 的构造随各自那张卡加。
 // 注册表全部来自加载结果（维度表表头、idIndex、词表索引、pathTypes），不认任何具体表、维度或路径。
 
 import { CODE_RE, HandleError } from './vocab-handle.mjs';
@@ -144,6 +145,56 @@ export function isSeedKey(reg, text) {
 export function seedKeyOf(reg, text) {
   if (!isSeedKey(reg, text)) throw new HandleError('E-PATH-KEYKINDS', `seedKey ${JSON.stringify(text)}: want ^[a-z][a-z0-9_]{1,47}$, not a vocab code or loaded entity id`);
   return /** @type {import('../types.d.ts').SeedKey} */ (/** @type {unknown} */ (text));
+}
+
+// ---------- 种子键、h_i 输入串与骰值键的拼接（卷二 §1.10 :320–:323；卷二十七 R27-8.5 :721–:733） ----------
+// 卷二 §2.8 表 kernel 行（:852）"种子键与维度键拼接只在 kernel/handles/keys.mjs"：键串的拼接一律在本文件。
+// 各部件是否合文法的核对与错误码归调用方（kernel/sample.mjs 按卷二 §1.10 :320、卷二十七 R27-8.5 校验后调用），
+// 本文件只拼已核对的部件；不 import 别的内核文件，import 闭包不变。
+
+// 键成分之间的分隔串是卷二文法记号（定义源 handles/markers.mjs），不在这里另写字面量。
+const KEY_JOIN = GRAMMAR_TOKENS.joinSep;
+// joint 的第四段写作 `joint:<group>`（卷二 §1.10 :320）。
+const JOINT_PREFIX = 'joint:';
+
+/**
+ * 种子键文本（卷二 §1.10 :320）：`template.seed | kind | instanceId | dimension`，joint 把 dimension 换成 `joint:<group>`。
+ * 调用方已核对各部件合代号文法、不含分隔串；返回值尚未哈希（sha256 归 kernel/sample.mjs）。
+ * @param {string} templateSeed 世界模板种子（存档）
+ * @param {string} kind 实体类代号
+ * @param {string} instanceId 实例 id（卷十确定性导出）
+ * @param {string} dimension 维度名（joint 时是 map 维度名）
+ * @param {string} [group] joint 的组名；给出时第四段写 `joint:<group>`
+ * @returns {string}
+ */
+export function seedKeyText(templateSeed, kind, instanceId, dimension, group) {
+  const dimPart = group === undefined ? dimension : JOINT_PREFIX + group;
+  return [templateSeed, kind, instanceId, dimPart].join(KEY_JOIN);
+}
+
+/**
+ * 第 i 个哈希的输入串（卷二 §1.10 :323）：`seedKey | i`，i 从 0 起，i=0 也再哈希一次。
+ * 调用方已核对 seedKey 是 64 位十六进制、i 是非负整数；sha256 归 kernel/sample.mjs。
+ * @param {string} seedKey 种子键（64 位十六进制） @param {number} i 非负整数
+ * @returns {string}
+ */
+export function seedHashText(seedKey, i) {
+  return `${seedKey}${KEY_JOIN}${i}`;
+}
+
+/**
+ * 骰值键文本（卷二十七 R27-8.5 :721–:733，全书唯一写法）：恰五段
+ * `(worldSeed, streamCode, subjectId, worldTime, drawSiteCode)`，主体 id 与一到两个限定成分用 `|` 连接。
+ * 调用方已核对成分只能是代号、id、整数，无空段、无多余成分、无计数（E-SEED-COMPONENT 归 sample.mjs）。
+ * @param {string} worldSeed 世界种子
+ * @param {string} streamCode 流代号
+ * @param {Array<string | number>} subjectParts 主体 id 与限定成分（已按 id 在前、限定成分在后排好）
+ * @param {number} worldTime 世界时钟分钟数
+ * @param {string} drawSiteCode 抽取点代号
+ * @returns {string}
+ */
+export function diceKeyText(worldSeed, streamCode, subjectParts, worldTime, drawSiteCode) {
+  return [worldSeed, streamCode, subjectParts.join(KEY_JOIN), String(worldTime), drawSiteCode].join(KEY_JOIN);
 }
 
 /**

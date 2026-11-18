@@ -1,5 +1,6 @@
 // 随机实例化（卷二 §1.10 :305–:331）与骰值键（卷二十七 R27-8.5 :721–:733；卷一 §8.2 :637–:638）。
-// 本文件是 kernelApi `sample`（卷二 §2.7 :579）；种子键派生、h_i/u 取数、五段骰值键构造、首批分布求值都在这里。
+// 本文件是 kernelApi `sample`（卷二 §2.7 :579）：h_i/u 取数、首批分布求值与参数校验在这里；
+// 种子键、h_i 输入串与骰值键的拼接一律在 kernel/handles/keys.mjs（卷二 §2.8 :852），这里只调用。
 // 采样是纯函数（:328）：不写状态、不读墙钟、不共享随机流；同 (template.seed, kind, id, dim) 永远同值。
 // 摘要只经注入的 DigestCap（卷二 §2.9 :984，kernel 不 import node:crypto），复用 kernel/save.mjs 的 sha256Text。
 // 定点算术用 kernel/det-math.mjs（同一标度、同一种截断），不另写一份。
@@ -8,8 +9,7 @@ import { KernelError } from './errors.mjs';
 import { sha256Text } from './save.mjs';
 import { fixedUnits, fixedScale, truncateTo, fixedToNumber } from './det-math.mjs';
 import { CODE_RE } from './handles/vocab-handle.mjs';
-import { GRAMMAR_TOKENS } from './handles/markers.mjs';
-import { isHex64 } from './handles/keys.mjs';
+import { isHex64, seedKeyText, seedHashText, diceKeyText } from './handles/keys.mjs';
 
 // 分布种类（卷二 §1.10 :307–:316 的 `dist` 取值，单一定义源；别处只引用）。
 const DIST = Object.freeze({
@@ -23,13 +23,10 @@ const DIST = Object.freeze({
   ref: 'ref',
 });
 
-// 种子模板字符集与分隔串（卷二 §1.10 :320、文法记号取 handles/markers.mjs）。
-// 字符集是单一定义源：成员判定与长度上限都从这一个串来，不另写字符码或 64。
+// 种子模板字符集（卷二 §1.10 :320）：单一定义源，长度上限即字符集的字符数，不另写字面量 64。
+// 键串拼接在 handles/keys.mjs（卷二 §2.8 :852），这里只做文法核对和 sha256。
 const SEED_CHARS = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-';
-// 长度上限就是字符集的字符数（64）；按串求，不写字面量（卷二 S10 常数白名单外不落数）。
 const SEED_MAX = SEED_CHARS.split('').length;
-const JOIN = GRAMMAR_TOKENS.joinSep;
-const JOINT_PREFIX = 'joint:';
 const HEX_PREFIX = '0x';
 // 64 位均匀数取 sha256 十六进制串的高 64 位：256 − 64 = 192 位（0xc0），整数右移即可，不写字面量 16。
 const U_SHIFT_HEX = 'c0';
@@ -41,6 +38,9 @@ const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
 const isInt = (v) => Number.isSafeInteger(v);
 
+const paramError = (detail) => new KernelError('E-DIM-SAMPLE-PARAM', {}, detail);
+const componentError = (detail) => new KernelError('E-SEED-COMPONENT', {}, detail);
+
 /** 种子模板 `template.seed` 是否合卷二 :320 的字符集（1–64 个 [A-Za-z0-9_-]）。 @param {unknown} s @returns {boolean} */
 export function isSeedTemplate(s) {
   if (typeof s !== 'string' || !s.length || s.length > SEED_MAX) return false;
@@ -48,50 +48,31 @@ export function isSeedTemplate(s) {
   return true;
 }
 
-const paramError = (detail) => new KernelError('E-DIM-SAMPLE-PARAM', {}, detail);
-const componentError = (detail) => new KernelError('E-SEED-COMPONENT', {}, detail);
-
-/**
- * 种子键文本（卷二 §1.10 :320）：`template.seed | kind | instanceId | dimension`，joint 把 dimension 换成 `joint:<group>`。
- * 各部件按代号规范、不含分隔串；返回值尚未哈希。
- * @param {string} templateSeed 世界模板种子（存档）
- * @param {string} kind 实体类代号
- * @param {string} instanceId 实例 id（卷十确定性导出）
- * @param {string} dimension 维度名（joint 时是 map 维度名，仍须合代号文法）
- * @param {string} [group] joint 的组名；给出时第四段写 `joint:<group>`
- * @returns {string}
- */
-export function seedKeyText(templateSeed, kind, instanceId, dimension, group) {
-  if (!isSeedTemplate(templateSeed)) throw paramError(`template.seed ${JSON.stringify(templateSeed)}: want ^[A-Za-z0-9_-]{1,64}$`);
-  if (typeof kind !== 'string' || !CODE_RE.test(kind)) throw paramError(`kind ${JSON.stringify(kind)} is not a code`);
-  if (typeof instanceId !== 'string' || !CODE_RE.test(instanceId)) throw paramError(`instanceId ${JSON.stringify(instanceId)} is not a code`);
-  if (typeof dimension !== 'string' || !CODE_RE.test(dimension)) throw paramError(`dimension ${JSON.stringify(dimension)} is not a code`);
-  let dimPart = dimension;
-  if (group !== undefined) {
-    if (typeof group !== 'string' || !CODE_RE.test(group)) throw paramError(`joint group ${JSON.stringify(group)} is not a code`);
-    dimPart = JOINT_PREFIX + group;
-  }
-  return [templateSeed, kind, instanceId, dimPart].join(JOIN);
-}
-
 /**
  * kernelApi 之外的内核入口（测试与 sample 用）：种子键 = sha256(utf8(种子键文本))（卷二 §1.10 :320）。
+ * 键串拼接在 handles/keys.mjs 的 seedKeyText（卷二 §2.8 :852），这里做文法核对与摘要。
  * @param {string} templateSeed @param {string} kind @param {string} instanceId @param {string} dimension @param {string} [group]
  * @returns {string} 64 位小写十六进制
  */
 export function seedKeyFor(templateSeed, kind, instanceId, dimension, group) {
+  if (!isSeedTemplate(templateSeed)) throw paramError(`template.seed ${JSON.stringify(templateSeed)}: want ^[A-Za-z0-9_-]{1,64}$`);
+  if (typeof kind !== 'string' || !CODE_RE.test(kind)) throw paramError(`kind ${JSON.stringify(kind)} is not a code`);
+  if (typeof instanceId !== 'string' || !CODE_RE.test(instanceId)) throw paramError(`instanceId ${JSON.stringify(instanceId)} is not a code`);
+  if (typeof dimension !== 'string' || !CODE_RE.test(dimension)) throw paramError(`dimension ${JSON.stringify(dimension)} is not a code`);
+  if (group !== undefined && (typeof group !== 'string' || !CODE_RE.test(group))) throw paramError(`joint group ${JSON.stringify(group)} is not a code`);
   return sha256Text(seedKeyText(templateSeed, kind, instanceId, dimension, group));
 }
 
 /**
  * 第 i 个哈希：h_i = sha256(seedKey + "|" + i)，i 从 0 起，i=0 也再哈希一次（卷二 §1.10 :323）。
+ * 输入串拼接在 handles/keys.mjs 的 seedHashText（卷二 §2.8 :852），这里做文法核对与摘要。
  * @param {string} seedKey 种子键（64 位十六进制） @param {number} i 非负整数
  * @returns {string} 64 位小写十六进制
  */
 export function hashAt(seedKey, i) {
   if (typeof seedKey !== 'string' || !isHex64(seedKey)) throw paramError(`seedKey ${JSON.stringify(seedKey)}: want 64 hex chars`);
   if (!isInt(i) || i < 0) throw paramError(`i ${JSON.stringify(i)}: want a non-negative integer`);
-  return sha256Text(`${seedKey}${JOIN}${i}`);
+  return sha256Text(seedHashText(seedKey, i));
 }
 
 /**
@@ -109,6 +90,7 @@ const isQualifier = (x) => (typeof x === 'string' && CODE_RE.test(x)) || (isInt(
  * 骰值键（卷二十七 R27-8.5 :721–:733，全书唯一写法）：恰五段
  * `(worldSeed, streamCode, subjectId, worldTime, drawSiteCode)`，主体 id 后接一到两个限定成分、各成分用 `|` 连接。
  * 五段由构造器保证；各成分只能是代号、id、整数，空段、多余成分、计数一律拒收（E-SEED-COMPONENT）。
+ * 各成分核对在本函数，键串拼接在 handles/keys.mjs 的 diceKeyText（卷二 §2.8 :852）。
  * @param {string} worldSeed 世界种子
  * @param {string} streamCode 流代号
  * @param {string | Array<string | number>} subjectId 主体 id；数组为「id + 一到两个限定成分」
@@ -127,8 +109,7 @@ export function diceKeyOf(worldSeed, streamCode, subjectId, worldTime, drawSiteC
   if (q2 !== undefined && !isQualifier(q2)) throw componentError(`subjectId qualifier ${JSON.stringify(q2)}: want a registered code, entity id or fixed row ordinal`);
   if (!isInt(worldTime)) throw componentError(`worldTime ${JSON.stringify(worldTime)}: want an integer minute`);
   if (typeof drawSiteCode !== 'string' || !CODE_RE.test(drawSiteCode)) throw componentError(`drawSiteCode ${JSON.stringify(drawSiteCode)} is not a code`);
-  const subject = [first, q1, q2].filter((x) => x !== undefined).map((x) => String(x)).join(JOIN);
-  return [worldSeed, streamCode, subject, String(worldTime), drawSiteCode].join(JOIN);
+  return diceKeyText(worldSeed, streamCode, [first, q1, q2].filter((x) => x !== undefined), worldTime, drawSiteCode);
 }
 
 // ---------- 分布参数校验（卷二 §1.10 :318） ----------
