@@ -104,10 +104,14 @@
     {
      "ref": "块 3-2 续 keys.mjs 加 SeedKey 段文法 isSeedKey、seedKeyOf（李白 11-18 05:28 裁定②）：闭包文件变化，口径不变",
      "rev": 14
+    },
+    {
+     "ref": "块 3-2 续 seedKey 段不合文法改报 E-PATH-KEYKINDS（卷二 :1545、:815，勘误 1118k10；Opus 只核必须改）：keys.mjs 闭包文件变化，口径不变",
+     "rev": 15
     }
    ],
-   "print": "d1a30b8b17e44a860eaf44b228b7764fc07da289375d5959e0400c107bb21b5d",
-   "rev": 14,
+   "print": "5c872ddb240a7fa32ea6f7898f095051bcf3ea7bbd3530b408b8b0365bcb4af3",
+   "rev": 15,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -522,10 +526,14 @@
     {
      "ref": "块 3-2 续 keys.mjs 加 SeedKey 段文法 isSeedKey、seedKeyOf（李白 11-18 05:28 裁定②）：闭包文件变化，口径不变",
      "rev": 16
+    },
+    {
+     "ref": "块 3-2 续 seedKey 段不合文法改报 E-PATH-KEYKINDS（卷二 :1545、:815，勘误 1118k10；Opus 只核必须改）：keys.mjs 闭包文件变化，口径不变",
+     "rev": 17
     }
    ],
-   "print": "23319820f74fc2a5e884650c6b658eeb29f41f95c9cd9a796f49e7300d2ede25",
-   "rev": 16,
+   "print": "aee9acadf5bf9bce04d1ab84579b3ecddbfd83cca5a4027624b81b71da9ba118",
+   "rev": 17,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1104,10 +1112,14 @@
     {
      "ref": "块 3-2 续 keys.mjs 加 SeedKey 段文法 isSeedKey、seedKeyOf（李白 11-18 05:28 裁定②）：闭包文件变化，口径不变",
      "rev": 22
+    },
+    {
+     "ref": "块 3-2 续 seedKey 段不合文法改报 E-PATH-KEYKINDS（卷二 :1545、:815，勘误 1118k10；Opus 只核必须改）：keys.mjs 闭包文件变化，口径不变",
+     "rev": 23
     }
    ],
-   "print": "347c20bcfc427ec08bc99e1d566cf06bfd4f209a90573799c621d94b6edf0d3a",
-   "rev": 22,
+   "print": "9088fecc6fa9f96d26f2851b78681107ced18975aa6e2b95ae9851ea81c49261",
+   "rev": 23,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1262,10 +1274,14 @@
     {
      "ref": "块 3-2 续 keys.mjs 加 SeedKey 段文法 isSeedKey、seedKeyOf（李白 11-18 05:28 裁定②）：闭包文件变化，口径不变",
      "rev": 12
+    },
+    {
+     "ref": "块 3-2 续 seedKey 段不合文法改报 E-PATH-KEYKINDS（卷二 :1545、:815，勘误 1118k10；Opus 只核必须改）：keys.mjs 闭包文件变化，口径不变",
+     "rev": 13
     }
    ],
-   "print": "d1a30b8b17e44a860eaf44b228b7764fc07da289375d5959e0400c107bb21b5d",
-   "rev": 12,
+   "print": "5c872ddb240a7fa32ea6f7898f095051bcf3ea7bbd3530b408b8b0365bcb4af3",
+   "rev": 13,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {

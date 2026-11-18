@@ -126,12 +126,12 @@ export function isSeedKey(reg, text) {
 }
 
 /**
- * string → SeedKey（§2.9 第 2 条强转豁免表 keys.mjs 行）：不合 isSeedKey 即 E-DIM-ID-FORMAT（同 handle 段不合代号文法所报的码）。
+ * string → SeedKey（§2.9 第 2 条强转豁免表 keys.mjs 行）：不合 isSeedKey 即 E-PATH-KEYKINDS（卷二 :1545 码表、:815 现文，勘误 1118k10）。
  * @param {KeyRegistry} reg @param {unknown} text
  * @returns {import('../types.d.ts').SeedKey}
  */
 export function seedKeyOf(reg, text) {
-  if (!isSeedKey(reg, text)) throw new HandleError('E-DIM-ID-FORMAT', `seedKey ${JSON.stringify(text)}: want ^[a-z][a-z0-9_]{1,47}$, not a vocab code or loaded entity id`);
+  if (!isSeedKey(reg, text)) throw new HandleError('E-PATH-KEYKINDS', `seedKey ${JSON.stringify(text)}: want ^[a-z][a-z0-9_]{1,47}$, not a vocab code or loaded entity id`);
   return /** @type {import('../types.d.ts').SeedKey} */ (/** @type {unknown} */ (text));
 }
 

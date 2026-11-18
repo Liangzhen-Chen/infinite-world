@@ -224,10 +224,10 @@ function writePathChecked(state, path, value) {
   if (!tx || tx.state !== state) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity }, 'writePath outside the transaction of this state');
   const existing = getAt(state, segs);
   if (!writerOk(d, tx, segs, existing)) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity }, `${tx.file} is not the registered writer of ${rec.pattern}`);
-  // keyKinds seedKey 段：由种子派生的实体 id（代号文法、非词表代号、非已载入实体 id，handles/keys.mjs isSeedKey），不合即 E-DIM-ID-FORMAT（同 handle 段）。
+  // keyKinds seedKey 段：由种子派生的实体 id（代号文法、非词表代号、非已载入实体 id，handles/keys.mjs isSeedKey），不合即 E-PATH-KEYKINDS（卷二 :1545、:815，勘误 1118k10）。
   for (const { slot, kinds } of rec.seedSlots) {
     const v = ids[slot];
-    if (!isSeedKey(registry(), v) && !kinds.includes(registry().idIndex.get(v))) throw new KernelError('E-DIM-ID-FORMAT', { entity: v }, `${rec.pattern}: segment ${JSON.stringify(v)} is not a seedKey (code grammar, not a vocab code or loaded entity id)`);
+    if (!isSeedKey(registry(), v) && !kinds.includes(registry().idIndex.get(v))) throw new KernelError('E-PATH-KEYKINDS', { entity: null },`${rec.pattern}: segment ${JSON.stringify(v)} is not a seedKey (code grammar, not a vocab code or loaded entity id)`);
   }
   // 卷二十七 R27-5.1：非有限值、负零不得进入状态（E-DET-NONFINITE）；被拒走同一上抛通路，由事务整笔回滚（卷二 §2.6 :499）。
   if (hasNonFinite(value)) throw new KernelError('E-DET-NONFINITE', { entity }, `non-finite number or negative zero written to ${rec.pattern}`);

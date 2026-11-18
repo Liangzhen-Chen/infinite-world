@@ -1,7 +1,7 @@
 // 块 3-2 续（李白 11-18 05:28 裁定①②）：
 // ① 视图读取函数登记 registerViewReader（照 advance-registry 同法；内核按登记名调用、不 import 规则层；未登记 E-DIM-UNKNOWN-READ 不放行）；
 // ② keyKinds (c) 加 seedKey：由种子派生的实体 id 段（卷二 §1.10 :320 部件按代号规范、:234 ownerKey.aggregate: SeedKey；卷二十七 :348 聚合体 id），
-//    文法即 §1.9 代号文法，且不是词表代号、不是已载入实体 id；不合 E-DIM-ID-FORMAT（同 handle 段）；
+//    文法即 §1.9 代号文法，且不是词表代号、不是已载入实体 id；不合 E-PATH-KEYKINDS（卷二 :1545、:815）；
 //    state-owners 登 aggregates.*.ledgerHolder（卷二十七 :200，写者 aggregate.mjs；定义卷二 §5.6 :1765）。
 // 期望值一律手写字面量。
 import { test } from 'node:test';
@@ -75,7 +75,7 @@ test('keyKinds (c) seedKey：加载器收 seedKey（单独或混列）；写错�
   assert.deepEqual(mergeStateOwners(base(['seed']), {}).errors.map((e) => e.code), ['E-PATH-KEYKINDS']);
 });
 
-test('SeedKey 文法：代号文法、非词表代号、非已载入实体 id；不合 E-DIM-ID-FORMAT', () => {
+test('SeedKey 文法：代号文法、非词表代号、非已载入实体 id；不合 E-PATH-KEYKINDS', () => {
   const reg = { vocabIndex: new Map([['sink_t_eat', { family: 'sink' }]]), idIndex: new Map([['npc_q', 'person']]) };
   for (const ok of ['agg_t_1', 'ab', 'a0_b1']) {
     assert.equal(isSeedKey(reg, ok), true, ok);
@@ -84,13 +84,13 @@ test('SeedKey 文法：代号文法、非词表代号、非已载入实体 id；
   // 不合代号文法（§1.9 ^[a-z][a-z0-9_]{1,47}$）
   for (const bad of ['', 'a', 'Agg_1', 'agg-1', 'agg.1', 'agg 1', '1agg', `a${'b'.repeat(48)}`, 7, null, undefined]) {
     assert.equal(isSeedKey(reg, bad), false, String(bad));
-    assert.throws(() => seedKeyOf(reg, bad), codeIs('E-DIM-ID-FORMAT'), String(bad));
+    assert.throws(() => seedKeyOf(reg, bad), codeIs('E-PATH-KEYKINDS'), String(bad));
   }
   // 词表代号冒充 seedKey（词表代号段须走命名 struct，02:55）；已载入的带 kind 实体 id 也不是 seedKey
   assert.equal(isSeedKey(reg, 'sink_t_eat'), false);
-  assert.throws(() => seedKeyOf(reg, 'sink_t_eat'), codeIs('E-DIM-ID-FORMAT'));
+  assert.throws(() => seedKeyOf(reg, 'sink_t_eat'), codeIs('E-PATH-KEYKINDS'));
   assert.equal(isSeedKey(reg, 'npc_q'), false);
-  assert.throws(() => seedKeyOf(reg, 'npc_q'), codeIs('E-DIM-ID-FORMAT'));
+  assert.throws(() => seedKeyOf(reg, 'npc_q'), codeIs('E-PATH-KEYKINDS'));
 });
 
 // ---------- aggregates.*.ledgerHolder 登记与往返 ----------
@@ -105,7 +105,7 @@ test('state-owners 登 aggregates.*.ledgerHolder：boolean、keyKinds [seedKey]�
   assert.ok(types.includes("readonly 'aggregates.*.ledgerHolder': boolean;"));
 });
 
-test('aggregates 路径往返：aggregate.mjs 经 P 写 true 读回 true；seedKey 段不合文法、词表代号段 E-DIM-ID-FORMAT；别的文件写 E-VIEW-UNDECLARED-WRITE；非布尔 E-TEXT-UNGATED；被拒整笔不落', () => {
+test('aggregates 路径往返：aggregate.mjs 经 P 写 true 读回 true；seedKey 段不合文法、词表代号段 E-PATH-KEYKINDS；别的文件写 E-VIEW-UNDECLARED-WRITE；非布尔 E-TEXT-UNGATED；被拒整笔不落', () => {
   const AGG = { node: 'test_node', file: 'aggregate.mjs' };
   const state = {};
   assert.deepEqual(runTransaction(state, AGG, (s) => { writePath(s, P.aggregates_ledgerHolder('agg_t_1'), true); writePath(s, P.aggregates_ledgerHolder('agg_t_2'), false); }), { ok: true });
@@ -117,7 +117,7 @@ test('aggregates 路径往返：aggregate.mjs 经 P 写 true 读回 true；seedK
   assert.ok(W.vocab.index.has('sink_consume'));
   quiet(() => {
     for (const bad of ['Agg_1', 'agg-1', 'a', 'sink_consume']) {
-      assert.deepEqual(runTransaction(state, AGG, (s) => { writePath(s, P.aggregates_ledgerHolder('agg_t_9'), true); writePath(s, P.aggregates_ledgerHolder(bad), true); }), { ok: false, code: 'E-DIM-ID-FORMAT' }, bad);
+      assert.deepEqual(runTransaction(state, AGG, (s) => { writePath(s, P.aggregates_ledgerHolder('agg_t_9'), true); writePath(s, P.aggregates_ledgerHolder(bad), true); }), { ok: false, code: 'E-PATH-KEYKINDS' }, bad);
     }
     assert.deepEqual(runTransaction(state, { node: 'test_node', file: 'kernel/ledger.mjs' }, (s) => { writePath(s, P.aggregates_ledgerHolder('agg_t_9'), true); }), { ok: false, code: 'E-VIEW-UNDECLARED-WRITE' });
     assert.deepEqual(runTransaction(state, AGG, (s) => { writePath(s, P.aggregates_ledgerHolder('agg_t_9'), 1); }), { ok: false, code: 'E-TEXT-UNGATED' });
