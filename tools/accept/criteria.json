@@ -439,10 +439,14 @@
     {
      "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
      "rev": 3
+    },
+    {
+     "ref": "B2-W4g：共用的 typed_pos 加上下文白名单 (d)（typeof 与 markers.mjs 已定义文法记号不计、去掉 `in`）；本类别只用 directive、anyType、assertCast，判定口径不变",
+     "rev": 4
     }
    ],
-   "print": "1378b30fcd8517fbc47e74e88efe2f2c76bc4e13852192220e5fd532370edf72",
-   "rev": 3,
+   "print": "58ead4830620686de7fb7927c831a6bad545d8cf7709b8dbd66b973f8c069477",
+   "rev": 4,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -527,10 +531,14 @@
     {
      "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
      "rev": 4
+    },
+    {
+     "ref": "B2-W4g：共用的 typed_pos 加上下文白名单 (d)（typeof 与 markers.mjs 已定义文法记号不计、去掉 `in`）；本类别条目仍 registered，未用其检查项，判定口径不变",
+     "rev": 5
     }
    ],
-   "print": "0d0cc90b7b0bd86bcefab4c79b0b8b95e85e73948e5ba63fa03e6ac0423f52ec",
-   "rev": 4,
+   "print": "2843d98c1aec33308fb606b66474fdc553e33e366be2fa6a7381f2e577333fe5",
+   "rev": 5,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -684,10 +692,14 @@
     {
      "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
      "rev": 4
+    },
+    {
+     "ref": "B2-W4g：共用的 typed_pos 加上下文白名单 (d)（typeof 与 markers.mjs 已定义文法记号不计、去掉 `in`）；本类别条目仍 registered，未用其检查项，判定口径不变",
+     "rev": 5
     }
    ],
-   "print": "0d0cc90b7b0bd86bcefab4c79b0b8b95e85e73948e5ba63fa03e6ac0423f52ec",
-   "rev": 4,
+   "print": "2843d98c1aec33308fb606b66474fdc553e33e366be2fa6a7381f2e577333fe5",
+   "rev": 5,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -2027,10 +2039,14 @@
     {
      "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
      "rev": 3
+    },
+    {
+     "ref": "B2-W4g（卷二 §7 S13 (d)，李白 11-18 13:05 裁定第 2 条）：typed_pos 的 bareCompare 加上下文白名单 (d)——typeof 结果比较（含反向与 switch(typeof x) 的 case）不计；文法记号集合取自 kernel/handles/markers.mjs 的定义源导出（检测器不另写名单），其已定义记号不计；④ 原句只列 ===/!==/switch/Map 键/数组元素，去掉 `'x' in obj` 的计数（卷二 :2412，`in` 属 ②）。自测见 tests/accept/w4g-selftest.test.mjs",
+     "rev": 4
     }
    ],
-   "print": "0d0cc90b7b0bd86bcefab4c79b0b8b95e85e73948e5ba63fa03e6ac0423f52ec",
-   "rev": 3,
+   "print": "2843d98c1aec33308fb606b66474fdc553e33e366be2fa6a7381f2e577333fe5",
+   "rev": 4,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -2357,10 +2373,14 @@
     {
      "ref": "块 3 第 3-3 张第二部分：共用的 call_edge 加 entries 方式（lib/api-callers.mjs）；本类别条目不带 entries，原 callees 判定口径不变",
      "rev": 16
+    },
+    {
+     "ref": "B2-W4g：共用的 typed_pos 加上下文白名单 (d)（typeof 与 markers.mjs 已定义文法记号不计、去掉 `in`）；本类别条目只用 call_edge，判定口径不变",
+     "rev": 17
     }
    ],
-   "print": "fe006db7dd04bcafb493ceb30c1ce766223ce890c97b69a5dc0df3b0f0f4fc4a",
-   "rev": 16,
+   "print": "308b4f6680d5998c87ac06843d24337f2f6ea8e1e091c94f5800fefe73b104af",
+   "rev": 17,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

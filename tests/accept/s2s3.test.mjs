@@ -39,7 +39,7 @@ test('text_judge nonAscii：非 ASCII 字串与模板计入；throw new X(文案
   assert.deepEqual(text("const a = '睡';", ['nonAscii'], 'server-plugin/gate/x.mjs'), [['E-GATE-FUZZY', 1, 'literal_non_ascii']]);
 });
 
-test('text_judge bareCompare：裸字面量参与 ===、case、in、includes 数组、get/has 键计入；句柄比较与普通实参不计', () => {
+test('text_judge bareCompare：裸字面量参与 ===、case、includes 数组、get/has 键计入；`in`（B2-W4g 起不计）与句柄比较、普通实参不计', () => {
   const src = [
     "if (a === 'x') f();",
     "if ('y' !== b) f();",
@@ -49,7 +49,8 @@ test('text_judge bareCompare：裸字面量参与 ===、case、in、includes 数
     "const v = m.get('key');",
     "const ok = s.has(`lit`);",
   ].join('\n');
-  assert.deepEqual(text(src, ['bareCompare']).map((h) => h[1]), [1, 2, 3, 4, 5, 5, 6, 7]);
+  // 第 4 行 `'k' in o` 不计：卷二 :2412 ④ 只列 ===/!==/switch/Map 键/数组元素，`in` 属 ②（B2-W4g）。
+  assert.deepEqual(text(src, ['bareCompare']).map((h) => h[1]), [1, 2, 3, 5, 5, 6, 7]);
   assert.deepEqual(text("if (a === V.fam.x_y) f(); g('arg'); const o = { k: 'v' }; const t = [1, 'n'].length;", ['bareCompare']), []);
 });
 
