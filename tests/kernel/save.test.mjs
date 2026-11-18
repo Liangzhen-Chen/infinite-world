@@ -440,6 +440,52 @@ test('R27-4.8：清单引用的分片摘要不符 → 报 E-SAVE-SHARD-DIGEST，
   assert.deepEqual(loadSlot({ root, slot: 1, layout: LAYOUT, rulesDigest: RULES }), { ok: false, code: 'E-SAVE-TORN' });
 });
 
+// 把当前清单改成"分片都在、摘要都对，但快照里多一个分片表没有的分片代号"：读得出、拼不回。
+function breakAssembly(root, slot, manifest) {
+  const bad = { ...manifest, snapshotIndex: manifest.snapshotIndex.map((s) => ({ ...s, shards: { ...s.shards, shd_bogus: s.shards.shd_gauge } })) };
+  writeUnderTempRoot(root, `slot-${slot}/manifest.json`, JSON.stringify(bad));
+}
+
+test('分片拼回失败按清单残缺处理：回退上一个清单（报 E-SAVE-TORN）；两份都拼不回只交 E-SAVE-TORN，不交内部码', () => {
+  const root = testTempRoot('save-');
+  const book = createLogBook(LAYOUT, doc0());
+  saveToSlot({ root, slot: 0, book, doc: doc0(), rulesDigest: RULES, clockMinute: 1 });
+  appendLogEntry(book, { request: 1 });
+  const s2 = saveToSlot({ root, slot: 0, book, doc: doc0(), rulesDigest: RULES, clockMinute: 2 });
+  breakAssembly(root, 0, s2.manifest);
+  logs.length = 0;
+  const r = loadSlot({ root, slot: 0, layout: LAYOUT, rulesDigest: RULES });
+  assert.equal(r.ok, true);
+  assert.equal(r.fellBack, true);
+  assert.equal(r.clockMinute, 1);
+  assert.deepEqual(logs.map((x) => [x.code, x.fields.slot]), [['E-SAVE-TORN', 0]]);
+  // 上一个清单也拼不回：对外只有 E-SAVE-TORN。
+  const prev = JSON.parse(readFileSync(join(root, 'slot-0', 'manifest.prev.json'), 'utf8'));
+  writeUnderTempRoot(root, 'slot-0/manifest.prev.json', JSON.stringify({ ...prev, snapshotIndex: prev.snapshotIndex.map((s) => ({ ...s, shards: { ...s.shards, shd_bogus: s.shards.shd_gauge } })) }));
+  assert.deepEqual(loadSlot({ root, slot: 0, layout: LAYOUT, rulesDigest: RULES }), { ok: false, code: 'E-SAVE-TORN' });
+});
+
+test('R27-4.8 / A27-4.4：当前清单已残缺时存档不改名盖掉上一个完好清单；新清单再坏仍可回退到它', () => {
+  const root = testTempRoot('save-');
+  const book = createLogBook(LAYOUT, doc0());
+  saveToSlot({ root, slot: 0, book, doc: doc0(), rulesDigest: RULES, clockMinute: 1 });
+  appendLogEntry(book, { request: 1 });
+  const s2 = saveToSlot({ root, slot: 0, book, doc: doc0(), rulesDigest: RULES, clockMinute: 2 });
+  const prevBytes = readFileSync(join(root, 'slot-0', 'manifest.prev.json'), 'utf8');
+  // 当前清单（第二份）引用的日志尾分片损坏 → 当前清单残缺。
+  writeUnderTempRoot(root, `slot-0/shards/${s2.manifest.logSegments[0].digest}.json`, '[{"request":9}]');
+  appendLogEntry(book, { request: 2 });
+  const s3 = saveToSlot({ root, slot: 0, book, doc: doc0(), rulesDigest: RULES, clockMinute: 3 });
+  assert.equal(s3.ok, true);
+  assert.equal(readFileSync(join(root, 'slot-0', 'manifest.prev.json'), 'utf8'), prevBytes);
+  // 新清单提交后若再坏，退回的是第一份完好清单。
+  writeUnderTempRoot(root, `slot-0/shards/${s3.manifest.logSegments[0].digest}.json`, '[]');
+  const r = loadSlot({ root, slot: 0, layout: LAYOUT, rulesDigest: RULES });
+  assert.equal(r.ok, true);
+  assert.equal(r.fellBack, true);
+  assert.equal(r.clockMinute, 1);
+});
+
 test('A27-4.4 中断安全：提交改名之间中断（只剩上一个清单）读到上一个完整状态，不算残缺；分片写了一半的临时文件不影响读档', () => {
   const root = testTempRoot('save-');
   const book = createLogBook(LAYOUT, doc0());

@@ -73,7 +73,7 @@ function manifestShapeOk(m) {
  * @param {string} dir @param {string} name
  * @returns {{state: 'missing' | 'bad' | 'torn'} | {state: 'ok', manifest: any, texts: Map<string, string>}}
  */
-function checkManifest(dir, name) {
+export function checkManifest(dir, name) {
   const file = join(dir, name);
   if (!existsSync(file)) return { state: 'missing' };
   const m = readJson(file);
@@ -170,27 +170,36 @@ export function loadSlot({ root, slot, layout, rulesDigest }) {
   if (!slotOk(slot, layout)) return { ok: false, code: new KernelError('E-SAVE-SLOT-INVALID').code };
   const dir = slotDir(root, slot);
   const fields = { slot };
-  let chosen = checkManifest(dir, LAYOUT_NAMES.current);
-  let fellBack = false;
-  if (chosen.state !== 'ok') {
-    if (chosen.state === 'torn') report(new KernelError('E-SAVE-SHARD-DIGEST').code, fields);
-    const wasCommitted = chosen.state !== 'missing';
-    chosen = checkManifest(dir, LAYOUT_NAMES.previous);
-    if (chosen.state !== 'ok') return { ok: false, code: new KernelError('E-SAVE-TORN').code };
-    // 当前清单坏了才算残缺回退；当前清单不存在（提交改名之间中断）时上一个清单就是最近完好的清单。
-    if (wasCommitted) { report(new KernelError('E-SAVE-TORN').code, fields); fellBack = true; }
-  }
-  const m = chosen.manifest;
-  // 规则指纹：只此一次相等比较（R27-4.3、R27-7.5）。
-  if (m.rulesDigest !== rulesDigest) return { ok: false, code: new KernelError('E-SAVE-RULES-MISMATCH').code };
-  try {
-    const out = assemble(m, chosen.texts, layout);
-    return { ok: true, doc: out.doc, atEvent: out.atEvent, logTail: out.logTail, clockMinute: m.clockMinute, book: out.book, fellBack };
-  } catch (e) {
-    const code = codeOf(e);
-    if (code === null) throw e;
-    return { ok: false, code };
-  }
+  const tornCode = new KernelError('E-SAVE-TORN').code;
+  // 拼回失败（路径无声明、分片无对应行等）与清单残缺同样处理：当清单残缺回退，内部原因不作对外码（卷二 :939 闭集）。
+  const tryManifest = (chosen) => {
+    const m = chosen.manifest;
+    // 规则指纹：只此一次相等比较（R27-4.3、R27-7.5）。
+    if (m.rulesDigest !== rulesDigest) return { stop: { ok: false, code: new KernelError('E-SAVE-RULES-MISMATCH').code } };
+    try {
+      const out = assemble(m, chosen.texts, layout);
+      return { stop: { ok: true, doc: out.doc, atEvent: out.atEvent, logTail: out.logTail, clockMinute: m.clockMinute, book: out.book, fellBack: false } };
+    } catch (e) {
+      const code = codeOf(e);
+      if (code === null) throw e;
+      // Sealed 字节与摘要不符是闭集里的拒读码（:1128），原样交回；其余拼回失败走回退。
+      if (code === 'E-SEAL-DIGEST') return { stop: { ok: false, code } };
+      return { stop: null };
+    }
+  };
+  const cur = checkManifest(dir, LAYOUT_NAMES.current);
+  let wasCommitted = cur.state !== 'missing';
+  if (cur.state === 'ok') {
+    const r = tryManifest(cur);
+    if (r.stop) return r.stop;
+  } else if (cur.state === 'torn') report(new KernelError('E-SAVE-SHARD-DIGEST').code, fields);
+  const prev = checkManifest(dir, LAYOUT_NAMES.previous);
+  if (prev.state !== 'ok') return { ok: false, code: tornCode };
+  const r = tryManifest(prev);
+  if (!r.stop) return { ok: false, code: tornCode };
+  // 当前清单坏了才算残缺回退；当前清单不存在（提交改名之间中断）时上一个清单就是最近完好的清单。
+  if (wasCommitted) { report(tornCode, fields); if (r.stop.ok) r.stop.fellBack = true; }
+  return r.stop;
 }
 
 /**
