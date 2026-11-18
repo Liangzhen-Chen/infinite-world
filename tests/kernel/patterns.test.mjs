@@ -1,20 +1,9 @@
 // S13 正则叶子的单项测试（卷二 §2.8 表 kernel 行、封卷后勘误 1118k17）：每个函数的期望值都写成字面量，不用被测函数算。
-// 叶子现只放从 rx.mjs 搬来的正则与 det-math 的十进制文法（后者待裁，见文件内注释）；其余格式文法的测试跟到新位置：
+// 叶子只放从 rx.mjs 搬来的正则（十进制文法改在 det-math.mjs 手写逐字符解析，测试见 det-math-decimal.test.mjs）；其余格式文法的测试跟到新位置：
 // handles/keys.mjs → keys-format.test.mjs；validate/types.mjs、validate/rows.mjs → 各自测试；load/vocab-load.mjs → json-text.test.mjs。
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  parseDecimalLiteral,
-  rxTokenAt, shapeArgCount, setFieldNames,
-} from '../../server-plugin/kernel/handles/patterns.mjs';
-
-test('十进制文本：符号、整数、小数、指数', () => {
-  assert.deepEqual([...parseDecimalLiteral('12.5e-3')].slice(1), ['', '12', '5', '-3']);
-  assert.deepEqual([...parseDecimalLiteral('-3')].slice(1), ['-', '3', undefined, undefined]);
-  assert.deepEqual([...parseDecimalLiteral(0.1)].slice(1), ['', '0', '1', undefined]);
-  assert.equal(parseDecimalLiteral('abc'), null);
-  assert.equal(parseDecimalLiteral('1.2.3'), null);
-});
+import { rxTokenAt, shapeArgCount, setFieldNames } from '../../server-plugin/kernel/handles/patterns.mjs';
 
 test('RX 词法：粘性匹配数字、点分名字、运算符', () => {
   assert.deepEqual(rxTokenAt('mass > 2', 0), { groups: [undefined, 'mass', undefined], end: 4 });

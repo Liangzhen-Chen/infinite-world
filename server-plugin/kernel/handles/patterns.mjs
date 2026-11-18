@@ -25,12 +25,3 @@ export const shapeArgCount = (shape) => (shape.match(SHAPE_ARG) || []).length;
 const SET_FIELD = /([A-Za-z_][\w]*)（set，只作 member 的 set）/g;
 /** @param {string} shape @returns {string[]} */
 export const setFieldNames = (shape) => [...String(shape).matchAll(SET_FIELD)].map((m) => m[1]);
-
-// ---------- 十进制文本（det-math） ----------
-// 待裁：det-math 的定点解析正则。det-math → validate/*、handles/* 的任一文件都会成 import 环
-// （vocab-handle → validate/types → det-math），按派卡要求原样留在本文件，报主会话定去处。
-
-// 十进制文本（含 JS 数的指数写法）：定点算术的唯一解析正则（det-math）。
-const DECIMAL_LITERAL = /^(-?)(\d+)(?:\.(\d+))?(?:e([+-]?\d+))?$/i;
-/** @param {unknown} x @returns {RegExpExecArray | null} */
-export const parseDecimalLiteral = (x) => DECIMAL_LITERAL.exec(String(x));

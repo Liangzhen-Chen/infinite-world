@@ -144,10 +144,14 @@
     {
      "ref": "B2-W2（卷二 S13 正则叶子收窄）：patterns.mjs 只留从 rx.mjs 搬来的正则，其余格式正则按用途移入 handles/keys.mjs、validate/types.mjs、validate/rows.mjs、load/vocab-load.mjs，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 22
+    },
+    {
+     "ref": "B2-W2（卷二 S13 正则叶子收尾）：det-math 十进制文法改为手写逐字符解析、handles/patterns.mjs 只留从 rx.mjs 搬来的正则（删 DECIMAL_LITERAL/parseDecimalLiteral），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "edf02a274271218e20a09a0afac98690875ad60ebb5bb23d714ce8853e02bf0d",
-   "rev": 22,
+   "print": "3abd62c2a550d7820e733c090378baaae2b4e69e1f3118a115c1c614059b80ea",
+   "rev": 23,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -337,10 +341,14 @@
     {
      "ref": "B2-W2（卷二 S13 正则叶子收窄）：patterns.mjs 只留从 rx.mjs 搬来的正则，其余格式正则按用途移入 handles/keys.mjs、validate/types.mjs、validate/rows.mjs、load/vocab-load.mjs，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 9
+    },
+    {
+     "ref": "B2-W2（卷二 S13 正则叶子收尾）：det-math 十进制文法改为手写逐字符解析、handles/patterns.mjs 只留从 rx.mjs 搬来的正则（删 DECIMAL_LITERAL/parseDecimalLiteral），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 10
     }
    ],
-   "print": "a5039e4e49ba5395be2623e81ddc924a5a8ccedd6030c43667c4e35220a32548",
-   "rev": 9,
+   "print": "481151eed4b495f574d331cbfed5dc3d45abeb7a3abce7caf5a64b78ee6f0877",
+   "rev": 10,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -537,10 +545,14 @@
     {
      "ref": "B2-W2（卷二 S13 正则叶子收窄）：patterns.mjs 只留从 rx.mjs 搬来的正则，其余格式正则按用途移入 handles/keys.mjs、validate/types.mjs、validate/rows.mjs、load/vocab-load.mjs，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 10
+    },
+    {
+     "ref": "B2-W2（卷二 S13 正则叶子收尾）：det-math 十进制文法改为手写逐字符解析、handles/patterns.mjs 只留从 rx.mjs 搬来的正则（删 DECIMAL_LITERAL/parseDecimalLiteral），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 11
     }
    ],
-   "print": "e5e038b363f96a78eb808ed1de72fd86031b3aa7f3902d0ac6a9ab8a3b2d106f",
-   "rev": 10,
+   "print": "db8bf848a5dccb44a08a6ec4246cc595ebefc0aa2b0c096d807fe4d217f4710d",
+   "rev": 11,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -702,10 +714,14 @@
     {
      "ref": "B2-W2（卷二 S13 正则叶子收窄）：patterns.mjs 只留从 rx.mjs 搬来的正则，其余格式正则按用途移入 handles/keys.mjs、validate/types.mjs、validate/rows.mjs、load/vocab-load.mjs，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 26
+    },
+    {
+     "ref": "B2-W2（卷二 S13 正则叶子收尾）：det-math 十进制文法改为手写逐字符解析、handles/patterns.mjs 只留从 rx.mjs 搬来的正则（删 DECIMAL_LITERAL/parseDecimalLiteral），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 27
     }
    ],
-   "print": "5c462b180399a6b304a76d8cbea4825c2f6ca0fbe091120e5f1e00ea59ad6cee",
-   "rev": 26,
+   "print": "f4ad18de24f005df10b020bd0523b705c774b86d8026fdbb9876a77f1fe7bc97",
+   "rev": 27,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -848,10 +864,14 @@
     {
      "ref": "B2-W2（卷二 S13 正则叶子收窄）：patterns.mjs 只留从 rx.mjs 搬来的正则，其余格式正则按用途移入 handles/keys.mjs、validate/types.mjs、validate/rows.mjs、load/vocab-load.mjs，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 11
+    },
+    {
+     "ref": "B2-W2（卷二 S13 正则叶子收尾）：det-math 十进制文法改为手写逐字符解析、handles/patterns.mjs 只留从 rx.mjs 搬来的正则（删 DECIMAL_LITERAL/parseDecimalLiteral），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 12
     }
    ],
-   "print": "e5e038b363f96a78eb808ed1de72fd86031b3aa7f3902d0ac6a9ab8a3b2d106f",
-   "rev": 11,
+   "print": "db8bf848a5dccb44a08a6ec4246cc595ebefc0aa2b0c096d807fe4d217f4710d",
+   "rev": 12,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1295,10 +1315,14 @@
     {
      "ref": "B2-W2（卷二 S13 正则叶子收窄）：patterns.mjs 只留从 rx.mjs 搬来的正则，其余格式正则按用途移入 handles/keys.mjs、validate/types.mjs、validate/rows.mjs、load/vocab-load.mjs，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 11
+    },
+    {
+     "ref": "B2-W2（卷二 S13 正则叶子收尾）：det-math 十进制文法改为手写逐字符解析、handles/patterns.mjs 只留从 rx.mjs 搬来的正则（删 DECIMAL_LITERAL/parseDecimalLiteral），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 12
     }
    ],
-   "print": "e5e038b363f96a78eb808ed1de72fd86031b3aa7f3902d0ac6a9ab8a3b2d106f",
-   "rev": 11,
+   "print": "db8bf848a5dccb44a08a6ec4246cc595ebefc0aa2b0c096d807fe4d217f4710d",
+   "rev": 12,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -1325,10 +1349,14 @@
     {
      "ref": "B2-W2（卷二 S13 正则叶子收窄）：patterns.mjs 只留从 rx.mjs 搬来的正则，其余格式正则按用途移入 handles/keys.mjs、validate/types.mjs、validate/rows.mjs、load/vocab-load.mjs，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 3
+    },
+    {
+     "ref": "B2-W2（卷二 S13 正则叶子收尾）：det-math 十进制文法改为手写逐字符解析、handles/patterns.mjs 只留从 rx.mjs 搬来的正则（删 DECIMAL_LITERAL/parseDecimalLiteral），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 4
     }
    ],
-   "print": "6a54a351c345bfc503f86b975497ddd59ce1495aaf963d906607960a8e0c2c18",
-   "rev": 3,
+   "print": "37b37348d38191d6a6d3b8dc858c884a627b15753e3ebb641ddbcc93349a1940",
+   "rev": 4,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -1467,10 +1495,14 @@
     {
      "ref": "B2-W2（卷二 S13 正则叶子收窄）：patterns.mjs 只留从 rx.mjs 搬来的正则，其余格式正则按用途移入 handles/keys.mjs、validate/types.mjs、validate/rows.mjs、load/vocab-load.mjs，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 31
+    },
+    {
+     "ref": "B2-W2（卷二 S13 正则叶子收尾）：det-math 十进制文法改为手写逐字符解析、handles/patterns.mjs 只留从 rx.mjs 搬来的正则（删 DECIMAL_LITERAL/parseDecimalLiteral），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 32
     }
    ],
-   "print": "410ffae73b4926aab8d79b9e7a392d02898475998989eebb1478ac26ed0f2c94",
-   "rev": 31,
+   "print": "6ffcd3fb90154e53513592c5a9b73bdc3ee2ca201635a87ae1c36e0e31ddff5c",
+   "rev": 32,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1661,10 +1693,14 @@
     {
      "ref": "B2-W2（卷二 S13 正则叶子收窄）：patterns.mjs 只留从 rx.mjs 搬来的正则，其余格式正则按用途移入 handles/keys.mjs、validate/types.mjs、validate/rows.mjs、load/vocab-load.mjs，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 20
+    },
+    {
+     "ref": "B2-W2（卷二 S13 正则叶子收尾）：det-math 十进制文法改为手写逐字符解析、handles/patterns.mjs 只留从 rx.mjs 搬来的正则（删 DECIMAL_LITERAL/parseDecimalLiteral），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "edf02a274271218e20a09a0afac98690875ad60ebb5bb23d714ce8853e02bf0d",
-   "rev": 20,
+   "print": "3abd62c2a550d7820e733c090378baaae2b4e69e1f3118a115c1c614059b80ea",
+   "rev": 21,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -1818,10 +1854,14 @@
     {
      "ref": "B2-W2（卷二 S13 正则叶子收窄）：patterns.mjs 只留从 rx.mjs 搬来的正则，其余格式正则按用途移入 handles/keys.mjs、validate/types.mjs、validate/rows.mjs、load/vocab-load.mjs，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 5
+    },
+    {
+     "ref": "B2-W2（卷二 S13 正则叶子收尾）：det-math 十进制文法改为手写逐字符解析、handles/patterns.mjs 只留从 rx.mjs 搬来的正则（删 DECIMAL_LITERAL/parseDecimalLiteral），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 6
     }
    ],
-   "print": "6a54a351c345bfc503f86b975497ddd59ce1495aaf963d906607960a8e0c2c18",
-   "rev": 5,
+   "print": "37b37348d38191d6a6d3b8dc858c884a627b15753e3ebb641ddbcc93349a1940",
+   "rev": 6,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

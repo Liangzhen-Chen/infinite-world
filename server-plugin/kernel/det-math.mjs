@@ -3,8 +3,6 @@
 // 值只从那张表来（加载入口 installFixedConstants 收下），本文件不另定一份（李白 11-18 08:20 第 2 条）。
 // 小数位数上限不另设常数：precision p 合法当且仅当 BASE^p 整除 SCALE（§1.2 的 0–4）；扩展标度 p 须使 BASE^p = SCALE²（§1.2、§3.3 第 6 条的 8）。
 
-import { parseDecimalLiteral } from './handles/patterns.mjs';
-
 const LIMIT = BigInt(Number.MAX_SAFE_INTEGER);
 
 export class FixedError extends Error {
@@ -59,6 +57,45 @@ export function extPrecisionOk(p) {
   const q = powBase(p);
   const s = fixedScale();
   return q % s === 0n && q / s === s;
+}
+
+// 十进制文本的逐字符解析（原 handles/patterns.mjs 的 /^(-?)(\d+)(?:\.(\d+))?(?:e([+-]?\d+))?$/i，行为逐条等价）。
+// 用逐字符判断而非正则：det-math 若 import handles/*、validate/* 任一文件都会成 import 环（vocab-handle → validate/types → det-math），
+// 而本文件不在 S13 (b) 允许用正则的文件之列。接受的文法：可选 `-`（`+` 不收）；至少一位 0–9；可选 `.` 后至少一位 0–9（前导点、尾点不收）；
+// 可选 `e`/`E` 后可选 `+`/`-` 再接至少一位 0–9；整串必须恰好用尽（不 trim、不收尾随换行）。
+// 返回 [全文, 符号, 整数位, 小数位, 指数]（未出现的分组为 undefined，与 RegExpExecArray 同形），不合文法返回 null。
+const isDigit = (ch) => ch >= '0' && ch <= '9';
+
+/** @param {unknown} x @returns {(string | undefined)[] | null} */
+export function parseDecimalLiteral(x) {
+  const s = String(x);
+  let i = 0;
+  let sign = '';
+  if (s[i] === '-') { sign = '-'; i += 1; }
+  const wholeStart = i;
+  while (isDigit(s[i])) i += 1;
+  if (i === wholeStart) return null;
+  const whole = s.slice(wholeStart, i);
+  let fraction;
+  if (s[i] === '.') {
+    i += 1;
+    const fractionStart = i;
+    while (isDigit(s[i])) i += 1;
+    if (i === fractionStart) return null;
+    fraction = s.slice(fractionStart, i);
+  }
+  let exponent;
+  if (s[i] === 'e' || s[i] === 'E') {
+    i += 1;
+    const expStart = i;
+    if (s[i] === '+' || s[i] === '-') i += 1;
+    const expDigits = i;
+    while (isDigit(s[i])) i += 1;
+    if (i === expDigits) return null;
+    exponent = s.slice(expStart, i);
+  }
+  if (i !== s.length) return null;
+  return [s, sign, whole, fraction, exponent];
 }
 
 // 十进制文本（含 JS 数的指数写法）→ 定点整数，小数超出位数的部分截断（不四舍五入）。
