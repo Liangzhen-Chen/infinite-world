@@ -49,6 +49,30 @@
    "packOverridable": {"snapshotEveryEvents": false, "segmentEvents": false, "keepSnapshots": false}
   },
   {
+   "code": "detNumeric",
+   "file": "tables/det-numeric.json",
+   "structure": "keys",
+   "type": {
+    "mathAllow": {"type": "list", "of": {"type": "string"}},
+    "safeIntMax": "integer",
+    "fnTables": {"type": "map", "key": {"type": "enum", "vocab": "detfn"}, "value": {"type": "struct", "required": ["inScale", "outScale", "domainMin", "domainMax", "step", "basis"], "fields": {
+     "inScale": {"type": "integer", "unit": "count", "domain": [1, null]},
+     "outScale": {"type": "integer", "unit": "count", "domain": [1, null]},
+     "domainMin": {"type": "integer", "unit": "count"},
+     "domainMax": {"type": "integer", "unit": "count"},
+     "step": {"type": "integer", "unit": "count", "domain": [1, null]},
+     "iterations": {"type": "integer", "unit": "count", "domain": [1, null]},
+     "values": {"type": "list", "of": {"type": "integer", "unit": "count"}},
+     "sha256": {"type": "string"},
+     "basis": {"type": "string"}
+    }}}
+   },
+   "domain": {"mathAllow": {}, "safeIntMax": [9007199254740991, 9007199254740991], "fnTables": {"requireAll": true}},
+   "volume": "卷二十七 §2.1 :123（族 detfn 七值，代码内封闭枚举、值不带前缀）、§2.2 :167–:171（mathAllow、safeIntMax、fnTables）；R27-5.1 :568；R27-5.2 :570–:575；李白 11-18 21:3x 裁定第 1、2 条（detfn 不登 _vocab；七值只在一处显式枚举，rule table 的 fnTables 按 map<detfn, struct fnTable> 引用；本文件 volume 记七值：exp、ln、sin、cos、atan、sqrt、pow）",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"mathAllow": false, "safeIntMax": false, "fnTables": false}
+  },
+  {
    "code": "economyResources",
    "file": "tables/economy/resources.json",
    "structure": {"rows": {"vocab": "resource"}},

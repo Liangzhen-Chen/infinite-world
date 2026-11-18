@@ -196,10 +196,18 @@
     {
      "ref": "4-4a：kernel/det-math.mjs 新增 fixedExp/fixedLn/fixedPow 等定点函数（检测器 import 闭包经 validate/types.mjs 含 det-math），判据代码指纹更新，rev+1；判定口径不变",
      "rev": 35
+    },
+    {
+     "ref": "接主线（B2-W3）：4-4b det-numeric 与 fnTables 空表校验进入检测器 import 闭包，判据指纹重盖；判定口径不变",
+     "rev": 36
+    },
+    {
+     "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 37
     }
    ],
-   "print": "fa2449140e59d6b919430b9a12f235456dcd376da7a539f8368245282efad90a",
-   "rev": 35,
+   "print": "b3edc5f56986e4fec6b768d015ae7e62e56e536237537a0ba8d89b8278cec17c",
+   "rev": 37,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -457,10 +465,18 @@
     {
      "ref": "B2-W3（李白 11-18 20:20 裁定 B）：加载期派生编译、未建派生登记与加载期反查索引落在 validate/dimensions-validate.mjs，共用检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 26
+    },
+    {
+     "ref": "接主线（B2-W3）：4-4b det-numeric 与 fnTables 空表校验进入检测器 import 闭包，判据指纹重盖；判定口径不变",
+     "rev": 27
+    },
+    {
+     "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 28
     }
    ],
-   "print": "702c4f4e81d22e86c6c537b2abfb04aa1af2682c41961275413125baf47f6d5e",
-   "rev": 26,
+   "print": "0d1906e619a3667f74fead8fd8baadf8a5406fa7bb0da63a3b3a49c966cc7c80",
+   "rev": 28,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -495,10 +511,18 @@
     {
      "ref": "B2-W4h（卷二 :2413 (d)）：typed_pos 的 bareCompare 改成文记号只豁免 markers.mjs 的 GRAMMAR_TOKENS 定义源、typeof 只认操作数本身是 typeof；本类别 V-2.a 用 bareCompare，随该检测器改动，其余检查项（directive/anyType/assertCast）口径不变",
      "rev": 5
+    },
+    {
+     "ref": "接主线（B2-W3）：4-4b det-numeric 与 fnTables 空表校验进入检测器 import 闭包，判据指纹重盖；判定口径不变",
+     "rev": 6
+    },
+    {
+     "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 7
     }
    ],
-   "print": "1bbb5134bf93828f5b2e337fcbbd1dca8dc57429f37bd766256115f281d4bafe",
-   "rev": 5,
+   "print": "732416bd4a95d96578f935c93b37ba19e2f08cc997123fa28342c1f9ade5034f",
+   "rev": 7,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -591,10 +615,18 @@
     {
      "ref": "B2-W4h：共用检测器及其 import 闭包内 kernel 文件改动（文法记号与登记字段/族名改引 markers.mjs 定义源；typed_pos 白名单 (d) 收窄），判据代码指纹随之更新；本类别判定口径不变（R12-14.3）",
      "rev": 6
+    },
+    {
+     "ref": "接主线（B2-W3）：4-4b det-numeric 与 fnTables 空表校验进入检测器 import 闭包，判据指纹重盖；判定口径不变",
+     "rev": 7
+    },
+    {
+     "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 8
     }
    ],
-   "print": "129d71982171c8d6824116dbc7bc834d69e686853fa30bda467231158bbb60c7",
-   "rev": 6,
+   "print": "8781672b71bb3f9e8248ebed5f32b045856b2daddc7997e594bb0e4c97d3d4c6",
+   "rev": 8,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -741,10 +773,18 @@
     {
      "ref": "B2-W3（李白 11-18 20:20 裁定 B）：加载期派生编译、未建派生登记与加载期反查索引落在 validate/dimensions-validate.mjs，共用检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 27
+    },
+    {
+     "ref": "接主线（B2-W3）：4-4b det-numeric 与 fnTables 空表校验进入检测器 import 闭包，判据指纹重盖；判定口径不变",
+     "rev": 28
+    },
+    {
+     "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 29
     }
    ],
-   "print": "f59335aed26961383f6d3e47b04a3de1577fbf9becdf09fb39878e412fdd7946",
-   "rev": 27,
+   "print": "ed6b418dc5d4feb3e8e98734451301d6fe136fe7b61cae93dcf58660c29472ce",
+   "rev": 29,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -784,10 +824,18 @@
     {
      "ref": "B2-W4h：共用检测器及其 import 闭包内 kernel 文件改动（文法记号与登记字段/族名改引 markers.mjs 定义源；typed_pos 白名单 (d) 收窄），判据代码指纹随之更新；本类别判定口径不变（R12-14.3）",
      "rev": 6
+    },
+    {
+     "ref": "接主线（B2-W3）：4-4b det-numeric 与 fnTables 空表校验进入检测器 import 闭包，判据指纹重盖；判定口径不变",
+     "rev": 7
+    },
+    {
+     "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 8
     }
    ],
-   "print": "129d71982171c8d6824116dbc7bc834d69e686853fa30bda467231158bbb60c7",
-   "rev": 6,
+   "print": "8781672b71bb3f9e8248ebed5f32b045856b2daddc7997e594bb0e4c97d3d4c6",
+   "rev": 8,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -982,10 +1030,18 @@
     {
      "ref": "B2-W3（李白 11-18 20:20 裁定 B）：加载期派生编译、未建派生登记与加载期反查索引落在 validate/dimensions-validate.mjs，共用检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 43
+    },
+    {
+     "ref": "接主线（B2-W3）：4-4b det-numeric 与 fnTables 空表校验进入检测器 import 闭包，判据指纹重盖；判定口径不变",
+     "rev": 44
+    },
+    {
+     "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 45
     }
    ],
-   "print": "c6a4cbc7394ef392bfccd5fa1a0d879388f3e87b7f6c0995f7fedcdfc22e613f",
-   "rev": 43,
+   "print": "3cc61ac453428bd1a705e6e1052a93ef5cabfe63f1bd4d6a75a5867176881aef",
+   "rev": 45,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1196,10 +1252,18 @@
     {
      "ref": "B2-W3（李白 11-18 20:20 裁定 B）：加载期派生编译、未建派生登记与加载期反查索引落在 validate/dimensions-validate.mjs，共用检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 28
+    },
+    {
+     "ref": "接主线（B2-W3）：4-4b det-numeric 与 fnTables 空表校验进入检测器 import 闭包，判据指纹重盖；判定口径不变",
+     "rev": 29
+    },
+    {
+     "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 30
     }
    ],
-   "print": "f59335aed26961383f6d3e47b04a3de1577fbf9becdf09fb39878e412fdd7946",
-   "rev": 28,
+   "print": "ed6b418dc5d4feb3e8e98734451301d6fe136fe7b61cae93dcf58660c29472ce",
+   "rev": 30,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1711,10 +1775,18 @@
     {
      "ref": "B2-W3（李白 11-18 20:20 裁定 B）：加载期派生编译、未建派生登记与加载期反查索引落在 validate/dimensions-validate.mjs，共用检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 28
+    },
+    {
+     "ref": "接主线（B2-W3）：4-4b det-numeric 与 fnTables 空表校验进入检测器 import 闭包，判据指纹重盖；判定口径不变",
+     "rev": 29
+    },
+    {
+     "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 30
     }
    ],
-   "print": "f59335aed26961383f6d3e47b04a3de1577fbf9becdf09fb39878e412fdd7946",
-   "rev": 28,
+   "print": "ed6b418dc5d4feb3e8e98734451301d6fe136fe7b61cae93dcf58660c29472ce",
+   "rev": 30,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -1809,10 +1881,18 @@
     {
      "ref": "B2-W3（李白 11-18 20:20 裁定 B）：加载期派生编译、未建派生登记与加载期反查索引落在 validate/dimensions-validate.mjs，共用检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 20
+    },
+    {
+     "ref": "接主线（B2-W3）：4-4b det-numeric 与 fnTables 空表校验进入检测器 import 闭包，判据指纹重盖；判定口径不变",
+     "rev": 21
+    },
+    {
+     "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 22
     }
    ],
-   "print": "03d912878cc192d1874e225578908d4774440c11a746ec7eba7f670b754f51c5",
-   "rev": 20,
+   "print": "39abb98f92f1af96ec33159d8c1adda6822e16536d93c5ff3495f4147feb704d",
+   "rev": 22,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -2003,10 +2083,18 @@
     {
      "ref": "4-4a：kernel/det-math.mjs 新增 fixedExp/fixedLn/fixedPow 等定点函数（检测器 import 闭包经 validate/types.mjs 含 det-math），判据代码指纹更新，rev+1；判定口径不变",
      "rev": 44
+    },
+    {
+     "ref": "接主线（B2-W3）：4-4b det-numeric 与 fnTables 空表校验进入检测器 import 闭包，判据指纹重盖；判定口径不变",
+     "rev": 45
+    },
+    {
+     "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 46
     }
    ],
-   "print": "4a304ff0f89ca7b841e0826a30682130ed9247f33a31fae7693b0ca13957d4ba",
-   "rev": 44,
+   "print": "00e1c2319cb9114fe0281e3e9d6fa24bd5988f71a7046cf711d817a820aa020e",
+   "rev": 46,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -2154,10 +2242,18 @@
     {
      "ref": "B2-W3（李白 11-18 20:20 裁定 B）：加载期派生编译、未建派生登记与加载期反查索引落在 validate/dimensions-validate.mjs，共用检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 7
+    },
+    {
+     "ref": "接主线（B2-W3）：4-4b det-numeric 与 fnTables 空表校验进入检测器 import 闭包，判据指纹重盖；判定口径不变",
+     "rev": 8
+    },
+    {
+     "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 9
     }
    ],
-   "print": "3ced4bed441f71e3f8e97a9d51871ad0b691cb5aa220409d7823b8b15db37c63",
-   "rev": 7,
+   "print": "56e20b592dc31641b4a4c6f1a67e79e46eb2b7660eaba2ef2ef072c14b2a19e9",
+   "rev": 9,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -2311,10 +2407,18 @@
     {
      "ref": "4-4a：kernel/det-math.mjs 新增 fixedExp/fixedLn/fixedPow 等定点函数（检测器 import 闭包经 validate/types.mjs 含 det-math），判据代码指纹更新，rev+1；判定口径不变",
      "rev": 33
+    },
+    {
+     "ref": "接主线（B2-W3）：4-4b det-numeric 与 fnTables 空表校验进入检测器 import 闭包，判据指纹重盖；判定口径不变",
+     "rev": 34
+    },
+    {
+     "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 35
     }
    ],
-   "print": "fa2449140e59d6b919430b9a12f235456dcd376da7a539f8368245282efad90a",
-   "rev": 33,
+   "print": "b3edc5f56986e4fec6b768d015ae7e62e56e536237537a0ba8d89b8278cec17c",
+   "rev": 35,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -2340,10 +2444,18 @@
     {
      "ref": "接主线 B2-W3 后重盖，判定口径不变",
      "rev": 4
+    },
+    {
+     "ref": "接主线（B2-W3）：4-4b det-numeric 与 fnTables 空表校验进入检测器 import 闭包，判据指纹重盖；判定口径不变",
+     "rev": 5
+    },
+    {
+     "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 6
     }
    ],
-   "print": "28478ee666c7ca79d6cf7b95756ed73c512d919f1fb6bcea2be8634fcb0f797f",
-   "rev": 4,
+   "print": "45314465f0ceb476edc74cee8dbf8bc56a0adf80d0a200c851ed45821e728a21",
+   "rev": 6,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -2379,10 +2491,18 @@
     {
      "ref": "B2-W4h（卷二 :2413 (d)，李白 11-18 13:05 裁定第 2 条）：typed_pos 的 collectMarkerTokens 改只收 markers.mjs 的 GRAMMAR_TOKENS 文法记号定义源（TYPES 等协议标记裸写仍计 ④），operandHasTypeof 收窄为只认比较操作数本身是 typeof（含整操作数外层括号与 switch 判别式）；内核裸字面量照 T 与文法记号定义源改引，c_text_kernel_4 降至 0",
      "rev": 5
+    },
+    {
+     "ref": "接主线（B2-W3）：4-4b det-numeric 与 fnTables 空表校验进入检测器 import 闭包，判据指纹重盖；判定口径不变",
+     "rev": 6
+    },
+    {
+     "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 7
     }
    ],
-   "print": "129d71982171c8d6824116dbc7bc834d69e686853fa30bda467231158bbb60c7",
-   "rev": 5,
+   "print": "8781672b71bb3f9e8248ebed5f32b045856b2daddc7997e594bb0e4c97d3d4c6",
+   "rev": 7,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -2598,10 +2718,18 @@
     {
      "ref": "B2-W3（李白 11-18 20:20 裁定 B）：加载期派生编译、未建派生登记与加载期反查索引落在 validate/dimensions-validate.mjs，共用检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 22
+    },
+    {
+     "ref": "接主线（B2-W3）：4-4b det-numeric 与 fnTables 空表校验进入检测器 import 闭包，判据指纹重盖；判定口径不变",
+     "rev": 23
+    },
+    {
+     "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 24
     }
    ],
-   "print": "03d912878cc192d1874e225578908d4774440c11a746ec7eba7f670b754f51c5",
-   "rev": 22,
+   "print": "39abb98f92f1af96ec33159d8c1adda6822e16536d93c5ff3495f4147feb704d",
+   "rev": 24,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -2745,10 +2873,18 @@
     {
      "ref": "B2-W4h：共用检测器及其 import 闭包内 kernel 文件改动（文法记号与登记字段/族名改引 markers.mjs 定义源；typed_pos 白名单 (d) 收窄），判据代码指纹随之更新；本类别判定口径不变（R12-14.3）",
      "rev": 18
+    },
+    {
+     "ref": "接主线（B2-W3）：4-4b det-numeric 与 fnTables 空表校验进入检测器 import 闭包，判据指纹重盖；判定口径不变",
+     "rev": 19
+    },
+    {
+     "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 20
     }
    ],
-   "print": "1b1f1bd2aea06eb144e483d037f00ab89453c8323ffdf0d3d42160d284a01ac6",
-   "rev": 18,
+   "print": "213f0b751bdc5fb7ae26fe051be8bfd30c50f9d38b2e28b3505e468fc0691aed",
+   "rev": 20,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

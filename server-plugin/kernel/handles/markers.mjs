@@ -33,6 +33,9 @@ export const CODE_ENUMS = Object.freeze({
   rx_type: ['number', 'boolean', 'code', 'handle'],
   // 卷三甲 §2.1"物性格的来源级别"：代码内封闭枚举，只有三个值（A 实测出处、B 参照材料、C 设计设定）。
   cell_grade: ['measured', 'referenced', 'designed'],
+  // 卷二十七 §2.1 :123 族 detfn：内核定点数学设施提供的超越函数七值，代码内封闭枚举、值不带前缀（卷二 §1.9 :285、:289）。
+  // 规则表 det-numeric 的 fnTables 用它作 map 键；不登 _vocab 族（李白 11-18 21:3x 裁定第 1 条），七值只在这一处定义。
+  detfn: ['exp', 'ln', 'sin', 'cos', 'atan', 'sqrt', 'pow'],
 });
 
 // 不必写 domain 的类型（卷二 §1.2 表头；规则表登记的取值域同此写法，§4.1）。

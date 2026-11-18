@@ -4,6 +4,8 @@
 // 小数位数上限不另设常数：precision p 合法当且仅当 BASE^p 整除 SCALE（§1.2 的 0–4）；扩展标度 p 须使 BASE^p = SCALE²（§1.2、§3.3 第 6 条的 8）。
 
 const LIMIT = BigInt(Number.MAX_SAFE_INTEGER);
+// 状态整数上限 safeIntMax（卷二十七 §2.2 :168）：登记值经 installDetNumeric 收下；未装时用 IEEE 754 固定值。
+let safeIntMaxLimit = LIMIT;
 // 十进制文本文法的字元记号（逐字符解析，见文件头；单一定义）。
 const CH = Object.freeze({ minus: '-', dot: '.', expLower: 'e', expUpper: 'E', plus: '+' });
 
@@ -64,7 +66,7 @@ export const bps = () => fixedConstants().bps;
 
 /** @param {bigint} v 定点整数 @returns {bigint} */
 export function checkedFixed(v) {
-  if (v > LIMIT || v < -LIMIT) throw new FixedError('E-DIM-DOMAIN-RANGE', 'fixed overflow');
+  if (v > safeIntMaxLimit || v < -safeIntMaxLimit) throw new FixedError('E-DET-OVERFLOW', 'fixed overflow');
   return v;
 }
 
@@ -325,6 +327,176 @@ export function fixedLn(x) {
   // 第 5、6 步：合并并按 10¹⁰ 降标度，向零截断。
   const l = BigInt(n) * c.ln2 + s + s;
   return l / up;
+}
+
+// ---------- 族 detfn 的查表函数（卷二十七 R27-5.2 :570–:575） ----------
+// 七值各一行登记在规则表 det-numeric 的 fnTables（卷二十七 §2.2 :171）；本文件是这些函数的唯一实现。
+// 表值由 tools/gen-det-tables.mjs 离线生成入库，运行期只读表、不现算（R27-5.2 :574）。
+
+/** @type {null | Record<string, {inScale: bigint, outScale: bigint, domainMin: bigint, domainMax: bigint, step: bigint, iterations: bigint | null, values: bigint[] | null}>} */
+let detTables = null;
+
+const detInt = (v, where) => {
+  if (typeof v === 'bigint') return v;
+  if (typeof v === 'number' && Number.isSafeInteger(v)) return BigInt(v);
+  throw new FixedError('E-DIM-STRUCT-FIELD', `det-numeric ${where}: want an integer`);
+};
+
+/**
+ * 加载期收下 det-numeric 的 fnTables（卷二十七 §2.2 :171）：值可为 JSON 数或 BigInt。
+ * 逐行转换；不在这里重做规则表校验（加载器 load/rules.mjs 已按形状查过）。
+ * @param {Record<string, object>} fnTables
+ * @returns {void}
+ */
+export function installDetTables(fnTables) {
+  if (fnTables === null || typeof fnTables !== 'object' || Array.isArray(fnTables)) throw new FixedError('E-DIM-STRUCT-FIELD', 'det-numeric fnTables: want an object');
+  const rows = Object.create(null);
+  for (const name of Object.keys(fnTables)) {
+    const r = fnTables[name];
+    if (r === null || typeof r !== 'object') throw new FixedError('E-DIM-STRUCT-FIELD', `det-numeric fnTables.${name}: want an object`);
+    const values = Array.isArray(r.values) ? Object.freeze(r.values.map((v, i) => detInt(v, `${name}.values[${i}]`))) : null;
+    rows[name] = Object.freeze({
+      inScale: detInt(r.inScale, `${name}.inScale`),
+      outScale: detInt(r.outScale, `${name}.outScale`),
+      domainMin: detInt(r.domainMin, `${name}.domainMin`),
+      domainMax: detInt(r.domainMax, `${name}.domainMax`),
+      step: detInt(r.step, `${name}.step`),
+      iterations: r.iterations === undefined ? null : detInt(r.iterations, `${name}.iterations`),
+      values,
+    });
+  }
+  detTables = Object.freeze(rows);
+}
+
+/** @type {string[] | null} */
+let mathAllowList = null;
+
+/**
+ * 加载期收下 det-numeric 表的三个键（卷二十七 §2.2 :167–:171）：fnTables 交 installDetTables，
+ * safeIntMax 交 checkedFixed 的上限，mathAllow 交 mathAllowed（空表 = 全禁）。
+ * @param {Record<string, unknown>} rules engine.rules
+ * @returns {void}
+ */
+export function installDetNumeric(rules) {
+  const t = rules && rules.detNumeric;
+  if (t === null || typeof t !== 'object') return;
+  installDetTables(t.fnTables);
+  if (Number.isSafeInteger(t.safeIntMax) && t.safeIntMax > 0) safeIntMaxLimit = BigInt(t.safeIntMax);
+  mathAllowList = Object.freeze(Array.isArray(t.mathAllow) ? [...t.mathAllow] : []);
+}
+
+/** mathAllow 判定：规则层可用的整数安全数学成员（卷二十七 :167；空表 = 全禁）。@param {string} member @returns {boolean} */
+export const mathAllowed = (member) => mathAllowList !== null && mathAllowList.includes(member);
+
+function detRow(name) {
+  if (!detTables || !Object.hasOwn(detTables, name)) throw new FixedError('E-DIM-STRUCT-FIELD', `rules.det-numeric.fnTables.${name} missing (load order: installDetTables)`);
+  return detTables[name];
+}
+
+// 查表线性插值（卷二十七 R27-5.2 :571）：两点之间全程整数，除法向零截断；域外 E-DET-DOMAIN，不外推不钳位。
+function tableLookup(row, x, name) {
+  if (row.values === null) throw new FixedError('E-DIM-STRUCT-FIELD', `fnTables.${name}: this row has no values table`);
+  if (x < row.domainMin || x > row.domainMax) throw new FixedError('E-DET-DOMAIN', `${name} input ${x} outside [${row.domainMin}, ${row.domainMax}]`);
+  const off = x - row.domainMin;
+  const idx = off / row.step;
+  const rem = off - idx * row.step;
+  const i = Number(idx);
+  if (rem === 0n) return row.values[i];
+  const a = row.values[i];
+  const b = row.values[i + 1];
+  return a + ((b - a) * rem) / row.step;
+}
+
+/**
+ * ln：查表线性插值（卷二十七 :571）。入参、返回按该行的 inScale/outScale（现均为 10⁸）。
+ * @param {number | bigint} x @returns {bigint}
+ */
+export function ln(x) {
+  return tableLookup(detRow('ln'), detInt(x, 'ln input'), 'ln');
+}
+
+// 周期函数：输入先按 [domainMin, domainMax) 取余，再查表（卷二十七 :573）。
+function periodicLookup(name, x) {
+  const row = detRow(name);
+  const v = detInt(x, `${name} input`);
+  const period = row.domainMax - row.domainMin;
+  if (period <= 0n) throw new FixedError('E-DIM-STRUCT-FIELD', `fnTables.${name}: empty period`);
+  let r = (v - row.domainMin) % period;
+  if (r < 0n) r += period;
+  return tableLookup(row, row.domainMin + r, name);
+}
+
+/** sin：表覆盖一个整周期，输入先按周期取余（卷二十七 :573）。 @param {number | bigint} x @returns {bigint} */
+export const sin = (x) => periodicLookup('sin', x);
+
+/** cos：表覆盖一个整周期，输入先按周期取余（卷二十七 :573）。 @param {number | bigint} x @returns {bigint} */
+export const cos = (x) => periodicLookup('cos', x);
+
+/**
+ * atan：定义域内查表；域外按 atan(x)=sign(x)·π/2−atan(1/x) 折回（卷二十七 :573）。
+ * π/2 由本表 x=1（inScale）处的值乘 2 得出，不另写常数。
+ * @param {number | bigint} x @returns {bigint}
+ */
+export function atan(x) {
+  const row = detRow('atan');
+  const v = detInt(x, 'atan input');
+  if (v >= row.domainMin && v <= row.domainMax) return tableLookup(row, v, 'atan');
+  const reciprocal = (row.inScale * row.inScale) / v;
+  const folded = tableLookup(row, reciprocal, 'atan');
+  const halfPi = tableLookup(row, row.inScale, 'atan') + tableLookup(row, row.inScale, 'atan');
+  return (v < 0n ? -halfPi : halfPi) - folded;
+}
+
+/**
+ * exp：不另立表，直接用卷二 §1.10 冻结指数表与 fixedExp（唯一定义；卷二十七 :572）。
+ * 该行只给出标度与指向；域外由 fixedExp 报 E-DET-DOMAIN。
+ * @param {number | bigint} x @returns {bigint}
+ */
+export function exp(x) {
+  const row = detRow('exp');
+  const v = detInt(x, 'exp input');
+  if (v < row.domainMin || v > row.domainMax) throw new FixedError('E-DET-DOMAIN', `exp input ${v} outside [${row.domainMin}, ${row.domainMax}]`);
+  const s8 = scale8();
+  const x8 = (v * s8) / row.inScale;
+  const e8 = fixedExp(x8);
+  return (e8 * row.outScale) / s8;
+}
+
+/**
+ * sqrt：整数牛顿固定步数，不查表（卷二 §1.10 :326、卷二十七 :573）；步数登在该行 iterations。
+ * 输出取 min(y, ⌊n/y⌋)，保证返回 ⌊√n⌋。
+ * @param {number | bigint} x @returns {bigint}
+ */
+export function sqrt(x) {
+  const row = detRow('sqrt');
+  const v = detInt(x, 'sqrt input');
+  if (v < row.domainMin || v > row.domainMax) throw new FixedError('E-DET-DOMAIN', `sqrt input ${v} outside [${row.domainMin}, ${row.domainMax}]`);
+  if (v < 0n) throw new FixedError('E-DET-DOMAIN', `sqrt input ${v} is negative`);
+  if (row.iterations === null) throw new FixedError('E-DIM-STRUCT-FIELD', 'fnTables.sqrt.iterations missing');
+  const n = (v * row.outScale * row.outScale) / row.inScale;
+  if (n === 0n) return 0n;
+  let y = 1n << BigInt((bitLength(n) + 1) >> 1);
+  for (let i = 0n; i < row.iterations; i += 1n) y = (y + n / y) >> 1n;
+  const q = n / y;
+  return q < y ? q : y;
+}
+
+/**
+ * pow：由 exp 与 ln 组合（卷二 §3.3 :1341 非整数次幂唯一写法）：exp(k·ln x)，底数须为正。
+ * k 为 10⁸ 标度指数；结果按 exp 行的 outScale 给出。
+ * @param {number | bigint} x 底数（ln 行的 inScale 标度） @param {number | bigint} k 指数（10⁸ 标度） @returns {bigint}
+ */
+export function pow(x, k) {
+  const v = detInt(x, 'pow base');
+  if (v <= 0n) throw new FixedError('E-DET-DOMAIN', `pow base ${v} must be positive`);
+  const lnRow = detRow('ln');
+  const expRow = detRow('exp');
+  const s8 = scale8();
+  const lnOut = tableLookup(lnRow, v, 'ln');
+  const ln8 = (lnOut * s8) / lnRow.outScale;
+  const product = fixedMultiply8(detInt(k, 'pow exponent'), ln8);
+  const e8 = fixedExp(product);
+  return (e8 * expRow.outScale) / s8;
 }
 
 // 按维度 precision 向零截断。

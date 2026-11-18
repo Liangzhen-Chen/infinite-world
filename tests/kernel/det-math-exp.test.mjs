@@ -1,6 +1,6 @@
 // 4-4a《normal/lognormal 与唯一一份定点指数、对数、整数次幂》：卷二 §1.10 :323–:328（分位数表、exp 表、lognormal = exp(mu+sigma·z)）、
 // §3.3 :1328–:1340（fixedUnits8、fixedMultiply8、fixedExp、fixedPow、fixedLn 唯一定义）、卷二十七 R27-5.2 :569–:575
-// （表由 tools 组离线生成、运行时只读表；fn_exp 直接用卷二的指数表）。
+// （表由 tools 组离线生成、运行时只读表；detfn 的 exp 直接用卷二的指数表）。
 // 期望值按卷文公式手算成字面量（测试里不用被测函数算期望）：
 //   fixedExp(0) = e⁰×10⁸ = 10⁸ = 100000000；
 //   fixedExp(1) = floor(e×10⁸) = floor(271828182.8459…) = 271828182；

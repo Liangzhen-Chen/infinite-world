@@ -189,6 +189,226 @@ function buildExpFrac(expInt) {
   return values;
 }
 
+// ---------- det-numeric 规则表（卷二十七 §2.2 :171、R27-5.2 :570–:575） ----------
+// 表值同样用 BigInt 高精度离线算出：工作标度 W = 10⁶⁰，截到输出标度 10⁸ 前逐值核对不贴截断边界。
+// 工作标度内的截断误差远小于 10⁻⁴⁰，所以"离边界不足 10⁻⁴⁰"即视为算不准，抛错不写半截表。
+const DET_FILE = 'det-numeric.json';
+const W = 10n ** 60n;
+const OUT8 = 10n ** 8n;
+const W_PER_OUT = W / OUT8;
+const LN_MIN = 10_000_000;         // 0.1（10⁸ 标度）
+const LN_MAX = 1_000_000_000;      // 10
+const LN_STEP = 100_000;           // 10⁻³
+const TRIG_PERIOD = 628_320_000;   // 2π 截到 10⁻⁴ 的 10⁸ 标度值（6.2832）
+const TRIG_STEP = 40_000;          // 4×10⁻⁴
+const ATAN_LIM = 100_000_000;      // ±1
+const ATAN_STEP = 100_000;         // 10⁻³
+const SQRT_ITERATIONS = 32;        // 卷二 §1.10 :326 牛顿法固定 32 步
+const SAFE_INT_MAX = 9_007_199_254_740_991; // 2⁵³−1
+
+const bitLength = (v) => { let n = 0; let x = v; while (x > 0n) { x >>= 1n; n += 1; } return n; };
+// 大整数开方（初值取 2 的幂，牛顿迭代至稳定）；工作标度里算 1+x² 的平方根用。
+function isqrtBig(n) {
+  if (n < 2n) return n;
+  let x = 1n << BigInt((bitLength(n) + 1) >> 1);
+  for (;;) { const y = (x + n / x) >> 1n; if (y >= x) return x; x = y; }
+}
+
+// ln 2 的 W 标度值：2·atanh(1/3) = 2·(1/3 + 1/(3·3³) + …)。
+function ln2Fixed(w) {
+  const t = w / 3n;
+  const t2 = (t * t) / w;
+  let sum = 0n;
+  let p = t;
+  for (let i = 0; ; i += 1) {
+    const term = p / BigInt(2 * i + 1);
+    if (term === 0n) break;
+    sum += term;
+    p = (p * t2) / w;
+  }
+  return sum + sum;
+}
+
+// ln(x) 的 W 标度值：约到 [1,2) 后用 atanh 级数（|t| < 1/3），n·ln 2 合并。
+function lnW(x, w, ln2) {
+  let n = 0;
+  let m = x;
+  while (m >= 2n * w) { m /= 2n; n += 1; }
+  while (m < w) { m *= 2n; n -= 1; }
+  const t = ((m - w) * w) / (m + w);
+  const t2 = (t * t) / w;
+  let sum = 0n;
+  let p = t;
+  for (let i = 0; ; i += 1) {
+    const term = p / BigInt(2 * i + 1);
+    if (term === 0n) break;
+    sum += term;
+    p = (p * t2) / w;
+  }
+  return BigInt(n) * ln2 + sum + sum;
+}
+
+// sin/cos 的 W 标度值：先按 2π 取余，再 Taylor 级数（r < 2π，约 45 项后为 0）。
+function sinW(a, w, pi) {
+  const twoPi = pi + pi;
+  let r = a % twoPi;
+  if (r < 0n) r += twoPi;
+  const r2 = (r * r) / w;
+  let term = r;
+  let sum = r;
+  for (let n = 1; ; n += 1) {
+    term = -(((term * r2) / w)) / BigInt((2 * n) * (2 * n + 1));
+    if (term === 0n) break;
+    sum += term;
+  }
+  return sum;
+}
+
+function cosW(a, w, pi) {
+  const twoPi = pi + pi;
+  let r = a % twoPi;
+  if (r < 0n) r += twoPi;
+  const r2 = (r * r) / w;
+  let term = w;
+  let sum = w;
+  for (let n = 1; ; n += 1) {
+    term = -(((term * r2) / w)) / BigInt((2 * n - 1) * (2 * n));
+    if (term === 0n) break;
+    sum += term;
+  }
+  return sum;
+}
+
+// atan 的 W 标度值：反复用 atan(x)=2·atan(x/(1+√(1+x²))) 把 |x| 压到 0.1 以下，再 Taylor。
+function atanW(x, w) {
+  const neg = x < 0n;
+  let y = neg ? -x : x;
+  let factor = 1n;
+  while (y * 10n > w) {
+    const root = isqrtBig(w * w + y * y);
+    y = (y * w) / (w + root);
+    factor += factor;
+  }
+  const y2 = (y * y) / w;
+  let p = y;
+  let sum = y;
+  for (let i = 1; ; i += 1) {
+    p = -((p * y2) / w);
+    const term = p / BigInt(2 * i + 1);
+    if (term === 0n) break;
+    sum += term;
+  }
+  const out = factor * sum;
+  return neg ? -out : out;
+}
+
+// W 标度值截到 10⁸ 标度（向零截断）；离截断边界不足 10⁻⁴⁰ 视为算不准，抛错。
+function truncOut(v, name) {
+  const k = v / W_PER_OUT;
+  const rem = v - k * W_PER_OUT;
+  const mag = rem < 0n ? -rem : rem;
+  if (mag !== 0n && (mag < 10n ** 40n || W_PER_OUT - mag < 10n ** 40n)) fail(`${name}: 截断边界过近（rem=${rem}）`);
+  const out = Number(k);
+  if (!Number.isSafeInteger(out)) fail(`${name}: 结果超出安全整数（${k}）`);
+  return out;
+}
+
+function buildLn() {
+  const ln2 = ln2Fixed(W);
+  const values = [];
+  for (let x = LN_MIN; x <= LN_MAX; x += LN_STEP) values.push(truncOut(lnW(BigInt(x) * W_PER_OUT, W, ln2), `ln x=${x}`));
+  if (values[0] !== -230258509) fail(`ln x=0.1 不是向零截断的 ln 0.1×10⁸=-230258509，实为 ${values[0]}`); // ln(0.1) = −2.30258509…，向零截断
+  if (values[(100_000_000 - LN_MIN) / LN_STEP] !== 0) fail('ln x=1 不是 0');
+  if (values[values.length - 1] !== 230258509) fail(`ln x=10 不是 ⌊ln 10×10⁸⌋=230258509，实为 ${values[values.length - 1]}`);
+  return values;
+}
+
+function buildTrig(fn, name) {
+  const pi = piFixed(W);
+  const values = [];
+  for (let a = 0; a <= TRIG_PERIOD; a += TRIG_STEP) values.push(truncOut(fn(BigInt(a) * W_PER_OUT, W, pi), `${name} a=${a}`));
+  return values;
+}
+
+function buildAtan() {
+  const values = [];
+  for (let x = -ATAN_LIM; x <= ATAN_LIM; x += ATAN_STEP) values.push(truncOut(atanW(BigInt(x) * W_PER_OUT, W), `atan x=${x}`));
+  if (values[(0 + ATAN_LIM) / ATAN_STEP] !== 0) fail('atan x=0 不是 0');
+  if (values[(50_000_000 + ATAN_LIM) / ATAN_STEP] !== 46364760) fail(`atan x=0.5 不是 ⌊atan 0.5×10⁸⌋=46364760，实为 ${values[(50_000_000 + ATAN_LIM) / ATAN_STEP]}`);
+  if (values[(100_000_000 + ATAN_LIM) / ATAN_STEP] !== 78539816) fail(`atan x=1 不是 ⌊π/4×10⁸⌋=78539816，实为 ${values[(100_000_000 + ATAN_LIM) / ATAN_STEP]}`);
+  if (values[(100_000_000 + ATAN_LIM) / ATAN_STEP] !== -values[0]) fail('atan 两端不对称');
+  return values;
+}
+
+// 一条 fnTable 的 JSON 文本（字段顺序固定：标度、定义域、步长、可选 iterations/values/sha256、basis）。
+function fnEntryText(name, meta, values) {
+  const out = [`   "${name}": {`];
+  out.push(`    "inScale": ${meta.inScale},`);
+  out.push(`    "outScale": ${meta.outScale},`);
+  out.push(`    "domainMin": ${meta.domainMin},`);
+  out.push(`    "domainMax": ${meta.domainMax},`);
+  out.push(`    "step": ${meta.step},`);
+  if (meta.iterations !== undefined) out.push(`    "iterations": ${meta.iterations},`);
+  if (values) {
+    out.push(`    "values": ${block(values, '    ')},`);
+    out.push(`    "sha256": "${digestOf(values)}",`);
+  }
+  out.push(`    "basis": ${JSON.stringify(meta.basis)}`);
+  out.push('   }');
+  return out.join('\n');
+}
+
+const LN_BASIS = '输入 10⁸ 标度；定义域 [0.1, 10]（10⁷–10⁹），步长 10⁻³（10⁵）。两点线性插值误差 ≤ h²|f″|/8 = (10⁻³)²×(1/0.1²)/8 = 1.25×10⁻⁵（x=0.1 处最大）；域外报 E-DET-DOMAIN。首次标定：覆盖常见衰减系数与比值，步长按 10⁻³ 的插值误差给界。';
+const SIN_BASIS = '输入 10⁸ 标度；表覆盖一个周期 6.2832 rad（2π 截到 10⁻⁴，端点误差 1.47×10⁻⁵，由输入先按周期取余消化），步长 4×10⁻⁴（4×10⁴）；插值误差 ≤ h²/8 = 2×10⁻⁸。首次标定：周期取 10⁸ 标度上最接近 2π 的 10⁻⁴ 整倍数。';
+const COS_BASIS = SIN_BASIS;
+const ATAN_BASIS = '输入 10⁸ 标度；定义域 [-1, 1]，步长 10⁻³（10⁵）；插值误差 ≤ h²·max|f″|/8 ≈ (10⁻³)²×0.65/8 = 8.1×10⁻⁸。域外按 atan(x)=sign(x)·π/2−atan(1/x) 折回，π/2 由本表 x=1 的值乘 2 得出，不另写常数。';
+const EXP_BASIS = '不另立表：直接指向卷二 §1.10 冻结指数表与 fixedExp（唯一定义），标度 10⁸、取值域 [-40, 40] 与卷二 §3.3 一致。';
+const SQRT_BASIS = '不查表：整数牛顿法固定 32 步（卷二 §1.10 :326），32 登在 iterations；结果取 min(y, ⌊n/y⌋) 保证向下取整。定义域 [0, 2⁵³−1] 按输入 10⁸ 标度。';
+const POW_BASIS = '由 exp 与 ln 组合（卷二 §3.3 :1341 非整数次幂唯一写法）：exp(k·ln x)，底数须为正；定义域随 ln（0.1–10），k·ln x 须落在 fixedExp 的 [-40, 40]。';
+
+function detNumericText() {
+  const ln = buildLn();
+  const sin = buildTrig(sinW, 'sin');
+  const cos = buildTrig(cosW, 'cos');
+  const atan = buildAtan();
+  if (sin[2_500] !== 84147098) fail(`sin x=1 不是 ⌊sin 1×10⁸⌋=84147098，实为 ${sin[2_500]}`); // 10⁸/4×10⁴ = 2500
+  if (cos[2_500] !== 54030230) fail(`cos x=1 不是 ⌊cos 1×10⁸⌋=54030230，实为 ${cos[2_500]}`);
+  if (sin[0] !== 0 || cos[0] !== OUT8_NUMBER) fail('sin/cos 在 0 处的值不对');
+  const entries = [
+    fnEntryText('exp', { inScale: 100_000_000, outScale: 100_000_000, domainMin: -4_000_000_000, domainMax: 4_000_000_000, step: 1, basis: EXP_BASIS }),
+    fnEntryText('ln', { inScale: 100_000_000, outScale: 100_000_000, domainMin: LN_MIN, domainMax: LN_MAX, step: LN_STEP, basis: LN_BASIS }, ln),
+    fnEntryText('sin', { inScale: 100_000_000, outScale: 100_000_000, domainMin: 0, domainMax: TRIG_PERIOD, step: TRIG_STEP, basis: SIN_BASIS }, sin),
+    fnEntryText('cos', { inScale: 100_000_000, outScale: 100_000_000, domainMin: 0, domainMax: TRIG_PERIOD, step: TRIG_STEP, basis: COS_BASIS }, cos),
+    fnEntryText('atan', { inScale: 100_000_000, outScale: 100_000_000, domainMin: -ATAN_LIM, domainMax: ATAN_LIM, step: ATAN_STEP, basis: ATAN_BASIS }, atan),
+    fnEntryText('sqrt', { inScale: 100_000_000, outScale: 100_000_000, domainMin: 0, domainMax: SAFE_INT_MAX, step: 1, iterations: SQRT_ITERATIONS, basis: SQRT_BASIS }),
+    fnEntryText('pow', { inScale: 100_000_000, outScale: 100_000_000, domainMin: LN_MIN, domainMax: LN_MAX, step: 1, basis: POW_BASIS }),
+  ];
+  const text = `{
+ "rows": [
+  {
+   "key": "mathAllow",
+   "value": ["abs", "min", "max", "sign", "round", "trunc", "floor", "ceil"],
+   "source": "卷二十七 §2.2 :167 mathAllow（规则层可用的整数安全数学成员：取整、绝对值、最大最小、符号一类）；空表 = 全禁"
+  },
+  {
+   "key": "safeIntMax",
+   "value": ${SAFE_INT_MAX},
+   "source": "卷二十七 §2.2 :168（IEEE 754 双精度可精确表示的最大整数 2⁵³−1，固定值）"
+  },
+  {
+   "key": "fnTables",
+   "value": {
+${entries.join(',\n')}
+   },
+   "source": "卷二十七 §2.2 :171、R27-5.2 :570–:575（expo 七函数各一行；exp 指向卷二 §1.10 冻结表；sqrt 牛顿固定步；pow=exp∘ln）"
+  }
+ ]
+}
+`;
+  return { text, counts: { ln: ln.length, sin: sin.length, cos: cos.length, atan: atan.length } };
+}
+
+const OUT8_NUMBER = Number(OUT8);
 const digestOf = (values) => createHash('sha256').update(values.map(String).join(','), 'utf8').digest('hex');
 
 // 值数组的排版：每行 PER_LINE 个；closePad 是收尾 ] 的缩进。
@@ -203,6 +423,7 @@ export function generate() {
   const normalQuantile = buildNormalQuantile();
   const expInt = buildExpInt();
   const expFrac = buildExpFrac(expInt);
+  const det = detNumericText();
   const text = `{
  "generatedBy": "tools/gen-det-tables.mjs",
  "note": "expInt 的值是十进制字串（e^k×10⁸ 超出 2⁵³）；expFrac 与 normalQuantile 是 JSON 数。sha256 对 values.map(String).join(',') 的 UTF-8 字节。",
@@ -227,25 +448,33 @@ export function generate() {
  }
 }
 `;
-  return { text, counts: { normalQuantile: normalQuantile.length, expInt: expInt.length, expFrac: expFrac.length } };
+  return { text, detText: det.text, counts: { normalQuantile: normalQuantile.length, expInt: expInt.length, expFrac: expFrac.length, ...det.counts } };
 }
 
 function targetPath() {
   return join(repoRoot(), 'world', 'ontology', 'dimensions', safeSegment(FILE));
 }
 
+function detTargetPath() {
+  return join(repoRoot(), 'world', 'rules', 'tables', safeSegment(DET_FILE));
+}
+
 function main(argv) {
-  const { text, counts } = generate();
+  const { text, detText, counts } = generate();
   const file = targetPath();
+  const detFile = detTargetPath();
   const same = existsSync(file) && readFileSync(file, 'utf8') === text;
+  const detSame = existsSync(detFile) && readFileSync(detFile, 'utf8') === detText;
+  const summary = `${counts.normalQuantile}/${counts.expInt}/${counts.expFrac}/${counts.ln}/${counts.sin}/${counts.cos}/${counts.atan}`;
   if (argv.includes('--check')) {
-    process.stdout.write(same
-      ? `det tables up to date (${counts.normalQuantile}/${counts.expInt}/${counts.expFrac})\n`
+    process.stdout.write(same && detSame
+      ? `det tables up to date (${summary})\n`
       : 'det tables differ from the generated tables (run node tools/gen-det-tables.mjs)\n');
-    return same ? 0 : 1;
+    return same && detSame ? 0 : 1;
   }
   if (!same) writeFileSync(file, text);
-  process.stdout.write(same ? 'unchanged\n' : 'written\n');
+  if (!detSame) writeFileSync(detFile, detText);
+  process.stdout.write(same && detSame ? 'unchanged\n' : 'written\n');
   return 0;
 }
 

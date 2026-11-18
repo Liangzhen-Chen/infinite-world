@@ -13,6 +13,7 @@ import { checkDef, checkValue, rangeOk, DOMAIN_OPTIONAL, TYPES, KEY_RE, CODE_RE,
 import { STACKING } from '../validate/dimensions-validate.mjs';
 import { isRuleTableFile } from '../handles/keys.mjs';
 import { escapeJsonPointer, keyPointerOf } from './vocab-load.mjs';
+import { installDetNumeric } from '../det-math.mjs';
 
 export const RULES_LAYOUT = Object.freeze({ dir: 'world/rules', registry: 'registry.json' });
 
@@ -232,6 +233,46 @@ function checkProcessTable(t, env, err) {
   }
 }
 
+// fnTable 形状的跨字段检查（卷二十七 R27-5.2 :570–:575）：按值形状识别，不按表名、键名或函数名开分支——
+// 同形状的数据在任何规则表里都走同一检查（红线：不为某个 id/表/卷名单写特例）。类型系统查不到的三条在这里：
+// domainMax−domainMin 须被 step 整除、values 长度 = (domainMax−domainMin)÷step+1、每行须写非空 basis（标度步长依据）。
+const FN_SHAPE = ['inScale', 'outScale', 'domainMin', 'domainMax', 'step'];
+const isFnRow = (v) => isObj(v) && FN_SHAPE.every((f) => Object.hasOwn(v, f));
+// fnTables 是一张 map<代码内枚举, fnTable>：登记行声明 requireAll 时，枚举的每个条目都要有一行（"缺行即加载失败"）。
+// 枚举条目从登记引用的代码内枚举读，不在代码里列函数名，也不按表名分支。
+function fnTableSetOf(v, def, at, err) {
+  if (!isObj(v)) return null;
+  const enumFam = isObj(def) && def.type === T.type.map && isObj(def.key) && def.key.type === T.type.enum ? def.key.vocab : null;
+  const requireAll = isObj(def) && isObj(def.domain) && def.domain.requireAll === true && enumFam !== null && Object.hasOwn(CODE_ENUMS, enumFam);
+  // requireAll 时空表不早退：缺行循环从枚举条目派生，空对象必然逐值报缺失（卷二十七 :171"缺行即加载失败"）。
+  if (!requireAll && !Object.keys(v).length) return null;
+  if (!Object.keys(v).every((k) => isFnRow(v[k]))) return null;
+  if (!requireAll) return v;
+  let ok = true;
+  for (const k of CODE_ENUMS[enumFam]) {
+    if (Object.hasOwn(v, k)) continue;
+    ok = false;
+    err({ code: 'E-DIM-STRUCT-FIELD', level: 'L1', ...at, got: `missing ${k}`, want: `all entries of ${enumFam}` });
+  }
+  return ok ? v : null;
+}
+function checkFnRow(v, at, err) {
+  const bad = (code, field, got, want) => err({ code, level: 'L1', ...at, path: at.path ? `${at.path}/${field}` : field, got, want });
+  if (typeof v.basis !== 'string' || v.basis === RULES_DOC.empty) bad('E-DIM-STRUCT-FIELD', 'basis', v.basis, 'non-empty basis (scale/step calibration, R27-5.2 :575)');
+  const hasValues = Object.hasOwn(v, 'values');
+  if (hasValues && (typeof v.sha256 !== 'string' || v.sha256 === RULES_DOC.empty)) return bad('E-DIM-STRUCT-FIELD', 'sha256', v.sha256, 'non-empty digest for a values table (R27-5.2 :574)');
+  if (!hasValues && Object.hasOwn(v, 'sha256')) return bad('E-DIM-STRUCT-FIELD', 'sha256', v.sha256, 'only on a row carrying values');
+  const lo = BigInt(v.domainMin);
+  const hi = BigInt(v.domainMax);
+  const step = BigInt(v.step);
+  if (hi < lo) return bad('E-DIM-DOMAIN-RANGE', 'domainMax', v.domainMax, '>= domainMin');
+  if (step < 1n) return undefined; // step < 1 由登记的类型取值域报，不重复报
+  const span = hi - lo;
+  if (span % step !== 0n) return bad('E-DIM-DOMAIN-SIZE', 'step', v.step, `divides domainMax - domainMin (${span})`);
+  if (hasValues && BigInt(v.values.length) !== span / step + 1n) return bad('E-DIM-DOMAIN-SIZE', 'values', v.values.length, `(domainMax - domainMin) / step + 1 = ${span / step + 1n}`);
+  return undefined;
+}
+
 // 第二步：类型定义（完整写法的）与表值按 L1/L2 同一套检查。env 取自维度加载（validateDimensions 的 env）。
 /** @param {{errors: unknown[], tables: unknown[], rules: Record<string, unknown>}} read readRules 的结果 @param {Record<string, unknown>} env */
 export function checkRules(read, env) {
@@ -243,11 +284,19 @@ export function checkRules(read, env) {
     for (const [k, def] of defs) if (def.type !== undefined && Object.keys(def).some((f) => f !== TYPE_FIELD.type && f !== TYPE_FIELD.domain)) checkDef(def, env, { row: k, dim: 'type', path: `registry:${t.code}/${k}` }, err, false);
     for (const e of t.entries) {
       const at = { row: e.key, dim: '', path: e.path };
+      const before = errors.length;
       if (!t.keyed) checkValue(t.rowKey, e.key, env, { ...at, path: keyPointerOf(e.path) }, err);
       const def = t.keyed ? t.defs.get(e.key) : t.rowDef;
       if (def && TYPES.includes(def.type)) checkValue(def, e.value, env, at, err);
+      // 类型与取值域都过关后才做 fnTable 形状的跨字段检查；不过关就整行不查（避免同一处报两个码）。
+      if (errors.length !== before) continue;
+      const set = fnTableSetOf(e.value, def, at, err);
+      if (!set) continue;
+      for (const k of Object.keys(set).sort()) checkFnRow(set[k], { row: e.key, dim: '', path: `${e.path}/${k}` }, err);
     }
   }
+  // 全部规则表都过检查才把 det-numeric 装进内核（det-math 是这三个键的运行期消费者）：任一失败不装，用到时报缺少表。
+  if (!errors.length) installDetNumeric(read.rules);
   return errors;
 }
 
