@@ -22,7 +22,7 @@ export function validate(root, regs) {
   const err = (code, key, why) => errs.push(`${code} ${key}: ${why}`);
   const decl = readDecl(root);
   const model = groupModel(decl);
-  const keys = keySets(model, regs);
+  const keys = keySets(model, regs, decl);
   const groupKeys = keys.groups;
   const detectors = keys.detectors;
   const classes = new Map(regs.scanclasses.map((c) => [c.scanClass, c]));

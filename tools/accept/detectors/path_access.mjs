@@ -11,17 +11,19 @@
 //   display 读显示路径（卷十二 R12-2.10：显示集合只取声明表 stateKeys.<键>.display 与 textPaths）：state 成员链落在显示路径上即 E-VIEW-DISPLAY-READ。
 // 局限（P-1 与 2-3 汇报）：按成员链读路径，解构取出后的分支追不到；state 的根按名字认（lib/js-state.mjs），类型归因要等 tsc。
 
-import { tokenize, memberChains, conditionSpans, symbolPaths, BRANCH_OPS } from '../lib/js-scan.mjs';
+import { tokenize, memberChains, conditionSpans, symbolPaths, BRANCH_OPS, importsOf, isP } from '../lib/js-scan.mjs';
 import { stateChains, declPaths, writerOf, segsMatch, serverRel, callsOf } from '../lib/js-state.mjs';
 import { filesOfGroups, globToRe } from '../read.mjs';
 
 export function detect(ctx, params, cls) {
   if (params.access === 'write') return writeHits(ctx, params, cls || {});
   if (params.access === 'display') return displayHits(ctx, params);
+  if (params.access === 'ref') return refHits(ctx, params, cls);
   const pats = (params.paths || []).map((p) => p.split('.').map((seg) => globToRe(seg, [])));
-  const readers = new Set(filesOfGroups(ctx.files, ctx.model, params.readers || []));
+  // readerSystems：登记的读者是具体文件（卷六 A6-1.1 的账本内核，调用图白名单 S6-13 同法），文件不抄名单，取自声明表该系统（systems.<系统>.writers）所涉状态键的写者登记。
+  const readers = new Set([...filesOfGroups(ctx.files, ctx.model, params.readers || []), ...ownerFiles(ctx, params.readerSystems)]);
   const hits = [];
-  for (const file of filesOfGroups(ctx.files, ctx.model, params.groups || [])) {
+  for (const file of scopeOf(ctx, params)) {
     if (readers.has(file)) continue;
     const toks = tokenize(ctx.read(file));
     const cond = params.access === 'branch' ? conditionSpans(toks) : null;
@@ -30,6 +32,59 @@ export function detect(ctx, params, cls) {
       if (!pats.some((pat) => windowMatch(ch.segs, pat))) continue;
       if (cond && !isBranch(toks, ch, cond)) continue;
       hits.push({ file, line: toks[ch.start].line, nodeKind: 'member', symbolPath: sym[ch.start], code: params.code || '' });
+    }
+  }
+  return hits;
+}
+
+// 登记派生的文件：参数给系统代号（声明表 systems 的键），文件取该系统 writers 所涉状态键在 stateKeys.<键>.writers 里登记的写者文件（rewrite、create），
+// 服务端根相对转仓库路径（卷二 §2.7）。不另抄文件名单（R12-11.5）；系统不在声明表、派生不出文件、派生出的文件不在文件清单里，一律 E-ACC-ITEM-PARAM，不静默跳过。
+function ownerFiles(ctx, ids) {
+  if (ids === undefined) return [];
+  const decl = ctx.decl || {};
+  const root = ((ctx.model.processes || {}).server || {}).root || '';
+  const out = new Set();
+  for (const id of ids) {
+    const sys = (decl.systems || {})[id];
+    if (!sys) throw new Error(`E-ACC-ITEM-PARAM system=${id}`);
+    for (const w of sys.writers || []) {
+      const row = (decl.stateKeys || {})[w.split('.')[0]];
+      for (const v of Object.values((row && row.writers) || {})) {
+        const rels = typeof v === 'string' ? [v] : [v && v.rewrite, ...((v && v.create) || [])];
+        for (const rel of rels) if (rel) out.add(root + rel);
+      }
+    }
+  }
+  if (!out.size) throw new Error(`E-ACC-ITEM-PARAM systems=${ids.join(',')} no writer files`);
+  // 存在性对照真实仓库清单：真实执行里就是 ctx.files；用例夹具是虚拟文件集，执行器带 repoFiles（真实清单）来核，夹具里没有的派生文件只是不进本次扫描。
+  const repo = ctx.repoFiles || ctx.files;
+  for (const f of out) if (!repo.includes(f)) throw new Error(`E-ACC-ITEM-PARAM derived file missing ${f}`);
+  return [...out].sort();
+}
+
+// 范围：params.groups 展开的文件，并上 params.scopeSystems 由登记派生的具体文件。
+function scopeOf(ctx, params) {
+  const scope = new Set([...filesOfGroups(ctx.files, ctx.model, params.groups || []), ...ownerFiles(ctx, params.scopeSystems).filter((f) => ctx.files.includes(f))]);
+  return [...scope].sort();
+}
+
+// ref（卷六 A6-1.1 后半"账本内核对 priceFor、valuation 的引用为 0"）：params.paths 是单段名字；范围内（读者除外）出现
+// ① 同名标识符（不在 `.` 之后；import 列表里的名字、调用、赋值、传参都算引用），或 ② 相对静态 import 的模块文件名（去扩展名）同名，各计一处。
+// 局限：按名字认，`import x from './valuation.mjs'` 靠 ② 抓到；经第三方模块转手而不出现该名的，要靠转手模块自己的范围。
+function refHits(ctx, params, cls) {
+  const names = new Set(params.paths || []);
+  const readers = new Set([...filesOfGroups(ctx.files, ctx.model, params.readers || []), ...ownerFiles(ctx, params.readerSystems)]);
+  const hits = [];
+  for (const file of scopeOf(ctx, params)) {
+    if (readers.has(file)) continue;
+    const toks = tokenize(ctx.read(file));
+    const sym = symbolPaths(toks);
+    const push = (i, nodeKind) => hits.push({ file, line: toks[i].line, nodeKind, symbolPath: sym[i], code: params.code || '' });
+    toks.forEach((t, i) => { if (t.t === 'id' && names.has(t.v) && !isP(toks[i - 1], '.') && !isP(toks[i - 1], '?.')) push(i, 'ref'); });
+    for (const imp of importsOf(toks)) {
+      if (imp.kind !== 'static' || !imp.spec || !imp.spec.startsWith('.')) continue;
+      const stem = imp.spec.slice(imp.spec.lastIndexOf('/') + 1).replace(/\.[A-Za-z]+$/, '');
+      if (names.has(stem)) push(imp.at, 'import_module');
     }
   }
   return hits;

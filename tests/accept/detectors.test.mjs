@@ -10,6 +10,8 @@ import { detect as importEdge } from '../../tools/accept/detectors/import_edge.m
 import { detect as pathAccess } from '../../tools/accept/detectors/path_access.mjs';
 import { detect as callEdge } from '../../tools/accept/detectors/call_edge.mjs';
 import { detect as docStruct, definedNumbers } from '../../tools/accept/detectors/doc_struct.mjs';
+import { detect as dataShape } from '../../tools/accept/detectors/data_shape.mjs';
+import { REGISTERED_CODES } from '../../server-plugin/kernel/error-codes.mjs';
 import { ENUM } from '../../tools/accept/lib/item-form.mjs';
 import { tempRepo } from './temp-repo.mjs';
 import { testTempRoot, writeUnderTempRoot, assertRelUnderTempRoot } from './temp-root.mjs';
@@ -490,4 +492,77 @@ test('离线路径段登记（裁定一）：gatefac 行登记 rootFns、segment
   // 没有 guardedPaths 的类别不检查路径段设施的必跑测试（修订记录称“判定口径不变”）。
   assert.deepEqual(CLS.wallclock.guardedPaths, undefined);
   assert.deepEqual(callEdge(broken, { ...params, callees: ['wallclock'] }, CLS.wallclock).filter((h) => h.nodeKind === 'test').map((h) => h.symbolPath).filter((s) => s === req.names[0]), []);
+});
+
+// ---------- instance_name 整类登码与 S6-2 规则表一支（卷六 S6-2；卷十二 §2.12 :540、:545；李白 11-18 07:27 裁定①） ----------
+
+const TBL = 'world/rules/tables/economy/resources.json';
+const KEYCHECK = { checks: ['entityKey'], code: 'E-ACC-INSTANCE-NAME' };
+const tableHits = (doc, extra = {}, cls = CLS.instance_name) => dataShape(ctxOf({ [TBL]: JSON.stringify(doc), ...extra }), KEYCHECK, cls);
+
+test('instance_name 整类登码：类别下每一条目（含 CORE 的 vol2.S1）都登 E-ACC-INSTANCE-NAME，且码在码表里', () => {
+  const own = readRegistry(ROOT, 'items').filter((it) => it.scanClass === 'instance_name');
+  assert.deepEqual(own.map((it) => it.itemKey).sort(), ['vol1.V-1.a', 'vol2.S1', 'vol2.S8', 'vol6.S6-2.a', 'vol6.S6-2.b']);
+  for (const it of own) assert.equal(it.params.code, 'E-ACC-INSTANCE-NAME', it.itemKey);
+  assert.ok(REGISTERED_CODES.has('E-ACC-INSTANCE-NAME'));
+  assert.equal(litScope(ctxOf({ 'server-plugin/a.mjs': "const a = 'fxa_oats';" }), { groups: RT, literal: 'entityPrefix', code: 'E-ACC-INSTANCE-NAME' }, CLS.instance_name)[0].code, 'E-ACC-INSTANCE-NAME');
+});
+
+test('S6-2 规则表一支：键是实体 id 报一条（nodeKind key），值是实体 id 或单例 id 各报一条（value），码取条目参数', () => {
+  const k = tableHits({ rows: [{ key: 'res_x', value: { fxa_oats: 1 } }] });
+  assert.deepEqual(k.map((h) => [h.file, h.nodeKind, h.symbolPath, h.code]), [[TBL, 'key', 'rows[].value', 'E-ACC-INSTANCE-NAME']]);
+  const v = tableHits({ rows: [{ key: 'res_x', value: { family: 'fxa_oats', sources: ['src_genesis', 'fxsolo'], cls: 'fxclass_a' } }] });
+  assert.deepEqual(v.map((h) => [h.nodeKind, h.symbolPath]), [['value', 'rows[].value.family'], ['value', 'rows[].value.sources[]'], ['value', 'rows[].value.cls']]);
+});
+
+test('S6-2 规则表一支：词表代号、固定键名、前缀不带下划线或在中段的字串、数字与布尔都不报', () => {
+  assert.deepEqual(tableHits({ rows: [{ key: 'res_x', value: { family: 'resfam_asset', note: 'fxa without underscore, pre_fxa_ in the middle', fxa: 1, n: 5, ok: true, nothing: null, sources: ['src_genesis'], fxsolo2: 'fxsolo2' } }] }), []);
+});
+
+// 规则表取 world/rules/registry.json 全部登记行（卷十二 §2.4 :236），登记与文件存在性取真实根 ctx.root；这里换一个临时根造"登记缺失、无行、登记的文件不存在"。
+const ROW = '{"rows": [{"code": "fxTab", "file": "tables/nope.json", "structure": "processSlots", "volume": "vol6", "multiSourceMerge": "own_key_only", "packOverridable": true}]}';
+const shape = (base, fakeRoot) => dataShape({ ...base, root: fakeRoot }, KEYCHECK, CLS.instance_name).map((h) => [h.nodeKind, h.code, h.file, h.symbolPath]);
+
+test('S6-2 规则表一支：登记缺失、登记里没有表行、登记的文件不存在，都报 E-ACC-ITEM-PARAM（不静默放过）', () => {
+  const base = ctxOf({ 'server-plugin/a.mjs': 'export const x = 1;' });
+  const dir = testTempRoot('s62-reg-');
+  try {
+    assert.deepEqual(shape(base, dir), [['param', 'E-ACC-ITEM-PARAM', 'world/rules/registry.json', 'rules registry missing']]);
+    writeUnderTempRoot(dir, 'world/rules/registry.json', '{"rows": []}');
+    assert.deepEqual(shape(base, dir), [['param', 'E-ACC-ITEM-PARAM', 'world/rules/registry.json', 'rules registry has no table rows']]);
+    writeUnderTempRoot(dir, 'world/rules/registry.json', ROW);
+    assert.deepEqual(shape(base, dir), [['param', 'E-ACC-ITEM-PARAM', 'world/rules/tables/nope.json', 'registered table file missing']]);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('S6-2 规则表一支：扫登记的全部表而不限经济目录；登记里的表不在被查文件集里则不读；不在登记里的文件不读', () => {
+  const MOD = 'world/rules/tables/modifiers.json';
+  const hit = dataShape(ctxOf({ [MOD]: JSON.stringify({ rows: [{ key: 'fxa_oats', value: 1 }] }) }), KEYCHECK, CLS.instance_name);
+  assert.deepEqual(hit.map((h) => [h.file, h.nodeKind, h.code]), [[MOD, 'value', 'E-ACC-INSTANCE-NAME']]);
+  assert.deepEqual(dataShape(ctxOf({ 'world/rules/tables/economy/unregistered.json': JSON.stringify({ rows: [{ key: 'fxa_oats', value: 1 }] }) }), KEYCHECK, CLS.instance_name), []);
+  assert.deepEqual(dataShape(ctxOf({ 'server-plugin/a.mjs': 'export const x = 1;' }), KEYCHECK, undefined), []);
+});
+
+test('S6-2 规则表一支：表文件不是合法 JSON 报 E-ACC-ITEM-FORM，不静默跳过', () => {
+  const ctx = ctxOf({ [TBL]: '{"rows": [' });
+  assert.deepEqual(dataShape(ctx, KEYCHECK, CLS.instance_name).map((h) => [h.file, h.code]), [[TBL, 'E-ACC-ITEM-FORM']]);
+});
+
+test('S6-2 真实仓库：登记的全部规则表键值零命中（登记的实体前缀取自维度表表头，不写死）；扫到的表数等于登记行数', () => {
+  const ctx = loadContext(ROOT);
+  const rows = JSON.parse(readFileSync(join(ROOT, 'world/rules/registry.json'), 'utf8')).rows;
+  assert.equal(rows.length, 8);
+  assert.ok(rows.every((r) => ctx.files.includes(`world/rules/${r.file}`)));
+  assert.deepEqual(dataShape(ctx, KEYCHECK, CLS.instance_name), []);
+});
+
+test('vol2.S10 补码：const_literal 类条目登 E-ACC-CONST-LITERAL，码在码表里；全部在跑的 lit_scope、call_edge、path_access 等取 params.code 的条目都登了码', () => {
+  assert.ok(REGISTERED_CODES.has('E-ACC-CONST-LITERAL'));
+  const own = readRegistry(ROOT, 'items').filter((it) => it.scanClass === 'const_literal');
+  assert.deepEqual(own.map((it) => [it.itemKey, it.params.code]), [['vol2.S10', 'E-ACC-CONST-LITERAL']]);
+  const codeFromParam = new Set(['lit_scope', 'call_edge', 'file_set', 'data_shape']);
+  for (const it of readRegistry(ROOT, 'items')) {
+    if (it.state === 'registered' || !codeFromParam.has(it.detector) || (it.params || {}).checks) continue;
+    assert.ok(REGISTERED_CODES.has((it.params || {}).code), `${it.itemKey} running without a registered code`);
+  }
 });

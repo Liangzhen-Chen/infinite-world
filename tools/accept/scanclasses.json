@@ -131,7 +131,7 @@
     "data_shape"
    ],
    "scanClass": "instance_name",
-   "source": "卷一 R-4；卷二 S1；卷十二 §2.4"
+   "source": "卷一 R-4；卷二 S1；卷十二 §2.4 :236；S6-2 的 data_shape 一支读统一加载器唯一登记 world/rules/registry.json 全部登记行（不另抄目录名单）"
   },
   {
    "detectors": [
@@ -198,7 +198,7 @@
     "path_access"
    ],
    "scanClass": "module_edge",
-   "source": "卷二 §2.7；S16、S19；卷十二 §2.4"
+   "source": "卷二 §2.7；S16、S19；卷十二 §2.4；A6-1.1 的读者与范围文件不在类别行抄名单（R12-11.5，李白 11-18 Opus 只核），由检测器按条目参数 readerSystems、scopeSystems 从 state-owners.json 的 systems.<系统>.writers 所涉状态键的写者登记派生；派生不出或文件不在仓库报 E-ACC-ITEM-PARAM"
   },
   {
    "detectors": [

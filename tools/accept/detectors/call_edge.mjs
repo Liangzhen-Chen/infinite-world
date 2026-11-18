@@ -12,9 +12,12 @@
 
 import { tokenize, foldAt, buildEnv, importsOf, symbolPaths, isP, matchClose } from '../lib/js-scan.mjs';
 import { scopeFiles, facilityFiles, matchGlobs } from '../read.mjs';
+import { apiCallerHits } from '../lib/api-callers.mjs';
 import { posix } from 'node:path';
 
 export function detect(ctx, params, cls) {
+  // params.entries（kernelApi 导出 id）：受限内核入口的调用者核对，许可全取自 state-owners 的 callers 登记（lib/api-callers.mjs；卷六 S6-13）。
+  if (params.entries) return apiCallerHits(ctx, params);
   const table = {};
   const rows = new Map((ctx.regs.scanclasses || []).map((c) => [c.scanClass, c]));
   for (const c of params.callees || []) {

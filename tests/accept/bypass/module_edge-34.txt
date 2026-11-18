@@ -1,0 +1,5 @@
+// @file server-plugin/kernel/ledger.mjs
+import { priceFor } from '../market/price.mjs';
+export const f = () => priceFor(1);
+// @file server-plugin/kernel/files.json
+["server-plugin/kernel/__case__/module_edge-34.mjs", "server-plugin/kernel/ledger.mjs"]
