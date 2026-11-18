@@ -3600,6 +3600,33 @@
    "zeroRows": []
   },
   {
+   "detector": "state_pattern",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/state_pattern.mjs",
+   "itemKey": "vol6.S6-14",
+   "localNo": "S6-14",
+   "method": "static_data",
+   "params": {
+    "checks": [
+     "stateQuantity"
+    ],
+    "code": "E-DIM-STRUCT-FIELD"
+   },
+   "runsOn": "local_static",
+   "scanClass": "state_pattern",
+   "source": "卷六 §3.5 S6-14 :337（状态模式检查：实体行、偏离行、状态键上单位属于任一资源种类行 unit 的数值字段，除账本三路径与合同、义务记录里的应付数额外计数为 0）；卷二 §1.5 :200–:248（命名 struct 机读登记）；卷十二 R12-10.7 :1058、§2.12 :539–:547（无码状态不许出现；违例码用已登记的 E-DIM-STRUCT-FIELD，见 docs/卡回报/ds-b3-4.md“已定”）；李白 11-18 07:27 裁定第 2 条；块 3 第 3-4 张",
+   "stage": 0,
+   "state": "in_core",
+   "target": "data",
+   "volume": "vol6",
+   "zeroRows": []
+  },
+  {
    "detector": "lit_scope",
    "expect": "zero",
    "form": "scan",

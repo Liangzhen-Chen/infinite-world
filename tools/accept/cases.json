@@ -1000,6 +1000,94 @@
   },
   {
    "addedAtRev": 1,
+   "caseKey": "state_pattern-01",
+   "expectCode": "E-DIM-STRUCT-FIELD",
+   "fixture": "tests/accept/bypass/state_pattern-01.txt",
+   "group": "rules",
+   "origin": "S6-14：人物行上另存资源数量字段（单位属于资源种类行 unit）必报",
+   "polarity": "must_fail",
+   "scanClass": "state_pattern"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "state_pattern-02",
+   "expectCode": "E-DIM-STRUCT-FIELD",
+   "fixture": "tests/accept/bypass/state_pattern-02.txt",
+   "group": "rules",
+   "origin": "S6-14：命名 struct 里的资源数量字段必报（按单位判，不按字段名）",
+   "polarity": "must_fail",
+   "scanClass": "state_pattern"
+  },
+  {
+   "addedAtRev": 3,
+   "caseKey": "state_pattern-03",
+   "expectCode": "E-DIM-STRUCT-FIELD",
+   "fixture": "tests/accept/bypass/state_pattern-03.txt",
+   "group": "rules",
+   "origin": "S6-14：维度表实体行 rows.<id> 上另存资源数量字段必报（卷六 §4.1 规则 11 :382）",
+   "polarity": "must_fail",
+   "scanClass": "state_pattern"
+  },
+  {
+   "addedAtRev": 3,
+   "caseKey": "state_pattern-04",
+   "expectCode": "E-DIM-STRUCT-FIELD",
+   "fixture": "tests/accept/bypass/state_pattern-04.txt",
+   "group": "rules",
+   "origin": "S6-14：dimension 偏离行按 keyKinds 的 kind 维度表表头展开后必报（卷二 §2.7 :811）",
+   "polarity": "must_fail",
+   "scanClass": "state_pattern"
+  },
+  {
+   "addedAtRev": 3,
+   "caseKey": "state_pattern-05",
+   "expectCode": "E-DIM-STRUCT-FIELD",
+   "fixture": "tests/accept/bypass/state_pattern-05.txt",
+   "group": "rules",
+   "origin": "S6-14：pathTypes 的 list<…> 简写容器展开到命名 struct 的数值字段后必报（卷二 §2.7 :675、:811）",
+   "polarity": "must_fail",
+   "scanClass": "state_pattern"
+  },
+  {
+   "addedAtRev": 3,
+   "caseKey": "state_pattern-06",
+   "expectCode": "E-DIM-STRUCT-FIELD",
+   "fixture": "tests/accept/bypass/state_pattern-06.txt",
+   "group": "rules",
+   "origin": "S6-14：义务记录的 done（已给付，卷六 §2.4 :200）不是应付数额，仍必报；义务记录不整键豁免",
+   "polarity": "must_fail",
+   "scanClass": "state_pattern"
+  },
+  {
+   "addedAtRev": 3,
+   "caseKey": "state_pattern-07",
+   "expectCode": "E-DIM-STRUCT-FIELD",
+   "fixture": "tests/accept/bypass/state_pattern-07.txt",
+   "group": "rules",
+   "origin": "S6-14：合同记录里未标 payable 角色的数值字段必报，合同记录不整键豁免",
+   "polarity": "must_fail",
+   "scanClass": "state_pattern"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "state_pattern-11",
+   "fixture": "tests/accept/bypass/state_pattern-11.txt",
+   "group": "rules",
+   "origin": "S6-14：账本三路径、合同与义务记录的应付数额、单位不属于资源种类行的数值字段都不报",
+   "polarity": "must_pass",
+   "scanClass": "state_pattern"
+  },
+  {
+   "addedAtRev": 3,
+   "caseKey": "state_pattern-12",
+   "fixture": "tests/accept/bypass/state_pattern-12.txt",
+   "group": "rules",
+   "origin": "S6-14：义务记录的 qty（应付数额，命名 struct 登记里 role=payable）不报",
+   "polarity": "must_pass",
+   "scanClass": "state_pattern"
+  },
+  {
+   "addedAtRev": 1,
    "caseKey": "text_judge-01",
    "expectCode": "E-VIEW-TEXT-MATCH",
    "fixture": "tests/accept/bypass/text_judge-01.txt",

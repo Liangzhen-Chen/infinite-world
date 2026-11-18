@@ -1,0 +1,9 @@
+// 偏离行 created.*.props.* 登记为 dimension；该 kind 的维度表里有资源种类行 unit 的数值维度——S6-14 必报（卷二 §2.7 :811）。
+// @file world/ontology/state-owners.json
+{"pathTypes": {"created.*.props.*": "dimension"}, "keyKinds": {"created.*.props.*": [["item"], "dimKey"]}}
+// @file world/ontology/named-structs.json
+{"version": 1, "rows": []}
+// @file world/ontology/dimensions/item.json
+{"kind": "item", "dimensions": {"mass": {"type": "number", "unit": "copper"}}, "rows": {}}
+// @file world/rules/tables/economy/resources.json
+{"rows": [{"key": "res_test", "value": {"unit": "copper"}}]}

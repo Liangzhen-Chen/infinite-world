@@ -1,0 +1,7 @@
+// 状态登记表在人物行上另存了一个资源数量字段（copper 是资源种类表的 unit）——S6-14 必报。
+// @file world/ontology/state-owners.json
+{"pathTypes": {"npcs.*.coins": "integer:copper", "npcs.*.name": "opaque:name"}}
+// @file world/ontology/named-structs.json
+{"version": 1, "rows": []}
+// @file world/rules/tables/economy/resources.json
+{"rows": [{"key": "res_test", "value": {"unit": "copper"}}]}

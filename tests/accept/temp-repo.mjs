@@ -12,6 +12,10 @@ const REG_FILES = new Set(Object.values(REGISTRY).map((r) => r.file));
 export function tempRepo() {
   const dir = testTempRoot('p1-accept-');
   cpSync(join(ROOT, 'world/ontology/state-owners.json'), join(dir, 'world/ontology/state-owners.json'));
+  // 卷六 S6-14（in_core，必过）检测器读卷二 §1.5 命名 struct 机读登记与维度表实体行（卷六 :337、§4.1 规则 11 :382）：
+  // 临时仓库带上这两处世界数据，必过条目才与真实仓库同口径，不会因缺登记被判 E-ACC-ITEM-PARAM。
+  cpSync(join(ROOT, 'world/ontology/named-structs.json'), join(dir, 'world/ontology/named-structs.json'));
+  cpSync(join(ROOT, 'world/ontology/dimensions'), join(dir, 'world/ontology/dimensions'), { recursive: true });
   // 登记文件与整套门禁代码（S12-13 按类别登记的检测器模块及其 import 闭包算判据指纹；P-1b）。
   // 基线文件 baseline.json 同属 §2.11 登记（执行器写、卷十二 §2.5 基线分量）：复制过来，临时仓库里的 V-11 才与真实仓库同口径
   // （内核组的逐行基线分量不为零，不复制会按零基线拒）；内核文件只拷一部分，实测行数是基线的子集，只降判定照过。

@@ -1,0 +1,7 @@
+// 合同记录里未标「应付数额」角色的数值字段：合同整键不在豁免内，必报（卷六 :337）。
+// @file world/ontology/state-owners.json
+{"pathTypes": {"contracts.*": "struct:contract"}}
+// @file world/ontology/named-structs.json
+{"version": 1, "rows": [{"name": "struct:contract", "source": "fixture", "type": {"struct": {"terms": {"map": {"key": "ref vocab cterm", "value": "integer:copper"}}}}}]}
+// @file world/rules/tables/economy/resources.json
+{"rows": [{"key": "res_test", "value": {"unit": "copper"}}]}

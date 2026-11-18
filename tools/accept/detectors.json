@@ -45,6 +45,10 @@
    "source": "卷二十七 §4.8 R27-8.1 :717、R27-8.4 :720；卷十二 §2.4（开放登记）、§7 M12-5 :1341；B4-G（李白 11-18 16:3x 第 2 条）。模块 tools/accept/detectors/seed_sites.mjs（B4-G，主会话只核必须改第 1 项）"
   },
   {
+   "detectorCode": "state_pattern",
+   "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；卷十二 §2.4 开放登记；李白 11-18 07:27 裁定第 2 条；块 3 第 3-4 张"
+  },
+  {
    "detectorCode": "sym_exists",
    "source": "卷十二 §2.3"
   },

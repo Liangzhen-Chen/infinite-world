@@ -545,6 +545,13 @@
    "source": "卷十二 §3.4 S12-5、§2.3 :228、§1.3 第 2 条；P-1b 新登类别"
   },
   {
+   "detectors": [
+    "state_pattern"
+   ],
+   "scanClass": "state_pattern",
+   "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 命名 struct 机读登记 world/ontology/named-structs.json；卷十二 §2.4 开放登记；块 3 第 3-4 张"
+  },
+  {
    "checkCodes": {
     "bareCompare": "E-VIEW-TEXT-MATCH",
     "exportParams": "E-VIEW-FAMILY-UNRESOLVED",

@@ -1,0 +1,501 @@
+{
+ "version": 1,
+ "source": "卷二 §1.5 命名 struct 登记表（:204–:248）的机读形式；字段与单位以该表原文为准，本表只照录",
+ "grammar": {
+  "scalar": "pathTypes 同形类型串：integer:<unit> / number:<unit> / boolean / enum:<family> / ref:<kind> / ref vocab <family> / Handle<family> / EntityId / EntityId<kind> / SeedKey / RxId / rx / rxTree / distribution，可带 ' nullable'；不识别的类型串是 opaque（本表不据此判单位）",
+  "list": {"list": "<type node>"},
+  "set": {"set": "<type node>"},
+  "map": {"map": {"key": "<type node>", "value": "<type node>"}},
+  "inlineStruct": {"struct": {"<field>": "<type node>"}},
+  "namedStruct": "struct:<name>（可带 <类型参数> 与 ' nullable'）",
+  "fieldRoles": "可选：{\"<字段路径>\": {\"role\": \"payable\", \"source\": \"卷:行\"}}。role 记卷文给的字段语义（payable = 应付数额，卷六 §2.4 :200「应给付」）；S6-14 检测器只按角色标记豁免合同、义务记录里的应付数额，不认字段名"
+ },
+ "rows": [
+  {
+   "name": "struct:basis",
+   "source": "卷二 §1.5 :204",
+   "type": {"struct": {
+    "kind": "enum:basis_kind",
+    "seedKey": "SeedKey nullable",
+    "writer": "NodeName"
+   }}
+  },
+  {
+   "name": "struct:modifier",
+   "source": "卷二 §1.5 :205（§3.2 全部字段）",
+   "type": {"struct": {
+    "id": "opaque:id",
+    "target": "ModKey",
+    "scope": "opaque:scope",
+    "stage": "opaque:stage",
+    "value": "number nullable",
+    "valueRX": "RxId|rxTree nullable",
+    "curve": "DimKey nullable",
+    "when": "RxId|rxTree nullable",
+    "source.kind": "enum:kind",
+    "source.id": "EntityId",
+    "stackGroup": "Handle<stack_group> nullable",
+    "priority": "integer:count",
+    "unpenalized": "boolean",
+    "duration": "struct:duration nullable",
+    "basis": "struct:basis"
+   }}
+  },
+  {
+   "name": "struct:rxTree",
+   "source": "卷二 §1.5 :206",
+   "note": "判别联合（oneOf，discriminator op，maxDepth 16），变体表见卷二 §2.9 第 4 条",
+   "type": {"struct": {}}
+  },
+  {
+   "name": "struct:sealed",
+   "source": "卷二 §1.5 :207",
+   "type": {"struct": {
+    "bytes": "opaque:bytes（base64 序列化）",
+    "digest": "opaque:Digest"
+   }}
+  },
+  {
+   "name": "struct:duration",
+   "source": "卷二 §1.5 :208",
+   "type": {"struct": {
+    "days": "integer:day nullable",
+    "untilEvent": "Handle<verb> nullable"
+   }}
+  },
+  {
+   "name": "struct:terminated",
+   "source": "卷二 §1.5 :209",
+   "type": {"struct": {
+    "day": "integer:day",
+    "cause": "Handle<verb>",
+    "mode": "enum:successor_mode"
+   }}
+  },
+  {
+   "name": "struct:stockAnchor",
+   "source": "卷二 §1.5 :210",
+   "type": {"struct": {
+    "value": "number:<该维度的单位>",
+    "at": "integer:minute"
+   }}
+  },
+  {
+   "name": "struct:holding",
+   "source": "卷二 §1.5 :211",
+   "type": {"struct": {
+    "kind": "Handle<holding_kind>",
+    "holder": "EntityId",
+    "subject": "EntityId",
+    "terms": "struct:holding_terms",
+    "grantedBy": "EntityId nullable"
+   }}
+  },
+  {
+   "name": "struct:holding_terms",
+   "source": "卷二 §1.5 :212（占位，字段细目归卷十八）",
+   "type": {"struct": {
+    "shares": "number:fraction nullable",
+    "since": "integer:day",
+    "expires": "integer:day nullable"
+   }}
+  },
+  {
+   "name": "struct:effectCall",
+   "source": "卷二 §1.5 :213",
+   "type": {"struct": {
+    "family": "EntityId<effect>",
+    "params": {"map": {"key": "Handle<parameter>", "value": "number（单位取该参数槽在效果族行登记的单位）"}}
+   }}
+  },
+  {
+   "name": "struct:statusInstance",
+   "source": "卷二 §1.5 :214",
+   "type": {"struct": {
+    "status": "EntityId<status>",
+    "severity": "number:score",
+    "since": "integer:day",
+    "source": "EntityId nullable",
+    "bodyPart": "Handle<body_part> nullable"
+   }}
+  },
+  {
+   "name": "struct:nameParts",
+   "source": "卷二 §1.5 :215（§1.9 生成名段）",
+   "type": {"struct": {
+    "bank": "ref vocab bank",
+    "pattern": "ref vocab pattern",
+    "parts": {"list": {"struct": {
+     "slot": "enum:nslot",
+     "wordId": "ref vocab word"
+    }}},
+    "seq": "opaque:integer"
+   }}
+  },
+  {
+   "name": "struct:advancePlanItem",
+   "source": "卷二 §1.5 :216",
+   "type": {"struct": {
+    "unit": "EntityId",
+    "tierOrder": "opaque:integer",
+    "stepMinutes": "integer:minute",
+    "settleTo": "integer:minute"
+   }}
+  },
+  {
+   "name": "struct:fixtureLot",
+   "source": "卷二 §1.5 :217",
+   "type": {"struct": {
+    "item": "ref:item",
+    "count": "integer:count",
+    "materialKg": {"map": {"key": "ref:material", "value": "number:kg"}},
+    "quality": "ref vocab quality"
+   }}
+  },
+  {
+   "name": "struct:pendingPost",
+   "source": "卷二 §1.5 :218",
+   "type": {"struct": {
+    "requestSeq": "integer:count",
+    "txSeq": "integer:count",
+    "emitSeq": "integer:count",
+    "entrySeq": "integer:count",
+    "signal": "enum:kernel_signal",
+    "signalEvent": "EventId"
+   }}
+  },
+  {
+   "name": "struct:requirementBlock",
+   "source": "卷二 §1.5 :219（字段与语义只在 §1.13）",
+   "type": {"struct": {
+    "groups": {"list": {"list": {"struct": {
+     "classes": "opaque:classes?",
+     "items": "opaque:items?",
+     "abilities": "opaque:abilities?",
+     "qty": "opaque:qty",
+     "consumed": "opaque:consumed"
+    }}}},
+    "basis": "struct:basis"
+   }}
+  },
+  {
+   "name": "struct:effectCallList",
+   "source": "卷二 §1.5 :220",
+   "type": {"list": "struct:effectCall"}
+  },
+  {
+   "name": "struct:entityOrder",
+   "source": "卷二 §1.5 :221",
+   "type": {"list": "EntityId"}
+  },
+  {
+   "name": "struct:skillRecord",
+   "source": "卷二 §1.5 :222",
+   "type": {"struct": {
+    "stored": "number:score",
+    "peak": "number:score",
+    "lastDay": "integer:day",
+    "markDay": "integer:day",
+    "dayGain": "number:score"
+   }}
+  },
+  {
+   "name": "struct:deedCounter",
+   "source": "卷二 §1.5 :223",
+   "type": {"struct": {
+    "count": "integer:count",
+    "recent": "number:count",
+    "lastDay": "integer:day",
+    "distinct": {"set": "EntityId"},
+    "seeded": "integer:count"
+   }}
+  },
+  {
+   "name": "struct:growthRecord",
+   "source": "卷二 §1.5 :224",
+   "type": {"struct": {
+    "experience": "number:score",
+    "seededExperience": "number:score"
+   }}
+  },
+  {
+   "name": "struct:lifestyleRecord",
+   "source": "卷二 §1.5 :225",
+   "type": {"struct": {
+    "focus": "Handle<lifestyle> nullable",
+    "focusSince": "integer:day",
+    "perks": {"set": "Handle<perk>"}
+   }}
+  },
+  {
+   "name": "struct:upbringingRecord",
+   "source": "卷二 §1.5 :226",
+   "type": {"struct": {
+    "eduFocus": "Handle<sphere> nullable"
+   }}
+  },
+  {
+   "name": "struct:lifeSeed",
+   "source": "卷二 §1.5 :227",
+   "type": {"struct": {
+    "skills": {"map": {"key": "EntityId", "value": "struct:skillRecord"}},
+    "experience": "number:score",
+    "professions": {"set": "EntityId"},
+    "certs": {"set": "Handle<cert>"},
+    "deeds": {"map": {"key": "Handle<deed>", "value": "struct:deedCounter"}}
+   }}
+  },
+  {
+   "name": "struct:assessStep",
+   "source": "卷二 §1.5 :228（变体见卷十四 §4.7 EX-3）",
+   "note": "判别联合（oneOf，discriminator kind，六种）；下列点号键是各变体里的数值字段",
+   "type": {"struct": {
+    "kind": "opaque:判别联合 discriminator kind（六种）",
+    "check.difficulty": "number:score",
+    "check.rounds": "integer:count",
+    "check.passes": "integer:count",
+    "work.withinDays": "integer:day",
+    "work.tenure.days": "integer:day",
+    "endorse.count": "integer:count",
+    "endorse.rank.top": "integer:count"
+   }}
+  },
+  {
+   "name": "struct:examSession",
+   "source": "卷二 §1.5 :229",
+   "type": {"struct": {
+    "cert": "Handle<cert>",
+    "issuer": "EntityId",
+    "place": "EntityId",
+    "day": "integer:day",
+    "candidates": {"list": "EntityId"},
+    "results": {"map": {"key": "EntityId", "value": "number:score"}}
+   }}
+  },
+  {
+   "name": "struct:identityKey",
+   "source": "卷二 §1.5 :230",
+   "type": {"struct": {
+    "keyId": "integer:count",
+    "kind": "Handle<identity>",
+    "nameParts": "struct:nameParts nullable",
+    "lookKey": "struct:lookKey nullable",
+    "maskQuality": "number:score",
+    "since": "integer:minute",
+    "until": "integer:minute nullable"
+   }}
+  },
+  {
+   "name": "struct:lookKey",
+   "source": "卷二 §1.5 :231",
+   "type": {"struct": {
+    "species": "Handle<species>",
+    "sex": "Handle<sex>",
+    "lifeStage": "Handle<life_stage>",
+    "bands": {"list": "integer:count"}
+   }}
+  },
+  {
+   "name": "struct:conception",
+   "source": "卷二 §1.5 :232",
+   "type": {"struct": {
+    "otherParent": "EntityId nullable",
+    "offspringSpecies": "Handle<species>",
+    "sinceMinute": "integer:minute"
+   }}
+  },
+  {
+   "name": "struct:manifestRow",
+   "source": "卷二 §1.5 :233",
+   "type": {"struct": {
+    "ordinal": "integer:count",
+    "intendedType": "ref:facility_type",
+    "form": "Handle<bform>",
+    "areaM2": "number:m2",
+    "storeys": "integer:count",
+    "wallThicknessM": "number:m",
+    "materialKg": {"map": {"key": "ref:material", "value": "number:kg"}},
+    "zoneRole": "Handle<zrole> nullable",
+    "ownerRef": "struct:ownerKey",
+    "prePlace": "SeedKey",
+    "fixtures": {"list": "struct:fixtureLot"}
+   }}
+  },
+  {
+   "name": "struct:ownerKey",
+   "source": "卷二 §1.5 :234",
+   "type": {"struct": {
+    "aggregate": "SeedKey nullable",
+    "org": "ref:org nullable"
+   }}
+  },
+  {
+   "name": "struct:shopRow",
+   "source": "卷二 §1.5 :235",
+   "type": {"struct": {
+    "ordinal": "integer:count",
+    "shopkind": "Handle<shopkind>",
+    "venue": "integer:count",
+    "operator": "struct:ownerKey"
+   }}
+  },
+  {
+   "name": "struct:rosterSpec",
+   "source": "卷二 §1.5 :236",
+   "type": {"struct": {
+    "instanceId": "ref:person",
+    "originAggregate": "SeedKey",
+    "ordinal": "integer:count",
+    "species": "ref:species",
+    "birthplace": "ref:place",
+    "bornMinute": "integer:minute",
+    "profession": "ref:profession nullable",
+    "certs": {"set": "Handle<cert>"}
+   }}
+  },
+  {
+   "name": "struct:groupEntry",
+   "source": "卷二 §1.5 :237",
+   "type": {"struct": {
+    "pick": "enum:pick_kind",
+    "item": "ref:item nullable",
+    "itemRX": "rx nullable",
+    "group": "ref vocab item_group nullable",
+    "weight": "integer:count",
+    "probPermille": "integer:permille",
+    "count": "distribution",
+    "intent": "Handle<emphasis> nullable",
+    "containerRX": "rx nullable"
+   }}
+  },
+  {
+   "name": "struct:recurrence",
+   "source": "卷二 §1.5 :238",
+   "type": {"struct": {
+    "anchor": "opaque:判别联合 discriminator kind（recur_anchor，成员见卷二十 §2.4）",
+    "appliesRX": "rx",
+    "spanDays": "integer:day",
+    "calendarFrom": "enum:cal_source"
+   }}
+  },
+  {
+   "name": "struct:emission",
+   "source": "卷二 §1.5 :239",
+   "type": {"struct": {
+    "field": "Handle<field>",
+    "ratePerStep": "number:score",
+    "chance": "fraction nullable"
+   }}
+  },
+  {
+   "name": "struct:dueItem",
+   "source": "卷二 §1.5 :240",
+   "type": {"struct": {
+    "dueMinute": "integer:minute",
+    "kind": "Handle<due_kind>",
+    "owner": "EntityId",
+    "ref": "Handle",
+    "registeredMinute": "integer:minute"
+   }}
+  },
+  {
+   "name": "struct:epiCount",
+   "source": "卷二 §1.5 :241",
+   "type": {"struct": {
+    "infected": "integer:count",
+    "immune": "integer:count"
+   }}
+  },
+  {
+   "name": "struct:fnTable",
+   "source": "卷二 §1.5 :242",
+   "type": {"struct": {
+    "inScale": "integer:count",
+    "outScale": "integer:count",
+    "domainMin": "integer:count",
+    "domainMax": "integer:count",
+    "step": "integer:count",
+    "values": {"list": "integer:count"}
+   }}
+  },
+  {
+   "name": "struct:memberRange",
+   "source": "卷二 §1.5 :243",
+   "type": {"struct": {
+    "origin": "SeedKey",
+    "from": "integer:count",
+    "to": "integer:count",
+    "bornMinute": "integer:minute nullable"
+   }}
+  },
+  {
+   "name": "struct:byState<T>",
+   "source": "卷二 §1.5 :244",
+   "typeParam": "T",
+   "type": {"struct": {
+    "solid": "T nullable",
+    "liquid": "T nullable",
+    "gas": "T nullable"
+   }}
+  },
+  {
+   "name": "struct:holderAccounts",
+   "source": "卷二 §1.5 :245",
+   "type": {"map": {
+    "key": "ref vocab purpose",
+    "value": {"map": {
+     "key": "ref vocab resource",
+     "value": {"map": {
+      "key": "资源键",
+      "value": "integer:<该资源种类行的 unit>"
+     }}
+    }}
+   }}
+  },
+  {
+   "name": "struct:holderOutflow",
+   "source": "卷二 §1.5 :246",
+   "type": {"map": {
+    "key": "ref vocab purpose",
+    "value": {"map": {
+     "key": "ref vocab resource",
+     "value": {"map": {
+      "key": "资源键",
+      "value": {"struct": {"cumulative": "integer:<该资源种类行的 unit>"}}
+     }}
+    }}
+   }}
+  },
+  {
+   "name": "struct:holderLots",
+   "source": "卷二 §1.5 :247",
+   "type": {"map": {
+    "key": "ref vocab purpose",
+    "value": {"map": {
+     "key": "ref vocab resource",
+     "value": {"map": {
+      "key": "批次键",
+      "value": "opaque:struct（卷三乙 §2.3 批次结构，只存属性，不含 qty、lotSeq）"
+     }}
+    }}
+   }}
+  },
+  {
+   "name": "struct:resourceTotals",
+   "source": "卷二 §1.5 :248",
+   "type": {"map": {
+    "key": "ref vocab resource",
+    "value": {"map": {
+     "key": "来源或去处代号",
+     "value": {"struct": {
+      "cumulative": "integer:<该资源种类行的 unit>",
+      "usedByDay": {"list": {"struct": {
+       "day": "integer:day",
+       "used": "integer:<该资源种类行的 unit>"
+      }}}
+     }}
+    }}
+   }}
+  }
+ ]
+}

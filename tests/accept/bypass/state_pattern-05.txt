@@ -1,0 +1,7 @@
+// pathTypes 的 list<…> 简写里的命名 struct 另存资源数量字段——S6-14 必报（卷二 §2.7 :675、:811）。
+// @file world/ontology/state-owners.json
+{"pathTypes": {"pendingPost.*": "list<struct:pendingPost>"}}
+// @file world/ontology/named-structs.json
+{"version": 1, "rows": [{"name": "struct:pendingPost", "source": "fixture", "type": {"struct": {"entrySeq": "integer:count", "qty": "integer:copper"}}}]}
+// @file world/rules/tables/economy/resources.json
+{"rows": [{"key": "res_test", "value": {"unit": "copper"}}]}

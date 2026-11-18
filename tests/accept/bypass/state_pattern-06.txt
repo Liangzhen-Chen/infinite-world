@@ -1,0 +1,7 @@
+// 义务记录里的已给付数量 done：不是 S6-14 豁免的「应付数额」（qty 是应给付，卷六 §2.4 :200），必报。
+// @file world/ontology/state-owners.json
+{"pathTypes": {"obligations.*": "struct:obligation"}}
+// @file world/ontology/named-structs.json
+{"version": 1, "rows": [{"name": "struct:obligation", "source": "fixture", "type": {"struct": {"qty": "integer:copper", "done": "integer:copper"}}, "fieldRoles": {"qty": {"role": "payable", "source": "卷六 §2.4 :200"}}}]}
+// @file world/rules/tables/economy/resources.json
+{"rows": [{"key": "res_test", "value": {"unit": "copper"}}]}

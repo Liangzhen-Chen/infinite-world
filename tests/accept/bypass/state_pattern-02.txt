@@ -1,0 +1,7 @@
+// 命名 struct 里的资源数量字段（不是账本三路径、也不是合同义务记录）——S6-14 必报。
+// @file world/ontology/state-owners.json
+{"pathTypes": {"npcs.*.holding": "struct:holding"}}
+// @file world/ontology/named-structs.json
+{"version": 1, "rows": [{"name": "struct:holding", "source": "fixture", "type": {"struct": {"holder": "EntityId", "shares": "integer:copper"}}}]}
+// @file world/rules/tables/economy/resources.json
+{"rows": [{"key": "res_test", "value": {"unit": "copper"}}]}

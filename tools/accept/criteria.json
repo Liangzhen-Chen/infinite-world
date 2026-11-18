@@ -2328,6 +2328,36 @@
    }
   },
   {
+   "log": [
+    {
+     "ref": "3-4 只核整改第 0 步：rebase 主线 4-4a 后 kernel/det-math.mjs 改动使本类别判据代码指纹（经 detect 器 import 闭包 validate/types.mjs）失效，按卡文用登记器重盖；检测器判定口径尚未改，本轮只重盖指纹（R12-14.3）",
+     "rev": 2
+    },
+    {
+     "ref": "3-4 只核 M1–M5 整改：检测器补实体行（维度表 rows.<id> 与该行实际数值）、dimension 偏离行（keyKinds 的实体 kind 维度表表头展开，缺表同加载器跳过）、list<…>/set<…> 容器简写（复用 listItemType/parseNumberType）；豁免收窄为合同、义务记录里 role=payable 的应付数额（命名 struct 登记的 fieldRoles，语义出处卷六 §2.4 :200 应给付），账本三路径仍整键豁免；补必报用例 state_pattern-03/04/05/06/07 与必不报用例 state_pattern-12；判据代码指纹随之重盖",
+     "rev": 3
+    },
+    {
+     "ref": "接主线 B2-W3 后重盖，判定口径不变",
+     "rev": 4
+    }
+   ],
+   "print": "28478ee666c7ca79d6cf7b95756ed73c512d919f1fb6bcea2be8634fcb0f797f",
+   "rev": 4,
+   "scanClass": "state_pattern",
+   "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
+   "terms": {
+    "vol6.S6-14": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
    "criterion": "规则层与各模块组里，字串出现在卷二 §2.8 节点位置白名单之外：正则（限 regexFiles）、非 ASCII 字面量、裸字串字面量参与判断、导出函数形参无类型标注即命中；码按类别行 checkCodes 与 groupCodes。",
    "log": [
     {
