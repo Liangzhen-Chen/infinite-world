@@ -6,12 +6,15 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
+import { installFixedConstants } from '../../server-plugin/kernel/det-math.mjs';
 import { seedKeyFor, hashAt, uniformAt, diceKeyOf, validateDistribution, sample } from '../../server-plugin/kernel/sample.mjs';
 
 // 内核摘要能力由装配文件注入（卷二 §2.9 :984，# kernel 不 import node:crypto）；测试里用 node:crypto 装一个。
 installDigestCap({
   sha256Hex: (data, encoding) => createHash('sha256').update(data, encoding === 'base64' ? 'base64' : 'utf8').digest('hex'),
 });
+// 定点常数照 world/rules/tables/kernel-constants.json（卷二 S10 登记豁免表），与 kernel 测试夹具同值。
+installFixedConstants({ BASE: 10, SCALE: 10000, PERMILLE: 1000, BPS: 10000 });
 
 // 卷二 §1.10 :320：seedKey = sha256(utf8(template.seed + "|" + kind + "|" + instanceId + "|" + dimension))；
 // joint 把 dimension 换成 "joint:" + group。
@@ -105,7 +108,7 @@ test('normal sd>0、lognormal sigma>0、uniform min<max、triangular min≤mode�
 
 test('categorical：权重非负整数且和>0、键在枚举域（E-DIM-SAMPLE-WEIGHTS）', () => {
   passes({ dist: 'categorical', weights: { grd_a: 3, grd_b: 5 } }, { type: 'enum', vocab: 'grade' });
-  fails({ dist: 'categorical', weights: { grd_a: 1, grd_b: 0 } }, {}, 'E-DIM-SAMPLE-WEIGHTS');
+  passes({ dist: 'categorical', weights: { grd_a: 1, grd_b: 0 } }, { type: 'enum', vocab: 'grade' });
   fails({ dist: 'categorical', weights: { grd_a: -1, grd_b: 2 } }, {}, 'E-DIM-SAMPLE-WEIGHTS');
   fails({ dist: 'categorical', weights: { grd_a: 0.5, grd_b: 2 } }, {}, 'E-DIM-SAMPLE-WEIGHTS');
   fails({ dist: 'categorical', weights: { grd_a: 0, grd_b: 0 } }, {}, 'E-DIM-SAMPLE-WEIGHTS');
@@ -155,7 +158,7 @@ test('sample 纯函数：同输入同输出、不写状态、不读墙钟', () =
 
 test('sample 的种子来自 engine.template.seed；缺失即 E-DIM-SAMPLE-PARAM', () => {
   const dims = { height: { type: 'number', unit: 'kg', precision: 2, domain: [0, 10], sample: { dist: 'uniform', min: 0, max: 10 } } };
-  assert.throws(() => sample(engineWith(dims, undefined), 'gadget', 'gad_1', 'height'), (e) => e.code === 'E-DIM-SAMPLE-PARAM');
+  assert.throws(() => sample(engineWith(dims, null), 'gadget', 'gad_1', 'height'), (e) => e.code === 'E-DIM-SAMPLE-PARAM');
   assert.throws(() => sample(engineWith(dims, 'bad seed'), 'gadget', 'gad_1', 'height'), (e) => e.code === 'E-DIM-SAMPLE-PARAM');
 });
 
