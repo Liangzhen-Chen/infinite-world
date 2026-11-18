@@ -233,7 +233,7 @@ test('反应深度超 reactionDepthMax（8）：第 9 代非空即整刻作废�
     assert.deepEqual(log, ['ext_a', 'ext_b', 'rx_1', 'rx_2', 'rx_3', 'rx_4', 'rx_5', 'rx_6', 'rx_7', 'rx_8']);
     assert.deepEqual(state, { clock: { minute: 0, seq: 0 } });
     assert.deepEqual(reports.map((r) => r.code), ['E-CLOCK-REACTION-LIMIT']);
-    assert.deepEqual(reports[0].fields, { actual: 9, entity: null, limit: 8, request: null, stage: 4, tick: 1 });
+    assert.deepEqual(reports[0].fields, { actual: 9, entity: null, limit: 8, limit_key: 'reaction_depth_max', request: null, stage: 4, tick: 1 });
     const ok = { clock: { minute: 0, seq: 0 } };
     assert.deepEqual(advance(ENGINE, ok, 1, [reacting([], chain(8), { assertion: false })]), { ok: true, minute: 1 });
   });
@@ -248,7 +248,7 @@ test('单刻反应项累计超 proposalMax（12）：第 13 项所在的代即�
       { ok: false, code: 'E-CLOCK-REACTION-LIMIT', tick: 1, stage: 4, detail: 'proposalMax: limit 12, actual 13' });
     assert.deepEqual(log, ['ext_a', 'ext_b']);
     assert.deepEqual(state, { clock: { minute: 0, seq: 0 } });
-    assert.deepEqual(reports[0].fields, { actual: 13, entity: null, limit: 12, request: null, stage: 4, tick: 1 });
+    assert.deepEqual(reports[0].fields, { actual: 13, entity: null, limit: 12, limit_key: 'proposal_max', request: null, stage: 4, tick: 1 });
     const ok = { clock: { minute: 0, seq: 0 } };
     const okLog = [];
     assert.deepEqual(advance(ENGINE, ok, 1, [reacting(okLog, fan(12), { assertion: false })]), { ok: true, minute: 1 });

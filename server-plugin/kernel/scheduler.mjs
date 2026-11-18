@@ -20,8 +20,6 @@
 import { KernelError } from './errors.mjs';
 import { checkValue } from './validate/types.mjs';
 const HANDLE_PREFIX = 'due_';
-// 句柄序号的 base36 小写：基数即数字加小写字母这一套字符的个数（李白 11-18 03:31 裁定 2），由字符集取，不另写字面量。
-const BASE36_DIGITS = '0123456789abcdefghijklmnopqrstuvwxyz';
 import { readPath, writePath } from './storage.mjs';
 import { P } from './handles/generated.mjs';
 import { runTransaction, openTickJournal, closeTickJournal, rollbackTickJournal, currentTransaction } from './transaction.mjs';
@@ -50,6 +48,8 @@ const SCHEMA = Object.freeze({
   // 到期堆的状态顶层键（§3.2 :445 `due.*`，元素 struct:dueItem）。
   dueKey: 'due',
   clockKey: 'clock',
+  constantsTable: 'kernelConstants',
+  radixKey: 'handleRadix',
   dueNextField: 'dueNext',
   dueKind: 'due_kind',
   dueFields: Object.freeze(['calendarBound', 'floorRX', 'paceClass', 'rank']),
@@ -204,6 +204,8 @@ export function clockView(engine, state) {
 
 /** @type {Readonly<Record<string, any>> | null} 加载期收下的 rules.clock（schedule 不收 engine，入堆缩放读它）。 */
 let installedClock = null;
+/** @type {number | null} 加载期收下的句柄序号进制。 */
+let installedRadix = null;
 
 /**
  * 加载期收下 rules.clock（加载入口在全部校验通过后调一次，与 installStorage 同时；kernel 组内用，不在 kernelApi）。
@@ -211,6 +213,14 @@ let installedClock = null;
  */
 export function installScheduler(rules) {
   installedClock = isObj(rules) && isObj(rules[SCHEMA.table]) ? rules[SCHEMA.table] : null;
+  // 句柄序号进制：内核常数表 kernelConstants.handleRadix（base36 小写，李白 11-18 03:31 裁定 2），不在代码里写字面量。
+  const radix = isObj(rules) && isObj(rules[SCHEMA.constantsTable]) ? rules[SCHEMA.constantsTable][SCHEMA.radixKey] : undefined;
+  installedRadix = Number.isInteger(radix) ? radix : null;
+}
+
+function handleRadix() {
+  if (installedRadix === null) throw new Error(`kernel/scheduler.mjs: rules.${SCHEMA.constantsTable}.${SCHEMA.radixKey} missing (load order)`);
+  return installedRadix;
 }
 
 function clockTable() {
@@ -347,7 +357,7 @@ export function schedule(owner, kind, delayMinutes, ref) {
     }
     const next = readPath(tx.state, P.clock_dueNext()) ?? 0;
     if (!Number.isSafeInteger(next) || next < 0) throw new KernelError('E-DIM-DOMAIN-RANGE', {}, 'schedule: clock.dueNext is not a non-negative integer');
-    const handle = `${HANDLE_PREFIX}${next.toString([...BASE36_DIGITS].length)}`;
+    const handle = `${HANDLE_PREFIX}${next.toString(handleRadix())}`;
     txSet(tx, [SCHEMA.clockKey, SCHEMA.dueNextField], next + 1);
     txSet(tx, [SCHEMA.dueKey, handle], { dueMinute, kind, owner, ref, registeredMinute: now });
     if (heaps.has(tx.state)) heapPush(heaps.get(tx.state), { handle, dueMinute, registeredMinute: now });
@@ -628,7 +638,9 @@ function runReactions(engine, state, t, sources, causesIn, rank) {
       const max = limitOf(engine, key);
       if (actual <= max) return null;
       const detail = `${key}: limit ${max}, actual ${actual}`;
-      return { ok: false, code: 'E-CLOCK-REACTION-LIMIT', report: { entity: null, request: null, tick: t, stage: rank, limit: max, actual }, result: { ok: false, code: 'E-CLOCK-REACTION-LIMIT', tick: t, stage: rank, detail } };
+      // 日志只收代号文法字段（report.mjs）：limitKey 取上限键的代号形（驼峰转下划线小写，卷二十 §4.1.3 第 7 条对照表；李白 11-18 03:52）；驼峰名只在 detail。
+      const limitKey = key.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
+      return { ok: false, code: 'E-CLOCK-REACTION-LIMIT', report: { entity: null, request: null, tick: t, stage: rank, limit: max, actual, limit_key: limitKey }, result: { ok: false, code: 'E-CLOCK-REACTION-LIMIT', tick: t, stage: rank, detail } };
     };
     const over = limit(SCHEMA.depthKey, depth) || limit(SCHEMA.countKey, count);
     if (over) return over;
