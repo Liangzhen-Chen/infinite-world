@@ -121,7 +121,7 @@ async function runCases(root, ctx, items, classes) {
     const files = splitFixture(readFileSync(join(root, c.fixture), 'utf8'), main);
     // 夹具正文若是 JSON，同时当 gateState（{components, baseline}）给要看当次分量的判定用（baseline_monotone 用例）。
     let gateState; try { gateState = JSON.parse(files.get(main)); } catch { gateState = undefined; }
-    const cctx = { ...ctx, files: [...files.keys()].sort(), read: (p) => files.get(p), prefixes, gateState };
+    const cctx = { ...ctx, repoFiles: ctx.files, files: [...files.keys()].sort(), read: (p) => files.get(p), prefixes, gateState };
     const own = items.filter((it) => it.scanClass === c.scanClass);
     // 类别下没有已实现的条目（全是 registered，如 text_judge 靠 tsc 才能判的反例还报不出，卷十二 R12-11.7）：用例不跑，记 not_run，不算回归。
     if (!own.length) { out[c.caseKey] = 'not_run'; continue; }

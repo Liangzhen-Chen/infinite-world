@@ -3105,7 +3105,9 @@
      "sources",
      "sinks"
     ],
-    "readerSet": "ledgerFieldReaders"
+    "readerSystems": [
+     "sys.economy"
+    ]
    },
    "part": "a",
    "parts": [
@@ -3114,7 +3116,7 @@
    ],
    "runsOn": "local_static",
    "scanClass": "module_edge",
-   "source": "卷六 §4.1.6 A6-1.1 :398 中段（读资源种类行 transferable、counterpartRX、sources、sinks 四个字段的模块只有 kernel/ledger.mjs；调用图白名单，S6-13 同法，故同码 E-VIEW-INPUT-IMPORT）；读者文件集在 module_edge 类别行 fileSets.ledgerFieldReaders；按成员链读，解构取出后的读法追不到；块 3 第 3-3 张第二部分",
+   "source": "卷六 §4.1.6 A6-1.1 :398 中段（读资源种类行 transferable、counterpartRX、sources、sinks 四个字段的模块只有账本内核；调用图白名单，S6-13 同法，故同码 E-VIEW-INPUT-IMPORT）；读者文件取自 state-owners.json systems.sys.economy.writers 所涉状态键的写者登记（readerSystems，不另抄名单）；按成员链读，解构取出后的读法追不到；块 3 第 3-3 张第二部分",
    "stage": 0,
    "state": "implemented",
    "target": "runtime_code",
@@ -3140,7 +3142,9 @@
      "priceFor",
      "valuation"
     ],
-    "scopeSet": "ledgerKernel"
+    "scopeSystems": [
+     "sys.economy"
+    ]
    },
    "part": "b",
    "parts": [
@@ -3149,7 +3153,7 @@
    ],
    "runsOn": "local_static",
    "scanClass": "module_edge",
-   "source": "卷六 §4.1.6 A6-1.1 :398 后半（账本内核对 priceFor、valuation 的引用为 0；同名标识符与同名模块 import 都算引用，码 E-VIEW-INPUT-IMPORT 照 S6-13 同法）；范围文件集在 module_edge 类别行 fileSets.ledgerKernel；前半 S6-1、S6-8 已另行登记，S6-14 因无登记码未做；块 3 第 3-3 张第二部分",
+   "source": "卷六 §4.1.6 A6-1.1 :398 后半（账本内核对 priceFor、valuation 的引用为 0；同名标识符与同名模块 import 都算引用，码 E-VIEW-INPUT-IMPORT 照 S6-13 同法）；范围文件取自 state-owners.json systems.sys.economy.writers 所涉状态键的写者登记（scopeSystems，不另抄名单）；前半 S6-1、S6-8 已另行登记，S6-14 因无登记码未做；块 3 第 3-3 张第二部分",
    "stage": 0,
    "state": "implemented",
    "target": "runtime_code",

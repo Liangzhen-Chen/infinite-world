@@ -20,10 +20,10 @@ export function detect(ctx, params, cls) {
   if (params.access === 'display') return displayHits(ctx, params);
   if (params.access === 'ref') return refHits(ctx, params, cls);
   const pats = (params.paths || []).map((p) => p.split('.').map((seg) => globToRe(seg, [])));
-  // readerSet：登记的读者是具体文件（卷六 A6-1.1 的 `kernel/ledger.mjs`，调用图白名单 S6-13 同法），文件集登记在所属扫描类别行 fileSets，条目只引用集合代号。
-  const readers = new Set([...filesOfGroups(ctx.files, ctx.model, params.readers || []), ...fileSet(cls, params.readerSet)]);
+  // readerSystems：登记的读者是具体文件（卷六 A6-1.1 的账本内核，调用图白名单 S6-13 同法），文件不抄名单，取自声明表该系统（systems.<系统>.writers）所涉状态键的写者登记。
+  const readers = new Set([...filesOfGroups(ctx.files, ctx.model, params.readers || []), ...ownerFiles(ctx, params.readerSystems)]);
   const hits = [];
-  for (const file of scopeOf(ctx, params, cls)) {
+  for (const file of scopeOf(ctx, params)) {
     if (readers.has(file)) continue;
     const toks = tokenize(ctx.read(file));
     const cond = params.access === 'branch' ? conditionSpans(toks) : null;
@@ -37,18 +37,34 @@ export function detect(ctx, params, cls) {
   return hits;
 }
 
-// 文件集：扫描类别行 fileSets.<代号>（文件名单只在登记行，参数里只引用代号，R12-11.5）；没给代号为空，给了而类别行里没有即报错，不静默放过。
-function fileSet(cls, name) {
-  if (name === undefined) return [];
-  const set = ((cls || {}).fileSets || {})[name];
-  if (!Array.isArray(set)) throw new Error(`E-ACC-ITEM-PARAM fileSet=${name}`);
-  return set;
+// 登记派生的文件：参数给系统代号（声明表 systems 的键），文件取该系统 writers 所涉状态键在 stateKeys.<键>.writers 里登记的写者文件（rewrite、create），
+// 服务端根相对转仓库路径（卷二 §2.7）。不另抄文件名单（R12-11.5）；系统不在声明表、派生不出文件、派生出的文件不在文件清单里，一律 E-ACC-ITEM-PARAM，不静默跳过。
+function ownerFiles(ctx, ids) {
+  if (ids === undefined) return [];
+  const decl = ctx.decl || {};
+  const root = ((ctx.model.processes || {}).server || {}).root || '';
+  const out = new Set();
+  for (const id of ids) {
+    const sys = (decl.systems || {})[id];
+    if (!sys) throw new Error(`E-ACC-ITEM-PARAM system=${id}`);
+    for (const w of sys.writers || []) {
+      const row = (decl.stateKeys || {})[w.split('.')[0]];
+      for (const v of Object.values((row && row.writers) || {})) {
+        const rels = typeof v === 'string' ? [v] : [v && v.rewrite, ...((v && v.create) || [])];
+        for (const rel of rels) if (rel) out.add(root + rel);
+      }
+    }
+  }
+  if (!out.size) throw new Error(`E-ACC-ITEM-PARAM systems=${ids.join(',')} no writer files`);
+  // 存在性对照真实仓库清单：真实执行里就是 ctx.files；用例夹具是虚拟文件集，执行器带 repoFiles（真实清单）来核，夹具里没有的派生文件只是不进本次扫描。
+  const repo = ctx.repoFiles || ctx.files;
+  for (const f of out) if (!repo.includes(f)) throw new Error(`E-ACC-ITEM-PARAM derived file missing ${f}`);
+  return [...out].sort();
 }
 
-// 范围：params.groups 展开的文件，并上 params.scopeSet 文件集里（须在文件清单里的）具体文件。
-function scopeOf(ctx, params, cls) {
-  const scope = new Set(filesOfGroups(ctx.files, ctx.model, params.groups || []));
-  for (const f of fileSet(cls, params.scopeSet)) if (ctx.files.includes(f)) scope.add(f);
+// 范围：params.groups 展开的文件，并上 params.scopeSystems 由登记派生的具体文件。
+function scopeOf(ctx, params) {
+  const scope = new Set([...filesOfGroups(ctx.files, ctx.model, params.groups || []), ...ownerFiles(ctx, params.scopeSystems).filter((f) => ctx.files.includes(f))]);
   return [...scope].sort();
 }
 
@@ -57,9 +73,9 @@ function scopeOf(ctx, params, cls) {
 // 局限：按名字认，`import x from './valuation.mjs'` 靠 ② 抓到；经第三方模块转手而不出现该名的，要靠转手模块自己的范围。
 function refHits(ctx, params, cls) {
   const names = new Set(params.paths || []);
-  const readers = new Set([...filesOfGroups(ctx.files, ctx.model, params.readers || []), ...fileSet(cls, params.readerSet)]);
+  const readers = new Set([...filesOfGroups(ctx.files, ctx.model, params.readers || []), ...ownerFiles(ctx, params.readerSystems)]);
   const hits = [];
-  for (const file of scopeOf(ctx, params, cls)) {
+  for (const file of scopeOf(ctx, params)) {
     if (readers.has(file)) continue;
     const toks = tokenize(ctx.read(file));
     const sym = symbolPaths(toks);
