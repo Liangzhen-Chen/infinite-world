@@ -35,7 +35,7 @@ const U_SHIFT_HEX = 'c0';
 const WORD_ONES = 'ffffffffffffffff';
 const TWO64 = BigInt(HEX_PREFIX + WORD_ONES) + 1n;
 
-// 本模块要读的内核常数：表代号与常数键（卷二 §7 S10 :2404；值登记在 world/rules/tables/kernel-constants.json）。
+// 本模块要读的内核常数：表代号与常数键（卷二 §7 S10 :2407；值登记在 world/rules/tables/kernel-constants.json）。
 const SCHEMA = Object.freeze({
   constantsTable: 'kernelConstants',
   maxQualifiersKey: 'diceKeyMaxQualifiers',
@@ -50,7 +50,7 @@ const isInt = (v) => Number.isSafeInteger(v);
 let installedMaxQualifiers = null;
 
 /**
- * 加载期收下 kernelConstants.diceKeyMaxQualifiers（卷二 :2404 数值来自 engine.rules 即不计；卷二十七 R27-8.5 :728）。
+ * 加载期收下 kernelConstants.diceKeyMaxQualifiers（卷二 :2407 数值来自 engine.rules 即不计；卷二十七 R27-8.5 :728）。
  * @param {Record<string, any>} rules engine.rules
  * @returns {void}
  */
@@ -66,7 +66,7 @@ function diceKeyMaxQualifiers() {
 
 const paramError = (detail) => new KernelError('E-DIM-SAMPLE-PARAM', {}, detail);
 const componentError = (detail) => new KernelError('E-SEED-COMPONENT', {}, detail);
-// 骰值键复合对象段里取值为空的限定成分的填充代号（卷二 §2.9 第 0 条"内核信号代号"小族登记；卷二十七 R27-8.5 :729）。
+// 骰值键复合对象段里取值为空的限定成分的填充代号（卷二 §2.9 第 0 条"内核信号代号"小族登记；卷二十七 R27-8.5 :730）。
 const EMPTY_SEEDPART = 'nil_seedpart';
 
 /** 种子模板 `template.seed` 是否合卷二 :320 的字符集（1–64 个 [A-Za-z0-9_-]）。 @param {unknown} s @returns {boolean} */
@@ -137,7 +137,7 @@ export function diceKeyOf(worldSeed, streamCode, subjectId, worldTime, drawSiteC
   if (!parts || parts.length === 0 || parts.length - 1 > maxQualifiers) throw componentError(`subjectId ${JSON.stringify(subjectId)}: want an id plus 0-${maxQualifiers} qualifiers`);
   const [first, ...rawQualifiers] = parts;
   if (typeof first !== 'string' || !isQualifier(first)) throw componentError(`subjectId first component ${JSON.stringify(first)}: want a code or entity id`);
-  // 复合对象段某个限定成分取值为空时，该位置填 nil_seedpart，不省略该位置（卷二十七 R27-8.5 :729）；
+  // 复合对象段某个限定成分取值为空时，该位置填 nil_seedpart，不省略该位置（卷二十七 R27-8.5 :730）；
   // 空只认 undefined（位置存在而值缺），null 与其他非代号值照拒，不当作空成分。
   const qualifiers = rawQualifiers.map((q) => (q === undefined ? EMPTY_SEEDPART : q));
   for (const q of qualifiers) if (!isQualifier(q)) throw componentError(`subjectId qualifier ${JSON.stringify(q)}: want a registered code, entity id or fixed row ordinal`);

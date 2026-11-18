@@ -77,7 +77,7 @@ test('复合对象段：主体 id 后接一到两个限定成分，各成分用 
   assert.equal(diceKeyOf('seed_ab12', 'clock_draw', ['emitter_a', 'field_b', 2], 5, 'draw_weather'), 'seed_ab12|clock_draw|emitter_a|field_b|2|5|draw_weather');
 });
 
-test('复合对象段空限定成分位置填 nil_seedpart，不省略该位置（R27-8.5 :729）', () => {
+test('复合对象段空限定成分位置填 nil_seedpart，不省略该位置（R27-8.5 :730）', () => {
   // 中间位置为空：三成分段与两成分段是不同键，空位不被 filter 吞掉。
   assert.equal(diceKeyOf('seed_ab12', 'clock_draw', ['place_a', undefined, 'field_b'], 5, 'draw_weather'),
     'seed_ab12|clock_draw|place_a|nil_seedpart|field_b|5|draw_weather');
