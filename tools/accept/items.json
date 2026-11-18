@@ -2572,7 +2572,6 @@
     ],
     "groups": [
      "rules",
-     "kernel",
      "textcore",
      "clientTextcore",
      "display",
@@ -2581,9 +2580,99 @@
    },
    "runsOn": "local_static",
    "scanClass": "text_judge",
-   "source": "卷二 §7 S13 语言判断扫描（规则层组、kernel 与共享库组、显示层组；卷十二 §4.2）",
+   "source": "卷二 §7 S13 语言判断扫描（规则层组、kernel 与共享库组、显示层组；卷十二 §4.2）；kernel 组按李白 11-18 08:18 第 1 条另登逐行基线（vol2.S13.k1/k3/k4，B2-W2b）",
    "stage": 0,
    "state": "registered",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_text_kernel_1",
+   "detector": "typed_pos",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/typed_pos.mjs",
+   "itemKey": "vol2.S13.k1",
+   "localNo": "S13",
+   "method": "static_code",
+   "params": {
+    "checks": [
+     "regex"
+    ],
+    "groups": [
+     "kernel"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "text_judge",
+   "source": "卷二 §7 S13（:2415 kernel 组先登逐行清单基线、只降不升；李白裁定-1117 :958 第 1 条）①正则；卷十二 §2.5 c_text_<组键>_<类别号>、R12-8.4、R12-8.5；B2-W2b",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_text_kernel_3",
+   "detector": "typed_pos",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/typed_pos.mjs",
+   "itemKey": "vol2.S13.k3",
+   "localNo": "S13",
+   "method": "static_code",
+   "params": {
+    "checks": [
+     "nonAscii"
+    ],
+    "groups": [
+     "kernel"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "text_judge",
+   "source": "卷二 §7 S13（:2415 kernel 组先登逐行清单基线、只降不升；李白裁定-1117 :958 第 1 条）③非 ASCII；卷十二 §2.5 c_text_<组键>_<类别号>、R12-8.4、R12-8.5；B2-W2b",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_text_kernel_4",
+   "detector": "typed_pos",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/typed_pos.mjs",
+   "itemKey": "vol2.S13.k4",
+   "localNo": "S13",
+   "method": "static_code",
+   "params": {
+    "checks": [
+     "bareCompare"
+    ],
+    "groups": [
+     "kernel"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "text_judge",
+   "source": "卷二 §7 S13（:2415 kernel 组先登逐行清单基线、只降不升；李白裁定-1117 :958 第 1 条）④裸字面量；卷十二 §2.5 c_text_<组键>_<类别号>、R12-8.4、R12-8.5；B2-W2b",
+   "stage": 0,
+   "state": "in_core",
    "target": "runtime_code",
    "volume": "vol2",
    "zeroRows": []

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { readFileSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
-import { accRun, TEST_METHODS } from '../../tools/accept/run.mjs';
+import { accRun, TEST_METHODS, baselineVerdict } from '../../tools/accept/run.mjs';
 import { ENUM } from '../../tools/accept/lib/item-form.mjs';
 import { validate, register } from '../../tools/accept/register.mjs';
 import { listFiles, readRegistry, REGISTRY, LAYOUT } from '../../tools/accept/read.mjs';
@@ -15,7 +15,7 @@ const HOOK = join(ROOT, 'tools', 'accept', 'commit-hook.mjs');
 const NON_TEST_METHODS = { method: ENUM.method.filter((m) => !TEST_METHODS.includes(m)) };
 const regs = () =>Object.fromEntries(Object.keys(REGISTRY).map((k) => [k, readRegistry(ROOT, k)]));
 
-test('新树上提交关口：必过条目计数全 0，用例全过，放行', async () => {
+test('新树上提交关口：必过条目全过、基线不升，用例全过，放行', async () => {
   const { report } = await accRun('pre_commit', 'P-1', null, { root: ROOT });
   assert.equal(report.verdict, 'pass');
   // 必过集合里的条目全过；不过的只许是已实现、未进必过集合的条目（P-1b 的 S12-2、S12-3 新树非零，见 P-1b 回报）。
@@ -23,7 +23,8 @@ test('新树上提交关口：必过条目计数全 0，用例全过，放行', 
   assert.ok(report.items.failed.every((f) => f.itemKey !== 'bypass' && !core.has(f.itemKey)));
   assert.equal(report.items.pass + report.items.fail + report.items.not_run + report.items.blocked, report.items.total);
   assert.ok(report.items.pass >= core.size);
-  for (const c of Object.values(report.components)) assert.equal(c.current, 0);
+  // kernel 组 S13 逐行基线（B2-W2b）是 le_baseline：分量现值不要求 0，要求不高于上次合入（卷十二 R12-8.4、R12-8.5）。
+  for (const [k, c] of Object.entries(report.components)) assert.ok(c.current <= (c.last ?? 0), k);
   assert.ok(Object.values(report.cases).length >= 10);
   // text_judge 类别下没有已实现条目（靠 tsc 才能判的反例报不出，卷十二 R12-11.7）：它的用例不跑，记 not_run；其余用例全过。
   const notRun = Object.keys(report.cases).filter((k) => report.cases[k] === 'not_run');
@@ -64,7 +65,9 @@ test('V-11 提交关口当次判：当次分量高于入库基线（上次合入
   try {
     const bad = { 'server-plugin/rules.mjs': "\n\nexport function f(doc) { return 'npc_' + doc.id; }\n" };
     const opts = { root: dir, overrides: bad, prefixes: { prefixes: ['npc_'], singletons: [] } };
-    const rows = (cur) => [{ compCode: 'c_instance_id', b0: 0, current: cur }];
+    // 入库基线还有 kernel 组 S13 的三个分量（B2-W2b）；本用例只看 c_instance_id，内核分量给足，别让它们掺进来。
+    const rows = (cur) => [{ compCode: 'c_instance_id', b0: 0, current: cur },
+      ...['c_text_kernel_1', 'c_text_kernel_3', 'c_text_kernel_4'].map((compCode) => ({ compCode, b0: 0, current: 1000000 }))];
     const v11 = (report) => report.items.failed.find((f) => f.itemKey === 'vol1.V-11');
     // 无基线：没有上次合入的值按零基线（方案 R13、R12-8.9），本次 1 个行即拒。
     assert.deepEqual(v11((await accRun('pre_commit', 'x', null, opts)).report).codes, ['E-ACC-BASELINE-UP']);
@@ -77,6 +80,53 @@ test('V-11 提交关口当次判：当次分量高于入库基线（上次合入
     assert.equal(v11((await accRun('pre_commit', 'x', null, { ...opts, baselineRows: rows(5) })).report), undefined);
     // out/ 旧上升记录不误挡：测试不能往登记路径 out/ 写，由用例 baseline_monotone-12 与检测器单测覆盖。
     assert.equal((await accRun('pre_commit', 'x', null, { root: dir, baselineRows: rows(0) })).report.cases['baseline_monotone-12'], 'pass');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('le_baseline 判定（R12-8.4）：按分量行键集合判，新增任一条即不过；旧基线行按计数比；首次登记按 R12-8.9 放行', () => {
+  const a = { rowKey: 'c_text_kernel_4|server-plugin/kernel/a.mjs|f|literal_compare|0' };
+  const b = { rowKey: 'c_text_kernel_4|server-plugin/kernel/b.mjs|f|literal_compare|0' };
+  assert.equal(baselineVerdict([a], 1, { current: 1, rowKeys: [a.rowKey] }), 'pass');
+  assert.equal(baselineVerdict([a], 0, { current: 5, rowKeys: [a.rowKey, b.rowKey] }), 'pass');
+  // 新增一条即不过：现值集合不是基线集合的子集。
+  assert.equal(baselineVerdict([a, b], 2, { current: 1, rowKeys: [a.rowKey] }), 'fail');
+  // 总数持平、行键换了（一条消失一条新出现）也按集合判不过。
+  assert.equal(baselineVerdict([b], 1, { current: 1, rowKeys: [a.rowKey] }), 'fail');
+  // 旧基线行没有行键清单时退回行数比。
+  assert.equal(baselineVerdict([a, b], 2, { current: 1 }), 'fail');
+  assert.equal(baselineVerdict([a], 1, { current: 1 }), 'pass');
+  // 首次登记（baseline.json 里没有该分量）：以本次实测为 B0（R12-8.9），pass。
+  assert.equal(baselineVerdict([a], 1, undefined), 'pass');
+});
+
+test('R12-8.5：合入关口通过后写 baseline.json（只降不升，行键清单一并写），pre_commit 不写；新增一条即拒', async () => {
+  const dir = tempRepo();
+  try {
+    // 临时仓库不带方法是测试的条目 import 的世界数据（temp-repo.mjs 注）：按合法转移退役，让关口能过、走到写基线那一步。
+    const testCore = readRegistry(dir, 'items').filter((it) => it.state === 'in_core' && TEST_METHODS.includes(it.method)).map((it) => it.itemKey);
+    assert.deepEqual(register(dir, { itemStates: Object.fromEntries(testCore.map((k) => [k, 'retired'])) }).errors, []);
+    const baseFile = join(dir, LAYOUT.accDir, 'baseline.json');
+    const baselineOf = () => JSON.parse(readFileSync(baseFile, 'utf8')).rows;
+    const kernelRow = (rs) => rs.find((r) => r.compCode === 'c_text_kernel_4');
+    // 临时仓库的内核文件只拷一部分，实测应低于真实仓库的基线；合入关口通过后写回本次实测（只降）。
+    const before = kernelRow(baselineOf()).current;
+    const first = await accRun('pre_merge', 'B2-W2b', null, { root: dir, write: true });
+    assert.equal(first.report.verdict, 'pass');
+    const after = kernelRow(baselineOf());
+    assert.ok(after.current < before, `${after.current} < ${before}`);
+    assert.equal(after.current, first.report.components.c_text_kernel_4.current);
+    assert.equal(after.rowKeys.length, after.current);
+    assert.deepEqual(after.rowKeys, [...after.rowKeys].sort());
+    // 新出现一条（只在 kernel 组 S13 ④）：提交关口按行键集合判不过，码 E-ACC-BASELINE-UP；提交关口不写基线。
+    const probe = { 'server-plugin/kernel/rx.mjs': readFileSync(join(dir, 'server-plugin/kernel/rx.mjs'), 'utf8') + "\nexport function zzzProbe(x) { return x === 'probe_marker'; }\n" };
+    const up = await accRun('pre_commit', 'B2-W2b', null, { root: dir, overrides: probe, write: true });
+    assert.equal(up.report.verdict, 'fail');
+    assert.deepEqual(up.report.items.failed.find((f) => f.itemKey === 'vol2.S13.k4').codes, ['E-ACC-BASELINE-UP']);
+    assert.equal(kernelRow(baselineOf()).current, after.current);
+    // 提交关口即使通过也不写回（pre_commit 不是合入关口）。
+    const same = await accRun('pre_commit', 'B2-W2b', null, { root: dir, write: true });
+    assert.equal(same.report.verdict, 'pass');
+    assert.deepEqual(kernelRow(baselineOf()), after);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
