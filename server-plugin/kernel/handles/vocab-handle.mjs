@@ -6,6 +6,7 @@
 
 import { CODE_RE, isErrorCode } from '../validate/types.mjs';
 import { REGISTERED_CODES } from '../error-codes.mjs';
+import { T } from './markers.mjs';
 
 // 代号文法（§1.9 :278）：实体 id、类别 id、枚举值；定义在 validate/types.mjs，这里转出给 entity-id、keys 沿用。
 export { CODE_RE };
@@ -29,7 +30,7 @@ export class HandleError extends Error {
  * @returns {import('../types.d.ts').Handle<F>}
  */
 export function handleOf(index, family, id) {
-  if (typeof id !== 'string' || !CODE_RE.test(id)) throw new HandleError('E-DIM-ID-FORMAT', `vocab code ${JSON.stringify(id)}: want ^[a-z][a-z0-9_]{1,47}$`);
+  if (typeof id !== T.js_type.string || !CODE_RE.test(id)) throw new HandleError('E-DIM-ID-FORMAT', `vocab code ${JSON.stringify(id)}: want ^[a-z][a-z0-9_]{1,47}$`);
   const rec = index.get(id);
   if (!rec) throw new HandleError('E-DIM-REF-MISSING', `vocab code ${id}: not registered in _vocab.json`);
   if (rec.family !== family) throw new HandleError('E-VIEW-FAMILY-MISMATCH', `vocab code ${id}: family ${rec.family}, want ${family}`);

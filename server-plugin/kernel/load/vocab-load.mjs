@@ -1,6 +1,8 @@
 // 词表族与单位表（卷二 §1.9、§1.4、§1.1）：建代号索引、broader 上位链；核对族前缀与实体前缀不冲突（E-DIM-VOCAB-PREFIX）、
 // 条目代号格式与前缀、broader 闭合无环、单位条目。只按表头与族登记通用处理，不认任何具体族的条目。
 
+import { T } from '../handles/markers.mjs';
+
 const CODE_RE = /^[a-z][a-z0-9_]{1,47}$/;
 
 // 一个前缀与另一个前缀冲突：相等、或一个是另一个的开头（§1.9"任何词表族前缀不得等于实体前缀、不得是实体前缀的前缀、也不得以实体前缀开头"）。
@@ -15,15 +17,15 @@ export function loadVocab(vocabDoc, entityPrefixes, err) {
   const families = new Map();
   const index = new Map();
   const famObj = (vocabDoc && vocabDoc.families) || {};
-  if (!vocabDoc || typeof famObj !== 'object' || Array.isArray(famObj)) err({ code: 'E-DIM-VOCAB-PREFIX', table: '_vocab', got: typeof famObj, want: 'families object' });
+  if (!vocabDoc || typeof famObj !== T.js_type.object || Array.isArray(famObj)) err({ code: 'E-DIM-VOCAB-PREFIX', table: '_vocab', got: typeof famObj, want: 'families object' });
   for (const name of Object.keys(famObj).sort()) {
     const fam = famObj[name] || {};
     const prefix = fam.prefix;
     const at = { table: '_vocab', row: name };
-    if (typeof prefix !== 'string' || !CODE_RE.test(prefix + 'x')) { err({ code: 'E-DIM-VOCAB-PREFIX', ...at, dim: 'prefix', got: prefix, want: 'registered family prefix' }); continue; }
+    if (typeof prefix !== T.js_type.string || !CODE_RE.test(prefix + 'x')) { err({ code: 'E-DIM-VOCAB-PREFIX', ...at, dim: 'prefix', got: prefix, want: 'registered family prefix' }); continue; }
     for (const ep of entityPrefixes) if (clash(prefix, ep)) err({ code: 'E-DIM-VOCAB-PREFIX', ...at, dim: 'prefix', got: prefix, want: `no overlap with entity prefix ${ep}` });
     for (const [other, o] of families) if (clash(prefix, o.prefix)) err({ code: 'E-DIM-VOCAB-PREFIX', ...at, dim: 'prefix', got: prefix, want: `no overlap with family ${other} prefix ${o.prefix}` });
-    const entries = fam.entries && typeof fam.entries === 'object' ? fam.entries : {};
+    const entries = fam.entries && typeof fam.entries === T.js_type.object ? fam.entries : {};
     families.set(name, { name, prefix, closed: fam.closed === true, entries });
     for (const id of Object.keys(entries).sort()) {
       if (!CODE_RE.test(id) || !id.startsWith(prefix)) { err({ code: 'E-DIM-ID-FORMAT', table: '_vocab', row: id, dim: name, got: id, want: `^[a-z][a-z0-9_]{1,47}$ with prefix ${prefix}` }); continue; }
@@ -64,9 +66,9 @@ export function loadUnits(unitsDoc, err) {
   if (!rows) { err({ code: 'E-DIM-UNIT-UNKNOWN', table: '_units', got: typeof unitsDoc, want: '{"units": [...]}' }); return units; }
   for (const u of rows) {
     const id = u && u.id;
-    if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_]*$/.test(id)) { err({ code: 'E-DIM-ID-FORMAT', table: '_units', row: String(id), got: id, want: 'unit id' }); continue; }
+    if (typeof id !== T.js_type.string || !/^[A-Za-z][A-Za-z0-9_]*$/.test(id)) { err({ code: 'E-DIM-ID-FORMAT', table: '_units', row: String(id), got: id, want: 'unit id' }); continue; }
     if (units.has(id)) { err({ code: 'E-DIM-ID-DUPLICATE', table: '_units', row: id, got: id, want: 'unique unit id' }); continue; }
-    if (typeof u.dimension !== 'string' || u.si === undefined) err({ code: 'E-DIM-STRUCT-FIELD', table: '_units', row: id, got: Object.keys(u).sort().join(','), want: 'id, dimension, si, calibrate?' });
+    if (typeof u.dimension !== T.js_type.string || u.si === undefined) err({ code: 'E-DIM-STRUCT-FIELD', table: '_units', row: id, got: Object.keys(u).sort().join(','), want: 'id, dimension, si, calibrate?' });
     units.set(id, u);
   }
   return units;
