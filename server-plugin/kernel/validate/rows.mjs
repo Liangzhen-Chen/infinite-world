@@ -2,6 +2,7 @@
 // 取值走 §1.3 唯一算法：own（实体行展平后的值）→ 本维所属 precedence 组内、实体所属的展平类别行 → 派生 / 采样 → 未知。
 
 import { checkValue, CODE_ENUMS, ROW_FIELDS, splitKey, markersOf, T } from './types.mjs';
+import { GRAMMAR_TOKENS } from '../handles/markers.mjs';
 import { gradeDecl } from './cell-grades.mjs';
 import { rowReads, namedHolds } from './named-conditions.mjs';
 
@@ -15,8 +16,9 @@ const SECTIONS = ['classes', 'rows', 'generated'];
 // 节名句柄：成员由上面的节清单派生（三节即表文件的三个行区，§1.7）。
 const SECTION = markersOf('section', SECTIONS);
 // 族键由卷二点名：类别行键与 classes 字段取 class 族与 component 族（§1.3、§1.8），status 取 vstatus 族（§5.0）。
-const CLASS_FAMILIES = ['class', 'component'];
-const STATUS_FAMILY = 'vstatus';
+// 定义源在 kernel/handles/markers.mjs 的 VOCAB_FAMILIES（卷二 §1.9 :288），成员经 T.vocab_family 引用。
+const CLASS_FAMILIES = [T.vocab_family.class, T.vocab_family.component];
+const STATUS_FAMILY = T.vocab_family.vstatus;
 
 // 一张表的行结构（L1）与类别、组件、标签引用（L2）。
 /** @param {Record<string, unknown>} t 一张表 @param {Record<string, unknown>} env @param {(...args: unknown[]) => void} err */
@@ -171,7 +173,7 @@ function namedOf(t, id, row, form, cond) {
 }
 
 const knownPart = (t, id, row, item) => {
-  const [d, col] = item.split('.');
+  const [d, col] = item.split(GRAMMAR_TOKENS.pathSep);
   const r = valueOf(t, id, row, d);
   if (!r.known) return false;
   if (col === undefined) return true;
@@ -212,7 +214,7 @@ export function checkRequired(t, env, err, stats) {
         stats.applicable++;
         if (r.known) stats.known++;
         if (req.anyOf) {
-          if (!req.anyOf.some((item) => knownPart(t, id, row, item))) for (const item of req.anyOf) err({ code: 'E-DIM-REQUIRED-MISSING', level: 'L3', ...at(item.split('.')[0]), got: 'unknown', want: `at least one of ${req.anyOf.join(',')}` });
+          if (!req.anyOf.some((item) => knownPart(t, id, row, item))) for (const item of req.anyOf) err({ code: 'E-DIM-REQUIRED-MISSING', level: 'L3', ...at(item.split(GRAMMAR_TOKENS.pathSep)[0]), got: 'unknown', want: `at least one of ${req.anyOf.join(',')}` });
         } else if (!r.known) {
           // onUnknown: gap 的维度缺值只记缺口、进加载警告，不让加载失败（卷三甲 §2.1、§6 EA-6；卷二 §5 开头"两处不一致以定义卷为准"，李白 11-17）。
           // anyOf 组合条件不在此列：它表达的是"至少填一项"的硬约束（如卷三甲 M-11 ①），照旧 E。

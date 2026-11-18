@@ -19,11 +19,12 @@ import { statePathSegments, isHex64 } from './handles/keys.mjs';
 import { KernelError, codeOf } from './errors.mjs';
 import { clone } from './clone.mjs';
 import { markersOf } from './validate/types.mjs';
+import { GRAMMAR_TOKENS } from './handles/markers.mjs';
 
 // 本文件内部的固定记号：空字串、分片覆盖判定的三种结果（R27-4.6 覆盖核对的返回值）。
 const SEG = Object.freeze({ empty: '' });
 const COVER = Object.freeze({ partial: 'partial', full: 'full' });
-import { readManifestDigests, checkManifest } from './load/save.mjs';
+import { readManifestDigests, checkManifest, MANIFEST_STATE } from './load/save.mjs';
 
 // ---------- 存档布局的名字（S27-7：只在本文件与 kernel/load/save.mjs 出现） ----------
 
@@ -113,7 +114,7 @@ export function installDigestExclude(patterns) {
   });
 }
 
-const segMatch = (pat, segs) => pat.length === segs.length && pat.every((s, i) => s === '*' || s === segs[i]);
+const segMatch = (pat, segs) => pat.length === segs.length && pat.every((s, i) => s === GRAMMAR_TOKENS.wildcard || s === segs[i]);
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const OMIT = Symbol('omit');
 
@@ -145,7 +146,7 @@ export function walkPathTree(tree, leaf) {
       const rec = pathTypeOf(here);
       if (rec) { leaf(here, node[k], rec); continue; }
       if (isObj(node[k]) && pathTypeHasDeeper(here)) { visit(node[k], here); continue; }
-      throw new KernelError('E-PATH-UNDECLARED', { entity: null }, `no pathTypes pattern for ${here.join('.')}`);
+      throw new KernelError('E-PATH-UNDECLARED', { entity: null }, `no pathTypes pattern for ${here.join(GRAMMAR_TOKENS.pathSep)}`);
     }
   };
   visit(tree, []);
@@ -240,7 +241,7 @@ export function resetUnitOfPath() {
 // 一个值的路径归哪个单元；没登记或返回空即 E-SAVE-SHARD-UNCOVERED。
 function unitOf(row, segs) {
   const u = unitOfPath ? unitOfPath(Object.freeze([...segs])) : null;
-  if (typeof u !== 'string' || u === SEG.empty) throw new KernelError('E-SAVE-SHARD-UNCOVERED', {}, `${row.shard}: ${segs.join('.')} maps to no simulation unit`);
+  if (typeof u !== 'string' || u === SEG.empty) throw new KernelError('E-SAVE-SHARD-UNCOVERED', {}, `${row.shard}: ${segs.join(GRAMMAR_TOKENS.pathSep)} maps to no simulation unit`);
   return u;
 }
 
@@ -259,8 +260,8 @@ function rowCovers(rowSegs, typeSegs) {
   if (rowSegs.length > typeSegs.length) return 'none';
   let partial = false;
   for (let i = 0; i < rowSegs.length; i++) {
-    if (rowSegs[i] === '*') continue;
-    if (typeSegs[i] === '*') { partial = true; continue; }
+    if (rowSegs[i] === GRAMMAR_TOKENS.wildcard) continue;
+    if (typeSegs[i] === GRAMMAR_TOKENS.wildcard) { partial = true; continue; }
     if (rowSegs[i] !== typeSegs[i]) return 'none';
   }
   return partial ? 'partial' : 'full';
@@ -353,7 +354,7 @@ function takeSnapshot(compiled, doc, atEvent) {
   for (const part of PATH_PARTS) {
     walkPathTree(doc[part], (segs, v, rec) => {
       const row = compiled.rowOfPattern.get(rec.pattern);
-      if (!row || row.part !== part) throw new KernelError('E-SAVE-SHARD-UNCOVERED', {}, `${segs.join('.')} found in ${part}, shard row is ${row ? row.part : 'none'}`);
+      if (!row || row.part !== part) throw new KernelError('E-SAVE-SHARD-UNCOVERED', {}, `${segs.join(GRAMMAR_TOKENS.pathSep)} found in ${part}, shard row is ${row ? row.part : 'none'}`);
       const value = rec.sealed ? encodeSealedValue(v) : clone(v);
       if (row.partition === PARTITION.part_by_unit) {
         // 按单元各成一片：content[行] 是 单元代号 → 该单元的路径子树。
@@ -367,7 +368,7 @@ function takeSnapshot(compiled, doc, atEvent) {
   if (!isObj(data) || !isObj(data.base) || !Array.isArray(data.appends)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'doc_data must be {base: object, appends: list}');
   for (const { row } of compiled.dataRows) content[row.shard] = {};
   for (const table of Object.keys(data.base).sort()) {
-    const hit = compiled.dataRows.filter((d) => d.segs.some((s) => s[0] === '*' || s[0] === table));
+    const hit = compiled.dataRows.filter((d) => d.segs.some((s) => s[0] === GRAMMAR_TOKENS.wildcard || s[0] === table));
     if (hit.length !== 1) throw new KernelError('E-SAVE-SHARD-UNCOVERED', {}, `data table ${table} covered by ${hit.length} rows`);
     content[hit[0].row.shard][table] = clone(data.base[table]);
   }
@@ -545,7 +546,7 @@ export function saveToSlot({ root, slot, book, doc, rulesDigest, clockMinute }) 
     }
     const cur = join(dir, LAYOUT_NAMES.current);
     // 当前清单完好才改名为上一个清单；残缺的不改名，保留原来那份完好的上一个清单（R27-4.8、A27-4.4）。
-    if (existsSync(cur) && checkManifest(dir, LAYOUT_NAMES.current).state === 'ok') renameSync(cur, join(dir, LAYOUT_NAMES.previous));
+    if (existsSync(cur) && checkManifest(dir, LAYOUT_NAMES.current).state === MANIFEST_STATE.ok) renameSync(cur, join(dir, LAYOUT_NAMES.previous));
     atomicJSON(cur, manifest);
   } catch (e) {
     if (codeOf(e) !== null) throw e;

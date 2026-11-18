@@ -6,6 +6,7 @@
 
 import { KernelError } from './errors.mjs';
 import { isDeclarableNode, isAnyNode } from './handles/keys.mjs';
+import { T, GRAMMAR_TOKENS } from './handles/markers.mjs';
 const SEG = Object.freeze({ empty: '' });
 
 // 可由代码声明的三类节点（:470）与加载器机器生成的两类（:470 末句）。
@@ -23,9 +24,9 @@ const strList = (v) => Array.isArray(v) && v.every((x) => typeof x === 'string' 
 
 // own 的一项规整成一个依赖串（路径段以 `.` 相连；带 categories 的在后面附 `[cat,…]`），供闭包求并、排序与比对。
 function ownKey(item) {
-  if (Array.isArray(item)) return item.join('.');
+  if (Array.isArray(item)) return item.join(GRAMMAR_TOKENS.pathSep);
   const cats = Array.isArray(item.categories) && item.categories.length ? `[${[...item.categories].sort().join(',')}]` : '';
-  return `${item.path.join('.')}${cats}`;
+  return `${item.path.join(GRAMMAR_TOKENS.pathSep)}${cats}`;
 }
 
 function badDecl(node, detail) {
@@ -44,7 +45,7 @@ export function declareInputs(node, decl) {
   if (closures) throw new Error(`kernel/declare.mjs: declareInputs(${node}) after finalizeInputs (load order)`);
   if (!isDeclarableNode(node)) throw badDecl(node, 'node must be view:<name>, relation:<id> or scope:<id>');
   if (!isObj(decl)) throw badDecl(node, 'declaration must be an object {impl, own, uses}');
-  for (const k of Object.keys(decl)) if (!['impl', 'own', 'uses', 'foldsOverDays'].includes(k)) throw badDecl(node, `unknown field ${k}`);
+  for (const k of Object.keys(decl)) if (!T.decl_field.is(k)) throw badDecl(node, `unknown field ${k}`);
   if (!strList(decl.impl) || !decl.impl.length) throw badDecl(node, 'impl must be a non-empty list of function names');
   const ownOk = Array.isArray(decl.own) && decl.own.every((o) => strList(o) || (isObj(o) && strList(o.path) && (o.categories === undefined || strList(o.categories))));
   if (!ownOk) throw badDecl(node, 'own must be a list of path segment lists or {path, categories}');

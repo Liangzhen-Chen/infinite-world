@@ -4,8 +4,9 @@
 // 不计第 ④ 类。
 
 import { escapeJsonPointer, jsonScalarAt } from './vocab-load.mjs';
+import { GRAMMAR_TOKENS as G } from '../handles/markers.mjs';
 
-const WS = new Set([' ', '\t', '\n', '\r']);
+const WS = new Set([G.jsonSpace, G.jsonTab, G.jsonLf, G.jsonCr]);
 const escPtr = escapeJsonPointer;
 
 /** @param {string} text JSON 文本 */
@@ -20,7 +21,7 @@ export function parseJsonStrict(text) {
   function str(pointer) {
     const start = i;
     i++;
-    while (i < n && text[i] !== '"') { if (text[i] === '\\') i++; i++; }
+    while (i < n && text[i] !== G.jsonQuote) { if (text[i] === G.jsonEscape) i++; i++; }
     if (i >= n) bad(pointer, 'closing quote');
     i++;
     return JSON.parse(text.slice(start, i));
@@ -34,44 +35,44 @@ export function parseJsonStrict(text) {
   function value(pointer) {
     ws();
     const c = text[i];
-    if (c === '{') {
+    if (c === G.jsonObjOpen) {
       i++;
       const out = {};
       const seen = new Set();
       ws();
-      if (text[i] === '}') { i++; return out; }
+      if (text[i] === G.jsonObjClose) { i++; return out; }
       for (;;) {
         ws();
-        if (text[i] !== '"') bad(pointer, 'object key');
+        if (text[i] !== G.jsonQuote) bad(pointer, 'object key');
         const key = str(pointer);
         const p = `${pointer}/${escPtr(key)}`;
         if (seen.has(key)) errors.push({ code: 'E-DIM-DUPLICATE-KEY', pointer: p, got: key, want: 'unique key' });
         seen.add(key);
         ws();
-        if (text[i] !== ':') bad(p, ':');
+        if (text[i] !== G.jsonColon) bad(p, ':');
         i++;
         const v = value(p);
         Object.defineProperty(out, key, { value: v, enumerable: true, writable: true, configurable: true });
         ws();
-        if (text[i] === ',') { i++; continue; }
-        if (text[i] === '}') { i++; return out; }
+        if (text[i] === G.jsonComma) { i++; continue; }
+        if (text[i] === G.jsonObjClose) { i++; return out; }
         bad(p, ', or }');
       }
     }
-    if (c === '[') {
+    if (c === G.jsonArrOpen) {
       i++;
       const out = [];
       ws();
-      if (text[i] === ']') { i++; return out; }
+      if (text[i] === G.jsonArrClose) { i++; return out; }
       for (;;) {
         out.push(value(`${pointer}/${out.length}`));
         ws();
-        if (text[i] === ',') { i++; continue; }
-        if (text[i] === ']') { i++; return out; }
+        if (text[i] === G.jsonComma) { i++; continue; }
+        if (text[i] === G.jsonArrClose) { i++; return out; }
         bad(pointer, ', or ]');
       }
     }
-    if (c === '"') return str(pointer);
+    if (c === G.jsonQuote) return str(pointer);
     return scalar(pointer);
   }
   let result;

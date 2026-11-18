@@ -7,6 +7,7 @@
 
 import { handleOf, errorCodeOf, errorMemberName, HandleError } from './vocab-handle.mjs';
 import { statePathOf, checkPathPattern } from './keys.mjs';
+import { GRAMMAR_TOKENS } from './markers.mjs';
 import { ERROR_CODES } from '../error-codes.mjs';
 const EMPTY = Object.freeze({});
 
@@ -62,7 +63,7 @@ export function buildP(decl, opts = {}) {
   const out = {};
   const origin = new Map();
   for (const pattern of patterns) {
-    const name = pattern.split('.').filter((s) => s !== '*').join('_');
+    const name = pattern.split(GRAMMAR_TOKENS.pathSep).filter((s) => s !== GRAMMAR_TOKENS.wildcard).join('_');
     if (origin.has(name)) throw new HandleError('E-PATH-NAME-CLASH', `${JSON.stringify(origin.get(name))} and ${JSON.stringify(pattern)} both derive P member ${JSON.stringify(name)}`);
     origin.set(name, pattern);
     out[name] = Object.freeze((...segs) => statePathOf(patterns, pattern, segs));

@@ -33,7 +33,7 @@ const MERGE = Object.freeze({
 });
 // 独立格式：过程主体槽（卷二 §3.7 slots/consumers 嵌套格式；李白 11-18 块 2-5 裁定①）。登记行按文件登记，
 // 不写 type/domain（格式由 §3.7 定），packOverridable 写一个布尔；表值由下面的专用校验读，修正键是 process.<slot>（§3.1 :1291 额外命名空间）。
-const PROCESS_STRUCTURE = 'processSlots';
+const PROCESS_STRUCTURE = T.rule_structure.processSlots;
 const PROCESS_TOP = Object.freeze(['version', 'slots', 'consumers']);
 // 槽字段：§3.7 格式与 §1.2 表头字段（unit、precision、stacking、bounds、boundsRelative、boundsByKind、budget）加 process 槽独有的 paceable、baselineRX 与文档字段 basis。
 const SLOT_FIELDS = Object.freeze(['unit', 'precision', 'stacking', 'bounds', 'boundsRelative', 'boundsByKind', 'budget', 'paceable', 'baselineRX', 'basis']);

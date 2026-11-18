@@ -14,9 +14,9 @@ import { prepareNamedConditions } from './named-conditions.mjs';
 import { checkCellGrades } from './cell-grades.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
-// required 策略（卷二 §1.2）与类别族名（§1.3）、报错 severity（§4.1）：单一定义，比较处引用。
+// required 策略（卷二 §1.2）与报错 severity（§4.1）：单一定义，比较处引用。
+// 类别族名（§1.3）与伪类 effect（§1.5 :182）的定义源在 handles/markers.mjs 的 VOCAB_FAMILIES、ID_KINDS，这里引 T 句柄，不留第二份。
 const REQUIRED = Object.freeze({ always: 'always' });
-const FAMILY = Object.freeze({ class: 'class' });
 const SEVERITY = Object.freeze({ error: 'error' });
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 // 词表族键 kind（§1.9 "kind→kind_，22 类代号本身作枚举时用"）：表头 kind 须是该族条目去前缀后的名字。
@@ -74,7 +74,7 @@ export function validateDimensions(sources, options) {
     if (idIndex.has(id) || vocab.index.has(id)) err({ code: 'E-DIM-ID-DUPLICATE', level: 'L3', ...at, got: id, want: `unique across tables (also ${idIndex.get(id) || 'vocab'})` });
     else idIndex.set(id, kind);
   };
-  for (const id of Object.keys(isObj(effectsDoc) ? effectsDoc : {}).sort()) claim(id, 'effect', { table: '_effects', row: id, dim: '', path: `_effects.json#/${id}` });
+  for (const id of Object.keys(isObj(effectsDoc) ? effectsDoc : {}).sort()) claim(id, T.id_kind.effect,{ table: '_effects', row: id, dim: '', path: `_effects.json#/${id}` });
   for (const t of tables) {
     const prefixes = Array.isArray(t.entity.idPrefix) ? t.entity.idPrefix : [];
     const singles = Array.isArray(t.entity.singletonIds) ? t.entity.singletonIds : [];
@@ -88,12 +88,12 @@ export function validateDimensions(sources, options) {
     for (const id of Object.keys(isObj(t.doc.classes) ? t.doc.classes : {}).sort()) {
       const at = { table: t.kind, row: id, dim: '', path: `${t.file}#/classes/${id}` };
       if (!CODE_RE.test(id) || typeof t.entity.classPrefix !== 'string' || !id.startsWith(t.entity.classPrefix)) err({ code: 'E-DIM-ID-FORMAT', level: 'L0', ...at, got: id, want: `class id with prefix ${t.entity.classPrefix}` });
-      else if (!vocab.index.has(id) || vocab.index.get(id).family !== FAMILY.class) err({ code: 'E-DIM-CLASS-UNKNOWN', level: 'L2', ...at, got: id, want: 'entry of vocab family class' });
+      else if (!vocab.index.has(id) || vocab.index.get(id).family !== T.vocab_family.class) err({ code: 'E-DIM-CLASS-UNKNOWN', level: 'L2', ...at, got: id, want: 'entry of vocab family class' });
     }
   }
 
   // ---------- L1 表头 ----------
-  const kinds = new Set([...tables.map((t) => t.kind), 'effect']);
+  const kinds = new Set([...tables.map((t) => t.kind), T.id_kind.effect]);
   const tableDims = new Map(tables.map((t) => [t.kind, t.doc.dimensions]));
   const env = { units, vocab, kinds, idIndex, tableDims, displaySet: new Set(options.displaySet), compiled: new Map() };
   for (const t of tables) checkHeader(t, env, err);
