@@ -15,14 +15,16 @@ import { finalizeInputs, inputsBySystem, resetFinalized } from '../declare.mjs';
 import { codeOf } from '../errors.mjs';
 import { checkLedgerTables, checkSubjectFlagDims } from '../ledger.mjs';
 import { checkClockTables, checkHookCadence, installScheduler } from '../scheduler.mjs';
-import { installFixedConstants } from '../det-math.mjs';
-import { installSampleConstants } from '../sample.mjs';
+import { installFixedConstants, installExpTable } from '../det-math.mjs';
+import { installSampleConstants, installSampleDistributions } from '../sample.mjs';
 
 export const LAYOUT = Object.freeze({
   dimensionsDir: 'world/ontology/dimensions',
   units: '_units.json',
   vocab: '_vocab.json',
   effects: '_effects.json',
+  // 冻结分布表（卷二 §1.10 :324–:325；卷二十七 R27-5.2）：与 _units.json 同目录、同一种读法，读入后装配到内核。
+  distributions: '_distributions.json',
   stateOwners: 'world/ontology/state-owners.json',
   // 内核常数表在 engine.rules 下的表代号（卷二 S10 登记豁免表；登记行见 world/rules/registry.json）。
   constants: 'kernelConstants',
@@ -42,12 +44,27 @@ export function loadWorld(root, opts = {}) {
   // 校验器自己的上限取自内核常数表；登记了该表时缺键即加载失败（不设缺省）。
   const constants = ruleTable(read.rules, LAYOUT.constants);
   const need = (k) => { if (!Number.isInteger(constants[k])) throw new Error(`E-DIM-STRUCT-FIELD rules.${LAYOUT.constants}: ${k} missing`); return constants[k]; };
+  const needDigits = (k) => { if (typeof constants[k] !== 'string' || !constants[k]) throw new Error(`E-DIM-STRUCT-FIELD rules.${LAYOUT.constants}: ${k} missing`); return constants[k]; };
   // 定点标度常数只从规则表来（卷二 S10 登记豁免表）：校验维度前收下，det-math 的全部算术读它（李白 11-18 08:20 第 2 条）。
-  installFixedConstants({ BASE: need('BASE'), SCALE: need('SCALE'), PERMILLE: need('PERMILLE'), BPS: need('BPS') });
+  // fixedLn 的 W、升标度、级数项数与 LN2 同表登记（卷二 §3.3 :1335–:1339）；缺键与上面同一种方式拒。
+  installFixedConstants({
+    BASE: need('BASE'), SCALE: need('SCALE'), PERMILLE: need('PERMILLE'), BPS: need('BPS'),
+    fixedLnWorkExponent: need('fixedLnWorkExponent'), fixedLnInputExponent: need('fixedLnInputExponent'),
+    fixedLnSeriesTerms: need('fixedLnSeriesTerms'), LN2: needDigits('LN2'),
+  });
   // 骰值键限定成分个数上限也在同一张登记表（卷二 S10 :2407；卷二十七 R27-8.5 :728）：缺键照上面同一方式拒，
   // 读到了就交给 kernel/sample.mjs（§2.7 :579 kernelApi sample），sample/diceKeyOf 运行期才拿得到上限。
   need('diceKeyMaxQualifiers');
   installSampleConstants(read.rules);
+  // 冻结分布表与 _units.json 同目录、同一种读法（卷二 §1.10 :324–:325）：读入后交内核 det-math（exp 表）与 sample（分位数表）。
+  // 只在文件存在时装配；校验器夹具目录没有这张表，用到 normal/lognormal/fixedExp 时由内核报缺少表，不静默给值。
+  const distPath = join(dir, LAYOUT.distributions);
+  if (existsSync(distPath)) {
+    const dist = parseJsonStrict(readText(distPath));
+    if (dist.errors.length) throw new Error(`E-DIM-STRUCT-FIELD ${LAYOUT.distributions}: ${dist.errors[0].code} at ${dist.errors[0].pointer}`);
+    installExpTable(dist.value && dist.value.expTable);
+    installSampleDistributions(dist.value);
+  }
   const declPath = join(root, LAYOUT.stateOwners);
   const parsed = existsSync(declPath) ? parseJsonStrict(readText(declPath)) : { value: {}, errors: [] };
   const decl = parsed.value || {};

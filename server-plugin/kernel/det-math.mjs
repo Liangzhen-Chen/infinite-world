@@ -25,7 +25,27 @@ export function installFixedConstants(c) {
     if (!c || !Number.isInteger(c[k]) || c[k] < 1) throw new FixedError('E-DIM-STRUCT-FIELD', `rules.kernelConstants.${k} is not a positive integer`);
     return BigInt(c[k]);
   };
-  installed = Object.freeze({ base: need('BASE'), scale: need('SCALE'), permille: need('PERMILLE'), bps: need('BPS') });
+  // fixedLn 的算法常数（卷二 §3.3 :1335–:1339）：W、升标度、级数项数、LN2。单独装的测试可以先不交这四条，
+  // 调用 fixedLn 时缺即报加载顺序错（与 diceKeyMaxQualifiers 同法），不在代码里给缺省值。
+  const optInt = (k) => {
+    const v = c ? c[k] : undefined;
+    if (v === undefined) return null;
+    if (!Number.isInteger(v) || v < 1) throw new FixedError('E-DIM-STRUCT-FIELD', `rules.kernelConstants.${k} is not a positive integer`);
+    return v;
+  };
+  const optDigits = (k) => {
+    const v = c ? c[k] : undefined;
+    if (v === undefined) return null;
+    let digits = typeof v === 'string' && v.length > 0;
+    if (digits) for (const ch of v) if (!isDigit(ch)) digits = false;
+    if (!digits) throw new FixedError('E-DIM-STRUCT-FIELD', `rules.kernelConstants.${k} is not a decimal digit string`);
+    return BigInt(v);
+  };
+  installed = Object.freeze({
+    base: need('BASE'), scale: need('SCALE'), permille: need('PERMILLE'), bps: need('BPS'),
+    lnWorkExp: optInt('fixedLnWorkExponent'), lnInputExp: optInt('fixedLnInputExponent'),
+    lnTerms: optInt('fixedLnSeriesTerms'), ln2: optDigits('LN2'),
+  });
 }
 
 function fixedConstants() {
@@ -130,6 +150,181 @@ export const fixedMultiply = (a, b) => checkedFixed((a * b) / fixedScale());
 export function fixedDivide(a, b) {
   if (b === 0n) throw new FixedError('E-MOD-RX', 'division by zero');
   return checkedFixed((a * fixedScale()) / b);
+}
+
+// ---------- 10⁸ 标度与定点指数、对数、整数次幂（卷二 §3.3"定点指数与整数次幂（唯一定义）" :1328–:1340） ----------
+// 指数表由加载入口 installExpTable 收下（world/ontology/dimensions/_distributions.json，tools/gen-det-tables.mjs 离线生成）；
+// 运行期只读表、不现算（卷二十七 R27-5.2 :572–:574）。本文件是五个函数的唯一定义，别处只引用。
+
+/** 10⁸ 标度（SCALE²）。@returns {bigint} */
+const scale8 = () => { const s = fixedScale(); return s * s; };
+
+/** @type {null | {int: bigint[], frac: bigint[]}} */
+let expTables = null;
+
+const isFixed8 = (v) => typeof v === 'bigint';
+
+/**
+ * 加载期收下 exp 表（卷二 §1.10 :325）：expInt[k−kMin] 与 expFrac[m]，值可为十进制字串（大值超出 2⁵³）。
+ * @param {{scale: number, expInt: {kMin: number, kMax: number, values: (string | number)[]}, expFrac: {steps: number, values: (string | number)[]}}} doc
+ * @returns {void}
+ */
+export function installExpTable(doc) {
+  const intDoc = doc && doc.expInt;
+  const fracDoc = doc && doc.expFrac;
+  const ints = intDoc && Array.isArray(intDoc.values) ? intDoc.values : null;
+  const fracs = fracDoc && Array.isArray(fracDoc.values) ? fracDoc.values : null;
+  const bad = (m) => { throw new FixedError('E-DIM-STRUCT-FIELD', `_distributions.json expTable: ${m}`); };
+  if (!ints || ints.length < 1 || (ints.length & 1) !== 1) bad('expInt.values must be an odd-length array');
+  if (!fracs || fracs.length < 1) bad('expFrac.values must be a non-empty array');
+  if (Number(intDoc.kMin) !== -Number(intDoc.kMax)) bad('expInt.kMin must equal -kMax');
+  if (Number(intDoc.kMax) - Number(intDoc.kMin) + 1 !== ints.length) bad('expInt.kMin/kMax must span values');
+  if (Number(fracDoc.steps) !== fracs.length - 1) bad('expFrac.steps must be values.length - 1');
+  if (Number(doc.scale) !== Number(scale8())) bad('scale must equal SCALE squared');
+  const toBig = (v, where) => {
+    if (typeof v === 'string' && v.length > 0) {
+      let digits = true;
+      for (const ch of v) if (!isDigit(ch)) digits = false;
+      if (digits) return BigInt(v);
+    }
+    if (typeof v === 'number' && Number.isSafeInteger(v) && v >= 0) return BigInt(v);
+    return bad(`${where} must be a non-negative decimal integer`);
+  };
+  expTables = Object.freeze({
+    int: Object.freeze(ints.map((v, i) => toBig(v, `expInt.values[${i}]`))),
+    frac: Object.freeze(fracs.map((v, i) => toBig(v, `expFrac.values[${i}]`))),
+  });
+}
+
+function expTableOf() {
+  if (!expTables) throw new FixedError('E-DIM-STRUCT-FIELD', '_distributions.json expTable missing (load order: installExpTable)');
+  return expTables;
+}
+
+/**
+ * 十进制字串 → 10⁸ 标度整数，小数第 9 位起向零截断（卷二 §3.3 :1329）。
+ * @param {number | bigint | string} x @returns {bigint}
+ */
+export function fixedUnits8(x) {
+  const s8 = scale8();
+  if (typeof x === 'bigint') return x * s8;
+  if (typeof x === 'number' && !Number.isFinite(x)) throw new FixedError('E-DET-DOMAIN', 'nonfinite');
+  const m = parseDecimalLiteral(x);
+  if (!m) throw new FixedError('E-DET-DOMAIN', `not a decimal: ${x}`);
+  const [, sign, whole, fraction, exponent] = m;
+  let digits = whole + (fraction || '');
+  let point = whole.length + Number(exponent || 0);
+  if (point < 0) { digits = '0'.repeat(-point) + digits; point = 0; }
+  if (point > digits.length) { digits = digits + '0'.repeat(point - digits.length); }
+  const intPart = digits.slice(0, point) || '0';
+  const frac = digits.slice(point);
+  const v = BigInt(intPart) * s8 + (BigInt(frac || '0') * s8) / powBase(frac.length);
+  return sign ? -v : v;
+}
+
+/** 两个 10⁸ 标度数相乘，BigInt 整除向零截断（卷二 §3.3 :1330）。@param {bigint} a @param {bigint} b @returns {bigint} */
+export const fixedMultiply8 = (a, b) => (a * b) / scale8();
+
+// 向下取整的整数除法（b > 0）；BigInt 的 / 向零截断，负数要再修正。
+function floorDiv(a, b) {
+  const q = a / b;
+  const r = a % b;
+  return r !== 0n && (r < 0n) !== (b < 0n) ? q - 1n : q;
+}
+
+function bitLength(v) {
+  let n = 0;
+  let x = v;
+  while (x > 0n) { x >>= 1n; n += 1; }
+  return n;
+}
+
+/**
+ * 定点指数（卷二 §3.3 :1332）：入参、返回都是 10⁸ 标度；取值域 [−40, 40]（由 expInt 表长定），越界即错。
+ * k = floor(x)，r = x − k，e^r 由 expFrac 线性插值，全程整数、向零截断。
+ * @param {bigint} x 10⁸ 标度输入 @returns {bigint} 10⁸ 标度的 e^x
+ */
+export function fixedExp(x) {
+  if (!isFixed8(x)) throw new FixedError('E-DET-DOMAIN', `fixedExp input ${String(x)}: want a fixed 10^8 integer`);
+  const t = expTableOf();
+  const s8 = scale8();
+  const half = t.int.length >> 1;
+  const bound = BigInt(half) * s8;
+  if (x < -bound || x > bound) throw new FixedError('E-DET-DOMAIN', `fixedExp input ${x} outside [-${half}, ${half}]`);
+  const k = Number(floorDiv(x, s8));
+  const r = x - BigInt(k) * s8;
+  const steps = BigInt(t.frac.length - 1);
+  const m = Number((r * steps) / s8);
+  const rem = r * steps - BigInt(m) * s8;
+  const f0 = t.frac[m];
+  const f1 = t.frac[m + 1];
+  const eR = f0 + ((f1 - f0) * rem) / s8;
+  return (t.int[k + half] * eR) / s8;
+}
+
+/**
+ * 定点整数次幂（卷二 §3.3 :1333）：底数 10⁸ 标度非负，指数非负整数；按二进制位高到低反复平方与相乘。
+ * @param {bigint} b 10⁸ 标度底数 @param {number | bigint} n 非负整数指数 @returns {bigint} 10⁸ 标度结果
+ */
+export function fixedPow(b, n) {
+  if (!isFixed8(b) || b < 0n) throw new FixedError('E-DET-DOMAIN', 'fixedPow base: want a non-negative fixed 10^8 integer');
+  const e = typeof n === 'bigint' ? n : (Number.isSafeInteger(n) && n >= 0 ? BigInt(n) : null);
+  if (e === null || e < 0n) throw new FixedError('E-DET-DOMAIN', 'fixedPow exponent: want a non-negative integer');
+  let result = scale8();
+  for (let i = bitLength(e) - 1; i >= 0; i -= 1) {
+    result = fixedMultiply8(result, result);
+    if (((e >> BigInt(i)) & 1n) === 1n) result = fixedMultiply8(result, b);
+  }
+  return result;
+}
+
+function lnConstants() {
+  const c = fixedConstants();
+  if (c.lnWorkExp === null || c.lnInputExp === null || c.lnTerms === null || c.ln2 === null) {
+    throw new FixedError('E-DIM-STRUCT-FIELD', 'rules.kernelConstants fixedLnWorkExponent/fixedLnInputExponent/fixedLnSeriesTerms/LN2 missing (load order)');
+  }
+  return c;
+}
+
+/**
+ * 定点自然对数（卷二 §3.3 :1334–:1341）：入参 10⁸ 标度，定义域 0 < x ≤ expInt[40]，越界即错、不钳位。
+ * 返回 10⁸ 标度的 ln x；固定六步、无随入参变化的迭代次数。
+ * @param {bigint} x 10⁸ 标度输入 @returns {bigint} 10⁸ 标度结果
+ */
+export function fixedLn(x) {
+  if (!isFixed8(x)) throw new FixedError('E-DET-DOMAIN', `fixedLn input ${String(x)}: want a fixed 10^8 integer`);
+  const t = expTableOf();
+  const top = t.int[t.int.length - 1];
+  if (x <= 0n || x > top) throw new FixedError('E-DET-DOMAIN', `fixedLn input ${x} outside (0, ${top}]`);
+  const c = lnConstants();
+  const w = fixedBase() ** BigInt(c.lnWorkExp);
+  const up = fixedBase() ** BigInt(c.lnInputExp);
+  const a = x * up;
+  // 第 2 步：唯一的 n 使 2ⁿW ≤ A < 2ⁿ⁺¹W。
+  let n;
+  if (a >= w) {
+    n = bitLength(a / w) - 1;
+  } else {
+    const r = w / a;
+    const rbits = bitLength(r) - 1;
+    const exact = w % a === 0n;
+    const powerOfTwo = (r & (r - 1n)) === 0n;
+    n = -(exact && powerOfTwo ? rbits : rbits + 1);
+  }
+  const m = n >= 0 ? a / (1n << BigInt(n)) : a * (1n << BigInt(-n));
+  // 第 3 步：换元。
+  const tv = ((m - w) * w) / (m + w);
+  const t2 = (tv * tv) / w;
+  // 第 4 步：固定项数级数。
+  let s = 0n;
+  let p = tv;
+  for (let i = 0; i < c.lnTerms; i += 1) {
+    s += p / BigInt(i + i + 1);
+    p = (p * t2) / w;
+  }
+  // 第 5、6 步：合并并按 10¹⁰ 降标度，向零截断。
+  const l = BigInt(n) * c.ln2 + s + s;
+  return l / up;
 }
 
 // 按维度 precision 向零截断。

@@ -7,7 +7,7 @@
 
 import { KernelError } from './errors.mjs';
 import { sha256Text } from './save.mjs';
-import { fixedUnits, fixedScale, truncateTo, fixedToNumber } from './det-math.mjs';
+import { fixedUnits, fixedScale, truncateTo, fixedToNumber, fixedExp } from './det-math.mjs';
 import { CODE_RE } from './handles/vocab-handle.mjs';
 import { KEY_RE } from './validate/types.mjs';
 import { isHex64, seedKeyText, seedHashText, diceKeyText } from './handles/keys.mjs';
@@ -62,6 +62,39 @@ export function installSampleConstants(rules) {
 function diceKeyMaxQualifiers() {
   if (installedMaxQualifiers === null) throw new Error(`kernel/sample.mjs: rules.${SCHEMA.constantsTable}.${SCHEMA.maxQualifiersKey} missing (load order)`);
   return installedMaxQualifiers;
+}
+
+// normal 分位数表（卷二 §1.10 :324）：4097 点、4 位定点、两端钳 ±3.9000；离线生成、运行期只读（卷二十七 R27-5.2）。
+/** @type {null | bigint[]} */
+let normalQuantile = null;
+
+/**
+ * 加载期收下 _distributions.json.normalQuantile（4 位定点表，点数须为 2 的幂加一）。
+ * @param {{normalQuantile: {scale: number, values: number[]}}} doc
+ * @returns {void}
+ */
+export function installSampleDistributions(doc) {
+  const q = doc && doc.normalQuantile;
+  const values = q && Array.isArray(q.values) ? q.values : null;
+  const bad = (m) => { throw new KernelError('E-DIM-STRUCT-FIELD', {}, `_distributions.json normalQuantile: ${m}`); };
+  if (!values || values.length < 1 || (values.length & 1) !== 1) bad('values must be an odd-length array');
+  const points = BigInt(values.length - 1);
+  if ((points & (points - 1n)) !== 0n) bad('values.length - 1 must be a power of two');
+  if (Number(q.scale) !== Number(fixedScale())) bad('scale must equal SCALE');
+  if (!values.every((v) => Number.isSafeInteger(v))) bad('values must be integers');
+  normalQuantile = Object.freeze(values.map((v) => BigInt(v)));
+}
+
+function quantileTable() {
+  if (normalQuantile === null) throw new KernelError('E-DIM-STRUCT-FIELD', {}, '_distributions.json normalQuantile missing (load order: installSampleDistributions)');
+  return normalQuantile;
+}
+
+function bitLength(v) {
+  let n = 0;
+  let x = v;
+  while (x > 0n) { x >>= 1n; n += 1; }
+  return n;
 }
 
 const paramError = (detail) => new KernelError('E-DIM-SAMPLE-PARAM', {}, detail);
@@ -277,6 +310,31 @@ function clampAndTrunc(v, dist, def) {
   return fixedToNumber(x);
 }
 
+// 标准正态分位数 z（10⁴ 标度）：j = u 的高位、f = 余下低位，整数线性插值（卷二 §1.10 :324）。
+function normalZ(seedKey) {
+  const table = quantileTable();
+  const u = uniformAt(seedKey, 0);
+  // 高位位数 = u 的位数 − 表区间数的位数（64 − 12 = 52），从表长与 TWO64 派生，不写 52。
+  const shift = BigInt(bitLength(TWO64) - bitLength(BigInt(table.length - 1)));
+  const j = Number(u >> shift);
+  const f = u & ((1n << shift) - 1n);
+  return table[j] + (((table[j + 1] - table[j]) * f) >> shift);
+}
+
+function sampleNormal(seedKey, dist, def) {
+  const z = normalZ(seedKey);
+  const v = fixedUnits(dist.mean) + mul(fixedUnits(dist.sd), z);
+  return clampAndTrunc(v, dist, def);
+}
+
+// lognormal = exp(mu + sigma×z)：exp 只经内核 fixedExp（唯一定义），再降到 10⁴ 标度（卷二 §1.10 :325、§3.3 :1332）。
+function sampleLognormal(seedKey, dist, def) {
+  const z = normalZ(seedKey);
+  const lin = fixedUnits(dist.mu) + mul(fixedUnits(dist.sigma), z);
+  const e8 = fixedExp(lin * fixedScale());
+  return clampAndTrunc(e8 / fixedScale(), dist, def);
+}
+
 function sampleUniform(seedKey, dist, def) {
   const min = fixedUnits(dist.min);
   const span = fixedUnits(dist.max) - min;
@@ -319,8 +377,9 @@ function defOf(engine, kind, dim) {
 /**
  * kernelApi `sample(engine, kind, id, dim)`（卷二 §1.10 :328、§2.7 :579）：纯函数，返回该维度的采样值，不写状态。
  * 种子取自世界模板参数 `engine.template.seed`（卷十 R10-12.5 的世界模板参数，存档）；无分布、种子不合文法即拒。
- * 首批求值：uniform、triangular、categorical；normal/lognormal 的冻结分位数表与 exp 表、curve/ref 的分布表、
- * joint 的向量求值分别在卷四-4 与卷二十六落（卷二 :318 "joint 只定格式，卷二十六实现"），此处先过参数校验，求值待表。
+ * 首批求值：normal、lognormal、uniform、triangular、categorical（normal/lognormal 读 _distributions.json 的冻结表，
+ * lognormal 的 exp 只经 kernel/det-math.mjs 的 fixedExp）；curve/ref 的分布表、joint 的向量求值在卷二十六落
+ * （卷二 :318 "joint 只定格式，卷二十六实现"），此处先过参数校验，求值待表。
  * @param {any} engine 加载结果（tables、vocab、template）
  * @param {string} kind 实体类代号
  * @param {string} id 实例 id
@@ -340,11 +399,13 @@ export function sample(engine, kind, id, dim) {
   if (group !== undefined && (typeof group !== 'string' || !CODE_RE.test(group))) throw paramError(`joint group ${JSON.stringify(group)} is not a code`);
   const seedKey = seedKeyFor(templateSeed, kind, id, dim, group);
   switch (dist.dist) {
+    case DIST.normal: return sampleNormal(seedKey, dist, def);
+    case DIST.lognormal: return sampleLognormal(seedKey, dist, def);
     case DIST.uniform: return sampleUniform(seedKey, dist, def);
     case DIST.triangular: return sampleTriangular(seedKey, dist, def);
     case DIST.categorical: return sampleCategorical(seedKey, dist);
     default:
-      // 求值依赖冻结表/内核原语，分别由 4-4 与卷二十六落地；这里不静默给假值。
-      throw new Error(`kernel/sample.mjs: distribution ${dist.dist} evaluation needs its frozen tables (vol2 :324-:327, vol27 R27-8) not yet built`);
+      // 求值依赖冻结表/内核原语，分别由卷二十六落地；这里不静默给假值。
+      throw new Error(`kernel/sample.mjs: distribution ${dist.dist} evaluation needs its frozen tables (vol2 :318, vol27 R27-8) not yet built`);
   }
 }

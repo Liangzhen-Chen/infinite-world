@@ -192,10 +192,14 @@
     {
      "ref": "4-3 补（卷二 §2.8 :852）：种子键派生串、h_i 输入串与骰值键五段的拼接移入 kernel/handles/keys.mjs（只拼已核对部件），共用检测器 import 闭包内 keys.mjs 内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 34
+    },
+    {
+     "ref": "4-4a：kernel/det-math.mjs 新增 fixedExp/fixedLn/fixedPow 等定点函数（检测器 import 闭包经 validate/types.mjs 含 det-math），判据代码指纹更新，rev+1；判定口径不变",
+     "rev": 35
     }
    ],
-   "print": "545bdac11052320870579aefd6bba6c13898f7ec65e3dcdcea8dfa645e419f9d",
-   "rev": 34,
+   "print": "fa2449140e59d6b919430b9a12f235456dcd376da7a539f8368245282efad90a",
+   "rev": 35,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -445,10 +449,14 @@
     {
      "ref": "4-3 补（卷二 §2.8 :852）：种子键派生串、h_i 输入串与骰值键五段的拼接移入 kernel/handles/keys.mjs（只拼已核对部件），共用检测器 import 闭包内 keys.mjs 内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 24
+    },
+    {
+     "ref": "4-4a：kernel/det-math.mjs 新增 fixedExp/fixedLn/fixedPow 等定点函数（检测器 import 闭包经 validate/types.mjs 含 det-math），判据代码指纹更新，rev+1；判定口径不变",
+     "rev": 25
     }
    ],
-   "print": "2921a0719037db7c663c18502f201e323abba1407c60a9d1c34cdb6c9f205de5",
-   "rev": 24,
+   "print": "b63b3cc0a082c593ee50a9d56e78e9e5097b9932e770e65338f4cbf816a866d1",
+   "rev": 25,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -721,10 +729,14 @@
     {
      "ref": "4-3 补（卷二 §2.8 :852）：种子键派生串、h_i 输入串与骰值键五段的拼接移入 kernel/handles/keys.mjs（只拼已核对部件），共用检测器 import 闭包内 keys.mjs 内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 25
+    },
+    {
+     "ref": "4-4a：kernel/det-math.mjs 新增 fixedExp/fixedLn/fixedPow 等定点函数（检测器 import 闭包经 validate/types.mjs 含 det-math），判据代码指纹更新，rev+1；判定口径不变",
+     "rev": 26
     }
    ],
-   "print": "88f5e3c55b81e407f29e34c926c22f588868d7f0a38a4ff7378cda60f4191243",
-   "rev": 25,
+   "print": "2faa579b9a26196f0066d296795d6515f926eab0c344eb2612e031f7d94176bb",
+   "rev": 26,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -954,10 +966,14 @@
     {
      "ref": "4-3 补（卷二 §2.8 :852）：种子键派生串、h_i 输入串与骰值键五段的拼接移入 kernel/handles/keys.mjs（只拼已核对部件），共用检测器 import 闭包内 keys.mjs 内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 41
+    },
+    {
+     "ref": "4-4a：kernel/det-math.mjs 新增 fixedExp/fixedLn/fixedPow 等定点函数（检测器 import 闭包经 validate/types.mjs 含 det-math），判据代码指纹更新，rev+1；判定口径不变",
+     "rev": 42
     }
    ],
-   "print": "7d583d1c7ec9549202ac3751d89abbbe9b8facb24969d23001cdb91c1ae602ca",
-   "rev": 41,
+   "print": "79379c5589a41c6cc842a37cc353bebddf8c2d93e25527b66af9b2e94bb7d545",
+   "rev": 42,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1160,10 +1176,14 @@
     {
      "ref": "4-3 补（卷二 §2.8 :852）：种子键派生串、h_i 输入串与骰值键五段的拼接移入 kernel/handles/keys.mjs（只拼已核对部件），共用检测器 import 闭包内 keys.mjs 内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 26
+    },
+    {
+     "ref": "4-4a：kernel/det-math.mjs 新增 fixedExp/fixedLn/fixedPow 等定点函数（检测器 import 闭包经 validate/types.mjs 含 det-math），判据代码指纹更新，rev+1；判定口径不变",
+     "rev": 27
     }
    ],
-   "print": "88f5e3c55b81e407f29e34c926c22f588868d7f0a38a4ff7378cda60f4191243",
-   "rev": 26,
+   "print": "2faa579b9a26196f0066d296795d6515f926eab0c344eb2612e031f7d94176bb",
+   "rev": 27,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1667,10 +1687,14 @@
     {
      "ref": "4-3 补（卷二 §2.8 :852）：种子键派生串、h_i 输入串与骰值键五段的拼接移入 kernel/handles/keys.mjs（只拼已核对部件），共用检测器 import 闭包内 keys.mjs 内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 26
+    },
+    {
+     "ref": "4-4a：kernel/det-math.mjs 新增 fixedExp/fixedLn/fixedPow 等定点函数（检测器 import 闭包经 validate/types.mjs 含 det-math），判据代码指纹更新，rev+1；判定口径不变",
+     "rev": 27
     }
    ],
-   "print": "88f5e3c55b81e407f29e34c926c22f588868d7f0a38a4ff7378cda60f4191243",
-   "rev": 26,
+   "print": "2faa579b9a26196f0066d296795d6515f926eab0c344eb2612e031f7d94176bb",
+   "rev": 27,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -1757,10 +1781,14 @@
     {
      "ref": "4-3 补（卷二 §2.8 :852）：种子键派生串、h_i 输入串与骰值键五段的拼接移入 kernel/handles/keys.mjs（只拼已核对部件），共用检测器 import 闭包内 keys.mjs 内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 18
+    },
+    {
+     "ref": "4-4a：kernel/det-math.mjs 新增 fixedExp/fixedLn/fixedPow 等定点函数（检测器 import 闭包经 validate/types.mjs 含 det-math），判据代码指纹更新，rev+1；判定口径不变",
+     "rev": 19
     }
    ],
-   "print": "1eb7985847870cf397f7d9bf68f3878a58b1d4d4cb41cefe262c0ef0f78ad6d5",
-   "rev": 18,
+   "print": "fc1653e1981b81f2e3d7ef9eacc659c126f10821b62acdc7c0c95bbc03ad04e2",
+   "rev": 19,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -1947,10 +1975,14 @@
     {
      "ref": "4-3 补（卷二 §2.8 :852）：种子键派生串、h_i 输入串与骰值键五段的拼接移入 kernel/handles/keys.mjs（只拼已核对部件），共用检测器 import 闭包内 keys.mjs 内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 43
+    },
+    {
+     "ref": "4-4a：kernel/det-math.mjs 新增 fixedExp/fixedLn/fixedPow 等定点函数（检测器 import 闭包经 validate/types.mjs 含 det-math），判据代码指纹更新，rev+1；判定口径不变",
+     "rev": 44
     }
    ],
-   "print": "80fabbea256f74d1cdd535f5d43adfbbb6a2b171166c885b78f40e35c7a1a08d",
-   "rev": 43,
+   "print": "4a304ff0f89ca7b841e0826a30682130ed9247f33a31fae7693b0ca13957d4ba",
+   "rev": 44,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -2090,10 +2122,14 @@
     {
      "ref": "4-3 补（卷二 §2.8 :852）：种子键派生串、h_i 输入串与骰值键五段的拼接移入 kernel/handles/keys.mjs（只拼已核对部件），共用检测器 import 闭包内 keys.mjs 内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 5
+    },
+    {
+     "ref": "4-4a：kernel/det-math.mjs 新增 fixedExp/fixedLn/fixedPow 等定点函数（检测器 import 闭包经 validate/types.mjs 含 det-math），判据代码指纹更新，rev+1；判定口径不变",
+     "rev": 6
     }
    ],
-   "print": "5ce8b59bbae45823ba7f828c2fc8f9cec449a1f4205b1081c4489a42b26e4fce",
-   "rev": 5,
+   "print": "b71353cc74d0a550dd0e426d4de9e04c650ffd56c2784b37f527c2253656a6ce",
+   "rev": 6,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -2243,10 +2279,14 @@
     {
      "ref": "4-3 补（卷二 §2.8 :852）：种子键派生串、h_i 输入串与骰值键五段的拼接移入 kernel/handles/keys.mjs（只拼已核对部件），共用检测器 import 闭包内 keys.mjs 内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 32
+    },
+    {
+     "ref": "4-4a：kernel/det-math.mjs 新增 fixedExp/fixedLn/fixedPow 等定点函数（检测器 import 闭包经 validate/types.mjs 含 det-math），判据代码指纹更新，rev+1；判定口径不变",
+     "rev": 33
     }
    ],
-   "print": "545bdac11052320870579aefd6bba6c13898f7ec65e3dcdcea8dfa645e419f9d",
-   "rev": 32,
+   "print": "fa2449140e59d6b919430b9a12f235456dcd376da7a539f8368245282efad90a",
+   "rev": 33,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -2492,10 +2532,14 @@
     {
      "ref": "4-3 补（卷二 §2.8 :852）：种子键派生串、h_i 输入串与骰值键五段的拼接移入 kernel/handles/keys.mjs（只拼已核对部件），共用检测器 import 闭包内 keys.mjs 内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 20
+    },
+    {
+     "ref": "4-4a：kernel/det-math.mjs 新增 fixedExp/fixedLn/fixedPow 等定点函数（检测器 import 闭包经 validate/types.mjs 含 det-math），判据代码指纹更新，rev+1；判定口径不变",
+     "rev": 21
     }
    ],
-   "print": "1eb7985847870cf397f7d9bf68f3878a58b1d4d4cb41cefe262c0ef0f78ad6d5",
-   "rev": 20,
+   "print": "fc1653e1981b81f2e3d7ef9eacc659c126f10821b62acdc7c0c95bbc03ad04e2",
+   "rev": 21,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

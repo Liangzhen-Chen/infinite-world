@@ -16,3 +16,6 @@ world/drafts/w1/yp-depth-rest/review-failed-once.mjs -text
 
 # 派卡脚本是 sh 脚本，检出须为 LF，否则 Windows 检出后每行带 CR 无法执行
 tools/dispatch/*.sh text eol=lf
+
+# 离线生成并逐位比对的冻结表（卷二十七 R27-5.2）：生成器写 LF，检出须同字节，否则 core.autocrlf 检出后 --check 必不过
+world/ontology/dimensions/_distributions.json text eol=lf
