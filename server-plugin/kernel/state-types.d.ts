@@ -21,6 +21,7 @@ export interface PathTypes {
   readonly 'displayNames.*.seq': number;
   readonly 'displayNames.*.text': SealedValue;
   readonly 'due.*': StructValue<'dueItem'>;
+  readonly 'ledgerTotals': StructValue<'resourceTotals'>;
   readonly 'narration.*': SealedValue;
   readonly 'outflowTotals.*': StructValue<'holderOutflow'>;
   readonly 'pendingPost.*': readonly (StructValue<'pendingPost'>)[];
@@ -49,6 +50,7 @@ export type State = {
       readonly text?: SealedValue;
     } };
   readonly due?: { readonly [segment: string]: StructValue<'dueItem'> };
+  readonly ledgerTotals?: StructValue<'resourceTotals'>;
   readonly narration?: { readonly [segment: string]: SealedValue };
   readonly outflowTotals?: { readonly [segment: string]: StructValue<'holderOutflow'> };
   readonly pendingPost?: { readonly [segment: string]: readonly (StructValue<'pendingPost'>)[] };

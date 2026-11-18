@@ -279,8 +279,9 @@ export function mergeStateOwners(decl, ctx = {}) {
     for (const rel of sorted(Object.keys(row.writers))) {
       const w = row.writers[rel];
       const wat = `${at}/writers/${rel}`;
-      const abs = `${key}.${rel}`;
-      if (rel === '' || segs(rel).includes('')) { err(E.E_DIM_STRUCT_FIELD, key, wat, rel, 'non-empty relative path pattern'); continue; }
+      // 相对路径为空串即该顶层键本身（整键的值是一个命名 struct、无 `*` 段的 pathTypes 项，如卷二 §1.5 `struct:resourceTotals` 的 `ledgerTotals`）。
+      const abs = rel === '' ? key : `${key}.${rel}`;
+      if (rel !== '' && segs(rel).includes('')) { err(E.E_DIM_STRUCT_FIELD, key, wat, rel, 'relative path pattern without empty segments ("" = the whole key)'); continue; }
       const rec = parseWriter(w, (code, got, want) => err(code, abs, wat, got, want));
       if (rec) writers.set(abs, { pattern: abs, key, ...rec, source: 'stateKeys' });
     }
