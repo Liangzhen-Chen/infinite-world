@@ -1,0 +1,25 @@
+{
+ "rows": [
+  {
+   "key": "snapshotEveryEvents",
+   "value": 1000,
+   "source": "卷二十七 §2.2；李白 11-18 块 2-4 裁定 c：暂定 1000，待试玩调",
+   "grade": "designed",
+   "basis": "全书无值（卷二十七 R27-4.5 :504 只写距上一个快照多少条做快照，未给数）；李白 11-18 定 1000；待试玩调"
+  },
+  {
+   "key": "segmentEvents",
+   "value": 500,
+   "source": "卷二十七 §2.2；李白 11-18 块 2-4 裁定 c：暂定 500，待试玩调",
+   "grade": "designed",
+   "basis": "全书无值（R27-4.5 :504）；李白 11-18 定 500，须 ≤ snapshotEveryEvents；待试玩调"
+  },
+  {
+   "key": "keepSnapshots",
+   "value": 2,
+   "source": "卷二十七 §2.2；块 2-4 暂定 2（执行者按同一量级给值），待试玩调",
+   "grade": "designed",
+   "basis": "全书无值（R27-4.5 :504、R27-4.8 :512：回读失败回退上一份完好快照，至少留 2 份）；待试玩调"
+  }
+ ]
+}

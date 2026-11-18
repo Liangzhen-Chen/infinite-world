@@ -19,6 +19,7 @@ import {
   registerUnitOfPath, resetUnitOfPath,
 } from '../../server-plugin/kernel/save.mjs';
 import { loadSlot, autoLoadSlot, loadDigestExclude } from '../../server-plugin/kernel/load/save.mjs';
+import { readRules, ruleTable } from '../../server-plugin/kernel/load/rules.mjs';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 import { digestHex, createDigestCap } from '../../server-plugin/textcore/digest.mjs';
 import { generate, formatExclude } from '../../tools/gen-digest-exclude.mjs';
@@ -439,6 +440,20 @@ test('写时复制：没变的分片不重写；只改一个状态值时只多�
   tickEnd(book, doc1);
   // 新写：gauge 一片 + 封好的日志段一片；数据、文字、持有、账本四片摘要不变不重写。
   assert.equal(saveToSlot({ root, slot: 0, book, doc: doc1, rulesDigest: RULES, clockMinute: 3 }).written, 2);
+});
+
+test('规则表 saveLayout 经 readRules/ruleTable 读出 1000/500/2，交 createLogBook 通过（卷二十七 §2.2、卷二 :1500）', () => {
+  const read = readRules(ROOT);
+  assert.deepEqual(read.errors.filter((e) => e.table === 'rules.saveLayout'), []);
+  const t = ruleTable(read.rules, 'saveLayout');
+  assert.equal(t.snapshotEveryEvents, 1000);
+  assert.equal(t.segmentEvents, 500);
+  assert.equal(t.keepSnapshots, 2);
+  const layout = { ...LAYOUT, snapshotEveryEvents: t.snapshotEveryEvents, segmentEvents: t.segmentEvents, keepSnapshots: t.keepSnapshots };
+  const book = createLogBook(layout, doc0());
+  assert.equal(book.layout.snapshotEveryEvents, 1000);
+  assert.equal(book.layout.segmentEvents, 500);
+  assert.equal(book.layout.keepSnapshots, 2);
 });
 
 test('A27-4.2 分片无关：同一逻辑文档换另一张合法分片表存盘读回，存档摘要不变、文档相同', () => {
