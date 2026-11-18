@@ -3,12 +3,25 @@
 // number（白名单外数值，R12-4.2；白名单取扫描类别登记行 litAllow，出处卷一 R-6 第 1 条）。
 // selfName（S12-5，E-ACC-SCAN-SELFNAME）：卷代号、条目键与条目原编号（条目登记）、表代号（维度表文件名）、模块文件名（文件清单里
 // 代码文件的文件名）、检测器代号（模块名）的字串，或带登记实体前缀的字串。
+// modifierKey（卷二 §7 S8：修正键字面量；修正键的定义与键形见卷二 §3.1 :1290）：键形是 `<kind>.<dimension>[<key>]`，
+// 只算 `modifiable:true` 的 number/integer/map<…,number> 维度；另有 `body.<capability>`（卷二 §3.6）、`process.<slot>`
+// （卷二 §3.7）与 `stock.*`（卷二 :1290 收卷五 §2.3 的 stock.growthFactor、stock.lossPerDay）三个命名空间。
+// 键集从被查内容里的登记数据读（R12-1.7、R12-1.2 同法）：维度表 kind 的 dimensions、表头 capabilities、
+// derived-process.json 的 slots；代码里不列键。
+// 键形与类型核对照 kernel/handles/keys.mjs:18 的 DIM_KEY_RE 与 :66-73 的 modKeyOf（modifiable + 数值类型 + map 须带下标）写在这里：
+// 不 import keys.mjs，因为其 import 闭包含 BigInt 字面量（kernel/det-math.mjs），classPrint 的 JSON.stringify 序列化不了 BigInt，
+// 补 read.mjs 又会让全部扫描类重算判据指纹（S12-13），read.mjs 不在本卡所有权内。下标是否属于该 map 的键集不在此核对（只判键形）。
+// 未覆盖：stock.* 的键集登记在卷五 §2.3，被查内容里没有对应的数据登记（未找到）；S8 保持 registered（不虚报）。
 // 范围：params.groups（模块组键，R12-11.5）、params.facs、params.modules（read.mjs scopeFiles）。计数落在产生值的地方：定义处一次，
 // 引用处不重计；从范围外文件 import 来的常量计在 import 处。
 // params.access = branch：只计落在分支位置的（if/while/for/switch 条件里，或紧邻比较、逻辑运算、`?`、`case`）。
 
 import { tokenize, foldAt, minPrecAt, canStartAt, buildEnv, importsOf, specifierIndexes, symbolPaths, constDecls, conditionSpans, BRANCH_OPS } from '../lib/js-scan.mjs';
 import { scopeFiles, resolveRel, isCode, LAYOUT, REGISTRY } from '../read.mjs';
+
+// 与 kernel/handles/keys.mjs:18 的 DIM_KEY_RE 同文法；数值类型集合同 :20 的 NUMERIC。
+const MOD_KEY_RE = /^([a-z][a-z0-9_]{1,47})\.([a-z][a-zA-Z0-9]{0,47})(?:\[([^[\]]+)\])?$/;
+const NUMERIC_TYPES = ['number', 'integer'];
 
 const JUDGES = {
   selfName: (ctx) => {
@@ -32,7 +45,59 @@ const JUDGES = {
     const allow = (cls.litAllow || []).map(Number);
     return (v) => v.k === 'num' && !allow.includes(Number(v.v));
   },
+  modifierKey: (ctx) => {
+    const reg = modifierRegistry(ctx);
+    const memo = new Map();
+    return (v) => {
+      if (v.k !== 'str') return false;
+      if (!memo.has(v.v)) memo.set(v.v, isModifierKey(reg, v.v));
+      return memo.get(v.v);
+    };
+  },
 };
+
+// 一条字串是不是修正键：键形合 MOD_KEY_RE，kind 的该维度已登记、modifiable:true，值类型或 map 的值类型是 number/integer，
+// map 维度必须带下标、非 map 维度不带（与 keys.mjs 的 modKeyOf 同口径）。
+function isModifierKey(reg, text) {
+  const m = MOD_KEY_RE.exec(text);
+  if (!m) return false;
+  const [, kind, dimension, sub] = m;
+  const dims = reg.tableDims.get(kind);
+  const def = dims && Object.hasOwn(dims, dimension) ? dims[dimension] : undefined;
+  if (!def || def.modifiable !== true) return false;
+  const valueType = def.type === 'map' ? (def.value || {}).type : def.type;
+  if (!NUMERIC_TYPES.includes(valueType)) return false;
+  return def.type === 'map' ? sub !== undefined : sub === undefined;
+}
+
+// 修正键的登记表（keys.mjs 的 KeyRegistry 形态）：kind → 该维度表表头的 dimensions；表头 capabilities 段按卷二 §3.6
+// 注册为 body.<capability>；derived-process.json 的 slots 按卷二 §3.7 注册为 process.<slot>（槽是数值修正键）。
+// idIndex（行键即实例 id）与 vocabIndex 按 KeyRegistry 形态备着；本判定只判键形与类型，不核对下标属于哪个键集。
+function modifierRegistry(ctx) {
+  const tableDims = new Map();
+  const idIndex = new Map();
+  const vocabIndex = new Map();
+  for (const f of ctx.files) {
+    if (!f.startsWith(LAYOUT.dimensionsDir + '/') || !f.endsWith('.json')) continue;
+    const base = f.slice(f.lastIndexOf('/') + 1);
+    if (base.startsWith('_')) continue;
+    let table; try { table = JSON.parse(ctx.read(f)); } catch { continue; }
+    const kind = table && typeof table.kind === 'string' && table.kind ? table.kind : base.slice(0, -5);
+    tableDims.set(kind, (table && table.dimensions) || {});
+    const rows = table && table.rows;
+    if (rows && typeof rows === 'object' && !Array.isArray(rows)) for (const id of Object.keys(rows)) idIndex.set(id, kind);
+    const caps = (table && table.capabilities) || {};
+    if (caps && typeof caps === 'object' && Object.keys(caps).length) tableDims.set('body', caps);
+  }
+  const proc = 'world/rules/tables/derived-process.json';
+  if (ctx.files.includes(proc)) {
+    let data; try { data = JSON.parse(ctx.read(proc)); } catch { data = null; }
+    const slots = {};
+    for (const name of Object.keys((data && data.slots) || {})) slots[name] = { modifiable: true, type: 'number' };
+    if (Object.keys(slots).length) tableDims.set('process', slots);
+  }
+  return { tableDims, idIndex, vocabIndex };
+}
 
 export function detect(ctx, params, cls) {
   const make = JUDGES[params.literal];

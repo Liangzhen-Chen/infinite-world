@@ -71,6 +71,7 @@
    "expect": "zero",
    "form": "scan",
    "gates": [
+    "pre_commit",
     "pre_merge"
    ],
    "itemKey": "vol1.V-11",
