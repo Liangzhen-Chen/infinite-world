@@ -23,6 +23,8 @@ export function tempRepo() {
   mkdirSync(join(dir, 'server-plugin/kernel/validate'), { recursive: true });
   mkdirSync(join(dir, 'server-plugin/kernel/load'), { recursive: true });
   cpSync(join(ROOT, 'server-plugin/kernel/handles/keys.mjs'), join(dir, 'server-plugin/kernel/handles/keys.mjs'));
+  // S13 正则叶子（卷二 §2.8 封卷后勘误 1118k17）：det-math、vocab-handle、error-codes 等都在它的 import 闭包里，指纹要算同一份。
+  cpSync(join(ROOT, 'server-plugin/kernel/handles/patterns.mjs'), join(dir, 'server-plugin/kernel/handles/patterns.mjs'));
   cpSync(join(ROOT, 'server-plugin/kernel/handles/vocab-handle.mjs'), join(dir, 'server-plugin/kernel/handles/vocab-handle.mjs'));
   cpSync(join(ROOT, 'server-plugin/kernel/validate/types.mjs'), join(dir, 'server-plugin/kernel/validate/types.mjs'));
   cpSync(join(ROOT, 'server-plugin/kernel/det-math.mjs'), join(dir, 'server-plugin/kernel/det-math.mjs'));
