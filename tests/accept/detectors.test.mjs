@@ -165,6 +165,7 @@ test('lit_scope 修正键族（卷二 S8、§3.1 :1290）：按 <kind>.<dimensio
     fxLabel: { type: 'string', modifiable: true },
     fxFlag: { type: 'boolean', modifiable: true },
     fxWeights: { type: 'map', value: { type: 'number' }, key: { type: 'integer' }, modifiable: true },
+    fxSeed: { type: 'map', value: { type: 'number' }, key: { type: 'string', vocab: 'fxseed' }, modifiable: true },
   } });
   const run = (src, extra = {}) => litScope(ctxOf({ 'server-plugin/a.mjs': src, [dims]: table, ...extra }), { groups: RT, literal: 'modifierKey' }, CLS.instance_name).length;
   assert.equal(run("const k = 'fx.fxSharpness';"), 1);
@@ -178,6 +179,18 @@ test('lit_scope 修正键族（卷二 S8、§3.1 :1290）：按 <kind>.<dimensio
   assert.equal(run("const k = 'fx.fxFlag';"), 0);
   assert.equal(run("const k = 'fx.fxWeights';"), 0); // map 维度要下标
   assert.equal(run("const k = 'zz.fxSharpness';"), 0); // 没登记的 kind
+  // 卷二 :1290：map 下标须是登记词表代号。夹具自造小词表（不动 world/），已登记代号算修正键（must_fail 极性，必须报），
+  // 未登记代号不算（must_pass 极性，必须不报）；没有词表登记时不得凭键形放行。
+  const vocab = 'world/ontology/dimensions/_vocab.json';
+  const vocabDoc = JSON.stringify({ families: {
+    fxseed: { prefix: 'fxv_', entries: { fxv_alpha: {} } },
+    fxother: { prefix: 'fxo_', entries: { fxo_beta: {} } },
+  } });
+  const seedRun = (src) => litScope(ctxOf({ 'server-plugin/a.mjs': src, [dims]: table, [vocab]: vocabDoc }), { groups: RT, literal: 'modifierKey' }, CLS.instance_name).length;
+  assert.equal(seedRun("const k = 'fx.fxSeed[fxv_alpha]';"), 1);
+  assert.equal(seedRun("const k = 'fx.fxSeed[fxv_missing]';"), 0);
+  assert.equal(seedRun("const k = 'fx.fxSeed[fxo_beta]';"), 0); // 别的族的代号也不行（键定义写的是 fxseed 族）
+  assert.equal(run("const k = 'fx.fxSeed[fxv_alpha]';"), 0); // 被查内容里没有词表登记：核不了代号，不算
   assert.equal(run("// 'fx.fxSharpness' 在注释里\nconst k = 'fx.fxSharpnes';"), 0);
   assert.equal(litScope(ctxOf({ 'server-plugin/a.mjs': "const k = 'fx.fxSharpness';" }), { groups: RT, literal: 'modifierKey' }, CLS.instance_name).length, 0);
   // 卷二 §3.6：body_plan 表头的 capabilities 段注册为 body.<capability>。
