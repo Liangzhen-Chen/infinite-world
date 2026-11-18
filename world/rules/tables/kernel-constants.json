@@ -6,6 +6,6 @@
   {"key": "BPS", "value": 10000, "source": "卷二 §3.3 定点算术 BPS = 10000（基点满值，与 SCALE 同值、另名供读）；卷十 S10-4 定点设施的命名标度常量；尚无代码读，见收尾待办（A12-4.5 宽限）"},
   {"key": "extendsMaxDepth", "value": 4, "source": "卷二 §1.3 继承链深 ≤4"},
   {"key": "rxMaxDepth", "value": 16, "source": "卷二 §1.5 struct:rxTree maxDepth 16；§2.9 第 4 条递归深度上限 16"},
-  {"key": "handleRadix", "value": 36, "file": "server-plugin/kernel/scheduler.mjs", "source": "卷二十 §4.1.2 句柄 due_＋全局序号；李白 11-18 03:31 裁定 2", "basis": "句柄序号的进制：base36 小写（数字加小写字母），李白 11-18 03:31 裁定 2；代码经规则表 kernelConstants 读入，不在代码里写字面量"}
+  {"key": "handleRadix", "value": 36, "source": "卷二十 §4.1.2 句柄 due_＋全局序号；李白 11-18 03:31 裁定 2", "basis": "句柄序号的进制：base36 小写（数字加小写字母），李白 11-18 03:31 裁定 2；代码经规则表 kernelConstants 读入，不在代码里写字面量"}
  ]
 }

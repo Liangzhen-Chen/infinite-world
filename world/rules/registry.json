@@ -6,7 +6,7 @@
    "structure": "keys",
    "type": {"BASE": "integer", "SCALE": "integer", "PERMILLE": "integer", "BPS": "integer", "extendsMaxDepth": "integer", "rxMaxDepth": "integer", "handleRadix": "integer"},
    "domain": {"BASE": [1, null], "SCALE": [1, null], "PERMILLE": [1, null], "BPS": [1, null], "extendsMaxDepth": [1, null], "rxMaxDepth": [1, null], "handleRadix": [2, 36]},
-   "volume": "卷二 §7 S10 :2386（kernel 定点文件常数登记豁免）、§3.3 :1319（定点算术段：SCALE、PERMILLE、BPS 同登）、§3.3 :1333、§1.3、§1.5",
+   "volume": "卷二 §7 S10 :2386（kernel 定点文件常数登记豁免）、卷二 :2404（数值来自 engine.rules 即不计，handleRadix 依此过 const_literal）、§3.3 :1319（定点算术段：SCALE、PERMILLE、BPS 同登）、§3.3 :1333、§1.3、§1.5",
    "multiSourceMerge": "own_key_only",
    "packOverridable": {"BASE": false, "SCALE": false, "PERMILLE": false, "BPS": false, "extendsMaxDepth": false, "rxMaxDepth": false, "handleRadix": false}
   },
