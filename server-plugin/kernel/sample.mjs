@@ -35,9 +35,34 @@ const U_SHIFT_HEX = 'c0';
 const WORD_ONES = 'ffffffffffffffff';
 const TWO64 = BigInt(HEX_PREFIX + WORD_ONES) + 1n;
 
+// 本模块要读的内核常数：表代号与常数键（卷二 §7 S10 :2404；值登记在 world/rules/tables/kernel-constants.json）。
+const SCHEMA = Object.freeze({
+  constantsTable: 'kernelConstants',
+  maxQualifiersKey: 'diceKeyMaxQualifiers',
+});
+
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
 const isInt = (v) => Number.isSafeInteger(v);
+
+// 骰值键限定成分个数上限：加载期从规则表收下（与 installScheduler 同法），代码里不写字面量。
+/** @type {number | null} */
+let installedMaxQualifiers = null;
+
+/**
+ * 加载期收下 kernelConstants.diceKeyMaxQualifiers（卷二 :2404 数值来自 engine.rules 即不计；卷二十七 R27-8.5 :728）。
+ * @param {Record<string, any>} rules engine.rules
+ * @returns {void}
+ */
+export function installSampleConstants(rules) {
+  const v = isObj(rules) && isObj(rules[SCHEMA.constantsTable]) ? rules[SCHEMA.constantsTable][SCHEMA.maxQualifiersKey] : undefined;
+  installedMaxQualifiers = Number.isInteger(v) ? v : null;
+}
+
+function diceKeyMaxQualifiers() {
+  if (installedMaxQualifiers === null) throw new Error(`kernel/sample.mjs: rules.${SCHEMA.constantsTable}.${SCHEMA.maxQualifiersKey} missing (load order)`);
+  return installedMaxQualifiers;
+}
 
 const paramError = (detail) => new KernelError('E-DIM-SAMPLE-PARAM', {}, detail);
 const componentError = (detail) => new KernelError('E-SEED-COMPONENT', {}, detail);
@@ -106,13 +131,15 @@ export function diceKeyOf(worldSeed, streamCode, subjectId, worldTime, drawSiteC
   if (!isSeedTemplate(worldSeed)) throw componentError(`worldSeed ${JSON.stringify(worldSeed)}: want ^[A-Za-z0-9_-]{1,64}$`);
   if (typeof streamCode !== 'string' || !CODE_RE.test(streamCode)) throw componentError(`streamCode ${JSON.stringify(streamCode)} is not a code`);
   const parts = typeof subjectId === 'string' ? [subjectId] : Array.isArray(subjectId) ? subjectId : null;
-  // 恰一个主体 id 后接零到二个限定成分：第三段之后还有位置即拒，位置上的空值也算位置，不省略。
-  const [first, , , ...extra] = parts || [];
-  if (!parts || first === undefined || extra.length !== 0) throw componentError(`subjectId ${JSON.stringify(subjectId)}: want an id plus 0-2 qualifiers`);
+  // 恰一个主体 id 后接零到 diceKeyMaxQualifiers 个限定成分（卷二十七 R27-8.5 :728）：超过上限即拒，
+  // 位置上的空值也算位置，不省略。上限由内核常数表读入，不写字面量。
+  const maxQualifiers = diceKeyMaxQualifiers();
+  if (!parts || parts.length === 0 || parts.length - 1 > maxQualifiers) throw componentError(`subjectId ${JSON.stringify(subjectId)}: want an id plus 0-${maxQualifiers} qualifiers`);
+  const [first, ...rawQualifiers] = parts;
   if (typeof first !== 'string' || !isQualifier(first)) throw componentError(`subjectId first component ${JSON.stringify(first)}: want a code or entity id`);
   // 复合对象段某个限定成分取值为空时，该位置填 nil_seedpart，不省略该位置（卷二十七 R27-8.5 :729）；
   // 空只认 undefined（位置存在而值缺），null 与其他非代号值照拒，不当作空成分。
-  const qualifiers = parts.slice(1).map((q) => (q === undefined ? EMPTY_SEEDPART : q));
+  const qualifiers = rawQualifiers.map((q) => (q === undefined ? EMPTY_SEEDPART : q));
   for (const q of qualifiers) if (!isQualifier(q)) throw componentError(`subjectId qualifier ${JSON.stringify(q)}: want a registered code, entity id or fixed row ordinal`);
   if (!isInt(worldTime)) throw componentError(`worldTime ${JSON.stringify(worldTime)}: want an integer minute`);
   if (typeof drawSiteCode !== 'string' || !CODE_RE.test(drawSiteCode)) throw componentError(`drawSiteCode ${JSON.stringify(drawSiteCode)} is not a code`);
