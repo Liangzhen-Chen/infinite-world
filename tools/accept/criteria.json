@@ -204,10 +204,14 @@
     {
      "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 37
+    },
+    {
+     "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 38
     }
    ],
-   "print": "b3edc5f56986e4fec6b768d015ae7e62e56e536237537a0ba8d89b8278cec17c",
-   "rev": 37,
+   "print": "b6cf387e98c03134d038001e3c06200cde51201f63f1c44ecb6069d5deecbde5",
+   "rev": 38,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -473,10 +477,14 @@
     {
      "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 28
+    },
+    {
+     "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 29
     }
    ],
-   "print": "0d1906e619a3667f74fead8fd8baadf8a5406fa7bb0da63a3b3a49c966cc7c80",
-   "rev": 28,
+   "print": "d0c5c865213e34ac46dd7c47a1d186f9294e74b84bb62ec7155f1b335b57649d",
+   "rev": 29,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -781,10 +789,14 @@
     {
      "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 29
+    },
+    {
+     "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 30
     }
    ],
-   "print": "ed6b418dc5d4feb3e8e98734451301d6fe136fe7b61cae93dcf58660c29472ce",
-   "rev": 29,
+   "print": "79d42150a57d416bea087784ba0f6024c0587fea7acb95460def8f06d75e3197",
+   "rev": 30,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1038,10 +1050,14 @@
     {
      "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 45
+    },
+    {
+     "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 46
     }
    ],
-   "print": "3cc61ac453428bd1a705e6e1052a93ef5cabfe63f1bd4d6a75a5867176881aef",
-   "rev": 45,
+   "print": "08a9d8d3fa50c2014fc70807433a84968496d9ada34ce8a841b630f0e4567a19",
+   "rev": 46,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1260,10 +1276,14 @@
     {
      "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 30
+    },
+    {
+     "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 31
     }
    ],
-   "print": "ed6b418dc5d4feb3e8e98734451301d6fe136fe7b61cae93dcf58660c29472ce",
-   "rev": 30,
+   "print": "79d42150a57d416bea087784ba0f6024c0587fea7acb95460def8f06d75e3197",
+   "rev": 31,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1783,10 +1803,14 @@
     {
      "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 30
+    },
+    {
+     "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 31
     }
    ],
-   "print": "ed6b418dc5d4feb3e8e98734451301d6fe136fe7b61cae93dcf58660c29472ce",
-   "rev": 30,
+   "print": "79d42150a57d416bea087784ba0f6024c0587fea7acb95460def8f06d75e3197",
+   "rev": 31,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -1889,10 +1913,14 @@
     {
      "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 22
+    },
+    {
+     "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "39abb98f92f1af96ec33159d8c1adda6822e16536d93c5ff3495f4147feb704d",
-   "rev": 22,
+   "print": "760d9ebfa2ebf7dca9e6bdbed743012abbfa83c740a7cf2c148e627c6599257a",
+   "rev": 23,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -2091,10 +2119,14 @@
     {
      "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 46
+    },
+    {
+     "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 47
     }
    ],
-   "print": "00e1c2319cb9114fe0281e3e9d6fa24bd5988f71a7046cf711d817a820aa020e",
-   "rev": 46,
+   "print": "438e4d7e92167efa0cf9b02ce86ebd2de980a448af9856fb954794a70bc72d83",
+   "rev": 47,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -2250,10 +2282,14 @@
     {
      "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 9
+    },
+    {
+     "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 10
     }
    ],
-   "print": "56e20b592dc31641b4a4c6f1a67e79e46eb2b7660eaba2ef2ef072c14b2a19e9",
-   "rev": 9,
+   "print": "c04fde8b5d61b3f4864603042a9e45bdf7410862beebd2f91c28c9ba9606e9de",
+   "rev": 10,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -2415,10 +2451,14 @@
     {
      "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 35
+    },
+    {
+     "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 36
     }
    ],
-   "print": "b3edc5f56986e4fec6b768d015ae7e62e56e536237537a0ba8d89b8278cec17c",
-   "rev": 35,
+   "print": "b6cf387e98c03134d038001e3c06200cde51201f63f1c44ecb6069d5deecbde5",
+   "rev": 36,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -2452,10 +2492,14 @@
     {
      "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 6
+    },
+    {
+     "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 7
     }
    ],
-   "print": "45314465f0ceb476edc74cee8dbf8bc56a0adf80d0a200c851ed45821e728a21",
-   "rev": 6,
+   "print": "40bdfca22ff4c71db4cf9416682e5160d5793d073a35739e6e948ab6c4dd00ba",
+   "rev": 7,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -2726,10 +2770,14 @@
     {
      "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 24
+    },
+    {
+     "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "39abb98f92f1af96ec33159d8c1adda6822e16536d93c5ff3495f4147feb704d",
-   "rev": 24,
+   "print": "760d9ebfa2ebf7dca9e6bdbed743012abbfa83c740a7cf2c148e627c6599257a",
+   "rev": 25,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

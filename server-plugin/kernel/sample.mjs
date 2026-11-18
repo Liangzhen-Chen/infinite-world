@@ -7,7 +7,7 @@
 
 import { KernelError } from './errors.mjs';
 import { sha256Text } from './save.mjs';
-import { fixedUnits, fixedScale, truncateTo, fixedToNumber, fixedExp } from './det-math.mjs';
+import { fixedUnits, fixedScale, truncateTo, fixedToNumber, fixedExp, fixedSqrtInt } from './det-math.mjs';
 import { CODE_RE } from './handles/vocab-handle.mjs';
 import { KEY_RE } from './validate/types.mjs';
 import { isHex64, seedKeyText, seedHashText, diceKeyText } from './handles/keys.mjs';
@@ -282,19 +282,10 @@ function mul(a, b) {
   return (a * b) / fixedScale();
 }
 
-// 牛顿法整数开方（向零收敛；等价于固定 32 步的结果，不写迭代次数常数）。
-function isqrt(n) {
-  if (n <= 1n) return n;
-  let x = n;
-  for (;;) {
-    const y = (x + n / x) >> 1n;
-    if (y >= x) return x;
-    x = y;
-  }
-}
-
 // 定点值的平方根：real = v / SCALE，sqrt(real) * SCALE = sqrt(v * SCALE)。
-const sqrtFixed = (v) => isqrt(v * fixedScale());
+// 开方只有 kernel/det-math.mjs 一份（整数牛顿法固定步数，步数登在 fnTables.sqrt.iterations；卷二 §1.10 :326、卷二十七 :573），
+// 这里只按标度放大后调用，不另写实现、不另写步数常数。
+const sqrtFixed = (v) => fixedSqrtInt(v * fixedScale());
 
 function clampAndTrunc(v, dist, def) {
   const p = def.precision;

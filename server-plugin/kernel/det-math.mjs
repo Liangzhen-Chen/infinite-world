@@ -463,8 +463,26 @@ export function exp(x) {
 }
 
 /**
+ * 整数开方（全仓唯一实现）：返回 ⌊√n⌋，与标度无关。牛顿法固定步数，步数取 fnTables.sqrt.iterations
+ * （卷二 §1.10 :326、卷二十七 R27-5.2 :573）。detfn `sqrt` 与三角分布的逆 CDF（kernel/sample.mjs）共用这一份，
+ * 别处不得另写开方；输出取 min(y, ⌊n/y⌋)，保证向下取整。
+ * @param {number | bigint} n 非负整数（标度放大后的平方数） @returns {bigint}
+ */
+export function fixedSqrtInt(n) {
+  const v = detInt(n, 'integer sqrt input');
+  if (v < 0n) throw new FixedError('E-DET-DOMAIN', `integer sqrt input ${v} is negative`);
+  const row = detRow('sqrt');
+  if (row.iterations === null) throw new FixedError('E-DIM-STRUCT-FIELD', 'fnTables.sqrt.iterations missing');
+  if (v === 0n) return 0n;
+  let y = 1n << BigInt((bitLength(v) + 1) >> 1);
+  for (let i = 0n; i < row.iterations; i += 1n) y = (y + v / y) >> 1n;
+  const q = v / y;
+  return q < y ? q : y;
+}
+
+/**
  * sqrt：整数牛顿固定步数，不查表（卷二 §1.10 :326、卷二十七 :573）；步数登在该行 iterations。
- * 输出取 min(y, ⌊n/y⌋)，保证返回 ⌊√n⌋。
+ * 只做标度换算与定义域核对，开方本体调 fixedSqrtInt（同一份实现）。
  * @param {number | bigint} x @returns {bigint}
  */
 export function sqrt(x) {
@@ -472,13 +490,7 @@ export function sqrt(x) {
   const v = detInt(x, 'sqrt input');
   if (v < row.domainMin || v > row.domainMax) throw new FixedError('E-DET-DOMAIN', `sqrt input ${v} outside [${row.domainMin}, ${row.domainMax}]`);
   if (v < 0n) throw new FixedError('E-DET-DOMAIN', `sqrt input ${v} is negative`);
-  if (row.iterations === null) throw new FixedError('E-DIM-STRUCT-FIELD', 'fnTables.sqrt.iterations missing');
-  const n = (v * row.outScale * row.outScale) / row.inScale;
-  if (n === 0n) return 0n;
-  let y = 1n << BigInt((bitLength(n) + 1) >> 1);
-  for (let i = 0n; i < row.iterations; i += 1n) y = (y + n / y) >> 1n;
-  const q = n / y;
-  return q < y ? q : y;
+  return fixedSqrtInt((v * row.outScale * row.outScale) / row.inScale);
 }
 
 /**

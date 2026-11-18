@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
-import { installFixedConstants } from '../../server-plugin/kernel/det-math.mjs';
+import { installFixedConstants, installDetTables, fixedScale, sqrt } from '../../server-plugin/kernel/det-math.mjs';
 import { installSampleConstants, seedKeyFor, hashAt, uniformAt, diceKeyOf, validateDistribution, sample } from '../../server-plugin/kernel/sample.mjs';
 
 // 内核摘要能力由装配文件注入（卷二 §2.9 :984，# kernel 不 import node:crypto）；测试里用 node:crypto 装一个。
@@ -197,4 +197,60 @@ test('sample 对无分布维度报 E-DIM-REF-MISSING，不静默当 0', () => {
   const engine = engineWith({ height: { type: 'number', unit: 'kg', precision: 2, domain: [0, 10] } });
   assert.throws(() => sample(engine, 'gadget', 'gad_1', 'height'), (e) => e.code === 'E-DIM-REF-MISSING');
   assert.throws(() => sample(engine, 'gadget', 'gad_1', 'nope'), (e) => e.code === 'E-DIM-REF-MISSING');
+});
+
+// ---------- triangular：逆 CDF 用整数开方（卷二 §1.10 :326；4-4c 测试先行） ----------
+// 开方行照卷二十七 R27-5.2 :573：不查表，整数牛顿法固定 32 步；测试自己装前提，不读生成表当前的数字。
+const SQRT_ROW = { inScale: 100000000, outScale: 100000000, domainMin: 0, domainMax: 9007199254740991, step: 1, iterations: 32 };
+
+// 取 seed 'seed_ab12'、kind 'person'、id 'per_abc123'、dim 'height'，seedKey 即上面的 SEED_PLAIN，
+// u = uniformAt(SEED_PLAIN, 0) = 0x0166f0ccf6416e88 = 101032804757892744（h_i/u golden vector）。
+// r = ⌊u × SCALE / 2⁶⁴⌋ = ⌊101032804757892744 × 10000 / 18446744073709551616⌋ = 54
+//   （54 × 2⁶⁴ = 996124179980315787264 ≤ 1010328047578927440000 < 55 × 2⁶⁴）。
+function triangularEngine(dist, domain) {
+  const engine = ENGINE();
+  engine.tables.set('person', { doc: { dimensions: {
+    height: { type: 'number', unit: 'kg', precision: 2, domain, sample: dist },
+  } } });
+  return engine;
+}
+
+test('triangular 左支：u 落在模式左侧，逆 CDF = min + √(r(c−a)(b−a))（手算两例之一）', () => {
+  installDetTables({ sqrt: SQRT_ROW });
+  // min=0 mode=5 max=10，全部按 10⁴ 标度：a=0、b=50000、c=100000。
+  // f = (b−a) × SCALE / (c−a) = 50000 × 10000 / 100000 = 5000 > r=54，走左支。
+  // ⌊(c−a)(b−a)/SCALE⌋ = 100000 × 50000 / 10000 = 500000；⌊r × 500000/SCALE⌋ = 54 × 500000 / 10000 = 2700。
+  // 开方 ⌊√(2700 × SCALE)⌋ = ⌊√27000000⌋ = 5196（5196² = 26998416 ≤ 27000000 < 5197² = 27008809）。
+  // v = a + 5196 = 5196；precision 2 截断 ⌊5196/100⌋ × 100 = 5100，即 0.51。
+  assert.equal(sample(triangularEngine({ dist: 'triangular', min: 0, mode: 5, max: 10 }, [0, 10]), 'person', 'per_abc123', 'height'), 0.51);
+});
+
+test('triangular 右支：u 落在模式右侧，逆 CDF = max − √((1−r)(c−a)(c−b))（手算两例之二）', () => {
+  installDetTables({ sqrt: SQRT_ROW });
+  // min=0 mode=0 max=1000：a=0、b=0、c=10000000。f = 0 ≤ r=54，走右支。
+  // ⌊(c−a)(c−b)/SCALE⌋ = 10⁷ × 10⁷ / 10⁴ = 10¹⁰；
+  // ⌊(SCALE−r) × 10¹⁰/SCALE⌋ = 9946 × 10¹⁰ / 10⁴ = 9946000000。
+  // 开方 ⌊√(9946000000 × SCALE)⌋ = ⌊√99460000000000⌋ = 9972963
+  //   （9972963² = 99459990999369 ≤ 99460000000000 < 9972964² = 99460010945296）。
+  // v = c − 9972963 = 10000000 − 9972963 = 27037；precision 2 截断 ⌊27037/100⌋ × 100 = 27000，即 2.7。
+  assert.equal(sample(triangularEngine({ dist: 'triangular', min: 0, mode: 0, max: 1000 }, [0, 1000]), 'person', 'per_abc123', 'height'), 2.7);
+});
+
+test('triangular 用到的整数开方与 det-math sqrt 在同一输入上同值（4-4c）', () => {
+  installDetTables({ sqrt: SQRT_ROW });
+  // 第一例的三角内部开方输入 n = 2700 × SCALE = 27000000（10⁴ 标度平方），得 5196（10⁴ 标度）。
+  // det-math sqrt 的入参是 10⁸ 标度：同一实数 0.27 → 27000000，输出 10⁸ 标度的 ⌊√(27000000 × 10⁸)⌋：
+  //   51961524² = 2699999976402576 ≤ 2700000000000000 < 51961525² = 2700000080325625，故为 51961524。
+  // 降回 10⁴ 标度（÷ SCALE）与三角分布开方所得同为 5196。
+  assert.equal(sqrt(27000000n), 51961524n);
+  assert.equal(sqrt(27000000n) / fixedScale(), 5196n);
+});
+
+test('开方步数只从登记的 fnTables.sqrt.iterations 来：缺步数即拒，不退回别的循环（4-4c）', () => {
+  installDetTables({ sqrt: { ...SQRT_ROW, iterations: undefined } });
+  assert.throws(() => sqrt(27000000n), (e) => e.code === 'E-DIM-STRUCT-FIELD');
+  assert.throws(
+    () => sample(triangularEngine({ dist: 'triangular', min: 0, mode: 5, max: 10 }, [0, 10]), 'person', 'per_abc123', 'height'),
+    (e) => e.code === 'E-DIM-STRUCT-FIELD',
+  );
 });
