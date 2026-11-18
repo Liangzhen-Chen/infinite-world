@@ -5,6 +5,7 @@
 
 import { createHash } from 'node:crypto';
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { runRequiredTests, runTestFile } from './lib/required-tests.mjs';
@@ -65,11 +66,43 @@ function compValues(rows) {
   return keys;
 }
 
-// le_baseline（卷十二 R12-8.4、R12-8.5）：条目 baseComp 分量的本次实测不高于上次合入的值即 pass；
+// 基线提交上的内容（R12-8.9）：文件清单与内容都取自该提交（git ls-tree / git show），不碰当前工作树；判据、模型与登记取当前。
+// 用来对新分量数出 B0，免得把同一次合入带进来的违例当成基线。
+export function commitContext(root, ref) {
+  const git = (args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 1 << 28, stdio: ['ignore', 'pipe', 'ignore'] });
+  const files = git(['ls-tree', '-r', '--name-only', '-z', ref]).split('\0').filter(Boolean).sort();
+  const cache = new Map();
+  const read = (p) => { if (!cache.has(p)) cache.set(p, git(['show', `${ref}:${p}`])); return cache.get(p); };
+  return loadContext(root, { files, read });
+}
+
+// 新分量在基线提交上的行键（R12-8.9）：按登记的检测器与条目参数，在基线提交的内容上重数属于这些分量的行。
+// 只跑可能产出这些分量的条目（baseComp 或检测器派生的分量命中即算），原样走同一套行键拼法（R12-8.2）。
+export async function baselineKeysAt(root, ref, compCodes, items, classes) {
+  const ctx = commitContext(root, ref);
+  const out = new Map([...compCodes].map((c) => [c, []]));
+  for (const item of items) {
+    if (!RUNNABLE.includes(item.state) || !item.detector) continue;
+    const det = await detectorOf(item.detector);
+    const declared = typeof det.components === 'function' ? det.components(ctx, item.params || {}) : [];
+    if (![item.baseComp, ...declared].some((c) => c && out.has(c))) continue;
+    const hits = await det.detect(ctx, item.params || {}, classes.get(item.scanClass) || {});
+    for (const r of toRows(item, hits)) if (out.has(r.compCode)) out.get(r.compCode).push(r.rowKey);
+  }
+  return out;
+}
+
+// le_baseline（卷十二 R12-8.4、R12-8.5、R12-8.9）：条目 baseComp 分量的本次实测不高于上次合入的值即 pass；
 // 自上一次合入起新出现任一行键即不过（集合比较：现值行键集合不是基线行键集合的子集），码 E-ACC-BASELINE-UP（§2.12）。
-// 基线行带行键清单时按集合比（少一条仍过）；旧基线行没有清单时按行数比。首次登记（baseline.json 里没有该分量）按 R12-8.9 以本次实测为 B0，pass。
-export function baselineVerdict(itemRows, current, baseRow) {
-  if (!baseRow) return 'pass';
+// 基线行带行键清单时按集合比（少一条仍过）；旧基线行没有清单时按行数比。
+// 首次登记（baseline.json 里没有该分量）不放行：B0 按基线提交的内容数出（b0.rowKeys），现值行键集合不是 B0 集合的子集即不过；
+// 没拿到基线提交的 B0 也不放行，不拿本次实测当 B0（R12-8.9）。
+export function baselineVerdict(itemRows, current, baseRow, b0) {
+  if (!baseRow) {
+    if (!b0) return 'fail';
+    const priorB0 = new Set(b0.rowKeys || []);
+    return itemRows.every((r) => priorB0.has(r.rowKey)) ? 'pass' : 'fail';
+  }
   if (Array.isArray(baseRow.rowKeys)) {
     const prior = new Set(baseRow.rowKeys);
     return itemRows.every((r) => prior.has(r.rowKey)) ? 'pass' : 'fail';
@@ -78,21 +111,25 @@ export function baselineVerdict(itemRows, current, baseRow) {
 }
 
 // 合入关口通过后写 baseline.json（R12-8.5；§2.11 基线分量的唯一写者是执行器）。只降不升：现值低于上次合入才更新。
-// 首次出现的新分量按 R12-8.9 记 B0 与本次实测（B0=首测值）；未测到的旧分量原样保留。合入号由调用方给（opts.mergeRef），没有则留旧值。
-// 行按分量代号升序，行键升序，报告确定。
-export function writeBaseline(root, baseRows, components, rows, mergeRef) {
+// 合入号必填（没有则拒写）；首次出现的新分量按 R12-8.9 把基线提交上数出的 B0 与本次实测一起登记（b0Map），不拿本次实测当 B0。
+// 未测到的旧分量原样保留。行按分量代号升序，行键升序，报告确定。
+export function writeBaseline(root, baseRows, components, rows, mergeRef, b0Map) {
+  if (!mergeRef) throw new Error('E-ACC-BASELINE-EDIT pre_merge 写基线需要 --merge-ref（R12-8.5）');
   const keysOf = compValues(rows);
   const prev = new Map(baseRows.map((r) => [r.compCode, r]));
-  const ref = mergeRef || null;
   const out = [];
   for (const compCode of Object.keys(components).sort()) {
     const cur = components[compCode];
     const rowKeys = (keysOf.get(compCode) || []).slice().sort();
     const p = prev.get(compCode);
-    const lastMergeRef = ref || (p && p.lastMergeRef !== undefined ? p.lastMergeRef : null);
-    if (!p) { out.push({ compCode, b0: cur, b0Source: 'counted', locked: false, current: cur, lastMergeRef, rowKeys }); continue; }
+    if (!p) {
+      const b = b0Map && b0Map.get(compCode);
+      if (!b) throw new Error(`E-ACC-BASELINE-UP ${compCode} 首次登记缺基线提交的 B0（R12-8.9）`);
+      out.push({ compCode, b0: b.count, b0Source: 'counted', locked: false, current: cur, lastMergeRef: mergeRef, rowKeys });
+      continue;
+    }
     // 持平保持原样（行集合有变而总数持平的已在 le_baseline 条目上按集合拦下，关口不过就不会走到这里）。
-    out.push(cur < p.current ? { ...p, current: cur, rowKeys, lastMergeRef } : { ...p, lastMergeRef });
+    out.push(cur < p.current ? { ...p, current: cur, rowKeys, lastMergeRef: mergeRef } : { ...p, lastMergeRef: mergeRef });
   }
   for (const r of baseRows) if (!(r.compCode in components)) out.push(r);
   out.sort((a, b) => (a.compCode < b.compCode ? -1 : a.compCode > b.compCode ? 1 : 0));
@@ -211,11 +248,26 @@ export async function accRun(gate, subject, contentPrint, opts = {}) {
   }
   const ordered = [...items.filter((i) => !lateKeys.has(i.itemKey)), ...items.filter((i) => lateKeys.has(i.itemKey))];
   const itemRows = new Map(); const extChangedItems = new Set();
-  // 上次合入值表：合入关口上，本次首次出现的分量按 R12-8.9 以本次实测为 B0（登记新分量），不与零比较；
+  // 新分量首次登记的 B0（R12-8.9）：合入关口上按基线提交（opts.mergeRef）的内容数出；提交关口不登记新分量（返回空表）。
+  // 结果按当前新分量集合缓存；没有基线提交就返回 null，不许拿本次实测当 B0（不 silent pass）。
+  let b0Map = new Map(); let b0Sig = '';
+  const ensureB0 = async () => {
+    if (gate !== 'pre_merge') return new Map();
+    const comps = Object.keys(components).filter((k) => !(k in base)).sort();
+    const sig = comps.join(',');
+    if (sig === b0Sig) return b0Map;
+    b0Sig = sig;
+    if (!comps.length) { b0Map = new Map(); return b0Map; }
+    if (!opts.mergeRef) { b0Map = null; return b0Map; }
+    const keys = await baselineKeysAt(root, opts.mergeRef, comps, items, classes);
+    b0Map = new Map(comps.map((c) => [c, { count: (keys.get(c) || []).length, rowKeys: (keys.get(c) || []).slice() }]));
+    return b0Map;
+  };
+  // 上次合入值表：合入关口上，本次首次出现的分量取基线提交上数出的 B0（R12-8.9），没有 B0 按零；
   // 提交关口仍按零基线（R12-8.4）。V-11 这类 late 条目在其余条目数完之后取这张表。
-  const lastMergeTable = (comps) => {
+  const lastMergeTable = (comps, b0s) => {
     const out = Object.fromEntries(Object.entries(base).map(([k, b]) => [k, typeof b.current === 'number' ? b.current : 0]));
-    if (gate === 'pre_merge') for (const [k, v] of Object.entries(comps)) if (!(k in out)) out[k] = v;
+    if (gate === 'pre_merge') for (const k of Object.keys(comps)) if (!(k in out)) out[k] = b0s && b0s.get(k) ? b0s.get(k).count : 0;
     return out;
   };
   for (const item of ordered) {
@@ -230,7 +282,7 @@ export async function accRun(gate, subject, contentPrint, opts = {}) {
     // 扩展性条目（R12-6.2 ①⑥）：执行前后各记一次代码文件集合指纹，不同即该条目不过、码 E-ACC-EXT-CODE-CHANGED（S12-12 数执行记录里的这类）。
     const before = item.form === 'extend' ? codeSetPrint(root) : null;
     const itemCtx = lateKeys.has(item.itemKey)
-      ? { ...ctx, gateState: { components: { ...components }, baseline: lastMergeTable(components) } }
+      ? { ...ctx, gateState: { components: { ...components }, baseline: lastMergeTable(components, await ensureB0()) } }
       : ctx;
     const hits = await runItem(itemCtx, item, classes);
     const extChanged = before !== null && codeSetPrint(root) !== before;
@@ -248,10 +300,13 @@ export async function accRun(gate, subject, contentPrint, opts = {}) {
     if (results[item.itemKey] === 'fail') failed.push({ itemKey: item.itemKey, codes: [...new Set(r.map((x) => x.errorCode))].sort() });
   }
   // le_baseline 判定（R12-8.4）：读该条目 baseComp 分量的现值和 baseline.json 的上次合入值；不过的码是 §2.12 的 E-ACC-BASELINE-UP。
+  // 新分量（baseline.json 里没有）只在合入关口登记，B0 取基线提交上数出的值（R12-8.9）；提交关口尚未登记，不拿零基线拒。
+  const b0 = await ensureB0();
   for (const item of ordered) {
     if (!RUNNABLE.includes(item.state) || !item.detector || item.expect !== 'le_baseline') continue;
     if (extChangedItems.has(item.itemKey)) { results[item.itemKey] = 'fail'; failed.push({ itemKey: item.itemKey, codes: ['E-ACC-EXT-CODE-CHANGED'] }); continue; }
-    const v = baselineVerdict(itemRows.get(item.itemKey) || [], components[item.baseComp] || 0, base[item.baseComp]);
+    if (!base[item.baseComp] && gate !== 'pre_merge') { results[item.itemKey] = 'pass'; continue; }
+    const v = baselineVerdict(itemRows.get(item.itemKey) || [], components[item.baseComp] || 0, base[item.baseComp], b0 && b0.get(item.baseComp));
     results[item.itemKey] = v;
     if (v === 'fail') failed.push({ itemKey: item.itemKey, codes: ['E-ACC-BASELINE-UP'] });
   }
@@ -282,7 +337,8 @@ export async function accRun(gate, subject, contentPrint, opts = {}) {
     versions: { runner: RUNNER_VERSION, criteria },
     items: { total: vs.length, pass: count('pass'), fail: count('fail'), not_run: count('not_run'), blocked: count('blocked'), failed },
     components: Object.fromEntries(Object.keys(components).sort().map((k) => [k, {
-      b0: base[k] ? base[k].b0 : null, last: base[k] ? base[k].current : null, current: components[k],
+      b0: base[k] ? base[k].b0 : (b0 && b0.get(k) ? b0.get(k).count : null),
+      last: base[k] ? base[k].current : null, current: components[k],
       diff: base[k] ? components[k] - base[k].current : null,
     }])),
     rowSet: { new: [...curKeys].filter((k) => !prevKeys.has(k)).sort(), gone: [...prevKeys].filter((k) => !curKeys.has(k)).sort(), drift: [] },
@@ -299,20 +355,27 @@ export async function accRun(gate, subject, contentPrint, opts = {}) {
     writeFileSync(join(outDir, `${gate}.json`), stableJson(report));
     writeFileSync(join(root, LAYOUT.accDir, 'hits.json'), stableJson({ rows }));
     // R12-8.5：合入关口通过后由执行器把各分量现值写入 baseline.json（只在合入关口，pre_commit 不写）；别的途径改它是 E-ACC-BASELINE-EDIT。
-    if (gate === 'pre_merge' && report.verdict === 'pass') writeBaseline(root, Object.values(base), components, rows, opts.mergeRef);
+    // 合入号必填：没有 --merge-ref 就拒写（writeBaseline 抛 E-ACC-BASELINE-EDIT）。
+    if (gate === 'pre_merge' && report.verdict === 'pass') writeBaseline(root, Object.values(base), components, rows, opts.mergeRef, b0);
   }
   return { report, rows, text: stableJson(report) };
 }
 
-// 命令行：node tools/accept/run.mjs <关口> [对象] [--write] [--root 目录]
+// 命令行：node tools/accept/run.mjs <关口> [对象] [--write] [--merge-ref 提交] [--root 目录]
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const args = process.argv.slice(2);
   const flag = (n) => { const i = args.indexOf(n); return i >= 0 ? args.splice(i, 2)[1] : null; };
   const root = flag('--root');
+  const mergeRef = flag('--merge-ref');
   const write = args.includes('--write');
   const pos = args.filter((a) => a !== '--write');
-  if (!pos[0]) { process.stderr.write('usage: run.mjs <gate> [subject] [--write] [--root dir]\n'); process.exit(2); }
-  const { report, text } = await accRun(pos[0], pos[1] || '', null, { root: root || undefined, write, runRequired: true });
+  if (!pos[0]) { process.stderr.write('usage: run.mjs <gate> [subject] [--write] [--merge-ref 提交] [--root dir]\n'); process.exit(2); }
+  // R12-8.5：合入关口写基线必须带合入号；不带就不写、停下报已登记码（不自造码）。
+  if (pos[0] === 'pre_merge' && write && !mergeRef) {
+    process.stderr.write('E-ACC-BASELINE-EDIT pre_merge --write requires --merge-ref <提交>（R12-8.5）\n');
+    process.exit(2);
+  }
+  const { report, text } = await accRun(pos[0], pos[1] || '', null, { root: root || undefined, write, mergeRef: mergeRef || undefined, runRequired: true });
   process.stdout.write(text);
   process.exit(report.verdict === 'pass' ? 0 : 1);
 }

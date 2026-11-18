@@ -3,13 +3,13 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { readFileSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
-import { spawnSync } from 'node:child_process';
-import { accRun, TEST_METHODS, baselineVerdict } from '../../tools/accept/run.mjs';
+import { spawnSync, execFileSync } from 'node:child_process';
+import { accRun, TEST_METHODS, baselineVerdict, baselineKeysAt } from '../../tools/accept/run.mjs';
 import { ENUM } from '../../tools/accept/lib/item-form.mjs';
 import { validate, register } from '../../tools/accept/register.mjs';
 import { listFiles, readRegistry, REGISTRY, LAYOUT } from '../../tools/accept/read.mjs';
 import { ROOT, tempRepo } from './temp-repo.mjs';
-import { writeUnderTempRoot } from './temp-root.mjs';
+import { testTempRoot, writeUnderTempRoot } from './temp-root.mjs';
 
 const HOOK = join(ROOT, 'tools', 'accept', 'commit-hook.mjs');
 const NON_TEST_METHODS = { method: ENUM.method.filter((m) => !TEST_METHODS.includes(m)) };
@@ -83,7 +83,7 @@ test('V-11 提交关口当次判：当次分量高于入库基线（上次合入
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('le_baseline 判定（R12-8.4）：按分量行键集合判，新增任一条即不过；旧基线行按计数比；首次登记按 R12-8.9 放行', () => {
+test('le_baseline 判定（R12-8.4、R12-8.9）：按分量行键集合判，新增任一条即不过；旧基线行按计数比；首次登记拿基线提交的 B0 判，没有 B0 不放行', () => {
   const a = { rowKey: 'c_text_kernel_4|server-plugin/kernel/a.mjs|f|literal_compare|0' };
   const b = { rowKey: 'c_text_kernel_4|server-plugin/kernel/b.mjs|f|literal_compare|0' };
   assert.equal(baselineVerdict([a], 1, { current: 1, rowKeys: [a.rowKey] }), 'pass');
@@ -95,11 +95,14 @@ test('le_baseline 判定（R12-8.4）：按分量行键集合判，新增任一�
   // 旧基线行没有行键清单时退回行数比。
   assert.equal(baselineVerdict([a, b], 2, { current: 1 }), 'fail');
   assert.equal(baselineVerdict([a], 1, { current: 1 }), 'pass');
-  // 首次登记（baseline.json 里没有该分量）：以本次实测为 B0（R12-8.9），pass。
-  assert.equal(baselineVerdict([a], 1, undefined), 'pass');
+  // 首次登记（baseline.json 里没有该分量）：B0 由基线提交数出（R12-8.9），现值集合不是 B0 集合的子集即不过。
+  assert.equal(baselineVerdict([a], 1, undefined, { count: 1, rowKeys: [a.rowKey] }), 'pass');
+  assert.equal(baselineVerdict([a, b], 2, undefined, { count: 1, rowKeys: [a.rowKey] }), 'fail');
+  // 没有基线提交的 B0：不放行，不拿本次实测当 B0。
+  assert.equal(baselineVerdict([a], 1, undefined), 'fail');
 });
 
-test('R12-8.5：合入关口通过后写 baseline.json（只降不升，行键清单一并写），pre_commit 不写；新增一条即拒', async () => {
+test('R12-8.5：合入关口通过后写 baseline.json（只降不升，行键清单一并写，合入号必填），pre_commit 不写；新增一条即拒', async () => {
   const dir = tempRepo();
   try {
     // 临时仓库不带方法是测试的条目 import 的世界数据（temp-repo.mjs 注）：按合法转移退役，让关口能过、走到写基线那一步。
@@ -108,15 +111,24 @@ test('R12-8.5：合入关口通过后写 baseline.json（只降不升，行键�
     const baseFile = join(dir, LAYOUT.accDir, 'baseline.json');
     const baselineOf = () => JSON.parse(readFileSync(baseFile, 'utf8')).rows;
     const kernelRow = (rs) => rs.find((r) => r.compCode === 'c_text_kernel_4');
-    // 临时仓库的内核文件只拷一部分，实测应低于真实仓库的基线；合入关口通过后写回本次实测（只降）。
+    // 合入号必填（R12-8.5）：不带 --merge-ref 拒写，已登记码 E-ACC-BASELINE-EDIT，基线文件不动。
+    const beforeRefuse = readFileSync(baseFile, 'utf8');
+    await assert.rejects(accRun('pre_merge', 'B2-W2b', null, { root: dir, write: true }), /E-ACC-BASELINE-EDIT/);
+    assert.equal(readFileSync(baseFile, 'utf8'), beforeRefuse);
+    const cli = spawnSync(process.execPath, [join(ROOT, 'tools', 'accept', 'run.mjs'), 'pre_merge', 'B2-W2b', '--write', '--root', dir], { encoding: 'utf8' });
+    assert.equal(cli.status, 2);
+    assert.match(cli.stderr, /E-ACC-BASELINE-EDIT/);
+    assert.equal(readFileSync(baseFile, 'utf8'), beforeRefuse);
+    // 临时仓库的内核文件只拷一部分，实测应低于真实仓库的基线；合入关口通过后写回本次实测（只降）与合入号。
     const before = kernelRow(baselineOf()).current;
-    const first = await accRun('pre_merge', 'B2-W2b', null, { root: dir, write: true });
+    const first = await accRun('pre_merge', 'B2-W2b', null, { root: dir, write: true, mergeRef: 'c8a2bccd' });
     assert.equal(first.report.verdict, 'pass');
     const after = kernelRow(baselineOf());
     assert.ok(after.current < before, `${after.current} < ${before}`);
     assert.equal(after.current, first.report.components.c_text_kernel_4.current);
     assert.equal(after.rowKeys.length, after.current);
     assert.deepEqual(after.rowKeys, [...after.rowKeys].sort());
+    assert.equal(after.lastMergeRef, 'c8a2bccd');
     // 新出现一条（只在 kernel 组 S13 ④）：提交关口按行键集合判不过，码 E-ACC-BASELINE-UP；提交关口不写基线。
     const probe = { 'server-plugin/kernel/rx.mjs': readFileSync(join(dir, 'server-plugin/kernel/rx.mjs'), 'utf8') + "\nexport function zzzProbe(x) { return x === 'probe_marker'; }\n" };
     const up = await accRun('pre_commit', 'B2-W2b', null, { root: dir, overrides: probe, write: true });
@@ -127,6 +139,58 @@ test('R12-8.5：合入关口通过后写 baseline.json（只降不升，行键�
     const same = await accRun('pre_commit', 'B2-W2b', null, { root: dir, write: true });
     assert.equal(same.report.verdict, 'pass');
     assert.deepEqual(kernelRow(baselineOf()), after);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('R12-8.9：新分量的 B0 在基线提交的内容上数出，不读当前工作树上的新增', async () => {
+  const dir = testTempRoot('b0-');
+  try {
+    const git = (...args) => execFileSync('git', ['-c', 'user.name=accept-test', '-c', 'user.email=accept-test@example.invalid', ...args], { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    writeUnderTempRoot(dir, 'world/ontology/state-owners.json', readFileSync(join(ROOT, 'world/ontology/state-owners.json')));
+    // 基线提交里内核组的一个文件有 1 处裸字面量比较。
+    writeUnderTempRoot(dir, 'server-plugin/kernel/a.mjs', "export function f(x) { return x === 'a' ? 1 : 0; }\n");
+    git('init', '-q'); git('add', '-A'); git('commit', '-q', '-m', 'baseline');
+    const ref = git('rev-parse', 'HEAD').trim();
+    // 当前工作树多 1 处；数 B0 时不许看它。
+    writeUnderTempRoot(dir, 'server-plugin/kernel/a.mjs', "export function f(x) { return x === 'a' ? 1 : 0; }\nexport function g(x) { return x !== 'b' ? 1 : 0; }\n");
+    const item = { itemKey: 'fx.S13.k4', state: 'in_core', detector: 'typed_pos', scanClass: 'text_judge', baseComp: 'c_text_kernel_4', params: { checks: ['bareCompare'], groups: ['kernel'] } };
+    const classes = new Map([['text_judge', readRegistry(ROOT, 'scanclasses').find((c) => c.scanClass === 'text_judge')]]);
+    const keys = await baselineKeysAt(dir, ref, ['c_text_kernel_4'], [item], classes);
+    assert.equal(keys.get('c_text_kernel_4').length, 1);
+    assert.deepEqual(keys.get('c_text_kernel_4'), ['c_text_kernel_4|server-plugin/kernel/a.mjs|f|literal_compare|0']);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('R12-8.9：合入关口首次登记新分量——基线提交 N 条、当前 N+1 条即拒；不超过时 B0 与现值一起登记，合入号写入 lastMergeRef', async () => {
+  const dir = tempRepo();
+  try {
+    const git = (...args) => execFileSync('git', ['-c', 'user.name=accept-test', '-c', 'user.email=accept-test@example.invalid', ...args], { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    // 临时仓库不带方法是测试的条目 import 的世界数据：按合法转移退役，关口才能过。
+    const testCore = readRegistry(dir, 'items').filter((it) => it.state === 'in_core' && TEST_METHODS.includes(it.method)).map((it) => it.itemKey);
+    assert.deepEqual(register(dir, { itemStates: Object.fromEntries(testCore.map((k) => [k, 'retired'])) }).errors, []);
+    // 基线提交上还没有任何分量（首次登记），提交内容与当时的工作树一致。
+    writeFileSync(join(dir, LAYOUT.accDir, 'baseline.json'), '{"rows": []}\n');
+    git('init', '-q'); git('add', '-A'); git('commit', '-q', '-m', 'baseline');
+    const ref = git('rev-parse', 'HEAD').trim();
+    const baseFile = join(dir, LAYOUT.accDir, 'baseline.json');
+    const baselineOf = () => JSON.parse(readFileSync(baseFile, 'utf8')).rows;
+    const rx = readFileSync(join(dir, 'server-plugin/kernel/rx.mjs'), 'utf8');
+    // 当前比基线提交多一条裸字面量比较（N+1）：现值集合不是 B0 集合的子集，拒，且不写基线。
+    writeFileSync(join(dir, 'server-plugin/kernel/rx.mjs'), rx + "\nexport function zzzProbe(x) { return x === 'probe_marker'; }\n");
+    const up = await accRun('pre_merge', 'B2-W2b', null, { root: dir, write: true, mergeRef: ref });
+    assert.equal(up.report.verdict, 'fail');
+    assert.deepEqual(up.report.items.failed.find((f) => f.itemKey === 'vol2.S13.k4').codes, ['E-ACC-BASELINE-UP']);
+    assert.equal(up.report.components.c_text_kernel_4.current, up.report.components.c_text_kernel_4.b0 + 1);
+    assert.deepEqual(baselineOf(), []);
+    // 回到基线内容（当前条数不超过基线）：B0 与现值一起登记，合入号写进 lastMergeRef。
+    writeFileSync(join(dir, 'server-plugin/kernel/rx.mjs'), rx);
+    const ok = await accRun('pre_merge', 'B2-W2b', null, { root: dir, write: true, mergeRef: ref });
+    assert.equal(ok.report.verdict, 'pass');
+    const row = baselineOf().find((r) => r.compCode === 'c_text_kernel_4');
+    assert.equal(row.b0, ok.report.components.c_text_kernel_4.current);
+    assert.equal(row.current, row.b0);
+    assert.equal(row.rowKeys.length, row.current);
+    assert.equal(row.lastMergeRef, ref);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 

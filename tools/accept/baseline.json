@@ -5,7 +5,7 @@
    "b0Source": "counted",
    "compCode": "c_const_literal",
    "current": 0,
-   "lastMergeRef": null,
+   "lastMergeRef": "938b337196ed9b6e8c05065b7df6fe91260b1a63",
    "locked": false,
    "rowKeys": []
   },
@@ -14,7 +14,7 @@
    "b0Source": "counted",
    "compCode": "c_instance_id",
    "current": 0,
-   "lastMergeRef": null,
+   "lastMergeRef": "938b337196ed9b6e8c05065b7df6fe91260b1a63",
    "locked": false,
    "rowKeys": []
   },
@@ -23,7 +23,7 @@
    "b0Source": "counted",
    "compCode": "c_rules_import",
    "current": 0,
-   "lastMergeRef": null,
+   "lastMergeRef": "938b337196ed9b6e8c05065b7df6fe91260b1a63",
    "locked": false,
    "rowKeys": []
   },
@@ -32,7 +32,7 @@
    "b0Source": "counted",
    "compCode": "c_text_kernel_1",
    "current": 0,
-   "lastMergeRef": null,
+   "lastMergeRef": "938b337196ed9b6e8c05065b7df6fe91260b1a63",
    "locked": false,
    "rowKeys": []
   },
@@ -41,7 +41,7 @@
    "b0Source": "counted",
    "compCode": "c_text_kernel_3",
    "current": 0,
-   "lastMergeRef": null,
+   "lastMergeRef": "938b337196ed9b6e8c05065b7df6fe91260b1a63",
    "locked": false,
    "rowKeys": []
   },
@@ -50,7 +50,7 @@
    "b0Source": "counted",
    "compCode": "c_text_kernel_4",
    "current": 670,
-   "lastMergeRef": null,
+   "lastMergeRef": "938b337196ed9b6e8c05065b7df6fe91260b1a63",
    "locked": false,
    "rowKeys": [
     "c_text_kernel_4|server-plugin/kernel/advance-registry.mjs|registerAdvanceHook|literal_compare|0",
@@ -730,7 +730,7 @@
    "b0Source": "counted",
    "compCode": "c_version_fork",
    "current": 0,
-   "lastMergeRef": null,
+   "lastMergeRef": "938b337196ed9b6e8c05065b7df6fe91260b1a63",
    "locked": false,
    "rowKeys": []
   },
@@ -739,7 +739,7 @@
    "b0Source": "counted",
    "compCode": "c_write_accounts",
    "current": 0,
-   "lastMergeRef": null,
+   "lastMergeRef": "938b337196ed9b6e8c05065b7df6fe91260b1a63",
    "locked": false,
    "rowKeys": []
   },
@@ -748,7 +748,7 @@
    "b0Source": "counted",
    "compCode": "c_write_aggregates",
    "current": 0,
-   "lastMergeRef": null,
+   "lastMergeRef": "938b337196ed9b6e8c05065b7df6fe91260b1a63",
    "locked": false,
    "rowKeys": []
   },
@@ -757,7 +757,7 @@
    "b0Source": "counted",
    "compCode": "c_write_clock",
    "current": 0,
-   "lastMergeRef": null,
+   "lastMergeRef": "938b337196ed9b6e8c05065b7df6fe91260b1a63",
    "locked": false,
    "rowKeys": []
   },
@@ -766,7 +766,7 @@
    "b0Source": "counted",
    "compCode": "c_write_created",
    "current": 0,
-   "lastMergeRef": null,
+   "lastMergeRef": "938b337196ed9b6e8c05065b7df6fe91260b1a63",
    "locked": false,
    "rowKeys": []
   },
@@ -775,7 +775,7 @@
    "b0Source": "counted",
    "compCode": "c_write_displayNames",
    "current": 0,
-   "lastMergeRef": null,
+   "lastMergeRef": "938b337196ed9b6e8c05065b7df6fe91260b1a63",
    "locked": false,
    "rowKeys": []
   },
@@ -784,7 +784,7 @@
    "b0Source": "counted",
    "compCode": "c_write_due",
    "current": 0,
-   "lastMergeRef": null,
+   "lastMergeRef": "938b337196ed9b6e8c05065b7df6fe91260b1a63",
    "locked": false,
    "rowKeys": []
   },
@@ -793,7 +793,7 @@
    "b0Source": "counted",
    "compCode": "c_write_ledgerCounters",
    "current": 0,
-   "lastMergeRef": null,
+   "lastMergeRef": "938b337196ed9b6e8c05065b7df6fe91260b1a63",
    "locked": false,
    "rowKeys": []
   },
@@ -802,7 +802,7 @@
    "b0Source": "counted",
    "compCode": "c_write_ledgerTotals",
    "current": 0,
-   "lastMergeRef": null,
+   "lastMergeRef": "938b337196ed9b6e8c05065b7df6fe91260b1a63",
    "locked": false,
    "rowKeys": []
   },
@@ -811,7 +811,7 @@
    "b0Source": "counted",
    "compCode": "c_write_outflowTotals",
    "current": 0,
-   "lastMergeRef": null,
+   "lastMergeRef": "938b337196ed9b6e8c05065b7df6fe91260b1a63",
    "locked": false,
    "rowKeys": []
   },
@@ -820,7 +820,7 @@
    "b0Source": "counted",
    "compCode": "c_write_pendingPost",
    "current": 0,
-   "lastMergeRef": null,
+   "lastMergeRef": "938b337196ed9b6e8c05065b7df6fe91260b1a63",
    "locked": false,
    "rowKeys": []
   },
@@ -829,7 +829,7 @@
    "b0Source": "counted",
    "compCode": "c_write_playerNotes",
    "current": 0,
-   "lastMergeRef": null,
+   "lastMergeRef": "938b337196ed9b6e8c05065b7df6fe91260b1a63",
    "locked": false,
    "rowKeys": []
   },
@@ -838,7 +838,7 @@
    "b0Source": "counted",
    "compCode": "c_write_stockLots",
    "current": 0,
-   "lastMergeRef": null,
+   "lastMergeRef": "938b337196ed9b6e8c05065b7df6fe91260b1a63",
    "locked": false,
    "rowKeys": []
   },
@@ -847,7 +847,7 @@
    "b0Source": "counted",
    "compCode": "c_write_terminated",
    "current": 0,
-   "lastMergeRef": null,
+   "lastMergeRef": "938b337196ed9b6e8c05065b7df6fe91260b1a63",
    "locked": false,
    "rowKeys": []
   }
