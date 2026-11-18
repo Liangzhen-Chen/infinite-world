@@ -1,6 +1,6 @@
 # 项目规则（无限原野）
 
-开工只读本文件、`docs/当前状态.md`、`docs/PLAN.md` 和 `docs/PROGRESS.md` 的当前相关段。指南和其他文件按当前任务需要定位阅读，不通读。主项目为 `F:/dnd`，历史从 Git 标签 `snapshot-20261010` 按需读取。
+开工只读本文件、`docs/产品原则.md`（北极星）、`docs/派活卡头规矩.md`、`docs/当前状态.md`、`docs/PLAN.md` 和 `docs/PROGRESS.md` 的当前相关段。指南和其他文件按当前任务需要定位阅读，不通读。主项目为 `F:/dnd`，历史从 Git 标签 `snapshot-20261010` 按需读取。
 
 ## Stop That Shit 开发规则
 
