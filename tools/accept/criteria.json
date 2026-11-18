@@ -208,10 +208,14 @@
     {
      "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 38
+    },
+    {
+     "ref": "接主线 4-4c 后重盖，判定口径不变",
+     "rev": 39
     }
    ],
-   "print": "b6cf387e98c03134d038001e3c06200cde51201f63f1c44ecb6069d5deecbde5",
-   "rev": 38,
+   "print": "eeea6fc4e18aa895361800bfd2e7fa4842f3aa288c5962fbcb7f06a7fc4937ff",
+   "rev": 39,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -481,10 +485,14 @@
     {
      "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 29
+    },
+    {
+     "ref": "接主线 4-4c 后重盖，判定口径不变",
+     "rev": 30
     }
    ],
-   "print": "d0c5c865213e34ac46dd7c47a1d186f9294e74b84bb62ec7155f1b335b57649d",
-   "rev": 29,
+   "print": "8b64f525919dea45ef9dc1ed93f344a08f432ade73a16c33ce790b3cebd4b302",
+   "rev": 30,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -793,10 +801,14 @@
     {
      "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 30
+    },
+    {
+     "ref": "接主线 4-4c 后重盖，判定口径不变",
+     "rev": 31
     }
    ],
-   "print": "79d42150a57d416bea087784ba0f6024c0587fea7acb95460def8f06d75e3197",
-   "rev": 30,
+   "print": "5cb3bb842a1c645482e32e8da06b5c788307fe52b1ba79a560fa650c689e11b2",
+   "rev": 31,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1054,10 +1066,14 @@
     {
      "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 46
+    },
+    {
+     "ref": "接主线 4-4c 后重盖，判定口径不变",
+     "rev": 47
     }
    ],
-   "print": "08a9d8d3fa50c2014fc70807433a84968496d9ada34ce8a841b630f0e4567a19",
-   "rev": 46,
+   "print": "10fafda753bf1441c85de6d6253786ff4bc0a79c0d98a0987e1892b22889ea15",
+   "rev": 47,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1280,10 +1296,14 @@
     {
      "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 31
+    },
+    {
+     "ref": "接主线 4-4c 后重盖，判定口径不变",
+     "rev": 32
     }
    ],
-   "print": "79d42150a57d416bea087784ba0f6024c0587fea7acb95460def8f06d75e3197",
-   "rev": 31,
+   "print": "5cb3bb842a1c645482e32e8da06b5c788307fe52b1ba79a560fa650c689e11b2",
+   "rev": 32,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1807,10 +1827,14 @@
     {
      "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 31
+    },
+    {
+     "ref": "接主线 4-4c 后重盖，判定口径不变",
+     "rev": 32
     }
    ],
-   "print": "79d42150a57d416bea087784ba0f6024c0587fea7acb95460def8f06d75e3197",
-   "rev": 31,
+   "print": "5cb3bb842a1c645482e32e8da06b5c788307fe52b1ba79a560fa650c689e11b2",
+   "rev": 32,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -1917,10 +1941,14 @@
     {
      "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 23
+    },
+    {
+     "ref": "接主线 4-4c 后重盖，判定口径不变",
+     "rev": 24
     }
    ],
-   "print": "760d9ebfa2ebf7dca9e6bdbed743012abbfa83c740a7cf2c148e627c6599257a",
-   "rev": 23,
+   "print": "2a8ce6d4f7043590bae390510dad3d672a86dad8153c22a94e55ee773448129f",
+   "rev": 24,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -2123,10 +2151,14 @@
     {
      "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 47
+    },
+    {
+     "ref": "接主线 4-4c 后重盖，判定口径不变",
+     "rev": 48
     }
    ],
-   "print": "438e4d7e92167efa0cf9b02ce86ebd2de980a448af9856fb954794a70bc72d83",
-   "rev": 47,
+   "print": "19c911eb73e4dec5084ce4593d53b08d9ab5bc1a50c1463168111726a3ae57e3",
+   "rev": 48,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -2286,10 +2318,14 @@
     {
      "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 10
+    },
+    {
+     "ref": "接主线 4-4c 后重盖，判定口径不变",
+     "rev": 11
     }
    ],
-   "print": "c04fde8b5d61b3f4864603042a9e45bdf7410862beebd2f91c28c9ba9606e9de",
-   "rev": 10,
+   "print": "b86effe08494cde47b8590e13f6d55988b3e20671ec1b0126634a37d02d8907f",
+   "rev": 11,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -2455,10 +2491,14 @@
     {
      "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 36
+    },
+    {
+     "ref": "接主线 4-4c 后重盖，判定口径不变",
+     "rev": 37
     }
    ],
-   "print": "b6cf387e98c03134d038001e3c06200cde51201f63f1c44ecb6069d5deecbde5",
-   "rev": 36,
+   "print": "eeea6fc4e18aa895361800bfd2e7fa4842f3aa288c5962fbcb7f06a7fc4937ff",
+   "rev": 37,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -2496,10 +2536,14 @@
     {
      "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 7
+    },
+    {
+     "ref": "接主线 4-4c 后重盖，判定口径不变",
+     "rev": 8
     }
    ],
-   "print": "40bdfca22ff4c71db4cf9416682e5160d5793d073a35739e6e948ab6c4dd00ba",
-   "rev": 7,
+   "print": "d96eb349c58fb08db2c4c072ef134e4a16e6a28edb80ec5acff9bed212dba8be",
+   "rev": 8,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -2774,10 +2818,14 @@
     {
      "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 25
+    },
+    {
+     "ref": "接主线 4-4c 后重盖，判定口径不变",
+     "rev": 26
     }
    ],
-   "print": "760d9ebfa2ebf7dca9e6bdbed743012abbfa83c740a7cf2c148e627c6599257a",
-   "rev": 25,
+   "print": "2a8ce6d4f7043590bae390510dad3d672a86dad8153c22a94e55ee773448129f",
+   "rev": 26,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

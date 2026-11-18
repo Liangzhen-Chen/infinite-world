@@ -22,8 +22,9 @@ test('码表条数：E 与 W 各为手数的字面量', () => {
   // 块 3 第 3-3c 张加卷六账本一码 E-LEDGER-CAPPED-DIRECT（勘误 1118k13 续、李白 11-18 07:02 选丙）：591 → 592、E 573 → 574。
   // B2-W1 加卷十二 §2.12 两码 E-ACC-PROMISE-UNREACHABLE、E-ACC-PARAM-UNCONSUMED（勘误 1118k18；李白 11-18 08:20 裁定①）：592 → 594、E 574 → 576。
   // 卡头自查卡加卷十二 §2.12 一码 E-ACC-CARD-SELFCHECK（李白 11-18 17:45）：594 → 595、E 576 → 577。
-  assert.equal(codes.length, 595);
-  assert.equal(codes.filter((c) => c[0] === 'E').length, 577);
+  // B5-0 加卷九 §2.8 一码 E-ACT-WRITER-NOT-READY（勘误 1118k25；李白 11-18 22:10 丙9）：595 → 596、E 577 → 578。
+  assert.equal(codes.length, 596);
+  assert.equal(codes.filter((c) => c[0] === 'E').length, 578);
   assert.equal(codes.filter((c) => c[0] === 'W').length, 18);
   assert.equal(REGISTERED_CODES.size, codes.length);
 });
@@ -88,6 +89,8 @@ test('抽 6 个跨卷码：E 成员名与值、出处', () => {
   assert.deepEqual(src('E-ACC-TEST-FAIL'), ['vol12.s2.12']);
   assert.deepEqual(src('E-ACC-REQUIRED-NOT-RUN'), ['vol12.s2.12']);
   assert.deepEqual(src('E-ACC-CARD-SELFCHECK'), ['vol12.s2.12']);
+  // 勘误 1118k25（李白 11-18 22:10 丙9）：卷九 §2.8 定义，卷二 §4.3 只登记。
+  assert.deepEqual(src('E-ACT-WRITER-NOT-READY'), ['vol2.s4.3', 'vol9.s2.8']);
 });
 
 test('E 的成员与码表一一对应：条数相等、冻结、成员名把连字符换成下划线', () => {
