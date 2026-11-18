@@ -10,7 +10,7 @@
 | 4 | 新测试不依赖仓库当前偶然数字 | 是 | 未新增测试；验收只跑卡文命令。 |
 | 5 | 没有为降计数改写允许的代码、没有假常量 | 是 | 无代码逻辑改动、无假常量；只删文件、改路径引用与 `.gitattributes` 失效行。 |
 | 6 | 只改了卡文列出的文件；diff 共 __ 行 | 是 | 累计：`docs/测试报告/` 298 个文件（29057 行删除）、`logs/sessions/` 1251 个旧记录（35543 行删除）、零读者旧文档 8 个文件（572 行删除）、过时文档 25 个 `git mv` 进 `docs/归档/`、三个审查目录 1318 个文件合一（零重名，无需前缀）、相关路径行约 130 处、`.gitattributes` 1 行删除；均在卡文文件所有权内（"上列删除与移动对象、引用它们的路径行"）。 |
-| 7 | 全量测试已跑：命令＋pass/fail 数 | 是 | `node --test tests/*.test.mjs tests/kernel/*.test.mjs tests/accept/*.test.mjs` → `ℹ tests 480`、`ℹ pass 480`、`ℹ fail 0`；`node tools/accept/run.mjs pre_commit` → `"verdict": "pass"`；`node tools/accept/commit-hook.mjs` → `pre_commit pass 1aca3bc1…`。 |
+| 7 | 全量测试已跑：命令＋pass/fail 数 | 是 | `node --test tests/*.test.mjs tests/kernel/*.test.mjs tests/accept/*.test.mjs` → `ℹ tests 480`、`ℹ pass 480`、`ℹ fail 0`（审查目录合并后重跑，duration_ms 88193）；`node tools/accept/run.mjs pre_commit` → `"verdict": "pass"`、`contentPrint 12e2c842…`；`node tools/accept/commit-hook.mjs` → `pre_commit pass 12e2c842443212bb83f42e54f8f63b9aca6965b195e2f15623d899fa6f4fbbd1`。 |
 | 8 | 这张卡让块 6 哪一步更近了（一句话），且没有为此违背北极星任何一条 | 是 | 仓库去掉 551M 旧引擎回放、旧草稿与过时文档，审查记录只有一处，找现行规矩与证据更快；未写死、未加特例、未跳过规则引擎、未缩小世界规模。 |
 
 ## 逐项记录（滚动更新）
@@ -29,3 +29,16 @@
 6. **world/drafts/**（347M，7937 个跟踪文件）：有程序与现行文档在读——26 个 `world/design/*.mjs` 以它为 draftRoot/预算根（`docs/…` 里举了 6 条），`docs/待办.md:11`、`docs/待用户确认.md:27/:160`、`docs/问题.md:21`、`docs/新底子方案-v0.md:37`。卡文"有读者的不删"，已回报主会话。
 7. **docs/统一底层设计/版本快照/**（409M，1372 个跟踪文件）：是勘误手续"勘误前快照"的存放处；`docs/新底子方案-v0.md:430` 定义手续，卷零/卷一/卷二大量按 `版本快照/<卷>…` 引用，CLAUDE.md 规定"追加勘误前快照、不升版本"。无程序读它，但属现行手续存储；按卡文"记读者、不删并回报"，存不存快照由主会话另定。
 8. **docs/probes/**（1.2M）：卷十二 `:1346` M12-9 登记"保留，登记为题集条目与工具数据"；`docs/事件推演测试.md:6-8/:33` 仍用其提示词与题集。
+
+## 验收命令与残留引用（卡文验收项）
+
+- 全量测试与门禁读数见自查表第 7 项。
+- `git grep -n "统一底层设计/审查"` 合并后仍在 230 个文件中命中，全部是历史材料：
+  - `docs/统一底层设计/版本快照/*`（历史快照，1372 文件）；
+  - `docs/审查/*`（审查原文自身，含 `李白裁定-1117.md` 与 `脚本输出/`）；
+  - `docs/归档/PLAN-历史-至1118.md`；
+  - `docs/卡回报/ds-err12s.md`；
+  - `docs/统一底层设计/脚本/全书/乙8-入口名候选.mjs:435`（`git show 664151c4:` 读历史提交内的旧路径，改了会让历史读取失败）；
+  - `docs/统一底层设计/脚本/检查脚本锚点改动/check-verb-emitter-*.diff`（历史补丁原文）。
+- `git grep -n "docs/审查记录"` 只剩：`docs/审查/mktw-v8/v9规则-审查R2.md`、`docs/审查/门禁方案-审查A/B.md`（原文自身）、`docs/归档/PLAN-历史-至1118.md`。
+- 工作区最终 `git status --short` 为空。
