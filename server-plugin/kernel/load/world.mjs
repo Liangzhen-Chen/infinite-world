@@ -14,7 +14,7 @@ import { installStorage } from '../storage.mjs';
 import { finalizeInputs, inputsBySystem, resetFinalized } from '../declare.mjs';
 import { codeOf } from '../errors.mjs';
 import { checkLedgerTables } from '../ledger.mjs';
-import { checkClockTables } from '../scheduler.mjs';
+import { checkClockTables, checkHookCadence, installScheduler } from '../scheduler.mjs';
 
 export const LAYOUT = Object.freeze({
   dimensionsDir: 'world/ontology/dimensions',
@@ -58,15 +58,16 @@ export function loadWorld(root, opts = {}) {
     limits: { extendsMaxDepth: need('extendsMaxDepth'), rxMaxDepth: need('rxMaxDepth') },
   });
   // 账本的资源种类表、ledger.json 与本卷词表条目的跨字段校验（卷六 §2.1、§2.2、§2.5；字段含义只在 kernel/ledger.mjs 读，A6-1.1）。
-  // rules.clock 与 due_kind、reaction_priority 条目的加载校验（卷二十 §2.1；字段含义只在 kernel/scheduler.mjs 读）。
-  const domain = report.env ? [...checkLedgerTables(read.rules, report.env), ...checkClockTables(read.rules, report.env)] : [];
-  const tail = rulesReport([...checkRules(read, report.env), ...domain]);
   // 声明表合并与核对（卷二 §2.7；state-owners.json 的 L0 语法错误一并报出）。
   const families = report.vocab && report.vocab.families ? [...report.vocab.families.keys()] : [];
   // 可终止实体类（卷二 §2.6 :516）：实体表的类别行写了 termination（整表一致由校验器另核）。
   const terminableKinds = [...report.tables].filter(([, t]) => t.doc && t.doc.classes && typeof t.doc.classes === 'object' && Object.values(t.doc.classes).some((c) => c && typeof c === 'object' && c.termination !== undefined)).map(([k]) => k);
   const tableDims = new Map([...report.tables].map(([k, t]) => [k, t.doc && t.doc.dimensions ? t.doc.dimensions : {}]));
   const owners = mergeStateOwners(decl, { units: report.env.units, kinds: new Set(report.tables.keys()), families: new Set(families), terminableKinds, tableDims });
+  // rules.clock 与 due_kind、reaction_priority 条目的加载校验（卷二十 §2.1；字段含义只在 kernel/scheduler.mjs 读）；
+  // cadence/phaseOffset 按声明表的钩子逐个查（§2.1 :130，E-CLOCK-CADENCE，块 4-2），所以排在声明表合并之后。
+  const domain = report.env ? [...checkLedgerTables(read.rules, report.env), ...checkClockTables(read.rules, report.env), ...checkHookCadence(read.rules, owners.merged.hooks)] : [];
+  const tail = rulesReport([...checkRules(read, report.env), ...domain]);
   const syntax = (parsed.errors || []).map((e) => ({ code: e.code, severity: 'error', level: 'L0', table: 'state-owners', row: '', dim: '', path: `#${e.pointer}`, got: e.got, want: e.want }));
   // 依赖声明定稿（卷二 §2.3 :470–471、§2.7 :828）：机器生成 dim:<kind> 与 modified:<kind>，对 uses 做传递闭包，写回 systems[*].inputs。
   const deps = report.ok && tail.ok && owners.ok && syntax.length === 0 ? finalizeDeps(report.tables, decl.systems) : { errors: [], systems: undefined };
@@ -76,6 +77,7 @@ export function loadWorld(root, opts = {}) {
     installVocab(report);
     installHandles({ vocab: report.vocab, decl, ledgerPaths: owners.merged.ledgerPaths });
     installStorage(owners.merged); // readPath/writePath 运行期核对用的声明表合并结果（kernel/storage.mjs，块 2 第 2-3 张）
+    installScheduler(read.rules); // schedule 入堆缩放读 rules.clock（kernel/scheduler.mjs，块 4 第 4-2 张）
     owners.merged.systems = deps.systems;
   }
   const syntaxText = syntax.map((e) => `${e.code}  ${e.table}/.  got ${JSON.stringify(e.got)}  want ${e.want}  — ${e.path}\n`).join('');

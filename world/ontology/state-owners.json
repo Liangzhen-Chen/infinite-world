@@ -2,7 +2,8 @@
  "version": 1,
  "stateKeys": {
   "accounts": {"readers": [], "writers": {"*": "kernel/ledger.mjs"}},
-  "clock": {"readers": [], "writers": {"minute": "kernel/scheduler.mjs", "seq": "kernel/scheduler.mjs"}},
+  "clock": {"readers": [], "writers": {"minute": "kernel/scheduler.mjs", "seq": "kernel/scheduler.mjs", "dueNext": "kernel/scheduler.mjs"}},
+  "due": {"readers": [], "writers": {"*": "kernel/scheduler.mjs"}},
   "created":{"readers": ["dim:*"], "writers": {"*.props.*": "kernel/dimension-writers.mjs", "*.props.basis": "kernel/dimension-writers.mjs"}},
   "displayNames": {"readers": [], "writers": {"*": "ai-gate/naming-gate.mjs"}, "display": ["*.text"]},
   "outflowTotals": {"readers": [], "writers": {"*": "kernel/ledger.mjs"}},
@@ -16,7 +17,7 @@
    "sources": {"src_birth": {}, "src_boundary": {}, "src_genesis": {}, "src_issue": {}, "src_regrow": {}, "src_transform": {}},
    "sinks": ["sink_boundary", "sink_consume", "sink_death", "sink_decay", "sink_depart", "sink_loss", "sink_redeem", "sink_seized", "sink_transform"],
    "entryCallerFiles": {}, "entryJudges": []},
-  "sys.time_env": {"tables": ["clock"], "writers": ["clock.minute", "clock.seq"], "entryCallerFiles": {}, "entryJudges": []}
+  "sys.time_env": {"tables": ["clock"], "writers": ["clock.minute", "clock.seq", "clock.dueNext", "due.*"], "entryCallerFiles": {}, "entryJudges": []}
  },
  "textPaths": ["displayNames.*.text", "playerNotes.*.text", "narration.*"],
  "textWriters": {"displayNames.*.text": "ai-gate/naming-gate.mjs", "playerNotes.*.text": "ai-gate/note-gate.mjs", "narration.*": "ai-gate/narration-gate.mjs"},
@@ -24,6 +25,8 @@
   "accounts.*": "struct:holderAccounts",
   "clock.minute": "integer:minute",
   "clock.seq": "integer:count",
+  "clock.dueNext": "integer:count",
+  "due.*": "struct:dueItem",
   "created.*.props.*": "dimension",
   "created.*.props.basis": "struct:basis",
   "displayNames.*.seq": "integer:count",
@@ -36,6 +39,7 @@
  },
  "keyKinds": {
   "accounts.*": [["deity", "faith", "org", "person", "place"]],
+  "due.*": ["handle"],
   "created.*.props.*": [["item", "person", "place"], "dimKey"],
   "created.*.props.basis": [["item", "person", "place"]],
   "displayNames.*.seq": [["person", "identityKey"]],
@@ -76,6 +80,8 @@
   {"export": "kernel/scheduler.mjs#schedule", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/scheduler.mjs#cancel", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/scheduler.mjs#clockView", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/advance-registry.mjs#registerAdvanceHook", "callers": ["rules"], "acceptsState": false},
+  {"export": "kernel/advance-registry.mjs#registerAdvancePlan", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/transaction.mjs#registerHoldWhileRecompute", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/save.mjs#registerUnitOfPath", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/clone.mjs#clone", "callers": ["rules"], "acceptsState": false},

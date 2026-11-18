@@ -31,9 +31,13 @@ const FIELD_RE = /^[a-z][a-zA-Z0-9_]*(\.[a-z][a-zA-Z0-9_]*)*$/;
 export const ENTITY_KINDS = Object.freeze(['item', 'material', 'species', 'plant', 'body_plan', 'person', 'place', 'facility_type', 'recipe', 'org', 'office', 'polity', 'law_code', 'deity', 'faith', 'culture', 'profession', 'skill', 'knowledge', 'offense', 'status', 'event_type']);
 // keyKinds 的 (c) 项：封闭的非实体键类型代号（李白 11-17 pathTypes `*` 段 kind 字段裁定）。event = EventId（卷二 :197 事件无 kind）；
 // dimKey = 维度键（如 created.*.props.* 的第二段）；identityKey = 身份键键号（卷四 :927，全世界唯一整数、对规则不透明，非实体 kind；李白 11-17）。
+// handle = 运行时句柄（李白 11-18 03:22 裁定②：如 due.* 的段是 cancel 用的句柄，运行时生成、不是固定词表；词表代号段仍走命名 struct，02:55）。
 // (b) 列表可混列实体 kind 与 (c) 代号，表示并集。再加新代号须登记进卷二并报李白，各卷不得自造。
 export const KEY_DIMKEY = 'dimKey';
-export const KEY_NONENTITY = Object.freeze(['event', KEY_DIMKEY, 'identityKey']);
+export const KEY_HANDLE = 'handle';
+export const KEY_NONENTITY = Object.freeze(['event', KEY_DIMKEY, 'identityKey', KEY_HANDLE]);
+
+// handle 类的格式即卷二 §1.9 代号文法 CODE_RE（kernel/validate/types.mjs，不另立文法；李白 11-18 03:31 裁定 1）；生成句柄的内核文件自管形状（scheduler.mjs 的 due_＋序号）。
 // 去留表覆盖核对豁免的协议键顶层段（卷二 §2.6 :519"账户、holdings、statuses、modifiers、terminated、到期堆"；到期堆的键 `due` 见卷二十 :445）。账户由账本写者判（ledgerPaths）。
 const PROTOCOL_KEYS = new Set(['holdings', 'statuses', 'modifiers', 'terminated', 'due']);
 

@@ -11,8 +11,9 @@ const rejects = (fn, code) => assert.throws(fn, (e) => e.code === code && e.mess
 const codes = ERROR_CODES.map((e) => e.code);
 
 test('码表条数：E 与 W 各为手数的字面量', () => {
-  assert.equal(codes.length, 577);
-  assert.equal(codes.filter((c) => c[0] === 'E').length, 560);
+  // 块 4-2 加 E-CLOCK-REACTION-LIMIT（李白 11-18 03:22 裁定①）：577 → 578、E 560 → 561。
+  assert.equal(codes.length, 578);
+  assert.equal(codes.filter((c) => c[0] === 'E').length, 561);
   assert.equal(codes.filter((c) => c[0] === 'W').length, 17);
   assert.equal(REGISTERED_CODES.size, codes.length);
 });

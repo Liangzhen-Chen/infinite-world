@@ -248,7 +248,7 @@ test('争夺裁决多标的整单分配：要两个标的的提案两个都拿�
 
 // ---------- kernelApi 与到期登记待 4-2 ----------
 
-test('kernelApi 登记 schedule、cancel、clockView（K4-13）与 createWallTimer（只给 index.mjs）；schedule/cancel 实现待 4-2，调用即抛不静默', () => {
+test('kernelApi 登记 schedule、cancel、clockView（K4-13）与 createWallTimer（只给 index.mjs）；schedule/cancel 在事务外调用即 E-VIEW-UNDECLARED-WRITE', () => {
   const decl = JSON.parse(readFileSync(join(ROOT, 'world/ontology/state-owners.json'), 'utf8'));
   const rows = decl.kernelApi.exports.filter((x) => x.export.startsWith('kernel/scheduler.mjs#'));
   assert.deepEqual(rows, [
@@ -257,13 +257,13 @@ test('kernelApi 登记 schedule、cancel、clockView（K4-13）与 createWallTim
     { export: 'kernel/scheduler.mjs#clockView', callers: ['rules'], acceptsState: true },
     { export: 'kernel/scheduler.mjs#createWallTimer', callerFiles: ['index.mjs'], acceptsState: false },
   ]);
-  assert.deepEqual(decl.stateKeys.clock, { readers: [], writers: { minute: 'kernel/scheduler.mjs', seq: 'kernel/scheduler.mjs' } });
+  assert.deepEqual(decl.stateKeys.clock, { readers: [], writers: { minute: 'kernel/scheduler.mjs', seq: 'kernel/scheduler.mjs', dueNext: 'kernel/scheduler.mjs' } });
   assert.equal(decl.pathTypes['clock.minute'], 'integer:minute');
   assert.equal(decl.pathTypes['clock.seq'], 'integer:count');
-  assert.deepEqual(decl.systems['sys.time_env'], { tables: ['clock'], writers: ['clock.minute', 'clock.seq'], entryCallerFiles: {}, entryJudges: [] });
+  assert.deepEqual(decl.systems['sys.time_env'], { tables: ['clock'], writers: ['clock.minute', 'clock.seq', 'clock.dueNext', 'due.*'], entryCallerFiles: {}, entryJudges: [] });
   assert.ok(JSON.parse(readFileSync(join(ROOT, 'server-plugin/kernel/files.json'), 'utf8')).includes('server-plugin/kernel/scheduler.mjs'));
-  assert.throws(() => schedule('npc_a', 'due_recurrence', 10, 'ref_1'), (e) => e instanceof Error && !('code' in e));
-  assert.throws(() => cancel('h_1'), (e) => e instanceof Error && !('code' in e));
+  assert.throws(() => schedule('npc_a', 'due_recurrence', 10, 'ref_1'), codeIs('E-VIEW-UNDECLARED-WRITE'));
+  assert.throws(() => cancel('due_recurrence-npc_a-ref_1'), codeIs('E-VIEW-UNDECLARED-WRITE'));
 });
 
 test('createWallTimer：时长须是整数毫秒；deadline 到点中止；heartbeat 可停', async () => {
@@ -280,11 +280,14 @@ test('createWallTimer：时长须是整数毫秒；deadline 到点中止；heart
 
 // ---------- 加载校验 ----------
 
-test('rules.clock 按登记载入：四键手写字面量', () => {
+test('rules.clock 按登记载入：七键手写字面量（4-2 加 cadence、phaseOffset 空表与入堆缩放配置项 paceFactor 1/1）', () => {
   assert.deepEqual({ ...W.rules.clock }, {
     reactionDepthMax: 8,
     proposalMax: 12,
     drawSites: ['site.emit.chance', 'site.weather.precip', 'site.weather.state', 'site.weather.windDir', 'site.weather.windSpeed'],
+    cadence: {},
+    phaseOffset: {},
+    paceFactor: { num: 1, den: 1 },
     contestDefault: 'lottery',
   });
   assert.deepEqual(Object.keys(W.vocab.families.get('due_kind').entries), ['due_recurrence', 'due_revive_window']);
