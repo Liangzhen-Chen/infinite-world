@@ -188,10 +188,14 @@
     {
      "ref": "卡头自查卡（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：error-codes.mjs 登 E-ACC-CARD-SELFCHECK 入检测器闭包，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 33
+    },
+    {
+     "ref": "4-3 补（卷二 §2.8 :852）：种子键派生串、h_i 输入串与骰值键五段的拼接移入 kernel/handles/keys.mjs（只拼已核对部件），共用检测器 import 闭包内 keys.mjs 内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 34
     }
    ],
-   "print": "14bf633b7a9cfe682ea10bdcfd526653cdbe20911fd83fb52b2ecfc407ac9468",
-   "rev": 33,
+   "print": "545bdac11052320870579aefd6bba6c13898f7ec65e3dcdcea8dfa645e419f9d",
+   "rev": 34,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -437,10 +441,14 @@
     {
      "ref": "卡头自查卡（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：error-codes.mjs 登 E-ACC-CARD-SELFCHECK 入检测器闭包，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 23
+    },
+    {
+     "ref": "4-3 补（卷二 §2.8 :852）：种子键派生串、h_i 输入串与骰值键五段的拼接移入 kernel/handles/keys.mjs（只拼已核对部件），共用检测器 import 闭包内 keys.mjs 内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 24
     }
    ],
-   "print": "a25582d0676a194f4e4faaed7053024e179e7c890f105c1ee289eebdb4889cd1",
-   "rev": 23,
+   "print": "2921a0719037db7c663c18502f201e323abba1407c60a9d1c34cdb6c9f205de5",
+   "rev": 24,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -709,10 +717,14 @@
     {
      "ref": "卡头自查卡（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：error-codes.mjs 登 E-ACC-CARD-SELFCHECK 入检测器闭包，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 24
+    },
+    {
+     "ref": "4-3 补（卷二 §2.8 :852）：种子键派生串、h_i 输入串与骰值键五段的拼接移入 kernel/handles/keys.mjs（只拼已核对部件），共用检测器 import 闭包内 keys.mjs 内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "f2563800483be775e92ea104f9bba10568d00388ba73c57d320edefe7cbb55a2",
-   "rev": 24,
+   "print": "88f5e3c55b81e407f29e34c926c22f588868d7f0a38a4ff7378cda60f4191243",
+   "rev": 25,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -938,10 +950,14 @@
     {
      "ref": "卡头自查卡（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：error-codes.mjs 登 E-ACC-CARD-SELFCHECK 入检测器闭包，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 40
+    },
+    {
+     "ref": "4-3 补（卷二 §2.8 :852）：种子键派生串、h_i 输入串与骰值键五段的拼接移入 kernel/handles/keys.mjs（只拼已核对部件），共用检测器 import 闭包内 keys.mjs 内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 41
     }
    ],
-   "print": "4977332abed3e13ff848f04de8f13e99fe27e71640ab6f88aacc5eeb95ffe365",
-   "rev": 40,
+   "print": "7d583d1c7ec9549202ac3751d89abbbe9b8facb24969d23001cdb91c1ae602ca",
+   "rev": 41,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1140,10 +1156,14 @@
     {
      "ref": "卡头自查卡（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：error-codes.mjs 登 E-ACC-CARD-SELFCHECK 入检测器闭包，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 25
+    },
+    {
+     "ref": "4-3 补（卷二 §2.8 :852）：种子键派生串、h_i 输入串与骰值键五段的拼接移入 kernel/handles/keys.mjs（只拼已核对部件），共用检测器 import 闭包内 keys.mjs 内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 26
     }
    ],
-   "print": "f2563800483be775e92ea104f9bba10568d00388ba73c57d320edefe7cbb55a2",
-   "rev": 25,
+   "print": "88f5e3c55b81e407f29e34c926c22f588868d7f0a38a4ff7378cda60f4191243",
+   "rev": 26,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1643,10 +1663,14 @@
     {
      "ref": "卡头自查卡（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：error-codes.mjs 登 E-ACC-CARD-SELFCHECK 入检测器闭包，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 25
+    },
+    {
+     "ref": "4-3 补（卷二 §2.8 :852）：种子键派生串、h_i 输入串与骰值键五段的拼接移入 kernel/handles/keys.mjs（只拼已核对部件），共用检测器 import 闭包内 keys.mjs 内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 26
     }
    ],
-   "print": "f2563800483be775e92ea104f9bba10568d00388ba73c57d320edefe7cbb55a2",
-   "rev": 25,
+   "print": "88f5e3c55b81e407f29e34c926c22f588868d7f0a38a4ff7378cda60f4191243",
+   "rev": 26,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -1729,10 +1753,14 @@
     {
      "ref": "卡头自查卡（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：error-codes.mjs 登 E-ACC-CARD-SELFCHECK 入检测器闭包，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 17
+    },
+    {
+     "ref": "4-3 补（卷二 §2.8 :852）：种子键派生串、h_i 输入串与骰值键五段的拼接移入 kernel/handles/keys.mjs（只拼已核对部件），共用检测器 import 闭包内 keys.mjs 内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 18
     }
    ],
-   "print": "3b7d3b7a3ecf7ba9d9c0c788a4a793adc8772494bec3d1d41c404ee4db392cf6",
-   "rev": 17,
+   "print": "1eb7985847870cf397f7d9bf68f3878a58b1d4d4cb41cefe262c0ef0f78ad6d5",
+   "rev": 18,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -1915,10 +1943,14 @@
     {
      "ref": "卡头自查卡（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：error-codes.mjs 登 E-ACC-CARD-SELFCHECK 入检测器闭包，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 42
+    },
+    {
+     "ref": "4-3 补（卷二 §2.8 :852）：种子键派生串、h_i 输入串与骰值键五段的拼接移入 kernel/handles/keys.mjs（只拼已核对部件），共用检测器 import 闭包内 keys.mjs 内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 43
     }
    ],
-   "print": "0f6baab67e3e9c6af11883942028b7ebd1fb27e315f4d51fa9472b33c94f208c",
-   "rev": 42,
+   "print": "80fabbea256f74d1cdd535f5d43adfbbb6a2b171166c885b78f40e35c7a1a08d",
+   "rev": 43,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -2050,10 +2082,18 @@
     {
      "ref": "卡头自查卡（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：error-codes.mjs 登 E-ACC-CARD-SELFCHECK 入检测器闭包，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 3
+    },
+    {
+     "ref": "4-3：seed-keys.json 按新格式重建为 §4.1 键表（单键 entries，值即抽取点行列表），检测器改读该键行；判据代码闭包变化升 rev 4、盖指纹（块 4-3；rev 3 为主线卡头自查卡占用）",
+     "rev": 4
+    },
+    {
+     "ref": "4-3 补（卷二 §2.8 :852）：种子键派生串、h_i 输入串与骰值键五段的拼接移入 kernel/handles/keys.mjs（只拼已核对部件），共用检测器 import 闭包内 keys.mjs 内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 5
     }
    ],
-   "print": "ae40e6b1e52feb46f4f205d225e3261ef349f401cfbacb3698e2d9ec6e40d7d9",
-   "rev": 3,
+   "print": "5ce8b59bbae45823ba7f828c2fc8f9cec449a1f4205b1081c4489a42b26e4fce",
+   "rev": 5,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -2199,10 +2239,14 @@
     {
      "ref": "卡头自查卡（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：error-codes.mjs 登 E-ACC-CARD-SELFCHECK 入检测器闭包，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 31
+    },
+    {
+     "ref": "4-3 补（卷二 §2.8 :852）：种子键派生串、h_i 输入串与骰值键五段的拼接移入 kernel/handles/keys.mjs（只拼已核对部件），共用检测器 import 闭包内 keys.mjs 内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 32
     }
    ],
-   "print": "14bf633b7a9cfe682ea10bdcfd526653cdbe20911fd83fb52b2ecfc407ac9468",
-   "rev": 31,
+   "print": "545bdac11052320870579aefd6bba6c13898f7ec65e3dcdcea8dfa645e419f9d",
+   "rev": 32,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -2444,10 +2488,14 @@
     {
      "ref": "卡头自查卡（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：error-codes.mjs 登 E-ACC-CARD-SELFCHECK 入检测器闭包，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 19
+    },
+    {
+     "ref": "4-3 补（卷二 §2.8 :852）：种子键派生串、h_i 输入串与骰值键五段的拼接移入 kernel/handles/keys.mjs（只拼已核对部件），共用检测器 import 闭包内 keys.mjs 内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 20
     }
    ],
-   "print": "3b7d3b7a3ecf7ba9d9c0c788a4a793adc8772494bec3d1d41c404ee4db392cf6",
-   "rev": 19,
+   "print": "1eb7985847870cf397f7d9bf68f3878a58b1d4d4cb41cefe262c0ef0f78ad6d5",
+   "rev": 20,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
