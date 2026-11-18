@@ -242,6 +242,8 @@ test('A6-1.3：新增一行资源种类（行会工分，受限转让）与一�
   assert.deepEqual(run((s) => { post(E, s, { legs: [{ account: R('npc_c', SH), delta: -2 }, { account: R('npc_a', SH), delta: -1 }, { flow: 'sink_t_guild', kind: 'res_t_guildscrip', qty: 3 }], reason: 'verb_test' }); }), { ok: true });
   assert.deepEqual(auditLedger(E, state), []);
   let rep;
+  // 期末日须早于当日（卷六 :376 日＋来源重放判据取当日 usedByDay 项）：推进到第 4 日再结第 3 日的期。
+  setDay(state, 4);
   assert.deepEqual(run((s) => { closeLedgerPeriod(E, s, 3, (r) => { rep = r; }); }), { ok: true });
   assert.deepEqual(JSON.parse(JSON.stringify(rep.gaps)), [{ code: 'W-LEDGER-ALERT', resource: 'res_t_guildscrip', flow: 'sink_t_guild', day: 3, used: 3, alert: 2 }]);
   assert.deepEqual(state.ledgerTotals.res_t_guildscrip, { sink_t_guild: { cumulative: 3, usedByDay: [] }, src_t_guild: { cumulative: 4, usedByDay: [] } });

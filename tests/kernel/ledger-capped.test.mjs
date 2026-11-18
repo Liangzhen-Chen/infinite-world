@@ -272,3 +272,77 @@ test('月结只在本状态的事务内写；期末日须为非负整数世界�
     assert.deepEqual(r, { ok: false, code });
   }
 });
+
+// ---------- 只核 1118k 追加：日限额出处按规则层定（卷六 :376、§2.5 :224）；月结期末日须早于当日（卷六 :376、§4.1.1 :347） ----------
+// 期望值照卷文公式手算成字面量：第 0 日表值限 3，a2 b2 总量 4 > 3，各 2×3÷4=1.5→1，余 1 补 npc_a → a2 b1。
+
+test('结算入口：有 budget 格的来源日限额一律照表取——传 limit 大于表值 99 也按表值 3（a2 b2 → a2 b1）', () => {
+  const state = at(0);
+  let out;
+  assert.deepEqual(runTransaction(state, CTX, (s) => { out = settleCappedAllocation(ENGINE, s, settleDraft({ limit: 99 })); }), { ok: true });
+  assert.deepEqual(clone(out).allocations, [
+    { key: ['npc_a'], requested: 2, granted: 2 },
+    { key: ['org_b'], requested: 2, granted: 1 },
+  ]);
+  assert.equal(out.booked, 3);
+  assert.deepEqual(state.ledgerTotals, { res_t_coin: { src_genesis: { cumulative: 3, usedByDay: [{ day: 0, used: 3 }] } } });
+});
+
+test('结算入口：src_genesis 第 1 日传 limit 空也不入账（窗口外按零，:224；:376 开局仅第 0 日 → 全 granted 0、状态不变）', () => {
+  const state = at(1);
+  let out;
+  assert.deepEqual(runTransaction(state, CTX, (s) => { out = settleCappedAllocation(ENGINE, s, settleDraft({ day: 1, limit: null })); }), { ok: true });
+  assert.deepEqual(clone(out), {
+    day: 1, resource: 'res_t_coin', source: 'src_genesis',
+    allocations: [{ key: ['npc_a'], requested: 2, granted: 0 }, { key: ['org_b'], requested: 2, granted: 0 }],
+    booked: 0, alreadyBooked: false,
+  });
+  assert.deepEqual(state, { clock: { minute: 1440, seq: 0 } });
+});
+
+test('结算入口：无 budget 格的来源（边界供货）用调用方传入的限额（限 1：a2 总 2 > 1 → a1）', () => {
+  const state = at(0);
+  let out;
+  assert.deepEqual(runTransaction(state, CTX, (s) => {
+    out = settleCappedAllocation(ENGINE, s, { resourceKind: 'res_t_grain', code: 'src_boundary', day: 0, limit: 1, reason: 'verb_test_settle', requests: [{ key: 'npc_a', qty: 2 }], targets: [{ key: 'npc_a', account: { holder: 'npc_a', purpose: SH, resource: { kind: 'res_t_grain' } }, lot: { attrs: { taint: 0 } } }] });
+  }), { ok: true });
+  // 2×1÷2=1，余 0。
+  assert.deepEqual(clone(out).allocations, [{ key: ['npc_a'], requested: 2, granted: 1 }]);
+  assert.equal(out.booked, 1);
+  assert.deepEqual(state.ledgerTotals, { res_t_grain: { src_boundary: { cumulative: 1, usedByDay: [{ day: 0, used: 1 }] } } });
+});
+
+test('月结：期末日须早于当日（同日 6、以后 7 皆拒 E-DIM-DOMAIN-RANGE），状态不变', () => {
+  const state = at(6);
+  assert.deepEqual(runTransaction(state, CTX, (s) => { closeLedgerPeriod(ENGINE, s, 6, () => {}); }), { ok: false, code: 'E-DIM-DOMAIN-RANGE' });
+  assert.deepEqual(runTransaction(state, CTX, (s) => { closeLedgerPeriod(ENGINE, s, 7, () => {}); }), { ok: false, code: 'E-DIM-DOMAIN-RANGE' });
+  assert.deepEqual(state, at(6));
+});
+
+test('结期后重跑当日分配不重复入账：第 3 日边界分配 5 限 3 → a3，结前一日（endDay 2）后重跑仍幂等', () => {
+  const state = at(3);
+  const draft = {
+    resourceKind: 'res_t_grain', code: 'src_boundary', day: 3, limit: 3, reason: 'verb_test_settle',
+    requests: [{ key: 'npc_a', qty: 5 }],
+    targets: [{ key: 'npc_a', account: { holder: 'npc_a', purpose: SH, resource: { kind: 'res_t_grain' } }, lot: { attrs: { taint: 0 } } }],
+  };
+  const run = () => {
+    let out;
+    const tx = runTransaction(state, CTX, (s) => { out = settleCappedAllocation(ENGINE, s, draft); });
+    return { tx, out };
+  };
+  const first = run();
+  assert.deepEqual(first.tx, { ok: true });
+  assert.equal(first.out.booked, 3); // 5 > 3：5×3÷5=3，余 0。
+  const afterFirst = clone(state);
+  let rep;
+  assert.deepEqual(runTransaction(state, CTX, (s) => { rep = closeLedgerPeriod(ENGINE, s, 2, () => {}); }), { ok: true });
+  assert.deepEqual(clone(rep).usage, []); // 当日项 day 3 > endDay 2，不结、不清。
+  assert.deepEqual(state, afterFirst);
+  const again = run();
+  assert.deepEqual(again.tx, { ok: true });
+  assert.equal(again.out.alreadyBooked, true);
+  assert.equal(again.out.booked, 3);
+  assert.deepEqual(state, afterFirst);
+  assert.deepEqual(state.ledgerTotals.res_t_grain.src_boundary, { cumulative: 3, usedByDay: [{ day: 3, used: 3 }] });
+});

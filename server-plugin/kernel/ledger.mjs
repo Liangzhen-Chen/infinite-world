@@ -1097,8 +1097,9 @@ const settleRef = (why) => new KernelError('E-DIM-REF-MISSING', { entity: null }
  * - requests 照 prorateCapped：`[{key, qty}]`，key 是申请主体 id 或全序元组，qty 正整数。
  * - targets 是与 requests 的 key 一一对应的入账去处：`[{key, account: {holder, purpose, resource: {kind, key?}}, lot?}]`；
  *   给 0 的申请不入账（post 不收零腿），但仍须有对应 target（申请集合与去处集合须一一对应，缺、多、重都 E-DIM-REF-MISSING）。
- * - limit 是当日限额（非负整数或 null = 不限）。ledger.json 有 budget 格的来源，调用方经 budgetOn 取；边界供货的限额不在 ledger.json，
- *   由 §4.6 规则 8 的日终步算定后传入（:376）。
+ * - limit 是调用方给出的当日限额（非负整数或 null = 不限），只对 ledger.json 没有 budget 格的来源（边界供货，§4.6 规则 8 的日终步算定）采用。
+ *   ledger.json 有该来源的 budget 格时，入口自己照 budgetOn 取限额：窗口内照表值、窗口外按零（§2.5 :224；:376"开局仅第 0 日"），
+ *   调用方传的 limit 不采用——否则规则层在第 0 日之后传 null 就能绕过窗口不限量入账，正好违反规则 6 的"不在单笔上先到先得"。
  * - day 是结算的世界日，须等于 clockView 的当日：usedByDay 按当日记账（§4.1.1 :347），"日＋来源"判重放要对得上（:376）。
  * - 防重放：同日同来源只入账一次。判据从账本既有数据派生——`ledgerTotals.<资源种类>.<来源>.usedByDay` 有 `day` 等于该日的那一项即已入账
  *   （§4.1.1 :347 当日用量即取该项；:376"按日＋来源判"），不新开状态键。已入账即幂等返回 `{allocations, booked: 当日已记用量, alreadyBooked: true}`，
@@ -1120,7 +1121,12 @@ export function settleCappedAllocation(engine, state, input) {
     if (typeof input.reason !== 'string' || !CODE_RE.test(input.reason)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'reason is a verb code');
     const rec = cappedChannel(engine, input.resourceKind, input.code);
     if (rec.family !== SCHEMA.src) throw settleRef(`${JSON.stringify(input.code)} is not a ${SCHEMA.src} entry (an allocation posts ${SCHEMA.src} legs)`);
-    const allocations = prorateCapped(input.requests, input.limit);
+    if (input.limit !== null && !(Number.isSafeInteger(input.limit) && input.limit >= 0)) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, 'limit is a non-negative integer or null');
+    // 日限额的出处按规则层定（卷六 §4.1 规则 6 :376、§2.5 :224）：ledger.json 有该来源的 budget 格，入口照 budgetOn 自己取
+    // （窗口内照表值、窗口外按零），调用方传的 limit 不采用；没有 budget 格的来源（边界供货，§4.6 规则 8）才用传入值。
+    const budgetCell = readAt(ruleTable(engine.rules, SCHEMA.ledgerTable), ['budget', input.resourceKind, input.code]);
+    const limit = isObj(budgetCell) ? budgetOn(engine, input.resourceKind, input.code, input.day).limit : input.limit;
+    const allocations = prorateCapped(input.requests, limit);
 
     // 申请集合与入账去处的对应（按 requestKey 的同一写法归并比较）。
     if (!Array.isArray(input.targets)) throw settleErr('targets is a list of {key, account, lot?}');
@@ -1162,7 +1168,7 @@ export function settleCappedAllocation(engine, state, input) {
 // ---------- 月结账本侧（§4.22 规则 4 :1261 月结顺序；李白 11-18 04:20、04:22；S6-14 出报时派生、当期保留明细） ----------
 
 /**
- * 月结账本侧：给定期末日 endDay（世界日整数），从 ledgerTotals 各格取 day ≤ endDay 的 usedByDay 项，经 alertGaps 派生预警缺口，
+ * 月结账本侧：给定期末日 endDay（世界日整数，须早于 clockView 的当日），从 ledgerTotals 各格取 day ≤ endDay 的 usedByDay 项，经 alertGaps 派生预警缺口，
  * 交调用方传入的 writeReport({endDay, usage, gaps}) 写报（econReports 的写者是 economy-report.mjs，块 7）；writeReport 返回后
  * 才清掉这些逐日项、只留 cumulative（cumulative 不动）；writeReport 抛错即原样抛出、一项不清（写报失败不得清）。
  * 只在本状态的事务内写（E-VIEW-UNDECLARED-WRITE）。同一输入两次结果相同：只读状态与规则表，不读真实时间。
@@ -1174,6 +1180,11 @@ export function closeLedgerPeriod(engine, state, endDay, writeReport) {
   const tx = currentTransaction();
   if (!tx || tx.state !== state) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity: null }, 'closeLedgerPeriod outside the transaction of this state');
   if (!Number.isSafeInteger(endDay) || endDay < 0) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, 'endDay is a non-negative integer world day');
+  // 期末日须早于当日：月结会清掉 day ≤ endDay 的 usedByDay 项，而同一天同一来源分配的重放判据正是当日那一项
+  // （卷六 :376"按日＋来源判"、§4.1.1 :347）。允许结到当日乃至以后，规则层就能结期后重跑当日分配——当日项已清、
+  // 重放判据失效而重复入账。码取卷二已定义的 E-DIM-DOMAIN-RANGE（本函数对 endDay 的取用域原本就报它；卷六码表无专属码，不新造）。
+  const today = clockView(engine, state).day;
+  if (endDay >= today) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, `endDay ${endDay} must be before the current world day ${today} (卷六 :376: closing the current day would erase the day+source replay test)`);
   if (typeof writeReport !== 'function') throw structErr('writeReport is the caller-supplied report writer');
   const totals = readAt(state, [SCHEMA.totals]);
   const usage = [];
