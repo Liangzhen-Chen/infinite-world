@@ -1,2 +1,1 @@
-// @file tools/accept/out/fx/pre_merge.json
-{"components": {"c_instance_id": {"b0": 3, "last": 4, "current": 4, "diff": 0}, "c_new": {"b0": null, "last": null, "current": 2, "diff": null}}}
+{"baseline": {"c_instance_id": 4, "c_id_parse": 2}, "components": {"c_instance_id": 4, "c_id_parse": 1, "c_new": 2}}

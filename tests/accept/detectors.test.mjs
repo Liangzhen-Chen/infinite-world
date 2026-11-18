@@ -207,18 +207,18 @@ test('lit_scope 修正键族（卷二 S8、§3.1 :1290）：按 <kind>.<dimensio
   assert.equal(procRun("const k = 'process.unknown';"), 0);
 });
 
-test('ledger_count 基线单调（V-11、E-ACC-BASELINE-UP）：记录里现值高于该次执行时上次合入的值即计一条，一记录一分量一条', () => {
-  const rec = (components) => JSON.stringify({ components });
-  const run = (components, file = 'tools/accept/out/p/pre_merge.json') => ledgerCount(ctxOf({ [file]: rec(components) }), { cond: 'baselineMonotone', code: 'E-ACC-BASELINE-UP' }).length;
-  assert.equal(run({ c_instance_id: { last: 2, current: 3 } }), 1);
-  assert.equal(run({ c_instance_id: { last: 3, current: 3 } }), 0);
-  assert.equal(run({ c_instance_id: { last: 3, current: 2 } }), 0);
-  assert.equal(run({ c_instance_id: { last: null, current: 5 } }), 0);
-  assert.equal(run({ c_instance_id: { last: 2, current: 3 }, c_id_parse: { last: 0, current: 1 } }), 2);
-  assert.equal(run({}, 'tools/accept/out/p/pre_merge.json'), 0);
-  // 只读执行记录目录：别处的同名文件不计。
-  assert.equal(run({ c_instance_id: { last: 2, current: 3 } }, 'tools/accept/other.json'), 0);
-  assert.equal(run({ c_instance_id: { last: 2, current: 3 } }, 'tools/accept/hits.json'), 0);
+test('ledger_count 基线单调（V-11、E-ACC-BASELINE-UP）：当次现值高于上次合入的值即计一条，一分量一条；不读 out/ 下的记录', () => {
+  const run = (components, baseline, files = {}) => ledgerCount({ ...ctxOf(files), gateState: { components, baseline } }, { cond: 'baselineMonotone', code: 'E-ACC-BASELINE-UP' });
+  assert.equal(run({ c_instance_id: 3 }, { c_instance_id: 2 }).length, 1);
+  assert.equal(run({ c_instance_id: 3 }, { c_instance_id: 3 }).length, 0);
+  assert.equal(run({ c_instance_id: 2 }, { c_instance_id: 3 }).length, 0);
+  assert.equal(run({ c_instance_id: 5 }, {}).length, 0);
+  assert.deepEqual(run({ c_instance_id: 3, c_id_parse: 1, c_other: 0 }, { c_instance_id: 2, c_id_parse: 0, c_other: 0 }).map((h) => h.symbolPath), ['c_id_parse', 'c_instance_id']);
+  // out/ 下有旧的上升记录，当次不升：不误挡。
+  const old = JSON.stringify({ components: { c_instance_id: { last: 2, current: 3 } } });
+  assert.equal(run({ c_instance_id: 3 }, { c_instance_id: 3 }, { 'tools/accept/out/p/pre_merge.json': old }).length, 0);
+  // 没有 gateState 不静默放行。
+  assert.throws(() => ledgerCount(ctxOf({}), { cond: 'baselineMonotone' }), /gateState/);
 });
 
 test('item_ledger 登记的形式名与 acc_form 的四个值一一对应', () => {

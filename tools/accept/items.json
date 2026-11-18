@@ -74,14 +74,19 @@
     "pre_commit",
     "pre_merge"
    ],
+   "impl": "tools/accept/detectors/ledger_count.mjs",
    "itemKey": "vol1.V-11",
    "localNo": "V-11",
    "method": "static_data",
+   "params": {
+    "code": "E-ACC-BASELINE-UP",
+    "cond": "baselineMonotone"
+   },
    "runsOn": "local_static",
    "scanClass": "baseline_monotone",
    "source": "卷一 §12.2 V-11（基线只降，I43）；S12-3 转录",
    "stage": 0,
-   "state": "registered",
+   "state": "in_core",
    "target": "registry",
    "volume": "vol1",
    "zeroRows": []

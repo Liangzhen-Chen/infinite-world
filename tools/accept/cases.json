@@ -20,6 +20,15 @@
    "scanClass": "baseline_monotone"
   },
   {
+   "addedAtRev": 6,
+   "caseKey": "baseline_monotone-12",
+   "fixture": "tests/accept/bypass/baseline_monotone-12.txt",
+   "group": "offline",
+   "origin": "卷十二 R12-8.4：当次不升，out/ 下留有旧的上升记录也不误挡（必须不报用例；V-11 当次判定不读 out/）",
+   "polarity": "must_pass",
+   "scanClass": "baseline_monotone"
+  },
+  {
    "addedAtRev": 1,
    "caseKey": "const_literal-01",
    "fixture": "tests/accept/bypass/const_literal-01.txt",
