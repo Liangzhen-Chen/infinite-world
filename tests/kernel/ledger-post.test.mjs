@@ -413,3 +413,110 @@ test('alertGaps：只对物理律通道、alert 非空、当日用量大于 aler
   assert.throws(() => alertGaps(ENGINE, [{ resource: 'res_t_grain', flow: 'sink_consume', day: -1, used: 1 }]), (e) => e.code === 'E-DIM-DOMAIN-RANGE');
   assert.throws(() => alertGaps(ENGINE, [{ resource: 'res_t_grain', flow: 'purpose_test_shelf', day: 1, used: 1 }]), (e) => e.code === 'E-DIM-REF-MISSING');
 });
+
+// ---------- 拆分余额先于除法（卷六 §4.2 规则 5 :418"原数量为 0 的批次无可拆，不做这次除法"；Opus 只核必须改 1） ----------
+
+test('拆分：入账腿排在出账腿前，原批余额 0 带 costBasis 即 E-LEDGER-NEGATIVE（不除以零）；余额够时腿序不影响拆分', () => {
+  const state = grainState();
+  state.accounts.npc_a.purpose_test_shelf.res_t_grain.lot_9 = 0;
+  state.stockLots.npc_a.purpose_test_shelf.res_t_grain.lot_9 = { costBasis: 50 };
+  state.ledgerCounters.lotNext = 10;
+  const before = clone(state);
+  const p = (legs) => run(state, (s) => { post(ENGINE, s, { legs, reason: 'verb_test' }); });
+  assert.deepEqual(p([
+    { account: acc('org_b', SH, 'res_t_grain'), delta: 2, lot: { splitFrom: 'lot_9' } },
+    { account: acc('npc_a', SH, 'res_t_grain', 'lot_9'), delta: -2 },
+  ]), { ok: false, code: 'E-LEDGER-NEGATIVE' });
+  assert.deepEqual(state, before);
+  // lot_0 余额 10、costBasis 100，入账腿在前拆 4：floor(100×4÷10)=40，原批留 60
+  assert.deepEqual(p([
+    { account: acc('org_b', SH, 'res_t_grain'), delta: 4, lot: { splitFrom: 'lot_0' } },
+    { account: acc('npc_a', SH, 'res_t_grain', 'lot_0'), delta: -4 },
+  ]), { ok: true });
+  assert.equal(state.stockLots.org_b.purpose_test_shelf.res_t_grain.lot_a.costBasis, 40);
+  assert.equal(state.stockLots.npc_a.purpose_test_shelf.res_t_grain.lot_0.costBasis, 60);
+  assert.equal(state.accounts.npc_a.purpose_test_shelf.res_t_grain.lot_0, 6);
+});
+
+// ---------- 居民聚合体作持有人（卷六 §2.1 :103、S6-14；卷三乙 K-2 :1031；卷二 §5.6 :1765；卷二十七 §3.1 :200；勘误 1118k9） ----------
+
+test('持有人：居民聚合体按 aggregates.<id>.ledgerHolder 判，为真可作；为假、缺写或非布尔 E-LEDGER-HOLDER-NOT-SUBJECT；既非实体也非聚合记录 E-DIM-UNKNOWN-READ', () => {
+  const aggs = { agg_t_reg: { ledgerHolder: true }, agg_t_off: { ledgerHolder: false }, agg_t_none: {}, agg_t_str: { ledgerHolder: 'true' } };
+  const issue = (h) => run(at(0, { aggregates: clone(aggs) }), (s) => { post(ENGINE, s, { legs: [{ account: acc(h, SH, 'res_t_coin', 'coin_x'), delta: 2 }, { flow: 'src_issue', kind: 'res_t_coin', qty: 2 }], reason: 'verb_test' }); });
+  assert.deepEqual(issue('agg_t_reg'), { ok: true });
+  assert.deepEqual(issue('agg_t_off'), { ok: false, code: 'E-LEDGER-HOLDER-NOT-SUBJECT' });
+  assert.deepEqual(issue('agg_t_none'), { ok: false, code: 'E-LEDGER-HOLDER-NOT-SUBJECT' });
+  assert.deepEqual(issue('agg_t_str'), { ok: false, code: 'E-LEDGER-HOLDER-NOT-SUBJECT' });
+  assert.deepEqual(issue('agg_t_ghost'), { ok: false, code: 'E-DIM-UNKNOWN-READ' });
+  // 登记为主体的聚合体：开户、转给人物都过，余额手算 5 − 2 = 3
+  const ok = at(0, { aggregates: clone(aggs), accounts: { agg_t_reg: { purpose_test_shelf: { res_t_coin: { coin_x: 5 } } } } });
+  assert.deepEqual(run(ok, (s) => { transfer(ENGINE, s, { from: { holder: 'agg_t_reg', purpose: SH }, to: { holder: 'npc_a', purpose: SH }, resource: { kind: 'res_t_coin', key: 'coin_x' }, qty: 2, reason: 'verb_test' }); }), { ok: true });
+  assert.equal(ok.accounts.agg_t_reg.purpose_test_shelf.res_t_coin.coin_x, 3);
+  // 出账腿与审计：标记为假的聚合体名下已有余额，往外记被拒、审计报出
+  const held = at(0, { aggregates: clone(aggs), accounts: { agg_t_off: { purpose_test_shelf: { res_t_coin: { coin_x: 4 } } } } });
+  const before = clone(held);
+  assert.deepEqual(run(held, (s) => { transfer(ENGINE, s, { from: { holder: 'agg_t_off', purpose: SH }, to: { holder: 'npc_a', purpose: SH }, resource: { kind: 'res_t_coin', key: 'coin_x' }, qty: 1, reason: 'verb_test' }); }), { ok: false, code: 'E-LEDGER-HOLDER-NOT-SUBJECT' });
+  assert.deepEqual(held, before);
+  assert.deepEqual(auditLedger(ENGINE, held).map((x) => [x.code, x.path]), [['E-LEDGER-HOLDER-NOT-SUBJECT', 'accounts.agg_t_off']]);
+  assert.deepEqual(auditLedger(ENGINE, ok), []);
+});
+
+// ---------- 批次属性 project 与 E-LEDGER-STAGING-SPONSOR（卷三乙 §2.3 :280、K-8 :1037；卷十九 §3.3 :272、§4.4 规则 7 :531；卷六码表） ----------
+
+const PROJECTS = { bp_t_house: { sponsor: 'npc_a' }, bp_t_hall: { sponsor: 'org_b' } };
+function stagedState(projects = PROJECTS) {
+  const state = grainState();
+  if (projects !== null) state.buildProject = clone(projects);
+  return state;
+}
+// npc_a 从 lot_0 拆 n 件到自己名下用途 PU 的新批次，lot 写法由调用方给
+const supply = (state, n, lot, to = 'npc_a') => run(state, (s) => { post(ENGINE, s, { legs: [{ account: acc('npc_a', SH, 'res_t_grain', 'lot_0'), delta: -n }, { account: acc(to, PU, 'res_t_grain'), delta: n, lot }], reason: 'verb_test_supply' }); });
+
+test('project：供料拆分 {splitFrom, project} 设新批次 project，其余属性原样带出（costBasis 照拆）；再拆原样带出 project；K-8 审计通过', () => {
+  const state = stagedState();
+  assert.deepEqual(supply(state, 4, { splitFrom: 'lot_0', project: 'bp_t_house' }), { ok: true });
+  // floor(100×4÷10)=40，原批留 60
+  assert.deepEqual(state.stockLots.npc_a.purpose_test_purse.res_t_grain.lot_1, { enteredDay: 3, taint: 0.25, costBasis: 40, source: 'org_b', project: 'bp_t_house' });
+  assert.equal(state.stockLots.npc_a.purpose_test_shelf.res_t_grain.lot_0.costBasis, 60);
+  // 从 lot_1 拆 1 件回 SH：project 原样带出，costBasis floor(40×1÷4)=10，lot_1 留 30
+  assert.deepEqual(run(state, (s) => { post(ENGINE, s, { legs: [{ account: acc('npc_a', PU, 'res_t_grain', 'lot_1'), delta: -1 }, { account: acc('npc_a', SH, 'res_t_grain'), delta: 1, lot: { splitFrom: 'lot_1' } }], reason: 'verb_test' }); }), { ok: true });
+  assert.deepEqual(state.stockLots.npc_a.purpose_test_shelf.res_t_grain.lot_2, { enteredDay: 3, taint: 0.25, costBasis: 10, source: 'org_b', project: 'bp_t_house' });
+  assert.equal(state.stockLots.npc_a.purpose_test_purse.res_t_grain.lot_1.costBasis, 30);
+  // 新属性批次带 project、持有人即 sponsor 也过
+  assert.deepEqual(run(state, (s) => { post(ENGINE, s, { legs: [{ account: acc('org_b', PU, 'res_t_grain'), delta: 2, lot: { attrs: { project: 'bp_t_hall' } } }, { flow: 'src_regrow', kind: 'res_t_grain', qty: 2 }], reason: 'verb_test' }); }), { ok: true });
+  assert.deepEqual(auditLots(ENGINE, state), []);
+  // 拆分写 project: null 即清掉（转出备料）
+  assert.deepEqual(run(state, (s) => { post(ENGINE, s, { legs: [{ account: acc('npc_a', PU, 'res_t_grain', 'lot_1'), delta: -1 }, { account: acc('npc_c', SH, 'res_t_grain'), delta: 1, lot: { splitFrom: 'lot_1', project: null } }], reason: 'verb_test' }); }), { ok: true });
+  assert.equal(state.stockLots.npc_c.purpose_test_shelf.res_t_grain.lot_4.project, null);
+});
+
+test('project 反例：持有人≠sponsor、指向不存在工程、带出 project 转给非 sponsor 都 E-LEDGER-STAGING-SPONSOR；工程状态整键未有 E-DIM-UNKNOWN-READ；非代号 E-DIM-ID-FORMAT；整笔不落', () => {
+  const state = stagedState();
+  const before = clone(state);
+  assert.deepEqual(supply(state, 2, { splitFrom: 'lot_0', project: 'bp_t_hall' }), { ok: false, code: 'E-LEDGER-STAGING-SPONSOR' });
+  assert.deepEqual(supply(state, 2, { splitFrom: 'lot_0', project: 'bp_t_gone' }), { ok: false, code: 'E-LEDGER-STAGING-SPONSOR' });
+  assert.deepEqual(supply(state, 2, { splitFrom: 'lot_0', project: 'BP!' }), { ok: false, code: 'E-DIM-ID-FORMAT' });
+  assert.deepEqual(run(state, (s) => { post(ENGINE, s, { legs: [{ account: acc('npc_c', PU, 'res_t_grain'), delta: 1, lot: { attrs: { project: 'bp_t_house' } } }, { flow: 'src_regrow', kind: 'res_t_grain', qty: 1 }], reason: 'verb_test' }); }), { ok: false, code: 'E-LEDGER-STAGING-SPONSOR' });
+  assert.deepEqual(state, before);
+  // 先供料成 lot_1（project bp_t_house），再原样转给 org_b：带出的 project 不改，org_b 不是 sponsor
+  assert.deepEqual(supply(state, 3, { splitFrom: 'lot_0', project: 'bp_t_house' }), { ok: true });
+  const mid = clone(state);
+  assert.deepEqual(run(state, (s) => { transfer(ENGINE, s, { from: { holder: 'npc_a', purpose: PU }, to: { holder: 'org_b', purpose: PU }, resource: { kind: 'res_t_grain', key: 'lot_1' }, qty: 1, reason: 'verb_test' }); }), { ok: false, code: 'E-LEDGER-STAGING-SPONSOR' });
+  assert.deepEqual(state, mid);
+  // 状态里还没有 buildProject（卷十九 construction.mjs 未建）：读不到，不放行
+  const none = stagedState(null);
+  assert.deepEqual(supply(none, 2, { splitFrom: 'lot_0', project: 'bp_t_house' }), { ok: false, code: 'E-DIM-UNKNOWN-READ' });
+});
+
+test('K-8 审计 project：持有人≠sponsor、工程不存在逐项 E-LEDGER-STAGING-SPONSOR；工程状态整键未有 E-DIM-UNKNOWN-READ', () => {
+  const state = stagedState();
+  state.accounts.npc_a.purpose_test_purse = { res_t_grain: { lot_1: 2, lot_2: 1 } };
+  state.stockLots.npc_a.purpose_test_purse = { res_t_grain: { lot_1: { project: 'bp_t_hall' }, lot_2: { project: 'bp_t_gone' } } };
+  state.ledgerCounters.lotNext = 3;
+  assert.deepEqual(auditLots(ENGINE, state).map((x) => [x.code, x.path]), [
+    ['E-LEDGER-STAGING-SPONSOR', 'stockLots.npc_a.purpose_test_purse.res_t_grain.lot_1'],
+    ['E-LEDGER-STAGING-SPONSOR', 'stockLots.npc_a.purpose_test_purse.res_t_grain.lot_2'],
+  ]);
+  delete state.buildProject;
+  assert.deepEqual(auditLots(ENGINE, state).map((x) => x.code), ['E-DIM-UNKNOWN-READ', 'E-DIM-UNKNOWN-READ']);
+});

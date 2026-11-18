@@ -16,7 +16,7 @@
  },
  "systems": {
   "sys.dimension_entry": {"tables": [], "entryCallerFiles": {}, "entryJudges": []},
-  "sys.economy": {"tables": [], "writers": ["accounts.*", "ledgerCounters.lotNext", "ledgerTotals", "outflowTotals.*"],
+  "sys.economy": {"tables": [], "writers": ["accounts.*", "ledgerCounters.lotNext", "ledgerTotals", "outflowTotals.*", "stockLots.*"],
    "sources": {"src_birth": {}, "src_boundary": {}, "src_genesis": {}, "src_issue": {}, "src_regrow": {}, "src_transform": {}},
    "sinks": ["sink_boundary", "sink_consume", "sink_death", "sink_decay", "sink_depart", "sink_loss", "sink_redeem", "sink_seized", "sink_transform"],
    "entryCallerFiles": {}, "entryJudges": []},

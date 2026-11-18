@@ -96,10 +96,14 @@
     {
      "ref": "块 3-2 续加 E-LEDGER-USEDBYDAY-ORDER、E-LEDGER-HOLDER-NOT-SUBJECT（勘误 1118k8 码表）：码表闭包变化，口径不变",
      "rev": 12
+    },
+    {
+     "ref": "块 3-2 续加 E-LEDGER-STAGING-SPONSOR（勘误 1118k9 码表）：码表闭包变化，口径不变",
+     "rev": 13
     }
    ],
-   "print": "c6fbf329c7b6c2464fbe0310fbc93f8400d5a085c1cdcb199cc9f95bc2302064",
-   "rev": 12,
+   "print": "2399f549f7d4d2c652e7a87c5633d313f47bb1a192fe79a66a4e7c20781ee541",
+   "rev": 13,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -506,10 +510,14 @@
     {
      "ref": "块 3-2 续加 E-LEDGER-USEDBYDAY-ORDER、E-LEDGER-HOLDER-NOT-SUBJECT（勘误 1118k8 码表）：码表闭包变化，口径不变",
      "rev": 14
+    },
+    {
+     "ref": "块 3-2 续加 E-LEDGER-STAGING-SPONSOR（勘误 1118k9 码表）：码表闭包变化，口径不变",
+     "rev": 15
     }
    ],
-   "print": "942a20bf0c180fe98b038cc93a674f8bbeccb2ca1496508d4a1a5ee3f3982402",
-   "rev": 14,
+   "print": "6ed33bebe86d02f022b2db7fd1bad87575a2dda243a549c5b758cbc6b31677f9",
+   "rev": 15,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1080,10 +1088,14 @@
     {
      "ref": "块 3-2 续加 E-LEDGER-USEDBYDAY-ORDER、E-LEDGER-HOLDER-NOT-SUBJECT（勘误 1118k8 码表）：码表闭包变化，口径不变",
      "rev": 20
+    },
+    {
+     "ref": "块 3-2 续加 E-LEDGER-STAGING-SPONSOR（勘误 1118k9 码表）：码表闭包变化，口径不变",
+     "rev": 21
     }
    ],
-   "print": "f77033ed4e046c479b462def1c36ebe2204c3e650c8266cdbaedd623be5d4895",
-   "rev": 20,
+   "print": "440eeda807518f0361dde060121880428e80dffb824b3d383a249adbfa2c4f55",
+   "rev": 21,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1230,10 +1242,14 @@
     {
      "ref": "块 3-2 续加 E-LEDGER-USEDBYDAY-ORDER、E-LEDGER-HOLDER-NOT-SUBJECT（勘误 1118k8 码表）：码表闭包变化，口径不变",
      "rev": 10
+    },
+    {
+     "ref": "块 3-2 续加 E-LEDGER-STAGING-SPONSOR（勘误 1118k9 码表）：码表闭包变化，口径不变",
+     "rev": 11
     }
    ],
-   "print": "c6fbf329c7b6c2464fbe0310fbc93f8400d5a085c1cdcb199cc9f95bc2302064",
-   "rev": 10,
+   "print": "2399f549f7d4d2c652e7a87c5633d313f47bb1a192fe79a66a4e7c20781ee541",
+   "rev": 11,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {

@@ -374,7 +374,8 @@ test('kernelApi 登记账本已实现的入口（卷六 :351 六名加 alertGaps
   assert.equal(decl.keyKinds.ledgerTotals, undefined);
   assert.equal(decl.pathTypes['npcs.*.coins'], undefined);
   const eco = decl.systems['sys.economy'];
-  assert.deepEqual([eco.entryCallerFiles, eco.entryJudges, eco.writers], [{}, [], ['accounts.*', 'ledgerCounters.lotNext', 'ledgerTotals', 'outflowTotals.*']]);
+  // stockLots.* 写者 ledger.mjs（卷三乙 §3.3 :434），系统写者列表同登（Opus 只核必须改 2）
+  assert.deepEqual([eco.entryCallerFiles, eco.entryJudges, eco.writers], [{}, [], ['accounts.*', 'ledgerCounters.lotNext', 'ledgerTotals', 'outflowTotals.*', 'stockLots.*']]);
   assert.deepEqual(Object.keys(eco.sources), ['src_birth', 'src_boundary', 'src_genesis', 'src_issue', 'src_regrow', 'src_transform']);
   assert.equal(eco.sinks.length, 9);
   assert.equal(decl.kernelApi.exports.some((x) => x.export.endsWith('#declareLedgerWriter')), false);

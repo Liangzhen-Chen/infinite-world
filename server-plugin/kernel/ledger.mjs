@@ -37,6 +37,11 @@ export const SCHEMA = Object.freeze({
   catalogKinds: Object.freeze(['deity', 'faith']),
   // 作持有人须带"作为主体登记"标记的 kind 与标记维度（§2.1 :103、S6-14；维度定义只在卷二 §5.6 :1765，boolean、always、onUnknown error）。
   subjectFlags: Object.freeze({ place: 'ledgerHolder' }),
+  // 居民聚合体作持有人（§2.1 :103 SeedKey、S6-14，勘误 1118k9）：聚合记录在状态 aggregates.<aggregate>（卷二十七 §3.1），
+  // 登记标记字段同名同义 ledgerHolder（卷二 §5.6 :1765；位置卷二十七 :200）。checkSubject 对聚合体返回的 kind 记作 aggregateKind。
+  aggregates: 'aggregates', aggregateFlag: 'ledgerHolder', aggregateKind: 'aggregate',
+  // 批次属性 project（卷三乙 §2.3 :280，ref 卷十九 buildProject nullable）与工程记录的发起主体字段（卷十九 §3.3 :272 buildProject.<工程>.sponsor）。
+  project: 'project', buildProject: 'buildProject', sponsor: 'sponsor',
   catalogFamily: 'resfam_point',
   // transferability：tr_bound 只许与发行者之间转（§2.1 :114）。
   bound: 'tr_bound',
@@ -290,13 +295,21 @@ function denied(e) {
 
 // 持有人是主体（§2.1 :103、S6-14；卷三乙 K-2 :1030）：代号形、已载入实体、kind 在 holder 类型里；须带主体标记的 kind（place）其行标记为真，
 // 否则 E-LEDGER-HOLDER-NOT-SUBJECT。标记经 dim() 读（实体行或偏离行），不按名字、id 或类别推断。容器、固定装置是物品或词表代号，
-// 不在 holder 类型里（kind 不合 E-DIM-REF-MISSING，不是实体 E-DIM-UNKNOWN-READ）。出入账腿都核。返回 kind。
+// 不在 holder 类型里（kind 不合 E-DIM-REF-MISSING，不是实体 E-DIM-UNKNOWN-READ）。居民聚合体（勘误 1118k9）读状态 aggregates.<id>.ledgerHolder。
+// 出入账腿都核。返回 kind（聚合体为 SCHEMA.aggregateKind）。
 function checkSubject(engine, state, holderId) {
   if (typeof holderId !== 'string' || !CODE_RE.test(holderId)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'holder id is not a code');
   let kind;
   try { kind = kindOf(holderId); } catch (e) {
     if (codeOf(e) !== 'E-DIM-REF-MISSING') throw e;
-    throw new KernelError('E-DIM-UNKNOWN-READ', { entity: holderId }, `holder ${holderId} is not a loaded entity (onUnknown error, 卷六 §2.1 :103; entity tables load in block 6, K3-44)`);
+    // 不是已载入实体：是状态里的居民聚合记录即按其 ledgerHolder 标记判（§2.1 :103、S6-14、卷三乙 K-2 :1031；无标记或非真同为 E-LEDGER-HOLDER-NOT-SUBJECT），
+    // 不按聚合种类或名字推断；也不是聚合记录才是读到未知。
+    const agg = readAt(state, [SCHEMA.aggregates, holderId]);
+    if (isObj(agg)) {
+      if (agg[SCHEMA.aggregateFlag] !== true) throw new KernelError('E-LEDGER-HOLDER-NOT-SUBJECT', { entity: holderId }, `aggregate ${holderId}: ${SCHEMA.aggregateFlag} is not true (not registered as a ledger subject, 卷六 §2.1 :103)`);
+      return SCHEMA.aggregateKind;
+    }
+    throw new KernelError('E-DIM-UNKNOWN-READ', { entity: holderId }, `holder ${holderId} is neither a loaded entity nor an aggregate record (onUnknown error, 卷六 §2.1 :103; entity tables load in block 6, K3-44)`);
   }
   if (!SCHEMA.holderKinds.includes(kind)) throw new KernelError('E-DIM-REF-MISSING', { entity: holderId }, `holder kind ${kind} is not one of ${SCHEMA.holderKinds.join(', ')}`);
   if (Object.hasOwn(SCHEMA.subjectFlags, kind)) {
@@ -393,9 +406,11 @@ function parseAccountLeg(engine, leg, i) {
   if (newLot) {
     if (Object.hasOwn(r, 'key')) throw structErr(`leg ${i}: a new lot leg carries no resource key (post issues it)`);
     const l = leg.lot;
-    const one = isObj(l) ? Object.keys(l) : [];
-    if (one.length !== 1 || !['attrs', 'splitFrom'].includes(one[0])) throw structErr(`leg ${i}: lot is {splitFrom} or {attrs}`);
+    // 拆分可另带 project：供料时拆出新批次并把新批次的 project 设为该工程（卷十九 §4.4 规则 7 :531、卷三乙 K-2 :1031）；其余属性原样带出。
+    const ks = isObj(l) ? Object.keys(l).sort(cmp).join(',') : '';
+    if (!['attrs', 'splitFrom', 'project,splitFrom'].includes(ks)) throw structErr(`leg ${i}: lot is {splitFrom, project?} or {attrs}`);
     if (Object.hasOwn(l, 'splitFrom') && (typeof l.splitFrom !== 'string' || !CODE_RE.test(l.splitFrom))) throw new KernelError('E-DIM-ID-FORMAT', { entity: a.holder }, `leg ${i}: splitFrom is not a lot key`);
+    if (Object.hasOwn(l, SCHEMA.project) && !projectOk(l[SCHEMA.project])) throw new KernelError('E-DIM-ID-FORMAT', { entity: a.holder }, `leg ${i}: project is null or a buildProject id`);
     if (Object.hasOwn(l, 'attrs')) checkLotAttrs(l.attrs, a.holder, i);
   } else if (typeof r.key !== 'string' || !CODE_RE.test(r.key)) {
     throw new KernelError('E-DIM-ID-FORMAT', { entity: a.holder }, `leg ${i}: resource key is not a code`);
@@ -410,6 +425,29 @@ function checkLotAttrs(attrs, holder, i) {
   const cb = attrs[SCHEMA.costBasis];
   if (cb !== undefined && !(Number.isSafeInteger(cb) && cb >= 0)) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: holder }, `leg ${i}: costBasis is a non-negative integer`);
   if (!taintOk(attrs[SCHEMA.taint])) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: holder }, `leg ${i}: taint is in [0, 1]`);
+  if (!projectOk(attrs[SCHEMA.project])) throw new KernelError('E-DIM-ID-FORMAT', { entity: holder }, `leg ${i}: project is null or a buildProject id`);
+}
+
+// 批次属性 project：未写、null 或代号形的工程键（卷三乙 §2.3 :280 nullable ref buildProject）。
+function projectOk(p) {
+  return p === undefined || p === null || (typeof p === 'string' && CODE_RE.test(p));
+}
+
+// 备料批次（project 非空）的持有人须等于该工程的 sponsor（卷六码表 E-LEDGER-STAGING-SPONSOR；卷三乙 K-8 :1037；卷十九 §4.4 规则 7 :531）。
+// 返回违例 {code, why}（合格为 null）。工程记录读 buildProject.<project>.sponsor（卷十九 §3.3 :272）。卷十九 construction.mjs（写者）未建：
+// 状态里没有 buildProject 这一顶层键时，分不清"工程不存在"与"写者未上线"，按 onUnknown error 报 E-DIM-UNKNOWN-READ 不放行（同 K3-44 持有人未载入）；
+// 顶层键在而无该工程记录，即指向不存在的工程；记录在而 sponsor 不等于持有人（或记录无 sponsor）——两者都 E-LEDGER-STAGING-SPONSOR。
+// 用途是否为备料不认具体用途代号，只按 project 非空判。
+function stagingFault(state, holder, attrs) {
+  const p = isObj(attrs) ? attrs[SCHEMA.project] : undefined;
+  if (p === undefined || p === null) return null;
+  if (!projectOk(p)) return { code: 'E-DIM-ID-FORMAT', why: `${SCHEMA.project} is null or a buildProject id` };
+  const store = readAt(state, [SCHEMA.buildProject]);
+  if (store === undefined) return { code: 'E-DIM-UNKNOWN-READ', why: `${SCHEMA.buildProject} is not readable (vol19 construction.mjs not built; not let through)` };
+  const rec = readAt(state, [SCHEMA.buildProject, p]);
+  if (rec === undefined) return { code: 'E-LEDGER-STAGING-SPONSOR', why: `lot of ${SCHEMA.project} ${p}: no ${SCHEMA.buildProject}.${p}` };
+  if (!isObj(rec) || rec[SCHEMA.sponsor] !== holder) return { code: 'E-LEDGER-STAGING-SPONSOR', why: `lot of ${SCHEMA.project} ${p}: holder ${holder} is not ${SCHEMA.buildProject}.${p}.${SCHEMA.sponsor} (${isObj(rec) ? JSON.stringify(rec[SCHEMA.sponsor]) : 'malformed record'})` };
+  return null;
 }
 
 // 赃物份额：未写或 fraction [0, 1]（卷三乙 §2.3 taint；K-8 :1035）。
@@ -449,6 +487,8 @@ function parseFlowLeg(engine, leg, i) {
  * 写：accounts 余额；规则 13 trackOutflow 分区的出账腿加 outflowTotals.<持有人>.<用途>.<种类>.<键>.cumulative；
  * 来源去处 ledgerTotals.<种类>.<代号> = {cumulative 累加, usedByDay 当日项（clockView 世界日）累加、无则追加}；已有 usedByDay 乱序、重复日或末项晚于当日
  *   E-LEDGER-USEDBYDAY-ORDER（李白 11-18 04:31 第 5 条）；
+ * 新批次的 project（卷三乙 §2.3 :280）非空即核持有人等于 buildProject.<project>.sponsor（E-LEDGER-STAGING-SPONSOR；工程状态整键未有即 E-DIM-UNKNOWN-READ）；
+ *   拆分写 {splitFrom, project} 即把新批次的 project 设为该值（供料，卷十九 §4.4 规则 7 :531），不写即原样带出。
  * 新批次写 stockLots.<持有人>.<用途>.<种类>.<批次键>；拆分时 costBasis 照卷六 §4.2 规则 5 :418 拆（拆出 floor(原值 × 拆出量 ÷ 原数量)、留下取差），其余属性原样，taint 不改。
  * @param {{vocab: any, rules: any}} engine @param {any} state
  * @param {{legs: any[], reason: string, refs?: any}} draft
@@ -523,7 +563,10 @@ export function post(engine, state, draft) {
       const attrs = readAt(state, [SCHEMA.stockLots, src.holder, src.purpose, a.kind, a.lot.splitFrom]);
       if (!isObj(attrs)) throw new KernelError('E-DIM-REF-MISSING', { entity: src.holder }, `lot ${a.lot.splitFrom} has no ${SCHEMA.stockLots} row`);
       const bal = readAt(state, [SCHEMA.accounts, src.holder, src.purpose, a.kind, a.lot.splitFrom]);
-      before.set(k, { src, attrs, qty: Number.isInteger(bal) ? bal : 0, taken: 0, splits: 0, total: splitQty.get(k) });
+      const qty = Number.isInteger(bal) ? bal : 0;
+      // 原批余额不够本笔出账量即先拒（余额检查在拆分除法之前，不论腿序）：原数量为 0 的批次无可拆，不做这次除法（卷六 §4.2 规则 5 :418）。
+      if (qty < outOf.get(k)) throw new KernelError('E-LEDGER-NEGATIVE', { entity: src.holder, balance: qty, delta: -outOf.get(k) }, `lot ${a.lot.splitFrom}: balance ${qty} is less than ${outOf.get(k)} leaving it`);
+      before.set(k, { src, attrs, qty, taken: 0, splits: 0, total: splitQty.get(k) });
     }
     const radix = acct.some((a) => a.lot) ? lotRadix(engine) : null;
     const lots = [];
@@ -549,6 +592,7 @@ export function post(engine, state, draft) {
             b.taken += part;
           }
           b.splits += a.delta;
+          if (Object.hasOwn(a.lot, SCHEMA.project)) attrs[SCHEMA.project] = a.lot[SCHEMA.project];
         }
         lots.push(Object.freeze([a.i, key]));
       }
@@ -557,7 +601,12 @@ export function post(engine, state, draft) {
       const now = (Number.isInteger(cur) ? cur : 0) + a.delta;
       if (now < 0) throw new KernelError('E-LEDGER-NEGATIVE', { entity: a.holder, balance: Number.isInteger(cur) ? cur : 0, delta: a.delta }, `leg ${a.i}: balance would be ${now}`);
       setInTx(tx, segs, now);
-      if (attrs) setInTx(tx, [SCHEMA.stockLots, a.holder, a.purpose, a.kind, key], attrs);
+      if (attrs) {
+        // 新批次（新属性或拆分带出）带 project 即核备料持有人等于工程 sponsor（卷三乙 K-8 :1037、卷十九 §4.4 规则 7 :531）。
+        const sf = stagingFault(state, a.holder, attrs);
+        if (sf) throw new KernelError(sf.code, { entity: a.holder }, `leg ${a.i}: ${sf.why}`);
+        setInTx(tx, [SCHEMA.stockLots, a.holder, a.purpose, a.kind, key], attrs);
+      }
       // 规则 13：trackOutflow 为真的分区，每条出账腿的减少量加进流出累计。
       if (a.delta < 0 && a.purposeEntry.trackOutflow === true) {
         const oseg = [SCHEMA.outflow, a.holder, a.purpose, a.kind, a.key, 'cumulative'];
@@ -635,6 +684,7 @@ export function transfer(engine, state, t) {
  * - 每个批次键在账本里恰有一行余额（出现在两个账户即 E-DIM-ID-DUPLICATE）；
  * - 物品类余额行必有同路径 stockLots 行，stockLots 行必有同路径余额行（E-DIM-REF-MISSING）；
  * - stockLots 行不带数量字段（E-DIM-STRUCT-FIELD）；taint 若写了须在 [0, 1]（E-DIM-DOMAIN-RANGE）。purports.item 是否物品模板待块 6 物品表。
+ * - project 非空的批次：持有人须等于 buildProject.<project>.sponsor、工程须存在（E-LEDGER-STAGING-SPONSOR；工程状态整键未有即 E-DIM-UNKNOWN-READ），同 post。
  * @param {{vocab: any, rules: any}} engine @param {any} state
  * @returns {readonly {code: string, path: string, why: string}[]}
  */
@@ -674,6 +724,8 @@ export function auditLots(engine, state) {
     if (!isObj(attrs)) { push('E-DIM-STRUCT-FIELD', segs, 'lot attrs is an object'); return; }
     for (const f of SCHEMA.lotForbidden) if (Object.hasOwn(attrs, f)) push('E-DIM-STRUCT-FIELD', segs, `lot attrs carry no ${f}`);
     if (!taintOk(attrs[SCHEMA.taint])) push('E-DIM-DOMAIN-RANGE', segs, 'taint in [0, 1]');
+    const sf = stagingFault(state, rel[0], attrs);
+    if (sf) push(sf.code, segs, sf.why);
   });
   return Object.freeze(out.sort((a, b) => cmp(a.path, b.path) || cmp(a.code, b.code)));
 }
