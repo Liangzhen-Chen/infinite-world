@@ -262,15 +262,15 @@ function prepareRow(engine, state, kind, id, row, clock) {
   };
 }
 
-// 去重：同一 (source.id, target, subject) 只计一条（§3.2、§3.4）；stackGroup 只在同一 (target, stage) 内取序最高者（§3.2 :1313）。
-// 同源多条时留阶段在前者，同阶段留全序键在前者（卷文只说"只计一条"，未写留哪条，这里取确定的一条，见回报）。
+// 去重（§3.3、§3.4，封卷后勘误 1118b26，李白 11-18 块 2-5 裁定③）：同源去重键是 (source.id, target, subject, stage)，分阶段各自去重——
+// 同一来源在不同阶段的条都计；同一来源在同一阶段的多条只留按该阶段全序键（§3.3 :1338）排最前的一条。本函数的行已是同一 (target, subject)。
+// stackGroup 只在同一 (target, stage) 内取序最高者（§3.2 :1313）。
 function dedupe(rows) {
-  const better = (r, old) => (r.stage !== old.stage ? STAGES.indexOf(r.stage) < STAGES.indexOf(old.stage) : orderOf(r.stage)(r, old) < 0);
   const bySource = new Map();
   for (const r of rows) {
-    const k = r.sourceId === '' ? `\u0000${r.id}` : r.sourceId;
+    const k = `${r.stage}\u0000${r.sourceId === '' ? `\u0000${r.id}` : r.sourceId}`;
     const old = bySource.get(k);
-    if (!old || better(r, old)) bySource.set(k, r);
+    if (!old || orderOf(r.stage)(r, old) < 0) bySource.set(k, r);
   }
   const out = [];
   for (const stage of STAGES) {

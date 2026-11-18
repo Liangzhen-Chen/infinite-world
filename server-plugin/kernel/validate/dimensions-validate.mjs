@@ -17,7 +17,8 @@ const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 // 词表族键 kind（§1.9 "kind→kind_，22 类代号本身作枚举时用"）：表头 kind 须是该族条目去前缀后的名字。
 const KIND_FAMILY = 'kind';
-const STACKING = ['none', 'penalized'];
+// 叠加方式（§1.2 `.stacking`）；过程主体槽的专用校验（kernel/load/rules.mjs，§3.7）同读此处。
+export const STACKING = Object.freeze(['none', 'penalized']);
 
 // sources：{units: 文本, vocab: 文本, effects?: 文本, tables: [{file, text}]}（file 为文件名，如 "<kind>.json"）。
 // options：{namespaces: [..], displaySet: [..], ns: [{ns, shape, type}], limits: {extendsMaxDepth, rxMaxDepth}}。

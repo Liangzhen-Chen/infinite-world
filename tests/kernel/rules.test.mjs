@@ -88,6 +88,51 @@ test('checkRules 只按登记查，不认表名', () => {
   });
 });
 
+// 过程主体槽（卷二 §3.7 独立格式；李白 11-18 块 2-5 裁定①）：文件级登记、专用校验、同一套 E-MOD-*。
+const procReg = (over = {}) => ({ code: 'proc', file: 'proc.json', structure: 'processSlots', volume: '测试', multiSourceMerge: 'own_key_only', packOverridable: false, ...over });
+const slot = (over = {}) => ({ unit: 'kg', precision: 2, stacking: 'penalized', bounds: [0.5, 2], boundsRelative: true, boundsByKind: { loan: [0.8, 1.5] }, budget: { maxModifiers: 16, totalBounds: { mul: [-0.5, 1] } }, paceable: true, basis: '测试槽', ...over });
+const procDoc = (slots, consumers = {}) => ({ version: 1, slots, consumers });
+
+test('真实 derived-process.json：按 processSlots 登记载入，零 error', () => {
+  const read = readRules(ROOT);
+  assert.deepEqual(read.errors, []);
+  assert.deepEqual(ruleTable(read.rules, 'derivedProcess'), { version: 1, slots: {}, consumers: {} });
+  assert.equal(ruleTable(read.rules, 'kernelConstants').PERMILLE, 1000);
+  assert.equal(ruleTable(read.rules, 'kernelConstants').BPS, 10000);
+});
+
+test('过程主体槽：合法通过；lowerCamel 槽名（process.<slot>）不被代号文法误拒', () => {
+  const doc = procDoc({ price: slot(), coinCredit: slot({ stacking: 'none', boundsRelative: undefined, boundsByKind: undefined }) }, { decision: { autonomy: { slot: 'coinCredit', base: 1.0 } } });
+  withRules([procReg()], { 'proc.json': doc }, (dir) => {
+    assert.deepEqual(readRules(ROOT, { rulesDir: dir }).errors, []);
+    assert.deepEqual(fullCodes(dir), []);
+  });
+});
+
+test('过程主体槽：结构错报对应码（E-MOD-STACKING / BOUNDS / BUDGET / KEY-UNREGISTERED、E-DIM-STRUCT-FIELD、E-DIM-ID-FORMAT、单位）', () => {
+  const codes = (doc) => withRules([procReg()], { 'proc.json': doc }, (dir) => fullCodes(dir));
+  assert.deepEqual(codes(procDoc({ price: slot({ stacking: 'diminishing' }) })), ['E-MOD-STACKING']);
+  assert.deepEqual(codes(procDoc({ price: slot({ bounds: [2, 1] }) })), ['E-MOD-BOUNDS']);
+  assert.deepEqual(codes(procDoc({ price: slot({ boundsByKind: { loan: [1] } }) })), ['E-MOD-BOUNDS']);
+  assert.deepEqual(codes(procDoc({ price: slot({ budget: { maxModifiers: 0 } }) })), ['E-MOD-BUDGET']);
+  assert.deepEqual(codes(procDoc({ price: slot({ budget: { totalBounds: { scale: [0, 1] } } }) })), ['E-MOD-BUDGET']);
+  assert.deepEqual(codes(procDoc({ price: slot() }, { decision: { autonomy: { slot: 'nosuch', base: 1 } } })), ['E-MOD-KEY-UNREGISTERED']);
+  assert.deepEqual(codes(procDoc({ price: slot({ alias: 'x' }) })), ['E-DIM-STRUCT-FIELD']);
+  assert.deepEqual(codes(procDoc({ price: slot({ unit: 'nosuch_unit' }) })), ['E-DIM-UNIT-UNKNOWN']);
+  assert.deepEqual(codes(procDoc({ 'Price-x': slot() })), ['E-DIM-ID-FORMAT']);
+  assert.deepEqual(codes({ version: 1, slots: {}, consumers: {}, stray: 1 }), ['E-DIM-STRUCT-FIELD']);
+  assert.deepEqual(codes({ version: 1, slots: [], consumers: {} }), ['E-DIM-STRUCT-FIELD']);
+  assert.deepEqual(codes(procDoc({ price: slot({ baselineRX: 3 }) })), ['E-MOD-RX']);
+  assert.deepEqual(codes(procDoc({ price: slot({ baselineRX: 'mass * 2' }) })), []);
+});
+
+test('过程主体槽登记行：写了 type/domain 或 packOverridable 不是布尔 → E-DIM-STRUCT-FIELD', () => {
+  const doc = procDoc({});
+  withRules([procReg({ type: { price: 'number' } })], { 'proc.json': doc }, (dir) => assert.deepEqual(fullCodes(dir), ['E-DIM-STRUCT-FIELD']));
+  withRules([procReg({ packOverridable: {} })], { 'proc.json': doc }, (dir) => assert.deepEqual(fullCodes(dir), ['E-DIM-STRUCT-FIELD']));
+  withRules([procReg()], {}, (dir) => assert.deepEqual(fullCodes(dir), ['E-RULES-UNREGISTERED']));
+});
+
 test('L5 齐全率：每表每维五列，条件不满足计不适用，两次输出字节相同', () => {
   const a = validateDimensions(sourcesOf(fixture()), OPTIONS).coverage;
   const b = validateDimensions(sourcesOf(fixture()), OPTIONS).coverage;
