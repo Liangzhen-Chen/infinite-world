@@ -17,7 +17,7 @@
 
 ### 已完成
 
-1. **docs/测试报告/**（551M，298 个跟踪文件）：`git grep -n "docs/测试报告"` 在 `tools/ tests/ server-plugin/ schemas/ .githooks/ package.json` 无命中，无程序读；引用只在历史文档与 `docs/待办.md:5` 的后续报告路径约定里，不读现有文件。`git rm -r` 删除；`.gitattributes:1` 的 `docs/测试报告/*.txt` 规则随之删除。
+1. **docs/测试报告/**（551M，298 个跟踪文件）：`git grep -n "docs/测试报告"` 在 `tools/ tests/ server-plugin/ schemas/ .githooks/ package.json` 无命中，无程序读；引用只在历史文档与 `docs/待办.md:5` 的后续报告路径约定里，不读现有文件（该行已改为"新的报告目录"，不再指向已删路径）。`git rm -r` 删除；`.gitattributes:1` 的 `docs/测试报告/*.txt` 规则随之删除。
 2. **logs/sessions/**（7.3M，1264 个跟踪文件，全是 `.md` 派卡 prompt/body）：`git grep -n "logs/sessions"` 在代码目录无命中；保留被尚未解决事项或现行文档点名的 13 个：`A3-astra-plan.md`、`A3-owner-plan2.md`、`A3D-sol.body.md`、`FABSCAN.body.md`、`MKTDESIGN.body.md`、`PR02-cc-001.deferred.md`、`S2C-astra-plan.md`、`S5CT.final.md`、`WM1-inclusion.md`、`a4llm-research.final.md`、`jev-audit.final.md`、`s5-plan.final.md`、`s5w8-survey.md`；其余 1251 个删除。被引用的 `.txt/.json` 证据本就不入库（`.gitignore` 只放行 `*.md`），不受影响。
 3. **零读者旧文档**：`R35A-verify.md`、`R35C-verify.md`、`docs/A3-接点归属2.md`、`docs/S5-02-价格迁移.md`、`docs/Claude校准.md`、`docs/Claude校准_用量.json`、`.codex/`（2 文件）——`git grep` 均无外部路径引用（Claude校准的命中只在自身，随文件删除）。
 4. **有引用的过时文档**：25 个 `git mv docs/归档/`——`交接.md`、`PROGRESS.md`、`无限原野_开发指南v2.md`、`模型对比.md`、`j2-audit-1..4.md`、`m26-*`（6）、`m27-*`（5）、`r15-trades-a/b.md`、`编造排查清单-1111.md/.json`、`波次评分-新细则重评-1111.md`、`可玩版本-S5.md`。当前文档的路径引用已改：`docs/CHANGELOG.md:68`、`docs/世界设计/_AI现状盘点.md:58/72/83/93/97/122`、`docs/世界设计/AI/AI-05-…:26`、`使用说明.md:5`、`docs/骨架可核实事实设计.md:60`、`logs/arch/astra-proposal.md`。`world/drafts/` 里回执/理由字段的历史引文不改（属已审内容，改了可能破坏授权指纹），记在清理记录。`docs/probes/` 保留：卷十二 `:1346` M12-9 明确"保留，登记为题集条目与工具数据"，`docs/事件推演测试.md` 仍以它为提示词与题集目录。
