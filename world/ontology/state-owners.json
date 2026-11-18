@@ -47,7 +47,12 @@
  "assembly": {"files": ["server-plugin/index.mjs"], "process": "server", "calls": ["createRouterCaps", "createDigestCap", "createWallTimer", "mountKernel", "registerSystems", "mountOutput", "mountAi", "mountMenuEntry", "mountSaveRoutes", "mountNarration", "mountInput"]},
  "retired": ["server-plugin/legacy/**", "server-plugin/compat/**", "server-plugin/migrations/**"],
  "kernelApi": {"exports": [
+  {"export": "kernel/dimensions.mjs#dim", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/dimensions.mjs#modified", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/dimensions.mjs#explain", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/memo.mjs#stateMemo", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/memo.mjs#inputsOf", "callers": ["rules"], "acceptsState": false},
+  {"export": "kernel/declare.mjs#declareInputs", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/storage.mjs#readPath", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/storage.mjs#writePath", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/transaction.mjs#registerHoldWhileRecompute", "callers": ["rules"], "acceptsState": false},

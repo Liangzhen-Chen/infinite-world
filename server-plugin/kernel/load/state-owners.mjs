@@ -32,7 +32,8 @@ export const ENTITY_KINDS = Object.freeze(['item', 'material', 'species', 'plant
 // keyKinds 的 (c) 项：封闭的非实体键类型代号（李白 11-17 pathTypes `*` 段 kind 字段裁定）。event = EventId（卷二 :197 事件无 kind）；
 // dimKey = 维度键（如 created.*.props.* 的第二段）；identityKey = 身份键键号（卷四 :927，全世界唯一整数、对规则不透明，非实体 kind；李白 11-17）。
 // (b) 列表可混列实体 kind 与 (c) 代号，表示并集。再加新代号须登记进卷二并报李白，各卷不得自造。
-export const KEY_NONENTITY = Object.freeze(['event', 'dimKey', 'identityKey']);
+export const KEY_DIMKEY = 'dimKey';
+export const KEY_NONENTITY = Object.freeze(['event', KEY_DIMKEY, 'identityKey']);
 // 去留表覆盖核对豁免的协议键顶层段（卷二 §2.6 :519"账户、holdings、statuses、modifiers、terminated、到期堆"；到期堆的键 `due` 见卷二十 :445）。账户由账本写者判（ledgerPaths）。
 const PROTOCOL_KEYS = new Set(['holdings', 'statuses', 'modifiers', 'terminated', 'due']);
 
@@ -225,6 +226,23 @@ export function mergeStateOwners(decl, ctx = {}) {
   }
   for (const p of sorted(Object.keys(pathTypes))) {
     if (nStarsOf(p) > 0 && !textSet.has(p) && !Object.hasOwn(keyKinds, p)) err(E.E_PATH_KEYKINDS, p, `#/pathTypes/${p}`, undefined, 'keyKinds entry (one item per * segment) required for a non-textPath pattern with * segments');
+  }
+  // dimension 路径展开（卷二 §2.7 :804 pathTypes 文法 dimension 行）：string 类型的维度被排除在 dimension 路径之外，展开时遇到即 E-TEXT-UNGATED。
+  // 按 keyKinds 找该路径的实体段可取的 kind 与维度名所在段（dimKey）；维度名是字面段时只看这一维。ctx.tableDims：kind → 维度表表头。
+  const tableDims = ctx.tableDims instanceof Map ? ctx.tableDims : new Map();
+  for (const p of sorted(Object.keys(pathTypes))) {
+    if (pathTypes[p] !== 'dimension' || !Array.isArray(keyKinds[p])) continue;
+    const kk = keyKinds[p];
+    const dimAt = kk.indexOf(KEY_DIMKEY);
+    const literalDim = dimAt < 0 ? segs(p)[segs(p).length - 1] : null;
+    const kinds = kk.flatMap((it) => (Array.isArray(it) ? it : [it])).filter((k) => entityKinds.has(k) && !KEY_NONENTITY.includes(k));
+    for (const k of sorted(new Set(kinds))) {
+      const dims = tableDims.get(k);
+      if (!isObj(dims)) continue;
+      for (const name of sorted(Object.keys(dims))) {
+        if ((literalDim === null || literalDim === name) && isObj(dims[name]) && dims[name].type === 'string') err(E.E_TEXT_UNGATED, p, `#/pathTypes/${p}`, `${k}.${name}`, 'string dimensions are excluded from dimension paths');
+      }
+    }
   }
 
   // textPaths 与 textWriters：每条 textPath 在 pathTypes 内、恰一个写者（E-WRITER-MISSING）；写者表只收 textPaths。

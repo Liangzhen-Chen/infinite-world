@@ -1,0 +1,5 @@
+{
+ "rows": [
+  {"key": "stackingTable", "value": [1.0000, 0.8691, 0.5706, 0.2830, 0.1060, 0.0300, 0.0064, 0.0010, 0.0001], "file": "server-plugin/kernel/dimensions.mjs", "source": "卷二 §3.3 :1356 S(n)=exp(−(n/2.67)²) 四舍五入 4 位冻结（附录 E stacking.mjs）"}
+ ]
+}

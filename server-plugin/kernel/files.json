@@ -1,6 +1,8 @@
 [
  "server-plugin/kernel/clone.mjs",
+ "server-plugin/kernel/declare.mjs",
  "server-plugin/kernel/det-math.mjs",
+ "server-plugin/kernel/dimensions.mjs",
  "server-plugin/kernel/error-codes.mjs",
  "server-plugin/kernel/errors.mjs",
  "server-plugin/kernel/handles/entity-id.mjs",

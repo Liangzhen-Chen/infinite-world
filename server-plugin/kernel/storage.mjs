@@ -10,14 +10,15 @@ import { clone } from './clone.mjs';
 import { invalidateMemo } from './memo.mjs';
 import { statePathSegments, pathTypeShape } from './handles/keys.mjs';
 import { CODE_RE } from './handles/vocab-handle.mjs';
-import { compareSpecificity, KEY_NONENTITY } from './load/state-owners.mjs';
+import { compareSpecificity, KEY_NONENTITY, KEY_DIMKEY } from './load/state-owners.mjs';
 import { registry } from './vocab.mjs';
 import { KernelError, codeOf } from './errors.mjs';
 import { currentTransaction } from './transaction.mjs';
 
 /**
- * @typedef {{pattern: string, segs: string[], type: string, shape: import('./handles/keys.mjs').PathTypeShape | null, entitySlots: number[]}} PathRec
+ * @typedef {{pattern: string, segs: string[], type: string, shape: import('./handles/keys.mjs').PathTypeShape | null, entitySlots: number[], entityKinds: string[][], dimSlot: number}} PathRec
  * entitySlots：该模式第几个 `*` 段（从 0 计）的 keyKinds 项含实体 kind（(a) 单个或 (b) 列表里有实体 kind；(c) 项不算），用于"目标实体未终止"核对。
+ * entityKinds：与 entitySlots 一一对应的该段可取的实体 kind；dimSlot：keyKinds 项为 dimKey 的 `*` 段（没有为 -1），dimension 路径的维度名在这一段。
  * @typedef {{pattern: string, segs: string[], create: string[], rewrite: string | null, viaRelocate: boolean}} WriterRec
  */
 
@@ -42,7 +43,9 @@ export function installStorage(merged) {
   const paths = sorted(Object.keys(merged.pathTypes || {})).map((pattern) => {
     const kk = Array.isArray((merged.keyKinds || {})[pattern]) ? merged.keyKinds[pattern] : [];
     const entitySlots = kk.map((it, i) => (isEntityItem(it) ? i : -1)).filter((i) => i >= 0);
-    return { pattern, segs: segsOf(pattern), type: merged.pathTypes[pattern], shape: pathTypeShape(merged.pathTypes[pattern]), entitySlots };
+    const entityKinds = entitySlots.map((i) => (Array.isArray(kk[i]) ? kk[i] : [kk[i]]).filter((k) => !nonEntity.has(k)));
+    const dimSlot = kk.findIndex((it) => it === KEY_DIMKEY); // keyKinds (c) 项"维度键"：dimension 路径上维度名所在的段
+    return { pattern, segs: segsOf(pattern), type: merged.pathTypes[pattern], shape: pathTypeShape(merged.pathTypes[pattern]), entitySlots, entityKinds, dimSlot };
   });
   const pPatterns = new Set(paths.map((p) => p.pattern).filter((p) => !text.has(p) && !ledger.has(p)));
   const writers = (merged.writers || []).map((w) => ({ pattern: w.pattern, segs: segsOf(w.pattern), create: [...(w.create || [])], rewrite: w.rewrite, viaRelocate: w.viaRelocate === true }));
@@ -122,7 +125,7 @@ function plainValue(v) {
 function typeOk(shape, v) {
   if (!shape) return false;
   switch (shape.base) {
-    case 'number': return typeof v === 'number'; // 非有限值拒写归 2-5（卷二十七 R27-5.1，体检 K2-20），经同一上抛通路
+    case 'number': return typeof v === 'number'; // 非有限值、负零在此之前已按 R27-5.1 拒写（E-DET-NONFINITE）
     case 'integer': return Number.isInteger(v);
     case 'boolean': return typeof v === 'boolean';
     case 'EventId': return isCode(v);
@@ -184,6 +187,25 @@ export function writePath(state, path, value) {
   }
 }
 
+// 值里（含嵌套数组、对象）有非有限数或负零（R27-5.1）。
+function hasNonFinite(v) {
+  if (typeof v === 'number') return !Number.isFinite(v) || Object.is(v, -0);
+  if (Array.isArray(v)) return v.some(hasNonFinite);
+  if (v !== null && typeof v === 'object') return Object.values(v).some(hasNonFinite);
+  return false;
+}
+
+// dimension 路径上这一段维度名在该实体所属表（idIndex 查不到时为 keyKinds 列出的各表）里是 string 维度。
+function stringDimension(rec, ids) {
+  if (rec.dimSlot < 0) return false;
+  const name = ids[rec.dimSlot];
+  const reg = registry();
+  const id = rec.entitySlots.length ? ids[rec.entitySlots[0]] : null;
+  const known = id === null ? undefined : reg.idIndex.get(id);
+  const kinds = known !== undefined ? [known] : rec.entityKinds.length ? rec.entityKinds[0] : [];
+  return kinds.some((k) => { const dims = reg.tableDims.get(k); return !!dims && Object.hasOwn(dims, name) && dims[name] && dims[name].type === 'string'; });
+}
+
 // 写入被拒时先在当前事务上记"已被拒"（卷二 :499、:1033）：规则层即使 catch 住这次拒写，runTransaction 见标记仍整笔回滚。
 function markDenied(e) {
   const tx = currentTransaction();
@@ -199,6 +221,10 @@ function writePathChecked(state, path, value) {
   if (!tx || tx.state !== state) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity }, 'writePath outside the transaction of this state');
   const existing = getAt(state, segs);
   if (!writerOk(d, tx, segs, existing)) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity }, `${tx.file} is not the registered writer of ${rec.pattern}`);
+  // 卷二十七 R27-5.1：非有限值、负零不得进入状态（E-DET-NONFINITE）；被拒走同一上抛通路，由事务整笔回滚（卷二 §2.6 :499）。
+  if (hasNonFinite(value)) throw new KernelError('E-DET-NONFINITE', { entity }, `non-finite number or negative zero written to ${rec.pattern}`);
+  // 卷二 §2.7 :804 pathTypes 文法 dimension 行：运行期写 string 维度即 E-TEXT-UNGATED（dimension 路径上存不进自然语言）。
+  if (rec.shape && rec.shape.base === 'dimension' && stringDimension(rec, ids)) throw new KernelError('E-TEXT-UNGATED', { entity }, `${rec.pattern}: string dimension is not a dimension path`);
   if (!typeOk(rec.shape, value)) throw new KernelError('E-TEXT-UNGATED', { entity }, `value does not match pathTypes ${rec.pattern}: ${rec.type}`);
   const marks = getAt(state, [TERMINATED_KEY]);
   for (const slot of rec.entitySlots) {

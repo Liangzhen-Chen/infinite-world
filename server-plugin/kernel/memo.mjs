@@ -2,7 +2,19 @@
 // 从 old-final-1117 server-plugin/storage.mjs:271 改写搬入（体检 K2-01）：不搬 records 索引一族与 withRecordIndex 开关（K2-39），
 // 不搬"依赖路径选择器"与按 PatchCursor 携带缓存（旧实现）。新底子的作废口径只有一条：这份 state 经 kernel 写入一次，按它算的缓存全部作废
 // （kernel/storage.mjs 每次写入、kernel/transaction.mjs 每次回滚都调 invalidateMemo），所以缓存命中与重算恒得同一结果。
-// `inputsOf`（:574）由声明读取那张卡建（块2-排期第五节第 5 条待定），本卡不建。
+// `inputsOf`（:574）由块 2 第 2-5 张建（主会话定归属）：依赖闭包在 kernel/declare.mjs 加载期定稿，这里只按名取。
+
+import { closureOf } from './declare.mjs';
+
+/**
+ * kernelApi `inputsOf(node)`（§2.3 :471、§2.7 :574，acceptsState: false）：节点的最终依赖数组，加载期算一次、冻结，每次返回同一对象。
+ * 未声明的节点 E-DIM-REF-MISSING。
+ * @param {string} node
+ * @returns {readonly string[]}
+ */
+export function inputsOf(node) {
+  return closureOf(node);
+}
 
 /** @type {WeakMap<object, Map<string, Map<unknown, any>>>} */
 let memos = new WeakMap();
