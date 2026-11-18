@@ -3081,6 +3081,7 @@
     "pre_commit",
     "pre_merge"
    ],
+   "impl": "tests/kernel/ledger-invariants.test.mjs",
    "itemKey": "vol6.A6-1.2.a",
    "localNo": "A6-1.2",
    "method": "property_test",
@@ -3103,7 +3104,7 @@
    "runsOn": "local_static",
    "source": "卷六 §4.1.6 A6-1.2 :399 守恒式整数相等（§4.1 规则 4 :362）与三元键唯一存法（规则 1 :355）；方案 §3.3 I1′ :367、I15′ :369；测试 tests/kernel/ledger-invariants.test.mjs（I1′、I15′ 各条），审计入口 kernel/ledger.mjs auditLedger",
    "stage": 0,
-   "state": "registered",
+   "state": "in_core",
    "target": "tests_code",
    "volume": "vol6",
    "zeroRows": [
@@ -3119,6 +3120,7 @@
     "pre_commit",
     "pre_merge"
    ],
+   "impl": "tests/kernel/ledger-invariants.test.mjs",
    "itemKey": "vol6.A6-1.2.b",
    "localNo": "A6-1.2",
    "method": "property_test",
@@ -3141,7 +3143,7 @@
    "runsOn": "local_static",
    "source": "卷六 §4.1.6 A6-1.2 :399 所有余额非负（§4.1 规则 2 :356）；方案 §3.3 I2′ :368；测试 tests/kernel/ledger-invariants.test.mjs（I2′ 各条）",
    "stage": 0,
-   "state": "registered",
+   "state": "in_core",
    "target": "tests_code",
    "volume": "vol6",
    "zeroRows": [

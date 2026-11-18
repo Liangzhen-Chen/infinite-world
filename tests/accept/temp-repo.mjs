@@ -1,9 +1,9 @@
 // 门禁测试用的临时仓库（非 git，按磁盘遍历）：声明表、§2.11 登记、整套门禁代码与绕法用例片段。临时根由 temp-root.mjs 的 testTempRoot 生成；
 // 这里只对"临时根 + 常量相对路径"写（S12-2 判法，李白 11-17 裁定三）。需要额外文件的测试在自己里面按常量路径写。
 import { join, extname, basename } from 'node:path';
-import { cpSync, mkdirSync } from 'node:fs';
-import { REGISTRY } from '../../tools/accept/read.mjs';
-import { ROOT, testTempRoot } from './temp-root.mjs';
+import { cpSync, mkdirSync, existsSync, readFileSync } from 'node:fs';
+import { REGISTRY, readRegistry } from '../../tools/accept/read.mjs';
+import { ROOT, testTempRoot, writeUnderTempRoot } from './temp-root.mjs';
 
 export { ROOT };
 
@@ -38,5 +38,12 @@ export function tempRepo() {
     recursive: true,
     filter: (src) => extname(src) === '' || extname(src) === '.txt' || extname(src) === '.json',
   });
+  // 已实现条目的 impl（卷十二 §2.2 :203，登记器要求 implemented 起文件存在）：门禁目录外的（方法是测试的条目的测试文件）
+  // 按登记行逐个经临时根写入口放进来，登记器在临时仓库里才站得住。只放文件本身，不放它 import 的内核与世界数据（world 整份太大），
+  // 所以这些条目在临时仓库里执行必不过——临时仓库的测试按条目看结果，或用条目过滤（R12-10.2）只跑要看的条目。
+  for (const it of readRegistry(ROOT, 'items')) {
+    if (it.state === 'registered' || !it.impl || it.impl.startsWith('tools/accept/') || existsSync(join(dir, it.impl))) continue;
+    writeUnderTempRoot(dir, it.impl, readFileSync(join(ROOT, it.impl)));
+  }
   return dir;
 }

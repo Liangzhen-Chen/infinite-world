@@ -125,6 +125,25 @@ test('I1′ 反例：改坏一份存档（余额多 1、来源累计少 1、出�
   assert.deepEqual(auditLedger(ENGINE, stray).map((v) => v.code), ['E-LEDGER-CODE-UNREGISTERED']);
 });
 
+test('I1′ 反例：单笔不平（规则 2 L−S+K=0）整笔拒、不留痕；平了才入账', () => {
+  const { state } = scenario(1, 120);
+  const before = clone(state);
+  const a = acc('npc_c', SH, 'res_t_scrip', 'coin_y');
+  // 增量腿 +5、来源腿 3：L−S+K = 5−3 = 2 ≠ 0。
+  assert.deepEqual(runTransaction(state, CTX, (s) => { post(ENGINE, s, { legs: [{ account: a, delta: 5 }, { flow: 'src_issue', kind: 'res_t_scrip', qty: 3 }], reason: 'verb_test' }); }), { ok: false, code: 'E-LEDGER-UNBALANCED' });
+  // 账户到账户转移少收 1：L−S+K = −4+3 = −1 ≠ 0，本笔没有来源去处腿，按规则 2 报未带代号（先给 npc_c 入 4 让减量腿不为负）。
+  assert.deepEqual(runTransaction(state, CTX, (s) => { post(ENGINE, s, { legs: [{ account: a, delta: 4 }, { flow: 'src_issue', kind: 'res_t_scrip', qty: 4 }], reason: 'verb_test' }); }), { ok: true });
+  const mid = clone(state);
+  assert.deepEqual(runTransaction(state, CTX, (s) => { post(ENGINE, s, { legs: [{ account: a, delta: -4 }, { account: acc('npc_a', SH, 'res_t_scrip', 'coin_y'), delta: 3 }], reason: 'verb_test' }); }), { ok: false, code: 'E-LEDGER-CODE-UNREGISTERED' });
+  assert.deepEqual(state, mid);
+  assert.deepEqual(auditLedger(ENGINE, state), []);
+  // 平的那笔只比改前多 4：npc_c 余额与来源累计各加 4。
+  const bal = (s) => (((s.accounts || {}).npc_c || {})[SH] || {}).res_t_scrip?.coin_y || 0;
+  const src = (s) => ((s.ledgerTotals || {}).res_t_scrip || {}).src_issue?.cumulative || 0;
+  assert.equal(bal(state) - bal(before), 4);
+  assert.equal(src(state) - src(before), 4);
+});
+
 test('I2′ 反例：存档里一个余额为负（总量仍对平），审计报 E-LEDGER-NEGATIVE；入账时同样整笔拒', () => {
   const state = {};
   setDay(state, 0);

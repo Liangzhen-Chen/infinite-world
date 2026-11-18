@@ -108,10 +108,14 @@
     {
      "ref": "块 3-2 续 seedKey 段不合文法改报 E-PATH-KEYKINDS（卷二 :1545、:815，勘误 1118k10；Opus 只核必须改）：keys.mjs 闭包文件变化，口径不变",
      "rev": 15
+    },
+    {
+     "ref": "门禁错误码登记两码 E-ACC-TEST-FAIL、E-ACC-REQUIRED-NOT-RUN（卷十二 §2.12 勘误 1118k14；李白 11-18 06:41）：error-codes.mjs 入检测器闭包，指纹重盖，判定口径不变",
+     "rev": 16
     }
    ],
-   "print": "5c872ddb240a7fa32ea6f7898f095051bcf3ea7bbd3530b408b8b0365bcb4af3",
-   "rev": 15,
+   "print": "c913f79caf48b1f637133e29167e417a4eec3e70ab588afa915442dac43c0145",
+   "rev": 16,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -546,10 +550,14 @@
     {
      "ref": "块 3-2 续 seedKey 段不合文法改报 E-PATH-KEYKINDS（卷二 :1545、:815，勘误 1118k10；Opus 只核必须改）：keys.mjs 闭包文件变化，口径不变",
      "rev": 17
+    },
+    {
+     "ref": "门禁错误码登记两码 E-ACC-TEST-FAIL、E-ACC-REQUIRED-NOT-RUN（卷十二 §2.12 勘误 1118k14；李白 11-18 06:41）：error-codes.mjs 入检测器闭包，指纹重盖，判定口径不变",
+     "rev": 18
     }
    ],
-   "print": "aee9acadf5bf9bce04d1ab84579b3ecddbfd83cca5a4027624b81b71da9ba118",
-   "rev": 17,
+   "print": "77e27c930d1e97166164d9ae7fadca98b1586bcf1a2554cb8fdfccbe83646039",
+   "rev": 18,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1132,10 +1140,14 @@
     {
      "ref": "块 3-2 续 seedKey 段不合文法改报 E-PATH-KEYKINDS（卷二 :1545、:815，勘误 1118k10；Opus 只核必须改）：keys.mjs 闭包文件变化，口径不变",
      "rev": 23
+    },
+    {
+     "ref": "门禁错误码登记两码 E-ACC-TEST-FAIL、E-ACC-REQUIRED-NOT-RUN（卷十二 §2.12 勘误 1118k14；李白 11-18 06:41）：error-codes.mjs 入检测器闭包，指纹重盖，判定口径不变",
+     "rev": 24
     }
    ],
-   "print": "9088fecc6fa9f96d26f2851b78681107ced18975aa6e2b95ae9851ea81c49261",
-   "rev": 23,
+   "print": "bcdf877e9bf2e4ec3d7555400bdaef5d32b407a014968e31168a50b156359f98",
+   "rev": 24,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1294,10 +1306,14 @@
     {
      "ref": "块 3-2 续 seedKey 段不合文法改报 E-PATH-KEYKINDS（卷二 :1545、:815，勘误 1118k10；Opus 只核必须改）：keys.mjs 闭包文件变化，口径不变",
      "rev": 13
+    },
+    {
+     "ref": "门禁错误码登记两码 E-ACC-TEST-FAIL、E-ACC-REQUIRED-NOT-RUN（卷十二 §2.12 勘误 1118k14；李白 11-18 06:41）：error-codes.mjs 入检测器闭包，指纹重盖，判定口径不变",
+     "rev": 14
     }
    ],
-   "print": "5c872ddb240a7fa32ea6f7898f095051bcf3ea7bbd3530b408b8b0365bcb4af3",
-   "rev": 13,
+   "print": "c913f79caf48b1f637133e29167e417a4eec3e70ab588afa915442dac43c0145",
+   "rev": 14,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
