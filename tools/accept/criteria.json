@@ -148,10 +148,14 @@
     {
      "ref": "B2-W2（卷二 S13 正则叶子收尾）：det-math 十进制文法改为手写逐字符解析、handles/patterns.mjs 只留从 rx.mjs 搬来的正则（删 DECIMAL_LITERAL/parseDecimalLiteral），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 23
+    },
+    {
+     "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 24
     }
    ],
-   "print": "3abd62c2a550d7820e733c090378baaae2b4e69e1f3118a115c1c614059b80ea",
-   "rev": 23,
+   "print": "b5b329c1dc5ab88d5cb9405f98fe02e8dfa8923bc0d8fa052aab2fb258b1b46f",
+   "rev": 24,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -345,10 +349,14 @@
     {
      "ref": "B2-W2（卷二 S13 正则叶子收尾）：det-math 十进制文法改为手写逐字符解析、handles/patterns.mjs 只留从 rx.mjs 搬来的正则（删 DECIMAL_LITERAL/parseDecimalLiteral），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 10
+    },
+    {
+     "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 11
     }
    ],
-   "print": "481151eed4b495f574d331cbfed5dc3d45abeb7a3abce7caf5a64b78ee6f0877",
-   "rev": 10,
+   "print": "b3f9dba95348689e0e02cfa75bfb0506525437199de129587b0604d330c2e0ac",
+   "rev": 11,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -549,10 +557,14 @@
     {
      "ref": "B2-W2（卷二 S13 正则叶子收尾）：det-math 十进制文法改为手写逐字符解析、handles/patterns.mjs 只留从 rx.mjs 搬来的正则（删 DECIMAL_LITERAL/parseDecimalLiteral），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 11
+    },
+    {
+     "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 12
     }
    ],
-   "print": "db8bf848a5dccb44a08a6ec4246cc595ebefc0aa2b0c096d807fe4d217f4710d",
-   "rev": 11,
+   "print": "955e161ebf64752444ddaffb3c3b37554fa81b620835f2d396d0a39fc34bd457",
+   "rev": 12,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -718,10 +730,14 @@
     {
      "ref": "B2-W2（卷二 S13 正则叶子收尾）：det-math 十进制文法改为手写逐字符解析、handles/patterns.mjs 只留从 rx.mjs 搬来的正则（删 DECIMAL_LITERAL/parseDecimalLiteral），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 27
+    },
+    {
+     "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 28
     }
    ],
-   "print": "f4ad18de24f005df10b020bd0523b705c774b86d8026fdbb9876a77f1fe7bc97",
-   "rev": 27,
+   "print": "e7c270eb825fb61ab52c2410086c772a161faee8aeb9ce4b2b894058767385cb",
+   "rev": 28,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -868,10 +884,14 @@
     {
      "ref": "B2-W2（卷二 S13 正则叶子收尾）：det-math 十进制文法改为手写逐字符解析、handles/patterns.mjs 只留从 rx.mjs 搬来的正则（删 DECIMAL_LITERAL/parseDecimalLiteral），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 12
+    },
+    {
+     "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 13
     }
    ],
-   "print": "db8bf848a5dccb44a08a6ec4246cc595ebefc0aa2b0c096d807fe4d217f4710d",
-   "rev": 12,
+   "print": "955e161ebf64752444ddaffb3c3b37554fa81b620835f2d396d0a39fc34bd457",
+   "rev": 13,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1319,10 +1339,14 @@
     {
      "ref": "B2-W2（卷二 S13 正则叶子收尾）：det-math 十进制文法改为手写逐字符解析、handles/patterns.mjs 只留从 rx.mjs 搬来的正则（删 DECIMAL_LITERAL/parseDecimalLiteral），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 12
+    },
+    {
+     "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 13
     }
    ],
-   "print": "db8bf848a5dccb44a08a6ec4246cc595ebefc0aa2b0c096d807fe4d217f4710d",
-   "rev": 12,
+   "print": "955e161ebf64752444ddaffb3c3b37554fa81b620835f2d396d0a39fc34bd457",
+   "rev": 13,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -1353,10 +1377,14 @@
     {
      "ref": "B2-W2（卷二 S13 正则叶子收尾）：det-math 十进制文法改为手写逐字符解析、handles/patterns.mjs 只留从 rx.mjs 搬来的正则（删 DECIMAL_LITERAL/parseDecimalLiteral），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 4
+    },
+    {
+     "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 5
     }
    ],
-   "print": "37b37348d38191d6a6d3b8dc858c884a627b15753e3ebb641ddbcc93349a1940",
-   "rev": 4,
+   "print": "c828a3cc35468b6adaee5e58efe62f3476dbdedd8709761923b1288ff5ba51d9",
+   "rev": 5,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -1499,10 +1527,14 @@
     {
      "ref": "B2-W2（卷二 S13 正则叶子收尾）：det-math 十进制文法改为手写逐字符解析、handles/patterns.mjs 只留从 rx.mjs 搬来的正则（删 DECIMAL_LITERAL/parseDecimalLiteral），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 32
+    },
+    {
+     "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 33
     }
    ],
-   "print": "6ffcd3fb90154e53513592c5a9b73bdc3ee2ca201635a87ae1c36e0e31ddff5c",
-   "rev": 32,
+   "print": "9a64ff23a0f5f4b93e7e3b64f7d7ee161608643b86d1a8d5704ab46fcd35a43b",
+   "rev": 33,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1697,10 +1729,14 @@
     {
      "ref": "B2-W2（卷二 S13 正则叶子收尾）：det-math 十进制文法改为手写逐字符解析、handles/patterns.mjs 只留从 rx.mjs 搬来的正则（删 DECIMAL_LITERAL/parseDecimalLiteral），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 21
+    },
+    {
+     "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 22
     }
    ],
-   "print": "3abd62c2a550d7820e733c090378baaae2b4e69e1f3118a115c1c614059b80ea",
-   "rev": 21,
+   "print": "b5b329c1dc5ab88d5cb9405f98fe02e8dfa8923bc0d8fa052aab2fb258b1b46f",
+   "rev": 22,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -1882,10 +1918,14 @@
     {
      "ref": "B2-W2（卷二 S13 正则叶子收尾）：det-math 十进制文法改为手写逐字符解析、handles/patterns.mjs 只留从 rx.mjs 搬来的正则（删 DECIMAL_LITERAL/parseDecimalLiteral），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 6
+    },
+    {
+     "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 7
     }
    ],
-   "print": "37b37348d38191d6a6d3b8dc858c884a627b15753e3ebb641ddbcc93349a1940",
-   "rev": 6,
+   "print": "c828a3cc35468b6adaee5e58efe62f3476dbdedd8709761923b1288ff5ba51d9",
+   "rev": 7,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

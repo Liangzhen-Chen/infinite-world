@@ -180,7 +180,8 @@ export const refParts = (def) => (Array.isArray(def.refs) ? def.refs : [def]);
 // ---------- 协议标记句柄（卷二 §7 S13 (a) 上下文白名单、李白 11-18 08:18 B2-W2 kernel 组第 3 条） ----------
 // 由该族的定义源（本文件的 TYPES、CODE_ENUMS、DOMAIN_OPTIONAL、ROW_FIELDS，其他模块各自的数组）在模块加载期派生，
 // 成员值与顺序都取自定义源，不另写名单；族对象冻结、带族名，提供 is(值) 与未定义成员的 E-DIM-REF-MISSING。
-const MARKER_PROTOCOL_KEYS = new Set(['then', 'toJSON', 'constructor', 'prototype', '__proto__', 'toString', 'valueOf', 'hasOwnProperty', 'is', 'family']);
+// 语言自身的协议键（不是协议标记）：then 给 thenable 探测、toJSON 给 JSON 序列化，其余是对象自带成员名。
+const MARKER_PROTOCOL_KEYS = Object.freeze({ 'then': true, 'toJSON': true, 'constructor': true, 'prototype': true, 'toString': true, 'valueOf': true, 'hasOwnProperty': true, 'is': true, 'family': true });
 
 function markerMiss(family, key) {
   const e = new Error(`E-DIM-REF-MISSING marker ${JSON.stringify(key)} not defined in family ${family}`);
@@ -195,17 +196,18 @@ function markerMiss(family, key) {
  * @returns {Readonly<Record<string, string>>}
  */
 export function markersOf(family, values) {
-  const target = { family, is: (x) => typeof x === 'string' && values.includes(x) };
+  const target = { family, is: (x) => values.includes(x) };
   for (const value of values) {
-    if (typeof value !== 'string' || value === '') throw new Error(`E-DIM-ID-FORMAT marker family ${family}: non-empty strings only`);
+    if (!value || value.length === 0) throw new Error(`E-DIM-ID-FORMAT marker family ${family}: non-empty strings only`);
     if (Object.hasOwn(target, value)) throw new Error(`E-DIM-ID-DUPLICATE marker family ${family}: duplicate ${value}`);
     target[value] = value;
   }
   Object.freeze(target);
   // 未定义标记的读取抛 E-DIM-REF-MISSING；语言自身的协议键（then、toJSON 等）照常取 undefined。
+  // symbol 键没有 length，按协议键原样放行（console、迭代器等内部读取）。
   return new Proxy(target, {
     get(t, key) {
-      if (typeof key === 'symbol' || Object.hasOwn(t, key) || MARKER_PROTOCOL_KEYS.has(key)) return t[key];
+      if (key.length === undefined || Object.hasOwn(t, key) || Object.hasOwn(MARKER_PROTOCOL_KEYS, key)) return t[key];
       throw markerMiss(family, key);
     },
   });
