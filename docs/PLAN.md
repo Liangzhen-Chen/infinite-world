@@ -3489,3 +3489,7 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - **派勘误 1118k8**（api/errlots；卷二/卷三乙/卷六/卷九；stockLots 04:10＋预警缺口 04:20＋usedByDay 04:22 并一号）：写 claude-opus-5-5 medium，只核拟 claude-opus-5-5 medium（跨卷、李白指定）。
 - **派 3-2 续**（api/b3-2；post/transfer、stockLots 批次键与 K-8、usedByDay、账本码入码表）：写 claude-opus-5-5 medium，只核拟 claude-opus-5-5 medium（内核）。与 1118k8 文件不相交，并行（一路改卷文、一路写码；内核卡此时只此一张）。
 - **主会话违规记录**：04:2x 改卡文时用了一次 sed -i（禁用项），改动内容即所需改动，已认；此后只用 Edit。
+- **勘误 1118k8 封（2e66b580；卷二、卷三乙、卷六、卷九、卷十三、卷十九；李白 04:10/04:20/04:22/04:31/04:45）**：写 claude-opus-5-5 medium 五轮（卡上 $2.90、$1.61、$1.44、$1.30、$1.39）；必改一条主会话改（块3.md:94）；只核 claude-opus-5-5 medium $1.52 修后封（跨卷、李白指定），复核 claude-sonnet-5-5 medium 可封。原文 审查/勘误1118k8-只核原始输出.md。
+- **勘误 1118k9 封（2692f743；卷二、卷三乙、卷六、卷十九、卷二十七；李白 04:55/05:08）**：写 claude-sonnet-5-5 medium 六轮（一轮停报无落点；$0.54、$0.72 等）；只核按李白定 Sonnet、因扩三卷以上且执行者自报未核实处升 claude-opus-5-5 medium 两轮（$0.80 修后封、二轮修后封），复核 claude-sonnet-5-5 medium 可封。原文 审查/勘误1118k9-只核原始输出.md。
+- **块 3-2 进度**：续卡 74f47ebc→48dcca41（写 claude-opus-5-5 medium，卡上 $6.68、$4.75），只核 claude-opus-5-5 medium $1.05 修后放行（两条必改：除零、writers 补 stockLots.*）；**偏离迁移体检**：costBasis 拆分在 3-2 照卷六 :418 公式做（体检 K3-46 原归块 6；原样带出会使成本翻倍，违 :418"逐位相等"，卷文优先），合并与出批次序仍归块 6。现派 b3-2d（两条必改＋1118k9 聚合体主体、备料 project/sponsor 校验落码），写 claude-opus-5-5 medium，之后另一 Opus 只核增量。
+- **李白 04:55、05:08 照录**；块 5 首卡挂账补工程换发起主体、聚合体拆人与解散合并；块 7 补聚合体 ledgerHolder 值来源；问题.md 补整批拆出取整余数、auditLedger 未接存档加载、直接记限额来源（归 3-3）、ledgerHolder 内容回填。
