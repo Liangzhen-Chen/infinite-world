@@ -1,1 +1,0 @@
-{"pass":true,"modelCalls":0,"checks":33,"replayed":2,"requests":393,"requestsByRole":{"host":138,"consistency":87,"review":59,"planning":10,"tool":98,"blind":1}}
