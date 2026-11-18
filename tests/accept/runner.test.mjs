@@ -50,20 +50,22 @@ test('门禁是拦：规则层或内核里出现一处违例即拒，行键不�
   assert.equal(report.verdict, 'fail');
   const core = new Set(readRegistry(ROOT, 'items').filter((it) => it.state === 'in_core').map((it) => it.itemKey));
   const failed = Object.fromEntries(report.items.failed.filter((f) => core.has(f.itemKey)).map((f) => [f.itemKey, f.codes]));
-  assert.deepEqual(Object.keys(failed).sort(), ['vol1.V-17', 'vol2.S1', 'vol2.S10', 'vol2.S16']);
+  assert.deepEqual(Object.keys(failed).sort(), ['vol1.V-11', 'vol1.V-17', 'vol2.S1', 'vol2.S10', 'vol2.S16']);
+  // 无基线按零基线：注入的 c_instance_id 行使 V-11 也拒（方案 R13、R12-8.9）。
+  assert.deepEqual(failed['vol1.V-11'], ['E-ACC-BASELINE-UP']);
   assert.deepEqual(failed['vol2.S16'], ['E-KERNEL-UPWARD-IMPORT']);
   assert.equal(rows.find((r) => r.itemKey === 'vol2.S1').rowKey, 'c_instance_id|server-plugin/rules.mjs|f|str|0');
 });
 
-test('V-11 提交关口当次判：当次分量高于入库基线（上次合入）即拒；持平、下降、无基线通过；out/ 的旧上升记录不误挡', async () => {
+test('V-11 提交关口当次判：当次分量高于入库基线（上次合入）即拒；持平、下降通过，无基线按零基线（现值大于 0 即拒）；out/ 的旧上升记录不误挡', async () => {
   const dir = tempRepo();
   try {
     const bad = { 'server-plugin/rules.mjs': "\n\nexport function f(doc) { return 'npc_' + doc.id; }\n" };
     const opts = { root: dir, overrides: bad, prefixes: { prefixes: ['npc_'], singletons: [] } };
     const rows = (cur) => [{ compCode: 'c_instance_id', b0: 0, current: cur }];
     const v11 = (report) => report.items.failed.find((f) => f.itemKey === 'vol1.V-11');
-    // 无基线：没有上次合入的值，不计。
-    assert.equal(v11((await accRun('pre_commit', 'x', null, opts)).report), undefined);
+    // 无基线：没有上次合入的值按零基线（方案 R13、R12-8.9），本次 1 个行即拒。
+    assert.deepEqual(v11((await accRun('pre_commit', 'x', null, opts)).report).codes, ['E-ACC-BASELINE-UP']);
     // 上次合入为 0，本次 1 个 c_instance_id 行：当次上升，V-11 不过，整次拒绝。
     const up = (await accRun('pre_commit', 'x', null, { ...opts, baselineRows: rows(0) })).report;
     assert.deepEqual(v11(up).codes, ['E-ACC-BASELINE-UP']);

@@ -13,10 +13,11 @@
   {
    "addedAtRev": 2,
    "caseKey": "baseline_monotone-11",
+   "expectCode": "E-ACC-BASELINE-UP",
    "fixture": "tests/accept/bypass/baseline_monotone-11.txt",
    "group": "offline",
-   "origin": "卷十二 R12-14.3；卷一 V-11：与上次合入相等、低于、或没有上次合入的值时不计（必须不报用例）",
-   "polarity": "must_pass",
+   "origin": "卷十二 R12-14.3、R12-8.4 首句、R12-8.9；卷一 I43；方案 R13：与上次合入相等或低于不计，没有上次合入值的新分量按零基线比较，现值大于 0 即报（只有 c_new 一条；必须报用例）",
+   "polarity": "must_fail",
    "scanClass": "baseline_monotone"
   },
   {

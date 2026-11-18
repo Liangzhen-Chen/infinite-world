@@ -39,13 +39,14 @@ const CONDS = {
   },
   baselineMonotone(ctx, params) {
     // 当次判定（R12-8.4）：现值取本次执行刚数出的各分量，上次合入的值取入库的 baseline.json（accBaseline），都由执行器放进 ctx.gateState；
-    // 不读 out/ 下的执行记录，所以本地残留的旧记录不影响本次。没有上次合入的值的分量（新分量、尚无基线文件）不计。
+    // 不读 out/ 下的执行记录，所以本地残留的旧记录不影响本次。没有上次合入的值的分量（新分量、尚无基线文件）按零基线比较（方案 R13、R12-8.9）。
     const st = ctx.gateState;
     if (!st || !st.components || !st.baseline) throw new Error('E-ACC-ITEM-PARAM baselineMonotone needs gateState');
     const hits = [];
     for (const compCode of Object.keys(st.components).sort()) {
-      const cur = st.components[compCode]; const last = st.baseline[compCode];
-      if (typeof cur === 'number' && typeof last === 'number' && cur > last) {
+      const cur = st.components[compCode];
+      const last = typeof st.baseline[compCode] === 'number' ? st.baseline[compCode] : 0;
+      if (typeof cur === 'number' && cur > last) {
         hits.push({ file: `${LAYOUT.accDir}/baseline.json`, line: 0, nodeKind: 'component', symbolPath: compCode, code: params.code || '' });
       }
     }

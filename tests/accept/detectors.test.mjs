@@ -212,7 +212,8 @@ test('ledger_count 基线单调（V-11、E-ACC-BASELINE-UP）：当次现值高�
   assert.equal(run({ c_instance_id: 3 }, { c_instance_id: 2 }).length, 1);
   assert.equal(run({ c_instance_id: 3 }, { c_instance_id: 3 }).length, 0);
   assert.equal(run({ c_instance_id: 2 }, { c_instance_id: 3 }).length, 0);
-  assert.equal(run({ c_instance_id: 5 }, {}).length, 0);
+  assert.equal(run({ c_instance_id: 5 }, {}).length, 1);
+  assert.equal(run({ c_instance_id: 0 }, {}).length, 0);
   assert.deepEqual(run({ c_instance_id: 3, c_id_parse: 1, c_other: 0 }, { c_instance_id: 2, c_id_parse: 0, c_other: 0 }).map((h) => h.symbolPath), ['c_id_parse', 'c_instance_id']);
   // out/ 下有旧的上升记录，当次不升：不误挡。
   const old = JSON.stringify({ components: { c_instance_id: { last: 2, current: 3 } } });
