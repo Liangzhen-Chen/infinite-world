@@ -3479,3 +3479,4 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - **卷二十勘误 1118k4 封**（f6c01ad5，K4-43 五档系数指块 7、K4-44 calendar 挂块 7）：写 claude-sonnet-5-5 medium 两轮；只核 claude-opus-5-5 medium $0.37 修后放行；复核 claude-sonnet-5-5 medium 可封。原文 审查/卷二十勘误1118k4-只核原始输出.md。
 - **块 3-1《资源种类表、词表与账本骨架》封**（2fbe337e、f27f58b6）：写 claude-opus-5-5 medium（卡上 $9.12）；只核 claude-opus-5-5 medium $1.67 修后放行（三条均记账，主会话补收尾待办）；复核 claude-sonnet-5-5 medium $0.08 可封（主会话先封后补复核，已认）。302/302。原文 审查/块3-1-只核原始输出.md。**等李白裁定**：ledgerTotals 登记（挡 3-2）。待开：卷六 :224 码口径小勘误（核 :1493 还是 :1501）。
 - **块 4 开工**（通知已发），派 **4-1**（api/b4-1；claude-opus-5-5 medium 写，只核 claude-opus-5-5 medium）。
+- **勘误 1118k5 封**（edb83104，李白 02:55 词表代号段走命名 struct＋卷六 :224 码口径）：写 claude-sonnet-5-5 medium 两轮；只核 claude-opus-5-5 medium $0.39 修后放行；复核 claude-sonnet-5-5 medium 可封。卷二 §1.5 登 holderAccounts/holderOutflow/resourceTotals。原文 审查/勘误1118k5-只核原始输出.md。3-2 排 4-1 后（要 clockView，e6；内核卡一次一张），ledgerTotals 用 struct:resourceTotals。
