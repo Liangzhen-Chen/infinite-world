@@ -231,6 +231,26 @@
    },
    "prefix": "diet_"
   },
+  "due_kind": {
+   "closed": false,
+   "entries": {
+    "due_recurrence": {
+     "basis": "卷二十 §2.1 :147（封卷后勘误 1115k3）；rank 取 :151 分配表",
+     "calendarBound": true,
+     "floorRX": null,
+     "paceClass": "equilibrium",
+     "rank": 340
+    },
+    "due_revive_window": {
+     "basis": "卷二十 §2.1 :145（封卷后勘误 1115j6）；rank 取 :151 分配表（1115k3）",
+     "calendarBound": true,
+     "floorRX": null,
+     "paceClass": "equilibrium",
+     "rank": 280
+    }
+   },
+   "prefix": "due_"
+  },
   "matcat": {
    "closed": false,
    "entries": {
@@ -307,6 +327,11 @@
     "reaction_weave": {}
    },
    "prefix": "reaction_"
+  },
+  "reaction_priority": {
+   "closed": false,
+   "entries": {},
+   "prefix": "rprio_"
   },
   "resfam": {
    "closed": true,

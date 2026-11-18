@@ -35,14 +35,15 @@ const hook = (phase, after, sortKey) => ({ phase, after, sortKey });
 // ---------- 真实声明表 ----------
 
 test('真实 state-owners.json：合并零错；loadWorld 通过后 V、E、P 都有成员，P 成员按派生名、textPaths 不生成', () => {
-  const m = mergeStateOwners(realDecl(), { units: new Set(['count']) });
+  const m = mergeStateOwners(realDecl(), { units: new Set(['count', 'minute']) });
   assert.deepEqual(m.errors, []);
   const r = loadWorld(ROOT);
   assert.ok(r.ok, r.text);
   assert.ok(Object.keys(V).length > 0);
   assert.equal(E.E_WRITER_DUPLICATE, 'E-WRITER-DUPLICATE');
   assert.equal(E.E_PHASE_DUPLICATE, 'E-PHASE-DUPLICATE');
-  assert.deepEqual(Object.keys(P), ['created_props', 'created_props_basis', 'displayNames_seq', 'pendingPost', 'terminated']);
+  // clock.minute、clock.seq（写者 kernel/scheduler.mjs，块 4-1；卷二十 §3.2 :444）生成 P。
+  assert.deepEqual(Object.keys(P), ['clock_minute', 'clock_seq', 'created_props', 'created_props_basis', 'displayNames_seq', 'pendingPost', 'terminated']);
   assert.equal(P.created_props('mat_x', 'density'), 'created.mat_x.props.density');
   assert.equal(P.terminated('npc_x'), 'terminated.npc_x');
   assert.equal(P.displayNames_text, undefined);
