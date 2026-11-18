@@ -894,6 +894,25 @@
    "scanClass": "registry_write"
   },
   {
+   "addedAtRev": 14,
+   "caseKey": "rng_bypass-01",
+   "expectCode": "E-SEED-KEY",
+   "fixture": "tests/accept/bypass/rng_bypass-01.txt",
+   "group": "rules",
+   "origin": "卷一 §8.2 :638、卷二 :320：规则层出现 Math.random 必须报（卷二十七 S27-6 :246）",
+   "polarity": "must_fail",
+   "scanClass": "rng_bypass"
+  },
+  {
+   "addedAtRev": 14,
+   "caseKey": "rng_bypass-11",
+   "fixture": "tests/accept/bypass/rng_bypass-11.txt",
+   "group": "rules",
+   "origin": "卷二 :320：Math.random 只在 legacy/（server-plugin/legacy 属声明表 retired 段，不在任何组的作用范围）",
+   "polarity": "must_pass",
+   "scanClass": "rng_bypass"
+  },
+  {
    "addedAtRev": 1,
    "caseKey": "rules_import-01",
    "expectCode": "E-TSC-PARSE",
@@ -911,6 +930,44 @@
    "origin": "卷二 §2.7 规则层经 kernel 读",
    "polarity": "must_pass",
    "scanClass": "rules_import"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "seed_sites-01",
+   "expectCode": "E-SEED-KEY",
+   "fixture": "tests/accept/bypass/seed_sites-01.txt",
+   "group": "rules",
+   "origin": "卷二十七 R27-8.1 :717：源码里出现的抽取点未在登记表登记，必须报（夹具表格式随 4-3 新格式落定）",
+   "polarity": "must_fail",
+   "scanClass": "seed_sites"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "seed_sites-11",
+   "fixture": "tests/accept/bypass/seed_sites-11.txt",
+   "group": "rules",
+   "origin": "卷二十七 R27-8.1 :717：登记表与源码逐点对上，不报（夹具表格式随 4-3 新格式落定）",
+   "polarity": "must_pass",
+   "scanClass": "seed_sites"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "seed_sites-21",
+   "expectCode": "E-SEED-COLLISION",
+   "fixture": "tests/accept/bypass/seed_sites-21.txt",
+   "group": "rules",
+   "origin": "卷二十七 R27-8.4 :720：role_seed 两行（流代号, 抽取点代号）相同，必须报（夹具表格式随 4-3 新格式落定）",
+   "polarity": "must_fail",
+   "scanClass": "seed_sites"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "seed_sites-22",
+   "fixture": "tests/accept/bypass/seed_sites-22.txt",
+   "group": "rules",
+   "origin": "卷二十七 R27-8.4 :720：role_seed 行两两不同且前缀非空，不报（夹具表格式随 4-3 新格式落定）",
+   "polarity": "must_pass",
+   "scanClass": "seed_sites"
   },
   {
    "addedAtRev": 1,

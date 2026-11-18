@@ -1,0 +1,4 @@
+// @file server-plugin/legacy/rng_bypass-11.mjs
+export function pickSide() {
+  return Math.random() < 0.5 ? 'a' : 'b';
+}

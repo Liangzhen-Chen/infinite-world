@@ -1961,7 +1961,16 @@
    "print": "1f8db88287c1e71e87aab038dcfad8583d27809f8e4cdef94c689a47ddfd34e9",
    "rev": 14,
    "scanClass": "rng_bypass",
-   "terms": {}
+   "terms": {
+    "vol27.A27-8.1.a": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
   },
   {
    "log": [
@@ -1987,6 +1996,39 @@
    "scanClass": "rules_import",
    "terms": {
     "vol1.V-9": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "log": [
+    {
+     "ref": "B4-G 首次登记（李白 11-18 16:3x 第 2 条）：检测器模块随 4-3 的 seed-keys 新格式落地，条目先留 registered（卷十二 §8 Q12-10 :1371）",
+     "rev": 1
+    },
+    {
+     "ref": "B4-G 检测器落地（主会话只核必须改第 1、4 项）：建 tools/accept/detectors/seed_sites.mjs——登记表↔源码双向比对（R27-8.1 :717）与 role_seed 查重、非空前缀（R27-8.4 :720），判据代码闭包变化升 rev 2、盖指纹；扫描类别行加 seedTable 规则表代号；条目 vol27.A27-8.1.b/c 转 implemented（R12-11.7 :1110）",
+     "rev": 2
+    }
+   ],
+   "print": "747f228fab41b6048cc8612500347b9cc481a977cdae873922aebdcac3e5a5f0",
+   "rev": 2,
+   "scanClass": "seed_sites",
+   "terms": {
+    "vol27.A27-8.1.b": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol27.A27-8.1.c": {
      "expect": "zero",
      "gates": [
       "pre_commit",
