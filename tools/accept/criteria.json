@@ -160,10 +160,14 @@
     {
      "ref": "B2-W4 第二步续（卷二 S13 ④）：rx.mjs 裸字面量改由 markers.mjs 的 T 句柄（rxTree 变体、RX 类型、typeof 常量），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 26
+    },
+    {
+     "ref": "B2-W4 第二步再续（卷二 S13 ④）：validate/types.mjs、dimensions.mjs、named-conditions.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 27
     }
    ],
-   "print": "51e0d5578723a40a3469d82fe9e536c31774782b1be141fee57e83b72057bff3",
-   "rev": 26,
+   "print": "d29b657de23bb2ace0a3ec37e707dd8ee2f5a1e85ee5b7e5f6ab1893238887a1",
+   "rev": 27,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -369,10 +373,14 @@
     {
      "ref": "B2-W4 第二步续（卷二 S13 ④）：rx.mjs 裸字面量改由 markers.mjs 的 T 句柄（rxTree 变体、RX 类型、typeof 常量），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 13
+    },
+    {
+     "ref": "B2-W4 第二步再续（卷二 S13 ④）：validate/types.mjs、dimensions.mjs、named-conditions.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 14
     }
    ],
-   "print": "19df3cc8fe0e51d81bc5c1311bc8888f68b3a892a43dfa42fc4d945e041e3e8b",
-   "rev": 13,
+   "print": "daaee34380f8e90ba1e6bfd4097adce71a8191af56df815b556f437b2f71aa0f",
+   "rev": 14,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -585,10 +593,14 @@
     {
      "ref": "B2-W4 第二步续（卷二 S13 ④）：rx.mjs 裸字面量改由 markers.mjs 的 T 句柄（rxTree 变体、RX 类型、typeof 常量），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 14
+    },
+    {
+     "ref": "B2-W4 第二步再续（卷二 S13 ④）：validate/types.mjs、dimensions.mjs、named-conditions.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 15
     }
    ],
-   "print": "ad11b99209255940b4e9247ed7b440a795b2c3c2e09b31fa4cc3a607f4800ec7",
-   "rev": 14,
+   "print": "3388e4dcbfe6f7a83d99f5784c0a475d34e03687b91be00212a44e88059fae49",
+   "rev": 15,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -766,10 +778,14 @@
     {
      "ref": "B2-W4 第二步续（卷二 S13 ④）：rx.mjs 裸字面量改由 markers.mjs 的 T 句柄（rxTree 变体、RX 类型、typeof 常量），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 30
+    },
+    {
+     "ref": "B2-W4 第二步再续（卷二 S13 ④）：validate/types.mjs、dimensions.mjs、named-conditions.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 31
     }
    ],
-   "print": "a2033c7fd104d0b836c854bbd8db153efe9ad32c68ef18275d077dfe49604c2e",
-   "rev": 30,
+   "print": "f41bb5fb35d55b9489f0a5576802a724d49f284a4f5e29c2408f8263d594fee7",
+   "rev": 31,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -928,10 +944,14 @@
     {
      "ref": "B2-W4 第二步续（卷二 S13 ④）：rx.mjs 裸字面量改由 markers.mjs 的 T 句柄（rxTree 变体、RX 类型、typeof 常量），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 15
+    },
+    {
+     "ref": "B2-W4 第二步再续（卷二 S13 ④）：validate/types.mjs、dimensions.mjs、named-conditions.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 16
     }
    ],
-   "print": "ad11b99209255940b4e9247ed7b440a795b2c3c2e09b31fa4cc3a607f4800ec7",
-   "rev": 15,
+   "print": "3388e4dcbfe6f7a83d99f5784c0a475d34e03687b91be00212a44e88059fae49",
+   "rev": 16,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1391,10 +1411,14 @@
     {
      "ref": "B2-W4 第二步续（卷二 S13 ④）：rx.mjs 裸字面量改由 markers.mjs 的 T 句柄（rxTree 变体、RX 类型、typeof 常量），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 15
+    },
+    {
+     "ref": "B2-W4 第二步再续（卷二 S13 ④）：validate/types.mjs、dimensions.mjs、named-conditions.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 16
     }
    ],
-   "print": "ad11b99209255940b4e9247ed7b440a795b2c3c2e09b31fa4cc3a607f4800ec7",
-   "rev": 15,
+   "print": "3388e4dcbfe6f7a83d99f5784c0a475d34e03687b91be00212a44e88059fae49",
+   "rev": 16,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -1437,10 +1461,14 @@
     {
      "ref": "B2-W4 第二步续（卷二 S13 ④）：rx.mjs 裸字面量改由 markers.mjs 的 T 句柄（rxTree 变体、RX 类型、typeof 常量），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 7
+    },
+    {
+     "ref": "B2-W4 第二步再续（卷二 S13 ④）：validate/types.mjs、dimensions.mjs、named-conditions.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 8
     }
    ],
-   "print": "08db74e5020fb60b44f493b3e47ec7fe72b2b2c46a45d0378e1c3ed186e845fc",
-   "rev": 7,
+   "print": "43a90cb16d56666f32b9137516173a4e88a4930a630cdb128d27d1aa0d98eedc",
+   "rev": 8,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -1595,10 +1623,14 @@
     {
      "ref": "B2-W4 第二步续（卷二 S13 ④）：rx.mjs 裸字面量改由 markers.mjs 的 T 句柄（rxTree 变体、RX 类型、typeof 常量），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 35
+    },
+    {
+     "ref": "B2-W4 第二步再续（卷二 S13 ④）：validate/types.mjs、dimensions.mjs、named-conditions.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 36
     }
    ],
-   "print": "4ce3d65f9fd303f7f739183858b39f934f4a0259948e0a3c136c8999d3306d9a",
-   "rev": 35,
+   "print": "009186f52d069a3e5856e260290ea5eb841fa31417a93966f24a2a1f72f4af41",
+   "rev": 36,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1805,10 +1837,14 @@
     {
      "ref": "B2-W4 第二步续（卷二 S13 ④）：rx.mjs 裸字面量改由 markers.mjs 的 T 句柄（rxTree 变体、RX 类型、typeof 常量），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 24
+    },
+    {
+     "ref": "B2-W4 第二步再续（卷二 S13 ④）：validate/types.mjs、dimensions.mjs、named-conditions.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "51e0d5578723a40a3469d82fe9e536c31774782b1be141fee57e83b72057bff3",
-   "rev": 24,
+   "print": "d29b657de23bb2ace0a3ec37e707dd8ee2f5a1e85ee5b7e5f6ab1893238887a1",
+   "rev": 25,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -2002,10 +2038,14 @@
     {
      "ref": "B2-W4 第二步续（卷二 S13 ④）：rx.mjs 裸字面量改由 markers.mjs 的 T 句柄（rxTree 变体、RX 类型、typeof 常量），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 9
+    },
+    {
+     "ref": "B2-W4 第二步再续（卷二 S13 ④）：validate/types.mjs、dimensions.mjs、named-conditions.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 10
     }
    ],
-   "print": "08db74e5020fb60b44f493b3e47ec7fe72b2b2c46a45d0378e1c3ed186e845fc",
-   "rev": 9,
+   "print": "43a90cb16d56666f32b9137516173a4e88a4930a630cdb128d27d1aa0d98eedc",
+   "rev": 10,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

@@ -11,13 +11,19 @@ export { T, TYPES, DOMAIN_OPTIONAL, ROW_FIELDS, CODE_ENUMS, markersOf };
 export const CODE_RE = /^[a-z][a-z0-9_]{1,47}$/;
 export const KEY_RE = /^[a-z][a-zA-Z0-9]{0,47}$/;
 
+// 本文件的两处固定记号定义源（单一定义，比较处引用成员）：
+// VOCAB_ANY：ref 的 vocab 部分写 "*" 表示任一词表族（本文件实现口径；卷二 §1.5 ref 行只列 "<family>"/"refs"，未写通配，故不按 S13 (d) 豁免）；
+// COMBINE：map 的 combine 取值封闭，只有 sum（卷二 §1.6 第 5、6 项 :263–:264）。
+const VOCAB_ANY = Object.freeze({ any: '*' });
+const COMBINE = Object.freeze({ sum: 'sum' });
+
 // ---------- 错误码文法（卷二 §4.2）与 state-owners 的 pathTypes 值文法（§2.7） ----------
 // 原 kernel/handles/patterns.mjs 搬入（S13 (b) 允许 validate/* 用正则；patterns.mjs 只留从 rx.mjs 搬来的正则）。
 
 // 错误码文法：E-<区>-<名> / W-…（vocab-handle 构造 ErrorCode 前按它核对）。
 const ERROR_CODE = /^[EW]-[A-Z0-9]+(-[A-Z0-9]+)+$/;
 /** @param {unknown} s @returns {boolean} */
-export const isErrorCode = (s) => typeof s === 'string' && ERROR_CODE.test(s);
+export const isErrorCode = (s) => typeof s === T.js_type.string && ERROR_CODE.test(s);
 
 const LIST_TYPE = /^list<(?<item>.+)>$/;
 const NUMBER_TYPE = /^(?<base>number|integer)(?::(?<unit>.*))?$/;
@@ -34,13 +40,13 @@ export function parseNumberType(t) {
   return m ? { base: m.groups.base, unit: m.groups.unit } : null;
 }
 /** ref:<kind> / enum:<family> / struct:<name> 三类封闭写法。@param {string} t @returns {boolean} */
-export const isClosedType = (t) => typeof t === 'string' && (CLOSED_TYPE.test(t) || STRUCT_TYPE.test(t));
+export const isClosedType = (t) => typeof t === T.js_type.string && (CLOSED_TYPE.test(t) || STRUCT_TYPE.test(t));
 
 const SEALED_MENTION = /(^|<)sealed(>|$)/;
 /** 类型文法里是否出现 sealed（list<sealed>、struct 名含 sealed 段等）。@param {unknown} t @returns {boolean} */
-export const mentionsSealed = (t) => typeof t === 'string' && SEALED_MENTION.test(t);
+export const mentionsSealed = (t) => typeof t === T.js_type.string && SEALED_MENTION.test(t);
 
-const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+const isObj = (v) => v !== null && typeof v === T.js_type.object && !Array.isArray(v);
 const ptr = (base, k) => `${base}/${String(k).replace(/~/g, '~0').replace(/\//g, '~1')}`;
 const vocabOf = (def) => def.vocab !== undefined ? def.vocab : (isObj(def.domain) ? def.domain.vocab : undefined);
 const sizeOf = (def, k) => def[k] !== undefined ? def[k] : (isObj(def.domain) ? def.domain[k] : undefined);
@@ -49,7 +55,7 @@ const sizeOf = (def, k) => def[k] !== undefined ? def[k] : (isObj(def.domain) ? 
 /** @param {unknown} domain @returns {boolean} */
 export function rangeOk(domain) {
   const [lo, hi, ...rest] = Array.isArray(domain) ? domain : [];
-  const okEnd = (x) => x === null || typeof x === 'number';
+  const okEnd = (x) => x === null || typeof x === T.js_type.number;
   return Array.isArray(domain) && !rest.length && okEnd(lo) && okEnd(hi) && !(lo !== null && hi !== null && lo > hi);
 }
 // 不必写 domain 的类型（§1.2 表头）的定义源在 handles/markers.mjs。
@@ -77,14 +83,14 @@ export function checkDef(def, env, at, err, top) {
   if (t === T.type.enum) {
     const fam = vocabOf(def);
     if (Array.isArray(def.values) || Array.isArray(def.enum) || Array.isArray(def.domain)) bad('E-DIM-DOMAIN-ENUM', 'inline enum', 'vocab family (no inline enums)');
-    else if (typeof fam !== 'string' || !(env.vocab.families.has(fam) || Object.hasOwn(CODE_ENUMS, fam))) bad('E-DIM-REF-MISSING', fam, 'registered vocab family or code enum');
+    else if (typeof fam !== T.js_type.string || !(env.vocab.families.has(fam) || Object.hasOwn(CODE_ENUMS, fam))) bad('E-DIM-REF-MISSING', fam, 'registered vocab family or code enum');
   }
   if (t === T.type.ref) {
     const forms = ['kind', 'kinds', 'vocab', 'dim', 'refs'].filter((k) => def[k] !== undefined);
     if (forms.length !== 1) bad('E-DIM-STRUCT-FIELD', forms.join(',') || 'none', 'exactly one of kind/kinds/vocab/dim/refs');
     for (const part of refParts(def)) {
       if (part.kind !== undefined && !env.kinds.has(part.kind)) bad('E-DIM-REF-MISSING', part.kind, 'a loaded table kind or effect');
-      if (part.vocab !== undefined && part.vocab !== '*' && !env.vocab.families.has(part.vocab)) bad('E-DIM-REF-MISSING', part.vocab, 'registered vocab family');
+      if (part.vocab !== undefined && part.vocab !== VOCAB_ANY.any && !env.vocab.families.has(part.vocab)) bad('E-DIM-REF-MISSING', part.vocab, 'registered vocab family');
       if (part.dim !== undefined && !env.kinds.has(part.dim)) bad('E-DIM-REF-DIM', part.dim, 'a loaded table kind');
     }
   }
@@ -102,7 +108,7 @@ export function checkDef(def, env, at, err, top) {
     if (!isObj(def.value)) bad('E-DIM-STRUCT-FIELD', def.value, 'value: <type>');
     else checkDef(def.value, env, { ...at, path: `${at.path}/value` }, err, false);
     const valueType = isObj(def.value) ? def.value.type : undefined;
-    if (def.combine !== undefined && (def.combine !== 'sum' || !(valueType === T.type.number || valueType === T.type.integer))) bad('E-DIM-MAP-SPARSE-NONSUM', def.combine, 'combine "sum" on a number/integer valued map');
+    if (def.combine !== undefined && (def.combine !== COMBINE.sum || !(valueType === T.type.number || valueType === T.type.integer))) bad('E-DIM-MAP-SPARSE-NONSUM', def.combine, 'combine "sum" on a number/integer valued map');
   }
   if (t === T.type.struct) {
     if (!isObj(def.fields)) { bad('E-DIM-STRUCT-FIELD', def.fields, 'fields object'); return; }
@@ -126,7 +132,7 @@ export function checkDef(def, env, at, err, top) {
         seen.add(s);
       });
     } else if (Array.isArray(def.oneOf)) {
-      if (typeof def.discriminator !== 'string') bad('E-DIM-UNION-SHAPE', def.discriminator, 'discriminator field name');
+      if (typeof def.discriminator !== T.js_type.string) bad('E-DIM-UNION-SHAPE', def.discriminator, 'discriminator field name');
       def.oneOf.forEach((m, i) => {
         if (!isObj(m) || m.type !== T.type.struct || !isObj(m.fields) || !Object.hasOwn(m.fields, def.discriminator)) bad('E-DIM-UNION-SHAPE', isObj(m) ? m.type : m, 'struct member carrying the discriminator');
         else checkDef(m, env, { ...at, path: `${at.path}/oneOf/${i}` }, err, false);
@@ -162,32 +168,32 @@ export function checkValue(def, v, env, at, err) {
   if (v === null) { if (!def.nullable) bad('E-DIM-DOMAIN-RANGE', null, `${def.type} (not nullable)`); return; }
   switch (def.type) {
     case T.type.number: case T.type.integer: {
-      if (typeof v !== 'number' || !Number.isFinite(v) || (def.type === T.type.integer && !Number.isInteger(v))) { bad('E-DIM-DOMAIN-RANGE', v, def.type); return; }
+      if (typeof v !== T.js_type.number || !Number.isFinite(v) || (def.type === T.type.integer && !Number.isInteger(v))) { bad('E-DIM-DOMAIN-RANGE', v, def.type); return; }
       if (Array.isArray(def.domain)) {
         const [lo, hi] = def.domain;
         if ((lo !== null && v < lo) || (hi !== null && v > hi)) bad('E-DIM-DOMAIN-RANGE', v, `[${lo},${hi}] ${def.unit || ''}`.trim());
       }
       return;
     }
-    case T.type.boolean: if (typeof v !== 'boolean') bad('E-DIM-DOMAIN-RANGE', v, 'boolean'); return;
+    case T.type.boolean: if (typeof v !== T.js_type.boolean) bad('E-DIM-DOMAIN-RANGE', v, 'boolean'); return;
     case T.type.string: {
       const max = sizeOf(def, 'maxLength');
-      if (typeof v !== 'string') bad('E-DIM-DOMAIN-RANGE', v, 'string');
+      if (typeof v !== T.js_type.string) bad('E-DIM-DOMAIN-RANGE', v, 'string');
       else if (max !== undefined && [...v].length > max) bad('E-DIM-DOMAIN-SIZE', v.length, `maxLength ${max}`);
       return;
     }
     case T.type.enum: {
       const fam = vocabOf(def);
       if (Object.hasOwn(CODE_ENUMS, fam) && !env.vocab.families.has(fam)) { if (!CODE_ENUMS[fam].includes(v)) bad('E-DIM-DOMAIN-ENUM', v, `code enum ${fam}`); return; }
-      const rec = typeof v === 'string' && CODE_RE.test(v) ? env.vocab.index.get(v) : undefined;
+      const rec = typeof v === T.js_type.string && CODE_RE.test(v) ? env.vocab.index.get(v) : undefined;
       if (!rec || rec.family !== fam) bad('E-DIM-DOMAIN-ENUM', v, `entry of vocab family ${fam}`);
       return;
     }
     case T.type.ref: {
-      if (typeof v !== 'string' || !CODE_RE.test(v)) { bad('E-DIM-ID-FORMAT', v, 'ASCII code ^[a-z][a-z0-9_]{1,47}$'); return; }
+      if (typeof v !== T.js_type.string || !CODE_RE.test(v)) { bad('E-DIM-ID-FORMAT', v, 'ASCII code ^[a-z][a-z0-9_]{1,47}$'); return; }
       const parts = refParts(def);
       const ok = parts.some((p) => {
-        if (p.vocab !== undefined) { const r = env.vocab.index.get(v); return Boolean(r) && (p.vocab === '*' || r.family === p.vocab); }
+        if (p.vocab !== undefined) { const r = env.vocab.index.get(v); return Boolean(r) && (p.vocab === VOCAB_ANY.any || r.family === p.vocab); }
         if (p.kind !== undefined) return env.idIndex.get(v) === p.kind;
         if (p.kinds !== undefined) return p.kinds.includes(env.idIndex.get(v));
         if (p.dim !== undefined) { const d = (env.tableDims.get(p.dim) || {})[v]; return Boolean(d) && (d.type === T.type.number || d.type === T.type.integer); }
@@ -230,7 +236,7 @@ export function checkValue(def, v, env, at, err) {
       const pairOk = (p) => {
         if (!Array.isArray(p)) return false;
         const [x, y, ...rest] = p;
-        return typeof x === 'number' && typeof y === 'number' && rest.length === 0;
+        return typeof x === T.js_type.number && typeof y === T.js_type.number && rest.length === 0;
       };
       if (!Array.isArray(v) || !pts.every(pairOk)) { bad('E-DIM-DOMAIN-CURVE', v, '[[x,y],...]'); return; }
       if (pts.some((p, i) => i > 0 && !(p[0] > pts[i - 1][0]))) bad('E-DIM-DOMAIN-CURVE', pts.map((p) => p[0]), 'strictly increasing x');
@@ -248,7 +254,7 @@ export function checkValue(def, v, env, at, err) {
       return;
     }
     case T.type.rx: {
-      if (typeof v !== 'string') { bad('E-MOD-RX', typeof v, 'RX text', 'L2'); return; }
+      if (typeof v !== T.js_type.string) { bad('E-MOD-RX', typeof v, 'RX text', 'L2'); return; }
       try { env.compiled.set(at.path, compileRXInScope(v, 'data', env.rxScope)); } catch (e) {
         if (!e.code) throw e;
         bad(e.code, v, e.message, 'L2');
