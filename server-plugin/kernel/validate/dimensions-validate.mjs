@@ -8,7 +8,7 @@
 import { parseJsonStrict } from '../load/json-text.mjs';
 import { loadVocab, loadUnits } from '../load/vocab-load.mjs';
 import { flattenTable } from '../load/flatten.mjs';
-import { checkDef, CODE_RE, KEY_RE, CODE_ENUMS, TYPES, DOMAIN_OPTIONAL, T } from './types.mjs';
+import { checkDef, CODE_RE, KEY_RE, CODE_ENUMS, TYPES, DOMAIN_OPTIONAL, T, markersOf } from './types.mjs';
 import { checkRows, checkPrecedence, checkComponents, checkRequired, requiredSyntaxOk } from './rows.mjs';
 import { prepareNamedConditions } from './named-conditions.mjs';
 import { checkCellGrades } from './cell-grades.mjs';
@@ -19,6 +19,8 @@ const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const KIND_FAMILY = 'kind';
 // 叠加方式（§1.2 `.stacking`）；过程主体槽的专用校验（kernel/load/rules.mjs，§3.7）同读此处。
 export const STACKING = Object.freeze(['none', 'penalized']);
+/** 叠加方式的族句柄：成员由上面的 STACKING 派生（过程主体槽与修正求值共用）。 */
+export const STACKING_MARKERS = markersOf('stacking', STACKING);
 
 // sources：{units: 文本, vocab: 文本, effects?: 文本, tables: [{file, text}]}（file 为文件名，如 "<kind>.json"）。
 // options：{namespaces: [..], displaySet: [..], ns: [{ns, shape, type}], limits: {extendsMaxDepth, rxMaxDepth}}。
