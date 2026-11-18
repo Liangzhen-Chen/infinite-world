@@ -2,7 +2,8 @@
 // 块 3 第 3-1 张：三元键、开户 openAccount、读入口 balance / accountsOf / stockIn、资源种类表与本卷词表族的加载校验 checkLedgerTables、
 // ledger.json 生效日窗口的读法 budgetOn。第 3-2 张：入账 post / transfer、批次存储 stockLots 与批次键、K-8 一致性审计 auditLots、
 // 物理律通道预警派生 alertGaps、逐日用量 usedByDay 的写与读 dayUsage、持有人主体核对与审计入口 auditLedger。
-// 限额通道日终分配、月结清理逐日项与守恒不变量归 3-3。
+// 第 3-3 张：限额通道按比例分配 prorateCapped / allocateCapped（申请存放与日终调用归块 7）、月结账本侧 closeLedgerPeriod（写报由调用方传入）、
+// auditLedger 加守恒审计（三元键、非负、守恒式）。
 // 新账本一开始就是唯一写者（方案 R5）：accounts.*、ledgerTotals、outflowTotals.*、stockLots.*、ledgerCounters.lotNext 的写者只有本文件（state-owners.json）。
 // 只读登记数据（资源种类行、词表条目字段、规则表），不认任何具体资源、来源去处代号、用途或实体 id（AGENTS 红线）；
 // 下面 SCHEMA 是卷六定义的族名、封闭族条目与账户字段的类型，不是内容数据。资源种类行的 transferable、counterpartRX、sources、sinks
@@ -816,7 +817,59 @@ export function auditLedger(engine, state) {
       }
     }
   }
+  for (const v of auditConservation(engine, state)) push(v.code, v.path, v.why);
   return Object.freeze(out.sort((a, b) => cmp(a.path, b.path) || cmp(a.code, b.code)));
+}
+
+/**
+ * 守恒审计（纯读；auditLedger 的一部分，3-3）：
+ * - 三元键（§4.1 规则 1 :355，I15′）：accounts.<持有人>.<用途>.<资源种类>.<资源键> 是唯一存法——用途须是 purpose 条目、资源种类须是资源种类行
+ *   （E-DIM-REF-MISSING），末层须是整数（E-DIM-STRUCT-FIELD）；
+ * - 非负（规则 2 :356，I2′）：余额为负 E-LEDGER-NEGATIVE；
+ * - 守恒式（规则 4 :362，I1′）：对每种资源，普通账户余额之和 = 来源累计之和 − 去处累计之和；不等即 E-LEDGER-UNBALANCED
+ *   （规则 2 :356"这条式子是规则 4 守恒式的单笔形式……两条规则因此是同一条"，同一条规则同一码，不另造码）。
+ *   ledgerTotals 下的代号不是 src/sink 条目即 E-LEDGER-CODE-UNREGISTERED（规则 3 :361）。整数相等，不设容差（A6-1.2 :399）。
+ * @returns {{code: string, path: string, why: string}[]}
+ */
+function auditConservation(engine, state) {
+  const out = [];
+  const push = (code, path, why) => out.push({ code, path, why });
+  const net = new Map(); // 资源种类 → BigInt（余额之和 − 来源累计 + 去处累计）
+  const add = (kind, v) => net.set(kind, (net.get(kind) || 0n) + v);
+  const all = readAt(state, [SCHEMA.accounts]);
+  for (const h of Object.keys(isObj(all) ? all : {}).sort(cmp)) {
+    const byPurpose = isObj(all[h]) ? all[h] : {};
+    for (const p of Object.keys(byPurpose).sort(cmp)) {
+      const pr = engine.vocab.index.get(p);
+      if (!pr || pr.family !== SCHEMA.purpose) { push('E-DIM-REF-MISSING', `${SCHEMA.accounts}.${h}.${p}`, `${p} is not a ${SCHEMA.purpose} entry (three-key: holder.purpose.kind.key)`); continue; }
+      const byKind = isObj(byPurpose[p]) ? byPurpose[p] : {};
+      for (const k of Object.keys(byKind).sort(cmp)) {
+        if (!isObj(readAt(ruleTable(engine.rules, SCHEMA.resourcesTable), [k]))) { push('E-DIM-REF-MISSING', `${SCHEMA.accounts}.${h}.${p}.${k}`, `${k} is not a resource kind row`); continue; }
+        const byKey = isObj(byKind[k]) ? byKind[k] : {};
+        for (const key of Object.keys(byKey).sort(cmp)) {
+          const v = byKey[key];
+          const path = `${SCHEMA.accounts}.${h}.${p}.${k}.${key}`;
+          if (!Number.isSafeInteger(v)) { push('E-DIM-STRUCT-FIELD', path, 'balance is an integer'); continue; }
+          if (v < 0) push('E-LEDGER-NEGATIVE', path, `balance ${v}`);
+          add(k, BigInt(v));
+        }
+      }
+    }
+  }
+  const totals = readAt(state, [SCHEMA.totals]);
+  for (const k of Object.keys(isObj(totals) ? totals : {}).sort(cmp)) {
+    for (const code of Object.keys(isObj(totals[k]) ? totals[k] : {}).sort(cmp)) {
+      const rec = engine.vocab.index.get(code);
+      const c = isObj(totals[k][code]) ? totals[k][code].cumulative : undefined;
+      if (!rec || (rec.family !== SCHEMA.src && rec.family !== SCHEMA.sink)) { push('E-LEDGER-CODE-UNREGISTERED', `${SCHEMA.totals}.${k}.${code}`, `${code} is not a ${SCHEMA.src} or ${SCHEMA.sink} entry`); continue; }
+      if (!Number.isSafeInteger(c)) continue; // 形状由 readTotalsCell 一段报
+      add(k, rec.family === SCHEMA.src ? -BigInt(c) : BigInt(c));
+    }
+  }
+  for (const [k, d] of [...net].sort((a, b) => cmp(a[0], b[0]))) {
+    if (d !== 0n) push('E-LEDGER-UNBALANCED', `${SCHEMA.accounts}/${SCHEMA.totals}:${k}`, `Σ balances − Σ sources + Σ sinks = ${d} (rule 4)`);
+  }
+  return out;
 }
 
 // ---------- 物理律通道预警（§4.1 规则 6 :375；李白 11-18 04:20 选 A：不单独存储，月结 closePeriod 派生写月报） ----------
@@ -939,4 +992,105 @@ export function budgetOn(engine, resourceKind, code, day) {
   const from = cell.activeFromDay === undefined ? 0 : cell.activeFromDay;
   const inside = day >= from && (cell.activeToDay === undefined || day <= cell.activeToDay);
   return Object.freeze(inside ? { active: true, limit: cell.limit } : { active: false, limit: 0 });
+}
+
+// ---------- 限额通道日终分配（§4.1 规则 6 :376；K3-45，块 3 第 3-3 张） ----------
+// 只建分配函数：申请的存放（tradeRuns）与日终调用（settleTrade）归块 7（§4.6 规则 8 :579、:582；§5.3）。本文件不加申请状态键、不加日终钩子。
+
+// 申请键：申请主体 id（规则 6），或按全序细分的元组（§4.6 规则 8 :582"（买方 id、计价资源键、货的资源键）"，第一键即申请主体 id）。
+function requestKey(k, i) {
+  const t = typeof k === 'string' ? [k] : k;
+  if (!Array.isArray(t) || t.length === 0 || t.some((s) => typeof s !== 'string' || s === '')) throw structErr(`request ${i}: key is a non-empty string or a list of them`);
+  return t;
+}
+const cmpKey = (a, b) => {
+  for (let i = 0; i < Math.min(a.length, b.length); i++) { const c = cmp(a[i], b[i]); if (c) return c; }
+  return a.length - b.length;
+};
+
+/**
+ * 纯函数：限额通道一日的按比例分配（§4.1 规则 6 :376；§4.6 规则 8 第一步 :582 复用同一做法）。
+ * requests = [{key, qty}]：key 是申请主体 id 或按全序细分的元组（逐段比较），qty 正整数；limit 是当日限额（非负整数）或 null（不限）。
+ * 先汇总：同 key 的数量相加并成一条（:582"先归并"）。总量不超过 limit（或 limit 为 null）时全部照准；超过时
+ * 各条 floor(数量 × limit ÷ 总量)，余数 limit − Σ 向下取整 按 key 升序逐个补一单位（:376）。结果只取决于申请集合，与给出次序无关。
+ * @param {readonly {key: string | readonly string[], qty: number}[]} requests @param {number | null} limit
+ * @returns {readonly {key: readonly string[], requested: number, granted: number}[]} 按 key 升序
+ */
+export function prorateCapped(requests, limit) {
+  if (!Array.isArray(requests)) throw structErr('requests is a list of {key, qty}');
+  if (limit !== null && !(Number.isSafeInteger(limit) && limit >= 0)) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, 'limit is a non-negative integer or null');
+  const merged = new Map();
+  requests.forEach((r, i) => {
+    if (!fieldsWithin(r, ['key', 'qty']) || !Object.hasOwn(r, 'key') || !Object.hasOwn(r, 'qty')) throw structErr(`request ${i} is {key, qty}`);
+    if (!isPosInt(r.qty)) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, `request ${i}: qty is a positive integer`);
+    const key = requestKey(r.key, i);
+    const id = JSON.stringify(key);
+    const m = merged.get(id) || { key, requested: 0 };
+    m.requested += r.qty;
+    if (!Number.isSafeInteger(m.requested)) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, `request ${i}: merged qty exceeds safe integer`);
+    merged.set(id, m);
+  });
+  const rows = [...merged.values()].sort((a, b) => cmpKey(a.key, b.key));
+  const total = rows.reduce((s, r) => s + BigInt(r.requested), 0n);
+  if (limit === null || total <= BigInt(limit)) {
+    return Object.freeze(rows.map((r) => Object.freeze({ key: Object.freeze([...r.key]), requested: r.requested, granted: r.requested })));
+  }
+  const granted = rows.map((r) => Number((BigInt(r.requested) * BigInt(limit)) / total));
+  let rest = limit - granted.reduce((s, g) => s + g, 0);
+  for (let i = 0; rest > 0; i++, rest--) granted[i] += 1;
+  return Object.freeze(rows.map((r, i) => Object.freeze({ key: Object.freeze([...r.key]), requested: r.requested, granted: granted[i] })));
+}
+
+/**
+ * 某资源种类某限额通道（budgetMode bm_capped）在世界日 day 的日终分配：当日限额照 budgetOn 读（格缺或 limit 空 = 不限；
+ * 生效日窗口外按零计，§2.5 :224），再交 prorateCapped。代号不是 src/sink 条目 E-DIM-REF-MISSING、不在该种类行 sources/sinks 内
+ * E-LEDGER-CODE-UNREGISTERED、不是限额通道 E-DIM-DOMAIN-ENUM。只读规则表，不读不写状态。
+ * @param {{vocab: any, rules: any}} engine @param {string} resourceKind @param {string} code @param {number} day
+ * @param {readonly {key: string | readonly string[], qty: number}[]} requests
+ */
+export function allocateCapped(engine, resourceKind, code, day, requests) {
+  const row = resourceRow(engine, resourceKind, null);
+  const rec = typeof code === 'string' ? engine.vocab.index.get(code) : undefined;
+  if (!rec || (rec.family !== SCHEMA.src && rec.family !== SCHEMA.sink)) throw new KernelError('E-DIM-REF-MISSING', { entity: null }, `${JSON.stringify(code)} is not a ${SCHEMA.src} or ${SCHEMA.sink} entry`);
+  const listed = rec.family === SCHEMA.src ? row.sources : row.sinks;
+  if (!Array.isArray(listed) || !listed.includes(code)) throw new KernelError('E-LEDGER-CODE-UNREGISTERED', { entity: null }, `${code} is not in ${resourceKind} ${rec.family === SCHEMA.src ? 'sources' : 'sinks'}`);
+  if ((rec.entry || {}).budgetMode !== SCHEMA.capped) throw new KernelError('E-DIM-DOMAIN-ENUM', { entity: null }, `${code} is not a ${SCHEMA.capped} channel`);
+  return prorateCapped(requests, budgetOn(engine, resourceKind, code, day).limit);
+}
+
+// ---------- 月结账本侧（§4.22 规则 4 :1261 月结顺序；李白 11-18 04:20、04:22；S6-14 出报时派生、当期保留明细） ----------
+
+/**
+ * 月结账本侧：给定期末日 endDay（世界日整数），从 ledgerTotals 各格取 day ≤ endDay 的 usedByDay 项，经 alertGaps 派生预警缺口，
+ * 交调用方传入的 writeReport({endDay, usage, gaps}) 写报（econReports 的写者是 economy-report.mjs，块 7）；writeReport 返回后
+ * 才清掉这些逐日项、只留 cumulative（cumulative 不动）；writeReport 抛错即原样抛出、一项不清（写报失败不得清）。
+ * 只在本状态的事务内写（E-VIEW-UNDECLARED-WRITE）。同一输入两次结果相同：只读状态与规则表，不读真实时间。
+ * @param {{vocab: any, rules: any}} engine @param {any} state @param {number} endDay
+ * @param {(r: {endDay: number, usage: readonly any[], gaps: readonly any[]}) => void} writeReport
+ * @returns {Readonly<{endDay: number, usage: readonly any[], gaps: readonly any[], cleared: number}>} cleared：清掉的逐日项条数
+ */
+export function closeLedgerPeriod(engine, state, endDay, writeReport) {
+  const tx = currentTransaction();
+  if (!tx || tx.state !== state) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity: null }, 'closeLedgerPeriod outside the transaction of this state');
+  if (!Number.isSafeInteger(endDay) || endDay < 0) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, 'endDay is a non-negative integer world day');
+  if (typeof writeReport !== 'function') throw structErr('writeReport is the caller-supplied report writer');
+  const totals = readAt(state, [SCHEMA.totals]);
+  const usage = [];
+  const keep = [];
+  for (const kind of Object.keys(isObj(totals) ? totals : {}).sort(cmp)) {
+    for (const code of Object.keys(isObj(totals[kind]) ? totals[kind] : {}).sort(cmp)) {
+      const cell = readTotalsCell(state, kind, code);
+      const closed = cell.usedByDay.filter((d) => d.day <= endDay);
+      if (!closed.length) continue;
+      for (const d of closed) usage.push(Object.freeze({ resource: kind, flow: code, day: d.day, used: d.used }));
+      keep.push({ kind, code, cumulative: cell.cumulative, rest: cell.usedByDay.filter((d) => d.day > endDay) });
+    }
+  }
+  const gaps = alertGaps(engine, usage);
+  const report = Object.freeze({ endDay, usage: Object.freeze(usage), gaps });
+  writeReport(report);
+  for (const k of keep) {
+    setInTx(tx, [SCHEMA.totals, k.kind, k.code], { [SCHEMA.cumulative]: k.cumulative, [SCHEMA.usedByDay]: k.rest.map((d) => ({ day: d.day, used: d.used })) });
+  }
+  return Object.freeze({ ...report, cleared: usage.length });
 }

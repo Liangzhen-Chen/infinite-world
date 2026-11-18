@@ -327,7 +327,8 @@ test('usedByDay：同日累加、跨日追加（按 clockView 世界日），同
 });
 
 test('usedByDay 乱序、重复日、末项晚于当日：post 拒 E-LEDGER-USEDBYDAY-ORDER 整笔不落；dayUsage 与 auditLedger 同样报；缺字段 E-DIM-STRUCT-FIELD', () => {
-  const cell = (usedByDay) => at(4, { ledgerTotals: { res_t_coin: { src_issue: { cumulative: 5, usedByDay } } } });
+  // 余额 5 与来源累计 5 对平（3-3 起 auditLedger 核守恒式，卷六 §4.1 规则 4 :362），本测试只看 usedByDay。
+  const cell = (usedByDay) => at(4, { accounts: { npc_a: { purpose_test_shelf: { res_t_coin: { coin_x: 5 } } } }, ledgerTotals: { res_t_coin: { src_issue: { cumulative: 5, usedByDay } } } });
   for (const list of [[{ day: 3, used: 2 }, { day: 2, used: 3 }], [{ day: 3, used: 2 }, { day: 3, used: 3 }], [{ day: 7, used: 5 }]]) {
     const state = cell(list);
     const before = clone(state);
@@ -339,7 +340,7 @@ test('usedByDay 乱序、重复日、末项晚于当日：post 拒 E-LEDGER-USED
   assert.deepEqual(auditLedger(ENGINE, cell([{ day: 7, used: 5 }])), []);
   assert.deepEqual(auditLedger(ENGINE, cell([{ day: 3, used: 2 }, { day: 2, used: 3 }])).map((x) => [x.code, x.path]), [['E-LEDGER-USEDBYDAY-ORDER', 'ledgerTotals.res_t_coin.src_issue']]);
   // 只有 cumulative 的旧形状不兼容
-  const old = at(4, { ledgerTotals: { res_t_coin: { src_issue: { cumulative: 5 } } } });
+  const old = at(4, { accounts: { npc_a: { purpose_test_shelf: { res_t_coin: { coin_x: 5 } } } }, ledgerTotals: { res_t_coin: { src_issue: { cumulative: 5 } } } });
   assert.deepEqual(run(old, mint(1)), { ok: false, code: 'E-DIM-STRUCT-FIELD' });
   assert.deepEqual(auditLedger(ENGINE, old).map((x) => x.code), ['E-DIM-STRUCT-FIELD']);
 });
@@ -369,7 +370,7 @@ test('持有人：place 行 ledgerHolder 为真才可作持有人；为假或缺
   assert.deepEqual(issue('loc_bare'), { ok: false, code: 'E-LEDGER-HOLDER-NOT-SUBJECT' });
   assert.deepEqual(run(at(0), (s) => { openAccount(ENGINE, s, 'loc_square', { kind: 'res_t_coin', key: 'coin_x' }, SH); }), { ok: false, code: 'E-LEDGER-HOLDER-NOT-SUBJECT' });
   // 出账腿：账上已有余额的非主体 place 也不能往外记
-  const held = at(0, { accounts: { loc_square: { purpose_test_shelf: { res_t_coin: { coin_x: 4 } } } } });
+  const held = at(0, { accounts: { loc_square: { purpose_test_shelf: { res_t_coin: { coin_x: 4 } } } }, ledgerTotals: { res_t_coin: { src_issue: { cumulative: 4, usedByDay: [] } } } });
   const before = clone(held);
   assert.deepEqual(run(held, (s) => { transfer(ENGINE, s, { from: { holder: 'loc_square', purpose: SH }, to: { holder: 'npc_a', purpose: SH }, resource: { kind: 'res_t_coin', key: 'coin_x' }, qty: 1, reason: 'verb_test' }); }), { ok: false, code: 'E-LEDGER-HOLDER-NOT-SUBJECT' });
   assert.deepEqual(run(held, (s) => { transfer(ENGINE, s, { from: { holder: 'npc_a', purpose: SH }, to: { holder: 'loc_square', purpose: SH }, resource: { kind: 'res_t_coin', key: 'coin_x' }, qty: 0, reason: 'verb_test' }); }).code, 'E-DIM-DOMAIN-RANGE');
@@ -470,11 +471,11 @@ test('持有人：居民聚合体经视图 aggregateView 按 ledgerHolder 判，
     assert.deepEqual(issue('npc_a'), { ok: true });
   });
   // 登记为主体的聚合体：开户、转给人物都过，余额手算 5 − 2 = 3
-  const ok = at(0, { accounts: { agg_t_reg: { purpose_test_shelf: { res_t_coin: { coin_x: 5 } } } } });
+  const ok = at(0, { accounts: { agg_t_reg: { purpose_test_shelf: { res_t_coin: { coin_x: 5 } } } }, ledgerTotals: { res_t_coin: { src_issue: { cumulative: 5, usedByDay: [] } } } });
   assert.deepEqual(run(ok, (s) => { transfer(ENGINE, s, { from: { holder: 'agg_t_reg', purpose: SH }, to: { holder: 'npc_a', purpose: SH }, resource: { kind: 'res_t_coin', key: 'coin_x' }, qty: 2, reason: 'verb_test' }); }), { ok: true });
   assert.equal(ok.accounts.agg_t_reg.purpose_test_shelf.res_t_coin.coin_x, 3);
   // 出账腿与审计：标记为假的聚合体名下已有余额，往外记被拒、审计报出
-  const held = at(0, { accounts: { agg_t_off: { purpose_test_shelf: { res_t_coin: { coin_x: 4 } } } } });
+  const held = at(0, { accounts: { agg_t_off: { purpose_test_shelf: { res_t_coin: { coin_x: 4 } } } }, ledgerTotals: { res_t_coin: { src_issue: { cumulative: 4, usedByDay: [] } } } });
   const before = clone(held);
   assert.deepEqual(run(held, (s) => { transfer(ENGINE, s, { from: { holder: 'agg_t_off', purpose: SH }, to: { holder: 'npc_a', purpose: SH }, resource: { kind: 'res_t_coin', key: 'coin_x' }, qty: 1, reason: 'verb_test' }); }), { ok: false, code: 'E-LEDGER-HOLDER-NOT-SUBJECT' });
   assert.deepEqual(held, before);
