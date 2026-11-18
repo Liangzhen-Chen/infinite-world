@@ -6,9 +6,12 @@ import assert from 'node:assert/strict';
 import { declareInputs, finalizeInputs, inputsBySystem, resetDeclarations } from '../../server-plugin/kernel/declare.mjs';
 import { inputsOf } from '../../server-plugin/kernel/memo.mjs';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
+import { KernelError } from '../../server-plugin/kernel/errors.mjs';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
+// 接口调用错误：不带登记码的普通 Error（卷二 §4.3 勘误 1118b25），既不是 KernelError 也没有 code。
+const plainError = (e) => e instanceof Error && !(e instanceof KernelError) && e.code === undefined;
 const GEN = new Map([['gadget', { dim: { own: ['created.gad_*.props'], uses: [] }, modified: { own: ['modifiers', 'statuses'], uses: [] } }]]);
 
 test('传递闭包：own 并 uses 闭包；dim:/modified: 机器生成；inputsOf 每次返回同一冻结对象（A10）', () => {
@@ -21,7 +24,7 @@ test('传递闭包：own 并 uses 闭包；dim:/modified: 机器生成；inputsO
   assert.deepEqual(inputsOf('dim:gadget'), ['created.gad_*.props']);
   assert.strictEqual(inputsOf('view:alpha'), inputsOf('view:alpha'));
   assert.ok(Object.isFrozen(inputsOf('view:alpha')));
-  assert.throws(() => inputsOf('view:nosuch'), (e) => e.code === 'E-DIM-REF-MISSING');
+  assert.throws(() => inputsOf('view:nosuch'), plainError);
 });
 
 test('改被调用节点的 own，调用者闭包随之变化（A10）', () => {
@@ -37,19 +40,19 @@ test('改被调用节点的 own，调用者闭包随之变化（A10）', () => {
   assert.deepEqual(inputsOf('view:alpha'), ['beta.one', 'beta.two']);
 });
 
-test('成环 E-VIEW-DEPS-CYCLE；uses 指向未声明节点 E-DIM-REF-MISSING；重复登记与形状不合', () => {
+test('成环 E-VIEW-DEPS-CYCLE；uses 指向未声明节点、重复登记、形状不合均为不带登记码的 Error', () => {
   resetDeclarations();
   declareInputs('view:alpha', { impl: ['a'], own: [], uses: ['view:beta'] });
   declareInputs('view:beta', { impl: ['b'], own: [], uses: ['view:alpha'] });
   assert.throws(() => finalizeInputs(new Map()), (e) => e.code === 'E-VIEW-DEPS-CYCLE');
   resetDeclarations();
   declareInputs('view:alpha', { impl: ['a'], own: [], uses: ['scope:nowhere'] });
-  assert.throws(() => finalizeInputs(new Map()), (e) => e.code === 'E-DIM-REF-MISSING');
+  assert.throws(() => finalizeInputs(new Map()), plainError);
   resetDeclarations();
   declareInputs('view:alpha', { impl: ['a'], own: [], uses: [] });
-  assert.throws(() => declareInputs('view:alpha', { impl: ['a'], own: [], uses: [] }), (e) => e.code === 'E-DIM-ID-DUPLICATE');
-  assert.throws(() => declareInputs('dim:gadget', { impl: ['a'], own: [], uses: [] }), (e) => e.code === 'E-DIM-STRUCT-FIELD');
-  assert.throws(() => declareInputs('view:gamma', { impl: [], own: [], uses: [] }), (e) => e.code === 'E-DIM-STRUCT-FIELD');
+  assert.throws(() => declareInputs('view:alpha', { impl: ['a'], own: [], uses: [] }), plainError);
+  assert.throws(() => declareInputs('dim:gadget', { impl: ['a'], own: [], uses: [] }), plainError);
+  assert.throws(() => declareInputs('view:gamma', { impl: [], own: [], uses: [] }), plainError);
 });
 
 test('写回 systems[*].inputs：节点按系统 view/predicates 的函数名落在 impl 组内归属', () => {

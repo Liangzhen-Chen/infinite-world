@@ -172,7 +172,10 @@ test('基值未知不单独求值，原样交回（卷二 §3.8 :1440）；修�
 });
 
 test('修正项来源只许交入一次', () => {
-  assert.throws(() => installModifierSource(() => []), (e) => e.code === 'E-WRITER-DUPLICATE');
+  // 接口调用错误：不带登记码的普通 Error（卷二 §4.3 勘误 1118b25）。
+  const plainError = (e) => e instanceof Error && e.constructor === Error && e.code === undefined;
+  assert.throws(() => installModifierSource(() => []), plainError);
   resetModifierSource();
+  assert.throws(() => installModifierSource('not a function'), plainError);
   installModifierSource(() => rows);
 });
