@@ -1,1 +1,0 @@
-用法：collect.mjs --files 清单 --jobs 2；select.mjs 工作树 base（均支持 --map）。map按源码保存UTF-8函数区间、执行者/加载者、提交与耗时。顶层、增删、world/tests、过期或偏移不符回退；新增/未采集/失败测试必选。单测23 pass/0 fail；CORE逐文件40 pass/0 fail。偏离：jobs限1–2，遵守3个node上限。真实采集与Git集成待沙箱外验证；未提交。详见工具README。

@@ -1,1 +1,0 @@
-写点tools/{system-map,run-baseline,scenarios,balance-combat,compare-settings}，tests/{runtime,m6-02~09,village-trade-live}。隔离、双进程，留CLI。map/T23/CORE过，runtime/M6浏览器EPERM；基线23败、2过，runner同阻。docs净。工作区根代测；外跑默认/并发/CLI/浏览器/runner。清理拒绝，留.tmp/p3-artifacts-check。

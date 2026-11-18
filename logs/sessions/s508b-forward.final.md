@@ -1,1 +1,0 @@
-改transport/market/obligation-conditional及运输、产能、资金接点；新增transport目录动作，支持买卖远期、履约、双方发起取消。锚点：60kg、风险0.5、运费264铜、税26铜；田产300→299；托管30铜、部分退款805铜。s5-08 20/20、CORE逐文件、arch-metrics/system-map、目录/运输/寄信/农事通过；静态10587。偏离：扩domain-rules/stock批次与NPC机会成本；旧测补真实役畜和托管统计，未降断言。TAP摘要；零付费模型、未提交。第3会话据自动门禁实际差异修复并收口。

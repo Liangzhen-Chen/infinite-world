@@ -1,3 +1,0 @@
-卡 s402-perception（S4 第一批「02｜看见、听见与偷窃见证」）。项目《无限原野》。工作区 F:/dnd-wt/S402（分支 t-s402，自 S4 集成分支 s4a；A3 尚未合 master）。先读 docs/产品原则.md、docs/当前状态.md 的“S4 规划”节（含主会话设计决定 A–E），以及 S4 规划全文 F:/dnd/logs/sessions/s4-plan.final.txt 中「02｜看见、听见与偷窃见证」一节——可改/锁定文件、验收命令、机制断言、对应登记行与 todo 用例均以该节为准；已完成的 01 分区移动在 s4a 上（server-plugin/place-layout.mjs）。
-并行说明：另一张 S4 卡同时在跑（02 与 04 文件不重叠）；若需改对方列出的文件，停下报告最小接点。涉及正式世界内容的改动只经现有审批管线（真实模型 L2 上限 30 次、1 元，key 只从 DEEPSEEK_API_KEY）。不为测试造接口或世界内容；前提用真实动作。验收测试逐个文件单独运行；静态提示 ≤10593（当前 10587）。不改 docs/（交接与状态由主会话维护）。
-通用：TEMP/TMP=F:/dnd-tmp，最多 2 个 node 进程，输出过滤为摘要。不再启动其他会话或子代理。CORE 由主会话沙箱外跑。最后回复不超过 10 行，同样写到 F:/dnd/logs/sessions/s402-perception.final.txt。

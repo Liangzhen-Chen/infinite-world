@@ -1,3 +1,0 @@
-续做 s402-perception（你的改动已合入 s4a）。新工作区 F:/dnd-wt/S402B（分支 t-s402b，自 s4a）。主会话在沙箱外跑 tests/s4-space-ui.test.mjs 失败：第 47 行 `dialog.getByRole('button',{name:/观门侧廊/}).first().click()` 30 秒超时——玩家经 act('core:move',{destination:'bld_bs_reed_dao'}) 真实到达芦衡观后，#fields-dialog 中没有出现“观门侧廊”分区按钮。查明根因（对话框移动后未刷新 / 分区选项未进入界面投影 / 按钮命名或可见条件与测试不符），修产品或修测试取法（须有依据，不放宽断言）。你在沙箱内无法运行浏览器：用离线可测部分（界面投影/菜单数据）复现并修复，列出需主会话沙箱外补跑的命令。
-可改：extension/ 下地点菜单与对话框相关文件、server-plugin/action-affordances.mjs（仅分区选项投影）、tests/s4-space-ui.test.mjs。锁定：server-plugin/law.mjs、server-plugin/engine.mjs（另一张卡在改）。
-最后回复不超过 6 行，同样写到 F:/dnd/logs/sessions/s402b-ui.final.txt。不再启动其他会话或子代理。

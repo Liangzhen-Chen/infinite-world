@@ -1,9 +1,0 @@
-{
-  "date": "2026-10-10",
-  "scope": "河湾32完整人物，固定agriculture-test种子连续13个月，优化前后逐月比较完整存档",
-  "months": 13,
-  "allStatesMatch": true,
-  "beforeMs": 3187,
-  "afterMs": 1794,
-  "relatedTests": "天气、引擎、作息42/42；耗时为本机单组测量，不代表全部地图或长期性能保证"
-}

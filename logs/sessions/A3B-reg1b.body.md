@@ -1,4 +1,0 @@
-（续跑）上一会话在执行中因机器/应用重启被中断。工作区里保留着你上次未提交的改动（git status 可见），在其基础上继续，不要重做已完成部分；先用 git diff --stat 与已有报告（若有 F:/dnd/logs/sessions/A3B-reg1.final.txt）确认进度。报告写到 F:/dnd/logs/sessions/A3B-reg1b.final.txt。原卡如下：
-
-卡 A3-回归1（A3 合入前全量扫描的非 A3 失败）。工作区 F:/dnd-wt/A3B（分支 a3b，已同步 a3a）。项目《无限原野》Node 规则引擎。全量逐文件扫描（logs/sessions/sweep-a3a-v2t.tsv）在 a3a 上发现以下文件失败（不含超时项，超时归性能卡）：tests/a2-ui.test.mjs（1，可能是浏览器 EPERM，沙箱内如实记）、action-registry（1）、actions-catalog（1）、arch-metrics（1）、entity-groups（1）、forest-water（2）、holdings-writers（2：未包装的持有写入点、调用写入包装的模块未声明写入者——A3 各卡新增的写入点，主会话已确认在 a3a HEAD 即失败）、m1-history-preconditions（1）、m3-consistency-evidence（1）、a1b-fixes（2，B-r12 可能已修，先复跑确认）。
-要求：逐文件复跑取失败用例末 30 行，按根因归并；每个根因判定是 A3 改动引入的真回归（修实现，使原断言通过）还是 A3 设计变更使旧断言过期（只有当设计文档明确规定新行为时，才把断言改为验证新真实行为，保留原意图与反例，逐处写设计依据）；holdings-writers 要求所有新写入点走包装并声明写入者，不得放宽该不变量。不删测试、不跳过。跑上述文件、tests/a3-*.test.mjs、CORE。报告 F:/dnd/logs/sessions/A3B-reg1b.final.txt（逐文件：根因、判定、改动、依据）；回复 ≤150 字。

@@ -1,2 +1,0 @@
-续做 s404-offices（同一工作区 F:/dnd-wt/S404；主会话已把你的未完成改动提交为 WIP，并合入最新 s4a——其中 02 感知见证已完成，law.mjs 与 engine.mjs 现解锁给你）。按你上轮报告的两处共享接点完成：(1) server-plugin/law.mjs 第 44、152 行附近改用当前任职与 officeOnDuty()，接通原生收件与案件经办，不读 facts.onDuty 快照；(2) engine.scoped() 第 562 行附近远方会长按 setup 实例化时重复添加已有目录人物的问题，修根因（不制造远方人物、不跳过重复检查）。然后按原卡全部验收命令逐文件单独运行（原卡见 F:/dnd/logs/sessions/s404-offices.body.md 与 s4-plan 第 04 节），另跑 tests/law.test.mjs、tests/s4-perception.test.mjs、tests/s4-layout.test.mjs。
-锁定：extension/ 地点菜单相关（另一张卡在改）。最后回复不超过 8 行，同样写到 F:/dnd/logs/sessions/s404b-shared.final.txt。不再启动其他会话或子代理。

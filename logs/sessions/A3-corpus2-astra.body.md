@@ -1,3 +1,0 @@
-你是独立出题者（续）。项目《无限原野》。工作区 F:/dnd-wt/A3CORPUS（只读参考）。独立性要求同前：不得读 server-plugin/、extension/、tests/ 的代码与测试；只读 docs/架构设计/（06-动作层与开放动作.md 的原语表与 world_propose 提案格式、05-统一模型.md、附录A）、docs/待用户确认.md、world/。
-任务：为 F:/dnd/logs/sessions/a3-intents-v2.json 的 120 条意图逐条补字段 proposal：一个“合格的意图解析器（LLM）”会提交给引擎的结构化提案，严格按 06 章 world_propose 的提案形状与原语名（如 {intent, effects:[{op:'transfer'|'vital'|'learn'|'fact.set'|'holding.open'|'move'|...,  ...参数}], consent?, target?...}）；需澄清的写 proposal:null 并给 clarifyNeed；元游戏/违规类照实写解析器可能提交的越界提案（让引擎去拦）。参数用 world/ 中真实存在的 id（地点、人物、物品、技能、配方）；找不到合适对象时如实写出（如不存在的目标），以考验引擎兜底与拒绝。不改 expected，除非发现原判定与设计明显矛盾（改动须在 a3-intents-v2.md 记录理由）。
-直接改写该 JSON 文件；最后回复 ≤100 字：补全条数、改了几条 expected 及原因。

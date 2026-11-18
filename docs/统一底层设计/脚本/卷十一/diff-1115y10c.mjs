@@ -6,8 +6,8 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url)).replace(/\\/g, '/').replace(/\/$/, '');
-const OUT = `${HERE}/../../审查/脚本输出`;
-const REL = 'docs/统一底层设计/审查/脚本输出';
+const OUT = `${HERE}/../../../审查/脚本输出`;
+const REL = 'docs/审查/脚本输出';
 const REV = process.argv[2] ?? 'HEAD';
 const oldOf = f => JSON.parse(execFileSync('git', ['show', `${REV}:${REL}/${f}`], { cwd: HERE, encoding: 'utf8', maxBuffer: 1 << 28 }));
 const newOf = f => JSON.parse(readFileSync(`${OUT}/${f}`, 'utf8'));

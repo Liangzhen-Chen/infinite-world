@@ -25,7 +25,7 @@
 
 S5A 相比审计基点已合 perf1：主要是 records 索引和 PatchCursor 热点优化及测试隔离，不能再把“实现 perf1”列成下一张卡。对有重叠的 governance/high-nobility/public-projects/promotion，差异是检索索引替换，未关闭审计所述司法消费者、军功顺序和到岗问题。已有通过报告仅按原报告范围复用；安静模式最终预算仍待阶段验收。[两基点 `git diff`；logs/review/actions.md:75–87]
 
-状态文档开头仍写旧 A3 位置，后部已有 A3+S4 合入及 S5 进行中的记录。调度应以最新事实和 `logs/review/actions.md` 为准。S5-04/08/09/10 的未完成义务，不重复包装成“发现架构全坏”；S6 的传播、S7 的全规模等价、S8 的包加载与依赖归层，也不提前宣布已完成。[docs/当前状态.md:35–41；docs/PROGRESS.md:462；logs/sessions/s5-plan.final.md:18–42]
+状态文档开头仍写旧 A3 位置，后部已有 A3+S4 合入及 S5 进行中的记录。调度应以最新事实和 `logs/review/actions.md` 为准。S5-04/08/09/10 的未完成义务，不重复包装成“发现架构全坏”；S6 的传播、S7 的全规模等价、S8 的包加载与依赖归层，也不提前宣布已完成。[docs/当前状态.md:35–41；docs/归档/PROGRESS.md:462；logs/sessions/s5-plan.final.md:18–42]
 
 ## 1. 九个根因及后续影响
 

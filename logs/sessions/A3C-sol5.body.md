@@ -1,3 +1,0 @@
-卡 A3-C 第 5 轮（旧入口归一：注册动作回报已采用原语）。项目《无限原野》Node 规则引擎。工作区 F:/dnd-wt/A3C（分支 a3c，已同步最新 a3a）。
-独立验收（F:/dnd/logs/sessions/a3-score-v2e.json）：37 条意图已正确路由到注册动作（如 core:trade.buy、core:time.sleep、core:time.rest、core:learn），但回执里“已采用原语效果”为空，签名无法核对。设计（docs/架构设计/10 章 A3 行：原语表统一 K2/K6/M4 三表合一 + 适配器；06 §6.8 签名）要求：任何动作执行都以原语效果落账并在回执列出。
-任务：为旧入口注册动作补适配器，使执行结果以原语效果（transfer、vital、time、learn、fact.set、holding.*、emit 等，按 06 原语表）记录进回执的已采用效果（含 index、目标、资源、来源/角色标记，与 A3-A 已有的派生成本标记一致），实际状态变化与回执一一对应（不只是“报告”，要与账本/状态对账）。优先覆盖上述 37 条涉及的动作，再推广到其他旧入口。不改语料与判分工具。重跑 node tools/a3-score.mjs tests/fixtures/a3-intents-v2.json 报路由/签名变化。跑 tests/a3-*.test.mjs、CORE、ledger-reconcile。报告 F:/dnd/logs/sessions/A3C-sol5.final.txt；回复 ≤150 字。

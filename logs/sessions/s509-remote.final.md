@@ -1,1 +1,0 @@
-改server-plugin/{remote-generation,population,wildlife}.mjs及tests/s5-09.test.mjs。聚合开户借出；野生个体S/I/R并回、重放及存档往返；锚点925钱/37物/2132人、20/8/2、林木33323、河流300/675。Q09、CORE逐文件、arch-metrics、system-map通过，提示10587。偏离：population收尾接点；wildlife仅加物化标记。未完：人物账户退出并回、跨郡/降层churn，第2会话接日程/商铺后补验收。无模型、未提交。

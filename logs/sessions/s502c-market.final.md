@@ -1,1 +1,0 @@
-商户/家庭口粮按户籍、营养和修正派生保留；区域价、补货、NPC自治接市场。改市场/商店/区域贸易/自治、world审批与说明、测试及迁移清单。L2→L4→publish→verify两项过，DeepSeek实耗上界0.002408元。逐文件node --test：s5-02 15/0、ledger12/0；CORE、arch、system-map、performance过；静态10587。overfit受EPERM。affected429项完成151（新测1无基线），余278，含master账本及农业/库存长跑；详同目录s502c-market的matrix/pending/failures。其余价格调用见docs/S5-02-价格迁移.md；下一步补跑pending。未提交部署。

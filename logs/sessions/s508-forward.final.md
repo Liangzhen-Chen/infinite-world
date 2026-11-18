@@ -1,1 +1,0 @@
-改：market/obligation-conditional.mjs、world的slots/core和tables/market.json；新增s5-08.test.mjs。远期按实付、共享库存、履约与真实质押派生，取消扣权、违约禁入；锚点345→138铜、半付预期5、取消后可靠度0.25。s5-08、CORE逐文件、arch-metrics、system-map、市场/交付相关测试全过；静态10587。偏离：编码需TAP摘要；未提交、零模型。余项：生产产能、合意取消实操、两段税险、役畜运力、封关、在途货款。下会话做运输及锚点，第三会话收尾验收。

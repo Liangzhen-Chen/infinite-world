@@ -1,5 +1,0 @@
-
-> infinite-fields@0.1.0 build:release
-> node tools/build-world.mjs --release
-
-{"hash":"3984c0eb856e219f488ed0e13c9d7c9ea0a5bc53dca836c8db84d1ea0670db6f","ok":true,"errors":[],"warnings":[],"counts":{"npcs":18,"locations":22,"items":66,"professions":65,"skills":204,"spells":1,"recipes":15,"monsters":50,"bosses":0}}

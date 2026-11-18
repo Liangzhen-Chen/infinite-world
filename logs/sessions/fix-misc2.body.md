@@ -1,3 +1,0 @@
-续做 fix-misc（同一工作区 F:/dnd-wt/A3F3；你上轮的改动已由主会话提交并合入 a3a）。主会话决定：种私田须有具备 soil_work 用途的工具这一规则合理，保留（翻土需要工具）；tests/probes/s3-offscreen.mjs 不是冻结文件（冻结的只有 tests/fixtures/a3-intents-v2.json 与 tools/a3-score.mjs），可以改。
-要做：在 tests/probes/s3-offscreen.mjs 的场景前提里，用真实游戏动作先取得播种与早收所需的工具（例如在出售锄头/镰刀的店铺真实购买，钱从玩家现有钱袋出；店铺与物品须是世界里真实存在的，rg world/ 核对；若需要先移动到店铺，就真实移动并等待），再继续原场景；保留原断言与 30/60 分钟时序从已审批数据派生。不改世界数据、不改规则、不为场景加物品。
-验收：node --test --test-isolation=none tests/s3-offscreen-life.test.mjs tests/s3-run001.test.mjs 全部通过；再跑 tests/agriculture-private.test.mjs 若存在（rg 找私田相关测试一并跑）。最后回复不超过 8 行，同样写到 F:/dnd/logs/sessions/fix-misc2.final.txt。不再启动其他会话或子代理。

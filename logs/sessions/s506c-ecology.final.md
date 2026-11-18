@@ -1,1 +1,0 @@
-advance-registry：合法畜群日结/出生捕食余数变更，按既有golden流程更新复跑5/0。holdings：wildlife裸写缺陷，改holdingSet后3/0。s5-05：合法领地压容，槽固定K60，保留33鱼/3出生，16/0。UI启动EPERM，原回归待外跑。改wildlife、测试/金快照、s5-06及world内容/审批。逐文件node --test --test-isolation=none；CORE/arch/map过，s5-06为19/1存档EPERM，overfit两项spawn EPERM。L2六项、逐条L4后发布，费用上界0.011976元、预留0。

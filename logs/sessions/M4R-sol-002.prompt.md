@@ -1,4 +1,0 @@
-你是《无限原野》的执行会话（Sol）。工作目录 F:/dnd-wt/M4R（分支 m4r，已合入 master；以 master 为准先 git merge master 若可，被拦则直接在当前工作区继续）。遵守 AGENTS.md（全部原创）与 docs/PLAN.md 开头规则；不启动其他会话；不用 git stash，不读 secrets.json（DeepSeek 只用环境变量 DEEPSEEK_API_KEY），不碰 dist/。沙箱拦截 git 时改动留工作区由主会话代提交。测试加 --test-isolation=none。
-任务 M4b 收尾：隐藏职业被动与代价的结算代码已合入主线，但职业规则正文未发布——上次前23条 L2 因我方解析失误耗尽两次调用。主会话授权：先修好解析（不改审核标准），再对全部待审条目各补审一次（这是解析错误而非模型否决，补审不计入“同一失败最多重跑一次”），然后 L4（随机10条六项均分≥4、单项≥3）并正式发布，接通 hidden-passives 测试里的候选规则。金额上限再加0.5元，独立预算账如实记账。
-验收：node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs tests/hidden-passives.test.mjs tests/career.test.mjs tests/combat.test.mjs tests/learning.test.mjs tests/prompt.test.mjs tests/system-map.test.mjs；buildWorld 临时目录发布构建。
-最后回复不超过6行：L2 次数与金额、L4 分数、验收结果、未解决，同样写到 F:/dnd/logs/sessions/M4R-sol-002.final.txt。

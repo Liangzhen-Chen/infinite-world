@@ -529,7 +529,7 @@ if (!defB || !defC || !defDue || !c12) {
   //  · 条目引用到本单元：条目点名了该栏，或条目一栏都没点名（“动词行无代号与载荷，需设计”“缺表 B 全部 12 栏”这类整行条目）→ 对上；
   //  · 条目对本卷有引用但都不是本单元 → 不对上（如死因动词条目只点卷八b `lethal`，不标卷八b 其余动词）；
   //  · 条目对本卷没有任何行号或代号引用 → 按（卷、栏）对：条目点名了该栏才对上（如“卷十五天劫……的 family、allowedTargets”）。
-  const readList = n => { for (const p of [path.join(ROOT, '审查', n), 'F:/dnd/docs/统一底层设计/审查/' + n]) { try { return fs.readFileSync(p, 'utf8').split(/\r?\n/); } catch {} } return []; };
+  const readList = n => { for (const p of [path.join(ROOT, '..', '审查', n), 'F:/dnd/docs/审查/' + n]) { try { return fs.readFileSync(p, 'utf8').split(/\r?\n/); } catch {} } return []; };
   const PENDING = [...readList('全书加载修复批-待裁清单.md'), ...readList('全书加载修复批-甲0-缺栏清单.md')];
   const volRx = v => new RegExp(v + '(?![一二三四五六七八九十零b甲乙])', 'g');
   const ALLF = [...new Set([...REQ_B, ...REQ_C, ...REQ_DUE])];
