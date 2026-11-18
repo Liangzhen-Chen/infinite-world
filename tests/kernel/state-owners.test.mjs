@@ -43,7 +43,9 @@ test('真实 state-owners.json：合并零错；loadWorld 通过后 V、E、P �
   assert.equal(E.E_WRITER_DUPLICATE, 'E-WRITER-DUPLICATE');
   assert.equal(E.E_PHASE_DUPLICATE, 'E-PHASE-DUPLICATE');
   // clock.minute、clock.seq（写者 kernel/scheduler.mjs，块 4-1；卷二十 §3.2 :444）、due.*（块 4-2，:445）、clock.dueNext（句柄计数器，李白 11-18 03:31）生成 P。
-  assert.deepEqual(Object.keys(P), ['clock_dueNext', 'clock_minute', 'clock_seq', 'created_props', 'created_props_basis', 'displayNames_seq', 'due', 'pendingPost', 'terminated']);
+  // aggregates.*.ledgerHolder（卷二十七 :200，写者 aggregate.mjs；keyKinds seedKey，李白 11-18 05:28 裁定②）生成 P.aggregates_ledgerHolder。
+  assert.deepEqual(Object.keys(P), ['aggregates_ledgerHolder', 'clock_dueNext', 'clock_minute', 'clock_seq', 'created_props', 'created_props_basis', 'displayNames_seq', 'due', 'pendingPost', 'terminated']);
+  assert.equal(P.aggregates_ledgerHolder('agg_x'), 'aggregates.agg_x.ledgerHolder');
   assert.equal(P.created_props('mat_x', 'density'), 'created.mat_x.props.density');
   assert.equal(P.terminated('npc_x'), 'terminated.npc_x');
   assert.equal(P.displayNames_text, undefined);
@@ -52,7 +54,9 @@ test('真实 state-owners.json：合并零错；loadWorld 通过后 V、E、P �
   assert.throws(() => kindOf('zz_not_an_id'), (e) => e.code === 'E-DIM-REF-MISSING');
   assert.deepEqual(r.owners.displayPaths, ['displayNames.*.text', 'playerNotes.*.text']);
   // 账本账户路径（写者 kernel/ledger.mjs）不生成 P（卷二 §2.6 第 4 条 :497；块 3-1 K3-04）：上面 P 的成员名里没有 accounts、outflowTotals。
-  assert.deepEqual(r.owners.ledgerPaths, ['accounts.*', 'outflowTotals.*']);
+  // ledgerTotals 整键 struct:resourceTotals（卷二 §1.5 :247，李白 11-18 02:55）同样是账本路径。
+  // 块 3-2：stockLots.*（卷三乙 :433）与批次键计数器 ledgerCounters.lotNext（李白 11-18 04:10）同为账本路径。
+  assert.deepEqual(r.owners.ledgerPaths, ['accounts.*', 'ledgerCounters.lotNext', 'ledgerTotals', 'outflowTotals.*', 'stockLots.*']);
 });
 
 test('真实声明表：sys.dimension_entry 两个闭集字段显式写空值；不登 sys.migration、ledgerSystem', () => {
@@ -320,6 +324,20 @@ test('账本账户路径：改写写者是账本写者的模式不生成 P；tex
   const m = mergeStateOwners(d, CTX);
   assert.deepEqual(m.errors, []);
   assert.deepEqual(m.merged.ledgerPaths, ['purse.*.coins']);
+});
+
+test('整键写者：writers 相对路径空串即顶层键本身（无 * 段的整键 struct，如卷二 §1.5 struct:resourceTotals）；账本整键不生成 P；含空段的相对路径仍拒', () => {
+  const d = base();
+  d.stateKeys.tally = { readers: [], writers: { '': 'kernel/ledger.mjs' } };
+  d.pathTypes.tally = 'struct:tallyTotals';
+  const m = mergeStateOwners(d, CTX);
+  assert.deepEqual(m.errors, []);
+  assert.deepEqual(m.merged.ledgerPaths, ['tally']);
+  assert.deepEqual(m.merged.writers.filter((w) => w.key === 'tally').map((w) => [w.pattern, w.rewrite]), [['tally', 'kernel/ledger.mjs']]);
+  const bad = base();
+  bad.stateKeys.tally = { readers: [], writers: { 'a..b': 'kernel/ledger.mjs' } };
+  bad.pathTypes.tally = 'struct:tallyTotals';
+  assert.deepEqual(mergeStateOwners(bad, CTX).errors.map((e) => e.code), ['E-DIM-STRUCT-FIELD']);
 });
 
 // ---------- sortKey 算法（卷十一 R11-3.14）与离线生成器 ----------

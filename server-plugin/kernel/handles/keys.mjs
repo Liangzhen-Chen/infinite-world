@@ -1,6 +1,7 @@
 // 维度键、修正键、state 路径的拼接与核对（卷二 §2.8 表 kernel 行"种子键与维度键拼接只在 kernel/handles/keys.mjs"；
 // §2.9 第 2 条强转豁免文件表 keys.mjs 行：按各自文法解析并查注册表，StatePath 另核对模式在 pathTypes 内且不是 textPath 与账本路径）。
-// 本文件只做 DimKey、ModKey、StatePath 三种（块 2 第 2-1 张）；SeedKey、NodeName、RxId、TextScope、EventId 的构造随各自那张卡加。
+// 本文件做 DimKey、ModKey、StatePath 三种（块 2 第 2-1 张）与 SeedKey 段的文法核对（块 3-2，李白 11-18 05:28 裁定②）；
+// SeedKey 的派生（§1.10 派生函数）、NodeName、RxId、TextScope、EventId 的构造随各自那张卡加。
 // 注册表全部来自加载结果（维度表表头、idIndex、词表索引、pathTypes），不认任何具体表、维度或路径。
 
 import { CODE_RE, HandleError } from './vocab-handle.mjs';
@@ -110,6 +111,28 @@ export function checkPathPattern(pattern) {
   const bad = segs.find((s) => s !== '*' && (!PATH_SEGMENT_RE.test(s) || PATH_SEGMENT_RESERVED.has(s)));
   if (!segs.length || bad !== undefined) throw new HandleError('E-PATH-SEGMENT-GRAMMAR', `pathTypes pattern ${JSON.stringify(pattern)}: literal segment ${JSON.stringify(bad)} not ^[a-z][a-zA-Z0-9_]*$ or reserved word`);
   if (!segs.some((s) => s !== '*')) throw new HandleError('E-PATH-SEGMENT-GRAMMAR', `pathTypes pattern ${JSON.stringify(pattern)}: needs at least one literal segment`);
+}
+
+/**
+ * 由种子派生的实体 id 段（SeedKey；keyKinds (c) `seedKey`，李白 11-18 05:28 裁定②）是否合文法：
+ * 卷二 §1.10 :320 种子键各部件"按代号规范"，派生 id 即 §1.9 代号文法 CODE_RE（与 handle 段同一文法，不另立宽松正则；卷二 :234 `ownerKey.aggregate: SeedKey`、
+ * 卷二十七 :348 聚合体 id 由 §1.10 派生函数得出、登记为 role_id）；且它既不是词表代号（词表代号段走命名 struct，02:55 裁定，不借 seedKey 兜底），
+ * 也不是已载入的带 kind 实体 id（那类段写实体 kind，keyKinds (a)(b)）。
+ * @param {KeyRegistry} reg @param {unknown} text
+ * @returns {boolean}
+ */
+export function isSeedKey(reg, text) {
+  return typeof text === 'string' && CODE_RE.test(text) && !reg.vocabIndex.has(text) && !reg.idIndex.has(text);
+}
+
+/**
+ * string → SeedKey（§2.9 第 2 条强转豁免表 keys.mjs 行）：不合 isSeedKey 即 E-PATH-KEYKINDS（卷二 :1545 码表、:815 现文，勘误 1118k10）。
+ * @param {KeyRegistry} reg @param {unknown} text
+ * @returns {import('../types.d.ts').SeedKey}
+ */
+export function seedKeyOf(reg, text) {
+  if (!isSeedKey(reg, text)) throw new HandleError('E-PATH-KEYKINDS', `seedKey ${JSON.stringify(text)}: want ^[a-z][a-z0-9_]{1,47}$, not a vocab code or loaded entity id`);
+  return /** @type {import('../types.d.ts').SeedKey} */ (/** @type {unknown} */ (text));
 }
 
 /**

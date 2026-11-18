@@ -12,9 +12,12 @@ const codes = ERROR_CODES.map((e) => e.code);
 
 test('码表条数：E 与 W 各为手数的字面量', () => {
   // 块 4-2 加 E-CLOCK-REACTION-LIMIT（李白 11-18 03:22 裁定①）：577 → 578、E 560 → 561。
-  assert.equal(codes.length, 578);
-  assert.equal(codes.filter((c) => c[0] === 'E').length, 561);
-  assert.equal(codes.filter((c) => c[0] === 'W').length, 17);
+  // 块 3-2 加卷六账本六码（勘误 1118k7 码表）：E 五码、W 一码；578 → 584、E 561 → 566、W 17 → 18。
+  // 块 3-2 续加 E-LEDGER-USEDBYDAY-ORDER、E-LEDGER-HOLDER-NOT-SUBJECT（勘误 1118k8 码表）：584 → 586、E 566 → 568。
+  // 块 3-2 续加 E-LEDGER-STAGING-SPONSOR（勘误 1118k9 码表）：586 → 587、E 568 → 569。
+  assert.equal(codes.length, 587);
+  assert.equal(codes.filter((c) => c[0] === 'E').length, 569);
+  assert.equal(codes.filter((c) => c[0] === 'W').length, 18);
   assert.equal(REGISTERED_CODES.size, codes.length);
 });
 
@@ -54,6 +57,14 @@ test('抽 6 个跨卷码：E 成员名与值、出处', () => {
   assert.deepEqual(src('E-ENV-TARGET'), ['卷二十 附·本卷错误码表']);
   assert.deepEqual(src('E-SEED-KEY'), ['卷二 §4.3', '卷二十 附·本卷错误码表']);
   assert.deepEqual(src('W-CAL-DRIFT'), ['卷二十 附·本卷错误码表']);
+  // 勘误 1118k7：卷六自己的码表，账本六码。
+  assert.deepEqual(src('E-LEDGER-UNBALANCED'), ['卷六 附·本卷错误码表']);
+  assert.deepEqual(src('W-LEDGER-ALERT'), ['卷六 附·本卷错误码表']);
+  // 勘误 1118k8：卷六码表补两码。
+  assert.deepEqual(src('E-LEDGER-USEDBYDAY-ORDER'), ['卷六 附·本卷错误码表']);
+  assert.deepEqual(src('E-LEDGER-HOLDER-NOT-SUBJECT'), ['卷六 附·本卷错误码表']);
+  // 勘误 1118k9：卷六码表补一码。
+  assert.deepEqual(src('E-LEDGER-STAGING-SPONSOR'), ['卷六 附·本卷错误码表']);
   assert.deepEqual(src('E-MAT-GRADE-KEYS'), ['卷二 §4.3']);
   assert.deepEqual(src('W-DIM-GAP'), ['卷二 §4.3']);
   assert.deepEqual(src('E-ACC-REGISTRY-WRITE'), ['卷二 §4.3', '卷十二 §2.12']);

@@ -30,5 +30,6 @@
  "server-plugin/kernel/validate/named-conditions.mjs",
  "server-plugin/kernel/validate/rows.mjs",
  "server-plugin/kernel/validate/types.mjs",
+ "server-plugin/kernel/view-registry.mjs",
  "server-plugin/kernel/vocab.mjs"
 ]

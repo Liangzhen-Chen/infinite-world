@@ -1,7 +1,9 @@
 // 账本骨架（卷六 §4.1 账本三元键与守恒；§2.1 账户与资源种类；§2.2 词表族；§2.5 ledger.json；§3.1 读入口；§3.3 唯一写者）。
 // 块 3 第 3-1 张：三元键、开户 openAccount、读入口 balance / accountsOf / stockIn、资源种类表与本卷词表族的加载校验 checkLedgerTables、
-// ledger.json 生效日窗口的读法 budgetOn。入账 post / transfer、批次存储归 3-2，限额通道日终分配与守恒不变量归 3-3。
-// 新账本一开始就是唯一写者（方案 R5）：accounts.*、outflowTotals.* 的写者只有本文件（state-owners.json；ledgerTotals.* 的登记等李白裁定，见回报）。
+// ledger.json 生效日窗口的读法 budgetOn。第 3-2 张：入账 post / transfer、批次存储 stockLots 与批次键、K-8 一致性审计 auditLots、
+// 物理律通道预警派生 alertGaps、逐日用量 usedByDay 的写与读 dayUsage、持有人主体核对与审计入口 auditLedger。
+// 限额通道日终分配、月结清理逐日项与守恒不变量归 3-3。
+// 新账本一开始就是唯一写者（方案 R5）：accounts.*、ledgerTotals、outflowTotals.*、stockLots.*、ledgerCounters.lotNext 的写者只有本文件（state-owners.json）。
 // 只读登记数据（资源种类行、词表条目字段、规则表），不认任何具体资源、来源去处代号、用途或实体 id（AGENTS 红线）；
 // 下面 SCHEMA 是卷六定义的族名、封闭族条目与账户字段的类型，不是内容数据。资源种类行的 transferable、counterpartRX、sources、sinks
 // 四个字段只在本文件读（A6-1.1 :398）。
@@ -13,6 +15,10 @@ import { KernelError, codeOf } from './errors.mjs';
 import { currentTransaction } from './transaction.mjs';
 import { TERMINATED_KEY } from './storage.mjs';
 import { invalidateMemo } from './memo.mjs';
+import { clone } from './clone.mjs';
+import { dim } from './dimensions.mjs';
+import { clockView } from './scheduler.mjs';
+import { readView } from './view-registry.mjs';
 
 // ---------- 卷六定义的结构常量 ----------
 
@@ -30,9 +36,31 @@ export const SCHEMA = Object.freeze({
   // 账户 holder 的类型（§2.1 :103）：ref refs[kind person, kind org, kind place, kind faith, kind deity]；faith、deity 两表的登记行只用于点数类。
   holderKinds: Object.freeze(['deity', 'faith', 'org', 'person', 'place']),
   catalogKinds: Object.freeze(['deity', 'faith']),
+  // 作持有人须带"作为主体登记"标记的 kind 与标记维度（§2.1 :103、S6-14；维度定义只在卷二 §5.6 :1765，boolean、always、onUnknown error）。
+  subjectFlags: Object.freeze({ place: 'ledgerHolder' }),
+  // 居民聚合体作持有人（§2.1 :103 SeedKey、S6-14，勘误 1118k9）：聚合记录 aggregates.<aggregate> 只由 aggregate.mjs 读写（卷二十七 S27-2 :242，
+  // 内核不在读豁免集合 :225），账本经登记的视图读取函数 aggregateView（卷二十七 §3.1）取登记标记 ledgerHolder（卷二 §5.6 :1765；位置卷二十七 :200；
+  // 李白 11-18 05:28 裁定①第 2、4 条）。checkSubject 对聚合体返回的 kind 记作 aggregateKind。
+  aggregateView: 'aggregateView', aggregateFlag: 'ledgerHolder', aggregateKind: 'aggregate',
+  // 批次属性 project（卷三乙 §2.3 :280，ref 卷十九 buildProject nullable）与工程的发起主体字段 sponsor（卷十九 §3.3 :272），
+  // 经登记的视图读取函数 buildProjectView（卷十九 §3.2 :242，补 sponsor 只读；李白 11-18 05:28 裁定①第 1、2 条）取，不直读 buildProject。
+  project: 'project', projectView: 'buildProjectView', sponsor: 'sponsor',
   catalogFamily: 'resfam_point',
-  // 状态顶层键（§3.3 :305）。
-  accounts: 'accounts',
+  // transferability：tr_bound 只许与发行者之间转（§2.1 :114）。
+  bound: 'tr_bound',
+  // 物品类资源的键是批次（§2.1 :104）：这一族的账户每个资源键是一个批次键，批次属性存 stockLots（李白 11-18 04:10）。
+  lotFamily: 'resfam_goods',
+  // 状态顶层键（§3.3 :305；stockLots 卷三乙 §3.3 :433；批次键计数器，李白 11-18 04:10，块 3-2 定名）。
+  accounts: 'accounts', totals: 'ledgerTotals', outflow: 'outflowTotals', stockLots: 'stockLots',
+  counters: 'ledgerCounters', lotNext: 'lotNext',
+  // struct:resourceTotals 的字段（卷二 §1.5 :247；卷六 §4.1.1 :347）：{cumulative, usedByDay: list<{day, used}>}。
+  cumulative: 'cumulative', usedByDay: 'usedByDay',
+  // 批次键 = 前缀 + 计数器值按内核常数表 handleRadix 进制（与卷二十 due_ 句柄同一做法，李白 11-18 03:31、04:10）。
+  lotPrefix: 'lot_', constantsTable: 'kernelConstants', radixKey: 'handleRadix',
+  // 批次属性里账本自己做算术的字段（卷六 §2.3 :160 costBasis：整批总成本原值，整数）与 K-8 校验的字段（卷三乙 :1035 taint ∈ [0,1]）。
+  costBasis: 'costBasis', taint: 'taint',
+  // 批次属性不存数量、不另存序号（卷二 §1.5 :246 struct:holderLots"末层不含"所列两字段；卷三乙 §2.3 :264"两字段已删"）：写了即拒。
+  lotForbidden: Object.freeze(['lotSeq', 'qty']),
   // 条目上的文档字段（不参与规则；grade 取卷三甲 §2.1 来源级别）。
   docFields: Object.freeze(['basis', 'grade']),
   grades: Object.freeze(['designed', 'measured', 'referenced']),
@@ -184,6 +212,32 @@ export function checkLedgerTables(rules, env) {
   return errors;
 }
 
+// 主体标记维度在表头的登记形状（卷二 §5.6 :1765：boolean，required always，onUnknown error）。
+const SUBJECT_FLAG_DEF = Object.freeze({ type: 'boolean', required: 'always', onUnknown: 'error' });
+
+/**
+ * 加载校验：持有人类型里须带主体标记的 kind（SCHEMA.subjectFlags），其维度表载入了，表头就必须照卷二 §5.6 :1765 登记标记维度
+ * （boolean、always、onUnknown error）。登记对了，"每行显式写、缺值报错"由公用行校验按 required always 报 E-DIM-REQUIRED-MISSING；
+ * 本函数只查表头，不认任何具体行。该 kind 的表未载入即无可查（实体表块 6 载入）。
+ * @param {Map<string, {doc: any}>} tables 维度校验结果的 tables（kind → {doc}）
+ * @returns {{code: string, level: string, table: string, row: string, dim: string, path: string, got: unknown, want: string}[]}
+ */
+export function checkSubjectFlagDims(tables) {
+  const errors = [];
+  for (const kind of Object.keys(SCHEMA.subjectFlags).sort(cmp)) {
+    const t = tables instanceof Map ? tables.get(kind) : undefined;
+    if (!t) continue;
+    const flag = SCHEMA.subjectFlags[kind];
+    const dims = t.doc && isObj(t.doc.dimensions) ? t.doc.dimensions : {};
+    const def = isObj(dims[flag]) ? dims[flag] : null;
+    for (const f of Object.keys(SUBJECT_FLAG_DEF)) {
+      if (def && def[f] === SUBJECT_FLAG_DEF[f]) continue;
+      errors.push({ code: 'E-DIM-STRUCT-FIELD', level: 'L2', table: kind, row: '', dim: flag, path: `${kind}#/dimensions/${flag}/${f}`, got: def ? def[f] : 'missing', want: `${SUBJECT_FLAG_DEF[f]} (卷二 §5.6 ${flag}; 卷六 §2.1 holder)` });
+    }
+  }
+  return errors;
+}
+
 // ---------- 运行期取登记数据 ----------
 
 function resourceRow(engine, kind, holder) {
@@ -242,6 +296,43 @@ function denied(e) {
 
 // ---------- 写入口 ----------
 
+// 持有人是主体（§2.1 :103、S6-14；卷三乙 K-2 :1030）：代号形、已载入实体、kind 在 holder 类型里；须带主体标记的 kind（place）其行标记为真，
+// 否则 E-LEDGER-HOLDER-NOT-SUBJECT。标记经 dim() 读（实体行或偏离行），不按名字、id 或类别推断。容器、固定装置是物品或词表代号，
+// 不在 holder 类型里（kind 不合 E-DIM-REF-MISSING，不是实体 E-DIM-UNKNOWN-READ）。居民聚合体（勘误 1118k9）经视图 aggregateView 读 ledgerHolder。
+// 出入账腿都核。返回 kind（聚合体为 SCHEMA.aggregateKind）。
+function checkSubject(engine, state, holderId) {
+  if (typeof holderId !== 'string' || !CODE_RE.test(holderId)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'holder id is not a code');
+  let kind;
+  try { kind = kindOf(holderId); } catch (e) {
+    if (codeOf(e) !== 'E-DIM-REF-MISSING') throw e;
+    // 先查实体，不是已载入实体再查居民聚合体：经登记的视图读取函数 aggregateView 取该聚合体（视图未登记 E-DIM-UNKNOWN-READ，不放行），
+    // 按其 ledgerHolder 标记判（§2.1 :103、S6-14、卷三乙 K-2 :1031；无标记或非真同为 E-LEDGER-HOLDER-NOT-SUBJECT，卷二十七 :200），
+    // 不按聚合种类或名字推断；视图给不出这一条（null/undefined）才是读到未知，给出的不是对象即形状不合，同报 E-DIM-UNKNOWN-READ。
+    const agg = readView(SCHEMA.aggregateView, engine, state, holderId);
+    if (isObj(agg)) {
+      if (agg[SCHEMA.aggregateFlag] !== true) throw new KernelError('E-LEDGER-HOLDER-NOT-SUBJECT', { entity: holderId }, `aggregate ${holderId}: ${SCHEMA.aggregateFlag} is not true (not registered as a ledger subject, 卷六 §2.1 :103)`);
+      return SCHEMA.aggregateKind;
+    }
+    if (agg !== null && agg !== undefined) throw new KernelError('E-DIM-UNKNOWN-READ', { entity: holderId }, `${SCHEMA.aggregateView}(${holderId}) did not return an object`);
+    throw new KernelError('E-DIM-UNKNOWN-READ', { entity: holderId }, `holder ${holderId} is neither a loaded entity nor an aggregate (onUnknown error, 卷六 §2.1 :103; entity tables load in block 6, K3-44)`);
+  }
+  if (!SCHEMA.holderKinds.includes(kind)) throw new KernelError('E-DIM-REF-MISSING', { entity: holderId }, `holder kind ${kind} is not one of ${SCHEMA.holderKinds.join(', ')}`);
+  if (Object.hasOwn(SCHEMA.subjectFlags, kind)) {
+    const flag = SCHEMA.subjectFlags[kind];
+    const f = dim(engine, state, kind, holderId, flag);
+    if (!(f.known && f.value === true)) throw new KernelError('E-LEDGER-HOLDER-NOT-SUBJECT', { entity: holderId }, `${kind} ${holderId}: ${flag} is not true (not registered as a ledger subject, 卷六 §2.1 :103)`);
+  }
+  return kind;
+}
+
+// 入账腿与开户的持有人核对（§2.1 :103）：主体核对之外，目录行只持点数类、未终止。
+function checkHolder(engine, state, holderId, row) {
+  const kind = checkSubject(engine, state, holderId);
+  if (SCHEMA.catalogKinds.includes(kind) && row.family !== SCHEMA.catalogFamily) throw new KernelError('E-DIM-REF-MISSING', { entity: holderId }, `${kind} catalog rows hold ${SCHEMA.catalogFamily} only`);
+  const marks = isObj(state) ? state[TERMINATED_KEY] : undefined;
+  if (isObj(marks) && Object.hasOwn(marks, holderId)) throw new KernelError('E-TERM-RESIDUE', { entity: holderId }, `holder ${holderId} is terminated`);
+}
+
 /**
  * kernelApi `openAccount(holderId, resourceRef, purposeCode)`（卷六 §3.2 :288；engine、state 省略写法照 §3.1 表头）：开零余额账户。
  * 已有该账户即原样返回，不改余额。只在事务内写（账本路径唯一写者是本文件）。依次核对，被拒抛 KernelError，由事务整笔回滚：
@@ -260,15 +351,7 @@ export function openAccount(engine, state, holderId, resourceRef, purposeCode) {
     if (typeof holderId !== 'string' || !CODE_RE.test(holderId)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'holder id is not a code');
     const row = checkResource(engine, resourceRef, holderId);
     entryOf(engine, SCHEMA.purpose, purposeCode, holderId);
-    let kind;
-    try { kind = kindOf(holderId); } catch (e) {
-      if (codeOf(e) !== 'E-DIM-REF-MISSING') throw e;
-      throw new KernelError('E-DIM-UNKNOWN-READ', { entity: holderId }, `holder ${holderId} is not a loaded entity (onUnknown error, 卷六 §2.1 :103; entity tables load in block 6, K3-44)`);
-    }
-    if (!SCHEMA.holderKinds.includes(kind)) throw new KernelError('E-DIM-REF-MISSING', { entity: holderId }, `holder kind ${kind} is not one of ${SCHEMA.holderKinds.join(', ')}`);
-    if (SCHEMA.catalogKinds.includes(kind) && row.family !== SCHEMA.catalogFamily) throw new KernelError('E-DIM-REF-MISSING', { entity: holderId }, `${kind} catalog rows hold ${SCHEMA.catalogFamily} only`);
-    const marks = isObj(state) ? state[TERMINATED_KEY] : undefined;
-    if (isObj(marks) && Object.hasOwn(marks, holderId)) throw new KernelError('E-TERM-RESIDUE', { entity: holderId }, `holder ${holderId} is terminated`);
+    checkHolder(engine, state, holderId, row);
     const key = accountKey(holderId, resourceRef, purposeCode);
     const segs = [SCHEMA.accounts, ...key];
     if (Number.isInteger(readAt(state, segs))) return key;
@@ -279,6 +362,488 @@ export function openAccount(engine, state, holderId, resourceRef, purposeCode) {
   } catch (e) {
     throw denied(e);
   }
+}
+
+// ---------- post：账本唯一写入口（§3.2 :286；§4.1 规则 2、3、5、7、13） ----------
+
+const LEG_ACCOUNT_FIELDS = Object.freeze(['account', 'delta', 'lot']);
+const LEG_FLOW_FIELDS = Object.freeze(['flow', 'kind', 'qty']);
+const DRAFT_FIELDS = Object.freeze(['legs', 'reason', 'refs']);
+const ACCOUNT_FIELDS = Object.freeze(['holder', 'purpose', 'resource']);
+const USAGE_FIELDS = Object.freeze(['day', 'flow', 'resource', 'used']);
+
+const fieldsWithin = (o, allowed) => isObj(o) && Object.keys(o).every((k) => allowed.includes(k));
+const structErr = (why) => new KernelError('E-DIM-STRUCT-FIELD', { entity: null }, why);
+const isPosInt = (v) => Number.isSafeInteger(v) && v > 0;
+
+// 批次键计数器的进制：内核常数表 kernelConstants.handleRadix（与卷二十 due_ 句柄同一张表、同一进制，李白 11-18 03:31、04:10）。
+function lotRadix(engine) {
+  const t = ruleTable(engine.rules, SCHEMA.constantsTable);
+  const r = isObj(t) ? t[SCHEMA.radixKey] : undefined;
+  if (!Number.isInteger(r)) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, `rules.${SCHEMA.constantsTable}.${SCHEMA.radixKey} is not an integer radix`);
+  return r;
+}
+
+// 批次键的序号（前缀之后按进制读回、往返一致才算；不是批次键即 null）。
+function lotOrdinal(key, radix) {
+  if (typeof key !== 'string' || !key.startsWith(SCHEMA.lotPrefix)) return null;
+  const digits = key.slice(SCHEMA.lotPrefix.length);
+  const n = Number.parseInt(digits, radix);
+  return Number.isSafeInteger(n) && n >= 0 && n.toString(radix) === digits ? n : null;
+}
+
+// 入账腿的账户 {holder, purpose, resource: {kind, key?}}；新批次腿（带 lot）不写 key，键由 post 发。
+function parseAccountLeg(engine, leg, i) {
+  if (!fieldsWithin(leg, LEG_ACCOUNT_FIELDS) || !Object.hasOwn(leg, 'account') || !Object.hasOwn(leg, 'delta')) throw structErr(`leg ${i}: account leg is {account, delta, lot?}`);
+  const a = leg.account;
+  if (!fieldsWithin(a, ACCOUNT_FIELDS) || ACCOUNT_FIELDS.some((f) => !Object.hasOwn(a, f))) throw structErr(`leg ${i}: account is {holder, purpose, resource}`);
+  if (typeof a.holder !== 'string' || !CODE_RE.test(a.holder)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, `leg ${i}: holder id is not a code`);
+  const r = a.resource;
+  if (!isObj(r) || !fieldsWithin(r, ['key', 'kind'])) throw structErr(`leg ${i}: resource is {kind, key}`);
+  const row = resourceRow(engine, r.kind, a.holder);
+  const purposeEntry = entryOf(engine, SCHEMA.purpose, a.purpose, a.holder);
+  if (!Number.isSafeInteger(leg.delta) || leg.delta === 0) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: a.holder }, `leg ${i}: delta is a non-zero integer`);
+  const isLotRow = row.family === SCHEMA.lotFamily;
+  const newLot = Object.hasOwn(leg, 'lot');
+  // 物品类：入账腿一律开新批次（每个批次键在账本里恰有一行余额，李白 11-18 04:10 K-8），出账腿指名已有批次。
+  if (isLotRow && leg.delta > 0 && !newLot) throw structErr(`leg ${i}: an increase of a ${SCHEMA.lotFamily} resource opens a new lot (lot: {splitFrom} or {attrs})`);
+  if (newLot && (!isLotRow || leg.delta < 0)) throw structErr(`leg ${i}: lot only on increase legs of ${SCHEMA.lotFamily} resources`);
+  if (newLot) {
+    if (Object.hasOwn(r, 'key')) throw structErr(`leg ${i}: a new lot leg carries no resource key (post issues it)`);
+    const l = leg.lot;
+    // 拆分可另带 project：供料时拆出新批次并把新批次的 project 设为该工程（卷十九 §4.4 规则 7 :531、卷三乙 K-2 :1031）；其余属性原样带出。
+    const ks = isObj(l) ? Object.keys(l).sort(cmp).join(',') : '';
+    if (!['attrs', 'splitFrom', 'project,splitFrom'].includes(ks)) throw structErr(`leg ${i}: lot is {splitFrom, project?} or {attrs}`);
+    if (Object.hasOwn(l, 'splitFrom') && (typeof l.splitFrom !== 'string' || !CODE_RE.test(l.splitFrom))) throw new KernelError('E-DIM-ID-FORMAT', { entity: a.holder }, `leg ${i}: splitFrom is not a lot key`);
+    if (Object.hasOwn(l, SCHEMA.project) && !projectOk(l[SCHEMA.project])) throw new KernelError('E-DIM-ID-FORMAT', { entity: a.holder }, `leg ${i}: project is null or a buildProject id`);
+    if (Object.hasOwn(l, 'attrs')) checkLotAttrs(l.attrs, a.holder, i);
+  } else if (typeof r.key !== 'string' || !CODE_RE.test(r.key)) {
+    throw new KernelError('E-DIM-ID-FORMAT', { entity: a.holder }, `leg ${i}: resource key is not a code`);
+  }
+  return { i, holder: a.holder, purpose: a.purpose, kind: r.kind, key: newLot ? null : r.key, delta: leg.delta, row, purposeEntry, lot: newLot ? leg.lot : null };
+}
+
+// 新批次的属性（卷三乙 §2.3 批次结构，字段含义与校验归块 6）：本卡只拒数量字段、只查账本自己做算术的 costBasis（非负整数）与 K-8 的 taint 范围。
+function checkLotAttrs(attrs, holder, i) {
+  if (!isObj(attrs)) throw structErr(`leg ${i}: lot attrs is an object`);
+  for (const f of SCHEMA.lotForbidden) if (Object.hasOwn(attrs, f)) throw structErr(`leg ${i}: lot attrs carry no ${f} (the ledger balance is the only quantity)`);
+  const cb = attrs[SCHEMA.costBasis];
+  if (cb !== undefined && !(Number.isSafeInteger(cb) && cb >= 0)) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: holder }, `leg ${i}: costBasis is a non-negative integer`);
+  if (!taintOk(attrs[SCHEMA.taint])) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: holder }, `leg ${i}: taint is in [0, 1]`);
+  if (!projectOk(attrs[SCHEMA.project])) throw new KernelError('E-DIM-ID-FORMAT', { entity: holder }, `leg ${i}: project is null or a buildProject id`);
+}
+
+// 批次属性 project：未写、null 或代号形的工程键（卷三乙 §2.3 :280 nullable ref buildProject）。
+function projectOk(p) {
+  return p === undefined || p === null || (typeof p === 'string' && CODE_RE.test(p));
+}
+
+// 备料批次（project 非空）的持有人须等于该工程的 sponsor（卷六码表 E-LEDGER-STAGING-SPONSOR；卷三乙 K-8 :1037；卷十九 §4.4 规则 7 :531）。
+// 返回违例 {code, why}（合格为 null）。sponsor 经登记的视图读取函数 buildProjectView（卷十九 §3.2 :242、§3.3 :272）取，不直读 buildProject
+// （李白 11-18 05:28 裁定①第 2 条；卷十九 construction.mjs 未建前视图未登记）：
+// - 视图未登记：E-DIM-UNKNOWN-READ，不放行（裁定①第 3 条）；
+// - 视图给不出该工程（null/undefined）：指向不存在的工程，E-LEDGER-STAGING-SPONSOR；
+// - 给出的不是对象、或无 sponsor、或 sponsor 不是代号：形状不合，E-DIM-UNKNOWN-READ（裁定①，本卡）；
+// - sponsor 不等于持有人：E-LEDGER-STAGING-SPONSOR。
+// 用途是否为备料不认具体用途代号，只按 project 非空判。
+function stagingFault(engine, state, holder, attrs) {
+  const p = isObj(attrs) ? attrs[SCHEMA.project] : undefined;
+  if (p === undefined || p === null) return null;
+  if (!projectOk(p)) return { code: 'E-DIM-ID-FORMAT', why: `${SCHEMA.project} is null or a buildProject id` };
+  let view;
+  try { view = readView(SCHEMA.projectView, engine, state, p); } catch (e) {
+    if (codeOf(e) !== 'E-DIM-UNKNOWN-READ') throw e;
+    return { code: 'E-DIM-UNKNOWN-READ', why: e.message };
+  }
+  if (view === null || view === undefined) return { code: 'E-LEDGER-STAGING-SPONSOR', why: `lot of ${SCHEMA.project} ${p}: ${SCHEMA.projectView}(${p}) has no such project` };
+  if (!isObj(view) || !Object.hasOwn(view, SCHEMA.sponsor) || typeof view[SCHEMA.sponsor] !== 'string' || !CODE_RE.test(view[SCHEMA.sponsor])) {
+    return { code: 'E-DIM-UNKNOWN-READ', why: `lot of ${SCHEMA.project} ${p}: ${SCHEMA.projectView}(${p}) returned no ${SCHEMA.sponsor} code` };
+  }
+  if (view[SCHEMA.sponsor] !== holder) return { code: 'E-LEDGER-STAGING-SPONSOR', why: `lot of ${SCHEMA.project} ${p}: holder ${holder} is not ${SCHEMA.projectView}(${p}).${SCHEMA.sponsor} (${view[SCHEMA.sponsor]})` };
+  return null;
+}
+
+// 赃物份额：未写或 fraction [0, 1]（卷三乙 §2.3 taint；K-8 :1035）。
+function taintOk(t) {
+  return t === undefined || (typeof t === 'number' && t >= 0 && t <= 1);
+}
+
+// 来源、去处腿 {flow: src 或 sink 代号, kind: 资源种类, qty: 正整数}（规则 3：代号须在该种类行 sources / sinks 内）。
+function parseFlowLeg(engine, leg, i) {
+  if (!fieldsWithin(leg, LEG_FLOW_FIELDS) || LEG_FLOW_FIELDS.some((f) => !Object.hasOwn(leg, f))) throw structErr(`leg ${i}: flow leg is {flow, kind, qty}`);
+  const row = resourceRow(engine, leg.kind, null);
+  if (!isPosInt(leg.qty)) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, `leg ${i}: qty is a positive integer`);
+  const rec = typeof leg.flow === 'string' ? engine.vocab.index.get(leg.flow) : undefined;
+  const side = rec && rec.family === SCHEMA.src ? SCHEMA.src : rec && rec.family === SCHEMA.sink ? SCHEMA.sink : null;
+  if (side === null) throw new KernelError('E-LEDGER-CODE-UNREGISTERED', { entity: null }, `leg ${i}: ${JSON.stringify(leg.flow)} is not a ${SCHEMA.src} or ${SCHEMA.sink} entry`);
+  const listed = side === SCHEMA.src ? row.sources : row.sinks;
+  if (!Array.isArray(listed) || !listed.includes(leg.flow)) throw new KernelError('E-LEDGER-CODE-UNREGISTERED', { entity: null }, `leg ${i}: ${leg.flow} is not in ${side === SCHEMA.src ? 'sources' : 'sinks'} of resource kind ${leg.kind}`);
+  return { i, code: leg.flow, side, kind: leg.kind, qty: leg.qty, entry: rec.entry || {}, row };
+}
+
+/**
+ * kernelApi `post({legs, reason, refs})`（卷六 §3.2 :286；engine、state 省略写法照 §3.1 表头）：账本唯一写入口，一笔之内全成或全败。
+ * 腿有两种：入账腿 {account: {holder, purpose, resource: {kind, key}}, delta: 非零整数, lot?}；来源去处腿 {flow: src/sink 代号, kind, qty: 正整数}。
+ * 物品类（resfam_goods，§2.1 :104 键是批次）入账腿不写 key、带 lot：{splitFrom: 本笔出账腿里同种类的批次键}（拆分，属性原样带出）或 {attrs}（新批次属性）；
+ * 批次键由 post 发（lot_ + ledgerCounters.lotNext 按 handleRadix 进制，只增不复用），属性写 stockLots，数量只在账户余额（李白 11-18 04:10）。
+ * 核对次序（任一不合即抛 KernelError，事务整笔回滚，规则层 catch 住也回滚）：
+ * - reason 必填（E-DIM-STRUCT-FIELD）、代号形（E-DIM-ID-FORMAT）；是否已登记 verb 待块 5，回执 notRun 列 reason_verb（K3-43）。
+ * - 规则 3：来源去处代号是 src/sink 条目、在该种类行 sources/sinks 内（E-LEDGER-CODE-UNREGISTERED）。
+ * - 规则 2：每个资源种类 L − S + K = 0；不平而本笔该种类没有任何来源去处腿即 E-LEDGER-CODE-UNREGISTERED（未带代号），带了仍不平即 E-LEDGER-UNBALANCED；
+ *   拆分腿从某批次带出的量之和超过该批次本笔出账量，同为 E-LEDGER-UNBALANCED。任一腿后余额为负 E-LEDGER-NEGATIVE。
+ * - 规则 5：带 pairedWith 的代号，本笔须有其配对代号的腿（E-LEDGER-PAIR-MISSING）；卷十九明细作对手的单向转换腿待卷十九首卡，现一律按缺腿拒。
+ * - 规则 7：同一种类有出账持有人与入账持有人不同时——tr_restricted 而 counterpartRX 空即 E-LEDGER-TRANSFER-RESTRICTED；counterpartRX 非空或 tr_bound
+ *   要读双方类别、持有边与发行者（块 6、卷十八、卷六 §4.15），读不到按 onUnknown error 报 E-DIM-UNKNOWN-READ，不放行。
+ * - 持有人只能是主体（§2.1 :103、S6-14）：出入账腿都核，不是已载入实体 E-DIM-UNKNOWN-READ、kind 不合 E-DIM-REF-MISSING、
+ *   place 行 ledgerHolder 不为真 E-LEDGER-HOLDER-NOT-SUBJECT；入账腿另照 openAccount 核目录行与终止（E-TERM-RESIDUE），账户不存在即开。
+ * - 限额：不在单笔上拒（§4.1 规则 6 :376 超日限额日终按比例分配；§2.5 :224 窗口外按零计也在那一步），日终分配归 3-3，带限额通道腿的回执 notRun 列 budget。
+ * 写：accounts 余额；规则 13 trackOutflow 分区的出账腿加 outflowTotals.<持有人>.<用途>.<种类>.<键>.cumulative；
+ * 来源去处 ledgerTotals.<种类>.<代号> = {cumulative 累加, usedByDay 当日项（clockView 世界日）累加、无则追加}；已有 usedByDay 乱序、重复日或末项晚于当日
+ *   E-LEDGER-USEDBYDAY-ORDER（李白 11-18 04:31 第 5 条）；
+ * 新批次的 project（卷三乙 §2.3 :280）非空即核持有人等于视图 buildProjectView(project).sponsor（E-LEDGER-STAGING-SPONSOR；视图未登记或返回缺 sponsor 即 E-DIM-UNKNOWN-READ）；
+ *   拆分写 {splitFrom, project} 即把新批次的 project 设为该值（供料，卷十九 §4.4 规则 7 :531），不写即原样带出。
+ * 新批次写 stockLots.<持有人>.<用途>.<种类>.<批次键>；拆分时 costBasis 照卷六 §4.2 规则 5 :418 拆（拆出 floor(原值 × 拆出量 ÷ 原数量)、留下取差），其余属性原样，taint 不改。
+ * @param {{vocab: any, rules: any}} engine @param {any} state
+ * @param {{legs: any[], reason: string, refs?: any}} draft
+ * @returns {Readonly<{lots: readonly (readonly [number, string])[], notRun: readonly string[]}>} lots：[腿序号, 新批次键]；notRun：本笔未核的项
+ */
+export function post(engine, state, draft) {
+  try {
+    const tx = currentTransaction();
+    if (!tx || tx.state !== state) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity: null }, 'post outside the transaction of this state');
+    if (!fieldsWithin(draft, DRAFT_FIELDS)) throw structErr('post draft is {legs, reason, refs?}');
+    if (!Object.hasOwn(draft, 'reason')) throw structErr('post reason is required (verb code, 卷六 §3.2 :286)');
+    if (typeof draft.reason !== 'string' || !CODE_RE.test(draft.reason)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'post reason is not a code');
+    if (draft.refs !== undefined && !isObj(draft.refs)) throw structErr('post refs is an object');
+    if (!Array.isArray(draft.legs) || draft.legs.length === 0) throw structErr('post legs is a non-empty list');
+
+    const acct = [];
+    const flows = [];
+    draft.legs.forEach((leg, i) => {
+      if (isObj(leg) && Object.hasOwn(leg, 'flow')) flows.push(parseFlowLeg(engine, leg, i));
+      else acct.push(parseAccountLeg(engine, leg, i));
+    });
+
+    // 规则 2：每个资源种类 L − S + K = 0。
+    const kinds = [...new Set([...acct.map((a) => a.kind), ...flows.map((f) => f.kind)])].sort(cmp);
+    for (const kind of kinds) {
+      const L = acct.filter((a) => a.kind === kind).reduce((s, a) => s + a.delta, 0);
+      const S = flows.filter((f) => f.kind === kind && f.side === SCHEMA.src).reduce((s, f) => s + f.qty, 0);
+      const K = flows.filter((f) => f.kind === kind && f.side === SCHEMA.sink).reduce((s, f) => s + f.qty, 0);
+      if (L - S + K === 0) continue;
+      if (S === 0 && K === 0) throw new KernelError('E-LEDGER-CODE-UNREGISTERED', { entity: null }, `${kind}: legs do not net to zero and carry no source or sink code`);
+      throw new KernelError('E-LEDGER-UNBALANCED', { entity: null, net: L - S + K }, `${kind}: L - S + K = ${L - S + K}`);
+    }
+    // 拆分腿：splitFrom 是本笔同种类出账腿的批次，带出量之和不超过该批次出账量。
+    const outOf = new Map();
+    for (const a of acct) if (a.delta < 0) outOf.set(`${a.kind}/${a.key}`, (outOf.get(`${a.kind}/${a.key}`) || 0) - a.delta);
+    const splitQty = new Map();
+    for (const a of acct) {
+      if (!a.lot || !Object.hasOwn(a.lot, 'splitFrom')) continue;
+      const k = `${a.kind}/${a.lot.splitFrom}`;
+      if (!outOf.has(k)) throw structErr(`leg ${a.i}: splitFrom ${a.lot.splitFrom} is not a lot of kind ${a.kind} with a decrease leg in this post`);
+      splitQty.set(k, (splitQty.get(k) || 0) + a.delta);
+      if (splitQty.get(k) > outOf.get(k)) throw new KernelError('E-LEDGER-UNBALANCED', { entity: a.holder }, `leg ${a.i}: more split from ${a.lot.splitFrom} than leaves it`);
+    }
+    // 规则 5：pairedWith 互指的代号成对出现。
+    const codes = new Set(flows.map((f) => f.code));
+    for (const f of flows) {
+      const p = f.entry.pairedWith;
+      if (p !== null && p !== undefined && !codes.has(p)) throw new KernelError('E-LEDGER-PAIR-MISSING', { entity: null }, `leg ${f.i}: ${f.code} needs a ${p} leg in the same post`);
+    }
+    // 规则 7：转让限制（只在出入账持有人不同时；同一持有人分区之间与来源去处腿不是转让）。
+    for (const kind of kinds) {
+      const legs = acct.filter((a) => a.kind === kind);
+      if (!legs.length) continue;
+      const row = legs[0].row;
+      const outs = new Set(legs.filter((a) => a.delta < 0).map((a) => a.holder));
+      const ins = new Set(legs.filter((a) => a.delta > 0).map((a) => a.holder));
+      const between = [...outs].some((h) => [...ins].some((g) => g !== h));
+      if (!between || (row.transferable !== SCHEMA.restricted && row.transferable !== SCHEMA.bound)) continue;
+      if (row.transferable === SCHEMA.restricted && (row.counterpartRX === null || row.counterpartRX === undefined)) {
+        throw new KernelError('E-LEDGER-TRANSFER-RESTRICTED', { entity: null }, `${kind}: ${SCHEMA.restricted} with no counterpart condition moves between no holders`);
+      }
+      throw new KernelError('E-DIM-UNKNOWN-READ', { entity: null }, `${kind}: ${row.transferable} needs counterpart classes, holding edges and the issuer (block 6, vol18, vol6 s4.15); not read, not let through`);
+    }
+
+    // 写。拆分的原批次属性与原数量取本笔写入之前的值。
+    const before = new Map();
+    for (const a of acct) {
+      if (!a.lot || !Object.hasOwn(a.lot, 'splitFrom')) continue;
+      const src = acct.find((b) => b.delta < 0 && b.kind === a.kind && b.key === a.lot.splitFrom);
+      const k = `${a.kind}/${a.lot.splitFrom}`;
+      if (before.has(k)) continue;
+      const attrs = readAt(state, [SCHEMA.stockLots, src.holder, src.purpose, a.kind, a.lot.splitFrom]);
+      if (!isObj(attrs)) throw new KernelError('E-DIM-REF-MISSING', { entity: src.holder }, `lot ${a.lot.splitFrom} has no ${SCHEMA.stockLots} row`);
+      const bal = readAt(state, [SCHEMA.accounts, src.holder, src.purpose, a.kind, a.lot.splitFrom]);
+      const qty = Number.isInteger(bal) ? bal : 0;
+      // 原批余额不够本笔出账量即先拒（余额检查在拆分除法之前，不论腿序）：原数量为 0 的批次无可拆，不做这次除法（卷六 §4.2 规则 5 :418）。
+      if (qty < outOf.get(k)) throw new KernelError('E-LEDGER-NEGATIVE', { entity: src.holder, balance: qty, delta: -outOf.get(k) }, `lot ${a.lot.splitFrom}: balance ${qty} is less than ${outOf.get(k)} leaving it`);
+      before.set(k, { src, attrs, qty, taken: 0, splits: 0, total: splitQty.get(k) });
+    }
+    const radix = acct.some((a) => a.lot) ? lotRadix(engine) : null;
+    const lots = [];
+    for (const a of acct) {
+      if (a.delta > 0) checkHolder(engine, state, a.holder, a.row);
+      else checkSubject(engine, state, a.holder);
+      let key = a.key;
+      let attrs = null;
+      if (a.lot) {
+        const next = readAt(state, [SCHEMA.counters, SCHEMA.lotNext]) ?? 0;
+        if (!Number.isSafeInteger(next) || next < 0) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, `${SCHEMA.counters}.${SCHEMA.lotNext} is not a non-negative integer`);
+        key = `${SCHEMA.lotPrefix}${next.toString(radix)}`;
+        setInTx(tx, [SCHEMA.counters, SCHEMA.lotNext], next + 1);
+        if (Object.hasOwn(a.lot, 'attrs')) attrs = clone(a.lot.attrs);
+        else {
+          const b = before.get(`${a.kind}/${a.lot.splitFrom}`);
+          attrs = clone(b.attrs);
+          const cb = b.attrs[SCHEMA.costBasis];
+          if (cb !== undefined) {
+            // 卷六 §4.2 规则 5 :418：拆出部分 floor(costBasis × 拆出数量 ÷ 原数量)，原批留下部分取原值减去各拆出部分（末份取差）。
+            const part = Number((BigInt(cb) * BigInt(a.delta)) / BigInt(b.qty));
+            attrs[SCHEMA.costBasis] = part;
+            b.taken += part;
+          }
+          b.splits += a.delta;
+          if (Object.hasOwn(a.lot, SCHEMA.project)) attrs[SCHEMA.project] = a.lot[SCHEMA.project];
+        }
+        lots.push(Object.freeze([a.i, key]));
+      }
+      const segs = [SCHEMA.accounts, a.holder, a.purpose, a.kind, key];
+      const cur = readAt(state, segs);
+      const now = (Number.isInteger(cur) ? cur : 0) + a.delta;
+      if (now < 0) throw new KernelError('E-LEDGER-NEGATIVE', { entity: a.holder, balance: Number.isInteger(cur) ? cur : 0, delta: a.delta }, `leg ${a.i}: balance would be ${now}`);
+      setInTx(tx, segs, now);
+      if (attrs) {
+        // 新批次（新属性或拆分带出）带 project 即核备料持有人等于工程 sponsor（卷三乙 K-8 :1037、卷十九 §4.4 规则 7 :531）。
+        const sf = stagingFault(engine, state, a.holder, attrs);
+        if (sf) throw new KernelError(sf.code, { entity: a.holder }, `leg ${a.i}: ${sf.why}`);
+        setInTx(tx, [SCHEMA.stockLots, a.holder, a.purpose, a.kind, key], attrs);
+      }
+      // 规则 13：trackOutflow 为真的分区，每条出账腿的减少量加进流出累计。
+      if (a.delta < 0 && a.purposeEntry.trackOutflow === true) {
+        const oseg = [SCHEMA.outflow, a.holder, a.purpose, a.kind, a.key, 'cumulative'];
+        const prev = readAt(state, oseg);
+        setInTx(tx, oseg, (Number.isInteger(prev) ? prev : 0) - a.delta);
+      }
+    }
+    // 拆出部分的 costBasis 从原批扣下（留下部分取原值减去拆出部分之和）。
+    for (const [k, b] of before) {
+      if (b.attrs[SCHEMA.costBasis] === undefined) continue;
+      setInTx(tx, [SCHEMA.stockLots, b.src.holder, b.src.purpose, k.slice(0, k.indexOf('/')), k.slice(k.indexOf('/') + 1), SCHEMA.costBasis], b.attrs[SCHEMA.costBasis] - b.taken);
+    }
+    // 规则 3：来源、去处按资源种类累计（cumulative 单调不减）；同时记当日用量 usedByDay（§4.1.1 :347；世界日读 clockView，e6）。
+    // 不在单笔上做限额拒绝：限额通道超日限额由日终按比例分配（§4.1 规则 6 :376），窗口外按零计（§2.5 :224）也归那一步（3-3）。
+    if (flows.length) {
+      const today = clockView(engine, state).day;
+      const byCell = new Map();
+      for (const f of flows) {
+        const k = `${f.kind}/${f.code}`;
+        const c = byCell.get(k) || { kind: f.kind, code: f.code, qty: 0 };
+        c.qty += f.qty;
+        byCell.set(k, c);
+      }
+      for (const c of [...byCell.values()].sort((x, y) => cmp(x.kind, y.kind) || cmp(x.code, y.code))) {
+        const seg = [SCHEMA.totals, c.kind, c.code];
+        const prev = readTotalsCell(state, c.kind, c.code);
+        const days = prev.usedByDay.map((d) => ({ day: d.day, used: d.used }));
+        const last = days[days.length - 1];
+        if (last && last.day > today) throw new KernelError('E-LEDGER-USEDBYDAY-ORDER', { entity: null }, `${seg.join('.')}: last day ${last.day} is after today ${today}`);
+        if (last && last.day === today) last.used += c.qty;
+        else days.push({ day: today, used: c.qty });
+        setInTx(tx, seg, { [SCHEMA.cumulative]: prev.cumulative + c.qty, [SCHEMA.usedByDay]: days });
+      }
+    }
+
+    const notRun = ['reason_verb'];
+    if (flows.some((f) => f.entry.budgetMode === SCHEMA.capped)) notRun.push('budget');
+    if (kinds.some((k) => resourceRow(engine, k, null).issuerBacked === true)) notRun.push('issuer_backed');
+    return Object.freeze({ lots: Object.freeze(lots), notRun: Object.freeze(notRun.sort(cmp)) });
+  } catch (e) {
+    throw denied(e);
+  }
+}
+
+/**
+ * kernelApi `transfer({from, to, resource, qty, reason, refs})`（卷六 §3.2 :287）：post 的两腿简写。from、to 是账户键 {holder, purpose}，
+ * resource 是 {kind, key}，qty 正整数。物品类的入账腿按拆分写（lot: {splitFrom: resource.key}），属性原样带出；其余资源两腿同键。
+ * @param {{vocab: any, rules: any}} engine @param {any} state
+ * @param {{from: {holder: string, purpose: string}, to: {holder: string, purpose: string}, resource: {kind: string, key: string}, qty: number, reason: string, refs?: any}} t
+ */
+export function transfer(engine, state, t) {
+  try {
+    if (!fieldsWithin(t, ['from', 'qty', 'reason', 'refs', 'resource', 'to']) || ['from', 'qty', 'reason', 'resource', 'to'].some((f) => !Object.hasOwn(t, f))) throw structErr('transfer is {from, to, resource, qty, reason, refs?}');
+    for (const side of ['from', 'to']) if (!fieldsWithin(t[side], ['holder', 'purpose'])) throw structErr(`transfer ${side} is {holder, purpose}`);
+    if (!isPosInt(t.qty)) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, 'transfer qty is a positive integer');
+    if (!isObj(t.resource)) throw structErr('transfer resource is {kind, key}');
+    const row = resourceRow(engine, t.resource.kind, null);
+    const out = { account: { holder: t.from.holder, purpose: t.from.purpose, resource: t.resource }, delta: -t.qty };
+    const into = row.family === SCHEMA.lotFamily
+      ? { account: { holder: t.to.holder, purpose: t.to.purpose, resource: { kind: t.resource.kind } }, delta: t.qty, lot: { splitFrom: t.resource.key } }
+      : { account: { holder: t.to.holder, purpose: t.to.purpose, resource: t.resource }, delta: t.qty };
+    const draft = { legs: [out, into], reason: t.reason };
+    if (t.refs !== undefined) draft.refs = t.refs;
+    return post(engine, state, draft);
+  } catch (e) {
+    throw denied(e);
+  }
+}
+
+// ---------- K-8 批次一致性（卷三乙 §4.4 K-8 :1035；李白 11-18 04:10） ----------
+
+/**
+ * 审计入口（纯读）：物品类账户与 stockLots 一一对应。返回违例行（空即通过），按 path 升序：
+ * - 物品类账户的每个资源键是批次键（lot_ 前缀、按 handleRadix 读回序号且小于 ledgerCounters.lotNext，即发过、不复用），否则 E-DIM-ID-FORMAT；
+ * - 每个批次键在账本里恰有一行余额（出现在两个账户即 E-DIM-ID-DUPLICATE）；
+ * - 物品类余额行必有同路径 stockLots 行，stockLots 行必有同路径余额行（E-DIM-REF-MISSING）；
+ * - stockLots 行不带数量字段（E-DIM-STRUCT-FIELD）；taint 若写了须在 [0, 1]（E-DIM-DOMAIN-RANGE）。purports.item 是否物品模板待块 6 物品表。
+ * - project 非空的批次：持有人须等于视图 buildProjectView(project).sponsor、工程须存在（E-LEDGER-STAGING-SPONSOR；视图未登记或返回缺 sponsor 即 E-DIM-UNKNOWN-READ），同 post。
+ * @param {{vocab: any, rules: any}} engine @param {any} state
+ * @returns {readonly {code: string, path: string, why: string}[]}
+ */
+export function auditLots(engine, state) {
+  const out = [];
+  const push = (code, segs, why) => out.push(Object.freeze({ code, path: segs.join('.'), why }));
+  const rows = ruleTable(engine.rules, SCHEMA.resourcesTable);
+  const isLotKind = (kind) => Object.hasOwn(rows, kind) && isObj(rows[kind]) && rows[kind].family === SCHEMA.lotFamily;
+  const radix = lotRadix(engine);
+  const nextRaw = readAt(state, [SCHEMA.counters, SCHEMA.lotNext]);
+  const next = Number.isSafeInteger(nextRaw) ? nextRaw : 0;
+  // 逐行走 <top>.<持有人>.<用途>.<种类>.<键>；rel 是去掉顶层键的四段，两张表按 rel 对照。
+  const walk = (top, fn) => {
+    const t = readAt(state, [top]);
+    for (const h of Object.keys(isObj(t) ? t : {}).sort(cmp)) {
+      for (const p of Object.keys(isObj(t[h]) ? t[h] : {}).sort(cmp)) {
+        for (const k of Object.keys(isObj(t[h][p]) ? t[h][p] : {}).sort(cmp)) {
+          for (const key of Object.keys(isObj(t[h][p][k]) ? t[h][p][k] : {}).sort(cmp)) fn([h, p, k, key], t[h][p][k][key]);
+        }
+      }
+    }
+  };
+  const seen = new Map();
+  walk(SCHEMA.accounts, (rel) => {
+    const [, , kind, key] = rel;
+    if (!isLotKind(kind)) return;
+    const segs = [SCHEMA.accounts, ...rel];
+    const seq = lotOrdinal(key, radix);
+    if (seq === null || seq >= next) push('E-DIM-ID-FORMAT', segs, `not an issued lot key (${SCHEMA.lotPrefix} + seq < ${SCHEMA.counters}.${SCHEMA.lotNext} in radix ${radix})`);
+    if (seen.has(key)) push('E-DIM-ID-DUPLICATE', segs, `lot key also at ${seen.get(key)}`);
+    else seen.set(key, segs.join('.'));
+    if (!isObj(readAt(state, [SCHEMA.stockLots, ...rel]))) push('E-DIM-REF-MISSING', segs, `no ${SCHEMA.stockLots} row for this lot`);
+  });
+  walk(SCHEMA.stockLots, (rel, attrs) => {
+    const segs = [SCHEMA.stockLots, ...rel];
+    if (!Number.isInteger(readAt(state, [SCHEMA.accounts, ...rel]))) push('E-DIM-REF-MISSING', segs, 'no ledger balance row for this lot');
+    if (!isObj(attrs)) { push('E-DIM-STRUCT-FIELD', segs, 'lot attrs is an object'); return; }
+    for (const f of SCHEMA.lotForbidden) if (Object.hasOwn(attrs, f)) push('E-DIM-STRUCT-FIELD', segs, `lot attrs carry no ${f}`);
+    if (!taintOk(attrs[SCHEMA.taint])) push('E-DIM-DOMAIN-RANGE', segs, 'taint in [0, 1]');
+    const sf = stagingFault(engine, state, rel[0], attrs);
+    if (sf) push(sf.code, segs, sf.why);
+  });
+  return Object.freeze(out.sort((a, b) => cmp(a.path, b.path) || cmp(a.code, b.code)));
+}
+
+// ---------- 逐日用量 usedByDay（卷二 §1.5 :247 struct:resourceTotals；卷六 §4.1.1 :347；李白 11-18 04:22、04:31 第 5 条） ----------
+
+// 一条 usedByDay 的违例（空即合格）：项是 {day: 非负整数, used: 非负整数}（E-DIM-STRUCT-FIELD），day 严格升序、每天至多一项（E-LEDGER-USEDBYDAY-ORDER）。
+function usedByDayFault(list) {
+  if (!Array.isArray(list)) return { code: 'E-DIM-STRUCT-FIELD', why: `${SCHEMA.usedByDay} is a list of {day, used}` };
+  for (let i = 0; i < list.length; i++) {
+    const d = list[i];
+    if (!isObj(d) || Object.keys(d).sort().join(',') !== 'day,used' || !Number.isSafeInteger(d.day) || d.day < 0 || !Number.isSafeInteger(d.used) || d.used < 0) {
+      return { code: 'E-DIM-STRUCT-FIELD', why: `${SCHEMA.usedByDay}[${i}] is {day, used} with non-negative integers` };
+    }
+    if (i > 0 && !(list[i - 1].day < d.day)) return { code: 'E-LEDGER-USEDBYDAY-ORDER', why: `${SCHEMA.usedByDay}[${i}].day ${d.day} does not follow day ${list[i - 1].day} strictly` };
+  }
+  return null;
+}
+
+// 读 ledgerTotals.<种类>.<代号>：没有即 {cumulative: 0, usedByDay: []}；有就须两字段齐全且 usedByDay 合格（不为旧形状兼容），否则抛对应码。
+function readTotalsCell(state, kind, code) {
+  const cell = readAt(state, [SCHEMA.totals, kind, code]);
+  if (cell === undefined) return { cumulative: 0, usedByDay: [] };
+  const path = `${SCHEMA.totals}.${kind}.${code}`;
+  if (!isObj(cell) || Object.keys(cell).sort().join(',') !== `${SCHEMA.cumulative},${SCHEMA.usedByDay}` || !Number.isSafeInteger(cell.cumulative) || cell.cumulative < 0) {
+    throw new KernelError('E-DIM-STRUCT-FIELD', { entity: null }, `${path} is {${SCHEMA.cumulative}, ${SCHEMA.usedByDay}}`);
+  }
+  const bad = usedByDayFault(cell.usedByDay);
+  if (bad) throw new KernelError(bad.code, { entity: null }, `${path}: ${bad.why}`);
+  return cell;
+}
+
+/**
+ * 当日用量（§4.1.1 :347、§4.1 规则 6 :375）：ledgerTotals.<资源种类>.<代号>.usedByDay 里 day 等于当日（clockView 世界日）那一项的 used，无项即 0。
+ * 读时照写入处同一套校验 usedByDay（乱序或重复日 E-LEDGER-USEDBYDAY-ORDER）。纯读。
+ * @param {{vocab: any, rules: any, units: any}} engine @param {any} state @param {string} resourceKind @param {string} code 来源或去处代号
+ * @returns {number}
+ */
+export function dayUsage(engine, state, resourceKind, code) {
+  resourceRow(engine, resourceKind, null);
+  const rec = typeof code === 'string' ? engine.vocab.index.get(code) : undefined;
+  if (!rec || (rec.family !== SCHEMA.src && rec.family !== SCHEMA.sink)) throw new KernelError('E-DIM-REF-MISSING', { entity: null }, `${JSON.stringify(code)} is not a ${SCHEMA.src} or ${SCHEMA.sink} entry`);
+  const today = clockView(engine, state).day;
+  const hit = readTotalsCell(state, resourceKind, code).usedByDay.find((d) => d.day === today);
+  return hit ? hit.used : 0;
+}
+
+/**
+ * 账本审计入口（纯读；加载存档后与守恒审计时调）。返回违例行（空即通过），按 path 升序：
+ * - ledgerTotals 每格是 {cumulative, usedByDay}，usedByDay 项形状不合 E-DIM-STRUCT-FIELD，day 不严格升序或同日多项 E-LEDGER-USEDBYDAY-ORDER（李白 11-18 04:31 第 5 条）；
+ * - accounts、stockLots、outflowTotals 的每个持有人照 post 同一套主体核对（§2.1 :103、S6-14）：不是已载入实体 E-DIM-UNKNOWN-READ，
+ *   kind 不在 holder 类型里 E-DIM-REF-MISSING，place 行 ledgerHolder 不为真 E-LEDGER-HOLDER-NOT-SUBJECT（码表"加载期见到即加载失败"）；
+ * - 物品类批次的一致性照 auditLots（K-8）。
+ * @param {{vocab: any, rules: any, tables?: any}} engine @param {any} state
+ * @returns {readonly {code: string, path: string, why: string}[]}
+ */
+export function auditLedger(engine, state) {
+  const out = [...auditLots(engine, state)];
+  const push = (code, path, why) => out.push(Object.freeze({ code, path, why }));
+  const totals = readAt(state, [SCHEMA.totals]);
+  for (const kind of Object.keys(isObj(totals) ? totals : {}).sort(cmp)) {
+    for (const code of Object.keys(isObj(totals[kind]) ? totals[kind] : {}).sort(cmp)) {
+      try { readTotalsCell(state, kind, code); } catch (e) {
+        if (codeOf(e) === null) throw e;
+        push(codeOf(e), `${SCHEMA.totals}.${kind}.${code}`, e.message);
+      }
+    }
+  }
+  for (const top of [SCHEMA.accounts, SCHEMA.outflow, SCHEMA.stockLots]) {
+    const t = readAt(state, [top]);
+    for (const h of Object.keys(isObj(t) ? t : {}).sort(cmp)) {
+      try { checkSubject(engine, state, h); } catch (e) {
+        if (codeOf(e) === null) throw e;
+        push(codeOf(e), `${top}.${h}`, e.message);
+      }
+    }
+  }
+  return Object.freeze(out.sort((a, b) => cmp(a.path, b.path) || cmp(a.code, b.code)));
+}
+
+// ---------- 物理律通道预警（§4.1 规则 6 :375；李白 11-18 04:20 选 A：不单独存储，月结 closePeriod 派生写月报） ----------
+
+/**
+ * 纯函数：给定若干（资源种类、来源或去处代号、世界日、当日用量），对照 ledger.json 的 alert 派生逐日预警缺口 W-LEDGER-ALERT。
+ * 只对物理律通道（budgetMode bm_physical）；alert 格缺或为空即不预警；用量大于 alert 才记。不截断、不拒单笔、不写状态、不经 report。
+ * 逐日用量取自 ledgerTotals 的 usedByDay（post 写、dayUsage 读当日项）；按期汇集成 usage 并写进月报、写成功后清已结期逐日项归 3-3 closePeriod。
+ * @param {{vocab: any, rules: any}} engine
+ * @param {readonly {resource: string, flow: string, day: number, used: number}[]} usage
+ * @returns {readonly {code: string, resource: string, flow: string, day: number, used: number, alert: number}[]} 按（资源种类、代号、日）升序
+ */
+export function alertGaps(engine, usage) {
+  if (!Array.isArray(usage)) throw structErr('usage is a list of {resource, flow, day, used}');
+  const alert = readAt(ruleTable(engine.rules, SCHEMA.ledgerTable), ['alert']);
+  const out = [];
+  for (const u of usage) {
+    if (!fieldsWithin(u, USAGE_FIELDS) || USAGE_FIELDS.some((f) => !Object.hasOwn(u, f))) throw structErr('usage row is {resource, flow, day, used}');
+    resourceRow(engine, u.resource, null);
+    const rec = typeof u.flow === 'string' ? engine.vocab.index.get(u.flow) : undefined;
+    if (!rec || (rec.family !== SCHEMA.src && rec.family !== SCHEMA.sink)) throw new KernelError('E-DIM-REF-MISSING', { entity: null }, `${JSON.stringify(u.flow)} is not a ${SCHEMA.src} or ${SCHEMA.sink} entry`);
+    if (!Number.isSafeInteger(u.day) || u.day < 0 || !Number.isSafeInteger(u.used) || u.used < 0) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, 'day and used are non-negative integers');
+    if ((rec.entry || {}).budgetMode !== SCHEMA.physical) continue;
+    const line = readAt(alert, [u.resource, u.flow]);
+    if (Number.isInteger(line) && u.used > line) out.push(Object.freeze({ code: 'W-LEDGER-ALERT', resource: u.resource, flow: u.flow, day: u.day, used: u.used, alert: line }));
+  }
+  return Object.freeze(out.sort((a, b) => cmp(a.resource, b.resource) || cmp(a.flow, b.flow) || a.day - b.day));
 }
 
 // ---------- 读入口（§3.1：全部纯读，不开户、不入账、不写状态） ----------

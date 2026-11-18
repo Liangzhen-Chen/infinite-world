@@ -13,6 +13,7 @@ export type SealedValue = { readonly __brand: 'SealedValue' };
 /** pathTypes 每条模式的值类型。 */
 export interface PathTypes {
   readonly 'accounts.*': StructValue<'holderAccounts'>;
+  readonly 'aggregates.*.ledgerHolder': boolean;
   readonly 'clock.dueNext': number;
   readonly 'clock.minute': number;
   readonly 'clock.seq': number;
@@ -21,10 +22,13 @@ export interface PathTypes {
   readonly 'displayNames.*.seq': number;
   readonly 'displayNames.*.text': SealedValue;
   readonly 'due.*': StructValue<'dueItem'>;
+  readonly 'ledgerCounters.lotNext': number;
+  readonly 'ledgerTotals': StructValue<'resourceTotals'>;
   readonly 'narration.*': SealedValue;
   readonly 'outflowTotals.*': StructValue<'holderOutflow'>;
   readonly 'pendingPost.*': readonly (StructValue<'pendingPost'>)[];
   readonly 'playerNotes.*.text': SealedValue;
+  readonly 'stockLots.*': StructValue<'holderLots'>;
   readonly 'terminated.*': StructValue<'terminated'>;
 }
 
@@ -34,6 +38,9 @@ export type PathValue<P extends keyof PathTypes> = PathTypes[P];
 /** state 的形状：按 pathTypes 各模式展开，`*` 段为索引签名。 */
 export type State = {
   readonly accounts?: { readonly [segment: string]: StructValue<'holderAccounts'> };
+  readonly aggregates?: { readonly [segment: string]: {
+      readonly ledgerHolder?: boolean;
+    } };
   readonly clock?: {
     readonly dueNext?: number;
     readonly minute?: number;
@@ -49,11 +56,16 @@ export type State = {
       readonly text?: SealedValue;
     } };
   readonly due?: { readonly [segment: string]: StructValue<'dueItem'> };
+  readonly ledgerCounters?: {
+    readonly lotNext?: number;
+  };
+  readonly ledgerTotals?: StructValue<'resourceTotals'>;
   readonly narration?: { readonly [segment: string]: SealedValue };
   readonly outflowTotals?: { readonly [segment: string]: StructValue<'holderOutflow'> };
   readonly pendingPost?: { readonly [segment: string]: readonly (StructValue<'pendingPost'>)[] };
   readonly playerNotes?: { readonly [segment: string]: {
       readonly text?: SealedValue;
     } };
+  readonly stockLots?: { readonly [segment: string]: StructValue<'holderLots'> };
   readonly terminated?: { readonly [segment: string]: StructValue<'terminated'> };
 };

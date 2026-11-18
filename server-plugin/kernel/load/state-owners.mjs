@@ -32,10 +32,14 @@ export const ENTITY_KINDS = Object.freeze(['item', 'material', 'species', 'plant
 // keyKinds 的 (c) 项：封闭的非实体键类型代号（李白 11-17 pathTypes `*` 段 kind 字段裁定）。event = EventId（卷二 :197 事件无 kind）；
 // dimKey = 维度键（如 created.*.props.* 的第二段）；identityKey = 身份键键号（卷四 :927，全世界唯一整数、对规则不透明，非实体 kind；李白 11-17）。
 // handle = 运行时句柄（李白 11-18 03:22 裁定②：如 due.* 的段是 cancel 用的句柄，运行时生成、不是固定词表；词表代号段仍走命名 struct，02:55）。
+// seedKey = 由种子派生的实体 id 段（李白 11-18 05:28 裁定②：如 aggregates.* 的段是居民聚合体 id，卷二 :234 `SeedKey`、卷二十七 :348 经 §1.10 派生）；
+// 只收这一类段，词表代号段仍走命名 struct（02:55），不得借 seedKey 兜底：运行期 storage 写入按 handles/keys.mjs isSeedKey 核（代号文法、非词表代号、非已载入实体 id），
+// 不合 E-DIM-ID-FORMAT（与 handle 段不合文法同码）。
 // (b) 列表可混列实体 kind 与 (c) 代号，表示并集。再加新代号须登记进卷二并报李白，各卷不得自造。
 export const KEY_DIMKEY = 'dimKey';
 export const KEY_HANDLE = 'handle';
-export const KEY_NONENTITY = Object.freeze(['event', KEY_DIMKEY, 'identityKey', KEY_HANDLE]);
+export const KEY_SEEDKEY = 'seedKey';
+export const KEY_NONENTITY = Object.freeze(['event', KEY_DIMKEY, 'identityKey', KEY_HANDLE, KEY_SEEDKEY]);
 
 // handle 类的格式即卷二 §1.9 代号文法 CODE_RE（kernel/validate/types.mjs，不另立文法；李白 11-18 03:31 裁定 1）；生成句柄的内核文件自管形状（scheduler.mjs 的 due_＋序号）。
 // 去留表覆盖核对豁免的协议键顶层段（卷二 §2.6 :519"账户、holdings、statuses、modifiers、terminated、到期堆"；到期堆的键 `due` 见卷二十 :445）。账户由账本写者判（ledgerPaths）。
@@ -279,8 +283,9 @@ export function mergeStateOwners(decl, ctx = {}) {
     for (const rel of sorted(Object.keys(row.writers))) {
       const w = row.writers[rel];
       const wat = `${at}/writers/${rel}`;
-      const abs = `${key}.${rel}`;
-      if (rel === '' || segs(rel).includes('')) { err(E.E_DIM_STRUCT_FIELD, key, wat, rel, 'non-empty relative path pattern'); continue; }
+      // 相对路径为空串即该顶层键本身（整键的值是一个命名 struct、无 `*` 段的 pathTypes 项，如卷二 §1.5 `struct:resourceTotals` 的 `ledgerTotals`）。
+      const abs = rel === '' ? key : `${key}.${rel}`;
+      if (rel !== '' && segs(rel).includes('')) { err(E.E_DIM_STRUCT_FIELD, key, wat, rel, 'relative path pattern without empty segments ("" = the whole key)'); continue; }
       const rec = parseWriter(w, (code, got, want) => err(code, abs, wat, got, want));
       if (rec) writers.set(abs, { pattern: abs, key, ...rec, source: 'stateKeys' });
     }

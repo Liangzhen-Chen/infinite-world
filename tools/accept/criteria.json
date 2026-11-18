@@ -88,10 +88,30 @@
     {
      "ref": "块 4-2 加 E-CLOCK-REACTION-LIMIT（李白 11-18 03:22 裁定①）：码表闭包变化，口径不变",
      "rev": 10
+    },
+    {
+     "ref": "块 3-2 加卷六账本六码（勘误 1118k7 码表）：码表闭包变化，口径不变",
+     "rev": 11
+    },
+    {
+     "ref": "块 3-2 续加 E-LEDGER-USEDBYDAY-ORDER、E-LEDGER-HOLDER-NOT-SUBJECT（勘误 1118k8 码表）：码表闭包变化，口径不变",
+     "rev": 12
+    },
+    {
+     "ref": "块 3-2 续加 E-LEDGER-STAGING-SPONSOR（勘误 1118k9 码表）：码表闭包变化，口径不变",
+     "rev": 13
+    },
+    {
+     "ref": "块 3-2 续 keys.mjs 加 SeedKey 段文法 isSeedKey、seedKeyOf（李白 11-18 05:28 裁定②）：闭包文件变化，口径不变",
+     "rev": 14
+    },
+    {
+     "ref": "块 3-2 续 seedKey 段不合文法改报 E-PATH-KEYKINDS（卷二 :1545、:815，勘误 1118k10；Opus 只核必须改）：keys.mjs 闭包文件变化，口径不变",
+     "rev": 15
     }
    ],
-   "print": "3a6f9c463e73117591658fde2028d31955a512e55ea211c4319fb7dd91bbc83f",
-   "rev": 10,
+   "print": "5c872ddb240a7fa32ea6f7898f095051bcf3ea7bbd3530b408b8b0365bcb4af3",
+   "rev": 15,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -490,10 +510,30 @@
     {
      "ref": "块 4-2 加 E-CLOCK-REACTION-LIMIT（李白 11-18 03:22 裁定①）：码表闭包变化，口径不变",
      "rev": 12
+    },
+    {
+     "ref": "块 3-2 加卷六账本六码（勘误 1118k7 码表）：码表闭包变化，口径不变",
+     "rev": 13
+    },
+    {
+     "ref": "块 3-2 续加 E-LEDGER-USEDBYDAY-ORDER、E-LEDGER-HOLDER-NOT-SUBJECT（勘误 1118k8 码表）：码表闭包变化，口径不变",
+     "rev": 14
+    },
+    {
+     "ref": "块 3-2 续加 E-LEDGER-STAGING-SPONSOR（勘误 1118k9 码表）：码表闭包变化，口径不变",
+     "rev": 15
+    },
+    {
+     "ref": "块 3-2 续 keys.mjs 加 SeedKey 段文法 isSeedKey、seedKeyOf（李白 11-18 05:28 裁定②）：闭包文件变化，口径不变",
+     "rev": 16
+    },
+    {
+     "ref": "块 3-2 续 seedKey 段不合文法改报 E-PATH-KEYKINDS（卷二 :1545、:815，勘误 1118k10；Opus 只核必须改）：keys.mjs 闭包文件变化，口径不变",
+     "rev": 17
     }
    ],
-   "print": "a0f31b6e591bb458d1401724d3a41d1ebba8b7e784de36ca84ed41a41d873023",
-   "rev": 12,
+   "print": "aee9acadf5bf9bce04d1ab84579b3ecddbfd83cca5a4027624b81b71da9ba118",
+   "rev": 17,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1056,10 +1096,30 @@
     {
      "ref": "块 4-2 加 E-CLOCK-REACTION-LIMIT（李白 11-18 03:22 裁定①）：码表闭包变化，口径不变",
      "rev": 18
+    },
+    {
+     "ref": "块 3-2 加卷六账本六码（勘误 1118k7 码表）：码表闭包变化，口径不变",
+     "rev": 19
+    },
+    {
+     "ref": "块 3-2 续加 E-LEDGER-USEDBYDAY-ORDER、E-LEDGER-HOLDER-NOT-SUBJECT（勘误 1118k8 码表）：码表闭包变化，口径不变",
+     "rev": 20
+    },
+    {
+     "ref": "块 3-2 续加 E-LEDGER-STAGING-SPONSOR（勘误 1118k9 码表）：码表闭包变化，口径不变",
+     "rev": 21
+    },
+    {
+     "ref": "块 3-2 续 keys.mjs 加 SeedKey 段文法 isSeedKey、seedKeyOf（李白 11-18 05:28 裁定②）：闭包文件变化，口径不变",
+     "rev": 22
+    },
+    {
+     "ref": "块 3-2 续 seedKey 段不合文法改报 E-PATH-KEYKINDS（卷二 :1545、:815，勘误 1118k10；Opus 只核必须改）：keys.mjs 闭包文件变化，口径不变",
+     "rev": 23
     }
    ],
-   "print": "cb3a6c6670c72138fdfb56c9d5c3f562708cf656ef440fcaf0c2c2858c153db1",
-   "rev": 18,
+   "print": "9088fecc6fa9f96d26f2851b78681107ced18975aa6e2b95ae9851ea81c49261",
+   "rev": 23,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1198,10 +1258,30 @@
     {
      "ref": "块 4-2 加 E-CLOCK-REACTION-LIMIT（李白 11-18 03:22 裁定①）：码表闭包变化，口径不变",
      "rev": 8
+    },
+    {
+     "ref": "块 3-2 加卷六账本六码（勘误 1118k7 码表）：码表闭包变化，口径不变",
+     "rev": 9
+    },
+    {
+     "ref": "块 3-2 续加 E-LEDGER-USEDBYDAY-ORDER、E-LEDGER-HOLDER-NOT-SUBJECT（勘误 1118k8 码表）：码表闭包变化，口径不变",
+     "rev": 10
+    },
+    {
+     "ref": "块 3-2 续加 E-LEDGER-STAGING-SPONSOR（勘误 1118k9 码表）：码表闭包变化，口径不变",
+     "rev": 11
+    },
+    {
+     "ref": "块 3-2 续 keys.mjs 加 SeedKey 段文法 isSeedKey、seedKeyOf（李白 11-18 05:28 裁定②）：闭包文件变化，口径不变",
+     "rev": 12
+    },
+    {
+     "ref": "块 3-2 续 seedKey 段不合文法改报 E-PATH-KEYKINDS（卷二 :1545、:815，勘误 1118k10；Opus 只核必须改）：keys.mjs 闭包文件变化，口径不变",
+     "rev": 13
     }
    ],
-   "print": "3a6f9c463e73117591658fde2028d31955a512e55ea211c4319fb7dd91bbc83f",
-   "rev": 8,
+   "print": "5c872ddb240a7fa32ea6f7898f095051bcf3ea7bbd3530b408b8b0365bcb4af3",
+   "rev": 13,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {

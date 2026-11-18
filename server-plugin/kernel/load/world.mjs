@@ -13,7 +13,7 @@ import { installHandles } from '../handles/generated.mjs';
 import { installStorage } from '../storage.mjs';
 import { finalizeInputs, inputsBySystem, resetFinalized } from '../declare.mjs';
 import { codeOf } from '../errors.mjs';
-import { checkLedgerTables } from '../ledger.mjs';
+import { checkLedgerTables, checkSubjectFlagDims } from '../ledger.mjs';
 import { checkClockTables, checkHookCadence, installScheduler } from '../scheduler.mjs';
 
 export const LAYOUT = Object.freeze({
@@ -66,7 +66,8 @@ export function loadWorld(root, opts = {}) {
   const owners = mergeStateOwners(decl, { units: report.env.units, kinds: new Set(report.tables.keys()), families: new Set(families), terminableKinds, tableDims });
   // rules.clock 与 due_kind、reaction_priority 条目的加载校验（卷二十 §2.1；字段含义只在 kernel/scheduler.mjs 读）；
   // cadence/phaseOffset 按声明表的钩子逐个查（§2.1 :130，E-CLOCK-CADENCE，块 4-2），所以排在声明表合并之后。
-  const domain = report.env ? [...checkLedgerTables(read.rules, report.env), ...checkClockTables(read.rules, report.env), ...checkHookCadence(read.rules, owners.merged.hooks)] : [];
+  // 持有人主体标记维度的表头登记（卷二 §5.6 ledgerHolder；卷六 §2.1 holder），该 kind 的表载入了才查。
+  const domain = report.env ? [...checkLedgerTables(read.rules, report.env), ...checkSubjectFlagDims(report.tables),...checkClockTables(read.rules, report.env), ...checkHookCadence(read.rules, owners.merged.hooks)] : [];
   const tail = rulesReport([...checkRules(read, report.env), ...domain]);
   const syntax = (parsed.errors || []).map((e) => ({ code: e.code, severity: 'error', level: 'L0', table: 'state-owners', row: '', dim: '', path: `#${e.pointer}`, got: e.got, want: e.want }));
   // 依赖声明定稿（卷二 §2.3 :470–471、§2.7 :828）：机器生成 dim:<kind> 与 modified:<kind>，对 uses 做传递闭包，写回 systems[*].inputs。
