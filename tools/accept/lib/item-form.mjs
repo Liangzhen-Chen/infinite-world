@@ -29,6 +29,9 @@ export const METHOD_TARGETS = { static_code: ['runtime_code', 'tools_code', 'tes
 export const PARAM_KINDS = {
   groups: 'group', readers: 'group', codes: 'code', code: 'code', paths: 'path', literal: 'word', access: 'word',
   facs: 'fac', callers: 'fac', roots: 'fac', modules: 'table', tables: 'table', callees: 'class', checks: 'word', cond: 'word',
+  // api：kernelApi 导出 id（"<文件>#<名>"，入口名，须在声明表 kernelApi 登记里）。readerSet、scopeSet 是闭集代号，指向所属扫描类别行 fileSets 里的文件集
+  // （参数里不许列文件名单，R12-11.5；文件名单只在扫描类别登记行，随出处登记，同 castFiles、litExempt）。
+  entries: 'api', readerSet: 'word', scopeSet: 'word',
 };
 
 // 非扫描式条目（没有 scanClass 的）的修订记录（卷十二 S12-16；李白 11-17 S12-16 非扫描式条目修订记录裁定）：记在条目行自身，以条目为单位。
@@ -84,6 +87,7 @@ export function itemChecks(it, keys) {
       else if (kind === 'path' && !/^[A-Za-z*][A-Za-z0-9_*]*(\.[A-Za-z*][A-Za-z0-9_*]*)*$/.test(v)) err('param', 'E-ACC-ITEM-PARAM', `path ${v}`);
       else if (kind === 'word' && !/^[a-z][A-Za-z0-9_]*$/.test(v)) err('param', 'E-ACC-ITEM-PARAM', `${pk} ${v}`);
       else if (kind === 'fac' && !keys.facs.has(v)) err('param', 'E-ACC-ITEM-PARAM', `facility ${v} not registered`);
+      else if (kind === 'api' && !(keys.apis && keys.apis.has(v))) err('param', 'E-ACC-ITEM-PARAM', `kernelApi entry ${v} not registered`);
       else if (kind === 'table' && !(v in REGISTRY)) err('param', 'E-ACC-ITEM-PARAM', `table ${v} not registered`);
       else if (kind === 'class' && !keys.classes.has(v)) err('param', 'E-ACC-ITEM-PARAM', `class ${v} not registered`);
     }
@@ -91,8 +95,9 @@ export function itemChecks(it, keys) {
   return out;
 }
 
-export function keySets(model, regs) {
+export function keySets(model, regs, decl) {
   return {
+    apis: new Set((((decl || {}).kernelApi || {}).exports || []).map((e) => e.export)),
     groups: new Set(model.groups.map((g) => g.key).concat(model.offlineGroups.map((g) => g.key), Object.values(model.processes).map((p) => p.remainderGroup).filter(Boolean))),
     detectors: new Set((regs.detectors || []).map((d) => d.detectorCode)),
     classes: new Set((regs.scanclasses || []).map((c) => c.scanClass)),

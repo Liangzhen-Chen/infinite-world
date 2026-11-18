@@ -25,7 +25,7 @@ function namelistShape(v) {
 
 export function detect(ctx, params) {
   const checks = new Set(params.checks || []);
-  const keys = keySets(ctx.model, ctx.regs);
+  const keys = keySets(ctx.model, ctx.regs, ctx.decl);
   const hits = [];
   for (const kind of params.tables || []) {
     const rows = regContent(ctx, kind);

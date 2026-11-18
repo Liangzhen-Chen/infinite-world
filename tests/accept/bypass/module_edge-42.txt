@@ -1,0 +1,4 @@
+// @file server-plugin/kernel/ledger.mjs
+export const f = (row) => row.sources.length + row.sinks.length;
+// @file server-plugin/kernel/files.json
+["server-plugin/kernel/__case__/module_edge-42.mjs", "server-plugin/kernel/ledger.mjs"]

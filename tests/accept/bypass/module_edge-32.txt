@@ -1,0 +1,2 @@
+import * as L from '../../kernel/ledger.mjs';
+export const f = (s) => L.transfer(s, []);

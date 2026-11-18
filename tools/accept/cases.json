@@ -650,6 +650,64 @@
    "scanClass": "module_edge"
   },
   {
+   "addedAtRev": 17,
+   "caseKey": "module_edge-31",
+   "expectCode": "E-VIEW-INPUT-IMPORT",
+   "fixture": "tests/accept/bypass/module_edge-31.txt",
+   "group": "gate",
+   "origin": "卷六 S6-13 :336、1118k13：gate 组不在 post 的 callers 登记里，具名导入即计",
+   "polarity": "must_fail",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 17,
+   "caseKey": "module_edge-32",
+   "expectCode": "E-VIEW-INPUT-IMPORT",
+   "fixture": "tests/accept/bypass/module_edge-32.txt",
+   "group": "inputEdge",
+   "origin": "卷六 S6-13 :336、1118k13：命名空间导入调用 transfer，inputEdge 不在登记 callers 里",
+   "polarity": "must_fail",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 17,
+   "caseKey": "module_edge-33",
+   "expectCode": "E-VIEW-INPUT-IMPORT",
+   "fixture": "tests/accept/bypass/module_edge-33.txt",
+   "group": "rules",
+   "origin": "卷六 A6-1.1 :398：kernel/ledger.mjs 之外读资源种类行 sources 字段",
+   "polarity": "must_fail",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 17,
+   "caseKey": "module_edge-34",
+   "expectCode": "E-VIEW-INPUT-IMPORT",
+   "fixture": "tests/accept/bypass/module_edge-34.txt",
+   "group": "kernel",
+   "origin": "卷六 A6-1.1 :398：账本内核 kernel/ledger.mjs 引用 priceFor",
+   "polarity": "must_fail",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 17,
+   "caseKey": "module_edge-41",
+   "fixture": "tests/accept/bypass/module_edge-41.txt",
+   "group": "rules",
+   "origin": "卷六 S6-13 :336：规则层在 post 的 callers 登记里，具名导入并调用不计（必须不报用例）",
+   "polarity": "must_pass",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 17,
+   "caseKey": "module_edge-42",
+   "fixture": "tests/accept/bypass/module_edge-42.txt",
+   "group": "kernel",
+   "origin": "卷六 A6-1.1 :398：kernel/ledger.mjs 自己读 sources、sinks 不计（必须不报用例）",
+   "polarity": "must_pass",
+   "scanClass": "module_edge"
+  },
+  {
    "addedAtRev": 1,
    "caseKey": "namelist-01",
    "expectCode": "E-ACC-SCAN-NAMELIST",

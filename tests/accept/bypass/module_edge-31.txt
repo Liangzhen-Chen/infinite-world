@@ -1,0 +1,2 @@
+import { post } from '../../kernel/ledger.mjs';
+export const f = (s) => post(s, []);

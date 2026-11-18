@@ -197,8 +197,16 @@
     "call_edge",
     "path_access"
    ],
+   "fileSets": {
+    "ledgerFieldReaders": [
+     "server-plugin/kernel/ledger.mjs"
+    ],
+    "ledgerKernel": [
+     "server-plugin/kernel/ledger.mjs"
+    ]
+   },
    "scanClass": "module_edge",
-   "source": "卷二 §2.7；S16、S19；卷十二 §2.4"
+   "source": "卷二 §2.7；S16、S19；卷十二 §2.4；fileSets（文件名单只在类别登记行，R12-11.5）：ledgerFieldReaders 照卷六 A6-1.1 :398（读资源种类行 transferable、counterpartRX、sources、sinks 的模块只有 kernel/ledger.mjs），ledgerKernel 照同行（账本内核 kernel/ledger.mjs 对 priceFor、valuation 的引用范围）"
   },
   {
    "detectors": [

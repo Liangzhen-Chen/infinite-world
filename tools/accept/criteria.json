@@ -30,10 +30,14 @@
     {
      "ref": "无上次合入值按零基线（依方案 R13、R12-8.9；卷十二 R12-8.4 首句、卷一 I43 的零基线特例）：baselineMonotone 对没有上次合入值的分量（新分量、尚无 baseline.json）按 0 比较，现值大于 0 即计一条；用例 baseline_monotone-11 的 c_new 改为必须报",
      "rev": 7
+    },
+    {
+     "ref": "块 3 第 3-3 张第二部分：共用 lib/item-form.mjs 加 entries、readerSet、scopeSet 参数键与 keySets 第三参；本类别判定口径不变",
+     "rev": 8
     }
    ],
-   "print": "3901adf3f3e26fc25806a8da214ed473ac14b58e2c20186664bb70eaf842e5f8",
-   "rev": 7,
+   "print": "cd62590b3aa5a2c4e7b022b67ab0a2090466bd3a18e736a565819e13ca2da6f3",
+   "rev": 8,
    "scanClass": "baseline_monotone",
    "source": "卷一 V-11（I43）；卷十二 §2.5、E-ACC-BASELINE-UP；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -167,10 +171,14 @@
     {
      "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
      "rev": 2
+    },
+    {
+     "ref": "块 3 第 3-3 张第二部分：共用的 path_access 加 readerSet、scopeSet 与 ref 方式（文件集取自类别行 fileSets）；本类别条目不用，write 判定口径不变",
+     "rev": 3
     }
    ],
-   "print": "1144a496c8087359e64597bb721f37a44a0d921a95acf12417ccbb57a849ecd1",
-   "rev": 2,
+   "print": "93c59c371bfd21303a48c3f26d8ea9120f00163a29f421e11e76b0874d0ed6e7",
+   "rev": 3,
    "scanClass": "cross_write",
    "source": "卷十二 R12-3.1–3.4；卷二 §2.6、§2.7、S5",
    "terms": {
@@ -226,10 +234,14 @@
     {
      "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
      "rev": 2
+    },
+    {
+     "ref": "块 3 第 3-3 张第二部分：共用的 path_access 加 readerSet、scopeSet 与 ref 方式（文件集取自类别行 fileSets）；本类别条目不用，display 判定口径不变",
+     "rev": 3
     }
    ],
-   "print": "1144a496c8087359e64597bb721f37a44a0d921a95acf12417ccbb57a849ecd1",
-   "rev": 2,
+   "print": "93c59c371bfd21303a48c3f26d8ea9120f00163a29f421e11e76b0874d0ed6e7",
+   "rev": 3,
    "scanClass": "display_read",
    "source": "卷十二 R12-2.10；卷二 S7",
    "terms": {
@@ -253,10 +265,14 @@
     {
      "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
      "rev": 2
+    },
+    {
+     "ref": "块 3 第 3-3 张第二部分：共用的 path_access 加 readerSet、scopeSet 与 ref 方式，lib/item-form.mjs 加参数键；本类别无条目用，判定口径不变",
+     "rev": 3
     }
    ],
-   "print": "fb3f253600275bc57fa6737b807f4a828d619a7c8d8bcb85f84403df4eaf002d",
-   "rev": 2,
+   "print": "c05ee44ed57b1c1887b08789f0fa9909f058ed9bc6c4bfa3bda8790725cde7a0",
+   "rev": 3,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -329,10 +345,14 @@
     {
      "ref": "共用的 ledger_count 的 baselineMonotone 无上次合入值按零基线（方案 R13、R12-8.9）；本类别判定口径不变",
      "rev": 7
+    },
+    {
+     "ref": "块 3 第 3-3 张第二部分：共用 lib/item-form.mjs 加 entries、readerSet、scopeSet 参数键与 keySets 第三参；本类别判定口径不变",
+     "rev": 8
     }
    ],
-   "print": "3901adf3f3e26fc25806a8da214ed473ac14b58e2c20186664bb70eaf842e5f8",
-   "rev": 7,
+   "print": "cd62590b3aa5a2c4e7b022b67ab0a2090466bd3a18e736a565819e13ca2da6f3",
+   "rev": 8,
    "scanClass": "ext_code",
    "terms": {
     "vol12.S12-12": {
@@ -421,10 +441,14 @@
     {
      "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
      "rev": 4
+    },
+    {
+     "ref": "块 3 第 3-3 张第二部分：共用 lib/item-form.mjs 加 entries、readerSet、scopeSet 参数键与 keySets 第三参、data_shape 传声明表；本类别判定口径不变",
+     "rev": 5
     }
    ],
-   "print": "48c214f8b48bbccf9a0641a6dd3893d1f6a17774950739751c14e74f625b6fcc",
-   "rev": 4,
+   "print": "c46bfd8890059bbe6af61089b71da0443d111cde6c64956be7ac7ab592b48a4e",
+   "rev": 5,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -554,10 +578,14 @@
     {
      "ref": "门禁错误码登记两码 E-ACC-TEST-FAIL、E-ACC-REQUIRED-NOT-RUN（卷十二 §2.12 勘误 1118k14；李白 11-18 06:41）：error-codes.mjs 入检测器闭包，指纹重盖，判定口径不变",
      "rev": 18
+    },
+    {
+     "ref": "块 3 第 3-3 张第二部分：共用 lib/item-form.mjs 加 entries、readerSet、scopeSet 参数键与 keySets 第三参、data_shape 传声明表；本类别判定口径不变",
+     "rev": 19
     }
    ],
-   "print": "77e27c930d1e97166164d9ae7fadca98b1586bcf1a2554cb8fdfccbe83646039",
-   "rev": 18,
+   "print": "814eeef0cdac59a010b6ed74d63098a01c35fb3cea50f4309371b44e133b7091",
+   "rev": 19,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -615,10 +643,14 @@
     {
      "ref": "共用的 ledger_count 的 baselineMonotone 无上次合入值按零基线（方案 R13、R12-8.9）；本类别判定口径不变",
      "rev": 7
+    },
+    {
+     "ref": "块 3 第 3-3 张第二部分：共用 lib/item-form.mjs 加 entries、readerSet、scopeSet 参数键与 keySets 第三参；本类别判定口径不变",
+     "rev": 8
     }
    ],
-   "print": "3901adf3f3e26fc25806a8da214ed473ac14b58e2c20186664bb70eaf842e5f8",
-   "rev": 7,
+   "print": "cd62590b3aa5a2c4e7b022b67ab0a2090466bd3a18e736a565819e13ca2da6f3",
+   "rev": 8,
    "scanClass": "item_downgrade",
    "terms": {
     "vol12.S12-16": {
@@ -652,10 +684,14 @@
     {
      "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
      "rev": 5
+    },
+    {
+     "ref": "块 3 第 3-3 张第二部分：lib/item-form.mjs 加 entries（须是 kernelApi 登记里的导出 id）、readerSet、scopeSet 参数键与 keySets 第三参，data_shape 传声明表；参数里列文件仍拒（item_form-02），原有核对口径不变",
+     "rev": 6
     }
    ],
-   "print": "48c214f8b48bbccf9a0641a6dd3893d1f6a17774950739751c14e74f625b6fcc",
-   "rev": 5,
+   "print": "c46bfd8890059bbe6af61089b71da0443d111cde6c64956be7ac7ab592b48a4e",
+   "rev": 6,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -735,10 +771,14 @@
     {
      "ref": "共用的 ledger_count 的 baselineMonotone 无上次合入值按零基线（方案 R13、R12-8.9）；本类别判定口径不变",
      "rev": 5
+    },
+    {
+     "ref": "块 3 第 3-3 张第二部分：共用 lib/item-form.mjs 加 entries、readerSet、scopeSet 参数键与 keySets 第三参；本类别判定口径不变",
+     "rev": 6
     }
    ],
-   "print": "3901adf3f3e26fc25806a8da214ed473ac14b58e2c20186664bb70eaf842e5f8",
-   "rev": 5,
+   "print": "cd62590b3aa5a2c4e7b022b67ab0a2090466bd3a18e736a565819e13ca2da6f3",
+   "rev": 6,
    "scanClass": "ledger_tally",
    "source": "卷十二 §4.1.6 至 §4.14.6 A12-n.1；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -946,10 +986,14 @@
     {
      "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
      "rev": 16
+    },
+    {
+     "ref": "块 3 第 3-3 张第二部分（李白 11-18 06:18 裁定、卷六 S6-13 现文）：共用的 call_edge 加 entries 方式（受限内核入口调用者核对，新 lib/api-callers.mjs，许可全取自 state-owners kernelApi 的 callers/callerFiles，不在检测器或卷十二另抄名单）；path_access 加 readerSet、scopeSet（文件集登记在本类别行 fileSets）与 ref 方式；lib/item-form.mjs 加 entries、readerSet、scopeSet 参数键；call_edge 原 callees 判定、path_access 的 read/branch 判定口径不变；新增 vol6.S6-13.a、vol6.A6-1.1.a、vol6.A6-1.1.b 三行与用例 module_edge-31、32、33、34、41、42",
+     "rev": 17
     }
    ],
-   "print": "38a40c391b5082185121ca2cc8c200beac667f7b0fd899a42d9fe6a8987a95a2",
-   "rev": 16,
+   "print": "a50a4b2426cc6cc4aeccfc5170232660494699b177b2bdea660e207a20e1487f",
+   "rev": 17,
    "scanClass": "module_edge",
    "terms": {
     "vol1.V-24.b": {
@@ -1007,6 +1051,30 @@
       "pre_merge"
      ],
      "stage": 0
+    },
+    "vol6.A6-1.1.a": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol6.A6-1.1.b": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol6.S6-13.a": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
     }
    }
   },
@@ -1031,10 +1099,14 @@
     {
      "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
      "rev": 5
+    },
+    {
+     "ref": "块 3 第 3-3 张第二部分：共用 lib/item-form.mjs 加 entries、readerSet、scopeSet 参数键与 keySets 第三参、data_shape 传声明表；本类别判定口径不变",
+     "rev": 6
     }
    ],
-   "print": "48c214f8b48bbccf9a0641a6dd3893d1f6a17774950739751c14e74f625b6fcc",
-   "rev": 5,
+   "print": "c46bfd8890059bbe6af61089b71da0443d111cde6c64956be7ac7ab592b48a4e",
+   "rev": 6,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -1144,10 +1216,14 @@
     {
      "ref": "门禁错误码登记两码 E-ACC-TEST-FAIL、E-ACC-REQUIRED-NOT-RUN（卷十二 §2.12 勘误 1118k14；李白 11-18 06:41）：error-codes.mjs 入检测器闭包，指纹重盖，判定口径不变",
      "rev": 24
+    },
+    {
+     "ref": "块 3 第 3-3 张第二部分：共用的 call_edge 加 entries 方式（lib/api-callers.mjs）；本类别条目不带 entries，原 callees 判定口径不变",
+     "rev": 25
     }
    ],
-   "print": "bcdf877e9bf2e4ec3d7555400bdaef5d32b407a014968e31168a50b156359f98",
-   "rev": 24,
+   "print": "3b4226483cb914610618e356c7d1f9d7e97ddc784ad92dbba0fc6f45c290e111",
+   "rev": 25,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1213,10 +1289,14 @@
     {
      "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
      "rev": 13
+    },
+    {
+     "ref": "块 3 第 3-3 张第二部分：共用的 call_edge 加 entries 方式（lib/api-callers.mjs）；本类别条目不带 entries，原 callees 判定口径不变",
+     "rev": 14
     }
    ],
-   "print": "7ac601260da3169f82f45f9e3749a57a6d7be51c3e99f34a565e67ba23227a8c",
-   "rev": 13,
+   "print": "1f8db88287c1e71e87aab038dcfad8583d27809f8e4cdef94c689a47ddfd34e9",
+   "rev": 14,
    "scanClass": "rng_bypass",
    "terms": {}
   },
@@ -1501,10 +1581,14 @@
     {
      "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
      "rev": 5
+    },
+    {
+     "ref": "块 3 第 3-3 张第二部分：共用的 path_access 加 readerSet、scopeSet 与 ref 方式（文件集取自类别行 fileSets）；本类别条目不用，read、branch 判定口径不变",
+     "rev": 6
     }
    ],
-   "print": "1144a496c8087359e64597bb721f37a44a0d921a95acf12417ccbb57a849ecd1",
-   "rev": 5,
+   "print": "93c59c371bfd21303a48c3f26d8ea9120f00163a29f421e11e76b0874d0ed6e7",
+   "rev": 6,
    "scanClass": "version_fork",
    "terms": {
     "vol1.V-17": {
@@ -1578,10 +1662,14 @@
     {
      "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
      "rev": 15
+    },
+    {
+     "ref": "块 3 第 3-3 张第二部分：共用的 call_edge 加 entries 方式（lib/api-callers.mjs）；本类别条目不带 entries，原 callees 判定口径不变",
+     "rev": 16
     }
    ],
-   "print": "286071322ca791ef4d433441f6b5d034599ba7d209c6ed17a6944f5857a64f55",
-   "rev": 15,
+   "print": "fe006db7dd04bcafb493ceb30c1ce766223ce890c97b69a5dc0df3b0f0f4fc4a",
+   "rev": 16,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

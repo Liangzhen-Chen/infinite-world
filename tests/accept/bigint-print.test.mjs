@@ -12,10 +12,11 @@ const print = (src, name = 'x.mjs') => codePrint(vctx(new Map([[name, src]])), [
 
 test('codePrint 不含 BigInt 的输入与改前 master 的指纹逐字相同', () => {
   const ctx = loadContext(ROOT);
-  // 下列字面量取自改前 master（本卡只动 read.mjs、lit_scope.mjs 与登记，所取文件都不在本卡改动内）。
-  assert.equal(codePrint(ctx, ['tools/accept/detectors/path_access.mjs']), 'a360199d75782ba2ec59eee9664d34418709d4541a951fe37d2126efc5e90ab5');
+  // 下列字面量是固定文件内容的指纹，用来钉死 codePrint 的序列化写法；所取文件不属于会随新检测方式改动的 path_access、call_edge
+  // （块 3 第 3-3 张第二部分改了这两个检测器，原先取它们的两条字面量随之作废，改取 typed_pos；第二条 js-scan、js-state 的字面量取自改前 master 未变）。
+  assert.equal(codePrint(ctx, ['tools/accept/detectors/typed_pos.mjs']), '4d6035fe84dec2c9c02d51ba4fcdc8d54345469649de89a6ef64bc69e2449be7');
   assert.equal(codePrint(ctx, ['tools/accept/lib/js-scan.mjs', 'tools/accept/lib/js-state.mjs']), '434d6196a6cfb92c945bd66d2e83dffbd3153603af0cf228e491f89d47785b2b');
-  assert.equal(codePrint(ctx, ['tools/accept/detectors/call_edge.mjs', 'tools/accept/detectors/import_edge.mjs']), '6cf38dc2a52869b801fc5900035f48b111e86b1149721b802e59ed7079208c71');
+  assert.equal(codePrint(ctx, ['tools/accept/detectors/import_edge.mjs', 'tools/accept/detectors/typed_pos.mjs']), 'eb82a96d09a863ac785a16b25dcb62198b7cc18788209f4638334694e7632c2f');
   // 判据闭包为空的类别（登记了检测器代号但仓库里没有该模块）：指纹是空序列的 sha256，改前改后一样。
   assert.equal(classPrint(ctx, 'flow_taint'), 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
   assert.equal(classPrint(ctx, 'legacy_symbol'), 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');

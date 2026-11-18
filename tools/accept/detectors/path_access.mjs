@@ -11,17 +11,19 @@
 //   display 读显示路径（卷十二 R12-2.10：显示集合只取声明表 stateKeys.<键>.display 与 textPaths）：state 成员链落在显示路径上即 E-VIEW-DISPLAY-READ。
 // 局限（P-1 与 2-3 汇报）：按成员链读路径，解构取出后的分支追不到；state 的根按名字认（lib/js-state.mjs），类型归因要等 tsc。
 
-import { tokenize, memberChains, conditionSpans, symbolPaths, BRANCH_OPS } from '../lib/js-scan.mjs';
+import { tokenize, memberChains, conditionSpans, symbolPaths, BRANCH_OPS, importsOf, isP } from '../lib/js-scan.mjs';
 import { stateChains, declPaths, writerOf, segsMatch, serverRel, callsOf } from '../lib/js-state.mjs';
 import { filesOfGroups, globToRe } from '../read.mjs';
 
 export function detect(ctx, params, cls) {
   if (params.access === 'write') return writeHits(ctx, params, cls || {});
   if (params.access === 'display') return displayHits(ctx, params);
+  if (params.access === 'ref') return refHits(ctx, params, cls);
   const pats = (params.paths || []).map((p) => p.split('.').map((seg) => globToRe(seg, [])));
-  const readers = new Set(filesOfGroups(ctx.files, ctx.model, params.readers || []));
+  // readerSet：登记的读者是具体文件（卷六 A6-1.1 的 `kernel/ledger.mjs`，调用图白名单 S6-13 同法），文件集登记在所属扫描类别行 fileSets，条目只引用集合代号。
+  const readers = new Set([...filesOfGroups(ctx.files, ctx.model, params.readers || []), ...fileSet(cls, params.readerSet)]);
   const hits = [];
-  for (const file of filesOfGroups(ctx.files, ctx.model, params.groups || [])) {
+  for (const file of scopeOf(ctx, params, cls)) {
     if (readers.has(file)) continue;
     const toks = tokenize(ctx.read(file));
     const cond = params.access === 'branch' ? conditionSpans(toks) : null;
@@ -30,6 +32,43 @@ export function detect(ctx, params, cls) {
       if (!pats.some((pat) => windowMatch(ch.segs, pat))) continue;
       if (cond && !isBranch(toks, ch, cond)) continue;
       hits.push({ file, line: toks[ch.start].line, nodeKind: 'member', symbolPath: sym[ch.start], code: params.code || '' });
+    }
+  }
+  return hits;
+}
+
+// 文件集：扫描类别行 fileSets.<代号>（文件名单只在登记行，参数里只引用代号，R12-11.5）；没给代号为空，给了而类别行里没有即报错，不静默放过。
+function fileSet(cls, name) {
+  if (name === undefined) return [];
+  const set = ((cls || {}).fileSets || {})[name];
+  if (!Array.isArray(set)) throw new Error(`E-ACC-ITEM-PARAM fileSet=${name}`);
+  return set;
+}
+
+// 范围：params.groups 展开的文件，并上 params.scopeSet 文件集里（须在文件清单里的）具体文件。
+function scopeOf(ctx, params, cls) {
+  const scope = new Set(filesOfGroups(ctx.files, ctx.model, params.groups || []));
+  for (const f of fileSet(cls, params.scopeSet)) if (ctx.files.includes(f)) scope.add(f);
+  return [...scope].sort();
+}
+
+// ref（卷六 A6-1.1 后半"账本内核对 priceFor、valuation 的引用为 0"）：params.paths 是单段名字；范围内（读者除外）出现
+// ① 同名标识符（不在 `.` 之后；import 列表里的名字、调用、赋值、传参都算引用），或 ② 相对静态 import 的模块文件名（去扩展名）同名，各计一处。
+// 局限：按名字认，`import x from './valuation.mjs'` 靠 ② 抓到；经第三方模块转手而不出现该名的，要靠转手模块自己的范围。
+function refHits(ctx, params, cls) {
+  const names = new Set(params.paths || []);
+  const readers = new Set([...filesOfGroups(ctx.files, ctx.model, params.readers || []), ...fileSet(cls, params.readerSet)]);
+  const hits = [];
+  for (const file of scopeOf(ctx, params, cls)) {
+    if (readers.has(file)) continue;
+    const toks = tokenize(ctx.read(file));
+    const sym = symbolPaths(toks);
+    const push = (i, nodeKind) => hits.push({ file, line: toks[i].line, nodeKind, symbolPath: sym[i], code: params.code || '' });
+    toks.forEach((t, i) => { if (t.t === 'id' && names.has(t.v) && !isP(toks[i - 1], '.') && !isP(toks[i - 1], '?.')) push(i, 'ref'); });
+    for (const imp of importsOf(toks)) {
+      if (imp.kind !== 'static' || !imp.spec || !imp.spec.startsWith('.')) continue;
+      const stem = imp.spec.slice(imp.spec.lastIndexOf('/') + 1).replace(/\.[A-Za-z]+$/, '');
+      if (names.has(stem)) push(imp.at, 'import_module');
     }
   }
   return hits;
