@@ -231,12 +231,15 @@ test('提交前重算钩子：收到本笔写过的路径；它抛码即整笔�
 
 test('submitProposal：带回应句柄的被拒回码，心跳推进（无句柄）只回拒绝；通过回 ok', () => {
   const st = fresh();
-  installProposalSession({ state: st, resolve: (p) => ({ node: 'view:act', file: p.as, handler: (s, q) => writePath(s, P.gauge_level('gad_one'), q.to) }) });
+  // 日志簿只用到 entries（kernel/save.mjs appendLogEntry）；完整日志簿与"先记 doc_log 再处理"的次序见 tests/kernel/save.test.mjs。
+  const book = /** @type {any} */ ({ entries: [] });
+  installProposalSession({ state: st, book, resolve: (p) => ({ node: 'view:act', file: p.as, handler: (s, q) => writePath(s, P.gauge_level('gad_one'), q.to) }) });
   try {
     assert.deepEqual(submitProposal({ request: 1, reply: {}, as: 'sys/gauge.mjs', to: 4 }), { ok: true });
     assert.deepEqual(submitProposal({ request: 2, reply: {}, as: 'sys/other.mjs', to: 5 }), { ok: false, code: 'E-VIEW-UNDECLARED-WRITE' });
     assert.deepEqual(submitProposal({ request: 3, as: 'sys/other.mjs', to: 6 }), { ok: false });
     assert.equal(st.gauge.gad_one.level, 4);
+    assert.deepEqual(book.entries, [{ request: 1, as: 'sys/gauge.mjs', to: 4 }, { request: 2, as: 'sys/other.mjs', to: 5 }, { request: 3, as: 'sys/other.mjs', to: 6 }]);
   } finally {
     installProposalSession(null);
   }

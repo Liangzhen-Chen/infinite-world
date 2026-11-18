@@ -1,19 +1,10 @@
 {
- "version": 1,
- "source": "AI-05 §4.2 / AI-04 §6.2：规则状态哈希的排除口径（唯一数据表）。按路径精确限定（只删该路径对象的直接子键，深层同名不删），只删字符串值；对象、数组、数字同名键一律保留。storage.mjs 的 digest 算法不改，排除在传给它之前做。",
- "layers": {
-  "narration": "AI/叙述生成的文字及其派生指纹、模型标识；换模型或换文字不改规则状态（AI-04 §6.3）",
-  "names": "显示名；改名前后规则状态不变（NM-1 验收叠加此层）"
- },
- "rules": [
-  {"layer": "narration", "prefix": ["state", "created", "*"], "keys": ["background", "currentConcern", "visibleFeature", "notes"], "source": "population.mjs:366 PROFILE_FIELDS 字符串型字段；population.mjs:433 并入 state.created"},
-  {"layer": "narration", "prefix": ["state", "population", "*", "profiles", "*"], "keys": ["profileHash"], "source": "population.mjs:435 profileHash = 模型档案内容哈希"},
-  {"layer": "narration", "prefix": ["state", "population", "*", "profiles", "*", "generator"], "keys": ["model"], "source": "population.mjs:436 生成所用模型 id"},
-  {"layer": "narration", "prefix": ["state", "remote", "*", "profiles", "*"], "keys": ["profileHash"], "source": "remote-generation.mjs:912 profileHash = 模型档案内容哈希"},
-  {"layer": "narration", "prefix": ["state", "remote", "*", "profiles", "*", "profile"], "keys": ["background", "currentConcern", "visibleFeature", "notes"], "source": "remote-generation.mjs:912 profile 与 population.mjs:366 同字段表"},
-  {"layer": "narration", "prefix": ["state", "remote", "*", "profiles", "*", "generator"], "keys": ["model"], "source": "remote-generation.mjs:913 生成所用模型 id"},
-  {"layer": "names", "prefix": ["state", "created", "*"], "keys": ["name"], "source": "wildlife.mjs:97 created 实体 {id,name,aliases}；population.mjs 名册身份含 name（aliases 是字符串数组，按只删字符串值的规则不删）"},
-  {"layer": "names", "prefix": ["state", "npcs", "*"], "keys": ["name"], "source": "npc-state.mjs:110 initialNpcState.name"},
-  {"layer": "names", "prefix": ["state", "player"], "keys": ["name"], "source": "engine.mjs:622 state.player.name"}
+ "generatedBy": "tools/gen-digest-exclude.mjs",
+ "rule": "卷二 §2.9 第 3 条：display 字段集合 ∪ displayNames.* ∪ playerNotes.*",
+ "paths": [
+  "displayNames.*",
+  "displayNames.*.text",
+  "playerNotes.*",
+  "playerNotes.*.text"
  ]
 }
