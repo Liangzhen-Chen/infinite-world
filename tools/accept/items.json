@@ -3220,6 +3220,7 @@
     "pre_commit",
     "pre_merge"
    ],
+   "impl": "tools/accept/detectors/seed_sites.mjs",
    "itemKey": "vol27.A27-8.1.b",
    "localNo": "A27-8.1",
    "method": "static_code",
@@ -3241,9 +3242,9 @@
    ],
    "runsOn": "local_static",
    "scanClass": "seed_sites",
-   "source": "卷二十七 §4.8 R27-8.1 :717（每个抽取点在登记表恰一行，源码与登记表双向比对，任一侧多出即 E-SEED-KEY）；卷十二 §7 M12-5 :1341（源码扫描移到离线组成为检测器参数）；卷二 :320（seed-keys.json 登记）；登记表随 4-3 按新格式重建（李白 11-18 16:3x 第 5 条），本条目先登 registered（卷十二 §8 Q12-10 :1371）",
+   "source": "卷二十七 §4.8 R27-8.1 :717（每个抽取点在登记表恰一行，源码与登记表双向比对，任一侧多出即 E-SEED-KEY）；卷十二 §7 M12-5 :1341（源码扫描移到离线组）；卷二 §1.10 :320（种子键登记 role seed）、§4.1 :1508（规则表登记）；表代号经扫描类别行 seedTable 从 world/rules/registry.json 登记行派生（R12-11.5 规则表键）；检测器 tools/accept/detectors/seed_sites.mjs。真实仓库登记表随 4-3 按新格式重建（李白 11-18 16:3x 第 5 条），现读数如实报，状态留 implemented（R12-11.7 :1110）",
    "stage": 0,
-   "state": "registered",
+   "state": "implemented",
    "target": "runtime_code",
    "volume": "vol27",
    "zeroRows": []
@@ -3256,6 +3257,7 @@
     "pre_commit",
     "pre_merge"
    ],
+   "impl": "tools/accept/detectors/seed_sites.mjs",
    "itemKey": "vol27.A27-8.1.c",
    "localNo": "A27-8.1",
    "method": "static_code",
@@ -3276,9 +3278,9 @@
    ],
    "runsOn": "local_static",
    "scanClass": "seed_sites",
-   "source": "卷二十七 §4.8 R27-8.4 :720（role_seed 行（流代号, 抽取点代号）两两不同、前缀不得为空，有重复或空前缀即 E-SEED-COLLISION）；A27-8.1 :759；登记表随 4-3 重建，本条目先登 registered（卷十二 §8 Q12-10 :1371）",
+   "source": "卷二十七 §4.8 R27-8.4 :720（role_seed 行（流代号, 抽取点代号）两两不同、前缀不得为空，有重复或空前缀即 E-SEED-COLLISION）；A27-8.1 :759；检测器 tools/accept/detectors/seed_sites.mjs；表代号经扫描类别行 seedTable 派生（R12-11.5）。真实仓库登记表随 4-3 重建，现读数如实报，状态留 implemented（R12-11.7 :1110）",
    "stage": 0,
-   "state": "registered",
+   "state": "implemented",
    "target": "runtime_code",
    "volume": "vol27",
    "zeroRows": []

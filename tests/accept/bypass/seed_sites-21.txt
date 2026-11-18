@@ -1,3 +1,5 @@
+// @file world/rules/registry.json
+{"rows":[{"code":"seedKeys","file":"tables/seed-keys.json","structure":"keys","type":{"entries":"list"},"domain":{},"volume":"卷二 §1.10 :320、卷二十七 §4.8","multiSourceMerge":"own_key_only","packOverridable":false}]}
 // @file world/rules/tables/seed-keys.json
 {"version":1,"entries":[{"file":"weather.mjs","stream":"weather","site":"daily","prefix":"weather_","role":"role_seed","purpose":"夹具：天气日抽（与下一行同一对流代号与抽取点代号）"},{"file":"crop.mjs","stream":"weather","site":"daily","prefix":"crop_","role":"role_seed","purpose":"夹具：作物日抽（与上一行同一对流代号与抽取点代号）"}]}
 // @file server-plugin/weather.mjs
