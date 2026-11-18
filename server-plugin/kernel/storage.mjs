@@ -10,7 +10,7 @@ import { clone } from './clone.mjs';
 import { invalidateMemo } from './memo.mjs';
 import { statePathSegments, pathTypeShape, isSeedKey } from './handles/keys.mjs';
 import { CODE_RE } from './handles/vocab-handle.mjs';
-import { compareSpecificity, KEY_NONENTITY, KEY_DIMKEY, KEY_SEEDKEY } from './load/state-owners.mjs';
+import { compareSpecificity, KEY_NONENTITY, KEY_DIMKEY, KEY_SEEDKEY, KEY_HANDLE } from './load/state-owners.mjs';
 import { registry } from './vocab.mjs';
 import { KernelError, codeOf } from './errors.mjs';
 import { currentTransaction } from './transaction.mjs';
@@ -29,6 +29,12 @@ let decl = null;
 /** 终止协议的标记键（§2.6 实体终止协议第 2 步 `state.terminated[entityId]`；内核协议自己的键，与 load/state-owners.mjs 的协议键同一出处）。 */
 export const TERMINATED_KEY = 'terminated';
 
+/** 运行期才产生的路径段文法（按 keyKind 分派；以后加同类段只登一行）。handle 段文法即 §1.9 代号文法 CODE_RE（4-2）；seedKey 另须非词表代号、非已载入实体 id。 */
+const RUNTIME_SEG_GRAMMAR = Object.freeze({
+  [KEY_SEEDKEY]: (reg, v) => isSeedKey(reg, v),
+  [KEY_HANDLE]: (_reg, v) => typeof v === 'string' && CODE_RE.test(v),
+});
+
 const sorted = (xs) => [...xs].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 const segsOf = (p) => statePathSegments(p) || [];
 
@@ -46,8 +52,12 @@ export function installStorage(merged) {
     const entitySlots = kk.map((it, i) => (isEntityItem(it) ? i : -1)).filter((i) => i >= 0);
     const entityKinds = entitySlots.map((i) => (Array.isArray(kk[i]) ? kk[i] : [kk[i]]).filter((k) => !nonEntity.has(k)));
     const dimSlot = kk.findIndex((it) => it === KEY_DIMKEY); // keyKinds (c) 项"维度键"：dimension 路径上维度名所在的段
-    // keyKinds (c) 项 seedKey（单独或在 (b) 列表里）：该段写入时按 SeedKey 文法核（李白 11-18 05:28 裁定②）；列表里同列的实体 kind 照收该 kind 的已载入 id。
-    const seedSlots = kk.flatMap((it, i) => (it === KEY_SEEDKEY || (Array.isArray(it) && it.includes(KEY_SEEDKEY)) ? [{ slot: i, kinds: Array.isArray(it) ? it.filter((k) => !nonEntity.has(k)) : [] }] : []));
+    // keyKinds (c) 运行期段（RUNTIME_SEG_GRAMMAR 的键，如 seedKey、handle；单独或在 (b) 列表里）：该段写入时按各自文法核（李白 11-18 05:50 裁定第 2 条整类规则）；列表里同列的实体 kind 照收该 kind 的已载入 id。
+    const seedSlots = kk.flatMap((it, i) => {
+      const members = Array.isArray(it) ? it : [it];
+      const grammars = members.filter((k) => Object.hasOwn(RUNTIME_SEG_GRAMMAR, k));
+      return grammars.length ? [{ slot: i, grammars, kinds: Array.isArray(it) ? it.filter((k) => !nonEntity.has(k)) : [] }] : [];
+    });
     return { pattern, segs: segsOf(pattern), type: merged.pathTypes[pattern], shape: pathTypeShape(merged.pathTypes[pattern]), entitySlots, entityKinds, dimSlot, seedSlots };
   });
   const pPatterns = new Set(paths.map((p) => p.pattern).filter((p) => !text.has(p) && !ledger.has(p)));
@@ -224,10 +234,10 @@ function writePathChecked(state, path, value) {
   if (!tx || tx.state !== state) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity }, 'writePath outside the transaction of this state');
   const existing = getAt(state, segs);
   if (!writerOk(d, tx, segs, existing)) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity }, `${tx.file} is not the registered writer of ${rec.pattern}`);
-  // keyKinds seedKey 段：由种子派生的实体 id（代号文法、非词表代号、非已载入实体 id，handles/keys.mjs isSeedKey），不合即 E-PATH-KEYKINDS（卷二 :1545、:815，勘误 1118k10）。
-  for (const { slot, kinds } of rec.seedSlots) {
+  // keyKinds 运行期段（seedKey、handle 及以后同类）：按各自文法核，不过即 E-PATH-KEYKINDS（卷二 :1545、:815，勘误 1118k10、1118k12；李白 11-18 05:50 裁定第 2 条）。
+  for (const { slot, grammars, kinds } of rec.seedSlots) {
     const v = ids[slot];
-    if (!isSeedKey(registry(), v) && !kinds.includes(registry().idIndex.get(v))) throw new KernelError('E-PATH-KEYKINDS', { entity: null },`${rec.pattern}: segment ${JSON.stringify(v)} is not a seedKey (code grammar, not a vocab code or loaded entity id)`);
+    if (!grammars.some((g) => RUNTIME_SEG_GRAMMAR[g](registry(), v)) && !kinds.includes(registry().idIndex.get(v))) throw new KernelError('E-PATH-KEYKINDS', { entity: null }, `${rec.pattern}: segment ${JSON.stringify(v)} does not fit ${grammars.join('/')} grammar`);
   }
   // 卷二十七 R27-5.1：非有限值、负零不得进入状态（E-DET-NONFINITE）；被拒走同一上抛通路，由事务整笔回滚（卷二 §2.6 :499）。
   if (hasNonFinite(value)) throw new KernelError('E-DET-NONFINITE', { entity }, `non-finite number or negative zero written to ${rec.pattern}`);

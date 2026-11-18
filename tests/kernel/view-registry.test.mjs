@@ -93,6 +93,23 @@ test('SeedKey 文法：代号文法、非词表代号、非已载入实体 id；
   assert.throws(() => seedKeyOf(reg, 'npc_q'), codeIs('E-PATH-KEYKINDS'));
 });
 
+// ---------- 运行期段整类核（李白 11-18 05:50 裁定第 2 条）：handle 段与 seedKey 段同在 storage 写入处按各自文法核 ----------
+
+test('handle 段写入：合代号文法的句柄可写可读；不合文法 E-PATH-KEYKINDS 整笔不落', () => {
+  const SCH = { node: 'test_node', file: 'kernel/scheduler.mjs' };
+  const item = { dueMinute: 110, kind: 'due_recurrence', owner: 'npc_a', ref: 'ref_1', registeredMinute: 100 };
+  const state = {};
+  assert.deepEqual(runTransaction(state, SCH, (s) => { writePath(s, P.due('due_0'), item); }), { ok: true });
+  assert.deepEqual(state, { due: { due_0: item } });
+  const before = JSON.parse(JSON.stringify(state));
+  quiet(() => {
+    for (const bad of ['a', 'Due_0', 'due-0', 'due 0', '0due', `a${'b'.repeat(48)}`]) {
+      assert.deepEqual(runTransaction(state, SCH, (s) => { writePath(s, P.due('due_1'), item); writePath(s, P.due(bad), item); }), { ok: false, code: 'E-PATH-KEYKINDS' }, JSON.stringify(bad));
+    }
+  });
+  assert.deepEqual(state, before);
+});
+
 // ---------- aggregates.*.ledgerHolder 登记与往返 ----------
 
 test('state-owners 登 aggregates.*.ledgerHolder：boolean、keyKinds [seedKey]、写者 aggregate.mjs；不是账本路径', () => {
