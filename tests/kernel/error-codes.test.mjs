@@ -17,8 +17,9 @@ test('码表条数：E 与 W 各为手数的字面量', () => {
   // 块 3-2 续加 E-LEDGER-STAGING-SPONSOR（勘误 1118k9 码表）：586 → 587、E 568 → 569。
   // 门禁卡加卷十二 §2.12 两码 E-ACC-TEST-FAIL、E-ACC-REQUIRED-NOT-RUN（勘误 1118k14；李白 11-18 06:41）：587 → 589、E 569 → 571。
   // 块 3-3b 加卷十二 §2.12 一码 E-ACC-INSTANCE-NAME（勘误 1118k15；李白 11-18 07:27 裁定①）：589 → 590、E 571 → 572。
-  assert.equal(codes.length, 590);
-  assert.equal(codes.filter((c) => c[0] === 'E').length, 572);
+  // 块 3-3b 续加卷十二 §2.12 一码 E-ACC-CONST-LITERAL（勘误 1118k16）：590 → 591、E 572 → 573。
+  assert.equal(codes.length, 591);
+  assert.equal(codes.filter((c) => c[0] === 'E').length, 573);
   assert.equal(codes.filter((c) => c[0] === 'W').length, 18);
   assert.equal(REGISTERED_CODES.size, codes.length);
 });

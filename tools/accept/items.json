@@ -2501,6 +2501,7 @@
    "localNo": "S10",
    "method": "static_code",
    "params": {
+    "code": "E-ACC-CONST-LITERAL",
     "groups": [
      "rules",
      "kernel",
@@ -2518,7 +2519,7 @@
    },
    "runsOn": "local_static",
    "scanClass": "const_literal",
-   "source": "卷二 §7 S10；卷十二 §4.4",
+   "source": "卷二 §7 S10；卷十二 §4.4；卷十二 §2.12 :541 E-ACC-CONST-LITERAL（勘误 1118k16）",
    "stage": 0,
    "state": "in_core",
    "target": "runtime_code",

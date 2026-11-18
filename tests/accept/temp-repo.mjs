@@ -34,12 +34,18 @@ export function tempRepo() {
   cpSync(join(ROOT, 'server-plugin/kernel/ledger.mjs'), join(dir, 'server-plugin/kernel/ledger.mjs'));
   // 放进来的 kernel 文件要在两处登记里站得住：成员闭集清单（E-FILE-UNASSIGNED，S19）与 S10 的常数登记豁免表。
   cpSync(join(ROOT, 'server-plugin/kernel/files.json'), join(dir, 'server-plugin/kernel/files.json'));
-  mkdirSync(join(dir, 'world/rules/tables'), { recursive: true });
-  cpSync(join(ROOT, 'world/rules/tables/kernel-constants.json'), join(dir, 'world/rules/tables/kernel-constants.json'));
-  // 卷六 S6-2 的规则表一支（data_shape entityKey）：类别行 ruleTableDirs 的目录在仓库里须有表，否则 E-ACC-ITEM-PARAM；临时仓库带上真实经济规则表。
-  mkdirSync(join(dir, 'world/rules/tables/economy'), { recursive: true });
-  cpSync(join(ROOT, 'world/rules/tables/economy/resources.json'), join(dir, 'world/rules/tables/economy/resources.json'));
-  cpSync(join(ROOT, 'world/rules/tables/economy/ledger.json'), join(dir, 'world/rules/tables/economy/ledger.json'));
+  // 卷六 S6-2 的规则表一支（data_shape entityKey）读统一加载器唯一登记 world/rules/registry.json 的全部登记行（经 kernel/load/rules.mjs 的 readRules）：
+  // 临时仓库带上登记、登记所指的全部表（含 kernel-constants.json，S10 豁免登记），登记缺失或所指文件不存在会报 E-ACC-ITEM-PARAM；
+  // readRules 的 import 闭包（json-text、flatten、validate 下四个模块）按字面路径放进来。
+  cpSync(join(ROOT, 'world/rules/registry.json'), join(dir, 'world/rules/registry.json'));
+  cpSync(join(ROOT, 'world/rules/tables'), join(dir, 'world/rules/tables'), { recursive: true });
+  cpSync(join(ROOT, 'server-plugin/kernel/load/rules.mjs'), join(dir, 'server-plugin/kernel/load/rules.mjs'));
+  cpSync(join(ROOT, 'server-plugin/kernel/load/json-text.mjs'), join(dir, 'server-plugin/kernel/load/json-text.mjs'));
+  cpSync(join(ROOT, 'server-plugin/kernel/load/flatten.mjs'), join(dir, 'server-plugin/kernel/load/flatten.mjs'));
+  cpSync(join(ROOT, 'server-plugin/kernel/validate/dimensions-validate.mjs'), join(dir, 'server-plugin/kernel/validate/dimensions-validate.mjs'));
+  cpSync(join(ROOT, 'server-plugin/kernel/validate/rows.mjs'), join(dir, 'server-plugin/kernel/validate/rows.mjs'));
+  cpSync(join(ROOT, 'server-plugin/kernel/validate/named-conditions.mjs'), join(dir, 'server-plugin/kernel/validate/named-conditions.mjs'));
+  cpSync(join(ROOT, 'server-plugin/kernel/validate/cell-grades.mjs'), join(dir, 'server-plugin/kernel/validate/cell-grades.mjs'));
   cpSync(join(ROOT, 'tests/accept/bypass'), join(dir, 'tests/accept/bypass'), {
     recursive: true,
     filter: (src) => extname(src) === '' || extname(src) === '.txt' || extname(src) === '.json',
