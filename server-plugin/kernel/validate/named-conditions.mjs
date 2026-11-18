@@ -5,9 +5,11 @@
 // 只按声明通用处理，不认表名、族名与条目；未声明的命名条件照旧只记入 notCovered。
 
 import { compileRXInScope, evaluateRX, nsKey, RxError } from '../rx.mjs';
-import { T } from '../handles/markers.mjs';
+import { T, GRAMMAR_TOKENS } from '../handles/markers.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+// RX 读入口的字段读数键：命名空间代号 + 路径分隔符 + 字段名（分隔符定义在 kernel/handles/markers.mjs，卷二 §2.7 :814）。
+const nsField = (ns, field) => ns + GRAMMAR_TOKENS.pathSep + field;
 
 // 加载期每条目编译一次；编不过的条目报在词表条目上（E-MOD-RX / E-RX-NS-UNKNOWN），不参与判定。
 /** @param {Record<string, unknown>} t 一张表 @param {Record<string, unknown>} env @param {(...args: unknown[]) => void} err */
@@ -47,8 +49,8 @@ export function prepareNamedConditions(t, env, err) {
 export function rowReads(rowNs, known, classes) {
   const reads = {};
   const none = new Set();
-  for (const [dim, v] of known) { if (v === null) none.add(`${rowNs}.${dim}`); else reads[`${rowNs}.${dim}`] = v; }
-  reads[`${rowNs}.classes`] = classes;
+  for (const [dim, v] of known) { const key = nsField(rowNs, dim); if (v === null) none.add(key); else reads[key] = v; }
+  reads[nsField(rowNs, 'classes')] = classes;
   return { reads, none };
 }
 
@@ -61,7 +63,7 @@ const FALSE_NODE = { op: 'cmp', cmpOp: 'ne', left: { op: 'num', value: 0 }, righ
 //   lt/le/gt/ge、member：null 没有大小、也不属于任何集合，任一操作数是显式 null 即不成立（外层 not 取反成立）。
 // 算术里的显式 null（如 null + 1 < 3）裁定未覆盖，不折叠，仍按读不到处理。缺值不在此处，走求值器抛 RxError 的未知路径。
 const NULL_RULES = {
-  cmp: { fields: ['left', 'right'], by: (n) => ({ eq: (l, r) => l && r, ne: (l, r) => !(l && r) }[n.cmpOp] || (() => false)) },
+  cmp: { fields: ['left', 'right'], by: (n) => (n.cmpOp === T.code_enum.rx_cmp.eq ? (l, r) => l && r : n.cmpOp === T.code_enum.rx_cmp.ne ? (l, r) => !(l && r) : () => false) },
   member: { fields: ['item', 'set'], by: () => () => false },
 };
 

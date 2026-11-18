@@ -1,5 +1,5 @@
 // B2-W4g 门禁自测（卷二 §7 S13 (d)，:2412 ④ 原句、:2413 上下文白名单；李白 11-18 13:05 裁定第 2 条）。
-// 四类极性：typeof 结果比较不计；markers.mjs 已定义文法记号不计；未定义串仍计；`'x' in obj` 不计。
+// 四类极性：typeof 结果比较不计（只认操作数本身）；markers.mjs 的 GRAMMAR_TOKENS 文法记号不计（协议标记裸写照计）；未定义串仍计；`'x' in obj` 不计。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { join, dirname } from 'node:path';
@@ -25,10 +25,25 @@ test('S13 (d) typeof 结果比较不计', () => {
   assert.equal(count("const b = typeof x === 'undefined' && y === 'undefined';"), 1);
 });
 
-test('S13 (d) markers.mjs 已定义文法记号不计', () => {
-  assert.equal(count("const b = x === 'number';"), 0); // TYPES
-  assert.equal(count("const b = x !== 'eq';"), 0); // CODE_ENUMS.rx_cmp
-  assert.equal(count("const b = ['number', 'string'].includes(x);"), 0); // 数组元素
+test('S13 (d) 只豁免 markers.mjs 的文法记号定义源；协议标记裸写照计', () => {
+  // 文法记号定义源 GRAMMAR_TOKENS 的成员不计：通配、路径分隔符、join 分隔串、JSON 文法记号。
+  assert.equal(count("const b = s === '*';"), 0);
+  assert.equal(count("const b = ['*', '.', '|'].includes(s);"), 0);
+  assert.equal(count("const b = c === '\"' || c === '\\\\';"), 0);
+  // TYPES 等协议标记不是文法记号，裸写仍计（这里曾是放宽的错误用例）。
+  assert.equal(count("const b = x === 'number';"), 1);
+  assert.equal(count("const b = x !== 'eq';"), 1);
+  assert.equal(count("const b = ['number', 'string'].includes(x);"), 2); // 数组元素各计一条
+});
+
+test('S13 (d) typeof 只认操作数本身是 typeof 表达式', () => {
+  assert.equal(count("const b = typeof x === 'undefined';"), 0);
+  assert.equal(count("const b = 'undefined' === typeof x;"), 0);
+  assert.equal(count("const b = (typeof x) === 'object';"), 0);
+  assert.equal(count("const b = typeof x !== 'number';"), 0);
+  // 操作数里别处出现 typeof 不算：下标、条件表达式不是 typeof 结果比较。
+  assert.equal(count("const b = a[typeof x] === 'zzz_not_marker';"), 1);
+  assert.equal(count("if (typeof x) y === 'zzz_not_marker';"), 1);
 });
 
 test('S13 (d) markers.mjs 没定义的串仍计', () => {

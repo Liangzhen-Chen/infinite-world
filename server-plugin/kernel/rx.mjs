@@ -6,7 +6,7 @@
 
 import { fixedUnits, fixedAdd, fixedSub, fixedMultiply, fixedDivide, fixedToNumber, FixedError } from './det-math.mjs';
 import { rxTokenAt, shapeArgCount, setFieldNames } from './handles/patterns.mjs';
-import { T } from './handles/markers.mjs';
+import { T, GRAMMAR_TOKENS } from './handles/markers.mjs';
 
 // 本文件内部的记号表（卷二没写文本语法，见文件头；只在 rx.mjs 用的单一定义，成员引用取代裸字面量比较）。
 // TOK：词法记号种类；PROFILE：编译档代号（卷二 §2.9 第 4 条"显示档与对 outputGate 开放"）；
@@ -29,6 +29,13 @@ const PROFILE_OPS = Object.freeze({
 const ARITH = { '+': T.rx_op.add, '-': T.rx_op.sub, '*': T.rx_op.mul, '/': T.rx_op.div, '%': T.rx_op.mod };
 const CMP = { '==': T.code_enum.rx_cmp.eq, '!=': T.code_enum.rx_cmp.ne, '<': T.code_enum.rx_cmp.lt, '<=': T.code_enum.rx_cmp.le, '>': T.code_enum.rx_cmp.gt, '>=': T.code_enum.rx_cmp.ge };
 const CLOCK_FIELDS = new Set([T.code_enum.rx_clock.day, T.code_enum.rx_clock.season]);
+// 序比较的操作数判定函数，键是 rx_cmp 句柄（不以字串字面量作判断表，S13 ④）；eq/ne 在上一层先判。
+const ORDERING = new Map([
+  [T.code_enum.rx_cmp.lt, (x, y) => x < y],
+  [T.code_enum.rx_cmp.le, (x, y) => x <= y],
+  [T.code_enum.rx_cmp.gt, (x, y) => x > y],
+  [T.code_enum.rx_cmp.ge, (x, y) => x >= y],
+]);
 const WORD_OPS = Object.freeze({ and: '&&', or: '||', not: '!', has: 'has' });
 
 function tokenize(text) {
@@ -131,13 +138,13 @@ function parse(text, profile, scope) {
 
 // 名字的归属（数据档）：已登记命名空间（按段前缀唯一匹配）→ ns；clock.<字段> → clock；维度键 → dim；词表代号 → handle。
 function resolveName(name, profile, scope, node) {
-  const segs = name.split('.');
+  const segs = name.split(GRAMMAR_TOKENS.pathSep);
   const nsRow = (scope.ns || []).find((r) => {
-    const rs = r.ns.split('.');
+    const rs = r.ns.split(GRAMMAR_TOKENS.pathSep);
     return rs.every((s, k) => segs[k] === s);
   });
   if (nsRow) {
-    const arg = segs.slice(nsRow.ns.split('.').length);
+    const arg = segs.slice(nsRow.ns.split(GRAMMAR_TOKENS.pathSep).length);
     return node(arg.length ? { op: T.rx_op.ns, ns: nsRow.ns, arg } : { op: T.rx_op.ns, ns: nsRow.ns });
   }
   const [head, field, ...more] = segs;
@@ -279,7 +286,7 @@ export function compileRXInScope(text, profile, scope) {
 }
 
 /** @param {{ns: string, arg?: string[]}} n 命名空间读数节点 @returns {string} */
-export const nsKey = (n) => (n.arg ? [n.ns, ...n.arg].join('.') : n.ns);
+export const nsKey = (n) => (n.arg ? [n.ns, ...n.arg].join(GRAMMAR_TOKENS.pathSep) : n.ns);
 
 // ---------- 求值 ----------
 // bindings：{dim: {<维度键>: 值}, clock: {day, season}}；nsReads：{<命名空间读数键>: 值}（键 = 代号与 arg 以点相连）。
@@ -321,8 +328,8 @@ export function evaluateRX(tree, bindings, nsReads) {
           return { t: 'boolean', v: (a.v === b.v) === (n.cmpOp === T.code_enum.rx_cmp.eq) };
         }
         if (a.t !== T.rx_kind.number || b.t !== T.rx_kind.number) fail('ordering needs numbers');
-        const r = { lt: a.v < b.v, le: a.v <= b.v, gt: a.v > b.v, ge: a.v >= b.v }[n.cmpOp];
-        return { t: 'boolean', v: r };
+        const ordering = ORDERING.get(n.cmpOp);
+        return { t: 'boolean', v: ordering ? ordering(a.v, b.v) : undefined };
       }
       case T.rx_op.and: return { t: 'boolean', v: n.items.every((x) => bool(x)) };
       case T.rx_op.or: return { t: 'boolean', v: n.items.some((x) => bool(x)) };

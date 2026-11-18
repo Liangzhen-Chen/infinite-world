@@ -23,7 +23,8 @@ const E = buildE();
 // 分片切分方式与文档部分、清单状态的固定记号（卷二十七 R27-4.1 :124、§1.9 族 partition/state）：单一定义，比较处引用。
 const PARTITION = Object.freeze({ byUnit: 'part_by_unit' });
 const DOC_PART = Object.freeze({ data: 'doc_data' });
-const MANIFEST_STATE = Object.freeze({ missing: 'missing', ok: 'ok', torn: 'torn' });
+/** 清单状态（checkManifest 的返回字段 state）：本文件的单一定义，写盘侧 save.mjs 也引用它比较。 */
+export const MANIFEST_STATE = Object.freeze({ missing: 'missing', ok: 'ok', torn: 'torn' });
 
 /** 入库的摘要排除表（生成文件，取代旧的手写表；卷一 §8.3 :643 的文件名不变）。 */
 export const DIGEST_EXCLUDE_FILE = 'world/rules/tables/digest-exclude.json';

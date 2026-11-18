@@ -6,6 +6,7 @@
 
 import { buildE, buildP } from '../handles/generated.mjs';
 import { checkPathPattern } from '../handles/keys.mjs';
+import { GRAMMAR_TOKENS, KERNEL_MODULES } from '../handles/markers.mjs';
 import { errorCodeOf, HandleError } from '../handles/vocab-handle.mjs';
 import { isPathPattern } from '../handles/keys.mjs';
 import { isClosedType, listItemType, mentionsSealed, parseNumberType, T } from '../validate/types.mjs';
@@ -14,7 +15,7 @@ const E = buildE();
 
 // 账本账户路径（§2.6 第 4 条"`*.coins` 等，只经账本转移"）：改写写者是账本写者的模式；P 不为它们生成构造函数。
 // 账本写者文件即 kernelApi 的账本转移 `moveCoins/moveStock/transfer` 所在文件（§2.7 kernelApi、stateKeys 示例 `"*.coins": "kernel/ledger.mjs"`）。
-export const LEDGER_WRITER = 'kernel/ledger.mjs';
+export const LEDGER_WRITER = KERNEL_MODULES.ledger;
 
 // 系统登记项的字段（§2.7 JSON 示例与各项定义：两个闭集字段、phase、terminationCleanup（§2.6）、emits 与 eventDerive、inputs 写回镜像）。
 // 下面各数组是这几张登记表字段名的单一定义源，Set 由它派生；成员是卷二 §2.5、§2.7 写明的登记字段名，不散写在 new Set([...]) 里。
@@ -65,7 +66,7 @@ const PROTOCOL_KEYS = new Set(PROTOCOL_KEY_LIST);
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const isStrList = (v) => Array.isArray(v) && v.every((s) => typeof s === 'string' && s !== PATH.empty);
 const sorted = (xs) => [...xs].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
-const segs = (p) => p.split('.');
+const segs = (p) => p.split(GRAMMAR_TOKENS.pathSep);
 const exactKeys = (o, list) => isObj(o) && sorted(Object.keys(o)).join(',') === sorted(list).join(',');
 
 // ---------- 路径模式匹配语义（§2.7 SA-P5；pathTypes、textPaths、textWriters、stateKeys.writers 共用） ----------
@@ -73,13 +74,13 @@ const exactKeys = (o, list) => isObj(o) && sorted(Object.keys(o)).join(',') === 
 /** 两条模式是否存在共同可匹配的具体路径（`*` 恰匹配一段）。 @param {string} a @param {string} b @returns {boolean} */
 export function patternsOverlap(a, b) {
   const x = segs(a), y = segs(b);
-  return x.length === y.length && x.every((s, i) => s === '*' || y[i] === '*' || s === y[i]);
+  return x.length === y.length && x.every((s, i) => s === GRAMMAR_TOKENS.wildcard || y[i] === GRAMMAR_TOKENS.wildcard || s === y[i]);
 }
 
 /** 模式 a 是否覆盖 b 的全部具体路径（a 的每段是 `*` 或与 b 同段）。 @param {string} a @param {string} b @returns {boolean} */
 export function patternCovers(a, b) {
   const x = segs(a), y = segs(b);
-  return x.length === y.length && x.every((s, i) => s === '*' || s === y[i]);
+  return x.length === y.length && x.every((s, i) => s === GRAMMAR_TOKENS.wildcard || s === y[i]);
 }
 
 /**
@@ -89,9 +90,9 @@ export function patternCovers(a, b) {
  */
 export function compareSpecificity(a, b) {
   const x = segs(a), y = segs(b);
-  const lit = (s) => s.filter((t) => t !== '*').length;
+  const lit = (s) => s.filter((t) => t !== GRAMMAR_TOKENS.wildcard).length;
   if (lit(x) !== lit(y)) return lit(x) - lit(y);
-  const sx = x.flatMap((t, i) => (t === '*' ? [i] : [])), sy = y.flatMap((t, i) => (t === '*' ? [i] : []));
+  const sx = x.flatMap((t, i) => (t === GRAMMAR_TOKENS.wildcard ? [i] : [])), sy = y.flatMap((t, i) => (t === GRAMMAR_TOKENS.wildcard ? [i] : []));
   for (let i = 0; i < Math.min(sx.length, sy.length); i++) if (sx[i] !== sy[i]) return sx[i] - sy[i];
   return sx.length - sy.length;
 }
@@ -243,7 +244,7 @@ export function mergeStateOwners(decl, ctx = {}) {
   // 无 `*` 段的不得填；textPaths 整类不强制（卷二 :497 不生成 P、:519 不进去留覆盖核对；不对任何单条特判）。违者 E-PATH-KEYKINDS。
   const entityKinds = new Set([...ENTITY_KINDS, ...(ctx.kinds || []), ...(ctx.entityKinds || [])]);
   const keyKinds = opt('keyKinds', isObj, 'object pattern -> list of key kinds') ? d.keyKinds : {};
-  const nStarsOf = (p) => segs(p).filter((s) => s === '*').length;
+  const nStarsOf = (p) => segs(p).filter((s) => s === GRAMMAR_TOKENS.wildcard).length;
   for (const p of sorted(Object.keys(keyKinds))) {
     if (!Object.hasOwn(pathTypes, p)) { err(E.E_PATH_UNDECLARED, p, `#/keyKinds/${p}`, p, 'keyKinds pattern declared in pathTypes'); continue; }
     for (const { got, want } of keyKindsIssues(keyKinds[p], nStarsOf(p), entityKinds)) err(E.E_PATH_KEYKINDS, p, `#/keyKinds/${p}`, got, want);
@@ -317,7 +318,7 @@ export function mergeStateOwners(decl, ctx = {}) {
   for (const [a, b] of overlapPairs([...writers.keys()])) err(E.E_PATH_OVERLAP, a, '#/stateKeys', b, 'writer patterns of equal specificity must not overlap');
   // 每个状态顶层键至少有一条 pathTypes 模式覆盖（§2.7 路径模式匹配语义末句）。
   for (const key of sorted(Object.keys(stateKeys))) {
-    if (!Object.keys(pathTypes).some((p) => { const s0 = segs(p)[0]; return s0 === key || s0 === '*'; })) err(E.E_PATH_UNDECLARED, key, `#/stateKeys/${key}`, key, 'at least one pathTypes pattern under the key');
+    if (!Object.keys(pathTypes).some((p) => { const s0 = segs(p)[0]; return s0 === key || s0 === GRAMMAR_TOKENS.wildcard; })) err(E.E_PATH_UNDECLARED, key, `#/stateKeys/${key}`, key, 'at least one pathTypes pattern under the key');
   }
   // memberRecomputable：每条须是 pathTypes 已有模式（§2.7）。
   if (opt('memberRecomputable', isStrList, 'list of path patterns')) {

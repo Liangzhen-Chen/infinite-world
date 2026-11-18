@@ -6,6 +6,7 @@
 
 import { CODE_RE, HandleError } from './vocab-handle.mjs';
 import { T } from '../validate/types.mjs';
+import { GRAMMAR_TOKENS } from './markers.mjs';
 
 // pathTypes 值类型里超出 §1.5 类型名的固定记号：定义源在 kernel/handles/markers.mjs（卷二 §2.7 :811 dimension、sealed、EventId 行），这里只引用。
 const TYPE_EXTRA = T.path_type_extra;
@@ -102,7 +103,7 @@ export function parseDimKey(reg, text) {
  * @param {string} pattern
  */
 export function wildcardCount(pattern) {
-  return pattern.split('.').filter((s) => s === '*').length;
+  return pattern.split(GRAMMAR_TOKENS.pathSep).filter((s) => s === GRAMMAR_TOKENS.wildcard).length;
 }
 
 /** pathTypes 模式字面段文法（李白 11-17 pathTypes 段文法裁定及其修正，卷二 §2.7）：小写字母开头，后面允许大小写字母、数字、下划线。 */
@@ -116,10 +117,10 @@ export const PATH_SEGMENT_RESERVED = new Set(PATH_SEGMENT_RESERVED_LIST);
  * @param {string} pattern
  */
 export function checkPathPattern(pattern) {
-  const segs = typeof pattern === 'string' ? pattern.split('.') : [];
-  const bad = segs.find((s) => s !== '*' && (!PATH_SEGMENT_RE.test(s) || PATH_SEGMENT_RESERVED.has(s)));
+  const segs = typeof pattern === 'string' ? pattern.split(GRAMMAR_TOKENS.pathSep) : [];
+  const bad = segs.find((s) => s !== GRAMMAR_TOKENS.wildcard && (!PATH_SEGMENT_RE.test(s) || PATH_SEGMENT_RESERVED.has(s)));
   if (!segs.length || bad !== undefined) throw new HandleError('E-PATH-SEGMENT-GRAMMAR', `pathTypes pattern ${JSON.stringify(pattern)}: literal segment ${JSON.stringify(bad)} not ^[a-z][a-zA-Z0-9_]*$ or reserved word`);
-  if (!segs.some((s) => s !== '*')) throw new HandleError('E-PATH-SEGMENT-GRAMMAR', `pathTypes pattern ${JSON.stringify(pattern)}: needs at least one literal segment`);
+  if (!segs.some((s) => s !== GRAMMAR_TOKENS.wildcard)) throw new HandleError('E-PATH-SEGMENT-GRAMMAR', `pathTypes pattern ${JSON.stringify(pattern)}: needs at least one literal segment`);
 }
 
 /**
@@ -153,7 +154,7 @@ export function seedKeyOf(reg, text) {
  */
 export function statePathSegments(path) {
   if (typeof path !== 'string' || path === SEG.empty) return null;
-  const segs = path.split('.');
+  const segs = path.split(GRAMMAR_TOKENS.pathSep);
   return segs.includes('') ? null : segs;
 }
 
@@ -190,16 +191,16 @@ export function pathTypeShape(t) {
  */
 export function statePathOf(patterns, pattern, segs) {
   if (!patterns.has(pattern)) throw new HandleError('E-PATH-UNDECLARED', `${JSON.stringify(pattern)}: not a P-constructible pathTypes pattern`);
-  const parts = pattern.split('.');
+  const parts = pattern.split(GRAMMAR_TOKENS.pathSep);
   if (segs.length !== wildcardCount(pattern)) throw new HandleError('E-PATH-UNDECLARED', `${pattern}: ${segs.length} segment(s) given, ${wildcardCount(pattern)} wildcard(s)`);
   let i = 0;
   const out = parts.map((p) => {
-    if (p !== '*') return p;
+    if (p !== GRAMMAR_TOKENS.wildcard) return p;
     const s = segs[i++];
-    if (typeof s !== 'string' || s === SEG.empty || s.includes('.')) throw new HandleError('E-DIM-ID-FORMAT', `${pattern}: segment ${JSON.stringify(s)} not a single path segment`);
+    if (typeof s !== 'string' || s === SEG.empty || s.includes(GRAMMAR_TOKENS.pathSep)) throw new HandleError('E-DIM-ID-FORMAT', `${pattern}: segment ${JSON.stringify(s)} not a single path segment`);
     return s;
   });
-  return /** @type {import('../types.d.ts').StatePath<P>} */ (out.join('.'));
+  return /** @type {import('../types.d.ts').StatePath<P>} */ (out.join(GRAMMAR_TOKENS.pathSep));
 }
 
 // ---------- 文件路径、代号、节点名、摘要的格式文法 ----------

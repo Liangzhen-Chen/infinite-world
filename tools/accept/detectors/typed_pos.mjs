@@ -5,7 +5,8 @@
 //   nonAscii     S13 ③：含非 ASCII 字符的字串或模板字面量；`throw new X(…)` 的文案实参不计（S13 (c)）
 //   bareCompare  S13 ④：裸字串字面量参与 ===/!==/==/!=、case、数组字面量的 .includes、.get/.has 的键
 //                （④ 原句只列 ===/!==/switch/Map 键/数组元素，`in` 不在此列，见卷二 :2412）；
-//                上下文白名单 (d)：typeof 结果比较与 markers.mjs 已定义的文法记号不计（卷二 :2413）；
+//                上下文白名单 (d)：typeof 结果比较与 markers.mjs 的 GRAMMAR_TOKENS 文法记号定义源不计；
+//                协议标记（TYPES、CODE_ENUMS 等）裸写照计（卷二 :2413）；
 //                另含补洞写法（别名溯源、族前缀拼接、V 动态访问、字面量判断表，见 shapeHits）
 //   exportParams §2.8 第 4 条末句：导出函数的形参没有 JSDoc 类型标注（E-VIEW-FAMILY-UNRESOLVED；块 2 体检 K2-46，从第一个文件起全量适用）
 //   directive / anyType / assertCast  §2.8 第 4a 条：@ts-ignore 等指令注释、JSDoc 里的 any 与 *、`/** @type */ (…)` 强转与 `x is T` / asserts / @overload（只许类别行 castFiles）
@@ -24,52 +25,66 @@ const NON_ASCII = /[^\x00-\x7f]/;
 const EQ_OPS = new Set(['===', '!==', '==', '!=']);
 
 // S13 ④ 上下文白名单 (d) 的文法记号（卷二 :2413，封卷后勘误 1118k20）：不在此另写名单，
-// 取 kernel/handles/markers.mjs 的定义源导出（卷二 :852 规定这些记号在那里定义一次）。
-// 只收数组与由数组组成的对象里的字串（定义源）；跳过函数与已由定义源派生的句柄根 T，不另列记号值。
-function collectMarkerTokens(m) {
+// 只取 kernel/handles/markers.mjs 的文法记号定义源 GRAMMAR_TOKENS（按导出名定位；TYPES 等协议标记不是文法记号，裸写照计）。
+// 记号值在定义源处，本文件只收集其成员字串；协议标记裸写（`x === 'number'`、`state === 'ok'`）不在豁免内。
+function collectGrammarTokens(m) {
   const out = new Set();
   const add = (v) => {
     if (typeof v === 'string') out.add(v);
     else if (Array.isArray(v)) for (const x of v) add(x);
     else if (v && typeof v === 'object') for (const k of Object.keys(v)) add(v[k]);
   };
-  for (const [k, v] of Object.entries(m)) {
-    if (k === 'T' || typeof v === 'function') continue;
-    add(v);
-  }
+  add(m);
   return out;
 }
-const MARKER_TOKENS = collectMarkerTokens(markers);
+const MARKER_TOKENS = collectGrammarTokens(markers.GRAMMAR_TOKENS);
 
 // S13 (d)：`typeof x === '<字面量>'` 及反向、`switch (typeof x)` 的 case 不计第 ④ 类。
-// 从字面量一侧沿运算符扫描操作数，操作数里出现 typeof 即算 typeof 结果比较。
+// 只认比较操作数本身就是 typeof 表达式（可带外层括号）；操作数里别处出现 typeof（`a[typeof b] === 'z'`、
+// `if (typeof x) y === 'z'`）不算——那不是 typeof 结果的比较。
 const OPERAND_STOP_IDS = new Set(['return', 'case', 'if', 'while', 'for', 'switch', 'throw', 'new', 'delete', 'void', 'in', 'instanceof', 'of', 'const', 'let', 'var', 'else', 'do', 'yield', 'await', 'function']);
-function operandHasTypeof(toks, start, dir) {
-  let j = start; let depth = 0;
+// 从字面量一侧沿运算符取操作数的记号范围 [lo, hi]（含两端），遇运算符、语句关键字或不成组的括号停。
+function operandRange(toks, start, dir) {
+  let j = start; let depth = 0; let lo = start; let hi = start;
   while (j >= 0 && j < toks.length) {
     const t = toks[j];
     if (t.t === 'p') {
       if (t.v === '.' || t.v === '?.' || t.v === '!') { j += dir; continue; }
       if (dir < 0) {
-        if (t.v === ')' || t.v === ']') { depth++; j--; continue; }
-        if (t.v === '(' || t.v === '[') { if (depth === 0) return false; depth--; j--; continue; }
-        return false;
+        if (t.v === ')' || t.v === ']') { depth++; lo = j; j--; continue; }
+        if (t.v === '(' || t.v === '[') {
+          if (depth === 0) { if (matchClose(toks, j) === start) lo = j; break; } // 只有整操作数的外层括号算进范围
+          depth--; lo = j; j--; continue;
+        }
+        break;
       }
-      if (t.v === '(' || t.v === '[') { depth++; j++; continue; }
-      if (t.v === ')' || t.v === ']') { if (depth === 0) return false; depth--; j++; continue; }
-      return false;
+      if (t.v === '(' || t.v === '[') { depth++; hi = j; j++; continue; }
+      if (t.v === ')' || t.v === ']') { if (depth === 0) break; depth--; hi = j; j++; continue; }
+      break;
     }
     if (t.t === 'id') {
-      if (t.v === 'typeof') return true;
-      if (OPERAND_STOP_IDS.has(t.v)) return false;
+      if (OPERAND_STOP_IDS.has(t.v)) break;
+      if (dir < 0) lo = j; else hi = j;
       j += dir; continue;
     }
-    if (t.t === 'str' || t.t === 'num' || t.t === 'tpl') { j += dir; continue; }
-    return false;
+    if (t.t === 'str' || t.t === 'num' || t.t === 'tpl') { if (dir < 0) lo = j; else hi = j; j += dir; continue; }
+    break;
   }
-  return false;
+  return [lo, hi];
 }
-// case 的字面量：向前找到同一 switch 的判别式，判别式里含 typeof 即不计。
+// 范围内是不是一个 typeof 表达式：整体即 `typeof <操作数>`，或外面套了只包住它的括号。
+function isTypeofExpr(toks, lo, hi) {
+  while (lo <= hi && isP(toks[lo], '(') && matchClose(toks, lo) === hi) { lo++; hi--; }
+  if (lo > hi || !(toks[lo].t === 'id' && toks[lo].v === 'typeof')) return false;
+  if (lo === hi) return false;
+  const [, end] = operandRange(toks, lo + 1, 1);
+  return end === hi;
+}
+function operandIsTypeof(toks, start, dir) {
+  const [lo, hi] = operandRange(toks, start, dir);
+  return lo <= hi && isTypeofExpr(toks, lo, hi);
+}
+// case 的字面量：向前找到同一 switch 的判别式，判别式本身是 typeof 表达式即不计。
 function caseOfTypeofSwitch(toks, i) {
   let depth = 0;
   for (let j = i - 1; j >= 0; j--) {
@@ -78,8 +93,8 @@ function caseOfTypeofSwitch(toks, i) {
     if (isP(t, '{')) { if (depth > 0) depth--; continue; }
     if (depth === 0 && t.t === 'id' && t.v === 'switch' && isP(toks[j + 1], '(')) {
       const close = matchClose(toks, j + 1);
-      for (let k = j + 2; k < close; k++) if (toks[k].t === 'id' && toks[k].v === 'typeof') return true;
-      return false;
+      if (close < 0 || close <= j + 2) return false;
+      return isTypeofExpr(toks, j + 2, close - 1);
     }
   }
   return false;
@@ -147,7 +162,7 @@ function bareCompareHits(toks) {
     const prev = toks[i - 1]; const next = toks[i + 1];
     const op = (x) => x && x.t === 'p' && EQ_OPS.has(x.v);
     if (op(prev) || op(next)) {
-      if ((op(prev) && operandHasTypeof(toks, i - 2, -1)) || (op(next) && operandHasTypeof(toks, i + 2, 1))) return; // S13 (d) typeof 结果比较
+      if ((op(prev) && operandIsTypeof(toks, i - 2, -1)) || (op(next) && operandIsTypeof(toks, i + 2, 1))) return; // S13 (d) typeof 结果比较
       return out.push(i);
     }
     if (prev && prev.t === 'id' && prev.v === 'case') { if (!caseOfTypeofSwitch(toks, i)) out.push(i); return; }

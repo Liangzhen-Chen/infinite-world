@@ -24,7 +24,7 @@ import { dim } from './dimensions.mjs';
 import { clockView } from './scheduler.mjs';
 import { readView } from './view-registry.mjs';
 import { buildE } from './handles/generated.mjs';
-import { T } from './handles/markers.mjs';
+import { T, GRAMMAR_TOKENS } from './handles/markers.mjs';
 
 const E = buildE();
 // 三元键与登记行的字段名（卷二 §2.7 路径段、卷六 §2.5 :224 账本行 {day,used}、§3.1 :? 账户过滤字段）：定义源只写一份，比较处引用。
@@ -685,7 +685,7 @@ function postDraft(engine, state, draft, viaAllocation) {
         const prev = readTotalsCell(state, c.kind, c.code);
         const days = prev.usedByDay.map((d) => ({ day: d.day, used: d.used }));
         const last = days[days.length - 1];
-        if (last && last.day > today) throw new KernelError('E-LEDGER-USEDBYDAY-ORDER', { entity: null }, `${seg.join('.')}: last day ${last.day} is after today ${today}`);
+        if (last && last.day > today) throw new KernelError('E-LEDGER-USEDBYDAY-ORDER', { entity: null }, `${seg.join(GRAMMAR_TOKENS.pathSep)}: last day ${last.day} is after today ${today}`);
         if (last && last.day === today) last.used += c.qty;
         else days.push({ day: today, used: c.qty });
         setInTx(tx, seg, { [SCHEMA.cumulative]: prev.cumulative + c.qty, [SCHEMA.usedByDay]: days });
@@ -740,7 +740,7 @@ export function transfer(engine, state, t) {
  */
 export function auditLots(engine, state) {
   const out = [];
-  const push = (code, segs, why) => out.push(Object.freeze({ code, path: segs.join('.'), why }));
+  const push = (code, segs, why) => out.push(Object.freeze({ code, path: segs.join(GRAMMAR_TOKENS.pathSep), why }));
   const rows = ruleTable(engine.rules, SCHEMA.resourcesTable);
   const isLotKind = (kind) => Object.hasOwn(rows, kind) && isObj(rows[kind]) && rows[kind].family === SCHEMA.lotFamily;
   const radix = lotRadix(engine);
@@ -765,7 +765,7 @@ export function auditLots(engine, state) {
     const seq = lotOrdinal(key, radix);
     if (seq === null || seq >= next) push('E-DIM-ID-FORMAT', segs, `not an issued lot key (${SCHEMA.lotPrefix} + seq < ${SCHEMA.counters}.${SCHEMA.lotNext} in radix ${radix})`);
     if (seen.has(key)) push('E-DIM-ID-DUPLICATE', segs, `lot key also at ${seen.get(key)}`);
-    else seen.set(key, segs.join('.'));
+    else seen.set(key, segs.join(GRAMMAR_TOKENS.pathSep));
     if (!isObj(readAt(state, [SCHEMA.stockLots, ...rel]))) push('E-DIM-REF-MISSING', segs, `no ${SCHEMA.stockLots} row for this lot`);
   });
   walk(SCHEMA.stockLots, (rel, attrs) => {

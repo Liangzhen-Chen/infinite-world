@@ -176,10 +176,18 @@
     {
      "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 30
+    },
+    {
+     "ref": "B2-W4h：共用检测器及其 import 闭包内 kernel 文件改动（文法记号与登记字段/族名改引 markers.mjs 定义源；typed_pos 白名单 (d) 收窄），判据代码指纹随之更新；本类别判定口径不变（R12-14.3）",
+     "rev": 31
+    },
+    {
+     "ref": "B2-W4h 续：ledger.mjs、rx.mjs、validate/rows.mjs 的路径分隔符改引 markers.mjs 的 GRAMMAR_TOKENS 定义源，共用检测器的 import 闭包内容再变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 32
     }
    ],
-   "print": "7f4c4bb66002e2ee937d443b8701470ffc74228db7f0c8803bb37b06e7f81769",
-   "rev": 30,
+   "print": "c7d743eda31cc5a0347b698b76fb3d7e9f2dc84339d2b6dd3890bd369e1b0a54",
+   "rev": 32,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -409,10 +417,18 @@
     {
      "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 19
+    },
+    {
+     "ref": "B2-W4h：共用检测器及其 import 闭包内 kernel 文件改动（文法记号与登记字段/族名改引 markers.mjs 定义源；typed_pos 白名单 (d) 收窄），判据代码指纹随之更新；本类别判定口径不变（R12-14.3）",
+     "rev": 20
+    },
+    {
+     "ref": "B2-W4h 续：ledger.mjs、rx.mjs、validate/rows.mjs 的路径分隔符改引 markers.mjs 的 GRAMMAR_TOKENS 定义源，共用检测器的 import 闭包内容再变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "8d1cb3fc7bb616e74a09837d16282aa6336c0430679b6ea43f353659aa9707fb",
-   "rev": 19,
+   "print": "0d11650d3679c0c355baeb3813765eaf9fbb4203f70179cf068d5167428f8aa5",
+   "rev": 21,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -443,10 +459,14 @@
     {
      "ref": "B2-W4g：共用的 typed_pos 加上下文白名单 (d)（typeof 与 markers.mjs 已定义文法记号不计、去掉 `in`）；本类别只用 directive、anyType、assertCast，判定口径不变",
      "rev": 4
+    },
+    {
+     "ref": "B2-W4h（卷二 :2413 (d)）：typed_pos 的 bareCompare 改成文记号只豁免 markers.mjs 的 GRAMMAR_TOKENS 定义源、typeof 只认操作数本身是 typeof；本类别 V-2.a 用 bareCompare，随该检测器改动，其余检查项（directive/anyType/assertCast）口径不变",
+     "rev": 5
     }
    ],
-   "print": "58ead4830620686de7fb7927c831a6bad545d8cf7709b8dbd66b973f8c069477",
-   "rev": 4,
+   "print": "1bbb5134bf93828f5b2e337fcbbd1dca8dc57429f37bd766256115f281d4bafe",
+   "rev": 5,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -535,10 +555,14 @@
     {
      "ref": "B2-W4g：共用的 typed_pos 加上下文白名单 (d)（typeof 与 markers.mjs 已定义文法记号不计、去掉 `in`）；本类别条目仍 registered，未用其检查项，判定口径不变",
      "rev": 5
+    },
+    {
+     "ref": "B2-W4h：共用检测器及其 import 闭包内 kernel 文件改动（文法记号与登记字段/族名改引 markers.mjs 定义源；typed_pos 白名单 (d) 收窄），判据代码指纹随之更新；本类别判定口径不变（R12-14.3）",
+     "rev": 6
     }
    ],
-   "print": "2843d98c1aec33308fb606b66474fdc553e33e366be2fa6a7381f2e577333fe5",
-   "rev": 5,
+   "print": "129d71982171c8d6824116dbc7bc834d69e686853fa30bda467231158bbb60c7",
+   "rev": 6,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -657,10 +681,18 @@
     {
      "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 20
+    },
+    {
+     "ref": "B2-W4h：共用检测器及其 import 闭包内 kernel 文件改动（文法记号与登记字段/族名改引 markers.mjs 定义源；typed_pos 白名单 (d) 收窄），判据代码指纹随之更新；本类别判定口径不变（R12-14.3）",
+     "rev": 21
+    },
+    {
+     "ref": "B2-W4h 续：ledger.mjs、rx.mjs、validate/rows.mjs 的路径分隔符改引 markers.mjs 的 GRAMMAR_TOKENS 定义源，共用检测器的 import 闭包内容再变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 22
     }
    ],
-   "print": "3dae3bcb17bf6ced5c29ac68e02ba70c5a5d7bcd142133a3ed63aaf32e9f1e33",
-   "rev": 20,
+   "print": "2beb01fd52aed81c39b621ab1633abba50e0aabba1ab7b2f4be81b6bacbacf38",
+   "rev": 22,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -696,10 +728,14 @@
     {
      "ref": "B2-W4g：共用的 typed_pos 加上下文白名单 (d)（typeof 与 markers.mjs 已定义文法记号不计、去掉 `in`）；本类别条目仍 registered，未用其检查项，判定口径不变",
      "rev": 5
+    },
+    {
+     "ref": "B2-W4h：共用检测器及其 import 闭包内 kernel 文件改动（文法记号与登记字段/族名改引 markers.mjs 定义源；typed_pos 白名单 (d) 收窄），判据代码指纹随之更新；本类别判定口径不变（R12-14.3）",
+     "rev": 6
     }
    ],
-   "print": "2843d98c1aec33308fb606b66474fdc553e33e366be2fa6a7381f2e577333fe5",
-   "rev": 5,
+   "print": "129d71982171c8d6824116dbc7bc834d69e686853fa30bda467231158bbb60c7",
+   "rev": 6,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -866,10 +902,18 @@
     {
      "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 36
+    },
+    {
+     "ref": "B2-W4h：共用检测器及其 import 闭包内 kernel 文件改动（文法记号与登记字段/族名改引 markers.mjs 定义源；typed_pos 白名单 (d) 收窄），判据代码指纹随之更新；本类别判定口径不变（R12-14.3）",
+     "rev": 37
+    },
+    {
+     "ref": "B2-W4h 续：ledger.mjs、rx.mjs、validate/rows.mjs 的路径分隔符改引 markers.mjs 的 GRAMMAR_TOKENS 定义源，共用检测器的 import 闭包内容再变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 38
     }
    ],
-   "print": "1cc6019056e8f38a27163f4ab4a8a08975b84071f097d1d03cd17d17a27a9a47",
-   "rev": 36,
+   "print": "1400ae56ed0d352c173a2ad65e300df8a3bc6d33bcfd0da8619df23279f5ee9b",
+   "rev": 38,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1052,10 +1096,18 @@
     {
      "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 21
+    },
+    {
+     "ref": "B2-W4h：共用检测器及其 import 闭包内 kernel 文件改动（文法记号与登记字段/族名改引 markers.mjs 定义源；typed_pos 白名单 (d) 收窄），判据代码指纹随之更新；本类别判定口径不变（R12-14.3）",
+     "rev": 22
+    },
+    {
+     "ref": "B2-W4h 续：ledger.mjs、rx.mjs、validate/rows.mjs 的路径分隔符改引 markers.mjs 的 GRAMMAR_TOKENS 定义源，共用检测器的 import 闭包内容再变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "3dae3bcb17bf6ced5c29ac68e02ba70c5a5d7bcd142133a3ed63aaf32e9f1e33",
-   "rev": 21,
+   "print": "2beb01fd52aed81c39b621ab1633abba50e0aabba1ab7b2f4be81b6bacbacf38",
+   "rev": 23,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1539,10 +1591,18 @@
     {
      "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 21
+    },
+    {
+     "ref": "B2-W4h：共用检测器及其 import 闭包内 kernel 文件改动（文法记号与登记字段/族名改引 markers.mjs 定义源；typed_pos 白名单 (d) 收窄），判据代码指纹随之更新；本类别判定口径不变（R12-14.3）",
+     "rev": 22
+    },
+    {
+     "ref": "B2-W4h 续：ledger.mjs、rx.mjs、validate/rows.mjs 的路径分隔符改引 markers.mjs 的 GRAMMAR_TOKENS 定义源，共用检测器的 import 闭包内容再变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "3dae3bcb17bf6ced5c29ac68e02ba70c5a5d7bcd142133a3ed63aaf32e9f1e33",
-   "rev": 21,
+   "print": "2beb01fd52aed81c39b621ab1633abba50e0aabba1ab7b2f4be81b6bacbacf38",
+   "rev": 23,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -1609,10 +1669,18 @@
     {
      "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 13
+    },
+    {
+     "ref": "B2-W4h：共用检测器及其 import 闭包内 kernel 文件改动（文法记号与登记字段/族名改引 markers.mjs 定义源；typed_pos 白名单 (d) 收窄），判据代码指纹随之更新；本类别判定口径不变（R12-14.3）",
+     "rev": 14
+    },
+    {
+     "ref": "B2-W4h 续：ledger.mjs、rx.mjs、validate/rows.mjs 的路径分隔符改引 markers.mjs 的 GRAMMAR_TOKENS 定义源，共用检测器的 import 闭包内容再变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 15
     }
    ],
-   "print": "1f192d978282f48c477d12f3e4b033072ba7cc692e90cbd2aa7a53e2292e8c01",
-   "rev": 13,
+   "print": "fd784f196438735ef8f61bf377b5df5006ca1fdde3d49e25f0126c96082172a1",
+   "rev": 15,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -1783,10 +1851,18 @@
     {
      "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 39
+    },
+    {
+     "ref": "B2-W4h：共用检测器及其 import 闭包内 kernel 文件改动（文法记号与登记字段/族名改引 markers.mjs 定义源；typed_pos 白名单 (d) 收窄），判据代码指纹随之更新；本类别判定口径不变（R12-14.3）",
+     "rev": 40
+    },
+    {
+     "ref": "B2-W4h 续：ledger.mjs、rx.mjs、validate/rows.mjs 的路径分隔符改引 markers.mjs 的 GRAMMAR_TOKENS 定义源，共用检测器的 import 闭包内容再变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 41
     }
    ],
-   "print": "1e68376767f43b8bda54a1643358b0099b2c05af5c873589d337efea436966ba",
-   "rev": 39,
+   "print": "15be08679617d9a937210426009e09e250806565e8eaf93fbf34457ce01df754",
+   "rev": 41,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -2009,10 +2085,18 @@
     {
      "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 28
+    },
+    {
+     "ref": "B2-W4h：共用检测器及其 import 闭包内 kernel 文件改动（文法记号与登记字段/族名改引 markers.mjs 定义源；typed_pos 白名单 (d) 收窄），判据代码指纹随之更新；本类别判定口径不变（R12-14.3）",
+     "rev": 29
+    },
+    {
+     "ref": "B2-W4h 续：ledger.mjs、rx.mjs、validate/rows.mjs 的路径分隔符改引 markers.mjs 的 GRAMMAR_TOKENS 定义源，共用检测器的 import 闭包内容再变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 30
     }
    ],
-   "print": "7f4c4bb66002e2ee937d443b8701470ffc74228db7f0c8803bb37b06e7f81769",
-   "rev": 28,
+   "print": "c7d743eda31cc5a0347b698b76fb3d7e9f2dc84339d2b6dd3890bd369e1b0a54",
+   "rev": 30,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -2043,10 +2127,14 @@
     {
      "ref": "B2-W4g（卷二 §7 S13 (d)，李白 11-18 13:05 裁定第 2 条）：typed_pos 的 bareCompare 加上下文白名单 (d)——typeof 结果比较（含反向与 switch(typeof x) 的 case）不计；文法记号集合取自 kernel/handles/markers.mjs 的定义源导出（检测器不另写名单），其已定义记号不计；④ 原句只列 ===/!==/switch/Map 键/数组元素，去掉 `'x' in obj` 的计数（卷二 :2412，`in` 属 ②）。自测见 tests/accept/w4g-selftest.test.mjs",
      "rev": 4
+    },
+    {
+     "ref": "B2-W4h（卷二 :2413 (d)，李白 11-18 13:05 裁定第 2 条）：typed_pos 的 collectMarkerTokens 改只收 markers.mjs 的 GRAMMAR_TOKENS 文法记号定义源（TYPES 等协议标记裸写仍计 ④），operandHasTypeof 收窄为只认比较操作数本身是 typeof（含整操作数外层括号与 switch 判别式）；内核裸字面量照 T 与文法记号定义源改引，c_text_kernel_4 降至 0",
+     "rev": 5
     }
    ],
-   "print": "2843d98c1aec33308fb606b66474fdc553e33e366be2fa6a7381f2e577333fe5",
-   "rev": 4,
+   "print": "129d71982171c8d6824116dbc7bc834d69e686853fa30bda467231158bbb60c7",
+   "rev": 5,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -2234,10 +2322,18 @@
     {
      "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 15
+    },
+    {
+     "ref": "B2-W4h：共用检测器及其 import 闭包内 kernel 文件改动（文法记号与登记字段/族名改引 markers.mjs 定义源；typed_pos 白名单 (d) 收窄），判据代码指纹随之更新；本类别判定口径不变（R12-14.3）",
+     "rev": 16
+    },
+    {
+     "ref": "B2-W4h 续：ledger.mjs、rx.mjs、validate/rows.mjs 的路径分隔符改引 markers.mjs 的 GRAMMAR_TOKENS 定义源，共用检测器的 import 闭包内容再变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 17
     }
    ],
-   "print": "1f192d978282f48c477d12f3e4b033072ba7cc692e90cbd2aa7a53e2292e8c01",
-   "rev": 15,
+   "print": "fd784f196438735ef8f61bf377b5df5006ca1fdde3d49e25f0126c96082172a1",
+   "rev": 17,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -2377,10 +2473,14 @@
     {
      "ref": "B2-W4g：共用的 typed_pos 加上下文白名单 (d)（typeof 与 markers.mjs 已定义文法记号不计、去掉 `in`）；本类别条目只用 call_edge，判定口径不变",
      "rev": 17
+    },
+    {
+     "ref": "B2-W4h：共用检测器及其 import 闭包内 kernel 文件改动（文法记号与登记字段/族名改引 markers.mjs 定义源；typed_pos 白名单 (d) 收窄），判据代码指纹随之更新；本类别判定口径不变（R12-14.3）",
+     "rev": 18
     }
    ],
-   "print": "308b4f6680d5998c87ac06843d24337f2f6ea8e1e091c94f5800fefe73b104af",
-   "rev": 17,
+   "print": "1b1f1bd2aea06eb144e483d037f00ab89453c8323ffdf0d3d42160d284a01ac6",
+   "rev": 18,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

@@ -93,7 +93,7 @@ export function validateDimensions(sources, options) {
   }
 
   // ---------- L1 表头 ----------
-  const kinds = new Set([...tables.map((t) => t.kind), 'effect']);
+  const kinds = new Set([...tables.map((t) => t.kind), T.id_kind.effect]);
   const tableDims = new Map(tables.map((t) => [t.kind, t.doc.dimensions]));
   const env = { units, vocab, kinds, idIndex, tableDims, displaySet: new Set(options.displaySet), compiled: new Map() };
   for (const t of tables) checkHeader(t, env, err);

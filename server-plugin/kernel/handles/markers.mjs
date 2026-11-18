@@ -59,6 +59,42 @@ export const PATH_TYPE_EXTRAS = Object.freeze(['EventId', 'dimension', 'sealed']
 // 按所读字段取四种之一；登记数据 state-owners.json 的 rxNamespaces 行把它记作 field）。
 export const NS_ROW_TYPES = Object.freeze(['field']);
 
+// 卷二文法里的固定记号（S13 上下文白名单 (d)，卷二 :2413）：通配 `*`、路径分隔符、join 分隔串、JSON 文法记号。
+// 这些是语言与文法常量，不计第 ④ 类；卷二没写到的串不收。两个以上文件用到的文法记号只在此定义一次，别处引用（卷二 :2413 末句）。
+export const GRAMMAR_TOKENS = Object.freeze({
+  wildcard: '*', // 路径模式里的通配，恰匹配一段（卷二 §2.7 :814）
+  pathSep: '.', // 路径分段符（卷二 §2.7 :814：路径按 `.` 分段）
+  joinSep: '|', // 种子键各部件相连的分隔串（卷二 §1.10 :320）
+  // JSON 文法记号（卷二 :2413 (d)）：结构字符、字符串引号与转义、空白字符。
+  jsonObjOpen: '{',
+  jsonObjClose: '}',
+  jsonArrOpen: '[',
+  jsonArrClose: ']',
+  jsonComma: ',',
+  jsonColon: ':',
+  jsonQuote: '"',
+  jsonEscape: '\\',
+  jsonSpace: ' ',
+  jsonTab: '\t',
+  jsonLf: '\n',
+  jsonCr: '\r',
+});
+
+// 声明节点的字段（卷二 §2.3 :476 `declareInputs(node,{impl,own,uses})`、:477 `foldsOverDays`）。
+export const DECL_FIELDS = Object.freeze(['impl', 'own', 'uses', 'foldsOverDays']);
+
+// 规则表的独立格式名（卷二 §3.7 :1429：registry 文件级登记，结构写 `processSlots`）。
+export const RULE_STRUCTURES = Object.freeze(['processSlots']);
+
+// kernel 直接比较的词表族名（卷二 §1.9 :288 族名表：class、component、vstatus）。
+export const VOCAB_FAMILIES = Object.freeze(['class', 'component', 'vstatus']);
+
+// 表 kind 之外的伪类（卷二 §1.5 :182：`kind` 取 22 类或伪类 `effect`，即 _effects.json 的族）。
+export const ID_KINDS = Object.freeze(['effect']);
+
+// 作为写者模块路径的内核模块（卷二 §2.6 :247：账本写者 `kernel/ledger.mjs`）。
+export const KERNEL_MODULES = Object.freeze({ ledger: 'kernel/ledger.mjs' });
+
 // 入账腿 lot 的键集记号 attrs / splitFrom：卷三乙 post 批次腿的协议字段（块 3-2 实现定）。
 // 卷文待回补：卷三乙 post 批次腿字段（主会话另派勘误）；卷二、卷六、卷三乙现行卷文未找到这两个键名作批次腿键集的定义。
 // 定义源只此一份，kernel/ledger.mjs 引用（S13 ④，李白 11-18 13:05 裁定第 2 条）。
@@ -111,4 +147,8 @@ export const T = Object.freeze({
   path_type_extra: markersOf('path_type_extra', PATH_TYPE_EXTRAS),
   ns_row_type: markersOf('ns_row_type', NS_ROW_TYPES),
   lot_leg_key: markersOf('lot_leg_key', LOT_LEG_KEYS),
+  decl_field: markersOf('decl_field', DECL_FIELDS),
+  rule_structure: markersOf('rule_structure', RULE_STRUCTURES),
+  vocab_family: markersOf('vocab_family', VOCAB_FAMILIES),
+  id_kind: markersOf('id_kind', ID_KINDS),
 });

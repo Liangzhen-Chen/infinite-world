@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { T, TYPES, CODE_ENUMS, DOMAIN_OPTIONAL, ROW_FIELDS, RX_OPS, RX_KINDS, PATH_TYPE_EXTRAS, NS_ROW_TYPES, markersOf } from '../../server-plugin/kernel/handles/markers.mjs';
+import { T, TYPES, CODE_ENUMS, DOMAIN_OPTIONAL, ROW_FIELDS, RX_OPS, RX_KINDS, PATH_TYPE_EXTRAS, NS_ROW_TYPES, GRAMMAR_TOKENS, DECL_FIELDS, RULE_STRUCTURES, VOCAB_FAMILIES, ID_KINDS, KERNEL_MODULES, markersOf } from '../../server-plugin/kernel/handles/markers.mjs';
 import { T as T_REEXPORTED } from '../../server-plugin/kernel/validate/types.mjs';
 
 test('handles/markers.mjs 是 0 import 叶子：源码没有任何 import 语句', () => {
@@ -62,6 +62,26 @@ test('T.path_type_extra、T.ns_row_type：pathTypes 三记号（卷二 §2.7 :81
   for (const name of PATH_TYPE_EXTRAS) assert.equal(T.path_type_extra[name], name);
   assert.deepEqual([...NS_ROW_TYPES], ['field']);
   assert.equal(T.ns_row_type.field, 'field');
+});
+
+test('GRAMMAR_TOKENS：只收卷二文法写明的固定记号（S13 (d)，:2413；通配与路径分隔 :814，join 分隔串 :320）', () => {
+  assert.equal(GRAMMAR_TOKENS.wildcard, '*');
+  assert.equal(GRAMMAR_TOKENS.pathSep, '.');
+  assert.equal(GRAMMAR_TOKENS.joinSep, '|');
+  // JSON 文法记号：结构字符、引号、转义与空白（卷二 :2413 (d) 末句所引）。
+  assert.deepEqual(new Set(Object.values(GRAMMAR_TOKENS)), new Set(['*', '.', '|', '{', '}', '[', ']', ',', ':', '"', '\\', ' ', '\t', '\n', '\r']));
+});
+
+test('S13 ④ 的登记字段/族名定义源：成员即卷二写明的名字', () => {
+  assert.deepEqual([...DECL_FIELDS], ['impl', 'own', 'uses', 'foldsOverDays']);
+  assert.deepEqual([...RULE_STRUCTURES], ['processSlots']);
+  assert.deepEqual([...VOCAB_FAMILIES], ['class', 'component', 'vstatus']);
+  assert.deepEqual([...ID_KINDS], ['effect']);
+  assert.equal(KERNEL_MODULES.ledger, 'kernel/ledger.mjs');
+  assert.equal(T.decl_field.impl, 'impl');
+  assert.equal(T.rule_structure.processSlots, 'processSlots');
+  assert.equal(T.vocab_family.vstatus, 'vstatus');
+  assert.equal(T.id_kind.effect, 'effect');
 });
 
 test('冻结：族对象与根不可改，赋值抛 TypeError', () => {

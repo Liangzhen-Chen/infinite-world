@@ -14,7 +14,7 @@ import { compareSpecificity, KEY_NONENTITY, KEY_DIMKEY, KEY_SEEDKEY, KEY_HANDLE 
 import { registry } from './vocab.mjs';
 import { KernelError, codeOf } from './errors.mjs';
 import { currentTransaction } from './transaction.mjs';
-import { T } from './handles/markers.mjs';
+import { T, GRAMMAR_TOKENS } from './handles/markers.mjs';
 
 // pathTypes 值文法里超出 §1.5 类型名的固定记号：定义源在 kernel/handles/markers.mjs（卷二 §2.7 :811 的 EventId、dimension 与 sealed 行），
 // 这里只引用；§2.9 第 3 条 Sealed 的 bytes/digest 字段、本文件内部 Patch 的 op 取值与 JS 原型污染防护键在本文件定义，比较处引用成员。
@@ -79,7 +79,7 @@ function need() {
 }
 
 // 模式段是否覆盖具体路径段（`*` 恰匹配一段）。
-const covers = (pat, segs) => pat.length === segs.length && pat.every((s, i) => s === '*' || s === segs[i]);
+const covers = (pat, segs) => pat.length === segs.length && pat.every((s, i) => s === GRAMMAR_TOKENS.wildcard || s === segs[i]);
 
 // 覆盖该具体路径的最具体一条（§2.7 路径模式匹配语义：最具体模式优先）。
 function mostSpecific(recs, segs) {
@@ -89,7 +89,7 @@ function mostSpecific(recs, segs) {
 }
 
 // 具体路径的 `*` 段值（按模式里 `*` 的次序）。
-const starValues = (pat, segs) => pat.map((s, i) => (s === '*' ? segs[i] : null)).filter((v) => v !== null);
+const starValues = (pat, segs) => pat.map((s, i) => (s === GRAMMAR_TOKENS.wildcard ? segs[i] : null)).filter((v) => v !== null);
 
 /**
  * 核对实参是 P 句柄给出的 StatePath：是字串、各段非空、最具体的 pathTypes 模式可生成 P 构造函数（不是 textPaths、账本账户路径）。
@@ -348,7 +348,7 @@ export function pathTypeOf(segs) {
  * @returns {boolean}
  */
 export function pathTypeHasDeeper(segs) {
-  return need().paths.some((r) => r.segs.length > segs.length && segs.every((s, i) => r.segs[i] === '*' || r.segs[i] === s));
+  return need().paths.some((r) => r.segs.length > segs.length && segs.every((s, i) => r.segs[i] === GRAMMAR_TOKENS.wildcard || r.segs[i] === s));
 }
 
 /**
