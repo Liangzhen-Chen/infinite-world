@@ -1,6 +1,6 @@
 // 方法是测试的条目（卷十二 §4.5.1 :782 load_check、unit_test、property_test）经执行器真跑 impl 所指的测试文件（§2.2 :203），
 // 期望 all_pass：全过才 pass；失败、skip、todo、一条没有、文件缺失都不过，不默认通过。必过集合里不过即拒（R12-5.1），
-// not_run 也当不过（R12-10.7 :1047）；runsOn 不是 local_static 的本机不跑（R12-9.7 :990）。
+// not_run 也当不过（R12-10.7 :1051）；runsOn 不是 local_static 的本机不跑（R12-9.7 :994）。
 // 写临时仓库只用 tempRepo() 拿到的目录加常量相对路径或 writeUnderTempRoot（S12-2）。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -23,7 +23,7 @@ const ROW = (key, extra = {}) => ({
 // 只跑卷十二方法是测试的条目（条目过滤，R12-10.2）：临时仓库里真实的卷六不变量条目跑不起来（temp-repo.mjs），这里不看它们。
 const ONLY = { volume: 'vol12', method: TEST_METHODS, state: ['implemented', 'in_core'] };
 const failedOf = (report) => Object.fromEntries(report.items.failed.map((f) => [f.itemKey, { codes: f.codes, cases: f.cases }]));
-// 过滤掉的条目列 not_run、必过的当不过（R12-10.7 :1047），总判因此不再只看这几条；拦下的只取本测试登的 vol12.TX-* 里在必过集合的。
+// 过滤掉的条目列 not_run、必过的当不过（R12-10.7 :1051），总判因此不再只看这几条；拦下的只取本测试登的 vol12.TX-* 里在必过集合的。
 const blockedTx = (repo, report) => {
   const core = new Set(readRegistry(repo, 'items').filter((it) => it.state === 'in_core').map((it) => it.itemKey));
   return report.items.failed.map((f) => f.itemKey).filter((k) => k.startsWith('vol12.TX-') && core.has(k)).sort();
@@ -117,7 +117,7 @@ test('登记器：测试条目进 implemented 须有 impl 且在 tools/accept/ �
 test('真仓库：卷六 A6-1.2 a（I1′ 守恒、I15′ 单一账户）、b（I2′ 非负）在必过集合里，经执行器真跑测试文件为 pass', async () => {
   const keys = ['vol6.A6-1.2.a', 'vol6.A6-1.2.b'];
   const { report } = await accRun('pre_commit', 'x', null, { root: ROOT, filter: { itemKey: keys } });
-  // 过滤掉的条目列 not_run（R12-10.7 :1047），总数是整个关口的、总判随之不是 pass；只看这两条自己。
+  // 过滤掉的条目列 not_run（R12-10.7 :1051），总数是整个关口的、总判随之不是 pass；只看这两条自己。
   assert.equal(report.items.pass, 2);
   assert.equal(report.items.pass + report.items.fail + report.items.not_run + report.items.blocked, report.items.total);
   for (const k of keys) assert.equal(failedOf(report)[k], undefined);

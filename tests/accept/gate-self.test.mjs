@@ -73,6 +73,18 @@ test('S12-2 测试临时根：临时根加常量相对路径不计；拼接、�
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+test('检测器命中而条目没登 params.code：执行器报 E-ACC-ITEM-FORM，不报空码（卷十二 §2.12 :542）', async () => {
+  const dir = tempRepo();
+  try {
+    writeFileSync(join(dir, 'tools/accept/detectors/file_set.mjs'), readFileSync(join(dir, 'tools/accept/detectors/file_set.mjs'), 'utf8').replace('row.print !== classPrint', 'row.print === classPrint'));
+    const items = JSON.parse(readFileSync(join(dir, 'tools/accept/items.json'), 'utf8'));
+    delete items.rows.find((r) => r.itemKey === 'vol12.S12-13').params.code;
+    writeFileSync(join(dir, 'tools/accept/items.json'), JSON.stringify(items));
+    const { rows } = await accRun('pre_commit', 'P-1b', null, { root: dir });
+    assert.deepEqual([...new Set(rows.filter((r) => r.itemKey === 'vol12.S12-13').map((r) => r.errorCode))], ['E-ACC-ITEM-FORM']);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
 test('S12-13、S12-16：手改检测器或条目三项而不走修订即拒；登记器同样拒，升版带记录才收', async () => {
   const dir = tempRepo();
   try {

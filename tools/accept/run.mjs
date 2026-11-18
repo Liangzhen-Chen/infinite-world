@@ -8,6 +8,7 @@ import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { runRequiredTests, runTestFile } from './lib/required-tests.mjs';
+import { REGISTERED_CODES } from '../../server-plugin/kernel/error-codes.mjs';
 
 // 方法是测试的条目（卷十二 §4.5.1 :782 进必过集合的三种方法）：没有检测器（§2.2 :194 非静态条目可空），实现就是 `impl` 所指的测试文件
 // （§2.2 :203），期望 `all_pass`（§2.1"用例全过"）——执行器真跑该文件，全过才 pass。
@@ -56,13 +57,15 @@ async function detectorOf(code) {
 // 行键（R12-8.2）：分量、文件、符号链、节点种类、同符号内序号；不含行号。
 // 分量：命中自带的派生分量（卷十二 §2.5"写入归属类的分量不手列"，按声明项派生，块 2 体检 K2-13）优先，否则取条目登记的 baseComp。
 const compOf = (item, h) => h.comp || item.baseComp || '';
+// 检测器命中带的码为空或不在码表里（条目没登 params.code 等），按条目缺字段报 E-ACC-ITEM-FORM（§2.12 :542 整类规则：不过必带登记的码，没有空码）。
+const codeOrItemForm = (code) => (code && REGISTERED_CODES.has(code) ? code : 'E-ACC-ITEM-FORM');
 function toRows(item, hits) {
   const seen = new Map();
   return hits.map((h) => {
     const base = [compOf(item, h), h.file, h.symbolPath, h.nodeKind].join('|');
     const ordinal = seen.get(base) || 0;
     seen.set(base, ordinal + 1);
-    return { rowKey: `${base}|${ordinal}`, compCode: compOf(item, h), file: h.file, symbolPath: h.symbolPath, nodeKind: h.nodeKind, ordinal, line: h.line, errorCode: h.code, itemKey: item.itemKey, state: 'open' };
+    return { rowKey: `${base}|${ordinal}`, compCode: compOf(item, h), file: h.file, symbolPath: h.symbolPath, nodeKind: h.nodeKind, ordinal, line: h.line, errorCode: codeOrItemForm(h.code), itemKey: item.itemKey, state: 'open' };
   });
 }
 
@@ -70,7 +73,7 @@ function toRows(item, hits) {
 // 全部用例通过才 pass（R12-11.7 :1100"在当前主干上为 pass"）；没跑出一条通过、有失败、有 skip/todo 都不过，不默认通过。
 // 文件缺失报 E-ACC-ITEM-FORM（§2.12：条目缺必填字段；impl 自 implemented 起必填）。测试文件有失败、skip、todo、零用例报 E-ACC-TEST-FAIL（§2.12 勘误 1118k14；李白 11-18 06:41 ①），cases 写原因；
 // 验收报告里凡条目不过/未跑都落到 §2.12 登记的码，没有无码状态。
-// runsOn 不是 local_static 的条目只在登记为该种类的测试台跑（R12-9.7 :990），本机不跑，记 not_run。
+// runsOn 不是 local_static 的条目只在登记为该种类的测试台跑（R12-9.7 :994），本机不跑，记 not_run。
 // 同一次执行里同一文件只跑一次（几条条目可共用一个测试文件）。
 function runTestItem(root, item, bench, cache) {
   if (item.runsOn !== 'local_static' && item.runsOn !== bench) return { verdict: 'not_run' };
@@ -137,8 +140,8 @@ export async function accRun(gate, subject, contentPrint, opts = {}) {
   const print = contentPrint || contentPrintOf(ctx);
   const classes = new Map(readRegistry(root, 'scanclasses').map((r) => [r.scanClass, r]));
   const criteria = Object.fromEntries(readRegistry(root, 'criteria').map((r) => [r.scanClass, r.rev]));
-  // 条目过滤参数（R12-10.2 :1028"要少跑，就用关口与条目过滤的参数，照样出执行记录"）：opts.filter 是 accItems 的过滤（§3.1），关口照旧。
-  // 滤掉的条目不许从报告里消失（R12-10.7 :1047）：列 not_run，必过集合按整个关口全部条目算。
+  // 条目过滤参数（R12-10.2 :1032"要少跑，就用关口与条目过滤的参数，照样出执行记录"）：opts.filter 是 accItems 的过滤（§3.1），关口照旧。
+  // 滤掉的条目不许从报告里消失（R12-10.7 :1051）：列 not_run，必过集合按整个关口全部条目算。
   const gateItems = accItems(root, { gate });
   const items = accItems(root, { ...(opts.filter || {}), gate });
   const keptKeys = new Set(items.map((it) => it.itemKey));
@@ -204,7 +207,7 @@ export async function accRun(gate, subject, contentPrint, opts = {}) {
   const vs = Object.values(results);
   const count = (v) => vs.filter((x) => x === v).length;
   const mustPass = new Set(gateItems.filter((it) => it.state === 'in_core').map((it) => it.itemKey));
-  // 必过集合里的 not_run 与 blocked 都当不过（R12-10.7 :1047），列进不过的条目，码 E-ACC-REQUIRED-NOT-RUN（§2.12 勘误 1118k14），cases 写结论。
+  // 必过集合里的 not_run 与 blocked 都当不过（R12-10.7 :1051），列进不过的条目，码 E-ACC-REQUIRED-NOT-RUN（§2.12 勘误 1118k14），cases 写结论。
   for (const k of [...mustPass].sort()) if (results[k] === 'not_run' || results[k] === 'blocked') failed.push({ itemKey: k, codes: ['E-ACC-REQUIRED-NOT-RUN'], cases: [`verdict:${results[k]}`] });
   const blocking = failed.filter((f) => f.itemKey === 'bypass' || f.itemKey === 'required-tests' || mustPass.has(f.itemKey));
 

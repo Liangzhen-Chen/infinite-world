@@ -158,7 +158,7 @@ async function requiredVerdict(testSrc) {
     writeUnderTempRoot(dir, 'tests/accept/fx-helper.mjs', 'export function w() {}\n');
     if (testSrc !== null) writeUnderTempRoot(dir, 'tests/accept/fx.test.mjs', testSrc);
     // 条目过滤（R12-10.2）：只跑方法不是测试的条目——方法是测试的条目在临时仓库里必不过（temp-repo.mjs），这里只看必跑测试。
-    // 滤掉的条目列 not_run、必过的当不过（R12-10.7 :1047），所以总判必为 fail；这里只看 required-tests 那部分，
+    // 滤掉的条目列 not_run、必过的当不过（R12-10.7 :1051），所以总判必为 fail；这里只看 required-tests 那部分，
     // 另返回拦下的必过条目（只要必过集合里的），应正好等于方法是测试的必过条目。
     const { report } = await accRun('pre_commit', 'x', null, { root: dir, runRequired: true, filter: NON_TEST_METHODS });
     const items = readRegistry(dir, 'items');
