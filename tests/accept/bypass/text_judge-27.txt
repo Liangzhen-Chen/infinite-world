@@ -1,0 +1,2 @@
+/** @param {Handles} V @param {Key} k @returns {unknown} */
+export function bad(V, k) { return V[`sfam_${k}`]; }

@@ -1,0 +1,5 @@
+/** @param {unknown} s @returns {unknown} */
+export function bad(s) {
+  const y = /** @type {Handle<a>} */ (/** @type {unknown} */ (s));
+  return y;
+}

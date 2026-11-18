@@ -1,0 +1,2 @@
+/** @param {Text} text @returns {unknown} */
+export function bad(text) { return /** @type {Handle<action>} */ (text); }

@@ -1,0 +1,2 @@
+/** @param {Key} k @returns {unknown} */
+export function bad(k) { return 'sfam_' + k; }

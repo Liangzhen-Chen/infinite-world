@@ -1,0 +1,3 @@
+// 卷二 §2.8 代表性反例注明 E-KERNEL-ONLY（构造品牌值只许 kernel）；强转写法本身由 assertCast 报，码为 E-TSC-ESCAPE-ASSERT。
+/** @returns {unknown} */
+export function bad() { return /** @type {Handle<status_family>} */ ('sleep'); }

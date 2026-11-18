@@ -1,0 +1,16 @@
+// 正例（卷二 §2.8 代表性正反例前三行）：两侧同品牌的比较、Map 键位置、return、同类型实参。
+/**
+ * @param {Fact} fact
+ * @param {Handles} V
+ * @param {Map<Handle, number>} byFamily
+ * @param {Handle} id
+ * @param {Cred} cred
+ * @param {Path} path
+ * @param {Text} text
+ * @returns {unknown}
+ */
+export function ok(fact, V, byFamily, id, cred, path, text) {
+  if (fact.is(V.status_family.sfam_sleep)) return id;
+  if (fact.value === V.status_family.sfam_sleep) return byFamily.get(fact.value);
+  return writeText(cred, path, text);
+}

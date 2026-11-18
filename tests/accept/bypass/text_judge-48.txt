@@ -1,0 +1,3 @@
+// 靠 tsc 类型才能判（卷二 S13 上下文白名单反例：一侧是 status_family 的 Fact、另一侧是别族句柄，E-VIEW-FAMILY-MISMATCH）。
+/** @param {Handles} V @param {Fact} x @returns {boolean} */
+export function bad(V, x) { return x === V.terrain.terrain_hill; }

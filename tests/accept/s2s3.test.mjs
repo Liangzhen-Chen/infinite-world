@@ -2,6 +2,7 @@
 // 以及导出参数类型标注从第一个文件起全量适用（块 2 体检 K2-46，卷二 §2.8 第 4 条末句）。期望值一律手写字面量。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadContext, readRegistry, readDecl } from '../../tools/accept/read.mjs';
@@ -50,6 +51,25 @@ test('text_judge bareCompare：裸字面量参与 ===、case、in、includes 数
   ].join('\n');
   assert.deepEqual(text(src, ['bareCompare']).map((h) => h[1]), [1, 2, 3, 4, 5, 5, 6, 7]);
   assert.deepEqual(text("if (a === V.fam.x_y) f(); g('arg'); const o = { k: 'v' }; const t = [1, 'n'].length;", ['bareCompare']), []);
+});
+
+test('text_judge bareCompare 补洞写法（卷二 §2.8 代表性正反例、S13 补洞②③）：别名溯源、族前缀拼接、V 动态访问、字面量判断表', () => {
+  const lines = (src) => text(src, ['bareCompare']).map((h) => h[1]);
+  const cls = { ...CLS.text_judge, handleRoots: ['V'] };
+  const withRoots = (src) => typedPos(ctxOf({ 'server-plugin/a.mjs': src }), { groups: SERVER, checks: ['bareCompare'] }, cls).map((h) => [h.line, h.nodeKind]);
+  // 别名溯源：const 折叠为字串的名字（含折叠后的拼接）参与比较
+  assert.deepEqual(lines("const S = 'sleep';\nif (x === S) f();"), [2]);
+  assert.deepEqual(lines("const S = 'sfam_' + 'sleep';\nswitch (k) { case S: break; }"), [1, 2]);
+  assert.deepEqual(lines("const n = 4;\nconst h = V.a.x;\nif (x === h || x === n) f();"), []);
+  // 族前缀拼接
+  assert.deepEqual(lines("const a = 'sfam_' + k;\nconst b = `sfam_${k}`;\nconst c = String.fromCharCode(97);"), [1, 2, 3]);
+  assert.deepEqual(lines("const a = 'sfam_';\nconst b = `x ${k}y`;\nconst c = 'ab' + k;\nconst d = 'a_b' + k;"), []);
+  // V 动态访问与模板串下标
+  assert.deepEqual(withRoots('const a = V[fam][id];\nconst b = V[`sfam_${k}`];\nconst c = o[`k${i}`];\nconst d = V.status_family.sfam_sleep;\nconst e = o.V[k];'), [[1, 'literal_compare'], [2, 'literal_compare'], [2, 'literal_compare'], [3, 'literal_compare']]);
+  // 字面量判断表
+  assert.deepEqual(lines("const a = {sleep: 1}[x];\nconst b = ['sleep'][0];\nconst c = ({ a: 's' }).a;\nconst d = { k: 'v' };\nconst e = [1, 2];\nfoo({ a: 1 }).b;"), [1, 2, 3]);
+  assert.deepEqual(lines("const m = new Map([['sleep', 1], [V.a.x, 2]]).get(x);\nconst s = new Set(['a', V.a.x]).has(x);\nconst t = new Map([[V.a.x, 1]]);\nconst u = new Set([V.a.x]);"), [1, 2]);
+  assert.deepEqual(lines('/** @param {Handle} h @returns {boolean} */\nexport function f(h) { return [V.a.x, V.a.y].includes(h) && h === V.a.x; }'), []);
 });
 
 test('text_judge exportParams：导出函数每个形参要有 JSDoc 类型标注（含解构、箭头、默认值；@type 整体标注算）', () => {
@@ -111,8 +131,41 @@ test('S2、S3 条目在真实仓库上零命中（零基线），且条目状态
   const { report, rows } = await accRun('pre_commit', 'test', null, { root: ROOT });
   const keys = ['vol1.V-2.a', 'vol1.V-2.b', 'vol1.V-3', 'vol1.V-20', 'vol1.V-23', 'vol2.S2', 'vol2.S3.a', 'vol2.S5', 'vol2.S7', 'vol2.S15', 'vol2.S18', 'vol2.S19.a', 'vol2.S19.b'];
   assert.deepEqual(rows.filter((r) => keys.includes(r.itemKey)), []);
-  assert.deepEqual(report.gaps.filter((k) => ['vol2.S3.b', 'vol2.S9', 'vol2.S13', 'vol2.S17.a', 'vol2.S17.b'].includes(k)), ['vol2.S13', 'vol2.S17.a', 'vol2.S17.b', 'vol2.S3.b', 'vol2.S9']);
-  for (const c of ['text_judge', 'escape_hatch', 'display_read', 'cross_write', 'undeclared_io']) {
+  // 卷十二 R12-11.7：text_judge 靠 tsc 才能判的反例现有词法检测器报不出，本类别条目全部退回 registered（不虚报 implemented）。
+  assert.deepEqual(report.gaps.filter((k) => ['vol1.V-2.a', 'vol1.V-20', 'vol1.V-23', 'vol1.V-24.a', 'vol1.V-25.a', 'vol1.V-29.a', 'vol1.V-31.a', 'vol2.S2', 'vol2.S3.a', 'vol2.S18', 'vol2.S19.a', 'vol2.S3.b', 'vol2.S9', 'vol2.S13', 'vol2.S17.a', 'vol2.S17.b'].includes(k)),
+    ['vol1.V-2.a', 'vol1.V-20', 'vol1.V-23', 'vol1.V-24.a', 'vol1.V-25.a', 'vol1.V-29.a', 'vol1.V-31.a', 'vol2.S13', 'vol2.S17.a', 'vol2.S17.b', 'vol2.S18', 'vol2.S19.a', 'vol2.S2', 'vol2.S3.a', 'vol2.S3.b', 'vol2.S9']);
+  assert.deepEqual(readRegistry(ROOT, 'items').filter((it) => it.scanClass === 'text_judge' && it.state !== 'registered').map((it) => it.itemKey), []);
+  for (const c of ['escape_hatch', 'display_read', 'cross_write', 'undeclared_io']) {
     for (const k of Object.keys(report.cases).filter((x) => x.startsWith(`${c}-`))) assert.equal(report.cases[k], 'pass', k);
   }
+  for (const k of Object.keys(report.cases).filter((x) => x.startsWith('text_judge-'))) assert.equal(report.cases[k], 'not_run', k);
+});
+
+test('text_judge 用例集：§2.8 代表性正反例逐条录入；词法可判的报出、要 tsc 才能判的现在报不出（照实，不虚报）', () => {
+  const cases = readRegistry(ROOT, 'cases').filter((c) => c.scanClass === 'text_judge');
+  const flagged = {};
+  for (const c of cases) {
+    const src = readFileSync(join(ROOT, c.fixture), 'utf8');
+    flagged[c.caseKey] = typedPos(ctxOf({ 'server-plugin/a.mjs': src }), { groups: SERVER, checks: ['regex', 'nonAscii', 'bareCompare', 'exportParams'] }, CLS.text_judge).length > 0;
+  }
+  assert.deepEqual(flagged, {
+    'text_judge-01': true, 'text_judge-02': true, 'text_judge-03': true, 'text_judge-04': true, 'text_judge-05': true, 'text_judge-06': true,
+    'text_judge-11': false, 'text_judge-21': false, 'text_judge-22': false,
+    'text_judge-23': true, 'text_judge-24': true, 'text_judge-25': true, 'text_judge-26': true, 'text_judge-27': true, 'text_judge-28': true,
+    'text_judge-29': true, 'text_judge-30': true, 'text_judge-31': true, 'text_judge-32': true, 'text_judge-33': true, 'text_judge-34': true,
+    'text_judge-41': false, 'text_judge-42': false, 'text_judge-43': false, 'text_judge-44': false, 'text_judge-45': false,
+    'text_judge-46': false, 'text_judge-47': false, 'text_judge-48': false,
+  });
+  // 极性与上表一致的（must_fail 报出、must_pass 不报）才是现在能判的；其余的正是条目不得 implemented 的原因
+  const cannot = cases.filter((c) => (c.polarity === 'must_fail') !== flagged[c.caseKey]).map((c) => c.caseKey);
+  assert.deepEqual(cannot, ['text_judge-41', 'text_judge-42', 'text_judge-43', 'text_judge-44', 'text_judge-45', 'text_judge-46', 'text_judge-47', 'text_judge-48']);
+});
+
+test('词法可判的 text_judge 检查项（regex、nonAscii、bareCompare、导出参数标注）在真实仓库上仍零命中', () => {
+  const ctx = loadContext(ROOT);
+  // 退回 registered 的 11 条（vol2.S13 是整个 kernel 与共享库组的逐行基线，另有它自己的口径，不在此列）
+  const demoted = ['vol1.V-2.a', 'vol1.V-20', 'vol1.V-23', 'vol1.V-24.a', 'vol1.V-25.a', 'vol1.V-29.a', 'vol1.V-31.a', 'vol2.S18', 'vol2.S19.a', 'vol2.S2', 'vol2.S3.a'];
+  const items = readRegistry(ROOT, 'items').filter((it) => demoted.includes(it.itemKey));
+  assert.equal(items.length, 11);
+  for (const it of items) assert.deepEqual(typedPos(ctx, it.params, CLS.text_judge).map((h) => `${h.file}:${h.line} ${h.code}`), [], it.itemKey);
 });

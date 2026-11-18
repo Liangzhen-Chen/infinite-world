@@ -12,7 +12,8 @@ import { report } from './report.mjs';
  * @typedef {{node: string, file: string, request?: number | string | null, tick?: number, stage?: number}} TxContext
  * node：当前节点名（推进钩子或提案处理函数，§2.6 第 3 条）；file：该节点所在文件（相对 server-plugin/，与 stateKeys.writers 同写法）；
  * request：本次请求编号；tick、stage：推进中的刻 t 与 tick_stage 位次（推进中被拒时进日志）。
- * @typedef {{state: any, node: string, file: string, request: number | string | null, tick?: number, stage?: number, undo: {segs: string[], existed: boolean, prev: any}[], written: string[][]}} Tx
+ * @typedef {{state: any, node: string, file: string, request: number | string | null, tick?: number, stage?: number, undo: {segs: string[], existed: boolean, prev: any}[], written: string[][], denied?: unknown}} Tx
+ * denied：本事务内第一次被拒写入的错误（storage 的 writePath/writeSealed 拒写时记；有则整笔回滚，不论规则层是否 catch）。
  */
 
 /** @type {Tx | null} */
@@ -77,6 +78,8 @@ export function runTransaction(state, ctx, body) {
   } catch (e) {
     failure = e;
   }
+  // 写入被拒时 storage 已在本事务上记了标记（卷二 :499）：规则层 catch 住也照样整笔回滚；以第一次被拒的错误为准。
+  if (tx.denied !== undefined) failure = tx.denied;
   if (failure === null) {
     current = null;
     return { ok: true };

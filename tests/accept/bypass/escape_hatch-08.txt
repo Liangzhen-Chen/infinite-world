@@ -1,0 +1,3 @@
+/* eslint-disable */
+/** @param {Fact} x @returns {boolean} */
+export function bad(x) { return x === undefined; }

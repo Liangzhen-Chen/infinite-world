@@ -1,0 +1,5 @@
+// 靠 tsc 类型才能判（卷二 §2.8 代表性反例：判别式/计算属性位置 switch (text)、obj[text]）。
+/** @param {Text} text @returns {number} */
+export function a(text) { switch (text) { default: return 0; } }
+/** @param {Text} text @param {Table} obj @returns {unknown} */
+export function b(text, obj) { return obj[text]; }

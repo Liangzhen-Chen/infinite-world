@@ -9,7 +9,7 @@ import { statePathSegments, pathTypeShape } from './handles/keys.mjs';
 import { CODE_RE } from './handles/vocab-handle.mjs';
 import { compareSpecificity, KEY_NONENTITY } from './load/state-owners.mjs';
 import { registry } from './vocab.mjs';
-import { KernelError } from './errors.mjs';
+import { KernelError, codeOf } from './errors.mjs';
 import { currentTransaction } from './transaction.mjs';
 
 /**
@@ -172,6 +172,21 @@ function writerOk(d, tx, segs, existing) {
  * @returns {void}
  */
 export function writePath(state, path, value) {
+  try {
+    writePathChecked(state, path, value);
+  } catch (e) {
+    markDenied(e);
+    throw e;
+  }
+}
+
+// 写入被拒时先在当前事务上记"已被拒"（卷二 :499、:1033）：规则层即使 catch 住这次拒写，runTransaction 见标记仍整笔回滚。
+function markDenied(e) {
+  const tx = currentTransaction();
+  if (tx && codeOf(e) !== null && tx.denied === undefined) tx.denied = e;
+}
+
+function writePathChecked(state, path, value) {
   const d = need();
   const { segs, rec } = resolvePath(path);
   const ids = starValues(rec.segs, segs);
@@ -229,6 +244,15 @@ export function readSealed(state, path) {
  * @returns {void}
  */
 export function writeSealed(state, credential, path, sealed) {
+  try {
+    writeSealedChecked(state, credential, path, sealed);
+  } catch (e) {
+    markDenied(e);
+    throw e;
+  }
+}
+
+function writeSealedChecked(state, credential, path, sealed) {
   const d = need();
   const { segs } = resolveText(path);
   const tx = currentTransaction();

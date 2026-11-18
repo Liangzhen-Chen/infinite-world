@@ -1,0 +1,2 @@
+/** @param {Fact} x @returns {boolean} */
+export function bad(x) { return x === 'sleep'; }

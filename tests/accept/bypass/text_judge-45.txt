@@ -1,0 +1,7 @@
+// 靠 tsc 类型才能判（卷二 §2.8 代表性反例：内建实参 Number/parseInt、比较运算位置 x < y）。
+/** @param {Text} text @returns {unknown} */
+export function a(text) { return Number(text); }
+/** @param {Text} text @returns {unknown} */
+export function b(text) { return parseInt(text, 10); }
+/** @param {Text} x @param {Text} y @returns {boolean} */
+export function c(x, y) { return x < y; }

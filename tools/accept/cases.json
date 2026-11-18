@@ -209,6 +209,55 @@
    "scanClass": "escape_hatch"
   },
   {
+   "addedAtRev": 2,
+   "caseKey": "escape_hatch-05",
+   "expectCode": "E-TSC-ESCAPE-ANY",
+   "fixture": "tests/accept/bypass/escape_hatch-05.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 代表性正反例表 /** @type {any} */ (x) === 'sleep'",
+   "polarity": "must_fail",
+   "scanClass": "escape_hatch"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "escape_hatch-06",
+   "expectCode": "E-TSC-ESCAPE-ASSERT",
+   "fixture": "tests/accept/bypass/escape_hatch-06.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 代表性正反例表 经 unknown 的双重强转（kernel 之外）",
+   "polarity": "must_fail",
+   "scanClass": "escape_hatch"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "escape_hatch-07",
+   "expectCode": "E-TSC-ESCAPE-ASSERT",
+   "fixture": "tests/accept/bypass/escape_hatch-07.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 代表性正反例表 inputEdge 里 /** @type {Handle<action>} */ (text)（V-2.b 的范围只有规则层，用例放规则层位置；强转豁免只看 castFiles，与组无关）",
+   "polarity": "must_fail",
+   "scanClass": "escape_hatch"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "escape_hatch-08",
+   "expectCode": "E-TSC-ESCAPE-DIRECTIVE",
+   "fixture": "tests/accept/bypass/escape_hatch-08.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 代表性正反例表 文件头 /* eslint-disable */",
+   "polarity": "must_fail",
+   "scanClass": "escape_hatch"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "escape_hatch-09",
+   "fixture": "tests/accept/bypass/escape_hatch-09.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 代表性正反例表 /** @type {Handle<status_family>} */ ('sleep')（kernel 之外，表注 E-KERNEL-ONLY；强转本身报 E-TSC-ESCAPE-ASSERT）",
+   "polarity": "must_fail",
+   "scanClass": "escape_hatch"
+  },
+  {
    "addedAtRev": 1,
    "caseKey": "escape_hatch-11",
    "fixture": "tests/accept/bypass/escape_hatch-11.txt",
@@ -824,6 +873,224 @@
    "group": "rules",
    "origin": "卷二 S13 (a) 正例 fact.is(V…)、value === V…；(c) throw 文案",
    "polarity": "must_pass",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-21",
+   "fixture": "tests/accept/bypass/text_judge-21.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 代表性正反例表 通过行：fact.is(V…)、x === V…、byFamily.get(fact.value)、return id、writeText(cred, path, text)",
+   "polarity": "must_pass",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-22",
+   "fixture": "tests/accept/bypass/text_judge-22.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 代表性正反例表 通过行：解构/变量声明保留品牌、三元合流与数组 includes 同品牌",
+   "polarity": "must_pass",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-23",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-23.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 代表性正反例表 x === 'sleep'；A16",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-24",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-24.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 代表性正反例表 x === 'sfam_sleep'；S13 (a)",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-25",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-25.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 代表性正反例表 'sfam_' + k；S13 补洞②；A16",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-26",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-26.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 代表性正反例表 模板串 sfam_${k}；S13 补洞②",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-27",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-27.txt",
+   "group": "rules",
+   "origin": "卷二 S13 补洞② 反例 V[`sfam_${k}`]",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-28",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-28.txt",
+   "group": "rules",
+   "origin": "卷二 S13 补洞② V[fam][id]；A16",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-29",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-29.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 代表性正反例表 {sleep:1}[x]；S13 ② 对象字面量标识符键的动态读",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-30",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-30.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 代表性正反例表 new Map([['sleep', 1]]).get(x)",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-31",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-31.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 代表性正反例表 new Set(['a']).has(x)",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-32",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-32.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 代表性正反例表 const S = 'sleep'; x === S；S13 补洞③；A16",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-33",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-33.txt",
+   "group": "rules",
+   "origin": "卷二 S13 补洞③ 经数组 ['sleep'][0] 到达的比较",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-34",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-34.txt",
+   "group": "rules",
+   "origin": "卷二 S13 补洞③ 经对象字面量 {a:'sleep'}.a 到达的比较",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-41",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-41.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 代表性正反例表 x.startsWith('sfam_')、x.length、x.slice(0,5)（要 tsc，词法检测器报不出）",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-42",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-42.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 代表性正反例表 String(k)（要 tsc）",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-43",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-43.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 代表性正反例表 switch (text)、obj[text]（要 tsc）",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-44",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-44.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 代表性正反例表 展开/迭代/解构/Object.keys/JSON.stringify/encodeURIComponent（要 tsc）",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-45",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-45.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 代表性正反例表 Number(text)、parseInt(text)、x < y（要 tsc）",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-46",
+   "expectCode": "E-VIEW-FALLBACK",
+   "fixture": "tests/accept/bypass/text_judge-46.txt",
+   "group": "rules",
+   "origin": "卷二 §2.8 代表性正反例表 cond ? V.a.x : 'y'、x ?? V.a.x（要 tsc）",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-47",
+   "expectCode": "E-VIEW-FAMILY-UNRESOLVED",
+   "fixture": "tests/accept/bypass/text_judge-47.txt",
+   "group": "rules",
+   "origin": "卷二 S13 补洞① 反例 (c ? a.value : b.value) === V…；A16（要 tsc）",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-48",
+   "expectCode": "E-VIEW-FAMILY-MISMATCH",
+   "fixture": "tests/accept/bypass/text_judge-48.txt",
+   "group": "rules",
+   "origin": "卷二 S13 (a) 反例 x === V.terrain.terrain_hill（x 声明为 status_family；要 tsc）",
+   "polarity": "must_fail",
    "scanClass": "text_judge"
   },
   {
