@@ -237,11 +237,13 @@ test('排除表生成：display 字段集合 ∪ displayNames.* ∪ playerNotes.
   assert.deepEqual(digestExcludeOf({ displayPaths: ['gauge.*.label'] }), ['displayNames.*', 'gauge.*.label', 'playerNotes.*']);
 });
 
-test('入库排除表与生成器输出逐字节一致；声明表变了而文件没重生成即 E-DIGEST-EXCLUDE-DRIFT', () => {
+test('入库排除表与生成器输出逐值一致；声明表变了而文件没重生成即 E-DIGEST-EXCLUDE-DRIFT', () => {
   const w = loadWorld(ROOT);
   assert.equal(w.ok, true, w.text);
-  const file = readFileSync(join(ROOT, 'world/rules/tables/digest-exclude.json'), 'utf8');
-  assert.equal(formatExclude(generate(ROOT)), file);
+  // 按值比（检出时换行可能被改成 CRLF，字节比会误报）；生成器的写法另核同输入同输出。
+  const file = JSON.parse(readFileSync(join(ROOT, 'world/rules/tables/digest-exclude.json'), 'utf8'));
+  assert.equal(canonicalEqual(file, generate(ROOT)), true);
+  assert.equal(formatExclude(generate(ROOT)), formatExclude(generate(ROOT)));
   assert.deepEqual(loadDigestExclude(ROOT, w.owners), ['displayNames.*', 'displayNames.*.text', 'playerNotes.*', 'playerNotes.*.text']);
   assert.throws(() => loadDigestExclude(ROOT, { ...w.owners, displayPaths: [...w.owners.displayPaths, 'created.*.props.basis'] }), (e) => e.code === 'E-DIGEST-EXCLUDE-DRIFT');
   const empty = testTempRoot('dex-');
