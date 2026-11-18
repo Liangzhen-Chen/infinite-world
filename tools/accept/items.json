@@ -261,7 +261,7 @@
    "scanClass": "text_judge",
    "source": "卷一 §12.1 V-2 语言判断部分（判定即 V-20；卷二 §2.8、S13）；拆 a/b 见李白 11-17 S12-3 裁定第 2 条",
    "stage": 0,
-   "state": "implemented",
+   "state": "registered",
    "target": "runtime_code",
    "volume": "vol1",
    "zeroRows": []
@@ -329,7 +329,7 @@
    "scanClass": "text_judge",
    "source": "卷一 §12.1 V-20 V-2 的判定规则（同 V-2 范围与清单）",
    "stage": 0,
-   "state": "implemented",
+   "state": "registered",
    "target": "runtime_code",
    "volume": "vol1",
    "zeroRows": []
@@ -415,7 +415,7 @@
    "scanClass": "text_judge",
    "source": "卷一 §12.1 V-23 输入边扫描（= 卷二 S18；import 侧由 S16 判）",
    "stage": 0,
-   "state": "implemented",
+   "state": "registered",
    "target": "runtime_code",
    "volume": "vol1",
    "zeroRows": []
@@ -453,7 +453,7 @@
    "scanClass": "text_judge",
    "source": "卷一 §12.1 V-24 显示层组扫描字串部分（= 卷二 S13 显示层组、S19）；拆 a/b 照李白 11-17 S12-3 裁定第 2 条（同 S19）",
    "stage": 0,
-   "state": "implemented",
+   "state": "registered",
    "target": "runtime_code",
    "volume": "vol1",
    "zeroRows": []
@@ -528,7 +528,7 @@
    "scanClass": "text_judge",
    "source": "卷一 §12.1 V-25 显示闸扫描字串部分（= 卷二 S19）；拆 a/b 照李白 11-17 S12-3 裁定第 2 条",
    "stage": 0,
-   "state": "implemented",
+   "state": "registered",
    "target": "runtime_code",
    "volume": "vol1",
    "zeroRows": []
@@ -683,7 +683,7 @@
    "scanClass": "text_judge",
    "source": "卷一 §12.1 V-29 AI 输出边守门扫描字串部分（= 卷二 S19）；拆 a/b 照李白 11-17 S12-3 裁定第 2 条",
    "stage": 0,
-   "state": "implemented",
+   "state": "registered",
    "target": "runtime_code",
    "volume": "vol1",
    "zeroRows": []
@@ -822,7 +822,7 @@
    "scanClass": "text_judge",
    "source": "卷一 §12.1 V-31 门禁扫描组字串部分（= 卷二 S19 gate 部分）；拆 a/b 照李白 11-17 S12-3 裁定第 2 条",
    "stage": 0,
-   "state": "implemented",
+   "state": "registered",
    "target": "runtime_code",
    "volume": "vol1",
    "zeroRows": []
@@ -2648,7 +2648,7 @@
    "scanClass": "text_judge",
    "source": "卷二 §7 S18 inputEdge 组机器扫描（卷十二 §4.2 R12-2.6）",
    "stage": 0,
-   "state": "implemented",
+   "state": "registered",
    "target": "runtime_code",
    "volume": "vol2",
    "zeroRows": []
@@ -2688,7 +2688,7 @@
    "scanClass": "text_judge",
    "source": "卷二 §7 S19 各组 string 操作部分（卷十二 §2.4 首批表 text_judge）；拆 a/b 见李白 11-17 S12-3 裁定第 2 条",
    "stage": 0,
-   "state": "implemented",
+   "state": "registered",
    "target": "runtime_code",
    "volume": "vol2",
    "zeroRows": []
@@ -2769,7 +2769,7 @@
    "scanClass": "text_judge",
    "source": "卷二 §7 S2 E-VIEW-TEXT-MATCH（卷十二 §4.2）",
    "stage": 0,
-   "state": "implemented",
+   "state": "registered",
    "target": "runtime_code",
    "volume": "vol2",
    "zeroRows": []
@@ -2804,7 +2804,7 @@
    "scanClass": "text_judge",
    "source": "卷二 §7 S3 状态列表与睡眠正则部分（卷十二 §2.4 落类表 text_judge）；拆 a/b 见李白 11-17 S12-3 裁定第 2 条",
    "stage": 0,
-   "state": "implemented",
+   "state": "registered",
    "target": "runtime_code",
    "volume": "vol2",
    "zeroRows": []

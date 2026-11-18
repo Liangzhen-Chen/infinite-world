@@ -1,0 +1,15 @@
+// 正例（卷二 §2.8 代表性正反例：变量声明/解构保留品牌类型、三元合流与数组位置两分支/元素同品牌；由 tsc 推断）。
+/**
+ * @param {Dims} dims
+ * @param {Handles} V
+ * @param {Fact} fact
+ * @param {boolean} cond
+ * @param {Handle} v
+ * @returns {boolean}
+ */
+export function kept(dims, V, fact, cond, v) {
+  const { family } = dims;
+  const f = fact.value;
+  const h = cond ? V.a.x : V.a.y;
+  return family.value === V.status_family.sfam_sleep || f === V.status_family.sfam_sleep || h === v || [V.a.x, V.a.y].includes(v);
+}

@@ -1,0 +1,7 @@
+// 靠 tsc 类型才能判（卷二 §2.8 代表性反例：属性/方法位置不在白名单）。词法检测器报不出，所以 text_judge 条目不得为 implemented。
+/** @param {Key} x @returns {boolean} */
+export function a(x) { return x.startsWith('sfam_'); }
+/** @param {Key} x @returns {number} */
+export function b(x) { return x.length; }
+/** @param {Key} x @returns {unknown} */
+export function c(x) { return x.slice(0, 5); }

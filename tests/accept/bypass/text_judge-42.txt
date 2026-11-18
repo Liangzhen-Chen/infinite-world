@@ -1,0 +1,3 @@
+// 靠 tsc 类型才能判（卷二 §2.8 代表性反例：内建调用 String(k)）。
+/** @param {Key} k @returns {unknown} */
+export function bad(k) { return String(k); }

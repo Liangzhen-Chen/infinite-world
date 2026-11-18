@@ -116,6 +116,27 @@ test('越权写者：整笔回滚（先前的写也撤销），事务结束后 r
   assert.deepEqual(st2, { gauge: { gad_one: { level: 1 } } });
 });
 
+test('规则层 catch 住被拒写入后事务仍整笔回滚、状态不变（卷二 :499）', () => {
+  const st = fresh();
+  logs.length = 0;
+  const r = runTransaction(st, { ...GAUGE, request: 21 }, (s) => {
+    writePath(s, P.gauge_level('gad_one'), 2);
+    try { writePath(s, P.gauge_born('gad_one'), 1); } catch { /* 规则层吞掉 */ }
+    writePath(s, P.gauge_dims('gad_two', 'mass'), 4);
+  });
+  assert.deepEqual(r, { ok: false, code: 'E-VIEW-UNDECLARED-WRITE' });
+  assert.deepEqual(st, { gauge: { gad_one: { level: 1 } } });
+  assert.deepEqual(logs, [{ code: 'E-VIEW-UNDECLARED-WRITE', fields: { entity: 'gad_one', request: 21 } }]);
+  // 值类型不符被 catch 同样整笔回滚
+  const st2 = fresh();
+  const r2 = runTransaction(st2, GAUGE, (s) => {
+    writePath(s, P.gauge_level('gad_one'), 3);
+    try { writePath(s, P.gauge_level('gad_one'), 'raw text'); } catch { /* 吞 */ }
+  });
+  assert.deepEqual(r2, { ok: false, code: 'E-TEXT-UNGATED' });
+  assert.deepEqual(st2, { gauge: { gad_one: { level: 1 } } });
+});
+
 test('值类型不符（裸文字、非整数、别族代号、非代号字串）一律 E-TEXT-UNGATED', () => {
   const cases = [
     [P.gauge_level('gad_one'), 'ten'],
@@ -237,6 +258,13 @@ test('readSealed/writeSealed：只走 textPaths；凭证核对未交入或不过
     assert.throws(() => readSealed(st, 'gauge.gad_one.level'), (e) => e.code === 'E-PATH-UNDECLARED');
     assert.deepEqual(runTransaction(st, GAUGE, (s) => writePath(s, 'notes.nt_one.text', sealed)), { ok: false, code: 'E-PATH-UNDECLARED' });
     assert.deepEqual(Object.keys(st), ['notes']);
+    assert.deepEqual(st.notes, { nt_one: { text: { bytes: 'AAEC', digest: 'ab12' } } });
+    // 规则层 catch 住被拒的 writeSealed：整笔仍回滚，nt_one 不变
+    const r = runTransaction(st, writer, (s) => {
+      writeSealed(s, 'cred', 'notes.nt_one.text', { bytes: 'ZZZZ', digest: 'ff00' });
+      try { writeSealed(s, 'cred', 'notes.nt_two.text', sealed); } catch { /* 吞 */ }
+    });
+    assert.deepEqual(r, { ok: false, code: 'E-TEXT-UNGATED' });
     assert.deepEqual(st.notes, { nt_one: { text: { bytes: 'AAEC', digest: 'ab12' } } });
   } finally {
     installCredentialCheck(null);

@@ -99,10 +99,12 @@ async function runCases(root, ctx, items, classes) {
     const files = splitFixture(readFileSync(join(root, c.fixture), 'utf8'), main);
     const cctx = { ...ctx, files: [...files.keys()].sort(), read: (p) => files.get(p), prefixes };
     const own = items.filter((it) => it.scanClass === c.scanClass);
+    // 类别下没有已实现的条目（全是 registered，如 text_judge 靠 tsc 才能判的反例还报不出，卷十二 R12-11.7）：用例不跑，记 not_run，不算回归。
+    if (!own.length) { out[c.caseKey] = 'not_run'; continue; }
     const hits = [];
     for (const it of own) hits.push(...await runItem(cctx, it, classes));
     const flagged = hits.length > 0 && (!c.expectCode || hits.some((h) => h.code === c.expectCode));
-    const ok = own.length > 0 && (c.polarity === 'must_fail' ? flagged : hits.length === 0);
+    const ok = c.polarity === 'must_fail' ? flagged : hits.length === 0;
     out[c.caseKey] = ok ? 'pass' : 'fail';
   }
   return out;
@@ -138,7 +140,7 @@ export async function accRun(gate, subject, contentPrint, opts = {}) {
   rows.sort((a, b) => (a.rowKey < b.rowKey ? -1 : a.rowKey > b.rowKey ? 1 : 0));
 
   const cases = await runCases(root, ctx, runnable, classes);
-  const caseFails = Object.keys(cases).filter((k) => cases[k] !== 'pass');
+  const caseFails = Object.keys(cases).filter((k) => cases[k] === 'fail');
   if (caseFails.length) failed.push({ itemKey: 'bypass', codes: ['E-ACC-BYPASS-REGRESSION'], cases: caseFails });
 
   // 必跑测试（李白 11-17 裁定②）：opts.runRequired 时真执行登记的 requiredTests，失败、跳过、缺失都算不过；

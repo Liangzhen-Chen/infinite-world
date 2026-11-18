@@ -162,10 +162,14 @@
     {
      "ref": "块 2 第 2-3 张初版：typed_pos 判注释里的 @ts-ignore/@ts-expect-error/@ts-nocheck/eslint-disable、JSDoc 类型里的 any 与 *、castFiles 之外的 /** @type */ (…) 强转与 x is T、asserts、@overload；声明文件闭集（file_set）与隐式 any、as 断言（.mjs 无此语法）未判",
      "rev": 1
+    },
+    {
+     "ref": "块 2 第 2-3 张只核改：共用的 typed_pos 补判 bareCompare 的补洞写法（本类别只用 directive、anyType、assertCast，判定口径不变）；§2.8 代表性反例补进用例 escape_hatch-05 至 09，原用例仍报出",
+     "rev": 2
     }
    ],
-   "print": "e75c6aa0c259e3039950cdc8c60f09985bec0a7136cf5e2b9e7ffe6d9bb99519",
-   "rev": 1,
+   "print": "a0289221d61c4309408b545b9076b16638fd4eb899780809de504c292383c8a9",
+   "rev": 2,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -218,10 +222,14 @@
     {
      "ref": "块 2 第 2-3 张：typed_pos 检测器模块建成（本类别条目仍 registered，未用其检查项）；本类别判定口径不变",
      "rev": 2
+    },
+    {
+     "ref": "块 2 第 2-3 张只核改：共用的 typed_pos 补判 bareCompare 的补洞写法（本类别条目仍 registered，未用其检查项）；本类别判定口径不变",
+     "rev": 3
     }
    ],
-   "print": "c0e2da3c790d3230f7abab5275b47c102ae16f5a7ccfdb0ca7feb7e0172c8e4f",
-   "rev": 2,
+   "print": "07e876e930ad8b061b58c5ab6b0a90a02074ca064b46c0442e9ed5bd6ec48c72",
+   "rev": 3,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -268,10 +276,14 @@
     {
      "ref": "块 2 第 2-3 张：typed_pos 检测器模块建成（本类别条目仍 registered，未用其检查项）；本类别判定口径不变",
      "rev": 2
+    },
+    {
+     "ref": "块 2 第 2-3 张只核改：共用的 typed_pos 补判 bareCompare 的补洞写法（本类别条目仍 registered，未用其检查项）；本类别判定口径不变",
+     "rev": 3
     }
    ],
-   "print": "c0e2da3c790d3230f7abab5275b47c102ae16f5a7ccfdb0ca7feb7e0172c8e4f",
-   "rev": 2,
+   "print": "07e876e930ad8b061b58c5ab6b0a90a02074ca064b46c0442e9ed5bd6ec48c72",
+   "rev": 3,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -944,10 +956,14 @@
     {
      "ref": "块 2 第 2-3 张初版：typed_pos 词法级实现 S13 ①（regexFiles 之外的正则字面量与 RegExp 构造）、③（非 ASCII 字串与模板字面量，throw new X(…) 的文案除外）、④（裸字串字面量参与 ===/!==/==/!=、case、in、数组字面量 .includes、.get/.has 键）与 §2.8 第 4 条末句导出函数形参无 JSDoc 类型标注（K2-46）；S13 ②、无法归因比较、族不符要 tsc，未判",
      "rev": 1
+    },
+    {
+     "ref": "块 2 第 2-3 张只核改（R12-14.5 补漏报）：typed_pos 的 bareCompare 补判卷二 S13 补洞②③ 与 §2.8 代表性反例里词法可判的整类写法——常量折叠为字串的别名参与比较、族前缀（以 _ 结尾的代号前缀）字串与模板拼接、String.fromCharCode、句柄根（类别行 handleRoots）的计算属性访问、模板串作下标、对象或数组字面量立即下标或取成员、new Map 的字串键与 new Set 的字串元素；§2.8 代表性正反例表与 S13 反例照录进用例集（text_judge-21 至 48）；其中要 tsc 才能判的（S13 ②、族不符、无法归因、`??` 填充，用例 41 至 48）现有检测器报不出，按 R12-11.7 本类别全部条目退回 registered（V-2.a、V-20、V-23、V-24.a、V-25.a、V-29.a、V-31.a、S2、S3.a、S18、S19.a），expect、stage、gates 不动；原有 must_fail 用例仍报出，真实仓库零命中不变",
+     "rev": 2
     }
    ],
-   "print": "c0e2da3c790d3230f7abab5275b47c102ae16f5a7ccfdb0ca7feb7e0172c8e4f",
-   "rev": 1,
+   "print": "07e876e930ad8b061b58c5ab6b0a90a02074ca064b46c0442e9ed5bd6ec48c72",
+   "rev": 2,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -1166,10 +1182,14 @@
     {
      "ref": "块 2 第 2-3 张：typed_pos 检测器模块建成（本类别条目只用 call_edge）；本类别判定口径不变",
      "rev": 13
+    },
+    {
+     "ref": "块 2 第 2-3 张只核改：共用的 typed_pos 补判 bareCompare 的补洞写法（本类别条目只用 call_edge）；本类别判定口径不变",
+     "rev": 14
     }
    ],
-   "print": "9de5a9f3104ef1904eb98c25efa0967b0c9d5b28e6c7a56c8f60c121b1b46a65",
-   "rev": 13,
+   "print": "6e998d4e299714dc2be7562b5a1b62b5bbc2724f951f98e369a67834fbe2e68f",
+   "rev": 14,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

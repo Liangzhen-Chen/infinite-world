@@ -1,0 +1,2 @@
+/** @param {Key} x @returns {unknown} */
+export function bad(x) { return new Map([['sleep', 1]]).get(x); }

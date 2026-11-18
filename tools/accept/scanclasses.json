@@ -565,13 +565,16 @@
      "regex": "E-GATE-FUZZY"
     }
    },
+   "handleRoots": [
+    "V"
+   ],
    "regexFiles": [
     "server-plugin/kernel/handles/*.mjs",
     "server-plugin/kernel/validate/*.mjs",
     "server-plugin/kernel/load/vocab-load.mjs"
    ],
    "scanClass": "text_judge",
-   "source": "卷十二 §2.4 首批表、§4.2（卷二 §2.8 第 2–4 条与各组表违例码列；S13 ①③④ 与 (b)(c)；S18、S19）；regexFiles 照卷二 S13 (b) 与 §2.8 表 kernel 行；块 2 第 2-3 张登记"
+   "source": "卷十二 §2.4 首批表、§4.2（卷二 §2.8 第 2–4 条与各组表违例码列；S13 ①③④ 与 (b)(c)；S18、S19）；regexFiles 照卷二 S13 (b) 与 §2.8 表 kernel 行；handleRoots 照卷二 S13 补洞②（句柄根 V，§2.8 第 4 条）；块 2 第 2-3 张登记"
   },
   {
    "detectors": [

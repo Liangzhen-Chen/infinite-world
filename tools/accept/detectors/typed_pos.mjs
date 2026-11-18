@@ -3,14 +3,17 @@
 // params.groups：范围（模块组键，R12-2.3 按磁盘真实文件展开）；params.checks：本条目计哪几项——
 //   regex        S13 ①：正则字面量、RegExp 构造，出现在类别行 regexFiles 之外（卷二 S13 (b) 的文件限定）
 //   nonAscii     S13 ③：含非 ASCII 字符的字串或模板字面量；`throw new X(…)` 的文案实参不计（S13 (c)）
-//   bareCompare  S13 ④：裸字串字面量参与 ===/!==/==/!=、case、`in`、数组字面量的 .includes、.get/.has 的键
+//   bareCompare  S13 ④：裸字串字面量参与 ===/!==/==/!=、case、`in`、数组字面量的 .includes、.get/.has 的键；
+//                另含补洞写法（别名溯源、族前缀拼接、V 动态访问、字面量判断表，见 shapeHits）
 //   exportParams §2.8 第 4 条末句：导出函数的形参没有 JSDoc 类型标注（E-VIEW-FAMILY-UNRESOLVED；块 2 体检 K2-46，从第一个文件起全量适用）
 //   directive / anyType / assertCast  §2.8 第 4a 条：@ts-ignore 等指令注释、JSDoc 里的 any 与 *、`/** @type */ (…)` 强转与 `x is T` / asserts / @overload（只许类别行 castFiles）
 // 每项报哪个码取类别行 checkCodes；类别行 groupCodes 给了该组该项的码时按组取（卷二 §2.8 各组表的违例码列）。
-// 局限（写进 2-3 回报，等 tsc 与 typescript-eslint 进离线组）：S13 ②（对归因为 string 的值做闭集外操作）要静态类型，词法级做不了，本检测器不判；
-// 无法归因的比较（E-VIEW-FAMILY-UNRESOLVED 第 ① 补洞）、句柄族不符（E-VIEW-FAMILY-MISMATCH）、隐式 any 同理不判。
+// 局限（等 tsc 与 typescript-eslint 进离线组）：S13 ②（对归因为 string 的值做闭集外操作：`x.startsWith`、`x.length`、`switch (text)`、
+// `obj[text]`、展开迭代解构、`Number(text)`、`x < y`、`String(k)`）要静态类型，词法级做不了，本检测器不判；
+// 无法归因的比较（E-VIEW-FAMILY-UNRESOLVED 第 ① 补洞）、句柄族不符（E-VIEW-FAMILY-MISMATCH）、`x ?? V.a.x`、隐式 any 同理不判。
+// 因此依赖本检测器全部判定的 text_judge 条目照卷十二 R12-11.7 不得为 implemented（§2.8 代表性正反例已全部录入用例集，靠 tsc 才能判的几条现在报不出）。
 
-import { tokenize, isP, matchClose, symbolPaths } from '../lib/js-scan.mjs';
+import { tokenize, isP, matchClose, symbolPaths, buildEnv } from '../lib/js-scan.mjs';
 import { commentsOf, exportedFunctions, jsdocBefore, jsdocParamNames } from '../lib/js-state.mjs';
 import { scopeFiles, matchGlobs, classify } from '../read.mjs';
 
@@ -86,6 +89,64 @@ function bareCompareHits(toks) {
   return out;
 }
 
+// S13 ④ 的补洞写法（卷二 S13 上下文白名单"三条补洞"②③、§2.8 代表性正反例；整类规则，不认具体字串）：
+//   别名溯源   本文件常量折叠后为字串的名字参与 ===/!==/==/!=、case（`const S='sleep'; x===S`）
+//   族前缀拼接 以 `_` 结尾的代号前缀字串与表达式相拼：`'sfam_'+k`、`` `sfam_${k}` ``、String.fromCharCode
+//   动态取句柄 句柄根（类别行 handleRoots）的计算属性访问 `V[fam]`、`V[`…`]`；模板串作下标 `o[`…${k}`]`
+//   字面量判断表 对象或数组字面量立即被下标或取成员 `{sleep:1}[x]`、`['sleep'][0]`、`{a:'s'}.a`；
+//               `new Map([['sleep',1]])` 的字串键、`new Set(['a'])` 的字串元素
+const ID_PREFIX = /^[a-z][a-z0-9]*_$/;
+const EXPR_START = new Set(['(', '=', ',', '?', ':', '||', '&&', '??', '===', '!==', '==', '!=', '[', '!', '+', '-']);
+
+function isExprStart(toks, i) {
+  const prev = toks[i - 1];
+  return !!prev && ((prev.t === 'p' && EXPR_START.has(prev.v)) || (prev.t === 'id' && (prev.v === 'return' || prev.v === 'case')));
+}
+
+// 容器字面量 toks[open..close] 里深度 1 的字串元素（Map 取内层数组的第一个元素）
+function containerStrs(toks, open, close, mapEntries) {
+  const out = []; let d = 0;
+  for (let k = open; k <= close; k++) {
+    const t = toks[k];
+    if (isP(t, '[') || isP(t, '(') || isP(t, '{')) { d++; if (mapEntries && d === 2 && isP(t, '[')) { const n = toks[k + 1]; if (n && (n.t === 'str' || (n.t === 'tpl' && n.exprs.length === 0))) out.push(k + 1); } continue; }
+    if (isP(t, ']') || isP(t, ')') || isP(t, '}')) { d--; continue; }
+    if (!mapEntries && d === 1 && (t.t === 'str' || (t.t === 'tpl' && t.exprs.length === 0)) && (isP(toks[k - 1], '[') || isP(toks[k - 1], ','))) out.push(k);
+  }
+  return out;
+}
+
+function shapeHits(toks, roots) {
+  const out = [];
+  const env = buildEnv(toks);
+  const aliases = new Set([...env].filter(([, v]) => v.k === 'str').map(([n]) => n));
+  toks.forEach((t, i) => {
+    const prev = toks[i - 1]; const next = toks[i + 1];
+    const dotted = isP(prev, '.') || isP(prev, '?.');
+    if (t.t === 'id' && aliases.has(t.v) && !dotted) {
+      const eq = (x) => x && x.t === 'p' && EQ_OPS.has(x.v);
+      if ((eq(prev) || eq(next)) || (prev && prev.t === 'id' && prev.v === 'case')) out.push(i);
+    }
+    if (t.t === 'str' && ID_PREFIX.test(t.v) && (isP(prev, '+') || isP(next, '+'))) out.push(i);
+    if (t.t === 'tpl' && t.exprs.length && t.quasis.some((q, j) => j < t.exprs.length && ID_PREFIX.test(q))) out.push(i);
+    if (t.t === 'id' && t.v === 'String' && isP(next, '.') && toks[i + 2] && toks[i + 2].v === 'fromCharCode') out.push(i);
+    if (t.t === 'id' && roots.includes(t.v) && !dotted && isP(next, '[')) out.push(i);
+    if (t.t === 'tpl' && t.exprs.length && isP(prev, '[') && isP(next, ']') && toks[i - 2] && (toks[i - 2].t === 'id' || isP(toks[i - 2], ')') || isP(toks[i - 2], ']'))) out.push(i);
+    if (t.t === 'p' && (t.v === '{' || t.v === '[') && isExprStart(toks, i)) {
+      let close = matchClose(toks, i);
+      const callee = toks[i - 2];
+      const grouping = !callee || !((callee.t === 'id' && !['return', 'case', 'typeof', 'in', 'of'].includes(callee.v)) || isP(callee, ')') || isP(callee, ']'));
+      if (isP(prev, '(') && grouping && isP(toks[close + 1], ')')) close++; // `({…}).a`、`(['x'])[0]`（括号是分组不是调用）
+      const after = toks[close + 1];
+      const indexed = isP(after, '[') || (t.v === '{' && isP(after, '.') && toks[close + 2] && toks[close + 2].t === 'id' && !isP(toks[close + 3], '('));
+      if (indexed) out.push(i);
+    }
+    if (t.t === 'id' && t.v === 'new' && next && (next.v === 'Map' || next.v === 'Set') && isP(toks[i + 2], '(') && isP(toks[i + 3], '[')) {
+      out.push(...containerStrs(toks, i + 3, matchClose(toks, i + 3), next.v === 'Map'));
+    }
+  });
+  return [...new Set(out)];
+}
+
 function exportParamHits(toks, comments) {
   const out = [];
   for (const fn of exportedFunctions(toks)) {
@@ -131,6 +192,7 @@ export function detect(ctx, params, cls) {
   const codes = (cls && cls.checkCodes) || {};
   const regexFiles = (cls && cls.regexFiles) || [];
   const castFiles = (cls && cls.castFiles) || [];
+  const handleRoots = (cls && cls.handleRoots) || [];
   const hits = [];
   for (const file of scopeFiles(ctx, params)) {
     const src = ctx.read(file);
@@ -147,7 +209,7 @@ export function detect(ctx, params, cls) {
       const push = (line, symbolPath, nodeKind) => hits.push({ file, line, nodeKind, symbolPath, code });
       if (check === 'regex') { if (!matchGlobs(file, regexFiles, ctx.model.codeExts)) for (const i of regexHits(toks)) push(toks[i].line, sym(i), 'regex'); }
       else if (check === 'nonAscii') for (const i of nonAsciiHits(toks)) push(toks[i].line, sym(i), 'literal_non_ascii');
-      else if (check === 'bareCompare') for (const i of bareCompareHits(toks)) push(toks[i].line, sym(i), 'literal_compare');
+      else if (check === 'bareCompare') for (const i of [...bareCompareHits(toks), ...shapeHits(toks, handleRoots)].sort((a, b) => a - b)) push(toks[i].line, sym(i), 'literal_compare');
       else if (check === 'exportParams') for (const h of exportParamHits(toks, comments)) push(h.line, h.symbolPath, 'export_param');
       else if (check === 'assertCast') { if (!matchGlobs(file, castFiles, ctx.model.codeExts)) for (const h of commentHits(src, toks, comments, check)) push(h.line, h.symbolPath, check); }
       else if (check === 'directive' || check === 'anyType') for (const h of commentHits(src, toks, comments, check)) push(h.line, h.symbolPath, check);

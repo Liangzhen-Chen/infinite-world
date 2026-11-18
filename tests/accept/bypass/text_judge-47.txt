@@ -1,0 +1,3 @@
+// 靠 tsc 类型才能判（卷二 S13 上下文白名单反例、A16：三元合流的族无法归因，E-VIEW-FAMILY-UNRESOLVED）。
+/** @param {Handles} V @param {boolean} c @param {Fact} a @param {Fact} b @returns {boolean} */
+export function bad(V, c, a, b) { return (c ? a.value : b.value) === V.status_family.sfam_sleep; }

@@ -1,0 +1,5 @@
+// 靠 tsc 类型才能判（卷二 §2.8 代表性反例：三元两分支不同品牌；`??` 对 Fact 值默认填充，E-VIEW-FALLBACK）。
+/** @param {Handles} V @param {boolean} cond @returns {unknown} */
+export function a(V, cond) { return cond ? V.a.x : 'y'; }
+/** @param {Handles} V @param {Fact} x @returns {unknown} */
+export function b(V, x) { return x ?? V.a.x; }

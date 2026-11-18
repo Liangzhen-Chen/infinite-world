@@ -1,0 +1,15 @@
+// 靠 tsc 类型才能判（卷二 §2.8 代表性反例：展开/迭代/解构/内建实参位置）。
+/** @param {Text} text @returns {unknown} */
+export function a(text) { return [...text]; }
+/** @param {Text} text @returns {unknown} */
+export function b(text) { return Array.from(text); }
+/** @param {Text} text @returns {number} */
+export function c(text) { let n = 0; for (const ch of text) n += ch ? 1 : 0; return n; }
+/** @param {Text} text @returns {unknown} */
+export function d(text) { const [first, second] = text; return [first, second]; }
+/** @param {Text} text @returns {unknown} */
+export function e(text) { return Object.keys(text); }
+/** @param {Text} text @returns {unknown} */
+export function f(text) { return JSON.stringify(text); }
+/** @param {Text} text @returns {unknown} */
+export function g(text) { return encodeURIComponent(text); }

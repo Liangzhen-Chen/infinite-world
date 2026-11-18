@@ -1,0 +1,2 @@
+/** @param {Handles} V @param {Key} fam @param {Key} id @returns {unknown} */
+export function bad(V, fam, id) { return V[fam][id]; }
