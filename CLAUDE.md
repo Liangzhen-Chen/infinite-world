@@ -13,7 +13,7 @@
 - 三层：Opus 5.5 中档 / Sonnet 5.5 中档 / DeepSeek（deepseek-flash）。
 - 默认 Sonnet 统筹、DeepSeek 写代码。内核、加载器、跨卷、改裁定、同一处错两次的交 Opus。
 - 可让一个 Sonnet 或 Opus 包一整块并调 DeepSeek 写码；封卡前复核由另一个 Claude 会话按分档做。
-- Claude 只用会员额度，不用 API（不再用 claude -p 带 API 密钥）；DeepSeek 照常用（F:/dnd-tools/api/run-card-ds.sh，只在子进程环境设 DeepSeek 地址与密钥，不打印不提交密钥）。
+- Claude 只用会员额度，不用 API（不再用 claude -p 带 API 密钥）；DeepSeek 照常用（派卡统一走仓库内 tools/dispatch/run-card-ds.sh，只在子进程环境设 DeepSeek 地址与密钥，不打印不提交密钥）。
 - 11-19 10:00 前：写与改一律 DeepSeek；只核先用另一 DeepSeek；内核、加载器、跨卷、改裁定的卡加 Claude Sonnet 中档终核（最多两轮）；不用 Opus；Claude API 再花不超 10 美元。
 
 ## 复核分档
