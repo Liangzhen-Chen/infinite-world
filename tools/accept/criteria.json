@@ -453,10 +453,14 @@
     {
      "ref": "4-4a：kernel/det-math.mjs 新增 fixedExp/fixedLn/fixedPow 等定点函数（检测器 import 闭包经 validate/types.mjs 含 det-math），判据代码指纹更新，rev+1；判定口径不变",
      "rev": 25
+    },
+    {
+     "ref": "B2-W3（李白 11-18 20:20 裁定 B）：加载期派生编译、未建派生登记与加载期反查索引落在 validate/dimensions-validate.mjs，共用检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 26
     }
    ],
-   "print": "b63b3cc0a082c593ee50a9d56e78e9e5097b9932e770e65338f4cbf816a866d1",
-   "rev": 25,
+   "print": "702c4f4e81d22e86c6c537b2abfb04aa1af2682c41961275413125baf47f6d5e",
+   "rev": 26,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -733,10 +737,14 @@
     {
      "ref": "4-4a：kernel/det-math.mjs 新增 fixedExp/fixedLn/fixedPow 等定点函数（检测器 import 闭包经 validate/types.mjs 含 det-math），判据代码指纹更新，rev+1；判定口径不变",
      "rev": 26
+    },
+    {
+     "ref": "B2-W3（李白 11-18 20:20 裁定 B）：加载期派生编译、未建派生登记与加载期反查索引落在 validate/dimensions-validate.mjs，共用检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 27
     }
    ],
-   "print": "2faa579b9a26196f0066d296795d6515f926eab0c344eb2612e031f7d94176bb",
-   "rev": 26,
+   "print": "f59335aed26961383f6d3e47b04a3de1577fbf9becdf09fb39878e412fdd7946",
+   "rev": 27,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -970,10 +978,14 @@
     {
      "ref": "4-4a：kernel/det-math.mjs 新增 fixedExp/fixedLn/fixedPow 等定点函数（检测器 import 闭包经 validate/types.mjs 含 det-math），判据代码指纹更新，rev+1；判定口径不变",
      "rev": 42
+    },
+    {
+     "ref": "B2-W3（李白 11-18 20:20 裁定 B）：加载期派生编译、未建派生登记与加载期反查索引落在 validate/dimensions-validate.mjs，共用检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 43
     }
    ],
-   "print": "79379c5589a41c6cc842a37cc353bebddf8c2d93e25527b66af9b2e94bb7d545",
-   "rev": 42,
+   "print": "c6a4cbc7394ef392bfccd5fa1a0d879388f3e87b7f6c0995f7fedcdfc22e613f",
+   "rev": 43,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1180,10 +1192,14 @@
     {
      "ref": "4-4a：kernel/det-math.mjs 新增 fixedExp/fixedLn/fixedPow 等定点函数（检测器 import 闭包经 validate/types.mjs 含 det-math），判据代码指纹更新，rev+1；判定口径不变",
      "rev": 27
+    },
+    {
+     "ref": "B2-W3（李白 11-18 20:20 裁定 B）：加载期派生编译、未建派生登记与加载期反查索引落在 validate/dimensions-validate.mjs，共用检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 28
     }
    ],
-   "print": "2faa579b9a26196f0066d296795d6515f926eab0c344eb2612e031f7d94176bb",
-   "rev": 27,
+   "print": "f59335aed26961383f6d3e47b04a3de1577fbf9becdf09fb39878e412fdd7946",
+   "rev": 28,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1691,10 +1707,14 @@
     {
      "ref": "4-4a：kernel/det-math.mjs 新增 fixedExp/fixedLn/fixedPow 等定点函数（检测器 import 闭包经 validate/types.mjs 含 det-math），判据代码指纹更新，rev+1；判定口径不变",
      "rev": 27
+    },
+    {
+     "ref": "B2-W3（李白 11-18 20:20 裁定 B）：加载期派生编译、未建派生登记与加载期反查索引落在 validate/dimensions-validate.mjs，共用检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 28
     }
    ],
-   "print": "2faa579b9a26196f0066d296795d6515f926eab0c344eb2612e031f7d94176bb",
-   "rev": 27,
+   "print": "f59335aed26961383f6d3e47b04a3de1577fbf9becdf09fb39878e412fdd7946",
+   "rev": 28,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -1785,10 +1805,14 @@
     {
      "ref": "4-4a：kernel/det-math.mjs 新增 fixedExp/fixedLn/fixedPow 等定点函数（检测器 import 闭包经 validate/types.mjs 含 det-math），判据代码指纹更新，rev+1；判定口径不变",
      "rev": 19
+    },
+    {
+     "ref": "B2-W3（李白 11-18 20:20 裁定 B）：加载期派生编译、未建派生登记与加载期反查索引落在 validate/dimensions-validate.mjs，共用检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 20
     }
    ],
-   "print": "fc1653e1981b81f2e3d7ef9eacc659c126f10821b62acdc7c0c95bbc03ad04e2",
-   "rev": 19,
+   "print": "03d912878cc192d1874e225578908d4774440c11a746ec7eba7f670b754f51c5",
+   "rev": 20,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -2126,10 +2150,14 @@
     {
      "ref": "4-4a：kernel/det-math.mjs 新增 fixedExp/fixedLn/fixedPow 等定点函数（检测器 import 闭包经 validate/types.mjs 含 det-math），判据代码指纹更新，rev+1；判定口径不变",
      "rev": 6
+    },
+    {
+     "ref": "B2-W3（李白 11-18 20:20 裁定 B）：加载期派生编译、未建派生登记与加载期反查索引落在 validate/dimensions-validate.mjs，共用检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 7
     }
    ],
-   "print": "b71353cc74d0a550dd0e426d4de9e04c650ffd56c2784b37f527c2253656a6ce",
-   "rev": 6,
+   "print": "3ced4bed441f71e3f8e97a9d51871ad0b691cb5aa220409d7823b8b15db37c63",
+   "rev": 7,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -2536,10 +2564,14 @@
     {
      "ref": "4-4a：kernel/det-math.mjs 新增 fixedExp/fixedLn/fixedPow 等定点函数（检测器 import 闭包经 validate/types.mjs 含 det-math），判据代码指纹更新，rev+1；判定口径不变",
      "rev": 21
+    },
+    {
+     "ref": "B2-W3（李白 11-18 20:20 裁定 B）：加载期派生编译、未建派生登记与加载期反查索引落在 validate/dimensions-validate.mjs，共用检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 22
     }
    ],
-   "print": "fc1653e1981b81f2e3d7ef9eacc659c126f10821b62acdc7c0c95bbc03ad04e2",
-   "rev": 21,
+   "print": "03d912878cc192d1874e225578908d4774440c11a746ec7eba7f670b754f51c5",
+   "rev": 22,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

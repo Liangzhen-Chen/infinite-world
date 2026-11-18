@@ -11,6 +11,7 @@ import { validateDimensions } from '../../server-plugin/kernel/validate/dimensio
 import { gradedCells } from '../../server-plugin/kernel/validate/cell-grades.mjs';
 import { readRules, ruleTable } from '../../server-plugin/kernel/load/rules.mjs';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
+import { dim } from '../../server-plugin/kernel/dimensions.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DIR = join(ROOT, 'world/ontology/dimensions');
@@ -18,8 +19,8 @@ const read = (f) => readFileSync(join(DIR, f), 'utf8');
 const C = ruleTable(readRules(ROOT).rules, 'kernelConstants');
 const NS = JSON.parse(readFileSync(join(ROOT, 'world/ontology/state-owners.json'), 'utf8')).rxNamespaces;
 const OPTIONS = { namespaces: ['core'], displaySet: [], ns: NS, limits: { extendsMaxDepth: C.extendsMaxDepth, rxMaxDepth: C.rxMaxDepth } };
-const load = () => ({ material: JSON.parse(read('material.json')), vocab: JSON.parse(read('_vocab.json')), units: JSON.parse(read('_units.json')) });
-const run = (w) => validateDimensions({ units: JSON.stringify(w.units), vocab: JSON.stringify(w.vocab), tables: [{ file: 'material.json', text: JSON.stringify(w.material) }] }, OPTIONS);
+const load = () => ({ material: JSON.parse(read('material.json')), vocab: JSON.parse(read('_vocab.json')), units: JSON.parse(read('_units.json')), unbuilt: read('_unbuilt-derived.json') });
+const run = (w) => validateDimensions({ units: JSON.stringify(w.units), vocab: JSON.stringify(w.vocab), unbuilt: w.unbuilt, tables: [{ file: 'material.json', text: JSON.stringify(w.material) }] }, OPTIONS);
 const errs = (r) => r.errors.filter((e) => e.severity === 'error');
 const codesOf = (r, row) => errs(r).filter((e) => e.row === row).map((e) => `${e.code}:${e.dim}`).sort();
 const key = (e) => `${e.code}|${e.row}|${e.dim}`;
@@ -43,6 +44,17 @@ test('真实世界 loadWorld：零 error、零 warning；byDigestible 已按表�
   assert.equal(r.ok, true);
   assert.deepEqual(r.errors, []);
   assert.ok(!r.notCovered.some((x) => x.endsWith(':byDigestible')));
+});
+
+test('真实世界：未建派生登记恰列五处；producedBy 由加载器反查索引给出（李白 11-18 20:20 裁定 B；卷三乙 :627）', () => {
+  const r = loadWorld(ROOT);
+  assert.equal(r.ok, true);
+  assert.deepEqual([...r.tables.get('material').unbuilt].sort(), ['categories', 'charYield', 'hardness', 'hydration', 'toughness']);
+  const eng = { tables: r.tables, vocab: r.vocab, rules: r.rules, env: r.env };
+  // mat_coke 只被一行 reactionProducts[reaction_char] 指向（material.json:4201）→ {reaction_char}；mat_oak 没有行指向 → 空集。
+  assert.deepEqual(dim(eng, {}, 'material', 'mat_coke', 'producedBy'), { known: true, applicable: true, value: ['reaction_char'], source: 'index' });
+  assert.deepEqual(dim(eng, {}, 'material', 'mat_oak', 'producedBy').value, []);
+  assert.throws(() => dim(eng, {}, 'material', 'mat_oak', 'hardness'), (e) => e.code === 'E-MOD-RX');
 });
 
 test('四族词表：class、plant_part、damage、diet 在 _vocab.json；diet 四条照卷四 §4.7.5 数据行原文载入', () => {

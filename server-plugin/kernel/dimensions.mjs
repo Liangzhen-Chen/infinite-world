@@ -156,13 +156,75 @@ function readBase(engine, state, kind, id, dimension, key) {
     const v = pick(cls[dimension], key);
     if (v !== undefined) return fact({ known: true, applicable: true, value: v, source: 'class', chain: Object.freeze(chain.slice(0, i + 1)) });
   }
-  // 派生式（§1.12）的求值未建：派生式的编译与派生依赖图未做（kernel/validate/dimensions-validate.mjs 头注），
-  // 走到这里不能读成"未知"，否则把应有值静默当缺失。采样（§1.10）走 kernelApi sample（kernel/sample.mjs，块 4-3）。
-  if (def.derived !== undefined) throw new Error(`kernel/dimensions.mjs: ${kind}.${dimension} is derived (§1.12); derived evaluation not built yet`);
+  // 加载期反查索引（§1.12 封卷后勘误 1118k23；卷三乙 :627）：索引由加载器建好，读时只按行查；无行指向即空集（已知值）。
+  if (def.reverseIndex !== undefined) {
+    const index = t.reverse instanceof Map ? t.reverse.get(dimension) : undefined;
+    const v = index instanceof Map && index.has(id) ? index.get(id) : Object.freeze([]);
+    return fact({ known: true, applicable: true, value: v, source: 'index' });
+  }
+  // 派生式（§1.12）：按 §1.3 取值顺序在类别链之后求值，变量一律读基值，未知按 TA-S1 整条未知。
+  // 编译树由加载器交下（validateDimensions 的 t.derived，§2.9 第 4 条 :1182）；本文件读时只消费；采样（§1.10）走 kernelApi sample（kernel/sample.mjs，块 4-3）。
+  if (def.derived !== undefined) {
+    // 登记在案的未建派生（§1.12 封卷后勘误 1118k23）：加载期已跳过编译，运行时读到直接抛已登记码，不静默给值。
+    if (t.unbuilt instanceof Set && t.unbuilt.has(dimension)) throw new KernelError('E-MOD-RX', { entity: id }, `derived ${kind}.${dimension} is registered unbuilt (aggregate/set primitives or data missing)`);
+    const d = evaluateDerived(engine, state, kind, id, dimension);
+    return d.known ? fact(d) : d;
+  }
   if (def.sample !== undefined) {
     return fact({ known: true, applicable: true, value: sample(engine, kind, id, dimension), source: 'sample' });
   }
   return Object.freeze({ known: false, applicable: true });
+}
+
+// ---------- 派生（§1.12） ----------
+
+// 同一趟求值里重入同一 (kind, id, 维度) 即环（§1.12 RA-N3）；不带 recursive 的按 E-DIM-DERIVED-CYCLE（加载期已判，这里防御），
+// 带 recursive 的合法自引用要走 §1.12 聚合原语，而 agg 求值未建，按已登记码 E-MOD-RX 报未实现，不判环。
+const deriving = new Set();
+
+// 派生结果按维度类型交回并截断（§1.12 :381"派生结果按 precision 截断"）；类型不合按 RX 求值失败报 E-MOD-RX。
+// map/set/list/struct 的派生维度已在加载期按 E-MOD-RX 拒收（validate/dimensions-validate.mjs），这里不再有 map 当标量的分支。
+function derivedValue(def, v, at) {
+  const type = def.type;
+  if (type === T.type.number || type === T.type.integer) {
+    if (typeof v !== 'number') throw new KernelError('E-MOD-RX', {}, `derived ${at}: result is not a number`);
+    return { known: true, applicable: true, value: fixedToNumber(truncateTo(fixedUnits(v), precisionOf(def))), source: 'derived' };
+  }
+  if (type === T.type.boolean) {
+    if (typeof v !== 'boolean') throw new KernelError('E-MOD-RX', {}, `derived ${at}: result is not a boolean`);
+    return { known: true, applicable: true, value: v, source: 'derived' };
+  }
+  if (type !== T.type.ref && type !== T.type.enum) throw new KernelError('E-MOD-RX', {}, `derived ${at}: result type ${type} is not a scalar RX result`);
+  if (typeof v !== 'string') throw new KernelError('E-MOD-RX', {}, `derived ${at}: result is ${typeof v}`);
+  return { known: true, applicable: true, value: v, source: 'derived' };
+}
+
+// 派生求值（§1.12）：读同主体的各变量基值（§1.12 :378"派生变量一律读基值"）；任一变量 known:false / applicable:false / 显式 null
+// 即整条未知（TA-S1 :379），不按 0 代入。编译树只消费加载期交下的 t.derived（§2.9 第 4 条），读时不编译。
+function evaluateDerived(engine, state, kind, id, dimension) {
+  const t = tableOf(engine, kind);
+  const def = t.doc.dimensions[dimension];
+  const at = `${kind}.${dimension} of ${JSON.stringify(id)}`;
+  const tree = t.derived instanceof Map ? t.derived.get(dimension) : undefined;
+  if (tree === undefined) throw new Error(`kernel/dimensions.mjs: derived tree for ${at} missing; the dimension table was not compiled at load`);
+  const stackKey = `${kind}\u0000${id}\u0000${dimension}`;
+  if (deriving.has(stackKey)) {
+    if (def.recursive !== undefined) throw new KernelError('E-MOD-RX', { entity: id }, `recursive derived ${at} needs aggregate primitives (not built)`);
+    throw new KernelError('E-DIM-DERIVED-CYCLE', { entity: id }, `derived cycle at ${at}`);
+  }
+  deriving.add(stackKey);
+  try {
+    const dims = {};
+    for (const k of rxDimKeys(tree)) {
+      const f = readBase(engine, state, kind, id, k, undefined);
+      if (!f.known || !f.applicable || f.value === null || f.value === undefined) return Object.freeze({ known: false, applicable: true });
+      dims[k] = f.value;
+    }
+    const v = evaluateRX(tree, { dim: dims, clock: {} }, {});
+    return derivedValue(def, v, at);
+  } finally {
+    deriving.delete(stackKey);
+  }
 }
 
 /**
@@ -177,13 +239,8 @@ export function dim(engine, state, kind, id, dimension, opts = {}) {
 
 // ---------- RX 变量绑定（读求值管线；P2-20） ----------
 
-/**
- * 修正项 when / valueRX 的变量绑定（§3.2 :1303"只能经 dim() 读来源与对象的基值"；§2.2 :448 clock.day / clock.season）：
- * 收集树里引用的维度键，逐个经 dim() 读主体的基值；未知、不适用或显式 null 的不进绑定（求值时缺读数即 E-MOD-RX，不当 0）。kernel 组内用。
- * @param {Engine} engine @param {any} state @param {string} kind @param {string} id @param {any} tree @param {ReadOptions['clock']} [clock]
- * @returns {{dim: Record<string, any>, clock: Record<string, any>}}
- */
-export function rxBindings(engine, state, kind, id, tree, clock) {
+// RX 树里引用的维度键（§2.9 第 4 条 `dim` 变体）：派生式求值与修正项绑定共用这一处遍历，排序后返回。
+function rxDimKeys(tree) {
   const keys = new Set();
   const walk = (n) => {
     if (!isObj(n)) return;
@@ -192,8 +249,18 @@ export function rxBindings(engine, state, kind, id, tree, clock) {
     if (Array.isArray(n.items)) n.items.forEach(walk);
   };
   walk(tree);
+  return [...keys].sort();
+}
+
+/**
+ * 修正项 when / valueRX 的变量绑定（§3.2 :1303"只能经 dim() 读来源与对象的基值"；§2.2 :448 clock.day / clock.season）：
+ * 收集树里引用的维度键，逐个经 dim() 读主体的基值；未知、不适用或显式 null 的不进绑定（求值时缺读数即 E-MOD-RX，不当 0）。kernel 组内用。
+ * @param {Engine} engine @param {any} state @param {string} kind @param {string} id @param {any} tree @param {ReadOptions['clock']} [clock]
+ * @returns {{dim: Record<string, any>, clock: Record<string, any>}}
+ */
+export function rxBindings(engine, state, kind, id, tree, clock) {
   const dims = {};
-  for (const k of [...keys].sort()) {
+  for (const k of rxDimKeys(tree)) {
     const f = readBase(engine, state, kind, id, k, undefined);
     if (f.known && f.value !== null) dims[k] = f.value;
   }

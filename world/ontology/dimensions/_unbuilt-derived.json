@@ -1,0 +1,11 @@
+{
+ "version": 1,
+ "note": "未建派生登记（卷二 §1.12 封卷后勘误 1118k23，依据李白 11-18 20:20 B2-W3 裁定 B）：凡 derived 按现行 RX 写不成的维度登记在这里，加载期只编可写的派生，登记项跳过不报错；没登记又编不过的仍报 E-MOD-RX。字段 table/dimension/missing/card；missing 取 primitive（缺原语）/data（缺数据）/constant（缺常数）的非空去重有序列表；card 未排期时写固定代号 pre_first_reader_card（首个读者玩法卡前，待排）。",
+ "entries": [
+  {"table": "material", "dimension": "categories", "missing": ["data", "primitive"], "card": "pre_first_reader_card"},
+  {"table": "material", "dimension": "charYield", "missing": ["data", "primitive"], "card": "pre_first_reader_card"},
+  {"table": "material", "dimension": "hardness", "missing": ["data", "primitive"], "card": "pre_first_reader_card"},
+  {"table": "material", "dimension": "hydration", "missing": ["constant"], "card": "pre_first_reader_card"},
+  {"table": "material", "dimension": "toughness", "missing": ["data", "primitive"], "card": "pre_first_reader_card"}
+ ]
+}

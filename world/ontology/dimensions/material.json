@@ -2145,10 +2145,10 @@
    "vocab": "plant_part"
   },
   "producedBy": {
-   "derived": "卷三乙 §2.1：由别行 reactionProducts 反查",
    "domain": {
     "maxSize": 8
    },
+   "reverseIndex": "reactionProducts",
    "modifiable": false,
    "of": {
     "type": "ref",

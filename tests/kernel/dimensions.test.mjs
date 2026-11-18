@@ -4,16 +4,22 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { fixture, OPTIONS, sourcesOf } from './fixture.mjs';
+import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
 import { validateDimensions } from '../../server-plugin/kernel/validate/dimensions-validate.mjs';
 import { installVocab, registry } from '../../server-plugin/kernel/vocab.mjs';
 import { modKeyOf } from '../../server-plugin/kernel/handles/keys.mjs';
 import { compileRXInScope } from '../../server-plugin/kernel/rx.mjs';
 import { dim, modified, explain, runPipeline, installModifierSource, resetModifierSource } from '../../server-plugin/kernel/dimensions.mjs';
+import { sample } from '../../server-plugin/kernel/sample.mjs';
 import { resetMemos } from '../../server-plugin/kernel/memo.mjs';
 
 // 叠加惩罚表（卷二 :1356 S[0..8]，照抄字面量）。
 const STACKING = [1.0000, 0.8691, 0.5706, 0.2830, 0.1060, 0.0300, 0.0064, 0.0010, 0.0001];
+
+// 采样经 kernel/save.mjs 的 sha256Text（卷二 §2.9 :984，kernel 不 import node:crypto）：测试里装一个摘要能力。
+installDigestCap({ sha256Hex: (data, encoding) => createHash('sha256').update(data, encoding === 'base64' ? 'base64' : 'utf8').digest('hex') });
 
 function world() {
   const f = fixture();
@@ -22,6 +28,16 @@ function world() {
   f.gadget.dimensions.upkeep = { type: 'map', key: { type: 'ref', vocab: 'grade' }, value: { type: 'number', unit: 'count', domain: [0, 100], precision: 2 }, modifiable: true, stacking: 'none', bounds: [0, 100], ...common };
   // 派生维度（§1.12 derived）同样 modifiable：登记即成修正键，不另写槽（体检 K2-05）。
   f.gadget.dimensions.reach = { type: 'number', unit: 'kg', domain: [0, 200], precision: 2, derived: 'mass * 2', modifiable: true, stacking: 'none', bounds: [0, 200], ...common };
+  // 派生递推（引用另一个派生维度）、按 precision 截断、引用未知维度、维度级自环、编译失败、派生变量只读基值。
+  f.gadget.dimensions.reachArea = { type: 'number', unit: 'count', domain: [0, 40000], precision: 2, derived: 'reach * reach', modifiable: false, ...common };
+  f.gadget.dimensions.halfMass = { type: 'number', unit: 'kg', domain: [0, 100], precision: 2, derived: 'mass / 3', modifiable: false, ...common };
+  f.gadget.dimensions.doubleSpeed = { type: 'number', unit: 'count', domain: [0, 20], precision: 2, derived: 'workSpeed * 2', modifiable: false, ...common };
+  f.gadget.dimensions.gradeIsA = { type: 'boolean', derived: 'grade == grd_a', modifiable: false, ...common };
+  // 带 recursive 的自引用：加载期不判环（§1.2 .recursive、§1.12 RA-N3），读时因聚合原语未建报 E-MOD-RX。
+  f.gadget.dimensions.deep = { type: 'number', unit: 'kg', domain: [0, 100], precision: 2, derived: 'deep + 1', recursive: { relation: 'rel_part' }, modifiable: false, ...common };
+  // 抽样维度（§1.10 sample）：实例无值、类别行无值时经 sample 求值；有实例值即按 §1.3 取值顺序先取实例值。
+  f.gadget.dimensions.smell = { type: 'number', unit: 'count', domain: [0, 10], precision: 2, sample: { dist: 'uniform', min: 1, max: 3 }, modifiable: false, ...common };
+  f.gadget.rows.gad_box.smell = 7;
   f.gadget.rows.gad_box.workSpeed = 1;
   f.gadget.rows.gad_box.upkeep = { grd_a: 12, grd_b: 3 };
   f.gadget.rows.gad_box.spec = { low: 1, high: 2 };
@@ -32,7 +48,7 @@ function world() {
 
 const report = world();
 installVocab(report);
-const engine = { tables: report.tables, vocab: report.vocab, rules: { modifiers: { stackingTable: STACKING } } };
+const engine = { tables: report.tables, vocab: report.vocab, rules: { modifiers: { stackingTable: STACKING } }, template: { seed: 'fixture_seed' }, env: report.env };
 const scope = { dims: new Map(Object.entries(report.tables.get('gadget').doc.dimensions)), vocabIndex: report.vocab.index, ns: [], maxDepth: 16 };
 const rx = (text) => compileRXInScope(text, 'data', scope).tree;
 
@@ -59,6 +75,175 @@ test('dim：实体行值、类别链（含 extends 展平与 broader 成员）�
   assert.deepEqual(dim(engine, { created: { gad_hammer: { props: { mass: 9 } } } }, 'gadget', 'gad_hammer', 'mass'), { known: true, applicable: true, value: 9, source: 'instance', unit: 'kg' });
   assert.equal(dim(engine, st, 'gadget', 'gad_box', 'upkeep', { key: 'grd_b' }).value, 3);
   assert.throws(() => dim(engine, st, 'gadget', 'gad_box', 'nosuch'), (e) => e.code === 'E-DIM-REF-MISSING');
+});
+
+test('派生维度：类别链之后求值，变量读基值，派生可引用派生，结果按 precision 向零截断（§1.3、§1.12）', () => {
+  const st = {};
+  // gad_box：mass 是实体行值 5 → reach=5×2=10、reachArea=10×10=100、halfMass=5÷3=1.6666…→1.66
+  assert.deepEqual(dim(engine, st, 'gadget', 'gad_box', 'reach'), { known: true, applicable: true, value: 10, source: 'derived', unit: 'kg' });
+  assert.deepEqual(dim(engine, st, 'gadget', 'gad_box', 'reachArea'), { known: true, applicable: true, value: 100, source: 'derived', unit: 'count' });
+  assert.equal(dim(engine, st, 'gadget', 'gad_box', 'halfMass').value, 1.66);
+  // gad_hammer：mass 走类别链（1 ×2 ~3.5）得 5.5 → reach=11、reachArea=121、halfMass=5.5÷3=1.8333…→1.83
+  assert.equal(dim(engine, st, 'gadget', 'gad_hammer', 'reach').value, 11);
+  assert.equal(dim(engine, st, 'gadget', 'gad_hammer', 'reachArea').value, 121);
+  assert.equal(dim(engine, st, 'gadget', 'gad_hammer', 'halfMass').value, 1.83);
+});
+
+test('派生未知传播：任一变量未知或不适用即整条未知（§1.12 TA-S1，不静默当 0）', () => {
+  // grade 对 gad_box 不适用（required: byClass:cls_tool）→ gradeIsA 未知
+  assert.deepEqual(dim(engine, {}, 'gadget', 'gad_box', 'gradeIsA'), { known: false, applicable: true });
+  // gad_hammer 属 cls_tool，grade=grd_a → 真
+  assert.deepEqual(dim(engine, {}, 'gadget', 'gad_hammer', 'gradeIsA'), { known: true, applicable: true, value: true, source: 'derived' });
+});
+
+test('派生变量一律读基值，不读修正后值（§1.12 :378）', () => {
+  use([row('m_speed', 'gadget.workSpeed', 'add', 1)]);
+  assert.equal(modified(engine, {}, 'gadget', 'gad_box', 'workSpeed').value, 2);
+  // 若读修正后值会得 4；基值 1 → 2
+  assert.equal(dim(engine, {}, 'gadget', 'gad_box', 'doubleSpeed').value, 2);
+  use([]);
+});
+
+// 加载期编译与 L1（卷二 §2.9 第 4 条 :1182–:1183、§4.1 L1 :1500）：派生式按本表维度编成树，读时只消费这棵树。
+const derivedDef = (extra) => ({ type: 'number', unit: 'kg', domain: [0, 200], precision: 2, modifiable: false, required: 'never', onUnknown: 'gap', source: 'test', owner: 'test', ...extra });
+// 第二张表：与 gadget 同名不同定义的 radius（测本表编译范围），另有 thickness（测跨表变量）。
+const widgetTable = () => ({
+  kind: 'widget', namespace: 'core', version: 1,
+  entity: { idPrefix: ['wgt_'], classPrefix: 'cls_', singletonIds: [], instanceTable: null },
+  behaviors: ['use'],
+  dimensions: {
+    radius: { type: 'number', unit: 'count', domain: [0, 100], precision: 1, required: 'always', onUnknown: 'error', modifiable: false, source: 'test', owner: 'test' },
+    thickness: { type: 'number', unit: 'kg', domain: [0, 100], precision: 2, required: 'never', onUnknown: 'gap', modifiable: false, source: 'test', owner: 'test' },
+  },
+  precedenceGroups: { default: [] },
+  classes: {}, rows: {}, generated: {},
+});
+const twoTables = (f, widget) => ({ units: JSON.stringify(f.units), vocab: JSON.stringify(f.vocab), tables: [
+  { file: 'gadget.json', text: JSON.stringify(f.gadget) },
+  { file: 'widget.json', text: JSON.stringify(widget) },
+] });
+const errorsOf = (r) => r.errors.filter((e) => e.severity === 'error');
+const hasErr = (r, code, dim) => errorsOf(r).some((e) => e.code === code && e.dim === dim);
+// 未建派生登记（卷二 §1.12 封卷后勘误 1118k23）：登记表是机读文件，测试按同一形状造。
+const registryOf = (entries) => JSON.stringify({ version: 1, entries });
+const withUnbuilt = (sources, entries) => ({ ...sources, unbuilt: registryOf(entries) });
+const unbuiltEntry = (dimension, extra = {}) => ({ table: 'gadget', dimension, missing: ['data', 'primitive'], card: 'pre_first_reader_card', ...extra });
+
+test('加载期：派生式编译失败报 E-MOD-RX（§2.9 第 4 条 :1183）；空串同样拒收', () => {
+  const f = fixture();
+  f.gadget.dimensions.badSyntax = derivedDef({ derived: 'mass +' });
+  f.gadget.dimensions.emptyDerived = derivedDef({ derived: '' });
+  const r = validateDimensions(sourcesOf(f), OPTIONS);
+  assert.ok(hasErr(r, 'E-MOD-RX', 'badSyntax'));
+  assert.ok(hasErr(r, 'E-MOD-RX', 'emptyDerived'));
+});
+
+test('加载期：变量不在本表报 E-DIM-DERIVED-VAR（§4.1 L1 :1500"变量存在"）', () => {
+  const f = fixture();
+  f.gadget.dimensions.foreignReach = derivedDef({ derived: 'thickness * 2' });
+  assert.ok(hasErr(validateDimensions(twoTables(f, widgetTable()), OPTIONS), 'E-DIM-DERIVED-VAR', 'foreignReach'));
+});
+
+test('加载期：自引用不带 recursive 报 E-DIM-DERIVED-CYCLE（§1.12 RA-N3 :380）', () => {
+  const f = fixture();
+  f.gadget.dimensions.loop = derivedDef({ derived: 'loop + 1' });
+  assert.ok(hasErr(validateDimensions(sourcesOf(f), OPTIONS), 'E-DIM-DERIVED-CYCLE', 'loop'));
+});
+
+test('加载期：两表同名不同定义时，本表派生按本表维度编译（卷二 :372、:378"主体的基值维度"）', () => {
+  const f = fixture();
+  // gadget 的 radius 与 widget 的 radius 单位、精度都不同；areaX 必须按 gadget 自己的 radius 编译
+  f.gadget.dimensions.radius = { type: 'number', unit: 'kg', domain: [0, 100], precision: 2, required: 'never', onUnknown: 'gap', modifiable: false, source: 'test', owner: 'test' };
+  f.gadget.dimensions.areaX = derivedDef({ derived: 'radius * radius' });
+  assert.deepEqual(errorsOf(validateDimensions(twoTables(f, widgetTable()), OPTIONS)), []);
+});
+
+test('加载期：map 派生维度按 E-MOD-RX 拒收（RX 变体没有产出 map/set 的，§2.9 第 4 条 :1163–:1182）', () => {
+  const f = fixture();
+  f.gadget.dimensions.mapDerived = {
+    type: 'map', key: { type: 'ref', vocab: 'grade' }, value: { type: 'number', unit: 'kg', domain: [0, 10], precision: 1 },
+    derived: 'mass', modifiable: false, required: 'never', onUnknown: 'gap', source: 'test', owner: 'test',
+  };
+  assert.ok(hasErr(validateDimensions(sourcesOf(f), OPTIONS), 'E-MOD-RX', 'mapDerived'));
+});
+
+test('未建派生登记：登记里的派生加载期跳过不报错，列入 unbuilt 且不出编译树（§1.12 勘误 1118k23）', () => {
+  const f = fixture();
+  f.gadget.dimensions.unbuiltThing = derivedDef({ derived: '卷三乙 §2.1：由 strength 合成' });
+  const r = validateDimensions(withUnbuilt(sourcesOf(f), [unbuiltEntry('unbuiltThing')]), OPTIONS);
+  assert.deepEqual(errorsOf(r), []);
+  const t = r.tables.get('gadget');
+  assert.ok(t.unbuilt.has('unbuiltThing'));
+  assert.ok(!t.derived.has('unbuiltThing'));
+});
+
+test('未建派生登记：没登记又编不过的仍报 E-MOD-RX、加载失败（§2.9 第 4 条 :1183）', () => {
+  const f = fixture();
+  f.gadget.dimensions.unbuiltThing = derivedDef({ derived: '卷三乙 §2.1' });
+  const r = validateDimensions(sourcesOf(f), OPTIONS);
+  assert.ok(hasErr(r, 'E-MOD-RX', 'unbuiltThing'));
+  assert.equal(r.ok, false);
+});
+
+test('运行期读登记里的未建派生：抛已登记码 E-MOD-RX，不静默给值（§1.12 勘误 1118k23）', () => {
+  const f = fixture();
+  f.gadget.dimensions.unbuiltThing = derivedDef({ derived: '卷三乙 §2.1' });
+  const rep = validateDimensions(withUnbuilt(sourcesOf(f), [unbuiltEntry('unbuiltThing')]), OPTIONS);
+  installVocab(rep);
+  try {
+    const eng = { tables: rep.tables, vocab: rep.vocab, rules: engine.rules, template: engine.template, env: rep.env };
+    assert.throws(() => dim(eng, {}, 'gadget', 'gad_box', 'unbuiltThing'), (e) => e.code === 'E-MOD-RX');
+  } finally { installVocab(report); }
+});
+
+test('未建派生登记双向核：登记了已能编译的派生、或登记了非派生维度，都按已登记码拒收（§1.12 勘误 1118k23）', () => {
+  const a = fixture();
+  a.gadget.dimensions.volumeX = derivedDef({ derived: 'mass * 2' });
+  assert.ok(hasErr(validateDimensions(withUnbuilt(sourcesOf(a), [unbuiltEntry('volumeX')]), OPTIONS), 'E-DIM-STRUCT-FIELD', 'volumeX'));
+  const b = fixture();
+  assert.ok(hasErr(validateDimensions(withUnbuilt(sourcesOf(b), [unbuiltEntry('mass')]), OPTIONS), 'E-DIM-REF-MISSING', 'mass'));
+});
+
+test('加载期反查索引：reverseIndex 维度按全表建成只读集合，无行指向为空集（§1.12 勘误 1118k23；卷三乙 :627）', () => {
+  const f = fixture();
+  f.gadget.dimensions.maker = { type: 'map', key: { type: 'ref', vocab: 'grade' }, value: { type: 'ref', kind: 'gadget' }, required: 'never', onUnknown: 'skip', modifiable: false, source: 'test', owner: 'test' };
+  f.gadget.dimensions.heirs = { type: 'set', of: { type: 'ref', vocab: 'grade' }, domain: { maxSize: 3 }, required: 'never', onUnknown: 'skip', modifiable: false, source: 'test', owner: 'test', reverseIndex: 'maker' };
+  // gad_box 的 maker[grd_a] 指向 gad_hammer：gad_hammer.heirs = {grd_a}；没有行指向 gad_box → 空集。
+  f.gadget.rows.gad_box.maker = { grd_a: 'gad_hammer' };
+  const rep = validateDimensions(sourcesOf(f), OPTIONS);
+  assert.deepEqual(errorsOf(rep), []);
+  installVocab(rep);
+  try {
+    const eng = { tables: rep.tables, vocab: rep.vocab, rules: engine.rules, template: engine.template, env: rep.env };
+    assert.deepEqual(dim(eng, {}, 'gadget', 'gad_hammer', 'heirs'), { known: true, applicable: true, value: ['grd_a'], source: 'index' });
+    assert.deepEqual(dim(eng, {}, 'gadget', 'gad_box', 'heirs').value, []);
+    // 手填反查维度即 E-DIM-DERIVED-WRITTEN。
+    const bad = fixture();
+    bad.gadget.dimensions.maker = f.gadget.dimensions.maker;
+    bad.gadget.dimensions.heirs = f.gadget.dimensions.heirs;
+    bad.gadget.rows.gad_box.heirs = ['grd_b'];
+    assert.ok(hasErr(validateDimensions(sourcesOf(bad), OPTIONS), 'E-DIM-DERIVED-WRITTEN', 'heirs'));
+  } finally { installVocab(report); }
+});
+
+test('加载期：编好的树随加载结果交下，读时只消费它（§2.9 第 4 条 :1182 "kernel/load 在加载期 compileRX"）', () => {
+  const t = report.tables.get('gadget');
+  assert.ok(t.derived instanceof Map);
+  assert.equal(t.derived.get('reach').op, 'mul');
+  assert.equal(t.derived.get('reach').left.key, 'mass');
+});
+
+test('带 recursive 的自引用加载期不判环；读时聚合原语未建，报 E-MOD-RX 而不是 E-DIM-DERIVED-CYCLE（§1.12 RA-N3）', () => {
+  assert.ok(!report.errors.some((e) => e.code === 'E-DIM-DERIVED-CYCLE' && e.dim === 'deep'));
+  assert.throws(() => dim(engine, {}, 'gadget', 'gad_box', 'deep'), (e) => e.code === 'E-MOD-RX');
+});
+
+test('抽样维度经 sample 得确定值（同种子同值）；实例有值先取实例值（§1.3 取值顺序、§1.10 :328）', () => {
+  const a = dim(engine, {}, 'gadget', 'gad_hammer', 'smell');
+  assert.equal(a.source, 'sample');
+  assert.equal(a.value, sample(engine, 'gadget', 'gad_hammer', 'smell'));
+  assert.equal(dim(engine, {}, 'gadget', 'gad_hammer', 'smell').value, a.value);
+  assert.deepEqual(dim(engine, {}, 'gadget', 'gad_box', 'smell'), { known: true, applicable: true, value: 7, source: 'instance', unit: 'count' });
 });
 
 test('附录 B：五条修正项按全序键施加，结果 1.2221，explain 五段逐段复算', () => {

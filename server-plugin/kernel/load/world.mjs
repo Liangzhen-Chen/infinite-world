@@ -25,6 +25,8 @@ export const LAYOUT = Object.freeze({
   effects: '_effects.json',
   // 冻结分布表（卷二 §1.10 :324–:325；卷二十七 R27-5.2）：与 _units.json 同目录、同一种读法，读入后装配到内核。
   distributions: '_distributions.json',
+  // 未建派生登记（卷二 §1.12 封卷后勘误 1118k23）：加载器读，与维度表同目录、下划线前缀，不当维度表。
+  unbuiltDerived: '_unbuilt-derived.json',
   stateOwners: 'world/ontology/state-owners.json',
   // 内核常数表在 engine.rules 下的表代号（卷二 S10 登记豁免表；登记行见 world/rules/registry.json）。
   constants: 'kernelConstants',
@@ -73,6 +75,7 @@ export function loadWorld(root, opts = {}) {
     units: readText(join(dir, LAYOUT.units)),
     vocab: readText(join(dir, LAYOUT.vocab)),
     effects: names.includes(LAYOUT.effects) ? readText(join(dir, LAYOUT.effects)) : undefined,
+    unbuilt: names.includes(LAYOUT.unbuiltDerived) ? readText(join(dir, LAYOUT.unbuiltDerived)) : undefined,
     tables: names.filter((n) => !n.startsWith('_')).map((file) => ({ file, text: readText(join(dir, file)) })),
   };
   const report = validateDimensions(sources, {
@@ -115,7 +118,8 @@ export function loadWorld(root, opts = {}) {
 }
 
 // `dim:<kind>` = `created.<前缀>*.props`（该表 idPrefix 逐个）∪ 该表 derived 用到的 relation 的闭包；`modified:<kind>` = `dim:<kind>` ∪ `modifiers` ∪ `statuses`
-// ∪ 该表修正项用到的 scope 的闭包（卷二 §2.3 :470 末句）。derived 公式的编译与修正项的作用域收集尚未建（kernel/validate 头注），两处闭包暂为空，见回报。
+// ∪ 该表修正项用到的 scope 的闭包（卷二 §2.3 :470 末句）。derived 公式的编译与维度级环已在 validate 的 L1 做（编译树随加载结果交出）；
+// derived 用到的 relation 闭包（实例级聚合未建）与修正项作用域收集仍未建，两处闭包暂为空，见回报。
 // `modifiers`、`statuses` 是卷文写明的协议状态键（:470；与 load/state-owners.mjs PROTOCOL_KEYS 同一出处 :519）。
 const MODIFIED_KEYS = Object.freeze(['modifiers', 'statuses']);
 
