@@ -6,6 +6,16 @@
 
 import { fixedUnits, fixedAdd, fixedSub, fixedMultiply, fixedDivide, fixedToNumber, FixedError } from './det-math.mjs';
 import { rxTokenAt, shapeArgCount, setFieldNames } from './handles/patterns.mjs';
+import { T } from './handles/markers.mjs';
+
+// 本文件内部的记号表（卷二没写文本语法，见文件头；只在 rx.mjs 用的单一定义，成员引用取代裸字面量比较）。
+// TOK：词法记号种类；PROFILE：编译档代号（卷二 §2.9 第 4 条"显示档与对 outputGate 开放"）；ROW_TYPE_FIELD：命名空间登记行"随字段"的读法类型；
+// FAMILY：RX 读入口返回形状登记里用到的词表族名（卷二 §1.9 前缀表 aggregate→agg_、relation→rel_）；AGG_PRIM：卷二 §1.12 聚合原语（exists、count）。
+const TOK = Object.freeze({ num: 'num', name: 'name', op: 'op', eof: 'eof' });
+const PROFILE = Object.freeze({ data: 'data' });
+const ROW_TYPE_FIELD = 'field';
+const FAMILY = Object.freeze({ aggregate: 'aggregate', relation: 'relation' });
+const AGG_PRIM = Object.freeze({ exists: 'exists', count: 'count' });
 
 export class RxError extends Error {
   constructor(message, code) { super(message); this.code = code || 'E-MOD-RX'; }
@@ -14,15 +24,15 @@ const fail = (message, code) => { throw new RxError(message, code); };
 
 // 两档各收哪些变体（§2.9 第 4 条"显示档与对 outputGate 开放"）。
 const PROFILE_OPS = Object.freeze({
-  data: new Set(['num', 'dim', 'handle', 'add', 'sub', 'mul', 'div', 'cmp', 'and', 'or', 'not', 'agg', 'clock', 'ns', 'member']),
+  data: new Set([T.rx_op.num, T.rx_op.dim, T.rx_op.handle, T.rx_op.add, T.rx_op.sub, T.rx_op.mul, T.rx_op.div, T.rx_op.cmp, T.rx_op.and, T.rx_op.or, T.rx_op.not, T.rx_op.agg, T.rx_op.clock, T.rx_op.ns, T.rx_op.member]),
 });
-const ARITH = { '+': 'add', '-': 'sub', '*': 'mul', '/': 'div', '%': 'mod' };
-const CMP = { '==': 'eq', '!=': 'ne', '<': 'lt', '<=': 'le', '>': 'gt', '>=': 'ge' };
-const CLOCK_FIELDS = new Set(['day', 'season']);
+const ARITH = { '+': T.rx_op.add, '-': T.rx_op.sub, '*': T.rx_op.mul, '/': T.rx_op.div, '%': T.rx_op.mod };
+const CMP = { '==': T.code_enum.rx_cmp.eq, '!=': T.code_enum.rx_cmp.ne, '<': T.code_enum.rx_cmp.lt, '<=': T.code_enum.rx_cmp.le, '>': T.code_enum.rx_cmp.gt, '>=': T.code_enum.rx_cmp.ge };
+const CLOCK_FIELDS = new Set([T.code_enum.rx_clock.day, T.code_enum.rx_clock.season]);
 const WORD_OPS = Object.freeze({ and: '&&', or: '||', not: '!', has: 'has' });
 
 function tokenize(text) {
-  if (typeof text !== 'string') fail('expression must be text');
+  if (typeof text !== T.js_type.string) fail('expression must be text');
   const out = [];
   let at = 0;
   const end = text.trimEnd().length;
@@ -31,12 +41,12 @@ function tokenize(text) {
     if (!m) fail(`unexpected text at ${at}`);
     at = m.end;
     const [numTok, nameTok, opTok] = m.groups;
-    if (numTok !== undefined) out.push({ k: 'num', v: numTok });
-    else if (Object.hasOwn(WORD_OPS, nameTok)) out.push({ k: 'op', v: WORD_OPS[nameTok] });
-    else if (nameTok !== undefined) out.push({ k: 'name', v: nameTok });
-    else out.push({ k: 'op', v: opTok });
+    if (numTok !== undefined) out.push({ k: TOK.num, v: numTok });
+    else if (Object.hasOwn(WORD_OPS, nameTok)) out.push({ k: TOK.op, v: WORD_OPS[nameTok] });
+    else if (nameTok !== undefined) out.push({ k: TOK.name, v: nameTok });
+    else out.push({ k: TOK.op, v: opTok });
   }
-  out.push({ k: 'eof', v: '' });
+  out.push({ k: TOK.eof, v: '' });
   return out;
 }
 
@@ -44,29 +54,29 @@ function parse(text, profile, scope) {
   const toks = tokenize(text);
   let i = 0;
   const peek = () => toks[i];
-  const isOp = (v) => peek().k === 'op' && peek().v === v;
+  const isOp = (v) => peek().k === TOK.op && peek().v === v;
   const take = (v) => { if (!isOp(v)) fail(`expected ${v}`); i++; };
   const node = (n) => { if (!PROFILE_OPS[profile].has(n.op)) fail(`variant ${n.op} not allowed in ${profile} profile`); return n; };
 
   function orExpr() {
     const items = [andExpr()];
     while (isOp('||')) { i++; items.push(andExpr()); }
-    return items.length === 1 ? items[0] : node({ op: 'or', items });
+    return items.length === 1 ? items[0] : node({ op: T.rx_op.or, items });
   }
   function andExpr() {
     const items = [notExpr()];
     while (isOp('&&')) { i++; items.push(notExpr()); }
-    return items.length === 1 ? items[0] : node({ op: 'and', items });
+    return items.length === 1 ? items[0] : node({ op: T.rx_op.and, items });
   }
   function notExpr() {
-    if (isOp('!')) { i++; return node({ op: 'not', item: notExpr() }); }
+    if (isOp('!')) { i++; return node({ op: T.rx_op.not, item: notExpr() }); }
     return cmpExpr();
   }
   function cmpExpr() {
     const left = addExpr();
     const t = peek();
-    if (t.k === 'op' && CMP[t.v]) { i++; return node({ op: 'cmp', cmpOp: CMP[t.v], left, right: addExpr() }); }
-    if (isOp('has')) { i++; return node({ op: 'member', item: addExpr(), set: left }); }
+    if (t.k === TOK.op && CMP[t.v]) { i++; return node({ op: T.rx_op.cmp, cmpOp: CMP[t.v], left, right: addExpr() }); }
+    if (isOp('has')) { i++; return node({ op: T.rx_op.member, item: addExpr(), set: left }); }
     return left;
   }
   function addExpr() {
@@ -80,7 +90,7 @@ function parse(text, profile, scope) {
     return left;
   }
   function unary() {
-    if (isOp('-')) { i++; return node({ op: 'sub', left: node({ op: 'num', value: fixedToNumber(0n) }), right: unary() }); }
+    if (isOp('-')) { i++; return node({ op: T.rx_op.sub, left: node({ op: T.rx_op.num, value: fixedToNumber(0n) }), right: unary() }); }
     return primary();
   }
   function args() {
@@ -92,30 +102,30 @@ function parse(text, profile, scope) {
   }
   function primary() {
     const t = peek();
-    if (t.k === 'num') { i++; return node({ op: 'num', value: fixedToNumber(fixedUnits(t.v)) }); }
+    if (t.k === TOK.num) { i++; return node({ op: T.rx_op.num, value: fixedToNumber(fixedUnits(t.v)) }); }
     if (isOp('(')) { i++; const e = orExpr(); take(')'); return e; }
-    if (t.k !== 'name') fail(`unexpected ${t.v || t.k}`);
+    if (t.k !== TOK.name) fail(`unexpected ${t.v || t.k}`);
     i++;
     if (isOp('(')) return call(t.v, args());
     return resolveName(t.v, profile, scope, node);
   }
   function call(name, list) {
-    const handleOf = (n) => (n.op === 'handle' ? n.value : fail(`${name} needs a handle argument`));
-    if (name === 'member') {
+    const handleOf = (n) => (n.op === T.rx_op.handle ? n.value : fail(`${name} needs a handle argument`));
+    if (name === T.rx_op.member) {
       const [item, set, ...rest] = list;
       if (!set || rest.length) fail('member(item, set) takes two arguments');
-      return node({ op: 'member', item, set });
+      return node({ op: T.rx_op.member, item, set });
     }
-    if (name === 'agg') {
+    if (name === T.rx_op.agg) {
       const [fn, rel, dim, filter, ...rest] = list;
       if (!rel || rest.length) fail('agg(fn, rel[, dim[, filter]]) arity');
-      if (dim && dim.op !== 'dim') fail('agg dim argument must name a dimension');
-      return node({ op: 'agg', fn: handleOf(fn), rel: handleOf(rel), dim: dim ? dim.key : null, filter: filter || null });
+      if (dim && dim.op !== T.rx_op.dim) fail('agg dim argument must name a dimension');
+      return node({ op: T.rx_op.agg, fn: handleOf(fn), rel: handleOf(rel), dim: dim ? dim.key : null, filter: filter || null });
     }
     return fail(`unknown function ${name}`);
   }
   const tree = orExpr();
-  if (peek().k !== 'eof') fail(`trailing ${peek().v}`);
+  if (peek().k !== TOK.eof) fail(`trailing ${peek().v}`);
   return tree;
 }
 
@@ -128,64 +138,64 @@ function resolveName(name, profile, scope, node) {
   });
   if (nsRow) {
     const arg = segs.slice(nsRow.ns.split('.').length);
-    return node(arg.length ? { op: 'ns', ns: nsRow.ns, arg } : { op: 'ns', ns: nsRow.ns });
+    return node(arg.length ? { op: T.rx_op.ns, ns: nsRow.ns, arg } : { op: T.rx_op.ns, ns: nsRow.ns });
   }
   const [head, field, ...more] = segs;
-  if (head === 'clock' && field !== undefined && !more.length) {
+  if (head === T.rx_op.clock && field !== undefined && !more.length) {
     if (!CLOCK_FIELDS.has(field)) fail(`clock field ${field}`);
-    return node({ op: 'clock', field });
+    return node({ op: T.rx_op.clock, field });
   }
-  if (scope.dims && scope.dims.has(name)) return node({ op: 'dim', key: name });
-  if (scope.vocabIndex && scope.vocabIndex.has(name)) return node({ op: 'handle', value: name });
+  if (scope.dims && scope.dims.has(name)) return node({ op: T.rx_op.dim, key: name });
+  if (scope.vocabIndex && scope.vocabIndex.has(name)) return node({ op: T.rx_op.handle, value: name });
   if (segs.length > 1) return fail(`unregistered namespace in ${name}`, 'E-RX-NS-UNKNOWN');
   return fail(`unknown name ${name}`);
 }
 
 // RX 类型规则（§2.9 第 4 条第 1–3 点）：编译期能定的都在编译期核。
 function typeOf(n, scope) {
-  const want = (sub, ...types) => { const t = typeOf(sub, scope); if (t !== 'runtime' && !types.includes(t)) fail(`${n.op} operand is ${t}, needs ${types.join('/')}`); return t; };
+  const want = (sub, ...types) => { const t = typeOf(sub, scope); if (t !== T.rx_kind.runtime && !types.includes(t)) fail(`${n.op} operand is ${t}, needs ${types.join('/')}`); return t; };
   switch (n.op) {
-    case 'num': return 'number';
-    case 'handle': return 'handle';
-    case 'dim': return dimRxType(scope.dims.get(n.key), n.key);
-    case 'clock': return n.field === 'day' ? 'number' : 'handle';
-    case 'ns': {
+    case T.rx_op.num: return 'number';
+    case T.rx_op.handle: return 'handle';
+    case T.rx_op.dim: return dimRxType(scope.dims.get(n.key), n.key);
+    case T.rx_op.clock: return n.field === T.code_enum.rx_clock.day ? 'number' : 'handle';
+    case T.rx_op.ns: {
       const row = scope.ns.find((r) => r.ns === n.ns);
       const argc = (n.arg || []).length;
       const want = nsArgCount(row);
       if (argc !== want) fail(`namespace ${n.ns} takes ${want} segments, got ${argc}`);
       // 登记形状里写明的 set 型字段：这种读法不是读数，只许作 member 的 set（§2.9 第 4 条第 1 点）。
       if (argc === 1 && nsSetFields(row).has(n.arg[0])) return 'set';
-      return row.type === 'field' ? 'runtime' : row.type;
+      return row.type === ROW_TYPE_FIELD ? T.rx_kind.runtime : row.type;
     }
-    case 'add': case 'sub': case 'mul': case 'div':
+    case T.rx_op.add: case T.rx_op.sub: case T.rx_op.mul: case T.rx_op.div:
       want(n.left, 'number'); want(n.right, 'number'); return 'number';
-    case 'cmp': {
-      if (n.cmpOp === 'eq' || n.cmpOp === 'ne') {
+    case T.rx_op.cmp: {
+      if (n.cmpOp === T.code_enum.rx_cmp.eq || n.cmpOp === T.code_enum.rx_cmp.ne) {
         const a = typeOf(n.left, scope); const b = typeOf(n.right, scope);
-        if (a === 'set' || b === 'set') fail('a set field is only a member set, not a value');
-        if (a !== 'runtime' && b !== 'runtime' && !sameKind(a, b)) fail(`cannot compare ${a} with ${b}`);
+        if (a === T.rx_kind.set || b === T.rx_kind.set) fail('a set field is only a member set, not a value');
+        if (a !== T.rx_kind.runtime && b !== T.rx_kind.runtime && !sameKind(a, b)) fail(`cannot compare ${a} with ${b}`);
         return 'boolean';
       }
       want(n.left, 'number'); want(n.right, 'number'); return 'boolean';
     }
-    case 'and': case 'or': n.items.forEach((x) => want(x, 'boolean')); return 'boolean';
-    case 'not': want(n.item, 'boolean'); return 'boolean';
-    case 'member':
+    case T.rx_op.and: case T.rx_op.or: n.items.forEach((x) => want(x, 'boolean')); return 'boolean';
+    case T.rx_op.not: want(n.item, 'boolean'); return 'boolean';
+    case T.rx_op.member:
       want(n.item, 'code', 'handle', 'codeOrHandle');
       // set 读 set 型维度，或读已登记命名空间里一个登记为 set 型的字段（§2.9 第 4 条第 1 点）；别的一律编译失败。
-      if (n.set.op === 'ns') { if (typeOf(n.set, scope) !== 'set') fail('member set must read a set dimension or a registered set field'); }
-      else if (n.set.op !== 'dim' || dimRxType(scope.dims.get(n.set.key), n.set.key, true) !== 'set') fail('member set must read a set dimension');
+      if (n.set.op === T.rx_op.ns) { if (typeOf(n.set, scope) !== T.rx_kind.set) fail('member set must read a set dimension or a registered set field'); }
+      else if (n.set.op !== T.rx_op.dim || dimRxType(scope.dims.get(n.set.key), n.set.key, true) !== T.rx_kind.set) fail('member set must read a set dimension');
       return 'boolean';
-    case 'agg': {
+    case T.rx_op.agg: {
       if (n.filter) want(n.filter, 'boolean');
       const fam = scope.vocabIndex.get(n.fn);
-      if (!fam || fam.family !== 'aggregate') fail(`agg fn ${n.fn} is not an aggregate handle`);
+      if (!fam || fam.family !== FAMILY.aggregate) fail(`agg fn ${n.fn} is not an aggregate handle`);
       const rel = scope.vocabIndex.get(n.rel);
-      if (!rel || rel.family !== 'relation') fail(`agg rel ${n.rel} is not a relation handle`);
+      if (!rel || rel.family !== FAMILY.relation) fail(`agg rel ${n.rel} is not a relation handle`);
       const prim = n.fn.slice(fam.prefix.length);
-      if (prim === 'exists') return 'boolean';
-      if (prim === 'count') return 'number';
+      if (prim === AGG_PRIM.exists) return 'boolean';
+      if (prim === AGG_PRIM.count) return 'number';
       return n.dim ? dimRxType(scope.dims.get(n.dim), n.dim) : 'number';
     }
     default: return fail(`unknown variant ${n.op}`);
@@ -196,13 +206,13 @@ function typeOf(n, scope) {
 // 无返回形状（推不出）即登记行违反第 1 点，按 §2.9 第 4 条第 3 点报 E-RX-NS-UNKNOWN，不取默认值。
 /** @param {{ns: string, shape: string}} row 命名空间登记行 @returns {number} */
 export const nsArgCount = (row) => {
-  if (!row || typeof row.shape !== 'string') return fail(`namespace row ${row && row.ns} has no return shape`, 'E-RX-NS-UNKNOWN');
+  if (!row || typeof row.shape !== T.js_type.string) return fail(`namespace row ${row && row.ns} has no return shape`, 'E-RX-NS-UNKNOWN');
   return shapeArgCount(row.shape);
 };
 // 返回形状里写明"（set，只作 member 的 set）"的字段名：`<字段>（set，只作 member 的 set）`，由登记行判，不按命名空间名特判。
 /** @param {{ns: string, shape: string}} row 命名空间登记行 @returns {Set<string>} */
 export const nsSetFields = (row) => new Set(setFieldNames(row.shape));
-const sameKind =(a, b) => a === b || (a === 'codeOrHandle' && (b === 'code' || b === 'handle')) || (b === 'codeOrHandle' && (a === 'code' || a === 'handle'));
+const sameKind =(a, b) => a === b || (a === T.rx_kind.codeOrHandle && (b === T.rx_kind.code || b === T.rx_kind.handle)) || (b === T.rx_kind.codeOrHandle && (a === T.rx_kind.code || a === T.rx_kind.handle));
 
 // 维度类型 → RX 读数类型（第 1 点 dim 一项）；set 只许作 member 的 set。
 /** @param {Record<string, unknown>} def 维度类型定义 @param {string} key 维度键 @param {boolean} [allowSet] */
@@ -210,11 +220,11 @@ export function dimRxType(def, key, allowSet = false) {
   if (!def) return fail(`unknown dimension ${key}`);
   if (def.ambiguous) return fail(`dimension ${key} has different types in different tables`);
   const t = def.type;
-  if (t === 'number' || t === 'integer') return 'number';
-  if (t === 'boolean') return 'boolean';
-  if (t === 'enum') return 'handle';
-  if (t === 'set' && allowSet) return 'set';
-  if (t === 'ref') {
+  if (t === T.type.number || t === T.type.integer) return 'number';
+  if (t === T.type.boolean) return 'boolean';
+  if (t === T.type.enum) return 'handle';
+  if (t === T.type.set && allowSet) return 'set';
+  if (t === T.type.ref) {
     const parts = def.refs || [def];
     const kinds = parts.filter((p) => p.kind || p.kinds).length;
     if (kinds === parts.length) return 'code';
@@ -225,12 +235,12 @@ export function dimRxType(def, key, allowSet = false) {
 }
 
 function depthOf(n) {
-  const kids = [n.left, n.right, n.item, n.set, n.filter, ...(n.items || [])].filter((x) => x && typeof x === 'object');
+  const kids = [n.left, n.right, n.item, n.set, n.filter, ...(n.items || [])].filter((x) => x && typeof x === T.js_type.object);
   return 1 + kids.reduce((m, k) => Math.max(m, depthOf(k)), 0);
 }
 
 function deepFreeze(v) {
-  if (v && typeof v === 'object') { Object.values(v).forEach(deepFreeze); Object.freeze(v); }
+  if (v && typeof v === T.js_type.object) { Object.values(v).forEach(deepFreeze); Object.freeze(v); }
   return v;
 }
 
@@ -239,7 +249,7 @@ function deepFreeze(v) {
 // 记 docs/问题.md。P-2：数据档由 kernel/validate 在加载期经 compileRXInScope 编；显示档未做。两种调用这里都报 E-MOD-RX。
 /** @param {unknown} text 表达式树 @param {string} profile 编译档 */
 export function compileRX(text, profile) {
-  if (profile === 'data') return fail('data profile is compiled at load time by kernel/validate (compileRXInScope)');
+  if (profile === PROFILE.data) return fail('data profile is compiled at load time by kernel/validate (compileRXInScope)');
   return fail(`profile ${profile} not available (P-2 builds the data profile only)`);
 }
 
@@ -256,12 +266,12 @@ export function compileRXInScope(text, profile, scope) {
     if (e instanceof FixedError) fail(e.message);
     throw e;
   }
-  if (typeOf(tree, scope) === 'set') fail('a set field is only a member set, not a value');
+  if (typeOf(tree, scope) === T.rx_kind.set) fail('a set field is only a member set, not a value');
   if (!(depthOf(tree) <= scope.maxDepth)) fail(`depth exceeds ${scope.maxDepth}`);
   const nsRefs = [];
   const walk = (n) => {
-    if (!n || typeof n !== 'object') return;
-    if (n.op === 'ns') nsRefs.push(nsKey(n));
+    if (!n || typeof n !== T.js_type.object) return;
+    if (n.op === T.rx_op.ns) nsRefs.push(nsKey(n));
     [n.left, n.right, n.item, n.set, n.filter, ...(n.items || [])].forEach(walk);
   };
   walk(tree);
@@ -275,14 +285,14 @@ export const nsKey = (n) => (n.arg ? [n.ns, ...n.arg].join('.') : n.ns);
 // bindings：{dim: {<维度键>: 值}, clock: {day, season}}；nsReads：{<命名空间读数键>: 值}（键 = 代号与 arg 以点相连）。
 // 数值一律按定点算（§3.3），结果按 JS 数交回。读数缺即求值失败（E-MOD-RX）。
 
-const own = (o, k) => o !== null && typeof o === 'object' && Object.hasOwn(o, k);
+const own = (o, k) => o !== null && typeof o === T.js_type.object && Object.hasOwn(o, k);
 // 缺读数的求值失败带上缺的读数键（RxError.key），让调用方分清"该键是已知的没有"与"该键未知"。
 const missing = (message, key) => { const e = new RxError(message); e.key = key; throw e; };
 
 function readValue(v) {
-  if (typeof v === 'number') return { t: 'number', v: fixedUnits(v) };
-  if (typeof v === 'boolean') return { t: 'boolean', v };
-  if (typeof v === 'string') return { t: 'code', v };
+  if (typeof v === T.js_type.number) return { t: 'number', v: fixedUnits(v) };
+  if (typeof v === T.js_type.boolean) return { t: 'boolean', v };
+  if (typeof v === T.js_type.string) return { t: 'code', v };
   // 只有四种读数类型（§2.9 第 4 条 :1174），没有第五种：显式 null（"没有"，§1.6 :254）由调用方按字段定义处的含义处理，不交进求值器。
   return fail('binding value must be a number, boolean or code');
 }
@@ -295,31 +305,31 @@ function readValue(v) {
 export function evaluateRX(tree, bindings, nsReads) {
   const run = (n) => {
     switch (n.op) {
-      case 'num': return { t: 'number', v: fixedUnits(n.value) };
-      case 'handle': return { t: 'code', v: n.value };
-      case 'dim': return own(bindings && bindings.dim, n.key) ? readValue(bindings.dim[n.key]) : missing(`no binding for dimension ${n.key}`, n.key);
-      case 'clock': return own(bindings && bindings.clock, n.field) ? readValue(bindings.clock[n.field]) : fail(`no clock ${n.field}`);
-      case 'ns': { const k = nsKey(n); return own(nsReads, k) ? readValue(nsReads[k]) : missing(`no namespace read ${k}`, k); }
-      case 'add': return { t: 'number', v: fixedAdd(num(n.left), num(n.right)) };
-      case 'sub': return { t: 'number', v: fixedSub(num(n.left), num(n.right)) };
-      case 'mul': return { t: 'number', v: fixedMultiply(num(n.left), num(n.right)) };
-      case 'div': return { t: 'number', v: fixedDivide(num(n.left), num(n.right)) };
-      case 'cmp': {
+      case T.rx_op.num: return { t: 'number', v: fixedUnits(n.value) };
+      case T.rx_op.handle: return { t: 'code', v: n.value };
+      case T.rx_op.dim: return own(bindings && bindings.dim, n.key) ? readValue(bindings.dim[n.key]) : missing(`no binding for dimension ${n.key}`, n.key);
+      case T.rx_op.clock: return own(bindings && bindings.clock, n.field) ? readValue(bindings.clock[n.field]) : fail(`no clock ${n.field}`);
+      case T.rx_op.ns: { const k = nsKey(n); return own(nsReads, k) ? readValue(nsReads[k]) : missing(`no namespace read ${k}`, k); }
+      case T.rx_op.add: return { t: 'number', v: fixedAdd(num(n.left), num(n.right)) };
+      case T.rx_op.sub: return { t: 'number', v: fixedSub(num(n.left), num(n.right)) };
+      case T.rx_op.mul: return { t: 'number', v: fixedMultiply(num(n.left), num(n.right)) };
+      case T.rx_op.div: return { t: 'number', v: fixedDivide(num(n.left), num(n.right)) };
+      case T.rx_op.cmp: {
         const a = run(n.left); const b = run(n.right);
-        if (n.cmpOp === 'eq' || n.cmpOp === 'ne') {
+        if (n.cmpOp === T.code_enum.rx_cmp.eq || n.cmpOp === T.code_enum.rx_cmp.ne) {
           if (a.t !== b.t) fail('eq/ne operands differ in type');
-          return { t: 'boolean', v: (a.v === b.v) === (n.cmpOp === 'eq') };
+          return { t: 'boolean', v: (a.v === b.v) === (n.cmpOp === T.code_enum.rx_cmp.eq) };
         }
-        if (a.t !== 'number' || b.t !== 'number') fail('ordering needs numbers');
+        if (a.t !== T.rx_kind.number || b.t !== T.rx_kind.number) fail('ordering needs numbers');
         const r = { lt: a.v < b.v, le: a.v <= b.v, gt: a.v > b.v, ge: a.v >= b.v }[n.cmpOp];
         return { t: 'boolean', v: r };
       }
-      case 'and': return { t: 'boolean', v: n.items.every((x) => bool(x)) };
-      case 'or': return { t: 'boolean', v: n.items.some((x) => bool(x)) };
-      case 'not': return { t: 'boolean', v: !bool(n.item) };
-      case 'member': {
+      case T.rx_op.and: return { t: 'boolean', v: n.items.every((x) => bool(x)) };
+      case T.rx_op.or: return { t: 'boolean', v: n.items.some((x) => bool(x)) };
+      case T.rx_op.not: return { t: 'boolean', v: !bool(n.item) };
+      case T.rx_op.member: {
         const item = run(n.item);
-        const k = n.set.op === 'ns' ? nsKey(n.set) : null;
+        const k = n.set.op === T.rx_op.ns ? nsKey(n.set) : null;
         const set = k !== null ? (own(nsReads, k) ? nsReads[k] : missing(`no namespace read ${k}`, k))
           : own(bindings && bindings.dim, n.set.key) ? bindings.dim[n.set.key] : missing(`no binding for dimension ${n.set.key}`, n.set.key);
         if (!Array.isArray(set)) fail('member set binding must be a list');
@@ -328,11 +338,11 @@ export function evaluateRX(tree, bindings, nsReads) {
       default: return fail(`variant ${n.op} has no evaluation source in P-2`);
     }
   };
-  const num = (n) => { const r = run(n); return r.t === 'number' ? r.v : fail('number expected'); };
-  const bool = (n) => { const r = run(n); return r.t === 'boolean' ? r.v : fail('boolean expected'); };
+  const num = (n) => { const r = run(n); return r.t === T.rx_kind.number ? r.v : fail('number expected'); };
+  const bool = (n) => { const r = run(n); return r.t === T.rx_kind.boolean ? r.v : fail('boolean expected'); };
   try {
     const r = run(tree);
-    return r.t === 'number' ? fixedToNumber(r.v) : r.v;
+    return r.t === T.rx_kind.number ? fixedToNumber(r.v) : r.v;
   } catch (e) {
     if (e instanceof FixedError) fail(e.message);
     throw e;
