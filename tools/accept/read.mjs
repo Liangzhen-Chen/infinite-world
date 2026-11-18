@@ -227,11 +227,20 @@ export function facilityFiles(ctx, codes) {
 }
 
 // 代码指纹：按路径排序，各文件取词法 token 序列（去注释、空白与行号）摘要；判定逻辑不变的排版改动不改指纹（S12-13）。
+// 词法数值可能是 BigInt（`10n`，见 js-scan 的 numValue），JSON.stringify 不能直接序列化：统一写成 {"$bigint":"<十进制>"}。
+// 普通 token 的值没有对象形态、token 字段也没有 $bigint，所以同值同指纹、且与数值、普通字串（含形似上述标记的字串）都不撞；
+// 不含 BigInt 的输入走同一路径，序列化结果逐字与定此写法之前相同。
+function tokenJson(k, v) {
+  if (k === 'line' || k === 'nl') return undefined;
+  if (typeof v === 'bigint') return { $bigint: v.toString() };
+  return v;
+}
+
 export function codePrint(ctx, files) {
   const h = createHash('sha256');
   for (const f of [...files].sort()) {
     h.update(f + '\0');
-    h.update(JSON.stringify(tokenize(ctx.read(f)), (k, v) => (k === 'line' || k === 'nl' ? undefined : v)));
+    h.update(JSON.stringify(tokenize(ctx.read(f)), tokenJson));
     h.update('\n');
   }
   return h.digest('hex');

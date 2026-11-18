@@ -8,9 +8,8 @@
 // （卷二 §3.7）与 `stock.*`（卷二 :1290 收卷五 §2.3 的 stock.growthFactor、stock.lossPerDay）三个命名空间。
 // 键集从被查内容里的登记数据读（R12-1.7、R12-1.2 同法）：维度表 kind 的 dimensions、表头 capabilities、
 // derived-process.json 的 slots；代码里不列键。
-// 键形与类型核对照 kernel/handles/keys.mjs:18 的 DIM_KEY_RE 与 :66-73 的 modKeyOf（modifiable + 数值类型 + map 须带下标）写在这里：
-// 不 import keys.mjs，因为其 import 闭包含 BigInt 字面量（kernel/det-math.mjs），classPrint 的 JSON.stringify 序列化不了 BigInt，
-// 补 read.mjs 又会让全部扫描类重算判据指纹（S12-13），read.mjs 不在本卡所有权内。下标是否属于该 map 的键集不在此核对（只判键形）。
+// 键形与类型核直接调 kernel/handles/keys.mjs：文法是其 :18 的 DIM_KEY_RE（经 :80 的 parseDimKey 拆键），
+// 判定是其 :66 的 modKeyOf（modifiable + 数值类型 + map 须带下标）；本文件不自备键形正则与判定。
 // 未覆盖：stock.* 的键集登记在卷五 §2.3，被查内容里没有对应的数据登记（未找到）；S8 保持 registered（不虚报）。
 // 范围：params.groups（模块组键，R12-11.5）、params.facs、params.modules（read.mjs scopeFiles）。计数落在产生值的地方：定义处一次，
 // 引用处不重计；从范围外文件 import 来的常量计在 import 处。
@@ -18,10 +17,7 @@
 
 import { tokenize, foldAt, minPrecAt, canStartAt, buildEnv, importsOf, specifierIndexes, symbolPaths, constDecls, conditionSpans, BRANCH_OPS } from '../lib/js-scan.mjs';
 import { scopeFiles, resolveRel, isCode, LAYOUT, REGISTRY } from '../read.mjs';
-
-// 与 kernel/handles/keys.mjs:18 的 DIM_KEY_RE 同文法；数值类型集合同 :20 的 NUMERIC。
-const MOD_KEY_RE = /^([a-z][a-z0-9_]{1,47})\.([a-z][a-zA-Z0-9]{0,47})(?:\[([^[\]]+)\])?$/;
-const NUMERIC_TYPES = ['number', 'integer'];
+import { parseDimKey, modKeyOf } from '../../../server-plugin/kernel/handles/keys.mjs';
 
 const JUDGES = {
   selfName: (ctx) => {
@@ -56,23 +52,17 @@ const JUDGES = {
   },
 };
 
-// 一条字串是不是修正键：键形合 MOD_KEY_RE，kind 的该维度已登记、modifiable:true，值类型或 map 的值类型是 number/integer，
-// map 维度必须带下标、非 map 维度不带（与 keys.mjs 的 modKeyOf 同口径）。
+// 一条字串是不是修正键：交给 keys.mjs 的同两个函数判——parseDimKey 按文法拆键并查维度登记与 map 下标，
+// modKeyOf 再判 modifiable、数值类型与 map 须带下标；任一抛 HandleError 即不是修正键。
 function isModifierKey(reg, text) {
-  const m = MOD_KEY_RE.exec(text);
-  if (!m) return false;
-  const [, kind, dimension, sub] = m;
-  const dims = reg.tableDims.get(kind);
-  const def = dims && Object.hasOwn(dims, dimension) ? dims[dimension] : undefined;
-  if (!def || def.modifiable !== true) return false;
-  const valueType = def.type === 'map' ? (def.value || {}).type : def.type;
-  if (!NUMERIC_TYPES.includes(valueType)) return false;
-  return def.type === 'map' ? sub !== undefined : sub === undefined;
+  let key;
+  try { key = parseDimKey(reg, text); } catch { return false; }
+  try { modKeyOf(reg, key.kind, key.dimension, key.sub); return true; } catch { return false; }
 }
 
 // 修正键的登记表（keys.mjs 的 KeyRegistry 形态）：kind → 该维度表表头的 dimensions；表头 capabilities 段按卷二 §3.6
 // 注册为 body.<capability>；derived-process.json 的 slots 按卷二 §3.7 注册为 process.<slot>（槽是数值修正键）。
-// idIndex（行键即实例 id）与 vocabIndex 按 KeyRegistry 形态备着；本判定只判键形与类型，不核对下标属于哪个键集。
+// idIndex（行键即实例 id）与 vocabIndex 由 keys.mjs 的 subKeyOk 用来核对代号下标。
 function modifierRegistry(ctx) {
   const tableDims = new Map();
   const idIndex = new Map();

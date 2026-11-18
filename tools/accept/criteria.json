@@ -18,10 +18,14 @@
     {
      "ref": "门禁新类别实现卡只核改：V-11 退回 registered（提交钩子只调 accRun、不写执行记录，当次上升在提交关口拦不住，与 R12-8.4“提交关口上即拒”不符；照 master 写回 state，不经状态转移）；baselineMonotone 判定代码保留，本类别无已实现条目，用例 baseline_monotone-01/11 记 not_run",
      "rev": 4
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 5
     }
    ],
-   "print": "feb9c1fdc34630b9b7c33261e40a0c50930baff128f94651a8d3ffce214c62ca",
-   "rev": 4,
+   "print": "c7124c14521bfe3ccf87a661b78ec370603be45deda4fa0b755d1e72bfc83492",
+   "rev": 5,
    "scanClass": "baseline_monotone",
    "source": "卷一 V-11（I43）；卷十二 §2.5、E-ACC-BASELINE-UP；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -60,10 +64,14 @@
     {
      "ref": "门禁新类别实现卡只核改：lit_scope 的 modifierKey 改按修正键键形 `<kind>.<dimension>[<key>]` 与数值类型判（卷二 §3.1 :1290；键形与类型照 kernel/handles/keys.mjs 的 DIM_KEY_RE 与 modKeyOf，该模块不能直接 import：其 import 闭包含 BigInt，classPrint 序列化不了，理由见 lit_scope.mjs 注释），裸维度名不报；另纳入 body.<capability>、process.<slot>；本类别判定口径不变",
      "rev": 6
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 7
     }
    ],
-   "print": "5f78aa6e9fc488ad1285a8bdec82d0265d611777088975c0a605a250909c91b8",
-   "rev": 6,
+   "print": "5ef0b4f36faf0a2e1733a610fc9a513376a756a3700ff1839d96ced0dc84d146",
+   "rev": 7,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -85,10 +93,14 @@
     {
      "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
      "rev": 2
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 3
     }
    ],
-   "print": "019c0f47b2a637cd8684006c733353c11aa8243b6897730d1761e3d99f0fabf7",
-   "rev": 2,
+   "print": "4bad3f873b97632e8b7345b60341066e0ad810b5a6e5873205d9171e01a1b3a3",
+   "rev": 3,
    "scanClass": "crit_version",
    "terms": {
     "vol12.S12-13": {
@@ -107,10 +119,14 @@
     {
      "ref": "块 2 第 2-3 张初版：path_access write 方式，按声明表 stateKeys.writers（最具体模式优先）核对 writeEntries 调用的 P 成员路径与所在文件，直接改 state 成员链计 E-VIEW-BYPASS；分量按状态顶层键派生 c_write_<键>",
      "rev": 1
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 2
     }
    ],
-   "print": "b113a9b6b8b17db75728d35d809b4e3e9c2beb905c2e42ed671d69aefbd42b11",
-   "rev": 1,
+   "print": "1144a496c8087359e64597bb721f37a44a0d921a95acf12417ccbb57a849ecd1",
+   "rev": 2,
    "scanClass": "cross_write",
    "source": "卷十二 R12-3.1–3.4；卷二 §2.6、§2.7、S5",
    "terms": {
@@ -146,10 +162,14 @@
     {
      "ref": "块 2 第 2-3 张初版：path_access display 方式，显示集合取声明表 stateKeys.<键>.display 与 textPaths（R12-2.10），state 成员链落在其上即 E-VIEW-DISPLAY-READ；labels 读者（E-VIEW-LABEL-READ）未判",
      "rev": 1
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 2
     }
    ],
-   "print": "b113a9b6b8b17db75728d35d809b4e3e9c2beb905c2e42ed671d69aefbd42b11",
-   "rev": 1,
+   "print": "1144a496c8087359e64597bb721f37a44a0d921a95acf12417ccbb57a849ecd1",
+   "rev": 2,
    "scanClass": "display_read",
    "source": "卷十二 R12-2.10；卷二 S7",
    "terms": {
@@ -169,10 +189,14 @@
     {
      "ref": "块 2 第 2-3 张登记类别（P1-32）；声明表一模式一写者由合并器加载期报 E-WRITER-DUPLICATE（kernel/load/state-owners.mjs），实现侧两处写入的扫描随首个挂此类别的条目实现",
      "rev": 1
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 2
     }
    ],
-   "print": "dafcae0b4721ac557b0df5a0e121798b488ca42d5d2501c3990e80405cd67b19",
-   "rev": 1,
+   "print": "fb3f253600275bc57fa6737b807f4a828d619a7c8d8bcb85f84403df4eaf002d",
+   "rev": 2,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -195,10 +219,14 @@
     {
      "ref": "块 2 第 2-3 张只核改：共用的 typed_pos 补判 bareCompare 的补洞写法（本类别只用 directive、anyType、assertCast，判定口径不变）；§2.8 代表性反例补进用例 escape_hatch-05 至 09，原用例仍报出",
      "rev": 2
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 3
     }
    ],
-   "print": "a0289221d61c4309408b545b9076b16638fd4eb899780809de504c292383c8a9",
-   "rev": 2,
+   "print": "1378b30fcd8517fbc47e74e88efe2f2c76bc4e13852192220e5fd532370edf72",
+   "rev": 3,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -229,10 +257,14 @@
     {
      "ref": "门禁新类别实现卡：共用的 ledger_count 加 baselineMonotone 判定（V-11）；本类别判定口径不变",
      "rev": 4
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 5
     }
    ],
-   "print": "feb9c1fdc34630b9b7c33261e40a0c50930baff128f94651a8d3ffce214c62ca",
-   "rev": 4,
+   "print": "c7124c14521bfe3ccf87a661b78ec370603be45deda4fa0b755d1e72bfc83492",
+   "rev": 5,
    "scanClass": "ext_code",
    "terms": {
     "vol12.S12-12": {
@@ -259,10 +291,14 @@
     {
      "ref": "块 2 第 2-3 张只核改：共用的 typed_pos 补判 bareCompare 的补洞写法（本类别条目仍 registered，未用其检查项）；本类别判定口径不变",
      "rev": 3
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 4
     }
    ],
-   "print": "07e876e930ad8b061b58c5ab6b0a90a02074ca064b46c0442e9ed5bd6ec48c72",
-   "rev": 3,
+   "print": "0d0cc90b7b0bd86bcefab4c79b0b8b95e85e73948e5ba63fa03e6ac0423f52ec",
+   "rev": 4,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -313,10 +349,14 @@
     {
      "ref": "门禁新类别实现卡只核改：删去编造的出处（`world/ontology/derived-fields.json` 是 I10 存档派生黑名单，卷一 R-6、卷十二 R12-4.6 都没提）；判据只照卷一 R-6 第 5 条与卷十二 R12-4.6 原句写，其余派生字段名单未找到；判定口径未变，条目 vol1.V-9.b 仍 registered",
      "rev": 3
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 4
     }
    ],
-   "print": "246ea5401a19d5a41749e83ac7c6d1bf79b7861c13f01eacdfd8eeecc821c36a",
-   "rev": 3,
+   "print": "48c214f8b48bbccf9a0641a6dd3893d1f6a17774950739751c14e74f625b6fcc",
+   "rev": 4,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -344,10 +384,14 @@
     {
      "ref": "块 2 第 2-3 张只核改：共用的 typed_pos 补判 bareCompare 的补洞写法（本类别条目仍 registered，未用其检查项）；本类别判定口径不变",
      "rev": 3
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 4
     }
    ],
-   "print": "07e876e930ad8b061b58c5ab6b0a90a02074ca064b46c0442e9ed5bd6ec48c72",
-   "rev": 3,
+   "print": "0d0cc90b7b0bd86bcefab4c79b0b8b95e85e73948e5ba63fa03e6ac0423f52ec",
+   "rev": 4,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -402,10 +446,14 @@
     {
      "ref": "门禁新类别实现卡只核改：modifierKey 改按卷二 §3.1 :1290 的键形 `<kind>.<dimension>[<key>]` 与数值类型判（键形与类型照 kernel/handles/keys.mjs 的 DIM_KEY_RE 与 modKeyOf，该模块不能直接 import：其 import 闭包含 BigInt，classPrint 序列化不了），裸维度名、非数值维度不报；stock.* 键集登记在卷五 §2.3、被查内容里没有对应数据登记（未找到），词表键的 map 下标取不到，判不全；S8 照 master 写回 registered（不经状态转移），撤回上一轮为 S8 加的 instance_name-07/12 两行用例（该类别已无 modifierKey 可跑条目，留着 must_fail 会造成误报回归）",
      "rev": 8
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 9
     }
    ],
-   "print": "b58c89736f18483e2b449bed019eadf49ef44a08a4649de4b2635573e7b52fbf",
-   "rev": 8,
+   "print": "e492e26c6d324b5c4bc1b082f29a015fbccfab582e98acffae42d8feb1ffeaa5",
+   "rev": 9,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -451,10 +499,14 @@
     {
      "ref": "门禁新类别实现卡：共用的 ledger_count 加 baselineMonotone 判定（V-11）；本类别判定口径不变",
      "rev": 4
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 5
     }
    ],
-   "print": "feb9c1fdc34630b9b7c33261e40a0c50930baff128f94651a8d3ffce214c62ca",
-   "rev": 4,
+   "print": "c7124c14521bfe3ccf87a661b78ec370603be45deda4fa0b755d1e72bfc83492",
+   "rev": 5,
    "scanClass": "item_downgrade",
    "terms": {
     "vol12.S12-16": {
@@ -484,10 +536,14 @@
     {
      "ref": "api-s1216（李白 11-17 S12-16 裁定第 2 条）：item-form 对没有 scanClass 的条目核 rev、revisions 形式，对 part、parts 核拆行形式；原有判定口径不变",
      "rev": 4
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 5
     }
    ],
-   "print": "246ea5401a19d5a41749e83ac7c6d1bf79b7861c13f01eacdfd8eeecc821c36a",
-   "rev": 4,
+   "print": "48c214f8b48bbccf9a0641a6dd3893d1f6a17774950739751c14e74f625b6fcc",
+   "rev": 5,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -525,10 +581,14 @@
     {
      "ref": "api-s1216（李白 11-17 S12-3 三类问题裁定第 2、3 条）：按原条目计——跨两类拆 a/b 行的原条目，各行 parts 列的每一部分都有行才算已登记，计数按原条目不按行；定义处用删除线 ~~ 起首的作废条不计入；新增 must_fail 用例与 must_pass 用例各一",
      "rev": 6
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 7
     }
    ],
-   "print": "708c1ca4f0c8471504804595cbceb34dacafd3f297148bd1ca5aa245114433b2",
-   "rev": 6,
+   "print": "8633293c9af3fd4c08df0bd4596a1682fb3c36ba025a78615922a59bbea5970b",
+   "rev": 7,
    "scanClass": "item_ledger",
    "terms": {
     "vol12.S12-3": {
@@ -551,10 +611,14 @@
     {
      "ref": "门禁新类别实现卡：共用的 ledger_count 模块有改动（加 baselineMonotone 判定）；本类别判据仍未实现（逐条的汇总来源未登记，A12-n.1 里还有三类来源以外的比较），判定口径不变，14 条条目留 registered，等李白裁定",
      "rev": 2
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 3
     }
    ],
-   "print": "feb9c1fdc34630b9b7c33261e40a0c50930baff128f94651a8d3ffce214c62ca",
-   "rev": 2,
+   "print": "c7124c14521bfe3ccf87a661b78ec370603be45deda4fa0b755d1e72bfc83492",
+   "rev": 3,
    "scanClass": "ledger_tally",
    "source": "卷十二 §4.1.6 至 §4.14.6 A12-n.1；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -758,10 +822,14 @@
     {
      "ref": "块 2 第 2-3 张：共用的 path_access 加 write、display 两种方式与派生分量（新 lib/js-state.mjs）；本类别条目不用这两种方式，read、branch 判定口径不变；新增 V-24.b、V-25.b、V-29.b、V-31.b、S19.b 五行（import_edge，参数同 S16 的码）",
      "rev": 15
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 16
     }
    ],
-   "print": "ece6796af1ec800ce0bf4b95313ccf43f864d4b129520443f16463a9c6c6b6f1",
-   "rev": 15,
+   "print": "38a40c391b5082185121ca2cc8c200beac667f7b0fd899a42d9fe6a8987a95a2",
+   "rev": 16,
    "scanClass": "module_edge",
    "terms": {
     "vol1.V-24.b": {
@@ -839,10 +907,14 @@
     {
      "ref": "api-s1216：共用的 item-form 加非扫描式条目修订记录与拆行的形式核对；本类别判定口径不变",
      "rev": 4
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 5
     }
    ],
-   "print": "246ea5401a19d5a41749e83ac7c6d1bf79b7861c13f01eacdfd8eeecc821c36a",
-   "rev": 4,
+   "print": "48c214f8b48bbccf9a0641a6dd3893d1f6a17774950739751c14e74f625b6fcc",
+   "rev": 5,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -912,10 +984,14 @@
     {
      "ref": "门禁新类别实现卡只核改：lit_scope 的 modifierKey 改按修正键键形与数值类型判（卷二 §3.1 :1290），裸维度名不报；本类别判定口径不变",
      "rev": 14
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 15
     }
    ],
-   "print": "65f3c540db335bb5be988ad769e2ce04866e3545e6fa106b4345a857bcdfd999",
-   "rev": 14,
+   "print": "671e1e279916e0459a674dc474b96c7528e9bf42e1b6cfb6fd7d4eb496a88932",
+   "rev": 15,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -977,10 +1053,14 @@
     {
      "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
      "rev": 12
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 13
     }
    ],
-   "print": "c26664c9b16a1f6432b3ad4e029173b4360e55f9702f9f4a44e23096f6f79b47",
-   "rev": 12,
+   "print": "7ac601260da3169f82f45f9e3749a57a6d7be51c3e99f34a565e67ba23227a8c",
+   "rev": 13,
    "scanClass": "rng_bypass",
    "terms": {}
   },
@@ -997,10 +1077,14 @@
     {
      "ref": "b21fin：read.mjs 声明文件（.d.ts/.d.mts/.d.cts）不算模块文件、不展开进代码扩展名匹配；本类别判定口径不变",
      "rev": 3
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 4
     }
    ],
-   "print": "f0c4c24afdad070e7f0f535682b70d45ebff7d26799e33a169e137f238b46c2e",
-   "rev": 3,
+   "print": "689d1719976dac3b407264052e8e3173b34571389de77a5518c372576ab36955",
+   "rev": 4,
    "scanClass": "rules_import",
    "terms": {
     "vol1.V-9": {
@@ -1030,10 +1114,14 @@
     {
      "ref": "门禁新类别实现卡只核改：lit_scope 的 modifierKey 改按修正键键形与数值类型判（卷二 §3.1 :1290），裸维度名不报；本类别判定口径不变",
      "rev": 4
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 5
     }
    ],
-   "print": "5f78aa6e9fc488ad1285a8bdec82d0265d611777088975c0a605a250909c91b8",
-   "rev": 4,
+   "print": "5ef0b4f36faf0a2e1733a610fc9a513376a756a3700ff1839d96ced0dc84d146",
+   "rev": 5,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -1056,10 +1144,14 @@
     {
      "ref": "块 2 第 2-3 张只核改（R12-14.5 补漏报）：typed_pos 的 bareCompare 补判卷二 S13 补洞②③ 与 §2.8 代表性反例里词法可判的整类写法——常量折叠为字串的别名参与比较、族前缀（以 _ 结尾的代号前缀）字串与模板拼接、String.fromCharCode、句柄根（类别行 handleRoots）的计算属性访问、模板串作下标、对象或数组字面量立即下标或取成员、new Map 的字串键与 new Set 的字串元素；§2.8 代表性正反例表与 S13 反例照录进用例集（text_judge-21 至 48）；其中要 tsc 才能判的（S13 ②、族不符、无法归因、`??` 填充，用例 41 至 48）现有检测器报不出，按 R12-11.7 本类别全部条目退回 registered（V-2.a、V-20、V-23、V-24.a、V-25.a、V-29.a、V-31.a、S2、S3.a、S18、S19.a），expect、stage、gates 不动；原有 must_fail 用例仍报出，真实仓库零命中不变",
      "rev": 2
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 3
     }
    ],
-   "print": "07e876e930ad8b061b58c5ab6b0a90a02074ca064b46c0442e9ed5bd6ec48c72",
-   "rev": 2,
+   "print": "0d0cc90b7b0bd86bcefab4c79b0b8b95e85e73948e5ba63fa03e6ac0423f52ec",
+   "rev": 3,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -1167,10 +1259,14 @@
     {
      "ref": "块 2 第 2-3 张初版：decl_cmp dynamicState（state 计算属性、展开、Object.keys 等枚举、for…in）；inputs（declareInputs 叶子核对）待 2-5 建 declareInputs",
      "rev": 1
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 2
     }
    ],
-   "print": "9a7f846c092caa2f11d3fac6743de556a8b8595c59da85ef44eab012f309c074",
-   "rev": 1,
+   "print": "5549260b2e3cf71b5241e44ab1695e4335e6cad44892606b16f6569546c01da8",
+   "rev": 2,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -1209,10 +1305,14 @@
     {
      "ref": "块 2 第 2-3 张：共用的 path_access 加 write、display 两种方式与派生分量（新 lib/js-state.mjs）；本类别用 branch 方式，判定口径不变",
      "rev": 4
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 5
     }
    ],
-   "print": "b113a9b6b8b17db75728d35d809b4e3e9c2beb905c2e42ed671d69aefbd42b11",
-   "rev": 4,
+   "print": "1144a496c8087359e64597bb721f37a44a0d921a95acf12417ccbb57a849ecd1",
+   "rev": 5,
    "scanClass": "version_fork",
    "terms": {
     "vol1.V-17": {
@@ -1282,10 +1382,14 @@
     {
      "ref": "块 2 第 2-3 张只核改：共用的 typed_pos 补判 bareCompare 的补洞写法（本类别条目只用 call_edge）；本类别判定口径不变",
      "rev": 14
+    },
+    {
+     "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
+     "rev": 15
     }
    ],
-   "print": "6e998d4e299714dc2be7562b5a1b62b5bbc2724f951f98e369a67834fbe2e68f",
-   "rev": 14,
+   "print": "286071322ca791ef4d433441f6b5d034599ba7d209c6ed17a6944f5857a64f55",
+   "rev": 15,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {
