@@ -59,6 +59,11 @@ export const PATH_TYPE_EXTRAS = Object.freeze(['EventId', 'dimension', 'sealed']
 // 按所读字段取四种之一；登记数据 state-owners.json 的 rxNamespaces 行把它记作 field）。
 export const NS_ROW_TYPES = Object.freeze(['field']);
 
+// 入账腿 lot 的键集记号 attrs / splitFrom：卷三乙 post 批次腿的协议字段（块 3-2 实现定）。
+// 卷文待回补：卷三乙 post 批次腿字段（主会话另派勘误）；卷二、卷六、卷三乙现行卷文未找到这两个键名作批次腿键集的定义。
+// 定义源只此一份，kernel/ledger.mjs 引用（S13 ④，李白 11-18 13:05 裁定第 2 条）。
+export const LOT_LEG_KEYS = Object.freeze(['attrs', 'splitFrom']);
+
 // 语言自身的协议键（不是协议标记）：then 给 thenable 探测、toJSON 给 JSON 序列化，其余是对象自带成员名。
 const MARKER_PROTOCOL_KEYS = Object.freeze({ 'then': true, 'toJSON': true, 'constructor': true, 'prototype': true, 'toString': true, 'valueOf': true, 'hasOwnProperty': true, 'is': true, 'family': true });
 
@@ -105,4 +110,5 @@ export const T = Object.freeze({
   rx_kind: markersOf('rx_kind', RX_KINDS),
   path_type_extra: markersOf('path_type_extra', PATH_TYPE_EXTRAS),
   ns_row_type: markersOf('ns_row_type', NS_ROW_TYPES),
+  lot_leg_key: markersOf('lot_leg_key', LOT_LEG_KEYS),
 });

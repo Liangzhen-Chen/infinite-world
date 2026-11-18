@@ -172,10 +172,14 @@
     {
      "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 29
+    },
+    {
+     "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 30
     }
    ],
-   "print": "778c774e754d724593973ffa2b6b41e723dbdeef4d52220531aa07094b9340da",
-   "rev": 29,
+   "print": "7f4c4bb66002e2ee937d443b8701470ffc74228db7f0c8803bb37b06e7f81769",
+   "rev": 30,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -401,10 +405,14 @@
     {
      "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 18
+    },
+    {
+     "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 19
     }
    ],
-   "print": "befbbf5fdd830c37cffc270e8c82e09cafd5cc1646dced7ef2367180b1c342f0",
-   "rev": 18,
+   "print": "8d1cb3fc7bb616e74a09837d16282aa6336c0430679b6ea43f353659aa9707fb",
+   "rev": 19,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -637,10 +645,14 @@
     {
      "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 19
+    },
+    {
+     "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 20
     }
    ],
-   "print": "c71d09a3e4938ce75ca94fe629383ffad2a01bdc40dfac57e7bb89e47a404cec",
-   "rev": 19,
+   "print": "3dae3bcb17bf6ced5c29ac68e02ba70c5a5d7bcd142133a3ed63aaf32e9f1e33",
+   "rev": 20,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -838,10 +850,14 @@
     {
      "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 35
+    },
+    {
+     "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 36
     }
    ],
-   "print": "fa08f8b88150f31675f4da6a3c7fab5d75ab86ea87cac979de1dcf7e228394ce",
-   "rev": 35,
+   "print": "1cc6019056e8f38a27163f4ab4a8a08975b84071f097d1d03cd17d17a27a9a47",
+   "rev": 36,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1020,10 +1036,14 @@
     {
      "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 20
+    },
+    {
+     "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "c71d09a3e4938ce75ca94fe629383ffad2a01bdc40dfac57e7bb89e47a404cec",
-   "rev": 20,
+   "print": "3dae3bcb17bf6ced5c29ac68e02ba70c5a5d7bcd142133a3ed63aaf32e9f1e33",
+   "rev": 21,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1503,10 +1523,14 @@
     {
      "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 20
+    },
+    {
+     "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "c71d09a3e4938ce75ca94fe629383ffad2a01bdc40dfac57e7bb89e47a404cec",
-   "rev": 20,
+   "print": "3dae3bcb17bf6ced5c29ac68e02ba70c5a5d7bcd142133a3ed63aaf32e9f1e33",
+   "rev": 21,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -1569,10 +1593,14 @@
     {
      "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 12
+    },
+    {
+     "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 13
     }
    ],
-   "print": "abc4b049600c5a030c98c98d56fc668a53b37557c3c25f0cbd160062466af611",
-   "rev": 12,
+   "print": "1f192d978282f48c477d12f3e4b033072ba7cc692e90cbd2aa7a53e2292e8c01",
+   "rev": 13,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -1739,10 +1767,14 @@
     {
      "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 38
+    },
+    {
+     "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 39
     }
    ],
-   "print": "50d9632088ffb883644d9d54de4bbeb4826bd851a4cc87fd736fbc8f959177cc",
-   "rev": 38,
+   "print": "1e68376767f43b8bda54a1643358b0099b2c05af5c873589d337efea436966ba",
+   "rev": 39,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1961,10 +1993,14 @@
     {
      "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 27
+    },
+    {
+     "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 28
     }
    ],
-   "print": "778c774e754d724593973ffa2b6b41e723dbdeef4d52220531aa07094b9340da",
-   "rev": 27,
+   "print": "7f4c4bb66002e2ee937d443b8701470ffc74228db7f0c8803bb37b06e7f81769",
+   "rev": 28,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -2178,10 +2214,14 @@
     {
      "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 14
+    },
+    {
+     "ref": "B2-W4 第二步二十一（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：ledger 入账腿 lot 键集 attrs/splitFrom 定义源收进 handles/markers.mjs、project 改引 SCHEMA.project；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 15
     }
    ],
-   "print": "abc4b049600c5a030c98c98d56fc668a53b37557c3c25f0cbd160062466af611",
-   "rev": 14,
+   "print": "1f192d978282f48c477d12f3e4b033072ba7cc692e90cbd2aa7a53e2292e8c01",
+   "rev": 15,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

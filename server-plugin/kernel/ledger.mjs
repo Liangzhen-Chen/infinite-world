@@ -24,16 +24,16 @@ import { dim } from './dimensions.mjs';
 import { clockView } from './scheduler.mjs';
 import { readView } from './view-registry.mjs';
 import { buildE } from './handles/generated.mjs';
+import { T } from './handles/markers.mjs';
 
 const E = buildE();
 // 三元键与登记行的字段名（卷二 §2.7 路径段、卷六 §2.5 :224 账本行 {day,used}、§3.1 :? 账户过滤字段）：定义源只写一份，比较处引用。
 const RESOURCE_KEY_FIELDS = ['key', 'kind'];
 const DAY_USED_FIELDS = ['day', 'used'];
 const ACCOUNT_FILTER_FIELDS = ['family', 'purpose'];
-// 入账腿 lot 的三种键集写法：{attrs}、{splitFrom}、{project, splitFrom}（物品类的资源键是批次，卷六 §2.1 :104；批次属性归卷三乙 §4.4。
-// 这三个字面键名在卷二、卷六、卷三乙未找到定义，是 kernel 入账腿契约）。单一定义源，比较处引用成员（S13 ④，李白 11-18 13:05 裁定第 2 条）。
-const LOT_KEYS = Object.freeze({ attrs: 'attrs', splitFrom: 'splitFrom', project: 'project' });
-const LOT_KEY_SHAPES = Object.freeze([LOT_KEYS.attrs, LOT_KEYS.splitFrom, `${LOT_KEYS.project},${LOT_KEYS.splitFrom}`]);
+// 入账腿 lot 的三种键集写法：{attrs}、{splitFrom}、{project, splitFrom}（物品类的资源键是批次，卷六 §2.1 :104；批次属性归卷三乙 §4.4）。
+// attrs、splitFrom 是 post 批次腿的协议字段，定义源在 kernel/handles/markers.mjs 的 T.lot_leg_key（卷文待回补：卷三乙 post 批次腿字段（主会话另派勘误））；
+// project 引用本文件的 SCHEMA.project（卷三乙 §2.3 :280）。单一定义源，比较处引用成员（S13 ④，李白 11-18 13:05 裁定第 2 条）。
 // 路径模式的空段（卷二 §2.7 writers 写法："" = 整个键）。
 const PATH = Object.freeze({ empty: '' });
 
@@ -84,6 +84,10 @@ export const SCHEMA = Object.freeze({
   docFields: Object.freeze(['basis', 'grade']),
   grades: Object.freeze(['designed', 'measured', 'referenced']),
 });
+
+// 入账腿 lot 的键集（定义源见本文件顶部注释）：成员只引用 markers 的 T.lot_leg_key 与 SCHEMA.project，不另写字面键名。
+const LOT_KEYS = Object.freeze({ attrs: T.lot_leg_key.attrs, splitFrom: T.lot_leg_key.splitFrom, project: SCHEMA.project });
+const LOT_KEY_SHAPES = Object.freeze([LOT_KEYS.attrs, LOT_KEYS.splitFrom, `${LOT_KEYS.project},${LOT_KEYS.splitFrom}`]);
 
 // src / sink 条目字段（§2.2 :131–132，四字段每行必写；reportGroup 在 indicator 族上线前显式写 null，李白 11-18 02:20 K3-41）。
 const FLOW_FIELDS = Object.freeze(['budgetMode', 'families', 'pairedWith', 'reportGroup']);
