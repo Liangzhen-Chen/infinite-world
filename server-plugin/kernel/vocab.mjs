@@ -4,6 +4,7 @@
 
 import { clone } from './clone.mjs';
 import { handleOf, HandleError } from './handles/vocab-handle.mjs';
+import { T } from './handles/markers.mjs';
 
 /**
  * @typedef {{families: Map<string, {name: string, prefix: string, closed: boolean, entries: Record<string, any>}>, index: Map<string, {family: string, prefix: string, entry: any}>}} VocabIndex
@@ -14,7 +15,7 @@ import { handleOf, HandleError } from './handles/vocab-handle.mjs';
 let installed = null;
 
 const deepFreeze = (v) => {
-  if (v && typeof v === 'object' && !Object.isFrozen(v)) {
+  if (v && typeof v === T.js_type.object && !Object.isFrozen(v)) {
     Object.freeze(v);
     for (const k of Object.keys(v)) deepFreeze(v[k]);
   }
@@ -31,7 +32,7 @@ export function installVocab(report) {
   const kindIds = new Map();
   for (const [kind, t] of [...report.tables].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
     const doc = t.doc || {};
-    const entity = doc.entity && typeof doc.entity === 'object' ? doc.entity : {};
+    const entity = doc.entity && typeof doc.entity === T.js_type.object ? doc.entity : {};
     tableDims.set(kind, deepFreeze(clone(doc.dimensions || {})));
     kindIds.set(kind, deepFreeze({
       idPrefix: Array.isArray(entity.idPrefix) ? [...entity.idPrefix] : [],

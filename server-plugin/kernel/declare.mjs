@@ -6,6 +6,9 @@
 
 import { KernelError } from './errors.mjs';
 import { isDeclarableNode, isAnyNode } from './handles/keys.mjs';
+import { T } from './handles/markers.mjs';
+
+const SEG = Object.freeze({ empty: '' });
 
 // 可由代码声明的三类节点（:470）与加载器机器生成的两类（:470 末句）。
 
@@ -17,8 +20,8 @@ let declared = new Map();
 /** @type {null | Map<string, readonly string[]>} */
 let closures = null;
 
-const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
-const strList = (v) => Array.isArray(v) && v.every((x) => typeof x === 'string' && x !== '');
+const isObj = (v) => v !== null && typeof v === T.js_type.object && !Array.isArray(v);
+const strList = (v) => Array.isArray(v) && v.every((x) => typeof x === T.js_type.string && x !== SEG.empty);
 
 // own 的一项规整成一个依赖串（路径段以 `.` 相连；带 categories 的在后面附 `[cat,…]`），供闭包求并、排序与比对。
 function ownKey(item) {
@@ -48,7 +51,7 @@ export function declareInputs(node, decl) {
   const ownOk = Array.isArray(decl.own) && decl.own.every((o) => strList(o) || (isObj(o) && strList(o.path) && (o.categories === undefined || strList(o.categories))));
   if (!ownOk) throw badDecl(node, 'own must be a list of path segment lists or {path, categories}');
   if (!strList(decl.uses) || !decl.uses.every((u) => isAnyNode(u))) throw badDecl(node, 'uses must be a list of node names');
-  if (decl.foldsOverDays !== undefined && typeof decl.foldsOverDays !== 'boolean') throw badDecl(node, 'foldsOverDays must be boolean');
+  if (decl.foldsOverDays !== undefined && typeof decl.foldsOverDays !== T.js_type.boolean) throw badDecl(node, 'foldsOverDays must be boolean');
   if (declared.has(node)) throw new Error(`kernel/declare.mjs: declareInputs: ${node} declared twice`);
   declared.set(node, Object.freeze({
     impl: Object.freeze([...decl.impl]),
@@ -118,7 +121,7 @@ export function inputsBySystem(systems) {
   const out = new Map();
   for (const name of Object.keys(isObj(systems) ? systems : {}).sort()) {
     const s = systems[name];
-    const entries = [s && s.view, ...(s && Array.isArray(s.predicates) ? s.predicates : [])].filter((e) => typeof e === 'string' && e.includes('#'));
+    const entries = [s && s.view, ...(s && Array.isArray(s.predicates) ? s.predicates : [])].filter((e) => typeof e === T.js_type.string && e.includes('#'));
     const fns = new Set(entries.map((e) => e.slice(e.indexOf('#') + 1)));
     const inputs = {};
     for (const [node, d] of [...declared].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {

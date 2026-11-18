@@ -16,6 +16,7 @@ import { codeOf } from '../errors.mjs';
 import { checkLedgerTables, checkSubjectFlagDims } from '../ledger.mjs';
 import { checkClockTables, checkHookCadence, installScheduler } from '../scheduler.mjs';
 import { installFixedConstants } from '../det-math.mjs';
+import { T } from '../handles/markers.mjs';
 
 export const LAYOUT = Object.freeze({
   dimensionsDir: 'world/ontology/dimensions',
@@ -64,7 +65,7 @@ export function loadWorld(root, opts = {}) {
   // 声明表合并与核对（卷二 §2.7；state-owners.json 的 L0 语法错误一并报出）。
   const families = report.vocab && report.vocab.families ? [...report.vocab.families.keys()] : [];
   // 可终止实体类（卷二 §2.6 :516）：实体表的类别行写了 termination（整表一致由校验器另核）。
-  const terminableKinds = [...report.tables].filter(([, t]) => t.doc && t.doc.classes && typeof t.doc.classes === 'object' && Object.values(t.doc.classes).some((c) => c && typeof c === 'object' && c.termination !== undefined)).map(([k]) => k);
+  const terminableKinds = [...report.tables].filter(([, t]) => t.doc && t.doc.classes && typeof t.doc.classes === T.js_type.object && Object.values(t.doc.classes).some((c) => c && typeof c === T.js_type.object && c.termination !== undefined)).map(([k]) => k);
   const tableDims = new Map([...report.tables].map(([k, t]) => [k, t.doc && t.doc.dimensions ? t.doc.dimensions : {}]));
   const owners = mergeStateOwners(decl, { units: report.env.units, kinds: new Set(report.tables.keys()), families: new Set(families), terminableKinds, tableDims });
   // rules.clock 与 due_kind、reaction_priority 条目的加载校验（卷二十 §2.1；字段含义只在 kernel/scheduler.mjs 读）；
@@ -100,7 +101,7 @@ const MODIFIED_KEYS = Object.freeze(['modifiers', 'statuses']);
 function finalizeDeps(tables, systems) {
   const generated = new Map();
   for (const [kind, t] of tables) {
-    const entity = t.doc && t.doc.entity && typeof t.doc.entity === 'object' ? t.doc.entity : {};
+    const entity = t.doc && t.doc.entity && typeof t.doc.entity === T.js_type.object ? t.doc.entity : {};
     const prefixes = Array.isArray(entity.idPrefix) ? entity.idPrefix : [];
     generated.set(kind, { dim: { own: prefixes.map((p) => `created.${p}*.props`), uses: [] }, modified: { own: [...MODIFIED_KEYS], uses: [] } });
   }
@@ -109,7 +110,7 @@ function finalizeDeps(tables, systems) {
     finalizeInputs(generated);
     const bySystem = inputsBySystem(systems);
     const out = {};
-    for (const [name, s] of Object.entries(systems && typeof systems === 'object' ? systems : {})) out[name] = { ...s, inputs: bySystem.get(name) };
+    for (const [name, s] of Object.entries(systems && typeof systems === T.js_type.object ? systems : {})) out[name] = { ...s, inputs: bySystem.get(name) };
     return { errors: [], systems: out };
   } catch (e) {
     const code = codeOf(e);
