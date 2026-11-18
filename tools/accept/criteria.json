@@ -184,10 +184,14 @@
     {
      "ref": "B2-W4h 续：ledger.mjs、rx.mjs、validate/rows.mjs 的路径分隔符改引 markers.mjs 的 GRAMMAR_TOKENS 定义源，共用检测器的 import 闭包内容再变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 32
+    },
+    {
+     "ref": "卡头自查卡（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：error-codes.mjs 登 E-ACC-CARD-SELFCHECK 入检测器闭包，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 33
     }
    ],
-   "print": "c7d743eda31cc5a0347b698b76fb3d7e9f2dc84339d2b6dd3890bd369e1b0a54",
-   "rev": 32,
+   "print": "14bf633b7a9cfe682ea10bdcfd526653cdbe20911fd83fb52b2ecfc407ac9468",
+   "rev": 33,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -429,10 +433,14 @@
     {
      "ref": "B2-W4g 续（卷二 S13 ④）：validate/dimensions-validate.mjs 的类别族名与伪类 effect 改引 handles/markers.mjs 的 VOCAB_FAMILIES、ID_KINDS（比较处取 T.vocab_family.class、T.id_kind.effect），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 22
+    },
+    {
+     "ref": "卡头自查卡（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：error-codes.mjs 登 E-ACC-CARD-SELFCHECK 入检测器闭包，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "3bb087c4dce7643787d4e2a4c627a023fb69d81d40b9e4818bbb7f52d1187c22",
-   "rev": 22,
+   "print": "a25582d0676a194f4e4faaed7053024e179e7c890f105c1ee289eebdb4889cd1",
+   "rev": 23,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -697,10 +705,14 @@
     {
      "ref": "B2-W4g 续（卷二 S13 ④）：validate/dimensions-validate.mjs 的类别族名与伪类 effect 改引 handles/markers.mjs 的 VOCAB_FAMILIES、ID_KINDS（比较处取 T.vocab_family.class、T.id_kind.effect），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 23
+    },
+    {
+     "ref": "卡头自查卡（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：error-codes.mjs 登 E-ACC-CARD-SELFCHECK 入检测器闭包，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 24
     }
    ],
-   "print": "ecb54245319f1a661863d02f7c53c0d39bcd93a1d92f6a21a356420628cc1525",
-   "rev": 23,
+   "print": "f2563800483be775e92ea104f9bba10568d00388ba73c57d320edefe7cbb55a2",
+   "rev": 24,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -922,10 +934,14 @@
     {
      "ref": "B2-W4g 续（卷二 S13 ④）：validate/dimensions-validate.mjs 的类别族名与伪类 effect 改引 handles/markers.mjs 的 VOCAB_FAMILIES、ID_KINDS（比较处取 T.vocab_family.class、T.id_kind.effect），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 39
+    },
+    {
+     "ref": "卡头自查卡（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：error-codes.mjs 登 E-ACC-CARD-SELFCHECK 入检测器闭包，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 40
     }
    ],
-   "print": "babdd0a83364633bebbd44089d48abb91968a464eb07a1a82166445acdf6db78",
-   "rev": 39,
+   "print": "4977332abed3e13ff848f04de8f13e99fe27e71640ab6f88aacc5eeb95ffe365",
+   "rev": 40,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1120,10 +1136,14 @@
     {
      "ref": "B2-W4g 续（卷二 S13 ④）：validate/dimensions-validate.mjs 的类别族名与伪类 effect 改引 handles/markers.mjs 的 VOCAB_FAMILIES、ID_KINDS（比较处取 T.vocab_family.class、T.id_kind.effect），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 24
+    },
+    {
+     "ref": "卡头自查卡（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：error-codes.mjs 登 E-ACC-CARD-SELFCHECK 入检测器闭包，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "ecb54245319f1a661863d02f7c53c0d39bcd93a1d92f6a21a356420628cc1525",
-   "rev": 24,
+   "print": "f2563800483be775e92ea104f9bba10568d00388ba73c57d320edefe7cbb55a2",
+   "rev": 25,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1619,10 +1639,14 @@
     {
      "ref": "B2-W4g 续（卷二 S13 ④）：validate/dimensions-validate.mjs 的类别族名与伪类 effect 改引 handles/markers.mjs 的 VOCAB_FAMILIES、ID_KINDS（比较处取 T.vocab_family.class、T.id_kind.effect），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 24
+    },
+    {
+     "ref": "卡头自查卡（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：error-codes.mjs 登 E-ACC-CARD-SELFCHECK 入检测器闭包，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "ecb54245319f1a661863d02f7c53c0d39bcd93a1d92f6a21a356420628cc1525",
-   "rev": 24,
+   "print": "f2563800483be775e92ea104f9bba10568d00388ba73c57d320edefe7cbb55a2",
+   "rev": 25,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -1701,10 +1725,14 @@
     {
      "ref": "B2-W4g 续（卷二 S13 ④）：validate/dimensions-validate.mjs 的类别族名与伪类 effect 改引 handles/markers.mjs 的 VOCAB_FAMILIES、ID_KINDS（比较处取 T.vocab_family.class、T.id_kind.effect），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 16
+    },
+    {
+     "ref": "卡头自查卡（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：error-codes.mjs 登 E-ACC-CARD-SELFCHECK 入检测器闭包，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 17
     }
    ],
-   "print": "f3c7042038399f6f41e5f527846d1bed776dbaef936414a808094dce0c6abbc2",
-   "rev": 16,
+   "print": "3b7d3b7a3ecf7ba9d9c0c788a4a793adc8772494bec3d1d41c404ee4db392cf6",
+   "rev": 17,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -1883,10 +1911,14 @@
     {
      "ref": "B2-W4h 续：ledger.mjs、rx.mjs、validate/rows.mjs 的路径分隔符改引 markers.mjs 的 GRAMMAR_TOKENS 定义源，共用检测器的 import 闭包内容再变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 41
+    },
+    {
+     "ref": "卡头自查卡（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：error-codes.mjs 登 E-ACC-CARD-SELFCHECK 入检测器闭包，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 42
     }
    ],
-   "print": "15be08679617d9a937210426009e09e250806565e8eaf93fbf34457ce01df754",
-   "rev": 41,
+   "print": "0f6baab67e3e9c6af11883942028b7ebd1fb27e315f4d51fa9472b33c94f208c",
+   "rev": 42,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -2014,10 +2046,14 @@
     {
      "ref": "B4-G 检测器落地（主会话只核必须改第 1、4 项）：建 tools/accept/detectors/seed_sites.mjs——登记表↔源码双向比对（R27-8.1 :717）与 role_seed 查重、非空前缀（R27-8.4 :720），判据代码闭包变化升 rev 2、盖指纹；扫描类别行加 seedTable 规则表代号；条目 vol27.A27-8.1.b/c 转 implemented（R12-11.7 :1110）",
      "rev": 2
+    },
+    {
+     "ref": "卡头自查卡（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：error-codes.mjs 登 E-ACC-CARD-SELFCHECK 入检测器闭包，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 3
     }
    ],
-   "print": "747f228fab41b6048cc8612500347b9cc481a977cdae873922aebdcac3e5a5f0",
-   "rev": 2,
+   "print": "ae40e6b1e52feb46f4f205d225e3261ef349f401cfbacb3698e2d9ec6e40d7d9",
+   "rev": 3,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -2159,10 +2195,14 @@
     {
      "ref": "B2-W4h 续：ledger.mjs、rx.mjs、validate/rows.mjs 的路径分隔符改引 markers.mjs 的 GRAMMAR_TOKENS 定义源，共用检测器的 import 闭包内容再变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 30
+    },
+    {
+     "ref": "卡头自查卡（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：error-codes.mjs 登 E-ACC-CARD-SELFCHECK 入检测器闭包，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 31
     }
    ],
-   "print": "c7d743eda31cc5a0347b698b76fb3d7e9f2dc84339d2b6dd3890bd369e1b0a54",
-   "rev": 30,
+   "print": "14bf633b7a9cfe682ea10bdcfd526653cdbe20911fd83fb52b2ecfc407ac9468",
+   "rev": 31,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -2400,10 +2440,14 @@
     {
      "ref": "B2-W4g 续（卷二 S13 ④）：validate/dimensions-validate.mjs 的类别族名与伪类 effect 改引 handles/markers.mjs 的 VOCAB_FAMILIES、ID_KINDS（比较处取 T.vocab_family.class、T.id_kind.effect），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 18
+    },
+    {
+     "ref": "卡头自查卡（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：error-codes.mjs 登 E-ACC-CARD-SELFCHECK 入检测器闭包，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 19
     }
    ],
-   "print": "f3c7042038399f6f41e5f527846d1bed776dbaef936414a808094dce0c6abbc2",
-   "rev": 18,
+   "print": "3b7d3b7a3ecf7ba9d9c0c788a4a793adc8772494bec3d1d41c404ee4db392cf6",
+   "rev": 19,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

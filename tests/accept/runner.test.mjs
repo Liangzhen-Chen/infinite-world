@@ -248,13 +248,16 @@ test('绕法用例回归：结果与极性不符即 E-ACC-BYPASS-REGRESSION，�
 });
 
 test('提交钩子：新树放行（退出码 0），有违例拒绝（退出码 1）', () => {
-  const ok = spawnSync(process.execPath, [HOOK], { cwd: ROOT, encoding: 'utf8' });
+  // 本测试跑的是执行器关口；卡头自查（DND_CARD_AGENT=1）另有 tests/accept/card-selfcheck.test.mjs。
+  // 派卡子代理的壳里跑全量测试时环境带着 DND_CARD_AGENT=1，这里显式按主会话跑，别把两条检查混在一起。
+  const MAIN_ENV = { ...process.env, DND_CARD_AGENT: '' };
+  const ok = spawnSync(process.execPath, [HOOK], { cwd: ROOT, encoding: 'utf8', env: MAIN_ENV });
   assert.equal(ok.status, 0, ok.stderr);
   const dir = tempRepo();
   try {
     mkdirSync(join(dir, 'server-plugin/kernel'), { recursive: true });
     writeFileSync(join(dir, 'server-plugin/kernel/k.mjs'), "import { r } from '../rules.mjs';\nexport const r2 = r;\n");
-    const no = spawnSync(process.execPath, [HOOK, '--root', dir], { encoding: 'utf8' });
+    const no = spawnSync(process.execPath, [HOOK, '--root', dir], { encoding: 'utf8', env: MAIN_ENV });
     assert.equal(no.status, 1);
     assert.match(no.stderr, /vol2\.S16 E-KERNEL-UPWARD-IMPORT/);
     // 干净的临时仓库：只被必过集合里方法是测试的条目拒（它们的测试文件 import 内核与世界数据，临时仓库不带，见 temp-repo.mjs），
@@ -266,7 +269,7 @@ test('提交钩子：新树放行（退出码 0），有违例拒绝（退出码
     const keysOf = (stderr) => stderr.split('\n').filter((l) => l.startsWith('  ')).map((l) => l.trim().split(' ')[0]).filter((k) => core.has(k)).sort();
     const clean = tempRepo();
     try {
-      const c = spawnSync(process.execPath, [HOOK, '--root', clean], { encoding: 'utf8' });
+      const c = spawnSync(process.execPath, [HOOK, '--root', clean], { encoding: 'utf8', env: MAIN_ENV });
       assert.deepEqual(keysOf(c.stderr), testCore);
       assert.ok(testCore.length > 0);
     } finally { rmSync(clean, { recursive: true, force: true }); }
