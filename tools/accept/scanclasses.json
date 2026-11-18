@@ -130,8 +130,11 @@
     "lit_scope",
     "data_shape"
    ],
+   "ruleTableDirs": [
+    "world/rules/tables/economy"
+   ],
    "scanClass": "instance_name",
-   "source": "卷一 R-4；卷二 S1；卷十二 §2.4"
+   "source": "卷一 R-4；卷二 S1；卷十二 §2.4；ruleTableDirs 照卷六 §2.5 :218 本卷规则表路径（S6-2 的 data_shape 一支读它）"
   },
   {
    "detectors": [

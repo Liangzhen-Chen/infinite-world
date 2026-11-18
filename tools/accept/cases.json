@@ -379,6 +379,35 @@
   },
   {
    "addedAtRev": 1,
+   "caseKey": "instance_name-21",
+   "expectCode": "E-ACC-INSTANCE-NAME",
+   "fixture": "tests/accept/bypass/instance_name-21.txt",
+   "group": "rules",
+   "origin": "卷六 S6-2：经济规则表的键为实体 id；李白 11-18 07:27 裁定①",
+   "polarity": "must_fail",
+   "scanClass": "instance_name"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "instance_name-22",
+   "expectCode": "E-ACC-INSTANCE-NAME",
+   "fixture": "tests/accept/bypass/instance_name-22.txt",
+   "group": "rules",
+   "origin": "卷六 S6-2：经济规则表的值为实体 id（单例 id 也算）；李白 11-18 07:27 裁定①",
+   "polarity": "must_fail",
+   "scanClass": "instance_name"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "instance_name-31",
+   "fixture": "tests/accept/bypass/instance_name-31.txt",
+   "group": "rules",
+   "origin": "卷六 S6-2：规则表键只许词表代号或固定键名；前缀不带下划线、前缀在中段的字串不算实体 id",
+   "polarity": "must_pass",
+   "scanClass": "instance_name"
+  },
+  {
+   "addedAtRev": 1,
    "caseKey": "item_downgrade-01",
    "expectCode": "E-ACC-ITEM-DOWNGRADE",
    "fixture": "tests/accept/bypass/item_downgrade-01.txt",

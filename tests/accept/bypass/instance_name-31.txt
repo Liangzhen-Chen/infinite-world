@@ -1,0 +1,4 @@
+// 规则层本身干净；经济规则表的键值都是词表代号、固定键名或普通文字
+export const x = 1;
+// @file world/rules/tables/economy/fx.json
+{"rows": [{"key": "res_x", "value": {"family": "resfam_asset", "note": "fxa without underscore and pre_fxa_ mid", "sources": ["src_genesis"]}}]}

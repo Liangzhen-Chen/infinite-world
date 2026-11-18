@@ -12,6 +12,7 @@
    "localNo": "V-1",
    "method": "static_code",
    "params": {
+    "code": "E-ACC-INSTANCE-NAME",
     "groups": [
      "rules",
      "kernel",
@@ -2461,6 +2462,7 @@
    "localNo": "S1",
    "method": "static_code",
    "params": {
+    "code": "E-ACC-INSTANCE-NAME",
     "groups": [
      "rules",
      "kernel",
@@ -3045,6 +3047,9 @@
    "itemKey": "vol2.S8",
    "localNo": "S8",
    "method": "static_code",
+   "params": {
+    "code": "E-ACC-INSTANCE-NAME"
+   },
    "runsOn": "local_static",
    "scanClass": "instance_name",
    "source": "卷二 §7 S8（修正键字面量）；S12-3 转录",
@@ -3384,6 +3389,71 @@
    "stage": 0,
    "state": "implemented",
    "target": "runtime_code",
+   "volume": "vol6",
+   "zeroRows": []
+  },
+  {
+   "detector": "lit_scope",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol6.S6-2.a",
+   "localNo": "S6-2",
+   "method": "static_code",
+   "params": {
+    "code": "E-ACC-INSTANCE-NAME",
+    "groups": [
+     "rules"
+    ],
+    "literal": "entityPrefix"
+   },
+   "part": "a",
+   "parts": [
+    "a",
+    "b"
+   ],
+   "runsOn": "local_static",
+   "scanClass": "instance_name",
+   "source": "卷六 §3.5 S6-2（:325）规则层实体 id 字面量计数为 0；卷十二 §2.12 :540 E-ACC-INSTANCE-NAME；李白 11-18 07:27 裁定①；拆 a/b 照 S12-3 裁定第 2 条",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol6",
+   "zeroRows": []
+  },
+  {
+   "detector": "data_shape",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/data_shape.mjs",
+   "itemKey": "vol6.S6-2.b",
+   "localNo": "S6-2",
+   "method": "static_data",
+   "params": {
+    "checks": [
+     "entityKey"
+    ],
+    "code": "E-ACC-INSTANCE-NAME"
+   },
+   "part": "b",
+   "parts": [
+    "a",
+    "b"
+   ],
+   "runsOn": "local_static",
+   "scanClass": "instance_name",
+   "source": "卷六 §3.5 S6-2（:325）本卷规则表（§2.5 :218 路径 world/rules/tables/economy/）键与值不得为实体 id；卷十二 §2.12 :540；李白 11-18 07:27 裁定①；规则表目录登在 instance_name 类别行 ruleTableDirs",
+   "stage": 0,
+   "state": "implemented",
+   "target": "data",
    "volume": "vol6",
    "zeroRows": []
   },

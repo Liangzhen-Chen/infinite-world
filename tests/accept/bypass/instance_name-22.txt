@@ -1,0 +1,4 @@
+// 规则层本身干净；经济规则表里有一个值是单例实体 id
+export const x = 1;
+// @file world/rules/tables/economy/fx.json
+{"rows": [{"key": "res_x", "value": {"sources": ["src_genesis", "fxsolo"]}}]}

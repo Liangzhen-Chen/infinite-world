@@ -120,10 +120,14 @@
     {
      "ref": "门禁错误码登记两码 E-ACC-TEST-FAIL、E-ACC-REQUIRED-NOT-RUN（卷十二 §2.12 勘误 1118k14；李白 11-18 06:41）：error-codes.mjs 入检测器闭包，指纹重盖，判定口径不变",
      "rev": 16
+    },
+    {
+     "ref": "块 3 第 3-3b 张（李白 11-18 07:27 裁定①）：error-codes.mjs 登 E-ACC-INSTANCE-NAME 入检测器闭包，指纹重盖，本类别判定口径不变",
+     "rev": 17
     }
    ],
-   "print": "c913f79caf48b1f637133e29167e417a4eec3e70ab588afa915442dac43c0145",
-   "rev": 16,
+   "print": "15ae3076226ed77d067ad6d95f04e41e2f889560025bfe2bf7543ef5951ba12f",
+   "rev": 17,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -297,10 +301,14 @@
     {
      "ref": "同卡续：path_access 派生文件存在性改对照真实仓库清单（执行器给用例夹具带 repoFiles），范围只取在本次文件集里的派生文件；本类别无条目用，判定口径不变",
      "rev": 5
+    },
+    {
+     "ref": "块 3 第 3-3b 张（李白 11-18 07:27 裁定①）：共用的 data_shape 加 entityKey 检查（S6-2 用）；本类别判定口径不变",
+     "rev": 6
     }
    ],
-   "print": "93b8dac827b128c7478ce14527361d14c4720fc5d36c0ee16dc88b0bbd09ad5e",
-   "rev": 5,
+   "print": "295f4518d8b2f0e779636a7bb78acdc602be4218bcc482fd4faac99a980c6f8a",
+   "rev": 6,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -481,10 +489,14 @@
     {
      "ref": "块 3 第 3-3 张第二部分续（Opus 只核必须改，李白 11-18）：共用 lib/item-form.mjs 参数键 readerSet、scopeSet 改 readerSystems、scopeSystems，keySets 加 systems；本类别判定口径不变",
      "rev": 6
+    },
+    {
+     "ref": "块 3 第 3-3b 张（李白 11-18 07:27 裁定①）：共用的 data_shape 加 entityKey 检查（S6-2 用）；本类别判定口径不变",
+     "rev": 7
     }
    ],
-   "print": "6995582f433b853aa44fa56d2c2bf201bdf3a8a0edf418529fa3905fd1822e12",
-   "rev": 6,
+   "print": "7b228cddf3f499352a62a8ae82c862fee66b812a1967d40651379a90aaeba7f3",
+   "rev": 7,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -622,10 +634,14 @@
     {
      "ref": "块 3 第 3-3 张第二部分续（Opus 只核必须改，李白 11-18）：共用 lib/item-form.mjs 参数键 readerSet、scopeSet 改 readerSystems、scopeSystems，keySets 加 systems；本类别判定口径不变",
      "rev": 20
+    },
+    {
+     "ref": "块 3 第 3-3b 张（李白 11-18 07:27 裁定①，卷六 S6-2；卷十二 §2.12 :540）：data_shape 加 entityKey 检查（规则表目录取类别行 ruleTableDirs，键/值带登记实体前缀或为单例 id 即报 params.code）、error-codes.mjs 登 E-ACC-INSTANCE-NAME；整类条目（V-1.a、S1、S8、新增 S6-2.a/.b）登码；原 lit_scope 判定口径不变",
+     "rev": 21
     }
    ],
-   "print": "253e704b55e37bcc11c2c6b3aa6a13918f85751d289746aa518ffde15edfba0d",
-   "rev": 20,
+   "print": "c8150b5bacf0bca26a2e0e32c72ab8122c011259ea358563573667367b3d4f3c",
+   "rev": 21,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -645,6 +661,22 @@
      "stage": 0
     },
     "vol2.S8": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol6.S6-2.a": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol6.S6-2.b": {
      "expect": "zero",
      "gates": [
       "pre_commit",
@@ -736,10 +768,14 @@
     {
      "ref": "块 3 第 3-3 张第二部分续（Opus 只核必须改，李白 11-18）：lib/item-form.mjs 参数键 readerSet、scopeSet 改 readerSystems、scopeSystems（须是声明表 systems 的键，keySets 加 systems），参数里列文件仍拒（item_form-02），原有核对口径不变",
      "rev": 7
+    },
+    {
+     "ref": "块 3 第 3-3b 张（李白 11-18 07:27 裁定①）：共用的 data_shape 加 entityKey 检查（S6-2 用）；本类别原有核对口径不变",
+     "rev": 8
     }
    ],
-   "print": "6995582f433b853aa44fa56d2c2bf201bdf3a8a0edf418529fa3905fd1822e12",
-   "rev": 7,
+   "print": "7b228cddf3f499352a62a8ae82c862fee66b812a1967d40651379a90aaeba7f3",
+   "rev": 8,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1167,10 +1203,14 @@
     {
      "ref": "块 3 第 3-3 张第二部分续（Opus 只核必须改，李白 11-18）：共用 lib/item-form.mjs 参数键 readerSet、scopeSet 改 readerSystems、scopeSystems，keySets 加 systems；本类别判定口径不变",
      "rev": 7
+    },
+    {
+     "ref": "块 3 第 3-3b 张（李白 11-18 07:27 裁定①）：共用的 data_shape 加 entityKey 检查（S6-2 用）；本类别判定口径不变",
+     "rev": 8
     }
    ],
-   "print": "6995582f433b853aa44fa56d2c2bf201bdf3a8a0edf418529fa3905fd1822e12",
-   "rev": 7,
+   "print": "7b228cddf3f499352a62a8ae82c862fee66b812a1967d40651379a90aaeba7f3",
+   "rev": 8,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -1284,10 +1324,14 @@
     {
      "ref": "块 3 第 3-3 张第二部分：共用的 call_edge 加 entries 方式（lib/api-callers.mjs）；本类别条目不带 entries，原 callees 判定口径不变",
      "rev": 25
+    },
+    {
+     "ref": "块 3 第 3-3b 张（李白 11-18 07:27 裁定①）：error-codes.mjs 登 E-ACC-INSTANCE-NAME 入检测器闭包，指纹重盖，本类别判定口径不变",
+     "rev": 26
     }
    ],
-   "print": "3b4226483cb914610618e356c7d1f9d7e97ddc784ad92dbba0fc6f45c290e111",
-   "rev": 25,
+   "print": "b21ddc6c7a5f3d85747b04ba76bcba1ef0e68acc84aa40c9b7dd3810b702f0a6",
+   "rev": 26,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1454,10 +1498,14 @@
     {
      "ref": "门禁错误码登记两码 E-ACC-TEST-FAIL、E-ACC-REQUIRED-NOT-RUN（卷十二 §2.12 勘误 1118k14；李白 11-18 06:41）：error-codes.mjs 入检测器闭包，指纹重盖，判定口径不变",
      "rev": 14
+    },
+    {
+     "ref": "块 3 第 3-3b 张（李白 11-18 07:27 裁定①）：error-codes.mjs 登 E-ACC-INSTANCE-NAME 入检测器闭包，指纹重盖，本类别判定口径不变",
+     "rev": 15
     }
    ],
-   "print": "c913f79caf48b1f637133e29167e417a4eec3e70ab588afa915442dac43c0145",
-   "rev": 14,
+   "print": "15ae3076226ed77d067ad6d95f04e41e2f889560025bfe2bf7543ef5951ba12f",
+   "rev": 15,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {

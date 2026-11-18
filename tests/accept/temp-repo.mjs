@@ -36,6 +36,10 @@ export function tempRepo() {
   cpSync(join(ROOT, 'server-plugin/kernel/files.json'), join(dir, 'server-plugin/kernel/files.json'));
   mkdirSync(join(dir, 'world/rules/tables'), { recursive: true });
   cpSync(join(ROOT, 'world/rules/tables/kernel-constants.json'), join(dir, 'world/rules/tables/kernel-constants.json'));
+  // 卷六 S6-2 的规则表一支（data_shape entityKey）：类别行 ruleTableDirs 的目录在仓库里须有表，否则 E-ACC-ITEM-PARAM；临时仓库带上真实经济规则表。
+  mkdirSync(join(dir, 'world/rules/tables/economy'), { recursive: true });
+  cpSync(join(ROOT, 'world/rules/tables/economy/resources.json'), join(dir, 'world/rules/tables/economy/resources.json'));
+  cpSync(join(ROOT, 'world/rules/tables/economy/ledger.json'), join(dir, 'world/rules/tables/economy/ledger.json'));
   cpSync(join(ROOT, 'tests/accept/bypass'), join(dir, 'tests/accept/bypass'), {
     recursive: true,
     filter: (src) => extname(src) === '' || extname(src) === '.txt' || extname(src) === '.json',

@@ -10,6 +10,8 @@ import { detect as importEdge } from '../../tools/accept/detectors/import_edge.m
 import { detect as pathAccess } from '../../tools/accept/detectors/path_access.mjs';
 import { detect as callEdge } from '../../tools/accept/detectors/call_edge.mjs';
 import { detect as docStruct, definedNumbers } from '../../tools/accept/detectors/doc_struct.mjs';
+import { detect as dataShape } from '../../tools/accept/detectors/data_shape.mjs';
+import { REGISTERED_CODES } from '../../server-plugin/kernel/error-codes.mjs';
 import { ENUM } from '../../tools/accept/lib/item-form.mjs';
 import { tempRepo } from './temp-repo.mjs';
 import { testTempRoot, writeUnderTempRoot, assertRelUnderTempRoot } from './temp-root.mjs';
@@ -490,4 +492,48 @@ test('离线路径段登记（裁定一）：gatefac 行登记 rootFns、segment
   // 没有 guardedPaths 的类别不检查路径段设施的必跑测试（修订记录称“判定口径不变”）。
   assert.deepEqual(CLS.wallclock.guardedPaths, undefined);
   assert.deepEqual(callEdge(broken, { ...params, callees: ['wallclock'] }, CLS.wallclock).filter((h) => h.nodeKind === 'test').map((h) => h.symbolPath).filter((s) => s === req.names[0]), []);
+});
+
+// ---------- instance_name 整类登码与 S6-2 规则表一支（卷六 S6-2；卷十二 §2.12 :540、:545；李白 11-18 07:27 裁定①） ----------
+
+const TBL = 'world/rules/tables/economy/fx.json';
+const KEYCHECK = { checks: ['entityKey'], code: 'E-ACC-INSTANCE-NAME' };
+const tableHits = (doc, extra = {}, cls = CLS.instance_name) => dataShape(ctxOf({ [TBL]: JSON.stringify(doc), ...extra }), KEYCHECK, cls);
+
+test('instance_name 整类登码：类别下每一条目（含 CORE 的 vol2.S1）都登 E-ACC-INSTANCE-NAME，且码在码表里', () => {
+  const own = readRegistry(ROOT, 'items').filter((it) => it.scanClass === 'instance_name');
+  assert.deepEqual(own.map((it) => it.itemKey).sort(), ['vol1.V-1.a', 'vol2.S1', 'vol2.S8', 'vol6.S6-2.a', 'vol6.S6-2.b']);
+  for (const it of own) assert.equal(it.params.code, 'E-ACC-INSTANCE-NAME', it.itemKey);
+  assert.ok(REGISTERED_CODES.has('E-ACC-INSTANCE-NAME'));
+  assert.equal(litScope(ctxOf({ 'server-plugin/a.mjs': "const a = 'fxa_oats';" }), { groups: RT, literal: 'entityPrefix', code: 'E-ACC-INSTANCE-NAME' }, CLS.instance_name)[0].code, 'E-ACC-INSTANCE-NAME');
+});
+
+test('S6-2 规则表一支：键是实体 id 报一条（nodeKind key），值是实体 id 或单例 id 各报一条（value），码取条目参数', () => {
+  const k = tableHits({ rows: [{ key: 'res_x', value: { fxa_oats: 1 } }] });
+  assert.deepEqual(k.map((h) => [h.file, h.nodeKind, h.symbolPath, h.code]), [[TBL, 'key', 'rows[].value', 'E-ACC-INSTANCE-NAME']]);
+  const v = tableHits({ rows: [{ key: 'res_x', value: { family: 'fxa_oats', sources: ['src_genesis', 'fxsolo'], cls: 'fxclass_a' } }] });
+  assert.deepEqual(v.map((h) => [h.nodeKind, h.symbolPath]), [['value', 'rows[].value.family'], ['value', 'rows[].value.sources[]'], ['value', 'rows[].value.cls']]);
+});
+
+test('S6-2 规则表一支：词表代号、固定键名、前缀不带下划线或在中段的字串、数字与布尔都不报', () => {
+  assert.deepEqual(tableHits({ rows: [{ key: 'res_x', value: { family: 'resfam_asset', note: 'fxa without underscore, pre_fxa_ in the middle', fxa: 1, n: 5, ok: true, nothing: null, sources: ['src_genesis'], fxsolo2: 'fxsolo2' } }] }), []);
+});
+
+test('S6-2 规则表一支：目录在真实仓库清单里没有表即 E-ACC-ITEM-PARAM（不静默放过）；用例夹具照真实清单，不因夹具里没有表而报', () => {
+  const ctx = ctxOf({ 'server-plugin/a.mjs': 'export const x = 1;' });
+  assert.deepEqual(dataShape(ctx, KEYCHECK, CLS.instance_name).map((h) => [h.nodeKind, h.code, h.file]), [['param', 'E-ACC-ITEM-PARAM', 'world/rules/tables/economy']]);
+  assert.deepEqual(dataShape({ ...ctx, repoFiles: ['world/rules/tables/economy/resources.json'] }, KEYCHECK, CLS.instance_name), []);
+  assert.deepEqual(dataShape(ctx, KEYCHECK, { ...CLS.instance_name, ruleTableDirs: [] }).map((h) => [h.code, h.symbolPath]), [['E-ACC-ITEM-PARAM', 'ruleTableDirs']]);
+  assert.deepEqual(dataShape(ctx, KEYCHECK, undefined).map((h) => h.code), ['E-ACC-ITEM-PARAM']);
+});
+
+test('S6-2 规则表一支：表文件不是合法 JSON 报 E-ACC-ITEM-FORM，不静默跳过；目录下非 .json 文件不读', () => {
+  const ctx = ctxOf({ [TBL]: '{"rows": [', 'world/rules/tables/economy/readme.md': 'fxa_oats' });
+  assert.deepEqual(dataShape(ctx, KEYCHECK, CLS.instance_name).map((h) => [h.file, h.code]), [[TBL, 'E-ACC-ITEM-FORM']]);
+});
+
+test('S6-2 真实仓库：经济规则表键值零命中（登记的实体前缀取自维度表表头，不写死）', () => {
+  const ctx = loadContext(ROOT);
+  assert.ok(ctx.files.some((f) => f.startsWith('world/rules/tables/economy/') && f.endsWith('.json')));
+  assert.deepEqual(dataShape(ctx, KEYCHECK, CLS.instance_name), []);
 });
