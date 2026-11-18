@@ -205,10 +205,10 @@ export function checkLedgerTables(rules, env) {
         const listed = [...(row.sources || []), ...(row.sinks || [])];
         if (!listed.includes(code)) push('E-DIM-REF-MISSING', ledTable, key, dim, code, `a source or sink listed on resource row ${res}`);
         const e = flows.get(code);
-        if (e && e.budgetMode !== mode) push('E-DIM-DOMAIN-ENUM', ledTable, key, dim, e.budgetMode, `${key} holds ${mode} channels only (卷六 §2.5 :224)`);
+        if (e && e.budgetMode !== mode) push('E-DIM-DOMAIN-ENUM', ledTable, key, dim, e.budgetMode, `${key} holds ${mode} channels only (vol6 s2.5 :224)`);
         const c = cells[code];
         if (key === 'budget' && isObj(c) && Number.isInteger(c.activeFromDay) && Number.isInteger(c.activeToDay) && c.activeFromDay > c.activeToDay) {
-          push('E-DIM-DOMAIN-RANGE', ledTable, key, `${dim}/activeFromDay`, [c.activeFromDay, c.activeToDay], 'activeFromDay ≤ activeToDay (world days)');
+          push('E-DIM-DOMAIN-RANGE', ledTable, key, `${dim}/activeFromDay`, [c.activeFromDay, c.activeToDay], 'activeFromDay <= activeToDay (world days)');
         }
       }
     }
@@ -236,7 +236,7 @@ export function checkSubjectFlagDims(tables) {
     const def = isObj(dims[flag]) ? dims[flag] : null;
     for (const f of Object.keys(SUBJECT_FLAG_DEF)) {
       if (def && def[f] === SUBJECT_FLAG_DEF[f]) continue;
-      errors.push({ code: 'E-DIM-STRUCT-FIELD', level: 'L2', table: kind, row: '', dim: flag, path: `${kind}#/dimensions/${flag}/${f}`, got: def ? def[f] : 'missing', want: `${SUBJECT_FLAG_DEF[f]} (卷二 §5.6 ${flag}; 卷六 §2.1 holder)` });
+      errors.push({ code: 'E-DIM-STRUCT-FIELD', level: 'L2', table: kind, row: '', dim: flag, path: `${kind}#/dimensions/${flag}/${f}`, got: def ? def[f] : 'missing', want: `${SUBJECT_FLAG_DEF[f]} (vol2 s5.6 ${flag}; vol6 s2.1 holder)` });
     }
   }
   return errors;
@@ -314,17 +314,17 @@ function checkSubject(engine, state, holderId) {
     // 不按聚合种类或名字推断；视图给不出这一条（null/undefined）才是读到未知，给出的不是对象即形状不合，同报 E-DIM-UNKNOWN-READ。
     const agg = readView(SCHEMA.aggregateView, engine, state, holderId);
     if (isObj(agg)) {
-      if (agg[SCHEMA.aggregateFlag] !== true) throw new KernelError('E-LEDGER-HOLDER-NOT-SUBJECT', { entity: holderId }, `aggregate ${holderId}: ${SCHEMA.aggregateFlag} is not true (not registered as a ledger subject, 卷六 §2.1 :103)`);
+      if (agg[SCHEMA.aggregateFlag] !== true) throw new KernelError('E-LEDGER-HOLDER-NOT-SUBJECT', { entity: holderId }, `aggregate ${holderId}: ${SCHEMA.aggregateFlag} is not true (not registered as a ledger subject, vol6 s2.1 :103)`);
       return SCHEMA.aggregateKind;
     }
     if (agg !== null && agg !== undefined) throw new KernelError('E-DIM-UNKNOWN-READ', { entity: holderId }, `${SCHEMA.aggregateView}(${holderId}) did not return an object`);
-    throw new KernelError('E-DIM-UNKNOWN-READ', { entity: holderId }, `holder ${holderId} is neither a loaded entity nor an aggregate (onUnknown error, 卷六 §2.1 :103; entity tables load in block 6, K3-44)`);
+    throw new KernelError('E-DIM-UNKNOWN-READ', { entity: holderId }, `holder ${holderId} is neither a loaded entity nor an aggregate (onUnknown error, vol6 s2.1 :103; entity tables load in block 6, K3-44)`);
   }
   if (!SCHEMA.holderKinds.includes(kind)) throw new KernelError('E-DIM-REF-MISSING', { entity: holderId }, `holder kind ${kind} is not one of ${SCHEMA.holderKinds.join(', ')}`);
   if (Object.hasOwn(SCHEMA.subjectFlags, kind)) {
     const flag = SCHEMA.subjectFlags[kind];
     const f = dim(engine, state, kind, holderId, flag);
-    if (!(f.known && f.value === true)) throw new KernelError('E-LEDGER-HOLDER-NOT-SUBJECT', { entity: holderId }, `${kind} ${holderId}: ${flag} is not true (not registered as a ledger subject, 卷六 §2.1 :103)`);
+    if (!(f.known && f.value === true)) throw new KernelError('E-LEDGER-HOLDER-NOT-SUBJECT', { entity: holderId }, `${kind} ${holderId}: ${flag} is not true (not registered as a ledger subject, vol6 s2.1 :103)`);
   }
   return kind;
 }
@@ -523,7 +523,7 @@ function postDraft(engine, state, draft, viaAllocation) {
     const tx = currentTransaction();
     if (!tx || tx.state !== state) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity: null }, 'post outside the transaction of this state');
     if (!fieldsWithin(draft, DRAFT_FIELDS)) throw structErr('post draft is {legs, reason, refs?}');
-    if (!Object.hasOwn(draft, 'reason')) throw structErr('post reason is required (verb code, 卷六 §3.2 :286)');
+    if (!Object.hasOwn(draft, 'reason')) throw structErr('post reason is required (verb code, vol6 s3.2 :286)');
     if (typeof draft.reason !== 'string' || !CODE_RE.test(draft.reason)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'post reason is not a code');
     if (draft.refs !== undefined && !isObj(draft.refs)) throw structErr('post refs is an object');
     if (!Array.isArray(draft.legs) || draft.legs.length === 0) throw structErr('post legs is a non-empty list');
@@ -539,7 +539,7 @@ function postDraft(engine, state, draft, viaAllocation) {
     // 按来源条目登记的 budgetMode 判，不写死代号；不是入口内部路径即整笔拒、不部分入账（尚未写任何状态，事务整笔不落）。
     if (!viaAllocation) {
       const direct = flows.find((f) => f.side === SCHEMA.src && f.entry.budgetMode === SCHEMA.capped);
-      if (direct) throw new KernelError('E-LEDGER-CAPPED-DIRECT', { entity: null }, `leg ${direct.i}: ${direct.code} is a ${SCHEMA.capped} source; only settleCappedAllocation may post it (卷六 §4.1 规则 6 :376)`);
+      if (direct) throw new KernelError('E-LEDGER-CAPPED-DIRECT', { entity: null }, `leg ${direct.i}: ${direct.code} is a ${SCHEMA.capped} source; only settleCappedAllocation may post it (vol6 s4.1 rule 6 :376)`);
     }
 
     // 规则 2：每个资源种类 L − S + K = 0。
@@ -884,7 +884,7 @@ function auditConservation(engine, state) {
     }
   }
   for (const [k, d] of [...net].sort((a, b) => cmp(a[0], b[0]))) {
-    if (d !== 0n) push('E-LEDGER-UNBALANCED', `${SCHEMA.accounts}/${SCHEMA.totals}:${k}`, `Σ balances − Σ sources + Σ sinks = ${d} (rule 4)`);
+    if (d !== 0n) push('E-LEDGER-UNBALANCED', `${SCHEMA.accounts}/${SCHEMA.totals}:${k}`, `sum balances - sum sources + sum sinks = ${d} (rule 4)`);
   }
   return out;
 }
@@ -1143,7 +1143,7 @@ export function settleCappedAllocation(engine, state, input) {
 
     // 防重放：同日同来源的分配只入账一次（:376）。日＋来源从 usedByDay 的当日项派生；day 须就是当日，post 的 usedByDay 按 clockView 当日写（§4.1.1 :347）。
     const today = clockView(engine, state).day;
-    if (input.day !== today) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, `day ${input.day} is not the current world day ${today} (the day+source replay test reads the current day's usedByDay, 卷六 §4.1.1 :347)`);
+    if (input.day !== today) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, `day ${input.day} is not the current world day ${today} (the day+source replay test reads the current day's usedByDay, vol6 s4.1.1 :347)`);
     const cell = readTotalsCell(state, input.resourceKind, input.code);
     const booked = cell.usedByDay.find((d) => d.day === input.day);
     const head = { day: input.day, resource: input.resourceKind, source: input.code, allocations };
@@ -1184,7 +1184,7 @@ export function closeLedgerPeriod(engine, state, endDay, writeReport) {
   // （卷六 :376"按日＋来源判"、§4.1.1 :347）。允许结到当日乃至以后，规则层就能结期后重跑当日分配——当日项已清、
   // 重放判据失效而重复入账。码取卷二已定义的 E-DIM-DOMAIN-RANGE（本函数对 endDay 的取用域原本就报它；卷六码表无专属码，不新造）。
   const today = clockView(engine, state).day;
-  if (endDay >= today) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, `endDay ${endDay} must be before the current world day ${today} (卷六 :376: closing the current day would erase the day+source replay test)`);
+  if (endDay >= today) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, `endDay ${endDay} must be before the current world day ${today} (vol6 :376: closing the current day would erase the day+source replay test)`);
   if (typeof writeReport !== 'function') throw structErr('writeReport is the caller-supplied report writer');
   const totals = readAt(state, [SCHEMA.totals]);
   const usage = [];

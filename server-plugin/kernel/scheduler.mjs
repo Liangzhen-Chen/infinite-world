@@ -28,6 +28,7 @@ import { report } from './report.mjs';
 import { registry } from './vocab.mjs';
 import { CODE_RE } from './validate/types.mjs';
 import { advanceHook, advanceHookNames } from './advance-registry.mjs';
+import { snakeCaseKey } from './handles/patterns.mjs';
 
 // ---------- 代码内封闭枚举（卷二十 §8 问题 5 :1318 列为代码内封闭、不登卷二） ----------
 
@@ -639,7 +640,7 @@ function runReactions(engine, state, t, sources, causesIn, rank) {
       if (actual <= max) return null;
       const detail = `${key}: limit ${max}, actual ${actual}`;
       // 日志只收代号文法字段（report.mjs）：limitKey 取上限键的代号形（驼峰转下划线小写，卷二十 §4.1.3 第 7 条对照表；李白 11-18 03:52）；驼峰名只在 detail。
-      const limitKey = key.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
+      const limitKey = snakeCaseKey(key);
       return { ok: false, code: 'E-CLOCK-REACTION-LIMIT', report: { entity: null, request: null, tick: t, stage: rank, limit: max, actual, limit_key: limitKey }, result: { ok: false, code: 'E-CLOCK-REACTION-LIMIT', tick: t, stage: rank, detail } };
     };
     const over = limit(SCHEMA.depthKey, depth) || limit(SCHEMA.countKey, count);

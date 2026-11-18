@@ -136,10 +136,14 @@
     {
      "ref": "B2-W1：error-codes.mjs 登 E-ACC-PROMISE-UNREACHABLE、E-ACC-PARAM-UNCONSUMED（卷十二 §2.12 勘误 1118k18）入检测器闭包，指纹重盖，本类别判定口径不变",
      "rev": 20
+    },
+    {
+     "ref": "B2-W2（卷十一 11-18 S13 kernel 清理）：检测器 import 闭包里的 kernel 文件改动（正则搬到 handles/patterns.mjs、error-codes 出处改 ASCII、det-math 常数改读规则表），指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "4f92bd7e79a461a660ae7768f68ba75880b16fa0507ba64149b3a14da0fc1272",
-   "rev": 20,
+   "print": "b823531380de2daa786f58cb1ce2976493bcc274e1c728990e4e7109ee962056",
+   "rev": 21,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -321,10 +325,14 @@
     {
      "ref": "块 3 第 3-3b 张续（Opus 只核必须改）：共用的 data_shape entityKey 改读 world/rules/registry.json 全部登记行（经 kernel/load/rules.mjs），不再取类别行 ruleTableDirs；error-codes.mjs 加 E-ACC-CONST-LITERAL；本类别判定口径不变",
      "rev": 7
+    },
+    {
+     "ref": "B2-W2（卷十一 11-18 S13 kernel 清理）：检测器 import 闭包里的 kernel 文件改动（正则搬到 handles/patterns.mjs、error-codes 出处改 ASCII、det-math 常数改读规则表），指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 8
     }
    ],
-   "print": "dc6e433c10159d72fa9456898b14485e404bb700786148529a6806fb055ecb45",
-   "rev": 7,
+   "print": "c7c4013d9814a4ec2b04125dc19e03ce852450736171e9e6b974f99552076714",
+   "rev": 8,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -513,10 +521,14 @@
     {
      "ref": "块 3 第 3-3b 张续（Opus 只核必须改）：共用的 data_shape entityKey 改读 world/rules/registry.json 全部登记行（经 kernel/load/rules.mjs），不再取类别行 ruleTableDirs；error-codes.mjs 加 E-ACC-CONST-LITERAL；本类别判定口径不变",
      "rev": 8
+    },
+    {
+     "ref": "B2-W2（卷十一 11-18 S13 kernel 清理）：检测器 import 闭包里的 kernel 文件改动（正则搬到 handles/patterns.mjs、error-codes 出处改 ASCII、det-math 常数改读规则表），指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 9
     }
    ],
-   "print": "f787440cdb4853476161b169518d9f7392f8dac55fbe0b8313058abe9b8bc046",
-   "rev": 8,
+   "print": "7a0f4108abaf904f0db3515b0564bc19f9cb01014709019a710ad368e326f21f",
+   "rev": 9,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -670,10 +682,14 @@
     {
      "ref": "B2-W1：error-codes.mjs 登 E-ACC-PROMISE-UNREACHABLE、E-ACC-PARAM-UNCONSUMED（卷十二 §2.12 勘误 1118k18）入检测器闭包，指纹重盖，本类别判定口径不变",
      "rev": 24
+    },
+    {
+     "ref": "B2-W2（卷十一 11-18 S13 kernel 清理）：检测器 import 闭包里的 kernel 文件改动（正则搬到 handles/patterns.mjs、error-codes 出处改 ASCII、det-math 常数改读规则表），指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "ad8dddc96deaaead759ec7737be9c755ae4e31063d63709a491a068358f1ecb9",
-   "rev": 24,
+   "print": "b5b7b6de0158a062aa4faede9fd095332129984e7fc5ed59770bdb6fd5032cfe",
+   "rev": 25,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -808,10 +824,14 @@
     {
      "ref": "块 3 第 3-3b 张续（Opus 只核必须改）：共用的 data_shape entityKey 改读 world/rules/registry.json 全部登记行（经 kernel/load/rules.mjs），不再取类别行 ruleTableDirs；error-codes.mjs 加 E-ACC-CONST-LITERAL；本类别原有核对口径不变",
      "rev": 9
+    },
+    {
+     "ref": "B2-W2（卷十一 11-18 S13 kernel 清理）：检测器 import 闭包里的 kernel 文件改动（正则搬到 handles/patterns.mjs、error-codes 出处改 ASCII、det-math 常数改读规则表），指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 10
     }
    ],
-   "print": "f787440cdb4853476161b169518d9f7392f8dac55fbe0b8313058abe9b8bc046",
-   "rev": 9,
+   "print": "7a0f4108abaf904f0db3515b0564bc19f9cb01014709019a710ad368e326f21f",
+   "rev": 10,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1247,10 +1267,14 @@
     {
      "ref": "块 3 第 3-3b 张续（Opus 只核必须改）：共用的 data_shape entityKey 改读 world/rules/registry.json 全部登记行（经 kernel/load/rules.mjs），不再取类别行 ruleTableDirs；error-codes.mjs 加 E-ACC-CONST-LITERAL；本类别判定口径不变",
      "rev": 9
+    },
+    {
+     "ref": "B2-W2（卷十一 11-18 S13 kernel 清理）：检测器 import 闭包里的 kernel 文件改动（正则搬到 handles/patterns.mjs、error-codes 出处改 ASCII、det-math 常数改读规则表），指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 10
     }
    ],
-   "print": "f787440cdb4853476161b169518d9f7392f8dac55fbe0b8313058abe9b8bc046",
-   "rev": 9,
+   "print": "7a0f4108abaf904f0db3515b0564bc19f9cb01014709019a710ad368e326f21f",
+   "rev": 10,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -1269,10 +1293,14 @@
     {
      "ref": "B2-W1：新登类别；共用的 decl_cmp 加 paramConsumed（A12-4.5，消费者口径照卷十二 :784；范围与读者分类从 state-owners 登记派生，加载器/校验器按登记目录段 load/、validate/ 排除）；判据见 criterion",
      "rev": 1
+    },
+    {
+     "ref": "B2-W2（卷十一 11-18 S13 kernel 清理）：检测器 import 闭包里的 kernel 文件改动（正则搬到 handles/patterns.mjs、error-codes 出处改 ASCII、det-math 常数改读规则表），指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 2
     }
    ],
-   "print": "216e8998f4eb46a9b4be3a89d022a7ad669cd9c51fa17e5c203d0f636f8c69fc",
-   "rev": 1,
+   "print": "203c2621c614f82871fb1bd69f282eaf2c8b02f31c43f622c2cc0c7cff67e3cd",
+   "rev": 2,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -1403,10 +1431,14 @@
     {
      "ref": "B2-W1：error-codes.mjs 登 E-ACC-PROMISE-UNREACHABLE、E-ACC-PARAM-UNCONSUMED（卷十二 §2.12 勘误 1118k18）入检测器闭包，指纹重盖，本类别判定口径不变",
      "rev": 29
+    },
+    {
+     "ref": "B2-W2（卷十一 11-18 S13 kernel 清理）：检测器 import 闭包里的 kernel 文件改动（正则搬到 handles/patterns.mjs、error-codes 出处改 ASCII、det-math 常数改读规则表），指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 30
     }
    ],
-   "print": "4a4b64ee10fb463e0c2b1185b983f03ddd9ca54f5d3f199c290be4437aacbd8e",
-   "rev": 29,
+   "print": "9a73fb0a9b40fb2e43edc2b71be8a00d36af21d982c5478184260f5a97e2df96",
+   "rev": 30,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1589,10 +1621,14 @@
     {
      "ref": "B2-W1：error-codes.mjs 登 E-ACC-PROMISE-UNREACHABLE、E-ACC-PARAM-UNCONSUMED（卷十二 §2.12 勘误 1118k18）入检测器闭包，指纹重盖，本类别判定口径不变",
      "rev": 18
+    },
+    {
+     "ref": "B2-W2（卷十一 11-18 S13 kernel 清理）：检测器 import 闭包里的 kernel 文件改动（正则搬到 handles/patterns.mjs、error-codes 出处改 ASCII、det-math 常数改读规则表），指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 19
     }
    ],
-   "print": "4f92bd7e79a461a660ae7768f68ba75880b16fa0507ba64149b3a14da0fc1272",
-   "rev": 18,
+   "print": "b823531380de2daa786f58cb1ce2976493bcc274e1c728990e4e7109ee962056",
+   "rev": 19,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -1738,10 +1774,14 @@
     {
      "ref": "B2-W1：共用的 decl_cmp 加 paramConsumed（A12-4.5）；error-codes.mjs 登 E-ACC-PROMISE-UNREACHABLE、E-ACC-PARAM-UNCONSUMED 入检测器闭包，指纹重盖；本类别用 dynamicState，判定口径不变",
      "rev": 3
+    },
+    {
+     "ref": "B2-W2（卷十一 11-18 S13 kernel 清理）：检测器 import 闭包里的 kernel 文件改动（正则搬到 handles/patterns.mjs、error-codes 出处改 ASCII、det-math 常数改读规则表），指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 4
     }
    ],
-   "print": "216e8998f4eb46a9b4be3a89d022a7ad669cd9c51fa17e5c203d0f636f8c69fc",
-   "rev": 3,
+   "print": "203c2621c614f82871fb1bd69f282eaf2c8b02f31c43f622c2cc0c7cff67e3cd",
+   "rev": 4,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

@@ -7,6 +7,7 @@
 import { buildE, buildP } from '../handles/generated.mjs';
 import { checkPathPattern } from '../handles/keys.mjs';
 import { errorCodeOf, HandleError } from '../handles/vocab-handle.mjs';
+import { isClosedType, isPathPattern, listItemType, mentionsSealed, parseNumberType } from '../handles/patterns.mjs';
 
 const E = buildE();
 
@@ -25,7 +26,6 @@ const HOOK_FIELDS = ['phase', 'after', 'sortKey'];
 // 读入口返回形状登记行（§2.7"读入口返回形状登记"第 1 点，五字段封闭）。
 const SHAPE_FIELDS = ['entry', 'field', 'type', 'refFamily', 'nullable'];
 const SHAPE_TYPES = new Set(['number', 'boolean', 'code', 'handle', 'shape']);
-const FIELD_RE = /^[a-z][a-zA-Z0-9_]*(\.[a-z][a-zA-Z0-9_]*)*$/;
 
 // 实体类登记（卷二 §2.1 入口清单的 22 类，一类一张实体表）：keyKinds 里 (a)(b) 项的 kind 只能取这些，或加载器已载入的表的 kind（ctx.kinds）。
 export const ENTITY_KINDS = Object.freeze(['item', 'material', 'species', 'plant', 'body_plan', 'person', 'place', 'facility_type', 'recipe', 'org', 'office', 'polity', 'law_code', 'deity', 'faith', 'culture', 'profession', 'skill', 'knowledge', 'offense', 'status', 'event_type']);
@@ -153,13 +153,13 @@ export function assignSortKeys(systems) {
 function typeIssue(t, units) {
   if (typeof t !== 'string') return { code: E.E_DIM_STRUCT_FIELD, want: 'type string' };
   if (t === 'string') return { code: E.E_TEXT_UNGATED, want: 'no path may be typed string' };
-  const list = /^list<(?<item>.+)>$/.exec(t);
-  if (list) return typeIssue(list.groups.item, units);
-  const num = /^(?<base>number|integer)(?::(?<unit>.*))?$/.exec(t);
-  if (num) return num.groups.unit && units.has(num.groups.unit) ? null : { code: E.E_DIM_UNIT_UNKNOWN, want: `${num.groups.base}:<unit in _units.json>` };
+  const item = listItemType(t);
+  if (item !== null) return typeIssue(item, units);
+  const num = parseNumberType(t);
+  if (num) return num.unit && units.has(num.unit) ? null : { code: E.E_DIM_UNIT_UNKNOWN, want: `${num.base}:<unit in _units.json>` };
   if (['boolean', 'dimension', 'sealed', 'EventId'].includes(t)) return null;
-  if (/^(ref|enum):[a-z][a-z0-9_]*$/.test(t) || /^struct:[a-zA-Z][a-zA-Z0-9_<>]*$/.test(t)) return null;
-  return { code: E.E_DIM_STRUCT_FIELD, want: 'number:<u> | integer:<u> | boolean | ref:<kind> | enum:<family> | dimension | struct:<name> | sealed | EventId | list<…>' };
+  if (isClosedType(t)) return null;
+  return { code: E.E_DIM_STRUCT_FIELD, want: 'number:<u> | integer:<u> | boolean | ref:<kind> | enum:<family> | dimension | struct:<name> | sealed | EventId | list<...>' };
 }
 // ---------- keyKinds 文法（卷二 §2.7"pathTypes 的 `*` 段 kind 字段"，封卷后勘误 1117rx7） ----------
 
@@ -184,7 +184,6 @@ function keyKindsIssues(v, nStars, kinds) {
 // 一项里的全部实体 kind（(a) 单个、(b) 列表；(c) 不算）。
 const itemKinds = (it) => (typeof it === 'string' ? (KEY_NONENTITY.includes(it) ? [] : [it]) : Array.isArray(it) ? it.filter((k) => typeof k === 'string') : []);
 
-const mentionsSealed = (t) => typeof t === 'string' && /(^|<)sealed(>|$)/.test(t);
 
 // ---------- 合并与核对 ----------
 
@@ -204,9 +203,9 @@ export function mergeStateOwners(decl, ctx = {}) {
   const opt = (k, test, want) => { if (d[k] !== undefined && !test(d[k])) err(E.E_DIM_STRUCT_FIELD, k, `#/${k}`, typeof d[k], want); return d[k] !== undefined && test(d[k]); };
 
   // pathTypes：字面段文法（2-1 的 checkPathPattern）与值类型。
-  const pathTypes = opt('pathTypes', isObj, 'object pattern → type') ? d.pathTypes : {};
+  const pathTypes = opt('pathTypes', isObj, 'object pattern -> type') ? d.pathTypes : {};
   const textPaths = opt('textPaths', isStrList, 'list of path patterns') ? d.textPaths : [];
-  const textWriters = opt('textWriters', isObj, 'object textPath → writer file') ? d.textWriters : {};
+  const textWriters = opt('textWriters', isObj, 'object textPath -> writer file') ? d.textWriters : {};
   const textSet = new Set(textPaths);
   let grammarOk = true;
   for (const p of sorted(Object.keys(pathTypes))) {
@@ -226,7 +225,7 @@ export function mergeStateOwners(decl, ctx = {}) {
   // keyKinds：同级顶层表 模式 → 按 `*` 段顺序的 kind 项列表（pathTypes 的值是类型串，无处挂字段）。有 `*` 段的非 textPaths 条目必填；
   // 无 `*` 段的不得填；textPaths 整类不强制（卷二 :497 不生成 P、:519 不进去留覆盖核对；不对任何单条特判）。违者 E-PATH-KEYKINDS。
   const entityKinds = new Set([...ENTITY_KINDS, ...(ctx.kinds || []), ...(ctx.entityKinds || [])]);
-  const keyKinds = opt('keyKinds', isObj, 'object pattern → list of key kinds') ? d.keyKinds : {};
+  const keyKinds = opt('keyKinds', isObj, 'object pattern -> list of key kinds') ? d.keyKinds : {};
   const nStarsOf = (p) => segs(p).filter((s) => s === '*').length;
   for (const p of sorted(Object.keys(keyKinds))) {
     if (!Object.hasOwn(pathTypes, p)) { err(E.E_PATH_UNDECLARED, p, `#/keyKinds/${p}`, p, 'keyKinds pattern declared in pathTypes'); continue; }
@@ -262,7 +261,7 @@ export function mergeStateOwners(decl, ctx = {}) {
   for (const [a, b] of overlapPairs(textPaths)) err(E.E_PATH_OVERLAP, a, '#/textPaths', b, 'patterns of equal specificity must not overlap');
 
   // stateKeys：字段、写者两种写法、display、顶层键覆盖。
-  const stateKeys = opt('stateKeys', isObj, 'object key → {readers, writers, display?, subjectRecords?}') ? d.stateKeys : {};
+  const stateKeys = opt('stateKeys', isObj, 'object key -> {readers, writers, display?, subjectRecords?}') ? d.stateKeys : {};
   const writers = new Map(); // 绝对模式 → {pattern, key, create, rewrite, rewriteRows, viaRelocate, source}
   const displayPaths = [];
   for (const key of sorted(Object.keys(stateKeys))) {
@@ -271,7 +270,7 @@ export function mergeStateOwners(decl, ctx = {}) {
     if (!isObj(row)) { err(E.E_DIM_STRUCT_FIELD, key, at, typeof row, '{readers, writers, display?, subjectRecords?}'); continue; }
     for (const f of sorted(Object.keys(row))) if (!STATE_KEY_FIELDS.has(f)) err(E.E_DIM_STRUCT_FIELD, key, `${at}/${f}`, f, `one of ${[...STATE_KEY_FIELDS].join(', ')}`);
     if (!isStrList(row.readers)) err(E.E_DIM_STRUCT_FIELD, key, `${at}/readers`, row.readers, 'list of node names or files');
-    if (row.subjectRecords !== undefined && !isObj(row.subjectRecords)) err(E.E_DIM_STRUCT_FIELD, key, `${at}/subjectRecords`, typeof row.subjectRecords, 'object pattern → {recordClass, subjectSegments}');
+    if (row.subjectRecords !== undefined && !isObj(row.subjectRecords)) err(E.E_DIM_STRUCT_FIELD, key, `${at}/subjectRecords`, typeof row.subjectRecords, 'object pattern -> {recordClass, subjectSegments}');
     // display：相对该顶层键的路径模式列表，可省（省即空集）；每条转成绝对模式后须是 pathTypes 已有模式。
     if (row.display !== undefined && !isStrList(row.display)) err(E.E_DIM_STRUCT_FIELD, key, `${at}/display`, row.display, 'list of path patterns relative to the key');
     else for (const rel of row.display || []) {
@@ -279,7 +278,7 @@ export function mergeStateOwners(decl, ctx = {}) {
       if (!Object.hasOwn(pathTypes, abs)) err(E.E_PATH_UNDECLARED, key, `${at}/display`, abs, 'display pattern declared in pathTypes');
       else displayPaths.push(abs);
     }
-    if (!isObj(row.writers)) { err(E.E_DIM_STRUCT_FIELD, key, `${at}/writers`, typeof row.writers, 'object relative pattern → writer'); continue; }
+    if (!isObj(row.writers)) { err(E.E_DIM_STRUCT_FIELD, key, `${at}/writers`, typeof row.writers, 'object relative pattern -> writer'); continue; }
     for (const rel of sorted(Object.keys(row.writers))) {
       const w = row.writers[rel];
       const wat = `${at}/writers/${rel}`;
@@ -310,7 +309,7 @@ export function mergeStateOwners(decl, ctx = {}) {
 
   // systems：两个闭集字段必写（§2.7 :770）；写者列表跨系统不重（E-STATE-MULTI-WRITER）；推进钩子格式与排序键。
   const phases = opt('phases', (v) => isStrList(v) && new Set(v).size === v.length, 'list of distinct phase codes') ? d.phases : null;
-  const systems = opt('systems', isObj, 'object system key → registration') ? d.systems : {};
+  const systems = opt('systems', isObj, 'object system key -> registration') ? d.systems : {};
   const claimed = new Map();
   const hooks = [];
   let hooksOk = true;
@@ -320,7 +319,7 @@ export function mergeStateOwners(decl, ctx = {}) {
     const at = `#/systems/${name}`;
     if (!isObj(s)) { err(E.E_DIM_STRUCT_FIELD, name, at, typeof s, 'system registration object'); hooksOk = false; continue; }
     for (const f of sorted(Object.keys(s))) if (!SYSTEM_FIELDS.has(f)) err(E.E_DIM_STRUCT_FIELD, name, `${at}/${f}`, f, `one of ${[...SYSTEM_FIELDS].join(', ')}`);
-    if (!isObj(s.entryCallerFiles) || !Object.values(s.entryCallerFiles).every(isStrList)) err(E.E_DIM_STRUCT_FIELD, name, `${at}/entryCallerFiles`, s.entryCallerFiles, 'object entry → list of files ({} when none)');
+    if (!isObj(s.entryCallerFiles) || !Object.values(s.entryCallerFiles).every(isStrList)) err(E.E_DIM_STRUCT_FIELD, name, `${at}/entryCallerFiles`, s.entryCallerFiles, 'object entry -> list of files ({} when none)');
     if (!(Array.isArray(s.entryJudges) && (s.entryJudges.length === 0 || isStrList(s.entryJudges)))) err(E.E_DIM_STRUCT_FIELD, name, `${at}/entryJudges`, s.entryJudges, 'list of <file>#<fn> ([] when none)');
     for (const f of ['predicates', 'tables', 'writers', 'sinks', 'emits']) if (s[f] !== undefined && !(Array.isArray(s[f]) && (s[f].length === 0 || isStrList(s[f])))) err(E.E_DIM_STRUCT_FIELD, name, `${at}/${f}`, s[f], 'list of strings');
     for (const f of ['view', 'eventDerive']) if (s[f] !== undefined && (typeof s[f] !== 'string' || !s[f].includes('#'))) err(E.E_DIM_STRUCT_FIELD, name, `${at}/${f}`, s[f], '<file>#<fn>');
@@ -335,14 +334,14 @@ export function mergeStateOwners(decl, ctx = {}) {
     const viewFile = typeof s.view === 'string' ? s.view.split('#')[0] : null;
     if (viewFile && isObj(s.entryCallerFiles)) for (const fn of Object.keys(s.entryCallerFiles)) entries.add(`${viewFile}#${fn}`);
     if (s.phase === undefined) continue;
-    if (!isObj(s.phase)) { err(E.E_DIM_STRUCT_FIELD, name, `${at}/phase`, typeof s.phase, 'object hook → {phase, after, sortKey}'); hooksOk = false; continue; }
+    if (!isObj(s.phase)) { err(E.E_DIM_STRUCT_FIELD, name, `${at}/phase`, typeof s.phase, 'object hook -> {phase, after, sortKey}'); hooksOk = false; continue; }
     for (const hook of sorted(Object.keys(s.phase))) {
       const h = s.phase[hook];
       const hat = `${at}/phase/${hook}`;
       if (!exactKeys(h, HOOK_FIELDS)) { err(E.E_DIM_STRUCT_FIELD, name, hat, isObj(h) ? sorted(Object.keys(h)).join(',') : typeof h, HOOK_FIELDS.join(', ')); hooksOk = false; continue; }
       if (!phases || !phases.includes(h.phase)) { err(E.E_DIM_DOMAIN_ENUM, name, `${hat}/phase`, h.phase, `one of phases (${(phases || []).join(', ')})`); hooksOk = false; }
       if (!(Array.isArray(h.after) && (h.after.length === 0 || isStrList(h.after)))) { err(E.E_DIM_STRUCT_FIELD, name, `${hat}/after`, h.after, 'list of hook names'); hooksOk = false; }
-      if (!Number.isInteger(h.sortKey) || h.sortKey < 1) { err(E.E_DIM_STRUCT_FIELD, name, `${hat}/sortKey`, h.sortKey, 'integer ≥ 1'); hooksOk = false; }
+      if (!Number.isInteger(h.sortKey) || h.sortKey < 1) { err(E.E_DIM_STRUCT_FIELD, name, `${hat}/sortKey`, h.sortKey, 'integer >= 1'); hooksOk = false; }
       hooks.push({ system: name, hook, phase: h.phase, after: h.after, sortKey: h.sortKey });
     }
   }
@@ -383,7 +382,7 @@ export function mergeStateOwners(decl, ctx = {}) {
       const bad = (got, want) => err(E.E_DIM_STRUCT_FIELD, isObj(r) && typeof r.entry === 'string' ? r.entry : String(i), at, got, want);
       if (!exactKeys(r, SHAPE_FIELDS)) return bad(isObj(r) ? sorted(Object.keys(r)).join(',') : typeof r, SHAPE_FIELDS.join(', '));
       if (!entries.has(r.entry)) bad(r.entry, 'entry registered as a system view, predicate or entryCallerFiles key');
-      if (typeof r.field !== 'string' || !FIELD_RE.test(r.field)) bad(r.field, 'field code (nested fields joined by .)');
+      if (!isPathPattern(r.field)) bad(r.field, 'field code (nested fields joined by .)');
       const k = JSON.stringify([r.entry, r.field]);
       if (seen.has(k)) bad(`${r.entry} ${r.field}`, 'one row per entry and field');
       seen.add(k);
@@ -427,7 +426,7 @@ export function mergeStateOwners(decl, ctx = {}) {
 
   errors.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : a.code < b.code ? -1 : a.code > b.code ? 1 : 0));
   const nErr = errors.filter((e) => e.severity === 'error').length;
-  const text = errors.map((e) => `${e.code}  ${e.table}/${e.row}.${e.dim}  got ${JSON.stringify(e.got)}  want ${e.want}  — ${e.path}`).join('\n') + (errors.length ? '\n' : '');
+  const text = errors.map((e) => `${e.code}  ${e.table}/${e.row}.${e.dim}  got ${JSON.stringify(e.got)}  want ${e.want}  - ${e.path}`).join('\n') + (errors.length ? '\n' : '');
   return {
     ok: nErr === 0,
     errors,

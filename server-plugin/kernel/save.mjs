@@ -14,10 +14,12 @@
 import { openSync, writeSync, fsyncSync, closeSync, renameSync, mkdirSync, existsSync, readdirSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { canonical, pathTypeOf, pathTypeHasDeeper, pathTypeRecords, isSealedValue, hasExactKeys } from './storage.mjs';
+
 import { statePathSegments } from './handles/keys.mjs';
 import { KernelError, codeOf } from './errors.mjs';
 import { clone } from './clone.mjs';
 import { readManifestDigests, checkManifest } from './load/save.mjs';
+import { isHex64 } from './handles/patterns.mjs';
 
 // ---------- 存档布局的名字（S27-7：只在本文件与 kernel/load/save.mjs 出现） ----------
 
@@ -33,7 +35,6 @@ export const LAYOUT_NAMES = Object.freeze({ slotPrefix: 'slot-', shardsDir: 'sha
 export const MANIFEST_FIELDS = Object.freeze(['clockMinute', 'dataDigest', 'logSegments', 'rulesDigest', 'saveDigest', 'shardDigests', 'slot', 'snapshotIndex']);
 
 const SEALED_TAG = '$sealed';
-const HEX64 = /^[0-9a-f]{64}$/;
 
 // ---------- 摘要能力（:981、:987） ----------
 
@@ -87,7 +88,7 @@ export function digestExcludeOf(merged) {
  * @returns {{generatedBy: string, rule: string, paths: string[]}}
  */
 export function digestExcludeDoc(merged) {
-  return { generatedBy: 'tools/gen-digest-exclude.mjs', rule: '卷二 §2.9 第 3 条：display 字段集合 ∪ displayNames.* ∪ playerNotes.*', paths: digestExcludeOf(merged) };
+  return { generatedBy: 'tools/gen-digest-exclude.mjs', rule: 'vol2 s2.9 rule 3: display field set union displayNames.* union playerNotes.*', paths: digestExcludeOf(merged) };
 }
 
 /** @type {string[][] | null} */
@@ -270,9 +271,9 @@ function rowCovers(rowSegs, typeSegs) {
 export function compileLayout(layout) {
   if (!isObj(layout)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'save layout must be an object');
   for (const k of ['segmentEvents', 'snapshotEveryEvents', 'keepSnapshots', 'saveSlotCount']) {
-    if (!posInt(layout[k])) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `save layout ${k} must be an integer ≥ 1`);
+    if (!posInt(layout[k])) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `save layout ${k} must be an integer >= 1`);
   }
-  if (layout.segmentEvents > layout.snapshotEveryEvents) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'segmentEvents must be ≤ snapshotEveryEvents');
+  if (layout.segmentEvents > layout.snapshotEveryEvents) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'segmentEvents must be <= snapshotEveryEvents');
   if (!Array.isArray(layout.shards)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'save layout shards must be a list');
   const codes = new Set();
   const uncovered = (detail) => new KernelError('E-SAVE-SHARD-UNCOVERED', {}, detail);
@@ -500,7 +501,7 @@ export function shardPath(dir, digest) {
  */
 export function saveToSlot({ root, slot, book, doc, rulesDigest, clockMinute }) {
   if (!slotOk(slot, book.layout)) return { ok: false, code: new KernelError('E-SAVE-SLOT-INVALID').code };
-  if (typeof rulesDigest !== 'string' || !HEX64.test(rulesDigest)) throw new Error('saveToSlot: rulesDigest must be a 64-hex digest');
+  if (!isHex64(rulesDigest)) throw new Error('saveToSlot: rulesDigest must be a 64-hex digest');
   if (!Number.isInteger(clockMinute)) throw new Error('saveToSlot: clockMinute must be an integer');
   const full = { doc_data: doc.doc_data, doc_state: doc.doc_state, doc_holdings: doc.doc_holdings, doc_ledger: doc.doc_ledger, doc_log: book.entries };
   /** @type {Map<string, string>} */

@@ -5,11 +5,9 @@
 // declareStateWriter、declareLedgerWriter（:576–577）本卡不需要，随用到它们的那张卡建。
 
 import { KernelError } from './errors.mjs';
+import { isDeclarableNode, isAnyNode } from './handles/patterns.mjs';
 
 // 可由代码声明的三类节点（:470）与加载器机器生成的两类（:470 末句）。
-const DECLARABLE = /^(view|relation|scope):[A-Za-z][A-Za-z0-9_]*$/;
-const GENERATED = /^(dim|modified):([a-z][a-z0-9_]{1,47})$/;
-const NODE = /^(view|relation|scope|dim|modified):[A-Za-z][A-Za-z0-9_]*$/;
 
 /** @typedef {string | {path: string[], categories?: string[]}} OwnItem 声明里 own 的一项：路径段列表（字串数组）或带 categories 的路径。 */
 /** @typedef {{impl: string[], own: (string[] | {path: string[], categories?: string[]})[], uses: string[], foldsOverDays?: boolean}} Declaration */
@@ -43,13 +41,13 @@ function badDecl(node, detail) {
  */
 export function declareInputs(node, decl) {
   if (closures) throw new Error(`kernel/declare.mjs: declareInputs(${node}) after finalizeInputs (load order)`);
-  if (typeof node !== 'string' || !DECLARABLE.test(node)) throw badDecl(node, 'node must be view:<name>, relation:<id> or scope:<id>');
+  if (!isDeclarableNode(node)) throw badDecl(node, 'node must be view:<name>, relation:<id> or scope:<id>');
   if (!isObj(decl)) throw badDecl(node, 'declaration must be an object {impl, own, uses}');
   for (const k of Object.keys(decl)) if (!['impl', 'own', 'uses', 'foldsOverDays'].includes(k)) throw badDecl(node, `unknown field ${k}`);
   if (!strList(decl.impl) || !decl.impl.length) throw badDecl(node, 'impl must be a non-empty list of function names');
   const ownOk = Array.isArray(decl.own) && decl.own.every((o) => strList(o) || (isObj(o) && strList(o.path) && (o.categories === undefined || strList(o.categories))));
   if (!ownOk) throw badDecl(node, 'own must be a list of path segment lists or {path, categories}');
-  if (!strList(decl.uses) || !decl.uses.every((u) => NODE.test(u))) throw badDecl(node, 'uses must be a list of node names');
+  if (!strList(decl.uses) || !decl.uses.every((u) => isAnyNode(u))) throw badDecl(node, 'uses must be a list of node names');
   if (decl.foldsOverDays !== undefined && typeof decl.foldsOverDays !== 'boolean') throw badDecl(node, 'foldsOverDays must be boolean');
   if (declared.has(node)) throw new Error(`kernel/declare.mjs: declareInputs: ${node} declared twice`);
   declared.set(node, Object.freeze({

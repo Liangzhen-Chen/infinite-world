@@ -16,12 +16,12 @@ import {
 import { canonicalEqual } from '../storage.mjs';
 import { KernelError, codeOf } from '../errors.mjs';
 import { report } from '../report.mjs';
+import { isHex64 } from '../handles/patterns.mjs';
 
 /** 入库的摘要排除表（生成文件，取代旧的手写表；卷一 §8.3 :643 的文件名不变）。 */
 export const DIGEST_EXCLUDE_FILE = 'world/rules/tables/digest-exclude.json';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
-const HEX64 = /^[0-9a-f]{64}$/;
 
 /** 读并解析一个 JSON 文件；不存在或解析不过返回 undefined。 @param {string} file */
 function readJson(file) {
@@ -55,14 +55,14 @@ export function loadDigestExclude(root, merged) {
  */
 export function readManifestDigests(file) {
   const m = readJson(file);
-  return isObj(m) && Array.isArray(m.shardDigests) ? m.shardDigests.filter((d) => typeof d === 'string' && HEX64.test(d)) : [];
+  return isObj(m) && Array.isArray(m.shardDigests) ? m.shardDigests.filter(isHex64) : [];
 }
 
 function manifestShapeOk(m) {
   if (!isObj(m)) return false;
   const keys = Object.keys(m).sort();
   if (keys.length !== MANIFEST_FIELDS.length || keys.some((k, i) => k !== MANIFEST_FIELDS[i])) return false;
-  return Array.isArray(m.shardDigests) && m.shardDigests.every((d) => typeof d === 'string' && HEX64.test(d))
+  return Array.isArray(m.shardDigests) && m.shardDigests.every(isHex64)
     && Array.isArray(m.logSegments) && m.logSegments.every((s, i) => isObj(s) && Number.isInteger(s.count) && typeof s.digest === 'string' && typeof s.sealed === 'boolean' && (s.sealed || i === m.logSegments.length - 1))
     && Array.isArray(m.snapshotIndex) && m.snapshotIndex.length > 0 && m.snapshotIndex.every((s) => isObj(s) && Number.isInteger(s.atEvent) && isObj(s.shards))
     && typeof m.rulesDigest === 'string' && Number.isInteger(m.clockMinute) && Number.isInteger(m.slot);

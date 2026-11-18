@@ -69,7 +69,7 @@ export function checkDef(def, env, at, err, top) {
     if (!env.units.has(def.unit)) bad('E-DIM-UNIT-UNKNOWN', def.unit, 'unit id in _units.json');
     const extScale = top && def.stockMode === 'extScale';
     if (def.precision === undefined) { if (t === 'number') bad('E-DIM-SCHEMA-PRECISION', 'missing', 'decimal places within SCALE'); }
-    else if (extScale ? !extPrecisionOk(def.precision) : !precisionOk(def.precision)) bad('E-DIM-SCHEMA-PRECISION', def.precision, extScale ? 'decimal places of SCALE² (stockMode extScale)' : 'decimal places within SCALE');
+    else if (extScale ? !extPrecisionOk(def.precision) : !precisionOk(def.precision)) bad('E-DIM-SCHEMA-PRECISION', def.precision, extScale ? 'decimal places of SCALE^2 (stockMode extScale)' : 'decimal places within SCALE');
     if (def.domain !== undefined && !rangeOk(def.domain)) bad('E-DIM-DOMAIN-RANGE', def.domain, '[min,max] (null = unbounded)');
   }
   if (t === 'enum') {
@@ -228,7 +228,7 @@ export function checkValue(def, v, env, at, err) {
         const [x, y, ...rest] = p;
         return typeof x === 'number' && typeof y === 'number' && rest.length === 0;
       };
-      if (!Array.isArray(v) || !pts.every(pairOk)) { bad('E-DIM-DOMAIN-CURVE', v, '[[x,y],…]'); return; }
+      if (!Array.isArray(v) || !pts.every(pairOk)) { bad('E-DIM-DOMAIN-CURVE', v, '[[x,y],...]'); return; }
       if (pts.some((p, i) => i > 0 && !(p[0] > pts[i - 1][0]))) bad('E-DIM-DOMAIN-CURVE', pts.map((p) => p[0]), 'strictly increasing x');
       if (def.monotone === true) {
         const d = pts.slice(1).map((p, i) => Math.sign(p[1] - pts[i][1]));

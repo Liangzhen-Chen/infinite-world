@@ -5,7 +5,8 @@
 /** @typedef {import('../types.d.ts').ErrorCode} ErrorCode */
 
 import { CODE_RE } from '../validate/types.mjs';
-import { ERROR_CODE_RE, REGISTERED_CODES } from '../error-codes.mjs';
+import { REGISTERED_CODES } from '../error-codes.mjs';
+import { isErrorCode } from './patterns.mjs';
 
 // 代号文法（§1.9 :278）：实体 id、类别 id、枚举值；定义在 validate/types.mjs，这里转出给 entity-id、keys 沿用。
 export { CODE_RE };
@@ -44,7 +45,7 @@ export function handleOf(index, family, id) {
  * @returns {ErrorCode}
  */
 export function errorCodeOf(code, registered = REGISTERED_CODES) {
-  if (typeof code !== 'string' || !ERROR_CODE_RE.test(code)) throw new HandleError('E-DIM-ID-FORMAT', `error code ${JSON.stringify(code)}: want E-<区>-<名> / W-…`);
+  if (!isErrorCode(code)) throw new HandleError('E-DIM-ID-FORMAT', `error code ${JSON.stringify(code)}: want E-<area>-<name> / W-...`);
   if (!registered.has(code)) throw new HandleError('E-DIM-REF-MISSING', `error code ${code}: not in error code registry`);
   return /** @type {ErrorCode} */ (code);
 }

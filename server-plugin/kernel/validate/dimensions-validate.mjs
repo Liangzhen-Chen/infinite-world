@@ -125,13 +125,13 @@ function checkHeader(t, env, err) {
     if (!KEY_RE.test(key)) bad('E-DIM-ID-FORMAT', '', key, 'lowerCamel dimension key');
     checkDef(def, env, at(key), err, true);
     if (!isObj(def)) continue;
-    if (!requiredSyntaxOk(def.required)) bad('E-DIM-STRUCT-FIELD', 'required', def.required, 'always|never|byClass:<c>|ifPresent:<d>|byEnum:<d>=<v>|anyOf:<a>,<b>|byDigestible|byReader, joined by ；');
+    if (!requiredSyntaxOk(def.required)) bad('E-DIM-STRUCT-FIELD', 'required', def.required, 'always|never|byClass:<c>|ifPresent:<d>|byEnum:<d>=<v>|anyOf:<a>,<b>|byDigestible|byReader, joined by ;');
     if (def.required !== 'always' && def.onUnknown === undefined) bad('E-DIM-ONUNKNOWN-MISSING', 'onUnknown', 'missing', CODE_ENUMS.onUnknown.join('|'));
     else if (def.onUnknown !== undefined && !CODE_ENUMS.onUnknown.includes(def.onUnknown)) bad('E-DIM-DOMAIN-ENUM', 'onUnknown', def.onUnknown, CODE_ENUMS.onUnknown.join('|'));
     if (typeof def.modifiable !== 'boolean') bad('E-DIM-MODIFIABLE-TYPE', 'modifiable', def.modifiable, 'true|false');
     else if (def.modifiable) {
       const numeric = (d) => isObj(d) && (d.type === 'number' || d.type === 'integer');
-      if (!(numeric(def) || (def.type === 'map' && numeric(def.value))) || def.type === 'string') bad('E-DIM-MODIFIABLE-TYPE', 'modifiable', def.type, 'number, integer or map<…, number>');
+      if (!(numeric(def) || (def.type === 'map' && numeric(def.value))) || def.type === 'string') bad('E-DIM-MODIFIABLE-TYPE', 'modifiable', def.type, 'number, integer or map<..., number>');
       if (!STACKING.includes(def.stacking)) bad('E-MOD-STACKING', 'stacking', def.stacking, STACKING.join('|'), 'L2');
       const [lo, hi, ...rest] = Array.isArray(def.bounds) ? def.bounds : [];
       if (typeof lo !== 'number' || typeof hi !== 'number' || rest.length || lo > hi) bad('E-MOD-BOUNDS', 'bounds', def.bounds, '[lo,hi]', 'L2');
@@ -163,7 +163,7 @@ function report(errors, tables, stats, env) {
   const out = norm.filter((e) => { const k = [e.code, e.table, e.row, e.dim].join('\u0000'); if (seen.has(k)) return false; seen.add(k); return true; });
   const nErr = out.filter((e) => e.severity === 'error').length;
   const rows = tables.reduce((n, t) => n + Object.keys(isObj(t.doc.rows) ? t.doc.rows : {}).length + Object.keys(isObj(t.doc.generated) ? t.doc.generated : {}).length, 0);
-  const lines = out.map((e) => `${e.code}  ${e.table}/${e.row}.${e.dim}  got ${JSON.stringify(e.got)}  want ${e.want}  — ${e.path}`);
+  const lines = out.map((e) => `${e.code}  ${e.table}/${e.row}.${e.dim}  got ${JSON.stringify(e.got)}  want ${e.want}  - ${e.path}`);
   lines.push(`errors=${nErr} warnings=${out.length - nErr} tables=${tables.length} rows=${rows} known=${stats.known} applicable=${stats.applicable}`);
   return {
     ok: nErr === 0,

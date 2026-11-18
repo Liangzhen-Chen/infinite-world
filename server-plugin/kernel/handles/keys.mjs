@@ -67,7 +67,7 @@ export function dimKeyOf(reg, kind, dimension, key) {
 export function modKeyOf(reg, kind, dimension, key) {
   const def = dimDef(reg, kind, dimension);
   const valueType = def && def.type === 'map' ? (def.value || {}).type : def && def.type;
-  if (!def || def.modifiable !== true || !NUMERIC.includes(valueType)) throw new HandleError('E-MOD-KEY-UNREGISTERED', `${join(kind, dimension, key)}: not a modifiable number/integer/map<…,number> dimension`);
+  if (!def || def.modifiable !== true || !NUMERIC.includes(valueType)) throw new HandleError('E-MOD-KEY-UNREGISTERED', `${join(kind, dimension, key)}: not a modifiable number/integer/map<...,number> dimension`);
   if (def.type === 'map' && key === undefined) throw new HandleError('E-MOD-KEY-UNREGISTERED', `${join(kind, dimension)}: map dimension needs a subscript`);
   if (key !== undefined && (def.type !== 'map' || !subKeyOk(reg, def.key, key))) throw new HandleError('E-DIM-REF-MISSING', `${join(kind, dimension, key)}: subscript not a key of the map dimension`);
   return /** @type {ModKey} */ (join(kind, dimension, key));

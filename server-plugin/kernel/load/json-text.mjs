@@ -1,8 +1,10 @@
 // L0 语法（卷二 §4.1）：JSON 可解析且无重复键，逐字符扫描。结构由本文件扫描，标量文本交给 JSON.parse 解码。
 // 返回 {value, errors}；errors 每项 {code, pointer, got, want}，pointer 为 JSON 指针。
 
+import { escapeJsonPointer, jsonScalarAt } from '../handles/patterns.mjs';
+
 const WS = new Set([' ', '\t', '\n', '\r']);
-const escPtr = (k) => k.replace(/~/g, '~0').replace(/\//g, '~1');
+const escPtr = escapeJsonPointer;
 
 /** @param {string} text JSON 文本 */
 export function parseJsonStrict(text) {
@@ -22,12 +24,10 @@ export function parseJsonStrict(text) {
     return JSON.parse(text.slice(start, i));
   }
   function scalar(pointer) {
-    const m = /-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null/y;
-    m.lastIndex = i;
-    const r = m.exec(text);
+    const r = jsonScalarAt(text, i);
     if (!r) bad(pointer, 'JSON value');
-    i = m.lastIndex;
-    return JSON.parse(r[0]);
+    i = r.end;
+    return JSON.parse(r.raw);
   }
   function value(pointer) {
     ws();

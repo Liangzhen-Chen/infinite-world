@@ -4,6 +4,7 @@
 import { checkValue, CODE_ENUMS, ROW_FIELDS, splitKey } from './types.mjs';
 import { gradeDecl } from './cell-grades.mjs';
 import { rowReads, namedHolds } from './named-conditions.mjs';
+import { splitRequiredTerms } from '../handles/patterns.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const SECTIONS = ['classes', 'rows', 'generated'];
@@ -115,7 +116,7 @@ function valueOf(t, id, row, dim) {
 
 const REQ_FORMS = /^(always|never|byClass:[a-z][a-z0-9_]*|ifPresent:[a-z][a-zA-Z0-9]*|byEnum:[a-z][a-zA-Z0-9]*=[a-z][a-z0-9_]*|anyOf:[a-zA-Z0-9.]+(,[a-zA-Z0-9.]+)+|byDigestible|byReader)$/;
 /** @param {unknown} s required 策略 @returns {string[]} */
-export const requiredTerms = (s) => (typeof s === 'string' ? s.split('；').map((x) => x.trim()) : []);
+export const requiredTerms = splitRequiredTerms;
 /** @param {unknown} s required 策略 @returns {boolean} */
 export const requiredSyntaxOk = (s) => requiredTerms(s).length > 0 && requiredTerms(s).every((x) => REQ_FORMS.test(x));
 

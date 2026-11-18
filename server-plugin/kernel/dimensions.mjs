@@ -6,7 +6,7 @@
 // 本文件不手写槽、不认任何具体表、维度或键（体检 K2-05）。只有一条节奏通路：本管线不乘任何节奏系数（卷二十 §4.10 规则 5、6；体检 K2-06、K2-23b）。
 // 整条管线只有 BigInt 加、乘、整除、比较与查表（kernel/det-math.mjs），无浮点运算。
 
-import { fixedUnits, fixedAdd, fixedMultiply, truncateTo, fixedToNumber, SCALE } from './det-math.mjs';
+import { fixedUnits, fixedAdd, fixedMultiply, truncateTo, fixedToNumber, fixedScale } from './det-math.mjs';
 import { dimKeyOf, modKeyOf } from './handles/keys.mjs';
 import { registry } from './vocab.mjs';
 import { stateMemo } from './memo.mjs';
@@ -308,7 +308,7 @@ export function runPipeline(engine, base, rows, def, subjectKind) {
     for (const r of side) {
       const s = !penalized || r.unpenalized ? S[0] : pen < S.length ? S[pen++] : (pen++, 0n);
       const b = v;
-      v = fixedMultiply(v, SCALE + fixedMultiply(r.fixed, s));
+      v = fixedMultiply(v, fixedScale() + fixedMultiply(r.fixed, s));
       push(r, num(s), b, v);
     }
   }
