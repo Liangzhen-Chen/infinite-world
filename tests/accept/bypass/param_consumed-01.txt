@@ -1,0 +1,5 @@
+// 规则层代码读的是别的键，登记参数 unitValue 没有消费者（A12-4.5 必须报）。
+export const pick = (t) => t.other;
+
+// @file world/rules/tables/valuation.json
+{"rows": [{"key": "unitValue", "value": 1}]}

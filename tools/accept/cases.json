@@ -777,6 +777,25 @@
   },
   {
    "addedAtRev": 1,
+   "caseKey": "param_consumed-01",
+   "expectCode": "E-ACC-PARAM-UNCONSUMED",
+   "fixture": "tests/accept/bypass/param_consumed-01.txt",
+   "group": "rules",
+   "origin": "卷十二 §4.4.6 A12-4.5、R12-13.3：规则层代码读的是别的键，登记参数没有消费者（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "param_consumed"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "param_consumed-11",
+   "fixture": "tests/accept/bypass/param_consumed-11.txt",
+   "group": "rules",
+   "origin": "卷十二 R12-13.3、R12-14.3：规则层代码经规则表读到登记参数（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "param_consumed"
+  },
+  {
+   "addedAtRev": 1,
    "caseKey": "registry_write-01",
    "fixture": "tests/accept/bypass/registry_write-01.txt",
    "group": "offline",

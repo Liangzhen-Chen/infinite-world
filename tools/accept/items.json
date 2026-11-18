@@ -1725,18 +1725,24 @@
    "itemKey": "vol12.A12-4.4",
    "localNo": "A12-4.4",
    "method": "property_test",
-   "print": "31088112cf94f7ba963daad474900158f2ec3dbdd36fecfad251af9f2e147f27",
-   "rev": 1,
+   "print": "39d74d232c335fd9ec3337881798fba65fbdd75e5948d7c38e241c70c70e2255",
+   "rev": 2,
    "revisions": [
     {
      "card": "A12-4.4/4.5 补登卡",
      "date": "2026-11-18",
      "rev": 1,
      "summary": "首次登记，扫描待实现"
+    },
+    {
+     "card": "B2-W1",
+     "date": "2026-11-18",
+     "rev": 2,
+     "summary": "只登 registered，不实现；现无机读承诺来源，挂块 5 B5-ACT《动作目录与 affordances 落码》（卷十二 :783；李白 11-18 08:20 裁定③）"
     }
    ],
    "runsOn": "local_static",
-   "source": "卷十二 §4.4.6 A12-4.4（卷十二:773）；A12-4.4/4.5 补登卡",
+   "source": "卷十二 §4.4.6 A12-4.4（:783）；暂登 registered，挂块 5 B5-ACT《动作目录与 affordances 落码》；B2-W1 卡；李白 11-18 08:20 裁定③",
    "stage": 0,
    "state": "registered",
    "target": "tests_code",
@@ -1744,29 +1750,29 @@
    "zeroRows": []
   },
   {
+   "detector": "decl_cmp",
    "expect": "zero",
-   "form": "invariant",
+   "form": "scan",
    "gates": [
+    "pre_commit",
     "pre_merge"
    ],
+   "impl": "tools/accept/detectors/decl_cmp.mjs",
    "itemKey": "vol12.A12-4.5",
    "localNo": "A12-4.5",
-   "method": "property_test",
-   "print": "5a905c9c2f087f8246283ef6f88df10f6d2997882d1ce0aa2489b94f8c822841",
-   "rev": 1,
-   "revisions": [
-    {
-     "card": "A12-4.4/4.5 补登卡",
-     "date": "2026-11-18",
-     "rev": 1,
-     "summary": "首次登记，扫描待实现"
-    }
-   ],
+   "method": "static_data",
+   "params": {
+    "checks": [
+     "paramConsumed"
+    ],
+    "code": "E-ACC-PARAM-UNCONSUMED"
+   },
    "runsOn": "local_static",
-   "source": "卷十二 §4.4.6 A12-4.5（卷十二:774）；A12-4.4/4.5 补登卡",
+   "scanClass": "param_consumed",
+   "source": "卷十二 §4.4.6 A12-4.5（:784）；§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定②；B2-W1 卡",
    "stage": 0,
-   "state": "registered",
-   "target": "tests_code",
+   "state": "implemented",
+   "target": "registry",
    "volume": "vol12",
    "zeroRows": []
   },

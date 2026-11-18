@@ -1,0 +1,5 @@
+// 规则层代码经规则表读到登记的 unitValue（A12-4.5 必须不报）。
+export const pick = (t) => t.unitValue;
+
+// @file world/rules/tables/valuation.json
+{"rows": [{"key": "unitValue", "value": 1}]}

@@ -11,6 +11,7 @@ import { detect as pathAccess } from '../../tools/accept/detectors/path_access.m
 import { detect as callEdge } from '../../tools/accept/detectors/call_edge.mjs';
 import { detect as docStruct, definedNumbers } from '../../tools/accept/detectors/doc_struct.mjs';
 import { detect as dataShape } from '../../tools/accept/detectors/data_shape.mjs';
+import { detect as declCmp } from '../../tools/accept/detectors/decl_cmp.mjs';
 import { REGISTERED_CODES } from '../../server-plugin/kernel/error-codes.mjs';
 import { ENUM } from '../../tools/accept/lib/item-form.mjs';
 import { tempRepo } from './temp-repo.mjs';
@@ -560,9 +561,67 @@ test('vol2.S10 补码：const_literal 类条目登 E-ACC-CONST-LITERAL，码在�
   assert.ok(REGISTERED_CODES.has('E-ACC-CONST-LITERAL'));
   const own = readRegistry(ROOT, 'items').filter((it) => it.scanClass === 'const_literal');
   assert.deepEqual(own.map((it) => [it.itemKey, it.params.code]), [['vol2.S10', 'E-ACC-CONST-LITERAL']]);
-  const codeFromParam = new Set(['lit_scope', 'call_edge', 'file_set', 'data_shape']);
+  const codeFromParam = new Set(['lit_scope', 'call_edge', 'file_set', 'data_shape', 'decl_cmp']);
   for (const it of readRegistry(ROOT, 'items')) {
     if (it.state === 'registered' || !codeFromParam.has(it.detector) || (it.params || {}).checks) continue;
     assert.ok(REGISTERED_CODES.has((it.params || {}).code), `${it.itemKey} running without a registered code`);
   }
+});
+
+// ---------- A12-4.5 参数必须有消费者（卷十二 §4.4.6 :784；李白 11-18 08:20 裁定②，勘误 1118k18） ----------
+
+const VALUATION = 'world/rules/tables/valuation.json';
+const PC = { checks: ['paramConsumed'], code: 'E-ACC-PARAM-UNCONSUMED' };
+const pc = (map) => declCmp(ctxOf(map), PC, CLS.param_consumed);
+
+test('param_consumed：规则层读到即不算（成员访问、下标、同值字串），读别的键报 E-ACC-PARAM-UNCONSUMED', () => {
+  const table = { [VALUATION]: '{"rows": []}' };
+  assert.deepEqual(pc({ ...table, 'server-plugin/rates.mjs': 'export const f = (t) => t.unitValue;' }), []);
+  assert.deepEqual(pc({ ...table, 'server-plugin/rates.mjs': "export const f = (t) => t['unitValue'];" }), []);
+  assert.deepEqual(pc({ ...table, 'server-plugin/rates.mjs': "const K = 'unitValue'; export const f = (t) => t[K];" }), []);
+  assert.deepEqual(pc({ ...table, 'server-plugin/kernel/rates.mjs': 'export const f = (t) => t.unitValue;' }), []);
+  const hit = pc({ ...table, 'server-plugin/rates.mjs': 'export const f = (t) => t.other;' });
+  assert.deepEqual(hit.map((h) => [h.file, h.nodeKind, h.symbolPath, h.code]), [['world/rules/registry.json', 'param', 'valuation.unitValue', 'E-ACC-PARAM-UNCONSUMED']]);
+});
+
+test('param_consumed：加载器（kernel/load/）、校验器（kernel/validate/）与测试读全表都不算消费者', () => {
+  const table = { [VALUATION]: '{"rows": []}' };
+  const src = 'export const f = (t) => t.unitValue;';
+  for (const file of ['server-plugin/kernel/load/x.mjs', 'server-plugin/kernel/validate/x.mjs', 'tests/kernel/x.mjs']) {
+    assert.equal(pc({ ...table, [file]: src }).length, 1, file);
+  }
+});
+
+test('param_consumed：范围经登记解析；被查内容里没有登记的键表、或内核组登记缺失报 E-ACC-ITEM-PARAM，不静默放过', () => {
+  assert.deepEqual(pc({ 'server-plugin/rates.mjs': 'export const x = 1;' }).map((h) => [h.nodeKind, h.code]), [['param', 'E-ACC-ITEM-PARAM']]);
+  const ctx = ctxOf({ [VALUATION]: '{"rows": []}', 'server-plugin/rates.mjs': 'export const f = (t) => t.unitValue;' });
+  const noKernel = Object.fromEntries(Object.entries(ctx.decl).filter(([k]) => k !== 'kernel'));
+  assert.deepEqual(declCmp({ ...ctx, decl: noKernel }, PC, CLS.param_consumed).map((h) => [h.nodeKind, h.code]), [['param', 'E-ACC-ITEM-PARAM']]);
+});
+
+test('param_consumed 真实仓库：如实报无运行期消费者的登记参数（待 S13 卡接上 det-math 常数），有读者的键不计', () => {
+  assert.ok(REGISTERED_CODES.has('E-ACC-PARAM-UNCONSUMED'));
+  assert.ok(REGISTERED_CODES.has('E-ACC-PROMISE-UNREACHABLE'));
+  const hits = declCmp(loadContext(ROOT), PC, CLS.param_consumed);
+  assert.ok(hits.every((h) => h.code === 'E-ACC-PARAM-UNCONSUMED'));
+  const keys = hits.map((h) => h.symbolPath).sort();
+  // det-math.mjs:5-6 自定 BASE/SCALE/PERMILLE/BPS，kernelConstants 这四键无读者，待 S13 卡（B2-W2）接上；
+  // extendsMaxDepth/rxMaxDepth 只被加载器与校验器读到，按消费者口径不算；valuation.unitValue 只有测试读。
+  assert.deepEqual(keys, [
+    'kernelConstants.BASE', 'kernelConstants.BPS', 'kernelConstants.PERMILLE', 'kernelConstants.SCALE',
+    'kernelConstants.extendsMaxDepth', 'kernelConstants.rxMaxDepth', 'valuation.unitValue',
+  ]);
+  for (const k of ['kernelConstants.handleRadix', 'modifiers.stackingTable', 'economyLedger.budget', 'economyLedger.alert',
+    'clock.cadence', 'clock.phaseOffset', 'clock.paceFactor', 'clock.contestDefault', 'clock.reactionDepthMax', 'clock.proposalMax', 'clock.drawSites',
+    'saveLayout.segmentEvents', 'saveLayout.snapshotEveryEvents', 'saveLayout.keepSnapshots']) assert.ok(!keys.includes(k), k);
+});
+
+test('A12-4.5 登记：条目 vol12.A12-4.5 登码 E-ACC-PARAM-UNCONSUMED、scanClass 与检测器已登记；A12-4.4 仍 registered 并挂 B5-ACT', () => {
+  const items = readRegistry(ROOT, 'items');
+  const a45 = items.find((it) => it.itemKey === 'vol12.A12-4.5');
+  assert.deepEqual([a45.state, a45.scanClass, a45.detector, a45.params.code], ['implemented', 'param_consumed', 'decl_cmp', 'E-ACC-PARAM-UNCONSUMED']);
+  assert.ok(CLS.param_consumed.detectors.includes('decl_cmp'));
+  const a44 = items.find((it) => it.itemKey === 'vol12.A12-4.4');
+  assert.equal(a44.state, 'registered');
+  assert.match(a44.source, /B5-ACT/);
 });
