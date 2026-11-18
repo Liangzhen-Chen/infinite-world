@@ -25,8 +25,10 @@ test('新树上提交关口：必过条目计数全 0，用例全过，放行', 
   assert.ok(Object.values(report.cases).length >= 10);
   // text_judge 类别下没有已实现条目（靠 tsc 才能判的反例报不出，卷十二 R12-11.7）：它的用例不跑，记 not_run；其余用例全过。
   const notRun = Object.keys(report.cases).filter((k) => report.cases[k] === 'not_run');
-  assert.ok(notRun.length > 0 && notRun.every((k) => k.startsWith('text_judge-')));
-  assert.ok(Object.entries(report.cases).every(([k, v]) => v === 'pass' || k.startsWith('text_judge-')));
+  // undeclared_io 同理（S15 的"传给登记之外的函数"未判，R12-3.4）。
+  const gap = (k) => k.startsWith('text_judge-') || k.startsWith('undeclared_io-');
+  assert.ok(notRun.length > 0 && notRun.every(gap));
+  assert.ok(Object.entries(report.cases).every(([k, v]) => v === 'pass' || gap(k)));
 });
 
 test('报告确定：同内容两次逐字节相同，打乱文件遍历次序也相同', async () => {
@@ -74,16 +76,12 @@ test('登记器：形式、参数、门禁设施、状态转移不合即拒，�
     assert.equal(readFileSync(join(dir, LAYOUT.accDir, 'items.json'), 'utf8'), before);
     const back = register(dir, { itemStates: { [item.itemKey]: 'registered' } });
     assert.match(back.errors.join('\n'), /not allowed/);
-    // implemented 退回 registered 只在修订该类别判据的同一次登记里许可（rev 加一并带同号记录）；单改状态、或 in_core 退回，一律拒
+    // 没有别的转移（卷十二 :1098）：implemented 退回 registered，即使同时修订判据，也一律拒
     const impl = r.items.find((it) => it.state === 'implemented' && it.scanClass);
     assert.match(register(dir, { itemStates: { [impl.itemKey]: 'registered' } }).errors.join('\n'), /implemented -> registered not allowed/);
-    const demoted = register(dir, { itemStates: { [impl.itemKey]: 'registered' }, criteriaRevise: { [impl.scanClass]: 'P-1 自测：退回 registered' } });
-    assert.deepEqual(demoted.errors, []);
-    const row = readRegistry(dir, 'criteria').find((c) => c.scanClass === impl.scanClass);
-    const old = r.criteria.find((c) => c.scanClass === impl.scanClass);
-    assert.equal(row.rev, old.rev + 1);
-    assert.deepEqual(row.log.slice(0, old.log.length), old.log);
-    assert.equal(readRegistry(dir, 'items').find((it) => it.itemKey === impl.itemKey).state, 'registered');
+    const crow = r.criteria.find((c) => c.scanClass === impl.scanClass);
+    const withRev = { ...crow, rev: crow.rev + 1, log: [...crow.log, { ref: 'P-1 自测', rev: crow.rev + 1 }] };
+    assert.match(register(dir, { itemStates: { [impl.itemKey]: 'registered' }, criteria: [withRev] }).errors.join('\n'), /implemented -> registered not allowed/);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 

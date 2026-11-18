@@ -1,0 +1,4 @@
+// 卷二 A12 :2375 反例：把 state 传给三类对象（内核 API、本入口 uses 内的函数、声明项）之外的辅助函数 → S15 必报 E-VIEW-DYNAMIC-STATE。
+// 现有词法检测器判不出（要调用图与 uses 才能判，decl_cmp 局限）：照实记为缺口用例，条目留 registered。
+/** @param {State} state @returns {unknown} */
+export function placeView(state) { return statusView(state); }

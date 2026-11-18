@@ -1,0 +1,5 @@
+// 卷二 §2.8 / S13 ③（:2399）别名跨文件溯源：字面量别名在别的文件里定义（./codes.mjs：export const S = 'sleep'），本文件只导入再比较。
+// 现有词法检测器只在单文件内溯源，判不出（要 tsc 或跨文件调用图）：照实记为缺口用例。
+import { S } from './codes.mjs';
+/** @param {Key} x @returns {boolean} */
+export function bad(x) { return x === S; }

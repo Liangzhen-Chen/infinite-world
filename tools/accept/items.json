@@ -1013,6 +1013,27 @@
    "zeroRows": []
   },
   {
+   "baseComp": "c_difficulty",
+   "detector": "data_shape",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol1.V-9.b",
+   "localNo": "V-9",
+   "method": "static_data",
+   "runsOn": "local_static",
+   "scanClass": "handfill_derived",
+   "source": "原条目 vol1.V-9（卷一 R-6 第 5 条判定 :346、附录甲 V-9 :756）；S12-3 拆行；卷十二 R12-4.6、M12-4（tools/derived-scan.mjs 的 replace_entry）。本行只覆盖手填派生值（难度）一项，旧基线 26；V-9 的白名单外数值字面量、缺 basis 两项不在本行，仍是 V-9 欠账；未实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "data",
+   "volume": "vol1",
+   "zeroRows": []
+  },
+  {
    "detector": "ledger_count",
    "expect": "zero",
    "form": "scan",
@@ -1536,6 +1557,25 @@
    "runsOn": "local_static",
    "scanClass": "ledger_tally",
    "source": "卷十二 §4.3.6 A12-3.1；S12-3 转录",
+   "stage": 0,
+   "state": "registered",
+   "target": "registry",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
+   "detector": "data_shape",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol12.A12-3.1.b",
+   "localNo": "A12-3.1",
+   "method": "static_data",
+   "runsOn": "local_static",
+   "scanClass": "dual_write",
+   "source": "原条目 vol12.A12-3.1（卷十二 §4.3.6 A12-3.1；S12-3 拆行）；dual_write 的 data_shape 一支（R12-3.2、§2.4:241；块 2 体检 P1-32）；未实现",
    "stage": 0,
    "state": "registered",
    "target": "registry",
@@ -2523,7 +2563,7 @@
    "scanClass": "undeclared_io",
    "source": "卷二 §7 S15 E-VIEW-DYNAMIC-STATE（卷十二 R12-3.4）",
    "stage": 0,
-   "state": "implemented",
+   "state": "registered",
    "target": "runtime_code",
    "volume": "vol2",
    "zeroRows": []
