@@ -4,11 +4,13 @@
 //   向 engine.rules 要未登记的表（ruleTable）→ E-RULES-UNREGISTERED；
 //   表值的类型与取值域按 L1 同一套检查、报同一组码；multiSourceMerge 与值类型不合 → E-PACK-RULEKEY（卷二十八 §2.11 :280）。
 // 分两步：readRules 只读文件、查登记与结构（不需词表）；checkRules 拿维度加载得到的 env 查类型与取值域。
+// 结构除键表、行表外另有独立格式 "processSlots"（卷二 §3.7 过程主体槽，文件级登记，专用校验；李白 11-18 块 2-5 裁定①）。
 
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { parseJsonStrict } from './json-text.mjs';
-import { checkDef, checkValue, rangeOk, DOMAIN_OPTIONAL, TYPES, KEY_RE, CODE_RE } from '../validate/types.mjs';
+import { checkDef, checkValue, rangeOk, DOMAIN_OPTIONAL, TYPES, KEY_RE, CODE_RE, CODE_ENUMS } from '../validate/types.mjs';
+import { STACKING } from '../validate/dimensions-validate.mjs';
 
 export const RULES_LAYOUT = Object.freeze({ dir: 'world/rules', registry: 'registry.json' });
 
@@ -25,6 +27,14 @@ const MERGE = Object.freeze({
   take_max: (d) => ['number', 'integer', 'enum'].includes(d.type),
 });
 const FILE_RE = /^(?:[a-z0-9][a-z0-9_-]*\/)*[a-z0-9][a-z0-9_-]*\.json$/;
+// 独立格式：过程主体槽（卷二 §3.7 slots/consumers 嵌套格式；李白 11-18 块 2-5 裁定①）。登记行按文件登记，
+// 不写 type/domain（格式由 §3.7 定），packOverridable 写一个布尔；表值由下面的专用校验读，修正键是 process.<slot>（§3.1 :1291 额外命名空间）。
+const PROCESS_STRUCTURE = 'processSlots';
+const PROCESS_TOP = Object.freeze(['version', 'slots', 'consumers']);
+// 槽字段：§3.7 格式与 §1.2 表头字段（unit、precision、stacking、bounds、boundsRelative、boundsByKind、budget）加 process 槽独有的 paceable、baselineRX 与文档字段 basis。
+const SLOT_FIELDS = Object.freeze(['unit', 'precision', 'stacking', 'bounds', 'boundsRelative', 'boundsByKind', 'budget', 'paceable', 'baselineRX', 'basis']);
+const BUDGET_FIELDS = Object.freeze(['maxModifiers', 'totalBounds', 'stageBounds']);
+const CONSUMER_FIELDS = Object.freeze(['slot', 'base']);
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
@@ -94,7 +104,18 @@ export function readRules(root, opts = {}) {
       t.rowKey = { ...r.structure.rows, type: 'ref' };
       t.rowDef = checkDefShape(defOf(r.type, r.domain), r.multiSourceMerge, at);
       if (typeof r.packOverridable !== 'boolean') at('packOverridable', r.packOverridable, 'true|false');
-    } else return at('structure', r.structure, '"keys" or {"rows": <row key ref>}');
+    } else if (r.structure === PROCESS_STRUCTURE) {
+      // 文件级登记（§3.7 独立格式）：类型与取值域由格式本身定，登记行不写。
+      for (const f of ['type', 'domain']) if (r[f] !== undefined) at(f, f, `absent for structure "${PROCESS_STRUCTURE}" (format fixed by 卷二 §3.7)`);
+      if (typeof r.packOverridable !== 'boolean') at('packOverridable', r.packOverridable, 'true|false');
+      t.process = null;
+    } else return at('structure', r.structure, `"keys", {"rows": <row key ref>} or "${PROCESS_STRUCTURE}"`);
+    if (Object.hasOwn(t, 'process')) {
+      readProcessTable(root, t, errors);
+      tables.push(t);
+      rules[t.code] = Object.freeze(t.process || {});
+      return;
+    }
     readTable(root, t, errors);
     tables.push(t);
     rules[t.code] = Object.freeze(Object.fromEntries(t.entries.map((e) => [e.key, e.value])));
@@ -125,12 +146,89 @@ function readTable(root, t, errors) {
   });
 }
 
+// 过程主体槽文件的顶层结构（卷二 §3.7）：{"version": 正整数, "slots": {…}, "consumers": {…}}，不认别的顶层键。槽与消费者的逐项检查在 checkRules（要 env）。
+function readProcessTable(root, t, errors) {
+  const err = (path, got, want, code = 'E-DIM-STRUCT-FIELD', level = 'L1') => errors.push({ code, level, table: `rules.${t.code}`, row: '', dim: '', path, got, want });
+  if (!existsSync(resolve(root, t.file))) return err(t.file, 'missing', 'file named by the registry row', 'E-RULES-UNREGISTERED');
+  const doc = parseJsonStrict(readFileSync(resolve(root, t.file), 'utf8'));
+  for (const e of doc.errors) err(`${t.file}#${e.pointer}`, e.got, e.want, e.code, 'L0');
+  if (doc.errors.length) return;
+  const v = doc.value;
+  if (!isObj(v)) return err(t.file, typeof v, '{"version", "slots", "consumers"} (卷二 §3.7)');
+  // version 是 §3.7 格式里写着的顶层键，照收；不按它的值分支（规则只一版，不做版本分叉）。
+  for (const k of Object.keys(v).sort()) if (!PROCESS_TOP.includes(k)) err(`${t.file}#/${esc(k)}`, k, PROCESS_TOP.join('|'));
+  if (!isObj(v.slots)) err(`${t.file}#/slots`, v.slots, 'object: slot -> slot definition');
+  if (!isObj(v.consumers)) err(`${t.file}#/consumers`, v.consumers, 'object: consumer group -> consumers');
+  t.process = v;
+}
+
+// 过程主体槽的专用校验（卷二 §3.7"与实体维度的修正键同一管线、同一校验（E-MOD-*）"）：槽名是 process.<slot> 里的 <slot>，照维度键文法（lowerCamel）；
+// 单位与精度照维度表头同一检查（checkDef）；stacking / bounds / boundsByKind / budget / baselineRX 报 E-MOD-*；消费者所指槽须已登记。
+function checkProcessTable(t, env, err) {
+  const doc = t.process;
+  if (!isObj(doc)) return;
+  const file = t.file;
+  const slots = isObj(doc.slots) ? doc.slots : {};
+  for (const name of Object.keys(slots).sort()) {
+    const s = slots[name];
+    const base = `${file}#/slots/${esc(name)}`;
+    const bad = (code, dim, got, want, level = 'L2') => err({ code, level, row: `process.${name}`, dim, path: dim ? `${base}/${dim}` : base, got, want });
+    if (!KEY_RE.test(name)) bad('E-DIM-ID-FORMAT', '', name, 'lowerCamel slot name (modifier key process.<slot>, 卷二 §3.1)', 'L1');
+    if (!isObj(s)) { bad('E-DIM-STRUCT-FIELD', '', typeof s, 'slot definition object', 'L1'); continue; }
+    for (const f of Object.keys(s).sort()) if (!SLOT_FIELDS.includes(f)) bad('E-DIM-STRUCT-FIELD', f, f, SLOT_FIELDS.join('|'), 'L1');
+    checkDef({ type: 'number', unit: s.unit, precision: s.precision }, env, { row: `process.${name}`, dim: 'unit', path: base }, err, false);
+    if (!STACKING.includes(s.stacking)) bad('E-MOD-STACKING', 'stacking', s.stacking, STACKING.join('|'));
+    const pair = (b) => { const [lo, hi, ...rest] = Array.isArray(b) ? b : []; return !rest.length && typeof lo === 'number' && typeof hi === 'number' && lo <= hi; };
+    if (!pair(s.bounds)) bad('E-MOD-BOUNDS', 'bounds', s.bounds, '[lo,hi]');
+    if (s.boundsRelative !== undefined && typeof s.boundsRelative !== 'boolean') bad('E-MOD-BOUNDS', 'boundsRelative', s.boundsRelative, 'true|false');
+    if (s.boundsByKind !== undefined) {
+      if (!isObj(s.boundsByKind)) bad('E-MOD-BOUNDS', 'boundsByKind', s.boundsByKind, 'object: subject kind -> [lo,hi]');
+      else for (const [k, b] of Object.entries(s.boundsByKind).sort()) if (!KEY_RE.test(k) || !pair(b)) bad('E-MOD-BOUNDS', `boundsByKind/${esc(k)}`, b, 'subject kind -> [lo,hi]');
+    }
+    if (s.budget !== undefined) {
+      const b = s.budget;
+      if (!isObj(b)) bad('E-MOD-BUDGET', 'budget', b, `{${BUDGET_FIELDS.join(', ')}}`);
+      else {
+        for (const f of Object.keys(b).sort()) if (!BUDGET_FIELDS.includes(f)) bad('E-MOD-BUDGET', `budget/${esc(f)}`, f, BUDGET_FIELDS.join('|'));
+        if (b.maxModifiers !== undefined && (!Number.isInteger(b.maxModifiers) || b.maxModifiers < 1)) bad('E-MOD-BUDGET', 'budget/maxModifiers', b.maxModifiers, 'positive integer');
+        for (const f of ['totalBounds', 'stageBounds']) {
+          if (b[f] === undefined) continue;
+          if (!isObj(b[f])) { bad('E-MOD-BUDGET', `budget/${f}`, b[f], 'object: stage -> [lo,hi]'); continue; }
+          for (const [st, r] of Object.entries(b[f]).sort()) if (!CODE_ENUMS.stage.includes(st) || !pair(r)) bad('E-MOD-BUDGET', `budget/${f}/${esc(st)}`, [st, r], `stage (${CODE_ENUMS.stage.join('|')}) -> [lo,hi]`);
+        }
+      }
+    }
+    if (s.paceable !== undefined && typeof s.paceable !== 'boolean') bad('E-DIM-STRUCT-FIELD', 'paceable', s.paceable, 'true|false', 'L1');
+    if (s.basis !== undefined && typeof s.basis !== 'string') bad('E-DIM-STRUCT-FIELD', 'basis', s.basis, 'string', 'L1');
+    if (s.baselineRX !== undefined) checkValue({ type: 'rx' }, s.baselineRX, env, { row: `process.${name}`, dim: 'baselineRX', path: `${base}/baselineRX` }, err);
+  }
+  const consumers = isObj(doc.consumers) ? doc.consumers : {};
+  for (const group of Object.keys(consumers).sort()) {
+    const gpath = `${file}#/consumers/${esc(group)}`;
+    const g = consumers[group];
+    const gbad = (code, row, path, got, want, level = 'L1') => err({ code, level, row, dim: '', path, got, want });
+    if (!KEY_RE.test(group)) gbad('E-DIM-ID-FORMAT', group, gpath, group, 'lowerCamel consumer group');
+    if (!isObj(g)) { gbad('E-DIM-STRUCT-FIELD', group, gpath, typeof g, 'object: consumer -> {slot, base}'); continue; }
+    for (const name of Object.keys(g).sort()) {
+      const c = g[name];
+      const row = `${group}.${name}`;
+      const path = `${gpath}/${esc(name)}`;
+      if (!KEY_RE.test(name)) gbad('E-DIM-ID-FORMAT', row, path, name, 'lowerCamel consumer');
+      if (!isObj(c)) { gbad('E-DIM-STRUCT-FIELD', row, path, typeof c, '{slot, base}'); continue; }
+      for (const f of Object.keys(c).sort()) if (!CONSUMER_FIELDS.includes(f)) gbad('E-DIM-STRUCT-FIELD', row, `${path}/${esc(f)}`, f, CONSUMER_FIELDS.join('|'));
+      if (typeof c.slot !== 'string' || !Object.hasOwn(slots, c.slot)) gbad('E-MOD-KEY-UNREGISTERED', row, `${path}/slot`, c.slot, 'slot declared in slots (process.<slot>)', 'L2');
+      if (typeof c.base !== 'number') gbad('E-DIM-STRUCT-FIELD', row, `${path}/base`, c.base, 'number');
+    }
+  }
+}
+
 // 第二步：类型定义（完整写法的）与表值按 L1/L2 同一套检查。env 取自维度加载（validateDimensions 的 env）。
 /** @param {{errors: unknown[], tables: unknown[], rules: Record<string, unknown>}} read readRules 的结果 @param {Record<string, unknown>} env */
 export function checkRules(read, env) {
   const errors = [];
   for (const t of read.tables) {
     const err = (e) => errors.push({ ...e, table: `rules.${t.code}` });
+    if (Object.hasOwn(t, 'process')) { checkProcessTable(t, env, err); continue; }
     const defs = t.keyed ? [...t.defs] : t.rowDef ? [['', t.rowDef]] : [];
     for (const [k, def] of defs) if (def.type !== undefined && Object.keys(def).some((f) => f !== 'type' && f !== 'domain')) checkDef(def, env, { row: k, dim: 'type', path: `registry:${t.code}/${k}` }, err, false);
     for (const e of t.entries) {

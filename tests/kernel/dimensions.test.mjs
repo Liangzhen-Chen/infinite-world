@@ -140,6 +140,24 @@ test('叠加：stackGroup 同组取序最高；同源只计一条；stacking:non
   assert.deepEqual(pens, [1, 0.8691, 0.5706, 0.283, 0.106, 0.03, 0.0064, 0.001, 0.0001, 0]);
 });
 
+test('同源去重分阶段（卷二 §3.3、§3.4 勘误 1118b26，李白 11-18 块 2-5 裁定③）：键 (source.id, target, subject, stage)', () => {
+  const mat = { kind: 'material', id: 'mat_oak' };
+  // 同一材料行同时给 add 0.5 与 mul 0.20：两者都生效。1 + 0.5 = 1.5；×(1 + 0.20·S[0]) = 1.5 × 1.2 = 1.8
+  use([{ ...row('m_off', W, 'add', 0.5), source: mat }, { ...row('m_fac', W, 'mul', 0.20), source: mat }]);
+  assert.equal(modified(engine, {}, 'gadget', 'gad_box', 'workSpeed').value, 1.8);
+  assert.deepEqual(explain(engine, {}, 'gadget', 'gad_box', 'workSpeed').map((s) => s.id), ['m_off', 'm_fac']);
+  // 同阶段同源两条只留全序键 (priority desc, |value| desc, source.id asc, id asc) 最前者：|0.20| > |0.10| → 留 0.20，1 × 1.2 = 1.2
+  use([{ ...row('m_x', W, 'mul', 0.10), source: mat }, { ...row('m_y', W, 'mul', 0.20), source: mat }]);
+  assert.equal(modified(engine, {}, 'gadget', 'gad_box', 'workSpeed').value, 1.2);
+  // priority 先于 |value|：priority 1 的 0.10 排最前 → 留 0.10，1 × 1.1 = 1.1
+  use([{ ...row('m_x', W, 'mul', 0.10, { priority: 1 }), source: mat }, { ...row('m_y', W, 'mul', 0.20), source: mat }]);
+  assert.equal(modified(engine, {}, 'gadget', 'gad_box', 'workSpeed').value, 1.1);
+  // 全序其余键相同按 id asc：m_p 先于 m_q → 留 m_p 的 add 0.3，1 + 0.3 = 1.3
+  use([{ ...row('m_q', W, 'add', -0.3), source: mat }, { ...row('m_p', W, 'add', 0.3), source: mat }]);
+  assert.deepEqual(explain(engine, {}, 'gadget', 'gad_box', 'workSpeed').map((s) => s.id), ['m_p']);
+  assert.equal(modified(engine, {}, 'gadget', 'gad_box', 'workSpeed').value, 1.3);
+});
+
 test('派生维度登记即开槽：修正键来自维度表头 modifiable，map 子键分别寻址；不可修正维度拒收', () => {
   use([row('u1', 'gadget.upkeep[grd_a]', 'mul', 0.5)]);
   assert.equal(modified(engine, {}, 'gadget', 'gad_box', 'upkeep', { key: 'grd_a' }).value, 18);
