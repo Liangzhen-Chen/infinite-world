@@ -11,7 +11,8 @@ import { installVocab } from '../../server-plugin/kernel/vocab.mjs';
 import { installStorage, readPath, writePath, readSealed, writeSealed, installCredentialCheck } from '../../server-plugin/kernel/storage.mjs';
 import { runTransaction, submitProposal, installProposalSession, registerHoldWhileRecompute, resetHoldWhileRecompute } from '../../server-plugin/kernel/transaction.mjs';
 import { report, useReportSink, checkFields } from '../../server-plugin/kernel/report.mjs';
-import { reportError, KernelError } from '../../server-plugin/kernel/errors.mjs';
+import { reportError, KernelError, codeOf } from '../../server-plugin/kernel/errors.mjs';
+import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 
 const E = buildE();
 
@@ -296,4 +297,31 @@ test('reportError：带登记码的错误规整后走 report；不带登记码�
   const odd = { code: 'E-SAVE-TORN', fields: { note: 'free text' } };
   assert.equal(reportError(odd), 'E-SAVE-TORN');
   assert.deepEqual(logs[1], { code: 'E-SAVE-TORN', fields: {} });
+});
+
+// 李白 11-18 reportError 无登记码裁定：不带登记码的异常视为程序缺陷，原样抛回，事务照常回滚、加载照常停止。
+test('事务中途抛未登记异常：整笔回滚，同一异常对象原样到达调用方，不 report，事务已收尾', () => {
+  const st = fresh();
+  logs.length = 0;
+  const boom = new Error('x');
+  let caught = null;
+  try {
+    runTransaction(st, GAUGE, (s) => { writePath(s, P.gauge_level('gad_one'), 9); writePath(s, P.gauge_dims('gad_two', 'mass'), 3); throw boom; });
+  } catch (e) { caught = e; }
+  assert.strictEqual(caught, boom);
+  assert.equal(caught.message, 'x');
+  assert.deepEqual(st, { gauge: { gad_one: { level: 1 } } });
+  assert.deepEqual(logs, []);
+  assert.deepEqual(runTransaction(st, GAUGE, (s) => writePath(s, P.gauge_level('gad_one'), 2)), { ok: true });
+  assert.deepEqual(st, { gauge: { gad_one: { level: 2 } } });
+});
+
+test('加载中途抛未登记异常（维度目录不存在）：loadWorld 不返回结果，异常原样抛出且不带登记码', () => {
+  let caught = null;
+  let result = null;
+  try { result = loadWorld(process.cwd(), { dimensionsDir: 'tests/kernel/no-such-dims' }); } catch (e) { caught = e; }
+  assert.strictEqual(result, null);
+  assert.ok(caught instanceof Error);
+  assert.equal(caught.code, 'ENOENT');
+  assert.equal(codeOf(caught), null);
 });
