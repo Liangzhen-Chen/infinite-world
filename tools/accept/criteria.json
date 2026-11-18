@@ -152,10 +152,14 @@
     {
      "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 24
+    },
+    {
+     "ref": "B2-W4 第二步（卷二 S13 ④）：协议标记叶子 handles/markers.mjs 落地（标记定义源与 T 移入、0 import，rx.mjs 与 validate/types.mjs 都从它取），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "b5b329c1dc5ab88d5cb9405f98fe02e8dfa8923bc0d8fa052aab2fb258b1b46f",
-   "rev": 24,
+   "print": "a058a9f10629df8f1f6ff4433536e887c98fc39180f941d6595730fe4b4c4a5f",
+   "rev": 25,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -353,10 +357,14 @@
     {
      "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 11
+    },
+    {
+     "ref": "B2-W4 第二步（卷二 S13 ④）：协议标记叶子 handles/markers.mjs 落地（标记定义源与 T 移入、0 import，rx.mjs 与 validate/types.mjs 都从它取），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 12
     }
    ],
-   "print": "b3f9dba95348689e0e02cfa75bfb0506525437199de129587b0604d330c2e0ac",
-   "rev": 11,
+   "print": "e63fc9b8cb2f0a25495b7331719816f098b83f8f19bf0c506e80abf4a1fcfb96",
+   "rev": 12,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -561,10 +569,14 @@
     {
      "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 12
+    },
+    {
+     "ref": "B2-W4 第二步（卷二 S13 ④）：协议标记叶子 handles/markers.mjs 落地（标记定义源与 T 移入、0 import，rx.mjs 与 validate/types.mjs 都从它取），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 13
     }
    ],
-   "print": "955e161ebf64752444ddaffb3c3b37554fa81b620835f2d396d0a39fc34bd457",
-   "rev": 12,
+   "print": "713632281f179bd649a3f26f2c0ac89ce542381121f9ef20071d5fe7bc2b395a",
+   "rev": 13,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -734,10 +746,14 @@
     {
      "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 28
+    },
+    {
+     "ref": "B2-W4 第二步（卷二 S13 ④）：协议标记叶子 handles/markers.mjs 落地（标记定义源与 T 移入、0 import，rx.mjs 与 validate/types.mjs 都从它取），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 29
     }
    ],
-   "print": "e7c270eb825fb61ab52c2410086c772a161faee8aeb9ce4b2b894058767385cb",
-   "rev": 28,
+   "print": "06922df0792ad6baab76aae751eee000cce2ade246bbe11e9cb42f3d8c1053ec",
+   "rev": 29,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -888,10 +904,14 @@
     {
      "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 13
+    },
+    {
+     "ref": "B2-W4 第二步（卷二 S13 ④）：协议标记叶子 handles/markers.mjs 落地（标记定义源与 T 移入、0 import，rx.mjs 与 validate/types.mjs 都从它取），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 14
     }
    ],
-   "print": "955e161ebf64752444ddaffb3c3b37554fa81b620835f2d396d0a39fc34bd457",
-   "rev": 13,
+   "print": "713632281f179bd649a3f26f2c0ac89ce542381121f9ef20071d5fe7bc2b395a",
+   "rev": 14,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1343,10 +1363,14 @@
     {
      "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 13
+    },
+    {
+     "ref": "B2-W4 第二步（卷二 S13 ④）：协议标记叶子 handles/markers.mjs 落地（标记定义源与 T 移入、0 import，rx.mjs 与 validate/types.mjs 都从它取），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 14
     }
    ],
-   "print": "955e161ebf64752444ddaffb3c3b37554fa81b620835f2d396d0a39fc34bd457",
-   "rev": 13,
+   "print": "713632281f179bd649a3f26f2c0ac89ce542381121f9ef20071d5fe7bc2b395a",
+   "rev": 14,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -1381,10 +1405,14 @@
     {
      "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 5
+    },
+    {
+     "ref": "B2-W4 第二步（卷二 S13 ④）：协议标记叶子 handles/markers.mjs 落地（标记定义源与 T 移入、0 import，rx.mjs 与 validate/types.mjs 都从它取），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 6
     }
    ],
-   "print": "c828a3cc35468b6adaee5e58efe62f3476dbdedd8709761923b1288ff5ba51d9",
-   "rev": 5,
+   "print": "d37420d1b3184bb53f03ef782ceae576279efe6815b01484c8c5399b7f0d8f12",
+   "rev": 6,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -1531,10 +1559,14 @@
     {
      "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 33
+    },
+    {
+     "ref": "B2-W4 第二步（卷二 S13 ④）：协议标记叶子 handles/markers.mjs 落地（标记定义源与 T 移入、0 import，rx.mjs 与 validate/types.mjs 都从它取），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 34
     }
    ],
-   "print": "9a64ff23a0f5f4b93e7e3b64f7d7ee161608643b86d1a8d5704ab46fcd35a43b",
-   "rev": 33,
+   "print": "194ef8a491930674a97dfbb7c661faf63af2c0b91de55efda46f771f727df088",
+   "rev": 34,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1733,10 +1765,14 @@
     {
      "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 22
+    },
+    {
+     "ref": "B2-W4 第二步（卷二 S13 ④）：协议标记叶子 handles/markers.mjs 落地（标记定义源与 T 移入、0 import，rx.mjs 与 validate/types.mjs 都从它取），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "b5b329c1dc5ab88d5cb9405f98fe02e8dfa8923bc0d8fa052aab2fb258b1b46f",
-   "rev": 22,
+   "print": "a058a9f10629df8f1f6ff4433536e887c98fc39180f941d6595730fe4b4c4a5f",
+   "rev": 23,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -1922,10 +1958,14 @@
     {
      "ref": "B2-W4 第一步（卷二 S13 ④）：类型定义派生的冻结标记句柄 T 落地，检测器 import 闭包里的 kernel 文件改动（validate/types.mjs 新增 markersOf/T，validate、load、save、scheduler、dimensions、handles/keys 改用句柄），指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 7
+    },
+    {
+     "ref": "B2-W4 第二步（卷二 S13 ④）：协议标记叶子 handles/markers.mjs 落地（标记定义源与 T 移入、0 import，rx.mjs 与 validate/types.mjs 都从它取），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 8
     }
    ],
-   "print": "c828a3cc35468b6adaee5e58efe62f3476dbdedd8709761923b1288ff5ba51d9",
-   "rev": 7,
+   "print": "d37420d1b3184bb53f03ef782ceae576279efe6815b01484c8c5399b7f0d8f12",
+   "rev": 8,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

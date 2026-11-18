@@ -25,6 +25,8 @@ export function tempRepo() {
   mkdirSync(join(dir, 'server-plugin/kernel/validate'), { recursive: true });
   mkdirSync(join(dir, 'server-plugin/kernel/load'), { recursive: true });
   cpSync(join(ROOT, 'server-plugin/kernel/handles/keys.mjs'), join(dir, 'server-plugin/kernel/handles/keys.mjs'));
+  // 协议标记叶子（卷二 §2.8 封卷后勘误 1118k20）：validate/types.mjs 与 rx.mjs 都从它取定义源与 T，指纹闭包要算同一份。
+  cpSync(join(ROOT, 'server-plugin/kernel/handles/markers.mjs'), join(dir, 'server-plugin/kernel/handles/markers.mjs'));
   // S13 正则叶子（卷二 §2.8 封卷后勘误 1118k17）：vocab-handle → validate/types → rx 等在它的 import 闭包里，指纹要算同一份
   // （det-math 的十进制文法已改为手写逐字符解析，不再 import 本文件）。
   cpSync(join(ROOT, 'server-plugin/kernel/handles/patterns.mjs'), join(dir, 'server-plugin/kernel/handles/patterns.mjs'));
