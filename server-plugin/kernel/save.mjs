@@ -204,6 +204,38 @@ export function dataDigestOf(docData) {
   return sha256Text(canonical(docData));
 }
 
+// ---------- part_by_unit 的"路径→模拟单元"映射（注入；李白 11-18 块 2-4 三件裁定 a；卷二十七 R27-4.6） ----------
+
+/** @typedef {(segs: readonly string[]) => string | null | undefined} UnitOfPath 一个状态路径（逐段）归哪个模拟单元；返回单元代号，不归任何单元返回空 */
+
+/** @type {UnitOfPath | null} */
+let unitOfPath = null;
+
+/**
+ * kernelApi `registerUnitOfPath(fn)`：规则层在启动时交入"路径→模拟单元"映射函数（与 registerHoldWhileRecompute 同一做法，kernel 不 import 规则层）。
+ * part_by_unit 分片行只经它取单元：没登记即 compileLayout 按未覆盖拒；登记了而某值的路径返回空（不是非空字串）即该次快照按未覆盖拒，不猜。
+ * 只许交入一次（E-WRITER-DUPLICATE）。
+ * @param {UnitOfPath} fn
+ * @returns {void}
+ */
+export function registerUnitOfPath(fn) {
+  if (typeof fn !== 'function') throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'registerUnitOfPath: fn must be a function');
+  if (unitOfPath) throw new KernelError('E-WRITER-DUPLICATE', {}, 'unit-of-path mapping already registered');
+  unitOfPath = fn;
+}
+
+/** 测试与重新挂接用：清掉已交入的映射（kernel 组内用，不在 kernelApi）。 */
+export function resetUnitOfPath() {
+  unitOfPath = null;
+}
+
+// 一个值的路径归哪个单元；没登记或返回空即 E-SAVE-SHARD-UNCOVERED。
+function unitOf(row, segs) {
+  const u = unitOfPath ? unitOfPath(Object.freeze([...segs])) : null;
+  if (typeof u !== 'string' || u === '') throw new KernelError('E-SAVE-SHARD-UNCOVERED', {}, `${row.shard}: ${segs.join('.')} maps to no simulation unit`);
+  return u;
+}
+
 // ---------- 存档布局参数与分片表（规则表 save-layout、host，卷二十七 §2.2 :161–164、:184） ----------
 
 /**
@@ -231,7 +263,7 @@ function rowCovers(rowSegs, typeSegs) {
  * 每条 pathTypes 模式恰被一行完全覆盖；只盖住一部分、没盖住、被两行盖住，都是 E-SAVE-SHARD-UNCOVERED。
  * doc_log 恰一行且为 part_by_segment；doc_data 的 part_by_segment 行至多一行（追加段）。
  * part_by_segment 用在路径部分：pathTypes 还没有"只追加"标记（卷二十七 §5 登记未落），没有可用的路径，按未覆盖处理；
- * part_by_unit：卷文未写路径怎样归到模拟单元，推不出，按未覆盖处理（等李白裁定）。
+ * part_by_unit 只用在路径部分，路径归单元只经 registerUnitOfPath 注入的映射；没登记映射即按未覆盖处理（李白 11-18 块 2-4 三件裁定 a）。
  * @param {SaveLayout} layout
  * @returns {{rowOfPattern: Map<string, ShardRow>, dataRows: {row: ShardRow, segs: string[][]}[], appendRow: ShardRow | null, logRow: ShardRow, pathRows: ShardRow[]}}
  */
@@ -255,7 +287,10 @@ export function compileLayout(layout) {
     if (codes.has(row.shard)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `duplicate shard code ${row.shard}`);
     codes.add(row.shard);
     if (row.part === 'doc_log') { logRows.push(row); continue; }
-    if (row.partition === 'part_by_unit') throw uncovered(`${row.shard}: part_by_unit has no defined unit mapping`);
+    if (row.partition === 'part_by_unit') {
+      if (row.part === 'doc_data') throw uncovered(`${row.shard}: part_by_unit on doc_data (data tables are not state paths)`);
+      if (!unitOfPath) throw uncovered(`${row.shard}: part_by_unit without a registered unit mapping`);
+    }
     if (row.part === 'doc_data') {
       if (row.partition === 'part_by_segment') {
         if (appendRow) throw uncovered(`two doc_data append rows: ${appendRow.shard}, ${row.shard}`);
@@ -290,7 +325,7 @@ export function compileLayout(layout) {
 
 /**
  * @typedef {{text: string, digest: string}} ShardFile
- * @typedef {{atEvent: number, shards: Record<string, string | string[]>, files: ShardFile[]}} Snapshot shards：分片代号 → 文件摘要（追加段一行是摘要列表）
+ * @typedef {{atEvent: number, shards: Record<string, string | string[]>, files: ShardFile[]}} Snapshot shards：分片代号 → 文件摘要（追加段一行与 part_by_unit 一行是摘要列表）
  * @typedef {{count: number, text: string, digest: string}} Segment
  * @typedef {{layout: SaveLayout, compiled: ReturnType<typeof compileLayout>, entries: any[], segments: Segment[], sealedCount: number, snapshots: Snapshot[]}} LogBook
  */
@@ -311,7 +346,13 @@ function takeSnapshot(compiled, doc, atEvent) {
     walkPathTree(doc[part], (segs, v, rec) => {
       const row = compiled.rowOfPattern.get(rec.pattern);
       if (!row || row.part !== part) throw new KernelError('E-SAVE-SHARD-UNCOVERED', {}, `${segs.join('.')} found in ${part}, shard row is ${row ? row.part : 'none'}`);
-      setIn(content[row.shard], segs, rec.sealed ? encodeSealedValue(v) : clone(v));
+      const value = rec.sealed ? encodeSealedValue(v) : clone(v);
+      if (row.partition === 'part_by_unit') {
+        // 按单元各成一片：content[行] 是 单元代号 → 该单元的路径子树。
+        const u = unitOf(row, segs);
+        if (!Object.hasOwn(content[row.shard], u)) content[row.shard][u] = {};
+        setIn(content[row.shard][u], segs, value);
+      } else setIn(content[row.shard], segs, value);
     });
   }
   const data = doc.doc_data;
@@ -326,7 +367,15 @@ function takeSnapshot(compiled, doc, atEvent) {
   /** @type {Record<string, string | string[]>} */
   const shards = {};
   const files = [];
+  const byUnit = new Set(compiled.pathRows.filter((r) => r.partition === 'part_by_unit').map((r) => r.shard));
   for (const code of Object.keys(content).sort()) {
+    if (byUnit.has(code)) {
+      // part_by_unit 一行是摘要列表，按单元代号升序，每个单元一片（片里是带完整路径的子树，读回直接拼）。
+      const fs = Object.keys(content[code]).sort().map((u) => fileOf(content[code][u]));
+      shards[code] = fs.map((f) => f.digest);
+      files.push(...fs);
+      continue;
+    }
     const f = fileOf(content[code]);
     shards[code] = f.digest;
     files.push(f);

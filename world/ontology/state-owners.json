@@ -51,6 +51,7 @@
   {"export": "kernel/storage.mjs#readPath", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/storage.mjs#writePath", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/transaction.mjs#registerHoldWhileRecompute", "callers": ["rules"], "acceptsState": false},
+  {"export": "kernel/save.mjs#registerUnitOfPath", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/clone.mjs#clone", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/handles/generated.mjs#V", "callers": ["*"], "acceptsState": false},
   {"export": "kernel/handles/generated.mjs#E", "callers": ["*"], "acceptsState": false},
