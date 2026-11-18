@@ -2,6 +2,7 @@
  "version": 1,
  "stateKeys": {
   "accounts": {"readers": [], "writers": {"*": "kernel/ledger.mjs"}},
+  "aggregates": {"readers": [], "writers": {"*.ledgerHolder": "aggregate.mjs"}},
   "clock": {"readers": [], "writers": {"minute": "kernel/scheduler.mjs", "seq": "kernel/scheduler.mjs", "dueNext": "kernel/scheduler.mjs"}},
   "due": {"readers": [], "writers": {"*": "kernel/scheduler.mjs"}},
   "created":{"readers": ["dim:*"], "writers": {"*.props.*": "kernel/dimension-writers.mjs", "*.props.basis": "kernel/dimension-writers.mjs"}},
@@ -26,6 +27,7 @@
  "textWriters": {"displayNames.*.text": "ai-gate/naming-gate.mjs", "playerNotes.*.text": "ai-gate/note-gate.mjs", "narration.*": "ai-gate/narration-gate.mjs"},
  "pathTypes": {
   "accounts.*": "struct:holderAccounts",
+  "aggregates.*.ledgerHolder": "boolean",
   "clock.minute": "integer:minute",
   "clock.seq": "integer:count",
   "clock.dueNext": "integer:count",
@@ -45,6 +47,7 @@
  },
  "keyKinds": {
   "accounts.*": [["deity", "faith", "org", "person", "place"]],
+  "aggregates.*.ledgerHolder": ["seedKey"],
   "due.*": ["handle"],
   "created.*.props.*": [["item", "person", "place"], "dimKey"],
   "created.*.props.basis": [["item", "person", "place"]],
@@ -92,6 +95,7 @@
   {"export": "kernel/scheduler.mjs#clockView", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/advance-registry.mjs#registerAdvanceHook", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/advance-registry.mjs#registerAdvancePlan", "callers": ["rules"], "acceptsState": false},
+  {"export": "kernel/view-registry.mjs#registerViewReader", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/transaction.mjs#registerHoldWhileRecompute", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/save.mjs#registerUnitOfPath", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/clone.mjs#clone", "callers": ["rules"], "acceptsState": false},

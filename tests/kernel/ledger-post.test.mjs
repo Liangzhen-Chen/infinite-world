@@ -12,6 +12,7 @@ import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 import { installVocab } from '../../server-plugin/kernel/vocab.mjs';
 import { runTransaction } from '../../server-plugin/kernel/transaction.mjs';
 import { post, transfer, auditLots, auditLedger, alertGaps, openAccount, dayUsage, budgetOn, checkSubjectFlagDims } from '../../server-plugin/kernel/ledger.mjs';
+import { registerViewReader, resetViewRegistry } from '../../server-plugin/kernel/view-registry.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const W = loadWorld(ROOT);
@@ -440,20 +441,40 @@ test('拆分：入账腿排在出账腿前，原批余额 0 带 costBasis 即 E-
 
 // ---------- 居民聚合体作持有人（卷六 §2.1 :103、S6-14；卷三乙 K-2 :1031；卷二 §5.6 :1765；卷二十七 §3.1 :200；勘误 1118k9） ----------
 
-test('持有人：居民聚合体按 aggregates.<id>.ledgerHolder 判，为真可作；为假、缺写或非布尔 E-LEDGER-HOLDER-NOT-SUBJECT；既非实体也非聚合记录 E-DIM-UNKNOWN-READ', () => {
-  const aggs = { agg_t_reg: { ledgerHolder: true }, agg_t_off: { ledgerHolder: false }, agg_t_none: {}, agg_t_str: { ledgerHolder: 'true' } };
-  const issue = (h) => run(at(0, { aggregates: clone(aggs) }), (s) => { post(ENGINE, s, { legs: [{ account: acc(h, SH, 'res_t_coin', 'coin_x'), delta: 2 }, { flow: 'src_issue', kind: 'res_t_coin', qty: 2 }], reason: 'verb_test' }); });
+// 视图读取函数夹具（李白 11-18 05:28 裁定①：规则层 aggregateView（卷二十七 §3.1）、buildProjectView（卷十九 §3.2 :242）尚未建，本卡不建，
+// 测试以夹具登记；账本只经登记名调用，不读 state 里的 aggregates、buildProject）。FIX 给每个 id 的视图返回值，没有即 null。
+const FIX = { aggs: {}, projects: {} };
+const fixtureView = (key) => (_engine, _state, id) => (Object.hasOwn(FIX[key], id) ? FIX[key][id] : null);
+const registerFixtureViews = () => {
+  registerViewReader('aggregateView', 'rules/test-views.mjs', fixtureView('aggs'));
+  registerViewReader('buildProjectView', 'rules/test-views.mjs', fixtureView('projects'));
+};
+registerFixtureViews();
+// 视图未登记时跑 fn（工程、聚合体系统未上线的情形），跑完照原样登记回去。
+const withoutViews = (fn) => { resetViewRegistry(); try { return fn(); } finally { registerFixtureViews(); } };
+
+test('持有人：居民聚合体经视图 aggregateView 按 ledgerHolder 判，为真可作；为假、缺写或非布尔 E-LEDGER-HOLDER-NOT-SUBJECT；视图给不出、返回非对象、视图未登记 E-DIM-UNKNOWN-READ', () => {
+  FIX.aggs = { agg_t_reg: { ledgerHolder: true }, agg_t_off: { ledgerHolder: false }, agg_t_none: {}, agg_t_str: { ledgerHolder: 'true' }, agg_t_bad: 7 };
+  const issue = (h, extra = {}) => run(at(0, extra), (s) => { post(ENGINE, s, { legs: [{ account: acc(h, SH, 'res_t_coin', 'coin_x'), delta: 2 }, { flow: 'src_issue', kind: 'res_t_coin', qty: 2 }], reason: 'verb_test' }); });
   assert.deepEqual(issue('agg_t_reg'), { ok: true });
   assert.deepEqual(issue('agg_t_off'), { ok: false, code: 'E-LEDGER-HOLDER-NOT-SUBJECT' });
   assert.deepEqual(issue('agg_t_none'), { ok: false, code: 'E-LEDGER-HOLDER-NOT-SUBJECT' });
   assert.deepEqual(issue('agg_t_str'), { ok: false, code: 'E-LEDGER-HOLDER-NOT-SUBJECT' });
+  assert.deepEqual(issue('agg_t_bad'), { ok: false, code: 'E-DIM-UNKNOWN-READ' });
   assert.deepEqual(issue('agg_t_ghost'), { ok: false, code: 'E-DIM-UNKNOWN-READ' });
+  // 不直读 state：state 里写着 aggregates.agg_t_ghost.ledgerHolder = true，视图给不出它，照样读到未知
+  assert.deepEqual(issue('agg_t_ghost', { aggregates: { agg_t_ghost: { ledgerHolder: true } } }), { ok: false, code: 'E-DIM-UNKNOWN-READ' });
+  // 视图未登记：不放行；实体持有人不经视图，照常可作（先查实体、再查聚合体）
+  withoutViews(() => {
+    assert.deepEqual(issue('agg_t_reg'), { ok: false, code: 'E-DIM-UNKNOWN-READ' });
+    assert.deepEqual(issue('npc_a'), { ok: true });
+  });
   // 登记为主体的聚合体：开户、转给人物都过，余额手算 5 − 2 = 3
-  const ok = at(0, { aggregates: clone(aggs), accounts: { agg_t_reg: { purpose_test_shelf: { res_t_coin: { coin_x: 5 } } } } });
+  const ok = at(0, { accounts: { agg_t_reg: { purpose_test_shelf: { res_t_coin: { coin_x: 5 } } } } });
   assert.deepEqual(run(ok, (s) => { transfer(ENGINE, s, { from: { holder: 'agg_t_reg', purpose: SH }, to: { holder: 'npc_a', purpose: SH }, resource: { kind: 'res_t_coin', key: 'coin_x' }, qty: 2, reason: 'verb_test' }); }), { ok: true });
   assert.equal(ok.accounts.agg_t_reg.purpose_test_shelf.res_t_coin.coin_x, 3);
   // 出账腿与审计：标记为假的聚合体名下已有余额，往外记被拒、审计报出
-  const held = at(0, { aggregates: clone(aggs), accounts: { agg_t_off: { purpose_test_shelf: { res_t_coin: { coin_x: 4 } } } } });
+  const held = at(0, { accounts: { agg_t_off: { purpose_test_shelf: { res_t_coin: { coin_x: 4 } } } } });
   const before = clone(held);
   assert.deepEqual(run(held, (s) => { transfer(ENGINE, s, { from: { holder: 'agg_t_off', purpose: SH }, to: { holder: 'npc_a', purpose: SH }, resource: { kind: 'res_t_coin', key: 'coin_x' }, qty: 1, reason: 'verb_test' }); }), { ok: false, code: 'E-LEDGER-HOLDER-NOT-SUBJECT' });
   assert.deepEqual(held, before);
@@ -461,13 +482,12 @@ test('持有人：居民聚合体按 aggregates.<id>.ledgerHolder 判，为真�
   assert.deepEqual(auditLedger(ENGINE, ok), []);
 });
 
-// ---------- 批次属性 project 与 E-LEDGER-STAGING-SPONSOR（卷三乙 §2.3 :280、K-8 :1037；卷十九 §3.3 :272、§4.4 规则 7 :531；卷六码表） ----------
+// ---------- 批次属性 project 与 E-LEDGER-STAGING-SPONSOR（卷三乙 §2.3 :280、K-8 :1037；卷十九 §3.2 :242、§3.3 :272、§4.4 规则 7 :531；卷六码表） ----------
 
 const PROJECTS = { bp_t_house: { sponsor: 'npc_a' }, bp_t_hall: { sponsor: 'org_b' } };
 function stagedState(projects = PROJECTS) {
-  const state = grainState();
-  if (projects !== null) state.buildProject = clone(projects);
-  return state;
+  FIX.projects = clone(projects);
+  return grainState();
 }
 // npc_a 从 lot_0 拆 n 件到自己名下用途 PU 的新批次，lot 写法由调用方给
 const supply = (state, n, lot, to = 'npc_a') => run(state, (s) => { post(ENGINE, s, { legs: [{ account: acc('npc_a', SH, 'res_t_grain', 'lot_0'), delta: -n }, { account: acc(to, PU, 'res_t_grain'), delta: n, lot }], reason: 'verb_test_supply' }); });
@@ -490,7 +510,7 @@ test('project：供料拆分 {splitFrom, project} 设新批次 project，其余�
   assert.equal(state.stockLots.npc_c.purpose_test_shelf.res_t_grain.lot_4.project, null);
 });
 
-test('project 反例：持有人≠sponsor、指向不存在工程、带出 project 转给非 sponsor 都 E-LEDGER-STAGING-SPONSOR；工程状态整键未有 E-DIM-UNKNOWN-READ；非代号 E-DIM-ID-FORMAT；整笔不落', () => {
+test('project 反例：持有人≠sponsor、指向不存在工程、带出 project 转给非 sponsor 都 E-LEDGER-STAGING-SPONSOR；视图未登记、返回缺 sponsor E-DIM-UNKNOWN-READ；非代号 E-DIM-ID-FORMAT；整笔不落', () => {
   const state = stagedState();
   const before = clone(state);
   assert.deepEqual(supply(state, 2, { splitFrom: 'lot_0', project: 'bp_t_hall' }), { ok: false, code: 'E-LEDGER-STAGING-SPONSOR' });
@@ -503,12 +523,21 @@ test('project 反例：持有人≠sponsor、指向不存在工程、带出 proj
   const mid = clone(state);
   assert.deepEqual(run(state, (s) => { transfer(ENGINE, s, { from: { holder: 'npc_a', purpose: PU }, to: { holder: 'org_b', purpose: PU }, resource: { kind: 'res_t_grain', key: 'lot_1' }, qty: 1, reason: 'verb_test' }); }), { ok: false, code: 'E-LEDGER-STAGING-SPONSOR' });
   assert.deepEqual(state, mid);
-  // 状态里还没有 buildProject（卷十九 construction.mjs 未建）：读不到，不放行
-  const none = stagedState(null);
-  assert.deepEqual(supply(none, 2, { splitFrom: 'lot_0', project: 'bp_t_house' }), { ok: false, code: 'E-DIM-UNKNOWN-READ' });
+  // 视图未登记（卷十九 construction.mjs 未建）：读不到，不放行
+  const none = stagedState();
+  withoutViews(() => assert.deepEqual(supply(none, 2, { splitFrom: 'lot_0', project: 'bp_t_house' }), { ok: false, code: 'E-DIM-UNKNOWN-READ' }));
+  // 视图返回形状不合：无 sponsor、sponsor 非代号、返回非对象，都 E-DIM-UNKNOWN-READ
+  const odd = stagedState({ bp_t_nosp: { site: 'loc_shop' }, bp_t_num: { sponsor: 5 }, bp_t_bad: 'npc_a' });
+  const oddBefore = clone(odd);
+  for (const p of ['bp_t_nosp', 'bp_t_num', 'bp_t_bad']) assert.deepEqual(supply(odd, 2, { splitFrom: 'lot_0', project: p }), { ok: false, code: 'E-DIM-UNKNOWN-READ' }, p);
+  assert.deepEqual(odd, oddBefore);
+  // 不直读 state：state 里的 buildProject 写着 sponsor npc_a，视图说是 org_b，以视图为准
+  const viaView = stagedState({ bp_t_house: { sponsor: 'org_b' } });
+  viaView.buildProject = { bp_t_house: { sponsor: 'npc_a' } };
+  assert.deepEqual(supply(viaView, 2, { splitFrom: 'lot_0', project: 'bp_t_house' }), { ok: false, code: 'E-LEDGER-STAGING-SPONSOR' });
 });
 
-test('K-8 审计 project：持有人≠sponsor、工程不存在逐项 E-LEDGER-STAGING-SPONSOR；工程状态整键未有 E-DIM-UNKNOWN-READ', () => {
+test('K-8 审计 project：持有人≠sponsor、工程不存在逐项 E-LEDGER-STAGING-SPONSOR；视图未登记、返回缺 sponsor E-DIM-UNKNOWN-READ', () => {
   const state = stagedState();
   state.accounts.npc_a.purpose_test_purse = { res_t_grain: { lot_1: 2, lot_2: 1 } };
   state.stockLots.npc_a.purpose_test_purse = { res_t_grain: { lot_1: { project: 'bp_t_hall' }, lot_2: { project: 'bp_t_gone' } } };
@@ -517,6 +546,7 @@ test('K-8 审计 project：持有人≠sponsor、工程不存在逐项 E-LEDGER-
     ['E-LEDGER-STAGING-SPONSOR', 'stockLots.npc_a.purpose_test_purse.res_t_grain.lot_1'],
     ['E-LEDGER-STAGING-SPONSOR', 'stockLots.npc_a.purpose_test_purse.res_t_grain.lot_2'],
   ]);
-  delete state.buildProject;
-  assert.deepEqual(auditLots(ENGINE, state).map((x) => x.code), ['E-DIM-UNKNOWN-READ', 'E-DIM-UNKNOWN-READ']);
+  withoutViews(() => assert.deepEqual(auditLots(ENGINE, state).map((x) => x.code), ['E-DIM-UNKNOWN-READ', 'E-DIM-UNKNOWN-READ']));
+  FIX.projects = { bp_t_hall: {}, bp_t_gone: { sponsor: 'npc_a' } };
+  assert.deepEqual(auditLots(ENGINE, state).map((x) => [x.code, x.path]), [['E-DIM-UNKNOWN-READ', 'stockLots.npc_a.purpose_test_purse.res_t_grain.lot_1']]);
 });

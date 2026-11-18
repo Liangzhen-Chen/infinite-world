@@ -259,7 +259,7 @@ test('单刻反应项累计超 proposalMax（12）：第 13 项所在的代即�
 // ---------- keyKinds handle 与运行时句柄文法 ----------
 
 test('keyKinds (c) 封闭清单含 handle；due.* 的 keyKinds 写 [handle]；handle 格式即代号文法，不合即拒', () => {
-  assert.deepEqual([...KEY_NONENTITY], ['event', 'dimKey', 'identityKey', 'handle']);
+  assert.deepEqual([...KEY_NONENTITY], ['event', 'dimKey', 'identityKey', 'handle', 'seedKey']);
   const decl = JSON.parse(readFileSync(join(ROOT, 'world/ontology/state-owners.json'), 'utf8'));
   assert.deepEqual(decl.keyKinds['due.*'], ['handle']);
   assert.equal(decl.pathTypes['due.*'], 'struct:dueItem');

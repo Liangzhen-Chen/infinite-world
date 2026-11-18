@@ -100,10 +100,14 @@
     {
      "ref": "块 3-2 续加 E-LEDGER-STAGING-SPONSOR（勘误 1118k9 码表）：码表闭包变化，口径不变",
      "rev": 13
+    },
+    {
+     "ref": "块 3-2 续 keys.mjs 加 SeedKey 段文法 isSeedKey、seedKeyOf（李白 11-18 05:28 裁定②）：闭包文件变化，口径不变",
+     "rev": 14
     }
    ],
-   "print": "2399f549f7d4d2c652e7a87c5633d313f47bb1a192fe79a66a4e7c20781ee541",
-   "rev": 13,
+   "print": "d1a30b8b17e44a860eaf44b228b7764fc07da289375d5959e0400c107bb21b5d",
+   "rev": 14,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -514,10 +518,14 @@
     {
      "ref": "块 3-2 续加 E-LEDGER-STAGING-SPONSOR（勘误 1118k9 码表）：码表闭包变化，口径不变",
      "rev": 15
+    },
+    {
+     "ref": "块 3-2 续 keys.mjs 加 SeedKey 段文法 isSeedKey、seedKeyOf（李白 11-18 05:28 裁定②）：闭包文件变化，口径不变",
+     "rev": 16
     }
    ],
-   "print": "6ed33bebe86d02f022b2db7fd1bad87575a2dda243a549c5b758cbc6b31677f9",
-   "rev": 15,
+   "print": "23319820f74fc2a5e884650c6b658eeb29f41f95c9cd9a796f49e7300d2ede25",
+   "rev": 16,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1092,10 +1100,14 @@
     {
      "ref": "块 3-2 续加 E-LEDGER-STAGING-SPONSOR（勘误 1118k9 码表）：码表闭包变化，口径不变",
      "rev": 21
+    },
+    {
+     "ref": "块 3-2 续 keys.mjs 加 SeedKey 段文法 isSeedKey、seedKeyOf（李白 11-18 05:28 裁定②）：闭包文件变化，口径不变",
+     "rev": 22
     }
    ],
-   "print": "440eeda807518f0361dde060121880428e80dffb824b3d383a249adbfa2c4f55",
-   "rev": 21,
+   "print": "347c20bcfc427ec08bc99e1d566cf06bfd4f209a90573799c621d94b6edf0d3a",
+   "rev": 22,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1246,10 +1258,14 @@
     {
      "ref": "块 3-2 续加 E-LEDGER-STAGING-SPONSOR（勘误 1118k9 码表）：码表闭包变化，口径不变",
      "rev": 11
+    },
+    {
+     "ref": "块 3-2 续 keys.mjs 加 SeedKey 段文法 isSeedKey、seedKeyOf（李白 11-18 05:28 裁定②）：闭包文件变化，口径不变",
+     "rev": 12
     }
    ],
-   "print": "2399f549f7d4d2c652e7a87c5633d313f47bb1a192fe79a66a4e7c20781ee541",
-   "rev": 11,
+   "print": "d1a30b8b17e44a860eaf44b228b7764fc07da289375d5959e0400c107bb21b5d",
+   "rev": 12,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {

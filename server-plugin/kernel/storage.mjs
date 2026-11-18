@@ -8,17 +8,18 @@
 
 import { clone } from './clone.mjs';
 import { invalidateMemo } from './memo.mjs';
-import { statePathSegments, pathTypeShape } from './handles/keys.mjs';
+import { statePathSegments, pathTypeShape, isSeedKey } from './handles/keys.mjs';
 import { CODE_RE } from './handles/vocab-handle.mjs';
-import { compareSpecificity, KEY_NONENTITY, KEY_DIMKEY } from './load/state-owners.mjs';
+import { compareSpecificity, KEY_NONENTITY, KEY_DIMKEY, KEY_SEEDKEY } from './load/state-owners.mjs';
 import { registry } from './vocab.mjs';
 import { KernelError, codeOf } from './errors.mjs';
 import { currentTransaction } from './transaction.mjs';
 
 /**
- * @typedef {{pattern: string, segs: string[], type: string, shape: import('./handles/keys.mjs').PathTypeShape | null, entitySlots: number[], entityKinds: string[][], dimSlot: number}} PathRec
+ * @typedef {{pattern: string, segs: string[], type: string, shape: import('./handles/keys.mjs').PathTypeShape | null, entitySlots: number[], entityKinds: string[][], dimSlot: number, seedSlots: {slot: number, kinds: string[]}[]}} PathRec
  * entitySlots：该模式第几个 `*` 段（从 0 计）的 keyKinds 项含实体 kind（(a) 单个或 (b) 列表里有实体 kind；(c) 项不算），用于"目标实体未终止"核对。
  * entityKinds：与 entitySlots 一一对应的该段可取的实体 kind；dimSlot：keyKinds 项为 dimKey 的 `*` 段（没有为 -1），dimension 路径的维度名在这一段。
+ * seedSlots：keyKinds 项为 seedKey（或 (b) 列表含 seedKey）的 `*` 段及同列的实体 kind，写入时按 SeedKey 文法核。
  * @typedef {{pattern: string, segs: string[], create: string[], rewrite: string | null, viaRelocate: boolean}} WriterRec
  */
 
@@ -45,7 +46,9 @@ export function installStorage(merged) {
     const entitySlots = kk.map((it, i) => (isEntityItem(it) ? i : -1)).filter((i) => i >= 0);
     const entityKinds = entitySlots.map((i) => (Array.isArray(kk[i]) ? kk[i] : [kk[i]]).filter((k) => !nonEntity.has(k)));
     const dimSlot = kk.findIndex((it) => it === KEY_DIMKEY); // keyKinds (c) 项"维度键"：dimension 路径上维度名所在的段
-    return { pattern, segs: segsOf(pattern), type: merged.pathTypes[pattern], shape: pathTypeShape(merged.pathTypes[pattern]), entitySlots, entityKinds, dimSlot };
+    // keyKinds (c) 项 seedKey（单独或在 (b) 列表里）：该段写入时按 SeedKey 文法核（李白 11-18 05:28 裁定②）；列表里同列的实体 kind 照收该 kind 的已载入 id。
+    const seedSlots = kk.flatMap((it, i) => (it === KEY_SEEDKEY || (Array.isArray(it) && it.includes(KEY_SEEDKEY)) ? [{ slot: i, kinds: Array.isArray(it) ? it.filter((k) => !nonEntity.has(k)) : [] }] : []));
+    return { pattern, segs: segsOf(pattern), type: merged.pathTypes[pattern], shape: pathTypeShape(merged.pathTypes[pattern]), entitySlots, entityKinds, dimSlot, seedSlots };
   });
   const pPatterns = new Set(paths.map((p) => p.pattern).filter((p) => !text.has(p) && !ledger.has(p)));
   const writers = (merged.writers || []).map((w) => ({ pattern: w.pattern, segs: segsOf(w.pattern), create: [...(w.create || [])], rewrite: w.rewrite, viaRelocate: w.viaRelocate === true }));
@@ -221,6 +224,11 @@ function writePathChecked(state, path, value) {
   if (!tx || tx.state !== state) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity }, 'writePath outside the transaction of this state');
   const existing = getAt(state, segs);
   if (!writerOk(d, tx, segs, existing)) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity }, `${tx.file} is not the registered writer of ${rec.pattern}`);
+  // keyKinds seedKey 段：由种子派生的实体 id（代号文法、非词表代号、非已载入实体 id，handles/keys.mjs isSeedKey），不合即 E-DIM-ID-FORMAT（同 handle 段）。
+  for (const { slot, kinds } of rec.seedSlots) {
+    const v = ids[slot];
+    if (!isSeedKey(registry(), v) && !kinds.includes(registry().idIndex.get(v))) throw new KernelError('E-DIM-ID-FORMAT', { entity: v }, `${rec.pattern}: segment ${JSON.stringify(v)} is not a seedKey (code grammar, not a vocab code or loaded entity id)`);
+  }
   // 卷二十七 R27-5.1：非有限值、负零不得进入状态（E-DET-NONFINITE）；被拒走同一上抛通路，由事务整笔回滚（卷二 §2.6 :499）。
   if (hasNonFinite(value)) throw new KernelError('E-DET-NONFINITE', { entity }, `non-finite number or negative zero written to ${rec.pattern}`);
   // 卷二 §2.7 :804 pathTypes 文法 dimension 行：运行期写 string 维度即 E-TEXT-UNGATED（dimension 路径上存不进自然语言）。
