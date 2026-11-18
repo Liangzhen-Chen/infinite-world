@@ -83,16 +83,13 @@ export function validate(root, regs) {
   return errs;
 }
 
-// stepped：本次判据修订（rev 加一并带同号记录，R12-14.3、S12-16）的类别。R12-11.7 要求 implemented 时类别用例全过；
-// 判据修订时新补进用例集的反例若现有检测器报不出，该类别扫描式条目须退回 registered（不虚报 implemented）——
-// 这是 R12-11.7 同一条件的反向执行，只在修订该类别判据的那次登记里许可，且条目的 expect、stage、gates 不得动（stampCriteria 照常比对）。
-function transitions(prev, next, stepped = new Set()) {
+// 状态转移只有 registered→implemented→in_core→retired（卷十二 :1098，没有别的转移）。
+function transitions(prev, next) {
   const errs = [];
   const old = new Map(prev.map((r) => [r.itemKey, r.state]));
   for (const it of next) {
     const was = old.get(it.itemKey);
     if (was === undefined) { if (it.state !== 'registered') errs.push(`E-ACC-ITEM-FORM ${it.itemKey}: new item must start registered`); continue; }
-    if (was === 'implemented' && it.state === 'registered' && it.scanClass && stepped.has(it.scanClass)) continue;
     if (was !== it.state && !NEXT_STATE[was].includes(it.state)) errs.push(`E-ACC-ITEM-FORM ${it.itemKey}: ${was} -> ${it.state} not allowed`);
   }
   return errs;
@@ -104,7 +101,6 @@ function transitions(prev, next, stepped = new Set()) {
 const termsKey = (t) => JSON.stringify({ expect: t.expect, gates: t.gates, stage: t.stage });
 function stampCriteria(root, prevRows, regs) {
   const errors = [];
-  const stepped = new Set();
   const prev = new Map(prevRows.map((c) => [c.scanClass, c]));
   const ctx = loadContext(root, { regs, files: undefined });
   const rows = regs.criteria.map((c) => {
@@ -114,7 +110,6 @@ function stampCriteria(root, prevRows, regs) {
     const p = prev.get(c.scanClass);
     if (!p) return row;
     const step = row.rev === p.rev + 1 && (row.log || []).some((l) => l.rev === row.rev);
-    if (step) stepped.add(c.scanClass);
     if (row.rev !== p.rev && !step) errors.push(`E-ACC-ITEM-FORM ${c.scanClass}: rev must stay or step by one with a log entry`);
     if (!step && p.print !== undefined && p.print !== row.print) errors.push(`E-ACC-CRITERION-UNVERSIONED ${c.scanClass}: detector code changed without rev`);
     for (const [k, t] of Object.entries((p.terms) || {})) {
@@ -122,7 +117,7 @@ function stampCriteria(root, prevRows, regs) {
     }
     return row;
   });
-  return { rows, errors, stepped };
+  return { rows, errors };
 }
 
 // 非扫描式条目（没有 scanClass）的修订记录（S12-16；李白 11-17 裁定）：记在条目行自身。首次登记 rev 必为 1、带首条记录，不算降级；
@@ -160,18 +155,6 @@ export function register(root, input) {
     const { itemStates, ...rest } = input;
     input = { ...rest, items: [...(rest.items || []), ...patched.filter((r) => r.itemKey in itemStates)] };
   }
-  // input.criteriaRevise：{类别: 修订说明}。读出该类别现行判据行，rev 加一并在 log 末尾追加同号记录（旧记录原样保留，不经手抄）。
-  if (input.criteriaRevise) {
-    const cur = readRegistry(root, 'criteria');
-    const rows = [];
-    for (const [cls, ref] of Object.entries(input.criteriaRevise)) {
-      const row = cur.find((r) => r.scanClass === cls);
-      if (!row) return { errors: [`E-ACC-ITEM-FORM ${cls}: criteriaRevise has no criteria row`] };
-      rows.push({ ...row, rev: row.rev + 1, log: [...(row.log || []), { ref, rev: row.rev + 1 }] });
-    }
-    const { criteriaRevise, ...rest } = input;
-    input = { ...rest, criteria: [...(rest.criteria || []), ...rows] };
-  }
   const regs = {}; const touched = [];
   for (const kind of Object.keys(REGISTRY)) {
     const key = REGISTRY[kind].key;
@@ -189,7 +172,7 @@ export function register(root, input) {
   const stampedItems = stampItems(prevItems, regs.items);
   regs.items = stampedItems.rows;
   if (stableJson({ rows: regs.items }) !== stableJson({ rows: prevItems }) && !touched.includes('items')) touched.push('items');
-  const errors = [...transitions(prevItems, regs.items, stamped.stepped),...stamped.errors, ...stampedItems.errors, ...validate(root, regs)];
+  const errors = [...transitions(prevItems, regs.items),...stamped.errors, ...stampedItems.errors, ...validate(root, regs)];
   if (errors.length) return { errors };
   mkdirSync(join(root, LAYOUT.accDir), { recursive: true });
   for (const kind of touched) writeFileSync(join(root, LAYOUT.accDir, REGISTRY[kind].file), stableJson({ rows: regs[kind] }));

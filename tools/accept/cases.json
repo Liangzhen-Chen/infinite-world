@@ -1015,6 +1015,26 @@
   },
   {
    "addedAtRev": 2,
+   "caseKey": "text_judge-35",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-35.txt",
+   "group": "rules",
+   "origin": "卷二 S13 ③（:2399）别名跨文件溯源（现判不出，缺口）",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "text_judge-36",
+   "expectCode": "E-VIEW-TEXT-MATCH",
+   "fixture": "tests/accept/bypass/text_judge-36.txt",
+   "group": "rules",
+   "origin": "卷二 S13 ④（:2399）String.fromCharCode 构造字串参与比较",
+   "polarity": "must_fail",
+   "scanClass": "text_judge"
+  },
+  {
+   "addedAtRev": 2,
    "caseKey": "text_judge-41",
    "expectCode": "E-VIEW-TEXT-MATCH",
    "fixture": "tests/accept/bypass/text_judge-41.txt",
@@ -1120,6 +1140,16 @@
    "fixture": "tests/accept/bypass/undeclared_io-03.txt",
    "group": "rules",
    "origin": "卷二 S15 ...state",
+   "polarity": "must_fail",
+   "scanClass": "undeclared_io"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "undeclared_io-04",
+   "expectCode": "E-VIEW-DYNAMIC-STATE",
+   "fixture": "tests/accept/bypass/undeclared_io-04.txt",
+   "group": "rules",
+   "origin": "卷二 A12 :2375 把 state 传给三类对象之外的辅助函数 → S15 必报（现判不出，缺口）",
    "polarity": "must_fail",
    "scanClass": "undeclared_io"
   },

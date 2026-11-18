@@ -113,6 +113,13 @@
   },
   {
    "detectors": [
+    "data_shape"
+   ],
+   "scanClass": "handfill_derived",
+   "source": "卷十二 §2.4（:251）、R12-4.6（卷一 R-6 第 5 条）；M12-4 derived-scan 的 replace_entry；块 2 体检 P1-32（开放登记）"
+  },
+  {
+   "detectors": [
     "typed_pos"
    ],
    "scanClass": "id_parse",

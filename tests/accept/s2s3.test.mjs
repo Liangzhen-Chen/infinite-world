@@ -132,13 +132,15 @@ test('S2、S3 条目在真实仓库上零命中（零基线），且条目状态
   const keys = ['vol1.V-2.a', 'vol1.V-2.b', 'vol1.V-3', 'vol1.V-20', 'vol1.V-23', 'vol2.S2', 'vol2.S3.a', 'vol2.S5', 'vol2.S7', 'vol2.S15', 'vol2.S18', 'vol2.S19.a', 'vol2.S19.b'];
   assert.deepEqual(rows.filter((r) => keys.includes(r.itemKey)), []);
   // 卷十二 R12-11.7：text_judge 靠 tsc 才能判的反例现有词法检测器报不出，本类别条目全部退回 registered（不虚报 implemented）。
-  assert.deepEqual(report.gaps.filter((k) => ['vol1.V-2.a', 'vol1.V-20', 'vol1.V-23', 'vol1.V-24.a', 'vol1.V-25.a', 'vol1.V-29.a', 'vol1.V-31.a', 'vol2.S2', 'vol2.S3.a', 'vol2.S18', 'vol2.S19.a', 'vol2.S3.b', 'vol2.S9', 'vol2.S13', 'vol2.S17.a', 'vol2.S17.b'].includes(k)),
-    ['vol1.V-2.a', 'vol1.V-20', 'vol1.V-23', 'vol1.V-24.a', 'vol1.V-25.a', 'vol1.V-29.a', 'vol1.V-31.a', 'vol2.S13', 'vol2.S17.a', 'vol2.S17.b', 'vol2.S18', 'vol2.S19.a', 'vol2.S2', 'vol2.S3.a', 'vol2.S3.b', 'vol2.S9']);
+  assert.deepEqual(report.gaps.filter((k) => ['vol1.V-2.a', 'vol1.V-20', 'vol1.V-23', 'vol1.V-24.a', 'vol1.V-25.a', 'vol1.V-29.a', 'vol1.V-31.a', 'vol2.S2', 'vol2.S3.a', 'vol2.S18', 'vol2.S19.a', 'vol2.S3.b', 'vol2.S9', 'vol2.S13', 'vol2.S15', 'vol2.S17.a', 'vol2.S17.b'].includes(k)),
+    ['vol1.V-2.a', 'vol1.V-20', 'vol1.V-23', 'vol1.V-24.a', 'vol1.V-25.a', 'vol1.V-29.a', 'vol1.V-31.a', 'vol2.S13', 'vol2.S15', 'vol2.S17.a', 'vol2.S17.b', 'vol2.S18', 'vol2.S19.a', 'vol2.S2', 'vol2.S3.a', 'vol2.S3.b', 'vol2.S9']);
   assert.deepEqual(readRegistry(ROOT, 'items').filter((it) => it.scanClass === 'text_judge' && it.state !== 'registered').map((it) => it.itemKey), []);
-  for (const c of ['escape_hatch', 'display_read', 'cross_write', 'undeclared_io']) {
+  for (const c of ['escape_hatch', 'display_read', 'cross_write']) {
     for (const k of Object.keys(report.cases).filter((x) => x.startsWith(`${c}-`))) assert.equal(report.cases[k], 'pass', k);
   }
-  for (const k of Object.keys(report.cases).filter((x) => x.startsWith('text_judge-'))) assert.equal(report.cases[k], 'not_run', k);
+  // S15 的"state 传给登记之外的函数"未判（R12-3.4），undeclared_io 下没有已实现条目，用例不跑（A12 :2375 反例 undeclared_io-04 是缺口）。
+  assert.deepEqual(readRegistry(ROOT, 'items').filter((it) => it.scanClass === 'undeclared_io' && it.state !== 'registered').map((it) => it.itemKey), []);
+  for (const k of Object.keys(report.cases).filter((x) => x.startsWith('text_judge-') || x.startsWith('undeclared_io-'))) assert.equal(report.cases[k], 'not_run', k);
 });
 
 test('text_judge 用例集：§2.8 代表性正反例逐条录入；词法可判的报出、要 tsc 才能判的现在报不出（照实，不虚报）', () => {
@@ -153,12 +155,13 @@ test('text_judge 用例集：§2.8 代表性正反例逐条录入；词法可判
     'text_judge-11': false, 'text_judge-21': false, 'text_judge-22': false,
     'text_judge-23': true, 'text_judge-24': true, 'text_judge-25': true, 'text_judge-26': true, 'text_judge-27': true, 'text_judge-28': true,
     'text_judge-29': true, 'text_judge-30': true, 'text_judge-31': true, 'text_judge-32': true, 'text_judge-33': true, 'text_judge-34': true,
+    'text_judge-35': false, 'text_judge-36': true,
     'text_judge-41': false, 'text_judge-42': false, 'text_judge-43': false, 'text_judge-44': false, 'text_judge-45': false,
     'text_judge-46': false, 'text_judge-47': false, 'text_judge-48': false,
   });
   // 极性与上表一致的（must_fail 报出、must_pass 不报）才是现在能判的；其余的正是条目不得 implemented 的原因
   const cannot = cases.filter((c) => (c.polarity === 'must_fail') !== flagged[c.caseKey]).map((c) => c.caseKey);
-  assert.deepEqual(cannot, ['text_judge-41', 'text_judge-42', 'text_judge-43', 'text_judge-44', 'text_judge-45', 'text_judge-46', 'text_judge-47', 'text_judge-48']);
+  assert.deepEqual(cannot, ['text_judge-35', 'text_judge-41', 'text_judge-42', 'text_judge-43', 'text_judge-44', 'text_judge-45', 'text_judge-46', 'text_judge-47', 'text_judge-48']);
 });
 
 test('词法可判的 text_judge 检查项（regex、nonAscii、bareCompare、导出参数标注）在真实仓库上仍零命中', () => {

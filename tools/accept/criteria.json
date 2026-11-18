@@ -154,7 +154,15 @@
    "rev": 1,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
-   "terms": {}
+   "terms": {
+    "vol12.A12-3.1.b": {
+     "expect": "zero",
+     "gates": [
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
   },
   {
    "criterion": "卷二 §2.8 第 4a 条的逃逸写法出现在强转豁免文件表之外即命中。",
@@ -258,6 +266,29 @@
    "terms": {
     "vol2.S17.b": {
      "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "数据表里按规则应由派生算出的字段（卷一 R-6 第 5 条：难度一类派生值）手填了数即命中；计数进分量 c_difficulty，旧基线 26 取自卷一 R-6“判定”一段，不升（R12-4.6）。判据参数（哪些表、哪些派生字段）由实现该条时登记，本行不编。",
+   "log": [
+    {
+     "ref": "初版登记：块 2 体检 P1-32 挂 M12-4（derived-scan）；判据见 criterion",
+     "rev": 1
+    }
+   ],
+   "print": "246ea5401a19d5a41749e83ac7c6d1bf79b7861c13f01eacdfd8eeecc821c36a",
+   "rev": 1,
+   "scanClass": "handfill_derived",
+   "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
+   "terms": {
+    "vol1.V-9.b": {
+     "expect": "le_baseline",
      "gates": [
       "pre_commit",
       "pre_merge"
