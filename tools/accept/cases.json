@@ -1,6 +1,25 @@
 {
  "rows": [
   {
+   "addedAtRev": 2,
+   "caseKey": "baseline_monotone-01",
+   "expectCode": "E-ACC-BASELINE-UP",
+   "fixture": "tests/accept/bypass/baseline_monotone-01.txt",
+   "group": "offline",
+   "origin": "卷一 V-11、I43；卷十二 R12-8.4：任一分量高于上次合入即拒（V-11 条目转 implemented 时的必须报用例）",
+   "polarity": "must_fail",
+   "scanClass": "baseline_monotone"
+  },
+  {
+   "addedAtRev": 2,
+   "caseKey": "baseline_monotone-11",
+   "fixture": "tests/accept/bypass/baseline_monotone-11.txt",
+   "group": "offline",
+   "origin": "卷十二 R12-14.3；卷一 V-11：与上次合入相等、低于、或没有上次合入的值时不计（必须不报用例）",
+   "polarity": "must_pass",
+   "scanClass": "baseline_monotone"
+  },
+  {
    "addedAtRev": 1,
    "caseKey": "const_literal-01",
    "fixture": "tests/accept/bypass/const_literal-01.txt",
@@ -340,11 +359,29 @@
    "scanClass": "instance_name"
   },
   {
+   "addedAtRev": 7,
+   "caseKey": "instance_name-07",
+   "fixture": "tests/accept/bypass/instance_name-07.txt",
+   "group": "rules",
+   "origin": "卷二 §7 S8（修正键字面量在 .mjs = 0）；卷十二 §2.4 :267、R12-1.7：族键集取自登记（维度表的 modifiable 声明），拼接到达同值也计",
+   "polarity": "must_fail",
+   "scanClass": "instance_name"
+  },
+  {
    "addedAtRev": 1,
    "caseKey": "instance_name-11",
    "fixture": "tests/accept/bypass/instance_name-11.txt",
    "group": "rules",
    "origin": "卷十二 R12-13.3；卷一 §3.1 第 5 条（注释不计）",
+   "polarity": "must_pass",
+   "scanClass": "instance_name"
+  },
+  {
+   "addedAtRev": 7,
+   "caseKey": "instance_name-12",
+   "fixture": "tests/accept/bypass/instance_name-12.txt",
+   "group": "rules",
+   "origin": "卷十二 R12-14.3；卷二 §7 S8：注释里的同名串与不可修改的维度不计（必须不报用例）",
    "polarity": "must_pass",
    "scanClass": "instance_name"
   },

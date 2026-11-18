@@ -71,16 +71,22 @@
    "expect": "zero",
    "form": "scan",
    "gates": [
+    "pre_commit",
     "pre_merge"
    ],
+   "impl": "tools/accept/detectors/ledger_count.mjs",
    "itemKey": "vol1.V-11",
    "localNo": "V-11",
    "method": "static_data",
+   "params": {
+    "code": "E-ACC-BASELINE-UP",
+    "cond": "baselineMonotone"
+   },
    "runsOn": "local_static",
    "scanClass": "baseline_monotone",
    "source": "卷一 §12.2 V-11（基线只降，I43）；S12-3 转录",
    "stage": 0,
-   "state": "registered",
+   "state": "implemented",
    "target": "registry",
    "volume": "vol1",
    "zeroRows": []
@@ -2982,14 +2988,31 @@
     "pre_commit",
     "pre_merge"
    ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
    "itemKey": "vol2.S8",
    "localNo": "S8",
    "method": "static_code",
+   "params": {
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "gate",
+     "outputGate",
+     "aiGate",
+     "assembly",
+     "host",
+     "display",
+     "clientTextcore"
+    ],
+    "literal": "modifierKey"
+   },
    "runsOn": "local_static",
    "scanClass": "instance_name",
    "source": "卷二 §7 S8（修正键字面量）；S12-3 转录",
    "stage": 0,
-   "state": "registered",
+   "state": "implemented",
    "target": "runtime_code",
    "volume": "vol2",
    "zeroRows": []

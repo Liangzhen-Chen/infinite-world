@@ -5,6 +5,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadContext, prefixesFromDir, mergePrefixes, readRegistry, LAYOUT } from '../../tools/accept/read.mjs';
 import { detect as litScope } from '../../tools/accept/detectors/lit_scope.mjs';
+import { detect as ledgerCount } from '../../tools/accept/detectors/ledger_count.mjs';
 import { detect as importEdge } from '../../tools/accept/detectors/import_edge.mjs';
 import { detect as pathAccess } from '../../tools/accept/detectors/path_access.mjs';
 import { detect as callEdge } from '../../tools/accept/detectors/call_edge.mjs';
@@ -154,6 +155,32 @@ test('doc_struct 列表项开头（裁定二）：列表符或加粗后紧跟编
   const text = ['- S1 列表项', '* S2 星号列表', '1. S3 有序列表', '- **S4** 加粗', '- 说明 S5', '- (S6)', '段落中 S7 引用', '- `S8` 反引号', '- 扫描式：`S9`'].join('\n');
   assert.deepEqual([...definedNumbers(text, ['S']).keys()], ['S1', 'S2', 'S3', 'S4']);
   assert.equal(definedNumbers('- 扫描式：`S9`', ['S'], ['扫描式']).size, 0);
+});
+
+test('lit_scope 修正键族（卷二 S8）：键集取自维度表 modifiable 声明，折叠后的同名值计入', () => {
+  const dims = 'world/ontology/dimensions/fx.json';
+  const table = JSON.stringify({ dimensions: { fxSharpness: { modifiable: true }, fxFixed: { modifiable: false } } });
+  const run = (src) => litScope(ctxOf({ 'server-plugin/a.mjs': src, [dims]: table }), { groups: RT, literal: 'modifierKey' }, CLS.instance_name).length;
+  assert.equal(run("const k = 'fxSharpness';"), 1);
+  assert.equal(run("const k = 'fxSharp' + 'ness';"), 1);
+  assert.equal(run('const k = `fx${n}`;'), 0);
+  assert.equal(run("const k = 'fxFixed';"), 0);
+  assert.equal(run("// 'fxSharpness' 在注释里\nconst k = 'fxSharpnes';"), 0);
+  assert.equal(litScope(ctxOf({ 'server-plugin/a.mjs': "const k = 'fxSharpness';" }), { groups: RT, literal: 'modifierKey' }, CLS.instance_name).length, 0);
+});
+
+test('ledger_count 基线单调（V-11、E-ACC-BASELINE-UP）：记录里现值高于该次执行时上次合入的值即计一条，一记录一分量一条', () => {
+  const rec = (components) => JSON.stringify({ components });
+  const run = (components, file = 'tools/accept/out/p/pre_merge.json') => ledgerCount(ctxOf({ [file]: rec(components) }), { cond: 'baselineMonotone', code: 'E-ACC-BASELINE-UP' }).length;
+  assert.equal(run({ c_instance_id: { last: 2, current: 3 } }), 1);
+  assert.equal(run({ c_instance_id: { last: 3, current: 3 } }), 0);
+  assert.equal(run({ c_instance_id: { last: 3, current: 2 } }), 0);
+  assert.equal(run({ c_instance_id: { last: null, current: 5 } }), 0);
+  assert.equal(run({ c_instance_id: { last: 2, current: 3 }, c_id_parse: { last: 0, current: 1 } }), 2);
+  assert.equal(run({}, 'tools/accept/out/p/pre_merge.json'), 0);
+  // 只读执行记录目录：别处的同名文件不计。
+  assert.equal(run({ c_instance_id: { last: 2, current: 3 } }, 'tools/accept/other.json'), 0);
+  assert.equal(run({ c_instance_id: { last: 2, current: 3 } }, 'tools/accept/hits.json'), 0);
 });
 
 test('item_ledger 登记的形式名与 acc_form 的四个值一一对应', () => {

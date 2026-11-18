@@ -1,0 +1,3 @@
+export const k = 'fxSharp' + 'ness';
+// @file world/ontology/dimensions/fxmods.json
+{"dimensions": {"fxSharpness": {"modifiable": true}, "fxFixed": {"modifiable": false}}}

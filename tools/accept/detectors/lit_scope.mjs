@@ -3,6 +3,8 @@
 // number（白名单外数值，R12-4.2；白名单取扫描类别登记行 litAllow，出处卷一 R-6 第 1 条）。
 // selfName（S12-5，E-ACC-SCAN-SELFNAME）：卷代号、条目键与条目原编号（条目登记）、表代号（维度表文件名）、模块文件名（文件清单里
 // 代码文件的文件名）、检测器代号（模块名）的字串，或带登记实体前缀的字串。
+// modifierKey（卷二 §7 S8：修正键字面量）：与维度表里声明为可被外力改动的维度（`dimensions[*].modifiable`，卷二"修正键"的定义）同名的字串。
+// 键集从被查内容里的维度表读（R12-1.2 同法取自登记数据），代码里不列键。
 // 范围：params.groups（模块组键，R12-11.5）、params.facs、params.modules（read.mjs scopeFiles）。计数落在产生值的地方：定义处一次，
 // 引用处不重计；从范围外文件 import 来的常量计在 import 处。
 // params.access = branch：只计落在分支位置的（if/while/for/switch 条件里，或紧邻比较、逻辑运算、`?`、`case`）。
@@ -31,6 +33,17 @@ const JUDGES = {
   number: (ctx, cls) => {
     const allow = (cls.litAllow || []).map(Number);
     return (v) => v.k === 'num' && !allow.includes(Number(v.v));
+  },
+  modifierKey: (ctx) => {
+    const keys = new Set();
+    for (const f of ctx.files) {
+      if (!f.startsWith(LAYOUT.dimensionsDir + '/') || !f.endsWith('.json')) continue;
+      const base = f.slice(f.lastIndexOf('/') + 1);
+      if (base.startsWith('_')) continue;
+      let table; try { table = JSON.parse(ctx.read(f)); } catch { continue; }
+      for (const [key, def] of Object.entries((table && table.dimensions) || {})) if (def && def.modifiable === true) keys.add(key);
+    }
+    return (v) => v.k === 'str' && keys.has(v.v);
   },
 };
 
