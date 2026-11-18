@@ -9,6 +9,7 @@ import { KernelError } from './errors.mjs';
 import { sha256Text } from './save.mjs';
 import { fixedUnits, fixedScale, truncateTo, fixedToNumber } from './det-math.mjs';
 import { CODE_RE } from './handles/vocab-handle.mjs';
+import { KEY_RE } from './validate/types.mjs';
 import { isHex64, seedKeyText, seedHashText, diceKeyText } from './handles/keys.mjs';
 
 // 分布种类（卷二 §1.10 :307–:316 的 `dist` 取值，单一定义源；别处只引用）。
@@ -40,6 +41,8 @@ const isInt = (v) => Number.isSafeInteger(v);
 
 const paramError = (detail) => new KernelError('E-DIM-SAMPLE-PARAM', {}, detail);
 const componentError = (detail) => new KernelError('E-SEED-COMPONENT', {}, detail);
+// 骰值键复合对象段里取值为空的限定成分的填充代号（卷二 §2.9 第 0 条"内核信号代号"小族登记；卷二十七 R27-8.5 :729）。
+const EMPTY_SEEDPART = 'nil_seedpart';
 
 /** 种子模板 `template.seed` 是否合卷二 :320 的字符集（1–64 个 [A-Za-z0-9_-]）。 @param {unknown} s @returns {boolean} */
 export function isSeedTemplate(s) {
@@ -58,7 +61,8 @@ export function seedKeyFor(templateSeed, kind, instanceId, dimension, group) {
   if (!isSeedTemplate(templateSeed)) throw paramError(`template.seed ${JSON.stringify(templateSeed)}: want ^[A-Za-z0-9_-]{1,64}$`);
   if (typeof kind !== 'string' || !CODE_RE.test(kind)) throw paramError(`kind ${JSON.stringify(kind)} is not a code`);
   if (typeof instanceId !== 'string' || !CODE_RE.test(instanceId)) throw paramError(`instanceId ${JSON.stringify(instanceId)} is not a code`);
-  if (typeof dimension !== 'string' || !CODE_RE.test(dimension)) throw paramError(`dimension ${JSON.stringify(dimension)} is not a code`);
+  // 维度键按卷二 §1.9 :284 的 lowerCamel 文法（`bodyMassKg` 合、`body_mass` 不合），与代号文法不同。
+  if (typeof dimension !== 'string' || !KEY_RE.test(dimension)) throw paramError(`dimension ${JSON.stringify(dimension)}: want ^[a-z][a-zA-Z0-9]{0,47}$`);
   if (group !== undefined && (typeof group !== 'string' || !CODE_RE.test(group))) throw paramError(`joint group ${JSON.stringify(group)} is not a code`);
   return sha256Text(seedKeyText(templateSeed, kind, instanceId, dimension, group));
 }
@@ -102,14 +106,17 @@ export function diceKeyOf(worldSeed, streamCode, subjectId, worldTime, drawSiteC
   if (!isSeedTemplate(worldSeed)) throw componentError(`worldSeed ${JSON.stringify(worldSeed)}: want ^[A-Za-z0-9_-]{1,64}$`);
   if (typeof streamCode !== 'string' || !CODE_RE.test(streamCode)) throw componentError(`streamCode ${JSON.stringify(streamCode)} is not a code`);
   const parts = typeof subjectId === 'string' ? [subjectId] : Array.isArray(subjectId) ? subjectId : null;
-  const [first, q1, q2, extra] = parts || [];
-  if (!parts || first === undefined || extra !== undefined) throw componentError(`subjectId ${JSON.stringify(subjectId)}: want an id plus 0-2 qualifiers`);
+  // 恰一个主体 id 后接零到二个限定成分：第三段之后还有位置即拒，位置上的空值也算位置，不省略。
+  const [first, , , ...extra] = parts || [];
+  if (!parts || first === undefined || extra.length !== 0) throw componentError(`subjectId ${JSON.stringify(subjectId)}: want an id plus 0-2 qualifiers`);
   if (typeof first !== 'string' || !isQualifier(first)) throw componentError(`subjectId first component ${JSON.stringify(first)}: want a code or entity id`);
-  if (q1 !== undefined && !isQualifier(q1)) throw componentError(`subjectId qualifier ${JSON.stringify(q1)}: want a registered code, entity id or fixed row ordinal`);
-  if (q2 !== undefined && !isQualifier(q2)) throw componentError(`subjectId qualifier ${JSON.stringify(q2)}: want a registered code, entity id or fixed row ordinal`);
+  // 复合对象段某个限定成分取值为空时，该位置填 nil_seedpart，不省略该位置（卷二十七 R27-8.5 :729）；
+  // 空只认 undefined（位置存在而值缺），null 与其他非代号值照拒，不当作空成分。
+  const qualifiers = parts.slice(1).map((q) => (q === undefined ? EMPTY_SEEDPART : q));
+  for (const q of qualifiers) if (!isQualifier(q)) throw componentError(`subjectId qualifier ${JSON.stringify(q)}: want a registered code, entity id or fixed row ordinal`);
   if (!isInt(worldTime)) throw componentError(`worldTime ${JSON.stringify(worldTime)}: want an integer minute`);
   if (typeof drawSiteCode !== 'string' || !CODE_RE.test(drawSiteCode)) throw componentError(`drawSiteCode ${JSON.stringify(drawSiteCode)} is not a code`);
-  return diceKeyText(worldSeed, streamCode, [first, q1, q2].filter((x) => x !== undefined), worldTime, drawSiteCode);
+  return diceKeyText(worldSeed, streamCode, [first, ...qualifiers], worldTime, drawSiteCode);
 }
 
 // ---------- 分布参数校验（卷二 §1.10 :318） ----------

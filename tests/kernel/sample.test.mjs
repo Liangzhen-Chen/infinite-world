@@ -22,6 +22,8 @@ installFixedConstants({ BASE: 10, SCALE: 10000, PERMILLE: 1000, BPS: 10000 });
 const SEED_PLAIN = '87a2ca91cf1688c85ad10a0577ec36ebddb1857ed0f86704d7f2f0c887e9421d';
 // "seed_ab12|gadget|gad_1|joint:personality"
 const SEED_JOINT = '73441ce05ab38af58a93cff2e4cb6443f0dfe8a6fbef3e4929429805c0845003';
+// 驼峰维度键（卷二 §1.9 :284 的 lowerCamel 文法）："seed_ab12|person|per_abc123|bodyMassKg"
+const SEED_CAMEL = '1374cdce838941fa7f91848280b4da464777fe2b3947e02c07d8a77960ce298b';
 // 卷二 §1.10 :322–323：h_i = sha256(seedKey + "|" + i)，i=0 也再哈希一次；u = BigInt("0x" + h_i.slice(0,16))。
 const H0 = '0166f0ccf6416e8848a5b02719c8c0732c6daa44ef428b60bc6d48f11e2c21b0';
 const H1 = '14102010e6df8993b42faab8c84db632756764d4173e3062ab553f35f3dd8948';
@@ -33,6 +35,12 @@ test('种子键派生 golden vector（普通维度与 joint 段）', () => {
   assert.equal(seedKeyFor('seed_ab12', 'gadget', 'gad_1', 'personality', 'personality'), SEED_JOINT);
 });
 
+test('种子键接受 lowerCamel 维度键（卷二 §1.9 :284）：bodyMassKg 与 golden vector', () => {
+  // 常量由 node:crypto 对卷二 :320 的输入串独立算出（不经过 kernel 摘要注入）。
+  assert.equal(createHash('sha256').update('seed_ab12|person|per_abc123|bodyMassKg', 'utf8').digest('hex'), SEED_CAMEL);
+  assert.equal(seedKeyFor('seed_ab12', 'person', 'per_abc123', 'bodyMassKg'), SEED_CAMEL);
+});
+
 test('种子键各部件按卷二 :320 的文法拒收（E-DIM-SAMPLE-PARAM）', () => {
   const code = (fn) => assert.throws(fn, (e) => e.code === 'E-DIM-SAMPLE-PARAM');
   code(() => seedKeyFor('', 'person', 'per_abc123', 'height'));
@@ -42,6 +50,8 @@ test('种子键各部件按卷二 :320 的文法拒收（E-DIM-SAMPLE-PARAM）',
   code(() => seedKeyFor('seed_ab12', 'Person', 'per_abc123', 'height'));
   code(() => seedKeyFor('seed_ab12', 'person', 'per_abc|123', 'height'));
   code(() => seedKeyFor('seed_ab12', 'person', 'per_abc123', 'height|x'));
+  // 维度键是 lowerCamel（§1.9 :284），下划线不在字符集里；代号文法放过的 body_mass 在这里不合。
+  code(() => seedKeyFor('seed_ab12', 'person', 'per_abc123', 'body_mass'));
   code(() => seedKeyFor('seed_ab12', 'person', 'per_abc123', 'personality', 'bad group'));
 });
 
@@ -65,6 +75,21 @@ test('复合对象段：主体 id 后接一到两个限定成分，各成分用 
   assert.equal(diceKeyOf('seed_ab12', 'clock_draw', ['emitter_a', 'field_b', 2], 5, 'draw_weather'), 'seed_ab12|clock_draw|emitter_a|field_b|2|5|draw_weather');
 });
 
+test('复合对象段空限定成分位置填 nil_seedpart，不省略该位置（R27-8.5 :729）', () => {
+  // 中间位置为空：三成分段与两成分段是不同键，空位不被 filter 吞掉。
+  assert.equal(diceKeyOf('seed_ab12', 'clock_draw', ['place_a', undefined, 'field_b'], 5, 'draw_weather'),
+    'seed_ab12|clock_draw|place_a|nil_seedpart|field_b|5|draw_weather');
+  assert.notEqual(
+    diceKeyOf('seed_ab12', 'clock_draw', ['place_a', undefined, 'field_b'], 5, 'draw_weather'),
+    diceKeyOf('seed_ab12', 'clock_draw', ['place_a', 'field_b'], 5, 'draw_weather'),
+  );
+  // 末位为空也填，不省略。
+  assert.equal(diceKeyOf('seed_ab12', 'clock_draw', ['place_a', undefined], 5, 'draw_weather'),
+    'seed_ab12|clock_draw|place_a|nil_seedpart|5|draw_weather');
+  assert.equal(diceKeyOf('seed_ab12', 'clock_draw', ['place_a', 'field_b', undefined], 5, 'draw_weather'),
+    'seed_ab12|clock_draw|place_a|field_b|nil_seedpart|5|draw_weather');
+});
+
 test('骰值键成分拒收：空、多余限定成分、非法成分、非整数时刻（E-SEED-COMPONENT）', () => {
   const code = (fn) => assert.throws(fn, (e) => e.code === 'E-SEED-COMPONENT');
   code(() => diceKeyOf('', 'clock_draw', 'per_abc123', 5, 'draw_weather'));
@@ -74,6 +99,10 @@ test('骰值键成分拒收：空、多余限定成分、非法成分、非整�
   code(() => diceKeyOf('seed_ab12', 'clock_draw', [], 5, 'draw_weather'));
   code(() => diceKeyOf('seed_ab12', 'clock_draw', ['place_a', 'field_b', 2, 3], 5, 'draw_weather'));
   code(() => diceKeyOf('seed_ab12', 'clock_draw', ['place_a', 'bad field'], 5, 'draw_weather'));
+  // null 不是"位置存在而值缺"，不得当作空成分填 nil_seedpart，照拒。
+  code(() => diceKeyOf('seed_ab12', 'clock_draw', ['place_a', null], 5, 'draw_weather'));
+  // 多出的第四段即便取值为空也不得当成"第三个限定成分"，按长度拒。
+  code(() => diceKeyOf('seed_ab12', 'clock_draw', ['place_a', 'field_b', 2, undefined], 5, 'draw_weather'));
   code(() => diceKeyOf('seed_ab12', 'clock_draw', ['place_a', 'field|b'], 5, 'draw_weather'));
   code(() => diceKeyOf('seed_ab12', 'clock_draw', ['place_a', -1], 5, 'draw_weather'));
   code(() => diceKeyOf('seed_ab12', 'clock_draw', 'per_abc123', 1.5, 'draw_weather'));
