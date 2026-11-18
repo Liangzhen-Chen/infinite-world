@@ -46,20 +46,20 @@ const STRUCTURE = Object.freeze({ keys: 'keys' });
 const SEVERITY = Object.freeze({ error: 'error' });
 const TYPE_FIELD = Object.freeze({ type: 'type', domain: 'domain' });
 
-const isObj = (v) => v !== null && typeof v === T.js_type.object && !Array.isArray(v);
+const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const esc = (k) => escapeJsonPointer(String(k));
 
 // 登记里一个键（或行表的行值）的类型定义：type 写类型名或完整类型定义，domain 并入（写法同维度表头）。
 function defOf(type, domain) {
-  const def = typeof type === T.js_type.string ? { type } : isObj(type) ? { ...type } : null;
+  const def = typeof type === 'string' ? { type } : isObj(type) ? { ...type } : null;
   if (def && domain !== undefined) def.domain = domain;
   return def;
 }
 
 function checkDefShape(def, merge, at) {
   if (!def || !TYPES.includes(def.type)) return at('type', def ? def.type : def, TYPES.join('|'), 'E-DIM-SCHEMA-TYPE');
-  if (['number', 'integer'].includes(def.type) && def.domain !== undefined && !rangeOk(def.domain)) at('domain', def.domain, '[min,max] (null = unbounded)', 'E-DIM-DOMAIN-RANGE');
+  if ((def.type === T.type.number || def.type === T.type.integer) && def.domain !== undefined && !rangeOk(def.domain)) at('domain', def.domain, '[min,max] (null = unbounded)', 'E-DIM-DOMAIN-RANGE');
   if (def.domain === undefined && !DOMAIN_OPTIONAL.includes(def.type)) at('domain', 'missing', 'domain', 'E-DIM-DOMAIN-RANGE');
   if (Object.hasOwn(MERGE, merge) && !MERGE[merge](def)) at('multiSourceMerge', `${merge} on ${def.type}`, 'merge mode fitting the value type', 'E-PACK-RULEKEY');
   return def;
@@ -83,17 +83,17 @@ export function readRules(root, opts = {}) {
 
   const seen = { code: new Set(), file: new Set() };
   reg.value.rows.forEach((r, i) => {
-    const name = isObj(r) && typeof r.code === T.js_type.string ? r.code : String(i);
+    const name = isObj(r) && typeof r.code === 'string' ? r.code : String(i);
     const at = (dim, got, want, code, level) => regErr(name, dim, `${regPath}#/rows/${i}${dim ? '/' + dim : ''}`, got, want, code, level);
     if (!isObj(r)) return at('', typeof r, 'registry row object');
     for (const f of Object.keys(r).sort()) if (!REG_FIELDS.includes(f)) at(f, f, REG_FIELDS.join('|'));
-    if (typeof r.code !== T.js_type.string || !KEY_RE.test(r.code)) return at('code', r.code, 'lowerCamel table code', 'E-DIM-ID-FORMAT');
+    if (typeof r.code !== 'string' || !KEY_RE.test(r.code)) return at('code', r.code, 'lowerCamel table code', 'E-DIM-ID-FORMAT');
     if (seen.code.has(r.code)) return at('code', r.code, 'one registry row per table code', 'E-DIM-ID-DUPLICATE');
     seen.code.add(r.code);
     if (!isRuleTableFile(r.file) || r.file === RULES_LAYOUT.registry) return at('file', r.file, `relative .json path under ${dir}/`);
     if (seen.file.has(r.file)) return at('file', r.file, 'one file per registry row', 'E-DIM-ID-DUPLICATE');
     seen.file.add(r.file);
-    if (typeof r.volume !== T.js_type.string || r.volume === RULES_DOC.empty) at('volume', r.volume, 'owning volume');
+    if (typeof r.volume !== 'string' || r.volume === RULES_DOC.empty) at('volume', r.volume, 'owning volume');
     if (!Object.hasOwn(MERGE, r.multiSourceMerge)) at('multiSourceMerge', r.multiSourceMerge, Object.keys(MERGE).join('|'), 'E-PACK-RULEKEY');
 
     // 结构：键表 "keys"（type/domain/packOverridable 逐键写）；行表 {"rows": <行键的引用写法>}（三者各写一个）。
@@ -105,7 +105,7 @@ export function readRules(root, opts = {}) {
       for (const k of Object.keys(r.type).sort()) {
         const kat = (dim, got, want, code) => at(`${dim}/${esc(k)}`, got, want, code);
         const def = checkDefShape(defOf(r.type[k], isObj(r.domain) ? r.domain[k] : undefined), r.multiSourceMerge, kat);
-        if (isObj(r.packOverridable) && typeof r.packOverridable[k] !== T.js_type.boolean) kat('packOverridable', r.packOverridable[k], 'true|false');
+        if (isObj(r.packOverridable) && typeof r.packOverridable[k] !== 'boolean') kat('packOverridable', r.packOverridable[k], 'true|false');
         if (def) t.defs.set(k, def);
       }
       for (const k of Object.keys(isObj(r.domain) ? r.domain : {})) if (!Object.hasOwn(r.type, k)) at(`domain/${esc(k)}`, k, 'key declared in type', 'E-RULES-UNREGISTERED');
@@ -113,11 +113,11 @@ export function readRules(root, opts = {}) {
     } else if (isObj(r.structure) && isObj(r.structure.rows)) {
       t.rowKey = { ...r.structure.rows, type: 'ref' };
       t.rowDef = checkDefShape(defOf(r.type, r.domain), r.multiSourceMerge, at);
-      if (typeof r.packOverridable !== T.js_type.boolean) at('packOverridable', r.packOverridable, 'true|false');
+      if (typeof r.packOverridable !== 'boolean') at('packOverridable', r.packOverridable, 'true|false');
     } else if (r.structure === PROCESS_STRUCTURE) {
       // 文件级登记（§3.7 独立格式）：类型与取值域由格式本身定，登记行不写。
       for (const f of ['type', 'domain']) if (r[f] !== undefined) at(f, f, `absent for structure "${PROCESS_STRUCTURE}" (format fixed by vol2 s3.7)`);
-      if (typeof r.packOverridable !== T.js_type.boolean) at('packOverridable', r.packOverridable, 'true|false');
+      if (typeof r.packOverridable !== 'boolean') at('packOverridable', r.packOverridable, 'true|false');
       t.process = null;
     } else return at('structure', r.structure, `"keys", {"rows": <row key ref>} or "${PROCESS_STRUCTURE}"`);
     if (Object.hasOwn(t, 'process')) {
@@ -143,10 +143,10 @@ function readTable(root, t, errors) {
   const seen = new Set();
   doc.value.rows.forEach((row, i) => {
     const path = `${t.file}#/rows/${i}`;
-    if (!isObj(row) || typeof row.key !== T.js_type.string || !Object.hasOwn(row, 'value')) return err(String(i), path, row, '{key, value}');
+    if (!isObj(row) || typeof row.key !== 'string' || !Object.hasOwn(row, 'value')) return err(String(i), path, row, '{key, value}');
     for (const f of Object.keys(row).sort()) {
       if (!ROW_FIELDS.includes(f)) err(row.key, `${path}/${f}`, f, ROW_FIELDS.join('|'));
-      else if (f !== ROW_FIELD.key && f !== ROW_FIELD.value && typeof row[f] !== T.js_type.string) err(row.key, `${path}/${f}`, row[f], 'string');
+      else if (f !== ROW_FIELD.key && f !== ROW_FIELD.value && typeof row[f] !== 'string') err(row.key, `${path}/${f}`, row[f], 'string');
     }
     if (seen.has(row.key)) return err(row.key, `${path}/key`, row.key, 'unique key', 'E-DIM-DUPLICATE-KEY', 'L0');
     seen.add(row.key);
@@ -188,9 +188,9 @@ function checkProcessTable(t, env, err) {
     for (const f of Object.keys(s).sort()) if (!SLOT_FIELDS.includes(f)) bad('E-DIM-STRUCT-FIELD', f, f, SLOT_FIELDS.join('|'), 'L1');
     checkDef({ type: 'number', unit: s.unit, precision: s.precision }, env, { row: `process.${name}`, dim: 'unit', path: base }, err, false);
     if (!STACKING.includes(s.stacking)) bad('E-MOD-STACKING', 'stacking', s.stacking, STACKING.join('|'));
-    const pair = (b) => { const [lo, hi, ...rest] = Array.isArray(b) ? b : []; return !rest.length && typeof lo === T.js_type.number && typeof hi === T.js_type.number && lo <= hi; };
+    const pair = (b) => { const [lo, hi, ...rest] = Array.isArray(b) ? b : []; return !rest.length && typeof lo === 'number' && typeof hi === 'number' && lo <= hi; };
     if (!pair(s.bounds)) bad('E-MOD-BOUNDS', 'bounds', s.bounds, '[lo,hi]');
-    if (s.boundsRelative !== undefined && typeof s.boundsRelative !== T.js_type.boolean) bad('E-MOD-BOUNDS', 'boundsRelative', s.boundsRelative, 'true|false');
+    if (s.boundsRelative !== undefined && typeof s.boundsRelative !== 'boolean') bad('E-MOD-BOUNDS', 'boundsRelative', s.boundsRelative, 'true|false');
     if (s.boundsByKind !== undefined) {
       if (!isObj(s.boundsByKind)) bad('E-MOD-BOUNDS', 'boundsByKind', s.boundsByKind, 'object: subject kind -> [lo,hi]');
       else for (const [k, b] of Object.entries(s.boundsByKind).sort()) if (!KEY_RE.test(k) || !pair(b)) bad('E-MOD-BOUNDS', `boundsByKind/${esc(k)}`, b, 'subject kind -> [lo,hi]');
@@ -208,8 +208,8 @@ function checkProcessTable(t, env, err) {
         }
       }
     }
-    if (s.paceable !== undefined && typeof s.paceable !== T.js_type.boolean) bad('E-DIM-STRUCT-FIELD', 'paceable', s.paceable, 'true|false', 'L1');
-    if (s.basis !== undefined && typeof s.basis !== T.js_type.string) bad('E-DIM-STRUCT-FIELD', 'basis', s.basis, 'string', 'L1');
+    if (s.paceable !== undefined && typeof s.paceable !== 'boolean') bad('E-DIM-STRUCT-FIELD', 'paceable', s.paceable, 'true|false', 'L1');
+    if (s.basis !== undefined && typeof s.basis !== 'string') bad('E-DIM-STRUCT-FIELD', 'basis', s.basis, 'string', 'L1');
     if (s.baselineRX !== undefined) checkValue({ type: 'rx' }, s.baselineRX, env, { row: `process.${name}`, dim: 'baselineRX', path: `${base}/baselineRX` }, err);
   }
   const consumers = isObj(doc.consumers) ? doc.consumers : {};
@@ -226,8 +226,8 @@ function checkProcessTable(t, env, err) {
       if (!KEY_RE.test(name)) gbad('E-DIM-ID-FORMAT', row, path, name, 'lowerCamel consumer');
       if (!isObj(c)) { gbad('E-DIM-STRUCT-FIELD', row, path, typeof c, '{slot, base}'); continue; }
       for (const f of Object.keys(c).sort()) if (!CONSUMER_FIELDS.includes(f)) gbad('E-DIM-STRUCT-FIELD', row, `${path}/${esc(f)}`, f, CONSUMER_FIELDS.join('|'));
-      if (typeof c.slot !== T.js_type.string || !Object.hasOwn(slots, c.slot)) gbad('E-MOD-KEY-UNREGISTERED', row, `${path}/slot`, c.slot, 'slot declared in slots (process.<slot>)', 'L2');
-      if (typeof c.base !== T.js_type.number) gbad('E-DIM-STRUCT-FIELD', row, `${path}/base`, c.base, 'number');
+      if (typeof c.slot !== 'string' || !Object.hasOwn(slots, c.slot)) gbad('E-MOD-KEY-UNREGISTERED', row, `${path}/slot`, c.slot, 'slot declared in slots (process.<slot>)', 'L2');
+      if (typeof c.base !== 'number') gbad('E-DIM-STRUCT-FIELD', row, `${path}/base`, c.base, 'number');
     }
   }
 }

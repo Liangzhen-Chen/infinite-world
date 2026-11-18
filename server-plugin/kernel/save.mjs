@@ -19,7 +19,6 @@ import { statePathSegments, isHex64 } from './handles/keys.mjs';
 import { KernelError, codeOf } from './errors.mjs';
 import { clone } from './clone.mjs';
 import { markersOf } from './validate/types.mjs';
-import { T } from './handles/markers.mjs';
 
 // 本文件内部的固定记号：空字串、分片覆盖判定的三种结果（R27-4.6 覆盖核对的返回值）。
 const SEG = Object.freeze({ empty: '' });
@@ -56,7 +55,7 @@ let digestCap = null;
  * @param {DigestCap | null} cap
  */
 export function installDigestCap(cap) {
-  digestCap = cap && typeof cap.sha256Hex === T.js_type.function ? cap : null;
+  digestCap = cap && typeof cap.sha256Hex === 'function' ? cap : null;
 }
 
 function cap() {
@@ -115,7 +114,7 @@ export function installDigestExclude(patterns) {
 }
 
 const segMatch = (pat, segs) => pat.length === segs.length && pat.every((s, i) => s === '*' || s === segs[i]);
-const isObj = (v) => v !== null && typeof v === T.js_type.object && !Array.isArray(v);
+const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const OMIT = Symbol('omit');
 
 // 按排除表剔除；某层对象的子项全被剔除而变空的，这一层也剔除（有没有起名、写没写手记都不改摘要，卷一 §8.3 三条性质第 2 条）。
@@ -175,7 +174,7 @@ const SEALED_STORE_KEYS = Object.freeze([SEALED_TAG, 'bytes', 'digest'].sort());
  * @returns {boolean}
  */
 export function isSealedStoreForm(v) {
-  return hasExactKeys(v, SEALED_STORE_KEYS) && v[SEALED_TAG] === 1 && typeof v.bytes === T.js_type.string && typeof v.digest === T.js_type.string;
+  return hasExactKeys(v, SEALED_STORE_KEYS) && v[SEALED_TAG] === 1 && typeof v.bytes === 'string' && typeof v.digest === 'string';
 }
 
 /**
@@ -228,7 +227,7 @@ let unitOfPath = null;
  * @returns {void}
  */
 export function registerUnitOfPath(fn) {
-  if (typeof fn !== T.js_type.function) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'registerUnitOfPath: fn must be a function');
+  if (typeof fn !== 'function') throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'registerUnitOfPath: fn must be a function');
   if (unitOfPath) throw new KernelError('E-WRITER-DUPLICATE', {}, 'unit-of-path mapping already registered');
   unitOfPath = fn;
 }
@@ -241,7 +240,7 @@ export function resetUnitOfPath() {
 // 一个值的路径归哪个单元；没登记或返回空即 E-SAVE-SHARD-UNCOVERED。
 function unitOf(row, segs) {
   const u = unitOfPath ? unitOfPath(Object.freeze([...segs])) : null;
-  if (typeof u !== T.js_type.string || u === SEG.empty) throw new KernelError('E-SAVE-SHARD-UNCOVERED', {}, `${row.shard}: ${segs.join('.')} maps to no simulation unit`);
+  if (typeof u !== 'string' || u === SEG.empty) throw new KernelError('E-SAVE-SHARD-UNCOVERED', {}, `${row.shard}: ${segs.join('.')} maps to no simulation unit`);
   return u;
 }
 
@@ -290,7 +289,7 @@ export function compileLayout(layout) {
   let appendRow = null;
   const logRows = [];
   for (const row of layout.shards) {
-    if (!isObj(row) || typeof row.shard !== T.js_type.string || !DOC_PARTS.includes(row.part) || !PARTITIONS.includes(row.partition) || !Array.isArray(row.paths)) {
+    if (!isObj(row) || typeof row.shard !== 'string' || !DOC_PARTS.includes(row.part) || !PARTITIONS.includes(row.partition) || !Array.isArray(row.paths)) {
       throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'shard row must be {shard, part: docpart, paths: list, partition}');
     }
     if (codes.has(row.shard)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `duplicate shard code ${row.shard}`);

@@ -33,8 +33,9 @@ const SHAPE_FIELDS = ['entry', 'field', 'type', 'refFamily', 'nullable'];
 // 读入口返回形状的 type 取值：rx_type 四值（卷二 §1.9、§2.7 :771）加只供 readShapes 的结构化字段值 shape（§2.7 :771，封卷后勘误 1114zs5）。
 const SHAPE_TYPE = Object.freeze({ shape: 'shape' });
 const SHAPE_TYPES = new Set([T.code_enum.rx_type.number, T.code_enum.rx_type.boolean, T.code_enum.rx_type.code, T.code_enum.rx_type.handle, SHAPE_TYPE.shape]);
-// pathTypes 的值类型与写者对象的固定记号（卷二 §2.7：dimension、sealed；rewriteRows 的 all）与路径模式的空段（"" = 整个键，§2.7 writers 写法）。
-const PATH_TYPE = Object.freeze({ dimension: 'dimension', sealed: 'sealed' });
+// pathTypes 的值类型与写者对象的固定记号：dimension、sealed、EventId 的定义源在 kernel/handles/markers.mjs（卷二 §2.7 :811 三行），
+// 这里只引用；rewriteRows 的 all 与路径模式的空段（"" = 整个键，§2.7 writers 写法）在本文件定义。
+const PATH_TYPE = T.path_type_extra;
 const WRITER_ROWS = Object.freeze({ all: 'all' });
 const PATH = Object.freeze({ empty: '' });
 // 报错的 severity 取值（卷二 §4.1 报错行；warnings 以 W- 开头，其余为 error）。
@@ -61,8 +62,8 @@ export const KEY_NONENTITY = Object.freeze(['event', KEY_DIMKEY, 'identityKey', 
 const PROTOCOL_KEY_LIST = ['holdings', 'statuses', 'modifiers', 'terminated', 'due'];
 const PROTOCOL_KEYS = new Set(PROTOCOL_KEY_LIST);
 
-const isObj = (v) => v !== null && typeof v === T.js_type.object && !Array.isArray(v);
-const isStrList = (v) => Array.isArray(v) && v.every((s) => typeof s === T.js_type.string && s !== PATH.empty);
+const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+const isStrList = (v) => Array.isArray(v) && v.every((s) => typeof s === 'string' && s !== PATH.empty);
 const sorted = (xs) => [...xs].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 const segs = (p) => p.split('.');
 const exactKeys = (o, list) => isObj(o) && sorted(Object.keys(o)).join(',') === sorted(list).join(',');
@@ -167,13 +168,13 @@ export function assignSortKeys(systems) {
 
 // 返回 null 或 {code, want}。units：_units.json 已载入的单位（Map 或 Set）。
 function typeIssue(t, units) {
-  if (typeof t !== T.js_type.string) return { code: E.E_DIM_STRUCT_FIELD, want: 'type string' };
+  if (typeof t !== 'string') return { code: E.E_DIM_STRUCT_FIELD, want: 'type string' };
   if (t === T.type.string) return { code: E.E_TEXT_UNGATED, want: 'no path may be typed string' };
   const item = listItemType(t);
   if (item !== null) return typeIssue(item, units);
   const num = parseNumberType(t);
   if (num) return num.unit && units.has(num.unit) ? null : { code: E.E_DIM_UNIT_UNKNOWN, want: `${num.base}:<unit in _units.json>` };
-  if ([T.type.boolean, PATH_TYPE.dimension, PATH_TYPE.sealed, 'EventId'].includes(t)) return null;
+  if (t === T.type.boolean || t === PATH_TYPE.dimension || t === PATH_TYPE.sealed || t === PATH_TYPE.EventId) return null;
   if (isClosedType(t)) return null;
   return { code: E.E_DIM_STRUCT_FIELD, want: 'number:<u> | integer:<u> | boolean | ref:<kind> | enum:<family> | dimension | struct:<name> | sealed | EventId | list<...>' };
 }
@@ -187,18 +188,18 @@ function keyKindsIssues(v, nStars, kinds) {
   const out = [];
   v.forEach((it, i) => {
     const at = `item ${i}`;
-    if (typeof it === T.js_type.string) {
+    if (typeof it === 'string') {
       if (!KEY_NONENTITY.includes(it) && !kinds.has(it)) out.push({ got: it, want: `${at}: a registered entity kind or one of ${KEY_NONENTITY.join(', ')}` });
     } else if (Array.isArray(it)) {
       if (it.length === 0) out.push({ got: it, want: `${at}: non-empty list of entity kinds` });
       if (new Set(it).size !== it.length) out.push({ got: it, want: `${at}: no duplicate kinds` });
-      for (const k of it) if (typeof k !== T.js_type.string || !(kinds.has(k) || KEY_NONENTITY.includes(k))) out.push({ got: k, want: `${at}: each member a registered entity kind or one of ${KEY_NONENTITY.join(', ')} (union; no wildcard)` });
+      for (const k of it) if (typeof k !== 'string' || !(kinds.has(k) || KEY_NONENTITY.includes(k))) out.push({ got: k, want: `${at}: each member a registered entity kind or one of ${KEY_NONENTITY.join(', ')} (union; no wildcard)` });
     } else out.push({ got: it, want: `${at}: entity kind, list of entity kinds, or one of ${KEY_NONENTITY.join(', ')}` });
   });
   return out;
 }
 // 一项里的全部实体 kind（(a) 单个、(b) 列表；(c) 不算）。
-const itemKinds = (it) => (typeof it === T.js_type.string ? (KEY_NONENTITY.includes(it) ? [] : [it]) : Array.isArray(it) ? it.filter((k) => typeof k === T.js_type.string) : []);
+const itemKinds = (it) => (typeof it === 'string' ? (KEY_NONENTITY.includes(it) ? [] : [it]) : Array.isArray(it) ? it.filter((k) => typeof k === 'string') : []);
 
 
 // ---------- 合并与核对 ----------
@@ -271,7 +272,7 @@ export function mergeStateOwners(decl, ctx = {}) {
   // textPaths 与 textWriters：每条 textPath 在 pathTypes 内、恰一个写者（E-WRITER-MISSING）；写者表只收 textPaths。
   for (const tp of textPaths) {
     if (!Object.hasOwn(pathTypes, tp)) err(E.E_PATH_UNDECLARED, tp, '#/textPaths', tp, 'textPath declared in pathTypes as sealed');
-    if (typeof textWriters[tp] !== T.js_type.string || textWriters[tp] === PATH.empty) err(E.E_WRITER_MISSING, tp, '#/textWriters', textWriters[tp], 'exactly one writer file per textPath');
+    if (typeof textWriters[tp] !== 'string' || textWriters[tp] === PATH.empty) err(E.E_WRITER_MISSING, tp, '#/textWriters', textWriters[tp], 'exactly one writer file per textPath');
   }
   for (const tp of sorted(Object.keys(textWriters))) if (!textSet.has(tp)) err(E.E_PATH_UNDECLARED, tp, `#/textWriters/${tp}`, tp, 'textWriters key must be a textPath');
   for (const [a, b] of overlapPairs(textPaths)) err(E.E_PATH_OVERLAP, a, '#/textPaths', b, 'patterns of equal specificity must not overlap');
@@ -308,7 +309,7 @@ export function mergeStateOwners(decl, ctx = {}) {
   // textWriters 也是该 textPath 的改写写者；与 stateKeys 登记同一模式而写者不同即一路径多写者。
   for (const tp of textPaths) {
     const f = textWriters[tp];
-    if (typeof f !== T.js_type.string || f === PATH.empty) continue;
+    if (typeof f !== 'string' || f === PATH.empty) continue;
     const prev = writers.get(tp);
     if (prev && prev.rewrite !== f) err(E.E_WRITER_DUPLICATE, tp, `#/textWriters/${tp}`, `${prev.rewrite} / ${f}`, 'one rewrite writer per pattern');
     else if (!prev) writers.set(tp, { pattern: tp, key: segs(tp)[0], create: [], rewrite: f, rewriteRows: 'all', viaRelocate: false, source: 'textWriters' });
@@ -338,16 +339,16 @@ export function mergeStateOwners(decl, ctx = {}) {
     if (!isObj(s.entryCallerFiles) || !Object.values(s.entryCallerFiles).every(isStrList)) err(E.E_DIM_STRUCT_FIELD, name, `${at}/entryCallerFiles`, s.entryCallerFiles, 'object entry -> list of files ({} when none)');
     if (!(Array.isArray(s.entryJudges) && (s.entryJudges.length === 0 || isStrList(s.entryJudges)))) err(E.E_DIM_STRUCT_FIELD, name, `${at}/entryJudges`, s.entryJudges, 'list of <file>#<fn> ([] when none)');
     for (const f of ['predicates', 'tables', 'writers', 'sinks', 'emits']) if (s[f] !== undefined && !(Array.isArray(s[f]) && (s[f].length === 0 || isStrList(s[f])))) err(E.E_DIM_STRUCT_FIELD, name, `${at}/${f}`, s[f], 'list of strings');
-    for (const f of ['view', 'eventDerive']) if (s[f] !== undefined && (typeof s[f] !== T.js_type.string || !s[f].includes('#'))) err(E.E_DIM_STRUCT_FIELD, name, `${at}/${f}`, s[f], '<file>#<fn>');
+    for (const f of ['view', 'eventDerive']) if (s[f] !== undefined && (typeof s[f] !== 'string' || !s[f].includes('#'))) err(E.E_DIM_STRUCT_FIELD, name, `${at}/${f}`, s[f], '<file>#<fn>');
     for (const f of ['sources', 'terminationCleanup']) if (s[f] !== undefined && !isObj(s[f])) err(E.E_DIM_STRUCT_FIELD, name, `${at}/${f}`, typeof s[f], 'object');
     for (const p of Array.isArray(s.writers) ? s.writers : []) {
       if (claimed.has(p)) err(E.E_STATE_MULTI_WRITER, name, `${at}/writers`, p, `pattern already claimed by ${claimed.get(p)}`);
       else claimed.set(p, name);
     }
     // 已登记读入口（readShapes 的 entry 只能取这些）：view、predicates 里的函数、entryCallerFiles 的键（拼 view 所指文件）。
-    if (typeof s.view === T.js_type.string) entries.add(s.view);
+    if (typeof s.view === 'string') entries.add(s.view);
     for (const p of Array.isArray(s.predicates) ? s.predicates : []) entries.add(p);
-    const viewFile = typeof s.view === T.js_type.string ? s.view.split('#')[0] : null;
+    const viewFile = typeof s.view === 'string' ? s.view.split('#')[0] : null;
     if (viewFile && isObj(s.entryCallerFiles)) for (const fn of Object.keys(s.entryCallerFiles)) entries.add(`${viewFile}#${fn}`);
     if (s.phase === undefined) continue;
     if (!isObj(s.phase)) { err(E.E_DIM_STRUCT_FIELD, name, `${at}/phase`, typeof s.phase, 'object hook -> {phase, after, sortKey}'); hooksOk = false; continue; }
@@ -395,7 +396,7 @@ export function mergeStateOwners(decl, ctx = {}) {
     const seen = new Set();
     d.readShapes.forEach((r, i) => {
       const at = `#/readShapes/${i}`;
-      const bad = (got, want) => err(E.E_DIM_STRUCT_FIELD, isObj(r) && typeof r.entry === T.js_type.string ? r.entry : String(i), at, got, want);
+      const bad = (got, want) => err(E.E_DIM_STRUCT_FIELD, isObj(r) && typeof r.entry === 'string' ? r.entry : String(i), at, got, want);
       if (!exactKeys(r, SHAPE_FIELDS)) return bad(isObj(r) ? sorted(Object.keys(r)).join(',') : typeof r, SHAPE_FIELDS.join(', '));
       if (!entries.has(r.entry)) bad(r.entry, 'entry registered as a system view, predicate or entryCallerFiles key');
       if (!isPathPattern(r.field)) bad(r.field, 'field code (nested fields joined by .)');
@@ -405,9 +406,9 @@ export function mergeStateOwners(decl, ctx = {}) {
       if (!SHAPE_TYPES.has(r.type)) bad(r.type, [...SHAPE_TYPES].join(' | '));
       else if (r.type === T.code_enum.rx_type.code ? !(ctx.kinds && ctx.kinds.has(r.refFamily))
         : r.type === T.code_enum.rx_type.handle ? !(ctx.families && ctx.families.has(r.refFamily))
-          : r.type === SHAPE_TYPE.shape ? !(typeof r.refFamily === T.js_type.string && r.refFamily.startsWith('struct:'))
+          : r.type === SHAPE_TYPE.shape ? !(typeof r.refFamily === 'string' && r.refFamily.startsWith('struct:'))
             : r.refFamily !== null) bad(r.refFamily, `refFamily matching type ${r.type}`);
-      if (typeof r.nullable !== T.js_type.boolean) bad(r.nullable, 'boolean');
+      if (typeof r.nullable !== 'boolean') bad(r.nullable, 'boolean');
     });
   }
 
@@ -453,19 +454,19 @@ export function mergeStateOwners(decl, ctx = {}) {
 
 // 写者两种写法（§2.7"建行写者与改写写者"）。返回规整后的 {create, rewrite, rewriteRows, viaRelocate}，形状不合返回 null。
 function parseWriter(w, bad) {
-  if (typeof w === T.js_type.string && w !== PATH.empty) return { create: [], rewrite: w, rewriteRows: WRITER_ROWS.all, viaRelocate: false };
+  if (typeof w === 'string' && w !== PATH.empty) return { create: [], rewrite: w, rewriteRows: WRITER_ROWS.all, viaRelocate: false };
   if (!isObj(w)) { bad(E.E_DIM_STRUCT_FIELD, w, 'writer file or {create, rewrite, rewriteRows?, viaRelocate}'); return null; }
   let ok = true;
   for (const f of sorted(Object.keys(w))) if (!WRITER_FIELDS.has(f)) { bad(E.E_DIM_STRUCT_FIELD, f, `one of ${[...WRITER_FIELDS].join(', ')}`); ok = false; }
   if (!(Array.isArray(w.create) && (w.create.length === 0 || isStrList(w.create)))) { bad(E.E_DIM_STRUCT_FIELD, w.create, 'create: list of files'); ok = false; }
   else if (new Set(w.create).size !== w.create.length) bad(E.E_WRITER_DUPLICATE, w.create, 'create files distinct');
-  if (!(w.rewrite === null || (typeof w.rewrite === T.js_type.string && w.rewrite !== PATH.empty))) { bad(E.E_DIM_STRUCT_FIELD, w.rewrite, 'rewrite: file or null'); ok = false; }
+  if (!(w.rewrite === null || (typeof w.rewrite === 'string' && w.rewrite !== PATH.empty))) { bad(E.E_DIM_STRUCT_FIELD, w.rewrite, 'rewrite: file or null'); ok = false; }
   // viaRelocate 每个写者对象必写（§2.7；含义与登记不合的码见 §2.6"行改挂"第 7 点）。
-  if (typeof w.viaRelocate !== T.js_type.boolean) { bad(E.E_RELOC_FIELDS, w.viaRelocate, 'viaRelocate: boolean on every writer object'); ok = false; }
+  if (typeof w.viaRelocate !== 'boolean') { bad(E.E_RELOC_FIELDS, w.viaRelocate, 'viaRelocate: boolean on every writer object'); ok = false; }
   const rows = w.rewriteRows;
   const rowsOk = rows === WRITER_ROWS.all || (isObj(rows) && sorted(Object.keys(rows)).join(',') === sorted(REWRITE_ROWS_FIELDS).join(',')
     && [rows.inside, rows.withComponent].every((l) => Array.isArray(l) && (l.length === 0 || isStrList(l))) && rows.inside.length + rows.withComponent.length > 0);
-  if (typeof w.rewrite === T.js_type.string) {
+  if (typeof w.rewrite === 'string') {
     if (rows === undefined) {
       // 某文件既在 create 又是 rewrite 而没有写 rewriteRows：E-WRITER-DUPLICATE（§2.7 计数口径）；否则只是漏写必写字段。
       if (Array.isArray(w.create) && w.create.includes(w.rewrite)) bad(E.E_WRITER_DUPLICATE, w.rewrite, 'file both create and rewrite needs rewriteRows');
@@ -473,7 +474,7 @@ function parseWriter(w, bad) {
       ok = false;
     } else if (!rowsOk) { bad(E.E_DIM_STRUCT_FIELD, rows, 'rewriteRows: "all" or {withComponent, inside} with at least one non-empty list'); ok = false; }
   } else if (w.rewrite === null && rows !== undefined) { bad(E.E_DIM_STRUCT_FIELD, rows, 'no rewriteRows when rewrite is null'); ok = false; }
-  if (w.viaRelocate === true && (typeof w.rewrite !== T.js_type.string || rows === undefined || rows === WRITER_ROWS.all)) bad(E.E_RELOC_FIELDS, w.viaRelocate, 'viaRelocate needs rewrite and a component rewriteRows (not "all")');
+  if (w.viaRelocate === true && (typeof w.rewrite !== 'string' || rows === undefined || rows === WRITER_ROWS.all)) bad(E.E_RELOC_FIELDS, w.viaRelocate, 'viaRelocate needs rewrite and a component rewriteRows (not "all")');
   if (!ok) return null;
   return { create: [...w.create], rewrite: w.rewrite, rewriteRows: rows === undefined ? null : rows, viaRelocate: w.viaRelocate };
 }

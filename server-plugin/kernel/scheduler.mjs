@@ -28,7 +28,6 @@ import { report } from './report.mjs';
 import { registry } from './vocab.mjs';
 import { CODE_RE } from './validate/types.mjs';
 import { advanceHook, advanceHookNames } from './advance-registry.mjs';
-import { T } from './handles/markers.mjs';
 import { snakeCaseKey } from './handles/keys.mjs';
 
 // ---------- 代码内封闭枚举（卷二十 §8 问题 5 :1318 列为代码内封闭、不登卷二） ----------
@@ -70,10 +69,10 @@ const SCHEMA = Object.freeze({
   modeHigh: Object.freeze({ arrival: false, price: true, rank: false }),
 });
 
-const isObj = (v) => v !== null && typeof v === T.js_type.object && !Array.isArray(v);
+const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 // 空字串（本文件内部）。
 const SEG = Object.freeze({ empty: '' });
-const isCode = (v) => typeof v === T.js_type.string && v !== SEG.empty;
+const isCode = (v) => typeof v === 'string' && v !== SEG.empty;
 
 // ---------- 同刻全序键（§4.1.3 第 4 条） ----------
 
@@ -157,7 +156,7 @@ export function compareKeys(a, b) {
 }
 
 function entryRank(engine, family, id) {
-  const rec = typeof id === T.js_type.string ? engine.vocab.index.get(id) : undefined;
+  const rec = typeof id === 'string' ? engine.vocab.index.get(id) : undefined;
   if (!rec || rec.family !== family) throw new KernelError('E-DIM-REF-MISSING', {}, `${JSON.stringify(id)} is not an entry of ${family}`);
   return rec.entry.rank;
 }
@@ -328,7 +327,7 @@ function txSet(tx, segs, value) {
 // 被拒即在当前事务上记"已被拒"：规则层 catch 住也照样整笔回滚（卷二 §2.6"事务内拒写的处置"，同 storage、ledger）。
 function denied(e) {
   const tx = currentTransaction();
-  if (tx && typeof e.code === T.js_type.string && tx.denied === undefined) tx.denied = e;
+  if (tx && typeof e.code === 'string' && tx.denied === undefined) tx.denied = e;
   return e;
 }
 
@@ -350,10 +349,10 @@ function txOrDeny(what) {
 export function schedule(owner, kind, delayMinutes, ref) {
   const tx = txOrDeny('schedule');
   try {
-    const rec = typeof kind === T.js_type.string ? registry().vocabIndex.get(kind) : undefined;
+    const rec = typeof kind === 'string' ? registry().vocabIndex.get(kind) : undefined;
     if (!rec || rec.family !== SCHEMA.dueKind) throw new KernelError('E-DUE-UNDECLARED', {}, `schedule: ${JSON.stringify(kind)} is not a ${SCHEMA.dueKind} entry`);
     for (const [what, v] of [['owner', owner], ['ref', ref]]) {
-      if (typeof v !== T.js_type.string || !CODE_RE.test(v)) throw new KernelError('E-DIM-ID-FORMAT', {}, `schedule: ${what} ${JSON.stringify(v)} is not a code (vol2 s1.9 code grammar)`);
+      if (typeof v !== 'string' || !CODE_RE.test(v)) throw new KernelError('E-DIM-ID-FORMAT', {}, `schedule: ${what} ${JSON.stringify(v)} is not a code (vol2 s1.9 code grammar)`);
     }
     const delay = enqueueDelay(clockTable(), rec.entry, delayMinutes);
     const now = clockField(tx.state, P.clock_minute());
@@ -370,7 +369,7 @@ export function schedule(owner, kind, delayMinutes, ref) {
     if (heaps.has(tx.state)) heapPush(heaps.get(tx.state), { handle, dueMinute, registeredMinute: now });
     return handle;
   } catch (e) {
-    throw (typeof e.code === T.js_type.string ? denied(e) : e);
+    throw (typeof e.code === 'string' ? denied(e) : e);
   }
 }
 
@@ -382,7 +381,7 @@ export function schedule(owner, kind, delayMinutes, ref) {
  */
 export function cancel(handle) {
   const tx = txOrDeny('cancel');
-  if (typeof handle !== T.js_type.string || !CODE_RE.test(handle)) throw denied(new KernelError('E-DIM-ID-FORMAT', {}, `cancel: ${JSON.stringify(handle)} is not a runtime handle`));
+  if (typeof handle !== 'string' || !CODE_RE.test(handle)) throw denied(new KernelError('E-DIM-ID-FORMAT', {}, `cancel: ${JSON.stringify(handle)} is not a runtime handle`));
   if (!Object.hasOwn(dueRows(tx.state), handle)) throw denied(new KernelError('E-DIM-REF-MISSING', {}, `cancel: no due item ${handle}`));
   txSet(tx, [SCHEMA.dueKey, handle], undefined);
 }
@@ -397,7 +396,7 @@ export function cancel(handle) {
  * @returns {TickSource}
  */
 export function dueSource(engine, io) {
-  if (!isObj(io) || typeof io.deliver !== T.js_type.function || typeof io.layerRankOf !== T.js_type.function) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'dueSource: want {deliver, layerRankOf}');
+  if (!isObj(io) || typeof io.deliver !== 'function' || typeof io.layerRankOf !== 'function') throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'dueSource: want {deliver, layerRankOf}');
   const { deliver, layerRankOf } = io;
   return {
     next(state, after) {
@@ -634,7 +633,7 @@ function runReactions(engine, state, t, sources, causesIn, rank) {
     const gen = [];
     for (const cause of causes) {
       const group = [];
-      for (const s of sources) if (typeof s.reactions === T.js_type.function) for (const it of s.reactions(state, t, cause)) group.push(it);
+      for (const s of sources) if (typeof s.reactions === 'function') for (const it of s.reactions(state, t, cause)) group.push(it);
       sortChecked(group, rank, `tick ${t} reactions of one cause`);
       for (const it of group) gen.push(it);
     }
@@ -688,7 +687,7 @@ function limitOf(engine, key) {
  * @returns {{target: string, contest: string, winners: ContestProposal[], losers: ContestProposal[]}[]}
  */
 export function resolveContest(engine, proposals, draw) {
-  if (typeof draw !== T.js_type.function) throw new Error('kernel/scheduler.mjs resolveContest: draw interface required (five-part dice key pending card 4-3)');
+  if (typeof draw !== 'function') throw new Error('kernel/scheduler.mjs resolveContest: draw interface required (five-part dice key pending card 4-3)');
   if (!Array.isArray(proposals)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'resolveContest: proposals must be a list');
   const table = engine.rules[SCHEMA.table];
   const fallback = isObj(table) ? table.contestDefault : undefined;
@@ -795,7 +794,7 @@ export function createWallTimer() {
     },
     heartbeat(ms, fn) {
       const every = wallMs(ms, 1);
-      if (typeof fn !== T.js_type.function) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'wall timer heartbeat: fn must be a function');
+      if (typeof fn !== 'function') throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'wall timer heartbeat: fn must be a function');
       let h = setTimeout(function beat() { h = setTimeout(beat, every); fn(); }, every);
       return () => clearTimeout(h);
     },
@@ -829,7 +828,7 @@ export function checkClockTables(rules, env) {
   };
   const closed = (table, id, e, fields) => {
     for (const f of Object.keys(e).sort()) if (!fields.includes(f) && !SCHEMA.docFields.includes(f)) push('E-DIM-STRUCT-FIELD', table, id, f, f, `one of ${[...fields, ...SCHEMA.docFields].join(', ')}`);
-    if (Object.hasOwn(e, 'basis') && typeof e.basis !== T.js_type.string) push('E-DIM-STRUCT-FIELD', table, id, 'basis', e.basis, 'string');
+    if (Object.hasOwn(e, 'basis') && typeof e.basis !== 'string') push('E-DIM-STRUCT-FIELD', table, id, 'basis', e.basis, 'string');
   };
   const ranks = (table, rows, dupCode) => {
     const seen = new Map();
@@ -848,7 +847,7 @@ export function checkClockTables(rules, env) {
     else if (!PACE_CLASS.includes(e.paceClass)) push('E-DIM-DOMAIN-ENUM', dueTable, id, 'paceClass', e.paceClass, PACE_CLASS.join('|'));
     for (const f of ['calendarBound', 'floorRX', 'rank']) if (!Object.hasOwn(e, f)) push('E-DIM-STRUCT-FIELD', dueTable, id, f, 'missing', `${f} (every entry, no default)`);
     if (Object.hasOwn(e, 'rank') && (!Number.isSafeInteger(e.rank) || e.rank < 0)) push('E-DIM-DOMAIN-RANGE', dueTable, id, 'rank', e.rank, 'integer >= 0');
-    if (Object.hasOwn(e, 'calendarBound') && typeof e.calendarBound !== T.js_type.boolean) push('E-DIM-DOMAIN-RANGE', dueTable, id, 'calendarBound', e.calendarBound, 'boolean');
+    if (Object.hasOwn(e, 'calendarBound') && typeof e.calendarBound !== 'boolean') push('E-DIM-DOMAIN-RANGE', dueTable, id, 'calendarBound', e.calendarBound, 'boolean');
     if (Object.hasOwn(e, 'floorRX') && e.floorRX !== null) {
       checkValue({ type: 'rx', nullable: true }, e.floorRX, env, { table: dueTable, row: id, dim: 'floorRX', path: `${dueTable}#/${id}/floorRX` }, (x) => errors.push(x));
     }

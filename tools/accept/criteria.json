@@ -168,10 +168,14 @@
     {
      "ref": "B2-W4 第二步四续（卷二 S13 ④）：handles/keys.mjs、handles/vocab-handle.mjs、load/vocab-load.mjs、det-math.mjs 的 typeof 比较与字元记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 28
+    },
+    {
+     "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 29
     }
    ],
-   "print": "92f043cacc0bf2abf7c7bf11942fe05e6e6ec61c9009296609f68180e9265b24",
-   "rev": 28,
+   "print": "778c774e754d724593973ffa2b6b41e723dbdeef4d52220531aa07094b9340da",
+   "rev": 29,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -393,10 +397,14 @@
     {
      "ref": "B2-W4 第二步六续（卷二 S13 ④）：validate/rows.mjs、cell-grades.mjs、dimensions-validate.mjs 与 scheduler.mjs、save.mjs、load/save.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 17
+    },
+    {
+     "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 18
     }
    ],
-   "print": "7a6248b8ca7bd7b8fc88b92cdf7fc8751465d48727d859db5eb010b0b055b919",
-   "rev": 17,
+   "print": "befbbf5fdd830c37cffc270e8c82e09cafd5cc1646dced7ef2367180b1c342f0",
+   "rev": 18,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -625,10 +633,14 @@
     {
      "ref": "B2-W4 第二步六续（卷二 S13 ④）：validate/rows.mjs、cell-grades.mjs、dimensions-validate.mjs 与 scheduler.mjs、save.mjs、load/save.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 18
+    },
+    {
+     "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 19
     }
    ],
-   "print": "0c8ae904407f5fd6c2baba6ff70c39fe2ab400f49cdce4589833aaf2439b3719",
-   "rev": 18,
+   "print": "c71d09a3e4938ce75ca94fe629383ffad2a01bdc40dfac57e7bb89e47a404cec",
+   "rev": 19,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -822,10 +834,14 @@
     {
      "ref": "B2-W4 第二步六续（卷二 S13 ④）：validate/rows.mjs、cell-grades.mjs、dimensions-validate.mjs 与 scheduler.mjs、save.mjs、load/save.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 34
+    },
+    {
+     "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 35
     }
    ],
-   "print": "9dba4528be5515e0a90df871d8b8af3bdf1ac581d9348cf11adfe7122b92cf1f",
-   "rev": 34,
+   "print": "fa08f8b88150f31675f4da6a3c7fab5d75ab86ea87cac979de1dcf7e228394ce",
+   "rev": 35,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1000,10 +1016,14 @@
     {
      "ref": "B2-W4 第二步六续（卷二 S13 ④）：validate/rows.mjs、cell-grades.mjs、dimensions-validate.mjs 与 scheduler.mjs、save.mjs、load/save.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 19
+    },
+    {
+     "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 20
     }
    ],
-   "print": "0c8ae904407f5fd6c2baba6ff70c39fe2ab400f49cdce4589833aaf2439b3719",
-   "rev": 19,
+   "print": "c71d09a3e4938ce75ca94fe629383ffad2a01bdc40dfac57e7bb89e47a404cec",
+   "rev": 20,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1479,10 +1499,14 @@
     {
      "ref": "B2-W4 第二步六续（卷二 S13 ④）：validate/rows.mjs、cell-grades.mjs、dimensions-validate.mjs 与 scheduler.mjs、save.mjs、load/save.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 19
+    },
+    {
+     "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 20
     }
    ],
-   "print": "0c8ae904407f5fd6c2baba6ff70c39fe2ab400f49cdce4589833aaf2439b3719",
-   "rev": 19,
+   "print": "c71d09a3e4938ce75ca94fe629383ffad2a01bdc40dfac57e7bb89e47a404cec",
+   "rev": 20,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -1541,10 +1565,14 @@
     {
      "ref": "B2-W4 第二步六续（卷二 S13 ④）：validate/rows.mjs、cell-grades.mjs、dimensions-validate.mjs 与 scheduler.mjs、save.mjs、load/save.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 11
+    },
+    {
+     "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 12
     }
    ],
-   "print": "ad4bf7400e6f9763ae1d5ded1f75a9f23ef90c8a75370f5624b48d7a702e4865",
-   "rev": 11,
+   "print": "abc4b049600c5a030c98c98d56fc668a53b37557c3c25f0cbd160062466af611",
+   "rev": 12,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -1707,10 +1735,14 @@
     {
      "ref": "B2-W4 第二步四续（卷二 S13 ④）：handles/keys.mjs、handles/vocab-handle.mjs、load/vocab-load.mjs、det-math.mjs 的 typeof 比较与字元记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 37
+    },
+    {
+     "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 38
     }
    ],
-   "print": "9b1aeaac0ff87e2bef1bd8d67c1f5ccc05678748e6a53e777e95af7b16167a0e",
-   "rev": 37,
+   "print": "50d9632088ffb883644d9d54de4bbeb4826bd851a4cc87fd736fbc8f959177cc",
+   "rev": 38,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1925,10 +1957,14 @@
     {
      "ref": "B2-W4 第二步四续（卷二 S13 ④）：handles/keys.mjs、handles/vocab-handle.mjs、load/vocab-load.mjs、det-math.mjs 的 typeof 比较与字元记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 26
+    },
+    {
+     "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 27
     }
    ],
-   "print": "92f043cacc0bf2abf7c7bf11942fe05e6e6ec61c9009296609f68180e9265b24",
-   "rev": 26,
+   "print": "778c774e754d724593973ffa2b6b41e723dbdeef4d52220531aa07094b9340da",
+   "rev": 27,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -2138,10 +2174,14 @@
     {
      "ref": "B2-W4 第二步六续（卷二 S13 ④）：validate/rows.mjs、cell-grades.mjs、dimensions-validate.mjs 与 scheduler.mjs、save.mjs、load/save.mjs 的 typeof 比较与固定记号改 T 句柄或本地单一定义源，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 13
+    },
+    {
+     "ref": "B2-W4 第二步二十（卷二 S13 ④，李白 11-18 13:05 裁定第 2 条）：typeof 比较还原为字面量（语言常量白名单）、删 JS_TYPES/T.js_type，pathTypes 三记号收进 markers.mjs、随字段记号取 T.ns_row_type，数组元素与本地别名改 T 成员；检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 14
     }
    ],
-   "print": "ad4bf7400e6f9763ae1d5ded1f75a9f23ef90c8a75370f5624b48d7a702e4865",
-   "rev": 13,
+   "print": "abc4b049600c5a030c98c98d56fc668a53b37557c3c25f0cbd160062466af611",
+   "rev": 14,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

@@ -13,7 +13,7 @@ import { checkRows, checkPrecedence, checkComponents, checkRequired, requiredSyn
 import { prepareNamedConditions } from './named-conditions.mjs';
 import { checkCellGrades } from './cell-grades.mjs';
 
-const isObj = (v) => v !== null && typeof v === T.js_type.object && !Array.isArray(v);
+const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 // required 策略（卷二 §1.2）与类别族名（§1.3）、报错 severity（§4.1）：单一定义，比较处引用。
 const REQUIRED = Object.freeze({ always: 'always' });
 const FAMILY = Object.freeze({ class: 'class' });
@@ -55,7 +55,7 @@ export function validateDimensions(sources, options) {
     if (!options.namespaces.includes(doc.namespace)) at('namespace', doc.namespace, options.namespaces.join('|'), 'E-DIM-SCHEMA-NAMESPACE', 'L1');
     // 表头版本"只认当前版"（§1.2，E-DIM-SCHEMA-VERSION）与卷一 V-17"内核按版本类字段分支 = 0"相抵，P-2 不做此项，记 docs/问题.md 待李白定。
     const e = doc.entity;
-    if (!isObj(e) || !Array.isArray(e.idPrefix) || !e.idPrefix.length || !e.idPrefix.every((p) => typeof p === T.js_type.string && CODE_RE.test(p + 'x'))) at('entity', isObj(e) ? e.idPrefix : e, 'entity.idPrefix: non-empty prefix list', 'E-DIM-ID-FORMAT');
+    if (!isObj(e) || !Array.isArray(e.idPrefix) || !e.idPrefix.length || !e.idPrefix.every((p) => typeof p === 'string' && CODE_RE.test(p + 'x'))) at('entity', isObj(e) ? e.idPrefix : e, 'entity.idPrefix: non-empty prefix list', 'E-DIM-ID-FORMAT');
     if (!Array.isArray(doc.behaviors) || !doc.behaviors.length) at('behaviors', doc.behaviors, 'non-empty behaviors list', 'E-DIM-BEHAVIOR-UNKNOWN');
     for (const s of ['dimensions', 'classes', 'rows', 'generated']) if (!isObj(doc[s])) at(s, typeof doc[s], `${s} object (may be empty)`, 'E-DIM-STRUCT-FIELD');
     tables.push({ file, kind, doc: { ...doc, dimensions: isObj(doc.dimensions) ? doc.dimensions : {} }, entity: isObj(e) ? e : {} });
@@ -87,7 +87,7 @@ export function validateDimensions(sources, options) {
     }
     for (const id of Object.keys(isObj(t.doc.classes) ? t.doc.classes : {}).sort()) {
       const at = { table: t.kind, row: id, dim: '', path: `${t.file}#/classes/${id}` };
-      if (!CODE_RE.test(id) || typeof t.entity.classPrefix !== T.js_type.string || !id.startsWith(t.entity.classPrefix)) err({ code: 'E-DIM-ID-FORMAT', level: 'L0', ...at, got: id, want: `class id with prefix ${t.entity.classPrefix}` });
+      if (!CODE_RE.test(id) || typeof t.entity.classPrefix !== 'string' || !id.startsWith(t.entity.classPrefix)) err({ code: 'E-DIM-ID-FORMAT', level: 'L0', ...at, got: id, want: `class id with prefix ${t.entity.classPrefix}` });
       else if (!vocab.index.has(id) || vocab.index.get(id).family !== FAMILY.class) err({ code: 'E-DIM-CLASS-UNKNOWN', level: 'L2', ...at, got: id, want: 'entry of vocab family class' });
     }
   }
@@ -134,13 +134,13 @@ function checkHeader(t, env, err) {
     if (!requiredSyntaxOk(def.required)) bad('E-DIM-STRUCT-FIELD', 'required', def.required, 'always|never|byClass:<c>|ifPresent:<d>|byEnum:<d>=<v>|anyOf:<a>,<b>|byDigestible|byReader, joined by ;');
     if (def.required !== REQUIRED.always && def.onUnknown === undefined) bad('E-DIM-ONUNKNOWN-MISSING', 'onUnknown', 'missing', CODE_ENUMS.onUnknown.join('|'));
     else if (def.onUnknown !== undefined && !CODE_ENUMS.onUnknown.includes(def.onUnknown)) bad('E-DIM-DOMAIN-ENUM', 'onUnknown', def.onUnknown, CODE_ENUMS.onUnknown.join('|'));
-    if (typeof def.modifiable !== T.js_type.boolean) bad('E-DIM-MODIFIABLE-TYPE', 'modifiable', def.modifiable, 'true|false');
+    if (typeof def.modifiable !== 'boolean') bad('E-DIM-MODIFIABLE-TYPE', 'modifiable', def.modifiable, 'true|false');
     else if (def.modifiable) {
       const numeric = (d) => isObj(d) && (d.type === T.type.number || d.type === T.type.integer);
       if (!(numeric(def) || (def.type === T.type.map && numeric(def.value))) || def.type === T.type.string) bad('E-DIM-MODIFIABLE-TYPE', 'modifiable', def.type, 'number, integer or map<..., number>');
       if (!STACKING.includes(def.stacking)) bad('E-MOD-STACKING', 'stacking', def.stacking, STACKING.join('|'), 'L2');
       const [lo, hi, ...rest] = Array.isArray(def.bounds) ? def.bounds : [];
-      if (typeof lo !== T.js_type.number || typeof hi !== T.js_type.number || rest.length || lo > hi) bad('E-MOD-BOUNDS', 'bounds', def.bounds, '[lo,hi]', 'L2');
+      if (typeof lo !== 'number' || typeof hi !== 'number' || rest.length || lo > hi) bad('E-MOD-BOUNDS', 'bounds', def.bounds, '[lo,hi]', 'L2');
     }
     if (def.sample !== undefined && def.derived !== undefined) bad('E-DIM-SAMPLE-DERIVED', 'sample', 'sample with derived', 'one of sample or derived');
     if (def.domain === undefined && TYPES.includes(def.type) && !DOMAIN_OPTIONAL.includes(def.type)) bad('E-DIM-DOMAIN-RANGE', 'domain', 'missing', 'domain');

@@ -9,11 +9,11 @@ import { rxTokenAt, shapeArgCount, setFieldNames } from './handles/patterns.mjs'
 import { T } from './handles/markers.mjs';
 
 // 本文件内部的记号表（卷二没写文本语法，见文件头；只在 rx.mjs 用的单一定义，成员引用取代裸字面量比较）。
-// TOK：词法记号种类；PROFILE：编译档代号（卷二 §2.9 第 4 条"显示档与对 outputGate 开放"）；ROW_TYPE_FIELD：命名空间登记行"随字段"的读法类型；
+// TOK：词法记号种类；PROFILE：编译档代号（卷二 §2.9 第 4 条"显示档与对 outputGate 开放"）；
 // FAMILY：RX 读入口返回形状登记里用到的词表族名（卷二 §1.9 前缀表 aggregate→agg_、relation→rel_）；AGG_PRIM：卷二 §1.12 聚合原语（exists、count）。
+// 命名空间登记行的"随字段"读法记号（field）不在此定义，取 kernel/handles/markers.mjs 的 T.ns_row_type.field（卷二 §2.9 :1195）。
 const TOK = Object.freeze({ num: 'num', name: 'name', op: 'op', eof: 'eof' });
 const PROFILE = Object.freeze({ data: 'data' });
-const ROW_TYPE_FIELD = 'field';
 const FAMILY = Object.freeze({ aggregate: 'aggregate', relation: 'relation' });
 const AGG_PRIM = Object.freeze({ exists: 'exists', count: 'count' });
 
@@ -32,7 +32,7 @@ const CLOCK_FIELDS = new Set([T.code_enum.rx_clock.day, T.code_enum.rx_clock.sea
 const WORD_OPS = Object.freeze({ and: '&&', or: '||', not: '!', has: 'has' });
 
 function tokenize(text) {
-  if (typeof text !== T.js_type.string) fail('expression must be text');
+  if (typeof text !== 'string') fail('expression must be text');
   const out = [];
   let at = 0;
   const end = text.trimEnd().length;
@@ -166,7 +166,7 @@ function typeOf(n, scope) {
       if (argc !== want) fail(`namespace ${n.ns} takes ${want} segments, got ${argc}`);
       // 登记形状里写明的 set 型字段：这种读法不是读数，只许作 member 的 set（§2.9 第 4 条第 1 点）。
       if (argc === 1 && nsSetFields(row).has(n.arg[0])) return 'set';
-      return row.type === ROW_TYPE_FIELD ? T.rx_kind.runtime : row.type;
+      return row.type === T.ns_row_type.field ? T.rx_kind.runtime : row.type;
     }
     case T.rx_op.add: case T.rx_op.sub: case T.rx_op.mul: case T.rx_op.div:
       want(n.left, 'number'); want(n.right, 'number'); return 'number';
@@ -206,7 +206,7 @@ function typeOf(n, scope) {
 // 无返回形状（推不出）即登记行违反第 1 点，按 §2.9 第 4 条第 3 点报 E-RX-NS-UNKNOWN，不取默认值。
 /** @param {{ns: string, shape: string}} row 命名空间登记行 @returns {number} */
 export const nsArgCount = (row) => {
-  if (!row || typeof row.shape !== T.js_type.string) return fail(`namespace row ${row && row.ns} has no return shape`, 'E-RX-NS-UNKNOWN');
+  if (!row || typeof row.shape !== 'string') return fail(`namespace row ${row && row.ns} has no return shape`, 'E-RX-NS-UNKNOWN');
   return shapeArgCount(row.shape);
 };
 // 返回形状里写明"（set，只作 member 的 set）"的字段名：`<字段>（set，只作 member 的 set）`，由登记行判，不按命名空间名特判。
@@ -235,12 +235,12 @@ export function dimRxType(def, key, allowSet = false) {
 }
 
 function depthOf(n) {
-  const kids = [n.left, n.right, n.item, n.set, n.filter, ...(n.items || [])].filter((x) => x && typeof x === T.js_type.object);
+  const kids = [n.left, n.right, n.item, n.set, n.filter, ...(n.items || [])].filter((x) => x && typeof x === 'object');
   return 1 + kids.reduce((m, k) => Math.max(m, depthOf(k)), 0);
 }
 
 function deepFreeze(v) {
-  if (v && typeof v === T.js_type.object) { Object.values(v).forEach(deepFreeze); Object.freeze(v); }
+  if (v && typeof v === 'object') { Object.values(v).forEach(deepFreeze); Object.freeze(v); }
   return v;
 }
 
@@ -270,7 +270,7 @@ export function compileRXInScope(text, profile, scope) {
   if (!(depthOf(tree) <= scope.maxDepth)) fail(`depth exceeds ${scope.maxDepth}`);
   const nsRefs = [];
   const walk = (n) => {
-    if (!n || typeof n !== T.js_type.object) return;
+    if (!n || typeof n !== 'object') return;
     if (n.op === T.rx_op.ns) nsRefs.push(nsKey(n));
     [n.left, n.right, n.item, n.set, n.filter, ...(n.items || [])].forEach(walk);
   };
@@ -285,14 +285,14 @@ export const nsKey = (n) => (n.arg ? [n.ns, ...n.arg].join('.') : n.ns);
 // bindings：{dim: {<维度键>: 值}, clock: {day, season}}；nsReads：{<命名空间读数键>: 值}（键 = 代号与 arg 以点相连）。
 // 数值一律按定点算（§3.3），结果按 JS 数交回。读数缺即求值失败（E-MOD-RX）。
 
-const own = (o, k) => o !== null && typeof o === T.js_type.object && Object.hasOwn(o, k);
+const own = (o, k) => o !== null && typeof o === 'object' && Object.hasOwn(o, k);
 // 缺读数的求值失败带上缺的读数键（RxError.key），让调用方分清"该键是已知的没有"与"该键未知"。
 const missing = (message, key) => { const e = new RxError(message); e.key = key; throw e; };
 
 function readValue(v) {
-  if (typeof v === T.js_type.number) return { t: 'number', v: fixedUnits(v) };
-  if (typeof v === T.js_type.boolean) return { t: 'boolean', v };
-  if (typeof v === T.js_type.string) return { t: 'code', v };
+  if (typeof v === 'number') return { t: 'number', v: fixedUnits(v) };
+  if (typeof v === 'boolean') return { t: 'boolean', v };
+  if (typeof v === 'string') return { t: 'code', v };
   // 只有四种读数类型（§2.9 第 4 条 :1174），没有第五种：显式 null（"没有"，§1.6 :254）由调用方按字段定义处的含义处理，不交进求值器。
   return fail('binding value must be a number, boolean or code');
 }

@@ -6,8 +6,6 @@
 import { errorCodeOf } from './handles/vocab-handle.mjs';
 import { REGISTERED_CODES } from './error-codes.mjs';
 import { report, checkFields } from './report.mjs';
-import { T } from './handles/markers.mjs';
-
 /**
  * 内核运行期拒写与拒收：带登记码与只含代号、数值的字段（事务处置第 2 件"记日志"用）。
  * 抛它的地方：writePath 的写者、类型、终止核对（§2.6 第 3 条），事务入口，以及日后各运行期核对（2-5 的非有限值拒写同此）。
@@ -35,7 +33,7 @@ export class KernelError extends Error {
 export function reportError(e) {
   const code = codeOf(e);
   if (code === null) throw e;
-  const raw = e !== null && typeof e === T.js_type.object && 'fields' in e ? e.fields : undefined;
+  const raw = e !== null && typeof e === 'object' && 'fields' in e ? e.fields : undefined;
   let fields = {};
   try { fields = raw === undefined ? {} : checkFields(raw); } catch { fields = {}; }
   report(code, fields);
@@ -48,7 +46,7 @@ export function reportError(e) {
  * @returns {import('./types.d.ts').ErrorCode | null}
  */
 export function codeOf(e) {
-  if (e === null || typeof e !== T.js_type.object || !('code' in e)) return null;
+  if (e === null || typeof e !== 'object' || !('code' in e)) return null;
   const c = e.code;
-  return typeof c === T.js_type.string && REGISTERED_CODES.has(c) ? errorCodeOf(c) : null;
+  return typeof c === 'string' && REGISTERED_CODES.has(c) ? errorCodeOf(c) : null;
 }

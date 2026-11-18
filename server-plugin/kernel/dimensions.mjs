@@ -37,7 +37,7 @@ const STAGE = markersOf('stage', STAGES);
 const STACKING_TABLE = Object.freeze({ table: 'modifiers', key: 'stackingTable' });
 const MEMO_SCOPE = 'kernel/dimensions.mjs#modified';
 
-const isObj = (v) => v !== null && typeof v === T.js_type.object && !Array.isArray(v);
+const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 // required 策略取值（卷二 §1.2）与 precedence 缺省组名（§3.2 修正项次序）：本文件用的固定记号，单一定义。
 const REQUIRED_POLICY = Object.freeze({ byClass: 'byClass', ifPresent: 'ifPresent' });
 // 空字串作为"无来源"的标记（本文件内部）。
@@ -56,7 +56,7 @@ let modifierSource = null;
  * @param {(engine: Engine, state: any, at: {target: ModKey, kind: string, id: string}) => ModifierRow[]} fn
  */
 export function installModifierSource(fn) {
-  if (typeof fn !== T.js_type.function) throw new Error('kernel/dimensions.mjs: installModifierSource: fn must be a function');
+  if (typeof fn !== 'function') throw new Error('kernel/dimensions.mjs: installModifierSource: fn must be a function');
   if (modifierSource) throw new Error('kernel/dimensions.mjs: installModifierSource: modifier source already installed');
   modifierSource = fn;
 }
@@ -91,7 +91,7 @@ function memberClasses(engine, t, state, id) {
   const stack = [...own];
   while (stack.length) {
     const c = stack.pop();
-    if (typeof c !== T.js_type.string || out.has(c)) continue;
+    if (typeof c !== 'string' || out.has(c)) continue;
     out.add(c);
     const rec = engine.vocab && engine.vocab.index ? engine.vocab.index.get(c) : undefined;
     const broader = rec && isObj(rec.entry) ? rec.entry.broader : undefined;
@@ -102,7 +102,7 @@ function memberClasses(engine, t, state, id) {
 
 // required 的 byClass / ifPresent 条件不满足即不适用（§1.3 取值算法第一行、§1.6 三种状态；RA-N5）。其余策略只管加载期必填，不影响适用性。
 function applicable(engine, t, state, kind, id, def) {
-  const req = typeof def.required === T.js_type.string ? def.required : '';
+  const req = typeof def.required === 'string' ? def.required : '';
   const colon = req.indexOf(':');
   const policy = colon < 0 ? req : req.slice(0, colon);
   const arg = colon < 0 ? '' : req.slice(colon + 1);
@@ -112,8 +112,8 @@ function applicable(engine, t, state, kind, id, def) {
 }
 
 function unitOf(def) {
-  if (def.type === T.type.map) return isObj(def.value) && typeof def.value.unit === T.js_type.string ? def.value.unit : undefined;
-  return typeof def.unit === T.js_type.string ? def.unit : undefined;
+  if (def.type === T.type.map) return isObj(def.value) && typeof def.value.unit === 'string' ? def.value.unit : undefined;
+  return typeof def.unit === 'string' ? def.unit : undefined;
 }
 
 // 取下标：map 维度带下标时取该键的值；键不在映射里即未知（§1.6 第 4 项"缺键只是该键未知"），显式 null 照原样交回（"没有"）。
@@ -144,7 +144,7 @@ function readBase(engine, state, kind, id, dimension, key) {
     if (v !== undefined) return fact({ known: true, applicable: true, value: v, source: 'instance' });
   }
   const doc = t.doc;
-  const group = isObj(doc.precedenceOf) && typeof doc.precedenceOf[dimension] === T.js_type.string ? doc.precedenceOf[dimension] : 'default';
+  const group = isObj(doc.precedenceOf) && typeof doc.precedenceOf[dimension] === 'string' ? doc.precedenceOf[dimension] : 'default';
   const order = isObj(doc.precedenceGroups) && Array.isArray(doc.precedenceGroups[group]) ? doc.precedenceGroups[group] : [];
   const members = memberClasses(engine, t, state, id);
   const flatClasses = t.flat && t.flat.classes instanceof Map ? t.flat.classes : new Map();
@@ -184,7 +184,7 @@ export function rxBindings(engine, state, kind, id, tree, clock) {
   const keys = new Set();
   const walk = (n) => {
     if (!isObj(n)) return;
-    if (n.op === T.rx_op.dim && typeof n.key === T.js_type.string) keys.add(n.key);
+    if (n.op === T.rx_op.dim && typeof n.key === 'string') keys.add(n.key);
     for (const k of ['left', 'right', 'item', 'set', 'filter']) walk(n[k]);
     if (Array.isArray(n.items)) n.items.forEach(walk);
   };
@@ -247,7 +247,7 @@ function precisionOf(def) {
 
 // 修正项规整：校验阶段，取值（value 或 valueRX），判 when。不适用返回 null。
 function prepareRow(engine, state, kind, id, row, clock) {
-  if (!isObj(row) || typeof row.id !== T.js_type.string) throw new KernelError('E-MOD-STAGE', { entity: id }, 'modifier row needs an id');
+  if (!isObj(row) || typeof row.id !== 'string') throw new KernelError('E-MOD-STAGE', { entity: id }, 'modifier row needs an id');
   if (!STAGES.includes(row.stage)) throw new KernelError('E-MOD-STAGE', { entity: id }, `modifier ${row.id}: stage ${JSON.stringify(row.stage)}`);
   if (row.when !== undefined && row.when !== null) {
     const r = evaluateRX(row.when, rxBindings(engine, state, kind, id, row.when, clock), {});
@@ -258,14 +258,14 @@ function prepareRow(engine, state, kind, id, row, clock) {
   let value = null;
   if (row.stage !== STAGE.post) {
     value = row.valueRX !== undefined && row.valueRX !== null ? evaluateRX(row.valueRX, rxBindings(engine, state, kind, id, row.valueRX, clock), {}) : row.value;
-    if (typeof value !== T.js_type.number) throw new KernelError('E-MOD-RX', { entity: id }, `modifier ${row.id}: value is not a number`);
+    if (typeof value !== 'number') throw new KernelError('E-MOD-RX', { entity: id }, `modifier ${row.id}: value is not a number`);
     fixed = fixedUnits(value);
   }
   const source = isObj(row.source) ? row.source : {};
-  const sourceId = typeof source.id === T.js_type.string ? source.id : typeof source.via === T.js_type.string ? source.via : '';
+  const sourceId = typeof source.id === 'string' ? source.id : typeof source.via === 'string' ? source.via : '';
   return {
     id: row.id, stage: row.stage, value, fixed, curve: row.curve, source, sourceId,
-    stackGroup: typeof row.stackGroup === T.js_type.string ? row.stackGroup : null,
+    stackGroup: typeof row.stackGroup === 'string' ? row.stackGroup : null,
     priority: Number.isInteger(row.priority) ? row.priority : 0, unpenalized: row.unpenalized === true,
   };
 }
@@ -348,7 +348,7 @@ function evaluate(engine, state, kind, id, dimension, opts) {
   const def = tableOf(engine, kind).doc.dimensions[dimension];
   const base = readBase(engine, state, kind, id, dimension, opts.key);
   // 基值未知或不适用：不单独求值，原样交回，由消费者按 onUnknown 处置（§3.8 :1440）；显式 null（"没有"）同样不进管线。
-  if (!base.known || typeof base.value !== T.js_type.number) return { fact: base, steps: Object.freeze([]) };
+  if (!base.known || typeof base.value !== 'number') return { fact: base, steps: Object.freeze([]) };
   const raw = modifierSource ? modifierSource(engine, state, { target, kind, id }) : [];
   const rows = [];
   for (const row of Array.isArray(raw) ? raw : []) {

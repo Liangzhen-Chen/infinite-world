@@ -7,7 +7,7 @@ import { fixedUnits, fixedAdd, fixedMultiply, truncateTo, fixedToNumber, FixedEr
 import { ROW_FIELDS, splitKey, T } from '../validate/types.mjs';
 
 const sortUnique = (xs) => [...new Set(xs)].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
-const isObj = (v) => v !== null && typeof v === T.js_type.object && !Array.isArray(v);
+const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 // 行键四种写法的 op（卷二 §1.3"继承"：`<维>+ / - / ~ / *`）；单一定义，比较处引用。
 const KEY_OP = Object.freeze({ plus: '+', minus: '-', tilde: '~' });
 // 表文件的两节（卷二 §1.3：类别行 classes、普通行 rows）。
@@ -56,7 +56,7 @@ export function flattenTable(table, groupsOf, maxDepth, err) {
     let parent = {};
     if (src.extends !== undefined) {
       const target = src.extends;
-      const why = typeof target === T.js_type.string ? targetOk(section, id, target) : 'a row id';
+      const why = typeof target === 'string' ? targetOk(section, id, target) : 'a row id';
       const tSection = Object.hasOwn(classes, target) ? 'classes' : 'rows';
       if (why) err({ code: 'E-DIM-EXTENDS-TARGET', level: 'L2', ...at(section, id, 'extends'), got: target, want: why });
       else if (stack.includes(`${tSection}/${target}`)) err({ code: 'E-DIM-CYCLE', level: 'L2', ...at(section, id, 'extends'), got: [...stack, `${tSection}/${target}`].join(' -> '), want: 'acyclic extends' });
@@ -89,7 +89,7 @@ export function flattenTable(table, groupsOf, maxDepth, err) {
           else throw new TypeError('delete needs set/map/list');
         } else {
           if (t !== T.type.number && t !== T.type.integer) throw new TypeError(`${op} needs number/integer`);
-          if (typeof base !== T.js_type.number) { err({ code: 'E-DIM-EXTEND-NOPARENT', level: 'L1', ...at(section, id, dim), got: base === undefined ? 'no parent value' : base, want: 'parent number value' }); delete out[dim]; continue; }
+          if (typeof base !== 'number') { err({ code: 'E-DIM-EXTEND-NOPARENT', level: 'L1', ...at(section, id, dim), got: base === undefined ? 'no parent value' : base, want: 'parent number value' }); delete out[dim]; continue; }
           const r = op === KEY_OP.tilde ? fixedAdd(fixedUnits(base), fixedUnits(v)) : fixedMultiply(fixedUnits(base), fixedUnits(v));
           out[dim] = fixedToNumber(truncateTo(r, Number.isInteger(def.precision) ? def.precision : 0));
         }

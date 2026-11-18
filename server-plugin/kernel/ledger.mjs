@@ -24,13 +24,16 @@ import { dim } from './dimensions.mjs';
 import { clockView } from './scheduler.mjs';
 import { readView } from './view-registry.mjs';
 import { buildE } from './handles/generated.mjs';
-import { T } from './handles/markers.mjs';
 
 const E = buildE();
 // 三元键与登记行的字段名（卷二 §2.7 路径段、卷六 §2.5 :224 账本行 {day,used}、§3.1 :? 账户过滤字段）：定义源只写一份，比较处引用。
 const RESOURCE_KEY_FIELDS = ['key', 'kind'];
 const DAY_USED_FIELDS = ['day', 'used'];
 const ACCOUNT_FILTER_FIELDS = ['family', 'purpose'];
+// 入账腿 lot 的三种键集写法：{attrs}、{splitFrom}、{project, splitFrom}（物品类的资源键是批次，卷六 §2.1 :104；批次属性归卷三乙 §4.4。
+// 这三个字面键名在卷二、卷六、卷三乙未找到定义，是 kernel 入账腿契约）。单一定义源，比较处引用成员（S13 ④，李白 11-18 13:05 裁定第 2 条）。
+const LOT_KEYS = Object.freeze({ attrs: 'attrs', splitFrom: 'splitFrom', project: 'project' });
+const LOT_KEY_SHAPES = Object.freeze([LOT_KEYS.attrs, LOT_KEYS.splitFrom, `${LOT_KEYS.project},${LOT_KEYS.splitFrom}`]);
 // 路径模式的空段（卷二 §2.7 writers 写法："" = 整个键）。
 const PATH = Object.freeze({ empty: '' });
 
@@ -87,9 +90,9 @@ const FLOW_FIELDS = Object.freeze(['budgetMode', 'families', 'pairedWith', 'repo
 // purpose 条目字段（§2.2 :130，四字段每行必写，不设缺省）。
 const PURPOSE_FIELDS = Object.freeze(['locksFor', 'spendable', 'trackOutflow', 'visibleToMarket']);
 
-const isObj = (v) => v !== null && typeof v === T.js_type.object && !Array.isArray(v);
+const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
-const codeOrNull = (v) => (typeof v === T.js_type.string && CODE_RE.test(v) ? v : null);
+const codeOrNull = (v) => (typeof v === 'string' && CODE_RE.test(v) ? v : null);
 
 // ---------- 三元键（§4.1 规则 1） ----------
 
@@ -106,7 +109,7 @@ const ACCOUNT_KEY_PARTS = Object.freeze(['holder', 'purpose', 'resourceKind', 'r
 export function accountKey(holder, resource, purpose) {
   const r = isObj(resource) ? resource : {};
   const segs = [holder, purpose, r.kind, r.key];
-  const bad = segs.findIndex((s) => typeof s !== T.js_type.string || !CODE_RE.test(s));
+  const bad = segs.findIndex((s) => typeof s !== 'string' || !CODE_RE.test(s));
   if (!isObj(resource) || Object.keys(resource).sort().join(',') !== [...RESOURCE_KEY_FIELDS].sort().join(',')) throw new KernelError('E-DIM-ID-FORMAT', { entity: codeOrNull(holder) }, 'resource must be {kind, key}');
   if (bad >= 0) throw new KernelError('E-DIM-ID-FORMAT', { entity: codeOrNull(holder) }, `account key segment ${bad} is not a code`);
   return Object.freeze(segs);
@@ -117,7 +120,7 @@ export function accountKey(holder, resource, purpose) {
  * @param {readonly string[]} segs
  */
 export function parseAccount(segs) {
-  if (!Array.isArray(segs) || segs.length !== ACCOUNT_KEY_PARTS.length || !segs.every((s) => typeof s === T.js_type.string && CODE_RE.test(s))) {
+  if (!Array.isArray(segs) || segs.length !== ACCOUNT_KEY_PARTS.length || !segs.every((s) => typeof s === 'string' && CODE_RE.test(s))) {
     throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'account key is [holder, purpose, resourceKind, resourceKey]');
   }
   const [holder, purpose, kind, key] = segs;
@@ -140,14 +143,14 @@ export function checkLedgerTables(rules, env) {
   const errors = [];
   const push = (code, table, row, dim, got, want) => errors.push({ code, level: 'L2', table, row, dim, path: `${table}#/${row}${dim ? '/' + dim : ''}`, got, want });
   const index = env.vocab.index;
-  const inFamily = (code, fam) => typeof code === T.js_type.string && index.has(code) && index.get(code).family === fam;
+  const inFamily = (code, fam) => typeof code === 'string' && index.has(code) && index.get(code).family === fam;
   const entriesOf = (fam) => {
     const f = env.vocab.families.get(fam);
     return f && isObj(f.entries) ? Object.keys(f.entries).sort().map((id) => [id, isObj(f.entries[id]) ? f.entries[id] : {}]) : [];
   };
   const docOk = (table, id, e) => {
     if (e.grade !== undefined && !SCHEMA.grades.includes(e.grade)) push('E-DIM-DOMAIN-ENUM', table, id, 'grade', e.grade, SCHEMA.grades.join('|'));
-    if (e.basis !== undefined && typeof e.basis !== T.js_type.string) push('E-DIM-STRUCT-FIELD', table, id, 'basis', e.basis, 'string');
+    if (e.basis !== undefined && typeof e.basis !== 'string') push('E-DIM-STRUCT-FIELD', table, id, 'basis', e.basis, 'string');
   };
   const closedFields = (table, id, e, fields) => {
     for (const f of Object.keys(e).sort()) if (!fields.includes(f) && !SCHEMA.docFields.includes(f)) push('E-DIM-STRUCT-FIELD', table, id, f, f, `one of ${[...fields, ...SCHEMA.docFields].join(', ')}`);
@@ -180,7 +183,7 @@ export function checkLedgerTables(rules, env) {
     const table = `_vocab.${SCHEMA.purpose}`;
     closedFields(table, id, e, PURPOSE_FIELDS);
     docOk(table, id, e);
-    for (const f of ['spendable', 'trackOutflow', 'visibleToMarket']) if (Object.hasOwn(e, f) && typeof e[f] !== T.js_type.boolean) push('E-DIM-DOMAIN-RANGE', table, id, f, e[f], 'boolean');
+    for (const f of ['spendable', 'trackOutflow', 'visibleToMarket']) if (Object.hasOwn(e, f) && typeof e[f] !== 'boolean') push('E-DIM-DOMAIN-RANGE', table, id, f, e[f], 'boolean');
     if (Object.hasOwn(e, 'locksFor') && e.locksFor !== null && !inFamily(e.locksFor, SCHEMA.ckind)) push('E-DIM-REF-MISSING', table, id, 'locksFor', e.locksFor, `null or entry of ${SCHEMA.ckind}`);
   }
 
@@ -258,12 +261,12 @@ export function checkSubjectFlagDims(tables) {
 
 function resourceRow(engine, kind, holder) {
   const rows = ruleTable(engine.rules, SCHEMA.resourcesTable);
-  if (typeof kind !== T.js_type.string || !Object.hasOwn(rows, kind)) throw new KernelError('E-DIM-REF-MISSING', { entity: codeOrNull(holder) }, `resource kind ${JSON.stringify(kind)} has no resource kind row`);
+  if (typeof kind !== 'string' || !Object.hasOwn(rows, kind)) throw new KernelError('E-DIM-REF-MISSING', { entity: codeOrNull(holder) }, `resource kind ${JSON.stringify(kind)} has no resource kind row`);
   return rows[kind];
 }
 
 function entryOf(engine, family, code, holder) {
-  const rec = typeof code === T.js_type.string ? engine.vocab.index.get(code) : undefined;
+  const rec = typeof code === 'string' ? engine.vocab.index.get(code) : undefined;
   if (!rec || rec.family !== family) throw new KernelError('E-DIM-REF-MISSING', { entity: codeOrNull(holder) }, `${JSON.stringify(code)} is not an entry of ${family}`);
   return rec.entry || {};
 }
@@ -272,7 +275,7 @@ function entryOf(engine, family, code, holder) {
 function checkResource(engine, resource, holder) {
   if (!isObj(resource) || Object.keys(resource).sort().join(',') !== [...RESOURCE_KEY_FIELDS].sort().join(',')) throw new KernelError('E-DIM-ID-FORMAT', { entity: codeOrNull(holder) }, 'resource must be {kind, key}');
   const row = resourceRow(engine, resource.kind, holder);
-  if (typeof resource.key !== T.js_type.string || !CODE_RE.test(resource.key)) throw new KernelError('E-DIM-ID-FORMAT', { entity: codeOrNull(holder) }, 'resource key is not a code');
+  if (typeof resource.key !== 'string' || !CODE_RE.test(resource.key)) throw new KernelError('E-DIM-ID-FORMAT', { entity: codeOrNull(holder) }, 'resource key is not a code');
   return row;
 }
 
@@ -317,7 +320,7 @@ function denied(e) {
 // 不在 holder 类型里（kind 不合 E-DIM-REF-MISSING，不是实体 E-DIM-UNKNOWN-READ）。居民聚合体（勘误 1118k9）经视图 aggregateView 读 ledgerHolder。
 // 出入账腿都核。返回 kind（聚合体为 SCHEMA.aggregateKind）。
 function checkSubject(engine, state, holderId) {
-  if (typeof holderId !== T.js_type.string || !CODE_RE.test(holderId)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'holder id is not a code');
+  if (typeof holderId !== 'string' || !CODE_RE.test(holderId)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'holder id is not a code');
   let kind;
   try { kind = kindOf(holderId); } catch (e) {
     if (codeOf(e) !== E.E_DIM_REF_MISSING) throw e;
@@ -364,7 +367,7 @@ function checkHolder(engine, state, holderId, row) {
  */
 export function openAccount(engine, state, holderId, resourceRef, purposeCode) {
   try {
-    if (typeof holderId !== T.js_type.string || !CODE_RE.test(holderId)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'holder id is not a code');
+    if (typeof holderId !== 'string' || !CODE_RE.test(holderId)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'holder id is not a code');
     const row = checkResource(engine, resourceRef, holderId);
     entryOf(engine, SCHEMA.purpose, purposeCode, holderId);
     checkHolder(engine, state, holderId, row);
@@ -402,7 +405,7 @@ function lotRadix(engine) {
 
 // 批次键的序号（前缀之后按进制读回、往返一致才算；不是批次键即 null）。
 function lotOrdinal(key, radix) {
-  if (typeof key !== T.js_type.string || !key.startsWith(SCHEMA.lotPrefix)) return null;
+  if (typeof key !== 'string' || !key.startsWith(SCHEMA.lotPrefix)) return null;
   const digits = key.slice(SCHEMA.lotPrefix.length);
   const n = Number.parseInt(digits, radix);
   return Number.isSafeInteger(n) && n >= 0 && n.toString(radix) === digits ? n : null;
@@ -413,7 +416,7 @@ function parseAccountLeg(engine, leg, i) {
   if (!fieldsWithin(leg, LEG_ACCOUNT_FIELDS) || !Object.hasOwn(leg, 'account') || !Object.hasOwn(leg, 'delta')) throw structErr(`leg ${i}: account leg is {account, delta, lot?}`);
   const a = leg.account;
   if (!fieldsWithin(a, ACCOUNT_FIELDS) || ACCOUNT_FIELDS.some((f) => !Object.hasOwn(a, f))) throw structErr(`leg ${i}: account is {holder, purpose, resource}`);
-  if (typeof a.holder !== T.js_type.string || !CODE_RE.test(a.holder)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, `leg ${i}: holder id is not a code`);
+  if (typeof a.holder !== 'string' || !CODE_RE.test(a.holder)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, `leg ${i}: holder id is not a code`);
   const r = a.resource;
   if (!isObj(r) || !fieldsWithin(r, ['key', 'kind'])) throw structErr(`leg ${i}: resource is {kind, key}`);
   const row = resourceRow(engine, r.kind, a.holder);
@@ -429,11 +432,11 @@ function parseAccountLeg(engine, leg, i) {
     const l = leg.lot;
     // 拆分可另带 project：供料时拆出新批次并把新批次的 project 设为该工程（卷十九 §4.4 规则 7 :531、卷三乙 K-2 :1031）；其余属性原样带出。
     const ks = isObj(l) ? Object.keys(l).sort(cmp).join(',') : '';
-    if (!['attrs', 'splitFrom', 'project,splitFrom'].includes(ks)) throw structErr(`leg ${i}: lot is {splitFrom, project?} or {attrs}`);
-    if (Object.hasOwn(l, 'splitFrom') && (typeof l.splitFrom !== T.js_type.string || !CODE_RE.test(l.splitFrom))) throw new KernelError('E-DIM-ID-FORMAT', { entity: a.holder }, `leg ${i}: splitFrom is not a lot key`);
+    if (!LOT_KEY_SHAPES.includes(ks)) throw structErr(`leg ${i}: lot is {splitFrom, project?} or {attrs}`);
+    if (Object.hasOwn(l, 'splitFrom') && (typeof l.splitFrom !== 'string' || !CODE_RE.test(l.splitFrom))) throw new KernelError('E-DIM-ID-FORMAT', { entity: a.holder }, `leg ${i}: splitFrom is not a lot key`);
     if (Object.hasOwn(l, SCHEMA.project) && !projectOk(l[SCHEMA.project])) throw new KernelError('E-DIM-ID-FORMAT', { entity: a.holder }, `leg ${i}: project is null or a buildProject id`);
     if (Object.hasOwn(l, 'attrs')) checkLotAttrs(l.attrs, a.holder, i);
-  } else if (typeof r.key !== T.js_type.string || !CODE_RE.test(r.key)) {
+  } else if (typeof r.key !== 'string' || !CODE_RE.test(r.key)) {
     throw new KernelError('E-DIM-ID-FORMAT', { entity: a.holder }, `leg ${i}: resource key is not a code`);
   }
   return { i, holder: a.holder, purpose: a.purpose, kind: r.kind, key: newLot ? null : r.key, delta: leg.delta, row, purposeEntry, lot: newLot ? leg.lot : null };
@@ -451,7 +454,7 @@ function checkLotAttrs(attrs, holder, i) {
 
 // 批次属性 project：未写、null 或代号形的工程键（卷三乙 §2.3 :280 nullable ref buildProject）。
 function projectOk(p) {
-  return p === undefined || p === null || (typeof p === T.js_type.string && CODE_RE.test(p));
+  return p === undefined || p === null || (typeof p === 'string' && CODE_RE.test(p));
 }
 
 // 备料批次（project 非空）的持有人须等于该工程的 sponsor（卷六码表 E-LEDGER-STAGING-SPONSOR；卷三乙 K-8 :1037；卷十九 §4.4 规则 7 :531）。
@@ -472,7 +475,7 @@ function stagingFault(engine, state, holder, attrs) {
     return { code: 'E-DIM-UNKNOWN-READ', why: e.message };
   }
   if (view === null || view === undefined) return { code: 'E-LEDGER-STAGING-SPONSOR', why: `lot of ${SCHEMA.project} ${p}: ${SCHEMA.projectView}(${p}) has no such project` };
-  if (!isObj(view) || !Object.hasOwn(view, SCHEMA.sponsor) || typeof view[SCHEMA.sponsor] !== T.js_type.string || !CODE_RE.test(view[SCHEMA.sponsor])) {
+  if (!isObj(view) || !Object.hasOwn(view, SCHEMA.sponsor) || typeof view[SCHEMA.sponsor] !== 'string' || !CODE_RE.test(view[SCHEMA.sponsor])) {
     return { code: 'E-DIM-UNKNOWN-READ', why: `lot of ${SCHEMA.project} ${p}: ${SCHEMA.projectView}(${p}) returned no ${SCHEMA.sponsor} code` };
   }
   if (view[SCHEMA.sponsor] !== holder) return { code: 'E-LEDGER-STAGING-SPONSOR', why: `lot of ${SCHEMA.project} ${p}: holder ${holder} is not ${SCHEMA.projectView}(${p}).${SCHEMA.sponsor} (${view[SCHEMA.sponsor]})` };
@@ -481,7 +484,7 @@ function stagingFault(engine, state, holder, attrs) {
 
 // 赃物份额：未写或 fraction [0, 1]（卷三乙 §2.3 taint；K-8 :1035）。
 function taintOk(t) {
-  return t === undefined || (typeof t === T.js_type.number && t >= 0 && t <= 1);
+  return t === undefined || (typeof t === 'number' && t >= 0 && t <= 1);
 }
 
 // 来源、去处腿 {flow: src 或 sink 代号, kind: 资源种类, qty: 正整数}（规则 3：代号须在该种类行 sources / sinks 内）。
@@ -489,7 +492,7 @@ function parseFlowLeg(engine, leg, i) {
   if (!fieldsWithin(leg, LEG_FLOW_FIELDS) || LEG_FLOW_FIELDS.some((f) => !Object.hasOwn(leg, f))) throw structErr(`leg ${i}: flow leg is {flow, kind, qty}`);
   const row = resourceRow(engine, leg.kind, null);
   if (!isPosInt(leg.qty)) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, `leg ${i}: qty is a positive integer`);
-  const rec = typeof leg.flow === T.js_type.string ? engine.vocab.index.get(leg.flow) : undefined;
+  const rec = typeof leg.flow === 'string' ? engine.vocab.index.get(leg.flow) : undefined;
   const side = rec && rec.family === SCHEMA.src ? SCHEMA.src : rec && rec.family === SCHEMA.sink ? SCHEMA.sink : null;
   if (side === null) throw new KernelError('E-LEDGER-CODE-UNREGISTERED', { entity: null }, `leg ${i}: ${JSON.stringify(leg.flow)} is not a ${SCHEMA.src} or ${SCHEMA.sink} entry`);
   const listed = side === SCHEMA.src ? row.sources : row.sinks;
@@ -536,7 +539,7 @@ function postDraft(engine, state, draft, viaAllocation) {
     if (!tx || tx.state !== state) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity: null }, 'post outside the transaction of this state');
     if (!fieldsWithin(draft, DRAFT_FIELDS)) throw structErr('post draft is {legs, reason, refs?}');
     if (!Object.hasOwn(draft, 'reason')) throw structErr('post reason is required (verb code, vol6 s3.2 :286)');
-    if (typeof draft.reason !== T.js_type.string || !CODE_RE.test(draft.reason)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'post reason is not a code');
+    if (typeof draft.reason !== 'string' || !CODE_RE.test(draft.reason)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'post reason is not a code');
     if (draft.refs !== undefined && !isObj(draft.refs)) throw structErr('post refs is an object');
     if (!Array.isArray(draft.legs) || draft.legs.length === 0) throw structErr('post legs is a non-empty list');
 
@@ -809,7 +812,7 @@ function readTotalsCell(state, kind, code) {
  */
 export function dayUsage(engine, state, resourceKind, code) {
   resourceRow(engine, resourceKind, null);
-  const rec = typeof code === T.js_type.string ? engine.vocab.index.get(code) : undefined;
+  const rec = typeof code === 'string' ? engine.vocab.index.get(code) : undefined;
   if (!rec || (rec.family !== SCHEMA.src && rec.family !== SCHEMA.sink)) throw new KernelError('E-DIM-REF-MISSING', { entity: null }, `${JSON.stringify(code)} is not a ${SCHEMA.src} or ${SCHEMA.sink} entry`);
   const today = clockView(engine, state).day;
   const hit = readTotalsCell(state, resourceKind, code).usedByDay.find((d) => d.day === today);
@@ -918,7 +921,7 @@ export function alertGaps(engine, usage) {
   for (const u of usage) {
     if (!fieldsWithin(u, USAGE_FIELDS) || USAGE_FIELDS.some((f) => !Object.hasOwn(u, f))) throw structErr('usage row is {resource, flow, day, used}');
     resourceRow(engine, u.resource, null);
-    const rec = typeof u.flow === T.js_type.string ? engine.vocab.index.get(u.flow) : undefined;
+    const rec = typeof u.flow === 'string' ? engine.vocab.index.get(u.flow) : undefined;
     if (!rec || (rec.family !== SCHEMA.src && rec.family !== SCHEMA.sink)) throw new KernelError('E-DIM-REF-MISSING', { entity: null }, `${JSON.stringify(u.flow)} is not a ${SCHEMA.src} or ${SCHEMA.sink} entry`);
     if (!Number.isSafeInteger(u.day) || u.day < 0 || !Number.isSafeInteger(u.used) || u.used < 0) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, 'day and used are non-negative integers');
     if ((rec.entry || {}).budgetMode !== SCHEMA.physical) continue;
@@ -952,7 +955,7 @@ export function balance(engine, state, holderId, resourceRef, purposeCode) {
  * @returns {readonly {holder: string, resource: {kind: string, key: string}, purpose: string, balance: number}[]}
  */
 export function accountsOf(engine, state, holderId, filter = {}) {
-  if (typeof holderId !== T.js_type.string || !CODE_RE.test(holderId)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'holder id is not a code');
+  if (typeof holderId !== 'string' || !CODE_RE.test(holderId)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'holder id is not a code');
   const f = isObj(filter) ? filter : {};
   for (const k of Object.keys(f)) if (!ACCOUNT_FILTER_FIELDS.includes(k)) throw new KernelError('E-DIM-STRUCT-FIELD', { entity: holderId }, `accountsOf filter field ${k}`);
   if (f.family !== undefined) entryOf(engine, SCHEMA.resfam, f.family, holderId);
@@ -983,11 +986,11 @@ export function accountsOf(engine, state, holderId, filter = {}) {
  * @returns {number}
  */
 export function stockIn(engine, state, scopePlaceId, resourceFilter) {
-  if (typeof scopePlaceId !== T.js_type.string || !CODE_RE.test(scopePlaceId)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'scope place id is not a code');
+  if (typeof scopePlaceId !== 'string' || !CODE_RE.test(scopePlaceId)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'scope place id is not a code');
   const rf = isObj(resourceFilter) ? resourceFilter : null;
   if (!rf || Object.keys(rf).some((k) => !RESOURCE_KEY_FIELDS.includes(k))) throw new KernelError('E-DIM-STRUCT-FIELD', { entity: scopePlaceId }, 'resourceFilter is {kind, key?}');
   resourceRow(engine, rf.kind, scopePlaceId);
-  if (rf.key !== undefined && (typeof rf.key !== T.js_type.string || !CODE_RE.test(rf.key))) throw new KernelError('E-DIM-ID-FORMAT', { entity: scopePlaceId }, 'resource key is not a code');
+  if (rf.key !== undefined && (typeof rf.key !== 'string' || !CODE_RE.test(rf.key))) throw new KernelError('E-DIM-ID-FORMAT', { entity: scopePlaceId }, 'resource key is not a code');
   const all = readAt(state, [SCHEMA.accounts]);
   let candidates = 0;
   for (const holder of Object.keys(isObj(all) ? all : {}).sort(cmp)) {
@@ -1028,8 +1031,8 @@ export function budgetOn(engine, resourceKind, code, day) {
 
 // 申请键：申请主体 id（规则 6），或按全序细分的元组（§4.6 规则 8 :582"（买方 id、计价资源键、货的资源键）"，第一键即申请主体 id）。
 function requestKey(k, i) {
-  const t = typeof k === T.js_type.string ? [k] : k;
-  if (!Array.isArray(t) || t.length === 0 || t.some((s) => typeof s !== T.js_type.string || s === PATH.empty)) throw structErr(`request ${i}: key is a non-empty string or a list of them`);
+  const t = typeof k === 'string' ? [k] : k;
+  if (!Array.isArray(t) || t.length === 0 || t.some((s) => typeof s !== 'string' || s === PATH.empty)) throw structErr(`request ${i}: key is a non-empty string or a list of them`);
   return t;
 }
 const cmpKey = (a, b) => {
@@ -1074,7 +1077,7 @@ export function prorateCapped(requests, limit) {
 // 在该种类行 sources/sinks 内、条目登记为限额通道。不合依次 E-DIM-REF-MISSING、E-LEDGER-CODE-UNREGISTERED、E-DIM-DOMAIN-ENUM。
 function cappedChannel(engine, resourceKind, code) {
   const row = resourceRow(engine, resourceKind, null);
-  const rec = typeof code === T.js_type.string ? engine.vocab.index.get(code) : undefined;
+  const rec = typeof code === 'string' ? engine.vocab.index.get(code) : undefined;
   if (!rec || (rec.family !== SCHEMA.src && rec.family !== SCHEMA.sink)) throw new KernelError('E-DIM-REF-MISSING', { entity: null }, `${JSON.stringify(code)} is not a ${SCHEMA.src} or ${SCHEMA.sink} entry`);
   const listed = rec.family === SCHEMA.src ? row.sources : row.sinks;
   if (!Array.isArray(listed) || !listed.includes(code)) throw new KernelError('E-LEDGER-CODE-UNREGISTERED', { entity: null }, `${code} is not in ${resourceKind} ${rec.family === SCHEMA.src ? 'sources' : 'sinks'}`);
@@ -1130,7 +1133,7 @@ export function settleCappedAllocation(engine, state, input) {
     if (!tx || tx.state !== state) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity: null }, 'settleCappedAllocation outside the transaction of this state');
     if (!fieldsWithin(input, SETTLE_FIELDS) || SETTLE_FIELDS.some((f) => !Object.hasOwn(input, f))) throw settleErr('settleCappedAllocation is {resourceKind, code, day, limit, reason, requests, targets}');
     if (!Number.isSafeInteger(input.day) || input.day < 0) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, 'day is a non-negative integer world day');
-    if (typeof input.reason !== T.js_type.string || !CODE_RE.test(input.reason)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'reason is a verb code');
+    if (typeof input.reason !== 'string' || !CODE_RE.test(input.reason)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'reason is a verb code');
     const rec = cappedChannel(engine, input.resourceKind, input.code);
     if (rec.family !== SCHEMA.src) throw settleRef(`${JSON.stringify(input.code)} is not a ${SCHEMA.src} entry (an allocation posts ${SCHEMA.src} legs)`);
     if (input.limit !== null && !(Number.isSafeInteger(input.limit) && input.limit >= 0)) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, 'limit is a non-negative integer or null');
@@ -1197,7 +1200,7 @@ export function closeLedgerPeriod(engine, state, endDay, writeReport) {
   // 重放判据失效而重复入账。码取卷二已定义的 E-DIM-DOMAIN-RANGE（本函数对 endDay 的取用域原本就报它；卷六码表无专属码，不新造）。
   const today = clockView(engine, state).day;
   if (endDay >= today) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, `endDay ${endDay} must be before the current world day ${today} (vol6 :376: closing the current day would erase the day+source replay test)`);
-  if (typeof writeReport !== T.js_type.function) throw structErr('writeReport is the caller-supplied report writer');
+  if (typeof writeReport !== 'function') throw structErr('writeReport is the caller-supplied report writer');
   const totals = readAt(state, [SCHEMA.totals]);
   const usage = [];
   const keep = [];

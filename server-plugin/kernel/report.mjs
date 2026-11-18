@@ -6,7 +6,6 @@
 import { appendFileSync } from 'node:fs';
 import { errorCodeOf, HandleError, CODE_RE } from './handles/vocab-handle.mjs';
 import { REGISTERED_CODES } from './error-codes.mjs';
-import { T } from './handles/markers.mjs';
 
 /** @typedef {null | boolean | number | string} FieldValue 代号（实体 id、句柄值、错误码）或数值；文字收不进来。 */
 /** @typedef {{code: import('./types.d.ts').ErrorCode, fields: Readonly<Record<string, FieldValue>>}} ReportRecord */
@@ -17,18 +16,18 @@ import { T } from './handles/markers.mjs';
  * @returns {Record<string, FieldValue>} 按键名升序的新对象
  */
 export function checkFields(fields) {
-  if (fields === null || typeof fields !== T.js_type.object || Array.isArray(fields)) throw new HandleError('E-DIM-ID-FORMAT', 'report fields: want a plain object of codes and numbers');
+  if (fields === null || typeof fields !== 'object' || Array.isArray(fields)) throw new HandleError('E-DIM-ID-FORMAT', 'report fields: want a plain object of codes and numbers');
   /** @type {Record<string, FieldValue>} */
   const out = {};
   for (const k of Object.keys(fields).sort()) {
     if (!CODE_RE.test(k)) throw new HandleError('E-DIM-ID-FORMAT', `report field name ${JSON.stringify(k)}: want ^[a-z][a-z0-9_]{1,47}$`);
     const v = fields[k];
-    if (v === null || typeof v === T.js_type.boolean) { out[k] = v; continue; }
-    if (typeof v === T.js_type.number) {
+    if (v === null || typeof v === 'boolean') { out[k] = v; continue; }
+    if (typeof v === 'number') {
       if (!Number.isFinite(v)) throw new HandleError('E-DET-NONFINITE', `report field ${k}: non-finite number`);
       out[k] = v; continue;
     }
-    if (typeof v === T.js_type.string && (CODE_RE.test(v) || REGISTERED_CODES.has(v))) { out[k] = v; continue; }
+    if (typeof v === 'string' && (CODE_RE.test(v) || REGISTERED_CODES.has(v))) { out[k] = v; continue; }
     throw new HandleError('E-DIM-ID-FORMAT', `report field ${k}: value must be null, boolean, finite number, code or error code`);
   }
   return out;
@@ -45,7 +44,7 @@ let sink = consoleSink;
  */
 export function useReportSink(next) {
   const prev = sink;
-  sink = typeof next === T.js_type.function ? next : consoleSink;
+  sink = typeof next === 'function' ? next : consoleSink;
   return prev;
 }
 

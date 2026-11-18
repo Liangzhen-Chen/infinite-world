@@ -1,8 +1,6 @@
 // 词表族与单位表（卷二 §1.9、§1.4、§1.1）：建代号索引、broader 上位链；核对族前缀与实体前缀不冲突（E-DIM-VOCAB-PREFIX）、
 // 条目代号格式与前缀、broader 闭合无环、单位条目。只按表头与族登记通用处理，不认任何具体族的条目。
 
-import { T } from '../handles/markers.mjs';
-
 const CODE_RE = /^[a-z][a-z0-9_]{1,47}$/;
 
 // 一个前缀与另一个前缀冲突：相等、或一个是另一个的开头（§1.9"任何词表族前缀不得等于实体前缀、不得是实体前缀的前缀、也不得以实体前缀开头"）。
@@ -17,15 +15,15 @@ export function loadVocab(vocabDoc, entityPrefixes, err) {
   const families = new Map();
   const index = new Map();
   const famObj = (vocabDoc && vocabDoc.families) || {};
-  if (!vocabDoc || typeof famObj !== T.js_type.object || Array.isArray(famObj)) err({ code: 'E-DIM-VOCAB-PREFIX', table: '_vocab', got: typeof famObj, want: 'families object' });
+  if (!vocabDoc || typeof famObj !== 'object' || Array.isArray(famObj)) err({ code: 'E-DIM-VOCAB-PREFIX', table: '_vocab', got: typeof famObj, want: 'families object' });
   for (const name of Object.keys(famObj).sort()) {
     const fam = famObj[name] || {};
     const prefix = fam.prefix;
     const at = { table: '_vocab', row: name };
-    if (typeof prefix !== T.js_type.string || !CODE_RE.test(prefix + 'x')) { err({ code: 'E-DIM-VOCAB-PREFIX', ...at, dim: 'prefix', got: prefix, want: 'registered family prefix' }); continue; }
+    if (typeof prefix !== 'string' || !CODE_RE.test(prefix + 'x')) { err({ code: 'E-DIM-VOCAB-PREFIX', ...at, dim: 'prefix', got: prefix, want: 'registered family prefix' }); continue; }
     for (const ep of entityPrefixes) if (clash(prefix, ep)) err({ code: 'E-DIM-VOCAB-PREFIX', ...at, dim: 'prefix', got: prefix, want: `no overlap with entity prefix ${ep}` });
     for (const [other, o] of families) if (clash(prefix, o.prefix)) err({ code: 'E-DIM-VOCAB-PREFIX', ...at, dim: 'prefix', got: prefix, want: `no overlap with family ${other} prefix ${o.prefix}` });
-    const entries = fam.entries && typeof fam.entries === T.js_type.object ? fam.entries : {};
+    const entries = fam.entries && typeof fam.entries === 'object' ? fam.entries : {};
     families.set(name, { name, prefix, closed: fam.closed === true, entries });
     for (const id of Object.keys(entries).sort()) {
       if (!CODE_RE.test(id) || !id.startsWith(prefix)) { err({ code: 'E-DIM-ID-FORMAT', table: '_vocab', row: id, dim: name, got: id, want: `^[a-z][a-z0-9_]{1,47}$ with prefix ${prefix}` }); continue; }
@@ -66,9 +64,9 @@ export function loadUnits(unitsDoc, err) {
   if (!rows) { err({ code: 'E-DIM-UNIT-UNKNOWN', table: '_units', got: typeof unitsDoc, want: '{"units": [...]}' }); return units; }
   for (const u of rows) {
     const id = u && u.id;
-    if (typeof id !== T.js_type.string || !/^[A-Za-z][A-Za-z0-9_]*$/.test(id)) { err({ code: 'E-DIM-ID-FORMAT', table: '_units', row: String(id), got: id, want: 'unit id' }); continue; }
+    if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_]*$/.test(id)) { err({ code: 'E-DIM-ID-FORMAT', table: '_units', row: String(id), got: id, want: 'unit id' }); continue; }
     if (units.has(id)) { err({ code: 'E-DIM-ID-DUPLICATE', table: '_units', row: id, got: id, want: 'unique unit id' }); continue; }
-    if (typeof u.dimension !== T.js_type.string || u.si === undefined) err({ code: 'E-DIM-STRUCT-FIELD', table: '_units', row: id, got: Object.keys(u).sort().join(','), want: 'id, dimension, si, calibrate?' });
+    if (typeof u.dimension !== 'string' || u.si === undefined) err({ code: 'E-DIM-STRUCT-FIELD', table: '_units', row: id, got: Object.keys(u).sort().join(','), want: 'id, dimension, si, calibrate?' });
     units.set(id, u);
   }
   return units;
@@ -77,6 +75,8 @@ export function loadUnits(unitsDoc, err) {
 // ---------- JSON 文本（L0 语法）的指针与标量 ----------
 // 原 kernel/handles/patterns.mjs 搬入：kernel 行规定"JSON 文本解析只在 kernel/load/*"，而 S13 (b) 只许见名文件用正则，
 // 本文件是 load/* 里唯一列在 (b) 的文件（自身不 import 任何 kernel 文件，不成环）。
+// JSON 文法记号（标点的字面字符与 true/false/null）是语言与文法常量，出处见卷二 §7 S13 上下文白名单 :2413 (d)（李白 11-18 13:05 裁定第 2 条），
+// 不计第 ④ 类；本文件的 JSON_SCALAR 正则与 load/json-text.mjs 的结构字符扫描都按这条口径。
 
 /** JSON 指针转义（RFC 6901）：`~` → `~0`、`/` → `~1`。@param {string} k @returns {string} */
 export const escapeJsonPointer = (k) => k.replace(/~/g, '~0').replace(/\//g, '~1');

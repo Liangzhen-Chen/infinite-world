@@ -7,8 +7,8 @@
 
 import { CODE_ENUMS, T } from './types.mjs';
 
-const isObj = (v) => v !== null && typeof v === T.js_type.object && !Array.isArray(v);
-const scalar = (v) => typeof v === T.js_type.number || typeof v === T.js_type.boolean;
+const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+const scalar = (v) => typeof v === 'number' || typeof v === 'boolean';
 // 卷三甲 §2.1 物性格单元格声明的两个字段名与表文件节名（§1.7）：单一定义，比较处引用。
 const GRADE_FIELD = Object.freeze({ field: 'field', refDim: 'refDim' });
 const SEG = Object.freeze({ empty: '' });
@@ -20,7 +20,7 @@ const SECTIONS = ['classes', 'rows', 'generated'];
 /** @param {Record<string, unknown>} doc 维度表文件 */
 export const gradeDecl = (doc) => {
   const d = isObj(doc.cellGrades) ? doc.cellGrades : null;
-  return d && typeof d.field === T.js_type.string ? d : null;
+  return d && typeof d.field === 'string' ? d : null;
 };
 
 // 一行（展平后）填了值的格：Map<格键, 值>。
@@ -39,7 +39,7 @@ export function gradedCells(dims, flatRow) {
 
 // 表头写了 cellGrades 却不是 {field: string, refDim?: string}（多余键也算）：声明本身错，报 E-DIM-STRUCT-FIELD，不静默当作没声明。
 function declShapeOk(d) {
-  return isObj(d) && typeof d.field === T.js_type.string && d.field !== SEG.empty && (d.refDim === undefined || typeof d.refDim === T.js_type.string) && Object.keys(d).every((k) => k === GRADE_FIELD.field || k === GRADE_FIELD.refDim);
+  return isObj(d) && typeof d.field === 'string' && d.field !== SEG.empty && (d.refDim === undefined || typeof d.refDim === 'string') && Object.keys(d).every((k) => k === GRADE_FIELD.field || k === GRADE_FIELD.refDim);
 }
 
 /** @param {Record<string, unknown>} t 一张表 @param {(...args: unknown[]) => void} err */
@@ -70,20 +70,20 @@ export function checkCellGrades(t, err) {
       const bad = (got, want) => err({ code: 'E-MAT-GRADE-FIELD', level: 'L3', ...at(k), got, want });
       if (!isObj(e) || Object.keys(e).sort().join(',') !== GRADE_KEYS.join(',')) { bad(isObj(e) ? Object.keys(e).sort().join(',') : e, GRADE_KEYS.join(',')); continue; }
       if (!CODE_ENUMS.cell_grade.includes(e.grade)) { bad(e.grade, CODE_ENUMS.cell_grade.join('|')); continue; }
-      if (![e.citation, e.basis].every((x) => x === null || typeof x === T.js_type.string)) { bad('non-string text', 'citation, basis string or null'); continue; }
+      if (![e.citation, e.basis].every((x) => x === null || typeof x === 'string')) { bad('non-string text', 'citation, basis string or null'); continue; }
       if (e.grade === T.code_enum.cell_grade.measured && !e.citation) bad('measured without citation', 'citation');
       if (e.grade === T.code_enum.cell_grade.designed && !e.basis) bad('designed without basis', 'basis');
       if (e.grade !== T.code_enum.cell_grade.referenced || !cells.has(k)) continue;
       referenced++;
       const ref = decl.refDim === undefined ? null : flat[decl.refDim];
-      const target = typeof ref === T.js_type.string && gradesOf.has(ref) ? gradesOf.get(ref).g : undefined;
+      const target = typeof ref === 'string' && gradesOf.has(ref) ? gradesOf.get(ref).g : undefined;
       const tg = isObj(target) ? target[k] : undefined;
       const tv = gradedCells(dims, flatOf(ref)).get(k);
-      if (typeof ref !== T.js_type.string) err({ code: 'E-MAT-GRADE-REF', level: 'L3', ...at(k), got: ref === undefined ? 'missing' : ref, want: `${decl.refDim} naming the reference row` });
+      if (typeof ref !== 'string') err({ code: 'E-MAT-GRADE-REF', level: 'L3', ...at(k), got: ref === undefined ? 'missing' : ref, want: `${decl.refDim} naming the reference row` });
       else if (!gradesOf.has(ref)) err({ code: 'E-MAT-GRADE-REF', level: 'L3', ...at(k), got: ref, want: 'existing reference row' });
       else if (!isObj(tg) || tg.grade !== T.code_enum.cell_grade.measured) err({ code: 'E-MAT-GRADE-REF', level: 'L3', ...at(k), got: isObj(tg) ? tg.grade : 'ungraded', want: `measured cell on ${ref}` });
       else if (tv !== cells.get(k)) err({ code: 'E-MAT-GRADE-REF', level: 'L3', ...at(k), got: `${cells.get(k)} vs ${tv}`, want: `value equal to ${ref}` });
     }
-    if (decl.refDim !== undefined && typeof flat[decl.refDim] === T.js_type.string && referenced === 0) err({ code: 'W-MAT-REF-UNUSED', level: 'L3', ...at(), got: flat[decl.refDim], want: `a referenced cell when ${decl.refDim} is set` });
+    if (decl.refDim !== undefined && typeof flat[decl.refDim] === 'string' && referenced === 0) err({ code: 'W-MAT-REF-UNUSED', level: 'L3', ...at(), got: flat[decl.refDim], want: `a referenced cell when ${decl.refDim} is set` });
   }
 }

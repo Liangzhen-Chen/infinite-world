@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { T, TYPES, CODE_ENUMS, DOMAIN_OPTIONAL, ROW_FIELDS, RX_OPS, RX_KINDS, JS_TYPES, markersOf } from '../../server-plugin/kernel/handles/markers.mjs';
+import { T, TYPES, CODE_ENUMS, DOMAIN_OPTIONAL, ROW_FIELDS, RX_OPS, RX_KINDS, PATH_TYPE_EXTRAS, NS_ROW_TYPES, markersOf } from '../../server-plugin/kernel/handles/markers.mjs';
 import { T as T_REEXPORTED } from '../../server-plugin/kernel/validate/types.mjs';
 
 test('handles/markers.mjs 是 0 import 叶子：源码没有任何 import 语句', () => {
@@ -57,10 +57,11 @@ test('T.rx_kind：RX 读法类型标记，含 rx_type 四值与"代号或句柄"
   assert.equal(T.rx_kind.family, 'rx_kind');
 });
 
-test('T.js_type：typeof 结果比较用的语言常量族（S13 上下文白名单 (d)）', () => {
-  for (const name of JS_TYPES) assert.equal(T.js_type[name], name);
-  assert.equal(T.js_type.object, 'object');
-  assert.equal(T.js_type.undefined, 'undefined');
+test('T.path_type_extra、T.ns_row_type：pathTypes 三记号（卷二 §2.7 :811）与 rxNamespaces 的"随字段"（:1195）各一份', () => {
+  assert.deepEqual([...PATH_TYPE_EXTRAS], ['EventId', 'dimension', 'sealed']);
+  for (const name of PATH_TYPE_EXTRAS) assert.equal(T.path_type_extra[name], name);
+  assert.deepEqual([...NS_ROW_TYPES], ['field']);
+  assert.equal(T.ns_row_type.field, 'field');
 });
 
 test('冻结：族对象与根不可改，赋值抛 TypeError', () => {

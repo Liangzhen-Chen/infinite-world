@@ -8,8 +8,6 @@
 import { handleOf, errorCodeOf, errorMemberName, HandleError } from './vocab-handle.mjs';
 import { statePathOf, checkPathPattern } from './keys.mjs';
 import { ERROR_CODES } from '../error-codes.mjs';
-import { T } from './markers.mjs';
-
 const EMPTY = Object.freeze({});
 
 /** @type {Readonly<Record<string, Readonly<Record<string, string>>>>} */
@@ -57,7 +55,7 @@ export function buildE(codes = ERROR_CODES.map((e) => e.code)) {
  * @param {{ledgerPaths?: string[]}} [opts] 账本账户路径模式（只经账本转移，不生成构造函数）
  */
 export function buildP(decl, opts = {}) {
-  const pathTypes = decl && decl.pathTypes && typeof decl.pathTypes === T.js_type.object ? decl.pathTypes : {};
+  const pathTypes = decl && decl.pathTypes && typeof decl.pathTypes === 'object' ? decl.pathTypes : {};
   for (const pattern of Object.keys(pathTypes)) checkPathPattern(pattern);
   const excluded = new Set([...(Array.isArray(decl && decl.textPaths) ? decl.textPaths : []), ...(opts.ledgerPaths || [])]);
   const patterns = new Set(sorted(Object.keys(pathTypes)).filter((p) => !excluded.has(p)));

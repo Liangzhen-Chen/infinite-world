@@ -9,7 +9,6 @@ import { KernelError, codeOf } from './errors.mjs';
 import { report } from './report.mjs';
 import { invalidateMemo } from './memo.mjs';
 import { appendLogEntry } from './save.mjs';
-import { T } from './handles/markers.mjs';
 
 /**
  * @typedef {{node: string, file: string, request?: number | string | null, tick?: number, stage?: number}} TxContext
@@ -32,8 +31,8 @@ function rollback(tx) {
   for (let i = tx.undo.length - 1; i >= 0; i--) {
     const { segs, existed, prev } = tx.undo[i];
     let cur = tx.state;
-    for (let k = 0; k < segs.length - 1 && cur && typeof cur === T.js_type.object; k++) cur = cur[segs[k]];
-    if (!cur || typeof cur !== T.js_type.object) continue;
+    for (let k = 0; k < segs.length - 1 && cur && typeof cur === 'object'; k++) cur = cur[segs[k]];
+    if (!cur || typeof cur !== 'object') continue;
     const last = segs[segs.length - 1];
     if (existed) cur[last] = prev; else delete cur[last];
   }
@@ -81,7 +80,7 @@ let holdWhileRecompute = null;
  * @returns {void}
  */
 export function registerHoldWhileRecompute(handler) {
-  if (typeof handler !== T.js_type.function) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'registerHoldWhileRecompute: handler must be a function');
+  if (typeof handler !== 'function') throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'registerHoldWhileRecompute: handler must be a function');
   if (holdWhileRecompute) throw new KernelError('E-WRITER-DUPLICATE', {}, 'hold-while recompute handler already registered');
   holdWhileRecompute = handler;
 }
@@ -123,7 +122,7 @@ export function runTransaction(state, ctx, body) {
   current = null;
   const code = codeOf(failure);
   if (code === null) throw failure;
-  const own = failure && typeof failure === T.js_type.object && failure.fields && typeof failure.fields === T.js_type.object ? failure.fields : {};
+  const own = failure && typeof failure === 'object' && failure.fields && typeof failure.fields === 'object' ? failure.fields : {};
   const fields = { entity: Object.hasOwn(own, 'entity') ? own.entity : null, request: tx.request };
   if (tx.tick !== undefined) Object.assign(fields, { tick: tx.tick, stage: tx.stage === undefined ? null : tx.stage });
   report(code, fields);

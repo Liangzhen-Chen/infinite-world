@@ -4,8 +4,6 @@
 
 import { CODE_RE, HandleError } from './vocab-handle.mjs';
 import { registry } from '../vocab.mjs';
-import { T } from './markers.mjs';
-
 /**
  * @template {string} K
  * @param {Map<string, {idPrefix: string[], singletonIds: string[]}>} kindIds kind → 表头登记的前缀与单例 id
@@ -16,7 +14,7 @@ import { T } from './markers.mjs';
 export function entityIdOf(kindIds, kind, id) {
   const reg = kindIds.get(kind);
   if (!reg) throw new HandleError('E-DIM-REF-MISSING', `kind ${JSON.stringify(kind)}: no dimension table registers it`);
-  if (typeof id !== T.js_type.string || !CODE_RE.test(id)) throw new HandleError('E-DIM-ID-FORMAT', `id ${JSON.stringify(id)}: want ^[a-z][a-z0-9_]{1,47}$`);
+  if (typeof id !== 'string' || !CODE_RE.test(id)) throw new HandleError('E-DIM-ID-FORMAT', `id ${JSON.stringify(id)}: want ^[a-z][a-z0-9_]{1,47}$`);
   if (!reg.idPrefix.some((p) => id.startsWith(p)) && !reg.singletonIds.includes(id)) throw new HandleError('E-DIM-ID-FORMAT', `id ${id}: prefix not one of ${kind} idPrefix ${reg.idPrefix.join('|')}`);
   return /** @type {import('../types.d.ts').EntityId<K>} */ (id);
 }

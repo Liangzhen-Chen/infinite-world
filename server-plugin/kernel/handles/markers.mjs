@@ -45,14 +45,19 @@ export const ROW_FIELDS = Object.freeze(['extends', 'abstract', 'classes', 'tags
 // 数据档收其中除 slot、mod、broader 外的变体（同条"显示档与对 outputGate 开放"）；数据档与显示档的选择在 rx.mjs。
 export const RX_OPS = Object.freeze(['num', 'dim', 'handle', 'add', 'sub', 'mul', 'div', 'cmp', 'and', 'or', 'not', 'agg', 'clock', 'slot', 'mod', 'broader', 'ns', 'member']);
 
-// RX 求值与编译的类型标记（卷二 §2.9 第 4 条"RX 类型规则" :1183 与 §1.9 代码内封闭枚举 rx_type）：
-// number/boolean/code/handle 即 rx_type 四值；codeOrHandle 是"代号或句柄"的混合读法标记（同条 :1183）；set 是只许作 member 的 set 的读法标记（同条）；
-// runtime 是代码内占位（同条"返回类型为随字段的按所读字段取四种之一"：编译期取不到具体类型时记 runtime），不是第五种类型。
+// RX 求值与编译的类型标记（卷二 §2.9 第 4 条"RX 类型规则" :1184–:1186，全 RX 唯一定义；§1.9 代码内封闭枚举 rx_type :288）：
+// number/boolean/code/handle 即 rx_type 四值（:1184、:1185）；codeOrHandle 是 :1185"实体类与词表族混合的 ref 为『代号或句柄』"的读法标记；
+// set 是 :1180、:1185 只许作 member 的 set 的读法标记（"不是读数、不算第五种类型"）；
+// runtime 是 :1185"返回类型为『随字段』的按所读字段取四种之一"（同 :1195）的代码占位：编译期取不到具体字段类型时记 runtime，不是第五种类型。
 export const RX_KINDS = Object.freeze(['number', 'boolean', 'code', 'handle', 'codeOrHandle', 'set', 'runtime']);
 
-// JavaScript 语言自带的 typeof 结果（S13 上下文白名单 (d)：typeof 结果比较属语言常量，不计第 ④ 类）。
-// 取值来自 ECMAScript 的 typeof 返回值集合，不是任何卷的协议标记；放在此处只为同一定义只写一份。
-export const JS_TYPES = Object.freeze(['undefined', 'object', 'boolean', 'number', 'bigint', 'string', 'symbol', 'function']);
+// pathTypes 值文法里超出 §1.5 类型名的三个固定记号（卷二 §2.7 :811 路径类型文法：dimension / sealed / EventId 三行）：
+// 定义源只此一份，handles/keys.mjs、kernel/storage.mjs、kernel/load/state-owners.mjs 三处比较都引用这里的成员。
+export const PATH_TYPE_EXTRAS = Object.freeze(['EventId', 'dimension', 'sealed']);
+
+// RX 可读命名空间登记行里"随字段"的读法记号（卷二 §2.9 第 4 条"RX 可读命名空间登记"第 1 点 :1195：各字段类型不同的行写"随字段"，
+// 按所读字段取四种之一；登记数据 state-owners.json 的 rxNamespaces 行把它记作 field）。
+export const NS_ROW_TYPES = Object.freeze(['field']);
 
 // 语言自身的协议键（不是协议标记）：then 给 thenable 探测、toJSON 给 JSON 序列化，其余是对象自带成员名。
 const MARKER_PROTOCOL_KEYS = Object.freeze({ 'then': true, 'toJSON': true, 'constructor': true, 'prototype': true, 'toString': true, 'valueOf': true, 'hasOwnProperty': true, 'is': true, 'family': true });
@@ -98,5 +103,6 @@ export const T = Object.freeze({
   code_enum: Object.freeze(codeEnumFamilies),
   rx_op: markersOf('rx_op', RX_OPS),
   rx_kind: markersOf('rx_kind', RX_KINDS),
-  js_type: markersOf('js_type', JS_TYPES),
+  path_type_extra: markersOf('path_type_extra', PATH_TYPE_EXTRAS),
+  ns_row_type: markersOf('ns_row_type', NS_ROW_TYPES),
 });

@@ -3,8 +3,6 @@
 // 值只从那张表来（加载入口 installFixedConstants 收下），本文件不另定一份（李白 11-18 08:20 第 2 条）。
 // 小数位数上限不另设常数：precision p 合法当且仅当 BASE^p 整除 SCALE（§1.2 的 0–4）；扩展标度 p 须使 BASE^p = SCALE²（§1.2、§3.3 第 6 条的 8）。
 
-import { T } from './handles/markers.mjs';
-
 const LIMIT = BigInt(Number.MAX_SAFE_INTEGER);
 // 十进制文本文法的字元记号（逐字符解析，见文件头；单一定义）。
 const CH = Object.freeze({ minus: '-', dot: '.', expLower: 'e', expUpper: 'E', plus: '+' });
@@ -106,8 +104,8 @@ export function parseDecimalLiteral(x) {
 /** @param {number | bigint | string} x @returns {bigint} */
 export function fixedUnits(x) {
   const scale = fixedScale();
-  if (typeof x === T.js_type.bigint) return checkedFixed(x * scale);
-  if (typeof x === T.js_type.number && !Number.isFinite(x)) throw new FixedError('E-DIM-DOMAIN-RANGE', 'nonfinite');
+  if (typeof x === 'bigint') return checkedFixed(x * scale);
+  if (typeof x === 'number' && !Number.isFinite(x)) throw new FixedError('E-DIM-DOMAIN-RANGE', 'nonfinite');
   const m = parseDecimalLiteral(x);
   if (!m) throw new FixedError('E-DIM-DOMAIN-RANGE', `not a decimal: ${x}`);
   const [, sign, whole, fraction, exponent] = m;
