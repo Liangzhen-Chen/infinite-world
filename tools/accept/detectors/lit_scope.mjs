@@ -10,6 +10,8 @@
 // derived-process.json 的 slots；代码里不列键。
 // 键形与类型核直接调 kernel/handles/keys.mjs：文法是其 :18 的 DIM_KEY_RE（经 :80 的 parseDimKey 拆键），
 // 判定是其 :66 的 modKeyOf（modifiable + 数值类型 + map 须带下标）；本文件不自备键形正则与判定。
+// map 下标为代号时按卷二 :1290（map<…,number> 的 `<key>` 须是登记词表代号）核：vocabIndex 从被查内容里的
+// _vocab.json 用 kernel/load/vocab-load.mjs 的 loadVocab 读（与读维度表同一种离线方式），本文件不列词表或代号。
 // 未覆盖：stock.* 的键集登记在卷五 §2.3，被查内容里没有对应的数据登记（未找到）；S8 保持 registered（不虚报）。
 // 范围：params.groups（模块组键，R12-11.5）、params.facs、params.modules（read.mjs scopeFiles）。计数落在产生值的地方：定义处一次，
 // 引用处不重计；从范围外文件 import 来的常量计在 import 处。
@@ -18,6 +20,7 @@
 import { tokenize, foldAt, minPrecAt, canStartAt, buildEnv, importsOf, specifierIndexes, symbolPaths, constDecls, conditionSpans, BRANCH_OPS } from '../lib/js-scan.mjs';
 import { scopeFiles, resolveRel, isCode, LAYOUT, REGISTRY } from '../read.mjs';
 import { parseDimKey, modKeyOf } from '../../../server-plugin/kernel/handles/keys.mjs';
+import { loadVocab } from '../../../server-plugin/kernel/load/vocab-load.mjs';
 
 const JUDGES = {
   selfName: (ctx) => {
@@ -62,11 +65,14 @@ function isModifierKey(reg, text) {
 
 // 修正键的登记表（keys.mjs 的 KeyRegistry 形态）：kind → 该维度表表头的 dimensions；表头 capabilities 段按卷二 §3.6
 // 注册为 body.<capability>；derived-process.json 的 slots 按卷二 §3.7 注册为 process.<slot>（槽是数值修正键）。
-// idIndex（行键即实例 id）与 vocabIndex 由 keys.mjs 的 subKeyOk 用来核对代号下标。
+// idIndex（行键即实例 id）与 vocabIndex（词表代号 → {family}）由 keys.mjs 的 subKeyOk 用来核对代号下标。
+// vocabIndex 从同一个维度表目录的 _vocab.json 读（skip 掉的前缀 `_` 文件就是它）；读法与读维度表同一种离线方式，
+// 走 kernel/load/vocab-load.mjs 的 loadVocab，不另写词表解析，也不列具体族或代号。
 function modifierRegistry(ctx) {
   const tableDims = new Map();
   const idIndex = new Map();
   const vocabIndex = new Map();
+  const entityPrefixes = [];
   for (const f of ctx.files) {
     if (!f.startsWith(LAYOUT.dimensionsDir + '/') || !f.endsWith('.json')) continue;
     const base = f.slice(f.lastIndexOf('/') + 1);
@@ -78,6 +84,14 @@ function modifierRegistry(ctx) {
     if (rows && typeof rows === 'object' && !Array.isArray(rows)) for (const id of Object.keys(rows)) idIndex.set(id, kind);
     const caps = (table && table.capabilities) || {};
     if (caps && typeof caps === 'object' && Object.keys(caps).length) tableDims.set('body', caps);
+    const entity = (table && table.entity) || {};
+    for (const p of Array.isArray(entity.idPrefix) ? entity.idPrefix : []) entityPrefixes.push(p);
+  }
+  const vocabPath = `${LAYOUT.dimensionsDir}/_vocab.json`;
+  if (ctx.files.includes(vocabPath)) {
+    let doc; try { doc = JSON.parse(ctx.read(vocabPath)); } catch { doc = null; }
+    const loaded = loadVocab(doc, entityPrefixes, () => {});
+    for (const [code, rec] of loaded.index) vocabIndex.set(code, { family: rec.family });
   }
   const proc = 'world/rules/tables/derived-process.json';
   if (ctx.files.includes(proc)) {

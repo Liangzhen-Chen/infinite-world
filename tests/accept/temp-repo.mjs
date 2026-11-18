@@ -21,11 +21,14 @@ export function tempRepo() {
   // 只许"临时根 + 常量相对路径"写（S12-2，李白 11-17 裁定三），所以逐条按字面路径复制，不用变量拼路径。
   mkdirSync(join(dir, 'server-plugin/kernel/handles'), { recursive: true });
   mkdirSync(join(dir, 'server-plugin/kernel/validate'), { recursive: true });
+  mkdirSync(join(dir, 'server-plugin/kernel/load'), { recursive: true });
   cpSync(join(ROOT, 'server-plugin/kernel/handles/keys.mjs'), join(dir, 'server-plugin/kernel/handles/keys.mjs'));
   cpSync(join(ROOT, 'server-plugin/kernel/handles/vocab-handle.mjs'), join(dir, 'server-plugin/kernel/handles/vocab-handle.mjs'));
   cpSync(join(ROOT, 'server-plugin/kernel/validate/types.mjs'), join(dir, 'server-plugin/kernel/validate/types.mjs'));
   cpSync(join(ROOT, 'server-plugin/kernel/det-math.mjs'), join(dir, 'server-plugin/kernel/det-math.mjs'));
   cpSync(join(ROOT, 'server-plugin/kernel/rx.mjs'), join(dir, 'server-plugin/kernel/rx.mjs'));
+  // lit_scope 的 vocabIndex 走 kernel/load/vocab-load.mjs 的 loadVocab，同样按字面路径放进临时仓库（其自身无 import）。
+  cpSync(join(ROOT, 'server-plugin/kernel/load/vocab-load.mjs'), join(dir, 'server-plugin/kernel/load/vocab-load.mjs'));
   cpSync(join(ROOT, 'server-plugin/kernel/error-codes.mjs'), join(dir, 'server-plugin/kernel/error-codes.mjs'));
   // 放进来的 kernel 文件要在两处登记里站得住：成员闭集清单（E-FILE-UNASSIGNED，S19）与 S10 的常数登记豁免表。
   cpSync(join(ROOT, 'server-plugin/kernel/files.json'), join(dir, 'server-plugin/kernel/files.json'));
