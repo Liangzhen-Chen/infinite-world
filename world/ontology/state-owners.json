@@ -89,6 +89,7 @@
   {"export": "kernel/ledger.mjs#stockIn", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/ledger.mjs#post", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/ledger.mjs#transfer", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/ledger.mjs#settleCappedAllocation", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/ledger.mjs#alertGaps", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/ledger.mjs#prorateCapped", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/ledger.mjs#allocateCapped", "callers": ["rules"], "acceptsState": false},

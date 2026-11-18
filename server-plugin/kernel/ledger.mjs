@@ -4,6 +4,9 @@
 // 物理律通道预警派生 alertGaps、逐日用量 usedByDay 的写与读 dayUsage、持有人主体核对与审计入口 auditLedger。
 // 第 3-3 张：限额通道按比例分配 prorateCapped / allocateCapped（申请存放与日终调用归块 7）、月结账本侧 closeLedgerPeriod（写报由调用方传入）、
 // auditLedger 加守恒审计（三元键、非负、守恒式）。
+// 第 3-3c 张（卷六 §4.1 规则 6 :376、码表 :1640，勘误 1118k13 续、李白 11-18 07:02 选丙）：日终分配结算入口 settleCappedAllocation 同事务按分配结果
+// 逐申请者入账；带 bm_capped 来源腿的直接 post / transfer 整笔拒 E-LEDGER-CAPPED-DIRECT（经入口发出用本文件私有的 postDraft(viaAllocation) 区分，
+// 不是调用方可传的参数）；同日同来源按 ledgerTotals 的 usedByDay 当日项判重放，重跑不重复记账。
 // 新账本一开始就是唯一写者（方案 R5）：accounts.*、ledgerTotals、outflowTotals.*、stockLots.*、ledgerCounters.lotNext 的写者只有本文件（state-owners.json）。
 // 只读登记数据（资源种类行、词表条目字段、规则表），不认任何具体资源、来源去处代号、用途或实体 id（AGENTS 红线）；
 // 下面 SCHEMA 是卷六定义的族名、封闭族条目与账户字段的类型，不是内容数据。资源种类行的 transferable、counterpartRX、sources、sinks
@@ -497,7 +500,8 @@ function parseFlowLeg(engine, leg, i) {
  *   要读双方类别、持有边与发行者（块 6、卷十八、卷六 §4.15），读不到按 onUnknown error 报 E-DIM-UNKNOWN-READ，不放行。
  * - 持有人只能是主体（§2.1 :103、S6-14）：出入账腿都核，不是已载入实体 E-DIM-UNKNOWN-READ、kind 不合 E-DIM-REF-MISSING、
  *   place 行 ledgerHolder 不为真 E-LEDGER-HOLDER-NOT-SUBJECT；入账腿另照 openAccount 核目录行与终止（E-TERM-RESIDUE），账户不存在即开。
- * - 限额：不在单笔上拒（§4.1 规则 6 :376 超日限额日终按比例分配；§2.5 :224 窗口外按零计也在那一步），日终分配归 3-3，带限额通道腿的回执 notRun 列 budget。
+ * - 限额：不在单笔上拒（§4.1 规则 6 :376 超日限额日终按比例分配；§2.5 :224 窗口外按零计也在那一步），但带 `bm_capped` 来源腿的直接 post（含 transfer）
+ *   整笔拒 E-LEDGER-CAPPED-DIRECT（封卷后勘误 1118k13 续、李白 11-18 07:02 选丙：限额来源只能由日终分配结算入口 settleCappedAllocation 入账）。
  * 写：accounts 余额；规则 13 trackOutflow 分区的出账腿加 outflowTotals.<持有人>.<用途>.<种类>.<键>.cumulative；
  * 来源去处 ledgerTotals.<种类>.<代号> = {cumulative 累加, usedByDay 当日项（clockView 世界日）累加、无则追加}；已有 usedByDay 乱序、重复日或末项晚于当日
  *   E-LEDGER-USEDBYDAY-ORDER（李白 11-18 04:31 第 5 条）；
@@ -509,6 +513,12 @@ function parseFlowLeg(engine, leg, i) {
  * @returns {Readonly<{lots: readonly (readonly [number, string])[], notRun: readonly string[]}>} lots：[腿序号, 新批次键]；notRun：本笔未核的项
  */
 export function post(engine, state, draft) {
+  return postDraft(engine, state, draft, false);
+}
+
+// post 的实现；viaAllocation 是本文件私有的"经日终分配结算入口发出"标记，只有 settleCappedAllocation 传 true。
+// 规则层调不到本函数（不导出），也没有可传的参数能置位，所以 bm_capped 来源腿不能借规则层数据路径伪造放行（卷六 §4.1 规则 6 :376）。
+function postDraft(engine, state, draft, viaAllocation) {
   try {
     const tx = currentTransaction();
     if (!tx || tx.state !== state) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity: null }, 'post outside the transaction of this state');
@@ -524,6 +534,13 @@ export function post(engine, state, draft) {
       if (isObj(leg) && Object.hasOwn(leg, 'flow')) flows.push(parseFlowLeg(engine, leg, i));
       else acct.push(parseAccountLeg(engine, leg, i));
     });
+
+    // 规则 6 限额通道：带 bm_capped 来源腿的 post 只能由日终分配结算入口发出（卷六 §4.1 规则 6 :376、码表 :1640；李白 11-18 07:02 选丙）。
+    // 按来源条目登记的 budgetMode 判，不写死代号；不是入口内部路径即整笔拒、不部分入账（尚未写任何状态，事务整笔不落）。
+    if (!viaAllocation) {
+      const direct = flows.find((f) => f.side === SCHEMA.src && f.entry.budgetMode === SCHEMA.capped);
+      if (direct) throw new KernelError('E-LEDGER-CAPPED-DIRECT', { entity: null }, `leg ${direct.i}: ${direct.code} is a ${SCHEMA.capped} source; only settleCappedAllocation may post it (卷六 §4.1 规则 6 :376)`);
+    }
 
     // 规则 2：每个资源种类 L − S + K = 0。
     const kinds = [...new Set([...acct.map((a) => a.kind), ...flows.map((f) => f.kind)])].sort(cmp);
@@ -656,8 +673,8 @@ export function post(engine, state, draft) {
       }
     }
 
+    // 限额通道不再列 notRun budget：带 bm_capped 来源腿的笔只能经分配结算入口发出，日限额已在那一步入账前算定（卷六 §4.1 规则 6 :376）。
     const notRun = ['reason_verb'];
-    if (flows.some((f) => f.entry.budgetMode === SCHEMA.capped)) notRun.push('budget');
     if (kinds.some((k) => resourceRow(engine, k, null).issuerBacked === true)) notRun.push('issuer_backed');
     return Object.freeze({ lots: Object.freeze(lots), notRun: Object.freeze(notRun.sort(cmp)) });
   } catch (e) {
@@ -1041,6 +1058,18 @@ export function prorateCapped(requests, limit) {
   return Object.freeze(rows.map((r, i) => Object.freeze({ key: Object.freeze([...r.key]), requested: r.requested, granted: granted[i] })));
 }
 
+// 某资源种类某限额通道（budgetMode bm_capped）的词表条目核对（allocateCapped 与结算入口共用）：代号是 src/sink 条目、
+// 在该种类行 sources/sinks 内、条目登记为限额通道。不合依次 E-DIM-REF-MISSING、E-LEDGER-CODE-UNREGISTERED、E-DIM-DOMAIN-ENUM。
+function cappedChannel(engine, resourceKind, code) {
+  const row = resourceRow(engine, resourceKind, null);
+  const rec = typeof code === 'string' ? engine.vocab.index.get(code) : undefined;
+  if (!rec || (rec.family !== SCHEMA.src && rec.family !== SCHEMA.sink)) throw new KernelError('E-DIM-REF-MISSING', { entity: null }, `${JSON.stringify(code)} is not a ${SCHEMA.src} or ${SCHEMA.sink} entry`);
+  const listed = rec.family === SCHEMA.src ? row.sources : row.sinks;
+  if (!Array.isArray(listed) || !listed.includes(code)) throw new KernelError('E-LEDGER-CODE-UNREGISTERED', { entity: null }, `${code} is not in ${resourceKind} ${rec.family === SCHEMA.src ? 'sources' : 'sinks'}`);
+  if ((rec.entry || {}).budgetMode !== SCHEMA.capped) throw new KernelError('E-DIM-DOMAIN-ENUM', { entity: null }, `${code} is not a ${SCHEMA.capped} channel`);
+  return rec;
+}
+
 /**
  * 某资源种类某限额通道（budgetMode bm_capped）在世界日 day 的日终分配：当日限额照 budgetOn 读（格缺或 limit 空 = 不限；
  * 生效日窗口外按零计，§2.5 :224），再交 prorateCapped。代号不是 src/sink 条目 E-DIM-REF-MISSING、不在该种类行 sources/sinks 内
@@ -1049,19 +1078,97 @@ export function prorateCapped(requests, limit) {
  * @param {readonly {key: string | readonly string[], qty: number}[]} requests
  */
 export function allocateCapped(engine, resourceKind, code, day, requests) {
-  const row = resourceRow(engine, resourceKind, null);
-  const rec = typeof code === 'string' ? engine.vocab.index.get(code) : undefined;
-  if (!rec || (rec.family !== SCHEMA.src && rec.family !== SCHEMA.sink)) throw new KernelError('E-DIM-REF-MISSING', { entity: null }, `${JSON.stringify(code)} is not a ${SCHEMA.src} or ${SCHEMA.sink} entry`);
-  const listed = rec.family === SCHEMA.src ? row.sources : row.sinks;
-  if (!Array.isArray(listed) || !listed.includes(code)) throw new KernelError('E-LEDGER-CODE-UNREGISTERED', { entity: null }, `${code} is not in ${resourceKind} ${rec.family === SCHEMA.src ? 'sources' : 'sinks'}`);
-  if ((rec.entry || {}).budgetMode !== SCHEMA.capped) throw new KernelError('E-DIM-DOMAIN-ENUM', { entity: null }, `${code} is not a ${SCHEMA.capped} channel`);
+  cappedChannel(engine, resourceKind, code);
   return prorateCapped(requests, budgetOn(engine, resourceKind, code, day).limit);
+}
+
+// ---------- 日终分配结算入口（卷六 §4.1 规则 6 :376；封卷后勘误 1118k13 续，李白 11-18 07:02 选丙；块 3 第 3-3c 张） ----------
+// 卷文未给函数名（只写"日终分配函数"与"内核结算入口"），照 prorateCapped / allocateCapped 的命名起名 settleCappedAllocation，待勘误回补。
+
+const SETTLE_FIELDS = Object.freeze(['code', 'day', 'limit', 'reason', 'requests', 'resourceKind', 'targets']);
+const SETTLE_TARGET_FIELDS = Object.freeze(['account', 'key', 'lot']);
+const settleErr = (why) => new KernelError('E-DIM-STRUCT-FIELD', { entity: null }, why);
+const settleRef = (why) => new KernelError('E-DIM-REF-MISSING', { entity: null }, why);
+
+/**
+ * kernelApi `settleCappedAllocation({resourceKind, code, day, limit, reason, requests, targets})`（卷六 §4.1 规则 6 :376 限额通道条；
+ * 封卷后勘误 1118k13 续、李白 11-18 07:02 选丙）：日终分配结算入口。输入某日某 bm_capped 来源的全部申请与日限额，交 prorateCapped 得分配结果，
+ * 在同一事务内按结果逐申请者 `post` 入账（出账腿为该限额来源）；开局 src_genesis 第 0 日走同一入口，不另设记录（:376）。
+ * - requests 照 prorateCapped：`[{key, qty}]`，key 是申请主体 id 或全序元组，qty 正整数。
+ * - targets 是与 requests 的 key 一一对应的入账去处：`[{key, account: {holder, purpose, resource: {kind, key?}}, lot?}]`；
+ *   给 0 的申请不入账（post 不收零腿），但仍须有对应 target（申请集合与去处集合须一一对应，缺、多、重都 E-DIM-REF-MISSING）。
+ * - limit 是调用方给出的当日限额（非负整数或 null = 不限），只对 ledger.json 没有 budget 格的来源（边界供货，§4.6 规则 8 的日终步算定）采用。
+ *   ledger.json 有该来源的 budget 格时，入口自己照 budgetOn 取限额：窗口内照表值、窗口外按零（§2.5 :224；:376"开局仅第 0 日"），
+ *   调用方传的 limit 不采用——否则规则层在第 0 日之后传 null 就能绕过窗口不限量入账，正好违反规则 6 的"不在单笔上先到先得"。
+ * - day 是结算的世界日，须等于 clockView 的当日：usedByDay 按当日记账（§4.1.1 :347），"日＋来源"判重放要对得上（:376）。
+ * - 防重放：同日同来源只入账一次。判据从账本既有数据派生——`ledgerTotals.<资源种类>.<来源>.usedByDay` 有 `day` 等于该日的那一项即已入账
+ *   （§4.1.1 :347 当日用量即取该项；:376"按日＋来源判"），不新开状态键。已入账即幂等返回 `{allocations, booked: 当日已记用量, alreadyBooked: true}`，
+ *   不再 post。不作拒绝：本卷码表是错误码的唯一出处（:1625、:1629–1642），其中没有重放码，失败原因只用代号（S6-5 :328），故重跑只幂等地不重复记账。
+ * - 分配按结果逐申请者 post，同一事务；任一申请者入账被拒，整笔（本事务）全成或全败。
+ * @param {{vocab: any, rules: any}} engine @param {any} state
+ * @param {{resourceKind: string, code: string, day: number, limit: number | null, reason: string,
+ *   requests: readonly {key: string | readonly string[], qty: number}[],
+ *   targets: readonly {key: string | readonly string[], account: {holder: string, purpose: string, resource: {kind: string, key?: string}}, lot?: any}[]}} input
+ * @returns {Readonly<{day: number, resource: string, source: string, allocations: readonly any[], booked: number, alreadyBooked: boolean}>}
+ *   allocations：prorateCapped 的结果；booked：当日该来源在账本里的用量（本次入账之和，重跑时为既有值）
+ */
+export function settleCappedAllocation(engine, state, input) {
+  try {
+    const tx = currentTransaction();
+    if (!tx || tx.state !== state) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity: null }, 'settleCappedAllocation outside the transaction of this state');
+    if (!fieldsWithin(input, SETTLE_FIELDS) || SETTLE_FIELDS.some((f) => !Object.hasOwn(input, f))) throw settleErr('settleCappedAllocation is {resourceKind, code, day, limit, reason, requests, targets}');
+    if (!Number.isSafeInteger(input.day) || input.day < 0) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, 'day is a non-negative integer world day');
+    if (typeof input.reason !== 'string' || !CODE_RE.test(input.reason)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'reason is a verb code');
+    const rec = cappedChannel(engine, input.resourceKind, input.code);
+    if (rec.family !== SCHEMA.src) throw settleRef(`${JSON.stringify(input.code)} is not a ${SCHEMA.src} entry (an allocation posts ${SCHEMA.src} legs)`);
+    if (input.limit !== null && !(Number.isSafeInteger(input.limit) && input.limit >= 0)) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, 'limit is a non-negative integer or null');
+    // 日限额的出处按规则层定（卷六 §4.1 规则 6 :376、§2.5 :224）：ledger.json 有该来源的 budget 格，入口照 budgetOn 自己取
+    // （窗口内照表值、窗口外按零），调用方传的 limit 不采用；没有 budget 格的来源（边界供货，§4.6 规则 8）才用传入值。
+    const budgetCell = readAt(ruleTable(engine.rules, SCHEMA.ledgerTable), ['budget', input.resourceKind, input.code]);
+    const limit = isObj(budgetCell) ? budgetOn(engine, input.resourceKind, input.code, input.day).limit : input.limit;
+    const allocations = prorateCapped(input.requests, limit);
+
+    // 申请集合与入账去处的对应（按 requestKey 的同一写法归并比较）。
+    if (!Array.isArray(input.targets)) throw settleErr('targets is a list of {key, account, lot?}');
+    const targetOf = new Map();
+    input.targets.forEach((t, i) => {
+      if (!fieldsWithin(t, SETTLE_TARGET_FIELDS) || !Object.hasOwn(t, 'key') || !Object.hasOwn(t, 'account')) throw settleErr(`targets[${i}] is {key, account, lot?}`);
+      const k = JSON.stringify(requestKey(t.key, i));
+      if (targetOf.has(k)) throw settleRef(`targets[${i}]: duplicate key ${k}`);
+      targetOf.set(k, t);
+    });
+    const wanted = new Set(allocations.map((a) => JSON.stringify(a.key)));
+    for (const k of wanted) if (!targetOf.has(k)) throw settleRef(`no target account for applicant ${k}`);
+    for (const k of targetOf.keys()) if (!wanted.has(k)) throw settleRef(`target ${k} has no allocation request`);
+
+    // 防重放：同日同来源的分配只入账一次（:376）。日＋来源从 usedByDay 的当日项派生；day 须就是当日，post 的 usedByDay 按 clockView 当日写（§4.1.1 :347）。
+    const today = clockView(engine, state).day;
+    if (input.day !== today) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, `day ${input.day} is not the current world day ${today} (the day+source replay test reads the current day's usedByDay, 卷六 §4.1.1 :347)`);
+    const cell = readTotalsCell(state, input.resourceKind, input.code);
+    const booked = cell.usedByDay.find((d) => d.day === input.day);
+    const head = { day: input.day, resource: input.resourceKind, source: input.code, allocations };
+    if (booked) return Object.freeze({ ...head, booked: booked.used, alreadyBooked: true });
+
+    let total = 0;
+    for (const a of allocations) {
+      if (a.granted === 0) continue;
+      const t = targetOf.get(JSON.stringify(a.key));
+      const leg = { account: t.account, delta: a.granted };
+      if (Object.hasOwn(t, 'lot')) leg.lot = t.lot;
+      // 经入口内部路径入账：postDraft 的 viaAllocation 是本文件私有的，规则层没有可传的参数能置位（不是 draft 字段）。
+      postDraft(engine, state, { legs: [leg, { flow: input.code, kind: input.resourceKind, qty: a.granted }], reason: input.reason }, true);
+      total += a.granted;
+    }
+    return Object.freeze({ ...head, booked: total, alreadyBooked: false });
+  } catch (e) {
+    throw denied(e);
+  }
 }
 
 // ---------- 月结账本侧（§4.22 规则 4 :1261 月结顺序；李白 11-18 04:20、04:22；S6-14 出报时派生、当期保留明细） ----------
 
 /**
- * 月结账本侧：给定期末日 endDay（世界日整数），从 ledgerTotals 各格取 day ≤ endDay 的 usedByDay 项，经 alertGaps 派生预警缺口，
+ * 月结账本侧：给定期末日 endDay（世界日整数，须早于 clockView 的当日），从 ledgerTotals 各格取 day ≤ endDay 的 usedByDay 项，经 alertGaps 派生预警缺口，
  * 交调用方传入的 writeReport({endDay, usage, gaps}) 写报（econReports 的写者是 economy-report.mjs，块 7）；writeReport 返回后
  * 才清掉这些逐日项、只留 cumulative（cumulative 不动）；writeReport 抛错即原样抛出、一项不清（写报失败不得清）。
  * 只在本状态的事务内写（E-VIEW-UNDECLARED-WRITE）。同一输入两次结果相同：只读状态与规则表，不读真实时间。
@@ -1073,6 +1180,11 @@ export function closeLedgerPeriod(engine, state, endDay, writeReport) {
   const tx = currentTransaction();
   if (!tx || tx.state !== state) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity: null }, 'closeLedgerPeriod outside the transaction of this state');
   if (!Number.isSafeInteger(endDay) || endDay < 0) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, 'endDay is a non-negative integer world day');
+  // 期末日须早于当日：月结会清掉 day ≤ endDay 的 usedByDay 项，而同一天同一来源分配的重放判据正是当日那一项
+  // （卷六 :376"按日＋来源判"、§4.1.1 :347）。允许结到当日乃至以后，规则层就能结期后重跑当日分配——当日项已清、
+  // 重放判据失效而重复入账。码取卷二已定义的 E-DIM-DOMAIN-RANGE（本函数对 endDay 的取用域原本就报它；卷六码表无专属码，不新造）。
+  const today = clockView(engine, state).day;
+  if (endDay >= today) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, `endDay ${endDay} must be before the current world day ${today} (卷六 :376: closing the current day would erase the day+source replay test)`);
   if (typeof writeReport !== 'function') throw structErr('writeReport is the caller-supplied report writer');
   const totals = readAt(state, [SCHEMA.totals]);
   const usage = [];

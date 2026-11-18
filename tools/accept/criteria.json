@@ -128,10 +128,14 @@
     {
      "ref": "块 3 第 3-3b 张续（卷十二 §2.12 :541 E-ACC-CONST-LITERAL，勘误 1118k16）：error-codes.mjs 登 E-ACC-CONST-LITERAL 入检测器闭包，指纹重盖；条目 vol2.S10 登该码（补码，判定口径不变）",
      "rev": 18
+    },
+    {
+     "ref": "块 3 第 3-3c 张（卷六 §4.1 规则 6 :376、码表 :1640，勘误 1118k13 续、李白 11-18 07:02 选丙）：error-codes.mjs 登 E-LEDGER-CAPPED-DIRECT 入检测器闭包，指纹重盖，本类别判定口径不变",
+     "rev": 19
     }
    ],
-   "print": "ca9331766e45cdc57e501664309ab000a6b572406b3a57f38c2c6368ecfc296f",
-   "rev": 18,
+   "print": "5a23ba6e85ca3bf41b73da1eae8208a31389a887e1bb982672ae80b9096f72f6",
+   "rev": 19,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -654,10 +658,14 @@
     {
      "ref": "块 3 第 3-3b 张续（Opus 只核必须改）：S6-2.b 规则表改取 world/rules/registry.json 全部登记行（经 kernel/load/rules.mjs 的 RULES_LAYOUT、readRules），删类别行 ruleTableDirs；登记缺失、无行、登记的文件不存在报 E-ACC-ITEM-PARAM；条目 vol2.S10 同卡补登 E-ACC-CONST-LITERAL（其他类别条目）；本类别判定口径不变",
      "rev": 22
+    },
+    {
+     "ref": "块 3 第 3-3c 张（卷六 §4.1 规则 6 :376、码表 :1640，勘误 1118k13 续、李白 11-18 07:02 选丙）：error-codes.mjs 登 E-LEDGER-CAPPED-DIRECT 入检测器闭包，指纹重盖，本类别判定口径不变",
+     "rev": 23
     }
    ],
-   "print": "6788b4b0a0cdff55e4ad0e48ce48ab4034b3249eec5e75d9f74bc6d886ab7f95",
-   "rev": 22,
+   "print": "dc3d732161962cd0264c694f84c82c491d72f4aac40604abd4829e61ca6d2d97",
+   "rev": 23,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1356,10 +1364,14 @@
     {
      "ref": "块 3 第 3-3b 张续（卷十二 §2.12 :541，勘误 1118k16）：error-codes.mjs 登 E-ACC-CONST-LITERAL 入检测器闭包，指纹重盖，本类别判定口径不变",
      "rev": 27
+    },
+    {
+     "ref": "块 3 第 3-3c 张（卷六 §4.1 规则 6 :376、码表 :1640，勘误 1118k13 续、李白 11-18 07:02 选丙）：error-codes.mjs 登 E-LEDGER-CAPPED-DIRECT 入检测器闭包，指纹重盖，本类别判定口径不变",
+     "rev": 28
     }
    ],
-   "print": "fcb4a49192d3dc2a554bc0223199a63a7087f6a2fc6272af2db2afc6d0fa90dd",
-   "rev": 27,
+   "print": "fdb47b75ca4c55758e4ee1fec3c5b1982854cb137c3e5e3fbd33e6c54d33ed37",
+   "rev": 28,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1534,10 +1546,14 @@
     {
      "ref": "块 3 第 3-3b 张续（卷十二 §2.12 :541，勘误 1118k16）：error-codes.mjs 登 E-ACC-CONST-LITERAL 入检测器闭包，指纹重盖，本类别判定口径不变",
      "rev": 16
+    },
+    {
+     "ref": "块 3 第 3-3c 张（卷六 §4.1 规则 6 :376、码表 :1640，勘误 1118k13 续、李白 11-18 07:02 选丙）：error-codes.mjs 登 E-LEDGER-CAPPED-DIRECT 入检测器闭包，指纹重盖，本类别判定口径不变",
+     "rev": 17
     }
    ],
-   "print": "ca9331766e45cdc57e501664309ab000a6b572406b3a57f38c2c6368ecfc296f",
-   "rev": 16,
+   "print": "5a23ba6e85ca3bf41b73da1eae8208a31389a887e1bb982672ae80b9096f72f6",
+   "rev": 17,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {

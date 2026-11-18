@@ -59,6 +59,16 @@ test('S6-13 post/transfer：入口定义文件自己不计', () => {
   assert.equal(callEdge(c, P).length, 0);
 });
 
+test('S6-13 日终分配结算入口 settleCappedAllocation：许可同样只读 kernelApi 登记——规则层调用不计，组外调用计入', () => {
+  const P2 = { ...P, entries: [...ENTRIES, 'kernel/ledger.mjs#settleCappedAllocation'] };
+  const ok = ctxOf({ 'server-plugin/econ.mjs': "import { settleCappedAllocation } from './kernel/ledger.mjs';\nexport const f = (s) => settleCappedAllocation(s, {});" });
+  assert.equal(callEdge(ok, P2).length, 0);
+  const bad = ctxOf({ 'server-plugin/gate/g.mjs': "import { settleCappedAllocation } from '../kernel/ledger.mjs';\nexport const f = (s) => settleCappedAllocation(s, {});" });
+  const hits = callEdge(bad, P2);
+  assert.equal(hits.length, 1);
+  assert.deepEqual([hits[0].nodeKind, hits[0].code], ['import', 'E-VIEW-INPUT-IMPORT']);
+});
+
 test('S6-13 post/transfer：许可只读登记——callers 写 `*` 放行服务端各模块组但不放装配文件，callerFiles 放行具体文件', () => {
   const star = withApi([{ export: 'kernel/ledger.mjs#post', callers: ['*'] }, { export: 'kernel/ledger.mjs#transfer', callers: [], callerFiles: ['gate/x.mjs'] }]);
   const files = {
