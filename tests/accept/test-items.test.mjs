@@ -57,7 +57,7 @@ test('必过集合里的测试条目：测试文件全过即 pass、放行；失
       const r = await run(dir);
       assert.deepEqual(blockedTx(dir, r), ['vol12.TX-1'], reason);
       assert.equal(r.verdict, 'fail', reason);
-      assert.deepEqual(failedOf(r)['vol12.TX-1'], { codes: [], cases: [`${FX}:${reason}`] }, reason);
+      assert.deepEqual(failedOf(r)['vol12.TX-1'], { codes: ['E-ACC-TEST-FAIL'], cases: [`${FX}:${reason}`] }, reason);
     }
     // 登记后测试文件被删：按条目缺必填字段报 E-ACC-ITEM-FORM（§2.12；impl 自 implemented 起必填），不默认通过。
     rmSync(join(dir, 'tests/accept/fx-inv.test.mjs'));
@@ -73,7 +73,7 @@ test('已实现未进必过集合的测试条目：不过照报，但不拦（R1
     setup(dir, [ROW('TX-1')], 'implemented');
     writeUnderTempRoot(dir, FX, SRC("test('inv one', () => { assert.fail('x'); });"));
     const r = await run(dir);
-    assert.deepEqual(failedOf(r)['vol12.TX-1'], { codes: [], cases: [`${FX}:failed`] });
+    assert.deepEqual(failedOf(r)['vol12.TX-1'], { codes: ['E-ACC-TEST-FAIL'], cases: [`${FX}:failed`] });
     assert.deepEqual(blockedTx(dir, r), []);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
@@ -84,7 +84,7 @@ test('runsOn 为 cloud_ref 的必过测试条目：本机不跑记 not_run，必
     setup(dir, [ROW('TX-2', { runsOn: 'cloud_ref' })], 'in_core');
     const local = await run(dir);
     assert.deepEqual(blockedTx(dir, local), ['vol12.TX-2']);
-    assert.deepEqual(failedOf(local)['vol12.TX-2'], { codes: [], cases: ['verdict:not_run'] });
+    assert.deepEqual(failedOf(local)['vol12.TX-2'], { codes: ['E-ACC-REQUIRED-NOT-RUN'], cases: ['verdict:not_run'] });
     const cloud = await run(dir, { bench: 'cloud_ref' });
     assert.deepEqual(blockedTx(dir, cloud), []);
     assert.equal(cloud.items.pass, 1);
@@ -98,7 +98,7 @@ test('两条条目共用一个测试文件：各自判 pass；文件不过两条
     assert.equal((await run(dir)).items.pass, 2);
     writeUnderTempRoot(dir, FX, SRC("test('inv one', () => { assert.fail('x'); });"));
     const bad = failedOf(await run(dir));
-    assert.deepEqual([bad['vol12.TX-1'], bad['vol12.TX-3']], [{ codes: [], cases: [`${FX}:failed`] }, { codes: [], cases: [`${FX}:failed`] }]);
+    assert.deepEqual([bad['vol12.TX-1'], bad['vol12.TX-3']], [{ codes: ['E-ACC-TEST-FAIL'], cases: [`${FX}:failed`] }, { codes: ['E-ACC-TEST-FAIL'], cases: [`${FX}:failed`] }]);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 

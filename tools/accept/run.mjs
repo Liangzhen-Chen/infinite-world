@@ -68,7 +68,8 @@ function toRows(item, hits) {
 
 // 方法是测试的条目（卷十二 §4.5.1 :782；§2.2 :194 detector 可空、:203 impl 是测试文件；期望 all_pass）：真跑 impl 所指的测试文件，
 // 全部用例通过才 pass（R12-11.7 :1100"在当前主干上为 pass"）；没跑出一条通过、有失败、有 skip/todo 都不过，不默认通过。
-// 文件缺失报 E-ACC-ITEM-FORM（§2.12：条目缺必填字段；impl 自 implemented 起必填）。测试失败卷十二 §2.12 没有专码，codes 空、cases 写原因。
+// 文件缺失报 E-ACC-ITEM-FORM（§2.12：条目缺必填字段；impl 自 implemented 起必填）。测试文件有失败、skip、todo、零用例报 E-ACC-TEST-FAIL（§2.12 勘误 1118k14；李白 11-18 06:41 ①），cases 写原因；
+// 验收报告里凡条目不过/未跑都落到 §2.12 登记的码，没有无码状态。
 // runsOn 不是 local_static 的条目只在登记为该种类的测试台跑（R12-9.7 :990），本机不跑，记 not_run。
 // 同一次执行里同一文件只跑一次（几条条目可共用一个测试文件）。
 function runTestItem(root, item, bench, cache) {
@@ -77,7 +78,7 @@ function runTestItem(root, item, bench, cache) {
   if (!cache.has(item.impl)) cache.set(item.impl, runTestFile(root, item.impl).reason);
   const reason = cache.get(item.impl);
   if (reason === null) return { verdict: 'pass' };
-  return { verdict: 'fail', codes: reason === 'missing' ? ['E-ACC-ITEM-FORM'] : [], cases: [`${item.impl}:${reason}`] };
+  return { verdict: 'fail', codes: reason === 'missing' ? ['E-ACC-ITEM-FORM'] : ['E-ACC-TEST-FAIL'], cases: [`${item.impl}:${reason}`] };
 }
 
 async function runItem(ctx, item, classes) {
@@ -203,8 +204,8 @@ export async function accRun(gate, subject, contentPrint, opts = {}) {
   const vs = Object.values(results);
   const count = (v) => vs.filter((x) => x === v).length;
   const mustPass = new Set(gateItems.filter((it) => it.state === 'in_core').map((it) => it.itemKey));
-  // 必过集合里的 not_run 与 blocked 都当不过（R12-10.7 :1047），列进不过的条目（卷十二 §2.12 没有专码，codes 空、cases 写结论）。
-  for (const k of [...mustPass].sort()) if (results[k] === 'not_run' || results[k] === 'blocked') failed.push({ itemKey: k, codes: [], cases: [`verdict:${results[k]}`] });
+  // 必过集合里的 not_run 与 blocked 都当不过（R12-10.7 :1047），列进不过的条目，码 E-ACC-REQUIRED-NOT-RUN（§2.12 勘误 1118k14），cases 写结论。
+  for (const k of [...mustPass].sort()) if (results[k] === 'not_run' || results[k] === 'blocked') failed.push({ itemKey: k, codes: ['E-ACC-REQUIRED-NOT-RUN'], cases: [`verdict:${results[k]}`] });
   const blocking = failed.filter((f) => f.itemKey === 'bypass' || f.itemKey === 'required-tests' || mustPass.has(f.itemKey));
 
   const report = {

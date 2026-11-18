@@ -15,8 +15,9 @@ test('码表条数：E 与 W 各为手数的字面量', () => {
   // 块 3-2 加卷六账本六码（勘误 1118k7 码表）：E 五码、W 一码；578 → 584、E 561 → 566、W 17 → 18。
   // 块 3-2 续加 E-LEDGER-USEDBYDAY-ORDER、E-LEDGER-HOLDER-NOT-SUBJECT（勘误 1118k8 码表）：584 → 586、E 566 → 568。
   // 块 3-2 续加 E-LEDGER-STAGING-SPONSOR（勘误 1118k9 码表）：586 → 587、E 568 → 569。
-  assert.equal(codes.length, 587);
-  assert.equal(codes.filter((c) => c[0] === 'E').length, 569);
+  // 门禁卡加卷十二 §2.12 两码 E-ACC-TEST-FAIL、E-ACC-REQUIRED-NOT-RUN（勘误 1118k14；李白 11-18 06:41）：587 → 589、E 569 → 571。
+  assert.equal(codes.length, 589);
+  assert.equal(codes.filter((c) => c[0] === 'E').length, 571);
   assert.equal(codes.filter((c) => c[0] === 'W').length, 18);
   assert.equal(REGISTERED_CODES.size, codes.length);
 });
@@ -68,6 +69,8 @@ test('抽 6 个跨卷码：E 成员名与值、出处', () => {
   assert.deepEqual(src('E-MAT-GRADE-KEYS'), ['卷二 §4.3']);
   assert.deepEqual(src('W-DIM-GAP'), ['卷二 §4.3']);
   assert.deepEqual(src('E-ACC-REGISTRY-WRITE'), ['卷二 §4.3', '卷十二 §2.12']);
+  assert.deepEqual(src('E-ACC-TEST-FAIL'), ['卷十二 §2.12']);
+  assert.deepEqual(src('E-ACC-REQUIRED-NOT-RUN'), ['卷十二 §2.12']);
 });
 
 test('E 的成员与码表一一对应：条数相等、冻结、成员名把连字符换成下划线', () => {
