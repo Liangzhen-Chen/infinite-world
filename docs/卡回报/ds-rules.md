@@ -10,7 +10,7 @@
 | 4 | 新测试不依赖仓库当前偶然数字 | 是 | 未新增测试；验收只跑卡文命令。 |
 | 5 | 没有为降计数改写允许的代码、没有假常量 | 是 | 无代码改动、无常量；`git diff --name-only` 只有文档。 |
 | 6 | 只改了卡文列出的文件；diff 共 __ 行 | 是 | 只改 `AGENTS.md`、`docs/当前状态.md`、`docs/PLAN.md`、`docs/归档/PLAN-历史-至1118.md`、`docs/产品原则.md`、`docs/无限原野_开发指南v3.md`、`docs/交接-1117.md`、本回报；未动 CLAUDE.md、代码、卷文。正文改动 10+37+23+8+2+4+54＝138 行，另历史整文件平移 3508 行（`git mv` 内容未改写）。 |
-| 7 | 全量测试已跑：命令＋pass/fail 数 | 是 | `node --test tests/*.test.mjs tests/kernel/*.test.mjs tests/accept/*.test.mjs` → `ℹ tests 480`、`ℹ pass 480`、`ℹ fail 0`；`node tools/accept/commit-hook.mjs` → `pre_commit pass a2d018eea3f88e663ea8e77959a37d2668c2530010253ba77929a9d15d3c0970`。 |
+| 7 | 全量测试已跑：命令＋pass/fail 数 | 是 | `node --test tests/*.test.mjs tests/kernel/*.test.mjs tests/accept/*.test.mjs` → `ℹ tests 480`、`ℹ pass 480`、`ℹ fail 0`；`node tools/accept/commit-hook.mjs` → `pre_commit pass 6551a96f64665914461c11996931992ac734422091bf315800833d85851b8c7b`。 |
 | 8 | 这张卡让块 6 哪一步更近了（一句话），且没有为此违背北极星任何一条 | 是 | 规矩只留 CLAUDE.md 一处，子代理不再照过期/打架的旧条款（C 盘路径、合并后只跑固定测试、周额度 80% 停手、Opus 只核旧档）做事，块 6 的卡能按同一套规矩推进；未写死、未加特例、未跳过规则引擎、未缩小世界规模。 |
 
 ## 改动前后原句（先 `sed -n` 核原句）
