@@ -119,8 +119,19 @@ test('R12-8.5：合入关口通过后写 baseline.json（只降不升，行键�
     assert.equal(cli.status, 2);
     assert.match(cli.stderr, /E-ACC-BASELINE-EDIT/);
     assert.equal(readFileSync(baseFile, 'utf8'), beforeRefuse);
-    // 临时仓库的内核文件只拷一部分，实测应低于真实仓库的基线；合入关口通过后写回本次实测（只降）与合入号。
+    // 写回只验"本次实测严格低于上次合入"（R12-8.5 :948）：不拿真实仓库基线的现值当参照（它已降到 0，比不出来）。
+    // 先在临时仓库测出本次读数（pre_commit 不写基线），再把临时仓库的基线换成夹具：同一分量记成"读数 + 1000"、去掉行键清单
+    // （按计数比，实测必低于它），其余分量沿用临时仓库副本。真实 baseline.json 不动。
+    const measured = (await accRun('pre_commit', 'B2-W2b', null, { root: dir })).report.components.c_text_kernel_4.current;
+    const fixture = JSON.parse(readFileSync(baseFile, 'utf8'));
+    fixture.rows = fixture.rows.map((r) => {
+      if (r.compCode !== 'c_text_kernel_4') return r;
+      const { rowKeys, ...rest } = r;
+      return { ...rest, current: measured + 1000 };
+    });
+    writeFileSync(baseFile, JSON.stringify(fixture) + '\n');
     const before = kernelRow(baselineOf()).current;
+    assert.equal(before, measured + 1000);
     const first = await accRun('pre_merge', 'B2-W2b', null, { root: dir, write: true, mergeRef: 'c8a2bccd' });
     assert.equal(first.report.verdict, 'pass');
     const after = kernelRow(baselineOf());
