@@ -29,7 +29,8 @@ test('新树上提交关口：必过条目全过、基线不升，用例全过�
   // text_judge 类别下没有已实现条目（靠 tsc 才能判的反例报不出，卷十二 R12-11.7）：它的用例不跑，记 not_run；其余用例全过。
   const notRun = Object.keys(report.cases).filter((k) => report.cases[k] === 'not_run');
   // undeclared_io 同理（S15 的"传给登记之外的函数"未判，R12-3.4）。baseline_monotone 的用例现在真跑（V-11 当次判，R12-8.4）。
-  const gap = (k) => k.startsWith('text_judge-') || k.startsWith('undeclared_io-');
+  // seed_sites 同理（B4-G：两条条目均 registered，登记表随 4-3 按新格式重建后才有可判内容，R12-11.7）。
+  const gap = (k) => k.startsWith('text_judge-') || k.startsWith('undeclared_io-') || k.startsWith('seed_sites-');
   assert.ok(notRun.length > 0 && notRun.every(gap));
   assert.ok(Object.entries(report.cases).every(([k, v]) => v === 'pass' || gap(k)));
 });

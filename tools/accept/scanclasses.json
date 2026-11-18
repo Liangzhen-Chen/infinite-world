@@ -527,6 +527,13 @@
   },
   {
    "detectors": [
+    "seed_sites"
+   ],
+   "scanClass": "seed_sites",
+   "source": "卷二十七 §4.8 R27-8.1 :717（登记表与源码双向比对）、R27-8.4 :720（role_seed 行（流代号, 抽取点代号）两两不同、前缀非空）；卷二 :320（seed-keys.json 登记）；卷十二 §7 M12-5 :1341；B4-G（李白 11-18 16:3x 第 2 条）"
+  },
+  {
+   "detectors": [
     "lit_scope"
    ],
    "scanClass": "self_name",

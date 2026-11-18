@@ -1,0 +1,10 @@
+// @file world/rules/tables/seed-keys.json
+{"version":1,"entries":[{"file":"advance.mjs","stream":"clock","site":"dice","role":"seed","purpose":"夹具：时钟骰序键"}]}
+// @file server-plugin/advance.mjs
+export function clockDice(bag) {
+  return bag.draw('clock', 'dice');
+}
+// @file server-plugin/weather.mjs
+export function weatherDice(bag) {
+  return bag.draw('weather', 'daily');
+}

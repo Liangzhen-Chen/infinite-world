@@ -41,6 +41,10 @@
    "source": "卷十二 §2.3"
   },
   {
+   "detectorCode": "seed_sites",
+   "source": "卷二十七 §4.8 R27-8.1 :717、R27-8.4 :720；卷十二 §2.4（开放登记）、§7 M12-5 :1341；B4-G（李白 11-18 16:3x 第 2 条）。模块随 4-3 的 seed-keys 新格式落地，本条先登代号（同 taint、sym_exists 未建先例）"
+  },
+  {
    "detectorCode": "sym_exists",
    "source": "卷十二 §2.3"
   },

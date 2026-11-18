@@ -1,0 +1,10 @@
+// @file world/rules/tables/seed-keys.json
+{"version":1,"entries":[{"file":"weather.mjs","stream":"weather","site":"daily","prefix":"weather_","role":"role_seed","purpose":"夹具：天气日抽"},{"file":"crop.mjs","stream":"crop","site":"daily","prefix":"crop_","role":"role_seed","purpose":"夹具：作物日抽"}]}
+// @file server-plugin/weather.mjs
+export function weatherDice(bag) {
+  return bag.draw('weather', 'daily');
+}
+// @file server-plugin/crop.mjs
+export function cropDice(bag) {
+  return bag.draw('crop', 'daily');
+}
