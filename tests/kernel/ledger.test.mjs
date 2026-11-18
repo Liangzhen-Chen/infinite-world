@@ -360,6 +360,8 @@ test('kernelApi 登记账本已实现的入口（卷六 :351 六名加 alertGaps
     ['kernel/ledger.mjs#stockIn', ['rules'], true],
     ['kernel/ledger.mjs#post', ['rules'], true],
     ['kernel/ledger.mjs#transfer', ['rules'], true],
+    // 3-3c：日终分配结算入口（调用者块 7 settleTrade 所在层，现按 rules；卷六 §4.1 规则 6 :376、李白 11-18 07:02 选丙；S6-13 照核）。
+    ['kernel/ledger.mjs#settleCappedAllocation', ['rules'], true],
     ['kernel/ledger.mjs#alertGaps', ['rules'], false],
     // 3-3：限额通道分配（调用者 trade.mjs 的 settleTrade，卷六 §4.6 规则 8 :582）与月结账本侧（调用者 economy-report.mjs 的 closePeriod，§4.22 规则 4 :1261），块 7 接。
     ['kernel/ledger.mjs#prorateCapped', ['rules'], false],

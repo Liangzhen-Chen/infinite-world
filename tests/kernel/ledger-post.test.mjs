@@ -173,10 +173,9 @@ test('reason 必填、代号形；是否已登记 verb 块 5 前报 not_run（�
   assert.deepEqual(r.notRun, ['reason_verb']);
 });
 
-test('notRun：限额通道腿列 budget（日终按比例分配归 3-3）；issuerBacked 行列 issuer_backed（卷六 §4.15 块 7）', () => {
+test('notRun：限额通道腿不能直接 post（E-LEDGER-CAPPED-DIRECT，见 ledger-capped）；issuerBacked 行列 issuer_backed（卷六 §4.15 块 7）', () => {
   let r;
-  assert.equal(run(at(0), (s) => { r = post(ENGINE, s, { legs: [{ account: acc('npc_a', SH, 'res_t_coin', 'coin_x'), delta: 1 }, { flow: 'src_genesis', kind: 'res_t_coin', qty: 1 }], reason: 'verb_test' }); }).ok, true);
-  assert.deepEqual(r.notRun, ['budget', 'reason_verb']);
+  assert.deepEqual(run(at(0), (s) => { post(ENGINE, s, { legs: [{ account: acc('npc_a', SH, 'res_t_coin', 'coin_x'), delta: 1 }, { flow: 'src_genesis', kind: 'res_t_coin', qty: 1 }], reason: 'verb_test' }); }), { ok: false, code: 'E-LEDGER-CAPPED-DIRECT' });
   assert.equal(run(at(0), (s) => { r = post(ENGINE, s, { legs: [{ account: acc('npc_a', SH, 'res_t_backed', 'k1'), delta: 1 }, { flow: 'src_issue', kind: 'res_t_backed', qty: 1 }], reason: 'verb_test' }); }).ok, true);
   assert.deepEqual(r.notRun, ['issuer_backed', 'reason_verb']);
 });
@@ -347,18 +346,21 @@ test('usedByDay 乱序、重复日、末项晚于当日：post 拒 E-LEDGER-USED
 
 // ---------- 限额通道不在单笔上拒（卷六 §4.1 规则 6 :376；§2.5 :224） ----------
 
-test('限额通道：超日限额（第 0 日限 3，记 5）与窗口外（第 4 日限额按零）post 都照过，回执 notRun 列 budget，用量照记待日终分配', () => {
+test('限额通道：直接 post 到 bm_capped 来源整笔拒 E-LEDGER-CAPPED-DIRECT、账本不变（只能经日终分配结算入口，卷六 §4.1 规则 6 :376、码表 :1640；李白 11-18 07:02 选丙）；budgetOn 窗口照读，非限额来源照常', () => {
   assert.deepEqual(budgetOn(ENGINE, 'res_t_coin', 'src_genesis', 0), { active: true, limit: 3 });
   assert.deepEqual(budgetOn(ENGINE, 'res_t_coin', 'src_genesis', 4), { active: false, limit: 0 });
   const state = at(0);
-  let r;
-  assert.deepEqual(run(state, (s) => { mint(5, 'src_genesis')(s); r = post(ENGINE, s, { legs: [{ account: acc('npc_a', SH, 'res_t_coin', 'coin_x'), delta: 1 }, { flow: 'src_genesis', kind: 'res_t_coin', qty: 1 }], reason: 'verb_test' }); }), { ok: true });
-  assert.deepEqual(r.notRun, ['budget', 'reason_verb']);
+  const before = clone(state);
+  assert.deepEqual(run(state, mint(5, 'src_genesis')), { ok: false, code: 'E-LEDGER-CAPPED-DIRECT' });
+  assert.deepEqual(run(state, (s) => { post(ENGINE, s, { legs: [{ account: acc('npc_a', SH, 'res_t_coin', 'coin_x'), delta: 2 }, { flow: 'src_genesis', kind: 'res_t_coin', qty: 2 }], reason: 'verb_test' }); }), { ok: false, code: 'E-LEDGER-CAPPED-DIRECT' });
   state.clock.minute = 5760;
-  assert.deepEqual(run(state, (s) => { r = post(ENGINE, s, { legs: [{ account: acc('npc_a', SH, 'res_t_coin', 'coin_x'), delta: 2 }, { flow: 'src_genesis', kind: 'res_t_coin', qty: 2 }], reason: 'verb_test' }); }), { ok: true });
-  assert.deepEqual(r.notRun, ['budget', 'reason_verb']);
-  assert.deepEqual(state.ledgerTotals.res_t_coin.src_genesis, { cumulative: 8, usedByDay: [{ day: 0, used: 6 }, { day: 4, used: 2 }] });
-  assert.equal(state.accounts.npc_a.purpose_test_shelf.res_t_coin.coin_x, 8);
+  assert.deepEqual(run(state, (s) => { post(ENGINE, s, { legs: [{ account: acc('npc_a', SH, 'res_t_coin', 'coin_x'), delta: 1 }, { flow: 'src_genesis', kind: 'res_t_coin', qty: 1 }], reason: 'verb_test' }); }), { ok: false, code: 'E-LEDGER-CAPPED-DIRECT' });
+  state.clock.minute = 0;
+  assert.deepEqual(state, before);
+  // 非限额来源（src_issue）照常入账
+  assert.deepEqual(run(state, mint(5)), { ok: true });
+  assert.deepEqual(state.ledgerTotals.res_t_coin.src_issue, { cumulative: 5, usedByDay: [{ day: 0, used: 5 }] });
+  assert.equal(state.accounts.npc_a.purpose_test_shelf.res_t_coin.coin_x, 5);
 });
 
 // ---------- 持有人只能是主体（卷六 §2.1 :103、S6-14；卷三乙 K-2 :1030；李白 11-18 04:45） ----------

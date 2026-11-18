@@ -10,12 +10,18 @@ import { fileURLToPath } from 'node:url';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 import { installVocab } from '../../server-plugin/kernel/vocab.mjs';
 import { runTransaction } from '../../server-plugin/kernel/transaction.mjs';
-import { prorateCapped, allocateCapped, closeLedgerPeriod } from '../../server-plugin/kernel/ledger.mjs';
+import { post, prorateCapped, allocateCapped, settleCappedAllocation, closeLedgerPeriod } from '../../server-plugin/kernel/ledger.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const W = loadWorld(ROOT);
 assert.ok(W.ok, W.text);
-installVocab({ vocab: W.vocab, idIndex: W.idIndex, tables: W.tables });
+// 用途分区与持有人按 K3-44 用登记场景：在词表与注册表副本里加行（不进 world/）。
+const SHELF = { spendable: true, locksFor: null, visibleToMarket: true, trackOutflow: false };
+const vocab = {
+  families: W.vocab.families,
+  index: new Map([...W.vocab.index, ['purpose_test_shelf', { family: 'purpose', prefix: 'purpose_', entry: SHELF }]]),
+};
+installVocab({ vocab, idIndex: new Map([...W.idIndex, ['npc_a', 'person'], ['org_b', 'org'], ['npc_c', 'person']]), tables: W.tables });
 const row = (family, sources, sinks) => ({ family, unit: 'bps', transferable: 'tr_free', counterpartRX: null, sources, sinks, issuerBacked: false });
 const rules = structuredClone(W.rules);
 Object.assign(rules.economyResources, {
@@ -25,11 +31,13 @@ Object.assign(rules.economyResources, {
 rules.economyLedger.alert.res_t_grain = { sink_consume: 10 };
 // 第 0 日日限额 3（窗口 [0, 0]）；res_t_grain 的 src_boundary 不登 budget 格（= 不限，:224）。
 rules.economyLedger.budget.res_t_coin = { src_genesis: { limit: 3, activeFromDay: 0, activeToDay: 0 } };
-const ENGINE = { vocab: W.vocab, rules, units: W.env.units, tables: W.tables };
+const ENGINE = { vocab, rules, units: W.env.units, tables: W.tables };
 const CTX = { node: 'test_node', file: 'test/ledger-capped.test.mjs' };
 const at = (day, extra = {}) => ({ clock: { minute: day * 1440, seq: 0 }, ...extra });
 const clone = (v) => JSON.parse(JSON.stringify(v));
 const flat = (rows) => rows.map((r) => [r.key.join('|'), r.requested, r.granted]);
+const SH = 'purpose_test_shelf';
+const acc = (holder, purpose, kind, key) => ({ holder, purpose, resource: { kind, key } });
 
 // 全排列（打乱申请次序用）。
 function permutations(list) {
@@ -100,6 +108,110 @@ test('allocateCapped：代号不在该种类行 E-LEDGER-CODE-UNREGISTERED；物
   assert.throws(() => allocateCapped(ENGINE, 'res_t_grain', 'src_genesis', 0, reqs), (e) => e.code === 'E-LEDGER-CODE-UNREGISTERED');
   assert.throws(() => allocateCapped(ENGINE, 'res_t_coin', 'src_issue', 0, reqs), (e) => e.code === 'E-DIM-DOMAIN-ENUM');
   assert.throws(() => allocateCapped(ENGINE, 'res_t_coin', 'resfam_coin', 0, reqs), (e) => e.code === 'E-DIM-REF-MISSING');
+});
+
+// ---------- 日终分配结算入口（卷六 §4.1 规则 6 :376、码表 :1640；勘误 1118k13 续、李白 11-18 07:02 选丙；块 3 第 3-3c 张） ----------
+// 期望值照卷文公式手算成字面量：第 0 日限 3，a2 b2 总量 4 > 3，各 2×3÷4=1.5→1，余 1 按主体 id 升序补 npc_a → a2 b1。
+
+const REQS = [{ key: 'npc_a', qty: 2 }, { key: 'org_b', qty: 2 }];
+const TARGETS = [
+  { key: 'npc_a', account: acc('npc_a', SH, 'res_t_coin', 'coin_x') },
+  { key: 'org_b', account: acc('org_b', SH, 'res_t_coin', 'coin_x') },
+];
+const settleDraft = (input) => ({ resourceKind: 'res_t_coin', code: 'src_genesis', day: 0, limit: 3, reason: 'verb_test_settle', requests: REQS, targets: TARGETS, ...input });
+const settleRun = (state, input) => runTransaction(state, CTX, (s) => settleCappedAllocation(ENGINE, s, settleDraft(input)));
+const settleGet = (state, input) => {
+  let out;
+  const run = runTransaction(state, CTX, (s) => { out = settleCappedAllocation(ENGINE, s, settleDraft(input)); });
+  return { run, out };
+};
+
+test('结算入口：开局 src_genesis 第 0 日按分配结果逐申请者入账（a2 b2 限 3 → a2 b1），来源累计与当日用量照记', () => {
+  const state = at(0);
+  const { run, out } = settleGet(state, {});
+  assert.deepEqual(run, { ok: true });
+  assert.deepEqual(clone(out), {
+    day: 0, resource: 'res_t_coin', source: 'src_genesis',
+    allocations: [{ key: ['npc_a'], requested: 2, granted: 2 }, { key: ['org_b'], requested: 2, granted: 1 }],
+    booked: 3, alreadyBooked: false,
+  });
+  assert.deepEqual(state, {
+    clock: { minute: 0, seq: 0 },
+    accounts: { npc_a: { purpose_test_shelf: { res_t_coin: { coin_x: 2 } } }, org_b: { purpose_test_shelf: { res_t_coin: { coin_x: 1 } } } },
+    ledgerTotals: { res_t_coin: { src_genesis: { cumulative: 3, usedByDay: [{ day: 0, used: 3 }] } } },
+  });
+  // 账本仍守恒（来源累计 = 余额之和）。
+  assert.equal(Object.values(state.accounts).reduce((n, h) => n + h[SH].res_t_coin.coin_x, 0), 3);
+});
+
+test('结算入口：同一申请集合换序，分配与日终存档逐位相同（卷六 :376 结果只取决于申请集合）', () => {
+  const a = at(0);
+  const b = at(0);
+  assert.equal(settleRun(a, { requests: [{ key: 'org_b', qty: 2 }, { key: 'npc_a', qty: 2 }] }).ok, true);
+  assert.equal(settleRun(b, { requests: REQS }).ok, true);
+  assert.deepEqual(a, b);
+});
+
+test('结算入口：窗口外日限额按零（§2.5 :224）→ 全部 granted 0、不入账、不落 usedByDay；物品类经 lot 开新批次照常', () => {
+  const outside = at(1);
+  let r;
+  assert.deepEqual(runTransaction(outside, CTX, (s) => { r = settleCappedAllocation(ENGINE, s, { resourceKind: 'res_t_coin', code: 'src_genesis', day: 1, limit: 0, reason: 'verb_test_settle', requests: REQS, targets: TARGETS }); }), { ok: true });
+  assert.deepEqual(clone(r).allocations.map((x) => [x.key[0], x.granted]), [['npc_a', 0], ['org_b', 0]]);
+  assert.deepEqual(clone(r), { day: 1, resource: 'res_t_coin', source: 'src_genesis', allocations: [{ key: ['npc_a'], requested: 2, granted: 0 }, { key: ['org_b'], requested: 2, granted: 0 }], booked: 0, alreadyBooked: false });
+  assert.deepEqual(outside, { clock: { minute: 1440, seq: 0 } });
+  // 物品类（resfam_goods）入账腿须开新批次：target 带 lot {attrs}，批次键由 post 发。
+  const goods = at(0);
+  assert.deepEqual(runTransaction(goods, CTX, (s) => {
+    settleCappedAllocation(ENGINE, s, { resourceKind: 'res_t_grain', code: 'src_boundary', day: 0, limit: null, reason: 'verb_test_settle', requests: [{ key: 'npc_a', qty: 2 }], targets: [{ key: 'npc_a', account: { holder: 'npc_a', purpose: SH, resource: { kind: 'res_t_grain' } }, lot: { attrs: { taint: 0 } } }] });
+  }), { ok: true });
+  assert.deepEqual(goods, {
+    clock: { minute: 0, seq: 0 },
+    accounts: { npc_a: { purpose_test_shelf: { res_t_grain: { lot_0: 2 } } } },
+    stockLots: { npc_a: { purpose_test_shelf: { res_t_grain: { lot_0: { taint: 0 } } } } },
+    ledgerCounters: { lotNext: 1 },
+    ledgerTotals: { res_t_grain: { src_boundary: { cumulative: 2, usedByDay: [{ day: 0, used: 2 }] } } },
+  });
+});
+
+test('限额来源直接 post 整笔拒 E-LEDGER-CAPPED-DIRECT、账本不变；非限额来源照常', () => {
+  const state = at(0);
+  const before = clone(state);
+  const p = (flow, kind) => runTransaction(state, CTX, (s) => { post(ENGINE, s, { legs: [{ account: acc('npc_a', SH, kind, 'coin_x'), delta: 1 }, { flow, kind, qty: 1 }], reason: 'verb_test' }); });
+  assert.deepEqual(p('src_genesis', 'res_t_coin'), { ok: false, code: 'E-LEDGER-CAPPED-DIRECT' });
+  assert.deepEqual(state, before);
+  assert.deepEqual(p('src_issue', 'res_t_coin'), { ok: true });
+  assert.deepEqual(state.ledgerTotals.res_t_coin.src_issue, { cumulative: 1, usedByDay: [{ day: 0, used: 1 }] });
+});
+
+test('结算入口：重跑同日同来源不重复入账（按日＋来源判，判据取 usedByDay 当日项，卷六 §4.1.1 :347、:376）', () => {
+  const state = at(0);
+  assert.equal(settleRun(state, {}).ok, true);
+  const afterFirst = clone(state);
+  const again = settleGet(state, {});
+  assert.deepEqual(again.run, { ok: true });
+  assert.equal(again.out.alreadyBooked, true);
+  assert.equal(again.out.booked, 3);
+  assert.deepEqual(state, afterFirst);
+  // 换了申请集合重跑也不再加记：只记当日该来源一次。
+  const other = { requests: [{ key: 'npc_c', qty: 5 }], targets: [{ key: 'npc_c', account: acc('npc_c', SH, 'res_t_coin', 'coin_x') }] };
+  const changed = settleGet(state, other);
+  assert.deepEqual(changed.run, { ok: true });
+  assert.equal(changed.out.alreadyBooked, true);
+  assert.deepEqual(state, afterFirst);
+});
+
+test('结算入口参数：day 须等于当日、入口只收 src 限额通道、targets 与申请一一对应、reason 须代号、须在本事务内', () => {
+  const state = at(0);
+  const run = (input) => runTransaction(state, CTX, (s) => settleCappedAllocation(ENGINE, s, { resourceKind: 'res_t_coin', code: 'src_genesis', day: 0, limit: 3, reason: 'verb_test_settle', requests: REQS, targets: TARGETS, ...input }));
+  assert.deepEqual(run({ day: 1 }), { ok: false, code: 'E-DIM-DOMAIN-RANGE' });
+  assert.deepEqual(run({ reason: 'Verb!' }), { ok: false, code: 'E-DIM-ID-FORMAT' });
+  assert.deepEqual(run({ code: 'src_issue' }), { ok: false, code: 'E-DIM-DOMAIN-ENUM' });
+  assert.deepEqual(run({ code: 'resfam_coin' }), { ok: false, code: 'E-DIM-REF-MISSING' });
+  assert.deepEqual(run({ targets: [TARGETS[0]] }), { ok: false, code: 'E-DIM-REF-MISSING' });
+  assert.deepEqual(run({ targets: [...TARGETS, TARGETS[0]] }), { ok: false, code: 'E-DIM-REF-MISSING' });
+  assert.deepEqual(run({ targets: [...TARGETS, { key: 'npc_c', account: acc('npc_c', SH, 'res_t_coin', 'coin_x') }] }), { ok: false, code: 'E-DIM-REF-MISSING' });
+  assert.deepEqual(state, at(0));
+  assert.throws(() => settleCappedAllocation(ENGINE, at(0), { resourceKind: 'res_t_coin', code: 'src_genesis', day: 0, limit: 3, reason: 'verb_test_settle', requests: REQS, targets: TARGETS }), (e) => e.code === 'E-VIEW-UNDECLARED-WRITE');
 });
 
 // ---------- 月结账本侧 ----------

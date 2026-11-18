@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 import { installVocab } from '../../server-plugin/kernel/vocab.mjs';
 import { runTransaction } from '../../server-plugin/kernel/transaction.mjs';
-import { post, transfer, openAccount, auditLedger, balance, allocateCapped, closeLedgerPeriod } from '../../server-plugin/kernel/ledger.mjs';
+import { post, transfer, openAccount, auditLedger, balance, allocateCapped, settleCappedAllocation, closeLedgerPeriod } from '../../server-plugin/kernel/ledger.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const W = loadWorld(ROOT);
@@ -233,7 +233,8 @@ test('A6-1.3：新增一行资源种类（行会工分，受限转让）与一�
   // 新来源是限额通道：当日两条申请 3、3 超过限额 4，各 3×4÷6=2，无余数。
   const alloc = allocateCapped(E, 'res_t_guildscrip', 'src_t_guild', 3, [{ key: 'npc_c', qty: 3 }, { key: 'npc_a', qty: 3 }]);
   assert.deepEqual(alloc.map((a) => [a.key[0], a.granted]), [['npc_a', 2], ['npc_c', 2]]);
-  assert.deepEqual(run((s) => { openAccount(E, s, 'npc_a', { kind: 'res_t_guildscrip', key: 'scrip_hall' }, SH); for (const a of alloc) post(E, s, { legs: [{ account: R(a.key[0], SH), delta: a.granted }, { flow: 'src_t_guild', kind: 'res_t_guildscrip', qty: a.granted }], reason: 'verb_test' }); }), { ok: true });
+  // 限额来源只能经日终分配结算入口入账（卷六 §4.1 规则 6 :376、码表 :1640；李白 11-18 07:02 选丙）。
+  assert.deepEqual(run((s) => { settleCappedAllocation(E, s, { resourceKind: 'res_t_guildscrip', code: 'src_t_guild', day: 3, limit: 4, reason: 'verb_test', requests: [{ key: 'npc_c', qty: 3 }, { key: 'npc_a', qty: 3 }], targets: [{ key: 'npc_a', account: R('npc_a', SH) }, { key: 'npc_c', account: R('npc_c', SH) }] }); }), { ok: true });
   // 同一持有人分区之间可移动；给别人即受限（counterpartRX 空）
   assert.deepEqual(run((s) => { post(E, s, { legs: [{ account: R('npc_a', SH), delta: -1 }, { account: R('npc_a', PU), delta: 1 }], reason: 'verb_test' }); }), { ok: true });
   assert.deepEqual(run((s) => { post(E, s, { legs: [{ account: R('npc_a', SH), delta: -1 }, { account: R('npc_c', SH), delta: 1 }], reason: 'verb_test' }); }), { ok: false, code: 'E-LEDGER-TRANSFER-RESTRICTED' });
