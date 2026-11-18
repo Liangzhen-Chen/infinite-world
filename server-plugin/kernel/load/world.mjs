@@ -13,6 +13,7 @@ import { installHandles } from '../handles/generated.mjs';
 import { installStorage } from '../storage.mjs';
 import { finalizeInputs, inputsBySystem, resetFinalized } from '../declare.mjs';
 import { codeOf } from '../errors.mjs';
+import { checkLedgerTables } from '../ledger.mjs';
 
 export const LAYOUT = Object.freeze({
   dimensionsDir: 'world/ontology/dimensions',
@@ -55,7 +56,8 @@ export function loadWorld(root, opts = {}) {
     ns: Array.isArray(decl.rxNamespaces) ? decl.rxNamespaces : [],
     limits: { extendsMaxDepth: need('extendsMaxDepth'), rxMaxDepth: need('rxMaxDepth') },
   });
-  const tail = rulesReport(checkRules(read, report.env));
+  // 账本的资源种类表、ledger.json 与本卷词表条目的跨字段校验（卷六 §2.1、§2.2、§2.5；字段含义只在 kernel/ledger.mjs 读，A6-1.1）。
+  const tail = rulesReport([...checkRules(read, report.env), ...(report.env ? checkLedgerTables(read.rules, report.env) : [])]);
   // 声明表合并与核对（卷二 §2.7；state-owners.json 的 L0 语法错误一并报出）。
   const families = report.vocab && report.vocab.families ? [...report.vocab.families.keys()] : [];
   // 可终止实体类（卷二 §2.6 :516）：实体表的类别行写了 termination（整表一致由校验器另核）。

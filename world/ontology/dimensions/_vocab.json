@@ -1,5 +1,13 @@
 {
  "families": {
+  "budget_mode": {
+   "closed": true,
+   "entries": {
+    "bm_capped": {},
+    "bm_physical": {}
+   },
+   "prefix": "bm_"
+  },
   "burn_evidence": {
    "closed": false,
    "entries": {
@@ -268,6 +276,18 @@
    },
    "prefix": "ppart_"
   },
+  "purpose": {
+   "closed": false,
+   "entries": {
+    "purpose_unmaterialized": {
+     "locksFor": null,
+     "spendable": false,
+     "trackOutflow": false,
+     "visibleToMarket": false
+    }
+   },
+   "prefix": "purpose_"
+  },
   "reaction": {
    "closed": false,
    "entries": {
@@ -287,6 +307,169 @@
     "reaction_weave": {}
    },
    "prefix": "reaction_"
+  },
+  "resfam": {
+   "closed": true,
+   "entries": {
+    "resfam_asset": {},
+    "resfam_claim": {},
+    "resfam_coin": {},
+    "resfam_goods": {},
+    "resfam_point": {},
+    "resfam_stock": {}
+   },
+   "prefix": "resfam_"
+  },
+  "resource": {
+   "closed": false,
+   "entries": {
+    "res_building_share": {},
+    "res_unmaterialized_share": {}
+   },
+   "prefix": "res_"
+  },
+  "sink": {
+   "closed": false,
+   "entries": {
+    "sink_boundary": {
+     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）",
+     "budgetMode": "bm_physical",
+     "families": [],
+     "grade": "designed",
+     "pairedWith": null,
+     "reportGroup": null
+    },
+    "sink_consume": {
+     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）",
+     "budgetMode": "bm_physical",
+     "families": [],
+     "grade": "designed",
+     "pairedWith": null,
+     "reportGroup": null
+    },
+    "sink_death": {
+     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）",
+     "budgetMode": "bm_physical",
+     "families": [],
+     "grade": "designed",
+     "pairedWith": null,
+     "reportGroup": null
+    },
+    "sink_decay": {
+     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）",
+     "budgetMode": "bm_physical",
+     "families": [],
+     "grade": "designed",
+     "pairedWith": null,
+     "reportGroup": null
+    },
+    "sink_depart": {
+     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）",
+     "budgetMode": "bm_physical",
+     "families": [],
+     "grade": "designed",
+     "pairedWith": null,
+     "reportGroup": null
+    },
+    "sink_loss": {
+     "basis": "families 由资源种类行 sinks 反推：res_building_share（resfam_asset）（K3-41，李白 11-18 02:20）",
+     "budgetMode": "bm_physical",
+     "families": [
+      "resfam_asset"
+     ],
+     "grade": "designed",
+     "pairedWith": null,
+     "reportGroup": null
+    },
+    "sink_redeem": {
+     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）",
+     "budgetMode": "bm_physical",
+     "families": [],
+     "grade": "designed",
+     "pairedWith": null,
+     "reportGroup": null
+    },
+    "sink_seized": {
+     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）",
+     "budgetMode": "bm_physical",
+     "families": [],
+     "grade": "designed",
+     "pairedWith": null,
+     "reportGroup": null
+    },
+    "sink_transform": {
+     "basis": "families 由资源种类行 sinks 反推：res_unmaterialized_share（resfam_claim）（K3-41，李白 11-18 02:20）；pairedWith 卷六 §4.22.1 :1240",
+     "budgetMode": "bm_physical",
+     "families": [
+      "resfam_claim"
+     ],
+     "grade": "designed",
+     "pairedWith": "src_transform",
+     "reportGroup": null
+    }
+   },
+   "prefix": "sink_"
+  },
+  "src": {
+   "closed": false,
+   "entries": {
+    "src_birth": {
+     "basis": "families 由资源种类行 sources 反推：现登记行无一以它为来源（K3-41，李白 11-18 02:20）",
+     "budgetMode": "bm_physical",
+     "families": [],
+     "grade": "designed",
+     "pairedWith": null,
+     "reportGroup": null
+    },
+    "src_boundary": {
+     "basis": "families 卷六 §4.22.1 :1242 明写只含物品；限额通道 §4.22 规则 2 :1259",
+     "budgetMode": "bm_capped",
+     "families": [
+      "resfam_goods"
+     ],
+     "grade": "referenced",
+     "pairedWith": null,
+     "reportGroup": null
+    },
+    "src_genesis": {
+     "basis": "families 由资源种类行 sources 反推：res_building_share（resfam_asset）、res_unmaterialized_share（resfam_claim）（K3-41，李白 11-18 02:20）；限额通道 §4.22 规则 2 :1259",
+     "budgetMode": "bm_capped",
+     "families": [
+      "resfam_asset",
+      "resfam_claim"
+     ],
+     "grade": "designed",
+     "pairedWith": null,
+     "reportGroup": null
+    },
+    "src_issue": {
+     "basis": "families 由资源种类行 sources 反推：现登记行无一以它为来源（K3-41，李白 11-18 02:20）",
+     "budgetMode": "bm_physical",
+     "families": [],
+     "grade": "designed",
+     "pairedWith": null,
+     "reportGroup": null
+    },
+    "src_regrow": {
+     "basis": "families 由资源种类行 sources 反推：现登记行无一以它为来源（K3-41，李白 11-18 02:20）",
+     "budgetMode": "bm_physical",
+     "families": [],
+     "grade": "designed",
+     "pairedWith": null,
+     "reportGroup": null
+    },
+    "src_transform": {
+     "basis": "families 由资源种类行 sources 反推：res_building_share（resfam_asset）（K3-41，李白 11-18 02:20）；pairedWith 卷六 §4.22.1 :1240",
+     "budgetMode": "bm_physical",
+     "families": [
+      "resfam_asset"
+     ],
+     "grade": "designed",
+     "pairedWith": "sink_transform",
+     "reportGroup": null
+    }
+   },
+   "prefix": "src_"
   },
   "stress": {
    "closed": true,
@@ -317,6 +500,15 @@
     "subst_wood": {}
    },
    "prefix": "subst_"
+  },
+  "transferability": {
+   "closed": true,
+   "entries": {
+    "tr_bound": {},
+    "tr_free": {},
+    "tr_restricted": {}
+   },
+   "prefix": "tr_"
   }
  }
 }

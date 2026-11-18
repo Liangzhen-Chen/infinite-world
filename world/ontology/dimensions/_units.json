@@ -21,6 +21,11 @@
    "si": 1
   },
   {
+   "dimension": "ratio",
+   "id": "bps",
+   "si": 0.0001
+  },
+  {
    "calibrate": true,
    "dimension": "grade",
    "id": "breath_grade",
@@ -46,6 +51,11 @@
    "dimension": "ref_dose_per_mass_dry",
    "id": "daily_ref_per_kg_dry",
    "si": 1
+  },
+  {
+   "dimension": "time",
+   "id": "day",
+   "si": 86400
   },
   {
    "dimension": "ratio",

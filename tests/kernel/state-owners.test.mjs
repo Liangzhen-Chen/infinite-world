@@ -50,7 +50,8 @@ test('真实 state-owners.json：合并零错；loadWorld 通过后 V、E、P �
   assert.equal(P.playerNotes_text, undefined);
   assert.throws(() => kindOf('zz_not_an_id'), (e) => e.code === 'E-DIM-REF-MISSING');
   assert.deepEqual(r.owners.displayPaths, ['displayNames.*.text', 'playerNotes.*.text']);
-  assert.deepEqual(r.owners.ledgerPaths, []);
+  // 账本账户路径（写者 kernel/ledger.mjs）不生成 P（卷二 §2.6 第 4 条 :497；块 3-1 K3-04）：上面 P 的成员名里没有 accounts、outflowTotals。
+  assert.deepEqual(r.owners.ledgerPaths, ['accounts.*', 'outflowTotals.*']);
 });
 
 test('真实声明表：sys.dimension_entry 两个闭集字段显式写空值；不登 sys.migration、ledgerSystem', () => {

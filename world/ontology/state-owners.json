@@ -1,31 +1,41 @@
 {
  "version": 1,
  "stateKeys": {
-  "created": {"readers": ["dim:*"], "writers": {"*.props.*": "kernel/dimension-writers.mjs", "*.props.basis": "kernel/dimension-writers.mjs"}},
+  "accounts": {"readers": [], "writers": {"*": "kernel/ledger.mjs"}},
+  "created":{"readers": ["dim:*"], "writers": {"*.props.*": "kernel/dimension-writers.mjs", "*.props.basis": "kernel/dimension-writers.mjs"}},
   "displayNames": {"readers": [], "writers": {"*": "ai-gate/naming-gate.mjs"}, "display": ["*.text"]},
+  "outflowTotals": {"readers": [], "writers": {"*": "kernel/ledger.mjs"}},
   "pendingPost": {"readers": ["kernel/scheduler.mjs"], "writers": {"*": "kernel/transaction.mjs"}},
   "playerNotes": {"readers": [], "writers": {"*": "ai-gate/note-gate.mjs"}, "display": ["*.text"]},
   "terminated": {"readers": ["view:capacity"], "writers": {"*": "kernel/terminate.mjs"}}
  },
  "systems": {
-  "sys.dimension_entry": {"tables": [], "entryCallerFiles": {}, "entryJudges": []}
+  "sys.dimension_entry": {"tables": [], "entryCallerFiles": {}, "entryJudges": []},
+  "sys.economy": {"tables": [], "writers": ["accounts.*", "outflowTotals.*"],
+   "sources": {"src_birth": {}, "src_boundary": {}, "src_genesis": {}, "src_issue": {}, "src_regrow": {}, "src_transform": {}},
+   "sinks": ["sink_boundary", "sink_consume", "sink_death", "sink_decay", "sink_depart", "sink_loss", "sink_redeem", "sink_seized", "sink_transform"],
+   "entryCallerFiles": {}, "entryJudges": []}
  },
  "textPaths": ["displayNames.*.text", "playerNotes.*.text", "narration.*"],
  "textWriters": {"displayNames.*.text": "ai-gate/naming-gate.mjs", "playerNotes.*.text": "ai-gate/note-gate.mjs", "narration.*": "ai-gate/narration-gate.mjs"},
  "pathTypes": {
+  "accounts.*": "struct:holderAccounts",
   "created.*.props.*": "dimension",
   "created.*.props.basis": "struct:basis",
   "displayNames.*.seq": "integer:count",
   "displayNames.*.text": "sealed",
   "narration.*": "sealed",
+  "outflowTotals.*": "struct:holderOutflow",
   "pendingPost.*": "list<struct:pendingPost>",
   "playerNotes.*.text": "sealed",
   "terminated.*": "struct:terminated"
  },
  "keyKinds": {
+  "accounts.*": [["deity", "faith", "org", "person", "place"]],
   "created.*.props.*": [["item", "person", "place"], "dimKey"],
   "created.*.props.basis": [["item", "person", "place"]],
   "displayNames.*.seq": [["person", "identityKey"]],
+  "outflowTotals.*": [["deity", "faith", "org", "person", "place"]],
   "pendingPost.*": ["event"],
   "terminated.*": [["item", "org", "person", "place"]]
  },
@@ -55,6 +65,10 @@
   {"export": "kernel/declare.mjs#declareInputs", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/storage.mjs#readPath", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/storage.mjs#writePath", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/ledger.mjs#openAccount", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/ledger.mjs#balance", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/ledger.mjs#accountsOf", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/ledger.mjs#stockIn", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/transaction.mjs#registerHoldWhileRecompute", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/save.mjs#registerUnitOfPath", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/clone.mjs#clone", "callers": ["rules"], "acceptsState": false},

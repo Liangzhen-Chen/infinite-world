@@ -12,11 +12,13 @@ export type SealedValue = { readonly __brand: 'SealedValue' };
 
 /** pathTypes 每条模式的值类型。 */
 export interface PathTypes {
+  readonly 'accounts.*': StructValue<'holderAccounts'>;
   readonly 'created.*.props.*': DimensionValue;
   readonly 'created.*.props.basis': StructValue<'basis'>;
   readonly 'displayNames.*.seq': number;
   readonly 'displayNames.*.text': SealedValue;
   readonly 'narration.*': SealedValue;
+  readonly 'outflowTotals.*': StructValue<'holderOutflow'>;
   readonly 'pendingPost.*': readonly (StructValue<'pendingPost'>)[];
   readonly 'playerNotes.*.text': SealedValue;
   readonly 'terminated.*': StructValue<'terminated'>;
@@ -27,6 +29,7 @@ export type PathValue<P extends keyof PathTypes> = PathTypes[P];
 
 /** state 的形状：按 pathTypes 各模式展开，`*` 段为索引签名。 */
 export type State = {
+  readonly accounts?: { readonly [segment: string]: StructValue<'holderAccounts'> };
   readonly created?: { readonly [segment: string]: {
       readonly props?: {
         readonly basis?: StructValue<'basis'>;
@@ -37,6 +40,7 @@ export type State = {
       readonly text?: SealedValue;
     } };
   readonly narration?: { readonly [segment: string]: SealedValue };
+  readonly outflowTotals?: { readonly [segment: string]: StructValue<'holderOutflow'> };
   readonly pendingPost?: { readonly [segment: string]: readonly (StructValue<'pendingPost'>)[] };
   readonly playerNotes?: { readonly [segment: string]: {
       readonly text?: SealedValue;

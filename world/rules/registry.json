@@ -47,6 +47,43 @@
    "volume": "卷二十七 §2.2、R27-4.5 :504、R27-4.8 :512；卷二 :1500",
    "multiSourceMerge": "own_key_only",
    "packOverridable": {"snapshotEveryEvents": false, "segmentEvents": false, "keepSnapshots": false}
+  },
+  {
+   "code": "economyResources",
+   "file": "tables/economy/resources.json",
+   "structure": {"rows": {"vocab": "resource"}},
+   "type": {"type": "struct", "required": ["family", "unit", "transferable", "counterpartRX", "sources", "sinks", "onTerminate", "salvageFraction", "countsAsWealth", "unitOfAccount", "issuerBacked"], "fields": {
+    "family": {"type": "enum", "vocab": "resfam"},
+    "unit": {"type": "string"},
+    "transferable": {"type": "enum", "vocab": "transferability"},
+    "counterpartRX": {"type": "rx", "nullable": true},
+    "sources": {"type": "set", "of": {"type": "ref", "vocab": "src"}},
+    "sinks": {"type": "set", "of": {"type": "ref", "vocab": "sink"}},
+    "onTerminate": {"type": "enum", "vocab": "term_account"},
+    "salvageFraction": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4},
+    "countsAsWealth": {"type": "boolean"},
+    "unitOfAccount": {"type": "boolean"},
+    "issuerBacked": {"type": "boolean"}
+   }},
+   "volume": "卷六 §2.1 :108–122（资源种类表 resource 族，行由领域卷登记，字段含义只在卷六）；跨字段校验（unit 在 _units、families 一致、族内条目必有行）在 kernel/ledger.mjs checkLedgerTables",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": false
+  },
+  {
+   "code": "economyLedger",
+   "file": "tables/economy/ledger.json",
+   "structure": "keys",
+   "type": {
+    "budget": {"type": "map", "key": {"type": "ref", "vocab": "resource"}, "value": {"type": "map", "key": {"type": "ref", "refs": [{"vocab": "src"}, {"vocab": "sink"}]}, "value": {"type": "struct", "required": ["limit"], "fields": {
+     "limit": {"type": "integer", "unit": "count", "domain": [0, null], "nullable": true},
+     "activeFromDay": {"type": "integer", "unit": "day", "domain": [0, null]},
+     "activeToDay": {"type": "integer", "unit": "day", "domain": [0, null]}
+    }}}},
+    "alert": {"type": "map", "key": {"type": "ref", "vocab": "resource"}, "value": {"type": "map", "key": {"type": "ref", "refs": [{"vocab": "src"}, {"vocab": "sink"}]}, "value": {"type": "integer", "unit": "count", "domain": [0, null], "nullable": true}}}
+   },
+   "volume": "卷六 §2.5 :224（budget、alert）；生效日窗口 activeFromDay/activeToDay 照李白 11-18 02:20 K3-40（卷六勘误另卡）；窗口与通道种类的跨字段校验在 kernel/ledger.mjs checkLedgerTables",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"budget": false, "alert": false}
   }
  ]
 }

@@ -7,6 +7,7 @@ import { declareInputs, finalizeInputs, inputsBySystem, resetDeclarations } from
 import { inputsOf } from '../../server-plugin/kernel/memo.mjs';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 import { KernelError } from '../../server-plugin/kernel/errors.mjs';
+import { withKernelConstantsRules } from './fixture.mjs';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
@@ -67,7 +68,7 @@ test('写回 systems[*].inputs：节点按系统 view/predicates 的函数名落
 
 test('统一加载器：加载期定稿并写回，dim:<kind> 按表 idPrefix 机器生成', () => {
   resetDeclarations();
-  const r = loadWorld(ROOT, { dimensionsDir: 'tests/kernel/dims' });
+  const r = withKernelConstantsRules((rulesDir) => loadWorld(ROOT, { dimensionsDir: 'tests/kernel/dims', rulesDir }));
   assert.deepEqual(r.errors, []);
   assert.deepEqual(inputsOf('dim:gadget'), ['created.gad_*.props']);
   assert.deepEqual(inputsOf('modified:gadget'), ['created.gad_*.props', 'modifiers', 'statuses']);
