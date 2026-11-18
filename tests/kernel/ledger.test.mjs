@@ -331,7 +331,8 @@ test('doc_ledger 落片（卷二十七 R27-4.6 第 6 行 :540）：真实声明�
   // 账本两条模式归 doc_ledger 一行，其余顶层键归 doc_state 一行。
   const ledgerTops = [...new Set(W.owners.ledgerPaths.map((p) => p.split('.')[0]))].sort();
   const stateTops = [...new Set(Object.keys(W.owners.pathTypes).map((p) => p.split('.')[0]))].filter((k) => !ledgerTops.includes(k)).sort();
-  assert.deepEqual(ledgerTops, ['accounts', 'ledgerTotals', 'outflowTotals']);
+  // 块 3-2 加 stockLots（卷三乙 :433 写者 kernel/ledger.mjs）与批次键计数器 ledgerCounters（李白 11-18 04:10）。
+  assert.deepEqual(ledgerTops, ['accounts', 'ledgerCounters', 'ledgerTotals', 'outflowTotals', 'stockLots']);
   const layout = {
     shards: [
       { shard: 'shd_data', part: 'doc_data', paths: ['*'], partition: 'part_single' },
@@ -346,25 +347,34 @@ test('doc_ledger 落片（卷二十七 R27-4.6 第 6 行 :540）：真实声明�
   assert.equal(c.rowOfPattern.get('accounts.*').part, 'doc_ledger');
   assert.equal(c.rowOfPattern.get('outflowTotals.*').part, 'doc_ledger');
   assert.equal(c.rowOfPattern.get('ledgerTotals').part, 'doc_ledger');
+  assert.equal(c.rowOfPattern.get('stockLots.*').part, 'doc_ledger');
+  assert.equal(c.rowOfPattern.get('ledgerCounters.lotNext').part, 'doc_ledger');
 });
 
-test('kernelApi 登记账本四个已实现的入口；账本路径写者只有 kernel/ledger.mjs；sys.economy 两个闭集字段显式空值', () => {
+test('kernelApi 登记账本已实现的入口（卷六 :351 六名加 alertGaps）；账本路径写者只有 kernel/ledger.mjs；sys.economy 两个闭集字段显式空值', () => {
   const decl = JSON.parse(readFileSync(join(ROOT, 'world/ontology/state-owners.json'), 'utf8'));
   assert.deepEqual(decl.kernelApi.exports.filter((x) => x.export.startsWith('kernel/ledger.mjs#')).map((x) => [x.export, x.callers, x.acceptsState]), [
     ['kernel/ledger.mjs#openAccount', ['rules'], true],
     ['kernel/ledger.mjs#balance', ['rules'], true],
     ['kernel/ledger.mjs#accountsOf', ['rules'], true],
     ['kernel/ledger.mjs#stockIn', ['rules'], true],
+    ['kernel/ledger.mjs#post', ['rules'], true],
+    ['kernel/ledger.mjs#transfer', ['rules'], true],
+    ['kernel/ledger.mjs#alertGaps', ['rules'], false],
   ]);
   assert.deepEqual(decl.stateKeys.accounts.writers, { '*': 'kernel/ledger.mjs' });
   assert.deepEqual(decl.stateKeys.outflowTotals.writers, { '*': 'kernel/ledger.mjs' });
+  assert.deepEqual(decl.stateKeys.stockLots.writers, { '*': 'kernel/ledger.mjs' });
+  assert.deepEqual(decl.stateKeys.ledgerCounters.writers, { lotNext: 'kernel/ledger.mjs' });
+  assert.equal(decl.pathTypes['stockLots.*'], 'struct:holderLots');
+  assert.equal(decl.pathTypes['ledgerCounters.lotNext'], 'integer:count');
   // ledgerTotals 整键（卷二 §1.5 :247 struct:resourceTotals，李白 11-18 02:55；块 3-2）
   assert.deepEqual(decl.stateKeys.ledgerTotals.writers, { '': 'kernel/ledger.mjs' });
   assert.equal(decl.pathTypes.ledgerTotals, 'struct:resourceTotals');
   assert.equal(decl.keyKinds.ledgerTotals, undefined);
   assert.equal(decl.pathTypes['npcs.*.coins'], undefined);
   const eco = decl.systems['sys.economy'];
-  assert.deepEqual([eco.entryCallerFiles, eco.entryJudges, eco.writers], [{}, [], ['accounts.*', 'ledgerTotals', 'outflowTotals.*']]);
+  assert.deepEqual([eco.entryCallerFiles, eco.entryJudges, eco.writers], [{}, [], ['accounts.*', 'ledgerCounters.lotNext', 'ledgerTotals', 'outflowTotals.*']]);
   assert.deepEqual(Object.keys(eco.sources), ['src_birth', 'src_boundary', 'src_genesis', 'src_issue', 'src_regrow', 'src_transform']);
   assert.equal(eco.sinks.length, 9);
   assert.equal(decl.kernelApi.exports.some((x) => x.export.endsWith('#declareLedgerWriter')), false);

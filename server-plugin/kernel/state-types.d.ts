@@ -21,11 +21,13 @@ export interface PathTypes {
   readonly 'displayNames.*.seq': number;
   readonly 'displayNames.*.text': SealedValue;
   readonly 'due.*': StructValue<'dueItem'>;
+  readonly 'ledgerCounters.lotNext': number;
   readonly 'ledgerTotals': StructValue<'resourceTotals'>;
   readonly 'narration.*': SealedValue;
   readonly 'outflowTotals.*': StructValue<'holderOutflow'>;
   readonly 'pendingPost.*': readonly (StructValue<'pendingPost'>)[];
   readonly 'playerNotes.*.text': SealedValue;
+  readonly 'stockLots.*': StructValue<'holderLots'>;
   readonly 'terminated.*': StructValue<'terminated'>;
 }
 
@@ -50,6 +52,9 @@ export type State = {
       readonly text?: SealedValue;
     } };
   readonly due?: { readonly [segment: string]: StructValue<'dueItem'> };
+  readonly ledgerCounters?: {
+    readonly lotNext?: number;
+  };
   readonly ledgerTotals?: StructValue<'resourceTotals'>;
   readonly narration?: { readonly [segment: string]: SealedValue };
   readonly outflowTotals?: { readonly [segment: string]: StructValue<'holderOutflow'> };
@@ -57,5 +62,6 @@ export type State = {
   readonly playerNotes?: { readonly [segment: string]: {
       readonly text?: SealedValue;
     } };
+  readonly stockLots?: { readonly [segment: string]: StructValue<'holderLots'> };
   readonly terminated?: { readonly [segment: string]: StructValue<'terminated'> };
 };

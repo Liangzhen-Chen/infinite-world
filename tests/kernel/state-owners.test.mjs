@@ -53,7 +53,8 @@ test('真实 state-owners.json：合并零错；loadWorld 通过后 V、E、P �
   assert.deepEqual(r.owners.displayPaths, ['displayNames.*.text', 'playerNotes.*.text']);
   // 账本账户路径（写者 kernel/ledger.mjs）不生成 P（卷二 §2.6 第 4 条 :497；块 3-1 K3-04）：上面 P 的成员名里没有 accounts、outflowTotals。
   // ledgerTotals 整键 struct:resourceTotals（卷二 §1.5 :247，李白 11-18 02:55）同样是账本路径。
-  assert.deepEqual(r.owners.ledgerPaths, ['accounts.*', 'ledgerTotals', 'outflowTotals.*']);
+  // 块 3-2：stockLots.*（卷三乙 :433）与批次键计数器 ledgerCounters.lotNext（李白 11-18 04:10）同为账本路径。
+  assert.deepEqual(r.owners.ledgerPaths, ['accounts.*', 'ledgerCounters.lotNext', 'ledgerTotals', 'outflowTotals.*', 'stockLots.*']);
 });
 
 test('真实声明表：sys.dimension_entry 两个闭集字段显式写空值；不登 sys.migration、ledgerSystem', () => {
