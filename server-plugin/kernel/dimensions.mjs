@@ -44,12 +44,12 @@ let modifierSource = null;
 /**
  * 修正项来源（kernel 组内用，不在 kernelApi）：§3.2 的五处来源（维度表行、规则表 modifiers/*.json、state.modifiers、实例附魔、效果族输出）
  * 各由其写者与作用域解析（§3.5）那几张卡接入；它们在加载时交入一个收集函数，按 (target, 主体) 返回已解析作用域的修正项。
- * 未交入前没有任何修正项（modified 返回基值原生值）。只许交入一次（E-WRITER-DUPLICATE）。
+ * 未交入前没有任何修正项（modified 返回基值原生值）。只许交入一次（重复交入、fn 非函数都是调用方程序缺陷，抛不带登记码的 Error，卷二 §4.3 勘误 1118b25）。
  * @param {(engine: Engine, state: any, at: {target: ModKey, kind: string, id: string}) => ModifierRow[]} fn
  */
 export function installModifierSource(fn) {
-  if (typeof fn !== 'function') throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'installModifierSource: fn must be a function');
-  if (modifierSource) throw new KernelError('E-WRITER-DUPLICATE', {}, 'modifier source already installed');
+  if (typeof fn !== 'function') throw new Error('kernel/dimensions.mjs: installModifierSource: fn must be a function');
+  if (modifierSource) throw new Error('kernel/dimensions.mjs: installModifierSource: modifier source already installed');
   modifierSource = fn;
 }
 

@@ -30,13 +30,13 @@ function ownKey(item) {
 }
 
 function badDecl(node, detail) {
-  return new KernelError('E-DIM-STRUCT-FIELD', {}, `declareInputs(${JSON.stringify(node)}): ${detail}`);
+  return new Error(`kernel/declare.mjs: declareInputs(${JSON.stringify(node)}): ${detail}`); // 接口调用错误，不带登记码（卷二 §4.3 勘误 1118b25）
 }
 
 /**
  * kernelApi `declareInputs(node, {impl, own, uses})`（§2.3）。模块加载时登记；同一节点只许登记一次。
  * impl：本节点的实现函数组（函数名）；own：本节点直读的状态路径（段列表，或 {path, categories}）；uses：本节点调用的其他节点名。
- * 节点名不合三类文法、字段形状不对即 E-DIM-STRUCT-FIELD；重复登记 E-DIM-ID-DUPLICATE。加载期定稿之后再登记即启动顺序错误（抛 Error）。
+ * 节点名不合三类文法、字段形状不对、重复登记、加载期定稿之后再登记，都是调用方程序缺陷：抛不带登记码的 Error（卷二 §4.3 勘误 1118b25）。
  * @param {string} node
  * @param {Declaration} decl
  * @returns {void}
@@ -51,7 +51,7 @@ export function declareInputs(node, decl) {
   if (!ownOk) throw badDecl(node, 'own must be a list of path segment lists or {path, categories}');
   if (!strList(decl.uses) || !decl.uses.every((u) => NODE.test(u))) throw badDecl(node, 'uses must be a list of node names');
   if (decl.foldsOverDays !== undefined && typeof decl.foldsOverDays !== 'boolean') throw badDecl(node, 'foldsOverDays must be boolean');
-  if (declared.has(node)) throw new KernelError('E-DIM-ID-DUPLICATE', {}, `declareInputs: ${node} declared twice`);
+  if (declared.has(node)) throw new Error(`kernel/declare.mjs: declareInputs: ${node} declared twice`);
   declared.set(node, Object.freeze({
     impl: Object.freeze([...decl.impl]),
     own: Object.freeze(decl.own.map((o) => (Array.isArray(o) ? Object.freeze([...o]) : Object.freeze({ path: Object.freeze([...o.path]), ...(o.categories ? { categories: Object.freeze([...o.categories]) } : {}) })))),
@@ -63,7 +63,7 @@ export function declareInputs(node, decl) {
 /**
  * 加载期定稿（kernel/load/world.mjs 在校验通过后调一次）：生成 `dim:<kind>`、`modified:<kind>`，对全部节点的 uses 做传递闭包，冻结。
  * generated：kind → {dim: {own, uses}, modified: {own, uses}}（own 为依赖串列表，uses 为节点名列表），由加载器按维度表算出（:470 末句）；
- * `modified:<kind>` 另自动含 `dim:<kind>`。uses 指向未声明也未生成的节点 E-DIM-REF-MISSING；成环 E-VIEW-DEPS-CYCLE（码义 §2.3）。失败时不留半截结果。
+ * `modified:<kind>` 另自动含 `dim:<kind>`。uses 指向未声明也未生成的节点抛不带登记码的 Error；成环 E-VIEW-DEPS-CYCLE（码义 §2.3）。失败时不留半截结果。
  * @param {Map<string, {dim: {own: string[], uses: string[]}, modified: {own: string[], uses: string[]}}>} generated
  * @returns {Map<string, readonly string[]>} 节点名 → 冻结的依赖数组（与 inputsOf 返回同一对象）
  */
@@ -72,11 +72,11 @@ export function finalizeInputs(generated) {
   const nodes = new Map();
   for (const [node, d] of declared) nodes.set(node, { own: d.own.map(ownKey), uses: d.uses });
   for (const [kind, g] of [...generated].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
-    for (const name of [`dim:${kind}`, `modified:${kind}`]) if (nodes.has(name)) throw new KernelError('E-DIM-ID-DUPLICATE', {}, `${name} is machine-generated`);
+    for (const name of [`dim:${kind}`, `modified:${kind}`]) if (nodes.has(name)) throw new Error(`kernel/declare.mjs: finalizeInputs: ${name} is machine-generated and must not be declared by code`);
     nodes.set(`dim:${kind}`, { own: [...g.dim.own], uses: [...g.dim.uses] });
     nodes.set(`modified:${kind}`, { own: [...g.modified.own], uses: [`dim:${kind}`, ...g.modified.uses] });
   }
-  for (const [node, n] of nodes) for (const u of n.uses) if (!nodes.has(u)) throw new KernelError('E-DIM-REF-MISSING', {}, `${node} uses ${u}: not declared`);
+  for (const [node, n] of nodes) for (const u of n.uses) if (!nodes.has(u)) throw new Error(`kernel/declare.mjs: finalizeInputs: ${node} uses ${u}: not declared`);
   const out = new Map();
   const visiting = new Set();
   const visit = (node, trail) => {
@@ -97,14 +97,14 @@ export function finalizeInputs(generated) {
 }
 
 /**
- * 节点的最终依赖数组（kernel/memo.mjs#inputsOf 经它取；每次返回同一冻结对象，:471）。未定稿或未声明即 E-DIM-REF-MISSING。
+ * 节点的最终依赖数组（kernel/memo.mjs#inputsOf 经它取；每次返回同一冻结对象，:471）。未定稿或未声明即抛不带登记码的 Error（调用方程序缺陷）。
  * @param {string} node
  * @returns {readonly string[]}
  */
 export function closureOf(node) {
   if (!closures) throw new Error('kernel/declare.mjs: inputsOf before finalizeInputs (load order)');
   const c = closures.get(node);
-  if (!c) throw new KernelError('E-DIM-REF-MISSING', {}, `inputsOf: ${node} not declared`);
+  if (!c) throw new Error(`kernel/declare.mjs: inputsOf: ${node} not declared`);
   return c;
 }
 
