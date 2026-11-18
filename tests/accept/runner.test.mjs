@@ -158,15 +158,26 @@ async function requiredVerdict(testSrc) {
     writeUnderTempRoot(dir, 'tests/accept/fx-helper.mjs', 'export function w() {}\n');
     if (testSrc !== null) writeUnderTempRoot(dir, 'tests/accept/fx.test.mjs', testSrc);
     // 条目过滤（R12-10.2）：只跑方法不是测试的条目——方法是测试的条目在临时仓库里必不过（temp-repo.mjs），这里只看必跑测试。
+    // 滤掉的条目列 not_run、必过的当不过（R12-10.7 :1047），所以总判必为 fail；这里只看 required-tests 那部分，
+    // 另返回拦下的必过条目（只要必过集合里的），应正好等于方法是测试的必过条目。
     const { report } = await accRun('pre_commit', 'x', null, { root: dir, runRequired: true, filter: NON_TEST_METHODS });
-    return { verdict: report.verdict, failed: report.items.failed.filter((f) => f.itemKey === 'required-tests') };
+    const items = readRegistry(dir, 'items');
+    const core = new Set(items.filter((it) => it.state === 'in_core').map((it) => it.itemKey));
+    const blocked = report.items.failed.filter((f) => core.has(f.itemKey)).map((f) => f.itemKey).sort();
+    return { failed: report.items.failed.filter((f) => f.itemKey === 'required-tests'), blocked };
   } finally { rmSync(dir, { recursive: true, force: true }); }
 }
+const TEST_CORE = readRegistry(ROOT, 'items').filter((it) => it.state === 'in_core' && TEST_METHODS.includes(it.method)).map((it) => it.itemKey).sort();
 
 test('必跑测试真执行：全过放行；失败、skip、todo、缺失文件、缺失名字都判不过；只跑登记名', async () => {
-  assert.deepEqual(await requiredVerdict(FXTEST("test('alpha one', () => { assert.ok(true); });")), { verdict: 'pass', failed: [] });
+  const ok = await requiredVerdict(FXTEST("test('alpha one', () => { assert.ok(true); });"));
+  assert.deepEqual(ok.failed, []);
+  assert.ok(TEST_CORE.length > 0);
+  assert.deepEqual(ok.blocked, TEST_CORE);
   // 未登记的测试失败不影响（只跑登记名）。
-  assert.equal((await requiredVerdict(FXTEST("test('alpha one', () => {});", "test('beta', () => { assert.fail('x'); });"))).verdict, 'pass');
+  const other = await requiredVerdict(FXTEST("test('alpha one', () => {});", "test('beta', () => { assert.fail('x'); });"));
+  assert.deepEqual(other.failed, []);
+  assert.deepEqual(other.blocked, TEST_CORE);
   for (const src of [
     FXTEST("test('alpha one', () => { assert.fail('x'); });"),
     FXTEST("test.skip('alpha one', () => {});"),
@@ -176,7 +187,7 @@ test('必跑测试真执行：全过放行；失败、skip、todo、缺失文件
     null,
   ]) {
     const r = await requiredVerdict(src);
-    assert.equal(r.verdict, 'fail', String(src));
+    assert.deepEqual(r.blocked, TEST_CORE, String(src));
     assert.deepEqual(r.failed.map((f) => f.codes), [['E-ACC-REQUIRED-TEST']], String(src));
   }
 });

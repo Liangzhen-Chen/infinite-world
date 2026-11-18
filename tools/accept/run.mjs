@@ -137,11 +137,16 @@ export async function accRun(gate, subject, contentPrint, opts = {}) {
   const classes = new Map(readRegistry(root, 'scanclasses').map((r) => [r.scanClass, r]));
   const criteria = Object.fromEntries(readRegistry(root, 'criteria').map((r) => [r.scanClass, r.rev]));
   // 条目过滤参数（R12-10.2 :1028"要少跑，就用关口与条目过滤的参数，照样出执行记录"）：opts.filter 是 accItems 的过滤（§3.1），关口照旧。
+  // 滤掉的条目不许从报告里消失（R12-10.7 :1047）：列 not_run，必过集合按整个关口全部条目算。
+  const gateItems = accItems(root, { gate });
   const items = accItems(root, { ...(opts.filter || {}), gate });
+  const keptKeys = new Set(items.map((it) => it.itemKey));
+  const filteredOut = gateItems.filter((it) => !keptKeys.has(it.itemKey));
   const runnable = items.filter((it) => RUNNABLE.includes(it.state));
   const testCache = new Map();
 
-  const results = {}; const failed = []; const components = {}; let rows = [];
+  const results = {}; const failed = [];
+  for (const it of filteredOut) results[it.itemKey] = 'not_run'; const components = {}; let rows = [];
   // 上次合入的值（R12-8.4、R12-8.5）：入库的 baseline.json，只在合入关口写；不读 out/ 下的本地记录。
   // opts.baselineRows 只供测试代入（测试不得写登记路径 baseline.json，§2.11）；真实执行不传。
   const base = Object.fromEntries((opts.baselineRows || accBaseline(root)).map((b) => [b.compCode, b]));
@@ -197,8 +202,8 @@ export async function accRun(gate, subject, contentPrint, opts = {}) {
   const curKeys = new Set(rows.map((h) => h.rowKey));
   const vs = Object.values(results);
   const count = (v) => vs.filter((x) => x === v).length;
-  const mustPass = new Set(items.filter((it) => it.state === 'in_core').map((it) => it.itemKey));
-  // 必过集合里的 not_run 与 blocked 都当不过（R12-10.7 :1036），列进不过的条目（卷十二 §2.12 没有专码，codes 空、cases 写结论）。
+  const mustPass = new Set(gateItems.filter((it) => it.state === 'in_core').map((it) => it.itemKey));
+  // 必过集合里的 not_run 与 blocked 都当不过（R12-10.7 :1047），列进不过的条目（卷十二 §2.12 没有专码，codes 空、cases 写结论）。
   for (const k of [...mustPass].sort()) if (results[k] === 'not_run' || results[k] === 'blocked') failed.push({ itemKey: k, codes: [], cases: [`verdict:${results[k]}`] });
   const blocking = failed.filter((f) => f.itemKey === 'bypass' || f.itemKey === 'required-tests' || mustPass.has(f.itemKey));
 

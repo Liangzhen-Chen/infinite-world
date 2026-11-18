@@ -1,6 +1,6 @@
 // 方法是测试的条目（卷十二 §4.5.1 :782 load_check、unit_test、property_test）经执行器真跑 impl 所指的测试文件（§2.2 :203），
 // 期望 all_pass：全过才 pass；失败、skip、todo、一条没有、文件缺失都不过，不默认通过。必过集合里不过即拒（R12-5.1），
-// not_run 也当不过（R12-10.7 :1036）；runsOn 不是 local_static 的本机不跑（R12-9.7 :990）。
+// not_run 也当不过（R12-10.7 :1047）；runsOn 不是 local_static 的本机不跑（R12-9.7 :990）。
 // 写临时仓库只用 tempRepo() 拿到的目录加常量相对路径或 writeUnderTempRoot（S12-2）。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { rmSync } from 'node:fs';
 import { accRun, TEST_METHODS } from '../../tools/accept/run.mjs';
 import { register } from '../../tools/accept/register.mjs';
+import { readRegistry } from '../../tools/accept/read.mjs';
 import { ROOT, tempRepo } from './temp-repo.mjs';
 import { writeUnderTempRoot } from './temp-root.mjs';
 
@@ -22,6 +23,11 @@ const ROW = (key, extra = {}) => ({
 // 只跑卷十二方法是测试的条目（条目过滤，R12-10.2）：临时仓库里真实的卷六不变量条目跑不起来（temp-repo.mjs），这里不看它们。
 const ONLY = { volume: 'vol12', method: TEST_METHODS, state: ['implemented', 'in_core'] };
 const failedOf = (report) => Object.fromEntries(report.items.failed.map((f) => [f.itemKey, { codes: f.codes, cases: f.cases }]));
+// 过滤掉的条目列 not_run、必过的当不过（R12-10.7 :1047），总判因此不再只看这几条；拦下的只取本测试登的 vol12.TX-* 里在必过集合的。
+const blockedTx = (repo, report) => {
+  const core = new Set(readRegistry(repo, 'items').filter((it) => it.state === 'in_core').map((it) => it.itemKey));
+  return report.items.failed.map((f) => f.itemKey).filter((k) => k.startsWith('vol12.TX-') && core.has(k)).sort();
+};
 
 // 在临时仓库登一条（或几条）方法是测试的条目：registered → implemented（带 impl）→ 目标状态，每步经登记器。
 // 形参不叫 dir：临时根变量同名遮蔽即不认（S12-2 判法，call_edge）。
@@ -38,7 +44,7 @@ test('必过集合里的测试条目：测试文件全过即 pass、放行；失
   try {
     setup(dir, [ROW('TX-1')], 'in_core');
     const ok = await run(dir);
-    assert.equal(ok.verdict, 'pass');
+    assert.deepEqual(blockedTx(dir, ok), []);
     assert.equal(failedOf(ok)['vol12.TX-1'], undefined);
     assert.equal(ok.items.pass, 1);
     for (const [src, reason] of [
@@ -49,13 +55,14 @@ test('必过集合里的测试条目：测试文件全过即 pass、放行；失
     ]) {
       writeUnderTempRoot(dir, FX, src);
       const r = await run(dir);
+      assert.deepEqual(blockedTx(dir, r), ['vol12.TX-1'], reason);
       assert.equal(r.verdict, 'fail', reason);
       assert.deepEqual(failedOf(r)['vol12.TX-1'], { codes: [], cases: [`${FX}:${reason}`] }, reason);
     }
     // 登记后测试文件被删：按条目缺必填字段报 E-ACC-ITEM-FORM（§2.12；impl 自 implemented 起必填），不默认通过。
     rmSync(join(dir, 'tests/accept/fx-inv.test.mjs'));
     const gone = await run(dir);
-    assert.equal(gone.verdict, 'fail');
+    assert.deepEqual(blockedTx(dir, gone), ['vol12.TX-1']);
     assert.deepEqual(failedOf(gone)['vol12.TX-1'], { codes: ['E-ACC-ITEM-FORM'], cases: [`${FX}:missing`] });
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
@@ -67,7 +74,7 @@ test('已实现未进必过集合的测试条目：不过照报，但不拦（R1
     writeUnderTempRoot(dir, FX, SRC("test('inv one', () => { assert.fail('x'); });"));
     const r = await run(dir);
     assert.deepEqual(failedOf(r)['vol12.TX-1'], { codes: [], cases: [`${FX}:failed`] });
-    assert.equal(r.verdict, 'pass');
+    assert.deepEqual(blockedTx(dir, r), []);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
@@ -76,11 +83,10 @@ test('runsOn 为 cloud_ref 的必过测试条目：本机不跑记 not_run，必
   try {
     setup(dir, [ROW('TX-2', { runsOn: 'cloud_ref' })], 'in_core');
     const local = await run(dir);
-    assert.equal(local.items.not_run, 1);
-    assert.equal(local.verdict, 'fail');
+    assert.deepEqual(blockedTx(dir, local), ['vol12.TX-2']);
     assert.deepEqual(failedOf(local)['vol12.TX-2'], { codes: [], cases: ['verdict:not_run'] });
     const cloud = await run(dir, { bench: 'cloud_ref' });
-    assert.equal(cloud.verdict, 'pass');
+    assert.deepEqual(blockedTx(dir, cloud), []);
     assert.equal(cloud.items.pass, 1);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
@@ -111,8 +117,8 @@ test('登记器：测试条目进 implemented 须有 impl 且在 tools/accept/ �
 test('真仓库：卷六 A6-1.2 a（I1′ 守恒、I15′ 单一账户）、b（I2′ 非负）在必过集合里，经执行器真跑测试文件为 pass', async () => {
   const keys = ['vol6.A6-1.2.a', 'vol6.A6-1.2.b'];
   const { report } = await accRun('pre_commit', 'x', null, { root: ROOT, filter: { itemKey: keys } });
-  assert.equal(report.items.total, 2);
+  // 过滤掉的条目列 not_run（R12-10.7 :1047），总数是整个关口的、总判随之不是 pass；只看这两条自己。
   assert.equal(report.items.pass, 2);
-  assert.equal(report.verdict, 'pass');
+  assert.equal(report.items.pass + report.items.fail + report.items.not_run + report.items.blocked, report.items.total);
   for (const k of keys) assert.equal(failedOf(report)[k], undefined);
 });
