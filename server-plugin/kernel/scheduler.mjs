@@ -18,7 +18,7 @@
 // 本文件只读登记数据（规则表、词表条目字段、单位表），不认任何具体到期项种类、钩子、阶段名或实体 id；字串字面量只有 ASCII（§4.1.6 扫描式）。
 
 import { KernelError } from './errors.mjs';
-import { checkValue } from './validate/types.mjs';
+import { checkValue, markersOf } from './validate/types.mjs';
 const HANDLE_PREFIX = 'due_';
 import { readPath, writePath } from './storage.mjs';
 import { P } from './handles/generated.mjs';
@@ -36,6 +36,9 @@ import { snakeCaseKey } from './handles/keys.mjs';
 export const TICK_STAGE = Object.freeze(['external', 'due', 'clock', 'contest', 'reaction', 'assertion']);
 /** pace_class：延迟类、均衡类（§2.10 :408）。due_kind.paceClass 取其一。 */
 export const PACE_CLASS = Object.freeze(['equilibrium', 'latency']);
+// 节拍阶段与 paces 的族句柄：成员由上面的 TICK_STAGE、PACE_CLASS 派生。
+const STAGE = markersOf('tick_stage', TICK_STAGE);
+const PACE = markersOf('pace_class', PACE_CLASS);
 /** 争夺方式：每种是一段裁决算法（旧 CONTEST_RULES 的四值），代码内封闭；哪个标的用哪种由数据给（rules.clock.contestDefault 与提案的 contest）。 */
 export const CONTEST_MODES = Object.freeze(['arrival', 'lottery', 'price', 'rank']);
 
@@ -240,8 +243,8 @@ function clockTable() {
  */
 export function enqueueDelay(clock, kindEntry, delay) {
   if (!Number.isSafeInteger(delay) || delay < 1) throw new KernelError('E-DIM-DOMAIN-RANGE', {}, 'schedule: delayMinutes must be an integer >= 1');
-  if (kindEntry.paceClass === 'equilibrium') return delay;
-  if (kindEntry.paceClass !== 'latency') throw new KernelError('E-PACE-UNCLASSIFIED', {}, `due_kind paceClass ${JSON.stringify(kindEntry.paceClass)}`);
+  if (kindEntry.paceClass === PACE.equilibrium) return delay;
+  if (kindEntry.paceClass !== PACE.latency) throw new KernelError('E-PACE-UNCLASSIFIED', {}, `due_kind paceClass ${JSON.stringify(kindEntry.paceClass)}`);
   const f = isObj(clock) ? clock.paceFactor : undefined;
   if (!isObj(f) || !Number.isSafeInteger(f.num) || !Number.isSafeInteger(f.den) || f.num < 1 || f.den < 1) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'rules.clock.paceFactor: want {num >= 1, den >= 1}');
   if (kindEntry.floorRX !== null) throw new Error('kernel/scheduler.mjs enqueueDelay: floorRX evaluation pending the first latency due_kind with a floor');
@@ -400,7 +403,7 @@ export function dueSource(engine, io) {
       return h.length ? Math.max(h[0].dueMinute, after + 1) : null;
     },
     items(state, minute, stage) {
-      if (stage !== 'due') return [];
+      if (stage !== STAGE.due) return [];
       const h = heapOf(state);
       const out = [];
       const seen = new Set();
@@ -478,7 +481,7 @@ export function hookSource(engine, decl, plan) {
       return Math.min(...rows.map((r) => nextBeat(after, r.cadence, r.offset)));
     },
     items(_state, minute, stage) {
-      if (stage !== 'clock') return [];
+      if (stage !== STAGE.clock) return [];
       const out = [];
       for (const r of rows) {
         if ((((minute - r.offset) % r.cadence) + r.cadence) % r.cadence !== 0) continue;
@@ -582,7 +585,7 @@ function runTick(engine, state, t, sources) {
     const done = [];
     for (const stage of TICK_STAGE) {
       const rank = stageRank(stage);
-      if (stage === 'reaction') {
+      if (stage === STAGE.reaction) {
         const r = runReactions(engine, state, t, sources, done, rank);
         if (!r.ok) { abandon(); if (r.report) report(r.code, r.report); return r.result; }
         continue;

@@ -9,7 +9,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { parseJsonStrict } from './json-text.mjs';
-import { checkDef, checkValue, rangeOk, DOMAIN_OPTIONAL, TYPES, KEY_RE, CODE_RE, CODE_ENUMS } from '../validate/types.mjs';
+import { checkDef, checkValue, rangeOk, DOMAIN_OPTIONAL, TYPES, KEY_RE, CODE_RE, CODE_ENUMS, T, markersOf } from '../validate/types.mjs';
 import { STACKING } from '../validate/dimensions-validate.mjs';
 import { isRuleTableFile } from '../handles/keys.mjs';
 import { escapeJsonPointer, keyPointerOf } from './vocab-load.mjs';
@@ -21,12 +21,15 @@ export const RULES_LAYOUT = Object.freeze({ dir: 'world/rules', registry: 'regis
 const REG_FIELDS = ['code', 'file', 'structure', 'type', 'domain', 'volume', 'multiSourceMerge', 'packOverridable'];
 // 规则表文件：{"rows": [{key, value, …出处字段}]}；出处字段只记来源，不参与取值。
 const ROW_FIELDS = ['key', 'value', 'source', 'file', 'grade', 'basis'];
+// 行表字段句柄：成员由上面的 ROW_FIELDS 派生。
+const ROW_FIELD = markersOf('rules_row_field', ROW_FIELDS);
+const numericOrEnum = (d) => d.type === T.type.number || d.type === T.type.integer || d.type === T.type.enum;
 // 代码内封闭枚举 multi_source_merge（卷二十八 §2.1 :139–142）与各值适用的值类型（§2.11 :280）。
 const MERGE = Object.freeze({
   own_key_only: () => true,
-  all_and: (d) => d.type === 'boolean' || (d.type === 'struct' && isObj(d.fields) && Object.values(d.fields).every((f) => isObj(f) && f.type === 'boolean')),
-  take_min: (d) => ['number', 'integer', 'enum'].includes(d.type),
-  take_max: (d) => ['number', 'integer', 'enum'].includes(d.type),
+  all_and: (d) => d.type === T.type.boolean || (d.type === T.type.struct && isObj(d.fields) && Object.values(d.fields).every((f) => isObj(f) && f.type === T.type.boolean)),
+  take_min: numericOrEnum,
+  take_max: numericOrEnum,
 });
 // 独立格式：过程主体槽（卷二 §3.7 slots/consumers 嵌套格式；李白 11-18 块 2-5 裁定①）。登记行按文件登记，
 // 不写 type/domain（格式由 §3.7 定），packOverridable 写一个布尔；表值由下面的专用校验读，修正键是 process.<slot>（§3.1 :1291 额外命名空间）。
@@ -137,7 +140,7 @@ function readTable(root, t, errors) {
     if (!isObj(row) || typeof row.key !== 'string' || !Object.hasOwn(row, 'value')) return err(String(i), path, row, '{key, value}');
     for (const f of Object.keys(row).sort()) {
       if (!ROW_FIELDS.includes(f)) err(row.key, `${path}/${f}`, f, ROW_FIELDS.join('|'));
-      else if (f !== 'key' && f !== 'value' && typeof row[f] !== 'string') err(row.key, `${path}/${f}`, row[f], 'string');
+      else if (f !== ROW_FIELD.key && f !== ROW_FIELD.value && typeof row[f] !== 'string') err(row.key, `${path}/${f}`, row[f], 'string');
     }
     if (seen.has(row.key)) return err(row.key, `${path}/key`, row.key, 'unique key', 'E-DIM-DUPLICATE-KEY', 'L0');
     seen.add(row.key);
