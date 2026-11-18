@@ -17,7 +17,7 @@ import { canonical, pathTypeOf, pathTypeHasDeeper, pathTypeRecords, isSealedValu
 import { statePathSegments } from './handles/keys.mjs';
 import { KernelError, codeOf } from './errors.mjs';
 import { clone } from './clone.mjs';
-import { readManifestDigests } from './load/save.mjs';
+import { readManifestDigests, checkManifest } from './load/save.mjs';
 
 // ---------- 存档布局的名字（S27-7：只在本文件与 kernel/load/save.mjs 出现） ----------
 
@@ -487,7 +487,8 @@ export function saveToSlot({ root, slot, book, doc, rulesDigest, clockMinute }) 
       written++;
     }
     const cur = join(dir, LAYOUT_NAMES.current);
-    if (existsSync(cur)) renameSync(cur, join(dir, LAYOUT_NAMES.previous));
+    // 当前清单完好才改名为上一个清单；残缺的不改名，保留原来那份完好的上一个清单（R27-4.8、A27-4.4）。
+    if (existsSync(cur) && checkManifest(dir, LAYOUT_NAMES.current).state === 'ok') renameSync(cur, join(dir, LAYOUT_NAMES.previous));
     atomicJSON(cur, manifest);
   } catch (e) {
     if (codeOf(e) !== null) throw e;
