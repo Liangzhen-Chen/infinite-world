@@ -42,8 +42,8 @@ test('真实 state-owners.json：合并零错；loadWorld 通过后 V、E、P �
   assert.ok(Object.keys(V).length > 0);
   assert.equal(E.E_WRITER_DUPLICATE, 'E-WRITER-DUPLICATE');
   assert.equal(E.E_PHASE_DUPLICATE, 'E-PHASE-DUPLICATE');
-  // clock.minute、clock.seq（写者 kernel/scheduler.mjs，块 4-1；卷二十 §3.2 :444）、due.*（块 4-2，:445）生成 P。
-  assert.deepEqual(Object.keys(P), ['clock_minute', 'clock_seq', 'created_props', 'created_props_basis', 'displayNames_seq', 'due', 'pendingPost', 'terminated']);
+  // clock.minute、clock.seq（写者 kernel/scheduler.mjs，块 4-1；卷二十 §3.2 :444）、due.*（块 4-2，:445）、clock.dueNext（句柄计数器，李白 11-18 03:31）生成 P。
+  assert.deepEqual(Object.keys(P), ['clock_dueNext', 'clock_minute', 'clock_seq', 'created_props', 'created_props_basis', 'displayNames_seq', 'due', 'pendingPost', 'terminated']);
   assert.equal(P.created_props('mat_x', 'density'), 'created.mat_x.props.density');
   assert.equal(P.terminated('npc_x'), 'terminated.npc_x');
   assert.equal(P.displayNames_text, undefined);

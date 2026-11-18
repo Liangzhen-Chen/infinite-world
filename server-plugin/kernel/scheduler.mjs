@@ -19,13 +19,16 @@
 
 import { KernelError } from './errors.mjs';
 import { checkValue } from './validate/types.mjs';
+const HANDLE_PREFIX = 'due_';
+// 句柄序号的 base36 小写：基数即数字加小写字母这一套字符的个数（李白 11-18 03:31 裁定 2），由字符集取，不另写字面量。
+const BASE36_DIGITS = '0123456789abcdefghijklmnopqrstuvwxyz';
 import { readPath, writePath } from './storage.mjs';
 import { P } from './handles/generated.mjs';
 import { runTransaction, openTickJournal, closeTickJournal, rollbackTickJournal, currentTransaction } from './transaction.mjs';
 import { invalidateMemo } from './memo.mjs';
 import { report } from './report.mjs';
 import { registry } from './vocab.mjs';
-import { runtimeHandle, isRuntimeHandle } from './load/state-owners.mjs';
+import { CODE_RE } from './validate/types.mjs';
 import { advanceHook, advanceHookNames } from './advance-registry.mjs';
 
 // ---------- 代码内封闭枚举（卷二十 §8 问题 5 :1318 列为代码内封闭、不登卷二） ----------
@@ -46,6 +49,8 @@ const SCHEMA = Object.freeze({
   countKey: 'proposalMax',
   // 到期堆的状态顶层键（§3.2 :445 `due.*`，元素 struct:dueItem）。
   dueKey: 'due',
+  clockKey: 'clock',
+  dueNextField: 'dueNext',
   dueKind: 'due_kind',
   dueFields: Object.freeze(['calendarBound', 'floorRX', 'paceClass', 'rank']),
   reactionPriority: 'reaction_priority',
@@ -319,8 +324,9 @@ function txOrDeny(what) {
 /**
  * kernelApi `schedule(owner, kind, delayMinutes, ref)`：在当前事务里登记一个到期项，返回它的句柄（cancel 用；即 due.* 的 `*` 段，keyKinds `handle`）。
  * dueMinute = 当前分钟 + 入堆延迟（enqueueDelay）；registeredMinute = 当前分钟。同一 (owner, kind, ref) 至多一项，重复即 E-DUE-DUPLICATE（§4.1.1）；
- * kind 不是 due_kind 条目即 E-DUE-UNDECLARED；owner、ref 不合代号文法即 E-DIM-ID-FORMAT。句柄由 kind、owner、ref 三个代号拼成（state-owners.mjs runtimeHandle），
- * 无登记序号（§4.1.1"不需要任何登记序号来区分"）。被拒即整笔回滚。
+ * kind 不是 due_kind 条目即 E-DUE-UNDECLARED；owner、ref 不合代号文法即 E-DIM-ID-FORMAT。句柄 = 'due_' + 世界状态里计数器 clock.dueNext 的 base36 小写值，
+ * 随后计数器加 1（只增不回收，cancel 后不复用；计数器随存档走，同一存档重放得同一句柄；李白 11-18 03:31 裁定 2）。
+ * 重复判断不靠句柄：按 (owner, kind, ref) 三项扫 due 行（§4.1.1 :483）。被拒即整笔回滚（计数器也回滚）。
  * @param {string} owner @param {string} kind @param {number} delayMinutes @param {string} ref
  * @returns {string}
  */
@@ -329,22 +335,26 @@ export function schedule(owner, kind, delayMinutes, ref) {
   try {
     const rec = typeof kind === 'string' ? registry().vocabIndex.get(kind) : undefined;
     if (!rec || rec.family !== SCHEMA.dueKind) throw new KernelError('E-DUE-UNDECLARED', {}, `schedule: ${JSON.stringify(kind)} is not a ${SCHEMA.dueKind} entry`);
-    const handle = runtimeHandleOf([kind, owner, ref]);
+    for (const [what, v] of [['owner', owner], ['ref', ref]]) {
+      if (typeof v !== 'string' || !CODE_RE.test(v)) throw new KernelError('E-DIM-ID-FORMAT', {}, `schedule: ${what} ${JSON.stringify(v)} is not a code (vol2 s1.9 code grammar)`);
+    }
     const delay = enqueueDelay(clockTable(), rec.entry, delayMinutes);
     const now = clockField(tx.state, P.clock_minute());
     const dueMinute = now + delay;
     if (!Number.isSafeInteger(dueMinute)) throw new KernelError('E-DIM-DOMAIN-RANGE', {}, 'schedule: due minute out of safe integer range');
-    if (Object.hasOwn(dueRows(tx.state), handle)) throw new KernelError('E-DUE-DUPLICATE', { entity: owner }, `schedule: (${owner}, ${kind}, ${ref}) already in the due heap`);
+    for (const row of Object.values(dueRows(tx.state))) {
+      if (row.owner === owner && row.kind === kind && row.ref === ref) throw new KernelError('E-DUE-DUPLICATE', { entity: owner }, `schedule: (${owner}, ${kind}, ${ref}) already in the due heap`);
+    }
+    const next = readPath(tx.state, P.clock_dueNext()) ?? 0;
+    if (!Number.isSafeInteger(next) || next < 0) throw new KernelError('E-DIM-DOMAIN-RANGE', {}, 'schedule: clock.dueNext is not a non-negative integer');
+    const handle = `${HANDLE_PREFIX}${next.toString([...BASE36_DIGITS].length)}`;
+    txSet(tx, [SCHEMA.clockKey, SCHEMA.dueNextField], next + 1);
     txSet(tx, [SCHEMA.dueKey, handle], { dueMinute, kind, owner, ref, registeredMinute: now });
     if (heaps.has(tx.state)) heapPush(heaps.get(tx.state), { handle, dueMinute, registeredMinute: now });
     return handle;
   } catch (e) {
     throw (typeof e.code === 'string' ? denied(e) : e);
   }
-}
-
-function runtimeHandleOf(parts) {
-  try { return runtimeHandle(parts); } catch (e) { throw new KernelError('E-DIM-ID-FORMAT', {}, e.message); }
 }
 
 /**
@@ -355,7 +365,7 @@ function runtimeHandleOf(parts) {
  */
 export function cancel(handle) {
   const tx = txOrDeny('cancel');
-  if (!isRuntimeHandle(handle)) throw denied(new KernelError('E-DIM-ID-FORMAT', {}, `cancel: ${JSON.stringify(handle)} is not a runtime handle`));
+  if (typeof handle !== 'string' || !CODE_RE.test(handle)) throw denied(new KernelError('E-DIM-ID-FORMAT', {}, `cancel: ${JSON.stringify(handle)} is not a runtime handle`));
   if (!Object.hasOwn(dueRows(tx.state), handle)) throw denied(new KernelError('E-DIM-REF-MISSING', {}, `cancel: no due item ${handle}`));
   txSet(tx, [SCHEMA.dueKey, handle], undefined);
 }

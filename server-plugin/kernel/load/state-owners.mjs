@@ -6,7 +6,7 @@
 
 import { buildE, buildP } from '../handles/generated.mjs';
 import { checkPathPattern } from '../handles/keys.mjs';
-import { errorCodeOf, HandleError, CODE_RE } from '../handles/vocab-handle.mjs';
+import { errorCodeOf, HandleError } from '../handles/vocab-handle.mjs';
 
 const E = buildE();
 
@@ -37,26 +37,7 @@ export const KEY_DIMKEY = 'dimKey';
 export const KEY_HANDLE = 'handle';
 export const KEY_NONENTITY = Object.freeze(['event', KEY_DIMKEY, 'identityKey', KEY_HANDLE]);
 
-// 运行时句柄段的文法（keyKinds (c) 项 handle 的格式核对；李白 11-18 03:22 裁定②"按句柄文法核格式"）：
-// 由生成它的内核文件把若干个代号（每个合 2-1 句柄代号文法 CODE_RE，kernel/handles/vocab-handle.mjs，不另写）以 HANDLE_JOIN 相连；
-// HANDLE_JOIN 不在代号字符集里，所以拆回各段无歧义；不含 `.`，所以整串是一个路径段。
-export const HANDLE_JOIN = '-';
-
-/** 运行时句柄：非空串，按 HANDLE_JOIN 拆开的每段都合 CODE_RE。 @param {unknown} s @returns {boolean} */
-export function isRuntimeHandle(s) {
-  return typeof s === 'string' && s.split(HANDLE_JOIN).every((p) => CODE_RE.test(p));
-}
-
-/**
- * 由若干代号拼运行时句柄（生成句柄的内核文件用，如 kernel/scheduler.mjs 的到期项句柄）；任一段不合 CODE_RE 即 E-DIM-ID-FORMAT。
- * @param {string[]} parts
- * @returns {string}
- */
-export function runtimeHandle(parts) {
-  if (!Array.isArray(parts) || parts.length === 0) throw new HandleError('E-DIM-ID-FORMAT', 'runtime handle: want a non-empty list of codes');
-  for (const p of parts) if (typeof p !== 'string' || !CODE_RE.test(p)) throw new HandleError('E-DIM-ID-FORMAT', `runtime handle part ${JSON.stringify(p)}: want ^[a-z][a-z0-9_]{1,47}$`);
-  return parts.join(HANDLE_JOIN);
-}
+// handle 类的格式即卷二 §1.9 代号文法 CODE_RE（kernel/validate/types.mjs，不另立文法；李白 11-18 03:31 裁定 1）；生成句柄的内核文件自管形状（scheduler.mjs 的 due_＋序号）。
 // 去留表覆盖核对豁免的协议键顶层段（卷二 §2.6 :519"账户、holdings、statuses、modifiers、terminated、到期堆"；到期堆的键 `due` 见卷二十 :445）。账户由账本写者判（ledgerPaths）。
 const PROTOCOL_KEYS = new Set(['holdings', 'statuses', 'modifiers', 'terminated', 'due']);
 

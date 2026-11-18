@@ -9,7 +9,7 @@ import { readFileSync, rmSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
-import { mergeStateOwners, isRuntimeHandle, runtimeHandle, KEY_NONENTITY } from '../../server-plugin/kernel/load/state-owners.mjs';
+import { mergeStateOwners, KEY_NONENTITY } from '../../server-plugin/kernel/load/state-owners.mjs';
 import { useReportSink } from '../../server-plugin/kernel/report.mjs';
 import { writePath } from '../../server-plugin/kernel/storage.mjs';
 import { runTransaction } from '../../server-plugin/kernel/transaction.mjs';
@@ -35,13 +35,54 @@ function dues(log, extra = () => {}) {
 
 // ---------- struct:dueItem 与 schedule ----------
 
-test('schedule 在事务里写 due.<句柄> = struct:dueItem 五字段；句柄由 kind、owner、ref 三段拼成；均衡类不缩放', () => {
+test('schedule 在事务里写 due.<句柄> = struct:dueItem 五字段；句柄 = due_＋计数器 clock.dueNext 的 base36 小写；均衡类不缩放', () => {
   const state = { clock: { minute: 100, seq: 0 } };
   let h;
   assert.deepEqual(tx(state, () => { h = schedule('npc_b', 'due_recurrence', 10, 'ref_1'); }), { ok: true });
-  assert.equal(h, 'due_recurrence-npc_b-ref_1');
-  assert.deepEqual(state.due, { 'due_recurrence-npc_b-ref_1': { dueMinute: 110, kind: 'due_recurrence', owner: 'npc_b', ref: 'ref_1', registeredMinute: 100 } });
+  assert.equal(h, 'due_0');
+  assert.deepEqual(state.due, { due_0: { dueMinute: 110, kind: 'due_recurrence', owner: 'npc_b', ref: 'ref_1', registeredMinute: 100 } });
   assert.deepEqual(Object.keys(state.due[h]).sort(), ['dueMinute', 'kind', 'owner', 'ref', 'registeredMinute']);
+  assert.equal(state.clock.dueNext, 1);
+});
+
+test('句柄手算字面量：第 1 个 due_0、第 11 个 due_a、第 36 个 due_z、第 37 个 due_10；cancel 后再 schedule 不复用旧句柄', () => {
+  const state = { clock: { minute: 0, seq: 0 } };
+  const got = [];
+  tx(state, () => { for (let i = 0; i < 37; i++) got.push(schedule('npc_a', 'due_recurrence', 5, `ref_${i}`)); });
+  assert.deepEqual([got[0], got[10], got[35], got[36]], ['due_0', 'due_a', 'due_z', 'due_10']);
+  assert.equal(state.clock.dueNext, 37);
+  tx(state, () => { cancel('due_10'); });
+  let again;
+  tx(state, () => { again = schedule('npc_a', 'due_recurrence', 5, 'ref_36'); });
+  assert.equal(again, 'due_11');
+  assert.equal(Object.hasOwn(state.due, 'due_10'), false);
+});
+
+test('同一存档重放得同一句柄：计数器随状态走，存档往返（JSON 序列化再读回）后继续 schedule 与不往返的得到相同句柄', () => {
+  const a = { clock: { minute: 0, seq: 0 } };
+  tx(a, () => { schedule('npc_a', 'due_recurrence', 5, 'ref_1'); schedule('npc_a', 'due_recurrence', 6, 'ref_2'); });
+  const b = JSON.parse(JSON.stringify(a));
+  let ha, hb;
+  tx(a, () => { ha = schedule('npc_b', 'due_recurrence', 5, 'ref_1'); });
+  tx(b, () => { hb = schedule('npc_b', 'due_recurrence', 5, 'ref_1'); });
+  assert.equal(ha, 'due_2');
+  assert.equal(hb, 'due_2');
+  assert.deepEqual(a, b);
+});
+
+test('重复登记按 (owner, kind, ref) 三项判，不看句柄：三项任一不同即可并存，三项全同即使句柄不同也 E-DUE-DUPLICATE', () => {
+  quiet(() => {
+    const state = { clock: { minute: 0, seq: 0 } };
+    assert.deepEqual(tx(state, () => {
+      schedule('npc_a', 'due_recurrence', 5, 'ref_1');
+      schedule('npc_b', 'due_recurrence', 5, 'ref_1');
+      schedule('npc_a', 'due_revive_window', 5, 'ref_1');
+      schedule('npc_a', 'due_recurrence', 5, 'ref_2');
+    }), { ok: true });
+    assert.deepEqual(Object.keys(state.due), ['due_0', 'due_1', 'due_2', 'due_3']);
+    assert.deepEqual(tx(state, () => { schedule('npc_b', 'due_recurrence', 9, 'ref_1'); }), { ok: false, code: 'E-DUE-DUPLICATE' });
+    assert.equal(state.clock.dueNext, 4);
+  });
 });
 
 test('schedule 被拒即整笔回滚：同一 (owner, kind, ref) 重复 E-DUE-DUPLICATE、kind 不是 due_kind E-DUE-UNDECLARED、延迟 < 1 E-DIM-DOMAIN-RANGE、代号不合 E-DIM-ID-FORMAT；规则层 catch 住也回滚', () => {
@@ -53,7 +94,8 @@ test('schedule 被拒即整笔回滚：同一 (owner, kind, ref) 重复 E-DUE-DU
     assert.deepEqual(tx(state, () => { schedule('npc_a', 'due_recurrence', 0, 'ref_2'); }), { ok: false, code: 'E-DIM-DOMAIN-RANGE' });
     assert.deepEqual(tx(state, () => { schedule('NPC-A', 'due_recurrence', 5, 'ref_2'); }), { ok: false, code: 'E-DIM-ID-FORMAT' });
     assert.deepEqual(tx(state, () => { schedule('npc_a', 'due_recurrence', 5, 'ref_2'); try { schedule('npc_a', 'due_recurrence', 5, 'ref_2'); } catch { /* 吞掉也回滚 */ } }), { ok: false, code: 'E-DUE-DUPLICATE' });
-    assert.deepEqual(Object.keys(state.due), ['due_recurrence-npc_a-ref_1']);
+    assert.deepEqual(Object.keys(state.due), ['due_0']);
+    assert.equal(state.clock.dueNext, 1); // 被拒的 schedule 连计数器一并回滚
   });
 });
 
@@ -69,7 +111,7 @@ test('到期堆：先按 dueMinute，同刻按 (due_kind.rank, layerRank, owner,
     assert.deepEqual(advance(ENGINE, state, 20, [dues(log)]), { ok: true, minute: 120 });
     assert.deepEqual(log, want);
     assert.deepEqual(state.due, {});
-    assert.deepEqual(state.clock, { minute: 120, seq: 0 });
+    assert.deepEqual(state.clock, { minute: 120, seq: 0, dueNext: 4 });
   }
 });
 
@@ -80,22 +122,24 @@ test('到期堆：推进到目标前未到期的留在堆里；分两次推进�
   const src = dues(log);
   assert.deepEqual(advance(ENGINE, state, 10, [src]), { ok: true, minute: 10 });
   assert.deepEqual(log, [[3, 'due_recurrence', 'npc_a', 'ref_1']]);
-  assert.deepEqual(Object.keys(state.due), ['due_recurrence-npc_a-ref_2']);
+  assert.deepEqual(Object.keys(state.due), ['due_1']);
   assert.deepEqual(advance(ENGINE, state, 20, [src]), { ok: true, minute: 30 });
   assert.deepEqual(log, [[3, 'due_recurrence', 'npc_a', 'ref_1'], [30, 'due_recurrence', 'npc_a', 'ref_2']]);
 });
 
 // ---------- cancel 与墓碑 ----------
 
-test('cancel 只删状态行，堆里旧项成墓碑、弹出时丢弃；取消后同句柄再登记只按新时刻到期一次', () => {
+test('cancel 只删状态行，堆里旧项成墓碑、弹出时丢弃；取消后同三项再登记得新句柄、只按新时刻到期一次', () => {
   const state = { clock: { minute: 0, seq: 0 } };
   const log = [];
   const src = dues(log);
   tx(state, () => { schedule('npc_a', 'due_recurrence', 5, 'ref_1'); schedule('npc_b', 'due_recurrence', 5, 'ref_1'); });
   assert.equal(src.next(state, 0), 5); // 堆已从状态建起
-  assert.deepEqual(tx(state, () => { cancel('due_recurrence-npc_a-ref_1'); }), { ok: true });
-  assert.deepEqual(Object.keys(state.due), ['due_recurrence-npc_b-ref_1']);
-  assert.deepEqual(tx(state, () => { schedule('npc_a', 'due_recurrence', 8, 'ref_1'); }), { ok: true });
+  assert.deepEqual(tx(state, () => { cancel('due_0'); }), { ok: true });
+  assert.deepEqual(Object.keys(state.due), ['due_1']);
+  let again;
+  assert.deepEqual(tx(state, () => { again = schedule('npc_a', 'due_recurrence', 8, 'ref_1'); }), { ok: true });
+  assert.equal(again, 'due_2'); // 不复用已取消的 due_0
   assert.deepEqual(advance(ENGINE, state, 10, [src]), { ok: true, minute: 10 });
   assert.deepEqual(log, [[5, 'due_recurrence', 'npc_b', 'ref_1'], [8, 'due_recurrence', 'npc_a', 'ref_1']]);
   assert.deepEqual(state.due, {});
@@ -105,7 +149,7 @@ test('同刻先执行的到期项取消了后一项：后一项成墓碑，不�
   const state = { clock: { minute: 0, seq: 0 } };
   const log = [];
   tx(state, () => { schedule('npc_a', 'due_revive_window', 4, 'ref_1'); schedule('npc_b', 'due_recurrence', 4, 'ref_1'); });
-  const src = dues(log, (_st, item) => { if (item.owner === 'npc_a') cancel('due_recurrence-npc_b-ref_1'); });
+  const src = dues(log, (_st, item) => { if (item.owner === 'npc_a') cancel('due_1'); });
   assert.deepEqual(advance(ENGINE, state, 4, [src]), { ok: true, minute: 4 });
   assert.deepEqual(log, [[4, 'due_revive_window', 'npc_a', 'ref_1']]);
   assert.deepEqual(state.due, {});
@@ -116,9 +160,9 @@ test('cancel 被拒：句柄不合运行时句柄文法 E-DIM-ID-FORMAT、堆里
     const state = { clock: { minute: 0, seq: 0 } };
     tx(state, () => { schedule('npc_a', 'due_recurrence', 5, 'ref_1'); });
     assert.deepEqual(tx(state, () => { cancel('due.recurrence'); }), { ok: false, code: 'E-DIM-ID-FORMAT' });
-    assert.deepEqual(tx(state, () => { cancel('due_recurrence-npc_z-ref_1'); }), { ok: false, code: 'E-DIM-REF-MISSING' });
-    assert.deepEqual(tx(state, () => { cancel('due_recurrence-npc_a-ref_1'); try { cancel('Bad'); } catch { /* 吞掉也回滚 */ } }), { ok: false, code: 'E-DIM-ID-FORMAT' });
-    assert.deepEqual(Object.keys(state.due), ['due_recurrence-npc_a-ref_1']);
+    assert.deepEqual(tx(state, () => { cancel('due_7'); }), { ok: false, code: 'E-DIM-REF-MISSING' });
+    assert.deepEqual(tx(state, () => { cancel('due_0'); try { cancel('Bad'); } catch { /* 吞掉也回滚 */ } }), { ok: false, code: 'E-DIM-ID-FORMAT' });
+    assert.deepEqual(Object.keys(state.due), ['due_0']);
   });
 });
 
@@ -134,12 +178,12 @@ test('整刻作废：到期项发事件时被拒，本刻已出堆的各项连�
     const src = dues(log, (st, item) => { if (broken && item.owner === 'npc_b') writePath(st, 'pendingPost.evt_x', []); });
     assert.deepEqual(advance(ENGINE, state, 9, [src]), { ok: false, code: 'E-VIEW-UNDECLARED-WRITE', tick: 5, stage: 1 });
     assert.deepEqual(log, [[2, 'due_recurrence', 'npc_a', 'ref_0'], [5, 'due_revive_window', 'npc_a', 'ref_1'], [5, 'due_recurrence', 'npc_b', 'ref_2']]);
-    assert.deepEqual(state.clock, { minute: 2, seq: 0 });
-    assert.deepEqual(Object.keys(state.due).sort(), ['due_recurrence-npc_b-ref_2', 'due_revive_window-npc_a-ref_1']);
+    assert.deepEqual(state.clock, { minute: 2, seq: 0, dueNext: 3 });
+    assert.deepEqual(Object.keys(state.due).sort(), ['due_1', 'due_2']);
     assert.deepEqual(reports.map((r) => [r.code, r.fields.tick, r.fields.stage]), [['E-VIEW-UNDECLARED-WRITE', 5, 1]]);
     // 不修：每次推进都停在刻 5（"卡住"的代价，§4.1.3 第 7 条）。
     assert.deepEqual(advance(ENGINE, state, 9, [src]), { ok: false, code: 'E-VIEW-UNDECLARED-WRITE', tick: 5, stage: 1 });
-    assert.deepEqual(state.clock, { minute: 2, seq: 0 });
+    assert.deepEqual(state.clock, { minute: 2, seq: 0, dueNext: 3 });
     broken = false;
     log.length = 0;
     assert.deepEqual(advance(ENGINE, state, 9, [src]), { ok: true, minute: 11 });
@@ -214,7 +258,7 @@ test('单刻反应项累计超 proposalMax（12）：第 13 项所在的代即�
 
 // ---------- keyKinds handle 与运行时句柄文法 ----------
 
-test('keyKinds (c) 封闭清单含 handle；due.* 的 keyKinds 写 [handle]；运行时句柄文法：代号以 - 相连，段不合代号文法即拒', () => {
+test('keyKinds (c) 封闭清单含 handle；due.* 的 keyKinds 写 [handle]；handle 格式即代号文法，不合即拒', () => {
   assert.deepEqual([...KEY_NONENTITY], ['event', 'dimKey', 'identityKey', 'handle']);
   const decl = JSON.parse(readFileSync(join(ROOT, 'world/ontology/state-owners.json'), 'utf8'));
   assert.deepEqual(decl.keyKinds['due.*'], ['handle']);
@@ -224,11 +268,12 @@ test('keyKinds (c) 封闭清单含 handle；due.* 的 keyKinds 写 [handle]；�
   assert.deepEqual(mergeStateOwners(d, { units: new Set(['count']) }).errors, []);
   d.keyKinds['box.*'] = ['Handle'];
   assert.deepEqual(mergeStateOwners(d, { units: new Set(['count']) }).errors.map((e) => e.code), ['E-PATH-KEYKINDS']);
-  for (const ok of ['due_recurrence-npc_a-ref_1', 'ab', 'ab-cd']) assert.equal(isRuntimeHandle(ok), true, ok);
-  for (const bad of ['', 'a', 'Ab-cd', 'ab--cd', 'ab-', 'ab.cd', 'ab cd', 7, null]) assert.equal(isRuntimeHandle(bad), false, String(bad));
-  assert.equal(runtimeHandle(['due_x', 'npc_a']), 'due_x-npc_a');
-  assert.throws(() => runtimeHandle(['due_x', 'NPC']), codeIs('E-DIM-ID-FORMAT'));
-  assert.throws(() => runtimeHandle([]), codeIs('E-DIM-ID-FORMAT'));
+  // handle 类格式即 §1.9 代号文法（李白 11-18 03:31 裁定 1）：不合者 cancel 报 E-DIM-ID-FORMAT。
+  const state = { clock: { minute: 0, seq: 0 } };
+  tx(state, () => { schedule('npc_a', 'due_recurrence', 5, 'ref_1'); });
+  quiet(() => {
+    for (const bad of ['', 'a', 'Due_0', 'due-0', 'due.0', 'due 0', 7, null]) assert.deepEqual(tx(state, () => { cancel(bad); }), { ok: false, code: 'E-DIM-ID-FORMAT' }, String(bad));
+  });
 });
 
 // ---------- 入堆缩放 ----------

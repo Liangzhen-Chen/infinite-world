@@ -257,10 +257,10 @@ test('kernelApi 登记 schedule、cancel、clockView（K4-13）与 createWallTim
     { export: 'kernel/scheduler.mjs#clockView', callers: ['rules'], acceptsState: true },
     { export: 'kernel/scheduler.mjs#createWallTimer', callerFiles: ['index.mjs'], acceptsState: false },
   ]);
-  assert.deepEqual(decl.stateKeys.clock, { readers: [], writers: { minute: 'kernel/scheduler.mjs', seq: 'kernel/scheduler.mjs' } });
+  assert.deepEqual(decl.stateKeys.clock, { readers: [], writers: { minute: 'kernel/scheduler.mjs', seq: 'kernel/scheduler.mjs', dueNext: 'kernel/scheduler.mjs' } });
   assert.equal(decl.pathTypes['clock.minute'], 'integer:minute');
   assert.equal(decl.pathTypes['clock.seq'], 'integer:count');
-  assert.deepEqual(decl.systems['sys.time_env'], { tables: ['clock'], writers: ['clock.minute', 'clock.seq', 'due.*'], entryCallerFiles: {}, entryJudges: [] });
+  assert.deepEqual(decl.systems['sys.time_env'], { tables: ['clock'], writers: ['clock.minute', 'clock.seq', 'clock.dueNext', 'due.*'], entryCallerFiles: {}, entryJudges: [] });
   assert.ok(JSON.parse(readFileSync(join(ROOT, 'server-plugin/kernel/files.json'), 'utf8')).includes('server-plugin/kernel/scheduler.mjs'));
   assert.throws(() => schedule('npc_a', 'due_recurrence', 10, 'ref_1'), codeIs('E-VIEW-UNDECLARED-WRITE'));
   assert.throws(() => cancel('due_recurrence-npc_a-ref_1'), codeIs('E-VIEW-UNDECLARED-WRITE'));

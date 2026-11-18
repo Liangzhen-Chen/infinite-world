@@ -2,7 +2,7 @@
  "version": 1,
  "stateKeys": {
   "accounts": {"readers": [], "writers": {"*": "kernel/ledger.mjs"}},
-  "clock": {"readers": [], "writers": {"minute": "kernel/scheduler.mjs", "seq": "kernel/scheduler.mjs"}},
+  "clock": {"readers": [], "writers": {"minute": "kernel/scheduler.mjs", "seq": "kernel/scheduler.mjs", "dueNext": "kernel/scheduler.mjs"}},
   "due": {"readers": [], "writers": {"*": "kernel/scheduler.mjs"}},
   "created":{"readers": ["dim:*"], "writers": {"*.props.*": "kernel/dimension-writers.mjs", "*.props.basis": "kernel/dimension-writers.mjs"}},
   "displayNames": {"readers": [], "writers": {"*": "ai-gate/naming-gate.mjs"}, "display": ["*.text"]},
@@ -17,7 +17,7 @@
    "sources": {"src_birth": {}, "src_boundary": {}, "src_genesis": {}, "src_issue": {}, "src_regrow": {}, "src_transform": {}},
    "sinks": ["sink_boundary", "sink_consume", "sink_death", "sink_decay", "sink_depart", "sink_loss", "sink_redeem", "sink_seized", "sink_transform"],
    "entryCallerFiles": {}, "entryJudges": []},
-  "sys.time_env": {"tables": ["clock"], "writers": ["clock.minute", "clock.seq", "due.*"], "entryCallerFiles": {}, "entryJudges": []}
+  "sys.time_env": {"tables": ["clock"], "writers": ["clock.minute", "clock.seq", "clock.dueNext", "due.*"], "entryCallerFiles": {}, "entryJudges": []}
  },
  "textPaths": ["displayNames.*.text", "playerNotes.*.text", "narration.*"],
  "textWriters": {"displayNames.*.text": "ai-gate/naming-gate.mjs", "playerNotes.*.text": "ai-gate/note-gate.mjs", "narration.*": "ai-gate/narration-gate.mjs"},
@@ -25,6 +25,7 @@
   "accounts.*": "struct:holderAccounts",
   "clock.minute": "integer:minute",
   "clock.seq": "integer:count",
+  "clock.dueNext": "integer:count",
   "due.*": "struct:dueItem",
   "created.*.props.*": "dimension",
   "created.*.props.basis": "struct:basis",
