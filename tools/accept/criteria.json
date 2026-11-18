@@ -92,10 +92,14 @@
     {
      "ref": "块 3-2 加卷六账本六码（勘误 1118k7 码表）：码表闭包变化，口径不变",
      "rev": 11
+    },
+    {
+     "ref": "块 3-2 续加 E-LEDGER-USEDBYDAY-ORDER、E-LEDGER-HOLDER-NOT-SUBJECT（勘误 1118k8 码表）：码表闭包变化，口径不变",
+     "rev": 12
     }
    ],
-   "print": "18c363ceb133e84e185f49be739ae96b69001908f26e00c8d524021500a1971d",
-   "rev": 11,
+   "print": "c6fbf329c7b6c2464fbe0310fbc93f8400d5a085c1cdcb199cc9f95bc2302064",
+   "rev": 12,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -498,10 +502,14 @@
     {
      "ref": "块 3-2 加卷六账本六码（勘误 1118k7 码表）：码表闭包变化，口径不变",
      "rev": 13
+    },
+    {
+     "ref": "块 3-2 续加 E-LEDGER-USEDBYDAY-ORDER、E-LEDGER-HOLDER-NOT-SUBJECT（勘误 1118k8 码表）：码表闭包变化，口径不变",
+     "rev": 14
     }
    ],
-   "print": "b15ad63ce3e061072d789412a040a071ca9a31dc2ba7d3312ae5319230319389",
-   "rev": 13,
+   "print": "942a20bf0c180fe98b038cc93a674f8bbeccb2ca1496508d4a1a5ee3f3982402",
+   "rev": 14,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1068,10 +1076,14 @@
     {
      "ref": "块 3-2 加卷六账本六码（勘误 1118k7 码表）：码表闭包变化，口径不变",
      "rev": 19
+    },
+    {
+     "ref": "块 3-2 续加 E-LEDGER-USEDBYDAY-ORDER、E-LEDGER-HOLDER-NOT-SUBJECT（勘误 1118k8 码表）：码表闭包变化，口径不变",
+     "rev": 20
     }
    ],
-   "print": "f5ebd532c9d7eb7876d549a3a7ce22daa971985f10e86374cf6a20df2e64037c",
-   "rev": 19,
+   "print": "f77033ed4e046c479b462def1c36ebe2204c3e650c8266cdbaedd623be5d4895",
+   "rev": 20,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1214,10 +1226,14 @@
     {
      "ref": "块 3-2 加卷六账本六码（勘误 1118k7 码表）：码表闭包变化，口径不变",
      "rev": 9
+    },
+    {
+     "ref": "块 3-2 续加 E-LEDGER-USEDBYDAY-ORDER、E-LEDGER-HOLDER-NOT-SUBJECT（勘误 1118k8 码表）：码表闭包变化，口径不变",
+     "rev": 10
     }
    ],
-   "print": "18c363ceb133e84e185f49be739ae96b69001908f26e00c8d524021500a1971d",
-   "rev": 9,
+   "print": "c6fbf329c7b6c2464fbe0310fbc93f8400d5a085c1cdcb199cc9f95bc2302064",
+   "rev": 10,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
