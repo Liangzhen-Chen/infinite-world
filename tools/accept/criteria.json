@@ -88,10 +88,14 @@
     {
      "ref": "块 4-2 加 E-CLOCK-REACTION-LIMIT（李白 11-18 03:22 裁定①）：码表闭包变化，口径不变",
      "rev": 10
+    },
+    {
+     "ref": "块 3-2 加卷六账本六码（勘误 1118k7 码表）：码表闭包变化，口径不变",
+     "rev": 11
     }
    ],
-   "print": "3a6f9c463e73117591658fde2028d31955a512e55ea211c4319fb7dd91bbc83f",
-   "rev": 10,
+   "print": "18c363ceb133e84e185f49be739ae96b69001908f26e00c8d524021500a1971d",
+   "rev": 11,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -490,10 +494,14 @@
     {
      "ref": "块 4-2 加 E-CLOCK-REACTION-LIMIT（李白 11-18 03:22 裁定①）：码表闭包变化，口径不变",
      "rev": 12
+    },
+    {
+     "ref": "块 3-2 加卷六账本六码（勘误 1118k7 码表）：码表闭包变化，口径不变",
+     "rev": 13
     }
    ],
-   "print": "a0f31b6e591bb458d1401724d3a41d1ebba8b7e784de36ca84ed41a41d873023",
-   "rev": 12,
+   "print": "b15ad63ce3e061072d789412a040a071ca9a31dc2ba7d3312ae5319230319389",
+   "rev": 13,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1056,10 +1064,14 @@
     {
      "ref": "块 4-2 加 E-CLOCK-REACTION-LIMIT（李白 11-18 03:22 裁定①）：码表闭包变化，口径不变",
      "rev": 18
+    },
+    {
+     "ref": "块 3-2 加卷六账本六码（勘误 1118k7 码表）：码表闭包变化，口径不变",
+     "rev": 19
     }
    ],
-   "print": "cb3a6c6670c72138fdfb56c9d5c3f562708cf656ef440fcaf0c2c2858c153db1",
-   "rev": 18,
+   "print": "f5ebd532c9d7eb7876d549a3a7ce22daa971985f10e86374cf6a20df2e64037c",
+   "rev": 19,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -1198,10 +1210,14 @@
     {
      "ref": "块 4-2 加 E-CLOCK-REACTION-LIMIT（李白 11-18 03:22 裁定①）：码表闭包变化，口径不变",
      "rev": 8
+    },
+    {
+     "ref": "块 3-2 加卷六账本六码（勘误 1118k7 码表）：码表闭包变化，口径不变",
+     "rev": 9
     }
    ],
-   "print": "3a6f9c463e73117591658fde2028d31955a512e55ea211c4319fb7dd91bbc83f",
-   "rev": 8,
+   "print": "18c363ceb133e84e185f49be739ae96b69001908f26e00c8d524021500a1971d",
+   "rev": 9,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
