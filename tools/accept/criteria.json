@@ -193,6 +193,22 @@
       "pre_merge"
      ],
      "stage": 0
+    },
+    "vol6.S6-1": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol6.S6-8": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
     }
    }
   },

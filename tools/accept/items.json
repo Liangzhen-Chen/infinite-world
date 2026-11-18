@@ -3073,6 +3073,228 @@
    "target": "runtime_code",
    "volume": "vol2",
    "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol6.A6-1.2.a",
+   "localNo": "A6-1.2",
+   "method": "property_test",
+   "part": "a",
+   "parts": [
+    "a",
+    "b",
+    "c"
+   ],
+   "print": "032a096148b9db9463a45a8e9317875978fcfc71ff6967336df1938da15b9280",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-b3-3",
+     "date": "2026-11-18",
+     "rev": 1,
+     "summary": "首次登记（块 3 第 3-3 张：I1′ 守恒、I15′ 三元键，含改坏存档反例）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷六 §4.1.6 A6-1.2 :399 守恒式整数相等（§4.1 规则 4 :362）与三元键唯一存法（规则 1 :355）；方案 §3.3 I1′ :367、I15′ :369；测试 tests/kernel/ledger-invariants.test.mjs（I1′、I15′ 各条），审计入口 kernel/ledger.mjs auditLedger",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol6",
+   "zeroRows": [
+    "5.1",
+    "5.19",
+    "17.4"
+   ]
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol6.A6-1.2.b",
+   "localNo": "A6-1.2",
+   "method": "property_test",
+   "part": "b",
+   "parts": [
+    "a",
+    "b",
+    "c"
+   ],
+   "print": "30e62a80de3319e89835bd2c6cb7859fba765d3c289941996073fd201312866a",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-b3-3",
+     "date": "2026-11-18",
+     "rev": 1,
+     "summary": "首次登记（块 3 第 3-3 张：I2′ 非负，含反例）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷六 §4.1.6 A6-1.2 :399 所有余额非负（§4.1 规则 2 :356）；方案 §3.3 I2′ :368；测试 tests/kernel/ledger-invariants.test.mjs（I2′ 各条）",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol6",
+   "zeroRows": [
+    "5.1",
+    "17.4"
+   ]
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol6.A6-1.2.c",
+   "localNo": "A6-1.2",
+   "method": "property_test",
+   "part": "c",
+   "parts": [
+    "a",
+    "b",
+    "c"
+   ],
+   "print": "201b6e81ee52d4fff852520c527cd6d76fc70acd0bb4197345539d36008234a4",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-b3-3",
+     "date": "2026-11-18",
+     "rev": 1,
+     "summary": "首次登记（块 3 第 3-3 张：分段推进逐位相同、outflowTotals、打乱同日申请次序分配不变）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷六 §4.1.6 A6-1.2 :399 账本部分：分段推进 accounts、ledgerTotals、outflowTotals 逐位相同，outflowTotals 只增且等于减量腿之和、trackOutflow 为假无键（规则 13 :384），打乱同日申请次序限额通道分配不变（规则 6 :376）；测试 tests/kernel/ledger-invariants.test.mjs、tests/kernel/ledger-capped.test.mjs。建筑明细对平、issuerBacked、已终止实体余额为零不在本部分（块 3 体检第三节第 9、10 条，K3-44）",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol6",
+   "zeroRows": [
+    "5.1",
+    "17.4"
+   ]
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol6.A6-1.3",
+   "localNo": "A6-1.3",
+   "method": "scenario_run",
+   "print": "0d08303a8b925bba656e8a369bb1020a0e617588895db391e058c705f4c36974",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "api-b3-3",
+     "date": "2026-11-18",
+     "rev": 1,
+     "summary": "首次登记（块 3 第 3-3 张：新增资源种类行与来源去处代号不改代码）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷六 §4.1.6 A6-1.3 :400（新增一行资源种类不改代码即可开户、转移、受限转让、进月报；新增来源代号日预算自动生效）；K3-13 扩展性一半；测试 tests/kernel/ledger-invariants.test.mjs A6-1.3；报告分组（reportGroup → indicator 族）待卷六 §4.22 首卡（块 7）",
+   "stage": 0,
+   "state": "registered",
+   "target": "world_run",
+   "volume": "vol6",
+   "zeroRows": [
+    "5.2"
+   ]
+  },
+  {
+   "detector": "path_access",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/path_access.mjs",
+   "itemKey": "vol6.S6-1",
+   "localNo": "S6-1",
+   "method": "static_code",
+   "params": {
+    "access": "write",
+    "codes": [
+     "E-VIEW-UNDECLARED-WRITE",
+     "E-VIEW-BYPASS"
+    ],
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "gate",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "cross_write",
+   "source": "卷六 §3.5 S6-1 :324 前半（kernel/ledger.mjs 之外写 accounts.* 计数为 0；写者取 state-owners.json，§3.3 :305）；后半过渡期适配器作废（块 3 体检 K3-22）；K3-03，块 3 第 3-3 张",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol6",
+   "zeroRows": [
+    "5.1",
+    "17.1"
+   ]
+  },
+  {
+   "detector": "path_access",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/path_access.mjs",
+   "itemKey": "vol6.S6-8",
+   "localNo": "S6-8",
+   "method": "static_code",
+   "params": {
+    "access": "write",
+    "codes": [
+     "E-VIEW-UNDECLARED-WRITE",
+     "E-VIEW-BYPASS"
+    ],
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "gate",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "cross_write",
+   "source": "卷六 §3.5 S6-8 :331 后半（来源去处只是 ledgerTotals 计数，post 之外写 ledgerTotals.* 计数为 0；写者取 state-owners.json）；前半（无代号的增量腿、减量腿）由 post 运行期拒 E-LEDGER-CODE-UNREGISTERED（§4.1 规则 3 :361，tests/kernel/ledger-post.test.mjs）；K3-03，块 3 第 3-3 张",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol6",
+   "zeroRows": [
+    "5.1"
+   ]
   }
  ]
 }
