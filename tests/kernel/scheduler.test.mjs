@@ -24,7 +24,7 @@ const ENGINE = { vocab: W.vocab, rules: W.rules, units: W.env.units };
 const codeIs = (code) => (e) => e.code === code;
 const SRC = readFileSync(join(ROOT, 'server-plugin/kernel/scheduler.mjs'), 'utf8');
 // 去掉注释后的代码（扫描只看代码，不看注释里的出处文字）。
-const CODE = SRC.replace(/\/\*[\s\S]*?\*\//g, '').split('\n').map((l) => l.replace(/\/\/.*$/, '')).join('\n');
+const CODE = SRC.replace(/\/\*[\s\S]*?\*\//g, '').split(/\r?\n/).map((l) => l.replace(/\/\/.*$/, '')).join('\n');
 const clone = (v) => JSON.parse(JSON.stringify(v));
 
 // ---------- tick_stage 与同刻全序 ----------
