@@ -16,6 +16,7 @@ import { codeOf } from '../errors.mjs';
 import { checkLedgerTables, checkSubjectFlagDims } from '../ledger.mjs';
 import { checkClockTables, checkHookCadence, installScheduler } from '../scheduler.mjs';
 import { installFixedConstants } from '../det-math.mjs';
+import { installSampleConstants } from '../sample.mjs';
 
 export const LAYOUT = Object.freeze({
   dimensionsDir: 'world/ontology/dimensions',
@@ -43,6 +44,10 @@ export function loadWorld(root, opts = {}) {
   const need = (k) => { if (!Number.isInteger(constants[k])) throw new Error(`E-DIM-STRUCT-FIELD rules.${LAYOUT.constants}: ${k} missing`); return constants[k]; };
   // 定点标度常数只从规则表来（卷二 S10 登记豁免表）：校验维度前收下，det-math 的全部算术读它（李白 11-18 08:20 第 2 条）。
   installFixedConstants({ BASE: need('BASE'), SCALE: need('SCALE'), PERMILLE: need('PERMILLE'), BPS: need('BPS') });
+  // 骰值键限定成分个数上限也在同一张登记表（卷二 S10 :2407；卷二十七 R27-8.5 :728）：缺键照上面同一方式拒，
+  // 读到了就交给 kernel/sample.mjs（§2.7 :579 kernelApi sample），sample/diceKeyOf 运行期才拿得到上限。
+  need('diceKeyMaxQualifiers');
+  installSampleConstants(read.rules);
   const declPath = join(root, LAYOUT.stateOwners);
   const parsed = existsSync(declPath) ? parseJsonStrict(readText(declPath)) : { value: {}, errors: [] };
   const decl = parsed.value || {};

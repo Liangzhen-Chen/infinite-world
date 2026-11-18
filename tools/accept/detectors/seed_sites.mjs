@@ -16,6 +16,9 @@ import { RULES_LAYOUT } from '../../../server-plugin/kernel/load/rules.mjs';
 import { filesOfGroups } from '../read.mjs';
 import { tokenize, isP, matchClose } from '../lib/js-scan.mjs';
 
+// 种子键表的键名：登记行 type 声明的唯一键（§4.1 键表）；表格式归卷二 §1.10、卷二十七 §4.8。
+const ENTRIES_KEY = 'entries';
+
 const NOT_CALL = new Set(['if', 'for', 'while', 'switch', 'catch', 'with', 'function', 'return', 'typeof',
   'new', 'await', 'yield', 'delete', 'void', 'throw', 'case', 'in', 'of', 'instanceof']);
 
@@ -73,8 +76,10 @@ function seedTableOf(ctx, cls, hits, paramCode) {
   if (!ctx.files.includes(path)) { problem(`${path} missing`); return null; }
   let doc;
   try { doc = JSON.parse(ctx.read(path)); } catch { problem(`${path} unparsable`); return null; }
-  const entries = doc && doc.entries;
-  if (!Array.isArray(entries)) { problem(`${path} has no entries list`); return null; }
+  // 表是 §4.1 的键表：登记行 type 只声明一个键 entries，值即抽取点行列表（{"rows":[{key:"entries",value:[…]}]}）。
+  const entryRow = doc && Array.isArray(doc.rows) ? doc.rows.find((r) => r && r.key === ENTRIES_KEY) : undefined;
+  const entries = entryRow && Array.isArray(entryRow.value) ? entryRow.value : null;
+  if (!entries) { problem(`${path} has no ${ENTRIES_KEY} list`); return null; }
   for (const e of entries) {
     if (!e || typeof e.file !== 'string' || typeof e.stream !== 'string' || typeof e.site !== 'string' || typeof e.role !== 'string') {
       problem(`${path} entry lacks file/stream/site/role`);

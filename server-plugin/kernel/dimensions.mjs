@@ -7,6 +7,7 @@
 // 整条管线只有 BigInt 加、乘、整除、比较与查表（kernel/det-math.mjs），无浮点运算。
 
 import { fixedUnits, fixedAdd, fixedMultiply, truncateTo, fixedToNumber, fixedScale } from './det-math.mjs';
+import { sample } from './sample.mjs';
 import { dimKeyOf, modKeyOf } from './handles/keys.mjs';
 import { registry } from './vocab.mjs';
 import { stateMemo } from './memo.mjs';
@@ -155,10 +156,12 @@ function readBase(engine, state, kind, id, dimension, key) {
     const v = pick(cls[dimension], key);
     if (v !== undefined) return fact({ known: true, applicable: true, value: v, source: 'class', chain: Object.freeze(chain.slice(0, i + 1)) });
   }
-  // 派生式（§1.12）与采样（§1.10）的求值未建：派生式的编译与派生依赖图未做（kernel/validate/dimensions-validate.mjs 头注），
-  // 采样是 kernel/sample.mjs（kernelApi :572）那张卡。走到这里不能读成"未知"，否则把应有值静默当缺失。
+  // 派生式（§1.12）的求值未建：派生式的编译与派生依赖图未做（kernel/validate/dimensions-validate.mjs 头注），
+  // 走到这里不能读成"未知"，否则把应有值静默当缺失。采样（§1.10）走 kernelApi sample（kernel/sample.mjs，块 4-3）。
   if (def.derived !== undefined) throw new Error(`kernel/dimensions.mjs: ${kind}.${dimension} is derived (§1.12); derived evaluation not built yet`);
-  if (def.sample !== undefined) throw new Error(`kernel/dimensions.mjs: ${kind}.${dimension} is sampled (§1.10); kernel/sample.mjs not built yet`);
+  if (def.sample !== undefined) {
+    return fact({ known: true, applicable: true, value: sample(engine, kind, id, dimension), source: 'sample' });
+  }
   return Object.freeze({ known: false, applicable: true });
 }
 
