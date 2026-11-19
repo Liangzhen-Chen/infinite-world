@@ -23,6 +23,8 @@ function load({ rows = {}, edges = [], juris = null } = {}) {
   try {
     for (const f of readdirSync(join(ROOT, DIMS)).filter((n) => n.endsWith('.json'))) writeUnderTempRoot(tmp, f, realText(f));
     writeUnderTempRoot(tmp, 'place.json', JSON.stringify({ ...HEADER, rows, edges }));
+    // 物品行（6-22）的 origin 指向真实地点；本文件的临时世界只有自造的地点，物品表只留表头。
+    writeUnderTempRoot(tmp, 'item.json', JSON.stringify({ ...JSON.parse(realText('item.json')), rows: {} }));
     // 真实世界为旧数据没有的列登记了未建（6-24，缺值放行）；本文件的用例要核"缺 always 列即报错"，前提自己造：拷贝里去掉 place 的未建列登记。
     const unbuilt = JSON.parse(realText('_unbuilt-derived.json'));
     unbuilt.columns = unbuilt.columns.filter((c) => c.table !== 'place');

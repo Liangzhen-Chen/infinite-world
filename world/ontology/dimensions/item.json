@@ -121,6 +121,3618 @@
  "generated": {},
  "kind": "item",
  "namespace": "core",
- "rows": {},
+ "rows": {
+  "item_acid_moss_gel": {
+   "basis": "旧 world/meta/items.json：旧 id item_acid_moss_gel；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "loc_wild_bs_kiln"
+  },
+  "item_alum_grain": {
+   "basis": "旧 world/meta/items.json：旧 id item_alum_grain；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "loc_bs"
+  },
+  "item_animal_milk": {
+   "basis": "旧 world/meta/items.json：旧 id item_animal_milk；massKg 取旧 weight（单件，kg）；旧 unit「份」已并入（weight 本就是该单位一份的质量）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.3,
+   "origin": "loc_hw"
+  },
+  "item_apple_rye_griddle": {
+   "basis": "旧 world/meta/items.json：旧 id item_apple_rye_griddle；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.59,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_ash_spear": {
+   "basis": "旧 world/meta/items.json：旧 id item_ash_spear；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 230（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_weapon"
+   ],
+   "massKg": 1.8,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0043
+  },
+  "item_ash_stave": {
+   "basis": "旧 world/meta/items.json：旧 id item_ash_stave；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1.5,
+   "origin": "bld_hw_mill"
+  },
+  "item_ash_walking_stick": {
+   "basis": "旧 world/meta/items.json：旧 id item_ash_walking_stick；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.85,
+   "origin": "bld_hw_mill"
+  },
+  "item_bag": {
+   "basis": "旧 world/meta/items.json：旧 id item_bag；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.5,
+   "origin": "bld_hw_weaving"
+  },
+  "item_bamboo_fishing_rod": {
+   "basis": "旧 world/meta/items.json：旧 id item_bamboo_fishing_rod；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 100（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 1,
+   "origin": "bld_hw_mill",
+   "wearPerUse": 0.01
+  },
+  "item_banknote_hw": {
+   "basis": "旧 world/meta/items.json：旧 id item_banknote_hw；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.001,
+   "origin": "bld_hw_post"
+  },
+  "item_barley_pea_stew": {
+   "basis": "旧 world/meta/items.json：旧 id item_barley_pea_stew；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.82,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_beech_blank": {
+   "basis": "旧 world/meta/items.json：旧 id item_beech_blank；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1,
+   "origin": "bld_hw_mill"
+  },
+  "item_beech_press_board": {
+   "basis": "旧 world/meta/items.json：旧 id item_beech_press_board；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.7,
+   "origin": "bld_hw_mill"
+  },
+  "item_beech_spatula": {
+   "basis": "旧 world/meta/items.json：旧 id item_beech_spatula；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.16,
+   "origin": "bld_hw_mill"
+  },
+  "item_beeswax": {
+   "basis": "旧 world/meta/items.json：旧 id item_beeswax；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "loc_hw_apiary"
+  },
+  "item_beet": {
+   "basis": "旧 world/meta/items.json：旧 id item_beet；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.4,
+   "origin": "loc_hw_orchard"
+  },
+  "item_beet_barley_pot": {
+   "basis": "旧 world/meta/items.json：旧 id item_beet_barley_pot；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.8,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_beet_vinegar_dice": {
+   "basis": "旧 world/meta/items.json：旧 id item_beet_vinegar_dice；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.36,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_belt_buckle": {
+   "basis": "旧 world/meta/items.json：旧 id item_belt_buckle；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.13,
+   "origin": "bld_hw_forge"
+  },
+  "item_belt_strap": {
+   "basis": "旧 world/meta/items.json：旧 id item_belt_strap；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.26,
+   "origin": "bld_hw_weaving"
+  },
+  "item_bench_plane": {
+   "basis": "旧 world/meta/items.json：旧 id item_bench_plane；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 160（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.9,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0063
+  },
+  "item_billhook_polearm": {
+   "basis": "旧 world/meta/items.json：旧 id item_billhook_polearm；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 340（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_weapon"
+   ],
+   "massKg": 2.8,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0029
+  },
+  "item_boar_spear": {
+   "basis": "旧 world/meta/items.json：旧 id item_boar_spear；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 320（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_weapon"
+   ],
+   "massKg": 2.5,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0031
+  },
+  "item_bone_blank": {
+   "basis": "旧 world/meta/items.json：旧 id item_bone_blank；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.1,
+   "origin": "loc_hw_northwood"
+  },
+  "item_bone_folder": {
+   "basis": "旧 world/meta/items.json：旧 id item_bone_folder；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 90（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.08,
+   "origin": "bld_hw_weaving",
+   "wearPerUse": 0.0111
+  },
+  "item_bone_toggle_set": {
+   "basis": "旧 world/meta/items.json：旧 id item_bone_toggle_set；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.055,
+   "origin": "bld_hw_mill"
+  },
+  "item_book_bake_flatbread": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_bake_flatbread；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.12,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_book_cook_porridge": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_cook_porridge；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.12,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_book_curdle_milk": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_curdle_milk；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.12,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_book_dip_candles": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_dip_candles；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.12,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_book_fire_cup": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_fire_cup；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.12,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_book_fire_pot": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_fire_pot；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.12,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_book_forge_hinge": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_forge_hinge；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.12,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_book_forge_nails": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_forge_nails；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.12,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_book_household_pottery": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_household_pottery；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.2,
+   "origin": "bld_hw_school",
+   "readMinutes": 240
+  },
+  "item_book_journey_desk": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_journey_desk；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.3,
+   "origin": "bld_hw_school",
+   "readMinutes": 450
+  },
+  "item_book_journey_grain": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_journey_grain；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.3,
+   "origin": "bld_hw_school",
+   "readMinutes": 450
+  },
+  "item_book_journey_metal": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_journey_metal；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.3,
+   "origin": "bld_hw_school",
+   "readMinutes": 450
+  },
+  "item_book_journey_preserve": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_journey_preserve；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.3,
+   "origin": "bld_hw_school",
+   "readMinutes": 450
+  },
+  "item_book_journey_sewing": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_journey_sewing；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.3,
+   "origin": "bld_hw_school",
+   "readMinutes": 450
+  },
+  "item_book_journey_smallcraft": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_journey_smallcraft；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.3,
+   "origin": "bld_hw_school",
+   "readMinutes": 450
+  },
+  "item_book_journey_upkeep": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_journey_upkeep；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.3,
+   "origin": "bld_hw_school",
+   "readMinutes": 450
+  },
+  "item_book_journey_wood": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_journey_wood；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.3,
+   "origin": "bld_hw_school",
+   "readMinutes": 450
+  },
+  "item_book_m4_contract": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_m4_contract；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.18,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_book_m4_guard": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_m4_guard；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.18,
+   "origin": "loc_bs",
+   "readMinutes": 960
+  },
+  "item_book_m4_light": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_m4_light；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.18,
+   "origin": "bld_hw_school",
+   "readMinutes": 240
+  },
+  "item_book_m4_mind": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_m4_mind；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.18,
+   "origin": "loc_bs",
+   "readMinutes": 240
+  },
+  "item_book_m4_projection": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_m4_projection；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.18,
+   "origin": "loc_bs",
+   "readMinutes": 240
+  },
+  "item_book_m4_release": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_m4_release；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.18,
+   "origin": "loc_bs",
+   "readMinutes": 480
+  },
+  "item_book_m4_renew": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_m4_renew；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.18,
+   "origin": "loc_bs",
+   "readMinutes": 480
+  },
+  "item_book_m4_surface": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_m4_surface；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.18,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_book_m4_travel": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_m4_travel；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.18,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_book_m4_veils": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_m4_veils；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.18,
+   "origin": "loc_bs",
+   "readMinutes": 480
+  },
+  "item_book_mill_oats": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_mill_oats；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.12,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_book_s1_area": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_s1_area；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.2,
+   "origin": "bld_hw_school",
+   "readMinutes": 240
+  },
+  "item_book_s1_cover": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_s1_cover；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.2,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_book_s1_growth": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_s1_growth；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.2,
+   "origin": "bld_hw_school",
+   "readMinutes": 240
+  },
+  "item_book_s1_message": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_s1_message；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.2,
+   "origin": "bld_hw_school",
+   "readMinutes": 240
+  },
+  "item_book_s1_movement": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_s1_movement；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.2,
+   "origin": "bld_hw_school",
+   "readMinutes": 240
+  },
+  "item_book_s1_utility": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_s1_utility；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.2,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_book_s2_air": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_s2_air；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.2,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_book_s2_farm": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_s2_farm；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.2,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_book_s2_stone": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_s2_stone；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.2,
+   "origin": "bld_hw_school",
+   "readMinutes": 240
+  },
+  "item_book_s3_care": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_s3_care；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.2,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_book_s3_optics": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_s3_optics；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.2,
+   "origin": "bld_hw_school",
+   "readMinutes": 240
+  },
+  "item_book_s4_measure": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_s4_measure；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.2,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_book_s4_space": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_s4_space；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.2,
+   "origin": "bld_hw_school",
+   "readMinutes": 240
+  },
+  "item_book_salt_fish": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_salt_fish；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.12,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_book_sew_sack": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_sew_sack；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.12,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_book_spin_wool": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_spin_wool；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.12,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_book_spine_tape": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_spine_tape；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.11,
+   "origin": "bld_hw_mill"
+  },
+  "item_book_trades_artisan": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_trades_artisan；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.24,
+   "origin": "bld_hw_school",
+   "readMinutes": 300
+  },
+  "item_book_trades_iron": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_trades_iron；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.24,
+   "origin": "bld_hw_school",
+   "readMinutes": 300
+  },
+  "item_book_trades_kitchen": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_trades_kitchen；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.24,
+   "origin": "bld_hw_school",
+   "readMinutes": 300
+  },
+  "item_book_trades_leather": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_trades_leather；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.24,
+   "origin": "bld_hw_school",
+   "readMinutes": 300
+  },
+  "item_book_trades_wood": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_trades_wood；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.24,
+   "origin": "bld_hw_school",
+   "readMinutes": 300
+  },
+  "item_book_w2_reuse_advanced": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_w2_reuse_advanced；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.18,
+   "origin": "bld_hw_school",
+   "readMinutes": 480
+  },
+  "item_book_w2_reuse_basic": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_w2_reuse_basic；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.18,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_book_w2_reuse_middle": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_w2_reuse_middle；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.18,
+   "origin": "bld_hw_school",
+   "readMinutes": 240
+  },
+  "item_book_weave_linen": {
+   "basis": "旧 world/meta/items.json：旧 id item_book_weave_linen；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.12,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_boot_form": {
+   "basis": "旧 world/meta/items.json：旧 id item_boot_form；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.65,
+   "origin": "bld_hw_mill"
+  },
+  "item_boot_gaiter": {
+   "basis": "旧 world/meta/items.json：旧 id item_boot_gaiter；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.42,
+   "origin": "bld_hw_weaving"
+  },
+  "item_boot_scraper": {
+   "basis": "旧 world/meta/items.json：旧 id item_boot_scraper；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.82,
+   "origin": "bld_hw_forge"
+  },
+  "item_bottle_divider_crate": {
+   "basis": "旧 world/meta/items.json：旧 id item_bottle_divider_crate；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1.25,
+   "origin": "bld_hw_mill"
+  },
+  "item_brace_drill": {
+   "basis": "旧 world/meta/items.json：旧 id item_brace_drill；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 260（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.7,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0038
+  },
+  "item_brass_strip": {
+   "basis": "旧 world/meta/items.json：旧 id item_brass_strip；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "loc_bs"
+  },
+  "item_bread": {
+   "basis": "旧 world/meta/items.json：旧 id item_bread；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.15,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_bread_board": {
+   "basis": "旧 world/meta/items.json：旧 id item_bread_board；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.72,
+   "origin": "bld_hw_mill"
+  },
+  "item_bristle_bundle": {
+   "basis": "旧 world/meta/items.json：旧 id item_bristle_bundle；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "loc_bs"
+  },
+  "item_bristle_handbrush": {
+   "basis": "旧 world/meta/items.json：旧 id item_bristle_handbrush；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.21,
+   "origin": "bld_hw_mill"
+  },
+  "item_broad_bean": {
+   "basis": "旧 world/meta/items.json：旧 id item_broad_bean；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.3,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_broad_steel_chisel": {
+   "abilities": {
+    "ability_cut": 1,
+    "ability_dig": null,
+    "ability_drill": null,
+    "ability_grip": null,
+    "ability_pick_lock": null,
+    "ability_probe": null,
+    "ability_pry": null,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_broad_steel_chisel；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 cut 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 280（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.65,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0036
+  },
+  "item_broadbean_garlic_mash": {
+   "basis": "旧 world/meta/items.json：旧 id item_broadbean_garlic_mash；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.48,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_brush_roll": {
+   "basis": "旧 world/meta/items.json：旧 id item_brush_roll；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.24,
+   "origin": "bld_hw_weaving"
+  },
+  "item_bs_dao_primer": {
+   "basis": "旧 world/meta/items.json：旧 id item_bs_dao_primer；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.15,
+   "origin": "bld_bs_reed_dao",
+   "readMinutes": 120
+  },
+  "item_bs_mage_primer": {
+   "basis": "旧 world/meta/items.json：旧 id item_bs_mage_primer；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.15,
+   "origin": "bld_bs_school",
+   "readMinutes": 120
+  },
+  "item_bs_martial_primer": {
+   "basis": "旧 world/meta/items.json：旧 id item_bs_martial_primer；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.15,
+   "origin": "bld_bs_measured_hall",
+   "readMinutes": 120
+  },
+  "item_bs_monk_primer": {
+   "basis": "旧 world/meta/items.json：旧 id item_bs_monk_primer；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.15,
+   "origin": "bld_bs_still_temple",
+   "readMinutes": 120
+  },
+  "item_bucket_handle": {
+   "basis": "旧 world/meta/items.json：旧 id item_bucket_handle；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.7,
+   "origin": "bld_hw_forge"
+  },
+  "item_butter": {
+   "basis": "旧 world/meta/items.json：旧 id item_butter；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.1,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_button_shank_tool": {
+   "abilities": {
+    "ability_cut": null,
+    "ability_dig": null,
+    "ability_drill": null,
+    "ability_grip": 1,
+    "ability_pick_lock": null,
+    "ability_probe": null,
+    "ability_pry": null,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_button_shank_tool；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 grip 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 210（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.22,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0048
+  },
+  "item_cabbage": {
+   "basis": "旧 world/meta/items.json：旧 id item_cabbage；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.5,
+   "origin": "loc_hw_fields"
+  },
+  "item_cabbage_barley": {
+   "basis": "旧 world/meta/items.json：旧 id item_cabbage_barley；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.78,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_calcite_chalk": {
+   "basis": "旧 world/meta/items.json：旧 id item_calcite_chalk；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "loc_bs"
+  },
+  "item_canvas_satchel": {
+   "basis": "旧 world/meta/items.json：旧 id item_canvas_satchel；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.48,
+   "origin": "bld_hw_weaving"
+  },
+  "item_caraway_oat_crust": {
+   "basis": "旧 world/meta/items.json：旧 id item_caraway_oat_crust；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.27,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_caraway_seed": {
+   "basis": "旧 world/meta/items.json：旧 id item_caraway_seed；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.04,
+   "origin": "loc_bs"
+  },
+  "item_carpenters_adze": {
+   "abilities": {
+    "ability_cut": 1,
+    "ability_dig": null,
+    "ability_drill": null,
+    "ability_grip": null,
+    "ability_pick_lock": null,
+    "ability_probe": null,
+    "ability_pry": null,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_carpenters_adze；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 cut 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 280（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 1.4,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0036
+  },
+  "item_carrot": {
+   "basis": "旧 world/meta/items.json：旧 id item_carrot；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.3,
+   "origin": "loc_hw_fields"
+  },
+  "item_chain_link_set": {
+   "basis": "旧 world/meta/items.json：旧 id item_chain_link_set；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1.25,
+   "origin": "bld_hw_forge"
+  },
+  "item_chalk_powder": {
+   "basis": "旧 world/meta/items.json：旧 id item_chalk_powder；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.14,
+   "origin": "bld_hw_mill"
+  },
+  "item_charcoal": {
+   "basis": "旧 world/meta/items.json：旧 id item_charcoal；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.25,
+   "origin": "loc_hw_northwood"
+  },
+  "item_chasing_punch": {
+   "basis": "旧 world/meta/items.json：旧 id item_chasing_punch；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 250（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.16,
+   "origin": "loc_bs",
+   "wearPerUse": 0.004
+  },
+  "item_cheese_herb_mash": {
+   "basis": "旧 world/meta/items.json：旧 id item_cheese_herb_mash；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.21,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_cheese_rye_panbread": {
+   "basis": "旧 world/meta/items.json：旧 id item_cheese_rye_panbread；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.63,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_clamping_wood_jaw": {
+   "basis": "旧 world/meta/items.json：旧 id item_clamping_wood_jaw；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.65,
+   "origin": "bld_hw_mill"
+  },
+  "item_clay": {
+   "basis": "旧 world/meta/items.json：旧 id item_clay；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1,
+   "origin": "loc_hw_dock"
+  },
+  "item_clay_bead_set": {
+   "basis": "旧 world/meta/items.json：旧 id item_clay_bead_set；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.24,
+   "origin": "loc_bs"
+  },
+  "item_clay_bowl": {
+   "basis": "旧 world/meta/items.json：旧 id item_clay_bowl；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 90（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_container"
+   ],
+   "holdsLiquid": true,
+   "massKg": 0.48,
+   "origin": "loc_bs",
+   "volumeCapacity": 0.5,
+   "wearPerUse": 0.0111
+  },
+  "item_clay_cup": {
+   "basis": "旧 world/meta/items.json：旧 id item_clay_cup；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 60（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_container"
+   ],
+   "holdsLiquid": true,
+   "massKg": 0.22,
+   "origin": "loc_bs",
+   "volumeCapacity": 0.25,
+   "wearPerUse": 0.0167
+  },
+  "item_clay_dish": {
+   "basis": "旧 world/meta/items.json：旧 id item_clay_dish；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.42,
+   "origin": "loc_bs"
+  },
+  "item_clay_flowerpot": {
+   "basis": "旧 world/meta/items.json：旧 id item_clay_flowerpot；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.68,
+   "origin": "loc_bs"
+  },
+  "item_clay_funnel": {
+   "basis": "旧 world/meta/items.json：旧 id item_clay_funnel；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.4,
+   "origin": "loc_bs"
+  },
+  "item_clay_lid": {
+   "basis": "旧 world/meta/items.json：旧 id item_clay_lid；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.38,
+   "origin": "loc_bs"
+  },
+  "item_clay_net_weight": {
+   "basis": "旧 world/meta/items.json：旧 id item_clay_net_weight；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.55,
+   "origin": "loc_bs"
+  },
+  "item_clay_oil_lamp": {
+   "basis": "旧 world/meta/items.json：旧 id item_clay_oil_lamp；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.34,
+   "origin": "loc_bs"
+  },
+  "item_clay_pot": {
+   "basis": "旧 world/meta/items.json：旧 id item_clay_pot；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 70（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_container"
+   ],
+   "holdsLiquid": true,
+   "massKg": 0.6,
+   "origin": "loc_bs",
+   "volumeCapacity": 1.5,
+   "wearPerUse": 0.0143
+  },
+  "item_clay_roof_tile": {
+   "basis": "旧 world/meta/items.json：旧 id item_clay_roof_tile；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.72,
+   "origin": "loc_bs"
+  },
+  "item_clay_spool": {
+   "basis": "旧 world/meta/items.json：旧 id item_clay_spool；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.3,
+   "origin": "loc_bs"
+  },
+  "item_clean_lard": {
+   "basis": "旧 world/meta/items.json：旧 id item_clean_lard；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.15,
+   "origin": "loc_bs"
+  },
+  "item_clothes": {
+   "basis": "旧 world/meta/items.json：旧 id item_clothes；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 100（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_wearable"
+   ],
+   "massKg": 0.5,
+   "origin": "bld_hw_weaving",
+   "wearPerUse": 0.01
+  },
+  "item_coin_civic": {
+   "basis": "旧 world/meta/items.json：旧 id item_coin_civic；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.005,
+   "origin": "loc_capital"
+  },
+  "item_coin_coast": {
+   "basis": "旧 world/meta/items.json：旧 id item_coin_coast；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.005,
+   "origin": "loc_yandu"
+  },
+  "item_coin_wrap": {
+   "basis": "旧 world/meta/items.json：旧 id item_coin_wrap；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "bld_hw_weaving"
+  },
+  "item_cooking_pot": {
+   "basis": "旧 world/meta/items.json：旧 id item_cooking_pot；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 120（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_container",
+    "comp_tool"
+   ],
+   "holdsLiquid": true,
+   "massKg": 1.5,
+   "origin": "loc_bs",
+   "volumeCapacity": 3,
+   "wearPerUse": 0.0083
+  },
+  "item_copper_nameplate": {
+   "basis": "旧 world/meta/items.json：旧 id item_copper_nameplate；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.14,
+   "origin": "bld_hw_forge"
+  },
+  "item_copper_sheet": {
+   "basis": "旧 world/meta/items.json：旧 id item_copper_sheet；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "loc_yandu"
+  },
+  "item_cork_float_set": {
+   "basis": "旧 world/meta/items.json：旧 id item_cork_float_set；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.065,
+   "origin": "bld_hw_mill"
+  },
+  "item_cork_sheet": {
+   "basis": "旧 world/meta/items.json：旧 id item_cork_sheet；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.12,
+   "origin": "loc_bs"
+  },
+  "item_cork_stop_set": {
+   "basis": "旧 world/meta/items.json：旧 id item_cork_stop_set；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.07,
+   "origin": "bld_hw_mill"
+  },
+  "item_corklined_cup_wrap": {
+   "basis": "旧 world/meta/items.json：旧 id item_corklined_cup_wrap；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.24,
+   "origin": "bld_hw_weaving"
+  },
+  "item_cracked_wheat_pot": {
+   "basis": "旧 world/meta/items.json：旧 id item_cracked_wheat_pot；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.7,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_cream": {
+   "basis": "旧 world/meta/items.json：旧 id item_cream；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_cucumber": {
+   "basis": "旧 world/meta/items.json：旧 id item_cucumber；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.3,
+   "origin": "loc_hw_orchard"
+  },
+  "item_damp_sand_rub": {
+   "basis": "旧 world/meta/items.json：旧 id item_damp_sand_rub；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.38,
+   "origin": "bld_hw_weaving"
+  },
+  "item_darning_egg": {
+   "basis": "旧 world/meta/items.json：旧 id item_darning_egg；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.15,
+   "origin": "bld_hw_mill"
+  },
+  "item_dill": {
+   "basis": "旧 world/meta/items.json：旧 id item_dill；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.03,
+   "origin": "loc_hw_orchard"
+  },
+  "item_dill_cucumber": {
+   "basis": "旧 world/meta/items.json：旧 id item_dill_cucumber；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.31,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_door_latch": {
+   "basis": "旧 world/meta/items.json：旧 id item_door_latch；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.95,
+   "origin": "bld_hw_forge"
+  },
+  "item_door_wedge": {
+   "basis": "旧 world/meta/items.json：旧 id item_door_wedge；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "bld_hw_mill"
+  },
+  "item_drawer_pull": {
+   "basis": "旧 world/meta/items.json：旧 id item_drawer_pull；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.42,
+   "origin": "bld_hw_forge"
+  },
+  "item_drawknife": {
+   "abilities": {
+    "ability_cut": 1,
+    "ability_dig": null,
+    "ability_drill": null,
+    "ability_grip": null,
+    "ability_pick_lock": null,
+    "ability_probe": null,
+    "ability_pry": null,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_drawknife；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 cut 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 240（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.75,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0042
+  },
+  "item_dried_fruit": {
+   "basis": "旧 world/meta/items.json：旧 id item_dried_fruit；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.15,
+   "origin": "loc_hw_orchard"
+  },
+  "item_dry_mushroom": {
+   "basis": "旧 world/meta/items.json：旧 id item_dry_mushroom；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.06,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_dry_peas": {
+   "basis": "旧 world/meta/items.json：旧 id item_dry_peas；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.3,
+   "origin": "loc_hw_fields"
+  },
+  "item_earthworm_bait": {
+   "basis": "旧 world/meta/items.json：旧 id item_earthworm_bait；massKg 取旧 weight（单件，kg）；旧 unit「条」已并入（weight 本就是该单位一份的质量）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.01,
+   "origin": "loc_hw"
+  },
+  "item_ember_core": {
+   "basis": "旧 world/meta/items.json：旧 id item_ember_core；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "loc_wild_bs_kiln"
+  },
+  "item_estoc": {
+   "basis": "旧 world/meta/items.json：旧 id item_estoc；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 400（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_weapon"
+   ],
+   "massKg": 1.35,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0025
+  },
+  "item_external_medicine": {
+   "basis": "旧 world/meta/items.json：旧 id item_external_medicine；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.03,
+   "origin": "loc_hw"
+  },
+  "item_felt_insole_pair": {
+   "basis": "旧 world/meta/items.json：旧 id item_felt_insole_pair；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "bld_hw_weaving"
+  },
+  "item_felt_knee_pad": {
+   "basis": "旧 world/meta/items.json：旧 id item_felt_knee_pad；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.39,
+   "origin": "bld_hw_weaving"
+  },
+  "item_felt_polishing_pad": {
+   "basis": "旧 world/meta/items.json：旧 id item_felt_polishing_pad；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.16,
+   "origin": "bld_hw_weaving"
+  },
+  "item_felt_seat": {
+   "basis": "旧 world/meta/items.json：旧 id item_felt_seat；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.47,
+   "origin": "bld_hw_weaving"
+  },
+  "item_fine_sand": {
+   "basis": "旧 world/meta/items.json：旧 id item_fine_sand；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.3,
+   "origin": "loc_hw_dock"
+  },
+  "item_fine_sewing_needle": {
+   "basis": "旧 world/meta/items.json：旧 id item_fine_sewing_needle；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 180（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.01,
+   "origin": "bld_hw_weaving",
+   "wearPerUse": 0.0056
+  },
+  "item_fine_sieve": {
+   "basis": "旧 world/meta/items.json：旧 id item_fine_sieve；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 90（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.3,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0111
+  },
+  "item_fire_poker": {
+   "basis": "旧 world/meta/items.json：旧 id item_fire_poker；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.7,
+   "origin": "bld_hw_forge"
+  },
+  "item_fish": {
+   "basis": "旧 world/meta/items.json：旧 id item_fish；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.3,
+   "origin": "loc_hw_dock"
+  },
+  "item_fish_broth": {
+   "basis": "旧 world/meta/items.json：旧 id item_fish_broth；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.65,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_fish_oat_cake": {
+   "basis": "旧 world/meta/items.json：旧 id item_fish_oat_cake；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.46,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_fishing_bait": {
+   "basis": "旧 world/meta/items.json：旧 id item_fishing_bait；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.01,
+   "origin": "loc_hw"
+  },
+  "item_flanged_mace": {
+   "basis": "旧 world/meta/items.json：旧 id item_flanged_mace；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 350（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_weapon"
+   ],
+   "massKg": 1.65,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0029
+  },
+  "item_flat_file": {
+   "basis": "旧 world/meta/items.json：旧 id item_flat_file；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 160（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.42,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0063
+  },
+  "item_flax": {
+   "basis": "旧 world/meta/items.json：旧 id item_flax；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.3,
+   "origin": "bld_hw_weaving"
+  },
+  "item_flax_cord": {
+   "basis": "旧 world/meta/items.json：旧 id item_flax_cord；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.23,
+   "origin": "bld_hw_weaving"
+  },
+  "item_flax_stalk": {
+   "basis": "旧 world/meta/items.json：旧 id item_flax_stalk；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1,
+   "origin": "loc_wild_wt_mist"
+  },
+  "item_flour_paste_powder": {
+   "basis": "旧 world/meta/items.json：旧 id item_flour_paste_powder；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.1,
+   "origin": "bld_hw_school"
+  },
+  "item_folded_brass_cuff": {
+   "basis": "旧 world/meta/items.json：旧 id item_folded_brass_cuff；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.13,
+   "origin": "bld_hw_forge"
+  },
+  "item_folding_haversack": {
+   "basis": "旧 world/meta/items.json：旧 id item_folding_haversack；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.35,
+   "origin": "bld_hw_weaving"
+  },
+  "item_folding_map_board": {
+   "basis": "旧 world/meta/items.json：旧 id item_folding_map_board；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.85,
+   "origin": "bld_hw_mill"
+  },
+  "item_foot_rest": {
+   "basis": "旧 world/meta/items.json：旧 id item_foot_rest；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1.15,
+   "origin": "bld_hw_mill"
+  },
+  "item_forged_chain_short": {
+   "basis": "旧 world/meta/items.json：旧 id item_forged_chain_short；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1.4,
+   "origin": "bld_hw_forge"
+  },
+  "item_fowl_egg": {
+   "basis": "旧 world/meta/items.json：旧 id item_fowl_egg；massKg 取旧 weight（单件，kg）；旧 unit「份」已并入（weight 本就是该单位一份的质量）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "loc_hw"
+  },
+  "item_frame_saw": {
+   "abilities": {
+    "ability_cut": 1,
+    "ability_dig": null,
+    "ability_drill": null,
+    "ability_grip": null,
+    "ability_pick_lock": null,
+    "ability_probe": null,
+    "ability_pry": null,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_frame_saw；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 cut 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 150（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 1.1,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0067
+  },
+  "item_fresh_apple": {
+   "basis": "旧 world/meta/items.json：旧 id item_fresh_apple；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.25,
+   "origin": "loc_hw_orchard"
+  },
+  "item_fresh_curd": {
+   "basis": "旧 world/meta/items.json：旧 id item_fresh_curd；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.1,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_fruit_milk_pudding": {
+   "basis": "旧 world/meta/items.json：旧 id item_fruit_milk_pudding；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.48,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_fruit_oat_dumpling": {
+   "basis": "旧 world/meta/items.json：旧 id item_fruit_oat_dumpling；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.44,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_fruit_paste": {
+   "basis": "旧 world/meta/items.json：旧 id item_fruit_paste；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.16,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_fruit_porridge": {
+   "basis": "旧 world/meta/items.json：旧 id item_fruit_porridge；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.3,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_fruit_vinegar": {
+   "basis": "旧 world/meta/items.json：旧 id item_fruit_vinegar；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "loc_hw_orchard"
+  },
+  "item_fuller": {
+   "basis": "旧 world/meta/items.json：旧 id item_fuller；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 280（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.8,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0036
+  },
+  "item_gall_wash": {
+   "basis": "旧 world/meta/items.json：旧 id item_gall_wash；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.24,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_garlic": {
+   "basis": "旧 world/meta/items.json：旧 id item_garlic；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.1,
+   "origin": "loc_bs"
+  },
+  "item_garlic_butter": {
+   "basis": "旧 world/meta/items.json：旧 id item_garlic_butter；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.16,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_gate_hasps": {
+   "basis": "旧 world/meta/items.json：旧 id item_gate_hasps；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1.1,
+   "origin": "bld_hw_forge"
+  },
+  "item_goat_hair_brush": {
+   "basis": "旧 world/meta/items.json：旧 id item_goat_hair_brush；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 220（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.09,
+   "origin": "bld_hw_school",
+   "wearPerUse": 0.0045
+  },
+  "item_goat_milk": {
+   "basis": "旧 world/meta/items.json：旧 id item_goat_milk；massKg 取旧 weight（单件，kg）；旧 unit「份」已并入（weight 本就是该单位一份的质量）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.3,
+   "origin": "loc_hw"
+  },
+  "item_goat_skin": {
+   "basis": "旧 world/meta/items.json：旧 id item_goat_skin；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.5,
+   "origin": "bld_hw_weaving"
+  },
+  "item_goatskin_document_case": {
+   "basis": "旧 world/meta/items.json：旧 id item_goatskin_document_case；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.4,
+   "origin": "bld_hw_weaving"
+  },
+  "item_grain_sack": {
+   "basis": "旧 world/meta/items.json：旧 id item_grain_sack；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 90（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_container"
+   ],
+   "massKg": 0.32,
+   "origin": "bld_hw_weaving",
+   "wearPerUse": 0.0111
+  },
+  "item_grooving_wheel": {
+   "basis": "旧 world/meta/items.json：旧 id item_grooving_wheel；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 120（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.16,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0083
+  },
+  "item_gum_grain": {
+   "basis": "旧 world/meta/items.json：旧 id item_gum_grain；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "loc_yandu"
+  },
+  "item_hand_auger": {
+   "basis": "旧 world/meta/items.json：旧 id item_hand_auger；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 140（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.65,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0071
+  },
+  "item_hand_bellows": {
+   "basis": "旧 world/meta/items.json：旧 id item_hand_bellows；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 160（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 1.6,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0063
+  },
+  "item_hard_cheese": {
+   "basis": "旧 world/meta/items.json：旧 id item_hard_cheese；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "loc_bs"
+  },
+  "item_hazelnut": {
+   "basis": "旧 world/meta/items.json：旧 id item_hazelnut；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "loc_hw_northwood"
+  },
+  "item_head_wrap": {
+   "basis": "旧 world/meta/items.json：旧 id item_head_wrap；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.25,
+   "origin": "bld_hw_weaving"
+  },
+  "item_hearth_trivet": {
+   "basis": "旧 world/meta/items.json：旧 id item_hearth_trivet；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1.35,
+   "origin": "bld_hw_forge"
+  },
+  "item_hemp_thread": {
+   "basis": "旧 world/meta/items.json：旧 id item_hemp_thread；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.15,
+   "origin": "bld_hw_weaving"
+  },
+  "item_hen_egg": {
+   "basis": "旧 world/meta/items.json：旧 id item_hen_egg；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.24,
+   "origin": "loc_hw_fields"
+  },
+  "item_herb": {
+   "basis": "旧 world/meta/items.json：旧 id item_herb；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.1,
+   "origin": "bld_hw_herbs"
+  },
+  "item_herb_hoe": {
+   "abilities": {
+    "ability_cut": null,
+    "ability_dig": 1,
+    "ability_drill": null,
+    "ability_grip": null,
+    "ability_pick_lock": null,
+    "ability_probe": null,
+    "ability_pry": null,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_herb_hoe；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 soil_work 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 100（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 1.5,
+   "origin": "loc_hw",
+   "wearPerUse": 0.01
+  },
+  "item_herb_pouch": {
+   "basis": "旧 world/meta/items.json：旧 id item_herb_pouch；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.19,
+   "origin": "bld_hw_weaving"
+  },
+  "item_hide_glue": {
+   "basis": "旧 world/meta/items.json：旧 id item_hide_glue；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "bld_hw_weaving"
+  },
+  "item_hide_scraper": {
+   "basis": "旧 world/meta/items.json：旧 id item_hide_scraper；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 100（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.35,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.01
+  },
+  "item_hinge_pin": {
+   "basis": "旧 world/meta/items.json：旧 id item_hinge_pin；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.14,
+   "origin": "bld_hw_forge"
+  },
+  "item_hoe": {
+   "abilities": {
+    "ability_cut": null,
+    "ability_dig": 1,
+    "ability_drill": null,
+    "ability_grip": null,
+    "ability_pick_lock": null,
+    "ability_probe": null,
+    "ability_pry": null,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_hoe；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 soil_work 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 100（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 1.5,
+   "origin": "loc_hw",
+   "wearPerUse": 0.01
+  },
+  "item_hollow_gouge": {
+   "basis": "旧 world/meta/items.json：旧 id item_hollow_gouge；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 220（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.24,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0045
+  },
+  "item_honey": {
+   "basis": "旧 world/meta/items.json：旧 id item_honey；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.1,
+   "origin": "loc_hw_apiary"
+  },
+  "item_honey_curd_spread": {
+   "basis": "旧 world/meta/items.json：旧 id item_honey_curd_spread；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.38,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_honey_nut_cake": {
+   "basis": "旧 world/meta/items.json：旧 id item_honey_nut_cake；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.6,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_honeysuckle": {
+   "basis": "旧 world/meta/items.json：旧 id item_honeysuckle；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.1,
+   "origin": "loc_hw_northwood"
+  },
+  "item_honing_stone": {
+   "basis": "旧 world/meta/items.json：旧 id item_honing_stone；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 260（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.5,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0038
+  },
+  "item_hooked_pruning_knife": {
+   "abilities": {
+    "ability_cut": 1,
+    "ability_dig": null,
+    "ability_drill": null,
+    "ability_grip": null,
+    "ability_pick_lock": null,
+    "ability_probe": null,
+    "ability_pry": null,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_hooked_pruning_knife；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 cut 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 280（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.48,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0036
+  },
+  "item_horn_blank": {
+   "basis": "旧 world/meta/items.json：旧 id item_horn_blank；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.12,
+   "origin": "loc_hw_northwood"
+  },
+  "item_horn_comb": {
+   "basis": "旧 world/meta/items.json：旧 id item_horn_comb；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.075,
+   "origin": "bld_hw_mill"
+  },
+  "item_horn_spoon_blank": {
+   "basis": "旧 world/meta/items.json：旧 id item_horn_spoon_blank；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.065,
+   "origin": "bld_hw_mill"
+  },
+  "item_horsehair_bundle": {
+   "basis": "旧 world/meta/items.json：旧 id item_horsehair_bundle；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "loc_bs"
+  },
+  "item_horsehair_dustbrush": {
+   "basis": "旧 world/meta/items.json：旧 id item_horsehair_dustbrush；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.19,
+   "origin": "bld_hw_mill"
+  },
+  "item_horsehair_sieve_cloth": {
+   "basis": "旧 world/meta/items.json：旧 id item_horsehair_sieve_cloth；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.07,
+   "origin": "bld_hw_weaving"
+  },
+  "item_ingot_mold": {
+   "basis": "旧 world/meta/items.json：旧 id item_ingot_mold；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 260（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 2.2,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0038
+  },
+  "item_ink_brush": {
+   "basis": "旧 world/meta/items.json：旧 id item_ink_brush；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 70（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.04,
+   "origin": "bld_hw_school",
+   "wearPerUse": 0.0143
+  },
+  "item_ink_wiping_pad": {
+   "basis": "旧 world/meta/items.json：旧 id item_ink_wiping_pad；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "bld_hw_mill"
+  },
+  "item_iron": {
+   "basis": "旧 world/meta/items.json：旧 id item_iron；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 2,
+   "origin": "bld_hw_forge"
+  },
+  "item_iron_awl": {
+   "basis": "旧 world/meta/items.json：旧 id item_iron_awl；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.14,
+   "origin": "bld_hw_forge"
+  },
+  "item_iron_hinge": {
+   "basis": "旧 world/meta/items.json：旧 id item_iron_hinge；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.5,
+   "origin": "bld_hw_forge"
+  },
+  "item_iron_nail": {
+   "basis": "旧 world/meta/items.json：旧 id item_iron_nail；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.04,
+   "origin": "bld_hw_forge"
+  },
+  "item_iron_ore": {
+   "basis": "旧 world/meta/items.json：旧 id item_iron_ore；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1,
+   "origin": "loc_wild_lq_adit"
+  },
+  "item_iron_punch": {
+   "basis": "旧 world/meta/items.json：旧 id item_iron_punch；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 150（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.3,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0067
+  },
+  "item_iron_ring": {
+   "basis": "旧 world/meta/items.json：旧 id item_iron_ring；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.15,
+   "origin": "bld_hw_forge"
+  },
+  "item_iron_scrap": {
+   "basis": "旧 world/meta/items.json：旧 id item_iron_scrap；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "bld_hw_forge"
+  },
+  "item_iron_wire": {
+   "abilities": {
+    "ability_cut": null,
+    "ability_dig": null,
+    "ability_drill": null,
+    "ability_grip": null,
+    "ability_pick_lock": 1,
+    "ability_probe": null,
+    "ability_pry": null,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_iron_wire；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 unlock 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 100（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.2,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.01
+  },
+  "item_jeweler_pliers": {
+   "abilities": {
+    "ability_cut": null,
+    "ability_dig": null,
+    "ability_drill": null,
+    "ability_grip": 1,
+    "ability_pick_lock": null,
+    "ability_probe": null,
+    "ability_pry": null,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_jeweler_pliers；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 grip 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 260（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.2,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0038
+  },
+  "item_jeweler_saw": {
+   "abilities": {
+    "ability_cut": 1,
+    "ability_dig": null,
+    "ability_drill": null,
+    "ability_grip": null,
+    "ability_pick_lock": null,
+    "ability_probe": null,
+    "ability_pry": null,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_jeweler_saw；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 cut 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 280（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.28,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0036
+  },
+  "item_kitchen_knife": {
+   "abilities": {
+    "ability_cut": 1,
+    "ability_dig": null,
+    "ability_drill": null,
+    "ability_grip": null,
+    "ability_pick_lock": null,
+    "ability_probe": null,
+    "ability_pry": null,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_kitchen_knife；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 cut 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 100（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.3,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.01
+  },
+  "item_ladle_rest": {
+   "basis": "旧 world/meta/items.json：旧 id item_ladle_rest；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "bld_hw_mill"
+  },
+  "item_lamp_bracket": {
+   "basis": "旧 world/meta/items.json：旧 id item_lamp_bracket；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.55,
+   "origin": "bld_hw_forge"
+  },
+  "item_lampblack": {
+   "basis": "旧 world/meta/items.json：旧 id item_lampblack；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "loc_bs"
+  },
+  "item_lantern": {
+   "basis": "旧 world/meta/items.json：旧 id item_lantern；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.15,
+   "origin": "loc_hw"
+  },
+  "item_laundry_mesh_bag": {
+   "basis": "旧 world/meta/items.json：旧 id item_laundry_mesh_bag；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.16,
+   "origin": "bld_hw_weaving"
+  },
+  "item_leather_grip": {
+   "basis": "旧 world/meta/items.json：旧 id item_leather_grip；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "bld_hw_weaving"
+  },
+  "item_leather_hinge": {
+   "basis": "旧 world/meta/items.json：旧 id item_leather_hinge；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.18,
+   "origin": "bld_hw_weaving"
+  },
+  "item_leather_round_knife": {
+   "abilities": {
+    "ability_cut": 1,
+    "ability_dig": null,
+    "ability_drill": null,
+    "ability_grip": null,
+    "ability_pick_lock": null,
+    "ability_probe": null,
+    "ability_pry": null,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_leather_round_knife；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 cut 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 280（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.39,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0036
+  },
+  "item_leather_shears": {
+   "abilities": {
+    "ability_cut": 1,
+    "ability_dig": null,
+    "ability_drill": null,
+    "ability_grip": null,
+    "ability_pick_lock": null,
+    "ability_probe": null,
+    "ability_pry": null,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_leather_shears；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 cut 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 130（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.4,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0077
+  },
+  "item_leather_strop": {
+   "basis": "旧 world/meta/items.json：旧 id item_leather_strop；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 240（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.3,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0042
+  },
+  "item_leather_thimble": {
+   "basis": "旧 world/meta/items.json：旧 id item_leather_thimble；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.06,
+   "origin": "bld_hw_weaving"
+  },
+  "item_leather_wax_grease": {
+   "basis": "旧 world/meta/items.json：旧 id item_leather_wax_grease；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.17,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_ledger_cover": {
+   "basis": "旧 world/meta/items.json：旧 id item_ledger_cover；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.38,
+   "origin": "bld_hw_mill"
+  },
+  "item_leek": {
+   "basis": "旧 world/meta/items.json：旧 id item_leek；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "loc_hw_fields"
+  },
+  "item_leek_fish_pot": {
+   "basis": "旧 world/meta/items.json：旧 id item_leek_fish_pot；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.63,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_lentil": {
+   "basis": "旧 world/meta/items.json：旧 id item_lentil；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.3,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_lentil_leek_stew": {
+   "basis": "旧 world/meta/items.json：旧 id item_lentil_leek_stew；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.64,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_lidded_seed_box": {
+   "basis": "旧 world/meta/items.json：旧 id item_lidded_seed_box；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1.1,
+   "origin": "bld_hw_mill"
+  },
+  "item_line_level": {
+   "basis": "旧 world/meta/items.json：旧 id item_line_level；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 240（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.65,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0042
+  },
+  "item_line_winder": {
+   "basis": "旧 world/meta/items.json：旧 id item_line_winder；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.13,
+   "origin": "bld_hw_mill"
+  },
+  "item_linen_apron": {
+   "basis": "旧 world/meta/items.json：旧 id item_linen_apron；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.31,
+   "origin": "bld_hw_weaving"
+  },
+  "item_linen_canvas": {
+   "basis": "旧 world/meta/items.json：旧 id item_linen_canvas；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.5,
+   "origin": "bld_hw_weaving"
+  },
+  "item_linen_cleaning_swab": {
+   "basis": "旧 world/meta/items.json：旧 id item_linen_cleaning_swab；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.09,
+   "origin": "bld_hw_weaving"
+  },
+  "item_linen_cloth": {
+   "basis": "旧 world/meta/items.json：旧 id item_linen_cloth；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.4,
+   "origin": "bld_hw_weaving"
+  },
+  "item_linen_filter": {
+   "basis": "旧 world/meta/items.json：旧 id item_linen_filter；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.27,
+   "origin": "bld_hw_weaving"
+  },
+  "item_linen_wick": {
+   "basis": "旧 world/meta/items.json：旧 id item_linen_wick；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.03,
+   "origin": "bld_hw_weaving"
+  },
+  "item_linseed_oil": {
+   "basis": "旧 world/meta/items.json：旧 id item_linseed_oil；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.1,
+   "origin": "loc_bs"
+  },
+  "item_literacy_primer": {
+   "basis": "旧 world/meta/items.json：旧 id item_literacy_primer；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_readable"
+   ],
+   "massKg": 0.25,
+   "origin": "bld_hw_school",
+   "readMinutes": 120
+  },
+  "item_live_fish": {
+   "basis": "旧 world/meta/items.json：旧 id item_live_fish；massKg 取旧 weight（单件，kg）；旧 unit「条」已并入（weight 本就是该单位一份的质量）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.3,
+   "origin": "loc_hw_dock"
+  },
+  "item_loom": {
+   "basis": "旧 world/meta/items.json：旧 id item_loom；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 180（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 5,
+   "origin": "bld_hw_weaving",
+   "wearPerUse": 0.0056
+  },
+  "item_loom_reed": {
+   "basis": "旧 world/meta/items.json：旧 id item_loom_reed；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 260（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.8,
+   "origin": "bld_hw_weaving",
+   "wearPerUse": 0.0038
+  },
+  "item_loop_turner": {
+   "basis": "旧 world/meta/items.json：旧 id item_loop_turner；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 200（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.12,
+   "origin": "bld_hw_weaving",
+   "wearPerUse": 0.005
+  },
+  "item_marking_gauge": {
+   "basis": "旧 world/meta/items.json：旧 id item_marking_gauge；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 210（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.3,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0048
+  },
+  "item_marsh_phosphor": {
+   "basis": "旧 world/meta/items.json：旧 id item_marsh_phosphor；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.03,
+   "origin": "loc_wild_wt_mist"
+  },
+  "item_mason_chisel": {
+   "basis": "旧 world/meta/items.json：旧 id item_mason_chisel；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 270（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.9,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0037
+  },
+  "item_milk": {
+   "basis": "旧 world/meta/items.json：旧 id item_milk；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.5,
+   "origin": "loc_hw_fields"
+  },
+  "item_milk_oat_mash": {
+   "basis": "旧 world/meta/items.json：旧 id item_milk_oat_mash；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.55,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_mining_pick": {
+   "abilities": {
+    "ability_cut": null,
+    "ability_dig": 1,
+    "ability_drill": null,
+    "ability_grip": null,
+    "ability_pick_lock": null,
+    "ability_probe": null,
+    "ability_pry": 1,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_mining_pick；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 pry、soil_work 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 100（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 2.8,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.01
+  },
+  "item_mist_frost": {
+   "basis": "旧 world/meta/items.json：旧 id item_mist_frost；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "loc_wild_wt_mist"
+  },
+  "item_mixing_paddle": {
+   "basis": "旧 world/meta/items.json：旧 id item_mixing_paddle；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.24,
+   "origin": "bld_hw_mill"
+  },
+  "item_moon_toad_milk": {
+   "basis": "旧 world/meta/items.json：旧 id item_moon_toad_milk；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.02,
+   "origin": "loc_wild_lq_adit"
+  },
+  "item_mortise_chisel": {
+   "abilities": {
+    "ability_cut": 1,
+    "ability_dig": null,
+    "ability_drill": null,
+    "ability_grip": null,
+    "ability_pick_lock": null,
+    "ability_probe": null,
+    "ability_pry": null,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_mortise_chisel；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 cut 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 130（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.35,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0077
+  },
+  "item_mulberry_leaf": {
+   "basis": "旧 world/meta/items.json：旧 id item_mulberry_leaf；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.5,
+   "origin": "loc_bs_sangban"
+  },
+  "item_mushroom_barley_pot": {
+   "basis": "旧 world/meta/items.json：旧 id item_mushroom_barley_pot；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.6,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_mustard_relish": {
+   "basis": "旧 world/meta/items.json：旧 id item_mustard_relish；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.085,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_mustard_seed": {
+   "basis": "旧 world/meta/items.json：旧 id item_mustard_seed；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "loc_bs"
+  },
+  "item_mutton": {
+   "basis": "旧 world/meta/items.json：旧 id item_mutton；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.4,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_mutton_turnip_stew": {
+   "basis": "旧 world/meta/items.json：旧 id item_mutton_turnip_stew；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.83,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_needle_case": {
+   "basis": "旧 world/meta/items.json：旧 id item_needle_case；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.16,
+   "origin": "bld_hw_weaving"
+  },
+  "item_needle_roll": {
+   "basis": "旧 world/meta/items.json：旧 id item_needle_roll；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.18,
+   "origin": "bld_hw_weaving"
+  },
+  "item_netting_needle": {
+   "basis": "旧 world/meta/items.json：旧 id item_netting_needle；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 210（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.08,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0048
+  },
+  "item_oak_cudgel": {
+   "basis": "旧 world/meta/items.json：旧 id item_oak_cudgel；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 180（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_weapon"
+   ],
+   "massKg": 1.1,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0056
+  },
+  "item_oak_gall": {
+   "basis": "旧 world/meta/items.json：旧 id item_oak_gall；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.08,
+   "origin": "loc_hw_northwood"
+  },
+  "item_oat_crisp": {
+   "basis": "旧 world/meta/items.json：旧 id item_oat_crisp；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.28,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_oat_flatbread": {
+   "basis": "旧 world/meta/items.json：旧 id item_oat_flatbread；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.12,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_oat_flour": {
+   "basis": "旧 world/meta/items.json：旧 id item_oat_flour；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.4,
+   "origin": "bld_hw_mill"
+  },
+  "item_oats": {
+   "basis": "旧 world/meta/items.json：旧 id item_oats；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.5,
+   "origin": "loc_hw_fields"
+  },
+  "item_ochre_paint": {
+   "basis": "旧 world/meta/items.json：旧 id item_ochre_paint；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.17,
+   "origin": "bld_hw_mill"
+  },
+  "item_onion": {
+   "basis": "旧 world/meta/items.json：旧 id item_onion；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.25,
+   "origin": "loc_bs"
+  },
+  "item_onion_egg_soup": {
+   "basis": "旧 world/meta/items.json：旧 id item_onion_egg_soup；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.68,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_padded_work_collar": {
+   "basis": "旧 world/meta/items.json：旧 id item_padded_work_collar；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.48,
+   "origin": "bld_hw_weaving"
+  },
+  "item_paper_cord_tags": {
+   "basis": "旧 world/meta/items.json：旧 id item_paper_cord_tags；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.055,
+   "origin": "bld_hw_mill"
+  },
+  "item_parchment": {
+   "basis": "旧 world/meta/items.json：旧 id item_parchment；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.06,
+   "origin": "loc_bs"
+  },
+  "item_parchment_bookmark": {
+   "basis": "旧 world/meta/items.json：旧 id item_parchment_bookmark；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.035,
+   "origin": "bld_hw_mill"
+  },
+  "item_parrying_dagger": {
+   "basis": "旧 world/meta/items.json：旧 id item_parrying_dagger；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 280（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_weapon"
+   ],
+   "massKg": 0.5,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0036
+  },
+  "item_parsnip": {
+   "basis": "旧 world/meta/items.json：旧 id item_parsnip；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.35,
+   "origin": "loc_hw_orchard"
+  },
+  "item_parsnip_cream_pot": {
+   "basis": "旧 world/meta/items.json：旧 id item_parsnip_cream_pot；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.62,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_paste_cup_portion": {
+   "basis": "旧 world/meta/items.json：旧 id item_paste_cup_portion；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.26,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_pasture_forage": {
+   "basis": "旧 world/meta/items.json：旧 id item_pasture_forage；massKg 取旧 weight（单件，kg）；旧 unit「份」已并入（weight 本就是该单位一份的质量）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1,
+   "origin": "loc_hw"
+  },
+  "item_patch_bundle": {
+   "basis": "旧 world/meta/items.json：旧 id item_patch_bundle；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.3,
+   "origin": "bld_hw_weaving"
+  },
+  "item_pea_spread": {
+   "basis": "旧 world/meta/items.json：旧 id item_pea_spread；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.42,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_pear": {
+   "basis": "旧 world/meta/items.json：旧 id item_pear；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.3,
+   "origin": "loc_hw_orchard"
+  },
+  "item_pear_dry_chips": {
+   "basis": "旧 world/meta/items.json：旧 id item_pear_dry_chips；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.09,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_pear_vinegar_slice": {
+   "basis": "旧 world/meta/items.json：旧 id item_pear_vinegar_slice；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.26,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_pear_wheat_gruel": {
+   "basis": "旧 world/meta/items.json：旧 id item_pear_wheat_gruel；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.65,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_pearl_barley": {
+   "basis": "旧 world/meta/items.json：旧 id item_pearl_barley；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.5,
+   "origin": "loc_bs"
+  },
+  "item_peg_drying_rack": {
+   "basis": "旧 world/meta/items.json：旧 id item_peg_drying_rack；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1.6,
+   "origin": "bld_hw_mill"
+  },
+  "item_pheasant_egg": {
+   "basis": "旧 world/meta/items.json：旧 id item_pheasant_egg；massKg 取旧 weight（单件，kg）；旧 unit「份」已并入（weight 本就是该单位一份的质量）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "loc_hw"
+  },
+  "item_pine_board": {
+   "basis": "旧 world/meta/items.json：旧 id item_pine_board；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1,
+   "origin": "bld_hw_mill"
+  },
+  "item_pine_pitch": {
+   "basis": "旧 world/meta/items.json：旧 id item_pine_pitch；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.1,
+   "origin": "loc_hw_northwood"
+  },
+  "item_plantain": {
+   "basis": "旧 world/meta/items.json：旧 id item_plantain；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.1,
+   "origin": "loc_hw_northwood"
+  },
+  "item_plum": {
+   "basis": "旧 world/meta/items.json：旧 id item_plum；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.25,
+   "origin": "loc_hw_orchard"
+  },
+  "item_plum_honey_spread": {
+   "basis": "旧 world/meta/items.json：旧 id item_plum_honey_spread；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.27,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_plumb_bob": {
+   "basis": "旧 world/meta/items.json：旧 id item_plumb_bob；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 210（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.3,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0048
+  },
+  "item_polishing_powder": {
+   "basis": "旧 world/meta/items.json：旧 id item_polishing_powder；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.22,
+   "origin": "bld_hw_mill"
+  },
+  "item_poppy_rye_crisp": {
+   "basis": "旧 world/meta/items.json：旧 id item_poppy_rye_crisp；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.48,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_poppy_seed": {
+   "basis": "旧 world/meta/items.json：旧 id item_poppy_seed；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "loc_bs"
+  },
+  "item_pork_fat": {
+   "basis": "旧 world/meta/items.json：旧 id item_pork_fat；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_pot_lifter": {
+   "basis": "旧 world/meta/items.json：旧 id item_pot_lifter；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.88,
+   "origin": "bld_hw_forge"
+  },
+  "item_pot_wrap": {
+   "basis": "旧 world/meta/items.json：旧 id item_pot_wrap；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.37,
+   "origin": "bld_hw_weaving"
+  },
+  "item_pottery_wheel": {
+   "basis": "旧 world/meta/items.json：旧 id item_pottery_wheel；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 180（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 8,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0056
+  },
+  "item_practice_sword": {
+   "basis": "旧 world/meta/items.json：旧 id item_practice_sword；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 160（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_weapon"
+   ],
+   "massKg": 0.65,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0063
+  },
+  "item_pumice": {
+   "basis": "旧 world/meta/items.json：旧 id item_pumice；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.3,
+   "origin": "loc_yandu"
+  },
+  "item_quarterstaff": {
+   "basis": "旧 world/meta/items.json：旧 id item_quarterstaff；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 240（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_weapon"
+   ],
+   "massKg": 1.8,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0042
+  },
+  "item_quill_knife": {
+   "abilities": {
+    "ability_cut": 1,
+    "ability_dig": null,
+    "ability_drill": null,
+    "ability_grip": null,
+    "ability_pick_lock": null,
+    "ability_probe": null,
+    "ability_pry": null,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_quill_knife；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 cut 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 230（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.1,
+   "origin": "bld_hw_school",
+   "wearPerUse": 0.0043
+  },
+  "item_quill_pen_pair": {
+   "basis": "旧 world/meta/items.json：旧 id item_quill_pen_pair；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.009,
+   "origin": "bld_hw_mill"
+  },
+  "item_quill_set": {
+   "basis": "旧 world/meta/items.json：旧 id item_quill_set；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.015,
+   "origin": "bld_hw_school"
+  },
+  "item_rapeseed_oil": {
+   "basis": "旧 world/meta/items.json：旧 id item_rapeseed_oil；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.1,
+   "origin": "loc_bs"
+  },
+  "item_ration": {
+   "basis": "旧 world/meta/items.json：旧 id item_ration；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "loc_bs"
+  },
+  "item_raw_animal_hair": {
+   "basis": "旧 world/meta/items.json：旧 id item_raw_animal_hair；massKg 取旧 weight（单件，kg）；旧 unit「份」已并入（weight 本就是该单位一份的质量）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.1,
+   "origin": "loc_hw"
+  },
+  "item_raw_bone": {
+   "basis": "旧 world/meta/items.json：旧 id item_raw_bone；massKg 取旧 weight（单件，kg）；旧 unit「份」已并入（weight 本就是该单位一份的质量）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.5,
+   "origin": "loc_hw"
+  },
+  "item_raw_feather": {
+   "basis": "旧 world/meta/items.json：旧 id item_raw_feather；massKg 取旧 weight（单件，kg）；旧 unit「份」已并入（weight 本就是该单位一份的质量）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "loc_hw"
+  },
+  "item_raw_goat_hair": {
+   "basis": "旧 world/meta/items.json：旧 id item_raw_goat_hair；massKg 取旧 weight（单件，kg）；旧 unit「份」已并入（weight 本就是该单位一份的质量）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.1,
+   "origin": "loc_hw"
+  },
+  "item_raw_meat": {
+   "basis": "旧 world/meta/items.json：旧 id item_raw_meat；massKg 取旧 weight（单件，kg）；旧 unit「份」已并入（weight 本就是该单位一份的质量）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.4,
+   "origin": "loc_hw"
+  },
+  "item_raw_silk": {
+   "basis": "旧 world/meta/items.json：旧 id item_raw_silk；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "loc_bs_sangban"
+  },
+  "item_rawhide": {
+   "basis": "旧 world/meta/items.json：旧 id item_rawhide；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1,
+   "origin": "loc_hw_northwood"
+  },
+  "item_red_dyewood": {
+   "basis": "旧 world/meta/items.json：旧 id item_red_dyewood；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.1,
+   "origin": "loc_bs"
+  },
+  "item_red_ochre": {
+   "basis": "旧 world/meta/items.json：旧 id item_red_ochre；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.1,
+   "origin": "loc_bs"
+  },
+  "item_redwood_dye": {
+   "basis": "旧 world/meta/items.json：旧 id item_redwood_dye；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.25,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_reed_bundle": {
+   "basis": "旧 world/meta/items.json：旧 id item_reed_bundle；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "loc_hw_dock"
+  },
+  "item_reed_drying_mat": {
+   "basis": "旧 world/meta/items.json：旧 id item_reed_drying_mat；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.45,
+   "origin": "bld_hw_mill"
+  },
+  "item_reed_pen": {
+   "basis": "旧 world/meta/items.json：旧 id item_reed_pen；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 50（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.02,
+   "origin": "bld_hw_school",
+   "wearPerUse": 0.02
+  },
+  "item_reed_pen_box": {
+   "basis": "旧 world/meta/items.json：旧 id item_reed_pen_box；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.1,
+   "origin": "bld_hw_mill"
+  },
+  "item_reed_whistle": {
+   "basis": "旧 world/meta/items.json：旧 id item_reed_whistle；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.04,
+   "origin": "bld_hw_mill"
+  },
+  "item_rein_patch": {
+   "basis": "旧 world/meta/items.json：旧 id item_rein_patch；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.22,
+   "origin": "bld_hw_weaving"
+  },
+  "item_rendered_cooking_fat": {
+   "basis": "旧 world/meta/items.json：旧 id item_rendered_cooking_fat；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.16,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_resin": {
+   "basis": "旧 world/meta/items.json：旧 id item_resin；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.1,
+   "origin": "loc_hw_northwood"
+  },
+  "item_resin_cloth_patch": {
+   "basis": "旧 world/meta/items.json：旧 id item_resin_cloth_patch；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.32,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_rivet_set": {
+   "basis": "旧 world/meta/items.json：旧 id item_rivet_set；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 140（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.32,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0071
+  },
+  "item_riveting_hammer": {
+   "basis": "旧 world/meta/items.json：旧 id item_riveting_hammer；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 240（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.45,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0042
+  },
+  "item_rope_fid": {
+   "basis": "旧 world/meta/items.json：旧 id item_rope_fid；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 230（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.22,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0043
+  },
+  "item_round_file": {
+   "basis": "旧 world/meta/items.json：旧 id item_round_file；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 140（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.28,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0071
+  },
+  "item_rye_flour": {
+   "basis": "旧 world/meta/items.json：旧 id item_rye_flour；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.4,
+   "origin": "bld_hw_mill"
+  },
+  "item_s2_cinnabar": {
+   "basis": "旧 world/meta/items.json：旧 id item_s2_cinnabar；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.01,
+   "origin": "loc_bs"
+  },
+  "item_s2_fuling": {
+   "basis": "旧 world/meta/items.json：旧 id item_s2_fuling；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "loc_bs"
+  },
+  "item_s2_gancao": {
+   "basis": "旧 world/meta/items.json：旧 id item_s2_gancao；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.02,
+   "origin": "loc_bs"
+  },
+  "item_s2_huangjing": {
+   "basis": "旧 world/meta/items.json：旧 id item_s2_huangjing；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "loc_bs"
+  },
+  "item_s2_pill": {
+   "basis": "旧 world/meta/items.json：旧 id item_s2_pill；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.003,
+   "origin": "loc_bs"
+  },
+  "item_s2_talc": {
+   "basis": "旧 world/meta/items.json：旧 id item_s2_talc；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.005,
+   "origin": "loc_bs"
+  },
+  "item_s2_talisman": {
+   "basis": "旧 world/meta/items.json：旧 id item_s2_talisman；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.005,
+   "origin": "loc_bs"
+  },
+  "item_s2_tinder": {
+   "basis": "旧 world/meta/items.json：旧 id item_s2_tinder；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.004,
+   "origin": "loc_bs"
+  },
+  "item_s2_yellow_paper": {
+   "basis": "旧 world/meta/items.json：旧 id item_s2_yellow_paper；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.02,
+   "origin": "loc_bs"
+  },
+  "item_s3_incense": {
+   "basis": "旧 world/meta/items.json：旧 id item_s3_incense；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.002,
+   "origin": "loc_bs"
+  },
+  "item_s3_lamp_oil": {
+   "basis": "旧 world/meta/items.json：旧 id item_s3_lamp_oil；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.02,
+   "origin": "loc_bs"
+  },
+  "item_s3_rice": {
+   "basis": "旧 world/meta/items.json：旧 id item_s3_rice；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "loc_bs"
+  },
+  "item_s4_scripture_key": {
+   "basis": "旧 world/meta/items.json：旧 id item_s4_scripture_key；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "loc_bs"
+  },
+  "item_s_hook": {
+   "basis": "旧 world/meta/items.json：旧 id item_s_hook；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.16,
+   "origin": "bld_hw_forge"
+  },
+  "item_sack_pricker": {
+   "basis": "旧 world/meta/items.json：旧 id item_sack_pricker；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.15,
+   "origin": "bld_hw_forge"
+  },
+  "item_salt": {
+   "basis": "旧 world/meta/items.json：旧 id item_salt；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.02,
+   "origin": "loc_yandu"
+  },
+  "item_salt_fish": {
+   "basis": "旧 world/meta/items.json：旧 id item_salt_fish；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.25,
+   "origin": "loc_hw_dock"
+  },
+  "item_salted_curd": {
+   "basis": "旧 world/meta/items.json：旧 id item_salted_curd；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.16,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_salted_walnut": {
+   "basis": "旧 world/meta/items.json：旧 id item_salted_walnut；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.15,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_scraper_blade": {
+   "basis": "旧 world/meta/items.json：旧 id item_scraper_blade；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.15,
+   "origin": "bld_hw_forge"
+  },
+  "item_scroll_wrap": {
+   "basis": "旧 world/meta/items.json：旧 id item_scroll_wrap；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.41,
+   "origin": "bld_hw_weaving"
+  },
+  "item_seal_thread_bundle": {
+   "basis": "旧 world/meta/items.json：旧 id item_seal_thread_bundle；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.11,
+   "origin": "bld_hw_mill"
+  },
+  "item_seam_pitch_cake": {
+   "basis": "旧 world/meta/items.json：旧 id item_seam_pitch_cake；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.11,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_seam_rivet": {
+   "basis": "旧 world/meta/items.json：旧 id item_seam_rivet；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.12,
+   "origin": "bld_hw_forge"
+  },
+  "item_seed_marker": {
+   "basis": "旧 world/meta/items.json：旧 id item_seed_marker；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.09,
+   "origin": "bld_hw_mill"
+  },
+  "item_sewing_needle": {
+   "basis": "旧 world/meta/items.json：旧 id item_sewing_needle；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 70（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.005,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0143
+  },
+  "item_sheath_pouch": {
+   "basis": "旧 world/meta/items.json：旧 id item_sheath_pouch；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.25,
+   "origin": "bld_hw_weaving"
+  },
+  "item_sheet_shears": {
+   "abilities": {
+    "ability_cut": 1,
+    "ability_dig": null,
+    "ability_drill": null,
+    "ability_grip": null,
+    "ability_pick_lock": null,
+    "ability_probe": null,
+    "ability_pry": null,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_sheet_shears；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 cut 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 150（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.85,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0067
+  },
+  "item_shell_button_blank": {
+   "basis": "旧 world/meta/items.json：旧 id item_shell_button_blank；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.03,
+   "origin": "loc_bs"
+  },
+  "item_shell_button_set": {
+   "basis": "旧 world/meta/items.json：旧 id item_shell_button_set；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.022,
+   "origin": "bld_hw_mill"
+  },
+  "item_shutter_panel": {
+   "basis": "旧 world/meta/items.json：旧 id item_shutter_panel；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1.65,
+   "origin": "bld_hw_mill"
+  },
+  "item_shuttle": {
+   "basis": "旧 world/meta/items.json：旧 id item_shuttle；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.11,
+   "origin": "bld_hw_mill"
+  },
+  "item_sickle": {
+   "abilities": {
+    "ability_cut": 1,
+    "ability_dig": null,
+    "ability_drill": null,
+    "ability_grip": null,
+    "ability_pick_lock": null,
+    "ability_probe": null,
+    "ability_pry": null,
+    "ability_reap": 1
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_sickle；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 cut、harvest 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 100（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.5,
+   "origin": "loc_hw",
+   "wearPerUse": 0.01
+  },
+  "item_sighting_rule": {
+   "basis": "旧 world/meta/items.json：旧 id item_sighting_rule；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 260（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.55,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0038
+  },
+  "item_silk_cloth": {
+   "basis": "旧 world/meta/items.json：旧 id item_silk_cloth；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.15,
+   "origin": "loc_bs_sangban"
+  },
+  "item_silk_cocoon": {
+   "basis": "旧 world/meta/items.json：旧 id item_silk_cocoon；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.1,
+   "origin": "loc_bs_sangban"
+  },
+  "item_silkworm_eggs": {
+   "basis": "旧 world/meta/items.json：旧 id item_silkworm_eggs；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "loc_bs_sangban"
+  },
+  "item_silver_open_ring": {
+   "basis": "旧 world/meta/items.json：旧 id item_silver_open_ring；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.038,
+   "origin": "bld_hw_mill"
+  },
+  "item_silver_wire": {
+   "basis": "旧 world/meta/items.json：旧 id item_silver_wire；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "loc_bs"
+  },
+  "item_singlebit_axe": {
+   "basis": "旧 world/meta/items.json：旧 id item_singlebit_axe；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 280（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_weapon"
+   ],
+   "massKg": 1.4,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0036
+  },
+  "item_slate_splinter": {
+   "basis": "旧 world/meta/items.json：旧 id item_slate_splinter；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "loc_bs"
+  },
+  "item_slate_stylus": {
+   "basis": "旧 world/meta/items.json：旧 id item_slate_stylus；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.06,
+   "origin": "bld_hw_mill"
+  },
+  "item_slate_writing_tile": {
+   "basis": "旧 world/meta/items.json：旧 id item_slate_writing_tile；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.16,
+   "origin": "bld_hw_mill"
+  },
+  "item_small_bell_frame": {
+   "basis": "旧 world/meta/items.json：旧 id item_small_bell_frame；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.25,
+   "origin": "bld_hw_forge"
+  },
+  "item_small_trowel": {
+   "basis": "旧 world/meta/items.json：旧 id item_small_trowel；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 280（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.55,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0036
+  },
+  "item_smith_hammer": {
+   "basis": "旧 world/meta/items.json：旧 id item_smith_hammer；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 160（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 1.2,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0063
+  },
+  "item_smith_tongs": {
+   "abilities": {
+    "ability_cut": null,
+    "ability_dig": null,
+    "ability_drill": null,
+    "ability_grip": 1,
+    "ability_pick_lock": null,
+    "ability_probe": null,
+    "ability_pry": null,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_smith_tongs；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 grip 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 130（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.7,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0077
+  },
+  "item_soap_flake": {
+   "basis": "旧 world/meta/items.json：旧 id item_soap_flake；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.1,
+   "origin": "loc_bs"
+  },
+  "item_soap_wash_portion": {
+   "basis": "旧 world/meta/items.json：旧 id item_soap_wash_portion；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.5,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_soot_ink": {
+   "basis": "旧 world/meta/items.json：旧 id item_soot_ink；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "bld_hw_mill"
+  },
+  "item_spindle": {
+   "basis": "旧 world/meta/items.json：旧 id item_spindle；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 80（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.12,
+   "origin": "bld_hw_mill",
+   "wearPerUse": 0.0125
+  },
+  "item_spindle_whorl": {
+   "basis": "旧 world/meta/items.json：旧 id item_spindle_whorl；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.08,
+   "origin": "bld_hw_mill"
+  },
+  "item_spokeshave": {
+   "basis": "旧 world/meta/items.json：旧 id item_spokeshave；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 250（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.5,
+   "origin": "loc_bs",
+   "wearPerUse": 0.004
+  },
+  "item_staff": {
+   "abilities": {
+    "ability_cut": null,
+    "ability_dig": null,
+    "ability_drill": null,
+    "ability_grip": null,
+    "ability_pick_lock": null,
+    "ability_probe": 1,
+    "ability_pry": null,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_staff；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 probe 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 100（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 1,
+   "origin": "bld_hw_mill",
+   "wearPerUse": 0.01
+  },
+  "item_steel_arming_sword": {
+   "basis": "旧 world/meta/items.json：旧 id item_steel_arming_sword；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 300（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_weapon"
+   ],
+   "massKg": 1.25,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0033
+  },
+  "item_steel_bar": {
+   "basis": "旧 world/meta/items.json：旧 id item_steel_bar；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1,
+   "origin": "bld_hw_forge"
+  },
+  "item_steel_dividers": {
+   "basis": "旧 world/meta/items.json：旧 id item_steel_dividers；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 230（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.25,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0043
+  },
+  "item_steel_gouge_tip": {
+   "abilities": {
+    "ability_cut": 1,
+    "ability_dig": null,
+    "ability_drill": null,
+    "ability_grip": null,
+    "ability_pick_lock": null,
+    "ability_probe": null,
+    "ability_pry": null,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_steel_gouge_tip；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 cut 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 280（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.56,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0036
+  },
+  "item_stitchbound_folio": {
+   "basis": "旧 world/meta/items.json：旧 id item_stitchbound_folio；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.13,
+   "origin": "bld_hw_mill"
+  },
+  "item_stitching_awl": {
+   "abilities": {
+    "ability_cut": null,
+    "ability_dig": null,
+    "ability_drill": 1,
+    "ability_grip": null,
+    "ability_pick_lock": null,
+    "ability_probe": null,
+    "ability_pry": null,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_stitching_awl；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 pierce 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 110（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.15,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0091
+  },
+  "item_stone": {
+   "basis": "旧 world/meta/items.json：旧 id item_stone；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 3,
+   "origin": "loc_hw_dock"
+  },
+  "item_stone_crest_quill": {
+   "basis": "旧 world/meta/items.json：旧 id item_stone_crest_quill；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "loc_wild_yp_north"
+  },
+  "item_stone_mortar": {
+   "basis": "旧 world/meta/items.json：旧 id item_stone_mortar；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 140（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 1.8,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0071
+  },
+  "item_stone_point": {
+   "basis": "旧 world/meta/items.json：旧 id item_stone_point；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 280（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 1.1,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0036
+  },
+  "item_stove_grid": {
+   "basis": "旧 world/meta/items.json：旧 id item_stove_grid；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1.42,
+   "origin": "bld_hw_forge"
+  },
+  "item_strap_eye": {
+   "basis": "旧 world/meta/items.json：旧 id item_strap_eye；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.13,
+   "origin": "bld_hw_forge"
+  },
+  "item_swage_block": {
+   "basis": "旧 world/meta/items.json：旧 id item_swage_block；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 320（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 4,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0031
+  },
+  "item_tanned_leather": {
+   "basis": "旧 world/meta/items.json：旧 id item_tanned_leather；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.65,
+   "origin": "loc_bs"
+  },
+  "item_tannin_bark": {
+   "basis": "旧 world/meta/items.json：旧 id item_tannin_bark；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "loc_hw_northwood"
+  },
+  "item_tent_stake": {
+   "basis": "旧 world/meta/items.json：旧 id item_tent_stake；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.72,
+   "origin": "bld_hw_forge"
+  },
+  "item_thread_rack": {
+   "basis": "旧 world/meta/items.json：旧 id item_thread_rack；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1.05,
+   "origin": "bld_hw_mill"
+  },
+  "item_three_leg_stool": {
+   "basis": "旧 world/meta/items.json：旧 id item_three_leg_stool；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1.45,
+   "origin": "bld_hw_mill"
+  },
+  "item_tin_inlay_strip": {
+   "basis": "旧 world/meta/items.json：旧 id item_tin_inlay_strip；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.12,
+   "origin": "bld_hw_forge"
+  },
+  "item_tin_sheet": {
+   "basis": "旧 world/meta/items.json：旧 id item_tin_sheet；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2,
+   "origin": "loc_bs"
+  },
+  "item_toasted_oats": {
+   "basis": "旧 world/meta/items.json：旧 id item_toasted_oats；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.36,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_tool_apron_panel": {
+   "basis": "旧 world/meta/items.json：旧 id item_tool_apron_panel；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.5,
+   "origin": "bld_hw_weaving"
+  },
+  "item_tool_handle": {
+   "basis": "旧 world/meta/items.json：旧 id item_tool_handle；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.3,
+   "origin": "bld_hw_mill"
+  },
+  "item_tool_tray": {
+   "basis": "旧 world/meta/items.json：旧 id item_tool_tray；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1.25,
+   "origin": "bld_hw_mill"
+  },
+  "item_travel_sewing_wallet": {
+   "basis": "旧 world/meta/items.json：旧 id item_travel_sewing_wallet；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.28,
+   "origin": "bld_hw_weaving"
+  },
+  "item_try_square": {
+   "basis": "旧 world/meta/items.json：旧 id item_try_square；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 220（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.4,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0045
+  },
+  "item_turnip": {
+   "basis": "旧 world/meta/items.json：旧 id item_turnip；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.4,
+   "origin": "loc_hw_fields"
+  },
+  "item_turnip_oat_cake": {
+   "basis": "旧 world/meta/items.json：旧 id item_turnip_oat_cake；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.54,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_veining_chisel": {
+   "basis": "旧 world/meta/items.json：旧 id item_veining_chisel；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 270（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.18,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0037
+  },
+  "item_vinegar_carrot": {
+   "basis": "旧 world/meta/items.json：旧 id item_vinegar_carrot；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.26,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_walking_crutch": {
+   "basis": "旧 world/meta/items.json：旧 id item_walking_crutch；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1.3,
+   "origin": "bld_hw_mill"
+  },
+  "item_wall_shelf": {
+   "basis": "旧 world/meta/items.json：旧 id item_wall_shelf；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 1.2,
+   "origin": "bld_hw_mill"
+  },
+  "item_walnut": {
+   "basis": "旧 world/meta/items.json：旧 id item_walnut；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.15,
+   "origin": "loc_hw_orchard"
+  },
+  "item_walnut_honey_bites": {
+   "basis": "旧 world/meta/items.json：旧 id item_walnut_honey_bites；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.43,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_war_pick": {
+   "basis": "旧 world/meta/items.json：旧 id item_war_pick；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 360（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_weapon"
+   ],
+   "massKg": 1.7,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0028
+  },
+  "item_warm_vinegar_drink": {
+   "basis": "旧 world/meta/items.json：旧 id item_warm_vinegar_drink；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.25,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_water": {
+   "basis": "旧 world/meta/items.json：旧 id item_water；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.25,
+   "origin": "loc_hw"
+  },
+  "item_wax_candle": {
+   "basis": "旧 world/meta/items.json：旧 id item_wax_candle；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.015,
+   "origin": "loc_hw_apiary"
+  },
+  "item_wax_seal_blank": {
+   "basis": "旧 world/meta/items.json：旧 id item_wax_seal_blank；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.045,
+   "origin": "bld_hw_qingdeng"
+  },
+  "item_waxed_thread": {
+   "basis": "旧 world/meta/items.json：旧 id item_waxed_thread；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.15,
+   "origin": "bld_hw_mill"
+  },
+  "item_weaving_sword": {
+   "basis": "旧 world/meta/items.json：旧 id item_weaving_sword；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.18,
+   "origin": "bld_hw_mill"
+  },
+  "item_wheat_grain": {
+   "basis": "旧 world/meta/items.json：旧 id item_wheat_grain；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.5,
+   "origin": "loc_bs"
+  },
+  "item_wheat_seed": {
+   "basis": "旧 world/meta/items.json：旧 id item_wheat_seed；massKg 取旧 weight（单件，kg）；旧 unit「斤」已并入（weight 本就是该单位一份的质量）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.5,
+   "origin": "loc_bs"
+  },
+  "item_whittling_knife": {
+   "abilities": {
+    "ability_cut": 1,
+    "ability_dig": null,
+    "ability_drill": null,
+    "ability_grip": null,
+    "ability_pick_lock": null,
+    "ability_probe": null,
+    "ability_pry": null,
+    "ability_reap": null
+   },
+   "basis": "旧 world/meta/items.json：旧 id item_whittling_knife；massKg 取旧 weight（单件，kg）；abilities 由旧用途标签 cut 按对照表迁（初值 1 级，basis_kind migrated）；wearPerUse 取 1 ÷ 旧 durability 80（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.2,
+   "origin": "loc_bs",
+   "wearPerUse": 0.0125
+  },
+  "item_wick_coil": {
+   "basis": "旧 world/meta/items.json：旧 id item_wick_coil；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.025,
+   "origin": "bld_hw_weaving"
+  },
+  "item_wild_food": {
+   "basis": "旧 world/meta/items.json：旧 id item_wild_food；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.2
+  },
+  "item_willow_creel": {
+   "basis": "旧 world/meta/items.json：旧 id item_willow_creel；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.72,
+   "origin": "bld_hw_mill"
+  },
+  "item_willow_rod": {
+   "basis": "旧 world/meta/items.json：旧 id item_willow_rod；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.35,
+   "origin": "loc_hw_dock"
+  },
+  "item_wire_mesh_patch": {
+   "basis": "旧 world/meta/items.json：旧 id item_wire_mesh_patch；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.17,
+   "origin": "bld_hw_forge"
+  },
+  "item_wood": {
+   "basis": "旧 world/meta/items.json：旧 id item_wood；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 2,
+   "origin": "loc_hw_northwood"
+  },
+  "item_wood_mallet": {
+   "basis": "旧 world/meta/items.json：旧 id item_wood_mallet；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 110（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.55,
+   "origin": "bld_hw_mill",
+   "wearPerUse": 0.0091
+  },
+  "item_wood_marking_kit": {
+   "basis": "旧 world/meta/items.json：旧 id item_wood_marking_kit；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.18,
+   "origin": "bld_hw_mill"
+  },
+  "item_wood_rasp": {
+   "basis": "旧 world/meta/items.json：旧 id item_wood_rasp；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 120（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_tool"
+   ],
+   "massKg": 0.3,
+   "origin": "bld_hw_forge",
+   "wearPerUse": 0.0083
+  },
+  "item_wood_shavings": {
+   "basis": "旧 world/meta/items.json：旧 id item_wood_shavings；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.1,
+   "origin": "bld_hw_mill"
+  },
+  "item_wood_spoon": {
+   "basis": "旧 world/meta/items.json：旧 id item_wood_spoon；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.08,
+   "origin": "bld_hw_mill"
+  },
+  "item_wooden_peg": {
+   "basis": "旧 world/meta/items.json：旧 id item_wooden_peg；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.05,
+   "origin": "bld_hw_mill"
+  },
+  "item_wool": {
+   "basis": "旧 world/meta/items.json：旧 id item_wool；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.3,
+   "origin": "loc_bs"
+  },
+  "item_wool_felt_sheet": {
+   "basis": "旧 world/meta/items.json：旧 id item_wool_felt_sheet；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.5,
+   "origin": "bld_hw_weaving"
+  },
+  "item_wool_wristband": {
+   "basis": "旧 world/meta/items.json：旧 id item_wool_wristband；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.12,
+   "origin": "bld_hw_weaving"
+  },
+  "item_wool_yarn": {
+   "basis": "旧 world/meta/items.json：旧 id item_wool_yarn；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [],
+   "massKg": 0.08,
+   "origin": "bld_hw_weaving"
+  },
+  "item_work_book": {
+   "basis": "旧 world/meta/items.json：旧 id item_work_book；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_work"
+   ],
+   "massKg": 0.25
+  },
+  "item_work_manuscript": {
+   "basis": "旧 world/meta/items.json：旧 id item_work_manuscript；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_work"
+   ],
+   "massKg": 0.3
+  },
+  "item_work_map": {
+   "basis": "旧 world/meta/items.json：旧 id item_work_map；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "classes": [
+    "comp_work"
+   ],
+   "massKg": 0.1
+  }
+ },
  "version": 1
 }

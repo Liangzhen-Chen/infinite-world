@@ -60,8 +60,8 @@ test('M3 表头声明卷三乙 §2.2 的 emits、attachModifiers、launch、guar
   assert.equal(doc.dimensions.launch.fields.source.vocab, 'launchsrc');
   const unbuilt = JSON.parse(readFileSync(join(ROOT, 'world/ontology/dimensions/_unbuilt-derived.json'), 'utf8'));
   const cols = unbuilt.columns.filter((c) => c.table === 'item').map((c) => c.dimension);
-  assert.equal(cols.length, 18);
-  for (const k of ['attachModifiers', 'launch', 'guard']) assert.ok(cols.includes(k), k);
+  assert.equal(cols.length, 24); // 6-2 登的 18 列，加 6-22 登的 material、holdsLiquid、maxLoadKg、preserveMult、sealed、volumeCapacity
+  for (const k of ['attachModifiers', 'launch', 'guard', 'material', 'holdsLiquid', 'maxLoadKg', 'preserveMult', 'sealed', 'volumeCapacity']) assert.ok(cols.includes(k), k);
 });
 
 test('定义源一致：markers 的 MATTER_STATES 恰是 _vocab matter 族全部条目；两边不一致加载即失败', () => {

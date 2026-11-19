@@ -176,7 +176,8 @@ test('stockIn 在场一半待块 6（K3-44）：有可见候选时范围与在�
 
 test('资源种类表两行（卷六 :112、:371）与本卷词表族按登记载入', () => {
   const rows = W.rules.economyResources;
-  assert.deepEqual(Object.keys(rows).sort(), ['res_building_share', 'res_unmaterialized_share']);
+  // 6-22 起另有每件物品一行 goods（本测试管建筑份额两行；goods 行见 item-world.test.mjs）。
+  assert.deepEqual(Object.keys(rows).filter((k) => rows[k].family !== 'resfam_goods').sort(), ['res_building_share', 'res_unmaterialized_share']);
   assert.deepEqual([rows.res_building_share.family, rows.res_building_share.unit, rows.res_building_share.sources, rows.res_building_share.sinks],
     ['resfam_asset', 'asset_share_bp', ['src_genesis', 'src_transform'], ['sink_loss']]);
   assert.deepEqual([rows.res_unmaterialized_share.family, rows.res_unmaterialized_share.unit, rows.res_unmaterialized_share.sources, rows.res_unmaterialized_share.sinks],
@@ -195,12 +196,14 @@ test('资源种类表两行（卷六 :112、:371）与本卷词表族按登记�
 
 test('families 由资源种类行反推（K3-41）：字面量；src_boundary 照卷六 :1242 明写只含物品', () => {
   const families = (id) => W.vocab.index.get(id).entry.families;
-  assert.deepEqual(families('src_genesis'), ['resfam_asset', 'resfam_claim']);
-  assert.deepEqual(families('src_transform'), ['resfam_asset']);
-  assert.deepEqual(families('sink_loss'), ['resfam_asset']);
-  assert.deepEqual(families('sink_transform'), ['resfam_claim']);
+  // 6-22 起每件物品一行 goods 资源种类（sources src_boundary、src_genesis、src_transform；sinks 见下），families 随行反推。
+  assert.deepEqual(families('src_genesis'), ['resfam_asset', 'resfam_claim', 'resfam_goods']);
+  assert.deepEqual(families('src_transform'), ['resfam_asset', 'resfam_goods']);
+  assert.deepEqual(families('sink_loss'), ['resfam_asset', 'resfam_goods']);
+  assert.deepEqual(families('sink_transform'), ['resfam_claim', 'resfam_goods']);
   assert.deepEqual(families('src_boundary'), ['resfam_goods']);
-  for (const id of ['src_birth', 'src_issue', 'src_regrow', 'sink_boundary', 'sink_consume', 'sink_death', 'sink_decay', 'sink_depart', 'sink_redeem', 'sink_seized']) assert.deepEqual(families(id), [], id);
+  for (const id of ['sink_boundary', 'sink_consume', 'sink_decay', 'sink_depart', 'sink_seized']) assert.deepEqual(families(id), ['resfam_goods'], id);
+  for (const id of ['src_birth', 'src_issue', 'src_regrow', 'sink_death', 'sink_redeem']) assert.deepEqual(families(id), [], id);
   assert.equal(W.vocab.index.get('src_genesis').entry.grade, 'designed');
   assert.equal(W.vocab.index.get('src_boundary').entry.grade, 'referenced');
   assert.equal(W.vocab.index.get('src_transform').entry.pairedWith, 'sink_transform');

@@ -27,12 +27,11 @@ const has = (r, code, id) => r.messages.some((m) => m.startsWith(code) && (id ==
 
 // ---------- 真实 world/：只有表头 ----------
 
-test('真实 world：item 表头载入、没有行；massKg、material 恒必填；表头没有旧价格字段 basePrice，也没有任何手填的派生维度', () => {
+test('真实 world：item 表头载入（行内容归 6-22，见 item-world.test.mjs）；massKg、material 恒必填；表头没有旧价格字段 basePrice，也没有任何手填的派生维度', () => {
   const r = loadWorld(ROOT);
   assert.equal(r.ok, true, JSON.stringify(r.errors));
   const doc = JSON.parse(readFileSync(join(ROOT, 'world/ontology/dimensions/item.json'), 'utf8'));
   assert.deepEqual(doc.entity.idPrefix, ['item_']);
-  assert.deepEqual(doc.rows, {});
   assert.equal(doc.dimensions.massKg.required, 'always');
   assert.equal(doc.dimensions.material.required, 'always');
   assert.equal(Object.hasOwn(doc.dimensions, 'basePrice'), false);
@@ -40,10 +39,11 @@ test('真实 world：item 表头载入、没有行；massKg、material 恒必填
   for (const k of ['density', 'volumeL', 'sizeClass', 'categoryKind', 'possibleMatterStates', 'valueBase']) assert.notEqual(doc.dimensions[k].derived, undefined, k);
 });
 
-test('真实 world：规则表首批值卷文没给的键登在 rules.items.unbuilt（不编数）；聚合口径表覆盖材料表全部数值、映射、结构维度（M-10）', () => {
+test('真实 world：卷文缺口的键登在 rules.items.unbuilt（不编数；categoryRules、classRules、materialClassMin、sizeClasses 已由 6-22 入表）；聚合口径表覆盖材料表全部数值、映射、结构维度（M-10）', () => {
   const r = loadWorld(ROOT);
-  assert.deepEqual([...r.rules.items.unbuilt].sort(), ['categoryRules', 'classRules', 'instanceLotPointer', 'materialClassMin', 'resourceItemRef', 'sizeClasses', 'wearPerUseResolution']);
-  assert.equal(Object.hasOwn(r.rules.items, 'sizeClasses'), false);
+  assert.deepEqual([...r.rules.items.unbuilt].sort(), ['instanceLotPointer', 'wearPerUseResolution']);
+  for (const k of ['categoryRules', 'classRules', 'sizeClasses']) assert.equal(Array.isArray(r.rules.items[k]), true, k);
+  assert.equal(typeof r.rules.items.materialClassMin, 'number');
   const matDims = r.tables.get('material').doc.dimensions;
   const have = new Set(r.rules.items.aggregation.map((s) => s.dimension));
   for (const [k, d] of Object.entries(matDims)) if (['number', 'integer', 'map', 'struct'].includes(d.type)) assert.ok(have.has(k), `aggregation row for ${k}`);

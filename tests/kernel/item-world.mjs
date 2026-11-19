@@ -8,7 +8,9 @@ import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 import { gradedCells } from '../../server-plugin/kernel/validate/cell-grades.mjs';
 import { testTempRoot, writeUnderTempRoot } from '../accept/temp-root.mjs';
 
-export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const FIRST_BATCH_KEYS = Object.freeze(['categoryRules', 'classRules', 'materialClassMin', 'sizeClasses']);
+const FIXTURE_FILLED_COLUMNS = Object.freeze(['material', 'holdsLiquid', 'maxLoadKg', 'preserveMult', 'sealed', 'volumeCapacity']);
+export const ROOT =join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DIMS = 'world/ontology/dimensions';
 const RULES = 'world/rules';
 const clone = (v) => JSON.parse(JSON.stringify(v));
@@ -79,7 +81,11 @@ export function loadItemWorld(f) {
   try {
     for (const name of readdirSync(join(ROOT, DIMS)).filter((n) => n.endsWith('.json'))) {
       const doc = readDim(name);
+      // 6-22 起真实 world 有物品行、能力、类别、尺寸档条目与它们的未建列登记；本夹具造的是"测试自己给前提"的世界：
+      // 物品行只用 f.items，三族条目只用 f.vocab 给的，6-22 才登记的未建列不登（测试行自己给齐）。
+      if (name === '_unbuilt-derived.json') doc.columns = doc.columns.filter((c) => !(c.table === 'item' && FIXTURE_FILLED_COLUMNS.includes(c.dimension)));
       if (name === '_vocab.json') {
+        for (const fam of ['ability', 'category', 'size']) doc.families[fam].entries = {};
         for (const [fam, entries] of Object.entries(f.vocab)) Object.assign(doc.families[fam].entries, clone(entries));
         if (typeof f.editVocab === 'function') f.editVocab(doc);
       }
@@ -89,7 +95,7 @@ export function loadItemWorld(f) {
         if (typeof f.editMaterialDoc === 'function') f.editMaterialDoc(doc);
       }
       if (name === 'item.json') {
-        Object.assign(doc.rows, clone(f.items));
+        doc.rows = clone(f.items);
         if (typeof f.editItemDoc === 'function') f.editItemDoc(doc);
       }
       writeUnderTempRoot(tmp, `dims/${name}`, JSON.stringify(doc));
@@ -98,6 +104,13 @@ export function loadItemWorld(f) {
     for (const row of reg.rows) writeUnderTempRoot(tmp, `rules/${row.file}`, readFileSync(join(ROOT, RULES, row.file), 'utf8'));
     // rules.items：首批以外的键测试给值，并从 unbuilt 里去掉；f.rulesItems 里写 null 的键保持未建。
     const items = ruleRows('items.json', (rows) => {
+      // 6-22 已把四个首批键入真实表；夹具回到"首批以外测试自己给"：先去掉真实行、登回 unbuilt，再按 f.rulesItems 给。
+      for (const k of FIRST_BATCH_KEYS) {
+        const i = rows.findIndex((r) => r.key === k);
+        if (i >= 0) rows.splice(i, 1);
+      }
+      const unb = rows.find((r) => r.key === 'unbuilt');
+      unb.value = [...new Set([...unb.value, ...FIRST_BATCH_KEYS])].sort();
       const given = Object.entries(f.rulesItems).filter(([, v]) => v !== null);
       for (const [k, v] of given) setRule(rows, k, clone(v));
       const un = rows.find((r) => r.key === 'unbuilt');

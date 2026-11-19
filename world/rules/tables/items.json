@@ -66,12 +66,58 @@
    "basis": "逐行照卷三乙 :630–:672 的聚合口径表：每个材料表 number、map、struct 维度一行，只逐份使用或只作引用的写 none；承担组空即全部组；固相量（强度、硬度、韧性、韧展性、锋利上限、耐磨、防护系数）加 solidOnly（卷三乙 §4.2.3 I-7 逐项列出，卷文没写固相量登在哪，按单点登记放聚合表行上）。<维度>@<用途> 写法的行归读它的规则登记（卷三乙 :672），本表首批不登。valueMult、wearResistance、workDifficulty 是材料表已有的别卷登记维度，同表登口径（M-10）"
   },
   {
+   "key": "categoryRules",
+   "value": [
+    {"when": "member(comp_weapon, item.classes)", "value": "category_weapon"},
+    {"when": "member(comp_wearable, item.classes)", "value": "category_apparel"},
+    {"when": "member(comp_readable, item.classes) || member(comp_document, item.classes) || member(comp_work, item.classes)", "value": "category_document"},
+    {"when": "member(comp_container, item.classes)", "value": "category_container"},
+    {"when": "member(comp_tool, item.classes)", "value": "category_tool"}
+   ],
+   "file": "server-plugin/kernel/item.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §4.3.3 C-1 :984（first(rules.items.categoryRules)；变量只读功能维度与材料、形态，不读实体 id 与 class 族，不恒真）；§2.4 :298 category 族类别名；§7 M3b-9 :2046 ③（类别不迁旧值，由规则表派生）",
+   "basis": "暂定·待试玩标定（不是旧数据标定出的）。旧数据没有类别值，旧三套标签只用来核对（M3b-9 ④）；条件取旧标签已对到的手写组件类（comp_weapon、comp_wearable、comp_readable／comp_document／comp_work、comp_container、comp_tool），次序 武器、服装、文书、容器、工具（身兼容器与工具的锅按容器）。卷三乙 :298 列的食物、饮料、燃料、原料等类别要读材料派生组件与份额（C-1 第②类变量），内核 compileWhens（kernel/item.mjs:333）的变量域目前只有物品行维度与手写组件类，写不出；那些类别暂缺，故现在只有挂了上述组件类、又有 material 的物品能派生出类别（有 material 而派生不出即 E-DIM-REQUIRED-MISSING『categoryKind derives to nothing』）；旧数据没有 material，真实世界的物品行暂都未写（见 _unbuilt-derived.json 的 item.material），本表的条件由测试在加了测试材料的临时世界里核。stockSlot 各条取真（每类各开一槽）：卷文没给值，设计值待调（李白 11-19 21:0x ⑤）"
+  },
+  {
+   "key": "classRules",
+   "value": [
+    {"when": "member(comp_container, item.classes) && holdsLiquid", "value": "class_vessel"}
+   ],
+   "file": "server-plugin/kernel/item.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §4.3.1 :958（class_vessel：挂 comp_container 且 holdsLiquid 为真）；C-8 :985 ②",
+   "basis": "首批只有 class_vessel 一条：它只读手写组件类与 holdsLiquid（旧标签 liquid_container 迁来的值），其余首批条目 class_formed（内核另按 bulkForm 条目 bearsLoad 算，不依赖本表，I-7）、class_powder（要读 bulkForm 条目的 fine，RX 读不到条目字段）、class_fuel、class_salt（读折算量 fuelEnergyMJ、pileFlammability、saltPerKg，原语未建）、class_incense（读 usagePer，用度类未建）条件读本卡之外的量，暂缺；缺的条目读到时按未命中（卷二 §1.12）。暂定·待试玩标定"
+  },
+  {
    "key": "instancedComponents",
    "value": ["comp_attachment", "comp_container", "comp_corpse", "comp_document", "comp_livestock", "comp_readable", "comp_relic", "comp_tool", "comp_vehicle", "comp_weapon", "comp_wearable", "comp_work"],
    "file": "server-plugin/kernel/dimension-writers.mjs",
    "grade": "designed",
    "source": "卷三乙 §4.2.3 I-2 :908（首批：工具、武器、穿戴、容器、可读、文书、附件、作品、文物、载具、牲畜、尸体）",
    "basis": "逐条照 I-2 首批十二类；材料派生组件与 comp_crafted 不在表里（铁锭、木料、面粉、饼、炭、布都是存量，等级记在批次上，Q-4）"
+  },
+  {
+   "key": "materialClassMin",
+   "value": 0.5,
+   "file": "server-plugin/kernel/item.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §2.5 :332（物品从材料的本源成分与派生大类得到材料类别的最小份额）；C-8 :985 ①",
+   "basis": "暂定·待试玩标定。旧数据没有材料份额，卷文只说含义、没给数，P-3 推导规则（docs/审查/P-3-推导规则.md）也没有对应的统一规则；按\"过半才算那一类\"取 0.5：卷三乙 §4.2.5 例 1（铁斧：熟铁 0.6、橡木 0.4）份额 0.6 的金属类成立、0.4 的木质类不成立，例 2（竹篓：竹 1）成立，与例文一致。试玩中显出不合理再改这一个键"
+  },
+  {
+   "key": "sizeClasses",
+   "value": [
+    {"size": "size_tiny", "minVolumeL": 0},
+    {"size": "size_small", "minVolumeL": 0.05},
+    {"size": "size_medium", "minVolumeL": 0.5},
+    {"size": "size_large", "minVolumeL": 5},
+    {"size": "size_huge", "minVolumeL": 50}
+   ],
+   "file": "server-plugin/kernel/item.mjs",
+   "grade": "designed",
+   "source": "旧 world/meta/item-size-classes.json（按派生体积 volumeL 十倍等比分档：0.05、0.5、5、50 升）；卷三乙 §2.5 :334 体积→尺寸档曲线；§4.2.1 :892 sizeClass = lookup(rules.items.sizeClasses, volumeL)",
+   "basis": "旧数据标定：旧档 微件 maxVolumeL 0.05、小件 0.5、中件 5、大件 50、特大件无上界（取第一个 maxVolumeL 大于体积的档），折成新规则的 minVolumeL 起点 0、0.05、0.5、5、50（体积等于边界时旧规则进下一档，新规则 minVolumeL 不超过体积的最大一档，同一档）；档名代号 size_tiny、size_small、size_medium、size_large、size_huge 取卷三乙 §4.2.5 例 3 的 size_large 与 size_medium 的体例，显示名在 labels（微件、小件、中件、大件、特大件）"
   },
   {
    "key": "staticStateOrder",
@@ -83,11 +129,11 @@
   },
   {
    "key": "unbuilt",
-   "value": ["categoryRules", "classRules", "instanceLotPointer", "materialClassMin", "resourceItemRef", "sizeClasses", "wearPerUseResolution"],
+   "value": ["instanceLotPointer", "wearPerUseResolution"],
    "file": "server-plugin/kernel/item.mjs",
    "grade": "designed",
    "source": "卷三乙 §2.5 :325、:331–:335；§4.3.1 :948「上表是首批，条目值由迁移卡标定」",
-   "basis": "无出处不编：categoryRules 首批条目卷文没写（只列了 category 族的类别名）；classRules 首批各条的条件要读整堆有效易燃度（T-15）、折合热量（§4.17）、材料派生组件的具有口径等本卡之外的量；materialClassMin 的阈值卷文只说含义、没给数；sizeClasses 卷文只说按体积十倍分档，没给起点体积与档名。读到时按未知，求出的类别、尺寸档带缺口，由 6-22 物品内容转换按旧数据标定后入表。I-7（承力四项按 class_formed 适用）：class_formed 的类别成员要 classRules，该键未给时类别里没有它；但 I-7 的加载校验与固相量使用时的适用判断，直接按 class_formed 的定义条件（可能物态集含固且 bulkForm 条目 bearsLoad 为真，C-8 :953）算（kernel/item.mjs 的 formed），不依赖 classRules"
+   "basis": "无出处不编：instanceLotPointer、wearPerUseResolution 是 6-3 留下的卷文缺口（见 docs/卡回报/ds-b6-3.md 与 docs/问题.md），待李白裁定；resourceItemRef 已删（李白 11-19 20:3x ⑤ 认可物品→资源种类写在 resource 条目的 item 字段）。categoryRules、classRules、materialClassMin、sizeClasses 四键已由 6-22 入表（各行 basis 写明旧数据标定或 P-3 暂定）。I-7（承力四项按 class_formed 适用）：class_formed 的类别成员要 classRules（首批只有 class_vessel，见 classRules 行 basis）；但 I-7 的加载校验与固相量使用时的适用判断，直接按 class_formed 的定义条件（可能物态集含固且 bulkForm 条目 bearsLoad 为真，C-8 :953）算（kernel/item.mjs 的 formed），不依赖 classRules"
   }
  ]
 }

@@ -1,6 +1,6 @@
 {
  "families": {
-  "ability": {"closed": false, "entries": {}, "prefix": "ability_"},
+  "ability": {"closed": false, "entries": {"ability_cut": {}, "ability_dig": {}, "ability_drill": {}, "ability_grip": {}, "ability_pick_lock": {}, "ability_probe": {}, "ability_pry": {}, "ability_reap": {}}, "prefix": "ability_"},
   "access": {
    "closed": false,
    "entries": {
@@ -22,7 +22,7 @@
    },
    "prefix": "bform_"
   },
-  "category": {"closed": false, "entries": {}, "prefix": "category_"},
+  "category": {"closed": false, "entries": {"category_apparel": {"stockSlot": true}, "category_container": {"stockSlot": true}, "category_document": {"stockSlot": true}, "category_tool": {"stockSlot": true}, "category_weapon": {"stockSlot": true}}, "prefix": "category_"},
   "dockind": {"closed": false, "entries": {}, "prefix": "dockind_"},
   "emphasis": {"closed": false, "entries": {}, "prefix": "emph_"},
   "fault": {"closed": false, "entries": {}, "prefix": "fault_"},
@@ -60,7 +60,7 @@
    "quality_normal": {"basis": "卷三乙 :304 常；李白 11-19 20:3x ⑥", "rank": 3},
    "quality_poor": {"basis": "卷三乙 :304 次；李白 11-19 20:3x ⑥", "rank": 2}
   }, "prefix": "quality_"},
-  "size": {"closed": false, "entries": {}, "prefix": "size_"},
+  "size": {"closed": false, "entries": {"size_huge": {}, "size_large": {}, "size_medium": {}, "size_small": {}, "size_tiny": {}}, "prefix": "size_"},
   "source": {"closed": false, "entries": {}, "prefix": "source_"},
   "tier": {"closed": false, "entries": {}, "prefix": "tier_"},
   "transport": {"closed": false, "entries": {}, "prefix": "transport_"},
@@ -663,8 +663,1466 @@
   "resource": {
    "closed": false,
    "entries": {
+    "res_acid_moss_gel": {
+     "item": "item_acid_moss_gel"
+    },
+    "res_alum_grain": {
+     "item": "item_alum_grain"
+    },
+    "res_animal_milk": {
+     "item": "item_animal_milk"
+    },
+    "res_apple_rye_griddle": {
+     "item": "item_apple_rye_griddle"
+    },
+    "res_ash_spear": {
+     "item": "item_ash_spear"
+    },
+    "res_ash_stave": {
+     "item": "item_ash_stave"
+    },
+    "res_ash_walking_stick": {
+     "item": "item_ash_walking_stick"
+    },
+    "res_bag": {
+     "item": "item_bag"
+    },
+    "res_bamboo_fishing_rod": {
+     "item": "item_bamboo_fishing_rod"
+    },
+    "res_banknote_hw": {
+     "item": "item_banknote_hw"
+    },
+    "res_barley_pea_stew": {
+     "item": "item_barley_pea_stew"
+    },
+    "res_beech_blank": {
+     "item": "item_beech_blank"
+    },
+    "res_beech_press_board": {
+     "item": "item_beech_press_board"
+    },
+    "res_beech_spatula": {
+     "item": "item_beech_spatula"
+    },
+    "res_beeswax": {
+     "item": "item_beeswax"
+    },
+    "res_beet": {
+     "item": "item_beet"
+    },
+    "res_beet_barley_pot": {
+     "item": "item_beet_barley_pot"
+    },
+    "res_beet_vinegar_dice": {
+     "item": "item_beet_vinegar_dice"
+    },
+    "res_belt_buckle": {
+     "item": "item_belt_buckle"
+    },
+    "res_belt_strap": {
+     "item": "item_belt_strap"
+    },
+    "res_bench_plane": {
+     "item": "item_bench_plane"
+    },
+    "res_billhook_polearm": {
+     "item": "item_billhook_polearm"
+    },
+    "res_boar_spear": {
+     "item": "item_boar_spear"
+    },
+    "res_bone_blank": {
+     "item": "item_bone_blank"
+    },
+    "res_bone_folder": {
+     "item": "item_bone_folder"
+    },
+    "res_bone_toggle_set": {
+     "item": "item_bone_toggle_set"
+    },
+    "res_book_bake_flatbread": {
+     "item": "item_book_bake_flatbread"
+    },
+    "res_book_cook_porridge": {
+     "item": "item_book_cook_porridge"
+    },
+    "res_book_curdle_milk": {
+     "item": "item_book_curdle_milk"
+    },
+    "res_book_dip_candles": {
+     "item": "item_book_dip_candles"
+    },
+    "res_book_fire_cup": {
+     "item": "item_book_fire_cup"
+    },
+    "res_book_fire_pot": {
+     "item": "item_book_fire_pot"
+    },
+    "res_book_forge_hinge": {
+     "item": "item_book_forge_hinge"
+    },
+    "res_book_forge_nails": {
+     "item": "item_book_forge_nails"
+    },
+    "res_book_household_pottery": {
+     "item": "item_book_household_pottery"
+    },
+    "res_book_journey_desk": {
+     "item": "item_book_journey_desk"
+    },
+    "res_book_journey_grain": {
+     "item": "item_book_journey_grain"
+    },
+    "res_book_journey_metal": {
+     "item": "item_book_journey_metal"
+    },
+    "res_book_journey_preserve": {
+     "item": "item_book_journey_preserve"
+    },
+    "res_book_journey_sewing": {
+     "item": "item_book_journey_sewing"
+    },
+    "res_book_journey_smallcraft": {
+     "item": "item_book_journey_smallcraft"
+    },
+    "res_book_journey_upkeep": {
+     "item": "item_book_journey_upkeep"
+    },
+    "res_book_journey_wood": {
+     "item": "item_book_journey_wood"
+    },
+    "res_book_m4_contract": {
+     "item": "item_book_m4_contract"
+    },
+    "res_book_m4_guard": {
+     "item": "item_book_m4_guard"
+    },
+    "res_book_m4_light": {
+     "item": "item_book_m4_light"
+    },
+    "res_book_m4_mind": {
+     "item": "item_book_m4_mind"
+    },
+    "res_book_m4_projection": {
+     "item": "item_book_m4_projection"
+    },
+    "res_book_m4_release": {
+     "item": "item_book_m4_release"
+    },
+    "res_book_m4_renew": {
+     "item": "item_book_m4_renew"
+    },
+    "res_book_m4_surface": {
+     "item": "item_book_m4_surface"
+    },
+    "res_book_m4_travel": {
+     "item": "item_book_m4_travel"
+    },
+    "res_book_m4_veils": {
+     "item": "item_book_m4_veils"
+    },
+    "res_book_mill_oats": {
+     "item": "item_book_mill_oats"
+    },
+    "res_book_s1_area": {
+     "item": "item_book_s1_area"
+    },
+    "res_book_s1_cover": {
+     "item": "item_book_s1_cover"
+    },
+    "res_book_s1_growth": {
+     "item": "item_book_s1_growth"
+    },
+    "res_book_s1_message": {
+     "item": "item_book_s1_message"
+    },
+    "res_book_s1_movement": {
+     "item": "item_book_s1_movement"
+    },
+    "res_book_s1_utility": {
+     "item": "item_book_s1_utility"
+    },
+    "res_book_s2_air": {
+     "item": "item_book_s2_air"
+    },
+    "res_book_s2_farm": {
+     "item": "item_book_s2_farm"
+    },
+    "res_book_s2_stone": {
+     "item": "item_book_s2_stone"
+    },
+    "res_book_s3_care": {
+     "item": "item_book_s3_care"
+    },
+    "res_book_s3_optics": {
+     "item": "item_book_s3_optics"
+    },
+    "res_book_s4_measure": {
+     "item": "item_book_s4_measure"
+    },
+    "res_book_s4_space": {
+     "item": "item_book_s4_space"
+    },
+    "res_book_salt_fish": {
+     "item": "item_book_salt_fish"
+    },
+    "res_book_sew_sack": {
+     "item": "item_book_sew_sack"
+    },
+    "res_book_spin_wool": {
+     "item": "item_book_spin_wool"
+    },
+    "res_book_spine_tape": {
+     "item": "item_book_spine_tape"
+    },
+    "res_book_trades_artisan": {
+     "item": "item_book_trades_artisan"
+    },
+    "res_book_trades_iron": {
+     "item": "item_book_trades_iron"
+    },
+    "res_book_trades_kitchen": {
+     "item": "item_book_trades_kitchen"
+    },
+    "res_book_trades_leather": {
+     "item": "item_book_trades_leather"
+    },
+    "res_book_trades_wood": {
+     "item": "item_book_trades_wood"
+    },
+    "res_book_w2_reuse_advanced": {
+     "item": "item_book_w2_reuse_advanced"
+    },
+    "res_book_w2_reuse_basic": {
+     "item": "item_book_w2_reuse_basic"
+    },
+    "res_book_w2_reuse_middle": {
+     "item": "item_book_w2_reuse_middle"
+    },
+    "res_book_weave_linen": {
+     "item": "item_book_weave_linen"
+    },
+    "res_boot_form": {
+     "item": "item_boot_form"
+    },
+    "res_boot_gaiter": {
+     "item": "item_boot_gaiter"
+    },
+    "res_boot_scraper": {
+     "item": "item_boot_scraper"
+    },
+    "res_bottle_divider_crate": {
+     "item": "item_bottle_divider_crate"
+    },
+    "res_brace_drill": {
+     "item": "item_brace_drill"
+    },
+    "res_brass_strip": {
+     "item": "item_brass_strip"
+    },
+    "res_bread": {
+     "item": "item_bread"
+    },
+    "res_bread_board": {
+     "item": "item_bread_board"
+    },
+    "res_bristle_bundle": {
+     "item": "item_bristle_bundle"
+    },
+    "res_bristle_handbrush": {
+     "item": "item_bristle_handbrush"
+    },
+    "res_broad_bean": {
+     "item": "item_broad_bean"
+    },
+    "res_broad_steel_chisel": {
+     "item": "item_broad_steel_chisel"
+    },
+    "res_broadbean_garlic_mash": {
+     "item": "item_broadbean_garlic_mash"
+    },
+    "res_brush_roll": {
+     "item": "item_brush_roll"
+    },
+    "res_bs_dao_primer": {
+     "item": "item_bs_dao_primer"
+    },
+    "res_bs_mage_primer": {
+     "item": "item_bs_mage_primer"
+    },
+    "res_bs_martial_primer": {
+     "item": "item_bs_martial_primer"
+    },
+    "res_bs_monk_primer": {
+     "item": "item_bs_monk_primer"
+    },
+    "res_bucket_handle": {
+     "item": "item_bucket_handle"
+    },
     "res_building_share": {},
-    "res_unmaterialized_share": {}
+    "res_butter": {
+     "item": "item_butter"
+    },
+    "res_button_shank_tool": {
+     "item": "item_button_shank_tool"
+    },
+    "res_cabbage": {
+     "item": "item_cabbage"
+    },
+    "res_cabbage_barley": {
+     "item": "item_cabbage_barley"
+    },
+    "res_calcite_chalk": {
+     "item": "item_calcite_chalk"
+    },
+    "res_canvas_satchel": {
+     "item": "item_canvas_satchel"
+    },
+    "res_caraway_oat_crust": {
+     "item": "item_caraway_oat_crust"
+    },
+    "res_caraway_seed": {
+     "item": "item_caraway_seed"
+    },
+    "res_carpenters_adze": {
+     "item": "item_carpenters_adze"
+    },
+    "res_carrot": {
+     "item": "item_carrot"
+    },
+    "res_chain_link_set": {
+     "item": "item_chain_link_set"
+    },
+    "res_chalk_powder": {
+     "item": "item_chalk_powder"
+    },
+    "res_charcoal": {
+     "item": "item_charcoal"
+    },
+    "res_chasing_punch": {
+     "item": "item_chasing_punch"
+    },
+    "res_cheese_herb_mash": {
+     "item": "item_cheese_herb_mash"
+    },
+    "res_cheese_rye_panbread": {
+     "item": "item_cheese_rye_panbread"
+    },
+    "res_clamping_wood_jaw": {
+     "item": "item_clamping_wood_jaw"
+    },
+    "res_clay": {
+     "item": "item_clay"
+    },
+    "res_clay_bead_set": {
+     "item": "item_clay_bead_set"
+    },
+    "res_clay_bowl": {
+     "item": "item_clay_bowl"
+    },
+    "res_clay_cup": {
+     "item": "item_clay_cup"
+    },
+    "res_clay_dish": {
+     "item": "item_clay_dish"
+    },
+    "res_clay_flowerpot": {
+     "item": "item_clay_flowerpot"
+    },
+    "res_clay_funnel": {
+     "item": "item_clay_funnel"
+    },
+    "res_clay_lid": {
+     "item": "item_clay_lid"
+    },
+    "res_clay_net_weight": {
+     "item": "item_clay_net_weight"
+    },
+    "res_clay_oil_lamp": {
+     "item": "item_clay_oil_lamp"
+    },
+    "res_clay_pot": {
+     "item": "item_clay_pot"
+    },
+    "res_clay_roof_tile": {
+     "item": "item_clay_roof_tile"
+    },
+    "res_clay_spool": {
+     "item": "item_clay_spool"
+    },
+    "res_clean_lard": {
+     "item": "item_clean_lard"
+    },
+    "res_clothes": {
+     "item": "item_clothes"
+    },
+    "res_coin_civic": {
+     "item": "item_coin_civic"
+    },
+    "res_coin_coast": {
+     "item": "item_coin_coast"
+    },
+    "res_coin_wrap": {
+     "item": "item_coin_wrap"
+    },
+    "res_cooking_pot": {
+     "item": "item_cooking_pot"
+    },
+    "res_copper_nameplate": {
+     "item": "item_copper_nameplate"
+    },
+    "res_copper_sheet": {
+     "item": "item_copper_sheet"
+    },
+    "res_cork_float_set": {
+     "item": "item_cork_float_set"
+    },
+    "res_cork_sheet": {
+     "item": "item_cork_sheet"
+    },
+    "res_cork_stop_set": {
+     "item": "item_cork_stop_set"
+    },
+    "res_corklined_cup_wrap": {
+     "item": "item_corklined_cup_wrap"
+    },
+    "res_cracked_wheat_pot": {
+     "item": "item_cracked_wheat_pot"
+    },
+    "res_cream": {
+     "item": "item_cream"
+    },
+    "res_cucumber": {
+     "item": "item_cucumber"
+    },
+    "res_damp_sand_rub": {
+     "item": "item_damp_sand_rub"
+    },
+    "res_darning_egg": {
+     "item": "item_darning_egg"
+    },
+    "res_dill": {
+     "item": "item_dill"
+    },
+    "res_dill_cucumber": {
+     "item": "item_dill_cucumber"
+    },
+    "res_door_latch": {
+     "item": "item_door_latch"
+    },
+    "res_door_wedge": {
+     "item": "item_door_wedge"
+    },
+    "res_drawer_pull": {
+     "item": "item_drawer_pull"
+    },
+    "res_drawknife": {
+     "item": "item_drawknife"
+    },
+    "res_dried_fruit": {
+     "item": "item_dried_fruit"
+    },
+    "res_dry_mushroom": {
+     "item": "item_dry_mushroom"
+    },
+    "res_dry_peas": {
+     "item": "item_dry_peas"
+    },
+    "res_earthworm_bait": {
+     "item": "item_earthworm_bait"
+    },
+    "res_ember_core": {
+     "item": "item_ember_core"
+    },
+    "res_estoc": {
+     "item": "item_estoc"
+    },
+    "res_external_medicine": {
+     "item": "item_external_medicine"
+    },
+    "res_felt_insole_pair": {
+     "item": "item_felt_insole_pair"
+    },
+    "res_felt_knee_pad": {
+     "item": "item_felt_knee_pad"
+    },
+    "res_felt_polishing_pad": {
+     "item": "item_felt_polishing_pad"
+    },
+    "res_felt_seat": {
+     "item": "item_felt_seat"
+    },
+    "res_fine_sand": {
+     "item": "item_fine_sand"
+    },
+    "res_fine_sewing_needle": {
+     "item": "item_fine_sewing_needle"
+    },
+    "res_fine_sieve": {
+     "item": "item_fine_sieve"
+    },
+    "res_fire_poker": {
+     "item": "item_fire_poker"
+    },
+    "res_fish": {
+     "item": "item_fish"
+    },
+    "res_fish_broth": {
+     "item": "item_fish_broth"
+    },
+    "res_fish_oat_cake": {
+     "item": "item_fish_oat_cake"
+    },
+    "res_fishing_bait": {
+     "item": "item_fishing_bait"
+    },
+    "res_flanged_mace": {
+     "item": "item_flanged_mace"
+    },
+    "res_flat_file": {
+     "item": "item_flat_file"
+    },
+    "res_flax": {
+     "item": "item_flax"
+    },
+    "res_flax_cord": {
+     "item": "item_flax_cord"
+    },
+    "res_flax_stalk": {
+     "item": "item_flax_stalk"
+    },
+    "res_flour_paste_powder": {
+     "item": "item_flour_paste_powder"
+    },
+    "res_folded_brass_cuff": {
+     "item": "item_folded_brass_cuff"
+    },
+    "res_folding_haversack": {
+     "item": "item_folding_haversack"
+    },
+    "res_folding_map_board": {
+     "item": "item_folding_map_board"
+    },
+    "res_foot_rest": {
+     "item": "item_foot_rest"
+    },
+    "res_forged_chain_short": {
+     "item": "item_forged_chain_short"
+    },
+    "res_fowl_egg": {
+     "item": "item_fowl_egg"
+    },
+    "res_frame_saw": {
+     "item": "item_frame_saw"
+    },
+    "res_fresh_apple": {
+     "item": "item_fresh_apple"
+    },
+    "res_fresh_curd": {
+     "item": "item_fresh_curd"
+    },
+    "res_fruit_milk_pudding": {
+     "item": "item_fruit_milk_pudding"
+    },
+    "res_fruit_oat_dumpling": {
+     "item": "item_fruit_oat_dumpling"
+    },
+    "res_fruit_paste": {
+     "item": "item_fruit_paste"
+    },
+    "res_fruit_porridge": {
+     "item": "item_fruit_porridge"
+    },
+    "res_fruit_vinegar": {
+     "item": "item_fruit_vinegar"
+    },
+    "res_fuller": {
+     "item": "item_fuller"
+    },
+    "res_gall_wash": {
+     "item": "item_gall_wash"
+    },
+    "res_garlic": {
+     "item": "item_garlic"
+    },
+    "res_garlic_butter": {
+     "item": "item_garlic_butter"
+    },
+    "res_gate_hasps": {
+     "item": "item_gate_hasps"
+    },
+    "res_goat_hair_brush": {
+     "item": "item_goat_hair_brush"
+    },
+    "res_goat_milk": {
+     "item": "item_goat_milk"
+    },
+    "res_goat_skin": {
+     "item": "item_goat_skin"
+    },
+    "res_goatskin_document_case": {
+     "item": "item_goatskin_document_case"
+    },
+    "res_grain_sack": {
+     "item": "item_grain_sack"
+    },
+    "res_grooving_wheel": {
+     "item": "item_grooving_wheel"
+    },
+    "res_gum_grain": {
+     "item": "item_gum_grain"
+    },
+    "res_hand_auger": {
+     "item": "item_hand_auger"
+    },
+    "res_hand_bellows": {
+     "item": "item_hand_bellows"
+    },
+    "res_hard_cheese": {
+     "item": "item_hard_cheese"
+    },
+    "res_hazelnut": {
+     "item": "item_hazelnut"
+    },
+    "res_head_wrap": {
+     "item": "item_head_wrap"
+    },
+    "res_hearth_trivet": {
+     "item": "item_hearth_trivet"
+    },
+    "res_hemp_thread": {
+     "item": "item_hemp_thread"
+    },
+    "res_hen_egg": {
+     "item": "item_hen_egg"
+    },
+    "res_herb": {
+     "item": "item_herb"
+    },
+    "res_herb_hoe": {
+     "item": "item_herb_hoe"
+    },
+    "res_herb_pouch": {
+     "item": "item_herb_pouch"
+    },
+    "res_hide_glue": {
+     "item": "item_hide_glue"
+    },
+    "res_hide_scraper": {
+     "item": "item_hide_scraper"
+    },
+    "res_hinge_pin": {
+     "item": "item_hinge_pin"
+    },
+    "res_hoe": {
+     "item": "item_hoe"
+    },
+    "res_hollow_gouge": {
+     "item": "item_hollow_gouge"
+    },
+    "res_honey": {
+     "item": "item_honey"
+    },
+    "res_honey_curd_spread": {
+     "item": "item_honey_curd_spread"
+    },
+    "res_honey_nut_cake": {
+     "item": "item_honey_nut_cake"
+    },
+    "res_honeysuckle": {
+     "item": "item_honeysuckle"
+    },
+    "res_honing_stone": {
+     "item": "item_honing_stone"
+    },
+    "res_hooked_pruning_knife": {
+     "item": "item_hooked_pruning_knife"
+    },
+    "res_horn_blank": {
+     "item": "item_horn_blank"
+    },
+    "res_horn_comb": {
+     "item": "item_horn_comb"
+    },
+    "res_horn_spoon_blank": {
+     "item": "item_horn_spoon_blank"
+    },
+    "res_horsehair_bundle": {
+     "item": "item_horsehair_bundle"
+    },
+    "res_horsehair_dustbrush": {
+     "item": "item_horsehair_dustbrush"
+    },
+    "res_horsehair_sieve_cloth": {
+     "item": "item_horsehair_sieve_cloth"
+    },
+    "res_ingot_mold": {
+     "item": "item_ingot_mold"
+    },
+    "res_ink_brush": {
+     "item": "item_ink_brush"
+    },
+    "res_ink_wiping_pad": {
+     "item": "item_ink_wiping_pad"
+    },
+    "res_iron": {
+     "item": "item_iron"
+    },
+    "res_iron_awl": {
+     "item": "item_iron_awl"
+    },
+    "res_iron_hinge": {
+     "item": "item_iron_hinge"
+    },
+    "res_iron_nail": {
+     "item": "item_iron_nail"
+    },
+    "res_iron_ore": {
+     "item": "item_iron_ore"
+    },
+    "res_iron_punch": {
+     "item": "item_iron_punch"
+    },
+    "res_iron_ring": {
+     "item": "item_iron_ring"
+    },
+    "res_iron_scrap": {
+     "item": "item_iron_scrap"
+    },
+    "res_iron_wire": {
+     "item": "item_iron_wire"
+    },
+    "res_jeweler_pliers": {
+     "item": "item_jeweler_pliers"
+    },
+    "res_jeweler_saw": {
+     "item": "item_jeweler_saw"
+    },
+    "res_kitchen_knife": {
+     "item": "item_kitchen_knife"
+    },
+    "res_ladle_rest": {
+     "item": "item_ladle_rest"
+    },
+    "res_lamp_bracket": {
+     "item": "item_lamp_bracket"
+    },
+    "res_lampblack": {
+     "item": "item_lampblack"
+    },
+    "res_lantern": {
+     "item": "item_lantern"
+    },
+    "res_laundry_mesh_bag": {
+     "item": "item_laundry_mesh_bag"
+    },
+    "res_leather_grip": {
+     "item": "item_leather_grip"
+    },
+    "res_leather_hinge": {
+     "item": "item_leather_hinge"
+    },
+    "res_leather_round_knife": {
+     "item": "item_leather_round_knife"
+    },
+    "res_leather_shears": {
+     "item": "item_leather_shears"
+    },
+    "res_leather_strop": {
+     "item": "item_leather_strop"
+    },
+    "res_leather_thimble": {
+     "item": "item_leather_thimble"
+    },
+    "res_leather_wax_grease": {
+     "item": "item_leather_wax_grease"
+    },
+    "res_ledger_cover": {
+     "item": "item_ledger_cover"
+    },
+    "res_leek": {
+     "item": "item_leek"
+    },
+    "res_leek_fish_pot": {
+     "item": "item_leek_fish_pot"
+    },
+    "res_lentil": {
+     "item": "item_lentil"
+    },
+    "res_lentil_leek_stew": {
+     "item": "item_lentil_leek_stew"
+    },
+    "res_lidded_seed_box": {
+     "item": "item_lidded_seed_box"
+    },
+    "res_line_level": {
+     "item": "item_line_level"
+    },
+    "res_line_winder": {
+     "item": "item_line_winder"
+    },
+    "res_linen_apron": {
+     "item": "item_linen_apron"
+    },
+    "res_linen_canvas": {
+     "item": "item_linen_canvas"
+    },
+    "res_linen_cleaning_swab": {
+     "item": "item_linen_cleaning_swab"
+    },
+    "res_linen_cloth": {
+     "item": "item_linen_cloth"
+    },
+    "res_linen_filter": {
+     "item": "item_linen_filter"
+    },
+    "res_linen_wick": {
+     "item": "item_linen_wick"
+    },
+    "res_linseed_oil": {
+     "item": "item_linseed_oil"
+    },
+    "res_literacy_primer": {
+     "item": "item_literacy_primer"
+    },
+    "res_live_fish": {
+     "item": "item_live_fish"
+    },
+    "res_loom": {
+     "item": "item_loom"
+    },
+    "res_loom_reed": {
+     "item": "item_loom_reed"
+    },
+    "res_loop_turner": {
+     "item": "item_loop_turner"
+    },
+    "res_marking_gauge": {
+     "item": "item_marking_gauge"
+    },
+    "res_marsh_phosphor": {
+     "item": "item_marsh_phosphor"
+    },
+    "res_mason_chisel": {
+     "item": "item_mason_chisel"
+    },
+    "res_milk": {
+     "item": "item_milk"
+    },
+    "res_milk_oat_mash": {
+     "item": "item_milk_oat_mash"
+    },
+    "res_mining_pick": {
+     "item": "item_mining_pick"
+    },
+    "res_mist_frost": {
+     "item": "item_mist_frost"
+    },
+    "res_mixing_paddle": {
+     "item": "item_mixing_paddle"
+    },
+    "res_moon_toad_milk": {
+     "item": "item_moon_toad_milk"
+    },
+    "res_mortise_chisel": {
+     "item": "item_mortise_chisel"
+    },
+    "res_mulberry_leaf": {
+     "item": "item_mulberry_leaf"
+    },
+    "res_mushroom_barley_pot": {
+     "item": "item_mushroom_barley_pot"
+    },
+    "res_mustard_relish": {
+     "item": "item_mustard_relish"
+    },
+    "res_mustard_seed": {
+     "item": "item_mustard_seed"
+    },
+    "res_mutton": {
+     "item": "item_mutton"
+    },
+    "res_mutton_turnip_stew": {
+     "item": "item_mutton_turnip_stew"
+    },
+    "res_needle_case": {
+     "item": "item_needle_case"
+    },
+    "res_needle_roll": {
+     "item": "item_needle_roll"
+    },
+    "res_netting_needle": {
+     "item": "item_netting_needle"
+    },
+    "res_oak_cudgel": {
+     "item": "item_oak_cudgel"
+    },
+    "res_oak_gall": {
+     "item": "item_oak_gall"
+    },
+    "res_oat_crisp": {
+     "item": "item_oat_crisp"
+    },
+    "res_oat_flatbread": {
+     "item": "item_oat_flatbread"
+    },
+    "res_oat_flour": {
+     "item": "item_oat_flour"
+    },
+    "res_oats": {
+     "item": "item_oats"
+    },
+    "res_ochre_paint": {
+     "item": "item_ochre_paint"
+    },
+    "res_onion": {
+     "item": "item_onion"
+    },
+    "res_onion_egg_soup": {
+     "item": "item_onion_egg_soup"
+    },
+    "res_padded_work_collar": {
+     "item": "item_padded_work_collar"
+    },
+    "res_paper_cord_tags": {
+     "item": "item_paper_cord_tags"
+    },
+    "res_parchment": {
+     "item": "item_parchment"
+    },
+    "res_parchment_bookmark": {
+     "item": "item_parchment_bookmark"
+    },
+    "res_parrying_dagger": {
+     "item": "item_parrying_dagger"
+    },
+    "res_parsnip": {
+     "item": "item_parsnip"
+    },
+    "res_parsnip_cream_pot": {
+     "item": "item_parsnip_cream_pot"
+    },
+    "res_paste_cup_portion": {
+     "item": "item_paste_cup_portion"
+    },
+    "res_pasture_forage": {
+     "item": "item_pasture_forage"
+    },
+    "res_patch_bundle": {
+     "item": "item_patch_bundle"
+    },
+    "res_pea_spread": {
+     "item": "item_pea_spread"
+    },
+    "res_pear": {
+     "item": "item_pear"
+    },
+    "res_pear_dry_chips": {
+     "item": "item_pear_dry_chips"
+    },
+    "res_pear_vinegar_slice": {
+     "item": "item_pear_vinegar_slice"
+    },
+    "res_pear_wheat_gruel": {
+     "item": "item_pear_wheat_gruel"
+    },
+    "res_pearl_barley": {
+     "item": "item_pearl_barley"
+    },
+    "res_peg_drying_rack": {
+     "item": "item_peg_drying_rack"
+    },
+    "res_pheasant_egg": {
+     "item": "item_pheasant_egg"
+    },
+    "res_pine_board": {
+     "item": "item_pine_board"
+    },
+    "res_pine_pitch": {
+     "item": "item_pine_pitch"
+    },
+    "res_plantain": {
+     "item": "item_plantain"
+    },
+    "res_plum": {
+     "item": "item_plum"
+    },
+    "res_plum_honey_spread": {
+     "item": "item_plum_honey_spread"
+    },
+    "res_plumb_bob": {
+     "item": "item_plumb_bob"
+    },
+    "res_polishing_powder": {
+     "item": "item_polishing_powder"
+    },
+    "res_poppy_rye_crisp": {
+     "item": "item_poppy_rye_crisp"
+    },
+    "res_poppy_seed": {
+     "item": "item_poppy_seed"
+    },
+    "res_pork_fat": {
+     "item": "item_pork_fat"
+    },
+    "res_pot_lifter": {
+     "item": "item_pot_lifter"
+    },
+    "res_pot_wrap": {
+     "item": "item_pot_wrap"
+    },
+    "res_pottery_wheel": {
+     "item": "item_pottery_wheel"
+    },
+    "res_practice_sword": {
+     "item": "item_practice_sword"
+    },
+    "res_pumice": {
+     "item": "item_pumice"
+    },
+    "res_quarterstaff": {
+     "item": "item_quarterstaff"
+    },
+    "res_quill_knife": {
+     "item": "item_quill_knife"
+    },
+    "res_quill_pen_pair": {
+     "item": "item_quill_pen_pair"
+    },
+    "res_quill_set": {
+     "item": "item_quill_set"
+    },
+    "res_rapeseed_oil": {
+     "item": "item_rapeseed_oil"
+    },
+    "res_ration": {
+     "item": "item_ration"
+    },
+    "res_raw_animal_hair": {
+     "item": "item_raw_animal_hair"
+    },
+    "res_raw_bone": {
+     "item": "item_raw_bone"
+    },
+    "res_raw_feather": {
+     "item": "item_raw_feather"
+    },
+    "res_raw_goat_hair": {
+     "item": "item_raw_goat_hair"
+    },
+    "res_raw_meat": {
+     "item": "item_raw_meat"
+    },
+    "res_raw_silk": {
+     "item": "item_raw_silk"
+    },
+    "res_rawhide": {
+     "item": "item_rawhide"
+    },
+    "res_red_dyewood": {
+     "item": "item_red_dyewood"
+    },
+    "res_red_ochre": {
+     "item": "item_red_ochre"
+    },
+    "res_redwood_dye": {
+     "item": "item_redwood_dye"
+    },
+    "res_reed_bundle": {
+     "item": "item_reed_bundle"
+    },
+    "res_reed_drying_mat": {
+     "item": "item_reed_drying_mat"
+    },
+    "res_reed_pen": {
+     "item": "item_reed_pen"
+    },
+    "res_reed_pen_box": {
+     "item": "item_reed_pen_box"
+    },
+    "res_reed_whistle": {
+     "item": "item_reed_whistle"
+    },
+    "res_rein_patch": {
+     "item": "item_rein_patch"
+    },
+    "res_rendered_cooking_fat": {
+     "item": "item_rendered_cooking_fat"
+    },
+    "res_resin": {
+     "item": "item_resin"
+    },
+    "res_resin_cloth_patch": {
+     "item": "item_resin_cloth_patch"
+    },
+    "res_rivet_set": {
+     "item": "item_rivet_set"
+    },
+    "res_riveting_hammer": {
+     "item": "item_riveting_hammer"
+    },
+    "res_rope_fid": {
+     "item": "item_rope_fid"
+    },
+    "res_round_file": {
+     "item": "item_round_file"
+    },
+    "res_rye_flour": {
+     "item": "item_rye_flour"
+    },
+    "res_s2_cinnabar": {
+     "item": "item_s2_cinnabar"
+    },
+    "res_s2_fuling": {
+     "item": "item_s2_fuling"
+    },
+    "res_s2_gancao": {
+     "item": "item_s2_gancao"
+    },
+    "res_s2_huangjing": {
+     "item": "item_s2_huangjing"
+    },
+    "res_s2_pill": {
+     "item": "item_s2_pill"
+    },
+    "res_s2_talc": {
+     "item": "item_s2_talc"
+    },
+    "res_s2_talisman": {
+     "item": "item_s2_talisman"
+    },
+    "res_s2_tinder": {
+     "item": "item_s2_tinder"
+    },
+    "res_s2_yellow_paper": {
+     "item": "item_s2_yellow_paper"
+    },
+    "res_s3_incense": {
+     "item": "item_s3_incense"
+    },
+    "res_s3_lamp_oil": {
+     "item": "item_s3_lamp_oil"
+    },
+    "res_s3_rice": {
+     "item": "item_s3_rice"
+    },
+    "res_s4_scripture_key": {
+     "item": "item_s4_scripture_key"
+    },
+    "res_s_hook": {
+     "item": "item_s_hook"
+    },
+    "res_sack_pricker": {
+     "item": "item_sack_pricker"
+    },
+    "res_salt": {
+     "item": "item_salt"
+    },
+    "res_salt_fish": {
+     "item": "item_salt_fish"
+    },
+    "res_salted_curd": {
+     "item": "item_salted_curd"
+    },
+    "res_salted_walnut": {
+     "item": "item_salted_walnut"
+    },
+    "res_scraper_blade": {
+     "item": "item_scraper_blade"
+    },
+    "res_scroll_wrap": {
+     "item": "item_scroll_wrap"
+    },
+    "res_seal_thread_bundle": {
+     "item": "item_seal_thread_bundle"
+    },
+    "res_seam_pitch_cake": {
+     "item": "item_seam_pitch_cake"
+    },
+    "res_seam_rivet": {
+     "item": "item_seam_rivet"
+    },
+    "res_seed_marker": {
+     "item": "item_seed_marker"
+    },
+    "res_sewing_needle": {
+     "item": "item_sewing_needle"
+    },
+    "res_sheath_pouch": {
+     "item": "item_sheath_pouch"
+    },
+    "res_sheet_shears": {
+     "item": "item_sheet_shears"
+    },
+    "res_shell_button_blank": {
+     "item": "item_shell_button_blank"
+    },
+    "res_shell_button_set": {
+     "item": "item_shell_button_set"
+    },
+    "res_shutter_panel": {
+     "item": "item_shutter_panel"
+    },
+    "res_shuttle": {
+     "item": "item_shuttle"
+    },
+    "res_sickle": {
+     "item": "item_sickle"
+    },
+    "res_sighting_rule": {
+     "item": "item_sighting_rule"
+    },
+    "res_silk_cloth": {
+     "item": "item_silk_cloth"
+    },
+    "res_silk_cocoon": {
+     "item": "item_silk_cocoon"
+    },
+    "res_silkworm_eggs": {
+     "item": "item_silkworm_eggs"
+    },
+    "res_silver_open_ring": {
+     "item": "item_silver_open_ring"
+    },
+    "res_silver_wire": {
+     "item": "item_silver_wire"
+    },
+    "res_singlebit_axe": {
+     "item": "item_singlebit_axe"
+    },
+    "res_slate_splinter": {
+     "item": "item_slate_splinter"
+    },
+    "res_slate_stylus": {
+     "item": "item_slate_stylus"
+    },
+    "res_slate_writing_tile": {
+     "item": "item_slate_writing_tile"
+    },
+    "res_small_bell_frame": {
+     "item": "item_small_bell_frame"
+    },
+    "res_small_trowel": {
+     "item": "item_small_trowel"
+    },
+    "res_smith_hammer": {
+     "item": "item_smith_hammer"
+    },
+    "res_smith_tongs": {
+     "item": "item_smith_tongs"
+    },
+    "res_soap_flake": {
+     "item": "item_soap_flake"
+    },
+    "res_soap_wash_portion": {
+     "item": "item_soap_wash_portion"
+    },
+    "res_soot_ink": {
+     "item": "item_soot_ink"
+    },
+    "res_spindle": {
+     "item": "item_spindle"
+    },
+    "res_spindle_whorl": {
+     "item": "item_spindle_whorl"
+    },
+    "res_spokeshave": {
+     "item": "item_spokeshave"
+    },
+    "res_staff": {
+     "item": "item_staff"
+    },
+    "res_steel_arming_sword": {
+     "item": "item_steel_arming_sword"
+    },
+    "res_steel_bar": {
+     "item": "item_steel_bar"
+    },
+    "res_steel_dividers": {
+     "item": "item_steel_dividers"
+    },
+    "res_steel_gouge_tip": {
+     "item": "item_steel_gouge_tip"
+    },
+    "res_stitchbound_folio": {
+     "item": "item_stitchbound_folio"
+    },
+    "res_stitching_awl": {
+     "item": "item_stitching_awl"
+    },
+    "res_stone": {
+     "item": "item_stone"
+    },
+    "res_stone_crest_quill": {
+     "item": "item_stone_crest_quill"
+    },
+    "res_stone_mortar": {
+     "item": "item_stone_mortar"
+    },
+    "res_stone_point": {
+     "item": "item_stone_point"
+    },
+    "res_stove_grid": {
+     "item": "item_stove_grid"
+    },
+    "res_strap_eye": {
+     "item": "item_strap_eye"
+    },
+    "res_swage_block": {
+     "item": "item_swage_block"
+    },
+    "res_tanned_leather": {
+     "item": "item_tanned_leather"
+    },
+    "res_tannin_bark": {
+     "item": "item_tannin_bark"
+    },
+    "res_tent_stake": {
+     "item": "item_tent_stake"
+    },
+    "res_thread_rack": {
+     "item": "item_thread_rack"
+    },
+    "res_three_leg_stool": {
+     "item": "item_three_leg_stool"
+    },
+    "res_tin_inlay_strip": {
+     "item": "item_tin_inlay_strip"
+    },
+    "res_tin_sheet": {
+     "item": "item_tin_sheet"
+    },
+    "res_toasted_oats": {
+     "item": "item_toasted_oats"
+    },
+    "res_tool_apron_panel": {
+     "item": "item_tool_apron_panel"
+    },
+    "res_tool_handle": {
+     "item": "item_tool_handle"
+    },
+    "res_tool_tray": {
+     "item": "item_tool_tray"
+    },
+    "res_travel_sewing_wallet": {
+     "item": "item_travel_sewing_wallet"
+    },
+    "res_try_square": {
+     "item": "item_try_square"
+    },
+    "res_turnip": {
+     "item": "item_turnip"
+    },
+    "res_turnip_oat_cake": {
+     "item": "item_turnip_oat_cake"
+    },
+    "res_unmaterialized_share": {},
+    "res_veining_chisel": {
+     "item": "item_veining_chisel"
+    },
+    "res_vinegar_carrot": {
+     "item": "item_vinegar_carrot"
+    },
+    "res_walking_crutch": {
+     "item": "item_walking_crutch"
+    },
+    "res_wall_shelf": {
+     "item": "item_wall_shelf"
+    },
+    "res_walnut": {
+     "item": "item_walnut"
+    },
+    "res_walnut_honey_bites": {
+     "item": "item_walnut_honey_bites"
+    },
+    "res_war_pick": {
+     "item": "item_war_pick"
+    },
+    "res_warm_vinegar_drink": {
+     "item": "item_warm_vinegar_drink"
+    },
+    "res_water": {
+     "item": "item_water"
+    },
+    "res_wax_candle": {
+     "item": "item_wax_candle"
+    },
+    "res_wax_seal_blank": {
+     "item": "item_wax_seal_blank"
+    },
+    "res_waxed_thread": {
+     "item": "item_waxed_thread"
+    },
+    "res_weaving_sword": {
+     "item": "item_weaving_sword"
+    },
+    "res_wheat_grain": {
+     "item": "item_wheat_grain"
+    },
+    "res_wheat_seed": {
+     "item": "item_wheat_seed"
+    },
+    "res_whittling_knife": {
+     "item": "item_whittling_knife"
+    },
+    "res_wick_coil": {
+     "item": "item_wick_coil"
+    },
+    "res_wild_food": {
+     "item": "item_wild_food"
+    },
+    "res_willow_creel": {
+     "item": "item_willow_creel"
+    },
+    "res_willow_rod": {
+     "item": "item_willow_rod"
+    },
+    "res_wire_mesh_patch": {
+     "item": "item_wire_mesh_patch"
+    },
+    "res_wood": {
+     "item": "item_wood"
+    },
+    "res_wood_mallet": {
+     "item": "item_wood_mallet"
+    },
+    "res_wood_marking_kit": {
+     "item": "item_wood_marking_kit"
+    },
+    "res_wood_rasp": {
+     "item": "item_wood_rasp"
+    },
+    "res_wood_shavings": {
+     "item": "item_wood_shavings"
+    },
+    "res_wood_spoon": {
+     "item": "item_wood_spoon"
+    },
+    "res_wooden_peg": {
+     "item": "item_wooden_peg"
+    },
+    "res_wool": {
+     "item": "item_wool"
+    },
+    "res_wool_felt_sheet": {
+     "item": "item_wool_felt_sheet"
+    },
+    "res_wool_wristband": {
+     "item": "item_wool_wristband"
+    },
+    "res_wool_yarn": {
+     "item": "item_wool_yarn"
+    },
+    "res_work_book": {
+     "item": "item_work_book"
+    },
+    "res_work_manuscript": {
+     "item": "item_work_manuscript"
+    },
+    "res_work_map": {
+     "item": "item_work_map"
+    }
    },
    "prefix": "res_"
   },
@@ -716,17 +2174,21 @@
    "closed": false,
    "entries": {
     "sink_boundary": {
-     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）",
+     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调，李白 11-19 21:0x ⑤）",
      "budgetMode": "bm_physical",
-     "families": [],
+     "families": [
+      "resfam_goods"
+     ],
      "grade": "designed",
      "pairedWith": null,
      "reportGroup": null
     },
     "sink_consume": {
-     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）",
+     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调，李白 11-19 21:0x ⑤）",
      "budgetMode": "bm_physical",
-     "families": [],
+     "families": [
+      "resfam_goods"
+     ],
      "grade": "designed",
      "pairedWith": null,
      "reportGroup": null
@@ -740,26 +2202,31 @@
      "reportGroup": null
     },
     "sink_decay": {
-     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）",
+     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调，李白 11-19 21:0x ⑤）",
      "budgetMode": "bm_physical",
-     "families": [],
+     "families": [
+      "resfam_goods"
+     ],
      "grade": "designed",
      "pairedWith": null,
      "reportGroup": null
     },
     "sink_depart": {
-     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）",
+     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调，李白 11-19 21:0x ⑤）",
      "budgetMode": "bm_physical",
-     "families": [],
+     "families": [
+      "resfam_goods"
+     ],
      "grade": "designed",
      "pairedWith": null,
      "reportGroup": null
     },
     "sink_loss": {
-     "basis": "families 由资源种类行 sinks 反推：res_building_share（resfam_asset）（K3-41，李白 11-18 02:20）",
+     "basis": "families 由资源种类行 sinks 反推：res_building_share（resfam_asset）（K3-41，李白 11-18 02:20）；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调，李白 11-19 21:0x ⑤）",
      "budgetMode": "bm_physical",
      "families": [
-      "resfam_asset"
+      "resfam_asset",
+      "resfam_goods"
      ],
      "grade": "designed",
      "pairedWith": null,
@@ -774,18 +2241,21 @@
      "reportGroup": null
     },
     "sink_seized": {
-     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）",
+     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调，李白 11-19 21:0x ⑤）",
      "budgetMode": "bm_physical",
-     "families": [],
+     "families": [
+      "resfam_goods"
+     ],
      "grade": "designed",
      "pairedWith": null,
      "reportGroup": null
     },
     "sink_transform": {
-     "basis": "families 由资源种类行 sinks 反推：res_unmaterialized_share（resfam_claim）（K3-41，李白 11-18 02:20）；pairedWith 卷六 §4.22.1 :1240",
+     "basis": "families 由资源种类行 sinks 反推：res_unmaterialized_share（resfam_claim）（K3-41，李白 11-18 02:20）；pairedWith 卷六 §4.22.1 :1240；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调，李白 11-19 21:0x ⑤）",
      "budgetMode": "bm_physical",
      "families": [
-      "resfam_claim"
+      "resfam_claim",
+      "resfam_goods"
      ],
      "grade": "designed",
      "pairedWith": "src_transform",
@@ -821,11 +2291,12 @@
      "reportGroup": null
     },
     "src_genesis": {
-     "basis": "families 由资源种类行 sources 反推：res_building_share（resfam_asset）、res_unmaterialized_share（resfam_claim）（K3-41，李白 11-18 02:20）；限额通道 §4.22 规则 2 :1259",
+     "basis": "families 由资源种类行 sources 反推：res_building_share（resfam_asset）、res_unmaterialized_share（resfam_claim）（K3-41，李白 11-18 02:20）；限额通道 §4.22 规则 2 :1259；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调，李白 11-19 21:0x ⑤）",
      "budgetMode": "bm_capped",
      "families": [
       "resfam_asset",
-      "resfam_claim"
+      "resfam_claim",
+      "resfam_goods"
      ],
      "grade": "designed",
      "pairedWith": null,
@@ -848,10 +2319,11 @@
      "reportGroup": null
     },
     "src_transform": {
-     "basis": "families 由资源种类行 sources 反推：res_building_share（resfam_asset）（K3-41，李白 11-18 02:20）；pairedWith 卷六 §4.22.1 :1240",
+     "basis": "families 由资源种类行 sources 反推：res_building_share（resfam_asset）（K3-41，李白 11-18 02:20）；pairedWith 卷六 §4.22.1 :1240；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调，李白 11-19 21:0x ⑤）",
      "budgetMode": "bm_physical",
      "families": [
-      "resfam_asset"
+      "resfam_asset",
+      "resfam_goods"
      ],
      "grade": "designed",
      "pairedWith": "sink_transform",

@@ -118,6 +118,11 @@
    "si": 1
   },
   {
+   "dimension": "count",
+   "id": "piece",
+   "si": 1
+  },
+  {
    "dimension": "attenuation",
    "id": "dB_per_cm",
    "si": 100

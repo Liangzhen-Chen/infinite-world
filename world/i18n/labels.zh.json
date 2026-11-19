@@ -1,4 +1,28 @@
 {
+ "ability_cut": {
+  "label": "切"
+ },
+ "ability_dig": {
+  "label": "掘"
+ },
+ "ability_drill": {
+  "label": "钻"
+ },
+ "ability_grip": {
+  "label": "夹持"
+ },
+ "ability_pick_lock": {
+  "label": "开锁"
+ },
+ "ability_probe": {
+  "label": "探触"
+ },
+ "ability_pry": {
+  "label": "撬"
+ },
+ "ability_reap": {
+  "label": "割取"
+ },
  "bld_bs_boat": {
   "label": "船户会屋"
  },
@@ -866,6 +890,21 @@
  "bm_physical": {
   "label": "物理律通道"
  },
+ "category_apparel": {
+  "label": "服装"
+ },
+ "category_container": {
+  "label": "容器"
+ },
+ "category_document": {
+  "label": "文书"
+ },
+ "category_tool": {
+  "label": "工具"
+ },
+ "category_weapon": {
+  "label": "武器"
+ },
  "class_bone.appearance.0": {
   "label": "密质骨光滑、白色、坚实"
  },
@@ -1018,6 +1057,1464 @@
  },
  "due_revive_window": {
   "label": "复生窗口期满"
+ },
+ "item_acid_moss_gel": {
+  "label": "酸苔胶"
+ },
+ "item_alum_grain": {
+  "label": "工艺明矾粒"
+ },
+ "item_animal_milk": {
+  "label": "鲜兽乳"
+ },
+ "item_apple_rye_griddle": {
+  "label": "苹果黑麦烙饼"
+ },
+ "item_ash_spear": {
+  "label": "白蜡柄短矛"
+ },
+ "item_ash_stave": {
+  "label": "白蜡木直料"
+ },
+ "item_ash_walking_stick": {
+  "label": "弯首白蜡木手杖"
+ },
+ "item_bag": {
+  "label": "行囊"
+ },
+ "item_bamboo_fishing_rod": {
+  "label": "竹鱼竿"
+ },
+ "item_banknote_hw": {
+  "label": "河湾兑付券"
+ },
+ "item_barley_pea_stew": {
+  "label": "麦豆稠汤"
+ },
+ "item_beech_blank": {
+  "label": "山毛榉短坯"
+ },
+ "item_beech_press_board": {
+  "label": "双面压纸木板"
+ },
+ "item_beech_spatula": {
+  "label": "薄舌翻食木铲"
+ },
+ "item_beeswax": {
+  "label": "滤净蜂蜡块"
+ },
+ "item_beet": {
+  "label": "红根甜菜"
+ },
+ "item_beet_barley_pot": {
+  "label": "红根麦饭"
+ },
+ "item_beet_vinegar_dice": {
+  "label": "果醋甜菜丁"
+ },
+ "item_belt_buckle": {
+  "label": "折舌腰带扣"
+ },
+ "item_belt_strap": {
+  "label": "素面软革腰带"
+ },
+ "item_bench_plane": {
+  "label": "短底木刨"
+ },
+ "item_billhook_polearm": {
+  "label": "钩背长柄刃"
+ },
+ "item_boar_spear": {
+  "label": "横翼猎矛"
+ },
+ "item_bone_blank": {
+  "label": "净骨短坯"
+ },
+ "item_bone_folder": {
+  "label": "平脊骨压片"
+ },
+ "item_bone_toggle_set": {
+  "label": "双孔骨衣扣"
+ },
+ "item_book_bake_flatbread": {
+  "label": "烙燕麦薄饼工序册"
+ },
+ "item_book_cook_porridge": {
+  "label": "熬干果燕麦粥工序册"
+ },
+ "item_book_curdle_milk": {
+  "label": "凝制果醋鲜乳块工序册"
+ },
+ "item_book_dip_candles": {
+  "label": "浸制细蜂蜡烛工序册"
+ },
+ "item_book_fire_cup": {
+  "label": "拉烧小陶杯工序册"
+ },
+ "item_book_fire_pot": {
+  "label": "拉烧素面陶罐工序册"
+ },
+ "item_book_forge_hinge": {
+  "label": "锻制门柜铰链工序册"
+ },
+ "item_book_forge_nails": {
+  "label": "锻制小铁钉工序册"
+ },
+ "item_book_household_pottery": {
+  "label": "窑边家用陶器手记"
+ },
+ "item_book_journey_desk": {
+  "label": "书桌装订小作录"
+ },
+ "item_book_journey_grain": {
+  "label": "麦锅火候与稠度录"
+ },
+ "item_book_journey_metal": {
+  "label": "钢刃热修与薄片工谱"
+ },
+ "item_book_journey_preserve": {
+  "label": "短藏小食辨味册"
+ },
+ "item_book_journey_sewing": {
+  "label": "帆布与软衬裁缝图"
+ },
+ "item_book_journey_smallcraft": {
+  "label": "骨角饰线细作谱"
+ },
+ "item_book_journey_upkeep": {
+  "label": "器物养护备料手记"
+ },
+ "item_book_journey_wood": {
+  "label": "木角芦片杂工记"
+ },
+ "item_book_m4_contract": {
+  "label": "役灵契纹入门"
+ },
+ "item_book_m4_guard": {
+  "label": "元素护卫长契抄"
+ },
+ "item_book_m4_light": {
+  "label": "火纹与眩点习法"
+ },
+ "item_book_m4_mind": {
+  "label": "定息与错觉辨例"
+ },
+ "item_book_m4_projection": {
+  "label": "柔光与水卫契式"
+ },
+ "item_book_m4_release": {
+  "label": "执念松解手记"
+ },
+ "item_book_m4_renew": {
+  "label": "续供与解离条录"
+ },
+ "item_book_m4_surface": {
+  "label": "纸土留痕初抄"
+ },
+ "item_book_m4_travel": {
+  "label": "行旅安神祝词"
+ },
+ "item_book_m4_veils": {
+  "label": "折光与微光目记"
+ },
+ "item_book_mill_oats": {
+  "label": "筛磨燕麦粉工序册"
+ },
+ "item_book_s1_area": {
+  "label": "交锋圈域读本"
+ },
+ "item_book_s1_cover": {
+  "label": "近场防护读本"
+ },
+ "item_book_s1_growth": {
+  "label": "植株与采后读本"
+ },
+ "item_book_s1_message": {
+  "label": "自愿传讯读本"
+ },
+ "item_book_s1_movement": {
+  "label": "锚面与短渡读本"
+ },
+ "item_book_s1_utility": {
+  "label": "器物与小沟读本"
+ },
+ "item_book_s2_air": {
+  "label": "风力与传声读本"
+ },
+ "item_book_s2_farm": {
+  "label": "谷土梁架读本"
+ },
+ "item_book_s2_stone": {
+  "label": "岩层回声读本"
+ },
+ "item_book_s3_care": {
+  "label": "看护灯火读本"
+ },
+ "item_book_s3_optics": {
+  "label": "光影辨析读本"
+ },
+ "item_book_s4_measure": {
+  "label": "量距契纹读本"
+ },
+ "item_book_s4_space": {
+  "label": "空间役灵读本"
+ },
+ "item_book_salt_fish": {
+  "label": "短腌小咸鱼工序册"
+ },
+ "item_book_sew_sack": {
+  "label": "缝制麻布粮袋工序册"
+ },
+ "item_book_spin_wool": {
+  "label": "手纺粗毛线工序册"
+ },
+ "item_book_spine_tape": {
+  "label": "麻缝护脊带"
+ },
+ "item_book_trades_artisan": {
+  "label": "纸墨与小料手记"
+ },
+ "item_book_trades_iron": {
+  "label": "门窗炉具锻作录"
+ },
+ "item_book_trades_kitchen": {
+  "label": "谷蔬小灶记"
+ },
+ "item_book_trades_leather": {
+  "label": "熟革折缝手册"
+ },
+ "item_book_trades_wood": {
+  "label": "短板榫接图说"
+ },
+ "item_book_w2_reuse_advanced": {
+  "label": "二阶习术校读册"
+ },
+ "item_book_w2_reuse_basic": {
+  "label": "初阶杂术校读册"
+ },
+ "item_book_w2_reuse_middle": {
+  "label": "一阶习术校读册"
+ },
+ "item_book_weave_linen": {
+  "label": "织窄幅麻布工序册"
+ },
+ "item_boot_form": {
+  "label": "短靴木撑"
+ },
+ "item_boot_gaiter": {
+  "label": "系带护靴片"
+ },
+ "item_boot_scraper": {
+  "label": "门前刮泥架"
+ },
+ "item_bottle_divider_crate": {
+  "label": "分格小瓶木箱"
+ },
+ "item_brace_drill": {
+  "label": "曲柄细木钻"
+ },
+ "item_brass_strip": {
+  "label": "黄铜窄带"
+ },
+ "item_bread": {
+  "label": "面包"
+ },
+ "item_bread_board": {
+  "label": "提孔干货板"
+ },
+ "item_bristle_bundle": {
+  "label": "硬鬃毛束"
+ },
+ "item_bristle_handbrush": {
+  "label": "夹鬃小刷"
+ },
+ "item_broad_bean": {
+  "label": "干蚕豆瓣"
+ },
+ "item_broad_steel_chisel": {
+  "label": "宽刃木作钢凿"
+ },
+ "item_broadbean_garlic_mash": {
+  "label": "蒜香蚕豆泥"
+ },
+ "item_brush_roll": {
+  "label": "隔格笔刷卷"
+ },
+ "item_bs_dao_primer": {
+  "label": "验汀符笔初课"
+ },
+ "item_bs_mage_primer": {
+  "label": "东学光术初课"
+ },
+ "item_bs_martial_primer": {
+  "label": "量廊馆探步初课"
+ },
+ "item_bs_monk_primer": {
+  "label": "止波寺三息课"
+ },
+ "item_bucket_handle": {
+  "label": "弯耳提桶梁"
+ },
+ "item_butter": {
+  "label": "无盐黄油"
+ },
+ "item_button_shank_tool": {
+  "label": "拱脚制扣钳"
+ },
+ "item_cabbage": {
+  "label": "紧叶甘蓝"
+ },
+ "item_cabbage_barley": {
+  "label": "甘蓝麦粒烩"
+ },
+ "item_calcite_chalk": {
+  "label": "软白垩块"
+ },
+ "item_canvas_satchel": {
+  "label": "翻盖帆布挎袋"
+ },
+ "item_caraway_oat_crust": {
+  "label": "香籽燕麦硬片"
+ },
+ "item_caraway_seed": {
+  "label": "香芹籽"
+ },
+ "item_carpenters_adze": {
+  "label": "横刃修木锛"
+ },
+ "item_carrot": {
+  "label": "束装胡萝卜"
+ },
+ "item_chain_link_set": {
+  "label": "锻接短链节"
+ },
+ "item_chalk_powder": {
+  "label": "细白划粉"
+ },
+ "item_charcoal": {
+  "label": "木炭小袋"
+ },
+ "item_chasing_punch": {
+  "label": "圆珠錾点杆"
+ },
+ "item_cheese_herb_mash": {
+  "label": "莳萝碎乳酪"
+ },
+ "item_cheese_rye_panbread": {
+  "label": "乳酪夹麦饼"
+ },
+ "item_clamping_wood_jaw": {
+  "label": "对合木夹口"
+ },
+ "item_clay": {
+  "label": "筛过黏土团"
+ },
+ "item_clay_bead_set": {
+  "label": "串线陶珠组"
+ },
+ "item_clay_bowl": {
+  "label": "敞口粗陶碗"
+ },
+ "item_clay_cup": {
+  "label": "小陶杯"
+ },
+ "item_clay_dish": {
+  "label": "分格盐碟"
+ },
+ "item_clay_flowerpot": {
+  "label": "排水陶花盆"
+ },
+ "item_clay_funnel": {
+  "label": "短颈陶漏斗"
+ },
+ "item_clay_lid": {
+  "label": "平钮陶盖"
+ },
+ "item_clay_net_weight": {
+  "label": "穿孔陶网坠"
+ },
+ "item_clay_oil_lamp": {
+  "label": "浅腹陶油灯"
+ },
+ "item_clay_pot": {
+  "label": "素面陶罐"
+ },
+ "item_clay_roof_tile": {
+  "label": "叠搭弧瓦"
+ },
+ "item_clay_spool": {
+  "label": "双沿陶线轴"
+ },
+ "item_clean_lard": {
+  "label": "净制工坊脂"
+ },
+ "item_clothes": {
+  "label": "普通衣服"
+ },
+ "item_coin_civic": {
+  "label": "阶庭方孔钱"
+ },
+ "item_coin_coast": {
+  "label": "泊绳银片"
+ },
+ "item_coin_wrap": {
+  "label": "折口零钱夹"
+ },
+ "item_cooking_pot": {
+  "label": "厚底煮锅"
+ },
+ "item_copper_nameplate": {
+  "label": "素铜空白铭牌"
+ },
+ "item_copper_sheet": {
+  "label": "薄铜片"
+ },
+ "item_cork_float_set": {
+  "label": "穿线软木浮子"
+ },
+ "item_cork_sheet": {
+  "label": "软木薄片"
+ },
+ "item_cork_stop_set": {
+  "label": "贴合软木塞组"
+ },
+ "item_corklined_cup_wrap": {
+  "label": "软木衬杯套"
+ },
+ "item_cracked_wheat_pot": {
+  "label": "碎麦厚煮"
+ },
+ "item_cream": {
+  "label": "鲜乳上层稠乳"
+ },
+ "item_cucumber": {
+  "label": "短刺黄瓜"
+ },
+ "item_damp_sand_rub": {
+  "label": "湿砂去垢料"
+ },
+ "item_darning_egg": {
+  "label": "补袜木卵"
+ },
+ "item_dill": {
+  "label": "鲜莳萝束"
+ },
+ "item_dill_cucumber": {
+  "label": "莳萝盐瓜段"
+ },
+ "item_door_latch": {
+  "label": "落杆门闩"
+ },
+ "item_door_wedge": {
+  "label": "宽背门挡楔"
+ },
+ "item_drawer_pull": {
+  "label": "拱背抽屉拉手"
+ },
+ "item_drawknife": {
+  "label": "双耳削柄刀"
+ },
+ "item_dried_fruit": {
+  "label": "干果小袋"
+ },
+ "item_dry_mushroom": {
+  "label": "干栽培蘑菇片"
+ },
+ "item_dry_peas": {
+  "label": "晒干豌豆"
+ },
+ "item_earthworm_bait": {
+  "label": "蚯蚓饵"
+ },
+ "item_ember_core": {
+  "label": "余烬核"
+ },
+ "item_estoc": {
+  "label": "四棱刺剑"
+ },
+ "item_external_medicine": {
+  "label": "外敷药"
+ },
+ "item_felt_insole_pair": {
+  "label": "贴底毛毡鞋垫"
+ },
+ "item_felt_knee_pad": {
+  "label": "绑带护膝垫"
+ },
+ "item_felt_polishing_pad": {
+  "label": "薄毡抛光垫"
+ },
+ "item_felt_seat": {
+  "label": "压毡坐垫"
+ },
+ "item_fine_sand": {
+  "label": "洗净细砂"
+ },
+ "item_fine_sewing_needle": {
+  "label": "细眼缝衣针组"
+ },
+ "item_fine_sieve": {
+  "label": "细目工艺筛"
+ },
+ "item_fire_poker": {
+  "label": "钩头拨火杆"
+ },
+ "item_fish": {
+  "label": "剖净鲜鱼"
+ },
+ "item_fish_broth": {
+  "label": "清煮鱼汤"
+ },
+ "item_fish_oat_cake": {
+  "label": "碎鱼燕麦烙饼"
+ },
+ "item_fishing_bait": {
+  "label": "钓饵"
+ },
+ "item_flanged_mace": {
+  "label": "六棱锤杖"
+ },
+ "item_flat_file": {
+  "label": "平齿铁锉"
+ },
+ "item_flax": {
+  "label": "梳理麻纤维束"
+ },
+ "item_flax_cord": {
+  "label": "三股麻绳"
+ },
+ "item_flax_stalk": {
+  "label": "野亚麻茎束"
+ },
+ "item_flour_paste_powder": {
+  "label": "干浆粉"
+ },
+ "item_folded_brass_cuff": {
+  "label": "卷边黄铜腕圈"
+ },
+ "item_folding_haversack": {
+  "label": "卷口干粮小包"
+ },
+ "item_folding_map_board": {
+  "label": "折页行图板"
+ },
+ "item_foot_rest": {
+  "label": "倾面脚凳"
+ },
+ "item_forged_chain_short": {
+  "label": "连扣铁短链"
+ },
+ "item_fowl_egg": {
+  "label": "禽蛋"
+ },
+ "item_frame_saw": {
+  "label": "窄框木锯"
+ },
+ "item_fresh_apple": {
+  "label": "晚熟苹果"
+ },
+ "item_fresh_curd": {
+  "label": "果醋鲜乳凝块"
+ },
+ "item_fruit_milk_pudding": {
+  "label": "干果乳粉糕"
+ },
+ "item_fruit_oat_dumpling": {
+  "label": "干果燕麦团"
+ },
+ "item_fruit_paste": {
+  "label": "醋煮干果酱"
+ },
+ "item_fruit_porridge": {
+  "label": "干果燕麦粥"
+ },
+ "item_fruit_vinegar": {
+  "label": "酸果醋小瓶"
+ },
+ "item_fuller": {
+  "label": "长槽锻沟杆"
+ },
+ "item_gall_wash": {
+  "label": "淡瘿染液"
+ },
+ "item_garlic": {
+  "label": "晒皮蒜头"
+ },
+ "item_garlic_butter": {
+  "label": "蒜末拌黄油"
+ },
+ "item_gate_hasps": {
+  "label": "翻舌门扣"
+ },
+ "item_goat_hair_brush": {
+  "label": "宽根羊毫排刷"
+ },
+ "item_goat_milk": {
+  "label": "鲜山羊乳"
+ },
+ "item_goat_skin": {
+  "label": "薄鞣山羊革"
+ },
+ "item_goatskin_document_case": {
+  "label": "扁面羊革文书套"
+ },
+ "item_grain_sack": {
+  "label": "麻布粮袋"
+ },
+ "item_grooving_wheel": {
+  "label": "缝距齿轮柄"
+ },
+ "item_gum_grain": {
+  "label": "净树胶粒"
+ },
+ "item_hand_auger": {
+  "label": "横柄手钻"
+ },
+ "item_hand_bellows": {
+  "label": "皮囊小风箱"
+ },
+ "item_hard_cheese": {
+  "label": "熟成硬乳酪角"
+ },
+ "item_hazelnut": {
+  "label": "去壳榛仁"
+ },
+ "item_head_wrap": {
+  "label": "遮尘麻头巾"
+ },
+ "item_hearth_trivet": {
+  "label": "三脚铁锅架"
+ },
+ "item_hemp_thread": {
+  "label": "细捻麻线团"
+ },
+ "item_hen_egg": {
+  "label": "鸡蛋小篮份"
+ },
+ "item_herb": {
+  "label": "药草"
+ },
+ "item_herb_hoe": {
+  "label": "药锄"
+ },
+ "item_herb_pouch": {
+  "label": "透气药草袋"
+ },
+ "item_hide_glue": {
+  "label": "熬制皮骨胶"
+ },
+ "item_hide_scraper": {
+  "label": "弧口刮皮刀"
+ },
+ "item_hinge_pin": {
+  "label": "长头铰销"
+ },
+ "item_hoe": {
+  "label": "铁锄"
+ },
+ "item_hollow_gouge": {
+  "label": "圆口雕花凿"
+ },
+ "item_honey": {
+  "label": "滤蜜小罐份"
+ },
+ "item_honey_curd_spread": {
+  "label": "蜜拌鲜乳酪"
+ },
+ "item_honey_nut_cake": {
+  "label": "蜜榛黑麦糕"
+ },
+ "item_honeysuckle": {
+  "label": "金银花"
+ },
+ "item_honing_stone": {
+  "label": "细面刃磨石"
+ },
+ "item_hooked_pruning_knife": {
+  "label": "内弯修枝钢刀"
+ },
+ "item_horn_blank": {
+  "label": "空心角片坯"
+ },
+ "item_horn_comb": {
+  "label": "短齿角梳"
+ },
+ "item_horn_spoon_blank": {
+  "label": "弧面角片匙"
+ },
+ "item_horsehair_bundle": {
+  "label": "洗净马尾毛束"
+ },
+ "item_horsehair_dustbrush": {
+  "label": "软毛拂尘刷"
+ },
+ "item_horsehair_sieve_cloth": {
+  "label": "马尾细滤片"
+ },
+ "item_ingot_mold": {
+  "label": "双槽铁锭模"
+ },
+ "item_ink_brush": {
+  "label": "短毫画笔"
+ },
+ "item_ink_wiping_pad": {
+  "label": "吸墨麻布垫"
+ },
+ "item_iron": {
+  "label": "铁料"
+ },
+ "item_iron_awl": {
+  "label": "锥尖穿孔针"
+ },
+ "item_iron_hinge": {
+  "label": "门柜小铰链"
+ },
+ "item_iron_nail": {
+  "label": "小铁钉"
+ },
+ "item_iron_ore": {
+  "label": "含铁矿石"
+ },
+ "item_iron_punch": {
+  "label": "短身冲子"
+ },
+ "item_iron_ring": {
+  "label": "圆眼系绳环"
+ },
+ "item_iron_scrap": {
+  "label": "铁边料小块"
+ },
+ "item_iron_wire": {
+  "label": "退火铁线卷"
+ },
+ "item_jeweler_pliers": {
+  "label": "窄嘴饰线钳"
+ },
+ "item_jeweler_saw": {
+  "label": "细弓镂片锯"
+ },
+ "item_kitchen_knife": {
+  "label": "案上切刀"
+ },
+ "item_ladle_rest": {
+  "label": "槽口木匙托"
+ },
+ "item_lamp_bracket": {
+  "label": "折臂灯托"
+ },
+ "item_lampblack": {
+  "label": "收烟墨粉"
+ },
+ "item_lantern": {
+  "label": "纸花灯"
+ },
+ "item_laundry_mesh_bag": {
+  "label": "疏孔洗布袋"
+ },
+ "item_leather_grip": {
+  "label": "缠柄熟革条"
+ },
+ "item_leather_hinge": {
+  "label": "折页软革铰片"
+ },
+ "item_leather_round_knife": {
+  "label": "半月裁革钢刀"
+ },
+ "item_leather_shears": {
+  "label": "短刃裁革剪"
+ },
+ "item_leather_strop": {
+  "label": "张面修刃皮板"
+ },
+ "item_leather_thimble": {
+  "label": "绕指护针套"
+ },
+ "item_leather_wax_grease": {
+  "label": "薄涂护革脂蜡"
+ },
+ "item_ledger_cover": {
+  "label": "包角账页封皮"
+ },
+ "item_leek": {
+  "label": "青叶韭葱"
+ },
+ "item_leek_fish_pot": {
+  "label": "韭葱鱼煨锅"
+ },
+ "item_lentil": {
+  "label": "褐扁豆"
+ },
+ "item_lentil_leek_stew": {
+  "label": "葱叶扁豆烩"
+ },
+ "item_lidded_seed_box": {
+  "label": "分格种子匣"
+ },
+ "item_line_level": {
+  "label": "木座槽水准"
+ },
+ "item_line_winder": {
+  "label": "八字绕线板"
+ },
+ "item_linen_apron": {
+  "label": "交背麻围裙"
+ },
+ "item_linen_canvas": {
+  "label": "紧织麻帆布"
+ },
+ "item_linen_cleaning_swab": {
+  "label": "缠头拭管条"
+ },
+ "item_linen_cloth": {
+  "label": "窄幅麻布"
+ },
+ "item_linen_filter": {
+  "label": "宽口滤布"
+ },
+ "item_linen_wick": {
+  "label": "扁捻麻灯芯"
+ },
+ "item_linseed_oil": {
+  "label": "木用亚麻油"
+ },
+ "item_literacy_primer": {
+  "label": "田契识字课本"
+ },
+ "item_live_fish": {
+  "label": "活鱼"
+ },
+ "item_loom": {
+  "label": "窄幅手织架"
+ },
+ "item_loom_reed": {
+  "label": "密齿织筘"
+ },
+ "item_loop_turner": {
+  "label": "钩头翻带杆"
+ },
+ "item_marking_gauge": {
+  "label": "滑座划线规"
+ },
+ "item_marsh_phosphor": {
+  "label": "沼光磷粉"
+ },
+ "item_mason_chisel": {
+  "label": "阔口修石凿"
+ },
+ "item_milk": {
+  "label": "鲜牛乳小壶"
+ },
+ "item_milk_oat_mash": {
+  "label": "乳香燕麦糊"
+ },
+ "item_mining_pick": {
+  "label": "普通矿镐"
+ },
+ "item_mist_frost": {
+  "label": "雾魂凝霜"
+ },
+ "item_mixing_paddle": {
+  "label": "长柄搅糊板"
+ },
+ "item_moon_toad_milk": {
+  "label": "灵蟾白浆"
+ },
+ "item_mortise_chisel": {
+  "label": "直口木凿"
+ },
+ "item_mulberry_leaf": {
+  "label": "鲜桑叶束"
+ },
+ "item_mushroom_barley_pot": {
+  "label": "菌片大麦煨"
+ },
+ "item_mustard_relish": {
+  "label": "粗粒芥醋酱"
+ },
+ "item_mustard_seed": {
+  "label": "黄芥籽"
+ },
+ "item_mutton": {
+  "label": "去骨羊肉"
+ },
+ "item_mutton_turnip_stew": {
+  "label": "羊肉芜菁煨"
+ },
+ "item_needle_case": {
+  "label": "扁皮长针夹"
+ },
+ "item_needle_roll": {
+  "label": "卷式针包"
+ },
+ "item_netting_needle": {
+  "label": "双叉结网梭"
+ },
+ "item_oak_cudgel": {
+  "label": "包尾橡木棒"
+ },
+ "item_oak_gall": {
+  "label": "干瘿小包"
+ },
+ "item_oat_crisp": {
+  "label": "无盐燕麦脆片"
+ },
+ "item_oat_flatbread": {
+  "label": "燕麦薄饼"
+ },
+ "item_oat_flour": {
+  "label": "燕麦粉"
+ },
+ "item_oats": {
+  "label": "带壳燕麦"
+ },
+ "item_ochre_paint": {
+  "label": "赤土胶彩"
+ },
+ "item_onion": {
+  "label": "黄皮洋葱"
+ },
+ "item_onion_egg_soup": {
+  "label": "葱香蛋花汤"
+ },
+ "item_padded_work_collar": {
+  "label": "软衬扛物肩圈"
+ },
+ "item_paper_cord_tags": {
+  "label": "穿绳皮纸吊签"
+ },
+ "item_parchment": {
+  "label": "刮薄羊皮纸"
+ },
+ "item_parchment_bookmark": {
+  "label": "折首皮纸签"
+ },
+ "item_parrying_dagger": {
+  "label": "叉护手短刃"
+ },
+ "item_parsnip": {
+  "label": "白肉欧防风根"
+ },
+ "item_parsnip_cream_pot": {
+  "label": "稠乳白根煨"
+ },
+ "item_paste_cup_portion": {
+  "label": "纸工熟浆糊"
+ },
+ "item_pasture_forage": {
+  "label": "草场青草"
+ },
+ "item_patch_bundle": {
+  "label": "锁边补衣片"
+ },
+ "item_pea_spread": {
+  "label": "盐煮豌豆泥"
+ },
+ "item_pear": {
+  "label": "脆肉梨"
+ },
+ "item_pear_dry_chips": {
+  "label": "薄梨干片"
+ },
+ "item_pear_vinegar_slice": {
+  "label": "醋浸梨片"
+ },
+ "item_pear_wheat_gruel": {
+  "label": "梨肉麦糊"
+ },
+ "item_pearl_barley": {
+  "label": "脱壳大麦"
+ },
+ "item_peg_drying_rack": {
+  "label": "折靠晾布架"
+ },
+ "item_pheasant_egg": {
+  "label": "雉蛋"
+ },
+ "item_pine_board": {
+  "label": "风干松木短板"
+ },
+ "item_pine_pitch": {
+  "label": "熬稠松脂块"
+ },
+ "item_plantain": {
+  "label": "车前"
+ },
+ "item_plum": {
+  "label": "去梗紫李"
+ },
+ "item_plum_honey_spread": {
+  "label": "蜜煮紫李酱"
+ },
+ "item_plumb_bob": {
+  "label": "铜壳吊线锤"
+ },
+ "item_polishing_powder": {
+  "label": "轻石细磨粉"
+ },
+ "item_poppy_rye_crisp": {
+  "label": "籽香黑麦脆饼"
+ },
+ "item_poppy_seed": {
+  "label": "食用罂粟籽"
+ },
+ "item_pork_fat": {
+  "label": "食用猪板脂"
+ },
+ "item_pot_lifter": {
+  "label": "夹口提锅钩"
+ },
+ "item_pot_wrap": {
+  "label": "夹层锅布"
+ },
+ "item_pottery_wheel": {
+  "label": "手拨陶轮"
+ },
+ "item_practice_sword": {
+  "label": "圆棱练习木剑"
+ },
+ "item_pumice": {
+  "label": "轻质磨石"
+ },
+ "item_quarterstaff": {
+  "label": "箍端长木杖"
+ },
+ "item_quill_knife": {
+  "label": "短锋修羽刀"
+ },
+ "item_quill_pen_pair": {
+  "label": "削口鹅羽笔组"
+ },
+ "item_quill_set": {
+  "label": "净鹅羽管组"
+ },
+ "item_rapeseed_oil": {
+  "label": "菜籽油小份"
+ },
+ "item_ration": {
+  "label": "干粮"
+ },
+ "item_raw_animal_hair": {
+  "label": "未洗兽毛"
+ },
+ "item_raw_bone": {
+  "label": "生骨"
+ },
+ "item_raw_feather": {
+  "label": "杂羽"
+ },
+ "item_raw_goat_hair": {
+  "label": "未洗山羊毛"
+ },
+ "item_raw_meat": {
+  "label": "生肉"
+ },
+ "item_raw_silk": {
+  "label": "生丝一缕"
+ },
+ "item_rawhide": {
+  "label": "刮净生皮"
+ },
+ "item_red_dyewood": {
+  "label": "红染木碎片"
+ },
+ "item_red_ochre": {
+  "label": "赤土色粉"
+ },
+ "item_redwood_dye": {
+  "label": "温煎红木染液"
+ },
+ "item_reed_bundle": {
+  "label": "干直芦管束"
+ },
+ "item_reed_drying_mat": {
+  "label": "透风芦管晒帘"
+ },
+ "item_reed_pen": {
+  "label": "斜口芦苇笔"
+ },
+ "item_reed_pen_box": {
+  "label": "芦管笔尖匣"
+ },
+ "item_reed_whistle": {
+  "label": "单孔芦鸣哨"
+ },
+ "item_rein_patch": {
+  "label": "缰绳接头护片"
+ },
+ "item_rendered_cooking_fat": {
+  "label": "小锅熟猪脂"
+ },
+ "item_resin": {
+  "label": "树脂"
+ },
+ "item_resin_cloth_patch": {
+  "label": "薄脂麻补片"
+ },
+ "item_rivet_set": {
+  "label": "凹头铆窝杆"
+ },
+ "item_riveting_hammer": {
+  "label": "偏口细铆锤"
+ },
+ "item_rope_fid": {
+  "label": "尖身插绳棒"
+ },
+ "item_round_file": {
+  "label": "圆身孔锉"
+ },
+ "item_rye_flour": {
+  "label": "细筛黑麦粉"
+ },
+ "item_s2_cinnabar": {
+  "label": "朱砂小包"
+ },
+ "item_s2_fuling": {
+  "label": "茯苓块"
+ },
+ "item_s2_gancao": {
+  "label": "甘草片"
+ },
+ "item_s2_huangjing": {
+  "label": "制黄精片"
+ },
+ "item_s2_pill": {
+  "label": "黄精茯苓蜜丸"
+ },
+ "item_s2_talc": {
+  "label": "滑石粉小包"
+ },
+ "item_s2_talisman": {
+  "label": "朱砂黄符"
+ },
+ "item_s2_tinder": {
+  "label": "艾绒引火包"
+ },
+ "item_s2_yellow_paper": {
+  "label": "黄表纸小帖"
+ },
+ "item_s3_incense": {
+  "label": "线香"
+ },
+ "item_s3_lamp_oil": {
+  "label": "灯油小盏"
+ },
+ "item_s3_rice": {
+  "label": "祝米小包"
+ },
+ "item_s4_scripture_key": {
+  "label": "经阁铜钥"
+ },
+ "item_s_hook": {
+  "label": "双弯铁挂钩"
+ },
+ "item_sack_pricker": {
+  "label": "直柄开袋锥"
+ },
+ "item_salt": {
+  "label": "粗盐小包"
+ },
+ "item_salt_fish": {
+  "label": "短腌咸鱼"
+ },
+ "item_salted_curd": {
+  "label": "压盐鲜乳饼"
+ },
+ "item_salted_walnut": {
+  "label": "盐焙核桃仁"
+ },
+ "item_scraper_blade": {
+  "label": "平口刮木片"
+ },
+ "item_scroll_wrap": {
+  "label": "束带卷稿套"
+ },
+ "item_seal_thread_bundle": {
+  "label": "卷札封结线"
+ },
+ "item_seam_pitch_cake": {
+  "label": "接缝软脂饼"
+ },
+ "item_seam_rivet": {
+  "label": "短身皮铆钉组"
+ },
+ "item_seed_marker": {
+  "label": "槽头播种牌"
+ },
+ "item_sewing_needle": {
+  "label": "粗眼缝针"
+ },
+ "item_sheath_pouch": {
+  "label": "钝口工具皮套"
+ },
+ "item_sheet_shears": {
+  "label": "弯柄金属剪"
+ },
+ "item_shell_button_blank": {
+  "label": "贝片扣坯组"
+ },
+ "item_shell_button_set": {
+  "label": "细孔贝面扣组"
+ },
+ "item_shutter_panel": {
+  "label": "拼条窗扇"
+ },
+ "item_shuttle": {
+  "label": "尖梭织纬器"
+ },
+ "item_sickle": {
+  "label": "铁镰"
+ },
+ "item_sighting_rule": {
+  "label": "折脚照准尺"
+ },
+ "item_silk_cloth": {
+  "label": "素绸一段"
+ },
+ "item_silk_cocoon": {
+  "label": "蚕茧一捧"
+ },
+ "item_silkworm_eggs": {
+  "label": "蚕种纸"
+ },
+ "item_silver_open_ring": {
+  "label": "绕合银开口环"
+ },
+ "item_silver_wire": {
+  "label": "细银丝束"
+ },
+ "item_singlebit_axe": {
+  "label": "短柄单刃斧"
+ },
+ "item_slate_splinter": {
+  "label": "平面板岩片"
+ },
+ "item_slate_stylus": {
+  "label": "尖端板岩划笔"
+ },
+ "item_slate_writing_tile": {
+  "label": "磨边板岩写牌"
+ },
+ "item_small_bell_frame": {
+  "label": "悬片响铃架"
+ },
+ "item_small_trowel": {
+  "label": "折颈砌缝铲"
+ },
+ "item_smith_hammer": {
+  "label": "锻工手锤"
+ },
+ "item_smith_tongs": {
+  "label": "长柄铁钳"
+ },
+ "item_soap_flake": {
+  "label": "刮片硬皂"
+ },
+ "item_soap_wash_portion": {
+  "label": "温搅皂洗液"
+ },
+ "item_soot_ink": {
+  "label": "树胶烟墨"
+ },
+ "item_spindle": {
+  "label": "木纺锤"
+ },
+ "item_spindle_whorl": {
+  "label": "木纺轮片"
+ },
+ "item_spokeshave": {
+  "label": "弧底辐条刨"
+ },
+ "item_staff": {
+  "label": "旧木杖"
+ },
+ "item_steel_arming_sword": {
+  "label": "直刃单手剑"
+ },
+ "item_steel_bar": {
+  "label": "淬用钢条"
+ },
+ "item_steel_dividers": {
+  "label": "锁距钢规"
+ },
+ "item_steel_gouge_tip": {
+  "label": "套柄圆口钢凿"
+ },
+ "item_stitchbound_folio": {
+  "label": "麻订空白册"
+ },
+ "item_stitching_awl": {
+  "label": "缝革扁锥"
+ },
+ "item_stone": {
+  "label": "石料"
+ },
+ "item_stone_crest_quill": {
+  "label": "鸡蛇石冠羽"
+ },
+ "item_stone_mortar": {
+  "label": "浅腹石臼"
+ },
+ "item_stone_point": {
+  "label": "加厚开石尖"
+ },
+ "item_stove_grid": {
+  "label": "小炉挡炭栅"
+ },
+ "item_strap_eye": {
+  "label": "双孔绑带耳"
+ },
+ "item_swage_block": {
+  "label": "分槽压形砧"
+ },
+ "item_tanned_leather": {
+  "label": "鞣熟软革"
+ },
+ "item_tannin_bark": {
+  "label": "干鞣树皮片"
+ },
+ "item_tent_stake": {
+  "label": "弯头帐钉"
+ },
+ "item_thread_rack": {
+  "label": "绕线立架"
+ },
+ "item_three_leg_stool": {
+  "label": "斜脚矮凳"
+ },
+ "item_tin_inlay_strip": {
+  "label": "压点锡饰边"
+ },
+ "item_tin_sheet": {
+  "label": "压薄锡片"
+ },
+ "item_toasted_oats": {
+  "label": "锅焙燕麦粒"
+ },
+ "item_tool_apron_panel": {
+  "label": "分袋工匠围腰"
+ },
+ "item_tool_handle": {
+  "label": "小工具木柄"
+ },
+ "item_tool_tray": {
+  "label": "开口工具盘"
+ },
+ "item_travel_sewing_wallet": {
+  "label": "合页针线夹"
+ },
+ "item_try_square": {
+  "label": "钢舌木角尺"
+ },
+ "item_turnip": {
+  "label": "带皮芜菁"
+ },
+ "item_turnip_oat_cake": {
+  "label": "芜菁燕麦饼"
+ },
+ "item_veining_chisel": {
+  "label": "细线刻纹凿"
+ },
+ "item_vinegar_carrot": {
+  "label": "短浸醋萝卜"
+ },
+ "item_walking_crutch": {
+  "label": "腋托木拐"
+ },
+ "item_wall_shelf": {
+  "label": "短板壁架"
+ },
+ "item_walnut": {
+  "label": "碎壳净核桃仁"
+ },
+ "item_walnut_honey_bites": {
+  "label": "核桃蜜麦块"
+ },
+ "item_war_pick": {
+  "label": "短喙战锤"
+ },
+ "item_warm_vinegar_drink": {
+  "label": "温果醋饮"
+ },
+ "item_water": {
+  "label": "清水一份"
+ },
+ "item_wax_candle": {
+  "label": "细蜂蜡烛"
+ },
+ "item_wax_seal_blank": {
+  "label": "圆面封印蜡饼"
+ },
+ "item_waxed_thread": {
+  "label": "上蜡麻缝线"
+ },
+ "item_weaving_sword": {
+  "label": "压纬木片"
+ },
+ "item_wheat_grain": {
+  "label": "净麦粒"
+ },
+ "item_wheat_seed": {
+  "label": "麦种"
+ },
+ "item_whittling_knife": {
+  "label": "削木小刀"
+ },
+ "item_wick_coil": {
+  "label": "分段油灯芯圈"
+ },
+ "item_wild_food": {
+  "label": "野食"
+ },
+ "item_willow_creel": {
+  "label": "扁口柳条篓"
+ },
+ "item_willow_rod": {
+  "label": "柔柳条束"
+ },
+ "item_wire_mesh_patch": {
+  "label": "交绕铁线网片"
+ },
+ "item_wood": {
+  "label": "木料"
+ },
+ "item_wood_mallet": {
+  "label": "枣木敲凿槌"
+ },
+ "item_wood_marking_kit": {
+  "label": "白垩放样条"
+ },
+ "item_wood_rasp": {
+  "label": "粗齿木锉"
+ },
+ "item_wood_shavings": {
+  "label": "干木刨屑"
+ },
+ "item_wood_spoon": {
+  "label": "偏柄木匙"
+ },
+ "item_wooden_peg": {
+  "label": "榫用木楔"
+ },
+ "item_wool": {
+  "label": "洗净羊毛束"
+ },
+ "item_wool_felt_sheet": {
+  "label": "厚毛毡片"
+ },
+ "item_wool_wristband": {
+  "label": "针缝毛腕套"
+ },
+ "item_wool_yarn": {
+  "label": "粗毛线团"
+ },
+ "item_work_book": {
+  "label": "署名印本"
+ },
+ "item_work_manuscript": {
+  "label": "署名手稿"
+ },
+ "item_work_map": {
+  "label": "手绘行路图"
  },
  "loc_bs": {
   "label": "白石镇"
@@ -1658,11 +3155,1469 @@
  "purpose_unmaterialized": {
   "label": "未物化预置"
  },
+ "res_acid_moss_gel": {
+  "label": "酸苔胶"
+ },
+ "res_alum_grain": {
+  "label": "工艺明矾粒"
+ },
+ "res_animal_milk": {
+  "label": "鲜兽乳"
+ },
+ "res_apple_rye_griddle": {
+  "label": "苹果黑麦烙饼"
+ },
+ "res_ash_spear": {
+  "label": "白蜡柄短矛"
+ },
+ "res_ash_stave": {
+  "label": "白蜡木直料"
+ },
+ "res_ash_walking_stick": {
+  "label": "弯首白蜡木手杖"
+ },
+ "res_bag": {
+  "label": "行囊"
+ },
+ "res_bamboo_fishing_rod": {
+  "label": "竹鱼竿"
+ },
+ "res_banknote_hw": {
+  "label": "河湾兑付券"
+ },
+ "res_barley_pea_stew": {
+  "label": "麦豆稠汤"
+ },
+ "res_beech_blank": {
+  "label": "山毛榉短坯"
+ },
+ "res_beech_press_board": {
+  "label": "双面压纸木板"
+ },
+ "res_beech_spatula": {
+  "label": "薄舌翻食木铲"
+ },
+ "res_beeswax": {
+  "label": "滤净蜂蜡块"
+ },
+ "res_beet": {
+  "label": "红根甜菜"
+ },
+ "res_beet_barley_pot": {
+  "label": "红根麦饭"
+ },
+ "res_beet_vinegar_dice": {
+  "label": "果醋甜菜丁"
+ },
+ "res_belt_buckle": {
+  "label": "折舌腰带扣"
+ },
+ "res_belt_strap": {
+  "label": "素面软革腰带"
+ },
+ "res_bench_plane": {
+  "label": "短底木刨"
+ },
+ "res_billhook_polearm": {
+  "label": "钩背长柄刃"
+ },
+ "res_boar_spear": {
+  "label": "横翼猎矛"
+ },
+ "res_bone_blank": {
+  "label": "净骨短坯"
+ },
+ "res_bone_folder": {
+  "label": "平脊骨压片"
+ },
+ "res_bone_toggle_set": {
+  "label": "双孔骨衣扣"
+ },
+ "res_book_bake_flatbread": {
+  "label": "烙燕麦薄饼工序册"
+ },
+ "res_book_cook_porridge": {
+  "label": "熬干果燕麦粥工序册"
+ },
+ "res_book_curdle_milk": {
+  "label": "凝制果醋鲜乳块工序册"
+ },
+ "res_book_dip_candles": {
+  "label": "浸制细蜂蜡烛工序册"
+ },
+ "res_book_fire_cup": {
+  "label": "拉烧小陶杯工序册"
+ },
+ "res_book_fire_pot": {
+  "label": "拉烧素面陶罐工序册"
+ },
+ "res_book_forge_hinge": {
+  "label": "锻制门柜铰链工序册"
+ },
+ "res_book_forge_nails": {
+  "label": "锻制小铁钉工序册"
+ },
+ "res_book_household_pottery": {
+  "label": "窑边家用陶器手记"
+ },
+ "res_book_journey_desk": {
+  "label": "书桌装订小作录"
+ },
+ "res_book_journey_grain": {
+  "label": "麦锅火候与稠度录"
+ },
+ "res_book_journey_metal": {
+  "label": "钢刃热修与薄片工谱"
+ },
+ "res_book_journey_preserve": {
+  "label": "短藏小食辨味册"
+ },
+ "res_book_journey_sewing": {
+  "label": "帆布与软衬裁缝图"
+ },
+ "res_book_journey_smallcraft": {
+  "label": "骨角饰线细作谱"
+ },
+ "res_book_journey_upkeep": {
+  "label": "器物养护备料手记"
+ },
+ "res_book_journey_wood": {
+  "label": "木角芦片杂工记"
+ },
+ "res_book_m4_contract": {
+  "label": "役灵契纹入门"
+ },
+ "res_book_m4_guard": {
+  "label": "元素护卫长契抄"
+ },
+ "res_book_m4_light": {
+  "label": "火纹与眩点习法"
+ },
+ "res_book_m4_mind": {
+  "label": "定息与错觉辨例"
+ },
+ "res_book_m4_projection": {
+  "label": "柔光与水卫契式"
+ },
+ "res_book_m4_release": {
+  "label": "执念松解手记"
+ },
+ "res_book_m4_renew": {
+  "label": "续供与解离条录"
+ },
+ "res_book_m4_surface": {
+  "label": "纸土留痕初抄"
+ },
+ "res_book_m4_travel": {
+  "label": "行旅安神祝词"
+ },
+ "res_book_m4_veils": {
+  "label": "折光与微光目记"
+ },
+ "res_book_mill_oats": {
+  "label": "筛磨燕麦粉工序册"
+ },
+ "res_book_s1_area": {
+  "label": "交锋圈域读本"
+ },
+ "res_book_s1_cover": {
+  "label": "近场防护读本"
+ },
+ "res_book_s1_growth": {
+  "label": "植株与采后读本"
+ },
+ "res_book_s1_message": {
+  "label": "自愿传讯读本"
+ },
+ "res_book_s1_movement": {
+  "label": "锚面与短渡读本"
+ },
+ "res_book_s1_utility": {
+  "label": "器物与小沟读本"
+ },
+ "res_book_s2_air": {
+  "label": "风力与传声读本"
+ },
+ "res_book_s2_farm": {
+  "label": "谷土梁架读本"
+ },
+ "res_book_s2_stone": {
+  "label": "岩层回声读本"
+ },
+ "res_book_s3_care": {
+  "label": "看护灯火读本"
+ },
+ "res_book_s3_optics": {
+  "label": "光影辨析读本"
+ },
+ "res_book_s4_measure": {
+  "label": "量距契纹读本"
+ },
+ "res_book_s4_space": {
+  "label": "空间役灵读本"
+ },
+ "res_book_salt_fish": {
+  "label": "短腌小咸鱼工序册"
+ },
+ "res_book_sew_sack": {
+  "label": "缝制麻布粮袋工序册"
+ },
+ "res_book_spin_wool": {
+  "label": "手纺粗毛线工序册"
+ },
+ "res_book_spine_tape": {
+  "label": "麻缝护脊带"
+ },
+ "res_book_trades_artisan": {
+  "label": "纸墨与小料手记"
+ },
+ "res_book_trades_iron": {
+  "label": "门窗炉具锻作录"
+ },
+ "res_book_trades_kitchen": {
+  "label": "谷蔬小灶记"
+ },
+ "res_book_trades_leather": {
+  "label": "熟革折缝手册"
+ },
+ "res_book_trades_wood": {
+  "label": "短板榫接图说"
+ },
+ "res_book_w2_reuse_advanced": {
+  "label": "二阶习术校读册"
+ },
+ "res_book_w2_reuse_basic": {
+  "label": "初阶杂术校读册"
+ },
+ "res_book_w2_reuse_middle": {
+  "label": "一阶习术校读册"
+ },
+ "res_book_weave_linen": {
+  "label": "织窄幅麻布工序册"
+ },
+ "res_boot_form": {
+  "label": "短靴木撑"
+ },
+ "res_boot_gaiter": {
+  "label": "系带护靴片"
+ },
+ "res_boot_scraper": {
+  "label": "门前刮泥架"
+ },
+ "res_bottle_divider_crate": {
+  "label": "分格小瓶木箱"
+ },
+ "res_brace_drill": {
+  "label": "曲柄细木钻"
+ },
+ "res_brass_strip": {
+  "label": "黄铜窄带"
+ },
+ "res_bread": {
+  "label": "面包"
+ },
+ "res_bread_board": {
+  "label": "提孔干货板"
+ },
+ "res_bristle_bundle": {
+  "label": "硬鬃毛束"
+ },
+ "res_bristle_handbrush": {
+  "label": "夹鬃小刷"
+ },
+ "res_broad_bean": {
+  "label": "干蚕豆瓣"
+ },
+ "res_broad_steel_chisel": {
+  "label": "宽刃木作钢凿"
+ },
+ "res_broadbean_garlic_mash": {
+  "label": "蒜香蚕豆泥"
+ },
+ "res_brush_roll": {
+  "label": "隔格笔刷卷"
+ },
+ "res_bs_dao_primer": {
+  "label": "验汀符笔初课"
+ },
+ "res_bs_mage_primer": {
+  "label": "东学光术初课"
+ },
+ "res_bs_martial_primer": {
+  "label": "量廊馆探步初课"
+ },
+ "res_bs_monk_primer": {
+  "label": "止波寺三息课"
+ },
+ "res_bucket_handle": {
+  "label": "弯耳提桶梁"
+ },
  "res_building_share": {
   "label": "建筑份额"
  },
+ "res_butter": {
+  "label": "无盐黄油"
+ },
+ "res_button_shank_tool": {
+  "label": "拱脚制扣钳"
+ },
+ "res_cabbage": {
+  "label": "紧叶甘蓝"
+ },
+ "res_cabbage_barley": {
+  "label": "甘蓝麦粒烩"
+ },
+ "res_calcite_chalk": {
+  "label": "软白垩块"
+ },
+ "res_canvas_satchel": {
+  "label": "翻盖帆布挎袋"
+ },
+ "res_caraway_oat_crust": {
+  "label": "香籽燕麦硬片"
+ },
+ "res_caraway_seed": {
+  "label": "香芹籽"
+ },
+ "res_carpenters_adze": {
+  "label": "横刃修木锛"
+ },
+ "res_carrot": {
+  "label": "束装胡萝卜"
+ },
+ "res_chain_link_set": {
+  "label": "锻接短链节"
+ },
+ "res_chalk_powder": {
+  "label": "细白划粉"
+ },
+ "res_charcoal": {
+  "label": "木炭小袋"
+ },
+ "res_chasing_punch": {
+  "label": "圆珠錾点杆"
+ },
+ "res_cheese_herb_mash": {
+  "label": "莳萝碎乳酪"
+ },
+ "res_cheese_rye_panbread": {
+  "label": "乳酪夹麦饼"
+ },
+ "res_clamping_wood_jaw": {
+  "label": "对合木夹口"
+ },
+ "res_clay": {
+  "label": "筛过黏土团"
+ },
+ "res_clay_bead_set": {
+  "label": "串线陶珠组"
+ },
+ "res_clay_bowl": {
+  "label": "敞口粗陶碗"
+ },
+ "res_clay_cup": {
+  "label": "小陶杯"
+ },
+ "res_clay_dish": {
+  "label": "分格盐碟"
+ },
+ "res_clay_flowerpot": {
+  "label": "排水陶花盆"
+ },
+ "res_clay_funnel": {
+  "label": "短颈陶漏斗"
+ },
+ "res_clay_lid": {
+  "label": "平钮陶盖"
+ },
+ "res_clay_net_weight": {
+  "label": "穿孔陶网坠"
+ },
+ "res_clay_oil_lamp": {
+  "label": "浅腹陶油灯"
+ },
+ "res_clay_pot": {
+  "label": "素面陶罐"
+ },
+ "res_clay_roof_tile": {
+  "label": "叠搭弧瓦"
+ },
+ "res_clay_spool": {
+  "label": "双沿陶线轴"
+ },
+ "res_clean_lard": {
+  "label": "净制工坊脂"
+ },
+ "res_clothes": {
+  "label": "普通衣服"
+ },
+ "res_coin_civic": {
+  "label": "阶庭方孔钱"
+ },
+ "res_coin_coast": {
+  "label": "泊绳银片"
+ },
+ "res_coin_wrap": {
+  "label": "折口零钱夹"
+ },
+ "res_cooking_pot": {
+  "label": "厚底煮锅"
+ },
+ "res_copper_nameplate": {
+  "label": "素铜空白铭牌"
+ },
+ "res_copper_sheet": {
+  "label": "薄铜片"
+ },
+ "res_cork_float_set": {
+  "label": "穿线软木浮子"
+ },
+ "res_cork_sheet": {
+  "label": "软木薄片"
+ },
+ "res_cork_stop_set": {
+  "label": "贴合软木塞组"
+ },
+ "res_corklined_cup_wrap": {
+  "label": "软木衬杯套"
+ },
+ "res_cracked_wheat_pot": {
+  "label": "碎麦厚煮"
+ },
+ "res_cream": {
+  "label": "鲜乳上层稠乳"
+ },
+ "res_cucumber": {
+  "label": "短刺黄瓜"
+ },
+ "res_damp_sand_rub": {
+  "label": "湿砂去垢料"
+ },
+ "res_darning_egg": {
+  "label": "补袜木卵"
+ },
+ "res_dill": {
+  "label": "鲜莳萝束"
+ },
+ "res_dill_cucumber": {
+  "label": "莳萝盐瓜段"
+ },
+ "res_door_latch": {
+  "label": "落杆门闩"
+ },
+ "res_door_wedge": {
+  "label": "宽背门挡楔"
+ },
+ "res_drawer_pull": {
+  "label": "拱背抽屉拉手"
+ },
+ "res_drawknife": {
+  "label": "双耳削柄刀"
+ },
+ "res_dried_fruit": {
+  "label": "干果小袋"
+ },
+ "res_dry_mushroom": {
+  "label": "干栽培蘑菇片"
+ },
+ "res_dry_peas": {
+  "label": "晒干豌豆"
+ },
+ "res_earthworm_bait": {
+  "label": "蚯蚓饵"
+ },
+ "res_ember_core": {
+  "label": "余烬核"
+ },
+ "res_estoc": {
+  "label": "四棱刺剑"
+ },
+ "res_external_medicine": {
+  "label": "外敷药"
+ },
+ "res_felt_insole_pair": {
+  "label": "贴底毛毡鞋垫"
+ },
+ "res_felt_knee_pad": {
+  "label": "绑带护膝垫"
+ },
+ "res_felt_polishing_pad": {
+  "label": "薄毡抛光垫"
+ },
+ "res_felt_seat": {
+  "label": "压毡坐垫"
+ },
+ "res_fine_sand": {
+  "label": "洗净细砂"
+ },
+ "res_fine_sewing_needle": {
+  "label": "细眼缝衣针组"
+ },
+ "res_fine_sieve": {
+  "label": "细目工艺筛"
+ },
+ "res_fire_poker": {
+  "label": "钩头拨火杆"
+ },
+ "res_fish": {
+  "label": "剖净鲜鱼"
+ },
+ "res_fish_broth": {
+  "label": "清煮鱼汤"
+ },
+ "res_fish_oat_cake": {
+  "label": "碎鱼燕麦烙饼"
+ },
+ "res_fishing_bait": {
+  "label": "钓饵"
+ },
+ "res_flanged_mace": {
+  "label": "六棱锤杖"
+ },
+ "res_flat_file": {
+  "label": "平齿铁锉"
+ },
+ "res_flax": {
+  "label": "梳理麻纤维束"
+ },
+ "res_flax_cord": {
+  "label": "三股麻绳"
+ },
+ "res_flax_stalk": {
+  "label": "野亚麻茎束"
+ },
+ "res_flour_paste_powder": {
+  "label": "干浆粉"
+ },
+ "res_folded_brass_cuff": {
+  "label": "卷边黄铜腕圈"
+ },
+ "res_folding_haversack": {
+  "label": "卷口干粮小包"
+ },
+ "res_folding_map_board": {
+  "label": "折页行图板"
+ },
+ "res_foot_rest": {
+  "label": "倾面脚凳"
+ },
+ "res_forged_chain_short": {
+  "label": "连扣铁短链"
+ },
+ "res_fowl_egg": {
+  "label": "禽蛋"
+ },
+ "res_frame_saw": {
+  "label": "窄框木锯"
+ },
+ "res_fresh_apple": {
+  "label": "晚熟苹果"
+ },
+ "res_fresh_curd": {
+  "label": "果醋鲜乳凝块"
+ },
+ "res_fruit_milk_pudding": {
+  "label": "干果乳粉糕"
+ },
+ "res_fruit_oat_dumpling": {
+  "label": "干果燕麦团"
+ },
+ "res_fruit_paste": {
+  "label": "醋煮干果酱"
+ },
+ "res_fruit_porridge": {
+  "label": "干果燕麦粥"
+ },
+ "res_fruit_vinegar": {
+  "label": "酸果醋小瓶"
+ },
+ "res_fuller": {
+  "label": "长槽锻沟杆"
+ },
+ "res_gall_wash": {
+  "label": "淡瘿染液"
+ },
+ "res_garlic": {
+  "label": "晒皮蒜头"
+ },
+ "res_garlic_butter": {
+  "label": "蒜末拌黄油"
+ },
+ "res_gate_hasps": {
+  "label": "翻舌门扣"
+ },
+ "res_goat_hair_brush": {
+  "label": "宽根羊毫排刷"
+ },
+ "res_goat_milk": {
+  "label": "鲜山羊乳"
+ },
+ "res_goat_skin": {
+  "label": "薄鞣山羊革"
+ },
+ "res_goatskin_document_case": {
+  "label": "扁面羊革文书套"
+ },
+ "res_grain_sack": {
+  "label": "麻布粮袋"
+ },
+ "res_grooving_wheel": {
+  "label": "缝距齿轮柄"
+ },
+ "res_gum_grain": {
+  "label": "净树胶粒"
+ },
+ "res_hand_auger": {
+  "label": "横柄手钻"
+ },
+ "res_hand_bellows": {
+  "label": "皮囊小风箱"
+ },
+ "res_hard_cheese": {
+  "label": "熟成硬乳酪角"
+ },
+ "res_hazelnut": {
+  "label": "去壳榛仁"
+ },
+ "res_head_wrap": {
+  "label": "遮尘麻头巾"
+ },
+ "res_hearth_trivet": {
+  "label": "三脚铁锅架"
+ },
+ "res_hemp_thread": {
+  "label": "细捻麻线团"
+ },
+ "res_hen_egg": {
+  "label": "鸡蛋小篮份"
+ },
+ "res_herb": {
+  "label": "药草"
+ },
+ "res_herb_hoe": {
+  "label": "药锄"
+ },
+ "res_herb_pouch": {
+  "label": "透气药草袋"
+ },
+ "res_hide_glue": {
+  "label": "熬制皮骨胶"
+ },
+ "res_hide_scraper": {
+  "label": "弧口刮皮刀"
+ },
+ "res_hinge_pin": {
+  "label": "长头铰销"
+ },
+ "res_hoe": {
+  "label": "铁锄"
+ },
+ "res_hollow_gouge": {
+  "label": "圆口雕花凿"
+ },
+ "res_honey": {
+  "label": "滤蜜小罐份"
+ },
+ "res_honey_curd_spread": {
+  "label": "蜜拌鲜乳酪"
+ },
+ "res_honey_nut_cake": {
+  "label": "蜜榛黑麦糕"
+ },
+ "res_honeysuckle": {
+  "label": "金银花"
+ },
+ "res_honing_stone": {
+  "label": "细面刃磨石"
+ },
+ "res_hooked_pruning_knife": {
+  "label": "内弯修枝钢刀"
+ },
+ "res_horn_blank": {
+  "label": "空心角片坯"
+ },
+ "res_horn_comb": {
+  "label": "短齿角梳"
+ },
+ "res_horn_spoon_blank": {
+  "label": "弧面角片匙"
+ },
+ "res_horsehair_bundle": {
+  "label": "洗净马尾毛束"
+ },
+ "res_horsehair_dustbrush": {
+  "label": "软毛拂尘刷"
+ },
+ "res_horsehair_sieve_cloth": {
+  "label": "马尾细滤片"
+ },
+ "res_ingot_mold": {
+  "label": "双槽铁锭模"
+ },
+ "res_ink_brush": {
+  "label": "短毫画笔"
+ },
+ "res_ink_wiping_pad": {
+  "label": "吸墨麻布垫"
+ },
+ "res_iron": {
+  "label": "铁料"
+ },
+ "res_iron_awl": {
+  "label": "锥尖穿孔针"
+ },
+ "res_iron_hinge": {
+  "label": "门柜小铰链"
+ },
+ "res_iron_nail": {
+  "label": "小铁钉"
+ },
+ "res_iron_ore": {
+  "label": "含铁矿石"
+ },
+ "res_iron_punch": {
+  "label": "短身冲子"
+ },
+ "res_iron_ring": {
+  "label": "圆眼系绳环"
+ },
+ "res_iron_scrap": {
+  "label": "铁边料小块"
+ },
+ "res_iron_wire": {
+  "label": "退火铁线卷"
+ },
+ "res_jeweler_pliers": {
+  "label": "窄嘴饰线钳"
+ },
+ "res_jeweler_saw": {
+  "label": "细弓镂片锯"
+ },
+ "res_kitchen_knife": {
+  "label": "案上切刀"
+ },
+ "res_ladle_rest": {
+  "label": "槽口木匙托"
+ },
+ "res_lamp_bracket": {
+  "label": "折臂灯托"
+ },
+ "res_lampblack": {
+  "label": "收烟墨粉"
+ },
+ "res_lantern": {
+  "label": "纸花灯"
+ },
+ "res_laundry_mesh_bag": {
+  "label": "疏孔洗布袋"
+ },
+ "res_leather_grip": {
+  "label": "缠柄熟革条"
+ },
+ "res_leather_hinge": {
+  "label": "折页软革铰片"
+ },
+ "res_leather_round_knife": {
+  "label": "半月裁革钢刀"
+ },
+ "res_leather_shears": {
+  "label": "短刃裁革剪"
+ },
+ "res_leather_strop": {
+  "label": "张面修刃皮板"
+ },
+ "res_leather_thimble": {
+  "label": "绕指护针套"
+ },
+ "res_leather_wax_grease": {
+  "label": "薄涂护革脂蜡"
+ },
+ "res_ledger_cover": {
+  "label": "包角账页封皮"
+ },
+ "res_leek": {
+  "label": "青叶韭葱"
+ },
+ "res_leek_fish_pot": {
+  "label": "韭葱鱼煨锅"
+ },
+ "res_lentil": {
+  "label": "褐扁豆"
+ },
+ "res_lentil_leek_stew": {
+  "label": "葱叶扁豆烩"
+ },
+ "res_lidded_seed_box": {
+  "label": "分格种子匣"
+ },
+ "res_line_level": {
+  "label": "木座槽水准"
+ },
+ "res_line_winder": {
+  "label": "八字绕线板"
+ },
+ "res_linen_apron": {
+  "label": "交背麻围裙"
+ },
+ "res_linen_canvas": {
+  "label": "紧织麻帆布"
+ },
+ "res_linen_cleaning_swab": {
+  "label": "缠头拭管条"
+ },
+ "res_linen_cloth": {
+  "label": "窄幅麻布"
+ },
+ "res_linen_filter": {
+  "label": "宽口滤布"
+ },
+ "res_linen_wick": {
+  "label": "扁捻麻灯芯"
+ },
+ "res_linseed_oil": {
+  "label": "木用亚麻油"
+ },
+ "res_literacy_primer": {
+  "label": "田契识字课本"
+ },
+ "res_live_fish": {
+  "label": "活鱼"
+ },
+ "res_loom": {
+  "label": "窄幅手织架"
+ },
+ "res_loom_reed": {
+  "label": "密齿织筘"
+ },
+ "res_loop_turner": {
+  "label": "钩头翻带杆"
+ },
+ "res_marking_gauge": {
+  "label": "滑座划线规"
+ },
+ "res_marsh_phosphor": {
+  "label": "沼光磷粉"
+ },
+ "res_mason_chisel": {
+  "label": "阔口修石凿"
+ },
+ "res_milk": {
+  "label": "鲜牛乳小壶"
+ },
+ "res_milk_oat_mash": {
+  "label": "乳香燕麦糊"
+ },
+ "res_mining_pick": {
+  "label": "普通矿镐"
+ },
+ "res_mist_frost": {
+  "label": "雾魂凝霜"
+ },
+ "res_mixing_paddle": {
+  "label": "长柄搅糊板"
+ },
+ "res_moon_toad_milk": {
+  "label": "灵蟾白浆"
+ },
+ "res_mortise_chisel": {
+  "label": "直口木凿"
+ },
+ "res_mulberry_leaf": {
+  "label": "鲜桑叶束"
+ },
+ "res_mushroom_barley_pot": {
+  "label": "菌片大麦煨"
+ },
+ "res_mustard_relish": {
+  "label": "粗粒芥醋酱"
+ },
+ "res_mustard_seed": {
+  "label": "黄芥籽"
+ },
+ "res_mutton": {
+  "label": "去骨羊肉"
+ },
+ "res_mutton_turnip_stew": {
+  "label": "羊肉芜菁煨"
+ },
+ "res_needle_case": {
+  "label": "扁皮长针夹"
+ },
+ "res_needle_roll": {
+  "label": "卷式针包"
+ },
+ "res_netting_needle": {
+  "label": "双叉结网梭"
+ },
+ "res_oak_cudgel": {
+  "label": "包尾橡木棒"
+ },
+ "res_oak_gall": {
+  "label": "干瘿小包"
+ },
+ "res_oat_crisp": {
+  "label": "无盐燕麦脆片"
+ },
+ "res_oat_flatbread": {
+  "label": "燕麦薄饼"
+ },
+ "res_oat_flour": {
+  "label": "燕麦粉"
+ },
+ "res_oats": {
+  "label": "带壳燕麦"
+ },
+ "res_ochre_paint": {
+  "label": "赤土胶彩"
+ },
+ "res_onion": {
+  "label": "黄皮洋葱"
+ },
+ "res_onion_egg_soup": {
+  "label": "葱香蛋花汤"
+ },
+ "res_padded_work_collar": {
+  "label": "软衬扛物肩圈"
+ },
+ "res_paper_cord_tags": {
+  "label": "穿绳皮纸吊签"
+ },
+ "res_parchment": {
+  "label": "刮薄羊皮纸"
+ },
+ "res_parchment_bookmark": {
+  "label": "折首皮纸签"
+ },
+ "res_parrying_dagger": {
+  "label": "叉护手短刃"
+ },
+ "res_parsnip": {
+  "label": "白肉欧防风根"
+ },
+ "res_parsnip_cream_pot": {
+  "label": "稠乳白根煨"
+ },
+ "res_paste_cup_portion": {
+  "label": "纸工熟浆糊"
+ },
+ "res_pasture_forage": {
+  "label": "草场青草"
+ },
+ "res_patch_bundle": {
+  "label": "锁边补衣片"
+ },
+ "res_pea_spread": {
+  "label": "盐煮豌豆泥"
+ },
+ "res_pear": {
+  "label": "脆肉梨"
+ },
+ "res_pear_dry_chips": {
+  "label": "薄梨干片"
+ },
+ "res_pear_vinegar_slice": {
+  "label": "醋浸梨片"
+ },
+ "res_pear_wheat_gruel": {
+  "label": "梨肉麦糊"
+ },
+ "res_pearl_barley": {
+  "label": "脱壳大麦"
+ },
+ "res_peg_drying_rack": {
+  "label": "折靠晾布架"
+ },
+ "res_pheasant_egg": {
+  "label": "雉蛋"
+ },
+ "res_pine_board": {
+  "label": "风干松木短板"
+ },
+ "res_pine_pitch": {
+  "label": "熬稠松脂块"
+ },
+ "res_plantain": {
+  "label": "车前"
+ },
+ "res_plum": {
+  "label": "去梗紫李"
+ },
+ "res_plum_honey_spread": {
+  "label": "蜜煮紫李酱"
+ },
+ "res_plumb_bob": {
+  "label": "铜壳吊线锤"
+ },
+ "res_polishing_powder": {
+  "label": "轻石细磨粉"
+ },
+ "res_poppy_rye_crisp": {
+  "label": "籽香黑麦脆饼"
+ },
+ "res_poppy_seed": {
+  "label": "食用罂粟籽"
+ },
+ "res_pork_fat": {
+  "label": "食用猪板脂"
+ },
+ "res_pot_lifter": {
+  "label": "夹口提锅钩"
+ },
+ "res_pot_wrap": {
+  "label": "夹层锅布"
+ },
+ "res_pottery_wheel": {
+  "label": "手拨陶轮"
+ },
+ "res_practice_sword": {
+  "label": "圆棱练习木剑"
+ },
+ "res_pumice": {
+  "label": "轻质磨石"
+ },
+ "res_quarterstaff": {
+  "label": "箍端长木杖"
+ },
+ "res_quill_knife": {
+  "label": "短锋修羽刀"
+ },
+ "res_quill_pen_pair": {
+  "label": "削口鹅羽笔组"
+ },
+ "res_quill_set": {
+  "label": "净鹅羽管组"
+ },
+ "res_rapeseed_oil": {
+  "label": "菜籽油小份"
+ },
+ "res_ration": {
+  "label": "干粮"
+ },
+ "res_raw_animal_hair": {
+  "label": "未洗兽毛"
+ },
+ "res_raw_bone": {
+  "label": "生骨"
+ },
+ "res_raw_feather": {
+  "label": "杂羽"
+ },
+ "res_raw_goat_hair": {
+  "label": "未洗山羊毛"
+ },
+ "res_raw_meat": {
+  "label": "生肉"
+ },
+ "res_raw_silk": {
+  "label": "生丝一缕"
+ },
+ "res_rawhide": {
+  "label": "刮净生皮"
+ },
+ "res_red_dyewood": {
+  "label": "红染木碎片"
+ },
+ "res_red_ochre": {
+  "label": "赤土色粉"
+ },
+ "res_redwood_dye": {
+  "label": "温煎红木染液"
+ },
+ "res_reed_bundle": {
+  "label": "干直芦管束"
+ },
+ "res_reed_drying_mat": {
+  "label": "透风芦管晒帘"
+ },
+ "res_reed_pen": {
+  "label": "斜口芦苇笔"
+ },
+ "res_reed_pen_box": {
+  "label": "芦管笔尖匣"
+ },
+ "res_reed_whistle": {
+  "label": "单孔芦鸣哨"
+ },
+ "res_rein_patch": {
+  "label": "缰绳接头护片"
+ },
+ "res_rendered_cooking_fat": {
+  "label": "小锅熟猪脂"
+ },
+ "res_resin": {
+  "label": "树脂"
+ },
+ "res_resin_cloth_patch": {
+  "label": "薄脂麻补片"
+ },
+ "res_rivet_set": {
+  "label": "凹头铆窝杆"
+ },
+ "res_riveting_hammer": {
+  "label": "偏口细铆锤"
+ },
+ "res_rope_fid": {
+  "label": "尖身插绳棒"
+ },
+ "res_round_file": {
+  "label": "圆身孔锉"
+ },
+ "res_rye_flour": {
+  "label": "细筛黑麦粉"
+ },
+ "res_s2_cinnabar": {
+  "label": "朱砂小包"
+ },
+ "res_s2_fuling": {
+  "label": "茯苓块"
+ },
+ "res_s2_gancao": {
+  "label": "甘草片"
+ },
+ "res_s2_huangjing": {
+  "label": "制黄精片"
+ },
+ "res_s2_pill": {
+  "label": "黄精茯苓蜜丸"
+ },
+ "res_s2_talc": {
+  "label": "滑石粉小包"
+ },
+ "res_s2_talisman": {
+  "label": "朱砂黄符"
+ },
+ "res_s2_tinder": {
+  "label": "艾绒引火包"
+ },
+ "res_s2_yellow_paper": {
+  "label": "黄表纸小帖"
+ },
+ "res_s3_incense": {
+  "label": "线香"
+ },
+ "res_s3_lamp_oil": {
+  "label": "灯油小盏"
+ },
+ "res_s3_rice": {
+  "label": "祝米小包"
+ },
+ "res_s4_scripture_key": {
+  "label": "经阁铜钥"
+ },
+ "res_s_hook": {
+  "label": "双弯铁挂钩"
+ },
+ "res_sack_pricker": {
+  "label": "直柄开袋锥"
+ },
+ "res_salt": {
+  "label": "粗盐小包"
+ },
+ "res_salt_fish": {
+  "label": "短腌咸鱼"
+ },
+ "res_salted_curd": {
+  "label": "压盐鲜乳饼"
+ },
+ "res_salted_walnut": {
+  "label": "盐焙核桃仁"
+ },
+ "res_scraper_blade": {
+  "label": "平口刮木片"
+ },
+ "res_scroll_wrap": {
+  "label": "束带卷稿套"
+ },
+ "res_seal_thread_bundle": {
+  "label": "卷札封结线"
+ },
+ "res_seam_pitch_cake": {
+  "label": "接缝软脂饼"
+ },
+ "res_seam_rivet": {
+  "label": "短身皮铆钉组"
+ },
+ "res_seed_marker": {
+  "label": "槽头播种牌"
+ },
+ "res_sewing_needle": {
+  "label": "粗眼缝针"
+ },
+ "res_sheath_pouch": {
+  "label": "钝口工具皮套"
+ },
+ "res_sheet_shears": {
+  "label": "弯柄金属剪"
+ },
+ "res_shell_button_blank": {
+  "label": "贝片扣坯组"
+ },
+ "res_shell_button_set": {
+  "label": "细孔贝面扣组"
+ },
+ "res_shutter_panel": {
+  "label": "拼条窗扇"
+ },
+ "res_shuttle": {
+  "label": "尖梭织纬器"
+ },
+ "res_sickle": {
+  "label": "铁镰"
+ },
+ "res_sighting_rule": {
+  "label": "折脚照准尺"
+ },
+ "res_silk_cloth": {
+  "label": "素绸一段"
+ },
+ "res_silk_cocoon": {
+  "label": "蚕茧一捧"
+ },
+ "res_silkworm_eggs": {
+  "label": "蚕种纸"
+ },
+ "res_silver_open_ring": {
+  "label": "绕合银开口环"
+ },
+ "res_silver_wire": {
+  "label": "细银丝束"
+ },
+ "res_singlebit_axe": {
+  "label": "短柄单刃斧"
+ },
+ "res_slate_splinter": {
+  "label": "平面板岩片"
+ },
+ "res_slate_stylus": {
+  "label": "尖端板岩划笔"
+ },
+ "res_slate_writing_tile": {
+  "label": "磨边板岩写牌"
+ },
+ "res_small_bell_frame": {
+  "label": "悬片响铃架"
+ },
+ "res_small_trowel": {
+  "label": "折颈砌缝铲"
+ },
+ "res_smith_hammer": {
+  "label": "锻工手锤"
+ },
+ "res_smith_tongs": {
+  "label": "长柄铁钳"
+ },
+ "res_soap_flake": {
+  "label": "刮片硬皂"
+ },
+ "res_soap_wash_portion": {
+  "label": "温搅皂洗液"
+ },
+ "res_soot_ink": {
+  "label": "树胶烟墨"
+ },
+ "res_spindle": {
+  "label": "木纺锤"
+ },
+ "res_spindle_whorl": {
+  "label": "木纺轮片"
+ },
+ "res_spokeshave": {
+  "label": "弧底辐条刨"
+ },
+ "res_staff": {
+  "label": "旧木杖"
+ },
+ "res_steel_arming_sword": {
+  "label": "直刃单手剑"
+ },
+ "res_steel_bar": {
+  "label": "淬用钢条"
+ },
+ "res_steel_dividers": {
+  "label": "锁距钢规"
+ },
+ "res_steel_gouge_tip": {
+  "label": "套柄圆口钢凿"
+ },
+ "res_stitchbound_folio": {
+  "label": "麻订空白册"
+ },
+ "res_stitching_awl": {
+  "label": "缝革扁锥"
+ },
+ "res_stone": {
+  "label": "石料"
+ },
+ "res_stone_crest_quill": {
+  "label": "鸡蛇石冠羽"
+ },
+ "res_stone_mortar": {
+  "label": "浅腹石臼"
+ },
+ "res_stone_point": {
+  "label": "加厚开石尖"
+ },
+ "res_stove_grid": {
+  "label": "小炉挡炭栅"
+ },
+ "res_strap_eye": {
+  "label": "双孔绑带耳"
+ },
+ "res_swage_block": {
+  "label": "分槽压形砧"
+ },
+ "res_tanned_leather": {
+  "label": "鞣熟软革"
+ },
+ "res_tannin_bark": {
+  "label": "干鞣树皮片"
+ },
+ "res_tent_stake": {
+  "label": "弯头帐钉"
+ },
+ "res_thread_rack": {
+  "label": "绕线立架"
+ },
+ "res_three_leg_stool": {
+  "label": "斜脚矮凳"
+ },
+ "res_tin_inlay_strip": {
+  "label": "压点锡饰边"
+ },
+ "res_tin_sheet": {
+  "label": "压薄锡片"
+ },
+ "res_toasted_oats": {
+  "label": "锅焙燕麦粒"
+ },
+ "res_tool_apron_panel": {
+  "label": "分袋工匠围腰"
+ },
+ "res_tool_handle": {
+  "label": "小工具木柄"
+ },
+ "res_tool_tray": {
+  "label": "开口工具盘"
+ },
+ "res_travel_sewing_wallet": {
+  "label": "合页针线夹"
+ },
+ "res_try_square": {
+  "label": "钢舌木角尺"
+ },
+ "res_turnip": {
+  "label": "带皮芜菁"
+ },
+ "res_turnip_oat_cake": {
+  "label": "芜菁燕麦饼"
+ },
  "res_unmaterialized_share": {
   "label": "未物化建筑份额"
+ },
+ "res_veining_chisel": {
+  "label": "细线刻纹凿"
+ },
+ "res_vinegar_carrot": {
+  "label": "短浸醋萝卜"
+ },
+ "res_walking_crutch": {
+  "label": "腋托木拐"
+ },
+ "res_wall_shelf": {
+  "label": "短板壁架"
+ },
+ "res_walnut": {
+  "label": "碎壳净核桃仁"
+ },
+ "res_walnut_honey_bites": {
+  "label": "核桃蜜麦块"
+ },
+ "res_war_pick": {
+  "label": "短喙战锤"
+ },
+ "res_warm_vinegar_drink": {
+  "label": "温果醋饮"
+ },
+ "res_water": {
+  "label": "清水一份"
+ },
+ "res_wax_candle": {
+  "label": "细蜂蜡烛"
+ },
+ "res_wax_seal_blank": {
+  "label": "圆面封印蜡饼"
+ },
+ "res_waxed_thread": {
+  "label": "上蜡麻缝线"
+ },
+ "res_weaving_sword": {
+  "label": "压纬木片"
+ },
+ "res_wheat_grain": {
+  "label": "净麦粒"
+ },
+ "res_wheat_seed": {
+  "label": "麦种"
+ },
+ "res_whittling_knife": {
+  "label": "削木小刀"
+ },
+ "res_wick_coil": {
+  "label": "分段油灯芯圈"
+ },
+ "res_wild_food": {
+  "label": "野食"
+ },
+ "res_willow_creel": {
+  "label": "扁口柳条篓"
+ },
+ "res_willow_rod": {
+  "label": "柔柳条束"
+ },
+ "res_wire_mesh_patch": {
+  "label": "交绕铁线网片"
+ },
+ "res_wood": {
+  "label": "木料"
+ },
+ "res_wood_mallet": {
+  "label": "枣木敲凿槌"
+ },
+ "res_wood_marking_kit": {
+  "label": "白垩放样条"
+ },
+ "res_wood_rasp": {
+  "label": "粗齿木锉"
+ },
+ "res_wood_shavings": {
+  "label": "干木刨屑"
+ },
+ "res_wood_spoon": {
+  "label": "偏柄木匙"
+ },
+ "res_wooden_peg": {
+  "label": "榫用木楔"
+ },
+ "res_wool": {
+  "label": "洗净羊毛束"
+ },
+ "res_wool_felt_sheet": {
+  "label": "厚毛毡片"
+ },
+ "res_wool_wristband": {
+  "label": "针缝毛腕套"
+ },
+ "res_wool_yarn": {
+  "label": "粗毛线团"
+ },
+ "res_work_book": {
+  "label": "署名印本"
+ },
+ "res_work_manuscript": {
+  "label": "署名手稿"
+ },
+ "res_work_map": {
+  "label": "手绘行路图"
  },
  "resfam_asset": {
   "label": "建筑资产"
@@ -1708,6 +4663,21 @@
  },
  "sink_transform": {
   "label": "转换投入"
+ },
+ "size_huge": {
+  "label": "特大件"
+ },
+ "size_large": {
+  "label": "大件"
+ },
+ "size_medium": {
+  "label": "中件"
+ },
+ "size_small": {
+  "label": "小件"
+ },
+ "size_tiny": {
+  "label": "微件"
  },
  "src_birth": {
   "label": "出生对平"
