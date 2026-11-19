@@ -66,6 +66,9 @@
 - 11-19 6-7 只核附条件三项，记为后卡必过：① 6-24 验收断言"真实世界地点根恰一个"（6-7 空表不查一根）；② 有地下行入库前须排卡建 enclosed/surfaceRefElevationM/depthM 所缺原语（first/nearest/exists）；③ 6-27 create 适配器若能建地点行，须在该卡登记建行写者（K6-42）。卷五 §4.1.2 `created.*.parent`→`created.*.props.parent` 勘误由主会话自定、随 6-7 改一轮做。
 - 11-19 6-0：门禁第 1 条 text_judge 半条（对照表 #3、#38、#49 文字匹配扩到块 6 新文件组）改 implemented 会让 9 个"要 tsc"的必须报用例报不出。已定：照原状不实现、不改用例（改用例即降门槛），记问题.md 挂"类型检查建成卡"；S1、S10 本就覆盖全部组，块 6 新目录自动归 rules 组。
 - 11-19 6-0：他卷维度引用的词表族未建（如 abilities 引 ability 族）会报 E-DIM-REF-MISSING。已定：沿用 _unbuilt-derived.json names 体例扩为"未建词表族"整类登记，由首个撞上的卡（6-2）实现，不逐列特判。
+- 11-19 6-29：降水量、风速分布族——李白 14:2x 说 gamma/Weibull，卷二 §1.10 :319 首批分布只有 uniform/normal/lognormal/triangular/categorical/curve。已定：照卷文用 lognormal 极大似然拟合太原实测，不为此扩卷二分布族；报李白备案（他若要 gamma/Weibull 再走卷二勘误加分布）。
+- 11-19 6-29：weightRX 原用 6 次多项式拟合逐月频率（误差 0.35）。已定：建卷二 §1.12 :369 已定义的 RX lookup(curve, x) 原语（整类，复用 lookupCurve），weightRX 改基础频率×季节曲线查表（Opus 写，内核）。季按太阳相位划分（卷二十季节来自倾角纬度），不用气象季。
+- 记过 11-19：6-29 写者又一次 sed -i（被拦）与一次输出重定向（F:/dnd-tmp/t1.txt）。
 - 记过 11-19：6-7 写者一次把登记器输入生成的 stdout 丢到 /dev/null（输出重定向，自报）。
 - 合入注意 11-19：6-0（卷二）与 6-7（卷五）勘误都用了 1119k2；6-7 先合占 1119k2，6-0 改号 1119k3（已告写者）。
 - 11-19 6-7 复核第 2 轮记账，后卡必过：terrain 条目字段与 paceFactor>0 检查归 6-27；access、water 两族条目随 6-24 灌行补上。
