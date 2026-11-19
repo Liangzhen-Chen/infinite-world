@@ -1,0 +1,18 @@
+{
+ "rows": [
+  {
+   "key": "records",
+   "value": {},
+   "source": "卷二 §2.6 :529（去留表取值 rules.terminate.records.<rcls_ 代号>）",
+   "grade": "designed",
+   "basis": "现行声明表里以可终止实体 id 为路径段的键（created.*.props.*、created.*.props.basis、displayNames.*.seq、outflowTotals.*、stockLots.*）卷文都没有写明去留，按李白 11-18 22:10 丙4 不自拟，清单报李白再定；各卷登记的记录类随该卷建状态键的卡加行"
+  },
+  {
+   "key": "unbuilt",
+   "value": {"onTerminate": ["sink"], "card": "pre_first_reader_card"},
+   "source": "卷二 §2.6 :522（sink 转入登记的汇）；卷六 :117（资源行 sinks 是允许的去处集合，不是终止时的单一去处）",
+   "grade": "designed",
+   "basis": "李白 11-19 11:1x ③：sink 终止去处没有单值登记，多值时选哪个卷文未写，不硬造选法；登记为未建，拒收报专码。第一张真需要 sink 的卡补单值字段并勘误卷六，再从本行删去"
+  }
+ ]
+}

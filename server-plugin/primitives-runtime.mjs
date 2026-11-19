@@ -6,7 +6,8 @@
 //
 // 分工边界（本卡只做骨架）：
 // - 只实现目标写者现已存在的适配器：transfer（kernel/ledger.mjs#transfer）。见 docs/卡回报/ds-b5-1.md 的“已建适配器／拒收清单”。
-// - 其余原语（含 emit、learn、transform、holding 四条、destroy、schedule 等）没有适配器，一律整笔拒收 E-ACT-WRITER-NOT-READY，
+// - 5-3 补 holding 四条、5-4 补 destroy（转调 kernel/terminate.mjs#terminate）。
+// - 其余原语（含 emit、learn、transform、schedule 等）没有适配器，一律整笔拒收 E-ACT-WRITER-NOT-READY，
 //   抛出后由调用方已开的内核事务整笔回滚；不造桩、不静默跳过。
 // - 一次 execute 一次事务由调用方保证：execute 只由 resolve() 提交段与推进钩子调度方调用，二者都在调用方已开的内核事务里
 //   （kernel/transaction.mjs#runTransaction 是 kernel 组内用、不在 kernelApi；规则层只能经 kernelApi 调 kernel，卷二 §2.7 :790）。
@@ -19,6 +20,7 @@
 
 import { transfer } from './kernel/ledger.mjs';
 import { openHolding, closeHolding, transferHolding, rescaleHolding } from './kernel/holdings.mjs';
+import { terminate } from './kernel/terminate.mjs';
 
 // 账户 id 的段序（卷六 §4.1 规则 1、kernel/ledger.mjs 的 accountKey）：持有人、用途、资源种类、资源键。
 // 原语 transfer 的 from、to 是账户 id（卷九 §4.2.1 transfer 行只给 from、to、qty；账户包含资源，
@@ -232,7 +234,7 @@ function splitAccount(id, maxLength) {
 }
 
 // 适配器按原语分，不按领域分（R9-2.4）：每个原语一个函数，领域差别只来自参数与目标写者。
-// 已建目标写者的适配器：transfer（kernel/ledger.mjs#transfer）与 holding 四条（kernel/holdings.mjs，5-3）。
+// 已建目标写者的适配器：transfer（kernel/ledger.mjs#transfer）、holding 四条（kernel/holdings.mjs，5-3）与 destroy（kernel/terminate.mjs，5-4）。
 // 其余原语不在此表，由 execute 整笔拒收 E-ACT-WRITER-NOT-READY。
 // holding 四条只经 kernelApi 调持有写者（卷二 §2.7 kernelApi 的 kernel/holdings.mjs 条目）；可选字段 terms / grantedBy 照原样转交。
 const ADAPTERS = Object.freeze({
@@ -268,6 +270,12 @@ const ADAPTERS = Object.freeze({
   },
   'holding.rescale'(engine, state, p, reason) {
     rescaleHolding(engine, state, { holdingKind: p.holdingKind, subject: p.subject, shares: p.shares, terms: p.terms, cause: reason });
+  },
+  // destroy 落内核实体终止协议（卷九 §4.2.1 :640；卷二 §2.6 :519）：cause 取本笔事件动词，无死因细分写 null。
+  // 涉实物的去处腿（R9-2.7 :667）在终止第 3 步按资源种类行 onTerminate 经账本处置；sink 去处登记为未建
+  // （rules.terminate.unbuilt），与目标实体表或其写者未上线同由 terminate 拒 E-ACT-WRITER-NOT-READY。
+  destroy(engine, state, p, reason) {
+    terminate(engine, state, p.entity, reason, null);
   },
 });
 

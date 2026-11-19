@@ -368,6 +368,8 @@ test('kernelApi 登记账本已实现的入口（卷六 :351 六名加 alertGaps
     ['kernel/ledger.mjs#allocateCapped', ['rules'], false],
     ['kernel/ledger.mjs#closeLedgerPeriod', ['rules'], true],
   ]);
+  // 5-4：内核终止协议第 3 步账户分流经账本转移（卷二 §2.6 :522），transfer 另以 callerFiles 只放行该文件（李白 11-19 11:1x ①；卷二 §2.7 勘误 1118k30 两者取并集）。
+  assert.deepEqual(decl.kernelApi.exports.filter((x) => x.callerFiles && x.export.startsWith('kernel/ledger.mjs#')).map((x) => [x.export, x.callerFiles]), [['kernel/ledger.mjs#transfer', ['kernel/terminate.mjs']]]);
   assert.deepEqual(decl.stateKeys.accounts.writers, { '*': 'kernel/ledger.mjs' });
   assert.deepEqual(decl.stateKeys.outflowTotals.writers, { '*': 'kernel/ledger.mjs' });
   assert.deepEqual(decl.stateKeys.stockLots.writers, { '*': 'kernel/ledger.mjs' });

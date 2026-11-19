@@ -17,6 +17,8 @@
   "terminated": {"readers": ["view:capacity"], "writers": {"*": "kernel/terminate.mjs"}}
  },
  "systems": {
+  "sys.capacity": {"predicates": ["action-capacity.mjs#terminated", "action-capacity.mjs#dead"], "tables": [], "writers": [], "entryCallerFiles": {}, "entryJudges": [],
+   "emits": []},
   "sys.dimension_entry": {"tables": [], "entryCallerFiles": {}, "entryJudges": []},
   "sys.economy": {"tables": [], "writers": ["accounts.*", "ledgerCounters.lotNext", "ledgerTotals", "outflowTotals.*", "stockLots.*"],
    "sources": {"src_birth": {}, "src_boundary": {}, "src_genesis": {}, "src_issue": {}, "src_regrow": {}, "src_transform": {}},
@@ -106,7 +108,7 @@
   {"export": "kernel/ledger.mjs#accountsOf", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/ledger.mjs#stockIn", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/ledger.mjs#post", "callers": ["rules"], "acceptsState": true},
-  {"export": "kernel/ledger.mjs#transfer", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/ledger.mjs#transfer", "callers": ["rules"], "callerFiles": ["kernel/terminate.mjs"], "acceptsState": true},
   {"export": "kernel/holdings.mjs#openHolding", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/holdings.mjs#closeHolding", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/holdings.mjs#transferHolding", "callers": ["rules"], "acceptsState": true},
@@ -125,6 +127,10 @@
   {"export": "kernel/advance-registry.mjs#registerAdvancePlan", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/view-registry.mjs#registerViewReader", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/transaction.mjs#registerHoldWhileRecompute", "callers": ["rules"], "acceptsState": false},
+  {"export": "kernel/terminate.mjs#terminate", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/terminate.mjs#revive", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/terminate.mjs#registerTerminationCleanup", "callers": ["rules"], "acceptsState": false},
+  {"export": "kernel/terminate.mjs#registerSuccessionOrder", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/save.mjs#registerUnitOfPath", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/clone.mjs#clone", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/handles/generated.mjs#V", "callers": ["*"], "acceptsState": false},

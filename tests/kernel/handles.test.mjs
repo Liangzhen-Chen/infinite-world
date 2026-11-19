@@ -246,6 +246,8 @@ test('kernelApi 登记：state-owners.json 每条导出所指文件存在且确�
     const mod = await import(pathToFileURL(abs).href);
     assert.ok(Object.hasOwn(mod, name), `${row.export}: export missing`);
     assert.equal(typeof row.acceptsState, 'boolean');
-    assert.ok(Array.isArray(row.callers) !== Array.isArray(row.callerFiles), `${row.export}: callers xor callerFiles`);
+    // 卷二 §2.7 :577（勘误 1118k30，李白 11-19 11:1x ①）：callers（组键）与 callerFiles（具体文件）至少写一个，两者可并存、取并集；写了的都是非空字串表。
+    assert.ok(Array.isArray(row.callers) || Array.isArray(row.callerFiles), `${row.export}: callers or callerFiles`);
+    for (const f of ['callers', 'callerFiles']) if (row[f] !== undefined) assert.ok(Array.isArray(row[f]) && row[f].length > 0 && row[f].every((s) => typeof s === 'string' && s.length > 0), `${row.export}: ${f} is a non-empty list of strings`);
   }
 });

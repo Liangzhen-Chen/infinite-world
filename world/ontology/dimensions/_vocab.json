@@ -386,6 +386,11 @@
    "entries": {},
    "prefix": "rprio_"
   },
+  "record_class": {
+   "closed": false,
+   "entries": {},
+   "prefix": "rcls_"
+  },
   "resfam": {
    "closed": true,
    "entries": {

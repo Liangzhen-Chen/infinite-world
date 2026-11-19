@@ -110,6 +110,24 @@
    "packOverridable": {"budget": false, "alert": false}
   },
   {
+   "code": "terminate",
+   "file": "tables/terminate.json",
+   "structure": "keys",
+   "type": {
+    "records": {"type": "map", "key": {"type": "ref", "vocab": "record_class"}, "value": {"type": "struct", "required": ["atTerminate"], "fields": {
+     "atTerminate": {"type": "enum", "vocab": "term_record"},
+     "atRevive": {"type": "enum", "vocab": "revive_record"}
+    }}},
+    "unbuilt": {"type": "struct", "required": ["onTerminate", "card"], "fields": {
+     "onTerminate": {"type": "set", "of": {"type": "enum", "vocab": "term_account"}},
+     "card": {"type": "string"}
+    }}
+   },
+   "volume": "卷二 §2.6 :529（rules.terminate.records.<rcls_ 代号> = {atTerminate: enum term_record, atRevive: enum revive_record}，两个代码内封闭枚举、没有缺省；atRevive 当且仅当 atTerminate = hold 时必填，跨字段核对在 kernel/terminate.mjs checkTerminationTables）；unbuilt 为终止第 3 步未建的 onTerminate 取值登记（李白 11-19 11:1x ③，照 B2-W3 未建派生做法：登记的取值拒收报 E-ACT-WRITER-NOT-READY，未登记又未建的报 E-DIM-STRUCT-FIELD；card 未排期写 pre_first_reader_card）",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"records": false, "unbuilt": false}
+  },
+  {
    "code": "clock",
    "file": "tables/clock.json",
    "structure": "keys",
