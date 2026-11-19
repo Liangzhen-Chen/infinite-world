@@ -107,10 +107,12 @@ export function loadItemWorld(f) {
     const mats = ruleRows('materials.json', (rows) => { if (typeof f.editRulesMaterials === 'function') f.editRulesMaterials(rows); });
     writeUnderTempRoot(tmp, 'rules/tables/materials.json', JSON.stringify(mats));
     const climate = ruleRows('climate.json', (rows) => {
+      const un = rows.find((r) => r.key === 'unbuilt');
       if (f.envTempDomain !== null) {
         setRule(rows, 'envTempDomain', clone(f.envTempDomain));
-        const un = rows.find((r) => r.key === 'unbuilt');
-        un.value = un.value.filter((k) => k !== 'envTempDomain');
+      } else { // 域没给：真世界已登值，这里去掉并登回 unbuilt，造"尚未给值"的前提
+        rows.splice(rows.findIndex((r) => r.key === 'envTempDomain'), 1);
+        un.value = [...un.value, 'envTempDomain'].sort();
       }
     });
     writeUnderTempRoot(tmp, 'rules/tables/climate.json', JSON.stringify(climate));

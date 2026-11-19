@@ -188,7 +188,7 @@
     "unbuilt": {"type": "set", "of": {"type": "string"}}
    },
    "domain": {"elevationTempGradient": [null, 0], "envTempDomain": {}, "unbuilt": {}},
-   "volume": "卷二十 §2.9 :396（rules.climate 键表）、envTempDomain（卷三乙 T-13 :1469 点名：自然环境可达的温度范围，卷二十 Q-30 待登记；块 6 第 6-2 张加键、登 unbuilt，卷文无值）、§4.5.3 第 1 条（elevationTempGradient 只由 env.climateTempC 的派生读）；elevationTempGradient 取外部权威出处 ISA（李白 11-19 13:3x ③），卷文示意值不算出处；geothermalGradient、曲线、昼夜峰值分钟、cloudDamp 无出处，登在 unbuilt，不写缺省",
+   "volume": "卷二十 §2.9 :396（rules.climate 键表）、envTempDomain（卷三乙 T-13 :1469 点名：自然环境可达的温度范围，卷二十 Q-30 待登记；块 6 第 6-2 张加键，补值卡 B 按李白 11-19 18:1x ② 取 WMO 全局极值入值，读者 kernel/item.mjs）、§4.5.3 第 1 条（elevationTempGradient 只由 env.climateTempC 的派生读）；elevationTempGradient 取外部权威出处 ISA（李白 11-19 13:3x ③），卷文示意值不算出处；geothermalGradient、曲线、昼夜峰值分钟、cloudDamp 无出处，登在 unbuilt，不写缺省",
    "multiSourceMerge": "own_key_only",
    "packOverridable": {"elevationTempGradient": false, "envTempDomain": false, "unbuilt": false}
   },
@@ -287,8 +287,9 @@
    "code": "climateProto",
    "file": "tables/climate-proto.json",
    "structure": {"rows": {"vocab": "climate_proto"}},
-   "type": {"type": "struct", "required": ["seasonCurve"], "fields": {
-    "seasonCurve": {"type": "map", "key": {"type": "ref", "vocab": "weather"}, "value": {"type": "curve", "x": "fraction", "y": "fraction"}}
+   "type": {"type": "struct", "required": ["seasonCurve", "tempExtremeC"], "fields": {
+    "seasonCurve": {"type": "map", "key": {"type": "ref", "vocab": "weather"}, "value": {"type": "curve", "x": "fraction", "y": "fraction"}},
+    "tempExtremeC": {"type": "struct", "required": ["max", "min"], "fields": {"min": {"type": "number", "unit": "celsius", "precision": 4}, "max": {"type": "number", "unit": "celsius", "precision": 4}}}
    }},
    "volume": "气候原型表（李白 11-19 15:5x ⑤：季节曲线挂气候原型，天气单元经 climateProto 引用；卷二十 §4.3.3 第 3 条 weightRX 读静态维度在当前相位的份额）；卷二十 :395 未列此表，6-29 改一轮自定；读者 kernel/weather.mjs（env.seasonCurve）",
    "multiSourceMerge": "own_key_only",

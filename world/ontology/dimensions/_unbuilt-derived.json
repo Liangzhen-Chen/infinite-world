@@ -23,7 +23,7 @@
   {"table": "item", "dimension": "fuelEnergyMJ", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷三乙 §4.17.1 总热量折算量；折算原语未建"},
   {"table": "item", "dimension": "necessityTier", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷三乙 C-3：沿下游配方关系递归取最大，配方表与递归聚合未建"},
   {"table": "item", "dimension": "pileFlammability", "missing": ["constant", "primitive"], "card": "pre_first_reader_card", "note": "卷三乙 T-15 成堆规则：成堆形态参数待标定（卷三乙 Q-38）"},
-  {"table": "item", "dimension": "possibleMatterStates", "missing": ["constant", "primitive"], "card": "pre_first_reader_card", "note": "卷三乙 T-13：模板主料的可能物态集，读 rules.climate.envTempDomain（卷二十待登记、本表登 unbuilt）；set 型派生 RX 写不成；kernel/item.mjs 的 matterStatesOf 在该键有值时求"},
+  {"table": "item", "dimension": "possibleMatterStates", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷三乙 T-13：模板主料的可能物态集，读 rules.climate.envTempDomain（补值卡 B 已登 WMO 全局极值）；set 型派生 RX 写不成；kernel/item.mjs 的 matterStatesOf 在该键有值时求"},
   {"table": "item", "dimension": "protection", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷三乙 §4.13 穿戴四项派生之一；防护规则未建"},
   {"table": "item", "dimension": "saltPerKg", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷三乙 §4.17.1 折算量；折算原语未建"},
   {"table": "item", "dimension": "satietyTotal", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷三乙 §4.17.1 总饱腹折算量；折算原语未建"},
