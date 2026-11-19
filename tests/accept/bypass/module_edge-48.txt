@@ -1,0 +1,1 @@
+export const startPrice = (row) => { const { basePrice } = row; return basePrice; };

@@ -26,7 +26,7 @@ const codeOf = (e) => {
 };
 // required 策略（卷二 §1.2）与报错 severity（§4.1）：单一定义，比较处引用。
 // 类别族名（§1.3）与伪类 effect（§1.5 :182）的定义源在 handles/markers.mjs 的 VOCAB_FAMILIES、ID_KINDS，这里引 T 句柄，不留第二份。
-const REQUIRED = Object.freeze({ always: 'always' });
+const REQUIRED = Object.freeze({ always: 'always', never: 'never' });
 const SEVERITY = Object.freeze({ error: 'error' });
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 // 词表族键 kind（§1.9 "kind→kind_，22 类代号本身作枚举时用"）：表头 kind 须是该族条目去前缀后的名字。
@@ -122,6 +122,9 @@ export function validateDimensions(sources, options) {
   // ---------- L1 未建派生登记（卷二 §1.12 封卷后勘误 1118k23）：登记所指必须是本表 derived 维度 ----------
   const unbuiltByTable = readUnbuiltRegistry(unbuiltDoc, tables, err);
   const unbuiltNames = readUnbuiltNames(unbuiltDoc, vocab, err);
+  // 未建维度／未建列登记（同文件 columns，§1.12 封卷后勘误 1119k3 ②）：行上缺值放行，checkRequired 读 t.unbuiltColumns。
+  const unbuiltColumns = readUnbuiltColumns(unbuiltDoc, tables, err);
+  for (const t of tables) t.unbuiltColumns = unbuiltColumns.get(t.kind) || new Set();
 
   // ---------- L1 派生式：按本表维度在加载期编译，维度级环（§2.9 第 4 条 :1182–:1183、§4.1 L1 :1500、§1.12 RA-N3 :380） ----------
   for (const t of tables) {
@@ -215,6 +218,48 @@ function readUnbuiltNames(doc, vocab, err) {
     if (vocab.index.has(e.name)) { bad(i, 'E-DIM-STRUCT-FIELD', e.name, 'already registered: remove it from names'); return; }
     if (out.has(e.name)) { bad(i, 'E-DIM-DUPLICATE-KEY', e.name, 'one entry per name'); return; }
     out.add(e.name);
+  });
+  return out;
+}
+
+// 未建维度／未建列登记（同文件 columns，§1.12 封卷后勘误 1119k3 ②；李白 11-19 12:4x 丙9、丙10）：[{table, dimension, missing, card}]，
+// 字段文法同 entries。所指须是本表表头已声明、按行填写（非 derived、reverseIndex、ruleIndex、sample）、required 不是 never 的维度；
+// 登记只放行该（表，维度）行上的缺值，行上有值照常校验；形状不合、所指不合、重复的条目报已登记码且不放行（登记不得变成后门）。
+function readUnbuiltColumns(doc, tables, err) {
+  const out = new Map();
+  const list = isObj(doc) && doc.columns !== undefined ? doc.columns : [];
+  if (!Array.isArray(list)) {
+    err({ code: 'E-DIM-STRUCT-FIELD', level: 'L1', table: '_unbuilt-derived', row: '', dim: '', path: '_unbuilt-derived.json#/columns', got: list, want: 'columns array' });
+    return out;
+  }
+  const byKind = new Map(tables.map((t) => [t.kind, t]));
+  list.forEach((entry, i) => {
+    const at = {
+      table: isObj(entry) && typeof entry.table === 'string' ? entry.table : '',
+      row: '',
+      dim: isObj(entry) && typeof entry.dimension === 'string' ? entry.dimension : '',
+      path: `_unbuilt-derived.json#/columns/${i}`,
+    };
+    const bad = (code, got, want) => err({ code, level: 'L1', ...at, got, want });
+    if (!isObj(entry)) { bad('E-DIM-STRUCT-FIELD', entry, '{table, dimension, missing, card}'); return; }
+    let ok = true;
+    if (typeof entry.table !== 'string' || !CODE_RE.test(entry.table)) { bad('E-DIM-ID-FORMAT', entry.table, 'loaded table kind'); ok = false; }
+    if (typeof entry.dimension !== 'string' || !KEY_RE.test(entry.dimension)) { bad('E-DIM-ID-FORMAT', entry.dimension, 'lowerCamel dimension key'); ok = false; }
+    const missing = entry.missing;
+    if (!Array.isArray(missing) || !missing.length || missing.some((m) => !UNBUILT_MISSING.includes(m))
+      || new Set(missing).size !== missing.length || missing.some((m, j) => j > 0 && cmp(missing[j - 1], m) >= 0)) { bad('E-DIM-DOMAIN-ENUM', missing, UNBUILT_MISSING.join('|') + ' (non-empty, unique, sorted)'); ok = false; }
+    if (typeof entry.card !== 'string' || !CARD_CODE_RE.test(entry.card)) { bad('E-DIM-STRUCT-FIELD', entry.card, 'card id or pre_first_reader_card'); ok = false; }
+    const t = typeof entry.table === 'string' ? byKind.get(entry.table) : undefined;
+    if (!t) { bad('E-DIM-REF-MISSING', entry.table, 'loaded table kind'); return; }
+    const def = typeof entry.dimension === 'string' && Object.hasOwn(t.doc.dimensions, entry.dimension) ? t.doc.dimensions[entry.dimension] : undefined;
+    if (!isObj(def)) { bad('E-DIM-REF-MISSING', entry.dimension, 'dimension declared in this table header'); return; }
+    if (def.derived !== undefined || def.reverseIndex !== undefined || def.ruleIndex !== undefined || def.sample !== undefined) { bad('E-DIM-STRUCT-FIELD', entry.dimension, 'row-filled dimension (derived ones go to entries)'); return; }
+    if (typeof def.required !== 'string' || def.required === REQUIRED.never) { bad('E-DIM-STRUCT-FIELD', def.required, 'required dimension (not never): nothing to release'); return; }
+    const m = out.get(t.kind) || new Set();
+    if (m.has(entry.dimension)) { bad('E-DIM-DUPLICATE-KEY', entry.dimension, 'one columns entry per (table, dimension)'); return; }
+    if (!ok) return;
+    m.add(entry.dimension);
+    out.set(t.kind, m);
   });
   return out;
 }
@@ -522,7 +567,7 @@ function report(errors, tables, stats, env, effects) {
     coverage: coverageText(stats.coverage),
     rx: env.compiled,
     effects,
-    tables: new Map(tables.map((t) => [t.kind, { doc: t.doc, flat: t.flat, derived: t.derived || new Map(), unbuilt: t.unbuilt || new Set(), reverse: t.reverse || new Map(), ruleIndexes: t.ruleIndexes || new Map() }])),
+    tables: new Map(tables.map((t) => [t.kind, { doc: t.doc, flat: t.flat, derived: t.derived || new Map(), unbuilt: t.unbuilt || new Set(), unbuiltColumns: t.unbuiltColumns || new Set(), reverse: t.reverse || new Map(), ruleIndexes: t.ruleIndexes || new Map() }])),
     vocab: env.vocab,
     idIndex: env.idIndex,
     env,

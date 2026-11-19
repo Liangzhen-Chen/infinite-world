@@ -204,6 +204,87 @@ test('未建派生登记双向核：登记了已能编译的派生、或登记�
   assert.ok(hasErr(validateDimensions(withUnbuilt(sourcesOf(b), [unbuiltEntry('mass')]), OPTIONS), 'E-DIM-REF-MISSING', 'mass'));
 });
 
+// 未建维度／未建列登记（卷二 §1.12 封卷后勘误 1119k3 ②；李白 11-19 12:4x 丙9、丙10）：同文件 columns，每条 {table, dimension, missing, card}。
+const withColumns = (sources, columns) => ({ ...sources, unbuilt: JSON.stringify({ version: 1, entries: [], columns }) });
+const columnEntry = (dimension, extra = {}) => ({ table: 'gadget', dimension, missing: ['data'], card: 'pre_first_reader_card', ...extra });
+// 他卷的 always 维度：表头写全；gad_box 有旧值（照转保留），gad_hammer 没有。
+const withHeft = () => {
+  const f = fixture();
+  f.gadget.dimensions.heft = { type: 'number', unit: 'kg', domain: [0, 100], precision: 2, required: 'always', onUnknown: 'error', modifiable: false, source: 'test', owner: 'test' };
+  f.gadget.rows.gad_box.heft = 7;
+  return f;
+};
+
+test('未建列登记：未登记的 always 维度缺值仍报 E-DIM-REQUIRED-MISSING（勘误 1119k3 ②）', () => {
+  const r = validateDimensions(sourcesOf(withHeft()), OPTIONS);
+  assert.ok(errorsOf(r).some((e) => e.code === 'E-DIM-REQUIRED-MISSING' && e.dim === 'heft' && e.row === 'gad_hammer'));
+  assert.equal(r.ok, false);
+  // 空登记（columns 为空表）不放行任何维度。
+  assert.ok(hasErr(validateDimensions(withColumns(sourcesOf(withHeft()), []), OPTIONS), 'E-DIM-REQUIRED-MISSING', 'heft'));
+});
+
+test('未建列登记：已登记的维度缺值放行、列入 unbuiltColumns；旧值照转保留并照常校验（勘误 1119k3 ②）', () => {
+  const r = validateDimensions(withColumns(sourcesOf(withHeft()), [columnEntry('heft')]), OPTIONS);
+  assert.deepEqual(errorsOf(r), []);
+  assert.deepEqual([...r.tables.get('gadget').unbuiltColumns], ['heft']);
+  // 登记只放行缺值，不放行值本身：旧值越出取值域照报。
+  const f = withHeft();
+  f.gadget.rows.gad_box.heft = 500;
+  assert.ok(hasErr(validateDimensions(withColumns(sourcesOf(f), [columnEntry('heft')]), OPTIONS), 'E-DIM-DOMAIN-RANGE', 'heft'));
+  // 登记按（表，维度）逐条：登了 heft 不放行同表别的必填维度。
+  const g = withHeft();
+  delete g.gadget.rows.gad_box.mass;
+  const rg = validateDimensions(withColumns(sourcesOf(g), [columnEntry('heft')]), OPTIONS);
+  assert.ok(errorsOf(rg).some((e) => e.code === 'E-DIM-REQUIRED-MISSING' && e.dim === 'mass' && e.row === 'gad_box'));
+  assert.ok(!errorsOf(rg).some((e) => e.dim === 'heft'));
+});
+
+test('未建列登记：运行期读到缺值按未知，有旧值的行照读旧值（勘误 1119k3 ②）', () => {
+  const rep = validateDimensions(withColumns(sourcesOf(withHeft()), [columnEntry('heft')]), OPTIONS);
+  installVocab(rep);
+  try {
+    const eng = { tables: rep.tables, vocab: rep.vocab, rules: engine.rules, template: engine.template, env: rep.env };
+    const miss = dim(eng, {}, 'gadget', 'gad_hammer', 'heft');
+    assert.equal(miss.known, false);
+    assert.equal(miss.value, undefined);
+    const kept = dim(eng, {}, 'gadget', 'gad_box', 'heft');
+    assert.equal(kept.known, true);
+    assert.equal(kept.value, 7);
+  } finally { installVocab(report); }
+});
+
+test('未建列登记双向核：所指须是本表已声明、非派生、非 never 的必填维度；形状、重复、取值都按已登记码拒收（勘误 1119k3 ②）', () => {
+  const errs = (columns, f = withHeft()) => errorsOf(validateDimensions(withColumns(sourcesOf(f), columns), OPTIONS));
+  const has = (list, code) => list.some((e) => e.code === code && e.path.startsWith('_unbuilt-derived.json#/columns'));
+  // 表头没声明的维度：不许靠登记逃掉表头。
+  assert.ok(has(errs([columnEntry('ghost')]), 'E-DIM-REF-MISSING'));
+  // 没载入的表。
+  assert.ok(has(errs([columnEntry('heft', { table: 'nosuch' })]), 'E-DIM-REF-MISSING'));
+  // 不是必填（never）的维度没有可放行的东西。
+  assert.ok(has(errs([columnEntry('parts')]), 'E-DIM-STRUCT-FIELD'));
+  // 派生维度归 entries 管，不进 columns。
+  const d = withHeft();
+  d.gadget.dimensions.volumeX = derivedDef({ derived: 'mass * 2' });
+  assert.ok(has(errs([columnEntry('volumeX')], d), 'E-DIM-STRUCT-FIELD'));
+  // 重复、missing 取值不合、card 文法不合、条目不是对象、columns 不是数组。
+  assert.ok(has(errs([columnEntry('heft'), columnEntry('heft')]), 'E-DIM-DUPLICATE-KEY'));
+  assert.ok(has(errs([columnEntry('heft', { missing: [] })]), 'E-DIM-DOMAIN-ENUM'));
+  assert.ok(has(errs([columnEntry('heft', { missing: ['vocab'] })]), 'E-DIM-DOMAIN-ENUM'));
+  assert.ok(has(errs([columnEntry('heft', { card: '' })]), 'E-DIM-STRUCT-FIELD'));
+  assert.ok(has(errs([null]), 'E-DIM-STRUCT-FIELD'));
+  assert.ok(has(errs({ heft: true }), 'E-DIM-STRUCT-FIELD'));
+  // 出错的登记不放行：形状不合的那条照样不进 unbuiltColumns，缺值照报。
+  assert.ok(errs([columnEntry('heft', { missing: [] })]).some((e) => e.code === 'E-DIM-REQUIRED-MISSING' && e.dim === 'heft'));
+});
+
+test('卷六 A6-21.1 数据半：行上写表头未声明的旧基础价格字段，加载器即报 E-DIM-STRUCT-FIELD（整类：未声明字段一律拒收）', () => {
+  const f = fixture();
+  f.gadget.rows.gad_box.basePrice = 12;
+  const r = validateDimensions(sourcesOf(f), OPTIONS);
+  assert.ok(errorsOf(r).some((e) => e.code === 'E-DIM-STRUCT-FIELD' && e.row === 'gad_box' && e.dim === 'basePrice'));
+  assert.equal(r.ok, false);
+});
+
 test('加载期反查索引：reverseIndex 维度按全表建成只读集合，无行指向为空集（§1.12 勘误 1118k23；卷三乙 :627）', () => {
   const f = fixture();
   f.gadget.dimensions.maker = { type: 'map', key: { type: 'ref', vocab: 'grade' }, value: { type: 'ref', kind: 'gadget' }, required: 'never', onUnknown: 'skip', modifiable: false, source: 'test', owner: 'test' };

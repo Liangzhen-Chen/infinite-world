@@ -1,0 +1,1 @@
+export const elapsed = (start) => Date.now() - start;

@@ -42,10 +42,14 @@
     {
      "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
      "rev": 10
+    },
+    {
+     "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
+     "rev": 11
     }
    ],
-   "print": "7b313a62608afb45543c357b5566ce096d577385362795d97c1366653e9536ce",
-   "rev": 10,
+   "print": "2e294baf83151cc3f2a36882f5faec6e3e2a513ca38b0ff31723dd8106dd6769",
+   "rev": 11,
    "scanClass": "baseline_monotone",
    "source": "卷一 V-11（I43）；卷十二 §2.5、E-ACC-BASELINE-UP；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -240,10 +244,14 @@
     {
      "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
      "rev": 45
+    },
+    {
+     "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
+     "rev": 46
     }
    ],
-   "print": "11fd08fc54142943ad914e3ce0009e3def5f07d5b733c6c390c3343077efe9a3",
-   "rev": 45,
+   "print": "6957de0bafe09f5f4e99b8076e8b37ed6ed3507f87ba8a065eddacb8d9ad45c3",
+   "rev": 46,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -327,10 +335,18 @@
     {
      "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
      "rev": 9
+    },
+    {
+     "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
+     "rev": 10
+    },
+    {
+     "ref": "共用检测器 path_access 改动（6-0 改一轮：解构不计带 readerSystems 的条目）；本类别条目判定口径不变",
+     "rev": 11
     }
    ],
-   "print": "4726d3660575176f6510abbc8a2fb301e8f5c71b9e14eecfabe7ef3bbacc6061",
-   "rev": 9,
+   "print": "921389a21fc494e9cf75a7c182a9ebb6813c747b7130bc10594e4227370516da",
+   "rev": 11,
    "scanClass": "cross_write",
    "source": "卷十二 R12-3.1–3.4；卷二 §2.6、§2.7、S5",
    "terms": {
@@ -414,10 +430,18 @@
     {
      "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
      "rev": 9
+    },
+    {
+     "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
+     "rev": 10
+    },
+    {
+     "ref": "共用检测器 path_access 改动（6-0 改一轮：解构不计带 readerSystems 的条目）；本类别条目判定口径不变",
+     "rev": 11
     }
    ],
-   "print": "4726d3660575176f6510abbc8a2fb301e8f5c71b9e14eecfabe7ef3bbacc6061",
-   "rev": 9,
+   "print": "921389a21fc494e9cf75a7c182a9ebb6813c747b7130bc10594e4227370516da",
+   "rev": 11,
    "scanClass": "display_read",
    "source": "卷十二 R12-2.10；卷二 S7",
    "terms": {
@@ -589,10 +613,18 @@
     {
      "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
      "rev": 39
+    },
+    {
+     "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
+     "rev": 40
+    },
+    {
+     "ref": "共用检测器 path_access 改动（6-0 改一轮：解构不计带 readerSystems 的条目）；本类别条目判定口径不变",
+     "rev": 41
     }
    ],
-   "print": "e5211a4877106abb964de9500cb3535410f8a996b59e5fa1cd2ea9093a49db6a",
-   "rev": 39,
+   "print": "e07e459bd401fd710eb641d2a6d6ed2b2a685b7b6c5bacf3f45dc1901b02438f",
+   "rev": 41,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -713,10 +745,14 @@
     {
      "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
      "rev": 10
+    },
+    {
+     "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
+     "rev": 11
     }
    ],
-   "print": "7b313a62608afb45543c357b5566ce096d577385362795d97c1366653e9536ce",
-   "rev": 10,
+   "print": "2e294baf83151cc3f2a36882f5faec6e3e2a513ca38b0ff31723dd8106dd6769",
+   "rev": 11,
    "scanClass": "ext_code",
    "terms": {
     "vol12.S12-12": {
@@ -973,10 +1009,14 @@
     {
      "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
      "rev": 37
+    },
+    {
+     "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
+     "rev": 38
     }
    ],
-   "print": "b1a7e29216213708c775d344b8d1ed854b37fd12cf039b27ce090d2b5ff92f2c",
-   "rev": 37,
+   "print": "d523b002c4b90ddc6fdb6c49f9f5dacb279ea0795be2b2f0d59dda93e98a9988",
+   "rev": 38,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1282,10 +1322,14 @@
     {
      "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
      "rev": 53
+    },
+    {
+     "ref": "块 6 第 6-0 张（主会话自定裁定，李白 11-19 13:50 门槛）：lit_scope entityPrefix 字串恰等于已登记维度表 kind（表类名）不计，前缀匹配照旧；用例 instance_name-41、42",
+     "rev": 54
     }
    ],
-   "print": "b4f50c57a74a1f7293da947c8dd96002ccad83b0e747373ab7f0c2a78eca487e",
-   "rev": 53,
+   "print": "bf1fe5e2a30aafd376a7870ec339b3d276e3300f511b02c02df96cdad9811f24",
+   "rev": 54,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1371,10 +1415,14 @@
     {
      "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
      "rev": 10
+    },
+    {
+     "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
+     "rev": 11
     }
    ],
-   "print": "7b313a62608afb45543c357b5566ce096d577385362795d97c1366653e9536ce",
-   "rev": 10,
+   "print": "2e294baf83151cc3f2a36882f5faec6e3e2a513ca38b0ff31723dd8106dd6769",
+   "rev": 11,
    "scanClass": "item_downgrade",
    "terms": {
     "vol12.S12-16": {
@@ -1540,10 +1588,14 @@
     {
      "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
      "rev": 38
+    },
+    {
+     "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
+     "rev": 39
     }
    ],
-   "print": "b1a7e29216213708c775d344b8d1ed854b37fd12cf039b27ce090d2b5ff92f2c",
-   "rev": 38,
+   "print": "d523b002c4b90ddc6fdb6c49f9f5dacb279ea0795be2b2f0d59dda93e98a9988",
+   "rev": 39,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1639,10 +1691,14 @@
     {
      "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
      "rev": 8
+    },
+    {
+     "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
+     "rev": 9
     }
    ],
-   "print": "7b313a62608afb45543c357b5566ce096d577385362795d97c1366653e9536ce",
-   "rev": 8,
+   "print": "2e294baf83151cc3f2a36882f5faec6e3e2a513ca38b0ff31723dd8106dd6769",
+   "rev": 9,
    "scanClass": "ledger_tally",
    "source": "卷十二 §4.1.6 至 §4.14.6 A12-n.1；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -1878,10 +1934,18 @@
     {
      "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
      "rev": 23
+    },
+    {
+     "ref": "块 6 第 6-0 张门禁条目 2、4（块6-规矩检查对照 #14、#26）：path_access read 方式加 readerPredicates（读者取声明表 systems.<系统>.predicates 的提供文件）与单段模式的对象解构键计入；新增 vol2.K6-24、vol6.A6-21.1 与用例 module_edge-45 至 49；原判定口径不变",
+     "rev": 24
+    },
+    {
+     "ref": "path_access read 方式的解构计数改为不计带 readerSystems 的条目：上一版（rev 24）解构计入连带改了 vol6.A6-1.1.a 口径（其字段按行出自哪张表认、解构不走 isForeignRow 豁免），rev 24 记录写“原判定口径不变”不实；本版 vol6.A6-1.1.a 回到 rev 23 口径（解构不计），vol2.K6-24、vol6.A6-21.1 照计解构；vol6.A6-21.1 source 如实收窄为“读点”（Opus 只核 M1、M2）",
+     "rev": 25
     }
    ],
-   "print": "cb50799e41734741f5e2490ccde3a2fd36f43cd39e6e95903e49afe074b32330",
-   "rev": 23,
+   "print": "4f609bebc2aa00ec147b7b0e9dc606256e872e8c15e404fff021b15ec7fa70d7",
+   "rev": 25,
    "scanClass": "module_edge",
    "terms": {
     "vol1.V-24.b": {
@@ -1932,6 +1996,14 @@
      ],
      "stage": 0
     },
+    "vol2.K6-24": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
     "vol2.S16": {
      "expect": "zero",
      "gates": [
@@ -1957,6 +2029,14 @@
      "stage": 0
     },
     "vol6.A6-1.1.b": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol6.A6-21.1": {
      "expect": "zero",
      "gates": [
       "pre_commit",
@@ -2127,10 +2207,14 @@
     {
      "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
      "rev": 38
+    },
+    {
+     "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
+     "rev": 39
     }
    ],
-   "print": "b1a7e29216213708c775d344b8d1ed854b37fd12cf039b27ce090d2b5ff92f2c",
-   "rev": 38,
+   "print": "d523b002c4b90ddc6fdb6c49f9f5dacb279ea0795be2b2f0d59dda93e98a9988",
+   "rev": 39,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -2265,10 +2349,14 @@
     {
      "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
      "rev": 30
+    },
+    {
+     "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
+     "rev": 31
     }
    ],
-   "print": "1ee0e5c68d9320b24b8fb31c5528000beb1bec1f1e90b358d2ef558a62af0d07",
-   "rev": 30,
+   "print": "aa051a809ddfc5ace531add9d36f788dbc4686f3a59618f43355b5862cd12707",
+   "rev": 31,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -2499,10 +2587,14 @@
     {
      "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
      "rev": 54
+    },
+    {
+     "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
+     "rev": 55
     }
    ],
-   "print": "16d9bb42d9b582accea2ca87610a7b7f3949d5c085faea2946e8ca612bb8ee2e",
-   "rev": 54,
+   "print": "83d91028a5f9c363f7528bdb1c7472cf968df68d5dc3c3acaf20e0cd78a75cda",
+   "rev": 55,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -2698,10 +2790,14 @@
     {
      "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
      "rev": 17
+    },
+    {
+     "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
+     "rev": 18
     }
    ],
-   "print": "69d58cb85f8468020ddbf4803228d4618c291078f8913e8475dd2279bc0ac87d",
-   "rev": 17,
+   "print": "3e2b8d2907eb0fceb03cd5ee97b069774acd841bef03037cca9ff2f5461756bb",
+   "rev": 18,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -2895,10 +2991,14 @@
     {
      "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
      "rev": 43
+    },
+    {
+     "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
+     "rev": 44
     }
    ],
-   "print": "11fd08fc54142943ad914e3ce0009e3def5f07d5b733c6c390c3343077efe9a3",
-   "rev": 43,
+   "print": "6957de0bafe09f5f4e99b8076e8b37ed6ed3507f87ba8a065eddacb8d9ad45c3",
+   "rev": 44,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -2964,10 +3064,14 @@
     {
      "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
      "rev": 14
+    },
+    {
+     "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
+     "rev": 15
     }
    ],
-   "print": "e5531ab59d0c4e4fb45e9d4bd4076a3cef9ba340a3deb9f87950d471cbaa2212",
-   "rev": 14,
+   "print": "ad2c523bcaeef084df04657025be1b91128c29e9161b2808108637043cb74865",
+   "rev": 15,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -3290,10 +3394,14 @@
     {
      "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
      "rev": 32
+    },
+    {
+     "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
+     "rev": 33
     }
    ],
-   "print": "1ee0e5c68d9320b24b8fb31c5528000beb1bec1f1e90b358d2ef558a62af0d07",
-   "rev": 32,
+   "print": "aa051a809ddfc5ace531add9d36f788dbc4686f3a59618f43355b5862cd12707",
+   "rev": 33,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -3364,10 +3472,18 @@
     {
      "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
      "rev": 12
+    },
+    {
+     "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
+     "rev": 13
+    },
+    {
+     "ref": "共用检测器 path_access 改动（6-0 改一轮：解构不计带 readerSystems 的条目）；本类别条目判定口径不变",
+     "rev": 14
     }
    ],
-   "print": "4726d3660575176f6510abbc8a2fb301e8f5c71b9e14eecfabe7ef3bbacc6061",
-   "rev": 12,
+   "print": "921389a21fc494e9cf75a7c182a9ebb6813c747b7130bc10594e4227370516da",
+   "rev": 14,
    "scanClass": "version_fork",
    "terms": {
     "vol1.V-17": {
@@ -3481,13 +3597,29 @@
     {
      "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
      "rev": 25
+    },
+    {
+     "ref": "块 6 第 6-0 张门禁条目 1（块6-规矩检查对照 #34 墙钟半条）：新增运行代码条目 vol27.S27-3 与用例 wallclock-21、22；判据代码不变",
+     "rev": 26
+    },
+    {
+     "ref": "vol27.S27-3 source 如实收窄：只守墙钟与性能计数器，计时器半条与 costPlan/advancePlan 参数表半条登记未覆盖并挂卡；判据代码不变（Opus 只核 M3）",
+     "rev": 27
     }
    ],
    "print": "9730feb6aafa57e0db5ffe714b4d347a6cc5e25f022218e0ad5a45e1d592b7c6",
-   "rev": 25,
+   "rev": 27,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol27.S27-3": {
      "expect": "zero",
      "gates": [
       "pre_commit",

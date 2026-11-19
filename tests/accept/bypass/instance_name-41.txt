@@ -1,0 +1,3 @@
+// 字串恰等于已登记维度表的 kind（表类名）是类名、不是实例 id：与实例前缀 body_ 同形也不计
+export const KINDS = ['body_plan', 'fixture'];
+export const isPlan = (k) => k === 'body_plan';

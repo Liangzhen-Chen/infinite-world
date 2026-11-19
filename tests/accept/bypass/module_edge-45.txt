@@ -1,0 +1,1 @@
+export const isDead = (fam) => fam.terminal === true;

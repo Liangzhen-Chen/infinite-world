@@ -43,6 +43,8 @@ export function tempRepo() {
   cpSync(join(ROOT, 'server-plugin/kernel/error-codes.mjs'), join(dir, 'server-plugin/kernel/error-codes.mjs'));
   // 卷六 A6-1.1 的读者与范围文件由 state-owners 写者登记派生（path_access ownerFiles），派生文件不在仓库即 E-ACC-ITEM-PARAM；临时仓库用真声明表，故带上账本内核本身。
   cpSync(join(ROOT, 'server-plugin/kernel/ledger.mjs'), join(dir, 'server-plugin/kernel/ledger.mjs'));
+  // 卷二 §2.5 :503 terminal 的读者由 state-owners systems.sys.capacity.predicates 派生（path_access predicateFiles，vol2.K6-24），同理带上谓词提供文件本身。
+  cpSync(join(ROOT, 'server-plugin/action-capacity.mjs'), join(dir, 'server-plugin/action-capacity.mjs'));
   // 放进来的 kernel 文件要在两处登记里站得住：成员闭集清单（E-FILE-UNASSIGNED，S19）与 S10 的常数登记豁免表。
   cpSync(join(ROOT, 'server-plugin/kernel/files.json'), join(dir, 'server-plugin/kernel/files.json'));
   // 卷六 S6-2 的规则表一支（data_shape entityKey）读统一加载器唯一登记 world/rules/registry.json 的全部登记行（经 kernel/load/rules.mjs 的 readRules）：

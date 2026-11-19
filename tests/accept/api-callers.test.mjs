@@ -191,3 +191,94 @@ test('K5-24 真实仓库：kernel 目录之外没有人直读 state.terminated',
   const p = readRegistry(ROOT, 'items').find((i) => i.itemKey === 'vol2.K5-24').params;
   assert.equal(pathAccess(loadContext(ROOT, {}), p, CLS).length, 0);
 });
+
+// 块 6 第 6-0 张门禁条目（docs/迁移体检/块6-规矩检查对照.md 门禁条目 1、2、4）。
+const itemParams = (key) => readRegistry(ROOT, 'items').find((i) => i.itemKey === key).params;
+
+test('K6-24 terminal 读者闭集：读者取自声明表 sys.capacity 的谓词文件，别处（含 kernel、显示层）读 terminal 字段即计', () => {
+  const p = itemParams('vol2.K6-24');
+  const read = 'export const f = (fam) => fam.terminal;';
+  const c = ctxOf({
+    'server-plugin/action-capacity.mjs': read,
+    'server-plugin/body/death.mjs': read,
+    'server-plugin/kernel/k.mjs': "export const f = (fam) => fam['terminal'];",
+    'extension/panel.mjs': read,
+    'server-plugin/ok.mjs': "export const f = (engine, state, id, fam) => terminated(engine, state, id).ok && fam.terminated && fam.incapacitating;",
+  });
+  assert.deepEqual(pathAccess(c, p, CLS).map((h) => [h.file, h.code]), [
+    ['extension/panel.mjs', 'E-VIEW-PREDICATE-LOCAL'], ['server-plugin/body/death.mjs', 'E-VIEW-PREDICATE-LOCAL'], ['server-plugin/kernel/k.mjs', 'E-VIEW-PREDICATE-LOCAL'],
+  ]);
+});
+
+test('K6-24 读者按声明派生不点名：谓词登记改指别的文件，读者随之改变', () => {
+  const p = itemParams('vol2.K6-24');
+  const moved = { ...DECL, systems: { ...DECL.systems, 'sys.capacity': { ...DECL.systems['sys.capacity'], predicates: ['body/predicates.mjs#terminated'] } } };
+  const read = 'export const f = (fam) => fam.terminal;';
+  const c = ctxOf({ 'server-plugin/action-capacity.mjs': read, 'server-plugin/body/predicates.mjs': read }, moved);
+  assert.deepEqual(pathAccess(c, p, CLS).map((h) => h.file), ['server-plugin/action-capacity.mjs']);
+});
+
+test('K6-24 口子：解构取字段（声明、参数、for…of、改名、嵌套）计，对象字面量构造不计', () => {
+  const p = itemParams('vol2.K6-24');
+  const c = ctxOf({
+    'server-plugin/action-capacity.mjs': 'export const z = 1;',
+    'server-plugin/a.mjs': 'export const f = (fam) => { const { terminal } = fam; return terminal; };',
+    'server-plugin/b.mjs': 'export const f = ({ terminal }) => terminal;',
+    'server-plugin/c.mjs': 'export function f(xs) { for (const { terminal: t } of xs) if (t) return 1; return 0; }',
+    'server-plugin/d.mjs': 'export const f = (row) => { const { family: { terminal } } = row; return terminal; };',
+    'server-plugin/e.mjs': "export const f = (x) => { let t; ({ 'terminal': t } = x); return t; };",
+    'server-plugin/ok.mjs': 'export const f = (terminal) => { const o = { terminal: true }; return { terminal, o }; };',
+  });
+  assert.deepEqual(pathAccess(c, p, CLS).map((h) => [h.file, h.nodeKind]), [
+    ['server-plugin/a.mjs', 'destructure'], ['server-plugin/b.mjs', 'destructure'], ['server-plugin/c.mjs', 'destructure'], ['server-plugin/d.mjs', 'destructure'], ['server-plugin/e.mjs', 'destructure'],
+  ]);
+});
+
+test('A6-1.1 口径不变：带 readerSystems 的读条目不计解构（解构追不到行出自哪张表），成员链照计', () => {
+  const p = itemParams('vol6.A6-1.1.a');
+  const c = ctxOf({
+    'server-plugin/kernel/ledger.mjs': 'export const z = 1;',
+    'server-plugin/a.mjs': 'export const f = (row) => { const { sources, sinks } = row; return [sources, sinks]; };',
+    'server-plugin/b.mjs': 'export const f = (row) => row.sources;',
+  });
+  assert.deepEqual(pathAccess(c, p, CLS).map((h) => [h.file, h.nodeKind]), [['server-plugin/b.mjs', 'member']]);
+});
+
+test('K6-24 真实仓库：terminal 字段的读点为 0', () => {
+  assert.equal(pathAccess(loadContext(ROOT, {}), itemParams('vol2.K6-24'), CLS).length, 0);
+});
+
+test('A6-21.1 旧基础价格字段：任何组读 basePrice（成员、下标、解构）即计，读 valueBase 不计', () => {
+  const p = itemParams('vol6.A6-21.1');
+  const c = ctxOf({
+    'server-plugin/market/price.mjs': 'export const f = (row) => row.basePrice;',
+    'server-plugin/kernel/k.mjs': "export const f = (row) => row['basePrice'];",
+    'server-plugin/econ.mjs': 'export const f = (row) => { const { basePrice: b } = row; return b; };',
+    'server-plugin/ok.mjs': 'export const f = (row) => row.valueBase;',
+  });
+  assert.deepEqual(pathAccess(c, p, CLS).map((h) => [h.file, h.code]), [
+    ['server-plugin/econ.mjs', 'E-VIEW-INPUT-IMPORT'], ['server-plugin/kernel/k.mjs', 'E-VIEW-INPUT-IMPORT'], ['server-plugin/market/price.mjs', 'E-VIEW-INPUT-IMPORT'],
+  ]);
+});
+
+test('A6-21.1 真实仓库：basePrice 读点为 0', () => {
+  assert.equal(pathAccess(loadContext(ROOT, {}), itemParams('vol6.A6-21.1'), CLS).length, 0);
+});
+
+test('S27-3 墙钟：规则层、内核、装配文件取墙钟即计（全局名、零实参 Date、perf_hooks 导入），带实参的 Date 与 gate 组不计', () => {
+  const p = itemParams('vol27.S27-3');
+  const c = ctxOf({
+    'server-plugin/action/resolve.mjs': 'export const f = () => Date.now();',
+    'server-plugin/gate/scan.mjs': 'export const f = () => Date.now();',
+    'server-plugin/index.mjs': 'export function init() { return new Date(); }',
+    'server-plugin/kernel/k.mjs': "import { performance } from 'node:perf_hooks';\nexport const f = () => performance.now();",
+    'server-plugin/ok.mjs': 'export const f = (ms) => new Date(ms).getUTCFullYear();',
+  });
+  assert.deepEqual(callEdge(c, p).map((h) => [h.file, h.code]), [
+    ['server-plugin/action/resolve.mjs', 'E-GLOBAL-UNLISTED'], ['server-plugin/index.mjs', 'E-GLOBAL-UNLISTED'], ['server-plugin/kernel/k.mjs', 'E-GLOBAL-UNLISTED'],
+  ]);
+});
+
+test('S27-3 真实仓库：规则层、内核取墙钟为 0', () => {
+  assert.equal(callEdge(loadContext(ROOT, {}), itemParams('vol27.S27-3')).length, 0);
+});

@@ -1,0 +1,5 @@
+{
+ "kind": "body_plan", "namespace": "core", "version": 1,
+ "entity": {"idPrefix": ["body_"], "classPrefix": "bpclass_", "singletonIds": []},
+ "dimensions": {}, "classes": {}, "rows": {}, "generated": {}
+}

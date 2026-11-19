@@ -1,0 +1,4 @@
+export const isDead = (instances) => {
+  for (const { family: { terminal } } of instances) if (terminal) return true;
+  return false;
+};

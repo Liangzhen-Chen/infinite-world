@@ -24,9 +24,14 @@ export function detect(ctx, params, cls) {
   if (params.access === 'stateRead') return stateReadHits(ctx, params);
   const pats = (params.paths || []).map((p) => p.split('.').map((seg) => globToRe(seg, [])));
   // readerSystems：登记的读者是具体文件（卷六 A6-1.1 的账本内核，调用图白名单 S6-13 同法），文件不抄名单，取自声明表该系统（systems.<系统>.writers）所涉状态键的写者登记。
-  const readers = new Set([...filesOfGroups(ctx.files, ctx.model, params.readers || []), ...ownerFiles(ctx, params.readerSystems)]);
+  // readerPredicates：登记的读者是该系统谓词的提供文件（卷二 §2.5 :503 terminal 的读者只有提供 terminated 谓词的 action-capacity.mjs），取自声明表 systems.<系统>.predicates，不点名文件。
+  const readers = new Set([...filesOfGroups(ctx.files, ctx.model, params.readers || []), ...ownerFiles(ctx, params.readerSystems), ...predicateFiles(ctx, params.readerPredicates)]);
   // 带 readerSystems 的读条目查的是资源种类行（卷六 A6-1.1）的字段：同名字段出自别的表的行（如卷十八 :337 持有种类行的 transferable）不是该行，按“这一行出自哪张表”认。
   const rowTable = params.readerSystems !== undefined ? resourceTableCode : null;
+  // 解构取字段（`const { f } = x`、`({ f }) =>`、`for (const { f: g } of xs)`）：只有单段模式能按键名认，键名合模式即计（宁报勿漏，同 K5-24 stateRead 的解构口径）；
+  // 读（read）才计，branch 只管成员链上的分支。带 readerSystems 的条目（rowTable 非空，卷六 A6-1.1）不计解构：
+  // 它的字段按"这一行出自哪张表"认，解构追不到行的来历，计入会把别表同名字段（卷十八 :337）一并报出，改变该条目原口径。
+  const singles = params.access === 'branch' || rowTable ? [] : pats.filter((pat) => pat.length === 1).map((pat) => pat[0]);
   const hits = [];
   for (const file of scopeOf(ctx, params)) {
     if (readers.has(file)) continue;
@@ -40,8 +45,79 @@ export function detect(ctx, params, cls) {
       if (rowTable && isForeignRow(toks, env, ch, rowTable)) continue;
       hits.push({ file, line: toks[ch.start].line, nodeKind: 'member', symbolPath: sym[ch.start], code: params.code || '' });
     }
+    if (!singles.length) continue;
+    for (const k of destructuredKeys(toks)) {
+      if (singles.some((re) => re.test(toks[k].v))) hits.push({ file, line: toks[k].line, nodeKind: 'destructure', symbolPath: sym[k], code: params.code || '' });
+    }
   }
   return hits;
+}
+
+// 对象解构模式里的键位下标。认作解构模式的 `{…}`：收尾 `}` 后紧跟 `=`（声明、赋值、参数缺省）或 `of`/`in`；或是形参表里的一项
+// （所在括号收尾后紧跟 `=>`，或括号前是 `function [名]`、`catch`）；或是另一解构模式里 `键:` 之后的值（嵌套）。
+// 键位：模式第一层里紧跟 `{` 或 `,`、其后是 `,` `}` `:` `=` 的标识符或字串；`...rest` 不是键。
+function destructuredKeys(toks) {
+  const out = [];
+  const seen = new Set();
+  const keysOf = (open) => {
+    if (seen.has(open)) return;
+    seen.add(open);
+    const close = matchClose(toks, open);
+    for (let i = open + 1; i < close; i++) {
+      if (isP(toks[i], '{') || isP(toks[i], '[') || isP(toks[i], '(')) { i = matchClose(toks, i); continue; }
+      const t = toks[i];
+      if ((t.t !== 'id' && t.t !== 'str') || !(isP(toks[i - 1], '{') || isP(toks[i - 1], ','))) continue;
+      const nx = toks[i + 1];
+      if (!(isP(nx, ',') || isP(nx, '}') || isP(nx, ':') || isP(nx, '='))) continue;
+      out.push(i);
+      if (isP(nx, ':') && isP(toks[i + 2], '{')) keysOf(i + 2);
+    }
+  };
+  for (let o = 0; o < toks.length; o++) {
+    if (!isP(toks[o], '{') || isP(toks[o - 1], ':')) continue;
+    const c = matchClose(toks, o);
+    const after = toks[c + 1];
+    let pattern = isP(after, '=') || (after && after.t === 'id' && (after.v === 'of' || after.v === 'in'));
+    if (!pattern && (isP(toks[o - 1], '(') || isP(toks[o - 1], ','))) {
+      const p = enclosingParen(toks, o);
+      if (p >= 0) {
+        const pc = matchClose(toks, p);
+        const before = toks[p - 1]; const before2 = toks[p - 2];
+        pattern = isP(toks[pc + 1], '=>') || (before && before.t === 'id' && (before.v === 'function' || before.v === 'catch'))
+          || (before && before.t === 'id' && before2 && before2.t === 'id' && before2.v === 'function');
+      }
+    }
+    if (pattern) keysOf(o);
+  }
+  return out.sort((a, b) => a - b);
+}
+
+// toks[i] 所在的最内层未闭合 `(` 的下标；不在括号里为 -1。
+function enclosingParen(toks, i) {
+  let depth = 0;
+  for (let k = i - 1; k >= 0; k--) {
+    if (isP(toks[k], ')') || isP(toks[k], ']') || isP(toks[k], '}')) depth++;
+    else if (isP(toks[k], '(') || isP(toks[k], '[') || isP(toks[k], '{')) { if (depth === 0) return isP(toks[k], '(') ? k : -1; depth--; }
+  }
+  return -1;
+}
+
+// 谓词提供文件：参数给系统代号，文件取声明表 systems.<系统>.predicates 各项（"<服务端根相对文件>#<导出名>"）的文件部分（卷二 §2.5、§2.7）。
+// 系统不在声明表、没有谓词登记、派生出的文件不在文件清单里，一律 E-ACC-ITEM-PARAM，不静默跳过（同 ownerFiles）。
+function predicateFiles(ctx, ids) {
+  if (ids === undefined) return [];
+  const decl = ctx.decl || {};
+  const root = ((ctx.model.processes || {}).server || {}).root || '';
+  const out = new Set();
+  for (const id of ids) {
+    const sys = (decl.systems || {})[id];
+    if (!sys) throw new Error(`E-ACC-ITEM-PARAM system=${id}`);
+    for (const p of sys.predicates || []) out.add(root + String(p).split('#')[0]);
+  }
+  if (!out.size) throw new Error(`E-ACC-ITEM-PARAM systems=${ids.join(',')} no predicate files`);
+  const repo = ctx.repoFiles || ctx.files;
+  for (const f of out) if (!repo.includes(f)) throw new Error(`E-ACC-ITEM-PARAM derived file missing ${f}`);
+  return [...out].sort();
 }
 
 // 资源种类表的登记代号（world/rules/registry.json 的 economyResources 行，与 state_pattern 同一口径，R12-11.5）。

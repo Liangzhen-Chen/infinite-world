@@ -217,6 +217,8 @@ export function checkRequired(t, env, err, stats) {
         if (req.anyOf) {
           if (!req.anyOf.some((item) => knownPart(t, id, row, item))) for (const item of req.anyOf) err({ code: 'E-DIM-REQUIRED-MISSING', level: 'L3', ...at(item.split(GRAMMAR_TOKENS.pathSep)[0]), got: 'unknown', want: `at least one of ${req.anyOf.join(',')}` });
         } else if (!r.known) {
+          // 登记在案的未建维度／未建列（卷二 §1.12 封卷后勘误 1119k3 ②）：本（表，维度）行上缺值放行，运行期读到按未知；未登记的照下面报。
+          if (t.unbuiltColumns instanceof Set && t.unbuiltColumns.has(dim)) continue;
           // onUnknown: gap 的维度缺值只记缺口、进加载警告，不让加载失败（卷三甲 §2.1、§6 EA-6；卷二 §5 开头"两处不一致以定义卷为准"，李白 11-17）。
           // anyOf 组合条件不在此列：它表达的是"至少填一项"的硬约束（如卷三甲 M-11 ①），照旧 E。
           const code = dims[dim].onUnknown === T.code_enum.onUnknown.gap ? 'W-DIM-GAP' : 'E-DIM-REQUIRED-MISSING';

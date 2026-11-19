@@ -22,6 +22,21 @@ import { scopeFiles, resolveRel, isCode, LAYOUT, REGISTRY } from '../read.mjs';
 import { parseDimKey, modKeyOf } from '../../../server-plugin/kernel/handles/keys.mjs';
 import { loadVocab } from '../../../server-plugin/kernel/load/vocab-load.mjs';
 
+// 已登记维度表的 kind：维度表文件名即 kind（加载器按 E-DIM-SCHEMA-KIND 核 kind 与文件名一致），取自文件清单，不在本文件列名字。
+// 前缀与 kind 同源：真实执行取 world/ontology/dimensions；用例回归时（带 repoFiles）执行器另把绕法用例维度目录的前缀并入，kind 也同样并入。
+function tableKinds(ctx) {
+  const dirs = [LAYOUT.dimensionsDir + '/', ...(ctx.repoFiles ? [LAYOUT.bypassDimsDir + '/'] : [])];
+  const out = new Set();
+  for (const f of ctx.repoFiles || ctx.files) {
+    for (const d of dirs) {
+      if (!f.startsWith(d) || !f.endsWith('.json')) continue;
+      const base = f.slice(d.length, -'.json'.length);
+      if (!base.includes('/') && !base.startsWith('_')) out.add(base);
+    }
+  }
+  return out;
+}
+
 const JUDGES = {
   selfName: (ctx) => {
     const names = new Set();
@@ -35,10 +50,15 @@ const JUDGES = {
     const prefixed = (s) => ctx.prefixes.prefixes.some((p) => s.startsWith(p));
     return (v) => (v.k === 'str' && (names.has(v.v) || prefixed(v.v) || ctx.prefixes.singletons.includes(v.v))) || (v.k === 'strp' && prefixed(v.v));
   },
-  entityPrefix: (ctx) => (v) => {
-    if (v.k !== 'str' && v.k !== 'strp') return false;
-    if (ctx.prefixes.prefixes.some((p) => v.v.startsWith(p))) return true;
-    return v.k === 'str' && ctx.prefixes.singletons.includes(v.v);
+  entityPrefix: (ctx) => {
+    // 字串恰等于一个已登记维度表的 kind（表类名，如 body_plan，卷二 :41）是类名、不是实例 id，不计；前缀匹配照旧（同前缀的真实例 id 如 body_quadruped 照计）。
+    const kinds = tableKinds(ctx);
+    return (v) => {
+      if (v.k !== 'str' && v.k !== 'strp') return false;
+      if (v.k === 'str' && kinds.has(v.v)) return false;
+      if (ctx.prefixes.prefixes.some((p) => v.v.startsWith(p))) return true;
+      return v.k === 'str' && ctx.prefixes.singletons.includes(v.v);
+    };
   },
   number: (ctx, cls) => {
     const allow = (cls.litAllow || []).map(Number);

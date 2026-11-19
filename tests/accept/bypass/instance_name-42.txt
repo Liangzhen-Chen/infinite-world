@@ -1,0 +1,3 @@
+// 与表类名同前缀的真实例 id 照计：类名豁免只认恰等，不放宽前缀
+export const plan = 'body_quadruped';
+export const isPlan = (k) => k === 'body_plan_x';
