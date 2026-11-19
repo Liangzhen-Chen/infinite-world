@@ -5,8 +5,8 @@
    "value": ["baselineTier", "botchTier", "inputWeight", "marginWeight", "thresholds", "tiers", "toolBonus"],
    "file": "server-plugin/kernel/dimension-writers.mjs",
    "grade": "designed",
-   "source": "卷三乙 §2.5 :343–:345；§4.5.1、Q-6；卷三乙 :303（七档：劣、次、常、良、优、精、绝）；卷二 :1475；卷十四 :961（quality_fine）",
-   "basis": "无出处不编：品质表各档乘子与 baselineTier、botchTier、thresholds、inputWeight、toolBonus、marginWeight 卷文没给值。七档代号与次序已定（李白 11-19 20:3x ⑥，卷三乙 :304）：quality_awful 1、quality_poor 2、quality_normal 3、quality_good 4、quality_excellent 5、quality_masterwork 6、quality_legendary 7，登在 _vocab.json 的 quality 族（rank 字段），tierCodes 不再是缺口；卷十四 :961 的 quality_fine 不在七档内，由卷十四改引七档代号"
+   "source": "卷三乙 §2.5 :343–:345；§4.5.1、Q-6；卷三乙 :303（七档：劣、次、常、良、优、精、绝）；卷二 :1475；卷十四 :961（quality_masterwork）",
+   "basis": "无出处不编：品质表各档乘子与 baselineTier、botchTier、thresholds、inputWeight、toolBonus、marginWeight 卷文没给值。七档代号与次序已定（李白 11-19 20:3x ⑥，卷三乙 :304）：quality_awful 1、quality_poor 2、quality_normal 3、quality_good 4、quality_excellent 5、quality_masterwork 6、quality_legendary 7，登在 _vocab.json 的 quality 族（rank 字段），tierCodes 不再是缺口；卷十四 :961 原写的 quality_fine 不在七档内，已改为 quality_masterwork（李白 11-19 21:0x ③，勘误 1119k13）"
   }
  ]
 }

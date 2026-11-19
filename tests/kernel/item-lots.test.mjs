@@ -11,7 +11,8 @@ import { baseFixture, loadItemWorld, itemRow, share, ROOT } from './item-world.m
 import { installVocab } from '../../server-plugin/kernel/vocab.mjs';
 import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
 import { runTransaction } from '../../server-plugin/kernel/transaction.mjs';
-import { post, transfer, recordTaint, mergeLots, auditLots, auditLedger } from '../../server-plugin/kernel/ledger.mjs';
+import { post, transfer, recordTaint, mergeLots, auditLots, auditLedger, lotsUnmergeable } from '../../server-plugin/kernel/ledger.mjs';
+import { codeOf } from '../../server-plugin/kernel/errors.mjs';
 import { createItemInstance, writeItemDeviation } from '../../server-plugin/kernel/dimension-writers.mjs';
 import { dim } from '../../server-plugin/kernel/dimensions.mjs';
 import { lotsView, rotStep, wearStep, instanceView, canContain, containerView, durabilityOn, loadPlan } from '../../server-plugin/kernel/item-state.mjs';
@@ -652,6 +653,89 @@ test('itemRot 钩子登记（environment 阶段、文件 item-lots.mjs、节拍�
   assert.deepEqual(run(state, LOTS, (s) => { n = settleRotted(engine, s); }), { ok: true });
   assert.equal(n, 0);
   assert.deepEqual(auditLots(engine, state), []);
+});
+
+// ---------- K-3 实例批次不合并；实例批次键 lot_i_<实例id>（勘误 1119k13） ----------
+
+test('K-3 实例批次永不合并：PA 建斧 a、b，PB 建斧 c，PA 转 2 件给 PB，PB 名下三个实例批次各数量 1，键由实例 id 派生，不占批次计数器；审计过', () => {
+  const { engine } = build();
+  const state = at(3);
+  assert.deepEqual(create(engine, state, { id: 'item_inst_1', holder: PA }), { ok: true });
+  assert.deepEqual(create(engine, state, { id: 'item_inst_2', holder: PA }), { ok: true });
+  assert.deepEqual(create(engine, state, { id: 'item_inst_3', holder: PB }), { ok: true });
+  assert.equal(state.ledgerCounters, undefined);
+  let out;
+  assert.deepEqual(run(state, LOTS, (s) => { out = transferGoods(engine, s, { from: { holder: PA, purpose: SH }, to: { holder: PB, purpose: SH }, item: 'item_test_axe', qty: 2, reason: 'verb_test' }); }), { ok: true });
+  assert.deepEqual(out.merged, []);
+  assert.deepEqual(out.moved.map((m) => [m.from, m.to, m.qty]), [['lot_i_item_inst_1', 'lot_i_item_inst_1', 1], ['lot_i_item_inst_2', 'lot_i_item_inst_2', 1]]);
+  assert.deepEqual(Object.entries(state.accounts[PB][SH].res_test_axe), [['lot_i_item_inst_3', 1], ['lot_i_item_inst_1', 1], ['lot_i_item_inst_2', 1]]);
+  assert.deepEqual(lotsView(engine, state, PB, 'item_test_axe', SH).map((x) => [x.lotKey, x.qty]), [['lot_i_item_inst_1', 1], ['lot_i_item_inst_2', 1], ['lot_i_item_inst_3', 1]]);
+  assert.deepEqual(lotsView(engine, state, PA, 'item_test_axe', SH), []);
+  assert.equal(Object.keys(state.stockLots[PB][SH].res_test_axe).length, 3);
+  assert.equal(state.accounts[PA][SH].res_test_axe.lot_i_item_inst_1, undefined);
+  assert.equal(state.stockLots[PA][SH].res_test_axe.lot_i_item_inst_1, undefined);
+  assert.deepEqual(auditLots(engine, state), []);
+  // 散货批次照旧合并（同键同档、进度差不超上限）。
+  const g1 = stock(engine, state, PA, 5, { spoilage: 0, rotAnchorDay: 3 });
+  stock(engine, state, PB, 5, { spoilage: 0, rotAnchorDay: 3 });
+  assert.deepEqual(run(state, LOTS, (s) => { out = transferGoods(engine, s, { from: { holder: PA, purpose: SH }, to: { holder: PB, purpose: SH }, item: 'item_test_grain', qty: 5, reason: 'verb_test' }); }), { ok: true });
+  assert.equal(out.merged.length, 1);
+  assert.equal(state.accounts[PA][SH].res_test_grain[g1], 0);
+  assert.deepEqual(lotRows(state, PB).map((r) => r[1]), [10]);
+});
+
+test('K-3 实例批次 mergeLots 拒（整类条件，不看属性）；lotsUnmergeable 两键都要给', () => {
+  const { engine } = build();
+  const state = at(3);
+  create(engine, state, { id: 'item_inst_1' });
+  create(engine, state, { id: 'item_inst_2' });
+  const r = run(state, KERNEL, (s) => { mergeLots(engine, s, { holder: PA, purpose: SH, kind: 'res_test_axe', into: 'lot_i_item_inst_1', from: 'lot_i_item_inst_2' }); });
+  assert.deepEqual(r, { ok: false, code: 'E-DIM-STRUCT-FIELD' });
+  assert.equal(state.accounts[PA][SH].res_test_axe.lot_i_item_inst_2, 1);
+  assert.throws(() => lotsUnmergeable({}, {}), (e) => codeOf(e) === 'E-DIM-STRUCT-FIELD');
+  assert.equal(typeof lotsUnmergeable({}, {}, 'lot_i_a', 'lot_1'), 'string');
+  assert.equal(lotsUnmergeable({}, {}, 'lot_0', 'lot_1'), null);
+});
+
+test('K-8 实例批次键审计：多一件（键里的实例不存在）、少一件（实例没有自己那一批）、数量不为 1、两处账户同键，均报已登记码；序号键仍只核序号', () => {
+  const { engine } = build();
+  const state = at(3);
+  create(engine, state, { id: 'item_inst_1' });
+  assert.deepEqual(auditLots(engine, state), []);
+  // 多一件：造一批键指向不存在实例的批次。
+  const extra = structuredClone(state);
+  extra.accounts[PA][SH].res_test_axe.lot_i_item_inst_9 = 1;
+  extra.stockLots[PA][SH].res_test_axe.lot_i_item_inst_9 = { enteredDay: 3 };
+  assert.deepEqual(auditLots(engine, extra).map((x) => [x.code, x.path.split('.').pop()]), [['E-DIM-REF-MISSING', 'lot_i_item_inst_9']]);
+  // 少一件：实例行在、批次不在。
+  const lacking = structuredClone(state);
+  lacking.itemInstances.item_inst_2 = { template: 'item_test_axe' };
+  assert.deepEqual(auditLots(engine, lacking).map((x) => [x.code, x.path.split('.').pop()]), [['E-DIM-REF-MISSING', 'item_inst_2']]);
+  // 数量不为 1。
+  const two = structuredClone(state);
+  two.accounts[PA][SH].res_test_axe.lot_i_item_inst_1 = 2;
+  assert.deepEqual(auditLots(engine, two).map((x) => x.code), ['E-DIM-DOMAIN-RANGE']);
+  // 同键出现在两个账户。
+  const dup = structuredClone(state);
+  dup.accounts[PB] = { [SH]: { res_test_axe: { lot_i_item_inst_1: 1 } } };
+  dup.stockLots[PB] = { [SH]: { res_test_axe: { lot_i_item_inst_1: { enteredDay: 3 } } } };
+  assert.ok(auditLots(engine, dup).some((x) => x.code === 'E-DIM-ID-DUPLICATE'));
+  // 序号键不能写成实例键形、也不能借序号读回：lot_i_ 开头的键不按序号核。
+  const serial = structuredClone(state);
+  serial.accounts[PA][SH].res_test_grain = { lot_zz: 1 };
+  serial.stockLots[PA][SH].res_test_grain = { lot_zz: { enteredDay: 3 } };
+  assert.deepEqual(auditLots(engine, serial).map((x) => x.code), ['E-DIM-ID-FORMAT']);
+  // 错种类：斧实例的批次记在粮食种类名下。
+  const wrongKind = structuredClone(state);
+  wrongKind.accounts[PA][SH].res_test_grain = { lot_i_item_inst_1: 1 };
+  wrongKind.stockLots[PA][SH].res_test_grain = { lot_i_item_inst_1: { enteredDay: 3 } };
+  delete wrongKind.accounts[PA][SH].res_test_axe;
+  delete wrongKind.stockLots[PA][SH].res_test_axe;
+  assert.deepEqual(auditLots(engine, wrongKind).map((x) => x.code), ['E-DIM-REF-MISSING']);
+  // 实例已终止而批次仍有余额。
+  const dead = structuredClone(state);
+  dead.terminated = { item_inst_1: { minute: 0 } };
+  assert.deepEqual(auditLots(engine, dead).map((x) => x.code), ['E-TERM-RESIDUE']);
 });
 
 test('K-9 loadPlan：须装进容器的批次（水，needsHolds）按物品代号升序、容器按 id 升序逐件装到装不下；罐容 20 L、水每件 1.25 L，装 16 件（恰 20 L），余 14 件留下；筐盛不了液体；不需容器的批次不出现', () => {

@@ -217,7 +217,7 @@
   {"export": "kernel/item-state.mjs#containerView", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/item-state.mjs#resourceKindsOf", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/item-state.mjs#itemOfResource", "callers": ["rules"], "acceptsState": false},
-  {"export": "kernel/item-state.mjs#lotSeq", "callers": ["rules"], "acceptsState": false},
+  {"export": "kernel/item-state.mjs#lotKeyCompare", "callerFiles": ["item-lots.mjs"], "acceptsState": false},
   {"export": "kernel/dimension-writers.mjs#createItemInstance", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/dimension-writers.mjs#writeItemDeviation", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/ledger.mjs#mergeLots", "callers": ["rules"], "acceptsState": true},

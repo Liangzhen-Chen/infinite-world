@@ -13,7 +13,7 @@ import { dim } from './dimensions.mjs';
 import { materialView, itemView } from './item.mjs';
 import { dailyMeanTemp, tempAt } from './climate.mjs';
 import { weatherAt } from './weather.mjs';
-import { lotsUnmergeable, resourceAllows, SCHEMA as LEDGER } from './ledger.mjs';
+import { lotsUnmergeable, lotKeyInstance, resourceAllows, SCHEMA as LEDGER } from './ledger.mjs';
 import { buildE } from './handles/generated.mjs';
 import { placeClimateInput } from './place.mjs';
 import { kindOf } from './vocab.mjs';
@@ -115,7 +115,20 @@ function radixOf(engine) {
  * @returns {number}
  */
 export function lotSeq(engine, lotKey) {
+  if (lotKeyInstance(lotKey) !== null) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `${lotKey} is an instance lot key: it carries no serial`);
   return parseInt(lotKey.slice(LEDGER.lotPrefix.length), radixOf(engine));
+}
+
+/**
+ * 批次键的全序（排序用）：序号键按序号先后在前；实例批次键（无序号）在后，彼此按键串比较。
+ * @param {any} engine @param {string} a @param {string} b
+ * @returns {number}
+ */
+export function lotKeyCompare(engine, a, b) {
+  const ia = lotKeyInstance(a) !== null;
+  const ib = lotKeyInstance(b) !== null;
+  if (ia || ib) return ia === ib ? (a < b ? -1 : a > b ? 1 : 0) : (ia ? 1 : -1);
+  return lotSeq(engine, a) - lotSeq(engine, b);
 }
 
 /** 批次引用 lotRef = {account: {holder, purpose, kind}, lotKey} 的形状核对与取值。 */
@@ -324,7 +337,7 @@ export function rottenLots(engine, state) {
         if (template === null || !resourceAllows(engine, kind, ROT.sink)) continue;
         const shares = itemViewShares(engine, state, template);
         if (!shares.length || !shares.every((s) => dim(engine, state, ROT.material, s.materialRef, DIMN.rotRate).applicable)) continue;
-        for (const lotKey of Object.keys(accounts[holder][purpose][kind]).sort((a, b) => lotSeq(engine, a) - lotSeq(engine, b))) {
+        for (const lotKey of Object.keys(accounts[holder][purpose][kind]).sort((a, b) => lotKeyCompare(engine, a, b))) {
           const qty = accounts[holder][purpose][kind][lotKey];
           if (!(qty > 0)) continue;
           const r = rotStep(engine, state, { account: { holder, purpose, kind }, lotKey }, 0, { expiry: false });
@@ -462,7 +475,7 @@ export function lotMergeVerdict(engine, state, a, b) {
   const A = lotAttrs(state, pa);
   const B = lotAttrs(state, pb);
   if (!isObj(A) || !isObj(B)) throw new KernelError('E-DIM-REF-MISSING', { entity: pa.holder }, 'lotMergeVerdict: both lots have a stockLots row');
-  const bad = lotsUnmergeable(A, B);
+  const bad = lotsUnmergeable(A, B, pa.lotKey, pb.lotKey);
   if (bad !== null) return Object.freeze({ ok: false, reason: bad, spoilage: null });
   const ra = rotStep(engine, state, a, 0);
   const rb = rotStep(engine, state, b, 0);
@@ -515,7 +528,7 @@ export function lotsView(engine, state, holderId, itemId, purpose) {
       out.push({ lotKey, kind, qty: bucket[lotKey], attrs: isObj(attrs) ? attrs : {}, spoilage: r.spoilage, stage: r.stage, expiresDay: r.expiresDay });
     }
   }
-  out.sort((a, b) => lotSeq(engine, a.lotKey) - lotSeq(engine, b.lotKey));
+  out.sort((a, b) => lotKeyCompare(engine, a.lotKey, b.lotKey));
   return Object.freeze(out.map((x) => Object.freeze(x)));
 }
 

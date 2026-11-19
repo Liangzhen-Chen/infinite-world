@@ -76,7 +76,8 @@ export const SCHEMA = Object.freeze({
   // struct:resourceTotals 的字段（卷二 §1.5 :247；卷六 §4.1.1 :347）：{cumulative, usedByDay: list<{day, used}>}。
   cumulative: 'cumulative', usedByDay: 'usedByDay',
   // 批次键 = 前缀 + 计数器值按内核常数表 handleRadix 进制（与卷二十 due_ 句柄同一做法，李白 11-18 03:31、04:10）。
-  lotPrefix: 'lot_', constantsTable: 'kernelConstants', radixKey: 'handleRadix',
+  // 逐件实例的批次键 = 实例批次前缀 + 实例 id（确定性派生，不占计数器；序号键的数字串不含下划线，两种键文法不相交；卷三乙 §2.3、K-3，勘误 1119k13）。
+  lotPrefix: 'lot_', instanceLotPrefix: 'lot_i_', constantsTable: 'kernelConstants', radixKey: 'handleRadix',
   // 批次属性里账本自己做算术的字段（卷六 §2.3 :160 costBasis：整批总成本原值，整数）与 K-8 校验的字段（卷三乙 :1035 taint ∈ [0,1]）。
   costBasis: 'costBasis', taint: 'taint',
   // 批次属性不存数量、不另存序号（卷二 §1.5 :246 struct:holderLots"末层不含"所列两字段；卷三乙 §2.3 :264"两字段已删"）：写了即拒。
@@ -88,7 +89,7 @@ export const SCHEMA = Object.freeze({
 
 // 入账腿 lot 的键集（定义源见本文件顶部注释）：成员只引用 markers 的 T.lot_leg_key 与 SCHEMA.project，不另写字面键名。
 const LOT_KEYS = Object.freeze({ attrs: T.lot_leg_key.attrs, splitFrom: T.lot_leg_key.splitFrom, project: SCHEMA.project });
-const LOT_KEY_SHAPES = Object.freeze([LOT_KEYS.attrs, LOT_KEYS.splitFrom, `${LOT_KEYS.project},${LOT_KEYS.splitFrom}`]);
+const LOT_KEY_SHAPES = Object.freeze([LOT_KEYS.attrs, LOT_KEYS.splitFrom, `${LOT_KEYS.project},${LOT_KEYS.splitFrom}`, `${LOT_KEYS.attrs},${T.lot_leg_key.instance}`]);
 
 // src / sink 条目字段（§2.2 :131–132，四字段每行必写；reportGroup 在 indicator 族上线前显式写 null，李白 11-18 02:20 K3-41）。
 const FLOW_FIELDS = Object.freeze(['budgetMode', 'families', 'pairedWith', 'reportGroup']);
@@ -420,9 +421,19 @@ function isItemTemplate(id) {
   }
 }
 
-// 批次键的序号（前缀之后按进制读回、往返一致才算；不是批次键即 null）。
+/** 实例批次键：lot_i_ + 实例 id（逐件实例永远是自己那一批，数量 1）。 @param {string} instanceId @returns {string} */
+export function instanceLotKey(instanceId) {
+  return `${SCHEMA.instanceLotPrefix}${instanceId}`;
+}
+
+/** 实例批次键对应的实例 id；不是实例批次键（散货序号键等）为 null。 @param {any} key @returns {string | null} */
+export function lotKeyInstance(key) {
+  return typeof key === 'string' && key.startsWith(SCHEMA.instanceLotPrefix) && key.length > SCHEMA.instanceLotPrefix.length ? key.slice(SCHEMA.instanceLotPrefix.length) : null;
+}
+
+// 批次键的序号（前缀之后按进制读回、往返一致才算；不是序号键（含实例批次键）即 null）。
 function lotOrdinal(key, radix) {
-  if (typeof key !== 'string' || !key.startsWith(SCHEMA.lotPrefix)) return null;
+  if (typeof key !== 'string' || !key.startsWith(SCHEMA.lotPrefix) || lotKeyInstance(key) !== null) return null;
   const digits = key.slice(SCHEMA.lotPrefix.length);
   const n = Number.parseInt(digits, radix);
   return Number.isSafeInteger(n) && n >= 0 && n.toString(radix) === digits ? n : null;
@@ -452,6 +463,11 @@ function parseAccountLeg(engine, leg, i) {
     if (!LOT_KEY_SHAPES.includes(ks)) throw structErr(`leg ${i}: lot is {splitFrom, project?} or {attrs}`);
     if (Object.hasOwn(l, 'splitFrom') && (typeof l.splitFrom !== 'string' || !CODE_RE.test(l.splitFrom))) throw new KernelError('E-DIM-ID-FORMAT', { entity: a.holder }, `leg ${i}: splitFrom is not a lot key`);
     if (Object.hasOwn(l, SCHEMA.project) && !projectOk(l[SCHEMA.project])) throw new KernelError('E-DIM-ID-FORMAT', { entity: a.holder }, `leg ${i}: project is null or a buildProject id`);
+    if (Object.hasOwn(l, T.lot_leg_key.instance)) {
+      const id = l[T.lot_leg_key.instance];
+      if (typeof id !== 'string' || !CODE_RE.test(id)) throw new KernelError('E-DIM-ID-FORMAT', { entity: a.holder }, `leg ${i}: lot instance is an instance id code`);
+      if (leg.delta !== 1) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: a.holder }, `leg ${i}: an instance lot is one item (delta 1)`);
+    }
     if (Object.hasOwn(l, 'attrs')) checkLotAttrs(l.attrs, a.holder, i);
   } else if (typeof r.key !== 'string' || !CODE_RE.test(r.key)) {
     throw new KernelError('E-DIM-ID-FORMAT', { entity: a.holder }, `leg ${i}: resource key is not a code`);
@@ -642,10 +658,17 @@ function postDraft(engine, state, draft, viaAllocation) {
       let key = a.key;
       let attrs = null;
       if (a.lot) {
-        const next = readAt(state, [SCHEMA.counters, SCHEMA.lotNext]) ?? 0;
-        if (!Number.isSafeInteger(next) || next < 0) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, `${SCHEMA.counters}.${SCHEMA.lotNext} is not a non-negative integer`);
-        key = `${SCHEMA.lotPrefix}${next.toString(radix)}`;
-        setInTx(tx, [SCHEMA.counters, SCHEMA.lotNext], next + 1);
+        // 实例批次键：新实例 {instance} 用 lot_i_<实例id>；拆分自实例批次（转手）是同一件实例，键不变（件数恒 1）；其余发序号键。
+        const viaInstance = Object.hasOwn(a.lot, T.lot_leg_key.instance) ? instanceLotKey(a.lot[T.lot_leg_key.instance]) : (Object.hasOwn(a.lot, 'splitFrom') && lotKeyInstance(a.lot.splitFrom) !== null ? a.lot.splitFrom : null);
+        if (viaInstance !== null) {
+          key = viaInstance;
+          if (readAt(state, [SCHEMA.accounts, a.holder, a.purpose, a.kind, key]) !== undefined) throw new KernelError('E-DIM-ID-DUPLICATE', { entity: a.holder }, `leg ${a.i}: instance lot ${key} already has a row in this account`);
+        } else {
+          const next = readAt(state, [SCHEMA.counters, SCHEMA.lotNext]) ?? 0;
+          if (!Number.isSafeInteger(next) || next < 0) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, `${SCHEMA.counters}.${SCHEMA.lotNext} is not a non-negative integer`);
+          key = `${SCHEMA.lotPrefix}${next.toString(radix)}`;
+          setInTx(tx, [SCHEMA.counters, SCHEMA.lotNext], next + 1);
+        }
         if (Object.hasOwn(a.lot, 'attrs')) attrs = clone(a.lot.attrs);
         else {
           const b = before.get(`${a.kind}/${a.lot.splitFrom}`);
@@ -667,6 +690,8 @@ function postDraft(engine, state, draft, viaAllocation) {
       const now = (Number.isInteger(cur) ? cur : 0) + a.delta;
       if (now < 0) throw new KernelError('E-LEDGER-NEGATIVE', { entity: a.holder, balance: Number.isInteger(cur) ? cur : 0, delta: a.delta }, `leg ${a.i}: balance would be ${now}`);
       setInTx(tx, segs, now);
+      // 实例批次出账到 0 即整行删（实例只在一处账户，同键不留零行；散货批次零行照旧保留）。
+      if (now === 0 && lotKeyInstance(key) !== null) { deleteInTx(tx, segs); deleteInTx(tx, [SCHEMA.stockLots, a.holder, a.purpose, a.kind, key]); }
       if (attrs) {
         // 新批次（新属性或拆分带出）带 project 即核备料持有人等于工程 sponsor（卷三乙 K-8 :1037、卷十九 §4.4 规则 7 :531）。
         const sf = stagingFault(engine, state, a.holder, attrs);
@@ -682,7 +707,7 @@ function postDraft(engine, state, draft, viaAllocation) {
     }
     // 拆出部分的 costBasis 从原批扣下（留下部分取原值减去拆出部分之和）。
     for (const [k, b] of before) {
-      if (b.attrs[SCHEMA.costBasis] === undefined) continue;
+      if (b.attrs[SCHEMA.costBasis] === undefined || lotKeyInstance(k.slice(k.indexOf('/') + 1)) !== null) continue;
       setInTx(tx, [SCHEMA.stockLots, b.src.holder, b.src.purpose, k.slice(0, k.indexOf('/')), k.slice(k.indexOf('/') + 1), SCHEMA.costBasis], b.attrs[SCHEMA.costBasis] - b.taken);
     }
     // 规则 3：来源、去处按资源种类累计（cumulative 单调不减）；同时记当日用量 usedByDay（§4.1.1 :347；世界日读 clockView，e6）。
@@ -779,8 +804,23 @@ export function auditLots(engine, state) {
     const [, , kind, key] = rel;
     if (!isLotKind(kind)) return;
     const segs = [SCHEMA.accounts, ...rel];
-    const seq = lotOrdinal(key, radix);
-    if (seq === null || seq >= next) push('E-DIM-ID-FORMAT', segs, `not an issued lot key (${SCHEMA.lotPrefix} + seq < ${SCHEMA.counters}.${SCHEMA.lotNext} in radix ${radix})`);
+    const inst = lotKeyInstance(key);
+    if (inst !== null) {
+      // 实例批次键核与实例一一对应：键里的实例须存在（否则是多出来的一批）、余额恰为 1。
+      const irow = readAt(state, [ITEM.instances, inst]);
+      if (!isObj(irow)) push('E-DIM-REF-MISSING', segs, `instance lot ${key} has no ${ITEM.instances}.${inst} row`);
+      else {
+        // 种类须是该实例模板对应的资源种类（资源种类条目的 item 字段，卷六 §2.1，勘误 1119k12）；实例已终止而批次仍在即账本多算一件。
+        const rec = engine.vocab.index.get(kind);
+        if (!rec || !isObj(rec.entry) || rec.entry.item !== irow.template) push('E-DIM-REF-MISSING', segs, `instance lot ${key} sits under resource kind ${kind}, not the kind of its instance template`);
+        const tmarks = readAt(state, [TERMINATED_KEY]);
+        if (isObj(tmarks) && Object.hasOwn(tmarks, inst)) push('E-TERM-RESIDUE', segs, `instance ${inst} is terminated but its lot still holds a balance`);
+      }
+      if (readAt(state, [SCHEMA.accounts, ...rel]) !== 1) push('E-DIM-DOMAIN-RANGE', segs, 'an instance lot holds exactly one item');
+    } else {
+      const seq = lotOrdinal(key, radix);
+      if (seq === null || seq >= next) push('E-DIM-ID-FORMAT', segs, `not an issued lot key (${SCHEMA.lotPrefix} + seq < ${SCHEMA.counters}.${SCHEMA.lotNext} in radix ${radix})`);
+    }
     if (seen.has(key)) push('E-DIM-ID-DUPLICATE', segs, `lot key also at ${seen.get(key)}`);
     else seen.set(key, segs.join(GRAMMAR_TOKENS.pathSep));
     if (!isObj(readAt(state, [SCHEMA.stockLots, ...rel]))) push('E-DIM-REF-MISSING', segs, `no ${SCHEMA.stockLots} row for this lot`);
@@ -797,6 +837,13 @@ export function auditLots(engine, state) {
     const sf = stagingFault(engine, state, rel[0], attrs);
     if (sf) push(sf.code, segs, sf.why);
   });
+  // 少一件：每件未终止的实例都有自己那一批（键 lot_i_<实例id>，恰一行；两处出现已在上面报 E-DIM-ID-DUPLICATE）。
+  const insts = readAt(state, [ITEM.instances]);
+  const marks = readAt(state, [TERMINATED_KEY]);
+  for (const id of Object.keys(isObj(insts) ? insts : {}).sort(cmp)) {
+    if (isObj(marks) && Object.hasOwn(marks, id)) continue;
+    if (!seen.has(instanceLotKey(id))) push('E-DIM-REF-MISSING', [ITEM.instances, id], `instance ${id} has no lot ${instanceLotKey(id)}`);
+  }
   return Object.freeze(out.sort((a, b) => cmp(a.path, b.path) || cmp(a.code, b.code)));
 }
 
@@ -1293,9 +1340,12 @@ function weightedMean(a, qa, b, qb) {
  * kernelApi `lotsUnmergeable(a, b)`（纯函数，卷三乙 §4.4.3 K-3）：两批属性账本侧不能合并的原因（不合则为一句说明，可合并为 null）：
  * 判同键 source / qualityTier / purports / batchTag / material / project 须全同，temperature / burn / leakAnchorDay 须都为空，taint 须两批都写或都不写。
  * 腐坏档同档与进度差不超 rules.rot.mergeMaxGap 属腐坏规则，由调用方（item-lots.mjs）另判。
- * @param {any} a @param {any} b @returns {string | null}
+ * 属逐件实例的批次（批次键是实例批次键）不与任何批次合并（K-3 整类条件，勘误 1119k13）：两批的键都要给，判在属性之前。
+ * @param {any} a @param {any} b @param {string} aKey a 的批次键 @param {string} bKey b 的批次键 @returns {string | null}
  */
-export function lotsUnmergeable(a, b) {
+export function lotsUnmergeable(a, b, aKey, bKey) {
+  if (typeof aKey !== 'string' || typeof bKey !== 'string') throw structErr('lotsUnmergeable needs both lot keys');
+  if (lotKeyInstance(aKey) !== null || lotKeyInstance(bKey) !== null) return 'an instance lot is one item and never merges (K-3)';
   for (const k of LOT_SAME_KEYS) if (!sameJson(a[k], b[k])) return `lots differ in ${k} (K-3 judges them apart)`;
   for (const k of LOT_MUST_BE_EMPTY) if (!emptyAttr(a[k]) || !emptyAttr(b[k])) return `${k} is non-empty (a heated, burning or leaking lot does not merge, K-3)`;
   if (emptyAttr(a[SCHEMA.taint]) !== emptyAttr(b[SCHEMA.taint])) return 'taint is written on both lots or neither';
@@ -1330,7 +1380,7 @@ export function mergeLots(engine, state, m) {
     const qb = readAt(state, [SCHEMA.accounts, ...seg(m.from)]);
     if (!isObj(A) || !isObj(B)) throw new KernelError('E-DIM-REF-MISSING', { entity: m.holder }, 'mergeLots: both lots have a stockLots row');
     if (!isPosInt(qa) || !isPosInt(qb)) throw new KernelError('E-LEDGER-NEGATIVE', { entity: m.holder }, 'mergeLots: both lots have a positive balance (a zero lot is deleted, not merged)');
-    const why = lotsUnmergeable(A, B);
+    const why = lotsUnmergeable(A, B, m.into, m.from);
     if (why !== null) throw structErr(`mergeLots: ${why}`);
     const next = { ...A };
     if (!emptyAttr(A[SCHEMA.taint])) next[SCHEMA.taint] = weightedMean(A[SCHEMA.taint], qa, B[SCHEMA.taint], qb);

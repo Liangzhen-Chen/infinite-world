@@ -156,7 +156,8 @@ export const VOCAB_RX_FIELDS = Object.freeze([Object.freeze({ family: 'weather',
 // 入账腿 lot 的键集记号 attrs / splitFrom：卷三乙 post 批次腿的协议字段（块 3-2 实现定）。
 // 卷文待回补：卷三乙 post 批次腿字段（主会话另派勘误）；卷二、卷六、卷三乙现行卷文未找到这两个键名作批次腿键集的定义。
 // 定义源只此一份，kernel/ledger.mjs 引用（S13 ④，李白 11-18 13:05 裁定第 2 条）。
-export const LOT_LEG_KEYS = Object.freeze(['attrs', 'splitFrom']);
+// instance：逐件实例的批次腿 {instance, attrs}，批次键由实例 id 确定性派生（lot_i_<实例id>），不占序号计数器（卷三乙 §2.3、K-3，勘误 1119k13）。
+export const LOT_LEG_KEYS = Object.freeze(['attrs', 'instance', 'splitFrom']);
 
 // 语言自身的协议键（不是协议标记）：then 给 thenable 探测、toJSON 给 JSON 序列化，其余是对象自带成员名。
 const MARKER_PROTOCOL_KEYS = Object.freeze({ 'then': true, 'toJSON': true, 'constructor': true, 'prototype': true, 'toString': true, 'valueOf': true, 'hasOwnProperty': true, 'is': true, 'family': true });

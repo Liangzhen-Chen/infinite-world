@@ -84,7 +84,7 @@ function requiredFor(templateView, def) {
 
 /**
  * kernelApi `createItemInstance(engine, state, spec)`（卷三乙 I-2；卷九 R9-2.7）：为挂了 rules.items.instancedComponents 所列组件类的物品模板逐件建实例，
- * 同一事务内经账本 post 一笔带登记来源代号 spec.flow 的腿（一件、新批次），taint 由账本 recordTaint 写初值。
+ * 同一事务内经账本 post 一笔带登记来源代号 spec.flow 的腿（一件、自己那一批，批次键 lot_i_<实例id>，永不与别的批次合并，卷三乙 K-3），taint 由账本 recordTaint 写初值。
  * spec：{id, template, holder, purpose, flow, reason, fields}；fields 是实例维度（表头 instanceDimensions）：必填的缺一即拒（E-DIM-REQUIRED-MISSING），
  * 不适用的（该模板不要求、也不是 byClass 条件成立）写了即拒（E-DIM-STRUCT-FIELD），值不合取值域拒（校验器给的码）。taint 必给（实例必填，账本写）。
  * 模板没挂逐件建实例的组件类拒（E-DIM-STRUCT-FIELD，I-2：不挂的模板无实例，只以存量存在）；id 已存在拒（E-DIM-ID-DUPLICATE）。
@@ -134,7 +134,7 @@ export function createItemInstance(engine, state, spec) {
     for (const key of Object.keys(out).sort(cmp)) setInTx(tx, [ST.instances, spec.id, key], out[key]);
     post(engine, state, {
       legs: [
-        { account: { holder: spec.holder, purpose: spec.purpose, resource: { kind } }, delta: 1, lot: { attrs: { enteredDay: today, taint: spec.taint } } },
+        { account: { holder: spec.holder, purpose: spec.purpose, resource: { kind } }, delta: 1, lot: { attrs: { enteredDay: today, taint: spec.taint }, instance: spec.id } },
         { flow: spec.flow, kind, qty: 1 },
       ],
       reason: spec.reason,

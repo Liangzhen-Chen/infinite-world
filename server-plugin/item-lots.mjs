@@ -3,7 +3,7 @@
 // 本文件的函数在以本文件为节点的事务里调（runTransaction 的 file 是 item-lots.mjs），腐坏字段经 writePath 写；账本腿经 post、批次合并经 mergeLots（账本写批次与 taint）。
 // 不认任何物品、资源、类别代号；先后读批次键序号与腐坏进度，判合并读规则表与批次属性。数值运算一律在内核（item-state.mjs），本文件只编排。
 
-import { lotsView, rotStep, lotMergeVerdict, lotSeq, rottenLots, itemOfResource } from './kernel/item-state.mjs';
+import { lotsView, rotStep, lotMergeVerdict, lotKeyCompare, rottenLots, itemOfResource } from './kernel/item-state.mjs';
 import { post, mergeLots } from './kernel/ledger.mjs';
 import { clockView } from './kernel/scheduler.mjs';
 import { writePath, readPath } from './kernel/storage.mjs';
@@ -57,11 +57,11 @@ export function reanchorInstance(engine, state, instanceId) {
 }
 
 // 先陈后新（K-3）：腐坏进度高的先出；进度相同或读不出（按 0 排，不编数、不改变先后规则）的，批次键序号小的先出（序号承担先后，§2.3）。
-function outOrder(lots) {
+function outOrder(engine, lots) {
   return [...lots].sort((a, b) => {
     const sa = a.spoilage.known ? a.spoilage.value : 0;
     const sb = b.spoilage.known ? b.spoilage.value : 0;
-    return sb - sa || a.seq - b.seq;
+    return sb - sa || lotKeyCompare(engine, a.lotKey, b.lotKey);
   });
 }
 
@@ -76,7 +76,7 @@ function outOrder(lots) {
  */
 export function transferGoods(engine, state, t) {
   if (!isObj(t) || !isObj(t.from) || !isObj(t.to) || typeof t.item !== 'string' || !Number.isSafeInteger(t.qty) || t.qty < 1) throw fail('E-DIM-STRUCT-FIELD', 'transferGoods is {from, to, item, qty, reason, refs?}: qty a positive integer');
-  const lots = outOrder(lotsView(engine, state, t.from.holder, t.item, t.from.purpose).map((l) => ({ ...l, seq: lotSeq(engine, l.lotKey) })));
+  const lots = outOrder(engine, lotsView(engine, state, t.from.holder, t.item, t.from.purpose));
   const have = lots.reduce((s, l) => s + l.qty, 0);
   if (have < t.qty) throw Object.assign(fail('E-LEDGER-NEGATIVE', `${t.from.holder} holds ${have} of ${t.item}, less than ${t.qty}`), { fields: { entity: t.from.holder } });
   const legs = [];

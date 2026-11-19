@@ -54,10 +54,18 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 13
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 14
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 15
     }
    ],
    "print": "bb7d3fee9983da381115e46521762705db4de87132fe59f10f4815975e1ad768",
-   "rev": 13,
+   "rev": 15,
    "scanClass": "baseline_monotone",
    "source": "卷一 V-11（I43）；卷十二 §2.5、E-ACC-BASELINE-UP；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -296,10 +304,18 @@
     {
      "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
      "rev": 56
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 57
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 58
     }
    ],
-   "print": "cb372b1532c985649580915332c4e6441259ba02201cbad4af53333c3ee45321",
-   "rev": 56,
+   "print": "ebbe4109d4e31b43b6f80e76242b876491e6f2f41ae1ae68fa3713fb1a4b5a75",
+   "rev": 58,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -337,10 +353,18 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 6
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 7
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 8
     }
    ],
    "print": "e92920a8c0fa5b98a1d92b2d861d56106eec03c0040ec655dac189ac43fd9bf0",
-   "rev": 6,
+   "rev": 8,
    "scanClass": "crit_version",
    "terms": {
     "vol12.S12-13": {
@@ -407,10 +431,18 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 13
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 14
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 15
     }
    ],
    "print": "769ca36b5bb054d30d00490237a20a422aa67edeafc9f95f5a7869a4cc34c249",
-   "rev": 13,
+   "rev": 15,
    "scanClass": "cross_write",
    "source": "卷十二 R12-3.1–3.4；卷二 §2.6、§2.7、S5",
    "terms": {
@@ -510,10 +542,18 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 13
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 14
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 15
     }
    ],
    "print": "769ca36b5bb054d30d00490237a20a422aa67edeafc9f95f5a7869a4cc34c249",
-   "rev": 13,
+   "rev": 15,
    "scanClass": "display_read",
    "source": "卷十二 R12-2.10；卷二 S7",
    "terms": {
@@ -733,10 +773,18 @@
     {
      "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
      "rev": 51
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 52
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 53
     }
    ],
-   "print": "f469bdc1c34c59b82c7566102eb7d7391ffcf2616c449c863a702d3642a07e2d",
-   "rev": 51,
+   "print": "3c8eaca132a8f838b704a0f49fd5ef5c115c3700c8273aa1a7928ea94a747117",
+   "rev": 53,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -819,10 +867,18 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 17
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 18
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 19
     }
    ],
-   "print": "e98e72c100c7ee12fd649aaa32d26c5c0ceff0b4c261300b6d6a64e5380fb6fd",
-   "rev": 17,
+   "print": "9c4329d86748ce2ce85420f64f451d2346aed4d260abeaabc4b9daeee9bf234e",
+   "rev": 19,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -889,10 +945,18 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 13
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 14
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 15
     }
    ],
    "print": "bb7d3fee9983da381115e46521762705db4de87132fe59f10f4815975e1ad768",
-   "rev": 13,
+   "rev": 15,
    "scanClass": "ext_code",
    "terms": {
     "vol12.S12-12": {
@@ -979,10 +1043,18 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 18
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 19
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 20
     }
    ],
-   "print": "81c1e8da3ff1f207b6662d84679d9dbc536f1cc32406d387a85523ee83632b64",
-   "rev": 18,
+   "print": "236976268bd7e12d6a1d46b680f1a5fe8ba77d3b6cdbab491176dc44e2ee03c7",
+   "rev": 20,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -1002,10 +1074,18 @@
     {
      "ref": "块 2 第 2-3 张登记类别；taint 检测器模块未建，挂此类别的条目（卷二 S17 后半）留 registered",
      "rev": 1
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 2
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 3
     }
    ],
    "print": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rev": 1,
+   "rev": 3,
    "scanClass": "flow_taint",
    "source": "卷十二 §2.4；卷二 S17",
    "terms": {
@@ -1213,10 +1293,18 @@
     {
      "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
      "rev": 48
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 49
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 50
     }
    ],
-   "print": "d4ed87b447cff10ea3ac695d9c67bf850effb5904082fe6806408008e3fdd54e",
-   "rev": 48,
+   "print": "c979ecd0d26f15f28e506ca24dab0f6f8c44974718735f2e1127189bd30cb32f",
+   "rev": 50,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1304,10 +1392,18 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 18
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 19
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 20
     }
    ],
-   "print": "81c1e8da3ff1f207b6662d84679d9dbc536f1cc32406d387a85523ee83632b64",
-   "rev": 18,
+   "print": "236976268bd7e12d6a1d46b680f1a5fe8ba77d3b6cdbab491176dc44e2ee03c7",
+   "rev": 20,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -1586,10 +1682,18 @@
     {
      "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
      "rev": 64
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 65
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 66
     }
    ],
-   "print": "9d56290bf92e9d0e80eaa377804a9c1cadc6c14a4ef246867516bb2e3454e335",
-   "rev": 64,
+   "print": "ef62499e96acea5bedfcc81cb135989cc17baf6221b6a0b1c39e8ff9e2d22ac5",
+   "rev": 66,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1687,10 +1791,18 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 13
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 14
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 15
     }
    ],
    "print": "bb7d3fee9983da381115e46521762705db4de87132fe59f10f4815975e1ad768",
-   "rev": 13,
+   "rev": 15,
    "scanClass": "item_downgrade",
    "terms": {
     "vol12.S12-16": {
@@ -1900,10 +2012,18 @@
     {
      "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
      "rev": 49
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 50
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 51
     }
    ],
-   "print": "d4ed87b447cff10ea3ac695d9c67bf850effb5904082fe6806408008e3fdd54e",
-   "rev": 49,
+   "print": "c979ecd0d26f15f28e506ca24dab0f6f8c44974718735f2e1127189bd30cb32f",
+   "rev": 51,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1957,10 +2077,18 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 10
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 11
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 12
     }
    ],
    "print": "d7f641a92f1b662ba75eaf87cd5ada8d780665fb1dbd0817948e70f7729799ca",
-   "rev": 10,
+   "rev": 12,
    "scanClass": "item_ledger",
    "terms": {
     "vol12.S12-3": {
@@ -2019,10 +2147,18 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 11
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 12
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 13
     }
    ],
    "print": "bb7d3fee9983da381115e46521762705db4de87132fe59f10f4815975e1ad768",
-   "rev": 11,
+   "rev": 13,
    "scanClass": "ledger_tally",
    "source": "卷十二 §4.1.6 至 §4.14.6 A12-n.1；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -2132,10 +2268,18 @@
     {
      "ref": "初版登记：S12-3 条目转录",
      "rev": 1
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 2
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 3
     }
    ],
    "print": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "rev": 1,
+   "rev": 3,
    "scanClass": "legacy_symbol",
    "source": "卷十二 §2.4（卷二 S3、S6、S14）",
    "terms": {
@@ -2274,10 +2418,18 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 27
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 28
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 29
     }
    ],
    "print": "7dd9cc905c3ee9f89697b0458612590d18ecc4e43b36ca44ad4cb93ea8fc4714",
-   "rev": 27,
+   "rev": 29,
    "scanClass": "module_edge",
    "terms": {
     "vol1.V-24.b": {
@@ -2583,10 +2735,18 @@
     {
      "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
      "rev": 49
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 50
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 51
     }
    ],
-   "print": "d4ed87b447cff10ea3ac695d9c67bf850effb5904082fe6806408008e3fdd54e",
-   "rev": 49,
+   "print": "c979ecd0d26f15f28e506ca24dab0f6f8c44974718735f2e1127189bd30cb32f",
+   "rev": 51,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -2773,10 +2933,18 @@
     {
      "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
      "rev": 43
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 44
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 45
     }
    ],
-   "print": "e30295f2ea3a718106ce04e1dbeaeab4e1c606c738240ad3f88eb18503cf26a5",
-   "rev": 43,
+   "print": "5877a2635e35edda17973c3eca23d6794fa3f4a11d9a6015115b314cf0d85299",
+   "rev": 45,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -3051,10 +3219,18 @@
     {
      "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
      "rev": 65
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 66
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 67
     }
    ],
-   "print": "254d74a35f4cdffa923a5e52d737eb3293b6197652c35ea285cbdeb1198224a7",
-   "rev": 65,
+   "print": "e8710446467bbdfc321137026fb43a0bb6e8bd3ea4adae9a8288cccb0da11568",
+   "rev": 67,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -3136,10 +3312,18 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 17
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 18
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 19
     }
    ],
    "print": "510d2e4a6d0e24a4da2b7c3bc94f5b946c74675df3e36c4e3de0c73583afd35c",
-   "rev": 17,
+   "rev": 19,
    "scanClass": "rng_bypass",
    "terms": {
     "vol27.A27-8.1.a": {
@@ -3181,10 +3365,18 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 7
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 8
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 9
     }
    ],
    "print": "09d41cedba372cb315163eb30c23e1a52698760d1cccbcae848dd083ec4f4ade",
-   "rev": 7,
+   "rev": 9,
    "scanClass": "rules_import",
    "terms": {
     "vol1.V-9": {
@@ -3310,10 +3502,18 @@
     {
      "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
      "rev": 28
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 29
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 30
     }
    ],
-   "print": "f811bf13073f854f50b6944d5135fefd927ea5eb6891e319301b7b68bce5d4a5",
-   "rev": 28,
+   "print": "c59f885b6aea3757879c0890f370e4abd5ef688e74d4ba80c8430be12768bced",
+   "rev": 30,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -3551,10 +3751,18 @@
     {
      "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
      "rev": 54
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 55
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 56
     }
    ],
-   "print": "cb372b1532c985649580915332c4e6441259ba02201cbad4af53333c3ee45321",
-   "rev": 54,
+   "print": "ebbe4109d4e31b43b6f80e76242b876491e6f2f41ae1ae68fa3713fb1a4b5a75",
+   "rev": 56,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -3668,10 +3876,18 @@
     {
      "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
      "rev": 26
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 27
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 28
     }
    ],
-   "print": "4cfab4ecf1fc93885e0222fe4e2dc7d00dc34bebe9987b65878967bb573f221d",
-   "rev": 26,
+   "print": "b74bffefd84bd9bf489dff1570d9814ddc26904bf5cf6a4da85ea93c5d52deba",
+   "rev": 28,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -3755,10 +3971,18 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 17
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 18
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 19
     }
    ],
-   "print": "81c1e8da3ff1f207b6662d84679d9dbc536f1cc32406d387a85523ee83632b64",
-   "rev": 17,
+   "print": "236976268bd7e12d6a1d46b680f1a5fe8ba77d3b6cdbab491176dc44e2ee03c7",
+   "rev": 19,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -4066,10 +4290,18 @@
     {
      "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
      "rev": 45
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 46
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 47
     }
    ],
-   "print": "e30295f2ea3a718106ce04e1dbeaeab4e1c606c738240ad3f88eb18503cf26a5",
-   "rev": 45,
+   "print": "5877a2635e35edda17973c3eca23d6794fa3f4a11d9a6015115b314cf0d85299",
+   "rev": 47,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -4156,10 +4388,18 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 16
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 17
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 18
     }
    ],
    "print": "769ca36b5bb054d30d00490237a20a422aa67edeafc9f95f5a7869a4cc34c249",
-   "rev": 16,
+   "rev": 18,
    "scanClass": "version_fork",
    "terms": {
     "vol1.V-17": {
@@ -4301,10 +4541,18 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 32
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 33
+    },
+    {
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "rev": 34
     }
    ],
-   "print": "739338b47f08cb189e77096719dfe0be8b65555146fbbd7e7db9188115d97285",
-   "rev": 32,
+   "print": "09f740985fabf89a5f9554636287c23bfcc89513aa2e84556a7bc9afd2242958",
+   "rev": 34,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {
