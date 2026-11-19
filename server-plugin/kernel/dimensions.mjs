@@ -16,6 +16,7 @@ import { KernelError } from './errors.mjs';
 import { ruleTable } from './load/rules.mjs';
 import { markersOf, T } from './validate/types.mjs';
 import { STACKING_MARKERS } from './validate/dimensions-validate.mjs';
+import { requirement } from './validate/rows.mjs';
 
 /** @typedef {import('./types.d.ts').ModKey} ModKey */
 /**
@@ -39,8 +40,6 @@ const STACKING_TABLE = Object.freeze({ table: 'modifiers', key: 'stackingTable' 
 const MEMO_SCOPE = 'kernel/dimensions.mjs#modified';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
-// required 策略取值（卷二 §1.2）与 precedence 缺省组名（§3.2 修正项次序）：本文件用的固定记号，单一定义。
-const REQUIRED_POLICY = Object.freeze({ byClass: 'byClass', ifPresent: 'ifPresent' });
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
 // ---------- 修正项来源 ----------
@@ -117,15 +116,17 @@ function memberClasses(engine, t, state, id) {
   return out;
 }
 
-// required 的 byClass / ifPresent 条件不满足即不适用（§1.3 取值算法第一行、§1.6 三种状态；RA-N5）。其余策略只管加载期必填，不影响适用性。
-function applicable(engine, t, state, kind, id, def) {
-  const req = typeof def.required === 'string' ? def.required : '';
-  const colon = req.indexOf(':');
-  const policy = colon < 0 ? req : req.slice(0, colon);
-  const arg = colon < 0 ? '' : req.slice(colon + 1);
-  if (policy === REQUIRED_POLICY.byClass) return memberClasses(engine, t, state, id).has(arg);
-  if (policy === REQUIRED_POLICY.ifPresent) return readBase(engine, state, kind, id, arg, undefined).known;
-  return true;
+// required 的条件项（byClass、ifPresent、byEnum、已声明判据的命名条件；"；"并列任一成立即必填，卷二 :105）都不满足即不适用
+// （§1.3 取值算法第一行、§1.6 三种状态；RA-N5）。判定与加载期同一份：validate/rows.mjs requirement。运行期给它的是有效行的视图：
+// 成员关系取 memberClasses（含偏离行类别与材料派生组件），值取偏离行 props 覆盖展平行（§1.3 覆盖顺序）。没有条件项的策略不影响适用性。
+function applicable(engine, t, state, id, dimension) {
+  const created = createdRow(state, id);
+  const flatRows = t.flat && t.flat.rows instanceof Map ? t.flat.rows : new Map();
+  const effective = { ...(flatRows.get(id) || {}), ...(created && isObj(created.props) ? created.props : {}) };
+  // memberClasses 已沿 broader 展开成全集，判定时不再展开上位（ancestors 给空）。
+  const view = { ...t, env: { vocab: { ancestors: () => [] } }, flat: { ...t.flat, rows: { get: (k) => (k === id ? effective : flatRows.get(k)) } } };
+  const req = requirement(view, id, { classes: [...memberClasses(engine, t, state, id)] }, dimension);
+  return !req.conditional || req.applicable;
 }
 
 function unitOf(def) {
@@ -148,7 +149,7 @@ function readBase(engine, state, kind, id, dimension, key) {
   if (known !== kind && !created) throw new KernelError('E-DIM-REF-MISSING', { entity: null }, `${JSON.stringify(id)} is not a ${kind} entity`);
   const unit = unitOf(def);
   const fact = (f) => Object.freeze(unit === undefined ? f : { ...f, unit });
-  if (!applicable(engine, t, state, kind, id, def)) return Object.freeze({ known: false, applicable: false });
+  if (!applicable(engine, t, state, id, dimension)) return Object.freeze({ known: false, applicable: false });
   // 偏离行（state.created 的 props）覆盖实体行有效值（含 extends 展平与 generated 节）：§1.3 覆盖顺序总表。
   const props = created && isObj(created.props) ? created.props : undefined;
   if (props && Object.hasOwn(props, dimension)) {

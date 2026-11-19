@@ -217,6 +217,97 @@ test('C-1、C-8 when 不得恒真、不得读 class 族条目；编不过的条�
   assert.ok(has(bad('density > 0'), 'E-MOD-RX')); // 派生量不在类别规则的变量域
 });
 
+// ---------- C-1 ②、C-8 ②：when 读按 M-1 聚合的材料量（material.<维度键>，静态读法 T-14；补值卡 E） ----------
+
+// 前提：木料易燃度 0.5、铁 0（测试材料的 plain 给 0）；燃料测试类别排在首位，其余规则照基础夹具。
+const burnWorld = (items) => loaded((f) => {
+  f.materials[WOOD].flammability = 0.5;
+  f.vocab.category.category_test_fuel = { stockSlot: true };
+  f.vocab.class.class_test_flammable = {};
+  f.rulesItems.categoryRules = [{ when: 'material.flammability >= 0.3', value: 'category_test_fuel' }, ...f.rulesItems.categoryRules];
+  f.rulesItems.classRules = [...f.rulesItems.classRules, { when: 'material.flammability >= 0.3', value: 'class_test_flammable' }];
+  Object.assign(f.items, items);
+});
+const lump = (wood, iron) => itemRow(1, iron === 0 ? [body(WOOD, wood)] : [body(WOOD, wood), body(IRON, iron)]);
+
+test('C-1 ② 类别随材料份额变：易燃度按 mean 聚合 = 木份额 × 0.5；木五成 0.25 < 0.3 不入燃料，木六成 0.3 恰到阈值入，全木 0.5 入，全铁 0 不入；classRules 同一读法', () => {
+  const { eng } = burnWorld({ item_test_w50: lump(0.5, 0.5), item_test_w60: lump(0.6, 0.4), item_test_w100: lump(1, 0), item_test_iron: itemRow(1, [body(IRON, 1)]) });
+  assert.equal(itemView(eng, {}, 'item_test_w50').categoryKind, 'category_test_other');
+  assert.equal(itemView(eng, {}, 'item_test_w60').categoryKind, 'category_test_fuel');
+  assert.equal(itemView(eng, {}, 'item_test_w100').categoryKind, 'category_test_fuel');
+  assert.equal(itemView(eng, {}, 'item_test_iron').categoryKind, 'category_test_other');
+  assert.equal(itemView(eng, {}, 'item_test_w50').classes.includes('class_test_flammable'), false);
+  assert.equal(itemView(eng, {}, 'item_test_w60').classes.includes('class_test_flammable'), true);
+  // 类别规则读到的量与 materialView 给物品模板 id 的聚合读数是同一个量（卷三乙 §3.1 :425）。
+  assert.equal(materialView(eng, {}, 'item_test_w60').dims.flammability.value, 0.3);
+});
+
+test('C-1 ② 不适用的份不参加聚合（M-1 ①"铁没有热值"）：木料挂可燃、热值 18，铁不可燃；热值按 sum = 木份额 × 18，木五成 9 恰到阈值入，木四成 7.2 不入；全铁不适用、不命中', () => {
+  const { eng } = loaded((f) => {
+    f.materials[WOOD] = { ...f.materials[WOOD], classes: ['comp_burnable'], heatValue: 18, moisture: 0.1, volatility: 0.01 };
+    f.vocab.category.category_test_fuel = { stockSlot: true };
+    f.rulesItems.categoryRules = [{ when: 'material.heatValue >= 9', value: 'category_test_fuel' }, ...f.rulesItems.categoryRules];
+    f.items.item_test_w50 = lump(0.5, 0.5);
+    f.items.item_test_w40 = lump(0.4, 0.6);
+    f.items.item_test_iron = itemRow(1, [body(IRON, 1)]);
+  });
+  assert.equal(itemView(eng, {}, 'item_test_w50').categoryKind, 'category_test_fuel');
+  assert.equal(itemView(eng, {}, 'item_test_w40').categoryKind, 'category_test_other');
+  assert.equal(itemView(eng, {}, 'item_test_iron').categoryKind, 'category_test_other');
+  // 加载期类别派生与运行期 materialView 对同一件物品的这个量同口径（卷三乙 §3.1 :425）。
+  assert.equal(materialView(eng, {}, 'item_test_w50').dims.heatValue.value, 9);
+  assert.equal(materialView(eng, {}, 'item_test_iron').dims.heatValue.applicable, false);
+});
+
+test('C-1 ② 多项条件必填（卷二 :105"；"并列任一成立即必填）：含水率对可燃的木适用、对铁不适用；木铁各半 mean = 0.4（只算木），加载期类别与运行期 materialView 同一读数', () => {
+  const { eng } = loaded((f) => {
+    f.materials[WOOD] = { ...f.materials[WOOD], classes: ['comp_burnable'], heatValue: 18, moisture: 0.4, volatility: 0.01 };
+    f.vocab.category.category_test_fuel = { stockSlot: true };
+    f.rulesItems.categoryRules = [{ when: 'material.moisture >= 0.4', value: 'category_test_fuel' }, ...f.rulesItems.categoryRules];
+    f.items.item_test_w50 = lump(0.5, 0.5);
+  });
+  assert.equal(itemView(eng, {}, 'item_test_w50').categoryKind, 'category_test_fuel');
+  assert.deepEqual([materialView(eng, {}, 'item_test_w50').dims.moisture.known, materialView(eng, {}, 'item_test_w50').dims.moisture.value], [true, 0.4]);
+  assert.equal(materialView(eng, {}, 'item_test_w50', { dimensions: ['moisture'] }).dims.moisture.value, 0.4);
+  assert.equal(materialView(eng, {}, IRON).dims.moisture.applicable, false);
+});
+
+test('C-1 ② 分态量按静态读法 T-14 取栏：冰水料可固可液，静态取固栏 0.9 < 1 不入；木料固栏 1 入；不读液栏（类别不随温度变）', () => {
+  const { eng } = loaded((f) => {
+    f.vocab.category.category_test_fuel = { stockSlot: true };
+    f.rulesItems.categoryRules = [{ when: 'material.density >= 1', value: 'category_test_fuel' }, ...f.rulesItems.categoryRules];
+    f.items.item_test_cube = itemRow(9, [body(ICE, 1)]);
+    f.items.item_test_log = itemRow(1, [body(WOOD, 1)]);
+  });
+  assert.equal(itemView(eng, {}, 'item_test_cube').categoryKind, 'category_test_other');
+  assert.equal(itemView(eng, {}, 'item_test_log').categoryKind, 'category_test_fuel');
+});
+
+test('C-1 ② 材料量未知按未知传播、不命中（卷二 §1.12）：环境温度域没给，分态量未知，读它的条目连同取反都不命中，落到下一条', () => {
+  const { eng } = loaded((f) => {
+    f.envTempDomain = null;
+    f.vocab.category.category_test_fuel = { stockSlot: true };
+    f.rulesItems.categoryRules = [
+      { when: 'material.density >= 1', value: 'category_test_fuel' },
+      { when: '!(material.density < 1)', value: 'category_test_fuel' },
+      ...f.rulesItems.categoryRules,
+    ];
+    const r = itemRow(1, [body(WOOD, 1)]);
+    delete r.bulkForm;
+    f.items.item_test_log = r;
+  });
+  assert.equal(itemView(eng, {}, 'item_test_log').categoryKind, 'category_test_other');
+});
+
+test('C-1 ② material.<键> 只收聚合到物品层的材料维度：口径 none、不是材料维度、映射型、classes 都在加载期拒（E-MOD-RX）', () => {
+  const bad = (when) => world((f) => { f.rulesItems.categoryRules = [{ when, value: 'category_test_other' }, ...f.rulesItems.categoryRules]; });
+  assert.ok(has(bad('material.salvageFraction > 0'), 'E-MOD-RX')); // 口径 none：物品层没有它的聚合值（M-1 聚合表）
+  assert.ok(has(bad('material.noSuchDim > 0'), 'E-MOD-RX'));
+  assert.ok(has(bad('material.nutrients > 0'), 'E-MOD-RX')); // map 型不是 RX 读数（卷二 §2.9 第 4 条）
+  assert.ok(has(bad('member(comp_edible, material.classes)'), 'E-MOD-RX'));
+  assert.ok(world((f) => { f.rulesItems.categoryRules = [{ when: 'material.flammability >= 0', value: 'category_test_other' }]; }).ok);
+});
+
 test('C-6 库存槽按 categoryKind 开：stockSlot 为真的类别各一槽；加一件物品自动入槽，加一个类别条目自动多一槽，都不改 .mjs', () => {
   const before = loaded((f) => { f.items.item_test_axe = axe(); });
   assert.deepEqual(stockSlots(before.eng), ['category_test_pack', 'category_test_tool']);

@@ -12,8 +12,8 @@ import { dim, modified, readsUnbuilt } from './dimensions.mjs';
 import { kindOf } from './vocab.mjs';
 import { KernelError } from './errors.mjs';
 import { fixedUnits, fixedAdd, fixedSub, fixedMultiply, fixedDivide, fixedToNumber, truncateTo } from './det-math.mjs';
-import { compileRXInScope, evaluateRX, RxError, splitDimKey, rxChildren } from './rx.mjs';
-import { valueOf } from './validate/rows.mjs';
+import { compileRXInScope, evaluateRX, RxError, splitDimKey, rxChildren, nsKey, dimRxType } from './rx.mjs';
+import { valueOf, requirement } from './validate/rows.mjs';
 import { T } from './handles/markers.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -123,7 +123,10 @@ function loadReader(tables, env) {
     }
     const raw = (isObj(mat.doc.rows) && mat.doc.rows[id]) || (isObj(mat.doc.generated) && mat.doc.generated[id]) || {};
     const r = valueOf(mat, id, raw, key);
-    return r.known && r.value !== undefined && r.value !== null ? KNOWN(r.value) : UNKNOWN();
+    if (r.known && r.value !== undefined && r.value !== null) return KNOWN(r.value);
+    // 条件必填（byClass、ifPresent 等）的条件都不满足：这份材料没有这个量，不适用（卷二 §1.3；卷三乙 M-1 ①"铁没有热值"），与运行期 dim 同口径。
+    const req = requirement(mat, id, raw, key);
+    return req.conditional && !req.applicable ? NOT_APPLICABLE : UNKNOWN();
   };
 }
 
@@ -329,14 +332,32 @@ function materialClassesOf(view, read, shares) {
   return { classes: out, conflicts: [...new Set(conflicts)].sort(cmp) };
 }
 
-// 类别规则表（categoryRules、classRules）：每条 when 按物品表的非派生维度（加可能物态集）与 item.classes 编译；读到未知按未命中（卷二 §1.12）。
+// material.<维度键> 在类别规则里读的是被求值物品按 M-1 聚合的材料量（卷三乙 C-1 ②、§3.1 :425）：只收聚合表里口径不为 none 的材料维度，
+// 且物品层读数是 RX 读数（数值、布尔、代号、句柄；分态量按静态读法 T-14 取一栏，读数是数值）。不合返回说明，合格返回 null。
+function materialFieldProblem(view, matter, arg) {
+  const field = (arg || []).join('.');
+  const mat = view.tables.get(KIND.material);
+  const def = mat && isObj(mat.doc.dimensions) ? mat.doc.dimensions[field] : undefined;
+  const spec = specOf(view.rules, field);
+  if (!isObj(def) || !isObj(spec) || spec.mode === AGG.none) return `${KIND.material}.${field} is not a material dimension aggregated to the item level (rules.items.aggregation, M-1)`;
+  if (isPerState(matter, def)) return null;
+  try { dimRxType(def, field); return null; } catch (e) {
+    if (e instanceof RxError) return `${KIND.material}.${field}: ${e.message}`;
+    throw e;
+  }
+}
+
+// 类别规则表（categoryRules、classRules）：每条 when 按物品表的非派生维度（加可能物态集）、item.classes 与 material.<维度键> 编译；读到未知按未命中（卷二 §1.12）。
 function compileWhens(view, itemT, key, errors) {
   const list = ruleValue(view.rules, RULES.items, key);
   if (!Array.isArray(list)) return null;
   const dims = new Map(Object.entries(itemT.doc.dimensions).filter(([k, d]) => isObj(d) && (d.derived === undefined || k === DIM.possibleMatterStates)));
-  // 命名空间只收代号等于物品表 kind 的登记行（state-owners.json rxNamespaces：item，读被求值的那一件物品的维度与 classes）。
+  // 命名空间收两张表的 kind 同名的登记行（state-owners.json rxNamespaces）：item 读被求值的那一件物品的维度与 classes；
+  // material 读同一件物品按 M-1 聚合的材料量（变量口径同卷三乙 C-1 ②，卷四 §4.7.7）。
   const kind = [...view.tables.keys()].find((k) => view.tables.get(k) === itemT);
-  const scope = { dims, vocabIndex: view.vocab.index, ns: (Array.isArray(view.ns) ? view.ns : []).filter((r) => r.ns === kind), maxDepth: view.maxDepth, rules: view.rules };
+  const nsKinds = [kind, KIND.material];
+  const scope = { dims, vocabIndex: view.vocab.index, ns: (Array.isArray(view.ns) ? view.ns : []).filter((r) => nsKinds.includes(r.ns)), maxDepth: view.maxDepth, rules: view.rules };
+  const matter = matterFamilyOf(view.vocab, itemT.doc.dimensions);
   const out = [];
   list.forEach((entry, i) => {
     const at = `rules.items.${key}[${i}]`;
@@ -349,21 +370,30 @@ function compileWhens(view, itemT, key, errors) {
     // C-1、C-8：when 不得读 class 族类别（整类指定）、不得恒真（至少读一个变量）。
     let reads = 0;
     let readsClass = false;
+    const nsReads = [];
+    const problems = [];
     const walk = (n) => {
       if (!isObj(n)) return;
       if (n.op === T.rx_op.dim || n.op === T.rx_op.ns) reads += 1;
+      if (n.op === T.rx_op.ns) {
+        nsReads.push({ key: nsKey(n), ns: n.ns, field: (n.arg || []).join('.') });
+        const why = n.ns === KIND.material ? materialFieldProblem(view, matter, n.arg) : null;
+        if (why !== null) problems.push(why);
+      }
       if (n.op === T.rx_op.handle && (view.vocab.index.get(n.value) || {}).family === T.vocab_family.class) readsClass = true;
       rxChildren(n).forEach(walk);
     };
     walk(c.tree);
     if (!reads) errors.push(`${CODE.structField} ${at}: when reads no variable (constant condition is not allowed, C-1)`);
     if (readsClass) errors.push(`${CODE.structField} ${at}: when reads a class-family entry (C-1, C-8)`);
-    out.push({ tree: c.tree, value: entry.value, nsRefs: c.nsRefs });
+    for (const why of problems) errors.push(`${CODE.modRx} ${at}: ${why}`);
+    if (!problems.length) out.push({ tree: c.tree, value: entry.value, nsReads });
   });
   return out;
 }
 
-function evalWhen(c, read) {
+// readers：命名空间代号 → 按字段名给读数的函数（读不到给 undefined，按未知不命中）。
+function evalWhen(c, read, readers) {
   const bound = {};
   const walk = (n) => {
     if (!isObj(n)) return;
@@ -372,7 +402,10 @@ function evalWhen(c, read) {
   };
   walk(c.tree);
   const nsReads = {};
-  for (const ref of c.nsRefs) { const v = read(ref.slice(KIND.item.length + 1)); if (v !== undefined) nsReads[ref] = v; }
+  for (const r of c.nsReads) {
+    const v = Object.hasOwn(readers, r.ns) ? readers[r.ns](r.field) : undefined;
+    if (v !== undefined) nsReads[r.key] = v;
+  }
   try { return evaluateRX(c.tree, { dim: bound, clock: {} }, nsReads) === true; } catch (e) {
     if (e instanceof RxError && e.key !== undefined) return false; // 缺读数 = 未知，按未命中
     throw e;
@@ -499,17 +532,35 @@ export function checkItemTables(view) {
     const ownComps = [...new Set((Array.isArray(raw.classes) ? raw.classes : []).flatMap((c) => [c, ...(typeof view.vocab.ancestors === 'function' ? view.vocab.ancestors(c) : [])]))].sort(cmp);
     const derivedReads = { [T.row_field.classes]: ownComps, [DIM.possibleMatterStates]: states === null ? undefined : states };
     const reader = (key) => (Object.hasOwn(derivedReads, key) ? derivedReads[key] : val(key));
+    // material.<维度键>：这件物品按 M-1 聚合的材料量，模板按静态读法（T-14），读法与 materialView 给模板 id 同一个 aggregateDim；
+    // 未知、不适用都不交读数（按未命中）；该维 onUnknown 为 error 的未知照 M-1 报错。
+    const aggCtx = { vocab: view.vocab, rules: view.rules, matDims, matter, formed };
+    const aggregated = new Map();
+    const materialReader = (field) => {
+      if (!aggregated.has(field)) {
+        let f;
+        try { f = aggregateDim(aggCtx, read, shares, field); } catch (e) {
+          if (!isObj(e) || e.code !== CODE.required) throw e;
+          errors.push(`${CODE.required} ${id}: ${e.message}`);
+          f = UNKNOWN(CODE.required);
+        }
+        aggregated.set(field, f);
+      }
+      const v = aggregated.get(field).known ? aggregated.get(field).value : undefined;
+      return typeof v === 'number' || typeof v === 'string' || typeof v === 'boolean' ? v : undefined;
+    };
+    const readers = { [KIND.item]: reader, [KIND.material]: materialReader };
     const material = materialClassesOf(view, read, shares);
     const classes = new Set(material.classes);
     for (const c of material.conflicts) errors.push(`${CODE.derivedConflict} ${id}: class ${c} comes from both substance and a derived category (M-9, one source only)`);
     for (const c of classRules || []) {
-      if (!evalWhen(c, reader)) continue;
+      if (!evalWhen(c, reader, readers)) continue;
       if (material.classes.has(c.value)) errors.push(`${CODE.derivedConflict} ${id}: class ${c.value} comes from both material and rules.items.classRules (C-8, one source only)`);
       classes.add(c.value);
     }
     let categoryKind = null;
     if (categoryRules !== null) {
-      const hit = categoryRules.find((c) => evalWhen(c, reader));
+      const hit = categoryRules.find((c) => evalWhen(c, reader, readers));
       if (hit === undefined) errors.push(`${CODE.required} ${id}: categoryKind derives to nothing (no rules.items.categoryRules entry matches, C-1)`);
       else categoryKind = hit.value;
     }

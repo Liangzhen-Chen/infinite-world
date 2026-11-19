@@ -135,8 +135,9 @@ export const requiredTerms = splitRequiredTerms;
 export const requiredSyntaxOk = (s) => requiredTerms(s).length > 0 && requiredTerms(s).every((x) => REQ_FORMS.test(x));
 
 const CONDITIONAL_FORMS = ['byClass', 'ifPresent', 'byEnum'];
-// 一个实体行对一个维度的必填判定：{applicable（必填）, anyOf?, named?, conditional}。
-function requirement(t, id, row, dim) {
+// 一个实体行对一个维度的必填判定：{applicable（必填）, anyOf?, named?, conditional}。加载期物品聚合读材料也用它判"不适用"（kernel/item.mjs loadReader）。
+/** @param {any} t 一张表 @param {string} id 行代号 @param {Record<string, any>} row 行原文 @param {string} dim 维度键 */
+export function requirement(t, id, row, dim) {
   const terms = requiredTerms((t.doc.dimensions[dim] || {}).required);
   // conditional：策略里有 byClass/ifPresent/byEnum 条件项（§1.3 取值算法 :152，条件都不满足即"不适用"，RA-N5）。
   const out = { applicable: false, anyOf: null, named: [], conditional: false };
