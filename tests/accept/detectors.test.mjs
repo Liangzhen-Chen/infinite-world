@@ -607,9 +607,10 @@ test('param_consumed 真实仓库：如实报无运行期消费者的登记参�
   assert.ok(hits.every((h) => h.code === 'E-ACC-PARAM-UNCONSUMED'));
   const keys = hits.map((h) => h.symbolPath).sort();
   // B2-W2 起 det-math.mjs 的 BASE/SCALE/PERMILLE/BPS 经规则表 kernelConstants 读入（installFixedConstants），该四键已有消费者；
-  // extendsMaxDepth/rxMaxDepth 只被加载器与校验器读到，按消费者口径不算；valuation.unitValue 只有测试读。
+  // extendsMaxDepth 只被加载器与校验器读到，按消费者口径不算；valuation.unitValue 只有测试读。
+  // rxMaxDepth 自 5-3 起被持有写者读（kernel/holdings.mjs 的 holdWhile 编译），已有人消费。
   assert.deepEqual(keys, [
-    'kernelConstants.extendsMaxDepth', 'kernelConstants.rxMaxDepth', 'valuation.unitValue',
+    'kernelConstants.extendsMaxDepth', 'valuation.unitValue',
   ]);
   for (const k of ['kernelConstants.handleRadix', 'modifiers.stackingTable', 'economyLedger.budget', 'economyLedger.alert',
     'clock.cadence', 'clock.phaseOffset', 'clock.paceFactor', 'clock.contestDefault', 'clock.reactionDepthMax', 'clock.proposalMax', 'clock.drawSites',

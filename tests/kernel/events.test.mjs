@@ -270,6 +270,8 @@ test('事务成功：事件恰一条且提交后仍在；调用方在 emit 后�
 test('提交前重算（holdWhileRecompute）抛错：事务整笔回滚，事件一并截掉', () => {
   const book = freshLog();
   const state = {};
+  // primitives-runtime 的模块加载会带入持有写者并登记它自己的重算钩子（5-3）；本测试要独占，先清掉再登记。
+  resetHoldWhileRecompute();
   registerHoldWhileRecompute(() => { throw new Error('hold while failed'); });
   try {
     assert.throws(() => runTransaction(state, CTX, (s) => { emit(ENGINE, s, terminationEvent(), KERNEL_ID); }), /hold while failed/);
@@ -447,8 +449,9 @@ test('verb 族行：真实 world/ 数据全过；缺栏、kindOnly 被列出、�
 test('verb 族数据：四条块 5 内核/持有事件行齐全，发出系统与卷二 §2.6、卷十八 R18-1.10/R18-1.11 一致', () => {
   const entries = W.vocab.families.get('verb').entries;
   assert.deepEqual(Object.keys(entries).sort(), ['verb_domicile_changed', 'verb_entity_revived', 'verb_entity_terminated', 'verb_holding_changed']);
-  assert.deepEqual(DECL.kernel.emits.slice().sort(), ['verb_entity_revived', 'verb_entity_terminated']);
-  assert.deepEqual(DECL.systems['sys.social'].emits.slice().sort(), ['verb_domicile_changed', 'verb_holding_changed']);
+  // 持有变化与常住变化两条事件由同一个持有写者（kernel/holdings.mjs）发出，同列 kernel.emits（卷二 §2.7 :770；R18-1.10、R18-1.11）。
+  assert.deepEqual(DECL.kernel.emits.slice().sort(), ['verb_domicile_changed', 'verb_entity_revived', 'verb_entity_terminated', 'verb_holding_changed']);
+  assert.deepEqual(DECL.systems['sys.social'].emits, []);
   // 终止行 worthSlots.destroyed 含 id、kindFrom = cause（卷二 :524）。
   assert.deepEqual(entries.verb_entity_terminated.worthSlots, { destroyed: ['id'], moved: [], stake: [] });
   assert.equal(entries.verb_entity_terminated.kindFrom, 'cause');

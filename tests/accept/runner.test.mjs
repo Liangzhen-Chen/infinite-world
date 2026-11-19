@@ -108,6 +108,11 @@ test('R12-8.5：合入关口通过后写 baseline.json（只降不升，行键�
     // 临时仓库不带方法是测试的条目 import 的世界数据（temp-repo.mjs 注）：按合法转移退役，让关口能过、走到写基线那一步。
     const testCore = readRegistry(dir, 'items').filter((it) => it.state === 'in_core' && TEST_METHODS.includes(it.method)).map((it) => it.itemKey);
     assert.deepEqual(register(dir, { itemStates: Object.fromEntries(testCore.map((k) => [k, 'retired'])) }).errors, []);
+    // 合入号取临时仓库自己的提交，不写死仓库外的提交号：新建 stateKeys.holdings 派生出新分量 c_write_holdings，
+    // 合入关口按 R12-8.9 在该提交的内容上数 B0（git ls-tree），仓库外提交号在临时仓库里解析不到。
+    const git = (...args) => execFileSync('git', ['-c', 'user.name=accept-test', '-c', 'user.email=accept-test@example.invalid', ...args], { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    git('init', '-q'); git('add', '-A'); git('commit', '-q', '-m', 'baseline');
+    const ref = git('rev-parse', 'HEAD').trim();
     const baseFile = join(dir, LAYOUT.accDir, 'baseline.json');
     const baselineOf = () => JSON.parse(readFileSync(baseFile, 'utf8')).rows;
     const kernelRow = (rs) => rs.find((r) => r.compCode === 'c_text_kernel_4');
@@ -132,14 +137,14 @@ test('R12-8.5：合入关口通过后写 baseline.json（只降不升，行键�
     writeFileSync(baseFile, JSON.stringify(fixture) + '\n');
     const before = kernelRow(baselineOf()).current;
     assert.equal(before, measured + 1000);
-    const first = await accRun('pre_merge', 'B2-W2b', null, { root: dir, write: true, mergeRef: 'c8a2bccd' });
+    const first = await accRun('pre_merge', 'B2-W2b', null, { root: dir, write: true, mergeRef: ref });
     assert.equal(first.report.verdict, 'pass');
     const after = kernelRow(baselineOf());
     assert.ok(after.current < before, `${after.current} < ${before}`);
     assert.equal(after.current, first.report.components.c_text_kernel_4.current);
     assert.equal(after.rowKeys.length, after.current);
     assert.deepEqual(after.rowKeys, [...after.rowKeys].sort());
-    assert.equal(after.lastMergeRef, 'c8a2bccd');
+    assert.equal(after.lastMergeRef, ref);
     // 新出现一条（只在 kernel 组 S13 ④）：提交关口按行键集合判不过，码 E-ACC-BASELINE-UP；提交关口不写基线。
     const probe = { 'server-plugin/kernel/rx.mjs': readFileSync(join(dir, 'server-plugin/kernel/rx.mjs'), 'utf8') + "\nexport function zzzProbe(x) { return x === 'probe_marker'; }\n" };
     const up = await accRun('pre_commit', 'B2-W2b', null, { root: dir, overrides: probe, write: true });

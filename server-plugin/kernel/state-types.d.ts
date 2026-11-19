@@ -22,6 +22,7 @@ export interface PathTypes {
   readonly 'displayNames.*.seq': number;
   readonly 'displayNames.*.text': SealedValue;
   readonly 'due.*': StructValue<'dueItem'>;
+  readonly 'holdings.*.*': StructValue<'holding'>;
   readonly 'ledgerCounters.lotNext': number;
   readonly 'ledgerTotals': StructValue<'resourceTotals'>;
   readonly 'narration.*': SealedValue;
@@ -56,6 +57,7 @@ export type State = {
       readonly text?: SealedValue;
     } };
   readonly due?: { readonly [segment: string]: StructValue<'dueItem'> };
+  readonly holdings?: { readonly [segment: string]: { readonly [segment: string]: StructValue<'holding'> } };
   readonly ledgerCounters?: {
     readonly lotNext?: number;
   };

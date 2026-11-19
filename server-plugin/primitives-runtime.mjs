@@ -18,6 +18,7 @@
 // - 效果族 effects() 的调用面归 5-5，本卡不写。
 
 import { transfer } from './kernel/ledger.mjs';
+import { openHolding, closeHolding, transferHolding, rescaleHolding } from './kernel/holdings.mjs';
 
 // 账户 id 的段序（卷六 §4.1 规则 1、kernel/ledger.mjs 的 accountKey）：持有人、用途、资源种类、资源键。
 // 原语 transfer 的 from、to 是账户 id（卷九 §4.2.1 transfer 行只给 from、to、qty；账户包含资源，
@@ -225,7 +226,9 @@ function splitAccount(id, maxLength) {
 }
 
 // 适配器按原语分，不按领域分（R9-2.4）：每个原语一个函数，领域差别只来自参数与目标写者。
-// 本卡只建目标写者现已存在的 transfer（kernel/ledger.mjs#transfer）。其余原语不在此表，由 execute 整笔拒收 E-ACT-WRITER-NOT-READY。
+// 已建目标写者的适配器：transfer（kernel/ledger.mjs#transfer）与 holding 四条（kernel/holdings.mjs，5-3）。
+// 其余原语不在此表，由 execute 整笔拒收 E-ACT-WRITER-NOT-READY。
+// holding 四条只经 kernelApi 调持有写者（卷二 §2.7 kernelApi 的 kernel/holdings.mjs 条目）；可选字段 terms / grantedBy 照原样转交。
 const ADAPTERS = Object.freeze({
   transfer(engine, state, p, reason, maxLength) {
     const from = splitAccount(p.from, maxLength);
@@ -239,6 +242,25 @@ const ADAPTERS = Object.freeze({
       qty: p.qty,
       reason,
     });
+  },
+  'holding.open'(engine, state, p, reason) {
+    openHolding(engine, state, { holdingKind: p.holdingKind, holder: p.holder, subject: p.subject, terms: p.terms, grantedBy: p.grantedBy, cause: reason });
+  },
+  'holding.close'(engine, state, p, reason) {
+    closeHolding(engine, state, { id: p.holding === undefined ? p.id : p.holding, holdingKind: p.holdingKind, holder: p.holder, subject: p.subject, endReason: p.endReason, cause: reason });
+  },
+  'holding.transfer'(engine, state, p, reason) {
+    transferHolding(engine, state, {
+      id: p.holding === undefined ? p.id : p.holding,
+      holdingKind: p.holdingKind,
+      holder: p.holder,
+      subject: p.subject,
+      newHolder: p.newHolder,
+      cause: reason,
+    });
+  },
+  'holding.rescale'(engine, state, p, reason) {
+    rescaleHolding(engine, state, { holdingKind: p.holdingKind, subject: p.subject, shares: p.shares, cause: reason });
   },
 });
 

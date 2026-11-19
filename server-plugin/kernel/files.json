@@ -13,6 +13,7 @@
  "server-plugin/kernel/handles/markers.mjs",
  "server-plugin/kernel/handles/patterns.mjs",
  "server-plugin/kernel/handles/vocab-handle.mjs",
+ "server-plugin/kernel/holdings.mjs",
  "server-plugin/kernel/ledger.mjs",
  "server-plugin/kernel/load/flatten.mjs",
  "server-plugin/kernel/load/json-text.mjs",
