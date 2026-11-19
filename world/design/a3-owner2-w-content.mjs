@@ -62,11 +62,11 @@ export async function checkFoundation(world, entries = contentEntries(world)) {
   const candidate = previewWorld(world, entries);
   const before = validateWorld(world), after = validateWorld(candidate);
   assert.deepEqual(after.errors.filter(error => !before.errors.includes(error)), [], '本批不得引入世界校验错误');
-  const blocklist = await read('world/meta/blocklist.json');
+  const blocklist = await read('world/i18n/blocklist.zh.json');
   for (const entry of entries) {
     assert.deepEqual(validateDraft(draftFor(entry), entry).errors, []);
     const body = JSON.stringify(entry.row);
-    for (const word of [...blocklist.names, ...blocklist.realPeople]) assert.ok(!body.includes(word), `原创屏蔽：${entry.id}`);
+    for (const word of blocklist.entries.map(e => e.word)) assert.ok(!body.includes(word), `原创屏蔽：${entry.id}`);
   }
   return {entries: entries.length, people: entries.filter(e => e.kind === 'person').length,
     items: entries.filter(e => e.kind === 'item').length, existingWorldErrors: before.errors};

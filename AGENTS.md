@@ -52,7 +52,7 @@
 ## 安全与原创
 
 - 不读取、不输出、不提交 `SillyTavern/data/*/secrets.json`。调用 DeepSeek 只用环境变量 `DEEPSEEK_API_KEY`。
-- 不复制小说《再生勇士》的正文、人名、地名、组织名与情节；屏蔽表在 `world/meta/blocklist.json`。
+- 不复制小说《再生勇士》的正文、人名、地名、组织名与情节；屏蔽表在 `world/i18n/blocklist.zh.json`。
 - 未成年 NPC 不进入恋爱或亲密情节。
 
 ## 分工

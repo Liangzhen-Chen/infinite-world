@@ -184,6 +184,7 @@
   {"export": "kernel/handles/generated.mjs#V", "callers": ["*"], "acceptsState": false},
   {"export": "kernel/handles/generated.mjs#E", "callers": ["*"], "acceptsState": false},
   {"export": "kernel/handles/markers.mjs#T", "callerFiles": ["output-gate/enums.mjs"], "acceptsState": false},
+  {"export": "kernel/load/codepoint-tables.mjs#codepointTables", "callers": ["textcore", "gate", "aiGate", "inputEdge"], "acceptsState": false},
   {"export": "kernel/handles/generated.mjs#P", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/handles/entity-id.mjs#entityId", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/vocab.mjs#vocab", "callers": ["*"], "acceptsState": false},

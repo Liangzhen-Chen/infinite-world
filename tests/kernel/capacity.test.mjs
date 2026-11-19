@@ -30,7 +30,7 @@ const { speciesView } = await import('../../server-plugin/species.mjs');
 const CAP = { awakeMin: 0.5, full: { consciousness: 0.8, manipulation: 0.7, moving: 0.6 }, limited: { consciousness: 0.4, manipulation: 0.3, moving: 0.3 } };
 const engineWithCap = (cap) => { const e = engineOf(W.world); return { ...e, rules: { ...e.rules, capacity: cap } }; };
 const ENGINE = engineWithCap(CAP);
-const REAL = engineOf(W.world); // 真实 rules.capacity：三键登在 unbuilt
+const REAL = engineOf(W.world); // 真实 rules.capacity：暂定值已写
 
 // 修正项来源（同 body.test.mjs）：状态实例的档怎么变成修正项归后面的卡，这里按 (修正键, 主体) 交登记项模拟。
 let registered = [];
@@ -132,12 +132,18 @@ test('capacity：三项都过 full → full；过 limited 不过 full → limite
   assert.equal(withMods([injury('bpart_arm_l', -1)], () => capacity(ENGINE, {}, 'npc_test_a')).level, 'limited');
 });
 
-test('阈值表登在 unbuilt（真实世界现状）：awake、capacity 按未知交出且原因 unbuilt，不当 false、不当 none；can 与 terminated 不读阈值，照常', () => {
-  assert.deepEqual(awake(REAL, {}, 'npc_test_a'), { ok: false, known: false, reason: 'unbuilt' });
-  assert.deepEqual(capacity(REAL, {}, 'npc_test_a'), { level: null, known: false, reason: 'unbuilt' });
+test('真实世界的暂定阈值（awakeMin 1/2、full 2/3、limited 1/3，李白 11-19 18:1x ①）：awake、capacity 不再按未知交出；期望值按量程等分点手算', () => {
+  assert.deepEqual(awake(REAL, {}, 'npc_test_a'), { ok: true, known: true, reason: null });
+  assert.deepEqual(capacity(REAL, {}, 'npc_test_a'), { level: 'full', known: true, reason: null });
+  // consciousness 1 − 0.6 = 0.4 < 0.5 不醒；1 − 0.5 = 0.5 取等醒。
+  assert.equal(withMods([onCap('consciousness', -0.6)], () => awake(REAL, {}, 'npc_test_a')).ok, false);
+  assert.equal(withMods([onCap('consciousness', -0.5)], () => awake(REAL, {}, 'npc_test_a')).ok, true);
+  // 丧失一腿 moving 0.5：< 2/3 且 ≥ 1/3 → limited；双腿 0 → none。
+  assert.equal(withMods([injury('bpart_leg_l', -1)], () => capacity(REAL, {}, 'npc_test_a')).level, 'limited');
+  assert.equal(withMods([injury('bpart_leg_l', -1), injury('bpart_leg_r', -1)], () => capacity(REAL, {}, 'npc_test_a')).level, 'none');
   assert.equal(can(REAL, {}, 'npc_test_a', 'cap_moving').ok, true);
   assert.equal(terminated(REAL, stateWith(null, { npc_test_a: MARK }), 'npc_test_a').ok, true);
-  // 状态实例的挡板在读阈值之前判：睡眠者即使阈值未建也确知不醒。
+  // 状态实例的挡板在读阈值之前判。
   assert.deepEqual(awake(REAL, stateWith({ npc_test_a: [inst('status_test_sleep')] }), 'npc_test_a'), { ok: false, known: true, reason: 'status_test_sleep' });
 });
 

@@ -216,7 +216,7 @@
     "unbuilt": {"type": "set", "of": {"type": "string"}}
    },
    "domain": {"awakeMin": [0, 1], "full": {}, "limited": {}, "unbuilt": {}},
-   "volume": "卷二 §2.5 :510（rules.capacity 阈值表 {awakeMin, full:{consciousness,moving,manipulation}, limited:{…}}；limited 与 full 同键，卷文以省略号带过）；值卷文没给，登在 unbuilt，awake／capacity 读到按未知；读者只有 action-capacity.mjs（卷四 P-5 (a)）",
+   "volume": "卷二 §2.5 :510（rules.capacity 阈值表 {awakeMin, full:{consciousness,moving,manipulation}, limited:{…}}；limited 与 full 同键，卷文以省略号带过）；值卷文没给，李白 11-19 18:1x ① 令按 P-3 规则取暂定值（标待试玩标定），unbuilt 现为空；读者只有 action-capacity.mjs（卷四 P-5 (a)）",
    "multiSourceMerge": "own_key_only",
    "packOverridable": {"awakeMin": false, "full": false, "limited": false, "unbuilt": false}
   },

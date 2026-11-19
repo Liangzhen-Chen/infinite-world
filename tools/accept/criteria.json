@@ -3612,10 +3612,14 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 24
+    },
+    {
+     "ref": "块 6 补值卡 A（李白 11-19 18:1x ③）：卷六勘误 1119k9 资源单位 bps 改 asset_share_bp，补用例 state_pattern-13（比率单位 bps 不报）、-14（资源单位 asset_share_bp 必报）；检测器判定口径不变",
+     "rev": 25
     }
    ],
    "print": "b417d637193553e919915d04e6a31d01a051a66185f77ca46f041aff6c6f36d2",
-   "rev": 24,
+   "rev": 25,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {

@@ -178,9 +178,9 @@ test('资源种类表两行（卷六 :112、:371）与本卷词表族按登记�
   const rows = W.rules.economyResources;
   assert.deepEqual(Object.keys(rows).sort(), ['res_building_share', 'res_unmaterialized_share']);
   assert.deepEqual([rows.res_building_share.family, rows.res_building_share.unit, rows.res_building_share.sources, rows.res_building_share.sinks],
-    ['resfam_asset', 'bps', ['src_genesis', 'src_transform'], ['sink_loss']]);
+    ['resfam_asset', 'asset_share_bp', ['src_genesis', 'src_transform'], ['sink_loss']]);
   assert.deepEqual([rows.res_unmaterialized_share.family, rows.res_unmaterialized_share.unit, rows.res_unmaterialized_share.sources, rows.res_unmaterialized_share.sinks],
-    ['resfam_claim', 'bps', ['src_genesis'], ['sink_transform']]);
+    ['resfam_claim', 'asset_share_bp', ['src_genesis'], ['sink_transform']]);
   const fam = (f) => Object.keys(W.vocab.families.get(f).entries).sort();
   assert.deepEqual(fam('resfam'), ['resfam_asset', 'resfam_claim', 'resfam_coin', 'resfam_goods', 'resfam_point', 'resfam_stock']);
   assert.equal(W.vocab.families.get('resfam').closed, true);

@@ -5,15 +5,14 @@
 // 不用正则；一次调用返回全部命中。实现与逐个 indexOf 同结果。
 // NFC 的"输出码点 → 原文区间"对照需要按字素簇逐簇规范化（Intl.Segmenter 切簇、簇内 normalize），ops.mjs 闭集七函数里没有带对照表的 NFC，
 // 所以本文件内自做，回报报李白（卷二 :876 matcher 行的闭集只写 nfc、mapCodePoints、indexOf）。
-// 码点折叠表来自 kernelApi `codepointTables`（卷二 §2.7 :809 textcore 行），那一项尚未建，由装配经 installBlocklist 交入；没装即不能匹配（fail closed）。
+// 码点折叠表来自 kernelApi `codepointTables`（卷二 §2.7 :642，kernel/load/codepoint-tables.mjs 读 world/i18n/casefold.json，unicode.org CaseFolding C+S 全表），
+// 由装配经 installBlocklist 交入；折叠表必给，没装词表即不能匹配（fail closed）。表里没有的码点不变（无大小写之分，如汉字）。
 
 import { textValue } from '../textcore/text-types.mjs';
 import { fail } from './fail.mjs';
 
-/** 折叠表未建而无法核对时给命中段的类别标记（不是 blocklist_category 族的值）。 */
-export const UNKNOWN_CATEGORY = 'casefold_unbuilt';
 const SEGMENTER = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
-/** @type {Map<string, {needles: ReadonlyArray<{cps: readonly number[], category: string}>, casefold: null | ReadonlyMap<number, readonly number[]>}>} */
+/** @type {Map<string, {needles: ReadonlyArray<{cps: readonly number[], category: string}>, casefold: ReadonlyMap<number, readonly number[]>}>} */
 const installed = new Map();
 
 /**
@@ -27,18 +26,15 @@ export function normalizeWithMap(s, casefold) {
   const origStart = [];
   const origEnd = [];
   let at = 0;
-  let unfoldable = false;
   for (const { segment } of SEGMENTER.segment(s)) {
     const width = Array.from(segment).length;
     for (const ch of segment.normalize('NFC')) {
       const cp = ch.codePointAt(0);
-      // 折叠表未建（casefold 为空）：有大小写之分的字符无法折叠，记下，由调用方按"未知"处理；无大小写之分的字符（如汉字）不受影响。
-      if (casefold === null && ch !== ch.toLowerCase()) unfoldable = true;
-      for (const out of casefold !== null && casefold.has(cp) ? casefold.get(cp) : [cp]) { cps.push(out); origStart.push(at); origEnd.push(at + width); }
+      for (const out of casefold.has(cp) ? casefold.get(cp) : [cp]) { cps.push(out); origStart.push(at); origEnd.push(at + width); }
     }
     at += width;
   }
-  return { cps, origStart, origEnd, unfoldable, length: at };
+  return { cps, origStart, origEnd, length: at };
 }
 
 /**
@@ -50,12 +46,12 @@ export function normalizeWithMap(s, casefold) {
  */
 export function installBlocklist(lang, entries, casefold) {
   if (installed.has(lang)) fail('E_I18N_BLOCKLIST', `blocklist ${lang} already installed`);
+  if (!(casefold instanceof Map) || casefold.size === 0) fail('E_I18N_BLOCKLIST', 'casefold table required');
   const needles = entries.map((e) => {
     const word = textValue(e.word);
     if (word === undefined) fail('E_I18N_BLOCKLIST', 'needle must be Text');
-    const { cps, unfoldable } = normalizeWithMap(word, casefold);
+    const { cps } = normalizeWithMap(word, casefold);
     if (cps.length === 0) fail('E_I18N_BLOCKLIST', 'empty needle');
-    if (unfoldable) fail('E_I18N_BLOCKLIST', 'needle needs case folding but the casefold table is not built');
     return Object.freeze({ cps: Object.freeze(cps), category: e.category });
   });
   installed.set(lang, Object.freeze({ needles: Object.freeze(needles), casefold }));
@@ -88,9 +84,6 @@ export function matchBlocklist(text, lang) {
   if (!installed.has(lang)) return fail('E_I18N_LOCALE', `no blocklist installed for ${lang}`);
   const { needles, casefold } = installed.get(lang);
   const norm = normalizeWithMap(s, casefold);
-  // 折叠表未建时，含有大小写之分字符的文字无法核对屏蔽词：卷二十九、卷二没有对"缺表"的规定，按"未知"拒放——整段算一次命中（类别 UNKNOWN_CATEGORY），
-  // 交 redact.mjs 整段换成替换记号，不放行也不抛错中断响应。汉字等无大小写之分的文字照常匹配。
-  if (norm.unfoldable) return [{ start: 0, end: norm.cps.length, origStart: 0, origEnd: norm.length, categories: [UNKNOWN_CATEGORY] }];
   const spans = [];
   for (const n of needles) for (const i of findAll(norm.cps, n.cps)) spans.push({ start: i, end: i + n.cps.length, category: n.category });
   spans.sort((a, b) => a.start - b.start || a.end - b.end);

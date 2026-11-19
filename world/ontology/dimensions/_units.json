@@ -71,6 +71,11 @@
    "si": 1
   },
   {
+   "dimension": "asset_share",
+   "id": "asset_share_bp",
+   "si": 1
+  },
+  {
    "calibrate": true,
    "dimension": "axis",
    "id": "axis",

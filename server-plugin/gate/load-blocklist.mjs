@@ -25,11 +25,12 @@ function exists(root, rel) {
  * 加载并登记一种显示语言的屏蔽词表。
  * @param {string} root 仓库根
  * @param {string} lang 显示语言代号
- * @param {null | ReadonlyMap<number, readonly number[]>} casefold kernel 的简单大小写折叠码点表（kernelApi codepointTables，需外部 Unicode 数据，尚未建；
- *   传 null 即表未建：有大小写之分的词条拒收、有大小写之分的待筛文字按"未知"整段遮蔽，汉字等不受影响）
+ * @param {ReadonlyMap<number, readonly number[]>} casefold kernel 的简单大小写折叠码点表（kernelApi codepointTables，world/i18n/casefold.json，
+ *   unicode.org CaseFolding C+S 全表）；必给，缺表即拒（不再有"未建则整段遮蔽"的退路）
  * @returns {number} 登记的词条数
  */
 export function loadBlocklist(root, lang, casefold) {
+  if (!(casefold instanceof Map) || casefold.size === 0) return fail('E_I18N_BLOCKLIST', 'casefold table required');
   const rel = `world/i18n/blocklist.${lang}.json`;
   let entries = [];
   if (exists(root, rel)) {
@@ -39,7 +40,7 @@ export function loadBlocklist(root, lang, casefold) {
     entries = doc.entries.map((e) => {
       if (!isObj(e) || typeof e.word !== 'string' || e.word.length === 0 || typeof e.category !== 'string') return fail('E_I18N_BLOCKLIST', `${rel}: entry`);
       const nfcWord = nfc(brand(e.word));
-      return { word: casefold === null ? nfcWord : mapCodePoints(nfcWord, casefold), category: e.category };
+      return { word: mapCodePoints(nfcWord, casefold), category: e.category };
     });
   }
   installBlocklist(lang, entries, casefold);

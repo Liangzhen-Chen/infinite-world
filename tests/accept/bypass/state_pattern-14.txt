@@ -1,0 +1,7 @@
+// 状态键上另存了单位为 asset_share_bp（资源种类行的 unit）的数值字段——S6-14 必报；同路径上单位 bps 的比率字段不报，只报资源数量那一个。
+// @file world/ontology/state-owners.json
+{"pathTypes": {"npcs.*.share": "integer:asset_share_bp", "npcs.*.coverRatio": "integer:bps"}}
+// @file world/ontology/named-structs.json
+{"version": 1, "rows": []}
+// @file world/rules/tables/economy/resources.json
+{"rows": [{"key": "res_test", "value": {"unit": "asset_share_bp"}}]}

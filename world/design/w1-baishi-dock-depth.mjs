@@ -100,7 +100,7 @@ export async function validate(bundle,world){
  for(const p of bundle.people)assert.ok(check(p),`${p.id}: ${JSON.stringify(check.errors)}`);
  assert.deepEqual(validateNpcProfiles(proposed),[]);
  assert.deepEqual(validateNpcDepth(proposed).issues,[]);
- const blocked=await read('world/meta/blocklist.json');for(const p of bundle.people)assert.ok(![...blocked.names,...blocked.realPeople].some(n=>JSON.stringify(p).includes(n)),p.id);
+ const blocked=await read('world/i18n/blocklist.zh.json');for(const p of bundle.people)assert.ok(!blocked.entries.map(e=>e.word).some(n=>JSON.stringify(p).includes(n)),p.id);
  for(let i=0;i<bundle.people.length;i++)for(const key of Object.keys(bundle.sources[i]))if(!['tier','home'].includes(key))assert.deepEqual(bundle.people[i][key],bundle.sources[i][key],`${bundle.people[i].id}.${key}`);
  return bundle;
 }

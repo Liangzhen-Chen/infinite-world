@@ -1289,6 +1289,25 @@
    "scanClass": "state_pattern"
   },
   {
+   "addedAtRev": 25,
+   "caseKey": "state_pattern-13",
+   "fixture": "tests/accept/bypass/state_pattern-13.txt",
+   "group": "rules",
+   "origin": "S6-14：单位 bps（卷二 §1.4 比率）的数值字段不是资源数量，资源 unit 为 asset_share_bp 时不报（一个单位代号只许一个意思）",
+   "polarity": "must_pass",
+   "scanClass": "state_pattern"
+  },
+  {
+   "addedAtRev": 25,
+   "caseKey": "state_pattern-14",
+   "expectCode": "E-DIM-STRUCT-FIELD",
+   "fixture": "tests/accept/bypass/state_pattern-14.txt",
+   "group": "rules",
+   "origin": "S6-14：单位为资源 unit asset_share_bp 的状态字段必报，同路径 bps 比率字段不报",
+   "polarity": "must_fail",
+   "scanClass": "state_pattern"
+  },
+  {
    "addedAtRev": 1,
    "caseKey": "text_judge-01",
    "expectCode": "E-VIEW-TEXT-MATCH",

@@ -6,7 +6,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
+import { codepointTables } from '../../server-plugin/kernel/load/codepoint-tables.mjs';
 import { useReportSink } from '../../server-plugin/kernel/report.mjs';
 import { createReplyChannel, postReply, serveRequest, newReplyHandle, claimReplySend } from '../../server-plugin/kernel/transport/reply-channel.mjs';
 import { displayData } from '../../server-plugin/output-gate/display-load.mjs';
@@ -33,8 +36,8 @@ assert.ok(W.ok, W.text);
 const codeIs = (code) => (e) => e.code === code;
 const ABC_SHA256 = 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad';
 const LANG = 'zz';
-// 测试用的折叠表：A–Z 折成 a–z（码点 65–90 → 97–122）。
-const CASEFOLD = new Map(Array.from({ length: 26 }, (_, i) => [65 + i, [97 + i]]));
+// 真实折叠表：world/i18n/casefold.json（unicode.org CaseFolding C+S），经 kernel 的 codepointTables 读入。
+const CASEFOLD = codepointTables(ROOT).casefold;
 const j = (v) => JSON.stringify(v);
 
 /** 在临时根下写 world/i18n、world/display 文件，返回根。files: {相对路径: 值}。 */
@@ -67,9 +70,9 @@ test('真实 labels.zh.json 是"代号 → 形态 → 文字"，labels 加载器
   assert.equal(str(lb.names.get('resfam_coin').get('label')), '铸币');
 });
 
-test('真实屏蔽词表 world/i18n/blocklist.zh.json 经 load-blocklist 加载（折叠表未建传 null）：72 条（names 53 与 realPeople 19 去重），一词被显示闸遮蔽', () => {
+test('真实屏蔽词表 world/i18n/blocklist.zh.json 经 load-blocklist 加载（真实折叠表）：72 条（names 53 与 realPeople 19 去重），一词被显示闸遮蔽', () => {
   resetBlocklist();
-  assert.equal(loadBlocklist(ROOT, 'zh', null), 72);
+  assert.equal(loadBlocklist(ROOT, 'zh', CASEFOLD), 72);
   const redact = createRedactor(T('#'), 'zh');
   const out = (s) => { const r = redact(T(s)); return [release(r.screened), r.verdict]; };
   assert.deepEqual(out('他叫特朗普吗'), ['他叫#吗', 'replace']); // realPeople 档
@@ -79,16 +82,49 @@ test('真实屏蔽词表 world/i18n/blocklist.zh.json 经 load-blocklist 加载�
   assert.equal(matchBlocklist(T('特朗普'), 'zh')[0].categories[0], 'bcat_real_person');
 });
 
-test('折叠表未建（null）：汉字照常匹配；有大小写之分的文字无法核对，按"未知"整段遮蔽；有大小写之分的词条拒收', () => {
+test('真实折叠表（CaseFolding C+S）：大写英文与大小写变体不再整段遮蔽；ς 折 σ、ſ 折 s；汉字不变；屏蔽词的大小写变体被遮', () => {
+  // 取表：大写 A (65) → a (97)；ς (962) → σ (963)；ſ (383) → s (115)；汉字「中」(20013) 不在表里。
+  assert.deepEqual(CASEFOLD.get(65), [97]);
+  assert.deepEqual(CASEFOLD.get(962), [963]);
+  assert.deepEqual(CASEFOLD.get(383), [115]);
+  assert.equal(CASEFOLD.has(20013), false);
   resetBlocklist();
-  assert.equal(loadBlocklist(ROOT, 'zh', null), 72);
-  const redact = createRedactor(T('#'), 'zh');
+  assert.equal(useBlocklist(['trump', 'σασ', 'sun', '特朗普']), 4);
+  const redact = createRedactor(T('#'), LANG);
   const out = (s) => { const r = redact(T(s)); return [release(r.screened), r.verdict]; };
-  assert.deepEqual(out('Hello 世界'), ['#', 'replace']);
-  assert.deepEqual(out('hello world'), ['hello world', 'pass']); // 全小写：无需折叠
-  assert.deepEqual(matchBlocklist(T('ABC'), 'zh'), [{ start: 0, end: 3, origStart: 0, origEnd: 3, categories: ['casefold_unbuilt'] }]);
+  // 无屏蔽词的大写英文与汉字混排：原样放行，不整段遮蔽。
+  assert.deepEqual(out('Hello WORLD 世界'), ['Hello WORLD 世界', 'pass']);
+  assert.deepEqual(matchBlocklist(T('ABC'), LANG), []);
+  // 屏蔽词大小写变体：命中段按原文坐标换记号。
+  assert.deepEqual(out('he said TRUMP loudly'), ['he said # loudly', 'replace']);
+  assert.deepEqual(out('Trump'), ['#', 'replace']);
+  assert.deepEqual(matchBlocklist(T('xTRUMPx'), LANG), [{ start: 1, end: 6, origStart: 1, origEnd: 6, categories: ['bcat_name'] }]);
+  // ς 与 σ：词尾 ς 折成 σ，ΣΑς 折成 σασ 命中；ſ 折成 s，ſUN 折成 sun 命中。
+  assert.deepEqual(matchBlocklist(T('ΣΑς'), LANG), [{ start: 0, end: 3, origStart: 0, origEnd: 3, categories: ['bcat_name'] }]);
+  assert.deepEqual(matchBlocklist(T('ſUN'), LANG), [{ start: 0, end: 3, origStart: 0, origEnd: 3, categories: ['bcat_name'] }]);
+  assert.deepEqual(matchBlocklist(T('他叫特朗普'), LANG), [{ start: 2, end: 5, origStart: 2, origEnd: 5, categories: ['bcat_name'] }]);
+});
+
+test('casefold.json 的出处与校验值：版本、来源 sha256 照主会话下载记录；map 的 sha256 与文件登记的 tableSha256 相符；只含一对一映射', () => {
+  const real = JSON.parse(readFileSync(join(ROOT, 'world/i18n/casefold.json'), 'utf8'));
+  assert.equal(real.status, 'C+S');
+  assert.equal(real.unicodeVersion, '18.0.0');
+  assert.equal(real.sourceSha256, 'a004797658a457bec4dc11683e39f69249ea3b595b752dbea6721c4c9f587b0d');
+  assert.equal(createHash('sha256').update(JSON.stringify(real.map)).digest('hex'), real.tableSha256);
+  assert.ok(real.map.every((p) => p.length === 2));
+});
+
+test('折叠表必给：不传（null）或空表即拒，没有"未建则整段遮蔽"的退路；码点表文件缺失或条目不合加载即拒', () => {
   resetBlocklist();
-  assert.throws(() => installBlocklist('zh', [{ word: T('Bad'), category: 'bcat_name' }], null), codeIs('E-I18N-BLOCKLIST'));
+  assert.throws(() => loadBlocklist(ROOT, 'zh', null), codeIs('E-I18N-BLOCKLIST'));
+  assert.throws(() => loadBlocklist(ROOT, 'zh', new Map()), codeIs('E-I18N-BLOCKLIST'));
+  assert.throws(() => installBlocklist('zh', [{ word: T('Bad'), category: 'bcat_name' }], undefined), codeIs('E-I18N-BLOCKLIST'));
+  const withMap = (map) => rootWith({ 'world/i18n/casefold.json': { version: 1, map } });
+  assert.equal(codepointTables(withMap([[65, 97]])).casefold.get(65)[0], 97);
+  for (const bad of [[], [[65]], [[65, 97, 98]], [[65, 97], [65, 98]], [[65, -1]], [[65, 1114112]], [[65.5, 97]], [['A', 97]]]) {
+    assert.throws(() => codepointTables(withMap(bad)), codeIs('E-I18N-BLOCKLIST'), JSON.stringify(bad));
+  }
+  assert.throws(() => codepointTables(testTempRoot('outgate-nocf-')), codeIs('E-I18N-BLOCKLIST'));
 });
 
 // ---------- textcore ----------

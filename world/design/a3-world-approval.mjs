@@ -235,12 +235,12 @@ export function checkEntry(world, entry) {
 export async function checkFoundation(world, entries) {
   const candidate = previewWorld(world), before = validateWorld(world), after = validateWorld(candidate);
   assert.deepEqual(after.errors.filter(e => !before.errors.includes(e)), [], '本批不得引入世界校验错误');
-  const blocklist = await read('world/meta/blocklist.json'), errors = [], warnings = [];
+  const blocklist = await read('world/i18n/blocklist.zh.json'), errors = [], warnings = [];
   for (const entry of entries) {
     const check = checkEntry(candidate, entry);
     errors.push(...check.errors.map(e => `${entry.id}: ${e}`)); warnings.push(...check.warnings.map(w => ({id: entry.id, ...w})));
     const body = JSON.stringify(entry.row);
-    for (const word of [...blocklist.names, ...blocklist.realPeople]) if (body.includes(word)) errors.push(`${entry.id}: 原创屏蔽 ${word}`);
+    for (const word of blocklist.entries.map(e => e.word)) if (body.includes(word)) errors.push(`${entry.id}: 原创屏蔽 ${word}`);
   }
   return {entries: entries.length, errors, warnings, existingWorldErrors: before.errors};
 }

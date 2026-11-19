@@ -1,5 +1,8 @@
 {
  "rows": [
-  {"key": "unbuilt", "value": ["awakeMin", "full", "limited"], "file": "server-plugin/action-capacity.mjs", "grade": "designed", "source": "卷二 §2.5 :510（rules.capacity 阈值表 {awakeMin, full, limited}，阈值表归卷二）", "basis": "卷二、卷四、卷二十一都只给键与形状，没有数值，旧世界数据（snapshot-20261010）也没有可转的阈值；不编数，三键登在 unbuilt：awake、capacity 读到即按未知交出（原因 unbuilt），待李白给数或试玩标定后写值并从 unbuilt 删去"}
+  {"key": "awakeMin", "value": 0.5, "file": "server-plugin/action-capacity.mjs", "grade": "designed", "source": "卷二 §2.5 :510（rules.capacity 阈值表）；量程取卷二 §3.6 能力维度 fraction 域 [0, 1]；卷四 :1051–:1052（熟睡 consciousness 0.4，由族字段与阈值判）、:573（受伤后 0.75）", "basis": "暂定·待试玩标定（李白 11-19 18:1x ①）。依 docs/审查/P-3-推导规则.md 的做法（无卷文数值时取已有量程与卷文例值统一推算、整类一个规则、标设定）：规则「等分点」——量程 [0,1] 的中点 1/2 为清醒线。卷文两个例值与它相容：熟睡 0.4 < 0.5 不到清醒线，受伤 0.75 ≥ 0.5 仍清醒。没有身体图或被 incapacitating/suppressesAwake 族实例挡住的情形由 action-capacity.mjs 先判，不经此阈值"},
+  {"key": "full", "value": {"consciousness": 0.6667, "manipulation": 0.6667, "moving": 0.6667}, "file": "server-plugin/action-capacity.mjs", "grade": "designed", "source": "卷二 §2.5 :510（full 与 limited 同键 consciousness、moving、manipulation）；量程同上", "basis": "暂定·待试玩标定（李白 11-19 18:1x ①）。规则「等分点」：把量程 [0,1] 三等分，full 取上三分之一的下界 2/3（precision 4 取 0.6667）；三项同值，不为某一项单设数。卷文例值：失一手 manipulation 0.7（卷四 :573）、一腿半损 moving 0.75（:1053）仍属 full，与轻伤不碍事相符"},
+  {"key": "limited", "value": {"consciousness": 0.3333, "manipulation": 0.3333, "moving": 0.3333}, "file": "server-plugin/action-capacity.mjs", "grade": "designed", "source": "卷二 §2.5 :510；量程同上", "basis": "暂定·待试玩标定（李白 11-19 18:1x ①）。规则「等分点」：limited 取中三分之一的下界 1/3（precision 4 取 0.3333）；三项同值。低于它即 none"},
+  {"key": "unbuilt", "value": [], "file": "server-plugin/action-capacity.mjs", "grade": "designed", "source": "卷二 §2.5 :510", "basis": "awakeMin、full、limited 三键已按 P-3 规则暂定写值，从 unbuilt 删去（李白 11-19 18:1x ①）；以后有未建键登在此处，读到按未知"}
  ]
 }

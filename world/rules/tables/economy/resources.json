@@ -12,7 +12,7 @@
     "sinks": ["sink_loss"],
     "sources": ["src_genesis", "src_transform"],
     "transferable": "tr_free",
-    "unit": "bps",
+    "unit": "asset_share_bp",
     "unitOfAccount": false
    },
    "source": "卷六 §2.1 :112（family、unit 基点、sources、sinks 明写；一族只这一行，键为设施实例）",
@@ -31,7 +31,7 @@
     "sinks": ["sink_transform"],
     "sources": ["src_genesis"],
     "transferable": "tr_restricted",
-    "unit": "bps",
+    "unit": "asset_share_bp",
     "unitOfAccount": false
    },
    "source": "卷六 §4.1 规则 5 '物化建行' :371（resfam_claim 一行，键为地点，只许聚合账户持有，来源只 src_genesis、去处只 sink_transform）",

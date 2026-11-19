@@ -134,11 +134,11 @@ export function checkEntry(world, entry) {
 export async function checkFoundation(world, entries) {
   const validation = validateWorld(world);
   assert.deepEqual(validation.errors, [], '正式世界必须通过校验');
-  const blocklist = await read('world/meta/blocklist.json'), errors = [];
+  const blocklist = await read('world/i18n/blocklist.zh.json'), errors = [];
   for (const entry of entries) {
     errors.push(...checkEntry(world, entry).map(e => `${entry.id}: ${e}`));
     const body = JSON.stringify(entry.row);
-    for (const word of [...blocklist.names, ...blocklist.realPeople]) if (body.includes(word)) errors.push(`${entry.id}: 原创屏蔽 ${word}`);
+    for (const word of blocklist.entries.map(e => e.word)) if (body.includes(word)) errors.push(`${entry.id}: 原创屏蔽 ${word}`);
   }
   return {entries: entries.length, errors};
 }
