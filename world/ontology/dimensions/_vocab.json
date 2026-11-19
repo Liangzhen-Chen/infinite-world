@@ -39,6 +39,42 @@
    },
    "prefix": "bev_"
   },
+  "calendar": {
+   "closed": false,
+   "entries": {
+    "cal_default": {
+     "basis": "卷二十 §4.2.5 第一行（12 月大小月 30/29 相间、19 年 7 闰、闰月 29 日）；数据迁自 world/ontology/calendar.json core:calendar_default（旧 months、leap、rateBasis）；weekDays 取旧 rules.json calendar.tens 三旬 ÷ 旧 daysPerMonth 30 = 10；dayStart 取 midnight 是旧实现 day = minute 整除 1440（旧 engine.calendar）；era 取 continuous 是旧实现无年号重置；tracksSolar 旧数据没有，见 rules.calendar.unbuilt",
+     "epochMinute": 0,
+     "months": [
+      {"ordinal": 1, "days": 30}, {"ordinal": 2, "days": 29}, {"ordinal": 3, "days": 30}, {"ordinal": 4, "days": 29},
+      {"ordinal": 5, "days": 30}, {"ordinal": 6, "days": 29}, {"ordinal": 7, "days": 30}, {"ordinal": 8, "days": 29},
+      {"ordinal": 9, "days": 30}, {"ordinal": 10, "days": 29}, {"ordinal": 11, "days": 30}, {"ordinal": 12, "days": 29}
+     ],
+     "intercalation": [
+      {"cycleYears": 19, "years": [3, 6, 8, 11, 14, 17, 19], "mode": "month", "afterMonth": 6, "days": 29, "obligationAnchor": false}
+     ],
+     "weekDays": 10,
+     "dayStart": "midnight",
+     "era": {"mode": "continuous", "resetOn": [], "cycleYears": null},
+     "rateBasis": {"monthDays": 30, "yearDays": 360}
+    },
+    "cal_legacy_30": {
+     "basis": "卷二十 §4.2.5 第二行（12 月各 30 日、不置闰、年长 360）；数据迁自 world/ontology/calendar.json legacy:30-day；weekDays、dayStart、era 的出处同 cal_default；tracksSolar 旧数据没有，见 rules.calendar.unbuilt",
+     "epochMinute": 0,
+     "months": [
+      {"ordinal": 1, "days": 30}, {"ordinal": 2, "days": 30}, {"ordinal": 3, "days": 30}, {"ordinal": 4, "days": 30},
+      {"ordinal": 5, "days": 30}, {"ordinal": 6, "days": 30}, {"ordinal": 7, "days": 30}, {"ordinal": 8, "days": 30},
+      {"ordinal": 9, "days": 30}, {"ordinal": 10, "days": 30}, {"ordinal": 11, "days": 30}, {"ordinal": 12, "days": 30}
+     ],
+     "intercalation": [],
+     "weekDays": 10,
+     "dayStart": "midnight",
+     "era": {"mode": "continuous", "resetOn": [], "cycleYears": null},
+     "rateBasis": {"monthDays": 30, "yearDays": 360}
+    }
+   },
+   "prefix": "cal_"
+  },
   "class": {
    "closed": false,
    "entries": {
@@ -423,6 +459,37 @@
    },
    "prefix": "res_"
   },
+  "season": {
+   "closed": false,
+   "entries": {
+    "sea_four_spring": {
+     "basis": "区间取旧实现：季 = 日序 ÷ 90 的四等分、旧历第 1 日为春（旧 weather.mjs，360 日一年）= 太阳相位 [0, 1/4)；growth、warmth、wetness 无出处不填（卷文示意值不算出处，李白 11-19 13:3x ③），见 rules.season.unbuilt",
+     "scheme": "ssch_four", "order": 0, "phaseFrom": {"num": 0, "den": 4}, "phaseTo": {"num": 1, "den": 4}
+    },
+    "sea_four_summer": {
+     "basis": "区间取旧实现四等分，相位 [1/4, 2/4)；三个数值维度无出处不填，见 rules.season.unbuilt",
+     "scheme": "ssch_four", "order": 1, "phaseFrom": {"num": 1, "den": 4}, "phaseTo": {"num": 2, "den": 4}
+    },
+    "sea_four_autumn": {
+     "basis": "区间取旧实现四等分，相位 [2/4, 3/4)；三个数值维度无出处不填，见 rules.season.unbuilt",
+     "scheme": "ssch_four", "order": 2, "phaseFrom": {"num": 2, "den": 4}, "phaseTo": {"num": 3, "den": 4}
+    },
+    "sea_four_winter": {
+     "basis": "区间取旧实现四等分，相位 [3/4, 4/4)；三个数值维度无出处不填，见 rules.season.unbuilt",
+     "scheme": "ssch_four", "order": 3, "phaseFrom": {"num": 3, "den": 4}, "phaseTo": {"num": 4, "den": 4}
+    }
+   },
+   "prefix": "sea_"
+  },
+  "season_scheme": {
+   "closed": false,
+   "entries": {
+    "ssch_four": {
+     "basis": "卷二十 §2.6（scheme 开放族）、§4.4.5 四季方案；旧实现 season = 日序 ÷ 90 的四等分（旧 weather.mjs）"
+    }
+   },
+   "prefix": "ssch_"
+  },
   "sink": {
    "closed": false,
    "entries": {
@@ -692,6 +759,36 @@
     }
    },
    "prefix": "verb_"
+  },
+  "weather": {
+   "closed": false,
+   "entries": {
+    "wx_clear": {
+     "basis": "旧 world/meta/rules.json weather.states.clear（晴）：temperatureOffset 2、humidity 40（百分数，÷100）；其余字段旧数据没有，见 rules.weather.unbuilt",
+     "tempOffsetC": 2, "humidity": 0.4
+    },
+    "wx_cloudy": {
+     "basis": "旧 weather.states.cloudy（阴）：temperatureOffset 0、humidity 65；其余字段旧数据没有",
+     "tempOffsetC": 0, "humidity": 0.65
+    },
+    "wx_fog": {
+     "basis": "旧 weather.states.fog（雾）：temperatureOffset −1、humidity 90；其余字段旧数据没有",
+     "tempOffsetC": -1, "humidity": 0.9
+    },
+    "wx_rain": {
+     "basis": "旧 weather.states.rain（雨）：temperatureOffset −2、humidity 85；其余字段旧数据没有（降水量分布、风、相态）",
+     "tempOffsetC": -2, "humidity": 0.85
+    },
+    "wx_snow": {
+     "basis": "旧 weather.states.snow（雪）：temperatureOffset −4、humidity 75；其余字段旧数据没有",
+     "tempOffsetC": -4, "humidity": 0.75
+    },
+    "wx_storm": {
+     "basis": "旧 weather.states.storm（暴雨）：temperatureOffset −3、humidity 95；其余字段旧数据没有",
+     "tempOffsetC": -3, "humidity": 0.95
+    }
+   },
+   "prefix": "wx_"
   }
  }
 }

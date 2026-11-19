@@ -4,11 +4,11 @@
    "code": "kernelConstants",
    "file": "tables/kernel-constants.json",
    "structure": "keys",
-   "type": {"BASE": "integer", "SCALE": "integer", "PERMILLE": "integer", "BPS": "integer", "extendsMaxDepth": "integer", "rxMaxDepth": "integer", "handleRadix": "integer", "diceKeyMaxQualifiers": "integer", "grammarMaxLength": "integer", "fixedLnWorkExponent": "integer", "fixedLnInputExponent": "integer", "fixedLnSeriesTerms": "integer", "LN2": "string"},
-   "domain": {"BASE": [1, null], "SCALE": [1, null], "PERMILLE": [1, null], "BPS": [1, null], "extendsMaxDepth": [1, null], "rxMaxDepth": [1, null], "handleRadix": [2, 36], "diceKeyMaxQualifiers": [1, null], "grammarMaxLength": [1, null], "fixedLnWorkExponent": [1, null], "fixedLnInputExponent": [1, null], "fixedLnSeriesTerms": [1, null], "LN2": {}},
+   "type": {"BASE": "integer", "SCALE": "integer", "PERMILLE": "integer", "BPS": "integer", "extendsMaxDepth": "integer", "rxMaxDepth": "integer", "handleRadix": "integer", "diceKeyMaxQualifiers": "integer", "grammarMaxLength": "integer", "fixedLnWorkExponent": "integer", "fixedLnInputExponent": "integer", "fixedLnSeriesTerms": "integer", "LN2": "string", "thermalLagMaxNum": "integer", "thermalLagMaxDen": "integer"},
+   "domain": {"BASE": [1, null], "SCALE": [1, null], "PERMILLE": [1, null], "BPS": [1, null], "extendsMaxDepth": [1, null], "rxMaxDepth": [1, null], "handleRadix": [2, 36], "diceKeyMaxQualifiers": [1, null], "grammarMaxLength": [1, null], "fixedLnWorkExponent": [1, null], "fixedLnInputExponent": [1, null], "fixedLnSeriesTerms": [1, null], "LN2": {}, "thermalLagMaxNum": [1, null], "thermalLagMaxDen": [1, null]},
    "volume": "卷二 §7 S10 :2407（kernel 定点文件常数登记豁免；数值来自 engine.rules 即不计，handleRadix、diceKeyMaxQualifiers、grammarMaxLength 依此过 const_literal）、§1.9 :285（代号 ^[a-z][a-z0-9_]{1,47}$ 与维度键 ^[a-z][a-zA-Z0-9]{0,47}$ 的总长上限）、§3.3 :1319（定点算术段：SCALE、PERMILLE、BPS 同登）、§3.3 :1333、§3.3 :1335–:1339（fixedLn 的 W=10¹⁸、升标度 10¹⁰、级数项数 20、LN2；登记句另见 :1341）、§1.3、§1.5；卷二十七 R27-8.5 :728（骰值键 subjectId 后接一到两个限定成分）",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"BASE": false, "SCALE": false, "PERMILLE": false, "BPS": false, "extendsMaxDepth": false, "rxMaxDepth": false, "handleRadix": false, "diceKeyMaxQualifiers": false, "grammarMaxLength": false, "fixedLnWorkExponent": false, "fixedLnInputExponent": false, "fixedLnSeriesTerms": false, "LN2": false}
+   "packOverridable": {"BASE": false, "SCALE": false, "PERMILLE": false, "BPS": false, "extendsMaxDepth": false, "rxMaxDepth": false, "handleRadix": false, "diceKeyMaxQualifiers": false, "grammarMaxLength": false, "fixedLnWorkExponent": false, "fixedLnInputExponent": false, "fixedLnSeriesTerms": false, "LN2": false, "thermalLagMaxNum": false, "thermalLagMaxDen": false}
   },
   {
    "code": "modifiers",
@@ -161,6 +161,84 @@
    "volume": "卷二 §1.10 :320（种子键登记表，抽取点一行）；卷二十七 R27-8.1 :717（全登记与源码双向比对）、R27-8.4 :720（role_seed 的（流代号, 抽取点代号）两两不同、前缀非空）；表格式与行随各抽取点首卡（块 4-3 建骨架）",
    "multiSourceMerge": "own_key_only",
    "packOverridable": {"entries": false}
+  },
+  {
+   "code": "astro",
+   "file": "tables/astro.json",
+   "structure": "keys",
+   "type": {
+    "yearDays": {"type": "struct", "fields": {"num": {"type": "integer", "unit": "count", "domain": [1, null]}, "den": {"type": "integer", "unit": "count", "domain": [1, null]}}, "required": ["num", "den"]},
+    "phaseEpochMinute": {"type": "integer", "unit": "minute"},
+    "minutesPerMeterEast": {"type": "number", "unit": "minute", "precision": 0},
+    "thermalLagPhase": {"type": "struct", "fields": {"num": {"type": "integer", "unit": "count", "domain": [0, null]}, "den": {"type": "integer", "unit": "count", "domain": [1, null]}}, "required": ["num", "den"]},
+    "unbuilt": {"type": "set", "of": {"type": "string"}}
+   },
+   "domain": {"yearDays": {}, "phaseEpochMinute": [null, null], "minutesPerMeterEast": [0, null], "thermalLagPhase": {}, "unbuilt": {}},
+   "volume": "卷二十 §2.2 :207–:220（rules.astro）；yearDays、phaseEpochMinute 取旧数据、minutesPerMeterEast 与 thermalLagPhase 取卷文明文值；卷文写“标定”或无数值的键、以及只被日照公式读的 axialTiltDeg 登在 unbuilt（李白 11-19 12:4x 丙6、丙7：非核心读数按未知传播并机读登记缺口，不写缺省）；thermalLagPhase 的 num 小于 den 核对在 kernel/calendar.mjs checkCalendarClimateTables（卷文域 [0, 1/4) 的上界 1/4 未核，见回报）；读者只有 kernel/calendar.mjs 的 astroView 与 kernel/climate.mjs",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"yearDays": false, "phaseEpochMinute": false, "minutesPerMeterEast": false, "thermalLagPhase": false, "unbuilt": false}
+  },
+  {
+   "code": "climate",
+   "file": "tables/climate.json",
+   "structure": "keys",
+   "type": {
+    "elevationTempGradient": {"type": "number", "unit": "celsius_per_m", "precision": 4},
+    "unbuilt": {"type": "set", "of": {"type": "string"}}
+   },
+   "domain": {"elevationTempGradient": [null, 0], "unbuilt": {}},
+   "volume": "卷二十 §2.9 :396（rules.climate 键表）、§4.5.3 第 1 条（elevationTempGradient 只由 env.climateTempC 的派生读）；elevationTempGradient 取外部权威出处 ISA（李白 11-19 13:3x ③），卷文示意值不算出处；geothermalGradient、曲线、昼夜峰值分钟、cloudDamp 无出处，登在 unbuilt，不写缺省",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"elevationTempGradient": false, "unbuilt": false}
+  },
+  {
+   "code": "calendar",
+   "file": "tables/calendar.json",
+   "structure": "keys",
+   "type": {
+    "unbuilt": {"type": "set", "of": {"type": "string"}}
+   },
+   "domain": {"unbuilt": {}},
+   "volume": "卷二十 §2.9 :402（rules.calendar.{driftTolerance, relativeDepthMax}）：两键卷文无数值、旧数据没有，登在 unbuilt（李白 11-19 12:4x 丙7）；另登 tracksSolar、eraView、按日出日落起日三项未前移",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"unbuilt": false}
+  },
+  {
+   "code": "season",
+   "file": "tables/season.json",
+   "structure": "keys",
+   "type": {
+    "unbuilt": {"type": "set", "of": {"type": "string"}}
+   },
+   "domain": {"unbuilt": {}},
+   "volume": "卷二十 §2.9 :401（rules.season.schemeRules）与 §2.6 季节行数值维度：卷文没给的值登在 unbuilt（李白 11-19 12:4x 丙6、丙7），季节行本身在词表族 season",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"unbuilt": false}
+  },
+  {
+   "code": "weather",
+   "file": "tables/weather.json",
+   "structure": "keys",
+   "type": {
+    "anchorDays": {"type": "integer", "unit": "day"},
+    "unbuilt": {"type": "set", "of": {"type": "string"}}
+   },
+   "domain": {"anchorDays": [1, null], "unbuilt": {}},
+   "volume": "卷二十 §2.9 :395（rules.weather）、§4.3.3 第 2 条（anchorDays 锚段）；weightScale、persistBase、meltCurve 与天气行字段无出处，登在 unbuilt（李白 11-19 13:3x ①③），读者 kernel/weather.mjs",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"anchorDays": false, "unbuilt": false}
+  },
+  {
+   "code": "facility",
+   "file": "tables/facility.json",
+   "structure": "keys",
+   "type": {
+    "unbuilt": {"type": "set", "of": {"type": "string"}}
+   },
+   "domain": {"unbuilt": {}},
+   "volume": "卷十九 §4.1 规则 4 :326（rules.facility.thermal.openingWPerM2K）：卷文和旧数据都没有值，登在 unbuilt，kernel/climate.mjs envelopeUaWPerK 读到按未知（李白 11-19 13:3x ②）",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"unbuilt": false}
   },
   {
    "code": "materials",

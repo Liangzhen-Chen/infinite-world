@@ -1,0 +1,6 @@
+{
+ "rows": [
+  {"key": "anchorDays", "value": 360, "file": "server-plugin/kernel/weather.mjs", "grade": "referenced", "source": "卷二十 §2.9 :395（weather.anchorDays）、§4.3.3 第 2 条（日序按 anchorDays 切锚段）", "basis": "旧 weather.mjs dailySequence 每年 360 日一段、年初重置初始分布（旧 rules.json weather.annualReset: true）= 锚段 360 日"},
+  {"key": "unbuilt", "value": ["cloud", "meltCurve", "persistBase", "persistence", "phenomena", "precipMm", "precipPhaseFrom", "snowCover", "weightRX", "weightScale", "windDirSpreadDeg", "windMps"], "file": "server-plugin/kernel/weather.mjs", "grade": "designed", "source": "卷二十 §2.5 :273–:288（weather 行字段）、§2.9 :395（weather.{anchorDays, weightScale, persistBase, meltCurve}）；李白 11-19 13:3x ①③", "basis": "旧数据没有、卷文只有示意：weightScale、persistBase（旧 persistence 0.45 是“与前一日同状态的混合概率”，与卷二十“权重 × 持续性”乘法口径不同，不转）、每行 persistence、cloud、降水量与风速分布、风向偏角、precipPhaseFrom、每行 weightRX（旧 seasonalWeights 按季分档权重，不是对静态维度与太阳相位的表达式，不转）；meltCurve 与积雪（第 5 条）、现象（第 6 条）往后排。weatherAt 读到按未知并带缺口，不拿别的状态兜底。旧 tempOffsetC、humidity 已转入词表族 weather 各行；旧通行系数、作物倍率、心情、命中修正归卷十七等，不转"}
+ ]
+}

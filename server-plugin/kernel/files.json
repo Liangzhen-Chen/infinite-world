@@ -1,5 +1,7 @@
 [
  "server-plugin/kernel/advance-registry.mjs",
+ "server-plugin/kernel/calendar.mjs",
+ "server-plugin/kernel/climate.mjs",
  "server-plugin/kernel/clone.mjs",
  "server-plugin/kernel/declare.mjs",
  "server-plugin/kernel/det-math.mjs",
@@ -39,5 +41,6 @@
  "server-plugin/kernel/validate/rows.mjs",
  "server-plugin/kernel/validate/types.mjs",
  "server-plugin/kernel/view-registry.mjs",
- "server-plugin/kernel/vocab.mjs"
+ "server-plugin/kernel/vocab.mjs",
+ "server-plugin/kernel/weather.mjs"
 ]

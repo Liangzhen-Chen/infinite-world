@@ -1,0 +1,9 @@
+{
+ "rows": [
+  {"key": "yearDays", "value": {"num": 360, "den": 1}, "file": "server-plugin/kernel/calendar.mjs", "grade": "referenced", "source": "卷二十 §2.2 :211（rules.astro.yearDays，天文年，标定）", "basis": "旧 server-plugin/weather.mjs 太阳相位按 360 日一圈（sin(2π × dayOfYear ÷ 360)）、旧 engine.calendar 一年 360 日（12 月 × 30 日）；该世界一份，只由 astroView 读"},
+  {"key": "phaseEpochMinute", "value": 0, "file": "server-plugin/kernel/calendar.mjs", "grade": "referenced", "source": "卷二十 §2.2 :214（太阳相位 0 对应的分钟，相位 0 为北半球春分）", "basis": "旧 server-plugin/weather.mjs 赤纬 sin(2π × (dayOfYear − 0) ÷ 360)，第 0 日起点即相位 0；旧历第 1 月（雨月）为春"},
+  {"key": "thermalLagPhase", "value": {"num": 1, "den": 12}, "file": "server-plugin/kernel/climate.mjs", "grade": "designed", "source": "卷二十 §2.2 :218（真实约 1/12 年，最冷在冬至后约一个月）；§4.5.3 第 1 条手算校核取 1/12", "basis": "卷文规则值，非旧数据；取值域 [0, 1/4) 由加载校验 checkCalendarClimateTables 核（上界 1/4 登记在 kernelConstants.thermalLagMaxNum/Den，交叉乘比较），本行 1/12 通过该校验"},
+  {"key": "minutesPerMeterEast", "value": 0, "file": "server-plugin/kernel/climate.mjs", "grade": "designed", "source": "卷二十 §2.2 :217（minutesPerMeterEast，首版取 0，即全世界同一地方时）", "basis": "卷文明文：首版取 0；块 6 地方时 = 世界分钟对一日取余，本键为 0 时 climate.mjs 不加东西向偏移（读到非 0 须先建地方时换算，不静默忽略）"},
+  {"key": "unbuilt", "value": ["axialTiltDeg", "equinoxDaylightTol", "latitudeOriginDeg", "lunarEpochMinute", "metersPerDegreeNorth", "polarLatitudeCapDeg", "synodicDays"], "file": "server-plugin/kernel/calendar.mjs", "grade": "designed", "source": "卷二十 §2.2 :212、:215–:216、:219–:220（卷文这些键写“标定”或无数值，旧数据没有）；李白 11-19 12:4x 丙6、丙7（非核心读数按未知传播并机读登记缺口，不写缺省）", "basis": "无出处不编（axialTiltDeg 有旧数据出处 23.44 度，旧 weather.mjs daylightAt 的赤纬振幅与卷二十 §4.4.5 :691 同值，但它只被日照公式读、日照公式未前移，没有读者的登记参数过不了 A12-4.5，所以随日照公式一起登记在此，那张卡搬入）：读到这些键的入口（lunarPhase、由 coord 推纬度、日照公式 daylightMinutes）按未知返回并带缺口项；补出处时在本表加行并从本登记删去"}
+ ]
+}

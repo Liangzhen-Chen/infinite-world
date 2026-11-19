@@ -15,6 +15,8 @@ import { finalizeInputs, inputsBySystem, resetFinalized } from '../declare.mjs';
 import { codeOf } from '../errors.mjs';
 import { checkLedgerTables, checkSubjectFlagDims } from '../ledger.mjs';
 import { checkClockTables, checkHookCadence, installScheduler } from '../scheduler.mjs';
+import { checkCalendarClimateTables } from '../calendar.mjs';
+import { prepareWeatherRx, installWeather } from '../weather.mjs';
 import { installFixedConstants, installExpTable } from '../det-math.mjs';
 import { installSampleConstants, installSampleDistributions } from '../sample.mjs';
 import { checkVerbRows } from '../events.mjs';
@@ -111,7 +113,10 @@ export function loadWorld(root, opts = {}) {
   // rules.clock 与 due_kind、reaction_priority 条目的加载校验（卷二十 §2.1；字段含义只在 kernel/scheduler.mjs 读）；
   // cadence/phaseOffset 按声明表的钩子逐个查（§2.1 :130，E-CLOCK-CADENCE，块 4-2），所以排在声明表合并之后。
   // 持有人主体标记维度的表头登记（卷二 §5.6 ledgerHolder；卷六 §2.1 holder），该 kind 的表载入了才查。
-  const domain = report.env ? [...checkLedgerTables(read.rules, report.env), ...checkSubjectFlagDims(report.tables),...checkClockTables(read.rules, report.env), ...checkHookCadence(read.rules, owners.merged.hooks)] : [];
+  const domain = report.env ? [...checkLedgerTables(read.rules, report.env), ...checkSubjectFlagDims(report.tables),...checkClockTables(read.rules, report.env), ...checkHookCadence(read.rules, owners.merged.hooks), ...checkCalendarClimateTables(read.rules, report.env)] : [];
+  // 词表族 weather 各行的 weightRX 文本在这里经 compileRXInScope 编（卷二 §2.9 第 4 条，卷二十 §2.5 :276）；编不过的并入 domain 报 E-MOD-RX，编好的树校验全过后交 kernel/weather.mjs。
+  const weatherRx = report.env ? prepareWeatherRx(report.env) : { trees: new Map(), errors: [] };
+  domain.push(...weatherRx.errors);
   // 块 5 内核写者的加载期核对，违者加载失败、各用本函数已登记的码（字段含义只在各写者文件读）：verb 族与发出系统（卷二 §2.7 :774；
   // 卷二十四 R24-1.3、R24-2.1）、持有种类行（卷十八 §2.5、§2.6）、终止登记与去留表（卷二 §2.6 :526–:529）。词表收齐（report.ok）才核；
   // 词表不全时前面已经失败，不另报。终止去留表同 checkClockTables：规则目录登记了该表才核（只放内核常数表的校验器夹具目录不登记）；
@@ -131,6 +136,7 @@ export function loadWorld(root, opts = {}) {
     installVocab(report);
     installHandles({ vocab: report.vocab, decl, ledgerPaths: owners.merged.ledgerPaths });
     installStorage(owners.merged); // readPath/writePath 运行期核对用的声明表合并结果（kernel/storage.mjs，块 2 第 2-3 张）
+    installWeather(weatherRx.trees); // weatherAt 只读加载期编好的 weightRX 树（kernel/weather.mjs，块 6 第 6-28 张）
     installScheduler(read.rules); // schedule 入堆缩放读 rules.clock（kernel/scheduler.mjs，块 4 第 4-2 张）
     installTermination(decl); // 终止协议读声明表的 stateKeys.subjectRecords 与 systems.terminationCleanup（kernel/terminate.mjs，块 5 第 5-4 张；与 installStorage 同法）
     owners.merged.systems = deps.systems;

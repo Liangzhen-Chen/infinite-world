@@ -46,6 +46,11 @@
    "si": 1
   },
   {
+   "dimension": "temperature_gradient",
+   "id": "celsius_per_m",
+   "si": 1
+  },
+  {
    "dimension": "count",
    "id": "count",
    "si": 1

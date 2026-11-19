@@ -303,8 +303,14 @@ function stackingTable(engine) {
   return table.map((s) => fixedUnits(s));
 }
 
-// 分段线性曲线（§1.5 curve 行；§3.3 第 7 步"曲线点为定点，线性插值截断"）：x 落在首尾点之外取端点值。
-function lookupCurve(curve, v) {
+/**
+ * 分段线性曲线（§1.5 curve 行；§3.3 第 7 步"曲线点为定点，线性插值截断"）：x 落在首尾点之外取端点值。
+ * 块 6 6-28 起导出，供卷二十 climate.mjs 的 groundDampCurve 同一份插值（不另写第二份）。
+ * @param {{points?: [number, number][]}} curve 曲线点 [x, y] 的有序列表
+ * @param {bigint} v 定点自变量
+ * @returns {bigint}
+ */
+export function lookupCurve(curve, v) {
   const pts = isObj(curve) && Array.isArray(curve.points) ? curve.points.map(([x, y]) => [fixedUnits(x), fixedUnits(y)]) : [];
   if (!pts.length) throw new KernelError('E-MOD-STAGE', {}, 'post stage needs a curve with points');
   if (v <= pts[0][0]) return pts[0][1];

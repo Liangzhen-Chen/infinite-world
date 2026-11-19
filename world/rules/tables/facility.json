@@ -1,0 +1,5 @@
+{
+ "rows": [
+  {"key": "unbuilt", "value": ["thermal.openingWPerM2K"], "file": "server-plugin/kernel/climate.mjs", "grade": "designed", "source": "卷十九 §4.1 规则 4 :326（rules.facility.thermal.openingWPerM2K，开口散热系数）；李白 11-19 13:3x ②、13:4x ⑤（按建筑热工权威标准取值并写出处，取不到登未建）", "basis": "本卡未取得可核对的权威标准条款：开口（窗洞、门洞）的传热系数 W/(m²·K) 在建筑热工规范（如 GB 50176《民用建筑热工设计规范》、ISO 6946 / ISO 10077）里是按窗框、玻璃构造分档的 U 值，没有“无遮挡开口”这一档，且卷十九该参数的含义（含不含通风换气散热）卷文未写；条款号与取用方法查不实，不编，登未建，列入数据卡 6-29 的待查清单。envelopeUaWPerK 读不到该参数即未知并带缺口 opening_w_per_m2k；开口比例取 0 也照样要求有该参数，不因特殊值跳过"}
+ ]
+}

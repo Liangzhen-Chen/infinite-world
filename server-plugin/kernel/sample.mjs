@@ -179,6 +179,19 @@ export function diceKeyOf(worldSeed, streamCode, subjectId, worldTime, drawSiteC
   return diceKeyText(worldSeed, streamCode, [first, ...qualifiers], worldTime, drawSiteCode);
 }
 
+/**
+ * 按骰值键抽一个 [0, total) 的整数（卷二十 §4.3.3 第 2 条天气抽取；键五段同 diceKeyOf）：
+ * u = 骰值键的 sha256 作种子键的第 0 个 64 位均匀数（uniformAt），结果 = ⌊u × total ÷ 2^64⌋，BigInt 整除，同键同值。
+ * @param {number | bigint} total 正整数 @param {string} worldSeed @param {string} streamCode @param {string | Array<string | number>} subjectId @param {number} worldTime @param {string} drawSiteCode
+ * @returns {bigint}
+ */
+export function drawBelow(total, worldSeed, streamCode, subjectId, worldTime, drawSiteCode) {
+  const t = BigInt(total);
+  if (t <= 0n) throw paramError('drawBelow: total must be positive');
+  const u = uniformAt(sha256Text(diceKeyOf(worldSeed, streamCode, subjectId, worldTime, drawSiteCode)), 0);
+  return (u * t) / TWO64;
+}
+
 // ---------- 分布参数校验（卷二 §1.10 :318） ----------
 
 function checkCategorical(dist, dimDef, engine) {

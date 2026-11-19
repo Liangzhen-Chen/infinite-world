@@ -1,0 +1,5 @@
+{
+ "rows": [
+  {"key": "unbuilt", "value": ["addMonthEndClamp", "cultureCalendarRead", "dayOfYear", "dayStartSunrise", "dayStartSunset", "driftTolerance", "eraView", "intercalModeDays", "relativeDepthMax", "tracksSolar", "weekDay"], "file": "server-plugin/kernel/calendar.mjs", "grade": "designed", "source": "卷二十 §2.9 :402（calendar.{driftTolerance, relativeDepthMax}）、§2.3 :233 tracksSolar 与 intercalation、§3.1 :422 weekDay dayOfYear、:421 calendarAdd、:425 eraView、§2.3 :230 dayStart；李白 11-19 13:3x ④", "basis": "两套历法（亮圳 11-19 13:49）：全局系统时间 systemTimeView（时钟轴的显示投影，第几天、日内分钟，全世界统一）已建；各地当地历法按文化经 calendarFrom 解析、允许各地不同，解析不到即未知，不设全世界一部历法。文化行的 calendar 维度、地点到文化槽的解析（卷五 §4.12）、世界历法与四季怎么定（设计内容，亮圳定）都未建，登记 cultureCalendarRead；试玩只需第几天，星期、月份、当地历法细节往后放。卷文没写的口径不自补：weekDay 与 dayOfYear（:422 只列字段名，无起点与取值域，calendarView 不返回）、mode days 闰日的 leap 含义与排位（:233，加载拒收这种行）、calendarAdd 的月末截断（日期落不到时返回未知，不截断）。无出处不编：driftTolerance、relativeDepthMax、tracksSolar 卷文无数值、旧数据没有；eraView 读 eras.*，其写者 calendar-era.mjs 与按日出日落起日（要 §4.4 日照公式）未前移，块 6 的历法都是 midnight、continuous。calendarDayIndex 遇 sunrise/sunset 按未知返回；eraView 不提供"}
+ ]
+}

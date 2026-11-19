@@ -432,6 +432,47 @@ export const sin = (x) => periodicLookup('sin', x);
 /** cos：表覆盖一个整周期，输入先按周期取余（卷二十七 :573）。 @param {number | bigint} x @returns {bigint} */
 export const cos = (x) => periodicLookup('cos', x);
 
+// 圈数 → 弧度（10⁸ 标度）：整圈 = atan(1) = π/4 连翻三倍得 2π（atan 表 x=1 处的值，同 atan 域外折回的 π/2 取法，不另写 π 常数）。
+// 圈数是有理数 num/den（太阳相位、昼夜相位）；乘除 BigInt 向零截断；返回落在 [0, 整圈) 的整数弧度，sin/cos 查表不再绕圈。
+function fullTurnRadians() {
+  const row = detRow('atan');
+  const quarterOfHalfTurn = tableLookup(row, row.inScale, 'atan');
+  const halfPi = quarterOfHalfTurn + quarterOfHalfTurn;
+  const pi = halfPi + halfPi;
+  return pi + pi;
+}
+
+function turnsToRadians(num, den) {
+  const n = detInt(num, 'turns numerator');
+  const d = detInt(den, 'turns denominator');
+  if (d <= 0n) throw new FixedError('E-DIM-DOMAIN-RANGE', 'turns denominator must be positive');
+  const fullTurn = fullTurnRadians();
+  let wrapped = n % d;
+  if (wrapped < 0n) wrapped += d;
+  return (wrapped * fullTurn) / d;
+}
+
+/** 以圈数 num/den 为自变量的 sin（卷二十 §4.4.3 第 1 条：赤纬 ∝ sin(2π × 相位)）；返回 10⁸ 标度的 BigInt。 @param {number | bigint} num @param {number | bigint} den @returns {bigint} */
+export const sinTurns = (num, den) => sin(turnsToRadians(num, den));
+
+/** 以圈数 num/den 为自变量的 cos；返回 10⁸ 标度的 BigInt。 @param {number | bigint} num @param {number | bigint} den @returns {bigint} */
+export const cosTurns = (num, den) => cos(turnsToRadians(num, den));
+
+/**
+ * sin(2π × 圈数) 在圈数区间 [start, start + span]（均为 num ÷ den，span 为正）上的平均值，解析式 (cos θ0 − cos θ1) ÷ (θ1 − θ0)，θ 为弧度（卷二十 §4.11.3 第 2 条：日均温按解析式直接算）。
+ * 返回 10⁸ 标度的 BigInt；弧度差 = span ÷ den × 整圈（不经取余，区间可跨整圈），cos 值查同一张表。
+ * @param {number | bigint} startNum 起点分子 @param {number | bigint} spanNum 区间长分子（正） @param {number | bigint} den 共同分母（正）
+ * @returns {bigint}
+ */
+export function sinMeanTurns(startNum, spanNum, den) {
+  const span = detInt(spanNum, 'turns span');
+  const d = detInt(den, 'turns denominator');
+  if (span <= 0n) throw new FixedError('E-DIM-DOMAIN-RANGE', 'sinMeanTurns: span must be positive');
+  const start = detInt(startNum, 'turns start');
+  const radianSpan = (span * fullTurnRadians()) / d;
+  return ((cosTurns(start, d) - cosTurns(start + span, d)) * detRow('sin').outScale) / radianSpan;
+}
+
 /**
  * atan：定义域内查表；域外按 atan(x)=sign(x)·π/2−atan(1/x) 折回（卷二十七 :573）。
  * π/2 由本表 x=1（inScale）处的值乘 2 得出，不另写常数。
