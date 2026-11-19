@@ -1,5 +1,10 @@
 {
  "families": {
+  "access": {
+   "closed": false,
+   "entries": {},
+   "prefix": "access_"
+  },
   "aggregate": {
    "closed": true,
    "entries": {
@@ -165,6 +170,20 @@
       "fiberContent"
      ],
      "table": "material"
+    },
+    "comp_enclosure": {
+     "relocatable": false,
+     "relocatableIn": null,
+     "requires": [
+      "aperture"
+     ],
+     "table": "place"
+    },
+    "comp_region": {
+     "requires": [
+      "regionLevel"
+     ],
+     "table": "place"
     },
     "comp_rottable": {
      "requires": [
@@ -347,6 +366,11 @@
    },
    "prefix": "hk_"
   },
+  "juris": {
+   "closed": false,
+   "entries": {},
+   "prefix": "juris_"
+  },
   "matcat": {
    "closed": false,
    "entries": {
@@ -438,6 +462,15 @@
    "closed": false,
    "entries": {},
    "prefix": "rcls_"
+  },
+  "relation": {
+   "closed": true,
+   "entries": {
+    "rel_contains": {"id": "rel_contains", "from": "place", "to": "place", "via": "created.*.props.parent", "inputs": ["created.*.props.parent"], "intimate": false},
+    "rel_residents": {"id": "rel_residents", "from": "place", "to": "person", "via": {"index": "holdings.*.*", "field": "subject"}, "inputs": ["holdings.*.*", "created.*.props.parent"], "intimate": false},
+    "rel_within": {"id": "rel_within", "from": "place", "to": "place", "via": "created.*.props.parent", "inputs": ["created.*.props.parent"], "intimate": false}
+   },
+   "prefix": "rel_"
   },
   "resfam": {
    "closed": true,
@@ -663,6 +696,22 @@
    },
    "prefix": "subst_"
   },
+  "terrain": {
+   "closed": true,
+   "entries": {
+    "terrain_cave": {},
+    "terrain_coast": {},
+    "terrain_desert": {},
+    "terrain_forest": {},
+    "terrain_hill": {},
+    "terrain_lake": {},
+    "terrain_marsh": {},
+    "terrain_mountain": {},
+    "terrain_plain": {},
+    "terrain_river": {}
+   },
+   "prefix": "terrain_"
+  },
   "transferability": {
    "closed": true,
    "entries": {
@@ -759,6 +808,11 @@
     }
    },
    "prefix": "verb_"
+  },
+  "water": {
+   "closed": false,
+   "entries": {},
+   "prefix": "water_"
   },
   "weather": {
    "closed": false,

@@ -120,6 +120,16 @@
    "si": 1
   },
   {
+   "dimension": "length",
+   "id": "m",
+   "si": 1
+  },
+  {
+   "dimension": "area",
+   "id": "m2",
+   "si": 1
+  },
+  {
    "dimension": "time",
    "id": "minute",
    "si": 60

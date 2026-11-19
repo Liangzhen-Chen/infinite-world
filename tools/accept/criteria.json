@@ -236,10 +236,14 @@
     {
      "ref": "块 6 第 6-28 张：det-math.mjs 加 sinTurns、cosTurns，dimensions.mjs 导出 lookupCurve，两文件在本类别检测器 import 闭包内；判定口径不变",
      "rev": 44
+    },
+    {
+     "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
+     "rev": 45
     }
    ],
-   "print": "3769dc060c9fc24e17f9227cd015debaddf161495d42c95fc94eb53d37d1cad2",
-   "rev": 44,
+   "print": "11fd08fc54142943ad914e3ce0009e3def5f07d5b733c6c390c3343077efe9a3",
+   "rev": 45,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -581,10 +585,14 @@
     {
      "ref": "块 6 第 6-28 张：det-math.mjs 加 sinTurns、cosTurns，dimensions.mjs 导出 lookupCurve，两文件在本类别检测器 import 闭包内；判定口径不变",
      "rev": 38
+    },
+    {
+     "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
+     "rev": 39
     }
    ],
-   "print": "40df053a80b1c988678e6d802ba8566d69855aaffa8881372573476b07208e33",
-   "rev": 38,
+   "print": "e5211a4877106abb964de9500cb3535410f8a996b59e5fa1cd2ea9093a49db6a",
+   "rev": 39,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -643,10 +651,14 @@
     {
      "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
      "rev": 11
+    },
+    {
+     "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
+     "rev": 12
     }
    ],
-   "print": "bf33636134819c56284e7c605b6d4aeafba84911b6975c3351d104a59bc358c9",
-   "rev": 11,
+   "print": "fec33d1f5bd9abff3d5409c1eb9ce42969776378e0ac19c81c9666dc104fe584",
+   "rev": 12,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -767,10 +779,14 @@
     {
      "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
      "rev": 12
+    },
+    {
+     "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
+     "rev": 13
     }
    ],
-   "print": "7533e92fdbd711c81e78bbe469e28ee98994fe642ff78fdf3b88fe76d5772ca4",
-   "rev": 12,
+   "print": "041c146b8420b9d9deedad8b2ea45c402cd374453dbb009af9157659b7fdf75b",
+   "rev": 13,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -953,10 +969,14 @@
     {
      "ref": "块 6 第 6-28 张：det-math.mjs 加 sinTurns、cosTurns，dimensions.mjs 导出 lookupCurve，两文件在本类别检测器 import 闭包内；判定口径不变",
      "rev": 36
+    },
+    {
+     "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
+     "rev": 37
     }
    ],
-   "print": "b5c88b662260bf2b4d1420a629b960182b9e071811bee5c6024931d4962cf7d4",
-   "rev": 36,
+   "print": "b1a7e29216213708c775d344b8d1ed854b37fd12cf039b27ce090d2b5ff92f2c",
+   "rev": 37,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1020,10 +1040,14 @@
     {
      "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
      "rev": 12
+    },
+    {
+     "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
+     "rev": 13
     }
    ],
-   "print": "7533e92fdbd711c81e78bbe469e28ee98994fe642ff78fdf3b88fe76d5772ca4",
-   "rev": 12,
+   "print": "041c146b8420b9d9deedad8b2ea45c402cd374453dbb009af9157659b7fdf75b",
+   "rev": 13,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -1254,10 +1278,14 @@
     {
      "ref": "块 6 第 6-28 张：det-math.mjs 加 sinTurns、cosTurns，dimensions.mjs 导出 lookupCurve，两文件在本类别检测器 import 闭包内；判定口径不变",
      "rev": 52
+    },
+    {
+     "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
+     "rev": 53
     }
    ],
-   "print": "508aa628ef90a471988918778c89919b6c4372fcb68794f25f3a23d15dace7cd",
-   "rev": 52,
+   "print": "b4f50c57a74a1f7293da947c8dd96002ccad83b0e747373ab7f0c2a78eca487e",
+   "rev": 53,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1508,10 +1536,14 @@
     {
      "ref": "块 6 第 6-28 张：det-math.mjs 加 sinTurns、cosTurns，dimensions.mjs 导出 lookupCurve，两文件在本类别检测器 import 闭包内；判定口径不变",
      "rev": 37
+    },
+    {
+     "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
+     "rev": 38
     }
    ],
-   "print": "b5c88b662260bf2b4d1420a629b960182b9e071811bee5c6024931d4962cf7d4",
-   "rev": 37,
+   "print": "b1a7e29216213708c775d344b8d1ed854b37fd12cf039b27ce090d2b5ff92f2c",
+   "rev": 38,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -2091,10 +2123,14 @@
     {
      "ref": "块 6 第 6-28 张：det-math.mjs 加 sinTurns、cosTurns，dimensions.mjs 导出 lookupCurve，两文件在本类别检测器 import 闭包内；判定口径不变",
      "rev": 37
+    },
+    {
+     "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
+     "rev": 38
     }
    ],
-   "print": "b5c88b662260bf2b4d1420a629b960182b9e071811bee5c6024931d4962cf7d4",
-   "rev": 37,
+   "print": "b1a7e29216213708c775d344b8d1ed854b37fd12cf039b27ce090d2b5ff92f2c",
+   "rev": 38,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -2225,10 +2261,14 @@
     {
      "ref": "块 6 第 6-28 张：det-math.mjs 加 sinTurns、cosTurns，dimensions.mjs 导出 lookupCurve，两文件在本类别检测器 import 闭包内；判定口径不变",
      "rev": 29
+    },
+    {
+     "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
+     "rev": 30
     }
    ],
-   "print": "6de567845a248a88fe97d57d92b637cdd064c53ae439dbdeb718bd41af2dca55",
-   "rev": 29,
+   "print": "1ee0e5c68d9320b24b8fb31c5528000beb1bec1f1e90b358d2ef558a62af0d07",
+   "rev": 30,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -2455,10 +2495,14 @@
     {
      "ref": "块 6 第 6-28 张：det-math.mjs 加 sinTurns、cosTurns，dimensions.mjs 导出 lookupCurve，两文件在本类别检测器 import 闭包内；判定口径不变",
      "rev": 53
+    },
+    {
+     "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
+     "rev": 54
     }
    ],
-   "print": "635f04962696a03b774c5d6ad11b5f5f6b72ac4fad3d87cb12ea417b64a1d52c",
-   "rev": 53,
+   "print": "16d9bb42d9b582accea2ca87610a7b7f3949d5c085faea2946e8ca612bb8ee2e",
+   "rev": 54,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -2650,10 +2694,14 @@
     {
      "ref": "块 6 第 6-28 张：det-math.mjs 加 sinTurns、cosTurns，dimensions.mjs 导出 lookupCurve，两文件在本类别检测器 import 闭包内；判定口径不变",
      "rev": 16
+    },
+    {
+     "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
+     "rev": 17
     }
    ],
-   "print": "9869e6cd032d1e709e3b2dd4fc14f1f84625364c4e6b6f3df9c2dded49cadd74",
-   "rev": 16,
+   "print": "69d58cb85f8468020ddbf4803228d4618c291078f8913e8475dd2279bc0ac87d",
+   "rev": 17,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -2843,10 +2891,14 @@
     {
      "ref": "块 6 第 6-28 张：det-math.mjs 加 sinTurns、cosTurns，dimensions.mjs 导出 lookupCurve，两文件在本类别检测器 import 闭包内；判定口径不变",
      "rev": 42
+    },
+    {
+     "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
+     "rev": 43
     }
    ],
-   "print": "3769dc060c9fc24e17f9227cd015debaddf161495d42c95fc94eb53d37d1cad2",
-   "rev": 42,
+   "print": "11fd08fc54142943ad914e3ce0009e3def5f07d5b733c6c390c3343077efe9a3",
+   "rev": 43,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -2908,10 +2960,14 @@
     {
      "ref": "块 6 第 6-28 张：det-math.mjs 加 sinTurns、cosTurns，dimensions.mjs 导出 lookupCurve，两文件在本类别检测器 import 闭包内；判定口径不变",
      "rev": 13
+    },
+    {
+     "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
+     "rev": 14
     }
    ],
-   "print": "a7d4c856c5537433511b9f696c9fc6cf000a4e2b4ff728beb2ecc131893709bf",
-   "rev": 13,
+   "print": "e5531ab59d0c4e4fb45e9d4bd4076a3cef9ba340a3deb9f87950d471cbaa2212",
+   "rev": 14,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -2971,10 +3027,14 @@
     {
      "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
      "rev": 11
+    },
+    {
+     "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
+     "rev": 12
     }
    ],
-   "print": "7533e92fdbd711c81e78bbe469e28ee98994fe642ff78fdf3b88fe76d5772ca4",
-   "rev": 11,
+   "print": "041c146b8420b9d9deedad8b2ea45c402cd374453dbb009af9157659b7fdf75b",
+   "rev": 12,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -3226,10 +3286,14 @@
     {
      "ref": "块 6 第 6-28 张：det-math.mjs 加 sinTurns、cosTurns，dimensions.mjs 导出 lookupCurve，两文件在本类别检测器 import 闭包内；判定口径不变",
      "rev": 31
+    },
+    {
+     "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
+     "rev": 32
     }
    ],
-   "print": "6de567845a248a88fe97d57d92b637cdd064c53ae439dbdeb718bd41af2dca55",
-   "rev": 31,
+   "print": "1ee0e5c68d9320b24b8fb31c5528000beb1bec1f1e90b358d2ef558a62af0d07",
+   "rev": 32,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -3413,10 +3477,14 @@
     {
      "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
      "rev": 24
+    },
+    {
+     "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
+     "rev": 25
     }
    ],
-   "print": "b304e2fc04b5a10d96cbc73d2bc24dbd9a23ee42782ec5aab7dcd0c73c4bd765",
-   "rev": 24,
+   "print": "9730feb6aafa57e0db5ffe714b4d347a6cc5e25f022218e0ad5a45e1d592b7c6",
+   "rev": 25,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

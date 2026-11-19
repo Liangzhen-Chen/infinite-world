@@ -92,8 +92,8 @@ export const DECL_FIELDS = Object.freeze(['impl', 'own', 'uses', 'foldsOverDays'
 // 规则表的独立格式名（卷二 §3.7 :1429：registry 文件级登记，结构写 `processSlots`）。
 export const RULE_STRUCTURES = Object.freeze(['processSlots']);
 
-// kernel 直接比较的词表族名（卷二 §1.9 :288 族名表：class、component、vstatus）。
-export const VOCAB_FAMILIES = Object.freeze(['class', 'component', 'vstatus']);
+// kernel 直接比较的词表族名（卷二 §1.9 :288 族名表：class、component、vstatus；relation→rel_、juris→juris_ 供 kernel/reverse-index.mjs、kernel/place.mjs）。
+export const VOCAB_FAMILIES = Object.freeze(['class', 'component', 'vstatus', 'relation', 'juris']);
 
 // 表 kind 之外的伪类（卷二 §1.5 :182：`kind` 取 22 类或伪类 `effect`，即 _effects.json 的族）。
 export const ID_KINDS = Object.freeze(['effect']);

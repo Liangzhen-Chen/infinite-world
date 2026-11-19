@@ -3,7 +3,10 @@
  "note": "未建派生登记（卷二 §1.12 封卷后勘误 1118k23，依据李白 11-18 20:20 B2-W3 裁定 B）：凡 derived 按现行 RX 写不成的维度登记在这里，加载期只编可写的派生，登记项跳过不报错；没登记又编不过的仍报 E-MOD-RX。字段 table/dimension/missing/card；missing 取 primitive（缺原语）/data（缺数据）/constant（缺常数）的非空去重有序列表；card 未排期时写固定代号 pre_first_reader_card（首个读者玩法卡前，待排）。names（勘误 1118k31，李白 11-19 13:2x ②）登记别卷未建的词表条目名，只许写在规则表条件里，求值按未命中；既没登记又不在此处的名字照旧加载报错。",
  "entries": [
   {"table": "material", "dimension": "hardness", "missing": ["data", "primitive"], "card": "pre_first_reader_card", "note": "缺 rules.materials.strengthSummary 权重（卷三乙 :625，卷文与旧数据都没有）与 map 点积原语；建卡时带回这些键及出处"},
-  {"table": "material", "dimension": "toughness", "missing": ["data", "primitive"], "card": "pre_first_reader_card", "note": "同 hardness：缺 rules.materials.strengthSummary.toughness 权重与 map 点积原语；建卡时带回这些键及出处"}
+  {"table": "material", "dimension": "toughness", "missing": ["data", "primitive"], "card": "pre_first_reader_card", "note": "同 hardness：缺 rules.materials.strengthSummary.toughness 权重与 map 点积原语；建卡时带回这些键及出处"},
+  {"table": "place", "dimension": "depthM", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷五 §4.5.3 规则 1：分支取值要 first(rules)（卷二 §1.12），RX 未建；且读 surfaceRefElevationM（同缺）"},
+  {"table": "place", "dimension": "enclosed", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷五 §4.5.3 规则 1：exists(rel_within, 挂 comp_enclosure) 带关系的聚合求值未建（rx.mjs 只建无关系的 known），按组件类过滤的 filter 写法亦未建"},
+  {"table": "place", "dimension": "surfaceRefElevationM", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷五 §4.5.3 规则 1：first(rules) 与带 recursive 的 nearest(rel_contains, …) 未建"}
  ],
  "names": [
   {"name": "comp_arcane", "family": "component", "volume": "卷十五《法术与超自然》超自然组件类未建（§2.3 :174、:979 登记顶层条目 comp_arcane 及其材料维度）", "card": "pre_first_reader_card"}

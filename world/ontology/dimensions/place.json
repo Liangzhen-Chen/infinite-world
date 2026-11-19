@@ -1,0 +1,287 @@
+{
+ "$schema": "../../schemas/dimensions.schema.json",
+ "behaviors": [
+  "contain",
+  "route"
+ ],
+ "classes": {},
+ "dimensions": {
+  "accessClass": {
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "required": "always",
+   "source": "卷五 §2.1 :144；§2.2 :236 access 族；§4.13",
+   "type": "enum",
+   "vocab": "access"
+  },
+  "aperture": {
+   "domain": [
+    0,
+    1
+   ],
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "precision": 4,
+   "required": "byClass:comp_enclosure",
+   "source": "卷五 §2.1 :97（主会话裁定 1）",
+   "type": "number",
+   "unit": "fraction"
+  },
+  "areaM2": {
+   "domain": [
+    1,
+    null
+   ],
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "precision": 4,
+   "required": "always",
+   "source": "卷五 §2.1 :92；§4.1.3 规则 3",
+   "type": "number",
+   "unit": "m2"
+  },
+  "coord": {
+   "fields": {
+    "x": {
+     "domain": [
+      null,
+      null
+     ],
+     "precision": 4,
+     "type": "number",
+     "unit": "m"
+    },
+    "y": {
+     "domain": [
+      null,
+      null
+     ],
+     "precision": 4,
+     "type": "number",
+     "unit": "m"
+    }
+   },
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "required": "always",
+   "source": "卷五 §2.1 :91；卷二 §5.6",
+   "type": "struct"
+  },
+  "depthM": {
+   "derived": "卷五 §4.5.3 规则 1：skyExposure 为 0 且 surfaceRefElevationM − elevationM 大于 0 时取该差，否则为 0",
+   "domain": [
+    0,
+    12000
+   ],
+   "modifiable": false,
+   "onUnknown": "gap",
+   "owner": "卷五 §2.1",
+   "precision": 4,
+   "required": "never",
+   "source": "卷五 §2.1 :100",
+   "type": "number",
+   "unit": "m"
+  },
+  "elevationM": {
+   "domain": [
+    -12000,
+    9000
+   ],
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "precision": 4,
+   "required": "always",
+   "source": "卷五 §2.1 :94",
+   "type": "number",
+   "unit": "m"
+  },
+  "enclosed": {
+   "derived": "卷五 §4.5.3 规则 1：exists(rel_within, 挂 comp_enclosure)",
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "required": "never",
+   "source": "卷五 §2.1 :98（主会话裁定 7）",
+   "type": "boolean"
+  },
+  "forestCover": {
+   "domain": [
+    0,
+    1
+   ],
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "precision": 4,
+   "required": "always",
+   "source": "卷五 §2.1 :136；卷二 §5.6",
+   "type": "number",
+   "unit": "fraction"
+  },
+  "hiddenness": {
+   "domain": [
+    0,
+    100
+   ],
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷十七 §2.3",
+   "precision": 4,
+   "required": "always",
+   "source": "卷五 §2.1 :168（他卷，指回卷十七 §2.3）；卷二 §5.6",
+   "type": "number",
+   "unit": "score"
+  },
+  "ledgerHolder": {
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷二 §5.6",
+   "required": "always",
+   "source": "卷二 §5.6 :1781 ledgerHolder；卷六 §2.1 holder",
+   "type": "boolean"
+  },
+  "parent": {
+   "kind": "place",
+   "modifiable": false,
+   "nullable": true,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "required": "always",
+   "source": "卷五 §2.1 :90；§4.1.3 规则 1",
+   "type": "ref"
+  },
+  "regionLevel": {
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "required": "byClass:comp_region",
+   "source": "卷五 §2.1 :145；§4.14.1",
+   "type": "enum",
+   "vocab": "juris"
+  },
+  "skyExposure": {
+   "domain": [
+    0,
+    1
+   ],
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "precision": 4,
+   "required": "always",
+   "source": "卷五 §2.1 :96；§4.5.1",
+   "type": "number",
+   "unit": "fraction"
+  },
+  "surfaceRefElevationM": {
+   "derived": "卷五 §4.5.3 规则 1：skyExposure 大于 0 时取自身 elevationM，否则取 nearest(rel_contains, surfaceRefElevationM)",
+   "domain": [
+    null,
+    null
+   ],
+   "modifiable": false,
+   "onUnknown": "gap",
+   "owner": "卷五 §2.1",
+   "precision": 4,
+   "recursive": {
+    "relation": "rel_contains"
+   },
+   "required": "never",
+   "source": "卷五 §2.1 :99",
+   "type": "number",
+   "unit": "m"
+  },
+  "terrain": {
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "required": "always",
+   "source": "卷五 §2.1 :93；§2.2 :227 terrain 族封闭 10 项；卷二 §5.6 :1760",
+   "type": "enum",
+   "vocab": "terrain"
+  },
+  "underground": {
+   "derived": "depthM > 0",
+   "modifiable": false,
+   "onUnknown": "gap",
+   "owner": "卷五 §2.1",
+   "required": "never",
+   "source": "卷五 §2.1 :101（主会话裁定 7）；§4.5.3 规则 1",
+   "type": "boolean"
+  },
+  "waterAccess": {
+   "domain": {},
+   "modifiable": false,
+   "of": {
+    "type": "ref",
+    "vocab": "water"
+   },
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "required": "always",
+   "source": "卷五 §2.1 :129；§2.2 :229 water 族；卷二 §5.6",
+   "type": "set"
+  }
+ },
+ "edgeStruct": {
+  "fields": {
+   "distanceM": {
+    "domain": [
+     0,
+     null
+    ],
+    "precision": 4,
+    "type": "number",
+    "unit": "m"
+   },
+   "from": {
+    "kind": "place",
+    "type": "ref"
+   },
+   "openness": {
+    "domain": [
+     0,
+     1
+    ],
+    "precision": 4,
+    "type": "number",
+    "unit": "fraction"
+   },
+   "to": {
+    "kind": "place",
+    "type": "ref"
+   },
+   "waterway": {
+    "type": "boolean"
+   }
+  },
+  "required": [
+   "distanceM",
+   "from",
+   "to",
+   "waterway"
+  ],
+  "source": "卷五 §2.1 :193–:195 edges 节；§4.1.1；卷二 §5.6 edges 行",
+  "type": "struct"
+ },
+ "edges": [],
+ "entity": {
+  "classPrefix": "class_",
+  "idPrefix": [
+   "bld_",
+   "loc_"
+  ],
+  "instanceTable": null,
+  "singletonIds": []
+ },
+ "generated": {},
+ "kind": "place",
+ "namespace": "core",
+ "rows": {},
+ "version": 1
+}
