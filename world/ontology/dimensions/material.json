@@ -3815,6 +3815,11 @@
      "citation": null,
      "grade": "designed"
     },
+    "wearResistance": {
+     "basis": "暂定，待试玩标定：出处 Wikipedia「Cast iron」对比表：Grey cast iron (ASTM A48) Brinell 260；Brinell 260 HB（灰铸铁 ASTM A48），H=260×9.80665=2549.7 MPa；换算 wearResistance = 22 + 38×ln(H/61)/ln(1274.9/61)（H 为 MPa；锚点竹 61 MPa=22、熟铁 1274.9 MPa=60；熟铁硬度未查到直接出处，取低碳钢 130 HB 代，待核）",
+     "citation": null,
+     "grade": "designed"
+    },
     "workDifficulty": {
      "basis": "设：P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
      "citation": null,
@@ -3841,6 +3846,7 @@
    },
    "substance": "subst_metal",
    "valueMult": 10,
+   "wearResistance": 68.7,
    "workDifficulty": 45
   },
   "mat_charcoal": {
@@ -4563,6 +4569,11 @@
      "citation": null,
      "grade": "designed"
     },
+    "wearResistance": {
+     "basis": "暂定，待试玩标定：出处 Wikipedia「Hardnesses of the elements (data page)」：Copper Brinell hardness (MPa) 520；Brinell 520 MPa（取表中带注\"硬度随预处理差几百个百分点\"的那一列；另一列区间 235–878）；换算 wearResistance = 22 + 38×ln(H/61)/ln(1274.9/61)（H 为 MPa；锚点竹 61 MPa=22、熟铁 1274.9 MPa=60；熟铁硬度未查到直接出处，取低碳钢 130 HB 代，待核）",
+     "citation": null,
+     "grade": "designed"
+    },
     "workDifficulty": {
      "basis": "设：P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
      "citation": null,
@@ -4589,6 +4600,7 @@
    },
    "substance": "subst_metal",
    "valueMult": 10,
+   "wearResistance": 48.8,
    "workDifficulty": 45
   },
   "mat_cotton": {
@@ -5595,6 +5607,11 @@
      "citation": null,
      "grade": "designed"
     },
+    "wearResistance": {
+     "basis": "暂定，待试玩标定：出处 The Wood Database「American Elm」：Janka hardness 830 lbf (3,690 N)，含水率 12%；Janka 3690 N（美洲榆 American Elm），H=3690÷100=36.9 MPa；换算 wearResistance = 22 + 38×ln(H/61)/ln(1274.9/61)（H 为 MPa；锚点竹 61 MPa=22、熟铁 1274.9 MPa=60；熟铁硬度未查到直接出处，取低碳钢 130 HB 代，待核）",
+     "citation": null,
+     "grade": "designed"
+    },
     "workDifficulty": {
      "basis": "设：P3-T1 同本源成分已有值中位数（组 subst_wood，参照 mat_bamboo；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
      "citation": null,
@@ -5626,6 +5643,7 @@
    "substance": "subst_wood",
    "valueMult": 1,
    "volatility": 0,
+   "wearResistance": 15.7,
    "workDifficulty": 15
   },
   "mat_fat": {
@@ -6622,6 +6640,11 @@
      "citation": null,
      "grade": "designed"
     },
+    "wearResistance": {
+     "basis": "暂定，待试玩标定：出处 Wikipedia「Hardnesses of the elements (data page)」：Gold Brinell hardness (MPa) 189；Brinell 189 MPa（带注的那一列；另一列区间 188–245）；换算 wearResistance = 22 + 38×ln(H/61)/ln(1274.9/61)（H 为 MPa；锚点竹 61 MPa=22、熟铁 1274.9 MPa=60；熟铁硬度未查到直接出处，取低碳钢 130 HB 代，待核）",
+     "citation": null,
+     "grade": "designed"
+    },
     "workDifficulty": {
      "basis": "设：P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
      "citation": null,
@@ -6648,6 +6671,7 @@
    },
    "substance": "subst_metal",
    "valueMult": 10,
+   "wearResistance": 36.1,
    "workDifficulty": 45
   },
   "mat_granite": {
@@ -7431,6 +7455,11 @@
      "citation": null,
      "grade": "designed"
     },
+    "wearResistance": {
+     "basis": "暂定，待试玩标定：出处 Wikipedia「Hardnesses of the elements (data page)」：Lead Brinell hardness (MPa) 37.5–41.8 (cast)；Brinell 37.5–41.8 MPa（铸态），取中值 39.65 MPa；换算 wearResistance = 22 + 38×ln(H/61)/ln(1274.9/61)（H 为 MPa；锚点竹 61 MPa=22、熟铁 1274.9 MPa=60；熟铁硬度未查到直接出处，取低碳钢 130 HB 代，待核）",
+     "citation": null,
+     "grade": "designed"
+    },
     "workDifficulty": {
      "basis": "设：P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
      "citation": null,
@@ -7457,6 +7486,7 @@
    },
    "substance": "subst_metal",
    "valueMult": 10,
+   "wearResistance": 16.6,
    "workDifficulty": 45
   },
   "mat_leaf_litter": {
@@ -8670,6 +8700,11 @@
      "citation": null,
      "grade": "designed"
     },
+    "wearResistance": {
+     "basis": "暂定，待试玩标定：出处 Wikipedia「Janka hardness test」表：Red Oak (Northern) 1,290 lbf / 5,700 N（与本行极限氧所取红橡同树种）；Janka 5700 N（北方红橡 Northern Red Oak），Janka 球投影面积 100 mm²，H=5700÷100=57 MPa；换算 wearResistance = 22 + 38×ln(H/61)/ln(1274.9/61)（H 为 MPa；锚点竹 61 MPa=22、熟铁 1274.9 MPa=60；熟铁硬度未查到直接出处，取低碳钢 130 HB 代，待核）",
+     "citation": null,
+     "grade": "designed"
+    },
     "workDifficulty": {
      "basis": "设：P3-T1 同本源成分已有值中位数（组 subst_wood，参照 mat_bamboo；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
      "citation": null,
@@ -8719,6 +8754,7 @@
    "substance": "subst_wood",
    "valueMult": 1,
    "volatility": 0,
+   "wearResistance": 21.2,
    "workDifficulty": 15
   },
   "mat_paper": {
@@ -10274,6 +10310,11 @@
      "citation": null,
      "grade": "designed"
     },
+    "wearResistance": {
+     "basis": "暂定，待试玩标定：出处 Wikipedia「Hardnesses of the elements (data page)」：Silver Brinell hardness (MPa) 206；Brinell 206 MPa（带注的那一列；另一列区间 245–250）；换算 wearResistance = 22 + 38×ln(H/61)/ln(1274.9/61)（H 为 MPa；锚点竹 61 MPa=22、熟铁 1274.9 MPa=60；熟铁硬度未查到直接出处，取低碳钢 130 HB 代，待核）",
+     "citation": null,
+     "grade": "designed"
+    },
     "workDifficulty": {
      "basis": "设：P3-T1 同本源成分已有值中位数（组 subst_metal，参照 mat_wrought_iron；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
      "citation": null,
@@ -10300,6 +10341,7 @@
    },
    "substance": "subst_metal",
    "valueMult": 10,
+   "wearResistance": 37.2,
    "workDifficulty": 45
   },
   "mat_soil": {
@@ -12215,6 +12257,11 @@
      "citation": null,
      "grade": "designed"
     },
+    "wearResistance": {
+     "basis": "暂定，待试玩标定：出处 The Wood Database「Black Willow」：Janka hardness 430 lbf (1,920 N)，含水率 12%；Janka 1920 N（黑柳 Black Willow，柳条为柳属枝条，代用料，待补柳条自己的值），H=1920÷100=19.2 MPa；换算 wearResistance = 22 + 38×ln(H/61)/ln(1274.9/61)（H 为 MPa；锚点竹 61 MPa=22、熟铁 1274.9 MPa=60；熟铁硬度未查到直接出处，取低碳钢 130 HB 代，待核）",
+     "citation": null,
+     "grade": "designed"
+    },
     "workDifficulty": {
      "basis": "设：P3-T1 同本源成分已有值中位数（组 subst_wood，参照 mat_bamboo；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
      "citation": null,
@@ -12245,6 +12292,7 @@
    "substance": "subst_wood",
    "valueMult": 1,
    "volatility": 0,
+   "wearResistance": 7.5,
    "workDifficulty": 15
   },
   "mat_wrought_iron": {
