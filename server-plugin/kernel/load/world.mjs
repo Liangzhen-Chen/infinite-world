@@ -23,6 +23,7 @@ import { checkVerbRows } from '../events.mjs';
 import { checkHoldingKindRows } from '../holdings.mjs';
 import { checkTerminationTables, installTermination, TERMINATE_RULES_TABLE } from '../terminate.mjs';
 import { checkPlaceTable } from '../place.mjs';
+import { checkBodyTables } from '../validate/body-tables.mjs';
 
 export const LAYOUT = Object.freeze({
   dimensionsDir: 'world/ontology/dimensions',
@@ -128,6 +129,8 @@ export function loadWorld(root, opts = {}) {
     if (Object.hasOwn(read.rules, TERMINATE_RULES_TABLE)) domain.push(...writerCheckRows('terminate', checkTerminationTables(view, decl)));
     // 地点表的树、边校验（卷五 §4.1.3 规则 1、3、4；A5-1.2；块 6 第 6-7 张）。
     domain.push(...writerCheckRows('place', checkPlaceTable({ ...view, env: report.env }).errors));
+    // 卷四本卷表与词表族的跨字段校验（§2.1、§2.2 身体图不变量、§2.4 条目字段、§2.7 E-BODY-*、E-SPECIES-ATTR-KEYS），违者加载失败。
+    domain.push(...checkBodyTables(view, { maxChainDepth: need('bodyPartChainMaxDepth'), unbuiltFields: report.env.unbuiltFields }));
   }
   const tail = rulesReport([...checkRules(read, report.env), ...domain]);
   const syntax = (parsed.errors || []).map((e) => ({ code: e.code, severity: 'error', level: 'L0', table: 'state-owners', row: '', dim: '', path: `#${e.pointer}`, got: e.got, want: e.want }));

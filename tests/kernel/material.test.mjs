@@ -3,7 +3,7 @@
 // 设定值（designed）只验有值、级别、basis、域与约束，不验具体数（李白 11-17）。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,10 +21,12 @@ const C = ruleTable(RULES, 'kernelConstants');
 const NS = JSON.parse(readFileSync(join(ROOT, 'world/ontology/state-owners.json'), 'utf8')).rxNamespaces;
 // 派生式读规则表值、派生大类读 rules.materials.matcatRules（卷二 §2.9、§1.12 勘误 1118k31），校验器要拿到真实规则表。
 const OPTIONS = { namespaces: ['core'], displaySet: [], ns: NS, limits: { extendsMaxDepth: C.extendsMaxDepth, rxMaxDepth: C.rxMaxDepth }, rules: RULES };
-// 真实世界还有 place 表（块 6 第 6-7 张）：未建派生登记里有它的条目，按真实目录的表集合一起交校验器；它只有表头，不影响材料表的断言。
-const PLACE_TABLE = Object.freeze({ file: 'place.json', text: read('place.json') });
+// 真实目录里材料表以外的维度表（未建登记文件一份、各表共用，登记所指的表须一起交校验器）：按目录通读，不点名具体表；
+// 这些表原样交，不影响材料表的断言。
+const OTHER_TABLES = Object.freeze(readdirSync(DIR).filter((n) => n.endsWith('.json') && !n.startsWith('_') && n !== 'material.json').sort()
+  .map((file) => Object.freeze({ file, text: read(file) })));
 const load = () => ({ material: JSON.parse(read('material.json')), vocab: JSON.parse(read('_vocab.json')), units: JSON.parse(read('_units.json')), unbuilt: read('_unbuilt-derived.json') });
-const run = (w) => validateDimensions({ units: JSON.stringify(w.units), vocab: JSON.stringify(w.vocab), unbuilt: w.unbuilt, tables: [{ file: 'material.json', text: JSON.stringify(w.material) }, PLACE_TABLE] }, OPTIONS);
+const run = (w) => validateDimensions({ units: JSON.stringify(w.units), vocab: JSON.stringify(w.vocab), unbuilt: w.unbuilt, tables: [{ file: 'material.json', text: JSON.stringify(w.material) }, ...OTHER_TABLES] }, OPTIONS);
 const errs = (r) => r.errors.filter((e) => e.severity === 'error');
 const codesOf = (r, row) => errs(r).filter((e) => e.row === row).map((e) => `${e.code}:${e.dim}`).sort();
 const key = (e) => `${e.code}|${e.row}|${e.dim}`;
@@ -103,7 +105,7 @@ test('categories 由加载器按 rules.materials.matcatRules 逐行求（卷三�
 });
 
 test('未建名（李白 11-19 13:2x ②）：条件引用登记的未建名按未命中、照登不报；名字既没登记又不在未建名里即加载报错；未建名已进词表或族不符也报', () => {
-  const runR = (w, rules) => validateDimensions({ units: JSON.stringify(w.units), vocab: JSON.stringify(w.vocab), unbuilt: w.unbuilt, tables: [{ file: 'material.json', text: JSON.stringify(w.material) }, PLACE_TABLE] }, { ...OPTIONS, rules });
+  const runR = (w, rules) => validateDimensions({ units: JSON.stringify(w.units), vocab: JSON.stringify(w.vocab), unbuilt: w.unbuilt, tables: [{ file: 'material.json', text: JSON.stringify(w.material) }, ...OTHER_TABLES] }, { ...OPTIONS, rules });
   const listOf = () => RULES.materials.matcatRules.map((x) => ({ ...x }));
   const w = load();
   const ok = runR(w, RULES);
@@ -131,7 +133,7 @@ test('未建名（李白 11-19 13:2x ②）：条件引用登记的未建名按�
 });
 
 test('加载期规则分类反例：族条目缺条件、条件值不在族里、行上手填、本源成分空且一条不命中，均加载失败', () => {
-  const runR = (w, rules) => validateDimensions({ units: JSON.stringify(w.units), vocab: JSON.stringify(w.vocab), unbuilt: w.unbuilt, tables: [{ file: 'material.json', text: JSON.stringify(w.material) }, PLACE_TABLE] }, { ...OPTIONS, rules });
+  const runR = (w, rules) => validateDimensions({ units: JSON.stringify(w.units), vocab: JSON.stringify(w.vocab), unbuilt: w.unbuilt, tables: [{ file: 'material.json', text: JSON.stringify(w.material) }, ...OTHER_TABLES] }, { ...OPTIONS, rules });
   const listOf = () => RULES.materials.matcatRules.map((x) => ({ ...x }));
   const w = load();
   assert.equal(runR(w, RULES).ok, true);

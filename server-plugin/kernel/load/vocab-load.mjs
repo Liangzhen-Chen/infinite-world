@@ -56,7 +56,9 @@ export function loadVocab(vocabDoc, entityPrefixes, err) {
   return { families, index, ancestors, depth: (id) => ancestors(id).length };
 }
 
-// `_units.json`：{"units": [{id, dimension, si, calibrate?}]}（§1.4 每条的字段；外层写法卷二未定，见 docs/问题.md）。
+// `_units.json`：{"units": [{id, dimension, si | siFromRule, calibrate?}]}（§1.4 每条的字段；外层写法卷二未定，见 docs/问题.md）。
+// siFromRule（卷二 §1.4 勘误 1119k5，李白 11-19 15:5x ③）：{key: "rules.<表>.<键>", unit: <已登记单位>, invert: boolean}，si 不写数，
+// 由加载期按该规则表键（struct{num, den}，以 unit 计）派生：si = num ÷ den × unit.si，invert 为真取倒数（resolveRuleSi）。si 与 siFromRule 恰写一个。
 /** @param {unknown} unitsDoc 已解析的 _units.json @param {(...args: unknown[]) => void} err 报错回调 */
 export function loadUnits(unitsDoc, err) {
   const units = new Map();
@@ -66,10 +68,37 @@ export function loadUnits(unitsDoc, err) {
     const id = u && u.id;
     if (typeof id !== 'string' || !/^[A-Za-z][A-Za-z0-9_]*$/.test(id)) { err({ code: 'E-DIM-ID-FORMAT', table: '_units', row: String(id), got: id, want: 'unit id' }); continue; }
     if (units.has(id)) { err({ code: 'E-DIM-ID-DUPLICATE', table: '_units', row: id, got: id, want: 'unique unit id' }); continue; }
-    if (typeof u.dimension !== 'string' || u.si === undefined) err({ code: 'E-DIM-STRUCT-FIELD', table: '_units', row: id, got: Object.keys(u).sort().join(','), want: 'id, dimension, si, calibrate?' });
+    if (typeof u.dimension !== 'string' || (u.si === undefined) === (u.siFromRule === undefined)) err({ code: 'E-DIM-STRUCT-FIELD', table: '_units', row: id, got: Object.keys(u).sort().join(','), want: 'id, dimension, exactly one of si / siFromRule, calibrate?' });
     units.set(id, u);
   }
   return units;
+}
+
+const RULE_KEY_RE = /^rules\.([a-zA-Z][a-zA-Z0-9]*)\.([a-zA-Z][a-zA-Z0-9]*)$/;
+
+/**
+ * 写 siFromRule 的单位按规则表派生 si（卷二 §1.4 勘误 1119k5）：键须是 rules.<表>.<键>、取到 struct{num, den} 正整数，unit 须是已登记且有 si 的单位，
+ * invert 须是布尔；不合即 E-DIM-UNIT-UNKNOWN，该单位不收 si。只在加载期算一次，不另存数。
+ * @param {Map<string, any>} units @param {Record<string, any> | undefined} rules @param {(...args: unknown[]) => void} err
+ */
+export function resolveRuleSi(units, rules, err) {
+  for (const [id, u] of units) {
+    if (u.siFromRule === undefined) continue;
+    const f = u.siFromRule;
+    const bad = (got, want) => { err({ code: 'E-DIM-UNIT-UNKNOWN', table: '_units', row: id, got, want }); units.delete(id); };
+    const m = f && typeof f.key === 'string' ? RULE_KEY_RE.exec(f.key) : null;
+    const [, tableCode, keyName] = m || [];
+    // 调用方没交规则表、或规则目录根本没登记该表（只放内核常数表等的夹具目录）：同 world.mjs 对终止去留表的做法，不在此核、不给 si；
+    // 用到该单位换算的读者读到无 si 即拒（scheduler 同口径），不静默给值。登记了该表而键不合的照报。
+    if (m && !(rules && typeof rules === 'object' && Object.hasOwn(rules, tableCode))) continue;
+    const table = m && rules && typeof rules === 'object' ? rules[tableCode] : undefined;
+    const v = table && typeof table === 'object' ? table[keyName] : undefined;
+    const base = f && typeof f.unit === 'string' ? units.get(f.unit) : undefined;
+    if (!m || !v || !Number.isSafeInteger(v.num) || !Number.isSafeInteger(v.den) || v.num <= 0 || v.den <= 0) { bad(f, 'siFromRule.key: rules.<table>.<key> holding struct{num, den} > 0'); continue; }
+    if (!base || typeof base.si !== 'number' || typeof f.invert !== 'boolean') { bad(f, 'siFromRule.unit: registered unit with si; invert boolean'); continue; }
+    // 正向：num ÷ den 个 unit；取倒数（每年一类的率）：den ÷ (num × unit.si)。
+    u.si = f.invert ? v.den / (v.num * base.si) : (v.num * base.si) / v.den;
+  }
 }
 
 // `_units.json` 的 conversions（卷二 §1.4，封卷后勘误 1118k31）：[{from, to, divideBy, divideByUnit, basis}]，

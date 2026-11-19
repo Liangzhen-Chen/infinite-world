@@ -1,0 +1,93 @@
+{
+ "$schema": "../../schemas/dimensions.schema.json",
+ "behaviors": [
+  "carry",
+  "die",
+  "move"
+ ],
+ "capabilities": {
+  "bloodPumping": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 3, "derived": "<部位贡献加权和>", "modifiable": true, "stacking": "none", "bounds": [0, 1], "required": "never", "onUnknown": "error", "source": "卷二 §3.6 :1430", "owner": "卷四 §2.2、§4.2"},
+  "breathing": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 3, "derived": "<部位贡献加权和>", "modifiable": true, "stacking": "none", "bounds": [0, 1], "required": "never", "onUnknown": "error", "source": "卷二 §3.6 :1430", "owner": "卷四 §2.2、§4.2"},
+  "consciousness": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 3, "derived": "<部位贡献加权和>", "modifiable": true, "stacking": "none", "bounds": [0, 1], "required": "never", "onUnknown": "error", "source": "卷二 §3.6 :1430", "owner": "卷四 §2.2、§4.2、§4.11"},
+  "digestion": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 3, "derived": "<部位贡献加权和>", "modifiable": true, "stacking": "none", "bounds": [0, 1], "required": "never", "onUnknown": "error", "source": "卷二 §3.6 :1430", "owner": "卷四 §2.2、§4.2"},
+  "hearing": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 3, "derived": "<部位贡献加权和>", "modifiable": true, "stacking": "none", "bounds": [0, 1], "required": "never", "onUnknown": "error", "source": "卷二 §3.6 :1430", "owner": "卷四 §2.2、§4.2"},
+  "flying": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 3, "derived": "<部位贡献加权和>", "modifiable": true, "stacking": "none", "bounds": [0, 1], "required": "never", "onUnknown": "error", "source": "卷二 §3.6 :1430（勘误 1119k5 补第 12 项；卷四 :1560 cap_flying）", "owner": "卷四 §2.2、§4.2、§4.6"},
+  "manipulation": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 3, "derived": "<部位贡献加权和>", "modifiable": true, "stacking": "none", "bounds": [0, 1], "required": "never", "onUnknown": "error", "source": "卷二 §3.6 :1430", "owner": "卷四 §2.2、§4.2、§4.11"},
+  "moving": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 3, "derived": "<部位贡献加权和>", "modifiable": true, "stacking": "none", "bounds": [0, 1], "required": "never", "onUnknown": "error", "source": "卷二 §3.6 :1430", "owner": "卷四 §2.2、§4.2、§4.11"},
+  "sight": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 3, "derived": "<部位贡献加权和>", "modifiable": true, "stacking": "none", "bounds": [0, 1], "required": "never", "onUnknown": "error", "source": "卷二 §3.6 :1430", "owner": "卷四 §2.2、§4.2"},
+  "smell": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 3, "derived": "<部位贡献加权和>", "modifiable": true, "stacking": "none", "bounds": [0, 1], "required": "never", "onUnknown": "error", "source": "卷二 §3.6 :1430", "owner": "卷四 §2.2、§4.2.1"},
+  "speech": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 3, "derived": "<部位贡献加权和>", "modifiable": true, "stacking": "none", "bounds": [0, 1], "required": "never", "onUnknown": "error", "source": "卷二 §3.6 :1430", "owner": "卷四 §2.2、§4.2"},
+  "touch": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 3, "derived": "<部位贡献加权和>", "modifiable": true, "stacking": "none", "bounds": [0, 1], "required": "never", "onUnknown": "error", "source": "卷二 §3.6 :1430", "owner": "卷四 §2.2、§4.2.1"}
+ },
+ "classes": {},
+ "dimensions": {
+  "params": {
+   "key": {"type": "ref", "vocab": "parameter"},
+   "modifiable": false,
+   "onUnknown": "skip",
+   "owner": "卷四 §2.2",
+   "required": "never",
+   "source": "卷二 §5.4",
+   "type": "map",
+   "value": {"type": "integer", "unit": "dimensionless", "domain": [null, null]}
+  },
+  "parts": {
+   "domain": {"maxSize": 64},
+   "modifiable": false,
+   "of": {
+    "type": "struct",
+    "required": ["contributes", "id", "parent", "sizeFraction", "vital"],
+    "fields": {
+     "contributes": {"type": "map", "key": {"type": "ref", "vocab": "capability"}, "value": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4}},
+     "id": {"type": "ref", "vocab": "body_part"},
+     "parent": {"type": "ref", "vocab": "body_part", "nullable": true},
+     "sizeFraction": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4},
+     "tissueOverride": {"type": "map", "nullable": true, "key": {"type": "ref", "vocab": "tissue"}, "value": {"type": "ref", "kind": "material"}},
+     "vital": {"type": "boolean"}
+    }
+   },
+   "onUnknown": "error",
+   "owner": "卷四 §2.2、§4.2",
+   "required": "always",
+   "source": "卷二 §5.4",
+   "type": "list"
+  },
+  "tissueFractions": {
+   "key": {"type": "ref", "vocab": "tissue"},
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷四 §2.2",
+   "required": "always",
+   "source": "卷四 §2.2",
+   "type": "map",
+   "value": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4}
+  }
+ },
+ "entity": {
+  "classPrefix": "class_",
+  "idPrefix": [
+   "body_"
+  ],
+  "instanceTable": null,
+  "singletonIds": []
+ },
+ "generated": {},
+ "instanceDimensions": {
+  "partIntegrity": {
+   "bounds": [0, 1],
+   "key": {"type": "ref", "vocab": "body_part"},
+   "modifiable": true,
+   "onUnknown": "error",
+   "owner": "卷四 §2.2、§4.2.3 B-2",
+   "required": "never",
+   "source": "卷四 §2.2",
+   "stacking": "none",
+   "type": "map",
+   "value": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4}
+  }
+ },
+ "kind": "body_plan",
+ "namespace": "core",
+ "rows": {},
+ "version": 1
+}

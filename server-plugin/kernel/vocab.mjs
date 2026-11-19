@@ -10,6 +10,9 @@ import { handleOf, HandleError } from './handles/vocab-handle.mjs';
  * loadVocab 的返回值（只用到 families 与 index）。
  */
 
+/** 能力维度修正键的命名空间名（卷二 §3.6 `body.<capability>`，卷文定名，单一定义；kernelApi，bodyView 按它取修正键）。 */
+export const CAPABILITY_NAMESPACE = 'body';
+
 /** @type {null | {vocab: VocabIndex, vocabIndex: VocabIndex['index'], idIndex: Map<string, string>, tableDims: Map<string, Record<string, any>>, kindIds: Map<string, {idPrefix: string[], singletonIds: string[]}>}} */
 let installed = null;
 
@@ -32,7 +35,10 @@ export function installVocab(report) {
   for (const [kind, t] of [...report.tables].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
     const doc = t.doc || {};
     const entity = doc.entity && typeof doc.entity === 'object' ? doc.entity : {};
-    tableDims.set(kind, deepFreeze(clone(doc.dimensions || {})));
+    // 实例维度（卷二 §1.2 instanceDimensions"格式同 dimensions"）同在本表键下，修正键 `<kind>.<dimension>[<key>]` 同样适用（卷四 §2.2 partIntegrity）。
+    tableDims.set(kind, deepFreeze(clone({ ...(doc.dimensions || {}), ...(doc.instanceDimensions || {}) })));
+    // 表头 capabilities 段注册为修正键 `body.<capability>`（卷二 §3.6 :1430"加载器把它们注册为修正键"）。
+    if (doc.capabilities && typeof doc.capabilities === 'object') tableDims.set(CAPABILITY_NAMESPACE, deepFreeze(clone(doc.capabilities)));
     kindIds.set(kind, deepFreeze({
       idPrefix: Array.isArray(entity.idPrefix) ? [...entity.idPrefix] : [],
       singletonIds: Array.isArray(entity.singletonIds) ? [...entity.singletonIds] : [],

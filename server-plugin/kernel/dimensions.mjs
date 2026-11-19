@@ -41,8 +41,6 @@ const MEMO_SCOPE = 'kernel/dimensions.mjs#modified';
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 // required 策略取值（卷二 §1.2）与 precedence 缺省组名（§3.2 修正项次序）：本文件用的固定记号，单一定义。
 const REQUIRED_POLICY = Object.freeze({ byClass: 'byClass', ifPresent: 'ifPresent' });
-// 空字串作为"无来源"的标记（本文件内部）。
-const SEG = Object.freeze({ empty: '' });
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
 // ---------- 修正项来源 ----------
@@ -291,9 +289,21 @@ function orderOf(stage) {
       const d = absBig(b.fixed) - absBig(a.fixed);
       if (d !== 0n) return d > 0n ? 1 : -1;
     }
-    if (stage !== STAGE.post) { const s = cmp(a.sourceId, b.sourceId); if (s !== 0) return s; }
+    if (stage !== STAGE.post) { const s = cmpTuple(a.sourceId, b.sourceId); if (s !== 0) return s; }
     return cmp(a.id, b.id);
   };
+}
+
+// 来源 id 是代号或代号元组（卷四 §4.2.3 B-5a (a)：读入口合成项的 source.id 是复合键，按分量逐项比较与排序）：一律化成元组，
+// 单个代号即一元元组，没有 id 取 via，都没有为空元组。逐分量比，前缀相同短者在前（一元元组之间即按代号比，与原单值比较一致）。
+function sourceKey(source) {
+  if (Array.isArray(source.id)) return source.id.map(String);
+  if (typeof source.id === 'string') return [source.id];
+  return typeof source.via === 'string' ? [source.via] : [];
+}
+function cmpTuple(a, b) {
+  for (let i = 0; i < a.length && i < b.length; i++) { const c = cmp(a[i], b[i]); if (c !== 0) return c; }
+  return a.length - b.length;
 }
 
 // 叠加惩罚系数 S[n]（§3.3 :1356–1357）：只查表，n 越过表长系数为 0（唯一的越界写法，TA-M1）。
@@ -347,7 +357,7 @@ function prepareRow(engine, state, kind, id, row, clock) {
     fixed = fixedUnits(value);
   }
   const source = isObj(row.source) ? row.source : {};
-  const sourceId = typeof source.id === 'string' ? source.id : typeof source.via === 'string' ? source.via : '';
+  const sourceId = sourceKey(source);
   return {
     id: row.id, stage: row.stage, value, fixed, curve: row.curve, source, sourceId,
     stackGroup: typeof row.stackGroup === 'string' ? row.stackGroup : null,
@@ -361,7 +371,7 @@ function prepareRow(engine, state, kind, id, row, clock) {
 function dedupe(rows) {
   const bySource = new Map();
   for (const r of rows) {
-    const k = `${r.stage}\u0000${r.sourceId === SEG.empty ? `\u0000${r.id}` : r.sourceId}`;
+    const k = `${r.stage}\u0000${r.sourceId.length === 0 ? `\u0000${r.id}` : JSON.stringify(r.sourceId)}`;
     const old = bySource.get(k);
     if (!old || orderOf(r.stage)(r, old) < 0) bySource.set(k, r);
   }
@@ -468,4 +478,75 @@ export function modified(engine, state, kind, id, dimension, opts = {}) {
  */
 export function explain(engine, state, kind, id, dimension, opts = {}) {
   return evaluate(engine, state, kind, id, dimension, opts).steps;
+}
+
+// ---------- 读到登记在案的未建派生（卷二 §1.12 封卷后勘误 1118k23） ----------
+
+/**
+ * 维度 key 本身登在未建派生登记里，或它的派生式（沿派生式读到的维度递归）依赖了登记项，即真。kernel 组内与 kernelApi 共用一处
+ * （kernel/place.mjs 的 placeView、规则层 species.mjs 的 speciesView）：只有这类维度读到 E-MOD-RX 时可按未知交出，其余 E-MOD-RX 照抛。
+ * @param {{derived?: Map<string, any>, unbuilt?: Set<string>}} t 加载结果里的一张表 @param {string} key
+ * @param {Set<string>} [seen] 递归时已走过的维度（防环）
+ * @returns {boolean}
+ */
+export function dependsOnUnbuilt(t, key, seen = new Set()) {
+  if (seen.has(key)) return false;
+  seen.add(key);
+  if (t.unbuilt instanceof Set && t.unbuilt.has(key)) return true;
+  const tree = t.derived instanceof Map ? t.derived.get(key) : undefined;
+  if (tree === undefined) return false;
+  return rxDimKeys(tree).some((k) => dependsOnUnbuilt(t, splitDimKey(k).dim, seen));
+}
+
+/**
+ * kernelApi `readsUnbuilt(engine, kind, dimension)`：该表这个维度是否登记在案的未建派生或依赖了它（见 dependsOnUnbuilt）。
+ * @param {Engine} engine @param {string} kind @param {string} dimension
+ * @returns {boolean}
+ */
+export function readsUnbuilt(engine, kind, dimension) {
+  return dependsOnUnbuilt(tableOf(engine, kind), dimension);
+}
+
+// ---------- 读入口在求值时合成的派生项（卷四 §4.2.3 B-5a，提请卷二 §3.2 接收的"第六种来源"） ----------
+
+// 合成项规整：只带算好的数值 value（B-5a (b)，不带 valueRX、when），阶段与数值核对同 prepareRow。
+function prepareDerived(d, subjectId, target) {
+  if (!isObj(d) || typeof d.id !== 'string') throw new KernelError('E-MOD-STAGE', { entity: subjectId }, `${target}: derived modifier needs an id`);
+  if (!STAGES.includes(d.stage) || d.stage === STAGE.post) throw new KernelError('E-MOD-STAGE', { entity: subjectId }, `${target}: derived modifier ${d.id}: stage ${JSON.stringify(d.stage)}`);
+  if (typeof d.value !== 'number' || !Number.isFinite(d.value)) throw new KernelError('E-MOD-RX', { entity: subjectId }, `${target}: derived modifier ${d.id}: value is not a finite number`);
+  const source = isObj(d.source) ? d.source : {};
+  return {
+    id: d.id, stage: d.stage, value: d.value, fixed: fixedUnits(d.value), curve: undefined, source, sourceId: sourceKey(source),
+    stackGroup: null, priority: 0, unpenalized: d.unpenalized === true,
+  };
+}
+
+/**
+ * kernelApi `modifiedWith(engine, state, ns, subjectId, dimension, opts)`（卷四 §4.2.3 B-5a、B-7；求值管线卷二 §3.3 同一条）：
+ * 给"读入口在求值时现场合成派生项"的修正键求值。ns 是修正键的表（`<kind>`）或命名空间（`CAPABILITY_NAMESPACE`），与 dimension、opts.key 拼成修正键
+ * （未登记即 E-MOD-KEY-UNREGISTERED）。基值由调用方按卷文给出（opts.base，有限数；卷四 B-1 结构基值、B-2 完好度基值恒 1）；
+ * opts.derived 是合成项 `[{id, stage, value, source: {kind, id, via}, unpenalized?}]`，source.id 可为复合键元组；它们不登记进 state.modifiers（B-5a (c)）。
+ * 另收修正项来源按 (修正键, 主体) 交来的登记项（B-6），合成项与登记项一起去重、排全序、过九步管线并钳位截断。
+ * 返回 {fact, steps}：fact.base 是 opts.base，fact.value 是管线结果；steps 即 explain 逐段，可逐条复算。纯读，不缓存（卷四 §4.11.3 C-6）。
+ * @param {Engine} engine @param {any} state @param {string} ns @param {string} subjectId @param {string} dimension
+ * @param {{base: number, key?: string|number, derived?: any[], clock?: ReadOptions['clock']}} opts
+ */
+export function modifiedWith(engine, state, ns, subjectId, dimension, opts) {
+  const reg = registry();
+  const o = isObj(opts) ? opts : {};
+  const target = modKeyOf(reg, ns, dimension, o.key);
+  const def = reg.tableDims.get(ns)[dimension];
+  if (typeof o.base !== 'number' || !Number.isFinite(o.base)) throw new KernelError('E-MOD-RX', { entity: subjectId }, `${target}: base must be a finite number`);
+  const subjectKind = reg.idIndex.get(subjectId);
+  const rows = (Array.isArray(o.derived) ? o.derived : []).map((d) => prepareDerived(d, subjectId, target));
+  const raw = modifierSource ? modifierSource(engine, state, { target, kind: subjectKind, id: subjectId }) : [];
+  for (const row of Array.isArray(raw) ? raw : []) {
+    if (!isObj(row) || row.target !== target) continue;
+    const r = prepareRow(engine, state, subjectKind, subjectId, row, o.clock);
+    if (r) rows.push(r);
+  }
+  const { value, steps } = runPipeline(engine, o.base, dedupe(rows), def, subjectKind);
+  const unit = unitOf(def);
+  const fact = { known: true, applicable: true, value, base: o.base, source: steps.length ? 'modified' : 'derived' };
+  return { fact: Object.freeze(unit === undefined ? fact : { ...fact, unit }), steps: Object.freeze(steps) };
 }

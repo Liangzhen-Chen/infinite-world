@@ -14,6 +14,7 @@
   {"key": "diceKeyMaxQualifiers", "value": 2, "source": "卷二十七 R27-8.5 :728 骰值键 subjectId 为一个 id 后接一到两个限定成分", "basis": "骰值键复合对象段限定成分个数上限：最多两个；代码经规则表 kernelConstants 读入，不在代码里写字面量（卷二 S10 :2404，数值来自 engine.rules 即不计）"},
   {"key": "thermalLagMaxNum", "value": 1, "file": "server-plugin/kernel/calendar.mjs", "source": "卷二十 §2.2 :218 thermalLagPhase 取值域 [0, 1/4)：上界 1/4 的分子", "basis": "上界登记成常数，checkCalendarClimateTables 经 engine.rules 读入交叉乘比较，不在代码里写字面量 4"},
   {"key": "thermalLagMaxDen", "value": 4, "file": "server-plugin/kernel/calendar.mjs", "source": "卷二十 §2.2 :218 thermalLagPhase 取值域 [0, 1/4)：上界 1/4 的分母", "basis": "同 thermalLagMaxNum"},
-  {"key": "grammarMaxLength", "value": 48, "source": "卷二 §1.9 :285 代号文法 ^[a-z][a-z0-9_]{1,47}$（总长至多 48）与维度键文法 ^[a-z][a-zA-Z0-9]{0,47}$（总长至多 48）", "basis": "卷二 :285 代号与键文法长度上限；代码经规则表 kernelConstants 读入，不在代码里写字面量（卷二 S10 :2404，数值来自 engine.rules 即不计）"}
+  {"key": "grammarMaxLength", "value": 48, "source": "卷二 §1.9 :285 代号文法 ^[a-z][a-z0-9_]{1,47}$（总长至多 48）与维度键文法 ^[a-z][a-zA-Z0-9]{0,47}$（总长至多 48）", "basis": "卷二 :285 代号与键文法长度上限；代码经规则表 kernelConstants 读入，不在代码里写字面量（卷二 S10 :2404，数值来自 engine.rules 即不计）"},
+  {"key": "bodyPartChainMaxDepth", "value": 8, "file": "server-plugin/kernel/validate/body-tables.mjs", "source": "卷四 §2.2 :202 身体图不变量“无环，链深 ≤ 8”", "basis": "加载期校验器上限：从根到任一部位经过的部位个数（根算 1）不超过此数；代码经规则表 kernelConstants 读入，不在代码里写字面量（卷二 S10 :2404）"}
  ]
 }

@@ -633,8 +633,10 @@ test('param_consumed 真实仓库：如实报无运行期消费者的登记参�
   // B2-W2 起 det-math.mjs 的 BASE/SCALE/PERMILLE/BPS 经规则表 kernelConstants 读入（installFixedConstants），该四键已有消费者；
   // extendsMaxDepth 只被加载器与校验器读到，按消费者口径不算；valuation.unitValue 只有测试读。
   // rxMaxDepth 自 5-3 起被持有写者读（kernel/holdings.mjs 的 holdWhile 编译），已有人消费。
+  // bodyPartChainMaxDepth（6-4，卷四 §2.2 :202"链深 ≤ 8"）与 extendsMaxDepth 同类：只被加载期校验器 kernel/validate/body-tables.mjs 读到，按消费者口径不算。
+  // life.stages（6-4，卷四 §2.5 :306 阶段表列定义，值登在 rules.life.unbuilt）：读者 life.mjs、person.mjs 未建（6-6），如实报。
   assert.deepEqual(keys, [
-    'kernelConstants.extendsMaxDepth', 'valuation.unitValue',
+    'kernelConstants.bodyPartChainMaxDepth', 'kernelConstants.extendsMaxDepth', 'life.stages', 'valuation.unitValue',
   ]);
   for (const k of ['kernelConstants.handleRadix', 'modifiers.stackingTable', 'economyLedger.budget', 'economyLedger.alert',
     'clock.cadence', 'clock.phaseOffset', 'clock.paceFactor', 'clock.contestDefault', 'clock.reactionDepthMax', 'clock.proposalMax', 'clock.drawSites',

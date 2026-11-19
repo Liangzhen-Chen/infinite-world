@@ -8,11 +8,10 @@
 // 视图派生字段 zones、stocks 等其余各组（§2.1 视图派生字段表）随各自的卡建，本文件不给半截值。
 
 import { KernelError, codeOf } from './errors.mjs';
-import { dim } from './dimensions.mjs';
+import { dim, dependsOnUnbuilt } from './dimensions.mjs';
 import { reverseLookup } from './reverse-index.mjs';
 import { fixedUnits, fixedUnits8, fixedToNumber, atan } from './det-math.mjs';
 import { checkDef, checkValue } from './validate/types.mjs';
-import { rxChildren, splitDimKey } from './rx.mjs';
 import { T } from './handles/markers.mjs';
 import { buildE } from './handles/generated.mjs';
 
@@ -84,18 +83,7 @@ function childIndex(engine, state) {
   return out;
 }
 
-// 一个派生维度是否读到登记在案的未建派生（_unbuilt-derived.json；卷二 §1.12 封卷后勘误 1118k23）：本身未建，或公式引用链上有未建项。
-function dependsOnUnbuilt(t, key, seen = new Set()) {
-  if (seen.has(key)) return false;
-  seen.add(key);
-  if (t.unbuilt instanceof Set && t.unbuilt.has(key)) return true;
-  const tree = t.derived instanceof Map ? t.derived.get(key) : undefined;
-  if (tree === undefined) return false;
-  const keys = [];
-  const walk = (n) => { if (!isObj(n)) return; if (n.op === T.rx_op.dim && typeof n.key === 'string') keys.push(splitDimKey(n.key).dim); rxChildren(n).forEach(walk); };
-  walk(tree);
-  return keys.some((k) => dependsOnUnbuilt(t, k, seen));
-}
+// 一个派生维度是否读到登记在案的未建派生：判定只在 kernel/dimensions.mjs#dependsOnUnbuilt 一处（speciesView 共用）。
 
 /**
  * kernelApi `placeView(engine, state, placeId)`（卷五 §3.1；卷二 §2.1 第 7 行）。纯读。

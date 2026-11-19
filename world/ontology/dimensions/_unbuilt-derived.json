@@ -1,15 +1,74 @@
 {
  "version": 1,
- "note": "未建派生登记（卷二 §1.12 封卷后勘误 1118k23，依据李白 11-18 20:20 B2-W3 裁定 B）：凡 derived 按现行 RX 写不成的维度登记在这里，加载期只编可写的派生，登记项跳过不报错；没登记又编不过的仍报 E-MOD-RX。字段 table/dimension/missing/card；missing 取 primitive（缺原语）/data（缺数据）/constant（缺常数）的非空去重有序列表；card 未排期时写固定代号 pre_first_reader_card（首个读者玩法卡前，待排）。names（勘误 1118k31，李白 11-19 13:2x ②）登记别卷未建的词表条目名，只许写在规则表条件里，求值按未命中；既没登记又不在此处的名字照旧加载报错。columns（勘误 1119k3 ②，李白 11-19 12:4x 丙9、丙10）登记未建维度／未建列：他卷的 always 维度、必填列整类登记，字段与 entries 同（table/dimension/missing/card）；所指须是该表表头已声明、按行填写、required 不是 never 的维度；行上缺值放行，有值照转保留并照常校验，运行期读到缺值按未知；未登记的缺值照旧 E-DIM-REQUIRED-MISSING。",
+ "note": "未建派生登记（卷二 §1.12 封卷后勘误 1118k23，依据李白 11-18 20:20 B2-W3 裁定 B）：凡 derived 按现行 RX 写不成的维度登记在这里，加载期只编可写的派生，登记项跳过不报错；没登记又编不过的仍报 E-MOD-RX。字段 table/dimension/missing/card；missing 取 primitive（缺原语）/data（缺数据）/constant（缺常数）的非空去重有序列表；card 未排期时写固定代号 pre_first_reader_card（首个读者玩法卡前，待排）。names（勘误 1118k31，李白 11-19 13:2x ②）登记别卷未建的词表条目名，只许写在规则表条件里，求值按未命中；既没登记又不在此处的名字照旧加载报错。columns（勘误 1119k3 ②，李白 11-19 12:4x 丙9、丙10）登记未建维度／未建列：他卷的 always 维度、必填列整类登记，字段与 entries 同（table/dimension/missing/card）；所指须是该表表头已声明、按行填写、required 不是 never 的维度；行上缺值放行，有值照转保留并照常校验，运行期读到缺值按未知；未登记的缺值照旧 E-DIM-REQUIRED-MISSING。families（6-4，体例同 names；卷二勘误待写）登记所在卷未前移的词表族 {family, prefix, volume, card}；kinds 登记所在卷未前移的实体表 {kind, prefix, volume, card}；units 登记 _units.json 还不能登的单位 {unit, missing, card}：三者都只放行表头类型的引用闭合（ref/enum 指向未建族、ref 指向未建表、unit 用未建单位），不免必填核对，行上缺值仍须逐（表，维度）登 columns；行上指向未建族、未建表的值照旧被拒；族、表已建成或单位已登 _units.json 仍登记即报应删；前缀冲突 E-DIM-VOCAB-PREFIX；未登记的照旧 E-DIM-REF-MISSING、E-DIM-UNIT-UNKNOWN。fields（6-4，同一裁定，体例同 columns）登记卷文只给了条目代号、没给条目字段值的族字段 {family, field, missing, card}：该族条目缺这一字段放行、写了照常核对，运行期读到缺值按未知；族里每条都已写这一字段即报应删。",
  "entries": [
   {"table": "material", "dimension": "hardness", "missing": ["data", "primitive"], "card": "pre_first_reader_card", "note": "缺 rules.materials.strengthSummary 权重（卷三乙 :625，卷文与旧数据都没有）与 map 点积原语；建卡时带回这些键及出处"},
   {"table": "material", "dimension": "toughness", "missing": ["data", "primitive"], "card": "pre_first_reader_card", "note": "同 hardness：缺 rules.materials.strengthSummary.toughness 权重与 map 点积原语；建卡时带回这些键及出处"},
   {"table": "place", "dimension": "depthM", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷五 §4.5.3 规则 1：分支取值要 first(rules)（卷二 §1.12），RX 未建；且读 surfaceRefElevationM（同缺）"},
   {"table": "place", "dimension": "enclosed", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷五 §4.5.3 规则 1：exists(rel_within, 挂 comp_enclosure) 带关系的聚合求值未建（rx.mjs 只建无关系的 known），按组件类过滤的 filter 写法亦未建"},
-  {"table": "place", "dimension": "surfaceRefElevationM", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷五 §4.5.3 规则 1：first(rules) 与带 recursive 的 nearest(rel_contains, …) 未建"}
+  {"table": "place", "dimension": "surfaceRefElevationM", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷五 §4.5.3 规则 1：first(rules) 与带 recursive 的 nearest(rel_contains, …) 未建"},
+  {"table": "species", "dimension": "bodyDensity", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷四 §4.1.3 S-3：wsum(身体图 tissueFractions 经 tissues 映射到材料, material, density)，跨表（身体图行、材料行）加权和，现行 RX 无此原语"},
+  {"table": "species", "dimension": "effectiveBanes", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷十六 R16-5.3 单点定义；map 派生结果需聚合或集合原语"},
+  {"table": "species", "dimension": "meanMassKg", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷四 §4.1.3 S-3：bodyMassKg 分布的均值，现行 RX 无读分布参数的原语"},
+  {"table": "species", "dimension": "speciesPower", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷十六 R16-2.1：物种均值个体的战力读数（卷十三 forcePower），读入口未建"},
+  {"table": "species", "dimension": "speciesTier", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷十六 R16-2.1：speciesPower 落入 mtier 族条目区间，读入口未建"},
+  {"table": "species", "dimension": "sizeClass", "missing": ["data", "primitive"], "card": "pre_first_reader_card", "note": "卷四 §4.1.3 S-3：用卷三乙 §4.2 尺寸档规则表对 bodyVolumeL 查档；规则表与 size 族未前移（6-2），读 bodyVolumeL 亦未建"}
  ],
  "names": [
   {"name": "comp_arcane", "family": "component", "volume": "卷十五《法术与超自然》超自然组件类未建（§2.3 :174、:979 登记顶层条目 comp_arcane 及其材料维度）", "card": "pre_first_reader_card"}
  ],
- "columns": []
+ "columns": [
+  {"table": "species", "dimension": "habitats", "missing": ["data"], "card": "pre_first_reader_card", "note": "引 biome 族（未建族，卷五 §4.3）；条目未前移，行上无从填值"},
+  {"table": "species", "dimension": "lairSites", "missing": ["data"], "card": "pre_first_reader_card", "note": "引 site 族（未建族，卷五 §4.6）"},
+  {"table": "species", "dimension": "pharmSensitivity", "missing": ["data"], "card": "pre_first_reader_card", "note": "键为 pharm 族（未建族，卷二十一 §2.4）；展平后键集 = pharm 全族，族未前移即无从写全"},
+  {"table": "species", "dimension": "senses", "missing": ["data"], "card": "6-8", "note": "键为 sense 族（未建族，卷五 §4.2.1，6-8）；展平后键集 = sense 全族"},
+  {"table": "species", "dimension": "shiftStatus", "missing": ["data"], "card": "pre_first_reader_card", "note": "ref status 表（未建实体表，卷二十一）"},
+  {"table": "species", "dimension": "shiftVariant", "missing": ["data"], "card": "pre_first_reader_card", "note": "引 mvariant 族（未建族，卷十六 §2.4）"},
+  {"table": "species", "dimension": "sourceStrength", "missing": ["data"], "card": "6-8", "note": "键为 sense 族（未建族）；值单位随感官（卷五 §4.2 规则 7），登在 units 未建 sense_arrival"},
+  {"table": "species", "dimension": "sxAnchors", "missing": ["data"], "card": "pre_first_reader_card", "note": "引 sxanchor 族（未建族，卷十五 §2.3）"},
+  {"table": "species", "dimension": "sxBounds", "missing": ["data"], "card": "pre_first_reader_card", "note": "引 sxbound 族（未建族，卷十五 §2.3）"},
+  {"table": "species", "dimension": "sxDrives", "missing": ["data"], "card": "pre_first_reader_card", "note": "引 sxdrive 族（未建族，卷十五 §2.3）"},
+  {"table": "species", "dimension": "sxForm", "missing": ["data"], "card": "pre_first_reader_card", "note": "引 sxform 族（未建族，卷十五 §2.3）"},
+  {"table": "species", "dimension": "sxOrigin", "missing": ["data"], "card": "pre_first_reader_card", "note": "引 sxorigin 族（未建族，卷十五 §2.3）"},
+  {"table": "species", "dimension": "sxPowers", "missing": ["data"], "card": "pre_first_reader_card", "note": "引 sxpower 族（未建族，卷十五 §2.3）"}
+ ],
+ "kinds": [
+  {"kind": "culture", "prefix": "culture_", "volume": "卷七《信仰与文化》文化表（卷二 §1.9 实体前缀 culture_）；物种 sxCulture 引用", "card": "pre_first_reader_card"},
+  {"kind": "status", "prefix": "status_", "volume": "卷二十一《医疗疾病与身体状态》状态容器表（卷二 §1.9 实体前缀 status_；6-5）；物种 shiftStatus 引用", "card": "6-5"}
+ ],
+ "units": [
+  {"unit": "effect_param", "missing": ["constant"], "card": "pre_first_reader_card", "note": "效果调用 params 的值单位取该参数槽在效果族行登记的单位（卷二 §3.9、struct:effectCall），随槽变化，写不成一个登记单位；物种 specialAttacks 用"},
+  {"unit": "sense_arrival", "missing": ["constant"], "card": "6-8", "note": "卷四 §2.1 sourceStrength“单位随感官，即到达量的单位”（卷五 §4.2 规则 7、11），随键变化，写不成一个登记单位"}
+ ],
+ "families": [
+  {"family": "biome", "prefix": "biome_", "volume": "卷五《地点地形与资源场》§4.3 群落族（卷二 §1.9）；物种 habitats、seasonHabitatRows 引用", "card": "pre_first_reader_card"},
+  {"family": "mtier", "prefix": "mtier_", "volume": "卷十六《神怪与怪物》§2.4 档族；物种 speciesTier 引用", "card": "pre_first_reader_card"},
+  {"family": "mvariant", "prefix": "mvar_", "volume": "卷十六《神怪与怪物》§2.4 变体模板族；物种 shiftVariant 引用", "card": "pre_first_reader_card"},
+  {"family": "parameter", "prefix": "param_", "volume": "卷二《维度表规范与统一入口》§1.9 参数族；身体图 params 引用", "card": "pre_first_reader_card"},
+  {"family": "pers", "prefix": "pers_", "volume": "卷二十六《需求心理与情绪》§2.4 人格轴族；物种 personalityBias 引用", "card": "pre_first_reader_card"},
+  {"family": "pharm", "prefix": "pharm_", "volume": "卷二十一《医疗疾病与身体状态》§2.4 药性族（新族，前缀照该卷 :460 示例 pharm_dispel）；物种 pharmSensitivity 引用", "card": "pre_first_reader_card"},
+  {"family": "requirement", "prefix": "req_", "volume": "卷二《维度表规范与统一入口》§1.13 需求块族（open）；物种 containNeed 引用", "card": "pre_first_reader_card"},
+  {"family": "sense", "prefix": "sense_", "volume": "卷五《地点地形与资源场》§4.2.1 感官族（6-8）；物种 senses 引用", "card": "6-8"},
+  {"family": "site", "prefix": "site_", "volume": "卷五《地点地形与资源场》§4.6 站点类型族；物种 lairSites 引用", "card": "pre_first_reader_card"},
+  {"family": "size", "prefix": "size_", "volume": "卷三乙《物态类别与物品》§4.2 尺寸档族（6-2）；物种 sizeClass 引用", "card": "6-2"},
+  {"family": "sxanchor", "prefix": "sxa_", "volume": "卷十五《法术与超自然》§2.3 六轴之依附；物种 sxAnchors 引用", "card": "pre_first_reader_card"},
+  {"family": "sxbound", "prefix": "sxb_", "volume": "卷十五《法术与超自然》§2.3 六轴之规矩；物种 sxBounds 引用", "card": "pre_first_reader_card"},
+  {"family": "sxdrive", "prefix": "sxd_", "volume": "卷十五《法术与超自然》§2.3 六轴之驱力；物种 sxDrives 引用", "card": "pre_first_reader_card"},
+  {"family": "sxform", "prefix": "sxf_", "volume": "卷十五《法术与超自然》§2.3 六轴之形态；物种 sxForm 引用", "card": "pre_first_reader_card"},
+  {"family": "sxorigin", "prefix": "sxo_", "volume": "卷十五《法术与超自然》§2.3 六轴之本源；物种 sxOrigin 引用", "card": "pre_first_reader_card"},
+  {"family": "sxpower", "prefix": "sxp_", "volume": "卷十五《法术与超自然》§2.3 六轴之能力；物种 sxPowers 引用", "card": "pre_first_reader_card"},
+  {"family": "wardtag", "prefix": "ward_", "volume": "卷十六《神怪与怪物》§2.4 忌标签族；物种 banes、wardImmune、effectiveBanes 引用", "card": "pre_first_reader_card"}
+ ],
+ "fields": [
+  {"family": "attr", "field": "agingCurve", "missing": ["data"], "card": "6-23", "note": "卷四 §2.4 :284 条目字段；卷末只给代号（:1561），§4.3.5 只两条示例；旧世界无"},
+  {"family": "attr", "field": "heritability", "missing": ["data"], "card": "6-23", "note": "同 agingCurve"},
+  {"family": "attr", "field": "hidden", "missing": ["data"], "card": "6-23", "note": "同 agingCurve（卷末只写 attr_luck 隐藏，其余公开，未写成条目字段）"},
+  {"family": "attr", "field": "physical", "missing": ["data"], "card": "6-23", "note": "同 agingCurve"},
+  {"family": "attr", "field": "residualFactor", "missing": ["data"], "card": "6-23", "note": "同 agingCurve"},
+  {"family": "gait", "field": "drivenBy", "missing": ["data"], "card": "6-23", "note": "卷四 §2.4 gait 条目字段；卷末只给代号（:1564）"},
+  {"family": "gait", "field": "exertion", "missing": ["data"], "card": "6-23", "note": "同 drivenBy"},
+  {"family": "life_stage", "field": "adult", "missing": ["data"], "card": "6-23", "note": "卷四 §2.4 life_stage 条目字段；卷末只给代号（:1562），阶段表 §4.4.5 为示例"},
+  {"family": "life_stage", "field": "fertile", "missing": ["data"], "card": "6-23", "note": "同 adult"},
+  {"family": "sex", "field": "bears", "missing": ["data"], "card": "6-23", "note": "卷四 §2.4 sex 条目字段；卷末只给代号（:1563）"}
+ ]
 }

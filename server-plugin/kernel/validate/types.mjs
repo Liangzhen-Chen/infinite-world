@@ -65,7 +65,13 @@ export function rangeOk(domain) {
 const SHAPE = { number: 'number', integer: 'number', boolean: 'boolean', string: 'string', enum: 'string', ref: 'string', rx: 'string', set: 'array', list: 'array', curve: 'array', map: 'object', struct: 'object', distribution: 'object' };
 
 // ---------- 类型定义 ----------
-// env：{units, vocab, kinds: Set, displaySet: Set}；at：报错定位（table、row、dim、path）。
+// 已登记的未建词表族、未建实体表、未建单位（_unbuilt-derived.json families、kinds、units，由维度校验器读入 env）：只放行表头类型的引用闭合；
+// 别的调用方（规则表登记等）不带这几项即不放行。
+const unbuiltFamily = (env, fam) => env.unbuiltFamilies instanceof Map && env.unbuiltFamilies.has(fam);
+const unbuiltKind = (env, kind) => env.unbuiltKinds instanceof Map && env.unbuiltKinds.has(kind);
+const unbuiltUnit = (env, unit) => env.unbuiltUnits instanceof Set && env.unbuiltUnits.has(unit);
+
+// env：{units, vocab, kinds: Set, displaySet: Set, unbuiltFamilies?: Map, unbuiltKinds?: Map, unbuiltUnits?: Set}；at：报错定位（table、row、dim、path）。
 /**
  * @param {Record<string, unknown>} def 类型定义 @param {Record<string, unknown>} env @param {Record<string, unknown>} at
  * @param {(...args: unknown[]) => void} err @param {boolean} [top] 是否维度顶层定义
@@ -75,7 +81,7 @@ export function checkDef(def, env, at, err, top) {
   const t = def.type;
   const bad = (code, got, want) => err({ code, level: 'L1', ...at, got, want });
   if (t === T.type.number || t === T.type.integer) {
-    if (!env.units.has(def.unit)) bad('E-DIM-UNIT-UNKNOWN', def.unit, 'unit id in _units.json');
+    if (!env.units.has(def.unit) && !unbuiltUnit(env, def.unit)) bad('E-DIM-UNIT-UNKNOWN', def.unit, 'unit id in _units.json');
     const extScale = top && def.stockMode === T.code_enum.stock_mode.extScale;
     if (def.precision === undefined) { if (t === T.type.number) bad('E-DIM-SCHEMA-PRECISION', 'missing', 'decimal places within SCALE'); }
     else if (extScale ? !extPrecisionOk(def.precision) : !precisionOk(def.precision)) bad('E-DIM-SCHEMA-PRECISION', def.precision, extScale ? 'decimal places of SCALE^2 (stockMode extScale)' : 'decimal places within SCALE');
@@ -84,14 +90,14 @@ export function checkDef(def, env, at, err, top) {
   if (t === T.type.enum) {
     const fam = vocabOf(def);
     if (Array.isArray(def.values) || Array.isArray(def.enum) || Array.isArray(def.domain)) bad('E-DIM-DOMAIN-ENUM', 'inline enum', 'vocab family (no inline enums)');
-    else if (typeof fam !== 'string' || !(env.vocab.families.has(fam) || Object.hasOwn(CODE_ENUMS, fam))) bad('E-DIM-REF-MISSING', fam, 'registered vocab family or code enum');
+    else if (typeof fam !== 'string' || !(env.vocab.families.has(fam) || unbuiltFamily(env, fam) || Object.hasOwn(CODE_ENUMS, fam))) bad('E-DIM-REF-MISSING', fam, 'registered vocab family or code enum');
   }
   if (t === T.type.ref) {
     const forms = ['kind', 'kinds', 'vocab', 'dim', 'refs'].filter((k) => def[k] !== undefined);
     if (forms.length !== 1) bad('E-DIM-STRUCT-FIELD', forms.join(',') || 'none', 'exactly one of kind/kinds/vocab/dim/refs');
     for (const part of refParts(def)) {
-      if (part.kind !== undefined && !env.kinds.has(part.kind)) bad('E-DIM-REF-MISSING', part.kind, 'a loaded table kind or effect');
-      if (part.vocab !== undefined && part.vocab !== VOCAB_ANY.any && !env.vocab.families.has(part.vocab)) bad('E-DIM-REF-MISSING', part.vocab, 'registered vocab family');
+      if (part.kind !== undefined && !env.kinds.has(part.kind) && !unbuiltKind(env, part.kind)) bad('E-DIM-REF-MISSING', part.kind, 'a loaded table kind or effect');
+      if (part.vocab !== undefined && part.vocab !== VOCAB_ANY.any && !env.vocab.families.has(part.vocab) && !unbuiltFamily(env, part.vocab)) bad('E-DIM-REF-MISSING', part.vocab, 'registered vocab family');
       if (part.dim !== undefined && !env.kinds.has(part.dim)) bad('E-DIM-REF-DIM', part.dim, 'a loaded table kind');
     }
   }

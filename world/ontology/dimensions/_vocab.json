@@ -12,6 +12,24 @@
    },
    "prefix": "agg_"
   },
+  "attr": {
+   "closed": false,
+   "entries": {
+    "attr_agility": {},
+    "attr_charisma": {},
+    "attr_constitution": {},
+    "attr_intellect": {},
+    "attr_luck": {},
+    "attr_spirit": {},
+    "attr_strength": {}
+   },
+   "prefix": "attr_"
+  },
+  "body_part": {
+   "closed": false,
+   "entries": {},
+   "prefix": "bpart_"
+  },
   "budget_mode": {
    "closed": true,
    "entries": {
@@ -79,6 +97,24 @@
     }
    },
    "prefix": "cal_"
+  },
+  "capability": {
+   "closed": false,
+   "entries": {
+    "cap_blood_pumping": {"dimKey": "bloodPumping", "limitedBy": {}, "basis": "李白 11-19 15:5x 裁定②：旧数据（snapshot-20261010）无能力间依赖，limitedBy 写 {}（卷四 §2.4 :283 必写），待试玩调"},
+    "cap_breathing": {"dimKey": "breathing", "limitedBy": {}, "basis": "李白 11-19 15:5x 裁定②：旧数据无能力间依赖，limitedBy 写 {}，待试玩调"},
+    "cap_consciousness": {"dimKey": "consciousness", "limitedBy": {}, "basis": "李白 11-19 15:5x 裁定②：旧数据无能力间依赖，limitedBy 写 {}，待试玩调"},
+    "cap_digestion": {"dimKey": "digestion", "limitedBy": {}, "basis": "李白 11-19 15:5x 裁定②：旧数据无能力间依赖，limitedBy 写 {}，待试玩调"},
+    "cap_flying": {"dimKey": "flying", "limitedBy": {}, "basis": "卷四 :1560 首批条目（李白 11-19 15:5x 裁定①保留，卷二 §3.6 勘误 1119k5 补表头第 12 项）；limitedBy 同裁定②写 {}，待试玩调"},
+    "cap_hearing": {"dimKey": "hearing", "limitedBy": {}, "basis": "李白 11-19 15:5x 裁定②：旧数据无能力间依赖，limitedBy 写 {}，待试玩调"},
+    "cap_manipulation": {"dimKey": "manipulation", "limitedBy": {}, "basis": "李白 11-19 15:5x 裁定②：旧数据无能力间依赖，limitedBy 写 {}，待试玩调"},
+    "cap_moving": {"dimKey": "moving", "limitedBy": {}, "basis": "李白 11-19 15:5x 裁定②：旧数据无能力间依赖，limitedBy 写 {}，待试玩调"},
+    "cap_sight": {"dimKey": "sight", "limitedBy": {}, "basis": "李白 11-19 15:5x 裁定②：旧数据无能力间依赖，limitedBy 写 {}，待试玩调"},
+    "cap_smell": {"dimKey": "smell", "limitedBy": {}, "basis": "卷四 §4.2.1 :521–:524"},
+    "cap_speech": {"dimKey": "speech", "limitedBy": {}, "basis": "李白 11-19 15:5x 裁定②：旧数据无能力间依赖，limitedBy 写 {}，待试玩调"},
+    "cap_touch": {"dimKey": "touch", "limitedBy": {}, "basis": "卷四 §4.2.1 :521–:524"}
+   },
+   "prefix": "cap_"
   },
   "class": {
    "closed": false,
@@ -313,6 +349,16 @@
    },
    "prefix": "due_"
   },
+  "gait": {
+   "closed": false,
+   "entries": {
+    "gait_climb": {},
+    "gait_fly": {},
+    "gait_swim": {},
+    "gait_walk": {}
+   },
+   "prefix": "gait_"
+  },
   "holding_kind": {
    "closed": false,
    "entries": {
@@ -370,6 +416,16 @@
    "closed": false,
    "entries": {},
    "prefix": "juris_"
+  },
+  "life_stage": {
+   "closed": false,
+   "entries": {
+    "lstage_adult": {},
+    "lstage_elder": {},
+    "lstage_infant": {},
+    "lstage_juvenile": {}
+   },
+   "prefix": "lstage_"
   },
   "matcat": {
    "closed": false,
@@ -472,6 +528,11 @@
    },
    "prefix": "rel_"
   },
+  "renewable": {
+   "closed": false,
+   "entries": {},
+   "prefix": "renewable_"
+  },
   "resfam": {
    "closed": true,
    "entries": {
@@ -522,6 +583,15 @@
     }
    },
    "prefix": "ssch_"
+  },
+  "sex": {
+   "closed": false,
+   "entries": {
+    "sex_female": {},
+    "sex_male": {},
+    "sex_none": {}
+   },
+   "prefix": "sex_"
   },
   "sink": {
    "closed": false,
@@ -711,6 +781,21 @@
     "terrain_river": {}
    },
    "prefix": "terrain_"
+  },
+  "taxon": {
+   "closed": false,
+   "entries": {},
+   "prefix": "taxon_"
+  },
+  "tissue": {
+   "closed": false,
+   "entries": {},
+   "prefix": "tissue_"
+  },
+  "trait": {
+   "closed": false,
+   "entries": {},
+   "prefix": "trait_"
   },
   "transferability": {
    "closed": true,

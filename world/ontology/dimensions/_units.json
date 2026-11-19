@@ -10,6 +10,11 @@
  ],
  "units": [
   {
+   "dimension": "volume",
+   "id": "L",
+   "si": 0.001
+  },
+  {
    "dimension": "volume_per_mass",
    "id": "L_per_kg",
    "si": 0.001
@@ -27,6 +32,12 @@
   {
    "dimension": "thermal_conductivity",
    "id": "W_per_m_K",
+   "si": 1
+  },
+  {
+   "calibrate": true,
+   "dimension": "axis",
+   "id": "axis",
    "si": 1
   },
   {
@@ -49,6 +60,16 @@
    "dimension": "temperature_gradient",
    "id": "celsius_per_m",
    "si": 1
+  },
+  {
+   "dimension": "length",
+   "id": "cm",
+   "si": 0.01
+  },
+  {
+   "dimension": "area",
+   "id": "cm2",
+   "si": 0.0001
   },
   {
    "dimension": "count",
@@ -93,6 +114,11 @@
    "si": 0.001
   },
   {
+   "dimension": "ratio",
+   "id": "hour_per_day",
+   "si": 0.041666666666666664
+  },
+  {
    "calibrate": true,
    "dimension": "grade",
    "id": "insul_grade",
@@ -102,6 +128,11 @@
    "dimension": "specific_heat",
    "id": "kJ_per_kg_K",
    "si": 1000
+  },
+  {
+   "dimension": "mass",
+   "id": "kg",
+   "si": 1
   },
   {
    "dimension": "density",
@@ -128,6 +159,11 @@
    "dimension": "area",
    "id": "m2",
    "si": 1
+  },
+  {
+   "dimension": "speed",
+   "id": "m_per_minute",
+   "si": 0.016666666666666666
   },
   {
    "dimension": "time",
@@ -166,6 +202,16 @@
    "dimension": "score",
    "id": "score",
    "si": 1
+  },
+  {
+   "dimension": "rate",
+   "id": "per_year",
+   "siFromRule": {"key": "rules.astro.yearDays", "unit": "day", "invert": true}
+  },
+  {
+   "dimension": "time",
+   "id": "year",
+   "siFromRule": {"key": "rules.astro.yearDays", "unit": "day", "invert": false}
   }
  ]
 }

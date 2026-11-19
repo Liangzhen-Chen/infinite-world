@@ -6,7 +6,7 @@
 // 表头声明的命名条件（namedConditions，如 byDigestible）与逐格来源级别（cellGrades，卷三甲 M-22）按声明通用处理。
 
 import { parseJsonStrict } from '../load/json-text.mjs';
-import { loadVocab, loadUnits, loadUnitConversions } from '../load/vocab-load.mjs';
+import { loadVocab, loadUnits, loadUnitConversions, resolveRuleSi } from '../load/vocab-load.mjs';
 import { flattenTable } from '../load/flatten.mjs';
 import { checkDef, splitKey, isErrorCode, CODE_RE, KEY_RE, CODE_ENUMS, TYPES, DOMAIN_OPTIONAL, T, markersOf } from './types.mjs';
 import { checkRows, checkPrecedence, checkComponents, checkRequired, requiredSyntaxOk, valueOf } from './rows.mjs';
@@ -74,6 +74,8 @@ export function validateDimensions(sources, options) {
   const entityPrefixes = [...new Set(tables.flatMap((t) => (Array.isArray(t.entity.idPrefix) ? t.entity.idPrefix : [])))].sort();
   const vocab = loadVocab(vocabDoc, entityPrefixes, err);
   const units = loadUnits(unitsDoc, err);
+  // 写 siFromRule 的单位（如 year、per_year 取 rules.astro.yearDays 的回归年，卷二 §1.4 勘误 1119k5）：加载期按规则表派生 si。
+  resolveRuleSi(units, options.rules, err);
   const unitConversions = loadUnitConversions(unitsDoc, units, err);
   if (vocab.families.has(KIND_FAMILY)) {
     const fam = vocab.families.get(KIND_FAMILY);
@@ -104,10 +106,18 @@ export function validateDimensions(sources, options) {
     }
   }
 
+  // ---------- L1 未建词表族、未建实体表、未建单位登记（同文件 families、kinds、units；6-4） ----------
+  // 只放行表头类型的引用闭合核对：ref/enum 指向已登记的未建族、ref 指向已登记的未建实体表、unit 用已登记的未建单位。
+  // 不免必填核对：行上缺值放行仍须逐（表，维度）登在 columns（1119k3）；行上引用未建族、未建表的值照旧被拒（没有条目可指）。
+  const unbuiltFamilies = readUnbuiltFamilies(unbuiltDoc, vocab, entityPrefixes, err);
+  const unbuiltFields = readUnbuiltFields(unbuiltDoc, vocab, err);
+  const unbuiltKinds = readUnbuiltKinds(unbuiltDoc, tables, vocab, entityPrefixes, err);
+  const unbuiltUnits = readUnbuiltUnits(unbuiltDoc, units, err);
+
   // ---------- L1 表头 ----------
   const kinds = new Set([...tables.map((t) => t.kind), T.id_kind.effect]);
   const tableDims = new Map(tables.map((t) => [t.kind, t.doc.dimensions]));
-  const env = { units, unitConversions, vocab, kinds, idIndex, tableDims, displaySet: new Set(options.displaySet), compiled: new Map() };
+  const env = { units, unitConversions, vocab, kinds, idIndex, tableDims, displaySet: new Set(options.displaySet), compiled: new Map(), unbuiltFamilies, unbuiltFields, unbuiltKinds, unbuiltUnits };
   for (const t of tables) checkHeader(t, env, err);
 
   // RX 编译用的维度表：全部表的维度键；同名维度在不同表类型不同即标为歧义（rx.mjs 编到它时报 E-MOD-RX）。
@@ -200,6 +210,97 @@ function readUnbuiltRegistry(doc, tables, err) {
     if (m.has(entry.dimension)) { bad('E-DIM-DUPLICATE-KEY', entry.dimension, 'one registry entry per (table, dimension)'); return; }
     m.set(entry.dimension, entry);
     out.set(t.kind, m);
+  });
+  return out;
+}
+
+// 未建词表族登记（同文件 families）：[{family, prefix, volume, card}]，登记一个所在卷未前移、而本卷表头已要引用的词表族。
+// 族名合代号文法、前缀合族前缀文法且不与已登记族或实体前缀冲突（E-DIM-VOCAB-PREFIX，同 loadVocab 口径）；族已在 _vocab.json 建成仍登记即报
+// "应删"（E-DIM-STRUCT-FIELD）；重复 E-DIM-DUPLICATE-KEY。出错的条目不放行。返回 Map<族名, 前缀>。
+function readUnbuiltFamilies(doc, vocab, entityPrefixes, err) {
+  const out = new Map();
+  const list = isObj(doc) && doc.families !== undefined ? doc.families : [];
+  const bad = (i, code, got, want) => err({ code, level: 'L1', table: '_unbuilt-derived', row: '', dim: '', path: `_unbuilt-derived.json#/families/${i}`, got, want });
+  if (!Array.isArray(list)) { bad('', 'E-DIM-STRUCT-FIELD', list, 'families array'); return out; }
+  const clash = (a, b) => a.startsWith(b) || b.startsWith(a);
+  list.forEach((e, i) => {
+    if (!isObj(e) || typeof e.family !== 'string' || !CODE_RE.test(e.family) || typeof e.prefix !== 'string' || !CODE_RE.test(e.prefix + 'x')
+      || typeof e.volume !== 'string' || !e.volume || typeof e.card !== 'string' || !CARD_CODE_RE.test(e.card)) { bad(i, 'E-DIM-STRUCT-FIELD', e, '{family, prefix, volume, card}'); return; }
+    if (vocab.families.has(e.family)) { bad(i, 'E-DIM-STRUCT-FIELD', e.family, 'family already built in _vocab.json: remove it from families'); return; }
+    if (out.has(e.family)) { bad(i, 'E-DIM-DUPLICATE-KEY', e.family, 'one entry per family'); return; }
+    const taken = [...[...vocab.families.values()].map((f) => f.prefix), ...entityPrefixes, ...out.values()];
+    const hit = taken.find((p) => clash(e.prefix, p));
+    if (hit !== undefined) { bad(i, 'E-DIM-VOCAB-PREFIX', e.prefix, `no overlap with registered prefix ${hit}`); return; }
+    out.set(e.family, e.prefix);
+  });
+  return out;
+}
+
+// 未建条目字段登记（同文件 fields）：[{family, field, missing, card}]，卷文只给了条目代号、没给某个条目字段值的族字段整类登记。
+// 族须已登记、字段合键文法，missing、card 文法同 entries；族里每条都已写这一字段即报"应删"（E-DIM-STRUCT-FIELD）；重复 E-DIM-DUPLICATE-KEY。
+// 本函数只核登记本身；字段是不是该族条目字段、缺这一字段的条目放行，由读该族条目字段的校验处按返回的 Map<族, Set<字段>> 办。
+function readUnbuiltFields(doc, vocab, err) {
+  const out = new Map();
+  const list = isObj(doc) && doc.fields !== undefined ? doc.fields : [];
+  const bad = (i, code, got, want) => err({ code, level: 'L1', table: '_unbuilt-derived', row: '', dim: '', path: `_unbuilt-derived.json#/fields/${i}`, got, want });
+  if (!Array.isArray(list)) { bad('', 'E-DIM-STRUCT-FIELD', list, 'fields array'); return out; }
+  list.forEach((e, i) => {
+    const missing = isObj(e) ? e.missing : undefined;
+    if (!isObj(e) || typeof e.family !== 'string' || typeof e.field !== 'string' || !KEY_RE.test(e.field) || typeof e.card !== 'string' || !CARD_CODE_RE.test(e.card)) { bad(i, 'E-DIM-STRUCT-FIELD', e, '{family, field, missing, card}'); return; }
+    if (!Array.isArray(missing) || !missing.length || missing.some((m) => !UNBUILT_MISSING.includes(m))
+      || new Set(missing).size !== missing.length || missing.some((m, j) => j > 0 && cmp(missing[j - 1], m) >= 0)) { bad(i, 'E-DIM-DOMAIN-ENUM', missing, UNBUILT_MISSING.join('|') + ' (non-empty, unique, sorted)'); return; }
+    const fam = vocab.families.get(e.family);
+    if (!fam) { bad(i, 'E-DIM-REF-MISSING', e.family, 'registered vocab family'); return; }
+    const set = out.get(e.family) || new Set();
+    if (set.has(e.field)) { bad(i, 'E-DIM-DUPLICATE-KEY', `${e.family}.${e.field}`, 'one entry per (family, field)'); return; }
+    const entries = Object.values(isObj(fam.entries) ? fam.entries : {});
+    if (entries.length && entries.every((x) => isObj(x) && Object.hasOwn(x, e.field))) { bad(i, 'E-DIM-STRUCT-FIELD', `${e.family}.${e.field}`, 'every entry already has this field: remove it from fields'); return; }
+    set.add(e.field);
+    out.set(e.family, set);
+  });
+  return out;
+}
+
+// 未建实体表登记（同文件 kinds）：[{kind, prefix, volume, card}]，登记一张所在卷未前移、而本卷表头已要 ref 的实体表（卷二 §1.2 kind）。
+// 表名合代号文法、前缀合实体前缀文法且不与已载入表的实体前缀或词表族前缀冲突（E-DIM-VOCAB-PREFIX）；该表已载入仍登记即报"应删"（E-DIM-STRUCT-FIELD）；
+// 重复 E-DIM-DUPLICATE-KEY。出错的条目不放行。只放行表头 ref 的引用闭合，行上指向它的值照旧被拒（表里没有行）。返回 Map<kind, 前缀>。
+function readUnbuiltKinds(doc, tables, vocab, entityPrefixes, err) {
+  const out = new Map();
+  const list = isObj(doc) && doc.kinds !== undefined ? doc.kinds : [];
+  const bad = (i, code, got, want) => err({ code, level: 'L1', table: '_unbuilt-derived', row: '', dim: '', path: `_unbuilt-derived.json#/kinds/${i}`, got, want });
+  if (!Array.isArray(list)) { bad('', 'E-DIM-STRUCT-FIELD', list, 'kinds array'); return out; }
+  const loaded = new Set(tables.map((t) => t.kind));
+  const clash = (a, b) => a.startsWith(b) || b.startsWith(a);
+  list.forEach((e, i) => {
+    if (!isObj(e) || typeof e.kind !== 'string' || !CODE_RE.test(e.kind) || typeof e.prefix !== 'string' || !CODE_RE.test(e.prefix + 'x')
+      || typeof e.volume !== 'string' || !e.volume || typeof e.card !== 'string' || !CARD_CODE_RE.test(e.card)) { bad(i, 'E-DIM-STRUCT-FIELD', e, '{kind, prefix, volume, card}'); return; }
+    if (loaded.has(e.kind)) { bad(i, 'E-DIM-STRUCT-FIELD', e.kind, 'table already loaded: remove it from kinds'); return; }
+    if (out.has(e.kind)) { bad(i, 'E-DIM-DUPLICATE-KEY', e.kind, 'one entry per kind'); return; }
+    const taken = [...entityPrefixes, ...[...vocab.families.values()].map((f) => f.prefix), ...out.values()];
+    const hit = taken.find((p) => clash(e.prefix, p));
+    if (hit !== undefined) { bad(i, 'E-DIM-VOCAB-PREFIX', e.prefix, `no overlap with registered prefix ${hit}`); return; }
+    out.set(e.kind, e.prefix);
+  });
+  return out;
+}
+
+// 未建单位登记（同文件 units）：[{unit, missing, card, note}]，登记表头要用、而 _units.json 还不能登（卷文未定换算或矛盾、或单位随键变化写不成一个）的单位代号。
+// 代号合单位文法；已在 _units.json 登记仍登记即报"应删"（E-DIM-STRUCT-FIELD）；missing、card 文法同 entries；重复 E-DIM-DUPLICATE-KEY。
+// 只放行表头 unit 的存在核对（E-DIM-UNIT-UNKNOWN）；不参与任何换算（没有 si，派生式换算照旧要 conversions）。返回 Set<unit>。
+const UNIT_RE = /^[A-Za-z][A-Za-z0-9_]*$/;
+function readUnbuiltUnits(doc, units, err) {
+  const out = new Set();
+  const list = isObj(doc) && doc.units !== undefined ? doc.units : [];
+  const bad = (i, code, got, want) => err({ code, level: 'L1', table: '_unbuilt-derived', row: '', dim: '', path: `_unbuilt-derived.json#/units/${i}`, got, want });
+  if (!Array.isArray(list)) { bad('', 'E-DIM-STRUCT-FIELD', list, 'units array'); return out; }
+  list.forEach((e, i) => {
+    const missing = isObj(e) ? e.missing : undefined;
+    if (!isObj(e) || typeof e.unit !== 'string' || !UNIT_RE.test(e.unit) || typeof e.card !== 'string' || !CARD_CODE_RE.test(e.card)) { bad(i, 'E-DIM-STRUCT-FIELD', e, '{unit, missing, card}'); return; }
+    if (!Array.isArray(missing) || !missing.length || missing.some((m) => !UNBUILT_MISSING.includes(m))
+      || new Set(missing).size !== missing.length || missing.some((m, j) => j > 0 && cmp(missing[j - 1], m) >= 0)) { bad(i, 'E-DIM-DOMAIN-ENUM', missing, UNBUILT_MISSING.join('|') + ' (non-empty, unique, sorted)'); return; }
+    if (units.has(e.unit)) { bad(i, 'E-DIM-STRUCT-FIELD', e.unit, 'unit already in _units.json: remove it from units'); return; }
+    if (out.has(e.unit)) { bad(i, 'E-DIM-DUPLICATE-KEY', e.unit, 'one entry per unit'); return; }
+    out.add(e.unit);
   });
   return out;
 }
@@ -509,10 +610,25 @@ function buildRuleIndexes(t, env, options, err) {
   t.ruleIndexes = out;
 }
 
+// 表头里与 dimensions 同格式的两节（卷二 §1.2 `instanceDimensions`"格式同 dimensions"；§3.6 身体图表头 `capabilities` 段每项同为维度定义），
+// 与 dimensions 走同一套表头校验；节不存在即跳过。
+const HEADER_SECTIONS = Object.freeze(['dimensions', 'instanceDimensions', 'capabilities']);
+
 function checkHeader(t, env, err) {
   const { doc, kind, file } = t;
   const dims = doc.dimensions;
-  const at = (dim, sub) => ({ table: kind, row: '', dim, path: `${file}#/dimensions/${dim}${sub ? '/' + sub : ''}` });
+  for (const section of HEADER_SECTIONS) {
+    const defs = section === HEADER_SECTIONS[0] ? dims : doc[section];
+    if (defs === undefined) continue;
+    if (!isObj(defs)) { err({ code: 'E-DIM-STRUCT-FIELD', level: 'L1', table: kind, row: '', dim: section, path: `${file}#/${section}`, got: typeof defs, want: `${section} object` }); continue; }
+    checkHeaderSection(defs, section, t, env, err);
+  }
+  checkHeaderPrecedence(t, err);
+}
+
+function checkHeaderSection(dims, section, t, env, err) {
+  const { kind, file } = t;
+  const at = (dim, sub) => ({ table: kind, row: '', dim, path: `${file}#/${section}/${dim}${sub ? '/' + sub : ''}` });
   for (const key of Object.keys(dims).sort()) {
     const def = dims[key];
     const bad = (code, sub, got, want, level) => err({ code, level: level || 'L1', ...at(key, sub), got, want });
@@ -537,6 +653,11 @@ function checkHeader(t, env, err) {
     if ((sm === T.code_enum.stock_mode.remainder) !== (def.remDenominator !== undefined)) bad('E-DIM-STRUCT-FIELD', 'remDenominator', def.remDenominator, 'remDenominator exactly when stockMode is remainder');
     if (def.source === undefined || def.owner === undefined) bad('W-DIM-SOURCE', 'source', [def.source, def.owner].map(String).join(','), 'source and owner');
   }
+}
+
+function checkHeaderPrecedence(t, err) {
+  const { doc, kind, file } = t;
+  const dims = doc.dimensions;
   const groups = doc.precedenceGroups;
   const hasClasses = isObj(doc.classes) && Object.keys(doc.classes).length > 0;
   if (hasClasses && !(isObj(groups) && Array.isArray(groups.default))) err({ code: 'E-DIM-PRECEDENCE-GROUP', level: 'L2', table: kind, row: '', dim: 'precedenceGroups', path: `${file}#/precedenceGroups`, got: isObj(groups) ? Object.keys(groups).sort().join(',') : groups, want: 'precedenceGroups.default when class rows exist' });

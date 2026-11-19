@@ -1,0 +1,5 @@
+{
+ "rows": [
+  {"key": "unbuilt", "value": ["stages"], "grade": "designed", "source": "卷四 §2.5 :306 rules.life.stages；§4.4 L-1 :639", "basis": "卷文只给阶段表的形状与 E-LIFE-STAGES 逐行检查（:374），§4.4.5 :654 的四行数值标明是示例；旧世界没有阶段表；不编数，读到按未知（卷二 §1.6）。读者 life.mjs、person.mjs 未建（6-6）"}
+ ]
+}

@@ -1,0 +1,6 @@
+{
+ "rows": [
+  {"key": "integrity", "value": {"lostBelow": 0}, "file": "server-plugin/body.mjs", "grade": "designed", "source": "卷四 §2.5 :304 rules.body.integrity.lostBelow", "basis": "李白 11-19 15:5x 裁定②：卷文只给键与形状，旧世界数据（snapshot-20261010）没有部位完好度阈值，取 0（完好度降到 0 即视为丧失），待试玩调"},
+  {"key": "unbuilt", "value": [], "file": "server-plugin/body.mjs", "grade": "designed", "source": "卷四 §2.5（体例同 rules.calendar.unbuilt）", "basis": "本表现无未建键；保留空表，日后有未建键登在此处、bodyView 读到按未知"}
+ ]
+}

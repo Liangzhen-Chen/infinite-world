@@ -248,10 +248,26 @@
     {
      "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
      "rev": 46
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 47
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 48
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 49
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 50
     }
    ],
-   "print": "6957de0bafe09f5f4e99b8076e8b37ed6ed3507f87ba8a065eddacb8d9ad45c3",
-   "rev": 46,
+   "print": "5f759e125fe279d897ca5fb8c8015edbbba68918d19fc0d2c5e9ba21a18bc819",
+   "rev": 50,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -621,10 +637,26 @@
     {
      "ref": "共用检测器 path_access 改动（6-0 改一轮：解构不计带 readerSystems 的条目）；本类别条目判定口径不变",
      "rev": 41
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 42
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 43
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 44
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 45
     }
    ],
-   "print": "e07e459bd401fd710eb641d2a6d6ed2b2a685b7b6c5bacf3f45dc1901b02438f",
-   "rev": 41,
+   "print": "54b0175d7c9240b7384dcdd98e5a5a932d46ac3a665d5b5f121c4e328bb6d72f",
+   "rev": 45,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1013,10 +1045,26 @@
     {
      "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
      "rev": 38
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 39
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 40
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 41
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 42
     }
    ],
-   "print": "d523b002c4b90ddc6fdb6c49f9f5dacb279ea0795be2b2f0d59dda93e98a9988",
-   "rev": 38,
+   "print": "21f5d33727fc2f85df2fef311044de35054cb0dc10dd426cd2384efda4d6cb61",
+   "rev": 42,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1326,10 +1374,26 @@
     {
      "ref": "块 6 第 6-0 张（主会话自定裁定，李白 11-19 13:50 门槛）：lit_scope entityPrefix 字串恰等于已登记维度表 kind（表类名）不计，前缀匹配照旧；用例 instance_name-41、42",
      "rev": 54
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 55
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 56
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 57
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 58
     }
    ],
-   "print": "bf1fe5e2a30aafd376a7870ec339b3d276e3300f511b02c02df96cdad9811f24",
-   "rev": 54,
+   "print": "1a0afd319289548dc2d91dc05bef629d840ec99136e71730fea5cb983edc06be",
+   "rev": 58,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1592,10 +1656,26 @@
     {
      "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
      "rev": 39
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 40
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 41
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 42
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 43
     }
    ],
-   "print": "d523b002c4b90ddc6fdb6c49f9f5dacb279ea0795be2b2f0d59dda93e98a9988",
-   "rev": 39,
+   "print": "21f5d33727fc2f85df2fef311044de35054cb0dc10dd426cd2384efda4d6cb61",
+   "rev": 43,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -2211,10 +2291,26 @@
     {
      "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
      "rev": 39
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 40
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 41
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 42
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 43
     }
    ],
-   "print": "d523b002c4b90ddc6fdb6c49f9f5dacb279ea0795be2b2f0d59dda93e98a9988",
-   "rev": 39,
+   "print": "21f5d33727fc2f85df2fef311044de35054cb0dc10dd426cd2384efda4d6cb61",
+   "rev": 43,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -2353,10 +2449,26 @@
     {
      "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
      "rev": 31
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 32
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 33
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 34
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 35
     }
    ],
-   "print": "aa051a809ddfc5ace531add9d36f788dbc4686f3a59618f43355b5862cd12707",
-   "rev": 31,
+   "print": "861fa0262c7cf79cad51f156437c9b612375d35a4e7868ebd6f013f98f48a76c",
+   "rev": 35,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -2591,10 +2703,26 @@
     {
      "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
      "rev": 55
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 56
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 57
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 58
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 59
     }
    ],
-   "print": "83d91028a5f9c363f7528bdb1c7472cf968df68d5dc3c3acaf20e0cd78a75cda",
-   "rev": 55,
+   "print": "3804fc2f4dac4acc534cd7adf0d7b394eff2e26788870b357a01214779e0ae2d",
+   "rev": 59,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -2794,10 +2922,26 @@
     {
      "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
      "rev": 18
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 19
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 20
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 21
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 22
     }
    ],
-   "print": "3e2b8d2907eb0fceb03cd5ee97b069774acd841bef03037cca9ff2f5461756bb",
-   "rev": 18,
+   "print": "185b6b96ff7345dea9cbd63433f4a4a54665c636b49eb55d0e6d59bbe9b80584",
+   "rev": 22,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -2995,10 +3139,26 @@
     {
      "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
      "rev": 44
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 45
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 46
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 47
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 48
     }
    ],
-   "print": "6957de0bafe09f5f4e99b8076e8b37ed6ed3507f87ba8a065eddacb8d9ad45c3",
-   "rev": 44,
+   "print": "5f759e125fe279d897ca5fb8c8015edbbba68918d19fc0d2c5e9ba21a18bc819",
+   "rev": 48,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -3068,10 +3228,26 @@
     {
      "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
      "rev": 15
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 16
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 17
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 18
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 19
     }
    ],
-   "print": "ad2c523bcaeef084df04657025be1b91128c29e9161b2808108637043cb74865",
-   "rev": 15,
+   "print": "03f7376eca724e781dc99431d82abaf2eaaef4af2f8a2afde8554dbbd3b89b4c",
+   "rev": 19,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -3398,10 +3574,26 @@
     {
      "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
      "rev": 33
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 34
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 35
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 36
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "rev": 37
     }
    ],
-   "print": "aa051a809ddfc5ace531add9d36f788dbc4686f3a59618f43355b5862cd12707",
-   "rev": 33,
+   "print": "861fa0262c7cf79cad51f156437c9b612375d35a4e7868ebd6f013f98f48a76c",
+   "rev": 37,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
