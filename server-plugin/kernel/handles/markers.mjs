@@ -95,6 +95,39 @@ export const VOCAB_FAMILIES = Object.freeze(['class', 'component', 'vstatus']);
 // 表 kind 之外的伪类（卷二 §1.5 :182：`kind` 取 22 类或伪类 `effect`，即 _effects.json 的族）。
 export const ID_KINDS = Object.freeze(['effect']);
 
+// 效果族行引用的词表族名（卷二 §3.9 :1459–:1482：`requirement` 需求块 §1.13、`consent.power` 的 ref vocab power、`params` 的 ref vocab parameter）与族 id 前缀 `eff_`（§1.5 :183）。
+// verb：事件输出的 `verb`（:1479 写 verbs.json；现行动词是词表 verb 族，行字段见卷二十四 §2.2 表 B，events.mjs 同取该族）。
+export const EFFECT_VOCAB_FAMILIES = Object.freeze(['parameter', 'requirement', 'power', 'verb']);
+export const EFFECT_ID_PREFIX = 'eff_';
+// 效果族 RX 里除调用参数外的唯一内置变量（卷二 §3.9 :1479：`magnitude`，`magnitudeRX` 的求值结果）。
+export const EFFECT_MAGNITUDE = 'magnitude';
+// 效果族行里 RX 字段的后缀与调用参数表字段名（卷二 §3.9 :1479：`magnitudeRX/valueRX/paramsRX`）：`<名>RX` 求值后输出为 `<名>`，`paramsRX` 输出为 `params`。
+export const EFFECT_RX_SUFFIX = 'RX';
+export const EFFECT_PARAMS_RX = 'paramsRX';
+// 效果族行（:1459–:1477 示例）与行内各结构的字段名；本文件是定义源，别处只引这些导出，不手写字段名。
+// 行字段里 `params` 缺写另报 E-EFF-PARAM（:1480），故单列。
+export const EFFECT_ROW_FIELDS = Object.freeze(['family', 'targetSelector', 'requirement', 'magnitudeRX', 'outputs', 'consent', 'cost', 'params', 'cooldownDays', 'basis', 'status']);
+export const EFFECT_ROW_REQUIRED = Object.freeze(['family', 'targetSelector', 'outputs', 'consent', 'params', 'cooldownDays', 'basis']);
+export const EFFECT_PARAMS_FIELD = 'params';
+// primitive 输出里 id 型参数（原语契约里类型记号为 id）的来源：首版只认两种明文来源（李白 11-19 10:4x 裁定 ②e）——
+// targetSelector 选出的目标（写 `target`，调用方 ctx.target 给），或调用方 ctx.fields 里登记卷写明的字段（写 `ctx.<字段>`）。
+export const EFFECT_ID_TYPE = 'id';
+export const EFFECT_ID_PARAMS = 'idParams';
+export const EFFECT_ID_SOURCE_TARGET = 'target';
+export const EFFECT_ID_SOURCE_CTX = 'ctx.';
+export const EFFECT_SELECTOR_FIELDS = Object.freeze(['scope', 'filter']);
+export const EFFECT_COST_FIELDS = Object.freeze(['resource', 'amountRX']);
+// 各输出种类（eff_output）的字段与必填字段（:1469–:1472 示例里出现的字段；spawn 卷文未定字段，只核 RX 字段可编译，其余原样带出，fields 为 null）。
+export const EFFECT_OUTPUT_SHAPE = Object.freeze({
+  modifier: { fields: ['kind', 'target', 'stage', 'valueRX', 'duration'], need: ['target', 'stage', 'valueRX'] },
+  status: { fields: ['kind', 'apply', 'severityDeltaRX'], need: ['apply', 'severityDeltaRX'] },
+  primitive: { fields: ['kind', 'op', EFFECT_PARAMS_RX, EFFECT_ID_PARAMS], need: ['op', EFFECT_PARAMS_RX] },
+  event: { fields: ['kind', 'verb'], need: ['verb'] },
+  spawn: { fields: null, need: [] },
+});
+// RX 编译失败时保留原码的登记码（未登记命名空间，:1479）。
+export const EFFECT_RX_KEEP_CODES = Object.freeze(['E-RX-NS-UNKNOWN']);
+
 // 作为写者模块路径的内核模块（卷二 §2.6 :247：账本写者 `kernel/ledger.mjs`）。
 export const KERNEL_MODULES = Object.freeze({ ledger: 'kernel/ledger.mjs' });
 
@@ -154,4 +187,5 @@ export const T = Object.freeze({
   rule_structure: markersOf('rule_structure', RULE_STRUCTURES),
   vocab_family: markersOf('vocab_family', VOCAB_FAMILIES),
   id_kind: markersOf('id_kind', ID_KINDS),
+  effect_vocab: markersOf('effect_vocab', EFFECT_VOCAB_FAMILIES),
 });

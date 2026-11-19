@@ -57,6 +57,8 @@ export function tempRepo() {
   cpSync(join(ROOT, 'server-plugin/kernel/validate/rows.mjs'), join(dir, 'server-plugin/kernel/validate/rows.mjs'));
   cpSync(join(ROOT, 'server-plugin/kernel/validate/named-conditions.mjs'), join(dir, 'server-plugin/kernel/validate/named-conditions.mjs'));
   cpSync(join(ROOT, 'server-plugin/kernel/validate/cell-grades.mjs'), join(dir, 'server-plugin/kernel/validate/cell-grades.mjs'));
+  // 效果族表校验（卷二 §3.9；5-5）：dimensions-validate 的 import，指纹闭包要算同一份。
+  cpSync(join(ROOT, 'server-plugin/kernel/validate/effects-validate.mjs'), join(dir, 'server-plugin/kernel/validate/effects-validate.mjs'));
   cpSync(join(ROOT, 'tests/accept/bypass'), join(dir, 'tests/accept/bypass'), {
     recursive: true,
     filter: (src) => extname(src) === '' || extname(src) === '.txt' || extname(src) === '.json',

@@ -212,10 +212,18 @@
     {
      "ref": "接主线 4-4c 后重盖，判定口径不变",
      "rev": 39
+    },
+    {
+     "ref": "5-5（效果族表与 effects()）：handles/markers.mjs 加效果族标记导出，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 40
+    },
+    {
+     "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
+     "rev": 41
     }
    ],
-   "print": "eeea6fc4e18aa895361800bfd2e7fa4842f3aa288c5962fbcb7f06a7fc4937ff",
-   "rev": 39,
+   "print": "b4e6bd4be31ef7f6ccdc6271271ca4f978a0370767c14ae2e762b8e5bb4f108b",
+   "rev": 41,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -489,10 +497,18 @@
     {
      "ref": "接主线 4-4c 后重盖，判定口径不变",
      "rev": 30
+    },
+    {
+     "ref": "5-5（效果族表与 effects()）：handles/markers.mjs 加效果族标记导出，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 31
+    },
+    {
+     "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
+     "rev": 32
     }
    ],
-   "print": "8b64f525919dea45ef9dc1ed93f344a08f432ade73a16c33ce790b3cebd4b302",
-   "rev": 30,
+   "print": "397a70de7443df32277e03cfda3cc29bac553aa1245062ece16e5f4fd874d92a",
+   "rev": 32,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -535,10 +551,18 @@
     {
      "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 7
+    },
+    {
+     "ref": "5-5（效果族表与 effects()）：handles/markers.mjs 加效果族标记导出，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 8
+    },
+    {
+     "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
+     "rev": 9
     }
    ],
-   "print": "732416bd4a95d96578f935c93b37ba19e2f08cc997123fa28342c1f9ade5034f",
-   "rev": 7,
+   "print": "ca67e400fb2fc3ff02782a841429d7335dbd319fc59a4cf9f2793fa42511b88d",
+   "rev": 9,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -639,10 +663,18 @@
     {
      "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 8
+    },
+    {
+     "ref": "5-5（效果族表与 effects()）：handles/markers.mjs 加效果族标记导出，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 9
+    },
+    {
+     "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
+     "rev": 10
     }
    ],
-   "print": "8781672b71bb3f9e8248ebed5f32b045856b2daddc7997e594bb0e4c97d3d4c6",
-   "rev": 8,
+   "print": "cc0ad585dcc7e3c1a52f0565610094241d1a44469f7a62cc050106ce1126e046",
+   "rev": 10,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -805,10 +837,18 @@
     {
      "ref": "接主线 4-4c 后重盖，判定口径不变",
      "rev": 31
+    },
+    {
+     "ref": "5-5（效果族表与 effects()）：handles/markers.mjs 加效果族标记导出，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 32
+    },
+    {
+     "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
+     "rev": 33
     }
    ],
-   "print": "5cb3bb842a1c645482e32e8da06b5c788307fe52b1ba79a560fa650c689e11b2",
-   "rev": 31,
+   "print": "5f7c6876ec6f64699af179027f0ad3727686e2ed549bda45189dda8eebe548c1",
+   "rev": 33,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -856,10 +896,18 @@
     {
      "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 8
+    },
+    {
+     "ref": "5-5（效果族表与 effects()）：handles/markers.mjs 加效果族标记导出，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 9
+    },
+    {
+     "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
+     "rev": 10
     }
    ],
-   "print": "8781672b71bb3f9e8248ebed5f32b045856b2daddc7997e594bb0e4c97d3d4c6",
-   "rev": 8,
+   "print": "cc0ad585dcc7e3c1a52f0565610094241d1a44469f7a62cc050106ce1126e046",
+   "rev": 10,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -1070,10 +1118,18 @@
     {
      "ref": "接主线 4-4c 后重盖，判定口径不变",
      "rev": 47
+    },
+    {
+     "ref": "5-5（效果族表与 effects()）：handles/markers.mjs 加效果族标记导出，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 48
+    },
+    {
+     "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
+     "rev": 49
     }
    ],
-   "print": "10fafda753bf1441c85de6d6253786ff4bc0a79c0d98a0987e1892b22889ea15",
-   "rev": 47,
+   "print": "ac1603a4371fd0b211679b09157deecc065d73cb72f6cb06ed7f59d927cfd066",
+   "rev": 49,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1300,10 +1356,18 @@
     {
      "ref": "接主线 4-4c 后重盖，判定口径不变",
      "rev": 32
+    },
+    {
+     "ref": "5-5（效果族表与 effects()）：handles/markers.mjs 加效果族标记导出，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 33
+    },
+    {
+     "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
+     "rev": 34
     }
    ],
-   "print": "5cb3bb842a1c645482e32e8da06b5c788307fe52b1ba79a560fa650c689e11b2",
-   "rev": 32,
+   "print": "5f7c6876ec6f64699af179027f0ad3727686e2ed549bda45189dda8eebe548c1",
+   "rev": 34,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1831,10 +1895,18 @@
     {
      "ref": "接主线 4-4c 后重盖，判定口径不变",
      "rev": 32
+    },
+    {
+     "ref": "5-5（效果族表与 effects()）：handles/markers.mjs 加效果族标记导出，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 33
+    },
+    {
+     "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
+     "rev": 34
     }
    ],
-   "print": "5cb3bb842a1c645482e32e8da06b5c788307fe52b1ba79a560fa650c689e11b2",
-   "rev": 32,
+   "print": "5f7c6876ec6f64699af179027f0ad3727686e2ed549bda45189dda8eebe548c1",
+   "rev": 34,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -1945,10 +2017,18 @@
     {
      "ref": "接主线 4-4c 后重盖，判定口径不变",
      "rev": 24
+    },
+    {
+     "ref": "5-5（效果族表与 effects()）：handles/markers.mjs 加效果族标记导出，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 25
+    },
+    {
+     "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
+     "rev": 26
     }
    ],
-   "print": "2a8ce6d4f7043590bae390510dad3d672a86dad8153c22a94e55ee773448129f",
-   "rev": 24,
+   "print": "1ba391290409b5e636510e58981ae930d20b04658704682963eae2e5a55f45f5",
+   "rev": 26,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -2155,10 +2235,18 @@
     {
      "ref": "接主线 4-4c 后重盖，判定口径不变",
      "rev": 48
+    },
+    {
+     "ref": "5-5（效果族表与 effects()）：handles/markers.mjs 加效果族标记导出，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 49
+    },
+    {
+     "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
+     "rev": 50
     }
    ],
-   "print": "19c911eb73e4dec5084ce4593d53b08d9ab5bc1a50c1463168111726a3ae57e3",
-   "rev": 48,
+   "print": "eb8b56e16f876dacfe1e8856de0627af5646fa2ce17b1976c5d9f7183d9a471c",
+   "rev": 50,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -2322,10 +2410,18 @@
     {
      "ref": "接主线 4-4c 后重盖，判定口径不变",
      "rev": 11
+    },
+    {
+     "ref": "5-5（效果族表与 effects()）：handles/markers.mjs 加效果族标记导出，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 12
+    },
+    {
+     "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
+     "rev": 13
     }
    ],
-   "print": "b86effe08494cde47b8590e13f6d55988b3e20671ec1b0126634a37d02d8907f",
-   "rev": 11,
+   "print": "0e61b91fd5095c2b87bc1e154c492f545f21a8b5f42593caa5059d6aa2b44131",
+   "rev": 13,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -2495,10 +2591,18 @@
     {
      "ref": "接主线 4-4c 后重盖，判定口径不变",
      "rev": 37
+    },
+    {
+     "ref": "5-5（效果族表与 effects()）：handles/markers.mjs 加效果族标记导出，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 38
+    },
+    {
+     "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
+     "rev": 39
     }
    ],
-   "print": "eeea6fc4e18aa895361800bfd2e7fa4842f3aa288c5962fbcb7f06a7fc4937ff",
-   "rev": 37,
+   "print": "b4e6bd4be31ef7f6ccdc6271271ca4f978a0370767c14ae2e762b8e5bb4f108b",
+   "rev": 39,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -2540,10 +2644,18 @@
     {
      "ref": "接主线 4-4c 后重盖，判定口径不变",
      "rev": 8
+    },
+    {
+     "ref": "5-5（效果族表与 effects()）：handles/markers.mjs 加效果族标记导出，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 9
+    },
+    {
+     "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
+     "rev": 10
     }
    ],
-   "print": "d96eb349c58fb08db2c4c072ef134e4a16e6a28edb80ec5acff9bed212dba8be",
-   "rev": 8,
+   "print": "4597d3321613f4d19e4dd5d05d6aeab701ef50914deccb85401c0a8936991d05",
+   "rev": 10,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -2587,10 +2699,18 @@
     {
      "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 7
+    },
+    {
+     "ref": "5-5（效果族表与 effects()）：handles/markers.mjs 加效果族标记导出，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 8
+    },
+    {
+     "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
+     "rev": 9
     }
    ],
-   "print": "8781672b71bb3f9e8248ebed5f32b045856b2daddc7997e594bb0e4c97d3d4c6",
-   "rev": 7,
+   "print": "cc0ad585dcc7e3c1a52f0565610094241d1a44469f7a62cc050106ce1126e046",
+   "rev": 9,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -2822,10 +2942,18 @@
     {
      "ref": "接主线 4-4c 后重盖，判定口径不变",
      "rev": 26
+    },
+    {
+     "ref": "5-5（效果族表与 effects()）：handles/markers.mjs 加效果族标记导出，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 27
+    },
+    {
+     "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
+     "rev": 28
     }
    ],
-   "print": "2a8ce6d4f7043590bae390510dad3d672a86dad8153c22a94e55ee773448129f",
-   "rev": 26,
+   "print": "1ba391290409b5e636510e58981ae930d20b04658704682963eae2e5a55f45f5",
+   "rev": 28,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -2977,10 +3105,18 @@
     {
      "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 20
+    },
+    {
+     "ref": "5-5（效果族表与 effects()）：handles/markers.mjs 加效果族标记导出，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 21
+    },
+    {
+     "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
+     "rev": 22
     }
    ],
-   "print": "213f0b751bdc5fb7ae26fe051be8bfd30c50f9d38b2e28b3505e468fc0691aed",
-   "rev": 20,
+   "print": "73112721fd57e7345ab09515b75e402cf36cee1c234188c5e118d2c14cc81c01",
+   "rev": 22,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

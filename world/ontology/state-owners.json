@@ -84,6 +84,7 @@
   {"export": "kernel/dimensions.mjs#dim", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/dimensions.mjs#modified", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/dimensions.mjs#explain", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/effects.mjs#effects", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/sample.mjs#sample", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/det-math.mjs#fixedExp", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/det-math.mjs#fixedPow", "callers": ["rules"], "acceptsState": false},

@@ -28,6 +28,8 @@ export const LAYOUT = Object.freeze({
   // 未建派生登记（卷二 §1.12 封卷后勘误 1118k23）：加载器读，与维度表同目录、下划线前缀，不当维度表。
   unbuiltDerived: '_unbuilt-derived.json',
   stateOwners: 'world/ontology/state-owners.json',
+  // 效果族行引用闭合要核的原语目录（卷二 §3.9 :1479：`op` 是 primitives.json 的原语）；文件不存在时不交，效果族的原语输出一律被拒。
+  primitives: 'world/ontology/primitives.json',
   // 内核常数表在 engine.rules 下的表代号（卷二 S10 登记豁免表；登记行见 world/rules/registry.json）。
   constants: 'kernelConstants',
 });
@@ -67,6 +69,14 @@ export function loadWorld(root, opts = {}) {
     installExpTable(dist.value && dist.value.expTable);
     installSampleDistributions(dist.value);
   }
+  // 原语目录：读到即交效果族校验；JSON 语法错同冻结分布表，直接拒。
+  const primitivesPath = join(root, LAYOUT.primitives);
+  let primitivesDoc;
+  if (existsSync(primitivesPath)) {
+    const parsedCatalog = parseJsonStrict(readText(primitivesPath));
+    if (parsedCatalog.errors.length) throw new Error(`E-DIM-STRUCT-FIELD ${LAYOUT.primitives}: ${parsedCatalog.errors[0].code} at ${parsedCatalog.errors[0].pointer}`);
+    primitivesDoc = parsedCatalog.value;
+  }
   const declPath = join(root, LAYOUT.stateOwners);
   const parsed = existsSync(declPath) ? parseJsonStrict(readText(declPath)) : { value: {}, errors: [] };
   const decl = parsed.value || {};
@@ -84,6 +94,7 @@ export function loadWorld(root, opts = {}) {
     displaySet: [],
     ns: Array.isArray(decl.rxNamespaces) ? decl.rxNamespaces : [],
     limits: { extendsMaxDepth: need('extendsMaxDepth'), rxMaxDepth: need('rxMaxDepth') },
+    primitives: primitivesDoc && Array.isArray(primitivesDoc.primitives) ? primitivesDoc.primitives : undefined,
   });
   // 账本的资源种类表、ledger.json 与本卷词表条目的跨字段校验（卷六 §2.1、§2.2、§2.5；字段含义只在 kernel/ledger.mjs 读，A6-1.1）。
   // 声明表合并与核对（卷二 §2.7；state-owners.json 的 L0 语法错误一并报出）。

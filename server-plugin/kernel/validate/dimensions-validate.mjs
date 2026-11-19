@@ -12,6 +12,7 @@ import { checkDef, splitKey, isErrorCode, CODE_RE, KEY_RE, CODE_ENUMS, TYPES, DO
 import { checkRows, checkPrecedence, checkComponents, checkRequired, requiredSyntaxOk } from './rows.mjs';
 import { prepareNamedConditions } from './named-conditions.mjs';
 import { checkCellGrades } from './cell-grades.mjs';
+import { checkEffects } from './effects-validate.mjs';
 import { compileRXInScope } from '../rx.mjs';
 import { REGISTERED_CODES } from '../error-codes.mjs';
 
@@ -36,10 +37,10 @@ export const STACKING = Object.freeze(['none', 'penalized']);
 export const STACKING_MARKERS = markersOf('stacking', STACKING);
 
 // sources：{units: 文本, vocab: 文本, effects?: 文本, unbuilt?: 文本, tables: [{file, text}]}（file 为文件名，如 "<kind>.json"）。
-// options：{namespaces: [..], displaySet: [..], ns: [{ns, shape, type}], limits: {extendsMaxDepth, rxMaxDepth}}。
+// options：{namespaces: [..], displaySet: [..], ns: [{ns, shape, type}], limits: {extendsMaxDepth, rxMaxDepth}, primitives?: 原语目录行}（只给效果族校验，缺即原语输出一律拒）。
 /**
  * @param {{units: string, vocab: string, effects?: string, tables: {file: string, text: string}[]}} sources
- * @param {{namespaces: string[], displaySet: string[], ns: {ns: string, shape: string, type: string}[], limits: {extendsMaxDepth: number, rxMaxDepth: number}}} options
+ * @param {{namespaces: string[], displaySet: string[], ns: {ns: string, shape: string, type: string}[], limits: {extendsMaxDepth: number, rxMaxDepth: number}, primitives?: any[]}} options
  */
 export function validateDimensions(sources, options) {
   const errors = [];
@@ -142,7 +143,10 @@ export function validateDimensions(sources, options) {
   checkComponents(new Map(tables.map((t) => [t.kind, t])), env, err);
   for (const t of tables) { t.named = prepareNamedConditions(t, env, err); checkRequired(t, env, err, stats); checkCellGrades(t, err); }
 
-  return report(errors, tables, stats, env);
+  // 效果族表（§3.9、§4.1 L2）：族行、RX、原语与动词的引用闭合；通过的族行与编好的 RX 树随加载结果交出，供 kernel/effects.mjs 求值。
+  const effects = checkEffects(effectsDoc, env, options, err);
+
+  return report(errors, tables, stats, env, effects);
 }
 
 // ---------- L1 派生式编译与维度级环 ----------
@@ -360,7 +364,7 @@ function checkHeader(t, env, err) {
 }
 
 // ---------- 报告（§4.2） ----------
-function report(errors, tables, stats, env) {
+function report(errors, tables, stats, env, effects) {
   const norm = errors.map((e) => ({
     code: e.code, severity: e.code.startsWith('W-') ? 'warning' : 'error', level: e.level || '',
     table: e.table || '', row: e.row || '', dim: e.dim || '', path: e.path || '',
@@ -380,6 +384,7 @@ function report(errors, tables, stats, env) {
     text: lines.join('\n') + '\n',
     coverage: coverageText(stats.coverage),
     rx: env.compiled,
+    effects,
     tables: new Map(tables.map((t) => [t.kind, { doc: t.doc, flat: t.flat, derived: t.derived || new Map(), unbuilt: t.unbuilt || new Set(), reverse: t.reverse || new Map() }])),
     vocab: env.vocab,
     idIndex: env.idIndex,
