@@ -8,6 +8,10 @@ export const CARD_SELFCHECK_CODE = 'E-ACC-CARD-SELFCHECK';
 export const CARD_RULES_DOC = 'docs/派活卡头规矩.md';
 export const CARD_REPORT_DIR = 'docs/卡回报';
 
+// 题面带 "__" 那项的证据判据：须含"共 N 行"；"约/大约"紧贴数字前、或"行"后接"左右"，即近似。
+const DIFF_LINES = /共\s*[0-9]+\s*行/;
+const DIFF_APPROX = /(?:约|大约)\s*共?\s*[0-9]|共\s*[0-9]+\s*行\s*左右/;
+
 // 回报文件路径：分支名里的 / 换成 -（分支 feature/x → docs/卡回报/feature-x.md）。
 export function reportPathOf(branch) {
   return `${CARD_REPORT_DIR}/${branch.split('/').join('-')}.md`;
@@ -65,8 +69,11 @@ export function parseSelfcheck(reportText, questions) {
     if (row[2] !== '是') { reasons.push(`${label}填的是"${row[2] || '空'}"，须为"是"`); continue; }
     const evidence = row[3];
     if (!evidence) { reasons.push(`${label}证据为空`); continue; }
-    // 题面里带 "__" 的项（diff 行数）：证据里不许还留着 "__"，且须出现数字。
-    if (q.includes('__') && (evidence.includes('__') || !/[0-9]/.test(evidence))) reasons.push(`${label}的"__"未替换为数字`);
+    const slot = q.includes('__');
+    // 任一项证据里都不许留着 "__"（占位未填）。
+    if (evidence.includes('__')) { reasons.push(slot ? `${label}的"__"未替换为数字` : `${label}证据含未填占位"__"`); continue; }
+    // 题面带 "__" 的项（diff 行数）：证据须写"共 N 行"（N 整数），数字前后带近似词不算确定。
+    if (slot && (!DIFF_LINES.test(evidence) || DIFF_APPROX.test(evidence))) reasons.push(`${label}未写确定 diff 行数（须含"共 N 行"，N 为整数，不许约、大约、左右）`);
   }
   return { ok: reasons.length === 0, reasons };
 }

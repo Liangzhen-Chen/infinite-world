@@ -78,6 +78,25 @@ test('第 6 项 diff 行数的 "__" 未换成数字：拒', () => {
   assert.ok(r.reasons.some((x) => x.includes('第 6 项') && x.includes('未替换为数字')));
 });
 
+test('第 6 项只写增删分量或近似行数：拒', () => {
+  for (const ev of ['约 +175 −20', 'diff 约 300 行', 'diff 共约 300 行', 'diff 共 300 行左右', '+175 −20']) {
+    const r = parse(tableText({ evidences: { 6: ev } }));
+    assert.equal(r.ok, false, ev);
+    assert.ok(r.reasons.some((x) => x.includes('第 6 项未写确定 diff 行数')), ev);
+  }
+});
+
+test('第 6 项写确定行数：放行', () => {
+  assert.deepEqual(parse(tableText({ evidences: { 6: 'diff 共 2264 行（+2200 −64）' } })), { ok: true, reasons: [] });
+  assert.deepEqual(parse(tableText({ evidences: { 6: '只改卡文列出的文件；diff 共  175 行' } })), { ok: true, reasons: [] });
+});
+
+test('任一项证据含 "__"：拒', () => {
+  const r = parse(tableText({ evidences: { 2: '见 __ 处' } }));
+  assert.equal(r.ok, false);
+  assert.ok(r.reasons.some((x) => x.includes('第 2 项证据含未填占位')));
+});
+
 test('题目与规矩文件不一致：拒', () => {
   const text = tableText().replace('没有按 id/名字/场景写特例', '没有写特例');
   const r = parse(text);
