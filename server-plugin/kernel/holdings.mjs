@@ -18,7 +18,7 @@
 // - 事件（R18-1.10 常住变化、R18-1.11 持有变化）经 kernelApi `emit` 写，随本事务提交才落；事务事件尚未接线（块 6），
 //   `actor` 取 null。有事务事件时链首取所涉边 id；没有事务事件（别的写者的推进钩子直写触发本写者）时按卷九 §2.9 :442
 //   取该钩子的登记代号与主体 id，拿不到即整笔拒收（记“部分”、挂块 6）。
-// - 提交前重算的 engine 由挂接处经 installHoldingEngine 交入（不在写者入口里猜）；装配文件未建，接点挂 5-7。
+// - 提交前重算的 engine 由挂接处经 installHoldingEngine 交入（不在写者入口里猜）；engine 由装配文件组成（块 6），接点挂块 6 装配卡（5-7 核定）。
 //   未交入时四个写者入口与提交前重算（本笔写到持有边或持有端路径）一律整笔拒收 E-ACT-WRITER-NOT-READY，不静默跳过。
 // - 数值常量不写字面量（S10 const_literal 只放 0/1/-1）：边序号从现有边推出，份额比较用 data 里的 shareSum。
 // - 不按持有种类名或实体 id 开分支：一切行为只读种类行字段（R18-1.1、S18-2）。
@@ -129,7 +129,7 @@ function needTx(state) {
 }
 
 // engine 未交入即整笔拒收（卡头第二节第 3 条，不留绕过口子）：没有它，提交前重算与 holdWhile 求值都跑不了，
-// 写者不静默照写。挂接处经 installHoldingEngine 交入；装配文件未建，接点挂 5-7。
+// 写者不静默照写。挂接处经 installHoldingEngine 交入；装配文件未建，接点挂块 6 装配卡。
 function needEngine() {
   if (!engineRef) throw deny('E-ACT-WRITER-NOT-READY', 'holding writer needs installHoldingEngine (commit-time recompute cannot run without engine)');
 }
@@ -870,7 +870,7 @@ function recompute(state, written) {
  * 上位词存在且无环、holdWhile 可编译、termsKeys 在键表内；§2.5 可静态判的项——intimate 逐行显式（E-REL-INTIMATE-FIELD）、
  * concluded 行 termsKeys 含 origin、gone 不取 ho_stay（E-HK-PROTOCOL）、任一格 ho_succeed 则 succeedBy 非空（E-HK-SUCCEED-SOURCE）。
  * 只按行字段判，不点名任何种类。`grantedBy` 的授予者模板核对要实体模板表，随第一张实体模板卡启用（见回报“部分与挂卡”）。
- * 供加载器与测试调用；本卡不接加载器（挂 5-7 收尾接线）。
+ * 统一加载器（kernel/load/world.mjs）在词表收齐后调用，违者加载失败（5-7 接线）；测试也直接调用。
  * @param {{vocab: any, rules: any}} engine
  * @returns {{ok: boolean, errors: string[]}}
  */
@@ -917,7 +917,7 @@ registerHoldWhileRecompute((state, written) => recompute(state, written));
 /**
  * 挂接时交入当前 engine（与 installEventLog／installProposalSession 同一 install* 模式；kernel 组内用，不在 kernelApi）。
  * 程序装载只能在挂接处调一次，不在四个写者入口里猜：提交前重算要查种类行、求 holdWhile，没有 engine 就无法重算。
- * 装配文件 server-plugin/index.mjs 尚未建（不在本卡文件清单），接点挂 5-7 块验收与整合。
+ * engine 含存档模板种子等装配期才齐的字段，由装配文件 server-plugin/index.mjs（块 6，卷二 :958 封闭清单）交入；5-7 核定挂块 6 装配卡。
  * @param {{vocab: any, rules: any}} engine
  */
 export function installHoldingEngine(engine) {

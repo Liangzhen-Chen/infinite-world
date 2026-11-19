@@ -121,7 +121,8 @@ export const EFFECT_COST_FIELDS = Object.freeze(['resource', 'amountRX']);
 export const EFFECT_OUTPUT_SHAPE = Object.freeze({
   modifier: { fields: ['kind', 'target', 'stage', 'valueRX', 'duration'], need: ['target', 'stage', 'valueRX'] },
   status: { fields: ['kind', 'apply', 'severityDeltaRX'], need: ['apply', 'severityDeltaRX'] },
-  primitive: { fields: ['kind', 'op', EFFECT_PARAMS_RX, EFFECT_ID_PARAMS], need: ['op', EFFECT_PARAMS_RX] },
+  // paramsRX 可省略，省略即无数值参数；原语非 id 必需参数缺了由 effects-validate 报 E-EFF-PARAM（李白 11-19 11:0x ③，卷二附录 1118k29 补注）。
+  primitive: { fields: ['kind', 'op', EFFECT_PARAMS_RX, EFFECT_ID_PARAMS], need: ['op'] },
   event: { fields: ['kind', 'verb'], need: ['verb'] },
   spawn: { fields: null, need: [] },
 });

@@ -201,6 +201,12 @@ export function checkEffects(doc, env, options, err) {
           for (const pn of Object.keys(out[PARAMS_RX])) if (!allowed.has(pn)) bad('E-EFF-PRIMITIVE', `${at}/${PARAMS_RX}/${pn}`, pn, `parameter names of ${out.op}: ${[...allowed].sort().join(',')}`);
         }
         if (prim) compiled.ids = checkIdParams(prim, out, at, bad, ctxFields);
+        // paramsRX 可省略，省略即无数值参数；契约 required 里的非 id 参数必须在 paramsRX 给出，缺了报 E-EFF-PARAM（李白 11-19 11:0x ③）。
+        if (prim) {
+          const given = isObj(out[PARAMS_RX]) ? out[PARAMS_RX] : {};
+          const req = isObj(prim.required) ? prim.required : {};
+          for (const pn of Object.keys(req)) if (!isIdSpec(req[pn]) && !Object.hasOwn(given, pn)) bad('E-EFF-PARAM', `${at}/${PARAMS_RX}/${pn}`, 'missing', `${out.op} needs an RX value for non-id parameter ${pn}`);
+        }
       } else if (out.kind === OUT.event) {
         if (familyOf(out.verb) !== T.effect_vocab.verb) bad('E-EVT-VERB', `${at}/verb`, out.verb, 'entry of vocab family verb');
       }

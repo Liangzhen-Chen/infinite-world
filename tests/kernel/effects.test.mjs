@@ -14,6 +14,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const PRIMITIVES = [
   { op: 'vital', required: { target: 'id', delta: 'number' } },
   { op: 'fact.set', required: { entity: 'id', field: 'dimension' }, oneOf: [[{ value: 'number' }, { delta: 'number' }]] },
+  { op: 'move', required: { to: 'id' } },
 ];
 // effectCtxFields：登记卷写明的 ctx 字段（李白 11-19 10:4x 裁定 ②e）；夹具里登记 holder 一个。
 const opts = (o = {}) => ({ ...OPTIONS, primitives: PRIMITIVES, effectCtxFields: ['holder'], ...o });
@@ -186,6 +187,17 @@ test('primitive 的 id 型参数只认两种明文来源：选出的目标（tar
   assert.ok(e((f) => { f.effects.eff_mend.outputs[1].paramsRX.target = '1'; }).includes('E-EFF-PARAM'));
   // 登记的 ctx 字段可用。
   assert.deepEqual(e((f) => { f.effects.eff_mend.outputs[1].idParams = { target: 'ctx.holder' }; }), []);
+});
+
+test('primitive 输出的 paramsRX 可省略、省略即无数值参数；原语的非 id 必需参数缺了仍报 E-EFF-PARAM（李白 11-19 11:0x ③；卷二附录 1118k29 补注）', () => {
+  const e = (edit) => errCodes(run(make(edit)));
+  // 正：move 只有 id 型必需参数 to，不写 paramsRX 通过；调用期 params 只含 id 参数。
+  const pure = (f) => { f.effects.eff_mend.outputs[1] = { kind: 'primitive', op: 'move', idParams: { to: 'target' } }; };
+  assert.deepEqual(e(pure), []);
+  assert.deepEqual(effects(run(make(pure)), {}, 'eff_mend', ctx)[1], { kind: 'primitive', op: 'move', params: { to: 'gad_box' } });
+  // 反：vital 的 delta 是非 id 必需参数，省略 paramsRX 或 paramsRX 里漏写 delta 都报 E-EFF-PARAM。
+  assert.ok(e((f) => { delete f.effects.eff_mend.outputs[1].paramsRX; }).includes('E-EFF-PARAM'));
+  assert.ok(e((f) => { f.effects.eff_mend.outputs[1].paramsRX = {}; }).includes('E-EFF-PARAM'));
 });
 
 test('调用期：id 来源取 ctx.target 或 ctx.fields 里登记字段；给不出即 E-EFF-PARAM', () => {

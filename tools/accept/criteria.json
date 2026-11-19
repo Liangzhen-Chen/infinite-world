@@ -220,10 +220,14 @@
     {
      "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
      "rev": 41
+    },
+    {
+     "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
+     "rev": 42
     }
    ],
-   "print": "b4e6bd4be31ef7f6ccdc6271271ca4f978a0370767c14ae2e762b8e5bb4f108b",
-   "rev": 41,
+   "print": "7361d065496260bed6017e5bd2340eff285d12a3ce192c63eae292c7892ab2c5",
+   "rev": 42,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -541,10 +545,14 @@
     {
      "ref": "path_access stateRead 补口子（K5-24 只核改）；本类别条目不用，判定口径不变",
      "rev": 35
+    },
+    {
+     "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
+     "rev": 36
     }
    ],
-   "print": "1270002eda6e36f6236d7cc7107dd201db2a36b7dbf5e34cf36433667ddeb62d",
-   "rev": 35,
+   "print": "dcff602135c27e276c9151dda0f82120180d8930586331437c2f8935674ee60c",
+   "rev": 36,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -595,10 +603,14 @@
     {
      "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
      "rev": 9
+    },
+    {
+     "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
+     "rev": 10
     }
    ],
-   "print": "ca67e400fb2fc3ff02782a841429d7335dbd319fc59a4cf9f2793fa42511b88d",
-   "rev": 9,
+   "print": "79e4636feac8c2296f26e771adca20a1b289facf6fbaf92960e349c3f6beba2e",
+   "rev": 10,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -707,10 +719,14 @@
     {
      "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
      "rev": 10
+    },
+    {
+     "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
+     "rev": 11
     }
    ],
-   "print": "cc0ad585dcc7e3c1a52f0565610094241d1a44469f7a62cc050106ce1126e046",
-   "rev": 10,
+   "print": "95961a42aeb74d2467b25b49c91e258844a429357a28040eef8aef4d08dfe9d0",
+   "rev": 11,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -881,10 +897,14 @@
     {
      "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
      "rev": 33
+    },
+    {
+     "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
+     "rev": 34
     }
    ],
-   "print": "5f7c6876ec6f64699af179027f0ad3727686e2ed549bda45189dda8eebe548c1",
-   "rev": 33,
+   "print": "6fbb58fd4ea128c69758f9a266ab28fe114b1d60b391c3888871332b83c4ec7e",
+   "rev": 34,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -940,10 +960,14 @@
     {
      "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
      "rev": 10
+    },
+    {
+     "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
+     "rev": 11
     }
    ],
-   "print": "cc0ad585dcc7e3c1a52f0565610094241d1a44469f7a62cc050106ce1126e046",
-   "rev": 10,
+   "print": "95961a42aeb74d2467b25b49c91e258844a429357a28040eef8aef4d08dfe9d0",
+   "rev": 11,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -1162,10 +1186,14 @@
     {
      "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
      "rev": 49
+    },
+    {
+     "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
+     "rev": 50
     }
    ],
-   "print": "ac1603a4371fd0b211679b09157deecc065d73cb72f6cb06ed7f59d927cfd066",
-   "rev": 49,
+   "print": "1ae618f8fad3fdcf6b1276effaa4d316ee238e5576e1b67e07c0b43f6fc1c02c",
+   "rev": 50,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1400,10 +1428,14 @@
     {
      "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
      "rev": 34
+    },
+    {
+     "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
+     "rev": 35
     }
    ],
-   "print": "5f7c6876ec6f64699af179027f0ad3727686e2ed549bda45189dda8eebe548c1",
-   "rev": 34,
+   "print": "6fbb58fd4ea128c69758f9a266ab28fe114b1d60b391c3888871332b83c4ec7e",
+   "rev": 35,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1959,10 +1991,14 @@
     {
      "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
      "rev": 34
+    },
+    {
+     "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
+     "rev": 35
     }
    ],
-   "print": "5f7c6876ec6f64699af179027f0ad3727686e2ed549bda45189dda8eebe548c1",
-   "rev": 34,
+   "print": "6fbb58fd4ea128c69758f9a266ab28fe114b1d60b391c3888871332b83c4ec7e",
+   "rev": 35,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -2081,10 +2117,14 @@
     {
      "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
      "rev": 26
+    },
+    {
+     "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
+     "rev": 27
     }
    ],
-   "print": "1ba391290409b5e636510e58981ae930d20b04658704682963eae2e5a55f45f5",
-   "rev": 26,
+   "print": "bd3ef307804cdddca3a8c9a4784f3f3441c08b2b28aa00c4ce452c0d8c363cc2",
+   "rev": 27,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -2299,10 +2339,14 @@
     {
      "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
      "rev": 50
+    },
+    {
+     "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
+     "rev": 51
     }
    ],
-   "print": "eb8b56e16f876dacfe1e8856de0627af5646fa2ce17b1976c5d9f7183d9a471c",
-   "rev": 50,
+   "print": "645278669f5396a162ef7af004e35d20c18e94a1a5376a07f2c4d98523250a85",
+   "rev": 51,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -2474,10 +2518,14 @@
     {
      "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
      "rev": 13
+    },
+    {
+     "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
+     "rev": 14
     }
    ],
-   "print": "0e61b91fd5095c2b87bc1e154c492f545f21a8b5f42593caa5059d6aa2b44131",
-   "rev": 13,
+   "print": "298a6ae5b2f16e19097d05dd4f4349381fb2ef2eba81535574a533b65965c348",
+   "rev": 14,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -2655,10 +2703,14 @@
     {
      "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
      "rev": 39
+    },
+    {
+     "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
+     "rev": 40
     }
    ],
-   "print": "b4e6bd4be31ef7f6ccdc6271271ca4f978a0370767c14ae2e762b8e5bb4f108b",
-   "rev": 39,
+   "print": "7361d065496260bed6017e5bd2340eff285d12a3ce192c63eae292c7892ab2c5",
+   "rev": 40,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -2708,10 +2760,14 @@
     {
      "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
      "rev": 10
+    },
+    {
+     "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
+     "rev": 11
     }
    ],
-   "print": "4597d3321613f4d19e4dd5d05d6aeab701ef50914deccb85401c0a8936991d05",
-   "rev": 10,
+   "print": "f59a04220b36229476b029d3133463fd4885bf4c59774a94da12f4e500bc8942",
+   "rev": 11,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -2763,10 +2819,14 @@
     {
      "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
      "rev": 9
+    },
+    {
+     "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
+     "rev": 10
     }
    ],
-   "print": "cc0ad585dcc7e3c1a52f0565610094241d1a44469f7a62cc050106ce1126e046",
-   "rev": 9,
+   "print": "95961a42aeb74d2467b25b49c91e258844a429357a28040eef8aef4d08dfe9d0",
+   "rev": 10,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -3006,10 +3066,14 @@
     {
      "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
      "rev": 28
+    },
+    {
+     "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
+     "rev": 29
     }
    ],
-   "print": "1ba391290409b5e636510e58981ae930d20b04658704682963eae2e5a55f45f5",
-   "rev": 28,
+   "print": "bd3ef307804cdddca3a8c9a4784f3f3441c08b2b28aa00c4ce452c0d8c363cc2",
+   "rev": 29,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -3181,10 +3245,14 @@
     {
      "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
      "rev": 22
+    },
+    {
+     "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
+     "rev": 23
     }
    ],
-   "print": "73112721fd57e7345ab09515b75e402cf36cee1c234188c5e118d2c14cc81c01",
-   "rev": 22,
+   "print": "b0f49a12d5b0d0e2844117141320aa779acd14ac01a714ff8a05e54a58b68395",
+   "rev": 23,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

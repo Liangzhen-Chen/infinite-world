@@ -18,7 +18,7 @@
 //   E-ACT-WRITER-NOT-READY；候补列表为空或全已终止、授予者为空或已终止，按"关闭"（R18-1.2、R18-1.8）。带 record 的边由持有写者照丙7 拒收。
 // - 第 5 步状态实例与运行态修正项的容器在块 6（卷二 §1.11）：块 5 的 state 没有这两个键；若见到该实体名下有条目即拒收，不静默跳过。
 // - 清理函数、候补顺序入口由规则层经 kernelApi 交入（与 registerAdvanceHook 同法：带 `<文件>#<函数>` 登记名，内核不 import 规则层）；
-//   声明表（stateKeys.subjectRecords、systems.*.terminationCleanup）由挂接处经 installTermination 交入（装配文件未建，接点挂 5-7）。
+//   声明表（stateKeys.subjectRecords、systems.*.terminationCleanup）由统一加载器在加载通过时经 installTermination 交入（kernel/load/world.mjs，与 installStorage 同法；5-7 接线）。
 // - 不按实体 id、类别名、种类名开分支：一切只读类别行、种类行、资源种类行与去留表。
 
 import { KernelError, codeOf } from './errors.mjs';
@@ -146,6 +146,9 @@ export function registerSuccessionOrder(succeedBy, handler) {
   if (orders.has(succeedBy)) throw deny(CODE.duplicate, `registerSuccessionOrder: ${succeedBy} already registered`);
   orders.set(succeedBy, handler);
 }
+
+/** 去留表所在的规则表代号（定义源仍是本文件 S.rulesTable；加载器据它判该表登记了没有，kernel 组内用）。 */
+export const TERMINATE_RULES_TABLE = S.rulesTable;
 
 /**
  * 挂接时交入声明表（state-owners.json 的 stateKeys 与 systems；kernel 组内用，不在 kernelApi；与 installStorage 同法）。
@@ -538,7 +541,7 @@ export function revive(engine, state, entityId, cause) {
 }
 
 /**
- * 窗口期满（卷二 §2.6 :530）：到期项发到时由内核删除该实体名下全部 hold 记录，终止标记不动。kernel 组内用（到期分发由挂接处接，挂 5-7）。
+ * 窗口期满（卷二 §2.6 :530）：到期项发到时由内核删除该实体名下全部 hold 记录，终止标记不动。kernel 组内用（到期事件的订阅分发由装配处交给调度器 dueSource 的 deliver，挂块 6 装配卡；非窗口项原样忽略）。
  * @param {{vocab: any, rules: any}} engine @param {any} state @param {{kind: string, owner: string}} item 到期项
  */
 export function expireReviveWindow(engine, state, item) {
@@ -556,7 +559,7 @@ export function expireReviveWindow(engine, state, item) {
  *   subjectSegments 是模式里 `*` 段的序号（从 1 起，E-DIM-STRUCT-FIELD）；
  * - `systems.<名>.terminationCleanup`：{kinds, handler, sortKey} 齐全（E-DIM-STRUCT-FIELD）；
  * - 实体表整表一致（:526 ①）：非 abstract 类别行沿 extends 取 termination，要么都有、要么都没有（E-DIM-REQUIRED-MISSING）。
- * 供加载器与测试调用；本卡不接加载器（挂 5-7 收尾接线，同 checkHoldingKindRows）。
+ * 统一加载器在规则目录登记了去留表时调用，违者加载失败（5-7 接线，同 checkHoldingKindRows）；测试也直接调用。
  * @param {{rules: any, tables?: Map<string, any>}} engine @param {{stateKeys?: any, systems?: any}} decl
  * @returns {string[]}
  */

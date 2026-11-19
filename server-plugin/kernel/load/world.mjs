@@ -17,6 +17,9 @@ import { checkLedgerTables, checkSubjectFlagDims } from '../ledger.mjs';
 import { checkClockTables, checkHookCadence, installScheduler } from '../scheduler.mjs';
 import { installFixedConstants, installExpTable } from '../det-math.mjs';
 import { installSampleConstants, installSampleDistributions } from '../sample.mjs';
+import { checkVerbRows } from '../events.mjs';
+import { checkHoldingKindRows } from '../holdings.mjs';
+import { checkTerminationTables, installTermination, TERMINATE_RULES_TABLE } from '../terminate.mjs';
 
 export const LAYOUT = Object.freeze({
   dimensionsDir: 'world/ontology/dimensions',
@@ -107,6 +110,15 @@ export function loadWorld(root, opts = {}) {
   // cadence/phaseOffset 按声明表的钩子逐个查（§2.1 :130，E-CLOCK-CADENCE，块 4-2），所以排在声明表合并之后。
   // 持有人主体标记维度的表头登记（卷二 §5.6 ledgerHolder；卷六 §2.1 holder），该 kind 的表载入了才查。
   const domain = report.env ? [...checkLedgerTables(read.rules, report.env), ...checkSubjectFlagDims(report.tables),...checkClockTables(read.rules, report.env), ...checkHookCadence(read.rules, owners.merged.hooks)] : [];
+  // 块 5 内核写者的加载期核对，违者加载失败、各用本函数已登记的码（字段含义只在各写者文件读）：verb 族与发出系统（卷二 §2.7 :774；
+  // 卷二十四 R24-1.3、R24-2.1）、持有种类行（卷十八 §2.5、§2.6）、终止登记与去留表（卷二 §2.6 :526–:529）。词表收齐（report.ok）才核；
+  // 词表不全时前面已经失败，不另报。终止去留表同 checkClockTables：规则目录登记了该表才核（只放内核常数表的校验器夹具目录不登记）；
+  // 未登记的世界运行期调 terminate 读表即 E-RULES-UNREGISTERED 拒收，不静默放行。
+  if (report.ok) {
+    const view = { vocab: report.vocab, rules: read.rules, tables: report.tables };
+    domain.push(...writerCheckRows('verb', checkVerbRows(view, decl).errors), ...writerCheckRows('holding_kind', checkHoldingKindRows(view).errors));
+    if (Object.hasOwn(read.rules, TERMINATE_RULES_TABLE)) domain.push(...writerCheckRows('terminate', checkTerminationTables(view, decl)));
+  }
   const tail = rulesReport([...checkRules(read, report.env), ...domain]);
   const syntax = (parsed.errors || []).map((e) => ({ code: e.code, severity: 'error', level: 'L0', table: 'state-owners', row: '', dim: '', path: `#${e.pointer}`, got: e.got, want: e.want }));
   // 依赖声明定稿（卷二 §2.3 :470–471、§2.7 :828）：机器生成 dim:<kind> 与 modified:<kind>，对 uses 做传递闭包，写回 systems[*].inputs。
@@ -118,6 +130,7 @@ export function loadWorld(root, opts = {}) {
     installHandles({ vocab: report.vocab, decl, ledgerPaths: owners.merged.ledgerPaths });
     installStorage(owners.merged); // readPath/writePath 运行期核对用的声明表合并结果（kernel/storage.mjs，块 2 第 2-3 张）
     installScheduler(read.rules); // schedule 入堆缩放读 rules.clock（kernel/scheduler.mjs，块 4 第 4-2 张）
+    installTermination(decl); // 终止协议读声明表的 stateKeys.subjectRecords 与 systems.terminationCleanup（kernel/terminate.mjs，块 5 第 5-4 张；与 installStorage 同法）
     owners.merged.systems = deps.systems;
   }
   const syntaxText = syntax.map((e) => `${e.code}  ${e.table}/.  got ${JSON.stringify(e.got)}  want ${e.want}  - ${e.path}\n`).join('');
@@ -126,6 +139,14 @@ export function loadWorld(root, opts = {}) {
     ...report, ok, errors: [...report.errors, ...tail.errors, ...syntax, ...owners.errors, ...deps.errors], text: tail.text + report.text + syntaxText + owners.text + depsText,
     rules: read.rules, owners: owners.merged,
   };
+}
+
+// 写者核对函数返回的错误行是 "<登记码> <所在> <说明>" 文字；转成加载报告的统一行（码取首段，其余作 got），按所属表归组。
+function writerCheckRows(table, lines) {
+  return lines.map((line) => {
+    const cut = line.indexOf(' ');
+    return { code: cut < 0 ? line : line.slice(0, cut), level: 'L2', table, row: '', dim: '', path: table, got: cut < 0 ? '' : line.slice(cut + 1), want: 'load-time check of the kernel writer' };
+  });
 }
 
 // `dim:<kind>` = `created.<前缀>*.props`（该表 idPrefix 逐个）∪ 该表 derived 用到的 relation 的闭包；`modified:<kind>` = `dim:<kind>` ∪ `modifiers` ∪ `statuses`
