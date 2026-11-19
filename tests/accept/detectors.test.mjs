@@ -600,6 +600,30 @@ test('param_consumed：范围经登记解析；被查内容里没有登记的键
   assert.deepEqual(declCmp({ ...ctx, decl: noKernel }, PC, CLS.param_consumed).map((h) => [h.nodeKind, h.code]), [['param', 'E-ACC-ITEM-PARAM']]);
 });
 
+// 数据侧消费者（卷十二 A12-4.5 勘误 1118k31，李白 11-19 13:2x ①）：已编进求值器、不在未建登记里的派生式所引用的键；已登记加载期派生按具名键读到的键。
+const DIMS = 'world/ontology/dimensions';
+const dimTable = (dims) => JSON.stringify({ kind: 'gadget', dimensions: dims });
+const UNBUILT = (entries) => JSON.stringify({ entries });
+
+test('param_consumed 数据侧：派生式引用 rules.<表>.<键> 即消费；加载期派生按具名 {table, key} 读到即消费', () => {
+  const table = { [VALUATION]: '{"rows": []}' };
+  assert.deepEqual(pc({ ...table, [`${DIMS}/gadget.json`]: dimTable({ worth: { derived: 'mass * rules.valuation.unitValue' } }) }), []);
+  assert.deepEqual(pc({ ...table, [`${DIMS}/gadget.json`]: dimTable({ kinds: { ruleIndex: { table: 'valuation', key: 'unitValue' } } }) }), []);
+});
+
+test('param_consumed 数据侧反例：只被未建派生引用的键仍报；表头别的字段提到、加载器遍历全表都不算；写错的键不当成消费', () => {
+  const table = { [VALUATION]: '{"rows": []}' };
+  const keysOf = (map) => pc(map).map((h) => h.symbolPath);
+  // 只被未建登记里的派生式引用。
+  assert.deepEqual(keysOf({ ...table, [`${DIMS}/gadget.json`]: dimTable({ worth: { derived: 'mass * rules.valuation.unitValue' } }), [`${DIMS}/_unbuilt-derived.json`]: UNBUILT([{ table: 'gadget', dimension: 'worth' }]) }), ['valuation.unitValue']);
+  // 表头非派生字段（来源说明）里写到、加载器整表遍历：都不算。
+  assert.deepEqual(keysOf({ ...table, [`${DIMS}/gadget.json`]: dimTable({ worth: { source: 'rules.valuation.unitValue', type: 'number' } }), 'server-plugin/kernel/load/x.mjs': 'export const f = (t) => Object.keys(t).map((k) => t[k]);' }), ['valuation.unitValue']);
+  // 写错键：对不上登记键，原键仍报（加载器另报 E-MOD-RX，见 tests/kernel/rx.test.mjs 规则表值用例）。
+  assert.deepEqual(keysOf({ ...table, [`${DIMS}/gadget.json`]: dimTable({ worth: { derived: 'mass * rules.valuation.unitValu' } }) }), ['valuation.unitValue']);
+  // 下划线开头的登记文件、子目录里的文件不当维度表。
+  assert.deepEqual(keysOf({ ...table, [`${DIMS}/_x.json`]: dimTable({ worth: { derived: 'rules.valuation.unitValue' } }), [`${DIMS}/sub/y.json`]: dimTable({ worth: { derived: 'rules.valuation.unitValue' } }) }), ['valuation.unitValue']);
+});
+
 test('param_consumed 真实仓库：如实报无运行期消费者的登记参数（B2-W2 起 det-math 常数已接上），有读者的键不计', () => {
   assert.ok(REGISTERED_CODES.has('E-ACC-PARAM-UNCONSUMED'));
   assert.ok(REGISTERED_CODES.has('E-ACC-PROMISE-UNREACHABLE'));

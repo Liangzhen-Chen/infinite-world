@@ -16,13 +16,19 @@
 //                 都报 E-ACC-ITEM-PARAM，不静默放过。
 // 局限（2-3 回报）：state 的根按名字认（lib/js-state.mjs）；"state 传给 §2.3 三类对象之外的函数"要调用图与类型，未判。
 // paramConsumed 是词法级判定：不追数据来源，只按键名在消费者文件里的出现形态计；解构简写 `const { key } = t` 不算读到（保守，会报）。
+//                 数据侧消费者两类（卷十二 A12-4.5 封卷后勘误 1118k31，李白 11-19 13:2x ①）：(a) 维度表里写成 RX、且不在未建派生登记里的
+//                 derived 式引用的 `rules.<表>.<键>`（加载期编进求值器，运行期由 dim 求值）；(b) 已登记加载期派生（表头 ruleIndex）按具名
+//                 {table, key} 读到的键，及该条件列表各条 when 引用的 `rules.<表>.<键>`。只认具名引用：表头别的字段、整表遍历、
+//                 未建派生的式子都不算；写错的键对不上任何登记键，也就不算（加载器另报 E-MOD-RX）。
 
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tokenize, isP, symbolPaths } from '../lib/js-scan.mjs';
 import { stateChains } from '../lib/js-state.mjs';
-import { filesOfGroups } from '../read.mjs';
+import { filesOfGroups, LAYOUT } from '../read.mjs';
 import { readRules, RULES_LAYOUT } from '../../../server-plugin/kernel/load/rules.mjs';
+import { NAME_ROOT } from '../../../server-plugin/kernel/rx.mjs';
+import { rxTokenAt } from '../../../server-plugin/kernel/handles/patterns.mjs';
 
 const ENUM_FNS = new Set(['keys', 'values', 'entries', 'assign', 'fromEntries', 'getOwnPropertyNames']);
 
@@ -62,6 +68,48 @@ function consumerFiles(ctx) {
   return filesOfGroups(ctx.files, ctx.model, [kernelKey, ...ruleGroups]).filter((f) => !excluded.some((p) => f.startsWith(p)));
 }
 
+// RX 文本里引用的规则表键（`rules.<表>.<键>…` 取前两段），按 RX 词法认名字，不按子串。
+function rxRuleRefs(text, out) {
+  if (typeof text !== 'string') return;
+  for (let at = 0; at < text.length;) {
+    const m = rxTokenAt(text, at);
+    if (!m || m.end === at) break;
+    at = m.end;
+    const name = m.groups[1];
+    if (name === undefined) continue;
+    const segs = name.split('.');
+    if (segs[0] === NAME_ROOT.rules && segs.length >= 3) out.add(`${segs[1]}.${segs[2]}`);
+  }
+}
+
+// 数据侧消费者（见头注 (a)(b)）：读被查内容里的维度表与未建派生登记；解析失败的文件跳过（加载器另报）。
+function dataConsumers(ctx, read) {
+  const out = new Set();
+  const dir = `${LAYOUT.dimensionsDir}/`;
+  const parse = (f) => { try { return JSON.parse(ctx.read(f)); } catch { return undefined; } };
+  const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+  const unbuiltDoc = ctx.files.includes(dir + LAYOUT.unbuiltDerived) ? parse(dir + LAYOUT.unbuiltDerived) : undefined; // 读不到或解析失败即视为没有登记
+  const unbuilt = new Set((isObj(unbuiltDoc) && Array.isArray(unbuiltDoc.entries) ? unbuiltDoc.entries : []).filter(isObj).map((e) => `${e.table}.${e.dimension}`));
+  const tableFile = new Map(read.tables.map((t) => [t.code, t.file]));
+  for (const f of ctx.files) {
+    if (!f.startsWith(dir) || f.slice(dir.length).includes('/') || f.slice(dir.length).startsWith('_') || !f.endsWith('.json')) continue;
+    const doc = parse(f);
+    if (!isObj(doc) || !isObj(doc.dimensions)) continue;
+    for (const [dim, def] of Object.entries(doc.dimensions)) {
+      if (!isObj(def)) continue;
+      if (def.derived !== undefined && !unbuilt.has(`${doc.kind}.${dim}`)) rxRuleRefs(def.derived, out);
+      const ri = def.ruleIndex;
+      if (!isObj(ri) || typeof ri.table !== 'string' || typeof ri.key !== 'string') continue;
+      out.add(`${ri.table}.${ri.key}`);
+      const file = tableFile.get(ri.table);
+      const rows = file && ctx.files.includes(file) ? parse(file) : undefined;
+      const row = isObj(rows) && Array.isArray(rows.rows) ? rows.rows.find((r) => isObj(r) && r.key === ri.key) : undefined;
+      for (const e of row && Array.isArray(row.value) ? row.value : []) if (isObj(e)) rxRuleRefs(e.when, out);
+    }
+  }
+  return out;
+}
+
 function unconsumedHits(ctx, params) {
   const regPath = `${RULES_LAYOUT.dir}/${RULES_LAYOUT.registry}`;
   const hits = [];
@@ -76,9 +124,10 @@ function unconsumedHits(ctx, params) {
   if (!files) { problem('kernel group registration missing'); return hits; }
   const tokens = files.map((f) => tokenize(ctx.read(f)));
   const code = params.code || 'E-ACC-PARAM-UNCONSUMED';
+  const data = dataConsumers(ctx, read);
   for (const t of keyed) {
     for (const key of t.defs.keys()) {
-      if (!tokens.some((toks) => consumes(toks, key))) hits.push({ file: regPath, line: 0, nodeKind: 'param', symbolPath: `${t.code}.${key}`, code });
+      if (!data.has(`${t.code}.${key}`) && !tokens.some((toks) => consumes(toks, key))) hits.push({ file: regPath, line: 0, nodeKind: 'param', symbolPath: `${t.code}.${key}`, code });
     }
   }
   return hits.sort((a, b) => (a.symbolPath < b.symbolPath ? -1 : a.symbolPath > b.symbolPath ? 1 : 0));

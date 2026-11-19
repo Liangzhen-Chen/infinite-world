@@ -98,6 +98,8 @@ export function loadWorld(root, opts = {}) {
     ns: Array.isArray(decl.rxNamespaces) ? decl.rxNamespaces : [],
     limits: { extendsMaxDepth: need('extendsMaxDepth'), rxMaxDepth: need('rxMaxDepth') },
     primitives: primitivesDoc && Array.isArray(primitivesDoc.primitives) ? primitivesDoc.primitives : undefined,
+    // 数据档 RX 读规则表值、加载期规则分类读条件列表（卷二 §2.9 第 4 条、§1.12，封卷后勘误 1118k31）。
+    rules: read.rules,
   });
   // 账本的资源种类表、ledger.json 与本卷词表条目的跨字段校验（卷六 §2.1、§2.2、§2.5；字段含义只在 kernel/ledger.mjs 读，A6-1.1）。
   // 声明表合并与核对（卷二 §2.7；state-owners.json 的 L0 语法错误一并报出）。

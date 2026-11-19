@@ -1,4 +1,13 @@
 {
+ "conversions": [
+  {
+   "basis": "含水率 fraction 是每千克含水的千克数，折升除以水的液态密度：卷三甲 §4.5.5 例 1 全集表 mat_water 行「密度液」1.0 kg/L（卷三甲-物质本源.md:563；material.json mat_water density.liquid=1，设定级 designed）。卷三乙 :628 hydration 用（李白 11-19 12:5x (d)）",
+   "divideBy": 1,
+   "divideByUnit": "kg_per_L",
+   "from": "fraction",
+   "to": "L_per_kg"
+  }
+ ],
  "units": [
   {
    "dimension": "volume_per_mass",

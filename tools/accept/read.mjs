@@ -11,6 +11,8 @@ import { tokenize, importsOf } from './lib/js-scan.mjs';
 export const LAYOUT = Object.freeze({
   stateOwners: 'world/ontology/state-owners.json',
   dimensionsDir: 'world/ontology/dimensions',
+  // 未建派生登记（卷二 §1.12 勘误 1118k23；与 server-plugin/kernel/load/world.mjs LAYOUT.unbuiltDerived 同名），param_consumed 判数据侧消费者时读。
+  unbuiltDerived: '_unbuilt-derived.json',
   accDir: 'tools/accept',
   outDir: 'tools/accept/out',
   detectorsDir: 'tools/accept/detectors',

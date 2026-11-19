@@ -6,14 +6,14 @@
 // 表头声明的命名条件（namedConditions，如 byDigestible）与逐格来源级别（cellGrades，卷三甲 M-22）按声明通用处理。
 
 import { parseJsonStrict } from '../load/json-text.mjs';
-import { loadVocab, loadUnits } from '../load/vocab-load.mjs';
+import { loadVocab, loadUnits, loadUnitConversions } from '../load/vocab-load.mjs';
 import { flattenTable } from '../load/flatten.mjs';
 import { checkDef, splitKey, isErrorCode, CODE_RE, KEY_RE, CODE_ENUMS, TYPES, DOMAIN_OPTIONAL, T, markersOf } from './types.mjs';
-import { checkRows, checkPrecedence, checkComponents, checkRequired, requiredSyntaxOk } from './rows.mjs';
+import { checkRows, checkPrecedence, checkComponents, checkRequired, requiredSyntaxOk, valueOf } from './rows.mjs';
 import { prepareNamedConditions } from './named-conditions.mjs';
 import { checkCellGrades } from './cell-grades.mjs';
 import { checkEffects } from './effects-validate.mjs';
-import { compileRXInScope } from '../rx.mjs';
+import { compileRXInScope, evaluateRX, rxChildren, splitDimKey, RxError } from '../rx.mjs';
 import { REGISTERED_CODES } from '../error-codes.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -74,6 +74,7 @@ export function validateDimensions(sources, options) {
   const entityPrefixes = [...new Set(tables.flatMap((t) => (Array.isArray(t.entity.idPrefix) ? t.entity.idPrefix : [])))].sort();
   const vocab = loadVocab(vocabDoc, entityPrefixes, err);
   const units = loadUnits(unitsDoc, err);
+  const unitConversions = loadUnitConversions(unitsDoc, units, err);
   if (vocab.families.has(KIND_FAMILY)) {
     const fam = vocab.families.get(KIND_FAMILY);
     for (const t of tables) if (!Object.hasOwn(fam.entries, fam.prefix + t.kind)) err({ code: 'E-DIM-SCHEMA-KIND', level: 'L0', table: t.kind, row: '', dim: 'kind', path: `${t.file}#/kind`, got: t.kind, want: `registered in vocab family ${KIND_FAMILY}` });
@@ -106,7 +107,7 @@ export function validateDimensions(sources, options) {
   // ---------- L1 表头 ----------
   const kinds = new Set([...tables.map((t) => t.kind), T.id_kind.effect]);
   const tableDims = new Map(tables.map((t) => [t.kind, t.doc.dimensions]));
-  const env = { units, vocab, kinds, idIndex, tableDims, displaySet: new Set(options.displaySet), compiled: new Map() };
+  const env = { units, unitConversions, vocab, kinds, idIndex, tableDims, displaySet: new Set(options.displaySet), compiled: new Map() };
   for (const t of tables) checkHeader(t, env, err);
 
   // RX 编译用的维度表：全部表的维度键；同名维度在不同表类型不同即标为歧义（rx.mjs 编到它时报 E-MOD-RX）。
@@ -115,11 +116,12 @@ export function validateDimensions(sources, options) {
     if (!rxDims.has(k)) rxDims.set(k, d);
     else if (JSON.stringify(rxDims.get(k)) !== JSON.stringify(d)) rxDims.set(k, { ambiguous: true });
   }
-  env.rxScope = { dims: rxDims, vocabIndex: vocab.index, ns: options.ns, maxDepth: options.limits.rxMaxDepth };
+  env.rxScope = { dims: rxDims, vocabIndex: vocab.index, ns: options.ns, maxDepth: options.limits.rxMaxDepth, rules: options.rules };
   env.rxDims = rxDims;
 
   // ---------- L1 未建派生登记（卷二 §1.12 封卷后勘误 1118k23）：登记所指必须是本表 derived 维度 ----------
   const unbuiltByTable = readUnbuiltRegistry(unbuiltDoc, tables, err);
+  const unbuiltNames = readUnbuiltNames(unbuiltDoc, vocab, err);
 
   // ---------- L1 派生式：按本表维度在加载期编译，维度级环（§2.9 第 4 条 :1182–:1183、§4.1 L1 :1500、§1.12 RA-N3 :380） ----------
   for (const t of tables) {
@@ -140,12 +142,17 @@ export function validateDimensions(sources, options) {
   for (const t of tables) { checkRows(t, env, err); checkPrecedence(t, env, err); }
   // 加载期反查索引（卷二 §1.12 封卷后勘误 1118k23；卷三乙 :627）：展平与自检之后遍历一次全表建成只读索引。
   for (const t of tables) buildReverseIndexes(t, err);
+  // 加载期规则分类（§1.12 封卷后勘误 1118k31；卷三乙 :618 派生大类）：反查索引之后、按规则表条件逐行求一次。
+  for (const t of tables) buildRuleIndexes(t, env, { ...options, unbuiltNames }, err);
   checkComponents(new Map(tables.map((t) => [t.kind, t])), env, err);
   for (const t of tables) { t.named = prepareNamedConditions(t, env, err); checkRequired(t, env, err, stats); checkCellGrades(t, err); }
 
   // 效果族表（§3.9、§4.1 L2）：族行、RX、原语与动词的引用闭合；通过的族行与编好的 RX 树随加载结果交出，供 kernel/effects.mjs 求值。
   const effects = checkEffects(effectsDoc, env, options, err);
 
+  // 规则表的 RX 值在本函数之后按 env.rxScope 编（kernel/load/world.mjs checkRules）：只有规则表条件可写已登记的未建名（勘误 1118k31）；
+  // 派生式、行上 RX、修正项、效果族都在上面编完，用的作用域不含未建名。
+  env.rxScope = { ...env.rxScope, unbuiltNames };
   return report(errors, tables, stats, env, effects);
 }
 
@@ -194,14 +201,38 @@ function readUnbuiltRegistry(doc, tables, err) {
   return out;
 }
 
+// 未建名登记（同文件 names，勘误 1118k31，李白 11-19 13:2x ②）：[{name, family, volume, card}]，登记一个别卷未建的词表条目名；
+// 只许写在规则表条件里，求值按未命中。名字须合代号文法、族已登记且前缀相符、族里还没有该条目（已登记就得删掉这条）。
+function readUnbuiltNames(doc, vocab, err) {
+  const out = new Set();
+  const list = isObj(doc) && doc.names !== undefined ? doc.names : [];
+  const bad = (i, code, got, want) => err({ code, level: 'L1', table: '_unbuilt-derived', row: '', dim: '', path: `_unbuilt-derived.json#/names/${i}`, got, want });
+  if (!Array.isArray(list)) { bad('', 'E-DIM-STRUCT-FIELD', list, 'names array'); return out; }
+  list.forEach((e, i) => {
+    if (!isObj(e) || typeof e.name !== 'string' || !CODE_RE.test(e.name) || typeof e.volume !== 'string' || !e.volume || typeof e.card !== 'string' || !CARD_CODE_RE.test(e.card)) { bad(i, 'E-DIM-STRUCT-FIELD', e, '{name, family, volume, card}'); return; }
+    const fam = vocab.families.get(e.family);
+    if (!fam || !e.name.startsWith(fam.prefix)) { bad(i, 'E-DIM-REF-MISSING', e.family, 'registered vocab family whose prefix the name carries'); return; }
+    if (vocab.index.has(e.name)) { bad(i, 'E-DIM-STRUCT-FIELD', e.name, 'already registered: remove it from names'); return; }
+    if (out.has(e.name)) { bad(i, 'E-DIM-DUPLICATE-KEY', e.name, 'one entry per name'); return; }
+    out.add(e.name);
+  });
+  return out;
+}
+
 // 派生式里引用的维度键（§2.9 第 4 条 `dim` 变体）；只走子树字段，`agg` 的 dim 是关系对象上的维度名，不是本表变量。
 function treeDimKeys(tree) {
+  const keys = new Set();
+  for (const k of treeDimRefs(tree)) keys.add(splitDimKey(k).dim);
+  return [...keys].sort();
+}
+
+// 式里读到的维度键原样（带下标的保留下标）。
+function treeDimRefs(tree) {
   const keys = new Set();
   const walk = (n) => {
     if (!n || typeof n !== 'object') return;
     if (n.op === T.rx_op.dim && typeof n.key === 'string') keys.add(n.key);
-    for (const k of ['left', 'right', 'item', 'set', 'filter']) walk(n[k]);
-    if (Array.isArray(n.items)) n.items.forEach(walk);
+    rxChildren(n).forEach(walk);
   };
   walk(tree);
   return [...keys].sort();
@@ -211,7 +242,28 @@ function treeDimKeys(tree) {
 function derivedScope(dims, env, options) {
   const scopeDims = new Map(Object.entries(dims));
   for (const [k, d] of env.rxDims) if (!scopeDims.has(k)) scopeDims.set(k, d);
-  return { dims: scopeDims, vocabIndex: env.vocab.index, ns: options.ns, maxDepth: options.limits.rxMaxDepth };
+  return { dims: scopeDims, vocabIndex: env.vocab.index, ns: options.ns, maxDepth: options.limits.rxMaxDepth, rules: options.rules };
+}
+
+// 维度的单位（map 维度取值类型的单位；带下标的维度键读 map 的值）。
+function unitOfKey(dims, key) {
+  const { dim, sub } = splitDimKey(key);
+  const def = dims[dim];
+  if (!isObj(def)) return undefined;
+  const d = def.type === T.type.map || sub !== undefined ? def.value : def;
+  return isObj(d) && typeof d.unit === 'string' ? d.unit : undefined;
+}
+
+// 单位换算（§1.4 conversions，勘误 1118k31）：派生式整式只读一个维度、单位与派生维度不同时，按登记的换算除以 divideBy；
+// 没登记换算即编译失败（E-MOD-RX），不按同值交回。其余式子的单位不在此核。
+function convertUnit(tree, def, dims, env) {
+  if (tree.op !== T.rx_op.dim) return { tree };
+  const from = unitOfKey(dims, tree.key);
+  const to = typeof def.unit === 'string' ? def.unit : undefined;
+  if (from === undefined || to === undefined || from === to) return { tree };
+  const row = env.unitConversions && env.unitConversions.get(from) ? env.unitConversions.get(from).get(to) : undefined;
+  if (!row) return { error: { code: 'E-MOD-RX', got: `${from} -> ${to}`, want: 'unit conversion registered in _units.json conversions' } };
+  return { tree: Object.freeze({ op: T.rx_op.div, left: tree, right: Object.freeze({ op: T.rx_op.num, value: row.divideBy }) }) };
 }
 
 // 单条派生式的可编译性：返回 {tree} 或 {error}。只收带登记码的 RX 编译错误（§2.9 第 4 条 :1183、:1234）；
@@ -229,7 +281,7 @@ function compileOne(def, dims, env, options) {
   }
   const foreign = treeDimKeys(compiled.tree).filter((k) => !Object.hasOwn(dims, k));
   if (foreign.length) return { error: { code: 'E-DIM-DERIVED-VAR', got: foreign.join(','), want: 'variable declared in this table (base-value dimension of the subject)' } };
-  return { tree: compiled.tree };
+  return convertUnit(compiled.tree, def, dims, env);
 }
 
 // 登记里的维度跳过编译；但登记了却已能写成 RX 的派生式必须从登记删除（E-DIM-STRUCT-FIELD），防止登记变成后门。
@@ -327,6 +379,91 @@ function buildReverseIndexes(t, err) {
   t.reverse = out;
 }
 
+// 加载期规则分类（卷二 §1.12 封卷后勘误 1118k31；卷三乙 :618、M-9 派生大类的整类写法）：维度头 .ruleIndex = {table, key, requiredUnless?}
+// 指规则表 rules.<table>.<key> 的条件列表 [{when, value}]；本维度是 set<ref vocab F>，不写 derived、不进 RX 读数、行上不得手填。
+// 每条 when 按本表维度编译（另可读 classes：本行组件类连 broader 上位，只作 member 的 set），逐行求一次，命中的 value 全部记入；
+// when 里读到未知的按未命中（§1.12 未知传播总则）。族 F 的每个条目都须有条件（缺即 E-DIM-REF-MISSING）；
+// requiredUnless 指一个维度：本行该维度未知或为 null 且分类结果为空集即 E-DIM-REQUIRED-MISSING。
+function buildRuleIndexes(t, env, options, err) {
+  const dims = t.doc.dimensions;
+  const out = new Map();
+  for (const [dim, def] of Object.entries(dims).sort(([a], [b]) => cmp(a, b))) {
+    if (!isObj(def) || def.ruleIndex === undefined) continue;
+    const at = { table: t.kind, row: '', dim, path: `${t.file}#/dimensions/${dim}/ruleIndex` };
+    const bad = (code, got, want, row = '') => err({ code, level: 'L1', ...at, row, got, want });
+    const ri = def.ruleIndex;
+    const fam = isObj(def.of) && def.of.type === T.type.ref ? def.of.vocab : undefined;
+    if (def.type !== T.type.set || typeof fam !== 'string' || !env.vocab.families.has(fam)) { bad('E-DIM-STRUCT-FIELD', def.type, 'set<ref vocab F>'); continue; }
+    if (def.derived !== undefined || def.sample !== undefined || def.reverseIndex !== undefined) { bad('E-DIM-STRUCT-FIELD', 'ruleIndex with derived/sample/reverseIndex', 'one of ruleIndex, reverseIndex, derived, sample'); continue; }
+    if (!isObj(ri) || typeof ri.table !== 'string' || typeof ri.key !== 'string' || (ri.requiredUnless !== undefined && !Object.hasOwn(dims, ri.requiredUnless))) { bad('E-DIM-STRUCT-FIELD', ri, '{table, key, requiredUnless?: dimension of this table}'); continue; }
+    const tableRules = isObj(options.rules) && isObj(options.rules[ri.table]) ? options.rules[ri.table] : undefined;
+    const list = tableRules && Object.hasOwn(tableRules, ri.key) ? tableRules[ri.key] : undefined;
+    if (!Array.isArray(list)) { bad('E-DIM-REF-MISSING', `${ri.table}.${ri.key}`, 'registered rules list [{when, value}]'); continue; }
+    // 行上手填即报（同 derived、reverseIndex 口径）。
+    for (const section of ['classes', 'rows', 'generated']) {
+      for (const [rowId, row] of Object.entries(isObj(t.doc[section]) ? t.doc[section] : {})) {
+        if (!isObj(row)) continue;
+        for (const key of Object.keys(row).sort()) if (splitKey(key).dim === dim) err({ code: 'E-DIM-DERIVED-WRITTEN', level: 'L1', table: t.kind, row: rowId, dim, path: `${t.file}#/${section}/${rowId}/${key}`, got: key, want: 'loader-index dimensions are not written' });
+      }
+    }
+    const scopeDims = new Map(Object.entries(dims).filter(([, d]) => isObj(d) && d.derived === undefined && d.sample === undefined && d.ruleIndex === undefined));
+    // 命名空间只收代号等于本表 kind 的登记行（读"被求值的那一份"本表行，如卷四登记的 material.classes）。
+    const ownNs = (options.ns || []).filter((r) => r.ns === t.kind);
+    const scope = { dims: scopeDims, vocabIndex: env.vocab.index, ns: ownNs, maxDepth: options.limits.rxMaxDepth, rules: options.rules, unbuiltNames: options.unbuiltNames };
+    const compiled = [];
+    list.forEach((entry, i) => {
+      const where = `rules.${ri.table}.${ri.key}[${i}]`;
+      if (!isObj(entry) || typeof entry.when !== 'string') { bad('E-DIM-STRUCT-FIELD', entry, '{when: rx, value}', where); return; }
+      const rec = env.vocab.index.get(entry.value);
+      if (!rec || rec.family !== fam) { bad('E-DIM-REF-MISSING', entry.value, `entry of vocab family ${fam}`, where); return; }
+      let c;
+      try { c = compileRXInScope(entry.when, 'data', scope); } catch (e) {
+        if (codeOf(e) === null) throw e;
+        bad(codeOf(e), e.message, 'compilable boolean data-profile RX', where); return;
+      }
+      // 引用已登记未建名的条件照登、求值按未命中（李白 11-19 13:2x ②）。
+      compiled.push({ when: c.tree, value: entry.value, nsRefs: c.nsRefs, unbuilt: c.unbuiltRefs.length > 0 });
+    });
+    const covered = new Set(compiled.map((c) => c.value));
+    for (const code of Object.keys(env.vocab.families.get(fam).entries).sort()) if (!covered.has(code)) bad('E-DIM-REF-MISSING', code, `a condition in rules.${ri.table}.${ri.key}`);
+    const index = new Map();
+    for (const [rowId] of t.flat.rows) {
+      const raw = isObj(t.doc.rows) && isObj(t.doc.rows[rowId]) ? t.doc.rows[rowId] : isObj(t.doc.generated) && isObj(t.doc.generated[rowId]) ? t.doc.generated[rowId] : {};
+      const read = (key) => {
+        const { dim: k, sub } = splitDimKey(key);
+        if (sub !== undefined) { const m = read(k); return m.known && isObj(m.value) && Object.hasOwn(m.value, sub) ? { known: true, value: m.value[sub] } : { known: false }; }
+        if (k === T.row_field.classes) return { known: true, value: [...new Set((Array.isArray(raw.classes) ? raw.classes : []).flatMap((c) => [c, ...env.vocab.ancestors(c)]))].sort(cmp) };
+        if (isObj(dims[k]) && dims[k].reverseIndex !== undefined) {
+          const ix = t.reverse instanceof Map ? t.reverse.get(k) : undefined;
+          return { known: true, value: ix instanceof Map && ix.has(rowId) ? ix.get(rowId) : [] };
+        }
+        return valueOf(t, rowId, raw, k);
+      };
+      const hits = new Set();
+      for (const c of compiled) {
+        if (c.unbuilt) continue;
+        const bound = {};
+        for (const k of treeDimRefs(c.when)) { const v = read(k); if (v.known && v.value !== undefined && v.value !== null) bound[k] = v.value; }
+        const nsReads = {};
+        for (const ref of c.nsRefs) { const v = read(ref.slice(t.kind.length + 1)); if (v.known && v.value !== undefined && v.value !== null) nsReads[ref] = v.value; }
+        let hit = false;
+        try { hit = evaluateRX(c.when, { dim: bound, clock: {} }, nsReads) === true; } catch (e) {
+          if (!(e instanceof RxError && e.key !== undefined)) throw e; // 缺读数 = 未知，按未命中
+        }
+        if (hit) hits.add(c.value);
+      }
+      const value = Object.freeze([...hits].sort(cmp));
+      index.set(rowId, value);
+      if (ri.requiredUnless !== undefined && !value.length) {
+        const v = read(ri.requiredUnless);
+        if (!v.known || v.value === null || v.value === undefined) err({ code: 'E-DIM-REQUIRED-MISSING', level: 'L3', table: t.kind, row: rowId, dim, path: `${t.file}#/rows/${rowId}`, got: 'empty', want: `${dim} non-empty when ${ri.requiredUnless} is empty` });
+      }
+    }
+    out.set(dim, index);
+  }
+  t.ruleIndexes = out;
+}
+
 function checkHeader(t, env, err) {
   const { doc, kind, file } = t;
   const dims = doc.dimensions;
@@ -385,7 +522,7 @@ function report(errors, tables, stats, env, effects) {
     coverage: coverageText(stats.coverage),
     rx: env.compiled,
     effects,
-    tables: new Map(tables.map((t) => [t.kind, { doc: t.doc, flat: t.flat, derived: t.derived || new Map(), unbuilt: t.unbuilt || new Set(), reverse: t.reverse || new Map() }])),
+    tables: new Map(tables.map((t) => [t.kind, { doc: t.doc, flat: t.flat, derived: t.derived || new Map(), unbuilt: t.unbuilt || new Set(), reverse: t.reverse || new Map(), ruleIndexes: t.ruleIndexes || new Map() }])),
     vocab: env.vocab,
     idIndex: env.idIndex,
     env,

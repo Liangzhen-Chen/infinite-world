@@ -1,5 +1,12 @@
 {
  "families": {
+  "aggregate": {
+   "closed": true,
+   "entries": {
+    "agg_known": {}
+   },
+   "prefix": "agg_"
+  },
   "budget_mode": {
    "closed": true,
    "entries": {
@@ -307,9 +314,14 @@
   "matcat": {
    "closed": false,
    "entries": {
-    "matcat_char": {},
-    "matcat_volatile_fuel": {},
-    "matcat_wax_fat": {}
+    "matcat_ceramic": {"materialClass": "class_ceramic"},
+    "matcat_char": {"materialClass": "class_char"},
+    "matcat_grain": {"materialClass": "class_grain"},
+    "matcat_paper": {"materialClass": "class_paper"},
+    "matcat_supernatural": {"materialClass": null},
+    "matcat_textile": {"materialClass": "class_fabric"},
+    "matcat_volatile_fuel": {"materialClass": null},
+    "matcat_wax_fat": {"materialClass": "class_fat"}
    },
    "prefix": "matcat_"
   },

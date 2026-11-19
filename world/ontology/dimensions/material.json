@@ -1670,7 +1670,6 @@
    "unit": "fraction"
   },
   "categories": {
-   "derived": "卷三乙 §2.1：派生大类规则",
    "domain": {
     "maxSize": 4
    },
@@ -1682,11 +1681,16 @@
    "onUnknown": "skip",
    "owner": "卷三乙 §2.1",
    "required": "never",
+   "ruleIndex": {
+    "key": "matcatRules",
+    "requiredUnless": "substance",
+    "table": "materials"
+   },
    "source": "卷三甲 §2.1",
    "type": "set"
   },
   "charYield": {
-   "derived": "卷三乙 §2.1",
+   "derived": "reactionYield[rules.materials.charReaction]",
    "domain": [
     0,
     1
@@ -1966,7 +1970,7 @@
    "unit": "MJ_per_kg_dry"
   },
   "hydration": {
-   "derived": "卷三乙 §2.1：由 moisture 推出",
+   "derived": "moisture",
    "domain": [
     0,
     1
@@ -1975,7 +1979,7 @@
    "onUnknown": "gap",
    "owner": "卷三乙 §2.1",
    "precision": 4,
-   "required": "never",
+   "required": "byClass:comp_drinkable",
    "source": "卷三甲 §2.1",
    "type": "number",
    "unit": "L_per_kg"

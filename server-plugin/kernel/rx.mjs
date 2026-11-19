@@ -15,7 +15,10 @@ import { T, GRAMMAR_TOKENS } from './handles/markers.mjs';
 const TOK = Object.freeze({ num: 'num', name: 'name', op: 'op', eof: 'eof' });
 const PROFILE = Object.freeze({ data: 'data' });
 const FAMILY = Object.freeze({ aggregate: 'aggregate', relation: 'relation' });
-const AGG_PRIM = Object.freeze({ exists: 'exists', count: 'count' });
+const AGG_PRIM = Object.freeze({ exists: 'exists', count: 'count', known: 'known' });
+// 数据档读规则表值的名字根（卷二 §2.9 第 4 条，封卷后勘误 1118k31）：`rules.<表代号>.<键>[.<子键>…]` 在加载期取值，
+// 数值编成 num、已登记代号编成 handle；别的形状与缺键即编译失败（E-MOD-RX）。
+export const NAME_ROOT = Object.freeze({ rules: 'rules' });
 
 export class RxError extends Error {
   constructor(message, code) { super(message); this.code = code || 'E-MOD-RX'; }
@@ -114,7 +117,18 @@ function parse(text, profile, scope) {
     if (t.k !== TOK.name) fail(`unexpected ${t.v || t.k}`);
     i++;
     if (isOp('(')) return call(t.v, args());
+    if (isOp(GRAMMAR_TOKENS.subOpen)) return subscript(t.v);
     return resolveName(t.v, profile, scope, node);
+  }
+  // `map维[下标]`：读本主体 map 型维度的一个键，编成带下标的 DimKey（卷二 :1613）；下标须在编译期定成代号或数值。
+  function subscript(name) {
+    i++;
+    const sub = orExpr();
+    take(GRAMMAR_TOKENS.subClose);
+    if (sub.op !== T.rx_op.handle && sub.op !== T.rx_op.num) fail(`subscript of ${name} must be a fixed code or number`);
+    const def = scope.dims && scope.dims.get(name);
+    if (!def || def.type !== T.type.map) fail(`${name} is not a map dimension`);
+    return node({ op: T.rx_op.dim, key: `${name}${GRAMMAR_TOKENS.subOpen}${sub.value}${GRAMMAR_TOKENS.subClose}` });
   }
   function call(name, list) {
     const handleOf = (n) => (n.op === T.rx_op.handle ? n.value : fail(`${name} needs a handle argument`));
@@ -129,6 +143,9 @@ function parse(text, profile, scope) {
       if (dim && dim.op !== T.rx_op.dim) fail('agg dim argument must name a dimension');
       return node({ op: T.rx_op.agg, fn: handleOf(fn), rel: handleOf(rel), dim: dim ? dim.key : null, filter: filter || null });
     }
+    // 无关系原语（§1.12 表；勘误 1118k31）：按原语名找 aggregate 族里登记的条目，rel 为 null，参数放 args。
+    const fn = aggregateHandle(name, scope);
+    if (fn !== undefined) return node({ op: T.rx_op.agg, fn, rel: null, dim: null, filter: null, args: list });
     return fail(`unknown function ${name}`);
   }
   const tree = orExpr();
@@ -148,14 +165,57 @@ function resolveName(name, profile, scope, node) {
     return node(arg.length ? { op: T.rx_op.ns, ns: nsRow.ns, arg } : { op: T.rx_op.ns, ns: nsRow.ns });
   }
   const [head, field, ...more] = segs;
+  if (head === NAME_ROOT.rules) return node(ruleConstant(name, segs.slice(1), scope));
   if (head === T.rx_op.clock && field !== undefined && !more.length) {
     if (!CLOCK_FIELDS.has(field)) fail(`clock field ${field}`);
     return node({ op: T.rx_op.clock, field });
   }
   if (scope.dims && scope.dims.has(name)) return node({ op: T.rx_op.dim, key: name });
   if (scope.vocabIndex && scope.vocabIndex.has(name)) return node({ op: T.rx_op.handle, value: name });
+  // 已登记的未建名（_unbuilt-derived.json names，勘误 1118k31）：只有交了 unbuiltNames 的作用域（规则表条件）收，编成句柄并由调用方按未命中处理。
+  if (scope.unbuiltNames && scope.unbuiltNames.has(name)) return node({ op: T.rx_op.handle, value: name });
   if (segs.length > 1) return fail(`unregistered namespace in ${name}`, 'E-RX-NS-UNKNOWN');
   return fail(`unknown name ${name}`);
+}
+
+// 规则表值（勘误 1118k31）：加载期从 scope.rules 按段取；数值编成 num，已登记代号编成 handle；缺表、缺键或别的形状编译失败。
+function ruleConstant(name, path, scope) {
+  let v = scope.rules;
+  for (const seg of path) v = v !== null && typeof v === 'object' && !Array.isArray(v) && Object.hasOwn(v, seg) ? v[seg] : undefined;
+  if (!path.length || v === undefined) return fail(`rules value ${name} is not registered`);
+  if (typeof v === 'number') return { op: T.rx_op.num, value: fixedToNumber(fixedUnits(v)) };
+  if (typeof v === 'string' && scope.vocabIndex && scope.vocabIndex.has(v)) return { op: T.rx_op.handle, value: v };
+  return fail(`rules value ${name} is not a number or a registered code`);
+}
+
+// 无关系原语的句柄：aggregate 族里后缀等于原语名的已登记条目；族未登记或没有该条目即 undefined。
+function aggregateHandle(name, scope) {
+  if (!scope.vocabIndex || !Object.values(AGG_PRIM).includes(name)) return undefined;
+  for (const [code, rec] of scope.vocabIndex) if (rec.family === FAMILY.aggregate && code === rec.prefix + name) return code;
+  return undefined;
+}
+
+// 原语名：句柄去掉族前缀（§1.9 前缀以第一个 `_` 结束）。求值时没有词表，按代号文法取。
+const primOf = (fn) => fn.slice(fn.indexOf('_') + 1);
+
+/** 带下标的 DimKey 拆成维代号与下标（卷二 :1613）；不带下标的 sub 为 undefined。@param {string} key */
+export function splitDimKey(key) {
+  const at = key.indexOf(GRAMMAR_TOKENS.subOpen);
+  if (at < 0 || !key.endsWith(GRAMMAR_TOKENS.subClose)) return { dim: key, sub: undefined };
+  return { dim: key.slice(0, at), sub: key.slice(at + 1, -1) };
+}
+
+// 维度键对应的类型定义：带下标的读 map 维度的值类型（单位随值）。
+function dimDefOf(dims, key) {
+  const { dim, sub } = splitDimKey(key);
+  const def = dims.get(dim);
+  if (sub === undefined || !def || def.type !== T.type.map) return sub === undefined ? def : undefined;
+  return def.value;
+}
+
+/** rxTree 一个节点的全部子树（各遍历共用）。@param {any} n @returns {any[]} */
+export function rxChildren(n) {
+  return [n.left, n.right, n.item, n.set, n.filter, ...(n.items || []), ...(n.args || [])].filter((x) => x && typeof x === 'object');
 }
 
 // RX 类型规则（§2.9 第 4 条第 1–3 点）：编译期能定的都在编译期核。
@@ -164,7 +224,7 @@ function typeOf(n, scope) {
   switch (n.op) {
     case T.rx_op.num: return 'number';
     case T.rx_op.handle: return 'handle';
-    case T.rx_op.dim: return dimRxType(scope.dims.get(n.key), n.key);
+    case T.rx_op.dim: return dimRxType(dimDefOf(scope.dims, n.key), n.key);
     case T.rx_op.clock: return n.field === T.code_enum.rx_clock.day ? 'number' : 'handle';
     case T.rx_op.ns: {
       const row = scope.ns.find((r) => r.ns === n.ns);
@@ -198,6 +258,14 @@ function typeOf(n, scope) {
       if (n.filter) want(n.filter, 'boolean');
       const fam = scope.vocabIndex.get(n.fn);
       if (!fam || fam.family !== FAMILY.aggregate) fail(`agg fn ${n.fn} is not an aggregate handle`);
+      if (n.rel === null) {
+        // 无关系原语（勘误 1118k31）：只建了 known（参数恰一个，读维度或命名空间读数，结果布尔）。
+        const prim = n.fn.slice(fam.prefix.length);
+        if (prim !== AGG_PRIM.known) fail(`primitive ${prim} has no relation-free form built`);
+        if (n.args.length !== 1 || (n.args[0].op !== T.rx_op.dim && n.args[0].op !== T.rx_op.ns)) fail('known(x) takes one dimension or namespace read');
+        typeOf(n.args[0], scope);
+        return 'boolean';
+      }
       const rel = scope.vocabIndex.get(n.rel);
       if (!rel || rel.family !== FAMILY.relation) fail(`agg rel ${n.rel} is not a relation handle`);
       const prim = n.fn.slice(fam.prefix.length);
@@ -242,8 +310,7 @@ export function dimRxType(def, key, allowSet = false) {
 }
 
 function depthOf(n) {
-  const kids = [n.left, n.right, n.item, n.set, n.filter, ...(n.items || [])].filter((x) => x && typeof x === 'object');
-  return 1 + kids.reduce((m, k) => Math.max(m, depthOf(k)), 0);
+  return 1 + rxChildren(n).reduce((m, k) => Math.max(m, depthOf(k)), 0);
 }
 
 function deepFreeze(v) {
@@ -276,13 +343,15 @@ export function compileRXInScope(text, profile, scope) {
   if (typeOf(tree, scope) === T.rx_kind.set) fail('a set field is only a member set, not a value');
   if (!(depthOf(tree) <= scope.maxDepth)) fail(`depth exceeds ${scope.maxDepth}`);
   const nsRefs = [];
+  const unbuiltRefs = [];
   const walk = (n) => {
     if (!n || typeof n !== 'object') return;
     if (n.op === T.rx_op.ns) nsRefs.push(nsKey(n));
-    [n.left, n.right, n.item, n.set, n.filter, ...(n.items || [])].forEach(walk);
+    if (n.op === T.rx_op.handle && scope.unbuiltNames && scope.unbuiltNames.has(n.value)) unbuiltRefs.push(n.value);
+    rxChildren(n).forEach(walk);
   };
   walk(tree);
-  return deepFreeze({ tree, nsRefs: [...new Set(nsRefs)].sort() });
+  return deepFreeze({ tree, nsRefs: [...new Set(nsRefs)].sort(), unbuiltRefs: [...new Set(unbuiltRefs)].sort() });
 }
 
 /** @param {{ns: string, arg?: string[]}} n 命名空间读数节点 @returns {string} */
@@ -341,6 +410,14 @@ export function evaluateRX(tree, bindings, nsReads) {
           : own(bindings && bindings.dim, n.set.key) ? bindings.dim[n.set.key] : missing(`no binding for dimension ${n.set.key}`, n.set.key);
         if (!Array.isArray(set)) fail('member set binding must be a list');
         return { t: 'boolean', v: set.includes(item.v) };
+      }
+      // 无关系原语 known(x)（勘误 1118k31）：x 有读数为真，缺读数（未知）为假；唯一不按未知传播的原语。
+      case T.rx_op.agg: {
+        if (n.rel !== null || primOf(n.fn) !== AGG_PRIM.known) return fail(`variant ${n.op} has no evaluation source in P-2`);
+        try { run(n.args[0]); return { t: 'boolean', v: true }; } catch (e) {
+          if (e instanceof RxError && e.key !== undefined) return { t: 'boolean', v: false };
+          throw e;
+        }
       }
       default: return fail(`variant ${n.op} has no evaluation source in P-2`);
     }

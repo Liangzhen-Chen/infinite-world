@@ -72,6 +72,26 @@ export function loadUnits(unitsDoc, err) {
   return units;
 }
 
+// `_units.json` 的 conversions（卷二 §1.4，封卷后勘误 1118k31）：[{from, to, divideBy, divideByUnit, basis}]，
+// 派生式整式只读一个维度、该维度单位与派生维度单位不同时，读数除以 divideBy（单位 divideByUnit）折成 to。返回 Map<from, Map<to, 行>>。
+/** @param {unknown} unitsDoc @param {Map<string, unknown>} units @param {(...args: unknown[]) => void} err */
+export function loadUnitConversions(unitsDoc, units, err) {
+  const out = new Map();
+  const rows = unitsDoc && unitsDoc.conversions !== undefined ? unitsDoc.conversions : [];
+  if (!Array.isArray(rows)) { err({ code: 'E-DIM-STRUCT-FIELD', table: '_units', row: 'conversions', got: typeof rows, want: 'conversions list' }); return out; }
+  rows.forEach((c, i) => {
+    const row = `conversions/${i}`;
+    const bad = (code, got, want) => err({ code, table: '_units', row, got, want });
+    if (!c || typeof c !== 'object' || typeof c.basis !== 'string' || !c.basis || typeof c.divideBy !== 'number' || !(c.divideBy > 0)) { bad('E-DIM-STRUCT-FIELD', c, '{from, to, divideBy > 0, divideByUnit, basis}'); return; }
+    for (const u of [c.from, c.to, c.divideByUnit]) if (!units.has(u)) { bad('E-DIM-UNIT-UNKNOWN', u, 'registered unit'); return; }
+    if (c.from === c.to) { bad('E-DIM-STRUCT-FIELD', c.from, 'from and to differ'); return; }
+    if (!out.has(c.from)) out.set(c.from, new Map());
+    if (out.get(c.from).has(c.to)) { bad('E-DIM-DUPLICATE-KEY', `${c.from}/${c.to}`, 'one conversion per (from, to)'); return; }
+    out.get(c.from).set(c.to, c);
+  });
+  return out;
+}
+
 // ---------- JSON 文本（L0 语法）的指针与标量 ----------
 // 原 kernel/handles/patterns.mjs 搬入：kernel 行规定"JSON 文本解析只在 kernel/load/*"，而 S13 (b) 只许见名文件用正则，
 // 本文件是 load/* 里唯一列在 (b) 的文件（自身不 import 任何 kernel 文件，不成环）。

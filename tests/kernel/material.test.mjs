@@ -16,9 +16,11 @@ import { dim } from '../../server-plugin/kernel/dimensions.mjs';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DIR = join(ROOT, 'world/ontology/dimensions');
 const read = (f) => readFileSync(join(DIR, f), 'utf8');
-const C = ruleTable(readRules(ROOT).rules, 'kernelConstants');
+const RULES = readRules(ROOT).rules;
+const C = ruleTable(RULES, 'kernelConstants');
 const NS = JSON.parse(readFileSync(join(ROOT, 'world/ontology/state-owners.json'), 'utf8')).rxNamespaces;
-const OPTIONS = { namespaces: ['core'], displaySet: [], ns: NS, limits: { extendsMaxDepth: C.extendsMaxDepth, rxMaxDepth: C.rxMaxDepth } };
+// 派生式读规则表值、派生大类读 rules.materials.matcatRules（卷二 §2.9、§1.12 勘误 1118k31），校验器要拿到真实规则表。
+const OPTIONS = { namespaces: ['core'], displaySet: [], ns: NS, limits: { extendsMaxDepth: C.extendsMaxDepth, rxMaxDepth: C.rxMaxDepth }, rules: RULES };
 const load = () => ({ material: JSON.parse(read('material.json')), vocab: JSON.parse(read('_vocab.json')), units: JSON.parse(read('_units.json')), unbuilt: read('_unbuilt-derived.json') });
 const run = (w) => validateDimensions({ units: JSON.stringify(w.units), vocab: JSON.stringify(w.vocab), unbuilt: w.unbuilt, tables: [{ file: 'material.json', text: JSON.stringify(w.material) }] }, OPTIONS);
 const errs = (r) => r.errors.filter((e) => e.severity === 'error');
@@ -46,15 +48,108 @@ test('真实世界 loadWorld：零 error、零 warning；byDigestible 已按表�
   assert.ok(!r.notCovered.some((x) => x.endsWith(':byDigestible')));
 });
 
-test('真实世界：未建派生登记恰列五处；producedBy 由加载器反查索引给出（李白 11-18 20:20 裁定 B；卷三乙 :627）', () => {
+test('真实世界：未建派生登记只剩 hardness、toughness（缺 strengthSummary 权重，李白 11-19 12:5x (d)）；producedBy 由加载器反查索引给出（卷三乙 :627）', () => {
   const r = loadWorld(ROOT);
   assert.equal(r.ok, true);
-  assert.deepEqual([...r.tables.get('material').unbuilt].sort(), ['categories', 'charYield', 'hardness', 'hydration', 'toughness']);
+  assert.deepEqual([...r.tables.get('material').unbuilt].sort(), ['hardness', 'toughness']);
   const eng = { tables: r.tables, vocab: r.vocab, rules: r.rules, env: r.env };
   // mat_coke 只被一行 reactionProducts[reaction_char] 指向（material.json:4201）→ {reaction_char}；mat_oak 没有行指向 → 空集。
   assert.deepEqual(dim(eng, {}, 'material', 'mat_coke', 'producedBy'), { known: true, applicable: true, value: ['reaction_char'], source: 'index' });
   assert.deepEqual(dim(eng, {}, 'material', 'mat_oak', 'producedBy').value, []);
   assert.throws(() => dim(eng, {}, 'material', 'mat_oak', 'hardness'), (e) => e.code === 'E-MOD-RX');
+});
+
+const worldEngine = () => { const r = loadWorld(ROOT); assert.equal(r.ok, true); return { tables: r.tables, vocab: r.vocab, rules: r.rules, env: r.env }; };
+
+test('charYield = reactionYield[rules.materials.charReaction]（卷三乙 :626）：竹 0.25；该键写 null 的不适用', () => {
+  const eng = worldEngine();
+  // 卷三甲 §4.1.5 例 2 :345 mat_bamboo reactionYield:{reaction_char:0.25}；charReaction 指炭化（卷三甲 :185）。
+  assert.deepEqual(dim(eng, {}, 'material', 'mat_bamboo', 'charYield'), { known: true, applicable: true, value: 0.25, source: 'derived', unit: 'fraction' });
+  const w = load();
+  const nullChar = Object.entries(w.material.rows).filter(([, row]) => row.reactionYield && row.reactionYield.reaction_char === null).map(([id]) => id);
+  assert.ok(nullChar.length > 0);
+  for (const id of nullChar) assert.deepEqual(dim(eng, {}, 'material', id, 'charYield'), { known: false, applicable: false }, id);
+});
+
+test('hydration = moisture 按 _units.json 换算折升，只对挂 comp_drinkable 的材料适用（卷三乙 :628）', () => {
+  const eng = worldEngine();
+  const w = load();
+  // 换算：每千克含水千克数 ÷ 水的液态密度 1 kg/L（卷三甲 :563 mat_water 密度液 1.0）。
+  for (const [id, row] of Object.entries(w.material.rows)) {
+    const f = dim(eng, {}, 'material', id, 'hydration');
+    if ((row.classes || []).includes('comp_drinkable')) assert.deepEqual(f, { known: true, applicable: true, value: row.moisture / 1, source: 'derived', unit: 'L_per_kg' }, id);
+    else assert.deepEqual(f, { known: false, applicable: false }, id);
+  }
+  assert.equal(dim(eng, {}, 'material', 'mat_water', 'hydration').value, 1);
+  // 换算登记删掉：单位不同又无换算，编译失败 E-MOD-RX，不按同值交回。
+  const x = load();
+  delete x.units.conversions;
+  assert.ok(errs(run(x)).some((e) => e.code === 'E-MOD-RX' && e.dim === 'hydration'));
+});
+
+test('categories 由加载器按 rules.materials.matcatRules 逐行求（卷三乙 :571–:584、:707–:722）：与 §4.1.5 例 1 应得结果表"预期派生大类"一致；超自然一条读未建名 comp_arcane（卷十五 :174），按未命中，所以应得表里的 matcat_supernatural 此刻不出现', () => {
+  const eng = worldEngine();
+  const vol = readFileSync(join(ROOT, 'docs/统一底层设计/卷三乙-物态类别与物品.md'), 'utf8').split('\n');
+  const a = vol.findIndex((l) => l.includes('<!--EXPECT-BEGIN-->'));
+  const b = vol.findIndex((l) => l.includes('<!--EXPECT-END-->'));
+  const rows = vol.slice(a + 1, b).filter((l) => /^\| mat_/.test(l)).map((l) => l.split('|').map((x) => x.trim()));
+  assert.equal(rows.length, 93);
+  for (const c of rows) {
+    const want = c[3] === '—' ? [] : c[3].split(/\s+/).filter((x) => x !== 'matcat_supernatural').sort();
+    assert.deepEqual(dim(eng, {}, 'material', c[1], 'categories'), { known: true, applicable: true, value: want, source: 'index' }, c[1]);
+  }
+});
+
+test('未建名（李白 11-19 13:2x ②）：条件引用登记的未建名按未命中、照登不报；名字既没登记又不在未建名里即加载报错；未建名已进词表或族不符也报', () => {
+  const runR = (w, rules) => validateDimensions({ units: JSON.stringify(w.units), vocab: JSON.stringify(w.vocab), unbuilt: w.unbuilt, tables: [{ file: 'material.json', text: JSON.stringify(w.material) }] }, { ...OPTIONS, rules });
+  const listOf = () => RULES.materials.matcatRules.map((x) => ({ ...x }));
+  const w = load();
+  const ok = runR(w, RULES);
+  assert.equal(ok.ok, true);
+  assert.ok([...ok.tables.get('material').ruleIndexes.get('categories').values()].every((v) => !v.includes('matcat_supernatural')));
+  // 写错名（既没登记也不在未建名里）：照旧报错。
+  const typo = listOf().map((x) => (x.value === 'matcat_supernatural' ? { ...x, when: 'member(comp_arcanee, material.classes)' } : x));
+  assert.ok(errs(runR(w, { ...RULES, materials: { ...RULES.materials, matcatRules: typo } })).some((e) => e.code === 'E-MOD-RX' && e.dim === 'categories'));
+  // 未建名删掉：同一条件编不过。
+  const x = load();
+  x.unbuilt = JSON.stringify({ ...JSON.parse(x.unbuilt), names: [] });
+  assert.ok(errs(runR(x, RULES)).some((e) => e.code === 'E-MOD-RX' && e.dim === 'categories'));
+  // 未建名已进词表：须从 names 删掉。
+  const y = load();
+  y.vocab.families.component.entries.comp_arcane = { table: 'material', requires: [] };
+  assert.ok(errs(runR(y, RULES)).some((e) => e.table === '_unbuilt-derived' && e.code === 'E-DIM-STRUCT-FIELD'));
+  // 族与前缀不符。
+  const z = load();
+  z.unbuilt = JSON.stringify({ ...JSON.parse(z.unbuilt), names: [{ name: 'comp_arcane', family: 'matcat', volume: 'x', card: 'pre_first_reader_card' }] });
+  assert.ok(errs(runR(z, RULES)).some((e) => e.table === '_unbuilt-derived' && e.code === 'E-DIM-REF-MISSING'));
+  // 未建名不能写进派生式（派生作用域不收）。
+  const d = load();
+  d.material.dimensions.charYield.derived = 'reactionYield[comp_arcane]';
+  assert.ok(errs(runR(d, RULES)).some((e) => e.code === 'E-MOD-RX' && e.dim === 'charYield'));
+});
+
+test('加载期规则分类反例：族条目缺条件、条件值不在族里、行上手填、本源成分空且一条不命中，均加载失败', () => {
+  const runR = (w, rules) => validateDimensions({ units: JSON.stringify(w.units), vocab: JSON.stringify(w.vocab), unbuilt: w.unbuilt, tables: [{ file: 'material.json', text: JSON.stringify(w.material) }] }, { ...OPTIONS, rules });
+  const listOf = () => RULES.materials.matcatRules.map((x) => ({ ...x }));
+  const w = load();
+  assert.equal(runR(w, RULES).ok, true);
+  // 删掉纸的条件：matcat_paper 没有条件（M-9 每个条目都须有条件）。
+  const r1 = runR(w, { ...RULES, materials: { ...RULES.materials, matcatRules: listOf().filter((x) => x.value !== 'matcat_paper') } });
+  assert.ok(errs(r1).some((e) => e.code === 'E-DIM-REF-MISSING' && e.got === 'matcat_paper'));
+  // 条件值不是 matcat 族条目。
+  const r2 = runR(w, { ...RULES, materials: { ...RULES.materials, matcatRules: [...listOf(), { when: 'known(meltPoint)', value: 'class_fat' }] } });
+  assert.ok(errs(r2).some((e) => e.code === 'E-DIM-REF-MISSING' && e.got === 'class_fat'));
+  // 规则表没有这张列表。
+  const r3 = runR(w, { ...RULES, materials: { ...RULES.materials, matcatRules: undefined } });
+  assert.ok(errs(r3).some((e) => e.code === 'E-DIM-REF-MISSING' && e.dim === 'categories'));
+  // 本源成分留空、一条也不命中（M-9）：去掉铁的 substance。
+  const x = load();
+  x.material.rows.mat_wrought_iron.substance = null;
+  assert.ok(codesOf(runR(x, RULES), 'mat_wrought_iron').includes('E-DIM-REQUIRED-MISSING:categories'));
+  // 留空但命中一条（木炭命中炭质）不报。
+  const y = load();
+  y.material.rows.mat_charcoal.substance = null;
+  assert.ok(!codesOf(runR(y, RULES), 'mat_charcoal').includes('E-DIM-REQUIRED-MISSING:categories'));
 });
 
 test('四族词表：class、plant_part、damage、diet 在 _vocab.json；diet 四条照卷四 §4.7.5 数据行原文载入', () => {
@@ -365,7 +460,14 @@ const scanMatterField = (w) => Object.entries(w.material.dimensions).filter(([, 
   const entries = fam && w.vocab.families[fam] ? Object.keys(w.vocab.families[fam].entries) : [];
   return ['solid', 'liquid', 'gas'].every((s) => entries.some((e) => e.endsWith(`_${s}`)));
 }).map(([k]) => k);
-const scanRulesKey = (w) => JSON.stringify(w.material.dimensions).match(/rules\.[a-zA-Z]+/g) || [];
+// AP-5（卷三甲 :289）只禁规则表键作取值域或必填条件；AP-3 六个派生量的定义归卷三乙（:625–:628 派生式读 rules.materials.*），
+// 所以只排除这六个维度的 derived 文本，其余字段照扫（李白 11-19 12:5x (a)）。
+const AP3_DERIVED = ['hardness', 'toughness', 'charYield', 'hydration', 'producedBy', 'categories'];
+const scanRulesKey = (w) => JSON.stringify(Object.fromEntries(Object.entries(w.material.dimensions).map(([k, d]) => {
+  if (!AP3_DERIVED.includes(k)) return [k, d];
+  const { derived, ...rest } = d;
+  return [k, rest];
+}))).match(/rules\.[a-zA-Z]+/g) || [];
 const scanPlantPart = (w) => Object.entries(w.material.dimensions).filter(([, d]) => [d.vocab, d.of && d.of.vocab, d.key && d.key.vocab].includes('plant_part')).map(([k]) => k)
   .concat(Object.entries(w.vocab.families).filter(([f, x]) => f !== 'plant_part' && Object.keys(x.entries).some((e) => e.startsWith('ppart_'))).map(([f]) => `family:${f}`));
 
@@ -386,6 +488,14 @@ test('AP-5：表头里没有规则表键（rules. 开头）；注入一处即被
   assert.deepEqual(scanRulesKey(w), []);
   w.material.dimensions.heatValue.required = 'byClass:comp_burnable；rules.materials.x';
   assert.deepEqual(scanRulesKey(w), ['rules.materials']);
+  // 非 AP-3 维度的 derived 写规则表键仍被扫出。
+  const x = load();
+  x.material.dimensions.heatValue.derived = 'moisture * rules.materials.x';
+  assert.deepEqual(scanRulesKey(x), ['rules.materials']);
+  // AP-3 维度的 required 写规则表键仍被扫出。
+  const y = load();
+  y.material.dimensions.charYield.required = 'byClass:comp_burnable；rules.materials.x';
+  assert.deepEqual(scanRulesKey(y), ['rules.materials']);
 });
 
 test('AP-6：植物部位词表全书只有 plant_part 一族，材料行只有 plantPart 一个字段引用它；另立一族或同义字段被扫出，同前缀的第二族被加载器拒绝', () => {

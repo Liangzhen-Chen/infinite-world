@@ -67,6 +67,9 @@ export const NS_ROW_TYPES = Object.freeze(['field']);
 export const GRAMMAR_TOKENS = Object.freeze({
   wildcard: '*', // 路径模式里的通配，恰匹配一段（卷二 §2.7 :814）
   pathSep: '.', // 路径分段符（卷二 §2.7 :814：路径按 `.` 分段）
+  // DimKey 的下标段 `<固定维代号>[<下标>]`（卷二 :1613；数据档 RX 读 map 维度的一个键，封卷后勘误 1118k31）。
+  subOpen: '[',
+  subClose: ']',
   joinSep: '|', // 种子键各部件相连的分隔串（卷二 §1.10 :320）
   // JSON 文法记号（卷二 :2413 (d)）：结构字符、字符串引号与转义、空白字符。
   jsonObjOpen: '{',

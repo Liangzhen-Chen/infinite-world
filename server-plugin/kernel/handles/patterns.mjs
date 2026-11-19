@@ -5,8 +5,8 @@
 
 // ---------- RX 表达式与返回形状（rx） ----------
 
-// RX 词法：数字、名字（可带点分下标）、运算符；粘性匹配从 at 起。
-const RX_TOKEN = /\s*(?:(\d+(?:\.\d+)?)|([a-z][A-Za-z0-9_]*(?:\.[A-Za-z0-9_]+)*)|(==|!=|<=|>=|&&|\|\||[-+*/%<>()!,]))/y;
+// RX 词法：数字、名字（可带点分下标）、运算符；粘性匹配从 at 起。`[` `]` 是 DimKey 下标段（卷二 :1613；勘误 1118k31）。
+const RX_TOKEN = /\s*(?:(\d+(?:\.\d+)?)|([a-z][A-Za-z0-9_]*(?:\.[A-Za-z0-9_]+)*)|(==|!=|<=|>=|&&|\|\||[-+*/%<>()!,[\]]))/y;
 /** @param {string} text @param {number} at @returns {{groups: (string | undefined)[], end: number} | null} */
 export function rxTokenAt(text, at) {
   RX_TOKEN.lastIndex = at;

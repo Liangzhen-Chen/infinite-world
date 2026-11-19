@@ -107,8 +107,9 @@ function memberOf(row, c, env) {
   return false;
 }
 
-// value(kind, id, dim) 去掉 applicable 判断的部分：{known, value, source}。
-function valueOf(t, id, row, dim) {
+// value(kind, id, dim) 去掉 applicable 判断的部分：{known, value, source}。加载期规则分类也读它（dimensions-validate buildRuleIndexes）。
+/** @param {any} t 一张表 @param {string} id 行代号 @param {Record<string, any>} row 行原文 @param {string} dim 维度键 @returns {{known: boolean, value?: any, source?: string}} */
+export function valueOf(t, id, row, dim) {
   const flat = t.flat.rows.get(id) || {};
   if (flat[dim] !== undefined) return { known: true, value: flat[dim], source: 'instance' };
   const def = (t.doc.dimensions || {})[dim] || {};

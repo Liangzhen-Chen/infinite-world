@@ -1,0 +1,97 @@
+{
+ "rows": [
+  {
+   "key": "charReaction",
+   "value": "reaction_char",
+   "source": "卷三乙 :323（哪个反应代号是炭化，供 charYield）、:626；卷三甲 :185（reaction 族首条「炭化」）",
+   "grade": "designed",
+   "basis": "卷三乙 §4.8 例 2 :1310 烧炭配方按 rules.materials.charReaction 选料、产物反应 reaction_char；reaction 族里表示炭化的代号只此一个"
+  },
+  {
+   "key": "charDecomposeMin",
+   "value": 1000,
+   "source": "卷三乙 :707 核对值表",
+   "grade": "designed",
+   "basis": "卷三乙 §4.1.5 例 1 首批标定值"
+  },
+  {
+   "key": "charHeatMin",
+   "value": 25,
+   "source": "卷三乙 :708 核对值表",
+   "grade": "designed",
+   "basis": "卷三乙 §4.1.5 例 1 首批标定值"
+  },
+  {
+   "key": "fatMeltMax",
+   "value": 200,
+   "source": "卷三乙 :709 核对值表",
+   "grade": "designed",
+   "basis": "卷三乙 §4.1.5 例 1 首批标定值"
+  },
+  {
+   "key": "fatHeatMin",
+   "value": 30,
+   "source": "卷三乙 :710 核对值表",
+   "grade": "designed",
+   "basis": "卷三乙 §4.1.5 例 1 首批标定值"
+  },
+  {
+   "key": "volatileMin",
+   "value": 0.005,
+   "source": "卷三乙 :711 核对值表",
+   "grade": "designed",
+   "basis": "卷三乙 §4.1.5 例 1 首批标定值"
+  },
+  {
+   "key": "grainMoistureMax",
+   "value": 0.15,
+   "source": "卷三乙 :712 核对值表",
+   "grade": "designed",
+   "basis": "卷三乙 §4.1.5 例 1 首批标定值"
+  },
+  {
+   "key": "grainEnergyMin",
+   "value": 17,
+   "source": "卷三乙 :713 核对值表；来历 :729",
+   "grade": "designed",
+   "basis": "卷三乙 §4.1.5 例 1 首批标定值"
+  },
+  {
+   "key": "grainPart",
+   "value": "ppart_seed",
+   "source": "卷三乙 :720 核对值表、:330",
+   "grade": "designed",
+   "basis": "卷三乙 §4.1.5 例 1 首批标定值"
+  },
+  {
+   "key": "grainCarbMin",
+   "value": 0.55,
+   "source": "卷三乙 :721 核对值表、:330；来历 :729",
+   "grade": "designed",
+   "basis": "卷三乙 §4.1.5 例 1 首批标定值"
+  },
+  {
+   "key": "grainFamily",
+   "value": "pfam_poaceae",
+   "source": "卷三乙 :722 核对值表、:330",
+   "grade": "designed",
+   "basis": "卷三乙 §4.1.5 例 1 首批标定值"
+  },
+  {
+   "key": "matcatRules",
+   "value": [
+    {"when": "member(comp_burnable, material.classes) && !known(meltPoint) && decomposePoint >= rules.materials.charDecomposeMin && heatValue >= rules.materials.charHeatMin", "value": "matcat_char"},
+    {"when": "member(comp_burnable, material.classes) && !member(comp_drinkable, material.classes) && meltPoint <= rules.materials.fatMeltMax && heatValue >= rules.materials.fatHeatMin && volatility < rules.materials.volatileMin", "value": "matcat_wax_fat"},
+    {"when": "member(comp_burnable, material.classes) && volatility >= rules.materials.volatileMin", "value": "matcat_volatile_fuel"},
+    {"when": "substance == subst_plant && plantPart == rules.materials.grainPart && member(comp_edible, material.classes) && moisture <= rules.materials.grainMoistureMax && energyDensity >= rules.materials.grainEnergyMin && carbContent >= rules.materials.grainCarbMin && plantFamily == rules.materials.grainFamily", "value": "matcat_grain"},
+    {"when": "member(reaction_spin, producedBy) || member(reaction_weave, producedBy) || member(reaction_felting, producedBy)", "value": "matcat_textile"},
+    {"when": "member(reaction_papermaking, producedBy)", "value": "matcat_paper"},
+    {"when": "member(reaction_firing, producedBy)", "value": "matcat_ceramic"},
+    {"when": "member(comp_arcane, material.classes)", "value": "matcat_supernatural"}
+   ],
+   "source": "卷三乙 §4.1 :571–:584 派生大类条件表（M-9）；卷二 §1.12 加载期规则分类（勘误 1118k31）",
+   "grade": "designed",
+   "basis": "照 :577–:584 八条逐条写；「没有 meltPoint」按卷三甲 M-11 读作该行没填 meltPoint（李白 11-19 12:5x (c)2），用 known；其余读到未知按未命中。超自然一条读卷十五 §2.3 :174、:979 的超自然组件类顶层 comp_arcane（material.classes 含 broader 上位），该名登记在 _unbuilt-derived.json names（卷十五未建），求值按未命中（李白 11-19 13:2x ②）"
+  }
+ ]
+}

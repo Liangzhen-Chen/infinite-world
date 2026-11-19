@@ -116,3 +116,41 @@ test('命名空间 arg 段数由返回形状推出（五列封闭，无 argCount
   assert.throws(() => compileRXInScope('lot.x.y <= 0.3', 'data', scope), { code: 'E-MOD-RX' });
   assert.throws(() => compileRXInScope('mat > 0', 'data', scope), { code: 'E-MOD-RX' });
 });
+
+// 勘误 1118k31：数据档 RX 读规则表值（加载期取成 num / handle）、map 维度的下标读（DimKey `<维>[<下标>]`，卷二 :1613）、无关系原语 known。
+const KSCOPE = {
+  ...SCOPE,
+  dims: new Map([...dims, ['yields', { type: 'map', key: { type: 'ref', vocab: 'grade' }, value: { type: 'number', unit: 'fraction' } }]]),
+  vocabIndex: new Map([...vocabIndex, ['agx_known', { family: 'aggregate', prefix: 'agx_' }]]),
+  rules: { tbl: { pick: 'grd_a', min: 2.5, nested: { deep: 3 }, list: [1], text: 'not_a_code' } },
+};
+const kc = (text) => compileRXInScope(text, 'data', KSCOPE);
+
+test('规则表值：数值编成 num、已登记代号编成 handle、可逐段取子键；缺表缺键、非数值非代号即 E-MOD-RX', () => {
+  assert.deepEqual(kc('mass >= rules.tbl.min').tree.right, { op: 'num', value: 2.5 });
+  assert.deepEqual(kc('grade == rules.tbl.pick').tree.right, { op: 'handle', value: 'grd_a' });
+  assert.deepEqual(kc('mass > rules.tbl.nested.deep').tree.right, { op: 'num', value: 3 });
+  for (const t of ['mass > rules.tbl.none', 'mass > rules.nope.min', 'mass > rules.tbl.list', 'grade == rules.tbl.text', 'mass > rules.tbl.nested', 'mass > rules']) assert.equal(code(() => kc(t)), 'E-MOD-RX', t);
+  assert.equal(code(() => c('mass >= rules.tbl.min')), 'E-MOD-RX'); // 作用域没交规则表
+  assert.equal(evaluateRX(kc('mass >= rules.tbl.min').tree, { dim: { mass: 2.5 } }, {}), true);
+});
+
+test('map 下标读：下标须编译期定成代号或数值，读值类型取 map 的值类型；缺键即缺读数', () => {
+  const { tree } = kc('yields[rules.tbl.pick] * 2');
+  assert.deepEqual(tree.left, { op: 'dim', key: 'yields[grd_a]' });
+  assert.equal(evaluateRX(tree, { dim: { 'yields[grd_a]': 0.25 } }, {}), 0.5);
+  assert.equal(kc('yields[grd_a] > 0').tree.left.key, 'yields[grd_a]');
+  assert.throws(() => evaluateRX(tree, { dim: {} }, {}), (e) => e.code === 'E-MOD-RX' && e.key === 'yields[grd_a]');
+  for (const t of ['yields[mass] > 0', 'mass[grd_a] > 0', 'yields[grd_a] == grd_a', 'yields[grd_a > 0']) assert.equal(code(() => kc(t)), 'E-MOD-RX', t);
+});
+
+test('known(x)：有读数为真、缺读数为假（唯一不按未知传播的原语）；aggregate 族没登记该条目、参数不是读数即 E-MOD-RX', () => {
+  const { tree } = kc('!known(mass) && open');
+  assert.deepEqual(tree.items[0].item, { op: 'agg', fn: 'agx_known', rel: null, dim: null, filter: null, args: [{ op: 'dim', key: 'mass' }] });
+  assert.equal(evaluateRX(tree, { dim: { open: true } }, {}), true);
+  assert.equal(evaluateRX(tree, { dim: { open: true, mass: 1 } }, {}), false);
+  assert.equal(evaluateRX(kc('known(story.wealth)').tree, {}, { 'story.wealth': 3 }), true);
+  for (const t of ['known(mass + 1)', 'known(mass, open)', 'known(2)']) assert.equal(code(() => kc(t)), 'E-MOD-RX', t);
+  assert.equal(code(() => c('known(mass)')), 'E-MOD-RX'); // 族里没登 known
+  assert.equal(code(() => kc('count(mass)')), 'E-MOD-RX'); // 族里没登的原语名
+});

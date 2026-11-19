@@ -11,7 +11,7 @@ import { sample } from './sample.mjs';
 import { dimKeyOf, modKeyOf } from './handles/keys.mjs';
 import { registry } from './vocab.mjs';
 import { stateMemo } from './memo.mjs';
-import { evaluateRX } from './rx.mjs';
+import { evaluateRX, rxChildren, splitDimKey } from './rx.mjs';
 import { KernelError } from './errors.mjs';
 import { ruleTable } from './load/rules.mjs';
 import { markersOf, T } from './validate/types.mjs';
@@ -162,6 +162,12 @@ function readBase(engine, state, kind, id, dimension, key) {
     const v = index instanceof Map && index.has(id) ? index.get(id) : Object.freeze([]);
     return fact({ known: true, applicable: true, value: v, source: 'index' });
   }
+  // 加载期规则分类（§1.12 封卷后勘误 1118k31；卷三乙 :618 派生大类）：加载器逐行求好，读时只按行查；无命中为空集（已知值）。
+  if (def.ruleIndex !== undefined) {
+    const index = t.ruleIndexes instanceof Map ? t.ruleIndexes.get(dimension) : undefined;
+    const v = index instanceof Map && index.has(id) ? index.get(id) : Object.freeze([]);
+    return fact({ known: true, applicable: true, value: v, source: 'index' });
+  }
   // 派生式（§1.12）：按 §1.3 取值顺序在类别链之后求值，变量一律读基值，未知按 TA-S1 整条未知。
   // 编译树由加载器交下（validateDimensions 的 t.derived，§2.9 第 4 条 :1182）；本文件读时只消费；采样（§1.10）走 kernelApi sample（kernel/sample.mjs，块 4-3）。
   if (def.derived !== undefined) {
@@ -216,7 +222,10 @@ function evaluateDerived(engine, state, kind, id, dimension) {
   try {
     const dims = {};
     for (const k of rxDimKeys(tree)) {
-      const f = readBase(engine, state, kind, id, k, undefined);
+      const { dim: base, sub } = splitDimKey(k);
+      const f = readBase(engine, state, kind, id, base, sub);
+      // map 维度的一个键写着显式 null（§1.6 第 2 点"没有"）：派生量不适用（勘误 1118k31；卷三乙 :626）。
+      if (sub !== undefined && f.known && f.value === null) return Object.freeze({ known: false, applicable: false });
       if (!f.known || !f.applicable || f.value === null || f.value === undefined) return Object.freeze({ known: false, applicable: true });
       dims[k] = f.value;
     }
@@ -245,8 +254,7 @@ function rxDimKeys(tree) {
   const walk = (n) => {
     if (!isObj(n)) return;
     if (n.op === T.rx_op.dim && typeof n.key === 'string') keys.add(n.key);
-    for (const k of ['left', 'right', 'item', 'set', 'filter']) walk(n[k]);
-    if (Array.isArray(n.items)) n.items.forEach(walk);
+    rxChildren(n).forEach(walk);
   };
   walk(tree);
   return [...keys].sort();
@@ -261,7 +269,8 @@ function rxDimKeys(tree) {
 export function rxBindings(engine, state, kind, id, tree, clock) {
   const dims = {};
   for (const k of rxDimKeys(tree)) {
-    const f = readBase(engine, state, kind, id, k, undefined);
+    const { dim: base, sub } = splitDimKey(k);
+    const f = readBase(engine, state, kind, id, base, sub);
     if (f.known && f.value !== null) dims[k] = f.value;
   }
   const c = {};

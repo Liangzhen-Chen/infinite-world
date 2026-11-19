@@ -161,6 +161,32 @@
    "volume": "卷二 §1.10 :320（种子键登记表，抽取点一行）；卷二十七 R27-8.1 :717（全登记与源码双向比对）、R27-8.4 :720（role_seed 的（流代号, 抽取点代号）两两不同、前缀非空）；表格式与行随各抽取点首卡（块 4-3 建骨架）",
    "multiSourceMerge": "own_key_only",
    "packOverridable": {"entries": false}
+  },
+  {
+   "code": "materials",
+   "file": "tables/materials.json",
+   "structure": "keys",
+   "type": {
+    "charReaction": {"type": "ref", "vocab": "reaction"},
+    "charDecomposeMin": {"type": "number", "unit": "celsius", "precision": 4},
+    "charHeatMin": {"type": "number", "unit": "MJ_per_kg_dry", "precision": 4},
+    "fatMeltMax": {"type": "number", "unit": "celsius", "precision": 4},
+    "fatHeatMin": {"type": "number", "unit": "MJ_per_kg_dry", "precision": 4},
+    "volatileMin": {"type": "number", "unit": "per_day_volatile", "precision": 4},
+    "grainMoistureMax": {"type": "number", "unit": "fraction", "precision": 4},
+    "grainEnergyMin": {"type": "number", "unit": "satiety_per_kg_dry", "precision": 4},
+    "grainPart": {"type": "ref", "vocab": "plant_part"},
+    "grainCarbMin": {"type": "number", "unit": "fraction", "precision": 4},
+    "grainFamily": {"type": "ref", "vocab": "plant_family"},
+    "matcatRules": {"type": "list", "of": {"type": "struct", "required": ["when", "value"], "fields": {
+     "when": {"type": "rx"},
+     "value": {"type": "ref", "vocab": "matcat"}
+    }}}
+   },
+   "domain": {"charReaction": {}, "charDecomposeMin": [-273, 6000], "charHeatMin": [0, 60], "fatMeltMax": [-273, 6000], "fatHeatMin": [0, 60], "volatileMin": [0, null], "grainMoistureMax": [0, 1], "grainEnergyMin": [0, null], "grainPart": {}, "grainCarbMin": [0, 1], "grainFamily": {}, "matcatRules": {}},
+   "volume": "卷三乙 §2.5 :322–:330（rules.materials 各键）；§4.1 :571–:584（matcatRules 八条，when 只读卷三甲行上修正前的值、producedBy 与组件类，M-9）、:626（charReaction 供 charYield）、:707–:722（首批标定值）；卷二 §1.12（加载期规则分类，封卷后勘误 1118k31）",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"charReaction": false, "charDecomposeMin": false, "charHeatMin": false, "fatMeltMax": false, "fatHeatMin": false, "volatileMin": false, "grainMoistureMax": false, "grainEnergyMin": false, "grainPart": false, "grainCarbMin": false, "grainFamily": false, "matcatRules": false}
   }
  ]
 }

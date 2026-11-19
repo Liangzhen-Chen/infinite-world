@@ -38,10 +38,14 @@
     {
      "ref": "块 3 第 3-3 张第二部分续（Opus 只核必须改，李白 11-18）：共用 lib/item-form.mjs 参数键 readerSet、scopeSet 改 readerSystems、scopeSystems（登记派生，不抄文件名单），keySets 加 systems；本类别判定口径不变",
      "rev": 9
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 10
     }
    ],
-   "print": "0fc65d33a7606b4d302d3cacc14700901c7309bed83fd5e0969785d1a3351392",
-   "rev": 9,
+   "print": "7b313a62608afb45543c357b5566ce096d577385362795d97c1366653e9536ce",
+   "rev": 10,
    "scanClass": "baseline_monotone",
    "source": "卷一 V-11（I43）；卷十二 §2.5、E-ACC-BASELINE-UP；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -224,10 +228,14 @@
     {
      "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
      "rev": 42
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 43
     }
    ],
-   "print": "7361d065496260bed6017e5bd2340eff285d12a3ce192c63eae292c7892ab2c5",
-   "rev": 42,
+   "print": "9835ad92ff716e4d6bccd41707c8e4bd62b0365eac395ef163f400c5059c3143",
+   "rev": 43,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -253,10 +261,14 @@
     {
      "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
      "rev": 3
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 4
     }
    ],
-   "print": "4bad3f873b97632e8b7345b60341066e0ad810b5a6e5873205d9171e01a1b3a3",
-   "rev": 3,
+   "print": "6daea59787cc730001583802c625581fcf3134d25129ff02857c445a1dc225bb",
+   "rev": 4,
    "scanClass": "crit_version",
    "terms": {
     "vol12.S12-13": {
@@ -303,10 +315,14 @@
     {
      "ref": "path_access stateRead 补口子（K5-24 只核改）；本类别条目不用，判定口径不变",
      "rev": 8
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 9
     }
    ],
-   "print": "7ac053ef82bb0368a6b456077a1045c7234f35762bacac38523abcbe176e6eca",
-   "rev": 8,
+   "print": "4726d3660575176f6510abbc8a2fb301e8f5c71b9e14eecfabe7ef3bbacc6061",
+   "rev": 9,
    "scanClass": "cross_write",
    "source": "卷十二 R12-3.1–3.4；卷二 §2.6、§2.7、S5",
    "terms": {
@@ -386,10 +402,14 @@
     {
      "ref": "path_access stateRead 补口子（K5-24 只核改）；本类别条目不用，判定口径不变",
      "rev": 8
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 9
     }
    ],
-   "print": "7ac053ef82bb0368a6b456077a1045c7234f35762bacac38523abcbe176e6eca",
-   "rev": 8,
+   "print": "4726d3660575176f6510abbc8a2fb301e8f5c71b9e14eecfabe7ef3bbacc6061",
+   "rev": 9,
    "scanClass": "display_read",
    "source": "卷十二 R12-2.10；卷二 S7",
    "terms": {
@@ -549,10 +569,14 @@
     {
      "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
      "rev": 36
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 37
     }
    ],
-   "print": "dcff602135c27e276c9151dda0f82120180d8930586331437c2f8935674ee60c",
-   "rev": 36,
+   "print": "0166dfb7364e9aa4db32991c5f377940ab81cf4f4b288d79f51ff73d58268218",
+   "rev": 37,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -607,10 +631,14 @@
     {
      "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
      "rev": 10
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 11
     }
    ],
-   "print": "79e4636feac8c2296f26e771adca20a1b289facf6fbaf92960e349c3f6beba2e",
-   "rev": 10,
+   "print": "bf33636134819c56284e7c605b6d4aeafba84911b6975c3351d104a59bc358c9",
+   "rev": 11,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -661,10 +689,14 @@
     {
      "ref": "块 3 第 3-3 张第二部分续（Opus 只核必须改，李白 11-18）：共用 lib/item-form.mjs 参数键 readerSet、scopeSet 改 readerSystems、scopeSystems，keySets 加 systems；本类别判定口径不变",
      "rev": 9
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 10
     }
    ],
-   "print": "0fc65d33a7606b4d302d3cacc14700901c7309bed83fd5e0969785d1a3351392",
-   "rev": 9,
+   "print": "7b313a62608afb45543c357b5566ce096d577385362795d97c1366653e9536ce",
+   "rev": 10,
    "scanClass": "ext_code",
    "terms": {
     "vol12.S12-12": {
@@ -723,10 +755,14 @@
     {
      "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
      "rev": 11
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 12
     }
    ],
-   "print": "95961a42aeb74d2467b25b49c91e258844a429357a28040eef8aef4d08dfe9d0",
-   "rev": 11,
+   "print": "7533e92fdbd711c81e78bbe469e28ee98994fe642ff78fdf3b88fe76d5772ca4",
+   "rev": 12,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -901,10 +937,14 @@
     {
      "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
      "rev": 34
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 35
     }
    ],
-   "print": "6fbb58fd4ea128c69758f9a266ab28fe114b1d60b391c3888871332b83c4ec7e",
-   "rev": 34,
+   "print": "b0d83d4e7ea23a439c283939955296230510445182a9ebb97e0c6340fa42fca8",
+   "rev": 35,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -964,10 +1004,14 @@
     {
      "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
      "rev": 11
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 12
     }
    ],
-   "print": "95961a42aeb74d2467b25b49c91e258844a429357a28040eef8aef4d08dfe9d0",
-   "rev": 11,
+   "print": "7533e92fdbd711c81e78bbe469e28ee98994fe642ff78fdf3b88fe76d5772ca4",
+   "rev": 12,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -1190,10 +1234,14 @@
     {
      "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
      "rev": 50
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 51
     }
    ],
-   "print": "1ae618f8fad3fdcf6b1276effaa4d316ee238e5576e1b67e07c0b43f6fc1c02c",
-   "rev": 50,
+   "print": "56a0344f79cded3d51a3bb3acbab0d964a3a9e99fa81563184e0fa9489b27689",
+   "rev": 51,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1275,10 +1323,14 @@
     {
      "ref": "块 3 第 3-3 张第二部分续（Opus 只核必须改，李白 11-18）：共用 lib/item-form.mjs 参数键 readerSet、scopeSet 改 readerSystems、scopeSystems，keySets 加 systems；本类别判定口径不变",
      "rev": 9
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 10
     }
    ],
-   "print": "0fc65d33a7606b4d302d3cacc14700901c7309bed83fd5e0969785d1a3351392",
-   "rev": 9,
+   "print": "7b313a62608afb45543c357b5566ce096d577385362795d97c1366653e9536ce",
+   "rev": 10,
    "scanClass": "item_downgrade",
    "terms": {
     "vol12.S12-16": {
@@ -1432,10 +1484,14 @@
     {
      "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
      "rev": 35
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 36
     }
    ],
-   "print": "6fbb58fd4ea128c69758f9a266ab28fe114b1d60b391c3888871332b83c4ec7e",
-   "rev": 35,
+   "print": "b0d83d4e7ea23a439c283939955296230510445182a9ebb97e0c6340fa42fca8",
+   "rev": 36,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1477,10 +1533,14 @@
     {
      "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
      "rev": 7
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 8
     }
    ],
-   "print": "8633293c9af3fd4c08df0bd4596a1682fb3c36ba025a78615922a59bbea5970b",
-   "rev": 7,
+   "print": "20c2e6b8f43f75a2f16babdd9f574f1bd15091f7f8227157bfddbf3c13816c60",
+   "rev": 8,
    "scanClass": "item_ledger",
    "terms": {
     "vol12.S12-3": {
@@ -1523,10 +1583,14 @@
     {
      "ref": "块 3 第 3-3 张第二部分续（Opus 只核必须改，李白 11-18）：共用 lib/item-form.mjs 参数键 readerSet、scopeSet 改 readerSystems、scopeSystems，keySets 加 systems；本类别判定口径不变",
      "rev": 7
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 8
     }
    ],
-   "print": "0fc65d33a7606b4d302d3cacc14700901c7309bed83fd5e0969785d1a3351392",
-   "rev": 7,
+   "print": "7b313a62608afb45543c357b5566ce096d577385362795d97c1366653e9536ce",
+   "rev": 8,
    "scanClass": "ledger_tally",
    "source": "卷十二 §4.1.6 至 §4.14.6 A12-n.1；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -1758,10 +1822,14 @@
     {
      "ref": "K5-24 只核改（卡头第二节第 3 条）：path_access stateRead 另计计算属性第一段与 state 绑定为值（别名、解构），函数实参不计；新增用例 module_edge-39、40、44；原判定口径不变",
      "rev": 22
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 23
     }
    ],
-   "print": "cbbeba4b11ee6c4ded6f2c39e6da446f4001943204f303f4a4aa706a90d47247",
-   "rev": 22,
+   "print": "cb50799e41734741f5e2490ccde3a2fd36f43cd39e6e95903e49afe074b32330",
+   "rev": 23,
    "scanClass": "module_edge",
    "terms": {
     "vol1.V-24.b": {
@@ -1995,10 +2063,14 @@
     {
      "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
      "rev": 35
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 36
     }
    ],
-   "print": "6fbb58fd4ea128c69758f9a266ab28fe114b1d60b391c3888871332b83c4ec7e",
-   "rev": 35,
+   "print": "b0d83d4e7ea23a439c283939955296230510445182a9ebb97e0c6340fa42fca8",
+   "rev": 36,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -2121,10 +2193,14 @@
     {
      "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
      "rev": 27
+    },
+    {
+     "ref": "块 6 第 6-1 张（李白 11-19 13:2x ①，卷十二 A12-4.5 勘误 1118k31）：decl_cmp paramConsumed 消费者口径补数据侧两类——已编进求值器且不在未建登记里的派生式引用的规则表键、已登记加载期派生（ruleIndex）按具名键读到的键及其条件引用的键；整表遍历、校验器、测试、只被未建派生引用的键仍不算；判定口径变",
+     "rev": 28
     }
    ],
-   "print": "bd3ef307804cdddca3a8c9a4784f3f3441c08b2b28aa00c4ce452c0d8c363cc2",
-   "rev": 27,
+   "print": "5f50f1f2b642289fcaa111194cb7e4dd302fd2f3e09a954eebd4754769c3f05a",
+   "rev": 28,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -2343,10 +2419,14 @@
     {
      "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
      "rev": 51
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 52
     }
    ],
-   "print": "645278669f5396a162ef7af004e35d20c18e94a1a5376a07f2c4d98523250a85",
-   "rev": 51,
+   "print": "4956a40002180b71982c40ff9ed241fdeefcfb1506def6ed09ba5ab140e54419",
+   "rev": 52,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -2416,10 +2496,14 @@
     {
      "ref": "块 3 第 3-3 张第二部分：共用的 call_edge 加 entries 方式（lib/api-callers.mjs）；本类别条目不带 entries，原 callees 判定口径不变",
      "rev": 14
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 15
     }
    ],
-   "print": "1f8db88287c1e71e87aab038dcfad8583d27809f8e4cdef94c689a47ddfd34e9",
-   "rev": 14,
+   "print": "84963ef45406b10eb170f51c36735798d00f7217b99dec559b1b94acbe543a77",
+   "rev": 15,
    "scanClass": "rng_bypass",
    "terms": {
     "vol27.A27-8.1.a": {
@@ -2449,10 +2533,14 @@
     {
      "ref": "BigInt 序列化与 lit_scope 改引 keys.mjs，判定口径不变",
      "rev": 4
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 5
     }
    ],
-   "print": "689d1719976dac3b407264052e8e3173b34571389de77a5518c372576ab36955",
-   "rev": 4,
+   "print": "b09e13671b5a8f3fd406c4684f9f03e8693900c823e1d812e606935fa05c544a",
+   "rev": 5,
    "scanClass": "rules_import",
    "terms": {
     "vol1.V-9": {
@@ -2522,10 +2610,14 @@
     {
      "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
      "rev": 14
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 15
     }
    ],
-   "print": "298a6ae5b2f16e19097d05dd4f4349381fb2ef2eba81535574a533b65965c348",
-   "rev": 14,
+   "print": "49f00521d3db712edbbcef840116ff5cb9d6d02cfed4c3f9cefeff4afd6cb4c6",
+   "rev": 15,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -2707,10 +2799,14 @@
     {
      "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
      "rev": 40
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 41
     }
    ],
-   "print": "7361d065496260bed6017e5bd2340eff285d12a3ce192c63eae292c7892ab2c5",
-   "rev": 40,
+   "print": "9835ad92ff716e4d6bccd41707c8e4bd62b0365eac395ef163f400c5059c3143",
+   "rev": 41,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -2764,10 +2860,14 @@
     {
      "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
      "rev": 11
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 12
     }
    ],
-   "print": "f59a04220b36229476b029d3133463fd4885bf4c59774a94da12f4e500bc8942",
-   "rev": 11,
+   "print": "dbc7f29cd5d5e9065fe1e86ab6c49e52b721dd32d0079eec2cc213f9f2a28d99",
+   "rev": 12,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -2823,10 +2923,14 @@
     {
      "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
      "rev": 10
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 11
     }
    ],
-   "print": "95961a42aeb74d2467b25b49c91e258844a429357a28040eef8aef4d08dfe9d0",
-   "rev": 10,
+   "print": "7533e92fdbd711c81e78bbe469e28ee98994fe642ff78fdf3b88fe76d5772ca4",
+   "rev": 11,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -3070,10 +3174,14 @@
     {
      "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
      "rev": 29
+    },
+    {
+     "ref": "块 6 第 6-1 张：共用检测器 decl_cmp 的 paramConsumed 口径改（勘误 1118k31），本类别的 dynamicState 判定不变；rx.mjs 等闭包文件改，重盖",
+     "rev": 30
     }
    ],
-   "print": "bd3ef307804cdddca3a8c9a4784f3f3441c08b2b28aa00c4ce452c0d8c363cc2",
-   "rev": 29,
+   "print": "5f50f1f2b642289fcaa111194cb7e4dd302fd2f3e09a954eebd4754769c3f05a",
+   "rev": 30,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -3140,10 +3248,14 @@
     {
      "ref": "path_access stateRead 补口子（K5-24 只核改）；本类别条目不用，判定口径不变",
      "rev": 11
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 12
     }
    ],
-   "print": "7ac053ef82bb0368a6b456077a1045c7234f35762bacac38523abcbe176e6eca",
-   "rev": 11,
+   "print": "4726d3660575176f6510abbc8a2fb301e8f5c71b9e14eecfabe7ef3bbacc6061",
+   "rev": 12,
    "scanClass": "version_fork",
    "terms": {
     "vol1.V-17": {
@@ -3249,10 +3361,14 @@
     {
      "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
      "rev": 23
+    },
+    {
+     "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
+     "rev": 24
     }
    ],
-   "print": "b0f49a12d5b0d0e2844117141320aa779acd14ac01a714ff8a05e54a58b68395",
-   "rev": 23,
+   "print": "b304e2fc04b5a10d96cbc73d2bc24dbd9a23ee42782ec5aab7dcd0c73c4bd765",
+   "rev": 24,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {
