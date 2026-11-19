@@ -23,7 +23,11 @@ function load({ rows = {}, edges = [], juris = null } = {}) {
   try {
     for (const f of readdirSync(join(ROOT, DIMS)).filter((n) => n.endsWith('.json'))) writeUnderTempRoot(tmp, f, realText(f));
     writeUnderTempRoot(tmp, 'place.json', JSON.stringify({ ...HEADER, rows, edges }));
-    // access、water 两族在真实词表里还没有条目（归内容卡 6-24）；测试自造一条进入档与一条水体类，供行填 always 列。
+    // 真实世界为旧数据没有的列登记了未建（6-24，缺值放行）；本文件的用例要核"缺 always 列即报错"，前提自己造：拷贝里去掉 place 的未建列登记。
+    const unbuilt = JSON.parse(realText('_unbuilt-derived.json'));
+    unbuilt.columns = unbuilt.columns.filter((c) => c.table !== 'place');
+    writeUnderTempRoot(tmp, '_unbuilt-derived.json', JSON.stringify(unbuilt));
+    // access、water 两族以测试自造的一条进入档与一条水体类替换（真实条目随 6-24 灌行而来），供行填 always 列。
     const v = structuredClone(VOCAB);
     v.families.access.entries = { access_test_open: { rank: 0, needsGrant: false } };
     v.families.water.entries = { water_test_fresh: { navigable: false } };
@@ -48,11 +52,9 @@ const TREE = { loc_w: row(null, 1000), loc_a: row('loc_w', 100), loc_b: row('loc
 
 // ---------- 对照表第 18 行：单根树、有限步到根、边两端存在且 from 小于 to、两端加通路类型唯一、面积和 ----------
 
-test('真实世界：place 表只有表头，加载零错误；空表没有树可核', () => {
+test('真实世界：place 表（6-24 灌入九省 31 郡的行与边）加载零错误；对真实行的断言在 place-world.test.mjs', () => {
   const r = loadWorld(ROOT);
   assert.equal(r.ok, true, r.text);
-  assert.deepEqual(Object.keys(r.tables.get('place').doc.rows), []);
-  assert.deepEqual(r.tables.get('place').doc.edges, []);
 });
 
 test('规则 1 正例：单根、各行一步到根，加载通过', () => {

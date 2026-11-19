@@ -3,7 +3,11 @@
   "ability": {"closed": false, "entries": {}, "prefix": "ability_"},
   "access": {
    "closed": false,
-   "entries": {},
+   "entries": {
+    "access_council": {"needsGrant": true, "rank": 2},
+    "access_private": {"needsGrant": true, "rank": 1},
+    "access_public": {"needsGrant": false, "rank": 0}
+   },
    "prefix": "access_"
   },
   "attach_slot": {"closed": false, "entries": {}, "prefix": "aslot_"},
@@ -504,7 +508,12 @@
   },
   "juris": {
    "closed": false,
-   "entries": {},
+   "entries": {
+    "juris_county": {"basis": "卷五 :1060 按现有省、郡两级加王国级与世界根登记；rank 依层级次序郡<省<王国<世界", "rank": 1},
+    "juris_kingdom": {"basis": "卷五 :1060 王国级；旧数据没有王国行，不挂行；rank 依层级次序郡<省<王国<世界", "rank": 3},
+    "juris_province": {"basis": "卷五 :1060；rank 依层级次序郡<省<王国<世界", "rank": 2},
+    "juris_world": {"basis": "卷五 :1060 世界根；rank 依层级次序郡<省<王国<世界", "rank": 4}
+   },
    "prefix": "juris_"
   },
   "life_stage": {
@@ -1004,7 +1013,9 @@
   },
   "water": {
    "closed": false,
-   "entries": {},
+   "entries": {
+    "water_navigable": {"navigable": true}
+   },
    "prefix": "water_"
   },
   "weather": {

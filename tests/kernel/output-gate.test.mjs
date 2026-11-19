@@ -65,7 +65,8 @@ test('segment_kind 取卷九 :147 的两个值（定义只在 markers.mjs）', (
 // ---------- 真实世界数据：labels 形态形状与旧屏蔽词表迁入 ----------
 test('真实 labels.zh.json 是"代号 → 形态 → 文字"，labels 加载器读得进，每条有 label', () => {
   const lb = loadLabels(ROOT, 'zh');
-  assert.equal(lb.names.size, 80);
+  // 条数按文件自己的键数核（加载器一条不丢），不抄仓库此刻的计数；6-24 起地点行也在 labels 里。
+  assert.equal(lb.names.size, Object.keys(JSON.parse(readFileSync(join(ROOT, 'world/i18n/labels.zh.json'), 'utf8'))).length);
   assert.equal(str(lb.names.get('bm_capped').get('label')), '限额通道');
   assert.equal(str(lb.names.get('resfam_coin').get('label')), '铸币');
 });

@@ -1,4 +1,865 @@
 {
+ "bld_bs_boat": {
+  "label": "船户会屋"
+ },
+ "bld_bs_carter": {
+  "label": "栈西车行"
+ },
+ "bld_bs_cloth": {
+  "label": "炉巷缝织屋"
+ },
+ "bld_bs_dock": {
+  "label": "河埠交接棚"
+ },
+ "bld_bs_guild": {
+  "label": "商旅行会联络处"
+ },
+ "bld_bs_hall": {
+  "label": "街议厅"
+ },
+ "bld_bs_home_001": {
+  "label": "严辙合住户居处"
+ },
+ "bld_bs_home_002": {
+  "label": "顾户居处"
+ },
+ "bld_bs_home_003": {
+  "label": "邵户居处"
+ },
+ "bld_bs_home_004": {
+  "label": "傅户居处"
+ },
+ "bld_bs_home_005": {
+  "label": "罗户居处"
+ },
+ "bld_bs_home_006": {
+  "label": "夏户居处"
+ },
+ "bld_bs_home_007": {
+  "label": "蔡户居处"
+ },
+ "bld_bs_home_008": {
+  "label": "韩户居处"
+ },
+ "bld_bs_home_009": {
+  "label": "程户居处"
+ },
+ "bld_bs_home_010": {
+  "label": "魏户居处"
+ },
+ "bld_bs_home_011": {
+  "label": "秦户居处"
+ },
+ "bld_bs_home_012": {
+  "label": "姚户居处"
+ },
+ "bld_bs_home_013": {
+  "label": "卢户居处"
+ },
+ "bld_bs_home_014": {
+  "label": "谭户居处"
+ },
+ "bld_bs_home_015": {
+  "label": "陆户居处"
+ },
+ "bld_bs_home_016": {
+  "label": "汪户居处"
+ },
+ "bld_bs_home_017": {
+  "label": "邢户居处"
+ },
+ "bld_bs_home_018": {
+  "label": "钟户居处"
+ },
+ "bld_bs_home_019": {
+  "label": "侯户居处"
+ },
+ "bld_bs_home_020": {
+  "label": "薛户居处"
+ },
+ "bld_bs_home_021": {
+  "label": "石户居处"
+ },
+ "bld_bs_home_022": {
+  "label": "熊户居处"
+ },
+ "bld_bs_home_023": {
+  "label": "乔户居处"
+ },
+ "bld_bs_home_024": {
+  "label": "戴户居处"
+ },
+ "bld_bs_home_025": {
+  "label": "彭户居处"
+ },
+ "bld_bs_home_026": {
+  "label": "邓户居处"
+ },
+ "bld_bs_home_027": {
+  "label": "叶户居处"
+ },
+ "bld_bs_home_028": {
+  "label": "邹户居处"
+ },
+ "bld_bs_home_029": {
+  "label": "郝户居处"
+ },
+ "bld_bs_home_030": {
+  "label": "任户居处"
+ },
+ "bld_bs_home_031": {
+  "label": "姜户居处"
+ },
+ "bld_bs_home_032": {
+  "label": "潘户居处"
+ },
+ "bld_bs_home_033": {
+  "label": "余户居处"
+ },
+ "bld_bs_home_034": {
+  "label": "杜户居处"
+ },
+ "bld_bs_home_035": {
+  "label": "钱户居处"
+ },
+ "bld_bs_home_036": {
+  "label": "蒋户居处"
+ },
+ "bld_bs_home_037": {
+  "label": "丁户居处"
+ },
+ "bld_bs_home_038": {
+  "label": "沈户居处"
+ },
+ "bld_bs_home_039": {
+  "label": "孟户居处"
+ },
+ "bld_bs_home_040": {
+  "label": "田户居处"
+ },
+ "bld_bs_home_041": {
+  "label": "邱户居处"
+ },
+ "bld_bs_home_042": {
+  "label": "江户居处"
+ },
+ "bld_bs_home_043": {
+  "label": "雷户居处"
+ },
+ "bld_bs_home_044": {
+  "label": "文户居处"
+ },
+ "bld_bs_home_045": {
+  "label": "苏户居处"
+ },
+ "bld_bs_home_046": {
+  "label": "白户居处"
+ },
+ "bld_bs_home_047": {
+  "label": "马户居处"
+ },
+ "bld_bs_home_048": {
+  "label": "龚户居处"
+ },
+ "bld_bs_home_049": {
+  "label": "汤户居处"
+ },
+ "bld_bs_home_050": {
+  "label": "于户居处"
+ },
+ "bld_bs_home_051": {
+  "label": "段户居处"
+ },
+ "bld_bs_home_052": {
+  "label": "朱户居处"
+ },
+ "bld_bs_home_053": {
+  "label": "金户居处"
+ },
+ "bld_bs_home_054": {
+  "label": "廖户居处"
+ },
+ "bld_bs_home_055": {
+  "label": "康户居处"
+ },
+ "bld_bs_home_056": {
+  "label": "毛户居处"
+ },
+ "bld_bs_home_057": {
+  "label": "洪户居处"
+ },
+ "bld_bs_home_058": {
+  "label": "袁户居处"
+ },
+ "bld_bs_home_059": {
+  "label": "尹户居处"
+ },
+ "bld_bs_home_060": {
+  "label": "赖户居处"
+ },
+ "bld_bs_home_061": {
+  "label": "阎户居处"
+ },
+ "bld_bs_home_062": {
+  "label": "陶户居处"
+ },
+ "bld_bs_home_063": {
+  "label": "邝户居处"
+ },
+ "bld_bs_home_064": {
+  "label": "崔户居处"
+ },
+ "bld_bs_home_065": {
+  "label": "武户居处"
+ },
+ "bld_bs_home_066": {
+  "label": "费户居处"
+ },
+ "bld_bs_home_067": {
+  "label": "高户居处"
+ },
+ "bld_bs_home_068": {
+  "label": "郭户居处"
+ },
+ "bld_bs_home_069": {
+  "label": "翁户居处"
+ },
+ "bld_bs_home_070": {
+  "label": "柳户居处"
+ },
+ "bld_bs_home_071": {
+  "label": "纪户居处"
+ },
+ "bld_bs_home_072": {
+  "label": "滕户居处"
+ },
+ "bld_bs_home_073": {
+  "label": "梅户居处"
+ },
+ "bld_bs_home_074": {
+  "label": "柯户居处"
+ },
+ "bld_bs_home_075": {
+  "label": "鲍户居处"
+ },
+ "bld_bs_home_076": {
+  "label": "季户居处"
+ },
+ "bld_bs_home_077": {
+  "label": "裴户居处"
+ },
+ "bld_bs_home_078": {
+  "label": "舒户居处"
+ },
+ "bld_bs_home_079": {
+  "label": "曲户居处"
+ },
+ "bld_bs_home_080": {
+  "label": "苗户居处"
+ },
+ "bld_bs_home_081": {
+  "label": "倪户居处"
+ },
+ "bld_bs_home_082": {
+  "label": "闵户居处"
+ },
+ "bld_bs_home_083": {
+  "label": "祝户居处"
+ },
+ "bld_bs_home_084": {
+  "label": "童户居处"
+ },
+ "bld_bs_home_085": {
+  "label": "包户居处"
+ },
+ "bld_bs_home_086": {
+  "label": "司户居处"
+ },
+ "bld_bs_home_087": {
+  "label": "蓝户居处"
+ },
+ "bld_bs_home_088": {
+  "label": "蒲户居处"
+ },
+ "bld_bs_home_089": {
+  "label": "莫户居处"
+ },
+ "bld_bs_home_090": {
+  "label": "艾户居处"
+ },
+ "bld_bs_inn": {
+  "label": "南市客舍"
+ },
+ "bld_bs_market": {
+  "label": "南市棚"
+ },
+ "bld_bs_measured_hall": {
+  "label": "量廊武馆"
+ },
+ "bld_bs_office": {
+  "label": "白石镇公署"
+ },
+ "bld_bs_oven": {
+  "label": "南市麦饼铺"
+ },
+ "bld_bs_potter": {
+  "label": "炉巷陶作屋"
+ },
+ "bld_bs_reed_dao": {
+  "label": "芦衡观"
+ },
+ "bld_bs_school": {
+  "label": "东街学馆"
+ },
+ "bld_bs_shrine": {
+  "label": "白石归途殿"
+ },
+ "bld_bs_smith": {
+  "label": "炉巷铁作坊"
+ },
+ "bld_bs_still_temple": {
+  "label": "止波寺"
+ },
+ "bld_bs_store": {
+  "label": "栈西货栈"
+ },
+ "bld_bs_temple": {
+  "label": "东街灯祠"
+ },
+ "bld_bs_watch": {
+  "label": "镇巡值房"
+ },
+ "bld_bs_weigh": {
+  "label": "河埠验秤房"
+ },
+ "bld_hc_citywall": {
+  "label": "环城城墙"
+ },
+ "bld_hc_stone_gate": {
+  "label": "环城现役石城门"
+ },
+ "bld_hw_altar": {
+  "label": "河湾石坛"
+ },
+ "bld_hw_council": {
+  "label": "村务屋"
+ },
+ "bld_hw_forge": {
+  "label": "铁匠铺"
+ },
+ "bld_hw_grain_annex": {
+  "label": "铁铺巷公仓"
+ },
+ "bld_hw_herbs": {
+  "label": "药草院"
+ },
+ "bld_hw_home_15": {
+  "label": "筛种院"
+ },
+ "bld_hw_home_16": {
+  "label": "沟边矮屋"
+ },
+ "bld_hw_home_17": {
+  "label": "南缝线屋"
+ },
+ "bld_hw_home_18": {
+  "label": "渡后木屋"
+ },
+ "bld_hw_home_19": {
+  "label": "东檐小院"
+ },
+ "bld_hw_home_20": {
+  "label": "合住旧院"
+ },
+ "bld_hw_home_21": {
+  "label": "柳影泥屋"
+ },
+ "bld_hw_home_22": {
+  "label": "补榫人家"
+ },
+ "bld_hw_mill": {
+  "label": "旧磨坊"
+ },
+ "bld_hw_post": {
+  "label": "小驿站"
+ },
+ "bld_hw_qingdeng": {
+  "label": "青灯酒馆"
+ },
+ "bld_hw_riverhome": {
+  "label": "河边小屋"
+ },
+ "bld_hw_school": {
+  "label": "小学堂"
+ },
+ "bld_hw_weaving": {
+  "label": "织坊"
+ },
+ "bld_lq_hall": {
+  "label": "泉标记事屋"
+ },
+ "bld_lq_home_01": {
+  "label": "栾佩户居处"
+ },
+ "bld_lq_home_02": {
+  "label": "焦岩户居处"
+ },
+ "bld_lq_home_03": {
+  "label": "储茵户居处"
+ },
+ "bld_lq_home_04": {
+  "label": "胥珑户居处"
+ },
+ "bld_lq_home_05": {
+  "label": "慎书户居处"
+ },
+ "bld_lq_home_06": {
+  "label": "宁野户居处"
+ },
+ "bld_lq_home_07": {
+  "label": "甄希户居处"
+ },
+ "bld_lq_home_08": {
+  "label": "甘祺户居处"
+ },
+ "bld_lq_home_09": {
+  "label": "宙梧户居处"
+ },
+ "bld_lq_home_10": {
+  "label": "霍霁户居处"
+ },
+ "bld_lq_home_11": {
+  "label": "明禾户居处"
+ },
+ "bld_lq_home_12": {
+  "label": "云绣户居处"
+ },
+ "bld_lq_home_13": {
+  "label": "符审户居处"
+ },
+ "bld_lq_home_14": {
+  "label": "皮菁户居处"
+ },
+ "bld_lq_home_15": {
+  "label": "尹致户居处"
+ },
+ "bld_lq_home_16": {
+  "label": "檀羽户居处"
+ },
+ "bld_lq_home_17": {
+  "label": "封济户居处"
+ },
+ "bld_lq_home_18": {
+  "label": "隋莉户居处"
+ },
+ "bld_lq_home_19": {
+  "label": "沙萝户居处"
+ },
+ "bld_lq_home_20": {
+  "label": "莫谷户居处"
+ },
+ "bld_lq_home_21": {
+  "label": "华钮户居处"
+ },
+ "bld_lq_home_22": {
+  "label": "闻琪户居处"
+ },
+ "bld_lq_home_23": {
+  "label": "鞠舒户居处"
+ },
+ "bld_lq_home_24": {
+  "label": "崔帆户居处"
+ },
+ "bld_lq_home_25": {
+  "label": "青岚户居处"
+ },
+ "bld_lq_home_26": {
+  "label": "衡庐户居处"
+ },
+ "bld_lq_home_27": {
+  "label": "易可户居处"
+ },
+ "bld_lq_home_28": {
+  "label": "满渠户居处"
+ },
+ "bld_lq_home_29": {
+  "label": "聂雅户居处"
+ },
+ "bld_lq_home_30": {
+  "label": "匡叶户居处"
+ },
+ "bld_lq_kitchen": {
+  "label": "砾泉共灶屋"
+ },
+ "bld_lq_workroom": {
+  "label": "旧柄缝补屋"
+ },
+ "bld_lq_yard": {
+  "label": "砾石整边院"
+ },
+ "bld_ms_gs_01": {
+  "label": "绳家矮棚"
+ },
+ "bld_ms_gs_02": {
+  "label": "折家矮棚"
+ },
+ "bld_ms_gs_03": {
+  "label": "砧家车棚"
+ },
+ "bld_ms_hx_01": {
+  "label": "漪家水窝"
+ },
+ "bld_ms_hx_02": {
+  "label": "敲家甲窝"
+ },
+ "bld_ms_hx_03": {
+  "label": "纤家草窝"
+ },
+ "bld_ms_hx_04": {
+  "label": "芦家石窝"
+ },
+ "bld_ms_ll_home_01": {
+  "label": "牙家皮棚"
+ },
+ "bld_ms_ll_home_02": {
+  "label": "锉家矮棚"
+ },
+ "bld_ms_ll_home_03": {
+  "label": "磐家石窝"
+ },
+ "bld_ms_td_home_01": {
+  "label": "苔家巢"
+ },
+ "bld_ms_td_home_02": {
+  "label": "青家巢"
+ },
+ "bld_ms_td_home_03": {
+  "label": "栗家巢"
+ },
+ "bld_ms_tj_home_01": {
+  "label": "烟灶铺"
+ },
+ "bld_ms_tj_home_02": {
+  "label": "钉灶铺"
+ },
+ "bld_ms_tj_home_03": {
+  "label": "砾灶铺"
+ },
+ "bld_ms_yg_home_01": {
+  "label": "节家树穴"
+ },
+ "bld_ms_yg_home_02": {
+  "label": "须家石窝"
+ },
+ "bld_ms_yg_home_03": {
+  "label": "拱家土窝"
+ },
+ "bld_sb_hall": {
+  "label": "桑坂换工屋"
+ },
+ "bld_sb_home_01": {
+  "label": "张洛户居处"
+ },
+ "bld_sb_home_02": {
+  "label": "袁卿户居处"
+ },
+ "bld_sb_home_03": {
+  "label": "钟岚户居处"
+ },
+ "bld_sb_home_04": {
+  "label": "田陌户居处"
+ },
+ "bld_sb_home_05": {
+  "label": "甄芸户居处"
+ },
+ "bld_sb_home_06": {
+  "label": "顾露户居处"
+ },
+ "bld_sb_home_07": {
+  "label": "叶荀户居处"
+ },
+ "bld_sb_home_08": {
+  "label": "竺钗户居处"
+ },
+ "bld_sb_home_09": {
+  "label": "潘瑶户居处"
+ },
+ "bld_sb_home_10": {
+  "label": "高枢户居处"
+ },
+ "bld_sb_home_11": {
+  "label": "周薇户居处"
+ },
+ "bld_sb_home_12": {
+  "label": "丛思户居处"
+ },
+ "bld_sb_home_13": {
+  "label": "茅俪户居处"
+ },
+ "bld_sb_home_14": {
+  "label": "解安户居处"
+ },
+ "bld_sb_home_15": {
+  "label": "白舒户居处"
+ },
+ "bld_sb_home_16": {
+  "label": "鲁玮户居处"
+ },
+ "bld_sb_home_17": {
+  "label": "史葵户居处"
+ },
+ "bld_sb_home_18": {
+  "label": "孔柳户居处"
+ },
+ "bld_sb_home_19": {
+  "label": "费清户居处"
+ },
+ "bld_sb_home_20": {
+  "label": "商筠户居处"
+ },
+ "bld_sb_home_21": {
+  "label": "池杉户居处"
+ },
+ "bld_sb_home_22": {
+  "label": "查悦户居处"
+ },
+ "bld_sb_home_23": {
+  "label": "秦婉户居处"
+ },
+ "bld_sb_home_24": {
+  "label": "龙芙户居处"
+ },
+ "bld_sb_home_25": {
+  "label": "诸弦户居处"
+ },
+ "bld_sb_home_26": {
+  "label": "扶瑜户居处"
+ },
+ "bld_sb_home_27": {
+  "label": "全立户居处"
+ },
+ "bld_sb_home_28": {
+  "label": "晏珏户居处"
+ },
+ "bld_sb_home_29": {
+  "label": "向荷户居处"
+ },
+ "bld_sb_home_30": {
+  "label": "邸叶户居处"
+ },
+ "bld_sb_kitchen": {
+  "label": "桑坂共灶屋"
+ },
+ "bld_sb_workroom": {
+  "label": "晒线缝补屋"
+ },
+ "bld_sb_yard": {
+  "label": "梭架修整院"
+ },
+ "bld_wt_hall": {
+  "label": "汀口记事屋"
+ },
+ "bld_wt_home_01": {
+  "label": "郑汐户居处"
+ },
+ "bld_wt_home_02": {
+  "label": "王浦户居处"
+ },
+ "bld_wt_home_03": {
+  "label": "周渚户居处"
+ },
+ "bld_wt_home_04": {
+  "label": "伍蓬户居处"
+ },
+ "bld_wt_home_05": {
+  "label": "魏涟户居处"
+ },
+ "bld_wt_home_06": {
+  "label": "黄霆户居处"
+ },
+ "bld_wt_home_07": {
+  "label": "贺芩户居处"
+ },
+ "bld_wt_home_08": {
+  "label": "吕沫户居处"
+ },
+ "bld_wt_home_09": {
+  "label": "施峤户居处"
+ },
+ "bld_wt_home_10": {
+  "label": "柯荔户居处"
+ },
+ "bld_wt_home_11": {
+  "label": "杜珂户居处"
+ },
+ "bld_wt_home_12": {
+  "label": "刘燕户居处"
+ },
+ "bld_wt_home_13": {
+  "label": "湛鸥户居处"
+ },
+ "bld_wt_home_14": {
+  "label": "支采户居处"
+ },
+ "bld_wt_home_15": {
+  "label": "薛萤户居处"
+ },
+ "bld_wt_home_16": {
+  "label": "雷芷户居处"
+ },
+ "bld_wt_home_17": {
+  "label": "倪筠户居处"
+ },
+ "bld_wt_home_18": {
+  "label": "屈槐户居处"
+ },
+ "bld_wt_home_19": {
+  "label": "丁素户居处"
+ },
+ "bld_wt_home_20": {
+  "label": "茹芹户居处"
+ },
+ "bld_wt_home_21": {
+  "label": "龚潞户居处"
+ },
+ "bld_wt_home_22": {
+  "label": "景遥户居处"
+ },
+ "bld_wt_home_23": {
+  "label": "范水户居处"
+ },
+ "bld_wt_home_24": {
+  "label": "单苴户居处"
+ },
+ "bld_wt_home_25": {
+  "label": "董霏户居处"
+ },
+ "bld_wt_home_26": {
+  "label": "裴纯户居处"
+ },
+ "bld_wt_home_27": {
+  "label": "宿蕙户居处"
+ },
+ "bld_wt_home_28": {
+  "label": "戚鹭户居处"
+ },
+ "bld_wt_home_29": {
+  "label": "花茵户居处"
+ },
+ "bld_wt_home_30": {
+  "label": "向祯户居处"
+ },
+ "bld_wt_kitchen": {
+  "label": "汀口共灶屋"
+ },
+ "bld_wt_workroom": {
+  "label": "苇席收边屋"
+ },
+ "bld_wt_yard": {
+  "label": "修篓木台院"
+ },
+ "bld_yp_hall": {
+  "label": "坡口议事屋"
+ },
+ "bld_yp_home_01": {
+  "label": "赵枫户居处"
+ },
+ "bld_yp_home_02": {
+  "label": "乔端户居处"
+ },
+ "bld_yp_home_03": {
+  "label": "温绪户居处"
+ },
+ "bld_yp_home_04": {
+  "label": "蒋弥户居处"
+ },
+ "bld_yp_home_05": {
+  "label": "韩培户居处"
+ },
+ "bld_yp_home_06": {
+  "label": "朱笙户居处"
+ },
+ "bld_yp_home_07": {
+  "label": "秦砺户居处"
+ },
+ "bld_yp_home_08": {
+  "label": "高忻户居处"
+ },
+ "bld_yp_home_09": {
+  "label": "陶咨户居处"
+ },
+ "bld_yp_home_10": {
+  "label": "卢夏户居处"
+ },
+ "bld_yp_home_11": {
+  "label": "潘菊户居处"
+ },
+ "bld_yp_home_12": {
+  "label": "任泊户居处"
+ },
+ "bld_yp_home_13": {
+  "label": "曹芸户居处"
+ },
+ "bld_yp_home_14": {
+  "label": "荀禾户居处"
+ },
+ "bld_yp_home_15": {
+  "label": "殷茸户居处"
+ },
+ "bld_yp_home_16": {
+  "label": "卫迟户居处"
+ },
+ "bld_yp_home_17": {
+  "label": "耿麓户居处"
+ },
+ "bld_yp_home_18": {
+  "label": "席存户居处"
+ },
+ "bld_yp_home_19": {
+  "label": "缪朴户居处"
+ },
+ "bld_yp_home_20": {
+  "label": "包印户居处"
+ },
+ "bld_yp_home_21": {
+  "label": "冯雅户居处"
+ },
+ "bld_yp_home_22": {
+  "label": "石苓户居处"
+ },
+ "bld_yp_home_23": {
+  "label": "邵若户居处"
+ },
+ "bld_yp_home_24": {
+  "label": "凌宛户居处"
+ },
+ "bld_yp_home_25": {
+  "label": "孔馥户居处"
+ },
+ "bld_yp_home_26": {
+  "label": "俞澄户居处"
+ },
+ "bld_yp_home_27": {
+  "label": "裘砚户居处"
+ },
+ "bld_yp_home_28": {
+  "label": "汤桓户居处"
+ },
+ "bld_yp_home_29": {
+  "label": "章颐户居处"
+ },
+ "bld_yp_home_30": {
+  "label": "利莎户居处"
+ },
+ "bld_yp_kitchen": {
+  "label": "坡口共灶屋"
+ },
+ "bld_yp_workroom": {
+  "label": "南坡缝线屋"
+ },
+ "bld_yp_yard": {
+  "label": "榆枝木作院"
+ },
  "bm_capped": {
   "label": "限额通道"
  },
@@ -157,6 +1018,642 @@
  },
  "due_revive_window": {
   "label": "复生窗口期满"
+ },
+ "loc_bs": {
+  "label": "白石镇"
+ },
+ "loc_bs_dongxue": {
+  "label": "东学街"
+ },
+ "loc_bs_guanqian": {
+  "label": "官前街"
+ },
+ "loc_bs_hebu": {
+  "label": "河埠街"
+ },
+ "loc_bs_liquan": {
+  "label": "砾泉村"
+ },
+ "loc_bs_luxiang": {
+  "label": "炉巷"
+ },
+ "loc_bs_nanshi": {
+  "label": "南市街"
+ },
+ "loc_bs_sangban": {
+  "label": "桑坂村"
+ },
+ "loc_bs_weiting": {
+  "label": "苇汀村"
+ },
+ "loc_bs_yupo": {
+  "label": "榆坡村"
+ },
+ "loc_bs_zhanxi": {
+  "label": "栈西街"
+ },
+ "loc_capital": {
+  "label": "王都"
+ },
+ "loc_county_feicui_lieer": {
+  "label": "砾耳猎林郡"
+ },
+ "loc_county_feicui_shuqiao": {
+  "label": "树桥郡"
+ },
+ "loc_county_feicui_taiyuan": {
+  "label": "苔院郡"
+ },
+ "loc_county_feicui_xiudao": {
+  "label": "东缘嗅道郡"
+ },
+ "loc_county_fengji_jinghuan": {
+  "label": "井环郡"
+ },
+ "loc_county_fengji_tiyuan": {
+  "label": "蹄原郡"
+ },
+ "loc_county_fengji_zhufeng": {
+  "label": "逐风集郡"
+ },
+ "loc_county_hanlu_heilu": {
+  "label": "黑炉谷"
+ },
+ "loc_county_hanlu_tongji": {
+  "label": "铜脊郡"
+ },
+ "loc_county_hanlu_tuixie": {
+  "label": "退楔郡"
+ },
+ "loc_county_hanlu_zheya": {
+  "label": "赭牙谷"
+ },
+ "loc_county_hupo_hupogang": {
+  "label": "琥珀港郡"
+ },
+ "loc_county_hupo_qiansheng": {
+  "label": "浅绳湾郡"
+ },
+ "loc_county_hupo_yanfeng": {
+  "label": "盐风群岛郡"
+ },
+ "loc_county_jingzhao_chaoting": {
+  "label": "潮汀郡"
+ },
+ "loc_county_jingzhao_huiyan": {
+  "label": "灰盐郡"
+ },
+ "loc_county_jingzhao_luyu": {
+  "label": "芦语渡郡"
+ },
+ "loc_county_wushan_guanxue": {
+  "label": "冠雪郡"
+ },
+ "loc_county_wushan_shanyi": {
+  "label": "杉根联邑"
+ },
+ "loc_county_wushan_wuling": {
+  "label": "雾岭联邑"
+ },
+ "loc_county_xichui_huancheng": {
+  "label": "环城郡"
+ },
+ "loc_county_xichui_longqu": {
+  "label": "垄渠郡"
+ },
+ "loc_county_xichui_shangzha": {
+  "label": "上闸郡"
+ },
+ "loc_county_xichui_xiadu": {
+  "label": "下渡郡"
+ },
+ "loc_county_xingwan_fudeng": {
+  "label": "覆灯湾郡"
+ },
+ "loc_county_xingwan_xuedeng": {
+  "label": "雪灯郡"
+ },
+ "loc_county_zhonglu_baiguan": {
+  "label": "白冠郡"
+ },
+ "loc_county_zhonglu_chizhe": {
+  "label": "赤褶郡"
+ },
+ "loc_county_zhonglu_jiekan": {
+  "label": "阶槛郡"
+ },
+ "loc_county_zhonglu_wangji": {
+  "label": "王畿郡"
+ },
+ "loc_county_zhonglu_xiqian": {
+  "label": "细嵌郡"
+ },
+ "loc_far_duanqi": {
+  "label": "断契坡"
+ },
+ "loc_far_huancheng": {
+  "label": "环城"
+ },
+ "loc_far_hupo": {
+  "label": "琥珀港"
+ },
+ "loc_far_jijie": {
+  "label": "季界亭"
+ },
+ "loc_far_luyu": {
+  "label": "芦语渡站"
+ },
+ "loc_far_shuqiao": {
+  "label": "树桥"
+ },
+ "loc_far_tongji": {
+  "label": "铜脊城"
+ },
+ "loc_far_xiushi": {
+  "label": "嗅石集"
+ },
+ "loc_far_xuedeng": {
+  "label": "雪灯镇"
+ },
+ "loc_far_zhufeng": {
+  "label": "逐风集"
+ },
+ "loc_hw": {
+  "label": "河湾村"
+ },
+ "loc_hw_apiary": {
+  "label": "南坡蜂场"
+ },
+ "loc_hw_dock": {
+  "label": "旧渡口"
+ },
+ "loc_hw_fields": {
+  "label": "南田"
+ },
+ "loc_hw_gate": {
+  "label": "村口"
+ },
+ "loc_hw_northwood": {
+  "label": "北林边"
+ },
+ "loc_hw_orchard": {
+  "label": "公用果园"
+ },
+ "loc_lq_fields": {
+  "label": "泉下坡田"
+ },
+ "loc_lq_garden": {
+  "label": "泉侧菜床"
+ },
+ "loc_lq_path": {
+  "label": "砾泉坡路口"
+ },
+ "loc_lq_spring": {
+  "label": "砾泉槽边"
+ },
+ "loc_ms_huipeng": {
+  "label": "灰棚集"
+ },
+ "loc_ms_huixi": {
+  "label": "回汐埠"
+ },
+ "loc_ms_lielu": {
+  "label": "裂炉营"
+ },
+ "loc_ms_taideng": {
+  "label": "苔灯坞"
+ },
+ "loc_ms_tanjie": {
+  "label": "炭阶地宫"
+ },
+ "loc_ms_yugen": {
+  "label": "榆根里"
+ },
+ "loc_prov_feicui": {
+  "label": "翡翠林盟"
+ },
+ "loc_prov_fengji": {
+  "label": "风脊草原"
+ },
+ "loc_prov_hanlu": {
+  "label": "寒炉山地"
+ },
+ "loc_prov_hupo": {
+  "label": "琥珀海岸"
+ },
+ "loc_prov_jingzhao": {
+  "label": "镜沼灰盐"
+ },
+ "loc_prov_wushan": {
+  "label": "雾杉高地"
+ },
+ "loc_prov_xichui": {
+  "label": "西陲河谷"
+ },
+ "loc_prov_xingwan": {
+  "label": "北境星湾"
+ },
+ "loc_prov_zhonglu": {
+  "label": "中陆诸邦"
+ },
+ "loc_sb_fields": {
+  "label": "桑坡边沟田"
+ },
+ "loc_sb_garden": {
+  "label": "南坂菜圃"
+ },
+ "loc_sb_orchard": {
+  "label": "桑坡树地"
+ },
+ "loc_sb_path": {
+  "label": "桑坂园外路口"
+ },
+ "loc_site_basalt_steps": {
+  "label": "乌岩阶"
+ },
+ "loc_site_beilin_tower": {
+  "label": "北林废观测塔"
+ },
+ "loc_site_copper_ridge": {
+  "label": "铜砾岭"
+ },
+ "loc_site_crown_firn": {
+  "label": "冠雪台原"
+ },
+ "loc_site_deep_star_bowl": {
+  "label": "沉星山坳"
+ },
+ "loc_site_glass_dunes": {
+  "label": "透砂坡"
+ },
+ "loc_site_ice_echo": {
+  "label": "冰回裂谷"
+ },
+ "loc_site_moon_cliffs": {
+  "label": "圆月断崖"
+ },
+ "loc_site_ms_gs_carts": {
+  "label": "灰棚卸车圈"
+ },
+ "loc_site_ms_gs_council": {
+  "label": "灰棚议签棚"
+ },
+ "loc_site_ms_gs_gate": {
+  "label": "灰棚迎车口"
+ },
+ "loc_site_ms_gs_kitchen": {
+  "label": "灰棚候饭灶"
+ },
+ "loc_site_ms_gs_repair": {
+  "label": "灰棚补具檐"
+ },
+ "loc_site_ms_gs_return": {
+  "label": "灰棚归签坡"
+ },
+ "loc_site_ms_gs_scale": {
+  "label": "灰棚公秤台"
+ },
+ "loc_site_ms_gs_store": {
+  "label": "灰棚公货柜"
+ },
+ "loc_site_ms_gs_tents": {
+  "label": "灰棚矮棚排"
+ },
+ "loc_site_ms_hx_council": {
+  "label": "议汐棚"
+ },
+ "loc_site_ms_hx_dew": {
+  "label": "露根圃"
+ },
+ "loc_site_ms_hx_land": {
+  "label": "回汐干芦台"
+ },
+ "loc_site_ms_hx_landing": {
+  "label": "回汐拆鱼石"
+ },
+ "loc_site_ms_hx_listen": {
+  "label": "听潮矮台"
+ },
+ "loc_site_ms_hx_reed": {
+  "label": "认岸芦门"
+ },
+ "loc_site_ms_hx_return": {
+  "label": "归汐高岸"
+ },
+ "loc_site_ms_hx_store": {
+  "label": "回汐存芦棚"
+ },
+ "loc_site_ms_hx_water": {
+  "label": "回汐水窝岸"
+ },
+ "loc_site_ms_ll_adit": {
+  "label": "矿口"
+ },
+ "loc_site_ms_ll_council": {
+  "label": "议事棚"
+ },
+ "loc_site_ms_ll_forge": {
+  "label": "共炉"
+ },
+ "loc_site_ms_ll_gate": {
+  "label": "裂炉营口"
+ },
+ "loc_site_ms_ll_huts": {
+  "label": "工棚区"
+ },
+ "loc_site_ms_ll_rocks": {
+  "label": "石窝"
+ },
+ "loc_site_ms_ll_shop": {
+  "label": "修具棚"
+ },
+ "loc_site_ms_ll_store": {
+  "label": "贡粮棚"
+ },
+ "loc_site_ms_ll_tents": {
+  "label": "兽人棚区"
+ },
+ "loc_site_ms_ll_yard": {
+  "label": "卸石场"
+ },
+ "loc_site_ms_td_commons": {
+  "label": "共食庭"
+ },
+ "loc_site_ms_td_council": {
+  "label": "长老树洞"
+ },
+ "loc_site_ms_td_garden": {
+  "label": "药圃"
+ },
+ "loc_site_ms_td_lampground": {
+  "label": "归土灯坪"
+ },
+ "loc_site_ms_td_li": {
+  "label": "溪畔洞"
+ },
+ "loc_site_ms_td_qing": {
+  "label": "榛坡洞"
+ },
+ "loc_site_ms_td_ropes": {
+  "label": "绳记坡"
+ },
+ "loc_site_ms_td_saltstone": {
+  "label": "换盐石"
+ },
+ "loc_site_ms_td_tai": {
+  "label": "老根洞"
+ },
+ "loc_site_ms_td_trapcache": {
+  "label": "收夹洞"
+ },
+ "loc_site_ms_tj_council": {
+  "label": "议事窟"
+ },
+ "loc_site_ms_tj_ding": {
+  "label": "钉灶窟"
+ },
+ "loc_site_ms_tj_forge": {
+  "label": "铸补间"
+ },
+ "loc_site_ms_tj_fungus": {
+  "label": "菌床洞"
+ },
+ "loc_site_ms_tj_hearth": {
+  "label": "共灶厅"
+ },
+ "loc_site_ms_tj_li": {
+  "label": "砾灶窟"
+ },
+ "loc_site_ms_tj_shaft": {
+  "label": "通风井"
+ },
+ "loc_site_ms_tj_stair": {
+  "label": "炭阶口"
+ },
+ "loc_site_ms_tj_store": {
+  "label": "仓窟"
+ },
+ "loc_site_ms_tj_yan": {
+  "label": "烟灶窟"
+ },
+ "loc_site_ms_yg_council": {
+  "label": "议根洞"
+ },
+ "loc_site_ms_yg_crown": {
+  "label": "老榆树穴"
+ },
+ "loc_site_ms_yg_ditch": {
+  "label": "榆根排水沟"
+ },
+ "loc_site_ms_yg_gate": {
+  "label": "根门"
+ },
+ "loc_site_ms_yg_nursery": {
+  "label": "育苗地"
+ },
+ "loc_site_ms_yg_rootslope": {
+  "label": "归根坡"
+ },
+ "loc_site_ms_yg_sett": {
+  "label": "獾土窟"
+ },
+ "loc_site_ms_yg_shed": {
+  "label": "修具棚"
+ },
+ "loc_site_ms_yg_stone": {
+  "label": "鼬石窟"
+ },
+ "loc_site_ms_yg_store": {
+  "label": "林产窖"
+ },
+ "loc_site_peat_islets": {
+  "label": "黑泥洲"
+ },
+ "loc_site_rainstone_basin": {
+  "label": "雨石盆地"
+ },
+ "loc_site_red_fold": {
+  "label": "赤褶山麓"
+ },
+ "loc_site_root_hollow": {
+  "label": "盘根洼"
+ },
+ "loc_site_salt_reeds": {
+  "label": "盐苇湾"
+ },
+ "loc_site_silt_canyon": {
+  "label": "沉沙峡"
+ },
+ "loc_site_w5_ash_market": {
+  "label": "灰石换场"
+ },
+ "loc_site_w5_boundary_pavilion": {
+  "label": "郡界碑亭"
+ },
+ "loc_site_w5_broken_bell": {
+  "label": "断钟寺"
+ },
+ "loc_site_w5_broken_rut_bridge": {
+  "label": "断辙桥"
+ },
+ "loc_site_w5_charcoal_camp": {
+  "label": "北坡炭窑营"
+ },
+ "loc_site_w5_cold_smelter": {
+  "label": "废冶炉台"
+ },
+ "loc_site_w5_east_barracks": {
+  "label": "东郊旧营"
+ },
+ "loc_site_w5_ferry_shrine": {
+  "label": "河神矶"
+ },
+ "loc_site_w5_granary_watergate": {
+  "label": "仓城旧水门"
+ },
+ "loc_site_w5_halfway_post": {
+  "label": "半程驿亭"
+ },
+ "loc_site_w5_harbor_lamp": {
+  "label": "琥珀港旧灯台"
+ },
+ "loc_site_w5_ice_cellar": {
+  "label": "雪灯旧冰窖"
+ },
+ "loc_site_w5_indigo_ditch": {
+  "label": "蓝沟废染坊"
+ },
+ "loc_site_w5_light_workshop": {
+  "label": "东学旧光坊"
+ },
+ "loc_site_w5_ll_deep_drift": {
+  "label": "封水深支"
+ },
+ "loc_site_w5_north_toll": {
+  "label": "北道旧税卡"
+ },
+ "loc_site_w5_old_bank_altar": {
+  "label": "旧验汀坛"
+ },
+ "loc_site_w5_old_mill": {
+  "label": "南河废水车坊"
+ },
+ "loc_site_w5_old_season_post": {
+  "label": "旧季界桩"
+ },
+ "loc_site_w5_orc_cairn": {
+  "label": "赭牙旧石冢"
+ },
+ "loc_site_w5_raid_fort": {
+  "label": "断契旧堡"
+ },
+ "loc_site_w5_reed_circle": {
+  "label": "芦滩旧契坛"
+ },
+ "loc_site_w5_reed_salt": {
+  "label": "芦口旧盐灶"
+ },
+ "loc_site_w5_rope_bridge_old": {
+  "label": "旧绳桥台"
+ },
+ "loc_site_w5_scent_watch": {
+  "label": "旧嗅台"
+ },
+ "loc_site_w5_seventy_li": {
+  "label": "七十里铺"
+ },
+ "loc_site_w5_silk_shrine": {
+  "label": "蚕娘祠"
+ },
+ "loc_site_w5_silver_trial": {
+  "label": "银镜旧试场"
+ },
+ "loc_site_w5_stone_markers": {
+  "label": "砾泉旧石标场"
+ },
+ "loc_site_w5_sunk_dock": {
+  "label": "施家旧船坞"
+ },
+ "loc_site_w5_td_trap_shrine": {
+  "label": "夹界石龛"
+ },
+ "loc_site_w5_tj_kiln_shrine": {
+  "label": "老窑神龛"
+ },
+ "loc_site_w5_tj_old_draft": {
+  "label": "塌风道"
+ },
+ "loc_site_w5_tongji_flooded_mine": {
+  "label": "铜脊淹矿"
+ },
+ "loc_site_w5_way_temple": {
+  "label": "歇脚观"
+ },
+ "loc_site_w5_well_camp": {
+  "label": "断绳井场"
+ },
+ "loc_site_w5_white_quarry": {
+  "label": "白石旧采坑"
+ },
+ "loc_site_w5_yandu_wreck": {
+  "label": "雁渡沉驳"
+ },
+ "loc_site_w5_yg_drowned_sett": {
+  "label": "淹窟"
+ },
+ "loc_site_w5_yg_hollow_elm": {
+  "label": "空心老榆"
+ },
+ "loc_site_w5_yupo_beacon": {
+  "label": "北岗烽台"
+ },
+ "loc_site_white_canopy": {
+  "label": "白冠高林"
+ },
+ "loc_wild_bs_kiln": {
+  "label": "白石镇西郊废窑"
+ },
+ "loc_wild_lq_adit": {
+  "label": "砾泉旧矿道口"
+ },
+ "loc_wild_sb_barrow": {
+  "label": "桑坂西坡荒冢"
+ },
+ "loc_wild_wt_mist": {
+  "label": "苇汀下游雾滩"
+ },
+ "loc_wild_yp_north": {
+  "label": "榆坡北岗老林"
+ },
+ "loc_world": {
+  "label": "已知大陆"
+ },
+ "loc_wt_bank": {
+  "label": "浅汀岸口"
+ },
+ "loc_wt_garden": {
+  "label": "岸上菜圃"
+ },
+ "loc_wt_path": {
+  "label": "苇汀干路口"
+ },
+ "loc_wt_reeds": {
+  "label": "苇束堆放地"
+ },
+ "loc_yandu": {
+  "label": "雁渡"
+ },
+ "loc_yp_fields": {
+  "label": "上下坡麦田"
+ },
+ "loc_yp_garden": {
+  "label": "背风菜圃"
+ },
+ "loc_yp_orchard": {
+  "label": "坡腰果树地"
+ },
+ "loc_yp_path": {
+  "label": "榆坡路口"
  },
  "purpose_unmaterialized": {
   "label": "未物化预置"
