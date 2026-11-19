@@ -646,6 +646,8 @@
 | `learn` | `learn` | 现行 `subject`、`learningSource`；改为 `subject`、`skill`、`source`（ref learn_source）、`minutes`（integer）、`difficulty`（number nullable），与卷十四 `session` 对齐（R9-2.8） | 调入口 | 卷十四的 `gainSkill` |
 | `time` | `time` | `minutes`（integer） | 声明写者 | 世界时钟，见卷二十 §4.1（刻、同刻全序、调度器与到期语义） |
 
+`schedule` 适配器填的整类映射（AI 不填；封卷后勘误 1118k26，李白 11-19 00:20 裁定）：`kind` 恒取 `due_scheduled`；`dueMinute = at`，`at` 小于当前分钟即拒 E-ACT-PRIMITIVE；转 `delayMinutes = at − clock.minute` 调内核 `schedule(owner, kind, delayMinutes, ref)`；`owner` 取本次动作的发起主体（取动作提案的行动者，不取 `cause` 文本）；`registeredMinute` 由内核取当前分钟；`ref` 取随同事务写入的“待执行项”记录的句柄，`action`／`rule` 载荷存在那条记录里，`dueItem` 本身仍无字串字段。
+
 效果族输出到原语的固定展开（五行，封闭，与卷二 §3.9（效果族表 `_effects.json`）的 `eff_output` 五值一一对应）：`modifier` 展开为带该修正项的 `status`；`status` 展开为 `status`；`primitive` 即所写原语；`event` 展开为 `emit`；`spawn` 展开为 `create`。
 
 #### 4.2.2 统一入口
@@ -660,7 +662,7 @@
 - **R9-2.4 适配器按原语分，不按领域分**：每个原语一个适配器。适配器里没有实体 id、没有按类别名写的分支；领域差别只来自参数与目标写者。
 - **R9-2.5 参数只有代号与数值**：原语参数的类型是卷二 §1.5（类型清单）里除 `string` 之外的类型。`fact.set` 的目标必须是某张维度表里登记的非文字维度，并且该维度的写者声明允许经执行器写。
 - **R9-2.6 别卷的输出清单**：推进钩子与反应规则返回的输出清单（形状同效果族输出）由钩子的调度方交 `execute` 执行，`cause` 取钩子或反应规则的登记代号。推进钩子另可按卷二 §2.6（写者与三接口）在其登记写者范围内经 `writePath` 直写；这类写入不经执行器，对活动与决策的影响按 R9-1.12、R9-12.7 的推进点上界处理，本卷不另设回调。
-- **R9-2.7 守恒**：实物与钱的增减只能是 `transfer`；`create`、`destroy` 涉及实物时，原语列表里必须有与之配对、指向登记源汇账户的 `transfer`，否则 E-ACT-PRIMITIVE。
+- **R9-2.7 守恒**：实物与钱的增减只能经账本 post（`transfer` 是两主体间 post 的原语形式）；`create`、`destroy` 涉及实物时，由该原语的写者在同一事务内经账本入口 post 一笔带登记来源／去处代号的腿（`create` 走 `src_*`，`destroy` 走 `sink_*`，代号取模板或规则表登记），AI 不另写配对 `transfer`；找不到登记代号即拒 E-ACT-PRIMITIVE（封卷后勘误 1118k26，李白 11-19 00:20 裁定；与 11-18 07:02 日终分配“写者同事务直接 post”同一口径）。
 - **R9-2.8 `learn` 不含成长算法**：善后段按动作行 `skillGain` 组出 `learn` 原语：`skill`、`source` 取该字段；`minutes` 取本次实际工时（长时动作取开工到收工的世界分钟数，瞬时动作为 0，0 分钟怎样计归卷十四）；`difficulty` 取本次检定的 `difficulty`（不检定为空）。适配器把它原样组成卷十四的 `session = {minutes, source, difficulty}` 交 `gainSkill(engine, state, personId, skillId, session)`；技能涨多少归卷十四 §4.12（成长、经验与兼修负担），`teacher`、`carrier`、`group` 由登记该动作行的卷经槽位给出时一并原样转交。`skillGain.skillFrom` 非空的，`skill` 取善后段以 `(engine, state, 行动者 id)` 调该入口所得 `field` 的值，为空即本次不组 `learn`（C13-7）。
 - **R9-2.9 `transition` 适配器交出本事务产物引用**（C15-1 ③）：`transition` 适配器按 `entity` 所属的状态机调该状态机登记的写入口，`kind` 是该状态机登记的迁移代号；每次调用都把本次事务中先于它执行的各原语适配器返回的产出引用（建立的状态实例、持有边、合同、实体等的 id，按执行次序）作为一个列表一并交给写入口，用不用由所属卷定。适配器不认识任何状态机、迁移代号或效果族代号；它在固定序里排在 `holding`、`obligation`、`status`、`create` 之后（R9-2.3），所以这些产物在交出时已存在。
 - **R9-2.10 `emit` 写目击名单，只算一次**（封卷后勘误，李白 11-14 20:22 根因 G 总规矩、P-1、P-2）：`emit` 适配器在本事务内、事件落定之前，对该事件调**一次**卷五 `perceiveEvent(engine, state, {verb, visibility, actor, targets, place, sourceLevels})`（签名照卷五 §3.2（判定与动作入口））：`verb`、`visibility`、`actor`、`targets` 取该事件记录的同名字段，`place` 取其 `payload.place`，`sourceLevels` 是以 `actor` 为行为人、照卷五 §4.2（分区、方位与感知通道） 规则 7 求出的各感官一次性源强（行为人此刻所做动作行的 `sourceStrength` 列作修正项叠加，§2.2；求法与未知的处置只照规则 7，本卷不另写）。返回结果原样写进该事件记录的 `witnesses`（形状唯一定义在卷二十四表 A）。按 `visibility` 分档（`private` 为空表等）全在 `perceiveEvent` 内，本卷不按档分支。目击名单只此一处求：执行器、别的原语与别卷都不为同一事件另调 `perceive` 或 `perceiveEvent`，一律只读 `witnesses`。
@@ -1762,6 +1764,7 @@
 | 封卷后勘误 1116乙8-3-九（依据：李白 11-16 10:xx 乙-8 改做法第 3、4 条；主会话技术裁定 1116 白天 B2–B4、E5；必要理由：迁移行落点所在节登记了多个入口，卡账 entries 取不到恰一个入口，改为只补能确定的名字、不在卷文留待补标记；不升版本号；改前快照 版本快照/卷九-v2-勘误前-1116乙8-3-九.md，改后覆盖 版本快照/卷九-v2.md）：落点栏补写入口名 4 行（M9-6、M9-7、M9-8、M9-10；名字只取本行原文明写的，或所引规则正文里恰写出的本卷唯一入口）。不改规则正文 | — | — |
 | 封卷后勘误 1118k8（依据：李白 11-18 04:10 stockLots 以卷六为准裁定第 4 条，见 审查/李白裁定-1117.md；卷三乙、卷六同号；改稿 claude-opus-5-5 中档；必要理由：裁定要求在卷九对应处注明容器内数量的记账口径；不升版本号；改前快照 版本快照/卷九-v2-勘误前-1118k8.md，改后覆盖 版本快照/卷九-v2.md）：R9-1.12"经账本离手"一点（抽查对象"账户与容器"处）补注"容器内物品的数量仍记在容器所属持有人的账户上，容器只管位置/归属"（04:10 第 4 条原话）。核过本卷无"容器自有账户"或"容器内数量另存"的写法，与该句不冲突。不改其他规则正文 | — | — |
 | 封卷后勘误 1118k25（依据：李白 11-18 22:10 块 5 体检 11 项裁定 五.1、丙9，原文见 docs/审查/李白裁定-1117.md 末节；不升版本号，不改卷首；改前快照 版本快照/卷九-v2-勘误前-1118k25.md，改后覆盖 版本快照/卷九-v2.md） | §2.8 错误码表；§4.2.2 统一入口 | §2.8 新增 E-ACT-WRITER-NOT-READY（原语适配器或其目标写者尚未上线；E-ACT-PRIMITIVE 保持原义，只管契约不合）；§4.2.2 写明执行器归规则层，文件 `server-plugin/primitives-runtime.mjs`，入口 `execute`，只由 `resolve()` 的提交段与推进钩子的调度方调用。历史修订记录不回改 | — | — |
+| 封卷后勘误 1118k26（依据：李白 11-19 00:20 裁定 5-1 两项，原文见 docs/审查/李白裁定-1117.md 末节“00:20 裁定：5-1 两项”；不升版本号，不改卷首；改前快照 `版本快照/卷九-v2-勘误前-1118k26.md`，改后覆盖 `版本快照/卷九-v2.md`） | §4.2.1 `schedule` 行一带；R9-2.7 | §4.2.1 表后补 `schedule` 适配器填的整类映射（AI 不填）：`kind` 恒取 `due_scheduled`；`dueMinute = at`，`at` 小于当前分钟即拒 E-ACT-PRIMITIVE；转 `delayMinutes = at − clock.minute` 调内核 `schedule(owner, kind, delayMinutes, ref)`；`owner` 取本次动作的发起主体（取动作提案的行动者，不取 `cause` 文本）；`registeredMinute` 由内核取当前分钟；`ref` 取随同事务写入的“待执行项”记录的句柄，`action`／`rule` 载荷存在那条记录里，`dueItem` 本身仍无字串字段。R9-2.7 改为实物与钱的增减只能经账本 post（`transfer` 是两主体间 post 的原语形式）；`create`、`destroy` 涉及实物时，由该原语的写者在同一事务内经账本入口 post 一笔带登记来源／去处代号的腿（`create` 走 `src_*`，`destroy` 走 `sink_*`，代号取模板或规则表登记），AI 不另写配对 `transfer`；找不到登记代号即拒 E-ACT-PRIMITIVE；与 11-18 07:02 日终分配同一口径。历史修订记录不回改 | — | — |
 
 ## 附录 自检脚本输出
 
