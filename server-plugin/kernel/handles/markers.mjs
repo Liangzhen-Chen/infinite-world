@@ -41,6 +41,10 @@ export const CODE_ENUMS = Object.freeze({
   // 卷二十七 §2.1 :123 族 detfn：内核定点数学设施提供的超越函数七值，代码内封闭枚举、值不带前缀（卷二 §1.9 :285、:289）。
   // 规则表 det-numeric 的 fnTables 用它作 map 键；不登 _vocab 族（李白 11-18 21:3x 裁定第 1 条），七值只在这一处定义。
   detfn: ['exp', 'ln', 'sin', 'cos', 'atan', 'sqrt', 'pow'],
+  // 卷十三 §2.3 :169–:171 封闭枚举 launchsrc（投射器的出力来源：人力、蓄力、装药），物品表 launch.source 用（块 6 第 6-2 张）。
+  launchsrc: ['body', 'stored', 'charge'],
+  // 卷三乙 §4.1.1 聚合口径代号 agg_mode：代码内封闭枚举、值不带前缀（规则表 rules.items.aggregation 的 mode 用它）。
+  agg_mode: ['mean', 'sum', 'hmean', 'dmean', 'max', 'min', 'dominant', 'none'],
 });
 
 // 不必写 domain 的类型（卷二 §1.2 表头；规则表登记的取值域同此写法，§4.1）。
@@ -98,7 +102,12 @@ export const DECL_FIELDS = Object.freeze(['impl', 'own', 'uses', 'foldsOverDays'
 export const RULE_STRUCTURES = Object.freeze(['processSlots']);
 
 // kernel 直接比较的词表族名（卷二 §1.9 :288 族名表：class、component、vstatus；relation→rel_、juris→juris_ 供 kernel/reverse-index.mjs、kernel/place.mjs）。
-export const VOCAB_FAMILIES = Object.freeze(['class', 'component', 'vstatus', 'relation', 'juris']);
+// 块 6 第 6-2 张加 holding_kind（kernel/holdings.mjs 的种类行族，取代族名冻结对象；李白 11-19 15:5x 起 6-7 先例）。
+export const VOCAB_FAMILIES = Object.freeze(['class', 'component', 'vstatus', 'relation', 'juris', 'holding_kind']);
+
+// matter 族封闭的三项代号（卷三乙 §2.4：固、液、气；kernel/item.mjs 判静态物态与固相量用，定义源只此一份）与表头 required 策略里本文件读的 never（卷二 §1.2）。matter 族条目另在 _vocab.json，二者由 kernel/item.mjs 的加载期一致性校验对齐。
+export const MATTER_STATES = Object.freeze(['matter_solid', 'matter_liquid', 'matter_gas']);
+export const REQUIRED_POLICIES = Object.freeze(['never']);
 
 // 表 kind 之外的伪类（卷二 §1.5 :182：`kind` 取 22 类或伪类 `effect`，即 _effects.json 的族）。
 export const ID_KINDS = Object.freeze(['effect']);
@@ -199,6 +208,8 @@ export const T = Object.freeze({
   decl_field: markersOf('decl_field', DECL_FIELDS),
   rule_structure: markersOf('rule_structure', RULE_STRUCTURES),
   vocab_family: markersOf('vocab_family', VOCAB_FAMILIES),
+  matter_state: markersOf('matter_state', MATTER_STATES),
+  required_policy: markersOf('required_policy', REQUIRED_POLICIES),
   id_kind: markersOf('id_kind', ID_KINDS),
   effect_vocab: markersOf('effect_vocab', EFFECT_VOCAB_FAMILIES),
 });

@@ -184,12 +184,13 @@
    "structure": "keys",
    "type": {
     "elevationTempGradient": {"type": "number", "unit": "celsius_per_m", "precision": 4},
+    "envTempDomain": {"type": "struct", "required": ["max", "min"], "fields": {"min": {"type": "number", "unit": "celsius", "precision": 4}, "max": {"type": "number", "unit": "celsius", "precision": 4}}},
     "unbuilt": {"type": "set", "of": {"type": "string"}}
    },
-   "domain": {"elevationTempGradient": [null, 0], "unbuilt": {}},
-   "volume": "卷二十 §2.9 :396（rules.climate 键表）、§4.5.3 第 1 条（elevationTempGradient 只由 env.climateTempC 的派生读）；elevationTempGradient 取外部权威出处 ISA（李白 11-19 13:3x ③），卷文示意值不算出处；geothermalGradient、曲线、昼夜峰值分钟、cloudDamp 无出处，登在 unbuilt，不写缺省",
+   "domain": {"elevationTempGradient": [null, 0], "envTempDomain": {}, "unbuilt": {}},
+   "volume": "卷二十 §2.9 :396（rules.climate 键表）、envTempDomain（卷三乙 T-13 :1469 点名：自然环境可达的温度范围，卷二十 Q-30 待登记；块 6 第 6-2 张加键、登 unbuilt，卷文无值）、§4.5.3 第 1 条（elevationTempGradient 只由 env.climateTempC 的派生读）；elevationTempGradient 取外部权威出处 ISA（李白 11-19 13:3x ③），卷文示意值不算出处；geothermalGradient、曲线、昼夜峰值分钟、cloudDamp 无出处，登在 unbuilt，不写缺省",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"elevationTempGradient": false, "unbuilt": false}
+   "packOverridable": {"elevationTempGradient": false, "envTempDomain": false, "unbuilt": false}
   },
   {
    "code": "body",
@@ -324,12 +325,45 @@
     "matcatRules": {"type": "list", "of": {"type": "struct", "required": ["when", "value"], "fields": {
      "when": {"type": "rx"},
      "value": {"type": "ref", "vocab": "matcat"}
-    }}}
+    }}},
+    "substanceClass": {"type": "map", "key": {"type": "ref", "vocab": "substance"}, "value": {"type": "ref", "vocab": "class"}}
    },
-   "domain": {"charReaction": {}, "charDecomposeMin": [-273, 6000], "charHeatMin": [0, 60], "fatMeltMax": [-273, 6000], "fatHeatMin": [0, 60], "volatileMin": [0, null], "grainMoistureMax": [0, 1], "grainEnergyMin": [0, null], "grainPart": {}, "grainCarbMin": [0, 1], "grainFamily": {}, "matcatRules": {}},
-   "volume": "卷三乙 §2.5 :322–:330（rules.materials 各键）；§4.1 :571–:584（matcatRules 八条，when 只读卷三甲行上修正前的值、producedBy 与组件类，M-9）、:626（charReaction 供 charYield）、:707–:722（首批标定值）；卷二 §1.12（加载期规则分类，封卷后勘误 1118k31）",
+   "domain": {"charReaction": {}, "charDecomposeMin": [-273, 6000], "charHeatMin": [0, 60], "fatMeltMax": [-273, 6000], "fatHeatMin": [0, 60], "volatileMin": [0, null], "grainMoistureMax": [0, 1], "grainEnergyMin": [0, null], "grainPart": {}, "grainCarbMin": [0, 1], "grainFamily": {}, "matcatRules": {}, "substanceClass": {}},
+   "volume": "卷三乙 §2.5 :322–:330（rules.materials 各键）；§4.1 :571–:584（matcatRules 八条，when 只读卷三甲行上修正前的值、producedBy 与组件类，M-9）、:626（charReaction 供 charYield）、:707–:722（首批标定值）；:326、:566 substanceClass（本源成分到类别，M-9 第 ① 条来源；块 6 第 6-2 张，物品材料类别 C-8 ① 读）；卷二 §1.12（加载期规则分类，封卷后勘误 1118k31）",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"charReaction": false, "charDecomposeMin": false, "charHeatMin": false, "fatMeltMax": false, "fatHeatMin": false, "volatileMin": false, "grainMoistureMax": false, "grainEnergyMin": false, "grainPart": false, "grainCarbMin": false, "grainFamily": false, "matcatRules": false}
+   "packOverridable": {"charReaction": false, "charDecomposeMin": false, "charHeatMin": false, "fatMeltMax": false, "fatHeatMin": false, "volatileMin": false, "grainMoistureMax": false, "grainEnergyMin": false, "grainPart": false, "grainCarbMin": false, "grainFamily": false, "matcatRules": false, "substanceClass": false}
+  },
+  {
+   "code": "items",
+   "file": "tables/items.json",
+   "structure": "keys",
+   "type": {
+    "aggregation": {"type": "list", "of": {"type": "struct", "required": ["dimension", "mode"], "fields": {
+     "dimension": {"type": "string"},
+     "mode": {"type": "enum", "vocab": "agg_mode"},
+     "groups": {"type": "set", "of": {"type": "ref", "vocab": "matgroup"}, "domain": {}},
+     "solidOnly": {"type": "boolean"}
+    }}},
+    "categoryRules": {"type": "list", "of": {"type": "struct", "required": ["when", "value"], "fields": {
+     "when": {"type": "rx"},
+     "value": {"type": "ref", "vocab": "category"}
+    }}},
+    "classRules": {"type": "list", "of": {"type": "struct", "required": ["when", "value"], "fields": {
+     "when": {"type": "rx"},
+     "value": {"type": "ref", "vocab": "class"}
+    }}},
+    "materialClassMin": {"type": "number", "unit": "fraction", "precision": 4},
+    "sizeClasses": {"type": "list", "of": {"type": "struct", "required": ["size", "minVolumeL"], "fields": {
+     "size": {"type": "ref", "vocab": "size"},
+     "minVolumeL": {"type": "number", "unit": "L", "precision": 4}
+    }}},
+    "staticStateOrder": {"type": "list", "of": {"type": "ref", "vocab": "matter"}},
+    "unbuilt": {"type": "set", "of": {"type": "string"}}
+   },
+   "domain": {"aggregation": {}, "categoryRules": {}, "classRules": {}, "materialClassMin": [0, 1], "sizeClasses": {}, "staticStateOrder": {}, "unbuilt": {}},
+   "volume": "卷三乙 §2.5 :324–:337（rules.items 各键）；§4.1.1 :630–:672（聚合口径表，M-1、M-10）；§4.3.3 C-1、C-8；§4.11 T-14；块 6 第 6-2 张只登本卡有读者的键；categoryRules、classRules、materialClassMin、sizeClasses 卷文没有首批值，登在 unbuilt，不编数。instancedComponents（I-2，读者 6-3）、materialCompMin、fuelHeatMin、fuelFlammabilityMin、saltContentMin、saltNutrient（C-8 燃料类、盐类与材料派生组件的具有口径，读者在类别规则卡）随读者卡登记",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"aggregation": false, "categoryRules": false, "classRules": false, "materialClassMin": false, "sizeClasses": false, "staticStateOrder": false, "unbuilt": false}
   }
  ]
 }

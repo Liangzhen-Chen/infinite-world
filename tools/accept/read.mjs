@@ -143,25 +143,27 @@ export function groupDir(model, groupKey) {
   return p ? p.root : null;
 }
 
-// ---------- 实体前缀（R12-1.2：取自各维度表表头 entity 的 idPrefix、classPrefix 与 singletonIds） ----------
+// ---------- 实体前缀（R12-1.2：取自各维度表表头 entity 的 idPrefix 与 singletonIds） ----------
 
 export function prefixesFromDir(dir) {
-  const prefixes = new Set(); const singletons = new Set();
-  if (!existsSync(dir)) return { prefixes, singletons };
+  const prefixes = new Set(); const singletons = new Set(); const classPrefixes = new Set();
+  if (!existsSync(dir)) return { prefixes, singletons, classPrefixes };
   for (const name of readdirSync(dir).sort()) {
     if (!name.endsWith('.json') || name.startsWith('_')) continue;
     const e = (readJson(join(dir, name)).entity) || {};
     for (const p of e.idPrefix || []) prefixes.add(p);
-    if (e.classPrefix) prefixes.add(e.classPrefix);
+    // classPrefix 是词表 class 族的条目前缀（类别代号），不是实体 id 前缀：卷六 S6-2 的规则表一支只计实体 id（prefixes），
+    // 代码里的字面量扫描（lit_scope）仍把类别代号一并计入（classPrefixes），不放宽（6-2 复核第 2 轮 N2）。
+    if (e.classPrefix) classPrefixes.add(e.classPrefix);
     for (const s of e.singletonIds || []) singletons.add(s);
   }
-  return { prefixes, singletons };
+  return { prefixes, singletons, classPrefixes };
 }
 
 export function mergePrefixes(...sets) {
-  const prefixes = new Set(); const singletons = new Set();
-  for (const s of sets) { s.prefixes.forEach((x) => prefixes.add(x)); s.singletons.forEach((x) => singletons.add(x)); }
-  return { prefixes: [...prefixes].sort(), singletons: [...singletons].sort() };
+  const prefixes = new Set(); const singletons = new Set(); const classPrefixes = new Set();
+  for (const s of sets) { s.prefixes.forEach((x) => prefixes.add(x)); s.singletons.forEach((x) => singletons.add(x)); (s.classPrefixes || []).forEach((x) => classPrefixes.add(x)); }
+  return { prefixes: [...prefixes].sort(), singletons: [...singletons].sort(), classPrefixes: [...classPrefixes].sort() };
 }
 
 // ---------- 执行上下文 ----------

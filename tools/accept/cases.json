@@ -426,6 +426,35 @@
    "scanClass": "instance_name"
   },
   {
+   "addedAtRev": 62,
+   "caseKey": "instance_name-43",
+   "expectCode": "E-ACC-INSTANCE-NAME",
+   "fixture": "tests/accept/bypass/instance_name-43.txt",
+   "group": "rules",
+   "origin": "卷六 S6-2：规则表的值是真实体 id（物品表 item_ 前缀）照计（必须报；6-2 只核 M1，主会话 11-19 定检测器整类不计类别代号）",
+   "polarity": "must_fail",
+   "scanClass": "instance_name"
+  },
+  {
+   "addedAtRev": 62,
+   "caseKey": "instance_name-44",
+   "fixture": "tests/accept/bypass/instance_name-44.txt",
+   "group": "rules",
+   "origin": "卷六 S6-2：规则表的值是词表 class 族类别代号（classPrefix 前缀）不是实体 id，不计（必须不报；6-2 只核 M1）",
+   "polarity": "must_pass",
+   "scanClass": "instance_name"
+  },
+  {
+   "addedAtRev": 62,
+   "caseKey": "instance_name-45",
+   "expectCode": "E-ACC-INSTANCE-NAME",
+   "fixture": "tests/accept/bypass/instance_name-45.txt",
+   "group": "rules",
+   "origin": "卷一 R-4 第 3 条；规则层代码里写死类别代号（classPrefix 前缀）仍计，只有规则表一支不把类别代号当实体 id（必须报；6-2 复核第 2 轮 N2）",
+   "polarity": "must_fail",
+   "scanClass": "instance_name"
+  },
+  {
    "addedAtRev": 1,
    "caseKey": "item_downgrade-01",
    "expectCode": "E-ACC-ITEM-DOWNGRADE",

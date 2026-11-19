@@ -10,6 +10,37 @@
  ],
  "units": [
   {
+   "dimension": "energy",
+   "id": "MJ",
+   "si": 1000000
+  },
+  {
+   "calibrate": true,
+   "dimension": "ref_dose_per_mass",
+   "id": "daily_ref_per_kg",
+   "si": 1
+  },
+  {
+   "dimension": "impulse",
+   "id": "kg_m_per_s",
+   "si": 1
+  },
+  {
+   "dimension": "angle",
+   "id": "mrad",
+   "si": 0.001
+  },
+  {
+   "dimension": "mass_per_time",
+   "id": "kg_per_day",
+   "si": 0.000011574074074074073
+  },
+  {
+   "dimension": "per_length",
+   "id": "per_m",
+   "si": 1
+  },
+  {
    "dimension": "volume",
    "id": "L",
    "si": 0.001

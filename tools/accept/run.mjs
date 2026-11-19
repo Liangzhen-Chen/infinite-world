@@ -198,7 +198,7 @@ function coversGroup(item, group) {
 async function runCases(root, ctx, items, classes) {
   const cases = readRegistry(root, 'cases');
   const fixturePrefixes = prefixesFromDir(join(root, LAYOUT.bypassDimsDir));
-  const prefixes = mergePrefixes({ prefixes: new Set(ctx.prefixes.prefixes), singletons: new Set(ctx.prefixes.singletons) }, fixturePrefixes);
+  const prefixes = mergePrefixes({ prefixes: new Set(ctx.prefixes.prefixes), singletons: new Set(ctx.prefixes.singletons), classPrefixes: new Set(ctx.prefixes.classPrefixes || []) }, fixturePrefixes);
   const out = {};
   for (const c of [...cases].sort((a, b) => (a.caseKey < b.caseKey ? -1 : 1))) {
     const dir = groupDir(ctx.model, c.group);

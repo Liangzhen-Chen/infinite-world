@@ -1,0 +1,2 @@
+// 规则层代码里写死类别代号（词表 class 族，带 classPrefix）：仍计（必须报）
+export const x = 'class_metal';

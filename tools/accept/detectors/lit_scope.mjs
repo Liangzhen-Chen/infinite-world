@@ -47,7 +47,7 @@ const JUDGES = {
       if (isCode(f, ctx.model)) names.add(base);
       if (f.startsWith(LAYOUT.dimensionsDir + '/') && base.endsWith('.json') && !base.startsWith('_')) names.add(base.slice(0, -5));
     }
-    const prefixed = (s) => ctx.prefixes.prefixes.some((p) => s.startsWith(p));
+    const prefixed = (s) => [...ctx.prefixes.prefixes, ...(ctx.prefixes.classPrefixes || [])].some((p) => s.startsWith(p));
     return (v) => (v.k === 'str' && (names.has(v.v) || prefixed(v.v) || ctx.prefixes.singletons.includes(v.v))) || (v.k === 'strp' && prefixed(v.v));
   },
   entityPrefix: (ctx) => {
@@ -56,7 +56,8 @@ const JUDGES = {
     return (v) => {
       if (v.k !== 'str' && v.k !== 'strp') return false;
       if (v.k === 'str' && kinds.has(v.v)) return false;
-      if (ctx.prefixes.prefixes.some((p) => v.v.startsWith(p))) return true;
+      // 代码里写死类别代号（classPrefixes）与实体前缀同样计；只有规则表一支（data_shape）不把类别代号当实体 id。
+      if ([...ctx.prefixes.prefixes, ...(ctx.prefixes.classPrefixes || [])].some((p) => v.v.startsWith(p))) return true;
       return v.k === 'str' && ctx.prefixes.singletons.includes(v.v);
     };
   },

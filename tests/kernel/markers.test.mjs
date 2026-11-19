@@ -75,7 +75,7 @@ test('GRAMMAR_TOKENS：只收卷二文法写明的固定记号（S13 (d)，:2413
 test('S13 ④ 的登记字段/族名定义源：成员即卷二写明的名字', () => {
   assert.deepEqual([...DECL_FIELDS], ['impl', 'own', 'uses', 'foldsOverDays']);
   assert.deepEqual([...RULE_STRUCTURES], ['processSlots']);
-  assert.deepEqual([...VOCAB_FAMILIES], ['class', 'component', 'vstatus', 'relation', 'juris']);
+  assert.deepEqual([...VOCAB_FAMILIES], ['class', 'component', 'vstatus', 'relation', 'juris', 'holding_kind']);
   assert.deepEqual([...ID_KINDS], ['effect']);
   assert.equal(KERNEL_MODULES.ledger, 'kernel/ledger.mjs');
   assert.equal(T.decl_field.impl, 'impl');

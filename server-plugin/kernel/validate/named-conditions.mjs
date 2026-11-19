@@ -76,7 +76,8 @@ function foldAbsent(n, absent) {
     if (l || r) return rule.by(n)(l, r) ? TRUE_NODE : FALSE_NODE;
   }
   const out = { ...n };
-  for (const f of ['left', 'right', 'item', 'set', 'filter']) if (n[f]) out[f] = foldAbsent(n[f], absent);
+  // 子节点是节点变体里值为对象的字段（left、right、item、set、filter）；按值的形状取，不在此列字段名（块 6 第 6-2 张建物品表后 item 成了表代号，字面量会按自名计）。
+  for (const f of Object.keys(n)) if (n[f] && typeof n[f] === 'object' && !Array.isArray(n[f])) out[f] = foldAbsent(n[f], absent);
   if (Array.isArray(n.items)) out.items = n.items.map((x) => foldAbsent(x, absent));
   return out;
 }

@@ -1,0 +1,4 @@
+// 规则表的值是真实体 id（物品表的 item_ 前缀）：照计
+export const x = 1;
+// @file world/rules/tables/economy/resources.json
+{"rows": [{"key": "res_x", "value": {"family": "resfam_asset", "made_of": "item_axe"}}]}

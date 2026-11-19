@@ -1,10 +1,60 @@
 {
  "families": {
+  "ability": {"closed": false, "entries": {}, "prefix": "ability_"},
   "access": {
    "closed": false,
    "entries": {},
    "prefix": "access_"
   },
+  "attach_slot": {"closed": false, "entries": {}, "prefix": "aslot_"},
+  "batch": {"closed": false, "entries": {}, "prefix": "batch_"},
+  "bulkform": {
+   "closed": false,
+   "entries": {
+    "bform_block": {"bearsLoad": true, "fine": false},
+    "bform_granule": {"bearsLoad": false, "fine": false},
+    "bform_powder": {"bearsLoad": false, "fine": true},
+    "bform_sheet": {"bearsLoad": true, "fine": false}
+   },
+   "prefix": "bform_"
+  },
+  "category": {"closed": false, "entries": {}, "prefix": "category_"},
+  "dockind": {"closed": false, "entries": {}, "prefix": "dockind_"},
+  "emphasis": {"closed": false, "entries": {}, "prefix": "emph_"},
+  "fault": {"closed": false, "entries": {}, "prefix": "fault_"},
+  "layer": {"closed": false, "entries": {}, "prefix": "layer_"},
+  "matgroup": {
+   "closed": false,
+   "entries": {
+    "mgroup_binding": {"structural": true},
+    "mgroup_body": {"structural": true},
+    "mgroup_fill": {"structural": false},
+    "mgroup_frame": {"structural": true},
+    "mgroup_grip": {"structural": true},
+    "mgroup_lining": {"structural": true},
+    "mgroup_shell": {"structural": true},
+    "mgroup_working": {"structural": true}
+   },
+   "prefix": "mgroup_"
+  },
+  "matter": {
+   "closed": true,
+   "entries": {
+    "matter_gas": {},
+    "matter_liquid": {},
+    "matter_solid": {}
+   },
+   "prefix": "matter_"
+  },
+  "pool": {"closed": false, "entries": {}, "prefix": "pool_"},
+  "quality": {"closed": false, "entries": {}, "prefix": "quality_"},
+  "size": {"closed": false, "entries": {}, "prefix": "size_"},
+  "source": {"closed": false, "entries": {}, "prefix": "source_"},
+  "tier": {"closed": false, "entries": {}, "prefix": "tier_"},
+  "transport": {"closed": false, "entries": {}, "prefix": "transport_"},
+  "usage": {"closed": false, "entries": {}, "prefix": "usage_"},
+  "usage_per": {"closed": false, "entries": {}, "prefix": "uper_"},
+  "wear": {"closed": false, "entries": {}, "prefix": "wear_"},
   "aggregate": {
    "closed": true,
    "entries": {
@@ -143,10 +193,13 @@
     "class_fat": {},
     "class_fish": {},
     "class_flesh": {},
+    "class_formed": {},
     "class_fresh_herb": {},
     "class_fruit": {},
+    "class_fuel": {},
     "class_glass": {},
     "class_grain": {},
+    "class_incense": {},
     "class_iron": {},
     "class_leather": {},
     "class_legume": {},
@@ -158,6 +211,7 @@
     "class_nut": {},
     "class_paper": {},
     "class_plant": {},
+    "class_powder": {},
     "class_salt": {},
     "class_silver": {},
     "class_spice_seed": {},
@@ -167,6 +221,7 @@
     "class_timber": {},
     "class_tin": {},
     "class_vegetable": {},
+    "class_vessel": {},
     "class_vinegar": {},
     "class_wax": {},
     "class_wood": {}
@@ -176,6 +231,20 @@
   "component": {
    "closed": false,
    "entries": {
+    "comp_attachment": {"enables": ["attach"], "requires": ["attachModifiers", "fitsSlot", "modCost"], "table": "item"},
+    "comp_container": {"enables": ["contain"], "requires": ["holdsLiquid", "maxLoadKg", "sealed", "volumeCapacity"], "table": "item"},
+    "comp_consumable": {"enables": [], "requires": ["usageClass"], "table": "item"},
+    "comp_corpse": {"enables": ["remains"], "requires": [], "table": "item"},
+    "comp_crafted": {"enables": [], "requires": [], "table": "item"},
+    "comp_document": {"enables": ["attest"], "requires": ["docKind"], "table": "item"},
+    "comp_livestock": {"enables": [], "requires": [], "table": "item"},
+    "comp_readable": {"enables": ["read"], "requires": ["difficulty", "language", "teaches"], "table": "item"},
+    "comp_relic": {"enables": [], "requires": [], "table": "item"},
+    "comp_tool": {"enables": ["provide_ability"], "requires": ["abilities", "wearPerUse"], "table": "item"},
+    "comp_vehicle": {"enables": [], "requires": ["vform"], "table": "item"},
+    "comp_weapon": {"enables": [], "requires": ["attacks", "weaponClass"], "table": "item"},
+    "comp_wearable": {"enables": ["insulate", "protect", "wear"], "requires": ["coverage", "covers", "fitBody", "fitSize", "layer", "thicknessMm"], "table": "item"},
+    "comp_work": {"enables": [], "requires": [], "table": "item"},
     "comp_burnable": {
      "requires": [
       "heatValue",

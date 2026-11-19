@@ -23,6 +23,7 @@ import { checkVerbRows } from '../events.mjs';
 import { checkHoldingKindRows } from '../holdings.mjs';
 import { checkTerminationTables, installTermination, TERMINATE_RULES_TABLE } from '../terminate.mjs';
 import { checkPlaceTable } from '../place.mjs';
+import { checkItemTables, checkItemClasses } from '../item.mjs';
 import { checkBodyTables } from '../validate/body-tables.mjs';
 
 export const LAYOUT = Object.freeze({
@@ -119,6 +120,8 @@ export function loadWorld(root, opts = {}) {
   // 词表族 weather 各行的 weightRX 文本在这里经 compileRXInScope 编（卷二 §2.9 第 4 条，卷二十 §2.5 :276）；编不过的并入 domain 报 E-MOD-RX，编好的树校验全过后交 kernel/weather.mjs。
   const weatherRx = report.env ? prepareWeatherRx(report.env) : { trees: new Map(), errors: [] };
   domain.push(...weatherRx.errors);
+  // 物品行 classes 不许手写 class 族条目与材料派生组件（卷三乙 I-6；对照表第 2 行）：只读表数据，不等其他校验通过，先于卷二 §1.8 的组件类只属一张表报 E-DIM-DERIVED-WRITTEN。
+  if (report.vocab && report.tables) domain.push(...writerCheckRows('item', checkItemClasses({ vocab: report.vocab, tables: report.tables }).errors));
   // 块 5 内核写者的加载期核对，违者加载失败、各用本函数已登记的码（字段含义只在各写者文件读）：verb 族与发出系统（卷二 §2.7 :774；
   // 卷二十四 R24-1.3、R24-2.1）、持有种类行（卷十八 §2.5、§2.6）、终止登记与去留表（卷二 §2.6 :526–:529）。词表收齐（report.ok）才核；
   // 词表不全时前面已经失败，不另报。终止去留表同 checkClockTables：规则目录登记了该表才核（只放内核常数表的校验器夹具目录不登记）；
@@ -129,6 +132,8 @@ export function loadWorld(root, opts = {}) {
     if (Object.hasOwn(read.rules, TERMINATE_RULES_TABLE)) domain.push(...writerCheckRows('terminate', checkTerminationTables(view, decl)));
     // 地点表的树、边校验（卷五 §4.1.3 规则 1、3、4；A5-1.2；块 6 第 6-7 张）。
     domain.push(...writerCheckRows('place', checkPlaceTable({ ...view, env: report.env }).errors));
+    // 物品表的行校验与类别派生（卷三乙 I-5、I-6、I-8、I-9、C-1、C-8；块 6 第 6-2 张）；派生结果挂在 item 表的 itemDerived，itemView 只读它。
+    domain.push(...writerCheckRows('item', checkItemTables({ ...view, env: report.env, ns: Array.isArray(decl.rxNamespaces) ? decl.rxNamespaces : [], maxDepth: need('rxMaxDepth') }).errors));
     // 卷四本卷表与词表族的跨字段校验（§2.1、§2.2 身体图不变量、§2.4 条目字段、§2.7 E-BODY-*、E-SPECIES-ATTR-KEYS），违者加载失败。
     domain.push(...checkBodyTables(view, { maxChainDepth: need('bodyPartChainMaxDepth'), unbuiltFields: report.env.unbuiltFields }));
   }

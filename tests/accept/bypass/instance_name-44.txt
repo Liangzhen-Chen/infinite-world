@@ -1,0 +1,4 @@
+// 规则表的值是类别代号（词表 class 族，带 classPrefix）：类别代号不是实体 id，不计
+export const x = 1;
+// @file world/rules/tables/economy/resources.json
+{"rows": [{"key": "res_x", "value": {"family": "resfam_asset", "class": "class_metal"}}]}

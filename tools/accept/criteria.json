@@ -46,10 +46,18 @@
     {
      "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
      "rev": 11
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 12
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 13
     }
    ],
-   "print": "2e294baf83151cc3f2a36882f5faec6e3e2a513ca38b0ff31723dd8106dd6769",
-   "rev": 11,
+   "print": "bb7d3fee9983da381115e46521762705db4de87132fe59f10f4815975e1ad768",
+   "rev": 13,
    "scanClass": "baseline_monotone",
    "source": "卷一 V-11（I43）；卷十二 §2.5、E-ACC-BASELINE-UP；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -272,10 +280,22 @@
     {
      "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
      "rev": 52
+    },
+    {
+     "ref": "块 6 第 6-2 张：kernel/handles/markers.mjs 加 agg_mode 代码枚举、MATTER_STATES、REQUIRED_POLICIES、holding_kind 族名标记（卷三乙 §4.1.1、§2.4；卷十八 §4.1.1），文件在本类别检测器 import 闭包内，判据指纹变动；判定口径不变",
+     "rev": 53
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 54
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 55
     }
    ],
-   "print": "b728a4ed9845f0144d7684c68af693ee4fc65c9db542021a4655b45861f4400a",
-   "rev": 52,
+   "print": "76653e97110196708c13cb82de6966c25f8ac7d90a673331b9ee48aa3de23f47",
+   "rev": 55,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -305,10 +325,18 @@
     {
      "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
      "rev": 4
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 5
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 6
     }
    ],
-   "print": "6daea59787cc730001583802c625581fcf3134d25129ff02857c445a1dc225bb",
-   "rev": 4,
+   "print": "e92920a8c0fa5b98a1d92b2d861d56106eec03c0040ec655dac189ac43fd9bf0",
+   "rev": 6,
    "scanClass": "crit_version",
    "terms": {
     "vol12.S12-13": {
@@ -367,10 +395,18 @@
     {
      "ref": "共用检测器 path_access 改动（6-0 改一轮：解构不计带 readerSystems 的条目）；本类别条目判定口径不变",
      "rev": 11
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 12
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 13
     }
    ],
-   "print": "921389a21fc494e9cf75a7c182a9ebb6813c747b7130bc10594e4227370516da",
-   "rev": 11,
+   "print": "769ca36b5bb054d30d00490237a20a422aa67edeafc9f95f5a7869a4cc34c249",
+   "rev": 13,
    "scanClass": "cross_write",
    "source": "卷十二 R12-3.1–3.4；卷二 §2.6、§2.7、S5",
    "terms": {
@@ -462,10 +498,18 @@
     {
      "ref": "共用检测器 path_access 改动（6-0 改一轮：解构不计带 readerSystems 的条目）；本类别条目判定口径不变",
      "rev": 11
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 12
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 13
     }
    ],
-   "print": "921389a21fc494e9cf75a7c182a9ebb6813c747b7130bc10594e4227370516da",
-   "rev": 11,
+   "print": "769ca36b5bb054d30d00490237a20a422aa67edeafc9f95f5a7869a4cc34c249",
+   "rev": 13,
    "scanClass": "display_read",
    "source": "卷十二 R12-2.10；卷二 S7",
    "terms": {
@@ -669,10 +713,22 @@
     {
      "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
      "rev": 47
+    },
+    {
+     "ref": "块 6 第 6-2 张：kernel/handles/markers.mjs 加 agg_mode 代码枚举、MATTER_STATES、REQUIRED_POLICIES、holding_kind 族名标记（卷三乙 §4.1.1、§2.4；卷十八 §4.1.1），文件在本类别检测器 import 闭包内，判据指纹变动；判定口径不变",
+     "rev": 48
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 49
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 50
     }
    ],
-   "print": "3747574d0da876b651dbf34ae2a4467aac33e1b9425485006840960b83ea6f1c",
-   "rev": 47,
+   "print": "01053d6c4647495df99f87f819b4929ae553a096fb127526a534aed2d3ddb417",
+   "rev": 50,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -743,10 +799,22 @@
     {
      "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
      "rev": 14
+    },
+    {
+     "ref": "块 6 第 6-2 张：kernel/handles/markers.mjs 加 agg_mode 代码枚举、MATTER_STATES、REQUIRED_POLICIES、holding_kind 族名标记（卷三乙 §4.1.1、§2.4；卷十八 §4.1.1），文件在本类别检测器 import 闭包内，判据指纹变动；判定口径不变",
+     "rev": 15
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 16
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 17
     }
    ],
-   "print": "2a4cc69716f589c1a5469634c0a179ce3489d75fb37c0221d8dc4754d42697a1",
-   "rev": 14,
+   "print": "e98e72c100c7ee12fd649aaa32d26c5c0ceff0b4c261300b6d6a64e5380fb6fd",
+   "rev": 17,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -805,10 +873,18 @@
     {
      "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
      "rev": 11
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 12
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 13
     }
    ],
-   "print": "2e294baf83151cc3f2a36882f5faec6e3e2a513ca38b0ff31723dd8106dd6769",
-   "rev": 11,
+   "print": "bb7d3fee9983da381115e46521762705db4de87132fe59f10f4815975e1ad768",
+   "rev": 13,
    "scanClass": "ext_code",
    "terms": {
     "vol12.S12-12": {
@@ -883,10 +959,22 @@
     {
      "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
      "rev": 15
+    },
+    {
+     "ref": "块 6 第 6-2 张：kernel/handles/markers.mjs 加 agg_mode 代码枚举、MATTER_STATES、REQUIRED_POLICIES、holding_kind 族名标记（卷三乙 §4.1.1、§2.4；卷十八 §4.1.1），文件在本类别检测器 import 闭包内，判据指纹变动；判定口径不变",
+     "rev": 16
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 17
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 18
     }
    ],
-   "print": "a09011d28b196fc66bbc4ffc7b6af0fcd709ea97498c06f12c79c6cbf8e98093",
-   "rev": 15,
+   "print": "81c1e8da3ff1f207b6662d84679d9dbc536f1cc32406d387a85523ee83632b64",
+   "rev": 18,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -1101,10 +1189,22 @@
     {
      "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
      "rev": 44
+    },
+    {
+     "ref": "块 6 第 6-2 张：kernel/handles/markers.mjs 加 agg_mode 代码枚举、MATTER_STATES、REQUIRED_POLICIES、holding_kind 族名标记（卷三乙 §4.1.1、§2.4；卷十八 §4.1.1），文件在本类别检测器 import 闭包内，判据指纹变动；判定口径不变",
+     "rev": 45
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 46
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 47
     }
    ],
-   "print": "e1db3310611041f0f8d51bb12866eb0cc2b3d616d9caffc7b8115d449552a67e",
-   "rev": 44,
+   "print": "f683c2d2f6a1063960a230f15937b9cd37baee4f73b6e7e54d37f82390cca878",
+   "rev": 47,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1180,10 +1280,22 @@
     {
      "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
      "rev": 15
+    },
+    {
+     "ref": "块 6 第 6-2 张：kernel/handles/markers.mjs 加 agg_mode 代码枚举、MATTER_STATES、REQUIRED_POLICIES、holding_kind 族名标记（卷三乙 §4.1.1、§2.4；卷十八 §4.1.1），文件在本类别检测器 import 闭包内，判据指纹变动；判定口径不变",
+     "rev": 16
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 17
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 18
     }
    ],
-   "print": "a09011d28b196fc66bbc4ffc7b6af0fcd709ea97498c06f12c79c6cbf8e98093",
-   "rev": 15,
+   "print": "81c1e8da3ff1f207b6662d84679d9dbc536f1cc32406d387a85523ee83632b64",
+   "rev": 18,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -1446,10 +1558,22 @@
     {
      "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
      "rev": 60
+    },
+    {
+     "ref": "块 6 第 6-2 张：kernel/handles/markers.mjs 加 agg_mode 代码枚举、MATTER_STATES、REQUIRED_POLICIES、holding_kind 族名标记（卷三乙 §4.1.1、§2.4；卷十八 §4.1.1），文件在本类别检测器 import 闭包内，判据指纹变动；判定口径不变",
+     "rev": 61
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 62
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 63
     }
    ],
-   "print": "e190181f148e0e63faf91d57190fc62ecde5eca3a31c6a9e24fbe026033dcf0a",
-   "rev": 60,
+   "print": "39a3651efbe45f7aac414be7753c75ee3884aa17867c503557973717a6cded8b",
+   "rev": 63,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1539,10 +1663,18 @@
     {
      "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
      "rev": 11
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 12
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 13
     }
    ],
-   "print": "2e294baf83151cc3f2a36882f5faec6e3e2a513ca38b0ff31723dd8106dd6769",
-   "rev": 11,
+   "print": "bb7d3fee9983da381115e46521762705db4de87132fe59f10f4815975e1ad768",
+   "rev": 13,
    "scanClass": "item_downgrade",
    "terms": {
     "vol12.S12-16": {
@@ -1736,10 +1868,22 @@
     {
      "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
      "rev": 45
+    },
+    {
+     "ref": "块 6 第 6-2 张：kernel/handles/markers.mjs 加 agg_mode 代码枚举、MATTER_STATES、REQUIRED_POLICIES、holding_kind 族名标记（卷三乙 §4.1.1、§2.4；卷十八 §4.1.1），文件在本类别检测器 import 闭包内，判据指纹变动；判定口径不变",
+     "rev": 46
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 47
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 48
     }
    ],
-   "print": "e1db3310611041f0f8d51bb12866eb0cc2b3d616d9caffc7b8115d449552a67e",
-   "rev": 45,
+   "print": "f683c2d2f6a1063960a230f15937b9cd37baee4f73b6e7e54d37f82390cca878",
+   "rev": 48,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -1785,10 +1929,18 @@
     {
      "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
      "rev": 8
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 9
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 10
     }
    ],
-   "print": "20c2e6b8f43f75a2f16babdd9f574f1bd15091f7f8227157bfddbf3c13816c60",
-   "rev": 8,
+   "print": "d7f641a92f1b662ba75eaf87cd5ada8d780665fb1dbd0817948e70f7729799ca",
+   "rev": 10,
    "scanClass": "item_ledger",
    "terms": {
     "vol12.S12-3": {
@@ -1839,10 +1991,18 @@
     {
      "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
      "rev": 9
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 10
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 11
     }
    ],
-   "print": "2e294baf83151cc3f2a36882f5faec6e3e2a513ca38b0ff31723dd8106dd6769",
-   "rev": 9,
+   "print": "bb7d3fee9983da381115e46521762705db4de87132fe59f10f4815975e1ad768",
+   "rev": 11,
    "scanClass": "ledger_tally",
    "source": "卷十二 §4.1.6 至 §4.14.6 A12-n.1；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -2086,10 +2246,18 @@
     {
      "ref": "path_access read 方式的解构计数改为不计带 readerSystems 的条目：上一版（rev 24）解构计入连带改了 vol6.A6-1.1.a 口径（其字段按行出自哪张表认、解构不走 isForeignRow 豁免），rev 24 记录写“原判定口径不变”不实；本版 vol6.A6-1.1.a 回到 rev 23 口径（解构不计），vol2.K6-24、vol6.A6-21.1 照计解构；vol6.A6-21.1 source 如实收窄为“读点”（Opus 只核 M1、M2）",
      "rev": 25
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 26
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 27
     }
    ],
-   "print": "4f609bebc2aa00ec147b7b0e9dc606256e872e8c15e404fff021b15ec7fa70d7",
-   "rev": 25,
+   "print": "7dd9cc905c3ee9f89697b0458612590d18ecc4e43b36ca44ad4cb93ea8fc4714",
+   "rev": 27,
    "scanClass": "module_edge",
    "terms": {
     "vol1.V-24.b": {
@@ -2379,10 +2547,22 @@
     {
      "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
      "rev": 45
+    },
+    {
+     "ref": "块 6 第 6-2 张：kernel/handles/markers.mjs 加 agg_mode 代码枚举、MATTER_STATES、REQUIRED_POLICIES、holding_kind 族名标记（卷三乙 §4.1.1、§2.4；卷十八 §4.1.1），文件在本类别检测器 import 闭包内，判据指纹变动；判定口径不变",
+     "rev": 46
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 47
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 48
     }
    ],
-   "print": "e1db3310611041f0f8d51bb12866eb0cc2b3d616d9caffc7b8115d449552a67e",
-   "rev": 45,
+   "print": "f683c2d2f6a1063960a230f15937b9cd37baee4f73b6e7e54d37f82390cca878",
+   "rev": 48,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -2545,10 +2725,22 @@
     {
      "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
      "rev": 37
+    },
+    {
+     "ref": "块 6 第 6-2 张：kernel/handles/markers.mjs 加 agg_mode 代码枚举、MATTER_STATES、REQUIRED_POLICIES、holding_kind 族名标记（卷三乙 §4.1.1、§2.4；卷十八 §4.1.1），文件在本类别检测器 import 闭包内，判据指纹变动；判定口径不变",
+     "rev": 38
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 39
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 40
     }
    ],
-   "print": "3430702acb0358e5f05cd414f6918adb90a13d265e80e0bb8d966d2114db4581",
-   "rev": 37,
+   "print": "60a447275e22e102f6130739002879fc6057f763a4649a2f027e66426c1043fb",
+   "rev": 40,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -2807,10 +2999,22 @@
     {
      "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
      "rev": 61
+    },
+    {
+     "ref": "块 6 第 6-2 张：kernel/handles/markers.mjs 加 agg_mode 代码枚举、MATTER_STATES、REQUIRED_POLICIES、holding_kind 族名标记（卷三乙 §4.1.1、§2.4；卷十八 §4.1.1），文件在本类别检测器 import 闭包内，判据指纹变动；判定口径不变",
+     "rev": 62
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 63
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 64
     }
    ],
-   "print": "bce9d319ceffcbfde393d036c0ddce4afbbe72bc79aed6d0ecc82ac8e2bcc075",
-   "rev": 61,
+   "print": "dfcc1aaa3b346d01a021f5401d04461f3b775a20584f637ff420e4d7daee95aa",
+   "rev": 64,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -2884,10 +3088,18 @@
     {
      "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
      "rev": 15
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 16
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 17
     }
    ],
-   "print": "84963ef45406b10eb170f51c36735798d00f7217b99dec559b1b94acbe543a77",
-   "rev": 15,
+   "print": "510d2e4a6d0e24a4da2b7c3bc94f5b946c74675df3e36c4e3de0c73583afd35c",
+   "rev": 17,
    "scanClass": "rng_bypass",
    "terms": {
     "vol27.A27-8.1.a": {
@@ -2921,10 +3133,18 @@
     {
      "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
      "rev": 5
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 6
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 7
     }
    ],
-   "print": "b09e13671b5a8f3fd406c4684f9f03e8693900c823e1d812e606935fa05c544a",
-   "rev": 5,
+   "print": "09d41cedba372cb315163eb30c23e1a52698760d1cccbcae848dd083ec4f4ade",
+   "rev": 7,
    "scanClass": "rules_import",
    "terms": {
     "vol1.V-9": {
@@ -3034,10 +3254,22 @@
     {
      "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
      "rev": 24
+    },
+    {
+     "ref": "块 6 第 6-2 张：kernel/handles/markers.mjs 加 agg_mode 代码枚举、MATTER_STATES、REQUIRED_POLICIES、holding_kind 族名标记（卷三乙 §4.1.1、§2.4；卷十八 §4.1.1），文件在本类别检测器 import 闭包内，判据指纹变动；判定口径不变",
+     "rev": 25
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 26
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 27
     }
    ],
-   "print": "c7316f03cfac941f21098ac0ef579bcb3979a83e9bc5e6f4a0d4621fefafe0cc",
-   "rev": 24,
+   "print": "fc6a37b336549c370aa6bfd6142d24a309617a70af663d266778cd991106e759",
+   "rev": 27,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -3259,10 +3491,22 @@
     {
      "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
      "rev": 50
+    },
+    {
+     "ref": "块 6 第 6-2 张：kernel/handles/markers.mjs 加 agg_mode 代码枚举、MATTER_STATES、REQUIRED_POLICIES、holding_kind 族名标记（卷三乙 §4.1.1、§2.4；卷十八 §4.1.1），文件在本类别检测器 import 闭包内，判据指纹变动；判定口径不变",
+     "rev": 51
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 52
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 53
     }
    ],
-   "print": "b728a4ed9845f0144d7684c68af693ee4fc65c9db542021a4655b45861f4400a",
-   "rev": 50,
+   "print": "76653e97110196708c13cb82de6966c25f8ac7d90a673331b9ee48aa3de23f47",
+   "rev": 53,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -3356,10 +3600,22 @@
     {
      "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
      "rev": 21
+    },
+    {
+     "ref": "块 6 第 6-2 张：kernel/handles/markers.mjs 加 agg_mode 代码枚举、MATTER_STATES、REQUIRED_POLICIES、holding_kind 族名标记（卷三乙 §4.1.1、§2.4；卷十八 §4.1.1），文件在本类别检测器 import 闭包内，判据指纹变动；判定口径不变",
+     "rev": 22
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 23
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 24
     }
    ],
-   "print": "e1643e1eff499c2ec26cad51438072851082e0e4cac129cc0f7e2845069520fd",
-   "rev": 21,
+   "print": "b417d637193553e919915d04e6a31d01a051a66185f77ca46f041aff6c6f36d2",
+   "rev": 24,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -3431,10 +3687,22 @@
     {
      "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
      "rev": 14
+    },
+    {
+     "ref": "块 6 第 6-2 张：kernel/handles/markers.mjs 加 agg_mode 代码枚举、MATTER_STATES、REQUIRED_POLICIES、holding_kind 族名标记（卷三乙 §4.1.1、§2.4；卷十八 §4.1.1），文件在本类别检测器 import 闭包内，判据指纹变动；判定口径不变",
+     "rev": 15
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 16
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 17
     }
    ],
-   "print": "a09011d28b196fc66bbc4ffc7b6af0fcd709ea97498c06f12c79c6cbf8e98093",
-   "rev": 14,
+   "print": "81c1e8da3ff1f207b6662d84679d9dbc536f1cc32406d387a85523ee83632b64",
+   "rev": 17,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -3718,10 +3986,22 @@
     {
      "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
      "rev": 39
+    },
+    {
+     "ref": "块 6 第 6-2 张：kernel/handles/markers.mjs 加 agg_mode 代码枚举、MATTER_STATES、REQUIRED_POLICIES、holding_kind 族名标记（卷三乙 §4.1.1、§2.4；卷十八 §4.1.1），文件在本类别检测器 import 闭包内，判据指纹变动；判定口径不变",
+     "rev": 40
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 41
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 42
     }
    ],
-   "print": "3430702acb0358e5f05cd414f6918adb90a13d265e80e0bb8d966d2114db4581",
-   "rev": 39,
+   "print": "60a447275e22e102f6130739002879fc6057f763a4649a2f027e66426c1043fb",
+   "rev": 42,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -3800,10 +4080,18 @@
     {
      "ref": "共用检测器 path_access 改动（6-0 改一轮：解构不计带 readerSystems 的条目）；本类别条目判定口径不变",
      "rev": 14
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 15
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 16
     }
    ],
-   "print": "921389a21fc494e9cf75a7c182a9ebb6813c747b7130bc10594e4227370516da",
-   "rev": 14,
+   "print": "769ca36b5bb054d30d00490237a20a422aa67edeafc9f95f5a7869a4cc34c249",
+   "rev": 16,
    "scanClass": "version_fork",
    "terms": {
     "vol1.V-17": {
@@ -3933,10 +4221,22 @@
     {
      "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
      "rev": 29
+    },
+    {
+     "ref": "块 6 第 6-2 张：kernel/handles/markers.mjs 加 agg_mode 代码枚举、MATTER_STATES、REQUIRED_POLICIES、holding_kind 族名标记（卷三乙 §4.1.1、§2.4；卷十八 §4.1.1），文件在本类别检测器 import 闭包内，判据指纹变动；判定口径不变",
+     "rev": 30
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 31
+    },
+    {
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "rev": 32
     }
    ],
-   "print": "31f7133f4025107494759ad1a7d915c5ff3433dcd262462c6874c04d00ed12f7",
-   "rev": 29,
+   "print": "739338b47f08cb189e77096719dfe0be8b65555146fbbd7e7db9188115d97285",
+   "rev": 32,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

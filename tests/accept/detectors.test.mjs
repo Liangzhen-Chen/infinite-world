@@ -513,7 +513,8 @@ test('S6-2 规则表一支：键是实体 id 报一条（nodeKind key），值�
   const k = tableHits({ rows: [{ key: 'res_x', value: { fxa_oats: 1 } }] });
   assert.deepEqual(k.map((h) => [h.file, h.nodeKind, h.symbolPath, h.code]), [[TBL, 'key', 'rows[].value', 'E-ACC-INSTANCE-NAME']]);
   const v = tableHits({ rows: [{ key: 'res_x', value: { family: 'fxa_oats', sources: ['src_genesis', 'fxsolo'], cls: 'fxclass_a' } }] });
-  assert.deepEqual(v.map((h) => [h.nodeKind, h.symbolPath]), [['value', 'rows[].value.family'], ['value', 'rows[].value.sources[]'], ['value', 'rows[].value.cls']]);
+  // 类别代号（表头 classPrefix，如 fxclass_a）是词表 class 族条目，不是实体 id，不计（6-2 只核 M1，主会话 11-19 定）。
+  assert.deepEqual(v.map((h) => [h.nodeKind, h.symbolPath]), [['value', 'rows[].value.family'], ['value', 'rows[].value.sources[]']]);
 });
 
 test('S6-2 规则表一支：词表代号、固定键名、前缀不带下划线或在中段的字串、数字与布尔都不报', () => {

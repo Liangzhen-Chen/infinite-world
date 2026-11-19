@@ -41,8 +41,6 @@ const S = Object.freeze({
   holdings: 'holdings',
   clock: 'clock',
   minute: 'minute',
-  kindFamily: 'holding_kind',
-  relationFamily: 'relation',
   since: 'since',
   until: 'until',
   endReason: 'endReason',
@@ -160,16 +158,27 @@ function kindRow(engine, code) {
   if (!isCode(code)) throw deny('E-HK-UNREGISTERED', `holding kind ${JSON.stringify(code)} is not a code`);
   const idx = engine && isObj(engine.vocab) ? engine.vocab.index : undefined;
   const rec = idx && typeof idx.get === TYPEOF_FUNCTION ? idx.get(code) : undefined;
-  if (!rec || rec.family !== S.kindFamily || !isObj(rec.entry)) throw deny('E-HK-UNREGISTERED', `holding kind ${JSON.stringify(code)} is not a registered holding_kind row`);
+  if (!rec || rec.family !== T.vocab_family.holding_kind || !isObj(rec.entry)) throw deny('E-HK-UNREGISTERED', `holding kind ${JSON.stringify(code)} is not a registered holding_kind row`);
   return rec.entry;
 }
 
-function rowEndNames(row) {
+// 端类型名解析（卷十八 §4.1.1 :457；李白 22:10 丙5）：先按实体模板名（TEMPLATE_NAMES），再按目录行所在的实体表名（engine.tables 的 kind，
+// 每建一张实体表即多一批可解析的名字，块 6 第 6-2 张起启用）；两边都解析不到即 E-HK-END-TYPE。engine 没交 tables 时只按模板名（夹具）。
+function endNameResolves(engine, name) {
+  if (typeof name !== TYPEOF_STRING) return false;
+  if (TEMPLATE_NAMES.includes(name)) return true;
+  if (engine === undefined || engine === null || !(engine.tables instanceof Map) || !engine.tables.has(name)) return false;
+  // 卷十八 §4.1.1 :457：实体表名只在该表不是卷二 §2.6 所定的可终止实体类时才算（可终止的表由实体模板名覆盖）；可终止即类别行写了 termination。
+  const classes = engine.tables.get(name).doc && engine.tables.get(name).doc.classes;
+  return !(isObj(classes) && Object.values(classes).some((c) => isObj(c) && c.termination !== undefined));
+}
+
+function rowEndNames(row, engine) {
   const list = [];
   for (const side of ['from', 'to']) {
     if (!Array.isArray(row[side]) || row[side].length === 0) throw deny('E-HK-ROW-FIELDS', `holding kind ${JSON.stringify(row.id)}: ${side} is a non-empty list`);
     for (const name of row[side]) {
-      if (typeof name !== TYPEOF_STRING || !TEMPLATE_NAMES.includes(name)) throw deny('E-HK-END-TYPE', `holding kind ${JSON.stringify(row.id)}: ${side} name ${JSON.stringify(name)} is not an entity template name`);
+      if (!endNameResolves(engine, name)) throw deny('E-HK-END-TYPE', `holding kind ${JSON.stringify(row.id)}: ${side} name ${JSON.stringify(name)} is neither an entity template name nor an entity table name`);
       list.push(name);
     }
   }
@@ -517,7 +526,7 @@ function assertCarriesRel(engine, row, terms) {
   if (isObj(terms) && terms.rel !== undefined && terms.rel !== null) {
     const idx = engine && isObj(engine.vocab) ? engine.vocab.index : undefined;
     const rec = idx && typeof idx.get === TYPEOF_FUNCTION ? idx.get(terms.rel) : undefined;
-    if (rec && rec.family === S.relationFamily && isObj(rec.entry) && rec.entry.record !== null && rec.entry.record !== undefined) {
+    if (rec && rec.family === T.vocab_family.relation && isObj(rec.entry) && rec.entry.record !== null && rec.entry.record !== undefined) {
       throw deny('E-ACT-WRITER-NOT-READY', `holding edge with record ${JSON.stringify(rec.entry.record)}: relation writer not built (block 5, ruling 11-18 22:10 B/record)`);
     }
     throw deny('E-ACT-WRITER-NOT-READY', `holding kind ${row.id}: terms.rel belongs to kernel/relations.mjs (not built in block 5)`);
@@ -546,7 +555,7 @@ export function openHolding(engine, state, input) {
   if (!isCode(p.holder) || !isCode(p.subject)) throw deny('E-HK-END-TYPE', 'holding.open holder and subject are entity ids');
   assertEnds(p.holder, p.subject);
   const row = kindRow(engine, p.holdingKind);
-  rowEndNames(row);
+  rowEndNames(row, engine);
   assertNotTerminated(state, p.holder);
   assertNotTerminated(state, p.subject);
   checkAdmission(row);
@@ -795,7 +804,7 @@ function kindRowFromState(kind) {
   if (!engineRef) return null;
   const idx = isObj(engineRef.vocab) ? engineRef.vocab.index : undefined;
   const rec = idx && typeof idx.get === TYPEOF_FUNCTION ? idx.get(kind) : undefined;
-  return rec && rec.family === S.kindFamily && isObj(rec.entry) ? rec.entry : null;
+  return rec && rec.family === T.vocab_family.holding_kind && isObj(rec.entry) ? rec.entry : null;
 }
 
 // 未装 engine 时无法按种类行判哪些边带 holdWhile（种类行要读 engine.vocab）；保守取全部现役边的两端，
@@ -879,10 +888,10 @@ export function checkHoldingKindRows(engine) {
   const idx = engine && isObj(engine.vocab) ? engine.vocab.index : undefined;
   if (!idx || typeof idx.get !== TYPEOF_FUNCTION) return { ok: false, errors: ['E-DIM-REF-MISSING vocab index missing'] };
   const rows = new Map();
-  for (const [code, rec] of idx) if (rec && rec.family === S.kindFamily && isObj(rec.entry)) rows.set(code, rec.entry);
+  for (const [code, rec] of idx) if (rec && rec.family === T.vocab_family.holding_kind && isObj(rec.entry)) rows.set(code, rec.entry);
   for (const [code, row] of rows) {
     for (const col of MAIN_COLUMNS) if (!Object.hasOwn(row, col)) errors.push(`E-HK-ROW-FIELDS ${code}: missing ${col}`);
-    try { rowEndNames(row); } catch (e) { errors.push(`${e.code} ${code}: ${e.message}`); }
+    try { rowEndNames(row, engine); } catch (e) { errors.push(`${e.code} ${code}: ${e.message}`); }
     if (!Object.hasOwn(row, 'intimate')) errors.push(`E-REL-INTIMATE-FIELD ${code}: intimate column must be written per row`);
     const termsKeys = Array.isArray(row.termsKeys) ? row.termsKeys : [];
     if (row.concluded === true && !termsKeys.includes(S.origin)) errors.push(`E-HK-PROTOCOL ${code}: concluded row termsKeys must include origin`);

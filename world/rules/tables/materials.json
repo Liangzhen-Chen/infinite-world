@@ -92,6 +92,14 @@
    "source": "卷三乙 §4.1 :571–:584 派生大类条件表（M-9）；卷二 §1.12 加载期规则分类（勘误 1118k31）",
    "grade": "designed",
    "basis": "照 :577–:584 八条逐条写；「没有 meltPoint」按卷三甲 M-11 读作该行没填 meltPoint（李白 11-19 12:5x (c)2），用 known；其余读到未知按未命中。超自然一条读卷十五 §2.3 :174、:979 的超自然组件类顶层 comp_arcane（material.classes 含 broader 上位），该名登记在 _unbuilt-derived.json names（卷十五未建），求值按未命中（李白 11-19 13:2x ②）"
+  },
+  {
+   "key": "substanceClass",
+   "value": {"subst_bone": "class_bone", "subst_flesh": "class_flesh", "subst_glass": "class_glass", "subst_hide": "class_leather", "subst_metal": "class_metal", "subst_mineral": "class_mineral", "subst_plant": "class_plant", "subst_stone": "class_stone", "subst_wood": "class_wood"},
+   "file": "server-plugin/kernel/item.mjs",
+   "source": "卷三乙 §2.5 :326（本源成分到类别的对应，放规则表、不挂词表条目）；首批九条 :566；类别派生表 :2175",
+   "grade": "designed",
+   "basis": "照 :566 九条；没有键的本源成分（纤维、动物制品、水）不给类别（:326）。物品材料类别 C-8 第 ① 条读它（kernel/item.mjs materialClassesOf）"
   }
  ]
 }
