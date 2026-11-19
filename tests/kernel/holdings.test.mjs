@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 import { installVocab } from '../../server-plugin/kernel/vocab.mjs';
 import { runTransaction, currentTransaction } from '../../server-plugin/kernel/transaction.mjs';
-import { installEventLog } from '../../server-plugin/kernel/events.mjs';
+import { installEventLog, emit } from '../../server-plugin/kernel/events.mjs';
 import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
 import { createDigestCap } from '../../server-plugin/textcore/digest.mjs';
 import { registerViewReader, resetViewRegistry } from '../../server-plugin/kernel/view-registry.mjs';
@@ -51,6 +51,18 @@ function run(state, body) {
 // 带登记码的拒写由事务整笔回滚并返回 {ok:false, code}（卷二 §2.6 事务内拒写的处置）。
 function fails(state, body, code) {
   assert.deepEqual(run(state, body), { ok: false, code });
+}
+
+// 造前提：在日志里放一条同意事件（表 A：actor、targets 是当事人），返回它的 EventId。tag 只用来让同一测试里多条事件 id 不撞（代号成分）。
+function consentEvent(state, tag, actor, targets) {
+  let id;
+  assert.deepEqual(run(state, (s) => {
+    id = emit(ENGINE, s, {
+      minute: MINUTE, verb: 'verb_holding_changed', actor, actorAs: null, targets, primitives: [], cause: CAUSE, witnesses: [], visibility: 'private',
+      payload: { edge: 'hld_consent', kind: 'hk_owns', holder: actor, subject: 'item_q', change: 'established', prevHolder: null, at: MINUTE },
+    }, { rule: `act_${tag}`, subject: actor, position: 'pos.test' }).id;
+  }), { ok: true });
+  return id;
 }
 
 function edges(state) {
@@ -278,11 +290,64 @@ test('改份额新增持有人：缔结的种类行不继承旧边的 seeded/con
 test('改份额新增持有人：缔结的种类行带本笔同意（terms.consentAct）通过，新增边只记本笔同意、不复制旧边 origin/consentAct', () => {
   const state = fresh();
   state.holdings = { npc_b: { hld_1: { kind: 'hk_owns', holder: 'npc_b', subject: 'item_q', terms: { since: MINUTE, until: null, endReason: null, suspended: false, consentAct: 'act_old_consent', grantor: null, share: 1, origin: 'seeded' }, grantedBy: null } } };
-  assert.deepEqual(run(state, (s) => rescaleHolding(ENGINE, s, { holdingKind: 'hk_owns', subject: 'item_q', shares: { npc_b: 0.4, npc_a: 0.6 }, terms: { consentAct: 'act_new_consent' }, cause: CAUSE })), { ok: true });
+  const consent = consentEvent(state, 'consent_a', 'npc_a', ['npc_b']);
+  assert.deepEqual(run(state, (s) => rescaleHolding(ENGINE, s, { holdingKind: 'hk_owns', subject: 'item_q', shares: { npc_b: 0.4, npc_a: 0.6 }, terms: { consentAct: consent }, cause: CAUSE })), { ok: true });
   const list = active(state, 'hk_owns').sort((a, b) => a.record.holder.localeCompare(b.record.holder));
   assert.deepEqual(list.map((e) => [e.record.holder, e.record.terms.share]), [['npc_a', 0.6], ['npc_b', 0.4]]);
   const added = list.find((e) => e.record.holder === 'npc_a');
-  assert.deepEqual(added.record.terms, { since: MINUTE, until: null, endReason: null, suspended: false, grantor: null, share: 0.6, consentAct: 'act_new_consent' });
+  assert.deepEqual(added.record.terms, { since: MINUTE, until: null, endReason: null, suspended: false, grantor: null, share: 0.6, consentAct: consent });
+});
+
+// 李白 11-19 03:20 裁定 2：一批新增多个持有人时用一个 consentAct，其当事人（表 A 的 actor 与 targets）须覆盖全部新增人。
+// 前提：npc_b 持有 1 份；改成 npc_b 0.5、npc_a 0.25、org_x 0.25，新增 npc_a 与 org_x 两人（0.5 + 0.25 + 0.25 = 1）。
+function twoNewHolders(state, consentAct) {
+  return run(state, (s) => rescaleHolding(ENGINE, s, { holdingKind: 'hk_owns', subject: 'item_q', shares: { npc_b: 0.5, npc_a: 0.25, org_x: 0.25 }, terms: consentAct === undefined ? undefined : { consentAct }, cause: CAUSE }));
+}
+const ownedByNpcB = () => ({ npc_b: { hld_1: { kind: 'hk_owns', holder: 'npc_b', subject: 'item_q', terms: { since: MINUTE, until: null, endReason: null, suspended: false, consentAct: null, grantor: null, share: 1, origin: 'seeded' }, grantedBy: null } } });
+
+test('改份额新增两人：同意事件的当事人覆盖两人（一人在 actor、一人在 targets）即通过，两条新边都记这一个 consentAct', () => {
+  const state = fresh();
+  state.holdings = ownedByNpcB();
+  const consent = consentEvent(state, 'consent_a', 'npc_a', ['org_x']);
+  assert.deepEqual(twoNewHolders(state, consent), { ok: true });
+  const list = active(state, 'hk_owns').sort((a, b) => a.record.holder.localeCompare(b.record.holder));
+  assert.deepEqual(list.map((e) => [e.record.holder, e.record.terms.share, e.record.terms.consentAct === consent]), [['npc_a', 0.25, true], ['npc_b', 0.5, false], ['org_x', 0.25, true]]);
+});
+
+test('改份额新增两人：同意事件的当事人只覆盖一人即拒 E-REL-CONSENT，状态与事件日志不变', () => {
+  const state = fresh();
+  state.holdings = ownedByNpcB();
+  const consent = consentEvent(state, 'consent_a', 'npc_a', ['npc_b']);
+  const snap = JSON.stringify(state);
+  const logged = book.entries.length;
+  assert.deepEqual(twoNewHolders(state, consent), { ok: false, code: 'E-REL-CONSENT' });
+  assert.equal(JSON.stringify(state), snap);
+  assert.equal(book.entries.length, logged);
+});
+
+test('改份额新增两人：consentAct 在事件日志里查不到即拒 E-REL-CONSENT（64 位十六进制形与代号形都一样）', () => {
+  const state = fresh();
+  state.holdings = ownedByNpcB();
+  assert.deepEqual(twoNewHolders(state, '0'.repeat(64)), { ok: false, code: 'E-REL-CONSENT' });
+  assert.deepEqual(twoNewHolders(state, 'act_no_such_event'), { ok: false, code: 'E-REL-CONSENT' });
+  assert.deepEqual(twoNewHolders(state, undefined), { ok: false, code: 'E-REL-CONSENT' });
+});
+
+test('改份额只改已有持有人的份额、不新增人：不要求同意，新边与旧边的同意字段都不动', () => {
+  const state = fresh();
+  state.holdings = {
+    npc_b: { hld_1: { kind: 'hk_owns', holder: 'npc_b', subject: 'item_q', terms: { since: MINUTE, until: null, endReason: null, suspended: false, consentAct: null, grantor: null, share: 0.75, origin: 'seeded' }, grantedBy: null } },
+    npc_a: { hld_2: { kind: 'hk_owns', holder: 'npc_a', subject: 'item_q', terms: { since: MINUTE, until: null, endReason: null, suspended: false, consentAct: null, grantor: null, share: 0.25, origin: 'seeded' }, grantedBy: null } },
+  };
+  assert.deepEqual(run(state, (s) => rescaleHolding(ENGINE, s, { holdingKind: 'hk_owns', subject: 'item_q', shares: { npc_b: 0.5, npc_a: 0.5 }, cause: CAUSE })), { ok: true });
+  assert.deepEqual(active(state, 'hk_owns').map((e) => [e.id, e.record.terms.share, e.record.terms.consentAct]).sort(), [['hld_1', 0.5, null], ['hld_2', 0.5, null]]);
+});
+
+test('terms.consentAct 形状：不是 EventId 或 null（如文字、数字）拒 E-HK-PROTOCOL', () => {
+  const state = fresh();
+  state.holdings = ownedByNpcB();
+  assert.deepEqual(twoNewHolders(state, 'Not An Event'), { ok: false, code: 'E-HK-PROTOCOL' });
+  assert.deepEqual(twoNewHolders(state, 7), { ok: false, code: 'E-HK-PROTOCOL' });
 });
 
 test('uniqueTriple：同一种类、同一持有者、同一标的至多一条现役边（第二条拒 E-HK-PROTOCOL）', () => {
@@ -337,13 +402,42 @@ test('转移：缔结的种类行承接边不继承旧边的 seeded/consentAct�
 test('转移：缔结的种类行带本笔同意（terms.consentAct）通过，承接边只记本笔同意、不复制旧边 origin/consentAct', () => {
   const state = fresh();
   state.holdings = { npc_a: { hld_1: { kind: 'hk_owns', holder: 'npc_a', subject: 'item_q', terms: { since: MINUTE, until: null, endReason: null, suspended: false, consentAct: 'act_old_consent', grantor: null, share: 1, origin: 'seeded' }, grantedBy: null } } };
+  // 同意事件当事人：承接者 npc_b（actor）与标的 item_q（targets）——新边两端都在内。
+  const consent = consentEvent(state, 'consent_t', 'npc_b', ['item_q']);
   let newId;
-  assert.deepEqual(run(state, (s) => { newId = transferHolding(ENGINE, s, { id: 'hld_1', newHolder: 'npc_b', terms: { consentAct: 'act_new_consent' }, cause: CAUSE }); }), { ok: true });
+  assert.deepEqual(run(state, (s) => { newId = transferHolding(ENGINE, s, { id: 'hld_1', newHolder: 'npc_b', terms: { consentAct: consent }, cause: CAUSE }); }), { ok: true });
   assert.equal(newId, 'hld_2');
   const oldEdge = edges(state).find((e) => e.id === 'hld_1');
   const newEdge = edges(state).find((e) => e.id === newId);
   assert.equal(oldEdge.record.terms.until, MINUTE);
-  assert.deepEqual(newEdge.record.terms, { since: MINUTE, until: null, endReason: null, suspended: false, grantor: null, share: 1, consentAct: 'act_new_consent' });
+  // EventId 是 64 位十六进制（卷二 §1.5），不是 CODE 文法：真实事件 id 也得能当 consentAct。
+  assert.equal(/^[0-9a-f]{64}$/.test(consent), true);
+  assert.deepEqual(newEdge.record.terms, { since: MINUTE, until: null, endReason: null, suspended: false, grantor: null, share: 1, consentAct: consent });
+});
+
+// 李白 11-19 10:2x 裁定 ②：凡写出的边持有者或标的换了人（开边、转移），新边两端都须在同意事件当事人内。
+const ownedByNpcA = () => ({ npc_a: { hld_1: { kind: 'hk_owns', holder: 'npc_a', subject: 'item_q', terms: { since: MINUTE, until: null, endReason: null, suspended: false, consentAct: null, grantor: null, share: 1, origin: 'seeded' }, grantedBy: null } } });
+test('转移：承接者不在同意事件当事人内即拒 E-REL-CONSENT；标的不在内也拒；查不到事件也拒，状态不变', () => {
+  const state = fresh();
+  state.holdings = ownedByNpcA();
+  const onlyOldHolder = consentEvent(state, 'consent_x', 'npc_a', ['item_q']);
+  const onlyHolder = consentEvent(state, 'consent_y', 'npc_b', []);
+  const snap = JSON.stringify(state);
+  for (const consentAct of [onlyOldHolder, onlyHolder, '0'.repeat(64)]) {
+    fails(state, (s) => transferHolding(ENGINE, s, { id: 'hld_1', newHolder: 'npc_b', terms: { consentAct }, cause: CAUSE }), 'E-REL-CONSENT');
+  }
+  assert.equal(JSON.stringify(state), snap);
+});
+
+test('开缔结边：持有者与标的都在同意事件当事人内通过；缺其一拒 E-REL-CONSENT', () => {
+  const state = fresh();
+  const both = consentEvent(state, 'consent_o', 'npc_a', ['item_q']);
+  const holderOnly = consentEvent(state, 'consent_p', 'npc_a', []);
+  const open = (consentAct) => run(state, (s) => openHolding(ENGINE, s, { holdingKind: 'hk_owns', holder: 'npc_a', subject: 'item_q', terms: { consentAct, share: 1 }, cause: CAUSE }));
+  assert.deepEqual(open(holderOnly), { ok: false, code: 'E-REL-CONSENT' });
+  assert.equal(edges(state).length, 0);
+  assert.deepEqual(open(both), { ok: true });
+  assert.deepEqual(active(state, 'hk_owns').map((e) => [e.record.holder, e.record.subject, e.record.terms.consentAct === both]), [['npc_a', 'item_q', true]]);
 });
 
 // R18-1.5 生成路径例外：块 5 没有“生成路径事务”标记，运行期不认 seeded。

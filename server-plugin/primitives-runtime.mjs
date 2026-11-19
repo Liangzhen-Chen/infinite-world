@@ -36,10 +36,10 @@ const EVENT_OPS = Object.freeze({ [EVENT_OP]: true });
 // dimension（维度键）与 shares（map<id, number>：键是实体 id、值是数值，键值两边都按文法与类型校）。按字段类型分开校，避免把 §1.9 的两条文法并成一条更宽的（只核第 4 条）。
 const CATALOG = [
   { op: 'transfer', family: 'transfer', channel: 'ledger', required: { from: 'account', to: 'account', qty: 'integer' } },
-  { op: 'holding.open', family: 'holding', channel: 'holding', required: { holdingKind: 'ref', holder: 'id', subject: 'id' } },
+  { op: 'holding.open', family: 'holding', channel: 'holding', required: { holdingKind: 'ref', holder: 'id', subject: 'id' }, optional: { terms: 'consentTerms' } },
   { op: 'holding.close', family: 'holding', channel: 'holding', oneOf: [[{ holding: 'id' }, { id: 'id' }, { holdingKind: 'ref', holder: 'id', subject: 'id' }]] },
-  { op: 'holding.transfer', family: 'holding', channel: 'holding', oneOf: [[{ holding: 'id' }, { id: 'id' }], [{ newHolder: 'id' }, { holder: 'id' }]] },
-  { op: 'holding.rescale', family: 'holding', channel: 'holding', required: { holdingKind: 'ref', subject: 'id', shares: 'shares' } },
+  { op: 'holding.transfer', family: 'holding', channel: 'holding', oneOf: [[{ holding: 'id' }, { id: 'id' }], [{ newHolder: 'id' }, { holder: 'id' }]], optional: { terms: 'consentTerms' } },
+  { op: 'holding.rescale', family: 'holding', channel: 'holding', required: { holdingKind: 'ref', subject: 'id', shares: 'shares' }, optional: { terms: 'consentTerms' } },
   { op: 'obligation.create', family: 'obligation', channel: 'declared', required: { id: 'id', obligationKind: 'ref', debtor: 'id', creditor: 'id' } },
   { op: 'obligation.settle', family: 'obligation', channel: 'declared', required: { id: 'id' } },
   { op: 'obligation.cancel', family: 'obligation', channel: 'declared', required: { id: 'id' } },
@@ -141,6 +141,9 @@ const TYPE_CHECK = Object.freeze({
   account: (v, spec, maxLength) => typeof v === 'string' && isAccountId(v, maxLength),
   dimension: (v, spec, maxLength) => typeof v === 'string' && isKey(v, maxLength),
   shares: (v, spec, maxLength) => isPlainObject(v) && Object.keys(v).every((k) => isCode(k, maxLength)) && Object.values(v).every((x) => typeof x === 'number' && Number.isFinite(x)),
+  // 持有原语的可选 terms（卷九 §4.2.1，勘误 1118k28）：只核是普通对象。其中 consentAct 的 EventId 校验与当事人覆盖核对、其余键的类型与是否许写，
+  // 都由内核持有写者判（李白 11-19 03:20 裁定 3：适配器只原样透传 terms，不自补、不自判）。
+  consentTerms: (v) => isPlainObject(v),
 });
 
 function fits(spec, value, maxLength) {
@@ -199,6 +202,9 @@ function checkContract(p, maxLength) {
   for (const [field, spec] of Object.entries(row.required || {})) {
     if (!Object.hasOwn(p, field) || !fits(spec, p[field], maxLength)) throw deny(CODE.contract, `${row.op}.${field} required (${JSON.stringify(spec)})`);
   }
+  for (const [field, spec] of Object.entries(row.optional || {})) {
+    if (Object.hasOwn(p, field) && !fits(spec, p[field], maxLength)) throw deny(CODE.contract, `${row.op}.${field} (${JSON.stringify(spec)})`);
+  }
   for (const group of row.oneOf || []) {
     let hits = 0;
     for (const alt of group) {
@@ -256,11 +262,12 @@ const ADAPTERS = Object.freeze({
       holder: p.holder,
       subject: p.subject,
       newHolder: p.newHolder,
+      terms: p.terms,
       cause: reason,
     });
   },
   'holding.rescale'(engine, state, p, reason) {
-    rescaleHolding(engine, state, { holdingKind: p.holdingKind, subject: p.subject, shares: p.shares, cause: reason });
+    rescaleHolding(engine, state, { holdingKind: p.holdingKind, subject: p.subject, shares: p.shares, terms: p.terms, cause: reason });
   },
 });
 
@@ -317,6 +324,7 @@ function specTokens(row) {
     if (typeof t === 'string') out.push(t);
   };
   for (const spec of Object.values(isPlainObject(row.required) ? row.required : {})) add(spec);
+  for (const spec of Object.values(isPlainObject(row.optional) ? row.optional : {})) add(spec);
   for (const group of Array.isArray(row.oneOf) ? row.oneOf : []) {
     for (const alt of Array.isArray(group) ? group : []) for (const spec of Object.values(isPlainObject(alt) ? alt : {})) add(spec);
   }

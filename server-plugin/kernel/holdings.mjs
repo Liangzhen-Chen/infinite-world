@@ -28,7 +28,8 @@ import { KernelError } from './errors.mjs';
 import { currentTransaction, registerHoldWhileRecompute } from './transaction.mjs';
 import { invalidateMemo } from './memo.mjs';
 import { TERMINATED_KEY } from './storage.mjs';
-import { emit } from './events.mjs';
+import { emit, findEvent } from './events.mjs';
+import { isHex64 } from './handles/keys.mjs';
 import { dim } from './dimensions.mjs';
 import { kindOf } from './vocab.mjs';
 import { compileRXInScope, evaluateRX } from './rx.mjs';
@@ -84,11 +85,11 @@ const TEMPLATE_NAMES = Object.freeze([
 const MAIN_COLUMNS = Object.freeze(['id', 'hyper', 'from', 'to', 'exclusive', 'gone', 'vacated', 'defected', 'subjectEnd', 'concluded', 'functional', 'membership', 'headship', 'carriesRel', 'conduct', 'conductBack', 'adopt', 'pins']);
 
 // terms 键的类型（卷十八 §4.1.1 键表 :465–:499；公共键在前，其余只在种类行 termsKeys 里出现才可写）。
-const TK = Object.freeze({ code: 'code', integer: 'integer', number: 'number', boolean: 'boolean', codes: 'codes', rx: 'rx' });
+const TK = Object.freeze({ code: 'code', eventId: 'eventId', integer: 'integer', number: 'number', boolean: 'boolean', codes: 'codes', rx: 'rx' });
 const COMMON_TERMS = Object.freeze([S.since, S.until, S.endReason, S.suspended, S.consentAct, S.grantor]);
 const TERMS_TYPES = Object.freeze({
   [S.since]: TK.integer, [S.until]: TK.integer, [S.endReason]: TK.code, [S.suspended]: TK.boolean,
-  [S.consentAct]: TK.code, [S.grantor]: TK.code,
+  [S.consentAct]: TK.eventId, [S.grantor]: TK.code,
   rel: TK.code, adoptive: TK.boolean, rank: TK.integer, share: TK.number, scope: TK.code, phase: TK.code,
   honor: TK.code, asOf: TK.integer, use: TK.code, rent: TK.number, rate: TK.number, task: TK.code,
   representative: TK.code, feeAccount: TK.code, aspect: TK.code, treaty: TK.code, regime: TK.code,
@@ -112,6 +113,8 @@ const TYPEOF_FUNCTION = typeof (() => {});
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const isCode = (v) => typeof v === TYPEOF_STRING && CODE_RE.test(v);
+// consentAct 的类型是 EventId（卷十八 :461）：事件 id 是 64 位十六进制，可能数字打头，不是 CODE 文法；代号形仍收（同 events.mjs 载荷的 EventId 校验）。
+const isEventRef = (v) => isCode(v) || (typeof v === TYPEOF_STRING && isHex64(v));
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const own = (o, k) => isObj(o) && Object.hasOwn(o, k);
 
@@ -184,6 +187,7 @@ function prepareTerms(engine, row, input, minute) {
     if (type === undefined) throw deny('E-HK-PROTOCOL', `terms.${key} has no registered key type`);
     const v = src[key];
     if (type === TK.code && !(v === null || isCode(v))) throw deny('E-HK-PROTOCOL', `terms.${key} is a code or null`);
+    if (type === TK.eventId && !(v === null || isEventRef(v))) throw deny('E-HK-PROTOCOL', `terms.${key} is an EventId or null`);
     if (type === TK.integer && !(v === null || Number.isSafeInteger(v))) throw deny('E-HK-PROTOCOL', `terms.${key} is an integer or null`);
     if (type === TK.number && !(typeof v === TYPEOF_NUMBER && Number.isFinite(v))) throw deny('E-HK-PROTOCOL', `terms.${key} is a finite number`);
     if (type === TK.boolean && typeof v !== TYPEOF_BOOLEAN) throw deny('E-HK-PROTOCOL', `terms.${key} is a boolean`);
@@ -414,7 +418,7 @@ function checkAdmission(row) {
 // 块 5 没有“生成路径事务”标记，运行期一律不认 seeded（挂生成路径卡，见回报“部分与挂卡”），只认本笔事务自己的同意事件编号。
 function checkConsent(row, terms) {
   if (row.concluded !== true) return;
-  if (!isCode(isObj(terms) ? terms[S.consentAct] : undefined)) throw deny('E-REL-CONSENT', `holding kind ${row.id}: concluded edge needs terms.consentAct from this transaction (runtime seeded is not a generation-path transaction)`);
+  if (!isEventRef(isObj(terms) ? terms[S.consentAct] : undefined)) throw deny('E-REL-CONSENT', `holding kind ${row.id}: concluded edge needs terms.consentAct from this transaction (runtime seeded is not a generation-path transaction)`);
 }
 
 // 转移/改份额的入参带本笔同意（R18-1.5 :521）：与开边同形的 `terms.consentAct`，只取这一个键；
@@ -424,8 +428,20 @@ function issuedConsent(input) {
   if (!isObj(input.terms)) throw deny('E-HK-PROTOCOL', 'holding terms is an object');
   if (!Object.hasOwn(input.terms, S.consentAct)) return null;
   const v = input.terms[S.consentAct];
-  if (!(v === null || isCode(v))) throw deny('E-HK-PROTOCOL', `terms.${S.consentAct} is a code or null`);
+  if (!(v === null || isEventRef(v))) throw deny('E-HK-PROTOCOL', `terms.${S.consentAct} is an EventId or null`);
   return v;
+}
+
+// 同意事件的当事人 = 该事件的 actor（非空时）∪ targets（卷十八 R18-1.5，李白 11-19 10:2x 裁定；唯一定义处）。
+// 凡写出的边其持有者或标的换了人（开边、转移的承接边）都核两端在当事人内；改份额两端不变，只核新增持有人（03:20 裁定 2）。
+// 事件查不到或缺任一个都按 E-REL-CONSENT 拒（卷十八 :298）。判“须同意”目前只看 concluded（关系条目 consent 指向的一半随块 7 关系写者）。
+function checkConsentCovers(row, consentAct, ends) {
+  if (row.concluded !== true || ends.length === 0) return;
+  const event = isEventRef(consentAct) ? findEvent(consentAct) : null;
+  if (event === null) throw deny('E-REL-CONSENT', `holding kind ${row.id}: terms.consentAct names no event in the log`);
+  const parties = new Set([event.actor, ...(Array.isArray(event.targets) ? event.targets : [])]);
+  const missing = ends.find((h) => !parties.has(h));
+  if (missing !== undefined) throw deny('E-REL-CONSENT', `holding kind ${row.id}: consent event parties do not cover ${missing}`, missing);
 }
 
 function checkGrantor(row, terms) {
@@ -537,6 +553,7 @@ export function openHolding(engine, state, input) {
   const terms = prepareTerms(engine, row, p.terms, minuteOf(state));
   assertCarriesRel(engine, row, terms);
   checkConsent(row, terms);
+  checkConsentCovers(row, terms[S.consentAct], [p.holder, p.subject]);
   checkGrantor(row, terms);
   checkShare(row, terms);
   if (row.uniqueTriple === true) {
@@ -629,6 +646,7 @@ export function transferHolding(engine, state, input) {
   const { [S.consentAct]: _oldConsent, [S.origin]: _oldOrigin, ...carriedTerms } = edge.record.terms;
   const terms = { ...carriedTerms, [S.since]: minute, [S.until]: null, [S.endReason]: null, [S.consentAct]: consentAct };
   checkConsent(row, terms);
+  checkConsentCovers(row, consentAct, [newHolder, edge.record.subject]);
   checkGrantor(row, terms);
   checkShare(row, terms);
   const oldClosed = { ...edge, record: { ...edge.record, terms: { ...edge.record.terms, [S.until]: minute, [S.endReason]: null } } };
@@ -680,6 +698,7 @@ export function rescaleHolding(engine, state, input) {
   // 新增持有人的边是 R18-1.5 意义上的新边：base 只照带 share/grantor 等字段，不带旧边的 origin/consentAct；
   // 本笔同意取入参 terms.consentAct；运行期没有本笔事务自己的同意即拒 E-REL-CONSENT。
   const consentAct = issuedConsent(p);
+  checkConsentCovers(row, consentAct, Object.keys(p.shares).filter((h) => !existing.has(h)).sort(cmp));
   const { [S.consentAct]: _baseConsent, [S.origin]: _baseOrigin, ...baseTerms } = current.length > 0 ? current[0].record.terms : {};
   const base = baseTerms;
   for (const holder of Object.keys(p.shares).sort(cmp)) {

@@ -19,6 +19,9 @@
     "holdingKind": "ref",
     "holder": "id",
     "subject": "id"
+   },
+   "optional": {
+    "terms": "consentTerms"
    }
   },
   {
@@ -46,7 +49,10 @@
      {"newHolder": "id"},
      {"holder": "id"}
     ]
-   ]
+   ],
+   "optional": {
+    "terms": "consentTerms"
+   }
   },
   {
    "op": "holding.rescale",
@@ -56,6 +62,9 @@
     "holdingKind": "ref",
     "subject": "id",
     "shares": "shares"
+   },
+   "optional": {
+    "terms": "consentTerms"
    }
   },
   {

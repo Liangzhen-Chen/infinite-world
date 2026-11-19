@@ -106,6 +106,16 @@ export function resetEventLog() {
   logBook = null;
 }
 
+/**
+ * 按 EventId 读事件日志簿里的一条冻结记录（kernel 组内用，不在 kernelApi）；没有即 null。
+ * 持有写者核本笔同意事件的当事人（卷十八 R18-1.5，表 A 的 actor 与 targets）时用。
+ * @param {string} id
+ * @returns {any | null}
+ */
+export function findEvent(id) {
+  return eventLog().entries.find((e) => isObj(e) && e.id === id) || null;
+}
+
 function eventLog() {
   if (!logBook) throw new Error('kernel/events.mjs: emit before installEventLog (mount order)');
   return logBook;

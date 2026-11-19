@@ -627,10 +627,10 @@
 | 族 | 原语 | 契约必填字段（可选字段从略） | 走哪条通道 | 落到谁的写者 |
 |---|---|---|---|---|
 | `transfer` | `transfer` | `from`、`to`（id），`qty`（integer） | 账本转移 | 卷六 §4.1（账本三元键与守恒）的转移入口 |
-| `holding` | `holding.open` | `holdingKind`、`holder`、`subject` | 持有 | 卷十八 §4.1（持有种类表与两条转移协议）：持有写者先调该种类行 `admission` 列所指的准入入口（卷十八 R18-1.13，入口返回 `{ok, reason, events}`），通过才写边，写成后发入口给出的随附事件；不过即拒、整批回滚（封卷后勘误 1115k4，依据李白 k4r-1 裁定） |
+| `holding` | `holding.open` | `holdingKind`、`holder`、`subject`；可选 `terms.consentAct`（本笔同意事件编号，见下“持有原语的本笔同意”） | 持有 | 卷十八 §4.1（持有种类表与两条转移协议）：持有写者先调该种类行 `admission` 列所指的准入入口（卷十八 R18-1.13，入口返回 `{ok, reason, events}`），通过才写边，写成后发入口给出的随附事件；不过即拒、整批回滚（封卷后勘误 1115k4，依据李白 k4r-1 裁定） |
 | | `holding.close` | 二选一必填：`holding` 或 `id`（边 id），或 `holdingKind`、`holder`、`subject` 三元（只许种类行 `uniqueTriple` 为真的种类，卷十八 R18-1.13；李白 k4r-1 裁定） | 持有 | 同上（准入与随附事件同 `holding.open`） |
-| | `holding.transfer` | `holding` 或 `id`；`newHolder` 或 `holder` | 持有 | 同上 |
-| | `holding.rescale` | `holdingKind`、`subject`，`shares`（map<id, number>） | 持有 | 同上 |
+| | `holding.transfer` | `holding` 或 `id`；`newHolder` 或 `holder`；可选 `terms.consentAct`（同 `holding.open`） | 持有 | 同上 |
+| | `holding.rescale` | `holdingKind`、`subject`，`shares`（map<id, number>）；可选 `terms.consentAct`（同 `holding.open`） | 持有 | 同上 |
 | `obligation` | `obligation.create` | `id`、`obligationKind`、`debtor`、`creditor` | 声明写者 | 卷六 §4.16（合同状态机）的义务写者 |
 | | `obligation.settle`、`obligation.cancel` | `id` | 声明写者 | 同上 |
 | `fact` | `fact.set` | `entity`、`field`；`value` 或 `delta`（number）二选一 | 声明写者 | 目标维度在卷二 §2.7（系统声明表 `state-owners.json`）登记的那个写者 |
@@ -645,6 +645,8 @@
 | `transition` | `transition` | `entity`、`kind`、`cause` | 声明写者 | 所属状态机的写者（合同、案件、对话、提案；卷十五的术式实例 `working.mjs` 与仪式记录 `rite.mjs`，迁移代号由卷十五登记，C15-1 ③）；适配器交出本事务产物引用（R9-2.9） |
 | `learn` | `learn` | 现行 `subject`、`learningSource`；改为 `subject`、`skill`、`source`（ref learn_source）、`minutes`（integer）、`difficulty`（number nullable），与卷十四 `session` 对齐（R9-2.8） | 调入口 | 卷十四的 `gainSkill` |
 | `time` | `time` | `minutes`（integer） | 声明写者 | 世界时钟，见卷二十 §4.1（刻、同刻全序、调度器与到期语义） |
+
+**持有原语的本笔同意**（封卷后勘误 1118k28，李白 11-19 03:20 裁定）：凡可能给缔结类（`concluded` 为真，或被关系条目 `consent` 指向的种类）新增持有人的持有原语——`holding.open`、`holding.transfer`、`holding.rescale`——契约都带可选 `terms.consentAct`，形状同内核持有写者入口（卷十八 R18-1.5：同意事件编号，记在新边的 `terms.consentAct`，E-REL-CONSENT）；`holding.close` 不加。`holding.rescale` 一批里新增多个持有人时只用一个 `consentAct`，该同意事件的当事人（定义与核对口径照卷十八 R18-1.5）须覆盖全部新增持有人，缺任一个按 E-REL-CONSENT 拒；只改已有持有人份额、不新增人的不要求；`holding.open`、`holding.transfer` 写出的新边持有者或标的换了人，两端都照卷十八 R18-1.5 核。判定只在内核持有写者入口做，适配器只原样透传 `terms`，不自补、不自判。
 
 `schedule` 适配器填的整类映射（AI 不填；封卷后勘误 1118k26，李白 11-19 00:20 裁定）：`kind` 恒取 `due_scheduled`；`dueMinute = at`，`at` 小于当前分钟即拒 E-ACT-PRIMITIVE；转 `delayMinutes = at − clock.minute` 调内核 `schedule(owner, kind, delayMinutes, ref)`；`owner` 取本次动作的发起主体（取动作提案的行动者，不取 `cause` 文本）；`registeredMinute` 由内核取当前分钟；`ref` 取随同事务写入的“待执行项”记录的句柄，`action`／`rule` 载荷存在那条记录里，`dueItem` 本身仍无字串字段。
 
@@ -1765,6 +1767,7 @@
 | 封卷后勘误 1118k8（依据：李白 11-18 04:10 stockLots 以卷六为准裁定第 4 条，见 审查/李白裁定-1117.md；卷三乙、卷六同号；改稿 claude-opus-5-5 中档；必要理由：裁定要求在卷九对应处注明容器内数量的记账口径；不升版本号；改前快照 版本快照/卷九-v2-勘误前-1118k8.md，改后覆盖 版本快照/卷九-v2.md）：R9-1.12"经账本离手"一点（抽查对象"账户与容器"处）补注"容器内物品的数量仍记在容器所属持有人的账户上，容器只管位置/归属"（04:10 第 4 条原话）。核过本卷无"容器自有账户"或"容器内数量另存"的写法，与该句不冲突。不改其他规则正文 | — | — |
 | 封卷后勘误 1118k25（依据：李白 11-18 22:10 块 5 体检 11 项裁定 五.1、丙9，原文见 docs/审查/李白裁定-1117.md 末节；不升版本号，不改卷首；改前快照 版本快照/卷九-v2-勘误前-1118k25.md，改后覆盖 版本快照/卷九-v2.md） | §2.8 错误码表；§4.2.2 统一入口 | §2.8 新增 E-ACT-WRITER-NOT-READY（原语适配器或其目标写者尚未上线；E-ACT-PRIMITIVE 保持原义，只管契约不合）；§4.2.2 写明执行器归规则层，文件 `server-plugin/primitives-runtime.mjs`，入口 `execute`，只由 `resolve()` 的提交段与推进钩子的调度方调用。历史修订记录不回改 | — | — |
 | 封卷后勘误 1118k26（依据：李白 11-19 00:20 裁定 5-1 两项，原文见 docs/审查/李白裁定-1117.md 末节“00:20 裁定：5-1 两项”；不升版本号，不改卷首；改前快照 `版本快照/卷九-v2-勘误前-1118k26.md`，改后覆盖 `版本快照/卷九-v2.md`） | §4.2.1 `schedule` 行一带；R9-2.7 | §4.2.1 表后补 `schedule` 适配器填的整类映射（AI 不填）：`kind` 恒取 `due_scheduled`；`dueMinute = at`，`at` 小于当前分钟即拒 E-ACT-PRIMITIVE；转 `delayMinutes = at − clock.minute` 调内核 `schedule(owner, kind, delayMinutes, ref)`；`owner` 取本次动作的发起主体（取动作提案的行动者，不取 `cause` 文本）；`registeredMinute` 由内核取当前分钟；`ref` 取随同事务写入的“待执行项”记录的句柄，`action`／`rule` 载荷存在那条记录里，`dueItem` 本身仍无字串字段。R9-2.7 改为实物与钱的增减只能经账本 post（`transfer` 是两主体间 post 的原语形式）；`create`、`destroy` 涉及实物时，由该原语的写者在同一事务内经账本入口 post 一笔带登记来源／去处代号的腿（`create` 走 `src_*`，`destroy` 走 `sink_*`，代号取模板或规则表登记），AI 不另写配对 `transfer`；找不到登记代号即拒 E-ACT-PRIMITIVE；与 11-18 07:02 日终分配同一口径。历史修订记录不回改 | — | — |
+| 封卷后勘误 1118k28（依据：李白 11-19 03:20 裁定与 10:2x 裁定“5-3b 两问”，原文见 docs/审查/李白裁定-1117.md 末节；不升版本号，不改卷首；改前快照 `版本快照/卷九-v2-勘误前-1118k28.md`，改后覆盖 `版本快照/卷九-v2.md`） | §4.2.1 holding 组四行 | `holding.open`、`holding.transfer`、`holding.rescale` 三行契约加可选 `terms.consentAct`（`holding.close` 不加）；表后补“持有原语的本笔同意”段：`holding.rescale` 一批新增多个持有人时用一个 `consentAct`，其当事人（照卷十八 R18-1.5）须覆盖全部新增持有人，缺任一个 E-REL-CONSENT；只改已有人份额不要求；开边、转移的新边两端同照卷十八 R18-1.5 核；判定只在内核持有写者入口做，适配器只原样透传 `terms`。历史修订记录不回改 | — | — |
 
 ## 附录 自检脚本输出
 

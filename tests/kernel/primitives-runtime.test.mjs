@@ -190,6 +190,28 @@ test('holding.rescale 的 shares 键按 id 文法校：空键、非代号键、4
   assert.deepEqual(state, snap);
 });
 
+// 卷九 §4.2.1 勘误 1118k28：holding.open、holding.transfer、holding.rescale 带可选 terms.consentAct，holding.close 不带；适配器不自判，
+// 契约这一层只核 terms 是普通对象；consentAct 的 EventId 校验与覆盖核对在内核（tests/kernel/holdings.test.mjs 守）。块 5 没有 emit 适配器，过了契约的批只走到“写者未上线”，所以“带了同意能过”的写入结果由内核测试守（tests/kernel/holdings.test.mjs）。
+test('holding 三原语的可选 terms.consentAct：目录三行带、holding.close 不带；形状不合 E-ACT-PRIMITIVE，合的走到写者未上线', () => {
+  const row = (op) => DOC.primitives.find((p) => p.op === op);
+  for (const op of ['holding.open', 'holding.transfer', 'holding.rescale']) assert.deepEqual(row(op).optional, { terms: 'consentTerms' }, op);
+  assert.equal(Object.hasOwn(row('holding.close'), 'optional'), false);
+  const state = funded(10);
+  const snap = clone(state);
+  const open = (terms) => [{ op: 'holding.open', holdingKind: 'hk_x', holder: 'npc_a', subject: 'item_q', terms }];
+  const transfer = (terms) => [{ op: 'holding.transfer', id: 'hld_1', newHolder: 'npc_b', terms }];
+  const rescale = (terms) => [{ op: 'holding.rescale', holdingKind: 'hk_x', subject: 'item_q', shares: { npc_a: 1 }, terms }];
+  for (const make of [open, transfer, rescale]) {
+    for (const terms of ['consent', ['consentAct'], null, 7]) {
+      assert.throws(() => execute(ENGINE, state, make(terms), 'act_t'), codeIs('E-ACT-PRIMITIVE'));
+    }
+    for (const terms of [{ consentAct: 'act_new_consent' }, { consentAct: '7'.repeat(64) }, { consentAct: 7 }, {}, { share: 1 }]) {
+      assert.deepEqual(runTransaction(state, CTX, (s) => execute(ENGINE, s, make(terms), 'act_t')), { ok: false, code: 'E-ACT-WRITER-NOT-READY' });
+    }
+  }
+  assert.deepEqual(state, snap);
+});
+
 test('文法总长上限经 engine.rules 读：缺键、0、负数、非整数都拒，不回落默认也不跳过', () => {
   const state = funded(10);
   const snap = clone(state);
