@@ -1,0 +1,4 @@
+export const f = (state, id, mark) => {
+  state.terminated[id] = mark;
+  state.holdings[id] = null;
+};

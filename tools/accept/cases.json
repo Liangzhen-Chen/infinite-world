@@ -729,6 +729,54 @@
    "scanClass": "module_edge"
   },
   {
+   "addedAtRev": 21,
+   "caseKey": "module_edge-36",
+   "expectCode": "E-VIEW-PREDICATE-LOCAL",
+   "fixture": "tests/accept/bypass/module_edge-36.txt",
+   "group": "rules",
+   "origin": "卷二 §2.5 :495（别处只调用 terminated 谓词，不自读 state.terminated；迁移体检 K5-24；李白 11-19 11:1x 裁定⑤）：规则层直读终止标记（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 21,
+   "caseKey": "module_edge-37",
+   "fixture": "tests/accept/bypass/module_edge-37.txt",
+   "group": "rules",
+   "origin": "卷二 §2.5 :495：规则层经 terminated 谓词与 P.terminated 句柄读，根不是状态根，不计（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 21,
+   "caseKey": "module_edge-38",
+   "fixture": "tests/accept/bypass/module_edge-38.txt",
+   "group": "rules",
+   "origin": "卷二 §2.5 :495：本条只管读；写入目标是 state.terminated 成员链的不属读，不计（写入归属归 cross_write 的写条目）；kernel 目录豁免见 tests/accept/api-callers.test.mjs（kernel 夹具过不了 S19.b 的文件清单核对，放不进绕法用例）（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 22,
+   "caseKey": "module_edge-39",
+   "expectCode": "E-VIEW-PREDICATE-LOCAL",
+   "fixture": "tests/accept/bypass/module_edge-39.txt",
+   "group": "rules",
+   "origin": "卷二 §2.5 :495 所有文件不得自读 state.terminated；计算属性第一段读 state（键未知）宁报勿漏（只核改，卡头第二节第 3 条）",
+   "polarity": "must_fail",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 22,
+   "caseKey": "module_edge-40",
+   "expectCode": "E-VIEW-PREDICATE-LOCAL",
+   "fixture": "tests/accept/bypass/module_edge-40.txt",
+   "group": "rules",
+   "origin": "卷二 §2.5 :495；别名 const s = state 之后读 s.terminated 追不到，绑定即计（只核改）",
+   "polarity": "must_fail",
+   "scanClass": "module_edge"
+  },
+  {
    "addedAtRev": 17,
    "caseKey": "module_edge-41",
    "fixture": "tests/accept/bypass/module_edge-41.txt",
@@ -753,6 +801,16 @@
    "group": "rules",
    "origin": "卷十八 :337、李白 11-19 10:4x 裁定①：行取自持有种类表（词表 holding_kind 条目）的同名字段 transferable，不属资源种类行，不计（必须不报用例）",
    "polarity": "must_pass",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 22,
+   "caseKey": "module_edge-44",
+   "expectCode": "E-VIEW-PREDICATE-LOCAL",
+   "fixture": "tests/accept/bypass/module_edge-44.txt",
+   "group": "rules",
+   "origin": "卷二 §2.5 :495；解构 const { terminated } = state 绑定即计（只核改）",
+   "polarity": "must_fail",
    "scanClass": "module_edge"
   },
   {

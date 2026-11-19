@@ -1,0 +1,4 @@
+export const f = (engine, state, id) => {
+  const mark = readPath(state, P.terminated(id));
+  return terminated(engine, state, id).ok && mark === undefined;
+};

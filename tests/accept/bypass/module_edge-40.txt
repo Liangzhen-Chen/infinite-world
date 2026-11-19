@@ -1,0 +1,4 @@
+export const f = (state, id) => {
+  const s = state;
+  return s.terminated[id];
+};

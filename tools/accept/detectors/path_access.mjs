@@ -8,6 +8,8 @@
 //              所在文件不是该模式最具体的登记改写写者（也不是建行写者）即 E-VIEW-UNDECLARED-WRITE；路径实参不是 P 成员，同码（写入点归不到路径上，R12-3.4）；
 //           ② 直接改 state（赋值、自增减、delete 的目标是 state 成员链）不经三条写通道即 E-VIEW-BYPASS。
 //           每行带分量 c_write_<声明项键>（R12-3.3 按声明项派生；归不到声明项的不带）。
+//   stateRead 读以 state 为根的路径（卷二 §2.5 :495；迁移体检 K5-24）：params.paths 是 state 之下的路径（如 terminated），范围内凡 state 根的成员链（读，非写入目标）以它开头即计；
+//           根按状态根认（lib/js-state.mjs stateChains），P.terminated 一类经句柄、谓词的读根不是 state，不计；计算属性段不当作命中（动态读归 E-VIEW-DYNAMIC-STATE）；kernel 目录靠范围（params.groups 不含 kernel）豁免，不点名文件。
 //   display 读显示路径（卷十二 R12-2.10：显示集合只取声明表 stateKeys.<键>.display 与 textPaths）：state 成员链落在显示路径上即 E-VIEW-DISPLAY-READ。
 // 局限（P-1 与 2-3 汇报）：按成员链读路径，解构取出后的分支追不到；state 的根按名字认（lib/js-state.mjs），类型归因要等 tsc。
 
@@ -19,6 +21,7 @@ export function detect(ctx, params, cls) {
   if (params.access === 'write') return writeHits(ctx, params, cls || {});
   if (params.access === 'display') return displayHits(ctx, params);
   if (params.access === 'ref') return refHits(ctx, params, cls);
+  if (params.access === 'stateRead') return stateReadHits(ctx, params);
   const pats = (params.paths || []).map((p) => p.split('.').map((seg) => globToRe(seg, [])));
   // readerSystems：登记的读者是具体文件（卷六 A6-1.1 的账本内核，调用图白名单 S6-13 同法），文件不抄名单，取自声明表该系统（systems.<系统>.writers）所涉状态键的写者登记。
   const readers = new Set([...filesOfGroups(ctx.files, ctx.model, params.readers || []), ...ownerFiles(ctx, params.readerSystems)]);
@@ -170,6 +173,32 @@ function writeHits(ctx, params, cls) {
     }
   }
   return hits;
+}
+
+function stateReadHits(ctx, params) {
+  const pats = (params.paths || []).map((p) => p.split('.'));
+  const hits = [];
+  for (const file of scopeOf(ctx, params)) {
+    const toks = tokenize(ctx.read(file));
+    const sym = symbolPaths(toks);
+    const push = (ch, nodeKind) => hits.push({ file, line: toks[ch.start].line, nodeKind, symbolPath: sym[ch.start], code: params.code || '' });
+    for (const ch of stateChains(toks)) {
+      if (ch.write) continue;
+      // 宁报勿漏（卡头第二节第 3 条）：① 计算属性做第一段（state[k]，键未知可能就是目标）；② state 被绑定为值（`= state`，含解构 `{…} = state`、别名 `const s = state`），之后换名读追不到。
+      // 作为函数实参传入（terminated(engine, state, id)、readPath(state, …)）不计。
+      if (ch.segs[0] === '*') { push(ch, 'computed'); continue; }
+      if (!ch.segs.length && boundAsValue(toks, ch)) { push(ch, 'alias'); continue; }
+      if (pats.some((pat) => ch.segs.length >= pat.length && pat.every((seg, k) => ch.segs[k] === seg))) push(ch, 'member');
+    }
+  }
+  return hits;
+}
+
+// 裸 `state`（链无后续成员）是否被绑定为值：根前（跳过 `x.` 前缀，如 engine.state）紧挨赋值号 `=`。
+function boundAsValue(toks, ch) {
+  let k = ch.start - 1;
+  while (k >= 1 && isP(toks[k], '.') && toks[k - 1].t === 'id') k -= 2;
+  return k >= 0 && isP(toks[k], '=');
 }
 
 function displayHits(ctx, params) {

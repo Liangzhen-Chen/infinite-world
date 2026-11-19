@@ -159,3 +159,35 @@ test('A6-1.1 按表认：持有种类行（词表条目）的同名字段不计�
   });
   assert.deepEqual(pathAccess(c, p, CLS).map((h) => h.file), ['server-plugin/mixed.mjs', 'server-plugin/param.mjs', 'server-plugin/res.mjs']);
 });
+
+test('K5-24 终止标记只许经 terminated 谓词读：state 根的读计（规则层各组），kernel 目录整体豁免，句柄、谓词、写入目标不计', () => {
+  const p = readRegistry(ROOT, 'items').find((i) => i.itemKey === 'vol2.K5-24').params;
+  const read = 'export const f = (state, id) => state.terminated[id];';
+  const c = ctxOf({
+    'server-plugin/econ.mjs': read,
+    'server-plugin/gate/g.mjs': "export const f = (engine, id) => engine.state['terminated'][id];",
+    'server-plugin/kernel/w.mjs': read,
+    'server-plugin/kernel/load/x.mjs': read,
+    'server-plugin/ok1.mjs': 'export const f = (engine, state, id) => terminated(engine, state, id).ok && readPath(state, P.terminated(id));',
+    'server-plugin/ok2.mjs': 'export const f = (state, id, m) => { state.terminated[id] = m; return state.holdings; };',
+  });
+  assert.deepEqual(pathAccess(c, p, CLS).map((h) => [h.file, h.code]), [['server-plugin/econ.mjs', 'E-VIEW-PREDICATE-LOCAL'], ['server-plugin/gate/g.mjs', 'E-VIEW-PREDICATE-LOCAL']]);
+});
+
+test('K5-24 口子：计算属性第一段、state 绑定为值（别名、解构、engine.state）计，函数实参与 kernel 目录不计', () => {
+  const p = readRegistry(ROOT, 'items').find((i) => i.itemKey === 'vol2.K5-24').params;
+  const c = ctxOf({
+    'server-plugin/a.mjs': 'export const f = (state, k) => state[k];',
+    'server-plugin/b.mjs': 'export const f = (state) => { const s = state; return s.terminated; };',
+    'server-plugin/c.mjs': 'export const f = (state) => { const { terminated } = state; return terminated; };',
+    'server-plugin/d.mjs': 'export const f = (engine) => { const s = engine.state; return s; };',
+    'server-plugin/e.mjs': 'export const f = (engine, state, id) => terminated(engine, state, id) && readPath(state, P.x);',
+    'server-plugin/kernel/k.mjs': 'export const f = (state, k) => { const s = state; return state[k] && s; };',
+  });
+  assert.deepEqual(pathAccess(c, p, CLS).map((h) => [h.file, h.nodeKind]), [['server-plugin/a.mjs', 'computed'], ['server-plugin/b.mjs', 'alias'], ['server-plugin/c.mjs', 'alias'], ['server-plugin/d.mjs', 'alias']]);
+});
+
+test('K5-24 真实仓库：kernel 目录之外没有人直读 state.terminated', () => {
+  const p = readRegistry(ROOT, 'items').find((i) => i.itemKey === 'vol2.K5-24').params;
+  assert.equal(pathAccess(loadContext(ROOT, {}), p, CLS).length, 0);
+});

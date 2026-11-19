@@ -1,0 +1,4 @@
+export const f = (state, id) => {
+  const { terminated } = state;
+  return terminated[id];
+};

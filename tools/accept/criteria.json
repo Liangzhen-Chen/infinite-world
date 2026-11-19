@@ -291,10 +291,18 @@
     {
      "ref": "接主线 5-5 后重盖，判定口径不变",
      "rev": 6
+    },
+    {
+     "ref": "共用的 path_access 加 stateRead 方式（K5-24）；本类别条目不用，判定口径不变",
+     "rev": 7
+    },
+    {
+     "ref": "path_access stateRead 补口子（K5-24 只核改）；本类别条目不用，判定口径不变",
+     "rev": 8
     }
    ],
-   "print": "ec8dfe0f285135ee6dc41c827b7b8ce6acc0c52e5f80dca4c6ddd95c50768110",
-   "rev": 6,
+   "print": "7ac053ef82bb0368a6b456077a1045c7234f35762bacac38523abcbe176e6eca",
+   "rev": 8,
    "scanClass": "cross_write",
    "source": "卷十二 R12-3.1–3.4；卷二 §2.6、§2.7、S5",
    "terms": {
@@ -366,10 +374,18 @@
     {
      "ref": "接主线 5-5 后重盖，判定口径不变",
      "rev": 6
+    },
+    {
+     "ref": "共用的 path_access 加 stateRead 方式（K5-24）；本类别条目不用，判定口径不变",
+     "rev": 7
+    },
+    {
+     "ref": "path_access stateRead 补口子（K5-24 只核改）；本类别条目不用，判定口径不变",
+     "rev": 8
     }
    ],
-   "print": "ec8dfe0f285135ee6dc41c827b7b8ce6acc0c52e5f80dca4c6ddd95c50768110",
-   "rev": 6,
+   "print": "7ac053ef82bb0368a6b456077a1045c7234f35762bacac38523abcbe176e6eca",
+   "rev": 8,
    "scanClass": "display_read",
    "source": "卷十二 R12-2.10；卷二 S7",
    "terms": {
@@ -517,10 +533,18 @@
     {
      "ref": "接主线 5-5 后重盖，判定口径不变",
      "rev": 33
+    },
+    {
+     "ref": "共用的 path_access 加 stateRead 方式（K5-24）；本类别条目不用，判定口径不变",
+     "rev": 34
+    },
+    {
+     "ref": "path_access stateRead 补口子（K5-24 只核改）；本类别条目不用，判定口径不变",
+     "rev": 35
     }
    ],
-   "print": "b2c0c6a5bf08e53f9c191cec8422d8bdeace03164474a9c24bd054970a641643",
-   "rev": 33,
+   "print": "1270002eda6e36f6236d7cc7107dd201db2a36b7dbf5e34cf36433667ddeb62d",
+   "rev": 35,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1694,10 +1718,18 @@
     {
      "ref": "接主线 5-5 后重盖，判定口径不变",
      "rev": 20
+    },
+    {
+     "ref": "门禁修（迁移体检 K5-24，李白 11-19 11:1x 裁定⑤）：共用的 path_access 加 stateRead 方式（按 state 根认读，kernel 目录靠范围豁免）；新增 vol2.K5-24 与用例 module_edge-36、37、38；原判定口径不变",
+     "rev": 21
+    },
+    {
+     "ref": "K5-24 只核改（卡头第二节第 3 条）：path_access stateRead 另计计算属性第一段与 state 绑定为值（别名、解构），函数实参不计；新增用例 module_edge-39、40、44；原判定口径不变",
+     "rev": 22
     }
    ],
-   "print": "933a64d09e4c2e73757f3fed7ad101a5fbf9835e36f8e46d2d9f05daaa46c55d",
-   "rev": 20,
+   "print": "cbbeba4b11ee6c4ded6f2c39e6da446f4001943204f303f4a4aa706a90d47247",
+   "rev": 22,
    "scanClass": "module_edge",
    "terms": {
     "vol1.V-24.b": {
@@ -1733,6 +1765,14 @@
      "stage": 0
     },
     "vol12.S12-1": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol2.K5-24": {
      "expect": "zero",
      "gates": [
       "pre_commit",
@@ -3028,10 +3068,18 @@
     {
      "ref": "接主线 5-5 后重盖，判定口径不变",
      "rev": 9
+    },
+    {
+     "ref": "共用的 path_access 加 stateRead 方式（K5-24）；本类别条目不用，判定口径不变",
+     "rev": 10
+    },
+    {
+     "ref": "path_access stateRead 补口子（K5-24 只核改）；本类别条目不用，判定口径不变",
+     "rev": 11
     }
    ],
-   "print": "ec8dfe0f285135ee6dc41c827b7b8ce6acc0c52e5f80dca4c6ddd95c50768110",
-   "rev": 9,
+   "print": "7ac053ef82bb0368a6b456077a1045c7234f35762bacac38523abcbe176e6eca",
+   "rev": 11,
    "scanClass": "version_fork",
    "terms": {
     "vol1.V-17": {

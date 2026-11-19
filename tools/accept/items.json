@@ -2455,6 +2455,43 @@
    "zeroRows": []
   },
   {
+   "detector": "path_access",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/path_access.mjs",
+   "itemKey": "vol2.K5-24",
+   "localNo": "K5-24",
+   "method": "static_code",
+   "params": {
+    "access": "stateRead",
+    "code": "E-VIEW-PREDICATE-LOCAL",
+    "groups": [
+     "rules",
+     "textcore",
+     "inputEdge",
+     "gate",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "paths": [
+     "terminated"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "module_edge",
+   "source": "卷二 §2.5 :495（terminated 谓词是判断已过终止协议的唯一入口，别处只调用，不自读 state.terminated）；迁移体检 K5-24；§2.7 :552（kernel 的 writePath 核对目标未终止是内核自己读，不列为读者）；李白 11-19 11:1x 裁定⑤：范围取 kernel 以外的全部服务端组，kernel 目录整体不在范围内，不点名文件；按根认：读 state 根下 terminated 即计，经 P.terminated 句柄或谓词读的根不是 state，不计；宁报勿漏：计算属性做第一段（state[k]）、state 绑定为值（别名、解构）同码计，作为函数实参传入不计",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
    "baseComp": "c_instance_id",
    "detector": "lit_scope",
    "expect": "zero",
