@@ -36,6 +36,7 @@
  "server-plugin/kernel/storage.mjs",
  "server-plugin/kernel/terminate.mjs",
  "server-plugin/kernel/transaction.mjs",
+ "server-plugin/kernel/transport/reply-channel.mjs",
  "server-plugin/kernel/validate/body-tables.mjs",
  "server-plugin/kernel/validate/cell-grades.mjs",
  "server-plugin/kernel/validate/dimensions-validate.mjs",

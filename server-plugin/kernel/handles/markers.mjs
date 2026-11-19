@@ -27,6 +27,11 @@ export const CODE_ENUMS = Object.freeze({
   stock_mode: ['raw', 'anchor', 'remainder', 'extScale'],
   reply_result: ['ok', 'received', 'rejected', 'error', 'save_unavailable'],
   narrate_result: ['written', 'skipped', 'rejected'],
+  // 卷二十九 §2.1 :129–:158：显示层三个代码内封闭枚举（值不带族前缀）；outputGate 只经 T.code_enum 比较，不写字串字面量（V-25.a）。
+  label_form: ['label', 'short', 'adj', 'plural', 'title', 'hint', 'desc', 'flavor'],
+  tpl_kind: ['event', 'scene', 'notice', 'refusal', 'dialogue', 'address', 'appearance', 'document', 'work', 'digest', 'chronicle', 'explain', 'name', 'format', 'prompt', 'snippet'],
+  fill_kind: ['ref', 'num', 'qty', 'time', 'dur', 'bearing', 'dist', 'list', 'stored', 'sub'],
+  segment_kind: ['narration', 'dialogue'], // 卷九 §2.1 :147
   term_record: ['clear', 'hold', 'keep'],
   revive_record: ['clear', 'keep'],
   writer_role: ['create', 'rewrite'],

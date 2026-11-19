@@ -1,82 +1,242 @@
 {
- "bm_capped": "限额通道",
- "bm_physical": "物理律通道",
- "class_bone.appearance.0": "密质骨光滑、白色、坚实",
- "class_bone.appearance.1": "外层致密坚硬",
- "class_bone.appearance.2": "内部松质骨为开孔多孔网状",
- "class_brass.appearance.0": "明亮的金黄色",
- "class_brass.appearance.1": "含铜量高的黄铜更偏金色",
- "class_brass.appearance.2": "含铜少、含锌多的黄铜更偏银色",
- "class_brass.appearance.3": "铜与硫反应生成褐色以至黑色的硫化铜表层",
- "class_brass.appearance.4": "硫化铜层若常接触弱酸性水（如城市雨水），可在空气中氧化成绿蓝色的碳酸铜铜绿",
- "class_ceramic.appearance.0": "烧后胎色自白、米黄、橙、红、褐到黑，随黏土与烧成气氛而异",
- "class_ceramic.appearance.1": "红陶色来自黏土中铁的氧化；还原焰烧成呈灰至黑",
- "class_ceramic.appearance.2": "无釉胎体多孔",
- "class_cheese.appearance.0": "外层可有带香味的霉层（外皮）",
- "class_cheese.appearance.1": "新制的硬质乳酪质地发韧如橡胶",
- "class_cheese.appearance.2": "有的乳酪气味特别冲",
- "class_copper.appearance.0": "新鲜表面呈粉橙色",
- "class_copper.appearance.1": "红橙色金属光泽",
- "class_copper.appearance.2": "暴露在空气中会带上红色的失泽层",
- "class_copper.appearance.3": "建筑上的铜（多用于屋面）氧化后呈绿色铜绿",
- "class_iron.appearance.0": "新断口呈青蓝色，有丝状光泽，纤维状",
- "class_iron.appearance.1": "含纤维状夹渣，蚀刻、锈蚀或折断处显木纹状纹理",
- "class_iron.appearance.2": "表面粗糙",
- "class_leather.appearance.0": "植鞣革柔软，呈浅褐色",
- "class_leather.appearance.1": "粒面（外层）纤维更细密",
- "class_leather.appearance.2": "全粒面革久用生出古色（包浆）",
- "class_paper.appearance.0": "由交织的纤维素纤维压成",
- "class_paper.appearance.1": "漂白浆纸为白色；机械浆纸久则发黄变脆",
- "class_paper.appearance.2": "手工纸边缘粗糙、毛茸",
- "class_paper.appearance.3": "手工帘抄纸带帘纹，压光或抛光可使表面光滑",
- "class_salt.appearance.0": "晶体色白，含杂质时微带蓝紫",
- "class_salt.appearance.1": "晶体半透明",
- "class_salt.appearance.2": "晶体呈立方形",
- "class_silver.appearance.0": "白色，有明亮的金属光泽",
- "class_silver.appearance.1": "可高度抛光",
- "class_silver.appearance.2": "遇硫在空气中变暗，生黑色硫化银",
- "class_spice_seed.appearance.0": "籽粒细小：罂粟籽不足 1 毫米，芥籽约 1–2 毫米，香芹籽约 3 毫米长",
- "class_spice_seed.appearance.1": "形状因种而异：芥籽圆，罂粟籽肾形且表面有凹点，香芹籽月牙形带五条浅脊",
- "class_spice_seed.appearance.2": "颜色因种而异：芥籽自黄白到黑，罂粟籽有石板蓝、灰、白",
- "class_timber.appearance.0": "心材色深于边材",
- "class_timber.appearance.1": "早材色浅、晚材色深，现出年轮",
- "class_timber.appearance.2": "木色由草黄到深色乃至红色（因树种而异）",
- "class_timber.appearance.3": "纹理绕节而过，节疤色深近圆",
- "class_wax.appearance.0": "色自近白到褐，多为黄色",
- "class_wax.appearance.1": "有蜂蜜般的香气",
- "class_wax.appearance.2": "室温下质脆，断口干而呈颗粒状",
- "class_wax.appearance.3": "近体温即变软",
- "class_wood.appearance.0": "心材色深于边材",
- "class_wood.appearance.1": "早材色浅、晚材色深，现出年轮",
- "class_wood.appearance.2": "木色由草黄到深色乃至红色（因树种而异）",
- "class_wood.appearance.3": "纹理绕节而过，节疤色深近圆",
- "due_recurrence": "周期日到来",
- "due_revive_window": "复生窗口期满",
- "purpose_unmaterialized": "未物化预置",
- "res_building_share": "建筑份额",
- "res_unmaterialized_share": "未物化建筑份额",
- "resfam_asset": "建筑资产",
- "resfam_claim": "债权凭证",
- "resfam_coin": "铸币",
- "resfam_goods": "物品",
- "resfam_point": "非金点数",
- "resfam_stock": "地点存量",
- "sink_boundary": "边界买走",
- "sink_consume": "用掉",
- "sink_death": "死亡对平",
- "sink_decay": "腐坏损耗",
- "sink_depart": "随实体离开",
- "sink_loss": "毁损遗失",
- "sink_redeem": "兑付",
- "sink_seized": "途中被取走",
- "sink_transform": "转换投入",
- "src_birth": "出生对平",
- "src_boundary": "边界供货",
- "src_genesis": "开局入账",
- "src_issue": "凭证发行",
- "src_regrow": "存量再生",
- "src_transform": "转换产出",
- "tr_bound": "只与发行者往来",
- "tr_free": "自由转让",
- "tr_restricted": "受限转让"
+ "bm_capped": {
+  "label": "限额通道"
+ },
+ "bm_physical": {
+  "label": "物理律通道"
+ },
+ "class_bone.appearance.0": {
+  "label": "密质骨光滑、白色、坚实"
+ },
+ "class_bone.appearance.1": {
+  "label": "外层致密坚硬"
+ },
+ "class_bone.appearance.2": {
+  "label": "内部松质骨为开孔多孔网状"
+ },
+ "class_brass.appearance.0": {
+  "label": "明亮的金黄色"
+ },
+ "class_brass.appearance.1": {
+  "label": "含铜量高的黄铜更偏金色"
+ },
+ "class_brass.appearance.2": {
+  "label": "含铜少、含锌多的黄铜更偏银色"
+ },
+ "class_brass.appearance.3": {
+  "label": "铜与硫反应生成褐色以至黑色的硫化铜表层"
+ },
+ "class_brass.appearance.4": {
+  "label": "硫化铜层若常接触弱酸性水（如城市雨水），可在空气中氧化成绿蓝色的碳酸铜铜绿"
+ },
+ "class_ceramic.appearance.0": {
+  "label": "烧后胎色自白、米黄、橙、红、褐到黑，随黏土与烧成气氛而异"
+ },
+ "class_ceramic.appearance.1": {
+  "label": "红陶色来自黏土中铁的氧化；还原焰烧成呈灰至黑"
+ },
+ "class_ceramic.appearance.2": {
+  "label": "无釉胎体多孔"
+ },
+ "class_cheese.appearance.0": {
+  "label": "外层可有带香味的霉层（外皮）"
+ },
+ "class_cheese.appearance.1": {
+  "label": "新制的硬质乳酪质地发韧如橡胶"
+ },
+ "class_cheese.appearance.2": {
+  "label": "有的乳酪气味特别冲"
+ },
+ "class_copper.appearance.0": {
+  "label": "新鲜表面呈粉橙色"
+ },
+ "class_copper.appearance.1": {
+  "label": "红橙色金属光泽"
+ },
+ "class_copper.appearance.2": {
+  "label": "暴露在空气中会带上红色的失泽层"
+ },
+ "class_copper.appearance.3": {
+  "label": "建筑上的铜（多用于屋面）氧化后呈绿色铜绿"
+ },
+ "class_iron.appearance.0": {
+  "label": "新断口呈青蓝色，有丝状光泽，纤维状"
+ },
+ "class_iron.appearance.1": {
+  "label": "含纤维状夹渣，蚀刻、锈蚀或折断处显木纹状纹理"
+ },
+ "class_iron.appearance.2": {
+  "label": "表面粗糙"
+ },
+ "class_leather.appearance.0": {
+  "label": "植鞣革柔软，呈浅褐色"
+ },
+ "class_leather.appearance.1": {
+  "label": "粒面（外层）纤维更细密"
+ },
+ "class_leather.appearance.2": {
+  "label": "全粒面革久用生出古色（包浆）"
+ },
+ "class_paper.appearance.0": {
+  "label": "由交织的纤维素纤维压成"
+ },
+ "class_paper.appearance.1": {
+  "label": "漂白浆纸为白色；机械浆纸久则发黄变脆"
+ },
+ "class_paper.appearance.2": {
+  "label": "手工纸边缘粗糙、毛茸"
+ },
+ "class_paper.appearance.3": {
+  "label": "手工帘抄纸带帘纹，压光或抛光可使表面光滑"
+ },
+ "class_salt.appearance.0": {
+  "label": "晶体色白，含杂质时微带蓝紫"
+ },
+ "class_salt.appearance.1": {
+  "label": "晶体半透明"
+ },
+ "class_salt.appearance.2": {
+  "label": "晶体呈立方形"
+ },
+ "class_silver.appearance.0": {
+  "label": "白色，有明亮的金属光泽"
+ },
+ "class_silver.appearance.1": {
+  "label": "可高度抛光"
+ },
+ "class_silver.appearance.2": {
+  "label": "遇硫在空气中变暗，生黑色硫化银"
+ },
+ "class_spice_seed.appearance.0": {
+  "label": "籽粒细小：罂粟籽不足 1 毫米，芥籽约 1–2 毫米，香芹籽约 3 毫米长"
+ },
+ "class_spice_seed.appearance.1": {
+  "label": "形状因种而异：芥籽圆，罂粟籽肾形且表面有凹点，香芹籽月牙形带五条浅脊"
+ },
+ "class_spice_seed.appearance.2": {
+  "label": "颜色因种而异：芥籽自黄白到黑，罂粟籽有石板蓝、灰、白"
+ },
+ "class_timber.appearance.0": {
+  "label": "心材色深于边材"
+ },
+ "class_timber.appearance.1": {
+  "label": "早材色浅、晚材色深，现出年轮"
+ },
+ "class_timber.appearance.2": {
+  "label": "木色由草黄到深色乃至红色（因树种而异）"
+ },
+ "class_timber.appearance.3": {
+  "label": "纹理绕节而过，节疤色深近圆"
+ },
+ "class_wax.appearance.0": {
+  "label": "色自近白到褐，多为黄色"
+ },
+ "class_wax.appearance.1": {
+  "label": "有蜂蜜般的香气"
+ },
+ "class_wax.appearance.2": {
+  "label": "室温下质脆，断口干而呈颗粒状"
+ },
+ "class_wax.appearance.3": {
+  "label": "近体温即变软"
+ },
+ "class_wood.appearance.0": {
+  "label": "心材色深于边材"
+ },
+ "class_wood.appearance.1": {
+  "label": "早材色浅、晚材色深，现出年轮"
+ },
+ "class_wood.appearance.2": {
+  "label": "木色由草黄到深色乃至红色（因树种而异）"
+ },
+ "class_wood.appearance.3": {
+  "label": "纹理绕节而过，节疤色深近圆"
+ },
+ "due_recurrence": {
+  "label": "周期日到来"
+ },
+ "due_revive_window": {
+  "label": "复生窗口期满"
+ },
+ "purpose_unmaterialized": {
+  "label": "未物化预置"
+ },
+ "res_building_share": {
+  "label": "建筑份额"
+ },
+ "res_unmaterialized_share": {
+  "label": "未物化建筑份额"
+ },
+ "resfam_asset": {
+  "label": "建筑资产"
+ },
+ "resfam_claim": {
+  "label": "债权凭证"
+ },
+ "resfam_coin": {
+  "label": "铸币"
+ },
+ "resfam_goods": {
+  "label": "物品"
+ },
+ "resfam_point": {
+  "label": "非金点数"
+ },
+ "resfam_stock": {
+  "label": "地点存量"
+ },
+ "sink_boundary": {
+  "label": "边界买走"
+ },
+ "sink_consume": {
+  "label": "用掉"
+ },
+ "sink_death": {
+  "label": "死亡对平"
+ },
+ "sink_decay": {
+  "label": "腐坏损耗"
+ },
+ "sink_depart": {
+  "label": "随实体离开"
+ },
+ "sink_loss": {
+  "label": "毁损遗失"
+ },
+ "sink_redeem": {
+  "label": "兑付"
+ },
+ "sink_seized": {
+  "label": "途中被取走"
+ },
+ "sink_transform": {
+  "label": "转换投入"
+ },
+ "src_birth": {
+  "label": "出生对平"
+ },
+ "src_boundary": {
+  "label": "边界供货"
+ },
+ "src_genesis": {
+  "label": "开局入账"
+ },
+ "src_issue": {
+  "label": "凭证发行"
+ },
+ "src_regrow": {
+  "label": "存量再生"
+ },
+ "src_transform": {
+  "label": "转换产出"
+ },
+ "tr_bound": {
+  "label": "只与发行者往来"
+ },
+ "tr_free": {
+  "label": "自由转让"
+ },
+ "tr_restricted": {
+  "label": "受限转让"
+ }
 }

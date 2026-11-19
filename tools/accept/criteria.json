@@ -268,10 +268,14 @@
     {
      "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
      "rev": 51
+    },
+    {
+     "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
+     "rev": 52
     }
    ],
-   "print": "2543fbf1d0087439956ec959edc1ac75828f223e342ce31f02cb75bd8e4c752d",
-   "rev": 51,
+   "print": "b728a4ed9845f0144d7684c68af693ee4fc65c9db542021a4655b45861f4400a",
+   "rev": 52,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -661,10 +665,14 @@
     {
      "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
      "rev": 46
+    },
+    {
+     "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
+     "rev": 47
     }
    ],
-   "print": "bf895ce6f64d87017fb0c49564244a2c818dc2c2b198c2fe199e78652b4c513c",
-   "rev": 46,
+   "print": "3747574d0da876b651dbf34ae2a4467aac33e1b9425485006840960b83ea6f1c",
+   "rev": 47,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -731,10 +739,14 @@
     {
      "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
      "rev": 13
+    },
+    {
+     "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
+     "rev": 14
     }
    ],
-   "print": "d6abf0491ed2638d4d3ab23d9375e7835914cf0f375e0ed2e1a3dcc973d1bd74",
-   "rev": 13,
+   "print": "2a4cc69716f589c1a5469634c0a179ce3489d75fb37c0221d8dc4754d42697a1",
+   "rev": 14,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -867,10 +879,14 @@
     {
      "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
      "rev": 14
+    },
+    {
+     "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
+     "rev": 15
     }
    ],
-   "print": "70e5a1b293b9d78fd4c6363918df0d0bedd0a3bd069d937a681e36b3cb889016",
-   "rev": 14,
+   "print": "a09011d28b196fc66bbc4ffc7b6af0fcd709ea97498c06f12c79c6cbf8e98093",
+   "rev": 15,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -1081,10 +1097,14 @@
     {
      "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
      "rev": 43
+    },
+    {
+     "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
+     "rev": 44
     }
    ],
-   "print": "764a3f66273b9ea2f7964f233ac78169112d7a71c6853096ecd87566255e8260",
-   "rev": 43,
+   "print": "e1db3310611041f0f8d51bb12866eb0cc2b3d616d9caffc7b8115d449552a67e",
+   "rev": 44,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1156,10 +1176,14 @@
     {
      "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
      "rev": 14
+    },
+    {
+     "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
+     "rev": 15
     }
    ],
-   "print": "70e5a1b293b9d78fd4c6363918df0d0bedd0a3bd069d937a681e36b3cb889016",
-   "rev": 14,
+   "print": "a09011d28b196fc66bbc4ffc7b6af0fcd709ea97498c06f12c79c6cbf8e98093",
+   "rev": 15,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -1418,10 +1442,14 @@
     {
      "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
      "rev": 59
+    },
+    {
+     "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
+     "rev": 60
     }
    ],
-   "print": "934531f4684dab664d56fc754bafadf2ffcb5e7d814545d746c8b15702325f53",
-   "rev": 59,
+   "print": "e190181f148e0e63faf91d57190fc62ecde5eca3a31c6a9e24fbe026033dcf0a",
+   "rev": 60,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1704,10 +1732,14 @@
     {
      "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
      "rev": 44
+    },
+    {
+     "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
+     "rev": 45
     }
    ],
-   "print": "764a3f66273b9ea2f7964f233ac78169112d7a71c6853096ecd87566255e8260",
-   "rev": 44,
+   "print": "e1db3310611041f0f8d51bb12866eb0cc2b3d616d9caffc7b8115d449552a67e",
+   "rev": 45,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -2343,10 +2375,14 @@
     {
      "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
      "rev": 44
+    },
+    {
+     "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
+     "rev": 45
     }
    ],
-   "print": "764a3f66273b9ea2f7964f233ac78169112d7a71c6853096ecd87566255e8260",
-   "rev": 44,
+   "print": "e1db3310611041f0f8d51bb12866eb0cc2b3d616d9caffc7b8115d449552a67e",
+   "rev": 45,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -2505,10 +2541,14 @@
     {
      "ref": "块 6 第 6-29 张合主线：decl_cmp paramConsumed 数据侧消费者 (a) 按加载期编进求值器的数据 RX 整类认，另含登记为加载期编译的词表行 RX 字段（handles/markers.mjs VOCAB_RX_FIELDS）里引用的规则表键（主会话 11-19 定口径，依李白 11-19 13:2x ① 原意）；用例 param_consumed-02、-03、-12；判定口径变",
      "rev": 36
+    },
+    {
+     "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
+     "rev": 37
     }
    ],
-   "print": "d0169b8064d695c4272523db5273c6f2b149332d4752f00c9eceb9f715a3939e",
-   "rev": 36,
+   "print": "3430702acb0358e5f05cd414f6918adb90a13d265e80e0bb8d966d2114db4581",
+   "rev": 37,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -2763,10 +2803,14 @@
     {
      "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
      "rev": 60
+    },
+    {
+     "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
+     "rev": 61
     }
    ],
-   "print": "652363c218ede336d9f260d9a35879dda714c860fd6a007ce8a422fb689bbd28",
-   "rev": 60,
+   "print": "bce9d319ceffcbfde393d036c0ddce4afbbe72bc79aed6d0ecc82ac8e2bcc075",
+   "rev": 61,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -2986,10 +3030,14 @@
     {
      "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
      "rev": 23
+    },
+    {
+     "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
+     "rev": 24
     }
    ],
-   "print": "02a4aed9ba1882909a6d45d5165172d83947626f32747ab6587a1978d9dd6478",
-   "rev": 23,
+   "print": "c7316f03cfac941f21098ac0ef579bcb3979a83e9bc5e6f4a0d4621fefafe0cc",
+   "rev": 24,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -3207,10 +3255,14 @@
     {
      "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
      "rev": 49
+    },
+    {
+     "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
+     "rev": 50
     }
    ],
-   "print": "2543fbf1d0087439956ec959edc1ac75828f223e342ce31f02cb75bd8e4c752d",
-   "rev": 49,
+   "print": "b728a4ed9845f0144d7684c68af693ee4fc65c9db542021a4655b45861f4400a",
+   "rev": 50,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -3300,10 +3352,14 @@
     {
      "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
      "rev": 20
+    },
+    {
+     "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
+     "rev": 21
     }
    ],
-   "print": "b0ee14f351f733164c7eadb222064f87111534399769e3cb5fc2d7c896258a72",
-   "rev": 20,
+   "print": "e1643e1eff499c2ec26cad51438072851082e0e4cac129cc0f7e2845069520fd",
+   "rev": 21,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -3371,10 +3427,14 @@
     {
      "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
      "rev": 13
+    },
+    {
+     "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
+     "rev": 14
     }
    ],
-   "print": "70e5a1b293b9d78fd4c6363918df0d0bedd0a3bd069d937a681e36b3cb889016",
-   "rev": 13,
+   "print": "a09011d28b196fc66bbc4ffc7b6af0fcd709ea97498c06f12c79c6cbf8e98093",
+   "rev": 14,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -3654,10 +3714,14 @@
     {
      "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
      "rev": 38
+    },
+    {
+     "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
+     "rev": 39
     }
    ],
-   "print": "d0169b8064d695c4272523db5273c6f2b149332d4752f00c9eceb9f715a3939e",
-   "rev": 38,
+   "print": "3430702acb0358e5f05cd414f6918adb90a13d265e80e0bb8d966d2114db4581",
+   "rev": 39,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -3865,10 +3929,14 @@
     {
      "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
      "rev": 28
+    },
+    {
+     "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
+     "rev": 29
     }
    ],
-   "print": "bcb7dede83d33fb5a6f372ea3286eab11c272fc618a91722362fcfac7d29ef89",
-   "rev": 28,
+   "print": "31f7133f4025107494759ad1a7d915c5ff3433dcd262462c6874c04d00ed12f7",
+   "rev": 29,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {
