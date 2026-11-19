@@ -22,7 +22,7 @@
    },
    "prefix": "bform_"
   },
-  "category": {"closed": false, "entries": {"category_apparel": {"stockSlot": true}, "category_container": {"stockSlot": true}, "category_document": {"stockSlot": true}, "category_tool": {"stockSlot": true}, "category_weapon": {"stockSlot": true}}, "prefix": "category_"},
+  "category": {"closed": false, "entries": {"category_apparel": {"stockSlot": true}, "category_container": {"stockSlot": true}, "category_document": {"stockSlot": true}, "category_food": {"stockSlot": true}, "category_tool": {"stockSlot": true}, "category_weapon": {"stockSlot": true}}, "prefix": "category_"},
   "dockind": {"closed": false, "entries": {}, "prefix": "dockind_"},
   "emphasis": {"closed": false, "entries": {}, "prefix": "emph_"},
   "fault": {"closed": false, "entries": {}, "prefix": "fault_"},
@@ -2182,7 +2182,7 @@
    "closed": false,
    "entries": {
     "sink_boundary": {
-     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调，李白 11-19 21:0x ⑤）",
+     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调（李白 11-19 21:0x ⑤、22:0x ⑥））",
      "budgetMode": "bm_physical",
      "families": [
       "resfam_goods"
@@ -2192,7 +2192,7 @@
      "reportGroup": null
     },
     "sink_consume": {
-     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调，李白 11-19 21:0x ⑤）",
+     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调（李白 11-19 21:0x ⑤、22:0x ⑥））",
      "budgetMode": "bm_physical",
      "families": [
       "resfam_goods"
@@ -2210,7 +2210,7 @@
      "reportGroup": null
     },
     "sink_decay": {
-     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调，李白 11-19 21:0x ⑤）",
+     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调（李白 11-19 21:0x ⑤、22:0x ⑥））",
      "budgetMode": "bm_physical",
      "families": [
       "resfam_goods"
@@ -2220,7 +2220,7 @@
      "reportGroup": null
     },
     "sink_depart": {
-     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调，李白 11-19 21:0x ⑤）",
+     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调（李白 11-19 21:0x ⑤、22:0x ⑥））",
      "budgetMode": "bm_physical",
      "families": [
       "resfam_goods"
@@ -2230,7 +2230,7 @@
      "reportGroup": null
     },
     "sink_loss": {
-     "basis": "families 由资源种类行 sinks 反推：res_building_share（resfam_asset）（K3-41，李白 11-18 02:20）；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调，李白 11-19 21:0x ⑤）",
+     "basis": "families 由资源种类行 sinks 反推：res_building_share（resfam_asset）（K3-41，李白 11-18 02:20）；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调（李白 11-19 21:0x ⑤、22:0x ⑥））",
      "budgetMode": "bm_physical",
      "families": [
       "resfam_asset",
@@ -2249,7 +2249,7 @@
      "reportGroup": null
     },
     "sink_seized": {
-     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调，李白 11-19 21:0x ⑤）",
+     "basis": "families 由资源种类行 sinks 反推：现登记行无一以它为去处（K3-41，李白 11-18 02:20）；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调（李白 11-19 21:0x ⑤、22:0x ⑥））",
      "budgetMode": "bm_physical",
      "families": [
       "resfam_goods"
@@ -2259,7 +2259,7 @@
      "reportGroup": null
     },
     "sink_transform": {
-     "basis": "families 由资源种类行 sinks 反推：res_unmaterialized_share（resfam_claim）（K3-41，李白 11-18 02:20）；pairedWith 卷六 §4.22.1 :1240；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调，李白 11-19 21:0x ⑤）",
+     "basis": "families 由资源种类行 sinks 反推：res_unmaterialized_share（resfam_claim）（K3-41，李白 11-18 02:20）；pairedWith 卷六 §4.22.1 :1240；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调（李白 11-19 21:0x ⑤、22:0x ⑥））",
      "budgetMode": "bm_physical",
      "families": [
       "resfam_claim",
@@ -2299,7 +2299,7 @@
      "reportGroup": null
     },
     "src_genesis": {
-     "basis": "families 由资源种类行 sources 反推：res_building_share（resfam_asset）、res_unmaterialized_share（resfam_claim）（K3-41，李白 11-18 02:20）；限额通道 §4.22 规则 2 :1259；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调，李白 11-19 21:0x ⑤）",
+     "basis": "families 由资源种类行 sources 反推：res_building_share（resfam_asset）、res_unmaterialized_share（resfam_claim）（K3-41，李白 11-18 02:20）；限额通道 §4.22 规则 2 :1259；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调（李白 11-19 21:0x ⑤、22:0x ⑥））",
      "budgetMode": "bm_capped",
      "families": [
       "resfam_asset",
@@ -2327,7 +2327,7 @@
      "reportGroup": null
     },
     "src_transform": {
-     "basis": "families 由资源种类行 sources 反推：res_building_share（resfam_asset）（K3-41，李白 11-18 02:20）；pairedWith 卷六 §4.22.1 :1240；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调，李白 11-19 21:0x ⑤）",
+     "basis": "families 由资源种类行 sources 反推：res_building_share（resfam_asset）（K3-41，李白 11-18 02:20）；pairedWith 卷六 §4.22.1 :1240；6-22 起另有 resfam_goods：每件物品一行 goods 资源种类（卷六 §4.22.1 :1238–:1247 对物品适用的通用通道取值：设计值待调（李白 11-19 21:0x ⑤、22:0x ⑥））",
      "budgetMode": "bm_physical",
      "families": [
       "resfam_asset",

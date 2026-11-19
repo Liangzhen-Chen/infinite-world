@@ -72,12 +72,13 @@
     {"when": "member(comp_wearable, item.classes)", "value": "category_apparel"},
     {"when": "member(comp_readable, item.classes) || member(comp_document, item.classes) || member(comp_work, item.classes)", "value": "category_document"},
     {"when": "member(comp_container, item.classes)", "value": "category_container"},
-    {"when": "member(comp_tool, item.classes)", "value": "category_tool"}
+    {"when": "member(comp_tool, item.classes)", "value": "category_tool"},
+    {"when": "material.edibleFraction > 0", "value": "category_food"}
    ],
    "file": "server-plugin/kernel/item.mjs",
    "grade": "designed",
    "source": "卷三乙 §4.3.3 C-1 :984（first(rules.items.categoryRules)；变量只读功能维度与材料、形态，不读实体 id 与 class 族，不恒真）；§2.4 :298 category 族类别名；§7 M3b-9 :2046 ③（类别不迁旧值，由规则表派生）",
-   "basis": "暂定·待试玩标定（不是旧数据标定出的）。旧数据没有类别值，旧三套标签只用来核对（M3b-9 ④）；条件取旧标签已对到的手写组件类（comp_weapon、comp_wearable、comp_readable／comp_document／comp_work、comp_container、comp_tool），次序 武器、服装、文书、容器、工具（身兼容器与工具的锅按容器）。卷三乙 :298 列的食物、饮料、燃料、原料等类别要读材料派生组件与份额（C-1 第②类变量），内核 compileWhens（kernel/item.mjs:333）的变量域目前只有物品行维度与手写组件类，写不出；那些类别暂缺，故现在只有挂了上述组件类、又有 material 的物品能派生出类别（有 material 而派生不出即 E-DIM-REQUIRED-MISSING『categoryKind derives to nothing』）；旧数据没有 material，真实世界的物品行暂都未写（见 _unbuilt-derived.json 的 item.material），本表的条件由测试在加了测试材料的临时世界里核。stockSlot 各条取真（每类各开一槽）：卷文没给值，设计值待调（李白 11-19 21:0x ⑤）"
+   "basis": "暂定·待试玩标定（不是旧数据标定出的）。旧数据没有类别值，旧三套标签只用来核对（M3b-9 ④）；条件取旧标签已对到的手写组件类（comp_weapon、comp_wearable、comp_readable／comp_document／comp_work、comp_container、comp_tool），次序 武器、服装、文书、容器、工具（身兼容器与工具的锅按容器）。卷三乙 :298 列的食物、饮料、燃料、原料等类别要读材料量（C-1 第②类变量）。补值卡 E 合入后 compileWhens 能读 material.<维度键>，6-22 第三阶段（李白 11-19 22:0x）加第六条 category_food（material.edibleFraction > 0：按 M-1 聚合的可食份额为正，读材料量，不读 id、不恒真，排在功能组件类之后）；饮料、燃料、原料、半成品等类别条目的条件需要标定（原料、半成品没有可读的材料量能与『有功能组件的物品』区分而不成兜底），暂缺：有 material 而派生不出类别即 E-DIM-REQUIRED-MISSING『categoryKind derives to nothing』，故这类物品的 material 暂不写（convert-items 的 heldMaterial 清单，见回报）。stockSlot 各条取真（每类各开一槽，含 category_food）：卷文没给值，设计值待调（李白 11-19 21:0x ⑤、22:0x ⑥）"
   },
   {
    "key": "classRules",

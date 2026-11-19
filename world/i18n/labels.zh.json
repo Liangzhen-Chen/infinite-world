@@ -899,6 +899,9 @@
  "category_document": {
   "label": "文书"
  },
+ "category_food": {
+  "label": "食物"
+ },
  "category_tool": {
   "label": "工具"
  },

@@ -175,13 +175,21 @@
    "origin": "bld_hw_weaving"
   },
   "item_bamboo_fishing_rod": {
-   "basis": "旧 world/meta/items.json：旧 id item_bamboo_fishing_rod；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 100（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_bamboo_fishing_rod；massKg 取旧 weight（单件，kg）；wearPerUse 取 mat_bamboo 耐磨 22 ÷ 旧 durability 100（旧 durability 是可用次数；卷三乙 D-1：可用次数 = 耐磨 ÷ wearPerUse；设定数待调，没有真实使用年限出处）；material 取 mat_bamboo（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_block（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_block",
    "classes": [
     "comp_tool"
    ],
    "massKg": 1,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_bamboo",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_mill",
-   "wearPerUse": 0.01
+   "wearPerUse": 0.22
   },
   "item_banknote_hw": {
    "basis": "旧 world/meta/items.json：旧 id item_banknote_hw；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
@@ -298,83 +306,155 @@
    "origin": "bld_hw_mill"
   },
   "item_book_bake_flatbread": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_bake_flatbread；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_bake_flatbread；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.12,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
   "item_book_cook_porridge": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_cook_porridge；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_cook_porridge；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.12,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
   "item_book_curdle_milk": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_curdle_milk；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_curdle_milk；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.12,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
   "item_book_dip_candles": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_dip_candles；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_dip_candles；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.12,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
   "item_book_fire_cup": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_fire_cup；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_fire_cup；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.12,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
   "item_book_fire_pot": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_fire_pot；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_fire_pot；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.12,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
   "item_book_forge_hinge": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_forge_hinge；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_forge_hinge；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.12,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
   "item_book_forge_nails": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_forge_nails；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_forge_nails；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.12,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
   "item_book_household_pottery": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_household_pottery；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_household_pottery；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.2,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 240
   },
@@ -451,245 +531,461 @@
    "readMinutes": 450
   },
   "item_book_m4_contract": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_m4_contract；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_m4_contract；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.18,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
   "item_book_m4_guard": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_m4_guard；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_m4_guard；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.18,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "loc_bs",
    "readMinutes": 960
   },
   "item_book_m4_light": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_m4_light；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_m4_light；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.18,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 240
   },
   "item_book_m4_mind": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_m4_mind；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_m4_mind；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.18,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "loc_bs",
    "readMinutes": 240
   },
   "item_book_m4_projection": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_m4_projection；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_m4_projection；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.18,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "loc_bs",
    "readMinutes": 240
   },
   "item_book_m4_release": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_m4_release；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_m4_release；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.18,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "loc_bs",
    "readMinutes": 480
   },
   "item_book_m4_renew": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_m4_renew；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_m4_renew；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.18,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "loc_bs",
    "readMinutes": 480
   },
   "item_book_m4_surface": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_m4_surface；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_m4_surface；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.18,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
   "item_book_m4_travel": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_m4_travel；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_m4_travel；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.18,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
   "item_book_m4_veils": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_m4_veils；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_m4_veils；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.18,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "loc_bs",
    "readMinutes": 480
   },
   "item_book_mill_oats": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_mill_oats；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_mill_oats；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.12,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
   "item_book_s1_area": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_s1_area；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_s1_area；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.2,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 240
   },
   "item_book_s1_cover": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_s1_cover；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_s1_cover；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.2,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
   "item_book_s1_growth": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_s1_growth；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_s1_growth；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.2,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 240
   },
   "item_book_s1_message": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_s1_message；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_s1_message；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.2,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 240
   },
   "item_book_s1_movement": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_s1_movement；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_s1_movement；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.2,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 240
   },
   "item_book_s1_utility": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_s1_utility；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_s1_utility；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.2,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
   "item_book_s2_air": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_s2_air；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_s2_air；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.2,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
   "item_book_s2_farm": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_s2_farm；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_s2_farm；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.2,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
   "item_book_s2_stone": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_s2_stone；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_s2_stone；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.2,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 240
   },
   "item_book_s3_care": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_s3_care；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_s3_care；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.2,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
   "item_book_s3_optics": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_s3_optics；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_s3_optics；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.2,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 240
   },
   "item_book_s4_measure": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_s4_measure；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_s4_measure；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.2,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
   "item_book_s4_space": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_s4_space；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_s4_space；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.2,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 240
   },
   "item_book_salt_fish": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_salt_fish；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_salt_fish；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.12,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
   "item_book_sew_sack": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_sew_sack；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_sew_sack；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.12,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
   "item_book_spin_wool": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_spin_wool；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_spin_wool；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.12,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
@@ -700,83 +996,155 @@
    "origin": "bld_hw_mill"
   },
   "item_book_trades_artisan": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_trades_artisan；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_trades_artisan；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.24,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 300
   },
   "item_book_trades_iron": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_trades_iron；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_trades_iron；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.24,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 300
   },
   "item_book_trades_kitchen": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_trades_kitchen；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_trades_kitchen；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.24,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 300
   },
   "item_book_trades_leather": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_trades_leather；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_trades_leather；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.24,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 300
   },
   "item_book_trades_wood": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_trades_wood；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_trades_wood；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.24,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 300
   },
   "item_book_w2_reuse_advanced": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_w2_reuse_advanced；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_w2_reuse_advanced；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.18,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 480
   },
   "item_book_w2_reuse_basic": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_w2_reuse_basic；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_w2_reuse_basic；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.18,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
   "item_book_w2_reuse_middle": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_w2_reuse_middle；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_w2_reuse_middle；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.18,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 240
   },
   "item_book_weave_linen": {
-   "basis": "旧 world/meta/items.json：旧 id item_book_weave_linen；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_book_weave_linen；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.12,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_school",
    "readMinutes": 120
   },
@@ -881,38 +1249,70 @@
    "origin": "bld_hw_weaving"
   },
   "item_bs_dao_primer": {
-   "basis": "旧 world/meta/items.json：旧 id item_bs_dao_primer；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_bs_dao_primer；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.15,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_bs_reed_dao",
    "readMinutes": 120
   },
   "item_bs_mage_primer": {
-   "basis": "旧 world/meta/items.json：旧 id item_bs_mage_primer；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_bs_mage_primer；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.15,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_bs_school",
    "readMinutes": 120
   },
   "item_bs_martial_primer": {
-   "basis": "旧 world/meta/items.json：旧 id item_bs_martial_primer；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_bs_martial_primer；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.15,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_bs_measured_hall",
    "readMinutes": 120
   },
   "item_bs_monk_primer": {
-   "basis": "旧 world/meta/items.json：旧 id item_bs_monk_primer；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_bs_monk_primer；massKg 取旧 weight（单件，kg）；material 取 mat_paper（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_readable"
    ],
    "massKg": 0.15,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_paper",
+     "share": 1
+    }
+   ],
    "origin": "bld_bs_still_temple",
    "readMinutes": 120
   },
@@ -923,9 +1323,17 @@
    "origin": "bld_hw_forge"
   },
   "item_butter": {
-   "basis": "旧 world/meta/items.json：旧 id item_butter；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_butter；massKg 取旧 weight（单件，kg）；material 取 mat_butter（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_granule（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_granule",
    "classes": [],
    "massKg": 0.1,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_butter",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_qingdeng"
   },
   "item_button_shank_tool": {
@@ -1502,9 +1910,17 @@
    "origin": "bld_hw_forge"
   },
   "item_fowl_egg": {
-   "basis": "旧 world/meta/items.json：旧 id item_fowl_egg；massKg 取旧 weight（单件，kg）；旧 unit「份」已并入（weight 本就是该单位一份的质量）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_fowl_egg；massKg 取旧 weight（单件，kg）；旧 unit「份」已并入（weight 本就是该单位一份的质量）；material 取 mat_egg（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_granule（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_granule",
    "classes": [],
    "massKg": 0.05,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_egg",
+     "share": 1
+    }
+   ],
    "origin": "loc_hw"
   },
   "item_frame_saw": {
@@ -1563,9 +1979,17 @@
    "origin": "bld_hw_qingdeng"
   },
   "item_fruit_vinegar": {
-   "basis": "旧 world/meta/items.json：旧 id item_fruit_vinegar；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_fruit_vinegar；massKg 取旧 weight（单件，kg）；material 取 mat_vinegar（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_granule（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_granule",
    "classes": [],
    "massKg": 0.05,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_vinegar",
+     "share": 1
+    }
+   ],
    "origin": "loc_hw_orchard"
   },
   "item_fuller": {
@@ -1611,9 +2035,17 @@
    "wearPerUse": 0.0045
   },
   "item_goat_milk": {
-   "basis": "旧 world/meta/items.json：旧 id item_goat_milk；massKg 取旧 weight（单件，kg）；旧 unit「份」已并入（weight 本就是该单位一份的质量）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_goat_milk；massKg 取旧 weight（单件，kg）；旧 unit「份」已并入（weight 本就是该单位一份的质量）；material 取 mat_goat_milk（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_granule（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_granule",
    "classes": [],
    "massKg": 0.3,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_goat_milk",
+     "share": 1
+    }
+   ],
    "origin": "loc_hw"
   },
   "item_goat_skin": {
@@ -1629,13 +2061,21 @@
    "origin": "bld_hw_weaving"
   },
   "item_grain_sack": {
-   "basis": "旧 world/meta/items.json：旧 id item_grain_sack；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 90（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_grain_sack；massKg 取旧 weight（单件，kg）；wearPerUse 取 mat_linen_cloth 耐磨 14 ÷ 旧 durability 90（旧 durability 是可用次数；卷三乙 D-1：可用次数 = 耐磨 ÷ wearPerUse；设定数待调，没有真实使用年限出处）；material 取 mat_linen_cloth（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_sheet（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_sheet",
    "classes": [
     "comp_container"
    ],
    "massKg": 0.32,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_linen_cloth",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_weaving",
-   "wearPerUse": 0.0111
+   "wearPerUse": 0.1556
   },
   "item_grooving_wheel": {
    "basis": "旧 world/meta/items.json：旧 id item_grooving_wheel；massKg 取旧 weight（单件，kg）；wearPerUse 取 1 ÷ 旧 durability 120（旧 durability 是可用次数）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
@@ -1787,9 +2227,17 @@
    "wearPerUse": 0.0045
   },
   "item_honey": {
-   "basis": "旧 world/meta/items.json：旧 id item_honey；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_honey；massKg 取旧 weight（单件，kg）；material 取 mat_honey（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_granule（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_granule",
    "classes": [],
    "massKg": 0.1,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_honey",
+     "share": 1
+    }
+   ],
    "origin": "loc_hw_apiary"
   },
   "item_honey_curd_spread": {
@@ -2438,15 +2886,31 @@
    "origin": "bld_hw_qingdeng"
   },
   "item_oat_flour": {
-   "basis": "旧 world/meta/items.json：旧 id item_oat_flour；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_oat_flour；massKg 取旧 weight（单件，kg）；material 取 mat_oat（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_powder（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_powder",
    "classes": [],
    "massKg": 0.4,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_oat",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_mill"
   },
   "item_oats": {
-   "basis": "旧 world/meta/items.json：旧 id item_oats；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_oats；massKg 取旧 weight（单件，kg）；material 取 mat_oat（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_granule（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_granule",
    "classes": [],
    "massKg": 0.5,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_oat",
+     "share": 1
+    }
+   ],
    "origin": "loc_hw_fields"
   },
   "item_ochre_paint": {
@@ -2561,9 +3025,17 @@
    "origin": "bld_hw_qingdeng"
   },
   "item_pearl_barley": {
-   "basis": "旧 world/meta/items.json：旧 id item_pearl_barley；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_pearl_barley；massKg 取旧 weight（单件，kg）；material 取 mat_barley（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_granule（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_granule",
    "classes": [],
    "massKg": 0.5,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_barley",
+     "share": 1
+    }
+   ],
    "origin": "loc_bs"
   },
   "item_peg_drying_rack": {
@@ -2573,9 +3045,17 @@
    "origin": "bld_hw_mill"
   },
   "item_pheasant_egg": {
-   "basis": "旧 world/meta/items.json：旧 id item_pheasant_egg；massKg 取旧 weight（单件，kg）；旧 unit「份」已并入（weight 本就是该单位一份的质量）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_pheasant_egg；massKg 取旧 weight（单件，kg）；旧 unit「份」已并入（weight 本就是该单位一份的质量）；material 取 mat_egg（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_granule（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_granule",
    "classes": [],
    "massKg": 0.05,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_egg",
+     "share": 1
+    }
+   ],
    "origin": "loc_hw"
   },
   "item_pine_board": {
@@ -2718,9 +3198,17 @@
    "origin": "bld_hw_school"
   },
   "item_rapeseed_oil": {
-   "basis": "旧 world/meta/items.json：旧 id item_rapeseed_oil；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_rapeseed_oil；massKg 取旧 weight（单件，kg）；material 取 mat_rapeseed_oil（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_granule（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_granule",
    "classes": [],
    "massKg": 0.1,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_rapeseed_oil",
+     "share": 1
+    }
+   ],
    "origin": "loc_bs"
   },
   "item_ration": {
@@ -2754,9 +3242,17 @@
    "origin": "loc_hw"
   },
   "item_raw_meat": {
-   "basis": "旧 world/meta/items.json：旧 id item_raw_meat；massKg 取旧 weight（单件，kg）；旧 unit「份」已并入（weight 本就是该单位一份的质量）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_raw_meat；massKg 取旧 weight（单件，kg）；旧 unit「份」已并入（weight 本就是该单位一份的质量）；material 取 mat_flesh（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_granule（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_granule",
    "classes": [],
    "massKg": 0.4,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_flesh",
+     "share": 1
+    }
+   ],
    "origin": "loc_hw"
   },
   "item_raw_silk": {
@@ -2883,9 +3379,17 @@
    "wearPerUse": 0.0071
   },
   "item_rye_flour": {
-   "basis": "旧 world/meta/items.json：旧 id item_rye_flour；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_rye_flour；massKg 取旧 weight（单件，kg）；material 取 mat_rye（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_powder（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_powder",
    "classes": [],
    "massKg": 0.4,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_rye",
+     "share": 1
+    }
+   ],
    "origin": "bld_hw_mill"
   },
   "item_s2_cinnabar": {
@@ -3582,15 +4086,31 @@
    "origin": "bld_hw_mill"
   },
   "item_wheat_grain": {
-   "basis": "旧 world/meta/items.json：旧 id item_wheat_grain；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_wheat_grain；massKg 取旧 weight（单件，kg）；material 取 mat_wheat（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_granule（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_granule",
    "classes": [],
    "massKg": 0.5,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_wheat",
+     "share": 1
+    }
+   ],
    "origin": "loc_bs"
   },
   "item_wheat_seed": {
-   "basis": "旧 world/meta/items.json：旧 id item_wheat_seed；massKg 取旧 weight（单件，kg）；旧 unit「斤」已并入（weight 本就是该单位一份的质量）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "basis": "旧 world/meta/items.json：旧 id item_wheat_seed；massKg 取旧 weight（单件，kg）；旧 unit「斤」已并入（weight 本就是该单位一份的质量）；material 取 mat_wheat（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_granule（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
+   "bulkForm": "bform_granule",
    "classes": [],
    "massKg": 0.5,
+   "material": [
+    {
+     "group": "mgroup_body",
+     "materialRef": "mat_wheat",
+     "share": 1
+    }
+   ],
    "origin": "loc_bs"
   },
   "item_whittling_knife": {

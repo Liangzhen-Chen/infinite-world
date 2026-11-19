@@ -3,7 +3,7 @@
 // §4.3.3 C-1、C-8、§4.2.3 I-5；卷六《经济》§2.1 :112–:122 资源种类表、§4.22.1 :1238–:1247 来源去处、§4.21 规则 9（旧价只作标定参考）；
 // docs/迁移体检/块6.md 第四节 6-22 段（旧数据有的值照转，没有的列登记未建，不编数字）。
 // 数量与期望一律从旧数据（world/meta/items.json、item-size-classes.json）当场算出；用途标签到能力代号的对照取卷三乙 :2074 起的表（字面量）。
-// 类别规则表的条件，在 tests/kernel/item-world.mjs 的临时世界里加测试材料后逐条核（真实世界的物品行没有 material，规则表读不到材料量，见回报）。
+// 类别规则表的条件，在 tests/kernel/item-world.mjs 的临时世界里加测试材料后逐条核（真实世界的物品行写了 material 的部分见 item-world-material.test.mjs）。
 // 只跑不推进世界的小检查（本机 F 盘）。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -15,7 +15,7 @@ import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
 import { useReportSink } from '../../server-plugin/kernel/report.mjs';
 import { itemView } from '../../server-plugin/kernel/item.mjs';
 import { spawnSync } from 'node:child_process';
-import { convertItems } from '../../tools/convert-items.mjs';
+import { convertItems, materialContext } from '../../tools/convert-items.mjs';
 import { candidates } from '../../tools/material-candidates.mjs';
 import { baseFixture, loadItemWorld, engineOf, itemRow, share, ROOT } from './item-world.mjs';
 
@@ -26,6 +26,7 @@ const OLD = readJson('world/meta/items.json');
 const OLD_USE = readJson('world/meta/item-use-tags.json');
 const OLD_SIZES = readJson('world/meta/item-size-classes.json');
 const W = loadWorld(ROOT);
+assert.equal(W.ok, true, W.text); // 世界没加载成功就先把错误文字抛出来，免得后面读 W.tables 报无关的 TypeError
 const ITEM = W.tables.get('item').doc;
 const ROWS = ITEM.rows;
 const VOCAB = readJson('world/ontology/dimensions/_vocab.json').families;
@@ -118,15 +119,18 @@ test('容器与可读物：capacityMl 毫升折升照转；liquid_container 标�
   for (const k of ['holdsLiquid', 'maxLoadKg', 'sealed', 'volumeCapacity', 'material']) assert.ok(UNBUILT.columns.some((c) => c.table === 'item' && c.dimension === k), k);
 });
 
-test('wearPerUse（李白 21:0x ④）：旧 durability 是可用次数（每次用掉 1），工具、武器、衣物、容器的 wearPerUse = 1 ÷ 旧 durability（四位）；其余物品不写', () => {
+test('wearPerUse（李白 21:0x ④、22:0x）：旧 durability 是可用次数；工具、武器、衣物、容器才写：材料耐磨未知（行上没有 material）时占位 1 ÷ 旧 durability，写了 material 且材料有耐磨 w 时 w ÷ 旧 durability（卷三乙 D-1：可用次数 = 耐磨 ÷ wearPerUse）；四位；其余物品不写', () => {
+  const MATS = readJson('world/ontology/dimensions/material.json').rows;
   for (const it of OLD) {
     const durable = ROWS[it.id].classes.some((c) => ['comp_tool', 'comp_weapon', 'comp_wearable', 'comp_container'].includes(c));
-    assert.equal(ROWS[it.id].wearPerUse, durable ? Number((1 / it.durability).toFixed(4)) : undefined, it.id);
+    const wear = ROWS[it.id].material === undefined ? undefined : MATS[ROWS[it.id].material[0].materialRef].wearResistance;
+    const expected = !durable ? undefined : Number(((typeof wear === 'number' ? wear : 1) / it.durability).toFixed(4));
+    assert.equal(ROWS[it.id].wearPerUse, expected, it.id);
     if (durable) assert.ok(ROWS[it.id].wearPerUse > 0 && ROWS[it.id].wearPerUse <= 1, it.id);
   }
 });
 
-test('material：旧数据没有材料字段，行上不写；凡写了的行份额和为 1（I-5）；未写的列登未建、不借别的值顶', () => {
+test('material：旧数据没有材料字段，只写核定过的候选；凡写了的行份额和为 1（I-5）；未写的列登未建、不借别的值顶', () => {
   for (const [id, row] of Object.entries(ROWS)) {
     if (row.material === undefined) continue;
     assert.equal(Number(row.material.reduce((s, m) => s + m.share, 0).toFixed(4)), 1, id);
@@ -139,7 +143,7 @@ test('origin 照转旧 origin（引用地点表、闭合由加载校验核）；
 });
 
 test('重跑转换得到入库的行（可重跑、--check 只比对）；旧 cut 标签物品逐件列清单交人裁定锯、凿（旧数据无结构化标注，转换不读名称文字）', () => {
-  const out = convertItems(OLD, OLD_USE);
+  const out = convertItems(OLD, OLD_USE, materialContext(OLD));
   assert.deepEqual(out.rows, ROWS);
   assert.equal(out.report.cutNames.length, OLD.filter((it) => tagsOf(it).includes('cut')).length);
 });
@@ -157,7 +161,7 @@ test('rules.items 首批值：sizeClasses 由旧 item-size-classes.json 折成 m
   for (const e of Object.values(VOCAB.category.entries)) assert.equal(typeof e.stockSlot, 'boolean');
 });
 
-test('材料候选（李白 21:0x ①(a)）：候选只落在材料表已有行里；候选与对不上合计 = 旧物品数；清单文件与脚本重跑一致；item 行本阶段不写 material', () => {
+test('材料候选（李白 21:0x ①(a)）：候选只落在材料表已有行里；候选与对不上合计 = 旧物品数；清单文件与脚本重跑一致（写入见 item-world-material.test.mjs）', () => {
   const mats = new Set(Object.keys(readJson('world/ontology/dimensions/material.json').rows));
   const out = candidates(OLD, [...mats]);
   assert.equal(out.length, OLD.length);
@@ -167,7 +171,6 @@ test('材料候选（李白 21:0x ①(a)）：候选只落在材料表已有行�
   }
   assert.ok(out.some((r) => r.status === '候选') && out.some((r) => r.status === '无'));
   assert.equal(spawnSync(process.execPath, [join(ROOT, 'tools/material-candidates.mjs'), '--check']).status, 0);
-  assert.ok(Object.values(ROWS).every((r) => r.material === undefined));
 });
 
 // ---------- 规则表条件在临时世界里逐条核（真实规则值 + 测试材料行） ----------
