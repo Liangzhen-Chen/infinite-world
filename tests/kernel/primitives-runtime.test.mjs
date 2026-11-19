@@ -10,25 +10,33 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 import { installVocab } from '../../server-plugin/kernel/vocab.mjs';
-import { runTransaction } from '../../server-plugin/kernel/transaction.mjs';
+import { runTransaction, currentTransaction } from '../../server-plugin/kernel/transaction.mjs';
 import { openAccount, balance } from '../../server-plugin/kernel/ledger.mjs';
 import { useReportSink } from '../../server-plugin/kernel/report.mjs';
 import { execute, primitiveContract, sortPrimitives, checkPrimitiveCatalog } from '../../server-plugin/primitives-runtime.mjs';
+import { installEventLog, resetEventLog } from '../../server-plugin/kernel/events.mjs';
+import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
+import { createDigestCap } from '../../server-plugin/textcore/digest.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const W = loadWorld(ROOT);
 assert.ok(W.ok, W.text);
+// 事件 id 经 §1.10 派生函数（sha256）取，摘要能力照装配时注入（卷二 §2.9）。
+installDigestCap(createDigestCap());
 
 // 拒收会经 report 出口打日志；测试里换成空出口，断言只看返回值与状态。
 useReportSink(() => {});
 
 // 登记场景的持有人（块 3 起同法：测试 id 只进本进程的注册表，不进 world/）。
+// cause 是规则/指令代号（卷二十四表 A :139）；块 5 执行器不写事务事件、也不拿 cause 顶 verb（5-2 只核必须改 2）。
+const CAUSE = 'act_trade_test';
+const vocab = W.vocab;
 installVocab({
-  vocab: W.vocab,
+  vocab,
   idIndex: new Map([...W.idIndex, ['npc_a', 'person'], ['org_b', 'org'], ['item_q', 'item']]),
   tables: W.tables,
 });
-const ENGINE = { vocab: W.vocab, rules: W.rules };
+const ENGINE = { vocab, rules: W.rules, units: W.env.units, template: { seed: 'test_world_seed' } };
 const DOC = JSON.parse(readFileSync(join(ROOT, 'world/ontology/primitives.json'), 'utf8'));
 
 // 账本三元键（卷六 §4.1 规则 1）：holder.purpose.kind.key，原语 transfer 的 from/to 即账户 id。
@@ -40,9 +48,11 @@ const CTX = { node: 'test_setup', file: 'tests/kernel/primitives-runtime.test.mj
 const codeIs = (code) => (e) => e.code === code;
 const clone = (v) => JSON.parse(JSON.stringify(v));
 
-// 造前提：npc_a 名下一个零余额账户，再直接置余额（造前提用，断言不看这个数当基线）。
+// 造前提：npc_a 名下一个零余额账户，再直接置余额（造前提用，断言不看这个数当基线）；
+// 世界时钟与事件日志簿也在这里就位（mount 次序同运行时；块 5 执行器不写事件）。
 function funded(qty) {
-  const state = {};
+  const state = { clock: { minute: 0, seq: 0 } };
+  installEventLog({ entries: [] });
   assert.deepEqual(runTransaction(state, CTX, (s) => { openAccount(ENGINE, s, 'npc_a', BLD, UNMAT); }), { ok: true });
   state.accounts.npc_a.purpose_unmaterialized.res_building_share.bld_x = qty;
   return state;
@@ -108,14 +118,15 @@ test('契约不合即 E-ACT-PRIMITIVE，整批不执行、状态不变', () => {
   assert.deepEqual(state, snap);
 });
 
-test('特殊值不留绕过口子：qty 0/负数由账本拒、空串与 null 由契约拒、空 cause 拒', () => {
+test('特殊值不留绕过口子：qty 0/负数整批拒、空串与 null 由契约拒、空 cause 拒', () => {
   const state = funded(10);
   const snap = clone(state);
   // execute 在调用方事务里执行（R9-2.3）：这里用 runTransaction 充当调用方。
-  const run = (prims, cause = 'act_t') => runTransaction(state, CTX, (s) => execute(ENGINE, s, prims, cause));
-  // 契约层：0 与负数都是 integer，放行到适配器；账本按正整数拒（卷六 §4.1 规则 2、kernel/ledger.mjs 的 isPosInt）。
-  assert.deepEqual(run([{ op: 'transfer', from: FROM, to: TO, qty: 0 }]), { ok: false, code: 'E-DIM-DOMAIN-RANGE' });
-  assert.deepEqual(run([{ op: 'transfer', from: FROM, to: TO, qty: -1 }]), { ok: false, code: 'E-DIM-DOMAIN-RANGE' });
+  const run = (prims, cause = CAUSE) => runTransaction(state, CTX, (s) => execute(ENGINE, s, prims, cause));
+  // 0 与负数都是 integer，契约放行；块 5 没有 emit 原语/事件写者，整笔在写任何状态之前拒收，
+  // 账本按正整数拒（卷六 §4.1 规则 2、kernel/ledger.mjs 的 isPosInt）由账本自己的测试守。
+  assert.deepEqual(run([{ op: 'transfer', from: FROM, to: TO, qty: 0 }]), { ok: false, code: 'E-ACT-WRITER-NOT-READY' });
+  assert.deepEqual(run([{ op: 'transfer', from: FROM, to: TO, qty: -1 }]), { ok: false, code: 'E-ACT-WRITER-NOT-READY' });
   // 空串与 null 不是 id；空 cause 不是代号。
   assert.throws(() => execute(ENGINE, state, [{ op: 'transfer', from: '', to: TO, qty: 1 }], 'act_t'), codeIs('E-ACT-PRIMITIVE'));
   assert.throws(() => execute(ENGINE, state, [{ op: 'transfer', from: FROM, to: null, qty: 1 }], 'act_t'), codeIs('E-ACT-PRIMITIVE'));
@@ -215,19 +226,29 @@ test('写者未上线的原语整笔拒收 E-ACT-WRITER-NOT-READY，状态不变
   }
 });
 
-// ---------- 已建适配器：transfer（kernel/ledger.mjs#transfer） ----------
+// ---------- 块 5 执行器不写事务事件：批里没有 emit 原语即拿不到 verb，整笔拒收 ----------
 
-test('transfer 适配器：调用方事务里提交一笔账本转移，余额按三元键手算变化', () => {
+test('块 5 未接事件写者：transfer 批拿不到本笔事件 verb，整批拒收、账本不动', () => {
   const state = funded(10);
-  const r = runTransaction(state, CTX, (s) => execute(ENGINE, s, [{ op: 'transfer', from: FROM, to: TO, qty: 3 }], 'act_test_pay'));
-  assert.deepEqual(r, { ok: true });
-  assert.equal(balance(ENGINE, state, 'npc_a', BLD, UNMAT), 10 - 3);
-  assert.equal(balance(ENGINE, state, 'org_b', BLD, UNMAT), 0 + 3);
+  const r = runTransaction(state, CTX, (s) => execute(ENGINE, s, [{ op: 'transfer', from: FROM, to: TO, qty: 3 }], CAUSE));
+  assert.deepEqual(r, { ok: false, code: 'E-ACT-WRITER-NOT-READY' });
+  assert.equal(balance(ENGINE, state, 'npc_a', BLD, UNMAT), 10);
+  assert.equal(balance(ENGINE, state, 'org_b', BLD, UNMAT), 0);
 });
 
-test('任一适配器拒绝即由调用方事务整批回滚：transfer 已写的余额一并撤销', () => {
+test('transfer from/to 资源不同属契约不合：在整批校验期即拒 E-ACT-PRIMITIVE，早于任何写入', () => {
   const state = funded(10);
   const snap = clone(state);
+  // 同一种类不同键也是不同资源（卷六 §4.1 规则 1：资源种类与资源键一起确定三元键）。
+  const to = 'org_b.purpose_unmaterialized.res_building_share.bld_y';
+  assert.throws(() => execute(ENGINE, state, [{ op: 'transfer', from: FROM, to, qty: 1 }], CAUSE), codeIs('E-ACT-PRIMITIVE'));
+  assert.deepEqual(state, snap);
+});
+
+test('整批先在写入前核适配器：混批 [transfer, emit] 的 transfer 一笔不落', () => {
+  const state = funded(10);
+  const snap = clone(state);
+  // 5-1 终核非阻塞建议 1：emit 适配器未建，整笔在写任何状态之前拒收。
   const r = runTransaction(state, CTX, (s) => execute(ENGINE, s, [
     { op: 'transfer', from: FROM, to: TO, qty: 3 },
     { op: 'emit', verb: 'verb_x', visibility: 'public' },
@@ -252,12 +273,15 @@ test('固定序：按原语在目录中的次序，同原语按列表下标', ()
 
 // ---------- 一次 execute 一次事务由调用方保证（R9-2.3、R9-3.1 commit 段） ----------
 
-test('execute 不自开事务：事务外调用被账本拒写，事务内随调用方提交或回滚', () => {
+test('execute 不自开事务：事务内外都整笔拒收、状态不动，调用前后都没有留下当前事务', () => {
   const state = funded(10);
-  // 事务外直接调用：执行器不自开事务，首个写入（账本 post）按卷二 §2.6 拒写，状态不变。
-  assert.throws(() => execute(ENGINE, state, [{ op: 'transfer', from: FROM, to: TO, qty: 1 }], 'act_t'), codeIs('E-VIEW-UNDECLARED-WRITE'));
-  assert.equal(balance(ENGINE, state, 'npc_a', BLD, UNMAT), 10);
-  // 调用方事务内：写入随调用方提交。
-  assert.deepEqual(runTransaction(state, CTX, (s) => { execute(ENGINE, s, [{ op: 'transfer', from: FROM, to: TO, qty: 1 }], 'act_t'); }), { ok: true });
-  assert.equal(balance(ENGINE, state, 'npc_a', BLD, UNMAT), 9);
+  const snap = clone(state);
+  // 事务外直接调用：块 5 没有事件写者，批前即拒；执行器没有开事务（当前事务仍为空），状态不变。
+  assert.throws(() => execute(ENGINE, state, [{ op: 'transfer', from: FROM, to: TO, qty: 1 }], CAUSE), codeIs('E-ACT-WRITER-NOT-READY'));
+  assert.equal(currentTransaction(), null);
+  assert.deepEqual(state, snap);
+  // 调用方事务内同样整笔拒收（E-ACT-WRITER-NOT-READY 带登记码，事务整笔回滚）。
+  assert.deepEqual(runTransaction(state, CTX, (s) => execute(ENGINE, s, [{ op: 'transfer', from: FROM, to: TO, qty: 1 }], CAUSE)), { ok: false, code: 'E-ACT-WRITER-NOT-READY' });
+  assert.equal(currentTransaction(), null);
+  assert.deepEqual(state, snap);
 });

@@ -11,7 +11,10 @@
 // - 一次 execute 一次事务由调用方保证：execute 只由 resolve() 提交段与推进钩子调度方调用，二者都在调用方已开的内核事务里
 //   （kernel/transaction.mjs#runTransaction 是 kernel 组内用、不在 kernelApi；规则层只能经 kernelApi 调 kernel，卷二 §2.7 :790）。
 //   本文件不自开事务，写入直接落在调用方事务上；任一适配器拒绝即抛出，由调用方事务整笔回滚（卷九 R9-2.3 :658、R9-3.1 commit 段 :707）。
-// - “成功后恰一条原语事件”是 R9-2.3 的事件写入面，归 5-2；本卡无事件写入口，该半边记“部分”。
+// - 事务事件本卡不写：事件 `verb`／`visibility` 须来自本批 `emit` 原语（表 A :134／:142；卷九 §4.2.1 :643），
+//   `actor`／`targets`／`payload` 与 id 主体、位次须来自提交段或钩子上下文（卷九 §2.9 :437／:439），块 5 都拿不到，
+//   按李白 11-18 22:10 总原则／五.2 不造桩、不放空：批里没有 `emit` 原语即整笔拒收 E-ACT-WRITER-NOT-READY
+//   （"恰一条事件"记“部分”，挂块 6 建 emit 适配器／提交段接线的卡）。
 // - 效果族 effects() 的调用面归 5-5，本卡不写。
 
 import { transfer } from './kernel/ledger.mjs';
@@ -20,6 +23,10 @@ import { transfer } from './kernel/ledger.mjs';
 // 原语 transfer 的 from、to 是账户 id（卷九 §4.2.1 transfer 行只给 from、to、qty；账户包含资源，
 // 见 §4.2.5 数据实例“transfer（钱，买方到卖方）”），适配器按此段序拆出 ledger.transfer 的参数。
 const ACCOUNT_PARTS = Object.freeze(['holder', 'purpose', 'kind', 'key']);
+// 事件写载体原语（卷九 §4.2.1 :643）：事务事件的 verb、visibility 由它给；账本 reason 也取它给的 verb（卷六 §3.2 :286）。
+// 取法用查表（同 BY_OP、ADAPTERS 的写法），不写码值比较（卷二 S13 ④）。
+const EVENT_OP = 'emit';
+const EVENT_OPS = Object.freeze({ [EVENT_OP]: true });
 
 // 原语目录（封闭，设计 20 个、15 族；卷九 :625、R9-2.1 :656）。每行一份参数契约：required 为必填字段与类型；
 // oneOf 为若干“恰取一组”的备选字段组（组内每个备选是一组字段，整批恰命中一组）；unless 为条件必填（字段不等于 notEquals 时另须字段）。
@@ -172,6 +179,18 @@ export function sortPrimitives(primitives) {
   return ranked.map((x) => x.p);
 }
 
+// 每个原语在契约之上的整类约束（R9-2.3 第一句“逐个按契约校验”的一部分，不合即整批不执行）。
+// transfer 一笔只搬一种资源（卷六 §4.1 规则 1、2）：from、to 是账户 id，资源不同即契约不合，前移到校验期。
+const CONTRACT_EXTRAS = Object.freeze({
+  transfer(p, maxLength) {
+    const from = splitAccount(p.from, maxLength);
+    const to = splitAccount(p.to, maxLength);
+    if (from.resource.kind !== to.resource.kind || from.resource.key !== to.resource.key) {
+      throw deny(CODE.contract, 'transfer from/to are accounts of different resources');
+    }
+  },
+});
+
 // 契约校验（R9-2.3 第一句：逐个按契约校验，不合即 E-ACT-PRIMITIVE，整批不执行）。只查契约登记的字段；未登记的字段当可选字段放行。
 function checkContract(p, maxLength) {
   if (!isPlainObject(p) || typeof p.op !== 'string') throw deny(CODE.contract, 'primitive is {op, ...fields}');
@@ -192,6 +211,8 @@ function checkContract(p, maxLength) {
       if (!Object.hasOwn(p, field) || !fits(spec, p[field], maxLength)) throw deny(CODE.contract, `${row.op}.${field} required unless ${rule.field} is ${rule.notEquals}`);
     }
   }
+  const extra = CONTRACT_EXTRAS[row.op];
+  if (extra) extra(p, maxLength);
   return row;
 }
 
@@ -206,19 +227,17 @@ function splitAccount(id, maxLength) {
 // 适配器按原语分，不按领域分（R9-2.4）：每个原语一个函数，领域差别只来自参数与目标写者。
 // 本卡只建目标写者现已存在的 transfer（kernel/ledger.mjs#transfer）。其余原语不在此表，由 execute 整笔拒收 E-ACT-WRITER-NOT-READY。
 const ADAPTERS = Object.freeze({
-  transfer(engine, state, p, cause, maxLength) {
+  transfer(engine, state, p, reason, maxLength) {
     const from = splitAccount(p.from, maxLength);
     const to = splitAccount(p.to, maxLength);
-    // 一笔 transfer 只搬一种资源（卷六 §4.1 规则 1、2）；from、to 账户的资源不同即契约不合，整批不执行。
-    if (from.resource.kind !== to.resource.kind || from.resource.key !== to.resource.key) {
-      throw deny(CODE.contract, 'transfer from/to are accounts of different resources');
-    }
+    // from/to 资源相同由 checkContract 的 CONTRACT_EXTRAS 先核（R9-2.3 整批先校验）。
+    // reason 取本笔真实事件动词（本批 emit 原语的 verb），不拿规则/指令代号 cause 充数（卷六 §3.2 :286、5-2 只核必须改 2 附）。
     transfer(engine, state, {
       from: { holder: from.holder, purpose: from.purpose },
       to: { holder: to.holder, purpose: to.purpose },
       resource: from.resource,
       qty: p.qty,
-      reason: cause,
+      reason,
     });
   },
 });
@@ -228,8 +247,11 @@ const ADAPTERS = Object.freeze({
  * 只由 resolve() 提交段与推进钩子调度方调用，二者都在调用方已开的内核事务里（runTransaction 是 kernel 组内用、不在 kernelApi）；
  * 本函数不自开事务，写入直接落在调用方事务上：任一适配器拒绝（含写者未上线的 E-ACT-WRITER-NOT-READY）即抛出，由调用方事务整笔回滚。
  * 次序照 R9-2.3：先整批按契约校验（不合即抛 E-ACT-PRIMITIVE，整批不执行），再按目录固定序、同原语按列表下标逐个交给适配器。
- * 成功后无事件写入口（归 5-2），本卡只返回 {ok:true}。
- * @param {{vocab: object, rules: object}} engine
+ * 事务事件的 verb（`emit` 原语必填，表 A :134／:142）与账本 reason（卷六 §3.2 :286）都取本批 `emit` 原语的 verb；
+ * 批里没有 `emit` 原语即拿不到真实动词，按李白 11-18 22:10 总原则／五.2 整笔拒收 E-ACT-WRITER-NOT-READY，不拿 cause／null／{} 顶替。
+ * 事件本身本卡不写（actor／targets／payload 与 id 主体、位次须来自提交段或钩子上下文，卷九 §2.9 :437／:439）：
+ * “成功后恰一条事件”（R9-2.3 :658、R24-1.1 :395）记“部分”，挂块 6 建 emit 适配器／提交段接线的卡。
+ * @param {{vocab: object, rules: object, template?: {seed?: string}}} engine
  * @param {object} state
  * @param {readonly object[]} primitives 原语列表，每项 {op, ...契约字段}
  * @param {string} cause 规则或指令代号（卷二十四表 A 的 cause）
@@ -241,12 +263,14 @@ export function execute(engine, state, primitives, cause) {
   const maxLength = grammarMaxLength(engine);
   for (const p of primitives) checkContract(p, maxLength);
   if (typeof cause !== 'string' || cause.length === 0) throw deny(CODE.contract, 'cause is a non-empty code');
+  // 本笔真实事件动词只来自本批 emit 原语（表 A :134／:142 "卷九 emit 原语必填"；卷九 §4.2.5 :676 的成交一笔即 transfer、transfer、emit）；
+  // 没有它就没有 verb，账本 reason 与事务事件都无从取真值，整笔拒收（E-ACT-WRITER-NOT-READY）。
+  const eventPrim = primitives.find((p) => Object.hasOwn(EVENT_OPS, p.op));
+  if (!eventPrim) throw deny(CODE.writerNotReady, `no ${EVENT_OP} primitive: the transaction event verb and the ledger reason come from it`);
   const ordered = sortPrimitives(primitives);
-  for (const p of ordered) {
-    const adapter = ADAPTERS[p.op];
-    if (!adapter) throw deny(CODE.writerNotReady, `no adapter for ${p.op}`);
-    adapter(engine, state, p, cause, maxLength);
-  }
+  // 写入前先对整批核适配器存在性（5-1 终核非阻塞建议 1）：整批拒收不依赖调用方事务回滚。
+  for (const p of ordered) if (!ADAPTERS[p.op]) throw deny(CODE.writerNotReady, `no adapter for ${p.op}`);
+  for (const p of ordered) ADAPTERS[p.op](engine, state, p, eventPrim.verb, maxLength);
   return { ok: true };
 }
 

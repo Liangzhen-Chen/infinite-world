@@ -534,6 +534,94 @@
     "tr_restricted": {}
    },
    "prefix": "tr_"
+  },
+  "verb": {
+   "closed": false,
+   "entries": {
+    "verb_domicile_changed": {
+     "calendarBound": false,
+     "headSlot": null,
+     "kindFrom": null,
+     "kindOnly": false,
+     "parent": null,
+     "payloadShape": {
+      "person": "EntityId",
+      "place": "EntityId",
+      "since": "integer minute",
+      "until": "integer minute nullable"
+     },
+     "perceivable": false,
+     "scandal": false,
+     "senses": [],
+     "sigBase": 0,
+     "tallies": [],
+     "visibilityAllowed": ["private", "public", "witnessed"],
+     "worthSlots": {"destroyed": [], "moved": [], "stake": []}
+    },
+    "verb_entity_revived": {
+     "calendarBound": false,
+     "headSlot": null,
+     "kindFrom": "cause",
+     "kindOnly": false,
+     "parent": null,
+     "payloadShape": {
+      "cause": "ref vocab verb",
+      "id": "EntityId"
+     },
+     "perceivable": false,
+     "scandal": false,
+     "senses": [],
+     "sigBase": 0,
+     "tallies": [],
+     "visibilityAllowed": ["private", "public", "witnessed"],
+     "worthSlots": {"destroyed": [], "moved": [], "stake": []}
+    },
+    "verb_entity_terminated": {
+     "calendarBound": false,
+     "headSlot": null,
+     "kindFrom": "cause",
+     "kindOnly": false,
+     "parent": null,
+     "payloadShape": {
+      "cause": "ref vocab verb",
+      "id": "EntityId",
+      "mode": "enum successor_mode",
+      "source": "ref refs[kind status, kind event_type] nullable",
+      "successorId": "EntityId nullable"
+     },
+     "perceivable": false,
+     "scandal": false,
+     "senses": [],
+     "sigBase": 0,
+     "tallies": [],
+     "visibilityAllowed": ["private", "public", "witnessed"],
+     "worthSlots": {"destroyed": ["id"], "moved": [], "stake": []}
+    },
+    "verb_holding_changed": {
+     "calendarBound": false,
+     "headSlot": null,
+     "kindFrom": null,
+     "kindOnly": false,
+     "parent": null,
+     "payloadShape": {
+      "at": "integer minute",
+      "change": "enum holding_change",
+      "edge": "EdgeId",
+      "holder": "EntityId",
+      "kind": "ref holding_kind",
+      "prevHolder": "EntityId nullable",
+      "subject": "EntityId"
+     },
+     "perceivable": false,
+     "scandal": false,
+     "senses": [],
+     "sigBase": 0,
+     "tallies": [],
+     "visibilityAllowed": ["private", "public", "witnessed"],
+     "worthSlots": {"destroyed": [], "moved": [], "stake": []}
+    }
+   },
+   "prefix": "verb_"
   }
  }
 }

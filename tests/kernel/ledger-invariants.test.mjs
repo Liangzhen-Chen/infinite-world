@@ -21,13 +21,16 @@ const PURSE = { spendable: true, locksFor: null, visibleToMarket: false, trackOu
 // A6-1.3 扩展：新加一个来源代号（限额通道）与一个去处代号（物理律通道），只加词表行与种类行，不改代码。
 const GUILD_SRC = { budgetMode: 'bm_capped', families: ['resfam_claim'], pairedWith: null, reportGroup: null };
 const GUILD_SINK = { budgetMode: 'bm_physical', families: ['resfam_claim'], pairedWith: null, reportGroup: null };
+// 测试用 verb 行（K3-43：reason 须是已登记 verb；只进本进程注册表，不进 world/）。
+const TEST_VERBS = ['verb_test', 'verb_test_burn', 'verb_test_mint', 'verb_test_move'];
 const vocab = {
   families: W.vocab.families,
   index: new Map([...W.vocab.index,
     ['purpose_test_shelf', { family: 'purpose', prefix: 'purpose_', entry: SHELF }],
     ['purpose_test_purse', { family: 'purpose', prefix: 'purpose_', entry: PURSE }],
     ['src_t_guild', { family: 'src', prefix: 'src_', entry: GUILD_SRC }],
-    ['sink_t_guild', { family: 'sink', prefix: 'sink_', entry: GUILD_SINK }]]),
+    ['sink_t_guild', { family: 'sink', prefix: 'sink_', entry: GUILD_SINK }],
+    ...TEST_VERBS.map((v) => [v, { family: 'verb', prefix: 'verb_', entry: {} }])]),
 };
 installVocab({ vocab, idIndex: new Map([...W.idIndex, ['npc_a', 'person'], ['org_b', 'org'], ['npc_c', 'person']]), tables: W.tables });
 const row = (family, transferable, sources, sinks) => ({ family, unit: 'bps', transferable, counterpartRX: null, sources, sinks, issuerBacked: false });

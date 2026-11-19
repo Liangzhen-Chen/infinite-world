@@ -45,9 +45,9 @@ export const SCHEMA = Object.freeze({
   // 规则表代号（world/rules/registry.json；文件 world/rules/tables/economy/ resources.json、ledger.json，卷六 §2.1 :108、§2.5 :224）。
   resourcesTable: 'economyResources',
   ledgerTable: 'economyLedger',
-  // 词表族名（卷六 §2.2 :128–132；resource 族归卷二 §1.9）。
+  // 词表族名（卷六 §2.2 :128–132；resource 族归卷二 §1.9；verb 族归卷二 §1.9、卷二十四 §2.1）。
   resource: 'resource', resfam: 'resfam', purpose: 'purpose', src: 'src', sink: 'sink', budgetMode: 'budget_mode',
-  indicator: 'indicator', ckind: 'ckind',
+  indicator: 'indicator', ckind: 'ckind', verb: 'verb',
   // budget_mode 封闭两项的含义（§2.2 :131）：限额通道只进 budget，物理律通道只进 alert（§2.5 :224）。
   capped: 'bm_capped', physical: 'bm_physical',
   // transferability：只有 tr_restricted 带对手条件（§2.1 :114–115）。
@@ -510,7 +510,7 @@ function parseFlowLeg(engine, leg, i) {
  * 物品类（resfam_goods，§2.1 :104 键是批次）入账腿不写 key、带 lot：{splitFrom: 本笔出账腿里同种类的批次键}（拆分，属性原样带出）或 {attrs}（新批次属性）；
  * 批次键由 post 发（lot_ + ledgerCounters.lotNext 按 handleRadix 进制，只增不复用），属性写 stockLots，数量只在账户余额（李白 11-18 04:10）。
  * 核对次序（任一不合即抛 KernelError，事务整笔回滚，规则层 catch 住也回滚）：
- * - reason 必填（E-DIM-STRUCT-FIELD）、代号形（E-DIM-ID-FORMAT）；是否已登记 verb 待块 5，回执 notRun 列 reason_verb（K3-43）。
+ * - reason 必填（E-DIM-STRUCT-FIELD）、代号形（E-DIM-ID-FORMAT），且是已登记 verb（E-EVT-VERB；K3-43，verb 族建好后转真检查）。
  * - 规则 3：来源去处代号是 src/sink 条目、在该种类行 sources/sinks 内（E-LEDGER-CODE-UNREGISTERED）。
  * - 规则 2：每个资源种类 L − S + K = 0；不平而本笔该种类没有任何来源去处腿即 E-LEDGER-CODE-UNREGISTERED（未带代号），带了仍不平即 E-LEDGER-UNBALANCED；
  *   拆分腿从某批次带出的量之和超过该批次本笔出账量，同为 E-LEDGER-UNBALANCED。任一腿后余额为负 E-LEDGER-NEGATIVE。
@@ -544,6 +544,9 @@ function postDraft(engine, state, draft, viaAllocation) {
     if (!fieldsWithin(draft, DRAFT_FIELDS)) throw structErr('post draft is {legs, reason, refs?}');
     if (!Object.hasOwn(draft, 'reason')) throw structErr('post reason is required (verb code, vol6 s3.2 :286)');
     if (typeof draft.reason !== 'string' || !CODE_RE.test(draft.reason)) throw new KernelError('E-DIM-ID-FORMAT', { entity: null }, 'post reason is not a code');
+    // reason 是已登记 verb（卷六 §3.2 :286；K3-43：块 5 前报 not_run，verb 族建好后转真检查）。
+    const reasonRec = engine && engine.vocab && engine.vocab.index instanceof Map ? engine.vocab.index.get(draft.reason) : undefined;
+    if (!reasonRec || reasonRec.family !== SCHEMA.verb) throw new KernelError('E-EVT-VERB', { entity: null }, `post reason ${JSON.stringify(draft.reason)} is not a registered verb`);
     if (draft.refs !== undefined && !isObj(draft.refs)) throw structErr('post refs is an object');
     if (!Array.isArray(draft.legs) || draft.legs.length === 0) throw structErr('post legs is a non-empty list');
 
@@ -693,7 +696,8 @@ function postDraft(engine, state, draft, viaAllocation) {
     }
 
     // 限额通道不再列 notRun budget：带 bm_capped 来源腿的笔只能经分配结算入口发出，日限额已在那一步入账前算定（卷六 §4.1 规则 6 :376）。
-    const notRun = ['reason_verb'];
+    // reason 是已登记 verb 已在入口处真核（K3-43），不再列 notRun。
+    const notRun = [];
     if (kinds.some((k) => resourceRow(engine, k, null).issuerBacked === true)) notRun.push('issuer_backed');
     return Object.freeze({ lots: Object.freeze(lots), notRun: Object.freeze(notRun.sort(cmp)) });
   } catch (e) {

@@ -14,8 +14,10 @@ import { appendLogEntry } from './save.mjs';
  * @typedef {{node: string, file: string, request?: number | string | null, tick?: number, stage?: number}} TxContext
  * node：当前节点名（推进钩子或提案处理函数，§2.6 第 3 条）；file：该节点所在文件（相对 server-plugin/，与 stateKeys.writers 同写法）；
  * request：本次请求编号；tick、stage：推进中的刻 t 与 tick_stage 位次（推进中被拒时进日志）。
- * @typedef {{state: any, node: string, file: string, request: number | string | null, tick?: number, stage?: number, undo: {segs: string[], existed: boolean, prev: any}[], written: string[][], denied?: unknown}} Tx
+ * @typedef {{book: {entries: any[]}, entry: any}} LogUndo 事务内追加事件日志的撤销项（本事务追加的那条条目对象本身）
+ * @typedef {{state: any, node: string, file: string, request: number | string | null, tick?: number, stage?: number, undo: {segs: string[], existed: boolean, prev: any}[], logUndo: LogUndo[], written: string[][], denied?: unknown}} Tx
  * denied：本事务内第一次被拒写入的错误（storage 的 writePath/writeSealed 拒写时记；有则整笔回滚，不论规则层是否 catch）。
+ * logUndo：事件日志簿在 state 之外（R27-4.1），内核在事务内追加的事件条也纳入本事务回滚范围（R24-1.1、R24-1.2；卷二 §2.6 :509／:512）。
  */
 
 /** @type {Tx | null} */
@@ -26,7 +28,22 @@ export function currentTransaction() {
   return current;
 }
 
-// 撤销本事务的全部写入：按记录的倒序恢复原值或删去新加的键。
+/**
+ * 事务内向事件日志簿追加一条后，登记这条的撤销项（kernel/events.mjs#emit 调；kernel 组内用，不在 kernelApi）：
+ * 存日志簿里那条条目对象本身，本事务回滚（或所在刻整刻作废）时按引用删去——事件条随事务提交才落、回滚即无
+ * （R24-1.1 :395 事件由写下它的那笔事务写、R24-1.2 :396 同一事务之内；卷二 §2.6 :509 整笔回滚、:512 只有请求条目在回滚范围之外）。
+ * 不按条数截尾：刻内穿插的请求条目在事务之外写好，按引用删才不误删别人的条目（R27-7.3 :668）。
+ * @param {{entries: any[]}} book 事件日志簿（kernel/save.mjs 的 LogBook）
+ * @param {any} entry 本事务刚追加进 book.entries 的那一条（追加后的对象本身）
+ */
+export function registerLogUndo(book, entry) {
+  if (!current) throw new KernelError('E-VIEW-UNDECLARED-WRITE', {}, 'log append outside a transaction');
+  if (!book || !Array.isArray(book.entries) || entry === null || typeof entry !== 'object') throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'log undo needs the appended entry object');
+  current.logUndo.push({ book, entry });
+}
+
+// 撤销本事务的全部写入：按记录的倒序恢复原值或删去新加的键；事件日志簿在 state 之外，
+// 按 logUndo 存着的条目引用逐条删去本事务追加的（只删自己的，不动别人的；日志只追加不改已写条目，R24-1.6）。
 function rollback(tx) {
   for (let i = tx.undo.length - 1; i >= 0; i--) {
     const { segs, existed, prev } = tx.undo[i];
@@ -37,14 +54,22 @@ function rollback(tx) {
     if (existed) cur[last] = prev; else delete cur[last];
   }
   tx.undo.length = 0;
+  for (let i = tx.logUndo.length - 1; i >= 0; i--) {
+    const { book, entry } = tx.logUndo[i];
+    if (!book || !Array.isArray(book.entries)) continue;
+    const at = book.entries.lastIndexOf(entry);
+    if (at >= 0) book.entries.splice(at, 1);
+  }
+  tx.logUndo.length = 0;
   invalidateMemo(tx.state); // 回滚改了 state，缓存作废（kernel/memo.mjs）
 }
 
 // ---------- 刻级回退能力（卷二十 §4.1.3 第 7 条"刻级回退点" :516：回退点由 kernel/scheduler.mjs 在每刻开始时持有，本文件只提供能力，不加 kernelApi 导出） ----------
-// 一刻内各项各是一笔事务；刻日志开着时，每笔提交成功的事务把自己的撤销项接到刻日志末尾。整刻作废时按倒序撤销全部已提交的写入，
-// state 回到这一刻开始处理前；正常收刻时丢弃刻日志。被拒请求的条目记在日志簿上、不在 state 里，不受影响（R27-7.3）。
+// 一刻内各项各是一笔事务；刻日志开着时，每笔提交成功的事务把自己的撤销项（state 写入与事件日志追加）接到刻日志末尾。
+// 整刻作废时按倒序撤销全部已提交的写入，state 与事件日志都回到这一刻开始处理前（卷二十 §4.1.3 第 7 条 :523／:525）；
+// 正常收刻时丢弃刻日志。被拒请求的条目记在日志簿上、不在这一范围里，不受影响（R27-7.3）。
 
-/** @type {null | {state: any, undo: Tx['undo']}} */
+/** @type {null | {state: any, undo: Tx['undo'], logUndo: LogUndo[]}} */
 let tickJournal = null;
 
 /**
@@ -54,7 +79,7 @@ let tickJournal = null;
  */
 export function openTickJournal(state) {
   if (tickJournal || current) throw new KernelError('E-VIEW-UNDECLARED-WRITE', {}, 'tick journal already open or a transaction is running');
-  tickJournal = { state, undo: [] };
+  tickJournal = { state, undo: [], logUndo: [] };
 }
 
 /** 收刻：这一刻全部提交保留，丢弃刻日志。 */
@@ -102,7 +127,7 @@ export function resetHoldWhileRecompute() {
 export function runTransaction(state, ctx, body) {
   if (current) throw new KernelError('E-VIEW-UNDECLARED-WRITE', {}, 'nested transaction');
   /** @type {Tx} */
-  const tx = { state, node: ctx.node, file: ctx.file, request: ctx.request === undefined ? null : ctx.request, tick: ctx.tick, stage: ctx.stage, undo: [], written: [] };
+  const tx = { state, node: ctx.node, file: ctx.file, request: ctx.request === undefined ? null : ctx.request, tick: ctx.tick, stage: ctx.stage, undo: [], logUndo: [], written: [] };
   current = tx;
   let failure = null;
   try {
@@ -115,7 +140,10 @@ export function runTransaction(state, ctx, body) {
   if (tx.denied !== undefined) failure = tx.denied;
   if (failure === null) {
     current = null;
-    if (tickJournal && tickJournal.state === state) for (const u of tx.undo) tickJournal.undo.push(u);
+    if (tickJournal && tickJournal.state === state) {
+      for (const u of tx.undo) tickJournal.undo.push(u);
+      for (const u of tx.logUndo) tickJournal.logUndo.push(u);
+    }
     return { ok: true };
   }
   rollback(tx);

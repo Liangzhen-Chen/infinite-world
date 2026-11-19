@@ -21,6 +21,8 @@
    "sources": {"src_birth": {}, "src_boundary": {}, "src_genesis": {}, "src_issue": {}, "src_regrow": {}, "src_transform": {}},
    "sinks": ["sink_boundary", "sink_consume", "sink_death", "sink_decay", "sink_depart", "sink_loss", "sink_redeem", "sink_seized", "sink_transform"],
    "entryCallerFiles": {}, "entryJudges": []},
+  "sys.social": {"tables": [], "entryCallerFiles": {}, "entryJudges": [],
+   "emits": ["verb_domicile_changed", "verb_holding_changed"]},
   "sys.time_env": {"tables": ["clock"], "writers": ["clock.minute", "clock.seq", "clock.dueNext", "due.*"], "entryCallerFiles": {}, "entryJudges": []}
  },
  "textPaths": ["displayNames.*.text", "playerNotes.*.text", "narration.*"],
@@ -71,7 +73,8 @@
  "host": {"modules": ["extension/host/**/*.mjs"], "process": "client"},
  "textcore": {"modules": ["server-plugin/textcore/**/*.mjs"], "process": "server"},
  "clientTextcore": {"modules": ["extension/textcore/**/*.mjs"], "process": "client"},
- "kernel": {"modules": ["server-plugin/kernel/**/*.mjs"], "process": "server", "filesList": "server-plugin/kernel/files.json"},
+ "kernel": {"modules": ["server-plugin/kernel/**/*.mjs"], "process": "server", "filesList": "server-plugin/kernel/files.json",
+  "emits": ["verb_entity_revived", "verb_entity_terminated"]},
  "assembly": {"files": ["server-plugin/index.mjs"], "process": "server", "calls": ["createRouterCaps", "createDigestCap", "createWallTimer", "mountKernel", "registerSystems", "mountOutput", "mountAi", "mountMenuEntry", "mountSaveRoutes", "mountNarration", "mountInput"]},
  "retired": ["server-plugin/legacy/**", "server-plugin/compat/**", "server-plugin/migrations/**"],
  "kernelApi": {"exports": [
@@ -100,6 +103,8 @@
   {"export": "kernel/ledger.mjs#stockIn", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/ledger.mjs#post", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/ledger.mjs#transfer", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/events.mjs#emit", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/events.mjs#registerEventDerive", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/ledger.mjs#settleCappedAllocation", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/ledger.mjs#alertGaps", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/ledger.mjs#prorateCapped", "callers": ["rules"], "acceptsState": false},

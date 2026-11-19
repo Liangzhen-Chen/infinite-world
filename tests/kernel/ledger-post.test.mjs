@@ -21,11 +21,14 @@ assert.ok(W.ok, W.text);
 // 登记场景：用途分区（货架可见、钱袋跟踪流出）、持有人、资源种类行。
 const SHELF = { spendable: true, locksFor: null, visibleToMarket: true, trackOutflow: false };
 const PURSE = { spendable: true, locksFor: null, visibleToMarket: false, trackOutflow: true };
+// 测试用 verb 行（K3-43：reason 须是已登记 verb，verb 族块 5 起真核；只进本进程注册表，不进 world/）。
+const TEST_VERBS = ['verb_test', 'verb_test_harvest', 'verb_test_mill', 'verb_test_mint', 'verb_test_pay', 'verb_test_redeem', 'verb_test_sell', 'verb_test_supply'];
 const vocab = {
   families: W.vocab.families,
   index: new Map([...W.vocab.index,
     ['purpose_test_shelf', { family: 'purpose', prefix: 'purpose_', entry: SHELF }],
-    ['purpose_test_purse', { family: 'purpose', prefix: 'purpose_', entry: PURSE }]]),
+    ['purpose_test_purse', { family: 'purpose', prefix: 'purpose_', entry: PURSE }],
+    ...TEST_VERBS.map((v) => [v, { family: 'verb', prefix: 'verb_', entry: {} }])]),
 };
 // 测试用 place 表（只登主体标记维度，照卷二 §5.6 :1765 boolean / always / error）：每行显式写 ledgerHolder；loc_bare 故意缺写（加载期由公用行校验拒，
 // 这里绕过加载只验 post 读到"不为真"也拒）。bld_kiln 是只当位置用的炉窑行（固定装置所在），item_crate 是容器（物品），fixture_t_hearth 是固定装置代号（非实体）。
@@ -66,7 +69,7 @@ test('规则 2 正例：凭空产出、纯转移、用掉三种腿型手算通�
   const state = at(2);
   let r;
   assert.deepEqual(run(state, (s) => { r = post(ENGINE, s, { legs: [{ account: acc('npc_a', SH, 'res_t_coin', 'coin_x'), delta: 5 }, { flow: 'src_issue', kind: 'res_t_coin', qty: 5 }], reason: 'verb_test_mint' }); }), { ok: true });
-  assert.deepEqual(r, { lots: [], notRun: ['reason_verb'] });
+  assert.deepEqual(r, { lots: [], notRun: [] });
   assert.deepEqual(run(state, (s) => { post(ENGINE, s, { legs: [{ account: acc('npc_a', SH, 'res_t_coin', 'coin_x'), delta: -3 }, { account: acc('org_b', SH, 'res_t_coin', 'coin_x'), delta: 3 }], reason: 'verb_test_pay' }); }), { ok: true });
   assert.deepEqual(run(state, (s) => { post(ENGINE, s, { legs: [{ account: acc('npc_a', SH, 'res_t_coin', 'coin_x'), delta: -2 }, { flow: 'sink_redeem', kind: 'res_t_coin', qty: 2 }], reason: 'verb_test_redeem' }); }), { ok: true });
   assert.deepEqual(state, {
@@ -129,7 +132,7 @@ test('规则 5：src_transform 与 sink_transform 互指，缺一腿 E-LEDGER-PA
   assert.deepEqual(state, before);
   let r;
   assert.deepEqual(run(state, (s) => { r = post(ENGINE, s, { legs: [consume, toSink, make, fromSrc], reason: 'verb_test_mill' }); }), { ok: true });
-  assert.deepEqual(r, { lots: [[2, 'lot_1']], notRun: ['reason_verb'] });
+  assert.deepEqual(r, { lots: [[2, 'lot_1']], notRun: [] });
   assert.equal(state.accounts.npc_a.purpose_test_shelf.res_t_grain.lot_0, 0);
   assert.equal(state.accounts.npc_a.purpose_test_shelf.res_t_flour.lot_1, 2);
   assert.deepEqual(state.ledgerTotals, { res_t_grain: { sink_transform: { cumulative: 4, usedByDay: [{ day: 1, used: 4 }] } }, res_t_flour: { src_transform: { cumulative: 2, usedByDay: [{ day: 1, used: 2 }] } } });
@@ -161,23 +164,25 @@ test('规则 13：trackOutflow 为真的分区每条出账腿累计减少量（�
 
 // ---------- reason（K3-43） ----------
 
-test('reason 必填、代号形；是否已登记 verb 块 5 前报 not_run（回执 notRun 列 reason_verb）', () => {
+test('reason 必填、代号形，且必须是已登记 verb（K3-43 真检查）', () => {
   const legs = [{ account: acc('npc_a', SH, 'res_t_coin', 'coin_x'), delta: 1 }, { flow: 'src_issue', kind: 'res_t_coin', qty: 1 }];
   assert.deepEqual(run(at(0), (s) => { post(ENGINE, s, { legs }); }), { ok: false, code: 'E-DIM-STRUCT-FIELD' });
   assert.deepEqual(run(at(0), (s) => { post(ENGINE, s, { legs, reason: '' }); }), { ok: false, code: 'E-DIM-ID-FORMAT' });
   assert.deepEqual(run(at(0), (s) => { post(ENGINE, s, { legs, reason: 'Verb Pay' }); }), { ok: false, code: 'E-DIM-ID-FORMAT' });
   assert.deepEqual(run(at(0), (s) => { post(ENGINE, s, { legs, reason: 7 }); }), { ok: false, code: 'E-DIM-ID-FORMAT' });
+  // 格式合法而未登记为 verb 的代号即拒（verb 族建好后转真检查，K5-48）。
+  assert.deepEqual(run(at(0), (s) => { post(ENGINE, s, { legs, reason: 'verb_not_yet_registered' }); }), { ok: false, code: 'E-EVT-VERB' });
+  // 已登记 verb 通过，回执 notRun 不再列 reason_verb。
   let r;
-  // 格式合法而未登记的代号不拒（verb 族块 5 才有），但不静默：notRun 列出
-  assert.deepEqual(run(at(0), (s) => { r = post(ENGINE, s, { legs, reason: 'verb_not_yet_registered' }); }), { ok: true });
-  assert.deepEqual(r.notRun, ['reason_verb']);
+  assert.deepEqual(run(at(0), (s) => { r = post(ENGINE, s, { legs, reason: 'verb_test' }); }), { ok: true });
+  assert.deepEqual(r.notRun, []);
 });
 
 test('notRun：限额通道腿不能直接 post（E-LEDGER-CAPPED-DIRECT，见 ledger-capped）；issuerBacked 行列 issuer_backed（卷六 §4.15 块 7）', () => {
   let r;
   assert.deepEqual(run(at(0), (s) => { post(ENGINE, s, { legs: [{ account: acc('npc_a', SH, 'res_t_coin', 'coin_x'), delta: 1 }, { flow: 'src_genesis', kind: 'res_t_coin', qty: 1 }], reason: 'verb_test' }); }), { ok: false, code: 'E-LEDGER-CAPPED-DIRECT' });
   assert.equal(run(at(0), (s) => { r = post(ENGINE, s, { legs: [{ account: acc('npc_a', SH, 'res_t_backed', 'k1'), delta: 1 }, { flow: 'src_issue', kind: 'res_t_backed', qty: 1 }], reason: 'verb_test' }); }).ok, true);
-  assert.deepEqual(r.notRun, ['issuer_backed', 'reason_verb']);
+  assert.deepEqual(r.notRun, ['issuer_backed']);
 });
 
 test('入账腿持有人照 openAccount 核对：未载入实体 E-DIM-UNKNOWN-READ、已终止 E-TERM-RESIDUE', () => {
@@ -212,7 +217,7 @@ function grainState() {
   const state = at(3);
   let r;
   assert.deepEqual(run(state, (s) => { r = post(ENGINE, s, { legs: [{ account: acc('npc_a', SH, 'res_t_grain'), delta: 10, lot: { attrs: GRAIN0 } }, { flow: 'src_regrow', kind: 'res_t_grain', qty: 10 }], reason: 'verb_test_harvest' }); }), { ok: true });
-  assert.deepEqual(r, { lots: [[0, 'lot_0']], notRun: ['reason_verb'] });
+  assert.deepEqual(r, { lots: [[0, 'lot_0']], notRun: [] });
   return state;
 }
 

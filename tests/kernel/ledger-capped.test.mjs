@@ -17,9 +17,13 @@ const W = loadWorld(ROOT);
 assert.ok(W.ok, W.text);
 // 用途分区与持有人按 K3-44 用登记场景：在词表与注册表副本里加行（不进 world/）。
 const SHELF = { spendable: true, locksFor: null, visibleToMarket: true, trackOutflow: false };
+// 测试用 verb 行（K3-43：reason 须是已登记 verb；只进本进程注册表，不进 world/）。
+const TEST_VERBS = ['verb_test', 'verb_test_settle'];
 const vocab = {
   families: W.vocab.families,
-  index: new Map([...W.vocab.index, ['purpose_test_shelf', { family: 'purpose', prefix: 'purpose_', entry: SHELF }]]),
+  index: new Map([...W.vocab.index,
+    ['purpose_test_shelf', { family: 'purpose', prefix: 'purpose_', entry: SHELF }],
+    ...TEST_VERBS.map((v) => [v, { family: 'verb', prefix: 'verb_', entry: {} }])]),
 };
 installVocab({ vocab, idIndex: new Map([...W.idIndex, ['npc_a', 'person'], ['org_b', 'org'], ['npc_c', 'person']]), tables: W.tables });
 const row = (family, sources, sinks) => ({ family, unit: 'bps', transferable: 'tr_free', counterpartRX: null, sources, sinks, issuerBacked: false });
@@ -205,6 +209,8 @@ test('结算入口参数：day 须等于当日、入口只收 src 限额通道�
   const run = (input) => runTransaction(state, CTX, (s) => settleCappedAllocation(ENGINE, s, { resourceKind: 'res_t_coin', code: 'src_genesis', day: 0, limit: 3, reason: 'verb_test_settle', requests: REQS, targets: TARGETS, ...input }));
   assert.deepEqual(run({ day: 1 }), { ok: false, code: 'E-DIM-DOMAIN-RANGE' });
   assert.deepEqual(run({ reason: 'Verb!' }), { ok: false, code: 'E-DIM-ID-FORMAT' });
+  // 代号形而未登记为 verb：真检查拒（K3-43，verb 族块 5 起）。
+  assert.deepEqual(run({ reason: 'verb_not_registered' }), { ok: false, code: 'E-EVT-VERB' });
   assert.deepEqual(run({ code: 'src_issue' }), { ok: false, code: 'E-DIM-DOMAIN-ENUM' });
   assert.deepEqual(run({ code: 'resfam_coin' }), { ok: false, code: 'E-DIM-REF-MISSING' });
   assert.deepEqual(run({ targets: [TARGETS[0]] }), { ok: false, code: 'E-DIM-REF-MISSING' });
