@@ -11,7 +11,7 @@
 | 3 | 每个限额/校验都试过特殊值（不限/0/空），无法绕过 | 是 | 口径 none、不存在的键、map 型、classes 都在加载期 E-MOD-RX（item.test.mjs 新用例"只收聚合到物品层的材料维度"）；未知、不适用不交读数，连取反也不命中（新用例"未知按未知传播"）；onUnknown error 照 M-1 报 E-DIM-REQUIRED-MISSING |
 | 4 | 新测试不依赖仓库当前偶然数字 | 是 | 期望按 M-1 公式手算：mean 易燃度 = 木份额×0.5（0.25、0.3、0.5、0）；sum 热值 = 0.5×18 = 9、0.4×18 = 7.2；hmean 密度单料静态固栏 0.9、1；前提都在测试夹具里造 |
 | 5 | 没有为降计数改写允许的代码、没有假常量 | 是 | 新代码里原写的"数组字面量 .includes(typeof …)"被 literal_compare 计入，改成 S13 (d) 白名单里的 typeof 直接比较（同文件既有写法）；没改任何既有代码 |
-| 6 | 只改了卡文列出的文件；diff 共 __ 行 | 是 | 卡文所列：item.mjs、item.test.mjs、state-owners.json、criteria.json（经 register.mjs）、本回报；授权扩展 rows.mjs（主会话补值卡 E 裁定①，只加 export）、卷四勘误 1119k15（裁定②：正文、现行快照、勘误前快照）、dimensions.mjs（Opus 只核后主会话授权，applicable 改用 requirement）。代码与测试 diff 约 +175 −20 |
+| 6 | 只改了卡文列出的文件；diff 共 __ 行 | 是 | diff 共 2264 行（合入提交 11aaa5e7b：12 个文件 +2218 −46，含卷四勘误前快照；主会话 11-19 22:1x 按李白巡查补填）。卡文所列：item.mjs、item.test.mjs、state-owners.json、criteria.json（经 register.mjs）、本回报；授权扩展 rows.mjs（主会话补值卡 E 裁定①，只加 export）、卷四勘误 1119k15（裁定②：正文、现行快照、勘误前快照）、dimensions.mjs（Opus 只核后主会话授权，applicable 改用 requirement）。代码与测试 diff 约 +175 −20 |
 | 7 | 全量测试已跑：命令＋pass/fail 数 | 是 | `node --test tests/kernel/*.test.mjs tests/accept/*.test.mjs`：1091 pass / 0 fail；`node tools/accept/run.mjs pre_commit`："verdict": "pass" |
 | 8 | 这张卡让块 6 哪一步更近了（一句话），且没有为此违背北极星任何一条 | 是 | 6-22 给物品配了材料后，类别规则可以写"材料量过线"的条件（如 material.heatValue、material.flammability），混料物品里不适用的份不参加，类别由材料派生，不手写、不特判 |
 
