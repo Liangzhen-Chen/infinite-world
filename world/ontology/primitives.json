@@ -1,197 +1,222 @@
 {
- "$schema": "../../schemas/ontology.schema.json",
- "kind": "primitives",
- "namespace": "core",
- "version": 1,
- "note": "效果原语（06 §6.3），19 个、14 族（含 holding.rescale）。event 为该原语产生的事件动词（须在 verbs.json）。create 的兜底形式为 kind=mark（06 §6.9.5）。",
- "entries": [
+ "version": 2,
+ "primitives": [
   {
-   "id": "transfer",
+   "op": "transfer",
    "family": "transfer",
-   "event": "transfer",
-   "params": [
-    "resource",
-    "from",
-    "to",
-    "qty"
-   ]
+   "channel": "ledger",
+   "required": {
+    "from": "account",
+    "to": "account",
+    "qty": "integer"
+   }
   },
   {
-   "id": "holding.open",
+   "op": "holding.open",
    "family": "holding",
-   "event": "holding_opened",
-   "params": [
-    "kind",
-    "holder",
-    "subject",
-    "terms",
-    "grantedBy"
-   ]
+   "channel": "holding",
+   "required": {
+    "holdingKind": "ref",
+    "holder": "id",
+    "subject": "id"
+   }
   },
   {
-   "id": "holding.close",
+   "op": "holding.close",
    "family": "holding",
-   "event": "holding_closed",
-   "params": [
-    "holding",
-    "reason"
+   "channel": "holding",
+   "oneOf": [
+    [
+     {"holding": "id"},
+     {"id": "id"},
+     {"holdingKind": "ref", "holder": "id", "subject": "id"}
+    ]
    ]
   },
   {
-   "id": "holding.transfer",
+   "op": "holding.transfer",
    "family": "holding",
-   "event": "holding_transferred",
-   "params": [
-    "holding",
-    "newHolder"
+   "channel": "holding",
+   "oneOf": [
+    [
+     {"holding": "id"},
+     {"id": "id"}
+    ],
+    [
+     {"newHolder": "id"},
+     {"holder": "id"}
+    ]
    ]
   },
   {
-   "id": "holding.rescale",
+   "op": "holding.rescale",
    "family": "holding",
-   "event": "holding_rescaled",
-   "params": [
-    "subject",
-    "kind",
-    "shares"
-   ]
+   "channel": "holding",
+   "required": {
+    "holdingKind": "ref",
+    "subject": "id",
+    "shares": "shares"
+   }
   },
   {
-   "id": "obligation.create",
+   "op": "obligation.create",
    "family": "obligation",
-   "event": "obligation_created",
-   "params": [
-    "kind",
-    "debtor",
-    "creditor",
-    "terms"
-   ]
+   "channel": "declared",
+   "required": {
+    "id": "id",
+    "obligationKind": "ref",
+    "debtor": "id",
+    "creditor": "id"
+   }
   },
   {
-   "id": "obligation.settle",
+   "op": "obligation.settle",
    "family": "obligation",
-   "event": "settled",
-   "params": [
-    "id",
-    "amount"
-   ]
+   "channel": "declared",
+   "required": {
+    "id": "id"
+   }
   },
   {
-   "id": "obligation.cancel",
+   "op": "obligation.cancel",
    "family": "obligation",
-   "event": "cancelled",
-   "params": [
-    "id",
-    "reason"
-   ]
+   "channel": "declared",
+   "required": {
+    "id": "id"
+   }
   },
   {
-   "id": "fact.set",
+   "op": "fact.set",
    "family": "fact",
-   "event": "fact_changed",
-   "writable": {
-    "item": {"condition": {"type": "number", "min": 0, "max": 100}},
-    "building": {"condition": {"type": "number", "min": 0, "max": 100}},
-    "project": {"progress": {"type": "number", "min": 0, "max": 100}}
+   "channel": "declared",
+   "required": {
+    "entity": "id",
+    "field": "dimension"
    },
-   "params": [
-    "entity",
-    "field"
+   "oneOf": [
+    [
+     {"value": "number"},
+     {"delta": "number"}
+    ]
    ]
   },
   {
-   "id": "vital",
+   "op": "vital",
    "family": "vital",
-   "event": "harm",
-   "params": [
-    "target",
-    "delta",
-    "type"
-   ]
+   "channel": "declared",
+   "required": {
+    "target": "id",
+    "delta": "number"
+   }
   },
   {
-   "id": "status",
+   "op": "status",
    "family": "status",
-   "event": "status_applied",
-   "params": [
-    "target",
-    "status",
-    "duration"
-   ]
+   "channel": "declared",
+   "required": {
+    "target": "id",
+    "status": "ref",
+    "duration": "integer",
+    "magnitude": "integer"
+   }
   },
   {
-   "id": "move",
+   "op": "move",
    "family": "move",
-   "event": "moved",
-   "params": [
-    "entity",
-    "to",
-    "mode"
-   ]
+   "channel": "declared",
+   "required": {
+    "to": "id"
+   }
   },
   {
-   "id": "create",
+   "op": "create",
    "family": "create",
-   "event": "created",
-   "params": [
-    "kind",
-    "template"
+   "channel": "declared",
+   "required": {
+    "kind": "ref",
+    "facts": "map"
+   },
+   "unless": [
+    {
+     "field": "kind",
+     "notEquals": "mark",
+     "required": {
+      "template": "ref"
+     }
+    }
    ]
   },
   {
-   "id": "destroy",
+   "op": "destroy",
    "family": "destroy",
-   "event": "destroyed",
-   "params": [
-    "entity"
-   ]
+   "channel": "kernel",
+   "required": {
+    "entity": "id"
+   }
   },
   {
-   "id": "emit",
+   "op": "transform",
+   "family": "transform",
+   "channel": "invoke",
+   "required": {
+    "subject": "id",
+    "variant": "ref",
+    "direction": {"type": "enum", "values": ["apply", "revert"]},
+    "cause": "id"
+   }
+  },
+  {
+   "op": "emit",
    "family": "emit",
-   "event": "tell",
-   "params": [
-    "verb",
-    "actor"
-   ]
+   "channel": "event",
+   "required": {
+    "verb": "ref",
+    "visibility": {"type": "enum", "values": ["public", "private", "witnessed"]}
+   }
   },
   {
-   "id": "schedule",
+   "op": "schedule",
    "family": "schedule",
-   "event": "scheduled",
-   "params": [
-    "at",
-    "rule"
+   "channel": "due",
+   "required": {
+    "at": "integer"
+   },
+   "oneOf": [
+    [
+     {"action": "ref"},
+     {"rule": "ref"}
+    ]
    ]
   },
   {
-   "id": "transition",
+   "op": "transition",
    "family": "transition",
-   "event": "transition",
-   "params": [
-    "entity",
-    "kind",
-    "cause"
-   ]
+   "channel": "declared",
+   "required": {
+    "entity": "id",
+    "kind": "ref",
+    "cause": "id"
+   }
   },
   {
-   "id": "learn",
+   "op": "learn",
    "family": "learn",
-   "event": "learned",
-   "params": [
-    "entity",
-    "subject",
-    "amount",
-    "source"
-   ]
+   "channel": "invoke",
+   "required": {
+    "subject": "id",
+    "skill": "ref",
+    "source": "ref",
+    "minutes": "integer",
+    "difficulty": {"type": "number", "nullable": true}
+   }
   },
   {
-   "id": "time",
+   "op": "time",
    "family": "time",
-   "event": "time",
-   "params": [
-    "minutes"
-   ]
+   "channel": "declared",
+   "required": {
+    "minutes": "integer"
+   }
   }
  ]
 }

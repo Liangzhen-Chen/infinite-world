@@ -11,6 +11,7 @@
   {"key": "extendsMaxDepth", "value": 4, "source": "卷二 §1.3 继承链深 ≤4"},
   {"key": "rxMaxDepth", "value": 16, "source": "卷二 §1.5 struct:rxTree maxDepth 16；§2.9 第 4 条递归深度上限 16"},
   {"key": "handleRadix", "value": 36, "source": "卷二十 §4.1.2 句柄 due_＋全局序号；李白 11-18 03:31 裁定 2", "basis": "句柄序号的进制：base36 小写（数字加小写字母），李白 11-18 03:31 裁定 2；代码经规则表 kernelConstants 读入，不在代码里写字面量"},
-  {"key": "diceKeyMaxQualifiers", "value": 2, "source": "卷二十七 R27-8.5 :728 骰值键 subjectId 为一个 id 后接一到两个限定成分", "basis": "骰值键复合对象段限定成分个数上限：最多两个；代码经规则表 kernelConstants 读入，不在代码里写字面量（卷二 S10 :2404，数值来自 engine.rules 即不计）"}
+  {"key": "diceKeyMaxQualifiers", "value": 2, "source": "卷二十七 R27-8.5 :728 骰值键 subjectId 为一个 id 后接一到两个限定成分", "basis": "骰值键复合对象段限定成分个数上限：最多两个；代码经规则表 kernelConstants 读入，不在代码里写字面量（卷二 S10 :2404，数值来自 engine.rules 即不计）"},
+  {"key": "grammarMaxLength", "value": 48, "source": "卷二 §1.9 :285 代号文法 ^[a-z][a-z0-9_]{1,47}$（总长至多 48）与维度键文法 ^[a-z][a-zA-Z0-9]{0,47}$（总长至多 48）", "basis": "卷二 :285 代号与键文法长度上限；代码经规则表 kernelConstants 读入，不在代码里写字面量（卷二 S10 :2404，数值来自 engine.rules 即不计）"}
  ]
 }
