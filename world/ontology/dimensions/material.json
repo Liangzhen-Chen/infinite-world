@@ -2799,6 +2799,113 @@
    "volatility": 0,
    "workDifficulty": 5
   },
+  "mat_barley": {
+   "basis": "卷二十五｜能:饲｜大麦（Hordeum vulgare）：Feedipedia \"Barley grain\"（https://www.feedipedia.org/node/11705）",
+   "carbContent": 0.836,
+   "cellGrades": {
+    "carbContent": {
+     "basis": null,
+     "citation": "Feedipedia \"Barley grain\"（https://www.feedipedia.org/node/11705）：粗蛋白 11.8、脂肪 2、灰分 2.6（% DM），碳水按差减 100−11.8−2−2.6 = 83.6（与 mat_wheat 同口径，含纤维）",
+     "grade": "measured"
+    },
+    "decomposePoint": {
+     "basis": "设：参照 mat_wheat（P-3 :32/:40 同类参照），待补",
+     "citation": null,
+     "grade": "designed"
+    },
+    "density.solid": {
+     "basis": "设：参照 mat_wheat（P-3 :32/:40 同类参照），待补",
+     "citation": null,
+     "grade": "designed"
+    },
+    "edibleFraction": {
+     "basis": "设：P3-T1 同本源成分已有值中位数（组 subst_plant，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "energyDensity": {
+     "basis": null,
+     "citation": "Feedipedia \"Barley grain\"（https://www.feedipedia.org/node/11705） Main analysis 表\"Gross energy\"行：18.4 MJ/kg DM（范围 18.1–18.7，n=304）",
+     "grade": "measured"
+    },
+    "fiberContent": {
+     "basis": null,
+     "citation": "Feedipedia \"Barley grain\"（https://www.feedipedia.org/node/11705） Main analysis 表\"Crude fibre\"行：5.2 % DM",
+     "grade": "measured"
+    },
+    "flammability": {
+     "basis": "设：参照 mat_wheat（P-3 :32/:40 同类参照），待补",
+     "citation": null,
+     "grade": "designed"
+    },
+    "mealCap": {
+     "basis": "设：P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "moisture": {
+     "basis": null,
+     "citation": "Feedipedia \"Barley grain\"（https://www.feedipedia.org/node/11705） Main analysis 表\"Dry matter\"行：87.1 % as fed，含水率 = 1−0.871 = 0.129",
+     "grade": "measured"
+    },
+    "nutrients.nutr_salt": {
+     "basis": "设：参照 mat_wheat（P-3 :32/:40 同类参照），待补",
+     "citation": null,
+     "grade": "designed"
+    },
+    "rotRate": {
+     "basis": "暂定，待 M3a-4 标定（块 6 物品表首卡）：P3-T1 同本源成分已有值中位数（组 subst_plant，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "citation": null,
+     "grade": "designed"
+    },
+    "salvageFraction": {
+     "basis": "设：P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "sharpnessMax": {
+     "basis": "设：P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_bamboo、mat_water、mat_bone；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；卷二 §6.12 rules.dimfill.materialSharpnessMax 90%，分母为有固相栏的材料，缺格填设定值（李白 11-17 P3-32）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "valueMult": {
+     "basis": "暂定，待 M3b-27 标定（块 6 物品表首卡）：P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
+     "citation": null,
+     "grade": "designed"
+    },
+    "workDifficulty": {
+     "basis": "设：P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    }
+   },
+   "classes": [
+    "comp_edible",
+    "comp_rottable"
+   ],
+   "decomposePoint": 220,
+   "density": {
+    "solid": 1.3
+   },
+   "edibleFraction": 0.925,
+   "energyDensity": 18.4,
+   "fiberContent": 0.052,
+   "flammability": 0,
+   "mealCap": 1100,
+   "moisture": 0.129,
+   "nutrients": {
+    "nutr_salt": 0
+   },
+   "plantFamily": "pfam_poaceae",
+   "plantPart": "ppart_seed",
+   "refMaterial": null,
+   "rotRate": 0.101,
+   "salvageFraction": 0.4,
+   "sharpnessMax": 32.5,
+   "substance": "subst_plant",
+   "valueMult": 1,
+   "workDifficulty": 10
+  },
   "mat_beeswax": {
    "basis": "卷十九｜氧:未核｜卷十九蜂巢式巢室；未核到：极限氧",
    "burnRate": 0.25,
@@ -4805,6 +4912,11 @@
      "citation": null,
      "grade": "designed"
     },
+    "wearResistance": {
+     "basis": "设定数待调（非硬度换算）：布、绳、皮、纸没有可比硬度，取类内相对顺序（皮 > 绳 > 布 > 毡 > 纸）；真正的使用寿命由物品 wearPerUse 标定（见卷三甲 §4.2.5 勘误 1119k18）",
+     "citation": null,
+     "grade": "designed"
+    },
     "workDifficulty": {
      "basis": "设：P3-T1 同本源成分已有值中位数（组 subst_fiber，参照 mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
      "citation": null,
@@ -4833,6 +4945,7 @@
    "substance": "subst_fiber",
    "valueMult": 2,
    "volatility": 0,
+   "wearResistance": 12,
    "workDifficulty": 8
   },
   "mat_cotton_yarn": {
@@ -5888,6 +6001,11 @@
      "citation": null,
      "grade": "designed"
     },
+    "wearResistance": {
+     "basis": "设定数待调（非硬度换算）：布、绳、皮、纸没有可比硬度，取类内相对顺序（皮 > 绳 > 布 > 毡 > 纸）；真正的使用寿命由物品 wearPerUse 标定（见卷三甲 §4.2.5 勘误 1119k18）",
+     "citation": null,
+     "grade": "designed"
+    },
     "workDifficulty": {
      "basis": "设：P3-T1 同本源成分已有值中位数（组 subst_fiber，参照 mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
      "citation": null,
@@ -5905,6 +6023,91 @@
    "heatValue": 20,
    "ignitePoint": 570,
    "insulation": 4,
+   "moisture": 0.1,
+   "refMaterial": null,
+   "salvageFraction": 0.6,
+   "sharpnessMax": 32.5,
+   "substance": "subst_fiber",
+   "valueMult": 2,
+   "volatility": 0,
+   "wearResistance": 9,
+   "workDifficulty": 8
+  },
+  "mat_flax_fiber": {
+   "basis": "卷三｜氧:未核｜亚麻纤维（梳理麻纤维束的本料）；未核到：极限氧（只有二手转述，原文未读到，不入库），易燃度参照 mat_hemp_fiber；其余格参照 mat_hemp_fiber（同类纤维）",
+   "burnRate": 0.25,
+   "cellGrades": {
+    "burnRate": {
+     "basis": "设：参照 mat_hemp_fiber 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "decomposePoint": {
+     "basis": "设：参照 mat_hemp_fiber 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "density.solid": {
+     "basis": "设：参照 mat_hemp_fiber 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "flammability": {
+     "basis": "设：参照 mat_hemp_fiber 的易燃度 0.48（同类纤维）；本纤维极限氧原文未读到，待核",
+     "citation": null,
+     "grade": "designed"
+    },
+    "heatValue": {
+     "basis": "设：参照 mat_hemp_fiber 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "ignitePoint": {
+     "basis": "设：参照 mat_hemp_fiber；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "moisture": {
+     "basis": "设：参照 mat_hemp_fiber 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "salvageFraction": {
+     "basis": "设：参照 mat_hemp_fiber 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "sharpnessMax": {
+     "basis": "设：P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_bamboo、mat_water、mat_bone；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；卷二 §6.12 rules.dimfill.materialSharpnessMax 90%，分母为有固相栏的材料，缺格填设定值（李白 11-17 P3-32）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "valueMult": {
+     "basis": "设：参照 mat_hemp_fiber 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "volatility": {
+     "basis": "设：参照 mat_hemp_fiber 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "workDifficulty": {
+     "basis": "设：参照 mat_hemp_fiber 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    }
+   },
+   "classes": [
+    "comp_burnable"
+   ],
+   "decomposePoint": 200,
+   "density": {
+    "solid": 1.48
+   },
+   "flammability": 0.48,
+   "heatValue": 16,
+   "ignitePoint": 260,
    "moisture": 0.1,
    "refMaterial": null,
    "salvageFraction": 0.6,
@@ -6935,6 +7138,11 @@
      "citation": null,
      "grade": "designed"
     },
+    "wearResistance": {
+     "basis": "设定数待调（非硬度换算）：布、绳、皮、纸没有可比硬度，取类内相对顺序（皮 > 绳 > 布 > 毡 > 纸）；真正的使用寿命由物品 wearPerUse 标定（见卷三甲 §4.2.5 勘误 1119k18）",
+     "citation": null,
+     "grade": "designed"
+    },
     "workDifficulty": {
      "basis": "设：P3-T1 同本源成分已有值中位数（组 subst_fiber，参照 mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
      "citation": null,
@@ -6959,6 +7167,7 @@
    "substance": "subst_fiber",
    "valueMult": 2,
    "volatility": 0,
+   "wearResistance": 20,
    "workDifficulty": 8
   },
   "mat_hemp_fiber": {
@@ -7676,6 +7885,11 @@
      "citation": null,
      "grade": "designed"
     },
+    "wearResistance": {
+     "basis": "设定数待调（非硬度换算）：布、绳、皮、纸没有可比硬度，取类内相对顺序（皮 > 绳 > 布 > 毡 > 纸）；真正的使用寿命由物品 wearPerUse 标定（见卷三甲 §4.2.5 勘误 1119k18）",
+     "citation": null,
+     "grade": "designed"
+    },
     "workDifficulty": {
      "basis": "设：P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
      "citation": null,
@@ -7703,6 +7917,7 @@
    "substance": "subst_hide",
    "valueMult": 1,
    "volatility": 0,
+   "wearResistance": 30,
    "workDifficulty": 10
   },
   "mat_limestone": {
@@ -7801,6 +8016,108 @@
    "substance": "subst_stone",
    "valueMult": 1,
    "workDifficulty": 10
+  },
+  "mat_linen_cloth": {
+   "basis": "卷三｜氧:未核｜麻布（亚麻织成的布；织与纱的关系照棉布）；未核到：极限氧（只有二手转述，原文未读到，不入库），易燃度参照 mat_cotton_cloth；其余格参照 mat_cotton_cloth（同类织物）",
+   "breathabilityBase": 3,
+   "burnRate": 0.25,
+   "cellGrades": {
+    "breathabilityBase": {
+     "basis": "设：参照 mat_cotton_cloth 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "burnRate": {
+     "basis": "设：参照 mat_cotton_cloth 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "decomposePoint": {
+     "basis": "设：参照 mat_cotton_cloth 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "density.solid": {
+     "basis": "设：参照 mat_cotton_cloth 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "flammability": {
+     "basis": "设：参照 mat_cotton_cloth 的易燃度 0.56（同类织物）；本料极限氧原文未读到，待核",
+     "citation": null,
+     "grade": "designed"
+    },
+    "heatValue": {
+     "basis": "设：参照 mat_cotton_cloth 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "ignitePoint": {
+     "basis": "设：参照 mat_cotton_cloth 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "insulation": {
+     "basis": "设：参照 mat_cotton_cloth 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "moisture": {
+     "basis": "设：参照 mat_cotton_cloth 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "salvageFraction": {
+     "basis": "设：参照 mat_cotton_cloth 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "sharpnessMax": {
+     "basis": "设：P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_bamboo、mat_water、mat_bone；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；卷二 §6.12 rules.dimfill.materialSharpnessMax 90%，分母为有固相栏的材料，缺格填设定值（李白 11-17 P3-32）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "valueMult": {
+     "basis": "设：参照 mat_cotton_cloth 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "volatility": {
+     "basis": "设：参照 mat_cotton_cloth 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "wearResistance": {
+     "basis": "设定数待调（非硬度换算）：布、绳、皮、纸没有可比硬度，取类内相对顺序（皮 > 绳 > 布 > 毡 > 纸）；真正的使用寿命由物品 wearPerUse 标定（见卷三甲 §4.2.5 勘误 1119k18）",
+     "citation": null,
+     "grade": "designed"
+    },
+    "workDifficulty": {
+     "basis": "设：参照 mat_cotton_cloth 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    }
+   },
+   "classes": [
+    "comp_burnable"
+   ],
+   "decomposePoint": 200,
+   "density": {
+    "solid": 1.5
+   },
+   "flammability": 0.56,
+   "heatValue": 16,
+   "ignitePoint": 260,
+   "insulation": 5,
+   "moisture": 0.08,
+   "refMaterial": null,
+   "salvageFraction": 0.6,
+   "sharpnessMax": 32.5,
+   "substance": "subst_fiber",
+   "valueMult": 2,
+   "volatility": 0,
+   "wearResistance": 14,
+   "workDifficulty": 8
   },
   "mat_marsh_bark": {
    "basis": "卷二十一｜能:木 氧:试｜极限氧 22.5（小试样；White 1979 第 114 页表 1 的木材值\"杨 22.5\"，树皮没有自己的值，代用料，待补）",
@@ -8757,6 +9074,113 @@
    "wearResistance": 21.2,
    "workDifficulty": 15
   },
+  "mat_oat": {
+   "basis": "卷二十五｜能:饲｜燕麦（带稃，普通基因型）（Avena sativa）：Feedipedia \"Oats\"（https://www.feedipedia.org/node/12391）",
+   "carbContent": 0.806,
+   "cellGrades": {
+    "carbContent": {
+     "basis": null,
+     "citation": "Feedipedia \"Oats\"（https://www.feedipedia.org/node/12391）：粗蛋白 11、脂肪 5.4、灰分 3（% DM），碳水按差减 100−11−5.4−3 = 80.6（与 mat_wheat 同口径，含纤维）",
+     "grade": "measured"
+    },
+    "decomposePoint": {
+     "basis": "设：参照 mat_wheat（P-3 :32/:40 同类参照），待补",
+     "citation": null,
+     "grade": "designed"
+    },
+    "density.solid": {
+     "basis": "设：参照 mat_wheat（P-3 :32/:40 同类参照），待补",
+     "citation": null,
+     "grade": "designed"
+    },
+    "edibleFraction": {
+     "basis": "设：P3-T1 同本源成分已有值中位数（组 subst_plant，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "energyDensity": {
+     "basis": null,
+     "citation": "Feedipedia \"Oats\"（https://www.feedipedia.org/node/12391） Main analysis 表\"Gross energy\"行：19.5 MJ/kg DM（页面标星号，即按方程推算，n=86）",
+     "grade": "measured"
+    },
+    "fiberContent": {
+     "basis": null,
+     "citation": "Feedipedia \"Oats\"（https://www.feedipedia.org/node/12391） Main analysis 表\"Crude fibre\"行：13.9 % DM",
+     "grade": "measured"
+    },
+    "flammability": {
+     "basis": "设：参照 mat_wheat（P-3 :32/:40 同类参照），待补",
+     "citation": null,
+     "grade": "designed"
+    },
+    "mealCap": {
+     "basis": "设：P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "moisture": {
+     "basis": null,
+     "citation": "Feedipedia \"Oats\"（https://www.feedipedia.org/node/12391） Main analysis 表\"Dry matter\"行：87.9 % as fed，含水率 = 1−0.879 = 0.121",
+     "grade": "measured"
+    },
+    "nutrients.nutr_salt": {
+     "basis": "设：参照 mat_wheat（P-3 :32/:40 同类参照），待补",
+     "citation": null,
+     "grade": "designed"
+    },
+    "rotRate": {
+     "basis": "暂定，待 M3a-4 标定（块 6 物品表首卡）：P3-T1 同本源成分已有值中位数（组 subst_plant，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "citation": null,
+     "grade": "designed"
+    },
+    "salvageFraction": {
+     "basis": "设：P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "sharpnessMax": {
+     "basis": "设：P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_bamboo、mat_water、mat_bone；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；卷二 §6.12 rules.dimfill.materialSharpnessMax 90%，分母为有固相栏的材料，缺格填设定值（李白 11-17 P3-32）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "valueMult": {
+     "basis": "暂定，待 M3b-27 标定（块 6 物品表首卡）：P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
+     "citation": null,
+     "grade": "designed"
+    },
+    "workDifficulty": {
+     "basis": "设：P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    }
+   },
+   "classes": [
+    "comp_edible",
+    "comp_rottable"
+   ],
+   "decomposePoint": 220,
+   "density": {
+    "solid": 1.3
+   },
+   "edibleFraction": 0.925,
+   "energyDensity": 19.5,
+   "fiberContent": 0.139,
+   "flammability": 0,
+   "mealCap": 1100,
+   "moisture": 0.121,
+   "nutrients": {
+    "nutr_salt": 0
+   },
+   "plantFamily": "pfam_poaceae",
+   "plantPart": "ppart_seed",
+   "refMaterial": null,
+   "rotRate": 0.101,
+   "salvageFraction": 0.4,
+   "sharpnessMax": 32.5,
+   "substance": "subst_plant",
+   "valueMult": 1,
+   "workDifficulty": 10
+  },
   "mat_paper": {
    "basis": "卷三｜氧:未核｜未核到：极限氧",
    "burnRate": 0.25,
@@ -8816,6 +9240,11 @@
      "citation": null,
      "grade": "designed"
     },
+    "wearResistance": {
+     "basis": "设定数待调（非硬度换算）：布、绳、皮、纸没有可比硬度，取类内相对顺序（皮 > 绳 > 布 > 毡 > 纸）；真正的使用寿命由物品 wearPerUse 标定（见卷三甲 §4.2.5 勘误 1119k18）",
+     "citation": null,
+     "grade": "designed"
+    },
     "workDifficulty": {
      "basis": "设：P3-T1 同本源成分已有值中位数（组 subst_fiber，参照 mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
      "citation": null,
@@ -8839,6 +9268,7 @@
    "substance": "subst_fiber",
    "valueMult": 2,
    "volatility": 0,
+   "wearResistance": 4,
    "workDifficulty": 8
   },
   "mat_pickled_greens": {
@@ -9582,6 +10012,11 @@
      "citation": null,
      "grade": "designed"
     },
+    "wearResistance": {
+     "basis": "设定数待调（非硬度换算）：布、绳、皮、纸没有可比硬度，取类内相对顺序（皮 > 绳 > 布 > 毡 > 纸）；真正的使用寿命由物品 wearPerUse 标定（见卷三甲 §4.2.5 勘误 1119k18）",
+     "citation": null,
+     "grade": "designed"
+    },
     "workDifficulty": {
      "basis": "设：P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
      "citation": null,
@@ -9627,6 +10062,7 @@
    "substance": "subst_hide",
    "valueMult": 1,
    "volatility": 0,
+   "wearResistance": 22,
    "workDifficulty": 10
   },
   "mat_resin": {
@@ -9867,6 +10303,113 @@
    "valueMult": 1,
    "workDifficulty": 10
   },
+  "mat_rye": {
+   "basis": "卷二十五｜能:饲｜黑麦（Secale cereale）：Feedipedia \"Rye grain\"（https://www.feedipedia.org/node/12542）",
+   "carbContent": 0.863,
+   "cellGrades": {
+    "carbContent": {
+     "basis": null,
+     "citation": "Feedipedia \"Rye grain\"（https://www.feedipedia.org/node/12542）：粗蛋白 10.3、脂肪 1.4、灰分 2（% DM），碳水按差减 100−10.3−1.4−2 = 86.3（与 mat_wheat 同口径，含纤维）",
+     "grade": "measured"
+    },
+    "decomposePoint": {
+     "basis": "设：参照 mat_wheat（P-3 :32/:40 同类参照），待补",
+     "citation": null,
+     "grade": "designed"
+    },
+    "density.solid": {
+     "basis": "设：参照 mat_wheat（P-3 :32/:40 同类参照），待补",
+     "citation": null,
+     "grade": "designed"
+    },
+    "edibleFraction": {
+     "basis": "设：P3-T1 同本源成分已有值中位数（组 subst_plant，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "energyDensity": {
+     "basis": null,
+     "citation": "Feedipedia \"Rye grain\"（https://www.feedipedia.org/node/12542） Main analysis 表\"Gross energy\"行：18 MJ/kg DM（页面标星号，即按方程推算，n=20）",
+     "grade": "measured"
+    },
+    "fiberContent": {
+     "basis": null,
+     "citation": "Feedipedia \"Rye grain\"（https://www.feedipedia.org/node/12542） Main analysis 表\"Crude fibre\"行：2.2 % DM",
+     "grade": "measured"
+    },
+    "flammability": {
+     "basis": "设：参照 mat_wheat（P-3 :32/:40 同类参照），待补",
+     "citation": null,
+     "grade": "designed"
+    },
+    "mealCap": {
+     "basis": "设：P3-T2 胃容量一餐上限 1100 g（Geliebter 1988，旧 D12 mealCitation）；无卷文出处，设定值；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "moisture": {
+     "basis": null,
+     "citation": "Feedipedia \"Rye grain\"（https://www.feedipedia.org/node/12542） Main analysis 表\"Dry matter\"行：86.6 % as fed，含水率 = 1−0.866 = 0.134",
+     "grade": "measured"
+    },
+    "nutrients.nutr_salt": {
+     "basis": "设：参照 mat_wheat（P-3 :32/:40 同类参照），待补",
+     "citation": null,
+     "grade": "designed"
+    },
+    "rotRate": {
+     "basis": "暂定，待 M3a-4 标定（块 6 物品表首卡）：P3-T1 同本源成分已有值中位数（组 subst_plant，参照 mat_millet、mat_moon_berry；方法见卷三甲 §4.5.5 :519、:523 同类推定）；数无卷文出处，暂定；卷文规则 卷三甲 §7 M3a-4（:968）缺输入（旧物品无指向材料的字段），暂定",
+     "citation": null,
+     "grade": "designed"
+    },
+    "salvageFraction": {
+     "basis": "设：P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "sharpnessMax": {
+     "basis": "设：P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_bamboo、mat_water、mat_bone；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；卷二 §6.12 rules.dimfill.materialSharpnessMax 90%，分母为有固相栏的材料，缺格填设定值（李白 11-17 P3-32）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "valueMult": {
+     "basis": "暂定，待 M3b-27 标定（块 6 物品表首卡）：P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
+     "citation": null,
+     "grade": "designed"
+    },
+    "workDifficulty": {
+     "basis": "设：P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    }
+   },
+   "classes": [
+    "comp_edible",
+    "comp_rottable"
+   ],
+   "decomposePoint": 220,
+   "density": {
+    "solid": 1.3
+   },
+   "edibleFraction": 0.925,
+   "energyDensity": 18,
+   "fiberContent": 0.022,
+   "flammability": 0,
+   "mealCap": 1100,
+   "moisture": 0.134,
+   "nutrients": {
+    "nutr_salt": 0
+   },
+   "plantFamily": "pfam_poaceae",
+   "plantPart": "ppart_seed",
+   "refMaterial": null,
+   "rotRate": 0.101,
+   "salvageFraction": 0.4,
+   "sharpnessMax": 32.5,
+   "substance": "subst_plant",
+   "valueMult": 1,
+   "workDifficulty": 10
+  },
   "mat_seawater": {
    "basis": "卷五｜干物质八成是盐，按干基算盐分很高",
    "boilPoint": 100.6,
@@ -9968,6 +10511,96 @@
    "valueMult": 1,
    "workDifficulty": 10
   },
+  "mat_sheep_wool": {
+   "basis": "卷三｜氧:未核｜绵羊毛（洗净羊毛束的本料）；未核到：极限氧（只有二手转述，原文未读到，不入库），易燃度参照 mat_goat_hair；其余格参照 mat_goat_hair（同类纤维）",
+   "burnRate": 0.25,
+   "cellGrades": {
+    "burnRate": {
+     "basis": "设：参照 mat_goat_hair 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "decomposePoint": {
+     "basis": "设：参照 mat_goat_hair 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "density.solid": {
+     "basis": "设：参照 mat_goat_hair 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "flammability": {
+     "basis": "设：参照 mat_goat_hair 的易燃度 0.4（同类纤维）；本料极限氧原文未读到，待核",
+     "citation": null,
+     "grade": "designed"
+    },
+    "heatValue": {
+     "basis": "设：参照 mat_goat_hair 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "ignitePoint": {
+     "basis": "设：参照 mat_goat_hair 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "moisture": {
+     "basis": "设：参照 mat_goat_hair 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "salvageFraction": {
+     "basis": "设：参照 mat_goat_hair 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "sharpnessMax": {
+     "basis": "设：P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_bamboo、mat_water、mat_bone；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；卷二 §6.12 rules.dimfill.materialSharpnessMax 90%，分母为有固相栏的材料，缺格填设定值（李白 11-17 P3-32）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "valueMult": {
+     "basis": "设：参照 mat_goat_hair 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "volatility": {
+     "basis": "设：参照 mat_goat_hair 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "wearResistance": {
+     "basis": "设定数待调（非硬度换算）：布、绳、皮、纸没有可比硬度，取类内相对顺序（皮 > 绳 > 布 > 毡 > 纸）；真正的使用寿命由物品 wearPerUse 标定（见卷三甲 §4.2.5 勘误 1119k18）",
+     "citation": null,
+     "grade": "designed"
+    },
+    "workDifficulty": {
+     "basis": "设：参照 mat_goat_hair 同类纤维的值（未找到本纤维自己的合格出处，待补）；设定，可在试玩后调",
+     "citation": null,
+     "grade": "designed"
+    }
+   },
+   "classes": [
+    "comp_burnable"
+   ],
+   "decomposePoint": 230,
+   "density": {
+    "solid": 1.3
+   },
+   "flammability": 0.4,
+   "heatValue": 20,
+   "ignitePoint": 570,
+   "moisture": 0.12,
+   "refMaterial": null,
+   "salvageFraction": 0.6,
+   "sharpnessMax": 32.5,
+   "substance": "subst_fiber",
+   "valueMult": 2,
+   "volatility": 0,
+   "wearResistance": 10,
+   "workDifficulty": 8
+  },
   "mat_sheepskin": {
    "basis": "卷三｜氧:推｜自燃点同熟皮的出处，取 200–212 的中值｜repairedWith 暂定，待试玩调：P3-T3 本源成分的类别（卷三乙 §4.1.1 :559；与卷三甲 §4.1.5 例 1、例 2 一致）",
    "breathabilityBase": 2,
@@ -10043,6 +10676,11 @@
      "citation": null,
      "grade": "designed"
     },
+    "wearResistance": {
+     "basis": "设定数待调（非硬度换算）：布、绳、皮、纸没有可比硬度，取类内相对顺序（皮 > 绳 > 布 > 毡 > 纸）；真正的使用寿命由物品 wearPerUse 标定（见卷三甲 §4.2.5 勘误 1119k18）",
+     "citation": null,
+     "grade": "designed"
+    },
     "workDifficulty": {
      "basis": "设：P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_ghost_fire_oil、mat_bamboo、mat_black_powder、mat_goat_hair；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调",
      "citation": null,
@@ -10070,6 +10708,7 @@
    "substance": "subst_hide",
    "valueMult": 1,
    "volatility": 0,
+   "wearResistance": 18,
    "workDifficulty": 10
   },
   "mat_silk": {

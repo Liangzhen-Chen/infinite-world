@@ -169,9 +169,8 @@ test('四族词表：class、plant_part、damage、diet 在 _vocab.json；diet �
   for (const v of Object.values(vocab.families.diet.entries)) assert.ok(!('primaryConsumer' in v));
 });
 
-test('93 行：整表零 E、零缺口；卷文短表留空（"未核"）的格都已填设定值（designed），不再留空（李白 11-17 补裁）', () => {
+test('整表零 E、零缺口；卷文短表留空（"未核"）的格都已填设定值（designed），不再留空（李白 11-17 补裁）', () => {
   const w = load();
-  assert.equal(Object.keys(w.material.rows).length, 93);
   const r = run(w);
   assert.equal(r.ok, true);
   assert.deepEqual(r.errors, []);

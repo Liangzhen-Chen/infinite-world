@@ -34,3 +34,55 @@ for (const [id, v] of Object.entries(expected)) {
     assert.ok(g.basis.includes('出处 '));
   });
 }
+
+// 块 6 补值卡 H：布、绳、皮、纸的 wearResistance 是类内相对顺序的设定数（非硬度换算）；真实寿命放物品 wearPerUse。
+test('布绳皮纸 wearResistance：类内顺序 皮 > 绳 > 布 > 毡 > 纸，标设定数待调、非硬度换算', () => {
+  const v = (id) => rows[id].wearResistance;
+  assert.ok(v('mat_leather') > v('mat_hemp_cord') && v('mat_hemp_cord') > v('mat_linen_cloth'));
+  assert.ok(v('mat_linen_cloth') > v('mat_cotton_cloth') && v('mat_cotton_cloth') > v('mat_felt') && v('mat_felt') > v('mat_paper'));
+  for (const id of ['mat_leather', 'mat_rawhide', 'mat_sheepskin', 'mat_hemp_cord', 'mat_linen_cloth', 'mat_cotton_cloth', 'mat_sheep_wool', 'mat_felt', 'mat_paper']) {
+    const g = rows[id].cellGrades.wearResistance;
+    assert.equal(g.grade, 'designed');
+    assert.ok(g.basis.startsWith('设定数待调（非硬度换算）'), id);
+  }
+});
+
+// 块 6 补值卡 H：新增材料行，手算期望（Feedipedia Main analysis；碳水差减 = 1 − 粗蛋白 − 脂肪 − 灰分，含纤维）。
+const grains = {
+  mat_oat: { carb: 0.806, fiber: 0.139, energy: 19.5, moisture: 0.121 }, // 1−.110−.054−.030；DM 87.9%
+  mat_barley: { carb: 0.836, fiber: 0.052, energy: 18.4, moisture: 0.129 }, // 1−.118−.020−.026；DM 87.1%
+  mat_rye: { carb: 0.863, fiber: 0.022, energy: 18.0, moisture: 0.134 }, // 1−.103−.014−.020；DM 86.6%
+};
+for (const [id, e] of Object.entries(grains)) {
+  test(`${id} 谷物行：成分取 Feedipedia 并带出处`, () => {
+    const r = rows[id];
+    assert.equal(r.carbContent, e.carb);
+    assert.equal(r.fiberContent, e.fiber);
+    assert.equal(r.energyDensity, e.energy);
+    assert.equal(r.moisture, e.moisture);
+    for (const k of ['carbContent', 'fiberContent', 'energyDensity', 'moisture']) {
+      assert.equal(r.cellGrades[k].grade, 'measured');
+      assert.ok(r.cellGrades[k].citation.includes('feedipedia.org/node/'), `${id}.${k}`);
+    }
+  });
+}
+
+test('亚麻、麻布、绵羊毛：极限氧只有二手转述不入库，易燃度取同类行的设定值（designed，basis 写参照行与"待核"）', () => {
+  const ref = { mat_flax_fiber: 'mat_hemp_fiber', mat_linen_cloth: 'mat_cotton_cloth', mat_sheep_wool: 'mat_goat_hair' };
+  for (const [id, base] of Object.entries(ref)) {
+    assert.equal(rows[id].flammability, rows[base].flammability, id);
+    const g = rows[id].cellGrades.flammability;
+    assert.equal(g.grade, 'designed');
+    assert.ok(g.basis.startsWith(`设：参照 ${base}`) && g.basis.includes('待核'), id);
+  }
+});
+
+test('谷物行照抄小麦的格：basis 只写"参照 mat_wheat"，不冒用卷三甲例 1 全集表出处', () => {
+  for (const id of ['mat_oat', 'mat_barley', 'mat_rye']) {
+    for (const k of ['decomposePoint', 'density.solid', 'flammability', 'nutrients.nutr_salt']) {
+      const g = rows[id].cellGrades[k];
+      assert.equal(g.grade, 'designed');
+      assert.ok(g.basis.startsWith('设：参照 mat_wheat'), `${id}.${k}`);
+    }
+  }
+});
