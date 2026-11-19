@@ -61,5 +61,5 @@
 ## 已封与记过（摘要；详情见提交说明与 docs/审查/）
 
 - B2-W3 已封（06a7106b）；4-4a 已封（978bbb41）；3-4 已封、块 3 封块（73125c48）；块 5 体检与对照表入库（4f701e37）。
-- 记过：主会话 20:1x 误用输出重定向写 F:/dnd-tmp/null.txt（已删）；4-4a 执行者一次 sed -i（自报已改回）；4-4b 执行者一次 --no-verify（自报，该提交只有测试与回报）；块 5 体检执行者用 echo 作分隔；5-1 执行者试用 heredoc 一次（被 shell 拒、未写盘）；5-3 执行者提交说明用 heredoc（git commit -F -，自报，提交保留不改写历史）；主会话 00:0x 通知卷名写错（卷九、卷二十）；5-5 写者（Sonnet）两次误用 heredoc（只生成空文件已删）；5-4 写者（Opus）一次输出重定向写 F:/dnd-tmp/b54-gate.txt（仓库外、未提交，自报）；门禁 K5-24 写者（Sonnet）对 F:/dnd-tmp 临时文件用 sed -i、用 heredoc 追加 tests/accept/api-callers.test.mjs、一次 `>` 重定向写临时文件（自报；测试文件新增内容交只核逐行核）。以后卡头之外在 Agent 子代理卡末再重申禁用清单。
+- 记过：主会话 20:1x 误用输出重定向写 F:/dnd-tmp/null.txt（已删）；4-4a 执行者一次 sed -i（自报已改回）；4-4b 执行者一次 --no-verify（自报，该提交只有测试与回报）；块 5 体检执行者用 echo 作分隔；5-1 执行者试用 heredoc 一次（被 shell 拒、未写盘）；5-3 执行者提交说明用 heredoc（git commit -F -，自报，提交保留不改写历史）；主会话 00:0x 通知卷名写错（卷九、卷二十）；5-5 写者（Sonnet）两次误用 heredoc（只生成空文件已删）；5-4 写者（Opus）一次输出重定向写 F:/dnd-tmp/b54-gate.txt（仓库外、未提交，自报）；门禁 K5-24 写者（Sonnet）对 F:/dnd-tmp 临时文件用 sed -i、用 heredoc 追加 tests/accept/api-callers.test.mjs、一次 `>` 重定向写临时文件（自报；测试文件新增内容交只核逐行核）。以后卡头之外在 Agent 子代理卡末再重申禁用清单；块 6 体检写者（Sonnet）试用 python heredoc 一次（被拦、未写盘，自报）。
 - 副本备份后删（李白 19:35）已做完，清单见 docs/归档/清理记录-1118.md 末节。
