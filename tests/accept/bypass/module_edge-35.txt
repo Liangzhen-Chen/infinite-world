@@ -1,0 +1,4 @@
+export const f = (engine, id) => {
+  const row = engine.rules.economyResources[id];
+  return row.transferable;
+};

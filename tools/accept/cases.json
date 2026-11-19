@@ -719,6 +719,16 @@
    "scanClass": "module_edge"
   },
   {
+   "addedAtRev": 20,
+   "caseKey": "module_edge-35",
+   "expectCode": "E-VIEW-INPUT-IMPORT",
+   "fixture": "tests/accept/bypass/module_edge-35.txt",
+   "group": "rules",
+   "origin": "卷六 A6-1.1 :398、李白 11-19 10:4x 裁定①：行取自资源种类表（economyResources）的 transferable，在账本内核之外读必报",
+   "polarity": "must_fail",
+   "scanClass": "module_edge"
+  },
+  {
    "addedAtRev": 17,
    "caseKey": "module_edge-41",
    "fixture": "tests/accept/bypass/module_edge-41.txt",
@@ -733,6 +743,15 @@
    "fixture": "tests/accept/bypass/module_edge-42.txt",
    "group": "kernel",
    "origin": "卷六 A6-1.1 :398：kernel/ledger.mjs 自己读 sources、sinks 不计（必须不报用例）",
+   "polarity": "must_pass",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 20,
+   "caseKey": "module_edge-43",
+   "fixture": "tests/accept/bypass/module_edge-43.txt",
+   "group": "rules",
+   "origin": "卷十八 :337、李白 11-19 10:4x 裁定①：行取自持有种类表（词表 holding_kind 条目）的同名字段 transferable，不属资源种类行，不计（必须不报用例）",
    "polarity": "must_pass",
    "scanClass": "module_edge"
   },

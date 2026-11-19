@@ -11,7 +11,7 @@
 //   display 读显示路径（卷十二 R12-2.10：显示集合只取声明表 stateKeys.<键>.display 与 textPaths）：state 成员链落在显示路径上即 E-VIEW-DISPLAY-READ。
 // 局限（P-1 与 2-3 汇报）：按成员链读路径，解构取出后的分支追不到；state 的根按名字认（lib/js-state.mjs），类型归因要等 tsc。
 
-import { tokenize, memberChains, conditionSpans, symbolPaths, BRANCH_OPS, importsOf, isP } from '../lib/js-scan.mjs';
+import { tokenize, memberChains, conditionSpans, symbolPaths, BRANCH_OPS, importsOf, isP, buildEnv, matchClose } from '../lib/js-scan.mjs';
 import { stateChains, declPaths, writerOf, segsMatch, serverRel, callsOf } from '../lib/js-state.mjs';
 import { filesOfGroups, globToRe } from '../read.mjs';
 
@@ -22,19 +22,67 @@ export function detect(ctx, params, cls) {
   const pats = (params.paths || []).map((p) => p.split('.').map((seg) => globToRe(seg, [])));
   // readerSystems：登记的读者是具体文件（卷六 A6-1.1 的账本内核，调用图白名单 S6-13 同法），文件不抄名单，取自声明表该系统（systems.<系统>.writers）所涉状态键的写者登记。
   const readers = new Set([...filesOfGroups(ctx.files, ctx.model, params.readers || []), ...ownerFiles(ctx, params.readerSystems)]);
+  // 带 readerSystems 的读条目查的是资源种类行（卷六 A6-1.1）的字段：同名字段出自别的表的行（如卷十八 :337 持有种类行的 transferable）不是该行，按“这一行出自哪张表”认。
+  const rowTable = params.readerSystems !== undefined ? resourceTableCode : null;
   const hits = [];
   for (const file of scopeOf(ctx, params)) {
     if (readers.has(file)) continue;
     const toks = tokenize(ctx.read(file));
     const cond = params.access === 'branch' ? conditionSpans(toks) : null;
     const sym = symbolPaths(toks);
+    const env = rowTable ? buildEnv(toks) : null;
     for (const ch of memberChains(toks)) {
       if (!pats.some((pat) => windowMatch(ch.segs, pat))) continue;
       if (cond && !isBranch(toks, ch, cond)) continue;
+      if (rowTable && isForeignRow(toks, env, ch, rowTable)) continue;
       hits.push({ file, line: toks[ch.start].line, nodeKind: 'member', symbolPath: sym[ch.start], code: params.code || '' });
     }
   }
   return hits;
+}
+
+// 资源种类表的登记代号（world/rules/registry.json 的 economyResources 行，与 state_pattern 同一口径，R12-11.5）。
+const resourceTableCode = 'economyResources';
+
+// 链根变量是否证明是别的表的行：根变量的绑定 `const X = F(...)`，F 是本文件声明的函数，函数体读词表记录（`.family` 与 `.entry` 成员，
+// 卷二词表索引记录的形状：行是 family 对应词表的条目，不是资源种类表的行）且全程不碰资源种类表代号。
+// 追不到绑定（参数、解构、跨文件传入）一律不豁免，仍计——证明不了别的表就按资源种类行处理，不放过。
+function isForeignRow(toks, env, ch, tableCode) {
+  const root = toks[ch.start];
+  let at = -1;
+  for (let k = ch.start - 1; k >= 2; k--) {
+    if (isP(toks[k], '=') && toks[k - 1].t === 'id' && toks[k - 1].v === root.v && ['const', 'let', 'var'].includes(toks[k - 2].v)) { at = k + 1; break; }
+  }
+  if (at < 0) return false;
+  if (toks[at].t === 'id' && toks[at].v === 'await') at++;
+  const f = toks[at];
+  if (!f || f.t !== 'id' || !isP(toks[at + 1], '(')) return false;
+  const stmtEnd = matchClose(toks, at + 1) + 1;
+  if (toks[stmtEnd] && !isP(toks[stmtEnd], ';') && !toks[stmtEnd].nl) return false;
+  const body = functionBody(toks, f.v);
+  if (!body) return false;
+  const mentions = (lo, hi, pred) => { for (let k = lo; k < hi; k++) if (pred(toks[k], k)) return true; return false; };
+  const code = (t) => (t.t === 'str' && t.v === tableCode) || (t.t === 'id' && (t.v === tableCode || env.get(t.v) === tableCode));
+  const member = (name) => (t, k) => t.t === 'id' && t.v === name && isP(toks[k - 1], '.');
+  if (mentions(at, stmtEnd, code) || mentions(body[0], body[1], code)) return false;
+  return mentions(body[0], body[1], member('family')) && mentions(body[0], body[1], member('entry'));
+}
+
+// 本文件声明的函数 name 的函数体 [`{` 下标, `}` 下标 + 1)；`function name(` 与 `const name = (…) => {` 两种写法，其余认不出（返回 null）。
+function functionBody(toks, name) {
+  for (let i = 0; i < toks.length; i++) {
+    let open = -1;
+    if (toks[i].t === 'id' && toks[i].v === 'function' && toks[i + 1] && toks[i + 1].v === name && isP(toks[i + 2], '(')) {
+      const close = matchClose(toks, i + 2);
+      if (isP(toks[close + 1], '{')) open = close + 1;
+    } else if (toks[i].t === 'id' && toks[i].v === name && toks[i - 1] && toks[i - 1].v === 'const' && isP(toks[i + 1], '=')) {
+      let k = i + 2;
+      if (toks[k] && toks[k].t === 'id' && toks[k].v === 'async') k++;
+      if (isP(toks[k], '(')) { const close = matchClose(toks, k); if (isP(toks[close + 1], '=>') && isP(toks[close + 2], '{')) open = close + 2; }
+    }
+    if (open >= 0) return [open, matchClose(toks, open) + 1];
+  }
+  return null;
 }
 
 // 登记派生的文件：参数给系统代号（声明表 systems 的键），文件取该系统 writers 所涉状态键在 stateKeys.<键>.writers 里登记的写者文件（rewrite、create），

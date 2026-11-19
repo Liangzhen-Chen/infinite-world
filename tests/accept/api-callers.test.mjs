@@ -145,3 +145,17 @@ test('A6-1.1 引用：scopeSystems 登记派生的文件；同名标识符与同
   assert.deepEqual(hits.map((h) => [h.line, h.nodeKind]), [[1, 'ref'], [3, 'ref'], [2, 'import_module']]);
   assert.equal(pathAccess(c, { ...p, readerSystems: ECON }, CLS).length, 0);
 });
+
+test('A6-1.1 按表认：持有种类行（词表条目）的同名字段不计；资源种类表的行与追不到来源的行照计', () => {
+  const p = { access: 'read', groups: SRV, paths: ['transferable'], readerSystems: ECON, code: 'E-VIEW-INPUT-IMPORT' };
+  const kind = "function kindRow(e, c) { const rec = e.vocab.index.get(c); if (rec.family !== 'x') throw 1; return rec.entry; }\nexport const f = (e, c) => { const row = kindRow(e, c); return row.transferable; };";
+  const both = kind.replace("rec.family !== 'x'", "rec.family !== 'x' || !e.rules.economyResources");
+  const c = ctxOf({
+    'server-plugin/kernel/ledger.mjs': 'export const a = 1;',
+    'server-plugin/kind.mjs': kind,
+    'server-plugin/res.mjs': 'export const g = (e, id) => { const row = e.rules.economyResources[id]; return row.transferable; };',
+    'server-plugin/param.mjs': 'export const h = (row) => row.transferable;',
+    'server-plugin/mixed.mjs': both,
+  });
+  assert.deepEqual(pathAccess(c, p, CLS).map((h) => h.file), ['server-plugin/mixed.mjs', 'server-plugin/param.mjs', 'server-plugin/res.mjs']);
+});

@@ -1,0 +1,9 @@
+function kindRow(engine, code) {
+  const rec = engine.vocab.index.get(code);
+  if (!rec || rec.family !== 'holding_kind') throw new Error('unregistered');
+  return rec.entry;
+}
+export const f = (engine, code) => {
+  const row = kindRow(engine, code);
+  return row.transferable === true;
+};
