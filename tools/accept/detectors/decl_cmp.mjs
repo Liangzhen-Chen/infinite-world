@@ -20,6 +20,9 @@
 //                 derived 式引用的 `rules.<表>.<键>`（加载期编进求值器，运行期由 dim 求值）；(b) 已登记加载期派生（表头 ruleIndex）按具名
 //                 {table, key} 读到的键，及该条件列表各条 when 引用的 `rules.<表>.<键>`。只认具名引用：表头别的字段、整表遍历、
 //                 未建派生的式子都不算；写错的键对不上任何登记键，也就不算（加载器另报 E-MOD-RX）。
+//                 (a) 按"加载期编进求值器的数据 RX"整类认（李白 11-19 13:2x ① 原意，主会话 6-29 续定口径）：另含登记为加载期编译的
+//                 词表行 RX 字段（kernel/handles/markers.mjs VOCAB_RX_FIELDS，{族, 字段}）里写的式子；同族别的字段（basis 等文本）、
+//                 别的族里同名字段都不是加载器编译的，不算。
 
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -28,6 +31,7 @@ import { stateChains } from '../lib/js-state.mjs';
 import { filesOfGroups, LAYOUT } from '../read.mjs';
 import { readRules, RULES_LAYOUT } from '../../../server-plugin/kernel/load/rules.mjs';
 import { NAME_ROOT } from '../../../server-plugin/kernel/rx.mjs';
+import { VOCAB_RX_FIELDS } from '../../../server-plugin/kernel/handles/markers.mjs';
 import { rxTokenAt } from '../../../server-plugin/kernel/handles/patterns.mjs';
 
 const ENUM_FNS = new Set(['keys', 'values', 'entries', 'assign', 'fromEntries', 'getOwnPropertyNames']);
@@ -106,6 +110,14 @@ function dataConsumers(ctx, read) {
       const row = isObj(rows) && Array.isArray(rows.rows) ? rows.rows.find((r) => isObj(r) && r.key === ri.key) : undefined;
       for (const e of row && Array.isArray(row.value) ? row.value : []) if (isObj(e)) rxRuleRefs(e.when, out);
     }
+  }
+  // (a) 续：加载期编译的词表行 RX 字段（handles/markers.mjs VOCAB_RX_FIELDS），只读登记的 {族, 字段}；词表文件名同 lit_scope 的读法。
+  const vocabFile = `${dir}_vocab.json`;
+  const vocab = ctx.files.includes(vocabFile) ? parse(vocabFile) : undefined;
+  const families = isObj(vocab) && isObj(vocab.families) ? vocab.families : {};
+  for (const { family, field } of VOCAB_RX_FIELDS) {
+    const fam = families[family];
+    for (const e of Object.values(isObj(fam) && isObj(fam.entries) ? fam.entries : {})) if (isObj(e)) rxRuleRefs(e[field], out);
   }
   return out;
 }

@@ -1,0 +1,8 @@
+// 加载入口登记的词表行 RX 字段（kernel/load/world.mjs VOCAB_RX_FIELDS）里的式子引用登记的 unitValue：加载期编进求值器，算消费（A12-4.5 必须不报）。
+export const pick = (t) => t.other;
+
+// @file world/rules/tables/valuation.json
+{"rows": [{"key": "unitValue", "value": 1}]}
+
+// @file world/ontology/dimensions/_vocab.json
+{"families": {"weather": {"closed": false, "prefix": "wx_", "entries": {"wx_a": {"weightRX": "rules.valuation.unitValue * 2"}}}}}

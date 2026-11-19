@@ -35,6 +35,11 @@
    "si": 1
   },
   {
+   "dimension": "heat_transfer_coefficient",
+   "id": "W_per_m2_K",
+   "si": 1
+  },
+  {
    "calibrate": true,
    "dimension": "axis",
    "id": "axis",
@@ -91,6 +96,11 @@
    "dimension": "time",
    "id": "day",
    "si": 86400
+  },
+  {
+   "dimension": "angle",
+   "id": "degree",
+   "si": 0.017453292519943295
   },
   {
    "dimension": "ratio",
@@ -169,6 +179,11 @@
    "dimension": "time",
    "id": "minute",
    "si": 60
+  },
+  {
+   "dimension": "length",
+   "id": "mm",
+   "si": 0.001
   },
   {
    "dimension": "rate",

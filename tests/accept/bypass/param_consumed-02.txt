@@ -1,0 +1,8 @@
+// 词表行 RX 字段写错了键（unitValu），登记的 unitValue 没有消费者（A12-4.5 必须报；加载器另报 E-MOD-RX）。
+export const pick = (t) => t.other;
+
+// @file world/rules/tables/valuation.json
+{"rows": [{"key": "unitValue", "value": 1}]}
+
+// @file world/ontology/dimensions/_vocab.json
+{"families": {"weather": {"closed": false, "prefix": "wx_", "entries": {"wx_a": {"weightRX": "rules.valuation.unitValu * 2"}}}}}

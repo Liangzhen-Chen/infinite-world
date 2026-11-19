@@ -5,6 +5,7 @@
   {"table": "material", "dimension": "hardness", "missing": ["data", "primitive"], "card": "pre_first_reader_card", "note": "缺 rules.materials.strengthSummary 权重（卷三乙 :625，卷文与旧数据都没有）与 map 点积原语；建卡时带回这些键及出处"},
   {"table": "material", "dimension": "toughness", "missing": ["data", "primitive"], "card": "pre_first_reader_card", "note": "同 hardness：缺 rules.materials.strengthSummary.toughness 权重与 map 点积原语；建卡时带回这些键及出处"},
   {"table": "place", "dimension": "depthM", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷五 §4.5.3 规则 1：分支取值要 first(rules)（卷二 §1.12），RX 未建；且读 surfaceRefElevationM（同缺）"},
+  {"table": "place", "dimension": "seasonScheme", "missing": ["data"], "card": "pre_first_reader_card", "note": "卷二十 §4.4.3、§2.7 :363：由 rules.season.schemeRules 按纬度派生，schemeRules 未建（rules.season.unbuilt）；块 6 的天气单元显式指定 seasonScheme（allowExplicit）"},
   {"table": "place", "dimension": "enclosed", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷五 §4.5.3 规则 1：exists(rel_within, 挂 comp_enclosure) 带关系的聚合求值未建（rx.mjs 只建无关系的 known），按组件类过滤的 filter 写法亦未建"},
   {"table": "place", "dimension": "surfaceRefElevationM", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷五 §4.5.3 规则 1：first(rules) 与带 recursive 的 nearest(rel_contains, …) 未建"},
   {"table": "species", "dimension": "bodyDensity", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷四 §4.1.3 S-3：wsum(身体图 tissueFractions 经 tissues 映射到材料, material, density)，跨表（身体图行、材料行）加权和，现行 RX 无此原语"},

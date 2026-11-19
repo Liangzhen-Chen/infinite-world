@@ -1,0 +1,29 @@
+{
+ "version": 1,
+ "scope": "world_root",
+ "note": "转换输入：卷二十 §2.7 comp_weather_cell 的单元初值（地点表 place 表头的天气单元维度，类型与取值域见 world/ontology/dimensions/place.json）。加载器不读本文件，现在不生效；由 6-24 把它挂到起始地区（河湾村所在单元）的地点行上，经加载器校验后才进游戏。不引用任何地点 id。数据是现实打底的初值，游戏内按日生效改写（李白 11-19 14:5x），改写不回写本文件。",
+ "latitudeDeg": 37.783,
+ "cellElevationM": 779,
+ "cell": {
+  "annualMeanTempC": 11.0361,
+  "annualPrecipMm": 429.3696,
+  "tempAmpC": 14.2958,
+  "diurnalAmpC": 6.3983,
+  "precipSeasonality": [[0.0417, 0.5188], [0.125, 0.6987], [0.2083, 1.0452], [0.2917, 2.4086], [0.375, 3.0688], [0.4583, 2.0523], [0.5417, 1.1332], [0.625, 0.5025], [0.7083, 0.1127], [0.7917, 0.1232], [0.875, 0.0824], [0.9583, 0.2535]],
+  "prevailingWindDeg": 48.8462,
+  "perennialSnowMm": 0,
+  "precipLiquid": "mat_water",
+  "seasonScheme": "ssch_four",
+  "climateProto": "cpr_taiyuan",
+  "weatherCommonality": {"wx_clear": 4658, "wx_cloudy": 2871, "wx_fog": 790, "wx_rain": 1091, "wx_snow": 59, "wx_storm": 532}
+ },
+ "source": {
+  "station": "太原站 WMO 53772，GHCN-Daily 站号 CHM00053772，北纬 37.783 度、东经 112.55 度、海拔 779 米（ISD 记录头）",
+  "period": "1991-01-01 至 2020-12-31（WMO 现行标准期）",
+  "dataset": "NOAA NCEI GHCN-Daily（PRCP、TMAX、TMIN、TAVG，Menne 等 2012, JTECH 29:897）；NOAA NCEI Integrated Surface Database 逐时（总云量 GF1、现在天气 MW、风 WND）",
+  "urls": ["https://www.ncei.noaa.gov/pub/data/ghcn/daily/all/CHM00053772.dly", "https://www.ncei.noaa.gov/pub/data/noaa/<年>/537720-99999-<年>.gz（1991–2020 共 30 个）"],
+  "downloaded": "2026-11-19",
+  "sha256": {"CHM00053772.dly": "80686f47a4b7dc9d0b1d2eae59583e4de0e0287d76f0d7de81fdf2aa0c2f8f59", "537720-99999-1991.gz": "bcb2f64092dddbc76a6385e71cf61d4166bddd3a71dd24e2453ed3b4b7123252", "537720-99999-2020.gz": "bfca39cdf26acc1853c6acf8dfa4899b51c5e8ff34c83c15c7589f37d9a7f977", "other": "其余 28 个 ISD 文件的校验值见 docs/卡回报/ds-b6-29.md"},
+  "method": "docs/卡回报/ds-b6-29.md「换算方法」A–I、「第 2 步结果」与「改一轮」；年平均气温取 GHCN-Daily TAVG（10958 日全有）；凡读日降水的量（年降水、precipSeasonality、天气归类与其派生的 weatherCommonality）一律只用日降水缺测不超 10% 的 23 个年份（1991–2012、2020；2013–2019 每年缺测 239–276 日，留下的多是雨日，年和与全年相当，不用），天气有效日 8295；年降水为这 23 年年和的平均；tempAmpC 取太阳相位十二等分（3 月 20 日起）月均温（最大−最小）÷2；precipSeasonality 为同一十二等分的降水份额×12（全年积分 1）；盛行风向为 ISD 小时风向的风速加权矢量平均（风来向）；perennialSnowMm 取 0：1991–2020 每年夏季（相位月 3–5）日最高温平均最低为 26.8 度，积雪不能越夏；weatherCommonality 与各天气行 persistence 在内核口径下一起标定（换算方法 C.4，F:/dnd-tmp/p629/round2.mjs），使递推频率与次日同状态比例等于实测；climateProto 引太原原型（李白 11-19 15:5x ⑤）；precipLiquid 取 mat_water（降水的材料是水，卷二十 §2.7 :362）"
+ }
+}

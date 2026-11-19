@@ -154,6 +154,23 @@ export function fixedDivide(a, b) {
   return checkedFixed((a * fixedScale()) / b);
 }
 
+/**
+ * 分段线性曲线插值（卷二 §1.5 :189 curve；全书唯一一份插值，kernel/dimensions.mjs#lookupCurve 与 rx.mjs 的 lookup 原语都调它）。
+ * pts 为非空定点点列 [[x,y]…]、x 严格递增（调用方保证）；v 为定点；出域取端点，插值一次整除向零截断。
+ * @param {[bigint, bigint][]} pts @param {bigint} v @returns {bigint}
+ */
+export function fixedCurveAt(pts, v) {
+  if (v <= pts[0][0]) return pts[0][1];
+  for (let i = 1; i < pts.length; i++) {
+    const [x1, y1] = pts[i];
+    if (v <= x1) {
+      const [x0, y0] = pts[i - 1];
+      return y0 + ((y1 - y0) * (v - x0)) / (x1 - x0);
+    }
+  }
+  return pts[pts.length - 1][1];
+}
+
 // ---------- 10⁸ 标度与定点指数、对数、整数次幂（卷二 §3.3"定点指数与整数次幂（唯一定义）" :1328–:1340） ----------
 // 指数表由加载入口 installExpTable 收下（world/ontology/dimensions/_distributions.json，tools/gen-det-tables.mjs 离线生成）；
 // 运行期只读表、不现算（卷二十七 R27-5.2 :572–:574）。本文件是五个函数的唯一定义，别处只引用。

@@ -258,24 +258,37 @@
    "structure": "keys",
    "type": {
     "anchorDays": {"type": "integer", "unit": "day"},
+    "weightScale": {"type": "integer", "unit": "count"},
+    "persistBase": {"type": "integer", "unit": "count"},
     "unbuilt": {"type": "set", "of": {"type": "string"}}
    },
-   "domain": {"anchorDays": [1, null], "unbuilt": {}},
-   "volume": "卷二十 §2.9 :395（rules.weather）、§4.3.3 第 2 条（anchorDays 锚段）；weightScale、persistBase、meltCurve 与天气行字段无出处，登在 unbuilt（李白 11-19 13:3x ①③），读者 kernel/weather.mjs",
+   "domain": {"anchorDays": [1, null], "weightScale": [1, null], "persistBase": [1, null], "unbuilt": {}},
+   "volume": "卷二十 §2.9 :395（rules.weather）、§4.3.3 第 2 条（anchorDays 锚段）；weightScale、persistBase 取太原实测换算（6-29 第 2 步，李白 11-19 14:2x），meltCurve 无读者登在 unbuilt（李白 11-19 13:3x ①③），读者 kernel/weather.mjs",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"anchorDays": false, "unbuilt": false}
+   "packOverridable": {"anchorDays": false, "weightScale": false, "persistBase": false, "unbuilt": false}
+  },
+  {
+   "code": "climateProto",
+   "file": "tables/climate-proto.json",
+   "structure": {"rows": {"vocab": "climate_proto"}},
+   "type": {"type": "struct", "required": ["seasonCurve"], "fields": {
+    "seasonCurve": {"type": "map", "key": {"type": "ref", "vocab": "weather"}, "value": {"type": "curve", "x": "fraction", "y": "fraction"}}
+   }},
+   "volume": "气候原型表（李白 11-19 15:5x ⑤：季节曲线挂气候原型，天气单元经 climateProto 引用；卷二十 §4.3.3 第 3 条 weightRX 读静态维度在当前相位的份额）；卷二十 :395 未列此表，6-29 改一轮自定；读者 kernel/weather.mjs（env.seasonCurve）",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": false
   },
   {
    "code": "facility",
    "file": "tables/facility.json",
    "structure": "keys",
    "type": {
-    "unbuilt": {"type": "set", "of": {"type": "string"}}
+    "thermal": {"type": "struct", "required": ["openingWPerM2K"], "fields": {"openingWPerM2K": {"type": "number", "unit": "W_per_m2_K", "precision": 1}}}
    },
-   "domain": {"unbuilt": {}},
-   "volume": "卷十九 §4.1 规则 4 :326（rules.facility.thermal.openingWPerM2K）：卷文和旧数据都没有值，登在 unbuilt，kernel/climate.mjs envelopeUaWPerK 读到按未知（李白 11-19 13:3x ②）",
+   "domain": {"thermal": {}},
+   "volume": "卷十九 §4.1 规则 4 :326（rules.facility.thermal.openingWPerM2K）：取 GB 50176-2016 表 C.5.3-1 单层窗值（李白 11-19 14:2x 三），读者 kernel/climate.mjs envelopeUaWPerK",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"unbuilt": false}
+   "packOverridable": {"thermal": false}
   },
   {
    "code": "materials",

@@ -1,0 +1,8 @@
+// unitValue 只出现在加载器不编译的词表文本里：登记族的 basis 文本、未登记族里的同名字段（A12-4.5 必须报）。
+export const pick = (t) => t.other;
+
+// @file world/rules/tables/valuation.json
+{"rows": [{"key": "unitValue", "value": 1}]}
+
+// @file world/ontology/dimensions/_vocab.json
+{"families": {"weather": {"closed": false, "prefix": "wx_", "entries": {"wx_a": {"basis": "rules.valuation.unitValue"}}}, "other": {"closed": false, "prefix": "oth_", "entries": {"oth_a": {"weightRX": "rules.valuation.unitValue"}}}}}

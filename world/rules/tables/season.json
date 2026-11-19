@@ -1,5 +1,5 @@
 {
  "rows": [
-  {"key": "unbuilt", "value": ["schemeRules", "sea_four_autumn.growth", "sea_four_autumn.warmth", "sea_four_autumn.wetness", "sea_four_spring.growth", "sea_four_spring.warmth", "sea_four_spring.wetness", "sea_four_summer.growth", "sea_four_summer.warmth", "sea_four_summer.wetness", "sea_four_winter.growth", "sea_four_winter.warmth", "sea_four_winter.wetness"], "file": "server-plugin/kernel/climate.mjs", "grade": "designed", "source": "卷二十 §2.9 :401（season.schemeRules）；§2.6 :301–:303（季节行 growth、wetness、warmth 三个数值维度）；李白 11-19 13:3x ③（示意行数值不算出处）", "basis": "无出处不编：schemeRules（按纬度与 precipSeasonality 派生方案）卷文无数据，块 6 的天气单元显式指定 seasonAt 读的 seasonScheme（卷二十 §2.7 :362 allowExplicit）；三个数值维度旧数据只有作物倍率 cropSeasonFactors（0.8、1.1、1.4、0.3，是倍率不是 [0,1] 的 growth）与气温表，不是同一口径，不转；卷文 §4.4.5 :689 的夏冬示意值不算出处。十二项全登记，seasonDimension 读到按未知并带缺口"}
+  {"key": "unbuilt", "value": ["schemeRules"], "file": "server-plugin/kernel/climate.mjs", "grade": "designed", "source": "卷二十 §2.9 :401（season.schemeRules）；§2.6 :301–:303（季节行 growth、wetness、warmth 三个数值维度）；李白 11-19 13:3x ③（示意行数值不算出处）", "basis": "schemeRules（按纬度与 precipSeasonality 派生方案）卷文无数据格式，规则式（|纬度| > 黄赤交角选四季）没有读者，块 6 的天气单元显式指定 seasonAt 读的 seasonScheme（卷二十 §2.7 :362 allowExplicit），故仍登记。季节十二项已按太原 1991–2020 实测归一化入词表族 season 各行（6-29 第 2 步，算法见 docs/卡回报/ds-b6-29.md「换算方法」F）"}
  ]
 }

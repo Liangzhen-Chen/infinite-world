@@ -116,6 +116,15 @@
    },
    "prefix": "cap_"
   },
+  "climate_proto": {
+   "closed": false,
+   "entries": {
+    "cpr_taiyuan": {
+     "basis": "气候原型：太原站 WMO 53772（GHCN-Daily CHM00053772、ISD 537720）1991–2020 实测（亮圳 11-19 14:22 定原型地；李白 11-19 15:5x ⑤ 季节曲线挂原型，首批只有这一份）。原型数据在 rules.climateProto 本行；天气单元经 climateProto 字段引用"
+    }
+   },
+   "prefix": "cpr_"
+  },
   "class": {
    "closed": false,
    "entries": {
@@ -226,6 +235,18 @@
       "rotRate"
      ],
      "table": "material"
+    },
+    "comp_weather_cell": {
+     "requires": [
+      "annualMeanTempC",
+      "annualPrecipMm",
+      "climateProto",
+      "diurnalAmpC",
+      "perennialSnowMm",
+      "precipLiquid",
+      "tempAmpC"
+     ],
+     "table": "place"
     }
    },
    "prefix": "comp_"
@@ -557,20 +578,24 @@
    "closed": false,
    "entries": {
     "sea_four_spring": {
-     "basis": "区间取旧实现：季 = 日序 ÷ 90 的四等分、旧历第 1 日为春（旧 weather.mjs，360 日一年）= 太阳相位 [0, 1/4)；growth、warmth、wetness 无出处不填（卷文示意值不算出处，李白 11-19 13:3x ③），见 rules.season.unbuilt",
-     "scheme": "ssch_four", "order": 0, "phaseFrom": {"num": 0, "den": 4}, "phaseTo": {"num": 1, "den": 4}
+     "basis": "区间取旧实现：季 = 日序 ÷ 90 的四等分、旧历第 1 日为春（旧 weather.mjs，360 日一年）= 太阳相位 [0, 1/4)。growth、warmth、wetness 现实打底的初值（太原站 1991–2020，来源见 docs/卡回报/ds-b6-29.md「换算方法」F）：太阳相位十二等分的月值取该季三个月平均，warmth = (月均温 − 年最低月)/(年最高月 − 年最低月)，wetness = 月降水/年最大月降水（降水只取日降水缺测 ≤ 10% 的 23 年，2013–2019 年缺测过半且留下的多是雨日，不用），growth = 月积温(≥5 ℃)/年最大月积温",
+     "scheme": "ssch_four", "order": 0, "phaseFrom": {"num": 0, "den": 4}, "phaseTo": {"num": 1, "den": 4},
+     "growth": 0.5949, "warmth": 0.7316, "wetness": 0.2458
     },
     "sea_four_summer": {
-     "basis": "区间取旧实现四等分，相位 [1/4, 2/4)；三个数值维度无出处不填，见 rules.season.unbuilt",
-     "scheme": "ssch_four", "order": 1, "phaseFrom": {"num": 1, "den": 4}, "phaseTo": {"num": 2, "den": 4}
+     "basis": "区间取旧实现四等分，相位 [1/4, 2/4)；三个数值维度同 sea_four_spring 的算法与来源（太原 1991–2020 现实打底初值）",
+     "scheme": "ssch_four", "order": 1, "phaseFrom": {"num": 1, "den": 4}, "phaseTo": {"num": 2, "den": 4},
+     "growth": 0.9035, "warmth": 0.9483, "wetness": 0.8179
     },
     "sea_four_autumn": {
-     "basis": "区间取旧实现四等分，相位 [2/4, 3/4)；三个数值维度无出处不填，见 rules.season.unbuilt",
-     "scheme": "ssch_four", "order": 2, "phaseFrom": {"num": 2, "den": 4}, "phaseTo": {"num": 3, "den": 4}
+     "basis": "区间取旧实现四等分，相位 [2/4, 3/4)；三个数值维度同 sea_four_spring 的算法与来源（太原 1991–2020 现实打底初值）",
+     "scheme": "ssch_four", "order": 2, "phaseFrom": {"num": 2, "den": 4}, "phaseTo": {"num": 3, "den": 4},
+     "growth": 0.1901, "warmth": 0.3818, "wetness": 0.1899
     },
     "sea_four_winter": {
-     "basis": "区间取旧实现四等分，相位 [3/4, 4/4)；三个数值维度无出处不填，见 rules.season.unbuilt",
-     "scheme": "ssch_four", "order": 3, "phaseFrom": {"num": 3, "den": 4}, "phaseTo": {"num": 4, "den": 4}
+     "basis": "区间取旧实现四等分，相位 [3/4, 4/4)；三个数值维度同 sea_four_spring 的算法与来源（太原 1991–2020 现实打底初值）",
+     "scheme": "ssch_four", "order": 3, "phaseFrom": {"num": 3, "den": 4}, "phaseTo": {"num": 4, "den": 4},
+     "growth": 0.0158, "warmth": 0.1123, "wetness": 0.0499
     }
    },
    "prefix": "sea_"
@@ -674,6 +699,11 @@
     }
    },
    "prefix": "sink_"
+  },
+  "sphere": {
+   "closed": false,
+   "entries": {},
+   "prefix": "sphere_"
   },
   "src": {
    "closed": false,
@@ -903,28 +933,55 @@
    "closed": false,
    "entries": {
     "wx_clear": {
-     "basis": "旧 world/meta/rules.json weather.states.clear（晴）：temperatureOffset 2、humidity 40（百分数，÷100）；其余字段旧数据没有，见 rules.weather.unbuilt",
-     "tempOffsetC": 2, "humidity": 0.4
+     "basis": "tempOffsetC、humidity：旧 world/meta/rules.json weather.states.clear（晴）temperatureOffset 2、humidity 40（百分数，÷100）。其余字段现实打底的初值（按日生效改写，李白 11-19 14:5x）：太原站 WMO 53772（GHCN-Daily CHM00053772）1991–2020，来源、下载日期与文件校验值见 docs/卡回报/ds-b6-29.md；归类与换算见该回报「换算方法」。日降水只用缺测 ≤ 10% 的 23 年（2013–2019 年缺测过半且留下的多是雨日，不用）；晴 5056 日 / 有效日 8295；次日仍晴 3817 / 5022；persistence 是在内核口径下标定的值（单元 weatherCommonality、本单元气候原型季节曲线、persistBase 100、anchorDays 360、回归年相位一起递推，使模拟频率与次日同状态比例等于实测，见回报「换算方法」C.4）；cloud 取该类日平均总云量 ÷ 8（ISD GF1）；windMps 为该类日均风速（ISD，m/s）的对数正态极大似然拟合，windDirSpreadDeg 为小时风向与盛行风向角差的第 90 百分位",
+     "tempOffsetC": 2, "humidity": 0.4,
+     "persistence": 342, "cloud": 0.181,
+     "windMps": {"dist": "lognormal", "mu": 0.6701, "sigma": 0.5048, "clamp": [0.19, 8.67]},
+     "windDirSpreadDeg": 158.8, "precipPhaseFrom": "none",
+     "weightRX": "env.seasonCurve.wx_clear"
     },
     "wx_cloudy": {
-     "basis": "旧 weather.states.cloudy（阴）：temperatureOffset 0、humidity 65；其余字段旧数据没有",
-     "tempOffsetC": 0, "humidity": 0.65
+     "basis": "tempOffsetC、humidity：旧 weather.states.cloudy（阴）temperatureOffset 0、humidity 65。其余字段现实打底的初值（来源同 wx_clear）：阴 1705 日；次日仍阴 670 / 1700；persistence 标定同 wx_clear；weightRX 读本单元气候原型季节曲线在当日相位的值（env.seasonCurve，rules.climateProto）",
+     "tempOffsetC": 0, "humidity": 0.65,
+     "persistence": 141, "cloud": 0.721,
+     "windMps": {"dist": "lognormal", "mu": 0.7433, "sigma": 0.5155, "clamp": [0.18, 8.09]},
+     "windDirSpreadDeg": 151.2, "precipPhaseFrom": "none",
+     "weightRX": "env.seasonCurve.wx_cloudy"
     },
     "wx_fog": {
-     "basis": "旧 weather.states.fog（雾）：temperatureOffset −1、humidity 90；其余字段旧数据没有",
-     "tempOffsetC": -1, "humidity": 0.9
+     "basis": "tempOffsetC、humidity：旧 weather.states.fog（雾）temperatureOffset −1、humidity 90。其余字段现实打底的初值（来源同 wx_clear）：雾 468 日（ISD 现在天气码 11、12、28、40–49 任一出现，且日降水 < 1 mm）；次日仍雾 120 / 466；persistence 标定同 wx_clear",
+     "tempOffsetC": -1, "humidity": 0.9,
+     "persistence": 287, "cloud": 0.3955,
+     "windMps": {"dist": "lognormal", "mu": 0.3222, "sigma": 0.4958, "clamp": [0.26, 6.12]},
+     "windDirSpreadDeg": 158.8, "precipPhaseFrom": "none",
+     "weightRX": "env.seasonCurve.wx_fog"
     },
     "wx_rain": {
-     "basis": "旧 weather.states.rain（雨）：temperatureOffset −2、humidity 85；其余字段旧数据没有（降水量分布、风、相态）",
-     "tempOffsetC": -2, "humidity": 0.85
+     "basis": "tempOffsetC、humidity：旧 weather.states.rain（雨）temperatureOffset −2、humidity 85。其余字段现实打底的初值（来源同 wx_clear）：雨 724 日（日降水 ≥ 1 mm 且非雪、无雷暴）；次日仍雨 216 / 715；persistence 标定同 wx_clear；precipMm 为该类日降水量（mm）的对数正态矩匹配（n=724，均值 8.578、样本标准差 11.0249；σ² = ln(1 + s²/x̄²)，μ = ln x̄ − σ²/2；李白 11-19 15:5x ④），clamp 取观测最小、最大",
+     "tempOffsetC": -2, "humidity": 0.85,
+     "persistence": 269, "cloud": 0.7436,
+     "precipMm": {"dist": "lognormal", "mu": 1.6616, "sigma": 0.9876, "clamp": [1, 93.5]},
+     "windMps": {"dist": "lognormal", "mu": 0.6977, "sigma": 0.4765, "clamp": [0.27, 6.52]},
+     "windDirSpreadDeg": 141.2, "precipPhaseFrom": "byTemperature",
+     "weightRX": "env.seasonCurve.wx_rain"
     },
     "wx_snow": {
-     "basis": "旧 weather.states.snow（雪）：temperatureOffset −4、humidity 75；其余字段旧数据没有",
-     "tempOffsetC": -4, "humidity": 0.75
+     "basis": "tempOffsetC、humidity：旧 weather.states.snow（雪）temperatureOffset −4、humidity 75。其余字段现实打底的初值（来源同 wx_clear）：雪 33 日（日降水 ≥ 1 mm 且日最高温 ≤ 0 ℃；该站 GHCN-Daily 无 SNOW、WT 要素）；次日仍雪 7 / 33；persistence 标定同 wx_clear；precipMm 为水当量对数正态矩匹配（n=33，≥ 30 的下限；均值 4.6667、样本标准差 3.8717，公式同 wx_rain）；季节曲线春夏六个相位月无雪日，曲线点为 0",
+     "tempOffsetC": -4, "humidity": 0.75,
+     "persistence": 1575, "cloud": 0.7817,
+     "precipMm": {"dist": "lognormal", "mu": 1.2786, "sigma": 0.7237, "clamp": [1, 13.8]},
+     "windMps": {"dist": "lognormal", "mu": 0.7115, "sigma": 0.4591, "clamp": [0.37, 4.59]},
+     "windDirSpreadDeg": 131.2, "precipPhaseFrom": "byTemperature",
+     "weightRX": "env.seasonCurve.wx_snow"
     },
     "wx_storm": {
-     "basis": "旧 weather.states.storm（暴雨）：temperatureOffset −3、humidity 95；其余字段旧数据没有",
-     "tempOffsetC": -3, "humidity": 0.95
+     "basis": "tempOffsetC、humidity：旧 weather.states.storm（暴雨）temperatureOffset −3、humidity 95。其余字段现实打底的初值（来源同 wx_clear）：雷雨 309 日（ISD 现在天气码 17、29、91–99 任一出现且日降水 ≥ 1 mm；降水由状态定，卷二十 §4.3.3 第 4 条，雷暴而无降水的日按雾或云量归类；不再用「日降水 ≥ 50 mm」一支，见回报「自定裁定」）；次日仍是 47 / 306；persistence 标定同 wx_clear；precipMm 为对数正态矩匹配（n=309，均值 10.6964、样本标准差 13.0291，公式同 wx_rain）。tempOffsetC、humidity 仍是旧「暴雨」设计值",
+     "tempOffsetC": -3, "humidity": 0.95,
+     "persistence": 125, "cloud": 0.5955,
+     "precipMm": {"dist": "lognormal", "mu": 1.915, "sigma": 0.9538, "clamp": [1, 92.6]},
+     "windMps": {"dist": "lognormal", "mu": 0.7615, "sigma": 0.3299, "clamp": [0.66, 6.26]},
+     "windDirSpreadDeg": 151.2, "precipPhaseFrom": "byTemperature",
+     "weightRX": "env.seasonCurve.wx_storm"
     }
    },
    "prefix": "wx_"

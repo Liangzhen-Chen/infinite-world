@@ -135,6 +135,10 @@ export const EFFECT_RX_KEEP_CODES = Object.freeze(['E-RX-NS-UNKNOWN']);
 // 作为写者模块路径的内核模块（卷二 §2.6 :247：账本写者 `kernel/ledger.mjs`）。
 export const KERNEL_MODULES = Object.freeze({ ledger: 'kernel/ledger.mjs' });
 
+// 加载期编译进求值器的词表行 RX 字段（{族, 字段}）：卷二十 §2.5 :277 `weather.weightRX`（rx 型，kernel/weather.mjs 在加载入口编）。
+// 定义源只此一份：编译它的内核文件按族取字段，A12-4.5 检测器（tools/accept/detectors/decl_cmp.mjs paramConsumed）读同一张认数据侧消费者。
+export const VOCAB_RX_FIELDS = Object.freeze([Object.freeze({ family: 'weather', field: 'weightRX' })]);
+
 // 入账腿 lot 的键集记号 attrs / splitFrom：卷三乙 post 批次腿的协议字段（块 3-2 实现定）。
 // 卷文待回补：卷三乙 post 批次腿字段（主会话另派勘误）；卷二、卷六、卷三乙现行卷文未找到这两个键名作批次腿键集的定义。
 // 定义源只此一份，kernel/ledger.mjs 引用（S13 ④，李白 11-18 13:05 裁定第 2 条）。

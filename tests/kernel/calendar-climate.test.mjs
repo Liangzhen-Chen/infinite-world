@@ -27,7 +27,11 @@ installDigestCap({ sha256Hex: (data, encoding) => createHash('sha256').update(da
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const W = loadWorld(ROOT);
 assert.ok(W.ok, W.text);
-const ENGINE = { vocab: W.vocab, rules: W.rules, units: W.env.units };
+// 卷二十 §4.4、§4.5 的手算示例按 360 日一年写（第 90 日 = 1/4 年，§4.5.3 :716 的 5/6、1/3 年落在第 300、120 日）。真实世界年长取回归年
+// 365.24219 日（rules.astro.yearDays，李白 11-19 15:5x ③）；本文件按卷文示例手算的测试用只把 yearDays 换成 360 的引擎，公式与其余规则同真实世界，
+// 真实年长下的相位另由「astroView：真实世界年长」一条按 365.24219 手算。
+const REAL = { vocab: W.vocab, rules: W.rules, units: W.env.units };
+const ENGINE = { ...REAL, rules: { ...W.rules, astro: { ...W.rules.astro, yearDays: { num: 360, den: 1 } } } };
 const codeIs = (code) => (e) => e.code === code;
 const DAY = 1440;
 const near = (got, want, tol = 2) => assert.ok(Math.abs(Number(got) - Number(want)) <= tol, `got ${got}, want ${want} ± ${tol}`);
@@ -201,10 +205,22 @@ test('astroView：太阳相位 = frac((minute − phaseEpochMinute) ÷ 年长分
   assert.equal(drain().filter((r) => r.code === 'W-DIM-GAP').length, 1);
 });
 
+test('astroView：真实世界年长 = 回归年 365.24219 日（李白 11-19 15:5x ③）；第 365 日相位 = 365 ÷ 365.24219，第 366 日跨入下一年', () => {
+  const a = astroView(REAL);
+  // 年长分钟 = 36524219 × 1440 ÷ 100000。
+  assert.deepEqual({ ...a.yearMinutes }, { num: 52594875360, den: 100000 });
+  // 第 365 日起始分钟 525600：相位分子 = 525600 × 100000 = 52560000000（< 52594875360，仍在第 0 年）。
+  assert.deepEqual({ ...a.solarPhase(365 * DAY) }, { num: 52560000000, den: 52594875360 });
+  assert.equal(a.yearIndex(365 * DAY), 0);
+  // 第 366 日：527040 × 100000 − 52594875360 = 109124640。
+  assert.deepEqual({ ...a.solarPhase(366 * DAY) }, { num: 109124640, den: 52594875360 });
+  assert.equal(a.yearIndex(366 * DAY), 1);
+});
+
 test('astroView：缺 yearDays 报 E-DIM-STRUCT-FIELD、整表没登记报 E-RULES-UNREGISTERED，不给缺省', () => {
   const { yearDays, ...rest } = W.rules.astro;
   void yearDays;
-  assert.throws(() => astroView({ ...ENGINE, rules: { ...W.rules, astro: rest } }), codeIs('E-DIM-STRUCT-FIELD'));
+  assert.throws(() => astroView({ ...ENGINE, rules: { ...ENGINE.rules,astro: rest } }), codeIs('E-DIM-STRUCT-FIELD'));
   const { astro, ...noAstro } = W.rules;
   void astro;
   assert.throws(() => astroView({ ...ENGINE, rules: noAstro }), codeIs('E-RULES-UNREGISTERED'));
@@ -254,16 +270,16 @@ test('normalizedSolarPhase：纬度互为相反数的两地相差 1/2（§4.4.6 
   assert.equal(seasonAt(ENGINE, NORTH, 200 * DAY).value, a);
 });
 
-test('seasonDimension：示意值不算出处（李白 13:3x ③），真实世界四季行三个数值维度全部未知并带缺口，不当 0；行上有值才读得到', () => {
+test('seasonDimension：真实世界四季行三个数值维度已按太原实测入表（数值见 taiyuan-climate.test.mjs 手算）；行上没有的维度未知并带缺口，不当 0；行上有值才读得到', () => {
   drain();
   for (const id of ['sea_four_spring', 'sea_four_summer', 'sea_four_autumn', 'sea_four_winter']) {
     for (const dim of ['growth', 'wetness', 'warmth']) {
       const u = seasonDimension(ENGINE, id, dim);
-      assert.equal(u.known, false);
-      assert.deepEqual([...u.gaps], [`${dim}_${id}`]);
+      assert.equal(u.known, true);
+      assert.ok(u.value >= 0 && u.value <= 1);
     }
   }
-  assert.equal(drain().filter((r) => r.code === 'W-DIM-GAP').length, 12);
+  assert.equal(drain().filter((r) => r.code === 'W-DIM-GAP').length, 0);
   // 夹具：一行带 growth 0.7 的季节行（假设数据，只验读法）。
   const E = { vocab: { index: new Map([['sea_x', { family: 'season', entry: { growth: 0.7 } }]]) } };
   assert.equal(seasonDimension(E, 'sea_x', 'growth').value, 0.7);
@@ -328,7 +344,7 @@ test('全年季节摆动的最小、最大落在 5/6 与 1/3 年处（日序 300
   // 两次独立装载（各自 loadWorld）同输入逐日比对 30 日；并与按卷文公式手算的第 0、1、29 日（−1 + 10 × sin(2π × (相位 − 1/12))，相位按当日 10:00）比对。
   const W2 = loadWorld(ROOT);
   assert.ok(W2.ok, W2.text);
-  const ENGINE2 = { vocab: W2.vocab, rules: W2.rules, units: W2.env.units };
+  const ENGINE2 = { vocab: W2.vocab, rules: { ...W2.rules, astro: { ...W2.rules.astro, yearDays: { num: 360, den: 1 } } }, units: W2.env.units };
   for (let d = 0; d < 30; d += 1) assert.equal(outdoorTemp(ENGINE2, PASS, d * DAY + 600).fixed, outdoorTemp(ENGINE, PASS, d * DAY + 600).fixed);
   near(outdoorTemp(ENGINE, PASS, 600).fixed, -59369n, 3);
   near(outdoorTemp(ENGINE, PASS, DAY + 600).fixed, -57844n, 3);
@@ -351,7 +367,7 @@ test('outdoorTemp：交入当日天气偏移则只剩昼夜项缺口；规则表
   near(withOffset.fixed, -96602n + 20000n);
   assert.deepEqual([...withOffset.gaps], ['diurnal_term']);
   const rules = { climate: { ...W.rules.climate, cloudDamp: 0.5, diurnalPeakMinute: 840 } };
-  const E2 = { ...ENGINE, rules: { ...W.rules, ...rules } };
+  const E2 = { ...ENGINE, rules: { ...ENGINE.rules,...rules } };
   const input = { ...PASS, cell: { ...PASS.cell, diurnalAmpC: 6 }, weather: { cloud: 0.5, tempOffsetC: 0 } };
   // 昼夜振幅 6 ×（1 − 0.5 × 0.5）= 4.5；地方时 840 取峰值 +4.5，地方时 1560（差 720 分钟 = 半日）取 −4.5。
   const without = (m) => outdoorTemp(ENGINE, PASS, m).fixed;
@@ -368,7 +384,7 @@ test('groundTemp：洞穴 8 度、深 30 米、damp(30) = 0、梯度 0.03 → 8.
   const cave = { latitudeDeg: 38, cellElevationM: 0, surfaceRefElevationM: 0, enclosed: false, underground: true, depthM: 30, cell: { annualMeanTempC: 8, tempAmpC: 10 } };
   const u = groundTemp(ENGINE, cave, 0);
   assert.deepEqual([u.known, ...u.gaps], [false, 'geothermal_gradient', 'ground_damp_curve']);
-  const E2 = { ...ENGINE, rules: { ...W.rules, climate: { ...W.rules.climate, groundDampCurve: [[0, 1], [30, 0]], geothermalGradient: 0.03 } } };
+  const E2 = { ...ENGINE, rules: { ...ENGINE.rules,climate: { ...W.rules.climate, groundDampCurve: [[0, 1], [30, 0]], geothermalGradient: 0.03 } } };
   assert.equal(groundTemp(E2, cave, 0).fixed, 89000n);
   assert.equal(groundTemp(E2, cave, 270 * DAY).fixed, 89000n);
   // 深度 0：季节摆动全传到 → 等于常年气温 + 摆动；深度 15：damp = 0.5 → 摆动减半。
@@ -384,7 +400,7 @@ test('groundTemp：洞穴 8 度、深 30 米、damp(30) = 0、梯度 0.03 → 8.
 });
 
 test('indoorTemp：室内 = 外侧基准 + 热源功率 ÷ 散热能力；热源 0 时等于外侧基准；散热能力未知则未知，不拿外侧基准代替（第 4 条）', () => {
-  const E2 = { ...ENGINE, rules: { ...W.rules, climate: { ...W.rules.climate, groundDampCurve: [[0, 1], [30, 0]], geothermalGradient: 0.03 } } };
+  const E2 = { ...ENGINE, rules: { ...ENGINE.rules,climate: { ...W.rules.climate, groundDampCurve: [[0, 1], [30, 0]], geothermalGradient: 0.03 } } };
   const cellar = { latitudeDeg: 38, cellElevationM: 0, surfaceRefElevationM: 0, enclosed: true, underground: true, depthM: 30, cell: { annualMeanTempC: 8, tempAmpC: 10 } };
   // 外侧 = 地下基准 8.9；3000 ÷ 150 = 20 → 28.9。
   assert.equal(indoorTemp(E2, { ...cellar, heatPowerW: 3000, envelopeUaWPerK: 150 }, 0).fixed, 289000n);
@@ -404,7 +420,7 @@ test('indoorTemp：室内 = 外侧基准 + 热源功率 ÷ 散热能力；热源
 });
 
 test('tempAt：四种 (enclosed, underground) 组合各恰好命中分支规则一行（§4.5.6 ⑨）；两个布尔缺即未知', () => {
-  const E2 = { ...ENGINE, rules: { ...W.rules, climate: { ...W.rules.climate, groundDampCurve: [[0, 1], [30, 0]], geothermalGradient: 0.03 } } };
+  const E2 = { ...ENGINE, rules: { ...ENGINE.rules,climate: { ...W.rules.climate, groundDampCurve: [[0, 1], [30, 0]], geothermalGradient: 0.03 } } };
   const p = { ...PASS, depthM: 30, heatPowerW: 3000, envelopeUaWPerK: 150 };
   const m = 100 * DAY;
   const f = (enclosed, underground) => tempAt(E2, { ...p, enclosed, underground }, m);
@@ -420,7 +436,7 @@ test('tempAt：四种 (enclosed, underground) 组合各恰好命中分支规则�
 });
 
 test('minutesPerMeterEast 非 0 时不静默忽略：outdoorTemp 报 E-DIM-STRUCT-FIELD', () => {
-  const E2 = { ...ENGINE, rules: { ...W.rules, astro: { ...W.rules.astro, minutesPerMeterEast: 1 } } };
+  const E2 = { ...ENGINE, rules: { ...ENGINE.rules,astro: { ...W.rules.astro, minutesPerMeterEast: 1 } } };
   assert.throws(() => outdoorTemp(E2, PASS, 0), codeIs('E-DIM-STRUCT-FIELD'));
 });
 
@@ -487,8 +503,10 @@ function loadEditedWorld(editVocab) {
   } finally { rmSync(tmp, { recursive: true, force: true }); }
 }
 // 两个天气行：晴（wx_clear，旧数据 tempOffsetC 2）与雾（wx_fog，旧数据 tempOffsetC −1），权重文本与持续性由夹具给；其余四行不给频度。
+const WX_FIELDS = ['weightRX', 'persistence', 'cloud', 'precipMm', 'windMps', 'windDirSpreadDeg', 'precipPhaseFrom'];
 const wxEngine = (a, b, table = { anchorDays: 4, weightScale: 1, persistBase: 1 }) => {
-  const r = loadEditedWorld((rows) => { Object.assign(rows.wx_clear, a); Object.assign(rows.wx_fog, b); });
+  // 真实世界这两行已带太原实测字段；夹具先清掉，只留这里给的字段，验的是读法而不是数据。
+  const r = loadEditedWorld((rows) => { for (const id of ['wx_clear', 'wx_fog']) for (const k of WX_FIELDS) delete rows[id][k]; Object.assign(rows.wx_clear, a); Object.assign(rows.wx_fog, b); });
   assert.ok(r.ok, r.text);
   return { vocab: r.vocab, rules: { ...r.rules, weather: table }, units: r.env.units };
 };
@@ -571,14 +589,11 @@ test('weatherAt：当日量取状态行字段；行上没有的量（cloud）未
   assert.deepEqual([...weatherAt(E3, wxCtx(), 1).state.gaps], ['weather_persistence']);
 });
 
-test('weatherAt：真实世界（旧数据）缺 weightScale、weightRX 等，当日天气未知并带缺口；旧 tempOffsetC、humidity 已在行上；旧 persistence 0.45 不转', () => {
-  const real = weatherAt(ENGINE, { ...wxCtx(), cell: { weatherCommonality: { wx_clear: 1 }, staticDims: {} } }, 0);
-  assert.equal(real.state.known, false);
-  assert.ok(real.state.gaps.includes('weather_weight_scale'));
+test('weatherAt：真实世界旧 tempOffsetC、humidity 仍在行上，旧 persistence 0.45 不转（现 persistence 是太原实测换算的整数，见 taiyuan-climate.test.mjs）；日序为负报码', () => {
   assert.equal(W.rules.weather.anchorDays, 360);
   assert.equal(W.vocab.index.get('wx_rain').entry.tempOffsetC, -2);
   assert.equal(W.vocab.index.get('wx_snow').entry.humidity, 0.75);
-  for (const [, rec] of W.vocab.index) if (rec.family === 'weather') assert.equal(rec.entry.persistence, undefined);
+  for (const [, rec] of W.vocab.index) if (rec.family === 'weather') assert.ok(Number.isInteger(rec.entry.persistence) && rec.entry.persistence >= 1);
   assert.throws(() => weatherAt(ENGINE, wxCtx(), -1), codeIs('E-DIM-DOMAIN-RANGE'));
 });
 
@@ -603,7 +618,7 @@ test('dailyMeanTemp：常年气温 + 季节摆动在该日上的解析式平均 
   assert.deepEqual([...withOffset.gaps], []);
   assert.equal(withOffset.unit, 'celsius');
   // 不读昼夜参数：规则表给了 cloudDamp、diurnalPeakMinute、输入给了昼夜振幅与云量，日均温不变。
-  const full = { ...ENGINE, rules: { ...W.rules, climate: { ...W.rules.climate, cloudDamp: 0.5, diurnalPeakMinute: 840 } } };
+  const full = { ...ENGINE, rules: { ...ENGINE.rules,climate: { ...W.rules.climate, cloudDamp: 0.5, diurnalPeakMinute: 840 } } };
   const input = { ...PASS, cell: { ...PASS.cell, diurnalAmpC: 6 }, weather: { cloud: 0.3, tempOffsetC: 0 } };
   assert.equal(dailyMeanTemp(full, input, 120).fixed, dailyMeanTemp(ENGINE, { ...PASS, weather: { tempOffsetC: 0 } }, 120).fixed);
   // 日均温与一日内许多等距点上完整室外温度的平均一致（解析式的独立证据，容差 4 个定点单位）。
@@ -653,7 +668,7 @@ test('两套历法：系统时间 systemTimeView 全世界统一（第几天、�
 });
 
 const WALL = { envelopeAreaM2: 100, aperture: 0.1, thermalConductivitySum: 0.5, wallThicknessM: 0.2 };
-const withOpening = (v) => ({ ...ENGINE, rules: { ...W.rules, facility: { thermal: { openingWPerM2K: v } } } });
+const withOpening = (v) => ({ ...ENGINE, rules: { ...ENGINE.rules,facility: { thermal: { openingWPerM2K: v } } } });
 
 test('envelopeUaWPerK：100 × [(1 − 0.1) × 0.5 ÷ 0.2 + 0.1 × 3] = 255 W/K；开口比例取 0 也要求有 openingWPerM2K；墙厚非正报码；修正键倍率作用在结果上', () => {
   const E = withOpening(3);
@@ -665,9 +680,12 @@ test('envelopeUaWPerK：100 × [(1 − 0.1) × 0.5 ÷ 0.2 + 0.1 × 3] = 255 W/K�
   assert.equal(envelopeUaWPerK(E, { ...WALL, modifyUa: (v) => (v * 15000n) / 10000n }).fixed, 3825000n);
   // 无出处的 openingWPerM2K：真实世界未知，开口比例 0 也不放行。
   drain();
-  const u = envelopeUaWPerK(ENGINE, WALL);
+  const E0 = { ...ENGINE, rules: { ...ENGINE.rules,facility: {} } };
+  const u = envelopeUaWPerK(E0, WALL);
   assert.deepEqual([u.known, ...u.gaps], [false, 'opening_w_per_m2k']);
-  assert.deepEqual([...envelopeUaWPerK(ENGINE, { ...WALL, aperture: 0 }).gaps], ['opening_w_per_m2k']);
+  assert.deepEqual([...envelopeUaWPerK(E0, { ...WALL, aperture: 0 }).gaps], ['opening_w_per_m2k']);
+  // 世界规则表取 GB 50176-2016 表 C.5.3-1 单层窗 5.8：100 × [(1 − 0.1) × 0.5 ÷ 0.2 + 0.1 × 5.8] = 100 × (2.25 + 0.58) = 283 W/K。
+  assert.equal(envelopeUaWPerK(ENGINE, WALL).fixed, 2830000n);
   const none = envelopeUaWPerK(E, {});
   assert.deepEqual([...none.gaps], ['envelope_aperture', 'envelope_area_m2', 'envelope_conductivity_sum', 'wall_thickness_m']);
   assert.throws(() => envelopeUaWPerK(E, { ...WALL, wallThicknessM: 0 }), codeIs('E-DIM-DOMAIN-RANGE'));
@@ -684,13 +702,13 @@ test('heatPowerW：四项合计（场 强度 × heatWPerScore、燃烧、设施�
 });
 
 test('围护支：交入 envelope 与 heatSources 由卷十九散热能力式、四项热源算室温；热源读入口未建则室温未知（地下围护 8.9 + 210 ÷ 255）', () => {
-  const E2 = { ...ENGINE, rules: { ...W.rules, climate: { ...W.rules.climate, groundDampCurve: [[0, 1], [30, 0]], geothermalGradient: 0.03 }, facility: { thermal: { openingWPerM2K: 3 } } } };
+  const E2 = { ...ENGINE, rules: { ...ENGINE.rules,climate: { ...W.rules.climate, groundDampCurve: [[0, 1], [30, 0]], geothermalGradient: 0.03 }, facility: { thermal: { openingWPerM2K: 3 } } } };
   const cellar = { latitudeDeg: 38, cellElevationM: 0, surfaceRefElevationM: 0, enclosed: true, underground: true, depthM: 30, cell: { annualMeanTempC: 8, tempAmpC: 10 }, envelope: WALL, heatSources: { fields: [{ intensity: 2, heatWPerScore: 50 }], burning: [], facilities: [30], occupants: [80] } };
   // 外侧地下基准 8.9（89000）+ 210 ÷ 255 = 0.8235（fixedDivide 2100000 × 10000 ÷ 2550000 = 8235）。
   assert.equal(tempAt(E2, cellar, 0).fixed, 89000n + 8235n);
   const unbuilt = tempAt(E2, { ...cellar, heatSources: { ...cellar.heatSources, facilities: undefined } }, 0);
   assert.deepEqual([unbuilt.known, ...unbuilt.gaps], [false, 'heat_power_facilities']);
-  const noOpening = tempAt(ENGINE, cellar, 0);
+  const noOpening = tempAt({ ...ENGINE, rules: { ...ENGINE.rules,facility: {} } }, cellar, 0);
   assert.equal(noOpening.known, false);
   assert.ok(noOpening.gaps.includes('opening_w_per_m2k'));
 });

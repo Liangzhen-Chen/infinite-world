@@ -930,11 +930,40 @@
    "scanClass": "param_consumed"
   },
   {
+   "addedAtRev": 36,
+   "caseKey": "param_consumed-02",
+   "expectCode": "E-ACC-PARAM-UNCONSUMED",
+   "fixture": "tests/accept/bypass/param_consumed-02.txt",
+   "group": "rules",
+   "origin": "卷十二 §4.4.6 A12-4.5（勘误 1118k31 (a)）：加载期编译的词表行 RX 字段写错了键，登记参数没有消费者（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "param_consumed"
+  },
+  {
+   "addedAtRev": 36,
+   "caseKey": "param_consumed-03",
+   "expectCode": "E-ACC-PARAM-UNCONSUMED",
+   "fixture": "tests/accept/bypass/param_consumed-03.txt",
+   "group": "rules",
+   "origin": "卷十二 §4.4.6 A12-4.5（勘误 1118k31 (a)）：键只出现在加载器不编译的词表文本里（登记族的 basis、未登记族的同名字段），不算消费（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "param_consumed"
+  },
+  {
    "addedAtRev": 1,
    "caseKey": "param_consumed-11",
    "fixture": "tests/accept/bypass/param_consumed-11.txt",
    "group": "rules",
    "origin": "卷十二 R12-13.3、R12-14.3：规则层代码经规则表读到登记参数（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "param_consumed"
+  },
+  {
+   "addedAtRev": 36,
+   "caseKey": "param_consumed-12",
+   "fixture": "tests/accept/bypass/param_consumed-12.txt",
+   "group": "rules",
+   "origin": "卷十二 §4.4.6 A12-4.5（勘误 1118k31 (a)）：登记为加载期编译的词表行 RX 字段里的式子引用登记参数，加载期编进求值器，算消费（必须不报）",
    "polarity": "must_pass",
    "scanClass": "param_consumed"
   },

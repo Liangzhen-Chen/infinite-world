@@ -1,5 +1,5 @@
 {
  "rows": [
-  {"key": "unbuilt", "value": ["thermal.openingWPerM2K"], "file": "server-plugin/kernel/climate.mjs", "grade": "designed", "source": "卷十九 §4.1 规则 4 :326（rules.facility.thermal.openingWPerM2K，开口散热系数）；李白 11-19 13:3x ②、13:4x ⑤（按建筑热工权威标准取值并写出处，取不到登未建）", "basis": "本卡未取得可核对的权威标准条款：开口（窗洞、门洞）的传热系数 W/(m²·K) 在建筑热工规范（如 GB 50176《民用建筑热工设计规范》、ISO 6946 / ISO 10077）里是按窗框、玻璃构造分档的 U 值，没有“无遮挡开口”这一档，且卷十九该参数的含义（含不含通风换气散热）卷文未写；条款号与取用方法查不实，不编，登未建，列入数据卡 6-29 的待查清单。envelopeUaWPerK 读不到该参数即未知并带缺口 opening_w_per_m2k；开口比例取 0 也照样要求有该参数，不因特殊值跳过"}
+  {"key": "thermal", "value": {"openingWPerM2K": 5.8}, "file": "server-plugin/kernel/climate.mjs", "grade": "referenced", "source": "卷十九 §4.1 规则 4 :326（rules.facility.thermal.openingWPerM2K，开口散热系数，W/(m²·K)）；外部标准：GB 50176-2016《民用建筑热工设计规范》附录 C.5.3 表 C.5.3-1 单片 3mm 普通透明玻璃（单层窗）玻璃中心传热系数 Kgc = 5.8 W/(m²·K)（读 Wikisource 收录的标准全文：https://zh.wikisource.org/w/index.php?title=GB_50176-2016_民用建筑热工设计规范&oldid=5977225 ，该修订 2026-05-29，2026-11-19 取用；表题「表 C.5.3-1 典型玻璃配合不同窗框的整窗传热系数」，「3mm 透明玻璃」行 Kgc 5.8、整窗 6.6/5.8/5.0）；李白 11-19 14:2x 三：取单层窗传热系数", "basis": "开口无遮挡档在 GB 50176、ISO 10077-1、ISO 6946 都没有（第一步已查），李白裁定取单层窗值作开口散热系数：取表 C.5.3-1 最薄的单层透明玻璃 Kgc 5.8（表内同表带框整窗 5.0–6.6，随框型而变，框型不是开口的属性，故取玻璃中心值）；不含空气渗透与通风换气散热（ISO 10077-1 范围同样不含），卷十九该参数含不含通风卷文未写，仍是未解释项；未查 GB 50189，因 GB 50176 已有表号可核。开口比例取 0 也照样要求有该参数，不因特殊值跳过"}
  ]
 }

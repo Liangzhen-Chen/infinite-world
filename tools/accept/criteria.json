@@ -264,10 +264,14 @@
     {
      "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
      "rev": 50
+    },
+    {
+     "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
+     "rev": 51
     }
    ],
-   "print": "5f759e125fe279d897ca5fb8c8015edbbba68918d19fc0d2c5e9ba21a18bc819",
-   "rev": 50,
+   "print": "2543fbf1d0087439956ec959edc1ac75828f223e342ce31f02cb75bd8e4c752d",
+   "rev": 51,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -653,10 +657,14 @@
     {
      "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
      "rev": 45
+    },
+    {
+     "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
+     "rev": 46
     }
    ],
-   "print": "54b0175d7c9240b7384dcdd98e5a5a932d46ac3a665d5b5f121c4e328bb6d72f",
-   "rev": 45,
+   "print": "bf895ce6f64d87017fb0c49564244a2c818dc2c2b198c2fe199e78652b4c513c",
+   "rev": 46,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -719,10 +727,14 @@
     {
      "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
      "rev": 12
+    },
+    {
+     "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
+     "rev": 13
     }
    ],
-   "print": "fec33d1f5bd9abff3d5409c1eb9ce42969776378e0ac19c81c9666dc104fe584",
-   "rev": 12,
+   "print": "d6abf0491ed2638d4d3ab23d9375e7835914cf0f375e0ed2e1a3dcc973d1bd74",
+   "rev": 13,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -851,10 +863,14 @@
     {
      "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
      "rev": 13
+    },
+    {
+     "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
+     "rev": 14
     }
    ],
-   "print": "041c146b8420b9d9deedad8b2ea45c402cd374453dbb009af9157659b7fdf75b",
-   "rev": 13,
+   "print": "70e5a1b293b9d78fd4c6363918df0d0bedd0a3bd069d937a681e36b3cb889016",
+   "rev": 14,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -1061,10 +1077,14 @@
     {
      "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
      "rev": 42
+    },
+    {
+     "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
+     "rev": 43
     }
    ],
-   "print": "21f5d33727fc2f85df2fef311044de35054cb0dc10dd426cd2384efda4d6cb61",
-   "rev": 42,
+   "print": "764a3f66273b9ea2f7964f233ac78169112d7a71c6853096ecd87566255e8260",
+   "rev": 43,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1132,10 +1152,14 @@
     {
      "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
      "rev": 13
+    },
+    {
+     "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
+     "rev": 14
     }
    ],
-   "print": "041c146b8420b9d9deedad8b2ea45c402cd374453dbb009af9157659b7fdf75b",
-   "rev": 13,
+   "print": "70e5a1b293b9d78fd4c6363918df0d0bedd0a3bd069d937a681e36b3cb889016",
+   "rev": 14,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -1390,10 +1414,14 @@
     {
      "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
      "rev": 58
+    },
+    {
+     "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
+     "rev": 59
     }
    ],
-   "print": "1a0afd319289548dc2d91dc05bef629d840ec99136e71730fea5cb983edc06be",
-   "rev": 58,
+   "print": "934531f4684dab664d56fc754bafadf2ffcb5e7d814545d746c8b15702325f53",
+   "rev": 59,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1672,10 +1700,14 @@
     {
      "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
      "rev": 43
+    },
+    {
+     "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
+     "rev": 44
     }
    ],
-   "print": "21f5d33727fc2f85df2fef311044de35054cb0dc10dd426cd2384efda4d6cb61",
-   "rev": 43,
+   "print": "764a3f66273b9ea2f7964f233ac78169112d7a71c6853096ecd87566255e8260",
+   "rev": 44,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -2307,10 +2339,14 @@
     {
      "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
      "rev": 43
+    },
+    {
+     "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
+     "rev": 44
     }
    ],
-   "print": "21f5d33727fc2f85df2fef311044de35054cb0dc10dd426cd2384efda4d6cb61",
-   "rev": 43,
+   "print": "764a3f66273b9ea2f7964f233ac78169112d7a71c6853096ecd87566255e8260",
+   "rev": 44,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -2465,10 +2501,14 @@
     {
      "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
      "rev": 35
+    },
+    {
+     "ref": "块 6 第 6-29 张合主线：decl_cmp paramConsumed 数据侧消费者 (a) 按加载期编进求值器的数据 RX 整类认，另含登记为加载期编译的词表行 RX 字段（handles/markers.mjs VOCAB_RX_FIELDS）里引用的规则表键（主会话 11-19 定口径，依李白 11-19 13:2x ① 原意）；用例 param_consumed-02、-03、-12；判定口径变",
+     "rev": 36
     }
    ],
-   "print": "861fa0262c7cf79cad51f156437c9b612375d35a4e7868ebd6f013f98f48a76c",
-   "rev": 35,
+   "print": "d0169b8064d695c4272523db5273c6f2b149332d4752f00c9eceb9f715a3939e",
+   "rev": 36,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -2719,10 +2759,14 @@
     {
      "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
      "rev": 59
+    },
+    {
+     "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
+     "rev": 60
     }
    ],
-   "print": "3804fc2f4dac4acc534cd7adf0d7b394eff2e26788870b357a01214779e0ae2d",
-   "rev": 59,
+   "print": "652363c218ede336d9f260d9a35879dda714c860fd6a007ce8a422fb689bbd28",
+   "rev": 60,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -2938,10 +2982,14 @@
     {
      "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
      "rev": 22
+    },
+    {
+     "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
+     "rev": 23
     }
    ],
-   "print": "185b6b96ff7345dea9cbd63433f4a4a54665c636b49eb55d0e6d59bbe9b80584",
-   "rev": 22,
+   "print": "02a4aed9ba1882909a6d45d5165172d83947626f32747ab6587a1978d9dd6478",
+   "rev": 23,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -3155,10 +3203,14 @@
     {
      "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
      "rev": 48
+    },
+    {
+     "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
+     "rev": 49
     }
    ],
-   "print": "5f759e125fe279d897ca5fb8c8015edbbba68918d19fc0d2c5e9ba21a18bc819",
-   "rev": 48,
+   "print": "2543fbf1d0087439956ec959edc1ac75828f223e342ce31f02cb75bd8e4c752d",
+   "rev": 49,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -3244,10 +3296,14 @@
     {
      "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
      "rev": 19
+    },
+    {
+     "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
+     "rev": 20
     }
    ],
-   "print": "03f7376eca724e781dc99431d82abaf2eaaef4af2f8a2afde8554dbbd3b89b4c",
-   "rev": 19,
+   "print": "b0ee14f351f733164c7eadb222064f87111534399769e3cb5fc2d7c896258a72",
+   "rev": 20,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -3311,10 +3367,14 @@
     {
      "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
      "rev": 12
+    },
+    {
+     "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
+     "rev": 13
     }
    ],
-   "print": "041c146b8420b9d9deedad8b2ea45c402cd374453dbb009af9157659b7fdf75b",
-   "rev": 12,
+   "print": "70e5a1b293b9d78fd4c6363918df0d0bedd0a3bd069d937a681e36b3cb889016",
+   "rev": 13,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -3590,10 +3650,14 @@
     {
      "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
      "rev": 37
+    },
+    {
+     "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
+     "rev": 38
     }
    ],
-   "print": "861fa0262c7cf79cad51f156437c9b612375d35a4e7868ebd6f013f98f48a76c",
-   "rev": 37,
+   "print": "d0169b8064d695c4272523db5273c6f2b149332d4752f00c9eceb9f715a3939e",
+   "rev": 38,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -3797,10 +3861,14 @@
     {
      "ref": "vol27.S27-3 source 如实收窄：只守墙钟与性能计数器，计时器半条与 costPlan/advancePlan 参数表半条登记未覆盖并挂卡；判据代码不变（Opus 只核 M3）",
      "rev": 27
+    },
+    {
+     "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
+     "rev": 28
     }
    ],
-   "print": "9730feb6aafa57e0db5ffe714b4d347a6cc5e25f022218e0ad5a45e1d592b7c6",
-   "rev": 27,
+   "print": "bcb7dede83d33fb5a6f372ea3286eab11c272fc618a91722362fcfac7d29ef89",
+   "rev": 28,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {
