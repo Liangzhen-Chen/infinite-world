@@ -393,7 +393,7 @@
     "unbuilt": {"type": "set", "of": {"type": "string"}}
    },
    "domain": {"envCurve": {}, "unbuilt": {}},
-   "volume": "卷三乙 §2.5 :343（rules.wear 各键）；§4.10.1、§4.10.3 D-2；块 6 第 6-3 张只登有读者的键（envCurve 读者 kernel/item-state.mjs），卷文没给首批值，取暂定值（见 wear.json basis，标\"暂定·待试玩标定\"）；缺口登在 wear.json 的 unbuilt 行：levels（D-3、D-6，劣化等级与修正，wear 族代号卷文只有中文名）、faultCurve（卷三乙 §4.9 故障）、weatherCtx（湿度要天气上下文，世界种子流 rules.seedKeys 未建）；envCurve 的横轴是当日湿度（天气状态行 humidity，fraction）",
+   "volume": "卷三乙 §2.5 :343（rules.wear 各键）；§4.10.1、§4.10.3 D-2；块 6 第 6-3 张只登有读者的键（envCurve 读者 kernel/item-state.mjs），卷文没给首批值，取暂定值（见 wear.json basis，标\"暂定·待试玩标定\"）；缺口登在 wear.json 的 unbuilt 行：levels（D-3、D-6，劣化等级的阈值与修正；wear 族代号与次序已登记，李白 11-19 20:3x ⑥）、faultCurve（卷三乙 §4.9 故障）、weatherCtx（湿度要天气上下文，世界种子流 rules.seedKeys 未建）；envCurve 的横轴是当日湿度（天气状态行 humidity，fraction）",
    "multiSourceMerge": "own_key_only",
    "packOverridable": {"envCurve": false, "unbuilt": false}
   },
@@ -403,7 +403,7 @@
    "structure": "keys",
    "type": {"unbuilt": {"type": "set", "of": {"type": "string"}}},
    "domain": {"unbuilt": {}},
-   "volume": "卷三乙 §2.5 :349（rules.containers.maxNesting）；§4.4.3 K-2；§5.4 :1930、:1951（穿戴、装备、装入三种持有种类行由本卷登记进卷十八 §4.1 种类表）。块 6 第 6-3 张只登缺口：三种持有种类行的代号卷文没给，maxNesting 的值卷文没给，随种类行与值定后登记并接读者（见 containers.json）",
+   "volume": "卷三乙 §2.5 :349（rules.containers.maxNesting）；§4.4.3 K-2；§5.4 :1930、:1951（穿戴、装备、装入三种持有种类行由本卷登记进卷十八 §4.1 种类表）。块 6 第 6-3 张只登缺口：maxNesting 的值卷文没给，值定后登记并接读者（见 containers.json）；三种持有种类行已登记为 hk_containing、hk_wearing、hk_wielding（李白 11-19 20:3x ⑥）",
    "multiSourceMerge": "own_key_only",
    "packOverridable": {"unbuilt": false}
   },

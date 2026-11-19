@@ -99,11 +99,11 @@ function engineWith(rows, relations) {
 
 // ---------- 数据与加载期核对（K5-39、K5-40、丙5） ----------
 
-test('holding_kind 数据：47 行（42 旧 + 3 新增 + 2 卷十三），每行 40 列，端类型都在模板名闭集内，上位词链无环', () => {
+test('holding_kind 数据：49 行（42 旧 + 3 新增 + 2 卷十三 + 穿戴、装入 2 条，李白 11-19 20:3x ⑥），每行 40 列，端类型都在模板名闭集内，上位词链无环', () => {
   const fam = W.vocab.families.get('holding_kind');
   assert.ok(fam, 'holding_kind family');
   const entries = fam.entries;
-  assert.equal(Object.keys(entries).length, 47);
+  assert.equal(Object.keys(entries).length, 49);
   for (const [id, entry] of Object.entries(entries)) {
     assert.equal(Object.keys(entry).length, 40, id);
     for (const key of ['from', 'to']) assert.ok(Array.isArray(entry[key]) && entry[key].length > 0, `${id}.${key}`);
@@ -115,6 +115,31 @@ test('holding_kind 数据：47 行（42 旧 + 3 新增 + 2 卷十三），每行
   assert.equal(entries.hk_wielding.holdWhile, 'holder.handsHeld <= holder.graspLimbs && subject.wielders <= subject.wieldHands');
   assert.equal(entries.hk_permit.grantsEntry, true);
   assert.equal(entries.hk_permit.entryRankMax, 1);
+});
+
+test('李白 11-19 20:3x ②：access 三档次序公共 0 < 私宅 1 < 议会 2；一般成员类持有（membership 为真的整类）带进入权但最高只满足公共档，一张镇民身份进不了需许可的私宅与议会', () => {
+  const access = W.vocab.families.get('access').entries;
+  assert.deepEqual([access.access_public.rank, access.access_private.rank, access.access_council.rank], [0, 1, 2]);
+  const gated = Object.values(access).filter((e) => e.needsGrant).map((e) => e.rank).sort();
+  assert.deepEqual(gated, [1, 2]);
+  const kinds = W.vocab.families.get('holding_kind').entries;
+  const members = Object.entries(kinds).filter(([, r]) => r.membership === true);
+  assert.ok(members.length > 0);
+  for (const [id, row] of members) {
+    assert.equal(row.grantsEntry, true, id);
+    assert.equal(row.entryRankMax, access.access_public.rank, id);
+    for (const rank of gated) assert.ok(row.entryRankMax < rank, `${id} must not satisfy a needsGrant tier`);
+  }
+  assert.ok(members.some(([id]) => id === 'hk_citizen_of'));
+  // 许可持有仍能满足私宅档，不满足议会档。
+  assert.ok(kinds.hk_permit.entryRankMax >= access.access_private.rank && kinds.hk_permit.entryRankMax < access.access_council.rank);
+});
+
+test('李白 11-19 20:3x ⑥：装备即 hk_wielding，穿戴 hk_wearing、装入 hk_containing 是已登记的持有种类行，装入由物到物', () => {
+  const rows = W.vocab.families.get('holding_kind').entries;
+  assert.deepEqual([rows.hk_wearing.from, rows.hk_wearing.to], [['agent'], ['thing']]);
+  assert.deepEqual([rows.hk_containing.from, rows.hk_containing.to], [['thing'], ['thing']]);
+  assert.deepEqual(checkHoldingKindRows(ENGINE).errors, []);
 });
 
 test('丙5：种类行端类型名不在模板名闭集即拒（E-HK-END-TYPE）', () => {

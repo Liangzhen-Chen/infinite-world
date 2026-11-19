@@ -106,12 +106,16 @@ test('真实 world：item 表头有实例维度（taint 恒必填、durability �
   assert.equal(doc.instanceDimensions.taint.required, 'always');
   assert.deepEqual([doc.instanceDimensions.durability.required, doc.instanceDimensions.wearAnchorDay.required], ['byClass:comp_durable', 'byClass:comp_durable']);
   assert.deepEqual([doc.instanceDimensions.spoilage.required, doc.instanceDimensions.rotAnchorDay.required], ['byClass:comp_rottable', 'byClass:comp_rottable']);
-  // 品质档代号：卷二 :1475（awful、legendary）、卷三乙例子（normal、good、excellent、masterwork）、卷十四 :961（fine）里出现过的七个；卷文没有任何一处给出
-  // 代号到"劣次常良优精绝"七档的对应，第二档代号也没有，所以条目不带 rank、不排序，对应关系登在 rules.quality.unbuilt（tierCodes），待李白裁定。
-  const entries = engine.vocab.families.get('quality').entries;
-  assert.deepEqual(Object.keys(entries).sort(), ['quality_awful', 'quality_excellent', 'quality_fine', 'quality_good', 'quality_legendary', 'quality_masterwork', 'quality_normal']);
-  assert.ok(Object.values(entries).every((e) => !Object.hasOwn(e, 'rank')));
-  assert.ok(engine.rules.quality.unbuilt.includes('tierCodes'));
+  // 品质七档（卷三乙 :304 "劣、次、常、良、优、精、绝"；李白 11-19 20:3x ⑥）：代号与 rank 1–7；wear 五档（卷三乙 :310 "完好、旧、损、残、毁"）rank 0–4。
+  const quality = engine.vocab.families.get('quality').entries;
+  assert.deepEqual(Object.entries(quality).map(([k, e]) => [e.rank, k]).sort((a, b) => a[0] - b[0]),
+    [[1, 'quality_awful'], [2, 'quality_poor'], [3, 'quality_normal'], [4, 'quality_good'], [5, 'quality_excellent'], [6, 'quality_masterwork'], [7, 'quality_legendary']]);
+  const wear = engine.vocab.families.get('wear').entries;
+  assert.deepEqual(Object.entries(wear).map(([k, e]) => [e.rank, k]).sort((a, b) => a[0] - b[0]),
+    [[0, 'wear_intact'], [1, 'wear_worn'], [2, 'wear_damaged'], [3, 'wear_broken'], [4, 'wear_ruined']]);
+  assert.ok(!engine.rules.quality.unbuilt.includes('tierCodes'));
+  assert.ok(!engine.rules.wear.unbuilt.includes('wearKinds'));
+  assert.deepEqual(engine.rules.containers.unbuilt, ['maxNesting']);
   assert.equal(engine.rules.items.instancedComponents.length, 12);
   assert.ok(!engine.rules.items.instancedComponents.includes('comp_crafted'));
 });
@@ -447,6 +451,33 @@ test('D-1 用损：耐磨取承担组（工作部铁 50），每次用损 0.05 �
   assert.deepEqual(run(state, COND, (s) => { w = applyUse(engine, s, 'item_inst_1', 1000); }), { ok: true });
   assert.equal(w.durability, 0);
   assert.deepEqual(run(state, COND, (s) => { applyUse(engine, s, 'item_inst_1', 0); }), { ok: false, code: 'E-DIM-DOMAIN-RANGE' });
+});
+
+// 卷三乙 §4.10.5 例 1 铁斧：wearResistance 60、wearPerUse 0.002、dailyUses 40，lifeDays = 60 ÷ (0.002 × 40) = 750（卷二 §5.1 式）。
+// durability 是 stockMode extScale、precision 8（李白 11-19 20:3x ③；卷二 §1.2、§3.3 第 6 条）：单次 0.002 ÷ 60 = 0.0000333…，10⁸ 标度向零截断为 0.00003333（10⁴ 标度会截成 0，工具永远磨不动）。
+const ironAxe = (f) => { f.materials[IRON].wearResistance = 60; f.items.item_test_axe.wearPerUse = 0.002; };
+
+test('③ durability 声明 extScale、precision 8；§4.10.5 铁斧：单次用损 0.00003333、一日 40 次 0.00133333，750 日逐日磨下来耐久只剩 0.0000025，一次磨 30000 次正好磨尽', () => {
+  const { engine } = build(ironAxe);
+  const def = engine.tables.get('item').doc.instanceDimensions.durability;
+  assert.deepEqual([def.stockMode, def.precision], ['extScale', 8]);
+  const state = at(3);
+  assert.deepEqual(create(engine, state, {}), { ok: true });
+  assert.equal(wearStep(engine, state, 'item_inst_1', 'use').delta.value, 0.00003333);
+  assert.equal(wearStep(engine, state, 'item_inst_1', 'worn').delta.value, 0.00133333);
+  // 单次用损写进存储值：1 − 0.00003333 = 0.99996667（不是原样不动）。
+  let w;
+  assert.deepEqual(run(state, COND, (s) => { w = applyUse(engine, s, 'item_inst_1', 1); }), { ok: true });
+  assert.deepEqual(w, { durability: 0.99996667, wearAnchorDay: 3 });
+  // 寿命：从 1 起每日 40 次，750 日 = 750 × 0.00133333 = 0.9999975，剩 0.0000025；一次 30000 次 = 0.002 × 30000 ÷ 60 = 1，磨尽到 0。
+  const fresh = at(3);
+  assert.deepEqual(create(engine, fresh, {}), { ok: true });
+  assert.deepEqual(run(fresh, COND, (s) => { for (let day = 0; day < 750; day += 1) applyUse(engine, s, 'item_inst_1', 40); }), { ok: true });
+  assert.equal(fresh.itemInstances.item_inst_1.durability, 0.0000025);
+  const once = at(3);
+  assert.deepEqual(create(engine, once, {}), { ok: true });
+  assert.deepEqual(run(once, COND, (s) => { w = applyUse(engine, s, 'item_inst_1', 30000); }), { ok: true });
+  assert.equal(w.durability, 0);
 });
 
 test('D-2 自然劣化：腐蚀率 0.001（铁，只在含耐用份里取平均）、湿度曲线取 1：放 100 日损 0.1；存的值不动，读到 0.897；再用一次重设锚点（0.897 − 0.001 = 0.896，锚点日 103），再放 100 日读 0.796', () => {

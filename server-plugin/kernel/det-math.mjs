@@ -244,6 +244,12 @@ export function fixedUnits8(x) {
 /** 两个 10⁸ 标度数相乘，BigInt 整除向零截断（卷二 §3.3 :1330）。@param {bigint} a @param {bigint} b @returns {bigint} */
 export const fixedMultiply8 = (a, b) => (a * b) / scale8();
 
+/** 两个 10⁸ 标度数相除：a × SCALE² ÷ b，BigInt 整除向零截断（卷二 §3.3 :1408 第 6 条，10⁸ 标度除法唯一写法）。@param {bigint} a @param {bigint} b @returns {bigint} */
+export function fixedDivide8(a, b) {
+  if (b === 0n) throw new FixedError('E-MOD-RX', 'division by zero');
+  return (a * scale8()) / b;
+}
+
 // 向下取整的整数除法（b > 0）；BigInt 的 / 向零截断，负数要再修正。
 function floorDiv(a, b) {
   const q = a / b;
@@ -580,6 +586,13 @@ export function truncateTo(v, precision) {
 /** @param {bigint} v @returns {number} */
 export function fixedToNumber(v) {
   const neg = v < 0n; const a = neg ? -v : v; const scale = fixedScale();
+  return Number(`${neg ? '-' : ''}${a / scale}.${String((a % scale) + scale).slice(1)}`);
+}
+
+// 10⁸ 标度整数 → JS 数（stockMode extScale 字段读出用；同 fixedToNumber，按十进制文本转换）。
+/** @param {bigint} v @returns {number} */
+export function fixedToNumber8(v) {
+  const neg = v < 0n; const a = neg ? -v : v; const scale = scale8();
   return Number(`${neg ? '-' : ''}${a / scale}.${String((a % scale) + scale).slice(1)}`);
 }
 

@@ -292,10 +292,14 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 55
+    },
+    {
+     "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
+     "rev": 56
     }
    ],
-   "print": "76653e97110196708c13cb82de6966c25f8ac7d90a673331b9ee48aa3de23f47",
-   "rev": 55,
+   "print": "cb372b1532c985649580915332c4e6441259ba02201cbad4af53333c3ee45321",
+   "rev": 56,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -725,10 +729,14 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 50
+    },
+    {
+     "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
+     "rev": 51
     }
    ],
-   "print": "01053d6c4647495df99f87f819b4929ae553a096fb127526a534aed2d3ddb417",
-   "rev": 50,
+   "print": "f469bdc1c34c59b82c7566102eb7d7391ffcf2616c449c863a702d3642a07e2d",
+   "rev": 51,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1201,10 +1209,14 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 47
+    },
+    {
+     "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
+     "rev": 48
     }
    ],
-   "print": "f683c2d2f6a1063960a230f15937b9cd37baee4f73b6e7e54d37f82390cca878",
-   "rev": 47,
+   "print": "d4ed87b447cff10ea3ac695d9c67bf850effb5904082fe6806408008e3fdd54e",
+   "rev": 48,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1570,10 +1582,14 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 63
+    },
+    {
+     "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
+     "rev": 64
     }
    ],
-   "print": "39a3651efbe45f7aac414be7753c75ee3884aa17867c503557973717a6cded8b",
-   "rev": 63,
+   "print": "9d56290bf92e9d0e80eaa377804a9c1cadc6c14a4ef246867516bb2e3454e335",
+   "rev": 64,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1880,10 +1896,14 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 48
+    },
+    {
+     "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
+     "rev": 49
     }
    ],
-   "print": "f683c2d2f6a1063960a230f15937b9cd37baee4f73b6e7e54d37f82390cca878",
-   "rev": 48,
+   "print": "d4ed87b447cff10ea3ac695d9c67bf850effb5904082fe6806408008e3fdd54e",
+   "rev": 49,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -2559,10 +2579,14 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 48
+    },
+    {
+     "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
+     "rev": 49
     }
    ],
-   "print": "f683c2d2f6a1063960a230f15937b9cd37baee4f73b6e7e54d37f82390cca878",
-   "rev": 48,
+   "print": "d4ed87b447cff10ea3ac695d9c67bf850effb5904082fe6806408008e3fdd54e",
+   "rev": 49,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -2745,10 +2769,14 @@
     {
      "ref": "6-3 按（表，键）认消费者、unbuilt 缺口标记不计（主会话 6-3 改一轮 1）",
      "rev": 42
+    },
+    {
+     "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
+     "rev": 43
     }
    ],
-   "print": "1de0ffda407fdf532afb28fb338bf575218b8046b5af737bc3ad9e6b1dc189f6",
-   "rev": 42,
+   "print": "e30295f2ea3a718106ce04e1dbeaeab4e1c606c738240ad3f88eb18503cf26a5",
+   "rev": 43,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -3019,10 +3047,14 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 64
+    },
+    {
+     "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
+     "rev": 65
     }
    ],
-   "print": "dfcc1aaa3b346d01a021f5401d04461f3b775a20584f637ff420e4d7daee95aa",
-   "rev": 64,
+   "print": "254d74a35f4cdffa923a5e52d737eb3293b6197652c35ea285cbdeb1198224a7",
+   "rev": 65,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -3274,10 +3306,14 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 27
+    },
+    {
+     "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
+     "rev": 28
     }
    ],
-   "print": "fc6a37b336549c370aa6bfd6142d24a309617a70af663d266778cd991106e759",
-   "rev": 27,
+   "print": "f811bf13073f854f50b6944d5135fefd927ea5eb6891e319301b7b68bce5d4a5",
+   "rev": 28,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -3511,10 +3547,14 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 53
+    },
+    {
+     "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
+     "rev": 54
     }
    ],
-   "print": "76653e97110196708c13cb82de6966c25f8ac7d90a673331b9ee48aa3de23f47",
-   "rev": 53,
+   "print": "cb372b1532c985649580915332c4e6441259ba02201cbad4af53333c3ee45321",
+   "rev": 54,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -3624,10 +3664,14 @@
     {
      "ref": "块 6 补值卡 A（李白 11-19 18:1x ③）：卷六勘误 1119k9 资源单位 bps 改 asset_share_bp，补用例 state_pattern-13（比率单位 bps 不报）、-14（资源单位 asset_share_bp 必报）；检测器判定口径不变",
      "rev": 25
+    },
+    {
+     "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
+     "rev": 26
     }
    ],
-   "print": "b417d637193553e919915d04e6a31d01a051a66185f77ca46f041aff6c6f36d2",
-   "rev": 25,
+   "print": "4cfab4ecf1fc93885e0222fe4e2dc7d00dc34bebe9987b65878967bb573f221d",
+   "rev": 26,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -4018,10 +4062,14 @@
     {
      "ref": "6-3 decl_cmp 改动",
      "rev": 44
+    },
+    {
+     "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
+     "rev": 45
     }
    ],
-   "print": "1de0ffda407fdf532afb28fb338bf575218b8046b5af737bc3ad9e6b1dc189f6",
-   "rev": 44,
+   "print": "e30295f2ea3a718106ce04e1dbeaeab4e1c606c738240ad3f88eb18503cf26a5",
+   "rev": 45,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

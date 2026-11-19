@@ -17,7 +17,7 @@ import { lotsUnmergeable, resourceAllows, SCHEMA as LEDGER } from './ledger.mjs'
 import { buildE } from './handles/generated.mjs';
 import { placeClimateInput } from './place.mjs';
 import { kindOf } from './vocab.mjs';
-import { fixedUnits, fixedAdd, fixedSub, fixedMultiply, fixedDivide, fixedToNumber, fixedCurveAt } from './det-math.mjs';
+import { fixedUnits, fixedUnits8, fixedAdd, fixedSub, fixedMultiply, fixedMultiply8, fixedDivide, fixedDivide8, fixedToNumber, fixedToNumber8, fixedScale, fixedCurveAt } from './det-math.mjs';
 
 const E = buildE();
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -356,21 +356,22 @@ export function durabilityOn(engine, state, instanceId, day) {
   if (typeof row[F.durability] !== 'number' || !Number.isSafeInteger(row[F.wearAnchorDay])) return aggregated(engine, state, row[F.template], DIMN.corrosionRate).applicable ? UNKNOWN(GAP.wearAnchor) : NA;
   const anchor = row[F.wearAnchorDay];
   if (!Number.isSafeInteger(day) || day < anchor) throw new KernelError('E-DIM-DOMAIN-RANGE', {}, `durability read day ${day} is before the anchor day ${anchor}`);
-  const stored = fixedUnits(row[F.durability]);
-  if (day === anchor) return KNOWN(fixedToNumber(stored));
+  const stored = fixedUnits8(row[F.durability]);
+  if (day === anchor) return KNOWN(fixedToNumber8(stored));
   const rate = aggregated(engine, state, row[F.template], DIMN.corrosionRate);
-  if (!rate.applicable) return KNOWN(fixedToNumber(stored));
+  if (!rate.applicable) return KNOWN(fixedToNumber8(stored));
   if (!rate.known) return rate;
-  if (rate.value === 0) return KNOWN(fixedToNumber(stored));
+  if (rate.value === 0) return KNOWN(fixedToNumber8(stored));
   const curve = ruleVal(engine, RT.wear, RK.envCurve);
   if (!Array.isArray(curve) || !curve.length) return UNKNOWN('rules.wear.envCurve');
   const env = envOf(engine, state, { instance: instanceId });
   if (!env || !isObj(env.input)) return UNKNOWN(GAP.env);
   const s = sumFactors(anchor, day, (d) => wearDayFactor(engine, env, curve, d));
   if (s.sum === undefined) return UNKNOWN(...s.gaps);
-  const loss = fixedMultiply(fixedMultiply(fixedUnits(rate.value), preserveNone()), s.sum);
-  const left = fixedSub(stored, loss);
-  return KNOWN(fixedToNumber(left < 0n ? 0n : left));
+  // 自然劣化量按 10⁴ 标度算（率与湿度累计本是 10⁴ 的数，D-2 例 0.9136），升到 10⁸ 标度（乘 SCALE，不丢位）再从 10⁸ 的存值里减。
+  const loss = fixedMultiply(fixedMultiply(fixedUnits(rate.value), preserveNone()), s.sum) * fixedScale();
+  const left = stored - loss;
+  return KNOWN(fixedToNumber8(left < 0n ? 0n : left));
 }
 
 /**
@@ -391,7 +392,7 @@ export function wearStep(engine, state, instanceId, cause) {
     const today = todayOf(engine, state);
     if (today === null) return out(UNKNOWN(GAP.clock));
     const d = durabilityOn(engine, state, instanceId, today);
-    return out(d.known ? KNOWN(fixedToNumber(fixedSub(fixedUnits(row[F.durability]), fixedUnits(d.value)))) : d);
+    return out(d.known ? KNOWN(fixedToNumber8(fixedUnits8(row[F.durability]) - fixedUnits8(d.value))) : d);
   }
   return out(wearCost(engine, state, row, cause, 1));
 }
@@ -404,18 +405,19 @@ function templateValue(engine, state, templateId, key) {
 }
 
 // 用损量（D-1、D-4）：use＝times × wearPerUse ÷ wearResistance；worn＝一日 dailyUses 次用损。先乘次数、后除耐磨，定点向零截断，次数越多截断损失越小。
+// 耐久是 stockMode extScale 字段（precision 8，卷二 §3.3 第 6 条），用损全程在 10⁸ 标度算（李白 11-19 20:3x ③）：单次 0.002 ÷ 60 不再截成 0。
 function wearCost(engine, state, row, cause, times) {
   const perUse = templateValue(engine, state, row[F.template], DIMN.wearPerUse);
   const resist = aggregated(engine, state, row[F.template], DIMN.wearResistance);
   if (!resist.applicable) return NA;
   if (perUse === undefined || !resist.known) return UNKNOWN(DIMN.wearPerUse, DIMN.wearResistance);
-  let count = fixedUnits(times);
+  let count = fixedUnits8(times);
   if (cause === CAUSE.worn) {
     const uses = templateValue(engine, state, row[F.template], DIMN.dailyUses);
     if (uses === undefined) return UNKNOWN(DIMN.dailyUses);
-    count = fixedMultiply(count, fixedUnits(uses));
+    count = fixedMultiply8(count, fixedUnits8(uses));
   }
-  return KNOWN(fixedToNumber(fixedDivide(fixedMultiply(fixedUnits(perUse), count), fixedUnits(resist.value))));
+  return KNOWN(fixedToNumber8(fixedDivide8(fixedMultiply8(fixedUnits8(perUse), count), fixedUnits8(resist.value))));
 }
 
 /**
@@ -438,11 +440,11 @@ export function useWear(engine, state, instanceId, times) {
   if (today === null) throw new KernelError('E-DIM-UNKNOWN-READ', { entity: instanceId }, 'useWear: the world clock is not set');
   const step = wearCost(engine, state, row, CAUSE.use, times);
   if (!step.known) throw new KernelError('E-DIM-UNKNOWN-READ', { entity: instanceId }, `useWear: per-use wear is unknown (${(step.gaps || []).join(',') || 'not applicable'})`);
-  const cost = fixedUnits(step.value);
+  const cost = fixedUnits8(step.value);
   const now = durabilityOn(engine, state, instanceId, today);
-  const base = now.known ? fixedUnits(now.value) : fixedUnits(row[F.durability]);
-  const left = fixedSub(base, cost);
-  return Object.freeze({ durability: fixedToNumber(left < 0n ? 0n : left), wearAnchorDay: now.known ? today : row[F.wearAnchorDay] });
+  const base = now.known ? fixedUnits8(now.value) : fixedUnits8(row[F.durability]);
+  const left = base - cost;
+  return Object.freeze({ durability: fixedToNumber8(left < 0n ? 0n : left), wearAnchorDay: now.known ? today : row[F.wearAnchorDay] });
 }
 
 /**

@@ -2,11 +2,11 @@
  "rows": [
   {
    "key": "unbuilt",
-   "value": ["containmentKind", "equipKind", "maxNesting", "wearKind"],
+   "value": ["maxNesting"],
    "file": "server-plugin/kernel/item-state.mjs",
    "grade": "designed",
    "source": "卷三乙 §2.5 :349；§4.4.3 K-2 :1036；§4.10 D-4；§5.4 :1930、:1951（穿戴、装备、装入三种持有种类行由本卷登记进卷十八 §4.1 种类表）",
-   "basis": "无出处不编：三种持有种类行（containmentKind 装入、wearKind 穿戴、equipKind 装备）的代号卷文没给（现有 hk_wielding 是否即装备卷文也没说），maxNesting 的值卷文没给。待李白定代号后由本卷登记种类行；之后 containerView 读持有边、maxNesting 登值并接读者。未建期间 containerView 内容物恒为空（没有关系可存）、嵌套不判"
+   "basis": "三种持有种类行已登记（李白 11-19 20:3x ⑥，卷三乙 :1930）：装入 hk_containing、穿戴 hk_wearing、装备即现有 hk_wielding，见 _vocab.json 的 holding_kind 族，不再是本表缺口。无出处不编：maxNesting 的值卷文没给；值定后登记并接读者。未建期间嵌套不判"
   }
  ]
 }

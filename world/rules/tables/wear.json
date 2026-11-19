@@ -10,11 +10,11 @@
   },
   {
    "key": "unbuilt",
-   "value": ["faultCurve", "itemWear", "levels", "wearKinds", "weatherCtx"],
+   "value": ["faultCurve", "itemWear", "levels", "weatherCtx"],
    "file": "server-plugin/kernel/item-state.mjs",
    "grade": "designed",
    "source": "卷三乙 §2.5 :343（rules.wear 键表）；§4.10 D-3、D-4、D-6、D-7；§4.9 故障",
-   "basis": "缺口：levels（劣化等级的阈值与修正；wear 族代号卷文只有中文名\"完好、旧、损、残、毁\"，未找到代号）、faultCurve（§4.9 故障）、itemWear 钩子（D-4 穿用、D-7 越档与毁坏到期，要穿戴持有种类行，代号卷文没给，见 containers.json 的 wearKind）、wearKinds（同上）、weatherCtx（自然劣化要当日湿度，要天气上下文，世界种子流登记 rules.seedKeys 未建，读数按未知带缺口）"
+   "basis": "缺口：levels（劣化等级的阈值与修正；wear 族代号与次序已定，wear_intact 0、wear_worn 1、wear_damaged 2、wear_broken 3、wear_ruined 4，李白 11-19 20:3x ⑥、卷三乙 :310，登在 _vocab.json；各档阈值与修正卷文没给值）、faultCurve（§4.9 故障）、itemWear 钩子（D-4 穿用、D-7 越档与毁坏到期；穿戴持有种类行已登记为 hk_wearing，钩子本身仍待接）、weatherCtx（自然劣化要当日湿度，要天气上下文，世界种子流登记 rules.seedKeys 未建，读数按未知带缺口）"
   }
  ]
 }
