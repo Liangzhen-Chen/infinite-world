@@ -41,6 +41,7 @@ const FIELDS = {
   'struct:identityKey': ['keyId', 'kind', 'nameParts', 'lookKey', 'maskQuality', 'since', 'until'],
   'struct:lookKey': ['species', 'sex', 'lifeStage', 'bands'],
   'struct:conception': ['otherParent', 'offspringSpecies', 'sinceMinute'],
+  'struct:revivePoint': ['kind', 'counterpart'], // 勘误 1119k11：卷二 §1.5 增行（revivals.<person>.points 的元素）
   'struct:manifestRow': ['ordinal', 'intendedType', 'form', 'areaM2', 'storeys', 'wallThicknessM', 'materialKg', 'zoneRole', 'ownerRef', 'prePlace', 'fixtures'],
   'struct:ownerKey': ['aggregate', 'org'],
   'struct:shopRow': ['ordinal', 'shopkind', 'venue', 'operator'],
@@ -110,7 +111,7 @@ function numericLeaves(node, at, out) {
   return out;
 }
 
-test('命名 struct 登记与卷二 §1.5 表逐条一致：45 行、字段名与出处', () => {
+test('命名 struct 登记与卷二 §1.5 表逐条一致：46 行（1119k11 增 revivePoint）、字段名与出处', () => {
   assert.deepEqual([...rows.keys()].sort(), Object.keys(FIELDS).sort());
   for (const [name, fields] of Object.entries(FIELDS)) {
     const row = rows.get(name);
@@ -166,6 +167,6 @@ test('byState 带类型参数；命名引用都指向已登记的行', () => {
 });
 
 test('登记表只含卷文列出的名字，不给未登记名字开口子', () => {
-  assert.equal(REG.rows.length, 45);
-  assert.equal(new Set(REG.rows.map((r) => r.name)).size, 45);
+  assert.equal(REG.rows.length, 46);
+  assert.equal(new Set(REG.rows.map((r) => r.name)).size, 46);
 });

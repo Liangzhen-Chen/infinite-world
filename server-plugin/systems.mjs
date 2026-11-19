@@ -4,6 +4,7 @@
 // 并在 world/ontology/state-owners.json 的 systems 里写该系统的登记项（卷二 §2.7）。
 
 import './item-lots.mjs'; // 6-3：itemRot 推进钩子（卷三乙 §3.3 系统登记表）
+import './death.mjs'; // 6-6：settleBody 终止清理函数（卷四 §3.3；systems.death.terminationCleanup）
 
 /**
  * 装配文件调一次。各系统模块的登记在上面的 import 求值时已完成，这里不再做别的事。

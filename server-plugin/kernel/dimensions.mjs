@@ -9,7 +9,7 @@
 import { fixedUnits, fixedAdd, fixedMultiply, truncateTo, fixedToNumber, fixedScale, fixedCurveAt } from './det-math.mjs';
 import { sample } from './sample.mjs';
 import { dimKeyOf, modKeyOf } from './handles/keys.mjs';
-import { registry } from './vocab.mjs';
+import { registry, kindOfEntity } from './vocab.mjs';
 import { stateMemo } from './memo.mjs';
 import { evaluateRX, rxChildren, splitDimKey } from './rx.mjs';
 import { KernelError } from './errors.mjs';
@@ -81,13 +81,34 @@ function createdRow(state, id) {
 // 材料表的 kind（材料派生组件类按它认）。
 const MATERIAL = Object.freeze({ kind: 'material' });
 
+/**
+ * 一行的手写类别（kernel 组内用）：实体行或生成行自己写了 classes 就取它；没写、且该表头声明了 `classesFrom`（一个 ref 维度名）时，取该维度所指行的 classes
+ * ——个体的类别由物种行派生，不存储（卷四 :156、卷二 §1.8 comp_sapient 只挂物种行；李白 11-19 22:0x ⑤）。读不到即空。
+ * @param {any} engine @param {any} state @param {{doc: any}} t @param {string} id
+ * @returns {string[]}
+ */
+export function rowClassesOf(engine, state, t, id) {
+  const doc = t.doc || {};
+  const row = isObj(doc.rows) && isObj(doc.rows[id]) ? doc.rows[id] : isObj(doc.generated) && isObj(doc.generated[id]) ? doc.generated[id] : undefined;
+  if (row && Array.isArray(row.classes)) return row.classes;
+  if (typeof doc.classesFrom !== 'string' || typeof doc.kind !== 'string') return [];
+  // 直接读偏离行或展平行的原值，不经 readBase（readBase 要先判适用，适用要先取成员关系，会绕回本函数）。
+  const created = createdRow(state, id);
+  const flatRow = t.flat && t.flat.rows instanceof Map ? t.flat.rows.get(id) : undefined;
+  const ref = created && isObj(created.props) && Object.hasOwn(created.props, doc.classesFrom) ? created.props[doc.classesFrom] : isObj(flatRow) ? flatRow[doc.classesFrom] : undefined;
+  if (typeof ref !== 'string') return [];
+  const kindOfRef = registry().idIndex.get(ref);
+  if (typeof kindOfRef !== 'string') return [];
+  const target = tableOf(engine, kindOfRef).doc;
+  const src = isObj(target.rows) && isObj(target.rows[ref]) ? target.rows[ref] : isObj(target.generated) && isObj(target.generated[ref]) ? target.generated[ref] : undefined;
+  return src && Array.isArray(src.classes) ? src.classes : [];
+}
+
 // 实例声明的类别（含组件类），沿词表 broader 上位链展开（§1.3"成员关系单一来源"；RB-S4）。
 function memberClasses(engine, t, state, id) {
   const created = createdRow(state, id);
   const doc = t.doc || {};
-  const own = created && Array.isArray(created.classes) ? created.classes
-    : isObj(doc.rows) && isObj(doc.rows[id]) && Array.isArray(doc.rows[id].classes) ? doc.rows[id].classes
-      : isObj(doc.generated) && isObj(doc.generated[id]) && Array.isArray(doc.generated[id].classes) ? doc.generated[id].classes : [];
+  const own = rowClassesOf(engine, state, t, id);
   const out = new Set();
   const stack = [...own];
   while (stack.length) {
@@ -554,7 +575,7 @@ export function modifiedWith(engine, state, ns, subjectId, dimension, opts) {
   const target = modKeyOf(reg, ns, dimension, o.key);
   const def = reg.tableDims.get(ns)[dimension];
   if (typeof o.base !== 'number' || !Number.isFinite(o.base)) throw new KernelError('E-MOD-RX', { entity: subjectId }, `${target}: base must be a finite number`);
-  const subjectKind = reg.idIndex.get(subjectId);
+  const subjectKind = kindOfEntity(state, subjectId);
   const rows = (Array.isArray(o.derived) ? o.derived : []).map((d) => prepareDerived(d, subjectId, target));
   rows.push(...registeredRows(engine, state, target, subjectKind, subjectId, o.clock));
   const { value, steps } = runPipeline(engine, o.base, dedupe(rows), def, subjectKind);

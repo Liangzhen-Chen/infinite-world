@@ -5,9 +5,10 @@
 // 本文件不导出任何谓词（§3.2）：清醒、行动能力、死亡三问只在 action-capacity.mjs（卷二 §2.5）。本文件不写状态，纯读，不设缓存（C-6）。
 // 不认任何物种、身体图、部位、组织或能力代号：能力取自 capability 族条目，部位与组织取自身体图行；数值一律定点（kernel/det-math.mjs）。
 
-import { dim, modified, modifiedWith } from './kernel/dimensions.mjs';
-import { kindOf, CAPABILITY_NAMESPACE } from './kernel/vocab.mjs';
+import { dim, modifiedWith } from './kernel/dimensions.mjs';
+import { kindOf, kindOfEntity, CAPABILITY_NAMESPACE } from './kernel/vocab.mjs';
 import { fixedUnits, fixedAdd, fixedSub, fixedMultiply, fixedDivide, fixedToNumber, fixedScale } from './kernel/det-math.mjs';
+import { massOf } from './life.mjs';
 
 // 卷文定名（卷四 §2.1、§2.2、§2.3、§2.4、§2.5）：维度、字段、族名与规则表键。
 const S = Object.freeze({
@@ -104,7 +105,7 @@ const sourceIds = (steps) => Object.freeze(steps.map((s) => (isObj(s.source) && 
  * @param {object} engine @param {object} state @param {string} subjectId
  */
 export function bodyView(engine, state, subjectId) {
-  const subjectKind = kindOf(subjectId);
+  const subjectKind = kindOfEntity(state, subjectId);
   const { planId, speciesId } = effectivePlan(engine, state, subjectKind, subjectId);
   if (!planId) return null;
   const planKind = kindOf(planId);
@@ -166,7 +167,8 @@ export function bodyView(engine, state, subjectId) {
   }
   dims[S.dim.partIntegrity] = Object.freeze(Object.fromEntries(parts.map((p) => [p[S.part.id], integrity.get(p[S.part.id])])));
 
-  const mass = modified(engine, state, subjectKind, subjectId, S.dim.massKg);
+  // 主体体重（卷四 §4.4 L-2；个体表的 massKg 登记为未建派生，由 life.mjs 求，别的表照常经修正管线读）。
+  const mass = massOf(engine, state, subjectId);
   const tissueKeys = (() => { const f = dim(engine, state, planKind, planId, S.dim.tissueFractions); return f.known && isObj(f.value) ? Object.keys(f.value).sort() : []; })();
   const out = parts.map((p) => {
     const id = p[S.part.id];

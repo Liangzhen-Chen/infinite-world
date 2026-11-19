@@ -10,7 +10,7 @@
 import { KernelError, codeOf } from './errors.mjs';
 import { currentTransaction } from './transaction.mjs';
 import { invalidateMemo } from './memo.mjs';
-import { kindOf, registry } from './vocab.mjs';
+import { kindOf, kindOfEntity, registry } from './vocab.mjs';
 import { CODE_RE } from './handles/vocab-handle.mjs';
 import { entityId } from './handles/entity-id.mjs';
 import { checkValue } from './validate/types.mjs';
@@ -60,18 +60,20 @@ function denied(e) {
   return e;
 }
 
-const tableOf = (engine) => {
-  const t = engine.tables instanceof Map ? engine.tables.get(KIND.item) : undefined;
-  if (!t) throw fail('E-DIM-REF-MISSING', 'no item dimension table');
+const tableOf = (engine, kind = KIND.item) => {
+  const t = engine.tables instanceof Map ? engine.tables.get(kind) : undefined;
+  if (!t) throw fail('E-DIM-REF-MISSING', `no ${kind} dimension table`);
   return t;
 };
 
 // 用表头维度定义核一个值；第一条错即抛（码取校验器给的）。
-function checkField(engine, def, value, key, entity) {
+function checkField(engine, state, def, value, key, entity, kind = KIND.item) {
   const reg = registry();
-  const env = { vocab: engine.vocab, idIndex: reg.idIndex, units: engine.units, tableDims: reg.tableDims };
+  // 引用值指向的实体：加载期登记的，或本状态里已建行的运行期实体（如尸体的 ofPerson 指向运行期建的个体，kernelApi kindOfEntity 同一口径）。
+  const idIndex = { get: (id) => { try { return kindOfEntity(state, id); } catch (e) { return undefined; } } };
+  const env = { vocab: engine.vocab, idIndex, units: engine.units, tableDims: reg.tableDims };
   let first = null;
-  checkValue(def, value, env, { table: KIND.item, row: entity || '', dim: key, path: key }, (e) => { if (first === null) first = e; });
+  checkValue(def, value, env, { table: kind, row: entity || '', dim: key, path: key }, (e) => { if (first === null) first = e; });
   if (first !== null) throw fail(first.code, `${key}: got ${JSON.stringify(first.got)}, want ${first.want}`, entity);
 }
 
@@ -121,7 +123,7 @@ export function createItemInstance(engine, state, spec) {
       if (need && !given) throw fail('E-DIM-REQUIRED-MISSING', `instance dimension ${key} is required for ${spec.template}`, spec.id);
       if (!need && given) throw fail('E-DIM-STRUCT-FIELD', `instance dimension ${key} does not apply to ${spec.template}`, spec.id);
       if (!given) continue;
-      checkField(engine, defs[key], fields[key], key, spec.id);
+      checkField(engine, state, defs[key], fields[key], key, spec.id);
       if (fields[key] !== null) out[key] = fields[key];
     }
 
@@ -162,8 +164,56 @@ export function writeItemDeviation(engine, state, id, dimension, value) {
     const def = isObj(doc.dimensions) ? doc.dimensions[dimension] : undefined;
     if (!isObj(def)) throw fail('E-DIM-REF-MISSING', `${dimension} is not a dimension of the item table`, id);
     if (def.derived !== undefined && def.allowExplicit !== true) throw fail('E-DIM-DERIVED-WRITTEN', `${dimension} is derived and has no deviation channel`, id);
-    checkField(engine, def, value, dimension, id);
+    checkField(engine, state, def, value, dimension, id);
     setInTx(tx, [ST.created, id, ST.props, dimension], value);
+  } catch (e) {
+    throw denied(e);
+  }
+}
+
+// ---------- 个体偏离行（卷四 §3.3 `instantiatePerson` 的声明写者；§2.6 `created.<person>.props.*`；§4.10 P-1、P-4；块 6 第 6-6 张） ----------
+
+const PERSON = Object.freeze({ kind: 'person', basisKind: 'generated', basis: 'basis' });
+const PERSON_SPEC_FIELDS = Object.freeze(['id', 'props']);
+
+/**
+ * kernelApi `writePersonRow(engine, state, spec)`（卷四 §2.6 `created.<person>.props.*`：kernel/dimension-writers.mjs 是唯一写者，只在 `instantiatePerson` 内写一次；
+ * §4.10 P-1：偏离行只有物种、性别、出生、先天基础值等，基础值生成时写一次、之后不改）：建一条新个体偏离行。
+ * spec：{id, props}；props 的键是 person 表头维度（派生维度不许显式写：E-DIM-DERIVED-WRITTEN），值按表头定义核（校验器给的码）；
+ * 表头 required 为 always 的非派生维度必须在 props 里给，除非该（表，维度）登记在未建列（`_unbuilt-derived.json` columns，丙9）：缺即 E-DIM-REQUIRED-MISSING。
+ * 同一事务内再写 `created.<id>.props.basis`（{kind: generated, seedKey: null, writer: 当前节点}，卷二 §1.5 struct:basis）。
+ * 不存类别：人物类别由物种行派生（表头 classesFrom: species；卷四 :156、卷二 §1.8；李白 11-19 22:0x ⑤）。id 已存在（加载期登记的或已建行的）拒 E-DIM-ID-DUPLICATE；id 前缀不属 person 拒 E-DIM-ID-FORMAT。
+ * 写直接落在调用方已开的内核事务上，任一步失败抛带登记码的错误，整笔回滚。
+ * @param {any} engine @param {any} state
+ * @param {{id: string, props: Record<string, any>}} spec
+ * @returns {Readonly<{id: string}>}
+ */
+export function writePersonRow(engine, state, spec) {
+  try {
+    const tx = currentTransaction();
+    if (!tx || tx.state !== state) throw fail('E-VIEW-UNDECLARED-WRITE', 'writePersonRow outside the transaction of this state');
+    if (!isObj(spec) || Object.keys(spec).some((k) => !PERSON_SPEC_FIELDS.includes(k)) || PERSON_SPEC_FIELDS.some((k) => !Object.hasOwn(spec, k))) throw fail('E-DIM-STRUCT-FIELD', `writePersonRow spec is {${PERSON_SPEC_FIELDS.join(', ')}}`);
+    entityId(PERSON.kind, spec.id);
+    if (registry().idIndex.has(spec.id) || (isObj(state[ST.created]) && Object.hasOwn(state[ST.created], spec.id))) throw fail('E-DIM-ID-DUPLICATE', `${spec.id} already exists`, spec.id);
+    if (!isObj(spec.props)) throw fail('E-DIM-STRUCT-FIELD', 'props is an object of dimension values', spec.id);
+    const table = tableOf(engine, PERSON.kind);
+    const defs = isObj(table.doc.dimensions) ? table.doc.dimensions : {};
+    const unbuilt = table.unbuiltColumns instanceof Set ? table.unbuiltColumns : new Set();
+    for (const key of Object.keys(spec.props).sort(cmp)) {
+      const def = defs[key];
+      if (!isObj(def)) throw fail('E-DIM-REF-MISSING', `${key} is not a dimension of the person table`, spec.id);
+      if (def.derived !== undefined && def.allowExplicit !== true) throw fail('E-DIM-DERIVED-WRITTEN', `${key} is derived and has no deviation channel`, spec.id);
+      if (key === PERSON.basis) throw fail('E-DIM-STRUCT-FIELD', 'basis is written by the writer', spec.id);
+      checkField(engine, state, def, spec.props[key], key, spec.id, PERSON.kind);
+    }
+    for (const key of Object.keys(defs).sort(cmp)) {
+      const def = defs[key];
+      if (def.derived !== undefined || def.required !== REQ.always || unbuilt.has(key)) continue;
+      if (!Object.hasOwn(spec.props, key)) throw fail('E-DIM-REQUIRED-MISSING', `person dimension ${key} is required (always)`, spec.id);
+    }
+    for (const key of Object.keys(spec.props).sort(cmp)) setInTx(tx, [ST.created, spec.id, ST.props, key], spec.props[key]);
+    setInTx(tx, [ST.created, spec.id, ST.props, PERSON.basis], { kind: PERSON.basisKind, seedKey: null, writer: tx.node });
+    return Object.freeze({ id: spec.id });
   } catch (e) {
     throw denied(e);
   }

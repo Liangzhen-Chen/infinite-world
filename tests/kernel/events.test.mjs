@@ -448,8 +448,9 @@ test('verb 族行：真实 world/ 数据全过；缺栏、kindOnly 被列出、�
 
 test('verb 族数据：四条块 5 内核/持有事件行齐全，发出系统与卷二 §2.6、卷十八 R18-1.10/R18-1.11 一致', () => {
   const entries = W.vocab.families.get('verb').entries;
-  // 6-3 加 verb_item_spoiled（卷三乙 §2.8 坏透，发出系统是 itemRot 的 sys.itemRot）；块 5 的四条仍如下。
-  assert.deepEqual(Object.keys(entries).sort(), ['verb_domicile_changed', 'verb_entity_revived', 'verb_entity_terminated', 'verb_holding_changed', 'verb_item_spoiled']);
+  // 6-3 加 verb_item_spoiled（卷三乙 §2.8 坏透，发出系统是 itemRot 的 sys.itemRot）；6-6 加卷四 §2.8 的四条死因行（kindOnly，无发出系统，作终止协议 cause 的取值）；块 5 的四条仍如下。
+  assert.deepEqual(Object.keys(entries).sort(), ['verb_death_event', 'verb_death_natural', 'verb_death_status', 'verb_death_vital_loss', 'verb_domicile_changed', 'verb_entity_revived', 'verb_entity_terminated', 'verb_holding_changed', 'verb_item_spoiled']);
+  assert.ok(['verb_death_event', 'verb_death_natural', 'verb_death_status', 'verb_death_vital_loss'].every((v) => entries[v].kindOnly === true && entries[v].kindFrom === null));
   assert.deepEqual(DECL.systems['sys.itemRot'].emits, ['verb_item_spoiled']);
   // 持有变化与常住变化两条事件由同一个持有写者（kernel/holdings.mjs）发出，同列 kernel.emits（卷二 §2.7 :770；R18-1.10、R18-1.11）。
   assert.deepEqual(DECL.kernel.emits.slice().sort(), ['verb_domicile_changed', 'verb_entity_revived', 'verb_entity_terminated', 'verb_holding_changed']);

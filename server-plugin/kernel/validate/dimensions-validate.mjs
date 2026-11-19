@@ -121,10 +121,13 @@ export function validateDimensions(sources, options) {
   for (const t of tables) checkHeader(t, env, err);
 
   // RX 编译用的维度表：全部表的维度键；同名维度在不同表类型不同即标为歧义（rx.mjs 编到它时报 E-MOD-RX）。
+  // "类型"只指 RX 读数用得到的那几项（类型、单位、引用的 kind 与词表族）：来源、取值域、派生式、是否可修正等表头文档字段不同不算类型不同
+  // （同名同类型的维度如物品与个体的 massKg 都是 number kg，规则表里读 massKg 的条件不应因此无法编译）。
+  const rxSig = (d) => JSON.stringify([d && d.type, d && d.unit, d && d.kind, d && d.kinds, d && d.vocab, d && d.refs, d && d.value, d && d.key, d && d.of]);
   const rxDims = new Map();
   for (const t of tables) for (const [k, d] of Object.entries(t.doc.dimensions)) {
     if (!rxDims.has(k)) rxDims.set(k, d);
-    else if (JSON.stringify(rxDims.get(k)) !== JSON.stringify(d)) rxDims.set(k, { ambiguous: true });
+    else if (rxSig(rxDims.get(k)) !== rxSig(d)) rxDims.set(k, { ambiguous: true });
   }
   env.rxScope = { dims: rxDims, vocabIndex: vocab.index, ns: options.ns, maxDepth: options.limits.rxMaxDepth, rules: options.rules };
   env.rxDims = rxDims;

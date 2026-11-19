@@ -85,7 +85,8 @@ const ENGINE = {
 };
 const DECL = {
   stateKeys: { ...REAL_DECL.stateKeys, testHold: { readers: [], writers: { '*': 'test/hold.mjs' }, subjectRecords: { '*': { recordClass: 'rcls_test_hold', subjectSegments: [1] } } } },
-  systems: REAL_DECL.systems,
+  // 6-6 起真实声明里有 sys.death（settleBody 清理登记）：本文件用虚构 person 表与终止协议本身，不带它（死亡路径在 tests/kernel/death.test.mjs）。
+  systems: Object.fromEntries(Object.entries(REAL_DECL.systems).filter(([k]) => k !== 'sys.death')),
 };
 
 const RES = { kind: 'res_building_share', key: 'bld_x' };

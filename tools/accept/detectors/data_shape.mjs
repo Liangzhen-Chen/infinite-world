@@ -6,12 +6,14 @@
 //   entityKey：规则表里的键/值不得是实体 id（卷六 S6-2，报 params.code；表取 world/rules/registry.json 全部登记行，见下 entityKeyHits）。
 // 每个命中落在一行登记行上（一行多处同类只计一次）。
 
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { readRules, RULES_LAYOUT } from '../../../server-plugin/kernel/load/rules.mjs';
 import { itemChecks, keySets } from '../lib/item-form.mjs';
 import { LAYOUT, REGISTRY, regContent } from '../read.mjs';
 
+// 规则表里不计实体 id 的表（词表式代号）：状态表（status）。
+const VOCAB_LIKE_KINDS = ['status'];
 const PATH_LINE = /[\w./-]+\.[A-Za-z]{1,5}(?::|#L)\d+\b/;
 const ROW_KEY = /^[^|\s]*\|[^|]+\|[^|]*\|[^|]+\|\d+$/;
 
@@ -40,7 +42,15 @@ function entityKeyHits(ctx, params) {
   if (!existsSync(join(ctx.root, regPath))) { problem(regPath, 'E-ACC-ITEM-PARAM', 'rules registry missing'); return hits; }
   const tables = readRules(ctx.root).tables;
   if (!tables.length) { problem(regPath, 'E-ACC-ITEM-PARAM', 'rules registry has no table rows'); return hits; }
-  const { prefixes, singletons } = ctx.prefixes;
+  // 卷六 S6-2 只管物品、材料、地点、组织、职业、铸币六类实体 id；状态行代号是状态表的词表式代号（卷四 :318 rules.death.terminalStatus 指向状态表一行，
+  // 李白 11-19 22:0x ④），不是这六类，不计（与类别代号不计同理，整类口径，不按单个代号放行）。
+  const exempt = new Set();
+  for (const kind of VOCAB_LIKE_KINDS) {
+    const f = join(ctx.root, LAYOUT.dimensionsDir, `${kind}.json`);
+    if (existsSync(f)) for (const p of (JSON.parse(readFileSync(f, 'utf8')).entity || {}).idPrefix || []) exempt.add(p);
+  }
+  const prefixes = ctx.prefixes.prefixes.filter((p) => !exempt.has(p));
+  const { singletons } = ctx.prefixes;
   const isId = (s) => typeof s === 'string' && (prefixes.some((p) => s.startsWith(p)) || singletons.includes(s));
   for (const t of tables) {
     if (!existsSync(join(ctx.root, t.file))) { problem(t.file, 'E-ACC-ITEM-PARAM', 'registered table file missing'); continue; }

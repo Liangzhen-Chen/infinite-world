@@ -1,5 +1,12 @@
 {
  "rows": [
-  {"key": "unbuilt", "value": ["stages"], "grade": "designed", "source": "卷四 §2.5 :306 rules.life.stages；§4.4 L-1 :639", "basis": "卷文只给阶段表的形状与 E-LIFE-STAGES 逐行检查（:374），§4.4.5 :654 的四行数值标明是示例；旧世界没有阶段表；不编数，读到按未知（卷二 §1.6）。读者 life.mjs、person.mjs 未建（6-6）"}
+  {
+   "key": "unbuilt",
+   "value": ["birthplaceClass", "earlyHazard", "fertilityByLiving", "fertilityCurve", "gestationStatus", "growthCurve", "hazardByLiving", "naturalCause", "senescenceHazard", "stages"],
+   "file": "server-plugin/life.mjs",
+   "grade": "designed",
+   "source": "卷四 §2.5 :306–:309（阶段表、成长曲线、背景死亡率、生育力、妊娠与出生地各键）；§4.4 L-1 至 L-6；:65（数据实例的 id 与数值都是示例）；李白 13:3x ③（示意行里的数不算出处）",
+   "basis": "stages、growthCurve：卷文只给形状，§4.4.5 :654 的四行与 :65 明说是示例，示意数不许当数据用（李白 13:3x ③）；旧世界没有阶段表与体重曲线。P-3（docs/审查/P-3-推导规则.md）的做法是从已有量程与已有卷文值统一推算：阶段表每行的下界、foodFactor、sleepFactor 与出生体重比例没有任何已有量程可推（L-1 文字只保证首行两个下界为 0、成年行 relMaturityMin 为 1，不够写出整张表），推不出，退回未建，不编数；lifeStage、adult、massKg 读到按未知带原因，instantiatePerson 的 ageYears 路径在阶段未知时整笔拒收（不假定成年）。待报李白：给阶段界线与出生体重比例的真实出处（如 WHO 新生儿体重中位数对成人体重、发育学阶段划分），或另给暂定口径。其余键读者 lifeTick 块 6 不建，不编曲线；hazardByLiving、fertilityByLiving 的自变量是卷六交来的 living（卷四 :39）：未知时不以任何常数代替"
+  }
  ]
 }

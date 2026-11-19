@@ -19,7 +19,7 @@ export const LEDGER_WRITER = KERNEL_MODULES.ledger;
 
 // 系统登记项的字段（§2.7 JSON 示例与各项定义：两个闭集字段、phase、terminationCleanup（§2.6）、emits 与 eventDerive、inputs 写回镜像）。
 // 下面各数组是这几张登记表字段名的单一定义源，Set 由它派生；成员是卷二 §2.5、§2.7 写明的登记字段名，不散写在 new Set([...]) 里。
-const SYSTEM_FIELD_LIST = ['view', 'predicates', 'tables', 'writers', 'sources', 'sinks', 'entryCallerFiles', 'entryJudges', 'phase', 'terminationCleanup', 'emits', 'eventDerive', 'inputs'];
+const SYSTEM_FIELD_LIST = ['view', 'predicates', 'tables', 'writers', 'sources', 'sinks', 'entryCallerFiles', 'entryJudges', 'phase', 'terminationCleanup', 'writeDelegations', 'emits', 'eventDerive', 'inputs'];
 const SYSTEM_FIELDS = new Set(SYSTEM_FIELD_LIST);
 // 状态顶层键登记项的字段（§2.5 :479"readers、writers、display 字段集合"；§2.6 去留表 subjectRecords）。
 const STATE_KEY_FIELD_LIST = ['readers', 'writers', 'display', 'subjectRecords'];
@@ -60,7 +60,8 @@ export const KEY_NONENTITY = Object.freeze(['event', KEY_DIMKEY, 'identityKey', 
 
 // handle 类的格式即卷二 §1.9 代号文法 CODE_RE（kernel/validate/types.mjs，不另立文法；李白 11-18 03:31 裁定 1）；生成句柄的内核文件自管形状（scheduler.mjs 的 due_＋序号）。
 // 去留表覆盖核对豁免的协议键顶层段（卷二 §2.6 :519"账户、holdings、statuses、modifiers、terminated、到期堆"；到期堆的键 `due` 见卷二十 :445）。账户由账本写者判（ledgerPaths）。
-const PROTOCOL_KEY_LIST = ['holdings', 'statuses', 'modifiers', 'terminated', 'due'];
+// stockLots（账户下的批次明细）与账户余额同一笔走，不单独删（李白 11-19 11:1x ④；卷二 §2.6 勘误 1119k11），同按协议自处置的键。
+const PROTOCOL_KEY_LIST = ['holdings', 'statuses', 'modifiers', 'terminated', 'due', 'stockLots'];
 const PROTOCOL_KEYS = new Set(PROTOCOL_KEY_LIST);
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -342,6 +343,18 @@ export function mergeStateOwners(decl, ctx = {}) {
     for (const f of ['predicates', 'tables', 'writers', 'sinks', 'emits']) if (s[f] !== undefined && !(Array.isArray(s[f]) && (s[f].length === 0 || isStrList(s[f])))) err(E.E_DIM_STRUCT_FIELD, name, `${at}/${f}`, s[f], 'list of strings');
     for (const f of ['view', 'eventDerive']) if (s[f] !== undefined && (typeof s[f] !== 'string' || !s[f].includes('#'))) err(E.E_DIM_STRUCT_FIELD, name, `${at}/${f}`, s[f], '<file>#<fn>');
     for (const f of ['sources', 'terminationCleanup']) if (s[f] !== undefined && !isObj(s[f])) err(E.E_DIM_STRUCT_FIELD, name, `${at}/${f}`, typeof s[f], 'object');
+    // 写者委托（卷二 §2.6 第 3 条勘误 1119k16）：[{from: 委托方文件, to: "<被委托写者文件>#<函数>"}]；被委托的文件必须是 stateKeys 里登记的某条路径的写者，
+    // 委托方只能以被委托写者的身份调那一个函数（kernel/transaction.mjs runDelegated），不能冒充任意文件。
+    if (s.writeDelegations !== undefined) {
+      const writerFiles = new Set(Object.values(isObj(d.stateKeys) ? d.stateKeys : {}).flatMap((k) => (isObj(k) && isObj(k.writers) ? Object.values(k.writers) : [])));
+      const list = Array.isArray(s.writeDelegations) ? s.writeDelegations : null;
+      if (list === null) err(E.E_DIM_STRUCT_FIELD, name, `${at}/writeDelegations`, typeof s.writeDelegations, 'list of {from, to}');
+      for (const [i, e] of (list || []).entries()) {
+        const hash = isObj(e) && typeof e.to === 'string' ? e.to.indexOf('#') : -1;
+        if (!exactKeys(e, ['from', 'to']) || typeof e.from !== 'string' || hash <= 0) err(E.E_DIM_STRUCT_FIELD, name, `${at}/writeDelegations/${i}`, e, '{from: <file>, to: <file>#<fn>}');
+        else if (!writerFiles.has(e.to.slice(0, hash))) err(E.E_DIM_REF_MISSING, name, `${at}/writeDelegations/${i}`, e.to, 'a file registered as a writer in stateKeys');
+      }
+    }
     for (const p of Array.isArray(s.writers) ? s.writers : []) {
       if (claimed.has(p)) err(E.E_STATE_MULTI_WRITER, name, `${at}/writers`, p, `pattern already claimed by ${claimed.get(p)}`);
       else claimed.set(p, name);

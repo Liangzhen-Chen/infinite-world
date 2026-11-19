@@ -255,6 +255,8 @@ test('kernelApi 登记 schedule、cancel、clockView（K4-13）与 createWallTim
     { export: 'kernel/scheduler.mjs#schedule', callers: ['rules'], acceptsState: false },
     { export: 'kernel/scheduler.mjs#cancel', callers: ['rules'], acceptsState: false },
     { export: 'kernel/scheduler.mjs#clockView', callers: ['rules'], acceptsState: true },
+    // 6-6：冷却按日数折分钟（卷四 §4.8 D-6 cooldownDays），death.mjs 读一日的分钟数。
+    { export: 'kernel/scheduler.mjs#minutesPerDay', callers: ['rules'], acceptsState: false },
     { export: 'kernel/scheduler.mjs#createWallTimer', callerFiles: ['index.mjs'], acceptsState: false },
   ]);
   assert.deepEqual(decl.stateKeys.clock, { readers: [], writers: { minute: 'kernel/scheduler.mjs', seq: 'kernel/scheduler.mjs', dueNext: 'kernel/scheduler.mjs' } });

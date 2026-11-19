@@ -22,6 +22,7 @@ import { installSampleConstants, installSampleDistributions } from '../sample.mj
 import { checkVerbRows } from '../events.mjs';
 import { checkHoldingKindRows } from '../holdings.mjs';
 import { checkTerminationTables, installTermination, TERMINATE_RULES_TABLE } from '../terminate.mjs';
+import { installDelegations } from '../transaction.mjs';
 import { checkPlaceTable } from '../place.mjs';
 import { checkItemTables, checkItemClasses } from '../item.mjs';
 import { checkItemStateTables } from '../item-state.mjs';
@@ -150,6 +151,7 @@ export function loadWorld(root, opts = {}) {
     installStorage(owners.merged); // readPath/writePath 运行期核对用的声明表合并结果（kernel/storage.mjs，块 2 第 2-3 张）
     installWeather(weatherRx.trees); // weatherAt 只读加载期编好的 weightRX 树（kernel/weather.mjs，块 6 第 6-28 张）
     installScheduler(read.rules); // schedule 入堆缩放读 rules.clock（kernel/scheduler.mjs，块 4 第 4-2 张）
+    installDelegations(decl); // 写者委托登记（systems.*.writeDelegations，卷二 §2.6 第 3 条勘误 1119k16；kernel/transaction.mjs runDelegated）
     installTermination(decl); // 终止协议读声明表的 stateKeys.subjectRecords 与 systems.terminationCleanup（kernel/terminate.mjs，块 5 第 5-4 张；与 installStorage 同法）
     owners.merged.systems = deps.systems;
   }

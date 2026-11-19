@@ -9,6 +9,7 @@ import { clockView } from './kernel/scheduler.mjs';
 import { writePath, readPath } from './kernel/storage.mjs';
 import { emit } from './kernel/events.mjs';
 import { registerAdvanceHook } from './kernel/advance-registry.mjs';
+import { registerDelegate } from './kernel/transaction.mjs';
 import { P, V } from './kernel/handles/generated.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -160,3 +161,5 @@ export function settleRotted(engine, state) {
 
 // itemRot 推进钩子（卷三乙 §3.3 系统登记表：environment 阶段；节拍一日，见 rules.clock.cadence）：一拍结算一次坏透。
 registerAdvanceHook('itemRot', 'item-lots.mjs', (engine, state) => { settleRotted(engine, state); });
+// 被委托写者：卷四 D-4 的 settleBody（death.mjs）落尸体腐坏初值，经 state-owners systems.sys.death.writeDelegations 登记的委托调（kernel/transaction.mjs runDelegated）。
+registerDelegate('item-lots.mjs#initInstanceRot', initInstanceRot);

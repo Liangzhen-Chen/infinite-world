@@ -455,6 +455,25 @@
    "scanClass": "instance_name"
   },
   {
+   "addedAtRev": 68,
+   "caseKey": "instance_name-46",
+   "fixture": "tests/accept/bypass/instance_name-46.txt",
+   "group": "rules",
+   "origin": "卷六 S6-2；卷四 :318 rules.death.terminalStatus 指向状态表一行：规则表的值是状态表行代号（前缀 status_），不是六类实体 id，不计（必须不报；整类口径，李白 11-19 22:0x ④）",
+   "polarity": "must_pass",
+   "scanClass": "instance_name"
+  },
+  {
+   "addedAtRev": 68,
+   "caseKey": "instance_name-47",
+   "expectCode": "E-ACC-INSTANCE-NAME",
+   "fixture": "tests/accept/bypass/instance_name-47.txt",
+   "group": "rules",
+   "origin": "卷一 R-4 第 3 条；规则层代码里写死状态行代号仍计，状态表前缀只在规则表一支不计（必须报；李白 11-19 22:0x ④）",
+   "polarity": "must_fail",
+   "scanClass": "instance_name"
+  },
+  {
    "addedAtRev": 1,
    "caseKey": "item_downgrade-01",
    "expectCode": "E-ACC-ITEM-DOWNGRADE",

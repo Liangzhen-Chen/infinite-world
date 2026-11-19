@@ -239,12 +239,28 @@
       "value": {"type": "number", "unit": "dimensionless", "precision": 4}
      }}}
     }}},
+    "growthCurve": {"type": "curve", "x": "dimensionless", "y": "dimensionless"},
     "unbuilt": {"type": "set", "of": {"type": "string"}}
    },
-   "domain": {"stages": {}, "unbuilt": {}},
-   "volume": "卷四 §2.5 :306（rules.life.stages：有序 list<struct{stage, relMaturityMin, relAgeMin, foodFactor, sleepFactor, modifiers}>，只有两个数值下界）、§4.4 L-1 :639（阶段判定）、E-LIFE-STAGES :374；卷文 §4.4.5 :654 的数值标明为示例，旧世界无阶段表：stages 登在 unbuilt（体例同 rules.body.unbuilt），不编数；读者 life.mjs、person.mjs 未建（6-6）",
+   "domain": {"stages": {}, "growthCurve": {}, "unbuilt": {}},
+   "volume": "卷四 §2.5 :306（rules.life.stages：有序 list<struct{stage, relMaturityMin, relAgeMin, foodFactor, sleepFactor, modifiers}>，只有两个数值下界）、§4.4 L-1 :639（阶段判定）、E-LIFE-STAGES :374；卷文 §4.4.5 :654 的数值标明为示例，旧世界无阶段表：示意数不算出处（:65；李白 13:3x ③）、P-3 又推不出，stages 与 §2.5 :307 growthCurve（relMaturity → 成年体重比例）都登 unbuilt，待报李白（读者 server-plugin/life.mjs，6-6）；其余键（背景死亡、生育、妊娠、出生地）读者 lifeTick 块 6 不建，登 unbuilt",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"stages": false, "unbuilt": false}
+   "packOverridable": {"stages": false, "growthCurve": false, "unbuilt": false}
+  },
+  {
+   "code": "death",
+   "file": "tables/death.json",
+   "structure": "keys",
+   "type": {
+    "terminalStatus": {"type": "ref", "kind": "status"},
+    "lostPartsExcluded": {"type": "boolean"},
+    "corpseClass": {"type": "ref", "vocab": "component"},
+    "unbuilt": {"type": "set", "of": {"type": "string"}}
+   },
+   "domain": {"terminalStatus": {}, "lostPartsExcluded": {}, "corpseClass": {}, "unbuilt": {}},
+   "volume": "卷四 §2.5 :318（rules.death：terminalStatus、vitalLossCause、lostPartsExcluded、corpseClass）、§4.8；terminalStatus 指状态表一行（李白 11-19 22:0x ④：与卷六 S6-2 不冲突，状态行代号不计实例名）；vitalLossCause 的读者是 §4.2 B-8 致命部位反应规则（块 6 不建）登 unbuilt；corpsePurpose（卷文没给的尸体账户用途，读者 death.mjs）登 unbuilt；读者 server-plugin/death.mjs（6-6）",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"terminalStatus": false, "lostPartsExcluded": false, "corpseClass": false, "unbuilt": false}
   },
   {
    "code": "calendar",

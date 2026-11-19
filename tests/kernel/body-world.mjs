@@ -5,7 +5,11 @@ import { readFileSync, readdirSync, rmSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
+import { gradedCells } from '../../server-plugin/kernel/validate/cell-grades.mjs';
 import { testTempRoot, writeUnderTempRoot } from '../accept/temp-root.mjs';
+
+// 测试材料行逐格记 designed（卷三甲 M-22 键集合须等于填了值的格；同 item-world.mjs）。
+const gradedRow = (dimensions, row) => ({ ...row, cellGrades: Object.fromEntries([...gradedCells(dimensions, row).keys()].map((k) => [k, { grade: 'designed', citation: null, basis: '测试行' }])) });
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DIMS = 'world/ontology/dimensions';
@@ -119,7 +123,22 @@ export function loadBodyWorld(f) {
         for (const k of ['tissue', 'attr', 'sex', 'gait', 'taxon', 'class', 'life_stage', 'trait']) Object.assign(fam[k].entries, clone(f.vocab[k]));
         if (typeof f.editVocab === 'function') f.editVocab(doc);
       }
-      if (name === '_unbuilt-derived.json' && typeof f.editUnbuilt === 'function') f.editUnbuilt(doc);
+      // 夹具用只有四个维度的最小 person 表顶替真实 person.json（6-6 建成）：真实表头的未建派生与未建列登记（table person）所指维度这里没有，须一并去掉。
+      if (name === '_unbuilt-derived.json') {
+        if (!f.realPerson) {
+          doc.entries = doc.entries.filter((e) => e.table !== 'person');
+          doc.columns = doc.columns.filter((e) => e.table !== 'person');
+        }
+        if (typeof f.editUnbuilt === 'function') f.editUnbuilt(doc);
+      }
+      // f.realPerson（6-6）：用真实 person.json 表头，行取 f.personRows（作者侧个体行，加在抄件里）；另可加测试材料行与物品行（尸体模板）、改地点行。
+      if (name === 'person.json' && f.realPerson) {
+        Object.assign(doc.rows, clone(f.personRows || {}));
+        if (typeof f.editPersonDoc === 'function') f.editPersonDoc(doc);
+      }
+      if (name === 'material.json' && f.materials) for (const [id, row] of Object.entries(f.materials)) doc.rows[id] = gradedRow(doc.dimensions, clone(row));
+      if (name === 'item.json' && f.items) Object.assign(doc.rows, clone(f.items));
+      if (name === 'place.json' && typeof f.editPlaceDoc === 'function') f.editPlaceDoc(doc);
       // 状态表（kind status，6-5）：真实表头只有 family 一个维度、没有行；夹具按 f.statuses 在抄件上加测试状态行（行内容归卷二十一，不进 world/）。
       if (name === 'status.json' && f.statuses) Object.assign(doc.rows, clone(f.statuses));
       if (name === 'body_plan.json') {
@@ -153,10 +172,17 @@ export function loadBodyWorld(f) {
       }
       writeUnderTempRoot(tmp, `dims/${name}`, JSON.stringify(doc));
     }
-    writeUnderTempRoot(tmp, 'dims/person.json', JSON.stringify(personTable(clone(f.persons))));
+    if (!f.realPerson) writeUnderTempRoot(tmp, 'dims/person.json', JSON.stringify(personTable(clone(f.persons))));
     const readRule = (file) => readFileSync(join(ROOT, RULES, file), 'utf8');
     const reg = JSON.parse(readRule('registry.json'));
-    for (const row of reg.rows) writeUnderTempRoot(tmp, `rules/${row.file}`, readRule(row.file));
+    // f.editRules（6-6）：{规则表代号: (rows) => void}，在抄件上改该表的行（如给 rules.items.categoryRules 加测试类别的条件）。
+    for (const row of reg.rows) {
+      const edit = f.editRules && f.editRules[row.code];
+      if (typeof edit !== 'function') { writeUnderTempRoot(tmp, `rules/${row.file}`, readRule(row.file)); continue; }
+      const doc = JSON.parse(readRule(row.file));
+      edit(doc.rows);
+      writeUnderTempRoot(tmp, `rules/${row.file}`, JSON.stringify(doc));
+    }
     // rules.body：夹具在抄件上给测试阈值（f.lostBelow）；f.lostBelow 为 null 时把该键登进 unbuilt、不给值（测"未建即未知"）。
     if (f.lostBelow !== undefined) {
       // 真实 rules.body.unbuilt 登了 metabolism（§4.7 未建，speciesView 的 meanDailyFoodNeed 读它）；夹具默认同，f.bodyUnbuilt 可改（测"没登记即报错"）。

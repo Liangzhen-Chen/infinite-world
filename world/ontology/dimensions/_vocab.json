@@ -228,6 +228,8 @@
     "class_mushroom": {},
     "class_nut": {},
     "class_paper": {},
+    "class_person_beast": {},
+    "class_person_mind": {},
     "class_plant": {},
     "class_powder": {},
     "class_salt": {},
@@ -631,7 +633,13 @@
   },
   "record_class": {
    "closed": false,
-   "entries": {},
+   "entries": {
+    "rcls_deviation_row": {},
+    "rcls_name_history": {},
+    "rcls_outflow_history": {},
+    "rcls_revival_cooldown": {},
+    "rcls_revive_points": {}
+   },
    "prefix": "rcls_"
   },
   "relation": {
@@ -2414,6 +2422,66 @@
   "verb": {
    "closed": false,
    "entries": {
+    "verb_death_event": {
+     "calendarBound": false,
+     "headSlot": null,
+     "kindFrom": null,
+     "kindOnly": true,
+     "parent": null,
+     "payloadShape": {},
+     "perceivable": false,
+     "scandal": false,
+     "senses": [],
+     "sigBase": 0,
+     "tallies": [],
+     "visibilityAllowed": ["private", "public", "witnessed"],
+     "worthSlots": {"destroyed": [], "moved": [], "stake": []}
+    },
+    "verb_death_natural": {
+     "calendarBound": false,
+     "headSlot": null,
+     "kindFrom": null,
+     "kindOnly": true,
+     "parent": null,
+     "payloadShape": {},
+     "perceivable": false,
+     "scandal": false,
+     "senses": [],
+     "sigBase": 0,
+     "tallies": [],
+     "visibilityAllowed": ["private", "public", "witnessed"],
+     "worthSlots": {"destroyed": [], "moved": [], "stake": []}
+    },
+    "verb_death_status": {
+     "calendarBound": false,
+     "headSlot": null,
+     "kindFrom": null,
+     "kindOnly": true,
+     "parent": null,
+     "payloadShape": {},
+     "perceivable": false,
+     "scandal": false,
+     "senses": [],
+     "sigBase": 0,
+     "tallies": [],
+     "visibilityAllowed": ["private", "public", "witnessed"],
+     "worthSlots": {"destroyed": [], "moved": [], "stake": []}
+    },
+    "verb_death_vital_loss": {
+     "calendarBound": false,
+     "headSlot": null,
+     "kindFrom": null,
+     "kindOnly": true,
+     "parent": null,
+     "payloadShape": {},
+     "perceivable": false,
+     "scandal": false,
+     "senses": [],
+     "sigBase": 0,
+     "tallies": [],
+     "visibilityAllowed": ["private", "public", "witnessed"],
+     "worthSlots": {"destroyed": [], "moved": [], "stake": []}
+    },
     "verb_domicile_changed": {
      "calendarBound": false,
      "headSlot": null,

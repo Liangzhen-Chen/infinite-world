@@ -28,6 +28,60 @@ export function currentTransaction() {
   return current;
 }
 
+// ---------- 写者委托（卷二 §2.6 第 3 条勘误 1119k16） ----------
+// 一个系统的写入口要调另一个系统的声明写者导出（writePath 按事务节点所在文件核写者）：例如卷四 §4.8.3 D-2 的 die（death.mjs）经 status.mjs 写终止类状态实例。
+// 委托只经登记：state-owners.json systems.<名>.writeDelegations 列 {from: 委托方文件, to: "<被委托写者文件>#<函数>"}（加载期核 to 的文件是 stateKeys 登记的写者）；
+// 被委托的函数由它所在模块在加载时经 registerDelegate 交入；委托方只能调登记在自己名下的那几个函数，且在调用期间节点换成被委托写者（调完恢复）——不收任意文件名、不收任意闭包，
+// 不能冒充别的写者（卷二 :522 运行期写者核对不变）。
+
+/** @type {Map<string, (...args: any[]) => any>} */
+const delegates = new Map();
+/** @type {{from: string, to: string}[]} */
+let delegations = [];
+
+/**
+ * kernelApi `registerDelegate(ref, fn)`：被委托写者的模块在加载时交入自己的导出函数（ref = "<文件>#<函数>"）。重复交入拒。
+ * @param {string} ref @param {(...args: any[]) => any} fn
+ */
+export function registerDelegate(ref, fn) {
+  if (typeof ref !== 'string' || typeof fn !== 'function') throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'registerDelegate(ref: <file>#<fn>, fn)');
+  if (delegates.has(ref)) throw new KernelError('E-WRITER-DUPLICATE', {}, `delegate ${ref} already registered`);
+  delegates.set(ref, fn);
+}
+
+/**
+ * 加载期收下声明表里的写者委托（kernel/load/world.mjs 经此交入；kernel 组内用，不在 kernelApi）。
+ * @param {{systems?: Record<string, any>}} decl
+ */
+export function installDelegations(decl) {
+  const systems = decl && typeof decl === 'object' && decl.systems && typeof decl.systems === 'object' ? decl.systems : {};
+  delegations = Object.keys(systems).sort().flatMap((n) => (systems[n] && Array.isArray(systems[n].writeDelegations) ? systems[n].writeDelegations : []));
+}
+
+/**
+ * kernelApi `runDelegated(state, ref, ...args)`：在当前事务内以被委托写者的身份调登记的函数。当前节点所在文件须是该委托在声明表里的 from，
+ * ref 须登记在案且已交入函数，否则拒（E-VIEW-UNDECLARED-WRITE）；调完恢复节点；fn 抛错原样上抛（整笔回滚由事务处理）。
+ * @param {any} state @param {string} ref @param {...any} args
+ * @returns {any}
+ */
+export function runDelegated(state, ref, ...args) {
+  if (!current || current.state !== state) throw new KernelError('E-VIEW-UNDECLARED-WRITE', {}, 'runDelegated outside the transaction of this state');
+  if (!delegations.some((e) => e.from === current.file && e.to === ref)) throw new KernelError('E-VIEW-UNDECLARED-WRITE', {}, `${current.file} has no registered write delegation to ${ref}`);
+  const fn = delegates.get(ref);
+  if (!fn) throw new KernelError('E-ACT-WRITER-NOT-READY', {}, `delegate ${ref} is registered in the declaration table but its module did not register it`);
+  const at = ref.indexOf('#');
+  const saved = { node: current.node, file: current.file };
+  current.file = ref.slice(0, at);
+  current.node = ref.slice(at + 1);
+  try { return fn(...args); } finally { current.node = saved.node; current.file = saved.file; }
+}
+
+/** 测试用：清掉交入的委托函数与委托登记（kernel 组内用）。 */
+export function resetDelegations() {
+  delegates.clear();
+  delegations = [];
+}
+
 /**
  * 事务内向事件日志簿追加一条后，登记这条的撤销项（kernel/events.mjs#emit 调；kernel 组内用，不在 kernelApi）：
  * 存日志簿里那条条目对象本身，本事务回滚（或所在刻整刻作废）时按引用删去——事件条随事务提交才落、回滚即无

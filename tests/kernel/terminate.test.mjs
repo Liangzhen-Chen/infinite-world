@@ -90,10 +90,13 @@ const RECORDS = {
 function engineWith(over = {}) {
   const index = new Map(REP.vocab.index);
   for (const r of over.holdingRows || []) index.set(r.id, { family: 'holding_kind', prefix: 'hk_', entry: r });
-  const rules = { ...W.rules, terminate: { ...W.rules.terminate, records: RECORDS }, ...(over.rules || {}) };
+  // 去留表：真实表的行（6-6 起有 revivals、created 等）加本文件的测试记录类；真实声明表里的键须都有取值（E-TERM-RECORD-UNLISTED）。
+  const rules = { ...W.rules, terminate: { ...W.rules.terminate, records: { ...W.rules.terminate.records, ...RECORDS } }, ...(over.rules || {}) };
   return { vocab: { ...REP.vocab, index }, rules, units: W.env.units, tables: TABLES, template: { seed: 'test_terminate_seed' } };
 }
 const ENGINE = engineWith();
+// 真实声明里 6-6 起有 sys.death（settleBody 的清理登记，只在死亡测试里交入）：本文件用虚构 person 表与自己的两个测试清理，不带它。
+const { 'sys.death': _death, ...REAL_SYSTEMS } = REAL_DECL.systems;
 const DECL = {
   stateKeys: {
     ...REAL_DECL.stateKeys,
@@ -103,7 +106,7 @@ const DECL = {
     testRumor: { readers: [], writers: { '*.*': 'test/rumor.mjs' }, subjectRecords: { '*.*': { recordClass: 'rcls_test_rumor', subjectSegments: [1, 2] } } },
   },
   systems: {
-    ...REAL_DECL.systems,
+    ...REAL_SYSTEMS,
     'sys.test_body': { tables: [], entryCallerFiles: {}, entryJudges: [], terminationCleanup: { kinds: ['person'], handler: 'test/body.mjs#settleBody', sortKey: 2 } },
     'sys.test_identity': { tables: [], entryCallerFiles: {}, entryJudges: [], terminationCleanup: { kinds: ['person'], handler: 'test/identity.mjs#closeIdentities', sortKey: 1 } },
     'sys.test_place': { tables: [], entryCallerFiles: {}, entryJudges: [], terminationCleanup: { kinds: ['place'], handler: 'test/place.mjs#ruin', sortKey: 1 } },
@@ -422,15 +425,18 @@ test('残余核对：持有者终止格不适用（null）的边留着即 E-TERM
   fails(state, (s) => terminate(engine, s, 'npc_a', CAUSE, null), 'E-TERM-RESIDUE');
 });
 
-test('复生点边：窗口 > 0 要整组覆盖 revivals 点（卷四路径未登记）整笔拒收；窗口为 0 只关边', () => {
+test('复生点边（6-6 起路径已登记）：窗口 > 0 关边并整组覆盖 revivals.<主体>.points（每条边一项：持有种类、标的）；窗口为 0 只关边、不记点', () => {
   const engine = engineWith({ holdingRows: [testRow({ id: 'hk_test_rev', revival: 'rev_test' })] });
   let state = fresh(engine);
   assert.deepEqual(run(state, (s) => { openHolding(engine, s, { holdingKind: 'hk_test_rev', holder: 'npc_s', subject: 'place_x', cause: CAUSE }); }), { ok: true });
-  fails(state, (s) => terminate(engine, s, 'npc_s', CAUSE, null), 'E-ACT-WRITER-NOT-READY');
+  assert.deepEqual(run(state, (s) => terminate(engine, s, 'npc_s', CAUSE, null)), { ok: true });
+  assert.equal(active(state).length, 0);
+  assert.deepEqual(state.revivals, { npc_s: { points: [{ kind: 'hk_test_rev', counterpart: 'place_x' }] } });
   state = fresh(engine);
   assert.deepEqual(run(state, (s) => { openHolding(engine, s, { holdingKind: 'hk_test_rev', holder: 'npc_a', subject: 'place_x', cause: CAUSE }); }), { ok: true });
   assert.deepEqual(run(state, (s) => terminate(engine, s, 'npc_a', CAUSE, null)), { ok: true });
   assert.equal(active(state).length, 0);
+  assert.equal(state.revivals, undefined);
 });
 
 // ---------- 第 5 步：到期项 ----------

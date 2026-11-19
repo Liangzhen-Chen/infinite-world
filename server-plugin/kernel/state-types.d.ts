@@ -26,6 +26,7 @@ export interface PathTypes {
   readonly 'itemInstances.*.diedMinute': number;
   readonly 'itemInstances.*.durability': number;
   readonly 'itemInstances.*.madeDay': number;
+  readonly 'itemInstances.*.ofPerson': EntityId<'person'>;
   readonly 'itemInstances.*.ofSpecies': EntityId<'species'>;
   readonly 'itemInstances.*.qualityTier': Handle<'quality'>;
   readonly 'itemInstances.*.rotAnchorDay': number;
@@ -39,6 +40,8 @@ export interface PathTypes {
   readonly 'outflowTotals.*': StructValue<'holderOutflow'>;
   readonly 'pendingPost.*': readonly (StructValue<'pendingPost'>)[];
   readonly 'playerNotes.*.text': SealedValue;
+  readonly 'revivals.*.lastMinute': number;
+  readonly 'revivals.*.points': readonly (StructValue<'revivePoint'>)[];
   readonly 'statuses.*': readonly (StructValue<'statusInstance'>)[];
   readonly 'stockLots.*': StructValue<'holderLots'>;
   readonly 'stockLots.*.*.*.*.rotAnchorDay': number;
@@ -75,6 +78,7 @@ export type State = {
       readonly diedMinute?: number;
       readonly durability?: number;
       readonly madeDay?: number;
+      readonly ofPerson?: EntityId<'person'>;
       readonly ofSpecies?: EntityId<'species'>;
       readonly qualityTier?: Handle<'quality'>;
       readonly rotAnchorDay?: number;
@@ -92,6 +96,10 @@ export type State = {
   readonly pendingPost?: { readonly [segment: string]: readonly (StructValue<'pendingPost'>)[] };
   readonly playerNotes?: { readonly [segment: string]: {
       readonly text?: SealedValue;
+    } };
+  readonly revivals?: { readonly [segment: string]: {
+      readonly lastMinute?: number;
+      readonly points?: readonly (StructValue<'revivePoint'>)[];
     } };
   readonly statuses?: { readonly [segment: string]: readonly (StructValue<'statusInstance'>)[] };
   readonly stockLots?: { readonly [segment: string]: StructValue<'holderLots'> & { readonly [segment: string]: { readonly [segment: string]: { readonly [segment: string]: {

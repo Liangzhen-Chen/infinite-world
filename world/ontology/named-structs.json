@@ -305,6 +305,14 @@
    }}
   },
   {
+   "name": "struct:revivePoint",
+   "source": "卷二 §1.5 :235（勘误 1119k11；revivals.<person>.points 的元素，卷四 §2.6、本卷 §2.6 终止第 4 步 ③）",
+   "type": {"struct": {
+    "kind": "Handle<holding_kind>",
+    "counterpart": "EntityId"
+   }}
+  },
+  {
    "name": "struct:manifestRow",
    "source": "卷二 §1.5 :233",
    "type": {"struct": {

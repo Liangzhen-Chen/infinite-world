@@ -9,7 +9,7 @@ import { KernelError } from './errors.mjs';
 import { sha256Text } from './save.mjs';
 import { fixedUnits, fixedScale, truncateTo, fixedToNumber, fixedExp, fixedSqrtInt } from './det-math.mjs';
 import { CODE_RE } from './handles/vocab-handle.mjs';
-import { KEY_RE } from './validate/types.mjs';
+import { KEY_RE, T } from './validate/types.mjs';
 import { isHex64, seedKeyText, seedHashText, diceKeyText } from './handles/keys.mjs';
 
 // 分布种类（卷二 §1.10 :307–:316 的 `dist` 取值，单一定义源；别处只引用）。
@@ -395,11 +395,29 @@ export function sample(engine, kind, id, dim) {
   if (!def) throw new KernelError('E-DIM-REF-MISSING', {}, `${JSON.stringify(kind)}.${JSON.stringify(dim)}: no dimension definition`);
   const dist = def.sample;
   if (dist === undefined) throw new KernelError('E-DIM-REF-MISSING', {}, `${JSON.stringify(kind)}.${JSON.stringify(dim)}: dimension has no sample`);
+  return drawFrom(engine, kind, id, dim, dist, def, dist.dist === DIST.joint ? dist.group : undefined);
+}
+
+/**
+ * kernelApi `sampleDistribution(engine, kind, id, dim, dist, key)`（卷二 §1.10 :305–:331；卷四 §4.10 P-4）：按调用方给的分布对象采样，
+ * 种子键仍是 (template.seed, kind, id, dim)，其余同 `sample`。用于分布不挂在被采样维度表头 `sample` 上、而来自别处的情形
+ * （个体的成年体重、寿命、属性、外貌轴取自物种行的分布，卷四 §2.1、§2.3）；精度与取值域读 dim 在 kind 表头里的定义（map 维度读其值定义）。
+ * map 维度逐键采样时用 `key`（代号）：种子键第四段写 `joint:<key>`，与 joint"整组一次抽"同一写法，不同键得不同种子键（一键一抽）。
+ * 纯函数，不写状态；joint、curve、ref 分布没有首批求值，照旧拒（不静默给值）。
+ * @param {any} engine @param {string} kind @param {string} id @param {string} dim @param {any} dist @param {string | undefined} key
+ * @returns {number | string}
+ */
+export function sampleDistribution(engine, kind, id, dim, dist, key) {
+  const def = defOf(engine, kind, dim);
+  if (!def) throw new KernelError('E-DIM-REF-MISSING', {}, `${JSON.stringify(kind)}.${JSON.stringify(dim)}: no dimension definition`);
+  return drawFrom(engine, kind, id, dim, dist, isObj(def.value) && def.type === T.type.map ? def.value : def, key);
+}
+
+function drawFrom(engine, kind, id, dim, dist, def, group) {
   validateDistribution(dist, def, engine);
   const templateSeed = engine && engine.template ? engine.template.seed : undefined;
   if (!isSeedTemplate(templateSeed)) throw paramError(`template.seed ${JSON.stringify(templateSeed)}: want ^[A-Za-z0-9_-]{1,64}$`);
   if (typeof id !== 'string' || !CODE_RE.test(id)) throw paramError(`id ${JSON.stringify(id)} is not a code`);
-  const group = dist.dist === DIST.joint ? dist.group : undefined;
   if (group !== undefined && (typeof group !== 'string' || !CODE_RE.test(group))) throw paramError(`joint group ${JSON.stringify(group)} is not a code`);
   const seedKey = seedKeyFor(templateSeed, kind, id, dim, group);
   switch (dist.dist) {

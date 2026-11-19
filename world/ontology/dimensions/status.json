@@ -18,6 +18,8 @@
  "generated": {},
  "kind": "status",
  "namespace": "core",
- "rows": {},
+ "rows": {
+  "status_death": {"family": "sfam_dead", "basis": "卷四 §4.8.1 :866 的终止类状态行（卷二 §1.11 :352 首批赋值 sfam_dead{terminal}；die 按 rules.death.terminalFamily 在本表选 family 为 sfam_dead 的行，须恰这一行）；die 写它的实例、终止第 5 步随全部状态实例清掉；其余状态行内容归卷二十一"}
+ },
  "version": 1
 }

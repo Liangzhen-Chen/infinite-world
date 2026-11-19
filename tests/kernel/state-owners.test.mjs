@@ -47,9 +47,10 @@ test('真实 state-owners.json：合并零错；loadWorld 通过后 V、E、P �
   // clock.minute、clock.seq（写者 kernel/scheduler.mjs，块 4-1；卷二十 §3.2 :444）、due.*（块 4-2，:445）、clock.dueNext（句柄计数器，李白 11-18 03:31）生成 P。
   // aggregates.*.ledgerHolder（卷二十七 :200，写者 aggregate.mjs；keyKinds seedKey，李白 11-18 05:28 裁定②）生成 P.aggregates_ledgerHolder。
   // 块 6 第 6-3 张：itemInstances.<id>.* 除 taint（账本写，账本路径不生成 P）外各生成一个 P；stockLots 的腐坏两字段（声明写者 item-lots.mjs）各生成一个 P。
+  // 块 6 第 6-6 张：itemInstances.<id>.ofPerson（尸体实例）、revivals.<person>.lastMinute 与 .points。
   assert.deepEqual(Object.keys(P), ['aggregates_ledgerHolder', 'clock_dueNext', 'clock_minute', 'clock_seq', 'created_props', 'created_props_basis', 'displayNames_seq', 'due', 'holdings',
-    'itemInstances_diedMinute', 'itemInstances_durability', 'itemInstances_madeDay', 'itemInstances_ofSpecies', 'itemInstances_qualityTier', 'itemInstances_rotAnchorDay', 'itemInstances_spoilage', 'itemInstances_template', 'itemInstances_wearAnchorDay',
-    'pendingPost', 'statuses', 'stockLots_rotAnchorDay', 'stockLots_spoilage', 'terminated']);
+    'itemInstances_diedMinute', 'itemInstances_durability', 'itemInstances_madeDay', 'itemInstances_ofPerson', 'itemInstances_ofSpecies', 'itemInstances_qualityTier', 'itemInstances_rotAnchorDay', 'itemInstances_spoilage', 'itemInstances_template', 'itemInstances_wearAnchorDay',
+    'pendingPost', 'revivals_lastMinute', 'revivals_points', 'statuses', 'stockLots_rotAnchorDay', 'stockLots_spoilage', 'terminated']);
   // 持有边存储形 holdings.<持有者>.<边句柄>（卷十八 §4.1.1；5-3）：P.holdings(holder, edge) 两个 * 段都进参数。
   assert.equal(P.holdings('npc_x', 'hld_1'), 'holdings.npc_x.hld_1');
   assert.equal(P.aggregates_ledgerHolder('agg_x'), 'aggregates.agg_x.ledgerHolder');

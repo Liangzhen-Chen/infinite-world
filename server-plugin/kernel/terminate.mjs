@@ -26,12 +26,12 @@ import { currentTransaction } from './transaction.mjs';
 import { invalidateMemo } from './memo.mjs';
 import { TERMINATED_KEY } from './storage.mjs';
 import { emit } from './events.mjs';
-import { kindOf } from './vocab.mjs';
+import { kindOfEntity } from './vocab.mjs';
 import { CODE_RE } from './handles/vocab-handle.mjs';
 import { isModuleFile } from './handles/keys.mjs';
 import { T, GRAMMAR_TOKENS } from './handles/markers.mjs';
 import { compileRXInScope, evaluateRX } from './rx.mjs';
-import { rxBindings } from './dimensions.mjs';
+import { rxBindings, rowClassesOf } from './dimensions.mjs';
 import { ruleTable } from './load/rules.mjs';
 import { accountsOf, transfer } from './ledger.mjs';
 import { closeHolding } from './holdings.mjs';
@@ -42,6 +42,8 @@ const S = Object.freeze({
   accounts: 'accounts',
   holdings: 'holdings',
   due: 'due',
+  revivals: 'revivals',
+  pointsKey: 'points',
   statuses: 'statuses',
   modifiers: 'modifiers',
   verbFamily: 'verb',
@@ -204,10 +206,10 @@ const isMarked = (state, id) => Object.hasOwn(marksOf(state), id);
 
 // ---------- 第 1 步：类别行 termination 与后继 ----------
 
-function entityKind(id) {
+function entityKind(state, id) {
   if (!isCode(id)) throw deny(CODE.idFormat, `entity id ${JSON.stringify(id)} is not a code`);
-  try { return kindOf(id); } catch (e) {
-    if (codeOf(e) !== null) throw deny(CODE.refMissing, `${id} is not a loaded entity`, id);
+  try { return kindOfEntity(state, id); } catch (e) {
+    if (codeOf(e) !== null) throw deny(CODE.refMissing, `${id} is not a loaded or created entity`, id);
     throw e;
   }
 }
@@ -219,10 +221,8 @@ function terminationOf(engine, state, kind, id) {
   if (!t || !isObj(t.doc)) throw deny(CODE.notReady, `entity table ${kind} is not loaded (entity tables load in block 6/7)`, id);
   const doc = t.doc;
   const classes = isObj(doc.classes) ? doc.classes : {};
-  const created = isObj(state) && isObj(state.created) && isObj(state.created[id]) ? state.created[id] : null;
-  const rowOf = (sec) => (isObj(doc[sec]) && isObj(doc[sec][id]) ? doc[sec][id] : null);
-  const row = created && Array.isArray(created.classes) ? created : rowOf('rows') || rowOf('generated');
-  const declaredClasses = row && Array.isArray(row.classes) ? row.classes : [];
+  // 声明的类别：实体行或生成行手写的；没写则由表头 classesFrom 指的维度（人物表：物种）所指行的类别派生，不存储。
+  const declaredClasses = rowClassesOf(engine, state, t, id);
   const found = new Map();
   for (const c of declaredClasses) {
     const seen = new Set();
@@ -269,7 +269,7 @@ function successorOf(engine, state, kind, id, term) {
   let v;
   try { v = evaluateRX(tree, rxBindings(engine, state, kind, id, tree), {}); } catch (e) { return null; }
   if (!isCode(v) || v === id || isMarked(state, v)) return null;
-  try { kindOf(v); } catch (e) { return null; }
+  try { kindOfEntity(state, v); } catch (e) { return null; }
   return v;
 }
 
@@ -401,6 +401,7 @@ function firstLiveSuccessor(engine, state, id, row, rec) {
 }
 
 function settleHoldings(engine, state, id, cause, windowDays) {
+  const points = [];
   for (const { edgeId, rec } of activeEdges(state, (r) => r.holder === id)) {
     const row = holdingRow(engine, rec.kind);
     let heir = null;
@@ -409,10 +410,11 @@ function settleHoldings(engine, state, id, cause, windowDays) {
     else if (row.gone === HANDOVER.revert) heir = isCode(rec.terms.grantor) && !isMarked(state, rec.terms.grantor) ? rec.terms.grantor : null;
     else if (row.gone !== HANDOVER.close) throw deny(CODE.notReady, `holding kind ${rec.kind}: holder-end disposition ${JSON.stringify(row.gone)} needs a protocol transfer in the holding writer (not built)`, id);
     if (heir !== null) throw deny(CODE.notReady, `holding kind ${rec.kind}: handing ${edgeId} to ${heir} needs a protocol transfer in the holding writer (not built)`, id);
-    // 复生点边（③）：窗口 > 0 时要整组覆盖 revivals.<主体>.points，该路径由卷四登记（块 6）；窗口为 0 不记点，只关边。
-    if (row.revival !== null && row.revival !== undefined && windowDays > 0) throw deny(CODE.notReady, `holding kind ${rec.kind}: revival points path is registered by volume 4 (block 6)`, id);
+    // 复生点边（③）：窗口 > 0 时记一项（该边的持有种类，该边的标的），关边后以本次关闭的全部复生点边整组覆盖 revivals.<主体>.points（卷四 §2.6）；窗口为 0 不记点，只关边。
+    if (row.revival !== null && row.revival !== undefined && windowDays > 0) points.push({ kind: rec.kind, counterpart: rec.subject });
     closeHolding(engine, state, { id: edgeId, cause });
   }
+  if (points.length > 0) txSet(needTx(state), [S.revivals, id, S.pointsKey], points);
   // 协议乙：以它为标的的边一律解除（R18-1.3；subjectEnd 现只许 send_close，本步不读它）。
   for (const { edgeId } of activeEdges(state, (r) => r.subject === id)) closeHolding(engine, state, { id: edgeId, cause });
 }
@@ -481,7 +483,7 @@ export function terminate(engine, state, entityId, cause, source) {
   if (inCleanup) throw deny(CODE.undeclaredWrite, 'termination cleanup must not call terminate', entityId);
   checkCause(engine, cause);
   if (!(source === null || isCode(source))) throw deny(CODE.idFormat, 'terminate source is a code or null', entityId);
-  const kind = entityKind(entityId);
+  const kind = entityKind(state, entityId);
   if (isMarked(state, entityId)) throw deny(CODE.residue, `entity ${entityId} is already terminated`, entityId);
   // 第 1 步
   const term = terminationOf(engine, state, kind, entityId);
@@ -502,8 +504,10 @@ export function terminate(engine, state, entityId, cause, source) {
   // 第 4 步
   settleHoldings(engine, state, entityId, cause, term.reviveWindowDays);
   // 第 5 步
-  const blocked = protocolEntries(state, entityId);
-  if (blocked.length) throw deny(CODE.notReady, `${entityId}: ${blocked.join()} entries need the status container (block 6)`, entityId);
+  // 第 5 步清状态实例（状态容器 6-5 已建，写者 status.mjs；清除是协议动作，不算第二个写者）；运行态修正项的容器（modifier.mjs）块 6 没有，见到条目即拒收，不静默跳过。
+  if (isObj(state[S.statuses]) && Object.hasOwn(state[S.statuses], entityId)) txSet(tx, [S.statuses, entityId], undefined);
+  const blocked = protocolEntries(state, entityId).filter((k) => k === S.modifiers);
+  if (blocked.length) throw deny(CODE.notReady, `${entityId}: ${blocked.join()} entries need the modifier container (block 7)`, entityId);
   const due = dueRows(state);
   for (const h of Object.keys(due).sort(cmp)) if (due[h].owner === entityId || due[h].ref === entityId) cancel(h);
   if (term.reviveWindowDays > 0) {
@@ -527,7 +531,7 @@ export function revive(engine, state, entityId, cause) {
   const tx = needTx(state);
   if (inCleanup) throw deny(CODE.undeclaredWrite, 'termination cleanup must not call revive', entityId);
   checkCause(engine, cause);
-  const kind = entityKind(entityId);
+  const kind = entityKind(state, entityId);
   const mark = marksOf(state)[entityId];
   if (!isObj(mark)) throw deny(CODE.reviveDenied, `${entityId} has no termination mark`, entityId);
   const term = terminationOf(engine, state, kind, entityId);

@@ -1,0 +1,36 @@
+{
+ "rows": [
+  {
+   "key": "terminalStatus",
+   "value": "status_death",
+   "file": "server-plugin/death.mjs",
+   "grade": "designed",
+   "source": "卷四 §2.5 :318 rules.death.terminalStatus（ref status，状态表里的一行）；§4.8.3 D-2 :879；卷二 §1.11 :352 首批赋值 sfam_dead{terminal}；李白 11-19 22:0x ④",
+   "basis": "状态表里终止类状态行（status.json status_death，family sfam_dead 带 terminal:true），内容归卷二十一。卷六 S6-2 只管六类实体 id，状态行代号不计（门禁 data_shape 整类收紧，状态表前缀不算实例名）"
+  },
+  {
+   "key": "lostPartsExcluded",
+   "value": true,
+   "file": "server-plugin/death.mjs",
+   "grade": "designed",
+   "source": "卷四 §2.5 :318 rules.death.lostPartsExcluded；§4.8.3 D-4 :882（carcassOf 质量 = 主体 massKg × 参与部位 sizeFraction 之和，为真时不计已丧失部位）",
+   "basis": "暂定·待试玩标定（李白 11-19 18:1x ①）。卷文只给键与布尔类型，没给值。规则「实物为准」：已丧失的部位（eff 为 0）不在死者身上，也就不进尸体，取真；取假会让断肢的人留下完整躯体质量的尸体，与 §4.8.6 尸体质量 ≤ 死时 massKg 不矛盾但不合实物"
+  },
+  {
+   "key": "corpseClass",
+   "value": "comp_corpse",
+   "file": "server-plugin/death.mjs",
+   "grade": "designed",
+   "source": "卷四 §2.5 :318 rules.death.corpseClass；§4.8.1 :867（尸体是 item 表的实例，组件类由它指向）；卷三乙 §2.3 :225、I-2 :908（comp_corpse 已在 rules.items.instancedComponents）",
+   "basis": "物品表现有的、卷三乙登记的尸体组件类（_vocab.json component 族 comp_corpse，table item）；.mjs 不写该代号"
+  },
+  {
+   "key": "unbuilt",
+   "value": ["corpsePurpose", "vitalLossCause"],
+   "file": "server-plugin/death.mjs",
+   "grade": "designed",
+   "source": "卷四 §2.5 :318 rules.death.vitalLossCause（取死因行 verb_death_vital_loss，§2.8）；§4.2 B-8 :542；§4.8.3 D-4 :882（尸体建在终止时所在地点，账户用途卷文没给）",
+   "basis": "vitalLossCause 的读者是 B-8 致命部位反应规则（某 vital 部位 eff 变 0 时调 die），块 6 无状态实例写者推动部位折损，本卡不建该反应规则，登此处；死因行 verb_death_vital_loss 已在 _vocab.json 登记（§2.8）。die 的调用方传 cause、source，不读此键。corpsePurpose：尸体物品作为一件实物落在地点账户上，账本要一个账户用途（purpose 族条目，卷六 §2.2），卷四 D-4 只写“在终止时所在地点新建一件尸体物品”没给用途，purpose 族现只有 purpose_unmaterialized（地点物化份额，不是实物搁放）；不编，登未建（settleBody 读到即 E-ACT-WRITER-NOT-READY），待卷六给地面搁放用途或李白裁定"
+  }
+ ]
+}

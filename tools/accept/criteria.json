@@ -785,10 +785,14 @@
     {
      "ref": "补值卡 E：kernel/item.mjs（类别规则 categoryRules、classRules 的 when 读 material.<维度键>，即物品按 M-1 聚合的材料量；加载期读材料对条件必填不满足的维度给不适用）、kernel/validate/rows.mjs（requirement 导出）、kernel/dimensions.mjs（运行期 applicable 改用 requirement，多项条件必填与加载期同口径，卷二 :105；Opus 只核 6-fixE 必须改 1）；李白 11-19 21:0x ①(c)；卷三乙 §4.3.3 C-1 ②、§3.1 :425、M-1 ①。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 54
+    },
+    {
+     "ref": "块 6 第 6-6 张最后一轮：tools/accept/detectors/data_shape.mjs（entityKey 整类收紧：状态表前缀行代号不是六类实体 id，规则表键值里不计；代码里写死仍计；李白 11-19 22:0x ④），并新增 instance_name-46（必须不报）、instance_name-47（必须报）；kernel/dimensions.mjs、terminate.mjs、dimension-writers.mjs（人物类别由物种行派生，删 created.*.classes 存储，⑤）等落在检测器 import 闭包内，指纹变动",
+     "rev": 55
     }
    ],
-   "print": "56852566be08e5ecba393a38277628f57c3e37184d5c40d041d59c4243dd747e",
-   "rev": 54,
+   "print": "a4d16500b2d059360c7f07287b85e0028401f3165ca84faf748879386623212f",
+   "rev": 55,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1309,10 +1313,14 @@
     {
      "ref": "补值卡 E：kernel/item.mjs（类别规则 categoryRules、classRules 的 when 读 material.<维度键>，即物品按 M-1 聚合的材料量；加载期读材料对条件必填不满足的维度给不适用）、kernel/validate/rows.mjs（requirement 导出）、kernel/dimensions.mjs（运行期 applicable 改用 requirement，多项条件必填与加载期同口径，卷二 :105；Opus 只核 6-fixE 必须改 1）；李白 11-19 21:0x ①(c)；卷三乙 §4.3.3 C-1 ②、§3.1 :425、M-1 ①。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 51
+    },
+    {
+     "ref": "块 6 第 6-6 张最后一轮：tools/accept/detectors/data_shape.mjs（entityKey 整类收紧：状态表前缀行代号不是六类实体 id，规则表键值里不计；代码里写死仍计；李白 11-19 22:0x ④），并新增 instance_name-46（必须不报）、instance_name-47（必须报）；kernel/dimensions.mjs、terminate.mjs、dimension-writers.mjs（人物类别由物种行派生，删 created.*.classes 存储，⑤）等落在检测器 import 闭包内，指纹变动",
+     "rev": 52
     }
    ],
-   "print": "aeadad3e28c24726dd2e1165d8af4aab36ee29e68d6c2435fe5896a2cfe74cdb",
-   "rev": 51,
+   "print": "a83ed58feef192eddea55a7476ed5c8e07c0c4e162e334186141664d0a3b8cb5",
+   "rev": 52,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1702,10 +1710,14 @@
     {
      "ref": "补值卡 E：kernel/item.mjs（类别规则 categoryRules、classRules 的 when 读 material.<维度键>，即物品按 M-1 聚合的材料量；加载期读材料对条件必填不满足的维度给不适用）、kernel/validate/rows.mjs（requirement 导出）、kernel/dimensions.mjs（运行期 applicable 改用 requirement，多项条件必填与加载期同口径，卷二 :105；Opus 只核 6-fixE 必须改 1）；李白 11-19 21:0x ①(c)；卷三乙 §4.3.3 C-1 ②、§3.1 :425、M-1 ①。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 67
+    },
+    {
+     "ref": "块 6 第 6-6 张最后一轮：tools/accept/detectors/data_shape.mjs（entityKey 整类收紧：状态表前缀行代号不是六类实体 id，规则表键值里不计；代码里写死仍计；李白 11-19 22:0x ④），并新增 instance_name-46（必须不报）、instance_name-47（必须报）；kernel/dimensions.mjs、terminate.mjs、dimension-writers.mjs（人物类别由物种行派生，删 created.*.classes 存储，⑤）等落在检测器 import 闭包内，指纹变动",
+     "rev": 68
     }
    ],
-   "print": "c97cbc01bd0e2a30d373cbf71f92ca5da084ec8f7f986aa1e95a39bc536cfcf7",
-   "rev": 67,
+   "print": "4b0128eb41177204c4a146f5bdc1b15534d3ab3ae313bb86c49dab7214446545",
+   "rev": 68,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -2036,10 +2048,14 @@
     {
      "ref": "补值卡 E：kernel/item.mjs（类别规则 categoryRules、classRules 的 when 读 material.<维度键>，即物品按 M-1 聚合的材料量；加载期读材料对条件必填不满足的维度给不适用）、kernel/validate/rows.mjs（requirement 导出）、kernel/dimensions.mjs（运行期 applicable 改用 requirement，多项条件必填与加载期同口径，卷二 :105；Opus 只核 6-fixE 必须改 1）；李白 11-19 21:0x ①(c)；卷三乙 §4.3.3 C-1 ②、§3.1 :425、M-1 ①。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 52
+    },
+    {
+     "ref": "块 6 第 6-6 张最后一轮：tools/accept/detectors/data_shape.mjs（entityKey 整类收紧：状态表前缀行代号不是六类实体 id，规则表键值里不计；代码里写死仍计；李白 11-19 22:0x ④），并新增 instance_name-46（必须不报）、instance_name-47（必须报）；kernel/dimensions.mjs、terminate.mjs、dimension-writers.mjs（人物类别由物种行派生，删 created.*.classes 存储，⑤）等落在检测器 import 闭包内，指纹变动",
+     "rev": 53
     }
    ],
-   "print": "aeadad3e28c24726dd2e1165d8af4aab36ee29e68d6c2435fe5896a2cfe74cdb",
-   "rev": 52,
+   "print": "a83ed58feef192eddea55a7476ed5c8e07c0c4e162e334186141664d0a3b8cb5",
+   "rev": 53,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -2763,10 +2779,14 @@
     {
      "ref": "补值卡 E：kernel/item.mjs（类别规则 categoryRules、classRules 的 when 读 material.<维度键>，即物品按 M-1 聚合的材料量；加载期读材料对条件必填不满足的维度给不适用）、kernel/validate/rows.mjs（requirement 导出）、kernel/dimensions.mjs（运行期 applicable 改用 requirement，多项条件必填与加载期同口径，卷二 :105；Opus 只核 6-fixE 必须改 1）；李白 11-19 21:0x ①(c)；卷三乙 §4.3.3 C-1 ②、§3.1 :425、M-1 ①。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 52
+    },
+    {
+     "ref": "块 6 第 6-6 张最后一轮：tools/accept/detectors/data_shape.mjs（entityKey 整类收紧：状态表前缀行代号不是六类实体 id，规则表键值里不计；代码里写死仍计；李白 11-19 22:0x ④），并新增 instance_name-46（必须不报）、instance_name-47（必须报）；kernel/dimensions.mjs、terminate.mjs、dimension-writers.mjs（人物类别由物种行派生，删 created.*.classes 存储，⑤）等落在检测器 import 闭包内，指纹变动",
+     "rev": 53
     }
    ],
-   "print": "aeadad3e28c24726dd2e1165d8af4aab36ee29e68d6c2435fe5896a2cfe74cdb",
-   "rev": 52,
+   "print": "a83ed58feef192eddea55a7476ed5c8e07c0c4e162e334186141664d0a3b8cb5",
+   "rev": 53,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -2965,10 +2985,14 @@
     {
      "ref": "补值卡 E：kernel/item.mjs（类别规则 categoryRules、classRules 的 when 读 material.<维度键>，即物品按 M-1 聚合的材料量；加载期读材料对条件必填不满足的维度给不适用）、kernel/validate/rows.mjs（requirement 导出）、kernel/dimensions.mjs（运行期 applicable 改用 requirement，多项条件必填与加载期同口径，卷二 :105；Opus 只核 6-fixE 必须改 1）；李白 11-19 21:0x ①(c)；卷三乙 §4.3.3 C-1 ②、§3.1 :425、M-1 ①。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 46
+    },
+    {
+     "ref": "块 6 第 6-6 张最后一轮：tools/accept/detectors/data_shape.mjs（entityKey 整类收紧：状态表前缀行代号不是六类实体 id，规则表键值里不计；代码里写死仍计；李白 11-19 22:0x ④），并新增 instance_name-46（必须不报）、instance_name-47（必须报）；kernel/dimensions.mjs、terminate.mjs、dimension-writers.mjs（人物类别由物种行派生，删 created.*.classes 存储，⑤）等落在检测器 import 闭包内，指纹变动",
+     "rev": 47
     }
    ],
-   "print": "c456adf6c47d1537dfcf6c383147a536513749bc97f162cd09361932ae2430d9",
-   "rev": 46,
+   "print": "37db335f97cf56a296b5024d811611ffd7c31672498d34ac7896a86aba3c3140",
+   "rev": 47,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -3538,10 +3562,14 @@
     {
      "ref": "补值卡 E：kernel/item.mjs（类别规则 categoryRules、classRules 的 when 读 material.<维度键>，即物品按 M-1 聚合的材料量；加载期读材料对条件必填不满足的维度给不适用）、kernel/validate/rows.mjs（requirement 导出）、kernel/dimensions.mjs（运行期 applicable 改用 requirement，多项条件必填与加载期同口径，卷二 :105；Opus 只核 6-fixE 必须改 1）；李白 11-19 21:0x ①(c)；卷三乙 §4.3.3 C-1 ②、§3.1 :425、M-1 ①。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 31
+    },
+    {
+     "ref": "块 6 第 6-6 张最后一轮：tools/accept/detectors/data_shape.mjs（entityKey 整类收紧：状态表前缀行代号不是六类实体 id，规则表键值里不计；代码里写死仍计；李白 11-19 22:0x ④），并新增 instance_name-46（必须不报）、instance_name-47（必须报）；kernel/dimensions.mjs、terminate.mjs、dimension-writers.mjs（人物类别由物种行派生，删 created.*.classes 存储，⑤）等落在检测器 import 闭包内，指纹变动",
+     "rev": 32
     }
    ],
-   "print": "0d23e5c02c46e7084bcacf1216bae9a93aa2f27a022f53d33495eb3b4b63633b",
-   "rev": 31,
+   "print": "bea95cdb47516f522e38492c95789040ca16dc4fdff7df393005347dca63c2be",
+   "rev": 32,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -3916,10 +3944,14 @@
     {
      "ref": "补值卡 E：kernel/item.mjs（类别规则 categoryRules、classRules 的 when 读 material.<维度键>，即物品按 M-1 聚合的材料量；加载期读材料对条件必填不满足的维度给不适用）、kernel/validate/rows.mjs（requirement 导出）、kernel/dimensions.mjs（运行期 applicable 改用 requirement，多项条件必填与加载期同口径，卷二 :105；Opus 只核 6-fixE 必须改 1）；李白 11-19 21:0x ①(c)；卷三乙 §4.3.3 C-1 ②、§3.1 :425、M-1 ①。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 29
+    },
+    {
+     "ref": "块 6 第 6-6 张最后一轮：tools/accept/detectors/data_shape.mjs（entityKey 整类收紧：状态表前缀行代号不是六类实体 id，规则表键值里不计；代码里写死仍计；李白 11-19 22:0x ④），并新增 instance_name-46（必须不报）、instance_name-47（必须报）；kernel/dimensions.mjs、terminate.mjs、dimension-writers.mjs（人物类别由物种行派生，删 created.*.classes 存储，⑤）等落在检测器 import 闭包内，指纹变动",
+     "rev": 30
     }
    ],
-   "print": "ce8820c7b7fba0562dd6d16cae4d633f894e896c0f756c05601c780d265a6d0c",
-   "rev": 29,
+   "print": "cd35798f5db576bc745d0c272796faa1dd0dd07b6031577c4b3cf1d5ed2d3776",
+   "rev": 30,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -4334,10 +4366,14 @@
     {
      "ref": "补值卡 E：kernel/item.mjs（类别规则 categoryRules、classRules 的 when 读 material.<维度键>，即物品按 M-1 聚合的材料量；加载期读材料对条件必填不满足的维度给不适用）、kernel/validate/rows.mjs（requirement 导出）、kernel/dimensions.mjs（运行期 applicable 改用 requirement，多项条件必填与加载期同口径，卷二 :105；Opus 只核 6-fixE 必须改 1）；李白 11-19 21:0x ①(c)；卷三乙 §4.3.3 C-1 ②、§3.1 :425、M-1 ①。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 48
+    },
+    {
+     "ref": "块 6 第 6-6 张最后一轮：tools/accept/detectors/data_shape.mjs（entityKey 整类收紧：状态表前缀行代号不是六类实体 id，规则表键值里不计；代码里写死仍计；李白 11-19 22:0x ④），并新增 instance_name-46（必须不报）、instance_name-47（必须报）；kernel/dimensions.mjs、terminate.mjs、dimension-writers.mjs（人物类别由物种行派生，删 created.*.classes 存储，⑤）等落在检测器 import 闭包内，指纹变动",
+     "rev": 49
     }
    ],
-   "print": "c456adf6c47d1537dfcf6c383147a536513749bc97f162cd09361932ae2430d9",
-   "rev": 48,
+   "print": "37db335f97cf56a296b5024d811611ffd7c31672498d34ac7896a86aba3c3140",
+   "rev": 49,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

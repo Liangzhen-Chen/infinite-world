@@ -1,0 +1,4 @@
+// 规则表的值是状态表行代号（status 表前缀 status_）：状态行是词表式代号，不是六类实体 id，不计（必须不报；李白 11-19 22:0x ④，整类口径）
+export const x = 1;
+// @file world/rules/tables/economy/resources.json
+{"rows": [{"key": "res_x", "value": {"family": "resfam_asset", "status": "status_death"}}]}

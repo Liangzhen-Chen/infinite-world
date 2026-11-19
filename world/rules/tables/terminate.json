@@ -2,10 +2,16 @@
  "rows": [
   {
    "key": "records",
-   "value": {},
-   "source": "卷二 §2.6 :529（去留表取值 rules.terminate.records.<rcls_ 代号>）",
+   "value": {
+    "rcls_deviation_row": {"atTerminate": "keep"},
+    "rcls_name_history": {"atTerminate": "keep"},
+    "rcls_outflow_history": {"atTerminate": "keep"},
+    "rcls_revival_cooldown": {"atTerminate": "hold", "atRevive": "keep"},
+    "rcls_revive_points": {"atTerminate": "hold", "atRevive": "clear"}
+   },
+   "source": "卷二 §2.6 :529（去留表取值 rules.terminate.records.<rcls_ 代号>）；卷四 §2.6 去留表 :350–:356（revivals 两行）；李白 11-19 11:1x ④（丙4 去留四项）",
    "grade": "designed",
-   "basis": "现行声明表里以可终止实体 id 为路径段的键（created.*.props.*、created.*.props.basis、displayNames.*.seq、outflowTotals.*、stockLots.*）卷文都没有写明去留，按李白 11-18 22:10 丙4 不自拟，清单报李白再定；各卷登记的记录类随该卷建状态键的卡加行"
+   "basis": "rcls_revival_cooldown（revivals.<person>.lastMinute）hold/keep、rcls_revive_points（revivals.<person>.points）hold/clear：卷四 §2.6 去留表原值。丙4 四项照李白 11-19 11:1x ④：created.*.props.*、created.*.props.basis、created.*.classes（建行写的偏离行，后果可追溯）→ rcls_deviation_row keep；outflowTotals.*（卷六 A6-1.2 只增不减）→ rcls_outflow_history keep；displayNames.*.seq（名字历史）→ rcls_name_history keep；stockLots.* 跟账户余额同一笔走，不单独删，按协议自处置的键（与账户同，卷二 §2.6 勘误 1119k11）。其余卷的记录类随该卷建状态键的卡加行（presenting、conceptions、renewables、life、identities 的键卷四未建）"
   },
   {
    "key": "unbuilt",

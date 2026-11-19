@@ -76,6 +76,23 @@ export function kindOf(id) {
 }
 
 /**
+ * `kindOfEntity(state, id)`：加载期登记的 id 照 `kindOf`；运行期新建的实体（`state.created.<id>` 有偏离行，建行写者建行时已按表头
+ * entity.idPrefix 与 singletonIds 核过前缀，kernel/handles/entity-id.mjs）取登记前缀与该 id 相符的那一个 kind（前缀各表互斥，加载期核）。
+ * 两处都认不出 E-DIM-REF-MISSING。只读。
+ * @param {any} state @param {string} id
+ * @returns {string}
+ */
+export function kindOfEntity(state, id) {
+  const known = registry().idIndex.get(id);
+  if (known !== undefined) return known;
+  const made = state && typeof state === 'object' && state.created && typeof state.created === 'object' && Object.hasOwn(state.created, id);
+  if (made) {
+    for (const [kind, reg] of registry().kindIds) if (reg.idPrefix.some((p) => id.startsWith(p)) || reg.singletonIds.includes(id)) return kind;
+  }
+  throw new HandleError('E-DIM-REF-MISSING', `id ${JSON.stringify(id)}: not in idIndex and not a created entity`);
+}
+
+/**
  * `idIndex()`：实体 id → kind 的副本（给 textcore、gate 等非规则组建代号登记表用；§2.9 第 6 条）。改副本不影响注册表。
  * @returns {Map<string, string>}
  */
