@@ -1,12 +1,33 @@
 {
  "rows": [
   {
-   "key": "unbuilt",
-   "value": ["birthplaceClass", "earlyHazard", "fertilityByLiving", "fertilityCurve", "gestationStatus", "growthCurve", "hazardByLiving", "naturalCause", "senescenceHazard", "stages"],
+   "key": "stages",
+   "value": [
+    {"stage": "lstage_infant", "relMaturityMin": 0, "relAgeMin": 0, "foodFactor": 1.1538, "sleepFactor": 2, "modifiers": []},
+    {"stage": "lstage_juvenile", "relMaturityMin": 0.0526, "relAgeMin": 0, "foodFactor": 1.1683, "sleepFactor": 1.4841, "modifiers": []},
+    {"stage": "lstage_adult", "relMaturityMin": 1, "relAgeMin": 0, "foodFactor": 1, "sleepFactor": 1, "modifiers": []},
+    {"stage": "lstage_elder", "relMaturityMin": 1, "relAgeMin": 0.7, "foodFactor": 0.8448, "sleepFactor": 1, "modifiers": []}
+   ],
    "file": "server-plugin/life.mjs",
    "grade": "designed",
-   "source": "卷四 §2.5 :306–:309（阶段表、成长曲线、背景死亡率、生育力、妊娠与出生地各键）；§4.4 L-1 至 L-6；:65（数据实例的 id 与数值都是示例）；李白 13:3x ③（示意行里的数不算出处）",
-   "basis": "stages、growthCurve：卷文只给形状，§4.4.5 :654 的四行与 :65 明说是示例，示意数不许当数据用（李白 13:3x ③）；旧世界没有阶段表与体重曲线。P-3（docs/审查/P-3-推导规则.md）的做法是从已有量程与已有卷文值统一推算：阶段表每行的下界、foodFactor、sleepFactor 与出生体重比例没有任何已有量程可推（L-1 文字只保证首行两个下界为 0、成年行 relMaturityMin 为 1，不够写出整张表），推不出，退回未建，不编数；lifeStage、adult、massKg 读到按未知带原因，instantiatePerson 的 ageYears 路径在阶段未知时整笔拒收（不假定成年）。待报李白：给阶段界线与出生体重比例的真实出处（如 WHO 新生儿体重中位数对成人体重、发育学阶段划分），或另给暂定口径。其余键读者 lifeTick 块 6 不建，不编曲线；hazardByLiving、fertilityByLiving 的自变量是卷六交来的 living（卷四 :39）：未知时不以任何常数代替"
+   "source": "卷四 §2.5 :306（rules.life.stages 形状）；§4.4 L-1 :639（成年行 relMaturityMin 为 1，老年行靠 relAgeMin）、E-LIFE-STAGES :374；李白 11-19 22:0x 裁定·攒批第六批 ①",
+   "basis": "婴儿→少年界（relMaturityMin 0.0526）：WHO 以「满 1 岁前」为婴儿（GHO 指标页 Child deaths, infant deaths (between birth and 11 months)，原句 the count of deaths occurring to an infant, before reaching the age of one；https://www.who.int/data/gho/data/indicators/indicator-details/GHO/number-of-infant-deaths ，2026-11-19 读）；1 岁 ÷ 人类成熟龄 19 年 = 0.05263，取四位 0.0526（物种行 maturityYears 须为 19，见 growthCurve 行依据；阶段界是相对量，不写死岁数）。少年→成年界按 L-1 固定为 1（成年行 relMaturityMin 1），人类成熟龄 19 取 WHO 对青少年的界定：Adolescence is the phase of life between childhood and adulthood, from ages 10 to 19（https://www.who.int/health-topics/adolescent-health ，2026-11-19 读），并与 WHO 5–19 岁生长参考止于 19 岁一致。老年行 relAgeMin 0.7：没有能对上寿命 62 的现成权威数，用卷四 §4.4.5 :659 的示例数，设定数待试玩调（李白 11-19 22:0x ①）。foodFactor（卷四 T-1 :787：dailyFoodNeed = 按体重四分之三次方的能量曲线 × foodFactor，故 foodFactor = 该阶段实际能量需要 ÷ 成人需要 ÷ (体重 ÷ 成年体重)^0.75，成年行按定义为 1，:805）取 FAO/WHO/UNU《Human energy requirements》2004 报告（https://www.fao.org/4/y5686e/y5686e00.htm ，2026-11-19 读）：婴儿取表 3.2 的 0–12 月每月 kcal/d（y5686e05.htm），少年取表 4.2、4.3 的 1–18 岁每岁 kcal/d（y5686e06.htm），体重用本表 growthCurve 同一套 WHO 中位体重（0–5 岁取月中日龄、5–19 岁取 BMI×身高²，取各区间中点年龄），成人需要 = 表 5.2 的 18–30 岁基础代谢公式（男 15.057kg + 692.2，女 14.818kg + 486.6，y5686e07.htm）代入 19 岁中位体重 × PAL 1.85（报告 y5686e08.htm 给中度活动生活方式 PAL 中点 1.85）；各月、各岁的比值取等权平均，男女两条取平均：婴儿 1.1538、少年 1.1683。老年行 0.8448 = 同体重同 PAL 下 ≥60 岁基础代谢公式（男 11.711kg + 587.7，女 9.082kg + 658.5）÷ 18–30 岁公式，男 0.8062、女 0.8834 取平均（报告的 ≥60 岁表与成人表用同一组 PAL 列，故不另设 PAL）。少年行覆盖 1–19 岁，用到 18 岁的表，18–19 岁不另算；比值是离散区间等权平均，不是积分。sleepFactor = 该年龄组推荐睡眠时长中点 ÷ 成人 7 小时：AASM 共识 Paruthi 等 2016 J Clin Sleep Med 12(6):785–786（https://pmc.ncbi.nlm.nih.gov/articles/PMC4877308/ ，2026-11-19 读）婴儿 4–12 月 12–16 h（中点 14，婴儿行 = 14 ÷ 7 = 2；该共识无 4 月以下建议，不外推）；少年行按年龄宽度加权：1–2 岁 11–14 h（中点 12.5，宽 2 年）、3–5 岁 10–13（11.5，宽 3）、6–12 岁 9–12（10.5，宽 7）、13–18 岁 8–10（9，宽 6），加权均值 187 ÷ 18 = 10.389 h，÷ 7 = 1.4841；成人 7 小时取 AASM/SRS 成人「7 or more」（经 Sleep Foundation 页转述，https://www.sleepfoundation.org/how-sleep-works/how-much-sleep-do-we-really-need ，2026-11-19 读，原文 Watson 等 2015 在 PMC 页被验证码挡住未读到，不绕过）；老年：该页成人一行已覆盖老年，无单独数，sleepFactor 取 1。结果含两个对物种行的前提：人类 sleepHoursPerDay 须为 7（成人基线），maturityYears 须为 19，均归 6-23。modifiers 四行都空：卷文婴儿行的操作、移动折减（:656）只是示例、无出处，不写；是否要婴儿能力折减报李白。"
+  },
+  {
+   "key": "growthCurve",
+   "value": [[0, 0.0525], [0.0132, 0.0972], [0.0263, 0.1214], [0.0526, 0.1482], [0.1053, 0.1885], [0.1579, 0.2251], [0.2105, 0.2591], [0.2632, 0.2923], [0.3158, 0.3262], [0.3684, 0.363], [0.4211, 0.4044], [0.4737, 0.4516], [0.5263, 0.5056], [0.5789, 0.5687], [0.6316, 0.6426], [0.6842, 0.724], [0.7368, 0.8038], [0.7895, 0.8712], [0.8421, 0.9222], [0.8947, 0.9581], [0.9474, 0.9825], [1, 1]],
+   "file": "server-plugin/life.mjs",
+   "grade": "referenced",
+   "source": "卷四 §2.5 :307（rules.life.growthCurve：relMaturity → 成年体重比例）；§4.4 L-2 :640；李白 11-19 22:0x 裁定·攒批第六批 ①",
+   "basis": "WHO 体重中位数按各性别 19 岁中位体重归一，男女两条比值逐点取平均，横轴 relMaturity = 年龄 ÷ 19（人类成熟龄 19 年，见 stages 行依据）。0–5 岁取 WHO Child Growth Standards 体重年龄表中位数（Excel expanded tables，列 M；男 https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/weight-for-age/expanded-tables/wfa-boys-zscore-expanded-tables.xlsx ，女同目录 wfa-girls-zscore-expanded-tables.xlsx；页面 https://www.who.int/tools/child-growth-standards/standards/weight-for-age ；2026-11-19 读）：取第 0、91、183、365、731、1096、1461、1826 日对应 0、0.25、0.5、1、2、3、4、5 岁。5–19 岁取 WHO 2007 Growth reference 的身高年龄与 BMI 年龄中位数（expanded tables 的 xlsx，列 M，月龄 61–228；页面 https://www.who.int/tools/growth-reference-data-for-5to19-years/indicators/height-for-age 与 .../bmi-for-age ，2026-11-19 读），体重 = BMI 中位数 × 身高中位数²（WHO 体重年龄参考只到 10 岁，故 6–19 岁整段统一这样折；两个中位数之积不严格等于体重中位数）；取 6 至 19 岁整岁（月龄 72、84 … 228）。19 岁中位体重：男 69.1554 kg、女 57.0373 kg；各点男、女 kg 与比值见 docs/卡回报/ds-b6-who.md。成年体重 adultMassKg 仍是个体自己的值（卷四 §2.3），本曲线只给比例。5 岁处接缝：5 岁点出自 0–5 标准，6 岁点出自 5–19 参考，两套样本，线性插值。设定：19 岁定为满比例 1（19 岁后实际体重还会略增，不建模）。"
+  },
+  {
+   "key": "unbuilt",
+   "value": ["birthplaceClass", "earlyHazard", "fertilityByLiving", "fertilityCurve", "gestationStatus", "hazardByLiving", "naturalCause", "senescenceHazard"],
+   "file": "server-plugin/life.mjs",
+   "grade": "designed",
+   "source": "卷四 §2.5 :306–:309（背景死亡率、生育力、妊娠与出生地各键）；§4.4 L-3 至 L-6；:65（数据实例的 id 与数值都是示例）；李白 13:3x ③（示意行里的数不算出处）",
+   "basis": "stages 与 growthCurve 已由 WHO 数据建成（见上两行），不再登未建。其余键读者 lifeTick 块 6 不建，不编曲线；hazardByLiving、fertilityByLiving 的自变量是卷六交来的 living（卷四 :39）：未知时不以任何常数代替。人类寿命锚 62 与 infantShare 0.1（卷四 §7.5 M4-49）：snapshot-20261010 里没有 balance/population.json，查不到原数据；锚 62 属物种行 lifespanYears（真实世界物种表尚无行，归 6-23），infantShare 属 earlyHazard 锚点（本键未建），均无处落地，报李白"
   }
  ]
 }

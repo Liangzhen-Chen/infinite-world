@@ -221,7 +221,6 @@
   {"family": "attr", "field": "residualFactor", "missing": ["data"], "card": "6-23", "note": "同 agingCurve"},
   {"family": "gait", "field": "drivenBy", "missing": ["data"], "card": "6-23", "note": "卷四 §2.4 gait 条目字段；卷末只给代号（:1564）"},
   {"family": "gait", "field": "exertion", "missing": ["data"], "card": "6-23", "note": "同 drivenBy"},
-  {"family": "life_stage", "field": "adult", "missing": ["data"], "card": "pre_first_reader_card", "note": "卷四 §2.4 life_stage 条目字段；阶段表退回未建（示例值不算出处，李白 13:3x ③），阶段与成年界线待李白给出处后一并写"},
   {"family": "life_stage", "field": "fertile", "missing": ["data"], "card": "6-23", "note": "卷四 §2.4 life_stage 条目字段；只被 §4.4 L-5 生育判定读（lifeTick 往后排），旧世界无；adult 已在 6-6 按阶段表 relMaturityMin ≥ 1 写出"},
   {"family": "sex", "field": "bears", "missing": ["data"], "card": "6-23", "note": "卷四 §2.4 sex 条目字段；卷末只给代号（:1563）"}
  ]

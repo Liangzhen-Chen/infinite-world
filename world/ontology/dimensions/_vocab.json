@@ -537,10 +537,10 @@
   "life_stage": {
    "closed": false,
    "entries": {
-    "lstage_adult": {},
-    "lstage_elder": {},
-    "lstage_infant": {},
-    "lstage_juvenile": {}
+    "lstage_adult": {"adult": true},
+    "lstage_elder": {"adult": true},
+    "lstage_infant": {"adult": false},
+    "lstage_juvenile": {"adult": false}
    },
    "prefix": "lstage_"
   },

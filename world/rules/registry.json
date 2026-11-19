@@ -243,7 +243,7 @@
     "unbuilt": {"type": "set", "of": {"type": "string"}}
    },
    "domain": {"stages": {}, "growthCurve": {}, "unbuilt": {}},
-   "volume": "卷四 §2.5 :306（rules.life.stages：有序 list<struct{stage, relMaturityMin, relAgeMin, foodFactor, sleepFactor, modifiers}>，只有两个数值下界）、§4.4 L-1 :639（阶段判定）、E-LIFE-STAGES :374；卷文 §4.4.5 :654 的数值标明为示例，旧世界无阶段表：示意数不算出处（:65；李白 13:3x ③）、P-3 又推不出，stages 与 §2.5 :307 growthCurve（relMaturity → 成年体重比例）都登 unbuilt，待报李白（读者 server-plugin/life.mjs，6-6）；其余键（背景死亡、生育、妊娠、出生地）读者 lifeTick 块 6 不建，登 unbuilt",
+   "volume": "卷四 §2.5 :306（rules.life.stages：有序 list<struct{stage, relMaturityMin, relAgeMin, foodFactor, sleepFactor, modifiers}>，只有两个数值下界）、§4.4 L-1 :639（阶段判定）、E-LIFE-STAGES :374；卷文 §4.4.5 :654 的数值标明为示例（:65；李白 13:3x ③），不作数据：stages 与 §2.5 :307 growthCurve（relMaturity → 成年体重比例）已按李白 11-19 22:0x 第六批 ① 用 WHO 等真实资料建成（出处在 tables/life.json 各行，读者 server-plugin/life.mjs，6-6）；其余键（背景死亡、生育、妊娠、出生地）读者 lifeTick 块 6 不建，登 unbuilt",
    "multiSourceMerge": "own_key_only",
    "packOverridable": {"stages": false, "growthCurve": false, "unbuilt": false}
   },

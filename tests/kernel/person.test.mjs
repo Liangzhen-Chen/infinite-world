@@ -41,14 +41,13 @@ test('真实 world：person 表有卷四 §2.3 的头：always 维度、他卷 a
   for (const k of ['adult', 'ageYears', 'attrMod', 'lifeStage', 'living', 'massKg', 'nativeLanguage', 'relAge', 'relMaturity', 'identityKeys', 'fatKg', 'forcePower', 'moveSpeed', 'level', 'esteemTier']) assert.ok(doc.dimensions[k].derived !== undefined && real.tables.get('person').unbuilt.has(k), k);
   // 卷四 §2.3 的其余维度全部在表头声明（不省略；commandBonus 的键族卷文未给，未写，见回报）。
   assert.ok(Object.keys(doc.dimensions).length >= 70, String(Object.keys(doc.dimensions).length));
-  // 阶段表与成长曲线真实世界登 unbuilt（示意数不算出处）：三个读数按未知，ageYears 建人整笔拒收，不假定成年。
-  assert.deepEqual(['stages', 'growthCurve'].filter((k) => real.rules.life.unbuilt.includes(k)), ['stages', 'growthCurve']);
+  // 阶段表与成长曲线真实世界已由 WHO 数据建成（不在 unbuilt）：ageYears 路径建人成功，三个读数确知。
+  assert.deepEqual(['stages', 'growthCurve'].filter((k) => real.rules.life.unbuilt.includes(k)), []);
   const unk = { ...ENGINE, rules: { ...ENGINE.rules, life: real.rules.life } };
   const st0 = state({ created: {} });
-  assert.deepEqual(make(st0, base({ birthMinute: undefined, ageYears: 20 }), unk), { ok: false, code: 'E-ACT-WRITER-NOT-READY' });
-  assert.deepEqual(make(st0, base(), unk), { ok: true });
+  assert.deepEqual(make(st0, base({ birthMinute: undefined, ageYears: 20 }), unk), { ok: true });
   const f = lifeFacts(unk, st0, 'npc_new');
-  assert.deepEqual([f.lifeStage.known, f.adult.known, f.massKg.known, f.ageYears.known], [false, false, false, true]);
+  assert.deepEqual([f.lifeStage.known, f.adult.known, f.massKg.known, f.ageYears.known], [true, true, true, true]);
   assert.equal(doc.dimensions.massKg.modifiable, true);
   assert.equal(doc.dimensions.attributes.stacking, 'penalized');
   assert.deepEqual(Object.keys(doc.classes).filter((c) => !c.startsWith('class_test')).sort(), ['class_person_beast', 'class_person_mind']);
@@ -92,6 +91,27 @@ test('阶段与成长：8 岁 → relMaturity 0.5 入少年阶段（≥ 0.15、<
   // 阶段在边界上：relMaturity 恰为 1（16 岁）入成年阶段（"≥"），差一分钟仍是少年。
   assert.deepEqual(make(st, base({ instanceId: 'npc_edge', birthMinute: born(16) })), { ok: true });
   assert.equal(lifeFacts(ENGINE, st, 'npc_edge').lifeStage.value, 'lstage_adult');
+});
+
+// 真实 world 的阶段表与成长曲线（WHO 数据，rules/tables/life.json）：人类成熟龄 19 年（该表依据所写前提），寿命钉 60 年。
+// 手算：relMaturity = 年龄 ÷ 19；婴儿→少年界 0.0526（1 岁 ÷ 19 = 0.05263 ≥ 0.0526，0.99 岁 = 0.0521 < 0.0526）；老年 relAge ≥ 0.7（42 ÷ 60 = 0.7）；
+// 曲线在 [0.4737, 0.5263] 两点 (0.4737, 0.4516)、(0.5263, 0.5056) 间线性：9.5 岁 relMaturity = 0.5 恰在中点 → 0.4516 + 0.5 × (0.5056 − 0.4516) = 0.4786，体重 = 70 × 0.4786 = 33.502；0 岁 = 70 × 0.0525 = 3.675；19 岁 = 70 × 1 = 70。
+test('真实世界人类阶段与体重：19 岁成年、差一岁入少年、不满 1 岁为婴儿、42 岁（relAge 0.7）入老年；体重按 WHO 归一曲线手算', () => {
+  const { engine, W } = buildPersonWorld((f) => { f.species.species_test_a.maturityYears = 19; });
+  const eng = { ...engine, rules: { ...engine.rules, life: W.rules.life } };
+  const st = state({ created: {} });
+  const at = (k, age) => { const id = `npc_${k}`; assert.deepEqual(make(st, base({ instanceId: id, birthMinute: born(age) }), eng), { ok: true }); return lifeFacts(eng, st, id); };
+  const stageOf = (f) => [f.lifeStage.value, f.adult.value];
+  assert.deepEqual(stageOf(at('p_born', 0)), ['lstage_infant', false]);
+  assert.deepEqual(stageOf(at('p_099', 0.99)), ['lstage_infant', false]);
+  assert.deepEqual(stageOf(at('p_1', 1)), ['lstage_juvenile', false]);
+  assert.deepEqual(stageOf(at('p_189', 18.9)), ['lstage_juvenile', false]);
+  assert.deepEqual(stageOf(at('p_19', 19)), ['lstage_adult', true]);
+  assert.deepEqual(stageOf(at('p_41', 41)), ['lstage_adult', true]);
+  assert.deepEqual(stageOf(at('p_42', 42)), ['lstage_elder', true]);
+  assert.equal(lifeFacts(eng, st, 'npc_p_born').massKg.value, 3.675);
+  assert.equal(lifeFacts(eng, st, 'npc_p_19').massKg.value, 70);
+  assert.equal(at('p_95', 9.5).massKg.value, 33.502);
 });
 
 test('出生时刻在现刻之后（负年龄，取值域 ≥ 0）是数据错误，照抛 E-DIM-DOMAIN-RANGE；不当 0', () => {
