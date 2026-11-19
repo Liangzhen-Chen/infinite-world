@@ -10,9 +10,21 @@ import { kindOf } from './kernel/vocab.mjs';
 import { E } from './kernel/handles/generated.mjs';
 import { capabilityBaseline } from './body.mjs';
 
-const S = Object.freeze({ bodyPlan: 'bodyPlan', meanMassKg: 'meanMassKg' });
+const S = Object.freeze({ bodyPlan: 'bodyPlan', meanMassKg: 'meanMassKg', rulesTable: 'body', unbuilt: 'unbuilt', metabolism: 'metabolism' });
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const UNKNOWN = Object.freeze({ known: false, applicable: true });
+
+// §4.7 代谢三率：均值日需读 rules.body.metabolism（卷四 §2.5 :314）。该键登在 rules.body.unbuilt 即按未知交出并带原因；
+// 没登记就既没有数、也没建算法，不能把未知当作"登记过"——照直报错，不静默给未知（6-4 遗留 S4）。
+function meanDailyFoodNeed(engine) {
+  const table = isObj(engine.rules) && isObj(engine.rules[S.rulesTable]) ? engine.rules[S.rulesTable] : undefined;
+  if (table && Array.isArray(table[S.unbuilt]) && table[S.unbuilt].includes(S.metabolism)) return Object.freeze({ ...UNKNOWN, reason: `${S.rulesTable}.${S.unbuilt}` });
+  // 登记码错误（形状同 kernel/errors.mjs#KernelError，kernel/transaction.mjs 的 codeOf 按 e.code 认）。
+  const e = new Error(`${E.E_DIM_UNKNOWN_READ} speciesView: meanDailyFoodNeed needs rules.${S.rulesTable}.${S.metabolism}, which is neither built nor registered in rules.${S.rulesTable}.${S.unbuilt}`);
+  e.code = E.E_DIM_UNKNOWN_READ;
+  e.fields = {};
+  throw e;
+}
 
 // 一个维度的基值 Fact；只有登记在案的未建派生（或依赖它的派生）读到 E-MOD-RX 时按未知交出并带上码。
 function readDim(engine, state, kind, id, key) {
@@ -38,7 +50,7 @@ export function speciesView(engine, state, speciesId) {
     dims: Object.freeze(dims),
     capabilityBaseline: plan && plan.known && typeof plan.value === 'string' ? capabilityBaseline(engine, state, plan.value) : null,
     meanMassKg: dims[S.meanMassKg] || UNKNOWN,
-    // §4.7 代谢三率（metabolism）未建：聚合层的均值日需按未知交出。
-    meanDailyFoodNeed: UNKNOWN,
+    // §4.7 代谢三率（metabolism）未建：聚合层的均值日需按登记（rules.body.unbuilt）交未知。
+    meanDailyFoodNeed: meanDailyFoodNeed(engine),
   });
 }

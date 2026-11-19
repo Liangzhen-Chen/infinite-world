@@ -331,8 +331,9 @@ test('未建族、未建表、未建单位不免必填核对：引用它们的�
 });
 
 test('未建实体表：已登记的表只放行表头 ref；未登记即 E-DIM-REF-MISSING；表已载入仍登记即报应删；前缀重叠 E-DIM-VOCAB-PREFIX', () => {
-  const unreg = loadErr((f) => { f.editUnbuilt = (doc) => { doc.kinds = doc.kinds.filter((x) => x.kind !== 'status'); }; });
-  assert.ok(unreg.errors.some(([c, t, , d]) => c === 'E-DIM-REF-MISSING' && t === 'species' && d === 'shiftStatus'), JSON.stringify(unreg.errors));
+  const unreg = loadErr((f) => { f.editUnbuilt = (doc) => { doc.kinds = doc.kinds.filter((x) => x.kind !== 'culture'); }; });
+  // status 表自 6-5 起已建成（world/ontology/dimensions/status.json），未建实体表的样本改用仍未建的 culture（卷七，物种 sxCulture 引用）。
+  assert.ok(unreg.errors.some(([c, t, , d]) => c === 'E-DIM-REF-MISSING' && t === 'species' && d === 'sxCulture'), JSON.stringify(unreg.errors));
   const loaded = loadErr((f) => { f.editUnbuilt = (doc) => { doc.kinds.push({ kind: 'material', prefix: 'zzmat_', volume: 'test', card: 'pre_first_reader_card' }); }; });
   assert.ok(loaded.errors.some(([c, t]) => c === 'E-DIM-STRUCT-FIELD' && t === '_unbuilt-derived'), JSON.stringify(loaded.errors));
   const clash = loadErr((f) => { f.editUnbuilt = (doc) => { doc.kinds.push({ kind: 'no_such_kind', prefix: 'mat_x_', volume: 'test', card: 'pre_first_reader_card' }); }; });

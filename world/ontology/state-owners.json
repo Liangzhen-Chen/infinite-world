@@ -14,11 +14,13 @@
   "stockLots": {"readers": [], "writers": {"*": "kernel/ledger.mjs"}},
   "pendingPost": {"readers": ["kernel/scheduler.mjs"], "writers": {"*": "kernel/transaction.mjs"}},
   "playerNotes": {"readers": [], "writers": {"*": "ai-gate/note-gate.mjs"}, "display": ["*.text"]},
+  "statuses": {"readers": ["view:statusView"], "writers": {"*": "status.mjs"}},
   "terminated": {"readers": ["view:capacity"], "writers": {"*": "kernel/terminate.mjs"}}
  },
  "systems": {
-  "sys.capacity": {"predicates": ["action-capacity.mjs#terminated", "action-capacity.mjs#dead"], "tables": [], "writers": [], "entryCallerFiles": {}, "entryJudges": [],
+  "sys.capacity": {"predicates": ["action-capacity.mjs#can", "action-capacity.mjs#awake", "action-capacity.mjs#capacity", "action-capacity.mjs#terminated", "action-capacity.mjs#dead"], "tables": [], "writers": [], "entryCallerFiles": {}, "entryJudges": [],
    "emits": []},
+  "sys.status": {"tables": ["status"], "writers": ["statuses.*"], "entryCallerFiles": {}, "entryJudges": []},
   "sys.dimension_entry": {"tables": [], "entryCallerFiles": {}, "entryJudges": []},
   "sys.economy": {"tables": [], "writers": ["accounts.*", "ledgerCounters.lotNext", "ledgerTotals", "outflowTotals.*", "stockLots.*"],
    "sources": {"src_birth": {}, "src_boundary": {}, "src_genesis": {}, "src_issue": {}, "src_regrow": {}, "src_transform": {}},
@@ -48,6 +50,7 @@
   "outflowTotals.*": "struct:holderOutflow",
   "pendingPost.*": "list<struct:pendingPost>",
   "playerNotes.*.text": "sealed",
+  "statuses.*": "list<struct:statusInstance>",
   "stockLots.*": "struct:holderLots",
   "terminated.*": "struct:terminated"
  },
@@ -61,6 +64,7 @@
   "displayNames.*.seq": [["person", "identityKey"]],
   "outflowTotals.*": [["deity", "faith", "org", "person", "place"]],
   "pendingPost.*": ["event"],
+  "statuses.*": [["faith", "item", "org", "person", "place"]],
   "stockLots.*": [["deity", "faith", "org", "person", "place"]],
   "terminated.*": [["item", "org", "person", "place"]]
  },

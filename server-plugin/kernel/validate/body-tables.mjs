@@ -5,6 +5,7 @@
 
 import { fixedUnits, fixedAdd, fixedScale } from '../det-math.mjs';
 import { KEY_RE } from './types.mjs';
+import { CAPABILITY_NAMESPACE } from '../vocab.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
@@ -41,6 +42,8 @@ const ENTRY_FIELDS = Object.freeze({
   life_stage: { adult: T.boolean, fertile: T.boolean },
   sex: { bears: T.boolean },
   trait: { heritability: T.fraction, residualFactor: T.number, visible: T.boolean, bands: T.count },
+  // 卷二 §1.11 :352 status_family 族条目带字段：只有谓词文件读这三项（P-5 (b)）；每条必写布尔，没写不当 false。
+  status_family: { terminal: T.boolean, incapacitating: T.boolean, suppressesAwake: T.boolean },
 });
 
 const finite = (v) => typeof v === 'number' && Number.isFinite(v);
@@ -94,6 +97,14 @@ export function checkBodyTables(view, limits) {
     }
   }
   checkCapabilities(caps, push);
+
+  // 修正键命名空间 `body` 的维度表只来自一张表头的 capabilities 段（卷二 §3.6 :1430）：第二张带该段的表，或某张表的 kind 恰叫这个名字，
+  // 都会让 installVocab 里命名空间的表被静默覆盖，加载期按重复键拒收。
+  if (view.tables instanceof Map) {
+    const withCaps = [...view.tables].filter(([, t]) => isObj(t.doc) && isObj(t.doc[S.capsSection])).map(([k]) => k).sort();
+    for (const k of withCaps.slice(1)) push('E-DIM-DUPLICATE-KEY', k, '', S.capsSection, k, `${S.capsSection} section only on one table (${withCaps[0]} already has it)`);
+    if (view.tables.has(CAPABILITY_NAMESPACE) && withCaps.length > 0) push('E-DIM-DUPLICATE-KEY', CAPABILITY_NAMESPACE, '', S.capsSection, CAPABILITY_NAMESPACE, `no table kind equal to the modifier namespace ${CAPABILITY_NAMESPACE}`);
+  }
 
   const species = view.tables instanceof Map ? view.tables.get(S.speciesKind) : undefined;
   const planRef = species && isObj(species.doc) && isObj(species.doc.dimensions) && isObj(species.doc.dimensions[S.dim.bodyPlan]) ? species.doc.dimensions[S.dim.bodyPlan].kind : undefined;

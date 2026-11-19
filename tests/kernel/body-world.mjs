@@ -120,6 +120,8 @@ export function loadBodyWorld(f) {
         if (typeof f.editVocab === 'function') f.editVocab(doc);
       }
       if (name === '_unbuilt-derived.json' && typeof f.editUnbuilt === 'function') f.editUnbuilt(doc);
+      // 状态表（kind status，6-5）：真实表头只有 family 一个维度、没有行；夹具按 f.statuses 在抄件上加测试状态行（行内容归卷二十一，不进 world/）。
+      if (name === 'status.json' && f.statuses) Object.assign(doc.rows, clone(f.statuses));
       if (name === 'body_plan.json') {
         const def = doc.capabilities.smell;
         for (const c of Object.values(f.capabilities)) if (typeof c.dimKey === 'string' && !doc.capabilities[c.dimKey]) doc.capabilities[c.dimKey] = clone(def);
@@ -157,9 +159,11 @@ export function loadBodyWorld(f) {
     for (const row of reg.rows) writeUnderTempRoot(tmp, `rules/${row.file}`, readRule(row.file));
     // rules.body：夹具在抄件上给测试阈值（f.lostBelow）；f.lostBelow 为 null 时把该键登进 unbuilt、不给值（测"未建即未知"）。
     if (f.lostBelow !== undefined) {
+      // 真实 rules.body.unbuilt 登了 metabolism（§4.7 未建，speciesView 的 meanDailyFoodNeed 读它）；夹具默认同，f.bodyUnbuilt 可改（测"没登记即报错"）。
+      const unb = f.bodyUnbuilt || ['metabolism'];
       writeUnderTempRoot(tmp, 'rules/tables/body.json', JSON.stringify({ rows: f.lostBelow === null
-        ? [{ key: 'unbuilt', value: ['integrity.lostBelow'], source: 'test', grade: 'designed', basis: 'test' }]
-        : [{ key: 'unbuilt', value: [], source: 'test', grade: 'designed', basis: 'test' }, { key: 'integrity', value: { lostBelow: f.lostBelow }, source: 'test', grade: 'designed', basis: 'test' }] }));
+        ? [{ key: 'unbuilt', value: ['integrity.lostBelow', ...unb], source: 'test', grade: 'designed', basis: 'test' }]
+        : [{ key: 'unbuilt', value: unb, source: 'test', grade: 'designed', basis: 'test' },{ key: 'integrity', value: { lostBelow: f.lostBelow }, source: 'test', grade: 'designed', basis: 'test' }] }));
     }
     writeUnderTempRoot(tmp, 'rules/registry.json', JSON.stringify(reg));
     const r = loadWorld(ROOT, { dimensionsDir: relative(ROOT, join(tmp, 'dims')), rulesDir: join(tmp, 'rules') });

@@ -205,6 +205,21 @@
    "packOverridable": {"integrity": false, "unbuilt": false}
   },
   {
+   "code": "capacity",
+   "file": "tables/capacity.json",
+   "structure": "keys",
+   "type": {
+    "awakeMin": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4},
+    "full": {"type": "struct", "required": ["consciousness", "manipulation", "moving"], "fields": {"consciousness": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4}, "manipulation": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4}, "moving": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4}}},
+    "limited": {"type": "struct", "required": ["consciousness", "manipulation", "moving"], "fields": {"consciousness": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4}, "manipulation": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4}, "moving": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4}}},
+    "unbuilt": {"type": "set", "of": {"type": "string"}}
+   },
+   "domain": {"awakeMin": [0, 1], "full": {}, "limited": {}, "unbuilt": {}},
+   "volume": "卷二 §2.5 :510（rules.capacity 阈值表 {awakeMin, full:{consciousness,moving,manipulation}, limited:{…}}；limited 与 full 同键，卷文以省略号带过）；值卷文没给，登在 unbuilt，awake／capacity 读到按未知；读者只有 action-capacity.mjs（卷四 P-5 (a)）",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"awakeMin": false, "full": false, "limited": false, "unbuilt": false}
+  },
+  {
    "code": "life",
    "file": "tables/life.json",
    "structure": "keys",

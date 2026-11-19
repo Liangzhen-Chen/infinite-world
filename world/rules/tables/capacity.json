@@ -1,0 +1,5 @@
+{
+ "rows": [
+  {"key": "unbuilt", "value": ["awakeMin", "full", "limited"], "file": "server-plugin/action-capacity.mjs", "grade": "designed", "source": "卷二 §2.5 :510（rules.capacity 阈值表 {awakeMin, full, limited}，阈值表归卷二）", "basis": "卷二、卷四、卷二十一都只给键与形状，没有数值，旧世界数据（snapshot-20261010）也没有可转的阈值；不编数，三键登在 unbuilt：awake、capacity 读到即按未知交出（原因 unbuilt），待李白给数或试玩标定后写值并从 unbuilt 删去"}
+ ]
+}

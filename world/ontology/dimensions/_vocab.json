@@ -766,6 +766,15 @@
    },
    "prefix": "src_"
   },
+  "status_family": {
+   "closed": false,
+   "entries": {
+    "sfam_dead": {"terminal": true, "incapacitating": false, "suppressesAwake": false, "basis": "卷二 §1.11 :352 首批赋值 sfam_dead{terminal}，其余二字段 false"},
+    "sfam_sleep": {"terminal": false, "incapacitating": false, "suppressesAwake": true, "basis": "卷二 §1.11 :352 首批赋值 sfam_sleep{suppressesAwake}，其余二字段 false"},
+    "sfam_unconscious": {"terminal": false, "incapacitating": true, "suppressesAwake": true, "basis": "卷二 §1.11 :352 首批赋值 sfam_unconscious{incapacitating, suppressesAwake}，terminal false"}
+   },
+   "prefix": "sfam_"
+  },
   "stress": {
    "closed": true,
    "entries": {

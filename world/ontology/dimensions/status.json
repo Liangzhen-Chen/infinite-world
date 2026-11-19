@@ -1,0 +1,23 @@
+{
+ "$schema": "../../schemas/dimensions.schema.json",
+ "behaviors": [
+  "status_tick"
+ ],
+ "classes": {},
+ "dimensions": {
+  "family": {"type": "ref", "vocab": "status_family", "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷二 §1.11（family: enum status_family）", "owner": "卷二十一 §4.1（状态行内容）；谓词读者见卷二 §2.5"}
+ },
+ "entity": {
+  "classPrefix": "class_",
+  "idPrefix": [
+   "status_"
+  ],
+  "instanceTable": null,
+  "singletonIds": []
+ },
+ "generated": {},
+ "kind": "status",
+ "namespace": "core",
+ "rows": {},
+ "version": 1
+}

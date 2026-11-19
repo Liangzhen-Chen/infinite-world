@@ -29,6 +29,7 @@ export interface PathTypes {
   readonly 'outflowTotals.*': StructValue<'holderOutflow'>;
   readonly 'pendingPost.*': readonly (StructValue<'pendingPost'>)[];
   readonly 'playerNotes.*.text': SealedValue;
+  readonly 'statuses.*': readonly (StructValue<'statusInstance'>)[];
   readonly 'stockLots.*': StructValue<'holderLots'>;
   readonly 'terminated.*': StructValue<'terminated'>;
 }
@@ -68,6 +69,7 @@ export type State = {
   readonly playerNotes?: { readonly [segment: string]: {
       readonly text?: SealedValue;
     } };
+  readonly statuses?: { readonly [segment: string]: readonly (StructValue<'statusInstance'>)[] };
   readonly stockLots?: { readonly [segment: string]: StructValue<'holderLots'> };
   readonly terminated?: { readonly [segment: string]: StructValue<'terminated'> };
 };

@@ -38,6 +38,7 @@ export function installVocab(report) {
     // 实例维度（卷二 §1.2 instanceDimensions"格式同 dimensions"）同在本表键下，修正键 `<kind>.<dimension>[<key>]` 同样适用（卷四 §2.2 partIntegrity）。
     tableDims.set(kind, deepFreeze(clone({ ...(doc.dimensions || {}), ...(doc.instanceDimensions || {}) })));
     // 表头 capabilities 段注册为修正键 `body.<capability>`（卷二 §3.6 :1430"加载器把它们注册为修正键"）。
+    // 命名空间只有一份（撞名由加载期校验 checkBodyTables 按 E-DIM-DUPLICATE-KEY 拒收，校验不过不会走到这里）。
     if (doc.capabilities && typeof doc.capabilities === 'object') tableDims.set(CAPABILITY_NAMESPACE, deepFreeze(clone(doc.capabilities)));
     kindIds.set(kind, deepFreeze({
       idPrefix: Array.isArray(entity.idPrefix) ? [...entity.idPrefix] : [],

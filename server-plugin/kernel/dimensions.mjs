@@ -429,6 +429,18 @@ export function runPipeline(engine, base, rows, def, subjectKind) {
   return { value: num(v), steps };
 }
 
+// 修正项来源按 (修正键, 主体) 交来的登记项，逐条过 prepareRow（when、取值）；evaluate 与 modifiedWith 共用这一段。
+function registeredRows(engine, state, target, kind, id, clock) {
+  const raw = modifierSource ? modifierSource(engine, state, { target, kind, id }) : [];
+  const rows = [];
+  for (const row of Array.isArray(raw) ? raw : []) {
+    if (!isObj(row) || row.target !== target) continue;
+    const r = prepareRow(engine, state, kind, id, row, clock);
+    if (r) rows.push(r);
+  }
+  return rows;
+}
+
 function evaluate(engine, state, kind, id, dimension, opts) {
   const reg = registry();
   const target = modKeyOf(reg, kind, dimension, opts.key); // E-MOD-KEY-UNREGISTERED / E-DIM-REF-MISSING
@@ -436,13 +448,7 @@ function evaluate(engine, state, kind, id, dimension, opts) {
   const base = readBase(engine, state, kind, id, dimension, opts.key);
   // 基值未知或不适用：不单独求值，原样交回，由消费者按 onUnknown 处置（§3.8 :1440）；显式 null（"没有"）同样不进管线。
   if (!base.known || typeof base.value !== 'number') return { fact: base, steps: Object.freeze([]) };
-  const raw = modifierSource ? modifierSource(engine, state, { target, kind, id }) : [];
-  const rows = [];
-  for (const row of Array.isArray(raw) ? raw : []) {
-    if (!isObj(row) || row.target !== target) continue;
-    const r = prepareRow(engine, state, kind, id, row, opts.clock);
-    if (r) rows.push(r);
-  }
+  const rows = registeredRows(engine, state, target, kind, id, opts.clock);
   const { value, steps } = runPipeline(engine, base.value, dedupe(rows), def, kind);
   if (!steps.length) return { fact: base, steps: Object.freeze([]) };
   const unit = unitOf(def);
@@ -531,12 +537,7 @@ export function modifiedWith(engine, state, ns, subjectId, dimension, opts) {
   if (typeof o.base !== 'number' || !Number.isFinite(o.base)) throw new KernelError('E-MOD-RX', { entity: subjectId }, `${target}: base must be a finite number`);
   const subjectKind = reg.idIndex.get(subjectId);
   const rows = (Array.isArray(o.derived) ? o.derived : []).map((d) => prepareDerived(d, subjectId, target));
-  const raw = modifierSource ? modifierSource(engine, state, { target, kind: subjectKind, id: subjectId }) : [];
-  for (const row of Array.isArray(raw) ? raw : []) {
-    if (!isObj(row) || row.target !== target) continue;
-    const r = prepareRow(engine, state, subjectKind, subjectId, row, o.clock);
-    if (r) rows.push(r);
-  }
+  rows.push(...registeredRows(engine, state, target, subjectKind, subjectId, o.clock));
   const { value, steps } = runPipeline(engine, o.base, dedupe(rows), def, subjectKind);
   const unit = unitOf(def);
   const fact = { known: true, applicable: true, value, base: o.base, source: steps.length ? 'modified' : 'derived' };

@@ -34,8 +34,7 @@
   {"table": "species", "dimension": "sxPowers", "missing": ["data"], "card": "pre_first_reader_card", "note": "引 sxpower 族（未建族，卷十五 §2.3）"}
  ],
  "kinds": [
-  {"kind": "culture", "prefix": "culture_", "volume": "卷七《信仰与文化》文化表（卷二 §1.9 实体前缀 culture_）；物种 sxCulture 引用", "card": "pre_first_reader_card"},
-  {"kind": "status", "prefix": "status_", "volume": "卷二十一《医疗疾病与身体状态》状态容器表（卷二 §1.9 实体前缀 status_；6-5）；物种 shiftStatus 引用", "card": "6-5"}
+  {"kind": "culture", "prefix": "culture_", "volume": "卷七《信仰与文化》文化表（卷二 §1.9 实体前缀 culture_）；物种 sxCulture 引用", "card": "pre_first_reader_card"}
  ],
  "units": [
   {"unit": "effect_param", "missing": ["constant"], "card": "pre_first_reader_card", "note": "效果调用 params 的值单位取该参数槽在效果族行登记的单位（卷二 §3.9、struct:effectCall），随槽变化，写不成一个登记单位；物种 specialAttacks 用"},
