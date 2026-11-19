@@ -20,6 +20,7 @@ import { currentTransaction } from './transaction.mjs';
 import { TERMINATED_KEY } from './storage.mjs';
 import { invalidateMemo } from './memo.mjs';
 import { clone } from './clone.mjs';
+import { fixedUnits, fixedAdd, fixedMultiply, fixedDivide, fixedToNumber } from './det-math.mjs';
 import { dim } from './dimensions.mjs';
 import { clockView } from './scheduler.mjs';
 import { readView } from './view-registry.mjs';
@@ -407,6 +408,18 @@ function lotRadix(engine) {
   return r;
 }
 
+// 物品表的 kind 与实例状态键、改赃份额记录的目标键（卷三乙 §3.3 "taint 的写者"表）：固定记号，单一定义。
+const ITEM = Object.freeze({ kind: 'item', instances: 'itemInstances' });
+const TARGET = Object.freeze({ instance: 'instance', lot: 'lot' });
+
+// 代号是不是物品模板：kindOf 是 item 且不是实例（实例不在 idIndex，kindOf 即 E-DIM-REF-MISSING，同样不是）。
+function isItemTemplate(id) {
+  try { return kindOf(id) === ITEM.kind; } catch (e) {
+    if (codeOf(e) === E.E_DIM_REF_MISSING) return false;
+    throw e;
+  }
+}
+
 // 批次键的序号（前缀之后按进制读回、往返一致才算；不是批次键即 null）。
 function lotOrdinal(key, radix) {
   if (typeof key !== 'string' || !key.startsWith(SCHEMA.lotPrefix)) return null;
@@ -778,6 +791,9 @@ export function auditLots(engine, state) {
     if (!isObj(attrs)) { push('E-DIM-STRUCT-FIELD', segs, 'lot attrs is an object'); return; }
     for (const f of SCHEMA.lotForbidden) if (Object.hasOwn(attrs, f)) push('E-DIM-STRUCT-FIELD', segs, `lot attrs carry no ${f}`);
     if (!taintOk(attrs[SCHEMA.taint])) push('E-DIM-DOMAIN-RANGE', segs, 'taint in [0, 1]');
+    // 卷三乙 K-8 :1037：purports.item 若非空须是物品模板（kindOf 查加载期注册表，不解析字串；未登记同样不是）。
+    const claimed = isObj(attrs.purports) ? attrs.purports.item : null;
+    if (claimed !== null && claimed !== undefined && !isItemTemplate(claimed)) push('E-DIM-REF-MISSING', segs, 'purports.item is an item template');
     const sf = stagingFault(engine, state, rel[0], attrs);
     if (sf) push(sf.code, segs, sf.why);
   });
@@ -1228,4 +1244,148 @@ export function closeLedgerPeriod(engine, state, endDay, writeReport) {
     setInTx(tx, [SCHEMA.totals, k.kind, k.code], { [SCHEMA.cumulative]: k.cumulative, [SCHEMA.usedByDay]: k.rest.map((d) => ({ day: d.day, used: d.used })) });
   }
   return Object.freeze({ ...report, cleared: usage.length });
+}
+
+// ---------- 批次合并与赃物份额（卷三乙 §3.3 "taint 的写者"、§4.4.3 K-3、K-4；块 6 第 6-3 张） ----------
+
+/**
+ * 资源种类行是否登记了某来源或去处代号（卷六 §2.1：来源与去处四字段只在账本读，A6-1.1）：其他模块问"这个种类能不能记这个来源或去处"只经本函数。
+ * 种类没有行、没有该字段都答 false。
+ * @param {{rules: any}} engine @param {string} kind 资源种类 @param {string} flow src 或 sink 代号
+ * @returns {boolean}
+ */
+export function resourceAllows(engine, kind, flow) {
+  const rows = ruleTable(engine.rules, SCHEMA.resourcesTable);
+  const row = Object.hasOwn(rows, kind) ? rows[kind] : undefined;
+  return isObj(row) && ((Array.isArray(row.sources) && row.sources.includes(flow)) || (Array.isArray(row.sinks) && row.sinks.includes(flow)));
+}
+
+// 事务内删（记撤销项，格式同 setInTx）：键存在才删。
+function deleteInTx(tx, segs) {
+  let cur = tx.state;
+  for (let i = 0; i < segs.length - 1; i++) {
+    if (!isObj(cur) || !Object.hasOwn(cur, segs[i])) return;
+    cur = cur[segs[i]];
+  }
+  const last = segs[segs.length - 1];
+  if (!isObj(cur) || !Object.hasOwn(cur, last)) return;
+  tx.undo.push({ segs: [...segs], existed: true, prev: cur[last] });
+  delete cur[last];
+  tx.written.push([...segs]);
+  invalidateMemo(tx.state);
+}
+
+// 批次属性里 K-3 判同的键与"受热或在燃烧则不并"的键（卷三乙 §4.4.3 K-3 :1037）；腐坏档与进度差是腐坏规则的事，由调用方先判。
+const LOT_SAME_KEYS = Object.freeze(['source', 'qualityTier', 'purports', 'batchTag', 'material', 'project']);
+const LOT_MUST_BE_EMPTY = Object.freeze(['temperature', 'burn', 'leakAnchorDay']);
+// 腐坏字段归 item-lots.mjs（同一写者同一条规则，卷三乙 §3.3），合并时账本不碰。
+const LOT_ROT_KEYS = Object.freeze(['spoilage', 'rotAnchorDay']);
+const sameJson = (a, b) => JSON.stringify(a === undefined ? null : a) === JSON.stringify(b === undefined ? null : b);
+const emptyAttr = (v) => v === undefined || v === null;
+
+// 两个量按非负整数数量加权平均：(a × qa + b × qb) ÷ (qa + qb)，定点向零截断到 4 位（权重恒为正，除数恒大于 0）。
+function weightedMean(a, qa, b, qb) {
+  const num = fixedAdd(fixedMultiply(fixedUnits(a), fixedUnits(qa)), fixedMultiply(fixedUnits(b), fixedUnits(qb)));
+  return fixedToNumber(fixedDivide(num, fixedUnits(qa + qb)));
+}
+
+/**
+ * kernelApi `lotsUnmergeable(a, b)`（纯函数，卷三乙 §4.4.3 K-3）：两批属性账本侧不能合并的原因（不合则为一句说明，可合并为 null）：
+ * 判同键 source / qualityTier / purports / batchTag / material / project 须全同，temperature / burn / leakAnchorDay 须都为空，taint 须两批都写或都不写。
+ * 腐坏档同档与进度差不超 rules.rot.mergeMaxGap 属腐坏规则，由调用方（item-lots.mjs）另判。
+ * @param {any} a @param {any} b @returns {string | null}
+ */
+export function lotsUnmergeable(a, b) {
+  for (const k of LOT_SAME_KEYS) if (!sameJson(a[k], b[k])) return `lots differ in ${k} (K-3 judges them apart)`;
+  for (const k of LOT_MUST_BE_EMPTY) if (!emptyAttr(a[k]) || !emptyAttr(b[k])) return `${k} is non-empty (a heated, burning or leaking lot does not merge, K-3)`;
+  if (emptyAttr(a[SCHEMA.taint]) !== emptyAttr(b[SCHEMA.taint])) return 'taint is written on both lots or neither';
+  return null;
+}
+
+/**
+ * kernelApi `mergeLots(engine, state, {holder, purpose, kind, into, from})`（卷三乙 §4.4.3 K-3；§3.3 "taint 的写者"合并一行）：
+ * 同一账户同一种类的两个批次并成一个：把 from 的余额并入 into，删去 from 的余额行与批次行（数量为 0 的批次即删除，卷六 §2.3）。
+ * 账本只判与腐坏无关的条件——判同键 source / qualityTier / purports / batchTag / material / project 全同、temperature / burn / leakAnchorDay 都为空、
+ * 两批余额都为正；任一不合整笔拒。腐坏档同档与进度差不超 rules.rot.mergeMaxGap 由调用方先判，两批的 spoilage、rotAnchorDay 由它们的声明写者
+ * （item-lots.mjs）在本笔之后重设，账本不碰（§3.3 两条路径各一个写者）。
+ * 账本改写：taint 按两批余额（同一种物品、判同键含 material 相同，故件数之比即质量之比）加权平均（定点 4 位向零截断，除数恒大于 0）；
+ * oreGrade 按数量加权平均、有一批为空结果即为空（未知不顶替）；enteredDay 取较早者；costBasis 两批都有则相加、否则不写（未知不顶替）。其余属性取 into 的。
+ * @param {{vocab: any, rules: any}} engine @param {any} state
+ * @param {{holder: string, purpose: string, kind: string, into: string, from: string}} m
+ * @returns {Readonly<{into: string, qty: number}>}
+ */
+export function mergeLots(engine, state, m) {
+  try {
+    const tx = currentTransaction();
+    if (!tx || tx.state !== state) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity: null }, 'mergeLots outside the transaction of this state');
+    if (!fieldsWithin(m, ['holder', 'purpose', 'kind', 'into', 'from']) || ['holder', 'purpose', 'kind', 'into', 'from'].some((f) => typeof m[f] !== 'string')) throw structErr('mergeLots is {holder, purpose, kind, into, from}');
+    if (m.into === m.from) throw structErr('mergeLots into and from are different lots');
+    const row = resourceRow(engine, m.kind, m.holder);
+    if (row.family !== SCHEMA.lotFamily) throw new KernelError('E-DIM-REF-MISSING', { entity: m.holder }, `${m.kind} is not a ${SCHEMA.lotFamily} resource`);
+    checkSubject(engine, state, m.holder);
+    const seg = (k) => [m.holder, m.purpose, m.kind, k];
+    const A = readAt(state, [SCHEMA.stockLots, ...seg(m.into)]);
+    const B = readAt(state, [SCHEMA.stockLots, ...seg(m.from)]);
+    const qa = readAt(state, [SCHEMA.accounts, ...seg(m.into)]);
+    const qb = readAt(state, [SCHEMA.accounts, ...seg(m.from)]);
+    if (!isObj(A) || !isObj(B)) throw new KernelError('E-DIM-REF-MISSING', { entity: m.holder }, 'mergeLots: both lots have a stockLots row');
+    if (!isPosInt(qa) || !isPosInt(qb)) throw new KernelError('E-LEDGER-NEGATIVE', { entity: m.holder }, 'mergeLots: both lots have a positive balance (a zero lot is deleted, not merged)');
+    const why = lotsUnmergeable(A, B);
+    if (why !== null) throw structErr(`mergeLots: ${why}`);
+    const next = { ...A };
+    if (!emptyAttr(A[SCHEMA.taint])) next[SCHEMA.taint] = weightedMean(A[SCHEMA.taint], qa, B[SCHEMA.taint], qb);
+    if (emptyAttr(A.oreGrade) || emptyAttr(B.oreGrade)) { if (Object.hasOwn(next, 'oreGrade')) next.oreGrade = null; } else next.oreGrade = weightedMean(A.oreGrade, qa, B.oreGrade, qb);
+    if (Number.isInteger(A.enteredDay) && Number.isInteger(B.enteredDay)) next.enteredDay = Math.min(A.enteredDay, B.enteredDay);
+    if (Number.isInteger(A[SCHEMA.costBasis]) && Number.isInteger(B[SCHEMA.costBasis])) next[SCHEMA.costBasis] = A[SCHEMA.costBasis] + B[SCHEMA.costBasis];
+    else delete next[SCHEMA.costBasis];
+    for (const k of LOT_ROT_KEYS) if (Object.hasOwn(A, k)) next[k] = A[k];
+    setInTx(tx, [SCHEMA.stockLots, ...seg(m.into)], next);
+    setInTx(tx, [SCHEMA.accounts, ...seg(m.into)], qa + qb);
+    deleteInTx(tx, [SCHEMA.accounts, ...seg(m.from)]);
+    deleteInTx(tx, [SCHEMA.stockLots, ...seg(m.from)]);
+    return Object.freeze({ into: m.into, qty: qa + qb });
+  } catch (e) {
+    throw denied(e);
+  }
+}
+
+/**
+ * kernelApi `recordTaint(engine, state, {target, taint, cause})`（卷三乙 §3.3 "taint 的写者"表：改赃份额与实例初值两行）：
+ * 账本是 taint 的唯一写者。target 是 {instance: 实例 id} 或 {lot: {holder, purpose, kind, lotKey}}；taint ∈ [0, 1]。
+ * cause 是登记的 verb 代号（入赃、消赃的法律程序，卷八b 经原语执行器提交；写法同 post 的 reason）：给了即"改赃份额"，只改值、不改数量；
+ * cause 为 null 只许在实例还没有 taint 时写初值（建实例那一笔，§3.3 "其他来源的入账 写初值"），已有值再写 null 即拒。批次的初值由 post 的 attrs 带入，这里不重复。
+ * @param {{vocab: any, rules: any}} engine @param {any} state
+ * @param {{target: {instance: string} | {lot: {holder: string, purpose: string, kind: string, lotKey: string}}, taint: number, cause: string | null}} r
+ */
+export function recordTaint(engine, state, r) {
+  try {
+    const tx = currentTransaction();
+    if (!tx || tx.state !== state) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity: null }, 'recordTaint outside the transaction of this state');
+    if (!fieldsWithin(r, ['target', 'taint', 'cause']) || !Object.hasOwn(r, 'target') || !Object.hasOwn(r, 'taint') || !Object.hasOwn(r, 'cause')) throw structErr('recordTaint is {target, taint, cause}');
+    if (typeof r.taint !== 'number' || !taintOk(r.taint)) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, 'taint is a number in [0, 1]');
+    if (r.cause !== null) {
+      const rec = typeof r.cause === 'string' ? engine.vocab.index.get(r.cause) : undefined;
+      if (!rec || rec.family !== SCHEMA.verb) throw new KernelError('E-EVT-VERB', { entity: null }, `recordTaint cause ${JSON.stringify(r.cause)} is not a registered verb`);
+    }
+    const t = r.target;
+    if (isObj(t) && fieldsWithin(t, [TARGET.instance]) && Object.hasOwn(t, TARGET.instance)) {
+      const row = readAt(state, [ITEM.instances, t[TARGET.instance]]);
+      if (!isObj(row)) throw new KernelError('E-DIM-REF-MISSING', { entity: null }, `${JSON.stringify(t[TARGET.instance])} is not an item instance`);
+      if (r.cause === null && Object.hasOwn(row, SCHEMA.taint)) throw structErr('recordTaint: an instance taint is set once at creation (cause null); changing it needs a cause');
+      setInTx(tx, [ITEM.instances, t[TARGET.instance], SCHEMA.taint], r.taint);
+      return;
+    }
+    if (isObj(t) && fieldsWithin(t, [TARGET.lot]) && isObj(t[TARGET.lot])) {
+      if (r.cause === null) throw structErr('recordTaint: a lot taint is set by post attrs at creation; changing it needs a cause');
+      const { holder, purpose, kind, lotKey } = t[TARGET.lot];
+      const attrs = readAt(state, [SCHEMA.stockLots, holder, purpose, kind, lotKey]);
+      if (!isObj(attrs)) throw new KernelError('E-DIM-REF-MISSING', { entity: holder }, `lot ${lotKey} has no ${SCHEMA.stockLots} row`);
+      checkSubject(engine, state, holder);
+      setInTx(tx, [SCHEMA.stockLots, holder, purpose, kind, lotKey, SCHEMA.taint], r.taint);
+      return;
+    }
+    throw structErr('recordTaint target is {instance} or {lot: {holder, purpose, kind, lotKey}}');
+  } catch (e) {
+    throw denied(e);
+  }
 }

@@ -594,6 +594,17 @@ test('param_consumed：加载器（kernel/load/）、校验器（kernel/validate
   }
 });
 
+test('param_consumed 按（表，键）认：同名键 stages 登在 life 与 rot 两张表，读者只点到 rot 时只算 rot 的键有人读，life 的仍报；都点到或都不点按键名算；unbuilt 缺口标记不要求消费者', () => {
+  const tables = { 'world/rules/tables/life.json': '{"rows": []}', 'world/rules/tables/rot.json': '{"rows": []}' };
+  const hits = (src) => pc({ ...tables, 'server-plugin/r.mjs': src }).map((h) => h.symbolPath);
+  const stages = (src) => hits(src).filter((s) => s.endsWith('.stages'));
+  assert.deepEqual(stages("export const f = (r) => r['rot'].stages;"), ['life.stages']);
+  assert.deepEqual(stages("export const f = (r) => r['life'].stages;"), ['rot.stages']);
+  assert.deepEqual(stages("export const f = (r) => r['rot'].stages + r['life'].stages;"), []);
+  assert.deepEqual(stages('export const f = (r) => r.stages;'), []);
+  assert.equal(hits('export const f = (r) => r.stages;').some((s) => s.endsWith('.unbuilt')), false);
+});
+
 test('param_consumed：范围经登记解析；被查内容里没有登记的键表、或内核组登记缺失报 E-ACC-ITEM-PARAM，不静默放过', () => {
   assert.deepEqual(pc({ 'server-plugin/rates.mjs': 'export const x = 1;' }).map((h) => [h.nodeKind, h.code]), [['param', 'E-ACC-ITEM-PARAM']]);
   const ctx = ctxOf({ [VALUATION]: '{"rows": []}', 'server-plugin/rates.mjs': 'export const f = (t) => t.unitValue;' });

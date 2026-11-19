@@ -285,8 +285,8 @@ test('rules.clock 按登记载入：七键手写字面量（4-2 加 cadence、ph
     reactionDepthMax: 8,
     proposalMax: 12,
     drawSites: ['site.emit.chance', 'site.weather.precip', 'site.weather.state', 'site.weather.windDir', 'site.weather.windSpeed'],
-    cadence: {},
-    phaseOffset: {},
+    cadence: { itemRot: 1440 }, // 6-3 登记的 itemRot 钩子：一日一拍，相位 0
+    phaseOffset: { itemRot: 0 },
     paceFactor: { num: 1, den: 1 },
     contestDefault: 'lottery',
   });

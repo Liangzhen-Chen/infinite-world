@@ -24,6 +24,7 @@ import { checkHoldingKindRows } from '../holdings.mjs';
 import { checkTerminationTables, installTermination, TERMINATE_RULES_TABLE } from '../terminate.mjs';
 import { checkPlaceTable } from '../place.mjs';
 import { checkItemTables, checkItemClasses } from '../item.mjs';
+import { checkItemStateTables } from '../item-state.mjs';
 import { checkBodyTables } from '../validate/body-tables.mjs';
 
 export const LAYOUT = Object.freeze({
@@ -116,7 +117,7 @@ export function loadWorld(root, opts = {}) {
   // rules.clock 与 due_kind、reaction_priority 条目的加载校验（卷二十 §2.1；字段含义只在 kernel/scheduler.mjs 读）；
   // cadence/phaseOffset 按声明表的钩子逐个查（§2.1 :130，E-CLOCK-CADENCE，块 4-2），所以排在声明表合并之后。
   // 持有人主体标记维度的表头登记（卷二 §5.6 ledgerHolder；卷六 §2.1 holder），该 kind 的表载入了才查。
-  const domain = report.env ? [...checkLedgerTables(read.rules, report.env), ...checkSubjectFlagDims(report.tables),...checkClockTables(read.rules, report.env), ...checkHookCadence(read.rules, owners.merged.hooks), ...checkCalendarClimateTables(read.rules, report.env)] : [];
+  const domain = report.env ? [...checkLedgerTables(read.rules, report.env), ...checkSubjectFlagDims(report.tables),...checkClockTables(read.rules, report.env), ...checkHookCadence(read.rules, owners.merged.hooks), ...checkItemStateTables(read.rules), ...checkCalendarClimateTables(read.rules, report.env)] : [];
   // 词表族 weather 各行的 weightRX 文本在这里经 compileRXInScope 编（卷二 §2.9 第 4 条，卷二十 §2.5 :276）；编不过的并入 domain 报 E-MOD-RX，编好的树校验全过后交 kernel/weather.mjs。
   const weatherRx = report.env ? prepareWeatherRx(report.env) : { trees: new Map(), errors: [] };
   domain.push(...weatherRx.errors);

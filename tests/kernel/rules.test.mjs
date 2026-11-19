@@ -15,12 +15,14 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const real = (f) => JSON.parse(readFileSync(join(ROOT, 'world/rules', f), 'utf8'));
 
 // 临时规则目录：registry 取真实登记的 kernelConstants 行，另加 extra 行；files 为 {相对路径: 内容}。
-function withRules(extraRows, files, fn) {
+function withRules(extraRows, files, fn, withClock = true) {
   const tmpRoot = testTempRoot('p2b-rules-');
   try {
     const reg = real('registry.json');
-    const rows = [reg.rows.find((r) => r.code === 'kernelConstants'), ...extraRows];
-    const all = { 'registry.json': { rows }, 'tables/kernel-constants.json': real('tables/kernel-constants.json'), ...files };
+    // 真实声明表登记了推进钩子（6-3 itemRot），加载入口逐钩子核 rules.clock.cadence、phaseOffset（卷二十 §2.1）：经 loadWorld 的用例临时目录带上真实 clock 登记行与表。
+    const clock = withClock ? [reg.rows.find((r) => r.code === 'clock')] : [];
+    const rows = [reg.rows.find((r) => r.code === 'kernelConstants'), ...clock, ...extraRows];
+    const all = { 'registry.json': { rows }, 'tables/kernel-constants.json': real('tables/kernel-constants.json'), ...(withClock ? { 'tables/clock.json': real('tables/clock.json') } : {}), ...files };
     for (const [f, v] of Object.entries(all)) writeUnderTempRoot(tmpRoot, f, typeof v === 'string' ? v : JSON.stringify(v));
     return fn(tmpRoot);
   } finally { rmSync(tmpRoot, { recursive: true, force: true }); }
@@ -85,7 +87,7 @@ test('checkRules 只按登记查，不认表名', () => {
     const read = readRules(ROOT, { rulesDir: dir });
     const env = validateDimensions(sourcesOf(fixture()), OPTIONS).env;
     assert.deepEqual(checkRules(read, env).map((e) => `${e.code}:${e.table}`), ['E-DIM-DOMAIN-RANGE:rules.other']);
-  });
+  }, false);
 });
 
 // 过程主体槽（卷二 §3.7 独立格式；李白 11-18 块 2-5 裁定①）：文件级登记、专用校验、同一套 E-MOD-*。

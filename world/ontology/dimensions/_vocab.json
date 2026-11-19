@@ -44,14 +44,22 @@
   "matter": {
    "closed": true,
    "entries": {
-    "matter_gas": {},
-    "matter_liquid": {},
-    "matter_solid": {}
+    "matter_gas": {"needsHolds": true, "needsSealed": true, "needsContainer": true},
+    "matter_liquid": {"needsHolds": true, "needsSealed": false, "needsContainer": true},
+    "matter_solid": {"needsHolds": false, "needsSealed": false, "needsContainer": false}
    },
    "prefix": "matter_"
   },
   "pool": {"closed": false, "entries": {}, "prefix": "pool_"},
-  "quality": {"closed": false, "entries": {}, "prefix": "quality_"},
+  "quality": {"closed": false, "entries": {
+   "quality_awful": {},
+   "quality_excellent": {},
+   "quality_fine": {},
+   "quality_good": {},
+   "quality_legendary": {},
+   "quality_masterwork": {},
+   "quality_normal": {}
+  }, "prefix": "quality_"},
   "size": {"closed": false, "entries": {}, "prefix": "size_"},
   "source": {"closed": false, "entries": {}, "prefix": "source_"},
   "tier": {"closed": false, "entries": {}, "prefix": "tier_"},
@@ -999,6 +1007,24 @@
       "kind": "ref holding_kind",
       "prevHolder": "EntityId nullable",
       "subject": "EntityId"
+     },
+     "perceivable": false,
+     "scandal": false,
+     "senses": [],
+     "sigBase": 0,
+     "tallies": [],
+     "visibilityAllowed": ["private", "public", "witnessed"],
+     "worthSlots": {"destroyed": [], "moved": [], "stake": []}
+    },
+    "verb_item_spoiled": {
+     "calendarBound": false,
+     "headSlot": null,
+     "kindFrom": null,
+     "kindOnly": false,
+     "parent": null,
+     "payloadShape": {
+      "instance": "EntityId nullable",
+      "lot": "struct{holder: EntityId, item: ref item, purpose: ref vocab purpose, lotKey: 批次键} nullable"
      },
      "perceivable": false,
      "scandal": false,

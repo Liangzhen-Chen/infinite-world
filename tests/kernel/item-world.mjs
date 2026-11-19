@@ -83,6 +83,7 @@ export function loadItemWorld(f) {
         for (const [fam, entries] of Object.entries(f.vocab)) Object.assign(doc.families[fam].entries, clone(entries));
         if (typeof f.editVocab === 'function') f.editVocab(doc);
       }
+      if (name === 'place.json' && typeof f.editPlaceDoc === 'function') f.editPlaceDoc(doc);
       if (name === 'material.json') {
         for (const [id, row] of Object.entries(f.materials)) doc.rows[id] = graded(doc.dimensions, clone(row));
         if (typeof f.editMaterialDoc === 'function') f.editMaterialDoc(doc);
@@ -116,6 +117,15 @@ export function loadItemWorld(f) {
       }
     });
     writeUnderTempRoot(tmp, 'rules/tables/climate.json', JSON.stringify(climate));
+    // 块 6 第 6-3 张：rules.rot、rules.wear、rules.containers 卷文没给首批值（登在各表 unbuilt）；测试给的前提写在 f.rulesExtra[表文件名] = {键: 值}，并从 unbuilt 里去掉。
+    const given = (code) => ((f.rulesExtra || {})[code]) || {};
+    const withGiven = (code) => (rows) => {
+      for (const [k, v] of Object.entries(given(code))) setRule(rows, k, clone(v));
+      const un = rows.find((r) => r.key === 'unbuilt');
+      un.value = un.value.filter((k) => !(k in given(code)));
+    };
+    writeUnderTempRoot(tmp, 'rules/tables/rot.json', JSON.stringify(ruleRows('rot.json', withGiven('rot'))));
+    writeUnderTempRoot(tmp, 'rules/tables/wear.json', JSON.stringify(ruleRows('wear.json', withGiven('wear'))));
     writeUnderTempRoot(tmp, 'rules/registry.json', JSON.stringify(reg));
     const r = loadWorld(ROOT, { dimensionsDir: relative(ROOT, join(tmp, 'dims')), rulesDir: join(tmp, 'rules') });
     const errs = r.errors.filter((e) => e.severity === 'error');

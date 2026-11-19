@@ -136,8 +136,8 @@
     "proposalMax": {"type": "integer", "unit": "count"},
     "drawSites": {"type": "set", "of": {"type": "string"}},
     "contestDefault": "string",
-    "cadence": {"type": "struct", "fields": {}},
-    "phaseOffset": {"type": "struct", "fields": {}},
+    "cadence": {"type": "struct", "fields": {"itemRot": {"type": "integer", "unit": "minute", "domain": [1, null]}}},
+    "phaseOffset": {"type": "struct", "fields": {"itemRot": {"type": "integer", "unit": "minute", "domain": [0, null]}}},
     "paceFactor": {"type": "struct", "fields": {"num": {"type": "integer", "unit": "count", "domain": [1, null]}, "den": {"type": "integer", "unit": "count", "domain": [1, null]}}, "required": ["num", "den"]}
    },
    "domain": {"reactionDepthMax": [1, null], "proposalMax": [1, null], "drawSites": {}, "contestDefault": {}, "cadence": {}, "phaseOffset": {}, "paceFactor": {}},
@@ -171,12 +171,14 @@
     "phaseEpochMinute": {"type": "integer", "unit": "minute"},
     "minutesPerMeterEast": {"type": "number", "unit": "minute", "precision": 0},
     "thermalLagPhase": {"type": "struct", "fields": {"num": {"type": "integer", "unit": "count", "domain": [0, null]}, "den": {"type": "integer", "unit": "count", "domain": [1, null]}}, "required": ["num", "den"]},
+    "metersPerDegreeNorth": {"type": "number", "unit": "m", "precision": 0},
+    "latitudeOriginDeg": {"type": "number", "unit": "degree", "precision": 4},
     "unbuilt": {"type": "set", "of": {"type": "string"}}
    },
-   "domain": {"yearDays": {}, "phaseEpochMinute": [null, null], "minutesPerMeterEast": [0, null], "thermalLagPhase": {}, "unbuilt": {}},
+   "domain": {"yearDays": {}, "phaseEpochMinute": [null, null], "minutesPerMeterEast": [0, null], "thermalLagPhase": {}, "metersPerDegreeNorth": [1, null], "latitudeOriginDeg": [-90, 90], "unbuilt": {}},
    "volume": "卷二十 §2.2 :207–:220（rules.astro）；yearDays、phaseEpochMinute 取旧数据、minutesPerMeterEast 与 thermalLagPhase 取卷文明文值；卷文写“标定”或无数值的键、以及只被日照公式读的 axialTiltDeg 登在 unbuilt（李白 11-19 12:4x 丙6、丙7：非核心读数按未知传播并机读登记缺口，不写缺省）；thermalLagPhase 的 num 小于 den 核对在 kernel/calendar.mjs checkCalendarClimateTables（卷文域 [0, 1/4) 的上界 1/4 未核，见回报）；读者只有 kernel/calendar.mjs 的 astroView 与 kernel/climate.mjs",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"yearDays": false, "phaseEpochMinute": false, "minutesPerMeterEast": false, "thermalLagPhase": false, "unbuilt": false}
+   "packOverridable": {"yearDays": false, "phaseEpochMinute": false, "minutesPerMeterEast": false, "thermalLagPhase": false, "metersPerDegreeNorth": false, "latitudeOriginDeg": false, "unbuilt": false}
   },
   {
    "code": "climate",
@@ -359,12 +361,61 @@
      "minVolumeL": {"type": "number", "unit": "L", "precision": 4}
     }}},
     "staticStateOrder": {"type": "list", "of": {"type": "ref", "vocab": "matter"}},
+    "instancedComponents": {"type": "set", "of": {"type": "ref", "vocab": "component"}},
     "unbuilt": {"type": "set", "of": {"type": "string"}}
    },
-   "domain": {"aggregation": {}, "categoryRules": {}, "classRules": {}, "materialClassMin": [0, 1], "sizeClasses": {}, "staticStateOrder": {}, "unbuilt": {}},
+   "domain": {"aggregation": {}, "categoryRules": {}, "classRules": {}, "materialClassMin": [0, 1], "sizeClasses": {}, "staticStateOrder": {}, "instancedComponents": {}, "unbuilt": {}},
    "volume": "卷三乙 §2.5 :324–:337（rules.items 各键）；§4.1.1 :630–:672（聚合口径表，M-1、M-10）；§4.3.3 C-1、C-8；§4.11 T-14；块 6 第 6-2 张只登本卡有读者的键；categoryRules、classRules、materialClassMin、sizeClasses 卷文没有首批值，登在 unbuilt，不编数。instancedComponents（I-2，读者 6-3）、materialCompMin、fuelHeatMin、fuelFlammabilityMin、saltContentMin、saltNutrient（C-8 燃料类、盐类与材料派生组件的具有口径，读者在类别规则卡）随读者卡登记",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"aggregation": false, "categoryRules": false, "classRules": false, "materialClassMin": false, "sizeClasses": false, "staticStateOrder": false, "unbuilt": false}
+   "packOverridable": {"aggregation": false, "categoryRules": false, "classRules": false, "materialClassMin": false, "sizeClasses": false, "staticStateOrder": false, "instancedComponents": false, "unbuilt": false}
+  },
+  {
+   "code": "rot",
+   "file": "tables/rot.json",
+   "structure": "keys",
+   "type": {
+    "tempCurve": {"type": "curve", "x": "celsius", "y": "dimensionless"},
+    "stages": {"type": "list", "of": {"type": "struct", "required": ["minSpoilage"], "fields": {"minSpoilage": {"type": "number", "unit": "fraction", "precision": 4}}}},
+    "mergeMaxGap": {"type": "number", "unit": "fraction", "precision": 4},
+    "unbuilt": {"type": "set", "of": {"type": "string"}}
+   },
+   "domain": {"tempCurve": {}, "stages": {}, "mergeMaxGap": [0, 1], "unbuilt": {}},
+   "volume": "卷三乙 §2.5 :346（rules.rot 各键）；§4.12.1–§4.12.3 P-1、P-3、P-7；§4.4.3 K-3（mergeMaxGap）；块 6 第 6-3 张只登有读者的键（tempCurve、stages、mergeMaxGap 读者 kernel/item-state.mjs）：卷文没给首批值，三键都取暂定值（出处与标注见 world/rules/tables/rot.json 各行 basis，标\"暂定·待试玩标定\"）；stages 项只登 minSpoilage。尚无读者、没有值的缺口登在 rot.json 的 unbuilt 行：rotReaction（P-4 坏透转腐殖类产物）、stageModifiers 与 stageOnConsume（P-3 各档修正与食用后果，随修正来源接入与卷二十一效果族卡）、itemThermal（itemRot 的 after 依赖，卷三乙 §3.3 :482，§4.11 未建）",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"tempCurve": false, "stages": false, "mergeMaxGap": false, "unbuilt": false}
+  },
+  {
+   "code": "wear",
+   "file": "tables/wear.json",
+   "structure": "keys",
+   "type": {
+    "envCurve": {"type": "curve", "x": "fraction", "y": "dimensionless"},
+    "unbuilt": {"type": "set", "of": {"type": "string"}}
+   },
+   "domain": {"envCurve": {}, "unbuilt": {}},
+   "volume": "卷三乙 §2.5 :343（rules.wear 各键）；§4.10.1、§4.10.3 D-2；块 6 第 6-3 张只登有读者的键（envCurve 读者 kernel/item-state.mjs），卷文没给首批值，取暂定值（见 wear.json basis，标\"暂定·待试玩标定\"）；缺口登在 wear.json 的 unbuilt 行：levels（D-3、D-6，劣化等级与修正，wear 族代号卷文只有中文名）、faultCurve（卷三乙 §4.9 故障）、weatherCtx（湿度要天气上下文，世界种子流 rules.seedKeys 未建）；envCurve 的横轴是当日湿度（天气状态行 humidity，fraction）",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"envCurve": false, "unbuilt": false}
+  },
+  {
+   "code": "containers",
+   "file": "tables/containers.json",
+   "structure": "keys",
+   "type": {"unbuilt": {"type": "set", "of": {"type": "string"}}},
+   "domain": {"unbuilt": {}},
+   "volume": "卷三乙 §2.5 :349（rules.containers.maxNesting）；§4.4.3 K-2；§5.4 :1930、:1951（穿戴、装备、装入三种持有种类行由本卷登记进卷十八 §4.1 种类表）。块 6 第 6-3 张只登缺口：三种持有种类行的代号卷文没给，maxNesting 的值卷文没给，随种类行与值定后登记并接读者（见 containers.json）",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"unbuilt": false}
+  },
+  {
+   "code": "quality",
+   "file": "tables/quality.json",
+   "structure": "keys",
+   "type": {"unbuilt": {"type": "set", "of": {"type": "string"}}},
+   "domain": {"unbuilt": {}},
+   "volume": "卷三乙 §2.5 :343–:345、§4.5（rules.quality.*）。块 6 第 6-3 张只登缺口：品质表各档乘子、baselineTier、botchTier、thresholds、inputWeight、toolBonus、marginWeight 卷文没给值；品质档代号到档位的对应卷文没给（见 quality.json 与 _vocab.json quality 族）；读者是修正来源接入与 craftOutcome（后卡）",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"unbuilt": false}
   }
  ]
 }

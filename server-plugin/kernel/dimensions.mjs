@@ -79,6 +79,9 @@ function createdRow(state, id) {
   return isObj(c) ? c : undefined;
 }
 
+// 材料表的 kind（材料派生组件类按它认）。
+const MATERIAL = Object.freeze({ kind: 'material' });
+
 // 实例声明的类别（含组件类），沿词表 broader 上位链展开（§1.3"成员关系单一来源"；RB-S4）。
 function memberClasses(engine, t, state, id) {
   const created = createdRow(state, id);
@@ -95,6 +98,21 @@ function memberClasses(engine, t, state, id) {
     const rec = engine.vocab && engine.vocab.index ? engine.vocab.index.get(c) : undefined;
     const broader = rec && isObj(rec.entry) ? rec.entry.broader : undefined;
     for (const b of Array.isArray(broader) ? broader : broader === undefined ? [] : [broader]) stack.push(b);
+  }
+  // 材料派生组件（卷三乙 §4.2.1：物品"含有"材料里挂的组件类，份额大于 0 即算，行上不手写）：表头有 material 列表维度的实体，
+  // 其各份材料行上的组件类（组件类条目的 table 是材料表）并入成员关系，byClass 条件才读得到（如 wearPerUse 的 byClass:comp_durable）。
+  // 物品各份取有效值：偏离行优先，否则展平后的实体行（extends 已展平，含 generated 节）；材料行同取展平后的行与其手写组件类（doc 行与 generated 节）。
+  const flatRow = t.flat && t.flat.rows instanceof Map ? t.flat.rows.get(id) : undefined;
+  const shares = created && isObj(created.props) && Array.isArray(created.props.material) ? created.props.material
+    : isObj(flatRow) && Array.isArray(flatRow.material) ? flatRow.material : [];
+  const mt = engine.tables instanceof Map ? engine.tables.get(MATERIAL.kind) : undefined;
+  const mdoc = mt ? mt.doc : undefined;
+  for (const s of shares) {
+    const mrow = mdoc && isObj(s) ? (isObj(mdoc.rows) && mdoc.rows[s.materialRef]) || (isObj(mdoc.generated) && mdoc.generated[s.materialRef]) : undefined;
+    for (const c of Array.isArray(mrow && mrow.classes) ? mrow.classes : []) {
+      const rec = engine.vocab && engine.vocab.index ? engine.vocab.index.get(c) : undefined;
+      if (rec && isObj(rec.entry) && rec.entry.table === MATERIAL.kind) out.add(c);
+    }
   }
   return out;
 }

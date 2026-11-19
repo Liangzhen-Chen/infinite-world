@@ -1,0 +1,36 @@
+{
+ "rows": [
+  {
+   "key": "tempCurve",
+   "value": [[-20, 0], [0, 0.25], [10, 0.5], [20, 1], [30, 2], [40, 4]],
+   "file": "server-plugin/kernel/item-state.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §4.12.1（tempCurve 在 rotAnchor 取 1）、P-6（冰点以下趋近 0、单调不降）；rotAnchor 20 摄氏度见卷三甲 §2.3 :205",
+   "basis": "暂定·待试玩标定。形状取化学反应速率的 Q10 式（每升 10 摄氏度速率乘 Q10）：Q10 取 2，由 20 度取 1 向上下推（0 度 0.25、10 度 0.5、30 度 2、40 度 4）；冰点以下按 P-6 取 0（-20 度）。Q10 的定义读到原文（IFT《Food Technology》2023 年 9 月专栏：Q10 是温度升高 10 摄氏度时生物或化学体系速率的变化量，原文举例 Q10=2 即 30 度比 20 度速率加倍，并说 Q10 值只适用于单一体系或反应）；没有读到哪一篇权威原文给出食品腐坏的典型 Q10 数值，故 2 是暂定值，不是出处值；曲线点之间线性插值（卷二 §1.5 curve）。试玩中显出不合理改此处一处"
+  },
+  {
+   "key": "stages",
+   "value": [{"minSpoilage": 0}, {"minSpoilage": 0.2}, {"minSpoilage": 0.5}, {"minSpoilage": 1}],
+   "file": "server-plugin/kernel/item-state.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §4.12.3 P-3、P-7（minSpoilage 严格递增且首档为 0）；词表族 diet 各行 eats 条件里的腐坏阈值（lot.spoilage <= 0.2、<= 0.3、<= 0.5）",
+   "basis": "暂定·待试玩标定。四档：新鲜 [0,0.2)、渐陈 [0.2,0.5)、腐败 [0.5,1)、坏透 1。分界取 diet 各行 eats 条件已经用的阈值（0.2、0.5；0.3 落在渐陈档内），不另编；各档的修正与食用后果（modifiers、onConsume）待修正来源接入与卷二十一效果族卡登记"
+  },
+  {
+   "key": "mergeMaxGap",
+   "value": 0.05,
+   "file": "server-plugin/kernel/item-state.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §4.4.3 K-3（同一腐坏档且两批当日腐坏进度之差不超 rules.rot.mergeMaxGap 才合并）",
+   "basis": "暂定·待试玩标定。卷文只说差不超此数，没给数；取 0.05（最小档宽 0.2 的四分之一），使同档里差得多的陈货仍不并入新货。试玩中改此处一处"
+  },
+  {
+   "key": "unbuilt",
+   "value": ["itemThermal", "rotReaction", "stageModifiers", "stageOnConsume"],
+   "file": "server-plugin/kernel/item-state.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §2.5 :346（rules.rot 键表）；§3.3 :482（itemRot after = [itemThermal]）；P-3、P-4",
+   "basis": "三个读者已接的键（tempCurve、stages、mergeMaxGap）都有暂定值；缺口：rotReaction（P-4 坏透转腐殖类产物的反应代号，要配方与 rawForm 数据）、stageModifiers 与 stageOnConsume（P-3 各档修正与食用后果，随修正来源接入与卷二十一效果族卡）、itemThermal（itemRot 的 after 依赖，卷三乙 §4.11 未建，sys.itemRot 的 after 暂为空，是对卷文的偏离，itemThermal 建成后补）"
+  }
+ ]
+}

@@ -448,7 +448,9 @@ test('verb 族行：真实 world/ 数据全过；缺栏、kindOnly 被列出、�
 
 test('verb 族数据：四条块 5 内核/持有事件行齐全，发出系统与卷二 §2.6、卷十八 R18-1.10/R18-1.11 一致', () => {
   const entries = W.vocab.families.get('verb').entries;
-  assert.deepEqual(Object.keys(entries).sort(), ['verb_domicile_changed', 'verb_entity_revived', 'verb_entity_terminated', 'verb_holding_changed']);
+  // 6-3 加 verb_item_spoiled（卷三乙 §2.8 坏透，发出系统是 itemRot 的 sys.itemRot）；块 5 的四条仍如下。
+  assert.deepEqual(Object.keys(entries).sort(), ['verb_domicile_changed', 'verb_entity_revived', 'verb_entity_terminated', 'verb_holding_changed', 'verb_item_spoiled']);
+  assert.deepEqual(DECL.systems['sys.itemRot'].emits, ['verb_item_spoiled']);
   // 持有变化与常住变化两条事件由同一个持有写者（kernel/holdings.mjs）发出，同列 kernel.emits（卷二 §2.7 :770；R18-1.10、R18-1.11）。
   assert.deepEqual(DECL.kernel.emits.slice().sort(), ['verb_domicile_changed', 'verb_entity_revived', 'verb_entity_terminated', 'verb_holding_changed']);
   assert.deepEqual(DECL.systems['sys.social'].emits, []);

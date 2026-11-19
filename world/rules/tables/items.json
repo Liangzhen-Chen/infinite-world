@@ -66,6 +66,14 @@
    "basis": "逐行照卷三乙 :630–:672 的聚合口径表：每个材料表 number、map、struct 维度一行，只逐份使用或只作引用的写 none；承担组空即全部组；固相量（强度、硬度、韧性、韧展性、锋利上限、耐磨、防护系数）加 solidOnly（卷三乙 §4.2.3 I-7 逐项列出，卷文没写固相量登在哪，按单点登记放聚合表行上）。<维度>@<用途> 写法的行归读它的规则登记（卷三乙 :672），本表首批不登。valueMult、wearResistance、workDifficulty 是材料表已有的别卷登记维度，同表登口径（M-10）"
   },
   {
+   "key": "instancedComponents",
+   "value": ["comp_attachment", "comp_container", "comp_corpse", "comp_document", "comp_livestock", "comp_readable", "comp_relic", "comp_tool", "comp_vehicle", "comp_weapon", "comp_wearable", "comp_work"],
+   "file": "server-plugin/kernel/dimension-writers.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §4.2.3 I-2 :908（首批：工具、武器、穿戴、容器、可读、文书、附件、作品、文物、载具、牲畜、尸体）",
+   "basis": "逐条照 I-2 首批十二类；材料派生组件与 comp_crafted 不在表里（铁锭、木料、面粉、饼、炭、布都是存量，等级记在批次上，Q-4）"
+  },
+  {
    "key": "staticStateOrder",
    "value": ["matter_solid", "matter_liquid", "matter_gas"],
    "file": "server-plugin/kernel/item.mjs",
@@ -75,7 +83,7 @@
   },
   {
    "key": "unbuilt",
-   "value": ["categoryRules", "classRules", "materialClassMin", "sizeClasses"],
+   "value": ["categoryRules", "classRules", "instanceLotPointer", "materialClassMin", "resourceItemRef", "sizeClasses", "wearPerUseResolution"],
    "file": "server-plugin/kernel/item.mjs",
    "grade": "designed",
    "source": "卷三乙 §2.5 :325、:331–:335；§4.3.1 :948「上表是首批，条目值由迁移卡标定」",

@@ -1,0 +1,12 @@
+{
+ "rows": [
+  {
+   "key": "unbuilt",
+   "value": ["baselineTier", "botchTier", "inputWeight", "marginWeight", "thresholds", "tierCodes", "tiers", "toolBonus"],
+   "file": "server-plugin/kernel/dimension-writers.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §2.5 :343–:345；§4.5.1、Q-6；卷三乙 :303（七档：劣、次、常、良、优、精、绝）；卷二 :1475；卷十四 :961（quality_fine）",
+   "basis": "无出处不编：品质表各档乘子与 baselineTier、botchTier、thresholds、inputWeight、toolBonus、marginWeight 卷文没给值；tierCodes：卷文只有七档中文名，代号散见卷二 :1475（awful、legendary）、卷三乙例子（normal、good、excellent、masterwork）、卷十四 :961（fine），没有任何一处给出代号到档位的对应，第二档代号也没有——卷文未找到，待李白裁定，_vocab.json 的 quality 族条目不带 rank"
+  }
+ ]
+}

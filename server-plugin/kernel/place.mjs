@@ -10,7 +10,7 @@
 import { KernelError, codeOf } from './errors.mjs';
 import { dim, dependsOnUnbuilt } from './dimensions.mjs';
 import { reverseLookup } from './reverse-index.mjs';
-import { fixedUnits, fixedUnits8, fixedToNumber, atan } from './det-math.mjs';
+import { fixedUnits, fixedUnits8, fixedToNumber, fixedAdd, fixedDivide, atan } from './det-math.mjs';
 import { checkDef, checkValue } from './validate/types.mjs';
 import { T } from './handles/markers.mjs';
 import { buildE } from './handles/generated.mjs';
@@ -253,6 +253,58 @@ export function relResidents(engine, state, id) {
     }
   }
   return Object.freeze([...out].sort(cmp));
+}
+
+// ---------- 地点的气候输入（卷二十 :311、:327–:328 `latitudeDeg`、`weatherCell`：卷二十定义、place 派生；全书唯一一处） ----------
+
+// 天气单元的维度（挂 comp_weather_cell 的行才适用，卷二十 §2.7 :359）；气候输入里 cell 字段取这些。
+const CELL_DIMS = Object.freeze(['annualMeanTempC', 'tempAmpC', 'diurnalAmpC', 'seasonScheme']);
+const CELL_MARK = 'annualMeanTempC';
+const ASTRO = Object.freeze({ table: 'astro', origin: 'latitudeOriginDeg', perDegree: 'metersPerDegreeNorth' });
+const SITE = Object.freeze({ enclosed: 'enclosed', underground: 'underground', elevation: 'elevationM' });
+const envMemo = new WeakMap();
+
+/**
+ * 地点的纬度（卷二十 §2.7 :327 `latitudeDeg`，derived，来源 `coord`）：latitudeOriginDeg + coord.y ÷ metersPerDegreeNorth（rules.astro；定点）。
+ * 缺 coord 或任一参数即 null（按未知，不借常数）。
+ * @param {any} engine @param {any} view placeView 的结果
+ * @returns {number | null}
+ */
+export function placeLatitude(engine, view) {
+  const c = view.dims[DIM.coord];
+  const t = engine.rules && engine.rules[ASTRO.table];
+  const origin = t ? t[ASTRO.origin] : undefined;
+  const per = t ? t[ASTRO.perDegree] : undefined;
+  if (!c.known || !isObj(c.value) || typeof c.value[COORD.y] !== 'number' || typeof origin !== 'number' || typeof per !== 'number') return null;
+  return fixedToNumber(fixedAdd(fixedUnits(origin), fixedDivide(fixedUnits(c.value[COORD.y]), fixedUnits(per))));
+}
+
+/**
+ * 地点的气候输入（卷二十 §4.3.3 第 1 条天气单元解析 `nearest(rel_contains, 挂 comp_weather_cell)`、§4.5 `tempAt`/`dailyMeanTemp` 的 input）：
+ * 沿包含树从地点自身起取最近的挂 comp_weather_cell 的节点（按组件类认：单元维度对该行"适用"），单元值取该节点的维度；纬度见 placeLatitude。
+ * 没有单元、没有纬度即 null。结果按（引擎，地点）记忆（静态维度不随时刻变，卷二十 :327 "静态"），返回同一对象，下游逐日记忆才能命中。
+ * 天气上下文（湿度，要世界种子流代号与单元静态维度，种子流登记 rules.seedKeys 未建）这里不给。
+ * @param {any} engine @param {any} state @param {string} placeId
+ * @returns {{input: any} | null}
+ */
+export function placeClimateInput(engine, state, placeId) {
+  let byPlace = envMemo.get(engine);
+  if (!byPlace) { byPlace = new Map(); envMemo.set(engine, byPlace); }
+  if (byPlace.has(placeId)) return byPlace.get(placeId);
+  const own = placeView(engine, state, placeId);
+  const chain = [own, ...own.tree.ancestors.map((a) => placeView(engine, state, a))];
+  const cellNode = chain.find((n) => n.dims[CELL_MARK].applicable === true);
+  const latitudeDeg = placeLatitude(engine, own);
+  const val = (v, k) => (v.dims[k] && v.dims[k].known ? v.dims[k].value : undefined);
+  let out = null;
+  if (cellNode && latitudeDeg !== null) {
+    const cell = Object.fromEntries(CELL_DIMS.filter((k) => val(cellNode, k) !== undefined).map((k) => [k, val(cellNode, k)]));
+    const cellElevationM = val(cellNode, SITE.elevation);
+    const here = val(own, SITE.elevation);
+    out = { input: { latitudeDeg, cell, cellElevationM, surfaceRefElevationM: here === undefined ? cellElevationM : here, enclosed: val(own, SITE.enclosed), underground: val(own, SITE.underground), weather: {} } };
+  }
+  byPlace.set(placeId, out);
+  return out;
 }
 
 // ---------- 加载期校验（§4.1.3 规则 1、3、4；A5-1.2；块 6 对照表第 18 行） ----------

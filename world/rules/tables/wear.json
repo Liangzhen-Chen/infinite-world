@@ -1,0 +1,20 @@
+{
+ "rows": [
+  {
+   "key": "envCurve",
+   "value": [[0, 0], [1, 1]],
+   "file": "server-plugin/kernel/item-state.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §4.10.1（H 是逐日 lookup(rules.wear.envCurve, 当日湿度) 的累加）、D-2",
+   "basis": "暂定·待试玩标定。卷文没给曲线点；取湿度（0 到 1 的份额）到劣化倍数的恒等线（干燥不劣化、饱和湿度一倍），没有出处，是起点；试玩中改此处一处"
+  },
+  {
+   "key": "unbuilt",
+   "value": ["faultCurve", "itemWear", "levels", "wearKinds", "weatherCtx"],
+   "file": "server-plugin/kernel/item-state.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §2.5 :343（rules.wear 键表）；§4.10 D-3、D-4、D-6、D-7；§4.9 故障",
+   "basis": "缺口：levels（劣化等级的阈值与修正；wear 族代号卷文只有中文名\"完好、旧、损、残、毁\"，未找到代号）、faultCurve（§4.9 故障）、itemWear 钩子（D-4 穿用、D-7 越档与毁坏到期，要穿戴持有种类行，代号卷文没给，见 containers.json 的 wearKind）、wearKinds（同上）、weatherCtx（自然劣化要当日湿度，要天气上下文，世界种子流登记 rules.seedKeys 未建，读数按未知带缺口）"
+  }
+ ]
+}

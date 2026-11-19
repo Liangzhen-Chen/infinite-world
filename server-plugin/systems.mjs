@@ -3,6 +3,8 @@
 // 骨架（块 2 第 2-2 张，体检 K2-08）：现在还没有任何系统模块。各系统首次上线那张卡在这里加一行 import，
 // 并在 world/ontology/state-owners.json 的 systems 里写该系统的登记项（卷二 §2.7）。
 
+import './item-lots.mjs'; // 6-3：itemRot 推进钩子（卷三乙 §3.3 系统登记表）
+
 /**
  * 装配文件调一次。各系统模块的登记在上面的 import 求值时已完成，这里不再做别的事。
  * @returns {void}

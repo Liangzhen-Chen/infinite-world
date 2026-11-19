@@ -93,11 +93,22 @@
   "wardTags": {"type": "set", "of": {"type": "ref", "vocab": "wardtag"}, "domain": {}, "derived": "卷十六 §2.3：该行手写 tags 中属 wardtag 族的条目并上 deriveRX 成立的条目", "required": "never", "onUnknown": "skip", "modifiable": false, "source": "卷十六 §2.3 登记", "owner": "卷十六 §2.3"},
   "warmth": {"type": "number", "unit": "score", "domain": [0, null], "precision": 4, "derived": "卷三乙 §4.13：穿戴物保暖，派生", "required": "never", "onUnknown": "gap", "modifiable": false, "source": "卷二 §5.1；卷三乙 §2.2", "owner": "卷三乙 §4.13"},
   "warmthPoolQty": {"type": "number", "unit": "score", "domain": [0, null], "precision": 4, "derived": "卷三乙 §4.17.1：御寒折合量", "required": "never", "onUnknown": "gap", "modifiable": false, "source": "卷三乙 §2.2", "owner": "卷三乙 §4.17"},
-  "wearPerUse": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4, "required": "byClass:comp_durable；byClass:comp_tool", "onUnknown": "error", "modifiable": false, "source": "卷二 §5.1；卷三乙 §2.2、§4.6", "owner": "卷三乙 §4.10"},
+  "wearPerUse": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4, "required": "byClass:comp_durable", "onUnknown": "error", "modifiable": false, "source": "卷二 §5.1；卷三乙 §2.2、§4.6", "owner": "卷三乙 §4.10"},
   "wearResistance": {"type": "number", "unit": "score", "domain": [1, 100], "precision": 4, "derived": "mean(承担组材料的 wearResistance，按 rules.items.aggregation)", "required": "never", "onUnknown": "gap", "modifiable": false, "source": "卷二 §5.1；卷三乙 §2.2", "owner": "卷三乙 §4.10"},
   "weaponClass": {"type": "ref", "vocab": "class", "required": "byClass:comp_weapon", "onUnknown": "error", "modifiable": false, "source": "卷三乙 §2.2；CDDA 02 第 17 节第 53 项", "owner": "卷十三 §2.3 登记"},
   "wieldHands": {"type": "integer", "unit": "count", "domain": [1, null], "derived": "卷十三 R13-5.2：握持要几只手", "allowExplicit": true, "required": "never", "onUnknown": "gap", "modifiable": false, "source": "卷十三 §2.3 登记", "owner": "卷十三 §2.3"},
   "wielders": {"type": "integer", "unit": "count", "domain": [0, null], "derived": "卷十三 R13-5.2：以该物为标的的现役手持边条数", "required": "never", "onUnknown": "gap", "modifiable": false, "source": "卷十三 §2.3 登记", "owner": "卷十三 §2.3"}
+ },
+ "instanceDimensions": {
+  "diedMinute": {"type": "integer", "unit": "minute", "domain": [0, null], "required": "byClass:comp_corpse", "onUnknown": "error", "modifiable": false, "source": "卷三乙 §2.3 :225（卷四 §4.8 提出，台账 N-06）", "owner": "卷四 §4.8"},
+  "durability": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4, "bounds": [0, 1], "stacking": "none", "required": "byClass:comp_durable", "onUnknown": "error", "modifiable": true, "source": "卷三乙 §2.3 :225；§4.10.1（存的是锚点日的值，D-2）", "owner": "卷三乙 §4.10"},
+  "madeDay": {"type": "integer", "unit": "day", "domain": [0, null], "required": "byClass:comp_crafted", "onUnknown": "gap", "modifiable": false, "source": "卷三乙 §2.3 :225；§4.5", "owner": "卷三乙 §4.5"},
+  "ofSpecies": {"type": "ref", "kind": "species", "required": "byClass:comp_corpse", "onUnknown": "error", "modifiable": false, "source": "卷三乙 §2.3 :225（卷四 §4.8 提出，台账 N-06）", "owner": "卷四 §4.8"},
+  "qualityTier": {"type": "enum", "vocab": "quality", "ordered": true, "required": "byClass:comp_crafted", "onUnknown": "error", "modifiable": false, "source": "卷三乙 §2.3 :225；§4.5；卷二 §5.1（七档 quality_awful … quality_legendary）", "owner": "卷三乙 §4.5"},
+  "rotAnchorDay": {"type": "integer", "unit": "day", "domain": [0, null], "required": "byClass:comp_rottable", "onUnknown": "error", "modifiable": false, "source": "卷三乙 §2.3 :225；§4.12.1（腐坏锚点日）", "owner": "卷三乙 §4.12"},
+  "spoilage": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4, "required": "byClass:comp_rottable", "onUnknown": "error", "modifiable": false, "source": "卷三乙 §2.3 :225；§4.12.1（存的是锚点日的值，P-1）", "owner": "卷三乙 §4.12"},
+  "taint": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4, "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷三乙 §2.3 :225；§3.3 `taint` 的写者（与批次同义，台账 S-10）", "owner": "卷三乙 §4.4"},
+  "wearAnchorDay": {"type": "integer", "unit": "day", "domain": [0, null], "required": "byClass:comp_durable", "onUnknown": "error", "modifiable": false, "source": "卷三乙 §2.3 :225；§4.10.1（劣化锚点日）", "owner": "卷三乙 §4.10"}
  },
  "entity": {
   "classPrefix": "class_",

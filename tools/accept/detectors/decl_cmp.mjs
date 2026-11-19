@@ -60,6 +60,20 @@ function consumes(toks, key) {
   return false;
 }
 
+// 按（表，键）认消费者（整类）：键名读到之外，同名键若登在几张表里，文件点到了其中某些表的代号（字串或标识符），就只算那些表的键被读；
+// 一张表都没点到则按键名算全部同名表（旧口径）。同名键在别的表里被读，不算这一张表的键有人读
+// （6-3：rules.rot.stages 的读者不应顶掉 life.stages 的报告）。sharers 是登了该键的全部表代号。
+// 未建登记列表（各规则表的 `unbuilt` 键，登记里同为 set<string>）是"卷文没给值"的缺口标记，供加载校验与回报读，不是运行期读取的参数，不要求消费者。
+const MARKER_KEYS = new Set(['unbuilt']);
+function mentions(toks, table) {
+  return toks.some((t) => (t.t === 'str' || t.t === 'id') && t.v === table);
+}
+function consumesIn(toks, table, key, sharers) {
+  if (!consumes(toks, key)) return false;
+  const named = sharers.filter((s) => mentions(toks, s));
+  return named.length === 0 || named.includes(table);
+}
+
 // 消费者文件集（A12-4.5 口径）：规则层组＋内核组，去加载器、校验器。组键与目录段都从登记派生（见头注），没有文件名单。
 function consumerFiles(ctx) {
   const decl = ctx.decl || {};
@@ -139,7 +153,8 @@ function unconsumedHits(ctx, params) {
   const data = dataConsumers(ctx, read);
   for (const t of keyed) {
     for (const key of t.defs.keys()) {
-      if (!data.has(`${t.code}.${key}`) && !tokens.some((toks) => consumes(toks, key))) hits.push({ file: regPath, line: 0, nodeKind: 'param', symbolPath: `${t.code}.${key}`, code });
+      if (MARKER_KEYS.has(key)) continue;
+      if (!data.has(`${t.code}.${key}`) && !tokens.some((toks) => consumesIn(toks, t.code, key, keyed.filter((o) => o.defs.has(key)).map((o) => o.code)))) hits.push({ file: regPath, line: 0, nodeKind: 'param', symbolPath: `${t.code}.${key}`, code });
     }
   }
   return hits.sort((a, b) => (a.symbolPath < b.symbolPath ? -1 : a.symbolPath > b.symbolPath ? 1 : 0));

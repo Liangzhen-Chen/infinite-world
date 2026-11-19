@@ -68,9 +68,13 @@ export function withKernelConstantsRules(fn) {
   const tmpRoot = testTempRoot('kc-rules-');
   try {
     const real = (f) => readFileSync(join(REPO, 'world/rules', f), 'utf8');
-    const row = JSON.parse(real('registry.json')).rows.find((r) => r.code === 'kernelConstants');
-    writeUnderTempRoot(tmpRoot, 'registry.json', JSON.stringify({ rows: [row] }));
+    const rows = JSON.parse(real('registry.json')).rows;
+    const row = rows.find((r) => r.code === 'kernelConstants');
+    // 真实声明表登记了推进钩子（6-3 itemRot）：加载入口逐钩子核 rules.clock 的节拍与相位，故一并放真实 clock 登记行与表。
+    const clock = rows.find((r) => r.code === 'clock');
+    writeUnderTempRoot(tmpRoot, 'registry.json', JSON.stringify({ rows: [row, clock] }));
     writeUnderTempRoot(tmpRoot, row.file, real(row.file));
+    writeUnderTempRoot(tmpRoot, 'tables/clock.json', real('tables/clock.json'));
     return fn(tmpRoot);
   } finally { rmSync(tmpRoot, { recursive: true, force: true }); }
 }

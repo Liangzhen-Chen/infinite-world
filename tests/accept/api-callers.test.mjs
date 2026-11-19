@@ -15,9 +15,10 @@ const SRV = ['rules', 'kernel', 'textcore', 'inputEdge', 'gate', 'outputGate', '
 const ENTRIES = ['kernel/ledger.mjs#post', 'kernel/ledger.mjs#transfer'];
 const P = { entries: ENTRIES, groups: SRV, code: 'E-VIEW-INPUT-IMPORT' };
 
+// 夹具的文件集是虚拟的；登记派生的文件（账本与 stockLots 腐坏字段声明写者 item-lots.mjs）对照真实仓库清单核存在（path_access ownerFiles），故 repoFiles 带上它。
 function ctxOf(map, decl) {
   const files = new Map(Object.entries(map));
-  return loadContext(ROOT, { files: [...files.keys()].sort(), read: (p) => files.get(p), decl: decl || DECL });
+  return { ...loadContext(ROOT, { files: [...files.keys()].sort(), read: (p) => files.get(p), decl: decl || DECL }), repoFiles: [...files.keys(), 'server-plugin/item-lots.mjs'] };
 }
 const withApi = (exports) => ({ ...DECL, kernelApi: { exports } });
 
@@ -116,7 +117,7 @@ test('A6-1.1 读者与范围由登记派生：派生出的文件不在仓库、�
 });
 
 test('A6-1.1 用例夹具：派生文件对照真实仓库清单 repoFiles 核存在，夹具里没有的只是不进本次扫描', () => {
-  const c = { ...ctxOf({ 'server-plugin/econ.mjs': "import { priceFor } from './market/price.mjs';" }), repoFiles: ['server-plugin/kernel/ledger.mjs', 'server-plugin/econ.mjs'] };
+  const c = { ...ctxOf({ 'server-plugin/econ.mjs': "import { priceFor } from './market/price.mjs';" }), repoFiles: ['server-plugin/kernel/ledger.mjs', 'server-plugin/item-lots.mjs', 'server-plugin/econ.mjs'] };
   assert.equal(pathAccess(c, { access: 'ref', paths: ['priceFor'], scopeSystems: ECON, code: 'E-VIEW-INPUT-IMPORT' }, CLS).length, 0);
   assert.throws(() => pathAccess({ ...c, repoFiles: ['server-plugin/econ.mjs'] }, { access: 'ref', paths: ['priceFor'], scopeSystems: ECON, code: 'E-VIEW-INPUT-IMPORT' }, CLS), /E-ACC-ITEM-PARAM derived file missing/);
 });

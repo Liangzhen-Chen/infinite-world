@@ -23,6 +23,16 @@ export interface PathTypes {
   readonly 'displayNames.*.text': SealedValue;
   readonly 'due.*': StructValue<'dueItem'>;
   readonly 'holdings.*.*': StructValue<'holding'>;
+  readonly 'itemInstances.*.diedMinute': number;
+  readonly 'itemInstances.*.durability': number;
+  readonly 'itemInstances.*.madeDay': number;
+  readonly 'itemInstances.*.ofSpecies': EntityId<'species'>;
+  readonly 'itemInstances.*.qualityTier': Handle<'quality'>;
+  readonly 'itemInstances.*.rotAnchorDay': number;
+  readonly 'itemInstances.*.spoilage': number;
+  readonly 'itemInstances.*.taint': number;
+  readonly 'itemInstances.*.template': EntityId<'item'>;
+  readonly 'itemInstances.*.wearAnchorDay': number;
   readonly 'ledgerCounters.lotNext': number;
   readonly 'ledgerTotals': StructValue<'resourceTotals'>;
   readonly 'narration.*': SealedValue;
@@ -31,6 +41,8 @@ export interface PathTypes {
   readonly 'playerNotes.*.text': SealedValue;
   readonly 'statuses.*': readonly (StructValue<'statusInstance'>)[];
   readonly 'stockLots.*': StructValue<'holderLots'>;
+  readonly 'stockLots.*.*.*.*.rotAnchorDay': number;
+  readonly 'stockLots.*.*.*.*.spoilage': number;
   readonly 'terminated.*': StructValue<'terminated'>;
 }
 
@@ -59,6 +71,18 @@ export type State = {
     } };
   readonly due?: { readonly [segment: string]: StructValue<'dueItem'> };
   readonly holdings?: { readonly [segment: string]: { readonly [segment: string]: StructValue<'holding'> } };
+  readonly itemInstances?: { readonly [segment: string]: {
+      readonly diedMinute?: number;
+      readonly durability?: number;
+      readonly madeDay?: number;
+      readonly ofSpecies?: EntityId<'species'>;
+      readonly qualityTier?: Handle<'quality'>;
+      readonly rotAnchorDay?: number;
+      readonly spoilage?: number;
+      readonly taint?: number;
+      readonly template?: EntityId<'item'>;
+      readonly wearAnchorDay?: number;
+    } };
   readonly ledgerCounters?: {
     readonly lotNext?: number;
   };
@@ -70,6 +94,9 @@ export type State = {
       readonly text?: SealedValue;
     } };
   readonly statuses?: { readonly [segment: string]: readonly (StructValue<'statusInstance'>)[] };
-  readonly stockLots?: { readonly [segment: string]: StructValue<'holderLots'> };
+  readonly stockLots?: { readonly [segment: string]: StructValue<'holderLots'> & { readonly [segment: string]: { readonly [segment: string]: { readonly [segment: string]: {
+            readonly rotAnchorDay?: number;
+            readonly spoilage?: number;
+          } } } } };
   readonly terminated?: { readonly [segment: string]: StructValue<'terminated'> };
 };

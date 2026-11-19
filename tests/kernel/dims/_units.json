@@ -1,1 +1,1 @@
-{"units": [{"id": "kg", "dimension": "mass", "si": 1}, {"id": "count", "dimension": "count", "si": 1}, {"id": "fraction", "dimension": "ratio", "si": 1}, {"id": "minute", "dimension": "time", "si": 60}]}
+{"units": [{"id": "kg", "dimension": "mass", "si": 1}, {"id": "count", "dimension": "count", "si": 1}, {"id": "fraction", "dimension": "ratio", "si": 1}, {"id": "minute", "dimension": "time", "si": 60}, {"id": "day", "dimension": "time", "si": 86400}]}

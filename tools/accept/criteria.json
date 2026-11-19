@@ -2737,10 +2737,18 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 40
+    },
+    {
+     "ref": "6-3 按（表，键）认消费者、unbuilt 缺口标记不计（主会话 6-3 改一轮 1）",
+     "rev": 41
+    },
+    {
+     "ref": "6-3 按（表，键）认消费者、unbuilt 缺口标记不计（主会话 6-3 改一轮 1）",
+     "rev": 42
     }
    ],
-   "print": "60a447275e22e102f6130739002879fc6057f763a4649a2f027e66426c1043fb",
-   "rev": 40,
+   "print": "1de0ffda407fdf532afb28fb338bf575218b8046b5af737bc3ad9e6b1dc189f6",
+   "rev": 42,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -4002,10 +4010,18 @@
     {
      "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 42
+    },
+    {
+     "ref": "6-3 decl_cmp 改动",
+     "rev": 43
+    },
+    {
+     "ref": "6-3 decl_cmp 改动",
+     "rev": 44
     }
    ],
-   "print": "60a447275e22e102f6130739002879fc6057f763a4649a2f027e66426c1043fb",
-   "rev": 42,
+   "print": "1de0ffda407fdf532afb28fb338bf575218b8046b5af737bc3ad9e6b1dc189f6",
+   "rev": 44,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

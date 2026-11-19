@@ -42,7 +42,7 @@ test('真实 world：item 表头载入、没有行；massKg、material 恒必填
 
 test('真实 world：规则表首批值卷文没给的键登在 rules.items.unbuilt（不编数）；聚合口径表覆盖材料表全部数值、映射、结构维度（M-10）', () => {
   const r = loadWorld(ROOT);
-  assert.deepEqual([...r.rules.items.unbuilt].sort(), ['categoryRules', 'classRules', 'materialClassMin', 'sizeClasses']);
+  assert.deepEqual([...r.rules.items.unbuilt].sort(), ['categoryRules', 'classRules', 'instanceLotPointer', 'materialClassMin', 'resourceItemRef', 'sizeClasses', 'wearPerUseResolution']);
   assert.equal(Object.hasOwn(r.rules.items, 'sizeClasses'), false);
   const matDims = r.tables.get('material').doc.dimensions;
   const have = new Set(r.rules.items.aggregation.map((s) => s.dimension));
