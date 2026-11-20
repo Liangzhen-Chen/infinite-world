@@ -1,6 +1,7 @@
 #!/bin/sh
 # 用 DeepSeek（deepseek-flash）跑一张写码卡（亮圳 11-17 23:23 批准，经李白）。
-# 用法：sh tools/dispatch/run-card-ds.sh <工作目录> <提示文件>
+# 用法：sh tools/dispatch/run-card-ds.sh <工作目录> <提示文件> [flash|pro]
+#   第三参数选型号（亮圳 11-20 22:21）：缺省 flash = deepseek-flash；pro = deepseek-v4-pro（难活）。
 # 接法照 https://api-docs.deepseek.com/quick_start/agent_integrations/claude_code.md ：
 #   只在本子进程环境里设 ANTHROPIC_BASE_URL 与 ANTHROPIC_AUTH_TOKEN（取自用户环境变量 DEEPSEEK_API_KEY），
 #   所有模型名一律 deepseek-flash（以 claude-opus 开头的模型名会被转到更贵的 deepseek-v4-pro，这里一个都不出现）。
@@ -11,7 +12,11 @@ wd="$1"; pf="$2"
 [ -n "$DEEPSEEK_API_KEY" ] || { echo "DEEPSEEK_API_KEY 不存在" >&2; exit 2; }
 [ -d "$wd" ] || { echo "工作目录不存在: $wd" >&2; exit 2; }
 [ -f "$pf" ] || { echo "提示文件不存在: $pf" >&2; exit 2; }
-M=deepseek-flash
+case "${3:-flash}" in
+  flash) M=deepseek-flash ;;
+  pro) M=deepseek-v4-pro ;;
+  *) echo "型号只许 flash 或 pro: $3" >&2; exit 2 ;;
+esac
 git -C "$wd" fetch -q origin 2>/dev/null || true
 here="$(CDPATH= cd "$(dirname "$0")" && pwd)"
 prompt="$(node "$here/compose-card.mjs" "$wd" "$pf")" || exit 2
