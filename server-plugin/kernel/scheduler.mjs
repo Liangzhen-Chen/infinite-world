@@ -14,7 +14,7 @@
 //   钩子节拍对齐绝对分钟（§4.1.3 第 3 条）、cadence/phaseOffset 逐钩子加载核对（E-CLOCK-CADENCE，K4-46）；钩子函数经 kernel/advance-registry.mjs 交入；
 //   反应队列按代广度优先（§4.1.3 第 4 条）、超 reactionDepthMax/proposalMax 即整刻作废并报 E-CLOCK-REACTION-LIMIT（李白 11-18 03:22 裁定①）。
 //   不在本卡：骰值键与 sample（4-3）；advancePlan 的回调时机与层序、钩子节拍按层步长放大（块 6 卷二十七 §4.1 卡，K4-42 选 A）；
-//   到期事件 verb_due_elapsed 的写下与订阅分发（事件写入那张卡；本卡由调用方交入 deliver）；按实体撤销全部到期项（块 5 终止协议 e9，本卡只给 cancel）。
+//   （到期事件 verb_due_elapsed 6-19 起由本文件 due 段自己发，订阅分发在 kernel/subscribers.mjs）；按实体撤销全部到期项（块 5 终止协议 e9，本卡只给 cancel）。
 // 本文件只读登记数据（规则表、词表条目字段、单位表），不认任何具体到期项种类、钩子、阶段名或实体 id；字串字面量只有 ASCII（§4.1.6 扫描式）。
 
 import { KernelError } from './errors.mjs';
@@ -29,6 +29,7 @@ import { registry } from './vocab.mjs';
 import { CODE_RE } from './validate/types.mjs';
 import { advanceHook, advanceHookNames } from './advance-registry.mjs';
 import { snakeCaseKey } from './handles/keys.mjs';
+import { emit } from './events.mjs';
 
 // ---------- 代码内封闭枚举（卷二十 §8 问题 5 :1318 列为代码内封闭、不登卷二） ----------
 
@@ -386,18 +387,36 @@ export function cancel(handle) {
   txSet(tx, [SCHEMA.dueKey, handle], undefined);
 }
 
+// 到期事件的固定记号（卷二十 §5.1 :1074 动词；卷九 :440 到期一条的位次代号 pos.only）。
+const DUE_EVENT = Object.freeze({ verb: 'verb_due_elapsed', position: 'pos.only', visibility: 'private' });
+
+// 在当前事务内写下一条到期事件：actor 空、targets 空，规则段取到期项种类、主体段取拥有者 id（卷九 :440）。
+function emitDue(engine, state, item) {
+  emit(engine, state, {
+    minute: clockView(engine, state).minute,
+    verb: DUE_EVENT.verb,
+    actor: null,
+    targets: [],
+    primitives: [],
+    cause: item.kind,
+    witnesses: [],
+    visibility: DUE_EVENT.visibility,
+    payload: { kind: item.kind, owner: item.owner },
+  }, { rule: item.kind, subject: item.owner, position: DUE_EVENT.position });
+}
+
 /**
  * 到期项来源（due 段；交给 advance 的 TickSource）：next 取堆顶活项的 dueMinute（墓碑先弹掉）；某刻 minute 取全部 dueMinute ≤ minute 的活项，
- * 每项一笔事务（写者本文件）：先删 due.<句柄>（到期即出堆），再调 deliver 发到期事件。执行前该行已被同刻先执行的项取消即什么也不做（墓碑）。
- * deliver(state, item) 发 verb_due_elapsed（带 kind 与 owner，§4.1.3 第 5 条）——事件写下与订阅分发归事件写入那张卡，由调用方交入；
- * layerRankOf(owner) 给全序键的 layerRank（卷二十七 advancePlan 的层序，块 6）。
- * @param {{vocab: any}} engine
- * @param {{deliver: (state: any, item: {dueMinute: number, kind: string, owner: string, ref: string, registeredMinute: number}) => void, layerRankOf: (owner: string) => number}} io
+ * 每项一笔事务（写者本文件）：先删 due.<句柄>（到期即出堆），再由本文件在 due 段自己发 verb_due_elapsed（载荷 {kind, owner}，卷二十 §4.1.3 第 5 条 :507、§5.1 :1074；
+ * 事件 id 位次 pos.only，卷九 :440）；订阅者（拥有者一方）在事件投递时处理后果（kernel/subscribers.mjs），调度器不知道后果是什么。
+ * 执行前该行已被同刻先执行的项取消即什么也不做（墓碑）。layerRankOf(owner) 给全序键的 layerRank（卷二十七 advancePlan 的层序，块 6）。
+ * @param {{vocab: any, rules: any, template?: any}} engine
+ * @param {{layerRankOf: (owner: string) => number}} io
  * @returns {TickSource}
  */
 export function dueSource(engine, io) {
-  if (!isObj(io) || typeof io.deliver !== 'function' || typeof io.layerRankOf !== 'function') throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'dueSource: want {deliver, layerRankOf}');
-  const { deliver, layerRankOf } = io;
+  if (!isObj(io) || typeof io.layerRankOf !== 'function') throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'dueSource: want {layerRankOf}');
+  const { layerRankOf } = io;
   return {
     next(state, after) {
       const h = heapOf(state);
@@ -422,7 +441,7 @@ export function dueSource(engine, io) {
           run: (st) => {
             if (!live(st, e)) return;
             txSet(currentTransaction(), [SCHEMA.dueKey, e.handle], undefined);
-            deliver(st, item);
+            emitDue(engine, st, item);
           },
         });
       }

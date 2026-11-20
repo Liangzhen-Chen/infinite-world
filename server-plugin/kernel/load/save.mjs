@@ -18,6 +18,8 @@ import { KernelError, codeOf } from '../errors.mjs';
 import { report } from '../report.mjs';
 import { isHex64 } from '../handles/keys.mjs';
 import { buildE } from '../handles/generated.mjs';
+import { T } from '../handles/markers.mjs';
+import { postReply } from '../transport/reply-channel.mjs';
 
 const E = buildE();
 // 分片切分方式与文档部分、清单状态的固定记号（卷二十七 R27-4.1 :124、§1.9 族 partition/state）：单一定义，比较处引用。
@@ -229,4 +231,14 @@ export function autoLoadSlot(args) {
   if (!r.ok && r.code === new KernelError('E-SAVE-EMPTY').code) return { ok: true, fresh: true };
   if (!r.ok) report(r.code, { slot: Number.isInteger(args.slot) ? args.slot : null });
   return r;
+}
+
+/**
+ * `save_import` 路由的入口（卷二 :961 第 1 环；:965 第 2d 环"成功与拒收都走这里"；:979 第 5 条）。导入的真实流程（核长度与槽位、narrow、重算 Sealed 摘要、
+ * 规则指纹比较、写盘，与读档同一条流程）随 6-20；在那之前一律回 rejected 加 E-ACT-WRITER-NOT-READY（与块 5 写者未就绪同一做法），不写盘、不改 state。
+ * @param {unknown} body @param {object} handle ReplyHandle
+ * @returns {Promise<void>}
+ */
+export async function importNotReady(body, handle) {
+  postReply(handle, { resultCode: T.code_enum.reply_result.rejected, rejectCode: 'E-ACT-WRITER-NOT-READY' });
 }

@@ -465,9 +465,13 @@ test('required 策略分隔：全角分号分隔多个条件', () => {
 
 // ---------- registerSystems 骨架 ----------
 
-test('registerSystems 骨架：groupApi 只对 index.mjs 开放，文件存在，调用无返回值', () => {
+test('registerSystems：groupApi 只对 index.mjs 开放，文件存在；交入真实原语目录无返回值，目录缺失或与运行期契约不符即拒（6-19 接 checkPrimitiveCatalog）', () => {
   const row = realDecl().groupApi.exports.find((x) => x.export === 'systems.mjs#registerSystems');
   assert.deepEqual(row.callerFiles, ['index.mjs']);
   assert.ok(existsSync(join(ROOT, 'server-plugin/systems.mjs')));
-  assert.equal(registerSystems(), undefined);
+  const catalog = JSON.parse(readFileSync(join(ROOT, 'world/ontology/primitives.json'), 'utf8'));
+  assert.equal(registerSystems({ primitives: catalog }), undefined);
+  assert.throws(() => registerSystems({ primitives: undefined }), /primitive catalog/);
+  assert.throws(() => registerSystems(undefined), /primitive catalog/);
+  assert.throws(() => registerSystems({ primitives: { ...catalog, primitives: catalog.primitives.slice(1) } }), /primitive catalog/);
 });

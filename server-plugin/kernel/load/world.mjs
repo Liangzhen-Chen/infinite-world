@@ -3,7 +3,8 @@
 // 任一 error 即加载失败（ok 为假）；全部通过才收下注册表与句柄 V、E、P。只按目录、文件名约定与登记读，不认任何具体表。
 
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { parseJsonStrict } from './json-text.mjs';
 import { readRules, checkRules, rulesReport, ruleTable } from './rules.mjs';
 import { validateDimensions } from '../validate/dimensions-validate.mjs';
@@ -165,7 +166,17 @@ export function loadWorld(root, opts = {}) {
   return {
     ...report, ok, errors: [...report.errors, ...tail.errors, ...syntax, ...owners.errors, ...deps.errors], text: tail.text + report.text + syntaxText + owners.text + depsText,
     rules: read.rules, owners: owners.merged,
+    // 世界侧原语目录（world/ontology/primitives.json）的解析结果；没有该文件为 undefined。装配文件经 mountKernel 取得后交规则层核对（checkPrimitiveCatalog）。
+    primitives: primitivesDoc,
   };
+}
+
+/**
+ * 仓库根：本文件在 `<根>/server-plugin/kernel/load/world.mjs`，由自己的位置推出（装配文件不碰 import.meta.url、node:url，卷二 :996 扫描规则）。
+ * @returns {string}
+ */
+export function repoRoot() {
+  return dirname(dirname(dirname(dirname(fileURLToPath(import.meta.url)))));
 }
 
 // 写者核对函数返回的错误行是 "<登记码> <所在> <说明>" 文字；转成加载报告的统一行（码取首段，其余作 got），按所属表归组。

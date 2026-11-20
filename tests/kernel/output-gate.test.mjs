@@ -18,6 +18,7 @@ import { labelText, renderTpl } from '../../server-plugin/output-gate/templates.
 import { createEnvelopeExit } from '../../server-plugin/output-gate/envelope-exit.mjs';
 import { createRedactor } from '../../server-plugin/output-gate/redact.mjs';
 import { createReplyComposer } from '../../server-plugin/output-gate/reply-composer.mjs';
+import { displayLangs } from '../../server-plugin/kernel/handles/display-lang.mjs';
 import { mountOutput } from '../../server-plugin/output-gate/mount.mjs';
 import * as ENUMS from '../../server-plugin/output-gate/enums.mjs';
 import { brand } from '../../server-plugin/textcore/brand.mjs';
@@ -616,12 +617,29 @@ test('createReplyComposer：缺 envelopeExit 或 redact 即失败（没有显示
 });
 
 test('mountOutput（output-gate/mount.mjs）：向默认回应通道恰登记一次，之后默认通道的请求经它出响应；二次装配 E-WIRE-REPLY', async () => {
-  useBlocklist(['bad']);
+  // 装配边只交 createRouterCaps 的 caps 与 mountKernel 的 kernel：显示语言名单（locales.json，经 displayLangs）、屏蔽词表（含折叠表）、语言包、显示配置、替换记号、信封出口都由 mountOutput 自己组装。
+  const root = rootWith({
+    'world/i18n/locales.json': [{ id: LANG }],
+    'world/display/templates.json': TPL_ROWS,
+    [`world/i18n/labels.${LANG}.json`]: LABELS_FILE,
+    [`world/i18n/templates.${LANG}.json`]: TEXT_FILE,
+    [`world/i18n/blocklist.${LANG}.json`]: blocklistDoc(['bad']),
+    'world/i18n/casefold.json': JSON.parse(readFileSync(join(ROOT, 'world/i18n/casefold.json'), 'utf8')),
+  });
+  resetBlocklist();
   const sent = [];
-  const cap = { send(handle, body) { claimReplySend(handle); sent.push(JSON.parse(body)); } };
-  const deps = { envelopeExit: createEnvelopeExit(cap), redact: createRedactor(T('###'), LANG), display: DISPLAY, labels: LB.names, templates: LB.templates };
-  mountOutput(deps);
+  const replyCap = { send(handle, body) { claimReplySend(handle); sent.push(JSON.parse(body)); } };
+  const wiring = { caps: { replyCap }, kernel: { root } };
+  mountOutput(wiring);
   await serveRequest(newReplyHandle({}), (handle) => postReply(handle, { resultCode: 'ok', receipts: [{ actionId: 'act_buy', minutesAdvanced: 5, code: null }] }));
   assert.deepEqual(sent[0].envelopes.map((e) => e.text), ['<B:5>']);
-  assert.throws(() => mountOutput(deps), codeIs('E-WIRE-REPLY'));
+  // 二次装配：屏蔽词表重复登记本身就拒（E-I18N-BLOCKLIST）；清掉词表后，回应通道的"恰一个订阅者"仍拒（E-WIRE-REPLY）。
+  assert.throws(() => mountOutput(wiring), codeIs('E-I18N-BLOCKLIST'));
+  resetBlocklist();
+  assert.throws(() => mountOutput(wiring), codeIs('E-WIRE-REPLY'));
+  // 显示语言名单缺失或空、id 不合格都拒，不静默给缺省语言。
+  const none = testTempRoot('outgate-nolocales-');
+  assert.throws(() => displayLangs(none), codeIs('E-I18N-LOCALE'));
+  for (const bad of [[], {}, [{ id: 'Zh' }], [{}], [{ id: 'zz' }, { id: 'zz' }]]) assert.throws(() => displayLangs(rootWith({ 'world/i18n/locales.json': bad })), codeIs('E-I18N-LOCALE'));
+  assert.deepEqual(displayLangs(rootWith({ 'world/i18n/locales.json': [{ id: 'aa' }, { id: 'bb' }] })), ['aa', 'bb']);
 });

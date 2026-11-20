@@ -19,12 +19,13 @@ import { statePathSegments, isHex64 } from './handles/keys.mjs';
 import { KernelError, codeOf } from './errors.mjs';
 import { clone } from './clone.mjs';
 import { markersOf } from './validate/types.mjs';
-import { GRAMMAR_TOKENS } from './handles/markers.mjs';
+import { GRAMMAR_TOKENS, T } from './handles/markers.mjs';
+import { postReply } from './transport/reply-channel.mjs';
 
 // 本文件内部的固定记号：空字串、分片覆盖判定的三种结果（R27-4.6 覆盖核对的返回值）。
 const SEG = Object.freeze({ empty: '' });
 const COVER = Object.freeze({ partial: 'partial', full: 'full' });
-import { readManifestDigests, checkManifest, MANIFEST_STATE } from './load/save.mjs';
+import { readManifestDigests, checkManifest, MANIFEST_STATE, importNotReady } from './load/save.mjs';
 
 // ---------- 存档布局的名字（S27-7：只在本文件与 kernel/load/save.mjs 出现） ----------
 
@@ -563,4 +564,23 @@ function reclaim(dir, currentDigests) {
   for (const d of readManifestDigests(join(dir, LAYOUT_NAMES.previous))) keep.add(d + LAYOUT_NAMES.shardExt);
   const sdir = join(dir, LAYOUT_NAMES.shardsDir);
   for (const name of readdirSync(sdir)) if (!keep.has(name)) unlinkSync(join(sdir, name));
+}
+
+// ---------- 路由挂接（卷二 §2.9 第 0 条"存档四路"第 4、5 条、通路第 1、2c、2d 环；体检 K6-84 装配一侧） ----------
+// 导出与导入两条路由的入口由 mountSaveRoutes 向 RequestCap 登记（第 1 环）。每条返回路径恰好调一次 postReply（拒收也是一次回应，第 2c、2d 环）。
+// 入口的真实流程（导出写出存档字节经 ReplyCap.send、导入核长度与槽位与规则指纹后写盘，卷二 :967、:968）随 6-20；
+// 在那之前两条路由一律回 `rejected` 加 E-ACT-WRITER-NOT-READY（与块 5 写者未就绪同一做法），不写盘、不改 state，不假装成功。
+// 导出入口在本文件（卷二 :961 第 1 环：`save_export` 路由入口是 kernel/save.mjs）；导入入口在 kernel/load/save.mjs（`save_import` 路由入口，:961、:965 第 2d 环、:979 第 5 条）。
+async function exportNotReady(body, handle) {
+  postReply(handle, { resultCode: T.code_enum.reply_result.rejected, rejectCode: 'E-ACT-WRITER-NOT-READY' });
+}
+
+/**
+ * kernelApi `mountSaveRoutes(caps)`（只对 index.mjs 开放；卷二 :974 清单第六个，挂 `save_export` 与 `save_import` 两条路由）。
+ * @param {{requestCap: {register: (route: string, entry: (body: unknown, handle: object) => unknown) => void}}} caps createRouterCaps 的返回值
+ * @returns {void}
+ */
+export function mountSaveRoutes(caps) {
+  caps.requestCap.register(T.code_enum.wire_route.save_export, exportNotReady);
+  caps.requestCap.register(T.code_enum.wire_route.save_import, importNotReady);
 }

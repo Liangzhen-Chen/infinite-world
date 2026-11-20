@@ -8,6 +8,7 @@ import { brand } from '../textcore/brand.mjs';
 import { nfc, mapCodePoints } from '../textcore/ops.mjs';
 import { installBlocklist } from './matcher.mjs';
 import { fail } from './fail.mjs';
+import { codepointTables } from '../kernel/load/codepoint-tables.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const BLOCKLIST_VERSION = 1;
@@ -45,4 +46,14 @@ export function loadBlocklist(root, lang, casefold) {
   }
   installBlocklist(lang, entries, casefold);
   return entries.length;
+}
+
+/**
+ * 装配用：折叠表经 kernel 的 codepointTables 读（world/i18n/casefold.json），再加载并登记该语言的屏蔽词表。
+ * 装配边（output-gate/mount.mjs）只有语言代号与仓库根，折叠表的读取归 gate 组（codepointTables 的 callers 含 gate）。
+ * @param {string} root 仓库根 @param {string} lang 显示语言代号
+ * @returns {number} 登记的词条数
+ */
+export function loadDisplayBlocklist(root, lang) {
+  return loadBlocklist(root, lang, codepointTables(root).casefold);
 }

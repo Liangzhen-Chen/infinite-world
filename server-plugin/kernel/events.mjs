@@ -22,6 +22,7 @@ import { sha256Text, appendLogEntry } from './save.mjs';
 import { currentTransaction, registerLogUndo } from './transaction.mjs';
 import { report } from './report.mjs';
 import { KernelError } from './errors.mjs';
+import { dispatchEvent } from './subscribers.mjs';
 
 // 本文件比较用到的字串与记号（S13 ④：不写裸字串比较；与 load/state-owners.mjs 的常量写法同法）。
 const S = Object.freeze({
@@ -522,6 +523,8 @@ export function emit(engine, state, event, idParts) {
   deepFreeze(stored);
   // 估值缺口按 R24-2.3 末句记下，不让整条事件失败。
   for (const gap of gaps) report('W-DIM-GAP', { entity: full.actor, side: gap.side, field: gap.field });
+  // 订阅者在事件落定的这一刻被调（卷九 R9-1.12 前提失效通知；卷二十 §4.1.3 第 5 条到期事件），与事件同一笔事务。
+  dispatchEvent(engine, state, stored);
   return stored;
 }
 

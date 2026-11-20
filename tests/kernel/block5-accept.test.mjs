@@ -5,7 +5,7 @@
 // - I16′ 事件主写（方案 :370；卷九 R9-2.3 :663）内核写者半边：提交的终止恰一条终止事件、每关一条边恰一条持有变化事件；被拒的事务不留事件、状态不动。
 //   原语层"一次事务恰一条原语事件"与"快照加日志重建"两半不在本文件：前者等 emit 适配器（李白 11-18 22:10 五.2），后者等 det_save_load 模板（卷十二 R12-6.7）。
 // - 复生窗口期满（卷二 §2.6 :530；卷二十 §4.1.3 第 5 条 :506）：窗口项经调度器 due 段发到，交 expireReviveWindow 删 hold 记录、标记不动。
-//   deliver 在这里由测试组装（到期事件的订阅分发归块 6 装配卡），本条在验收记录里记"部分"。
+//   6-19 起到期事件由调度器 due 段自己发（不再注入 deliver），内核订阅者（kernel/mount.mjs）接 expireReviveWindow，本条由"部分"转为接通。
 // 输入：卷十二 R12-5.6 :806 要求用 §2.8 登记场景加性质测试；场景登记表（scenario）尚未建，本文件在测试里造前提（虚构可终止人物表，同
 // tests/kernel/terminate.test.mjs），对表里每个可终止实体逐个断言同一组性质，不写某个实例应得多少。只跑不推进世界存档的小检查。
 import { test } from 'node:test';
@@ -24,7 +24,9 @@ import { useReportSink } from '../../server-plugin/kernel/report.mjs';
 import { openHolding, installHoldingEngine } from '../../server-plugin/kernel/holdings.mjs';
 import { openAccount } from '../../server-plugin/kernel/ledger.mjs';
 import { advance, dueSource } from '../../server-plugin/kernel/scheduler.mjs';
-import { terminate, installTermination, resetTermination, expireReviveWindow, terminationResidue } from '../../server-plugin/kernel/terminate.mjs';
+import { terminate, installTermination, resetTermination, terminationResidue } from '../../server-plugin/kernel/terminate.mjs';
+import { installKernelSubscribers } from '../../server-plugin/kernel/mount.mjs';
+import { resetSubscribers } from '../../server-plugin/kernel/subscribers.mjs';
 import { OPTIONS } from './fixture.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -171,11 +173,13 @@ test('规则目录未登记去留表的世界（加载器"登记了才核"）：
   }
 });
 
-test('复生窗口期满经调度器 due 段发到（deliver 由测试组装，订阅分发挂块 6）：期满前 hold 记录留着，期满那一刻删，终止标记不动', () => {
+test('复生窗口期满经调度器 due 段发到（6-19 起走到期订阅分发：调度器 due 段自己写 verb_due_elapsed、内核订阅者交 expireReviveWindow）：期满前 hold 记录留着，期满那一刻删，终止标记不动', () => {
   const state = fresh();
+  resetSubscribers();
+  installKernelSubscribers();
   assert.deepEqual(run(state, (s) => terminate(ENGINE, s, 'npc_s', CAUSE, null)), { ok: true });
   assert.equal(state.testHold.npc_s, 1);
-  const source = dueSource(ENGINE, { layerRankOf: () => 0, deliver: (st, item) => expireReviveWindow(ENGINE, st, item) });
+  const source = dueSource(ENGINE, { layerRankOf: () => 0 });
   // 窗口项到期时刻 = (终止日 + 窗口日数) 日的起点（卷二 :530）。
   const dueMinute = (DAY + WINDOW_DAYS) * MPD;
   assert.deepEqual(advance(ENGINE, state, dueMinute - 1 - state.clock.minute, [source]), { ok: true, minute: dueMinute - 1 });
@@ -184,5 +188,10 @@ test('复生窗口期满经调度器 due 段发到（deliver 由测试组装，�
   assert.equal(state.testHold.npc_s, undefined);
   assert.equal(state.testHold.npc_h, 1);
   assert.deepEqual(state.terminated.npc_s, { day: DAY, cause: CAUSE, mode: 'inherit' });
+  // 到期事件恰一条，载荷是到期项的种类与拥有者（卷二十 §5.1 :1074）。
+  const dueEvents = book.entries.filter((e) => e.verb === 'verb_due_elapsed');
+  assert.equal(dueEvents.length, 1);
+  assert.deepEqual([dueEvents[0].payload.kind, dueEvents[0].payload.owner, dueEvents[0].minute], ['due_revive_window', 'npc_s', dueMinute]);
+  resetSubscribers();
   resetTermination();
 });

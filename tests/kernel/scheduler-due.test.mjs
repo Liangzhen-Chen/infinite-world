@@ -18,19 +18,28 @@ import {
 } from '../../server-plugin/kernel/scheduler.mjs';
 import { registerAdvanceHook, registerAdvancePlan, advanceHook, resetAdvanceRegistry } from '../../server-plugin/kernel/advance-registry.mjs';
 import { testTempRoot, writeUnderTempRoot } from '../accept/temp-root.mjs';
+import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
+import { createDigestCap } from '../../server-plugin/textcore/digest.mjs';
+import { installEventLog } from '../../server-plugin/kernel/events.mjs';
+import { registerSubscriber, resetSubscribers } from '../../server-plugin/kernel/subscribers.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const W = loadWorld(ROOT);
 assert.ok(W.ok, W.text);
-const ENGINE = { vocab: W.vocab, rules: W.rules, units: W.env.units };
+const ENGINE = { vocab: W.vocab, rules: W.rules, units: W.env.units, template: { seed: 'sched_due_seed' } };
+installDigestCap(createDigestCap());
 const codeIs = (code) => (e) => e.code === code;
 const RULE = { node: 'test_rule', file: 'rules/test-rule.mjs' };
 const tx = (state, body) => runTransaction(state, RULE, body);
 const quiet = (fn) => { const got = []; const prev = useReportSink((r) => got.push(r)); try { return fn(got); } finally { useReportSink(prev); } };
 
-// 到期项来源：deliver 记下（刻、kind、owner、ref）；layerRank 一律 0（推进计划的层序归块 6）。
+// 到期项来源：调度器 due 段自己发 verb_due_elapsed（6-19 起不再注入 deliver）；订阅者记下（刻、kind、owner）；layerRank 一律 0（推进计划的层序归块 6）。
+// 事件载荷只有 {kind, owner}（卷二十 §5.1 :1074），到期项的 ref 不进事件，所以记录里没有 ref。
 function dues(log, extra = () => {}) {
-  return dueSource(ENGINE, { layerRankOf: () => 0, deliver: (st, item) => { log.push([st.clock.minute, item.kind, item.owner, item.ref]); extra(st, item); } });
+  resetSubscribers();
+  installEventLog({ entries: [] });
+  registerSubscriber('verb_due_elapsed', 'rules/test-due.mjs', (_e, st, ev) => { log.push([st.clock.minute, ev.payload.kind, ev.payload.owner]); extra(st, ev.payload); });
+  return dueSource(ENGINE, { layerRankOf: () => 0 });
 }
 
 // ---------- struct:dueItem 与 schedule ----------
@@ -103,7 +112,7 @@ test('schedule 被拒即整笔回滚：同一 (owner, kind, ref) 重复 E-DUE-DU
 
 test('到期堆：先按 dueMinute，同刻按 (due_kind.rank, layerRank, owner, ref, registeredMinute)；登记先后不影响；到期即出堆', () => {
   const plan = [['npc_b', 'due_recurrence', 10, 'ref_1'], ['npc_a', 'due_recurrence', 10, 'ref_2'], ['npc_z', 'due_revive_window', 10, 'ref_9'], ['npc_a', 'due_revive_window', 5, 'ref_1']];
-  const want = [[105, 'due_revive_window', 'npc_a', 'ref_1'], [110, 'due_revive_window', 'npc_z', 'ref_9'], [110, 'due_recurrence', 'npc_a', 'ref_2'], [110, 'due_recurrence', 'npc_b', 'ref_1']];
+  const want = [[105, 'due_revive_window', 'npc_a'], [110, 'due_revive_window', 'npc_z'], [110, 'due_recurrence', 'npc_a'], [110, 'due_recurrence', 'npc_b']];
   for (const order of [plan, [...plan].reverse()]) {
     const state = { clock: { minute: 100, seq: 0 } };
     assert.deepEqual(tx(state, () => { for (const p of order) schedule(...p); }), { ok: true });
@@ -121,10 +130,10 @@ test('到期堆：推进到目标前未到期的留在堆里；分两次推进�
   const log = [];
   const src = dues(log);
   assert.deepEqual(advance(ENGINE, state, 10, [src]), { ok: true, minute: 10 });
-  assert.deepEqual(log, [[3, 'due_recurrence', 'npc_a', 'ref_1']]);
+  assert.deepEqual(log, [[3, 'due_recurrence', 'npc_a']]);
   assert.deepEqual(Object.keys(state.due), ['due_1']);
   assert.deepEqual(advance(ENGINE, state, 20, [src]), { ok: true, minute: 30 });
-  assert.deepEqual(log, [[3, 'due_recurrence', 'npc_a', 'ref_1'], [30, 'due_recurrence', 'npc_a', 'ref_2']]);
+  assert.deepEqual(log, [[3, 'due_recurrence', 'npc_a'], [30, 'due_recurrence', 'npc_a']]);
 });
 
 // ---------- cancel 与墓碑 ----------
@@ -141,7 +150,7 @@ test('cancel 只删状态行，堆里旧项成墓碑、弹出时丢弃；取消�
   assert.deepEqual(tx(state, () => { again = schedule('npc_a', 'due_recurrence', 8, 'ref_1'); }), { ok: true });
   assert.equal(again, 'due_2'); // 不复用已取消的 due_0
   assert.deepEqual(advance(ENGINE, state, 10, [src]), { ok: true, minute: 10 });
-  assert.deepEqual(log, [[5, 'due_recurrence', 'npc_b', 'ref_1'], [8, 'due_recurrence', 'npc_a', 'ref_1']]);
+  assert.deepEqual(log, [[5, 'due_recurrence', 'npc_b'], [8, 'due_recurrence', 'npc_a']]);
   assert.deepEqual(state.due, {});
 });
 
@@ -151,7 +160,7 @@ test('同刻先执行的到期项取消了后一项：后一项成墓碑，不�
   tx(state, () => { schedule('npc_a', 'due_revive_window', 4, 'ref_1'); schedule('npc_b', 'due_recurrence', 4, 'ref_1'); });
   const src = dues(log, (_st, item) => { if (item.owner === 'npc_a') cancel('due_1'); });
   assert.deepEqual(advance(ENGINE, state, 4, [src]), { ok: true, minute: 4 });
-  assert.deepEqual(log, [[4, 'due_revive_window', 'npc_a', 'ref_1']]);
+  assert.deepEqual(log, [[4, 'due_revive_window', 'npc_a']]);
   assert.deepEqual(state.due, {});
 });
 
@@ -177,7 +186,7 @@ test('整刻作废：到期项发事件时被拒，本刻已出堆的各项连�
     // 发 npc_b 的事件时写 pendingPost（写者是 kernel/transaction.mjs，到期项事务的文件是 kernel/scheduler.mjs）即被拒 E-VIEW-UNDECLARED-WRITE。
     const src = dues(log, (st, item) => { if (broken && item.owner === 'npc_b') writePath(st, 'pendingPost.evt_x', []); });
     assert.deepEqual(advance(ENGINE, state, 9, [src]), { ok: false, code: 'E-VIEW-UNDECLARED-WRITE', tick: 5, stage: 1 });
-    assert.deepEqual(log, [[2, 'due_recurrence', 'npc_a', 'ref_0'], [5, 'due_revive_window', 'npc_a', 'ref_1'], [5, 'due_recurrence', 'npc_b', 'ref_2']]);
+    assert.deepEqual(log, [[2, 'due_recurrence', 'npc_a'], [5, 'due_revive_window', 'npc_a'], [5, 'due_recurrence', 'npc_b']]);
     assert.deepEqual(state.clock, { minute: 2, seq: 0, dueNext: 3 });
     assert.deepEqual(Object.keys(state.due).sort(), ['due_1', 'due_2']);
     assert.deepEqual(reports.map((r) => [r.code, r.fields.tick, r.fields.stage]), [['E-VIEW-UNDECLARED-WRITE', 5, 1]]);
@@ -187,7 +196,7 @@ test('整刻作废：到期项发事件时被拒，本刻已出堆的各项连�
     broken = false;
     log.length = 0;
     assert.deepEqual(advance(ENGINE, state, 9, [src]), { ok: true, minute: 11 });
-    assert.deepEqual(log, [[5, 'due_revive_window', 'npc_a', 'ref_1'], [5, 'due_recurrence', 'npc_b', 'ref_2']]);
+    assert.deepEqual(log, [[5, 'due_revive_window', 'npc_a'], [5, 'due_recurrence', 'npc_b']]);
     assert.deepEqual(state.due, {});
   });
 });

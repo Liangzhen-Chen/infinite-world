@@ -2520,6 +2520,24 @@
      "visibilityAllowed": ["private", "public", "witnessed"],
      "worthSlots": {"destroyed": [], "moved": [], "stake": []}
     },
+    "verb_due_elapsed": {
+     "calendarBound": false,
+     "headSlot": null,
+     "kindFrom": null,
+     "kindOnly": false,
+     "parent": null,
+     "payloadShape": {
+      "kind": "ref vocab due_kind",
+      "owner": "EntityId"
+     },
+     "perceivable": false,
+     "scandal": false,
+     "senses": [],
+     "sigBase": 0,
+     "tallies": [],
+     "visibilityAllowed": ["private", "public", "witnessed"],
+     "worthSlots": {"destroyed": [], "moved": [], "stake": []}
+    },
     "verb_entity_revived": {
      "calendarBound": false,
      "headSlot": null,
