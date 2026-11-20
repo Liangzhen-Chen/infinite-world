@@ -666,5 +666,12 @@ export function checkItemStateTables(rules) {
   if (Array.isArray(rot.tempCurve) && rot.tempCurve.some((p) => p[1] < 0)) push('E-DIM-DOMAIN-CURVE', 'rot', RK.tempCurve, rot.tempCurve.map((p) => p[1]), 'tempCurve values >= 0');
   const wear = isObj(rules.wear) ? rules.wear : {};
   if (Array.isArray(wear.envCurve) && wear.envCurve.some((p) => p[1] < 0)) push('E-DIM-DOMAIN-CURVE', 'wear', RK.envCurve, wear.envCurve.map((p) => p[1]), 'envCurve values >= 0');
+  // D-6：levels 的 minDurability 严格递减；一个档只出现一次。最低档修正须把全部能力降到 0 的那半条待能力修正键登记（rules.wear.unbuilt 的 levelModifiers）。
+  if (Array.isArray(wear.levels)) {
+    const mins = wear.levels.map((l) => l.minDurability);
+    if (mins.some((x, i) => i > 0 && !(x < mins[i - 1]))) push('E-DIM-DOMAIN-RANGE', 'wear', 'levels', mins, 'minDurability strictly decreasing (D-6)');
+    const codes = wear.levels.map((l) => l.level);
+    if (new Set(codes).size !== codes.length) push('E-DIM-DUPLICATE-KEY', 'wear', 'levels', codes, 'one row per wear level');
+  }
   return errors;
 }

@@ -1,12 +1,36 @@
 {
  "rows": [
   {
+   "key": "baselineTier",
+   "value": "quality_normal",
+   "file": "server-plugin/kernel/valuation.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §4.5.1 :1070、Q-2、Q-6 :1090（baselineTier 所指那一档各列乘子为 0）；七档次序 :304（李白 11-19 20:3x ⑥）",
+   "basis": "暂定·待试玩标定。卷文没指明哪一档是基准；取七档正中的 quality_normal（rank 3，“常”），没有出处；试玩中改此处一处"
+  },
+  {
+   "key": "tiers",
+   "value": [
+    {"tier": "quality_awful", "key": "item.valueBase", "value": -0.5},
+    {"tier": "quality_poor", "key": "item.valueBase", "value": -0.25},
+    {"tier": "quality_normal", "key": "item.valueBase", "value": 0},
+    {"tier": "quality_good", "key": "item.valueBase", "value": 0.25},
+    {"tier": "quality_excellent", "key": "item.valueBase", "value": 0.5},
+    {"tier": "quality_masterwork", "key": "item.valueBase", "value": 0.75},
+    {"tier": "quality_legendary", "key": "item.valueBase", "value": 1}
+   ],
+   "file": "server-plugin/kernel/valuation.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §4.5.1 :1071（rules.quality.tiers[档][修正键] 每档对各修正键的乘子）、Q-1 :1086（品质 = 修正项来源，每个键一条 stage:mul 的 unpenalized 修正）、Q-6 :1090（沿档位序 better 为 higher 的列乘子单调不降；baselineTier 档各列为 0）；V-2 :1715（品质对价值的影响是 item.valueBase 上的修正项，品质表里有这一列）；统一暂定规则同 docs/审查/P-3-推导规则.md 第二节口径（统一规则算出、一处、标暂定）",
+   "basis": "暂定·待试玩标定。卷文没给乘子；统一规则：乘子 =（档的 rank − baselineTier 档的 rank）× 0.25，即劣 −0.5、次 −0.25、常 0、良 0.25、优 0.5、精 0.75、绝 1（单调不降、基准档为 0，并使价值不为负：最低档 1 + (−0.5) = 0.5）；0.25 取旧市场表 market.json qualityStep 1.25 的每档一成二五加价，那是旧数据、没有出处，仅作参照。本卡表里只有读者要用的一列 item.valueBase（读者 kernel/valuation.mjs）；别的列（wearPerUse、sharpness、beauty 等）由读它的卡按 Q-6 增列。表项写成 {tier, key, value} 行（一行一个档一个键）"
+  },
+  {
    "key": "unbuilt",
-   "value": ["baselineTier", "botchTier", "inputWeight", "marginWeight", "thresholds", "tiers", "toolBonus"],
+   "value": ["botchTier", "inputWeight", "marginWeight", "thresholds", "toolBonus"],
    "file": "server-plugin/kernel/dimension-writers.mjs",
    "grade": "designed",
-   "source": "卷三乙 §2.5 :343–:345；§4.5.1、Q-6；卷三乙 :303（七档：劣、次、常、良、优、精、绝）；卷二 :1475；卷十四 :961（quality_masterwork）",
-   "basis": "无出处不编：品质表各档乘子与 baselineTier、botchTier、thresholds、inputWeight、toolBonus、marginWeight 卷文没给值。七档代号与次序已定（李白 11-19 20:3x ⑥，卷三乙 :304）：quality_awful 1、quality_poor 2、quality_normal 3、quality_good 4、quality_excellent 5、quality_masterwork 6、quality_legendary 7，登在 _vocab.json 的 quality 族（rank 字段），tierCodes 不再是缺口；卷十四 :961 原写的 quality_fine 不在七档内，已改为 quality_masterwork（李白 11-19 21:0x ③，勘误 1119k13）"
+   "source": "卷三乙 §2.5 :343–:345；§4.5.1、Q-2；卷三乙 :303（七档：劣、次、常、良、优、精、绝）；卷二 :1475；卷十四 :961（quality_masterwork）",
+   "basis": "缺口：botchTier、thresholds、inputWeight、toolBonus、marginWeight 的读者是 craftOutcome（§4.8，后卡，品质滚档只在那里做），卷文没给值，值定后登记并接读者。七档代号与次序已定（李白 11-19 20:3x ⑥，卷三乙 :304）：quality_awful 1、quality_poor 2、quality_normal 3、quality_good 4、quality_excellent 5、quality_masterwork 6、quality_legendary 7，登在 _vocab.json 的 quality 族（rank 字段）。baselineTier、tiers 本卡（块 6 第 6-9 张，估值首个读品质，6-3 复核第 2 轮登记③）已给暂定值，见上两行；tiers 其余修正键列与 Q-6 的 better 方向校验（物品表头尚无 better 属性，卷三乙 §2.5 末【请卷二回填】）随各列的读者卡补"
   }
  ]
 }

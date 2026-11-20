@@ -26,6 +26,9 @@ import { installDelegations } from '../transaction.mjs';
 import { checkPlaceTable } from '../place.mjs';
 import { checkItemTables, checkItemClasses } from '../item.mjs';
 import { checkItemStateTables } from '../item-state.mjs';
+import { checkRecipeTable } from '../recipe.mjs';
+import { checkValuationTables } from '../valuation.mjs';
+import { checkPriceTables } from '../validate/price-tables.mjs';
 import { checkBodyTables } from '../validate/body-tables.mjs';
 
 export const LAYOUT = Object.freeze({
@@ -118,7 +121,7 @@ export function loadWorld(root, opts = {}) {
   // rules.clock 与 due_kind、reaction_priority 条目的加载校验（卷二十 §2.1；字段含义只在 kernel/scheduler.mjs 读）；
   // cadence/phaseOffset 按声明表的钩子逐个查（§2.1 :130，E-CLOCK-CADENCE，块 4-2），所以排在声明表合并之后。
   // 持有人主体标记维度的表头登记（卷二 §5.6 ledgerHolder；卷六 §2.1 holder），该 kind 的表载入了才查。
-  const domain = report.env ? [...checkLedgerTables(read.rules, report.env), ...checkSubjectFlagDims(report.tables),...checkClockTables(read.rules, report.env), ...checkHookCadence(read.rules, owners.merged.hooks), ...checkItemStateTables(read.rules), ...checkCalendarClimateTables(read.rules, report.env)] : [];
+  const domain = report.env ? [...checkLedgerTables(read.rules, report.env), ...checkSubjectFlagDims(report.tables),...checkClockTables(read.rules, report.env), ...checkHookCadence(read.rules, owners.merged.hooks), ...checkItemStateTables(read.rules), ...checkValuationTables(read.rules, { vocab: report.vocab }), ...checkCalendarClimateTables(read.rules, report.env)] : [];
   // 词表族 weather 各行的 weightRX 文本在这里经 compileRXInScope 编（卷二 §2.9 第 4 条，卷二十 §2.5 :276）；编不过的并入 domain 报 E-MOD-RX，编好的树校验全过后交 kernel/weather.mjs。
   const weatherRx = report.env ? prepareWeatherRx(report.env) : { trees: new Map(), errors: [] };
   domain.push(...weatherRx.errors);
@@ -136,6 +139,8 @@ export function loadWorld(root, opts = {}) {
     domain.push(...writerCheckRows('place', checkPlaceTable({ ...view, env: report.env }).errors));
     // 物品表的行校验与类别派生（卷三乙 I-5、I-6、I-8、I-9、C-1、C-8；块 6 第 6-2 张）；派生结果挂在 item 表的 itemDerived，itemView 只读它。
     domain.push(...writerCheckRows('item', checkItemTables({ ...view, env: report.env, ns: Array.isArray(decl.rxNamespaces) ? decl.rxNamespaces : [], maxDepth: need('rxMaxDepth') }).errors));
+    // 配方表的行校验（N-7、R-6 除数下界、R-7、Q-2、R-12 价值递归判环；块 6 第 6-9 张），读 itemDerived，故排在物品表校验之后；价格角色与用途行的跨字段校验（卷六 §2.2、§4.21）。
+    domain.push(...writerCheckRows('recipe', checkRecipeTable(view)), ...writerCheckRows('price', checkPriceTables(view)));
     // 卷四本卷表与词表族的跨字段校验（§2.1、§2.2 身体图不变量、§2.4 条目字段、§2.7 E-BODY-*、E-SPECIES-ATTR-KEYS），违者加载失败。
     domain.push(...checkBodyTables(view, { maxChainDepth: need('bodyPartChainMaxDepth'), unbuiltFields: report.env.unbuiltFields }));
   }

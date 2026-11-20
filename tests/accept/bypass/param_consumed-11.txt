@@ -1,5 +1,5 @@
-// 规则层代码经规则表读到登记的 unitValue（A12-4.5 必须不报）。
-export const pick = (t) => t.unitValue;
+// 规则层代码经规则表读到登记的 stackingTable（A12-4.5 必须不报）。示例表取只有一个运行期键的 modifiers（valuation 表自 6-9 起有多个键，不再适合当单键示例）。
+export const pick = (t) => t.stackingTable;
 
-// @file world/rules/tables/valuation.json
-{"rows": [{"key": "unitValue", "value": 1}]}
+// @file world/rules/tables/modifiers.json
+{"rows": [{"key": "stackingTable", "value": [1]}]}

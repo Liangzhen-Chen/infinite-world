@@ -31,6 +31,7 @@
  "server-plugin/kernel/load/world.mjs",
  "server-plugin/kernel/memo.mjs",
  "server-plugin/kernel/place.mjs",
+ "server-plugin/kernel/recipe.mjs",
  "server-plugin/kernel/report.mjs",
  "server-plugin/kernel/reverse-index.mjs",
  "server-plugin/kernel/rx.mjs",
@@ -46,8 +47,10 @@
  "server-plugin/kernel/validate/dimensions-validate.mjs",
  "server-plugin/kernel/validate/effects-validate.mjs",
  "server-plugin/kernel/validate/named-conditions.mjs",
+ "server-plugin/kernel/validate/price-tables.mjs",
  "server-plugin/kernel/validate/rows.mjs",
  "server-plugin/kernel/validate/types.mjs",
+ "server-plugin/kernel/valuation.mjs",
  "server-plugin/kernel/view-registry.mjs",
  "server-plugin/kernel/vocab.mjs",
  "server-plugin/kernel/weather.mjs"

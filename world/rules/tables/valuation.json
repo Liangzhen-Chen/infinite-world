@@ -6,6 +6,54 @@
    "source": "卷三乙 :1693 每“千克 × 价值倍率”折多少铜（铜即 resources.json coin_civic）；V-1 ② :1707；暂定，待试玩调；列入后续整体经济验收",
    "grade": "designed",
    "basis": "全书无值（卷三乙 :1693、:1707；M3b-27 :2059 的旧价标定现无可标件，李白 11-17）。参照卷三乙 §4.16.5 例 1 铁斧 :1730：锻料 1.2 kg × 铁类 valueMult 10 × 10 = 120 铜、柄料 0.7 kg × 木 1 × 10 = 7 铜、燃料与 240 分钟工价另计，整把约合一二日工钱（设一日工钱百铜量级；卷六 :789 工钱由供需定，无数可引）"
+  },
+  {
+   "key": "conditionCurve",
+   "value": [[0, 0], [1, 1]],
+   "file": "server-plugin/kernel/valuation.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §4.16.1 :1700、V-3 :1716（成色项 = lookup(conditionCurve, durability)）；§4.10 :1372（durability 1 为全新、0 为毁）",
+   "basis": "暂定·待试玩标定。卷文没给曲线点；取耐久（0 到 1）到成色项的恒等线（全新全价、毁坏无价、之间按比例），没有出处，是起点；卷三乙 :1737 例 1 的“durability 0.5 的实例 = 基础价值 × conditionCurve(0.5)”在此得 0.5；试玩中改此处一处"
+  },
+  {
+   "key": "freshnessCurve",
+   "value": [[0, 1], [1, 0]],
+   "file": "server-plugin/kernel/valuation.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §4.16.1 :1700、V-3 :1716（新鲜项 = lookup(freshnessCurve, spoilage)）；§4.12 P-1（spoilage 0 为新鲜、1 为坏透）；:1528（临期折价经 V-3 进入价格）",
+   "basis": "暂定·待试玩标定。卷文没给曲线点；取腐坏进度（0 到 1）到新鲜项的反向恒等线（新鲜全价、坏透无价、之间按比例），没有出处，是起点；试玩中改此处一处"
+  },
+  {
+   "key": "scarcityCurve",
+   "value": [[0, 3], [1, 1]],
+   "file": "server-plugin/kernel/valuation.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §4.16.1 :1700、V-3 :1716（scarcityFactor = lookup(scarcityCurve, scarcity)）、V-5 :1718（scarcity = supply ÷ (demandPerDay × scarcityHorizonDays)，覆盖天数比，越小越稀缺）；:1738 例 2（存量少处 scarcityFactor 大于 1，产地接近 1）",
+   "basis": "暂定·待试玩标定。卷文没给曲线点；取覆盖天数比 0（一件不剩）处因子 3，覆盖比 1（存量恰够 scarcityHorizonDays 日需求）及以上因子 1（曲线两端之外取端点值），之间线性；因子不低于 1（稀缺只加价）；3 是设定数，没有出处；试玩中改此处一处"
+  },
+  {
+   "key": "scarcityHorizonDays",
+   "value": 30,
+   "file": "server-plugin/kernel/valuation.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §4.16.1 :1700、V-5 :1718（分母 demandPerDay × scarcityHorizonDays）",
+   "basis": "暂定·待试玩标定。卷文没给数；取 30 日（存量够约一月日需求算“够用”），没有出处；试玩中改此处一处"
+  },
+  {
+   "key": "selectorRepresentative",
+   "value": "lowerMedian",
+   "file": "server-plugin/kernel/valuation.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §2.5 :352、V-1 :1714（代表值怎么取由 rules.valuation.selectorRepresentative 给出，首批为下中位数，平局按代号字典序）",
+   "basis": "卷文首批值：下中位数（n 个值升序，取第 ceil(n÷2) 个；n 为偶数取两个中间值里较小的；数值相等的成员按代号字典序排，取到哪个成员只由数据定，与实现无关）"
+  },
+  {
+   "key": "unbuilt",
+   "value": ["beautyValue"],
+   "file": "server-plugin/kernel/valuation.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §2.5 :352；V-3 :1716（装饰项 = beauty × beautyValue + 文物名气加成）；卷二十三 §4.1 beauty、§4.7 renownBonus",
+   "basis": "缺口：beautyValue 的读者是装饰项，而 beauty 维度（卷二十三 §4.1）与 renownBonus（卷二十三 §4.7）未建、物品表头没有 beauty 列，装饰项读不到，估值按未知记缺口（V-3 :1716），不写缺省；卷二十三建 beauty 时同卡给 beautyValue 的值与出处"
   }
  ]
 }

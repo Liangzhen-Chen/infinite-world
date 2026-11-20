@@ -98,6 +98,11 @@ export function loadItemWorld(f) {
         doc.rows = clone(f.items);
         if (typeof f.editItemDoc === 'function') f.editItemDoc(doc);
       }
+      // 块 6 第 6-9 张：配方行只用 f.recipes（真实 world 的配方表没有行，配方内容归内容卡）。
+      if (name === 'recipe.json') {
+        doc.rows = clone(f.recipes || {});
+        if (typeof f.editRecipeDoc === 'function') f.editRecipeDoc(doc);
+      }
       writeUnderTempRoot(tmp, `dims/${name}`, JSON.stringify(doc));
     }
     const reg = JSON.parse(readFileSync(join(ROOT, RULES, 'registry.json'), 'utf8'));
@@ -139,6 +144,11 @@ export function loadItemWorld(f) {
     };
     writeUnderTempRoot(tmp, 'rules/tables/rot.json', JSON.stringify(ruleRows('rot.json', withGiven('rot'))));
     writeUnderTempRoot(tmp, 'rules/tables/wear.json', JSON.stringify(ruleRows('wear.json', withGiven('wear'))));
+    // 块 6 第 6-9 张：估值读的三张规则表 valuation、crafting、quality 真实值照用；测试要换的键写在 f.rulesExtra[表代号]。
+    // f.editRules[表代号](rows) 可再改行（例：删一行并登回 unbuilt，造“规则表没给值”的前提）。
+    for (const code of ['valuation', 'crafting', 'quality']) {
+      writeUnderTempRoot(tmp, `rules/tables/${code}.json`, JSON.stringify(ruleRows(`${code}.json`, (rows) => { withGiven(code)(rows); if (f.editRules && typeof f.editRules[code] === 'function') f.editRules[code](rows); })));
+    }
     writeUnderTempRoot(tmp, 'rules/registry.json', JSON.stringify(reg));
     const r = loadWorld(ROOT, { dimensionsDir: relative(ROOT, join(tmp, 'dims')), rulesDir: join(tmp, 'rules') });
     const errs = r.errors.filter((e) => e.severity === 'error');

@@ -683,6 +683,23 @@ export function materialView(engine, state, id, options = {}) {
 }
 
 /**
+ * 按调用方给的材料组成（实例或批次对模板的 material 偏离，卷三乙 I-3、§2.3）聚合模板 templateId 的一个材料量（M-1，同 materialView 给物品模板 id 的算法，
+ * 差别只在份额表取自调用方）。materialList 形状同物品表 material 维度；形状不合或读到 error 级未知按未知带码交出。估值的材质项（V-3）用它读实例材料的 valueMult。
+ * @param {any} engine @param {any} state @param {string} templateId @param {unknown} materialList @param {string} dimension
+ */
+export function aggregateMaterialFor(engine, state, templateId, materialList, dimension) {
+  if (kindOf(templateId) !== KIND.item) throw new KernelError(CODE.refMissing, { entity: templateId }, `${JSON.stringify(templateId)} is not an item template`);
+  const shares = sharesOf(materialList);
+  if (shares === null) return UNKNOWN('material');
+  const t = tableOf(engine, KIND.item);
+  const ctx = { vocab: engine.vocab, rules: engine.rules, matDims: tableOf(engine, KIND.material).doc.dimensions, matter: matterFamilyOf(engine.vocab, t.doc.dimensions), formed: t.itemDerived instanceof Map && t.itemDerived.has(templateId) ? t.itemDerived.get(templateId).formed : null };
+  try { return aggregateDim(ctx, runtimeReader(engine, state), shares, dimension); } catch (e) {
+    if (!isObj(e) || e.code !== CODE.required) throw e;
+    return UNKNOWN(CODE.required);
+  }
+}
+
+/**
  * 库存槽（C-6）：类别条目 stockSlot 为真者各开一槽，按代号序。槽由数据定，加一个类别条目与一件物品即自动多一个槽、多一件入槽，不改本文件。
  * @param {any} engine @returns {readonly string[]}
  */

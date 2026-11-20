@@ -9,12 +9,26 @@
    "basis": "暂定·待试玩标定。卷文没给曲线点；取湿度（0 到 1 的份额）到劣化倍数的恒等线（干燥不劣化、饱和湿度一倍），没有出处，是起点；试玩中改此处一处"
   },
   {
+   "key": "levels",
+   "value": [
+    {"level": "wear_intact", "minDurability": 0.8, "modifiers": []},
+    {"level": "wear_worn", "minDurability": 0.6, "modifiers": []},
+    {"level": "wear_damaged", "minDurability": 0.4, "modifiers": []},
+    {"level": "wear_broken", "minDurability": 0.2, "modifiers": []},
+    {"level": "wear_ruined", "minDurability": 0, "modifiers": []}
+   ],
+   "file": "server-plugin/kernel/item-state.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §4.10.1 :1374（rules.wear.levels[档] = {minDurability, modifiers}，五档）、D-3、D-6 :1393（minDurability 严格递减）；wear 族五档代号与次序 :310（李白 11-19 20:3x ⑥）；统一暂定规则同 docs/审查/P-3-推导规则.md 第二节口径（统一规则算出、一处、标暂定）",
+   "basis": "暂定·待试玩标定。卷文没给阈值；统一规则：把耐久 [0,1] 均分五档，各档下界依次 0.8、0.6、0.4、0.2、0（wear_intact 到 wear_ruined，按 wear 族 rank 次序），严格递减、最低档下界 0（耐久 0 即毁，D-7）。modifiers 现为空表：卷文没给任何一档对能力、防护、保暖的修正项值，对应的修正键（能力等级、防护、保暖）也尚未登记，D-6 要求的“最低档修正把全部能力降到 0”因此还不能核，缺口登在 unbuilt 行的 levelModifiers；对估值的影响走 §4.16 的 conditionCurve，不在 levels 里重复（D-3）；试玩中改此处一处"
+  },
+  {
    "key": "unbuilt",
-   "value": ["faultCurve", "itemWear", "levels", "weatherCtx"],
+   "value": ["faultCurve", "itemWear", "levelModifiers", "weatherCtx"],
    "file": "server-plugin/kernel/item-state.mjs",
    "grade": "designed",
    "source": "卷三乙 §2.5 :343（rules.wear 键表）；§4.10 D-3、D-4、D-6、D-7；§4.9 故障",
-   "basis": "缺口：levels（劣化等级的阈值与修正；wear 族代号与次序已定，wear_intact 0、wear_worn 1、wear_damaged 2、wear_broken 3、wear_ruined 4，李白 11-19 20:3x ⑥、卷三乙 :310，登在 _vocab.json；各档阈值与修正卷文没给值）、faultCurve（§4.9 故障）、itemWear 钩子（D-4 穿用、D-7 越档与毁坏到期；穿戴持有种类行已登记为 hk_wearing，钩子本身仍待接）、weatherCtx（自然劣化要当日湿度，要天气上下文，世界种子流登记 rules.seedKeys 未建，读数按未知带缺口）"
+   "basis": "缺口：levelModifiers（levels 各档的修正项内容：能力、防护、保暖等修正键未登记，卷文没给值；levels 的阈值已给暂定值，见 levels 行）、faultCurve（§4.9 故障）、itemWear 钩子（D-4 穿用、D-7 越档与毁坏到期；穿戴持有种类行已登记为 hk_wearing，钩子本身仍待接）、weatherCtx（自然劣化要当日湿度，要天气上下文，世界种子流登记 rules.seedKeys 未建，读数按未知带缺口）"
   }
  ]
 }

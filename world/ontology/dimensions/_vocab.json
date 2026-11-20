@@ -51,6 +51,24 @@
    "prefix": "matter_"
   },
   "pool": {"closed": false, "entries": {}, "prefix": "pool_"},
+  "prole": {"closed": true, "entries": {
+   "prole_gate": {"basis": "卷六 §4.21.1 :1186 源汇资格（量在不在限额内，不估值）"},
+   "prole_term": {"basis": "卷六 §4.21.1 :1185 已签条款（合同 terms，签约时冻结）"},
+   "prole_trade": {"basis": "卷六 §4.21.1 :1183 成交（§4.2 的边际报价与双方底价、顶价）"},
+   "prole_worth": {"basis": "卷六 §4.21.1 :1184 估值（卷三乙 §4.16 的 valuation 按用途行调整）"}
+  }, "prefix": "prole_"},
+  "puse": {"closed": false, "entries": {}, "prefix": "puse_"},
+  "puse_basis": {"closed": true, "entries": {
+   "pbasis_cost": {"basis": "卷六 §4.21.1 :1191 basisRule：成本口径"},
+   "pbasis_market": {"basis": "卷六 §4.21.1 :1191 basisRule：市场口径"},
+   "pbasis_material": {"basis": "卷六 §4.21.1 :1191 basisRule：材料口径"},
+   "pbasis_rent": {"basis": "卷六 §4.21.1 :1191 basisRule：租金资本化口径"}
+  }, "prefix": "pbasis_"},
+  "puse_frame": {"closed": true, "entries": {
+   "pframe_holder": {"basis": "卷六 §4.21.1 :1191 frame：持有人的视角"},
+   "pframe_market": {"basis": "卷六 §4.21.1 :1191 frame：市场的视角"},
+   "pframe_observer": {"basis": "卷六 §4.21.1 :1191 frame：指定观察者的视角"}
+  }, "prefix": "pframe_"},
   "quality": {"closed": false, "entries": {
    "quality_awful": {"basis": "卷三乙 :304 劣；李白 11-19 20:3x ⑥", "rank": 1},
    "quality_excellent": {"basis": "卷三乙 :304 优；李白 11-19 20:3x ⑥", "rank": 5},

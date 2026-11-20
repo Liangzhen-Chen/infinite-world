@@ -33,7 +33,7 @@
     ]
   },
   "foodHabit": {
-    "source": "calibrate（可改；非历史估计）：惯常性 = 买得起的户占比（户现金 × dailyFoodShare ≥ 单价；收入无可读的有区分口径，现金暂代） × min(1,卖家数/habitualSellers)（稀缺已在手写 basePrice 里，不重复折价；marketSupply 在预算内调用会递归，故不用）；dailyFoodShare=一份食物单价占现金的日常上限（户内判定用买方本人钱包，聚落 p 在客观路径用各户成员钱包之和，主观视图只看本人钱包）（调研 F:/dnd-tmp/avail/report.md 口径：食物是贫户支出大头，单种单份取四分之一，初值）；luxuryBelow=惯常性低于此值即奢侈；richCashDays=本户现金超过本户 N 天日均收入才算宽裕，奢侈来源才参与购买；habitualSellers=算作广泛可得的卖家数；poorPurchaseLuxuryShareMax=审计：贫户预算期购买中奢侈来源花费占比上限",
+    "source": "calibrate（可改；非历史估计）：惯常性 = 买得起的户占比（户现金 × dailyFoodShare ≥ 单价；收入无可读的有区分口径，现金暂代） × min(1,卖家数/habitualSellers)（稀缺已在旧的手填价格字段里，不重复折价；marketSupply 在预算内调用会递归，故不用）；dailyFoodShare=一份食物单价占现金的日常上限（户内判定用买方本人钱包，聚落 p 在客观路径用各户成员钱包之和，主观视图只看本人钱包）（调研 F:/dnd-tmp/avail/report.md 口径：食物是贫户支出大头，单种单份取四分之一，初值）；luxuryBelow=惯常性低于此值即奢侈；richCashDays=本户现金超过本户 N 天日均收入才算宽裕，奢侈来源才参与购买；habitualSellers=算作广泛可得的卖家数；poorPurchaseLuxuryShareMax=审计：贫户预算期购买中奢侈来源花费占比上限",
     "dailyFoodShare": 0.25,
     "luxuryBelow": 0.1,
     "richCashDays": 5,

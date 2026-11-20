@@ -1,0 +1,28 @@
+{
+ "rows": [
+  {
+   "key": "laborRate",
+   "value": [{"minScore": 0, "copperPerMinute": 0.2}],
+   "file": "server-plugin/kernel/valuation.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §2.5 :341（rules.crafting 价值：laborRate、valueAdd）；V-1 :1714（minutes × rules.crafting.laborRate[技能阶]）；卷十四 SK-7 :750 技能阶 = sband 族中 minScore 不大于读数的最高一档",
+   "basis": "暂定·待试玩标定。卷文只写 laborRate[技能阶]，没给阶数与每阶的值，卷十四 sband 族条目也未给；本表按“阶下界 minScore 升序的列表，取 minScore 不大于定价配方 skillMin 的最后一阶的每分钟铜”读（技能阶的定义同 SK-7）。首批只设一阶：minScore 0、每分钟 0.2 铜，即 480 分钟（八小时工日）96 铜，对齐 valuation.unitValue 的 basis 里“一日工钱百铜量级”的设定；没有出处，各阶的值试玩中分阶改此处一处。卷文矛盾已报：卷十四 SK-7 :750 说技能阶不是任何规则的输入、卷六 §4.11 不按技能阶查工价，而卷三乙 V-1 :1714 用 laborRate[技能阶]；本卡按卷三乙 V-1 写，待李白裁"
+  },
+  {
+   "key": "valueAdd",
+   "value": 0.1,
+   "file": "server-plugin/kernel/valuation.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §2.5 :341；V-1 :1714（（Σ 消耗项参考价值 + 工价）×（1 + rules.crafting.valueAdd））",
+   "basis": "暂定·待试玩标定。卷文没给数；取 0.1（加工增值一成，覆盖设备折旧与经营风险），没有出处；V3-4.16-I 要求它非负，已在加载校验；试玩中改此处一处"
+  },
+  {
+   "key": "unbuilt",
+   "value": ["botchDurabilityCurve", "careMasteryCurve", "careQualityCurve", "careRange", "careTimeCurve", "difficultyTimeCurve", "edgeHardnessMin", "edgeSharpnessMin", "emphasisCostRelief", "failHard", "failureSalvageCurve", "forgeMalleabilityMin", "forgeMinMelt", "haftBendMin", "haftToughnessMin", "improvise", "masterySpan", "masteryTimeCurve", "materialDifficultyScale", "maxTimes", "minPortion", "residueReaction", "skillYieldCurve"],
+   "file": "server-plugin/kernel/valuation.mjs",
+   "grade": "designed",
+   "source": "卷三乙 §2.5 :341（rules.crafting.* 全部键）；§4.8.3 三方合力公式、R-6、R-10、R-13",
+   "basis": "缺口：本卡只前移估值要读的 laborRate、valueAdd（丙1 选 A，估值输入）；其余键的读者是 craftOutcome（§4.8，后卡），卷文没给首批值，值定后登记并接读者"
+  }
+ ]
+}

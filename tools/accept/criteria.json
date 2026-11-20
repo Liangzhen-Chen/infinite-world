@@ -312,10 +312,14 @@
     {
      "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 58
+    },
+    {
+     "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
+     "rev": 59
     }
    ],
-   "print": "ebbe4109d4e31b43b6f80e76242b876491e6f2f41ae1ae68fa3713fb1a4b5a75",
-   "rev": 58,
+   "print": "a5231fb26169d8318ce38230df5de472faf12fd19022947e88ea718c5d9d2d1a",
+   "rev": 59,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -789,10 +793,14 @@
     {
      "ref": "块 6 第 6-6 张最后一轮：tools/accept/detectors/data_shape.mjs（entityKey 整类收紧：状态表前缀行代号不是六类实体 id，规则表键值里不计；代码里写死仍计；李白 11-19 22:0x ④），并新增 instance_name-46（必须不报）、instance_name-47（必须报）；kernel/dimensions.mjs、terminate.mjs、dimension-writers.mjs（人物类别由物种行派生，删 created.*.classes 存储，⑤）等落在检测器 import 闭包内，指纹变动",
      "rev": 55
+    },
+    {
+     "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
+     "rev": 56
     }
    ],
-   "print": "a4d16500b2d059360c7f07287b85e0028401f3165ca84faf748879386623212f",
-   "rev": 55,
+   "print": "8af64051c1c545be8a44d2bfaec8dba0fc497eda9b4664c63fe6df45816adcc6",
+   "rev": 56,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -883,10 +891,14 @@
     {
      "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 19
+    },
+    {
+     "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
+     "rev": 20
     }
    ],
-   "print": "9c4329d86748ce2ce85420f64f451d2346aed4d260abeaabc4b9daeee9bf234e",
-   "rev": 19,
+   "print": "32244f4fc9416b7f12eef8ecca816c2cdcd08e1812c714d4a9491542b830d108",
+   "rev": 20,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -1059,10 +1071,14 @@
     {
      "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 20
+    },
+    {
+     "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
+     "rev": 21
     }
    ],
-   "print": "236976268bd7e12d6a1d46b680f1a5fe8ba77d3b6cdbab491176dc44e2ee03c7",
-   "rev": 20,
+   "print": "c34b34cf8b63b1ba2f01639d61042c12a4b3c51b0d925e9aaa471b49d330c759",
+   "rev": 21,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -1317,10 +1333,14 @@
     {
      "ref": "块 6 第 6-6 张最后一轮：tools/accept/detectors/data_shape.mjs（entityKey 整类收紧：状态表前缀行代号不是六类实体 id，规则表键值里不计；代码里写死仍计；李白 11-19 22:0x ④），并新增 instance_name-46（必须不报）、instance_name-47（必须报）；kernel/dimensions.mjs、terminate.mjs、dimension-writers.mjs（人物类别由物种行派生，删 created.*.classes 存储，⑤）等落在检测器 import 闭包内，指纹变动",
      "rev": 52
+    },
+    {
+     "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
+     "rev": 53
     }
    ],
-   "print": "a83ed58feef192eddea55a7476ed5c8e07c0c4e162e334186141664d0a3b8cb5",
-   "rev": 52,
+   "print": "1aabe4e409dbba1976df7ac6f3c0dbb163e5a8c9e7b85ea786cda9d6c53cb63c",
+   "rev": 53,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1416,10 +1436,14 @@
     {
      "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 20
+    },
+    {
+     "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
+     "rev": 21
     }
    ],
-   "print": "236976268bd7e12d6a1d46b680f1a5fe8ba77d3b6cdbab491176dc44e2ee03c7",
-   "rev": 20,
+   "print": "c34b34cf8b63b1ba2f01639d61042c12a4b3c51b0d925e9aaa471b49d330c759",
+   "rev": 21,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -1714,10 +1738,14 @@
     {
      "ref": "块 6 第 6-6 张最后一轮：tools/accept/detectors/data_shape.mjs（entityKey 整类收紧：状态表前缀行代号不是六类实体 id，规则表键值里不计；代码里写死仍计；李白 11-19 22:0x ④），并新增 instance_name-46（必须不报）、instance_name-47（必须报）；kernel/dimensions.mjs、terminate.mjs、dimension-writers.mjs（人物类别由物种行派生，删 created.*.classes 存储，⑤）等落在检测器 import 闭包内，指纹变动",
      "rev": 68
+    },
+    {
+     "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
+     "rev": 69
     }
    ],
-   "print": "4b0128eb41177204c4a146f5bdc1b15534d3ab3ae313bb86c49dab7214446545",
-   "rev": 68,
+   "print": "9babcfcc869af92bea0bbca37501f62ecceb72bd486304ae4d5ab0fe6817998c",
+   "rev": 69,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -2052,10 +2080,14 @@
     {
      "ref": "块 6 第 6-6 张最后一轮：tools/accept/detectors/data_shape.mjs（entityKey 整类收紧：状态表前缀行代号不是六类实体 id，规则表键值里不计；代码里写死仍计；李白 11-19 22:0x ④），并新增 instance_name-46（必须不报）、instance_name-47（必须报）；kernel/dimensions.mjs、terminate.mjs、dimension-writers.mjs（人物类别由物种行派生，删 created.*.classes 存储，⑤）等落在检测器 import 闭包内，指纹变动",
      "rev": 53
+    },
+    {
+     "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
+     "rev": 54
     }
    ],
-   "print": "a83ed58feef192eddea55a7476ed5c8e07c0c4e162e334186141664d0a3b8cb5",
-   "rev": 53,
+   "print": "1aabe4e409dbba1976df7ac6f3c0dbb163e5a8c9e7b85ea786cda9d6c53cb63c",
+   "rev": 54,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -2783,10 +2815,14 @@
     {
      "ref": "块 6 第 6-6 张最后一轮：tools/accept/detectors/data_shape.mjs（entityKey 整类收紧：状态表前缀行代号不是六类实体 id，规则表键值里不计；代码里写死仍计；李白 11-19 22:0x ④），并新增 instance_name-46（必须不报）、instance_name-47（必须报）；kernel/dimensions.mjs、terminate.mjs、dimension-writers.mjs（人物类别由物种行派生，删 created.*.classes 存储，⑤）等落在检测器 import 闭包内，指纹变动",
      "rev": 53
+    },
+    {
+     "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
+     "rev": 54
     }
    ],
-   "print": "a83ed58feef192eddea55a7476ed5c8e07c0c4e162e334186141664d0a3b8cb5",
-   "rev": 53,
+   "print": "1aabe4e409dbba1976df7ac6f3c0dbb163e5a8c9e7b85ea786cda9d6c53cb63c",
+   "rev": 54,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -2989,10 +3025,14 @@
     {
      "ref": "块 6 第 6-6 张最后一轮：tools/accept/detectors/data_shape.mjs（entityKey 整类收紧：状态表前缀行代号不是六类实体 id，规则表键值里不计；代码里写死仍计；李白 11-19 22:0x ④），并新增 instance_name-46（必须不报）、instance_name-47（必须报）；kernel/dimensions.mjs、terminate.mjs、dimension-writers.mjs（人物类别由物种行派生，删 created.*.classes 存储，⑤）等落在检测器 import 闭包内，指纹变动",
      "rev": 47
+    },
+    {
+     "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
+     "rev": 48
     }
    ],
-   "print": "37db335f97cf56a296b5024d811611ffd7c31672498d34ac7896a86aba3c3140",
-   "rev": 47,
+   "print": "c8d7ef4151e7c1e6cdb3738271b15c4a411b58aaebbb583346195d0c15a62eb9",
+   "rev": 48,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -3275,10 +3315,14 @@
     {
      "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 67
+    },
+    {
+     "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
+     "rev": 68
     }
    ],
-   "print": "e8710446467bbdfc321137026fb43a0bb6e8bd3ea4adae9a8288cccb0da11568",
-   "rev": 67,
+   "print": "45dc29750a55d8c87d9ab15f4a280a9a9284542738c733663fce39bff3425d60",
+   "rev": 68,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -3566,10 +3610,14 @@
     {
      "ref": "块 6 第 6-6 张最后一轮：tools/accept/detectors/data_shape.mjs（entityKey 整类收紧：状态表前缀行代号不是六类实体 id，规则表键值里不计；代码里写死仍计；李白 11-19 22:0x ④），并新增 instance_name-46（必须不报）、instance_name-47（必须报）；kernel/dimensions.mjs、terminate.mjs、dimension-writers.mjs（人物类别由物种行派生，删 created.*.classes 存储，⑤）等落在检测器 import 闭包内，指纹变动",
      "rev": 32
+    },
+    {
+     "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
+     "rev": 33
     }
    ],
-   "print": "bea95cdb47516f522e38492c95789040ca16dc4fdff7df393005347dca63c2be",
-   "rev": 32,
+   "print": "a5e3b5b45061a6a635f0d2b5a64b5ce26c14c2a0cbdfe7642add0359c393e445",
+   "rev": 33,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -3815,10 +3863,14 @@
     {
      "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 56
+    },
+    {
+     "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
+     "rev": 57
     }
    ],
-   "print": "ebbe4109d4e31b43b6f80e76242b876491e6f2f41ae1ae68fa3713fb1a4b5a75",
-   "rev": 56,
+   "print": "a5231fb26169d8318ce38230df5de472faf12fd19022947e88ea718c5d9d2d1a",
+   "rev": 57,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -3948,10 +4000,14 @@
     {
      "ref": "块 6 第 6-6 张最后一轮：tools/accept/detectors/data_shape.mjs（entityKey 整类收紧：状态表前缀行代号不是六类实体 id，规则表键值里不计；代码里写死仍计；李白 11-19 22:0x ④），并新增 instance_name-46（必须不报）、instance_name-47（必须报）；kernel/dimensions.mjs、terminate.mjs、dimension-writers.mjs（人物类别由物种行派生，删 created.*.classes 存储，⑤）等落在检测器 import 闭包内，指纹变动",
      "rev": 30
+    },
+    {
+     "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
+     "rev": 31
     }
    ],
-   "print": "cd35798f5db576bc745d0c272796faa1dd0dd07b6031577c4b3cf1d5ed2d3776",
-   "rev": 30,
+   "print": "042ea4047d92393ad4d55668cfbfcdf8b79256821187428463f6b1f637481c81",
+   "rev": 31,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -4043,10 +4099,14 @@
     {
      "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 19
+    },
+    {
+     "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
+     "rev": 20
     }
    ],
-   "print": "236976268bd7e12d6a1d46b680f1a5fe8ba77d3b6cdbab491176dc44e2ee03c7",
-   "rev": 19,
+   "print": "c34b34cf8b63b1ba2f01639d61042c12a4b3c51b0d925e9aaa471b49d330c759",
+   "rev": 20,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -4370,10 +4430,14 @@
     {
      "ref": "块 6 第 6-6 张最后一轮：tools/accept/detectors/data_shape.mjs（entityKey 整类收紧：状态表前缀行代号不是六类实体 id，规则表键值里不计；代码里写死仍计；李白 11-19 22:0x ④），并新增 instance_name-46（必须不报）、instance_name-47（必须报）；kernel/dimensions.mjs、terminate.mjs、dimension-writers.mjs（人物类别由物种行派生，删 created.*.classes 存储，⑤）等落在检测器 import 闭包内，指纹变动",
      "rev": 49
+    },
+    {
+     "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
+     "rev": 50
     }
    ],
-   "print": "37db335f97cf56a296b5024d811611ffd7c31672498d34ac7896a86aba3c3140",
-   "rev": 49,
+   "print": "c8d7ef4151e7c1e6cdb3738271b15c4a411b58aaebbb583346195d0c15a62eb9",
+   "rev": 50,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -4621,10 +4685,14 @@
     {
      "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 34
+    },
+    {
+     "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
+     "rev": 35
     }
    ],
-   "print": "09f740985fabf89a5f9554636287c23bfcc89513aa2e84556a7bc9afd2242958",
-   "rev": 34,
+   "print": "2d5c888014600331240a672e319c8a4f6926ac96853424fcab96c552949d9b9c",
+   "rev": 35,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

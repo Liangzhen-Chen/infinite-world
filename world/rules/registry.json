@@ -32,11 +32,33 @@
    "code": "valuation",
    "file": "tables/valuation.json",
    "structure": "keys",
-   "type": {"unitValue": "number"},
-   "domain": {"unitValue": [0, null]},
-   "volume": "卷三乙 §4.16 :346、:1693、V-1 :1707",
+   "type": {
+    "unitValue": "number",
+    "conditionCurve": {"type": "curve", "x": "fraction", "y": "dimensionless"},
+    "freshnessCurve": {"type": "curve", "x": "fraction", "y": "dimensionless"},
+    "scarcityCurve": {"type": "curve", "x": "dimensionless", "y": "dimensionless"},
+    "scarcityHorizonDays": {"type": "integer", "unit": "day"},
+    "selectorRepresentative": {"type": "string"},
+    "unbuilt": {"type": "set", "of": {"type": "string"}}
+   },
+   "domain": {"unitValue": [0, null], "conditionCurve": {}, "freshnessCurve": {}, "scarcityCurve": {}, "scarcityHorizonDays": [1, null], "selectorRepresentative": {}, "unbuilt": {}},
+   "volume": "卷三乙 §2.5 :352（rules.valuation 各键）、§4.16 :346、:1693、V-1 :1707、V-3 :1716、V-5 :1718；块 6 第 6-9 张：卷文没给曲线与视野日数，暂定值（出处与标注见 valuation.json 各行 basis，标“暂定·待试玩标定”）；selectorRepresentative 卷文首批值 lowerMedian；缺口 beautyValue（装饰项读者，卷二十三 beauty 未建）登在 unbuilt 行；读者是 kernel/valuation.mjs",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"unitValue": false}
+   "packOverridable": {"unitValue": false, "conditionCurve": false, "freshnessCurve": false, "scarcityCurve": false, "scarcityHorizonDays": false, "selectorRepresentative": false, "unbuilt": false}
+  },
+  {
+   "code": "crafting",
+   "file": "tables/crafting.json",
+   "structure": "keys",
+   "type": {
+    "laborRate": {"type": "list", "of": {"type": "struct", "required": ["minScore", "copperPerMinute"], "fields": {"minScore": {"type": "number", "unit": "score", "precision": 4}, "copperPerMinute": {"type": "number", "unit": "copper_per_minute", "precision": 4}}}},
+    "valueAdd": {"type": "number", "unit": "fraction", "precision": 4},
+    "unbuilt": {"type": "set", "of": {"type": "string"}}
+   },
+   "domain": {"laborRate": {}, "valueAdd": [0, null], "unbuilt": {}},
+   "volume": "卷三乙 §2.5 :341（rules.crafting.* 全部键）；§4.16 V-1 :1714（工价 laborRate、加成 valueAdd）；块 6 第 6-9 张只登估值要读的 laborRate、valueAdd（丙1 选 A，李白 11-19 12:4x），两键卷文没给值，暂定值（见 crafting.json basis，标“暂定·待试玩标定”）；其余键的读者是 craftOutcome（§4.8，后卡），缺口登在 crafting.json 的 unbuilt 行",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"laborRate": false, "valueAdd": false, "unbuilt": false}
   },
   {
    "code": "saveLayout",
@@ -406,12 +428,17 @@
    "structure": "keys",
    "type": {
     "envCurve": {"type": "curve", "x": "fraction", "y": "dimensionless"},
+    "levels": {"type": "list", "of": {"type": "struct", "required": ["level", "minDurability", "modifiers"], "fields": {
+     "level": {"type": "ref", "vocab": "wear"},
+     "minDurability": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4},
+     "modifiers": {"type": "list", "domain": {}, "of": {"type": "struct", "required": ["id", "target", "stage", "value", "unpenalized"], "fields": {"id": {"type": "string"}, "target": {"type": "string"}, "stage": {"type": "enum", "vocab": "stage"}, "value": {"type": "number", "unit": "dimensionless", "precision": 4}, "unpenalized": {"type": "boolean"}}}}
+    }}},
     "unbuilt": {"type": "set", "of": {"type": "string"}}
    },
-   "domain": {"envCurve": {}, "unbuilt": {}},
+   "domain": {"envCurve": {}, "levels": {}, "unbuilt": {}},
    "volume": "卷三乙 §2.5 :343（rules.wear 各键）；§4.10.1、§4.10.3 D-2；块 6 第 6-3 张只登有读者的键（envCurve 读者 kernel/item-state.mjs），卷文没给首批值，取暂定值（见 wear.json basis，标\"暂定·待试玩标定\"）；缺口登在 wear.json 的 unbuilt 行：levels（D-3、D-6，劣化等级的阈值与修正；wear 族代号与次序已登记，李白 11-19 20:3x ⑥）、faultCurve（卷三乙 §4.9 故障）、weatherCtx（湿度要天气上下文，世界种子流 rules.seedKeys 未建）；envCurve 的横轴是当日湿度（天气状态行 humidity，fraction）",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"envCurve": false, "unbuilt": false}
+   "packOverridable": {"envCurve": false, "levels": false, "unbuilt": false}
   },
   {
    "code": "containers",
@@ -427,11 +454,15 @@
    "code": "quality",
    "file": "tables/quality.json",
    "structure": "keys",
-   "type": {"unbuilt": {"type": "set", "of": {"type": "string"}}},
-   "domain": {"unbuilt": {}},
-   "volume": "卷三乙 §2.5 :343–:345、§4.5（rules.quality.*）。块 6 第 6-3 张只登缺口：品质表各档乘子、baselineTier、botchTier、thresholds、inputWeight、toolBonus、marginWeight 卷文没给值；品质档代号到档位的对应卷文没给（见 quality.json 与 _vocab.json quality 族）；读者是修正来源接入与 craftOutcome（后卡）",
+   "type": {
+    "baselineTier": {"type": "ref", "vocab": "quality"},
+    "tiers": {"type": "list", "of": {"type": "struct", "required": ["tier", "key", "value"], "fields": {"tier": {"type": "ref", "vocab": "quality"}, "key": {"type": "string"}, "value": {"type": "number", "unit": "dimensionless", "precision": 4}}}},
+    "unbuilt": {"type": "set", "of": {"type": "string"}}
+   },
+   "domain": {"baselineTier": {}, "tiers": {}, "unbuilt": {}},
+   "volume": "卷三乙 §2.5 :343–:345、§4.5（rules.quality.*）。块 6 第 6-9 张（估值首个读品质，6-3 复核第 2 轮登记③）登 baselineTier、tiers 的暂定值（见 quality.json 各行 basis，标“暂定·待试玩标定”）；缺口登在 quality.json 的 unbuilt 行：botchTier、thresholds、inputWeight、toolBonus、marginWeight（读者是 craftOutcome，后卡）；品质档代号与次序见 _vocab.json quality 族",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"unbuilt": false}
+   "packOverridable": {"baselineTier": false, "tiers": false, "unbuilt": false}
   }
  ]
 }

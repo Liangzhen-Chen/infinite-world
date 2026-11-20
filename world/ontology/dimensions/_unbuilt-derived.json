@@ -35,8 +35,8 @@
   {"table": "item", "dimension": "speedCapMpm", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷十七 R17-2.4 登记；载具规则未建"},
   {"table": "item", "dimension": "substitutePool", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷三乙 S-4：池条目成员条件推出，池族条目与折算原语未建"},
   {"table": "item", "dimension": "transportMode", "missing": ["data", "primitive"], "card": "pre_first_reader_card", "note": "卷三乙 §4.18：first(rules.items.transportRules)，规则表未建"},
-  {"table": "item", "dimension": "valueBase", "missing": ["primitive"], "card": "6-9", "note": "卷三乙 §4.16、卷六 §4.21：估值归 6-9"},
-  {"table": "item", "dimension": "valueDensity", "missing": ["primitive"], "card": "6-9", "note": "卷三乙 §4.18：货值密度，读 valueBase，6-9 后可算"},
+  {"table": "item", "dimension": "valueBase", "missing": ["primitive"], "card": "6-9", "note": "卷三乙 §4.16 V-1：先配方成本后材料价，沿配方图递归，RX 写不成；由 kernel/valuation.mjs 的 valueBaseOf 求（卷六 §4.21 A6-21.1：读 valueBase 的只有估值实现，itemView 不交这一维，按未知带码），6-9 已建"},
+  {"table": "item", "dimension": "valueDensity", "missing": ["primitive"], "card": "6-9", "note": "卷三乙 §4.18 Y-1：valueBase ÷ massKg，读 valueBase 只能经估值实现（A6-21.1），由 kernel/valuation.mjs 的 valueDensityOf 求，itemView 不交这一维；6-9 已建"},
   {"table": "item", "dimension": "vehicleLoadKg", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷十七 R17-2.2 登记；载具规则未建"},
   {"table": "item", "dimension": "wardTags", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷十六 §2.3：手写 tags 并上 deriveRX 成立的条目，set 型派生 RX 写不成"},
   {"table": "item", "dimension": "warmth", "missing": ["primitive"], "card": "pre_first_reader_card", "note": "卷三乙 §4.13 穿戴四项派生之一；穿戴规则未建"},
@@ -98,6 +98,7 @@
   {"name": "comp_arcane", "family": "component", "volume": "卷十五《法术与超自然》超自然组件类未建（§2.3 :174、:979 登记顶层条目 comp_arcane 及其材料维度）", "card": "pre_first_reader_card"}
  ],
  "columns": [
+  {"table": "recipe", "dimension": "skill", "missing": ["data"], "card": "pre_first_reader_card", "note": "卷三乙 §2.7 :365 always：引技能表（卷十四，skill 未建表，登在 kinds），行上无从填值；估值（V-1）只读 skillMin，不读 skill；craftOutcome（R-1）读技能值时按未知"},
   {"table": "species", "dimension": "habitats", "missing": ["data"], "card": "pre_first_reader_card", "note": "引 biome 族（未建族，卷五 §4.3）；条目未前移，行上无从填值"},
   {"table": "species", "dimension": "lairSites", "missing": ["data"], "card": "pre_first_reader_card", "note": "引 site 族（未建族，卷五 §4.6）"},
   {"table": "species", "dimension": "pharmSensitivity", "missing": ["data"], "card": "pre_first_reader_card", "note": "键为 pharm 族（未建族，卷二十一 §2.4）；展平后键集 = pharm 全族，族未前移即无从写全"},
@@ -158,16 +159,14 @@
   {"table": "person", "dimension": "origin", "missing": ["data"], "card": "pre_first_reader_card", "note": "丙9：卷四 §2.3 :226 always（出身类别，可显式空）；origin 族条目（placeFilter、grants）归 chargen 与卷十（§4.12），未前移，登 families；instantiatePerson 不写缺省，读到按未知"}
  ],
  "kinds": [
+  {"kind": "facility_type", "prefix": "facility_", "volume": "卷十九《建筑与设施》设施类型表（卷二 §2.1 第 8 行 facility_type）；配方 workstation 引用（卷三乙 §2.7 :365）", "card": "pre_first_reader_card"},
   {"kind": "knowledge", "prefix": "lore_", "volume": "卷二十二《知识信息与传播》知识表（卷二 §1.9 实体前缀 lore_，原 know_）；物品 teaches 引用", "card": "pre_first_reader_card"},
-  {"kind": "recipe", "prefix": "recipe_", "volume": "卷三乙《物态类别与物品》§2.7 配方表（卷二 §1.9 实体前缀 recipe_，卡归配方卡）；物品 selfMakeRecipe 引用", "card": "pre_first_reader_card"},
   {"kind": "skill", "prefix": "skill_", "volume": "卷十四《职业技能与学艺》技能表（实体前缀 skill_）；个体 skills 引用", "card": "pre_first_reader_card"},
   {"kind": "profession", "prefix": "profession_", "volume": "卷十四职业表（实体前缀 profession_）；个体 primaryProfession 引用", "card": "pre_first_reader_card"},
   {"kind": "faith", "prefix": "faith_", "volume": "卷七《信仰与文化》信仰表；个体 faith 引用", "card": "pre_first_reader_card"},
   {"kind": "culture", "prefix": "culture_", "volume": "卷七《信仰与文化》文化表（卷二 §1.9 实体前缀 culture_）；物种 sxCulture 引用", "card": "pre_first_reader_card"}
  ],
  "units": [
-  {"unit": "copper", "missing": ["constant"], "card": "6-9", "note": "卷三乙 §2.2 valueBase 单位；货币单位与换算归卷六《经济》货币表，6-9 估值卡建"},
-  {"unit": "copper_per_kg", "missing": ["constant"], "card": "6-9", "note": "卷三乙 §2.6、§4.18 valueDensity 单位；同 copper"},
   {"unit": "satiety", "missing": ["constant"], "card": "pre_first_reader_card", "note": "卷三乙 §2.6、§4.17.1 satietyTotal 单位；标定只在卷二 §1.4（1 satiety = 每千克干重总能 1 兆焦，与物种无关），与已登 satiety_per_kg_dry 的换算未写成登记行"},
   {"unit": "effect_param", "missing": ["constant"], "card": "pre_first_reader_card", "note": "效果调用 params 的值单位取该参数槽在效果族行登记的单位（卷二 §3.9、struct:effectCall），随槽变化，写不成一个登记单位；物种 specialAttacks 用"},
   {"unit": "satiety_per_day", "missing": ["constant"], "card": "pre_first_reader_card", "note": "卷四 §4.7 dailyFoodNeed 单位；与已登 satiety_per_kg_dry 的换算未写成登记行"},
@@ -178,6 +177,7 @@
  ],
  "families": [
   {"family": "arcschool", "prefix": "asch_", "volume": "卷十五《法术与超自然》§2.3 流派族；物品 arcSchool 引用", "card": "pre_first_reader_card"},
+  {"family": "fixture", "prefix": "fixture_", "volume": "卷十九《建筑与设施》固定装置族（卷三乙 §4.8.5 例 1 写作 fixture_forge）；配方 workstation 引用（卷三乙 §2.7 :365）", "card": "pre_first_reader_card"},
   {"family": "field", "prefix": "field_", "volume": "卷二十《时间日历天气与环境》§2.8 词表族 field（环境场，带字段）；物品 emits 引用", "card": "pre_first_reader_card"},
   {"family": "language", "prefix": "lang_", "volume": "卷二《维度表规范与统一入口》§1.9 语言族（世界里的人说的语言）；物品 language 引用", "card": "pre_first_reader_card"},
   {"family": "vform", "prefix": "vform_", "volume": "卷十七《交通与路途》§2.2 载具形制族；物品 vform 引用", "card": "pre_first_reader_card"},

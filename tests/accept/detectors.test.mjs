@@ -572,23 +572,25 @@ test('vol2.S10 补码：const_literal 类条目登 E-ACC-CONST-LITERAL，码在�
 
 // ---------- A12-4.5 参数必须有消费者（卷十二 §4.4.6 :784；李白 11-18 08:20 裁定②，勘误 1118k18） ----------
 
-const VALUATION = 'world/rules/tables/valuation.json';
+// 示例表取登记里只有一个运行期键的 modifiers（键 stackingTable）：测试只要“一张表、一个键”，不依赖某张真实规则表当前有几个键
+// （valuation 表在 6-9 登记了估值读的各键后不再是单键表，原先用它当示例的 15 处改用 modifiers，断言的口径一字未动）。
+const VALUATION = 'world/rules/tables/modifiers.json';
 const PC = { checks: ['paramConsumed'], code: 'E-ACC-PARAM-UNCONSUMED' };
 const pc = (map) => declCmp(ctxOf(map), PC, CLS.param_consumed);
 
 test('param_consumed：规则层读到即不算（成员访问、下标、同值字串），读别的键报 E-ACC-PARAM-UNCONSUMED', () => {
   const table = { [VALUATION]: '{"rows": []}' };
-  assert.deepEqual(pc({ ...table, 'server-plugin/rates.mjs': 'export const f = (t) => t.unitValue;' }), []);
-  assert.deepEqual(pc({ ...table, 'server-plugin/rates.mjs': "export const f = (t) => t['unitValue'];" }), []);
-  assert.deepEqual(pc({ ...table, 'server-plugin/rates.mjs': "const K = 'unitValue'; export const f = (t) => t[K];" }), []);
-  assert.deepEqual(pc({ ...table, 'server-plugin/kernel/rates.mjs': 'export const f = (t) => t.unitValue;' }), []);
+  assert.deepEqual(pc({ ...table, 'server-plugin/rates.mjs': 'export const f = (t) => t.stackingTable;' }), []);
+  assert.deepEqual(pc({ ...table, 'server-plugin/rates.mjs': "export const f = (t) => t['stackingTable'];" }), []);
+  assert.deepEqual(pc({ ...table, 'server-plugin/rates.mjs': "const K = 'stackingTable'; export const f = (t) => t[K];" }), []);
+  assert.deepEqual(pc({ ...table, 'server-plugin/kernel/rates.mjs': 'export const f = (t) => t.stackingTable;' }), []);
   const hit = pc({ ...table, 'server-plugin/rates.mjs': 'export const f = (t) => t.other;' });
-  assert.deepEqual(hit.map((h) => [h.file, h.nodeKind, h.symbolPath, h.code]), [['world/rules/registry.json', 'param', 'valuation.unitValue', 'E-ACC-PARAM-UNCONSUMED']]);
+  assert.deepEqual(hit.map((h) => [h.file, h.nodeKind, h.symbolPath, h.code]), [['world/rules/registry.json', 'param', 'modifiers.stackingTable', 'E-ACC-PARAM-UNCONSUMED']]);
 });
 
 test('param_consumed：加载器（kernel/load/）、校验器（kernel/validate/）与测试读全表都不算消费者', () => {
   const table = { [VALUATION]: '{"rows": []}' };
-  const src = 'export const f = (t) => t.unitValue;';
+  const src = 'export const f = (t) => t.stackingTable;';
   for (const file of ['server-plugin/kernel/load/x.mjs', 'server-plugin/kernel/validate/x.mjs', 'tests/kernel/x.mjs']) {
     assert.equal(pc({ ...table, [file]: src }).length, 1, file);
   }
@@ -607,7 +609,7 @@ test('param_consumed 按（表，键）认：同名键 stages 登在 life 与 ro
 
 test('param_consumed：范围经登记解析；被查内容里没有登记的键表、或内核组登记缺失报 E-ACC-ITEM-PARAM，不静默放过', () => {
   assert.deepEqual(pc({ 'server-plugin/rates.mjs': 'export const x = 1;' }).map((h) => [h.nodeKind, h.code]), [['param', 'E-ACC-ITEM-PARAM']]);
-  const ctx = ctxOf({ [VALUATION]: '{"rows": []}', 'server-plugin/rates.mjs': 'export const f = (t) => t.unitValue;' });
+  const ctx = ctxOf({ [VALUATION]: '{"rows": []}', 'server-plugin/rates.mjs': 'export const f = (t) => t.stackingTable;' });
   const noKernel = Object.fromEntries(Object.entries(ctx.decl).filter(([k]) => k !== 'kernel'));
   assert.deepEqual(declCmp({ ...ctx, decl: noKernel }, PC, CLS.param_consumed).map((h) => [h.nodeKind, h.code]), [['param', 'E-ACC-ITEM-PARAM']]);
 });
@@ -619,21 +621,21 @@ const UNBUILT = (entries) => JSON.stringify({ entries });
 
 test('param_consumed 数据侧：派生式引用 rules.<表>.<键> 即消费；加载期派生按具名 {table, key} 读到即消费', () => {
   const table = { [VALUATION]: '{"rows": []}' };
-  assert.deepEqual(pc({ ...table, [`${DIMS}/gadget.json`]: dimTable({ worth: { derived: 'mass * rules.valuation.unitValue' } }) }), []);
-  assert.deepEqual(pc({ ...table, [`${DIMS}/gadget.json`]: dimTable({ kinds: { ruleIndex: { table: 'valuation', key: 'unitValue' } } }) }), []);
+  assert.deepEqual(pc({ ...table, [`${DIMS}/gadget.json`]: dimTable({ worth: { derived: 'mass * rules.modifiers.stackingTable' } }) }), []);
+  assert.deepEqual(pc({ ...table, [`${DIMS}/gadget.json`]: dimTable({ kinds: { ruleIndex: { table: 'modifiers', key: 'stackingTable' } } }) }), []);
 });
 
 test('param_consumed 数据侧反例：只被未建派生引用的键仍报；表头别的字段提到、加载器遍历全表都不算；写错的键不当成消费', () => {
   const table = { [VALUATION]: '{"rows": []}' };
   const keysOf = (map) => pc(map).map((h) => h.symbolPath);
   // 只被未建登记里的派生式引用。
-  assert.deepEqual(keysOf({ ...table, [`${DIMS}/gadget.json`]: dimTable({ worth: { derived: 'mass * rules.valuation.unitValue' } }), [`${DIMS}/_unbuilt-derived.json`]: UNBUILT([{ table: 'gadget', dimension: 'worth' }]) }), ['valuation.unitValue']);
+  assert.deepEqual(keysOf({ ...table, [`${DIMS}/gadget.json`]: dimTable({ worth: { derived: 'mass * rules.modifiers.stackingTable' } }), [`${DIMS}/_unbuilt-derived.json`]: UNBUILT([{ table: 'gadget', dimension: 'worth' }]) }), ['modifiers.stackingTable']);
   // 表头非派生字段（来源说明）里写到、加载器整表遍历：都不算。
-  assert.deepEqual(keysOf({ ...table, [`${DIMS}/gadget.json`]: dimTable({ worth: { source: 'rules.valuation.unitValue', type: 'number' } }), 'server-plugin/kernel/load/x.mjs': 'export const f = (t) => Object.keys(t).map((k) => t[k]);' }), ['valuation.unitValue']);
+  assert.deepEqual(keysOf({ ...table, [`${DIMS}/gadget.json`]: dimTable({ worth: { source: 'rules.modifiers.stackingTable', type: 'number' } }), 'server-plugin/kernel/load/x.mjs': 'export const f = (t) => Object.keys(t).map((k) => t[k]);' }), ['modifiers.stackingTable']);
   // 写错键：对不上登记键，原键仍报（加载器另报 E-MOD-RX，见 tests/kernel/rx.test.mjs 规则表值用例）。
-  assert.deepEqual(keysOf({ ...table, [`${DIMS}/gadget.json`]: dimTable({ worth: { derived: 'mass * rules.valuation.unitValu' } }) }), ['valuation.unitValue']);
+  assert.deepEqual(keysOf({ ...table, [`${DIMS}/gadget.json`]: dimTable({ worth: { derived: 'mass * rules.modifiers.stackingTabl' } }) }), ['modifiers.stackingTable']);
   // 下划线开头的登记文件、子目录里的文件不当维度表。
-  assert.deepEqual(keysOf({ ...table, [`${DIMS}/_x.json`]: dimTable({ worth: { derived: 'rules.valuation.unitValue' } }), [`${DIMS}/sub/y.json`]: dimTable({ worth: { derived: 'rules.valuation.unitValue' } }) }), ['valuation.unitValue']);
+  assert.deepEqual(keysOf({ ...table, [`${DIMS}/_x.json`]: dimTable({ worth: { derived: 'rules.modifiers.stackingTable' } }), [`${DIMS}/sub/y.json`]: dimTable({ worth: { derived: 'rules.modifiers.stackingTable' } }) }), ['modifiers.stackingTable']);
 });
 
 test('param_consumed 真实仓库：如实报无运行期消费者的登记参数（B2-W2 起 det-math 常数已接上），有读者的键不计', () => {
@@ -643,12 +645,12 @@ test('param_consumed 真实仓库：如实报无运行期消费者的登记参�
   assert.ok(hits.every((h) => h.code === 'E-ACC-PARAM-UNCONSUMED'));
   const keys = hits.map((h) => h.symbolPath).sort();
   // B2-W2 起 det-math.mjs 的 BASE/SCALE/PERMILLE/BPS 经规则表 kernelConstants 读入（installFixedConstants），该四键已有消费者；
-  // extendsMaxDepth 只被加载器与校验器读到，按消费者口径不算；valuation.unitValue 只有测试读。
+  // extendsMaxDepth 只被加载器与校验器读到，按消费者口径不算；valuation 各键自 6-9 起有读者 kernel/valuation.mjs（估值），不再报。
   // rxMaxDepth 自 5-3 起被持有写者读（kernel/holdings.mjs 的 holdWhile 编译），已有人消费。
   // bodyPartChainMaxDepth（6-4，卷四 §2.2 :202"链深 ≤ 8"）与 extendsMaxDepth 同类：只被加载期校验器 kernel/validate/body-tables.mjs 读到，按消费者口径不算。
   // life.stages（6-4 登记列定义、值在 unbuilt）：6-6 起有读者 server-plugin/life.mjs（lifeFacts 读阶段表），不再报。
   assert.deepEqual(keys, [
-    'kernelConstants.bodyPartChainMaxDepth', 'kernelConstants.extendsMaxDepth', 'valuation.unitValue',
+    'kernelConstants.bodyPartChainMaxDepth', 'kernelConstants.extendsMaxDepth',
   ]);
   for (const k of ['kernelConstants.handleRadix', 'modifiers.stackingTable', 'economyLedger.budget', 'economyLedger.alert',
     'clock.cadence', 'clock.phaseOffset', 'clock.paceFactor', 'clock.contestDefault', 'clock.reactionDepthMax', 'clock.proposalMax', 'clock.drawSites',

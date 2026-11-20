@@ -260,6 +260,22 @@
    "si": 1
   },
   {
+   "calibrate": true,
+   "dimension": "value",
+   "id": "copper",
+   "si": 1
+  },
+  {
+   "dimension": "value_per_mass",
+   "id": "copper_per_kg",
+   "si": 1
+  },
+  {
+   "dimension": "value_per_time",
+   "id": "copper_per_minute",
+   "si": 0.016666666666666666
+  },
+  {
    "dimension": "rate",
    "id": "per_year",
    "siFromRule": {"key": "rules.astro.yearDays", "unit": "day", "invert": true}

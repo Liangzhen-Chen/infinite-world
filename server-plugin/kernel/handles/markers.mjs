@@ -45,6 +45,9 @@ export const CODE_ENUMS = Object.freeze({
   launchsrc: ['body', 'stored', 'charge'],
   // 卷三乙 §4.1.1 聚合口径代号 agg_mode：代码内封闭枚举、值不带前缀（规则表 rules.items.aggregation 的 mode 用它）。
   agg_mode: ['mean', 'sum', 'hmean', 'dmean', 'max', 'min', 'dominant', 'none'],
+  // 卷三乙 §4.7.1 :1176、术语表 :2178 需求块候选项的 per（qty 的口径：piece 件、kg 千克、pool 替代池单位）：代码内封闭枚举、值不带前缀。
+  // 枚举名卷文未给，自定 req_per（块 6 第 6-9 张；配方表 inputs 内联块用它）。
+  req_per: ['piece', 'kg', 'pool'],
 });
 
 // 不必写 domain 的类型（卷二 §1.2 表头；规则表登记的取值域同此写法，§4.1）。
