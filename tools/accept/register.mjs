@@ -7,7 +7,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { LAYOUT, REGISTRY, readRegistry, readDecl, groupModel, loadContext, classPrint, matchGlobs } from './read.mjs';
-import { ENUM, itemChecks, keySets, itemPrint } from './lib/item-form.mjs';
+import { ENUM, PARAM_KINDS, itemChecks, keySets, itemPrint } from './lib/item-form.mjs';
 
 // §2.2 :203 `impl` 的取值域：`tools/accept/` 或 `tests/` 下的文件。
 const IMPL_DIRS = ['tools/accept/', 'tests/'];
@@ -52,6 +52,20 @@ export function validate(root, regs) {
     if (!ENUM.polarity.includes(c.polarity)) err('E-ACC-ITEM-FORM', k, 'polarity');
     if (!c.fixture || !c.fixture.startsWith(LAYOUT.bypassDir + '/') || !existsSync(join(root, c.fixture))) err('E-ACC-ITEM-FORM', k, 'fixture');
     if (!c.origin || !Number.isInteger(c.addedAtRev)) err('E-ACC-ITEM-FORM', k, 'origin/addedAtRev');
+  }
+
+  // §2.8 确定性模板：代号唯一；compares 是非空的封闭枚举子集（不重复）；paramsSchema 是对象，每个参数名对应一种已登记的参数键类（R12-11.5 的键类）。
+  const dettpl = regs.dettpl || [];
+  uniq(dettpl, 'tplCode', 'E-ACC-ITEM-FORM');
+  const tpls = new Set(dettpl.map((t) => t.tplCode));
+  // 卷十二 §2.2 :194：detector 填 §2.3 登记的检测器或 §2.8 的模板；摘要比对条目（digest_compare）填了就必须是已登记的模板（静态条目另由 itemChecks 核检测器）。
+  for (const it of regs.items) if (it.method === 'digest_compare' && it.detector !== undefined && !tpls.has(it.detector)) err('E-ACC-ITEM-FORM', it.itemKey, `digest_compare item: detector ${String(it.detector)} is not a registered determinism template`);
+  for (const t of dettpl) {
+    const k = t.tplCode;
+    if (!Array.isArray(t.compares) || !t.compares.length || new Set(t.compares).size !== t.compares.length || t.compares.some((c) => !ENUM.dettplCompares.includes(c))) err('E-ACC-ITEM-FORM', k, 'compares must be a non-empty list of distinct values from the dettpl compares enum');
+    if (t.paramsSchema === null || typeof t.paramsSchema !== 'object' || Array.isArray(t.paramsSchema)) err('E-ACC-ITEM-FORM', k, 'paramsSchema must be an object');
+    else for (const [pk, kind] of Object.entries(t.paramsSchema)) if (PARAM_KINDS[pk] !== kind) err('E-ACC-ITEM-PARAM', k, `paramsSchema ${pk}: ${String(kind)} is not the registered key kind`);
+    if (!t.source) err('E-ACC-ITEM-FORM', k, 'source missing');
   }
 
   uniq(regs.criteria, 'scanClass', 'E-ACC-ITEM-FORM');

@@ -220,11 +220,11 @@ test('处理函数出错或返回不合形状：每个请求仍恰一个响应�
   resetMenuDispatch();
 });
 
-test('存档两条路由（save_export、save_import）：存档流程随 6-20，之前一律 rejected 加 E-ACT-WRITER-NOT-READY；恰一个响应，不写盘', async () => {
+test('存档两条路由（save_export、save_import）：没有存档环境（开局前）一律 save_unavailable，恰一个响应，不写盘（真实流程见 save-routes.test.mjs）', async () => {
   for (const path of ['/save_export', '/save_import']) {
     const { res, json } = await request(ROUTER, path, { slot: 0, bytes: '' });
     assert.equal(res.bodies.length, 1, path);
-    assert.deepEqual([json.result, json.rejects], ['rejected', ['E-ACT-WRITER-NOT-READY']], path);
+    assert.deepEqual([json.result, json.rejects], ['save_unavailable', []], path);
   }
 });
 

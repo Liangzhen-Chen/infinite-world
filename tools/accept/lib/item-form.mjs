@@ -15,6 +15,8 @@ export const ENUM = {
   gates: ['pre_commit', 'pre_test', 'pre_merge', 'phase_exit', 'seal', 'book_close'],
   runsOn: ['local_static', 'cloud_ref', 'player_platform'],
   polarity: ['must_fail', 'must_pass'],
+  // 确定性模板的"比什么"（卷十二 §2.8 末段：存档摘要、排除日志分区后的世界状态摘要、事件流逐字节、逐值比较）。
+  dettplCompares: ['save_digest', 'world_state_digest', 'event_stream', 'value_equal'],
 };
 // R12-11.4 形式与方法的相容关系。
 export const FORM_METHODS = {

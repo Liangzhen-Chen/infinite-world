@@ -13,7 +13,7 @@ import { useReportSink } from '../../server-plugin/kernel/report.mjs';
 import { writePath } from '../../server-plugin/kernel/storage.mjs';
 import {
   TICK_STAGE, PACE_CLASS, CONTEST_MODES, stageRank, dueKey, clockKey, reactionKey, sourceKey, compareKeys, dueKindRank, reactionPriorityRank,
-  minutesPerDay, clockView, schedule, cancel, advance, resolveContest, checkClockTables, createWallTimer,
+  minutesPerDay, clockView, schedule, cancel, advance, resolveContest, checkClockTables, createWallTimer, installTickEnd,
 } from '../../server-plugin/kernel/scheduler.mjs';
 import { testTempRoot, writeUnderTempRoot } from '../accept/temp-root.mjs';
 
@@ -128,6 +128,32 @@ test('advance：逐刻跳到下一个有项的刻再到目标；一刻内按段�
   assert.deepEqual(Object.keys(state.pendingPost).sort(), ['ev_0', 'ev_a', 'ev_b', 'ev_c']);
   assert.deepEqual(advance(ENGINE, state, 0, []), { ok: true, minute: 110 });
   assert.throws(() => advance(ENGINE, state, -1, []), codeIs('E-DIM-DOMAIN-RANGE'));
+});
+
+test('刻末挂接 installTickEnd（卷二十七 R27-4.5 快照与封段只在一刻全部处理完时做）：每个处理完的刻调一次、参数是 state、调用时时钟已在这一刻；整刻作废的不调；交 null 清掉', () => {
+  const state = { clock: { minute: 0, seq: 0 } };
+  const log = [];
+  const seen = [];
+  installTickEnd((st) => { assert.equal(st, state); seen.push(st.clock.minute); });
+  try {
+    // 目标 9，来源在 2、5 有项：处理的刻是 2、5、9（目标刻也是一刻），每刻末各调一次。
+    const ok = [
+      { minute: 2, stage: 'external', ev: 'ev_a', file: OK, log },
+      { minute: 5, stage: 'external', ev: 'ev_b', file: OK, log },
+    ];
+    assert.deepEqual(advance(ENGINE, state, 9, [source(ok)]), { ok: true, minute: 9 });
+    assert.deepEqual(seen, [2, 5, 9]);
+    // 刻 12 一项被拒：刻 10 处理完调一次；刻 12 整刻作废、不调。
+    const bad = [{ minute: 12, stage: 'external', ev: 'ev_bad', file: 'test/not-the-writer.mjs', log }];
+    const prev = useReportSink(() => {});
+    try {
+      assert.equal(advance(ENGINE, state, 5, [source([{ minute: 10, stage: 'external', ev: 'ev_c', file: OK, log }, ...bad])]).ok, false);
+    } finally { useReportSink(prev); }
+    assert.deepEqual(seen, [2, 5, 9, 10]);
+    installTickEnd(null);
+    assert.deepEqual(advance(ENGINE, state, 3, []), { ok: true, minute: 13 });
+    assert.deepEqual(seen, [2, 5, 9, 10]);
+  } finally { installTickEnd(null); }
 });
 
 test('advance 刻级回退点：一刻内任一项被拒即整刻作废——本刻已执行的写入与时钟跳动都撤销、之前各刻保留；报告带刻与段位次；重推照样从这一刻重做', () => {

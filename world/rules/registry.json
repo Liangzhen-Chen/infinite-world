@@ -4,11 +4,11 @@
    "code": "kernelConstants",
    "file": "tables/kernel-constants.json",
    "structure": "keys",
-   "type": {"BASE": "integer", "SCALE": "integer", "PERMILLE": "integer", "BPS": "integer", "extendsMaxDepth": "integer", "rxMaxDepth": "integer", "handleRadix": "integer", "diceKeyMaxQualifiers": "integer", "grammarMaxLength": "integer", "fixedLnWorkExponent": "integer", "fixedLnInputExponent": "integer", "fixedLnSeriesTerms": "integer", "LN2": "string", "thermalLagMaxNum": "integer", "thermalLagMaxDen": "integer", "bodyPartChainMaxDepth": "integer"},
-   "domain": {"BASE": [1, null], "SCALE": [1, null], "PERMILLE": [1, null], "BPS": [1, null], "extendsMaxDepth": [1, null], "rxMaxDepth": [1, null], "handleRadix": [2, 36], "diceKeyMaxQualifiers": [1, null], "grammarMaxLength": [1, null], "fixedLnWorkExponent": [1, null], "fixedLnInputExponent": [1, null], "fixedLnSeriesTerms": [1, null], "LN2": {}, "thermalLagMaxNum": [1, null], "thermalLagMaxDen": [1, null], "bodyPartChainMaxDepth": [1, null]},
+   "type": {"BASE": "integer", "SCALE": "integer", "PERMILLE": "integer", "BPS": "integer", "extendsMaxDepth": "integer", "rxMaxDepth": "integer", "handleRadix": "integer", "diceKeyMaxQualifiers": "integer", "grammarMaxLength": "integer", "fixedLnWorkExponent": "integer", "fixedLnInputExponent": "integer", "fixedLnSeriesTerms": "integer", "LN2": "string", "thermalLagMaxNum": "integer", "thermalLagMaxDen": "integer", "bodyPartChainMaxDepth": "integer", "byteRadix": "integer", "base64Radix": "integer", "base64GroupChars": "integer", "utf8ContinuationBase": "integer", "utf8PayloadRadix": "integer", "utf8LeadBases": {"type": "list", "of": {"type": "integer", "unit": "count"}}, "utf8MinCodePoint": {"type": "list", "of": {"type": "integer", "unit": "count"}}, "unicodeMax": "integer", "surrogateFirst": "integer", "surrogateLast": "integer"},
+   "domain": {"BASE": [1, null], "SCALE": [1, null], "PERMILLE": [1, null], "BPS": [1, null], "extendsMaxDepth": [1, null], "rxMaxDepth": [1, null], "handleRadix": [2, 36], "diceKeyMaxQualifiers": [1, null], "grammarMaxLength": [1, null], "fixedLnWorkExponent": [1, null], "fixedLnInputExponent": [1, null], "fixedLnSeriesTerms": [1, null], "LN2": {}, "thermalLagMaxNum": [1, null], "thermalLagMaxDen": [1, null], "bodyPartChainMaxDepth": [1, null], "byteRadix": [1, null], "base64Radix": [1, null], "base64GroupChars": [1, null], "utf8ContinuationBase": [1, null], "utf8PayloadRadix": [1, null], "utf8LeadBases": {}, "utf8MinCodePoint": {}, "unicodeMax": [1, null], "surrogateFirst": [1, null], "surrogateLast": [1, null]},
    "volume": "卷二 §7 S10 :2407（kernel 定点文件常数登记豁免；数值来自 engine.rules 即不计，handleRadix、diceKeyMaxQualifiers、grammarMaxLength 依此过 const_literal）、§1.9 :285（代号 ^[a-z][a-z0-9_]{1,47}$ 与维度键 ^[a-z][a-zA-Z0-9]{0,47}$ 的总长上限）、§3.3 :1319（定点算术段：SCALE、PERMILLE、BPS 同登）、§3.3 :1333、§3.3 :1335–:1339（fixedLn 的 W=10¹⁸、升标度 10¹⁰、级数项数 20、LN2；登记句另见 :1341）、§1.3、§1.5；卷二十七 R27-8.5 :728（骰值键 subjectId 后接一到两个限定成分）；卷四 §2.2 :202（身体图不变量“链深 ≤ 8”，加载期校验器上限）",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"BASE": false, "SCALE": false, "PERMILLE": false, "BPS": false, "extendsMaxDepth": false, "rxMaxDepth": false, "handleRadix": false, "diceKeyMaxQualifiers": false, "grammarMaxLength": false, "fixedLnWorkExponent": false, "fixedLnInputExponent": false, "fixedLnSeriesTerms": false, "LN2": false, "thermalLagMaxNum": false, "thermalLagMaxDen": false, "bodyPartChainMaxDepth": false}
+   "packOverridable": {"BASE": false, "SCALE": false, "PERMILLE": false, "BPS": false, "extendsMaxDepth": false, "rxMaxDepth": false, "handleRadix": false, "diceKeyMaxQualifiers": false, "grammarMaxLength": false, "fixedLnWorkExponent": false, "fixedLnInputExponent": false, "fixedLnSeriesTerms": false, "LN2": false, "thermalLagMaxNum": false, "thermalLagMaxDen": false, "bodyPartChainMaxDepth": false, "byteRadix": false, "base64Radix": false, "base64GroupChars": false, "utf8ContinuationBase": false, "utf8PayloadRadix": false, "utf8LeadBases": false, "utf8MinCodePoint": false, "unicodeMax": false, "surrogateFirst": false, "surrogateLast": false}
   },
   {
    "code": "modifiers",
@@ -477,6 +477,19 @@
    "volume": "卷三乙 §2.5 :343–:345、§4.5（rules.quality.*）。块 6 第 6-9 张（估值首个读品质，6-3 复核第 2 轮登记③）登 baselineTier、tiers 的暂定值（见 quality.json 各行 basis，标“暂定·待试玩标定”）；缺口登在 quality.json 的 unbuilt 行：botchTier、thresholds、inputWeight、toolBonus、marginWeight（读者是 craftOutcome，后卡）；品质档代号与次序见 _vocab.json quality 族",
    "multiSourceMerge": "own_key_only",
    "packOverridable": {"baselineTier": false, "tiers": false, "unbuilt": false}
+  },
+  {
+   "code": "host",
+   "file": "tables/host.json",
+   "structure": "keys",
+   "type": {
+    "saveSlotCount": {"type": "integer", "unit": "count"},
+    "saveImportMaxBytes": {"type": "integer", "unit": "byte"}
+   },
+   "domain": {"saveSlotCount": [1, null], "saveImportMaxBytes": [1, null]},
+   "volume": "卷二十七 §2.2 :191–192（rules.host.saveSlotCount、rules.host.saveImportMaxBytes，取值域 ≥1，加载失败）；卷二 §2.9 第 0 条存档四路第 5 点；块 6 第 6-20 张只登这两键，心跳两键（heartbeatStepMinutes、heartbeatMs）随墙钟心跳那张卡登记（6-19 回报缺口 3）；读者是 kernel/save.mjs、kernel/load/save.mjs（经存档环境 installSaveEnv 交入）",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"saveSlotCount": false, "saveImportMaxBytes": false}
   }
  ]
 }

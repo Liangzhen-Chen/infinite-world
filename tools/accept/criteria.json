@@ -62,10 +62,14 @@
     {
      "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 15
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 16
     }
    ],
-   "print": "bb7d3fee9983da381115e46521762705db4de87132fe59f10f4815975e1ad768",
-   "rev": 15,
+   "print": "9a552e837b7fff5287e237f365a1fa49d1bb537653d8fb4df59cc8b6a966bf01",
+   "rev": 16,
    "scanClass": "baseline_monotone",
    "source": "卷一 V-11（I43）；卷十二 §2.5、E-ACC-BASELINE-UP；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -316,10 +320,14 @@
     {
      "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
      "rev": 59
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 60
     }
    ],
-   "print": "a5231fb26169d8318ce38230df5de472faf12fd19022947e88ea718c5d9d2d1a",
-   "rev": 59,
+   "print": "8ff6e3ccf4be1dafb5bd0ca369b5f3cb3ca3d8b7058f0982d275548304ccb2c4",
+   "rev": 60,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -365,10 +373,14 @@
     {
      "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 8
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 9
     }
    ],
-   "print": "e92920a8c0fa5b98a1d92b2d861d56106eec03c0040ec655dac189ac43fd9bf0",
-   "rev": 8,
+   "print": "851fc7ec42dc6c7e8e1e02a6b4608b8d4351d353cf6c60399013b14c1e39a344",
+   "rev": 9,
    "scanClass": "crit_version",
    "terms": {
     "vol12.S12-13": {
@@ -443,10 +455,14 @@
     {
      "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 15
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 16
     }
    ],
-   "print": "769ca36b5bb054d30d00490237a20a422aa67edeafc9f95f5a7869a4cc34c249",
-   "rev": 15,
+   "print": "08cbca63ff0eff05ddb603abed942c1481d49c046aec7f989d87b56d73ad9f0d",
+   "rev": 16,
    "scanClass": "cross_write",
    "source": "卷十二 R12-3.1–3.4；卷二 §2.6、§2.7、S5",
    "terms": {
@@ -554,10 +570,14 @@
     {
      "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 15
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 16
     }
    ],
-   "print": "769ca36b5bb054d30d00490237a20a422aa67edeafc9f95f5a7869a4cc34c249",
-   "rev": 15,
+   "print": "08cbca63ff0eff05ddb603abed942c1481d49c046aec7f989d87b56d73ad9f0d",
+   "rev": 16,
    "scanClass": "display_read",
    "source": "卷十二 R12-2.10；卷二 S7",
    "terms": {
@@ -797,10 +817,14 @@
     {
      "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
      "rev": 56
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 57
     }
    ],
-   "print": "8af64051c1c545be8a44d2bfaec8dba0fc497eda9b4664c63fe6df45816adcc6",
-   "rev": 56,
+   "print": "40ef61449615245315eb6d4c0f14bed2b0c39c94cd3ad0372a1c3d2f7023bdef",
+   "rev": 57,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -895,10 +919,14 @@
     {
      "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
      "rev": 20
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 21
     }
    ],
-   "print": "32244f4fc9416b7f12eef8ecca816c2cdcd08e1812c714d4a9491542b830d108",
-   "rev": 20,
+   "print": "60ec566966b460d6b349a0bee39d5d4d002fd659da754dbeeeaf76e3e814c053",
+   "rev": 21,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -973,10 +1001,14 @@
     {
      "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 15
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 16
     }
    ],
-   "print": "bb7d3fee9983da381115e46521762705db4de87132fe59f10f4815975e1ad768",
-   "rev": 15,
+   "print": "9a552e837b7fff5287e237f365a1fa49d1bb537653d8fb4df59cc8b6a966bf01",
+   "rev": 16,
    "scanClass": "ext_code",
    "terms": {
     "vol12.S12-12": {
@@ -1075,10 +1107,14 @@
     {
      "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
      "rev": 21
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 22
     }
    ],
-   "print": "c34b34cf8b63b1ba2f01639d61042c12a4b3c51b0d925e9aaa471b49d330c759",
-   "rev": 21,
+   "print": "1170937d047607a0073b62ff03f6c7545bb9505ef3b7543e25147b06fe25cf6f",
+   "rev": 22,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -1337,10 +1373,14 @@
     {
      "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
      "rev": 53
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 54
     }
    ],
-   "print": "1aabe4e409dbba1976df7ac6f3c0dbb163e5a8c9e7b85ea786cda9d6c53cb63c",
-   "rev": 53,
+   "print": "2ee01b3d894163b987afd7f1d4c54a0c46824e968d6ffb62fba8795955d678c3",
+   "rev": 54,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1440,10 +1480,14 @@
     {
      "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
      "rev": 21
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 22
     }
    ],
-   "print": "c34b34cf8b63b1ba2f01639d61042c12a4b3c51b0d925e9aaa471b49d330c759",
-   "rev": 21,
+   "print": "1170937d047607a0073b62ff03f6c7545bb9505ef3b7543e25147b06fe25cf6f",
+   "rev": 22,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -1742,10 +1786,14 @@
     {
      "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
      "rev": 69
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 70
     }
    ],
-   "print": "9babcfcc869af92bea0bbca37501f62ecceb72bd486304ae4d5ab0fe6817998c",
-   "rev": 69,
+   "print": "51c85df14d16a2db388e7a842600b6fc97ca5ee539765520a21c83ae8fe99e7d",
+   "rev": 70,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -1851,10 +1899,14 @@
     {
      "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 15
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 16
     }
    ],
-   "print": "bb7d3fee9983da381115e46521762705db4de87132fe59f10f4815975e1ad768",
-   "rev": 15,
+   "print": "9a552e837b7fff5287e237f365a1fa49d1bb537653d8fb4df59cc8b6a966bf01",
+   "rev": 16,
    "scanClass": "item_downgrade",
    "terms": {
     "vol12.S12-16": {
@@ -2084,10 +2136,14 @@
     {
      "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
      "rev": 54
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 55
     }
    ],
-   "print": "1aabe4e409dbba1976df7ac6f3c0dbb163e5a8c9e7b85ea786cda9d6c53cb63c",
-   "rev": 54,
+   "print": "2ee01b3d894163b987afd7f1d4c54a0c46824e968d6ffb62fba8795955d678c3",
+   "rev": 55,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -2149,10 +2205,14 @@
     {
      "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 12
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 13
     }
    ],
-   "print": "d7f641a92f1b662ba75eaf87cd5ada8d780665fb1dbd0817948e70f7729799ca",
-   "rev": 12,
+   "print": "bdbd07de095a0ebe8f9f7376e556cd127ef4d90ac0c1e5aa11d3066a921ca37f",
+   "rev": 13,
    "scanClass": "item_ledger",
    "terms": {
     "vol12.S12-3": {
@@ -2219,10 +2279,14 @@
     {
      "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 13
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 14
     }
    ],
-   "print": "bb7d3fee9983da381115e46521762705db4de87132fe59f10f4815975e1ad768",
-   "rev": 13,
+   "print": "9a552e837b7fff5287e237f365a1fa49d1bb537653d8fb4df59cc8b6a966bf01",
+   "rev": 14,
    "scanClass": "ledger_tally",
    "source": "卷十二 §4.1.6 至 §4.14.6 A12-n.1；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -2490,10 +2554,14 @@
     {
      "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 29
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 30
     }
    ],
-   "print": "7dd9cc905c3ee9f89697b0458612590d18ecc4e43b36ca44ad4cb93ea8fc4714",
-   "rev": 29,
+   "print": "e03fbfdc9dbd3e4c2ce0ff52c994d01bc1a49fe2569c99a725b4211272765967",
+   "rev": 30,
    "scanClass": "module_edge",
    "terms": {
     "vol1.V-24.b": {
@@ -2819,10 +2887,14 @@
     {
      "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
      "rev": 54
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 55
     }
    ],
-   "print": "1aabe4e409dbba1976df7ac6f3c0dbb163e5a8c9e7b85ea786cda9d6c53cb63c",
-   "rev": 54,
+   "print": "2ee01b3d894163b987afd7f1d4c54a0c46824e968d6ffb62fba8795955d678c3",
+   "rev": 55,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -3029,10 +3101,14 @@
     {
      "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
      "rev": 48
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 49
     }
    ],
-   "print": "c8d7ef4151e7c1e6cdb3738271b15c4a411b58aaebbb583346195d0c15a62eb9",
-   "rev": 48,
+   "print": "28c594599b72cf95eff25aa22ea83d3d282775609fd0b6f4133af07f036a25a4",
+   "rev": 49,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -3319,10 +3395,14 @@
     {
      "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
      "rev": 68
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 69
     }
    ],
-   "print": "45dc29750a55d8c87d9ab15f4a280a9a9284542738c733663fce39bff3425d60",
-   "rev": 68,
+   "print": "99d2764235ee9d7bf413b1482eb85e2140189a2c5ab64e43a8fd8cde6bdfde1b",
+   "rev": 69,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -3412,10 +3492,14 @@
     {
      "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 19
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 20
     }
    ],
-   "print": "510d2e4a6d0e24a4da2b7c3bc94f5b946c74675df3e36c4e3de0c73583afd35c",
-   "rev": 19,
+   "print": "128be81718800e472fe118f2c9c907f15ea6bfc45fd8c5ce2ac635d062d4523f",
+   "rev": 20,
    "scanClass": "rng_bypass",
    "terms": {
     "vol27.A27-8.1.a": {
@@ -3465,10 +3549,14 @@
     {
      "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 9
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 10
     }
    ],
-   "print": "09d41cedba372cb315163eb30c23e1a52698760d1cccbcae848dd083ec4f4ade",
-   "rev": 9,
+   "print": "c7c27be28986878b808333a90101565cd377088697f67905e94d65c971d40816",
+   "rev": 10,
    "scanClass": "rules_import",
    "terms": {
     "vol1.V-9": {
@@ -3614,10 +3702,14 @@
     {
      "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
      "rev": 33
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 34
     }
    ],
-   "print": "a5e3b5b45061a6a635f0d2b5a64b5ce26c14c2a0cbdfe7642add0359c393e445",
-   "rev": 33,
+   "print": "e2a54f269305ee04b7aa93b58acc43086adb8b7432b00848000f64cbd3be03bf",
+   "rev": 34,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -3867,10 +3959,14 @@
     {
      "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
      "rev": 57
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 58
     }
    ],
-   "print": "a5231fb26169d8318ce38230df5de472faf12fd19022947e88ea718c5d9d2d1a",
-   "rev": 57,
+   "print": "8ff6e3ccf4be1dafb5bd0ca369b5f3cb3ca3d8b7058f0982d275548304ccb2c4",
+   "rev": 58,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -4004,10 +4100,14 @@
     {
      "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
      "rev": 31
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 32
     }
    ],
-   "print": "042ea4047d92393ad4d55668cfbfcdf8b79256821187428463f6b1f637481c81",
-   "rev": 31,
+   "print": "52f86a5b6c2d5ecbe8f8ab0fc25596a93e963f0098ab8739e7a4fc9a24deaf47",
+   "rev": 32,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -4103,10 +4203,14 @@
     {
      "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
      "rev": 20
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 21
     }
    ],
-   "print": "c34b34cf8b63b1ba2f01639d61042c12a4b3c51b0d925e9aaa471b49d330c759",
-   "rev": 20,
+   "print": "1170937d047607a0073b62ff03f6c7545bb9505ef3b7543e25147b06fe25cf6f",
+   "rev": 21,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -4434,10 +4538,14 @@
     {
      "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
      "rev": 50
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 51
     }
    ],
-   "print": "c8d7ef4151e7c1e6cdb3738271b15c4a411b58aaebbb583346195d0c15a62eb9",
-   "rev": 50,
+   "print": "28c594599b72cf95eff25aa22ea83d3d282775609fd0b6f4133af07f036a25a4",
+   "rev": 51,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -4532,10 +4640,14 @@
     {
      "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 18
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 19
     }
    ],
-   "print": "769ca36b5bb054d30d00490237a20a422aa67edeafc9f95f5a7869a4cc34c249",
-   "rev": 18,
+   "print": "08cbca63ff0eff05ddb603abed942c1481d49c046aec7f989d87b56d73ad9f0d",
+   "rev": 19,
    "scanClass": "version_fork",
    "terms": {
     "vol1.V-17": {
@@ -4689,10 +4801,14 @@
     {
      "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
      "rev": 35
+    },
+    {
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "rev": 36
     }
    ],
-   "print": "2d5c888014600331240a672e319c8a4f6926ac96853424fcab96c552949d9b9c",
-   "rev": 35,
+   "print": "840b3e73fdf58899356d8b1a3915b879948817dc7b5a42aef99d6313e6111016",
+   "rev": 36,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

@@ -15,6 +15,16 @@
   {"key": "thermalLagMaxNum", "value": 1, "file": "server-plugin/kernel/calendar.mjs", "source": "卷二十 §2.2 :218 thermalLagPhase 取值域 [0, 1/4)：上界 1/4 的分子", "basis": "上界登记成常数，checkCalendarClimateTables 经 engine.rules 读入交叉乘比较，不在代码里写字面量 4"},
   {"key": "thermalLagMaxDen", "value": 4, "file": "server-plugin/kernel/calendar.mjs", "source": "卷二十 §2.2 :218 thermalLagPhase 取值域 [0, 1/4)：上界 1/4 的分母", "basis": "同 thermalLagMaxNum"},
   {"key": "grammarMaxLength", "value": 48, "source": "卷二 §1.9 :285 代号文法 ^[a-z][a-z0-9_]{1,47}$（总长至多 48）与维度键文法 ^[a-z][a-zA-Z0-9]{0,47}$（总长至多 48）", "basis": "卷二 :285 代号与键文法长度上限；代码经规则表 kernelConstants 读入，不在代码里写字面量（卷二 S10 :2404，数值来自 engine.rules 即不计）"},
+  {"key": "byteRadix", "value": 256, "file": "server-plugin/kernel/bytes.mjs", "source": "卷二 :1047 kernel 自带 base64 码表对 Uint8Array 逐字节查表（字节 = 256 个取值）", "basis": "字节的进制；kernel/bytes.mjs 的 base64 解码读它，代码经规则表 kernelConstants 读入，不写字面量（卷二 S10）"},
+  {"key": "base64Radix", "value": 64, "file": "server-plugin/kernel/bytes.mjs", "source": "卷二 :1047 base64（RFC 4648：字母表 64 个字符，每字符 6 位）", "basis": "base64 的进制；须等于 kernel/bytes.mjs 码表的长度，不等启动即拒"},
+  {"key": "base64GroupChars", "value": 4, "file": "server-plugin/kernel/bytes.mjs", "source": "卷二 :1047 base64（RFC 4648：每 4 个字符一组，填充 = 补满一组）", "basis": "base64 一组的字符数；填充个数 = 组长 − 末组字符数"},
+  {"key": "utf8ContinuationBase", "value": 128, "file": "server-plugin/kernel/bytes.mjs", "source": "UTF-8（RFC 3629）：续字节取值 128–191，小于 128 的字节是单字节字符", "basis": "kernel/bytes.mjs 的 UTF-8 解码与长度计量读它"},
+  {"key": "utf8PayloadRadix", "value": 64, "file": "server-plugin/kernel/bytes.mjs", "source": "UTF-8（RFC 3629）：每个续字节带 6 位有效位（64 进制）", "basis": "同上"},
+  {"key": "utf8LeadBases", "value": [192, 224, 240, 248], "file": "server-plugin/kernel/bytes.mjs", "source": "UTF-8（RFC 3629）：2、3、4 字节序列的首字节分别从 192、224、240 起，248 起不合法", "basis": "首字节档的起点；末项是 4 字节档的上界"},
+  {"key": "utf8MinCodePoint", "value": [128, 2048, 65536], "file": "server-plugin/kernel/bytes.mjs", "source": "UTF-8（RFC 3629）：1、2、3 个续字节的序列各自的最小码点（更小即过长编码，非法）；前两项同时是 UTF-8 字节数的分档点", "basis": "过长编码判定与字节数计量"},
+  {"key": "unicodeMax", "value": 1114111, "file": "server-plugin/kernel/bytes.mjs", "source": "Unicode：最大码点 U+10FFFF", "basis": "超过即非法"},
+  {"key": "surrogateFirst", "value": 55296, "file": "server-plugin/kernel/bytes.mjs", "source": "Unicode：代理区 U+D800–U+DFFF 不是字符，UTF-8 不得编码", "basis": "代理区起点"},
+  {"key": "surrogateLast", "value": 57343, "file": "server-plugin/kernel/bytes.mjs", "source": "同上", "basis": "代理区终点"},
   {"key": "bodyPartChainMaxDepth", "value": 8, "file": "server-plugin/kernel/validate/body-tables.mjs", "source": "卷四 §2.2 :202 身体图不变量“无环，链深 ≤ 8”", "basis": "加载期校验器上限：从根到任一部位经过的部位个数（根算 1）不超过此数；代码经规则表 kernelConstants 读入，不在代码里写字面量（卷二 S10 :2404）"}
  ]
 }

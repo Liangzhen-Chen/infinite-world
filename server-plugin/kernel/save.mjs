@@ -25,7 +25,9 @@ import { postReply } from './transport/reply-channel.mjs';
 // 本文件内部的固定记号：空字串、分片覆盖判定的三种结果（R27-4.6 覆盖核对的返回值）。
 const SEG = Object.freeze({ empty: '' });
 const COVER = Object.freeze({ partial: 'partial', full: 'full' });
-import { readManifestDigests, checkManifest, MANIFEST_STATE, importNotReady } from './load/save.mjs';
+import { readManifestDigests, checkManifest, MANIFEST_STATE, importEntry } from './load/save.mjs';
+import { saveEnv, currentGame } from './save-session.mjs';
+import { report } from './report.mjs';
 
 // ---------- 存档布局的名字（S27-7：只在本文件与 kernel/load/save.mjs 出现） ----------
 
@@ -340,7 +342,39 @@ export function compileLayout(layout) {
  * @typedef {{layout: SaveLayout, compiled: ReturnType<typeof compileLayout>, entries: any[], segments: Segment[], sealedCount: number, snapshots: Snapshot[]}} LogBook
  */
 
+/** @typedef {{doc_data: any, doc_state: any, doc_holdings: any, doc_ledger: any}} Doc 逻辑文档除日志外的四个部分 */
+
 const fileOf = (value) => { const text = canonical(value); return { text, digest: sha256Text(text) }; };
+
+/**
+ * 当前世界状态 → 逻辑文档的四个部分（存档与快照的来源）。状态是一棵按 pathTypes 组织的树；每个值落在恰一条声明模式上，
+ * 模式归哪个部分由分片表的那一行的 part 定（R27-4.6），本函数不认任何路径名。读取不复制：返回的部分里的值就是状态里的值，调用方只读用
+ * （takeSnapshot、saveDigest 各自复制或序列化）。
+ * @param {ReturnType<typeof compileLayout>} compiled @param {any} state @param {{base: any, appends: any[]}} data 世界数据副本
+ * @returns {Doc}
+ */
+export function docOfState(compiled, state, data) {
+  /** @type {Doc} */
+  const doc = { doc_data: data, doc_state: {}, doc_holdings: {}, doc_ledger: {} };
+  walkPathTree(state, (segs, v, rec) => {
+    const row = compiled.rowOfPattern.get(rec.pattern);
+    if (!row || !PATH_PARTS.includes(row.part)) throw new KernelError('E-SAVE-SHARD-UNCOVERED', {}, `${segs.join(GRAMMAR_TOKENS.pathSep)} has no state-part shard row`);
+    setIn(doc[row.part], segs, v);
+  });
+  return doc;
+}
+
+/**
+ * 逻辑文档的三个路径部分 → 状态（读档恢复的起点）。三部分的值按各自路径放回同一棵树，值复制一份；Sealed 是 {bytes, digest} 原样。
+ * @param {Doc} doc
+ * @returns {any}
+ */
+export function stateOfDoc(doc) {
+  // 新造的一棵树，不是某局进行中的 state：读档入口造出它、重跑成功才由 startGame 换上；活局的写仍只经 writePath（卷二 §2.6）。
+  const fresh = {};
+  for (const part of PATH_PARTS) walkPathTree(doc[part], (segs, v) => setIn(fresh, segs, clone(v)));
+  return fresh;
+}
 
 /**
  * 一个快照：逻辑文档除日志外四个部分按分片表切成分片文件（R27-4.6"快照不是第六个部分"）。
@@ -436,7 +470,8 @@ export function appendLogEntry(book, entry) {
  * 一刻全部处理完时调（R27-4.5"快照与封段只在一刻全部处理完时做；条数已到而这一刻还没处理完的，顺延到该刻末"）：
  * 未封条目 ≥ segmentEvents 即把它们封成一段；距上一个快照 ≥ snapshotEveryEvents 条即做快照，并只留最近 keepSnapshots 个（R27-4.9）。
  * 修剪只动快照与日志簿，不碰 state；更早的日志段原样保留（折叠归 R27-4.12，不在本卡）。
- * @param {LogBook} book @param {{doc_data: any, doc_state: any, doc_holdings: any, doc_ledger: any}} doc 此刻的四个部分
+ * doc 可以是此刻四个部分的对象，也可以是产生它的函数：函数只在真要做快照时才调（每刻末都从状态拆一遍四个部分太贵）。
+ * @param {LogBook} book @param {Doc | (() => Doc)} doc 此刻的四个部分
  * @returns {{sealed: boolean, snapshot: boolean}}
  */
 export function tickEnd(book, doc) {
@@ -451,7 +486,7 @@ export function tickEnd(book, doc) {
   }
   const last = book.snapshots[book.snapshots.length - 1];
   if (book.entries.length - last.atEvent >= snapshotEveryEvents) {
-    book.snapshots.push(takeSnapshot(book.compiled, doc, book.entries.length));
+    book.snapshots.push(takeSnapshot(book.compiled, typeof doc === 'function' ? doc() : doc, book.entries.length));
     while (book.snapshots.length > keepSnapshots) book.snapshots.shift();
     snapshot = true;
   }
@@ -535,6 +570,16 @@ export function saveToSlot({ root, slot, book, doc, rulesDigest, clockMinute }) 
     slot,
     snapshotIndex: book.snapshots.map((s) => ({ atEvent: s.atEvent, shards: s.shards })),
   };
+  const done = commitSlot(root, slot, files, manifest);
+  return done.ok ? { ok: true, written: done.written, manifest } : done;
+}
+
+/**
+ * 写分片、轮换清单、原子提交新清单、回收（本机存档与导入共用这一条写盘路径，卷二 :968"没有第二条读档路径"；R27-4.7–4.9）。
+ * @param {string} root @param {number} slot @param {Map<string, string>} files 摘要 → 分片文本 @param {Record<string, any>} manifest
+ * @returns {{ok: true, written: number} | {ok: false, code: import('./types.d.ts').ErrorCode}}
+ */
+export function commitSlot(root, slot, files, manifest) {
   const dir = slotDir(root, slot);
   let written = 0;
   try {
@@ -555,7 +600,7 @@ export function saveToSlot({ root, slot, book, doc, rulesDigest, clockMinute }) 
   }
   // 提交之后才回收；回收出错不改"已存好"的结果，错误原样抛出（不是存档失败，不吞）。
   reclaim(dir, manifest.shardDigests);
-  return { ok: true, written, manifest };
+  return { ok: true, written };
 }
 
 // 回收当前清单与上一个清单都不引用的分片文件（R27-4.9"不被任何保留清单引用的分片文件才可回收"）。
@@ -566,21 +611,78 @@ function reclaim(dir, currentDigests) {
   for (const name of readdirSync(sdir)) if (!keep.has(name)) unlinkSync(join(sdir, name));
 }
 
-// ---------- 路由挂接（卷二 §2.9 第 0 条"存档四路"第 4、5 条、通路第 1、2c、2d 环；体检 K6-84 装配一侧） ----------
-// 导出与导入两条路由的入口由 mountSaveRoutes 向 RequestCap 登记（第 1 环）。每条返回路径恰好调一次 postReply（拒收也是一次回应，第 2c、2d 环）。
-// 入口的真实流程（导出写出存档字节经 ReplyCap.send、导入核长度与槽位与规则指纹后写盘，卷二 :967、:968）随 6-20；
-// 在那之前两条路由一律回 `rejected` 加 E-ACT-WRITER-NOT-READY（与块 5 写者未就绪同一做法），不写盘、不改 state，不假装成功。
-// 导出入口在本文件（卷二 :961 第 1 环：`save_export` 路由入口是 kernel/save.mjs）；导入入口在 kernel/load/save.mjs（`save_import` 路由入口，:961、:965 第 2d 环、:979 第 5 条）。
-async function exportNotReady(body, handle) {
-  postReply(handle, { resultCode: T.code_enum.reply_result.rejected, rejectCode: 'E-ACT-WRITER-NOT-READY' });
+// ---------- 存档动作与路由（卷二 §2.9 第 0 条"存档四路" :940–944、通路第 1、2c、2d、5s 环；体检 K6-84） ----------
+// 存档与读档是 menu 路由上的动作（第 1 条）：本文件的 saveAction、kernel/load/save.mjs 的 loadAction 只返回 ReplyResult（代号结构），
+// 交给 menu-entry 的处理函数经第 2a 环回去；动作代号与槽位编号的线上载荷（schema:wire-up-menu-v1、动作行）未建，分流随 6-14、6-16、6-21。
+// 导出（第 4 条）：入口在本文件，成功时直接经 ReplyCap.send 发存档字节（第 5s 环，wire_body = bytes），不调 postReply；失败调一次 postReply（第 2c 环）。
+// 导入（第 5 条）：入口在 kernel/load/save.mjs。两条路由都由 mountSaveRoutes 向 RequestCap 登记（第 1 环）。
+// 没有存档环境（saveEnv 未交入）时回 save_unavailable，不写盘、不改 state，不假装成功。
+
+const RESULT = T.code_enum.reply_result;
+const WIRE_BODY = T.code_enum.wire_body;
+const CODE_SLOT = 'E-SAVE-SLOT-INVALID';
+const CODE_FORM = 'E-DIM-STRUCT-FIELD';
+/** 存档文件（导出的字节、导入的原文）是一个 JSON 对象，只有这两个键：清单与它引用的全部分片（摘要 → 分片文本）。 */
+export const BUNDLE = Object.freeze({ manifest: 'manifest', shards: 'shards' });
+
+const rejected = (code) => ({ resultCode: RESULT.rejected, rejectCode: code });
+
+/**
+ * 菜单"存档"动作（卷二 :940 第 1 条）：把当前游戏存进槽位。成功 ok；没有进行中的游戏 save_unavailable；槽位越界 rejected + E-SAVE-SLOT-INVALID；
+ * 写盘失败 rejected + E-SAVE-WRITE-FAIL（先 report）。清单只带 clockMinute 与槽位编号两样显示字段（第 3 条），不记墙钟。
+ * @param {unknown} slot 槽位编号（未核对的数值）
+ * @returns {{resultCode: string, rejectCode?: string}}
+ */
+export function saveAction(slot) {
+  const env = saveEnv();
+  const game = currentGame();
+  if (env === null || game === null) return { resultCode: RESULT.save_unavailable };
+  if (!slotOk(slot, env.layout)) return rejected(CODE_SLOT);
+  const doc = docOfState(game.book.compiled, game.state, game.data);
+  const r = saveToSlot({ root: env.root, slot, book: game.book, doc, rulesDigest: env.rulesDigest, clockMinute: game.clockMinute(game.state) });
+  if (r.ok) return { resultCode: RESULT.ok };
+  report(r.code, { slot });
+  return rejected(r.code);
+}
+
+// 槽位里最近的完好清单连同它引用的全部分片，写成存档文件的文本。当前清单完好用当前的；否则用完好的上一个（提交改名之间中断的槽位只剩它）。
+function bundleOfSlot(root, slot) {
+  const dir = slotDir(root, slot);
+  const cur = checkManifest(dir, LAYOUT_NAMES.current);
+  const prev = checkManifest(dir, LAYOUT_NAMES.previous);
+  const chosen = cur.state === MANIFEST_STATE.ok ? cur : prev.state === MANIFEST_STATE.ok ? prev : null;
+  if (chosen === null) {
+    const empty = cur.state === MANIFEST_STATE.missing && prev.state === MANIFEST_STATE.missing;
+    return { ok: false, code: new KernelError(empty ? 'E-SAVE-EMPTY' : 'E-SAVE-TORN').code };
+  }
+  /** @type {Record<string, string>} */
+  const shards = {};
+  for (const [digest, text] of chosen.texts) shards[digest] = text;
+  return { ok: true, text: canonical({ [BUNDLE.manifest]: chosen.manifest, [BUNDLE.shards]: shards }) };
+}
+
+/**
+ * `save_export` 路由的入口（卷二 :966 第 4 条；第 1、2c、5s 环）。请求体当 unknown，只读 `slot`（头部显示字段由 router-caps 带走，不在这里读）；
+ * 每条返回路径恰好用这个句柄一次：成功经 replyCap.send 发存档字节、不调 postReply；失败调 postReply 交带拒收代号的结果。
+ * @param {unknown} body @param {object} handle ReplyHandle @param {{send: (handle: object, body: string, wireBody: string) => void}} replyCap
+ * @returns {Promise<void>}
+ */
+export async function exportEntry(body, handle, replyCap) {
+  if (!isObj(body) || !Object.hasOwn(body, 'slot')) { postReply(handle, rejected(CODE_FORM)); return; }
+  const env = saveEnv();
+  if (env === null) { postReply(handle, { resultCode: RESULT.save_unavailable }); return; }
+  if (!slotOk(body.slot, env.layout)) { postReply(handle, rejected(CODE_SLOT)); return; }
+  const out = bundleOfSlot(env.root, body.slot);
+  if (!out.ok) { postReply(handle, rejected(out.code)); return; }
+  replyCap.send(handle, out.text, WIRE_BODY.bytes);
 }
 
 /**
  * kernelApi `mountSaveRoutes(caps)`（只对 index.mjs 开放；卷二 :974 清单第六个，挂 `save_export` 与 `save_import` 两条路由）。
- * @param {{requestCap: {register: (route: string, entry: (body: unknown, handle: object) => unknown) => void}}} caps createRouterCaps 的返回值
+ * @param {{requestCap: {register: (route: string, entry: (body: unknown, handle: object) => unknown) => void}, replyCap: {send: (handle: object, body: string, wireBody: string) => void}}} caps createRouterCaps 的返回值
  * @returns {void}
  */
 export function mountSaveRoutes(caps) {
-  caps.requestCap.register(T.code_enum.wire_route.save_export, exportNotReady);
-  caps.requestCap.register(T.code_enum.wire_route.save_import, importNotReady);
+  caps.requestCap.register(T.code_enum.wire_route.save_export, (body, handle) => exportEntry(body, handle, caps.replyCap));
+  caps.requestCap.register(T.code_enum.wire_route.save_import, importEntry);
 }

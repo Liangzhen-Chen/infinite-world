@@ -10,6 +10,11 @@
  ],
  "units": [
   {
+   "dimension": "information",
+   "id": "byte",
+   "si": 1
+  },
+  {
    "dimension": "energy",
    "id": "MJ",
    "si": 1000000

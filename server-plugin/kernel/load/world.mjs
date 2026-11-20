@@ -20,6 +20,7 @@ import { checkCalendarClimateTables } from '../calendar.mjs';
 import { prepareWeatherRx, installWeather } from '../weather.mjs';
 import { installFixedConstants, installExpTable } from '../det-math.mjs';
 import { installSampleConstants, installSampleDistributions } from '../sample.mjs';
+import { installByteConstants } from '../bytes.mjs';
 import { checkVerbRows } from '../events.mjs';
 import { checkHoldingKindRows } from '../holdings.mjs';
 import { checkTerminationTables, installTermination, TERMINATE_RULES_TABLE } from '../terminate.mjs';
@@ -74,6 +75,8 @@ export function loadWorld(root, opts = {}) {
   // 读到了就交给 kernel/sample.mjs（§2.7 :579 kernelApi sample），sample/diceKeyOf 运行期才拿得到上限。
   need('diceKeyMaxQualifiers');
   installSampleConstants(read.rules);
+  // 字节与文字编解码（kernel/bytes.mjs，导入存档用）的进制与档位同表登记，缺键即拒（卷二 :1047、S10）。
+  installByteConstants(constants);
   // 冻结分布表与 _units.json 同目录、同一种读法（卷二 §1.10 :324–:325）：读入后交内核 det-math（exp 表）与 sample（分位数表）。
   // 只在文件存在时装配；校验器夹具目录没有这张表，用到 normal/lognormal/fixedExp 时由内核报缺少表，不静默给值。
   const distPath = join(dir, LAYOUT.distributions);

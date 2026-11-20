@@ -3257,6 +3257,40 @@
    "zeroRows": []
   },
   {
+   "detector": "det_save_load",
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-4.3",
+   "localNo": "A27-4.3",
+   "method": "digest_compare",
+   "print": "d623dc7aaa59f7290341953306f198c4f795d07b3492c842031f082f29867c2a",
+   "rev": 2,
+   "revisions": [
+    {
+     "card": "b6-20",
+     "date": "2026-11-20",
+     "rev": 1,
+     "summary": "首次登记（块 6 第 6-20 张：A27-4.3 存读恒等对到模板 det_save_load，本机小夹具版；一局 30 日长测版由 6-26 在腾讯云测试台复跑）"
+    },
+    {
+     "card": "b6-20",
+     "date": "2026-11-20",
+     "rev": 2,
+     "summary": "修改轮（Opus 只核 ⑥）：模板代号填 detector（卷十二 §2.2 :194），去掉自造的 tpl 字段；method 改 digest_compare、runsOn 改 cloud_ref（R12-6.7 比较在测试台上做）；impl 留空，本机 tests/kernel/det-save-load.test.mjs 是普通 kernel 测试，不作该条目的 impl"
+    }
+   ],
+   "runsOn": "cloud_ref",
+   "source": "卷二十七 A27-4.3（存读恒等，交卷十二机器化）；卷十二 §2.8 末表（A27-4.3 → det_save_load）；块 6 第 6-20 张",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
    "detector": "call_edge",
    "expect": "zero",
    "form": "scan",

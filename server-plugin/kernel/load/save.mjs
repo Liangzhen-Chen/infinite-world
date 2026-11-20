@@ -3,7 +3,8 @@
 // 读档只读不写：任何失败都不改、不删存档目录下的文件（A27-4.6）。
 // 规则指纹：读档入口对 rulesDigest 只做一次相等比较，不等即 E-SAVE-RULES-MISMATCH 拒读，不迁移、不修补（R27-4.3、R27-7.5；体检 K2-21）。
 // 清单引用的分片缺失或摘要不符：报 E-SAVE-SHARD-DIGEST，回退到上一个完好清单并报 E-SAVE-TORN（R27-4.8）；两份都不完好即 E-SAVE-TORN 拒读；两份都不存在是空槽，E-SAVE-EMPTY（首启自动读档视为新档，见 autoLoadSlot）。
-// 恢复 = 最近一个完好快照 + 其后日志里的请求重跑（R27-4.5）；重跑是块 4 的复演，本文件交回快照与其后的日志条目，不重跑。
+// 恢复 = 最近一个完好快照 + 其后日志里的请求重跑（R27-4.5）：loadSlot 只交回快照与其后的日志条目（只读）；
+// loadAction（菜单"读档"动作）在本文件内做重跑 replay_apply（R27-7.2：读档恢复出的状态就是重跑的结果），导入写盘后与本机存档同一条读档流程（卷二 :968）。
 // 摘要排除表：读入库生成文件，与按声明表生成的结果逐值比对，不一致 E-DIGEST-EXCLUDE-DRIFT（卷二十七 R27-5.8；卷二 :826）。
 
 import { readFileSync, existsSync } from 'node:fs';
@@ -11,7 +12,7 @@ import { join } from 'node:path';
 import { parseJsonStrict } from './json-text.mjs';
 import {
   LAYOUT_NAMES, MANIFEST_FIELDS, slotOk, slotDir, shardPath, sha256Text, sha256Base64, walkPathTree, bookFrom, compileLayout,
-  digestExcludeDoc, installDigestExclude, isSealedStoreForm,
+  digestExcludeDoc, installDigestExclude, isSealedStoreForm, docOfState, stateOfDoc, saveDigest, commitSlot, tickEnd, BUNDLE,
 } from '../save.mjs';
 import { canonicalEqual } from '../storage.mjs';
 import { KernelError, codeOf } from '../errors.mjs';
@@ -20,6 +21,12 @@ import { isHex64 } from '../handles/keys.mjs';
 import { buildE } from '../handles/generated.mjs';
 import { T } from '../handles/markers.mjs';
 import { postReply } from '../transport/reply-channel.mjs';
+import { saveEnv, currentGame, setGame } from '../save-session.mjs';
+import { installProposalSession, submitProposal } from '../transaction.mjs';
+import { installEventLog } from '../events.mjs';
+import { installTickEnd } from '../scheduler.mjs';
+import { clone } from '../clone.mjs';
+import { base64ToBytes, utf8ToText, utf8Length } from '../bytes.mjs';
 
 const E = buildE();
 // 分片切分方式与文档部分、清单状态的固定记号（卷二十七 R27-4.1 :124、§1.9 族 partition/state）：单一定义，比较处引用。
@@ -175,11 +182,11 @@ function assemble(m, texts, layout) {
 
 /**
  * 从槽位读档（菜单"读档"动作经 menu-entry 在 kernel 组内调用；导入写盘后同一流程，卷二 :944 第 5 条）。只读不写。
- * 成功：{ok: true, doc（快照处四个部分 + 全部日志）, atEvent（快照所在的事件序号）, logTail（其后待重跑的条目）, clockMinute, book, fellBack}。
+ * 成功：{ok: true, doc（快照处四个部分 + 全部日志）, atEvent（快照所在的事件序号）, logTail（其后待重跑的条目）, clockMinute, saveDigest（存档时的存档摘要，重跑后核对用）, book, fellBack}。
  * 失败：{ok: false, code}，code ∈ E-SAVE-SLOT-INVALID、E-SAVE-EMPTY（槽位无存档：当前与上一个清单都不存在）、E-SAVE-TORN、E-SAVE-RULES-MISMATCH、E-SEAL-DIGEST、E-SAVE-SHARD-DIGEST 等。
  * 本函数是"明确要求载入某个已有存档"的一路（菜单读档、导入后读档），空槽即 E-SAVE-EMPTY。
  * @param {{root: string, slot: number, layout: import('../save.mjs').SaveLayout, rulesDigest: string}} args
- * @returns {{ok: true, doc: any, atEvent: number, logTail: any[], clockMinute: number, book: import('../save.mjs').LogBook, fellBack: boolean} | {ok: false, code: import('../types.d.ts').ErrorCode}}
+ * @returns {{ok: true, doc: any, atEvent: number, logTail: any[], clockMinute: number, saveDigest: string, book: import('../save.mjs').LogBook, fellBack: boolean} | {ok: false, code: import('../types.d.ts').ErrorCode}}
  */
 export function loadSlot({ root, slot, layout, rulesDigest }) {
   if (!slotOk(slot, layout)) return { ok: false, code: new KernelError('E-SAVE-SLOT-INVALID').code };
@@ -193,7 +200,7 @@ export function loadSlot({ root, slot, layout, rulesDigest }) {
     if (m.rulesDigest !== rulesDigest) return { stop: { ok: false, code: new KernelError('E-SAVE-RULES-MISMATCH').code } };
     try {
       const out = assemble(m, chosen.texts, layout);
-      return { stop: { ok: true, doc: out.doc, atEvent: out.atEvent, logTail: out.logTail, clockMinute: m.clockMinute, book: out.book, fellBack: false } };
+      return { stop: { ok: true, doc: out.doc, atEvent: out.atEvent, logTail: out.logTail, clockMinute: m.clockMinute, saveDigest: m.saveDigest, book: out.book, fellBack: false } };
     } catch (e) {
       const code = codeOf(e);
       if (code === null) throw e;
@@ -233,12 +240,165 @@ export function autoLoadSlot(args) {
   return r;
 }
 
+// ---------- 读档恢复（菜单"读档"动作）----------
+
+const RESULT = T.code_enum.reply_result;
+const CODE_FORM = 'E-DIM-STRUCT-FIELD';
+const CODE_DIVERGE = 'E-REPLAY-DIVERGE';
+const CODE_SIZE = 'E-SAVE-IMPORT-SIZE';
+const CODE_SLOT = 'E-SAVE-SLOT-INVALID';
+const rejected = (code) => ({ resultCode: RESULT.rejected, rejectCode: code });
+// 输入序列条目（卷二十七 R27-7.3：日志里的玩家指令与推进请求，带 kernel 发的请求编号）；日志里别的条目是事件记录，重跑时由规则重新写出。
+const isRequestEntry = (e) => isObj(e) && Object.hasOwn(e, 'request');
+
+// 把一份游戏接到全局的三处挂接：提案会话（submitProposal 的状态与日志簿）、事件日志簿（emit）、刻末封段与快照（调度器每刻处理完后调）。
+function wire(g) {
+  installProposalSession({ state: g.state, resolve: g.resolve, book: g.book });
+  installEventLog(g.book);
+  installTickEnd((st) => { if (st === g.state) tickEnd(g.book, () => docOfState(g.book.compiled, g.state, g.data)); });
+}
+
 /**
- * `save_import` 路由的入口（卷二 :961 第 1 环；:965 第 2d 环"成功与拒收都走这里"；:979 第 5 条）。导入的真实流程（核长度与槽位、narrow、重算 Sealed 摘要、
- * 规则指纹比较、写盘，与读档同一条流程）随 6-20；在那之前一律回 rejected 加 E-ACT-WRITER-NOT-READY（与块 5 写者未就绪同一做法），不写盘、不改 state。
+ * 开局或装配交入进行中的游戏（6-16 开局、读档成功后都走这一处；kernel 组内用，不在 kernelApi）。
+ * @param {{state: any, book: any, data: {base: any, appends: any[]}, resolve: (proposal: any) => any, clockMinute: (state: any) => number}} g
+ * @returns {void}
+ */
+export function startGame(g) {
+  setGame(g);
+  wire(g);
+}
+
+// 重跑之后的核对（R27-7.2：重跑产生的每条记录与日志里同序号的那条逐字节相同；R27-4.1：重跑到存档时刻的存档摘要必须等于清单里的）。
+// 一致返回 undefined；不一致返回第一处分歧 {event, primitive}（R27-7.2：报告第一处分歧的事件序号与原语序号）：
+// event 是日志里的序号（条数不等取两边较短的长度处；逐条比取第一条不等的）；primitive 是该条两边都带 primitives 列表时第一处不等的下标，取不到为 null；
+// 记录全相同而只有存档摘要不符时（分歧在状态，不在事件）两个都是 null。
+function replayDivergence(g, loaded) {
+  const tail = loaded.logTail;
+  const got = g.book.entries;
+  const common = Math.min(got.length - loaded.atEvent, tail.length);
+  for (let i = 0; i < common; i++) {
+    const a = got[loaded.atEvent + i];
+    const b = tail[i];
+    if (canonicalEqual(a, b)) continue;
+    return { event: loaded.atEvent + i, primitive: firstPrimitiveDiff(a, b) };
+  }
+  if (got.length !== loaded.atEvent + tail.length) return { event: loaded.atEvent + common, primitive: null };
+  const doc = docOfState(g.book.compiled, g.state, g.data);
+  return saveDigest({ ...doc, doc_log: got }) === loaded.saveDigest ? undefined : { event: null, primitive: null };
+}
+
+function firstPrimitiveDiff(a, b) {
+  if (!isObj(a) || !isObj(b) || !Array.isArray(a.primitives) || !Array.isArray(b.primitives)) return null;
+  const n = Math.min(a.primitives.length, b.primitives.length);
+  for (let i = 0; i < n; i++) if (!canonicalEqual(a.primitives[i], b.primitives[i])) return i;
+  return a.primitives.length === b.primitives.length ? null : n;
+}
+
+/**
+ * replay_apply（R27-7.2、R27-4.5）：由快照恢复状态，把日志簿截回快照处，按序重跑其后的玩家指令与推进请求（走与活局同一条 submitProposal；
+ * 记录由重跑重新写出，原语列表只作核对，不原样施加），核对记录与存档摘要。不符即不换世界：挂接退回原来的游戏，原状态原日志簿不动。
+ * 新状态在候选对象上做：挂接与进行中的游戏同时换成候选（二者始终指向同一份），不一致或过程抛错就一起退回原来那份再返回或原样往上抛。
+ * @param {NonNullable<ReturnType<typeof currentGame>>} game @param {Extract<ReturnType<typeof loadSlot>, {ok: true}>} loaded
+ * @returns {undefined | {event: number | null, primitive: number | null}} 重跑一致并已换上新世界返回 undefined；否则第一处分歧（世界没换）
+ */
+function restore(game, loaded) {
+  const { book, atEvent } = loaded;
+  // 截回快照处：快照之后的条目与越过快照的已封段都由重跑重新产生（刻末封段照常在重跑里发生）。
+  book.entries.length = atEvent;
+  while (book.segments.length > 0 && book.sealedCount > atEvent) book.sealedCount -= book.segments.pop().count;
+  // 世界数据副本取存档里读回的那份（R27-4.2：每个世界自带副本，追加段是存档的一部分），不沿用当前局的。
+  const next = { ...game, state: stateOfDoc(loaded.doc), book, data: loaded.doc.doc_data };
+  startGame(next);
+  let diverged;
+  let finished = false;
+  try {
+    for (const e of loaded.logTail) if (isRequestEntry(e)) submitProposal(clone(e));
+    diverged = replayDivergence(next, loaded);
+    finished = true;
+  } finally {
+    // 过程抛错（没走完）与不一致都退回原来那一局。
+    if (!finished || diverged !== undefined) startGame(game);
+  }
+  return diverged;
+}
+
+/**
+ * 菜单"读档"动作（卷二 :940 第 1 条；明确要求载入某个已有存档，空槽即 E-SAVE-EMPTY）。成功 ok；没有存档环境或进行中的游戏 save_unavailable；
+ * 拒读回 rejected 加拒收代号（E-SAVE-RULES-MISMATCH、E-SAVE-TORN、E-SAVE-EMPTY、E-SAVE-SLOT-INVALID、E-SEAL-DIGEST 等，loadSlot 给）；
+ * 重跑与存档不一致回 error 加 E-REPLAY-DIVERGE（先 report；世界不换）。
+ * @param {unknown} slot 槽位编号（未核对的数值）
+ * @returns {{resultCode: string, rejectCode?: string}}
+ */
+export function loadAction(slot) {
+  const env = saveEnv();
+  const game = currentGame();
+  if (env === null || game === null) return { resultCode: RESULT.save_unavailable };
+  const r = loadSlot({ root: env.root, slot: /** @type {number} */ (slot), layout: env.layout, rulesDigest: env.rulesDigest });
+  if (!r.ok) return rejected(r.code);
+  const diverged = restore(game, r);
+  if (diverged !== undefined) {
+    report(CODE_DIVERGE, { slot: /** @type {number} */ (slot), event: diverged.event, primitive: diverged.primitive });
+    return { resultCode: RESULT.error, rejectCode: CODE_DIVERGE };
+  }
+  return { resultCode: RESULT.ok };
+}
+
+// ---------- 导入（卷二 :968 第 5 条） ----------
+
+// 存档文件的文本 → 清单与分片。与读档同一套校验：清单形状、分片摘要、规则指纹一次相等比较、各 Sealed 重算（assemble）；全部过了才返回。
+// 先规则指纹后拼回，与 loadSlot 同序（布局不同的版本拼不回，不能把"版本不符"误报成残缺）。
+function checkBundle(text, env) {
+  const parsed = parseJsonStrict(text);
+  const torn = new KernelError('E-SAVE-TORN').code;
+  const b = parsed.errors.length ? undefined : parsed.value;
+  // 存档文件只有清单与分片两个键：键都在 BUNDLE 里，且两个都在、都是对象。
+  if (!isObj(b) || !Object.keys(b).every((k) => Object.values(BUNDLE).includes(k)) || !isObj(b[BUNDLE.manifest]) || !isObj(b[BUNDLE.shards])) return { ok: false, code: torn };
+  const m = b[BUNDLE.manifest];
+  if (!manifestShapeOk(m)) return { ok: false, code: torn };
+  /** @type {Map<string, string>} */
+  const texts = new Map();
+  for (const d of m.shardDigests) {
+    const t = Object.hasOwn(b[BUNDLE.shards], d) ? b[BUNDLE.shards][d] : undefined;
+    if (typeof t !== 'string' || sha256Text(t) !== d) return { ok: false, code: new KernelError('E-SAVE-SHARD-DIGEST').code };
+    texts.set(d, t);
+  }
+  if (m.rulesDigest !== env.rulesDigest) return { ok: false, code: new KernelError('E-SAVE-RULES-MISMATCH').code };
+  try {
+    assemble(m, texts, env.layout);
+  } catch (e) {
+    const code = codeOf(e);
+    if (code === null) throw e;
+    return { ok: false, code: code === E.E_SEAL_DIGEST ? code : torn };
+  }
+  return { ok: true, manifest: m, texts };
+}
+
+/**
+ * `save_import` 路由的入口（卷二 :961 第 1 环；:965 第 2d 环"成功与拒收都走这里"；:979 第 5 条）。请求体当 unknown：
+ * 先核对长度（请求体总长按 UTF-8 字节数，超过 saveImportMaxBytes 即 E-SAVE-IMPORT-SIZE）与槽位编号（越界即 E-SAVE-SLOT-INVALID），
+ * 再把 bytes 从 base64 解成存档文件文本（kernel 自带码表与严格 UTF-8 解码，kernel/bytes.mjs），按存档文件格式收窄、校验（checkBundle），
+ * 全部通过才写进目标槽位（commitSlot，与本机存档同一条写盘路径；写盘失败即 E-SAVE-WRITE-FAIL），任一不过即拒收：不写盘、不改 state。
+ * 写盘之后"与从该槽位读档是同一条流程"（卷二 :983）：调与菜单同一个 loadAction，它的结果（成功、拒读、重跑不一致）就是这次导入的回应。
+ * 每条返回路径恰好一次 postReply（第 2d 环）。没有存档环境或进行中的游戏（读档无处换）回 save_unavailable，不写盘。
+ * 已定：先比规则指纹再拼回，与 loadSlot 同序——布局不同的版本拼不回，免得把"版本不符"误报成残缺；只影响多项同时不过时回哪个码。
  * @param {unknown} body @param {object} handle ReplyHandle
  * @returns {Promise<void>}
  */
-export async function importNotReady(body, handle) {
-  postReply(handle, { resultCode: T.code_enum.reply_result.rejected, rejectCode: 'E-ACT-WRITER-NOT-READY' });
+export async function importEntry(body, handle) {
+  const reply = (r) => postReply(handle, r);
+  const env = saveEnv();
+  if (env === null || currentGame() === null) { reply({ resultCode: RESULT.save_unavailable }); return; }
+  // 长度先于形状核对（卷二 :983 "先核对长度与槽位编号"）：按请求体序列化后的 UTF-8 字节数计（宿主已解析过请求体，量不到原始字节数，见 docs/问题.md）。
+  const whole = JSON.stringify(body);
+  if (typeof whole === 'string' && utf8Length(whole) > env.saveImportMaxBytes) { reply(rejected(CODE_SIZE)); return; }
+  if (!isObj(body) || !Object.hasOwn(body, 'slot') || typeof body.bytes !== 'string') { reply(rejected(CODE_FORM)); return; }
+  if (!slotOk(body.slot, env.layout)) { reply(rejected(CODE_SLOT)); return; }
+  const raw = base64ToBytes(body.bytes);
+  const text = raw === null ? null : utf8ToText(raw);
+  const checked = text === null ? { ok: false, code: new KernelError('E-SAVE-TORN').code } : checkBundle(text, env);
+  if (!checked.ok) { reply(rejected(checked.code)); return; }
+  // 清单的槽位编号是显示字段，换成目标槽位（它不进任何摘要）。
+  const done = commitSlot(env.root, body.slot, checked.texts, { ...checked.manifest, slot: body.slot });
+  if (!done.ok) { report(done.code, { slot: body.slot }); reply(rejected(done.code)); return; }
+  reply(loadAction(body.slot));
 }

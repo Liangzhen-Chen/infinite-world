@@ -1,0 +1,20 @@
+{
+ "rows": [
+  {
+   "key": "saveSlotCount",
+   "value": 10,
+   "file": "server-plugin/kernel/save.mjs",
+   "grade": "designed",
+   "source": "卷二十七 §2.2 :191（rules.host.saveSlotCount，integer，个，≥1，加载失败；首值 10）；卷二 §2.9 第 0 条存档四路第 5 点（槽位编号取值 [0, saveSlotCount)，越界即 E-SAVE-SLOT-INVALID）",
+   "basis": "首值未核（无出处，待标定），阶段 0 实测后改，定值人李白（卷二十七封卷后勘误 1115k3，李白裁定第 12 条）；暂定·待试玩标定"
+  },
+  {
+   "key": "saveImportMaxBytes",
+   "value": 104857600,
+   "file": "server-plugin/kernel/load/save.mjs",
+   "grade": "designed",
+   "source": "卷二十七 §2.2 :192（rules.host.saveImportMaxBytes，integer，字节，≥1，加载失败；首值 104857600，即 100 MiB）；卷二 §2.9 第 0 条存档四路第 5 点（请求体总长超过它即 E-SAVE-IMPORT-SIZE）",
+   "basis": "首值取自旧测试 tests/ai01-server-gate.test.mjs:31 的请求体上限 100mb；首值未核（无出处，待标定），阶段 0 实测后改，定值人李白（卷二十七封卷后勘误 1115k3，李白裁定第 12 条）；暂定·待试玩标定"
+  }
+ ]
+}

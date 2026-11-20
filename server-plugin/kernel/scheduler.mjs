@@ -225,6 +225,18 @@ export function installScheduler(rules) {
   installedRadix = Number.isInteger(radix) ? radix : null;
 }
 
+/** @type {((state: any) => void) | null} 一刻全部处理完后调的挂接（存档层的封段与快照，卷二十七 R27-4.5）。 */
+let tickEndHook = null;
+
+/**
+ * 交入"刻末"挂接（kernel 组内用，不在 kernelApi；读档换世界时重新交入）：每刻六段全部处理完、刻日志关闭之后调一次，参数是处理这一刻的 state。
+ * 整刻作废的不调（那一刻没有处理完，R27-4.5"state 只停在某刻已全部处理完的边界上"）。交 null 即清掉。
+ * @param {((state: any) => void) | null} fn
+ */
+export function installTickEnd(fn) {
+  tickEndHook = typeof fn === 'function' ? fn : null;
+}
+
 function handleRadix() {
   if (installedRadix === null) throw new Error(`kernel/scheduler.mjs: rules.${SCHEMA.constantsTable}.${SCHEMA.radixKey} missing (load order)`);
   return installedRadix;
@@ -622,6 +634,7 @@ function runTick(engine, state, t, sources) {
     }
     closeTickJournal();
     settled = true;
+    if (tickEndHook !== null) tickEndHook(state);
     return { ok: true };
   } finally {
     if (!settled) abandon();

@@ -28,6 +28,8 @@ export const REGISTRY = Object.freeze({
   cases: { file: 'cases.json', key: 'caseKey' },
   criteria: { file: 'criteria.json', key: 'scanClass' },
   gatefacs: { file: 'gatefacs.json', key: 'facCode' },
+  // 确定性模板（卷十二 §2.8 dettpl、§2.11）：模板代号、比什么、参数登记；登记器是唯一写者。
+  dettpl: { file: 'dettpl.json', key: 'tplCode' },
 });
 
 const readJson = (p) => JSON.parse(readFileSync(p, 'utf8'));
