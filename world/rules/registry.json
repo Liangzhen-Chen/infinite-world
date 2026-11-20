@@ -61,6 +61,20 @@
    "packOverridable": {"laborRate": false, "valueAdd": false, "unbuilt": false}
   },
   {
+   "code": "demand",
+   "file": "tables/demand.json",
+   "structure": "keys",
+   "type": {
+    "expectWindowDays": {"type": "integer", "unit": "day"},
+    "minTradesForHabit": {"type": "integer", "unit": "count"},
+    "unbuilt": {"type": "set", "of": {"type": "string"}}
+   },
+   "domain": {"expectWindowDays": [1, null], "minTradesForHabit": [1, null], "unbuilt": {}},
+   "volume": "卷六 §2.5 :230（rules.demand 各键，expectWindowDays、minTradesForHabit 取值域 [1, null]）；§4.4.3 规则 4 :499；块 6 第 6-11 张只登惯常价与惯常成交量要读的两键，卷文没给值，暂定值（见 demand.json basis，标“暂定·待试玩标定”）；其余四键的缺口登在 demand.json 的 unbuilt 行；读者是 server-plugin/demand.mjs",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"expectWindowDays": false, "minTradesForHabit": false, "unbuilt": false}
+  },
+  {
    "code": "saveLayout",
    "file": "tables/save-layout.json",
    "structure": "keys",

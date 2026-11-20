@@ -1,0 +1,28 @@
+{
+ "rows": [
+  {
+   "key": "expectWindowDays",
+   "value": 30,
+   "file": "server-plugin/demand.mjs",
+   "grade": "designed",
+   "source": "卷六 §2.5 :230（demand.json：expectWindowDays，取值域 [1, null]，是移动平均的除数）；§4.4.3 规则 4 :499（窗口内成交量的移动平均为惯常成交量，同窗口成交均价为惯常价）",
+   "basis": "暂定·待试玩标定。卷六 §2.5 :230 写“数值由内容卡标定，本卷不写数值”，全书无值；取 30 个世界日（约一个月的成交窗口，足以平滑单日涨落又跟得上季节），没有出处，是起点；试玩中改此处一处"
+  },
+  {
+   "key": "minTradesForHabit",
+   "value": 3,
+   "file": "server-plugin/demand.mjs",
+   "grade": "designed",
+   "source": "卷六 §2.5 :230（demand.json：minTradesForHabit，取值域 [1, null]，成交均价的除数是成交条数）；§4.4.3 规则 4 :499（窗口内该货在当地成交不少于它时用成交记录，不足取这件货自己的估值角色价）",
+   "basis": "暂定·待试玩标定。卷六 :230 写“数值由内容卡标定，本卷不写数值”，全书无值；取 3 条（一两笔偶发成交不足以当惯常），没有出处，是起点；试玩中改此处一处"
+  },
+  {
+   "key": "unbuilt",
+   "value": ["budgetShareByTier", "coverDaysByTier", "habitCurve", "neutralPreference"],
+   "file": "server-plugin/demand.mjs",
+   "grade": "designed",
+   "source": "卷六 §2.5 :230（demand.json 全部键）；§4.4.3 规则 2、3、1 第四项",
+   "basis": "缺口：本卡只前移惯常价与惯常成交量要读的 expectWindowDays、minTradesForHabit（规则 4）。其余四键的读者是需求四来源的合成（规则 1 至 3：备货读 coverDaysByTier、分到物读 habitCurve 与 neutralPreference、预算截断读 budgetShareByTier），那一块被未建输入拦住（家户与用度类条目、作业记录、成员日需量，见 docs/卡回报/ds-b6-11.md），卷文没给值，值定后登记并接读者"
+  }
+ ]
+}
