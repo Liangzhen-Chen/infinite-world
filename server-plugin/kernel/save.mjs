@@ -35,11 +35,15 @@ import { report } from './report.mjs';
 export const DOC_PARTS = Object.freeze(['doc_data', 'doc_state', 'doc_holdings', 'doc_ledger', 'doc_log']);
 /** 按 pathTypes 路径组织的三个部分（R27-4.6"状态路径的匹配语义用卷二 §2.7"）。 */
 export const PATH_PARTS = Object.freeze(['doc_state', 'doc_holdings', 'doc_ledger']);
-/** 分片切分方式（族 partition，:126）。 */
-export const PARTITIONS = Object.freeze(['part_single', 'part_by_unit', 'part_by_segment']);
+/** 分片切分方式（族 partition，:126；part_by_chunk 第五版加，R27-4.6 :555）。 */
+export const PARTITIONS = Object.freeze(['part_single', 'part_by_unit', 'part_by_segment', 'part_by_chunk']);
 // 文档部分与切分方式的族句柄：成员由上面的 DOC_PARTS、PARTITIONS 派生。
 const PART = markersOf('doc_part', DOC_PARTS);
 const PARTITION = markersOf('partition', PARTITIONS);
+// 格差分路径的顶层键句柄（卷五 §3.3 :362）；part_by_chunk 只用于 cells.<w>.<chunk>.<cellKey>（卷二十七 R27-4.6 :555）。
+const GRID_KEY = markersOf('grid_diff_key', Object.freeze(['cells']));
+// 格差分路径的段形状 cells.<格空间号>.<里块号>.<格键>：段数与片键下标都从本形状派生，不另写 0/1/-1 之外的数字字面量（卷二 S10 白名单）。
+const GRID_PATH_SEGS = Object.freeze([GRID_KEY.cells, GRAMMAR_TOKENS.wildcard, GRAMMAR_TOKENS.wildcard, GRAMMAR_TOKENS.wildcard]);
 /** 槽位目录、分片目录与两份清单（当前与上一个完好清单，R27-4.8 回退用）。 */
 export const LAYOUT_NAMES = Object.freeze({ slotPrefix: 'slot-', shardsDir: 'shards', current: 'manifest.json', previous: 'manifest.prev.json', shardExt: '.json', tmpExt: '.tmp' });
 /** 清单字段（§4.4.1 :487；另加槽位编号 slot，R27-4.10 显示字段之一）。没有墙钟字段。 */
@@ -248,6 +252,12 @@ function unitOf(row, segs) {
   return u;
 }
 
+// 一个格差分路径的里块片键：第二、三段（格空间号与里块号），不经注入映射（R27-4.6 :555）。
+// 下标由 GRID_PATH_SEGS 派生（段形状 cells.<w>.<chunk>.<cellKey>），不另写数字字面量。
+function chunkKeyOf(segs) {
+  return segs.slice(1, GRID_PATH_SEGS.length - 1).join(GRAMMAR_TOKENS.pathSep);
+}
+
 // ---------- 存档布局参数与分片表（规则表 save-layout、host，卷二十七 §2.2 :161–164、:184） ----------
 
 /**
@@ -303,6 +313,14 @@ export function compileLayout(layout) {
       if (row.part === PART.doc_data) throw uncovered(`${row.shard}: part_by_unit on doc_data (data tables are not state paths)`);
       if (!unitOfPath) throw uncovered(`${row.shard}: part_by_unit without a registered unit mapping`);
     }
+    if (row.partition === PARTITION.part_by_chunk) {
+      // 只用于格差分 cells.<w>.<chunk>.<cellKey>（第二、三段是格空间号与里块号，R27-4.6 :555）；别的路径即加载失败。
+      if (row.part === PART.doc_data) throw uncovered(`${row.shard}: part_by_chunk on doc_data (data tables are not state paths)`);
+      for (const p of row.paths) {
+        const segs = statePathSegments(p);
+        if (!segs || segs.length !== GRID_PATH_SEGS.length || segs[0] !== GRID_KEY.cells) throw uncovered(`${row.shard}: part_by_chunk needs cells.<w>.<chunk>.<cellKey> paths, got ${p}`);
+      }
+    }
     if (row.part === PART.doc_data) {
       if (row.partition === PARTITION.part_by_segment) {
         if (appendRow) throw uncovered(`two doc_data append rows: ${appendRow.shard}, ${row.shard}`);
@@ -328,6 +346,11 @@ export function compileLayout(layout) {
     }
     if (full.length === 0) throw uncovered(`${t.pattern} is not covered by any shard row`);
     if (full.length > 1) throw uncovered(`${t.pattern} is covered by ${full.map((r) => r.shard).join(', ')}`);
+    // part_by_chunk 只用于格差分 cells.<w>.<chunk>.<cellKey>（段数恰为 GRID_PATH_SEGS.length，R27-4.6 :555）：它覆盖的 pathTypes 模式
+    // 段数也必须恰为 4，否则（如更深的 cells.*.*.*.<字段>）按"用于别的路径即加载失败"拒收。
+    if (full[0].partition === PARTITION.part_by_chunk && t.segs.length !== GRID_PATH_SEGS.length) {
+      throw uncovered(`${full[0].shard}: part_by_chunk covers ${t.pattern} (${t.segs.length} segments), needs exactly ${GRID_PATH_SEGS.length} (cells.<w>.<chunk>.<cellKey>)`);
+    }
     rowOfPattern.set(t.pattern, full[0]);
   }
   return { rowOfPattern, dataRows, appendRow, logRow: logRows[0], pathRows };
@@ -396,6 +419,11 @@ function takeSnapshot(compiled, doc, atEvent) {
         const u = unitOf(row, segs);
         if (!Object.hasOwn(content[row.shard], u)) content[row.shard][u] = {};
         setIn(content[row.shard][u], segs, value);
+      } else if (row.partition === PARTITION.part_by_chunk) {
+        // 按（格空间, 里块）各成一片：content[行] 是 片键 → 该里块的路径子树。
+        const ck = chunkKeyOf(segs);
+        if (!Object.hasOwn(content[row.shard], ck)) content[row.shard][ck] = {};
+        setIn(content[row.shard][ck], segs, value);
       } else setIn(content[row.shard], segs, value);
     });
   }
@@ -411,10 +439,10 @@ function takeSnapshot(compiled, doc, atEvent) {
   /** @type {Record<string, string | string[]>} */
   const shards = {};
   const files = [];
-  const byUnit = new Set(compiled.pathRows.filter((r) => r.partition === PARTITION.part_by_unit).map((r) => r.shard));
+  const multi = new Set(compiled.pathRows.filter((r) => r.partition === PARTITION.part_by_unit || r.partition === PARTITION.part_by_chunk).map((r) => r.shard));
   for (const code of Object.keys(content).sort()) {
-    if (byUnit.has(code)) {
-      // part_by_unit 一行是摘要列表，按单元代号升序，每个单元一片（片里是带完整路径的子树，读回直接拼）。
+    if (multi.has(code)) {
+      // part_by_unit / part_by_chunk 一行是摘要列表，按片键（单元代号 / 格空间.里块）升序，每个一片（片里是带完整路径的子树，读回直接拼）。
       const fs = Object.keys(content[code]).sort().map((u) => fileOf(content[code][u]));
       shards[code] = fs.map((f) => f.digest);
       files.push(...fs);

@@ -30,7 +30,7 @@ import { base64ToBytes, utf8ToText, utf8Length } from '../bytes.mjs';
 
 const E = buildE();
 // 分片切分方式与文档部分、清单状态的固定记号（卷二十七 R27-4.1 :124、§1.9 族 partition/state）：单一定义，比较处引用。
-const PARTITION = Object.freeze({ byUnit: 'part_by_unit' });
+const PARTITION = Object.freeze({ byUnit: 'part_by_unit', byChunk: 'part_by_chunk' });
 const DOC_PART = Object.freeze({ data: 'doc_data' });
 /** 清单状态（checkManifest 的返回字段 state）：本文件的单一定义，写盘侧 save.mjs 也引用它比较。 */
 export const MANIFEST_STATE = Object.freeze({ missing: 'missing', ok: 'ok', torn: 'torn' });
@@ -151,10 +151,10 @@ function assemble(m, texts, layout) {
       continue;
     }
     const row = rowOf.get(code);
-    const byUnit = row !== undefined && row.partition === PARTITION.byUnit;
-    if (!row || (byUnit ? !Array.isArray(ref) || !ref.every((d) => typeof d === 'string') : typeof ref !== 'string')) throw new KernelError('E-SAVE-SHARD-UNCOVERED', {}, `snapshot shard ${code} has no row in the layout`);
-    // part_by_unit 一行是各单元一片的摘要列表；每片是带完整路径的子树，逐片拼回。
-    for (const d of byUnit ? ref : [ref]) {
+    const multi = row !== undefined && (row.partition === PARTITION.byUnit || row.partition === PARTITION.byChunk);
+    if (!row || (multi ? !Array.isArray(ref) || !ref.every((d) => typeof d === 'string') : typeof ref !== 'string')) throw new KernelError('E-SAVE-SHARD-UNCOVERED', {}, `snapshot shard ${code} has no row in the layout`);
+    // part_by_unit / part_by_chunk 一行是各单元 / 里块一片的摘要列表；每片是带完整路径的子树，逐片拼回。
+    for (const d of multi ? ref : [ref]) {
       const content = parseShard(texts, d);
       if (row.part === DOC_PART.data) { Object.assign(doc.doc_data.base, content); continue; }
       walkPathTree(content, (segs, v, rec) => setIn(doc[row.part], segs, rec.sealed ? decodeSealedValue(v) : v));

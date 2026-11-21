@@ -504,6 +504,17 @@
      }}
     }}
    }}
+  },
+  {
+   "name": "struct:pos",
+   "source": "卷二 §1.5 :252",
+   "type": {"struct": {
+    "w": "integer:count",
+    "x": "integer:count",
+    "y": "integer:count",
+    "z": "integer:count",
+    "coarse": "boolean"
+   }}
   }
  ]
 }

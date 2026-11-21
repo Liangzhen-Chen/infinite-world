@@ -32,6 +32,7 @@ const DECL = {
     gauge: { readers: [], writers: { '*.level': 'sys/gauge.mjs', '*.dims.*': 'sys/gauge.mjs' } },
     holdings: { readers: [], writers: { '*.*': 'sys/hold.mjs' } },
     purse: { readers: [], writers: { '*.amount': 'sys/purse.mjs' } },
+    cells: { readers: [], writers: { '*.*.*': 'sys/grid-diff.mjs' } },
     displayNames: { readers: [], writers: { '*': 'ai-gate/naming-gate.mjs' }, display: ['*.text'] },
     playerNotes: { readers: [], writers: { '*': 'ai-gate/note-gate.mjs' }, display: ['*.text'] },
     narration: { readers: [], writers: { '*': 'ai-gate/narration-gate.mjs' } },
@@ -44,6 +45,7 @@ const DECL = {
     'gauge.*.dims.*': 'dimension',
     'holdings.*.*': 'integer:count',
     'purse.*.amount': 'integer:count',
+    'cells.*.*.*': 'integer:count',
     'displayNames.*.text': 'sealed',
     'displayNames.*.seq': 'integer:count',
     'playerNotes.*.text': 'sealed',
@@ -51,6 +53,7 @@ const DECL = {
   },
   keyKinds: {
     'gauge.*.level': ['gadget'], 'gauge.*.dims.*': ['gadget', 'dimKey'], 'holdings.*.*': ['gadget', 'gadget'], 'purse.*.amount': ['gadget'],
+    'cells.*.*.*': ['seedKey', 'seedKey', 'seedKey'],
     'displayNames.*.seq': [['gadget', 'identityKey']],
   },
   phases: [],
@@ -73,6 +76,7 @@ const LAYOUT = {
     { shard: 'shd_append', part: 'doc_data', paths: [], partition: 'part_by_segment' },
     { shard: 'shd_gauge', part: 'doc_state', paths: ['gauge'], partition: 'part_single' },
     { shard: 'shd_text', part: 'doc_state', paths: ['displayNames', 'playerNotes', 'narration'], partition: 'part_single' },
+    { shard: 'shd_cells', part: 'doc_state', paths: ['cells.*.*.*'], partition: 'part_by_chunk' },
     { shard: 'shd_hold', part: 'doc_holdings', paths: ['holdings'], partition: 'part_single' },
     { shard: 'shd_purse', part: 'doc_ledger', paths: ['purse'], partition: 'part_single' },
     { shard: 'shd_log', part: 'doc_log', paths: [], partition: 'part_by_segment' },
@@ -88,6 +92,7 @@ const LAYOUT_B = {
     { shard: 'shd_b', part: 'doc_data', paths: ['tbl_b'], partition: 'part_single' },
     { shard: 'shd_append', part: 'doc_data', paths: [], partition: 'part_by_segment' },
     { shard: 'shd_state', part: 'doc_state', paths: ['gauge', 'displayNames', 'playerNotes', 'narration'], partition: 'part_single' },
+    { shard: 'shd_cells', part: 'doc_state', paths: ['cells.*.*.*'], partition: 'part_by_chunk' },
     { shard: 'shd_hold', part: 'doc_holdings', paths: ['holdings.*.*'], partition: 'part_single' },
     { shard: 'shd_purse', part: 'doc_ledger', paths: ['purse.*'], partition: 'part_single' },
     { shard: 'shd_log', part: 'doc_log', paths: [], partition: 'part_by_segment' },
@@ -293,8 +298,8 @@ test('R27-4.4：未在 pathTypes 声明的路径进不了存档（E-PATH-UNDECLA
 // ---------- 分片表（R27-4.6） ----------
 
 test('分片表：每条 pathTypes 模式恰被一行完全覆盖；没盖、两行盖、只盖一部分、日志行不对、part_by_unit、路径部分用 part_by_segment 都 E-SAVE-SHARD-UNCOVERED', () => {
-  assert.equal(compileLayout(LAYOUT).pathRows.length, 4);
-  assert.equal(compileLayout(LAYOUT_B).pathRows.length, 3);
+  assert.equal(compileLayout(LAYOUT).pathRows.length, 5);
+  assert.equal(compileLayout(LAYOUT_B).pathRows.length, 4);
   const without = (code) => ({ ...LAYOUT, shards: LAYOUT.shards.filter((r) => r.shard !== code) });
   const plus = (row) => ({ ...LAYOUT, shards: [...LAYOUT.shards, row] });
   const uncovered = (e) => e.code === 'E-SAVE-SHARD-UNCOVERED';
@@ -359,7 +364,7 @@ test('part_by_unit 未登记映射即按未覆盖拒；登记了而某路径返�
   for (const empty of [null, undefined, '', 7]) {
     registerUnitOfPath((segs) => (segs[1] === 'gad_two' ? empty : 'unt_north'));
     try {
-      assert.equal(compileLayout(LAYOUT_UNIT).pathRows.length, 4);
+      assert.equal(compileLayout(LAYOUT_UNIT).pathRows.length, 5);
       assert.throws(() => createLogBook(LAYOUT_UNIT, docUnit()), uncovered);
     } finally {
       resetUnitOfPath();
@@ -371,6 +376,90 @@ test('part_by_unit 未登记映射即按未覆盖拒；登记了而某路径返�
     assert.throws(() => compileLayout({ ...LAYOUT, shards: [...LAYOUT.shards, { shard: 'shd_x', part: 'doc_data', paths: ['tbl_c'], partition: 'part_by_unit' }] }), uncovered);
   } finally {
     resetUnitOfPath();
+  }
+});
+
+// part_by_chunk（卷二十七 R27-4.6 :555、R27-4.13 :570；A27-4.9 :605）：cells.* 按（格空间, 里块）一片，
+// 片键直接取路径第二、三段（不经注入映射）；片里只有格差分，没有区格/细格基底与缓存。
+// 夹具：两个格空间 w0/w1、三个里块 c0/c1/c2，非空的（格空间, 里块）共 4 个——w0.c0、w0.c1、w1.c1、w1.c2。
+const docChunk = () => {
+  const d = doc0();
+  d.doc_state.cells = {
+    w0: { c0: { k1: 1, k2: 2 }, c1: { k3: 3 } },
+    w1: { c1: { k4: 4 }, c2: { k5: 5, k6: 6 } },
+  };
+  return d;
+};
+
+// 从快照的 cells 分片摘要列表还原 {片键 → {digest, tree}}（片键 = 格空间.里块；每片只含一个里块）。
+const chunkShardsOf = (snap) => {
+  const textOf = new Map(snap.files.map((f) => [f.digest, f.text]));
+  const out = new Map();
+  for (const d of snap.shards.shd_cells) {
+    const tree = JSON.parse(textOf.get(d));
+    const w = Object.keys(tree.cells)[0];
+    const c = Object.keys(tree.cells[w])[0];
+    out.set(`${w}.${c}`, { digest: d, tree });
+  }
+  return out;
+};
+
+test('part_by_chunk：每片只含同一（格空间, 里块）的格键、片数等于非空里块数、片里没有基底与缓存字段', () => {
+  const snap = createLogBook(LAYOUT, docChunk()).snapshots[0];
+  const shards = chunkShardsOf(snap);
+  assert.equal(snap.shards.shd_cells.length, 4);
+  assert.deepEqual([...shards.keys()].sort(), ['w0.c0', 'w0.c1', 'w1.c1', 'w1.c2']);
+  // 每片顶层只有 cells 一个键（A27-4.9：片里没有区格或细格基底、没有缓存），之下是（格空间→里块→格键），格键全在同一里块。
+  assert.deepEqual(shards.get('w0.c0').tree, { cells: { w0: { c0: { k1: 1, k2: 2 } } } });
+  assert.deepEqual(shards.get('w0.c1').tree, { cells: { w0: { c1: { k3: 3 } } } });
+  assert.deepEqual(shards.get('w1.c1').tree, { cells: { w1: { c1: { k4: 4 } } } });
+  assert.deepEqual(shards.get('w1.c2').tree, { cells: { w1: { c2: { k5: 5, k6: 6 } } } });
+});
+
+test('part_by_chunk：存盘读回，cells 差分逐键相同', () => {
+  const root = testTempRoot('save-');
+  const doc = docChunk();
+  const book = createLogBook(LAYOUT, doc);
+  assert.equal(saveToSlot({ root, slot: 0, book, doc, rulesDigest: RULES, clockMinute: 0 }).ok, true);
+  const r = loadSlot({ root, slot: 0, layout: LAYOUT, rulesDigest: RULES });
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.doc, withLog(doc, []));
+});
+
+test('part_by_chunk：一个里块的格改了只有那一片的摘要变、其余片不变（卷二十七 §4.4.5 例 7）', () => {
+  const a = createLogBook(LAYOUT, docChunk()).snapshots[0];
+  const b = docChunk();
+  b.doc_state.cells.w0.c0.k2 = 99;
+  const snapB = createLogBook(LAYOUT, b).snapshots[0];
+  const da = chunkShardsOf(a);
+  const db = chunkShardsOf(snapB);
+  assert.deepEqual([...db.keys()].sort(), [...da.keys()].sort());
+  for (const k of da.keys()) {
+    if (k === 'w0.c0') assert.notEqual(db.get(k).digest, da.get(k).digest);
+    else assert.equal(db.get(k).digest, da.get(k).digest);
+  }
+});
+
+test('part_by_chunk：用在非 cells 路径或 doc_data 即 E-SAVE-SHARD-UNCOVERED（对照表 #5）', () => {
+  const uncovered = (e) => e.code === 'E-SAVE-SHARD-UNCOVERED';
+  const plus = (row) => ({ ...LAYOUT, shards: [...LAYOUT.shards, row] });
+  assert.throws(() => compileLayout(plus({ shard: 'shd_x', part: 'doc_state', paths: ['gauge.*.level'], partition: 'part_by_chunk' })), uncovered);
+  assert.throws(() => compileLayout(plus({ shard: 'shd_x', part: 'doc_state', paths: ['cells.*.*'], partition: 'part_by_chunk' })), uncovered);
+  assert.throws(() => compileLayout(plus({ shard: 'shd_x', part: 'doc_data', paths: ['cells.*.*.*'], partition: 'part_by_chunk' })), uncovered);
+});
+
+test('part_by_chunk：覆盖段数不为 4 的 cells 路径模式（更深的 cells.*.*.*.*）即 E-SAVE-SHARD-UNCOVERED（R27-4.6 :555）', () => {
+  // 存储里多一条 5 段的 cells 模式：part_by_chunk 行 cells.*.*.* 会完全覆盖它（rowCovers 允许行短于模式），但段数不是 4，须按"用于别的路径即加载失败"拒。
+  // 直接改已合并的 pathTypes/keyKinds 装进存储（不经 mergeStateOwners/buildP：同顶层键的 cells.*.*.* 与 cells.*.*.*.* 会撞 P 成员名，与本题无关）。
+  installStorage({
+    ...merged.merged,
+    pathTypes: { ...merged.merged.pathTypes, 'cells.*.*.*.*': 'integer:count' },
+    keyKinds: { ...merged.merged.keyKinds, 'cells.*.*.*.*': ['seedKey', 'seedKey', 'seedKey', 'seedKey'] },
+  });
+  try {
+    assert.throws(() => compileLayout(LAYOUT), (e) => e.code === 'E-SAVE-SHARD-UNCOVERED');
+  } finally {
+    installStorage(merged.merged);
   }
 });
 

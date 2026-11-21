@@ -3291,6 +3291,33 @@
    "zeroRows": []
   },
   {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-4.9",
+   "localNo": "A27-4.9",
+   "method": "unit_test",
+   "print": "0b86c2e83aea4042f812bfaab67d0b6773073d51409282de7547edf485b0fa8b",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "g1-pos",
+     "date": "2026-11-21",
+     "rev": 1,
+     "summary": "首次登记（G1 位置类型/事件可选 pos/分片行：A27-4.9 格基底不存档归 G1；卡内测试随 cells.* 分片行 part_by_chunk 落地后写，本卡只登条目，指向 tests/kernel/save.test.mjs 的同名不变量测试）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-4.9 :605（格基底不存档：任意存档分片里没有区格或细格基底、没有缓存，part_by_chunk 每一片只含同一（格空间, 里块）的 cells.* 路径）；对照表 #6、#16 归 G1",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
    "detector": "call_edge",
    "expect": "zero",
    "form": "scan",

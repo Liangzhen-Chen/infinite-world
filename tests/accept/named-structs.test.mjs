@@ -58,6 +58,7 @@ const FIELDS = {
   'struct:holderOutflow': [],
   'struct:holderLots': [],
   'struct:resourceTotals': [],
+  'struct:pos': ['w', 'x', 'y', 'z', 'coarse'],
 };
 
 // 数值字段的卷文单位（integer / number 同此；记号按卷二 §1.5 原表）。
@@ -91,6 +92,7 @@ const NUMERIC = {
   'struct:epiCount': { infected: ['integer', 'count'], immune: ['integer', 'count'] },
   'struct:fnTable': { inScale: ['integer', 'count'], outScale: ['integer', 'count'], domainMin: ['integer', 'count'], domainMax: ['integer', 'count'], step: ['integer', 'count'], 'values[]': ['integer', 'count'] },
   'struct:memberRange': { from: ['integer', 'count'], to: ['integer', 'count'], bornMinute: ['integer', 'minute'] },
+  'struct:pos': { w: ['integer', 'count'], x: ['integer', 'count'], y: ['integer', 'count'], z: ['integer', 'count'] },
 };
 
 const NUM = /^(integer|number)(?::([^\s]+))?(?: nullable)?$/;
@@ -111,7 +113,7 @@ function numericLeaves(node, at, out) {
   return out;
 }
 
-test('命名 struct 登记与卷二 §1.5 表逐条一致：46 行（1119k11 增 revivePoint）、字段名与出处', () => {
+test('命名 struct 登记与卷二 §1.5 表逐条一致：47 行（G1 增 struct:pos；1119k11 增 revivePoint）、字段名与出处', () => {
   assert.deepEqual([...rows.keys()].sort(), Object.keys(FIELDS).sort());
   for (const [name, fields] of Object.entries(FIELDS)) {
     const row = rows.get(name);
@@ -167,6 +169,6 @@ test('byState 带类型参数；命名引用都指向已登记的行', () => {
 });
 
 test('登记表只含卷文列出的名字，不给未登记名字开口子', () => {
-  assert.equal(REG.rows.length, 46);
-  assert.equal(new Set(REG.rows.map((r) => r.name)).size, 46);
+  assert.equal(REG.rows.length, 47);
+  assert.equal(new Set(REG.rows.map((r) => r.name)).size, 47);
 });

@@ -207,6 +207,27 @@ test('表 A：必填缺失、verb 未登记、visibility 越权、文字字段�
   resetEventLog();
 });
 
+test('事件载荷公共字段 pos：可选；给了按 struct:pos 校验（缺字段/类型不对/多余字段拒 E-EVT-SHAPE）', () => {
+  const book = freshLog();
+  const pos = { w: 0, x: 1, y: 2, z: 3, coarse: true };
+  const payloadWith = (p) => ({ id: 'npc_a', cause: 'verb_entity_terminated', source: null, mode: 'inherit', successorId: null, pos: p });
+  // 给了 pos：按 struct:pos 校验并原样写入（卷二 §1.5 :252；卷五 §5 :1304）。
+  const rec = inTx({}, (s) => emit(ENGINE, s, terminationEvent({ payload: payloadWith(pos) }), { ...KERNEL_ID, subject: 'evt_prev_pos' }));
+  assert.deepEqual(rec.payload.pos, pos);
+  // 不给 pos：公共字段补 null（与 place 同法）。
+  const rec2 = inTx({}, (s) => emit(ENGINE, s, terminationEvent(), { ...KERNEL_ID, subject: 'evt_prev_none' }));
+  assert.equal(rec2.payload.pos, null);
+  // 给了就按 struct:pos 核：缺字段、多余字段、类型不对、非对象都 E-EVT-SHAPE，且不落日志。
+  const bad = (p) => assert.throws(() => inTx({}, (s) => emit(ENGINE, s, terminationEvent({ payload: payloadWith(p) }), KERNEL_ID)), codeIs('E-EVT-SHAPE'));
+  bad({ w: 0, x: 1, y: 2, z: 3 });                          // 缺 coarse
+  bad({ w: 0, x: 1, y: 2, z: 3, coarse: true, extra: 1 });  // 多余字段
+  bad({ w: 0, x: 1, y: 2, z: 3.5, coarse: true });          // 非整数
+  bad({ w: 0, x: 1, y: 2, z: 3, coarse: 'yes' });           // coarse 非布尔
+  bad(5);                                                    // 非对象
+  assert.equal(book.entries.length, 2);
+  resetEventLog();
+});
+
 test('写下后不改：日志存冻结的深副本，调用方改自己的入参也不改已写事件', () => {
   const book = freshLog();
   const input = terminationEvent();

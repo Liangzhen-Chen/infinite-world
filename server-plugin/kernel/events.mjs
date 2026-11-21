@@ -60,8 +60,8 @@ const CODE = Object.freeze({ shape: 'E-EVT-SHAPE', verb: 'E-EVT-VERB', emitter: 
 const VISIBILITY = Object.freeze(['private', 'public', 'witnessed']);
 // 调用方可给的字段（id 与六个补充字段由写者定，不收外来值）。
 const INPUT_FIELDS = Object.freeze(['minute', 'verb', 'actor', 'actorAs', 'targets', 'primitives', 'cause', 'witnesses', 'rollKey', 'visibility', 'payload']);
-// 载荷公共字段（表 A :141–:144）：place、related、causedBy。
-const PAYLOAD_COMMON = Object.freeze(['place', 'related', 'causedBy']);
+// 载荷公共字段（表 A :141–:144）：place、related、causedBy；加可选 pos（struct:pos，卷二 §1.5 :252；卷五 §5 :1304，格子迁移 G1）。
+const PAYLOAD_COMMON = Object.freeze(['place', 'related', 'causedBy', 'pos']);
 // 表 B 各栏（:156–:173：行上必写、没有缺省）。
 const VERB_ROW_FIELDS = Object.freeze([
   'parent', 'payloadShape', 'kindFrom', 'kindOnly', 'worthSlots', 'headSlot', 'sigBase', 'tallies',
@@ -83,6 +83,14 @@ const isCode = (v) => typeof v === 'string' && CODE_RE.test(v);
 // 位次代号在卷九 §2.9 写作 pos.commit／pos.only／pos.kernel（点分代号，不是单段 CODE_RE）。
 const isDottedCode = (v) => typeof v === 'string' && v.length > 0 && v.split(GRAMMAR_TOKENS.pathSep).every(isCode);
 const isEventId = (v) => typeof v === 'string' && isHex64(v);
+// struct:pos 的字段（卷二 §1.5 :252）：五个全必写、不多不少，w/x/y/z 整数、coarse 布尔。
+const POS_FIELDS = Object.freeze(['coarse', 'w', 'x', 'y', 'z']);
+const isPosValue = (v) => {
+  if (!isObj(v)) return false;
+  const keys = Object.keys(v).sort();
+  if (keys.length !== POS_FIELDS.length || keys.some((k, i) => k !== POS_FIELDS[i])) return false;
+  return Number.isSafeInteger(v.w) && Number.isSafeInteger(v.x) && Number.isSafeInteger(v.y) && Number.isSafeInteger(v.z) && typeof v.coarse === 'boolean';
+};
 
 // 错误形状同 KernelError（kernel/transaction.mjs 的 codeOf 按 e.code 认）；fields 只含代号与数值。
 function deny(code, detail) {
@@ -272,7 +280,9 @@ function normalizePayload(row, payload) {
   if (!isStrList(related) || !related.every(isCode)) throw deny(CODE.shape, 'payload.related: list of entity ids');
   const causedBy = p.causedBy === undefined ? [] : p.causedBy;
   if (!isStrList(causedBy) || !causedBy.every(isEventId)) throw deny(CODE.shape, 'payload.causedBy: list of EventId');
-  const out = { place, related, causedBy };
+  const pos = p.pos === undefined ? null : p.pos;
+  if (!(pos === null || isPosValue(pos))) throw deny(CODE.shape, 'payload.pos: struct:pos {w, x, y, z: integer:count, coarse: boolean}');
+  const out = { place, related, causedBy, pos };
   for (const [field, spec] of Object.entries(shape)) {
     const value = p[field] === undefined ? null : p[field];
     if (!payloadTypeOk(spec, value)) throw deny(CODE.shape, `payload.${field}: want ${spec}`);

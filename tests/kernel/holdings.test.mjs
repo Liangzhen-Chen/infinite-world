@@ -168,11 +168,11 @@ test('开边：hk_resides 写一条现役边，terms 公共键补齐，发持有
   assert.equal(list[0].id, id);
   assert.deepEqual(book.entries.map((e) => e.verb).sort(), ['verb_domicile_changed', 'verb_holding_changed']);
   const hc = book.entries.find((e) => e.verb === 'verb_holding_changed');
-  assert.deepEqual(hc.payload, { place: null, related: [], causedBy: [], edge: id, kind: 'hk_resides', holder: 'npc_a', subject: 'place_x', change: 'established', prevHolder: null, at: MINUTE });
+  assert.deepEqual(hc.payload, { place: null, related: [], causedBy: [], pos: null, edge: id, kind: 'hk_resides', holder: 'npc_a', subject: 'place_x', change: 'established', prevHolder: null, at: MINUTE });
   assert.deepEqual(hc.targets, ['place_x']);
   const dc = book.entries.find((e) => e.verb === 'verb_domicile_changed');
   // 常住变化行的 payloadShape 也有 place（边的标的），与表 A 公共字段同名，写者取载荷字段的值。
-  assert.deepEqual(dc.payload, { place: 'place_x', related: [], causedBy: [], person: 'npc_a', since: MINUTE, until: null });
+  assert.deepEqual(dc.payload, { place: 'place_x', related: [], causedBy: [], pos: null, person: 'npc_a', since: MINUTE, until: null });
 });
 
 test('关边：按边 id 关闭写 until=结束时刻并发 ended；重复关闭拒 E-HK-PROTOCOL', () => {
@@ -402,7 +402,7 @@ test('转移：同一事务关旧边写承接边，只发一条 transferred（ho
   assert.equal(newEdge.record.terms.until, null);
   assert.equal(newEdge.record.terms.share, undefined);
   assert.deepEqual(book.entries.map((e) => e.verb), ['verb_holding_changed']);
-  assert.deepEqual(book.entries[0].payload, { place: null, related: [], causedBy: [], edge: newId, kind: 'hk_test_move', holder: 'npc_b', subject: 'item_q', change: 'transferred', prevHolder: 'npc_a', at: MINUTE });
+  assert.deepEqual(book.entries[0].payload, { place: null, related: [], causedBy: [], pos: null, edge: newId, kind: 'hk_test_move', holder: 'npc_b', subject: 'item_q', change: 'transferred', prevHolder: 'npc_a', at: MINUTE });
 });
 
 test('转移：种类行 transferable 为假即拒；转给当前持有人即拒', () => {
