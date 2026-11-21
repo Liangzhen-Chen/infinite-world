@@ -15,12 +15,12 @@
   "bform": {"closed": false, "entries": {
    "bldform_river_house": {
     "walled": true, "roofed": true, "deck": false, "storeyBase": 0, "aspect": 1, "windowEvery": 4,
-    "wallThicknessDefaultM": 0.4, "wallThicknessMinM": 0.4,
+    "wallThicknessDefaultM": 0.4, "wallThicknessMinM": 0.4, "planSideMaxCells": 18,
     "rooms": [
      {"role": "roomrole_common_room", "share": 0.5, "level": 0, "open": false},
      {"role": "roomrole_sleeping_room", "share": 0.5, "level": 0, "open": false}
     ],
-    "basis": "西陲垄渠人（world/lore/cultures.json:21 culture_river，anchor 为 loc_hw）的盖法：\"夯土下墙与可拆木楼，门槛刻历次水位\"；docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 把它定为 building:river_house（wall rammed_earth、frame timber、roof thatch_reed）。walled 真（有夯土墙）、roofed 真（有草顶）、deck 假、storeyBase 0（设定无地窖）。aspect 1、windowEvery 4、wallThicknessDefaultM 0.4、wallThicknessMinM 0.4：无出处，暂定起点，待试玩标定（设定只写\"夯土下墙厚实\"，cultures.json:38，没有数；卷十九 :601 手算示例写明\"数值都是示意的数据\"，不是出处，不引）。rooms：locations.json 八处私宅各写两个房间\"共用起居间\"（如 :3301）与\"家人睡处\"（如 :3305）；share 0.5/0.5 无出处，暂定起点，待试玩标定。envelopeReq、skill、skillMin、minutesPerM2、toolAbilities、qualityCurve、portable、packMinutes、beautyBase、provides 等建造字段归卷十九建造卡，本卡未落（planBlueprint 与 checkBlueprintForms 不读）。"
+    "basis": "西陲垄渠人（world/lore/cultures.json:21 culture_river，anchor 为 loc_hw）的盖法：\"夯土下墙与可拆木楼，门槛刻历次水位\"；docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 把它定为 building:river_house（wall rammed_earth、frame timber、roof thatch_reed）。walled 真（有夯土墙）、roofed 真（有草顶）、deck 假、storeyBase 0（设定无地窖）。aspect 1、windowEvery 4、wallThicknessDefaultM 0.4、wallThicknessMinM 0.4：无出处，暂定起点，待试玩标定（设定只写\"夯土下墙厚实\"，cultures.json:38，没有数；卷十九 :601 手算示例写明\"数值都是示意的数据\"，不是出处，不引）。rooms：locations.json 八处私宅各写两个房间\"共用起居间\"（如 :3301）与\"家人睡处\"（如 :3305）；share 0.5/0.5 无出处，暂定起点，待试玩标定。planSideMaxCells 18（外包边长上限，细格计，卷十九 §2.4、封卷后勘误 1121k21，李白 11-22 裁定事件 3ce50e60）：设定原文 docs/世界设计/13-建筑、聚落形态与服饰器物.md:82 把 courtyard_house（river_house 的原型，:170）占地写成 footprintM2 [120, 300]，上限 300 m2；按本形制 aspect 1、细格 1 m 折外包：D = ⌊√300⌋ = 17、W = ceil(300 ÷ 17) = 18，取 18（占地上限的出处是设定原文，折成边长的算法与取整是生成规则，暂定·待试玩标定；不是 :601 示意值）。envelopeReq、skill、skillMin、minutesPerM2、toolAbilities、qualityCurve、portable、packMinutes、beautyBase、provides 等建造字段归卷十九建造卡，本卡未落（planBlueprint 与 checkBlueprintForms 不读）。"
    }
   }, "prefix": "bldform_"},
   "bulkform": {

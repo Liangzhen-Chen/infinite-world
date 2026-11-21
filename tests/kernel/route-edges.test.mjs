@@ -43,7 +43,7 @@ function load({ rows = {}, edges = [], spaces } = {}) {
     v.families.water.entries = { ...v.families.water.entries, water_test_nav: { navigable: true } };
     v.families.cellclass.entries = FULL_CELLCLASS;
     v.families.gentemplate.entries = GEN_TEMPLATE;
-    v.families.bform.entries = { bldform_test: { walled: true, aspect: 1, storeyBase: 0, roofed: true, deck: false, windowEvery: 0, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.2, rooms: [] } };
+    v.families.bform.entries = { bldform_test: { walled: true, aspect: 1, storeyBase: 0, roofed: true, deck: false, windowEvery: 0, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.2, planSideMaxCells: 64, rooms: [] } };
     writeUnderTempRoot(tmp, '_vocab.json', JSON.stringify(v));
     return loadWorld(ROOT, { dimensionsDir: relative(ROOT, tmp) });
   } finally { rmSync(tmp, { recursive: true, force: true }); }

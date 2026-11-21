@@ -8,7 +8,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
-import { planCellsOf, planBlueprint, worldCellsOf, materialsOfElements, breachesOf, openingAreasOf, checkBlueprintForms, KIND, CEILING, OPENING, REASON } from '../../server-plugin/kernel/blueprint.mjs';
+import { planCellsOf, planBlueprint, planFeasible, worldCellsOf, materialsOfElements, breachesOf, openingAreasOf, checkBlueprintForms, KIND, CEILING, OPENING, REASON } from '../../server-plugin/kernel/blueprint.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const W = loadWorld(ROOT); // 装配定点常数与 sqrt 表
@@ -16,10 +16,11 @@ assert.ok(W.ok, W.text);
 installDigestCap({ sha256Hex: (data, encoding) => createHash('sha256').update(data, encoding === 'base64' ? 'base64' : 'utf8').digest('hex') });
 
 // 规则常数：照 world/rules/tables/grid.json（cellM、storeyM、facingDirections）、单位表 L 的 si 与 facility.json 的 blueprint 行（卷十九给定的取值域上下限），值只作测试前提。
-const LIMITS = Object.freeze({ planCellsMin: 1, planCellsMax: 4096, storeysMin: 1, storeysMax: 64, storeyBaseMin: -8, storeyBaseMax: 0, windowEveryMax: 64, wallThicknessMaxM: 20, aspectMin: 0.125, aspectMax: 8 });
+const LIMITS = Object.freeze({ planCellsMin: 1, storeysMin: 1, storeysMax: 64, storeyBaseMin: -8, storeyBaseMax: 0, windowEveryMax: 64, wallThicknessMaxM: 20, aspectMin: 0.125, aspectMax: 8 });
 const RULES = Object.freeze({ cellM: 1, storeyM: 3, m3PerL: 0.001, facingDirections: 8, limits: LIMITS });
 // 卷十九 §4.4.5 手算例的形制：walled 真、aspect 1、storeyBase 0、roofed 真、deck 假、windowEvery 4、rooms 为空。
-const BASE = Object.freeze({ walled: true, aspect: 1, storeyBase: 0, roofed: true, deck: false, windowEvery: 4, rooms: [], wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.2 });
+// planSideMaxCells：形制自己登记的外包边长上限（卷十九 §2.4，封卷后勘误 1121k21）；夹具形制取 4096 只是让下面既有的大外包断言（外包出 4096 拒收、4096×1 放行）原样成立，不是全局常数。
+const BASE = Object.freeze({ walled: true, aspect: 1, storeyBase: 0, roofed: true, deck: false, windowEvery: 4, rooms: [], wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.2, planSideMaxCells: 4096 });
 const form = (extra = {}) => ({ ...BASE, ...extra });
 const plan = (f, cells, storeys, t, facing = 0) => planBlueprint({ form: f, planCells: { widthCells: cells[0], depthCells: cells[1] }, storeys, wallThicknessM: t, facing }, RULES);
 const count = (bp, pred) => bp.cells.filter(pred).length;
@@ -50,6 +51,33 @@ test('planCellsOf：卷十九手算例 A=36、w=1、D=6、W=6；aspect 取 [0.12
   throwsCode(() => planCellsOf({ form: form({ aspect: 8 }), areaM2: 20000000 }, RULES), 'E-DET-DOMAIN'); // D = ⌊√(2×10⁷ × 8)⌋ = 12649 > 4096
   throwsCode(() => planCellsOf({ form: form(), areaM2: 36, wallThicknessM: 0 }, RULES), 'E-DET-DOMAIN');
   throwsCode(() => planCellsOf({ form: form(), areaM2: 36, wallThicknessM: 21 }, RULES), 'E-DET-DOMAIN');
+});
+
+test('形制登记上限（封卷后勘误 1121k21）：外包任一边超过形制 planSideMaxCells 即拒收并带字段（需要多大、上限多少），恰到上限放行；形制没登记即拒收，没有默认放大', () => {
+  // 上限 8；墙厚 0.4 → w = 1；aspect 1。面积 64：A = 64，D = max(3, ⌊√64⌋ = 8) = 8，W = max(3, ceil(64 ÷ 8) = 8) = 8，恰在上限，放行。
+  const f8 = form({ planSideMaxCells: 8 });
+  assert.deepEqual(planCellsOf({ form: f8, areaM2: 64, wallThicknessM: 0.4 }, RULES), { widthCells: 8, depthCells: 8 });
+  // 面积 65：A = 65，D = max(3, ⌊√65⌋ = 8) = 8，W = max(3, ceil(65 ÷ 8) = 9) = 9 > 8：拒收，不截断。
+  const over = (fn) => { try { fn(); return null; } catch (e) { return e; } };
+  const e1 = over(() => planCellsOf({ form: f8, areaM2: 65, wallThicknessM: 0.4 }, RULES));
+  assert.ok(e1 && e1.code === 'E-DET-DOMAIN');
+  assert.deepEqual({ ...e1.fields }, { max_cells: 8, need_depth_cells: 8, need_width_cells: 9, reason: 'plan_cells_over_form_cap' });
+  // 同一面积换一条上限 9 的形制就放行：上限只来自形制条目，不是全局数。
+  assert.deepEqual(planCellsOf({ form: form({ planSideMaxCells: 9 }), areaM2: 65, wallThicknessM: 0.4 }, RULES), { widthCells: 9, depthCells: 8 });
+  // planBlueprint 与 planFeasible 的 planCells 同样按形制上限核：9×3 超（宽 9 > 8），8×8 放行。
+  const e2 = over(() => planBlueprint({ form: f8, planCells: { widthCells: 9, depthCells: 3 }, storeys: 1, wallThicknessM: 0.4, facing: 0 }, RULES));
+  assert.ok(e2 && e2.code === 'E-DET-DOMAIN');
+  assert.deepEqual({ ...e2.fields }, { max_cells: 8, need_depth_cells: 3, need_width_cells: 9, reason: 'plan_cells_over_form_cap' });
+  throwsCode(() => planFeasible({ form: f8, planCells: { widthCells: 3, depthCells: 9 }, storeys: 1, wallThicknessM: 0.4, facing: 0 }, RULES), 'E-DET-DOMAIN');
+  assert.equal(planBlueprint({ form: f8, planCells: { widthCells: 8, depthCells: 8 }, storeys: 1, wallThicknessM: 0.4, facing: 0 }, RULES).ok, true);
+  // 形制没登记上限（缺、0、非整数）：三个入口都拒收，不给默认放大。
+  for (const bad of [undefined, null, 8.5]) {
+    const f = form({ planSideMaxCells: bad });
+    throwsCode(() => planCellsOf({ form: f, areaM2: 36 }, RULES), 'E-DIM-REQUIRED-MISSING');
+    throwsCode(() => planBlueprint({ form: f, planCells: { widthCells: 6, depthCells: 6 }, storeys: 1, wallThicknessM: 0.4, facing: 0 }, RULES), 'E-DIM-REQUIRED-MISSING');
+    throwsCode(() => planFeasible({ form: f, planCells: { widthCells: 6, depthCells: 6 }, storeys: 1, wallThicknessM: 0.4, facing: 0 }, RULES), 'E-DIM-REQUIRED-MISSING');
+  }
+  throwsCode(() => planCellsOf({ form: form({ planSideMaxCells: 0 }), areaM2: 36 }, RULES), 'E-DIM-DOMAIN-RANGE');
 });
 
 // ---------- 手算例整张蓝图（#22、#26、#27，卷十九 §4.4.5） ----------
@@ -403,7 +431,7 @@ test('劣化表缺失（wear 为 null）：依赖它的量按未知往下传，�
 
 // ---------- 加载期校验与扩展性（#35、A19-5.3） ----------
 
-const ENTRY = { walled: true, aspect: 1, storeyBase: 0, roofed: true, deck: false, windowEvery: 4, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.2, rooms: [{ role: 'roomrole_t', share: 1, level: 0, open: false }] };
+const ENTRY = { walled: true, aspect: 1, storeyBase: 0, roofed: true, deck: false, windowEvery: 4, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.2, planSideMaxCells: 24, rooms: [{ role: 'roomrole_t', share: 1, level: 0, open: false }] };
 const index = (entries) => new Map([['roomrole_t', { family: 'roomrole', entry: {} }], ...entries.map(([c, e]) => [c, { family: 'bform', entry: e }])]);
 const codesOf = (entries) => checkBlueprintForms(index(entries), LIMITS).map((s) => s.split(' ')[0]);
 
@@ -421,6 +449,10 @@ test('bform 加载校验：合法条目放行；取值域越界、缺必填、�
   assert.deepEqual(bad({ rooms: undefined }), ['E-DIM-REQUIRED-MISSING']);
   assert.deepEqual(bad({ wallThicknessDefaultM: 0 }), ['E-DIM-DOMAIN-RANGE']);
   assert.deepEqual(bad({ wallThicknessMinM: 0.5 }), ['E-DIM-DOMAIN-RANGE']); // 下限大于缺省
+  // 形制必须自己登记外包边长上限 planSideMaxCells（封卷后勘误 1121k21）：缺、非整数拒收（缺必填），0 与负数拒收（取值域），没有默认放大。
+  for (const v of [undefined, null, 24.5, '24', Number.NaN]) assert.deepEqual(bad({ planSideMaxCells: v }), ['E-DIM-REQUIRED-MISSING']);
+  for (const v of [0, -1]) assert.deepEqual(bad({ planSideMaxCells: v }), ['E-DIM-DOMAIN-RANGE']);
+  assert.deepEqual(bad({ planSideMaxCells: 1 }), []);
   assert.deepEqual(bad({ rooms: [{ role: 'roomrole_zz', share: 1, level: 0, open: false }] }), ['E-DIM-REF-MISSING']);
   assert.deepEqual(bad({ rooms: [{ role: 'roomrole_t', share: 0.5, level: 0, open: false }] }), ['E-DIM-DOMAIN-RANGE']); // 同层份额之和 0.5
   assert.deepEqual(bad({ rooms: [{ role: 'roomrole_t', share: 0.5, level: 0, open: false }, { role: 'roomrole_t', share: 0.5, level: 0, open: true }, { role: 'roomrole_t', share: 1, level: 1, open: false }] }), []);

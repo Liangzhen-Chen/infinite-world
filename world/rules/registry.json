@@ -393,8 +393,8 @@
    "structure": "keys",
    "type": {
     "thermal": {"type": "struct", "required": ["openingWPerM2K"], "fields": {"openingWPerM2K": {"type": "number", "unit": "W_per_m2_K", "precision": 1}}},
-    "blueprint": {"type": "struct", "required": ["planCellsMin", "planCellsMax", "storeysMin", "storeysMax", "storeyBaseMin", "storeyBaseMax", "windowEveryMax", "wallThicknessMaxM", "aspectMin", "aspectMax"], "fields": {
-      "planCellsMin": {"type": "integer", "unit": "count"}, "planCellsMax": {"type": "integer", "unit": "count"},
+    "blueprint": {"type": "struct", "required": ["planCellsMin", "storeysMin", "storeysMax", "storeyBaseMin", "storeyBaseMax", "windowEveryMax", "wallThicknessMaxM", "aspectMin", "aspectMax"], "fields": {
+      "planCellsMin": {"type": "integer", "unit": "count"},
       "storeysMin": {"type": "integer", "unit": "count"}, "storeysMax": {"type": "integer", "unit": "count"},
       "storeyBaseMin": {"type": "integer", "unit": "count"}, "storeyBaseMax": {"type": "integer", "unit": "count"},
       "windowEveryMax": {"type": "integer", "unit": "count"}, "wallThicknessMaxM": {"type": "number", "unit": "m", "precision": 4},

@@ -26,7 +26,7 @@ const CELLCLASS = { cellclass_land: { ...ANY, slopeRange: [0, 1], priority: 1, g
 const TEMPLATE = { gtpl_land: { surfaceMaterial: 'mat_soil', airMaterial: 'mat_air', soilLayers: 1, soilMaterial: 'mat_soil', rockMaterial: 'mat_granite', blocks: [] } };
 
 // 形制条目是测试前提（同 blueprint-view.test.mjs）：walled 真、一层、屋面、墙厚缺省 0.4。
-const FORM = { walled: true, aspect: 1, storeyBase: 0, roofed: true, deck: false, windowEvery: 0, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.2, rooms: [] };
+const FORM = { walled: true, aspect: 1, storeyBase: 0, roofed: true, deck: false, windowEvery: 0, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.2, planSideMaxCells: 64, rooms: [] };
 
 function load({ rows, spaces } = {}) {
   const tmp = testTempRoot('cave-view-');

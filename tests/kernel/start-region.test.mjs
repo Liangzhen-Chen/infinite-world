@@ -36,7 +36,7 @@ const LOCATIONS = json('world/geo/locations.json');
 const throwsDomain = (fn) => assert.throws(fn, (e) => e && e.code === 'E-DET-DOMAIN');
 // 夹具（测试前提，不是设定数据）：真实数据里河湾村各栋的面积、层数、墙厚设定没给（均为 null），下面的蓝图与落位用例用自造的形制与八栋同尺寸的房子，期望值照卷文公式手算。
 // 形制照卷十九 §4.4.5 手算例的写法（aspect 1、windowEvery 4、墙厚 0.4）再带两间房（各半）；夹具房子 36 平方米、1 层。
-const FIX_FORM = { walled: true, roofed: true, deck: false, storeyBase: 0, aspect: 1, windowEvery: 4, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.4,
+const FIX_FORM = { walled: true, roofed: true, deck: false, storeyBase: 0, aspect: 1, windowEvery: 4, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.4, planSideMaxCells: 64,
   rooms: [{ role: 'roomrole_common_room', share: 0.5, level: 0, open: false }, { role: 'roomrole_sleeping_room', share: 0.5, level: 0, open: false }] };
 const FIX_HOMES = [0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({ id: `fx_home_${i}`, form: FIX_FORM, areaM2: 36, storeys: 1, wallThicknessM: 0.4, rooms: [{ roomRole: 'roomrole_common_room' }, { roomRole: 'roomrole_sleeping_room' }] }));
 

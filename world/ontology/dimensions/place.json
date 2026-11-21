@@ -498,7 +498,7 @@
     "depthCells": {
      "domain": [
       1,
-      4096
+      null
      ],
      "type": "integer",
      "unit": "count"
@@ -506,7 +506,7 @@
     "widthCells": {
      "domain": [
       1,
-      4096
+      null
      ],
      "type": "integer",
      "unit": "count"

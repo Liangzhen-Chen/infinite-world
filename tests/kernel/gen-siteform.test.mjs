@@ -7,6 +7,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
 import { blueprintRulesFrom } from '../../server-plugin/kernel/place-building.mjs';
@@ -22,9 +24,12 @@ assert.equal(world.ok, true);
 const BLUEPRINT = blueprintRulesFrom(world.rules, world.env.units);
 assert.notEqual(BLUEPRINT, null);
 const WHEN = makeWhen(world);
+const json = (p) => JSON.parse(readFileSync(join(ROOT, p), 'utf8'));
+const START = json('world/geo/start-buildings.json');
 
 // 形制条目（卷十九 §2.4 :203）：无房间的围墙形制、三个房间的形制。
-const F36 = { walled: true, roofed: true, deck: false, storeyBase: 0, aspect: 1, windowEvery: 4, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.4, rooms: [] };
+// planSideMaxCells：形制自己登记的外包边长上限（卷十九 §2.4，封卷后勘误 1121k21）；夹具取 64，各用例要测上限时另造形制改它。
+const F36 = { walled: true, roofed: true, deck: false, storeyBase: 0, aspect: 1, windowEvery: 4, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.4, planSideMaxCells: 64, rooms: [] };
 const F3R = {
   ...F36,
   rooms: [{ role: 'roomrole_a', share: 0.34, level: 0, open: false }, { role: 'roomrole_b', share: 0.34, level: 0, open: false }, { role: 'roomrole_c', share: 0.34, level: 0, open: false }],
@@ -199,13 +204,15 @@ test('planFeasible 与 planBlueprint 的 ok、reason 逐项相同（不铺格的
   assert.equal(seen, 7 * 4 * 7);
 });
 
-test('终止靠卷十 :688 的上限：面积无关的 floorOverOpenRoom 一律加倍到 planCells 越 4096 上限，报 E-GEN-ROW-INVALID，预判不铺格所以不耗内存', () => {
+test('终止靠卷十 :688 的形制登记上限：面积无关的 floorOverOpenRoom 一律加倍到 planCells 越形制 planSideMaxCells（夹具 64）上限，报 E-GEN-ROW-INVALID，预判不铺格所以不耗内存', () => {
   const id = 'loc_b1';
   const stack = { ...F36, rooms: [{ role: 'roomrole_a', share: 1, level: 0, open: true }, { role: 'roomrole_b', share: 1, level: 1, open: false }] };
   const vocab = vocabOf([['bldform_stack', formEntry(stack)]]);
   const e = (() => { try { run({ vocab, rows: rowsOf([[id, bld({ form: 'bldform_stack' })]]), authoredIds: new Set([id]), bldfillRows: fill(36, 2) }); return null; } catch (err) { return err; } })();
   assert.ok(e && e.code === 'E-GEN-ROW-INVALID');
-  assert.match(e.message, /planCellsMax|exceeds/);
+  // 面积 36 逐次加倍（A = 36·2ᵏ，aspect 1、墙厚 0.4 → m = 3）：k = 6（2304）时 D = 48、W = 48 仍在上限 64 内；k = 7（4608）时 D = ⌊√4608⌋ = 67、W = ceil(4608 ÷ 67) = 69 > 64，拒收。
+  assert.match(e.message, /planSideMaxCells is 64/);
+  assert.deepEqual({ ...e.fields }, { building: id, form: 'bldform_stack', max_cells: 64, need_depth_cells: 67, need_width_cells: 69, reason: 'plan_cells_over_form_cap' });
 });
 
 test('entranceNotAdjacent 与面积无关（只读 storeyBase 与 storeys）：提前报 E-GEN-ROW-INVALID，不加倍', () => {
@@ -220,4 +227,73 @@ test('层数缺口：用域上限夹过层数的行才记 storeys_max_unchecked�
   const rows = rowsOf([['loc_b1', bld()], ['loc_b2', bld({ storeys: 1 })]]);
   const out = run({ rows, authoredIds: new Set(['loc_b1', 'loc_b2']), bldfillRows: fill(36, 1) });
   assert.deepEqual(out.deferred.filter((d) => d.reason === 'storeys_max_unchecked').map((d) => d.id), ['loc_b1']);
+});
+
+// ---------- 封卷后勘误 1121k20/k21：形制登记上限（李白 11-22 裁定事件 3ce50e60 取甲） ----------
+
+test('超出形制上限：加倍到上限就停，仍放不下即 E-GEN-ROW-INVALID，日志字段写明哪栋、哪个形制、要多大、上限多少；恰到上限的形制放行，不截断、不缩房间', () => {
+  const id = 'loc_b1';
+  // 三房间形制（见文件头手算）：面积 4 → 8 → 16 → 32 逐次加倍都不可行；64 时外包 8×8（D = ⌊√64⌋ = 8，W = ceil(64 ÷ 8) = 8）才可分。
+  const at = (cap) => vocabOf([['bldform_r', formEntry({ ...F3R, planSideMaxCells: cap })]]);
+  const run4 = (cap) => run({ vocab: at(cap), rows: rowsOf([[id, bld({ form: 'bldform_r' })]]), authoredIds: new Set([id]), bldfillRows: fill(4, 1) });
+  // 上限 8：8×8 恰在上限，放行，补出的平面就是 8×8（没有被缩小）。
+  assert.deepEqual(run4(8).proposals[0].dims.planCells, { widthCells: 8, depthCells: 8 });
+  // 上限 7：32 m² 时外包 7×5（W = ceil(32 ÷ 5) = 7，D = ⌊√32⌋ = 5）在上限内但房间分不下；64 m² 要 8×8 > 7：拒收。
+  const e = (() => { try { run4(7); return null; } catch (err) { return err; } })();
+  assert.ok(e && e.code === 'E-GEN-ROW-INVALID');
+  assert.deepEqual({ ...e.fields }, { building: id, form: 'bldform_r', max_cells: 7, need_depth_cells: 8, need_width_cells: 8, reason: 'plan_cells_over_form_cap' });
+  // 上限来自形制：同一栋换一个上限 9 的形制，同样的规则行就放行。
+  assert.deepEqual(run4(9).proposals[0].dims.planCells, { widthCells: 8, depthCells: 8 });
+});
+
+test('作者写的 planCells 超过形制上限：同样拒收并带字段，不截断', () => {
+  const id = 'loc_b1';
+  const vocab = vocabOf([['bldform_cap8', formEntry({ ...F36, planSideMaxCells: 8 })]]);
+  const e = (() => { try { run({ vocab, rows: rowsOf([[id, bld({ form: 'bldform_cap8', planCells: { widthCells: 9, depthCells: 3 } })]]), authoredIds: new Set([id]), bldfillRows: fill(36, 1) }); return null; } catch (err) { return err; } })();
+  assert.ok(e && e.code === 'E-GEN-ROW-INVALID');
+  assert.deepEqual({ ...e.fields }, { building: id, form: 'bldform_cap8', max_cells: 8, need_depth_cells: 3, need_width_cells: 9, reason: 'plan_cells_over_form_cap' });
+});
+
+test('形制没登记上限（缺、0、非整数）：补缺入口一律拒收 E-GEN-ROW-INVALID，没有默认放大', () => {
+  const id = 'loc_b1';
+  for (const cap of [undefined, null, 0, 8.5]) {
+    const vocab = vocabOf([['bldform_nocap', formEntry({ ...F36, planSideMaxCells: cap })]]);
+    assert.equal(codeOf(() => run({ vocab, rows: rowsOf([[id, bld({ form: 'bldform_nocap' })]]), authoredIds: new Set([id]), bldfillRows: fill(36, 1) })), 'E-GEN-ROW-INVALID', String(cap));
+  }
+});
+
+test('起始地区现有全部手写建筑在真实形制上限下都排得下，补出的蓝图总格数不超过形制上限推出的界，内存在正常范围', () => {
+  const rowsIn = START.rows.filter((r) => typeof r.form === 'string');
+  assert.ok(rowsIn.length > 0);
+  const ids = new Set(rowsIn.map((r) => r.id));
+  const out = (() => {
+    const before = process.memoryUsage().heapUsed;
+    const res = genSiteForm({
+      table: 'place', stage: 'gstage_siteform', worldSeed: 'seed_start_region', genesisMinute: 0, vocab: world.vocab,
+      rows: rowsOf(rowsIn.map((r) => [r.id, { parent: null, classes: ['comp_facility'], form: r.form }])), authoredIds: ids,
+      bldfillRows: world.rules.gen.bldfillRows, roleFacility: world.rules.gen.roleFacility, blueprint: BLUEPRINT, when: WHEN,
+    });
+    return { res, grown: process.memoryUsage().heapUsed - before };
+  })();
+  assert.equal(out.res.proposals.length, rowsIn.length);
+  let totalCells = 0;
+  let totalBound = 0;
+  for (const r of rowsIn) {
+    const cap = world.vocab.index.get(r.form).entry.planSideMaxCells;
+    const d = out.res.proposals.find((p) => p.id === r.id).dims;
+    assert.ok(d.planCells.widthCells <= cap && d.planCells.depthCells <= cap, `${r.id} 平面在形制上限内`);
+    const bp = planBlueprint({ form: world.vocab.index.get(r.form).entry, planCells: d.planCells, storeys: d.storeys, wallThicknessM: d.wallThicknessM, facing: 0 }, BLUEPRINT);
+    assert.equal(bp.ok, true, `${r.id} 能展开`);
+    totalCells += bp.cells.length;
+    totalBound += cap * cap * (d.storeys + 2); // 每层至多 cap² 格，加最低一层之下的地板与屋面共两层
+  }
+  assert.ok(totalCells <= totalBound);
+  assert.ok(out.grown < 256 * 1024 * 1024, `堆增长 ${out.grown} 字节应在正常范围`);
+});
+
+test('统一硬数 4096 已删：规则表 rules.facility.blueprint 没有 planCellsMax，planCells 维度域没有上界', () => {
+  assert.equal(Object.hasOwn(world.rules.facility.blueprint, 'planCellsMax'), false);
+  const dom = json('world/ontology/dimensions/place.json').dimensions.planCells.fields;
+  assert.equal(dom.widthCells.domain[1], null);
+  assert.equal(dom.depthCells.domain[1], null);
 });

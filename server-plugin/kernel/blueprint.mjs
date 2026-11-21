@@ -34,7 +34,7 @@ export const REASON = Object.freeze({
 
 // 形制条目与输入的字段名（卷十九 §2.4 :203；§3.2 planBlueprint 签名）。
 const FORM = Object.freeze({
-  walled: 'walled', aspect: 'aspect', storeyBase: 'storeyBase', roofed: 'roofed', deck: 'deck', windowEvery: 'windowEvery', rooms: 'rooms',
+  walled: 'walled', aspect: 'aspect', storeyBase: 'storeyBase', roofed: 'roofed', deck: 'deck', windowEvery: 'windowEvery', rooms: 'rooms', planSideMax: 'planSideMaxCells',
   thicknessDefault: 'wallThicknessDefaultM', thicknessMin: 'wallThicknessMinM',
 });
 const ROOM = Object.freeze({ role: 'role', share: 'share', level: 'level', open: 'open' });
@@ -68,7 +68,15 @@ function formFields(form, limits) {
   if (!isInt(form[FORM.storeyBase]) || form[FORM.storeyBase] < limits.storeyBaseMin || form[FORM.storeyBase] > limits.storeyBaseMax) throw bad('E-DIM-DOMAIN-RANGE', 'blueprint form: storeyBase out of rules.facility.blueprint [storeyBaseMin, storeyBaseMax]');
   if (!isInt(form[FORM.windowEvery]) || form[FORM.windowEvery] < 0 || form[FORM.windowEvery] > limits.windowEveryMax) throw bad('E-DIM-DOMAIN-RANGE', 'blueprint form: windowEvery out of [0, windowEveryMax]');
   if (!Array.isArray(form[FORM.rooms])) throw bad('E-DIM-DOMAIN-RANGE', 'blueprint form: rooms is a list (may be empty)');
+  // 形制登记的外包边长上限（卷十九 §2.4，封卷后勘误 1121k21）：每种形制都必须自己登记，没有全局数、没有默认放大。
+  if (!isInt(form[FORM.planSideMax])) throw bad('E-DIM-REQUIRED-MISSING', 'blueprint form: planSideMaxCells is a required integer (the form registers its own plan size cap)');
+  if (form[FORM.planSideMax] < limits.planCellsMin) throw bad('E-DIM-DOMAIN-RANGE', 'blueprint form: planSideMaxCells below planCellsMin');
   return form;
+}
+
+// 外包某边超过形制登记上限：拒收并带字段（需要多大、上限多少），供生成日志与调用方报告用；不截断、不缩房间。
+function overFormCap(form, width, depth) {
+  return new KernelError('E-DET-DOMAIN', { reason: 'plan_cells_over_form_cap', need_width_cells: Number(width), need_depth_cells: Number(depth), max_cells: form[FORM.planSideMax] }, 'blueprint: plan cells exceed the form planSideMaxCells');
 }
 
 // 墙厚 t（定点米）：行上的 wallThicknessM；为空取形制的 wallThicknessDefaultM（卷十九 §4.5 规则 7）。须大于 0 且不超过 wallThicknessMaxM。
@@ -85,7 +93,7 @@ const wallCellsOf = (form, t, cell) => (form[FORM.walled] ? Number(ceilDiv(t, ce
 /**
  * `planCellsOf({form, areaM2, wallThicknessM})`（卷十九 §3.2、§4.5 规则 7 第 1 点）：意图面积折成外包宽深，建成时写进行上 planCells。
  * A = ceil(areaM2 ÷ cellM²)；w = ceil(t ÷ cellM)（walled 假时 0）；m = 2w + 1；D = max(m, fixedSqrtInt(floor(A × aspect)))；W = max(m, ceil(A ÷ D))。
- * 结果须在 [1, 4096]，越界抛 E-DET-DOMAIN（planCells 的取值域；不截断）。
+ * 外包任一边须不超过形制登记的 planSideMaxCells，越界抛 E-DET-DOMAIN（带字段 reason、need_width_cells、need_depth_cells、max_cells；不截断，卷十九 §2.1、§2.4，封卷后勘误 1121k21）。
  * @param {{form: object, areaM2: number, wallThicknessM?: number | null}} input @param {{cellM: number, storeyM: number, m3PerL: number}} rules
  * @returns {{widthCells: number, depthCells: number}}
  */
@@ -104,7 +112,7 @@ export function planCellsOf(input, rules) {
   const m = w + w + 1n;
   const depth = larger(m, fixedSqrtInt((cells * aspect) / scale));
   const width = larger(m, ceilDiv(cells, depth));
-  if (width > BigInt(limits.planCellsMax) || depth > BigInt(limits.planCellsMax)) throw bad('E-DET-DOMAIN', 'planCellsOf: outer rectangle exceeds planCellsMax cells');
+  if (width > BigInt(form[FORM.planSideMax]) || depth > BigInt(form[FORM.planSideMax])) throw overFormCap(form, width, depth);
   return { widthCells: Number(width), depthCells: Number(depth) };
 }
 
@@ -153,7 +161,8 @@ function readPlanInput(input, rules) {
   const lim = c.limits;
   const form = formFields(input.form, lim);
   const pc = input.planCells;
-  if (!isObj(pc) || !isInt(pc.widthCells) || !isInt(pc.depthCells) || pc.widthCells < lim.planCellsMin || pc.widthCells > lim.planCellsMax || pc.depthCells < lim.planCellsMin || pc.depthCells > lim.planCellsMax) throw bad('E-DET-DOMAIN', 'planBlueprint: planCells want integers in [planCellsMin, planCellsMax]');
+  if (!isObj(pc) || !isInt(pc.widthCells) || !isInt(pc.depthCells) || pc.widthCells < lim.planCellsMin || pc.depthCells < lim.planCellsMin) throw bad('E-DET-DOMAIN', 'planBlueprint: planCells want integers >= planCellsMin');
+  if (pc.widthCells > form[FORM.planSideMax] || pc.depthCells > form[FORM.planSideMax]) throw overFormCap(form, pc.widthCells, pc.depthCells);
   if (!isInt(input.storeys) || input.storeys < lim.storeysMin || input.storeys > lim.storeysMax) throw bad('E-DET-DOMAIN', 'planBlueprint: storeys want an integer in [storeysMin, storeysMax]');
   if (!isInt(input.facing) || input.facing < 0 || input.facing >= c.directions) throw bad('E-DET-DOMAIN', 'planBlueprint: facing want an integer in [0, facingDirections)');
   // 奇数向下取偶（§4.4 规则 2 ④）：取成每个四分之一圈所含档数的整数倍；转 turns 个四分之一圈。
@@ -629,7 +638,7 @@ export function openingAreasOf(bp, breach, closedPlaces, rules) {
 
 /**
  * 加载期校验 `bform` 族条目的平面字段与取值域（卷十九 §2.4 :203；规则表 build.json 另有常数，不在此）：返回错误文本数组（空为通过），码在文本开头。
- * 只核平面字段（walled、aspect、storeyBase、roofed、deck、windowEvery、wallThicknessDefaultM、wallThicknessMinM、rooms）；envelopeReq、技能等字段归建造卡。
+ * 只核平面字段（walled、aspect、storeyBase、roofed、deck、windowEvery、wallThicknessDefaultM、wallThicknessMinM、rooms、planSideMaxCells——后者每种形制必填，没登记即装载报错，封卷后勘误 1121k21）；envelopeReq、技能等字段归建造卡。
  * 新增一个形制条目只加数据：本函数遍历族内全部条目，不点名代号。rooms 各项的 role 须是 roomrole 族条目，同一 level 的 share 之和恰为 1（定点），level 为非负整数。
  * limits 是规则表 rules.facility.blueprint（取值域上下限）；世界里有形制条目而它缺失，报 E-RULES-UNREGISTERED，不当作没有上下限放过。
  * @param {Map<string, {family: string, entry: any}>} vocabIndex 词表索引 @param {any} limits
@@ -651,6 +660,8 @@ export function checkBlueprintForms(vocabIndex, limits) {
     else if (e[FORM.storeyBase] < limits.storeyBaseMin || e[FORM.storeyBase] > limits.storeyBaseMax) errors.push(`E-DIM-DOMAIN-RANGE ${at}: ${FORM.storeyBase} ${e[FORM.storeyBase]} want [${limits.storeyBaseMin}, ${limits.storeyBaseMax}]`);
     if (!isInt(e[FORM.windowEvery])) errors.push(`E-DIM-REQUIRED-MISSING ${at}: ${FORM.windowEvery} is a required integer`);
     else if (e[FORM.windowEvery] < 0 || e[FORM.windowEvery] > limits.windowEveryMax) errors.push(`E-DIM-DOMAIN-RANGE ${at}: ${FORM.windowEvery} ${e[FORM.windowEvery]} want [0, ${limits.windowEveryMax}]`);
+    if (!isInt(e[FORM.planSideMax])) errors.push(`E-DIM-REQUIRED-MISSING ${at}: ${FORM.planSideMax} is a required integer (the form's own plan size cap, no default)`);
+    else if (e[FORM.planSideMax] < limits.planCellsMin) errors.push(`E-DIM-DOMAIN-RANGE ${at}: ${FORM.planSideMax} ${e[FORM.planSideMax]} want >= ${limits.planCellsMin}`);
     for (const k of [FORM.thicknessDefault, FORM.thicknessMin]) {
       if (!num(e[k])) errors.push(`E-DIM-REQUIRED-MISSING ${at}: ${k} is a required number`);
       else if (fixedUnits(e[k]) <= 0n || fixedUnits(e[k]) > fixedUnits(limits.wallThicknessMaxM)) errors.push(`E-DIM-DOMAIN-RANGE ${at}: ${k} ${e[k]} want (0, ${limits.wallThicknessMaxM}]`);
