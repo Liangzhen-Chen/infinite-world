@@ -14,7 +14,8 @@
 - 默认 Sonnet 统筹、DeepSeek 写代码。内核、加载器、跨卷、改裁定、同一处错两次的交 Opus。
 - 可让一个 Sonnet 或 Opus 包一整块并调 DeepSeek 写码；封卡前复核由另一个 Claude 会话按分档做。
 - Claude 只用会员额度，不用 API（不再用 claude -p 带 API 密钥）；DeepSeek 照常用（派卡统一走仓库内 tools/dispatch/run-card-ds.sh，只在子进程环境设 DeepSeek 地址与密钥，不打印不提交密钥）。
-- 亮圳 11-20 22:21：写的活优先交 DeepSeek（难活 deepseek-v4-pro、简单活 deepseek-flash，run-card-ds.sh 第三参数选型号），Sonnet 审；跨卷难点才用 Opus，且尽量只核不写。Claude 每日预算用完不许停工，写全交 DeepSeek；只有 Claude 周额度真用尽才停，停前先报亮圳。做完一张直接按排期开下一张，不等回复。
+- **亮圳 11-21 02:58（现行，取代下条的派法）**：写代码默认由主会话派 **Sonnet 子代理**包卡；Sonnet 自己把简单部分经 run-card-ds.sh 委派给 DeepSeek 写，写回来由该 Sonnet 审核整合后交卷。主会话不直接派 DeepSeek，也不把 DeepSeek 产出直接交 Opus 审。Opus 只用于难的、跨卷的写或核。卡文里写明此分工。
+- 亮圳 11-20 22:21（额度部分仍有效；派法已被上条取代）：写的活优先交 DeepSeek（难活 deepseek-v4-pro、简单活 deepseek-flash，run-card-ds.sh 第三参数选型号），Sonnet 审；跨卷难点才用 Opus，且尽量只核不写。Claude 每日预算用完不许停工，写全交 DeepSeek；只有 Claude 周额度真用尽才停，停前先报亮圳。做完一张直接按排期开下一张，不等回复。
 - （已过期：11-19 10:00 前写与改一律 DeepSeek 的临时口径，10:00 起按上四条三层分工，李白 11-19 03:3x 第③条。）DeepSeek 不可用（无余额）时：写由 Claude Sonnet 中档（会员额度、会话内子代理）承担，只核由另一个 Sonnet，跨卷/内核卡终核最多两轮；DS 恢复后写码回 DS；每卡记模型与轮次。
 
 ## 复核分档
