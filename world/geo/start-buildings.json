@@ -1,0 +1,491 @@
+{
+  "basis": "转换输入：河湾村（loc_hw）19 栋手写建筑的盖法、面积、层数、墙厚与房间角色逐栋落成数据，供后续转换建建筑行；加载器暂不读本文件，现在不生效。只写设定原文推得出的值，推不出的写 null 并在 gap 列出原因，不编数、不按名字或 id 前缀批量推。本文件目前没有任何一栋的面积、层数、墙厚（设定没写；卷十九 :601 手算示例写明“数值都是示意的数据”，不是出处，不用）；谁来补这三项待李白裁定。",
+  "rows": [
+    {
+      "id": "bld_hw_qingdeng",
+      "name": "青灯酒馆",
+      "form": "bldform_river_house",
+      "areaM2": null,
+      "storeys": null,
+      "wallThicknessM": null,
+      "rooms": null,
+      "source": [
+        "world/geo/locations.json:37 \"id\": \"bld_hw_qingdeng\"",
+        "world/lore/cultures.json:21 \"architecture\": \"夯土下墙与可拆木楼，门槛刻历次水位\"",
+        "docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 courtyard_house 变体 `building:river_house`"
+      ],
+      "gap": [
+        "设定未给：该建筑的面积",
+        "设定未给：该建筑的层数",
+        "设定未给：该建筑的墙厚",
+        "设定未给：该建筑的房间与房间角色"
+      ]
+    },
+    {
+      "id": "bld_hw_mill",
+      "name": "旧磨坊",
+      "form": "bldform_river_house",
+      "areaM2": null,
+      "storeys": null,
+      "wallThicknessM": null,
+      "rooms": null,
+      "source": [
+        "world/geo/locations.json:124 \"id\": \"bld_hw_mill\"",
+        "world/lore/cultures.json:21 \"architecture\": \"夯土下墙与可拆木楼，门槛刻历次水位\"",
+        "docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 courtyard_house 变体 `building:river_house`"
+      ],
+      "gap": [
+        "设定未给：该建筑的面积",
+        "设定未给：该建筑的层数",
+        "设定未给：该建筑的墙厚",
+        "设定未给：该建筑的房间与房间角色"
+      ]
+    },
+    {
+      "id": "bld_hw_council",
+      "name": "村务屋",
+      "form": "bldform_river_house",
+      "areaM2": null,
+      "storeys": null,
+      "wallThicknessM": null,
+      "rooms": null,
+      "source": [
+        "world/geo/locations.json:168 \"id\": \"bld_hw_council\"",
+        "world/lore/cultures.json:21 \"architecture\": \"夯土下墙与可拆木楼，门槛刻历次水位\"",
+        "docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 courtyard_house 变体 `building:river_house`"
+      ],
+      "gap": [
+        "设定未给：该建筑的面积",
+        "设定未给：该建筑的层数",
+        "设定未给：该建筑的墙厚",
+        "设定未给：该建筑的房间与房间角色"
+      ]
+    },
+    {
+      "id": "bld_hw_riverhome",
+      "name": "河边小屋",
+      "form": "bldform_river_house",
+      "areaM2": null,
+      "storeys": null,
+      "wallThicknessM": null,
+      "rooms": null,
+      "source": [
+        "world/geo/locations.json:202 \"id\": \"bld_hw_riverhome\"",
+        "world/lore/cultures.json:21 \"architecture\": \"夯土下墙与可拆木楼，门槛刻历次水位\"",
+        "docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 courtyard_house 变体 `building:river_house`"
+      ],
+      "gap": [
+        "设定未给：该建筑的面积",
+        "设定未给：该建筑的层数",
+        "设定未给：该建筑的墙厚",
+        "设定未给：该建筑的房间与房间角色"
+      ]
+    },
+    {
+      "id": "bld_hw_forge",
+      "name": "铁匠铺",
+      "form": "bldform_river_house",
+      "areaM2": null,
+      "storeys": null,
+      "wallThicknessM": null,
+      "rooms": null,
+      "source": [
+        "world/geo/locations.json:241 \"id\": \"bld_hw_forge\"",
+        "world/lore/cultures.json:21 \"architecture\": \"夯土下墙与可拆木楼，门槛刻历次水位\"",
+        "docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 courtyard_house 变体 `building:river_house`"
+      ],
+      "gap": [
+        "设定未给：该建筑的面积",
+        "设定未给：该建筑的层数",
+        "设定未给：该建筑的墙厚",
+        "设定未给：该建筑的房间与房间角色"
+      ]
+    },
+    {
+      "id": "bld_hw_herbs",
+      "name": "药草院",
+      "form": "bldform_river_house",
+      "areaM2": null,
+      "storeys": null,
+      "wallThicknessM": null,
+      "rooms": null,
+      "source": [
+        "world/geo/locations.json:444 \"id\": \"bld_hw_herbs\"",
+        "world/lore/cultures.json:21 \"architecture\": \"夯土下墙与可拆木楼，门槛刻历次水位\"",
+        "docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 courtyard_house 变体 `building:river_house`"
+      ],
+      "gap": [
+        "设定未给：该建筑的面积",
+        "设定未给：该建筑的层数",
+        "设定未给：该建筑的墙厚",
+        "设定未给：该建筑的房间与房间角色"
+      ]
+    },
+    {
+      "id": "bld_hw_weaving",
+      "name": "织坊",
+      "form": "bldform_river_house",
+      "areaM2": null,
+      "storeys": null,
+      "wallThicknessM": null,
+      "rooms": null,
+      "source": [
+        "world/geo/locations.json:721 \"id\": \"bld_hw_weaving\"",
+        "world/lore/cultures.json:21 \"architecture\": \"夯土下墙与可拆木楼，门槛刻历次水位\"",
+        "docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 courtyard_house 变体 `building:river_house`"
+      ],
+      "gap": [
+        "设定未给：该建筑的面积",
+        "设定未给：该建筑的层数",
+        "设定未给：该建筑的墙厚",
+        "设定未给：该建筑的房间与房间角色"
+      ]
+    },
+    {
+      "id": "bld_hw_school",
+      "name": "小学堂",
+      "form": "bldform_river_house",
+      "areaM2": null,
+      "storeys": null,
+      "wallThicknessM": null,
+      "rooms": null,
+      "source": [
+        "world/geo/locations.json:865 \"id\": \"bld_hw_school\"",
+        "world/lore/cultures.json:21 \"architecture\": \"夯土下墙与可拆木楼，门槛刻历次水位\"",
+        "docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 courtyard_house 变体 `building:river_house`"
+      ],
+      "gap": [
+        "设定未给：该建筑的面积",
+        "设定未给：该建筑的层数",
+        "设定未给：该建筑的墙厚",
+        "设定未给：该建筑的房间与房间角色"
+      ]
+    },
+    {
+      "id": "bld_hw_post",
+      "name": "小驿站",
+      "form": "bldform_river_house",
+      "areaM2": null,
+      "storeys": null,
+      "wallThicknessM": null,
+      "rooms": null,
+      "source": [
+        "world/geo/locations.json:1248 \"id\": \"bld_hw_post\"",
+        "world/lore/cultures.json:21 \"architecture\": \"夯土下墙与可拆木楼，门槛刻历次水位\"",
+        "docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 courtyard_house 变体 `building:river_house`"
+      ],
+      "gap": [
+        "设定未给：该建筑的面积",
+        "设定未给：该建筑的层数",
+        "设定未给：该建筑的墙厚",
+        "设定未给：该建筑的房间与房间角色"
+      ]
+    },
+    {
+      "id": "bld_hw_altar",
+      "name": "河湾石坛",
+      "form": null,
+      "areaM2": null,
+      "storeys": null,
+      "wallThicknessM": null,
+      "rooms": null,
+      "source": [
+        "world/geo/locations.json:1361 \"id\": \"bld_hw_altar\"",
+        "world/geo/locations.json:1375 \"description\": \"村东的低矮石坛，坛沿刻着历年"
+      ],
+      "gap": [
+        "设定写的是“村东的低矮石坛……遮雨石龛”（locations.json:1375），不是夯土墙草顶的屋，设定未定它的盖法",
+        "设定未给：该建筑的面积",
+        "设定未给：该建筑的层数",
+        "设定未给：该建筑的墙厚",
+        "设定未给：该建筑的房间与房间角色"
+      ]
+    },
+    {
+      "id": "bld_hw_home_15",
+      "name": "筛种院",
+      "form": "bldform_river_house",
+      "areaM2": null,
+      "storeys": null,
+      "wallThicknessM": null,
+      "rooms": [
+        {
+          "id": "room_hw_15_common",
+          "name": "共用起居间",
+          "roomRole": "roomrole_common_room"
+        },
+        {
+          "id": "room_hw_15_sleep",
+          "name": "家人睡处",
+          "roomRole": "roomrole_sleeping_room"
+        }
+      ],
+      "source": [
+        "world/geo/locations.json:3272 \"id\": \"bld_hw_home_15\"",
+        "world/geo/locations.json:3287 \"purpose\": \"私宅\"",
+        "world/geo/locations.json:3301 \"name\": \"共用起居间\"",
+        "world/geo/locations.json:3305 \"name\": \"家人睡处\"",
+        "world/lore/cultures.json:21 \"architecture\": \"夯土下墙与可拆木楼，门槛刻历次水位\"",
+        "docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 courtyard_house 变体 `building:river_house`"
+      ],
+      "gap": [
+        "设定未给：该建筑的面积",
+        "设定未给：该建筑的层数",
+        "设定未给：该建筑的墙厚"
+      ]
+    },
+    {
+      "id": "bld_hw_home_16",
+      "name": "沟边矮屋",
+      "form": "bldform_river_house",
+      "areaM2": null,
+      "storeys": null,
+      "wallThicknessM": null,
+      "rooms": [
+        {
+          "id": "room_hw_16_common",
+          "name": "共用起居间",
+          "roomRole": "roomrole_common_room"
+        },
+        {
+          "id": "room_hw_16_sleep",
+          "name": "家人睡处",
+          "roomRole": "roomrole_sleeping_room"
+        }
+      ],
+      "source": [
+        "world/geo/locations.json:3330 \"id\": \"bld_hw_home_16\"",
+        "world/geo/locations.json:3345 \"purpose\": \"私宅\"",
+        "world/geo/locations.json:3358 \"name\": \"共用起居间\"",
+        "world/geo/locations.json:3362 \"name\": \"家人睡处\"",
+        "world/lore/cultures.json:21 \"architecture\": \"夯土下墙与可拆木楼，门槛刻历次水位\"",
+        "docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 courtyard_house 变体 `building:river_house`"
+      ],
+      "gap": [
+        "设定未给：该建筑的面积",
+        "设定未给：该建筑的层数",
+        "设定未给：该建筑的墙厚"
+      ]
+    },
+    {
+      "id": "bld_hw_home_17",
+      "name": "南缝线屋",
+      "form": "bldform_river_house",
+      "areaM2": null,
+      "storeys": null,
+      "wallThicknessM": null,
+      "rooms": [
+        {
+          "id": "room_hw_17_common",
+          "name": "共用起居间",
+          "roomRole": "roomrole_common_room"
+        },
+        {
+          "id": "room_hw_17_sleep",
+          "name": "家人睡处",
+          "roomRole": "roomrole_sleeping_room"
+        }
+      ],
+      "source": [
+        "world/geo/locations.json:3387 \"id\": \"bld_hw_home_17\"",
+        "world/geo/locations.json:3402 \"purpose\": \"私宅\"",
+        "world/geo/locations.json:3416 \"name\": \"共用起居间\"",
+        "world/geo/locations.json:3420 \"name\": \"家人睡处\"",
+        "world/lore/cultures.json:21 \"architecture\": \"夯土下墙与可拆木楼，门槛刻历次水位\"",
+        "docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 courtyard_house 变体 `building:river_house`"
+      ],
+      "gap": [
+        "设定未给：该建筑的面积",
+        "设定未给：该建筑的层数",
+        "设定未给：该建筑的墙厚"
+      ]
+    },
+    {
+      "id": "bld_hw_home_18",
+      "name": "渡后木屋",
+      "form": "bldform_river_house",
+      "areaM2": null,
+      "storeys": null,
+      "wallThicknessM": null,
+      "rooms": [
+        {
+          "id": "room_hw_18_common",
+          "name": "共用起居间",
+          "roomRole": "roomrole_common_room"
+        },
+        {
+          "id": "room_hw_18_sleep",
+          "name": "家人睡处",
+          "roomRole": "roomrole_sleeping_room"
+        }
+      ],
+      "source": [
+        "world/geo/locations.json:3445 \"id\": \"bld_hw_home_18\"",
+        "world/geo/locations.json:3460 \"purpose\": \"私宅\"",
+        "world/geo/locations.json:3474 \"name\": \"共用起居间\"",
+        "world/geo/locations.json:3478 \"name\": \"家人睡处\"",
+        "world/lore/cultures.json:21 \"architecture\": \"夯土下墙与可拆木楼，门槛刻历次水位\"",
+        "docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 courtyard_house 变体 `building:river_house`"
+      ],
+      "gap": [
+        "设定未给：该建筑的面积",
+        "设定未给：该建筑的层数",
+        "设定未给：该建筑的墙厚"
+      ]
+    },
+    {
+      "id": "bld_hw_home_19",
+      "name": "东檐小院",
+      "form": "bldform_river_house",
+      "areaM2": null,
+      "storeys": null,
+      "wallThicknessM": null,
+      "rooms": [
+        {
+          "id": "room_hw_19_common",
+          "name": "共用起居间",
+          "roomRole": "roomrole_common_room"
+        },
+        {
+          "id": "room_hw_19_sleep",
+          "name": "家人睡处",
+          "roomRole": "roomrole_sleeping_room"
+        }
+      ],
+      "source": [
+        "world/geo/locations.json:3503 \"id\": \"bld_hw_home_19\"",
+        "world/geo/locations.json:3518 \"purpose\": \"私宅\"",
+        "world/geo/locations.json:3532 \"name\": \"共用起居间\"",
+        "world/geo/locations.json:3536 \"name\": \"家人睡处\"",
+        "world/lore/cultures.json:21 \"architecture\": \"夯土下墙与可拆木楼，门槛刻历次水位\"",
+        "docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 courtyard_house 变体 `building:river_house`"
+      ],
+      "gap": [
+        "设定未给：该建筑的面积",
+        "设定未给：该建筑的层数",
+        "设定未给：该建筑的墙厚"
+      ]
+    },
+    {
+      "id": "bld_hw_home_20",
+      "name": "合住旧院",
+      "form": "bldform_river_house",
+      "areaM2": null,
+      "storeys": null,
+      "wallThicknessM": null,
+      "rooms": [
+        {
+          "id": "room_hw_20_common",
+          "name": "共用起居间",
+          "roomRole": "roomrole_common_room"
+        },
+        {
+          "id": "room_hw_20_sleep",
+          "name": "家人睡处",
+          "roomRole": "roomrole_sleeping_room"
+        }
+      ],
+      "source": [
+        "world/geo/locations.json:3561 \"id\": \"bld_hw_home_20\"",
+        "world/geo/locations.json:3576 \"purpose\": \"私宅\"",
+        "world/geo/locations.json:3590 \"name\": \"共用起居间\"",
+        "world/geo/locations.json:3594 \"name\": \"家人睡处\"",
+        "world/lore/cultures.json:21 \"architecture\": \"夯土下墙与可拆木楼，门槛刻历次水位\"",
+        "docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 courtyard_house 变体 `building:river_house`"
+      ],
+      "gap": [
+        "设定未给：该建筑的面积",
+        "设定未给：该建筑的层数",
+        "设定未给：该建筑的墙厚"
+      ]
+    },
+    {
+      "id": "bld_hw_home_21",
+      "name": "柳影泥屋",
+      "form": "bldform_river_house",
+      "areaM2": null,
+      "storeys": null,
+      "wallThicknessM": null,
+      "rooms": [
+        {
+          "id": "room_hw_21_common",
+          "name": "共用起居间",
+          "roomRole": "roomrole_common_room"
+        },
+        {
+          "id": "room_hw_21_sleep",
+          "name": "家人睡处",
+          "roomRole": "roomrole_sleeping_room"
+        }
+      ],
+      "source": [
+        "world/geo/locations.json:3619 \"id\": \"bld_hw_home_21\"",
+        "world/geo/locations.json:3634 \"purpose\": \"私宅\"",
+        "world/geo/locations.json:3648 \"name\": \"共用起居间\"",
+        "world/geo/locations.json:3652 \"name\": \"家人睡处\"",
+        "world/lore/cultures.json:21 \"architecture\": \"夯土下墙与可拆木楼，门槛刻历次水位\"",
+        "docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 courtyard_house 变体 `building:river_house`"
+      ],
+      "gap": [
+        "设定未给：该建筑的面积",
+        "设定未给：该建筑的层数",
+        "设定未给：该建筑的墙厚"
+      ]
+    },
+    {
+      "id": "bld_hw_home_22",
+      "name": "补榫人家",
+      "form": "bldform_river_house",
+      "areaM2": null,
+      "storeys": null,
+      "wallThicknessM": null,
+      "rooms": [
+        {
+          "id": "room_hw_22_common",
+          "name": "共用起居间",
+          "roomRole": "roomrole_common_room"
+        },
+        {
+          "id": "room_hw_22_sleep",
+          "name": "家人睡处",
+          "roomRole": "roomrole_sleeping_room"
+        }
+      ],
+      "source": [
+        "world/geo/locations.json:3677 \"id\": \"bld_hw_home_22\"",
+        "world/geo/locations.json:3692 \"purpose\": \"私宅\"",
+        "world/geo/locations.json:3706 \"name\": \"共用起居间\"",
+        "world/geo/locations.json:3710 \"name\": \"家人睡处\"",
+        "world/lore/cultures.json:21 \"architecture\": \"夯土下墙与可拆木楼，门槛刻历次水位\"",
+        "docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 courtyard_house 变体 `building:river_house`"
+      ],
+      "gap": [
+        "设定未给：该建筑的面积",
+        "设定未给：该建筑的层数",
+        "设定未给：该建筑的墙厚"
+      ]
+    },
+    {
+      "id": "bld_hw_grain_annex",
+      "name": "铁铺巷公仓",
+      "form": null,
+      "areaM2": null,
+      "storeys": null,
+      "wallThicknessM": null,
+      "rooms": null,
+      "source": [
+        "world/geo/locations.json:31162 \"id\": \"bld_hw_grain_annex\"",
+        "world/geo/locations.json:31174 \"material\": \"wood\"",
+        "world/lore/cultures.json:21 \"architecture\": \"夯土下墙与可拆木楼，门槛刻历次水位\"",
+        "docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 courtyard_house 变体 `building:river_house`"
+      ],
+      "gap": [
+        "旧数据 material 为 wood（locations.json:31174 \"material\": \"wood\"），与“夯土下墙”的西陲形制不一致，设定未定它的盖法",
+        "设定未给：该建筑的面积",
+        "设定未给：该建筑的层数",
+        "设定未给：该建筑的墙厚",
+        "设定未给：该建筑的房间与房间角色"
+      ]
+    }
+  ]
+}

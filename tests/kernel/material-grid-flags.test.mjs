@@ -108,12 +108,12 @@ test('空气没有 substance（null），由 matcatRules 按物态判据（沸�
   assert.ok(!(c2.get('mat_test_hot') || []).includes('matcat_gas'));
 });
 
-test('词表族 gentemplate：前缀 gtpl_、开放族、条目为空', () => {
+test('词表族 gentemplate：前缀 gtpl_、开放族；条目由 G11 数据卡补（G6 时为空，期望随该卡改：不再断言为空，条目字段与材料引用由 start-region.test.mjs 核）', () => {
   const r = loadWorld(ROOT);
   assert.equal(r.ok, true, r.text);
   const fam = r.vocab.families.get('gentemplate');
   assert.ok(fam, 'gentemplate 未登记');
   assert.equal(fam.prefix, 'gtpl_');
   assert.equal(fam.closed, false);
-  assert.deepEqual(Object.keys(fam.entries), []);
+  for (const code of Object.keys(fam.entries)) assert.ok(code.startsWith('gtpl_'), `${code} carries the family prefix`);
 });

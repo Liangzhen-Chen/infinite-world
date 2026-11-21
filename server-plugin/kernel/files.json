@@ -29,6 +29,7 @@
  "server-plugin/kernel/holdings.mjs",
  "server-plugin/kernel/item-state.mjs",
  "server-plugin/kernel/item.mjs",
+ "server-plugin/kernel/layout.mjs",
  "server-plugin/kernel/ledger.mjs",
  "server-plugin/kernel/load/codepoint-tables.mjs",
  "server-plugin/kernel/load/display-langs.mjs",

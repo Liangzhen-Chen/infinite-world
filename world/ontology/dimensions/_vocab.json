@@ -12,7 +12,17 @@
   },
   "attach_slot": {"closed": false, "entries": {}, "prefix": "aslot_"},
   "batch": {"closed": false, "entries": {}, "prefix": "batch_"},
-  "bform": {"closed": false, "entries": {}, "prefix": "bldform_"},
+  "bform": {"closed": false, "entries": {
+   "bldform_river_house": {
+    "walled": true, "roofed": true, "deck": false, "storeyBase": 0, "aspect": 1, "windowEvery": 4,
+    "wallThicknessDefaultM": 0.4, "wallThicknessMinM": 0.4,
+    "rooms": [
+     {"role": "roomrole_common_room", "share": 0.5, "level": 0, "open": false},
+     {"role": "roomrole_sleeping_room", "share": 0.5, "level": 0, "open": false}
+    ],
+    "basis": "西陲垄渠人（world/lore/cultures.json:21 culture_river，anchor 为 loc_hw）的盖法：\"夯土下墙与可拆木楼，门槛刻历次水位\"；docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 把它定为 building:river_house（wall rammed_earth、frame timber、roof thatch_reed）。walled 真（有夯土墙）、roofed 真（有草顶）、deck 假、storeyBase 0（设定无地窖）。aspect 1、windowEvery 4、wallThicknessDefaultM 0.4、wallThicknessMinM 0.4：无出处，暂定起点，待试玩标定（设定只写\"夯土下墙厚实\"，cultures.json:38，没有数；卷十九 :601 手算示例写明\"数值都是示意的数据\"，不是出处，不引）。rooms：locations.json 八处私宅各写两个房间\"共用起居间\"（如 :3301）与\"家人睡处\"（如 :3305）；share 0.5/0.5 无出处，暂定起点，待试玩标定。envelopeReq、skill、skillMin、minutesPerM2、toolAbilities、qualityCurve、portable、packMinutes、beautyBase、provides 等建造字段归卷十九建造卡，本卡未落（planBlueprint 与 checkBlueprintForms 不读）。"
+   }
+  }, "prefix": "bldform_"},
   "bulkform": {
    "closed": false,
    "entries": {
@@ -24,13 +34,40 @@
    "prefix": "bform_"
   },
   "category": {"closed": false, "entries": {"category_apparel": {"stockSlot": true}, "category_container": {"stockSlot": true}, "category_document": {"stockSlot": true}, "category_food": {"stockSlot": true}, "category_tool": {"stockSlot": true}, "category_weapon": {"stockSlot": true}}, "prefix": "category_"},
-  "cellclass": {"closed": false, "entries": {}, "prefix": "cellclass_"},
+  "cellclass": {"closed": false, "entries": {
+   "cellclass_cave": {"terrains": ["terrain_cave"], "waterAny": [], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 0, "genTemplate": "gtpl_bedrock", "basis": "兜底条目（卷五 §4.3 规则 9：没有条目成立即加载校验错误，数据须给全）；每种地形一条，条件只写地形、其余不限。模板选法见 gtpl_bedrock 的 basis；暂定·待试玩标定"},
+   "cellclass_coast": {"terrains": ["terrain_coast"], "waterAny": [], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 0, "genTemplate": "gtpl_silt", "basis": "兜底条目（同 cellclass_cave）；海岸区格取 gtpl_silt，依据见该模板 basis；暂定·待试玩标定"},
+   "cellclass_desert": {"terrains": ["terrain_desert"], "waterAny": [], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 0, "genTemplate": "gtpl_silt", "basis": "兜底条目（同 cellclass_cave）；材料表没有沙（mat_ 行只有粉砂 mat_silt），沙漠取 gtpl_silt 是缺沙材料行时的最近细颗粒，补沙材料行后改此处一处；暂定·待试玩标定"},
+   "cellclass_forest": {"terrains": ["terrain_forest"], "waterAny": [], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 0, "genTemplate": "gtpl_soil", "basis": "兜底条目（同 cellclass_cave）；树由卷五 §4.7 规则 12 按存量余额派生，不在模板里画；暂定·待试玩标定"},
+   "cellclass_hill": {"terrains": ["terrain_hill"], "waterAny": [], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 0, "genTemplate": "gtpl_soil", "basis": "兜底条目（同 cellclass_cave）；暂定·待试玩标定"},
+   "cellclass_lake": {"terrains": ["terrain_lake"], "waterAny": [], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 0, "genTemplate": "gtpl_silt", "basis": "兜底条目（同 cellclass_cave）；湖底取 gtpl_silt；暂定·待试玩标定"},
+   "cellclass_marsh": {"terrains": ["terrain_marsh"], "waterAny": [], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 0, "genTemplate": "gtpl_silt", "basis": "兜底条目（同 cellclass_cave）；convert-geo.mjs 的地形文本映射里沼泽来自泥炭湿地、泥沼与芦滩，取 gtpl_silt；暂定·待试玩标定"},
+   "cellclass_mountain": {"terrains": ["terrain_mountain"], "waterAny": [], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 0, "genTemplate": "gtpl_bedrock", "basis": "兜底条目（同 cellclass_cave）；convert-geo.mjs 的地形文本映射里山地来自砾石山地、高山粒雪台原、赤色褶皱山地，取 gtpl_bedrock；暂定·待试玩标定"},
+   "cellclass_plain": {"terrains": ["terrain_plain"], "waterAny": [], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 0, "genTemplate": "gtpl_soil", "basis": "兜底条目（同 cellclass_cave）；河湾村一带的地形文本是\"平地\"（locations.json:12）、转为 terrain_plain；暂定·待试玩标定"},
+   "cellclass_river": {"terrains": ["terrain_river"], "waterAny": [], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 0, "genTemplate": "gtpl_silt", "basis": "兜底条目（同 cellclass_cave）；河床取 gtpl_silt；暂定·待试玩标定"},
+   "cellclass_water": {"terrains": ["terrain_cave", "terrain_coast", "terrain_desert", "terrain_forest", "terrain_hill", "terrain_lake", "terrain_marsh", "terrain_mountain", "terrain_plain", "terrain_river"], "waterAny": ["water_navigable"], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 10, "genTemplate": "gtpl_silt", "basis": "水体足迹内的区格（卷五 §4.3 规则 9：waterAny 满足所在水体足迹行的 waterKind），任何地形都适用，优先于地形兜底；水体行写 water_navigable（world/geo/water-bodies.json），水本身的材料由水体行的 liquid 给，模板只给水底；暂定·待试玩标定"}
+  }, "prefix": "cellclass_"},
   "cellmark": {"closed": false, "entries": {}, "prefix": "cellmark_"},
   "dockind": {"closed": false, "entries": {}, "prefix": "dockind_"},
   "emphasis": {"closed": false, "entries": {}, "prefix": "emph_"},
   "fault": {"closed": false, "entries": {}, "prefix": "fault_"},
-  "gentemplate": {"closed": false, "entries": {}, "prefix": "gtpl_"},
+  "gentemplate": {"closed": false, "entries": {
+   "gtpl_bedrock": {"surfaceMaterial": "mat_granite", "soilLayers": 0, "soilMaterial": "mat_soil", "rockMaterial": "mat_granite", "airMaterial": "mat_air", "blocks": [], "basis": "山地与洞穴的细格基底：地表直接是岩，没有土层（soilLayers 0，soilMaterial 因必填而填 mat_soil、不被读）。岩取材料表里的 mat_granite（密度 2.7）；设定没写具体岩性，convert-geo.mjs 的地形文本映射只有\"砾石山地\"\"地下砾土窑道\"等；所在列有存量单元且其 stratum 条目有 material 时岩层材料优先（卷五 §4.3 规则 10）；暂定·待试玩标定"},
+   "gtpl_silt": {"surfaceMaterial": "mat_silt", "soilLayers": 1, "soilMaterial": "mat_silt", "rockMaterial": "mat_limestone", "airMaterial": "mat_air", "blocks": [], "basis": "湿地、河湖床、海岸与沙漠的细格基底：地表与一层（storeyM 3 m）土都是粉砂 mat_silt，其下兜底岩 mat_limestone。设定没写这些地方的土质；材料表没有沙、泥炭，粉砂是最接近的细颗粒；暂定·待试玩标定"},
+   "gtpl_soil": {"surfaceMaterial": "mat_soil", "soilLayers": 1, "soilMaterial": "mat_soil", "rockMaterial": "mat_limestone", "airMaterial": "mat_air", "blocks": [], "basis": "平原、森林、丘陵的细格基底：地表与一层（storeyM 3 m）土都是 mat_soil，其下兜底岩 mat_limestone；air 取 mat_air（G6 空气材料行）。设定没写土层厚度与岩性，土层一层是最小的整层数，岩性取材料表里的沉积岩行；所在列有存量单元且其 stratum 条目有 material 时岩层材料优先；暂定·待试玩标定"}
+  }, "prefix": "gtpl_"},
   "layer": {"closed": false, "entries": {}, "prefix": "layer_"},
+  "layout": {"closed": false, "entries": {
+   "layout_riverside_strip": {
+    "zones": [
+     {"role": "zrole_dwelling", "share": 0.5, "adjacent": ["zrole_workshop"]},
+     {"role": "zrole_workshop", "share": 0.3, "adjacent": ["zrole_dwelling", "zrole_wharf"]},
+     {"role": "zrole_wharf", "share": 0.2, "adjacent": ["zrole_workshop"]}
+    ],
+    "applies": "member(water_navigable, place.waterAccess)",
+    "basis": "沿河条带式（西陲）：卷十九 §4.6.5 :712\"西陲一种沿河条带式模板：居住、作坊、码头三种角色沿水排开，applies 要求水体可及集合非空\"；份额 0.5、0.3、0.2 取自卷十 §4.7.5 数据实例 :682（\"模板是沿河条带式，三个角色份额 0.5、0.3、0.2\"，按居住、作坊、码头的次序）。adjacent：\"沿水排开\"读作居住–作坊–码头依次相邻（居住与码头不要求相邻），设定未写相邻关系，暂定。applies：\"水体可及集合非空\"写成 member(water_navigable, place.waterAccess)，water 族现只有 water_navigable 一条（world/ontology/dimensions/_vocab.json water），族增条目时须改此处；RX 文法本卡未编译核对（求值归卷十生成阶段）。"
+   }
+  }, "prefix": "layout_"},
   "matgroup": {
    "closed": false,
    "entries": {
@@ -95,6 +132,11 @@
    "wear_ruined": {"basis": "卷三乙 :310 毁；李白 11-19 20:3x ⑥", "rank": 4},
    "wear_worn": {"basis": "卷三乙 :310 旧；李白 11-19 20:3x ⑥", "rank": 1}
   }, "prefix": "wear_"},
+  "zrole": {"closed": false, "entries": {
+   "zrole_dwelling": {"typeAffinity": {}, "basis": "沿河条带式模板的居住片（卷十九 §4.6.5 :712）。typeAffinity 留空：facility_type 设施类型表还没有数据（_unbuilt-derived.json 登记），亲和度没有可写的键；卷十 R10-7.5 对此的规定是\"模板里没有任何角色对它有亲和度时归份额最大的角色\"，所以现阶段所有建筑清单行都归份额最大的居住片，补设施类型表后补亲和度"},
+   "zrole_workshop": {"typeAffinity": {}, "basis": "沿河条带式模板的作坊片（卷十九 §4.6.5 :712）；typeAffinity 留空，理由同 zrole_dwelling"},
+   "zrole_wharf": {"typeAffinity": {}, "basis": "沿河条带式模板的码头片（卷十九 §4.6.5 :712）；typeAffinity 留空，理由同 zrole_dwelling"}
+  }, "prefix": "zrole_"},
   "aggregate": {
    "closed": true,
    "entries": {
@@ -2189,7 +2231,10 @@
    },
    "prefix": "res_"
   },
-  "roomrole": {"closed": false, "entries": {}, "prefix": "roomrole_"},
+  "roomrole": {"closed": false, "entries": {
+   "roomrole_common_room": {"basis": "world/geo/locations.json:3301 \"name\": \"共用起居间\"（八处私宅各有一间，房间 id 形如 room_hw_15_common）；只作房间行 roomRole 的对应键，规则里不对它分支（卷十九 §2.4）"},
+   "roomrole_sleeping_room": {"basis": "world/geo/locations.json:3305 \"name\": \"家人睡处\"（八处私宅各有一间，房间 id 形如 room_hw_15_sleep）；只作房间行 roomRole 的对应键，规则里不对它分支（卷十九 §2.4）"}
+  }, "prefix": "roomrole_"},
   "season": {
    "closed": false,
    "entries": {

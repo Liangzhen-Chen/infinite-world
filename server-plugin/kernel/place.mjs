@@ -27,6 +27,7 @@ import { columnSurface, nearControlPoints, regionSlope, cellAt, cellFlags, STATE
 import { checkBlueprintForms, KIND as BLUEPRINT_KIND } from './blueprint.mjs';
 import { blueprintOf as blueprintCore, buildingCellAt, buildingColumn, buildingFootprint, checkBuildingRows, doorExitsOf } from './place-building.mjs';
 import { checkGenTemplates, genTemplateOf, templateBlocksOf } from './grid-template.mjs';
+import { checkLayoutTemplates } from './layout.mjs';
 import { buildPlan, expandClasses, waterAccessOf, footprintAdjacency, edgeAdjacency } from './place-plan.mjs';
 import { createRouteEnv, edgeNumbers } from './route-edges.mjs';
 import { report } from './report.mjs';
@@ -1151,6 +1152,8 @@ export function checkPlaceTable(view) {
     if (idx instanceof Map) errors.push(...checkGenTemplates(idx, hasMaterial, true));
     // 建筑形制族（卷十九 §2.4 :203，A19-5.3）：平面字段与取值域；建筑行的蓝图可行、锚点在父足迹内、兄弟足迹不相交（卷五 §4.1 规则 11，E-GRID-FOOTPRINT-OUTSIDE-PARENT、E-GRID-SIBLING-OVERLAP）。
     if (idx instanceof Map) errors.push(...checkBlueprintForms(idx, view.rules && view.rules.facility ? view.rules.facility.blueprint : undefined));
+    // 布局模板与分片角色族（卷十九 §4.6 规则 1、3、4）：份额和为 1、adjacent 引用在本模板内、模板不写设施数量；族条目常查。
+    if (idx instanceof Map) errors.push(...checkLayoutTemplates(idx));
     errors.push(...checkBuildingRows({ rows, rp, idx, rules: view.rules, units: view.env ? view.env.units : undefined, zoneOfRegion: rp.plans.size > 0 ? (pos) => zoneOfPos(grid, rp.plans, pos) : null }));
   }
   // 规则 4：边节。

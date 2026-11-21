@@ -398,12 +398,16 @@
       "storeysMin": {"type": "integer", "unit": "count"}, "storeysMax": {"type": "integer", "unit": "count"},
       "storeyBaseMin": {"type": "integer", "unit": "count"}, "storeyBaseMax": {"type": "integer", "unit": "count"},
       "windowEveryMax": {"type": "integer", "unit": "count"}, "wallThicknessMaxM": {"type": "number", "unit": "m", "precision": 4},
-      "aspectMin": {"type": "number", "unit": "dimensionless", "precision": 4}, "aspectMax": {"type": "number", "unit": "dimensionless", "precision": 4}}}
+      "aspectMin": {"type": "number", "unit": "dimensionless", "precision": 4}, "aspectMax": {"type": "number", "unit": "dimensionless", "precision": 4}}},
+    "wear": {"type": "struct", "required": ["breachShare", "roofCurve", "wallOrderCode", "roofOrderCode"], "fields": {
+      "breachShare": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4},
+      "roofCurve": {"type": "curve", "x": "fraction", "y": "fraction"},
+      "wallOrderCode": {"type": "string"}, "roofOrderCode": {"type": "string"}}}
    },
-   "domain": {"thermal": {}, "blueprint": {}},
+   "domain": {"thermal": {}, "blueprint": {}, "wear": {}},
    "volume": "卷十九 §4.1 规则 4 :326（rules.facility.thermal.openingWPerM2K）：取 GB 50176-2016 表 C.5.3-1 单层窗值（李白 11-19 14:2x 三），读者 kernel/climate.mjs envelopeUaWPerK",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"thermal": false, "blueprint": false}
+   "packOverridable": {"thermal": false, "blueprint": false, "wear": false}
   },
   {
    "code": "materials",

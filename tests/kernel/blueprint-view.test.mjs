@@ -78,13 +78,15 @@ const WORLD = (extra = {}) => ({
   spaces: [{ w: 0, box: { x0: 0, y0: 0, cellsX: 2, cellsY: 3 }, root: 'loc_root' }],
 });
 const S = {};
-// 劣化规则表 wear（卷十九 §2.5）世界里还没有数值，用例自带夹具值（测试前提）；noWear 为真时不带，用来核"表缺失按未知往下传"。
+// 劣化规则表 wear（卷十九 §2.5）：本测试的期望值按 breachShare 0.5 手算，所以用例自带夹具值（测试前提，不读真实世界 facility.wear，真实值由 start-region.test.mjs 核）；
+// noWear 为真时把真实世界里的 wear 行也去掉，用来核"表缺失按未知往下传"（G11 起世界里有 wear 行，不去掉就不是"缺失"）。
 const WEAR = { breachShare: 0.5, roofCurve: [[0, 0], [1, 1]], wallOrderCode: 'k_wall', roofOrderCode: 'k_roof' };
 function world(spec, over = {}) {
   const { noWear = false, ...loadOver } = over;
   const r = load({ ...spec, ...loadOver });
   assert.equal(r.ok, true, r.text);
-  const rules = noWear ? r.rules : { ...r.rules, facility: { ...r.rules.facility, wear: WEAR } };
+  const { wear: _real, ...facilityNoWear } = r.rules.facility;
+  const rules = noWear ? { ...r.rules, facility: facilityNoWear } : { ...r.rules, facility: { ...r.rules.facility, wear: WEAR } };
   return { tables: r.tables, vocab: r.vocab, rules, units: r.env.units, template: { seed: 'seed_test' } };
 }
 const codesOf = (r) => r.errors.map((e) => e.code);
