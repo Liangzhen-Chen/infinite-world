@@ -24,8 +24,9 @@ test('码表条数：E 与 W 各为手数的字面量', () => {
   // 卡头自查卡加卷十二 §2.12 一码 E-ACC-CARD-SELFCHECK（李白 11-18 17:45）：594 → 595、E 576 → 577。
   // B5-0 加卷九 §2.8 一码 E-ACT-WRITER-NOT-READY（勘误 1118k25；李白 11-18 22:10 丙9）：595 → 596、E 577 → 578。
   // 格子迁移 G3 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（FOOTPRINT-OUTSIDE-PARENT、SIBLING-OVERLAP、SEED-SAME-CELL、WATERWAY-NO-CHANNEL、VOLUME-TOP-EXPOSED、CELL-NO-TERRAIN）：596 → 602、E 578 → 584。
-  assert.equal(codes.length, 602);
-  assert.equal(codes.filter((c) => c[0] === 'E').length, 584);
+  // 寻路方向与超限小卡加 E-GRID-PATH-OVER-CAP（卷五 :471 勘误 1121k12，李白 11-21 15:29；告警级、E- 开头照 E-GRID 先例）：602 → 603、E 584 → 585。
+  assert.equal(codes.length, 603);
+  assert.equal(codes.filter((c) => c[0] === 'E').length, 585);
   assert.equal(codes.filter((c) => c[0] === 'W').length, 18);
   assert.equal(REGISTERED_CODES.size, codes.length);
 });

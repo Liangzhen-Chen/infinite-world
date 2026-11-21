@@ -336,10 +336,14 @@
     {
      "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 63
+    },
+    {
+     "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 64
     }
    ],
-   "print": "e7d56011a81d161f3c8a2600fd51440fadfd18563dc010b212a3a57742504d96",
-   "rev": 63,
+   "print": "147b977df69a63dfde9443f451e226ce66738c5b1acab70407fd8b96107f7c00",
+   "rev": 64,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -845,10 +849,14 @@
     {
      "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 60
+    },
+    {
+     "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 61
     }
    ],
-   "print": "ee9d3426e74970e1c1ed4ae02cde32b33080219fc535aecdd396f8e56e74eb0a",
-   "rev": 60,
+   "print": "4d57a8acf485ac3f6c3ebc2a4deb82393767f8a7c25a7c2390ed34ef9f8ada1d",
+   "rev": 61,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1436,10 +1444,14 @@
     {
      "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 57
+    },
+    {
+     "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 58
     }
    ],
-   "print": "0310d4a280aec46928ffce44873f0231e0c186630c89d655cdab86ab6d5e6b8e",
-   "rev": 57,
+   "print": "77b6a77d5d9d8a19efbc70419781c6bdf240bea55e8bd0b0fdf9864d79c69c45",
+   "rev": 58,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1861,10 +1873,14 @@
     {
      "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 73
+    },
+    {
+     "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 74
     }
    ],
-   "print": "feb9c14d34343a56060ee1292c84741c44ef5ca910d4ab48c65f1c00386b4c87",
-   "rev": 73,
+   "print": "6971e7215e144a943783a626ae4fe19c71c5b8b18b6ede0ff316b69cc8aed9d2",
+   "rev": 74,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -2223,10 +2239,14 @@
     {
      "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 58
+    },
+    {
+     "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 59
     }
    ],
-   "print": "0310d4a280aec46928ffce44873f0231e0c186630c89d655cdab86ab6d5e6b8e",
-   "rev": 58,
+   "print": "77b6a77d5d9d8a19efbc70419781c6bdf240bea55e8bd0b0fdf9864d79c69c45",
+   "rev": 59,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -2986,10 +3006,14 @@
     {
      "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 58
+    },
+    {
+     "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 59
     }
    ],
-   "print": "0310d4a280aec46928ffce44873f0231e0c186630c89d655cdab86ab6d5e6b8e",
-   "rev": 58,
+   "print": "77b6a77d5d9d8a19efbc70419781c6bdf240bea55e8bd0b0fdf9864d79c69c45",
+   "rev": 59,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -3212,10 +3236,14 @@
     {
      "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 52
+    },
+    {
+     "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 53
     }
    ],
-   "print": "a6aaab70b5d25b59e61b42c053819649d338ed23f400a3eb11a773ce6f357975",
-   "rev": 52,
+   "print": "4bcd4bcc0d6136cee6412aebe0cbcf239a532b9f9ab15ef01beee86ec4a11c77",
+   "rev": 53,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -3518,10 +3546,14 @@
     {
      "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 72
+    },
+    {
+     "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 73
     }
    ],
-   "print": "6cb360e703637c07c1a75c9a126699edee4bfe14d268715d2fb4790c49953c6a",
-   "rev": 72,
+   "print": "8261d36e0d06ce39b5621d7188139ff4d344fe6d0e20f26c619c3af8fec61904",
+   "rev": 73,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -3837,10 +3869,14 @@
     {
      "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 37
+    },
+    {
+     "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 38
     }
    ],
-   "print": "3b5f5445345722307bd8465838ace0a99d022b6df5c2beb3afeb66d681f94d21",
-   "rev": 37,
+   "print": "4c3b7d84f7c68c8ce968c2576a3e67244fd970c7e8ec2407585ab0df708be00b",
+   "rev": 38,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -4106,10 +4142,14 @@
     {
      "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 61
+    },
+    {
+     "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 62
     }
    ],
-   "print": "e7d56011a81d161f3c8a2600fd51440fadfd18563dc010b212a3a57742504d96",
-   "rev": 61,
+   "print": "147b977df69a63dfde9443f451e226ce66738c5b1acab70407fd8b96107f7c00",
+   "rev": 62,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -4259,10 +4299,14 @@
     {
      "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 35
+    },
+    {
+     "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 36
     }
    ],
-   "print": "73f4486209e3ce2ebbcdd9912b0b1df44e03cb0757354e043ecb07a43aec5874",
-   "rev": 35,
+   "print": "7b42e189ba33ac7945323ea41a438746802e6fec66c9b64d4500cde5f097f859",
+   "rev": 36,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -4709,10 +4753,14 @@
     {
      "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 54
+    },
+    {
+     "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 55
     }
    ],
-   "print": "a6aaab70b5d25b59e61b42c053819649d338ed23f400a3eb11a773ce6f357975",
-   "rev": 54,
+   "print": "4bcd4bcc0d6136cee6412aebe0cbcf239a532b9f9ab15ef01beee86ec4a11c77",
+   "rev": 55,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

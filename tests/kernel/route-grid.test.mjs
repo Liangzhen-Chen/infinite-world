@@ -121,6 +121,19 @@ test('卷五 §4.1 规则 5 末句：带启发的结果与不带启发的逐格�
   assert.equal(revH.cost, revP.cost);
 });
 
+test('卷五 §4.1 规则 5（勘误 1121k12）：步价只看落脚格，正反两个方向的代价允许不同（各按出发方向求最小）', () => {
+  // 3×1 一排，各格步进系数 [1, 2, 5]（只看落脚格）；正交步长 1000000。
+  // 0→2：进格 1（系数 2）1000000×2 + 进格 2（系数 5）1000000×5 = 7000000；2→0：进格 1（系数 2）2000000 + 进格 0（系数 1）1000000 = 3000000。
+  const pace = [1n, 2n, 5n];
+  const env = { box: box(3, 1), lens, lower: { orth: Number(lens.orth), diag: Number(lens.diag) }, stepCost: (u, v, len) => len * pace[v] };
+  const fwd = regionPath(env, 0, 2, 100);
+  const back = regionPath(env, 2, 0, 100);
+  assert.deepEqual(fwd.cells, [0, 1, 2]);
+  assert.equal(fwd.cost, 7000000);
+  assert.deepEqual(back.cells, [2, 1, 0]);
+  assert.equal(back.cost, 3000000);
+});
+
 // ---------- 规则 4：地形构成（§4.10 A5-10.2 各项和为 1） ----------
 
 test('卷五 §4.1 规则 4：mixShares 最大余数法凑满整份，余数并列取码点序小的', () => {

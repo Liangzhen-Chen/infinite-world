@@ -24,6 +24,7 @@ import {
 } from './footprint.mjs';
 import { buildPlan, expandClasses, waterAccessOf, footprintAdjacency, edgeAdjacency } from './place-plan.mjs';
 import { createRouteEnv, edgeNumbers } from './route-edges.mjs';
+import { report } from './report.mjs';
 import { isPosValue } from './named-structs.mjs';
 import { cellClassOf } from './grid.mjs';
 
@@ -534,7 +535,7 @@ function lessLabel(x, y) {
 /**
  * 路网图最短路（卷五 §4.1 规则 5 地点到地点，并列取法固定：路程，边数，途经地点 id 序列字典序，通路类型序列陆路先于水路）。
  * lengthOf 给一条边的路程（定点）；算不出为 null，这样的边不在最短路的图上（路网最短路只在能算出路程的边上求，不拿别的量顶替）。
- * 返回 {d: 路程（定点）, places, ways, edges} | null（不连通）。方向取 s 写起（routeView 先从 id 较小的一端求、再按调用方向倒写）。
+ * 返回 {d: 路程（定点）, places, ways, edges} | null（不连通）。方向取 s 写起：并列时途经地点序列从 s 起比（routeView 按调用的实际出发方向求，不倒写，卷五 :470 勘误 1121k12）。
  * @param {any[]} edges 路网边 @param {string} s 起点地点 @param {string} t 终点地点 @param {(edge: any) => bigint | null} lengthOf 边长
  * @returns {{d: bigint, places: string[], ways: boolean[], edges: any[]} | null}
  */
@@ -564,7 +565,8 @@ export function shortestPath(edges, s, t, lengthOf) {
  * edge：两地之间直接的边，每种通路类型一项，陆路在前；没有即 []。每项 {waterway, requirement, portal, distanceM, terrainMix, ascentM, speedFactor, bearingDeg, cells}，
  * 各量都是栅格化路段的派生值（不存储，卷五 §4.1 规则 4）。
  * path：路网图最短路 {places, edges, distanceM}（节点是边端点，边长是路段 distanceM，门边 0；并列取法固定）；两地相同为没有边、distanceM 为 0 的路径；不连通为 null（两地距离未知）。
- * 结果只由路网图决定：先从代号序较小的一端求，再按调用方向倒写，所以去程与回程是同一条路径。
+ * 按调用的实际出发方向求最小路程路径，不把反方向的结果倒过来写；正反两次调用的路径与路程允许不同（并列时途经地点序列从出发端起比）。
+ * overCap：路网边的栅格化因展开数超 longCostCap 而算不出路程时为 true（此时 path 为 null、不是"路网不连通"，并经 report 记 E-GRID-PATH-OVER-CAP）；否则 false。
  * @param {any} engine @param {any} state @param {string} from @param {string} to
  */
 export function routeView(engine, state, from, to) {
@@ -573,40 +575,60 @@ export function routeView(engine, state, from, to) {
   // 离场子树不在路网图上：任一端是离场行时 edge 与 path 都为空（卷五 §4.1 规则 8、规则 4 末项）；图上也不含离场行的边。
   const { rp, env } = routeEnvOf(engine, state);
   const off = rp.offstage;
-  if (off.has(from) || off.has(to)) return Object.freeze({ edge: Object.freeze([]), path: null });
+  if (off.has(from) || off.has(to)) return Object.freeze({ edge: Object.freeze([]), path: null, overCap: false });
   const edges = off.size === 0 ? edgesOf(engine) : edgesOf(engine).filter((e) => !off.has(e[EDGE.from]) && !off.has(e[EDGE.to]));
   const direct = edges
     .filter((e) => (e[EDGE.from] === from && e[EDGE.to] === to) || (e[EDGE.from] === to && e[EDGE.to] === from))
     .sort((x, y) => Number(x[EDGE.waterway]) - Number(y[EDGE.waterway]))
     .map((e) => edgeItem(engine, rp, env, e, from, to));
   let path = null;
+  let overCap = false;
   if (from === to) path = Object.freeze({ places: Object.freeze([from]), edges: Object.freeze([]), distanceM: fixedToNumber(0n) });
   else {
-    const [s, t] = from < to ? [from, to] : [to, from];
-    const lab = shortestPath(edges, s, t, env.lengthOf);
-    if (lab !== null) {
-      const places = from === s ? lab.places : [...lab.places].reverse();
-      const raw = from === s ? lab.edges : [...lab.edges].reverse();
-      const items = raw.map((e, i) => edgeItem(engine, rp, env, e, places[i], places[i + 1]));
-      path = Object.freeze({ places: Object.freeze(places), edges: Object.freeze(items), distanceM: fixedToNumber(lab.d) });
+    // 搜索里碰到的、因超 longCostCap 算不出路程的边：结果不可信（那条边可能在更短的路上），整体按超限处理，不当无路、也不给一条可能不是最小的路。
+    let cappedEdge = null;
+    const lengthOf = (e) => {
+      const d = env.lengthOf(e);
+      if (d === null && cappedEdge === null && env.edgeOverCap(e)) cappedEdge = e;
+      return d;
+    };
+    const lab = shortestPath(edges, from, to, lengthOf);
+    if (cappedEdge !== null) {
+      overCap = true;
+      reportOverCap(engine, env.rasterEdge(cappedEdge).expanded);
+    } else if (lab !== null) {
+      const items = lab.edges.map((e, i) => edgeItem(engine, rp, env, e, lab.places[i], lab.places[i + 1]));
+      path = Object.freeze({ places: Object.freeze(lab.places), edges: Object.freeze(items), distanceM: fixedToNumber(lab.d) });
     }
   }
-  return Object.freeze({ edge: Object.freeze(direct), path });
+  return Object.freeze({ edge: Object.freeze(direct), path, overCap });
+}
+
+// 寻路展开数超 longCostCap：经内核报告出口记一条 E-GRID-PATH-OVER-CAP（告警级，不改状态；字段只含数值：上限与展开数）。
+function reportOverCap(engine, expanded) {
+  const grid = engine.rules && engine.rules[RULES.grid];
+  report('E-GRID-PATH-OVER-CAP', { cap: grid.longCostCap, expanded });
 }
 
 /**
  * kernelApi `pathView(engine, state, fromPos, toPos)`（卷五 §3.1、§4.1 规则 5 位置到位置）：两位置之间的格上路程，含路外穿越。
  * 本卡建区格层（泡外与长途）：同一格空间在区格图上寻路，一步代价 = 步长 × 终点区格步进系数（道路与航道区格取 roadPaceFactor）× 坡度项，路网只是代价更低的格；
- * 不同格空间只经一道门（门计 0）。返回 {steps: [{w, x, y}]（区格序号串，含两端）, distanceM}；展开上限 longCostCap 内找不到、任一量算不出为 null（未知）。
+ * 不同格空间只经一道门（门计 0）。按调用的实际出发方向求代价最小路径，不倒写（卷五 §4.1 规则 5，勘误 1121k12）：正反两次调用的格子可同、花费与路程允许不同。
+ * 返回 {steps: [{w, x, y}]（区格序号串，含两端）, distanceM}；两位置间真没有路、位置在外包框外或任一量算不出为 null（未知）；
+ * 展开数超 longCostCap 时返回 {overCap: true, steps: null, distanceM: null}（读路程仍得未知，但与"没有路"可区分），并经 report 记 E-GRID-PATH-OVER-CAP（告警级）。
  * 现场泡内两位置的细格寻路（bubbleCostCap）归细格底子（G6 起）与卷十七 G15，本函数不给近似（一律按区格求）。纯读。
  * @param {any} engine @param {any} state @param {{w: number, x: number, y: number, z: number, coarse: boolean}} fromPos @param {{w: number, x: number, y: number, z: number, coarse: boolean}} toPos
- * @returns {{steps: readonly {w: number, x: number, y: number}[], distanceM: number} | null}
+ * @returns {{steps: readonly {w: number, x: number, y: number}[], distanceM: number} | {overCap: true, steps: null, distanceM: null} | null}
  */
 export function pathView(engine, state, fromPos, toPos) {
   requirePos(fromPos, 'pathView fromPos');
   requirePos(toPos, 'pathView toPos');
   const r = routeEnvOf(engine, state).env.pathBetween(fromPos, toPos);
   if (r === null) return null;
+  if (r.overCap === true) {
+    reportOverCap(engine, r.expanded);
+    return Object.freeze({ overCap: true, steps: null, distanceM: null });
+  }
   return Object.freeze({ steps: Object.freeze(r.steps.map((c) => Object.freeze({ ...c }))), distanceM: fixedToNumber(r.distance) });
 }
 

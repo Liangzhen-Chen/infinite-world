@@ -213,13 +213,16 @@ test('并列二：路程、边数都同，从代号小的一端写起比地点�
   assert.deepEqual(sp(list, 'loc_a', 'loc_d').places, ['loc_a', 'loc_b', 'loc_d']);
 });
 
-test('并列二（取法看较小端）：胜者按代号小的一端 loc_a 写起比', () => {
+test('并列二（取法看实际出发端，勘误 1121k12）：胜者按出发端写起比，正反方向可得不同的路', () => {
   // P = a–b–e–d，Q = a–c–bb–d，各三条 10 m 的边。从 loc_a 写起 [a,b,e,d] < [a,c,bb,d]，P 胜；
-  // 若从 loc_d 写起则 [d,bb,c,a] < [d,e,b,a]，Q 会胜——所以这一例能分辨取法是否固定在较小端（routeView 先从较小端求、再按调用方向倒写）。
+  // 从 loc_d 写起 [d,bb,c,a] < [d,e,b,a]（"bb" < "e"），Q 胜——反向得 Q，不是 P 的倒写（routeView 按调用方向直接求，不倒写）。
   const list = [le('loc_a', 'loc_b', 10), le('loc_b', 'loc_e', 10), le('loc_d', 'loc_e', 10), le('loc_a', 'loc_c', 10), le('loc_bb', 'loc_c', 10), le('loc_bb', 'loc_d', 10)];
   const p = sp(list, 'loc_a', 'loc_d');
   assert.deepEqual(p.places, ['loc_a', 'loc_b', 'loc_e', 'loc_d']);
   assert.equal(p.distanceM, 30);
+  const q = sp(list, 'loc_d', 'loc_a');
+  assert.deepEqual(q.places, ['loc_d', 'loc_bb', 'loc_c', 'loc_a']);
+  assert.equal(q.distanceM, 30);
 });
 
 test('并列三：陆路、水路两条边等长，取陆路（通路类型序列陆路先于水路）', () => {

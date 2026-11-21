@@ -31,7 +31,7 @@ export function createRouteEnv({ grid, modifiers, vocabIndex, worldSeed, rp, ter
   const scale2 = scale * scale;
   const ready = Boolean(grid) && typeof grid.roadPaceFactor === 'number' && Number.isInteger(grid.longCostCap)
     && Boolean(modifiers) && Array.isArray(modifiers.slopeCurve) && Boolean(modifiers.slopeCurve.length);
-  if (!ready) return Object.freeze({ ready, rasterEdge: () => null, roadsOf: () => null, regionRoute: () => null, lengthOf: () => null, pathBetween: () => null });
+  if (!ready) return Object.freeze({ ready, rasterEdge: () => null, roadsOf: () => null, regionRoute: () => null, lengthOf: () => null, edgeOverCap: () => false, pathBetween: () => null });
   const cap = grid.longCostCap;
   const lens = stepLengths(grid);
   const slopePoints = modifiers.slopeCurve.map(([x, y]) => [fixedUnits(x), fixedUnits(y)]);
@@ -168,7 +168,7 @@ export function createRouteEnv({ grid, modifiers, vocabIndex, worldSeed, rp, ter
     const src = keyOf(plan.box, s.x, s.y);
     const dst = keyOf(plan.box, t.x, t.y);
     const r = regionPath(e.waterway ? waterModel(plan, dst) : landModel(plan), src, dst, cap);
-    if (r.cells === null) return { ok: false, reason: r.capped ? 'capped' : 'unreachable', expanded: r.expanded };
+    if (r.cells === null) return { ok: false, reason: r.capped ? 'capped' : 'unreachable', capped: r.capped, expanded: r.expanded };
     // 路段派生量（路程、爬升、地形构成、路况）：route-grid.mjs pathMetrics。
     const m = pathMetrics({ box: plan.box, lens, attrs: shardOf(plan).attrs, slopePoints, roadPace }, r.cells, e.waterway);
     return { ok: true, w: plan.w, keys: r.cells, cells: r.cells.map((k) => ({ x: xOf(plan.box, k), y: yOf(plan.box, k) })), ...m, expanded: r.expanded };
@@ -181,24 +181,37 @@ export function createRouteEnv({ grid, modifiers, vocabIndex, worldSeed, rp, ter
     return r.ok ? r.distance : null;
   };
 
+  // 这条边是否因展开数超 longCostCap 而算不出路程（与"两端真没有路"区分；门边不栅格化、不会超限）。
+  const edgeOverCap = (e) => {
+    if (e.portal !== undefined && e.portal !== null) return false;
+    const r = rasterEdge(e);
+    return !r.ok && Boolean(r.capped);
+  };
+
   // ---- 路网区格集（规则 5：道路与航道区格）：本格空间内全部非门边的区格串之并，按格空间分片，惰性 ----
   const roadsOf = (plan) => {
     const shard = shardOf(plan);
     if (shard.roads !== null) return shard.roads;
     const land = new Set();
     const water = new Set();
+    let over = null;
     for (const e of edges) {
       if (e.portal !== undefined && e.portal !== null) continue;
       if (!plan.cells.has(e.from) || !plan.cells.has(e.to)) continue;
       const r = rasterEdge(e);
-      if (!r.ok) continue;
+      if (!r.ok) {
+        // 超限的路网边：路网区格集不全，据此求的路可能不是最小的，整体按超限（与 routeView 同口径），不静默跳过。
+        if (r.capped && over === null) over = r.expanded;
+        continue;
+      }
       for (const k of r.keys) (e.waterway ? water : land).add(k);
     }
-    shard.roads = { land, water };
+    shard.roads = { land, water, over };
     return shard.roads;
   };
 
-  // ---- 位置到位置（规则 5）：同一格空间在区格图上寻路；方向取区格序号小的一端写起、再按调用方向倒写，去程回程同一条路径 ----
+  // ---- 位置到位置（规则 5，封卷后勘误 1121k12）：同一格空间在区格图上按调用的实际出发方向求代价最小路径，正反各算各的、不倒写 ----
+  // 返回 null（算不出：不在同一格空间、位置在外包框外；或两位置间真没有路）| {overCap: true, expanded}（展开数超 longCostCap，与"没路"可区分）| {w, cells, distance, expanded}。
   const routeMemo = new Map();
   const regionRoute = (posA, posB) => {
     if (posA.w !== posB.w) return null;
@@ -207,13 +220,13 @@ export function createRouteEnv({ grid, modifiers, vocabIndex, worldSeed, rp, ter
     const ca = regionOfPos(grid, posA);
     const cb = regionOfPos(grid, posB);
     if (!inBox(plan.box, ca.x, ca.y) || !inBox(plan.box, cb.x, cb.y)) return null;
-    const forward = ca.x < cb.x || (ca.x === cb.x && ca.y <= cb.y);
-    const [first, second] = forward ? [ca, cb] : [cb, ca];
-    // 按（两端、输入版本）缓存、不落盘：环境对象随输入重建，键里不再放版本（规则 5 末项）。
-    const key = `${plan.w}\u0000${first.x}\u0000${first.y}\u0000${second.x}\u0000${second.y}`;
+    const roads = roadsOf(plan);
+    if (roads.over !== null) return { overCap: true, expanded: roads.over };
+    // 按（有向两端、输入版本）缓存、不落盘：环境对象随输入重建，键里不再放版本（规则 5 末项）。
+    const key = `${plan.w}\u0000${ca.x}\u0000${ca.y}\u0000${cb.x}\u0000${cb.y}`;
     if (!routeMemo.has(key)) {
       if (routeMemo.size > cap) routeMemo.clear();
-      const r = regionPath(freeModel(plan, roadsOf(plan)), keyOf(plan.box, first.x, first.y), keyOf(plan.box, second.x, second.y), cap);
+      const r = regionPath(freeModel(plan, roads), keyOf(plan.box, ca.x, ca.y), keyOf(plan.box, cb.x, cb.y), cap);
       let distance = 0n;
       if (r.cells !== null) {
         for (let i = 1; i < r.cells.length; i += 1) {
@@ -222,31 +235,36 @@ export function createRouteEnv({ grid, modifiers, vocabIndex, worldSeed, rp, ter
           distance += dx && dy ? lens.diag : lens.orth;
         }
       }
-      routeMemo.set(key, r.cells === null ? null : { cells: r.cells.map((k) => ({ x: xOf(plan.box, k), y: yOf(plan.box, k) })), distance, expanded: r.expanded });
+      if (r.cells !== null) routeMemo.set(key, { cells: r.cells.map((k) => ({ x: xOf(plan.box, k), y: yOf(plan.box, k) })), distance, expanded: r.expanded });
+      else routeMemo.set(key, r.capped ? { overCap: true, expanded: r.expanded } : null);
     }
     const hit = routeMemo.get(key);
-    if (hit === null) return null;
-    return { w: plan.w, cells: forward ? hit.cells : [...hit.cells].reverse(), distance: hit.distance, expanded: hit.expanded };
+    if (hit === null || hit.overCap === true) return hit;
+    return { w: plan.w, cells: hit.cells, distance: hit.distance, expanded: hit.expanded };
   };
 
   /**
-   * pathView 的几何部分：{steps: [{w, x, y}]（区格序号串）, distance: 定点米, expanded} | null（未知）。
+   * pathView 的几何部分：{steps: [{w, x, y}]（区格序号串）, distance: 定点米, expanded} | null（未知：没有路或算不出）| {overCap: true, expanded}（展开数超上限，不是没路）。
    * 同一格空间：区格寻路；不同格空间：经各道门（portal 边，两个方向都可走）"起点到门的这一格 + 门的那一格到终点"中路程最小者，门本身计 0、只经一道门，
-   * 并列取边的两端 id 序小的（卷五 §4.1 规则 5 位置到位置末句、规则 7）。
+   * 并列取边的两端 id 序小的（卷五 §4.1 规则 5 位置到位置末句、规则 7）。经门时只要有一段超限，整个结果即超限（那一道门的候选算不出，不能当没有）。
    */
   const pathBetween = (posA, posB) => {
     if (posA.w === posB.w) {
       const r = regionRoute(posA, posB);
-      return r === null ? null : { steps: r.cells.map((c) => ({ w: r.w, ...c })), distance: r.distance, expanded: r.expanded };
+      if (r === null || r.overCap === true) return r;
+      return { steps: r.cells.map((c) => ({ w: r.w, ...c })), distance: r.distance, expanded: r.expanded };
     }
     const doors = edges.filter((e) => e.portal !== undefined && e.portal !== null)
       .sort((p, q) => cmp(`${p.from}\u0000${p.to}\u0000${p.waterway}`, `${q.from}\u0000${q.to}\u0000${q.waterway}`));
     let best = null;
+    let over = null;
     for (const e of doors) {
       for (const [da, db] of [[e.portal.a, e.portal.b], [e.portal.b, e.portal.a]]) {
         if (da.w !== posA.w || db.w !== posB.w) continue;
         const first = regionRoute(posA, da);
         const second = regionRoute(db, posB);
+        const capped = [first, second].find((x) => x !== null && x.overCap === true);
+        if (capped !== undefined) { if (over === null) over = capped; continue; }
         if (first === null || second === null) continue;
         const distance = first.distance + second.distance;
         if (best === null || distance < best.distance) {
@@ -254,10 +272,10 @@ export function createRouteEnv({ grid, modifiers, vocabIndex, worldSeed, rp, ter
         }
       }
     }
-    return best;
+    return over !== null ? over : best;
   };
 
-  return Object.freeze({ ready, rasterEdge, roadsOf, regionRoute, lengthOf, pathBetween });
+  return Object.freeze({ ready, rasterEdge, roadsOf, regionRoute, lengthOf, edgeOverCap, pathBetween });
 }
 
 /** 把栅格化的定点结果换成 routeView 用的数（米、比例）。@param {any} r rasterEdge 的成功结果 */

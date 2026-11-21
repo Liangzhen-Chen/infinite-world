@@ -12,6 +12,7 @@ import { createHash } from 'node:crypto';
 import { testTempRoot, writeUnderTempRoot, ROOT } from '../accept/temp-root.mjs';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
+import { useReportSink } from '../../server-plugin/kernel/report.mjs';
 import { routeView, pathView, placeView, zoneAt } from '../../server-plugin/kernel/place.mjs';
 
 installDigestCap({ sha256Hex: (data, encoding) => createHash('sha256').update(data, encoding === 'base64' ? 'base64' : 'utf8').digest('hex') });
@@ -138,12 +139,14 @@ test('path：去程回程路程相同、互为逆序；edge 只含直接的边�
   assert.deepEqual(routeView(e, S, 'loc_a', 'loc_a').path, { places: ['loc_a'], edges: [], distanceM: 0 });
   const lone = world({ ...ROW8(), edges: [edge('loc_a', 'loc_c')] });
   assert.equal(routeView(lone, S, 'loc_a', 'loc_b').path, null);
+  assert.equal(routeView(lone, S, 'loc_a', 'loc_b').overCap, false); // 真不连通：不是超限
 });
 
-test('path 并列取法固定从 id 较小端求再倒写（分辨性）：两条等长三边路线上下镜像，反向调用得同一条路倒写、路程相同', () => {
+test('path 并列取法从实际出发端起比（卷五 :470 勘误 1121k12，分辨性）：两条等长三边路线上下镜像，正向得 P、反向得 Q（不是 P 的倒写），路程相同', () => {
   // 6 × 3 区格，各地点一格：a (0,1)、d (5,1)；P = a–b–e–d 走上行 b (1,2)、e (4,2)；Q = a–c–bb–d 走下行 c (1,0)、bb (4,0)。
   // 每条路线：两个斜步 + 一段三个正交步的边 = 2 × 141.4213 + 300 = 582.8426，上下镜像、地形与高度一致，两条路程逐位相同、边数都是三。
-  // 从 loc_a 写起 [a,b,e,d] < [a,c,bb,d]，P 胜；若从 loc_d 写起则 [d,bb,c,a] < [d,e,b,a]，Q 会胜——所以反向调用仍得 P 的倒写，才证明固定从较小端求。
+  // 从 loc_a 写起 [a,b,e,d] < [a,c,bb,d]，P 胜；从 loc_d 写起 [d,bb,c,a] < [d,e,b,a]（"bb" < "e"），Q 胜——
+  // 所以反向调用得 Q（地点序列 d,bb,c,a），而不是把 P 倒过来（d,e,b,a）：若仍固定从较小端求再倒写，就会得到后者。
   const one = (x, y) => region('loc_root', x, y, { targetAreaM2: 10000 });
   const rows = { loc_root: ROOT_ROW({ coord: { x: 300, y: 150 } }), loc_a: one(50, 150), loc_d: one(550, 150), loc_b: one(150, 250), loc_e: one(450, 250), loc_c: one(150, 50), loc_bb: one(450, 50) };
   const edges = [edge('loc_a', 'loc_b'), edge('loc_b', 'loc_e'), edge('loc_d', 'loc_e'), edge('loc_a', 'loc_c'), edge('loc_bb', 'loc_c'), edge('loc_bb', 'loc_d')];
@@ -151,7 +154,7 @@ test('path 并列取法固定从 id 较小端求再倒写（分辨性）：两�
   const fwd = routeView(e, S, 'loc_a', 'loc_d').path;
   const back = routeView(e, S, 'loc_d', 'loc_a').path;
   assert.deepEqual(fwd.places, ['loc_a', 'loc_b', 'loc_e', 'loc_d']);
-  assert.deepEqual(back.places, ['loc_d', 'loc_e', 'loc_b', 'loc_a']);
+  assert.deepEqual(back.places, ['loc_d', 'loc_bb', 'loc_c', 'loc_a']);
   assert.equal(fwd.distanceM, 582.8426);
   assert.equal(back.distanceM, 582.8426);
 });
@@ -238,7 +241,7 @@ test('pathView 跨格空间：经门的"起点到门 + 门到终点"，门计 0�
   const r = pathView(e, S, P(250, 150, 0, 0), P(250, 150, 0, 1));
   assert.equal(r.distanceM, 300);
   assert.deepEqual(r.steps, [{ w: 0, x: 2, y: 1 }, { w: 0, x: 1, y: 1 }, { w: 0, x: 0, y: 1 }, { w: 1, x: 1, y: 1 }, { w: 1, x: 2, y: 1 }]);
-  // 反向同一条路径倒写、路程相同。
+  // 反向各算各的（不倒写）：这一段是一条直线上的唯一最小代价路径，所以反向恰是逆序、路程相同。
   const back = pathView(e, S, P(250, 150, 0, 1), P(250, 150, 0, 0));
   assert.equal(back.distanceM, 300);
   assert.deepEqual(back.steps, [...r.steps].reverse());
@@ -258,7 +261,7 @@ test('门边加载校验：a 不在 from 足迹内、b 不在 to 足迹内、门
 
 // ---------- 对照表第 37、38 行：pathView 区格寻路、离路穿越、步进系数 ----------
 
-test('pathView 沿路：路网区格取 roadPaceFactor，平地上走路与路网边同路程；回程同路程互为逆序', () => {
+test('pathView 沿路：路网区格取 roadPaceFactor，平地上走路与路网边同路程；这条直路是唯一最小代价路径，回程恰为逆序', () => {
   const e = world({ ...ROW8(), edges: [edge('loc_a', 'loc_b')] });
   const r = pathView(e, S, P(50, 150), P(750, 150));
   assert.equal(r.distanceM, 700);
@@ -277,12 +280,79 @@ test('pathView 位置只到区格精度：同一区格内任意细格同结果�
   assert.throws(() => pathView(e, S, { w: 0, x: 0, y: 0 }, P(1, 1)), (er) => er.code === 'E-DIM-STRUCT-FIELD');
 });
 
-test('pathView 展开上限：longCostCap 内找不到即为空（读路程得未知）；上限够用则找得到', () => {
+// 捕获内核报告出口（report.mjs）的记录；用完恢复原出口。
+function captured(fn) {
+  const logs = [];
+  const prev = useReportSink((rec) => logs.push(rec));
+  try { fn(); } finally { useReportSink(prev); }
+  return logs;
+}
+
+test('pathView 展开上限（勘误 1121k12）：超 longCostCap 返回明确的超限结果、不返回空、读路程仍得未知，并记 E-GRID-PATH-OVER-CAP；与"没有路"可区分；上限够用则找得到', () => {
   const r = load({ ...ROW8(), edges: [edge('loc_a', 'loc_b')] });
   assert.equal(r.ok, true, r.text);
   const small = { ...engineOf(r), rules: { ...r.rules, grid: { ...r.rules.grid, longCostCap: 3 } } };
-  assert.equal(pathView(small, S, P(50, 150), P(750, 150)), null);
+  let over;
+  const logs = captured(() => { over = pathView(small, S, P(50, 150), P(750, 150)); });
+  assert.deepEqual(over, { overCap: true, steps: null, distanceM: null });
+  // 展开第 4 个节点时超过上限 3：expanded = 4（regionPath 在 done.size > cap 的那一刻返回）。
+  assert.deepEqual(logs, [{ code: 'E-GRID-PATH-OVER-CAP', fields: { cap: 3, expanded: 4 } }]);
+  // 真没有路（位置在外包框外、没有门的跨格空间）仍是 null，且不记超限。
+  const none = captured(() => {
+    assert.equal(pathView(small, S, P(50, 150), P(5000, 150)), null);
+    assert.equal(pathView(small, S, P(50, 150), P(50, 150, 0, 3)), null);
+  });
+  assert.deepEqual(none, []);
   assert.notEqual(pathView(engineOf(r), S, P(50, 150), P(750, 150)), null);
+});
+
+test('pathView：路网边自身超限时整体超限，不用残缺的路网区格集返回一条较差的路（Opus 核 M1）', () => {
+  const r = load({ ...ROW8(), edges: [edge('loc_a', 'loc_b')] });
+  assert.equal(r.ok, true, r.text);
+  const small = { ...engineOf(r), rules: { ...r.rules, grid: { ...r.rules.grid, longCostCap: 3 } } };
+  // 相邻两格 (0,1)→(1,1)：自身只展开 2 个节点（≤3），但路网边 a–b 七步栅格化在第 4 个节点超限（expanded 4）。
+  let v;
+  const logs = captured(() => { v = pathView(small, S, P(50, 150), P(150, 150)); });
+  assert.deepEqual(v, { overCap: true, steps: null, distanceM: null });
+  assert.deepEqual(logs, [{ code: 'E-GRID-PATH-OVER-CAP', fields: { cap: 3, expanded: 4 } }]);
+  // 上限够用时同一对位置正常返回：一个正交步 100 m。
+  assert.equal(pathView(engineOf(r), S, P(50, 150), P(150, 150)).distanceM, 100);
+});
+
+test('routeView 展开上限（勘误 1121k12）：路网边因超 longCostCap 算不出路程时 path 为 null 且 overCap 为 true（并记 E-GRID-PATH-OVER-CAP），真不连通 overCap 为 false；上限够用则有 path', () => {
+  const r = load({ ...ROW8(), edges: [edge('loc_a', 'loc_b')] });
+  assert.equal(r.ok, true, r.text);
+  const small = { ...engineOf(r), rules: { ...r.rules, grid: { ...r.rules.grid, longCostCap: 3 } } };
+  let v;
+  const logs = captured(() => { v = routeView(small, S, 'loc_a', 'loc_b'); });
+  assert.equal(v.path, null);
+  assert.equal(v.overCap, true);
+  assert.equal(v.edge[0].distanceM.known, false); // 边的路程同样算不出（未知），不是 0
+  assert.deepEqual(logs, [{ code: 'E-GRID-PATH-OVER-CAP', fields: { cap: 3, expanded: 4 } }]);
+  const ok = routeView(engineOf(r), S, 'loc_a', 'loc_b');
+  assert.equal(ok.overCap, false);
+  assert.equal(ok.path.distanceM, 700);
+});
+
+// 方向不对称夹具：3 × 2 区格，全是 terrain_river（paceFactor 4、起伏 0，坡度项恒为 1）；loc_m1 占 (1,1)、loc_m2 占 (1,0)，路网边 m1–m2 使这两格成为道路格（步进系数 roadPaceFactor 0.8）。
+// 起点 S = 区格 (0,0)、终点 T = 区格 (2,1)，都不是道路格。步价只看落脚格（规则 5），一步 = 步长 × 终点格系数，步长正交 100、斜向 141.4213。
+//  正向 S→T：经 m1（先斜后正交）= 141.4213 × 0.8 + 100 × 4 = 513.1370；经 m2（先正交后斜）= 100 × 0.8 + 141.4213 × 4 = 645.6852；S→m2→m1→T = 80 + 80 + 400 = 560。最小是经 m1。
+//  反向 T→S：经 m2（先斜后正交）= 141.4213 × 0.8 + 100 × 4 = 513.1370；经 m1（先正交后斜）= 100 × 0.8 + 141.4213 × 4 = 645.6852；T→m1→m2→S = 560。最小是经 m2。
+// 所以正反两次调用的格子串不同，反向不是正向的倒写；路程（步长之和）都是 141.4213 + 100 = 241.4213。
+test('pathView 方向不同、代价最小路径可不同（勘误 1121k12，A5-1.2）：正向经 m1、反向经 m2，反向不是正向的倒写；路程各按所走格子的步长之和', () => {
+  const rows = {
+    loc_root: ROOT_ROW({ coord: { x: 150, y: 100 } }),
+    loc_m1: region('loc_root', 150, 150, { targetAreaM2: 10000 }),
+    loc_m2: region('loc_root', 150, 50, { targetAreaM2: 10000 }),
+  };
+  const e = world({ rows, spaces: [SPACE(3, 2)], edges: [edge('loc_m1', 'loc_m2')] });
+  const fwd = pathView(e, S, P(50, 50), P(250, 150));
+  const back = pathView(e, S, P(250, 150), P(50, 50));
+  assert.deepEqual(fwd.steps, [{ w: 0, x: 0, y: 0 }, { w: 0, x: 1, y: 1 }, { w: 0, x: 2, y: 1 }]);
+  assert.deepEqual(back.steps, [{ w: 0, x: 2, y: 1 }, { w: 0, x: 1, y: 0 }, { w: 0, x: 0, y: 0 }]);
+  assert.notDeepEqual(back.steps, [...fwd.steps].reverse());
+  assert.equal(fwd.distanceM, 241.4213);
+  assert.equal(back.distanceM, 241.4213);
 });
 
 // 离路穿越夹具（卷五 §4.1.6 A5-1.2；只放测试目录）：16 × 11 区格，一道山脊 loc_ridge（terrain_mountain，锚点海拔 90 m）竖在 x = 8、y = 0…7（八格）；
