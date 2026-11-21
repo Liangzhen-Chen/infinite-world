@@ -1,0 +1,25 @@
+{
+ "version": 1,
+ "scope": "world_root",
+ "note": "转换输入（与 weather-cell.json 同类）：区域足迹行的控制海拔 anchorElevationM（卷五 §2.1 :102、§4.3 规则 8 :656）。加载器不读本文件，现在不生效；G5b 转换时按行 id 写入对应行。只收设定原文给得出值的行，每行自带出处句；没在 rows 里的区域足迹行一律缺海拔，按未知传播（G5a 已支持，卷五 §4.3 规则 8 :656、卷二 §1.12），不用名字、地形词或别行的值顶替。",
+ "rows": {
+  "loc_county_xichui_longqu": {
+   "anchorElevationM": 779,
+   "basis": "world/geo/weather-cell.json:6 cellElevationM 779，出处 weather-cell.json:21（太原站 WMO 53772 海拔 779 米，ISD 记录头）；河湾村气候取太原实测（docs/研究/世界设定统一设计-W1W4-1119.md:33），天气单元挂在河湾村所在的垄渠郡（tools/convert-geo.mjs:18 WEATHER_CELL_PLACE、:107 起 elevationM 取 cellElevationM）。这行 G5b 本来就要转（docs/问题.md G5 遗留第 5 条“起始郡海拔转 anchorElevationM”），此处只是登记在同一处"
+  },
+  "loc_far_hupo": {
+   "anchorElevationM": 0,
+   "basis": "港在河口、与海相连：locations.json:23241“琥珀港在河口，岩岸围出一湾深水港”，regions.json:2005 港务“按潮窗与实测吃水安排”（有潮窗即港区水面随海面涨落）。港区与海面同一水准，取海拔零点 0 m（卷五 §2.1 :102 取值域含 0；海拔以海面为零）。精度说明：潮差与岸上高出海面多少设定没写，0 m 是“落在海面水准上”，不是测高；岩岸与坡地的更高处设定也没给，不编"
+  },
+  "loc_water_sea_hupo": {
+   "anchorElevationM": 0,
+   "basis": "海域足迹：海面是海拔零点（海拔的参照面）；海的存在出处见 world/geo/water-bodies.json 该行与 regions.json:397“河从西陲流到这里入海”"
+  }
+ },
+ "downhill": {
+  "note": "只有高低次序、没有数值的设定关系，不是控制点；供 G5b 或作者补数值后核对用（补出的值须满足次序，不满足即作者数据错）",
+  "chain": ["loc_hw", "loc_site_w5_ferry_shrine", "loc_yandu", "loc_far_hupo"],
+  "basis": "regions.json:76“河水从西北的丘陵流下，在河湾一带转缓，过雁渡往南流向海口”；regions.json:909“下渡郡在河的下游”、“货船顺流可到琥珀港”；regions.json:397“河从西陲流到这里入海”。河自上游向下游依次经过链上各点（course 见 water-bodies.json），水往低处流，故前者的河面海拔不低于后者，终点接海面 0 m"
+ },
+ "unknownRows": "全部其余区域足迹行（含 9 省、除垄渠郡外的 30 郡、不在 settlements.json buildingIds 里的地点行）设定原文没有海拔数值，也没有能换算成数值的量（world/ 全文无“海拔”数字，只有 weather-cell.json 一处；无山高、台地高、雪线高、河谷深度）。只有 terrain 文本（如“高山粒雪台原”）一类质性描述，按卡规矩不得按地形词批量套值，故不给值，列在回报推不出清单"
+}

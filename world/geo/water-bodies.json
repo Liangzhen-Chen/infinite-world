@@ -1,0 +1,111 @@
+{
+ "version": 1,
+ "scope": "world_root",
+ "note": "转换输入（与 weather-cell.json 同类）：G5b 真实世界上格时据此建 3 条水路边要走的水体行（挂 comp_tract 与 comp_waterbody，卷五 §2.1 :143-149、:238）。加载器不读本文件，现在不生效。只写设定原文推得出的值；推不出的值不编，列在各行 unknown 与文件末 openItems，由 G5b 或作者按原文补，补前不得用别的量顶替。出处写成 文件:行（行号取本提交时的仓库）。",
+ "bodies": [
+  {
+   "id": "loc_water_river_main",
+   "name": "河（河湾经雁渡至琥珀港入海）",
+   "nameBasis": "设定没有给这条河起专名，regions.json:76、:397、:909 都只称“河”；显示名用描述性名字，待作者定专名",
+   "classes": ["comp_tract", "comp_waterbody"],
+   "parentHint": "足迹须在父足迹之内（卷五 §4.1 规则 3）。河湾村属垄渠郡（西陲河谷省），琥珀港属琥珀港郡（琥珀海岸省），两省的最低共同祖先是世界根 loc_world（convert-geo.mjs 省挂世界根），故父取世界根；足迹由 boundary 作者覆盖（规则 10）",
+   "waterKind": "water_navigable",
+   "waterKindBasis": "_vocab.json water 族现只有 water_navigable（navigable 真，:2663）；河上跑货船与渡船（regions.json:906、:2004），可航。更细的类（河、海、flowing 流动）要加 water 族条目，那是 world/ontology 维度定义文件，本卡不改，见 openItems 第 1 条",
+   "flowing": true,
+   "flowingBasis": "regions.json:76“河水从西北的丘陵流下……过雁渡往南流向海口”；regions.json:909“货船顺流可到琥珀港”。流动是描述字段，现词表里没有 flowing 键",
+   "navigable": true,
+   "liquid": "mat_water",
+   "liquidBasis": "regions.json:76 河水从西北丘陵流下、一路在内陆；盐只出现在海口（regions.json:397“海口的盐湿滩地上晒盐”）。入海口一段咸淡混合设定没写，不分段，见 unknown",
+   "downstream": "loc_water_sea_hupo",
+   "downstreamBasis": "regions.json:397“河从西陲流到这里入海”；regions.json:2004“琥珀港郡在河口”",
+   "course": {
+    "direction": "自上游向下游依次经过下列地点（旧 coordinates，千米）；中心线取相邻两点直线，G5b 栅格化成连续区格串",
+    "via": [
+     {
+      "place": "loc_hw",
+      "coordinatesKm": [0, 0],
+      "at": "bank",
+      "basis": "河湾村在河边：regions.json:813“垄渠郡是西陲河谷的上游腹地，河湾村……河边有磨坊和木作”；regions.json:906“河湾的船沿水路上下”；routes.json:242 起 route_hw_yandu 只含 boat；routes.json:5885 起 route_w5_ferry_shrine_hw 只含 boat"
+     },
+     {
+      "place": "loc_site_w5_ferry_shrine",
+      "coordinatesKm": [-1.5, -17],
+      "at": "bank",
+      "basis": "河神矶：locations.json:29156“河湾到雁渡之间河边一块供着小龛的大石”；locations.json:29169“来往的船工路过都要往水里撒一把米”"
+     },
+     {
+      "place": "loc_yandu",
+      "coordinatesKm": [0, -32],
+      "at": "ford",
+      "basis": "regions.json:909“郡治雁渡是河上最大的渡口”；routes.json:242 起 route_hw_yandu（boat，32 km）"
+     },
+     {
+      "place": "loc_far_hupo",
+      "coordinatesKm": [-10, -160],
+      "at": "mouth",
+      "basis": "locations.json:23241“琥珀港在河口”；routes.json:5058 起 route_far_yandu_hupo_boat（只含 boat，128.4 km）；regions.json:2004 同"
+     }
+    ],
+    "lengthCheck": "旧水路边长都是端点直线距离：hw–yandu 32（|(0,0)–(0,−32)|）、yandu–hupo 128.4（|(0,−32)–(−10,−160)| = 128.39）、hw–河神矶 17（|(0,0)–(−1.5,−17)| = 17.07）。折线 hw→河神矶→yandu 长 17.07 + 15.07 = 32.14 km，与 route_hw_yandu 的 32 km 差 0.14 km（0.4%），说明河神矶在河边而折线不绕远，这是对上面三处出处的数字自洽核对，不是另立的值",
+    "upstreamOfHw": "设定只说河水从西北的丘陵流来（regions.json:76），河湾以上的走向与长度没有给，不画；上游端点见 unknown"
+   },
+   "footprint": {
+    "widthCells": 1,
+    "widthBasis": "区格边长 100 m（rules/tables/grid.json:24 regionCellM；卷五 §2.3 :271）是足迹的最小单位，设定没有给河宽，一条能表示的河最窄一区格宽。这是网格分辨率的取法，不是设定里的河宽；河宽 100 m 以内的真实宽度设定没有给，见 unknown",
+    "boundary": null,
+    "boundaryNote": "boundary（区格序号表）要外包框原点才能写，外包框归 G5b（卷五 §4.1.4 :522-523），本文件只给中心线与途经地点，由 G5b 把折线栅格化成 boundary；栅格化须保证河足迹与 hw、河神矶 的接入格相邻、与 yandu 的接入格相邻（卷五 §4.1 规则 4：水路边只走可航水体区格，起点格之后的每一步都须是可航水体格），否则仍报 E-GRID-WATERWAY-NO-CHANNEL"
+   },
+   "unknown": [
+    "depthM / capacityL：设定没有水深与河容量（world/ 全文无吃水、水深、河宽数字，只有“春汛常漫上河滩，秋末水浅，渡运跟着水位改期”regions.json:76 的季节水位说法与 locations.json:29169 起河神矶“大水改了这段河道的深浅”的传说），不编",
+    "catchmentM2 / runoffCoef：汇水面积与径流系数设定没有，河湾以上的流域范围不明，不编",
+    "surfaceM2：不填，由足迹派生（卷十 R10-2.12：surfaceM2 = 足迹面积），栅格化后才有",
+    "anchorElevationM：区域足迹必填控制海拔。设定没有河面各处海拔；只有关系（上游高、下游低，河湾 779 m 见 elevation-controls.json，入海口 0 m）。河中段不编，留缺按未知传播",
+    "入海口咸淡混合段（liquid 分段）与上游端点：设定没写"
+   ]
+  },
+  {
+   "id": "loc_water_sea_hupo",
+   "name": "海（琥珀海岸外）",
+   "nameBasis": "设定称“海”“海外”“海口”（regions.json:397），没有海名；显示名用描述性名字，待作者定名",
+   "classes": ["comp_tract", "comp_waterbody"],
+   "parentHint": "海域在琥珀海岸之外，足迹须落在世界根外包框内，取世界根为父（卷五 §4.1 规则 3、10）；外包框里的海按规则 10 现会被各省平分，须由 boundary 作者覆盖才有海，范围见 unknown",
+   "waterKind": "water_navigable",
+   "waterKindBasis": "regions.json:2004“港里停着……出海的帆船”；regions.json:2164“船常常出不了海”（冬季风暴限出海，不等于不可航）。词表现只有 water_navigable，同河一行的说明",
+   "flowing": false,
+   "navigable": true,
+   "liquid": "mat_seawater",
+   "liquidBasis": "regions.json:397“海口的盐湿滩地上晒盐、种海草”；world/ontology/dimensions/material.json:16564 mat_seawater 存在",
+   "downstream": null,
+   "downstreamBasis": "海是河的归宿（regions.json:397），海本身没有下游（downstream 图无环，卷五 §2.1 :149）",
+   "anchors": [
+    {
+     "place": "loc_far_hupo",
+     "coordinatesKm": [-10, -160],
+     "relation": "河入海处，海与河足迹在此相接",
+     "basis": "locations.json:23241、regions.json:397"
+    },
+    {
+     "place": "loc_county_hupo_yanfeng",
+     "coordinatesKm": [-20, -265],
+     "relation": "盐风群岛郡的中心点，是“琥珀海岸外海上的一串岩岛”，海环绕岛群（海域须包含岛周的水面，岛本身不是水体）",
+     "basis": "regions.json:2164、:397“海外散着盐风群岛”"
+    }
+   ],
+   "footprint": {
+    "boundary": null,
+    "boundaryNote": "海域的范围设定没有给：只知道海在琥珀港的河口以外、群岛在海上，海岸线怎样走、海有多宽多远都没有原文。不编范围；缺它则外包框里的海会按规则 10 被各省平分成陆地，须作者按原文补出海岸线后再画 boundary"
+   },
+   "anchorElevationM": "见 world/geo/elevation-controls.json（控制海拔只在那里登记一处）",
+   "unknown": [
+    "boundary 海域范围（海岸线、向海延伸多远）",
+    "depthM / capacityL / catchmentM2 / runoffCoef：设定没有，不编"
+   ]
+  }
+ ],
+ "openItems": [
+  "1. 词表：water 族只有 water_navigable，河与海不能分类。要给河、海各加条目（navigable 真，flowing 真/假）须改 world/ontology/dimensions/_vocab.json，该目录正由 G7 改，本卡未落；落地前两行都用 water_navigable，不影响 waterAccess 与水路栅格化",
+  "2. 河宽、水深、容量、汇水、径流、河面海拔、海域范围、上游端点：设定原文都没有，需要作者按原文再给或经亮圳裁定允许设定级估值（须带“设定级”标记，不借别处数字）",
+  "3. 另有一条溪：regions.json:2092“苔院郡的药草顺溪下来，也在湾里换海草和盐”，是否要成水体行、流向哪里设定没写，不属本卡 3 条水路边，未建",
+  "4. 白石镇一带的河（locations.json:26717 南河、26721 河岸）与河湾的河是否同一条，设定没写，不并入；它们没有水路边，不挡加载"
+ ]
+}
