@@ -348,10 +348,14 @@
     {
      "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 66
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 67
     }
    ],
-   "print": "760feb27b2df25a6ce627374d1fc53aed27c6e60995c1d9f08eb8568ba2205b3",
-   "rev": 66,
+   "print": "285e6f26dcc6d0fd16acc803536cddf9ff8855153e1b0d37b8a57ff3b8fa2422",
+   "rev": 67,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -869,10 +873,22 @@
     {
      "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 63
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 64
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 65
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 66
     }
    ],
-   "print": "47d6cec5453afce029edcc432a9a80070e737cf3bf295715e53ba64ac7c2c41a",
-   "rev": 63,
+   "print": "8df11a8690bdf20a6981852458b9acbfa1b75d2c842f9b3323b6ec4ce9b491d9",
+   "rev": 66,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1472,10 +1488,22 @@
     {
      "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 60
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 61
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 62
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 63
     }
    ],
-   "print": "649c2c605a0e408d5b89e46013d95636d881306aba173d280b821a1c85414eda",
-   "rev": 60,
+   "print": "3a4b78e2d9b472542ded462b246ce222b7e26d8afd8cd6349c49761648b4ddcb",
+   "rev": 63,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1909,10 +1937,22 @@
     {
      "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 76
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 77
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 78
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 79
     }
    ],
-   "print": "726cc719b4000770e73c51950b3cb0778e6f8f2e2fd2fa52244ea2bd60fce5bf",
-   "rev": 76,
+   "print": "dc8c68ad788c28ed543fe1e8329e152e78c9bc439e2852df5a76626f639e9f73",
+   "rev": 79,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -2283,10 +2323,22 @@
     {
      "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 61
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 62
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 63
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 64
     }
    ],
-   "print": "649c2c605a0e408d5b89e46013d95636d881306aba173d280b821a1c85414eda",
-   "rev": 61,
+   "print": "3a4b78e2d9b472542ded462b246ce222b7e26d8afd8cd6349c49761648b4ddcb",
+   "rev": 64,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -3058,10 +3110,22 @@
     {
      "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 61
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 62
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 63
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 64
     }
    ],
-   "print": "649c2c605a0e408d5b89e46013d95636d881306aba173d280b821a1c85414eda",
-   "rev": 61,
+   "print": "3a4b78e2d9b472542ded462b246ce222b7e26d8afd8cd6349c49761648b4ddcb",
+   "rev": 64,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -3296,10 +3360,22 @@
     {
      "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 55
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 56
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 57
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 58
     }
    ],
-   "print": "085680a7935c1e7c304bdb3f26d19c7f0e531390cc1172d3768b902a5e95d9dd",
-   "rev": 55,
+   "print": "9c7e6d3b347f9eac03a38f183df4aa0c876e95b7d5e6dfe15c00e5ea4c7df792",
+   "rev": 58,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -3614,10 +3690,14 @@
     {
      "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 75
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 76
     }
    ],
-   "print": "fc4111ff03a02c9225f5b2684170f153146e43c74dd4e8145368c4ab7ff1e845",
-   "rev": 75,
+   "print": "d10cb4f1c9f4af5b365857a68356107e62940581b0e85ac897923a2fe4b3628f",
+   "rev": 76,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -3945,10 +4025,22 @@
     {
      "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 40
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 41
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 42
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 43
     }
    ],
-   "print": "adb2bec81bae658d93985afbd31463571f718aeef40c12dd91ae021021a17da1",
-   "rev": 40,
+   "print": "aa666a052aca0c2b4df208737f148fd43fad3dc31ac66ea041d4de3a3b24d89c",
+   "rev": 43,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -4226,10 +4318,14 @@
     {
      "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 64
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 65
     }
    ],
-   "print": "760feb27b2df25a6ce627374d1fc53aed27c6e60995c1d9f08eb8568ba2205b3",
-   "rev": 64,
+   "print": "285e6f26dcc6d0fd16acc803536cddf9ff8855153e1b0d37b8a57ff3b8fa2422",
+   "rev": 65,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -4391,10 +4487,22 @@
     {
      "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 38
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 39
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 40
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 41
     }
    ],
-   "print": "525a9db9c63586f46b866bc0db0eed7a0b8f1a55b16a8f3698955f7d7396501d",
-   "rev": 38,
+   "print": "867c1cc88e5e0a30110a7662c9fdf14f927111169660dfe2ea05453d63f3cb82",
+   "rev": 41,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -4853,10 +4961,22 @@
     {
      "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 57
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 58
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 59
+    },
+    {
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 60
     }
    ],
-   "print": "085680a7935c1e7c304bdb3f26d19c7f0e531390cc1172d3768b902a5e95d9dd",
-   "rev": 57,
+   "print": "9c7e6d3b347f9eac03a38f183df4aa0c876e95b7d5e6dfe15c00e5ea4c7df792",
+   "rev": 60,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

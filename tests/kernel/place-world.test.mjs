@@ -141,6 +141,9 @@ test('水体类：waterAccess 只给旧水路边的两端，条目都有行在�
     if (!ends.has(id)) { assert.equal(Object.hasOwn(ROWS[id], 'waterAccess'), false, id); continue; }
     for (const w of ROWS[id].waterAccess) { assert.ok(entries.includes(w), id); used.add(w); }
   }
+  // 水体类条目由旧行的 waterAccess 用，或由转换输入里的水体行（world/geo/water-bodies.json，G5b 转换后才进表）用；两处都没用的条目才算多余。
+  const bodies = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'world/geo/water-bodies.json'), 'utf8')).bodies;
+  for (const b of bodies) used.add(b.waterKind);
   assert.deepEqual([...used].sort(), [...entries].sort());
 });
 

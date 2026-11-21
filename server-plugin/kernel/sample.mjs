@@ -192,6 +192,32 @@ export function drawBelow(total, worldSeed, streamCode, subjectId, worldTime, dr
   return (u * t) / TWO64;
 }
 
+// 按骰值键取值可用的分布种类：只取消耗骰值的五种（卷二 §1.10 封卷后勘误 1121k1）；curve 无随机、joint 归卷二十六、ref 不展开，都拒。
+const DRAW_KINDS = Object.freeze([DIST.uniform, DIST.normal, DIST.lognormal, DIST.triangular, DIST.categorical]);
+
+/**
+ * kernelApi `drawByKey`（卷二 §1.10 封卷后勘误 1121k1，卷十 C10-14 ⑤；卷十 R10-2.6 场偏差与 rules.gen.* 里的分布用它取值）：
+ * 键 = sha256(骰值键五段文本)（diceKeyOf 的五段，`distribution` 不是键成分）；第 0 个 64 位均匀数照 §1.10 的 h_i 展开，不另造键、无游标，
+ * 与调用先后、遍历次序无关；返回 4 位定点值（精度取内核定点标度的位数），clamp 只取分布对象自带的 `clamp`，目标维度的 precision 由调用方写回时再截；categorical 返回键。
+ * 不是维度表头的 `.sample`。非法分布按分布参数校验报 E-DIM-SAMPLE-PARAM、-DOMAIN、-WEIGHTS。
+ * @param {string} worldSeed @param {string} streamCode @param {string | Array<string | number>} subjectId @param {number} worldTime @param {string} drawSiteCode
+ * @param {Record<string, unknown>} distribution
+ * @returns {number | string}
+ */
+export function drawByKey(worldSeed, streamCode, subjectId, worldTime, drawSiteCode, distribution) {
+  validateDistribution(distribution);
+  if (!DRAW_KINDS.includes(distribution.dist)) throw paramError(`drawByKey: distribution ${JSON.stringify(distribution.dist)} is not drawn by dice key (want ${DRAW_KINDS.join('|')})`);
+  const seedKey = sha256Text(diceKeyOf(worldSeed, streamCode, subjectId, worldTime, drawSiteCode));
+  const def = { precision: String(fixedScale()).length - 1 };
+  switch (distribution.dist) {
+    case DIST.normal: return sampleNormal(seedKey, distribution, def);
+    case DIST.lognormal: return sampleLognormal(seedKey, distribution, def);
+    case DIST.uniform: return sampleUniform(seedKey, distribution, def);
+    case DIST.triangular: return sampleTriangular(seedKey, distribution, def);
+    default: return sampleCategorical(seedKey, distribution);
+  }
+}
+
 // ---------- 分布参数校验（卷二 §1.10 :318） ----------
 
 function checkCategorical(dist, dimDef, engine) {

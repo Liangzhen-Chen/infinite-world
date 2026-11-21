@@ -42,7 +42,7 @@ function load({ rows = {}, edges = [], spaces, cellclass = FULL_CELLCLASS, heade
     writeUnderTempRoot(tmp, '_unbuilt-derived.json', JSON.stringify(unbuilt));
     const v = structuredClone(VOCAB);
     v.families.access.entries = { access_test_open: { rank: 0, needsGrant: false } };
-    v.families.water.entries = { water_test_fresh: { navigable: false } };
+    v.families.water.entries = { ...v.families.water.entries, water_test_fresh: { navigable: false } };
     v.families.cellclass.entries = cellclass === null ? {} : cellclass;
     v.families.gentemplate.entries = GEN_TEMPLATE;
     v.families.bform.entries = { bldform_test: { walled: true, aspect: 1, storeyBase: 0, roofed: true, deck: false, windowEvery: 0, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.2, rooms: [] } };

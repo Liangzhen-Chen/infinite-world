@@ -130,6 +130,14 @@
 - [ ] 4 place 行转换（targetAreaM2、anchorElevationM、删 areaM2/elevationM 存储列、建筑行）：未落，等裁定。
 - [ ] 5 真实世界格空间表、纬度改读形心、门禁与性能测量点：未落，等裁定（原因见 docs/问题.md "G5 遗留"）。
 
+## 卷十《世界随机生成》生成补缺（G5b 前置；11-21 李白裁定；分支 ds/worldgen-fill；写 Sonnet 5.5 中档包卡，DeepSeek flash 一张；报告 docs/卡回报/worldgen-fill.md）
+
+- [x] 1 读卷十 R10-1.1/1.5–1.7/1.10–1.14、R10-2.6/2.7/2.10/2.12、§4.9、§4.12 与数据卡；结论：gstage、gfield、idslot、写回器、drawByKey 代码里都没有，只建本卡两阶段要的最小部分。
+- [x] 2 drawByKey（卷二 1121k1）、gstage 流程（stages.mjs）、位次 id（ids.mjs）、作者行视图（rows.mjs）、自然量（fields.mjs）、水体（water.mjs）、写回器（writeback.mjs）、世界创建补缺编排（worldgen.mjs）、作者输入读入口（load/geo-inputs.mjs）。
+- [x] 3 数据：_vocab.json（gstage、gfield、idslot、comp_tract、comp_waterbody）、place.json（水体六维）、rules 表 gen；generated 节偏离行与同表实体行同 id 放行（来源标记是 gstage 条目时）。
+- [x] 4 测试：gen-fields、gen-water、gen-worldgen、gen-water-grid（我写），gen-stages、draw-by-key（DeepSeek 写，未改）；既有测试同步 6 处夹具。验收两条见回报。
+- [ ] 5 未落（回报"未落"一节）：河宽、海域范围、水体按场值判定、水体类分河海、骨架阶段条目。
+
 ## 已封与记过（摘要；详情见提交说明与 docs/审查/）
 
 - B2-W3 已封（06a7106b）；4-4a 已封（978bbb41）；3-4 已封、块 3 封块（73125c48）；块 5 体检与对照表入库（4f701e37）。

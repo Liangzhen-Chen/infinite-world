@@ -149,6 +149,33 @@
    "source": "卷五 §2.1 :98（作者手画的区域足迹：区格序号的集合，非空时覆盖派生划分，§4.1 规则 10；只许区域足迹的行写，kernel/place.mjs 加载校验按足迹种类核禁填）",
    "type": "list"
   },
+  "capacityL": {
+   "domain": [
+    1,
+    null
+   ],
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "required": "byClass:comp_waterbody",
+   "source": "卷五 §2.1 :146（水体容量；水体阶段补缺：卷十 R10-2.12 :427 capacityL = surfaceM2 × 抽得的水深，立方米到升按单位表）",
+   "type": "integer",
+   "unit": "L"
+  },
+  "catchmentM2": {
+   "domain": [
+    0,
+    null
+   ],
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "precision": 4,
+   "required": "byClass:comp_waterbody",
+   "source": "卷五 §2.1 :147（汇水面积；水体阶段补缺：卷十 R10-2.12 :427 沿排水去处首先到达本水体的存量单元面积之和）",
+   "type": "number",
+   "unit": "m2"
+  },
   "breaks": {
    "domain": {},
    "modifiable": false,
@@ -311,6 +338,16 @@
    "type": "number",
    "unit": "celsius"
   },
+  "downstream": {
+   "kind": "place",
+   "modifiable": false,
+   "nullable": true,
+   "onUnknown": "skip",
+   "owner": "卷五 §2.1",
+   "required": "byClass:comp_waterbody",
+   "source": "卷五 §2.1 :149（下游水体，空表示没有下游，全表 downstream 图无环；水体阶段补缺：卷十 R10-2.12 :427 沿排水去处走、遇到的第一个水体）",
+   "type": "ref"
+  },
   "elevationM": {
    "domain": [
     -12000,
@@ -391,6 +428,15 @@
    "required": "always",
    "source": "卷二 §5.6 :1781 ledgerHolder；卷六 §2.1 holder",
    "type": "boolean"
+  },
+  "liquid": {
+   "kind": "material",
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "required": "byClass:comp_waterbody",
+   "source": "卷五 §2.1 :145（水体里装的液体材料，卷三材料行）",
+   "type": "ref"
   },
   "materialKg": {
    "combine": "sum",
@@ -507,6 +553,20 @@
    "type": "enum",
    "vocab": "juris"
   },
+  "runoffCoef": {
+   "domain": [
+    0,
+    1
+   ],
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "precision": 4,
+   "required": "byClass:comp_waterbody",
+   "source": "卷五 §2.1 :148（径流系数：落在汇水面积上的降水流进水体的份额；水体行由 gfield 给，卷十 R10-2.12 :427）",
+   "type": "number",
+   "unit": "fraction"
+  },
   "roomRole": {
    "modifiable": false,
    "onUnknown": "skip",
@@ -553,6 +613,20 @@
    "source": "卷五 §2.1 :101（体积足迹竖向占几层，§4.1 规则 11）；卷二 §5.6 :1793",
    "type": "integer",
    "unit": "count"
+  },
+  "surfaceM2": {
+   "domain": [
+    0,
+    null
+   ],
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "precision": 4,
+   "required": "byClass:comp_waterbody",
+   "source": "卷五 §2.1 :147（水面面积；水体阶段补缺：卷十 R10-2.12 :427 surfaceM2 = 本行足迹 areaM2）",
+   "type": "number",
+   "unit": "m2"
   },
   "storeys": {
    "domain": [
@@ -662,8 +736,8 @@
    "modifiable": false,
    "onUnknown": "skip",
    "owner": "卷五 §2.1",
-   "required": "never",
-   "source": "卷五 §2.1 :143（水体的类，waterAccess 由它派生；原定 byClass:comp_waterbody，该组件类随水体卡登记前先 never，写了照核 water 族引用）",
+   "required": "byClass:comp_waterbody",
+   "source": "卷五 §2.1 :143（水体的类，waterAccess 由它派生；水体组件类 comp_waterbody 已随卷十水体阶段卡登记，挂它的行必填）",
    "type": "ref",
    "vocab": "water"
   },

@@ -33,6 +33,10 @@ import { checkValuationTables } from '../valuation.mjs';
 import { checkPriceTables } from '../validate/price-tables.mjs';
 import { checkBodyTables } from '../validate/body-tables.mjs';
 import { installNamedStructs } from '../named-structs.mjs';
+import { checkGenStages } from '../gen/stages.mjs';
+import { checkGenFields } from '../gen/fields.mjs';
+import { checkGeneratedOverAuthored } from '../gen/writeback.mjs';
+import { generatorNames } from '../gen/worldgen.mjs';
 
 export const LAYOUT = Object.freeze({
   dimensionsDir: 'world/ontology/dimensions',
@@ -53,6 +57,8 @@ export const LAYOUT = Object.freeze({
 });
 
 const readText = (p) => readFileSync(p, 'utf8');
+// 地点表的 kind（文件名即 kind，卷二 §1.1）：生成场条目的目标维度在它的表头上核。
+const PLACE_KIND = 'place';
 
 /**
  * @param {string} root 仓库根
@@ -159,6 +165,10 @@ export function loadWorld(root, opts = {}) {
     domain.push(...writerCheckRows('recipe', checkRecipeTable(view)), ...writerCheckRows('price', checkPriceTables(view)));
     // 卷四本卷表与词表族的跨字段校验（§2.1、§2.2 身体图不变量、§2.4 条目字段、§2.7 E-BODY-*、E-SPECIES-ATTR-KEYS），违者加载失败。
     domain.push(...checkBodyTables(view, { maxChainDepth: need('bodyPartChainMaxDepth'), unbuiltFields: report.env.unbuiltFields }));
+    // 生成流程是数据（卷十 R10-1.1、§2.1 gstage、gfield）：阶段条目的字段、引用闭合、生成器登记与先后图无环；生成场条目的目标维度、slot、取值域与分布（E-GEN-STAGE-*、E-GEN-ROW-INVALID）。
+    const placeTable = report.tables.get(PLACE_KIND);
+    domain.push(...writerCheckRows('gen', checkGeneratedOverAuthored(report.tables)));
+    domain.push(...writerCheckRows('gen', [...checkGenStages(report.vocab, generatorNames()), ...(placeTable ? checkGenFields(report.vocab, placeTable.doc.dimensions) : [])]));
   }
   // 规则表校验通过才装入 det-math 的定点开方表（checkRules 末句），所以要用到它的校验排在它之后：水路边栅格化要步长 fixedSqrtInt(2 × regionCellM²)（卷五 §4.1 规则 4；G4）。
   const ruleErrors = checkRules(read, report.env);

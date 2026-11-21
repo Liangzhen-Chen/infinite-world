@@ -56,7 +56,7 @@ function load({ rows, edges = [], spaces, cellclass = CELLCLASS(), templates = T
     }
     const v = structuredClone(VOCAB);
     v.families.access.entries = { access_test_open: { rank: 0, needsGrant: false } };
-    v.families.water.entries = { water_test_fresh: { navigable: false } };
+    v.families.water.entries = { ...v.families.water.entries, water_test_fresh: { navigable: false } };
     v.families.cellclass.entries = cellclass;
     v.families.gentemplate.entries = withAir(templates);
     v.families.component.entries.comp_settlement = { requires: [], table: 'place' };

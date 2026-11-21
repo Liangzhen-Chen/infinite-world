@@ -110,7 +110,8 @@ export function flattenTable(table, groupsOf, maxDepth, err) {
   for (const id of Object.keys(rows).sort()) flatRows.set(id, resolve('rows', id, [`rows/${id}`]).dims);
   for (const id of Object.keys(generated).sort()) {
     const row = generated[id] || {};
-    flatRows.set(id, Object.fromEntries(Object.keys(row).filter((k) => Object.hasOwn(dims, k)).map((k) => [k, row[k]])));
+    // 偏离行覆盖同 id 的实体行（卷二 §1.3 覆盖顺序总表"generated 节偏离行 > 实体行有效值"）：逐维合并，偏离行没写的维度仍取实体行；没有同 id 实体行时即整行。
+    flatRows.set(id, { ...(flatRows.get(id) || {}), ...Object.fromEntries(Object.keys(row).filter((k) => Object.hasOwn(dims, k)).map((k) => [k, row[k]])) });
   }
   return { classes: flatClasses, rows: flatRows, abstract };
 }

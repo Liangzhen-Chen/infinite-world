@@ -1,0 +1,30 @@
+{
+ "rows": [
+  {
+   "key": "waterRows",
+   "value": [
+    {"priority": 1, "waterKind": "water_river", "depthM": {"dist": "triangular", "min": 1.5, "mode": 4, "max": 12}}
+   ],
+   "file": "server-plugin/kernel/gen/water.mjs",
+   "grade": "designed",
+   "source": "卷十 §2.3 :165（rules.gen.water.rows 的 priority、waterKind、depthM 三字段）、R10-2.12 :427（水深按命中行的 depthM 抽取）",
+   "basis": "暂定·待试玩标定。卷文没给水深分布数值；water 族已加 water_river（流水）与 water_sea（静水），流不流读词表条目的 flowing（卷五 §2.2 :248），规则行只按 waterKind 选：本行只管河，取适合航行的河道水深量级（三角分布 1.5–12 m，众数 4 m，推算依据：设定里河上跑货船与渡船，regions.json:906、:2004，吃水以米计）。海（water_sea）没有规则行，水深不补、进 deferred 留缺，不借河的量顶替；有了海的水深依据后在这里加一行 water_sea 的规则，代码不改"
+  },
+  {
+   "key": "roleTract",
+   "value": "comp_tract",
+   "file": "server-plugin/kernel/gen/worldgen.mjs",
+   "grade": "referenced",
+   "source": "卷十 R10-2.3 :413（句柄 rules.gen.roles.tract：存量单元的组件类）；卷五 §4.7 规则 1（存量单元即 comp_tract 行）",
+   "basis": "组件类代号，由 _vocab.json component 族登记；生成器只经本键认存量单元"
+  },
+  {
+   "key": "roleWaterbody",
+   "value": "comp_waterbody",
+   "file": "server-plugin/kernel/gen/worldgen.mjs",
+   "grade": "referenced",
+   "source": "卷十 R10-2.12 :427（句柄 rules.gen.roles.waterbody：水体组件类）；卷五 §2.1 组件类 comp_waterbody",
+   "basis": "组件类代号，由 _vocab.json component 族登记；生成器只经本键认水体行"
+  }
+ ]
+}

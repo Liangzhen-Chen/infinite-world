@@ -36,8 +36,9 @@ function load({ rows = {}, edges = [], juris = null } = {}) {
     // access、water 两族以测试自造的一条进入档与一条水体类替换（真实条目随 6-24 灌行而来），供行填 always 列。
     const v = structuredClone(VOCAB);
     v.families.access.entries = { access_test_open: { rank: 0, needsGrant: false } };
-    v.families.water.entries = { water_test_fresh: { navigable: false } };
-    if (juris) v.families.juris.entries = juris;
+    v.families.water.entries = { ...v.families.water.entries, water_test_fresh: { navigable: false } };
+    // gfield 条目的 levels 引用真实 juris 条目（卷十 §2.1 :114）；自造层级表的世界没有生成场。
+    if (juris) { v.families.juris.entries = juris; v.families.gfield.entries = {}; }
     writeUnderTempRoot(tmp, '_vocab.json', JSON.stringify(v));
     return loadWorld(ROOT, { dimensionsDir: relative(ROOT, tmp) });
   } finally { rmSync(tmp, { recursive: true, force: true }); }

@@ -45,7 +45,7 @@ function load({ rows, edges = [], spaces, forms = FORMS(), mutateRules } = {}) {
     writeUnderTempRoot(tmp, '_unbuilt-derived.json', JSON.stringify(unbuilt));
     const v = structuredClone(VOCAB);
     v.families.access.entries = { access_test_open: { rank: 0, needsGrant: false } };
-    v.families.water.entries = { water_test_fresh: { navigable: false } };
+    v.families.water.entries = { ...v.families.water.entries, water_test_fresh: { navigable: false } };
     v.families.cellclass.entries = CELLCLASS;
     v.families.gentemplate.entries = TEMPLATE;
     v.families.bform.entries = forms;

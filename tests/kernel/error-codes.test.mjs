@@ -26,9 +26,10 @@ test('码表条数：E 与 W 各为手数的字面量', () => {
   // 格子迁移 G3 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（FOOTPRINT-OUTSIDE-PARENT、SIBLING-OVERLAP、SEED-SAME-CELL、WATERWAY-NO-CHANNEL、VOLUME-TOP-EXPOSED、CELL-NO-TERRAIN）：596 → 602、E 578 → 584。
   // 寻路方向与超限小卡加 E-GRID-PATH-OVER-CAP（卷五 :471 勘误 1121k12，李白 11-21 15:29；告警级、E- 开头照 E-GRID 先例）：602 → 603、E 584 → 585。
   // 格子迁移 G6 加 E-GRID-STOCK-OVER-CAP（卷五 §4.7 规则 12 :910 "超出即加载或结算报错，不截"，对照表待定 10 已定：超限码随 G6 由卷二勘误补一码）：603 → 604、E 585 → 586。
-  assert.equal(codes.length, 604);
+  // 卷十生成补缺加 W-GEN-DOWNHILL-PROJECTED（高低次序投影日志，李白 11-21 裁定甲）：604 → 605、W 18 → 19。
+  assert.equal(codes.length, 605);
   assert.equal(codes.filter((c) => c[0] === 'E').length, 586);
-  assert.equal(codes.filter((c) => c[0] === 'W').length, 18);
+  assert.equal(codes.filter((c) => c[0] === 'W').length, 19);
   assert.equal(REGISTERED_CODES.size, codes.length);
 });
 

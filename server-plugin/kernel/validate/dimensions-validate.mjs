@@ -32,6 +32,8 @@ const SEVERITY = Object.freeze({ error: 'error' });
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 // 词表族键 kind（§1.9 "kind→kind_，22 类代号本身作枚举时用"）：表头 kind 须是该族条目去前缀后的名字。
 const KIND_FAMILY = 'kind';
+// 世界生成阶段词表族（卷十 §2.1 :113）：generated 节偏离行的来源标记 by 取它的条目。
+const STAGE_FAMILY = 'gstage';
 // 叠加方式（§1.2 `.stacking`）；过程主体槽的专用校验（kernel/load/rules.mjs，§3.7）同读此处。
 export const STACKING = Object.freeze(['none', 'penalized']);
 /** 叠加方式的族句柄：成员由上面的 STACKING 派生（过程主体槽与修正求值共用）。 */
@@ -93,10 +95,15 @@ export function validateDimensions(sources, options) {
   for (const t of tables) {
     const prefixes = Array.isArray(t.entity.idPrefix) ? t.entity.idPrefix : [];
     const singles = Array.isArray(t.entity.singletonIds) ? t.entity.singletonIds : [];
-    for (const section of ['rows', 'generated']) {
+    for (const [pass, section] of ['rows', 'generated'].entries()) {
       for (const id of Object.keys(isObj(t.doc[section]) ? t.doc[section] : {}).sort()) {
         const at = { table: t.kind, row: id, dim: '', path: `${t.file}#/${section}/${id}` };
         if (!CODE_RE.test(id) || !(prefixes.some((p) => id.startsWith(p)) || singles.includes(id))) err({ code: 'E-DIM-ID-FORMAT', level: 'L0', ...at, got: id, want: `^[a-z][a-z0-9_]{1,47}$ with prefix ${prefixes.join('|')}` });
+        // 世界生成写的偏离行（generated.by 是 gstage 族条目，卷十 §2.4 :213）可以与同表实体行同 id：它覆盖该实体行没写的维度（卷二 §1.3 覆盖顺序"generated 节偏离行 > 实体行有效值"、
+        // 卷十 R10-1.7 手写优先生成补缺、R10-9.4 偏离行写合并后的完整值），是同一实体的两处写法、不是重名；来源标记不是 gstage 条目的偏离行与实体行同 id 仍是重名。
+        const mark = pass > 0 && isObj(t.doc.generated[id]) ? t.doc.generated[id].generated : undefined;
+        const stages = vocab.families.get(STAGE_FAMILY);
+        if (pass > 0 && Object.hasOwn(isObj(t.doc.rows) ? t.doc.rows : {}, id) && isObj(mark) && stages && Object.hasOwn(stages.entries, mark.by)) continue;
         claim(id, t.kind, at);
       }
     }

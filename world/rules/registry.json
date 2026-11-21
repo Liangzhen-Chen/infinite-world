@@ -539,6 +539,24 @@
    "volume": "卷二十七 §2.2 :191–192（rules.host.saveSlotCount、rules.host.saveImportMaxBytes，取值域 ≥1，加载失败）；卷二 §2.9 第 0 条存档四路第 5 点；块 6 第 6-20 张只登这两键，心跳两键（heartbeatStepMinutes、heartbeatMs）随墙钟心跳那张卡登记（6-19 回报缺口 3）；读者是 kernel/save.mjs、kernel/load/save.mjs（经存档环境 installSaveEnv 交入）",
    "multiSourceMerge": "own_key_only",
    "packOverridable": {"saveSlotCount": false, "saveImportMaxBytes": false}
+  },
+  {
+   "code": "gen",
+   "file": "tables/worldgen.json",
+   "structure": "keys",
+   "type": {
+    "waterRows": {"type": "list", "of": {"type": "struct", "required": ["priority", "waterKind", "depthM"], "fields": {
+     "priority": {"type": "integer", "unit": "count"},
+     "waterKind": {"type": "ref", "vocab": "water"},
+     "depthM": {"type": "distribution"}
+    }}},
+    "roleTract": {"type": "ref", "vocab": "component"},
+    "roleWaterbody": {"type": "ref", "vocab": "component"}
+   },
+   "domain": {"waterRows": {}, "roleTract": {}, "roleWaterbody": {}},
+   "volume": "卷十 §2.3 :165（rules.gen.water.rows：命中的水体取哪一类、多深；本卡只落 priority、waterKind、depthM，whenRX 与 liquidRX 随存量单元行与 rx 读邻格聚合落地后补）、R10-2.12 :427（句柄 rules.gen.roles.tract、rules.gen.roles.waterbody，键名取驼峰 roleTract、roleWaterbody）；读者是 kernel/gen/worldgen.mjs、kernel/gen/water.mjs",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"waterRows": false, "roleTract": false, "roleWaterbody": false}
   }
  ]
 }

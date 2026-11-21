@@ -52,6 +52,30 @@
      "purpose": "存量在区格内取格的次序键 hash(世界种子, U, x, 格序号)（卷五 §4.7 规则 12 :912）：成分世界种子、生成流代号 grid、存量单元 U、存量 x、格空间号 w、格坐标 x、y、z；不放版本成分"
     },
     {
+     "file": "kernel/gen/fields.mjs",
+     "stream": "gen_fields",
+     "site": "site_gen_fields_dev",
+     "role": "role_seed",
+     "prefix": "gen_",
+     "purpose": "自然量场偏差抽取（卷十 R10-2.6 :421、§4.12.1 :860，原写 stream.gen.fields / site.gen.fields.dev，代号文法不收点改下划线）：骰值键五段世界种子、流代号 gen_fields、对象 instanceIdOf(idslot_fielddev, 地点, 场序位, genesisMinute)、时刻 genesisMinute、抽取点代号；角色取 role_seed（骰值键，卷二十七 seedrole 无专门角色，待卷二十七勘误）；不放版本成分"
+    },
+    {
+     "file": "kernel/gen/water.mjs",
+     "stream": "gen_water",
+     "site": "site_gen_water_depth",
+     "role": "role_seed",
+     "prefix": "gen_",
+     "purpose": "水体水深抽取（卷十 R10-2.12 :427、§4.12.1 :861，原写 stream.gen.water / site.gen.water.depth）：骰值键五段世界种子、流代号 gen_water、对象水体行 id、时刻 genesisMinute、抽取点代号；不放版本成分"
+    },
+    {
+     "file": "kernel/gen/ids.mjs",
+     "stream": "gen_ids",
+     "site": "instance_digest",
+     "role": "role_seed",
+     "prefix": "gen_",
+     "purpose": "实例位次导出的摘要（卷十 R10-12.1 :937、卷二十七 R27-8.9）：成分世界种子、位次代号、父 id、时刻、序位；用作抽取对象代号（kind 为空的位次）；不放版本成分、不放计数"
+    },
+    {
      "file": "kernel/grid.mjs",
      "stream": "grid",
      "site": "breach",

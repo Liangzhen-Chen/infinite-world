@@ -481,11 +481,12 @@ export function gridView(engine, state, spec) {
 /**
  * kernelApi `planFootprints(engine, {base, proposals, assumptions})`（卷五 §3.1，卷十 C10-27）：按给定行集合与生成输入求足迹与派生量，
  * 与 placeView、zoneAt 同一套算法；纯函数、不写状态。base = 世界数据里的地点行（缺省取当前世界表）；proposals = 写回器暂存的行提案（覆盖或新增）；
- * assumptions = 可选假设覆盖 {行 id: {维度: 值}}（只供试排、不进状态）。行都是 place.json 行的形状（维度键与 classes）。
+ * assumptions = 可选假设覆盖 {行 id: {维度: 值}}（只供试排、不进状态）。withCells 为假时不物化各行的区格列表（regionCells 为 null）：
+ * 列表每格一个对象，根行即全世界约 4,020 万区格、各级合计约 1.6 亿对象，全规模装不下；世界创建里只要面积、海拔、相邻集的调用（卷十水体阶段）一律传假。行都是 place.json 行的形状（维度键与 classes）。
  * 返回 {footprints: {id: placeFootprint 的形状}, errors: [{code, id, detail}], adjacency: {id: [相邻 id]}}（相邻只含足迹相邻，路网边由 placeNeighbors 并入）。
  * @param {any} engine @param {{base?: Record<string, any>, proposals?: Record<string, any>, assumptions?: Record<string, Record<string, any>>}} [input]
  */
-export function planFootprints(engine, { base, proposals = {}, assumptions = {} } = {}) {
+export function planFootprints(engine, { base, proposals = {}, assumptions = {}, withCells = true } = {}) {
   const t = placeTable(engine);
   const grid = engine.rules && engine.rules.grid;
   const spaces = Array.isArray(t.doc[SECTION.gridSpaces]) ? t.doc[SECTION.gridSpaces] : null;
@@ -511,7 +512,7 @@ export function planFootprints(engine, { base, proposals = {}, assumptions = {} 
       const geo = regionGeometry(grid, plan, id);
       if (!geo) continue;
       const h = regionHeights(grid, seed, plan, rp.rows, terrainEntryOf(engine), id);
-      footprints[id] = { kind: rp.kinds.get(id), w: plan.w, regionCells: cellList(plan, id), cellCount: geo.cellCount, areaM2: geo.areaM2, centroid: geo.centroid, elevationM: h ? h.elevationM : null, zRange: h ? h.zRange : null, waterAccess: waterAccessOf(plan, rp.rows, id) };
+      footprints[id] = { kind: rp.kinds.get(id), w: plan.w, regionCells: withCells ? cellList(plan, id) : null, cellCount: geo.cellCount, areaM2: geo.areaM2, centroid: geo.centroid, elevationM: h ? h.elevationM : null, zRange: h ? h.zRange : null, waterAccess: waterAccessOf(plan, rp.rows, id) };
     }
   }
   const adjacency = {};

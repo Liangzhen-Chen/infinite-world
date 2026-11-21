@@ -155,6 +155,7 @@
   {"export": "kernel/effects.mjs#effects", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/sample.mjs#sample", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/sample.mjs#sampleDistribution", "callerFiles": ["person.mjs"], "acceptsState": false},
+  {"export": "kernel/sample.mjs#drawByKey", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/det-math.mjs#fixedExp", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/det-math.mjs#fixedPow", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/det-math.mjs#fixedLn", "callers": ["rules"], "acceptsState": false},

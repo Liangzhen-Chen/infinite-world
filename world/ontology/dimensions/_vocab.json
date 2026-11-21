@@ -45,7 +45,7 @@
    "cellclass_mountain": {"terrains": ["terrain_mountain"], "waterAny": [], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 0, "genTemplate": "gtpl_bedrock", "basis": "兜底条目（同 cellclass_cave）；convert-geo.mjs 的地形文本映射里山地来自砾石山地、高山粒雪台原、赤色褶皱山地，取 gtpl_bedrock；暂定·待试玩标定"},
    "cellclass_plain": {"terrains": ["terrain_plain"], "waterAny": [], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 0, "genTemplate": "gtpl_soil", "basis": "兜底条目（同 cellclass_cave）；河湾村一带的地形文本是\"平地\"（locations.json:12）、转为 terrain_plain；暂定·待试玩标定"},
    "cellclass_river": {"terrains": ["terrain_river"], "waterAny": [], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 0, "genTemplate": "gtpl_silt", "basis": "兜底条目（同 cellclass_cave）；河床取 gtpl_silt；暂定·待试玩标定"},
-   "cellclass_water": {"terrains": ["terrain_cave", "terrain_coast", "terrain_desert", "terrain_forest", "terrain_hill", "terrain_lake", "terrain_marsh", "terrain_mountain", "terrain_plain", "terrain_river"], "waterAny": ["water_navigable"], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 10, "genTemplate": "gtpl_silt", "basis": "水体足迹内的区格（卷五 §4.3 规则 9：waterAny 满足所在水体足迹行的 waterKind），任何地形都适用，优先于地形兜底；水体行写 water_navigable（world/geo/water-bodies.json），水本身的材料由水体行的 liquid 给，模板只给水底；暂定·待试玩标定"}
+   "cellclass_water": {"terrains": ["terrain_cave", "terrain_coast", "terrain_desert", "terrain_forest", "terrain_hill", "terrain_lake", "terrain_marsh", "terrain_mountain", "terrain_plain", "terrain_river"], "waterAny": ["water_navigable", "water_river", "water_sea"], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 10, "genTemplate": "gtpl_silt", "basis": "水体足迹内的区格（卷五 §4.3 规则 9：waterAny 满足所在水体足迹行的 waterKind），任何地形都适用，优先于地形兜底；水体行写 water_river、water_sea（world/geo/water-bodies.json，卷十生成补缺卡按卷五 :248 加的两个条目；旧水路边两端的 waterAccess 仍是 water_navigable），水本身的材料由水体行的 liquid 给，模板只给水底；暂定·待试玩标定"}
   }, "prefix": "cellclass_"},
   "cellmark": {"closed": false, "entries": {}, "prefix": "cellmark_"},
   "dockind": {"closed": false, "entries": {}, "prefix": "dockind_"},
@@ -416,6 +416,15 @@
      ],
      "table": "place"
     },
+    "comp_tract": {
+     "relocatable": false,
+     "relocatableIn": null,
+     "requires": [
+      "forestCover",
+      "terrain"
+     ],
+     "table": "place"
+    },
     "comp_volume": {
      "relocatable": false,
      "relocatableIn": null,
@@ -424,6 +433,20 @@
       "spanZ",
       "targetAreaM2",
       "terrain"
+     ],
+     "table": "place"
+    },
+    "comp_waterbody": {
+     "relocatable": false,
+     "relocatableIn": null,
+     "requires": [
+      "capacityL",
+      "catchmentM2",
+      "downstream",
+      "liquid",
+      "runoffCoef",
+      "surfaceM2",
+      "waterKind"
      ],
      "table": "place"
     },
@@ -565,6 +588,66 @@
    },
    "prefix": "gait_"
   },
+  "gfield": {
+   "closed": false,
+   "entries": {
+    "gfield_control_elevation": {
+     "basis": "卷十 §2.1 :114 gfield 条目格式、R10-2.6 :421 场沿包含树逐级加偏差；目标 anchorElevationM 是控制海拔（卷五 §2.1 :102、§4.3 规则 8）。各层级偏差分布的数值卷文没有，暂定·待试玩标定：世界一级给一个起点（均值 300 m、标准差 120 m，平均起伏取大陆内陆台地的量级），省、郡、存量单元各级以 0 为均值逐级加偏差（标准差 250、120、40 m，逐级收窄以使同省的地点彼此相近）；取值域 [0, 3000] m 下限取海面零点（卷五 §2.1 :102 以海面为零）",
+     "levels": {
+      "juris_county": {"dist": "normal", "mean": 0, "sd": 120},
+      "juris_kingdom": {"dist": "normal", "mean": 0, "sd": 300},
+      "juris_province": {"dist": "normal", "mean": 0, "sd": 250},
+      "juris_world": {"dist": "normal", "mean": 300, "sd": 120}
+     },
+     "range": {"max": 3000, "min": 0},
+     "slot": 0,
+     "target": "anchorElevationM",
+     "tractLevel": {"dist": "normal", "mean": 0, "sd": 40}
+    },
+    "gfield_runoff_coef": {
+     "basis": "卷十 R10-2.12 :427（runoffCoef 由 gfield 给）、卷五 §2.1 :148（径流系数，落在汇水面积上的降水流进水体的份额，[0, 1]）。数值卷文没有，暂定·待试玩标定：世界一级起点 0.3、各级以 0 为均值收窄的偏差（0.04、0.03、0.02）；只写到挂水体组件的行上（R10-2.6）",
+     "levels": {
+      "juris_county": {"dist": "normal", "mean": 0, "sd": 0.03},
+      "juris_kingdom": {"dist": "normal", "mean": 0, "sd": 0.04},
+      "juris_province": {"dist": "normal", "mean": 0, "sd": 0.04},
+      "juris_world": {"dist": "normal", "mean": 0.3, "sd": 0.04}
+     },
+     "range": {"max": 1, "min": 0},
+     "slot": 1,
+     "target": "runoffCoef",
+     "tractLevel": {"dist": "normal", "mean": 0, "sd": 0.02}
+    }
+   },
+   "prefix": "gfield_"
+  },
+  "gstage": {
+   "closed": false,
+   "entries": {
+    "gstage_fields": {
+     "after": [],
+     "before": [],
+     "basis": "卷十 §4.1.1 :338 条目；after 暂空：骨架阶段（gstage_skeleton）由骨架卡登记条目与生成器，那时本条的 after 加它（骨架阶段对手写骨架的世界 whenRX 为假、不运行，R10-1.6）",
+     "generator": "gen/fields.mjs",
+     "phase": "worldgen",
+     "scope": "tract",
+     "whenRX": null,
+     "writesFamilies": [],
+     "writesKinds": ["place"]
+    },
+    "gstage_water": {
+     "after": ["gstage_fields"],
+     "before": [],
+     "basis": "卷十 §4.1.1 :339 条目",
+     "generator": "gen/water.mjs",
+     "phase": "worldgen",
+     "scope": "tract",
+     "whenRX": null,
+     "writesFamilies": [],
+     "writesKinds": ["place"]
+    }
+   },
+   "prefix": "gstage_"
+  },
   "holding_kind": {
    "closed": false,
    "entries": {
@@ -619,6 +702,13 @@
     "hk_enlisted": {"id": "hk_enlisted", "hyper": "hk_member_of", "from": ["agent"], "to": ["collective"], "exclusive": false, "gone": "ho_close", "vacated": "ho_close", "defected": "ho_close", "subjectEnd": "send_close", "concluded": false, "functional": true, "membership": true, "headship": false, "carriesRel": false, "conduct": 0.4, "conductBack": 0.1, "adopt": 0.5, "pins": "pside_none", "intimate": false, "bodyControl": false, "holderMax": null, "succeedBy": null, "excludes": false, "grantsEntry": true, "entryRankMax": 0, "visibility": "public", "contest": null, "capacityKey": null, "transferable": false, "incompatible": [], "grants": [], "hooks": [], "termsKeys": [], "shareSum": null, "grantedBy": [], "domicile": false, "holdWhile": null, "revival": null, "admission": null, "uniqueTriple": false}
    },
    "prefix": "hk_"
+  },
+  "idslot": {
+   "closed": false,
+   "entries": {
+    "idslot_fielddev": {"basis": "卷十 §2.1 :116、§4.12.1 :899（场偏差项：只作抽取对象、不建实体，kind 为空）", "clocked": false, "kind": null, "parentKinds": ["place"]}
+   },
+   "prefix": "idslot_"
   },
   "juris": {
    "closed": false,
@@ -2707,7 +2797,9 @@
   "water": {
    "closed": false,
    "entries": {
-    "water_navigable": {"navigable": true}
+    "water_navigable": {"navigable": true},
+    "water_river": {"basis": "卷五 §2.2 :248（water 族条目必写 navigable、flowing）；河：可航、流水（regions.json:76、:906、:909）", "flowing": true, "navigable": true},
+    "water_sea": {"basis": "卷五 §2.2 :248；海：可航（regions.json:2004）、静水取假（卷五 :664 静水全片一个水面）", "flowing": false, "navigable": true}
    },
    "prefix": "water_"
   },
