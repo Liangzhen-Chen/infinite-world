@@ -5,8 +5,9 @@
 // 格子世界（G3）：zoneAt（规则 12）、regionCell、landCell（规则 14）、planFootprints（§3.1）、placeView 的 footprint 与 exits（规则 9）、placeNeighbors（§4.14 规则 2）；
 // 足迹划分与几何的纯函数在 kernel/footprint.mjs，地点行到划分输入的整理在 kernel/place-plan.mjs。纬度由派生形心 centroid 求（M5-36）。
 // 两个读入口是纯读：不开户、不入账、不写任何状态（§3.1 末段）。只读表头登记与行数据，不按地点 id、名字、层级代号开分支（§4.1.3 规则 2）。
-// 本卡范围之外、照卷文按未知带出的（读不到的派生字段按未知 Fact 带出；体检 K6-45）：terrainMix 与 requirement（terrain 族条目与
-// struct:requirementBlock 未建）、speedFactor（§4.10，归 6-27）；路段 bearingDeg 随 G4 路网栅格化（bearingView 已建在 footprint.mjs）；
+// 路网（G4）：routeView 的 edge 各量与 path 都由栅格化路段派生、不存储（卷五 §4.1 规则 4、5；§4.10 规则 1），pathView 在区格图上求位置到位置的路程；
+// 栅格化与区格寻路在 kernel/route-edges.mjs（边与缓存）与 kernel/route-grid.mjs（图搜索与路段派生量）。
+// 照卷文按未知带出的（读不到的派生字段按未知 Fact 带出；体检 K6-45）：requirement（struct:requirementBlock 未建）、体积足迹端点的边（取顶层区格归 G8）；
 // 视图派生字段 zones、stocks 等其余各组（§2.1 视图派生字段表）随各自的卡建，本文件不给半截值。
 
 import { KernelError, codeOf } from './errors.mjs';
@@ -22,6 +23,7 @@ import {
   straightM as straightMCore, bearingView as bearingViewCore,
 } from './footprint.mjs';
 import { buildPlan, expandClasses, waterAccessOf, footprintAdjacency, edgeAdjacency } from './place-plan.mjs';
+import { createRouteEnv, edgeNumbers } from './route-edges.mjs';
 import { isPosValue } from './named-structs.mjs';
 import { cellClassOf } from './grid.mjs';
 
@@ -35,7 +37,9 @@ const DIM = Object.freeze({
   centroid: 'centroid', zRange: 'zRange', anchor: 'anchor', facing: 'facing', waterKind: 'waterKind',
 });
 const COORD = Object.freeze({ x: 'x', y: 'y' });
-const EDGE = Object.freeze({ from: 'from', to: 'to', distanceM: 'distanceM', waterway: 'waterway', openness: 'openness' });
+const EDGE = Object.freeze({ from: 'from', to: 'to', waterway: 'waterway', portal: 'portal' });
+// 路网环境读的规则表与词表族名（route-edges.mjs 的输入）：规则表代号取登记表（world/rules/registry.json），不另起名。
+const RULES = Object.freeze({ grid: 'grid', modifiers: 'terrainModifiers' });
 // 表文件里的边节与边节字段定义（卷二 §5.6"表内 edges 节"；字段定义放表头 edgeStruct，本卡自定）。
 const SECTION = Object.freeze({ edges: 'edges', edgeStruct: 'edgeStruct', gridSpaces: 'gridSpaces', gridSpaceStruct: 'gridSpaceStruct' });
 // 格空间表（卷五 §4.1.1 :422）行的字段；外包框取左下角区格序号与边长（区格数）。
@@ -458,24 +462,62 @@ function graphOf(edges) {
   return g;
 }
 
-function elevation(engine, state, id) {
-  const f = dim(engine, state, PLACE, id, DIM.elevationM);
-  return f.known && typeof f.value === 'number' ? f.value : null;
+const NOT_APPLICABLE = Object.freeze({ known: false, applicable: false });
+const isDoor = (e) => e[EDGE.portal] !== undefined && e[EDGE.portal] !== null;
+
+// 路网环境（边的栅格化、区格寻路与缓存，route-edges.mjs）：按足迹计划缓存——计划本身是"生成输入与偏离行"的纯函数，输入变了计划重划、环境随之重建，
+// 栅格化结果于是按（边，输入版本）缓存（卷五 §4.1 规则 4 末句、规则 5 末项）。离场行的边不在路网图上（规则 8、规则 4 末项）。
+const routeEnvs = new WeakMap();
+function routeEnvOf(engine, state) {
+  const rp = planOf(engine, state);
+  if (routeEnvs.has(rp)) return { rp, env: routeEnvs.get(rp) };
+  const rules = engine.rules || {};
+  const env = createRouteEnv({
+    grid: rules[RULES.grid],
+    modifiers: rules[RULES.modifiers],
+    vocabIndex: engine.vocab && engine.vocab.index,
+    worldSeed: worldSeedOf(engine),
+    rp,
+    terrainOf: terrainEntryOf(engine),
+    edges: edgesOf(engine).filter((e) => !rp.offstage.has(e[EDGE.from]) && !rp.offstage.has(e[EDGE.to])),
+  });
+  routeEnvs.set(rp, env);
+  return { rp, env };
 }
 
-// 边的属性组（§3.1 routeView().edge 的一项）：从调用的 a 端看向 b 端。每项一个 Fact；本卡未建的四项按未知带出（见文件头）。
-function edgeItem(engine, state, e, a, b) {
-  const ea = elevation(engine, state, a);
-  const eb = elevation(engine, state, b);
+// 路段方位角（§4.2 规则 12："路段取两端形心"）：从 a 端形心指向 b 端形心；两端不在同一格空间的足迹里、形心取不到、平面重合为未知。
+// 位置用定点米（SCALE 标度整数）作坐标：方位角只依赖平面差的比例，不依赖单位。
+function edgeBearing(engine, rp, a, b) {
+  const grid = engine.rules && engine.rules[RULES.grid];
+  const pa = planOfRow(rp, a);
+  const pb = planOfRow(rp, b);
+  if (!pa || pa !== pb) return UNKNOWN;
+  const ca = regionGeometry(grid, pa, a).centroid;
+  const cb = regionGeometry(grid, pa, b).centroid;
+  const at = (c) => ({ w: pa.w, x: Number(fixedUnits(c.x)), y: Number(fixedUnits(c.y)), z: 0 });
+  const v = bearingViewCore(grid, at(ca), at(cb));
+  return v === null ? UNKNOWN : KNOWN(v.bearingDeg);
+}
+
+// 边的属性组（§3.1 routeView().edge 的一项）：从调用的 a 端看向 b 端。每项一个 Fact。除 waterway、requirement、portal 外全是栅格化路段派生的量（§4.1 规则 4），
+// 算不出（世界种子或地形步进系数缺、足迹没划出、找不到路）按未知带出，不借别的量顶替；requirement（struct:requirementBlock）未建，按未知带出。
+// 门边（portal 非空）路程计 0（规则 7），不栅格化，没有地形构成、爬升、路况（§4.10 规则 1）。cells 是路段区格序号串，随调用方向（a 在前）。
+function edgeItem(engine, rp, env, e, a, b) {
+  const door = isDoor(e);
+  const base = { waterway: KNOWN(e[EDGE.waterway]), requirement: UNKNOWN, portal: KNOWN(door ? e[EDGE.portal] : null), bearingDeg: edgeBearing(engine, rp, a, b) };
+  if (door) return Object.freeze({ ...base, distanceM: KNOWN(fixedToNumber(0n)), terrainMix: NOT_APPLICABLE, ascentM: NOT_APPLICABLE, speedFactor: NOT_APPLICABLE, cells: NOT_APPLICABLE });
+  const r = env.rasterEdge(e);
+  if (!r.ok) return Object.freeze({ ...base, distanceM: UNKNOWN, terrainMix: UNKNOWN, ascentM: UNKNOWN, speedFactor: UNKNOWN, cells: UNKNOWN });
+  const n = edgeNumbers(r);
+  const known = (v) => (v === null ? UNKNOWN : KNOWN(Object.freeze(v)));
+  const cells = a === e[EDGE.from] ? r.cells : [...r.cells].reverse();
   return Object.freeze({
-    distanceM: KNOWN(e[EDGE.distanceM]),
-    terrainMix: UNKNOWN,
-    waterway: KNOWN(e[EDGE.waterway]),
-    openness: Object.hasOwn(e, EDGE.openness) ? KNOWN(e[EDGE.openness]) : UNKNOWN,
-    requirement: UNKNOWN,
-    ascentM: ea === null || eb === null ? UNKNOWN : KNOWN(fixedToNumber(fixedUnits(eb) - fixedUnits(ea))),
-    bearingDeg: UNKNOWN,
-    speedFactor: UNKNOWN,
+    ...base,
+    distanceM: KNOWN(n.distanceM),
+    terrainMix: known(n.terrainMix),
+    ascentM: n.ascentM === null ? UNKNOWN : KNOWN(n.ascentM),
+    speedFactor: n.speedFactor === null ? UNKNOWN : KNOWN(n.speedFactor),
+    cells: KNOWN(Object.freeze(cells.map((c) => Object.freeze({ ...c })))),
   });
 }
 
@@ -489,9 +531,16 @@ function lessLabel(x, y) {
   return false;
 }
 
-function shortest(edges, s, t) {
+/**
+ * 路网图最短路（卷五 §4.1 规则 5 地点到地点，并列取法固定：路程，边数，途经地点 id 序列字典序，通路类型序列陆路先于水路）。
+ * lengthOf 给一条边的路程（定点）；算不出为 null，这样的边不在最短路的图上（路网最短路只在能算出路程的边上求，不拿别的量顶替）。
+ * 返回 {d: 路程（定点）, places, ways, edges} | null（不连通）。方向取 s 写起（routeView 先从 id 较小的一端求、再按调用方向倒写）。
+ * @param {any[]} edges 路网边 @param {string} s 起点地点 @param {string} t 终点地点 @param {(edge: any) => bigint | null} lengthOf 边长
+ * @returns {{d: bigint, places: string[], ways: boolean[], edges: any[]} | null}
+ */
+export function shortestPath(edges, s, t, lengthOf) {
   const g = graphOf(edges);
-  const best = new Map([[s, { d: fixedUnits(0), places: [s], ways: [], edges: [] }]]);
+  const best = new Map([[s, { d: 0n, places: [s], ways: [], edges: [] }]]);
   const done = new Set();
   for (;;) {
     let u = null;
@@ -502,7 +551,9 @@ function shortest(edges, s, t) {
     const lu = best.get(u);
     for (const { other, edge } of g.get(u) || []) {
       if (done.has(other)) continue;
-      const cand = { d: lu.d + fixedUnits(edge[EDGE.distanceM]), places: [...lu.places, other], ways: [...lu.ways, edge[EDGE.waterway]], edges: [...lu.edges, edge] };
+      const len = lengthOf(edge);
+      if (len === null) continue;
+      const cand = { d: lu.d + len, places: [...lu.places, other], ways: [...lu.ways, edge[EDGE.waterway]], edges: [...lu.edges, edge] };
       if (!best.has(other) || lessLabel(cand, best.get(other))) best.set(other, cand);
     }
   }
@@ -510,35 +561,53 @@ function shortest(edges, s, t) {
 
 /**
  * kernelApi `routeView(engine, state, from, to)`（卷五 §3.1；§4.1.3 规则 4、5）。纯读。
- * edge：两地之间直接的边，每种通路类型一项，陆路在前；没有即 []。
- * path：几何最短路 {places, edges, distanceM}；两地相同为没有边、distanceM 为 0 的路径；不连通为 null（两地距离未知）。
- * 结果只由边图决定：先从代号序较小的一端求，再按调用方向倒写，所以去程与回程是同一条路径。
+ * edge：两地之间直接的边，每种通路类型一项，陆路在前；没有即 []。每项 {waterway, requirement, portal, distanceM, terrainMix, ascentM, speedFactor, bearingDeg, cells}，
+ * 各量都是栅格化路段的派生值（不存储，卷五 §4.1 规则 4）。
+ * path：路网图最短路 {places, edges, distanceM}（节点是边端点，边长是路段 distanceM，门边 0；并列取法固定）；两地相同为没有边、distanceM 为 0 的路径；不连通为 null（两地距离未知）。
+ * 结果只由路网图决定：先从代号序较小的一端求，再按调用方向倒写，所以去程与回程是同一条路径。
  * @param {any} engine @param {any} state @param {string} from @param {string} to
  */
 export function routeView(engine, state, from, to) {
   parentOf(engine, state, from); // 两端须是地点（dim() 对非地点抛 E-DIM-REF-MISSING）
   parentOf(engine, state, to);
   // 离场子树不在路网图上：任一端是离场行时 edge 与 path 都为空（卷五 §4.1 规则 8、规则 4 末项）；图上也不含离场行的边。
-  const off = planOf(engine, state).offstage;
+  const { rp, env } = routeEnvOf(engine, state);
+  const off = rp.offstage;
   if (off.has(from) || off.has(to)) return Object.freeze({ edge: Object.freeze([]), path: null });
   const edges = off.size === 0 ? edgesOf(engine) : edgesOf(engine).filter((e) => !off.has(e[EDGE.from]) && !off.has(e[EDGE.to]));
   const direct = edges
     .filter((e) => (e[EDGE.from] === from && e[EDGE.to] === to) || (e[EDGE.from] === to && e[EDGE.to] === from))
     .sort((x, y) => Number(x[EDGE.waterway]) - Number(y[EDGE.waterway]))
-    .map((e) => edgeItem(engine, state, e, from, to));
+    .map((e) => edgeItem(engine, rp, env, e, from, to));
   let path = null;
-  if (from === to) path = Object.freeze({ places: Object.freeze([from]), edges: Object.freeze([]), distanceM: fixedToNumber(fixedUnits(0)) });
+  if (from === to) path = Object.freeze({ places: Object.freeze([from]), edges: Object.freeze([]), distanceM: fixedToNumber(0n) });
   else {
     const [s, t] = from < to ? [from, to] : [to, from];
-    const lab = shortest(edges, s, t);
+    const lab = shortestPath(edges, s, t, env.lengthOf);
     if (lab !== null) {
       const places = from === s ? lab.places : [...lab.places].reverse();
       const raw = from === s ? lab.edges : [...lab.edges].reverse();
-      const items = raw.map((e, i) => edgeItem(engine, state, e, places[i], places[i + 1]));
+      const items = raw.map((e, i) => edgeItem(engine, rp, env, e, places[i], places[i + 1]));
       path = Object.freeze({ places: Object.freeze(places), edges: Object.freeze(items), distanceM: fixedToNumber(lab.d) });
     }
   }
   return Object.freeze({ edge: Object.freeze(direct), path });
+}
+
+/**
+ * kernelApi `pathView(engine, state, fromPos, toPos)`（卷五 §3.1、§4.1 规则 5 位置到位置）：两位置之间的格上路程，含路外穿越。
+ * 本卡建区格层（泡外与长途）：同一格空间在区格图上寻路，一步代价 = 步长 × 终点区格步进系数（道路与航道区格取 roadPaceFactor）× 坡度项，路网只是代价更低的格；
+ * 不同格空间只经一道门（门计 0）。返回 {steps: [{w, x, y}]（区格序号串，含两端）, distanceM}；展开上限 longCostCap 内找不到、任一量算不出为 null（未知）。
+ * 现场泡内两位置的细格寻路（bubbleCostCap）归细格底子（G6 起）与卷十七 G15，本函数不给近似（一律按区格求）。纯读。
+ * @param {any} engine @param {any} state @param {{w: number, x: number, y: number, z: number, coarse: boolean}} fromPos @param {{w: number, x: number, y: number, z: number, coarse: boolean}} toPos
+ * @returns {{steps: readonly {w: number, x: number, y: number}[], distanceM: number} | null}
+ */
+export function pathView(engine, state, fromPos, toPos) {
+  requirePos(fromPos, 'pathView fromPos');
+  requirePos(toPos, 'pathView toPos');
+  const r = routeEnvOf(engine, state).env.pathBetween(fromPos, toPos);
+  if (r === null) return null;
+  return Object.freeze({ steps: Object.freeze(r.steps.map((c) => Object.freeze({ ...c }))), distanceM: fixedToNumber(r.distance) });
 }
 
 // ---------- 三个关系的实现函数（§4.1.2 表；relation:<rel_id> 节点的实现方是本卷） ----------
@@ -689,6 +758,96 @@ function checkCellClasses(view, rp, errors) {
   }
 }
 
+// 一行是否在 id 的包含子树里（自身或祖先链上有 id）；沿计划里的 parent 走，有限步（树无环由规则 1 校验）。
+function inSubtree(rp, row, id) {
+  const seen = new Set();
+  for (let c = row; typeof c === 'string' && !seen.has(c); c = rp.parentOf(c)) { if (c === id) return true; seen.add(c); }
+  return false;
+}
+
+// 路网边两端（卷五 §4.1 规则 4、7；对照表 33、39 行）：两端只许是区域或体积足迹的行（建筑、房间的出入由蓝图门格派生，不建边）；
+// 非门边两端若都划出了区域足迹须在同一格空间（跨格空间只经门）；门边 portal 的 a 在 from 足迹内、b 在 to 足迹内，a、b 须合 struct:pos，门边不是水路。
+function checkEdgeEnds(rp, grid, e, at, sink) {
+  const ENDS = [FOOTPRINT_KIND.region, FOOTPRINT_KIND.volume];
+  for (const end of [e[EDGE.from], e[EDGE.to]]) {
+    const kind = rp.kinds.get(end);
+    if (kind !== undefined && !ENDS.includes(kind)) sink({ ...at, code: 'E-DIM-DOMAIN-RANGE', got: [end, kind], want: `edge ends are region or volume footprint rows (${ENDS.join(', ')}); building and room entrances come from blueprint door cells, no edge` });
+  }
+  if (!isDoor(e)) {
+    const pa = planOfRow(rp, e[EDGE.from]);
+    const pb = planOfRow(rp, e[EDGE.to]);
+    if (pa && pb && pa !== pb) sink({ ...at, code: 'E-DIM-DOMAIN-RANGE', got: [e[EDGE.from], e[EDGE.to]], want: 'a non-portal edge joins two places of one grid space (grid spaces connect only through portal edges)' });
+    return;
+  }
+  const door = e[EDGE.portal];
+  if (e[EDGE.waterway] === true) sink({ ...at, code: 'E-DIM-DOMAIN-RANGE', got: 'portal with waterway true', want: 'a portal edge is a door, not a water route' });
+  if (!isObj(door) || !isPosValue(door.a) || !isPosValue(door.b)) { sink({ ...at, code: 'E-DIM-STRUCT-FIELD', got: door, want: 'portal {a: struct:pos, b: struct:pos}' }); return; }
+  if (rp.plans.size === 0) return;
+  for (const [side, pos, end] of [['a', door.a, e[EDGE.from]], ['b', door.b, e[EDGE.to]]]) {
+    const zone = zoneOfPos(grid, rp.plans, pos);
+    if (zone === null || !inSubtree(rp, zone, end)) sink({ ...at, code: 'E-DIM-DOMAIN-RANGE', got: [side, pos], want: `portal ${side} lies inside the footprint of ${end}` });
+  }
+}
+
+/**
+ * 水路边栅格化的加载期校验（卷五 §4.1 规则 4：水路边只走可航水体足迹区格，两端之间没有通航水域即加载报错 E-GRID-WATERWAY-NO-CHANNEL；对照表 34 行）。
+ * 水路只读水体足迹与词表（不要地表高），所以加载期就能判；陆路边要地表高（世界种子），由运行期 routeView 栅格化，不在这里判。
+ * 步长要 det-math 的定点开方表，表在规则表校验通过后才装入（load/rules.mjs checkRules），所以本校验排在 checkRules 之后、由加载器单独调，
+ * 与 checkPlaceTable 分开（后者排在装表之前）。没有格空间、结构已被 checkPlaceTable 报错的表在这里不再重报。
+ * @param {{vocab: any, rules?: any, tables: Map<string, any>, env: any}} view @returns {{ok: boolean, errors: string[]}}
+ */
+export function checkPlaceRasters(view) {
+  const errors = [];
+  const t = view && view.tables instanceof Map ? view.tables.get(PLACE) : undefined;
+  const grid = view && view.rules && view.rules[RULES.grid];
+  const spaces = t && Array.isArray(t.doc[SECTION.gridSpaces]) ? t.doc[SECTION.gridSpaces] : [];
+  const edges = t && Array.isArray(t.doc[SECTION.edges]) ? t.doc[SECTION.edges].filter(isObj) : [];
+  if (spaces.length === 0 || !isObj(grid) || !edges.some((e) => e[EDGE.waterway] === true)) return { ok: true, errors };
+  const rows = t.flat && t.flat.rows instanceof Map ? t.flat.rows : new Map();
+  const idx = view.vocab ? view.vocab.index : undefined;
+  if (!checkGridSpaces(t, view, [], spaces)) return { ok: true, errors };
+  const rp = buildPlan({
+    ids: [...rows.keys()].sort(cmp),
+    get: (id, key) => rows.get(id)[key],
+    classesOf: (id) => expandClasses(rowClassesOf({}, null, t, id), broaderOf(idx)),
+    relocatable: relocatableIn(idx),
+    grid,
+    gridSpaces: spaces,
+  });
+  const env = createRouteEnv({ grid, modifiers: view.rules[RULES.modifiers], vocabIndex: idx, worldSeed: undefined, rp, terrainOf: () => null, edges: [] });
+  const water = edges.filter((e) => e[EDGE.waterway] === true && !isDoor(e) && planOfRow(rp, e[EDGE.from]) !== null && planOfRow(rp, e[EDGE.from]) === planOfRow(rp, e[EDGE.to])
+    && !rp.offstage.has(e[EDGE.from]) && !rp.offstage.has(e[EDGE.to]));
+  if (water.length === 0) return { ok: true, errors };
+  if (!env.ready) { errors.push('E-RULES-UNREGISTERED place: rules.grid.roadPaceFactor, rules.grid.longCostCap and rules.terrainModifiers.slopeCurve are needed to rasterize edges'); return { ok: false, errors }; }
+  for (const e of water) {
+    const r = env.rasterEdge(e);
+    if (!r.ok) errors.push(`E-GRID-WATERWAY-NO-CHANNEL place/${SECTION.edges}: no navigable water-body cell chain between ${e[EDGE.from]} and ${e[EDGE.to]} (${r.reason})`);
+  }
+  return { ok: errors.length === 0, errors };
+}
+
+// 地形步进系数与路况系数的取值域（卷五 §4.10.1：paceFactor 与 slopeCurve 严格大于 0；§4.1 规则 5：roadPaceFactor 不大于全部地形的 paceFactor；对照表 38 行）。
+// 本表有格空间时寻路读这些量，所以 terrain 族条目缺 paceFactor 即缺必填。
+function checkPaceTables(view, errors) {
+  const idx = view.vocab && view.vocab.index instanceof Map ? view.vocab.index : new Map();
+  const rules = view.rules || {};
+  const paces = [];
+  for (const [code, rec] of [...idx].sort(([a], [b]) => cmp(a, b))) {
+    if (!rec || rec.family !== FAMILY.terrain) continue;
+    const p = isObj(rec.entry) ? rec.entry.paceFactor : undefined;
+    if (p === undefined) { errors.push(`E-DIM-REQUIRED-MISSING ${code}: terrain entry needs paceFactor`); continue; }
+    if (typeof p !== 'number' || !(p > 0)) { errors.push(`E-DIM-DOMAIN-RANGE ${code}: paceFactor ${JSON.stringify(p)} must be a number > 0`); continue; }
+    paces.push([code, p]);
+  }
+  const road = isObj(rules[RULES.grid]) ? rules[RULES.grid].roadPaceFactor : undefined;
+  if (road !== undefined) {
+    if (typeof road !== 'number' || !(road > 0)) errors.push(`E-DIM-DOMAIN-RANGE rules.grid.roadPaceFactor: ${JSON.stringify(road)} must be a number > 0`);
+    else for (const [code, p] of paces) if (road > p) errors.push(`E-DIM-DOMAIN-RANGE rules.grid.roadPaceFactor: ${road} exceeds the paceFactor ${p} of ${code} (a road is never slower than any terrain)`);
+  }
+  const curve = isObj(rules[RULES.modifiers]) ? rules[RULES.modifiers].slopeCurve : undefined;
+  if (Array.isArray(curve)) for (const [x, y] of curve) if (!(y > 0)) errors.push(`E-DIM-DOMAIN-RANGE rules.terrainModifiers.slopeCurve: value ${JSON.stringify(y)} at ${JSON.stringify(x)} must be > 0`);
+}
+
 /**
  * 地点表的树、足迹与边校验（kernel 组内用，加载器在维度校验通过后调；没载入 place 表即无事可核）。
  * 单根树（不计离场行）、每行有限步到根（E-DIM-CYCLE；多根 E-DIM-DOMAIN-RANGE）；足迹种类只按组件类判，各足迹输入列只许对应种类的行写
@@ -787,6 +946,8 @@ export function checkPlaceTable(view) {
     const key = JSON.stringify([a, b, e[EDGE.waterway]]);
     if (keys.has(key)) sink({ ...at, code: 'E-DIM-DUPLICATE-KEY', got: [a, b, e[EDGE.waterway]], want: 'one edge per (from, to, waterway)' });
     keys.add(key);
+    checkEdgeEnds(rp, grid, e, at, sink);
   });
+  checkPaceTables(view, errors);
   return { ok: errors.length === 0, errors };
 }

@@ -9,8 +9,12 @@ import { readFileSync, readdirSync, rmSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { testTempRoot, writeUnderTempRoot, ROOT } from '../accept/temp-root.mjs';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
-import { placeView, routeView, relContains, relWithin, relResidents, checkPlaceTable } from '../../server-plugin/kernel/place.mjs';
+import { placeView, routeView, relContains, relWithin, relResidents, checkPlaceTable, shortestPath } from '../../server-plugin/kernel/place.mjs';
 import { reverseLookup } from '../../server-plugin/kernel/reverse-index.mjs';
+import { fixedUnits, fixedToNumber } from '../../server-plugin/kernel/det-math.mjs';
+
+// 路网边不存路长（拍板第 12 条）：路程由栅格化路段派生，其测试在 route-edges.test.mjs；本文件只核边节的加载校验与最短路的并列取法（图算法，抽象边长）。
+assert.equal(loadWorld(ROOT).ok, true); // 装配定点常数
 
 const DIMS = 'world/ontology/dimensions';
 const realText = (f) => readFileSync(join(ROOT, DIMS, f), 'utf8');
@@ -46,7 +50,7 @@ const row = (parent, areaM2, extra = {}) => ({
   parent, coord: { x: 0, y: 0 }, areaM2, elevationM: 0, anchorElevationM: 0, skyExposure: 1, ledgerHolder: false, basis: 'test',
   terrain: 'terrain_plain', waterAccess: ['water_test_fresh'], forestCover: 0, hiddenness: 0, accessClass: 'access_test_open', ...extra,
 });
-const edge = (from, to, distanceM, waterway = false, extra = {}) => ({ from, to, distanceM, waterway, ...extra });
+const edge = (from, to, waterway = false, extra = {}) => ({ from, to, waterway, ...extra });
 const engineOf = (r) => ({ tables: r.tables, vocab: r.vocab, rules: r.rules });
 
 // 一棵示例树：根 loc_w（1000 m2）下 loc_a、loc_b、loc_c、loc_d、loc_e 各 100 m2。
@@ -96,34 +100,32 @@ test('areaM2 特殊值：0 与负数出取值域 [1, null]，null 不可空', ()
   for (const a of [0, -5, null]) assert.ok(has(load({ rows: { loc_w: row(null, a) } }), 'E-DIM-DOMAIN-RANGE'), String(a));
 });
 
-test('规则 4 正例：from 小于 to；同两端陆路、水路两条边可并存；distanceM 为 0 可存', () => {
-  const r = load({ rows: TREE, edges: [edge('loc_a', 'loc_b', 10), edge('loc_a', 'loc_b', 10, true), edge('loc_b', 'loc_c', 0)] });
+test('规则 4 正例：from 小于 to；同两端陆路、水路两条边可并存', () => {
+  const r = load({ rows: TREE, edges: [edge('loc_a', 'loc_b'), edge('loc_a', 'loc_b', true), edge('loc_b', 'loc_c')] });
   assert.equal(r.ok, true, r.text);
 });
 
 test('规则 4 反例：from 不小于 to（倒序、两端相同）即 E-DIM-DOMAIN-RANGE', () => {
-  assert.ok(has(load({ rows: TREE, edges: [edge('loc_b', 'loc_a', 10)] }), 'E-DIM-DOMAIN-RANGE'));
-  assert.ok(has(load({ rows: TREE, edges: [edge('loc_a', 'loc_a', 10)] }), 'E-DIM-DOMAIN-RANGE'));
+  assert.ok(has(load({ rows: TREE, edges: [edge('loc_b', 'loc_a')] }), 'E-DIM-DOMAIN-RANGE'));
+  assert.ok(has(load({ rows: TREE, edges: [edge('loc_a', 'loc_a')] }), 'E-DIM-DOMAIN-RANGE'));
 });
 
 test('规则 4 反例：两端加通路类型重复即 E-DIM-DUPLICATE-KEY', () => {
-  const r = load({ rows: TREE, edges: [edge('loc_a', 'loc_b', 10), edge('loc_a', 'loc_b', 12)] });
+  const r = load({ rows: TREE, edges: [edge('loc_a', 'loc_b'), edge('loc_a', 'loc_b')] });
   assert.ok(has(r, 'E-DIM-DUPLICATE-KEY'), r.text);
 });
 
 test('边的两端特殊值：不存在的地点 E-DIM-REF-MISSING；null E-DIM-DOMAIN-RANGE；空串 E-DIM-ID-FORMAT', () => {
-  assert.ok(has(load({ rows: TREE, edges: [edge('loc_a', 'loc_zz', 10)] }), 'E-DIM-REF-MISSING'));
-  assert.ok(has(load({ rows: TREE, edges: [edge(null, 'loc_a', 10)] }), 'E-DIM-DOMAIN-RANGE'));
-  assert.ok(has(load({ rows: TREE, edges: [edge('', 'loc_a', 10)] }), 'E-DIM-ID-FORMAT'));
+  assert.ok(has(load({ rows: TREE, edges: [edge('loc_a', 'loc_zz')] }), 'E-DIM-REF-MISSING'));
+  assert.ok(has(load({ rows: TREE, edges: [edge(null, 'loc_a')] }), 'E-DIM-DOMAIN-RANGE'));
+  assert.ok(has(load({ rows: TREE, edges: [edge('', 'loc_a')] }), 'E-DIM-ID-FORMAT'));
 });
 
-test('边的字段：distanceM 负数或 null 拒收；缺 waterway、多出未登记字段即 E-DIM-STRUCT-FIELD', () => {
-  assert.ok(has(load({ rows: TREE, edges: [edge('loc_a', 'loc_b', -1)] }), 'E-DIM-DOMAIN-RANGE'));
-  assert.ok(has(load({ rows: TREE, edges: [edge('loc_a', 'loc_b', null)] }), 'E-DIM-DOMAIN-RANGE'));
-  const noWay = { from: 'loc_a', to: 'loc_b', distanceM: 10 };
-  assert.ok(has(load({ rows: TREE, edges: [noWay] }), 'E-DIM-STRUCT-FIELD'));
-  assert.ok(has(load({ rows: TREE, edges: [edge('loc_a', 'loc_b', 10, false, { bearingDeg: 90 })] }), 'E-DIM-STRUCT-FIELD'));
-  assert.ok(has(load({ rows: TREE, edges: [edge('loc_a', 'loc_b', 10, false, { openness: 2 })] }), 'E-DIM-DOMAIN-RANGE'));
+test('边的字段（A5-1.1）：路长、方位、通畅度等派生量不是存储列，写上即 E-DIM-STRUCT-FIELD；缺 waterway 同样拒收', () => {
+  for (const [k, v] of [['distanceM', 10], ['distanceM', -1], ['distanceM', null], ['bearingDeg', 90], ['openness', 2], ['terrainMix', {}], ['speedFactor', 1]]) {
+    assert.ok(has(load({ rows: TREE, edges: [edge('loc_a', 'loc_b', false, { [k]: v })] }), 'E-DIM-STRUCT-FIELD'), `${k} ${JSON.stringify(v)}`);
+  }
+  assert.ok(has(load({ rows: TREE, edges: [{ from: 'loc_a', to: 'loc_b' }] }), 'E-DIM-STRUCT-FIELD'));
 });
 
 test('checkPlaceTable 直调：没载入 place 表无事可核；边节不是列表即 E-DIM-STRUCT-FIELD', () => {
@@ -181,84 +183,71 @@ test('always 列：terrain 取封闭 10 项、waterAccess 取 water 族、forest
   assert.ok(has(load({ rows: { loc_w: row(null, 1000, { hiddenness: null }) } }), 'E-DIM-DOMAIN-RANGE'));
 });
 
-// ---------- 对照表第 19 行：几何最短路（§4.1.3 规则 5） ----------
+// ---------- 对照表第 36 行：路网图最短路的并列取法（§4.1.3 规则 5） ----------
+// 图算法用抽象边长（测试给定的数）直接核 shortestPath：路网边不存路长，路程在真实世界由栅格化路段派生（route-edges.test.mjs）；
+// 去程回程互为逆序、不连通为空、edge 的形状在 route-edges.test.mjs 用格世界核。
 
 const routeWorld = (edges) => { const r = load({ rows: TREE, edges }); assert.equal(r.ok, true, r.text); return engineOf(r); };
 const S = {};
+// 带测试边长的边：{from, to, waterway, len}；shortestPath 的 lengthOf 取 len（定点）。
+const le = (from, to, len, waterway = false) => ({ from, to, waterway, len });
+const lenOf = (e) => fixedUnits(e.len);
+const sp = (list, s, t) => {
+  const lab = shortestPath(list, s, t, lenOf);
+  return lab === null ? null : { places: lab.places, ways: lab.ways, distanceM: fixedToNumber(lab.d) };
+};
 
 test('最短路：路程最小者胜（a→b→d 20 < a→d 25）', () => {
-  const e = routeWorld([edge('loc_a', 'loc_b', 10), edge('loc_b', 'loc_d', 10), edge('loc_a', 'loc_d', 25)]);
-  const p = routeView(e, S, 'loc_a', 'loc_d').path;
+  const p = sp([le('loc_a', 'loc_b', 10), le('loc_b', 'loc_d', 10), le('loc_a', 'loc_d', 25)], 'loc_a', 'loc_d');
   assert.deepEqual(p.places, ['loc_a', 'loc_b', 'loc_d']);
   assert.equal(p.distanceM, 20);
 });
 
 test('并列一：路程相同取边数少的（直达 20 对 a→b→d 20）', () => {
-  const e = routeWorld([edge('loc_a', 'loc_b', 10), edge('loc_b', 'loc_d', 10), edge('loc_a', 'loc_d', 20)]);
-  assert.deepEqual(routeView(e, S, 'loc_a', 'loc_d').path.places, ['loc_a', 'loc_d']);
+  assert.deepEqual(sp([le('loc_a', 'loc_b', 10), le('loc_b', 'loc_d', 10), le('loc_a', 'loc_d', 20)], 'loc_a', 'loc_d').places, ['loc_a', 'loc_d']);
 });
 
-test('并列二：路程、边数都同，从代号小的一端写起比地点序列；反向调用是同一条路倒写', () => {
+test('并列二：路程、边数都同，从代号小的一端写起比地点序列', () => {
   // a→b→d 与 a→c→d 都是 20、两条边；从 loc_a 写起 [a,b,d] < [a,c,d]。
-  const e = routeWorld([edge('loc_a', 'loc_c', 10), edge('loc_c', 'loc_d', 10), edge('loc_a', 'loc_b', 10), edge('loc_b', 'loc_d', 10)]);
-  assert.deepEqual(routeView(e, S, 'loc_a', 'loc_d').path.places, ['loc_a', 'loc_b', 'loc_d']);
-  assert.deepEqual(routeView(e, S, 'loc_d', 'loc_a').path.places, ['loc_d', 'loc_b', 'loc_a']);
+  const list = [le('loc_a', 'loc_c', 10), le('loc_c', 'loc_d', 10), le('loc_a', 'loc_b', 10), le('loc_b', 'loc_d', 10)];
+  assert.deepEqual(sp(list, 'loc_a', 'loc_d').places, ['loc_a', 'loc_b', 'loc_d']);
 });
 
-test('并列二（取法看较小端）：从两端写起胜者不同时，一律按代号小的一端 loc_a 写起比，与调用方向无关', () => {
+test('并列二（取法看较小端）：胜者按代号小的一端 loc_a 写起比', () => {
   // P = a–b–e–d，Q = a–c–bb–d，各三条 10 m 的边。从 loc_a 写起 [a,b,e,d] < [a,c,bb,d]，P 胜；
-  // 若从 loc_d 写起则 [d,bb,c,a] < [d,e,b,a]，Q 会胜——所以这一例能分辨取法是否固定在较小端。
-  const r = load({ rows: { ...TREE, loc_bb: row('loc_w', 100) }, edges: [edge('loc_a', 'loc_b', 10), edge('loc_b', 'loc_e', 10), edge('loc_d', 'loc_e', 10), edge('loc_a', 'loc_c', 10), edge('loc_bb', 'loc_c', 10), edge('loc_bb', 'loc_d', 10)] });
-  assert.equal(r.ok, true, r.text);
-  const e = engineOf(r);
-  assert.deepEqual(routeView(e, S, 'loc_a', 'loc_d').path.places, ['loc_a', 'loc_b', 'loc_e', 'loc_d']);
-  assert.deepEqual(routeView(e, S, 'loc_d', 'loc_a').path.places, ['loc_d', 'loc_e', 'loc_b', 'loc_a']);
-  assert.equal(routeView(e, S, 'loc_d', 'loc_a').path.distanceM, 30);
+  // 若从 loc_d 写起则 [d,bb,c,a] < [d,e,b,a]，Q 会胜——所以这一例能分辨取法是否固定在较小端（routeView 先从较小端求、再按调用方向倒写）。
+  const list = [le('loc_a', 'loc_b', 10), le('loc_b', 'loc_e', 10), le('loc_d', 'loc_e', 10), le('loc_a', 'loc_c', 10), le('loc_bb', 'loc_c', 10), le('loc_bb', 'loc_d', 10)];
+  const p = sp(list, 'loc_a', 'loc_d');
+  assert.deepEqual(p.places, ['loc_a', 'loc_b', 'loc_e', 'loc_d']);
+  assert.equal(p.distanceM, 30);
 });
 
-test('并列三：陆路、水路两条边等长，取陆路；edge 两项陆路在前', () => {
-  const e = routeWorld([edge('loc_a', 'loc_b', 10, true), edge('loc_a', 'loc_b', 10, false)]);
-  const r = routeView(e, S, 'loc_b', 'loc_a');
-  assert.deepEqual(r.path.edges.map((x) => x.waterway.value), [false]);
-  assert.deepEqual(r.edge.map((x) => x.waterway.value), [false, true]);
+test('并列三：陆路、水路两条边等长，取陆路（通路类型序列陆路先于水路）', () => {
+  assert.deepEqual(sp([le('loc_a', 'loc_b', 10, true), le('loc_a', 'loc_b', 10, false)], 'loc_a', 'loc_b').ways, [false]);
 });
 
-test('边表存放顺序打乱，任何两点的 path 不变', () => {
-  const list = [edge('loc_a', 'loc_c', 10), edge('loc_c', 'loc_d', 10), edge('loc_a', 'loc_b', 10), edge('loc_b', 'loc_d', 10), edge('loc_a', 'loc_d', 20, true)];
-  const e1 = routeWorld(list);
-  const e2 = routeWorld([...list].reverse());
-  for (const [x, y] of [['loc_a', 'loc_d'], ['loc_d', 'loc_a'], ['loc_b', 'loc_c'], ['loc_c', 'loc_b']]) {
-    assert.deepEqual(routeView(e1, S, x, y).path, routeView(e2, S, x, y).path);
+test('边表存放顺序打乱，任何两点的最短路不变', () => {
+  const list = [le('loc_a', 'loc_c', 10), le('loc_c', 'loc_d', 10), le('loc_a', 'loc_b', 10), le('loc_b', 'loc_d', 10), le('loc_a', 'loc_d', 20, true)];
+  for (const [x, y] of [['loc_a', 'loc_d'], ['loc_b', 'loc_c'], ['loc_a', 'loc_c']]) {
+    assert.deepEqual(sp(list, x, y), sp([...list].reverse(), x, y));
   }
 });
 
-test('distanceM 为 0 的边照常参加；两地相同是没有边、distanceM 为 0 的路径', () => {
-  const e = routeWorld([edge('loc_a', 'loc_b', 0), edge('loc_b', 'loc_c', 0)]);
-  const p = routeView(e, S, 'loc_a', 'loc_c').path;
+test('边长为 0 的边（门边）照常参加', () => {
+  const p = sp([le('loc_a', 'loc_b', 0), le('loc_b', 'loc_c', 0)], 'loc_a', 'loc_c');
   assert.deepEqual(p.places, ['loc_a', 'loc_b', 'loc_c']);
   assert.equal(p.distanceM, 0);
-  assert.deepEqual(routeView(e, S, 'loc_a', 'loc_a').path, { places: ['loc_a'], edges: [], distanceM: 0 });
 });
 
-test('不连通：path 为 null（距离未知），edge 为空', () => {
-  const e = routeWorld([edge('loc_a', 'loc_b', 10)]);
-  const r = routeView(e, S, 'loc_a', 'loc_e');
-  assert.equal(r.path, null);
-  assert.deepEqual(r.edge, []);
+test('不连通：最短路为 null；算不出边长的边（lengthOf 为 null）不在图上，不拿别的量顶替', () => {
+  assert.equal(sp([le('loc_a', 'loc_b', 10)], 'loc_a', 'loc_e'), null);
+  const list = [le('loc_a', 'loc_b', 10), le('loc_b', 'loc_c', 10)];
+  const unknownMiddle = shortestPath(list, 'loc_a', 'loc_c', (e) => (e.to === 'loc_c' ? null : lenOf(e)));
+  assert.equal(unknownMiddle, null);
 });
 
 test('路程按定点相加：0.1 + 0.2 恰为 0.3', () => {
-  const e = routeWorld([edge('loc_a', 'loc_b', 0.1), edge('loc_b', 'loc_c', 0.2)]);
-  assert.equal(routeView(e, S, 'loc_a', 'loc_c').path.distanceM, 0.3);
-});
-
-test('边的属性组：ascentM 是 to 端减 from 端的海拔；未建的四项按未知带出', () => {
-  const e = routeWorld([edge('loc_a', 'loc_b', 10)]);
-  const fwd = routeView(e, S, 'loc_a', 'loc_b').edge[0];
-  assert.deepEqual(fwd.ascentM, { known: true, applicable: true, value: 5 });
-  assert.equal(routeView(e, S, 'loc_b', 'loc_a').edge[0].ascentM.value, -5);
-  for (const k of ['terrainMix', 'requirement', 'bearingDeg', 'speedFactor', 'openness']) assert.equal(fwd[k].known, false, k);
-  assert.deepEqual(fwd.distanceM, { known: true, applicable: true, value: 10 });
+  assert.equal(sp([le('loc_a', 'loc_b', 0.1), le('loc_b', 'loc_c', 0.2)], 'loc_a', 'loc_c').distanceM, 0.3);
 });
 
 test('routeView、placeView 对非地点 id 拒收（E-DIM-REF-MISSING），不给默认值', () => {

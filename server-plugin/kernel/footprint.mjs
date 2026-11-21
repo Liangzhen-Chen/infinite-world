@@ -36,10 +36,15 @@ function floorDiv(a, b) {
 }
 const ceilDiv = (a, b) => (a + b - 1n) / b; // a、b 皆正
 
-const inBox = (box, x, y) => x >= box.x0 && x < box.x0 + box.cellsX && y >= box.y0 && y < box.y0 + box.cellsY;
-const keyOf = (box, x, y) => (y - box.y0) * box.cellsX + (x - box.x0);
-const xOf = (box, k) => box.x0 + (k % box.cellsX);
-const yOf = (box, k) => box.y0 + (k - (k % box.cellsX)) / box.cellsX;
+// 区格下标与区格序号互换（路网寻路 route-edges.mjs 共用，不另写第二份）。
+/** 区格序号 (x, y) 是否在外包框内。@param {{x0: number, y0: number, cellsX: number, cellsY: number}} box @param {number} x @param {number} y @returns {boolean} */
+export const inBox = (box, x, y) => x >= box.x0 && x < box.x0 + box.cellsX && y >= box.y0 && y < box.y0 + box.cellsY;
+/** 区格序号 → 区格下标。@param {{x0: number, y0: number, cellsX: number}} box @param {number} x @param {number} y @returns {number} */
+export const keyOf = (box, x, y) => (y - box.y0) * box.cellsX + (x - box.x0);
+/** 区格下标 → 区格序号 x。@param {{x0: number, cellsX: number}} box @param {number} k @returns {number} */
+export const xOf = (box, k) => box.x0 + (k % box.cellsX);
+/** 区格下标 → 区格序号 y。@param {{y0: number, x0: number, cellsX: number}} box @param {number} k @returns {number} */
+export const yOf = (box, k) => box.y0 + (k - (k % box.cellsX)) / box.cellsX;
 const cellLess = (a, b) => a.x < b.x || (a.x === b.x && a.y < b.y);
 const isCellIndex = (c) => c !== null && typeof c === 'object' && Number.isSafeInteger(c.x) && Number.isSafeInteger(c.y);
 const NONE = -1; // 归属数组里"没有行"的值
@@ -435,6 +440,16 @@ export function regionCellPos(grid, worldSeed, plan, rows, terrainOf, rx, ry) {
   if (h === null) return null;
   const perCell = fixedUnits(grid.regionCellM) / fixedUnits(grid.cellM);
   return { w: plan.w, x: Number(BigInt(rx) * perCell + (perCell >> 1n)), y: Number(BigInt(ry) * perCell + (perCell >> 1n)), z: surfaceStorey(grid, h), coarse: true };
+}
+
+/**
+ * 区格中心那一列的地表高（定点米；卷五 §4.3 规则 8），路网栅格化与区格寻路读它算坡度。区格在外包框外、世界种子或 terrain 条目或控制点缺失为 null（未知）。
+ * @param {any} grid rules.grid @param {string | undefined} worldSeed @param {any} plan @param {Map<string, any>} rows
+ * @param {(code: string) => {reliefM: number, reliefRough: number} | null} terrainOf @param {number} rx @param {number} ry @returns {bigint | null}
+ */
+export function regionCellHeight(grid, worldSeed, plan, rows, terrainOf, rx, ry) {
+  if (!inBox(plan.box, rx, ry)) return null;
+  return cellHeight(grid, worldSeed, plan, rows, terrainOf, controlPointsOf(grid, plan, rows), keyOf(plan.box, rx, ry));
 }
 
 /**

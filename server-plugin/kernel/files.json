@@ -43,6 +43,8 @@
  "server-plugin/kernel/recipe.mjs",
  "server-plugin/kernel/report.mjs",
  "server-plugin/kernel/reverse-index.mjs",
+ "server-plugin/kernel/route-edges.mjs",
+ "server-plugin/kernel/route-grid.mjs",
  "server-plugin/kernel/rx.mjs",
  "server-plugin/kernel/sample.mjs",
  "server-plugin/kernel/save-session.mjs",

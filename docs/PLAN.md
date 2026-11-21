@@ -107,6 +107,19 @@
 - 记过 11-19：6-29 写者（Sonnet）一次把测试输出重定向写到 F:/dnd-tmp/t1.txt（自报，不在仓库）。
 - 待复核疑点 11-19 6-29：geothermalGradient 0.0275 取 25–30 ℃/km 区间中点、出处经维基二手转引未读原文——终核时判是否须换成具体文献值或登未建。
 
+## 格子迁移 G4《路网栅格化、长途选路、routeView 改》（11-21；分支 ds/g4-routes；写 Sonnet 5.5 中档包卡，DeepSeek flash 三张机械卡；报告 docs/卡回报/g4-routes.md）
+
+对照表归 G4 各行（26、27、31、32、33–42、45）逐行落实，后半移交的不做。步骤与结果：
+
+- [x] 1 读卷五 §4.1 规则 4、5、§4.10 规则 1、5、§3.1，定接口与数据落点——routeView 读派生、pathView 区格层、四项规则常数登记。
+- [x] 2 DS 卡 1：规则常数登记（paceFactor 十条、roadPaceFactor、longCostCap、slopeCurve；registry、grid.json、terrain-modifiers.json、_vocab.json）——rules/grid/footprint/place-world 测试全过，已审。
+- [x] 3 区格寻路核心 kernel/route-grid.mjs（带启发的精确并列取法、路段派生量、地形构成份额）——自己定稿。
+- [x] 4 路网边栅格化与缓存、pathView、门边 kernel/route-edges.mjs；place.mjs routeView 改派生、加载校验（边端足迹种类、门边、水路无航道、步进系数取值域）；load/world.mjs 水路校验排在 checkRules 之后。
+- [x] 5 DS 卡 2：route-grid.test.mjs 16 条手算用例——已逐行审。
+- [x] 6 route-edges.test.mjs（格世界夹具，手算期望）；place.test.mjs、place-footprint.test.mjs、place-world.test.mjs 改成路长不存储的口径；convert-geo 不再搬入路长，place.json 重转。
+- [x] 7 DS 卡 3：place-pace-tables.test.mjs（步进系数加载校验）。
+- [x] 8 全量测试与 pre_commit 门禁；回报 docs/卡回报/g4-routes.md；docs/问题.md 记 G4 遗留。
+
 ## 已封与记过（摘要；详情见提交说明与 docs/审查/）
 
 - B2-W3 已封（06a7106b）；4-4a 已封（978bbb41）；3-4 已封、块 3 封块（73125c48）；块 5 体检与对照表入库（4f701e37）。

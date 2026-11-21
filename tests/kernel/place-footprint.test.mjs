@@ -252,7 +252,7 @@ const AWAY = () => {
   const g = GRID4();
   g.rows.loc_away = region(null, 50, 50, { classes: ['comp_zone'] });
   g.rows.loc_away_kid = region('loc_away', 50, 50);
-  g.edges = [{ from: 'loc_a', to: 'loc_away', waterway: false, distanceM: 10 }, { from: 'loc_a', to: 'loc_b', waterway: false, distanceM: 3 }];
+  g.edges = [{ from: 'loc_a', to: 'loc_away', waterway: false }, { from: 'loc_a', to: 'loc_b', waterway: false }];
   return g;
 };
 
@@ -278,7 +278,7 @@ test('离场读法：zoneAt 不返回离场子树；足迹、形心等导出量�
   assert.equal(placeView(e, S, 'loc_away_kid').dims.parent.value, 'loc_away'); // 后代照存储值
   const r = routeView(e, S, 'loc_a', 'loc_away');
   assert.deepEqual([r.edge, r.path], [[], null]);
-  assert.equal(routeView(e, S, 'loc_a', 'loc_b').path.distanceM, 3); // 在树上的边照常
+  assert.deepEqual(routeView(e, S, 'loc_a', 'loc_b').path.places, ['loc_a', 'loc_b']); // 在树上的边照常
   assert.deepEqual(placeNeighbors(e, S, 'loc_a'), ['loc_b']); // 通往离场行的边不算
   assert.deepEqual(placeView(e, S, 'loc_a').exits.filter((x) => x.kind === 'road').map((x) => x.via.to), ['loc_b']); // 只有在树上的 a–b 一条路，通往离场行的边不算出口
   assert.deepEqual(placeNeighbors(e, S, 'loc_away'), []);
@@ -431,17 +431,17 @@ test('placeNeighbors：足迹有一对四邻接区格即相邻；路网边两端
   const e = world(STRIP());
   assert.deepEqual(placeNeighbors(e, S, 'loc_a'), ['loc_b']);
   assert.deepEqual(placeNeighbors(e, S, 'loc_t'), []); // (5,0) 的左邻 (4,0) 属根：根是 t 的祖先，不算
-  const withEdge = world({ ...STRIP(), edges: [{ from: 'loc_a', to: 'loc_t', waterway: true, distanceM: 400 }] });
+  const withEdge = world({ ...STRIP(), edges: [{ from: 'loc_a', to: 'loc_t', waterway: false }] });
   assert.deepEqual(placeNeighbors(withEdge, S, 'loc_a'), ['loc_b', 'loc_t']);
   assert.deepEqual(placeNeighbors(withEdge, S, 'loc_t'), ['loc_a']);
 });
 
 test('placeView().exits：路与开阔边界两种，排序按（种类 路、门、开阔；区格序号 (x,y)；两端）；根的足迹是整个外包框，没有开阔边界', () => {
-  const e = world({ ...STRIP(), edges: [{ from: 'loc_a', to: 'loc_t', waterway: true, distanceM: 400 }, { from: 'loc_b', to: 'loc_t', waterway: false, distanceM: 400 }] });
+  const e = world({ ...STRIP(), edges: [{ from: 'loc_a', to: 'loc_t', waterway: false }, { from: 'loc_b', to: 'loc_t', waterway: false }] });
   const a = placeView(e, S, 'loc_a').exits;
-  // a 只占 (0,0)：一条路（到 t 的航线，接入格 (0,0)），一格开阔边界（(0,0) 的右邻 (1,0) 在外侧）。
+  // a 只占 (0,0)：一条路（到 t 的陆路，接入格 (0,0)），一格开阔边界（(0,0) 的右邻 (1,0) 在外侧）。
   assert.deepEqual(a.map((x) => [x.kind, x.regionCell.x, x.regionCell.y]), [['road', 0, 0], ['open', 0, 0]]);
-  assert.deepEqual(a[0].via, { from: 'loc_a', to: 'loc_t', waterway: true });
+  assert.deepEqual(a[0].via, { from: 'loc_a', to: 'loc_t', waterway: false });
   assert.equal(a[0].inner, 'loc_a');
   // 根：子树含 a、b、t 与自己，两条边都在子树内，没有路；外包框之外没有格，没有开阔边界。
   assert.deepEqual(placeView(e, S, 'loc_root').exits, []);
@@ -461,7 +461,11 @@ test('straightM、bearingView 入口：位置须合 struct:pos；同格空间给
   assert.throws(() => bearingView(e, S, P(0, 0), { w: 0, x: 0, y: 0 }), (er) => er.code === 'E-DIM-STRUCT-FIELD');
 });
 
-test('routeView 与足迹互不干扰：没有格空间表的真实形状边照常最短路', () => {
-  const e = world({ rows: { loc_root: ROOT_ROW({ classes: [] }), loc_a: region('loc_root', 1, 1), loc_b: region('loc_root', 2, 2) }, edges: [{ from: 'loc_a', to: 'loc_b', waterway: false, distanceM: 7 }], cellclass: null });
-  assert.equal(routeView(e, S, 'loc_a', 'loc_b').path.distanceM, 7);
+test('没有格空间表的世界：边没有足迹可栅格化，派生量与路径按未知（不抛错、不借别的量顶替）；边本身照常读出', () => {
+  const e = world({ rows: { loc_root: ROOT_ROW({ classes: [] }), loc_a: region('loc_root', 1, 1), loc_b: region('loc_root', 2, 2) }, edges: [{ from: 'loc_a', to: 'loc_b', waterway: false }], cellclass: null });
+  const r = routeView(e, S, 'loc_a', 'loc_b');
+  assert.equal(r.edge.length, 1);
+  for (const k of ['distanceM', 'terrainMix', 'ascentM', 'speedFactor', 'cells', 'bearingDeg']) assert.equal(r.edge[0][k].known, false, k);
+  assert.equal(r.edge[0].waterway.value, false);
+  assert.equal(r.path, null);
 });

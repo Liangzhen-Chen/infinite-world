@@ -113,7 +113,7 @@ test('进入档：旧 access.mode 都折成 access 族条目，没有旧 access 
   for (const m of new Set(OLD.locations.filter((o) => o.access).map((o) => o.access.mode))) assert.equal(same(m).size, 1, `mode ${m} maps to one entry`);
 });
 
-test('边：旧路线逐条搬入；from 小于 to；两端加通路类型唯一；仅含 boat 方式的旧路线是水路边；distanceM 为千米折米', () => {
+test('边：旧路线逐条搬入；from 小于 to；两端加通路类型唯一；仅含 boat 方式的旧路线是水路边；不存路长（拍板第 12 条，卷五 §4.1 规则 4：路程由栅格化路段派生）', () => {
   const key = (e) => [e.from, e.to, e.waterway].join('|');
   const seen = new Set();
   for (const e of PLACE.edges) {
@@ -127,7 +127,7 @@ test('边：旧路线逐条搬入；from 小于 to；两端加通路类型唯一
     const water = r.modes.length === 1 && r.modes[0] === 'boat';
     const e = PLACE.edges.find((x) => x.from === (a < b ? a : b) && x.to === (a < b ? b : a) && x.waterway === water);
     assert.ok(e, r.id);
-    assert.equal(e.distanceM, km(r.lengthKm), r.id);
+    assert.deepEqual(Object.keys(e).sort(), ['from', 'to', 'waterway'], r.id); // 路长、地形构成、路况、通畅度都不存（A5-1.1）
   }
   assert.equal(PLACE.edges.filter((e) => e.waterway).length, OLD.routes.filter((r) => r.modes.length === 1 && r.modes[0] === 'boat').length);
 });

@@ -362,16 +362,29 @@
     "heightCtrlK": {"type": "integer", "unit": "count", "domain": [1, null]},
     "reliefOctaves": {"type": "integer", "unit": "count", "domain": [0, null]},
     "surfaceElevationMinM": {"type": "integer", "unit": "m", "domain": [null, 0]},
-    "surfaceElevationMaxM": {"type": "integer", "unit": "m", "domain": [0, null]}
+    "surfaceElevationMaxM": {"type": "integer", "unit": "m", "domain": [0, null]},
+    "roadPaceFactor": {"type": "number", "unit": "dimensionless", "precision": 4, "domain": [0, null]},
+    "longCostCap": {"type": "integer", "unit": "count", "domain": [1, null]}
    },
    "domain": {
     "storeyM": [1, null], "cellM": [1, null], "regionCellM": [1, null], "fullTurnDeg": [1, null], "facingDirections": [8, 8],
     "heightCtrlK": [1, null], "reliefOctaves": [0, null],
-    "surfaceElevationMinM": [null, 0], "surfaceElevationMaxM": [0, null]
+    "surfaceElevationMinM": [null, 0], "surfaceElevationMaxM": [0, null],
+    "roadPaceFactor": [0, null], "longCostCap": [1, null]
    },
-   "volume": "卷五 §2.3 :271（格的尺度与格世界的常数，grid.json 键表；只登有运行期消费者的键，chunkRegionCells/landSearchRadiusCells/roadPaceFactor/bubbleCostCap/longCostCap/farSight* 随其消费者卡登）；cellM（G3 起读：区格序号换算、直线距离）；fullTurnDeg、facingDirections 取卷五 §4.2 规则 12–13（方位角整圈度数、八向朝向档数；G3 bearingView 读）；surfaceElevationMinM/MaxM 取卷五 §4.1.1 :425 海拔取值域；heightCtrlK/reliefOctaves 卷文无数值，暂定·待试玩标定；读者 kernel/grid.mjs（G2 起）、kernel/footprint.mjs（G3 起）",
+   "volume": "卷五 §2.3 :271（格的尺度与格世界的常数，grid.json 键表；只登有运行期消费者的键，chunkRegionCells/landSearchRadiusCells/bubbleCostCap/farSight* 随其消费者卡登）；cellM（G3 起读：区格序号换算、直线距离）；fullTurnDeg、facingDirections 取卷五 §4.2 规则 12–13（方位角整圈度数、八向朝向档数；G3 bearingView 读）；surfaceElevationMinM/MaxM 取卷五 §4.1.1 :425 海拔取值域；heightCtrlK/reliefOctaves 卷文无数值，暂定·待试玩标定；roadPaceFactor、longCostCap（G4 起读：kernel/route-grid.mjs、kernel/route-edges.mjs，卷五 §4.1 规则 4、5；暂定·待试玩标定）；读者 kernel/grid.mjs（G2 起）、kernel/footprint.mjs（G3 起）",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"storeyM": false, "cellM": false, "regionCellM": false, "fullTurnDeg": false, "facingDirections": false, "heightCtrlK": false, "reliefOctaves": false, "surfaceElevationMinM": false, "surfaceElevationMaxM": false}
+   "packOverridable": {"storeyM": false, "cellM": false, "regionCellM": false, "fullTurnDeg": false, "facingDirections": false, "heightCtrlK": false, "reliefOctaves": false, "surfaceElevationMinM": false, "surfaceElevationMaxM": false, "roadPaceFactor": false, "longCostCap": false}
+  },
+  {
+   "code": "terrainModifiers",
+   "file": "tables/terrain-modifiers.json",
+   "structure": "keys",
+   "type": {"slopeCurve": {"type": "curve", "x": "dimensionless", "y": "dimensionless"}},
+   "domain": {"slopeCurve": {}},
+   "volume": "卷五 §2.3 :278、§4.10.1 :1059（slopeCurve：坡度 = 一步地表高差绝对值 ÷ 步长 → 坡度项；值域严格大于 0，校验在 place.mjs checkPlaceTable）；本卡只登有运行期读者的键，byTerrain/byBiome/bySite 修正项模板随卷二 §3.3 管线的读者卡登；读者 kernel/route-edges.mjs（G4 起）",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"slopeCurve": false}
   },
   {
    "code": "facility",

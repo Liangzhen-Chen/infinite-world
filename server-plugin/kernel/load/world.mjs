@@ -25,7 +25,7 @@ import { checkVerbRows } from '../events.mjs';
 import { checkHoldingKindRows } from '../holdings.mjs';
 import { checkTerminationTables, installTermination, TERMINATE_RULES_TABLE } from '../terminate.mjs';
 import { installDelegations } from '../transaction.mjs';
-import { checkPlaceTable } from '../place.mjs';
+import { checkPlaceTable, checkPlaceRasters } from '../place.mjs';
 import { checkItemTables, checkItemClasses } from '../item.mjs';
 import { checkItemStateTables } from '../item-state.mjs';
 import { checkRecipeTable } from '../recipe.mjs';
@@ -159,7 +159,10 @@ export function loadWorld(root, opts = {}) {
     // 卷四本卷表与词表族的跨字段校验（§2.1、§2.2 身体图不变量、§2.4 条目字段、§2.7 E-BODY-*、E-SPECIES-ATTR-KEYS），违者加载失败。
     domain.push(...checkBodyTables(view, { maxChainDepth: need('bodyPartChainMaxDepth'), unbuiltFields: report.env.unbuiltFields }));
   }
-  const tail = rulesReport([...checkRules(read, report.env), ...domain]);
+  // 规则表校验通过才装入 det-math 的定点开方表（checkRules 末句），所以要用到它的校验排在它之后：水路边栅格化要步长 fixedSqrtInt(2 × regionCellM²)（卷五 §4.1 规则 4；G4）。
+  const ruleErrors = checkRules(read, report.env);
+  const rasters = report.ok && ruleErrors.length === 0 ? writerCheckRows('place', checkPlaceRasters({ vocab: report.vocab, rules: read.rules, tables: report.tables, env: report.env }).errors) : [];
+  const tail = rulesReport([...ruleErrors, ...domain, ...rasters]);
   const syntax = (parsed.errors || []).map((e) => ({ code: e.code, severity: 'error', level: 'L0', table: 'state-owners', row: '', dim: '', path: `#${e.pointer}`, got: e.got, want: e.want }));
   // 依赖声明定稿（卷二 §2.3 :470–471、§2.7 :828）：机器生成 dim:<kind> 与 modified:<kind>，对 uses 做传递闭包，写回 systems[*].inputs。
   const deps = report.ok && tail.ok && owners.ok && syntax.length === 0 ? finalizeDeps(report.tables, decl.systems) : { errors: [], systems: undefined };

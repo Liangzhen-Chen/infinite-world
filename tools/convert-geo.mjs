@@ -148,7 +148,8 @@ export function convertGeo(geoDir) {
   // 边：一条路线一条边；无向，from 的 id 字典序小于 to；水路与陆路按 waterway 区分。
   const edges = routes.map((r) => {
     const a = newId(r.from); const b = newId(r.to);
-    return { distanceM: meters(r.lengthKm), from: a < b ? a : b, to: a < b ? b : a, waterway: isWater(r) };
+    // 路网边只存"两个站点之间有路"，不存路长（拍板第 12 条，卷五 §4.1 规则 4：路程由栅格化路段派生）；旧 lengthKm 不再搬入。
+    return { from: a < b ? a : b, to: a < b ? b : a, waterway: isWater(r) };
   }).sort((x, y) => (x.from < y.from ? -1 : x.from > y.from ? 1 : x.to < y.to ? -1 : x.to > y.to ? 1 : Number(x.waterway) - Number(y.waterway)));
   return { rows, edges, labels };
 }
