@@ -43,6 +43,7 @@ function load({ rows = {}, edges = [], spaces } = {}) {
     v.families.water.entries = { water_test_nav: { navigable: true } };
     v.families.cellclass.entries = FULL_CELLCLASS;
     v.families.gentemplate.entries = GEN_TEMPLATE;
+    v.families.bform.entries = { bldform_test: { walled: true, aspect: 1, storeyBase: 0, roofed: true, deck: false, windowEvery: 0, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.2, rooms: [] } };
     writeUnderTempRoot(tmp, '_vocab.json', JSON.stringify(v));
     return loadWorld(ROOT, { dimensionsDir: relative(ROOT, tmp) });
   } finally { rmSync(tmp, { recursive: true, force: true }); }
@@ -199,7 +200,8 @@ test('水路边：两端之间没有通航水域即加载报错 E-GRID-WATERWAY-
 // ---------- 对照表第 33、34 行：边两端的足迹种类、同一格空间 ----------
 
 test('边两端只许区域或体积足迹的行：建筑行、房间行作端点即 E-DIM-DOMAIN-RANGE；体积端加载通过（其栅格化归 G8，派生量按未知）', () => {
-  const bld = { classes: ['comp_facility'], anchor: { w: 0, x: 10, y: 150, z: 0, coarse: false }, facing: 0 };
+  // 挂 comp_facility 的行另须带卷十九 §2.1 的必填列（G7 第一步登记）：形制、外包宽深、层数、完好度、破口列表。
+  const bld = { classes: ['comp_facility'], anchor: { w: 0, x: 10, y: 150, z: 0, coarse: false }, facing: 0, form: 'bldform_test', planCells: { widthCells: 6, depthCells: 6 }, storeys: 1, condition: 1, breaks: [], materialKg: { mat_granite: 1000 } };
   const g = ROW8();
   g.rows.loc_h = row('loc_a', bld);
   assert.ok(has(load({ ...g, edges: [edge('loc_a', 'loc_h')] }), 'E-DIM-DOMAIN-RANGE'));

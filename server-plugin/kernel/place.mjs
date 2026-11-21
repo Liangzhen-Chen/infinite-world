@@ -23,13 +23,15 @@ import {
   straightM as straightMCore, bearingView as bearingViewCore,
   regionOfPos, ownerIdAt, inBox, keyOf, controlPointsOf, regionCellHeight,
 } from './footprint.mjs';
-import { columnSurface, nearControlPoints, regionSlope, cellAt, cellFlags } from './grid-base.mjs';
+import { columnSurface, nearControlPoints, regionSlope, cellAt, cellFlags, STATE, CELL_KIND } from './grid-base.mjs';
+import { checkBlueprintForms, KIND as BLUEPRINT_KIND } from './blueprint.mjs';
+import { blueprintOf as blueprintCore, buildingCellAt, buildingColumn, buildingFootprint, checkBuildingRows, doorExitsOf } from './place-building.mjs';
 import { checkGenTemplates, genTemplateOf, templateBlocksOf } from './grid-template.mjs';
 import { buildPlan, expandClasses, waterAccessOf, footprintAdjacency, edgeAdjacency } from './place-plan.mjs';
 import { createRouteEnv, edgeNumbers } from './route-edges.mjs';
 import { report } from './report.mjs';
 import { isPosValue } from './named-structs.mjs';
-import { cellClassOf, surfaceStorey as surfaceStoreyOf } from './grid.mjs';
+import { cellClassOf, surfaceStorey as surfaceStoreyOf, landCellKey } from './grid.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
@@ -184,14 +186,38 @@ const terrainEntryOf = (engine) => (code) => {
 };
 const worldSeedOf = (engine) => (engine && isObj(engine.template) && typeof engine.template.seed === 'string' ? engine.template.seed : undefined);
 
+// 建筑蓝图读取的上下文（place-building.mjs）：维度只经内核 dim() 的基值读（与 placeView 同一套取值）；缓存挂在计划对象 rp 上。
+function buildingCtx(engine, state, rp) {
+  const read = (table) => (id, key) => { const f = dim(engine, state, table, id, key); return f.known ? f.value : undefined; };
+  return { engine, state, rp, val: read(PLACE), materialVal: read(MATERIAL) };
+}
+
+/**
+ * kernelApi `blueprintOf(engine, state, placeId)`（卷十九 §3.2、§4.1 规则 3、§4.5 规则 8、10）：蓝图转世界坐标（加 anchor、按 facing 转），每格带此刻的材料、顶面、是否开口、所在固定装置，加 openingAreas；
+ * 建筑行离场、不是建筑行或输入读不到时为 null（未知）。纯读。细节与未接数据源见 place-building.mjs 的 blueprintOf。
+ * @param {any} engine @param {any} state @param {string} placeId
+ */
+export function blueprintOf(engine, state, placeId) {
+  const rp = planOf(engine, state);
+  return blueprintCore(buildingCtx(engine, state, rp), placeId);
+}
+
 /**
  * 一行的足迹与由足迹派生的量（卷五 §4.1 规则 13，区域足迹在区格粒度上算）：
  * {kind, w, regionCells（区格序号，(x, y) 字典序）, cellCount, areaM2, centroid, elevationM, zRange, waterAccess}。
- * 没有格空间表、离场行、划不出足迹的行与非区域足迹（建筑、房间、体积归 G7/G8）返回 null；elevationM、zRange 要世界种子与控制点，缺即为 null（未知）。
+ * 没有格空间表、离场行、划不出足迹的行与体积足迹（归 G8）返回 null；elevationM、zRange 要世界种子与控制点，缺即为 null（未知）。
+ * 建筑、房间足迹（G7）：足迹是蓝图的格（房间取它那个房间的格），regionCells 为空，areaM2 = 最低一层细格数 × cellM²，zRange 是占的层号范围，elevationM = zMin × storeyM（卷五 §4.1 规则 13）。
  * @param {any} engine @param {any} state @param {string} placeId
  */
 export function placeFootprint(engine, state, placeId) {
   const rp = planOf(engine, state);
+  const kind = rp.kinds.get(placeId);
+  if (kind === FOOTPRINT_KIND.building || kind === FOOTPRINT_KIND.room) {
+    if (rp.plans.size === 0) return null;
+    const f = buildingFootprint(buildingCtx(engine, state, rp), engine.rules.grid, placeId);
+    if (f === null) return null;
+    return Object.freeze({ kind: f.kind, w: f.w, regionCells: Object.freeze([]), cellCount: f.cellCount, areaM2: f.areaM2, centroid: Object.freeze(f.centroid), elevationM: f.elevationM, zRange: Object.freeze(f.zRange), waterAccess: Object.freeze([]) });
+  }
   const plan = planOfRow(rp, placeId);
   if (!plan) return null;
   const grid = engine.rules.grid;
@@ -214,14 +240,18 @@ export function placeFootprint(engine, state, placeId) {
 /**
  * kernelApi `zoneAt(engine, state, pos)`（卷五 §3.1、§4.1 规则 12）：位置所在的地点 = 包含该位置的足迹中在包含树上最深的那一行；
  * 位置在格空间外包框之外、格空间不存在、世界没登记格空间表为 null（未知）。coarse 位置照存的格求。离场行不被返回。
- * 本卡只给区域足迹（建筑、房间、体积的最深足迹归 G7/G8）。纯读。pos 须合 struct:pos（命名 struct 登记），否则 E-DIM-STRUCT-FIELD。
+ * 区域足迹之上叠建筑与房间足迹（G7，卷五 §4.1 规则 11、12）：位置落在某建筑蓝图的格上，房间格是房间行、其余（外墙、隔墙、内门、门、窗、桥面）是建筑行，所以内门格返回建筑行；
+ * 体积的最深足迹归 G8。纯读。pos 须合 struct:pos（命名 struct 登记），否则 E-DIM-STRUCT-FIELD。
  * @param {any} engine @param {any} state @param {{w: number, x: number, y: number, z: number, coarse: boolean}} pos @returns {string | null}
  */
 export function zoneAt(engine, state, pos) {
   if (!isPosValue(pos)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'zoneAt: pos is not a struct:pos');
   const rp = planOf(engine, state);
   if (rp.plans.size === 0) return null;
-  return zoneOfPos(engine.rules.grid, rp.plans, pos);
+  const region = zoneOfPos(engine.rules.grid, rp.plans, pos);
+  if (region === null) return null;
+  const inside = buildingCellAt(buildingCtx(engine, state, rp), engine.rules.grid, pos);
+  return inside === null ? region : inside.zone;
 }
 
 // 位置须合命名 struct 登记的 struct:pos（卷二 §1.5 :252），否则 E-DIM-STRUCT-FIELD；两个几何入口共用。
@@ -280,13 +310,27 @@ export function regionCell(engine, state, { w, region }) {
 /**
  * kernelApi `landCell(engine, state, {place, kind, seedKey, coarse})`（卷五 §3.1、§4.1 规则 14）：在地点足迹内落一格。
  * coarse 为真（泡外代表格）：区域足迹按 hash(seedKey, 区格序号) 取第一个 zoneAt 恰为 place 的区格的中心列地表层格；没有可落格为 null（不落到别处）。
- * coarse 为假要可立足细格，细格基底归 G6，本卡不落：抛 E-DET-DOMAIN，不给近似。建筑、房间、体积的落格归 G7/G8（非区域足迹同样为 null 以外不处理，抛同码）。纯读。
+ * coarse 为假要可立足细格，细格基底归 G6，本卡不落：抛 E-DET-DOMAIN，不给近似。体积的落格归 G8（抛同码）。纯读。
+ * 建筑、房间（G7，规则 14 :501）：coarse 为真时在"zoneAt 恰为 place"的足迹格里按 landCellKey(seedKey, w, x, y, z)（格序号含层，取格的整数坐标）取最小者，并列按 (x, y, z) 字典序；
+ * 建筑取墙、隔墙、门、窗、内门与无对应房间行的室内格，房间取它那个房间的格；coarse 是代表格，不要求可立足；没有可落格为 null。
  * @param {any} engine @param {any} state @param {{place: string, kind: string, seedKey: string, coarse: boolean}} spec
  * @returns {{w: number, x: number, y: number, z: number, coarse: boolean} | null}
  */
 export function landCell(engine, state, { place, seedKey, coarse }) {
   if (coarse !== true) throw new KernelError('E-DET-DOMAIN', {}, 'landCell: standable fine cells (coarse false) need the fine-cell base, not built yet');
   const rp = planOf(engine, state);
+  const kindOfPlace = rp.kinds.get(place);
+  if (kindOfPlace === FOOTPRINT_KIND.building || kindOfPlace === FOOTPRINT_KIND.room) {
+    if (rp.plans.size === 0) return null;
+    const f = buildingFootprint(buildingCtx(engine, state, rp), engine.rules.grid, place);
+    if (f === null) return null;
+    // 候选格：足迹内且 zoneAt 恰为 place 的格（卷五 §4.1 规则 14 :501；建筑即墙、隔墙、门、窗、内门与无对应房间行的室内格，房间即它那个房间的格）；coarse 是代表格，不要求可立足。
+    const mine = f.cells.filter((c) => c.zone === place);
+    if (mine.length === 0) return null;
+    const keyed = mine.map((c) => ({ c, k: landCellKey(seedKey, f.w, c.x, c.y, c.z) }));
+    keyed.sort((a, b) => cmp(a.k, b.k) || cmp(a.c.x, b.c.x) || cmp(a.c.y, b.c.y) || cmp(a.c.z, b.c.z));
+    return { w: f.w, x: keyed[0].c.x, y: keyed[0].c.y, z: keyed[0].c.z, coarse: true };
+  }
   const plan = planOfRow(rp, place);
   if (!plan) {
     if (rp.kinds.has(place) && rp.kinds.get(place) !== FOOTPRINT_KIND.region) throw new KernelError('E-DET-DOMAIN', {}, `landCell: ${rp.kinds.get(place)} footprints are not built yet`);
@@ -338,6 +382,19 @@ function regionFacts(engine, state, rp, plan, rx, ry, entries) {
   return { owner, row, centerH, slope, waterKind, inSettlement, onRoad, cellClass };
 }
 
+// 建筑蓝图一层的叠入口（grid-base 的 overlay 回调）：墙与隔墙读派到的料（固态）、室内与门窗洞读空气、楼梯格给"楼梯"格种类（读作空气、不是实心料）、桥面层的格保留基底只加顶面；
+// 顶面是顶元派到的料（没有料即读作无）。材料为 null 的格取该列模板的空气行（gentemplate.airMaterial）。
+function buildingOverlay(building) {
+  return (col, z, base) => {
+    const r = building.at(z);
+    if (r === null) return null;
+    if (r.unknown) return { material: null, state: null, selfSupport: null, unknown: true, zone: r.zone }; // 依赖未登记的劣化规则表：未知，往下传
+    if (r.kind === null) return { ...base, ceiling: r.ceiling, zone: r.zone };
+    const solid = r.material !== null;
+    return { material: solid ? r.material : col.tpl.airMaterial, state: solid ? STATE.solid : STATE.gas, selfSupport: false, kind: r.stairs ? CELL_KIND.stairs : null, ceiling: r.ceiling, zone: r.zone };
+  };
+}
+
 /**
  * kernelApi `gridView(engine, state, {w, region: {x, y}} | {w, cells: {x0, y0, z0, x1, y1, z1}})`（卷五 §3.1 :313）：纯读，结果只由生成输入与（当日有效输入版本）决定，
  * 与该区格此刻在不在现场泡里无关（§4.1 规则 17）；不缓存、不写状态。
@@ -375,6 +432,7 @@ export function gridView(engine, state, spec) {
   const terrainOf = terrainEntryOf(engine);
   const cps = controlPointsOf(grid, plan, rp.rows);
   const flagOf = materialFlagReader(engine, state);
+  const bctx = buildingCtx(engine, state, rp);
   const memo = new Map(); // 本次调用内相邻列共用的格点噪声（只省哈希）
   const regions = new Map(); // 本次调用内的区格事实与模板、格块
   const out = [];
@@ -399,17 +457,20 @@ export function gridView(engine, state, spec) {
       }
       if (reg === null) continue;
       const surf = reg.unknown || reg.entry === null ? null : columnSurface(grid, worldSeed, plan.w, reg.cps, reg.entry, x, y, memo);
+      const building = buildingColumn(bctx, grid, plan.w, x, y); // 建筑蓝图一层（叠在体积凿空之后、存量形态与差分之前，卷五 §4.3 规则 10）
       for (let z = z0; z <= z1; z += 1) {
         if (surf === null) { out.push(Object.freeze({ x, y, z, known: false, material: null, state: null, selfSupport: null, kind: null, fixture: null, mark: null, ceiling: null, blocksSky: null, bearsLoad: null, standable: null, zone: reg.f.owner })); continue; }
         // 水体足迹里的区格：地表以上画水，要读水体账户（卷二十 §4.6.1），代码里还没有账户读数——读不到就是未知，不能报成干地（卷五 :660 水只画在地表之上）。
         const inWater = reg.f.waterKind !== null;
         if (inWater && z > surf.z) { out.push(Object.freeze({ x, y, z, known: false, material: null, state: null, selfSupport: null, kind: null, fixture: null, mark: null, ceiling: null, blocksSky: null, bearsLoad: null, standable: null, zone: reg.f.owner })); continue; }
-        const col = { x, y, surfaceZ: surf.z, tpl: reg.tpl, rockMaterial: null, water: null, blocks: reg.blocks, overlay: null };
+        const col = { x, y, surfaceZ: surf.z, tpl: reg.tpl, rockMaterial: null, water: null, blocks: reg.blocks, overlay: building === null ? null : buildingOverlay(building), overlayTop: building === null ? undefined : building.top };
         const c = cellAt(col, z);
+        if (c.unknown) { out.push(Object.freeze({ x, y, z, known: false, material: null, state: null, selfSupport: null, kind: null, fixture: null, mark: null, ceiling: null, blocksSky: null, bearsLoad: null, standable: null, zone: c.zone || reg.f.owner })); continue; }
         const fl = cellFlags(col, z, flagOf);
         // 水体足迹里地表层及以下的格：头顶有没有冰（遮天）也是未读的水层，已确定遮天为真的不变，否则未知。
         if (inWater && fl.blocksSky !== true) fl.blocksSky = null;
-        out.push(Object.freeze({ x, y, z, known: true, material: c.material, state: c.state, selfSupport: c.selfSupport, kind: null, fixture: null, mark: null, ceiling: null, blocksSky: fl.blocksSky, bearsLoad: fl.bearsLoad, standable: fl.standable, zone: reg.f.owner }));
+        const here = building === null ? null : building.at(z);
+        out.push(Object.freeze({ x, y, z, known: true, material: c.material, state: c.state, selfSupport: c.selfSupport, kind: c.kind || null, fixture: here === null ? null : here.fixture, mark: null, ceiling: c.ceiling || null, blocksSky: fl.blocksSky, bearsLoad: fl.bearsLoad, standable: fl.standable, zone: c.zone || reg.f.owner }));
       }
     }
   }
@@ -478,8 +539,9 @@ export function placeNeighbors(engine, state, placeId) {
 }
 
 // 一地的出口（卷五 §4.1 规则 9）：路（一端在 P 的包含子树内、另一端在外的路网边，含门边）与开阔边界（足迹边界上与外侧相邻的区格）；
-// 门（建筑、房间蓝图外壳上的门格与开口窗格）归 G7，本卡不出。P 在离场子树内为空。排序按 (种类、区格序号 (x, y)、边的两端)。
-function exitsOf(engine, kids, rp, placeId) {
+// 门（G7）：建筑、房间由蓝图门格派生（正门、入口、此刻开口的窗格、破洞格；房间取与自己四邻相接的开口，内门归建筑行），一处开口一项，cell 取开口的首格，不建路网边。
+// P 在离场子树内为空。排序按 (种类、区格序号 (x, y)、边的两端、格坐标)。
+function exitsOf(engine, state, kids, rp, placeId) {
   if (rp.offstage.has(placeId)) return [];
   const grid = engine.rules && engine.rules.grid;
   const seed = worldSeedOf(engine);
@@ -507,6 +569,13 @@ function exitsOf(engine, kids, rp, placeId) {
   // 开阔边界：区域足迹。
   const plan = planOfRow(rp, placeId);
   if (plan) for (const c of openBoundaryCells(plan, placeId)) out.push({ inner: placeId, kind: EXIT_KIND.open, via: null, regionCell: c, cell: posOf(plan, c) });
+  // 门：建筑、房间足迹（蓝图门格）。
+  if (rp.plans.size > 0) {
+    for (const d of doorExitsOf(buildingCtx(engine, state, rp), placeId)) {
+      const first = d.cells[0];
+      out.push({ inner: placeId, kind: EXIT_KIND.door, via: null, regionCell: regionOfPos(grid, first), cell: Object.freeze({ w: d.w, x: first.x, y: first.y, z: first.z, coarse: false }) });
+    }
+  }
   const key = (x) => (x.regionCell ? [x.regionCell.x, x.regionCell.y] : [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER]);
   out.sort((p, q) => {
     if (p.kind !== q.kind) return EXIT_ORDER.indexOf(p.kind) - EXIT_ORDER.indexOf(q.kind);
@@ -514,7 +583,9 @@ function exitsOf(engine, kids, rp, placeId) {
     const kq = key(q);
     if (kp[0] !== kq[0]) return kp[0] - kq[0];
     if (kp[1] !== kq[1]) return kp[1] - kq[1];
-    return cmp(p.via ? `${p.via.from}|${p.via.to}|${p.via.waterway}` : '', q.via ? `${q.via.from}|${q.via.to}|${q.via.waterway}` : '');
+    const byVia = cmp(p.via ? `${p.via.from}|${p.via.to}|${p.via.waterway}` : '', q.via ? `${q.via.from}|${q.via.to}|${q.via.waterway}` : '');
+    if (byVia !== 0 || !p.cell || !q.cell) return byVia;
+    return cmp(p.cell.x, q.cell.x) || cmp(p.cell.y, q.cell.y) || cmp(p.cell.z, q.cell.z);
   });
   return out.map((x) => Object.freeze(x));
 }
@@ -558,7 +629,7 @@ export function placeView(engine, state, placeId) {
     dims: Object.freeze(dims),
     tree: Object.freeze({ ancestors: Object.freeze(ancestors), children: Object.freeze([...children]), depth: ancestors.length }),
     footprint,
-    exits: Object.freeze(exitsOf(engine, kids, rp, placeId)),
+    exits: Object.freeze(exitsOf(engine, state, kids, rp, placeId)),
   });
 }
 
@@ -1078,6 +1149,9 @@ export function checkPlaceTable(view) {
     const mt = view.tables instanceof Map ? view.tables.get(MATERIAL) : undefined;
     const hasMaterial = (code) => Boolean(mt && mt.flat && mt.flat.rows instanceof Map && mt.flat.rows.has(code));
     if (idx instanceof Map) errors.push(...checkGenTemplates(idx, hasMaterial, true));
+    // 建筑形制族（卷十九 §2.4 :203，A19-5.3）：平面字段与取值域；建筑行的蓝图可行、锚点在父足迹内、兄弟足迹不相交（卷五 §4.1 规则 11，E-GRID-FOOTPRINT-OUTSIDE-PARENT、E-GRID-SIBLING-OVERLAP）。
+    if (idx instanceof Map) errors.push(...checkBlueprintForms(idx, view.rules && view.rules.facility ? view.rules.facility.blueprint : undefined));
+    errors.push(...checkBuildingRows({ rows, rp, idx, rules: view.rules, units: view.env ? view.env.units : undefined, zoneOfRegion: rp.plans.size > 0 ? (pos) => zoneOfPos(grid, rp.plans, pos) : null }));
   }
   // 规则 4：边节。
   const def = t.doc[SECTION.edgeStruct];

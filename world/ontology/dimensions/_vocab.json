@@ -12,6 +12,7 @@
   },
   "attach_slot": {"closed": false, "entries": {}, "prefix": "aslot_"},
   "batch": {"closed": false, "entries": {}, "prefix": "batch_"},
+  "bform": {"closed": false, "entries": {}, "prefix": "bldform_"},
   "bulkform": {
    "closed": false,
    "entries": {
@@ -2188,6 +2189,7 @@
    },
    "prefix": "res_"
   },
+  "roomrole": {"closed": false, "entries": {}, "prefix": "roomrole_"},
   "season": {
    "closed": false,
    "entries": {

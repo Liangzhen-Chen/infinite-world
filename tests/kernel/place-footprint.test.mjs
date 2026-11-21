@@ -45,6 +45,7 @@ function load({ rows = {}, edges = [], spaces, cellclass = FULL_CELLCLASS, heade
     v.families.water.entries = { water_test_fresh: { navigable: false } };
     v.families.cellclass.entries = cellclass === null ? {} : cellclass;
     v.families.gentemplate.entries = GEN_TEMPLATE;
+    v.families.bform.entries = { bldform_test: { walled: true, aspect: 1, storeyBase: 0, roofed: true, deck: false, windowEvery: 0, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.2, rooms: [] } };
     for (const c of relocatable) v.families.component.entries[c].relocatable = true;
     writeUnderTempRoot(tmp, '_vocab.json', JSON.stringify(v));
     return loadWorld(ROOT, { dimensionsDir: relative(ROOT, tmp) });
@@ -89,8 +90,11 @@ test('byFootprint 必填：区域足迹缺 coord、缺 anchorElevationM、缺 te
   }
 });
 
+// 挂 comp_facility 的行另须带卷十九 §2.1 的必填列（G7 第一步登记）：形制、外包宽深、层数、完好度、破口列表。
+const BLD_COLUMNS = { form: 'bldform_test', planCells: { widthCells: 6, depthCells: 6 }, storeys: 1, condition: 1, breaks: [], materialKg: { mat_granite: 1000 } };
+
 test('byFootprint 禁填：建筑足迹行（挂 comp_facility）写 coord、terrain、boundary、targetAreaM2 一律 E-DIM-DOMAIN-RANGE；区域足迹行写 anchor、facing、spanZ 同样', () => {
-  const bld = { classes: ['comp_facility'], anchor: { w: 0, x: 10, y: 10, z: 0, coarse: false }, facing: 2 };
+  const bld = { classes: ['comp_facility'], anchor: { w: 0, x: 10, y: 10, z: 0, coarse: false }, facing: 2, ...BLD_COLUMNS };
   const ok = GRID4();
   ok.rows.loc_h = row('loc_a', bld);
   assert.equal(load(ok).ok, true, load(ok).text);
@@ -125,7 +129,7 @@ test('byFootprint：建筑行缺 anchor、facing 即 E-DIM-REQUIRED-MISSING；an
 
 test('房间足迹：挂 comp_zone 且有挂 comp_facility 的祖先才是房间（terrain、coord 禁填）；没有建筑祖先的 comp_zone 按区域足迹对待', () => {
   const g = GRID4();
-  g.rows.loc_h = row('loc_a', { classes: ['comp_facility'], anchor: { w: 0, x: 10, y: 10, z: 0, coarse: false }, facing: 0 });
+  g.rows.loc_h = row('loc_a', { classes: ['comp_facility'], anchor: { w: 0, x: 10, y: 10, z: 0, coarse: false }, facing: 0, ...BLD_COLUMNS });
   g.rows.loc_room = row('loc_h', { classes: ['comp_zone'] });
   assert.equal(load(g).ok, true, load(g).text);
   g.rows.loc_room = row('loc_h', { classes: ['comp_zone'], terrain: 'terrain_river' });

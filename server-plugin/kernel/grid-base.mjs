@@ -12,6 +12,8 @@ import { blockAt } from './grid-template.mjs';
 
 /** 材料的物态栏（卷三甲 :128 分态布尔的三栏）。 */
 export const STATE = Object.freeze({ solid: 'solid', liquid: 'liquid', gas: 'gas' });
+/** 格种类（卷五 §4.5 规则 5：楼梯、梯、坡；本卡只有蓝图给的楼梯，梯、坡归洞穴生成器）。格种类不是材料：楼梯格本格可立足、可通行。 */
+export const CELL_KIND = Object.freeze({ stairs: 'stairs' });
 /** 材料的三个格侧布尔维度名（卷三甲 :128–:130）。 */
 export const FLAG = Object.freeze({ opaque: 'opaque', blocksSky: 'blocksSky', bearsLoad: 'bearsLoad' });
 
@@ -164,6 +166,7 @@ function baseCell(col, z) {
 function columnTop(col) {
   let top = col.surfaceZ;
   if (col.water !== null && col.water.levelZ > top) top = col.water.levelZ;
+  if (typeof col.overlayTop === 'number' && col.overlayTop > top) top = col.overlayTop; // overlay 叠层（建筑蓝图）所到的最高层
   for (const b of col.blocks) if (b.x0 <= col.x && col.x <= b.x1 && b.y0 <= col.y && col.y <= b.y1 && b.z1 > top) top = b.z1;
   return top;
 }
@@ -174,6 +177,7 @@ function columnTop(col) {
  * @param {{material: string, state: string}} cell @param {string} flag
  */
 function flagOfCell(flagOf, cell, flag) {
+  if (cell.unknown) return null; // overlay 标未知的格：材料读不到，标志未知
   return flagOf(cell.material, cell.state, flag);
 }
 
@@ -192,16 +196,32 @@ export function cellFlags(col, z, flagOf) {
   let sky = false;
   let unknownAbove = false;
   const top = columnTop(col);
-  for (let k = z + 1; k <= top; k += 1) {
-    const v = flagOfCell(flagOf, cellAt(col, k), FLAG.blocksSky);
+  // 顶面（楼板、屋面、桥面，只来自蓝图层，卷五 §4.5 规则 1）是该格的上表面：遮住它以下各格的天，所以本格自己的顶面也算；顶面的料按固态读分态布尔。
+  for (let k = z; k <= top; k += 1) {
+    const cell = cellAt(col, k);
+    if (cell.unknown) { unknownAbove = true; continue; } // 依赖未登记规则表的格（劣化表缺失）：材料与顶面都未知，往下传
+    if (cell.ceiling) {
+      const v = flagOf(cell.ceiling, STATE.solid, FLAG.blocksSky);
+      if (v === true) { sky = true; break; }
+      if (v === null) unknownAbove = true;
+    }
+    if (k === z) continue;
+    const v = flagOfCell(flagOf, cell, FLAG.blocksSky);
     if (v === true) { sky = true; break; }
     if (v === null) unknownAbove = true;
   }
   const blocksSky = sky ? true : unknownAbove ? null : false;
   const bearsLoad = flagOfCell(flagOf, here, FLAG.bearsLoad);
   const passable = here.state === STATE.gas;
-  const underfoot = flagOfCell(flagOf, below, FLAG.bearsLoad);
-  const standable = !passable ? false : underfoot;
+  // 下一格能承托：材料能承托，或下一格有能承托的顶面（楼板托住正上方一格，卷五 §4.5 规则 1、5）；楼梯格（格种类，不是材料）本格可立足。
+  let underfoot = flagOfCell(flagOf, below, FLAG.bearsLoad);
+  if (underfoot !== true && below.unknown) underfoot = null;
+  else if (underfoot !== true && below.ceiling) {
+    const c = flagOf(below.ceiling, STATE.solid, FLAG.bearsLoad);
+    if (c === true) underfoot = true;
+    else if (c === null && underfoot === false) underfoot = null;
+  }
+  const standable = !passable ? false : here.kind === CELL_KIND.stairs ? true : underfoot;
   return { blocksSky, bearsLoad, standable };
 }
 

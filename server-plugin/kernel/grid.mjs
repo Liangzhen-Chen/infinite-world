@@ -95,6 +95,28 @@ export function stockCellKey(worldSeed, unit, stock, w, x, y, z) {
   return key;
 }
 
+/**
+ * 建筑按完好度派生的破口次序键（卷十九 §4.1 规则 3，hash(世界种子, 建筑行 id, 序代号, 该处最外一格的格序号)）：序代号是规则表 wear.json 的 wallOrderCode、roofOrderCode，
+ * 只作哈希的一段、规则不对它分支；格序号取蓝图局部（层、v、u）的唯一下标（blueprint.mjs）。同输入同结果，与遍历次序无关。
+ * @param {string} worldSeed @param {string} placeId @param {string} orderCode @param {number} cellIndex
+ * @returns {string} 64 位小写十六进制
+ */
+export function breachOrderKey(worldSeed, placeId, orderCode, cellIndex) {
+  const key = gridSeed('grid', 'breach', worldSeed, placeId, orderCode, cellIndex);
+  return key;
+}
+
+/**
+ * 建筑、房间 coarse 落格的细格次序键（卷五 §4.1 规则 14 :501，hash(seedKey, 格序号)，细格格序号含层，取格的整数坐标 (x, y, z)，先例 stockCellKey）：
+ * 与区格落格键 landOrderKey 同一调用方给的 seedKey，抽取点另登（grid/landcl）。同输入同结果，与遍历次序无关。
+ * @param {string} seedKey 调用方给的种子键 @param {number} w @param {number} x @param {number} y @param {number} z
+ * @returns {string} 64 位小写十六进制
+ */
+export function landCellKey(seedKey, w, x, y, z) {
+  const key = gridSeed('grid', 'landcl', seedKey, w, x, y, z);
+  return key;
+}
+
 // ---------- 起伏噪声（卷五 §4.3 规则 8「起伏」） ----------
 
 // 起伏噪声的格点哈希 hash(世界种子, w, 格点, k)（卷五 §4.3 规则 8）：也是种子抽取点，经 gridSeed 以字面量流/抽取点代号登记（seed-keys.json 第二行，R27-8.1）。

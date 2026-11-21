@@ -151,7 +151,7 @@ test('regionLevel：挂 comp_region 的行必填，取 juris 族条目；juris �
 });
 
 test('aperture：挂 comp_enclosure 的行必填，取值域 [0,1]', () => {
-  const enc = (extra) => ({ ...TREE, bld_house: row('loc_a', 50, { classes: ['comp_enclosure'], skyExposure: 0, ...extra }) });
+  const enc = (extra) => ({ ...TREE, bld_house: row('loc_a', 50, { classes: ['comp_enclosure'], skyExposure: 0, wallThicknessM: 0.3, ...extra }) });
   assert.equal(load({ rows: enc({ aperture: 0 }) }).ok, true);
   assert.ok(has(load({ rows: enc({}) }), 'E-DIM-REQUIRED-MISSING'));
   assert.ok(has(load({ rows: enc({ aperture: 1.5 }) }), 'E-DIM-DOMAIN-RANGE'));

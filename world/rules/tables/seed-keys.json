@@ -50,6 +50,22 @@
      "role": "role_seed",
      "prefix": "grid_",
      "purpose": "存量在区格内取格的次序键 hash(世界种子, U, x, 格序号)（卷五 §4.7 规则 12 :912）：成分世界种子、生成流代号 grid、存量单元 U、存量 x、格空间号 w、格坐标 x、y、z；不放版本成分"
+    },
+    {
+     "file": "kernel/grid.mjs",
+     "stream": "grid",
+     "site": "breach",
+     "role": "role_seed",
+     "prefix": "grid_",
+     "purpose": "建筑按完好度派生的破口与屋面缺口的次序键 hash(世界种子, 建筑行 id, 序代号, 该处最外一格的格序号)（卷十九 §4.1 规则 3、A27-8.1.b）：成分世界种子、生成流代号 grid、建筑行 id、序代号（wear.json 的 wallOrderCode 或 roofOrderCode）、蓝图格下标；不放版本成分"
+    },
+    {
+     "file": "kernel/grid.mjs",
+     "stream": "grid",
+     "site": "landcl",
+     "role": "role_seed",
+     "prefix": "grid_",
+     "purpose": "建筑、房间 coarse 落格的细格次序键 hash(seedKey, 格序号)（卷五 §4.1 规则 14 :501）：成分调用方给的种子键、生成流代号 grid、格空间号 w、格坐标 x、y、z（格序号含层）；不放版本成分"
     }
    ]
   }

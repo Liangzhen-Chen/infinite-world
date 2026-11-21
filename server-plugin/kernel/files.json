@@ -1,5 +1,6 @@
 [
  "server-plugin/kernel/advance-registry.mjs",
+ "server-plugin/kernel/blueprint.mjs",
  "server-plugin/kernel/bytes.mjs",
  "server-plugin/kernel/calendar.mjs",
  "server-plugin/kernel/climate.mjs",
@@ -42,6 +43,7 @@
  "server-plugin/kernel/mount.mjs",
  "server-plugin/kernel/named-struct-match.mjs",
  "server-plugin/kernel/named-structs.mjs",
+ "server-plugin/kernel/place-building.mjs",
  "server-plugin/kernel/place-plan.mjs",
  "server-plugin/kernel/place.mjs",
  "server-plugin/kernel/recipe.mjs",

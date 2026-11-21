@@ -44,6 +44,7 @@ function load({ rows = {}, edges = [], spaces, cellclass = FULL_CELLCLASS, heade
     v.families.water.entries = { water_test_fresh: { navigable: false } };
     v.families.cellclass.entries = cellclass === null ? {} : cellclass;
     v.families.gentemplate.entries = GEN_TEMPLATE;
+    v.families.bform.entries = { bldform_test: { walled: true, aspect: 1, storeyBase: 0, roofed: true, deck: false, windowEvery: 0, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.2, rooms: [] } };
     for (const c of relocatable) v.families.component.entries[c].relocatable = true;
     writeUnderTempRoot(tmp, '_vocab.json', JSON.stringify(v));
     return loadWorld(ROOT, { dimensionsDir: relative(ROOT, tmp) });
@@ -145,7 +146,9 @@ test('体积足迹 spanZ 取值域 [1,null]、targetAreaM2 取值域 [1,null]：
 
 // ---------- 建筑足迹行（卷五 §2.1 :99、:100） ----------
 
-const bldRow = (extra = {}) => row('loc_a', { classes: ['comp_facility'], anchor: { w: 0, x: 10, y: 10, z: 0, coarse: false }, facing: 2, ...extra });
+// 挂 comp_facility 的行另须带卷十九 §2.1 的必填列（G7 第一步登记）：形制、外包宽深、层数、完好度、破口列表。
+const BLD_COLUMNS = { form: 'bldform_test', planCells: { widthCells: 6, depthCells: 6 }, storeys: 1, condition: 1, breaks: [], materialKg: { mat_granite: 1000 } };
+const bldRow = (extra = {}) => row('loc_a', { classes: ['comp_facility'], anchor: { w: 0, x: 10, y: 10, z: 0, coarse: false }, facing: 2, ...BLD_COLUMNS, ...extra });
 
 test('建筑足迹 facing 取值域 [0,7]：越界、负数、小数、null 拒收；anchor 缺 coarse、anchor 为 null 拒收；完整合法值放行', () => {
   mustPass('建筑足迹完整合法值', (g) => { g.rows.loc_h = bldRow(); });

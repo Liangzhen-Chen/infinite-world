@@ -149,6 +149,58 @@
    "source": "卷五 §2.1 :98（作者手画的区域足迹：区格序号的集合，非空时覆盖派生划分，§4.1 规则 10；只许区域足迹的行写，kernel/place.mjs 加载校验按足迹种类核禁填）",
    "type": "list"
   },
+  "breaks": {
+   "domain": {},
+   "modifiable": false,
+   "of": {
+    "fields": {
+     "level": {
+      "domain": [
+       null,
+       null
+      ],
+      "type": "integer",
+      "unit": "count"
+     },
+     "remainL": {
+      "domain": [
+       1,
+       null
+      ],
+      "type": "integer",
+      "unit": "L"
+     },
+     "u": {
+      "domain": [
+       null,
+       null
+      ],
+      "type": "integer",
+      "unit": "count"
+     },
+     "v": {
+      "domain": [
+       null,
+       null
+      ],
+      "type": "integer",
+      "unit": "count"
+     }
+    },
+    "required": [
+     "u",
+     "v",
+     "level",
+     "remainL"
+    ],
+    "type": "struct"
+   },
+   "onUnknown": "gap",
+   "owner": "卷十九 §2.1",
+   "required": "byClass:comp_facility",
+   "source": "卷十九 §2.1 :117；卷二 §5.6 :1816（现场被亲手拆开、尚未补上的结构元；u、v、level 是蓝图局部坐标与层序，remainL 是这一处还差几升没补；建行事务显式写空列表；写者 facilities.mjs 的 breakStructure，写入路径归卷十九建造卡与 G9，本卡只读它派生破口）",
+   "type": "list"
+  },
   "centroid": {
    "derived": "卷五 §4.1.3 规则 13：足迹内区格中心坐标的平均（定点，向零截断）；由 kernel/place.mjs placeView 求（足迹划分 kernel/footprint.mjs）",
    "fields": {
@@ -186,6 +238,21 @@
    "source": "李白 11-19 15:5x ⑤（天气单元引用一个气候原型，季节曲线挂原型；原型表 rules.climateProto）；卷二十 §2.7 原表无此字段，6-29 改一轮新增。没引或所引原型未建：weightRX 读 env.seasonCurve 缺读数，当日天气按未知并报缺口 weather_climate_proto，不借别的原型",
    "type": "ref",
    "vocab": "climate_proto"
+  },
+  "condition": {
+   "domain": [
+    0,
+    1
+   ],
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷十九 §2.1",
+   "precision": 8,
+   "required": "byClass:comp_facility",
+   "stockMode": "extScale",
+   "source": "卷十九 §2.1 :118（完好度；实例维度，逐日劣化与改写式归卷十九 §4.1 规则 6，卷二 §3.3 第 6 条扩展标度 extScale；本卡的蓝图破口按它派生，§4.1 规则 3）；卷二 §5.6 :1814",
+   "type": "number",
+   "unit": "fraction"
   },
   "coord": {
    "fields": {
@@ -294,6 +361,15 @@
    "type": "number",
    "unit": "fraction"
   },
+  "form": {
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷十九 §2.1",
+   "required": "byClass:comp_facility",
+   "source": "卷十九 §2.1 :107（形制，bform 族 bldform_，开放；条目字段 §2.4 :203，由 planBlueprint 读，§4.5 规则 7）",
+   "type": "enum",
+   "vocab": "bform"
+  },
   "hiddenness": {
    "domain": [
     0,
@@ -315,6 +391,29 @@
    "required": "always",
    "source": "卷二 §5.6 :1781 ledgerHolder；卷六 §2.1 holder",
    "type": "boolean"
+  },
+  "materialKg": {
+   "combine": "sum",
+   "domain": {},
+   "key": {
+    "kind": "material",
+    "type": "ref"
+   },
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷十九 §2.1",
+   "required": "byClass:comp_facility",
+   "source": "卷十九 §2.1 :108（围护里每种料的质量，千克，原值，各值 [0, null]；份额与总质量读时派生；蓝图各结构元派到的料由它与各料 density 定，§4.5 规则 8；加减写者归卷十九建造卡，本卡只读）",
+   "type": "map",
+   "value": {
+    "domain": [
+     0,
+     null
+    ],
+    "precision": 4,
+    "type": "number",
+    "unit": "kg"
+   }
   },
   "parent": {
    "kind": "place",
@@ -339,6 +438,32 @@
    "source": "卷二十 §2.7 :361（comp_weather_cell）",
    "type": "number",
    "unit": "mm"
+  },
+  "planCells": {
+   "fields": {
+    "depthCells": {
+     "domain": [
+      1,
+      4096
+     ],
+     "type": "integer",
+     "unit": "count"
+    },
+    "widthCells": {
+     "domain": [
+      1,
+      4096
+     ],
+     "type": "integer",
+     "unit": "count"
+    }
+   },
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷十九 §2.1",
+   "required": "byClass:comp_facility",
+   "source": "卷十九 §2.1 :116；卷二 §5.6 :1815（蓝图外包矩形的宽与深，细格计；建成时由意图 areaM2 与形制 aspect 算出写入，planCellsOf 见 §4.5 规则 7 第 1 点，此后蓝图只读它；原地翻修整值重写，可移动建筑收起展开不改）",
+   "type": "struct"
   },
   "precipLiquid": {
    "kind": "material",
@@ -382,6 +507,15 @@
    "type": "enum",
    "vocab": "juris"
   },
+  "roomRole": {
+   "modifiable": false,
+   "onUnknown": "skip",
+   "owner": "卷十九 §2.1",
+   "required": "never",
+   "source": "卷十九 §2.1 :113（房间行在所属形制 rooms 列表里担的角色，roomrole 族 roomrole_，只带代号与 labels；建行函数生成房间行时写入；蓝图里它指明哪个房间，规则里不对任何代号分支；原写 byClass:comp_zone nullable，此处 never 加 onUnknown skip，因建筑行与别的房间行不带它）",
+   "type": "ref",
+   "vocab": "roomrole"
+  },
   "seasonScheme": {
    "allowExplicit": true,
    "derived": "卷二十 §4.4.3：由 rules.season.schemeRules 按纬度派生（schemeRules 未建，rules.season.unbuilt），单元可显式指定",
@@ -417,6 +551,19 @@
    "owner": "卷五 §2.1",
    "required": "byFootprint:volume",
    "source": "卷五 §2.1 :101（体积足迹竖向占几层，§4.1 规则 11）；卷二 §5.6 :1793",
+   "type": "integer",
+   "unit": "count"
+  },
+  "storeys": {
+   "domain": [
+    1,
+    64
+   ],
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷十九 §2.1",
+   "required": "byClass:comp_facility",
+   "source": "卷十九 §2.1 :115（层数，含形制 storeyBase 以下的地下层；蓝图按它逐层生成，每层占卷五的一个层号，§4.5 规则 7）",
    "type": "integer",
    "unit": "count"
   },
@@ -483,6 +630,20 @@
    "required": "never",
    "source": "卷五 §2.1 :101（主会话裁定 7）；§4.5.3 规则 1",
    "type": "boolean"
+  },
+  "wallThicknessM": {
+   "domain": [
+    0,
+    20
+   ],
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷十九 §2.1",
+   "precision": 4,
+   "required": "byClass:comp_enclosure",
+   "source": "卷十九 §2.1 :114（围护厚度，取值域 (0, 20]，建成时写入、此后不变；蓝图里外墙占 ceil(wallThicknessM ÷ cellM) 格厚，§4.5 规则 7；下界开区间由蓝图入口与建造卡核，登记域取闭区间 [0, 20]）",
+   "type": "number",
+   "unit": "m"
   },
   "waterAccess": {
    "domain": {},
