@@ -9,7 +9,10 @@ import { gradedCells } from '../../server-plugin/kernel/validate/cell-grades.mjs
 import { testTempRoot, writeUnderTempRoot } from '../accept/temp-root.mjs';
 
 // 测试材料行逐格记 designed（卷三甲 M-22 键集合须等于填了值的格；同 item-world.mjs）。
-const gradedRow = (dimensions, row) => ({ ...row, cellGrades: Object.fromEntries([...gradedCells(dimensions, row).keys()].map((k) => [k, { grade: 'designed', citation: null, basis: '测试行' }])) });
+// 材料四个分态布尔 always 必填（卷三甲 :128–:131，G6 修改轮 M1）：测试行没写的，补一组通用的（固栏真、液气栏假）。
+const FLAG_DEFAULT = { solid: true, liquid: false, gas: false };
+const withFlags = (row) => ({ opaque: { ...FLAG_DEFAULT }, blocksSky: { ...FLAG_DEFAULT }, bearsLoad: { ...FLAG_DEFAULT }, airtight: { ...FLAG_DEFAULT }, ...row });
+const gradedRow = (dimensions, row0) => { const row = withFlags(row0); return { ...row, cellGrades: Object.fromEntries([...gradedCells(dimensions, row).keys()].map((k) => [k, { grade: 'designed', citation: null, basis: '测试行' }])) }; };
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DIMS = 'world/ontology/dimensions';

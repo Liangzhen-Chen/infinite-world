@@ -28,6 +28,7 @@
   "dockind": {"closed": false, "entries": {}, "prefix": "dockind_"},
   "emphasis": {"closed": false, "entries": {}, "prefix": "emph_"},
   "fault": {"closed": false, "entries": {}, "prefix": "fault_"},
+  "gentemplate": {"closed": false, "entries": {}, "prefix": "gtpl_"},
   "layer": {"closed": false, "entries": {}, "prefix": "layer_"},
   "matgroup": {
    "closed": false,
@@ -601,6 +602,7 @@
    "entries": {
     "matcat_ceramic": {"materialClass": "class_ceramic"},
     "matcat_char": {"materialClass": "class_char"},
+    "matcat_gas": {"materialClass": null},
     "matcat_grain": {"materialClass": "class_grain"},
     "matcat_paper": {"materialClass": "class_paper"},
     "matcat_supernatural": {"materialClass": null},

@@ -82,7 +82,9 @@ export function personFixture() {
     doc.families.category.entries.category_test_other = { stockSlot: false };
     doc.families.trait.entries.trait_test_a = { heritability: 0.5, residualFactor: 0.9354, visible: true, bands: 4 };
     // 格空间里每个区格要有 cellclass 条目成立（卷五 §4.3 规则 9：数据给全兜底条目）：测试给一个不限地形与坡度的陆地兜底。
-    doc.families.cellclass.entries.cellclass_test_land = { terrains: Object.keys(doc.families.terrain.entries), waterAny: [], slopeRange: [0, 1], onRoad: null, inSettlement: null, priority: 1 };
+    doc.families.cellclass.entries.cellclass_test_land = { terrains: Object.keys(doc.families.terrain.entries), waterAny: [], slopeRange: [0, 1], onRoad: null, inSettlement: null, priority: 1, genTemplate: 'gtpl_test_land' };
+    // G6 起 cellclass 必有 genTemplate（卷五 §2.2；卷十 :118）：配一个测试模板。
+    doc.families.gentemplate.entries.gtpl_test_land = { surfaceMaterial: 'mat_soil', airMaterial: 'mat_air', soilLayers: 1, soilMaterial: 'mat_soil', rockMaterial: 'mat_granite', blocks: [] };
     doc.families.purpose.entries.purpose_test_shelf ={ spendable: true, locksFor: null, visibleToMarket: true, trackOutflow: false };
   };
   // 个体表：加测试维度 heir（后继表达式读它）与两个类别行：class_test_heir 有复生窗口 3 日，class_test_mortal 无窗口（0）。

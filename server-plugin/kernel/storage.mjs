@@ -8,9 +8,9 @@
 
 import { clone } from './clone.mjs';
 import { invalidateMemo } from './memo.mjs';
-import { statePathSegments, pathTypeShape, isSeedKey } from './handles/keys.mjs';
+import { statePathSegments, pathTypeShape, isSeedKey, isGridKeySeg } from './handles/keys.mjs';
 import { CODE_RE } from './handles/vocab-handle.mjs';
-import { compareSpecificity, KEY_NONENTITY, KEY_DIMKEY, KEY_SEEDKEY, KEY_HANDLE } from './load/state-owners.mjs';
+import { compareSpecificity, KEY_NONENTITY, KEY_DIMKEY, KEY_SEEDKEY, KEY_HANDLE, KEY_GRIDKEY } from './load/state-owners.mjs';
 import { registry } from './vocab.mjs';
 import { KernelError, codeOf } from './errors.mjs';
 import { currentTransaction } from './transaction.mjs';
@@ -24,10 +24,11 @@ const PATCH = Object.freeze({ set: 'set', delete: 'delete' });
 const UNSAFE_KEY_LIST = ['__proto__', 'prototype', 'constructor'];
 
 /**
- * @typedef {{pattern: string, segs: string[], type: string, shape: import('./handles/keys.mjs').PathTypeShape | null, entitySlots: number[], entityKinds: string[][], dimSlot: number, seedSlots: {slot: number, kinds: string[]}[]}} PathRec
+ * @typedef {{pattern: string, segs: string[], type: string, shape: import('./handles/keys.mjs').PathTypeShape | null, entitySlots: number[], entityKinds: string[][], dimSlot: number, seedSlots: {slot: number, kinds: string[]}[], gridSlots: number[]}} PathRec
  * entitySlots：该模式第几个 `*` 段（从 0 计）的 keyKinds 项含实体 kind（(a) 单个或 (b) 列表里有实体 kind；(c) 项不算），用于"目标实体未终止"核对。
  * entityKinds：与 entitySlots 一一对应的该段可取的实体 kind；dimSlot：keyKinds 项为 dimKey 的 `*` 段（没有为 -1），dimension 路径的维度名在这一段。
  * seedSlots：keyKinds 项为 seedKey（或 (b) 列表含 seedKey）的 `*` 段及同列的实体 kind，写入时按 SeedKey 文法核。
+ * gridSlots：keyKinds 项为 gridKey 的 `*` 段下标（cells/fieldCells 的前三段），写入时三段合起来按 isGridKeySeg 核。
  * @typedef {{pattern: string, segs: string[], create: string[], rewrite: string | null, viaRelocate: boolean}} WriterRec
  */
 
@@ -42,6 +43,24 @@ const RUNTIME_SEG_GRAMMAR = Object.freeze({
   [KEY_SEEDKEY]: (reg, v) => isSeedKey(reg, v),
   [KEY_HANDLE]: (_reg, v) => typeof v === 'string' && CODE_RE.test(v),
 });
+
+// gridKey 段的运行期核对要格常数（里块边长），取规则表 rules.grid；kernel/load/world.mjs 每次成功加载随 installStorage 一起装入（同 installScheduler 的先例，重装即覆盖上一次的）。
+// 世界没有登记 rules.grid 时用到即报 E-RULES-UNREGISTERED（不设缺省，卷二 :852）。
+/** @type {null | {cellM: number, regionCellM: number, chunkRegionCells: number}} */
+let gridRules = null;
+
+/**
+ * 交入 rules.grid 供运行期 gridKey 段核对（kernel 组内用，不在 kernelApi）。
+ * @param {{cellM: number, regionCellM: number, chunkRegionCells: number} | null | undefined} grid rules.grid（世界没有登记即 null）
+ */
+export function installGridRules(grid) {
+  gridRules = grid && typeof grid === 'object' ? grid : null;
+}
+
+function gridRulesNow() {
+  if (gridRules === null) throw new KernelError('E-RULES-UNREGISTERED', {}, 'storage: rules.grid is not registered, gridKey segments cannot be checked');
+  return gridRules;
+}
 
 const sorted = (xs) => [...xs].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 const segsOf = (p) => statePathSegments(p) || [];
@@ -66,7 +85,9 @@ export function installStorage(merged) {
       const grammars = members.filter((k) => Object.hasOwn(RUNTIME_SEG_GRAMMAR, k));
       return grammars.length ? [{ slot: i, grammars, kinds: Array.isArray(it) ? it.filter((k) => !nonEntity.has(k)) : [] }] : [];
     });
-    return { pattern, segs: segsOf(pattern), type: merged.pathTypes[pattern], shape: pathTypeShape(merged.pathTypes[pattern]), entitySlots, entityKinds, dimSlot, seedSlots };
+    // gridKey 段（keyKinds (c) 第六个，卷二 :852）：cells/fieldCells 前三段；写入时三段合起来核，不走 RUNTIME_SEG_GRAMMAR 的单段分派。
+    const gridSlots = kk.map((it, i) => (it === KEY_GRIDKEY ? i : -1)).filter((i) => i >= 0);
+    return { pattern, segs: segsOf(pattern), type: merged.pathTypes[pattern], shape: pathTypeShape(merged.pathTypes[pattern]), entitySlots, entityKinds, dimSlot, seedSlots, gridSlots };
   });
   const pPatterns = new Set(paths.map((p) => p.pattern).filter((p) => !text.has(p) && !ledger.has(p)));
   const writers = (merged.writers || []).map((w) => ({ pattern: w.pattern, segs: segsOf(w.pattern), create: [...(w.create || [])], rewrite: w.rewrite, viaRelocate: w.viaRelocate === true }));
@@ -246,6 +267,11 @@ function writePathChecked(state, path, value) {
   for (const { slot, grammars, kinds } of rec.seedSlots) {
     const v = ids[slot];
     if (!grammars.some((g) => RUNTIME_SEG_GRAMMAR[g](registry(), v)) && !kinds.includes(registry().idIndex.get(v))) throw new KernelError('E-PATH-KEYKINDS', { entity: null }, `${rec.pattern}: segment ${JSON.stringify(v)} does not fit ${grammars.join('/')} grammar`);
+  }
+  // gridKey 段（卷二 :852）：三段合起来核——w、里块号、格键都合文法，且格键 (x, y) 算出的里块等于路径里的里块号；不过 E-PATH-KEYKINDS（同 seedKey 整类规则）。
+  if (rec.gridSlots.length) {
+    const gv = rec.gridSlots.map((slot) => ids[slot]);
+    if (!isGridKeySeg(gridRulesNow(), ...gv)) throw new KernelError('E-PATH-KEYKINDS', { entity: null }, `${rec.pattern}: gridKey segments ${JSON.stringify(gv)} do not fit the cells.<w>.<chunk>.<cell> grammar or the cell is not in that chunk`);
   }
   // 卷二十七 R27-5.1：非有限值、负零不得进入状态（E-DET-NONFINITE）；被拒走同一上抛通路，由事务整笔回滚（卷二 §2.6 :499）。
   if (hasNonFinite(value)) throw new KernelError('E-DET-NONFINITE', { entity }, `non-finite number or negative zero written to ${rec.pattern}`);

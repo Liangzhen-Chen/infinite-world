@@ -53,7 +53,7 @@ const DECL = {
   },
   keyKinds: {
     'gauge.*.level': ['gadget'], 'gauge.*.dims.*': ['gadget', 'dimKey'], 'holdings.*.*': ['gadget', 'gadget'], 'purse.*.amount': ['gadget'],
-    'cells.*.*.*': ['seedKey', 'seedKey', 'seedKey'],
+    'cells.*.*.*': ['gridKey', 'gridKey', 'gridKey'], // G6：格差分前三段是 gridKey（卷二 :852），夹具原借 seedKey 占位
     'displayNames.*.seq': [['gadget', 'identityKey']],
   },
   phases: [],
@@ -454,7 +454,7 @@ test('part_by_chunk：覆盖段数不为 4 的 cells 路径模式（更深的 ce
   installStorage({
     ...merged.merged,
     pathTypes: { ...merged.merged.pathTypes, 'cells.*.*.*.*': 'integer:count' },
-    keyKinds: { ...merged.merged.keyKinds, 'cells.*.*.*.*': ['seedKey', 'seedKey', 'seedKey', 'seedKey'] },
+    keyKinds: { ...merged.merged.keyKinds, 'cells.*.*.*.*': ['gridKey', 'gridKey', 'gridKey', 'seedKey'] },
   });
   try {
     assert.throws(() => compileLayout(LAYOUT), (e) => e.code === 'E-SAVE-SHARD-UNCOVERED');

@@ -11,7 +11,7 @@ import { validateDimensions } from '../validate/dimensions-validate.mjs';
 import { mergeStateOwners } from './state-owners.mjs';
 import { installVocab } from '../vocab.mjs';
 import { installHandles } from '../handles/generated.mjs';
-import { installStorage } from '../storage.mjs';
+import { installStorage, installGridRules } from '../storage.mjs';
 import { finalizeInputs, inputsBySystem, resetFinalized } from '../declare.mjs';
 import { codeOf } from '../errors.mjs';
 import { checkLedgerTables, checkSubjectFlagDims } from '../ledger.mjs';
@@ -174,6 +174,7 @@ export function loadWorld(root, opts = {}) {
     if (namedStructsDoc) installNamedStructs(namedStructsDoc); // 命名 struct 登记（卷二 §1.5 :252；kernel/named-structs.mjs，G1 记账第一条）
     installHandles({ vocab: report.vocab, decl, ledgerPaths: owners.merged.ledgerPaths });
     installStorage(owners.merged); // readPath/writePath 运行期核对用的声明表合并结果（kernel/storage.mjs，块 2 第 2-3 张）
+    installGridRules(read.rules.grid); // gridKey 段运行期核对读 rules.grid（里块边长；G6，每次成功加载重装）
     installWeather(weatherRx.trees); // weatherAt 只读加载期编好的 weightRX 树（kernel/weather.mjs，块 6 第 6-28 张）
     installScheduler(read.rules); // schedule 入堆缩放读 rules.clock（kernel/scheduler.mjs，块 4 第 4-2 张）
     installDelegations(decl); // 写者委托登记（systems.*.writeDelegations，卷二 §2.6 第 3 条勘误 1119k16；kernel/transaction.mjs runDelegated）

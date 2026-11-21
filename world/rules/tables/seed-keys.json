@@ -26,6 +26,30 @@
      "role": "role_seed",
      "prefix": "grid_",
      "purpose": "落格次序键 hash(seedKey, 区格序号)（卷五 §4.1 规则 14 landCell）：成分调用方给的 seedKey、生成流代号 grid、格空间号 w、区格 x、区格 y；不放版本成分"
+    },
+    {
+     "file": "kernel/grid.mjs",
+     "stream": "grid",
+     "site": "tplblock",
+     "role": "role_seed",
+     "prefix": "grid_",
+     "purpose": "模板格块第 j 项的抽取键（卷十 R10-2.15 :435，抽取点 site.gen.tpl.block.<j>）：成分区格种子键、生成流代号 grid、块序号 j；不放版本成分"
+    },
+    {
+     "file": "kernel/grid.mjs",
+     "stream": "grid",
+     "site": "stockrg",
+     "role": "role_seed",
+     "prefix": "grid_",
+     "purpose": "存量分到区格的次序键 hash(世界种子, U, x, 区格序号)（卷五 §4.7 规则 12 :911）：成分世界种子、生成流代号 grid、存量单元 U、存量 x、格空间号 w、区格 x、区格 y；不放版本成分"
+    },
+    {
+     "file": "kernel/grid.mjs",
+     "stream": "grid",
+     "site": "stockcl",
+     "role": "role_seed",
+     "prefix": "grid_",
+     "purpose": "存量在区格内取格的次序键 hash(世界种子, U, x, 格序号)（卷五 §4.7 规则 12 :912）：成分世界种子、生成流代号 grid、存量单元 U、存量 x、格空间号 w、格坐标 x、y、z；不放版本成分"
     }
    ]
   }

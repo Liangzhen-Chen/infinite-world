@@ -29,6 +29,13 @@
    "basis": "卷三乙 §4.1.5 例 1 首批标定值"
   },
   {
+   "key": "gasBoilMax",
+   "value": 20,
+   "source": "G6 空气材料行（主会话 11-21 已定取乙）：常温常压下物态为气态的判据；卷三乙 §4.1 跟改（matcat 规则与条目）",
+   "grade": "designed",
+   "basis": "设：沸点不高于 20 °C（常温）的材料在常温常压下为气态；设定值，可在试玩后调"
+  },
+  {
    "key": "fatHeatMin",
    "value": 30,
    "source": "卷三乙 :710 核对值表",
@@ -87,7 +94,8 @@
     {"when": "member(reaction_spin, producedBy) || member(reaction_weave, producedBy) || member(reaction_felting, producedBy)", "value": "matcat_textile"},
     {"when": "member(reaction_papermaking, producedBy)", "value": "matcat_paper"},
     {"when": "member(reaction_firing, producedBy)", "value": "matcat_ceramic"},
-    {"when": "member(comp_arcane, material.classes)", "value": "matcat_supernatural"}
+    {"when": "member(comp_arcane, material.classes)", "value": "matcat_supernatural"},
+    {"when": "known(boilPoint) && boilPoint <= rules.materials.gasBoilMax", "value": "matcat_gas"}
    ],
    "source": "卷三乙 §4.1 :571–:584 派生大类条件表（M-9）；卷二 §1.12 加载期规则分类（勘误 1118k31）",
    "grade": "designed",

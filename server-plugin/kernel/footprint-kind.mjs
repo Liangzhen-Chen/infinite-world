@@ -5,7 +5,7 @@
 // 值不带前缀：region、building、room、volume，依次是区域、建筑、房间、体积足迹。
 export const FOOTPRINT_KIND = Object.freeze({ region: 'region', building: 'building', room: 'room', volume: 'volume' });
 // 足迹种类按这四个组件类判（卷五 §4.1 规则 2，次序固定）；组件类在卷五 §2.1 组件类一段登记。
-const CLASS = Object.freeze({ facility: 'comp_facility', zone: 'comp_zone', volume: 'comp_volume', layerRoot: 'comp_layer_root' });
+const CLASS = Object.freeze({ facility: 'comp_facility', zone: 'comp_zone', volume: 'comp_volume', layerRoot: 'comp_layer_root', settlement: 'comp_settlement' });
 
 /**
  * 足迹种类（卷五 §4.1 规则 2）：挂 comp_facility 的是建筑；挂 comp_zone 且有挂 comp_facility 的祖先的是房间；挂 comp_volume 的是体积；
@@ -24,3 +24,6 @@ export function footprintKindOf(classes, ancestorClassSets) {
 
 /** 本行是不是层根（开格空间的行）。@param {Set<string>} classes @returns {boolean} */
 export const isLayerRootClasses = (classes) => classes.has(CLASS.layerRoot);
+
+/** 本行挂不挂聚落组件类（卷五 §4.3 规则 9 `cellclass.inSettlement`：区格是否在挂 comp_settlement 的行的足迹里）。@param {Set<string>} classes @returns {boolean} */
+export const isSettlementClasses = (classes) => classes.has(CLASS.settlement);

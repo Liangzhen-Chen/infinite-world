@@ -165,7 +165,8 @@ export function splitKey(key) {
   return KEY_OPS.includes(last) ? { dim: key.slice(0, -1), op: last } : { dim: key, op: '' };
 }
 
-const fieldRequired = (def) => (Array.isArray(def.required) ? def.required : []);
+// 必填字段：嵌套 struct 的 required 是数组；维度顶层的 struct 的 required 是策略字符串，要逐栏必填的（卷三甲 :128 分态布尔"三栏每行都必写"）另写 requiredFields 数组，缺栏报 E-DIM-REQUIRED-MISSING。
+const fieldRequired = (def) => (Array.isArray(def.required) ? def.required : Array.isArray(def.requiredFields) ? def.requiredFields : []);
 /** @param {Record<string, unknown>} def ref 类型定义 */
 export const refParts = (def) => (Array.isArray(def.refs) ? def.refs : [def]);
 
@@ -248,7 +249,7 @@ export function checkValue(def, v, env, at, err) {
         if (!Object.hasOwn(def.fields, f)) bad('E-DIM-STRUCT-FIELD', f, `field of ${Object.keys(def.fields).sort().join(',')}`);
         else checkValue(def.fields[f], v[f], env, { ...at, path: ptr(at.path, f) }, err);
       }
-      for (const r of fieldRequired(def)) if (!Object.hasOwn(v, r)) bad('E-DIM-STRUCT-FIELD', `missing ${r}`, 'required struct field');
+      for (const r of fieldRequired(def)) if (!Object.hasOwn(v, r)) bad(Array.isArray(def.required) ? 'E-DIM-STRUCT-FIELD' : 'E-DIM-REQUIRED-MISSING', `missing ${r}`, 'required struct field');
       return;
     }
     case T.type.curve: {

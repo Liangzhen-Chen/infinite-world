@@ -340,10 +340,18 @@
     {
      "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 64
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 65
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 66
     }
    ],
-   "print": "147b977df69a63dfde9443f451e226ce66738c5b1acab70407fd8b96107f7c00",
-   "rev": 64,
+   "print": "760feb27b2df25a6ce627374d1fc53aed27c6e60995c1d9f08eb8568ba2205b3",
+   "rev": 66,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -853,10 +861,18 @@
     {
      "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 61
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 62
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 63
     }
    ],
-   "print": "4d57a8acf485ac3f6c3ebc2a4deb82393767f8a7c25a7c2390ed34ef9f8ada1d",
-   "rev": 61,
+   "print": "47d6cec5453afce029edcc432a9a80070e737cf3bf295715e53ba64ac7c2c41a",
+   "rev": 63,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1448,10 +1464,18 @@
     {
      "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 58
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 59
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 60
     }
    ],
-   "print": "77b6a77d5d9d8a19efbc70419781c6bdf240bea55e8bd0b0fdf9864d79c69c45",
-   "rev": 58,
+   "print": "649c2c605a0e408d5b89e46013d95636d881306aba173d280b821a1c85414eda",
+   "rev": 60,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1877,10 +1901,18 @@
     {
      "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 74
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 75
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 76
     }
    ],
-   "print": "6971e7215e144a943783a626ae4fe19c71c5b8b18b6ede0ff316b69cc8aed9d2",
-   "rev": 74,
+   "print": "726cc719b4000770e73c51950b3cb0778e6f8f2e2fd2fa52244ea2bd60fce5bf",
+   "rev": 76,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -2243,10 +2275,18 @@
     {
      "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 59
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 60
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 61
     }
    ],
-   "print": "77b6a77d5d9d8a19efbc70419781c6bdf240bea55e8bd0b0fdf9864d79c69c45",
-   "rev": 59,
+   "print": "649c2c605a0e408d5b89e46013d95636d881306aba173d280b821a1c85414eda",
+   "rev": 61,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -3010,10 +3050,18 @@
     {
      "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 59
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 60
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 61
     }
    ],
-   "print": "77b6a77d5d9d8a19efbc70419781c6bdf240bea55e8bd0b0fdf9864d79c69c45",
-   "rev": 59,
+   "print": "649c2c605a0e408d5b89e46013d95636d881306aba173d280b821a1c85414eda",
+   "rev": 61,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -3240,10 +3288,18 @@
     {
      "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 53
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 54
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 55
     }
    ],
-   "print": "4bcd4bcc0d6136cee6412aebe0cbcf239a532b9f9ab15ef01beee86ec4a11c77",
-   "rev": 53,
+   "print": "085680a7935c1e7c304bdb3f26d19c7f0e531390cc1172d3768b902a5e95d9dd",
+   "rev": 55,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -3550,10 +3606,18 @@
     {
      "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 73
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 74
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 75
     }
    ],
-   "print": "8261d36e0d06ce39b5621d7188139ff4d344fe6d0e20f26c619c3af8fec61904",
-   "rev": 73,
+   "print": "fc4111ff03a02c9225f5b2684170f153146e43c74dd4e8145368c4ab7ff1e845",
+   "rev": 75,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -3873,10 +3937,18 @@
     {
      "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 38
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 39
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 40
     }
    ],
-   "print": "4c3b7d84f7c68c8ce968c2576a3e67244fd970c7e8ec2407585ab0df708be00b",
-   "rev": 38,
+   "print": "adb2bec81bae658d93985afbd31463571f718aeef40c12dd91ae021021a17da1",
+   "rev": 40,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -4146,10 +4218,18 @@
     {
      "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 62
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 63
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 64
     }
    ],
-   "print": "147b977df69a63dfde9443f451e226ce66738c5b1acab70407fd8b96107f7c00",
-   "rev": 62,
+   "print": "760feb27b2df25a6ce627374d1fc53aed27c6e60995c1d9f08eb8568ba2205b3",
+   "rev": 64,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -4303,10 +4383,18 @@
     {
      "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 36
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 37
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 38
     }
    ],
-   "print": "7b42e189ba33ac7945323ea41a438746802e6fec66c9b64d4500cde5f097f859",
-   "rev": 36,
+   "print": "525a9db9c63586f46b866bc0db0eed7a0b8f1a55b16a8f3698955f7d7396501d",
+   "rev": 38,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -4757,10 +4845,18 @@
     {
      "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 55
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 56
+    },
+    {
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 57
     }
    ],
-   "print": "4bcd4bcc0d6136cee6412aebe0cbcf239a532b9f9ab15ef01beee86ec4a11c77",
-   "rev": 55,
+   "print": "085680a7935c1e7c304bdb3f26d19c7f0e531390cc1172d3768b902a5e95d9dd",
+   "rev": 57,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

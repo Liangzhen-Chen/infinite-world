@@ -67,6 +67,9 @@ export function tempRepo() {
   cpSync(join(ROOT, 'server-plugin/kernel/validate/cell-grades.mjs'), join(dir, 'server-plugin/kernel/validate/cell-grades.mjs'));
   // 效果族表校验（卷二 §3.9；5-5）：dimensions-validate 的 import，指纹闭包要算同一份。
   cpSync(join(ROOT, 'server-plugin/kernel/validate/effects-validate.mjs'), join(dir, 'server-plugin/kernel/validate/effects-validate.mjs'));
+  // gridKey 编解码（G6）：handles/keys.mjs 现 import errors.mjs（E-DET-DOMAIN），其闭包 errors.mjs、report.mjs 也要进临时仓库，指纹才算同一份。
+  cpSync(join(ROOT, 'server-plugin/kernel/errors.mjs'), join(dir, 'server-plugin/kernel/errors.mjs'));
+  cpSync(join(ROOT, 'server-plugin/kernel/report.mjs'), join(dir, 'server-plugin/kernel/report.mjs'));
   cpSync(join(ROOT, 'tests/accept/bypass'), join(dir, 'tests/accept/bypass'), {
     recursive: true,
     filter: (src) => extname(src) === '' || extname(src) === '.txt' || extname(src) === '.json',

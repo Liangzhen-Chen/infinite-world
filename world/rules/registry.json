@@ -357,6 +357,7 @@
     "storeyM": {"type": "integer", "unit": "m", "domain": [1, null]},
     "cellM": {"type": "integer", "unit": "m", "domain": [1, null]},
     "regionCellM": {"type": "integer", "unit": "m", "domain": [1, null]},
+    "chunkRegionCells": {"type": "integer", "unit": "count", "domain": [1, null]},
     "fullTurnDeg": {"type": "integer", "unit": "degree", "domain": [1, null]},
     "facingDirections": {"type": "integer", "unit": "count", "domain": [8, 8]},
     "heightCtrlK": {"type": "integer", "unit": "count", "domain": [1, null]},
@@ -367,14 +368,14 @@
     "longCostCap": {"type": "integer", "unit": "count", "domain": [1, null]}
    },
    "domain": {
-    "storeyM": [1, null], "cellM": [1, null], "regionCellM": [1, null], "fullTurnDeg": [1, null], "facingDirections": [8, 8],
+    "storeyM": [1, null], "cellM": [1, null], "regionCellM": [1, null], "chunkRegionCells": [1, null], "fullTurnDeg": [1, null], "facingDirections": [8, 8],
     "heightCtrlK": [1, null], "reliefOctaves": [0, null],
     "surfaceElevationMinM": [null, 0], "surfaceElevationMaxM": [0, null],
     "roadPaceFactor": [0, null], "longCostCap": [1, null]
    },
-   "volume": "卷五 §2.3 :271（格的尺度与格世界的常数，grid.json 键表；只登有运行期消费者的键，chunkRegionCells/landSearchRadiusCells/bubbleCostCap/farSight* 随其消费者卡登）；cellM（G3 起读：区格序号换算、直线距离）；fullTurnDeg、facingDirections 取卷五 §4.2 规则 12–13（方位角整圈度数、八向朝向档数；G3 bearingView 读）；surfaceElevationMinM/MaxM 取卷五 §4.1.1 :425 海拔取值域；heightCtrlK/reliefOctaves 卷文无数值，暂定·待试玩标定；roadPaceFactor、longCostCap（G4 起读：kernel/route-grid.mjs、kernel/route-edges.mjs，卷五 §4.1 规则 4、5；暂定·待试玩标定）；读者 kernel/grid.mjs（G2 起）、kernel/footprint.mjs（G3 起）",
+   "volume": "卷五 §2.3 :271（格的尺度与格世界的常数，grid.json 键表；只登有运行期消费者的键，landSearchRadiusCells/bubbleCostCap/farSight* 随其消费者卡登）；cellM（G3 起读：区格序号换算、直线距离）；fullTurnDeg、facingDirections 取卷五 §4.2 规则 12–13（方位角整圈度数、八向朝向档数；G3 bearingView 读）；surfaceElevationMinM/MaxM 取卷五 §4.1.1 :425 海拔取值域；heightCtrlK/reliefOctaves 卷文无数值，暂定·待试玩标定；roadPaceFactor、longCostCap（G4 起读：kernel/route-grid.mjs、kernel/route-edges.mjs，卷五 §4.1 规则 4、5；暂定·待试玩标定）；读者 kernel/grid.mjs（G2 起）、kernel/footprint.mjs（G3 起）、kernel/handles/keys.mjs（G6 起，chunkRegionCells）",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"storeyM": false, "cellM": false, "regionCellM": false, "fullTurnDeg": false, "facingDirections": false, "heightCtrlK": false, "reliefOctaves": false, "surfaceElevationMinM": false, "surfaceElevationMaxM": false, "roadPaceFactor": false, "longCostCap": false}
+   "packOverridable": {"storeyM": false, "cellM": false, "regionCellM": false, "chunkRegionCells": false, "fullTurnDeg": false, "facingDirections": false, "heightCtrlK": false, "reliefOctaves": false, "surfaceElevationMinM": false, "surfaceElevationMaxM": false, "roadPaceFactor": false, "longCostCap": false}
   },
   {
    "code": "terrainModifiers",
@@ -407,6 +408,7 @@
     "charDecomposeMin": {"type": "number", "unit": "celsius", "precision": 4},
     "charHeatMin": {"type": "number", "unit": "MJ_per_kg_dry", "precision": 4},
     "fatMeltMax": {"type": "number", "unit": "celsius", "precision": 4},
+    "gasBoilMax": {"type": "number", "unit": "celsius", "precision": 4},
     "fatHeatMin": {"type": "number", "unit": "MJ_per_kg_dry", "precision": 4},
     "volatileMin": {"type": "number", "unit": "per_day_volatile", "precision": 4},
     "grainMoistureMax": {"type": "number", "unit": "fraction", "precision": 4},
@@ -420,10 +422,10 @@
     }}},
     "substanceClass": {"type": "map", "key": {"type": "ref", "vocab": "substance"}, "value": {"type": "ref", "vocab": "class"}}
    },
-   "domain": {"charReaction": {}, "charDecomposeMin": [-273, 6000], "charHeatMin": [0, 60], "fatMeltMax": [-273, 6000], "fatHeatMin": [0, 60], "volatileMin": [0, null], "grainMoistureMax": [0, 1], "grainEnergyMin": [0, null], "grainPart": {}, "grainCarbMin": [0, 1], "grainFamily": {}, "matcatRules": {}, "substanceClass": {}},
+   "domain": {"charReaction": {}, "charDecomposeMin": [-273, 6000], "charHeatMin": [0, 60], "fatMeltMax": [-273, 6000], "gasBoilMax": [-273, 6000], "fatHeatMin": [0, 60], "volatileMin": [0, null], "grainMoistureMax": [0, 1], "grainEnergyMin": [0, null], "grainPart": {}, "grainCarbMin": [0, 1], "grainFamily": {}, "matcatRules": {}, "substanceClass": {}},
    "volume": "卷三乙 §2.5 :322–:330（rules.materials 各键）；§4.1 :571–:584（matcatRules 八条，when 只读卷三甲行上修正前的值、producedBy 与组件类，M-9）、:626（charReaction 供 charYield）、:707–:722（首批标定值）；:326、:566 substanceClass（本源成分到类别，M-9 第 ① 条来源；块 6 第 6-2 张，物品材料类别 C-8 ① 读）；卷二 §1.12（加载期规则分类，封卷后勘误 1118k31）",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"charReaction": false, "charDecomposeMin": false, "charHeatMin": false, "fatMeltMax": false, "fatHeatMin": false, "volatileMin": false, "grainMoistureMax": false, "grainEnergyMin": false, "grainPart": false, "grainCarbMin": false, "grainFamily": false, "matcatRules": false, "substanceClass": false}
+   "packOverridable": {"charReaction": false, "charDecomposeMin": false, "charHeatMin": false, "fatMeltMax": false, "gasBoilMax": false, "fatHeatMin": false, "volatileMin": false, "grainMoistureMax": false, "grainEnergyMin": false, "grainPart": false, "grainCarbMin": false, "grainFamily": false, "matcatRules": false, "substanceClass": false}
   },
   {
    "code": "items",

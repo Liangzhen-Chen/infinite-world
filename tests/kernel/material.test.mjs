@@ -34,7 +34,10 @@ const codesOf = (r, row) => errs(r).filter((e) => e.row === row).map((e) => `${e
 const key = (e) => `${e.code}|${e.row}|${e.dim}`;
 const gapList = (r) => r.errors.filter((e) => e.code === 'W-DIM-GAP').map((e) => `${e.row}.${e.dim}`).sort();
 // 测试行逐格记 designed（M-22 键集合须等于填了值的格）；删一格时连级别一起删。
-const withGrades = (w, row) => ({ ...row, cellGrades: Object.fromEntries([...gradedCells(w.material.dimensions, row).keys()].map((k) => [k, { grade: 'designed', citation: null, basis: '测试行' }])) });
+// 材料四个分态布尔 always 必填（卷三甲 :128–:131，G6 修改轮 M1）：测试行没写的，补一组通用的（固栏真、液气栏假）。
+const FLAG_DEFAULT = { solid: true, liquid: false, gas: false };
+const withFlags = (row) => ({ opaque: { ...FLAG_DEFAULT }, blocksSky: { ...FLAG_DEFAULT }, bearsLoad: { ...FLAG_DEFAULT }, airtight: { ...FLAG_DEFAULT }, ...row });
+const withGrades = (w, row0) => { const row = withFlags(row0); return { ...row, cellGrades: Object.fromEntries([...gradedCells(w.material.dimensions, row).keys()].map((k) => [k, { grade: 'designed', citation: null, basis: '测试行' }])) }; };
 const drop = (row, dim) => { delete row[dim]; for (const k of Object.keys(row.cellGrades)) if (k === dim || k.startsWith(`${dim}.`)) delete row.cellGrades[k]; };
 const domainOf = (w, k) => { const [d, s] = k.split('.'); const def = w.material.dimensions[d]; return (s !== undefined && def.fields ? def.fields[s] : def.value || def).domain || def.domain; };
 const cellValue = (row, k) => { const [d, s] = k.split('.'); return s === undefined ? row[d] : row[d][s]; };
@@ -99,7 +102,7 @@ test('categories 由加载器按 rules.materials.matcatRules 逐行求（卷三�
   const a = vol.findIndex((l) => l.includes('<!--EXPECT-BEGIN-->'));
   const b = vol.findIndex((l) => l.includes('<!--EXPECT-END-->'));
   const rows = vol.slice(a + 1, b).filter((l) => /^\| mat_/.test(l)).map((l) => l.split('|').map((x) => x.trim()));
-  assert.equal(rows.length, 93);
+  assert.equal(rows.length, 94); // 勘误 1121k13 加 mat_air 行（93 → 94）；mat_natural_gas 的预期大类加 matcat_gas
   for (const c of rows) {
     const want = c[3] === '—' ? [] : c[3].split(/\s+/).filter((x) => x !== 'matcat_supernatural').sort();
     assert.deepEqual(dim(eng, {}, 'material', c[1], 'categories'), { known: true, applicable: true, value: want, source: 'index' }, c[1]);

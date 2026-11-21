@@ -42,6 +42,7 @@ const FIELDS = {
   'struct:lookKey': ['species', 'sex', 'lifeStage', 'bands'],
   'struct:conception': ['otherParent', 'offspringSpecies', 'sinceMinute'],
   'struct:revivePoint': ['kind', 'counterpart'], // 勘误 1119k11：卷二 §1.5 增行（revivals.<person>.points 的元素）
+  'struct:gridCellDiff': ['material', 'fixture', 'mark', 'sinceMinute'], // 勘误 1121k1：卷二 :253 增行（cells.<w>.<里块>.<格键> 的值；G6 登）
   'struct:manifestRow': ['ordinal', 'intendedType', 'form', 'areaM2', 'storeys', 'wallThicknessM', 'materialKg', 'zoneRole', 'ownerRef', 'prePlace', 'fixtures'],
   'struct:ownerKey': ['aggregate', 'org'],
   'struct:shopRow': ['ordinal', 'shopkind', 'venue', 'operator'],
@@ -82,6 +83,7 @@ const NUMERIC = {
   'struct:identityKey': { keyId: ['integer', 'count'], maskQuality: ['number', 'score'], since: ['integer', 'minute'], until: ['integer', 'minute'] },
   'struct:lookKey': { 'bands[]': ['integer', 'count'] },
   'struct:conception': { sinceMinute: ['integer', 'minute'] },
+  'struct:gridCellDiff': { sinceMinute: ['integer', 'minute'] },
   'struct:manifestRow': { ordinal: ['integer', 'count'], areaM2: ['number', 'm2'], storeys: ['integer', 'count'], wallThicknessM: ['number', 'm'], 'materialKg<value>': ['number', 'kg'] },
   'struct:shopRow': { ordinal: ['integer', 'count'], venue: ['integer', 'count'] },
   'struct:rosterSpec': { ordinal: ['integer', 'count'], bornMinute: ['integer', 'minute'] },
@@ -113,7 +115,7 @@ function numericLeaves(node, at, out) {
   return out;
 }
 
-test('命名 struct 登记与卷二 §1.5 表逐条一致：47 行（G1 增 struct:pos；1119k11 增 revivePoint）、字段名与出处', () => {
+test('命名 struct 登记与卷二 §1.5 表逐条一致：48 行（G1 增 struct:pos；1119k11 增 revivePoint；G6 增 gridCellDiff）、字段名与出处', () => {
   assert.deepEqual([...rows.keys()].sort(), Object.keys(FIELDS).sort());
   for (const [name, fields] of Object.entries(FIELDS)) {
     const row = rows.get(name);
@@ -169,6 +171,6 @@ test('byState 带类型参数；命名引用都指向已登记的行', () => {
 });
 
 test('登记表只含卷文列出的名字，不给未登记名字开口子', () => {
-  assert.equal(REG.rows.length, 47);
-  assert.equal(new Set(REG.rows.map((r) => r.name)).size, 47);
+  assert.equal(REG.rows.length, 48); // G6 增 struct:gridCellDiff（勘误 1121k1）
+  assert.equal(new Set(REG.rows.map((r) => r.name)).size, 48);
 });

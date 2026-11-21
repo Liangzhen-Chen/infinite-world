@@ -19,9 +19,11 @@ const VOCAB = JSON.parse(realText('_vocab.json'));
 const TERRAINS = Object.keys(VOCAB.families.terrain.entries);
 
 // 兜底条目齐全的 cellclass（每个地形、有无水体各一条；卷五 §4.3 规则 9：数据给全兜底条目，代码不设缺省）。
+// G6 起每个 cellclass 条目必有 genTemplate（卷五 §2.2；卷十 :118 gentemplate 族），夹具给一个共用的测试模板。
+const GEN_TEMPLATE = { gtpl_test: { surfaceMaterial: 'mat_soil', airMaterial: 'mat_air', soilLayers: 1, soilMaterial: 'mat_soil', rockMaterial: 'mat_granite', blocks: [] } };
 const FULL_CELLCLASS = {
-  cellclass_land: { terrains: TERRAINS, waterAny: [], slopeRange: [0, 1], onRoad: null, inSettlement: null, priority: 1 },
-  cellclass_water: { terrains: TERRAINS, waterAny: ['water_test_fresh'], slopeRange: [0, 1], onRoad: null, inSettlement: null, priority: 1 },
+  cellclass_land: { terrains: TERRAINS, waterAny: [], slopeRange: [0, 1], onRoad: null, inSettlement: null, priority: 1, genTemplate: 'gtpl_test' },
+  cellclass_water: { terrains: TERRAINS, waterAny: ['water_test_fresh'], slopeRange: [0, 1], onRoad: null, inSettlement: null, priority: 1, genTemplate: 'gtpl_test' },
 };
 
 // 加载一个只改了地点行、边、格空间表与（可选）词表条目的世界；临时目录用完即删。
@@ -41,6 +43,7 @@ function load({ rows = {}, edges = [], spaces, cellclass = FULL_CELLCLASS, heade
     v.families.access.entries = { access_test_open: { rank: 0, needsGrant: false } };
     v.families.water.entries = { water_test_fresh: { navigable: false } };
     v.families.cellclass.entries = cellclass === null ? {} : cellclass;
+    v.families.gentemplate.entries = GEN_TEMPLATE;
     for (const c of relocatable) v.families.component.entries[c].relocatable = true;
     writeUnderTempRoot(tmp, '_vocab.json', JSON.stringify(v));
     return loadWorld(ROOT, { dimensionsDir: relative(ROOT, tmp) });

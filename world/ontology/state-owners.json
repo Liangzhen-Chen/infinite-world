@@ -50,6 +50,7 @@
  "pathTypes": {
   "accounts.*": "struct:holderAccounts",
   "aggregates.*.ledgerHolder": "boolean",
+  "cells.*.*.*": "struct:gridCellDiff",
   "clock.minute": "integer:minute",
   "clock.seq": "integer:count",
   "clock.dueNext": "integer:count",
@@ -87,6 +88,7 @@
  "keyKinds": {
   "accounts.*": [["deity", "faith", "org", "person", "place"]],
   "aggregates.*.ledgerHolder": ["seedKey"],
+  "cells.*.*.*": ["gridKey", "gridKey", "gridKey"],
   "due.*": ["handle"],
   "holdings.*.*": [["item", "office", "org", "person", "place", "polity"], "handle"],
   "created.*.props.*": [["item", "person", "place"], "dimKey"],

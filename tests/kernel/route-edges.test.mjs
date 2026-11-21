@@ -21,9 +21,11 @@ const realText = (f) => readFileSync(join(ROOT, DIMS, f), 'utf8');
 const HEADER = JSON.parse(realText('place.json'));
 const VOCAB = JSON.parse(realText('_vocab.json'));
 const TERRAINS = Object.keys(VOCAB.families.terrain.entries);
+// G6 起每个 cellclass 条目必有 genTemplate（卷五 §2.2；卷十 :118 gentemplate 族），夹具给一个共用的测试模板。
+const GEN_TEMPLATE = { gtpl_test: { surfaceMaterial: 'mat_soil', airMaterial: 'mat_air', soilLayers: 1, soilMaterial: 'mat_soil', rockMaterial: 'mat_granite', blocks: [] } };
 const FULL_CELLCLASS = {
-  cellclass_land: { terrains: TERRAINS, waterAny: [], slopeRange: [0, 1], onRoad: null, inSettlement: null, priority: 1 },
-  cellclass_water: { terrains: TERRAINS, waterAny: ['water_test_nav'], slopeRange: [0, 1], onRoad: null, inSettlement: null, priority: 1 },
+  cellclass_land: { terrains: TERRAINS, waterAny: [], slopeRange: [0, 1], onRoad: null, inSettlement: null, priority: 1, genTemplate: 'gtpl_test' },
+  cellclass_water: { terrains: TERRAINS, waterAny: ['water_test_nav'], slopeRange: [0, 1], onRoad: null, inSettlement: null, priority: 1, genTemplate: 'gtpl_test' },
 };
 
 // 加载一个只改了地点行、边、格空间表的世界；水体类只有一条可航的 water_test_nav；临时目录用完即删。
@@ -40,6 +42,7 @@ function load({ rows = {}, edges = [], spaces } = {}) {
     v.families.access.entries = { access_test_open: { rank: 0, needsGrant: false } };
     v.families.water.entries = { water_test_nav: { navigable: true } };
     v.families.cellclass.entries = FULL_CELLCLASS;
+    v.families.gentemplate.entries = GEN_TEMPLATE;
     writeUnderTempRoot(tmp, '_vocab.json', JSON.stringify(v));
     return loadWorld(ROOT, { dimensionsDir: relative(ROOT, tmp) });
   } finally { rmSync(tmp, { recursive: true, force: true }); }

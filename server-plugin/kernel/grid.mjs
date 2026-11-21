@@ -17,6 +17,16 @@ const SCALE = () => fixedScale();
 
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
+/**
+ * 64 位均匀数 u（uniformAt 的值，[0, 2^64)）映射到 [0, n) 的整数：floor(u × n ÷ 2^64)。n 为正整数（BigInt），全整数、不丢精度。
+ * 模板格块的千分数（n = 千分母）等"取一个整数份额"的抽取都经它，不各写一遍。
+ * @param {bigint} u @param {bigint} n @returns {bigint}
+ */
+export function uniformBelow(u, n) {
+  if (typeof u !== 'bigint' || typeof n !== 'bigint' || n <= 0n) throw new FixedError('E-DET-DOMAIN', 'uniformBelow: u and n must be bigint, n positive');
+  return (u * n) / TWO64;
+}
+
 // 向下取整的整数除法（b > 0）；BigInt 的 / 向零截断，负数要修正。
 function floorDiv(a, b) {
   const q = a / b;
@@ -54,6 +64,37 @@ export function landOrderKey(seedKey, w, rx, ry) {
   return key;
 }
 
+/**
+ * 模板格块第 j 项的抽取键（卷十 R10-2.15 :435，抽取点 site.gen.tpl.block.<j>）：成分是该区格的区格种子键与块序号 j；同一区格同一块同一结果，
+ * 与遍历次序、先派生哪个区格无关。取千分数在 grid-template.mjs（sha256 的前 64 位均匀数映射到 [0, 千分母)）。
+ * @param {string} regionSeedKey regionCellSeedKey 给的区格种子键 @param {number} j 模板 blocks 里的序号
+ * @returns {string} 64 位小写十六进制
+ */
+export function tplBlockKey(regionSeedKey, j) {
+  const key = gridSeed('grid', 'tplblock', regionSeedKey, j);
+  return key;
+}
+
+/**
+ * 存量分到区格的次序键（卷五 §4.7 规则 12 :911，hash(世界种子, U, x, 区格序号)）：U 是存量单元行 id，x 是存量（物种、矿物材料）代号。
+ * @param {string} worldSeed @param {string} unit @param {string} stock @param {number} w @param {number} rx @param {number} ry
+ * @returns {string} 64 位小写十六进制
+ */
+export function stockRegionKey(worldSeed, unit, stock, w, rx, ry) {
+  const key = gridSeed('grid', 'stockrg', worldSeed, unit, stock, w, rx, ry);
+  return key;
+}
+
+/**
+ * 存量在区格内取格的次序键（卷五 §4.7 规则 12 :912，hash(世界种子, U, x, 格序号)）：格序号取格的整数坐标 (x, y, z)。
+ * @param {string} worldSeed @param {string} unit @param {string} stock @param {number} w @param {number} x @param {number} y @param {number} z
+ * @returns {string} 64 位小写十六进制
+ */
+export function stockCellKey(worldSeed, unit, stock, w, x, y, z) {
+  const key = gridSeed('grid', 'stockcl', worldSeed, unit, stock, w, x, y, z);
+  return key;
+}
+
 // ---------- 起伏噪声（卷五 §4.3 规则 8「起伏」） ----------
 
 // 起伏噪声的格点哈希 hash(世界种子, w, 格点, k)（卷五 §4.3 规则 8）：也是种子抽取点，经 gridSeed 以字面量流/抽取点代号登记（seed-keys.json 第二行，R27-8.1）。
@@ -70,9 +111,17 @@ function unitNoise(u) {
   return (u * twoScale) / TWO64 - scale;
 }
 
-// 第 k 级在格点 (gi, gj) 的定点噪声值 [−1, 1]。
-function cornerNoise(worldSeed, w, gi, gj, k) {
-  return unitNoise(uniformAt(reliefKey(worldSeed, w, gi, gj, k), 0));
+// 第 k 级在格点 (gi, gj) 的定点噪声值 [−1, 1]。memo 是调用方给的一次性 Map（一次范围查询内相邻列共用格点，只省哈希次数，不跨调用、不进状态；
+// 键含 (gi, gj, k)，世界种子与 w 由调用方在同一次调用里固定），有无 memo 结果逐位相同。
+function cornerNoise(worldSeed, w, gi, gj, k, memo) {
+  if (!memo) return unitNoise(uniformAt(reliefKey(worldSeed, w, gi, gj, k), 0));
+  const key = `${gi}|${gj}|${k}`;
+  let v = memo.get(key);
+  if (v === undefined) {
+    v = unitNoise(uniformAt(reliefKey(worldSeed, w, gi, gj, k), 0));
+    memo.set(key, v);
+  }
+  return v;
 }
 
 /**
@@ -81,9 +130,10 @@ function cornerNoise(worldSeed, w, gi, gj, k) {
  * @param {{reliefOctaves: number, regionCellM: number}} grid rules.grid
  * @param {string} worldSeed @param {number} w @param {number} reliefM 振幅（米，≥0） @param {number} reliefRough 衰减比（fraction）
  * @param {number} qx 细格列 x（米） @param {number} qy 细格列 y（米）
+ * @param {Map<string, bigint>} [memo] 可选：一次范围查询内共用格点噪声的一次性 Map（只省哈希，结果不变）
  * @returns {bigint} 定点米（SCALE 标度）
  */
-export function reliefAt(grid, worldSeed, w, reliefM, reliefRough, qx, qy) {
+export function reliefAt(grid, worldSeed, w, reliefM, reliefRough, qx, qy, memo) {
   const octaves = grid.reliefOctaves;
   const qxf = fixedUnits(qx);
   const qyf = fixedUnits(qy);
@@ -100,10 +150,10 @@ export function reliefAt(grid, worldSeed, w, reliefM, reliefRough, qx, qy) {
     const gy0 = j * spacing;
     const tx = ((qxf - gx0) * scale) / spacing;
     const ty = ((qyf - gy0) * scale) / spacing;
-    const v00 = cornerNoise(worldSeed, w, i, j, k);
-    const v10 = cornerNoise(worldSeed, w, i + 1n, j, k);
-    const v01 = cornerNoise(worldSeed, w, i, j + 1n, k);
-    const v11 = cornerNoise(worldSeed, w, i + 1n, j + 1n, k);
+    const v00 = cornerNoise(worldSeed, w, i, j, k, memo);
+    const v10 = cornerNoise(worldSeed, w, i + 1n, j, k, memo);
+    const v01 = cornerNoise(worldSeed, w, i, j + 1n, k, memo);
+    const v11 = cornerNoise(worldSeed, w, i + 1n, j + 1n, k, memo);
     // 先 x 后 y 的双线性插值（各步 a + (b−a)·t ÷ SCALE），值域保持 [−SCALE, SCALE]。
     const top = v00 + ((v10 - v00) * tx) / scale;
     const bottom = v01 + ((v11 - v01) * tx) / scale;
@@ -164,12 +214,13 @@ export function controlSurfaceAt(grid, controlPoints, qx, qy) {
  * @param {{id: string, x: number, y: number, elevM: number}[]} controlPoints
  * @param {number} reliefM @param {number} reliefRough
  * @param {number} qx @param {number} qy
+ * @param {Map<string, bigint>} [memo] 可选：一次范围查询内共用格点噪声的一次性 Map（见 reliefAt）
  * @returns {bigint | null} 定点米（SCALE 标度）；控制面未知（最近控制点海拔未知）为 null
  */
-export function surfaceHeightAt(grid, worldSeed, w, controlPoints, reliefM, reliefRough, qx, qy) {
+export function surfaceHeightAt(grid, worldSeed, w, controlPoints, reliefM, reliefRough, qx, qy, memo) {
   const surface = controlSurfaceAt(grid, controlPoints, qx, qy);
   if (surface === null) return null;
-  let h = surface + reliefAt(grid, worldSeed, w, reliefM, reliefRough, qx, qy);
+  let h = surface + reliefAt(grid, worldSeed, w, reliefM, reliefRough, qx, qy, memo);
   const min = fixedUnits(grid.surfaceElevationMinM);
   const max = fixedUnits(grid.surfaceElevationMaxM);
   if (h < min) h = min;

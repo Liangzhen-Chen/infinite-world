@@ -8,6 +8,8 @@
 import { CODE_RE, HandleError } from './vocab-handle.mjs';
 import { T } from '../validate/types.mjs';
 import { GRAMMAR_TOKENS } from './markers.mjs';
+import { fixedUnits } from '../det-math.mjs';
+import { KernelError } from '../errors.mjs';
 
 // pathTypes 值类型里超出 §1.5 类型名的固定记号：定义源在 kernel/handles/markers.mjs（卷二 §2.7 :811 dimension、sealed、EventId 行），这里只引用。
 const TYPE_EXTRA = T.path_type_extra;
@@ -206,6 +208,130 @@ export function diceKeyText(worldSeed, streamCode, subjectParts, worldTime, draw
  */
 export function gridSeedKeyText(worldSeed, stream, site, ...parts) {
   return [worldSeed, stream, site, ...parts.map(String)].join(KEY_JOIN);
+}
+
+// ---------- state 路径里格坐标段 gridKey 的编解码（卷二 §2.7 keyKinds (c) `gridKey`，封卷后勘误 1121k1；李白 11-21 裁定） ----------
+// w 段＝格空间号，里块号段＝`<cx>:<cy>`，格键段＝`<x>:<y>:<z>`，都是十进制整数（负号带 `-`、零写 `0`、不补前导零）；
+// cx = floor(x ÷ (chunkRegionCells × regionCellM ÷ cellM))，cy 同理用 y，向负无穷取整（卷二 :852）。三段唯一可逆：
+// 构造用 gridKeyOf / gridPathOf，还原用 gridKeyParse，加载与写入核三段与"格键所在里块须等于路径里的里块号"用 isGridKeySeg。
+
+// 十进制整数（不补前导零，不收 `-0`、小数、空串）。
+const GRID_INT = /^(0|-?[1-9][0-9]*)$/;
+// 里块号与格键里的 `:` 分隔串（卷二 :852 gridKey 串形）。
+const GRID_SEP = ':';
+
+// 向下取整的整数除法（b > 0）；BigInt 的 / 向零截断，负数要修正（同 footprint.mjs regionOfPos 的 floorDiv）。
+function floorDiv(a, b) {
+  const q = a / b;
+  const r = a % b;
+  return r !== 0n && r < 0n ? q - 1n : q;
+}
+
+// 格坐标段的三段名（卷二 :852：格空间号、里块号、格键）；加载校验按它的长度定"前几个 * 段是 gridKey"，不另写个数。
+export const GRID_KEY_SEGMENTS = Object.freeze(['w', 'chunk', 'cell']);
+
+function gridInt(text) {
+  if (!GRID_INT.test(text)) return null;
+  const n = Number(text);
+  return Number.isSafeInteger(n) ? n : null; // 超出安全整数的十进制串不可逆，拒收
+}
+
+function gridPair(text) {
+  const [a, b, extra] = text.split(GRID_SEP);
+  if (a === undefined || b === undefined || extra !== undefined) return null;
+  const ai = gridInt(a);
+  const bi = gridInt(b);
+  return ai === null || bi === null ? null : [ai, bi];
+}
+
+function gridTriple(text) {
+  const [a, b, c, extra] = text.split(GRID_SEP);
+  if (a === undefined || b === undefined || c === undefined || extra !== undefined) return null;
+  const ai = gridInt(a);
+  const bi = gridInt(b);
+  const ci = gridInt(c);
+  return ai === null || bi === null || ci === null ? null : [ai, bi, ci];
+}
+
+/**
+ * 里块边长（细格数）= chunkRegionCells × regionCellM ÷ cellM，须是正整数，否则 E-DET-DOMAIN（卷二 :852 gridKey 串形的分母；卷五 §2.3 :271、:427）。
+ * 全程 BigInt 定点（照 footprint.mjs regionOfPos），不写 0、1、-1 以外的数字字面量。
+ * @param {{cellM: number, regionCellM: number, chunkRegionCells: number}} grid rules.grid
+ * @returns {number}
+ */
+export function gridChunkCells(grid) {
+  const cellM = grid.cellM;
+  const regionCellM = grid.regionCellM;
+  const chunkRegionCells = grid.chunkRegionCells;
+  if (!Number.isInteger(cellM) || !Number.isInteger(regionCellM) || !Number.isInteger(chunkRegionCells)
+    || cellM < 1 || regionCellM < 1 || chunkRegionCells < 1) {
+    throw new KernelError('E-DET-DOMAIN', {}, 'gridChunkCells: cellM, regionCellM, chunkRegionCells must be positive integers');
+  }
+  const numerator = BigInt(chunkRegionCells) * fixedUnits(regionCellM);
+  const cellMf = fixedUnits(cellM);
+  const cells = floorDiv(numerator, cellMf);
+  if (cells <= 0n || cells * cellMf !== numerator) throw new KernelError('E-DET-DOMAIN', {}, 'gridChunkCells: (chunkRegionCells * regionCellM) / cellM is not a positive integer');
+  return Number(cells);
+}
+
+/**
+ * 三段文本（w 段、里块号段、格键段），唯一可逆的一半（卷二 :852 gridKey 串形）。pos = {w, x, y, z}（整数）。
+ * @param {{cellM: number, regionCellM: number, chunkRegionCells: number}} grid rules.grid
+ * @param {{w: number, x: number, y: number, z: number}} pos
+ * @returns {{w: string, chunk: string, cell: string}}
+ */
+export function gridKeyOf(grid, pos) {
+  const chunkCells = gridChunkCells(grid);
+  const cx = floorDiv(BigInt(pos.x), BigInt(chunkCells));
+  const cy = floorDiv(BigInt(pos.y), BigInt(chunkCells));
+  return { w: String(pos.w), chunk: `${cx}${GRID_SEP}${cy}`, cell: `${pos.x}${GRID_SEP}${pos.y}${GRID_SEP}${pos.z}` };
+}
+
+/**
+ * 把三段文本还原成 {w, cx, cy, x, y, z}（整数）；任一段不合文法（前导零、`-0`、小数、空串、多余冒号、非数字）返回 null。
+ * @param {unknown} segs [w, chunk, cell] 三段文本
+ * @returns {{w: number, cx: number, cy: number, x: number, y: number, z: number} | null}
+ */
+export function gridKeyParse(segs) {
+  if (!Array.isArray(segs)) return null;
+  const [wText, chunkText, cellText, extra] = segs;
+  if (wText === undefined || chunkText === undefined || cellText === undefined || extra !== undefined) return null;
+  if (typeof wText !== 'string' || typeof chunkText !== 'string' || typeof cellText !== 'string') return null;
+  const w = gridInt(wText);
+  if (w === null) return null;
+  const chunk = gridPair(chunkText);
+  if (chunk === null) return null;
+  const cell = gridTriple(cellText);
+  if (cell === null) return null;
+  const [cx, cy] = chunk;
+  const [x, y, z] = cell;
+  return { w, cx, cy, x, y, z };
+}
+
+/**
+ * 三段合文法、且格键 (x, y) 算出的里块等于路径里的里块号（卷二 :852"格键所在里块必须等于路径里的里块号"）；里块不一致返回 false。
+ * @param {{cellM: number, regionCellM: number, chunkRegionCells: number}} grid rules.grid
+ * @param {unknown} w @param {unknown} chunk @param {unknown} cell
+ * @returns {boolean}
+ */
+export function isGridKeySeg(grid, w, chunk, cell) {
+  const parsed = gridKeyParse([w, chunk, cell]);
+  if (parsed === null) return false;
+  const chunkCells = gridChunkCells(grid);
+  const cx = floorDiv(BigInt(parsed.x), BigInt(chunkCells));
+  const cy = floorDiv(BigInt(parsed.y), BigInt(chunkCells));
+  return cx === BigInt(parsed.cx) && cy === BigInt(parsed.cy);
+}
+
+/**
+ * `cells.<w>.<cx>:<cy>.<x>:<y>:<z>` 这条 state 路径（给 G9 差分写入用；本卡不被别处调用，但与 gridKeyParse 互逆）。与 gridKeyOf 同一套串形。
+ * @param {{cellM: number, regionCellM: number, chunkRegionCells: number}} grid rules.grid
+ * @param {{w: number, x: number, y: number, z: number}} pos
+ * @returns {string}
+ */
+export function gridPathOf(grid, pos) {
+  const { w, chunk, cell } = gridKeyOf(grid, pos);
+  return ['cells', w, chunk, cell].join(GRAMMAR_TOKENS.pathSep);
 }
 
 /**

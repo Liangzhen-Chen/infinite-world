@@ -14,6 +14,7 @@ export type SealedValue = { readonly __brand: 'SealedValue' };
 export interface PathTypes {
   readonly 'accounts.*': StructValue<'holderAccounts'>;
   readonly 'aggregates.*.ledgerHolder': boolean;
+  readonly 'cells.*.*.*': StructValue<'gridCellDiff'>;
   readonly 'clock.dueNext': number;
   readonly 'clock.minute': number;
   readonly 'clock.seq': number;
@@ -58,6 +59,7 @@ export type State = {
   readonly aggregates?: { readonly [segment: string]: {
       readonly ledgerHolder?: boolean;
     } };
+  readonly cells?: { readonly [segment: string]: { readonly [segment: string]: { readonly [segment: string]: StructValue<'gridCellDiff'> } } };
   readonly clock?: {
     readonly dueNext?: number;
     readonly minute?: number;

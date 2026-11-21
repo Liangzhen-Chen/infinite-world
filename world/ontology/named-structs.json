@@ -515,6 +515,16 @@
     "z": "integer:count",
     "coarse": "boolean"
    }}
+  },
+  {
+   "name": "struct:gridCellDiff",
+   "source": "卷二 §1.5 :253（卷五 §3.3、§4.1 规则 15）",
+   "type": {"struct": {
+    "material": "ref:material nullable",
+    "fixture": "ref:item nullable",
+    "mark": "ref vocab cellmark nullable",
+    "sinceMinute": "integer:minute"
+   }}
   }
  ]
 }

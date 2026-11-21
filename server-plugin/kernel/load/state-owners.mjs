@@ -5,7 +5,7 @@
 // 只按登记数据判，不认任何具体顶层键、系统、文件或路径。报码一律取 E 句柄的生成函数 buildE（kernel/handles/generated.mjs）。
 
 import { buildE, buildP } from '../handles/generated.mjs';
-import { checkPathPattern } from '../handles/keys.mjs';
+import { checkPathPattern, GRID_KEY_SEGMENTS } from '../handles/keys.mjs';
 import { GRAMMAR_TOKENS, KERNEL_MODULES } from '../handles/markers.mjs';
 import { errorCodeOf, HandleError } from '../handles/vocab-handle.mjs';
 import { isPathPattern } from '../handles/keys.mjs';
@@ -56,13 +56,18 @@ export const ENTITY_KINDS = Object.freeze(['item', 'material', 'species', 'plant
 export const KEY_DIMKEY = 'dimKey';
 export const KEY_HANDLE = 'handle';
 export const KEY_SEEDKEY = 'seedKey';
-export const KEY_NONENTITY = Object.freeze(['event', KEY_DIMKEY, 'identityKey', KEY_HANDLE, KEY_SEEDKEY]);
+export const KEY_GRIDKEY = 'gridKey';
+export const KEY_NONENTITY = Object.freeze(['event', KEY_DIMKEY, 'identityKey', KEY_HANDLE, KEY_SEEDKEY, KEY_GRIDKEY]);
 
 // handle 类的格式即卷二 §1.9 代号文法 CODE_RE（kernel/validate/types.mjs，不另立文法；李白 11-18 03:31 裁定 1）；生成句柄的内核文件自管形状（scheduler.mjs 的 due_＋序号）。
 // 去留表覆盖核对豁免的协议键顶层段（卷二 §2.6 :519"账户、holdings、statuses、modifiers、terminated、到期堆"；到期堆的键 `due` 见卷二十 :445）。账户由账本写者判（ledgerPaths）。
 // stockLots（账户下的批次明细）与账户余额同一笔走，不单独删（李白 11-19 11:1x ④；卷二 §2.6 勘误 1119k11），同按协议自处置的键。
 const PROTOCOL_KEY_LIST = ['holdings', 'statuses', 'modifiers', 'terminated', 'due', 'stockLots'];
 const PROTOCOL_KEYS = new Set(PROTOCOL_KEY_LIST);
+// gridKey 只许用在以 cells./fieldCells. 开头的模式的前三个 `*` 段（卷二 :852）：字面段集合与 gridKey 代号照 PROTOCOL_KEYS 同一写法，不写裸字面量比较。
+const GRID_KEY_PREFIX_LIST = ['cells', 'fieldCells'];
+const GRID_KEY_PREFIXES = new Set(GRID_KEY_PREFIX_LIST);
+const GRID_KEY_CODES = new Set([KEY_GRIDKEY]);
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const isStrList = (v) => Array.isArray(v) && v.every((s) => typeof s === 'string' && s !== PATH.empty);
@@ -249,6 +254,18 @@ export function mergeStateOwners(decl, ctx = {}) {
   for (const p of sorted(Object.keys(keyKinds))) {
     if (!Object.hasOwn(pathTypes, p)) { err(E.E_PATH_UNDECLARED, p, `#/keyKinds/${p}`, p, 'keyKinds pattern declared in pathTypes'); continue; }
     for (const { got, want } of keyKindsIssues(keyKinds[p], nStarsOf(p), entityKinds)) err(E.E_PATH_KEYKINDS, p, `#/keyKinds/${p}`, got, want);
+    // gridKey 只许用在以 cells./fieldCells. 开头的模式的前三个 `*` 段（卷二 :852）；以 cells./fieldCells. 开头、有前三个 `*` 段的模式，前三项必须恰为 gridKey。
+    // 非列表的 keyKinds 已由 keyKindsIssues 报 E-PATH-KEYKINDS，这里只对列表核。
+    const kk = keyKinds[p];
+    if (Array.isArray(kk)) {
+      const gridPrefix = GRID_KEY_PREFIXES.has(segs(p)[0]);
+      const gridItem = (it) => GRID_KEY_CODES.has(it) || (Array.isArray(it) && it.some((k) => GRID_KEY_CODES.has(k)));
+      const lead = GRID_KEY_SEGMENTS.length; // 格坐标段的段数（w、里块、格键）
+      kk.forEach((it, i) => { if (gridItem(it) && (!gridPrefix || i >= lead)) err(E.E_PATH_KEYKINDS, p, `#/keyKinds/${p}`, it, 'gridKey only in the leading * segments (w, chunk, cell) of a cells.* / fieldCells.* pattern'); });
+      if (gridPrefix && nStarsOf(p) >= lead && !kk.slice(0, lead).every((it) => GRID_KEY_CODES.has(it))) {
+        err(E.E_PATH_KEYKINDS, p, `#/keyKinds/${p}`, kk.slice(0, lead), 'leading * segments (w, chunk, cell) of a cells.* / fieldCells.* pattern must be gridKey');
+      }
+    }
   }
   for (const p of sorted(Object.keys(pathTypes))) {
     if (nStarsOf(p) > 0 && !textSet.has(p) && !Object.hasOwn(keyKinds, p)) err(E.E_PATH_KEYKINDS, p, `#/pathTypes/${p}`, undefined, 'keyKinds entry (one item per * segment) required for a non-textPath pattern with * segments');

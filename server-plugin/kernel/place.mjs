@@ -17,22 +17,26 @@ import { fixedUnits, fixedToNumber, fixedAdd, fixedDivide } from './det-math.mjs
 import { checkDef, checkValue } from './validate/types.mjs';
 import { T } from './handles/markers.mjs';
 import { buildE } from './handles/generated.mjs';
-import { FOOTPRINT_KIND } from './footprint-kind.mjs';
+import { FOOTPRINT_KIND, isSettlementClasses } from './footprint-kind.mjs';
 import {
   zoneOfPos, cellList, regionGeometry, regionHeights, regionCellPos, landRegionCell, accessCell, openBoundaryCells,
   straightM as straightMCore, bearingView as bearingViewCore,
+  regionOfPos, ownerIdAt, inBox, keyOf, controlPointsOf, regionCellHeight,
 } from './footprint.mjs';
+import { columnSurface, nearControlPoints, regionSlope, cellAt, cellFlags } from './grid-base.mjs';
+import { checkGenTemplates, genTemplateOf, templateBlocksOf } from './grid-template.mjs';
 import { buildPlan, expandClasses, waterAccessOf, footprintAdjacency, edgeAdjacency } from './place-plan.mjs';
 import { createRouteEnv, edgeNumbers } from './route-edges.mjs';
 import { report } from './report.mjs';
 import { isPosValue } from './named-structs.mjs';
-import { cellClassOf } from './grid.mjs';
+import { cellClassOf, surfaceStorey as surfaceStoreyOf } from './grid.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
 // 本卷的表与维度、边节字段（卷五 §2.1、§4.1.1；表头里登记的名字，本文件只读它们，不另定义含义）。
 const PLACE = 'place';
+const MATERIAL = 'material';
 const DIM = Object.freeze({
   parent: 'parent', areaM2: 'areaM2', underground: 'underground', elevationM: 'elevationM', coord: 'coord',
   centroid: 'centroid', zRange: 'zRange', anchor: 'anchor', facing: 'facing', waterKind: 'waterKind',
@@ -289,6 +293,127 @@ export function landCell(engine, state, { place, seedKey, coarse }) {
     return null;
   }
   return landRegionCell(engine.rules.grid, worldSeedOf(engine), plan, rp.rows, terrainEntryOf(engine), place, seedKey);
+}
+
+// ---------- gridView（卷五 §3.1、§4.3 规则 8–11、§4.5；格子迁移 G6） ----------
+
+// 材料行的分态布尔（卷三甲 :128–:131 always 必填，加载期已核每行三栏都有值）：读 dim()，取格的当时物态那一栏。
+// 读不到（行不是材料、栏不是布尔）说明加载保证被破坏，当内核错误抛出，不当未知也不当假。
+function materialFlagReader(engine, state) {
+  return (material, matterState, flag) => {
+    const f = dim(engine, state, MATERIAL, material, flag);
+    if (!f.known || !isObj(f.value) || typeof f.value[matterState] !== 'boolean') throw new KernelError('E-DIM-REQUIRED-MISSING', {}, `gridView: material ${material} has no ${flag}.${matterState} (required always)`);
+    return f.value[matterState];
+  };
+}
+
+// 一个区格的区格层事实（规则 8、9）：所属最深区域足迹、地形类、中心列地表、坡度、水体类、是否聚落、是否道路或航道。一次 gridView 调用内按区格缓存（不跨调用）。
+function regionFacts(engine, state, rp, plan, rx, ry, entries) {
+  const grid = engine.rules[RULES.grid];
+  const k = keyOf(plan.box, rx, ry);
+  const owner = ownerIdAt(plan, k);
+  if (owner === undefined) return null;
+  const row = rp.rows.get(owner);
+  const worldSeed = worldSeedOf(engine);
+  const terrainOf = terrainEntryOf(engine);
+  const centerH = regionCellHeight(grid, worldSeed, plan, rp.rows, terrainOf, rx, ry);
+  let slope = null;
+  if (centerH !== null) {
+    // 外包框外没有区格，不参加；框内邻格高度未知则坡度未知（regionSlope 往下传，卷二 §1.12），不跳过。
+    const nbrs = [[1, 0], [-1, 0], [0, 1], [0, -1]].filter(([dx, dy]) => inBox(plan.box, rx + dx, ry + dy)).map(([dx, dy]) => regionCellHeight(grid, worldSeed, plan, rp.rows, terrainOf, rx + dx, ry + dy));
+    slope = regionSlope(grid, centerH, nbrs);
+  }
+  // 水体类、聚落：只沿最深归属行的祖先链看（同 waterAccessOf 的口径，不为每格建集合）。
+  let waterKind = null;
+  let inSettlement = false;
+  for (let c = owner; c !== null && c !== undefined; c = rp.rows.get(c).parent) {
+    const wk = rp.rows.get(c).waterKind;
+    if (waterKind === null && typeof wk === 'string') waterKind = wk;
+    if (isSettlementClasses(rp.classes.get(c))) inSettlement = true;
+  }
+  const { env } = routeEnvOf(engine, state);
+  const roads = env.roadsOf(plan);
+  const onRoad = roads !== null && (roads.land.has(k) || roads.water.has(k));
+  const cellClass = slope === null ? null : cellClassOf(entries, { terrain: row.terrain, waterKind, slope, onRoad, inSettlement });
+  return { owner, row, centerH, slope, waterKind, inSettlement, onRoad, cellClass };
+}
+
+/**
+ * kernelApi `gridView(engine, state, {w, region: {x, y}} | {w, cells: {x0, y0, z0, x1, y1, z1}})`（卷五 §3.1 :313）：纯读，结果只由生成输入与（当日有效输入版本）决定，
+ * 与该区格此刻在不在现场泡里无关（§4.1 规则 17）；不缓存、不写状态。
+ * - 区格：{w, region, owner（所属最深区域足迹）, cellClass, genTemplate, surfaceStorey, surfaceHeightM（中心列）, slope, onRoad, inSettlement}；格空间不存在或区格在外包框外为 null；
+ *   中心列高度未知（控制点海拔未知）时 surfaceStorey、surfaceHeightM、slope、cellClass 为 null。
+ * - 细格范围（闭区间，x、y、z 为细格整数坐标）：返回 {w, cells: [...]}，只含外包框内的列，按 (x, y, z) 字典序；每格 {x, y, z, known, material（空气是 gentemplate.airMaterial 那一行、物态 gas）, state, selfSupport, kind, fixture, mark, ceiling,
+ *   blocksSky, bearsLoad, standable, zone}。列高度或区格坡度未知则该列各格 known 为 false、其余字段 null。kind、fixture、ceiling（G7 建筑蓝图）、mark、fixture（G9 差分）、体积凿空（G8）
+ *   本卡恒为 null，格内容只含基底与模板格块。水体足迹里的区格（waterKind 非空）地表以上的格 known 为 false：水体账户的读数（卷二十 §4.6.1）与存量单元行（卷五 §2.1 水体字段、stocks）
+ *   代码里尚未建，水层读不到即未知，不报成干地（接上后改调 grid-base.mjs 的 waterOfRegion，去掉这一支；docs/问题.md "G6 遗留"）；有形存量的位置层同理还没叠。返回结构里没有余额、件数、千克数（S5-8）。
+ * @param {any} engine @param {any} state
+ * @param {{w: number, region?: {x: number, y: number}, cells?: {x0: number, y0: number, z0: number, x1: number, y1: number, z1: number}}} spec
+ */
+export function gridView(engine, state, spec) {
+  const rp = planOf(engine, state);
+  const plan = rp.plans.get(spec.w);
+  if (!plan) return null;
+  const grid = engine.rules[RULES.grid];
+  const index = engine.vocab && engine.vocab.index instanceof Map ? engine.vocab.index : new Map();
+  const entries = [...index].filter(([, rec]) => rec && rec.family === FAMILY.cellclass).map(([code, rec]) => [code, rec.entry]);
+  if (isObj(spec.region)) {
+    const { x: rx, y: ry } = spec.region;
+    if (!inBox(plan.box, rx, ry)) return null;
+    const f = regionFacts(engine, state, rp, plan, rx, ry, entries);
+    if (f === null) return null;
+    const tpl = f.cellClass === null ? null : genTemplateOf(index, f.cellClass);
+    return Object.freeze({
+      w: plan.w, region: Object.freeze({ x: rx, y: ry }), owner: f.owner, cellClass: f.cellClass, genTemplate: tpl === null ? null : tpl.code,
+      surfaceStorey: f.centerH === null ? null : surfaceStoreyOf(grid, f.centerH), surfaceHeightM: f.centerH === null ? null : fixedToNumber(f.centerH),
+      slope: f.slope, onRoad: f.onRoad, inSettlement: f.inSettlement,
+    });
+  }
+  if (!isObj(spec.cells)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'gridView: spec needs region or cells');
+  const { x0, y0, z0, x1, y1, z1 } = spec.cells;
+  const worldSeed = worldSeedOf(engine);
+  const terrainOf = terrainEntryOf(engine);
+  const cps = controlPointsOf(grid, plan, rp.rows);
+  const flagOf = materialFlagReader(engine, state);
+  const memo = new Map(); // 本次调用内相邻列共用的格点噪声（只省哈希）
+  const regions = new Map(); // 本次调用内的区格事实与模板、格块
+  const out = [];
+  for (let x = x0; x <= x1; x += 1) {
+    for (let y = y0; y <= y1; y += 1) {
+      const r = regionOfPos(grid, { x, y });
+      if (!inBox(plan.box, r.x, r.y)) continue;
+      const rk = keyOf(plan.box, r.x, r.y);
+      let reg = regions.get(rk);
+      if (reg === undefined) {
+        const f = regionFacts(engine, state, rp, plan, r.x, r.y, entries);
+        if (f === null) { reg = null; } else if (f.centerH === null || f.slope === null) {
+          reg = { unknown: true, f }; // 中心列高度或某个框内邻格高度未知（控制点海拔未知）：坡度、地形类、各列都未知，不借别的值、不抛码
+        } else {
+          if (f.cellClass === null) throw new KernelError('E-GRID-CELL-NO-TERRAIN', {}, `gridView: no cellclass entry for region ${r.x},${r.y}`);
+          const tpl = genTemplateOf(index, f.cellClass);
+          const centerZ = f.centerH === null ? null : surfaceStoreyOf(grid, f.centerH);
+          const blocks = centerZ === null ? [] : templateBlocksOf(grid, worldSeed, plan.w, r, Array.isArray(tpl.blocks) ? tpl.blocks : [], centerZ);
+          reg = { f, tpl, blocks, entry: terrainOf(f.row.terrain), cps: nearControlPoints(grid, cps, r.x, r.y) };
+        }
+        regions.set(rk, reg);
+      }
+      if (reg === null) continue;
+      const surf = reg.unknown || reg.entry === null ? null : columnSurface(grid, worldSeed, plan.w, reg.cps, reg.entry, x, y, memo);
+      for (let z = z0; z <= z1; z += 1) {
+        if (surf === null) { out.push(Object.freeze({ x, y, z, known: false, material: null, state: null, selfSupport: null, kind: null, fixture: null, mark: null, ceiling: null, blocksSky: null, bearsLoad: null, standable: null, zone: reg.f.owner })); continue; }
+        // 水体足迹里的区格：地表以上画水，要读水体账户（卷二十 §4.6.1），代码里还没有账户读数——读不到就是未知，不能报成干地（卷五 :660 水只画在地表之上）。
+        const inWater = reg.f.waterKind !== null;
+        if (inWater && z > surf.z) { out.push(Object.freeze({ x, y, z, known: false, material: null, state: null, selfSupport: null, kind: null, fixture: null, mark: null, ceiling: null, blocksSky: null, bearsLoad: null, standable: null, zone: reg.f.owner })); continue; }
+        const col = { x, y, surfaceZ: surf.z, tpl: reg.tpl, rockMaterial: null, water: null, blocks: reg.blocks, overlay: null };
+        const c = cellAt(col, z);
+        const fl = cellFlags(col, z, flagOf);
+        // 水体足迹里地表层及以下的格：头顶有没有冰（遮天）也是未读的水层，已确定遮天为真的不变，否则未知。
+        if (inWater && fl.blocksSky !== true) fl.blocksSky = null;
+        out.push(Object.freeze({ x, y, z, known: true, material: c.material, state: c.state, selfSupport: c.selfSupport, kind: null, fixture: null, mark: null, ceiling: null, blocksSky: fl.blocksSky, bearsLoad: fl.bearsLoad, standable: fl.standable, zone: reg.f.owner }));
+      }
+    }
+  }
+  return Object.freeze({ w: plan.w, cells: Object.freeze(out) });
 }
 
 /**
@@ -949,6 +1074,10 @@ export function checkPlaceTable(view) {
     }
     for (const r of rp.layerRoots) if (!spaceRoots.has(r)) errors.push(`E-DIM-REF-MISSING place/${r}: layer-root row has no grid space (${SECTION.gridSpaces})`);
     if (rp.plans.size > 0) checkCellClasses(view, rp, errors);
+    // 细格生成模板（卷十 :118）：族条目字段与材料引用常查；cellclass.genTemplate 的引用在世界划出了区格时核（与 cellclass 兜底同口径）。
+    const mt = view.tables instanceof Map ? view.tables.get(MATERIAL) : undefined;
+    const hasMaterial = (code) => Boolean(mt && mt.flat && mt.flat.rows instanceof Map && mt.flat.rows.has(code));
+    if (idx instanceof Map) errors.push(...checkGenTemplates(idx, hasMaterial, true));
   }
   // 规则 4：边节。
   const def = t.doc[SECTION.edgeStruct];
