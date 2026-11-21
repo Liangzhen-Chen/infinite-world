@@ -198,6 +198,17 @@ export function diceKeyText(worldSeed, streamCode, subjectParts, worldTime, draw
 }
 
 /**
+ * 区格生成种子键文本（卷五 §4.1 规则 15、卷二十七 R27-5.9）：世界种子 | 生成流代号 | 抽取点代号 | 其余整数成分。
+ * 其余整数成分由调用方给出（区格种子是格空间号 w、区格 x、区格 y；起伏噪声是格空间号 w、格点、级数），按 String 转十进制。
+ * 生成流代号与抽取点代号是调用处的字面量（seed_sites 检测器按登记表双向比对）；sha256 归调用方（kernel/grid.mjs）。
+ * @param {string} worldSeed 世界种子 @param {string} stream 生成流代号 @param {string} site 抽取点代号 @param {...(number|string)} parts
+ * @returns {string}
+ */
+export function gridSeedKeyText(worldSeed, stream, site, ...parts) {
+  return [worldSeed, stream, site, ...parts.map(String)].join(KEY_JOIN);
+}
+
+/**
  * 拆 state 路径或路径模式为段（§2.7 路径模式匹配语义：按 `.` 分段）。kernel 组里 state 路径的字串拆分只在本文件做（§2.8 表 kernel 行），
  * storage.mjs 读写时经它拿段，不自己切字串。不是非空字串、或有空段，返回 null。
  * @param {unknown} path

@@ -12,6 +12,7 @@
  "server-plugin/kernel/error-codes.mjs",
  "server-plugin/kernel/errors.mjs",
  "server-plugin/kernel/events.mjs",
+ "server-plugin/kernel/grid.mjs",
  "server-plugin/kernel/handles/display-lang.mjs",
  "server-plugin/kernel/handles/entity-id.mjs",
  "server-plugin/kernel/handles/generated.mjs",

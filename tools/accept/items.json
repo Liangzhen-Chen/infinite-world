@@ -3318,6 +3318,33 @@
    "zeroRows": []
   },
   {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-5.6",
+   "localNo": "A27-5.6",
+   "method": "unit_test",
+   "print": "576e943e713e007cff007307a92a86c3681800c3a7ca4dcf8df72cf422917716",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "g2-height",
+     "date": "2026-11-21",
+     "rev": 1,
+     "summary": "首次登记（G2 高度场与区格派生：A27-5.6 格派生的确定性归 G2；指向 tests/kernel/grid.test.mjs 的乱序派生逐格相同测试，非新检测器）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-5.6 :662（格派生的确定性：同一世界种子派生两遍、乱序派生、清缓存，区格结果逐格相同，种子键登记表里生成流的行不含版本成分）；对照表 #13、#16 归 G2",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
    "detector": "call_edge",
    "expect": "zero",
    "form": "scan",

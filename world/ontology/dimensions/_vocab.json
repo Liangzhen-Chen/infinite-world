@@ -23,6 +23,8 @@
    "prefix": "bform_"
   },
   "category": {"closed": false, "entries": {"category_apparel": {"stockSlot": true}, "category_container": {"stockSlot": true}, "category_document": {"stockSlot": true}, "category_food": {"stockSlot": true}, "category_tool": {"stockSlot": true}, "category_weapon": {"stockSlot": true}}, "prefix": "category_"},
+  "cellclass": {"closed": false, "entries": {}, "prefix": "cellclass_"},
+  "cellmark": {"closed": false, "entries": {}, "prefix": "cellmark_"},
   "dockind": {"closed": false, "entries": {}, "prefix": "dockind_"},
   "emphasis": {"closed": false, "entries": {}, "prefix": "emph_"},
   "fault": {"closed": false, "entries": {}, "prefix": "fault_"},
@@ -2400,16 +2402,16 @@
   "terrain": {
    "closed": true,
    "entries": {
-    "terrain_cave": {},
-    "terrain_coast": {},
-    "terrain_desert": {},
-    "terrain_forest": {},
-    "terrain_hill": {},
-    "terrain_lake": {},
-    "terrain_marsh": {},
-    "terrain_mountain": {},
-    "terrain_plain": {},
-    "terrain_river": {}
+    "terrain_cave": {"reliefM": 2.6, "reliefRough": 0.5, "basis": "推算：s=0.10；reliefM=s×regionCellM(100)÷3.75，3.75=2×(1+0.5+0.25+0.125)（4 级相邻区格中心高差上界=2×Σ reliefRough^k×reliefM），向下取一位小数；reliefRough 各地形统一取 0.5（1/f 分形噪声逐级振幅减半的通用取法，各地形暂不区分粗糙度）；暂定·待试玩标定"},
+    "terrain_coast": {"reliefM": 0.8, "reliefRough": 0.5, "basis": "推算：s=0.03；reliefM=s×100÷3.75=0.8（式同 terrain_cave）；暂定·待试玩标定"},
+    "terrain_desert": {"reliefM": 2, "reliefRough": 0.5, "basis": "推算：s=0.08（沙丘缓坡）；reliefM=s×100÷3.75=2.13，取 2（式同 terrain_cave）；暂定·待试玩标定"},
+    "terrain_forest": {"reliefM": 1.3, "reliefRough": 0.5, "basis": "推算：s=0.05；reliefM=s×100÷3.75=1.33，取 1.3（式同 terrain_cave）；暂定·待试玩标定"},
+    "terrain_hill": {"reliefM": 5.3, "reliefRough": 0.5, "basis": "推算：s=0.20；reliefM=s×100÷3.75=5.33，取 5.3（式同 terrain_cave）；暂定·待试玩标定"},
+    "terrain_lake": {"reliefM": 0, "reliefRough": 0.5, "basis": "水面平坦，振幅 0；reliefRough 取通用值 0.5（振幅为 0 时不起作用）；暂定·待试玩标定"},
+    "terrain_marsh": {"reliefM": 0.2, "reliefRough": 0.5, "basis": "推算：s=0.01；reliefM=s×100÷3.75=0.27，取 0.2（式同 terrain_cave）；暂定·待试玩标定"},
+    "terrain_mountain": {"reliefM": 13.3, "reliefRough": 0.5, "basis": "推算：s=0.50（陡坡上限，约 27°；大尺度坡度由控制面给，本项只管起伏）；reliefM=s×100÷3.75=13.33，取 13.3（式同 terrain_cave，保证邻区格坡度不超 s、不顶到 1）；暂定·待试玩标定"},
+    "terrain_plain": {"reliefM": 0.5, "reliefRough": 0.5, "basis": "推算：s=0.02；reliefM=s×100÷3.75=0.53，取 0.5（式同 terrain_cave）；暂定·待试玩标定"},
+    "terrain_river": {"reliefM": 0, "reliefRough": 0.5, "basis": "水面平坦，振幅 0；reliefRough 取通用值 0.5；暂定·待试玩标定"}
    },
    "prefix": "terrain_"
   },

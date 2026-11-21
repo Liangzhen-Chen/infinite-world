@@ -1,0 +1,34 @@
+{
+ "rows": [
+  {
+   "key": "storeyM",
+   "value": 3,
+   "basis": "卷五 §2.3 :271（层高，3 m；拍板第 1 条）"
+  },
+  {
+   "key": "regionCellM",
+   "value": 100,
+   "basis": "卷五 §2.3 :271（区格边长，100 m；拍板第 1 条）"
+  },
+  {
+   "key": "heightCtrlK",
+   "value": 4,
+   "basis": "卷五 §2.3 :271 高度场插值取最近几个控制点；卷文无数值，暂定·待试玩标定"
+  },
+  {
+   "key": "reliefOctaves",
+   "value": 4,
+   "basis": "卷五 §2.3 :271 起伏叠几级；卷文无数值，暂定·待试玩标定"
+  },
+  {
+   "key": "surfaceElevationMinM",
+   "value": -12000,
+   "basis": "卷五 §4.1.1 :425（海拔取值域下限 −12000 m）"
+  },
+  {
+   "key": "surfaceElevationMaxM",
+   "value": 9000,
+   "basis": "卷五 §4.1.1 :425（海拔取值域上限 9000 m）"
+  }
+ ]
+}

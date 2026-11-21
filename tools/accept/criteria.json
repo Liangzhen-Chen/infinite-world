@@ -324,10 +324,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 60
+    },
+    {
+     "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 61
     }
    ],
-   "print": "8ff6e3ccf4be1dafb5bd0ca369b5f3cb3ca3d8b7058f0982d275548304ccb2c4",
-   "rev": 60,
+   "print": "33a967bc61d306aaab5de10b54d67e504379f02ce643b68fd6529fbe1b83bc43",
+   "rev": 61,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -821,10 +825,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 57
+    },
+    {
+     "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 58
     }
    ],
-   "print": "40ef61449615245315eb6d4c0f14bed2b0c39c94cd3ad0372a1c3d2f7023bdef",
-   "rev": 57,
+   "print": "7c3658ce2f863e8e563a693fa5bede455c74398d054b650e34703ee0ccbb762d",
+   "rev": 58,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1400,10 +1408,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 54
+    },
+    {
+     "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 55
     }
    ],
-   "print": "2ee01b3d894163b987afd7f1d4c54a0c46824e968d6ffb62fba8795955d678c3",
-   "rev": 54,
+   "print": "be403fa266c0631c2556d92d196e8c6c962f6046be053becd8450f2b687cf942",
+   "rev": 55,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1813,10 +1825,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 70
+    },
+    {
+     "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 71
     }
    ],
-   "print": "51c85df14d16a2db388e7a842600b6fc97ca5ee539765520a21c83ae8fe99e7d",
-   "rev": 70,
+   "print": "92883dffba2aa7dbf9d0b80c6467d161c7f34e58877edb583182e17c6222d846",
+   "rev": 71,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -2163,10 +2179,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 55
+    },
+    {
+     "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 56
     }
    ],
-   "print": "2ee01b3d894163b987afd7f1d4c54a0c46824e968d6ffb62fba8795955d678c3",
-   "rev": 55,
+   "print": "be403fa266c0631c2556d92d196e8c6c962f6046be053becd8450f2b687cf942",
+   "rev": 56,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -2914,10 +2934,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 55
+    },
+    {
+     "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 56
     }
    ],
-   "print": "2ee01b3d894163b987afd7f1d4c54a0c46824e968d6ffb62fba8795955d678c3",
-   "rev": 55,
+   "print": "be403fa266c0631c2556d92d196e8c6c962f6046be053becd8450f2b687cf942",
+   "rev": 56,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -3128,10 +3152,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 49
+    },
+    {
+     "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 50
     }
    ],
-   "print": "28c594599b72cf95eff25aa22ea83d3d282775609fd0b6f4133af07f036a25a4",
-   "rev": 49,
+   "print": "752f520ab8b69da38f22b4050e5024d2c30178a7aea6c3fbbe5676e224bfbf14",
+   "rev": 50,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -3422,10 +3450,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 69
+    },
+    {
+     "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 70
     }
    ],
-   "print": "99d2764235ee9d7bf413b1482eb85e2140189a2c5ab64e43a8fd8cde6bdfde1b",
-   "rev": 69,
+   "print": "947170ba3b5d3f0e4f89a08cd0a81fceed420f5edc171da9a82573d3a6f805a4",
+   "rev": 70,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -3729,10 +3761,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 34
+    },
+    {
+     "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 35
     }
    ],
-   "print": "e2a54f269305ee04b7aa93b58acc43086adb8b7432b00848000f64cbd3be03bf",
-   "rev": 34,
+   "print": "3d014b3a8de766bcb28d4e7986a92df4eeb594e1b8f705bc38b719d7fcef45c3",
+   "rev": 35,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -3986,10 +4022,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 58
+    },
+    {
+     "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 59
     }
    ],
-   "print": "8ff6e3ccf4be1dafb5bd0ca369b5f3cb3ca3d8b7058f0982d275548304ccb2c4",
-   "rev": 58,
+   "print": "33a967bc61d306aaab5de10b54d67e504379f02ce643b68fd6529fbe1b83bc43",
+   "rev": 59,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -4127,10 +4167,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 32
+    },
+    {
+     "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 33
     }
    ],
-   "print": "52f86a5b6c2d5ecbe8f8ab0fc25596a93e963f0098ab8739e7a4fc9a24deaf47",
-   "rev": 32,
+   "print": "dcb9392a18d0ea4dfd8728d46a5f2e9f759e196ffda12d0ca4c3740e00e4704c",
+   "rev": 33,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -4565,10 +4609,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 51
+    },
+    {
+     "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 52
     }
    ],
-   "print": "28c594599b72cf95eff25aa22ea83d3d282775609fd0b6f4133af07f036a25a4",
-   "rev": 51,
+   "print": "752f520ab8b69da38f22b4050e5024d2c30178a7aea6c3fbbe5676e224bfbf14",
+   "rev": 52,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
