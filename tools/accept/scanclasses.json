@@ -119,12 +119,12 @@
      "Math.sqrt": []
     },
     "../kernel/det-math.mjs": {
-     "fixedSqrtInt": [],
-     "atan": []
+     "atan": [],
+     "fixedSqrtInt": []
     },
     "./kernel/det-math.mjs": {
-     "fixedSqrtInt": [],
-     "atan": []
+     "atan": [],
+     "fixedSqrtInt": []
     }
    },
    "detectors": [
@@ -565,6 +565,13 @@
    ],
    "scanClass": "self_name",
    "source": "卷十二 §3.4 S12-5、§2.3 :228、§1.3 第 2 条；P-1b 新登类别"
+  },
+  {
+   "detectors": [
+    "path_access"
+   ],
+   "scanClass": "sim_bypass",
+   "source": "卷二十七 S27-11 :260（sim-tiers.mjs 之外读 bubbleRadiusRegionCells）、A27-1.11 :369；卷十二 §2.4 开放登记。读者文件不在类别行抄名单，取自 state-owners.json systems.sys.simTiers.predicates 登记的提供文件（readerPredicates）"
   },
   {
    "detectors": [

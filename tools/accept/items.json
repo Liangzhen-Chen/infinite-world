@@ -3257,6 +3257,35 @@
    "zeroRows": []
   },
   {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tests/kernel/sim-tiers.test.mjs",
+   "itemKey": "vol27.A27-1.12",
+   "localNo": "A27-1.12",
+   "method": "property_test",
+   "print": "672e924f63870a05429a85d4334a05652c365fd5fbafb6ed9b86a2621a26621b",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "g10a-simtiers",
+     "date": "2026-11-22",
+     "rev": 1,
+     "summary": "首次登记（G10 第一步：bubbleView 两次调用相同、改位置与登记以外状态泡不变、无玩家控制实体泡为空；对照表 #59）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-1.12 :370（对任意状态 bubbleView 两次调用结果相同；改动玩家控制实体的位置与登记以外的任何状态，泡不变；没有玩家控制实体时泡为空）；测试 tests/kernel/sim-tiers.test.mjs（泡由状态算出各条）；泡触及单元恒为个体层一句归卷二十七主体卡（simTierOf 落地后补）",
+   "stage": 0,
+   "state": "implemented",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
    "detector": "det_save_load",
    "expect": "all_pass",
    "form": "invariant",
@@ -3448,6 +3477,47 @@
    "runsOn": "local_static",
    "scanClass": "seed_sites",
    "source": "卷二十七 §4.8 R27-8.4 :720（role_seed 行（流代号, 抽取点代号）两两不同、前缀不得为空，有重复或空前缀即 E-SEED-COLLISION）；A27-8.1 :759；检测器 tools/accept/detectors/seed_sites.mjs；表代号经扫描类别行 seedTable 派生（R12-11.5）。真实仓库登记表随 4-3 重建，现读数如实报，状态留 implemented（R12-11.7 :1110）",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "detector": "path_access",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/path_access.mjs",
+   "itemKey": "vol27.S27-11.a",
+   "localNo": "S27-11.a",
+   "method": "static_code",
+   "params": {
+    "access": "read",
+    "code": "E-SIM-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "gate",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "paths": [
+     "bubbleRadiusRegionCells"
+    ],
+    "readerPredicates": [
+     "sys.simTiers"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "sim_bypass",
+   "source": "卷二十七 S27-11 :260 前半（sim-tiers.mjs 之外读 bubbleRadiusRegionCells 即 E-SIM-BYPASS）、A27-1.11 :369（bubbleRadiusRegionCells 只在 sim-tiers.mjs 被读）、§2.2 :153。读者文件取自 state-owners.json systems.sys.simTiers.predicates 所指文件（sim-tiers.mjs，不点名文件）；范围取全部服务端组与内核组；成员链、字串下标与对象解构均计。后半'自算玩家周围区格'语义不可纯静态判，由 tests/kernel/sim-tiers.test.mjs 守（对照表 #59）；S27-11 的 alterCells 调用链半条归 vol5.S5-9（G9 开写前登），故本条目键带 .a。局限：解构取出后的别名追不到（path_access 头注释已声明）。",
    "stage": 0,
    "state": "implemented",
    "target": "runtime_code",

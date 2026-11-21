@@ -45,6 +45,8 @@ export function tempRepo() {
   cpSync(join(ROOT, 'server-plugin/kernel/ledger.mjs'), join(dir, 'server-plugin/kernel/ledger.mjs'));
   // 卷二 §2.5 :503 terminal 的读者由 state-owners systems.sys.capacity.predicates 派生（path_access predicateFiles，vol2.K6-24），同理带上谓词提供文件本身。
   cpSync(join(ROOT, 'server-plugin/action-capacity.mjs'), join(dir, 'server-plugin/action-capacity.mjs'));
+  // 卷二十七 S27-11 :260 bubbleRadiusRegionCells 的读者由 systems.sys.simTiers.predicates 派生（vol27.S27-11.a），同理带上提供文件 sim-tiers.mjs 本身。
+  cpSync(join(ROOT, 'server-plugin/sim-tiers.mjs'), join(dir, 'server-plugin/sim-tiers.mjs'));
   // 块 6 第 6-3 张：stockLots 的腐坏字段声明写者 item-lots.mjs 是 stateKeys.stockLots.writers 登记的文件，sys.economy 的派生范围随之含它，同理带上。
   cpSync(join(ROOT, 'server-plugin/item-lots.mjs'), join(dir, 'server-plugin/item-lots.mjs'));
   // 放进来的 kernel 文件要在两处登记里站得住：成员闭集清单（E-FILE-UNASSIGNED，S19）与 S10 的常数登记豁免表。

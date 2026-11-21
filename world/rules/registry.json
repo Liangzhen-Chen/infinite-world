@@ -571,6 +571,18 @@
    "volume": "卷十 §2.3 :165（rules.gen.water.rows：命中的水体取哪一类、多深；本卡只落 priority、waterKind、depthM，whenRX 与 liquidRX 随存量单元行与 rx 读邻格聚合落地后补）、:166（rules.gen.water.fill.rows，键名取驼峰 waterFillRows：作者手写水体行缺足迹输入时的补法，R10-2.17）、:186（rules.gen.bldfill.rows，键名取驼峰 bldfillRows：手写建筑行缺面积与层数时的取值范围，R10-7.12）、R10-2.12 :427（句柄 rules.gen.roles.tract、rules.gen.roles.waterbody，键名取驼峰 roleTract、roleWaterbody）；读者是 kernel/gen/worldgen.mjs、kernel/gen/water.mjs、kernel/gen/waterfoot.mjs、kernel/gen/siteform.mjs",
    "multiSourceMerge": "own_key_only",
    "packOverridable": {"waterRows": false, "waterFillRows": false, "bldfillRows": false, "roleTract": false, "roleWaterbody": false, "roleFacility": false, "underMaxAreaM2": false}
+  },
+  {
+   "code": "simTiers",
+   "file": "tables/sim-tiers.json",
+   "structure": "keys",
+   "type": {
+    "bubbleRadiusRegionCells": {"type": "integer", "unit": "count", "domain": [1, 4]}
+   },
+   "domain": {"bubbleRadiusRegionCells": [1, 4]},
+   "volume": "卷二十七 §2.2 :153（sim-tiers 表 bubbleRadiusRegionCells：现场泡半径，整数 1–4 区格，没有\"不限\"值；R27-1.12 :310；只登有运行期消费者的键，其余 sim-tiers 键随各自消费者卡登；读点只在 sim-tiers.mjs，S27-11 :260）",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"bubbleRadiusRegionCells": false}
   }
  ]
 }

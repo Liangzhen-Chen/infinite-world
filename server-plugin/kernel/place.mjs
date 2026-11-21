@@ -349,6 +349,26 @@ export function regionCell(engine, state, { w, region }) {
 }
 
 /**
+ * kernelApi `regionOf(engine, pos)`（卷五 §4.1.1：区格序号 = floor(x × cellM ÷ regionCellM)，派生不存；全书"位置所在区格"唯一出处）：
+ * 返回 {x, y}。纯函数，不读状态，引擎只用来取 rules.grid 的格尺度；pos 须合 struct:pos，否则 E-DIM-STRUCT-FIELD。
+ * @param {any} engine @param {{w: number, x: number, y: number, z: number, coarse: boolean}} pos @returns {{x: number, y: number}}
+ */
+export function regionOf(engine, pos) {
+  requirePos(pos, 'regionOf pos');
+  return regionOfPos(engine.rules.grid, pos);
+}
+
+/**
+ * kernelApi `gridSpaceBox(engine, state, w)`（卷五 §4.1.1：格空间表的外包框，区格序号范围）：返回冻结的 {x0, y0, cellsX, cellsY}；
+ * 格空间号不存在（含世界没登记格空间表）为 null。纯读。区格 (x, y) 在框内 ⇔ x0 ≤ x < x0 + cellsX 且 y0 ≤ y < y0 + cellsY。
+ * @param {any} engine @param {any} state @param {number} w @returns {{x0: number, y0: number, cellsX: number, cellsY: number} | null}
+ */
+export function gridSpaceBox(engine, state, w) {
+  const plan = planOf(engine, state).plans.get(w);
+  return plan ? Object.freeze({ x0: plan.box.x0, y0: plan.box.y0, cellsX: plan.box.cellsX, cellsY: plan.box.cellsY }) : null;
+}
+
+/**
  * kernelApi `landCell(engine, state, {place, kind, seedKey, coarse})`（卷五 §3.1、§4.1 规则 14）：在地点足迹内落一格。
  * coarse 为真（泡外代表格）：区域足迹按 hash(seedKey, 区格序号) 取第一个 zoneAt 恰为 place 的区格的中心列地表层格；没有可落格为 null（不落到别处）。
  * coarse 为假要可立足细格，细格基底归 G6，本卡不落：抛 E-DET-DOMAIN，不给近似。体积（G8）coarse 为真时在体积足迹的格里按 landCellKey 取最小者（同建筑、房间的取法）。纯读。

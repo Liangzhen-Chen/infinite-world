@@ -1289,6 +1289,35 @@
   },
   {
    "addedAtRev": 1,
+   "caseKey": "sim_bypass-01",
+   "expectCode": "E-SIM-BYPASS",
+   "fixture": "tests/accept/bypass/sim_bypass-01.txt",
+   "group": "rules",
+   "origin": "卷二十七 S27-11 :260 正例：规则层别处直接读 rules.simTiers.bubbleRadiusRegionCells 计 E-SIM-BYPASS",
+   "polarity": "must_fail",
+   "scanClass": "sim_bypass"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "sim_bypass-02",
+   "expectCode": "E-SIM-BYPASS",
+   "fixture": "tests/accept/bypass/sim_bypass-02.txt",
+   "group": "rules",
+   "origin": "卷二十七 S27-11 :260 正例：解构取 bubbleRadiusRegionCells 自算玩家周围区格计 E-SIM-BYPASS",
+   "polarity": "must_fail",
+   "scanClass": "sim_bypass"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "sim_bypass-11",
+   "fixture": "tests/accept/bypass/sim_bypass-11.txt",
+   "group": "rules",
+   "origin": "卷二十七 A27-1.11 :369 反例：别处只调 inBubble；读者文件 sim-tiers.mjs（取自 sys.simTiers.predicates）读该键不计",
+   "polarity": "must_pass",
+   "scanClass": "sim_bypass"
+  },
+  {
+   "addedAtRev": 1,
    "caseKey": "state_pattern-01",
    "expectCode": "E-DIM-STRUCT-FIELD",
    "fixture": "tests/accept/bypass/state_pattern-01.txt",

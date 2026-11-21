@@ -1,0 +1,4 @@
+import { inBubble } from './sim-tiers.mjs';
+export const writable = (engine, state, w, region) => inBubble(engine, state, w, region);
+// @file server-plugin/sim-tiers.mjs
+export const inBubble = (engine, state, w, region) => region.x <= engine.rules.simTiers.bubbleRadiusRegionCells;

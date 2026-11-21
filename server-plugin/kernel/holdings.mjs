@@ -250,6 +250,16 @@ function activeEdges(state, match) {
   return out;
 }
 
+/**
+ * kernelApi `openHoldingsOfKind(state, kind)`（只读；卷九 R9-3.9 的玩家席位边、卷十八 §4.1 持有边的读入口之一）：
+ * 状态里该持有种类的全部开着的边（`terms.until` 为空），按持有者 id、边句柄的码点序，返回 {id, holder, subject}（副本）。没有 holdings 节为空表。
+ * @param {any} state @param {string} kind @returns {{id: string, holder: string, subject: string}[]}
+ */
+export function openHoldingsOfKind(state, kind) {
+  const out = activeEdges(state, (e) => e.record.kind === kind).map((e) => ({ id: e.id, holder: e.holder, subject: e.record.subject }));
+  return out.sort((a, b) => (a.holder < b.holder ? -1 : a.holder > b.holder ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+}
+
 function nextEdgeId(state) {
   let max = 0;
   eachEdge(state, (e) => {

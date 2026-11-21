@@ -4471,6 +4471,29 @@
    }
   },
   {
+   "criterion": "规则表键 bubbleRadiusRegionCells（现场泡半径，卷二十七 §2.2 :153）的读点只有 sim-tiers.mjs（S27-11 前半、A27-1.11 后半）：读者文件取自 state-owners.json 的 sys.simTiers 登记（predicates 所指文件），范围取全部服务端组与内核组；范围内凡成员链、字串下标、对象解构取该键即计，一律经 bubbleView、inBubble。后半'自算玩家周围几个区格（不经 bubbleView、inBubble）'语义上不可纯静态判，由 sim-tiers 的卡内测试守（对照表 #59）；S27-11 的 alterCells 调用链半条归 vol5.S5-9（G9）。",
+   "log": [
+    {
+     "ref": "G10 第一步（对照表 #60，开写前登）：新登类别 sim_bypass，用现有检测器 path_access 的 read 方式表达读点唯一（照 S5-10 先例）；条目 vol27.S27-11.a implemented",
+     "rev": 1
+    }
+   ],
+   "print": "08cbca63ff0eff05ddb603abed942c1481d49c046aec7f989d87b56d73ad9f0d",
+   "rev": 1,
+   "scanClass": "sim_bypass",
+   "source": "卷二十七 §4.8 S27-11 :260、A27-1.11 :369；对照表 docs/迁移体检/格子G6-G11-规矩检查对照.md #60；卷十二 §2.4 开放登记",
+   "terms": {
+    "vol27.S27-11.a": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
    "log": [
     {
      "ref": "3-4 只核整改第 0 步：rebase 主线 4-4a 后 kernel/det-math.mjs 改动使本类别判据代码指纹（经 detect 器 import 闭包 validate/types.mjs）失效，按卡文用登记器重盖；检测器判定口径尚未改，本轮只重盖指纹（R12-14.3）",

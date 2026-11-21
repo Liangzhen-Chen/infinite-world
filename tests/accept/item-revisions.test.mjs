@@ -17,13 +17,14 @@ const V5 = 'vol1.V-5';
 // vol12.A12-4.4 改了 source（挂 B5-ACT），按 R12-11.11 已 rev 2 并补修订记录。块 6 第 6-20 张登卷二十七 1 条（A27-4.3，对到模板 det_save_load）：47 → 48。
 // G1 位置类型登卷二十七 1 条（A27-4.9 格基底不存档，state registered）：48 → 49。
 // G2 高度场与区格派生登卷二十七 1 条（A27-5.6 格派生的确定性，state registered）：49 → 50。
-test('登记的非扫描式条目共 50 条（卷一 14、卷十二 29、卷六 4、卷二十七 3），除 A12-4.4 外每条 rev 为 1、带首条修订记录', () => {
+// G10 第一步登卷二十七 1 条（A27-1.12 泡由状态算出，指向 tests/kernel/sim-tiers.test.mjs，state implemented）：50 → 51。
+test('登记的非扫描式条目共 51 条（卷一 14、卷十二 29、卷六 4、卷二十七 4），除 A12-4.4 外每条 rev 为 1、带首条修订记录', () => {
   const rows = nonScan();
-  assert.equal(rows.length, 50);
+  assert.equal(rows.length, 51);
   assert.equal(rows.filter((r) => r.volume === 'vol1').length, 14);
   assert.equal(rows.filter((r) => r.volume === 'vol12').length, 29);
   assert.equal(rows.filter((r) => r.volume === 'vol6').length, 4);
-  assert.equal(rows.filter((r) => r.volume === 'vol27').length, 3);
+  assert.equal(rows.filter((r) => r.volume === 'vol27').length, 4);
   // vol27.A27-4.3 在 6-20 修改轮改了 detector、method、runsOn（Opus 只核 ⑥），按 R12-11.11 已 rev 2 并补修订记录。
   const revised = (k) => k === 'vol12.A12-4.4' || k === 'vol27.A27-4.3';
   for (const r of rows) {
@@ -32,10 +33,10 @@ test('登记的非扫描式条目共 50 条（卷一 14、卷十二 29、卷六 
     assert.equal(r.revisions[0].rev, 1, r.itemKey);
   }
   // 状态：门禁设施卡（api-gatecore）把 A6-1.2 a、b 经执行器真跑测试文件为 pass 后流转进必过集合（R12-11.7），其余仍 registered。
-  assert.deepEqual(rows.filter((r) => r.state !== 'registered').map((r) => [r.itemKey, r.state]), [['vol6.A6-1.2.a', 'in_core'], ['vol6.A6-1.2.b', 'in_core']]);
+  assert.deepEqual(rows.filter((r) => r.state !== 'registered').map((r) => [r.itemKey, r.state]), [['vol27.A27-1.12', 'implemented'], ['vol6.A6-1.2.a', 'in_core'], ['vol6.A6-1.2.b', 'in_core']]);
 });
 
-test('S12-16：50 条非扫描式条目首次登记零报错，门禁不报降级', async () => {
+test('S12-16：51 条非扫描式条目首次登记零报错，门禁不报降级', async () => {
   const dir = tempRepo();
   try {
     // 首次登记一律从 registered 起（R12-11.7），已流转的条目按首次登记的样子交行；已有修订记录的条目（A12-4.4）不走首次登记。
@@ -46,8 +47,8 @@ test('S12-16：50 条非扫描式条目首次登记零报错，门禁不报降�
     const res = register(dir, { items: rows });
     assert.deepEqual(res.errors, []);
     const stored = readRegistry(dir, 'items').filter((r) => !r.scanClass);
-    // 临时仓库的初版只留扫描式条目，这里再登 48 条首登（A12-4.4、A27-4.3 已有修订记录，不在首登输入里）。
-    assert.equal(stored.length, 48);
+    // 临时仓库的初版只留扫描式条目，这里再登 49 条首登（A12-4.4、A27-4.3 已有修订记录，不在首登输入里）。
+    assert.equal(stored.length, 49);
     assert.ok(stored.every((r) => typeof r.print === 'string' && r.print.length === 64));
     const failed = failedOf((await accRun('pre_commit', 'S12-16', null, { root: dir })).report);
     assert.equal(failed['vol12.S12-16'], undefined);

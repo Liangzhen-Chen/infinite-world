@@ -1,0 +1,4 @@
+export const around = (engine, cx) => {
+  const { bubbleRadiusRegionCells: r } = engine.rules.simTiers;
+  return [cx - r, cx + r];
+};
