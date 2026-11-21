@@ -51,12 +51,12 @@
    "file": "tables/crafting.json",
    "structure": "keys",
    "type": {
-    "laborRate": {"type": "list", "of": {"type": "struct", "required": ["minScore", "copperPerMinute"], "fields": {"minScore": {"type": "number", "unit": "score", "precision": 4}, "copperPerMinute": {"type": "number", "unit": "copper_per_minute", "precision": 4}}}},
+    "laborRate": {"type": "number", "unit": "copper_per_minute", "precision": 4},
     "valueAdd": {"type": "number", "unit": "fraction", "precision": 4},
     "unbuilt": {"type": "set", "of": {"type": "string"}}
    },
-   "domain": {"laborRate": {}, "valueAdd": [0, null], "unbuilt": {}},
-   "volume": "卷三乙 §2.5 :341（rules.crafting.* 全部键）；§4.16 V-1 :1714（工价 laborRate、加成 valueAdd）；块 6 第 6-9 张只登估值要读的 laborRate、valueAdd（丙1 选 A，李白 11-19 12:4x），两键卷文没给值，暂定值（见 crafting.json basis，标“暂定·待试玩标定”）；其余键的读者是 craftOutcome（§4.8，后卡），缺口登在 crafting.json 的 unbuilt 行",
+   "domain": {"laborRate": [0, null], "valueAdd": [0, null], "unbuilt": {}},
+   "volume": "卷三乙 §2.5 :341（rules.crafting.* 全部键）；§4.16 V-1 :1714（工价 laborRate 单值，勘误 1121k7；加成 valueAdd）；块 6 第 6-9 张只登估值要读的 laborRate、valueAdd（丙1 选 A，李白 11-19 12:4x），两键卷文没给值，暂定值（见 crafting.json basis，标“暂定·待试玩标定”）；其余键的读者是 craftOutcome（§4.8，后卡），缺口登在 crafting.json 的 unbuilt 行",
    "multiSourceMerge": "own_key_only",
    "packOverridable": {"laborRate": false, "valueAdd": false, "unbuilt": false}
   },

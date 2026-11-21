@@ -2,11 +2,11 @@
  "rows": [
   {
    "key": "laborRate",
-   "value": [{"minScore": 0, "copperPerMinute": 0.2}],
+   "value": 0.2,
    "file": "server-plugin/kernel/valuation.mjs",
    "grade": "designed",
-   "source": "卷三乙 §2.5 :341（rules.crafting 价值：laborRate、valueAdd）；V-1 :1714（minutes × rules.crafting.laborRate[技能阶]）；卷十四 SK-7 :750 技能阶 = sband 族中 minScore 不大于读数的最高一档",
-   "basis": "暂定·待试玩标定。卷文只写 laborRate[技能阶]，没给阶数与每阶的值，卷十四 sband 族条目也未给；本表按“阶下界 minScore 升序的列表，取 minScore 不大于定价配方 skillMin 的最后一阶的每分钟铜”读（技能阶的定义同 SK-7）。首批只设一阶：minScore 0、每分钟 0.2 铜，即 480 分钟（八小时工日）96 铜，对齐 valuation.unitValue 的 basis 里“一日工钱百铜量级”的设定；没有出处，各阶的值试玩中分阶改此处一处。卷文矛盾已报：卷十四 SK-7 :750 说技能阶不是任何规则的输入、卷六 §4.11 不按技能阶查工价，而卷三乙 V-1 :1714 用 laborRate[技能阶]；本卡按卷三乙 V-1 写，待李白裁"
+   "source": "卷三乙 §2.5 :341（rules.crafting 价值：laborRate、valueAdd）；V-1 :1714（minutes × rules.crafting.laborRate，单值，勘误 1121k7）；李白 11-21 攒批第八批第一条（按卷十四 SK-7 :750：技能阶只供显示、不是任何规则的输入）",
+   "basis": "暂定·待试玩标定。单值，每分钟 0.2 铜，即 480 分钟（八小时工日）96 铜，对齐 valuation.unitValue 的 basis 里“一日工钱百铜量级”的设定；没有出处，试玩中改此处一处。技能高低只经配方 minutes 与产率体现，不进工价表（卷六已退役“按技能阶查工价”）。原按技能阶分阶的列表形态已由李白 11-21 裁定废除"
   },
   {
    "key": "valueAdd",

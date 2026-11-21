@@ -78,14 +78,10 @@ function lowerMedian(members) {
 
 // ---------- V-1 基础价值 ----------
 
-// 工价：laborRate 是阶下界 minScore 升序的列表，取 minScore 不大于 skillMin 的最后一阶（卷十四 SK-7 的技能阶定义）；没有可用阶按未知。
-function laborRateAt(engine, skillMin) {
-  const list = ruleOf(engine, RT.crafting, RK.laborRate);
-  if (!Array.isArray(list) || !list.length) return { gaps: [rulesGap(RT.crafting, RK.laborRate)] };
-  const s = fixedUnits(skillMin);
-  let hit = null;
-  for (const band of list) if (fixedUnits(band.minScore) <= s) hit = band;
-  return hit === null ? { gaps: [rulesGap(RT.crafting, RK.laborRate)] } : { fixed: fixedUnits(hit.copperPerMinute) };
+// 工价：laborRate 是单值（每分钟铜；卷三乙 V-1 勘误 1121k7，李白 11-21 攒批第八批第一条），不按技能阶查表，技能只经配方 minutes 与产率体现（卷十四 SK-7）；没给值按未知。
+function laborRate(engine) {
+  const v = ruleOf(engine, RT.crafting, RK.laborRate);
+  return typeof v === 'number' ? { fixed: fixedUnits(v) } : { gaps: [rulesGap(RT.crafting, RK.laborRate)] };
 }
 
 // 一个消耗项候选的参考价值（V-1 第二段）：{fixed} 或 {gaps}。stack 是正在定价的物品链（判环防御，加载期已判）。
@@ -135,7 +131,7 @@ function byRecipe(engine, state, pr, stack) {
   if (!(r0 > 0n) || !(out.qty > 0)) return UNKNOWN(GAP.yieldZero); // 加载期已拒；这里防御，不做零除
   const add = ruleOf(engine, RT.crafting, RK.valueAdd);
   if (typeof add !== 'number') return UNKNOWN(rulesGap(RT.crafting, RK.valueAdd));
-  const rate = laborRateAt(engine, rv.dims.skillMin.value);
+  const rate = laborRate(engine);
   if (rate.gaps) return UNKNOWN(...rate.gaps);
   const groups = groupsOf(rv.dims.inputs.value);
   if (groups === null) return UNKNOWN(GAP.requirement);
@@ -375,7 +371,7 @@ export function valuation(engine, state, subjectRef, ctx = {}) {
 
 /**
  * rules.valuation、rules.crafting 的跨键校验（V-1、V-3、V-5、Q-6）：曲线值不为负，稀缺曲线沿覆盖比单调不升（越稀缺越贵），
- * selectorRepresentative 是本实现认得的取法，laborRate 阶下界严格升序且工价不为负，品质表基准档各列为 0、乘子不使价值为负、每档每列齐全。
+ * selectorRepresentative 是本实现认得的取法，laborRate 单值非负（由登记域 [0, null] 守，不在此重复），品质表基准档各列为 0、乘子不使价值为负、每档每列齐全。
  * 返回错误行（格式同 checkItemStateTables）。
  * @param {Record<string, any>} rules engine.rules @param {{vocab?: any}} [view]
  */
@@ -388,13 +384,6 @@ export function checkValuationTables(rules, view = {}) {
   }
   if (Array.isArray(val[RK.scarcityCurve]) && val[RK.scarcityCurve].some((p, i) => i > 0 && p[1] > val[RK.scarcityCurve][i - 1][1])) push('E-DIM-DOMAIN-CURVE', RT.valuation, RK.scarcityCurve, val[RK.scarcityCurve].map((p) => p[1]), 'scarcityCurve non-increasing (V-3: the scarcer, the dearer)');
   if (val[RK.selectorRepresentative] !== undefined && !Object.values(REPRESENTATIVE).includes(val[RK.selectorRepresentative])) push('E-DIM-DOMAIN-ENUM', RT.valuation, RK.selectorRepresentative, val[RK.selectorRepresentative], `one of ${Object.values(REPRESENTATIVE).join('/')}`);
-  const craft = isObj(rules[RT.crafting]) ? rules[RT.crafting] : {};
-  if (Array.isArray(craft[RK.laborRate])) {
-    const list = craft[RK.laborRate];
-    if (!list.length) push('E-DIM-DOMAIN-RANGE', RT.crafting, RK.laborRate, list, 'at least one band');
-    if (list.some((b, i) => i > 0 && !(b.minScore > list[i - 1].minScore))) push('E-DIM-DOMAIN-RANGE', RT.crafting, RK.laborRate, list.map((b) => b.minScore), 'minScore strictly increasing');
-    if (list.some((b) => b.copperPerMinute < 0)) push('E-DIM-DOMAIN-RANGE', RT.crafting, RK.laborRate, list.map((b) => b.copperPerMinute), 'copperPerMinute >= 0');
-  }
   const q = isObj(rules[RT.quality]) ? rules[RT.quality] : {};
   if (Array.isArray(q[RK.tiers])) {
     const fam = view.vocab && view.vocab.families instanceof Map ? view.vocab.families.get(FAMILY.quality) : undefined;

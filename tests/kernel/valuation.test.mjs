@@ -1,6 +1,6 @@
 // 块 6 第 6-9 张《估值与 priceFor》之估值半：卷三乙 §4.16 估值公式与稀缺度派生（V-1 基础价值、V-2 单件估值、V-3 各项、V-5 稀缺度、V-7 纯函数与 explain 复算、V-8 没有回退）、
 // §4.18 Y-1 货值密度、§2.7 配方表与 §4.7 N-7、R-6 除数下界、R-12 判环的加载期校验；工价与加成读 rules.crafting（V-1 ①）。
-// 期望值按卷文公式手算成字面量（定点 4 位、向零截断），前提在 tests/kernel/item-world.mjs 的临时世界里造；规则表的暂定值（unitValue 10、valueAdd 0.1、laborRate 一阶 0.2 铜每分钟、
+// 期望值按卷文公式手算成字面量（定点 4 位、向零截断），前提在 tests/kernel/item-world.mjs 的临时世界里造；规则表的暂定值（unitValue 10、valueAdd 0.1、laborRate 单值 0.2 铜每分钟（V-1 勘误 1121k7）、
 // conditionCurve 恒等线、freshnessCurve 反向恒等线、scarcityCurve [[0,3],[1,1]]、scarcityHorizonDays 30、品质表 −0.5 到 +1）在各用例开头抄成字面量再算，不读当前计数。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -51,7 +51,7 @@ const itemsFixture = () => ({
   item_test_chest_kg: itemRow(1, [body(WOOD, 1)]),
 });
 
-// 配方（工价取 laborRate 一阶 0.2 铜每分钟，加成 valueAdd 0.1；基础留存率 r0 = yield × (1 − wasteFraction)）：
+// 配方（工价取 laborRate 单值 0.2 铜每分钟，与技能无关，加成 valueAdd 0.1；基础留存率 r0 = yield × (1 − wasteFraction)）：
 //   nail_a：skillMin 100，50 分钟，投 1 件 ingot，产 10 枚 nail：（60 + 50×0.2）×1.1 ÷ 10 = 77 ÷ 10 = 7.7
 //   nail_z：skillMin 50（更低，所以是定价配方），20 分钟，投 0.5 件 ingot（30），产 5 枚：（30 + 20×0.2）×1.1 ÷ 5 = 37.4 ÷ 5 = 7.48
 const recipesFixture = () => ({
@@ -128,6 +128,12 @@ test('V-1 ① 定价配方 skillMin 平局按配方代号字典序：两条都 s
   const eng = engine((f) => { delete f.recipes.recipe_test_nail_z; f.recipes.recipe_test_nail_b = rec({ groups: [[piece('item_test_ingot', 0.5)]] }, [{ item: 'item_test_nail', qty: 5 }], { minutes: 20, skillMin: 100 }); });
   assert.equal(pricingRecipeOf(eng, 'item_test_nail').id, 'recipe_test_nail_a');
   assert.equal(valueBaseOf(eng, at(0), 'item_test_nail').value, 7.7);
+});
+
+test('V-1 ① 工价是单值、与技能无关（勘误 1121k7）：laborRate 改 0.5，nail_z（skillMin 50）= (30 + 20×0.5) × 1.1 ÷ 5 = 8.8；去掉 nail_z 后 nail_a（skillMin 100）= (60 + 50×0.5) × 1.1 ÷ 10 = 9.35，两个技能同一个工价', () => {
+  const setRate = (f) => { f.rulesExtra = { ...f.rulesExtra, crafting: { laborRate: 0.5 } }; };
+  assert.equal(valueBaseOf(engine(setRate), at(0), 'item_test_nail').value, 8.8);
+  assert.equal(valueBaseOf(engine((f) => { setRate(f); delete f.recipes.recipe_test_nail_z; }), at(0), 'item_test_nail').value, 9.35);
 });
 
 test('V-1 ① 递归沿配方图，原料以 ② 为界：box = (5 × 7.48 + 10 × 0.2) × 1.1 ÷ 1 = 43.34；用 ingot 的 ② 价 60 沉到 nail、再到 box', () => {
@@ -370,11 +376,12 @@ test('Q-2 产物模板挂 comp_crafted 且逐件建实例（comp_crafted 与 ins
   assert.ok(r.ok, JSON.stringify(r.messages));
 });
 
-test('规则表跨键校验：scarcityCurve 沿覆盖比必须单调不升、品质表基准档各列为 0、laborRate 阶下界严格升序、wear.levels 的 minDurability 严格递减', () => {
+test('规则表跨键校验：scarcityCurve 沿覆盖比必须单调不升、品质表基准档各列为 0、laborRate 为负或仍写成分阶列表都拒、wear.levels 的 minDurability 严格递减', () => {
   const bad = (code, edit, text) => { const { r } = build((f) => { f.rulesExtra = { ...f.rulesExtra, ...edit }; }); assert.ok(failedWith(r, code, text), JSON.stringify(r.messages)); };
   bad('E-DIM-DOMAIN-CURVE', { valuation: { scarcityCurve: [[0, 1], [1, 3]] } });
   bad('E-DIM-DOMAIN-RANGE', { quality: { tiers: [{ tier: 'quality_awful', key: 'item.valueBase', value: -0.5 }, { tier: 'quality_poor', key: 'item.valueBase', value: -0.25 }, { tier: 'quality_normal', key: 'item.valueBase', value: 0.1 }, { tier: 'quality_good', key: 'item.valueBase', value: 0.25 }, { tier: 'quality_excellent', key: 'item.valueBase', value: 0.5 }, { tier: 'quality_masterwork', key: 'item.valueBase', value: 0.75 }, { tier: 'quality_legendary', key: 'item.valueBase', value: 1 }] } });
-  bad('E-DIM-DOMAIN-RANGE', { crafting: { laborRate: [{ minScore: 100, copperPerMinute: 0.5 }, { minScore: 100, copperPerMinute: 0.6 }] } });
+  bad('E-DIM-DOMAIN-RANGE', { crafting: { laborRate: -0.2 } });
+  assert.equal(build((f) => { f.rulesExtra = { ...f.rulesExtra, crafting: { laborRate: [{ minScore: 0, copperPerMinute: 0.2 }] } }; }).r.ok, false); // 旧的分阶列表形态不再是合法的值
   bad('E-DIM-DOMAIN-RANGE', { wear: { levels: [{ level: 'wear_intact', minDurability: 0.5, modifiers: [] }, { level: 'wear_worn', minDurability: 0.5, modifiers: [] }] } });
 });
 
