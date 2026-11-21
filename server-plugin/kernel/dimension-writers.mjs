@@ -14,6 +14,7 @@ import { kindOf, kindOfEntity, registry } from './vocab.mjs';
 import { CODE_RE } from './handles/vocab-handle.mjs';
 import { entityId } from './handles/entity-id.mjs';
 import { checkValue } from './validate/types.mjs';
+import { installedNamedStructs } from './named-structs.mjs';
 import { clockView } from './scheduler.mjs';
 import { post, recordTaint, resourceAllows } from './ledger.mjs';
 import { itemView } from './item.mjs';
@@ -71,7 +72,7 @@ function checkField(engine, state, def, value, key, entity, kind = KIND.item) {
   const reg = registry();
   // 引用值指向的实体：加载期登记的，或本状态里已建行的运行期实体（如尸体的 ofPerson 指向运行期建的个体，kernelApi kindOfEntity 同一口径）。
   const idIndex = { get: (id) => { try { return kindOfEntity(state, id); } catch (e) { return undefined; } } };
-  const env = { vocab: engine.vocab, idIndex, units: engine.units, tableDims: reg.tableDims };
+  const env = { vocab: engine.vocab, idIndex, units: engine.units, tableDims: reg.tableDims, namedStructs: installedNamedStructs() };
   let first = null;
   checkValue(def, value, env, { table: kind, row: entity || '', dim: key, path: key }, (e) => { if (first === null) first = e; });
   if (first !== null) throw fail(first.code, `${key}: got ${JSON.stringify(first.got)}, want ${first.want}`, entity);

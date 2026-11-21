@@ -4,7 +4,7 @@
 // `instantiatePerson`（个体偏离行的唯一写入时机，P-1、P-4）：建行时一次取齐——物种、出生地、出生时刻必给；性别、寿命、成年体重、属性、外貌轴未给的按卷二 §1.10 种子键从物种行的分布采样一次
 // （一键一抽，kernel/sample.mjs 的 sampleDistribution）；给了的取给定值（G-3 属性基数取物种均值再加分配、G-6 外貌取档中点都是创建例程算出后作指定值传入，本文件另导出 speciesAttributeMeans、bandMidpoint 两个纯函数供它用）。
 // 此后没有任何模块再写这些基础值。id 由调用方给（卷十 R10-12.1 的 id 派生未建，未给即 E-ACT-WRITER-NOT-READY）。亲本遗传、技能初值（卷十四）、母语熟练度、身份键、出身给予块 6 不建；
-// 他卷 always 维度（personality、sensitivity、location）整类登未建列（丙9），不写缺省。写落在调用方已开的内核事务上，经 kernelApi writePersonRow。
+// 他卷 always 维度（personality、sensitivity、pos、facing）整类登未建列（丙9），不写缺省；个体所在地点不是本表维度，读 zoneAt(pos)（卷二 §5.5 :1773）。写落在调用方已开的内核事务上，经 kernelApi writePersonRow。
 // 不认任何物种、阶段、属性或人物代号；玩家不特例（P-5）。
 
 import { dim, readsUnbuilt, modified } from './kernel/dimensions.mjs';

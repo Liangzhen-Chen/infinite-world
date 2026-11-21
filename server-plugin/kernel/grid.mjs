@@ -120,9 +120,9 @@ export function reliefAt(grid, worldSeed, w, reliefM, reliefRough, qx, qy) {
  * 控制面（纯函数）：同一格空间里形心离该列最近的 heightCtrlK 个控制点，anchorElevationM 按到该列直线距离的平方反比加权平均；
  * 该列恰在某控制点上时取该点的值。并列取 id 码点序小。全整数定点，除法向零截断。
  * @param {{heightCtrlK: number}} grid rules.grid
- * @param {{id: string, x: number, y: number, elevM: number}[]} controlPoints 控制点（形心 x/y 米、anchorElevationM 米）
+ * @param {{id: string, x: number, y: number, elevM: number | null}[]} controlPoints 控制点（形心 x/y 米、anchorElevationM 米；null 为该行海拔未知）
  * @param {number} qx 细格列 x（米） @param {number} qy 细格列 y（米）
- * @returns {bigint} 定点米（SCALE 标度）
+ * @returns {bigint | null} 定点米（SCALE 标度）；最近 K 个控制点里有海拔未知者为 null（未知）
  */
 export function controlSurfaceAt(grid, controlPoints, qx, qy) {
   const k = grid.heightCtrlK;
@@ -134,11 +134,15 @@ export function controlSurfaceAt(grid, controlPoints, qx, qy) {
     .map((p) => {
       const dx = fixedUnits(p.x) - qxf;
       const dy = fixedUnits(p.y) - qyf;
-      return { id: p.id, d2: dx * dx + dy * dy, elev: fixedUnits(p.elevM) };
+      return { id: p.id, d2: dx * dx + dy * dy, elev: p.elevM === null ? null : fixedUnits(p.elevM) };
     })
     .sort((a, b) => cmp(a.d2, b.d2) || cmp(a.id, b.id))
     .slice(0, k);
+  // 该列恰在某控制点上：取该点的值（卷五 :656），结果不依赖别的点；该点海拔未知则为未知。
   for (const p of selected) if (p.d2 === 0n) return p.elev;
+  // 不在任何控制点上：平方反比加权里每个入选点的权都为正，最近 K 个里任何一个海拔未知，这一列的控制面就是未知
+  // （控制点取全部区域足迹行；未知照卷二 §1.12 往下传，不当它不存在、不借别的点顶替）。
+  if (selected.some((p) => p.elev === null)) return null;
   // 平方反比权 1/d_i² 通分：权 w_i = Π_{j≠i} d_j²（整数精确，不设标度，任意远的控制点都不会权为 0 而分母归零）。
   let num = 0n;
   let den = 0n;
@@ -160,10 +164,12 @@ export function controlSurfaceAt(grid, controlPoints, qx, qy) {
  * @param {{id: string, x: number, y: number, elevM: number}[]} controlPoints
  * @param {number} reliefM @param {number} reliefRough
  * @param {number} qx @param {number} qy
- * @returns {bigint} 定点米（SCALE 标度）
+ * @returns {bigint | null} 定点米（SCALE 标度）；控制面未知（最近控制点海拔未知）为 null
  */
 export function surfaceHeightAt(grid, worldSeed, w, controlPoints, reliefM, reliefRough, qx, qy) {
-  let h = controlSurfaceAt(grid, controlPoints, qx, qy) + reliefAt(grid, worldSeed, w, reliefM, reliefRough, qx, qy);
+  const surface = controlSurfaceAt(grid, controlPoints, qx, qy);
+  if (surface === null) return null;
+  let h = surface + reliefAt(grid, worldSeed, w, reliefM, reliefRough, qx, qy);
   const min = fixedUnits(grid.surfaceElevationMinM);
   const max = fixedUnits(grid.surfaceElevationMaxM);
   if (h < min) h = min;

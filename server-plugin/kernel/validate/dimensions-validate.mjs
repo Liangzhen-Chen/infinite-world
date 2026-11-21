@@ -15,6 +15,7 @@ import { checkCellGrades } from './cell-grades.mjs';
 import { checkEffects } from './effects-validate.mjs';
 import { compileRXInScope, evaluateRX, rxChildren, splitDimKey, RxError } from '../rx.mjs';
 import { REGISTERED_CODES } from '../error-codes.mjs';
+import { namedStructMapOf } from '../named-struct-match.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 // 错误值上的登记码（与 kernel/errors.mjs#codeOf 同口径：不是对象、没有 code、码不在登记表内都返回 null）；
@@ -117,7 +118,9 @@ export function validateDimensions(sources, options) {
   // ---------- L1 表头 ----------
   const kinds = new Set([...tables.map((t) => t.kind), T.id_kind.effect]);
   const tableDims = new Map(tables.map((t) => [t.kind, t.doc.dimensions]));
-  const env = { units, unitConversions, vocab, kinds, idIndex, tableDims, displaySet: new Set(options.displaySet), compiled: new Map(), unbuiltFamilies, unbuiltFields, unbuiltKinds, unbuiltUnits };
+  // 命名 struct 登记（卷二 §1.5 :252）：表头里 {type: struct, named: "struct:<名>"} 引用它，字段与类型只在登记里（world/ontology/named-structs.json）。
+  const namedStructs = namedStructMapOf(options.namedStructs);
+  const env = { units, unitConversions, vocab, kinds, idIndex, tableDims, namedStructs, displaySet: new Set(options.displaySet), compiled: new Map(), unbuiltFamilies, unbuiltFields, unbuiltKinds, unbuiltUnits };
   for (const t of tables) checkHeader(t, env, err);
 
   // RX 编译用的维度表：全部表的维度键；同名维度在不同表类型不同即标为歧义（rx.mjs 编到它时报 E-MOD-RX）。

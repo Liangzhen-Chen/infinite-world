@@ -3,6 +3,7 @@
 
 import { precisionOk, extPrecisionOk } from '../det-math.mjs';
 import { compileRXInScope } from '../rx.mjs';
+import { matchStruct } from '../named-struct-match.mjs';
 import { T, TYPES, DOMAIN_OPTIONAL, ROW_FIELDS, CODE_ENUMS, markersOf } from '../handles/markers.mjs';
 
 // 定义源与 T 派生在 kernel/handles/markers.mjs（协议标记叶子，0 import，见该文件头）；这里只引用并转出给既有 import 方，不留第二份。
@@ -117,6 +118,12 @@ export function checkDef(def, env, at, err, top) {
     const valueType = isObj(def.value) ? def.value.type : undefined;
     if (def.combine !== undefined && (def.combine !== COMBINE.sum || !(valueType === T.type.number || valueType === T.type.integer))) bad('E-DIM-MAP-SPARSE-NONSUM', def.combine, 'combine "sum" on a number/integer valued map');
   }
+  if (t === T.type.struct && def.named !== undefined) {
+    // 引用命名 struct 登记（卷二 §1.5 :252）：字段与类型只在 named-structs.json，本处不另抄一份；不得同时写 fields。
+    if (typeof def.named !== 'string' || def.fields !== undefined) bad('E-DIM-STRUCT-FIELD', def.named, 'named: <struct:name> alone, without inline fields');
+    else if (!(env.namedStructs instanceof Map) || !env.namedStructs.has(def.named)) bad('E-DIM-REF-MISSING', def.named, 'a struct registered in world/ontology/named-structs.json');
+    return;
+  }
   if (t === T.type.struct) {
     if (!isObj(def.fields)) { bad('E-DIM-STRUCT-FIELD', def.fields, 'fields object'); return; }
     for (const f of Object.keys(def.fields).sort()) {
@@ -230,6 +237,12 @@ export function checkValue(def, v, env, at, err) {
       return;
     }
     case T.type.struct: {
+      if (def.named !== undefined) {
+        const fields = env.namedStructs instanceof Map ? env.namedStructs.get(def.named) : undefined;
+        if (!fields) bad('E-DIM-REF-MISSING', def.named, 'a registered named struct');
+        else if (!matchStruct(fields, v)) bad('E-DIM-STRUCT-FIELD', v, `${def.named} ${JSON.stringify(fields)} (exactly these fields, typed)`);
+        return;
+      }
       if (!isObj(v)) { bad('E-DIM-STRUCT-FIELD', typeof v, 'struct object'); return; }
       for (const f of Object.keys(v).sort()) {
         if (!Object.hasOwn(def.fields, f)) bad('E-DIM-STRUCT-FIELD', f, `field of ${Object.keys(def.fields).sort().join(',')}`);

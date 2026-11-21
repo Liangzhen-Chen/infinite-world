@@ -61,6 +61,8 @@ export function tempRepo() {
   cpSync(join(ROOT, 'server-plugin/kernel/validate/rows.mjs'), join(dir, 'server-plugin/kernel/validate/rows.mjs'));
   // 足迹种类判据叶子（格子迁移 G3）：rows.mjs 的 byFootprint 必填条件 import 它，指纹闭包要算同一份。
   cpSync(join(ROOT, 'server-plugin/kernel/footprint-kind.mjs'), join(dir, 'server-plugin/kernel/footprint-kind.mjs'));
+  // 命名 struct 登记读法（G5a）：types.mjs、dimensions-validate.mjs 的 import，指纹闭包要算同一份。
+  cpSync(join(ROOT, 'server-plugin/kernel/named-struct-match.mjs'), join(dir, 'server-plugin/kernel/named-struct-match.mjs'));
   cpSync(join(ROOT, 'server-plugin/kernel/validate/named-conditions.mjs'), join(dir, 'server-plugin/kernel/validate/named-conditions.mjs'));
   cpSync(join(ROOT, 'server-plugin/kernel/validate/cell-grades.mjs'), join(dir, 'server-plugin/kernel/validate/cell-grades.mjs'));
   // 效果族表校验（卷二 §3.9；5-5）：dimensions-validate 的 import，指纹闭包要算同一份。

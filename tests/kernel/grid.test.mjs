@@ -18,6 +18,20 @@ const GRID = Object.freeze({
 
 const m = (v) => fixedUnits(v); // 米 → 定点
 
+test('控制面未知传播：最近 K 个控制点里有海拔未知（null）者即未知；未入选的远处缺值点不影响；surfaceHeightAt 同样返回 null（不加起伏、不夹取）', () => {
+  const g = { ...GRID, heightCtrlK: 2 };
+  const near = [{ id: 'a', x: 0, y: 0, elevM: 100 }, { id: 'b', x: 100, y: 0, elevM: 200 }];
+  // 第三个点很远且缺值：K=2 时不入选，结果同只有 a、b（(50,0) 到 a、b 距离平方都是 2500，权相等 → 150）。
+  assert.equal(controlSurfaceAt(g, [...near, { id: 'z', x: 50000, y: 0, elevM: null }], 50, 0), m(150));
+  // 缺值点变成第二近：入选，未知。
+  assert.equal(controlSurfaceAt(g, [near[0], { id: 'n', x: 100, y: 0, elevM: null }, { id: 'f', x: 900, y: 0, elevM: 300 }], 50, 0), null);
+  // 恰在有值点上、另一入选点缺值：取该点的值（卷五 :656，结果不依赖别的点）：(100,0) 恰在 b 上，b = 200，入选的 n（缺值）不影响。
+  assert.equal(controlSurfaceAt(g, [{ id: 'n', x: 0, y: 0, elevM: null }, near[1]], 100, 0), m(200));
+  // 恰在缺值点上也是未知（不当作"取该点的值"，也不取别点）。
+  assert.equal(controlSurfaceAt(g, [{ id: 'n', x: 0, y: 0, elevM: null }, near[1]], 0, 0), null);
+  assert.equal(surfaceHeightAt(g, 's5', 0, [{ id: 'n', x: 0, y: 0, elevM: null }, near[1]], 10, 0.5, 0, 0), null);
+});
+
 test('控制面：单个控制点，任意列 h 等于其 anchorElevationM（heightCtrlK 取 1，加权平均一项等于本身）', () => {
   const g = { ...GRID, heightCtrlK: 1 };
   const cps = [{ id: 'p', x: 0, y: 0, elevM: 150 }];

@@ -12,6 +12,7 @@ import { createItemInstance, writeItemDeviation } from './kernel/dimension-write
 import { rotStep, resourceKindsOf } from './kernel/item-state.mjs';
 import { readPath, writePath } from './kernel/storage.mjs';
 import { dim } from './kernel/dimensions.mjs';
+import { zoneAt } from './kernel/place.mjs';
 import { kindOf, kindOfEntity, vocab } from './kernel/vocab.mjs';
 import { clockView, minutesPerDay } from './kernel/scheduler.mjs';
 import { fixedUnits, fixedAdd, fixedMultiply, fixedDivide, fixedToNumber, truncateTo } from './kernel/det-math.mjs';
@@ -25,7 +26,7 @@ import { massOf } from './life.mjs';
 // 卷文定名：规则表键、维度、词表族与协议代号。
 const S = Object.freeze({
   rules: Object.freeze({ table: 'death', terminalStatus: 'terminalStatus', lostPartsExcluded: 'lostPartsExcluded', corpseClass: 'corpseClass', corpsePurpose: 'corpsePurpose', unbuilt: 'unbuilt' }),
-  dim: Object.freeze({ species: 'species', location: 'location', bodyPlan: 'bodyPlan', parts: 'parts', tissueFractions: 'tissueFractions', tissues: 'tissues', massKg: 'massKg', material: 'material', family: 'family' }),
+  dim: Object.freeze({ species: 'species', pos: 'pos', bodyPlan: 'bodyPlan', parts: 'parts', tissueFractions: 'tissueFractions', tissues: 'tissues', massKg: 'massKg', material: 'material', family: 'family' }),
   tables: Object.freeze({ item: 'item', species: 'species', status: 'status' }),
   precisionKey: 'precision',
   wreck: 'wreck',
@@ -181,8 +182,11 @@ export function settleBody(engine, state, info) {
   if (carcass === null) return;
   const kind = kindOfEntity(state, info.id);
   const tpl = corpseTemplate(engine, corpseClass);
-  const loc = dim(engine, state, kind, info.id, S.dim.location);
-  if (!loc.known || typeof loc.value !== 'string') throw unknownRead(`${S.dim.location} of ${info.id} (the corpse lies where the person died)`);
+  // 尸体躺在死处：个体所在地点不存，读 zoneAt(pos)（卷五 §4.1 规则 12；卷二 §5.5 :1773）；位置未知或落在任何足迹之外都是未知，不借别处。
+  const pos = dim(engine, state, kind, info.id, S.dim.pos);
+  if (!pos.known || !isObj(pos.value)) throw unknownRead(`${S.dim.pos} of ${info.id} (the corpse lies where the person died)`);
+  const zone = zoneAt(engine, state, pos.value);
+  if (zone === null) throw unknownRead(`zoneAt(${S.dim.pos}) of ${info.id} (the position lies in no place footprint)`);
   const sp = dim(engine, state, kind, info.id, S.dim.species);
   if (!sp.known || typeof sp.value !== 'string') throw unknownRead(`${S.dim.species} of ${info.id}`);
   const itemTable = engine.tables.get(S.tables.item).doc.entity;
@@ -196,7 +200,7 @@ export function settleBody(engine, state, info) {
   const groups = [...new Set((Array.isArray(tpl.row.material) ? tpl.row.material : []).map((m) => m.group))];
   if (groups.length !== 1) throw deny(E.E_DIM_STRUCT_FIELD, `corpse template ${tpl.id}: reference composition has exactly one material group, got ${groups.length}`);
   createItemInstance(engine, state, {
-    id: corpseId, template: tpl.id, holder: loc.value, purpose: need(engine, S.rules.corpsePurpose), flow: sources[0], reason: info.cause, taint: S.taint,
+    id: corpseId, template: tpl.id, holder: zone, purpose: need(engine, S.rules.corpsePurpose), flow: sources[0], reason: info.cause, taint: S.taint,
     fields: { ofSpecies: sp.value, ofPerson: info.id, diedMinute },
   });
   writeItemDeviation(engine, state, corpseId, S.dim.massKg, carcass.massKg);

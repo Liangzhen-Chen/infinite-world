@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
-import { buildPersonWorld, MPY, PLACE, FLESH, BONE, ATTRS, personRow, ROOT } from './person-world.mjs';
+import { buildPersonWorld, MPY, PLACE, SUB, POS, POS_SUB, FLESH, BONE, ATTRS, personRow, ROOT } from './person-world.mjs';
 import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
 import { runTransaction } from '../../server-plugin/kernel/transaction.mjs';
 import { installEventLog } from '../../server-plugin/kernel/events.mjs';
@@ -157,12 +157,40 @@ test('carcassOf 物种均值（D-5 未个体化畜群）：{speciesId, massKg} �
   assert.throws(() => carcassOf(ENGINE, state, {}), (e) => e.code === 'E-DIM-STRUCT-FIELD');
 });
 
+// 卷五 §7 M5-38、卷二 §5.5 :1768–:1773（对照表第 2、44 行）：person 行不存 location，个体所在地点 = zoneAt(pos)；尸体躺在死处。
+// 夹具（person-world.mjs editPlaceDoc）：PLACE 是 300 × 100 区格小格空间的层根（足迹是整个外包框），子行 SUB 种子区格 (50, 50)、目标 4 区格（含种子格）。
+// 细格 (x, y) 的区格序号 = floor(x ÷ 100)（cellM 1 m、regionCellM 100 m）：POS (20050, 5050) → 区格 (200, 50)，不在 SUB 的 4 格里 → 最深足迹 PLACE；
+// POS_SUB (5050, 5050) → 区格 (50, 50) 是 SUB 的种子格 → 最深足迹 SUB；(30050, 5050) → 区格 (300, 50) 在外包框（x 0–299）之外 → 未知。
+test('尸体躺在死处：所在地点不存、读 zoneAt(pos)——位置在子行足迹里账户开在子行（最深足迹），在郡自己的足迹里开在郡；位置在外包框之外、格空间号不存在都整笔回滚（E-DIM-UNKNOWN-READ，不借别处）', () => {
+  const inSub = buildPersonWorld((f) => { f.personRows.npc_a = personRow({ heir: 'npc_b', pos: POS_SUB }); }).engine;
+  const s1 = fresh(inSub);
+  assert.deepEqual(run(s1, dieOf(inSub, 'npc_a')), { ok: true });
+  assert.deepEqual(Object.values(s1.accounts[SUB].purpose_test_shelf.res_test_corpse), [1]);
+  assert.equal(Object.hasOwn(s1.accounts, PLACE), false);
+  const s2 = fresh();
+  assert.deepEqual(run(s2, dieOf(ENGINE, 'npc_a')), { ok: true });
+  assert.deepEqual(Object.values(s2.accounts[PLACE].purpose_test_shelf.res_test_corpse), [1]);
+  assert.equal(Object.hasOwn(s2.accounts, SUB), false);
+  for (const pos of [{ ...POS, x: 30050 }, { ...POS, w: 9 }]) {
+    const e = buildPersonWorld((f) => { f.personRows.npc_a = personRow({ heir: 'npc_b', pos }); }).engine;
+    fails(fresh(e), dieOf(e, 'npc_a'), 'E-DIM-UNKNOWN-READ', e);
+  }
+});
+
+test('person 表不存 location（对照表第 2 行）：表头没有这个维度，作者行写 location 按未知字段拒收；pos、facing 是 always 维度（登未建列，卡 6-27），facing 出 [0, 7] 拒收', () => {
+  const doc = W.tables.get('person').doc;
+  assert.equal(Object.hasOwn(doc.dimensions, 'location'), false);
+  assert.deepEqual([doc.dimensions.pos.required, doc.dimensions.facing.required, doc.dimensions.facing.domain], ['always', 'always', [0, 7]]);
+  assert.throws(() => buildPersonWorld((f) => { f.personRows.npc_a = personRow({ heir: 'npc_b', location: PLACE }); }), /E-DIM-STRUCT-FIELD","person","npc_a","location"/);
+  for (const facing of [-1, 8, 1.5]) assert.throws(() => buildPersonWorld((f) => { f.personRows.npc_a = personRow({ heir: 'npc_b', facing }); }), /E-DIM-DOMAIN-RANGE","person","npc_a","facing"/);
+});
+
 test('尸体产出的前提缺一即整笔回滚、不静默：没有尸体模板行、两行都挂尸体类、死者所在地点未知、尸体账户用途未建（登未建）；终止与状态实例都不留', () => {
   const none = buildPersonWorld((f) => { f.items = {}; }).engine;
   fails(fresh(none), dieOf(none, 'npc_a'), 'E-ACT-WRITER-NOT-READY', none);
   const dup = buildPersonWorld((f) => { f.items.item_test_corpse2 = JSON.parse(JSON.stringify(f.items.item_test_corpse)); }).engine;
   fails(fresh(dup), dieOf(dup, 'npc_a'), 'E-DIM-STRUCT-FIELD', dup);
-  const noLoc = buildPersonWorld((f) => { f.personRows.npc_a = personRow({ heir: 'npc_b', location: undefined }); }).engine;
+  const noLoc = buildPersonWorld((f) => { f.personRows.npc_a = personRow({ heir: 'npc_b', pos: undefined }); }).engine;
   fails(fresh(noLoc), dieOf(noLoc, 'npc_a'), 'E-DIM-UNKNOWN-READ', noLoc);
   const noPurpose = { ...ENGINE, rules: { ...ENGINE.rules, death: { ...ENGINE.rules.death, corpsePurpose: undefined } } };
   fails(fresh(noPurpose), dieOf(noPurpose, 'npc_a'), 'E-ACT-WRITER-NOT-READY', noPurpose);
@@ -255,7 +283,7 @@ const covered = (path, id) => {
 test('终止后按 subjectRecords 与去留表机器枚举无遗留：状态里含死者 id 的路径只剩 keep/hold 的（运行期建的个体的偏离行 created.*、复生点 revivals.*.points）；clear 类与协议自处置类（账户、持有、状态实例）一条不剩', () => {
   const state = fresh();
   // 运行期建的个体（已有位置）：偏离行在 created 下，终止后保留（后果可追溯，丙4）。
-  assert.deepEqual(run(state, (s) => { writePersonRow(ENGINE, s, { id: 'npc_run', props: { species: 'species_test_a', sex: 'sex_male', birthMinute: NOW - 20 * MPY, birthplace: PLACE, location: PLACE, lifespanYears: 60, adultMassKg: 70, attributes: ATTRS(10), heir: 'npc_b' } }); }), { ok: true });
+  assert.deepEqual(run(state, (s) => { writePersonRow(ENGINE, s, { id: 'npc_run', props: { species: 'species_test_a', sex: 'sex_male', birthMinute: NOW - 20 * MPY, birthplace: PLACE, pos: POS, facing: 0, lifespanYears: 60, adultMassKg: 70, attributes: ATTRS(10), heir: 'npc_b' } }); }), { ok: true });
   assert.deepEqual(run(state, (s) => { openHolding(ENGINE, s, { holdingKind: 'hk_test_revive', holder: 'npc_run', subject: PLACE, cause: CAUSE }); }), { ok: true });
   assert.deepEqual(run(state, dieOf(ENGINE, 'npc_run')), { ok: true });
   // 协议自处置的键（卷二 §2.6：账户、holdings、statuses、modifiers、到期堆；stockLots 随账户）不进去留表：其残余由 terminationResidue 核（持有边只许是已关闭的、账户余额为 0、状态实例已清）。

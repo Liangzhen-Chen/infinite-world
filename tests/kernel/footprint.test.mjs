@@ -226,7 +226,7 @@ test('规则 13：形心变化纬度的输入随之变化——换种子让足�
 });
 
 // 2×1 区格：根（anchorElevationM 100）下 loc_a（种子 (50,50)，目标 1 格，anchorElevationM 0）、loc_b（种子 (150,50)，anchorElevationM 200）。
-// reliefM = 0 使起伏为 0：控制点是各行形心 root (100,50)=100、a (50,50)=0、b (150,50)=200；区格中心 (50,50) 恰在 a 的形心上 → h = 0；(150,50) 恰在 b 上 → h = 200。
+// reliefM = 0 使起伏为 0：控制点是 a (50,50)=0、b (150,50)=200（层根不是控制点，其 anchorElevationM 不入控制面）；区格中心 (50,50) 恰在 a 的形心上 → h = 0；(150,50) 恰在 b 上 → h = 200。
 // 地表层号 floor(h ÷ 3)：0 → 0；200 → 66。
 const hrows = () => rowsOf([
   ['loc_root', row(null, { coord: at(100, 50), anchorElevationM: 100 })],
@@ -234,6 +234,33 @@ const hrows = () => rowsOf([
   ['loc_b', row('loc_root', { coord: at(150, 50), anchorElevationM: 200 })],
 ]);
 const FLAT = () => ({ reliefM: 0, reliefRough: 0.5 });
+
+// 卷五 §4.3 规则 8 :656（G5a 修改轮必须改 2）：控制点是全部区域足迹行（层根除外），最近 K 个里任一个海拔未知，这一列的 h 即未知，不跳过它、不借别的点。
+test('控制点未知传播：最近控制点缺 anchorElevationM 则该列高度未知；更近的点有值时远处的缺值点不影响（K=1 手算）；层根不是控制点', () => {
+  // 2×1 区格，同上夹具但 loc_a 缺海拔：K=4 时两个控制点 a、b 都入选。区格 (0,0) 中心 (50,50) 恰在缺值的 a 上 → 未知；
+  // 区格 (1,0) 中心 (150,50) 恰在有值的 b 的形心上 → 取该点的值 200（卷五 :656 "恰在某控制点上时取该点的值"，结果不依赖 a，不因 a 缺值而未知），层号 floor(200÷3) = 66。
+  // 所以 loc_a 未知、loc_b = {200, [66,66]}；loc_root 含区格 (0,0)，未知。
+  const rows = hrows();
+  rows.get('loc_a').anchorElevationM = null;
+  const { plan } = plan0(rows, box(2, 1));
+  assert.deepEqual(regionHeights(GRID, 'seed_t', plan, rows, FLAT, 'loc_b'), { elevationM: 200, zRange: { zMin: 66, zMax: 66 } });
+  for (const id of ['loc_a', 'loc_root']) assert.equal(regionHeights(GRID, 'seed_t', plan, rows, FLAT, id), null, id);
+  // K=1：每列只取最近的一个控制点。区格 (1,0) 中心 (150,50) 恰在 b 的形心上 → h = 200（b 有值，不受 a 缺值影响）；区格 (0,0) 中心 (50,50) 恰在 a 的形心上 → 未知。
+  const g1 = { ...GRID, heightCtrlK: 1 };
+  const p1 = plan0(rows, box(2, 1)).plan;
+  assert.deepEqual(regionHeights(g1, 'seed_t', p1, rows, FLAT, 'loc_b'), { elevationM: 200, zRange: { zMin: 66, zMax: 66 } });
+  assert.equal(regionHeights(g1, 'seed_t', p1, rows, FLAT, 'loc_a'), null);
+  // 3×1 区格：根（层根，anchorElevationM 999，形心在 (150,50)）、a 种子 (50,50) 1 格海拔 0、b 种子 (250,50) 1 格海拔 200，区格 (1,0) 归根。
+  // 层根除外时控制点只有 a、b：(150,50) 到两者距离平方都是 100²，权相等 → h = (0 + 200) ÷ 2 = 100；若误把层根当控制点（形心恰在该列上）会取 999。
+  // 根的 elevationM = (0 + 100 + 200) ÷ 3 = 100，层号 floor(0÷3) = 0、floor(100÷3) = 33、floor(200÷3) = 66 → zRange [0, 66]。
+  const r3 = rowsOf([
+    ['loc_root', row(null, { coord: at(150, 50), anchorElevationM: 999 })],
+    ['loc_a', row('loc_root', { coord: at(50, 50), targetAreaM2: 10000, anchorElevationM: 0 })],
+    ['loc_b', row('loc_root', { coord: at(250, 50), targetAreaM2: 10000, anchorElevationM: 200 })],
+  ]);
+  const p3 = plan0(r3, box(3, 1)).plan;
+  assert.deepEqual(regionHeights(GRID, 'seed_t', p3, r3, FLAT, 'loc_root'), { elevationM: 100, zRange: { zMin: 0, zMax: 66 } });
+});
 
 test('规则 13：elevationM 取各区格中心列 h 的平均，zRange 取层号最小最大（手算：a 0 与 [0,0]；b 200 与 [66,66]；根 100 与 [0,66]）', () => {
   const rows = hrows();

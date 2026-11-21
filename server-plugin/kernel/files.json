@@ -37,6 +37,7 @@
  "server-plugin/kernel/load/world.mjs",
  "server-plugin/kernel/memo.mjs",
  "server-plugin/kernel/mount.mjs",
+ "server-plugin/kernel/named-struct-match.mjs",
  "server-plugin/kernel/named-structs.mjs",
  "server-plugin/kernel/place-plan.mjs",
  "server-plugin/kernel/place.mjs",

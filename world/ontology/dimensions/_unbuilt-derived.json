@@ -141,7 +141,7 @@
   {"table": "place", "dimension": "accessClass", "missing": ["data"], "card": "pre_first_reader_card", "note": "6-24：旧数据只有 access.mode 的行照转（access_public／private／council）；其余行旧数据没有，卷五 §4.13 规则 5 的缺省链（卷十九 accessDefaultOf、place 基础类别行）未建，不借缺省"},
   {"table": "place", "dimension": "annualMeanTempC", "missing": ["data"], "card": "pre_first_reader_card", "note": "6-24：comp_weather_cell 必填；只有起始地区单元有值（world/geo/weather-cell.json，太原），其余郡旧数据只有气候文字、没有数值，不借别郡"},
   {"table": "place", "dimension": "annualPrecipMm", "missing": ["data"], "card": "pre_first_reader_card", "note": "6-24：同 annualMeanTempC"},
-  {"table": "place", "dimension": "anchorElevationM", "missing": ["data"], "card": "g5", "note": "卷五 §2.1 :102 区域足迹必填的控制海拔：旧数据没有（旧 elevationM 只有起始地区单元一处），6-24 转换（G5，卷五 §7 M5-37：原 elevationM 作 anchorElevationM）才有值；缺值时该行不当控制点，高度场没有控制点时 elevationM、zRange 按未知"},
+  {"table": "place", "dimension": "anchorElevationM", "missing": ["data"], "card": "g5b", "note": "卷五 §2.1 :102 区域足迹必填的控制海拔：旧数据没有（旧 elevationM 只有起始地区单元一处），6-24 转换（G5b，卷五 §7 M5-37：原 elevationM 作 anchorElevationM）与真实世界地理生成输入数据卡才有值；缺值的行仍是控制点（卷五 §4.3 规则 8 :656），最近 K 个控制点里有缺值者该列高度未知，elevationM、zRange 按未知（G5a 起 kernel/footprint.mjs controlPointsOf、grid.mjs controlSurfaceAt 照此传播）"},
   {"table": "place", "dimension": "areaM2", "missing": ["data"], "card": "pre_first_reader_card", "note": "6-24：旧数据只有 biomes.json 的 17 处有面积，照转；其余行没有面积（M5-31 的离线派生缺聚落规模数据），不编"},
   {"table": "place", "dimension": "climateProto", "missing": ["data"], "card": "pre_first_reader_card", "note": "6-24：只有太原一份气候原型（cpr_taiyuan），起始地区单元引用；其余郡单元未引原型，当日天气按未知并报缺口 weather_climate_proto（6-29 口径），不借太原"},
   {"table": "place", "dimension": "coord", "missing": ["data"], "card": "pre_first_reader_card", "note": "6-24：只有世界根一行缺（旧数据没有世界根的坐标）；其余行照转旧 coordinates、center"},
@@ -156,7 +156,8 @@
   {"table": "place", "dimension": "tempAmpC", "missing": ["data"], "card": "pre_first_reader_card", "note": "6-24：同 annualMeanTempC"},
   {"table": "place", "dimension": "terrain", "missing": ["data"], "card": "pre_first_reader_card", "note": "6-24：只有世界根一行缺（旧数据没有它的地形）；其余行取旧 terrain 文本的主地形"},
   {"table": "place", "dimension": "waterAccess", "missing": ["data"], "card": "pre_first_reader_card", "note": "6-24：旧数据没有水体类；只有旧水路边（只含 boat 方式的路线）的两端写 water_navigable，其余行缺"},
-  {"table": "person", "dimension": "location", "missing": ["data"], "card": "6-27", "note": "卷四 §2.3 :263（卷十七 §2.3）：唯一写者 position.mjs 的 placeSubject（6-27），instantiatePerson 不写；6-27 前建出的个体读到按未知。人物行转换（6-23）旧数据有位置的照转"},
+  {"table": "person", "dimension": "pos", "missing": ["data"], "card": "6-27", "note": "卷二 §5.5 :1768（struct:pos，格坐标是个体位置的唯一真相）：唯一写者 position.mjs 的 placeSubject（6-27），instantiatePerson 不写；6-27 前建出的个体读到按未知。所在地点不存，读 zoneAt(pos)（G5 起，原 location 存储列删除）。旧人物数据里有位置（地点 id）者：6-23 转换、6-27 由 placeSubject 按地点 id 经 landCell 在该地点足迹内落格（卷五 §4.1 规则 6 :474）"},
+  {"table": "person", "dimension": "facing", "missing": ["data"], "card": "6-27", "note": "卷二 §5.5 :1769（八向序号 [0,7]）：唯一写者同 pos（placeSubject，6-27），instantiatePerson 不写；6-27 前建出的个体读到按未知"},
   {"table": "person", "dimension": "personality", "missing": ["data"], "card": "pre_first_reader_card", "note": "丙9（李白 11-19 12:4x）：他卷 always 维度整类登未建；取值卷二十六 §4.1、pers 族未前移（登 families），旧数据有的照转，其余读到按未知，不写缺省"},
   {"table": "person", "dimension": "sensitivity", "missing": ["data"], "card": "pre_first_reader_card", "note": "丙9：卷四 :232 always，经采样；键集 = pharm 族全部条目，pharm 族未前移（卷二十一 §2.4，登 families）且物种 pharmSensitivity 已登未建列，无从采样"},
   {"table": "person", "dimension": "origin", "missing": ["data"], "card": "pre_first_reader_card", "note": "丙9：卷四 §2.3 :226 always（出身类别，可显式空）；origin 族条目（placeFilter、grants）归 chargen 与卷十（§4.12），未前移，登 families；instantiatePerson 不写缺省，读到按未知"}

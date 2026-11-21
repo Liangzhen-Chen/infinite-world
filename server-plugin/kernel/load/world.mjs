@@ -118,6 +118,7 @@ export function loadWorld(root, opts = {}) {
   };
   const report = validateDimensions(sources, {
     namespaces: opts.namespaces || ['core'],
+    namedStructs: namedStructsDoc,
     // §1.5 string 行要求的 state-owners "display 集合"还没有机读键（声明表的 display 键是客户端模块组），暂为空集，见 docs/问题.md。
     displaySet: [],
     ns: Array.isArray(decl.rxNamespaces) ? decl.rxNamespaces : [],

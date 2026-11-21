@@ -20,7 +20,9 @@ const RULES = readRules(ROOT).rules;
 const C = ruleTable(RULES, 'kernelConstants');
 const NS = JSON.parse(readFileSync(join(ROOT, 'world/ontology/state-owners.json'), 'utf8')).rxNamespaces;
 // 派生式读规则表值、派生大类读 rules.materials.matcatRules（卷二 §2.9、§1.12 勘误 1118k31），校验器要拿到真实规则表。
-const OPTIONS = { namespaces: ['core'], displaySet: [], ns: NS, limits: { extendsMaxDepth: C.extendsMaxDepth, rxMaxDepth: C.rxMaxDepth }, rules: RULES };
+const OPTIONS = { namespaces: ['core'], displaySet: [], ns: NS, limits: { extendsMaxDepth: C.extendsMaxDepth, rxMaxDepth: C.rxMaxDepth }, rules: RULES,
+  // place、person 表头的位置量引用命名 struct:pos（G5a），校验器要拿到登记。
+  namedStructs: JSON.parse(readFileSync(join(ROOT, 'world/ontology/named-structs.json'), 'utf8')) };
 // 真实目录里材料表以外的维度表（未建登记文件一份、各表共用，登记所指的表须一起交校验器）：按目录通读，不点名具体表；
 // 这些表原样交，不影响材料表的断言。
 const OTHER_TABLES = Object.freeze(readdirSync(DIR).filter((n) => n.endsWith('.json') && !n.startsWith('_') && n !== 'material.json').sort()

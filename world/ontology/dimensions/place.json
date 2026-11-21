@@ -16,48 +16,12 @@
    "vocab": "access"
   },
   "anchor": {
-   "fields": {
-    "coarse": {
-     "type": "boolean"
-    },
-    "w": {
-     "domain": [
-      null,
-      null
-     ],
-     "type": "integer",
-     "unit": "count"
-    },
-    "x": {
-     "domain": [
-      null,
-      null
-     ],
-     "type": "integer",
-     "unit": "count"
-    },
-    "y": {
-     "domain": [
-      null,
-      null
-     ],
-     "type": "integer",
-     "unit": "count"
-    },
-    "z": {
-     "domain": [
-      null,
-      null
-     ],
-     "type": "integer",
-     "unit": "count"
-    }
-   },
    "modifiable": false,
+   "named": "struct:pos",
    "onUnknown": "error",
    "owner": "卷五 §2.1",
    "required": "byFootprint:building",
-   "source": "卷五 §2.1 :99（建筑蓝图原点所在的细格；位置量，§3.3）；卷二 §5.6 :1791；struct:pos 五字段全必写由 kernel/place.mjs 加载校验按命名 struct 登记核（维度表头的 struct 定义没有字段必填表）",
+   "source": "卷五 §2.1 :99（建筑蓝图原点所在的细格；位置量，§3.3）；卷二 §5.6 :1791；字段与类型引用命名 struct 登记 struct:pos（world/ontology/named-structs.json），由类型校验核，表头不抄字段表",
    "type": "struct"
   },
   "anchorElevationM": {
@@ -599,83 +563,11 @@
    "portal": {
     "fields": {
      "a": {
-      "fields": {
-       "coarse": {
-        "type": "boolean"
-       },
-       "w": {
-        "domain": [
-         null,
-         null
-        ],
-        "type": "integer",
-        "unit": "count"
-       },
-       "x": {
-        "domain": [
-         null,
-         null
-        ],
-        "type": "integer",
-        "unit": "count"
-       },
-       "y": {
-        "domain": [
-         null,
-         null
-        ],
-        "type": "integer",
-        "unit": "count"
-       },
-       "z": {
-        "domain": [
-         null,
-         null
-        ],
-        "type": "integer",
-        "unit": "count"
-       }
-      },
+      "named": "struct:pos",
       "type": "struct"
      },
      "b": {
-      "fields": {
-       "coarse": {
-        "type": "boolean"
-       },
-       "w": {
-        "domain": [
-         null,
-         null
-        ],
-        "type": "integer",
-        "unit": "count"
-       },
-       "x": {
-        "domain": [
-         null,
-         null
-        ],
-        "type": "integer",
-        "unit": "count"
-       },
-       "y": {
-        "domain": [
-         null,
-         null
-        ],
-        "type": "integer",
-        "unit": "count"
-       },
-       "z": {
-        "domain": [
-         null,
-         null
-        ],
-        "type": "integer",
-        "unit": "count"
-       }
-      },
+      "named": "struct:pos",
       "type": "struct"
      }
     },

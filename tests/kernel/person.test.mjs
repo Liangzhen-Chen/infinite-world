@@ -35,9 +35,9 @@ test('真实 world：person 表有卷四 §2.3 的头：always 维度、他卷 a
   const real = buildPersonWorld().W;
   const doc = real.tables.get('person').doc;
   const always = Object.entries(doc.dimensions).filter(([, d]) => d.required === 'always').map(([k]) => k).sort();
-  assert.deepEqual(always, ['adultMassKg', 'attributes', 'birthMinute', 'birthplace', 'lifespanYears', 'location', 'origin', 'personality', 'sensitivity', 'sex', 'species']);
-  // 他卷 always（personality、sensitivity、origin）与卷十七 location 登记为未建列（丙9）：行上缺值放行，不写缺省。
-  assert.deepEqual([...real.tables.get('person').unbuiltColumns].sort(), ['location', 'origin', 'personality', 'sensitivity']);
+  assert.deepEqual(always, ['adultMassKg', 'attributes', 'birthMinute', 'birthplace', 'facing', 'lifespanYears', 'origin', 'personality', 'pos', 'sensitivity', 'sex', 'species']);
+  // 他卷 always（personality、sensitivity、origin）与卷十七 pos、facing（G5 起取代存储列 location）登记为未建列（丙9）：行上缺值放行，不写缺省。
+  assert.deepEqual([...real.tables.get('person').unbuiltColumns].sort(), ['facing', 'origin', 'personality', 'pos', 'sensitivity']);
   for (const k of ['adult', 'ageYears', 'attrMod', 'lifeStage', 'living', 'massKg', 'nativeLanguage', 'relAge', 'relMaturity', 'identityKeys', 'fatKg', 'forcePower', 'moveSpeed', 'level', 'esteemTier']) assert.ok(doc.dimensions[k].derived !== undefined && real.tables.get('person').unbuilt.has(k), k);
   // 卷四 §2.3 的其余维度全部在表头声明（不省略；commandBonus 的键族卷文未给，未写，见回报）。
   assert.ok(Object.keys(doc.dimensions).length >= 70, String(Object.keys(doc.dimensions).length));
@@ -193,7 +193,7 @@ test('instantiatePerson 采样：钉死分布的物种，性别取唯一正权�
   assert.deepEqual(p.traits, { trait_test_a: 0.25 });
   assert.deepEqual(p.basis, { kind: 'generated', seedKey: null, writer: 'test_person' });
   assert.equal('culture' in p, false);
-  assert.equal('personality' in p || 'sensitivity' in p || 'location' in p, false, '他卷 always 维度不写缺省');
+  assert.equal('personality' in p || 'sensitivity' in p || 'pos' in p || 'facing' in p, false, '他卷 always 维度不写缺省');
 });
 
 test('给定值优先于采样：性别、寿命、体重、部分属性、外貌轴、culture 都按给定写；没给的属性仍由物种分布采样', () => {

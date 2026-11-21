@@ -332,10 +332,14 @@
     {
      "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 62
+    },
+    {
+     "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 63
     }
    ],
-   "print": "0a43f2ace6ae4eb1b6cd1efcd924b8fc19aeb198ba19dda124e1e58e93865a1b",
-   "rev": 62,
+   "print": "e7d56011a81d161f3c8a2600fd51440fadfd18563dc010b212a3a57742504d96",
+   "rev": 63,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -837,10 +841,14 @@
     {
      "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 59
+    },
+    {
+     "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 60
     }
    ],
-   "print": "3166c79ec78470aaffdbdb91491fbe5568ecae75adf6381d9b6230c13a06a112",
-   "rev": 59,
+   "print": "ee9d3426e74970e1c1ed4ae02cde32b33080219fc535aecdd396f8e56e74eb0a",
+   "rev": 60,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1424,10 +1432,14 @@
     {
      "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 56
+    },
+    {
+     "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 57
     }
    ],
-   "print": "77a497a8476cb388ca123bb95e499ae21a31250ede4c59895eab279c499e0dbf",
-   "rev": 56,
+   "print": "0310d4a280aec46928ffce44873f0231e0c186630c89d655cdab86ab6d5e6b8e",
+   "rev": 57,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1845,10 +1857,14 @@
     {
      "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 72
+    },
+    {
+     "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 73
     }
    ],
-   "print": "e9558f0b034f3ea6fd49e01ad2aae46b29d11a07f30a09006b1a598c32cbcf19",
-   "rev": 72,
+   "print": "feb9c14d34343a56060ee1292c84741c44ef5ca910d4ab48c65f1c00386b4c87",
+   "rev": 73,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -2203,10 +2219,14 @@
     {
      "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 57
+    },
+    {
+     "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 58
     }
    ],
-   "print": "77a497a8476cb388ca123bb95e499ae21a31250ede4c59895eab279c499e0dbf",
-   "rev": 57,
+   "print": "0310d4a280aec46928ffce44873f0231e0c186630c89d655cdab86ab6d5e6b8e",
+   "rev": 58,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -2962,10 +2982,14 @@
     {
      "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 57
+    },
+    {
+     "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 58
     }
    ],
-   "print": "77a497a8476cb388ca123bb95e499ae21a31250ede4c59895eab279c499e0dbf",
-   "rev": 57,
+   "print": "0310d4a280aec46928ffce44873f0231e0c186630c89d655cdab86ab6d5e6b8e",
+   "rev": 58,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -3184,10 +3208,14 @@
     {
      "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 51
+    },
+    {
+     "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 52
     }
    ],
-   "print": "02cd5ae19e70a3d9072e88cdde129181df114a642872d4b93a02df448ca9bb89",
-   "rev": 51,
+   "print": "a6aaab70b5d25b59e61b42c053819649d338ed23f400a3eb11a773ce6f357975",
+   "rev": 52,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -3486,10 +3514,14 @@
     {
      "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 71
+    },
+    {
+     "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 72
     }
    ],
-   "print": "b0191b77bc37afff405124038aa5e27a8157407a0a046c17b6b4695dc71e6e64",
-   "rev": 71,
+   "print": "6cb360e703637c07c1a75c9a126699edee4bfe14d268715d2fb4790c49953c6a",
+   "rev": 72,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -3801,10 +3833,14 @@
     {
      "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 36
+    },
+    {
+     "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 37
     }
    ],
-   "print": "dd1ceaa4e5e712ebcd1d77284194d6c849a9058e29f6eeec8b6c50fb7fd8af94",
-   "rev": 36,
+   "print": "3b5f5445345722307bd8465838ace0a99d022b6df5c2beb3afeb66d681f94d21",
+   "rev": 37,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -4066,10 +4102,14 @@
     {
      "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 60
+    },
+    {
+     "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 61
     }
    ],
-   "print": "0a43f2ace6ae4eb1b6cd1efcd924b8fc19aeb198ba19dda124e1e58e93865a1b",
-   "rev": 60,
+   "print": "e7d56011a81d161f3c8a2600fd51440fadfd18563dc010b212a3a57742504d96",
+   "rev": 61,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -4215,10 +4255,14 @@
     {
      "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 34
+    },
+    {
+     "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 35
     }
    ],
-   "print": "c1e5fdd943eae9d77961ca3edf54ae1d5b54b7c36f64d32df50d22da2db872d4",
-   "rev": 34,
+   "print": "73f4486209e3ce2ebbcdd9912b0b1df44e03cb0757354e043ecb07a43aec5874",
+   "rev": 35,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -4661,10 +4705,14 @@
     {
      "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 53
+    },
+    {
+     "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 54
     }
    ],
-   "print": "02cd5ae19e70a3d9072e88cdde129181df114a642872d4b93a02df448ca9bb89",
-   "rev": 53,
+   "print": "a6aaab70b5d25b59e61b42c053819649d338ed23f400a3eb11a773ce6f357975",
+   "rev": 54,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

@@ -364,17 +364,18 @@ export function regionGeometry(grid, plan, id) {
 }
 
 /**
- * 控制点：格空间里每个有 anchorElevationM 的区域足迹行，位置取它的形心（卷五 §4.3 规则 8 控制面）。按计划缓存。
- * @param {any} grid @param {any} plan @param {Map<string, any>} rows @returns {{id: string, x: number, y: number, elevM: number}[]}
+ * 控制点：格空间里全部划出了足迹的区域足迹行（层根除外），位置取它的形心（卷五 §4.3 规则 8 :656 控制面）。按计划缓存。
+ * 行的 anchorElevationM 未写（或不是数）时 elevM 为 null：该行仍是控制点，最近的控制点里有它时那一列的高度为未知（grid.mjs controlSurfaceAt），不跳过。
+ * @param {any} grid @param {any} plan @param {Map<string, any>} rows @returns {{id: string, x: number, y: number, elevM: number | null}[]}
  */
 export function controlPointsOf(grid, plan, rows) {
   if (plan.controlPoints) return plan.controlPoints;
   const out = [];
   for (const id of [...plan.cells.keys()].sort(cmp)) {
+    if (plan.cells.get(id) === null) continue; // 层根（足迹恒为整个外包框，cells 为 null）不是控制点
     const a = rows.get(id).anchorElevationM;
-    if (typeof a !== 'number') continue;
     const g = regionGeometry(grid, plan, id);
-    if (g) out.push({ id, x: g.centroid.x, y: g.centroid.y, elevM: a });
+    if (g) out.push({ id, x: g.centroid.x, y: g.centroid.y, elevM: typeof a === 'number' ? a : null });
   }
   plan.controlPoints = out;
   return out;
