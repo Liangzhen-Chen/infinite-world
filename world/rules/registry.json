@@ -355,20 +355,23 @@
    "structure": "keys",
    "type": {
     "storeyM": {"type": "integer", "unit": "m", "domain": [1, null]},
+    "cellM": {"type": "integer", "unit": "m", "domain": [1, null]},
     "regionCellM": {"type": "integer", "unit": "m", "domain": [1, null]},
+    "fullTurnDeg": {"type": "integer", "unit": "degree", "domain": [1, null]},
+    "facingDirections": {"type": "integer", "unit": "count", "domain": [8, 8]},
     "heightCtrlK": {"type": "integer", "unit": "count", "domain": [1, null]},
     "reliefOctaves": {"type": "integer", "unit": "count", "domain": [0, null]},
     "surfaceElevationMinM": {"type": "integer", "unit": "m", "domain": [null, 0]},
     "surfaceElevationMaxM": {"type": "integer", "unit": "m", "domain": [0, null]}
    },
    "domain": {
-    "storeyM": [1, null], "regionCellM": [1, null],
+    "storeyM": [1, null], "cellM": [1, null], "regionCellM": [1, null], "fullTurnDeg": [1, null], "facingDirections": [8, 8],
     "heightCtrlK": [1, null], "reliefOctaves": [0, null],
     "surfaceElevationMinM": [null, 0], "surfaceElevationMaxM": [0, null]
    },
-   "volume": "卷五 §2.3 :271（格的尺度与格世界的常数，grid.json 键表；G2 只登有运行期消费者的键，cellM/chunkRegionCells/landSearchRadiusCells/roadPaceFactor/bubbleCostCap/longCostCap/farSight* 随其消费者卡登）；surfaceElevationMinM/MaxM 取卷五 §4.1.1 :425 海拔取值域；heightCtrlK/reliefOctaves 卷文无数值，暂定·待试玩标定；读者 kernel/grid.mjs（G2 起）",
+   "volume": "卷五 §2.3 :271（格的尺度与格世界的常数，grid.json 键表；只登有运行期消费者的键，chunkRegionCells/landSearchRadiusCells/roadPaceFactor/bubbleCostCap/longCostCap/farSight* 随其消费者卡登）；cellM（G3 起读：区格序号换算、直线距离）；fullTurnDeg、facingDirections 取卷五 §4.2 规则 12–13（方位角整圈度数、八向朝向档数；G3 bearingView 读）；surfaceElevationMinM/MaxM 取卷五 §4.1.1 :425 海拔取值域；heightCtrlK/reliefOctaves 卷文无数值，暂定·待试玩标定；读者 kernel/grid.mjs（G2 起）、kernel/footprint.mjs（G3 起）",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"storeyM": false, "regionCellM": false, "heightCtrlK": false, "reliefOctaves": false, "surfaceElevationMinM": false, "surfaceElevationMaxM": false}
+   "packOverridable": {"storeyM": false, "cellM": false, "regionCellM": false, "fullTurnDeg": false, "facingDirections": false, "heightCtrlK": false, "reliefOctaves": false, "surfaceElevationMinM": false, "surfaceElevationMaxM": false}
   },
   {
    "code": "facility",

@@ -5,10 +5,11 @@ import { checkValue, CODE_ENUMS, ROW_FIELDS, splitKey, markersOf, T } from './ty
 import { GRAMMAR_TOKENS } from '../handles/markers.mjs';
 import { gradeDecl } from './cell-grades.mjs';
 import { rowReads, namedHolds } from './named-conditions.mjs';
+import { FOOTPRINT_KIND, footprintKindOf } from '../footprint-kind.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 // required 策略（卷二 §1.2：always、byClass、ifPresent、byEnum、anyOf、byDigestible、byReader）与行来源值（§1.3）、map combine（§1.6）、空字串。
-const REQUIRED_FORM = Object.freeze({ always: 'always', byClass: 'byClass', ifPresent: 'ifPresent', byEnum: 'byEnum', anyOf: 'anyOf', byDigestible: 'byDigestible', byReader: 'byReader' });
+const REQUIRED_FORM = Object.freeze({ always: 'always', byClass: 'byClass', ifPresent: 'ifPresent', byEnum: 'byEnum', anyOf: 'anyOf', byDigestible: 'byDigestible', byReader: 'byReader', byFootprint: 'byFootprint' });
 const SOURCE = Object.freeze({ instance: 'instance' });
 const COMBINE = Object.freeze({ sum: 'sum' });
 const SEG = Object.freeze({ empty: '' });
@@ -123,7 +124,9 @@ export function valueOf(t, id, row, dim) {
   return { known: false };
 }
 
-const REQ_FORMS = /^(always|never|byClass:[a-z][a-z0-9_]*|ifPresent:[a-z][a-zA-Z0-9]*|byEnum:[a-z][a-zA-Z0-9]*=[a-z][a-z0-9_]*|anyOf:[a-zA-Z0-9.]+(,[a-zA-Z0-9.]+)+|byDigestible|byReader)$/;
+// byFootprint:<种类>[,<种类>…]（卷二 §1.2 :105，place 表专用；种类是 footprint_kind 封闭枚举，取 kernel/footprint-kind.mjs 的 FOOTPRINT_KIND）。
+const FOOTPRINT_KINDS = Object.values(FOOTPRINT_KIND).join('|');
+const REQ_FORMS = new RegExp(`^(always|never|byClass:[a-z][a-z0-9_]*|ifPresent:[a-z][a-zA-Z0-9]*|byEnum:[a-z][a-zA-Z0-9]*=[a-z][a-z0-9_]*|anyOf:[a-zA-Z0-9.]+(,[a-zA-Z0-9.]+)+|byDigestible|byReader|byFootprint:(${FOOTPRINT_KINDS})(,(${FOOTPRINT_KINDS}))*)$`);
 // required 策略的多条件分隔符（卷二 §1.2 :104：一个维度可并列多个条件，以"；"分隔）。
 // 原 kernel/handles/patterns.mjs 搬入（S13 (b) 允许 validate/* 用正则；patterns.mjs 只留从 rx.mjs 搬来的正则）。
 const REQUIRED_TERM_SEPARATOR = /；/;
@@ -134,7 +137,22 @@ export const requiredTerms = splitRequiredTerms;
 /** @param {unknown} s required 策略 @returns {boolean} */
 export const requiredSyntaxOk = (s) => requiredTerms(s).length > 0 && requiredTerms(s).every((x) => REQ_FORMS.test(x));
 
-const CONDITIONAL_FORMS = ['byClass', 'ifPresent', 'byEnum'];
+const CONDITIONAL_FORMS = ['byClass', 'ifPresent', 'byEnum', 'byFootprint'];
+
+// 一行的足迹种类（卷五 §4.1 规则 2）：本行与各祖先的组件类全集（沿词表上位展开）交给 footprint-kind.mjs 判。祖先沿展平行的 parent 走，有环即止。
+function footprintKindOfRow(t, id, row) {
+  const setOf = (r) => new Set((Array.isArray(r && r.classes) ? r.classes : []).flatMap((c) => [c, ...t.env.vocab.ancestors(c)]));
+  // 父链沿展平行的 parent 走（有效值），祖先的组件类取实体行与生成行里写的 classes。
+  const flat = (rid) => (t.flat && t.flat.rows && typeof t.flat.rows.get === 'function' ? t.flat.rows.get(rid) : undefined);
+  const written = (rid) => (isObj(t.doc.rows) && isObj(t.doc.rows[rid]) ? t.doc.rows[rid] : isObj(t.doc.generated) ? t.doc.generated[rid] : undefined);
+  const ancestors = [];
+  const seen = new Set([id]);
+  for (let p = (flat(id) || row || {}).parent; typeof p === 'string' && !seen.has(p); p = (flat(p) || {}).parent) {
+    seen.add(p);
+    ancestors.push(setOf(written(p)));
+  }
+  return footprintKindOf(setOf(row), ancestors);
+}
 // 一个实体行对一个维度的必填判定：{applicable（必填）, anyOf?, named?, conditional}。加载期物品聚合读材料也用它判"不适用"（kernel/item.mjs loadReader）。
 /** @param {any} t 一张表 @param {string} id 行代号 @param {Record<string, any>} row 行原文 @param {string} dim 维度键 */
 export function requirement(t, id, row, dim) {
@@ -148,6 +166,7 @@ export function requirement(t, id, row, dim) {
     else if (form === REQUIRED_FORM.byClass) { if (memberOf(row, arg, t.env)) out.applicable = true; }
     else if (form === REQUIRED_FORM.ifPresent) { if (valueOf(t, id, row, arg).known) out.applicable = true; }
     else if (form === REQUIRED_FORM.byEnum) { const [d, v] = arg.split('='); if (valueOf(t, id, row, d).value === v) out.applicable = true; }
+    else if (form === REQUIRED_FORM.byFootprint) { if (arg.split(',').includes(footprintKindOfRow(t, id, row))) out.applicable = true; }
     else if (form === REQUIRED_FORM.anyOf) { out.applicable = true; out.anyOf = arg.split(','); }
     else if (form === REQUIRED_FORM.byDigestible || form === REQUIRED_FORM.byReader) {
       // 表头声明了判据的命名条件按声明求值（named-conditions.mjs），属条件项；没声明的只记 notCovered。

@@ -15,6 +15,65 @@
    "type": "enum",
    "vocab": "access"
   },
+  "anchor": {
+   "fields": {
+    "coarse": {
+     "type": "boolean"
+    },
+    "w": {
+     "domain": [
+      null,
+      null
+     ],
+     "type": "integer",
+     "unit": "count"
+    },
+    "x": {
+     "domain": [
+      null,
+      null
+     ],
+     "type": "integer",
+     "unit": "count"
+    },
+    "y": {
+     "domain": [
+      null,
+      null
+     ],
+     "type": "integer",
+     "unit": "count"
+    },
+    "z": {
+     "domain": [
+      null,
+      null
+     ],
+     "type": "integer",
+     "unit": "count"
+    }
+   },
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "required": "byFootprint:building",
+   "source": "卷五 §2.1 :99（建筑蓝图原点所在的细格；位置量，§3.3）；卷二 §5.6 :1791；struct:pos 五字段全必写由 kernel/place.mjs 加载校验按命名 struct 登记核（维度表头的 struct 定义没有字段必填表）",
+   "type": "struct"
+  },
+  "anchorElevationM": {
+   "domain": [
+    -12000,
+    9000
+   ],
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "precision": 4,
+   "required": "byFootprint:region,volume",
+   "source": "卷五 §2.1 :102（区域足迹：高度场在本行处的控制海拔，§4.3 规则 8；体积足迹：体积顶面的海拔）；卷二 §5.6 :1794",
+   "type": "number",
+   "unit": "m"
+  },
   "annualMeanTempC": {
    "domain": [
     null,
@@ -101,6 +160,69 @@
    "type": "ref",
    "vocab": "climate_proto"
   },
+  "boundary": {
+   "domain": {},
+   "modifiable": false,
+   "of": {
+    "fields": {
+     "x": {
+      "domain": [
+       null,
+       null
+      ],
+      "type": "integer",
+      "unit": "count"
+     },
+     "y": {
+      "domain": [
+       null,
+       null
+      ],
+      "type": "integer",
+      "unit": "count"
+     }
+    },
+    "required": [
+     "x",
+     "y"
+    ],
+    "type": "struct"
+   },
+   "onUnknown": "skip",
+   "owner": "卷五 §2.1",
+   "required": "never",
+   "source": "卷五 §2.1 :98（作者手画的区域足迹：区格序号的集合，非空时覆盖派生划分，§4.1 规则 10；只许区域足迹的行写，kernel/place.mjs 加载校验按足迹种类核禁填）",
+   "type": "list"
+  },
+  "centroid": {
+   "derived": "卷五 §4.1.3 规则 13：足迹内区格中心坐标的平均（定点，向零截断）；由 kernel/place.mjs placeView 求（足迹划分 kernel/footprint.mjs）",
+   "fields": {
+    "x": {
+     "domain": [
+      null,
+      null
+     ],
+     "precision": 4,
+     "type": "number",
+     "unit": "m"
+    },
+    "y": {
+     "domain": [
+      null,
+      null
+     ],
+     "precision": 4,
+     "type": "number",
+     "unit": "m"
+    }
+   },
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "required": "never",
+   "source": "卷五 §2.1 :103；§4.1.3 规则 13",
+   "type": "struct"
+  },
   "coord": {
    "fields": {
     "x": {
@@ -125,8 +247,8 @@
    "modifiable": false,
    "onUnknown": "error",
    "owner": "卷五 §2.1",
-   "required": "always",
-   "source": "卷五 §2.1 :91；卷二 §5.6",
+   "required": "byFootprint:region",
+   "source": "卷五 §2.1 :96（区域足迹的生长种子点，不是形心；拍板第 12 条）；卷二 §5.6 :1788",
    "type": "struct"
   },
   "depthM": {
@@ -180,6 +302,19 @@
    "required": "never",
    "source": "卷五 §2.1 :98（主会话裁定 7）",
    "type": "boolean"
+  },
+  "facing": {
+   "domain": [
+    0,
+    7
+   ],
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "required": "byFootprint:building",
+   "source": "卷五 §2.1 :100（建筑朝向，八向序号，0 为正北、顺时针每档 45 度；位置量，§3.3）；卷二 §5.6 :1792",
+   "type": "integer",
+   "unit": "count"
   },
   "forestCover": {
    "domain": [
@@ -308,6 +443,19 @@
    "type": "number",
    "unit": "fraction"
   },
+  "spanZ": {
+   "domain": [
+    1,
+    null
+   ],
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "required": "byFootprint:volume",
+   "source": "卷五 §2.1 :101（体积足迹竖向占几层，§4.1 规则 11）；卷二 §5.6 :1793",
+   "type": "integer",
+   "unit": "count"
+  },
   "surfaceRefElevationM": {
    "derived": "卷五 §4.5.3 规则 1：skyExposure 大于 0 时取自身 elevationM，否则取 nearest(rel_contains, surfaceRefElevationM)",
    "domain": [
@@ -325,6 +473,20 @@
    "source": "卷五 §2.1 :99",
    "type": "number",
    "unit": "m"
+  },
+  "targetAreaM2": {
+   "domain": [
+    1,
+    null
+   ],
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "precision": 4,
+   "required": "byFootprint:volume",
+   "source": "卷五 §2.1 :97（区域足迹的目标面积，可不填、缺省按 §4.1 规则 10 等分；体积足迹的底面积必填）；卷二 §5.6 :1789；区域足迹可选、建筑与房间行禁填由 kernel/place.mjs 加载校验核",
+   "type": "number",
+   "unit": "m2"
   },
   "tempAmpC": {
    "domain": [
@@ -344,8 +506,8 @@
    "modifiable": false,
    "onUnknown": "error",
    "owner": "卷五 §2.1",
-   "required": "always",
-   "source": "卷五 §2.1 :93；§2.2 :227 terrain 族封闭 10 项；卷二 §5.6 :1760",
+   "required": "byFootprint:region,volume",
+   "source": "卷五 §2.1 :105（主地形；区域足迹、体积足迹必填，建筑与房间行不填）；§2.2 :227 terrain 族封闭 10 项；卷二 §5.6 :1798",
    "type": "enum",
    "vocab": "terrain"
   },
@@ -371,6 +533,15 @@
    "source": "卷五 §2.1 :129；§2.2 :229 water 族；卷二 §5.6",
    "type": "set"
   },
+  "waterKind": {
+   "modifiable": false,
+   "onUnknown": "skip",
+   "owner": "卷五 §2.1",
+   "required": "never",
+   "source": "卷五 §2.1 :143（水体的类，waterAccess 由它派生；原定 byClass:comp_waterbody，该组件类随水体卡登记前先 never，写了照核 water 族引用）",
+   "type": "ref",
+   "vocab": "water"
+  },
   "weatherCommonality": {
    "key": {
     "type": "ref",
@@ -390,6 +561,33 @@
     "type": "integer",
     "unit": "count"
    }
+  },
+  "zRange": {
+   "derived": "卷五 §4.1.3 规则 13：足迹占的层号范围，区域足迹取各区格代表地表层号的最小与最大；由 kernel/place.mjs placeView 求（足迹划分 kernel/footprint.mjs）",
+   "fields": {
+    "zMax": {
+     "domain": [
+      null,
+      null
+     ],
+     "type": "integer",
+     "unit": "count"
+    },
+    "zMin": {
+     "domain": [
+      null,
+      null
+     ],
+     "type": "integer",
+     "unit": "count"
+    }
+   },
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "required": "never",
+   "source": "卷五 §2.1 :107；§4.1.3 规则 13",
+   "type": "struct"
   }
  },
  "edgeStruct": {
@@ -3217,6 +3415,72 @@
   "singletonIds": []
  },
  "generated": {},
+ "gridSpaceStruct": {
+  "fields": {
+   "box": {
+    "fields": {
+     "cellsX": {
+      "domain": [
+       1,
+       null
+      ],
+      "type": "integer",
+      "unit": "count"
+     },
+     "cellsY": {
+      "domain": [
+       1,
+       null
+      ],
+      "type": "integer",
+      "unit": "count"
+     },
+     "x0": {
+      "domain": [
+       null,
+       null
+      ],
+      "type": "integer",
+      "unit": "count"
+     },
+     "y0": {
+      "domain": [
+       null,
+       null
+      ],
+      "type": "integer",
+      "unit": "count"
+     }
+    },
+    "required": [
+     "cellsX",
+     "cellsY",
+     "x0",
+     "y0"
+    ],
+    "type": "struct"
+   },
+   "root": {
+    "kind": "place",
+    "type": "ref"
+   },
+   "w": {
+    "domain": [
+     0,
+     null
+    ],
+    "type": "integer",
+    "unit": "count"
+   }
+  },
+  "required": [
+   "box",
+   "root",
+   "w"
+  ],
+  "source": "卷五 §4.1.1 :422（格空间表是世界数据，每行三项：格空间号 w、外包框（以区格计）、根地点）；外包框取左下角区格序号 (x0, y0) 与边长 (cellsX, cellsY)（区格数）；表内 gridSpaces 节，体例同 edges 节（卷二 §5.6）",
+  "type": "struct"
+ },
  "kind": "place",
  "namespace": "core",
  "rows": {

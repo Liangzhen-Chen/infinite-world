@@ -42,6 +42,18 @@ export function regionCellSeedKey(worldSeed, w, rx, ry) {
   return key;
 }
 
+/**
+ * 落格次序键（卷五 §4.1 规则 14 `hash(seedKey, 区格序号)`，种子抽取点登记在 seed-keys.json 第三行）：
+ * 调用方给的 seedKey 与格空间号 w、区格 x、区格 y 取 sha256；同输入同结果，次序只由这个键定（并列由调用方按 (x, y) 字典序破）。
+ * @param {string} seedKey 调用方给的种子键 @param {number} w 格空间号 @param {number} rx 区格 x @param {number} ry 区格 y
+ * @returns {string} 64 位小写十六进制
+ */
+export function landOrderKey(seedKey, w, rx, ry) {
+  // 先赋值再返回：同 reliefKey（seed_sites 检测器对紧跟 return 的调用漏识别）。
+  const key = gridSeed('grid', 'land', seedKey, w, rx, ry);
+  return key;
+}
+
 // ---------- 起伏噪声（卷五 §4.3 规则 8「起伏」） ----------
 
 // 起伏噪声的格点哈希 hash(世界种子, w, 格点, k)（卷五 §4.3 规则 8）：也是种子抽取点，经 gridSeed 以字面量流/抽取点代号登记（seed-keys.json 第二行，R27-8.1）。

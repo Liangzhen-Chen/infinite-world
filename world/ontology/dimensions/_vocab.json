@@ -333,6 +333,21 @@
      ],
      "table": "place"
     },
+    "comp_facility": {
+     "relocatable": false,
+     "relocatableIn": null,
+     "requires": [
+      "anchor",
+      "facing"
+     ],
+     "table": "place"
+    },
+    "comp_layer_root": {
+     "relocatable": false,
+     "relocatableIn": null,
+     "requires": [],
+     "table": "place"
+    },
     "comp_region": {
      "requires": [
       "regionLevel"
@@ -355,6 +370,23 @@
       "precipLiquid",
       "tempAmpC"
      ],
+     "table": "place"
+    },
+    "comp_volume": {
+     "relocatable": false,
+     "relocatableIn": null,
+     "requires": [
+      "anchorElevationM",
+      "spanZ",
+      "targetAreaM2",
+      "terrain"
+     ],
+     "table": "place"
+    },
+    "comp_zone": {
+     "relocatable": false,
+     "relocatableIn": null,
+     "requires": [],
      "table": "place"
     }
    },

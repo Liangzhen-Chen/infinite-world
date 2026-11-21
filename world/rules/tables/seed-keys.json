@@ -18,6 +18,14 @@
      "role": "role_seed",
      "prefix": "grid_",
      "purpose": "起伏噪声格点哈希 hash(世界种子, w, 格点, k)（卷五 §4.3 规则 8）：成分世界种子、生成流代号 grid、格空间号 w、格点 i、格点 j、级数 k；不放版本成分"
+    },
+    {
+     "file": "kernel/grid.mjs",
+     "stream": "grid",
+     "site": "land",
+     "role": "role_seed",
+     "prefix": "grid_",
+     "purpose": "落格次序键 hash(seedKey, 区格序号)（卷五 §4.1 规则 14 landCell）：成分调用方给的 seedKey、生成流代号 grid、格空间号 w、区格 x、区格 y；不放版本成分"
     }
    ]
   }

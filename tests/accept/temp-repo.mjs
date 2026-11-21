@@ -59,6 +59,8 @@ export function tempRepo() {
   cpSync(join(ROOT, 'server-plugin/kernel/load/flatten.mjs'), join(dir, 'server-plugin/kernel/load/flatten.mjs'));
   cpSync(join(ROOT, 'server-plugin/kernel/validate/dimensions-validate.mjs'), join(dir, 'server-plugin/kernel/validate/dimensions-validate.mjs'));
   cpSync(join(ROOT, 'server-plugin/kernel/validate/rows.mjs'), join(dir, 'server-plugin/kernel/validate/rows.mjs'));
+  // 足迹种类判据叶子（格子迁移 G3）：rows.mjs 的 byFootprint 必填条件 import 它，指纹闭包要算同一份。
+  cpSync(join(ROOT, 'server-plugin/kernel/footprint-kind.mjs'), join(dir, 'server-plugin/kernel/footprint-kind.mjs'));
   cpSync(join(ROOT, 'server-plugin/kernel/validate/named-conditions.mjs'), join(dir, 'server-plugin/kernel/validate/named-conditions.mjs'));
   cpSync(join(ROOT, 'server-plugin/kernel/validate/cell-grades.mjs'), join(dir, 'server-plugin/kernel/validate/cell-grades.mjs'));
   // 效果族表校验（卷二 §3.9；5-5）：dimensions-validate 的 import，指纹闭包要算同一份。

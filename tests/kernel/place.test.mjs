@@ -43,7 +43,7 @@ const codes = (r) => r.errors.map((e) => e.code);
 const has = (r, code) => codes(r).includes(code);
 // 一行地点：父、面积、海拔；其余 always 维度照表头给齐。
 const row = (parent, areaM2, extra = {}) => ({
-  parent, coord: { x: 0, y: 0 }, areaM2, elevationM: 0, skyExposure: 1, ledgerHolder: false, basis: 'test',
+  parent, coord: { x: 0, y: 0 }, areaM2, elevationM: 0, anchorElevationM: 0, skyExposure: 1, ledgerHolder: false, basis: 'test',
   terrain: 'terrain_plain', waterAccess: ['water_test_fresh'], forestCover: 0, hiddenness: 0, accessClass: 'access_test_open', ...extra,
 });
 const edge = (from, to, distanceM, waterway = false, extra = {}) => ({ from, to, distanceM, waterway, ...extra });
@@ -89,13 +89,8 @@ test('parent 特殊值：不存在的地点 E-DIM-REF-MISSING；空串 E-DIM-ID-
   assert.ok(has(load({ rows: { loc_w: row(null, 1000), loc_a: missing } }), 'E-DIM-REQUIRED-MISSING'));
 });
 
-test('规则 3：同父子地点面积和等于父地点通过，多 1 m2 即 E-DIM-DOMAIN-RANGE', () => {
-  // 400 + 600 = 1000，不超过；400 + 601 = 1001 > 1000。
-  assert.equal(load({ rows: { loc_w: row(null, 1000), loc_a: row('loc_w', 400), loc_b: row('loc_w', 600) } }).ok, true);
-  const r = load({ rows: { loc_w: row(null, 1000), loc_a: row('loc_w', 400), loc_b: row('loc_w', 601) } });
-  assert.equal(r.ok, false);
-  assert.ok(has(r, 'E-DIM-DOMAIN-RANGE'), r.text);
-});
+// 旧规则 3（同父面积和不超过父、子 coord 落在父等效半径内）已由卷五 §4.1 规则 3 的足迹包含取代（格子迁移 G3，M5-35）：
+// 面积和与等效圆两组用例随旧校验一并删除，足迹包含的用例在 place-footprint.test.mjs。
 
 test('areaM2 特殊值：0 与负数出取值域 [1, null]，null 不可空', () => {
   for (const a of [0, -5, null]) assert.ok(has(load({ rows: { loc_w: row(null, a) } }), 'E-DIM-DOMAIN-RANGE'), String(a));
@@ -160,31 +155,7 @@ test('aperture：挂 comp_enclosure 的行必填，取值域 [0,1]', () => {
   assert.ok(has(load({ rows: enc({ aperture: 1.5 }) }), 'E-DIM-DOMAIN-RANGE'));
 });
 
-// ---------- 规则 3 前半：坐标包含（子地点 coord 与父地点 coord 之差 ≤ √(父 areaM2 ÷ π)） ----------
-
-// 手算：父 1000 m2，等效半径 √(1000/π) = 17.84124… m。定点判 π·dx² ≤ areaM2（π 取 atan 表 π/4 = 0.78539816 的四倍）：
-// dx = 17.8412 时 314159264 × 178412² = 9 999 953 814 795 516 416 ≤ 10¹⁹，过；dx = 17.8413（多 1 个定点单位）时 10 000 065 914 674 893 216 > 10¹⁹，拒。
-const contain = (x, y = 0, parentArea = 1000) => load({ rows: { loc_w: row(null, parentArea, { coord: { x: 100, y: 100 } }), loc_a: row('loc_w', 1, { coord: { x: 100 + x, y: 100 + y } }) } });
-
-test('坐标包含正例：恰在等效半径以内（17.8412 m）通过；反方向同样', () => {
-  assert.equal(contain(17.8412).ok, true, contain(17.8412).text);
-  assert.equal(contain(-17.8412).ok, true);
-  assert.equal(contain(0, 17.8412).ok, true);
-});
-
-test('坐标包含反例：越出 1 个定点单位（17.8413 m）即 E-DIM-DOMAIN-RANGE', () => {
-  const r = contain(17.8413);
-  assert.equal(r.ok, false);
-  assert.ok(has(r, 'E-DIM-DOMAIN-RANGE'), r.text);
-  assert.ok(has(contain(0, -17.8413), 'E-DIM-DOMAIN-RANGE'));
-});
-
-test('坐标包含特殊值：子与父同点（距离 0）在最小面积 1 m2 的父下也过；父 1 m2 半径 0.5641 m 过、0.5642 m 拒', () => {
-  // √(1/π) = 0.564189… m：314159264 × 5641² ≤ 10¹⁶ 过，× 5642² > 10¹⁶ 拒。
-  assert.equal(contain(0, 0, 1).ok, true);
-  assert.equal(contain(0.5641, 0, 1).ok, true);
-  assert.ok(has(contain(0.5642, 0, 1), 'E-DIM-DOMAIN-RANGE'));
-});
+// ---------- coord 结构（区域足迹的种子点，卷五 §2.1 :96）：缺 x 或 y 不按 0 顶替（旧的等效圆坐标包含校验已由足迹包含取代，见上） ----------
 
 test('坐标特殊值：空坐标 {}、缺 y 即 E-DIM-STRUCT-FIELD；null 不可空 E-DIM-DOMAIN-RANGE', () => {
   const at = (coord) => load({ rows: { loc_w: row(null, 1000), loc_a: row('loc_w', 1, { coord }) } });

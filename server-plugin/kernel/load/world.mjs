@@ -32,6 +32,7 @@ import { checkRecipeTable } from '../recipe.mjs';
 import { checkValuationTables } from '../valuation.mjs';
 import { checkPriceTables } from '../validate/price-tables.mjs';
 import { checkBodyTables } from '../validate/body-tables.mjs';
+import { installNamedStructs } from '../named-structs.mjs';
 
 export const LAYOUT = Object.freeze({
   dimensionsDir: 'world/ontology/dimensions',
@@ -45,6 +46,8 @@ export const LAYOUT = Object.freeze({
   stateOwners: 'world/ontology/state-owners.json',
   // 效果族行引用闭合要核的原语目录（卷二 §3.9 :1479：`op` 是 primitives.json 的原语）；文件不存在时不交，效果族的原语输出一律被拒。
   primitives: 'world/ontology/primitives.json',
+  // 命名 struct 登记（卷二 §1.5 :252 struct:pos；事件载荷 pos 的形状从这里派生，G1 记账第一条）；文件不存在时不装入。
+  namedStructs: 'world/ontology/named-structs.json',
   // 内核常数表在 engine.rules 下的表代号（卷二 S10 登记豁免表；登记行见 world/rules/registry.json）。
   constants: 'kernelConstants',
 });
@@ -93,6 +96,14 @@ export function loadWorld(root, opts = {}) {
     const parsedCatalog = parseJsonStrict(readText(primitivesPath));
     if (parsedCatalog.errors.length) throw new Error(`E-DIM-STRUCT-FIELD ${LAYOUT.primitives}: ${parsedCatalog.errors[0].code} at ${parsedCatalog.errors[0].pointer}`);
     primitivesDoc = parsedCatalog.value;
+  }
+  // 命名 struct 登记：读到即交内核 named-structs.mjs（事件 payload.pos 的字段与类型从登记派生）；JSON 语法错同原语目录直接拒。
+  const namedStructsPath = join(root, LAYOUT.namedStructs);
+  let namedStructsDoc;
+  if (existsSync(namedStructsPath)) {
+    const parsedStructs = parseJsonStrict(readText(namedStructsPath));
+    if (parsedStructs.errors.length) throw new Error(`E-DIM-STRUCT-FIELD ${LAYOUT.namedStructs}: ${parsedStructs.errors[0].code} at ${parsedStructs.errors[0].pointer}`);
+    namedStructsDoc = parsedStructs.value;
   }
   const declPath = join(root, LAYOUT.stateOwners);
   const parsed = existsSync(declPath) ? parseJsonStrict(readText(declPath)) : { value: {}, errors: [] };
@@ -156,6 +167,7 @@ export function loadWorld(root, opts = {}) {
   // 校验全部通过后收下注册表与句柄 V、E、P（kernel/vocab.mjs、kernel/handles/generated.mjs）；任一失败不收，句柄保持原值。
   if (ok) {
     installVocab(report);
+    if (namedStructsDoc) installNamedStructs(namedStructsDoc); // 命名 struct 登记（卷二 §1.5 :252；kernel/named-structs.mjs，G1 记账第一条）
     installHandles({ vocab: report.vocab, decl, ledgerPaths: owners.merged.ledgerPaths });
     installStorage(owners.merged); // readPath/writePath 运行期核对用的声明表合并结果（kernel/storage.mjs，块 2 第 2-3 张）
     installWeather(weatherRx.trees); // weatherAt 只读加载期编好的 weightRX 树（kernel/weather.mjs，块 6 第 6-28 张）

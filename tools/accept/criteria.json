@@ -328,10 +328,14 @@
     {
      "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 61
+    },
+    {
+     "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 62
     }
    ],
-   "print": "33a967bc61d306aaab5de10b54d67e504379f02ce643b68fd6529fbe1b83bc43",
-   "rev": 61,
+   "print": "0a43f2ace6ae4eb1b6cd1efcd924b8fc19aeb198ba19dda124e1e58e93865a1b",
+   "rev": 62,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -829,10 +833,14 @@
     {
      "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 58
+    },
+    {
+     "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 59
     }
    ],
-   "print": "7c3658ce2f863e8e563a693fa5bede455c74398d054b650e34703ee0ccbb762d",
-   "rev": 58,
+   "print": "3166c79ec78470aaffdbdb91491fbe5568ecae75adf6381d9b6230c13a06a112",
+   "rev": 59,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1412,10 +1420,14 @@
     {
      "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 55
+    },
+    {
+     "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 56
     }
    ],
-   "print": "be403fa266c0631c2556d92d196e8c6c962f6046be053becd8450f2b687cf942",
-   "rev": 55,
+   "print": "77a497a8476cb388ca123bb95e499ae21a31250ede4c59895eab279c499e0dbf",
+   "rev": 56,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1829,10 +1841,14 @@
     {
      "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 71
+    },
+    {
+     "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 72
     }
    ],
-   "print": "92883dffba2aa7dbf9d0b80c6467d161c7f34e58877edb583182e17c6222d846",
-   "rev": 71,
+   "print": "e9558f0b034f3ea6fd49e01ad2aae46b29d11a07f30a09006b1a598c32cbcf19",
+   "rev": 72,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -2183,10 +2199,14 @@
     {
      "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 56
+    },
+    {
+     "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 57
     }
    ],
-   "print": "be403fa266c0631c2556d92d196e8c6c962f6046be053becd8450f2b687cf942",
-   "rev": 56,
+   "print": "77a497a8476cb388ca123bb95e499ae21a31250ede4c59895eab279c499e0dbf",
+   "rev": 57,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -2938,10 +2958,14 @@
     {
      "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 56
+    },
+    {
+     "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 57
     }
    ],
-   "print": "be403fa266c0631c2556d92d196e8c6c962f6046be053becd8450f2b687cf942",
-   "rev": 56,
+   "print": "77a497a8476cb388ca123bb95e499ae21a31250ede4c59895eab279c499e0dbf",
+   "rev": 57,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -3156,10 +3180,14 @@
     {
      "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 50
+    },
+    {
+     "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 51
     }
    ],
-   "print": "752f520ab8b69da38f22b4050e5024d2c30178a7aea6c3fbbe5676e224bfbf14",
-   "rev": 50,
+   "print": "02cd5ae19e70a3d9072e88cdde129181df114a642872d4b93a02df448ca9bb89",
+   "rev": 51,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -3454,10 +3482,14 @@
     {
      "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 70
+    },
+    {
+     "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 71
     }
    ],
-   "print": "947170ba3b5d3f0e4f89a08cd0a81fceed420f5edc171da9a82573d3a6f805a4",
-   "rev": 70,
+   "print": "b0191b77bc37afff405124038aa5e27a8157407a0a046c17b6b4695dc71e6e64",
+   "rev": 71,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -3765,10 +3797,14 @@
     {
      "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 35
+    },
+    {
+     "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 36
     }
    ],
-   "print": "3d014b3a8de766bcb28d4e7986a92df4eeb594e1b8f705bc38b719d7fcef45c3",
-   "rev": 35,
+   "print": "dd1ceaa4e5e712ebcd1d77284194d6c849a9058e29f6eeec8b6c50fb7fd8af94",
+   "rev": 36,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -4026,10 +4062,14 @@
     {
      "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 59
+    },
+    {
+     "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 60
     }
    ],
-   "print": "33a967bc61d306aaab5de10b54d67e504379f02ce643b68fd6529fbe1b83bc43",
-   "rev": 59,
+   "print": "0a43f2ace6ae4eb1b6cd1efcd924b8fc19aeb198ba19dda124e1e58e93865a1b",
+   "rev": 60,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -4171,10 +4211,14 @@
     {
      "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 33
+    },
+    {
+     "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 34
     }
    ],
-   "print": "dcb9392a18d0ea4dfd8728d46a5f2e9f759e196ffda12d0ca4c3740e00e4704c",
-   "rev": 33,
+   "print": "c1e5fdd943eae9d77961ca3edf54ae1d5b54b7c36f64d32df50d22da2db872d4",
+   "rev": 34,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -4613,10 +4657,14 @@
     {
      "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 52
+    },
+    {
+     "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "rev": 53
     }
    ],
-   "print": "752f520ab8b69da38f22b4050e5024d2c30178a7aea6c3fbbe5676e224bfbf14",
-   "rev": 52,
+   "print": "02cd5ae19e70a3d9072e88cdde129181df114a642872d4b93a02df448ca9bb89",
+   "rev": 53,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
