@@ -1160,6 +1160,29 @@
    }
   },
   {
+   "criterion": "几何只有一处（卷五 S5-10）：kernel 以外服务端组对全局几何原语 Math.hypot、Math.atan2、Math.sqrt 与 det-math 定点几何 fixedSqrtInt、atan 的调用计数为 0（一律经 straightM、bearingView；规则层用定点函数自算距离/方位同计；入口文件与几何原语均在 kernel 组，经 state-owners.json 组登记派生、不在条目点名文件）；卷十七 tripPlan 的格上求路不经这些原语，不误报。",
+   "log": [
+    {
+     "ref": "G2 开写前登记门禁条目 vol5.S5-10（李白 11-21 裁定）：新登类别 geometry_bypass，call_edge 查几何原语调用；条目 implemented",
+     "rev": 1
+    }
+   ],
+   "print": "128be81718800e472fe118f2c9c907f15ea6bfc45fd8c5ce2ac635d062d4523f",
+   "rev": 1,
+   "scanClass": "geometry_bypass",
+   "source": "卷五 §3.5 S5-10 :408；卷十二 §2.4 开放登记",
+   "terms": {
+    "vol5.S5-10": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
    "criterion": "数据表里按卷一 R-6 第 5 条“`difficulty:数字` 由派生算出”的字段又带手填的数值即命中：判据只取卷一 R-6 第 5 条与卷十二 R12-4.6 的原句（R12-4.6：“数据表里按规则应由派生算出、却手填了数的字段，由 `data_shape` 报出”），不按表名、文件名或具体条目特判；每处手填计一行，进分量 `c_difficulty`，旧基线 26 取自卷一 R-6“判定”一段，不升（R12-4.6）。检测器 data_shape 读数据表。其余应由派生算出的字段名单，卷一 R-6、卷十二 R12-4.6 未给出（未找到）。",
    "log": [
     {

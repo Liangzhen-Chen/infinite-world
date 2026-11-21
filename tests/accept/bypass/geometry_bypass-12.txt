@@ -1,0 +1,20 @@
+export function tripPlan(engine, state, from, to) {
+  const dist = new Map();
+  const prev = new Map();
+  const queue = [from];
+  dist.set(from, 0);
+  while (queue.length) {
+    const cur = queue.pop();
+    const curMin = dist.get(cur);
+    for (const next of stepNeighbours(state, cur)) {
+      const stepMin = stepCost(state, cur, next);
+      const nd = curMin + stepMin;
+      if (!dist.has(next) || nd < dist.get(next)) {
+        dist.set(next, nd);
+        prev.set(next, cur);
+        queue.push(next);
+      }
+    }
+  }
+  return { dest: to, minutes: dist.get(to), legs: [], etaMinute: 0, tolls: [], closedAt: null };
+}

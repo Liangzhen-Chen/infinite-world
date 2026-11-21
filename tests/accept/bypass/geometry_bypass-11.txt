@@ -1,0 +1,2 @@
+import { straightM } from '../kernel/place.mjs';
+export const distM = (a, b) => straightM(a, b);

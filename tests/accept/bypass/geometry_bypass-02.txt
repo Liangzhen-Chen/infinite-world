@@ -1,0 +1,6 @@
+export function bearingOf(dy, dx) {
+  return Math.atan2(dy, dx);
+}
+export function normOf(x, y) {
+  return Math.sqrt(x * x + y * y);
+}

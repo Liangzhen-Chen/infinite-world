@@ -170,6 +170,16 @@
    "scanClass": "cross_write"
   },
   {
+   "addedAtRev": 16,
+   "caseKey": "cross_write-04",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/cross_write-04.txt",
+   "group": "rules",
+   "origin": "卷二 S5 直接改 state.cells[w][chunk][key]（cells 写者登记待 gridKey 落地，直接写由 E-VIEW-BYPASS 兜底）",
+   "polarity": "must_fail",
+   "scanClass": "cross_write"
+  },
+  {
    "addedAtRev": 1,
    "caseKey": "cross_write-11",
    "fixture": "tests/accept/bypass/cross_write-11.txt",
@@ -313,6 +323,64 @@
    "origin": "卷十二 S12-12：别的码、执行记录目录外的文件不算",
    "polarity": "must_pass",
    "scanClass": "ext_code"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "geometry_bypass-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/geometry_bypass-01.txt",
+   "group": "rules",
+   "origin": "卷五 S5-10 :408 正例：规则层自算两点直线距离（Math.hypot）计 E-VIEW-BYPASS",
+   "polarity": "must_fail",
+   "scanClass": "geometry_bypass"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "geometry_bypass-02",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/geometry_bypass-02.txt",
+   "group": "rules",
+   "origin": "卷五 S5-10 :408 正例：规则层自算方位角与距离（Math.atan2、Math.sqrt）计 E-VIEW-BYPASS",
+   "polarity": "must_fail",
+   "scanClass": "geometry_bypass"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "geometry_bypass-03",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/geometry_bypass-03.txt",
+   "group": "rules",
+   "origin": "卷五 S5-10 :408 正例：规则层用 det-math fixedSqrtInt/atan 自算两点直线距离/方位角计 E-VIEW-BYPASS（对照表 #45）",
+   "polarity": "must_fail",
+   "scanClass": "geometry_bypass"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "geometry_bypass-04",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/geometry_bypass-04.txt",
+   "group": "rules",
+   "origin": "卷五 S5-10 :408 正例：子目录相对写法 import '../kernel/det-math.mjs' 用 fixedSqrtInt/atan 自算两点直线距离/方位角计 E-VIEW-BYPASS（call_edge 按说明符字面比对）",
+   "polarity": "must_fail",
+   "scanClass": "geometry_bypass"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "geometry_bypass-11",
+   "fixture": "tests/accept/bypass/geometry_bypass-11.txt",
+   "group": "rules",
+   "origin": "卷五 S5-10 :408 反例：经入口 straightM 求距离，不碰全局几何原语，不计",
+   "polarity": "must_pass",
+   "scanClass": "geometry_bypass"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "geometry_bypass-12",
+   "fixture": "tests/accept/bypass/geometry_bypass-12.txt",
+   "group": "rules",
+   "origin": "卷五 S5-10 :408 寻路例外：卷十七 tripPlan 按自己的耗时度量在格上求路（R17-1.7），不做欧氏几何，不计",
+   "polarity": "must_pass",
+   "scanClass": "geometry_bypass"
   },
   {
    "addedAtRev": 1,

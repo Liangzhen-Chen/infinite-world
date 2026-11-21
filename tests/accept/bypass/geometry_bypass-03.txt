@@ -1,0 +1,7 @@
+import { fixedSqrtInt, atan } from './kernel/det-math.mjs';
+export function distOf(dx, dy) {
+  return fixedSqrtInt(dx * dx + dy * dy);
+}
+export function bearingOf(dy, dx) {
+  return atan(dy / dx);
+}

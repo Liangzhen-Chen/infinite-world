@@ -1,0 +1,3 @@
+// 不经三条写通道直接改 state.cells（卷二 S5 E-VIEW-BYPASS；cells 写者登记待 gridKey 落地，直接写由 E-VIEW-BYPASS 兜底）。
+/** @param {State} state @param {number} w @param {number} chunk @param {string} key @param {unknown} val @returns {void} */
+export function setCell(state, w, chunk, key, val) { state.cells[w][chunk][key] = val; }

@@ -112,6 +112,28 @@
    "source": "卷十二 §2.4 首批表（各卷登记；卷二 S17 后半）；块 2 第 2-3 张登记"
   },
   {
+   "callees": {
+    "": {
+     "Math.atan2": [],
+     "Math.hypot": [],
+     "Math.sqrt": []
+    },
+    "../kernel/det-math.mjs": {
+     "fixedSqrtInt": [],
+     "atan": []
+    },
+    "./kernel/det-math.mjs": {
+     "fixedSqrtInt": [],
+     "atan": []
+    }
+   },
+   "detectors": [
+    "call_edge"
+   ],
+   "scanClass": "geometry_bypass",
+   "source": "卷五 §3.5 S5-10 :408（几何只有一处：本卷入口文件之外自算两点直线距离、方位角为 0，一律经 straightM、bearingView；全局 Math.hypot/atan2/sqrt 与 det-math 定点几何 fixedSqrtInt/atan 一并查）；卷十二 §2.4 开放登记"
+  },
+  {
    "detectors": [
     "data_shape"
    ],
