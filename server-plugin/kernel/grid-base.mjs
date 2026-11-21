@@ -12,8 +12,10 @@ import { blockAt } from './grid-template.mjs';
 
 /** 材料的物态栏（卷三甲 :128 分态布尔的三栏）。 */
 export const STATE = Object.freeze({ solid: 'solid', liquid: 'liquid', gas: 'gas' });
-/** 格种类（卷五 §4.5 规则 5：楼梯、梯、坡；本卡只有蓝图给的楼梯，梯、坡归洞穴生成器）。格种类不是材料：楼梯格本格可立足、可通行。 */
-export const CELL_KIND = Object.freeze({ stairs: 'stairs' });
+/** 格种类（卷五 §4.5 规则 5：楼梯、梯、坡；楼梯由建筑蓝图给，梯由洞穴生成器的洞口通路给〔卷十 R10-2.14 第 4 项，G8〕，坡暂无来源）。格种类不是材料：这三种格本格可立足、可通行。 */
+export const CELL_KIND = Object.freeze({ stairs: 'stairs', ladder: 'ladder' });
+// 本格可立足的格种类（卷五 §4.5 规则 5 末段："梯、坡"或楼梯格本身可立足）。
+const STANDABLE_KINDS = Object.freeze([CELL_KIND.stairs, CELL_KIND.ladder]);
 /** 材料的三个格侧布尔维度名（卷三甲 :128–:130）。 */
 export const FLAG = Object.freeze({ opaque: 'opaque', blocksSky: 'blocksSky', bearsLoad: 'bearsLoad' });
 
@@ -221,7 +223,7 @@ export function cellFlags(col, z, flagOf) {
     if (c === true) underfoot = true;
     else if (c === null && underfoot === false) underfoot = null;
   }
-  const standable = !passable ? false : here.kind === CELL_KIND.stairs ? true : underfoot;
+  const standable = !passable ? false : STANDABLE_KINDS.includes(here.kind) ? true : underfoot;
   return { blocksSky, bearsLoad, standable };
 }
 

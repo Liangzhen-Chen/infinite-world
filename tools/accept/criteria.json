@@ -352,10 +352,14 @@
     {
      "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 67
+    },
+    {
+     "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
+     "rev": 68
     }
    ],
-   "print": "285e6f26dcc6d0fd16acc803536cddf9ff8855153e1b0d37b8a57ff3b8fa2422",
-   "rev": 67,
+   "print": "e03fe15dedf9fb5deb07d835771c67d7901b4a2998b235008094e2aaf81960b5",
+   "rev": 68,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -885,10 +889,14 @@
     {
      "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 66
+    },
+    {
+     "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
+     "rev": 67
     }
    ],
-   "print": "8df11a8690bdf20a6981852458b9acbfa1b75d2c842f9b3323b6ec4ce9b491d9",
-   "rev": 66,
+   "print": "80a5264878df6633dc135f333a057b81c3c0dec82b5247a0fd3b6abe0c1e5c42",
+   "rev": 67,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1500,10 +1508,14 @@
     {
      "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 63
+    },
+    {
+     "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
+     "rev": 64
     }
    ],
-   "print": "3a4b78e2d9b472542ded462b246ce222b7e26d8afd8cd6349c49761648b4ddcb",
-   "rev": 63,
+   "print": "ac81cdf051784a36691858deb28751518118c27a26badc0d0129667bf5b6be8f",
+   "rev": 64,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1949,10 +1961,14 @@
     {
      "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 79
+    },
+    {
+     "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
+     "rev": 80
     }
    ],
-   "print": "dc8c68ad788c28ed543fe1e8329e152e78c9bc439e2852df5a76626f639e9f73",
-   "rev": 79,
+   "print": "cb4344ecd5390f40120258dc6b20caeb1843cce348e76c0657fde123e7ad99e9",
+   "rev": 80,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -2335,10 +2351,14 @@
     {
      "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 64
+    },
+    {
+     "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
+     "rev": 65
     }
    ],
-   "print": "3a4b78e2d9b472542ded462b246ce222b7e26d8afd8cd6349c49761648b4ddcb",
-   "rev": 64,
+   "print": "ac81cdf051784a36691858deb28751518118c27a26badc0d0129667bf5b6be8f",
+   "rev": 65,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -3122,10 +3142,14 @@
     {
      "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 64
+    },
+    {
+     "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
+     "rev": 65
     }
    ],
-   "print": "3a4b78e2d9b472542ded462b246ce222b7e26d8afd8cd6349c49761648b4ddcb",
-   "rev": 64,
+   "print": "ac81cdf051784a36691858deb28751518118c27a26badc0d0129667bf5b6be8f",
+   "rev": 65,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -3372,10 +3396,14 @@
     {
      "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 58
+    },
+    {
+     "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
+     "rev": 59
     }
    ],
-   "print": "9c7e6d3b347f9eac03a38f183df4aa0c876e95b7d5e6dfe15c00e5ea4c7df792",
-   "rev": 58,
+   "print": "604ac4b231700da7941846c13b81b69a05c095bc0fd0de5682bae807c4f49500",
+   "rev": 59,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -3694,10 +3722,14 @@
     {
      "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 76
+    },
+    {
+     "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
+     "rev": 77
     }
    ],
-   "print": "d10cb4f1c9f4af5b365857a68356107e62940581b0e85ac897923a2fe4b3628f",
-   "rev": 76,
+   "print": "9520605fd7b6690787ecfe8b4b9c1ef59e93ee957f4559ef8739e6242ad9563f",
+   "rev": 77,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -4037,10 +4069,14 @@
     {
      "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 43
+    },
+    {
+     "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
+     "rev": 44
     }
    ],
-   "print": "aa666a052aca0c2b4df208737f148fd43fad3dc31ac66ea041d4de3a3b24d89c",
-   "rev": 43,
+   "print": "5f70ddbbefe09f5e303450edcd5c0d96693ff07ecaafd6b64235204569804bd5",
+   "rev": 44,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -4322,10 +4358,14 @@
     {
      "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 65
+    },
+    {
+     "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
+     "rev": 66
     }
    ],
-   "print": "285e6f26dcc6d0fd16acc803536cddf9ff8855153e1b0d37b8a57ff3b8fa2422",
-   "rev": 65,
+   "print": "e03fe15dedf9fb5deb07d835771c67d7901b4a2998b235008094e2aaf81960b5",
+   "rev": 66,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -4499,10 +4539,14 @@
     {
      "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 41
+    },
+    {
+     "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
+     "rev": 42
     }
    ],
-   "print": "867c1cc88e5e0a30110a7662c9fdf14f927111169660dfe2ea05453d63f3cb82",
-   "rev": 41,
+   "print": "5f33cb7324048754abbbab90a04672f440bb72c278b8c741d868b5ed6ee90dfe",
+   "rev": 42,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -4973,10 +5017,14 @@
     {
      "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 60
+    },
+    {
+     "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
+     "rev": 61
     }
    ],
-   "print": "9c7e6d3b347f9eac03a38f183df4aa0c876e95b7d5e6dfe15c00e5ea4c7df792",
-   "rev": 60,
+   "print": "604ac4b231700da7941846c13b81b69a05c095bc0fd0de5682bae807c4f49500",
+   "rev": 61,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

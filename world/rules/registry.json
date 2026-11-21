@@ -551,12 +551,13 @@
      "depthM": {"type": "distribution"}
     }}},
     "roleTract": {"type": "ref", "vocab": "component"},
-    "roleWaterbody": {"type": "ref", "vocab": "component"}
+    "roleWaterbody": {"type": "ref", "vocab": "component"},
+    "underMaxAreaM2": {"type": "number", "unit": "m2", "domain": [1, null], "precision": 4}
    },
-   "domain": {"waterRows": {}, "roleTract": {}, "roleWaterbody": {}},
+   "domain": {"waterRows": {}, "roleTract": {}, "roleWaterbody": {}, "underMaxAreaM2": [1, null]},
    "volume": "卷十 §2.3 :165（rules.gen.water.rows：命中的水体取哪一类、多深；本卡只落 priority、waterKind、depthM，whenRX 与 liquidRX 随存量单元行与 rx 读邻格聚合落地后补）、R10-2.12 :427（句柄 rules.gen.roles.tract、rules.gen.roles.waterbody，键名取驼峰 roleTract、roleWaterbody）；读者是 kernel/gen/worldgen.mjs、kernel/gen/water.mjs",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"waterRows": false, "roleTract": false, "roleWaterbody": false}
+   "packOverridable": {"waterRows": false, "roleTract": false, "roleWaterbody": false, "underMaxAreaM2": false}
   }
  ]
 }

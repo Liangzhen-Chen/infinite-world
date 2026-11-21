@@ -210,6 +210,16 @@ export function gridSeedKeyText(worldSeed, stream, site, ...parts) {
   return [worldSeed, stream, site, ...parts.map(String)].join(KEY_JOIN);
 }
 
+/**
+ * 种子之下的次序键输入串 hash(种子, 序号...)（卷十 R10-2.14 :431–:433；洞穴起点、生长、洞口并列）：种子键 | 整数序号 | 整数序号，按 String 转十进制；
+ * 调用方已核对种子键是 64 位十六进制、序号是整数；sha256 归 kernel/sample.mjs orderKeyAt。
+ * @param {string} seedKey 64 位十六进制种子键 @param {...number} parts 整数序号
+ * @returns {string}
+ */
+export function orderKeyText(seedKey, ...parts) {
+  return [seedKey, ...parts.map(String)].join(KEY_JOIN);
+}
+
 // ---------- state 路径里格坐标段 gridKey 的编解码（卷二 §2.7 keyKinds (c) `gridKey`，封卷后勘误 1121k1；李白 11-21 裁定） ----------
 // w 段＝格空间号，里块号段＝`<cx>:<cy>`，格键段＝`<x>:<y>:<z>`，都是十进制整数（负号带 `-`、零写 `0`、不补前导零）；
 // cx = floor(x ÷ (chunkRegionCells × regionCellM ÷ cellM))，cy 同理用 y，向负无穷取整（卷二 :852）。三段唯一可逆：

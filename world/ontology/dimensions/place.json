@@ -461,6 +461,14 @@
     "unit": "kg"
    }
   },
+  "mouth": {
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷五 §2.1",
+   "required": "byFootprint:volume",
+   "source": "卷五 §2.1 :102（体积足迹有没有通到地表的洞口，封卷后勘误 1121k3；卷十 R10-2.14 第 4 项）",
+   "type": "boolean"
+  },
   "parent": {
    "kind": "place",
    "modifiable": false,

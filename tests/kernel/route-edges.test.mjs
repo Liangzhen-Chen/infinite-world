@@ -208,7 +208,7 @@ test('边两端只许区域或体积足迹的行：建筑行、房间行作端�
   g.rows.loc_room = row('loc_h', { classes: ['comp_zone'] });
   assert.ok(has(load({ ...g, edges: [edge('loc_h', 'loc_room')] }), 'E-DIM-DOMAIN-RANGE'));
   const v = ROW8();
-  v.rows.loc_v = row('loc_a', { classes: ['comp_volume'], terrain: 'terrain_cave', anchorElevationM: -30, spanZ: 2, targetAreaM2: 500 });
+  v.rows.loc_v = row('loc_a', { classes: ['comp_volume'], terrain: 'terrain_cave', anchorElevationM: -30, spanZ: 2, targetAreaM2: 500, mouth: false }); // mouth 是体积行必填列（卷五 §2.1 :102，勘误 1121k3；G8 登记），值与本测试无关
   const e = world({ ...v, edges: [edge('loc_a', 'loc_v')] });
   const r = routeView(e, S, 'loc_a', 'loc_v');
   assert.equal(r.edge.length, 1);

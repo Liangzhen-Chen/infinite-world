@@ -118,7 +118,8 @@ test('byFootprint：建筑行缺 anchor、facing 即 E-DIM-REQUIRED-MISSING；an
     assert.ok(has(load(mk({ facing: 1, anchor })), 'E-DIM-STRUCT-FIELD') || has(load(mk({ facing: 1, anchor })), 'E-DIM-DOMAIN-RANGE'), JSON.stringify(anchor));
   }
   const vol = (extra) => { const g = GRID4(); g.rows.loc_v = row('loc_a', { classes: ['comp_volume'], ...extra }); return g; };
-  const full = { terrain: 'terrain_cave', anchorElevationM: -30, spanZ: 2, targetAreaM2: 500 };
+  // mouth 也是体积行必填列（卷五 §2.1 :102，勘误 1121k3；G8 登记）：下面逐列删一遍，缺 mouth 同样报 E-DIM-REQUIRED-MISSING。
+  const full = { terrain: 'terrain_cave', anchorElevationM: -30, spanZ: 2, targetAreaM2: 500, mouth: false };
   assert.equal(load(vol(full)).ok, true, load(vol(full)).text);
   for (const k of Object.keys(full)) {
     const g = vol(full);

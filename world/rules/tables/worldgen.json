@@ -25,6 +25,14 @@
    "grade": "referenced",
    "source": "卷十 R10-2.12 :427（句柄 rules.gen.roles.waterbody：水体组件类）；卷五 §2.1 组件类 comp_waterbody",
    "basis": "组件类代号，由 _vocab.json component 族登记；生成器只经本键认水体行"
+  },
+  {
+   "key": "underMaxAreaM2",
+   "value": 200000,
+   "file": "server-plugin/kernel/place-volume.mjs",
+   "grade": "designed",
+   "source": "卷十 :167（rules.gen.under.maxAreaM2，number（m2），≥ 1，一行地下存量单元的目标面积上限，R10-2.13；键名取驼峰平铺 underMaxAreaM2，同 roleTract 先例）",
+   "basis": "暂定·待试玩标定。卷十 :167 给 200000，推算依据见卷十 :167（一层洞的格数不超过现场泡一层列数的两倍上下）；读者是洞穴生成器 caveCellsOf 的格数上限（place-volume.mjs caveRulesFrom）；卷十 rules.gen.under.rows 随生成写码卡登"
   }
  ]
 }

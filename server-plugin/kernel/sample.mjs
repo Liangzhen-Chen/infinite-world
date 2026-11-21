@@ -10,7 +10,7 @@ import { sha256Text } from './save.mjs';
 import { fixedUnits, fixedScale, truncateTo, fixedToNumber, fixedExp, fixedSqrtInt } from './det-math.mjs';
 import { CODE_RE } from './handles/vocab-handle.mjs';
 import { KEY_RE, T } from './validate/types.mjs';
-import { isHex64, seedKeyText, seedHashText, diceKeyText } from './handles/keys.mjs';
+import { isHex64, seedKeyText, seedHashText, diceKeyText, orderKeyText } from './handles/keys.mjs';
 
 // 分布种类（卷二 §1.10 :307–:316 的 `dist` 取值，单一定义源；别处只引用）。
 const DIST = Object.freeze({
@@ -123,6 +123,32 @@ export function seedKeyFor(templateSeed, kind, instanceId, dimension, group) {
   if (typeof dimension !== 'string' || !KEY_RE.test(dimension)) throw paramError(`dimension ${JSON.stringify(dimension)}: want ^[a-z][a-zA-Z0-9]{0,47}$`);
   if (group !== undefined && (typeof group !== 'string' || !CODE_RE.test(group))) throw paramError(`joint group ${JSON.stringify(group)} is not a code`);
   return sha256Text(seedKeyText(templateSeed, kind, instanceId, dimension, group));
+}
+
+/**
+ * 身份采样的种子键（卷二 §1.10 :326：sha256(template.seed | 实体类 | 实例 id | 第四段)；卷十 R10-2.14 :431、§4.12.1 :882、R10-12.3 ④ :939：洞穴生长取
+ * 实体类、体积行 id、抽取点 site.gen.cave.grow）。第四段在这里是抽取点代号（代号文法，下划线写法，如 site_gen_cave_grow），不是维度键，所以与 seedKeyFor 分开、不放宽它。
+ * stream、site 是调用处的字面量（seed-keys.json 登记行的流代号与抽取点代号，seed_sites 检测器按它们双向比对）；键里不含流代号（卷二 :326 的键串只有四段）。
+ * @param {string} stream 流代号（登记用，不入键） @param {string} site 抽取点代号 @param {string} templateSeed @param {string} kind 实体类代号 @param {string} instanceId 实例 id
+ * @returns {string} 64 位小写十六进制
+ */
+export function identitySeedKey(stream, site, templateSeed, kind, instanceId) {
+  if (!isSeedTemplate(templateSeed)) throw paramError(`template.seed ${JSON.stringify(templateSeed)}: want ^[A-Za-z0-9_-]{1,64}$`);
+  for (const [name, v] of [['stream', stream], ['site', site], ['kind', kind], ['instanceId', instanceId]]) {
+    if (typeof v !== 'string' || !CODE_RE.test(v)) throw paramError(`${name} ${JSON.stringify(v)} is not a code`);
+  }
+  return sha256Text(seedKeyText(templateSeed, kind, instanceId, site));
+}
+
+/**
+ * 种子之下的次序键 hash(种子, 序号...)：sha256(种子键 | 整数 | 整数)；序号是区格序号或列的整数坐标，同输入同结果，与遍历次序无关。
+ * @param {string} seedKey 64 位十六进制种子键 @param {...number} parts 整数序号
+ * @returns {string}
+ */
+export function orderKeyAt(seedKey, ...parts) {
+  if (typeof seedKey !== 'string' || !isHex64(seedKey)) throw paramError(`seedKey ${JSON.stringify(seedKey)}: want 64 hex chars`);
+  for (const p of parts) if (!isInt(p)) throw paramError(`order part ${JSON.stringify(p)}: want an integer`);
+  return sha256Text(orderKeyText(seedKey, ...parts)); // 键串拼接在 handles/keys.mjs（卷二 :889）
 }
 
 /**

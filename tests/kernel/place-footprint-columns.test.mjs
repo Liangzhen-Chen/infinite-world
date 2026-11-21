@@ -131,7 +131,8 @@ test('区域足迹 boundary：空列表放行；缺 y、非整数、外包框外
 
 // ---------- 体积足迹行（卷五 §2.1 :97、:101、:102） ----------
 
-const volRow = (extra = {}) => row('loc_a', { classes: ['comp_volume'], terrain: 'terrain_cave', anchorElevationM: -30, spanZ: 2, targetAreaM2: 500, ...extra });
+// 体积行必填列含 mouth（卷五 §2.1 :102，封卷后勘误 1121k3；G8 登记维度）：夹具补 mouth: false，值与本测试无关。
+const volRow = (extra = {}) => row('loc_a', { classes: ['comp_volume'], terrain: 'terrain_cave', anchorElevationM: -30, spanZ: 2, targetAreaM2: 500, mouth: false, ...extra });
 
 test('体积足迹 spanZ 取值域 [1,null]、targetAreaM2 取值域 [1,null]：0、小数、null 拒收；完整合法值放行', () => {
   mustPass('体积足迹完整合法值', (g) => { g.rows.loc_v = volRow(); });
