@@ -5,7 +5,7 @@
 // 只按登记数据判，不认任何具体顶层键、系统、文件或路径。报码一律取 E 句柄的生成函数 buildE（kernel/handles/generated.mjs）。
 
 import { buildE, buildP } from '../handles/generated.mjs';
-import { checkPathPattern, GRID_KEY_SEGMENTS } from '../handles/keys.mjs';
+import { checkPathPattern, GRID_KEY_SEGMENTS, pathTypeShape } from '../handles/keys.mjs';
 import { GRAMMAR_TOKENS, KERNEL_MODULES } from '../handles/markers.mjs';
 import { errorCodeOf, HandleError } from '../handles/vocab-handle.mjs';
 import { isPathPattern } from '../handles/keys.mjs';
@@ -25,7 +25,7 @@ const SYSTEM_FIELDS = new Set(SYSTEM_FIELD_LIST);
 const STATE_KEY_FIELD_LIST = ['readers', 'writers', 'display', 'subjectRecords'];
 const STATE_KEY_FIELDS = new Set(STATE_KEY_FIELD_LIST);
 // 写者对象（§2.7"建行写者与改写写者"第 ② 种写法；viaRelocate 见 §2.6"行改挂"）。
-const WRITER_FIELD_LIST = ['create', 'rewrite', 'rewriteRows', 'viaRelocate'];
+const WRITER_FIELD_LIST = ['create', 'rewrite', 'rewriteRows', 'viaRelocate', 'dated'];
 const WRITER_FIELDS = new Set(WRITER_FIELD_LIST);
 // 推进钩子登记项：阶段、机读 after 列表（卷十一 R11-3.14、C11-5 ⑥）、排序键。
 const HOOK_FIELDS = ['phase', 'after', 'sortKey'];
@@ -39,6 +39,8 @@ const SHAPE_TYPES = new Set([T.code_enum.rx_type.number, T.code_enum.rx_type.boo
 const PATH_TYPE = T.path_type_extra;
 const WRITER_ROWS = Object.freeze({ all: 'all' });
 const PATH = Object.freeze({ empty: '' });
+// dated 写者记录路径上"实体类段"的角色记号（另一个角色是 keyKinds (c) 的 dimKey）；只在加载期核记录路径形状时用，卷二 §2.7 dated 未写路径形，见该处注释。
+const DATED_ENTITY_ROLE = 'entityKind';
 // 报错的 severity 取值（卷二 §4.1 报错行；warnings 以 W- 开头，其余为 error）。
 const SEVERITY = Object.freeze({ error: 'error' });
 // rewriteRows 为对象时的两个字段（卷二 §2.7 :757 建行写者与改写写者第 ② 种写法的 withComponent、inside）。
@@ -68,6 +70,9 @@ const PROTOCOL_KEYS = new Set(PROTOCOL_KEY_LIST);
 const GRID_KEY_PREFIX_LIST = ['cells', 'fieldCells'];
 const GRID_KEY_PREFIXES = new Set(GRID_KEY_PREFIX_LIST);
 const GRID_KEY_CODES = new Set([KEY_GRIDKEY]);
+// dated 记录路径形状核对按角色集合判，不写裸字面量比较（同 GRID_KEY_CODES 写法）。
+const DIM_KEY_CODES = new Set([KEY_DIMKEY]);
+const WILDCARD_CODES = new Set([GRAMMAR_TOKENS.wildcard]);
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const isStrList = (v) => Array.isArray(v) && v.every((s) => typeof s === 'string' && s !== PATH.empty);
@@ -331,9 +336,42 @@ export function mergeStateOwners(decl, ctx = {}) {
     if (typeof f !== 'string' || f === PATH.empty) continue;
     const prev = writers.get(tp);
     if (prev && prev.rewrite !== f) err(E.E_WRITER_DUPLICATE, tp, `#/textWriters/${tp}`, `${prev.rewrite} / ${f}`, 'one rewrite writer per pattern');
-    else if (!prev) writers.set(tp, { pattern: tp, key: segs(tp)[0], create: [], rewrite: f, rewriteRows: 'all', viaRelocate: false, source: 'textWriters' });
+    else if (!prev) writers.set(tp, { pattern: tp, key: segs(tp)[0], create: [], rewrite: f, rewriteRows: 'all', viaRelocate: false, dated: false, source: 'textWriters' });
   }
   for (const [a, b] of overlapPairs([...writers.keys()])) err(E.E_PATH_OVERLAP, a, '#/stateKeys', b, 'writer patterns of equal specificity must not overlap');
+  // dated 写者的路径模式（卷二 §2.7 dated；§1.3 最上一级）：模式本身就是"改写记录"的存放路径，kernel/dated.mjs 读取时按 (实体, 维度) 填它的两个 `*` 段。
+  // 已定：模式须正好是 pathTypes 里的一条、类型 list<…>、一个纯实体类 `*` 段，维度段为 dimKey 通配或最后一段写死维度名；同一（实体类，维度）至多一条 dated 模式（一行一维度只有一处记录）。
+  // 理由：读取取值要有唯一出处，卷二只写"改写记录"而未写它的路径形；这些是实现把记录路径固定成一种形状，卷二跟改待勘误。
+  const datedOwners = new Map(); // 实体类 → {wild: 通配模式或 null, dims: Map<维度名, 模式>}
+  for (const w of [...writers.values()].filter((x) => x.dated)) {
+    const p = w.pattern;
+    const bad = (got, want) => err(E.E_DATED_WRITER, p, `#/stateKeys/${w.key}/writers`, got, want);
+    const shape = Object.hasOwn(pathTypes, p) ? pathTypeShape(pathTypes[p]) : null;
+    const kk = keyKinds[p];
+    // 每个 `*` 段的角色：维度键段、纯实体类段（(a)(b) 项、不混 (c) 代号）、其他（null）；合格 = 每段角色互异、不含其他、实体段与维度键段各有一个，
+    // 即恰好这两段（不在这里写段数：段数由"两种角色各一次"推出）。
+    const role = (it) => (DIM_KEY_CODES.has(it) ? KEY_DIMKEY : (typeof it === 'string' || Array.isArray(it)) && itemKinds(it).length > 0 && !(Array.isArray(it) ? it : [it]).some((k) => KEY_NONENTITY.includes(k)) ? DATED_ENTITY_ROLE : null);
+    const roles = Array.isArray(kk) ? kk.map(role) : [];
+    const ent = Array.isArray(kk) ? kk[roles.indexOf(DATED_ENTITY_ROLE)] : undefined;
+    // 维度段两种写法：dimKey 通配（该实体类的全部维度），或模式最后一段写死维度名（只这一维；卷二 :799 单项登记"一行一个维度，不写通配"，位置量 parent/anchor/facing 因此可不登）。
+    const wildcardDim = roles.includes(KEY_DIMKEY);
+    const literalDim = segs(p)[segs(p).length - 1];
+    const slotsOk = roles.length === nStarsOf(p) && !roles.includes(null) && new Set(roles).size === roles.length && roles.includes(DATED_ENTITY_ROLE)
+      && (wildcardDim || !WILDCARD_CODES.has(literalDim));
+    if (!(shape && shape.base === T.type.list)) bad(pathTypes[p], 'dated pattern declared in pathTypes with a list<...> type (the records)');
+    else if (!slotsOk) bad(kk, 'dated pattern: one entity-kind * segment, and the dimension is either one dimKey * segment or a literal last segment (no other * segment)');
+    else for (const k of itemKinds(ent)) {
+      const dims = tableDims.get(k);
+      if (!wildcardDim && isObj(dims) && !Object.hasOwn(dims, literalDim)) { bad(`${k}.${literalDim}`, 'the literal dimension is a dimension of every listed entity kind'); continue; }
+      // 唯一性按（实体类，维度）：通配覆盖该类全部维度，与同类的任何其他 dated 模式相交即报；字面维度只与同类同维度或通配相交。
+      const own = datedOwners.get(k) || { wild: null, dims: new Map() };
+      const clash = wildcardDim ? (own.wild || [...own.dims.values()].find(Boolean)) : (own.wild || own.dims.get(literalDim));
+      if (clash) bad(wildcardDim ? k : `${k}.${literalDim}`, `(entity kind, dimension) already covered by dated pattern ${clash}`);
+      else if (wildcardDim) own.wild = p;
+      else own.dims.set(literalDim, p);
+      datedOwners.set(k, own);
+    }
+  }
   // 每个状态顶层键至少有一条 pathTypes 模式覆盖（§2.7 路径模式匹配语义末句）。
   for (const key of sorted(Object.keys(stateKeys))) {
     if (!Object.keys(pathTypes).some((p) => { const s0 = segs(p)[0]; return s0 === key || s0 === GRAMMAR_TOKENS.wildcard; })) err(E.E_PATH_UNDECLARED, key, `#/stateKeys/${key}`, key, 'at least one pathTypes pattern under the key');
@@ -485,8 +523,8 @@ export function mergeStateOwners(decl, ctx = {}) {
 
 // 写者两种写法（§2.7"建行写者与改写写者"）。返回规整后的 {create, rewrite, rewriteRows, viaRelocate}，形状不合返回 null。
 function parseWriter(w, bad) {
-  if (typeof w === 'string' && w !== PATH.empty) return { create: [], rewrite: w, rewriteRows: WRITER_ROWS.all, viaRelocate: false };
-  if (!isObj(w)) { bad(E.E_DIM_STRUCT_FIELD, w, 'writer file or {create, rewrite, rewriteRows?, viaRelocate}'); return null; }
+  if (typeof w === 'string' && w !== PATH.empty) return { create: [], rewrite: w, rewriteRows: WRITER_ROWS.all, viaRelocate: false, dated: false };
+  if (!isObj(w)) { bad(E.E_DIM_STRUCT_FIELD, w, 'writer file or {create, rewrite, rewriteRows?, viaRelocate, dated}'); return null; }
   let ok = true;
   for (const f of sorted(Object.keys(w))) if (!WRITER_FIELDS.has(f)) { bad(E.E_DIM_STRUCT_FIELD, f, `one of ${[...WRITER_FIELDS].join(', ')}`); ok = false; }
   if (!(Array.isArray(w.create) && (w.create.length === 0 || isStrList(w.create)))) { bad(E.E_DIM_STRUCT_FIELD, w.create, 'create: list of files'); ok = false; }
@@ -506,6 +544,14 @@ function parseWriter(w, bad) {
     } else if (!rowsOk) { bad(E.E_DIM_STRUCT_FIELD, rows, 'rewriteRows: "all" or {withComponent, inside} with at least one non-empty list'); ok = false; }
   } else if (w.rewrite === null && rows !== undefined) { bad(E.E_DIM_STRUCT_FIELD, rows, 'no rewriteRows when rewrite is null'); ok = false; }
   if (w.viaRelocate === true && (typeof w.rewrite !== 'string' || rows === undefined || rows === WRITER_ROWS.all)) bad(E.E_RELOC_FIELDS, w.viaRelocate, 'viaRelocate needs rewrite and a component rewriteRows (not "all")');
+  // dated 与 viaRelocate 同样每个写者对象必写（卷二 §2.7 dated :796"自那张卡起……必写"）。真值只对 rewrite 非空有意义、不与 viaRelocate 同真；
+  // 记录只由改写写者经 kernel/storage.mjs#appendDated 追加，建行写者对 dated 模式没有写入口，所以 create 须为空（已定：不留有名无实的登记）。
+  if (typeof w.dated !== 'boolean') { bad(E.E_DATED_WRITER, w.dated, 'dated: boolean on every writer object'); ok = false; }
+  else if (w.dated === true) {
+    if (typeof w.rewrite !== 'string') { bad(E.E_DATED_WRITER, w.rewrite, 'dated needs a rewrite writer file'); ok = false; }
+    if (w.viaRelocate === true) { bad(E.E_DATED_WRITER, w.viaRelocate, 'dated and viaRelocate must not both be true'); ok = false; }
+    if (Array.isArray(w.create) && w.create.length > 0) { bad(E.E_DATED_WRITER, w.create, 'dated pattern has no create writer'); ok = false; }
+  }
   if (!ok) return null;
-  return { create: [...w.create], rewrite: w.rewrite, rewriteRows: rows === undefined ? null : rows, viaRelocate: w.viaRelocate };
+  return { create: [...w.create], rewrite: w.rewrite, rewriteRows: rows === undefined ? null : rows, viaRelocate: w.viaRelocate, dated: w.dated };
 }

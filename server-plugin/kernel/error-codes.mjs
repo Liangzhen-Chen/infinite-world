@@ -83,6 +83,12 @@ const GROUPS = [
     // 封卷后勘误 1118k25（李白 11-18 22:10 丙9）：卷九 §2.8 新码，本卷不定义、只登记。
     'E-ACT-WRITER-NOT-READY',
   ]],
+  // 卷二 §2.7 `dated`"拒写的错误码随首个 dated 写者卡登记"（:796）；本卡命名。已定：E-DATED-FROMDAY = 追加记录的 fromDay 不是大于写入时当前日的整数（拒写、不落记录）；
+  // E-DATED-WRITER = 写者登记不合 dated 的规矩（dated 缺写或非布尔、真而无改写写者、与 viaRelocate 同真、有建行写者、路径模式或键类不合记录路径形、两条 dated 模式覆盖同一实体类）。
+  // 理由：两码各管运行期一道与加载期一道，同 E-RELOC-TARGET / E-RELOC-FIELDS 的分法；卷二 §4.3 与 §2.7 跟改待主会话派勘误。
+  ['vol2.s2.7', [
+    'E-DATED-FROMDAY', 'E-DATED-WRITER',
+  ]],
   ['vol4.s2.7', [
     'E-BODY-PLAN-SHAPE', 'E-BODY-TISSUE-KEYS', 'E-BODY-CAP-CYCLE', 'E-BODY-INTEGRITY-TARGET', 'E-SPECIES-GROWTH', 'E-SPECIES-TEMPERAMENT', 'E-DIET-EATS', 'E-DIET-PREY',
     'E-SPECIES-ATTR-KEYS', 'E-SPECIES-SAPIENT', 'E-LIFE-STAGES', 'E-SPECIES-MATURITY', 'E-HEREDITY-FACTOR', 'E-BODY-PART-TARGET', 'E-PERSON-SEX', 'E-IDENTITY-LEGAL', 'E-PERSON-CULTURE-MISSING',

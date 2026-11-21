@@ -162,6 +162,10 @@ export const VOCAB_RX_FIELDS = Object.freeze([Object.freeze({ family: 'weather',
 // instance：逐件实例的批次腿 {instance, attrs}，批次键由实例 id 确定性派生（lot_i_<实例id>），不占序号计数器（卷三乙 §2.3、K-3，勘误 1119k13）。
 export const LOT_LEG_KEYS = Object.freeze(['attrs', 'instance', 'splitFrom']);
 
+// 按日生效改写记录的三个字段（卷二 §2.7 `dated`"追加一条 `{fromDay, value, cause}`"，:796；§1.3 最上一级 :164）：
+// 定义源只此一份，kernel/storage.mjs（追加口的形状核对）、kernel/dated.mjs（读取）都从这里取字段名。
+export const DATED_RECORD_FIELDS = Object.freeze(['fromDay', 'value', 'cause']);
+
 // 语言自身的协议键（不是协议标记）：then 给 thenable 探测、toJSON 给 JSON 序列化，其余是对象自带成员名。
 const MARKER_PROTOCOL_KEYS = Object.freeze({ 'then': true, 'toJSON': true, 'constructor': true, 'prototype': true, 'toString': true, 'valueOf': true, 'hasOwnProperty': true, 'is': true, 'family': true });
 
@@ -209,6 +213,7 @@ export const T = Object.freeze({
   path_type_extra: markersOf('path_type_extra', PATH_TYPE_EXTRAS),
   ns_row_type: markersOf('ns_row_type', NS_ROW_TYPES),
   lot_leg_key: markersOf('lot_leg_key', LOT_LEG_KEYS),
+  dated_field: markersOf('dated_field', DATED_RECORD_FIELDS),
   decl_field: markersOf('decl_field', DECL_FIELDS),
   rule_structure: markersOf('rule_structure', RULE_STRUCTURES),
   vocab_family: markersOf('vocab_family', VOCAB_FAMILIES),

@@ -220,8 +220,8 @@ test('E-DIM-STRUCT-FIELD：类型不合文法；系统漏写 entryCallerFiles / 
   const b = base(); delete b.systems['sys.box'].entryJudges; assert.deepEqual(codes(b), ['E-DIM-STRUCT-FIELD']);
   const c = base(); c.systems['sys.box'].ledgerSystem = true; assert.deepEqual(codes(c), ['E-DIM-STRUCT-FIELD']);
   const e = base(); delete e.stateKeys.box.readers; assert.deepEqual(codes(e), ['E-DIM-STRUCT-FIELD']);
-  const f = base(); f.stateKeys.box.writers['*'] = { create: ['a.mjs'], rewrite: 'b.mjs', viaRelocate: false }; assert.deepEqual(codes(f), ['E-DIM-STRUCT-FIELD']);
-  const g = base(); g.stateKeys.box.writers['*'] = { create: ['a.mjs'], rewrite: null, rewriteRows: 'all', viaRelocate: false }; assert.deepEqual(codes(g), ['E-DIM-STRUCT-FIELD']);
+  const f = base(); f.stateKeys.box.writers['*'] = { create: ['a.mjs'], rewrite: 'b.mjs', viaRelocate: false, dated: false }; assert.deepEqual(codes(f), ['E-DIM-STRUCT-FIELD']);
+  const g = base(); g.stateKeys.box.writers['*'] = { create: ['a.mjs'], rewrite: null, rewriteRows: 'all', viaRelocate: false, dated: false }; assert.deepEqual(codes(g), ['E-DIM-STRUCT-FIELD']);
 });
 
 test('E-PATH-UNDECLARED：顶层键无 pathTypes、textPath 不在 pathTypes、display 与 memberRecomputable 不在 pathTypes、textWriters 多出键', () => {
@@ -240,20 +240,20 @@ test('E-WRITER-MISSING：textPath 没有写者', () => {
 
 test('E-WRITER-DUPLICATE：create 重复；既 create 又 rewrite 而无 rewriteRows；textWriters 与 stateKeys 写者不同', () => {
   const w = (o) => { const d = base(); d.stateKeys.box.writers['*'] = o; return codes(d); };
-  assert.deepEqual(w({ create: ['a.mjs', 'a.mjs'], rewrite: null, viaRelocate: false }), ['E-WRITER-DUPLICATE']);
-  assert.deepEqual(w({ create: ['a.mjs'], rewrite: 'a.mjs', viaRelocate: false }), ['E-WRITER-DUPLICATE']);
-  assert.deepEqual(w({ create: ['a.mjs'], rewrite: 'a.mjs', rewriteRows: { withComponent: ['cmp_x'], inside: [] }, viaRelocate: false }), []);
-  assert.deepEqual(w({ create: ['a.mjs', 'b.mjs'], rewrite: 'c.mjs', rewriteRows: 'all', viaRelocate: false }), []);
+  assert.deepEqual(w({ create: ['a.mjs', 'a.mjs'], rewrite: null, viaRelocate: false, dated: false }), ['E-WRITER-DUPLICATE']);
+  assert.deepEqual(w({ create: ['a.mjs'], rewrite: 'a.mjs', viaRelocate: false, dated: false }), ['E-WRITER-DUPLICATE']);
+  assert.deepEqual(w({ create: ['a.mjs'], rewrite: 'a.mjs', rewriteRows: { withComponent: ['cmp_x'], inside: [] }, viaRelocate: false, dated: false }), []);
+  assert.deepEqual(w({ create: ['a.mjs', 'b.mjs'], rewrite: 'c.mjs', rewriteRows: 'all', viaRelocate: false, dated: false }), []);
   const d = base(); d.stateKeys.memo = { readers: [], writers: { '*': 'other.mjs' } };
   assert.deepEqual(codes(d), ['E-WRITER-DUPLICATE']);
 });
 
 test('E-RELOC-FIELDS：写者对象漏写 viaRelocate；viaRelocate 真却无改写写者或行范围写 "all"', () => {
   const w = (o) => { const d = base(); d.stateKeys.box.writers['*'] = o; return codes(d); };
-  assert.deepEqual(w({ create: [], rewrite: null }), ['E-RELOC-FIELDS']);
-  assert.deepEqual(w({ create: [], rewrite: 'a.mjs', rewriteRows: 'all', viaRelocate: true }), ['E-RELOC-FIELDS']);
-  assert.deepEqual(w({ create: [], rewrite: null, viaRelocate: true }), ['E-RELOC-FIELDS']);
-  assert.deepEqual(w({ create: [], rewrite: 'a.mjs', rewriteRows: { withComponent: [], inside: ['cmp_x'] }, viaRelocate: true }), []);
+  assert.deepEqual(w({ create: [], rewrite: null, dated: false }), ['E-RELOC-FIELDS']);
+  assert.deepEqual(w({ create: [], rewrite: 'a.mjs', rewriteRows: 'all', viaRelocate: true, dated: false }), ['E-RELOC-FIELDS']);
+  assert.deepEqual(w({ create: [], rewrite: null, viaRelocate: true, dated: false }), ['E-RELOC-FIELDS']);
+  assert.deepEqual(w({ create: [], rewrite: 'a.mjs', rewriteRows: { withComponent: [], inside: ['cmp_x'] }, viaRelocate: true, dated: false }), []);
 });
 
 test('E-STATE-MULTI-WRITER：两个系统的 writers 登记同一模式', () => {

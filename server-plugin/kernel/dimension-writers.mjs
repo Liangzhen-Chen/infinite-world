@@ -11,10 +11,9 @@ import { KernelError, codeOf } from './errors.mjs';
 import { currentTransaction } from './transaction.mjs';
 import { invalidateMemo } from './memo.mjs';
 import { kindOf, kindOfEntity, registry } from './vocab.mjs';
+import { checkField as checkFieldOf } from './dim-value-check.mjs';
 import { CODE_RE } from './handles/vocab-handle.mjs';
 import { entityId } from './handles/entity-id.mjs';
-import { checkValue } from './validate/types.mjs';
-import { installedNamedStructs } from './named-structs.mjs';
 import { clockView } from './scheduler.mjs';
 import { post, recordTaint, resourceAllows } from './ledger.mjs';
 import { itemView } from './item.mjs';
@@ -68,15 +67,8 @@ const tableOf = (engine, kind = KIND.item) => {
 };
 
 // 用表头维度定义核一个值；第一条错即抛（码取校验器给的）。
-function checkField(engine, state, def, value, key, entity, kind = KIND.item) {
-  const reg = registry();
-  // 引用值指向的实体：加载期登记的，或本状态里已建行的运行期实体（如尸体的 ofPerson 指向运行期建的个体，kernelApi kindOfEntity 同一口径）。
-  const idIndex = { get: (id) => { try { return kindOfEntity(state, id); } catch (e) { return undefined; } } };
-  const env = { vocab: engine.vocab, idIndex, units: engine.units, tableDims: reg.tableDims, namedStructs: installedNamedStructs() };
-  let first = null;
-  checkValue(def, value, env, { table: kind, row: entity || '', dim: key, path: key }, (e) => { if (first === null) first = e; });
-  if (first !== null) throw fail(first.code, `${key}: got ${JSON.stringify(first.got)}, want ${first.want}`, entity);
-}
+// 实现在 dim-value-check.mjs（dated 写者共用）；缺省实体类是 item。
+const checkField = (engine, state, def, value, key, entity, kind = KIND.item) => checkFieldOf(engine, state, def, value, key, entity, kind);
 
 // 一条表头 required 对该模板是否成立：always 成立；never 不成立；byClass:X 在模板手写组件类（含上位类）含 X 时成立。
 function requiredFor(templateView, def) {

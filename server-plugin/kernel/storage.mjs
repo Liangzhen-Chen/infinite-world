@@ -11,10 +11,10 @@ import { invalidateMemo } from './memo.mjs';
 import { statePathSegments, pathTypeShape, isSeedKey, isGridKeySeg } from './handles/keys.mjs';
 import { CODE_RE } from './handles/vocab-handle.mjs';
 import { compareSpecificity, KEY_NONENTITY, KEY_DIMKEY, KEY_SEEDKEY, KEY_HANDLE, KEY_GRIDKEY } from './load/state-owners.mjs';
-import { registry } from './vocab.mjs';
+import { registry, kindOfEntity } from './vocab.mjs';
 import { KernelError, codeOf } from './errors.mjs';
 import { currentTransaction } from './transaction.mjs';
-import { T, GRAMMAR_TOKENS } from './handles/markers.mjs';
+import { T, GRAMMAR_TOKENS, DATED_RECORD_FIELDS } from './handles/markers.mjs';
 
 // pathTypes 值文法里超出 §1.5 类型名的固定记号：定义源在 kernel/handles/markers.mjs（卷二 §2.7 :811 的 EventId、dimension 与 sealed 行），
 // 这里只引用；§2.9 第 3 条 Sealed 的 bytes/digest 字段、本文件内部 Patch 的 op 取值与 JS 原型污染防护键在本文件定义，比较处引用成员。
@@ -29,10 +29,10 @@ const UNSAFE_KEY_LIST = ['__proto__', 'prototype', 'constructor'];
  * entityKinds：与 entitySlots 一一对应的该段可取的实体 kind；dimSlot：keyKinds 项为 dimKey 的 `*` 段（没有为 -1），dimension 路径的维度名在这一段。
  * seedSlots：keyKinds 项为 seedKey（或 (b) 列表含 seedKey）的 `*` 段及同列的实体 kind，写入时按 SeedKey 文法核。
  * gridSlots：keyKinds 项为 gridKey 的 `*` 段下标（cells/fieldCells 的前三段），写入时三段合起来按 isGridKeySeg 核。
- * @typedef {{pattern: string, segs: string[], create: string[], rewrite: string | null, viaRelocate: boolean}} WriterRec
+ * @typedef {{pattern: string, segs: string[], create: string[], rewrite: string | null, viaRelocate: boolean, dated: boolean}} WriterRec
  */
 
-/** @type {null | {paths: PathRec[], pPatterns: Set<string>, textPatterns: Set<string>, writers: WriterRec[]}} */
+/** @type {null | {paths: PathRec[], pPatterns: Set<string>, textPatterns: Set<string>, writers: WriterRec[], dated: PathRec[]}} */
 let decl = null;
 
 /** 终止协议的标记键（§2.6 实体终止协议第 2 步 `state.terminated[entityId]`；内核协议自己的键，与 load/state-owners.mjs 的协议键同一出处）。 */
@@ -90,8 +90,10 @@ export function installStorage(merged) {
     return { pattern, segs: segsOf(pattern), type: merged.pathTypes[pattern], shape: pathTypeShape(merged.pathTypes[pattern]), entitySlots, entityKinds, dimSlot, seedSlots, gridSlots };
   });
   const pPatterns = new Set(paths.map((p) => p.pattern).filter((p) => !text.has(p) && !ledger.has(p)));
-  const writers = (merged.writers || []).map((w) => ({ pattern: w.pattern, segs: segsOf(w.pattern), create: [...(w.create || [])], rewrite: w.rewrite, viaRelocate: w.viaRelocate === true }));
-  decl = { paths, pPatterns, textPatterns: text, writers };
+  const writers = (merged.writers || []).map((w) => ({ pattern: w.pattern, segs: segsOf(w.pattern), create: [...(w.create || [])], rewrite: w.rewrite, viaRelocate: w.viaRelocate === true, dated: w.dated === true }));
+  // dated 写者的模式本身就是改写记录的存放路径（加载期已核：恰两个 `*` 段，一个实体类段、一个 dimKey 段，同一实体类至多一条）；读取与追加都按这份 PathRec。
+  const datedPaths = writers.filter((w) => w.dated).flatMap((w) => paths.filter((p) => p.pattern === w.pattern));
+  decl = { paths, pPatterns, textPatterns: text, writers, dated: datedPaths };
 }
 
 function need() {
@@ -203,10 +205,11 @@ function setAt(tx, segs, value) {
 /**
  * 该事务能不能写这条具体路径：最具体的写者模式的改写写者是当前节点所在文件；或当前文件是该模式的建行写者且路径上还没有值（建行时落初值）。
  * 带 viaRelocate 的模式，改写写者不得直接 writePath，只能经行改挂原语（§2.6"行改挂"第 1 点 ②、第 7 点）。
+ * 带 dated 的模式，任何文件都不得 writePath：改写记录只追加、不覆盖（§2.7 dated），只经 appendDated。
  */
 function writerOk(d, tx, segs, existing) {
   const w = mostSpecific(d.writers, segs);
-  if (!w || typeof tx.file !== 'string') return false;
+  if (!w || typeof tx.file !== 'string' || w.dated) return false;
   if (w.rewrite === tx.file) return !w.viaRelocate;
   return w.create.includes(tx.file) && existing === undefined;
 }
@@ -263,27 +266,142 @@ function writePathChecked(state, path, value) {
   if (!tx || tx.state !== state) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity }, 'writePath outside the transaction of this state');
   const existing = getAt(state, segs);
   if (!writerOk(d, tx, segs, existing)) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity }, `${tx.file} is not the registered writer of ${rec.pattern}`);
-  // keyKinds 运行期段（seedKey、handle 及以后同类）：按各自文法核，不过即 E-PATH-KEYKINDS（卷二 :1545、:815，勘误 1118k10、1118k12；李白 11-18 05:50 裁定第 2 条）。
-  for (const { slot, grammars, kinds } of rec.seedSlots) {
-    const v = ids[slot];
-    if (!grammars.some((g) => RUNTIME_SEG_GRAMMAR[g](registry(), v)) && !kinds.includes(registry().idIndex.get(v))) throw new KernelError('E-PATH-KEYKINDS', { entity: null }, `${rec.pattern}: segment ${JSON.stringify(v)} does not fit ${grammars.join('/')} grammar`);
-  }
-  // gridKey 段（卷二 :852）：三段合起来核——w、里块号、格键都合文法，且格键 (x, y) 算出的里块等于路径里的里块号；不过 E-PATH-KEYKINDS（同 seedKey 整类规则）。
-  if (rec.gridSlots.length) {
-    const gv = rec.gridSlots.map((slot) => ids[slot]);
-    if (!isGridKeySeg(gridRulesNow(), ...gv)) throw new KernelError('E-PATH-KEYKINDS', { entity: null }, `${rec.pattern}: gridKey segments ${JSON.stringify(gv)} do not fit the cells.<w>.<chunk>.<cell> grammar or the cell is not in that chunk`);
-  }
+  checkRuntimeSegments(rec, ids);
   // 卷二十七 R27-5.1：非有限值、负零不得进入状态（E-DET-NONFINITE）；被拒走同一上抛通路，由事务整笔回滚（卷二 §2.6 :499）。
   if (hasNonFinite(value)) throw new KernelError('E-DET-NONFINITE', { entity }, `non-finite number or negative zero written to ${rec.pattern}`);
   // 卷二 §2.7 :804 pathTypes 文法 dimension 行：运行期写 string 维度即 E-TEXT-UNGATED（dimension 路径上存不进自然语言）。
   if (rec.shape && rec.shape.base === TYPE_EXTRA.dimension && stringDimension(rec, ids)) throw new KernelError('E-TEXT-UNGATED', { entity }, `${rec.pattern}: string dimension is not a dimension path`);
   if (!typeOk(rec.shape, value)) throw new KernelError('E-TEXT-UNGATED', { entity }, `value does not match pathTypes ${rec.pattern}: ${rec.type}`);
+  checkNotTerminated(state, rec, ids);
+  setAt(tx, segs, clone(value));
+}
+
+// keyKinds 运行期段（seedKey、handle 及以后同类）：按各自文法核，不过即 E-PATH-KEYKINDS（卷二 :1545、:815，勘误 1118k10、1118k12；李白 11-18 05:50 裁定第 2 条）；
+// gridKey 段（卷二 :852）：三段合起来核——w、里块号、格键都合文法，且格键 (x, y) 算出的里块等于路径里的里块号；不过 E-PATH-KEYKINDS（同 seedKey 整类规则）。
+function checkRuntimeSegments(rec, ids) {
+  for (const { slot, grammars, kinds } of rec.seedSlots) {
+    const v = ids[slot];
+    if (!grammars.some((g) => RUNTIME_SEG_GRAMMAR[g](registry(), v)) && !kinds.includes(registry().idIndex.get(v))) throw new KernelError('E-PATH-KEYKINDS', { entity: null }, `${rec.pattern}: segment ${JSON.stringify(v)} does not fit ${grammars.join('/')} grammar`);
+  }
+  if (rec.gridSlots.length) {
+    const gv = rec.gridSlots.map((slot) => ids[slot]);
+    if (!isGridKeySeg(gridRulesNow(), ...gv)) throw new KernelError('E-PATH-KEYKINDS', { entity: null }, `${rec.pattern}: gridKey segments ${JSON.stringify(gv)} do not fit the cells.<w>.<chunk>.<cell> grammar or the cell is not in that chunk`);
+  }
+}
+
+// 目标实体未终止（卷二 §2.6 E-TERM-RESIDUE）：路径上每个实体段都不在 state.terminated 里。
+function checkNotTerminated(state, rec, ids) {
   const marks = getAt(state, [TERMINATED_KEY]);
   for (const slot of rec.entitySlots) {
     const id = ids[slot];
     if (marks && typeof marks === 'object' && Object.hasOwn(marks, id)) throw new KernelError('E-TERM-RESIDUE', { entity: id }, `entity ${id} is terminated`);
   }
-  setAt(tx, segs, clone(value));
+}
+
+// ---------- 按日生效改写记录（卷二 §2.7 dated :796；§1.3 最上一级 :164） ----------
+
+const DATED_KEYS = T.dated_field;
+
+/**
+ * 内核组内的追加口（kernelApi 入口是 kernel/dated.mjs#writeDated，它给出写入时的当前日 today）：往 dated 写者模式的记录路径末尾追加一条 `{fromDay, value, cause}`。
+ * 只在事务内；当前文件须是该模式登记的改写写者（E-VIEW-UNDECLARED-WRITE）；`fromDay` 须是大于 today 的整数，否则 E-DATED-FROMDAY 拒写、不落任何记录
+ * （0、负数、小数、NaN、非数、缺都拒，没有"不限"之类的特殊值）；记录只含三个字段，cause 是代号形态的事件记录 id，value 是纯数据（非有限数 E-DET-NONFINITE）；
+ * 路径里的实体须已载入或已建行、维度须是其表的维度、派生维度（无显式通道）与 string 维度拒写（同 writeItemDeviation 的口径）。追加不改旧记录。
+ * value 另按维度定义核（fitValue(kind, id, dimension, def, value)，由 writeDated 交入 checkField；不合抛校验器给的码）。
+ * 模式的维度段是 dimKey 通配或字面维度名：字面模式只管那一维，其他维度没有记录路径（resolvePath 即 E-PATH-UNDECLARED），位置量等非 dated 维度因此追加不进。
+ * @param {any} state @param {string} path 记录路径（P 句柄给的 StatePath） @param {{fromDay: number, value: any, cause: string}} record @param {number} today 写入时的当前日
+ * @param {(kind: string, id: string, dimension: string, def: any, value: any) => void} fitValue
+ * @returns {void}
+ */
+export function appendDated(state, path, record, today, fitValue) {
+  try {
+    appendDatedChecked(state, path, record, today, fitValue);
+  } catch (e) {
+    markDenied(e);
+    throw e;
+  }
+}
+
+// dated 记录路径上的维度：维度键通配段取路径里的值，字面维度名（模式的最后一段）取它自己。
+function datedDimensionOf(rec, ids) {
+  return rec.dimSlot >= 0 ? ids[rec.dimSlot] : rec.segs[rec.segs.length - 1];
+}
+
+function appendDatedChecked(state, path, record, today, fitValue) {
+  const d = need();
+  const { segs, rec } = resolvePath(path);
+  const ids = starValues(rec.segs, segs);
+  const entity = rec.entitySlots.length ? ids[rec.entitySlots[0]] : null;
+  const tx = currentTransaction();
+  if (!tx || tx.state !== state) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity }, 'appendDated outside the transaction of this state');
+  const w = mostSpecific(d.writers, segs);
+  if (!w || !w.dated || typeof tx.file !== 'string' || w.rewrite !== tx.file) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity }, `${tx.file} is not the registered dated rewrite writer of ${rec.pattern}`);
+  checkRuntimeSegments(rec, ids);
+  if (!Number.isSafeInteger(today)) throw new KernelError('E-DATED-FROMDAY', { entity }, 'appendDated: the current day is not an integer');
+  const shapeOk = record !== null && typeof record === 'object' && !Array.isArray(record) && Object.keys(record).length === DATED_RECORD_FIELDS.length && DATED_RECORD_FIELDS.every((f) => Object.hasOwn(record, f));
+  if (!shapeOk) throw new KernelError('E-DIM-STRUCT-FIELD', { entity }, `a dated record is {${DATED_RECORD_FIELDS.join(', ')}}`);
+  if (!Number.isSafeInteger(record[DATED_KEYS.fromDay]) || record[DATED_KEYS.fromDay] <= today) throw new KernelError('E-DATED-FROMDAY', { entity }, `fromDay ${JSON.stringify(record[DATED_KEYS.fromDay])} must be an integer greater than the current day ${today}`);
+  if (!isCode(record[DATED_KEYS.cause])) throw new KernelError('E-DIM-STRUCT-FIELD', { entity }, 'cause is the code of the event record that triggered the rewrite');
+  const value = record[DATED_KEYS.value];
+  if (hasNonFinite(value)) throw new KernelError('E-DET-NONFINITE', { entity }, `non-finite number or negative zero in a dated record of ${rec.pattern}`);
+  if (!plainValue(value)) throw new KernelError('E-TEXT-UNGATED', { entity }, `a dated value must be plain data (${rec.pattern})`);
+  const id = ids[rec.entitySlots[0]];
+  const dimension = datedDimensionOf(rec, ids);
+  const reg = registry();
+  let kind;
+  try { kind = kindOfEntity(state, id); } catch (e) { throw new KernelError('E-DIM-REF-MISSING', { entity: id }, `${id} is neither a loaded entity nor a built row`); }
+  if (!rec.entityKinds[0].includes(kind)) throw new KernelError('E-PATH-KEYKINDS', { entity: id }, `${rec.pattern}: ${id} is a ${kind}, not one of ${rec.entityKinds[0].join('/')}`);
+  const dims = reg.tableDims.get(kind);
+  const def = dims && Object.hasOwn(dims, dimension) ? dims[dimension] : undefined;
+  if (!def) throw new KernelError('E-DIM-REF-MISSING', { entity: id }, `${dimension} is not a dimension of ${kind}`);
+  if (def.derived !== undefined && def.allowExplicit !== true) throw new KernelError('E-DIM-DERIVED-WRITTEN', { entity: id }, `${dimension} is derived and has no explicit channel`);
+  if (def.type === T.type.string) throw new KernelError('E-TEXT-UNGATED', { entity: id }, `${dimension} is a string dimension: not a dimension path`);
+  // value 按表头维度定义核类型、单位、值域、引用（与 writeItemDeviation 同一个 checkField，由调用方交入，不在这里复制）。
+  if (typeof fitValue !== 'function') throw new KernelError('E-DIM-STRUCT-FIELD', { entity: id }, 'appendDated needs the dimension value check');
+  fitValue(kind, id, dimension, def, value);
+  checkNotTerminated(state, rec, ids);
+  const existing = getAt(state, segs);
+  if (existing !== undefined && !Array.isArray(existing)) throw new KernelError('E-DIM-STRUCT-FIELD', { entity: id }, `${rec.pattern}: the stored records are not a list`);
+  setAt(tx, segs, [...(existing || []), clone(record)]);
+}
+
+/**
+ * 某实体某维度当前存着的改写记录（按追加次序；只读，调用者不得改；没有 dated 记录路径、没有装入声明表或没有记录即 null）。kernel 组内用，读取入口是 kernel/dated.mjs。
+ * @param {any} state @param {string} kind 实体类 @param {string} id @param {string} dimension
+ * @returns {ReadonlyArray<{fromDay: number, value: any, cause: string}> | null}
+ */
+export function datedRecordsOf(state, kind, id, dimension) {
+  if (!decl) return null;
+  for (const rec of decl.dated) {
+    if (!rec.entityKinds[0] || !rec.entityKinds[0].includes(kind)) continue;
+    // 加载期保证同一（实体类，维度）至多一条 dated 模式：字面维度模式只认它那一维，通配模式认全部维度。
+    if (rec.dimSlot < 0 && datedDimensionOf(rec, []) !== dimension) continue;
+    const given = [];
+    given[rec.entitySlots[0]] = id;
+    if (rec.dimSlot >= 0) given[rec.dimSlot] = dimension;
+    let star = 0;
+    const list = getAt(state, rec.segs.map((s) => (s === GRAMMAR_TOKENS.wildcard ? given[star++] : s)));
+    return Array.isArray(list) && list.length > 0 ? list : null;
+  }
+  return null;
+}
+
+/**
+ * 全部 dated 记录路径下存着的记录，按（具体路径字典序）排好，每个路径内保持追加次序（只读）。"当日有效输入版本"的求法用（kernel/dated.mjs）。没有 dated 模式即空数组。
+ * @param {any} state
+ * @returns {Array<{path: string, records: Array<{fromDay: number, value: any, cause: string}>}>}
+ */
+export function datedRecordsAll(state) {
+  if (!decl) return [];
+  const out = new Map();
+  const walk = (node, segs, i, trail) => {
+    if (i === segs.length) { if (Array.isArray(node) && node.length > 0) out.set(trail.join(GRAMMAR_TOKENS.pathSep), node); return; }
+    if (node === null || typeof node !== 'object') return;
+    if (segs[i] === GRAMMAR_TOKENS.wildcard) for (const k of Object.keys(node)) walk(node[k], segs, i + 1, [...trail, k]);
+    else if (Object.hasOwn(node, segs[i])) walk(node[segs[i]], segs, i + 1, [...trail, segs[i]]);
+  };
+  for (const rec of decl.dated) walk(state, rec.segs, 0, []);
+  return sorted([...out.keys()]).map((path) => ({ path, records: out.get(path) }));
 }
 
 // ---------- 文字（§2.9 第 3 条） ----------

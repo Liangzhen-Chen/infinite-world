@@ -356,10 +356,14 @@
     {
      "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
      "rev": 68
+    },
+    {
+     "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 69
     }
    ],
-   "print": "e03fe15dedf9fb5deb07d835771c67d7901b4a2998b235008094e2aaf81960b5",
-   "rev": 68,
+   "print": "74095e44c4eb8a3e2fce681b11be6c347eed4a9d8e21ea0e2a97367ad33b53ec",
+   "rev": 69,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -893,10 +897,14 @@
     {
      "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
      "rev": 67
+    },
+    {
+     "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 68
     }
    ],
-   "print": "80a5264878df6633dc135f333a057b81c3c0dec82b5247a0fd3b6abe0c1e5c42",
-   "rev": 67,
+   "print": "b52fb42c163930f435e3307369de5e717dd618bc4c953e873b0464aa8f835ccd",
+   "rev": 68,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -995,10 +1003,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 21
+    },
+    {
+     "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 22
     }
    ],
-   "print": "60ec566966b460d6b349a0bee39d5d4d002fd659da754dbeeeaf76e3e814c053",
-   "rev": 21,
+   "print": "c48ac15bcf8edc966151687afe013a4bae281f1ad2e278821d03dc64590c982f",
+   "rev": 22,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -1183,10 +1195,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 22
+    },
+    {
+     "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 23
     }
    ],
-   "print": "1170937d047607a0073b62ff03f6c7545bb9505ef3b7543e25147b06fe25cf6f",
-   "rev": 22,
+   "print": "50ca2a06ed1f40b52ac6f5507540ee3922b9e7799a1eac0e5fe8101944c38b68",
+   "rev": 23,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -1512,10 +1528,14 @@
     {
      "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
      "rev": 64
+    },
+    {
+     "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 65
     }
    ],
-   "print": "ac81cdf051784a36691858deb28751518118c27a26badc0d0129667bf5b6be8f",
-   "rev": 64,
+   "print": "f66a880828f39d7679eb82107e91c20990c511783a8ade19f7e0fbedfcfc68c0",
+   "rev": 65,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1619,10 +1639,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 22
+    },
+    {
+     "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 23
     }
    ],
-   "print": "1170937d047607a0073b62ff03f6c7545bb9505ef3b7543e25147b06fe25cf6f",
-   "rev": 22,
+   "print": "50ca2a06ed1f40b52ac6f5507540ee3922b9e7799a1eac0e5fe8101944c38b68",
+   "rev": 23,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -1965,10 +1989,14 @@
     {
      "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
      "rev": 80
+    },
+    {
+     "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 81
     }
    ],
-   "print": "cb4344ecd5390f40120258dc6b20caeb1843cce348e76c0657fde123e7ad99e9",
-   "rev": 80,
+   "print": "980b72e2ec9b820b25c14af0e78137615176fedd910b1bdeb8f891c04685ae5f",
+   "rev": 81,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -2355,10 +2383,14 @@
     {
      "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
      "rev": 65
+    },
+    {
+     "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 66
     }
    ],
-   "print": "ac81cdf051784a36691858deb28751518118c27a26badc0d0129667bf5b6be8f",
-   "rev": 65,
+   "print": "f66a880828f39d7679eb82107e91c20990c511783a8ade19f7e0fbedfcfc68c0",
+   "rev": 66,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -3146,10 +3178,14 @@
     {
      "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
      "rev": 65
+    },
+    {
+     "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 66
     }
    ],
-   "print": "ac81cdf051784a36691858deb28751518118c27a26badc0d0129667bf5b6be8f",
-   "rev": 65,
+   "print": "f66a880828f39d7679eb82107e91c20990c511783a8ade19f7e0fbedfcfc68c0",
+   "rev": 66,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -3400,10 +3436,14 @@
     {
      "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
      "rev": 59
+    },
+    {
+     "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 60
     }
    ],
-   "print": "604ac4b231700da7941846c13b81b69a05c095bc0fd0de5682bae807c4f49500",
-   "rev": 59,
+   "print": "779a468091f539818f588bf7ba911f3293de0b8a06ae2279c11017738a9c98d5",
+   "rev": 60,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -3726,10 +3766,14 @@
     {
      "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
      "rev": 77
+    },
+    {
+     "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 78
     }
    ],
-   "print": "9520605fd7b6690787ecfe8b4b9c1ef59e93ee957f4559ef8739e6242ad9563f",
-   "rev": 77,
+   "print": "52db55d39362b4b0e050b2857a8c879fbd93892c89b29fed8ac380bfc2e6b509",
+   "rev": 78,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -4073,10 +4117,14 @@
     {
      "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
      "rev": 44
+    },
+    {
+     "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 45
     }
    ],
-   "print": "5f70ddbbefe09f5e303450edcd5c0d96693ff07ecaafd6b64235204569804bd5",
-   "rev": 44,
+   "print": "c5362b81347e7a22b5a3fabf09052cc25c5690d695811bffc0e8a22009b2ba04",
+   "rev": 45,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -4362,10 +4410,14 @@
     {
      "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
      "rev": 66
+    },
+    {
+     "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 67
     }
    ],
-   "print": "e03fe15dedf9fb5deb07d835771c67d7901b4a2998b235008094e2aaf81960b5",
-   "rev": 66,
+   "print": "74095e44c4eb8a3e2fce681b11be6c347eed4a9d8e21ea0e2a97367ad33b53ec",
+   "rev": 67,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -4543,10 +4595,14 @@
     {
      "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
      "rev": 42
+    },
+    {
+     "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 43
     }
    ],
-   "print": "5f33cb7324048754abbbab90a04672f440bb72c278b8c741d868b5ed6ee90dfe",
-   "rev": 42,
+   "print": "334acb143b325e9dc3f1b22550b7a21c0017c6e7f620ad52d8a72b75245ce434",
+   "rev": 43,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -4646,10 +4702,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 21
+    },
+    {
+     "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 22
     }
    ],
-   "print": "1170937d047607a0073b62ff03f6c7545bb9505ef3b7543e25147b06fe25cf6f",
-   "rev": 21,
+   "print": "50ca2a06ed1f40b52ac6f5507540ee3922b9e7799a1eac0e5fe8101944c38b68",
+   "rev": 22,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -5021,10 +5081,14 @@
     {
      "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
      "rev": 61
+    },
+    {
+     "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 62
     }
    ],
-   "print": "604ac4b231700da7941846c13b81b69a05c095bc0fd0de5682bae807c4f49500",
-   "rev": 61,
+   "print": "779a468091f539818f588bf7ba911f3293de0b8a06ae2279c11017738a9c98d5",
+   "rev": 62,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -5284,10 +5348,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 36
+    },
+    {
+     "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 37
     }
    ],
-   "print": "840b3e73fdf58899356d8b1a3915b879948817dc7b5a42aef99d6313e6111016",
-   "rev": 36,
+   "print": "b54c2f794c1006e87d3fe4325ea8c81e3074bd544d0eede9c3f42d0e1b0bc64f",
+   "rev": 37,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

@@ -171,6 +171,8 @@
   {"export": "kernel/declare.mjs#declareInputs", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/storage.mjs#readPath", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/storage.mjs#writePath", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/dated.mjs#writeDated", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/dated.mjs#inputVersionAt", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/ledger.mjs#openAccount", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/ledger.mjs#balance", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/ledger.mjs#accountsOf", "callers": ["rules"], "acceptsState": true},

@@ -18,7 +18,7 @@ const E = buildE();
 
 const DECL = {
   stateKeys: {
-    gauge: { readers: [], writers: { '*.level': 'sys/gauge.mjs', '*.grade': 'sys/gauge.mjs', '*.dims.*': 'sys/gauge.mjs', '*.seal': 'sys/gauge.mjs', '*.born': { create: ['sys/maker.mjs'], rewrite: null, viaRelocate: false } } },
+    gauge: { readers: [], writers: { '*.level': 'sys/gauge.mjs', '*.grade': 'sys/gauge.mjs', '*.dims.*': 'sys/gauge.mjs', '*.seal': 'sys/gauge.mjs', '*.born': { create: ['sys/maker.mjs'], rewrite: null, viaRelocate: false, dated: false } } },
     notes: { readers: [], writers: {} },
     terminated: { readers: [], writers: { '*': 'kernel/terminate.mjs' } },
   },
@@ -174,7 +174,7 @@ test('建行写者：路径上还没有值时可写初值，已有值再写即�
 
 test('viaRelocate 的改写写者不得直接 writePath（只经行改挂原语）', () => {
   installStorage({
-    writers: [{ pattern: 'gauge.*.level', create: [], rewrite: 'sys/gauge.mjs', rewriteRows: { withComponent: ['cmp_x'], inside: [] }, viaRelocate: true }],
+    writers: [{ pattern: 'gauge.*.level', create: [], rewrite: 'sys/gauge.mjs', rewriteRows: { withComponent: ['cmp_x'], inside: [] }, viaRelocate: true, dated: false }],
     pathTypes: { 'gauge.*.level': 'integer:count' }, keyKinds: { 'gauge.*.level': ['gadget'] }, textPaths: [], ledgerPaths: [],
   });
   try {

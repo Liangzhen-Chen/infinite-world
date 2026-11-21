@@ -17,15 +17,17 @@ import { ruleTable } from './load/rules.mjs';
 import { markersOf, T } from './validate/types.mjs';
 import { STACKING_MARKERS } from './validate/dimensions-validate.mjs';
 import { requirement } from './validate/rows.mjs';
+import { datedValueAt, assertEvalDay } from './dated.mjs';
 
 /** @typedef {import('./types.d.ts').ModKey} ModKey */
 /**
  * @typedef {{known: boolean, applicable: boolean, value?: any, base?: any, unit?: string, source?: string, chain?: string[]}} Fact
- * Fact（§2.2 :442）：source 取 instance（偏离行或实体行自身的值）、class（类别链）、modified（经修正）；chain 是参与取值的类别链。
+ * Fact（§2.2 :442）：source 取 instance（偏离行或实体行自身的值）、class（类别链）、modified（经修正）、dated（求值日有效的按日生效改写记录，§1.3 最上一级）；chain 是参与取值的类别链。
  * @typedef {{tables: Map<string, {doc: any, flat: {classes: Map<string, any>, rows: Map<string, any>}}>, vocab: {index: Map<string, {entry: any}>}, rules: Record<string, any>}} Engine
  * engine：统一加载器 loadWorld 的结果（维度表原文与展平结果、词表、规则表）。
- * @typedef {{key?: string | number, clock?: {day?: number, season?: string}}} ReadOptions
- * key：map 维度的下标（键名 `<kind>.<dimension>[<key>]`，§3.1）；clock：求值时刻的 clock.day / clock.season（`when` 只能读到这两项，§2.2 :448）。
+ * @typedef {{key?: string | number, clock?: {day?: number, season?: string}, day?: number}} ReadOptions
+ * key：map 维度的下标（键名 `<kind>.<dimension>[<key>]`，§3.1）；clock：求值时刻的 clock.day / clock.season（`when` 只能读到这两项，§2.2 :448）；
+ * day：按日生效改写的求值日（卷二 §1.3 最上一级、§2.7 dated），非负整数，不给取当前日；读 dim 与派生式变量都按它取有效的改写记录。
  * @typedef {{id: string, target: string, stage: string, value?: number, valueRX?: any, curve?: any, when?: any, source: {kind?: string, id?: string, via?: string},
  *   stackGroup?: string | null, priority?: number, unpenalized?: boolean}} ModifierRow
  * 修正项（§3.2 :1296 格式；运行态 valueRX / when 是加载期编译好的 rxTree）。
@@ -161,7 +163,16 @@ function pick(v, key) {
   return isObj(v) && Object.hasOwn(v, key) ? v[key] : undefined;
 }
 
-function readBase(engine, state, kind, id, dimension, key) {
+// 一次求值只有一个求值日（卷二 :164"一个可选的求值日参数"）：基值（按日生效记录）、修正项与 when（clock.day）、派生变量都取它。
+// opts.day 给了就取它（须是非负整数）；没给而 opts.clock.day 给了取 clock.day；两者都给且不等即 E-DIM-STRUCT-FIELD；都没给取当前日（undefined）。
+function evalDayOf(opts) {
+  assertEvalDay(opts.day);
+  const c = isObj(opts.clock) ? opts.clock.day : undefined;
+  if (opts.day !== undefined && c !== undefined && c !== opts.day) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `opts.day ${opts.day} and opts.clock.day ${c} must be the same evaluation day`);
+  return opts.day !== undefined ? opts.day : c;
+}
+
+function readBase(engine, state, kind, id, dimension, key, day) {
   const t = tableOf(engine, kind);
   dimKeyOf(registry(), kind, dimension, key); // 维度与下标已登记（E-DIM-REF-MISSING / E-DIM-ID-FORMAT）
   const def = t.doc.dimensions[dimension];
@@ -171,6 +182,12 @@ function readBase(engine, state, kind, id, dimension, key) {
   const unit = unitOf(def);
   const fact = (f) => Object.freeze(unit === undefined ? f : { ...f, unit });
   if (!applicable(engine, t, state, id, dimension)) return Object.freeze({ known: false, applicable: false });
+  // 最上一级：求值日有效的按日生效改写记录（§1.3、§2.7 dated；没有登记 dated 写者或没有记录时这一级不存在，取值与本条之前逐位相同）。
+  const dated = datedValueAt(engine, state, kind, id, dimension, day);
+  if (dated.found) {
+    const v = pick(dated.value, key);
+    if (v !== undefined) return fact({ known: true, applicable: true, value: v, source: 'dated' });
+  }
   // 偏离行（state.created 的 props）覆盖实体行有效值（含 extends 展平与 generated 节）：§1.3 覆盖顺序总表。
   const props = created && isObj(created.props) ? created.props : undefined;
   if (props && Object.hasOwn(props, dimension)) {
@@ -211,7 +228,7 @@ function readBase(engine, state, kind, id, dimension, key) {
   if (def.derived !== undefined) {
     // 登记在案的未建派生（§1.12 封卷后勘误 1118k23）：加载期已跳过编译，运行时读到直接抛已登记码，不静默给值。
     if (t.unbuilt instanceof Set && t.unbuilt.has(dimension)) throw new KernelError('E-MOD-RX', { entity: id }, `derived ${kind}.${dimension} is registered unbuilt (aggregate/set primitives or data missing)`);
-    const d = evaluateDerived(engine, state, kind, id, dimension);
+    const d = evaluateDerived(engine, state, kind, id, dimension, day);
     return d.known ? fact(d) : d;
   }
   if (def.sample !== undefined) {
@@ -245,7 +262,7 @@ function derivedValue(def, v, at) {
 
 // 派生求值（§1.12）：读同主体的各变量基值（§1.12 :378"派生变量一律读基值"）；任一变量 known:false / applicable:false / 显式 null
 // 即整条未知（TA-S1 :379），不按 0 代入。编译树只消费加载期交下的 t.derived（§2.9 第 4 条），读时不编译。
-function evaluateDerived(engine, state, kind, id, dimension) {
+function evaluateDerived(engine, state, kind, id, dimension, day) {
   const t = tableOf(engine, kind);
   const def = t.doc.dimensions[dimension];
   const at = `${kind}.${dimension} of ${JSON.stringify(id)}`;
@@ -261,7 +278,7 @@ function evaluateDerived(engine, state, kind, id, dimension) {
     const dims = {};
     for (const k of rxDimKeys(tree)) {
       const { dim: base, sub } = splitDimKey(k);
-      const f = readBase(engine, state, kind, id, base, sub);
+      const f = readBase(engine, state, kind, id, base, sub, day);
       // map 维度的一个键写着显式 null（§1.6 第 2 点"没有"）：派生量不适用（勘误 1118k31；卷三乙 :626）。
       if (sub !== undefined && f.known && f.value === null) return Object.freeze({ known: false, applicable: false });
       if (!f.known || !f.applicable || f.value === null || f.value === undefined) return Object.freeze({ known: false, applicable: true });
@@ -281,7 +298,7 @@ function evaluateDerived(engine, state, kind, id, dimension) {
  * @returns {Fact}
  */
 export function dim(engine, state, kind, id, dimension, opts = {}) {
-  return readBase(engine, state, kind, id, dimension, opts.key);
+  return readBase(engine, state, kind, id, dimension, opts.key, evalDayOf(opts));
 }
 
 // ---------- RX 变量绑定（读求值管线；P2-20） ----------
@@ -308,7 +325,7 @@ export function rxBindings(engine, state, kind, id, tree, clock) {
   const dims = {};
   for (const k of rxDimKeys(tree)) {
     const { dim: base, sub } = splitDimKey(k);
-    const f = readBase(engine, state, kind, id, base, sub);
+    const f = readBase(engine, state, kind, id, base, sub, isObj(clock) ? clock.day : undefined);
     if (f.known && f.value !== null) dims[k] = f.value;
   }
   const c = {};
@@ -485,10 +502,13 @@ function evaluate(engine, state, kind, id, dimension, opts) {
   const reg = registry();
   const target = modKeyOf(reg, kind, dimension, opts.key); // E-MOD-KEY-UNREGISTERED / E-DIM-REF-MISSING
   const def = tableOf(engine, kind).doc.dimensions[dimension];
-  const base = readBase(engine, state, kind, id, dimension, opts.key);
+  const day = evalDayOf(opts);
+  const base = readBase(engine, state, kind, id, dimension, opts.key, day);
   // 基值未知或不适用：不单独求值，原样交回，由消费者按 onUnknown 处置（§3.8 :1440）；显式 null（"没有"）同样不进管线。
   if (!base.known || typeof base.value !== 'number') return { fact: base, steps: Object.freeze([]) };
-  const rows = registeredRows(engine, state, target, kind, id, opts.clock);
+  // 修正项的 when / valueRX 与基值同用这一个求值日（只给 opts.day 时也带进时钟），两种写法语义相同，modified 的 memo 同键才对。
+  const clock = day === undefined ? opts.clock : { ...(isObj(opts.clock) ? opts.clock : {}), day };
+  const rows = registeredRows(engine, state, target, kind, id, clock);
   const { value, steps } = runPipeline(engine, base.value, dedupe(rows), def, kind);
   if (!steps.length) return { fact: base, steps: Object.freeze([]) };
   const unit = unitOf(def);
@@ -505,8 +525,8 @@ function evaluate(engine, state, kind, id, dimension, opts) {
  */
 export function modified(engine, state, kind, id, dimension, opts = {}) {
   const target = modKeyOf(registry(), kind, dimension, opts.key);
-  const day = isObj(opts.clock) && opts.clock.day !== undefined ? opts.clock.day : null;
-  return stateMemo(state, MEMO_SCOPE, [target, id, day], () => evaluate(engine, state, kind, id, dimension, opts).fact);
+  const day = evalDayOf(opts);
+  return stateMemo(state, MEMO_SCOPE, [target, id, day === undefined ? null : day], () => evaluate(engine, state, kind, id, dimension, opts).fact);
 }
 
 /**
