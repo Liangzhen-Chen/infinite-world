@@ -11,6 +11,27 @@
    "basis": "暂定·待试玩标定。卷文没给水深分布数值；water 族已加 water_river（流水）与 water_sea（静水），流不流读词表条目的 flowing（卷五 §2.2 :248），规则行只按 waterKind 选：本行只管河，取适合航行的河道水深量级（三角分布 1.5–12 m，众数 4 m，推算依据：设定里河上跑货船与渡船，regions.json:906、:2004，吃水以米计）。海（water_sea）没有规则行，水深不补、进 deferred 留缺，不借河的量顶替；有了海的水深依据后在这里加一行 water_sea 的规则，代码不改"
   },
   {
+   "key": "waterFillRows",
+   "value": [
+    {"whenRX": "waterKind == water_river", "priority": 1, "areaShare": null, "halfWidthCells": {"dist": "uniform", "min": 0, "max": 3}},
+    {"whenRX": "waterKind == water_sea", "priority": 1, "areaShare": {"dist": "uniform", "min": 0.02, "max": 0.08}, "halfWidthCells": null}
+   ],
+   "file": "server-plugin/kernel/gen/waterfoot.mjs",
+   "grade": "designed",
+   "source": "生成规则（卷十 §2.3 :166 rules.gen.water.fill.rows 的 whenRX、priority、areaShare、halfWidthCells 四字段；R10-2.17 水体足迹输入补缺）",
+   "basis": "暂定·待试玩标定，出处写“生成规则”，不是设定原文。卷文与设定都没给河宽、海域占比。河：半宽取整数区格，均匀分布 [0, 3) 取整即 0、1、2（宽 1、3、5 个区格），区格边长见 rules.grid.regionCellM，推算依据：河在世界里只是窄带地物，不占地区成片面积；海：静水取父足迹面积的份额，均匀分布 [0.02, 0.08)，推算依据：设定里海只在东南琥珀海岸一侧（regions.json:2004），占世界外包框的量级为百分之几。whenRX 现只能读本行维度 waterKind（父行维度、形制数值字段读入口待卷二登记命名空间，R10-2.17、R10-7.12 未落），所以按 waterKind 分行；按词表 water 条目的 flowing 分静水（areaShare）与流水（halfWidthCells）由代码读词表，规则行只给数。标定后在这里改值，代码不改"
+  },
+  {
+   "key": "bldfillRows",
+   "value": [
+    {"whenRX": "known(form)", "priority": 1, "areaM2": {"dist": "uniform", "min": 16, "max": 64}, "storeys": {"dist": "uniform", "min": 1, "max": 3}}
+   ],
+   "file": "server-plugin/kernel/gen/siteform.mjs",
+   "grade": "designed",
+   "source": "生成规则（卷十 §2.3 :186 rules.gen.bldfill.rows 的 whenRX、priority、areaM2、storeys 四字段；R10-7.12 手写建筑行缺维度的补缺）",
+   "basis": "暂定·待试玩标定，出处写“生成规则”，不是设定原文；卷十九 :601 手算示例的数值是示意数据，不当设定出处、不作本行取值依据。取值范围的量级推算：一户一栋的民居外包面积 16–64 m2、一至二层（均匀分布 [1, 3) 取整即 1、2），推算依据：细格 1 m（拍板第 1 条）下一间房 3–6 m 见方量级。whenRX 现只能读本行维度：卷十 R10-7.12 要读的 intendedType 还不是 place 表登记的维度（卷十九建行卡登记后再按意图类型分行）、形制数值字段读入口待卷二登记命名空间，所以本行只用 known(form)（建筑行 form 必填，卷十九 §2.1）取全部手写建筑行；标定时按意图类型加行，代码不改"
+  },
+  {
    "key": "roleTract",
    "value": "comp_tract",
    "file": "server-plugin/kernel/gen/worldgen.mjs",
@@ -25,6 +46,14 @@
    "grade": "referenced",
    "source": "卷十 R10-2.12 :427（句柄 rules.gen.roles.waterbody：水体组件类）；卷五 §2.1 组件类 comp_waterbody",
    "basis": "组件类代号，由 _vocab.json component 族登记；生成器只经本键认水体行"
+  },
+  {
+   "key": "roleFacility",
+   "value": "comp_facility",
+   "file": "server-plugin/kernel/gen/worldgen.mjs",
+   "grade": "referenced",
+   "source": "卷十 R10-7.12（手写建筑行 = 挂 comp_facility 的作者行）；卷五 §4.1 规则 2（建筑足迹种类由 comp_facility 判）；卷十九 §2.1",
+   "basis": "组件类代号，由 _vocab.json component 族登记；生成器只经本键认建筑行"
   },
   {
    "key": "underMaxAreaM2",

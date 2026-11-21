@@ -142,6 +142,16 @@
 
 - 蓝图改按房间矩形存、细格读时派生，不逐格存（李白 11-22 事件 3ce50e60 第 4 条：现在不做，不挡 G9、G10；需要时改卷五/卷十九蓝图存储口径）。
 
+## 卷十勘误 1121k16–k19 写码（已合，见提交说明）（G5b 前置；分支 ds/gen-errata-code；写 Sonnet 5.5 中档包卡，机械部分委派 DeepSeek；报告 docs/卡回报/gen-errata-code.md）
+
+- [x] 1 读卷十 R10-1.7/2.12/2.17/2.18/7.12、卷五规则 8 河床与规则 10、A10-2.4 手算用例；模块切分定：gen/order.mjs、gen/waterband.mjs、gen/waterfoot.mjs、gen/siteform.mjs、kernel/water-bed.mjs，footprint.mjs 接河床与 E-GRID-WATER-BAND，writeback 加 revise。
+- [ ] 2 登记与数据：error-codes（E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT、E-GRID-WATER-BAND）、seed-keys 五行、rules.gen 两个新键与占位行、gstage 三条目与 after 调整、files.json。
+- [ ] 3 order.mjs（投影、冲突、日志）并迁移 gen-downhill 测试；fields.mjs 去掉内嵌投影。
+- [ ] 4 water-bed.mjs 与 footprint.mjs 接线（河床 δ、规则 13 取河床高、E-GRID-WATER-BAND）；place.mjs 列地表 δ。
+- [ ] 5 waterband.mjs（中心线、窄带、r 搜索）与 waterfoot.mjs（种子、静水补缺、跨父）。
+- [ ] 6 siteform.mjs（手写建筑行补缺：墙厚、planCells、storeys、可展开加倍）。
+- [ ] 7 worldgen.mjs 接线（三阶段、report.projections、authored 判定）；测试；全量与 pre_commit；回报。
+
 ## 已封与记过（摘要；详情见提交说明与 docs/审查/）
 
 - B2-W3 已封（06a7106b）；4-4a 已封（978bbb41）；3-4 已封、块 3 封块（73125c48）；块 5 体检与对照表入库（4f701e37）。

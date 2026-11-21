@@ -10,6 +10,8 @@ import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 import { readGeoInputs } from '../../server-plugin/kernel/load/geo-inputs.mjs';
 import { generateFill } from '../../server-plugin/kernel/gen/worldgen.mjs';
 import { applyGenerated } from '../../server-plugin/kernel/gen/writeback.mjs';
+import { blueprintRulesFrom } from '../../server-plugin/kernel/place-building.mjs';
+import { planBlueprint } from '../../server-plugin/kernel/blueprint.mjs';
 import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
 import { ROOT, testTempRoot, writeUnderTempRoot } from '../accept/temp-root.mjs';
 
@@ -24,14 +26,18 @@ const run = (seed = 'seed_one', geo = geoOf()) => generateFill(world, { worldSee
 const controls = JSON.parse(readFileSync(join(ROOT, 'world/geo/elevation-controls.json'), 'utf8'));
 const authoredIds = Object.keys(controls.rows);
 
-test('R10-1.1：流程来自 gstage 词表条目——自然量排在水体之前，没有写死的阶段清单', () => {
+test('R10-1.1：流程来自 gstage 词表条目——水体足迹补缺、自然量、高低次序投影、水体依 after 排成全序，没有写死的阶段清单', () => {
   const r = run();
-  assert.deepEqual(r.plan.map((s) => s.phase), ['worldgen', 'worldgen']);
+  // 封卷后勘误 1121k16 加了 gstage_waterfoot、gstage_order、gstage_siteform 三个阶段（卷十 §4.1.1 :342–:354）；次序只由条目的 after 定，同层按代号升序。
   const order = r.plan.map((s) => s.stage);
-  const fields = world.vocab.index.get(order[0]).entry;
-  const water = world.vocab.index.get(order[1]).entry;
-  assert.deepEqual(water.after, [order[0]]);
-  assert.equal(fields.generator !== water.generator, true);
+  assert.ok(r.plan.every((s) => s.phase === 'worldgen'));
+  const at = (code) => order.indexOf(code);
+  const entry = (code) => world.vocab.index.get(code).entry;
+  assert.deepEqual(entry('gstage_fields').after, ['gstage_waterfoot']);
+  assert.deepEqual(entry('gstage_order').after, ['gstage_fields']);
+  assert.deepEqual(entry('gstage_water').after, ['gstage_fields', 'gstage_order']);
+  assert.ok(at('gstage_waterfoot') < at('gstage_fields') && at('gstage_fields') < at('gstage_order') && at('gstage_order') < at('gstage_water'));
+  assert.equal(new Set(order.map((s) => entry(s).generator)).size, order.length, '每个阶段各用自己的生成器节点');
 });
 
 test('R10-1.7 手写优先：作者给了控制海拔的行（数据卡里每一行）一条偏离行都不出；其余区域足迹行各恰一条，值在 gfield 的 range 内', () => {
@@ -78,6 +84,14 @@ test('A10-1.2：同种子两次逐字节相同；作者输入的遍历次序打�
 
 test('R10-2.6 高低次序：数据卡给的河段次序，生成值沿链不增，且不低于下游作者端点、不高于上游作者端点', () => {
   const r = run();
+  // R10-2.18 ⑤ 日志 report.projections：逐条按行 id 升序，条数 = changed，改后的值就是偏离行里的值；作者值一个都不在日志里。
+  assert.equal(r.report.changed, r.report.projections.length);
+  assert.deepEqual(r.report.projections.map((p) => p.row), r.report.projections.map((p) => p.row).sort());
+  for (const p of r.report.projections) {
+    assert.equal(r.generated[p.row].anchorElevationM, p.to, p.row);
+    assert.equal(authoredIds.includes(p.row), false, `${p.row} 是作者值，不得被投影`);
+    assert.ok(p.end === 'floor' || p.end === 'cap');
+  }
   const chain = controls.downhill.chain;
   const authored = (id) => (controls.rows[id] ? controls.rows[id].anchorElevationM : undefined);
   const value = (id) => (authored(id) !== undefined ? authored(id) : r.generated[id].anchorElevationM);
@@ -124,11 +138,54 @@ test('R10-2.12 水体：作者输入里的水体行（转换前不在表里）�
   assert.ok(waterIds.length > 0);
   assert.deepEqual(r.pending.map((p) => p.id).sort(), waterIds);
   for (const p of r.pending) assert.ok(p.dims.runoffCoef >= 0 && p.dims.runoffCoef <= 1, p.id);
-  assert.deepEqual(r.deferred.map((d) => d.id).sort(), waterIds);
+  // 水体阶段的缺口（水体足迹补缺阶段另有缺口，见下一条）。
+  const waterGaps = r.deferred.filter((d) => d.stage === 'gstage_water');
+  assert.deepEqual(waterGaps.map((d) => d.id).sort(), waterIds);
   // 流水（河）有水深规则行：只缺足迹；静水（海，flowing 假）没有规则行——水深不借河的顶替，整体缺口留着（water_rule_missing）。
-  for (const d of r.deferred) {
+  for (const d of waterGaps) {
     assert.equal(d.reason, world.vocab.index.get(geo.authored.get(d.id).waterKind).entry.flowing === true ? 'footprint_unknown' : 'water_rule_missing');
     assert.deepEqual(d.gaps.slice().sort(), ['capacityL', 'catchmentM2', 'surfaceM2']);
   }
-  assert.ok(r.deferred.some((d) => d.reason === 'water_rule_missing') && r.deferred.some((d) => d.reason === 'footprint_unknown'));
+  assert.ok(waterGaps.some((d) => d.reason === 'water_rule_missing') && waterGaps.some((d) => d.reason === 'footprint_unknown'));
+});
+
+test('R10-2.17 水体足迹补缺：真实世界还没有格空间表，作者水体行缺的 coord 与窄带 boundary（河）、coord 与 targetAreaM2（海）划不出父足迹，进 deferred 带原因，不编、不出提案', () => {
+  const r = run();
+  const geo = geoOf();
+  const waterIds = [...geo.authored].filter(([, d]) => Array.isArray(d.classes) && d.classes.includes(world.rules.gen.roleWaterbody)).map(([id]) => id).sort();
+  const gaps = r.deferred.filter((d) => d.stage === 'gstage_waterfoot');
+  assert.deepEqual(gaps.map((d) => d.id).sort(), waterIds);
+  for (const d of gaps) {
+    assert.equal(d.reason, 'footprint_unknown');
+    const flowing = world.vocab.index.get(geo.authored.get(d.id).waterKind).entry.flowing === true;
+    assert.deepEqual(d.gaps.slice().sort(), flowing ? ['boundary', 'coord'] : ['coord', 'targetAreaM2']);
+  }
+  assert.deepEqual(r.pending.flatMap((p) => Object.keys(p.dims)).filter((k) => ['coord', 'targetAreaM2', 'boundary'].includes(k)), []);
+});
+
+test('R10-7.12 手写建筑行缺维度的补缺经 generateFill 接线：作者输入里挂 comp_facility 的建筑行缺墙厚、平面格数、层数时补出（by gstage_siteform），作者写了的不动，补出的房子经 planBlueprint 展开成细格；房间行只列缺口', () => {
+  const geo = geoOf();
+  const FORM = 'bldform_river_house'; // 真实词表里的形制：walled 真、wallThicknessDefaultM 0.4、两个房间
+  geo.authored.set('loc_bld_fill_a', { parent: WORLD_ROOT, classes: ['comp_facility'], form: FORM });
+  geo.authored.set('loc_bld_fill_b', { parent: WORLD_ROOT, classes: ['comp_facility'], form: FORM, planCells: { widthCells: 12, depthCells: 8 }, wallThicknessM: 0.5, storeys: 2 });
+  const r = generateFill(world, { worldSeed: 'seed_one', genesisMinute: 0, geo });
+  const a = r.pending.find((p) => p.id === 'loc_bld_fill_a');
+  assert.equal(a.by, 'gstage_siteform');
+  assert.equal(a.dims.wallThicknessM, world.vocab.index.get(FORM).entry.wallThicknessDefaultM);
+  assert.ok(Number.isInteger(a.dims.storeys) && a.dims.storeys >= 1);
+  // 补出的房子必须能展开成细格：planBlueprint 的 ok 为真，且有格。
+  const rules = blueprintRulesFrom(world.rules, world.env.units);
+  const bp = planBlueprint({ form: world.vocab.index.get(FORM).entry, planCells: a.dims.planCells, storeys: a.dims.storeys, wallThicknessM: a.dims.wallThicknessM, facing: 0 }, rules);
+  assert.equal(bp.ok, true);
+  assert.ok(bp.cells.length > 0);
+  // 三项作者都写了的行没有提案。
+  assert.equal(r.pending.some((p) => p.id === 'loc_bld_fill_b' && p.by === 'gstage_siteform'), false);
+  // 房间行：作者没写房间行，蓝图里每一间（形制的房间表逐层照搬到上面各层）都列缺口，只列、不造行。
+  const all = r.deferred.filter((d) => d.stage === 'gstage_siteform' && d.id === 'loc_bld_fill_a');
+  assert.deepEqual(all.map((d) => d.reason).sort(), ['room_rows_unbuilt', 'storeys_max_unchecked']); // 层数是域上限夹出的，另记缺口（修改轮 M5）
+  const gaps = all.filter((d) => d.reason === 'room_rows_unbuilt');
+  assert.equal(gaps[0].gaps.length, bp.rooms.length);
+  assert.ok(bp.rooms.length >= world.vocab.index.get(FORM).entry.rooms.length);
+  // 同种子同结果。
+  assert.equal(JSON.stringify(r), JSON.stringify(generateFill(world, { worldSeed: 'seed_one', genesisMinute: 0, geo })));
 });

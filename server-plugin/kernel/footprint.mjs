@@ -15,6 +15,7 @@ import { fixedUnits, fixedToNumber, fixedSqrtInt, atan, fixedUnits8 } from './de
 import { KernelError } from './errors.mjs';
 import { surfaceHeightAt, surfaceStorey, landOrderKey } from './grid.mjs';
 import { FOOTPRINT_KIND } from './footprint-kind.mjs';
+import { createWaterBeds } from './water-bed.mjs';
 
 // 足迹种类的判据只在 footprint-kind.mjs（加载期、运行期共用一份）。
 export { FOOTPRINT_KIND, footprintKindOf, isLayerRootClasses } from './footprint-kind.mjs';
@@ -186,6 +187,16 @@ export function planRegionFootprints(grid, spaces, rows) {
         coverCount += 1;
       }
       if (mine.size > 0 && !connected(box, mine)) err('E-DIM-DOMAIN-RANGE', id, 'boundary cells are not 4-connected');
+      // 流水水体的 boundary 表序即流向序（规则 10 "流水水体的足迹"，封卷后勘误 1121k17 修改轮 M1）：首格之外每格都与表序里排在它前面的某一格四邻相接（前缀连通）；按 flowing 判，不按 id 或水体类代号。
+      if (rows.get(id).flowing === true) {
+        const seen = new Set();
+        for (let i = 0; i < list.length; i += 1) {
+          const x = xOf(box, list[i]);
+          const y = yOf(box, list[i]);
+          if (i > 0 && !NEIGHBORS.some(([dx, dy]) => inBox(box, x + dx, y + dy) && seen.has(keyOf(box, x + dx, y + dy)))) { err('E-GRID-WATER-BAND', id, `boundary cell (${x},${y}) at table order ${i} touches none of the cells before it`); break; }
+          seen.add(list[i]);
+        }
+      }
     }
     // 种子：coord 所在区格。
     const seedOf = new Map();
@@ -336,6 +347,44 @@ export function cellList(plan, id) {
   return out.sort((a, b) => (cellLess(a, b) ? -1 : cellLess(b, a) ? 1 : 0));
 }
 
+/**
+ * 区格 (x, y) 是否在行 id 的足迹里（含它的后代足迹的格；卷五 §4.1 规则 2、3 的"父足迹成员"）。行没划出足迹或区格在外包框外为假。
+ * @param {any} plan @param {string} id @param {number} x @param {number} y @returns {boolean}
+ */
+export function footprintHas(plan, id, x, y) {
+  if (!plan.cells.has(id) || !inBox(plan.box, x, y)) return false;
+  return inFootprint(plan, plan.idx.get(id), keyOf(plan.box, x, y));
+}
+
+/**
+ * 行 id 的足迹区格按 (x, y) 字典序惰性遍历，不物化列表（父行可能是整个世界：卷五 §4.1.4 全规模约 4,020 万区格，不得装进单个 Map、Set 或数组）。
+ * 先取行的外包矩形（层根取整个外包框），只扫矩形里的格。
+ * @param {any} plan @param {string} id @returns {Generator<{x: number, y: number}>}
+ */
+export function* footprintCells(plan, id) {
+  if (!plan.cells.has(id)) return;
+  const list = plan.cells.get(id);
+  let x0 = plan.box.x0;
+  let x1 = plan.box.x0 + plan.box.cellsX - 1;
+  let y0 = plan.box.y0;
+  let y1 = plan.box.y0 + plan.box.cellsY - 1;
+  if (list !== null) {
+    if (list.length === 0) return;
+    x0 = xOf(plan.box, list[0]); x1 = x0; y0 = yOf(plan.box, list[0]); y1 = y0;
+    for (let i = 1; i < list.length; i += 1) {
+      const x = xOf(plan.box, list[i]);
+      const y = yOf(plan.box, list[i]);
+      if (x < x0) x0 = x;
+      if (x > x1) x1 = x;
+      if (y < y0) y0 = y;
+      if (y > y1) y1 = y;
+    }
+    // 行的足迹含后代的格，后代的格都在行自己的格之内（子足迹在父足迹内），所以外包矩形取自己的列表即可涵盖。
+  }
+  const me = plan.idx.get(id);
+  for (let x = x0; x <= x1; x += 1) for (let y = y0; y <= y1; y += 1) if (inFootprint(plan, me, keyOf(plan.box, x, y))) yield { x, y };
+}
+
 // ---------- 由足迹派生的几何量（卷五 §4.1 规则 13；区域足迹在区格粒度上算） ----------
 
 /**
@@ -381,8 +430,8 @@ export function controlPointsOf(grid, plan, rows) {
   return out;
 }
 
-// 区格中心那一列的地表高（定点米）：控制面 + 起伏，起伏幅度取该区格所属最深行的 terrain 条目。无控制点、无 terrain 条目即 null。
-function cellHeight(grid, worldSeed, plan, rows, terrainOf, controlPoints, k) {
+// 区格中心那一列的未修正地表高 h₀（定点米）：控制面 + 起伏，起伏幅度取该区格所属最深行的 terrain 条目。无控制点、无 terrain 条目即 null。
+function cellH0(grid, worldSeed, plan, rows, terrainOf, controlPoints, k) {
   const owner = ownerIdAt(plan, k);
   const entry = owner === undefined ? null : terrainOf(rows.get(owner).terrain);
   let h = null;
@@ -394,6 +443,98 @@ function cellHeight(grid, worldSeed, plan, rows, terrainOf, controlPoints, k) {
     h = surfaceHeightAt(grid, worldSeed, plan.w, controlPoints, entry.reliefM, entry.reliefRough, cx, cy);
   }
   return h;
+}
+
+// 水体行（挂了 waterKind 的区域足迹行）的河床（卷五 §4.3 规则 8 "河床"，纯函数 kernel/water-bed.mjs）：按计划与世界种子缓存。
+// 一行的 bed 按行整体求（前缀最小、上游出口值都是整行的量），取到哪一格都先求完整行；区格下标到行内位置的索引用排序后的下标列（不建 Map：海可能有上千万格）。
+function waterBedsOf(grid, worldSeed, plan, rows, terrainOf) {
+  if (plan.waterBeds && plan.waterBeds.seed === worldSeed) return plan.waterBeds;
+  const cps = controlPointsOf(grid, plan, rows);
+  const upstream = new Map();
+  for (const id of [...plan.cells.keys()].sort(cmp)) {
+    const r = rows.get(id);
+    if (plan.cells.get(id) === null || typeof r.waterKind !== 'string' || typeof r.downstream !== 'string') continue;
+    if (!upstream.has(r.downstream)) upstream.set(r.downstream, []);
+    upstream.get(r.downstream).push(id);
+  }
+  const infos = new Map();
+  const infoOf = (id) => {
+    if (infos.has(id)) return infos.get(id);
+    const list = plan.cells.get(id);
+    const xs = new Int32Array(list.length);
+    const ys = new Int32Array(list.length);
+    const h0 = new BigInt64Array(list.length);
+    let unknown = false;
+    for (let i = 0; i < list.length; i += 1) {
+      xs[i] = xOf(plan.box, list[i]);
+      ys[i] = yOf(plan.box, list[i]);
+      if (!unknown) {
+        const h = cellH0(grid, worldSeed, plan, rows, terrainOf, cps, list[i]);
+        if (h === null) unknown = true; else h0[i] = h;
+      }
+    }
+    const r = rows.get(id);
+    const info = { ordered: r.flowing === true && Array.isArray(r.boundary) && r.boundary.length > 0, cells: { xs, ys }, h0: unknown ? null : h0 };
+    infos.set(id, info);
+    return info;
+  };
+  const api = createWaterBeds({ upstreamsOf: (id) => upstream.get(id) || [], infoOf });
+  plan.waterBeds = { seed: worldSeed, api, index: new Map() };
+  return plan.waterBeds;
+}
+
+// 一行里区格下标 k 的位置：行的区格下标列排成升序（打包 key×n+位置 成一个不超过 2⁵³ 的整数，用原生数值排序，不用比较函数），再二分。
+function bedPositionOf(plan, wb, id, k) {
+  let idx = wb.index.get(id);
+  if (!idx) {
+    const list = plan.cells.get(id);
+    const n = list.length;
+    const packed = new Float64Array(n);
+    for (let i = 0; i < n; i += 1) packed[i] = list[i] * n + i;
+    packed.sort();
+    const keys = new Int32Array(n);
+    const pos = new Int32Array(n);
+    for (let i = 0; i < n; i += 1) { const at = packed[i] % n; pos[i] = at; keys[i] = (packed[i] - at) / n; }
+    idx = { keys, pos };
+    wb.index.set(id, idx);
+  }
+  let lo = 0;
+  let hi = idx.keys.length - 1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (idx.keys[mid] === k) return idx.pos[mid];
+    if (idx.keys[mid] < k) lo = mid + 1; else hi = mid - 1;
+  }
+  return -1;
+}
+
+// 区格中心那一列的地表高 h（卷五 §4.3 规则 8）：水体足迹的区格取河床高 bed（湖、海取水底高；规则 13 代表地表高与规则 10 水面口径一律取 bed），其余区格取 h₀；
+// 计划标了 bedOff（卷十 R10-2.12 求值次序：生成水体行的下游链先按未修正 h₀ 派生）时一律取 h₀。bed 未知（任一需要的 h₀ 为 null）即未知，不借 h₀ 顶替。
+function cellHeight(grid, worldSeed, plan, rows, terrainOf, controlPoints, k) {
+  const h0 = cellH0(grid, worldSeed, plan, rows, terrainOf, controlPoints, k);
+  if (h0 === null || plan.bedOff === true) return h0;
+  const owner = ownerIdAt(plan, k);
+  if (owner === undefined || typeof rows.get(owner).waterKind !== 'string' || plan.cells.get(owner) === null) return h0;
+  const wb = waterBedsOf(grid, worldSeed, plan, rows, terrainOf);
+  const bed = wb.api.bedOf(owner);
+  if (bed === null) return null;
+  const at = bedPositionOf(plan, wb, owner, k);
+  return at < 0 ? h0 : bed[at];
+}
+
+/**
+ * 区格的河床修正量 δ(c) = h₀(c) − bed(c)（定点米，不小于 0；卷五 §4.3 规则 8 末条：该区格内每一列的 h 都减去同一个修正量）。
+ * 不在水体足迹里、计划标了 bedOff、h₀ 或 bed 未知时为 null（未知时调用方不修正；非水体区格为 0n）。
+ * @param {any} grid @param {string | undefined} worldSeed @param {any} plan @param {Map<string, any>} rows
+ * @param {(code: string) => {reliefM: number, reliefRough: number} | null} terrainOf @param {number} rx @param {number} ry @returns {bigint | null}
+ */
+export function regionBedDelta(grid, worldSeed, plan, rows, terrainOf, rx, ry) {
+  if (!inBox(plan.box, rx, ry)) return null;
+  const k = keyOf(plan.box, rx, ry);
+  const cps = controlPointsOf(grid, plan, rows);
+  const h0 = cellH0(grid, worldSeed, plan, rows, terrainOf, cps, k);
+  const h = cellHeight(grid, worldSeed, plan, rows, terrainOf, cps, k);
+  return h0 === null || h === null ? null : h0 - h;
 }
 
 /**

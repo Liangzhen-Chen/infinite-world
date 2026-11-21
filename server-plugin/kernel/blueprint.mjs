@@ -125,6 +125,29 @@ const cache = new WeakMap(); // 形制条目对象 → Map(键 → 蓝图)；键
  * @param {{cellM: number, storeyM: number, m3PerL: number}} rules
  */
 export function planBlueprint(input, rules) {
+  const { c, form, pc, facing, t } = readPlanInput(input, rules);
+  const key = [pc.widthCells, pc.depthCells, input.storeys, t, facing, c.cell, c.storey, c.si].join(',');
+  let byForm = cache.get(form);
+  if (!byForm) { byForm = new Map(); cache.set(form, byForm); }
+  if (!byForm.has(key)) byForm.set(key, build(form, pc.widthCells, pc.depthCells, input.storeys, t, facing, c));
+  return byForm.get(key);
+}
+
+/**
+ * 不铺格的可行性预判（卷十 R10-7.12 "补出的房子必须能展开"的原语层支撑）：输入同 planBlueprint，返回与 planBlueprint 的 ok 与 reason 逐项相同的 {ok, reason}，
+ * 但不铺格、不建结构元，代价 O(层数 × 进深)，与平面面积 W × D 无关（大平面反复加倍重试时不白铺越来越大的蓝图）。
+ * 判的是 build 里全部会返回 ok 为假的四处：平面小于墙围、纯地下蓝图的入口不相邻、各层房间分不下、楼面压在开敞房间上；
+ * 最后一处按列类等价归并：除楼梯格 (w, D − w − 1) 外，室内的各列在同一行上行为相同，所以每行只判"楼梯列"与"普通列"两类。
+ * @param {{form: object, planCells: {widthCells: number, depthCells: number}, storeys: number, wallThicknessM?: number | null, facing: number}} input
+ * @param {{cellM: number, storeyM: number, m3PerL: number}} rules
+ * @returns {{ok: boolean, reason?: string}}
+ */
+export function planFeasible(input, rules) {
+  const { c, form, pc, t } = readPlanInput(input, rules);
+  return feasibleOf(form, pc.widthCells, pc.depthCells, input.storeys, wallCellsOf(form, t, c.cell));
+}
+
+function readPlanInput(input, rules) {
   if (!isObj(input) || !hasOnly(input, INPUT_KEYS)) throw bad('E-DET-DOMAIN', 'planBlueprint: input is {form, planCells, storeys, wallThicknessM, facing} only');
   const c = consts(rules);
   const lim = c.limits;
@@ -136,11 +159,65 @@ export function planBlueprint(input, rules) {
   // 奇数向下取偶（§4.4 规则 2 ④）：取成每个四分之一圈所含档数的整数倍；转 turns 个四分之一圈。
   const facing = input.facing - (input.facing % c.quarter);
   const t = thicknessOf(form, input.wallThicknessM, lim);
-  const key = [pc.widthCells, pc.depthCells, input.storeys, t, facing, c.cell, c.storey, c.si].join(',');
-  let byForm = cache.get(form);
-  if (!byForm) { byForm = new Map(); cache.set(form, byForm); }
-  if (!byForm.has(key)) byForm.set(key, build(form, pc.widthCells, pc.depthCells, input.storeys, t, facing, c));
-  return byForm.get(key);
+  return { c, form, pc, facing, t };
+}
+
+// 一层的房间行分法：defs 非空时返回每间的 {def, rowFrom, rowTo}（隔墙行 = 除末间外各间的 rowTo + 1），分不下返回 null（规则 7 第 3 点；build 与 feasibleOf 共用这一处）。
+function roomRowsOf(defs, D, w) {
+  const d = D - (w + w);
+  const r = defs.length;
+  const spare = d - (r - 1);
+  if (spare < r) return null;
+  const parts = splitRows(spare, defs.map((x) => x[ROOM.share]));
+  if (parts.some((q) => q <= 0)) return null;
+  const out = [];
+  let row = w;
+  for (let k = 0; k < r; k += 1) {
+    out.push({ def: defs[k], rowFrom: row, rowTo: row + parts[k] - 1 });
+    row += parts[k] + 1;
+  }
+  return out;
+}
+
+function feasibleOf(form, W, D, storeys, w) {
+  const m = w + w + 1;
+  if (W < m || D < m) return Object.freeze({ ok: false, reason: REASON.planTooSmall });
+  const base = form[FORM.storeyBase];
+  const top = storeys - 1;
+  const hasZero = base <= 0 && base + top >= 0;
+  const undergroundOnly = !hasZero;
+  if (undergroundOnly && base + storeys !== 0) return Object.freeze({ ok: false, reason: REASON.entranceNotAdjacent });
+  const levels = [];
+  for (let l = 0; l < storeys; l += 1) {
+    const defs = roomsOfLevel(form[FORM.rooms], l);
+    const rows = defs.length > 0 ? roomRowsOf(defs, D, w) : [];
+    if (rows === null) return Object.freeze({ ok: false, reason: REASON.roomsInfeasible });
+    levels.push(rows);
+  }
+  const stairV = D - w - 1;
+  const hasGeneric = W - (w + w) > 1; // 室内除楼梯列外还有别的列
+  // 某层某行（室内）的格：隔墙行不是室内；楼梯列在设楼梯的层是楼梯（不算室内但算"室内或楼梯"）；返回 {interior, stairs, room}，room 为房间序（层内）或 null。
+  const cellOf = (l, v, stairCol) => {
+    const rows = levels[l];
+    let room = null;
+    let onRoomRow = rows.length === 0;
+    for (let k = 0; k < rows.length; k += 1) if (v >= rows[k].rowFrom && v <= rows[k].rowTo) { room = k; onRoomRow = true; }
+    if (!onRoomRow) return { interior: false, stairs: false, room: null }; // 隔墙行
+    const stairs = stairCol && v === stairV && (l < top || undergroundOnly);
+    return { interior: !stairs, stairs, room };
+  };
+  for (let l = 0; l < top; l += 1) {
+    for (let v = w; v < D - w; v += 1) {
+      for (const stairCol of hasGeneric ? [false, true] : [true]) {
+        const here = cellOf(l, v, stairCol);
+        if (!here.interior || here.room === null || levels[l][here.room].def[ROOM.open] !== true) continue;
+        const above = cellOf(l + 1, v, stairCol);
+        if (!above.interior && !above.stairs) continue;
+        if (above.room === null || levels[l + 1][above.room].def[ROOM.open] !== true) return Object.freeze({ ok: false, reason: REASON.floorOverOpenRoom });
+      }
+    }
+  }
+  return Object.freeze({ ok: true });
 }
 
 // 一层的房间分法（规则 7 第 3 点）：rooms 里 level 等于 ℓ 的各项；没有而 ℓ 大于列表里最大的 level 时照搬最大那一层；都没有即不分。
@@ -207,20 +284,14 @@ function build(form, W, D, storeys, t, facing, c) {
     const defs = roomsOfLevel(form[FORM.rooms], l);
     const marks = []; // 这一层的隔墙行
     if (defs.length > 0) {
-      const d = D - (w + w);
-      const r = defs.length;
-      const spare = d - (r - 1);
-      if (spare < r) return Object.freeze({ ok: false, reason: REASON.roomsInfeasible });
-      const parts = splitRows(spare, defs.map((x) => x[ROOM.share]));
-      if (parts.some((q) => q <= 0)) return Object.freeze({ ok: false, reason: REASON.roomsInfeasible });
-      let row = w;
-      for (let k = 0; k < r; k += 1) {
+      const placed = roomRowsOf(defs, D, w);
+      if (placed === null) return Object.freeze({ ok: false, reason: REASON.roomsInfeasible });
+      placed.forEach((p, k) => {
         const ordinal = rooms.length;
-        rooms.push({ ordinal, role: defs[k][ROOM.role], level: l, open: defs[k][ROOM.open] === true, rowFrom: row, rowTo: row + parts[k] - 1 });
-        for (let v = row; v < row + parts[k]; v += 1) for (let u = w; u < W - w; u += 1) roomOf[v * W + u] = ordinal;
-        row += parts[k];
-        if (k < r - 1) { marks.push(row); row += 1; }
-      }
+        rooms.push({ ordinal, role: p.def[ROOM.role], level: l, open: p.def[ROOM.open] === true, rowFrom: p.rowFrom, rowTo: p.rowTo });
+        for (let v = p.rowFrom; v <= p.rowTo; v += 1) for (let u = w; u < W - w; u += 1) roomOf[v * W + u] = ordinal;
+        if (k < placed.length - 1) marks.push(p.rowTo + 1);
+      });
     }
     for (const v of marks) {
       for (let u = w; u < W - w; u += 1) kinds[v * W + u] = u === doorU ? KIND.door : KIND.partition;

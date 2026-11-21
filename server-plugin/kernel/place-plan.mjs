@@ -7,7 +7,16 @@
 import { footprintKindOf, isLayerRootClasses, FOOTPRINT_KIND } from './footprint-kind.mjs';
 import { planRegionFootprints, footprintAdjacency, ownerIdAt, eachCell } from './footprint.mjs';
 
-const DIM = Object.freeze({ parent: 'parent', coord: 'coord', targetAreaM2: 'targetAreaM2', boundary: 'boundary', terrain: 'terrain', anchorElevationM: 'anchorElevationM', waterKind: 'waterKind' });
+const DIM = Object.freeze({ parent: 'parent', coord: 'coord', targetAreaM2: 'targetAreaM2', boundary: 'boundary', terrain: 'terrain', anchorElevationM: 'anchorElevationM', waterKind: 'waterKind', downstream: 'downstream' });
+
+/**
+ * 水体类是否流水（卷五 §2.2 water 族条目的 flowing）：只读词表条目，不认任何水体类代号。buildPlan 的 flowingOf 参数用它。
+ * @param {Map<string, any> | undefined} index 加载期词表索引 @returns {(code: unknown) => boolean}
+ */
+export const flowingOfIndex = (index) => (code) => {
+  const rec = index instanceof Map && typeof code === 'string' ? index.get(code) : undefined;
+  return Boolean(rec && rec.entry !== null && typeof rec.entry === 'object' && rec.entry.flowing === true);
+};
 
 /**
  * 沿词表上位展开组件类。
@@ -35,7 +44,10 @@ export function expandClasses(own, broader) {
  *   relocatable: (classes: Set<string>) => boolean,
  *   grid: any,
  *   gridSpaces: any[] | null,
- * }} ctx get 取一行一个维度的有效值（偏离行覆盖展平行；没有为 undefined）；classesOf 给已展开的组件类全集；relocatable 判组件类里有没有可改挂者
+ *   flowingOf?: (waterKind: string) => boolean,
+ *   bed?: boolean,
+ * }} ctx get 取一行一个维度的有效值（偏离行覆盖展平行；没有为 undefined）；classesOf 给已展开的组件类全集；relocatable 判组件类里有没有可改挂者；
+ *   flowingOf 判水体类是否流水（flowingOfIndex(词表索引)；不交即全按静水）；bed 为假时区格代表地表高取未修正的 h₀、不求河床（卷十 R10-2.12 求值次序：生成水体行的下游链按 h₀ 派生），缺省为真
  * @returns {{rows: Map<string, any>, plans: Map<number, any>, errors: any[], kinds: Map<string, string>, classes: Map<string, Set<string>>, offstage: Set<string>, parentOf: (id: string) => string | null, layerRoots: string[]}}
  */
 export function buildPlan(ctx) {
@@ -63,8 +75,11 @@ export function buildPlan(ctx) {
   }
   const numberOrNull = (v) => (Number.isFinite(v) ? v : null);
   const rows = new Map();
+  const isFlowing = typeof ctx.flowingOf === 'function' ? ctx.flowingOf : () => false;
   for (const id of ids) {
     const boundary = ctx.get(id, DIM.boundary);
+    const waterKind = ctx.get(id, DIM.waterKind);
+    const downstream = ctx.get(id, DIM.downstream);
     rows.set(id, {
       parent: parentOf(id),
       kind: kinds.get(id),
@@ -74,11 +89,15 @@ export function buildPlan(ctx) {
       boundary: Array.isArray(boundary) ? boundary : null,
       terrain: ctx.get(id, DIM.terrain),
       anchorElevationM: numberOrNull(ctx.get(id, DIM.anchorElevationM)),
-      waterKind: ctx.get(id, DIM.waterKind),
+      waterKind,
+      // 河床（卷五 §4.3 规则 8）与流水足迹校验（规则 10）读：本行的下游水体行与是否流水（只读词表条目的 flowing；调用方不交 flowingOf 即按静水）。
+      downstream: typeof downstream === 'string' ? downstream : null,
+      flowing: typeof waterKind === 'string' && isFlowing(waterKind),
     });
   }
   const spaces = (ctx.gridSpaces || []).map((s) => ({ w: s.w, box: { x0: s.box.x0, y0: s.box.y0, cellsX: s.box.cellsX, cellsY: s.box.cellsY }, root: s.root }));
   const { plans, errors } = spaces.length > 0 ? planRegionFootprints(ctx.grid, spaces, rows) : { plans: new Map(), errors: [] };
+  if (ctx.bed === false) for (const plan of plans.values()) plan.bedOff = true;
   const layerRoots = ids.filter((id) => isLayerRootClasses(classes.get(id)) && !offstage.has(id));
   return { rows, plans, errors, kinds, classes, offstage, parentOf, layerRoots };
 }

@@ -624,9 +624,9 @@
    "closed": false,
    "entries": {
     "gstage_fields": {
-     "after": [],
+     "after": ["gstage_waterfoot"],
      "before": [],
-     "basis": "卷十 §4.1.1 :338 条目；after 暂空：骨架阶段（gstage_skeleton）由骨架卡登记条目与生成器，那时本条的 after 加它（骨架阶段对手写骨架的世界 whenRX 为假、不运行，R10-1.6）",
+     "basis": "卷十 §4.1.1 :343 条目（封卷后勘误 1121k16，after 加 gstage_waterfoot：补足迹必须先于任何读足迹、形心、海拔的阶段）；after 里的 gstage_skeleton 暂不写：骨架阶段由骨架卡登记条目与生成器，那时本条的 after 加它（骨架阶段对手写骨架的世界 whenRX 为假、不运行，R10-1.6）",
      "generator": "gen/fields.mjs",
      "phase": "worldgen",
      "scope": "tract",
@@ -634,13 +634,46 @@
      "writesFamilies": [],
      "writesKinds": ["place"]
     },
-    "gstage_water": {
+    "gstage_order": {
      "after": ["gstage_fields"],
      "before": [],
-     "basis": "卷十 §4.1.1 :339 条目",
+     "basis": "卷十 §4.1.1 :344 条目（封卷后勘误 1121k16；R10-2.18 高低次序投影）：世界作用域，读自然量阶段的产出，写回投影后的 anchorElevationM 偏离行",
+     "generator": "gen/order.mjs",
+     "phase": "worldgen",
+     "scope": "world",
+     "whenRX": null,
+     "writesFamilies": [],
+     "writesKinds": ["place"]
+    },
+    "gstage_siteform": {
+     "after": [],
+     "before": [],
+     "basis": "卷十 §4.1.1 :354 条目（站点面积与发展度；R10-7.12 手写建筑行缺维度的补缺在本阶段，R10-7.11 落位之前）；after 里的 gstage_economy 暂不写：设施清单、配额阶段由它自己的卡登记条目，那时本条的 after 加它",
+     "generator": "gen/siteform.mjs",
+     "phase": "worldgen",
+     "scope": "site",
+     "whenRX": null,
+     "writesFamilies": [],
+     "writesKinds": ["place"]
+    },
+    "gstage_water": {
+     "after": ["gstage_fields", "gstage_order"],
+     "before": [],
+     "basis": "卷十 §4.1.1 :345 条目（封卷后勘误 1121k16，after 加 gstage_order：水体阶段读投影后的海拔）",
      "generator": "gen/water.mjs",
      "phase": "worldgen",
      "scope": "tract",
+     "whenRX": null,
+     "writesFamilies": [],
+     "writesKinds": ["place"]
+    },
+    "gstage_waterfoot": {
+     "after": [],
+     "before": [],
+     "basis": "卷十 §4.1.1 :342 条目（封卷后勘误 1121k16；R10-2.17 水体足迹输入补缺与河道窄带）：世界作用域；after 里的 gstage_skeleton 暂不写：骨架阶段由骨架卡登记条目与生成器，那时本条的 after 加它",
+     "generator": "gen/waterfoot.mjs",
+     "phase": "worldgen",
+     "scope": "world",
      "whenRX": null,
      "writesFamilies": [],
      "writesKinds": ["place"]

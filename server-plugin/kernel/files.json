@@ -21,9 +21,14 @@
  "server-plugin/kernel/gen/draw.mjs",
  "server-plugin/kernel/gen/fields.mjs",
  "server-plugin/kernel/gen/ids.mjs",
+ "server-plugin/kernel/gen/order.mjs",
  "server-plugin/kernel/gen/rows.mjs",
+ "server-plugin/kernel/gen/siteform.mjs",
  "server-plugin/kernel/gen/stages.mjs",
  "server-plugin/kernel/gen/water.mjs",
+ "server-plugin/kernel/gen/waterband.mjs",
+ "server-plugin/kernel/gen/waterfoot.mjs",
+ "server-plugin/kernel/gen/when.mjs",
  "server-plugin/kernel/gen/worldgen.mjs",
  "server-plugin/kernel/gen/writeback.mjs",
  "server-plugin/kernel/grid-base.mjs",
@@ -88,5 +93,6 @@
  "server-plugin/kernel/valuation.mjs",
  "server-plugin/kernel/view-registry.mjs",
  "server-plugin/kernel/vocab.mjs",
+ "server-plugin/kernel/water-bed.mjs",
  "server-plugin/kernel/weather.mjs"
 ]

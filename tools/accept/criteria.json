@@ -360,10 +360,14 @@
     {
      "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 69
+    },
+    {
+     "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
+     "rev": 70
     }
    ],
-   "print": "74095e44c4eb8a3e2fce681b11be6c347eed4a9d8e21ea0e2a97367ad33b53ec",
-   "rev": 69,
+   "print": "5400867e656834689ad11c9f8c307086340a3d938c7924822b3f4e3331469bf0",
+   "rev": 70,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -901,10 +905,14 @@
     {
      "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 68
+    },
+    {
+     "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
+     "rev": 69
     }
    ],
-   "print": "b52fb42c163930f435e3307369de5e717dd618bc4c953e873b0464aa8f835ccd",
-   "rev": 68,
+   "print": "1b039a7ecf87eda0b7faea086f7518de475c61d71b761dfc85eef2d98e44bee2",
+   "rev": 69,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1532,10 +1540,14 @@
     {
      "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 65
+    },
+    {
+     "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
+     "rev": 66
     }
    ],
-   "print": "f66a880828f39d7679eb82107e91c20990c511783a8ade19f7e0fbedfcfc68c0",
-   "rev": 65,
+   "print": "1f361acf1d98f724909ec9e32202ef4b0918238bbdf76d07ff9ef14d624642d3",
+   "rev": 66,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1993,10 +2005,14 @@
     {
      "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 81
+    },
+    {
+     "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
+     "rev": 82
     }
    ],
-   "print": "980b72e2ec9b820b25c14af0e78137615176fedd910b1bdeb8f891c04685ae5f",
-   "rev": 81,
+   "print": "dbb72499d14094ce058d922854754c297c63e870f5378948cb939f41843ccd0a",
+   "rev": 82,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -2387,10 +2403,14 @@
     {
      "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 66
+    },
+    {
+     "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
+     "rev": 67
     }
    ],
-   "print": "f66a880828f39d7679eb82107e91c20990c511783a8ade19f7e0fbedfcfc68c0",
-   "rev": 66,
+   "print": "1f361acf1d98f724909ec9e32202ef4b0918238bbdf76d07ff9ef14d624642d3",
+   "rev": 67,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -3182,10 +3202,14 @@
     {
      "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 66
+    },
+    {
+     "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
+     "rev": 67
     }
    ],
-   "print": "f66a880828f39d7679eb82107e91c20990c511783a8ade19f7e0fbedfcfc68c0",
-   "rev": 66,
+   "print": "1f361acf1d98f724909ec9e32202ef4b0918238bbdf76d07ff9ef14d624642d3",
+   "rev": 67,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -3440,10 +3464,14 @@
     {
      "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 60
+    },
+    {
+     "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
+     "rev": 61
     }
    ],
-   "print": "779a468091f539818f588bf7ba911f3293de0b8a06ae2279c11017738a9c98d5",
-   "rev": 60,
+   "print": "0510cacd11faef6b9025bc5a913e5a6ed77b2eff16815ec49e27a8bce1f1a4bc",
+   "rev": 61,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -3770,10 +3798,14 @@
     {
      "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 78
+    },
+    {
+     "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
+     "rev": 79
     }
    ],
-   "print": "52db55d39362b4b0e050b2857a8c879fbd93892c89b29fed8ac380bfc2e6b509",
-   "rev": 78,
+   "print": "b428b95dd46448c3c396812953ee8afb9b9a713d7e0d2e229497d80f7e76a87a",
+   "rev": 79,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -4121,10 +4153,14 @@
     {
      "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 45
+    },
+    {
+     "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
+     "rev": 46
     }
    ],
-   "print": "c5362b81347e7a22b5a3fabf09052cc25c5690d695811bffc0e8a22009b2ba04",
-   "rev": 45,
+   "print": "506eff0f7aaf1d97b6a9d009cced9c26a116193133d2e31c7ed95d2e964824a9",
+   "rev": 46,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -4414,10 +4450,14 @@
     {
      "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 67
+    },
+    {
+     "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
+     "rev": 68
     }
    ],
-   "print": "74095e44c4eb8a3e2fce681b11be6c347eed4a9d8e21ea0e2a97367ad33b53ec",
-   "rev": 67,
+   "print": "5400867e656834689ad11c9f8c307086340a3d938c7924822b3f4e3331469bf0",
+   "rev": 68,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -4599,10 +4639,14 @@
     {
      "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 43
+    },
+    {
+     "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
+     "rev": 44
     }
    ],
-   "print": "334acb143b325e9dc3f1b22550b7a21c0017c6e7f620ad52d8a72b75245ce434",
-   "rev": 43,
+   "print": "373c842e82ce03f30569ca01f8b7eaa2a873576e87368310640282888b1eb45c",
+   "rev": 44,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -5085,10 +5129,14 @@
     {
      "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 62
+    },
+    {
+     "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
+     "rev": 63
     }
    ],
-   "print": "779a468091f539818f588bf7ba911f3293de0b8a06ae2279c11017738a9c98d5",
-   "rev": 62,
+   "print": "0510cacd11faef6b9025bc5a913e5a6ed77b2eff16815ec49e27a8bce1f1a4bc",
+   "rev": 63,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

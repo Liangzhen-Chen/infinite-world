@@ -1,7 +1,7 @@
-// 卷十 R10-2.6 高低次序（李白 11-21 裁定甲：生成值投影到满足次序、不拒收）与加载期作者覆盖核对（R10-1.7、E-GEN-OVERRIDE-AUTHORED）、planFootprints 不物化区格列表：
+// 卷十 R10-2.18 高低次序（李白 11-21 裁定：生成值投影到满足次序、不拒收；封卷后勘误 1121k16 的 gstage_order，gen/order.mjs）与加载期作者覆盖核对（R10-1.7、E-GEN-OVERRIDE-AUTHORED）、planFootprints 不物化区格列表：
 // ① 生成值违反次序 → 被投影修正，并经内核报告出口记 W-GEN-DOWNHILL-PROJECTED（改了哪行、从多少到多少）；
-// ② 整条下游链（行上 downstream）沿下游控制海拔不上坡，不只设定点名的几处；
-// ③ 作者手写值互相冲突 → 报错拒收，不改作者值；
+// ② 整条下游链（作者写的行上 downstream）沿下游控制海拔不上坡，不只设定点名的几处；
+// ③ 作者手写值互相冲突 → E-GEN-ORDER-CONFLICT 拒收，不改作者值；
 // ④ 同 id 的 generated 行与作者行写了同一维度 → 加载 E-GEN-OVERRIDE-AUTHORED；
 // ⑤ planFootprints 传 withCells 假时各行 regionCells 为 null。
 import { test } from 'node:test';
@@ -15,6 +15,7 @@ import { useReportSink } from '../../server-plugin/kernel/report.mjs';
 import { planFootprints } from '../../server-plugin/kernel/place.mjs';
 import { buildGenRows } from '../../server-plugin/kernel/gen/rows.mjs';
 import { genFields } from '../../server-plugin/kernel/gen/fields.mjs';
+import { genOrder } from '../../server-plugin/kernel/gen/order.mjs';
 import { ROOT, testTempRoot, writeUnderTempRoot } from '../accept/temp-root.mjs';
 
 installDigestCap({ sha256Hex: (data, encoding) => createHash('sha256').update(data, encoding === 'base64' ? 'base64' : 'utf8').digest('hex') });
@@ -38,18 +39,31 @@ const base = () => new Map([
 const gen = (eff, extra = {}) => genFields({ table: 'place', stage: 'gstage_fields', worldSeed: 'seed_one', genesisMinute: 0, vocab, rows: buildGenRows(eff, { index: new Map() }), dims: DIMS, ...extra });
 const val = (props, id) => props.find((p) => p.id === id).dims[EL];
 const capture = (fn) => { const logs = []; const prev = useReportSink((r) => logs.push(r)); try { return { out: fn(), logs }; } finally { useReportSink(prev); } };
+// 自然量阶段出各行的生成值（不投影），再交 gstage_order 的 genOrder 投影（封卷后勘误 1121k16，R10-2.18；取代原来内嵌在自然量阶段里的投影）。
+// 返回投影后的值（没被改的取原生成值）与 genOrder 的结果；作者写了海拔的行（eff 里 EL 有值）是固定值，行上的 downstream 都是作者写的。
+const project = (eff, downhill = []) => {
+  const raw = gen(eff);
+  const merged = new Map(eff);
+  for (const p of raw) merged.set(p.id, { ...merged.get(p.id), [EL]: p.dims[EL] });
+  const authored = new Set([...eff].filter(([, r]) => r[EL] !== undefined).map(([id]) => id));
+  const rows = buildGenRows(merged, { index: new Map() });
+  const order = genOrder({ table: 'place', stage: 'gstage_order', rows, elevationDim: EL, roleWaterbody: 'comp_waterbody', downhill, isAuthored: (id, dim) => dim === 'downstream' || (dim === EL && authored.has(id)) });
+  const after = raw.map((p) => ({ ...p, dims: { [EL]: (order.proposals.find((q) => q.id === p.id) || p).dims[EL] } }));
+  return { raw, after, order };
+};
 
 test('整条下游链沿下游不上坡：行上 downstream 连成的链，生成的控制海拔单调不增、不低于下游作者端点；改了的值逐条记 W-GEN-DOWNHILL-PROJECTED', () => {
-  const raw = gen(base());
-  const { out, logs } = capture(() => gen(base(), { elevationDim: EL }));
+  const { out, logs } = capture(() => project(base()));
+  const { raw, after, order } = out;
   const ids = ['loc_r1', 'loc_r2', 'loc_r3'];
-  assert.ok(val(out, 'loc_r1') >= val(out, 'loc_r2') && val(out, 'loc_r2') >= val(out, 'loc_r3') && val(out, 'loc_r3') >= 10);
-  const changed = ids.filter((id) => val(raw, id) !== val(out, id));
+  assert.ok(val(after, 'loc_r1') >= val(after, 'loc_r2') && val(after, 'loc_r2') >= val(after, 'loc_r3') && val(after, 'loc_r3') >= 10);
+  const changed = ids.filter((id) => val(raw, id) !== val(after, id));
   assert.deepEqual(logs.map((l) => l.fields.row).sort(), changed);
+  assert.deepEqual(order.report.projections.map((p) => p.row), changed, '日志 report.projections 按行 id 升序，恰是改了的行');
   for (const l of logs) {
     assert.equal(l.code, 'W-GEN-DOWNHILL-PROJECTED');
     assert.equal(l.fields.from, val(raw, l.fields.row));
-    assert.equal(l.fields.to, val(out, l.fields.row));
+    assert.equal(l.fields.to, val(after, l.fields.row));
   }
   // 手算这个种子下原始值是否真违反了次序（否则本例没测到投影）：违反则至少有一条日志。
   const violated = val(raw, 'loc_r1') < val(raw, 'loc_r2') || val(raw, 'loc_r2') < val(raw, 'loc_r3') || val(raw, 'loc_r3') < 10;
@@ -60,16 +74,16 @@ test('已违反次序的构造：上游行值被作者压低下游更高的情�
   const eff = base();
   eff.set('loc_r1', { ...eff.get('loc_r1'), [EL]: 20 });
   eff.set('loc_r4', { ...eff.get('loc_r4'), [EL]: 5 });
-  const raw = gen(eff);
-  const { out, logs } = capture(() => gen(eff, { elevationDim: EL }));
-  assert.ok(val(out, 'loc_r2') <= 20 && val(out, 'loc_r3') <= val(out, 'loc_r2') && val(out, 'loc_r3') >= 5);
+  const { out, logs } = capture(() => project(eff));
+  const { raw, after } = out;
+  assert.ok(val(after, 'loc_r2') <= 20 && val(after, 'loc_r3') <= val(after, 'loc_r2') && val(after, 'loc_r3') >= 5);
   for (const id of ['loc_r2', 'loc_r3']) if (val(raw, id) > 20) assert.equal(logs.some((l) => l.fields.row === id), true, id);
 });
 
-test('作者手写值互相冲突（下游比上游高）：报 E-GEN-ROW-INVALID 拒收，不改作者值', () => {
+test('作者手写值互相冲突（下游比上游高）：报 E-GEN-ORDER-CONFLICT 拒收，不改作者值', () => {
   const eff = base();
   eff.set('loc_r1', { ...eff.get('loc_r1'), [EL]: 5 });
-  assert.throws(() => gen(eff, { elevationDim: EL }), (e) => e.code === 'E-GEN-ROW-INVALID');
+  assert.throws(() => project(eff), (e) => e.code === 'E-GEN-ORDER-CONFLICT');
 });
 
 test('加载期：同 id 的 generated 行与作者行写了同一维度即 E-GEN-OVERRIDE-AUTHORED；不同维度不报', () => {
@@ -98,11 +112,11 @@ test('planFootprints withCells 假：各行 regionCells 为 null（不物化全�
   assert.equal(typeof r.adjacency, 'object');
 });
 
-test('跨链作者值冲突：loc_x 在一条链上要不低于作者 500（下游端）、在另一条链上要不高于作者 400（上游端）——投影不收敛，报 E-GEN-ROW-INVALID，不静默返回', () => {
+test('跨链作者值冲突：作者次序链 b → x → a 把 b（作者 400）与 a（作者 500）连在一起，上游比下游低——报 E-GEN-ORDER-CONFLICT，不静默返回、不改作者值', () => {
   const eff = base();
   eff.set('loc_x', { parent: 'loc_w', classes: [] });
   eff.set('loc_a', { parent: 'loc_w', classes: [], [EL]: 500 });
   eff.set('loc_b', { parent: 'loc_w', classes: [], [EL]: 400 });
   const downhill = [{ dim: EL, chain: ['loc_x', 'loc_a'] }, { dim: EL, chain: ['loc_b', 'loc_x'] }];
-  assert.throws(() => gen(eff, { downhill }), (e) => e.code === 'E-GEN-ROW-INVALID' && /conflict across chains/.test(e.message));
+  assert.throws(() => project(eff, downhill), (e) => e.code === 'E-GEN-ORDER-CONFLICT' && /400/.test(e.message) && /500/.test(e.message));
 });

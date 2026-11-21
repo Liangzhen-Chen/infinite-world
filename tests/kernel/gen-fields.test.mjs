@@ -11,6 +11,7 @@ import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
 import { drawByKey } from '../../server-plugin/kernel/sample.mjs';
 import { buildGenRows } from '../../server-plugin/kernel/gen/rows.mjs';
 import { genFields } from '../../server-plugin/kernel/gen/fields.mjs';
+import { genOrder } from '../../server-plugin/kernel/gen/order.mjs';
 import { writeback } from '../../server-plugin/kernel/gen/writeback.mjs';
 import { ROOT } from '../accept/temp-root.mjs';
 
@@ -46,7 +47,7 @@ const TREE = () => new Map([
 const run = (effective, field = FIELD, opts = {}) => {
   const vocab = mkVocab(field);
   const rows = buildGenRows(effective, { index: new Map() }, opts.input);
-  return genFields({ table: 'place', stage: 'gstage_fields', worldSeed: SEED, genesisMinute: 0, vocab, rows, dims: DIMS, downhill: opts.downhill, elevationDim: opts.elevationDim });
+  return genFields({ table: 'place', stage: 'gstage_fields', worldSeed: SEED, genesisMinute: 0, vocab, rows, dims: DIMS });
 };
 const valueOf = (props, id) => props.find((p) => p.id === id).dims.anchorElevationM;
 
@@ -119,25 +120,39 @@ test('只给区域足迹行补：建筑足迹行（作者输入标明）不出�
   assert.equal(v, draw4('loc_lake', 0, runoff.tractLevel));
 });
 
-test('R10-2.6 高低次序：生成值夹进作者上下界并随链单调不增；作者值不动；作者值之间次序错即 E-GEN-ROW-INVALID', () => {
+// 高低次序（R10-2.18）不在自然量阶段：自然量阶段只出各行的生成值，投影由 gstage_order 的 genOrder 做（封卷后勘误 1121k16，取代原来内嵌在自然量阶段里的投影）。
+// 下面三例的前提照旧（作者值、链与原测试同），改为"自然量出生成值、再交 genOrder 投影"。
+const orderOf = (eff, downhill) => {
+  const props = run(eff);
+  const merged = new Map(eff);
+  for (const p of props) merged.set(p.id, { ...merged.get(p.id), anchorElevationM: p.dims.anchorElevationM });
+  const authored = new Set([...eff].filter(([, r]) => r.anchorElevationM !== undefined).map(([id]) => id));
+  const rows = buildGenRows(merged, { index: new Map() });
+  const out = genOrder({ table: 'place', stage: 'gstage_order', rows, elevationDim: 'anchorElevationM', roleWaterbody: 'comp_waterbody', downhill, isAuthored: (id, dim) => dim === 'anchorElevationM' && authored.has(id) });
+  const after = (id) => { const p = out.proposals.find((x) => x.id === id); return p ? p.dims.anchorElevationM : merged.get(id).anchorElevationM; };
+  return { props, out, after };
+};
+
+test('R10-2.18 高低次序：生成值夹进作者上下界并随链单调不增；作者值不动；作者值之间次序错即 E-GEN-ORDER-CONFLICT', () => {
   // 链 s1 → s2（都生成）→ 上游作者 c1 之外：用三行链 [loc_s1, loc_s2, loc_c3]，其中 loc_c3 作者 0、loc_s1 作者 400。
   const eff = TREE();
   eff.set('loc_s1', { ...eff.get('loc_s1'), anchorElevationM: 400 });
   eff.set('loc_c3', { ...eff.get('loc_c3'), anchorElevationM: 0 });
-  const props = run(eff, FIELD, { downhill: [{ dim: 'anchorElevationM', chain: ['loc_s1', 'loc_s2', 'loc_c3'] }] });
-  const s2 = valueOf(props, 'loc_s2');
+  const r = orderOf(eff, [{ dim: 'anchorElevationM', chain: ['loc_s1', 'loc_s2', 'loc_c3'] }]);
+  const s2 = r.after('loc_s2');
   assert.ok(s2 <= 400 && s2 >= 0, `s2 ${s2} 须在作者上下界 [0, 400] 内`);
+  assert.equal(r.out.proposals.some((p) => p.id === 'loc_s1' || p.id === 'loc_c3'), false, '作者值一个都不改');
   // 作者次序错：上游 100、下游 400。
   const bad = TREE();
   bad.set('loc_s1', { ...bad.get('loc_s1'), anchorElevationM: 100 });
   bad.set('loc_c3', { ...bad.get('loc_c3'), anchorElevationM: 400 });
-  assert.throws(() => run(bad, FIELD, { downhill: [{ dim: 'anchorElevationM', chain: ['loc_s1', 'loc_s2', 'loc_c3'] }] }), (e) => e.code === 'E-GEN-ROW-INVALID');
+  assert.throws(() => orderOf(bad, [{ dim: 'anchorElevationM', chain: ['loc_s1', 'loc_s2', 'loc_c3'] }]), (e) => e.code === 'E-GEN-ORDER-CONFLICT');
   // 随链单调不增（三个生成行）：把 s1、s2 都留给生成，上游给大、下游给小的作者端点。
   const mono = TREE();
   mono.set('loc_c3', { ...mono.get('loc_c3'), anchorElevationM: 50 });
   mono.set('loc_p2', { ...mono.get('loc_p2'), anchorElevationM: 900 });
-  const p3 = run(mono, FIELD, { downhill: [{ dim: 'anchorElevationM', chain: ['loc_p2', 'loc_s1', 'loc_s2', 'loc_c3'] }] });
-  assert.ok(valueOf(p3, 'loc_s1') >= valueOf(p3, 'loc_s2') && valueOf(p3, 'loc_s2') >= 50 && valueOf(p3, 'loc_s1') <= 900);
+  const p3 = orderOf(mono, [{ dim: 'anchorElevationM', chain: ['loc_p2', 'loc_s1', 'loc_s2', 'loc_c3'] }]);
+  assert.ok(p3.after('loc_s1') >= p3.after('loc_s2') && p3.after('loc_s2') >= 50 && p3.after('loc_s1') <= 900);
 });
 
 test('R10-9.2：提案带来源标记 by（阶段代号）与 seedKey（64 位十六进制，等于该行首个场偏差抽取点的骰值键 sha256）', () => {
@@ -181,4 +196,17 @@ test('写回器 R10-1.7：提案的维度作者行上已有值即 E-GEN-OVERRIDE
   assert.throws(() => writeback(mk({ anchorElevationM: 9001 })), (e) => e.code === 'E-GEN-ROW-INVALID');
   assert.throws(() => writeback(mk({ anchorElevationM: 1 }, { stageEntry: { writesKinds: [] } })), (e) => e.code === 'E-GEN-ROW-INVALID');
   assert.throws(() => writeback(writeCtx([{ table: 'place', id: 'loc_nope', dims: { anchorElevationM: 1 }, by: 'gstage_fields', seedKey: 'k'.repeat(64) }])), (e) => e.code === 'E-GEN-ROW-INVALID');
+});
+
+test('写回器 revise（高低次序投影，R10-2.18）：只许改先行阶段已生成的维度；作者值即 E-GEN-OVERRIDE-AUTHORED；没有生成值可改、没交 isAuthored 都是 E-GEN-ROW-INVALID；改后仍是原来那一阶段的来源标记', () => {
+  const gen = writeback(writeCtx([{ table: 'place', id: 'loc_s1', dims: { anchorElevationM: 500 }, by: 'gstage_fields', seedKey: 'k'.repeat(64) }]));
+  const revise = (dims, over = {}) => writeback(writeCtx([{ table: 'place', id: 'loc_s1', dims, by: 'gstage_order', seedKey: '', revise: true }], { generated: gen.generated, stage: 'gstage_order', isAuthored: () => false, ...over }));
+  const out = revise({ anchorElevationM: 300 });
+  assert.equal(out.generated.loc_s1.anchorElevationM, 300);
+  assert.deepEqual(out.generated.loc_s1.generated, { by: 'gstage_fields', seedKey: 'k'.repeat(64), at: 0 });
+  assert.equal(gen.generated.loc_s1.anchorElevationM, 500, '入参的 generated 不被改');
+  assert.throws(() => revise({ anchorElevationM: 300 }, { isAuthored: () => true }), (e) => e.code === 'E-GEN-OVERRIDE-AUTHORED');
+  assert.throws(() => revise({ anchorElevationM: 300 }, { isAuthored: undefined }), (e) => e.code === 'E-GEN-ROW-INVALID');
+  assert.throws(() => revise({ anchorElevationM: 300 }, { generated: {} }), (e) => e.code === 'E-GEN-ROW-INVALID');
+  assert.throws(() => revise({ anchorElevationM: 9001 }), (e) => e.code === 'E-GEN-ROW-INVALID');
 });

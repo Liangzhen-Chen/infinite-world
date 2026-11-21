@@ -21,7 +21,7 @@ import { FOOTPRINT_KIND, isSettlementClasses } from './footprint-kind.mjs';
 import {
   zoneOfPos, cellList, regionGeometry, regionHeights, regionCellPos, landRegionCell, accessCell, openBoundaryCells,
   straightM as straightMCore, bearingView as bearingViewCore,
-  regionOfPos, ownerIdAt, inBox, keyOf, controlPointsOf, regionCellHeight,
+  regionOfPos, ownerIdAt, inBox, keyOf, controlPointsOf, regionCellHeight, regionBedDelta, footprintHas, footprintCells,
 } from './footprint.mjs';
 import { columnSurface, nearControlPoints, regionSlope, cellAt, cellFlags, STATE, CELL_KIND } from './grid-base.mjs';
 import { checkBlueprintForms, KIND as BLUEPRINT_KIND } from './blueprint.mjs';
@@ -29,7 +29,7 @@ import { blueprintOf as blueprintCore, buildingCellAt, buildingColumn, buildingF
 import { checkGenTemplates, genTemplateOf, templateBlocksOf } from './grid-template.mjs';
 import { checkLayoutTemplates } from './layout.mjs';
 import { volumeColumn, volumeZoneAt, volumeFootprint, volumeCellsOf, volumeExitsOf, volumesUnderRegionCells, checkVolumes, checkVolumeRows } from './place-volume.mjs';
-import { buildPlan, expandClasses, waterAccessOf, footprintAdjacency, edgeAdjacency } from './place-plan.mjs';
+import { buildPlan, expandClasses, waterAccessOf, footprintAdjacency, edgeAdjacency, flowingOfIndex } from './place-plan.mjs';
 import { createRouteEnv, edgeNumbers } from './route-edges.mjs';
 import { report } from './report.mjs';
 import { isPosValue } from './named-structs.mjs';
@@ -172,6 +172,7 @@ function planOf(engine, state) {
     relocatable: relocatableIn(index),
     grid,
     gridSpaces: spaces,
+    flowingOf: flowingOfIndex(index),
   });
   plans.set(t, { rules: engine.rules, vocab: engine.vocab, sig, value });
   return value;
@@ -525,12 +526,14 @@ export function gridView(engine, state, spec) {
           const tpl = genTemplateOf(index, f.cellClass);
           const centerZ = f.centerH === null ? null : surfaceStoreyOf(grid, f.centerH);
           const blocks = centerZ === null ? [] : templateBlocksOf(grid, worldSeed, plan.w, r, Array.isArray(tpl.blocks) ? tpl.blocks : [], centerZ);
-          reg = { f, tpl, blocks, entry: terrainOf(f.row.terrain), cps: nearControlPoints(grid, cps, r.x, r.y) };
+          // 水体足迹的区格：区格内每一列的 h 都减去同一个河床修正量 δ（卷五 §4.3 规则 8 "河床"末条）；非水体区格 δ 为 0。
+          reg = { f, tpl, blocks, entry: terrainOf(f.row.terrain), cps: nearControlPoints(grid, cps, r.x, r.y), delta: regionBedDelta(grid, worldSeed, plan, rp.rows, terrainOf, r.x, r.y) };
         }
         regions.set(rk, reg);
       }
       if (reg === null) continue;
-      const surf = reg.unknown || reg.entry === null ? null : columnSurface(grid, worldSeed, plan.w, reg.cps, reg.entry, x, y, memo);
+      const raw = reg.unknown || reg.entry === null ? null : columnSurface(grid, worldSeed, plan.w, reg.cps, reg.entry, x, y, memo);
+      const surf = raw === null || reg.delta === null ? null : (reg.delta === 0n ? raw : { h: raw.h - reg.delta, z: surfaceStoreyOf(grid, raw.h - reg.delta) });
       const vol = volumeColumn(vctx, grid, plan.w, x, y); // 体积凿空一层（G8；叠在模板格块之后、建筑蓝图之前，卷五 §4.3 规则 10）
       const building = buildingColumn(bctx, grid, plan.w, x, y); // 建筑蓝图一层（叠在体积凿空之后、存量形态与差分之前，卷五 §4.3 规则 10）
       const volUnknown = vol !== null && vol.at === undefined; // 这一列的体积读不到：不知道有没有洞，整列各格未知（卷二 :387、:389）
@@ -558,10 +561,13 @@ export function gridView(engine, state, spec) {
  * 与 placeView、zoneAt 同一套算法；纯函数、不写状态。base = 世界数据里的地点行（缺省取当前世界表）；proposals = 写回器暂存的行提案（覆盖或新增）；
  * assumptions = 可选假设覆盖 {行 id: {维度: 值}}（只供试排、不进状态）。withCells 为假时不物化各行的区格列表（regionCells 为 null）：
  * 列表每格一个对象，根行即全世界约 4,020 万区格、各级合计约 1.6 亿对象，全规模装不下；世界创建里只要面积、海拔、相邻集的调用（卷十水体阶段）一律传假。行都是 place.json 行的形状（维度键与 classes）。
- * 返回 {footprints: {id: placeFootprint 的形状}, errors: [{code, id, detail}], adjacency: {id: [相邻 id]}}（相邻只含足迹相邻，路网边由 placeNeighbors 并入）。
- * @param {any} engine @param {{base?: Record<string, any>, proposals?: Record<string, any>, assumptions?: Record<string, Record<string, any>>}} [input]
+ * bed 为假时区格代表地表高取未修正的 h₀、不求河床（卷十 R10-2.12 求值次序：生成水体行的下游链按未修正 h₀ 派生，链定后再求 bed）；heights 为假时不求高度（elevationM、zRange 为 null，
+ * 只要足迹面积与相邻的调用——水体足迹补缺阶段——不必逐区格算全世界的高度场）。
+ * 返回 {footprints: {id: placeFootprint 的形状}, errors: [{code, id, detail}], adjacency: {id: [相邻 id]}, probe}（相邻只含足迹相邻，路网边由 placeNeighbors 并入）。
+ * probe = {has(id, x, y), cells(id)}：区格是否在某行足迹内、某行足迹区格按 (x, y) 字典序惰性遍历（不物化列表；水体足迹补缺阶段在世界根这样的巨大父足迹里取种子区格用）。
+ * @param {any} engine @param {{base?: Record<string, any>, proposals?: Record<string, any>, assumptions?: Record<string, Record<string, any>>, withCells?: boolean, bed?: boolean, heights?: boolean}} [input]
  */
-export function planFootprints(engine, { base, proposals = {}, assumptions = {}, withCells = true } = {}) {
+export function planFootprints(engine, { base, proposals = {}, assumptions = {}, withCells = true, bed = true, heights = true } = {}) {
   const t = placeTable(engine);
   const grid = engine.rules && engine.rules.grid;
   const spaces = Array.isArray(t.doc[SECTION.gridSpaces]) ? t.doc[SECTION.gridSpaces] : null;
@@ -579,6 +585,8 @@ export function planFootprints(engine, { base, proposals = {}, assumptions = {},
     relocatable: relocatableIn(index),
     grid,
     gridSpaces: spaces,
+    flowingOf: flowingOfIndex(index),
+    bed: bed !== false,
   });
   const footprints = {};
   const seed = worldSeedOf(engine);
@@ -586,13 +594,18 @@ export function planFootprints(engine, { base, proposals = {}, assumptions = {},
     for (const id of plan.order) {
       const geo = regionGeometry(grid, plan, id);
       if (!geo) continue;
-      const h = regionHeights(grid, seed, plan, rp.rows, terrainEntryOf(engine), id);
+      const h = heights ? regionHeights(grid, seed, plan, rp.rows, terrainEntryOf(engine), id) : null;
       footprints[id] = { kind: rp.kinds.get(id), w: plan.w, regionCells: withCells ? cellList(plan, id) : null, cellCount: geo.cellCount, areaM2: geo.areaM2, centroid: geo.centroid, elevationM: h ? h.elevationM : null, zRange: h ? h.zRange : null, waterAccess: waterAccessOf(plan, rp.rows, id) };
     }
   }
   const adjacency = {};
   for (const plan of rp.plans.values()) for (const [id, set] of footprintAdjacency(plan)) adjacency[id] = [...set].sort(cmp);
-  return { footprints, errors: rp.errors, adjacency };
+  const holder = (id) => { for (const plan of rp.plans.values()) if (plan.cells.has(id)) return plan; return null; };
+  const probe = {
+    has: (id, x, y) => { const plan = holder(id); return plan !== null && footprintHas(plan, id, x, y); },
+    cells: function* cells(id) { const plan = holder(id); if (plan !== null) yield* footprintCells(plan, id); },
+  };
+  return { footprints, errors: rp.errors, adjacency, probe };
 }
 
 /**
@@ -1119,6 +1132,7 @@ export function checkPlaceRasters(view) {
     relocatable: relocatableIn(idx),
     grid,
     gridSpaces: spaces,
+    flowingOf: flowingOfIndex(idx),
   });
   const env = createRouteEnv({ grid, modifiers: view.rules[RULES.modifiers], vocabIndex: idx, worldSeed: undefined, rp, terrainOf: () => null, edges: [] });
   const water = edges.filter((e) => e[EDGE.waterway] === true && !isDoor(e) && planOfRow(rp, e[EDGE.from]) !== null && planOfRow(rp, e[EDGE.from]) === planOfRow(rp, e[EDGE.to])
@@ -1198,6 +1212,7 @@ export function checkPlaceTable(view) {
     relocatable: relocatableIn(idx),
     grid,
     gridSpaces: gridOk ? spaces : [],
+    flowingOf: flowingOfIndex(idx),
   });
   // 规则 1：单根（不计离场行）、有限步到根。
   const roots = ids.filter((id) => rows.get(id)[DIM.parent] === null && !rp.offstage.has(id));

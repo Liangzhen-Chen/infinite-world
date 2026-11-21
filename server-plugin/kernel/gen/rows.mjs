@@ -3,7 +3,7 @@
 // 足迹种类只按组件类判（kernel/footprint-kind.mjs，经 buildPlan），不看 id、不看显示名；作者输入里标明是建筑的行取建筑足迹种类
 // （旧数据还没有组件类的行，G5b 转换前由 settlements 的建筑清单标）。本文件不碰状态、不读文件。
 
-import { buildPlan, expandClasses } from '../place-plan.mjs';
+import { buildPlan, expandClasses, flowingOfIndex } from '../place-plan.mjs';
 import { FOOTPRINT_KIND } from '../footprint-kind.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -16,7 +16,8 @@ const broaderOf = (index) => (code) => {
 };
 
 /**
- * @typedef {{id: string, parent: string | null, regionLevel: string | null, kind: string, classes: Set<string>, dims: Record<string, any>}} GenRow
+ * @typedef {{id: string, parent: string | null, regionLevel: string | null, kind: string, classes: Set<string>, flowing: boolean, dims: Record<string, any>}} GenRow
+ *   flowing：水体类是流水（词表 water 条目的 flowing，卷五 §2.2；没有 waterKind 即假）
  */
 
 /**
@@ -47,6 +48,7 @@ export function buildGenRows(effective, vocab, input = {}) {
     relocatable: () => false,
     grid: null,
     gridSpaces: [],
+    flowingOf: flowingOfIndex(vocab.index),
   });
   const rows = new Map();
   for (const id of ids) {
@@ -58,6 +60,7 @@ export function buildGenRows(effective, vocab, input = {}) {
       regionLevel: typeof level === 'string' ? level : null,
       kind: buildings.has(id) ? FOOTPRINT_KIND.building : rp.kinds.get(id),
       classes: rp.classes.get(id),
+      flowing: rp.rows.get(id).flowing,
       dims,
     });
   }

@@ -71,6 +71,9 @@ test('水体阶段经 planFootprints 读足迹：surfaceM2 = 足迹面积、catc
   assert.equal(wa.dims.catchmentM2, 40000);
   assert.equal(wa.dims.capacityL, Math.floor((20000 * d4) / 10));
   assert.equal('downstream' in wa.dims, false, 'downstream 作者已写（空），不补');
-  assert.equal(wa.by, 'gstage_fields', '同一行先被自然量阶段补 runoffCoef，来源记先写的阶段');
+  // 这条河（flowing 真）作者没写 boundary：水体足迹补缺阶段（卷十 R10-2.17，排在自然量之前）先给它补出窄带，同一行后被自然量阶段补 runoffCoef，来源记先写的阶段（R10-1.2）。
+  // 手算（r 的搜索）：种子区格 (3,0)、下游空、目标 20000 m2 = 2 个区格；r=0 一格、r=1 取 (2,0)(3,0) 共两格（(4,0) 出父足迹）、r=2 三格超目标，停在 r=1——
+  // 窄带恰两格，所以上面 surfaceM2、catchmentM2、capacityL 的手算数不变。
+  assert.equal(wa.by, 'gstage_waterfoot');
   assert.ok(wa.dims.runoffCoef >= 0 && wa.dims.runoffCoef <= 1);
 });
