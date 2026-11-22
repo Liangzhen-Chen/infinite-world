@@ -14,6 +14,30 @@
 
 import { instanceIdOf, instanceDigestOf } from './ids.mjs';
 import { chainOf } from './rows.mjs';
+import { officeRowKinds } from '../validate/polity-tables.mjs';
+
+// 开局政体阶段要的输入（卷八 R8-18.9）：自己经统一读入口 ctx.read 取（规则表、三张表的展平行、表头与 id 前缀）；落位文化、站点类型条目、开局人数三个读入口世界里还没有生产者，
+// 由调用方经 ctx.views（opts.genViews）交入，没交即 undefined，阶段整段进 deferred 并列缺口，不编。
+function polityInputs(ctx) {
+  const read = ctx.read;
+  const views = ctx.views;
+  const polity = read.rules('polity');
+  const purposes = polity.rolesPurposes;
+  return {
+    polityRules: { genRealmRows: polity.genRealmRows, genSettlementKind: polity.genSettlementKind, genOpenTiers: polity.genOpenTiers, genHoldCause: polity.genHoldCause, genIdSlots: polity.genIdSlots },
+    classRows: new Map(Object.entries(read.classes('org'))),
+    officeActualKind: (officeRowKinds(read.dims('office'), ctx.vocab.families) || {}).actual,
+    cultureLevel: views.cultureLevel,
+    seatCultureOf: views.seatCultureOf, cultureDimsOf: views.cultureDimsOf, siteOf: views.siteOf, sitePopOf: views.sitePopOf,
+    orgRows: read.rows('org'), polityRows: read.rows('polity'), officeRows: read.rows('office'),
+    orgDims: read.dims('org'), officeDims: read.dims('office'), orgIdPrefix: read.idPrefix('org'), officeIdPrefix: read.idPrefix('office'),
+    treasury: purposes && typeof purposes.general === 'string' ? [purposes.general] : [],
+    heldBy: new Map(views.heldBy || []), // 作者写的统治边：地点 → {org, cause}（手写优先；子站点按 originSite 连到原站点那条边的持有组织与原因）
+  };
+}
+
+/** 阶段接口（A10-1.3）：登记表只认 {run(ctx)}；ctx 由 worldgen.mjs 统一给，本阶段自己取要的东西。 */
+export const stage = { run: (ctx) => genPolity({ ...ctx, ...polityInputs(ctx) }) };
 
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);

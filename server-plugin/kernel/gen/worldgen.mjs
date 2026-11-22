@@ -13,116 +13,42 @@ import { blueprintRulesFrom } from '../place-building.mjs';
 import { KernelError } from '../errors.mjs';
 import { genPlan } from './stages.mjs';
 import { buildGenRows } from './rows.mjs';
-import { genFields } from './fields.mjs';
-import { genOrder } from './order.mjs';
-import { genWater } from './water.mjs';
-import { genWaterFoot } from './waterfoot.mjs';
-import { genSiteForm } from './siteform.mjs';
-import { genEnvelope } from './envelope.mjs';
+import { stage as fieldsStage } from './fields.mjs';
+import { stage as orderStage } from './order.mjs';
+import { stage as waterStage } from './water.mjs';
+import { stage as waterFootStage } from './waterfoot.mjs';
+import { stage as siteFormStage } from './siteform.mjs';
+import { stage as envelopeStage } from './envelope.mjs';
 import { STATE } from '../grid-base.mjs';
 import { makeWhen } from './when.mjs';
 import { writeback, createRows } from './writeback.mjs';
-import { genPolity } from './polity.mjs';
-import { genOpeningAssets } from './holdings-open.mjs';
-import { chainOf } from './rows.mjs';
-import { FOOTPRINT_KIND } from '../footprint-kind.mjs';
-import { SCHEMA as LEDGER } from '../ledger.mjs';
-import { officeRowKinds } from '../validate/polity-tables.mjs';
+import { stage as polityStage } from './polity.mjs';
+import { stage as holdingsStage } from './holdings-open.mjs';
 
 const RULES_CODE = 'gen';
 const MATERIAL_TABLE = 'material'; // 材料表（kind material）
 const GRID_CODE = 'grid';
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
-// 生成器登记表：条目的 generator 节点名 → 运行函数 (ctx) => {proposals, deferred?, report?}。新阶段只在这里加一行并登记 gstage 条目（A10-1.3）。
-const NODE = Object.freeze({ fields: 'gen/fields.mjs', water: 'gen/water.mjs', waterfoot: 'gen/waterfoot.mjs', order: 'gen/order.mjs', siteform: 'gen/siteform.mjs', envelope: 'gen/envelope.mjs', polity: 'gen/polity.mjs', holdings: 'gen/holdings-open.mjs' });
-const RUNNERS = Object.freeze(Object.fromEntries([
-  [NODE.fields, (ctx) => ({ proposals: genFields(ctx), deferred: [] })],
-  [NODE.order, (ctx) => genOrder({ ...ctx, elevationDim: ctx.geo.elevationDim, downhill: ctx.geo.downhill, roleWaterbody: ctx.rules.roleWaterbody })],
-  [NODE.waterfoot, (ctx) => genWaterFoot({
-    ...ctx,
-    waterFillRows: ctx.rules.waterFillRows,
-    roleWaterbody: ctx.rules.roleWaterbody,
-    footprints: () => ctx.footprints({ heights: false }),
-  })],
-  [NODE.water, (ctx) => genWater({
-    ...ctx,
-    waterRows: ctx.rules.waterRows,
-    roleTract: ctx.rules.roleTract,
-    roleWaterbody: ctx.rules.roleWaterbody,
-    m3PerUnit: ctx.m3PerUnit,
-    // 水体阶段只读水体行与存量单元行的面积、海拔（汇水、排水去处）：只对这两类行求高度，其余行（政区、站点）不逐区格求高度场。
-    footprints: ctx.footprints({ bed: false, heights: (id) => { const r = ctx.rows.get(id); return r !== undefined && (r.classes.has(ctx.rules.roleWaterbody) || r.classes.has(ctx.rules.roleTract)); } }),
-  })],
-  [NODE.siteform, (ctx) => genSiteForm({ ...ctx, bldfillRows: ctx.rules.bldfillRows, roleFacility: ctx.rules.roleFacility, roleTract: ctx.rules.roleTract, roleWaterbody: ctx.rules.roleWaterbody, layoutCoverage: ctx.rules.layoutCoverage, layoutGapCells: ctx.rules.layoutGapCells })],
-  [NODE.envelope, (ctx) => genEnvelope({ ...ctx, roleFacility: ctx.rules.roleFacility, openingCondition: ctx.rules.openingCondition, densityOf: ctx.materialDensityOf })],
-  [NODE.polity, (ctx) => genPolity({ ...ctx, ...ctx.polity })],
-  [NODE.holdings, (ctx) => openingAssets(ctx)],
-]));
+// 生成器登记表：条目的 generator 节点名 → 该文件导出的阶段 {run(ctx)}（接口固定，A10-1.3）。编排器只给统一的 ctx，各阶段自己取输入、自己改名；
+// 新阶段只加一条 gstage 条目、一个生成器文件，再在这里登记一行"节点名 → 文件导出"。
+const STAGES = Object.freeze({
+  'gen/fields.mjs': fieldsStage, 'gen/water.mjs': waterStage, 'gen/waterfoot.mjs': waterFootStage, 'gen/order.mjs': orderStage,
+  'gen/siteform.mjs': siteFormStage, 'gen/envelope.mjs': envelopeStage, 'gen/polity.mjs': polityStage, 'gen/holdings-open.mjs': holdingsStage,
+});
+const RUNNERS = Object.freeze(Object.fromEntries(Object.entries(STAGES).map(([node, s]) => [node, (ctx) => s.run(ctx)])));
 
-// 开局持有阶段 gstage_holdings（卷十 R10-3.9、R10-7.2 ④，卷六 :642；李白 11-24 S6-1、H-1）：对全部建筑行推开局 ownerRef，交出入账提案 assets 与缺口 assetGaps；
-// 入账在世界创建事务里由 assetcalls.mjs 的 applyOpeningAssets 做（同 R8-18.9 ③ 的调用提案由 holdcalls.mjs 应用）。读先行阶段已交出的组织行（created.org，开局政体阶段建的聚落组织）、
-// 统治边提案（calls 与作者手写的 heldBy）与表里的组织行（含试玩地区的村社与家户行）；规则表键 tenureModes、dwellingIntendedType（卷十 :185 住处意图，值是设施类型行 id，设施类型归入类词表，李白 11-24「家户两问1122」①）缺了即拒（E-RULES-UNREGISTERED）。
-function openingAssets(ctx) {
-  const g = ctx.rules;
-  const need = (k) => { if (g[k] === undefined) throw new KernelError('E-RULES-UNREGISTERED', {}, `gen/holdings-open: rules.gen.${k} is needed`); return g[k]; };
-  const h = ctx.holdings;
-  const orgs = new Map(h.orgFlat);
-  for (const [id, row] of Object.entries((ctx.created && ctx.created.org) || {})) orgs.set(id, row);
-  const edges = new Map([...ctx.polity.heldBy].map(([place, e]) => [place, e.org]));
-  for (const c of ctx.calls) if (!edges.has(c.place)) edges.set(c.place, c.org);
-  const orgIds = [...orgs.keys()].sort(cmp);
-  const entryOf = (id) => (ctx.vocab.index.get(orgs.get(id).orgKind) || { entry: {} }).entry;
-  const domestic = (id) => { const t = h.orgTraits[orgs.get(id).orgKind]; return t !== undefined && t.domestic === true; };
-  const buildings = [...ctx.rows.values()].filter((r) => r.kind === FOOTPRINT_KIND.building && ctx.authoredIds.has(r.id)).sort((a, b) => cmp(a.id, b.id)) // 足迹种类是建筑：挂 comp_facility 的行，或转换输入标明是建筑的行（rows.mjs buildingIds，G5b 换表前）
-    .map((r) => ({ id: r.id, intendedType: r.dims.intendedType ?? null, owner: h.ownerOf ? (h.ownerOf(r.id) ?? null) : null }));
-  const r = genOpeningAssets({
-    buildings, dwellingType: need('dwellingIntendedType'), tenureModes: need('tenureModes'),
-    placeKind: ctx.table, kindOf: (id) => (orgs.has(id) ? 'org' : h.kindOf(id)),
-    holderKinds: LEDGER.holderKinds.filter((k) => !LEDGER.catalogKinds.includes(k) && !Object.hasOwn(LEDGER.subjectFlags, k)), // 账本持有人类型里的主体，去掉信仰、神祇目录与须带标记的地点
-    governorOf: (p) => { for (const a of chainOf(ctx.rows, p)) if (edges.has(a)) return edges.get(a); return null; },
-    placeChain: (p) => chainOf(ctx.rows, p), isSite: h.isSite,
-    settlementOrgAt: (p) => { const hit = orgIds.filter((id) => orgs.get(id).seat === p && entryOf(id).settlement === true); return hit.length === 0 ? null : hit[0]; },
-    tenureOf: (o) => orgs.get(o).tenure ?? null, parentOrgOf: (o) => orgs.get(o).parent ?? null,
-    householdsAt: (p) => orgIds.filter((id) => orgs.get(id).seat === p && domestic(id)),
-  });
-  return { proposals: [], deferred: [], assets: r.entries, assetGaps: r.gaps };
-}
-
-// 开局持有阶段要的输入：表里的组织行与 orgTraits（卷十八 :239 家户判定）、实体 kind 注册表；作者写的建筑 owner（旧数据，place 表没有这一维）与站点判定（卷五 §4.6，世界里还没有生产者）由调用方经 opts.genViews 交入，没交即不用。
-function holdingsInputs(world, opts) {
-  const rowsOf = (kind) => { const t = world.tables.get(kind); return t ? new Map([...t.flat.rows].map(([id, r]) => [id, { ...r }])) : new Map(); };
-  const views = opts.genViews || {};
-  const social = world.rules.social || {};
-  return {
-    orgFlat: rowsOf('org'),
-    orgTraits: social.orgTraits || {},
+// 统一的表读入口（各阶段共用，不替任何一个阶段拼输入）：按表种类读展平行（复制）、表头、类、id 前缀，按规则表代号读规则表，按 id 认 kind。别的模块的内部结构只在这一处读。
+function readEntry(world) {
+  const table = (kind) => world.tables.get(kind);
+  return Object.freeze({
+    rows: (kind) => { const t = table(kind); return t ? new Map([...t.flat.rows].map(([id, r]) => [id, { ...r }])) : new Map(); },
+    dims: (kind) => { const t = table(kind); return t ? t.doc.dimensions : {}; },
+    classes: (kind) => { const t = table(kind); return t && t.doc.classes ? t.doc.classes : {}; },
+    idPrefix: (kind) => { const t = table(kind); return t && t.doc.entity && Array.isArray(t.doc.entity.idPrefix) ? t.doc.entity.idPrefix[0] : undefined; },
+    rules: (code) => world.rules[code] || {},
     kindOf: (id) => (world.idIndex && world.idIndex.has(id) ? world.idIndex.get(id) : null),
-    ownerOf: views.ownerOf, isSite: views.siteOf instanceof Function ? (p) => Boolean(views.siteOf(p)) : undefined,
-  };
-}
-
-// 开局政体阶段要的输入（卷八 R8-18.9）：规则表、三张表的展平行、表头与 id 前缀；落位文化、站点类型条目、开局人数三个读入口（卷十 R10-4.2、卷五 §4.6、卷十 R10-3.3）
-// 世界里还没有生产者，由调用方经 opts.genViews 交入；没交即 undefined，阶段整段进 deferred 并列缺口，不编。
-function polityInputs(world, opts) {
-  const rows = (kind) => { const t = world.tables.get(kind); return t ? new Map([...t.flat.rows].map(([id, r]) => [id, { ...r }])) : new Map(); };
-  const dimsOf = (kind) => { const t = world.tables.get(kind); return t ? t.doc.dimensions : {}; };
-  const classesOf = (kind) => { const t = world.tables.get(kind); return t && t.doc.classes ? t.doc.classes : {}; };
-  const prefixOf = (kind) => { const t = world.tables.get(kind); return t && t.doc.entity && Array.isArray(t.doc.entity.idPrefix) ? t.doc.entity.idPrefix[0] : undefined; };
-  const polity = world.rules.polity || {};
-  const purposes = polity.rolesPurposes;
-  const views = opts.genViews || {};
-  return {
-    polityRules: { genRealmRows: polity.genRealmRows, genSettlementKind: polity.genSettlementKind, genOpenTiers: polity.genOpenTiers, genHoldCause: polity.genHoldCause, genIdSlots: polity.genIdSlots },
-    classRows: new Map(Object.entries(classesOf('org'))),
-    officeActualKind: (officeRowKinds(dimsOf('office'), world.vocab.families) || {}).actual,
-    cultureLevel: views.cultureLevel,
-    seatCultureOf: views.seatCultureOf, cultureDimsOf: views.cultureDimsOf, siteOf: views.siteOf, sitePopOf: views.sitePopOf,
-    orgRows: rows('org'), polityRows: rows('polity'), officeRows: rows('office'),
-    orgDims: dimsOf('org'), officeDims: dimsOf('office'), orgIdPrefix: prefixOf('org'), officeIdPrefix: prefixOf('office'),
-    treasury: purposes && typeof purposes.general === 'string' ? [purposes.general] : [],
-    heldBy: new Map(views.heldBy || []), // 作者写的统治边：地点 → {org, cause}（手写优先；子站点按 originSite 连到原站点那条边的持有组织与原因）
-  };
+  });
 }
 
 /** 生成器登记表里的节点名（加载期核对 gstage 条目的 generator 用）。@returns {string[]} */
@@ -162,8 +88,8 @@ export function generateFill(world, opts) {
   const pendingById = new Map();
   const deferred = [];
   const report = { projections: [], changed: 0 };
-  const polity = polityInputs(world, opts);
-  const holdings = holdingsInputs(world, opts);
+  const read = readEntry(world); // 统一表读入口，各阶段自取输入用
+  const views = opts.genViews || {}; // 世界里还没有生产者的读入口（调用方交入），各阶段自取
   const assets = []; // 开局持有阶段交出的入账提案（建筑 → 持有人），由 assetcalls.mjs 在世界创建事务内第 0 日入账
   const assetGaps = []; // 推不出归属的建筑及原因
   // 材料的固态栏密度（千克每升）：读材料表的行值。materialView 读材料维度也不套修正表（卷三乙 M-12，数值标量的有效值才走管线，density 是按物态分栏的 map、不是修正键，有效值即基值），
@@ -198,7 +124,7 @@ export function generateFill(world, opts) {
     const result = run({
       table, stage: step.stage, worldSeed: opts.worldSeed, genesisMinute: opts.genesisMinute, vocab: world.vocab, rows, dims, rules, geo,
       m3PerUnit: unit ? unit.si : undefined,
-      authoredIds, isAuthored, when, polity, materialDensityOf, holdings, created, calls,
+      authoredIds, isAuthored, when, materialDensityOf, read, views, created, calls,
       gridSpaceCount: Array.isArray(t.doc.gridSpaces) ? t.doc.gridSpaces.length : 0, // 格空间表的行数；0 即世界还没有格空间，划不出足迹
       regionCellM: grid && typeof grid.regionCellM === 'number' ? grid.regionCellM : undefined,
       blueprint: blueprintRulesFrom(world.rules, world.env.units),

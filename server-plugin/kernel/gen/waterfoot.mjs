@@ -16,6 +16,16 @@ import { genDraw, genDiceKey } from './draw.mjs';
 import { fixedUnits, fixedMultiply, fixedToNumber, truncateTo } from '../det-math.mjs';
 import { centerLine, chooseBand } from './waterband.mjs';
 
+/** 阶段接口（A10-1.3）：登记表只认 {run(ctx)}；ctx 由 worldgen.mjs 统一给，本阶段自己取要的东西。 */
+export const stage = {
+  run: (ctx) => genWaterFoot({
+    ...ctx,
+    waterFillRows: ctx.rules.waterFillRows,
+    roleWaterbody: ctx.rules.roleWaterbody,
+    footprints: () => ctx.footprints({ heights: false }),
+  }),
+};
+
 const DEFER = Object.freeze({ footprint: 'footprint_unknown', kind: 'water_kind_missing' });
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const keyOf = (x, y) => `${x},${y}`;

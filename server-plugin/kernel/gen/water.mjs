@@ -16,6 +16,19 @@ import { KernelError } from '../errors.mjs';
 import { genDraw, genDiceKey } from './draw.mjs';
 import { fixedUnits, fixedAdd, fixedScale, fixedToNumber } from '../det-math.mjs';
 
+/** 阶段接口（A10-1.3）：登记表只认 {run(ctx)}；ctx 由 worldgen.mjs 统一给，本阶段自己取要的东西。 */
+export const stage = {
+  run: (ctx) => genWater({
+    ...ctx,
+    waterRows: ctx.rules.waterRows,
+    roleTract: ctx.rules.roleTract,
+    roleWaterbody: ctx.rules.roleWaterbody,
+    m3PerUnit: ctx.m3PerUnit,
+    // 水体阶段只读水体行与存量单元行的面积、海拔（汇水、排水去处）：只对这两类行求高度，其余行（政区、站点）不逐区格求高度场。
+    footprints: ctx.footprints({ bed: false, heights: (id) => { const r = ctx.rows.get(id); return r !== undefined && (r.classes.has(ctx.rules.roleWaterbody) || r.classes.has(ctx.rules.roleTract)); } }),
+  }),
+};
+
 // 骰值键（卷十 §4.12.1 :861 `stream.gen.water` / `site.gen.water.depth`，对象段取水体行 id；代号写成下划线，同卷二十天气抽取点的写法；调用处写字面量并登记在 seed-keys.json）。
 const DEFER = Object.freeze({ footprint: 'footprint_unknown', rule: 'water_rule_missing', kind: 'water_kind_missing', liquid: 'liquid_missing' });
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);

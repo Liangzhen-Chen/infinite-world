@@ -123,6 +123,19 @@
    "grade": "referenced",
    "source": "卷十八 §4.1（持有边种类行 hk_household_head，户主边，与成员边互斥自动让出）、R18-2.9 :712（户主候补全序）、:746 A18-2.2（每个家户恰有一条户主边）；李白 11-22 15:21 P-2（开局家长照 R18-2.9 全序派生）",
    "basis": "句柄：同 householdMemberKind；读者是 opening-people.mjs"
+  },
+  {
+   "key": "createSteps",
+   "value": [
+    {"step": "fill", "reads": ["world", "geo", "genViews"], "writes": ["fill.plan", "fill.calls", "fill.assets", "fill.assetGaps", "fill.generated", "fill.created", "fill.pending", "fill.deferred", "fill.report"]},
+    {"step": "governors", "reads": ["fill.calls", "genViews"], "writes": ["edge.governor"]},
+    {"step": "assets", "reads": ["fill.assets", "edge.governor", "genViews"], "writes": ["ledger.opening"]},
+    {"step": "people", "reads": ["roster"], "writes": ["person.opening"]}
+   ],
+   "file": "server-plugin/world-create.mjs",
+   "grade": "referenced",
+   "source": "卷十 §3.2 :291（generateWorld 是世界创建流程里的唯一入口）、:295–:303（各步由写回器在世界创建事务内调用）；李白 11-22 18:36 P-28、P-29（次序写进步骤表数据、按读写依赖排：统治先于资产，人物独立）；亮圳 11-22 模块化原则（卡头第二节第 9 条）",
+   "basis": "次序由本表给出，代码不写死（卷十 :295–:303 勘误 1124k90）。每行 {step, reads, writes}：reads 须是调用方交入的外部通道或排在前面的步骤的 writes，违反即拒收（E-GEN-STAGE-CYCLE）。依据：资产的归属有一支取作者写的地点的统治组织（卷六 :642、卷八 R8-5.1），资产一步真读统治一步的结果（跳过的边被资产用到即整笔拒收），所以 assets 读 edge.governor，排在 governors 之后；人物只读名册、不读也不写别步的通道，独立。每步只拿到自己声明的 reads。fill 交出生成补缺的全部产出（生成行、新建组织行、待转换行、推迟项、报告）：生成行与新建组织行的落盘（写回器）尚无步骤，待 6-16 新开局卡建。读者是 world-create.mjs"
   }
  ]
 }

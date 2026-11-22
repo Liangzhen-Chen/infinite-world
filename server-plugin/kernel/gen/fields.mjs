@@ -14,6 +14,9 @@ import { requiredTerms } from '../validate/rows.mjs';
 import { T } from '../validate/types.mjs';
 import { drawObjectIdOf } from './ids.mjs';
 
+/** 阶段接口（A10-1.3、模块化评估 §4.4）：登记表只认 {run(ctx)}；ctx 由 worldgen.mjs 统一给，本阶段自己取要的东西。 */
+export const stage = { run: (ctx) => ({ proposals: genFields(ctx), deferred: [] }) };
+
 // 骰值键的流代号 gen_fields 与抽取点代号 site_gen_fields_dev（卷十 §4.12.1 :860 `stream.gen.fields` / `site.gen.fields.dev`；代号文法不收点，写成下划线，同卷二十天气抽取点的写法）
 // 在调用处写字面量并登记在 seed-keys.json（R27-8.1）。
 const SLOT = 'idslot_fielddev';

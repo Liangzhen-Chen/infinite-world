@@ -12,6 +12,9 @@
 import { KernelError } from '../errors.mjs';
 import { report } from '../report.mjs';
 
+/** 阶段接口（A10-1.3）：登记表只认 {run(ctx)}；ctx 由 worldgen.mjs 统一给，本阶段自己取要的东西。 */
+export const stage = { run: (ctx) => genOrder({ ...ctx, elevationDim: ctx.geo.elevationDim, downhill: ctx.geo.downhill, roleWaterbody: ctx.rules.roleWaterbody }) };
+
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
 const conflict = (why) => new KernelError('E-GEN-ORDER-CONFLICT', {}, why);

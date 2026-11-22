@@ -30,6 +30,9 @@ import { genDraw, genDiceKey } from './draw.mjs';
 import { layoutOf, defaultFacing } from '../layout.mjs';
 import { fixedUnits, fixedAdd, fixedMultiply, fixedToNumber, truncateTo } from '../det-math.mjs';
 
+/** 阶段接口（A10-1.3）：登记表只认 {run(ctx)}；ctx 由 worldgen.mjs 统一给，本阶段自己取要的东西。 */
+export const stage = { run: (ctx) => genSiteForm({ ...ctx, bldfillRows: ctx.rules.bldfillRows, roleFacility: ctx.rules.roleFacility, roleTract: ctx.rules.roleTract, roleWaterbody: ctx.rules.roleWaterbody, layoutCoverage: ctx.rules.layoutCoverage, layoutGapCells: ctx.rules.layoutGapCells }) };
+
 const FAMILY = Object.freeze({ form: 'bform' }); // 形制词表族（卷十九 §2.4）；设施类型是维度表（卷十九 §2.2），本阶段只读形制条目的 facilityTypes，不读类型表
 const REASON = Object.freeze({
   roomRows: 'room_rows_unbuilt', storeysCap: 'storeys_max_unchecked', tractUnplanned: 'tract_footprint_unplanned', formTypeUnmatched: 'form_type_unmatched',

@@ -12,8 +12,51 @@
 //      沿包含树找不到聚落组织时分两类缺口：不在任何站点之下（卷六 :642 要按 reachOf 退回，reachOf 未建）与站点之上都没有聚落组织。
 // 输入形状不合、特殊值（空串 owner、重复 id 等）一律拒收报错，不静默按空处理。不读 state、墙钟，不用 Math.*。
 
+import { KernelError } from '../errors.mjs';
+import { FOOTPRINT_KIND } from '../footprint-kind.mjs';
+import { SCHEMA as LEDGER } from '../ledger.mjs';
+import { chainOf } from './rows.mjs';
+
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const isStr = (v) => typeof v === 'string' && v.length > 0;
+
+// 阶段 gstage_holdings 的适配（自 worldgen.mjs 挪来，算法不动；模块化评估 §4.4）：对全部建筑行推开局 ownerRef，交出入账提案 assets 与缺口 assetGaps；
+// 入账在世界创建事务里由 assetcalls.mjs 的 applyOpeningAssets 做（同 R8-18.9 ③ 的调用提案由 holdcalls.mjs 应用）。读先行阶段已交出的组织行（created.org，开局政体阶段建的聚落组织）、
+// 统治边提案（calls 与作者手写的 views.heldBy）与表里的组织行（经统一读入口 ctx.read；含试玩地区的村社与家户行）；规则表键 tenureModes、dwellingIntendedType（卷十 :185 住处意图，
+// 值是设施类型行 id，设施类型归入类词表，李白 11-24「家户两问1122」①）缺了即拒（E-RULES-UNREGISTERED）。作者写的建筑 owner（旧数据，place 表没有这一维）与站点判定
+// （卷五 §4.6，世界里还没有生产者）由调用方经 ctx.views（opts.genViews）交入，没交即不用。
+function openingAssets(ctx) {
+  const g = ctx.rules;
+  const need = (k) => { if (g[k] === undefined) throw new KernelError('E-RULES-UNREGISTERED', {}, `gen/holdings-open: rules.gen.${k} is needed`); return g[k]; };
+  const views = ctx.views;
+  const orgTraits = ctx.read.rules('social').orgTraits || {};
+  const kindOfId = ctx.read.kindOf;
+  const ownerOf = views.ownerOf;
+  const isSite = views.siteOf instanceof Function ? (p) => Boolean(views.siteOf(p)) : undefined;
+  const orgs = new Map(ctx.read.rows('org'));
+  for (const [id, row] of Object.entries((ctx.created && ctx.created.org) || {})) orgs.set(id, row);
+  const edges = new Map([...(views.heldBy || [])].map(([place, e]) => [place, e.org]));
+  for (const c of ctx.calls) if (!edges.has(c.place)) edges.set(c.place, c.org);
+  const orgIds = [...orgs.keys()].sort(cmp);
+  const entryOf = (id) => (ctx.vocab.index.get(orgs.get(id).orgKind) || { entry: {} }).entry;
+  const domestic = (id) => { const t = orgTraits[orgs.get(id).orgKind]; return t !== undefined && t.domestic === true; };
+  const buildings = [...ctx.rows.values()].filter((r) => r.kind === FOOTPRINT_KIND.building && ctx.authoredIds.has(r.id)).sort((a, b) => cmp(a.id, b.id)) // 足迹种类是建筑：挂 comp_facility 的行，或转换输入标明是建筑的行（rows.mjs buildingIds，G5b 换表前）
+    .map((r) => ({ id: r.id, intendedType: r.dims.intendedType ?? null, owner: ownerOf ? (ownerOf(r.id) ?? null) : null }));
+  const r = genOpeningAssets({
+    buildings, dwellingType: need('dwellingIntendedType'), tenureModes: need('tenureModes'),
+    placeKind: ctx.table, kindOf: (id) => (orgs.has(id) ? 'org' : kindOfId(id)),
+    holderKinds: LEDGER.holderKinds.filter((k) => !LEDGER.catalogKinds.includes(k) && !Object.hasOwn(LEDGER.subjectFlags, k)), // 账本持有人类型里的主体，去掉信仰、神祇目录与须带标记的地点
+    governorOf: (p) => { for (const a of chainOf(ctx.rows, p)) if (edges.has(a)) return edges.get(a); return null; },
+    placeChain: (p) => chainOf(ctx.rows, p), isSite,
+    settlementOrgAt: (p) => { const hit = orgIds.filter((id) => orgs.get(id).seat === p && entryOf(id).settlement === true); return hit.length === 0 ? null : hit[0]; },
+    tenureOf: (o) => orgs.get(o).tenure ?? null, parentOrgOf: (o) => orgs.get(o).parent ?? null,
+    householdsAt: (p) => orgIds.filter((id) => orgs.get(id).seat === p && domestic(id)),
+  });
+  return { proposals: [], deferred: [], assets: r.entries, assetGaps: r.gaps };
+}
+
+/** 阶段接口（A10-1.3）：登记表只认 {run(ctx)}；ctx 由 worldgen.mjs 统一给，本阶段自己取要的东西。 */
+export const stage = { run: (ctx) => openingAssets(ctx) };
 
 /** 缺口原因代号（本文件唯一定义；报缺口与测试都引用）。 */
 export const GAP = Object.freeze({
