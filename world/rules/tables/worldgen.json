@@ -64,6 +64,14 @@
    "basis": "暂定 0.4，待标定。依据：卷十 :182 只给取值域（原句“number（fraction），(0, 1]，分片面积里建筑占地的上限比例”），R10-7.5（:680）写“除数恒为正”，卷文没有数值；取 0.4 是 G11 回报手算例的前提，不是设定原文；登记域写 [0, 1] 而卷文是 (0, 1]，运行期已拒 0（siteform.mjs）；读者是站点面积阶段（siteform.mjs 站点面积一节）"
   },
   {
+   "key": "layoutGapCells",
+   "value": 2,
+   "file": "server-plugin/kernel/gen/siteform.mjs",
+   "grade": "designed",
+   "source": "卷十 :183（rules.gen.layout.gapCells，integer（count，细格），≥ 1，落位时建筑外包之间、建筑与分片边之间至少空出的细格数，空出的格就是街巷，R10-7.11；键名取驼峰平铺 layoutGapCells，同 layoutCoverage 先例）",
+   "basis": "暂定·待试玩标定，取卷十 :183 给的 2。推算依据见卷十 :183：细格 1 m（拍板第 1 条），一人立一格，留两格即两人可错身、可牵一头牲口过；读者是站点面积阶段的落位调用（siteform.mjs 站点面积一节经 kernel/layout.mjs layoutOf）"
+  },
+  {
    "key": "underMaxAreaM2",
    "value": 200000,
    "file": "server-plugin/kernel/place-volume.mjs",

@@ -668,9 +668,9 @@
      "writesKinds": ["org", "office"]
     },
     "gstage_siteform": {
-     "after": [],
+     "after": ["gstage_fields", "gstage_order", "gstage_water"],
      "before": [],
-     "basis": "卷十 §4.1.1 :354 条目（站点面积与发展度；R10-7.12 手写建筑行缺维度的补缺在本阶段，R10-7.11 落位之前）；after 里的 gstage_economy 暂不写：设施清单、配额阶段由它自己的卡登记条目，那时本条的 after 加它",
+     "basis": "卷十 §4.1.1 :354 条目（站点面积与发展度；R10-7.12 手写建筑行缺维度的补缺在本阶段，R10-7.11 落位之前）：after gstage_economy；economy 至 water 的中间阶段未建，按卷十 :345–:354 的传递次序先写已建的前驱 gstage_fields、gstage_order、gstage_water（落位给建筑锚点 z，R10-7.11 第 5 点，读卷五 §4.3 规则 8 的地表层号，要控制海拔与水体河床修正，河床依赖水体阶段补的 downstream），economy 的卡登记时 after 换成 gstage_economy",
      "generator": "gen/siteform.mjs",
      "phase": "worldgen",
      "scope": "site",

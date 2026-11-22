@@ -8,7 +8,7 @@
 // 纯函数：只读表、世界种子、作者输入与先行阶段的产出；不读 state、墙钟。输出整个世界创建的 generated 节、不进表的待转换提案、缺口清单、生成报告，由调用方写进数据副本。
 
 import { ruleTable } from '../load/rules.mjs';
-import { planFootprints } from '../place.mjs';
+import { planFootprints, placeLatitude } from '../place.mjs';
 import { blueprintRulesFrom } from '../place-building.mjs';
 import { KernelError } from '../errors.mjs';
 import { genPlan } from './stages.mjs';
@@ -47,7 +47,7 @@ const RUNNERS = Object.freeze(Object.fromEntries([
     // 水体阶段只读水体行与存量单元行的面积、海拔（汇水、排水去处）：只对这两类行求高度，其余行（政区、站点）不逐区格求高度场。
     footprints: ctx.footprints({ bed: false, heights: (id) => { const r = ctx.rows.get(id); return r !== undefined && (r.classes.has(ctx.rules.roleWaterbody) || r.classes.has(ctx.rules.roleTract)); } }),
   })],
-  [NODE.siteform, (ctx) => genSiteForm({ ...ctx, bldfillRows: ctx.rules.bldfillRows, roleFacility: ctx.rules.roleFacility, roleTract: ctx.rules.roleTract, roleWaterbody: ctx.rules.roleWaterbody, layoutCoverage: ctx.rules.layoutCoverage })],
+  [NODE.siteform, (ctx) => genSiteForm({ ...ctx, bldfillRows: ctx.rules.bldfillRows, roleFacility: ctx.rules.roleFacility, roleTract: ctx.rules.roleTract, roleWaterbody: ctx.rules.roleWaterbody, layoutCoverage: ctx.rules.layoutCoverage, layoutGapCells: ctx.rules.layoutGapCells })],
   [NODE.polity, (ctx) => genPolity({ ...ctx, ...ctx.polity })],
 ]));
 
@@ -140,14 +140,18 @@ export function generateFill(world, opts) {
       gridSpaceCount: Array.isArray(t.doc.gridSpaces) ? t.doc.gridSpaces.length : 0, // 格空间表的行数；0 即世界还没有格空间，划不出足迹
       regionCellM: grid && typeof grid.regionCellM === 'number' ? grid.regionCellM : undefined,
       blueprint: blueprintRulesFrom(world.rules, world.env.units),
+      // o.extra：本次调用另加的行提案（id → 维度；站点面积阶段试排时给站点试写的 targetAreaM2，R10-7.5），叠在先行阶段已生成的偏离行之上，不进 generated。
       footprints: (o = {}) => {
         const base = {};
         for (const [id, r] of rows) base[id] = r.dims;
         const proposals = {};
         for (const [id, row] of Object.entries(generated)) proposals[id] = row;
+        for (const [id, row] of Object.entries(o.extra || {})) proposals[id] = { ...(proposals[id] || {}), ...row };
         const fp = planFootprints({ ...world, template: { seed: opts.worldSeed } }, { base, proposals, withCells: false, bed: o.bed, heights: o.heights });
         return { footprints: fp.footprints, adjacency: fp.adjacency, probe: fp.probe };
       },
+      // 站点的纬度（卷二十 §2.7 latitudeDeg，place 派生的唯一读法 placeLatitude）：落位补朝向时"面向赤道"要它（卷十九 §4.5 规则 11）。
+      latitudeDegOf: (coord) => placeLatitude(world, { dims: { coord: { known: true, value: coord } } }),
     });
     // 提案按表分：本表的是补缺（writeback），别的表的是建行（createRows，阶段须在 writesKinds 里声明那张表，R10-9.9）。
     const own = result.proposals.filter((p) => p.table === table);

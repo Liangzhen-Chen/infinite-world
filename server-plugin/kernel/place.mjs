@@ -198,6 +198,13 @@ const terrainEntryOf = (engine) => (code) => {
   const e = rec && isObj(rec.entry) ? rec.entry : null;
   return e && typeof e.reliefM === 'number' && typeof e.reliefRough === 'number' ? e : null;
 };
+// 一列的地表 {h, z}（卷五 §4.3 规则 8）：columnSurface 减去所在区格的河床修正 δ（非水体区格 δ 为 0）。gridView 的细格读法与 planFootprints probe 的 surfaceStoreyAt 共用这一处。
+// terrain 条目、控制面或 δ 任一未知为 null。
+function bedCorrectedColumn(grid, worldSeed, plan, entry, cps, delta, x, y, memo) {
+  const raw = entry === null ? null : columnSurface(grid, worldSeed, plan.w, cps, entry, x, y, memo);
+  if (raw === null || delta === null) return null;
+  return delta === 0n ? raw : { h: raw.h - delta, z: surfaceStoreyOf(grid, raw.h - delta) };
+}
 const worldSeedOf = (engine) => (engine && isObj(engine.template) && typeof engine.template.seed === 'string' ? engine.template.seed : undefined);
 
 // 建筑蓝图读取的上下文（place-building.mjs）：维度只经内核 dim() 的基值读（与 placeView 同一套取值）；缓存挂在计划对象 rp 上。
@@ -650,8 +657,7 @@ export function gridView(engine, state, spec) {
         regions.set(rk, reg);
       }
       if (reg === null) continue;
-      const raw = reg.unknown || reg.entry === null ? null : columnSurface(grid, worldSeed, plan.w, reg.cps, reg.entry, x, y, memo);
-      const surf = raw === null || reg.delta === null ? null : (reg.delta === 0n ? raw : { h: raw.h - reg.delta, z: surfaceStoreyOf(grid, raw.h - reg.delta) });
+      const surf = reg.unknown ? null : bedCorrectedColumn(grid, worldSeed, plan, reg.entry, reg.cps, reg.delta, x, y, memo);
       const vol = volumeColumn(vctx, grid, plan.w, x, y); // 体积凿空一层（G8；叠在模板格块之后、建筑蓝图之前，卷五 §4.3 规则 10）
       const building = buildingColumn(bctx, grid, plan.w, x, y); // 建筑蓝图一层（叠在体积凿空之后、存量形态与差分之前，卷五 §4.3 规则 10）
       const volUnknown = vol !== null && vol.at === undefined; // 这一列的体积读不到：不知道有没有洞，整列各格未知（卷二 :387、:389）
@@ -824,7 +830,8 @@ export function setSightCache(on) {
  * bed 为假时区格代表地表高取未修正的 h₀、不求河床（卷十 R10-2.12 求值次序：生成水体行的下游链按未修正 h₀ 派生，链定后再求 bed）；heights 为假时不求高度（elevationM、zRange 为 null，
  * 只要足迹面积与相邻的调用——水体足迹补缺阶段——不必逐区格算全世界的高度场；heights 也可给函数 (id) => 布尔，只对点名的行求高度）。
  * 返回 {footprints: {id: placeFootprint 的形状}, errors: [{code, id, detail}], adjacency: {id: [相邻 id]}, probe}（相邻只含足迹相邻，路网边由 placeNeighbors 并入）。
- * probe = {has(id, x, y), cells(id)}：区格是否在某行足迹内、某行足迹区格按 (x, y) 字典序惰性遍历（不物化列表；水体足迹补缺阶段在世界根这样的巨大父足迹里取种子区格用）。
+ * probe = {has(id, x, y), cells(id), surfaceStoreyAt(id, x, y)}：区格是否在某行足迹内、某行足迹区格按 (x, y) 字典序惰性遍历（不物化列表；水体足迹补缺阶段在世界根这样的巨大父足迹里取种子区格用）、
+ * 某行所在格空间里细格列的地表层号（落位给建筑锚点 z，卷十 R10-7.11 第 5 点；读不到为 null）。
  * @param {any} engine @param {{base?: Record<string, any>, proposals?: Record<string, any>, assumptions?: Record<string, Record<string, any>>, withCells?: boolean, bed?: boolean, heights?: boolean}} [input]
  */
 export function planFootprints(engine, { base, proposals = {}, assumptions = {}, withCells = true, bed = true, heights = true } = {}) {
@@ -866,6 +873,20 @@ export function planFootprints(engine, { base, proposals = {}, assumptions = {},
   const probe = {
     has: (id, x, y) => { const plan = holder(id); return plan !== null && footprintHas(plan, id, x, y); },
     cells: function* cells(id) { const plan = holder(id); if (plan !== null) yield* footprintCells(plan, id); },
+    // 行 id 所在格空间里细格列 (x, y) 的地表层号（卷五 §4.3 规则 8：落位给建筑锚点 z，卷十 R10-7.11 第 5 点）：与 gridView 的细格读法同一个函数 bedCorrectedColumn（带河床修正）。
+    // 读不到（行没划出足迹、列在外包框外、无世界种子、无 terrain 条目、控制面或河床修正未知）为 null，不借别的值。
+    surfaceStoreyAt: (id, x, y) => {
+      const plan = holder(id);
+      if (plan === null || !isObj(grid) || typeof seed !== 'string') return null;
+      const r = regionOfPos(grid, { x, y });
+      if (!inBox(plan.box, r.x, r.y)) return null;
+      const owner = ownerIdAt(plan, keyOf(plan.box, r.x, r.y));
+      const terrainOf = terrainEntryOf(engine);
+      const entry = owner === undefined ? null : terrainOf(rp.rows.get(owner).terrain);
+      const cps = nearControlPoints(grid, controlPointsOf(grid, plan, rp.rows), r.x, r.y);
+      const column = bedCorrectedColumn(grid, seed, plan, entry, cps, regionBedDelta(grid, seed, plan, rp.rows, terrainOf, r.x, r.y), x, y);
+      return column === null ? null : column.z;
+    },
   };
   return { footprints, errors: rp.errors, adjacency, probe };
 }

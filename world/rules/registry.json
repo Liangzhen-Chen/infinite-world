@@ -570,12 +570,13 @@
     "roleWaterbody": {"type": "ref", "vocab": "component"},
     "roleFacility": {"type": "ref", "vocab": "component"},
     "layoutCoverage": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4},
+    "layoutGapCells": {"type": "integer", "unit": "count", "domain": [1, null]},
     "underMaxAreaM2": {"type": "number", "unit": "m2", "domain": [1, null], "precision": 4}
    },
-   "domain": {"waterRows": {}, "waterFillRows": {}, "bldfillRows": {}, "roleTract": {}, "roleWaterbody": {}, "roleFacility": {}, "layoutCoverage": [0, 1], "underMaxAreaM2": [1, null]},
+   "domain": {"waterRows": {}, "waterFillRows": {}, "bldfillRows": {}, "roleTract": {}, "roleWaterbody": {}, "roleFacility": {}, "layoutCoverage": [0, 1], "layoutGapCells": [1, null], "underMaxAreaM2": [1, null]},
    "volume": "卷十 §2.3 :165（rules.gen.water.rows：命中的水体取哪一类、多深；本卡只落 priority、waterKind、depthM，whenRX 与 liquidRX 随存量单元行与 rx 读邻格聚合落地后补）、:166（rules.gen.water.fill.rows，键名取驼峰 waterFillRows：作者手写水体行缺足迹输入时的补法，R10-2.17）、:186（rules.gen.bldfill.rows，键名取驼峰 bldfillRows：手写建筑行缺面积与层数时的取值范围，R10-7.12）、R10-2.12 :427（句柄 rules.gen.roles.tract、rules.gen.roles.waterbody，键名取驼峰 roleTract、roleWaterbody）；读者是 kernel/gen/worldgen.mjs、kernel/gen/water.mjs、kernel/gen/waterfoot.mjs、kernel/gen/siteform.mjs",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"waterRows": false, "waterFillRows": false, "bldfillRows": false, "roleTract": false, "roleWaterbody": false, "roleFacility": false, "layoutCoverage": false, "underMaxAreaM2": false}
+   "packOverridable": {"waterRows": false, "waterFillRows": false, "bldfillRows": false, "roleTract": false, "roleWaterbody": false, "roleFacility": false, "layoutCoverage": false, "layoutGapCells": false, "underMaxAreaM2": false}
   },
   {
    "code": "simTiers",

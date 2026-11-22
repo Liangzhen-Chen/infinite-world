@@ -394,7 +394,7 @@ const text = (v) => `${JSON.stringify(sorted(v), null, 1)}\n`;
 // 按码分组：每组计数加 3 行举例（行 id 取 row 栏，没有则取 got 开头）。
 const errorText = (w) => {
   const groups = new Map();
-  for (const e of w.errors) { if (!groups.has(e.code)) groups.set(e.code, []); groups.get(e.code).push(e.row || String(e.got).slice(0, 110)); }
+  for (const e of w.errors) { const key = e.dim ? `${e.code}/${e.dim}` : e.code; if (!groups.has(key)) groups.set(key, []); groups.get(key).push(e.row || String(e.got).slice(0, 110)); } // 键带维度名：必填缺值按列分开计数
   return [...groups].sort((a, b) => (a[0] < b[0] ? -1 : 1)).map(([code, ids]) => `${code} x${ids.length}: ${[...new Set(ids)].slice(0, 3).join(' | ')}`).join('\n  ');
 };
 
@@ -428,7 +428,9 @@ export function fillPlace(out, log = () => {}) {
   geo.buildingIds = []; // 建筑行已挂 comp_facility，足迹种类由组件类判
   const fill = generateFill(world, { worldSeed: TEMPLATE_SEED, genesisMinute: GENESIS_MINUTE, geo });
   log(`fill: ${Object.keys(fill.generated).length} generated rows, ${fill.pending.length} pending, deferred ${fill.deferred.length}`);
-  const generated = { ...fill.generated };
+  const byReason = new Map();
+  for (const d of fill.deferred) byReason.set(`${d.stage}/${d.reason}`, (byReason.get(`${d.stage}/${d.reason}`) || 0) + 1);
+  log(`deferred by reason: ${[...byReason].sort((a, b) => (a[0] < b[0] ? -1 : 1)).map(([k, n]) => `${k} x${n}`).join('; ')}`);  const generated = { ...fill.generated };
   for (const p of fill.pending) generated[p.id] = { ...p.dims, generated: { by: p.by, seedKey: p.seedKey, at: GENESIS_MINUTE } };
   const doc = { ...header, rows: Object.fromEntries(Object.keys(rows).sort().map((id) => [id, rows[id]])), edges: out.edges, gridSpaces: spaces, generated };
   return { doc, deferred: fill.deferred };

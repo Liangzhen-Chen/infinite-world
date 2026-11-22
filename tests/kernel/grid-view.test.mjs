@@ -9,7 +9,7 @@ import { createHash } from 'node:crypto';
 import { testTempRoot, writeUnderTempRoot, ROOT } from '../accept/temp-root.mjs';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
-import { gridView, zoneAt } from '../../server-plugin/kernel/place.mjs';
+import { gridView, zoneAt, planFootprints } from '../../server-plugin/kernel/place.mjs';
 
 installDigestCap({ sha256Hex: (data, encoding) => createHash('sha256').update(data, encoding === 'base64' ? 'base64' : 'utf8').digest('hex') });
 const DIMS = 'world/ontology/dimensions';
@@ -56,7 +56,7 @@ function load({ rows, edges = [], spaces, cellclass = CELLCLASS(), templates = T
     }
     const v = structuredClone(VOCAB);
     v.families.access.entries = { access_test_open: { rank: 0, needsGrant: false } };
-    v.families.water.entries = { ...v.families.water.entries, water_test_fresh: { navigable: false } };
+    v.families.water.entries = { ...v.families.water.entries, water_test_fresh: { navigable: false }, water_test_river: { navigable: false, flowing: true } };
     v.families.cellclass.entries = cellclass;
     v.families.gentemplate.entries = withAir(templates);
     v.families.component.entries.comp_settlement = { requires: [], table: 'place' };
@@ -248,6 +248,18 @@ test('水体足迹里的区格（waterKind 非空）：地表以上的水层要�
   assert.equal(at(10).blocksSky, null);
   // 不在水体足迹里的区格（loc_a 的 (0,1)）不受影响：地表之上是空气。
   assert.equal(CELLS(e, { x0: 50, y0: 150, z0: 1, x1: 50, y1: 150, z1: 1 }).cells[0].material, 'mat_air');
+});
+
+test('落位读的地表层号与 gridView 同一读法（卷五 §4.3 规则 8，带河床修正）：planFootprints probe.surfaceStoreyAt 与 gridView 细格读出的地表层逐列相等，含水体区格一列', () => {
+  // loc_a 是流水（上游，作者画 (0,1) 一格、控制海拔 0），下游 loc_b 是静水（控制海拔 30，区格 (1,1)）：loc_b 的水底取 min(h₀ 30, 上游出口 0) = 0，δ = 30 > 0，
+  // 所以 loc_b 中心列地表高 0、层 0，而不修正时是 30 m → 层 10；loc_a 的 δ = 0。非水体区格 (0,0)（层根）同样比对。
+  const e = world(WORLD({ a: { waterKind: 'water_test_river', downstream: 'loc_b', boundary: [{ x: 0, y: 1 }], targetAreaM2: undefined }, b: { waterKind: 'water_test_fresh' } }), { cellclass: CELLCLASS({ cellclass_river: { ...ANY, waterAny: ['water_test_river'], slopeRange: [0, 1], priority: 1, genTemplate: 'gtpl_land' } }) });
+  const probe = planFootprints(e, { withCells: false }).probe;
+  const topSolid = (x, y) => CELLS(e, { x0: x, y0: y, z0: -3, x1: x, y1: y, z1: 12 }).cells.filter((c) => c.known && c.state === 'solid').reduce((m, c) => Math.max(m, c.z), -Infinity);
+  for (const [id, x, y] of [['loc_b', 150, 150], ['loc_b', 130, 170], ['loc_a', 50, 150], ['loc_root', 150, 50]]) {
+    assert.equal(probe.surfaceStoreyAt(id, x, y), topSolid(x, y), `${id} (${x},${y})`);
+  }
+  assert.equal(probe.surfaceStoreyAt('loc_b', 150, 150), 0); // 修正后的层（不修正是 10）
 });
 
 // ---------- 纯读、确定、不存数量（#13、#14、#15） ----------

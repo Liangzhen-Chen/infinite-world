@@ -27,10 +27,14 @@ import { KernelError } from '../errors.mjs';
 import { FOOTPRINT_KIND } from '../footprint-kind.mjs';
 import { planBlueprint, planFeasible, planCellsOf, REASON as BP_REASON } from '../blueprint.mjs';
 import { genDraw, genDiceKey } from './draw.mjs';
+import { layoutOf, defaultFacing } from '../layout.mjs';
 import { fixedUnits, fixedAdd, fixedMultiply, fixedToNumber, truncateTo } from '../det-math.mjs';
 
 const FAMILY = Object.freeze({ form: 'bform', type: 'facility_type' }); // 形制词表族（卷十九 §2.4）、设施类型族（卷十九 §2.2）
-const REASON = Object.freeze({ roomRows: 'room_rows_unbuilt', storeysCap: 'storeys_max_unchecked', tractUnplanned: 'tract_footprint_unplanned', formTypeUnmatched: 'form_type_unmatched' });
+const REASON = Object.freeze({
+  roomRows: 'room_rows_unbuilt', storeysCap: 'storeys_max_unchecked', tractUnplanned: 'tract_footprint_unplanned', formTypeUnmatched: 'form_type_unmatched',
+  layoutGrid: 'layout_grid_missing', layoutFootprint: 'layout_footprint_unplanned', latitudeUnknown: 'facing_latitude_unknown', anchorZ: 'anchor_z_unknown',
+});
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const CAP_REASON = 'plan_cells_over_form_cap'; // blueprint.mjs overFormCap 的 reason
 const wrapDomain = (id, formCode, e) => {
@@ -61,6 +65,7 @@ export function genSiteForm(ctx) {
   if (ctx.blueprint === null) throw new KernelError('E-RULES-UNREGISTERED', {}, 'siteform: rules.grid, rules.facility.blueprint and the volume unit are needed to fill building rows');
   const limits = ctx.blueprint.limits;
   const planOf = new Map(); // 建筑 id → 平面格数（作者写的或本阶段补的）；站点面积一节读
+  const specOf = new Map(); // 建筑 id → 展开蓝图要的输入 {form, planCells, storeys, wall}（作者写的或本阶段补的）；站点面积一节的落位读
   // 形制登记：bform 族全部条目的代号，按代号序（算一次）。
   const registered = ctx.vocab.index instanceof Map ? [...ctx.vocab.index].filter(([, r]) => r && r.family === FAMILY.form && r.entry !== null && typeof r.entry === 'object').map(([code]) => code).sort(cmp) : [];
   // 形制的设计围合值（卷十九 §4.5 规则 2 ③ 的比较对象）：取该形制最小可展开平面（面积自 1 m² 起逐次加倍到可展开）的蓝图 design；展不开即 null（不入候选）。
@@ -169,6 +174,7 @@ export function genSiteForm(ctx) {
       if (!bp.ok) throw new KernelError('E-GEN-ROW-INVALID', {}, `building ${b.id}: the authored planCells do not unfold into a blueprint (${bp.reason})`);
     }
     planOf.set(b.id, planCells);
+    specOf.set(b.id, { form, planCells, storeys, wall });
     // ④ 房间行缺口：同一 roomRole 的房间行按行 id 序对应蓝图里该角色的第 k 间。
     const have = new Map();
     for (const r of ctx.rows.values()) {
@@ -192,7 +198,7 @@ export function genSiteForm(ctx) {
       proposals.push({ table: ctx.table, id: b.id, dims, by: ctx.stage, seedKey: formSeedKey ?? genDiceKey('gen_siteform', 'site_gen_bldfill_area', ctx.worldSeed, b.id, ctx.genesisMinute) });
     }
   }
-  siteAreas(ctx, buildings, planOf, proposals, deferred);
+  siteAreas(ctx, buildings, planOf, specOf, proposals, deferred);
   return { proposals, deferred };
 }
 
@@ -200,8 +206,13 @@ export function genSiteForm(ctx) {
 // 站点 = 作者写的、不是政区也不是存量单元与水体的区域足迹行（地点）；作者写了 targetAreaM2 或 boundary 的不动。占地 = 各建筑平面格数（宽 × 深，细格）× cellM²；
 // N = max(1, ceil(占地 ÷ (layoutCoverage × regionCellM²)))，写 targetAreaM2 = N × regionCellM²（定点整除、向上取整）；N 只由占地决定，不按子行加量（卷文没有这一句，见 docs/问题.md"G5b 机制遗留"）。
 // 站点的父行是存量单元时，起始 N 超过该存量单元足迹格数即 E-GEN-ROW-INVALID（R10-7.5 末）。
-// 未落：R10-7.5 末的"layoutOf 试排、排不下 N 加一重排"（要建筑外包与锚点，建筑锚点阶段未接线）与分片角色归并。
-function siteAreas(ctx, buildings, planOf, proposals, deferred) {
+// 落位与重排（R10-7.11、R10-3.12、R10-7.5 末）：站点下直挂的手写建筑行（有形制、平面格数、层数者）缺 anchor、facing 时，按 layoutOf 排出来写成 generated 偏离行（来源"生成补缺"）；
+// 作者写了的原样不动，anchor 已写的当障碍；facing 缺时取 defaultFacing（意图、文化偏好两路现无来源，传空，即面向赤道，纬度取站点 coord）。试排用站点的足迹（经 ctx.footprints 读，
+// 站点 targetAreaM2 试写成 N × A）：排不下就 N 加一重排，至多加到站点所在父足迹的区格数，仍排不下即 E-GEN-ROW-INVALID；作者写了 targetAreaM2 或 boundary 的站点 N 取作者足迹的区格数、不加，
+// 排不下同样即 E-GEN-ROW-INVALID。所有站点同一轮试排、排不下的一起加一，重排到没有排不下的为止（N 只增，所以必止）。不分片（R10-7.1）：zones 恒空，整个站点足迹当一个分片。
+// 缺 form（缺口 form_type_unmatched）的建筑读不到蓝图外包：不排位、不当障碍、不写 anchor 与 facing。
+// 未落：分片角色归并（模板与分片角色未接线）；建筑 ordinal（手写行没有，同组按行 id 序）。
+function siteAreas(ctx, buildings, planOf, specOf, proposals, deferred) {
   const coverage = ctx.layoutCoverage;
   const regionCellM = ctx.regionCellM;
   const cellM = ctx.blueprint.cellM;
@@ -233,20 +244,146 @@ function siteAreas(ctx, buildings, planOf, proposals, deferred) {
   };
   // 要写面积的行：作者写的区域足迹行里不是政区（没有 regionLevel）、不是存量单元与水体（它们的面积来自作者或各自的阶段）、没写 targetAreaM2 与 boundary 者——
   // 即"地点"：没有建筑清单的地点占地为 0，取最少 1 区格（卷五 §4.1 规则 2、13：区域足迹至少一格）；政区与存量单元仍照规则 10 在父足迹里平分。
-  const places = [...ctx.rows.values()].filter((r) => r.kind === FOOTPRINT_KIND.region && r.parent !== null && r.regionLevel === null && ctx.authoredIds.has(r.id)
-    && !r.classes.has(ctx.roleTract) && !r.classes.has(ctx.roleWaterbody) && typeof r.dims.targetAreaM2 !== 'number' && !(Array.isArray(r.dims.boundary) && r.dims.boundary.length > 0)).sort((a, b) => cmp(a.id, b.id));
+  const siteRows = [...ctx.rows.values()].filter((r) => r.kind === FOOTPRINT_KIND.region && r.parent !== null && r.regionLevel === null && ctx.authoredIds.has(r.id)
+    && !r.classes.has(ctx.roleTract) && !r.classes.has(ctx.roleWaterbody)).sort((a, b) => cmp(a.id, b.id));
+  const authoredSized = (r) => typeof r.dims.targetAreaM2 === 'number' || (Array.isArray(r.dims.boundary) && r.dims.boundary.length > 0);
+  const places = siteRows.filter((r) => !authoredSized(r));
+  const startN = new Map();
+  // 站点的"所在存量单元"（李白 11-23 b41e0801 第⑩条取甲，卷十 R10-7.5 勘误 1123k45）：沿 parent 往上第一个挂存量单元组件类（roleTract）的祖先行；没有为 null。
+  const tractOf = (site) => {
+    const seen = new Set();
+    for (let id = site.parent; id !== null && id !== undefined && !seen.has(id); id = ctx.rows.has(id) ? ctx.rows.get(id).parent : null) {
+      seen.add(id);
+      const r = ctx.rows.get(id);
+      if (r !== undefined && r.classes.has(ctx.roleTract)) return id;
+    }
+    return null;
+  };
   for (const site of places) {
     const siteId = site.id;
     const n = occupancyN(siteId);
-    const parentRow = ctx.rows.get(site.parent);
-    if (parentRow !== undefined && parentRow.classes.has(ctx.roleTract)) {
-      const have = tractCellCount(site.parent);
+    const tractId = tractOf(site);
+    // 一路往上都没有存量单元：不判起始 N；N 加一的上界退回父行足迹区格数（见 placeBuildings）。这条退路是临时的（李白 11-23 da3cd65a 选甲），
+    // 等真实世界存量单元卡（块 6 之后）补上存量单元后撤。
+    if (tractId !== null) {
+      const have = tractCellCount(tractId);
       if (have === null) {
         // 世界没有格空间表：任何行都没有足迹，判不了，如实记缺口；有格空间表而这个存量单元没有足迹：这块地放不下站点，是数据缺口（R10-7.5 排不下同一口径）。
-        if (!(Number.isInteger(ctx.gridSpaceCount) && ctx.gridSpaceCount > 0)) deferred.push({ id: siteId, reason: REASON.tractUnplanned, gaps: [site.parent] });
-        else throw new KernelError('E-GEN-ROW-INVALID', { site: siteId, tract: site.parent, reason: 'tract_has_no_footprint' }, `site ${siteId}: its stock unit ${site.parent} has no footprint in a world that has grid spaces (R10-7.5); the site does not fit on this land`);
-      } else if (n > BigInt(have)) throw new KernelError('E-GEN-ROW-INVALID', { site: siteId, tract: site.parent, need_cells: Number(n), tract_cells: have }, `site ${siteId}: its starting N = ${n} cells exceeds the ${have} cells of its stock unit ${site.parent} (R10-7.5); the site does not fit on this land`);
+        if (!(Number.isInteger(ctx.gridSpaceCount) && ctx.gridSpaceCount > 0)) deferred.push({ id: siteId, reason: REASON.tractUnplanned, gaps: [tractId] });
+        else throw new KernelError('E-GEN-ROW-INVALID', { site: siteId, tract: tractId, reason: 'tract_has_no_footprint' }, `site ${siteId}: its stock unit ${tractId} has no footprint in a world that has grid spaces (R10-7.5); the site does not fit on this land`);
+      } else if (n > BigInt(have)) throw new KernelError('E-GEN-ROW-INVALID', { site: siteId, tract: tractId, need_cells: Number(n), tract_cells: have }, `site ${siteId}: its starting N = ${n} cells exceeds the ${have} cells of its stock unit ${tractId} (R10-7.5); the site does not fit on this land`);
     }
-    proposals.push({ table: ctx.table, id: siteId, dims: { targetAreaM2: fixedToNumber(n * cellArea) }, by: ctx.stage, seedKey: genDiceKey('gen_siteform', 'site_gen_bldfill_area', ctx.worldSeed, siteId, ctx.genesisMinute) });
+    startN.set(siteId, n);
   }
+  // 落位：试排排不下的站点 N 加一（R10-7.5 末），得最终 N 与各建筑的 anchor、facing。
+  const jobs = [];
+  for (const site of siteRows) {
+    const kids = buildings.filter((b) => b.parent === site.id && specOf.has(b.id));
+    if (kids.length > 0) jobs.push({ site, siteId: site.id, capId: tractOf(site) ?? site.parent, auto: !authoredSized(site), kids }); // capId：N 加一上界取其足迹区格数；无存量单元时临时退回父行
+  }
+  // 直挂在非站点行（存量单元、政区、层根……）下的手写建筑不在任何站点里：落位是站点的事（R10-7.11），这类行不排位；它们缺的 anchor、facing 由加载校验报必填缺值，不在这里另记缺口。
+  const finalN = placeBuildings(ctx, jobs, specOf, startN, cellArea, proposals, deferred);
+  for (const site of places) {
+    const n = finalN.get(site.id);
+    proposals.push({ table: ctx.table, id: site.id, dims: { targetAreaM2: fixedToNumber(n * cellArea) }, by: ctx.stage, seedKey: genDiceKey('gen_siteform', 'site_gen_bldfill_area', ctx.worldSeed, site.id, ctx.genesisMinute) });
+  }
+}
+
+const isXY = (a) => a !== null && typeof a === 'object' && !Array.isArray(a) && Number.isInteger(a.x) && Number.isInteger(a.y);
+
+// 落位（卷十 R10-7.11；R10-3.12 补写 anchor、facing；R10-7.5 排不下 N 加一）。jobs 按站点行 id 序，每项 {site, siteId, auto, kids}。返回自动定面积站点的最终 N（bigint，只增）。
+function placeBuildings(ctx, jobs, specOf, startN, cellArea, proposals, deferred) {
+  const nNow = new Map(startN);
+  if (jobs.length === 0) return nNow;
+  const gap = (id, reason, gaps) => deferred.push({ id, reason, gaps });
+  if (!(Number.isInteger(ctx.gridSpaceCount) && ctx.gridSpaceCount > 0)) {
+    // 世界没有格空间表：划不出足迹，落位无从做，如实记缺口（同 tract_footprint_unplanned）。
+    for (const j of jobs) {
+      const lacking = j.kids.filter((b) => b.dims.anchor === undefined || b.dims.facing === undefined).map((b) => b.id);
+      if (lacking.length > 0) gap(j.siteId, REASON.layoutGrid, lacking);
+    }
+    return nNow;
+  }
+  if (!Number.isInteger(ctx.layoutGapCells) || ctx.layoutGapCells < 1) throw new KernelError('E-RULES-UNREGISTERED', {}, 'siteform: rules.gen.layoutGapCells (integer >= 1) is needed for the layout (R10-7.11)');
+  const grid = { cellM: ctx.blueprint.cellM, regionCellM: ctx.regionCellM, facingDirections: ctx.blueprint.facingDirections };
+  const seedKeyOf = () => ''; // 落位不抽取（R10-7.11 首句），来源标记 seedKey 为空（R10-9.2、R10-12.7，同 order.mjs 投影提案）
+  // 每栋的朝向与蓝图外包（旋转后，相对锚点的细格偏移）：作者写了 facing 取作者的，否则 defaultFacing（卷十九 §4.5 规则 11）。
+  const prepared = [];
+  for (const j of jobs) {
+    const coord = j.site.dims.coord;
+    if (!(coord !== null && typeof coord === 'object' && typeof coord.x === 'number' && typeof coord.y === 'number')) { gap(j.siteId, REASON.layoutFootprint, ['coord']); continue; }
+    let latitude;
+    const items = [];
+    for (const b of j.kids) {
+      if (b.dims.facing !== undefined && !Number.isInteger(b.dims.facing)) throw new KernelError('E-GEN-ROW-INVALID', {}, `building ${b.id}: authored facing ${JSON.stringify(b.dims.facing)} is not an integer`);
+      if (b.dims.anchor !== undefined && !isXY(b.dims.anchor)) throw new KernelError('E-GEN-ROW-INVALID', {}, `building ${b.id}: authored anchor ${JSON.stringify(b.dims.anchor)} is not a position {x, y, ...}`);
+      let facing = b.dims.facing;
+      if (facing === undefined) {
+        if (latitude === undefined) latitude = typeof ctx.latitudeDegOf === 'function' ? ctx.latitudeDegOf(coord) : null;
+        if (latitude === null) { gap(b.id, REASON.latitudeUnknown, ['facing']); continue; }
+        facing = defaultFacing(grid, { intentFacing: null, culturePref: null, latitudeDeg: latitude });
+      }
+      const spec = specOf.get(b.id);
+      let bbox;
+      try { bbox = planBlueprint({ form: spec.form, planCells: spec.planCells, storeys: spec.storeys, wallThicknessM: spec.wall, facing }, ctx.blueprint).bbox; } catch (e) { throw wrapDomain(b.id, 'form', e); }
+      items.push({ b, facing, bbox, anchor: b.dims.anchor === undefined ? null : b.dims.anchor });
+    }
+    prepared.push({ ...j, coord, items });
+  }
+  // 试排：所有要排的站点同一轮，排不下的一起 N 加一，直到都排得下（N 只增，父足迹格数是上界，所以必止）。
+  let active = prepared.filter((j) => j.items.some((i) => i.anchor === null));
+  const result = new Map();
+  for (;;) {
+    const extra = {};
+    for (const [id, n] of nNow) extra[id] = { targetAreaM2: fixedToNumber(n * cellArea) };
+    const fp = typeof ctx.footprints === 'function' ? ctx.footprints({ heights: false, extra }) : null;
+    const failed = [];
+    const kept = [];
+    for (const j of active) {
+      const f = fp && fp.footprints ? fp.footprints[j.siteId] : undefined;
+      if (!f || !fp.probe || typeof fp.probe.cells !== 'function') { result.delete(j.siteId); gap(j.siteId, REASON.layoutFootprint, ['footprint']); continue; }
+      kept.push(j);
+      const S = [...fp.probe.cells(j.siteId)];
+      const n = j.auto ? Number(nNow.get(j.siteId)) : S.length; // 作者定了面积（targetAreaM2、boundary）：N 取作者足迹的区格数，不加（R10-7.5）
+      const input = {
+        siteId: j.siteId, coord: j.coord, cellCount: n, gapCells: ctx.layoutGapCells, regionCells: S, zones: [],
+        buildings: j.items.map((i) => ({ key: i.b.id, ordinal: 0, handWritten: true, facing: i.facing, bbox: i.bbox, anchor: i.anchor === null ? null : { x: i.anchor.x, y: i.anchor.y } })),
+      };
+      if (typeof fp.probe.surfaceStoreyAt === 'function') input.surfaceStoreyAt = (x, y) => fp.probe.surfaceStoreyAt(j.siteId, x, y);
+      const r = n >= 1 ? layoutOf(grid, input) : { ok: false, reason: 'layout_site_too_small', detail: 'the site has no footprint cell' };
+      if (r.ok) result.set(j.siteId, { r, w: f.w }); else failed.push({ j, r, n, parentCells: fp.footprints[j.capId] ? fp.footprints[j.capId].cellCount : null });
+    }
+    active = kept;
+    if (failed.length === 0) break;
+    for (const { j, r, n, parentCells } of failed) {
+      result.delete(j.siteId);
+      // 至多加到所在存量单元（沿 parent 往上第一个存量单元，勘误 1123k45）足迹的区格数；仍排不下即 E-GEN-ROW-INVALID。
+      if (!j.auto || !Number.isInteger(parentCells) || n >= parentCells) {
+        throw new KernelError('E-GEN-ROW-INVALID', { site: j.siteId, reason: r.reason, need_cells: n, max_cells: j.auto && Number.isInteger(parentCells) ? parentCells : n },
+          `site ${j.siteId}: its buildings do not fit at N = ${n} cells (${r.reason}: ${r.detail}); ${j.auto ? 'N cannot grow past the footprint of its parent' : 'an authored footprint is never grown'} (R10-7.5, R10-7.11)`);
+      }
+      nNow.set(j.siteId, BigInt(n + 1));
+    }
+  }
+  // 写偏离行：作者写了的维度不出提案（手写优先）；anchor 的 z 读不到（未知）时该栋 anchor、facing 都不写，记缺口。
+  for (const j of active) {
+    const res = result.get(j.siteId);
+    const placed = new Map(res ? res.r.buildings.map((p) => [p.key, p]) : []);
+    for (const i of j.items) {
+      const dims = {};
+      if (i.anchor === null) {
+        const p = placed.get(i.b.id);
+        if (!p || !Number.isInteger(p.anchor.z)) { gap(i.b.id, REASON.anchorZ, ['anchor']); continue; }
+        dims.anchor = { w: res.w, x: p.anchor.x, y: p.anchor.y, z: p.anchor.z, coarse: false };
+      }
+      if (i.b.dims.facing === undefined) dims.facing = i.facing;
+      if (Object.keys(dims).length > 0) proposals.push({ table: ctx.table, id: i.b.id, dims, by: ctx.stage, seedKey: seedKeyOf(i.b.id) });
+    }
+  }
+  // 不要排位的站点（建筑的 anchor 都已写，只缺 facing）：只补 facing。
+  for (const j of prepared) {
+    if (j.items.some((i) => i.anchor === null)) continue;
+    for (const i of j.items) if (i.b.dims.facing === undefined) proposals.push({ table: ctx.table, id: i.b.id, dims: { facing: i.facing }, by: ctx.stage, seedKey: seedKeyOf(i.b.id) });
+  }
+  return nNow;
 }

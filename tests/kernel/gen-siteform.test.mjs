@@ -61,6 +61,8 @@ const run = (o) => genSiteForm({
   footprints: o.footprints,
   gridSpaceCount: o.gridSpaceCount,
   layoutCoverage: o.layoutCoverage ?? 0.4,
+  layoutGapCells: Object.hasOwn(o, 'layoutGapCells') ? o.layoutGapCells : 2,
+  latitudeDegOf: o.latitudeDegOf,
   regionCellM: 100,
   roleTract: 'comp_tract',
   roleWaterbody: 'comp_waterbody',
@@ -438,6 +440,147 @@ test('起始地区现有全部手写建筑在真实形制上限下都排得下�
   }
   assert.ok(totalCells <= totalBound);
   assert.ok(out.grown < 256 * 1024 * 1024, `堆增长 ${out.grown} 字节应在正常范围`);
+});
+
+// ---------- 落位（卷十 R10-7.11、R10-3.12；R10-7.5 末排不下 N 加一重排；卷十九 §4.5 规则 11） ----------
+// 前提（测试自造，不读仓库此刻的计数）：区格边 100 m = 100 × 100 细格（细格 1 m）、gapCells 2、layoutCoverage 0.4；站点 loc_site 挂在存量单元 loc_tract 下；
+// 站点足迹由 strip 夹具给：N 个区格沿 x 排成一行 (0,0)…(N−1,0)（N 取试排写的 targetAreaM2 ÷ 10,000；真划分在 gen-layout-fill.test.mjs 用真内核走一遍），地表层号恒为 3、格空间序号 w = 0。
+// 行架手算见各用例；站点区格 (0,0) 外包 x 0..99、y 0..99，一栋放得下当且仅当外扩 2 格后全在足迹内：x0 ≥ 2、y0 ≥ 2。
+const BIGF = formEntry({ ...F36, planSideMaxCells: 256 });
+const LAY_VOCAB = () => vocabOf([['bldform_big', BIGF], TYPE_ANY]);
+const layRows = (kids, siteExtra = {}) => rowsOf([['loc_root', { parent: null }], ['loc_tract', { parent: 'loc_root', classes: ['comp_tract'] }], ['loc_site', { parent: 'loc_tract', coord: { x: 50, y: 50 }, ...siteExtra }], ...kids]);
+const kid = (id, w, d, extra = {}) => [id, bld({ parent: 'loc_site', form: 'bldform_big', planCells: { widthCells: w, depthCells: d }, storeys: 1, wallThicknessM: 0.4, ...extra })];
+const strip = ({ tract = 8, fixed = 1, z = 3 } = {}) => (o = {}) => {
+  const target = o.extra && o.extra.loc_site ? o.extra.loc_site.targetAreaM2 : fixed * 10000;
+  const n = target / 10000;
+  return { footprints: { loc_tract: { cellCount: tract }, loc_site: { w: 0, cellCount: n } }, probe: { cells: function* cells(id) { if (id === 'loc_site') for (let x = 0; x < n; x += 1) yield { x, y: 0 }; }, surfaceStoreyAt: () => z } };
+};
+const layRun = (kids, o = {}) => run({
+  vocab: o.vocab ?? LAY_VOCAB(), rows: layRows(kids, o.site), authoredIds: new Set(['loc_site', ...kids.map((k) => k[0])]), bldfillRows: fill(36, 1),
+  footprints: o.footprints ?? strip(o.strip), gridSpaceCount: o.grid ?? 1, latitudeDegOf: o.lat === null ? () => null : () => (o.lat ?? 31),
+});
+const dimsOf = (out, id) => out.proposals.filter((p) => p.id === id).reduce((a, p) => ({ ...a, ...p.dims }), {});
+const pos = (x, y, z = 3) => ({ w: 0, x, y, z, coarse: false });
+
+test('落位手算：三栋 6×6、8×4（作者写 facing 0）、6×6，站点 1 格（占地 36 + 32 + 36 = 104 m² → N = 1），纬度 31 → 朝向 4（面向赤道）：(7,2)、(10,5)、(25,2)', () => {
+  // 蓝图局部 (u, v) → 偏移 (x, y) = (u, −v)，再顺时针每个四分之一圈 (x, y) → (y, −x)（卷十九 §4.5 规则 7 第 2 点）；朝向 4 = 转两个四分之一圈 → (−u, v)：6×6 外包 {−5, 0, 0, 5}；
+  // 朝向 0：8×4 外包 {0, −3, 7, 0}。三栋无锚点，同遍按行 id 序：a、b、c。游标从 (0,0) 起：
+  // a：行 y=0、y=1 外扩出界（y − 2 < 0）；行 y=2：x=0、1 外扩出界，x=2 外扩 [0..9]×[0..9] 在足迹内 → 矩形 [2..7]×[2..7]，锚点 = (x0 − dx0, y0 − dy0) = (2 + 5, 2 − 0) = (7, 2)；游标挪到 x = 2 + 6 + 2 = 10。
+  // b：x=10：外扩 [8..19]×[0..7] 在内，与 a 外包外扩 2（x ≤ 9）不相交（10 > 7 + 2）→ [10..17]×[2..5]，锚点 (10 − 0, 2 + 3) = (10, 5)；游标 x = 10 + 8 + 2 = 20，本行已放最深 6。
+  // c：x=20：与 b 外扩（x ≤ 19）不相交（20 > 17 + 2）→ [20..25]×[2..7]，锚点 (20 + 5, 2 − 0) = (25, 2)。
+  const kids = [kid('bld_a', 6, 6), kid('bld_b', 8, 4, { facing: 0 }), kid('bld_c', 6, 6)];
+  const out = layRun(kids);
+  assert.deepEqual(dimsOf(out, 'bld_a'), { anchor: pos(7, 2), facing: 4 });
+  assert.deepEqual(dimsOf(out, 'bld_b'), { anchor: pos(10, 5) }); // 作者写了 facing 0：不出 facing 提案
+  assert.deepEqual(dimsOf(out, 'bld_c'), { anchor: pos(25, 2), facing: 4 });
+  assert.equal(targetOf(out, 'loc_site'), 10000);
+  for (const id of ['bld_a', 'bld_b', 'bld_c']) {
+    const p = out.proposals.find((q) => q.id === id);
+    assert.equal(p.by, 'gstage_siteform');
+    assert.equal(p.seedKey, ''); // 落位不抽取：来源标记为空（R10-9.2）
+  }
+  assert.deepEqual(out.deferred, []);
+});
+
+test('落位：同种子同结果，与行输入次序无关', () => {
+  const kids = [kid('bld_a', 6, 6), kid('bld_b', 8, 4, { facing: 0 }), kid('bld_c', 6, 6)];
+  assert.deepEqual(layRun(kids), layRun(kids));
+  assert.deepEqual(layRun(kids), layRun([...kids].reverse()));
+  assert.deepEqual(layRun(kids), layRun([kids[1], kids[2], kids[0]]));
+});
+
+test('落位：作者写了 anchor、facing 的建筑不动（无提案），并作障碍让别的栋绕开；只缺一项的只补那一项', () => {
+  // a 作者写 anchor (7,2)、facing 4（外包 {−5, 0, 0, 5} → 矩形 [2..7]×[2..7]）。b（8×4，作者 facing 0，外包 {0, −3, 7, 0}）第一个排：x=2..9 外扩 2 后与 a 相交，x=10 起不相交 → 矩形 [10..17]×[2..5]，
+  // 锚点 (10, 5)（没有障碍时它会排在矩形 [2..9]×[2..5]、锚点 (2, 5)）；c 接着 x = 20 → 锚点 (25, 2)，朝向取默认 4。再加 d：作者写了 anchor (60,60) 却没写 facing，只补 facing（面向赤道 4），不动 anchor，也不排位。
+  const a = kid('bld_a', 6, 6, { anchor: pos(7, 2), facing: 4 });
+  const out = layRun([a, kid('bld_b', 8, 4, { facing: 0 }), kid('bld_c', 6, 6)]);
+  assert.equal(out.proposals.some((p) => p.id === 'bld_a'), false);
+  assert.deepEqual(dimsOf(out, 'bld_b'), { anchor: pos(10, 5) });
+  assert.deepEqual(dimsOf(out, 'bld_c'), { anchor: pos(25, 2), facing: 4 });
+  const onlyFacing = layRun([kid('bld_d', 6, 6, { anchor: pos(60, 60) })]);
+  assert.deepEqual(dimsOf(onlyFacing, 'bld_d'), { facing: 4 });
+});
+
+test('落位：排不下 N 加一重排（R10-7.5）：一栋 97 × 4（外扩后 101 格宽）一个区格（外包宽 100）排不下，N = 2 时排得下：站点写 2 × 10,000 m²，锚点 (2, 5)', () => {
+  // 占地 388 m² → 起始 N = 1。N = 1：行 y=2 时 2 + 96 + 2 = 100 > 99 行到头，各行都到头，最后 cy + 3 + 2 > 99 放不下 → 排不下；N 加一 = 2：足迹 x 0..199，
+  // 行 y=2：x=2 外扩 [0..100] 在足迹内（区格 (0,0)、(1,0) 都在）→ 矩形 [2..98]×[2..5]，朝向 0 外包 {0, −3, 96, 0}，锚点 (2 − 0, 2 + 3) = (2, 5)。
+  const out = layRun([kid('bld_w', 97, 4, { facing: 0 })]);
+  assert.equal(targetOf(out, 'loc_site'), 20000);
+  assert.deepEqual(dimsOf(out, 'bld_w'), { anchor: pos(2, 5) });
+});
+
+test('落位：N 加到所在存量单元的区格数仍排不下即 E-GEN-ROW-INVALID；上限够就恰在上限处排下（R10-7.5 末）', () => {
+  // 197 × 4 朝向 0：占地 788 m² → N = 1；要 2 + 196 + 2 = 200 ≤ 足迹最右格号，N = 3（x 0..299）才排得下，N = 2（x 0..199）不行。
+  const wide = [kid('bld_w', 197, 4, { facing: 0 })];
+  const ok = layRun(wide, { strip: { tract: 3 } });
+  assert.equal(targetOf(ok, 'loc_site'), 30000);
+  assert.deepEqual(dimsOf(ok, 'bld_w'), { anchor: pos(2, 5) }); // 矩形 [2..198]×[2..5]，外包 {0, −3, 196, 0}
+  const e = (() => { try { layRun(wide, { strip: { tract: 2 } }); return null; } catch (err) { return err; } })();
+  assert.ok(e && e.code === 'E-GEN-ROW-INVALID');
+  assert.deepEqual({ ...e.fields }, { site: 'loc_site', reason: 'layout_no_fit', need_cells: 2, max_cells: 2 });
+});
+
+test('落位：作者定了面积（targetAreaM2）的站点 N 取作者足迹的区格数、不加，排不下即 E-GEN-ROW-INVALID；排得下的照排，站点面积不动', () => {
+  const author = { targetAreaM2: 10000 };
+  const e = (() => { try { layRun([kid('bld_w', 97, 4, { facing: 0 })], { site: author, strip: { fixed: 1 } }); return null; } catch (err) { return err; } })();
+  assert.ok(e && e.code === 'E-GEN-ROW-INVALID');
+  assert.deepEqual({ ...e.fields }, { site: 'loc_site', reason: 'layout_no_fit', need_cells: 1, max_cells: 1 });
+  const out = layRun([kid('bld_w', 90, 4, { facing: 0 })], { site: author, strip: { fixed: 1 } }); // 2 + 89 + 2 = 93 ≤ 99；矩形 [2..91]×[2..5]，外包 {0, −3, 89, 0}
+  assert.deepEqual(dimsOf(out, 'bld_w'), { anchor: pos(2, 5) });
+  assert.equal(targetOf(out, 'loc_site'), undefined);
+});
+
+test('落位：朝向缺时面向赤道（纬度 ≥ 0 取 4，< 0 取 0，0 档也写）；读不到纬度记缺口 facing_latitude_unknown、该栋不排不写；z 读不到记缺口 anchor_z_unknown、anchor 与 facing 都不写', () => {
+  const one = [kid('bld_a', 6, 6)];
+  assert.deepEqual(dimsOf(layRun(one, { lat: -10 }), 'bld_a'), { anchor: pos(2, 7), facing: 0 }); // 朝向 0：外包 {0, −5, 5, 0}，矩形 [2..7]×[2..7]，锚点 (2 − 0, 2 + 5) = (2, 7)
+  assert.deepEqual(dimsOf(layRun(one, { lat: 0 }), 'bld_a').facing, 4);
+  const noLat = layRun(one, { lat: null });
+  assert.equal(noLat.proposals.some((p) => p.id === 'bld_a'), false);
+  assert.deepEqual(noLat.deferred.filter((d) => d.reason === 'facing_latitude_unknown'), [{ id: 'bld_a', reason: 'facing_latitude_unknown', gaps: ['facing'] }]);
+  const noZ = layRun(one, { footprints: (o) => { const f = strip()(o); return { ...f, probe: { ...f.probe, surfaceStoreyAt: () => null } }; } });
+  assert.equal(noZ.proposals.some((p) => p.id === 'bld_a'), false);
+  assert.deepEqual(noZ.deferred.filter((d) => d.reason === 'anchor_z_unknown'), [{ id: 'bld_a', reason: 'anchor_z_unknown', gaps: ['anchor'] }]);
+});
+
+test('落位：缺 form 的建筑（缺口 form_type_unmatched）不排位、不当障碍、不写 anchor 与 facing；别的栋照常排', () => {
+  const out = layRun([kid('bld_a', 6, 6), ['bld_x', noFormRow({ parent: 'loc_site', intendedType: undefined })]]);
+  assert.equal(out.proposals.some((p) => p.id === 'bld_x'), false);
+  assert.deepEqual(out.deferred.filter((d) => d.reason === 'form_type_unmatched').map((d) => d.id), ['bld_x']);
+  assert.deepEqual(dimsOf(out, 'bld_a'), { anchor: pos(7, 2), facing: 4 }); // 与 bld_x 不存在时相同：朝向 4 的 6×6 在站点第一格排在矩形 [2..7]×[2..7]，锚点 (7, 2)
+});
+
+test('落位：世界没有格空间表记缺口 layout_grid_missing（列出缺的建筑），不写 anchor、facing；足迹读不到记 layout_footprint_unplanned；规则 layoutGapCells 缺（或 0）即 E-RULES-UNREGISTERED', () => {
+  const one = [kid('bld_a', 6, 6)];
+  const noGrid = layRun(one, { grid: 0 });
+  assert.equal(noGrid.proposals.some((p) => p.id === 'bld_a'), false);
+  assert.deepEqual(noGrid.deferred.filter((d) => d.reason === 'layout_grid_missing'), [{ id: 'loc_site', reason: 'layout_grid_missing', gaps: ['bld_a'] }]);
+  const noFp = layRun(one, { footprints: () => ({ footprints: { loc_tract: { cellCount: 8 } } }) });
+  assert.equal(noFp.proposals.some((p) => p.id === 'bld_a'), false);
+  assert.deepEqual(noFp.deferred.filter((d) => d.reason === 'layout_footprint_unplanned'), [{ id: 'loc_site', reason: 'layout_footprint_unplanned', gaps: ['footprint'] }]);
+  for (const gapCells of [undefined, 0]) {
+    assert.equal(codeOf(() => run({ vocab: LAY_VOCAB(), rows: layRows(one), authoredIds: new Set(['loc_site', 'bld_a']), footprints: strip(), gridSpaceCount: 1, layoutGapCells: gapCells, latitudeDegOf: () => 31 })), 'E-RULES-UNREGISTERED', String(gapCells));
+  }
+});
+
+test('所在存量单元 = 沿 parent 往上第一个存量单元（卷十 R10-7.5，勘误 1123k45，李白 11-23 b41e0801 第⑩条）：站点的父行不是存量单元、祖父是时按祖父的足迹格数判起始 N 与 N 加一的上界；一路往上没有存量单元时临时退回父行足迹格数作上界、照常排位', () => {
+  const rows = (siteParent) => rowsOf([['loc_root', { parent: null }], ['loc_tract', { parent: 'loc_root', classes: ['comp_tract'] }], ['loc_mid', { parent: 'loc_tract' }], ['loc_other', { parent: 'loc_root' }], ['loc_site', { parent: siteParent, coord: { x: 50, y: 50 } }], kid('bld_w', 197, 4, { facing: 0, parent: 'loc_site' })]);
+  const go = (siteParent, tract) => run({ vocab: LAY_VOCAB(), rows: rows(siteParent), authoredIds: new Set(['loc_site', 'bld_w']), bldfillRows: fill(36, 1), footprints: strip({ tract }), gridSpaceCount: 1, latitudeDegOf: () => 31 });
+  // 197 × 4 → 占地 788 m²，起始 N = 1；N = 3 才排得下（见上"N 加到…"用例）。祖父 loc_tract 3 格：排下，N = 3；2 格：N = 2 仍排不下报错，上界 2 来自祖父。
+  const ok = go('loc_mid', 3);
+  assert.equal(targetOf(ok, 'loc_site'), 30000);
+  assert.deepEqual(dimsOf(ok, 'bld_w'), { anchor: pos(2, 5) });
+  const e = (() => { try { go('loc_mid', 2); return null; } catch (err) { return err; } })();
+  assert.ok(e && e.code === 'E-GEN-ROW-INVALID');
+  assert.deepEqual({ ...e.fields }, { site: 'loc_site', reason: 'layout_no_fit', need_cells: 2, max_cells: 2 });
+  // 一路往上没有存量单元（loc_other 的祖先只有 loc_root）：临时退路（李白 11-23 da3cd65a 甲，存量单元卡补后撤）——N 加一的上界取父行 loc_other 的足迹格数，建筑照常排位。父行 3 格：排下，N = 3；2 格：报错 need 2 max 2。
+  const orphan = (cells) => run({ vocab: LAY_VOCAB(), rows: rows('loc_other'), authoredIds: new Set(['loc_site', 'bld_w']), bldfillRows: fill(36, 1), gridSpaceCount: 1, latitudeDegOf: () => 31,
+    footprints: (o) => { const f = strip({ tract: 1 })(o); f.footprints.loc_other = { cellCount: cells }; return f; } });
+  const none = orphan(3);
+  assert.equal(targetOf(none, 'loc_site'), 30000);
+  assert.deepEqual(dimsOf(none, 'bld_w'), { anchor: pos(2, 5) });
+  const e2 = (() => { try { orphan(2); return null; } catch (err) { return err; } })();
+  assert.ok(e2 && e2.code === 'E-GEN-ROW-INVALID');
+  assert.deepEqual({ ...e2.fields }, { site: 'loc_site', reason: 'layout_no_fit', need_cells: 2, max_cells: 2 });
 });
 
 test('统一硬数 4096 已删：规则表 rules.facility.blueprint 没有 planCellsMax，planCells 维度域没有上界', () => {
