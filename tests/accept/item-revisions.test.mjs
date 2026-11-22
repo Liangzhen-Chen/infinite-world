@@ -20,13 +20,15 @@ const V5 = 'vol1.V-5';
 // G10 第一步登卷二十七 1 条（A27-1.12 泡由状态算出，指向 tests/kernel/sim-tiers.test.mjs，state implemented）：50 → 51。
 // G9 登卷二十七 1 条（A27-1.14 离屏不写差分拒写侧，指向 tests/kernel/grid-diff.test.mjs，state registered）：51 → 52；A27-4.9 升 implemented（指向 tests/kernel/save.test.mjs）。
 // G10 余下登卷二十七 2 条（A27-1.13 展开收起切分无关、A27-1.15 扩展性，指向 tests/kernel/bubble.test.mjs、bubble-scale.test.mjs，state registered）：52 → 54。
-test('登记的非扫描式条目共 54 条（卷一 14、卷十二 29、卷六 4、卷二十七 7），除 A12-4.4 外每条 rev 为 1、带首条修订记录', () => {
+// G13（6-8）登卷九 1 条（A9-2.1 emit 适配器文件扫描，指向 tests/kernel/emit-adapter.test.mjs，state registered）：54 → 55。
+test('登记的非扫描式条目共 55 条（卷一 14、卷十二 29、卷六 4、卷二十七 7、卷九 1），除 A12-4.4 外每条 rev 为 1、带首条修订记录', () => {
   const rows = nonScan();
-  assert.equal(rows.length, 54);
+  assert.equal(rows.length, 55);
   assert.equal(rows.filter((r) => r.volume === 'vol1').length, 14);
   assert.equal(rows.filter((r) => r.volume === 'vol12').length, 29);
   assert.equal(rows.filter((r) => r.volume === 'vol6').length, 4);
   assert.equal(rows.filter((r) => r.volume === 'vol27').length, 7);
+  assert.equal(rows.filter((r) => r.volume === 'vol9').length, 1);
   // vol27.A27-4.3 在 6-20 修改轮改了 detector、method、runsOn（Opus 只核 ⑥），按 R12-11.11 已 rev 2 并补修订记录。
   const revised = (k) => k === 'vol12.A12-4.4' || k === 'vol27.A27-4.3';
   for (const r of rows) {
@@ -38,7 +40,7 @@ test('登记的非扫描式条目共 54 条（卷一 14、卷十二 29、卷六 
   assert.deepEqual(rows.filter((r) => r.state !== 'registered').map((r) => [r.itemKey, r.state]), [['vol27.A27-1.12', 'implemented'], ['vol27.A27-4.9', 'implemented'], ['vol6.A6-1.2.a', 'in_core'], ['vol6.A6-1.2.b', 'in_core']]);
 });
 
-test('S12-16：54 条非扫描式条目首次登记零报错，门禁不报降级', async () => {
+test('S12-16：55 条非扫描式条目首次登记零报错，门禁不报降级', async () => {
   const dir = tempRepo();
   try {
     // 首次登记一律从 registered 起（R12-11.7），已流转的条目按首次登记的样子交行；已有修订记录的条目（A12-4.4）不走首次登记。
@@ -49,8 +51,8 @@ test('S12-16：54 条非扫描式条目首次登记零报错，门禁不报降�
     const res = register(dir, { items: rows });
     assert.deepEqual(res.errors, []);
     const stored = readRegistry(dir, 'items').filter((r) => !r.scanClass);
-    // 临时仓库的初版只留扫描式条目，这里再登 52 条首登（A12-4.4、A27-4.3 已有修订记录，不在首登输入里）。
-    assert.equal(stored.length, 52);
+    // 临时仓库的初版只留扫描式条目，这里再登 53 条首登（A12-4.4、A27-4.3 已有修订记录，不在首登输入里）。
+    assert.equal(stored.length, 53);
     assert.ok(stored.every((r) => typeof r.print === 'string' && r.print.length === 64));
     const failed = failedOf((await accRun('pre_commit', 'S12-16', null, { root: dir })).report);
     assert.equal(failed['vol12.S12-16'], undefined);

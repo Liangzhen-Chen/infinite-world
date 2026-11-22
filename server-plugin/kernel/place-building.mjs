@@ -271,6 +271,25 @@ export function buildingColumn(ctx, grid, w, x, y) {
 }
 
 /**
+ * 一个区格上各建筑最高一层的层号 zMax（只算落在这个区格里的列；这个区格没有建筑为 null）。远景视线的遮挡高读它（卷五 §4.2 规则 15：区格上各建筑足迹最高一层顶面海拔 = (zMax + 1) × storeyM）。
+ * @param {any} ctx @param {any} grid @param {number} w @param {number} rx 区格序号 x @param {number} ry 区格序号 y
+ * @returns {number | null}
+ */
+export function buildingTopStoreyInRegion(ctx, grid, w, rx, ry) {
+  const ids = indexOf(ctx, grid).get(`${w},${rx},${ry}`);
+  if (!ids) return null;
+  let best = null;
+  for (const id of ids) {
+    for (const [col, z] of cellMapOf(ctx, id).top) {
+      const at = col.indexOf(',');
+      const r = regionOfPos(grid, { x: Number(col.slice(0, at)), y: Number(col.slice(at + 1)) });
+      if (r.x === rx && r.y === ry && (best === null || z > best)) best = z;
+    }
+  }
+  return best;
+}
+
+/**
  * 建筑足迹与房间足迹的派生几何（卷五 §4.1 规则 13）：areaM2 = 最低一层细格数 × cellM²，zRange = 足迹占的层号范围，elevationM = zRange.zMin × storeyM，
  * centroid = 足迹内细格中心坐标的平均（定点米，整数除法向零截断）；cellCount 是足迹的全部细格数。不是建筑或房间、离场、读不到为 null。
  * 房间足迹 = 蓝图里该房间的格（房间行不存几何）；没有对应房间格的房间行（蓝图里没有这间房）为 null。

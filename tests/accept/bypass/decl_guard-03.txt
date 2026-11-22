@@ -1,2 +1,2 @@
-import { perceiveEvent } from '../kernel/place.mjs';
+import { perceiveEvent } from '../perceive.mjs';
 export const witnesses = (engine, state, ev) => perceiveEvent(engine, state, ev);

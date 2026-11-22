@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { loadContext, readDecl, readRegistry } from '../../tools/accept/read.mjs';
 import { detect as declGuard } from '../../tools/accept/detectors/decl_guard.mjs';
 import { detect as pathAccess } from '../../tools/accept/detectors/path_access.mjs';
+import { detect as callEdge } from '../../tools/accept/detectors/call_edge.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DECL = readDecl(ROOT);
@@ -82,9 +83,12 @@ test('S17-1 现仓库计数为 0（pos、facing 只由声明写者 position.mjs 
 
 // ---------- vol9.R9-2.10、vol20.S20-fieldCells：登记之外不许调用的入口 ----------
 
+// 没登记的口径：去掉真声明表里这个入口的 kernelApi 行（perceiveEvent 已于 G13 登记，行在 perceive.mjs；本用例守的是"还没登记"这一支）。
+const withoutRow = (name) => ({ ...DECL, kernelApi: { ...DECL.kernelApi, exports: DECL.kernelApi.exports.filter((e) => !e.export.endsWith(`#${name}`)) } });
+
 for (const [key, name, code] of [['vol9.R9-2.10', 'perceiveEvent', 'E-VIEW-BYPASS'], ['vol20.S20-fieldCells', 'foldBubbleFields', 'E-SIM-BYPASS']]) {
   test(`${key} ${name}：还没登记的入口，定义文件之外具名导入、别名导入、重导出、命名空间引用各计一处`, () => {
-    const hits = (body, file = 'server-plugin/a.mjs') => guard(key, { [file]: body });
+    const hits = (body, file = 'server-plugin/a.mjs') => guard(key, { [file]: body }, withoutRow(name));
     assert.deepEqual(hits(`import { ${name} } from './kernel/place.mjs';\nexport const f = (e) => ${name}(e);`).map((h) => [h.nodeKind, h.code, h.line]), [['import', code, 1]]);
     assert.equal(hits(`import { ${name} as g } from './x.mjs';\nexport const f = (e) => g(e);`).length, 1);
     assert.deepEqual(hits(`export { ${name} } from './x.mjs';`).map((h) => h.nodeKind), ['reexport']);
@@ -104,6 +108,19 @@ for (const [key, name, code] of [['vol9.R9-2.10', 'perceiveEvent', 'E-VIEW-BYPAS
     assert.equal(realRepo(key).length, 0);
   });
 }
+
+test('vol9.R9-2.10 perceiveEvent 已登记进 kernelApi（G13，定义在 perceive.mjs，callerFiles 只有 emit 适配器 primitives-runtime.mjs）：适配器文件导入不计，别的文件导入、重导出、命名空间引用计 E-VIEW-BYPASS', () => {
+  const row = DECL.kernelApi.exports.find((e) => e.export === 'perceive.mjs#perceiveEvent');
+  assert.deepEqual([row.callerFiles, row.callers], [['primitives-runtime.mjs'], undefined]);
+  const body = "import { perceiveEvent } from './perceive.mjs';\nexport const f = (e, s, ev) => perceiveEvent(e, s, ev);";
+  assert.equal(guard('vol9.R9-2.10', { 'server-plugin/primitives-runtime.mjs': body }).length, 0);
+  assert.deepEqual(guard('vol9.R9-2.10', { 'server-plugin/batch.mjs': body }).map((h) => [h.file, h.nodeKind, h.code]), [['server-plugin/batch.mjs', 'import', 'E-VIEW-BYPASS']]);
+  assert.deepEqual(guard('vol9.R9-2.10', { 'server-plugin/other.mjs': "export { perceiveEvent } from './perceive.mjs';" }).map((h) => h.nodeKind), ['reexport']);
+  assert.deepEqual(guard('vol9.R9-2.10', { 'server-plugin/other.mjs': "import * as P from './perceive.mjs';\nexport const f = (e, s) => P.perceiveEvent(e, s, 1);" }).map((h) => h.nodeKind), ['member']);
+  // 定义文件自己不计；perceive（不是 perceiveEvent）的调用方不在本条目（卷五 S5-10 与卡内测试守）。
+  assert.equal(guard('vol9.R9-2.10', { 'server-plugin/perceive.mjs': 'export function perceiveEvent(e, s, ev) { return ev; }' }).length, 0);
+  assert.equal(guard('vol9.R9-2.10', { 'server-plugin/other.mjs': "import { perceive } from './perceive.mjs';\nexport const f = (e, s) => perceive(e, s, 1, 2);" }).length, 0);
+});
 
 // ---------- vol20.S20-4.7.6：场步进不读路网边，按具名导入判 ----------
 
@@ -161,4 +178,31 @@ test('T-4 kernel 以外读卷二十的十二张规则表（rules.<表>）各计�
 
 test('T-4 现仓库计数为 0', () => {
   assert.equal(realRepo('vol20.T-4').length, 0);
+});
+
+// ---------- vol5.S5-10（G13 收紧）：几何入口闭集按 kernelApi 逐名派生 ----------
+
+const S510 = () => item('vol5.S5-10');
+const geo = (map, decl) => callEdge(ctxOf(map, decl), S510().params, CLASSES.get(S510().scanClass));
+
+test('S5-10 入口闭集按 kernelApi 逐名派生：规则层文件经 ./kernel/det-math.mjs 调 fixedSqrtInt、调 Math.sqrt 或 Math.hypot 计；kernelApi 登记的几何入口定义文件（规则层内为 sight.mjs）不计；kernel 组不在范围', () => {
+  const sqrt = "import { fixedSqrtInt } from './kernel/det-math.mjs';\nexport const d = (x) => fixedSqrtInt(x);";
+  assert.deepEqual(geo({ 'server-plugin/other.mjs': sqrt }).map((h) => [h.file, h.code]), [['server-plugin/other.mjs', 'E-VIEW-BYPASS']]);
+  assert.equal(geo({ 'server-plugin/other.mjs': 'export const d = (x) => Math.sqrt(x);' }).length, 1);
+  assert.equal(geo({ 'server-plugin/other.mjs': 'export const d = (a, b) => Math.hypot(a, b);' }).length, 1);
+  assert.equal(geo({ 'server-plugin/sight.mjs': sqrt }).length, 0);
+  assert.equal(geo({ 'server-plugin/kernel/newgeom.mjs': 'export const d = (x) => Math.sqrt(x);' }).length, 0, 'kernel 组内部由组登记近似，不在本条目范围');
+  assert.equal(geo({ 'server-plugin/other.mjs': "import { fixedUnits } from './kernel/det-math.mjs';\nexport const d = (x) => fixedUnits(x);" }).length, 0, '其余 det-math 函数不是几何原语');
+});
+
+test('S5-10 入口导出 id 不在 kernelApi 登记里即计一行（不放行）；闭集随 kernelApi 登记变：去掉 sight.mjs#losView 的登记，sight.mjs 不再是入口文件', () => {
+  const noLos = { ...DECL, kernelApi: { ...DECL.kernelApi, exports: DECL.kernelApi.exports.filter((e) => e.export !== 'sight.mjs#losView') } };
+  assert.deepEqual(geo({ 'server-plugin/other.mjs': 'export const x = 1;' }, noLos).map((h) => [h.nodeKind, h.symbolPath]), [['entry', 'sight.mjs#losView']]);
+  const sqrt = "import { fixedSqrtInt } from './kernel/det-math.mjs';\nexport const d = (x) => fixedSqrtInt(x);";
+  assert.deepEqual(geo({ 'server-plugin/sight.mjs': sqrt }, noLos).map((h) => h.nodeKind), ['entry', 'call']); // 登记行缺一处，sight.mjs 里的调用一处
+});
+
+test('S5-10 现仓库计数为 0（kernelApi 登记了四个几何入口，规则层只有入口定义文件直接调几何原语）', () => {
+  assert.deepEqual(S510().params.geometryEntries, ['kernel/place.mjs#straightM', 'kernel/place.mjs#bearingView', 'kernel/place.mjs#zoneAt', 'sight.mjs#losView']);
+  assert.equal(callEdge(loadContext(ROOT, {}), S510().params, CLASSES.get(S510().scanClass)).length, 0);
 });

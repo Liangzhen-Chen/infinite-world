@@ -66,10 +66,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 16
+    },
+    {
+     "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
+     "rev": 17
     }
    ],
-   "print": "9a552e837b7fff5287e237f365a1fa49d1bb537653d8fb4df59cc8b6a966bf01",
-   "rev": 16,
+   "print": "46cbdeef709fdd0233caf26bf7253449b678f31aa03f37f965c9d7595786bf45",
+   "rev": 17,
    "scanClass": "baseline_monotone",
    "source": "卷一 V-11（I43）；卷十二 §2.5、E-ACC-BASELINE-UP；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -972,10 +976,14 @@
     {
      "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 71
+    },
+    {
+     "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
+     "rev": 72
     }
    ],
-   "print": "5142b8f574a46b36c785ed7191692c7b97801cf7c75a0af85699d7a6364fae47",
-   "rev": 71,
+   "print": "69b66dc09b5400a6314ec618841b55783319ab107db8a6bbd0420fd50195a27e",
+   "rev": 72,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1160,10 +1168,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 16
+    },
+    {
+     "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
+     "rev": 17
     }
    ],
-   "print": "9a552e837b7fff5287e237f365a1fa49d1bb537653d8fb4df59cc8b6a966bf01",
-   "rev": 16,
+   "print": "46cbdeef709fdd0233caf26bf7253449b678f31aa03f37f965c9d7595786bf45",
+   "rev": 17,
    "scanClass": "ext_code",
    "terms": {
     "vol12.S12-12": {
@@ -1319,15 +1331,19 @@
    }
   },
   {
-   "criterion": "几何只有一处（卷五 S5-10）：kernel 以外服务端组对全局几何原语 Math.hypot、Math.atan2、Math.sqrt 与 det-math 定点几何 fixedSqrtInt、atan 的调用计数为 0（一律经 straightM、bearingView；规则层用定点函数自算距离/方位同计；入口文件与几何原语均在 kernel 组，经 state-owners.json 组登记派生、不在条目点名文件）；卷十七 tripPlan 的格上求路不经这些原语，不误报。",
+   "criterion": "几何只有一处（卷五 S5-10）：kernel 以外服务端组对全局几何原语 Math.hypot、Math.atan2、Math.sqrt 与 det-math 定点几何 fixedSqrtInt、atan 的调用计数为 0（一律经 straightM、bearingView、zoneAt、losView；规则层用定点函数自算距离/方位同计）；入口闭集在 kernel 组内部由组登记近似（kernel 组不查，kernel 内部的逐名收紧待声明表加字段，另议）；规则层里只有 kernelApi 登记的几何入口（kernel/place.mjs#straightM、#bearingView、#zoneAt，sight.mjs#losView）的定义文件可以直接调（入口闭集按 kernelApi 逐名派生，不在条目里点名文件）；卷十七 tripPlan 的格上求路不经这些原语，不误报。",
    "log": [
     {
      "ref": "G2 开写前登记门禁条目 vol5.S5-10（李白 11-21 裁定）：新登类别 geometry_bypass，call_edge 查几何原语调用；条目 implemented",
      "rev": 1
+    },
+    {
+     "ref": "G13（6-8）按对照表 #43、条目备注把 S5-10 入口闭集由\"kernel 组近似\"收紧为按 kernelApi 逐名派生（kernel 以外各组）：call_edge 新增 params.geometryEntries（kernelApi 导出 id，其定义文件即入口文件）；修改轮撤回 exemptFiles、参数类 file 与 kernel 组入范围，判据回到改前范围外加 geometryEntries 逐名派生；判据文字改写，期望、阶段、关口不变；losView（sight.mjs#losView）同批登进 kernelApi",
+     "rev": 2
     }
    ],
-   "print": "128be81718800e472fe118f2c9c907f15ea6bfc45fd8c5ce2ac635d062d4523f",
-   "rev": 1,
+   "print": "549000fdad67f6395d8f492ada18899f31470196a9212bea036af040ce746e49",
+   "rev": 2,
    "scanClass": "geometry_bypass",
    "source": "卷五 §3.5 S5-10 :408；卷十二 §2.4 开放登记",
    "terms": {
@@ -1615,10 +1631,14 @@
     {
      "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 68
+    },
+    {
+     "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
+     "rev": 69
     }
    ],
-   "print": "e4ec799ada6ec06cad8f4a40ccec6cd9bbd0eade902cb5ac76121f5c7e7422de",
-   "rev": 68,
+   "print": "d7a0640d04cefc0f0d7d4cf233e896d932996d9290ab740140826ea95bb2fffe",
+   "rev": 69,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -2088,10 +2108,14 @@
     {
      "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 84
+    },
+    {
+     "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
+     "rev": 85
     }
    ],
-   "print": "16c678961e1f4dfb3ed70bfa73f12eec613b0c42d21981e76508998171a25705",
-   "rev": 84,
+   "print": "3f5715e61c5aa06a9d1d63352ea8551e86919e20efad5b4901de1093a73d34e5",
+   "rev": 85,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -2201,10 +2225,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 16
+    },
+    {
+     "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
+     "rev": 17
     }
    ],
-   "print": "9a552e837b7fff5287e237f365a1fa49d1bb537653d8fb4df59cc8b6a966bf01",
-   "rev": 16,
+   "print": "46cbdeef709fdd0233caf26bf7253449b678f31aa03f37f965c9d7595786bf45",
+   "rev": 17,
    "scanClass": "item_downgrade",
    "terms": {
     "vol12.S12-16": {
@@ -2494,10 +2522,14 @@
     {
      "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 69
+    },
+    {
+     "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
+     "rev": 70
     }
    ],
-   "print": "e4ec799ada6ec06cad8f4a40ccec6cd9bbd0eade902cb5ac76121f5c7e7422de",
-   "rev": 69,
+   "print": "d7a0640d04cefc0f0d7d4cf233e896d932996d9290ab740140826ea95bb2fffe",
+   "rev": 70,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -2637,10 +2669,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 14
+    },
+    {
+     "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
+     "rev": 15
     }
    ],
-   "print": "9a552e837b7fff5287e237f365a1fa49d1bb537653d8fb4df59cc8b6a966bf01",
-   "rev": 14,
+   "print": "46cbdeef709fdd0233caf26bf7253449b678f31aa03f37f965c9d7595786bf45",
+   "rev": 15,
    "scanClass": "ledger_tally",
    "source": "卷十二 §4.1.6 至 §4.14.6 A12-n.1；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -2912,10 +2948,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 30
+    },
+    {
+     "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
+     "rev": 31
     }
    ],
-   "print": "e03fbfdc9dbd3e4c2ce0ff52c994d01bc1a49fe2569c99a725b4211272765967",
-   "rev": 30,
+   "print": "c53b4745ba7309632dbadc95549d196c94bbd174f133ede5ac1b0245ba242481",
+   "rev": 31,
    "scanClass": "module_edge",
    "terms": {
     "vol1.V-24.b": {
@@ -3325,10 +3365,14 @@
     {
      "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 69
+    },
+    {
+     "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
+     "rev": 70
     }
    ],
-   "print": "e4ec799ada6ec06cad8f4a40ccec6cd9bbd0eade902cb5ac76121f5c7e7422de",
-   "rev": 69,
+   "print": "d7a0640d04cefc0f0d7d4cf233e896d932996d9290ab740140826ea95bb2fffe",
+   "rev": 70,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -3937,10 +3981,14 @@
     {
      "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 81
+    },
+    {
+     "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
+     "rev": 82
     }
    ],
-   "print": "439b244ffa93f8ae7f7545ae2cf2ba1ec43cd28426f648967b0b19256a78bf61",
-   "rev": 81,
+   "print": "7b3b18878690a7e20327664e9b7751d1a00385a4af46051d8f7f8700e9493b8e",
+   "rev": 82,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -4034,10 +4082,14 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 20
+    },
+    {
+     "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
+     "rev": 21
     }
    ],
-   "print": "128be81718800e472fe118f2c9c907f15ea6bfc45fd8c5ce2ac635d062d4523f",
-   "rev": 20,
+   "print": "549000fdad67f6395d8f492ada18899f31470196a9212bea036af040ce746e49",
+   "rev": 21,
    "scanClass": "rng_bypass",
    "terms": {
     "vol27.A27-8.1.a": {
@@ -5590,10 +5642,14 @@
     {
      "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 37
+    },
+    {
+     "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
+     "rev": 38
     }
    ],
-   "print": "b54c2f794c1006e87d3fe4325ea8c81e3074bd544d0eede9c3f42d0e1b0bc64f",
-   "rev": 37,
+   "print": "a820f32a712fb93f4674d9d1f28e8809009bac59f485375772a4973f52bdda7d",
+   "rev": 38,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

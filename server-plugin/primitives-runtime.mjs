@@ -10,22 +10,26 @@
 // - 6-27（格子 G12）补 move（经委托调 position.mjs#placeSubject）与 create（按实体类查创建例程，现只有 person；其余类整笔拒收）。time 适配器未落：time 原语的写者是卷二十调度器的推进
 //   （卷九 R9-3.11 :723 "推进只经 time 原语与卷二十的调度器"），而 execute 在已开的内核事务里跑、调度器 advance 自开事务逐刻（kernel/transaction.mjs 禁嵌套事务），
 //   卷九没给"提交后再推进"的交接形状，卷文推不出，留待裁定，仍整笔拒收 E-ACT-WRITER-NOT-READY。
-// - 其余原语（含 emit、learn、transform、schedule 等）没有适配器，一律整笔拒收 E-ACT-WRITER-NOT-READY，
+// - 6-8（格子 G13）补 emit（见下）。其余原语（含 learn、transform、schedule 等）没有适配器，一律整笔拒收 E-ACT-WRITER-NOT-READY，
 //   抛出后由调用方已开的内核事务整笔回滚；不造桩、不静默跳过。
 // - 一次 execute 一次事务由调用方保证：execute 只由 resolve() 提交段与推进钩子调度方调用，二者都在调用方已开的内核事务里
 //   （kernel/transaction.mjs#runTransaction 是 kernel 组内用、不在 kernelApi；规则层只能经 kernelApi 调 kernel，卷二 §2.7 :790）。
 //   本文件不自开事务，写入直接落在调用方事务上；任一适配器拒绝即抛出，由调用方事务整笔回滚（卷九 R9-2.3 :658、R9-3.1 commit 段 :707）。
-// - 事务事件本卡不写：事件 `verb`／`visibility` 须来自本批 `emit` 原语（表 A :134／:142；卷九 §4.2.1 :643），
-//   `actor`／`targets`／`payload` 与 id 主体、位次须来自提交段或钩子上下文（卷九 §2.9 :437／:439），块 5 都拿不到，
-//   按李白 11-18 22:10 总原则／五.2 不造桩、不放空：批里没有 `emit` 原语即整笔拒收 E-ACT-WRITER-NOT-READY
-//   （"恰一条事件"记“部分”，挂块 6 建 emit 适配器／提交段接线的卡）。
+// - 事务事件（6-8 / G13 起）：事件 `verb`／`visibility` 来自本批 `emit` 原语（表 A :134／:142；卷九 §4.2.1 :643），`actor`／`targets`／`payload` 与 id 主体、位次来自提交段或钩子上下文
+//   （卷九 §2.9 :437／:439）——execute 的第五个参数 `event` = {actor?, actorAs?, targets?, payload?, rollKey?, idParts: {rule, subject, position}} 就是这份上下文，由 resolve() 提交段（6-14）交入。
+//   没有 `emit` 原语、或有 emit 而没有上下文，仍按李白 11-18 22:10 总原则／五.2 不造桩、不放空：整笔在写任何状态之前拒收 E-ACT-WRITER-NOT-READY；一批至多一条 `emit`（R9-2.3 "恰一条事件"）。
+//   emit 适配器（卷九 R9-2.10）：在本事务内、事件落定之前对该事件调**一次**卷五 perceiveEvent，结果原样写进事件记录 `witnesses`，再经内核 emit 写事件（primitives = 本批排好序的原语列表）；
+//   目击名单只此一处求。未落：事件的 `payload` 须由提交段按动词行 payloadShape 备齐，本适配器原样交内核校验，不自补。
 // - 效果族 effects() 的调用面归 5-5，本卡不写。
 
 import { transfer } from './kernel/ledger.mjs';
 import { openHolding, closeHolding, transferHolding, rescaleHolding } from './kernel/holdings.mjs';
 import { terminate } from './kernel/terminate.mjs';
 import { runDelegated } from './kernel/transaction.mjs';
+import { emit as writeEvent } from './kernel/events.mjs';
+import { clockView } from './kernel/scheduler.mjs';
 import { instantiatePerson } from './person.mjs';
+import { perceiveEvent, sourceLevelsOf } from './perceive.mjs';
 
 // 账户 id 的段序（卷六 §4.1 规则 1、kernel/ledger.mjs 的 accountKey）：持有人、用途、资源种类、资源键。
 // 原语 transfer 的 from、to 是账户 id（卷九 §4.2.1 transfer 行只给 from、to、qty；账户包含资源，
@@ -299,6 +303,36 @@ const ADAPTERS = Object.freeze({
     if (!make) throw deny(CODE.writerNotReady, `create of ${p.kind}: no creation routine registered for this entity kind`);
     make(engine, state, p, reason);
   },
+  // emit 落事件写者（卷九 R9-2.3、R9-2.10；卷二十四 R24-1.1）：本事务内、事件落定之前对该事件调一次 perceiveEvent（actor 为行为人、照卷五规则 7 求各感官一次性源强），结果原样写进 `witnesses`。
+  // 事件的 actor、targets、payload、id 成分取提交段交入的上下文（ctx.event）；verb、visibility 取本批 emit 原语；primitives 是本批排好序的原语列表；cause 取 execute 的 cause。
+  emit(engine, state, p, reason, maxLength, ctx) {
+    const ev = ctx.event;
+    const actor = ev.actor === undefined ? null : ev.actor;
+    const targets = ev.targets === undefined ? [] : ev.targets;
+    const payload = ev.payload === undefined ? {} : ev.payload;
+    const witnesses = perceiveEvent(engine, state, {
+      verb: p.verb,
+      visibility: p.visibility,
+      actor,
+      targets,
+      place: payload.place === undefined ? null : payload.place,
+      pos: payload.pos === undefined ? null : payload.pos,
+      sourceLevels: actor === null ? {} : sourceLevelsOf(engine, state, actor),
+    });
+    writeEvent(engine, state, {
+      minute: clockView(engine, state).minute,
+      verb: p.verb,
+      actor,
+      actorAs: ev.actorAs,
+      targets,
+      primitives: ctx.primitives,
+      cause: ctx.cause,
+      witnesses,
+      rollKey: ev.rollKey,
+      visibility: p.visibility,
+      payload,
+    }, ev.idParts);
+  },
 });
 
 // create 的创建例程表（按实体类）。person：建行与初值位置成对写在同一事务里（PLAN.md :82 ②"建实例与初值成对写入"）：
@@ -328,9 +362,11 @@ const CREATORS = Object.freeze({
  * @param {object} state
  * @param {readonly object[]} primitives 原语列表，每项 {op, ...契约字段}
  * @param {string} cause 规则或指令代号（卷二十四表 A 的 cause）
+ * @param {{actor?: string | null, actorAs?: number | null, targets?: string[], payload?: object, rollKey?: string | null, idParts: {rule: string, subject: string, position: string}}} [event]
+ *   提交段交入的事务事件上下文（卷九 §2.9 :437；见文件头）；批里有 emit 原语而没有它，整笔在写任何状态之前拒收 E-ACT-WRITER-NOT-READY。
  * @returns {{ok: true}}
  */
-export function execute(engine, state, primitives, cause) {
+export function execute(engine, state, primitives, cause, event) {
   if (!Array.isArray(primitives)) throw deny(CODE.contract, 'primitives is a list');
   // 文法总长上限先读：缺键或非正整数即拒，整批不执行（不回落默认，不留绕过口子）。
   const maxLength = grammarMaxLength(engine);
@@ -338,12 +374,18 @@ export function execute(engine, state, primitives, cause) {
   if (typeof cause !== 'string' || cause.length === 0) throw deny(CODE.contract, 'cause is a non-empty code');
   // 本笔真实事件动词只来自本批 emit 原语（表 A :134／:142 "卷九 emit 原语必填"；卷九 §4.2.5 :676 的成交一笔即 transfer、transfer、emit）；
   // 没有它就没有 verb，账本 reason 与事务事件都无从取真值，整笔拒收（E-ACT-WRITER-NOT-READY）。
-  const eventPrim = primitives.find((p) => Object.hasOwn(EVENT_OPS, p.op));
-  if (!eventPrim) throw deny(CODE.writerNotReady, `no ${EVENT_OP} primitive: the transaction event verb and the ledger reason come from it`);
+  const eventPrims = primitives.filter((p) => Object.hasOwn(EVENT_OPS, p.op));
+  if (eventPrims.length === 0) throw deny(CODE.writerNotReady, `no ${EVENT_OP} primitive: the transaction event verb and the ledger reason come from it`);
+  // 成功后恰产出一条事件（R9-2.3）：一批至多一条 emit，不静默吞掉多余的。
+  if (eventPrims.length > 1) throw deny(CODE.contract, `at most one ${EVENT_OP} primitive per batch (R9-2.3: exactly one event)`);
+  const [eventPrim] = eventPrims;
+  // 事件上下文（actor、targets、payload、id 成分）只来自提交段（卷九 §2.9）；没有就没有来源，不造默认值，整批在写入前拒收。
+  if (!isPlainObject(event) || !isPlainObject(event.idParts)) throw deny(CODE.writerNotReady, `${EVENT_OP}: no event context {actor, targets, payload, idParts} (supplied by the commit stage, vol9 2.9)`);
   const ordered = sortPrimitives(primitives);
   // 写入前先对整批核适配器存在性（5-1 终核非阻塞建议 1）：整批拒收不依赖调用方事务回滚。
   for (const p of ordered) if (!ADAPTERS[p.op]) throw deny(CODE.writerNotReady, `no adapter for ${p.op}`);
-  for (const p of ordered) ADAPTERS[p.op](engine, state, p, eventPrim.verb, maxLength);
+  const ctx = { event, primitives: ordered, cause };
+  for (const p of ordered) ADAPTERS[p.op](engine, state, p, eventPrim.verb, maxLength, ctx);
   return { ok: true };
 }
 

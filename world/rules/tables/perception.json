@@ -1,0 +1,14 @@
+{
+ "rows": [
+  {
+   "key": "marginBase",
+   "value": {"sense_hearing": 0, "sense_sight": 0, "sense_smell": 0, "sense_vibration": 0},
+   "basis": "卷五 §4.2.3 规则 3 :583；卷文无数值，暂定·待试玩标定：先取 0（不加额外余量），键须覆盖 sense 全族"
+  },
+  {
+   "key": "candidateRadiusM",
+   "value": {"sense_hearing": 40, "sense_smell": 15, "sense_vibration": 10},
+   "basis": "卷五 §4.2.3 规则 9 :596；卷文无数值，暂定·待试玩标定（米）：听觉 40、嗅觉 15、震动觉 10；A5-2.2 要求大于 3 m"
+  }
+ ]
+}

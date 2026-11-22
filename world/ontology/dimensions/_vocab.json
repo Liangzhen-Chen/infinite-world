@@ -2394,6 +2394,16 @@
    },
    "prefix": "ssch_"
   },
+  "sense": {
+   "closed": false,
+   "entries": {
+    "sense_sight": {"perceivedAsleep": false, "capability": "cap_sight", "rangeDim": "env.sightM", "basis": "卷五 §4.2.1 :555–:560 首批 sense 条目"},
+    "sense_hearing": {"perceivedAsleep": true, "capability": "cap_hearing", "rangeDim": null, "basis": "卷五 §4.2.1 :555–:560 首批 sense 条目"},
+    "sense_smell": {"perceivedAsleep": true, "capability": "cap_smell", "rangeDim": null, "basis": "卷五 §4.2.1 :555–:560 首批 sense 条目"},
+    "sense_vibration": {"perceivedAsleep": true, "capability": "cap_touch", "rangeDim": null, "basis": "卷五 §4.2.1 :555–:560 首批 sense 条目"}
+   },
+   "prefix": "sense_"
+  },
   "sex": {
    "closed": false,
    "entries": {

@@ -25,10 +25,17 @@ export function detect(ctx, params, cls) {
   }
   const guarded = (cls || {}).guardedPaths || [];
   const joins = (cls || {}).joinFns || {};
-  const allowed = facilityFiles(ctx, params.callers);
+  const allowed = new Set(facilityFiles(ctx, params.callers));
   const roots = rootFacilities(ctx, params.roots);
   const segs = segmentFacilities(ctx);
   const hits = [];
+  // 入口闭集按 kernelApi 逐名派生（卷五 S5-10；G13 收紧）：params.geometryEntries 列 kernelApi 导出 id，其定义文件就是入口文件，范围内只有它们可以直接调几何原语（不开文件名单，R12-11.5）；
+  // 导出 id 不在 kernelApi 登记里计一行（不放行）。
+  for (const id of params.geometryEntries || []) {
+    const row = (((ctx.decl || {}).kernelApi || {}).exports || []).find((e) => e.export === id);
+    if (!row) { hits.push({ file: 'world/ontology/state-owners.json', line: 0, nodeKind: 'entry', symbolPath: id, code: params.code || '' }); continue; }
+    allowed.add((((ctx.model || {}).processes || {}).server || {}).root + id.split('#')[0]);
+  }
   for (const file of scopeFiles(ctx, params)) {
     if (allowed.has(file)) continue;
     const toks = tokenize(ctx.read(file));

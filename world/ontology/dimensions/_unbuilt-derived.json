@@ -104,10 +104,10 @@
   {"table": "species", "dimension": "habitats", "missing": ["data"], "card": "pre_first_reader_card", "note": "引 biome 族（未建族，卷五 §4.3）；条目未前移，行上无从填值"},
   {"table": "species", "dimension": "lairSites", "missing": ["data"], "card": "pre_first_reader_card", "note": "引 site 族（未建族，卷五 §4.6）"},
   {"table": "species", "dimension": "pharmSensitivity", "missing": ["data"], "card": "pre_first_reader_card", "note": "键为 pharm 族（未建族，卷二十一 §2.4）；展平后键集 = pharm 全族，族未前移即无从写全"},
-  {"table": "species", "dimension": "senses", "missing": ["data"], "card": "6-8", "note": "键为 sense 族（未建族，卷五 §4.2.1，6-8）；展平后键集 = sense 全族"},
+  {"table": "species", "dimension": "senses", "missing": ["data"], "card": "6-23", "note": "键为 sense 族（卷五 §4.2.1，G13 已建族与 perceive）；展平后键集 = sense 全族；物种行（6-23）才有值，阈值缺则 perceive 的 margin 按未知"},
   {"table": "species", "dimension": "shiftStatus", "missing": ["data"], "card": "pre_first_reader_card", "note": "ref status 表（未建实体表，卷二十一）"},
   {"table": "species", "dimension": "shiftVariant", "missing": ["data"], "card": "pre_first_reader_card", "note": "引 mvariant 族（未建族，卷十六 §2.4）"},
-  {"table": "species", "dimension": "sourceStrength", "missing": ["data"], "card": "6-8", "note": "键为 sense 族（未建族）；值单位随感官（卷五 §4.2 规则 7），登在 units 未建 sense_arrival"},
+  {"table": "species", "dimension": "sourceStrength", "missing": ["data"], "card": "6-23", "note": "键为 sense 族（G13 已建）；值单位随感官（卷五 §4.2 规则 7），登在 units 未建 sense_arrival；物种行（6-23）才有值，缺则 sourceLevelsOf 读到 null、该感官判没有感知到"},
   {"table": "species", "dimension": "sxAnchors", "missing": ["data"], "card": "pre_first_reader_card", "note": "引 sxanchor 族（未建族，卷十五 §2.3）"},
   {"table": "species", "dimension": "sxBounds", "missing": ["data"], "card": "pre_first_reader_card", "note": "引 sxbound 族（未建族，卷十五 §2.3）"},
   {"table": "species", "dimension": "sxDrives", "missing": ["data"], "card": "pre_first_reader_card", "note": "引 sxdrive 族（未建族，卷十五 §2.3）"},
@@ -132,7 +132,7 @@
   {"table": "item", "dimension": "fitSize", "missing": ["data"], "card": "6-22", "note": "丙10：同 coverage；size 族条目与尺寸档规则表卷文无首批"},
   {"table": "item", "dimension": "language", "missing": ["data"], "card": "pre_first_reader_card", "note": "丙10：引 language 族（未建族，登 families）"},
   {"table": "item", "dimension": "layer", "missing": ["data"], "card": "6-22", "note": "丙10：同 coverage；layer 族条目（贴身、中层、外衣、甲、罩披）卷文只给名"},
-  {"table": "item", "dimension": "sourceStrength", "missing": ["data"], "card": "6-8", "note": "同 species.sourceStrength：键为 sense 族（未建族）；值单位随感官，登在 units 未建 sense_arrival"},
+  {"table": "item", "dimension": "sourceStrength", "missing": ["data"], "card": "6-22", "note": "同 species.sourceStrength：键为 sense 族（G13 已建）；值单位随感官，登在 units 未建 sense_arrival；物品基础类别行写全 sense 族值（卷五 :589）归物品数据卡，perceivesEntity 对物品另要批次 spot（未登记）"},
   {"table": "item", "dimension": "teaches", "missing": ["data"], "card": "pre_first_reader_card", "note": "丙10：引 knowledge 表（未建实体表，登 kinds）"},
   {"table": "item", "dimension": "thicknessMm", "missing": ["data"], "card": "6-22", "note": "丙10：同 coverage"},
   {"table": "item", "dimension": "vform", "missing": ["data"], "card": "pre_first_reader_card", "note": "丙10：引 vform 族（未建族，卷十七 §2.2，登 families）"},
@@ -177,7 +177,7 @@
   {"unit": "L_per_day", "missing": ["constant"], "card": "pre_first_reader_card", "note": "卷四 §4.7 dailyWaterNeed 单位"},
   {"unit": "punch", "missing": ["constant"], "card": "pre_first_reader_card", "note": "卷十三 R13-10.5 穿透量、防护量单位"},
   {"unit": "aether", "missing": ["constant"], "card": "pre_first_reader_card", "note": "卷十五 §2.3 灵力单位"},
-  {"unit": "sense_arrival", "missing": ["constant"], "card": "6-8", "note": "卷四 §2.1 sourceStrength“单位随感官，即到达量的单位”（卷五 §4.2 规则 7、11），随键变化，写不成一个登记单位"}
+  {"unit": "sense_arrival", "missing": ["constant"], "card": "pre_first_reader_card", "note": "卷四 §2.1 sourceStrength“单位随感官，即到达量的单位”（卷五 §4.2 规则 7、11），随键变化，写不成一个登记单位"}
  ],
  "families": [
   {"family": "arcschool", "prefix": "asch_", "volume": "卷十五《法术与超自然》§2.3 流派族；物品 arcSchool 引用", "card": "pre_first_reader_card"},
@@ -192,7 +192,6 @@
   {"family": "pers", "prefix": "pers_", "volume": "卷二十六《需求心理与情绪》§2.4 人格轴族；物种 personalityBias 引用", "card": "pre_first_reader_card"},
   {"family": "pharm", "prefix": "pharm_", "volume": "卷二十一《医疗疾病与身体状态》§2.4 药性族（新族，前缀照该卷 :460 示例 pharm_dispel）；物种 pharmSensitivity 引用", "card": "pre_first_reader_card"},
   {"family": "requirement", "prefix": "req_", "volume": "卷二《维度表规范与统一入口》§1.13 需求块族（open）；物种 containNeed 引用", "card": "pre_first_reader_card"},
-  {"family": "sense", "prefix": "sense_", "volume": "卷五《地点地形与资源场》§4.2.1 感官族（6-8）；物种 senses 引用", "card": "6-8"},
   {"family": "site", "prefix": "site_", "volume": "卷五《地点地形与资源场》§4.6 站点类型族；物种 lairSites 引用", "card": "pre_first_reader_card"},
   {"family": "sxanchor", "prefix": "sxa_", "volume": "卷十五《法术与超自然》§2.3 六轴之依附；物种 sxAnchors 引用", "card": "pre_first_reader_card"},
   {"family": "sxbound", "prefix": "sxb_", "volume": "卷十五《法术与超自然》§2.3 六轴之规矩；物种 sxBounds 引用", "card": "pre_first_reader_card"},

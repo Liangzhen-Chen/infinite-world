@@ -35,6 +35,8 @@ export const PARAM_KINDS = {
   // 读者与范围文件由检测器从该系统涉及状态键的写者登记派生（参数里、类别行里都不列文件名单，R12-11.5）。
   // readerPredicates 同样只给系统代号，读者文件取该系统 predicates 登记的提供文件（卷二 §2.5 :503，path_access）。
   entries: 'api', readerSystems: 'system', scopeSystems: 'system', readerPredicates: 'system',
+  // geometryEntries：kernelApi 导出 id，其定义文件就是几何入口文件（call_edge 的入口闭集逐名派生，卷五 S5-10）。
+  geometryEntries: 'api',
 };
 
 // 非扫描式条目（没有 scanClass 的）的修订记录（卷十二 S12-16；李白 11-17 S12-16 非扫描式条目修订记录裁定）：记在条目行自身，以条目为单位。

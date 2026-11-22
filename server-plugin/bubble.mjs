@@ -50,8 +50,12 @@ export function bubbleDelta(before, after) {
   };
 }
 
-// 全部个体 id：个体表的行与 state.created 里的个体行，码点序。
-function personIds(engine, state) {
+/**
+ * 全部个体 id：个体表的行与 state.created 里的个体行，码点序（perceive.mjs 的事件目击候选也读它：G13，同样没有位置索引，一遍全扫）。
+ * @param {object} engine @param {object} state
+ * @returns {string[]}
+ */
+export function personIds(engine, state) {
   const t = engine && engine.tables instanceof Map ? engine.tables.get(S.person) : undefined;
   const ids = new Set(t && t.flat && t.flat.rows instanceof Map ? t.flat.rows.keys() : []);
   const created = isObj(state) && isObj(state.created) ? state.created : {};

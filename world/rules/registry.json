@@ -366,17 +366,20 @@
     "surfaceElevationMaxM": {"type": "integer", "unit": "m", "domain": [0, null]},
     "roadPaceFactor": {"type": "number", "unit": "dimensionless", "precision": 4, "domain": [0, null]},
     "longCostCap": {"type": "integer", "unit": "count", "domain": [1, null]},
-    "landSearchRadiusCells": {"type": "integer", "unit": "count", "domain": [3, null]}
+    "landSearchRadiusCells": {"type": "integer", "unit": "count", "domain": [3, null]},
+    "farSightStepRegionCells": {"type": "integer", "unit": "count", "domain": [1, null]},
+    "farSightMaxSamples": {"type": "integer", "unit": "count", "domain": [1, null]}
    },
    "domain": {
     "storeyM": [1, null], "cellM": [1, null], "regionCellM": [1, null], "chunkRegionCells": [1, null], "fullTurnDeg": [1, null], "facingDirections": [8, 8],
     "heightCtrlK": [1, null], "reliefOctaves": [0, null],
     "surfaceElevationMinM": [null, 0], "surfaceElevationMaxM": [0, null],
-    "roadPaceFactor": [0, null], "longCostCap": [1, null], "landSearchRadiusCells": [3, null]
+    "roadPaceFactor": [0, null], "longCostCap": [1, null], "landSearchRadiusCells": [3, null],
+    "farSightStepRegionCells": [1, null], "farSightMaxSamples": [1, null]
    },
-   "volume": "卷五 §2.3 :271（格的尺度与格世界的常数，grid.json 键表；只登有运行期消费者的键，landSearchRadiusCells/bubbleCostCap/farSight* 随其消费者卡登）；cellM（G3 起读：区格序号换算、直线距离）；fullTurnDeg、facingDirections 取卷五 §4.2 规则 12–13（方位角整圈度数、八向朝向档数；G3 bearingView 读）；surfaceElevationMinM/MaxM 取卷五 §4.1.1 :425 海拔取值域；heightCtrlK/reliefOctaves 卷文无数值，暂定·待试玩标定；roadPaceFactor、longCostCap（G4 起读：kernel/route-grid.mjs、kernel/route-edges.mjs，卷五 §4.1 规则 4、5；暂定·待试玩标定）；读者 kernel/grid.mjs（G2 起）、kernel/footprint.mjs（G3 起）、kernel/handles/keys.mjs（G6 起，chunkRegionCells）",
+   "volume": "卷五 §2.3 :271（格的尺度与格世界的常数，grid.json 键表；只登有运行期消费者的键，landSearchRadiusCells/bubbleCostCap 随其消费者卡登；farSightStepRegionCells、farSightMaxSamples（G13 起读：server-plugin/sight.mjs，卷五 §4.2 规则 15；暂定·待试玩标定））；cellM（G3 起读：区格序号换算、直线距离）；fullTurnDeg、facingDirections 取卷五 §4.2 规则 12–13（方位角整圈度数、八向朝向档数；G3 bearingView 读）；surfaceElevationMinM/MaxM 取卷五 §4.1.1 :425 海拔取值域；heightCtrlK/reliefOctaves 卷文无数值，暂定·待试玩标定；roadPaceFactor、longCostCap（G4 起读：kernel/route-grid.mjs、kernel/route-edges.mjs，卷五 §4.1 规则 4、5；暂定·待试玩标定）；读者 kernel/grid.mjs（G2 起）、kernel/footprint.mjs（G3 起）、kernel/handles/keys.mjs（G6 起，chunkRegionCells）",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"storeyM": false, "cellM": false, "regionCellM": false, "chunkRegionCells": false, "fullTurnDeg": false, "facingDirections": false, "heightCtrlK": false, "reliefOctaves": false, "surfaceElevationMinM": false, "surfaceElevationMaxM": false, "roadPaceFactor": false, "longCostCap": false, "landSearchRadiusCells": false}
+   "packOverridable": {"storeyM": false, "cellM": false, "regionCellM": false, "chunkRegionCells": false, "fullTurnDeg": false, "facingDirections": false, "heightCtrlK": false, "reliefOctaves": false, "surfaceElevationMinM": false, "surfaceElevationMaxM": false, "roadPaceFactor": false, "longCostCap": false, "landSearchRadiusCells": false, "farSightStepRegionCells": false, "farSightMaxSamples": false}
   },
   {
    "code": "terrainModifiers",
@@ -597,6 +600,19 @@
    "volume": "卷九 §2.5 :321（rules.control.seatKind：ref vocab holding_kind，玩家席位边种类）、R9-3.9 :721（一个实体由玩家出意图，当且仅当它有一条在世的玩家席位边；种类行 hk_player_seat 登在 holding_kind 族，:1646）；读点 sim-tiers.mjs 的 bubbleView、inBubble（卷二十七 R27-1.12 :310）",
    "multiSourceMerge": "own_key_only",
    "packOverridable": {"seatKind": false}
+  },
+  {
+   "code": "perception",
+   "file": "tables/perception.json",
+   "structure": "keys",
+   "type": {
+    "marginBase": {"type": "map", "key": {"type": "ref", "vocab": "sense"}, "value": {"type": "number", "unit": "sense_arrival", "precision": 4}},
+    "candidateRadiusM": {"type": "map", "key": {"type": "ref", "vocab": "sense"}, "value": {"type": "number", "unit": "m", "domain": [0, null], "precision": 4}}
+   },
+   "domain": {"marginBase": {}, "candidateRadiusM": {}},
+   "volume": "卷五 §4.2.3 规则 3、9（marginBase、candidateRadiusM；读点 server-plugin/perceive.mjs）",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"marginBase": false, "candidateRadiusM": false}
   }
  ]
 }

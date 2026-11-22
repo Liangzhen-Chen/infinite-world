@@ -29,7 +29,7 @@ import { datedValueAt, inputVersionAt } from './dated.mjs';
 import { datedRecordsAll } from './storage.mjs';
 import { createDiffReader } from './grid-diff-read.mjs';
 import { checkBlueprintForms, KIND as BLUEPRINT_KIND } from './blueprint.mjs';
-import { blueprintOf as blueprintCore, buildingCellAt, buildingColumn, buildingFootprint, checkBuildingRows, doorExitsOf } from './place-building.mjs';
+import { blueprintOf as blueprintCore, buildingCellAt, buildingColumn, buildingFootprint, buildingTopStoreyInRegion, checkBuildingRows, doorExitsOf } from './place-building.mjs';
 import { checkGenTemplates, genTemplateOf, templateBlocksOf } from './grid-template.mjs';
 import { checkLayoutTemplates } from './layout.mjs';
 import { volumeColumn, volumeZoneAt, volumeFootprint, volumeCellsOf, volumeExitsOf, volumesUnderRegionCells, checkVolumes, checkVolumeRows } from './place-volume.mjs';
@@ -767,6 +767,53 @@ export function settleCell(engine, state, pos) {
   }
   const e = extrudeCell(engine, state, pos);
   return Object.freeze(e.kind === SETTLE.land ? { kind: SETTLE.extrude, cell: e.cell } : { kind: e.kind });
+}
+
+// ---------- 视线读数（卷五 §4.2 规则 14、15；G13，视线本体在 server-plugin/sight.mjs，这里只给它读区格层事实与缓存槽） ----------
+
+/**
+ * kernelApi `regionOcclusionM(engine, state, {w, region: {x, y}})`（卷五 §4.2 规则 15 远景视线的遮挡高）：该区格的遮挡高（米）= 区格地表高与该区格上各建筑足迹最高一层顶面海拔 `(zMax + 1) × storeyM` 中的大者
+ * （地表高取 gridView 区格项的中心列地表高；建筑只算落在这个区格里的列；不含林冠，卷五 :604 现文）。格空间不存在、区格在外包框外、地表高未知（控制点海拔未知）为 null（未知，不拿别的量顶替）。纯读。
+ * @param {any} engine @param {any} state @param {{w: number, region: {x: number, y: number}}} spec
+ * @returns {number | null}
+ */
+export function regionOcclusionM(engine, state, spec) {
+  const rp = planOf(engine, state);
+  const plan = rp.plans.get(spec.w);
+  if (!plan || !inBox(plan.box, spec.region.x, spec.region.y)) return null;
+  const view = gridView(engine, state, { w: spec.w, region: spec.region });
+  if (view === null || view.surfaceHeightM === null) return null;
+  const grid = engine.rules[RULES.grid];
+  const top = buildingTopStoreyInRegion(buildingCtx(engine, state, rp), grid, spec.w, spec.region.x, spec.region.y);
+  if (top === null) return view.surfaceHeightM;
+  const roof = (top + 1) * grid.storeyM;
+  return roof > view.surfaceHeightM ? roof : view.surfaceHeightM;
+}
+
+// 视线缓存（投影，卷二十七 R27-5.9、R27-4.13、A27-1.13）：挂在"足迹计划"上——计划的缓存键已含当日有效输入版本与偏离行（planOf 的 sig），输入一变换新计划、旧缓存随之作废；
+// 不进状态、不进存档、不进存档摘要，读档后从空重建。开关只供测试（"开关缓存、中途清空结果逐位相同"）。
+let sightSlots = new WeakMap();
+let sightCacheOn = true;
+
+/**
+ * kernelApi `sightCache(engine, state)`：当前足迹计划上的远景视线缓存表（Map）；缓存关着时为 null。键由 sight.mjs 定（含全部输入），本模块只管作废：输入版本或地点行变了，旧表就不再被取到。
+ * @param {any} engine @param {any} state @returns {Map<string, any> | null}
+ */
+export function sightCache(engine, state) {
+  if (!sightCacheOn) return null;
+  const rp = planOf(engine, state);
+  let m = sightSlots.get(rp);
+  if (!m) { m = new Map(); sightSlots.set(rp, m); }
+  return m;
+}
+
+/**
+ * kernelApi `setSightCache(on)`：开关视线缓存并清空已有的（只供测试）；关闭时 sightCache 返回 null。
+ * @param {boolean} on
+ */
+export function setSightCache(on) {
+  sightCacheOn = on === true;
+  sightSlots = new WeakMap();
 }
 
 /**
