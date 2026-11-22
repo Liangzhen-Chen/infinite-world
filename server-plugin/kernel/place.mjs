@@ -443,7 +443,7 @@ export function landCell(engine, state, { place, seedKey, coarse }) {
     if (rp.kinds.has(place) && rp.kinds.get(place) !== FOOTPRINT_KIND.region) throw new KernelError('E-DET-DOMAIN', {}, `landCell: ${rp.kinds.get(place)} footprints are not built yet`);
     return null;
   }
-  return landRegionCell(engine.rules.grid, worldSeedOf(engine), plan, rp.rows, terrainEntryOf(engine), place, seedKey);
+  return landRegionCell(engine.rules.grid, worldSeedOf(engine), plan, rp.rows, terrainEntryOf(engine), place, seedKey, (pos) => zoneAt(engine, state, pos) === place);
 }
 
 /**

@@ -685,20 +685,31 @@ export function regionCellHeight(grid, worldSeed, plan, rows, terrainOf, rx, ry)
  * 落格（卷五 §4.1 规则 14，区域足迹、coarse 为真的代表格）：只在 zoneAt 恰为 place 的区格里取（落在更深后代足迹里的不算），
  * 按 landOrderKey(seedKey, w, x, y) 升序（并列 (x, y) 字典序）取第一个的中心列地表层那一格；没有可落的区格或高度算不出为 null。纯函数。
  * @param {any} grid rules.grid @param {string | undefined} worldSeed 世界种子 @param {any} plan 一个格空间的划分计划 @param {Map<string, any>} rows 行输入
- * @param {(code: string) => {reliefM: number, reliefRough: number} | null} terrainOf terrain 条目 @param {string} id 地点行 @param {string} seedKey 调用方给的种子键
+ * @param {(code: string) => {reliefM: number, reliefRough: number} | null} terrainOf terrain 条目 @param {string} id 地点行 @param {string} seedKey 调用方给的种子键 @param {((pos: {w: number, x: number, y: number, z: number, coarse: boolean}) => boolean)} accept 必填：代表格是否可落（zoneAt 恰为本地点；不传即抛错，不得跳过核对）
  * @returns {{w: number, x: number, y: number, z: number, coarse: boolean} | null}
  */
-export function landRegionCell(grid, worldSeed, plan, rows, terrainOf, id, seedKey) {
+export function landRegionCell(grid, worldSeed, plan, rows, terrainOf, id, seedKey, accept) {
+  if (typeof accept !== 'function') throw new TypeError('landRegionCell: accept (zoneAt 恰为本地点的判定) is required');
   if (!plan.cells.has(id)) return null;
   const me = plan.idx.get(id);
-  let best = null;
-  eachCell(plan, id, (k) => {
-    if (plan.owner[k] !== me) return;
-    const c = { x: xOf(plan.box, k), y: yOf(plan.box, k) };
-    const order = landOrderKey(seedKey, plan.w, c.x, c.y);
-    if (best === null || order < best.order || (order === best.order && cellLess(c, best.c))) best = { order, c };
-  });
-  return best === null ? null : regionCellPos(grid, worldSeed, plan, rows, terrainOf, best.c.x, best.c.y);
+  // 流式取"下一个最小者"（不物化区格列表）：每轮只留 (landOrderKey, x, y) 严格大于上一个的最小者；
+  // accept（必填）核代表格的 zoneAt 恰为本地点（卷五 :504），不合格就看序里下一个区格。
+  let last = null;
+  for (;;) {
+    let best = null;
+    eachCell(plan, id, (k) => {
+      if (plan.owner[k] !== me) return;
+      const c = { x: xOf(plan.box, k), y: yOf(plan.box, k) };
+      const order = landOrderKey(seedKey, plan.w, c.x, c.y);
+      if (last !== null && !(order > last.order || (order === last.order && cellLess(last.c, c)))) return;
+      if (best === null || order < best.order || (order === best.order && cellLess(c, best.c))) best = { order, c };
+    });
+    if (best === null) return null;
+    last = best;
+    const pos = regionCellPos(grid, worldSeed, plan, rows, terrainOf, best.c.x, best.c.y);
+    if (pos === null) return null; // 高度读不到：未知，不跳过往下找
+    if (accept(pos)) return pos;
+  }
 }
 
 /**

@@ -331,7 +331,7 @@ test('规则 14 落格：只在 zoneAt 恰为该地点的区格里取（后代�
     ['loc_b', row('loc_root', { coord: at(250, 50), targetAreaM2: 10000, anchorElevationM: 0 })],
   ]);
   const { plan } = plan0(rows, box(3, 1));
-  const land = (id, key) => landRegionCell(GRID, 'seed_t', plan, rows, FLAT, id, key);
+  const land = (id, key) => landRegionCell(GRID, 'seed_t', plan, rows, FLAT, id, key, (p) => zoneOfPos(GRID, new Map([[0, plan]]), p) === id);
   // 根的足迹含 3 格，但 zoneAt 恰为根的只有 (1,0)；落格只可能落在 (1,0)：x = 100 + 50。
   const r1 = land('loc_root', 'k1');
   assert.deepEqual([r1.w, r1.x, r1.y, r1.coarse], [0, 150, 50, true]);
@@ -341,7 +341,7 @@ test('规则 14 落格：只在 zoneAt 恰为该地点的区格里取（后代�
   // 子行占满父足迹的全部区格时，父行没有可落的区格 → 未知，不落到别的地点。
   const full = rowsOf([['loc_root', row(null, { coord: at(50, 50), anchorElevationM: 0 })], ['loc_a', row('loc_root', { coord: at(50, 50), anchorElevationM: 0 })]]);
   const pf = plan0(full, box(2, 1)).plan;
-  assert.equal(landRegionCell(GRID, 'seed_t', pf, full, FLAT, 'loc_root', 'k1'), null);
+  assert.equal(landRegionCell(GRID, 'seed_t', pf, full, FLAT, 'loc_root', 'k1', (p) => zoneOfPos(GRID, new Map([[0, pf]]), p) === 'loc_root'), null);
 });
 
 // ---------- §4.14 规则 2：相邻是派生；规则 9 开阔边界；规则 4 接入格 ----------
