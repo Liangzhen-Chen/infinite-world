@@ -29,8 +29,9 @@ test('码表条数：E 与 W 各为手数的字面量', () => {
   // 卷十生成补缺加 W-GEN-DOWNHILL-PROJECTED（高低次序投影日志，李白 11-21 裁定甲）：604 → 605、W 18 → 19。
   // 卷二 §2.7 dated 按日生效写者加 E-DATED-FROMDAY、E-DATED-WRITER 两码（G9 前置内核子卡，拒写码由本卡命名）：605 → 607、E 586 → 588。
   // 卷十勘误 1121k16–k19 写码加三码（卷十 §2.7 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT；卷二 1121k19 E-GRID-WATER-BAND）：607 → 610、E 588 → 591。
-  assert.equal(codes.length, 610);
-  assert.equal(codes.filter((c) => c[0] === 'E').length, 591);
+  // 格子迁移 G9 随 alterCells 加 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）：610 → 612、E 591 → 593。
+  assert.equal(codes.length, 612);
+  assert.equal(codes.filter((c) => c[0] === 'E').length, 593);
   assert.equal(codes.filter((c) => c[0] === 'W').length, 19);
   assert.equal(REGISTERED_CODES.size, codes.length);
 });

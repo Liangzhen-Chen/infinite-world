@@ -23,7 +23,10 @@ import {
   straightM as straightMCore, bearingView as bearingViewCore,
   regionOfPos, ownerIdAt, inBox, keyOf, controlPointsOf, regionCellHeight, regionBedDelta, footprintHas, footprintCells,
 } from './footprint.mjs';
-import { columnSurface, nearControlPoints, regionSlope, cellAt, cellFlags, STATE, CELL_KIND } from './grid-base.mjs';
+import { columnSurface, nearControlPoints, regionSlope, cellAt, cellFlags, extrudeLanding, extrudeLayerReach, SETTLE, STATE, CELL_KIND } from './grid-base.mjs';
+import { datedValueAt, inputVersionAt } from './dated.mjs';
+import { datedRecordsAll } from './storage.mjs';
+import { createDiffReader } from './grid-diff-read.mjs';
 import { checkBlueprintForms, KIND as BLUEPRINT_KIND } from './blueprint.mjs';
 import { blueprintOf as blueprintCore, buildingCellAt, buildingColumn, buildingFootprint, checkBuildingRows, doorExitsOf } from './place-building.mjs';
 import { checkGenTemplates, genTemplateOf, templateBlocksOf } from './grid-template.mjs';
@@ -133,7 +136,10 @@ function childIndex(engine, state) {
 // ---------- 足迹计划（卷五 §4.1 规则 2、8、10、12、13；G3） ----------
 
 // 偏离行（state.created[id].props）覆盖展平行的值（卷二 §1.3 覆盖顺序）；place 表没有类别行默认值，取不到即 undefined。
-function effectiveValue(t, state, id, key) {
+// 按日生效的改写记录（卷二 §1.3 最上一级、§2.7 dated；卷五 §4.1 规则 16）盖过偏离行与建行值：dated 是 datedValueAt 的读口，没有该行该维度的有效记录时不返回 found。
+function effectiveValue(t, state, id, key, dated) {
+  const over = dated ? dated(id, key) : { found: false };
+  if (over.found) return over.value;
   const created = isObj(state) && isObj(state.created) && Object.hasOwn(state.created, id) ? state.created[id] : undefined;
   if (isObj(created) && isObj(created.props) && Object.hasOwn(created.props, key)) return created.props[key];
   const row = t.flat && t.flat.rows instanceof Map ? t.flat.rows.get(id) : undefined;
@@ -160,14 +166,16 @@ function planOf(engine, state) {
   const spaces = Array.isArray(t.doc[SECTION.gridSpaces]) ? t.doc[SECTION.gridSpaces] : null;
   const ids = placeIds(engine, state);
   const created = isObj(state) && isObj(state.created) ? state.created : {};
-  const sig = JSON.stringify(ids.filter((id) => Object.hasOwn(created, id)).map((id) => [id, created[id]]));
+  // 缓存键含"当日有效输入版本"（卷五 §4.1 规则 16、卷二 inputVersionAt）：某输入在某日生效，缓存在那一日失效；没有任何改写记录时版本为 null（不取时钟、不取摘要）。
+  const inputVersion = datedRecordsAll(state).length === 0 ? null : inputVersionAt(engine, state);
+  const sig = JSON.stringify([inputVersion, ids.filter((id) => Object.hasOwn(created, id)).map((id) => [id, created[id]])]);
   const hit = plans.get(t);
   if (hit && hit.rules === engine.rules && hit.vocab === engine.vocab && hit.sig === sig) return hit.value;
   if (spaces !== null && spaces.length > 0 && !isObj(grid)) throw new KernelError('E-RULES-UNREGISTERED', {}, 'place: gridSpaces present but rules.grid is not registered');
   const index = engine.vocab && engine.vocab.index;
   const value = buildPlan({
     ids,
-    get: (id, key) => effectiveValue(t, state, id, key),
+    get: (id, key) => effectiveValue(t, state, id, key, inputVersion === null ? null : (rid, rkey) => datedValueAt(engine, state, PLACE, rid, rkey)),
     classesOf: (id) => expandClasses(rowClassesOf(engine, state, t, id), broaderOf(index)),
     relocatable: relocatableIn(index),
     grid,
@@ -477,15 +485,31 @@ function volumeOverlay(vol) {
   };
 }
 
-// 体积凿空在先、建筑蓝图在后叠（卷五 §4.3 规则 10）：建筑一层读到的"基底"是体积凿空之后的格。
-function stackOverlays(vol, building) {
-  const v = vol === null ? null : volumeOverlay(vol);
-  const b = building === null ? null : buildingOverlay(building);
-  if (v === null) return b;
-  if (b === null) return v;
+// 格差分一层的叠入口（G9；卷五 §4.3 规则 10 的最后一层、§4.1 规则 15 "任一细格的内容 = 基底 ⊕ 差分"）：这一格有有效差分才返回新格（没有返回 null）。
+// 差分的 material 非空即把格改成那一行材料（物态：是该模板的空气行读气态，其余读固态——材料行没有基础物态维度，液体差分待卷三甲给读法，见 docs/问题.md "G9 遗留"），
+// 同时丢掉下层的格种类与自承托（材料换了，原来的梯、坡、格块自承托不再成立）；material 为空则保留下层的格，只叠 fixture、mark。顶面与所属地点沿用下层。
+function diffOverlay(reader, w, x, y) {
   return (col, z, base) => {
-    const carved = v(col, z, base);
-    return b(col, z, carved || base) || carved;
+    const d = reader.cellAt(w, x, y, z);
+    if (d === null) return null;
+    if (d.material === null) return { ...base, fixture: d.fixture, mark: d.mark };
+    return { ...base, fixture: d.fixture, mark: d.mark, material: d.material, state: d.material === col.tpl.airMaterial ? STATE.gas : STATE.solid, selfSupport: false, kind: null, unknown: false };
+  };
+}
+
+// 体积凿空、建筑蓝图、格差分依次叠（卷五 §4.3 规则 10）：每一层读到的"基底"是前面各层叠完之后的格；返回 null 即这一格没有任何一层改动。
+function stackOverlays(...layers) {
+  const live = layers.filter((l) => l !== null);
+  if (live.length === 0) return null;
+  if (live.length === 1) return live[0];
+  return (col, z, base) => {
+    let cur = base;
+    let changed = null;
+    for (const layer of live) {
+      const next = layer(col, z, cur);
+      if (next) { cur = next; changed = next; }
+    }
+    return changed;
   };
 }
 
@@ -495,8 +519,8 @@ function stackOverlays(vol, building) {
  * - 区格：{w, region, owner（所属最深区域足迹）, cellClass, genTemplate, surfaceStorey, surfaceHeightM（中心列）, slope, onRoad, inSettlement}；格空间不存在或区格在外包框外为 null；
  *   中心列高度未知（控制点海拔未知）时 surfaceStorey、surfaceHeightM、slope、cellClass 为 null。
  * - 细格范围（闭区间，x、y、z 为细格整数坐标）：返回 {w, cells: [...]}，只含外包框内的列，按 (x, y, z) 字典序；每格 {x, y, z, known, material（空气是 gentemplate.airMaterial 那一行、物态 gas）, state, selfSupport, kind, fixture, mark, ceiling,
- *   blocksSky, bearsLoad, standable, zone}。列高度或区格坡度未知则该列各格 known 为 false、其余字段 null。kind、fixture、ceiling（G7 建筑蓝图）、mark、fixture（G9 差分）
- *   现在只有蓝图给；体积凿空（G8，洞穴生成器）叠在模板格块之后、蓝图之前：体积足迹的格与洞口通路格读空气（洞口通路格的 kind 是 ladder，zone 为所在区域足迹，体积格的 zone 是体积行）。水体足迹里的区格（waterKind 非空）地表以上的格 known 为 false：水体账户的读数（卷二十 §4.6.1）与存量单元行（卷五 §2.1 水体字段、stocks）
+ *   blocksSky, bearsLoad, standable, zone}。列高度或区格坡度未知则该列各格 known 为 false、其余字段 null。kind、fixture、ceiling 来自 G7 建筑蓝图；格差分 cells.* 是最后一层（G9，卷五 §4.1 规则 15、16）：
+ *   差分的 material 非空顶替下层材料，只有 fixture、mark 时保留下层的格，永久、当场生效；体积凿空（G8，洞穴生成器）叠在模板格块之后、蓝图之前：体积足迹的格与洞口通路格读空气（洞口通路格的 kind 是 ladder，zone 为所在区域足迹，体积格的 zone 是体积行）。水体足迹里的区格（waterKind 非空）地表以上的格 known 为 false：水体账户的读数（卷二十 §4.6.1）与存量单元行（卷五 §2.1 水体字段、stocks）
  *   代码里尚未建，水层读不到即未知，不报成干地（接上后改调 grid-base.mjs 的 waterOfRegion，去掉这一支；docs/问题.md "G6 遗留"）；有形存量的位置层同理还没叠。返回结构里没有余额、件数、千克数（S5-8）。
  * @param {any} engine @param {any} state
  * @param {{w: number, region?: {x: number, y: number}, cells?: {x0: number, y0: number, z0: number, x1: number, y1: number, z1: number}}} spec
@@ -528,6 +552,7 @@ export function gridView(engine, state, spec) {
   const flagOf = materialFlagReader(engine, state);
   const bctx = buildingCtx(engine, state, rp);
   const vctx = volumeCtx(engine, state, rp);
+  const diffs = createDiffReader(state, grid); // 格差分（G9，cells.*，最后一层）：本次调用内按里块建索引，不跨调用
   const memo = new Map(); // 本次调用内相邻列共用的格点噪声（只省哈希）
   const regions = new Map(); // 本次调用内的区格事实与模板、格块
   const out = [];
@@ -557,23 +582,109 @@ export function gridView(engine, state, spec) {
       const vol = volumeColumn(vctx, grid, plan.w, x, y); // 体积凿空一层（G8；叠在模板格块之后、建筑蓝图之前，卷五 §4.3 规则 10）
       const building = buildingColumn(bctx, grid, plan.w, x, y); // 建筑蓝图一层（叠在体积凿空之后、存量形态与差分之前，卷五 §4.3 规则 10）
       const volUnknown = vol !== null && vol.at === undefined; // 这一列的体积读不到：不知道有没有洞，整列各格未知（卷二 :387、:389）
+      const diffTop = diffs.columnTop(plan.w, x, y); // 这一列有差分的最高层（没有为 null）：差分叠在地表以上时，遮天等标志要算到这一层
+      const stacked = stackOverlays(vol === null ? null : volumeOverlay(vol), building === null ? null : buildingOverlay(building), diffTop === null ? null : diffOverlay(diffs, plan.w, x, y));
+      const overlayTop = diffTop === null ? (building === null ? undefined : building.top) : (building === null || diffTop > building.top ? diffTop : building.top);
       for (let z = z0; z <= z1; z += 1) {
         if (surf === null || volUnknown) { out.push(Object.freeze({ x, y, z, known: false, material: null, state: null, selfSupport: null, kind: null, fixture: null, mark: null, ceiling: null, blocksSky: null, bearsLoad: null, standable: null, zone: reg.f.owner })); continue; }
         // 水体足迹里的区格：地表以上画水，要读水体账户（卷二十 §4.6.1），代码里还没有账户读数——读不到就是未知，不能报成干地（卷五 :660 水只画在地表之上）。
         const inWater = reg.f.waterKind !== null;
         if (inWater && z > surf.z) { out.push(Object.freeze({ x, y, z, known: false, material: null, state: null, selfSupport: null, kind: null, fixture: null, mark: null, ceiling: null, blocksSky: null, bearsLoad: null, standable: null, zone: reg.f.owner })); continue; }
-        const col = { x, y, surfaceZ: surf.z, tpl: reg.tpl, rockMaterial: null, water: null, blocks: reg.blocks, overlay: stackOverlays(vol, building), overlayTop: building === null ? undefined : building.top };
+        const col = { x, y, surfaceZ: surf.z, tpl: reg.tpl, rockMaterial: null, water: null, blocks: reg.blocks, overlay: stacked, overlayTop };
         const c = cellAt(col, z);
         if (c.unknown) { out.push(Object.freeze({ x, y, z, known: false, material: null, state: null, selfSupport: null, kind: null, fixture: null, mark: null, ceiling: null, blocksSky: null, bearsLoad: null, standable: null, zone: c.zone || reg.f.owner })); continue; }
         const fl = cellFlags(col, z, flagOf);
         // 水体足迹里地表层及以下的格：头顶有没有冰（遮天）也是未读的水层，已确定遮天为真的不变，否则未知。
         if (inWater && fl.blocksSky !== true) fl.blocksSky = null;
         const here = building === null ? null : building.at(z);
-        out.push(Object.freeze({ x, y, z, known: true, material: c.material, state: c.state, selfSupport: c.selfSupport, kind: c.kind || null, fixture: here === null ? null : here.fixture, mark: null, ceiling: c.ceiling || null, blocksSky: fl.blocksSky, bearsLoad: fl.bearsLoad, standable: fl.standable, zone: c.zone || reg.f.owner }));
+        out.push(Object.freeze({ x, y, z, known: true, material: c.material, state: c.state, selfSupport: c.selfSupport, kind: c.kind || null, fixture: c.fixture ?? (here === null ? null : here.fixture), mark: c.mark ?? null, ceiling: c.ceiling || null, blocksSky: fl.blocksSky, bearsLoad: fl.bearsLoad, standable: fl.standable, zone: c.zone || reg.f.owner }));
       }
     }
   }
   return Object.freeze({ w: plan.w, cells: Object.freeze(out) });
+}
+
+/**
+ * kernelApi `isStructureCell(engine, state, pos)`（卷五 §4.1 规则 15 建筑结构元格拒写的判据；卷十九 §4.5 规则 8）：这一格是不是某座建筑的体元所在格
+ * ——外墙、隔墙、楼梯格（蓝图格种类 wall、partition、stairs；门、窗、室内、桥面层格不是体元）。顶元（楼板、屋面、桥面）不在其内（它们不经 alterCells）。
+ * 纯读；离场建筑（蓝图读不到）与没有建筑的格为 false。
+ * @param {any} engine @param {any} state @param {{w: number, x: number, y: number, z: number}} pos @returns {boolean}
+ */
+export function isStructureCell(engine, state, pos) {
+  const rp = planOf(engine, state);
+  const c = buildingCellAt(buildingCtx(engine, state, rp), engine.rules[RULES.grid], pos);
+  return c !== null && (c.kind === BLUEPRINT_KIND.wall || c.kind === BLUEPRINT_KIND.partition || c.kind === BLUEPRINT_KIND.stairs);
+}
+
+/**
+ * kernelApi `extrudeCell(engine, state, pos)`（卷五 §4.5 规则 6 :762 挤出；对照表待定 11 已定求法归本模块）：位置 pos 所在格不可立足时，求被挤到的落点。
+ * 候选格的"可立足"标志取 gridView（基底 ⊕ 差分，同一套），范围与次序见 grid-base.mjs#extrudeLanding；搜索半径只取规则表 rules.grid.landSearchRadiusCells（细格数，卷五 §2.3 :272），
+ * 未登记即 E-RULES-UNREGISTERED（卷文没有给数值，不设缺省）。落点格读不到（列高度未知）返回 unknown，范围内没有可立足格返回 buried（"被埋"，卷十三、卷四处理）。
+ * 不写位置：写位置是卷十七 placeSubject、物经批次写者执行（卷五 §4.5 规则 6），本函数只求落点。纯读。
+ * @param {any} engine @param {any} state @param {{w: number, x: number, y: number, z: number}} pos
+ * @returns {{kind: 'land', cell: {w: number, x: number, y: number, z: number, coarse: boolean}} | {kind: 'buried'} | {kind: 'unknown'}}
+ */
+export function extrudeCell(engine, state, pos) {
+  const grid = engine.rules && engine.rules[RULES.grid];
+  const radius = isObj(grid) ? grid.landSearchRadiusCells : undefined;
+  if (!Number.isSafeInteger(radius) || radius < 1) throw new KernelError('E-RULES-UNREGISTERED', {}, 'extrudeCell: rules.grid.landSearchRadiusCells is not registered (positive integer, cells)');
+  const maxDz = extrudeLayerReach(grid, radius);
+  const view = gridView(engine, state, { w: pos.w, cells: { x0: pos.x - radius, y0: pos.y - radius, z0: pos.z - maxDz, x1: pos.x + radius, y1: pos.y + radius, z1: pos.z + maxDz } });
+  if (view === null) return Object.freeze({ kind: SETTLE.buried });
+  const standable = new Map(view.cells.map((c) => [`${c.x},${c.y},${c.z}`, c.known ? c.standable : null]));
+  const found = extrudeLanding(grid, radius, pos, (x, y, z) => { const v = standable.get(`${x},${y},${z}`); return v === undefined ? false : v; });
+  return Object.freeze(found.kind === SETTLE.land ? { kind: SETTLE.land, cell: Object.freeze({ w: pos.w, x: found.cell.x, y: found.cell.y, z: found.cell.z, coarse: false }) } : { kind: found.kind });
+}
+
+// 整数向下取整除法（b > 0，a 可负）。
+const floorDivInt = (a, b) => (a - (((a % b) + b) % b)) / b;
+
+/**
+ * kernelApi `fallCell(engine, state, pos)`（卷五 §4.5 规则 6 :745–:746 坠落；A5-5.2 "桌所在格被差分清空后碗落到下方第一个可立足格"）：位置 pos 所在格不可立足而本格可穿行（气态）时，
+ * 落到同一列正下方第一个可立足格，落差 = 层数差 × storeyM（米，整数）。可立足标志取 gridView（基底 ⊕ 差分，同一套）。下方一路读不到可立足格直到世界最低地表层
+ * （rules.grid.surfaceElevationMinM ÷ storeyM 向下取整，卷五 §4.3 规则 8 的截断下界）返回 none；沿途遇到读不到的格（known 为假或可立足未知）返回 unknown，不跳过它往下找。
+ * 分窗读 gridView（窗宽从一层起逐窗加倍，不设层数常数）；同输入同结果。不写位置：写位置是 placeSubject、批次写者（卷五 §4.5 规则 6）。纯读。
+ * @param {any} engine @param {any} state @param {{w: number, x: number, y: number, z: number}} pos
+ * @returns {{kind: 'land', cell: {w: number, x: number, y: number, z: number, coarse: boolean}, dropM: number} | {kind: 'unknown'} | {kind: 'none'}}
+ */
+export function fallCell(engine, state, pos) {
+  const grid = engine.rules && engine.rules[RULES.grid];
+  if (!isObj(grid)) throw new KernelError('E-RULES-UNREGISTERED', {}, 'fallCell: rules.grid is not registered');
+  const floorZ = floorDivInt(grid.surfaceElevationMinM, grid.storeyM);
+  let hi = pos.z - 1;
+  let width = 1;
+  while (hi >= floorZ) {
+    const lo = hi - width + 1 > floorZ ? hi - width + 1 : floorZ;
+    const view = gridView(engine, state, { w: pos.w, cells: { x0: pos.x, y0: pos.y, z0: lo, x1: pos.x, y1: pos.y, z1: hi } });
+    if (view === null || view.cells.length === 0) return Object.freeze({ kind: SETTLE.none });
+    for (let z = hi; z >= lo; z -= 1) {
+      const c = view.cells[z - lo];
+      if (!c.known || c.standable === null) return Object.freeze({ kind: SETTLE.unknown });
+      if (c.standable) return Object.freeze({ kind: SETTLE.land, cell: Object.freeze({ w: pos.w, x: pos.x, y: pos.y, z, coarse: false }), dropM: (pos.z - z) * grid.storeyM });
+    }
+    hi = lo - 1;
+    width += width;
+  }
+  return Object.freeze({ kind: SETTLE.none });
+}
+
+/**
+ * kernelApi `settleCell(engine, state, pos)`（卷五 §4.5 规则 6：现场泡内任一时刻没有人或物处在不可立足格上；坠落与挤出统一在这一处判）：核一次 pos 所在格——
+ * 可立足 → stay；本格可穿行（气态）而不可立足 → fall（见 fallCell）；本格是实体或液体 → extrude（见 extrudeCell）；本格读不到 → unknown。同一输入落点唯一。
+ * 返回 {kind: 'stay'} | {kind: 'fall', cell, dropM} | {kind: 'extrude', cell} | {kind: 'buried'} | {kind: 'unknown'} | {kind: 'none'}（none：下方没有可立足格，见 fallCell）。不写位置。纯读。
+ * @param {any} engine @param {any} state @param {{w: number, x: number, y: number, z: number}} pos
+ */
+export function settleCell(engine, state, pos) {
+  const here = gridView(engine, state, { w: pos.w, cells: { x0: pos.x, y0: pos.y, z0: pos.z, x1: pos.x, y1: pos.y, z1: pos.z } });
+  const c = here === null || here.cells.length === 0 ? null : here.cells[0];
+  if (c === null || !c.known || c.standable === null) return Object.freeze({ kind: SETTLE.unknown });
+  if (c.standable) return Object.freeze({ kind: SETTLE.stay });
+  if (c.state === STATE.gas) {
+    const f = fallCell(engine, state, pos);
+    return Object.freeze(f.kind === SETTLE.land ? { kind: SETTLE.fall, cell: f.cell, dropM: f.dropM } : { kind: f.kind });
+  }
+  const e = extrudeCell(engine, state, pos);
+  return Object.freeze(e.kind === SETTLE.land ? { kind: SETTLE.extrude, cell: e.cell } : { kind: e.kind });
 }
 
 /**

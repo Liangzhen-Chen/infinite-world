@@ -201,3 +201,48 @@ test('inBubble 的区格实参不合（缺失、非整数、NaN）拒收 E-DIM-S
   }
   assert.throws(() => inBubble(engine, state, 0.5, { x: 200, y: 50 }), (e) => e.code === 'E-DIM-STRUCT-FIELD');
 });
+
+// ---------- G9 第一步：卷九 R9-3.9 玩家席位边登记（rules.control.seatKind 与 hk_player_seat 行） ----------
+
+test('rules.control.seatKind 登记为 ref vocab holding_kind，真实值指向 hk_player_seat 行（卷九 §2.5 :321、R9-3.9 :721）', () => {
+  const read = readRules(ROOT);
+  assert.deepEqual(read.errors, []);
+  assert.equal(read.rules.control.seatKind, 'hk_player_seat');
+  const row = loadWorld(ROOT).vocab.families.get('holding_kind').entries[read.rules.control.seatKind];
+  assert.ok(row, 'seat kind row exists in holding_kind family');
+});
+
+test('hk_player_seat 种类行列值照 R9-3.9 原文：bodyControl、intimate 假，grants 空，exclusive 真，gone/vacated/defected 都 ho_close，subjectEnd send_close，三传导系数 0，pins pside_none，visibility members，端类型 agent→agent', () => {
+  const row = loadWorld(ROOT).vocab.families.get('holding_kind').entries.hk_player_seat;
+  assert.deepEqual([row.from, row.to], [['agent'], ['agent']]);
+  assert.deepEqual([row.bodyControl, row.intimate, row.exclusive], [false, false, true]);
+  assert.deepEqual(row.grants, []);
+  assert.deepEqual([row.gone, row.vacated, row.defected, row.subjectEnd], ['ho_close', 'ho_close', 'ho_close', 'send_close']);
+  assert.deepEqual([row.concluded, row.functional, row.membership, row.headship, row.carriesRel], [false, false, false, false, false]);
+  assert.deepEqual([row.conduct, row.conductBack, row.adopt], [0, 0, 0]);
+  assert.deepEqual([row.pins, row.visibility], ['pside_none', 'members']);
+});
+
+test('seatKind 指向不存在的持有种类、非代号、空、null 一律加载失败（ref 校验，无放行值）', () => {
+  const reg = JSON.parse(readFileSync(join(ROOT, 'world/rules/registry.json'), 'utf8'));
+  const real = (f) => readFileSync(join(ROOT, 'world/rules', f), 'utf8');
+  const expect = [['hk_no_such', 'E-DIM-REF-MISSING'], ['item_x', 'E-DIM-REF-MISSING'], [5, 'E-DIM-ID-FORMAT'], ['', 'E-DIM-ID-FORMAT'], [null, 'E-DIM-DOMAIN-RANGE']];
+  for (const [bad, code] of expect) {
+    const tmp = testTempRoot('control-rules-');
+    try {
+      writeUnderTempRoot(tmp, 'registry.json', real('registry.json'));
+      for (const row of reg.rows) writeUnderTempRoot(tmp, row.file, row.code === 'control' ? JSON.stringify({ rows: [{ key: 'seatKind', value: bad, basis: 'test' }] }) : real(row.file));
+      const r = loadWorld(ROOT, { rulesDir: tmp });
+      assert.equal(r.ok, false, JSON.stringify(bad));
+      assert.deepEqual(r.errors.filter((e) => e.severity === 'error').map((e) => e.code), [code], JSON.stringify(bad));
+    } finally { rmSync(tmp, { recursive: true, force: true }); }
+  }
+});
+
+test('真实规则表的席位种类直接可用：不覆盖 rules.control，按 hk_player_seat 边算泡，不抛 E-RULES-UNREGISTERED', () => {
+  const { engine } = buildPersonWorld((f) => { f.personRows.npc_a = personRow({ pos: at(200, 50) }); });
+  assert.equal(engine.rules.control.seatKind, 'hk_player_seat');
+  const state = seats(edge('npc_a', { kind: 'hk_player_seat' }));
+  assert.deepEqual(flat(bubbleView(engine, state)), block(199, 201, 49, 51));
+  assert.equal(inBubble(engine, state, 0, { x: 200, y: 50 }), true);
+});

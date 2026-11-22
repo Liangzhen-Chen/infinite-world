@@ -3286,6 +3286,35 @@
    "zeroRows": []
   },
   {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tests/kernel/grid-diff.test.mjs",
+   "itemKey": "vol27.A27-1.14",
+   "localNo": "A27-1.14",
+   "method": "property_test",
+   "print": "54fba3fce79838e2e6179a8f673d1c91c7e6a4a1156701fd64825d5741467da5",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "g9-diff",
+     "date": "2026-11-22",
+     "rev": 1,
+     "summary": "首次登记（G9 拒写侧：不在泡内的行为者〔含泡移走后原地留下的 NPC〕、无行为者而目标格在泡外的起因发起的 alterCells 被拒 E-GRID-OFFSCREEN-WRITE 且整笔回滚，泡为空时 cells.* 写入计数为 0；泡内行为者打到泡外格照写；对照表 #47、#48、#58；回场对账侧随 G10 补后升 implemented）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-1.14 :372（离屏不写差分与回场对账：不在泡内的行为者〔用例须含泡移走后原地留下、位置仍在细格上的 NPC〕、无行为者而目标格在泡外的起因、批量统计形态结算发起的 alterCells 都被拒，写入计数为 0；泡内行为者打到泡外格的局部改动照写；泡为空推进任意时长 cells.* 写入计数为 0、差分片摘要不变；回场展开后卷五 A5-1.2\"差分与离屏\"全部成立）；卷五 §4.1 规则 15 :504、A5-1.2 :537。拒写侧测试 tests/kernel/grid-diff.test.mjs；回场对账与批量统计半条随 G10、G18 补。",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
    "detector": "det_save_load",
    "expect": "all_pass",
    "form": "invariant",
@@ -3325,6 +3354,7 @@
    "gates": [
     "pre_merge"
    ],
+   "impl": "tests/kernel/save.test.mjs",
    "itemKey": "vol27.A27-4.9",
    "localNo": "A27-4.9",
    "method": "unit_test",
@@ -3341,7 +3371,7 @@
    "runsOn": "local_static",
    "source": "卷二十七 A27-4.9 :605（格基底不存档：任意存档分片里没有区格或细格基底、没有缓存，part_by_chunk 每一片只含同一（格空间, 里块）的 cells.* 路径）；对照表 #6、#16 归 G1",
    "stage": 0,
-   "state": "registered",
+   "state": "implemented",
    "target": "tests_code",
    "volume": "vol27",
    "zeroRows": []
@@ -3590,6 +3620,44 @@
    "runsOn": "local_static",
    "scanClass": "geometry_bypass",
    "source": "卷五 §3.5 S5-10 :408（几何只有一处：本卷入口文件之外自算两点直线距离、方位角、视线、\"位置在哪个地点\"的实现计数为 0，一律经 straightM、bearingView、losView、zoneAt；grid-diff.mjs 之外写 cells.* 的调用点计数为 0；唯一的寻路例外卷十七 tripPlan 按自己的耗时度量在格上求路，卷十七 R17-1.7 :373、C17-15 ⑤）。本条目守几何一半：查全局几何原语 Math.hypot/Math.atan2/Math.sqrt 与 det-math 定点几何 fixedSqrtInt、atan（均 kernel/det-math.mjs 导出，全仓唯一开方与方位角定点实现）在 kernel 以外服务端组的调用计数为 0——规则层用定点函数自算距离/方位同算违例（入口文件 straightM/bearingView/losView/zoneAt 与几何原语均在 kernel 组，由 state-owners.json 组登记派生、不点名文件，同 vol2.K5-24 口径）；入口闭集现按 kernel 组近似，收紧时点：straightM、bearingView、losView、zoneAt 登进 kernelApi 后改为按 kernelApi 逐名派生（G3 落 zoneAt 时）。cells.* 写者登记（grid-diff.mjs，只经 alterCells，卷五 §3.3 :362）尚未落：gridKey 类代码未落（G6/G7 前，G1-Opus只核-1121），grid-diff.mjs 未建、cells 尚无合法写点，本条目不另立 cells 写者条目；直接 state.cells 写由 cross_write vol1.V-3 的 E-VIEW-BYPASS 兜底，writePath(P.cells)/alterCells 半截待 cells 写者登记落地（随 gridKey 落地那张卡）由 cross_write vol1.V-3 守。tripPlan 例外不是豁免：tripPlan 若需欧氏估价须经入口、不开白名单，它按耗时度量求路本就不经这些原语。局限：x*x+y*y 比较（不开方）、**0.5、const {sqrt}=Math 解构等词法写法查不到（call_edge 头注释已声明）。",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol5",
+   "zeroRows": []
+  },
+  {
+   "detector": "call_edge",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/call_edge.mjs",
+   "itemKey": "vol5.S5-9",
+   "localNo": "S5-9",
+   "method": "static_code",
+   "params": {
+    "code": "E-GRID-OFFSCREEN-WRITE",
+    "entries": [
+     "grid-diff.mjs#alterCells",
+     "grid-diff.mjs#clearDiffs"
+    ],
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "gate",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "module_edge",
+   "source": "卷五 §3.5 S5-9 :407、卷二十七 S27-11 :260 后半（静态半）、卷十 S10-11 :324、R10-9.12 :755、卷十九 S19-11 ② :329：批量、统计形态结算函数（simform_batch、simform_stat）、生成器、写回器、layoutOf、caveCellsOf、templateBlocksOf 到 alterCells 的调用链为 0；alterCells 的调用点是闭集（泡内开工、泡内建成〔含原地翻修〕、泡内展开三处）。本条目用现有检测器 call_edge 的 entries 形表达（照 vol6.S6-13.a 先例）：许可只读 state-owners.json kernelApi.exports 里 grid-diff.mjs#alterCells 一行的 callers、callerFiles，范围内其余文件 import 该入口即计（定义文件自己不计）。现闭集只有定义文件自己（G9 落地时没有调用者）；三处调用者随各自落地卡（卷十九建造、卷二十七展开 G10、卷五 take）把自己的文件补进该行 callerFiles，并在 systems.*.writeDelegations 登记写者委托；批量、统计结算与生成相关模块不得出现在闭集里。局限：经 runDelegated(state, \"grid-diff.mjs#alterCells\") 字串委托的调用不是 import，由写者委托登记（from 文件）与运行时拒写（R27-1.15 第 2 项）守；个体层泡外行为者静态分不开，同样由运行时拒写守。（G9 修改轮：clearDiffs 同样写格差分，同列入口）",
    "stage": 0,
    "state": "implemented",
    "target": "runtime_code",

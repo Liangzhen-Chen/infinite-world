@@ -364,10 +364,14 @@
     {
      "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
      "rev": 70
+    },
+    {
+     "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
+     "rev": 71
     }
    ],
-   "print": "5400867e656834689ad11c9f8c307086340a3d938c7924822b3f4e3331469bf0",
-   "rev": 70,
+   "print": "4c73fb3843cdb9274ab2b36de0ce812065a731ba511db97f50735c56462ab5cf",
+   "rev": 71,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -909,10 +913,14 @@
     {
      "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
      "rev": 69
+    },
+    {
+     "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
+     "rev": 70
     }
    ],
-   "print": "1b039a7ecf87eda0b7faea086f7518de475c61d71b761dfc85eef2d98e44bee2",
-   "rev": 69,
+   "print": "b16a2906efd632bd391310ce4c6c79b293aae36d5c73f8a08ed2af65c40eccf9",
+   "rev": 70,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1544,10 +1552,14 @@
     {
      "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
      "rev": 66
+    },
+    {
+     "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
+     "rev": 67
     }
    ],
-   "print": "1f361acf1d98f724909ec9e32202ef4b0918238bbdf76d07ff9ef14d624642d3",
-   "rev": 66,
+   "print": "fc7d5daa7b9bc092240662dbcc649dec72c851474eb76ec7ff0dc65839fb0ab6",
+   "rev": 67,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -2009,10 +2021,14 @@
     {
      "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
      "rev": 82
+    },
+    {
+     "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
+     "rev": 83
     }
    ],
-   "print": "dbb72499d14094ce058d922854754c297c63e870f5378948cb939f41843ccd0a",
-   "rev": 82,
+   "print": "01d60275ee82528059f6a6a57a643b55fca4ec9f907fa41e69daa112e30a15a9",
+   "rev": 83,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -2407,10 +2423,14 @@
     {
      "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
      "rev": 67
+    },
+    {
+     "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
+     "rev": 68
     }
    ],
-   "print": "1f361acf1d98f724909ec9e32202ef4b0918238bbdf76d07ff9ef14d624642d3",
-   "rev": 67,
+   "print": "fc7d5daa7b9bc092240662dbcc649dec72c851474eb76ec7ff0dc65839fb0ab6",
+   "rev": 68,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -2903,6 +2923,14 @@
      ],
      "stage": 0
     },
+    "vol5.S5-9": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
     "vol6.A6-1.1.a": {
      "expect": "zero",
      "gates": [
@@ -3206,10 +3234,14 @@
     {
      "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
      "rev": 67
+    },
+    {
+     "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
+     "rev": 68
     }
    ],
-   "print": "1f361acf1d98f724909ec9e32202ef4b0918238bbdf76d07ff9ef14d624642d3",
-   "rev": 67,
+   "print": "fc7d5daa7b9bc092240662dbcc649dec72c851474eb76ec7ff0dc65839fb0ab6",
+   "rev": 68,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -3468,10 +3500,14 @@
     {
      "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
      "rev": 61
+    },
+    {
+     "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
+     "rev": 62
     }
    ],
-   "print": "0510cacd11faef6b9025bc5a913e5a6ed77b2eff16815ec49e27a8bce1f1a4bc",
-   "rev": 61,
+   "print": "3b8c332d58a61b1d701654dd13a72091a3d23761efdb26f54c977080838b7713",
+   "rev": 62,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -3802,10 +3838,14 @@
     {
      "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
      "rev": 79
+    },
+    {
+     "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
+     "rev": 80
     }
    ],
-   "print": "b428b95dd46448c3c396812953ee8afb9b9a713d7e0d2e229497d80f7e76a87a",
-   "rev": 79,
+   "print": "8af65bfc97d206ed51d329e65f5206db215ef6775b20bb681052d39eef3eab38",
+   "rev": 80,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -4157,10 +4197,14 @@
     {
      "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
      "rev": 46
+    },
+    {
+     "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
+     "rev": 47
     }
    ],
-   "print": "506eff0f7aaf1d97b6a9d009cced9c26a116193133d2e31c7ed95d2e964824a9",
-   "rev": 46,
+   "print": "6acfeccbae1cf9ef4e4584c6d3e0c70f36773318bcc1e3584b6742a0870c3c70",
+   "rev": 47,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -4454,10 +4498,14 @@
     {
      "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
      "rev": 68
+    },
+    {
+     "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
+     "rev": 69
     }
    ],
-   "print": "5400867e656834689ad11c9f8c307086340a3d938c7924822b3f4e3331469bf0",
-   "rev": 68,
+   "print": "4c73fb3843cdb9274ab2b36de0ce812065a731ba511db97f50735c56462ab5cf",
+   "rev": 69,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -4666,10 +4714,14 @@
     {
      "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
      "rev": 44
+    },
+    {
+     "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
+     "rev": 45
     }
    ],
-   "print": "373c842e82ce03f30569ca01f8b7eaa2a873576e87368310640282888b1eb45c",
-   "rev": 44,
+   "print": "6c789a651cbb1250c58ac454cd40b46f963def604c126a13f9ae25f8755e70bc",
+   "rev": 45,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -5156,10 +5208,14 @@
     {
      "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
      "rev": 63
+    },
+    {
+     "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
+     "rev": 64
     }
    ],
-   "print": "0510cacd11faef6b9025bc5a913e5a6ed77b2eff16815ec49e27a8bce1f1a4bc",
-   "rev": 63,
+   "print": "3b8c332d58a61b1d701654dd13a72091a3d23761efdb26f54c977080838b7713",
+   "rev": 64,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

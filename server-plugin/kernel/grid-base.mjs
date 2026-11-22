@@ -16,6 +16,8 @@ export const STATE = Object.freeze({ solid: 'solid', liquid: 'liquid', gas: 'gas
 export const CELL_KIND = Object.freeze({ stairs: 'stairs', ladder: 'ladder' });
 // 本格可立足的格种类（卷五 §4.5 规则 5 末段："梯、坡"或楼梯格本身可立足）。
 const STANDABLE_KINDS = Object.freeze([CELL_KIND.stairs, CELL_KIND.ladder]);
+/** 坠落、挤出、落点结果的种类（place.mjs 的 settleCell、fallCell、extrudeCell 与本文件的 extrudeLanding 共用）。 */
+export const SETTLE = Object.freeze({ stay: 'stay', fall: 'fall', extrude: 'extrude', land: 'land', buried: 'buried', unknown: 'unknown', none: 'none' });
 /** 材料的三个格侧布尔维度名（卷三甲 :128–:130）。 */
 export const FLAG = Object.freeze({ opaque: 'opaque', blocksSky: 'blocksSky', bearsLoad: 'bearsLoad' });
 
@@ -225,6 +227,51 @@ export function cellFlags(col, z, flagOf) {
   }
   const standable = !passable ? false : STANDABLE_KINDS.includes(here.kind) ? true : underfoot;
   return { blocksSky, bearsLoad, standable };
+}
+
+/**
+ * 挤出搜索在竖向能到几层：floor(半径 × cellM ÷ storeyM)（半径内同一水平位置上下各这么多层，距离 ≤ 半径 × cellM）。入参须是正整数，否则 E-DET-DOMAIN。
+ * @param {{cellM: number, storeyM: number}} grid @param {number} radiusCells @returns {number}
+ */
+export function extrudeLayerReach(grid, radiusCells) {
+  if (!Number.isSafeInteger(radiusCells) || radiusCells < 1) throw new FixedError('E-DET-DOMAIN', 'extrudeLanding: radius must be a positive integer (cells)');
+  if (!Number.isSafeInteger(grid.cellM) || grid.cellM < 1 || !Number.isSafeInteger(grid.storeyM) || grid.storeyM < 1) throw new FixedError('E-DET-DOMAIN', 'extrudeLanding: cellM and storeyM must be positive integers');
+  const reach = radiusCells * grid.cellM;
+  return (reach - (reach % grid.storeyM)) / grid.storeyM; // 正整数的整除，不用 Math.*
+}
+
+/**
+ * 挤出落点（卷五 §4.5 规则 6 :762；对照表待定 11 已定：求法与"可立足"标志同模块，G9）：人或物所在格被新基底（按日重派生）或差分变成实体材料时，
+ * 移到 landSearchRadiusCells 内最近（直线距离）的可立足格，并列取格序号字典序（x, y, z）最小；范围内没有可立足格即"被埋"（卷十三、卷四处理，本函数不管伤害）。
+ * 距离的平方全整数比较：水平一格 cellM 米、一层 storeyM 米，d² = (dx·cellM)² + (dy·cellM)² + (dz·storeyM)²，范围 d² ≤ (半径·cellM)²，不开方。
+ * 按（d²，x，y，z）升序逐个看格：第一个可立足格即落点；若升序里在找到可立足格之前先遇到"未知"（standableAt 返回 null，列高度读不到），落点无从判定，
+ * 返回 unknown（往下传，不跳过它去取更远的格）。纯函数，同输入同结果，与调用方给的格读取次序无关。
+ * @param {{cellM: number, storeyM: number}} grid rules.grid
+ * @param {number} radiusCells rules.grid.landSearchRadiusCells（细格数，正整数）
+ * @param {{x: number, y: number, z: number}} from 被挤出的人或物所在格
+ * @param {(x: number, y: number, z: number) => boolean | null} standableAt 该格可立足（真）、不可立足（假）、读不到（null）
+ * @returns {{kind: 'land', cell: {x: number, y: number, z: number}} | {kind: 'buried'} | {kind: 'unknown'}}
+ */
+export function extrudeLanding(grid, radiusCells, from, standableAt) {
+  const maxDz = extrudeLayerReach(grid, radiusCells);
+  const sq = (n) => n * n;
+  const reach2 = sq(radiusCells * grid.cellM);
+  const candidates = [];
+  for (let dx = -radiusCells; dx <= radiusCells; dx += 1) {
+    for (let dy = -radiusCells; dy <= radiusCells; dy += 1) {
+      for (let dz = -maxDz; dz <= maxDz; dz += 1) {
+        const d2 = sq(dx * grid.cellM) + sq(dy * grid.cellM) + sq(dz * grid.storeyM);
+        if (d2 <= reach2) candidates.push({ d2, x: from.x + dx, y: from.y + dy, z: from.z + dz });
+      }
+    }
+  }
+  candidates.sort((a, b) => a.d2 - b.d2 || a.x - b.x || a.y - b.y || a.z - b.z);
+  for (const c of candidates) {
+    const ok = standableAt(c.x, c.y, c.z);
+    if (ok === true) return { kind: SETTLE.land, cell: { x: c.x, y: c.y, z: c.z } };
+    if (ok === null) return { kind: SETTLE.unknown };
+  }
+  return { kind: SETTLE.buried };
 }
 
 /**

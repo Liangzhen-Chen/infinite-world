@@ -107,7 +107,7 @@ test('cross_write：登记写者写自己的路径不计；越权写、非 P 实
   assert.deepEqual(writes({ 'server-plugin/sys/a.mjs': 'const x = state.terminated[id]; if (state.created === y) f(state); const o = { state: 1 };' }), []);
   assert.deepEqual(writes({ 'server-plugin/sys/a.mjs': 'writePath(state, P.pendingPost(id), []); state.x = 1;' }, ['E-VIEW-BYPASS']).map((h) => h[0]), ['E-VIEW-BYPASS']);
   const decl = readDecl(ROOT);
-  assert.deepEqual(components(loadContext(ROOT, { files: [], read: () => '', decl }), { access: 'write' }), ['c_write_accounts', 'c_write_aggregates', 'c_write_clock', 'c_write_created', 'c_write_displayNames', 'c_write_due', 'c_write_holdings', 'c_write_itemInstances', 'c_write_ledgerCounters', 'c_write_ledgerTotals', 'c_write_outflowTotals', 'c_write_pendingPost', 'c_write_playerNotes', 'c_write_revivals', 'c_write_statuses', 'c_write_stockLots', 'c_write_terminated']);
+  assert.deepEqual(components(loadContext(ROOT, { files: [], read: () => '', decl }), { access: 'write' }), ['c_write_accounts', 'c_write_aggregates', 'c_write_cells', 'c_write_clock', 'c_write_created', 'c_write_displayNames', 'c_write_due', 'c_write_holdings', 'c_write_itemInstances', 'c_write_ledgerCounters', 'c_write_ledgerTotals', 'c_write_outflowTotals', 'c_write_pendingPost', 'c_write_playerNotes', 'c_write_revivals', 'c_write_statuses', 'c_write_stockLots', 'c_write_terminated']);
   assert.deepEqual(components(loadContext(ROOT, { files: [], read: () => '', decl }), { access: 'read' }), []);
 });
 

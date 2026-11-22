@@ -32,6 +32,7 @@
  "server-plugin/kernel/gen/worldgen.mjs",
  "server-plugin/kernel/gen/writeback.mjs",
  "server-plugin/kernel/grid-base.mjs",
+ "server-plugin/kernel/grid-diff-read.mjs",
  "server-plugin/kernel/grid-stock.mjs",
  "server-plugin/kernel/grid-template.mjs",
  "server-plugin/kernel/grid.mjs",

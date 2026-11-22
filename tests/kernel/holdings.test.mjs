@@ -99,11 +99,11 @@ function engineWith(rows, relations) {
 
 // ---------- 数据与加载期核对（K5-39、K5-40、丙5） ----------
 
-test('holding_kind 数据：49 行（42 旧 + 3 新增 + 2 卷十三 + 穿戴、装入 2 条，李白 11-19 20:3x ⑥），每行 40 列，端类型都在模板名闭集内，上位词链无环', () => {
+test('holding_kind 数据：50 行（42 旧 + 3 新增 + 2 卷十三 + 穿戴、装入 2 条，李白 11-19 20:3x ⑥；+1 玩家席位边 hk_player_seat，卷九 R9-3.9 :721，G9 第一步），每行 40 列，端类型都在模板名闭集内，上位词链无环', () => {
   const fam = W.vocab.families.get('holding_kind');
   assert.ok(fam, 'holding_kind family');
   const entries = fam.entries;
-  assert.equal(Object.keys(entries).length, 49);
+  assert.equal(Object.keys(entries).length, 50);
   for (const [id, entry] of Object.entries(entries)) {
     assert.equal(Object.keys(entry).length, 40, id);
     for (const key of ['from', 'to']) assert.ok(Array.isArray(entry[key]) && entry[key].length > 0, `${id}.${key}`);

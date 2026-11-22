@@ -1,0 +1,9 @@
+{
+ "rows": [
+  {
+   "key": "seatKind",
+   "value": "hk_player_seat",
+   "basis": "卷九 §2.5 :321、R9-3.9 :721、:1646（玩家席位边的持有种类代号 hk_player_seat；种类行登在 holding_kind 族）"
+  }
+ ]
+}

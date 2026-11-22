@@ -283,3 +283,23 @@ test('S27-3 墙钟：规则层、内核、装配文件取墙钟即计（全局�
 test('S27-3 真实仓库：规则层、内核取墙钟为 0', () => {
   assert.equal(callEdge(loadContext(ROOT, {}), itemParams('vol27.S27-3')).length, 0);
 });
+
+// 卷五 S5-9（G9 登）：alterCells 的调用点是闭集，许可取自声明表 kernelApi 里 grid-diff.mjs#alterCells 一行的 callers、callerFiles（现只有定义文件自己）。
+test('S5-9 alterCells 调用点闭集：登记之外的文件（批量结算、生成器、写回器一类）import 它即计，重导出与命名空间引用同计；定义文件自己、登记 callerFiles 里的文件不计', () => {
+  const p = itemParams('vol5.S5-9');
+  assert.deepEqual(p.entries, ['grid-diff.mjs#alterCells', 'grid-diff.mjs#clearDiffs']); // clearDiffs 同样写格差分，同列入口
+  const clearer = "import { clearDiffs } from './grid-diff.mjs';\nexport const settle = (e, s) => clearDiffs(e, s, {});";
+  assert.deepEqual(callEdge(ctxOf({ 'server-plugin/sim-batch.mjs': clearer }), p).map((h) => [h.nodeKind, h.code, h.line]), [['import', 'E-GRID-OFFSCREEN-WRITE', 1]]);
+  const hits = (map, decl) => callEdge(ctxOf(map, decl), p);
+  const batch = "import { alterCells } from './grid-diff.mjs';\nexport const settle = (e, s) => alterCells(e, s, {});";
+  assert.deepEqual(hits({ 'server-plugin/sim-batch.mjs': batch }).map((h) => [h.file, h.nodeKind, h.code, h.line]), [['server-plugin/sim-batch.mjs', 'import', 'E-GRID-OFFSCREEN-WRITE', 1]]);
+  assert.equal(hits({ 'server-plugin/kernel/gen/writeback.mjs': "import { alterCells } from '../../grid-diff.mjs';\nalterCells(1);" }).length, 1);
+  assert.equal(hits({ 'server-plugin/sim-tiers.mjs': "import * as G from './grid-diff.mjs';\nG.alterCells(1);\nG.clearDiffs(2);" }).length, 2);
+  assert.equal(hits({ 'server-plugin/sim-stat.mjs': "export { alterCells } from './grid-diff.mjs';" }).length, 1);
+  assert.equal(hits({ 'server-plugin/grid-diff.mjs': "import * as me from './grid-diff.mjs';\nme.alterCells(1);" }).length, 0);
+  // 登记在 callerFiles 里的调用者（G10 展开、卷十九建造一类，各自落地时补进登记）不计。
+  const rows = DECL.kernelApi.exports.filter((r) => p.entries.includes(r.export));
+  const widened = withApi(rows.map((r) => ({ ...r, callerFiles: [...r.callerFiles, 'sim-batch.mjs'] })));
+  assert.equal(hits({ 'server-plugin/sim-batch.mjs': batch }, widened).length, 0);
+  assert.equal(hits({ 'server-plugin/sim-batch.mjs': clearer }, widened).length, 0);
+});
