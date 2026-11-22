@@ -248,6 +248,7 @@
    },
    "prefix": "cap_"
   },
+  "casus": {"closed": false, "entries": {}, "prefix": "casus_"},
   "climate_proto": {
    "closed": false,
    "entries": {
@@ -291,6 +292,15 @@
     "class_mineral": {},
     "class_mushroom": {},
     "class_nut": {},
+    "class_org_army": {},
+    "class_org_caravan": {},
+    "class_org_faction": {},
+    "class_org_firm": {},
+    "class_org_guild": {},
+    "class_org_monster_band": {},
+    "class_org_state": {},
+    "class_org_town": {},
+    "class_org_village": {},
     "class_paper": {},
     "class_person_beast": {},
     "class_person_mind": {},
@@ -578,6 +588,7 @@
    },
    "prefix": "due_"
   },
+  "election": {"closed": false, "entries": {}, "prefix": "election_"},
   "gait": {
    "closed": false,
    "entries": {
@@ -644,6 +655,17 @@
      "whenRX": null,
      "writesFamilies": [],
      "writesKinds": ["place"]
+    },
+    "gstage_polity": {
+     "after": [],
+     "before": [],
+     "basis": "卷八 R8-18.9 登记的条目（封卷后勘误，卷十 C10-2）：开局政体、持有与职位，世界创建事务内写第 0 日的组织行、职位行与统治边；卷文的 after 取开局人口阶段 gstage_people、before 取经济阶段 gstage_economy，两阶段条目还没有登记（骨架、人口、经济阶段各有自己的卡），登记时本条 after、before 各加上；scope 取 region（对每个落位级政区一次）",
+     "generator": "gen/polity.mjs",
+     "phase": "worldgen",
+     "scope": "region",
+     "whenRX": null,
+     "writesFamilies": [],
+     "writesKinds": ["org", "office"]
     },
     "gstage_siteform": {
      "after": [],
@@ -740,10 +762,14 @@
   "idslot": {
    "closed": false,
    "entries": {
-    "idslot_fielddev": {"basis": "卷十 §2.1 :116、§4.12.1 :899（场偏差项：只作抽取对象、不建实体，kind 为空）", "clocked": false, "kind": null, "parentKinds": ["place"]}
+    "idslot_fielddev": {"basis": "卷十 §2.1 :116、§4.12.1 :899（场偏差项：只作抽取对象、不建实体，kind 为空）", "clocked": false, "kind": null, "parentKinds": ["place"]},
+    "idslot_genoffice": {"basis": "卷八 R8-18.9 ⑤ 三条位次之三（封卷后勘误，卷十 C10-2；卷八 §5.3 :1397）：开局职位，以所属组织为父", "clocked": false, "kind": "office", "parentKinds": ["org"]},
+    "idslot_realm": {"basis": "卷八 R8-18.9 ⑤ 三条位次之一（卷八 §5.3 :1397）：开局主权组织，以落位级政区为父、序号取 0", "clocked": false, "kind": "org", "parentKinds": ["place"]},
+    "idslot_settlement": {"basis": "卷八 R8-18.9 ⑤ 三条位次之二（卷八 §5.3 :1397）：开局聚落组织，以站点为父、序号取 0", "clocked": false, "kind": "org", "parentKinds": ["place"]}
    },
    "prefix": "idslot_"
   },
+  "infsrc": {"closed": false, "entries": {}, "prefix": "infsrc_"},
   "juris": {
    "closed": false,
    "entries": {
@@ -754,6 +780,7 @@
    },
    "prefix": "juris_"
   },
+  "legit": {"closed": false, "entries": {}, "prefix": "legit_"},
   "life_stage": {
    "closed": false,
    "entries": {
@@ -779,6 +806,7 @@
    },
    "prefix": "matcat_"
   },
+  "motion": {"closed": false, "entries": {}, "prefix": "motion_"},
   "nutrient": {
    "closed": false,
    "entries": {
@@ -788,6 +816,22 @@
    },
    "prefix": "nutr_"
   },
+  "officerowkind": {"closed": true, "entries": {
+   "orowk_actual": {},
+   "orowk_kind": {}
+  }, "prefix": "orowk_"},
+  "orgkind": {"closed": false, "entries": {
+   "orgkind_army": {"sovereign": false, "settlement": false, "internal": false, "hasTreasury": true, "canTax": false, "canWar": true, "publicWorks": false, "memberEnds": ["agent"], "dissolveRX": null, "template": "class_org_army", "basis": "卷八 §2.4 :287 数据块；公共取值与理由见 :258、:281"},
+   "orgkind_caravan": {"sovereign": false, "settlement": false, "internal": false, "hasTreasury": true, "canTax": false, "canWar": false, "publicWorks": false, "memberEnds": ["agent"], "dissolveRX": null, "template": "class_org_caravan", "basis": "卷八 §2.4 :286 数据块；公共取值与理由见 :258、:281"},
+   "orgkind_faction": {"sovereign": false, "settlement": false, "internal": true, "hasTreasury": true, "canTax": false, "canWar": false, "publicWorks": false, "memberEnds": ["agent"], "dissolveRX": "faction.ultimatum.mphase_enacted >= 1", "template": "class_org_faction", "basis": "卷八 §2.4 :288 数据块；公共取值与理由见 :258、:281"},
+   "orgkind_firm": {"sovereign": false, "settlement": false, "internal": false, "hasTreasury": true, "canTax": false, "canWar": false, "publicWorks": false, "memberEnds": ["agent"], "dissolveRX": null, "template": "class_org_firm", "basis": "卷八 §2.4 :269 数据块；公共取值与理由见 :258、:260"},
+   "orgkind_guild": {"sovereign": false, "settlement": false, "internal": false, "hasTreasury": true, "canTax": false, "canWar": false, "publicWorks": false, "memberEnds": ["agent"], "dissolveRX": null, "template": "class_org_guild", "basis": "卷八 §2.4 :268 数据块；公共取值与理由见 :258、:260"},
+   "orgkind_monster_band": {"sovereign": true, "settlement": true, "internal": false, "hasTreasury": true, "canTax": true, "canWar": true, "publicWorks": true, "memberEnds": ["agent"], "dissolveRX": null, "template": "class_org_monster_band", "basis": "卷八 §2.4 :289 数据块；公共取值与理由见 :258、:281"},
+   "orgkind_state": {"sovereign": true, "settlement": false, "internal": false, "hasTreasury": true, "canTax": true, "canWar": true, "publicWorks": true, "memberEnds": ["agent"], "dissolveRX": null, "template": "class_org_state", "basis": "卷八 §2.4 :265 数据块；公共取值与理由见 :258、:260"},
+   "orgkind_town": {"sovereign": false, "settlement": true, "internal": false, "hasTreasury": true, "canTax": true, "canWar": false, "publicWorks": true, "memberEnds": ["agent"], "dissolveRX": null, "template": "class_org_town", "basis": "卷八 §2.4 :266 数据块；公共取值与理由见 :258、:260"},
+   "orgkind_village": {"sovereign": false, "settlement": true, "internal": false, "hasTreasury": true, "canTax": true, "canWar": false, "publicWorks": true, "memberEnds": ["agent"], "dissolveRX": null, "template": "class_org_village", "basis": "卷八 §2.4 :267 数据块；公共取值与理由见 :258、:260"}
+  }, "prefix": "orgkind_"},
+  "permit": {"closed": false, "entries": {}, "prefix": "permit_"},
   "plant_family": {
    "closed": true,
    "entries": {
@@ -815,6 +859,15 @@
    },
    "prefix": "ppart_"
   },
+  "politykind": {"closed": false, "entries": {
+   "pkind_realm": {"hyper": null, "basis": "作者：王国政体的归类代号（卷八 §2.4 politykind 只作归类与显示，规则不按它分支，S8-3）"}
+  }, "prefix": "pkind_"},
+  "power": {"closed": false, "entries": {}, "prefix": "power_"},
+  "powerscope": {"closed": true, "entries": {
+   "pscope_domain": {},
+   "pscope_org": {},
+   "pscope_subordinate": {}
+  }, "prefix": "pscope_"},
   "purpose": {
    "closed": false,
    "entries": {
@@ -877,6 +930,7 @@
    "entries": {},
    "prefix": "renewable_"
   },
+  "requirement": {"closed": false, "entries": {}, "prefix": "req_"},
   "resfam": {
    "closed": true,
    "entries": {
@@ -2359,6 +2413,7 @@
    "roomrole_common_room": {"basis": "world/geo/locations.json:3301 \"name\": \"共用起居间\"（八处私宅各有一间，房间 id 形如 room_hw_15_common）；只作房间行 roomRole 的对应键，规则里不对它分支（卷十九 §2.4）"},
    "roomrole_sleeping_room": {"basis": "world/geo/locations.json:3305 \"name\": \"家人睡处\"（八处私宅各有一间，房间 id 形如 room_hw_15_sleep）；只作房间行 roomRole 的对应键，规则里不对它分支（卷十九 §2.4）"}
   }, "prefix": "roomrole_"},
+  "salary": {"closed": false, "entries": {}, "prefix": "salary_"},
   "season": {
    "closed": false,
    "entries": {
@@ -2404,6 +2459,7 @@
    },
    "prefix": "sense_"
   },
+  "settletier": {"closed": false, "entries": {}, "prefix": "settletier_"},
   "sex": {
    "closed": false,
    "entries": {
@@ -2614,6 +2670,27 @@
    },
    "prefix": "subst_"
   },
+  "succession": {"closed": false, "entries": {
+   "succession_by_motion": {"orderSource": "succsrc_motion", "heirSource": null, "contestSkill": null, "poolRX": "1 == 1", "cost": [], "basis": "议案选出（卷八 R8-2.5 :665：orderSource 取议案选出，appointedBy 指 election 条目；heirSource、contestSkill 只在继承顺位、比试时用，写 null；poolRX 不设候选范围写恒真式 1 == 1，:119；cost 可空表）。李白 11-23 事件 b41e0801 ⑨：王国继承先按议案选出；待调：王国继承制具体做法（邦君会推举、候选范围、代价）世界设计方案 P1/D2 未定，poolRX 与 cost 的值待定"}
+  }, "prefix": "succession_"},
+  "succsource": {"closed": true, "entries": {
+   "succsrc_contest": {},
+   "succsrc_grantor": {},
+   "succsrc_heirs": {},
+   "succsrc_motion": {},
+   "succsrc_superior": {}
+  }, "prefix": "succsrc_"},
+  "taxbase": {"closed": false, "entries": {}, "prefix": "taxbase_"},
+  "tenuremode": {"closed": true, "entries": {
+   "tenure_common": {},
+   "tenure_household": {},
+   "tenure_superior": {}
+  }, "prefix": "tenure_"},
+  "term": {"closed": true, "entries": {
+   "term_fixed": {},
+   "term_life": {},
+   "term_pleasure": {}
+  }, "prefix": "term_"},
   "terrain": {
    "closed": true,
    "entries": {
@@ -2657,6 +2734,85 @@
   "verb": {
    "closed": false,
    "entries": {
+    "verb_conquer": {
+     "calendarBound": false,
+     "headSlot": null,
+     "kindFrom": null,
+     "kindOnly": true,
+     "parent": null,
+     "payloadShape": {},
+     "perceivable": false,
+     "scandal": false,
+     "senses": [],
+     "sigBase": 0,
+     "tallies": [],
+     "visibilityAllowed": ["private", "public", "witnessed"],
+     "worthSlots": {"destroyed": [], "moved": [], "stake": []}
+    },
+    "verb_governor_changed": {
+     "calendarBound": false,
+     "headSlot": null,
+     "kindFrom": "cause",
+     "kindOnly": false,
+     "parent": null,
+     "payloadShape": {
+      "from": "EntityId nullable",
+      "to": "EntityId nullable",
+      "cause": "ref vocab verb"
+     },
+     "perceivable": false,
+     "scandal": false,
+     "senses": [],
+     "sigBase": 0,
+     "tallies": [],
+     "visibilityAllowed": ["private", "public", "witnessed"],
+     "worthSlots": {"destroyed": [], "moved": [], "stake": []}
+    },
+    "verb_grant": {
+     "calendarBound": false,
+     "headSlot": null,
+     "kindFrom": null,
+     "kindOnly": true,
+     "parent": null,
+     "payloadShape": {},
+     "perceivable": false,
+     "scandal": false,
+     "senses": [],
+     "sigBase": 0,
+     "tallies": [],
+     "visibilityAllowed": ["private", "public", "witnessed"],
+     "worthSlots": {"destroyed": [], "moved": [], "stake": []}
+    },
+    "verb_opening": {
+     "calendarBound": false,
+     "headSlot": null,
+     "kindFrom": null,
+     "kindOnly": true,
+     "parent": null,
+     "payloadShape": {},
+     "perceivable": false,
+     "scandal": false,
+     "senses": [],
+     "sigBase": 0,
+     "tallies": [],
+     "visibilityAllowed": ["private", "public", "witnessed"],
+     "worthSlots": {"destroyed": [], "moved": [], "stake": []}
+    },
+    "verb_usurp": {
+     "calendarBound": false,
+     "headSlot": null,
+     "kindFrom": null,
+     "kindOnly": true,
+     "parent": null,
+     "payloadShape": {},
+     "perceivable": false,
+     "scandal": false,
+     "senses": [],
+     "sigBase": 0,
+     "tallies": [],
+     "visibilityAllowed": ["private", "public", "witnessed"],
+     "worthSlots": {"destroyed": [], "moved": [], "stake": []}
+    },
     "verb_death_event": {
      "calendarBound": false,
      "headSlot": null,

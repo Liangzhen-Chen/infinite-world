@@ -78,7 +78,7 @@ const REP = validateDimensions({
 }, OPTIONS);
 assert.ok(REP.ok, REP.text);
 const TABLES = new Map([...W.tables, ...REP.tables]);
-installVocab({ vocab: REP.vocab, idIndex: new Map([...W.idIndex, ...REP.idIndex, ['place_x', 'place'], ['org_h', 'org'], ['org_x', 'org']]), tables: TABLES });
+installVocab({ vocab: REP.vocab, idIndex: new Map([...W.idIndex, ...REP.idIndex, ['place_x', 'place'], ['org_h', 'org'], ['org_x', 'org'], ['sect_x', 'sect']]), tables: TABLES });
 
 // 测试记录类与去留取值（卷二 :529 三种去留；卷二十一 §3.3 :306–:307 的同类登记写法）。
 const RECORDS = {
@@ -247,7 +247,8 @@ test('清理函数只许写本系统登记为写者的路径：写本系统路�
 
 test('不可终止实体：实体表未载入拒 E-ACT-WRITER-NOT-READY；cause 不是 verb 拒 E-EVT-VERB；未载入 id 拒 E-DIM-REF-MISSING', () => {
   const state = fresh();
-  fails(state, (s) => terminate(ENGINE, s, 'org_x', CAUSE, null), 'E-ACT-WRITER-NOT-READY');
+  // org 表前置卡 A 起已载入（类别行写了 termination，组织是可终止实体类），所以"实体表未载入"改用一个尚无实体表的类 sect。
+  fails(state, (s) => terminate(ENGINE, s, 'sect_x', CAUSE, null), 'E-ACT-WRITER-NOT-READY');
   fails(state, (s) => terminate(ENGINE, s, 'npc_a', 'act_not_a_verb', null), 'E-EVT-VERB');
   fails(state, (s) => terminate(ENGINE, s, 'npc_zz', CAUSE, null), 'E-DIM-REF-MISSING');
   fails(state, (s) => terminate(ENGINE, s, 'npc_a', CAUSE, '中文'), 'E-DIM-ID-FORMAT');

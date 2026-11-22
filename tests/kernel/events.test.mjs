@@ -471,8 +471,15 @@ test('verb 族数据：四条块 5 内核/持有事件行齐全，发出系统�
   const entries = W.vocab.families.get('verb').entries;
   // 6-3 加 verb_item_spoiled（卷三乙 §2.8 坏透，发出系统是 itemRot 的 sys.itemRot）；6-6 加卷四 §2.8 的四条死因行（kindOnly，无发出系统，作终止协议 cause 的取值）；块 5 的四条仍如下。
   // 6-19 加 verb_due_elapsed（卷二十 §5.1 :1074，发出系统是调度器 due 段，内核发出，列 kernel.emits；载荷 {kind, owner}，actor 空、targets 空）。
-  assert.deepEqual(Object.keys(entries).sort(), ['verb_death_event', 'verb_death_natural', 'verb_death_status', 'verb_death_vital_loss', 'verb_domicile_changed', 'verb_due_elapsed', 'verb_entity_revived', 'verb_entity_terminated', 'verb_holding_changed', 'verb_item_spoiled']);
+  // 前置卡 A 加 verb_conquer、verb_grant、verb_usurp（卷八 §2.6 表后动词行表 B :401：kindOnly，无发出系统，只作统治者变更 cause 的取值）。
+  // 加 verb_governor_changed（卷八 :403 统治者变更，发出系统 sys.title，载荷 {from, to, cause}，kindFrom 取 cause，R8-5.6）。
+  assert.deepEqual(Object.keys(entries).sort(), ['verb_conquer', 'verb_death_event', 'verb_death_natural', 'verb_death_status', 'verb_death_vital_loss', 'verb_domicile_changed', 'verb_due_elapsed', 'verb_entity_revived', 'verb_entity_terminated', 'verb_governor_changed', 'verb_grant', 'verb_holding_changed', 'verb_item_spoiled', 'verb_opening', 'verb_usurp']);
+  // 加 verb_opening（卷八 1123k42，李白 11-23 b41e0801 ⑧：开局统治边的原因，kindOnly）。
+  assert.ok(['verb_conquer', 'verb_grant', 'verb_opening', 'verb_usurp'].every((v) => entries[v].kindOnly === true && entries[v].kindFrom === null && entries[v].perceivable === false));
   assert.deepEqual(entries.verb_due_elapsed.payloadShape, { kind: 'ref vocab due_kind', owner: 'EntityId' });
+  assert.deepEqual(entries.verb_governor_changed.payloadShape, { from: 'EntityId nullable', to: 'EntityId nullable', cause: 'ref vocab verb' });
+  assert.equal(entries.verb_governor_changed.kindFrom, 'cause');
+  assert.deepEqual(DECL.systems['sys.title'].emits, ['verb_governor_changed']);
   assert.ok(['verb_death_event', 'verb_death_natural', 'verb_death_status', 'verb_death_vital_loss'].every((v) => entries[v].kindOnly === true && entries[v].kindFrom === null));
   assert.deepEqual(DECL.systems['sys.itemRot'].emits, ['verb_item_spoiled']);
   // 持有变化与常住变化两条事件由同一个持有写者（kernel/holdings.mjs）发出，同列 kernel.emits（卷二 §2.7 :770；R18-1.10、R18-1.11）。

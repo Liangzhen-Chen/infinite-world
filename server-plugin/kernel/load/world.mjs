@@ -33,6 +33,7 @@ import { checkValuationTables } from '../valuation.mjs';
 import { checkPriceTables } from '../validate/price-tables.mjs';
 import { checkBodyTables } from '../validate/body-tables.mjs';
 import { checkSenseTables } from '../validate/sense-tables.mjs';
+import { checkPolityTables } from '../validate/polity-tables.mjs';
 import { installNamedStructs } from '../named-structs.mjs';
 import { checkGenStages } from '../gen/stages.mjs';
 import { checkGenFields } from '../gen/fields.mjs';
@@ -168,6 +169,8 @@ export function loadWorld(root, opts = {}) {
     domain.push(...checkBodyTables(view, { maxChainDepth: need('bodyPartChainMaxDepth'), unbuiltFields: report.env.unbuiltFields }));
     // 感知通道：sense 族条目三项必写、perception.json 键集覆盖、卷十三 groupRadius 取值域（卷五 §4.2.1、§4.2.3 规则 3、9、10；G13）。
     domain.push(...checkSenseTables(view));
+    // 组织、职位、政体三张表的跨行跨表校验与 orgTraits 同键（卷八 §2.8、卷十八 E-KIN-ORG-TRAITS）。
+    domain.push(...checkPolityTables(view));
     // 生成流程是数据（卷十 R10-1.1、§2.1 gstage、gfield）：阶段条目的字段、引用闭合、生成器登记与先后图无环；生成场条目的目标维度、slot、取值域与分布（E-GEN-STAGE-*、E-GEN-ROW-INVALID）。
     const placeTable = report.tables.get(PLACE_KIND);
     domain.push(...writerCheckRows('gen', checkGeneratedOverAuthored(report.tables)));

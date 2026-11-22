@@ -1,0 +1,56 @@
+{
+ "$schema": "../../schemas/dimensions.schema.json",
+ "behaviors": [
+  "org"
+ ],
+ "classes": {
+  "class_org_army": {"abstract": true, "orgKind": "orgkind_army", "charter": "1 == 1", "charterRules": {"permits": [], "duesRow": null, "motionRules": {}}, "covert": false, "termination": {"mode": "liquidate", "successorRX": null, "reviveWindowDays": 0}, "basis": "卷八 §2.4 :293 数据块；公共取值见 :258（清算、successorRX 空、复生窗口 0，charter 1 == 1，无许可无会费无议案规则，公开组织）；类别行 id 取 class_org_ 前缀（卷二 §1.3 :126 类别行入 class 族，李白 11-23 前置卡 A A-1）"},
+  "class_org_caravan": {"abstract": true, "orgKind": "orgkind_caravan", "charter": "1 == 1", "charterRules": {"permits": [], "duesRow": null, "motionRules": {}}, "covert": false, "termination": {"mode": "liquidate", "successorRX": null, "reviveWindowDays": 0}, "basis": "卷八 §2.4 :292 数据块；公共取值见 :258"},
+  "class_org_faction": {"abstract": true, "orgKind": "orgkind_faction", "charter": "1 == 1", "charterRules": {"permits": [], "duesRow": null, "motionRules": {}}, "covert": false, "termination": {"mode": "liquidate", "successorRX": null, "reviveWindowDays": 0}, "basis": "卷八 §2.4 :294 数据块；公共取值见 :258；解散条件在 orgkind 条目的 dissolveRX（:288）"},
+  "class_org_firm": {"abstract": true, "orgKind": "orgkind_firm", "charter": "1 == 1", "charterRules": {"permits": [], "duesRow": null, "motionRules": {}}, "covert": false, "termination": {"mode": "liquidate", "successorRX": null, "reviveWindowDays": 0}, "basis": "卷八 §2.4 :276 数据块；公共取值见 :258"},
+  "class_org_guild": {"abstract": true, "orgKind": "orgkind_guild", "charter": "1 == 1", "charterRules": {"permits": [], "duesRow": null, "motionRules": {}}, "covert": false, "termination": {"mode": "liquidate", "successorRX": null, "reviveWindowDays": 0}, "basis": "卷八 §2.4 :275 数据块；公共取值见 :258"},
+  "class_org_monster_band": {"abstract": true, "orgKind": "orgkind_monster_band", "charter": "1 == 1", "charterRules": {"permits": [], "duesRow": null, "motionRules": {}}, "covert": false, "tenure": "tenure_common", "termination": {"mode": "liquidate", "successorRX": null, "reviveWindowDays": 0}, "basis": "卷八 §2.4 :295 数据块；公共取值见 :258、:281（tenure 取归组织公有）"},
+  "class_org_state": {"abstract": true, "orgKind": "orgkind_state", "charter": "1 == 1", "charterRules": {"permits": [], "duesRow": null, "motionRules": {}}, "covert": false, "termination": {"mode": "liquidate", "successorRX": null, "reviveWindowDays": 0}, "basis": "卷八 §2.4 :272 数据块；公共取值见 :258"},
+  "class_org_town": {"abstract": true, "orgKind": "orgkind_town", "charter": "1 == 1", "charterRules": {"permits": [], "duesRow": null, "motionRules": {}}, "covert": false, "tenure": "tenure_household", "termination": {"mode": "liquidate", "successorRX": null, "reviveWindowDays": 0}, "basis": "卷八 §2.4 :273 数据块；公共取值见 :258、:260（tenure 是设计设定：城镇取归户）"},
+  "class_org_village": {"abstract": true, "orgKind": "orgkind_village", "charter": "1 == 1", "charterRules": {"permits": [], "duesRow": null, "motionRules": {}}, "covert": false, "tenure": "tenure_common", "termination": {"mode": "liquidate", "successorRX": null, "reviveWindowDays": 0}, "basis": "卷八 §2.4 :274 数据块；公共取值见 :258、:260（tenure 是设计设定：村社取归组织公有）"}
+ },
+ "dimensions": {
+  "charter": {"type": "rx", "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.1 :130（出处 CDDA 02 §17）", "owner": "卷八 §4.1（R8-1.2）"},
+  "charterRules": {"type": "struct", "required": "always", "requiredFields": ["duesRow", "motionRules", "permits"], "onUnknown": "error", "modifiable": false, "source": "卷八 §2.1 :132（出处 CDDA 02 §17；卷零覆盖表第 1134 行）", "owner": "卷八 §4.1", "fields": {"permits": {"type": "set", "of": {"type": "ref", "vocab": "permit"}, "domain": {}}, "duesRow": {"type": "ref", "vocab": "salary", "nullable": true}, "motionRules": {"type": "map", "key": {"type": "ref", "vocab": "motion"}, "value": {"type": "struct", "required": ["openDays", "passDen", "passNum", "quorumBps"], "fields": {"quorumBps": {"type": "integer", "unit": "bps", "domain": [0, 10000]}, "passNum": {"type": "integer", "unit": "count", "domain": [0, null]}, "passDen": {"type": "integer", "unit": "count", "domain": [1, null]}, "openDays": {"type": "integer", "unit": "day", "domain": [1, null]}}}}}},
+  "covert": {"type": "boolean", "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.1 :138（出处 卷二十二 §4.8 R22-8.1；封卷后勘误卷二十二 C22-5）", "owner": "卷二十二 R22-8.1、R22-8.2"},
+  "domainCount": {"type": "integer", "unit": "count", "domain": [0, null], "derived": "卷八 §2.1 :148 / §4.6：本组织直辖处数", "required": "never", "onUnknown": "gap", "modifiable": false, "source": "卷八 §2.1 :148（出处 CK3 05 §6.5 #51）", "owner": "卷八 §4.6"},
+  "domainLimit": {"type": "integer", "unit": "count", "domain": [0, null], "derived": "卷八 §2.1 :149 / §4.6：直辖上限", "required": "never", "onUnknown": "gap", "modifiable": true, "stacking": "none", "bounds": [0, 1000000], "source": "卷八 §2.1 :149（出处 CK3 05 §6.5 #51；modifiable:true 见该行）", "owner": "卷八 §4.6"},
+  "esteemTier": {"type": "enum", "vocab": "esteem_tier", "derived": "卷八 §2.1 :142：first(rules.social.esteem.tiers)，读对应账户余额，含义归卷十八", "required": "never", "onUnknown": "gap", "modifiable": false, "source": "卷八 §2.1 :142（出处 卷十八）", "owner": "卷十八"},
+  "forceMorale": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4, "derived": "卷八 §2.1 :145：军团士气，含义归卷十三 §4.8", "required": "never", "onUnknown": "gap", "modifiable": false, "source": "卷八 §2.1 :145（出处 卷十三）", "owner": "卷十三 §4.8"},
+  "forcePower": {"type": "number", "unit": "score", "domain": [0, null], "precision": 4, "derived": "卷八 §2.1 :143：兵力读数，含义归卷十三 §4.10", "required": "never", "onUnknown": "gap", "modifiable": false, "source": "卷八 §2.1 :143（出处 卷十三）", "owner": "卷十三 §4.10"},
+  "forceValues": {"type": "map", "key": {"type": "enum", "vocab": "forcevalue"}, "value": {"type": "integer", "unit": "count", "domain": [0, null]}, "derived": "卷八 §2.1 :144：兵团四值，键集 = 四项，含义归卷十三 §4.10（定点标度 rules.combat.force.valueScale，卷十三未建）", "required": "never", "onUnknown": "gap", "modifiable": false, "source": "卷八 §2.1 :144（出处 卷十三）", "owner": "卷十三 §4.10"},
+  "headOffice": {"type": "ref", "kind": "office", "nullable": true, "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.1 :131（出处 DF 01 §2.4）", "owner": "卷八 §2.2"},
+  "kitReadiness": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4, "derived": "卷八 §2.1 :146：齐装比例，含义归卷十三 §4.10", "required": "never", "onUnknown": "gap", "modifiable": false, "source": "卷八 §2.1 :146（出处 卷十三）", "owner": "卷十三 §4.10"},
+  "memberCount": {"type": "integer", "unit": "count", "domain": [0, null], "derived": "卷八 §2.1 :141：成员数，定义在卷十八，本卷只读", "required": "never", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.1 :141（出处 卷十八）", "owner": "卷十八"},
+  "offices": {"type": "set", "of": {"type": "ref", "kind": "office"}, "domain": {}, "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.1 :129（出处 DF 01 §2.4）", "owner": "卷八 §2.2；office.mjs 运行期改写"},
+  "orgKind": {"type": "enum", "vocab": "orgkind", "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.1 :125（出处 DF 01 §2.4）", "owner": "卷八 §4.1"},
+  "parent": {"type": "ref", "kind": "org", "nullable": true, "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.1 :128（出处 EVE 04 §6.1）", "owner": "卷八 §4.1"},
+  "polity": {"type": "ref", "kind": "polity", "nullable": true, "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.1 :126（出处 CK3 05 §6.5；R8-3.2）", "owner": "卷八 §4.1"},
+  "ration": {"type": "map", "key": {"type": "ref", "vocab": "class"}, "value": {"type": "number", "unit": "count", "domain": [0, null], "precision": 4}, "nullable": true, "required": "never", "onUnknown": "skip", "modifiable": false, "source": "卷八 §2.1 :136（出处 CDDA 02 §13）", "owner": "卷八 §4.1（只供卷六家户与军需读）"},
+  "realm": {"type": "ref", "kind": "org", "derived": "卷八 §2.1 :140：沿 parent 向上第一个 sovereign 种类且没有上级的组织；自己就是则取自己", "required": "never", "onUnknown": "skip", "modifiable": false, "source": "卷八 §2.1 :140（出处 CK3 05 §6.5）", "owner": "卷八 §4.1"},
+  "seat": {"type": "ref", "kind": "place", "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.1 :127（出处 DF 01 §2.4；移动驻地见 R8-3.4）", "owner": "卷八 §4.1"},
+  "supplyDays": {"type": "number", "unit": "day", "domain": [0, null], "precision": 4, "derived": "卷八 §2.1 :147：按当前口粮存量还能吃几日，含义归卷十三 §4.10", "required": "never", "onUnknown": "gap", "modifiable": false, "source": "卷八 §2.1 :147（出处 卷十三）", "owner": "卷十三 §4.10"},
+  "tenure": {"type": "enum", "vocab": "tenuremode", "required": "never", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.1 :133（出处 卷六 §4.7 规则 11 的请求）", "owner": "卷八 §4.1"},
+  "tier": {"type": "ref", "vocab": "settletier", "nullable": true, "required": "never", "onUnknown": "skip", "modifiable": false, "source": "卷八 §2.1 :134（出处 本卷）", "owner": "卷八 §4.18（运行期由治理写者改）"},
+  "treasury": {"type": "set", "of": {"type": "ref", "vocab": "purpose"}, "domain": {}, "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.1 :135（出处 EVE 04 §6.1）", "owner": "卷八 §4.1"}
+ },
+ "entity": {
+  "classPrefix": "class_",
+  "idPrefix": [
+   "org_"
+  ],
+  "instanceTable": null,
+  "singletonIds": []
+ },
+ "generated": {},
+ "kind": "org",
+ "namespace": "core",
+ "precedenceGroups": {"default": []},
+ "rows": {},
+ "version": 1
+}

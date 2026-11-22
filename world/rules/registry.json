@@ -613,6 +613,35 @@
    "volume": "卷五 §4.2.3 规则 3、9（marginBase、candidateRadiusM；读点 server-plugin/perceive.mjs）",
    "multiSourceMerge": "own_key_only",
    "packOverridable": {"marginBase": false, "candidateRadiusM": false}
+  },
+  {
+   "code": "polity",
+   "file": "tables/polity.json",
+   "structure": "keys",
+   "type": {
+    "rolesKinds": {"type": "struct", "required": ["governs"], "fields": {"governs": {"type": "ref", "vocab": "holding_kind"}}},
+    "holdForcibleCauses": {"type": "set", "of": {"type": "ref", "vocab": "verb"}, "domain": {}},
+    "genSettlementKind": {"type": "ref", "vocab": "orgkind"},
+    "genHoldCause": {"type": "ref", "vocab": "verb"},
+    "genIdSlots": {"type": "struct", "required": ["office", "realm", "settlement"], "fields": {"realm": {"type": "ref", "vocab": "idslot"}, "settlement": {"type": "ref", "vocab": "idslot"}, "office": {"type": "ref", "vocab": "idslot"}}},
+    "unbuilt": {"type": "set", "of": {"type": "string"}}
+   },
+   "domain": {"rolesKinds": {}, "holdForcibleCauses": {}, "genSettlementKind": {}, "genHoldCause": {}, "genIdSlots": {}, "unbuilt": {}},
+   "volume": "卷八 §2.6（polity.roles.kinds 的 governs、polity.hold.forcibleCauses、polity.gen.settlementKind；读点 kernel/title.mjs、kernel/gen/polity.mjs）；其余键卷文没给值，登在 unbuilt",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"rolesKinds": false, "holdForcibleCauses": false, "genSettlementKind": false, "genHoldCause": false, "genIdSlots": false, "unbuilt": false}
+  },
+  {
+   "code": "social",
+   "file": "tables/social.json",
+   "structure": "keys",
+   "type": {
+    "orgTraits": {"type": "map", "key": {"type": "ref", "vocab": "orgkind"}, "value": {"type": "struct", "required": ["descentGroup", "domestic"], "fields": {"domestic": {"type": "boolean"}, "descentGroup": {"type": "boolean"}}}}
+   },
+   "domain": {"orgTraits": {}},
+   "volume": "卷十八 §2.3 :239（rules.social.orgTraits）；同键与必写核对在 kernel/validate/polity-tables.mjs（E-KIN-ORG-TRAITS，卷十八 :300）",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"orgTraits": false}
   }
  ]
 }

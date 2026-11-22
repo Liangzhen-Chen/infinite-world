@@ -1,0 +1,45 @@
+{
+ "$schema": "../../schemas/dimensions.schema.json",
+ "behaviors": [
+  "office"
+ ],
+ "classes": {},
+ "dimensions": {
+  "acting": {"type": "ref", "kind": "person", "nullable": true, "derived": "卷八 §2.2 :178：标的为本行的现役代理边的持有者（至多一人，§4.2）", "required": "never", "onUnknown": "skip", "modifiable": false, "source": "卷八 §2.2 :178（出处 本卷）", "owner": "卷八 §4.2"},
+  "holder": {"type": "ref", "kind": "person", "nullable": true, "derived": "卷八 §2.2 :177：标的为本行的现役任职边的持有者（至多一人）", "required": "never", "onUnknown": "skip", "modifiable": false, "source": "卷八 §2.2 :177（出处 本卷）", "owner": "卷八 §4.2"},
+  "appointedBy": {"type": "ref", "refs": [{"kind": "office"}, {"vocab": "election"}], "nullable": true, "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.2 :166（出处 DF 01 §2.4）", "owner": "卷八 §4.2、§4.18"},
+  "bench": {"type": "ref", "kind": "office", "nullable": true, "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.2 :169（出处 DF 01 §2.4）", "owner": "卷八 §4.2（E-OFFICE-BENCH）"},
+  "councilSkill": {"type": "ref", "kind": "skill", "nullable": true, "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.2 :170（出处 CK3 05 §6.6 #63）", "owner": "卷八 §4.2"},
+  "dejureLiege": {"type": "ref", "kind": "office", "nullable": true, "derived": "卷八 §2.2 :181：读 state.dejure（§4.4）", "required": "never", "onUnknown": "skip", "modifiable": false, "source": "卷八 §2.2 :181（出处 CK3 05 §6.5 #47）", "owner": "卷八 §4.4"},
+  "domain": {"type": "ref", "kind": "place", "nullable": true, "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.2 :167（出处 CK3 05 §6.5 #47）", "owner": "卷八 §4.4"},
+  "eligibility": {"type": "rx", "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.2 :164（出处 CK3 05 §3.5）", "owner": "卷八 §4.2"},
+  "guardianOfLastResort": {"type": "boolean", "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.2 :172（出处 卷十八 §4.2）", "owner": "卷十八 §4.2"},
+  "jurisdictionLevel": {"type": "enum", "vocab": "juris", "required": "byEnum:officeRowKind=orowk_actual", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.2 :160（出处 卷五 §4.14；封卷后勘误卷八 N-2 丙'）", "owner": "卷五 §4.14"},
+  "officeKind": {"type": "ref", "kind": "office", "nullable": true, "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.2 :175（出处 本卷）", "owner": "卷八 §2.2（E-OFFICE-KIND）"},
+  "officeRowKind": {"type": "enum", "vocab": "officerowkind", "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.2 :174（出处 本卷）", "owner": "卷八 §2.2、§2.4"},
+  "org": {"type": "ref", "kind": "org", "derived": "卷八 §2.2 :176：offices 含本行的那个组织行", "required": "never", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.2 :176（出处 本卷）", "owner": "卷八 §2.2"},
+  "powers": {"type": "set", "of": {"type": "ref", "vocab": "power"}, "domain": {}, "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.2 :161（出处 DF 01 §2.4）", "owner": "卷八 §4.2"},
+  "rank": {"type": "integer", "unit": "count", "domain": [0, 9], "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.2 :159（出处 CK3 05 §6.5 #47）", "owner": "卷八 §4.2"},
+  "revoked": {"type": "boolean", "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.2 :173（出处 本卷；写者 office.mjs）", "owner": "卷八 §3.3"},
+  "salaryTable": {"type": "ref", "vocab": "salary", "required": "never", "onUnknown": "gap", "modifiable": false, "source": "卷八 §2.2 :162（出处 CK3 05 §6.6 #64）", "owner": "卷八 §4.2"},
+  "seatPlace": {"type": "ref", "kind": "place", "derived": "卷八 §2.2 :180：职位席位所在地 = 所属组织的 seat", "required": "never", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.2 :180（出处 本卷）", "owner": "卷八 §2.2；卷五 §4.11 规则 4"},
+  "succession": {"type": "enum", "vocab": "succession", "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.2 :163（出处 CK3 05 §6.5）", "owner": "卷八 §4.2"},
+  "term": {"type": "struct", "required": "always", "requiredFields": ["kind", "years"], "onUnknown": "error", "modifiable": false, "source": "卷八 §2.2 :165（出处 DF 01 §2.4）", "owner": "卷八 §4.2", "fields": {"kind": {"type": "enum", "vocab": "term"}, "years": {"type": "integer", "unit": "year", "domain": [1, null], "nullable": true}}},
+  "titular": {"type": "boolean", "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.2 :168（出处 本卷）", "owner": "卷八 §4.4"},
+  "vacant": {"type": "boolean", "derived": "卷八 §2.2 :179：没有现役任职边", "required": "never", "onUnknown": "gap", "modifiable": false, "source": "卷八 §2.2 :179（出处 本卷）", "owner": "卷八 §2.2"},
+  "venue": {"type": "ref", "vocab": "requirement", "nullable": true, "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷八 §2.2 :171（出处 DF 01 §2.4）", "owner": "卷八 §4.2（读卷十九的设施功能）"}
+ },
+ "entity": {
+  "classPrefix": "class_",
+  "idPrefix": [
+   "office_"
+  ],
+  "instanceTable": null,
+  "singletonIds": []
+ },
+ "generated": {},
+ "kind": "office",
+ "namespace": "core",
+ "rows": {},
+ "version": 1
+}

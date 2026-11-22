@@ -39,6 +39,21 @@ export function instanceDigestOf(vocab, worldSeed, genesisMinute, slot, parentId
 }
 
 /**
+ * 建实体的实例 id（卷十 R10-12.1 `instanceIdOf`）：位次条目的 kind 非空（建实体），id = 该实体类的 id 前缀（表头 entity.idPrefix 的首项，调用方给）加摘要前半。
+ * 前缀加摘要前半须合代号文法（小写字母起头、至多一个代号长度）；卷十没有写 id 的字面格式，此式与 drawObjectIdOf 同法（见回报"已定"）。
+ * @param {any} vocab @param {string} worldSeed @param {number} genesisMinute @param {string} slot 位次代号（kind 非空） @param {string} parentId @param {number} ordinal @param {string} idPrefix
+ * @returns {string}
+ */
+export function instanceIdOf(vocab, worldSeed, genesisMinute, slot, parentId, ordinal, idPrefix) {
+  const entry = idslotEntry(vocab, slot);
+  if (entry.kind === null || entry.kind === undefined) throw new KernelError('E-GEN-STAGE-UNKNOWN', {}, `idslot ${slot}: has no entity kind, it is a draw object (use drawObjectIdOf)`);
+  const digest = instanceDigestOf(vocab, worldSeed, genesisMinute, slot, parentId, ordinal);
+  const id = `${idPrefix}${digest.slice(0, digest.length >> 1)}`;
+  if (!CODE_RE.test(id)) throw new KernelError('E-SEED-COMPONENT', {}, `instanceIdOf: ${JSON.stringify(id)} is not a code (idPrefix ${JSON.stringify(idPrefix)})`);
+  return id;
+}
+
+/**
  * 抽取对象代号：kind 为空的位次导出的 id 只作骰值键的主体段用，须合代号文法（小写字母起头、至多一个代号长度），
  * 取 `<前缀>_` 加摘要前半（十六进制串长度的一半，不另写长度字面量）。前缀取位次代号去掉族前缀的部分。
  * @param {any} vocab @param {string} worldSeed @param {number} genesisMinute @param {string} slot @param {string} parentId @param {number} ordinal

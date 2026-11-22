@@ -1,0 +1,52 @@
+{
+ "rows": [
+  {
+   "key": "rolesKinds",
+   "value": {"governs": "hk_governs"},
+   "file": "server-plugin/kernel/title.mjs",
+   "grade": "referenced",
+   "source": "卷八 §2.6 :326（polity.roles.kinds 的 governs 一项）、§4.5.1 :765（统治边种类取 rules.polity.roles.kinds.governs，即卷十八已登记的统治行，沿用不改）",
+   "basis": "统治行 hk_governs 已登在 holding_kind 族（_vocab.json，卷十八 §4.1）；规则层不出现种类代号字面量，title.mjs 只读本键；该结构的其余句柄（member、officeHolder 等）由各自用到它的卡补"
+  },
+  {
+   "key": "holdForcibleCauses",
+   "value": ["verb_conquer", "verb_usurp"],
+   "file": "server-plugin/kernel/title.mjs",
+   "grade": "referenced",
+   "source": "卷八 §2.6 :342（polity.hold.forcibleCauses）、R8-5.3 :775（征服、篡夺在集合里；封授、继承、买卖、议案划拨不在）、:401（篡夺、征服属 forcibleCauses）",
+   "basis": "集合取征服 verb_conquer 与篡夺 verb_usurp 两项（两条动词行已登在 verb 族，kindOnly，卷八 :401）；polity.roles.verbs 结构本身没有读者，等发统治者变更事件的卡再建"
+  },
+  {
+   "key": "genSettlementKind",
+   "value": "orgkind_village",
+   "file": "server-plugin/kernel/gen/polity.mjs",
+   "grade": "designed",
+   "source": "卷八 §2.6 :376（polity.gen.settlementKind：所指条目 settlement 须为真、internal 须为假）、R8-18.9 ② :1267；李白 11-23 G5b-H（村社组织由开局阶段给每个聚落生成）",
+   "basis": "取村社（orgkind_village：settlement 真、internal 假，卷八 :267）；层级（村、镇）由 openTiers 与 tier 表达，不由本键分种类"
+  },
+  {
+   "key": "genIdSlots",
+   "value": {"office": "idslot_genoffice", "realm": "idslot_realm", "settlement": "idslot_settlement"},
+   "file": "server-plugin/kernel/gen/polity.mjs",
+   "grade": "referenced",
+   "source": "卷八 R8-18.9 ⑤ :1267、§5.3 :1397（三条位次：开局主权组织 idslot_realm、开局聚落组织 idslot_settlement、开局职位 idslot_genoffice）",
+   "basis": "三条位次已登在 idslot 族（_vocab.json）；规则层不出现代号字面量（S8-1），生成器读本键取句柄；键名 genIdSlots 是本卡自拟的规则表键（卷八 §2.6 没列），须李白认或改名"
+  },
+  {
+   "key": "genHoldCause",
+   "value": "verb_opening",
+   "file": "server-plugin/kernel/gen/polity.mjs",
+   "grade": "designed",
+   "source": "卷八 §2.6 :378（polity.gen.holdCause：不得在 forcibleCauses 里）、R8-18.9 ③；李白 11-23 事件 b41e0801 ⑧（新登只作原因的开局动词，不沿用封授、不连带封建契约；卷八勘误 1123k42）",
+   "basis": "取新登的 verb_opening（kindOnly，只作开局统治边的原因）；不在 holdForcibleCauses 里，加载校验核（kernel/validate/polity-tables.mjs）"
+  },
+  {
+   "key": "unbuilt",
+   "value": ["genOpenTiers", "genRealmRows", "rolesPurposes", "settleDemoteDays", "settleReopenDays"],
+   "file": "server-plugin/kernel/gen/polity.mjs",
+   "grade": "designed",
+   "source": "卷八 §2.6 :375（polity.gen.realmRows）、:377（polity.gen.openTiers）、:327（polity.roles.purposes）、:373–:374（polity.settle.demoteDays、reopenDays）",
+   "basis": "待调：卷文只给类型与判据，没给值，不自编：realmRows 与 openTiers 的 whenRX 内容、settletier 层级条目（order、requiresRX、grantsOffices）、两个天数、公库缺省分区的用途行（卷六 purpose 族没有 general，第 6 项另开卡）都不在本卡；开局阶段缺这些输入时整段进 deferred 并列缺口，不建行（gen/polity.mjs，卷十缺输入口径）"
+  }
+ ]
+}

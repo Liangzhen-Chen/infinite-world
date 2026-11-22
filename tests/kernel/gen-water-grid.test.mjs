@@ -62,7 +62,8 @@ test('水体阶段经 planFootprints 读足迹：surfaceM2 = 足迹面积、catc
     terrain: 'terrain_river', coord: { x: 350, y: 50 }, targetAreaM2: 20000, anchorElevationM: 0, forestCover: 0,
   }]]);
   const r = generateFill(world, { worldSeed: 'seed_one', genesisMinute: 0, geo: { authored, downhill: [], buildingIds: [] } });
-  assert.deepEqual(r.deferred, []);
+  // 开局政体阶段（gstage_polity，前置卡 A）已登记，真实世界缺落位文化等输入时它整段进 deferred（卷十缺输入口径）；本用例只核水体阶段无缺口。
+  assert.deepEqual(r.deferred.filter((d) => d.stage !== 'gstage_polity'), []);
   const wa = r.pending.find((p) => p.id === 'loc_wa');
   const rule = world.rules.gen.waterRows[0];
   const d4 = Math.round(drawByKey('seed_one', 'gen_water', 'loc_wa', 0, 'site_gen_water_depth', rule.depthM) * 10000);

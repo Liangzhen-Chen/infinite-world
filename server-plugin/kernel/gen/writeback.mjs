@@ -12,6 +12,7 @@
 
 import { KernelError } from '../errors.mjs';
 import { checkValue } from '../validate/types.mjs';
+import { requirement } from '../validate/rows.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
@@ -67,6 +68,45 @@ export function writeback(ctx) {
   const sorted = {};
   for (const id of Object.keys(out).sort(cmp)) sorted[id] = out[id];
   return { generated: sorted, pending };
+}
+
+/**
+ * 建行写回（卷十 R10-1.2 "一行的全部维度与组件类挂载都在这笔建行事务里定下"、R10-9.9、R10-9.4）：阶段在 writesKinds 声明过的表里新建整行，行落进该表 `generated` 节（偏离行同一形状，没有同 id 实体行即整行，卷二 §1.3）。
+ * 与 `writeback`（给已有行补维度）分开：新建的行 id 若已在表里或作者输入里，即 E-GEN-ROW-INVALID（建行不覆盖、不补，手写优先靠阶段自己不出提案，R10-1.7）；
+ * 逐维度同样核：表头登记的、无 derived 的维度（R10-9.12），值过 checkValue（R10-9.1）。
+ * @param {{table: string, stage: string, stageEntry: {writesKinds: string[]}, proposals: Array<{table: string, id: string, dims: Record<string, any>, by: string, seedKey: string}>,
+ *   tableIds: Set<string>, authoredIds: Set<string>, classIds: Set<string>, dims: Record<string, any>, env: any, genesisMinute: number, created: Record<string, any>}} ctx
+ * @returns {Record<string, any>} 合并后的新建行（新对象，按 id 升序）：{id: {<维度>: <整值>, generated: {by, seedKey, at}}}
+ */
+export function createRows(ctx) {
+  const out = { ...ctx.created };
+  const bad = (why) => { throw new KernelError('E-GEN-ROW-INVALID', {}, why); };
+  if (!ctx.stageEntry.writesKinds.includes(ctx.table)) bad(`stage ${ctx.stage} does not declare writesKinds ${ctx.table} (R10-9.9)`);
+  for (const p of ctx.proposals) {
+    if (p.table !== ctx.table) bad(`proposal ${p.id}: table ${p.table} is not ${ctx.table}`);
+    if (ctx.tableIds.has(p.id) || ctx.authoredIds.has(p.id) || Object.hasOwn(out, p.id)) bad(`proposal ${p.id}: the row already exists, a created row never overwrites (R10-1.7)`);
+    // 组件类、类别的挂载是行字段不是维度（卷五 §2.1 "组件类的挂载在行创建时定下"）：每项须是本表登记的类别行（abstract 模板行也是类别行）。
+    const { classes, ...dimValues } = p.dims;
+    if (classes !== undefined && (!Array.isArray(classes) || !classes.every((c) => typeof c === 'string' && ctx.classIds.has(c)))) bad(`proposal ${p.id}: classes ${JSON.stringify(classes)} must list class rows of table ${ctx.table}`);
+    for (const [dim, v] of Object.entries(dimValues)) {
+      const def = ctx.dims[dim];
+      if (!def) bad(`proposal ${p.id}: dimension ${dim} is not registered`);
+      if (def.derived !== undefined) bad(`proposal ${p.id}: ${dim} is derived (R10-9.12)`);
+      const errs = [];
+      checkValue(def, v, ctx.env, { table: ctx.table, row: p.id, dim, path: `generated/${p.id}/${dim}` }, (e) => errs.push(e));
+      if (errs.length > 0) bad(`proposal ${p.id}: ${dim}=${JSON.stringify(v)} fails the dimension check (${errs[0].code}, want ${errs[0].want})`);
+    }
+    // 必填核对（R10-9.1：新建整行与手写行同一校验，含必填）：表头 required 取 always 的非派生维度必须有值（显式 null 算有值）；`byEnum:<枚举维>=<值>` 在那一枚举维取该值时必填。
+    // 必填判定只有一处实现：validate/rows.mjs 的 requirement()（含"；"并列多条件、byClass、ifPresent、byEnum 等）。把提案当一张只有这一行的展平表交给它。
+    const asTable = { doc: { dimensions: ctx.dims }, flat: { rows: new Map([[p.id, dimValues]]), classes: new Map(), abstract: new Set() }, env: ctx.env };
+    const asRow = { classes: classes === undefined ? [] : classes };
+    const lacking = Object.keys(ctx.dims).sort().filter((dim) => ctx.dims[dim].derived === undefined && !Object.hasOwn(dimValues, dim) && requirement(asTable, p.id, asRow, dim).applicable);
+    if (lacking.length > 0) bad(`proposal ${p.id}: required dimensions ${lacking.join(', ')} are missing (R10-9.1)`);
+    out[p.id] = { ...p.dims, generated: { by: p.by, seedKey: p.seedKey, at: ctx.genesisMinute } };
+  }
+  const sorted = {};
+  for (const id of Object.keys(out).sort(cmp)) sorted[id] = out[id];
+  return sorted;
 }
 
 /**

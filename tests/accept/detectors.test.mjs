@@ -649,8 +649,9 @@ test('param_consumed 真实仓库：如实报无运行期消费者的登记参�
   // rxMaxDepth 自 5-3 起被持有写者读（kernel/holdings.mjs 的 holdWhile 编译），已有人消费。
   // bodyPartChainMaxDepth（6-4，卷四 §2.2 :202"链深 ≤ 8"）与 extendsMaxDepth 同类：只被加载期校验器 kernel/validate/body-tables.mjs 读到，按消费者口径不算。
   // life.stages（6-4 登记列定义、值在 unbuilt）：6-6 起有读者 server-plugin/life.mjs（lifeFacts 读阶段表），不再报。
+  // social.orgTraits（前置卡 A，卷十八 :239）：现只被加载期校验器 kernel/validate/polity-tables.mjs 读到（E-KIN-ORG-TRAITS 同键核对），运行期读者是卷十八家户、世系判定（块 7），按消费者口径不算。
   assert.deepEqual(keys, [
-    'kernelConstants.bodyPartChainMaxDepth', 'kernelConstants.extendsMaxDepth',
+    'kernelConstants.bodyPartChainMaxDepth', 'kernelConstants.extendsMaxDepth', 'social.orgTraits',
   ]);
   for (const k of ['kernelConstants.handleRadix', 'modifiers.stackingTable', 'economyLedger.budget', 'economyLedger.alert',
     'clock.cadence', 'clock.phaseOffset', 'clock.paceFactor', 'clock.contestDefault', 'clock.reactionDepthMax', 'clock.proposalMax', 'clock.drawSites',

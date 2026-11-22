@@ -63,7 +63,7 @@ const VERB = Object.freeze({
 const CHANGE = Object.freeze({ established: 'established', ended: 'ended', transferred: 'transferred' });
 
 // 处置代号里本卡会用到的两个（handover 族，卷十八 §2.2；块 5 只执行“关闭”一路，别的处置待 5-4 终止协议）。
-const HANDOVER = Object.freeze({ close: 'ho_close', stay: 'ho_stay', succeed: 'ho_succeed' });
+const HANDOVER = Object.freeze({ close: 'ho_close', stay: 'ho_stay', succeed: 'ho_succeed', revert: 'ho_revert' });
 
 // 互斥策略（卷十八 §2.2 :1531）与候补来源里本卡用到的取值。
 const POLICY = Object.freeze({ forbid: 'forbid', autoVacate: 'auto_vacate' });
@@ -423,9 +423,18 @@ function closeEdge(engine, state, tx, edge, cause, endReason, withEvent) {
 }
 
 // 旧边按种类行“离任”格处置（R18-1.5）；块 5 只执行“关闭”，别的处置待 5-4 终止协议，整笔拒收不静默照写。
+// ho_revert（回到授予者，R18-1.2 :518）：授予者为空或已终止时按关闭处置（口径同 terminate.mjs 的 revert 格）；授予者在世要协议转移，仍整笔拒收。
+function vacatesByClose(state, row, rec) {
+  if (row.vacated === HANDOVER.close) return true;
+  if (row.vacated !== HANDOVER.revert) return false;
+  const grantor = rec.terms[S.grantor];
+  const marks = isObj(state) ? state[TERMINATED_KEY] : undefined;
+  return !isCode(grantor) || (isObj(marks) && Object.hasOwn(marks, grantor));
+}
+
 function vacateEdge(engine, state, tx, edge, cause) {
   const row = kindRow(engine, edge.record.kind);
-  if (row.vacated === HANDOVER.close) { closeEdge(engine, state, tx, edge, cause, null, true); return; }
+  if (vacatesByClose(state, row, edge.record)) { closeEdge(engine, state, tx, edge, cause, null, true); return; }
   throw deny('E-ACT-WRITER-NOT-READY', `holding kind ${edge.record.kind}: vacated disposition ${JSON.stringify(row.vacated)} is not wired in block 5`);
 }
 
@@ -877,7 +886,7 @@ function recompute(state, written) {
       const touched = edges.has(edge.id) || ends.has(edge.record.holder) || ends.has(edge.record.subject);
       if (!touched) return;
       if (holdWhileHolds(engine, state, row, edge.record)) return;
-      if (row.vacated !== HANDOVER.close) throw deny('E-ACT-WRITER-NOT-READY', `holding kind ${row.id}: vacated disposition ${JSON.stringify(row.vacated)} is not wired in block 5`);
+      if (!vacatesByClose(state, row, edge.record)) throw deny('E-ACT-WRITER-NOT-READY', `holding kind ${row.id}: vacated disposition ${JSON.stringify(row.vacated)} is not wired in block 5`);
       closeEdge(engine, state, tx, edge, book && book.cause ? book.cause : null, null, true);
       changed = true;
     });

@@ -1,0 +1,19 @@
+{
+ "rows": [
+  {
+   "key": "orgTraits",
+   "value": {
+    "orgkind_army": {"domestic": false, "descentGroup": false},
+    "orgkind_caravan": {"domestic": false, "descentGroup": false},
+    "orgkind_faction": {"domestic": false, "descentGroup": false},
+    "orgkind_firm": {"domestic": false, "descentGroup": false},
+    "orgkind_guild": {"domestic": false, "descentGroup": false},
+    "orgkind_monster_band": {"domestic": false, "descentGroup": false},
+    "orgkind_state": {"domestic": false, "descentGroup": false},
+    "orgkind_town": {"domestic": false, "descentGroup": false},
+    "orgkind_village": {"domestic": false, "descentGroup": false}
+   },
+   "basis": "卷十八 §2.3 :239（rules.social.orgTraits：orgkind 族每条条目有同键一行，两项行上必写，E-KIN-ORG-TRAITS :300）；本卷登记的九种组织种类取值照卷八 :1414 orgTraitsRows（两项皆假）。卷十八自己的家户、世系（:170–:171）与卷七的教团、修会两对条目随它们自己的 orgkind 条目登记那一卡补行（同键规则：条目与行同批进）"
+  }
+ ]
+}
