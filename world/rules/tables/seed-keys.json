@@ -138,6 +138,14 @@
      "role": "role_seed",
      "prefix": "gen_",
      "purpose": "洞穴起点、生长与洞口并列的种子（卷十 R10-2.14 :431–:433、§4.12.1 :882、R10-12.3 ④ :939，原写 stream.gen.cave / site.gen.cave.grow，代号文法不收点改下划线）：身份采样键 sha256(模板种子 | 实体类 place | 体积行 id | 抽取点代号)（卷二 §1.10 :326，流代号不入键）；次序键 hash(种子, 区格序号或列序号) 同用这一个种子、不另分抽取点；w 由行所在格空间定、不另作成分；不放版本成分"
+    },
+    {
+     "file": "position.mjs",
+     "stream": "travel",
+     "site": "site_pos_land",
+     "role": "role_seed",
+     "prefix": "travel_",
+     "purpose": "给地点落格的 seedKey（卷十七 §3.3 :299、C17-13 :875，原写 site.pos.land，代号文法不收点改下划线）：骰值键五段世界种子、流代号 travel、被安置个体 id、本事务世界时刻、抽取点代号；调用方随地点给了 seedKey 的照用；不放版本成分"
     }
    ]
   }

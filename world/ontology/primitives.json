@@ -135,6 +135,13 @@
    "channel": "declared",
    "required": {
     "to": "id"
+   },
+   "optional": {
+    "subject": "id",
+    "facing": {
+     "type": "integer",
+     "nullable": true
+    }
    }
   },
   {

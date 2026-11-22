@@ -71,6 +71,7 @@ const loaded = load({
 assert.equal(loaded.ok, true, loaded.text);
 
 export const ENGINE = { tables: loaded.tables, vocab: loaded.vocab, rules: loaded.rules, units: loaded.env.units, template: { seed: 'seed_test' } };
+export const OWNERS = loaded.owners; // 声明表（G12 的 rebaseBubble 用例在其上加 dated 写者模式）
 export const SEAT = 'hk_player_seat'; // 真实规则表 rules.control.seatKind 的值
 export const pos = (x, y, z = 1, w = 0, coarse = false) => ({ w, x, y, z, coarse });
 export const seatEdge = (who) => ({ kind: SEAT, holder: who, subject: who, terms: { since: 0, until: null }, grantedBy: null });

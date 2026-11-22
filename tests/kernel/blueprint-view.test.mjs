@@ -9,7 +9,7 @@ import { createHash } from 'node:crypto';
 import { testTempRoot, writeUnderTempRoot, ROOT } from '../accept/temp-root.mjs';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
-import { gridView, zoneAt, placeView, blueprintOf, landCell } from '../../server-plugin/kernel/place.mjs';
+import { gridView, zoneAt, placeView, blueprintOf, landCell, settleCell } from '../../server-plugin/kernel/place.mjs';
 
 installDigestCap({ sha256Hex: (data, encoding) => createHash('sha256').update(data, encoding === 'base64' ? 'base64' : 'utf8').digest('hex') });
 assert.ok(loadWorld(ROOT).ok); // 先装配命名 struct、定点常数与 sqrt 表（夹具世界的加载校验要读 anchor）
@@ -274,7 +274,7 @@ test('breaks：行上拆开的元读作开口（外墙读空气、屋面顶面�
   assert.deepEqual(kinds, [[21, 120], [23, 120]]);
 });
 
-test('landCell：建筑、房间 coarse 落格在它自己的室内格里，同 seedKey 同结果，且 zoneAt 回到该地点；coarse 假仍不落', () => {
+test('landCell：建筑、房间 coarse 落格在它自己的室内格里，同 seedKey 同结果，且 zoneAt 回到该地点；coarse 假（泡内）落在可立足细格上', () => {
   const e = world(WORLD({
     bld_a: building('loc_a', [20, 120, 0], { form: 'bldform_halls', planCells: { widthCells: 6, depthCells: 7 } }),
     loc_room_f: room('bld_a', 'roomrole_front'),
@@ -292,7 +292,12 @@ test('landCell：建筑、房间 coarse 落格在它自己的室内格里，同 
     const p = landCell(e, S, { place: 'bld_a', kind: 'any', seedKey: k, coarse: true });
     assert.equal(zoneAt(e, S, p), 'bld_a', k);
   }
-  assert.throws(() => landCell(e, S, { place: 'bld_a', kind: 'any', seedKey: 'k1', coarse: false }), (x) => x && x.code === 'E-DET-DOMAIN');
+  // coarse 为假（G12 起落地，卷五 §4.1 规则 14 :502）：落在 zoneAt 恰为建筑行的可立足细格上，同输入同结果（取法是 landCellKey 最小者，哈希不手算，这里核性质）。
+  const fine = landCell(e, S, { place: 'bld_a', kind: 'any', seedKey: 'k1', coarse: false });
+  assert.equal(fine.coarse, false);
+  assert.equal(zoneAt(e, S, fine), 'bld_a');
+  assert.equal(settleCell(e, S, fine).kind, 'stay');
+  assert.deepEqual(landCell(e, S, { place: 'bld_a', kind: 'any', seedKey: 'k1', coarse: false }), fine);
 });
 
 test('landCell：格序号含层——两层建筑（无房间行）的落点不总落在最低层；每个落点 zoneAt 恰为建筑行', () => {

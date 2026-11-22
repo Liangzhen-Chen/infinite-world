@@ -351,15 +351,20 @@ test('钩子节拍对齐绝对分钟：下一拍是 after 之后第一个满足 
 const PHASES = JSON.parse(readFileSync(join(ROOT, 'world/ontology/state-owners.json'), 'utf8')).phases;
 function packDecl(hooks) {
   const d = JSON.parse(readFileSync(join(ROOT, 'world/ontology/state-owners.json'), 'utf8'));
-  delete d.systems['sys.itemRot'].phase; // 真实声明表的钩子（6-3 itemRot）不参与这些用例：它们只验本测试登记的钩子
+  delete d.systems['sys.itemRot'].phase; // 真实声明表的钩子（6-3 itemRot、6-27 rebaseBubble）不参与这些用例：它们只验本测试登记的钩子
+  delete d.systems['sys.position'].phase;
   d.systems['sys.test_pack'] = { tables: [], entryCallerFiles: {}, entryJudges: [], phase: hooks };
   return mergeStateOwners(d, { units: W.env.units, kinds: new Set(W.tables.keys()), families: new Set(W.vocab.families.keys()) });
 }
 const withClockRules = (cadence, phaseOffset) => ({ ...W.rules, clock: { ...W.rules.clock, cadence, phaseOffset } });
 
 test('cadence 逐钩子查：无钩子空表合法；登记一个钩子而缺 cadence 即 E-CLOCK-CADENCE；phaseOffset 每钩子一项且在 [0, cadence)；表里多出未登记钩子 E-DIM-REF-MISSING', () => {
-  // 真实声明表只有 6-3 登记的 itemRot（environment 阶段）；真实 rules.clock 给了它的节拍与相位，核对无错。
-  assert.deepEqual(W.owners.hooks, [{ system: 'sys.itemRot', hook: 'itemRot', phase: 'environment', after: [], sortKey: 1 }]);
+  // 真实声明表有 6-3 登记的 itemRot（environment 阶段）与 6-27 登记的 rebaseBubble（body 阶段：对个体位置的挤出、坠落结算，不与 itemRot 同阶段——同阶段同 sortKey 被拒，二者没有先后依赖，不编依赖）；
+  // 真实 rules.clock 给了它们的节拍与相位，核对无错。
+  assert.deepEqual(W.owners.hooks, [
+    { system: 'sys.itemRot', hook: 'itemRot', phase: 'environment', after: [], sortKey: 1 },
+    { system: 'sys.position', hook: 'rebaseBubble', phase: 'body', after: [], sortKey: 1 },
+  ]);
   assert.deepEqual(checkHookCadence(W.rules, W.owners.hooks), []);
   const m = packDecl({ settleTest: { phase: 'economy', after: [], sortKey: 1 } });
   assert.deepEqual(m.errors, []);
@@ -383,8 +388,8 @@ test('加载入口接上 cadence 核对：clock.json 写了声明表里没有的
       let text = real(r.file);
       if (r.code === 'clock') {
         const doc = JSON.parse(text);
-        doc.rows.find((x) => x.key === 'cadence').value = { ghost: 60, itemRot: 1440 };
-        doc.rows.find((x) => x.key === 'phaseOffset').value = { ghost: 0, itemRot: 0 };
+        doc.rows.find((x) => x.key === 'cadence').value = { ghost: 60, itemRot: 1440, rebaseBubble: 1440 };
+        doc.rows.find((x) => x.key === 'phaseOffset').value = { ghost: 0, itemRot: 0, rebaseBubble: 0 };
         text = JSON.stringify(doc);
       }
       writeUnderTempRoot(tmp, r.file, text);

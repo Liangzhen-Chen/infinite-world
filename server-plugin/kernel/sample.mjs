@@ -206,6 +206,16 @@ export function diceKeyOf(worldSeed, streamCode, subjectId, worldTime, drawSiteC
 }
 
 /**
+ * kernelApi `diceSeedKey(worldSeed, streamCode, subjectId, worldTime, drawSiteCode)`（卷二十七 R27-8.5 :721–:733；卷十七 §3.3 :299 给地点落格的 seedKey）：
+ * 骰值键五段（diceKeyOf 的五段与核对）的 sha256 十六进制串，即卷五 landCell 要的 64 位种子键；不消耗分布，只给键。同输入同结果。
+ * @param {string} worldSeed @param {string} streamCode @param {string | Array<string | number>} subjectId @param {number} worldTime @param {string} drawSiteCode
+ * @returns {string} 64 位小写十六进制
+ */
+export function diceSeedKey(worldSeed, streamCode, subjectId, worldTime, drawSiteCode) {
+  return sha256Text(diceKeyOf(worldSeed, streamCode, subjectId, worldTime, drawSiteCode));
+}
+
+/**
  * 按骰值键抽一个 [0, total) 的整数（卷二十 §4.3.3 第 2 条天气抽取；键五段同 diceKeyOf）：
  * u = 骰值键的 sha256 作种子键的第 0 个 64 位均匀数（uniformAt），结果 = ⌊u × total ÷ 2^64⌋，BigInt 整除，同键同值。
  * @param {number | bigint} total 正整数 @param {string} worldSeed @param {string} streamCode @param {string | Array<string | number>} subjectId @param {number} worldTime @param {string} drawSiteCode

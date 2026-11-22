@@ -20,6 +20,8 @@ export interface PathTypes {
   readonly 'clock.seq': number;
   readonly 'created.*.props.*': DimensionValue;
   readonly 'created.*.props.basis': StructValue<'basis'>;
+  readonly 'created.*.props.facing': number;
+  readonly 'created.*.props.pos': StructValue<'pos'>;
   readonly 'displayNames.*.seq': number;
   readonly 'displayNames.*.text': SealedValue;
   readonly 'due.*': StructValue<'dueItem'>;
@@ -68,7 +70,9 @@ export type State = {
   readonly created?: { readonly [segment: string]: {
       readonly props?: {
         readonly basis?: StructValue<'basis'>;
-      } & { readonly [segment: string]: (DimensionValue) | (StructValue<'basis'>) };
+        readonly facing?: number;
+        readonly pos?: StructValue<'pos'>;
+      } & { readonly [segment: string]: (DimensionValue) | (StructValue<'basis'>) | (number) | (StructValue<'pos'>) };
     } };
   readonly displayNames?: { readonly [segment: string]: {
       readonly seq?: number;

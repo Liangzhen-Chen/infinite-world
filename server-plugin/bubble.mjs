@@ -1,6 +1,6 @@
 // 现场泡的展开与收起（卷二十七 R27-1.13 展开、R27-1.14 收起、R27-1.16 回场对账；格子迁移 G10 余下）。
 // 本文件只做"算"：给定改变泡之前的泡，求这一笔事务该收起、该展开哪些区格，以及每个展开区格里每个个体的落点或可立足核对结果；不写任何状态
-// （卷二十七 §3.2 :274 "展开落格调卷十七 placeSubject 与卷三乙批次写者，本卷不写位置"）。位置由写者 placeSubject（卷十七，G12）在同一笔事务里按本文件给的结果写。
+// （卷二十七 §3.2 :274 "展开落格调卷十七 placeSubject 与卷三乙批次写者，本卷不写位置"）。位置由写者 placeSubject（卷十七，G12，server-plugin/position.mjs）在同一笔事务里按本文件给的结果写。
 //
 // 已定（理由在后）：
 // 1. 入口 bubbleTransition(engine, state, before)：调用方是改变泡的那一笔事务里的写者（玩家控制实体的位置写入、玩家控制登记的变动，R27-1.13 时机），
@@ -13,14 +13,15 @@
 // 5. 展开第 2 步落格（已定：主会话 11-22，以卷十七 §3.3 :297–:304 与 C17-18 为准，理由：卷十七为已封现行卷，卷二十七 :317、卷五 :501 的"给地点、整足迹哈希"是 C17-18 未落的旧文；
 //    两卷措辞对齐的勘误记 docs/问题.md 下批勘误清单，等李白批）：位置 coarse 为真且区格是 c 的个体，给位置（个体现有 pos）：目标格可立足即落它，否则取 landSearchRadiusCells 内
 //    直线距离最近的可立足格，并列格序号字典序最小——与卷五挤出同一取法，直接复用 extrudeCell（内核 extrudeLanding），不另写、不用哈希、不用种子键。范围内没有可立足格、或读不到
-//    （extrudeCell 的 buried、unknown）一律按未知：位置不改、仍 coarse，经内核报告出口记 E-GRID-LAND-UNKNOWN（告警），不放进岩里。
+//    （extrudeCell 的 buried、unknown）一律按未知：项里 outcome 为 unknown、to 为空。E-GRID-LAND-UNKNOWN 不在本文件记（已定：主会话 11-22，G12 对照表 #12 选甲，理由：卷十七 :302 与 :880
+//    规定写者 placeSubject 落不下才记、且只记一次；本函数是"只算"的纯函数，由它再记就会与 placeSubject 重复）：展开写位置的 position.mjs 对每个 coarse 个体调 placeSubject，由 placeSubject 唯一记。
 //    位置已在细格上的个体按卷五 §4.5 规则 6 经 settleCell 核一次：stay 不出项，其余原样给出（fall、extrude、buried、unknown、none）。
 // 6. 个体枚举：个体表的全部行与 state.created 里的个体行，按 id 码点序，读 pos；位置读不出（没有 pos、未知）的个体不在任何区格里，跳过。全表一遍（每次泡变动一遍，不是每个区格一遍）；
-//    若 G12 建了位置索引改读索引（docs/问题.md G10 遗留）。批次（物）落格归批次写者卡，卷三乙 spot 维度尚未登记：未落。rebaseBubble（R27-1.16 日界重派生钩子）要写位置：未落，归 G12。
+//    G12 未建位置索引（问题.md G10 遗留 6 的性能项留给腾讯云块验收实测，测量点：本函数的 personIds 一遍枚举）。批次（物）落格归批次写者卡，卷三乙 spot 维度尚未登记：未落。
+//    rebaseBubble（R27-1.16 日界重派生钩子）在 position.mjs，读泡内个体经本文件导出的 subjectsIn。
 
 import { dim } from './kernel/dimensions.mjs';
 import { kindOfEntity } from './kernel/vocab.mjs';
-import { report } from './kernel/report.mjs';
 import { regionOf, extrudeCell, settleCell } from './kernel/place.mjs';
 import { E } from './kernel/handles/generated.mjs';
 import { bubbleView } from './sim-tiers.mjs';
@@ -62,8 +63,12 @@ function personIds(engine, state) {
   return [...ids].sort(cmp);
 }
 
-// 区格集合里的个体：{region key → [{id, pos}]}，个体按 id 码点序。位置读不出的个体不在任何区格里。
-function subjectsIn(engine, state, regions) {
+/**
+ * 区格集合里的个体：{region key → [{id, pos}]}，个体按 id 码点序。位置读不出的个体不在任何区格里。key 形如 `w:x:y`。
+ * @param {object} engine @param {object} state @param {readonly object[]} regions 区格 {w, x, y} 的表
+ * @returns {Map<string, object[]>} 区格键 → 个体项 {id, pos} 的表
+ */
+export function subjectsIn(engine, state, regions) {
   const want = new Set(regions.map((r) => regionKey(r.w, r.x, r.y)));
   const out = new Map();
   for (const id of personIds(engine, state)) {
@@ -83,9 +88,9 @@ function subjectsIn(engine, state, regions) {
  * `{collapse, expand, moves}`：collapse、expand 是区格表 [{w, x, y}]（(w, x, y) 升序）；moves 是展开区格里需要动位置或交接的个体项，按（区格序号、个体 id）序，
  * 每项 `{subject, w, region: {x, y}, from: pos, outcome, to, dropM?}`：
  * - outcome 'land'：coarse 位置落到可立足细格，to 是落点（coarse 假）；
- * - outcome 'unknown'（coarse 的个体范围内没有可立足格或读不到；或细格个体 settleCell 读不到）：位置不改，to 为 null；coarse 个体另记一条 E-GRID-LAND-UNKNOWN（告警，字段 space、rx、ry 为格空间号与区格序号，报告出口不收文字也不带个体 id）；
+ * - outcome 'unknown'（coarse 的个体范围内没有可立足格或读不到；或细格个体 settleCell 读不到）：位置不改，to 为 null（E-GRID-LAND-UNKNOWN 由 placeSubject 记，不在这里）；
  * - 细格个体的 settleCell 结果：'fall'（to、dropM）、'extrude'（to）、'buried'、'none'（to 为 null，交卷十三、卷四）；'stay' 不出项。
- * 调用方（placeSubject，G12）按本表逐项写位置，在同一笔事务里。本函数不写状态；唯一副作用是 E-GRID-LAND-UNKNOWN 的报告。
+ * 调用方（position.mjs 的展开接线，G12）按本表逐项经 placeSubject 写位置，在同一笔事务里。本函数不写状态、没有任何副作用。
  * @param {object} engine @param {object} state
  * @param {readonly {w: number, regions: readonly {x: number, y: number}[]}[]} before 写入前的泡（bubbleView 的返回）
  */
@@ -99,7 +104,6 @@ export function bubbleTransition(engine, state, before) {
       if (pos.coarse === true) {
         const found = extrudeCell(engine, state, pos);
         if (found.kind !== OUTCOME.land) {
-          report(E.E_GRID_LAND_UNKNOWN, { space: c.w, rx: c.x, ry: c.y });
           moves.push({ ...base, outcome: OUTCOME.unknown, to: null });
         } else {
           moves.push({ ...base, outcome: OUTCOME.land, to: found.cell });

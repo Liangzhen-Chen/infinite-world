@@ -27,10 +27,12 @@ const access = (key, map) => pathAccess(ctxOf(map), item(key).params, CLASSES.ge
 const realRepo = (key) => (item(key).detector === 'decl_guard' ? declGuard : pathAccess)(loadContext(ROOT, {}), item(key).params, CLASSES.get(item(key).scanClass));
 
 const WRITERS = "import { writePersonRow, writeItemDeviation, createItemInstance } from './kernel/dimension-writers.mjs';\n";
-// 声明表覆盖：个体 pos、facing 的声明写者 position.mjs（卷十七 :288）。
+// 声明表覆盖：个体 pos、facing 的声明写者 position.mjs（卷十七 :288）。底表先去掉仓库里已登的 pos、facing 写者，
+// 夹具只看覆盖本身，不随仓库声明表的现状变（G12 落地后真表已登这两项）。
+const { '*.props.pos': _pos, '*.props.facing': _facing, ...BASE_CREATED_WRITERS } = DECL.stateKeys.created.writers;
 const withPosWriter = (facingToo = true) => ({
   ...DECL,
-  stateKeys: { ...DECL.stateKeys, created: { ...DECL.stateKeys.created, writers: { ...DECL.stateKeys.created.writers, '*.props.pos': 'position.mjs', ...(facingToo ? { '*.props.facing': 'position.mjs' } : {}) } } },
+  stateKeys: { ...DECL.stateKeys, created: { ...DECL.stateKeys.created, writers: { ...BASE_CREATED_WRITERS, '*.props.pos': 'position.mjs', ...(facingToo ? { '*.props.facing': 'position.mjs' } : {}) } } },
 });
 // 声明表覆盖：场的声明写者 env-fields.mjs（卷二十 :458、:459）。
 const withFieldWriter = { ...DECL, stateKeys: { ...DECL.stateKeys, fields: { readers: [], writers: { '*.*': 'env-fields.mjs' } }, fieldCells: { readers: [], writers: { '*.*.*.*': 'env-fields.mjs' } } } };
@@ -74,7 +76,7 @@ test('S17-1 声明写者：声明表登了 pos、facing 的写者文件后，该
   assert.deepEqual(guard('vol17.S17-1', { 'server-plugin/position.mjs': body }, withPosWriter(false)).map((h) => h.nodeKind), ['dim_write']);
 });
 
-test('S17-1 现仓库计数为 0（声明表尚无 pos、facing 写者）', () => {
+test('S17-1 现仓库计数为 0（pos、facing 只由声明写者 position.mjs 写）', () => {
   assert.equal(realRepo('vol17.S17-1').length, 0);
 });
 

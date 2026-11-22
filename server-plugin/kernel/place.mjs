@@ -22,9 +22,9 @@ import {
   zoneOfPos, cellList, regionGeometry, regionHeights, regionCellPos, landRegionCell, accessCell, openBoundaryCells,
   straightM as straightMCore, bearingView as bearingViewCore,
   regionOfPos, ownerIdAt, inBox, keyOf, controlPointsOf, regionCellHeight, regionBedDelta, footprintHas, footprintCells,
-  boundaryEntriesValid, BOUNDARY_ENTRY_DETAIL,
+  boundaryEntriesValid, BOUNDARY_ENTRY_DETAIL, eachCell, xOf, yOf,
 } from './footprint.mjs';
-import { columnSurface, nearControlPoints, regionSlope, cellAt, cellFlags, extrudeLanding, extrudeLayerReach, SETTLE, STATE, CELL_KIND } from './grid-base.mjs';
+import { columnSurface, nearControlPoints, regionSlope, cellAt, cellFlags, extrudeLanding, extrudeLayerReach, settleKindOf, fallStep, SETTLE, STATE, CELL_KIND } from './grid-base.mjs';
 import { datedValueAt, inputVersionAt } from './dated.mjs';
 import { datedRecordsAll } from './storage.mjs';
 import { createDiffReader } from './grid-diff-read.mjs';
@@ -37,7 +37,7 @@ import { buildPlan, expandClasses, waterAccessOf, footprintAdjacency, edgeAdjace
 import { createRouteEnv, edgeNumbers } from './route-edges.mjs';
 import { report } from './report.mjs';
 import { isPosValue } from './named-structs.mjs';
-import { cellClassOf, surfaceStorey as surfaceStoreyOf, landCellKey } from './grid.mjs';
+import { cellClassOf, surfaceStorey as surfaceStoreyOf, landCellKey, landOrderKey } from './grid.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
@@ -380,14 +380,15 @@ export function gridSpaceBox(engine, state, w) {
 /**
  * kernelApi `landCell(engine, state, {place, kind, seedKey, coarse})`（卷五 §3.1、§4.1 规则 14）：在地点足迹内落一格。
  * coarse 为真（泡外代表格）：区域足迹按 hash(seedKey, 区格序号) 取第一个 zoneAt 恰为 place 的区格的中心列地表层格；没有可落格为 null（不落到别处）。
- * coarse 为假要可立足细格，细格基底归 G6，本卡不落：抛 E-DET-DOMAIN，不给近似。体积（G8）coarse 为真时在体积足迹的格里按 landCellKey 取最小者（同建筑、房间的取法）。纯读。
+ * coarse 为假（泡内，可立足细格；卷五 §4.1 规则 14 :502，G12 起由 placeSubject 调）：见 landFineCell。体积（G8）coarse 为真时在体积足迹的格里按 landCellKey 取最小者（同建筑、房间的取法）。纯读。
  * 建筑、房间（G7，规则 14 :501）：coarse 为真时在"zoneAt 恰为 place"的足迹格里按 landCellKey(seedKey, w, x, y, z)（格序号含层，取格的整数坐标）取最小者，并列按 (x, y, z) 字典序；
  * 建筑取墙、隔墙、门、窗、内门与无对应房间行的室内格，房间取它那个房间的格；coarse 是代表格，不要求可立足；没有可落格为 null。
  * @param {any} engine @param {any} state @param {{place: string, kind: string, seedKey: string, coarse: boolean}} spec
  * @returns {{w: number, x: number, y: number, z: number, coarse: boolean} | null}
  */
 export function landCell(engine, state, { place, seedKey, coarse }) {
-  if (coarse !== true) throw new KernelError('E-DET-DOMAIN', {}, 'landCell: standable fine cells (coarse false) need the fine-cell base, not built yet');
+  if (coarse !== true && coarse !== false) throw new KernelError('E-DET-DOMAIN', {}, 'landCell: coarse is true or false');
+  if (coarse === false) return landFineCell(engine, state, place, seedKey);
   const rp = planOf(engine, state);
   const kindOfPlace = rp.kinds.get(place);
   if (kindOfPlace === FOOTPRINT_KIND.building || kindOfPlace === FOOTPRINT_KIND.room) {
@@ -418,6 +419,77 @@ export function landCell(engine, state, { place, seedKey, coarse }) {
     return null;
   }
   return landRegionCell(engine.rules.grid, worldSeedOf(engine), plan, rp.rows, terrainEntryOf(engine), place, seedKey);
+}
+
+/**
+ * 给地点、泡内一支（卷五 §4.1 规则 14 :502 "coarse 为假"；卷十七 §3.3 :302；G12 由 placeSubject 调）：只在 zoneAt 恰为 place 的格里取可立足细格，
+ * 同 coarse 为真的次序——区域足迹按 landOrderKey(seedKey, 区格序号) 升序（并列 (x, y) 字典序）逐个区格看，取该区格内（代表格即区格中心列地表层那一格，
+ * 竖向与水平各 landSearchRadiusCells 的范围，竖向同挤出的 extrudeLayerReach）可立足的格，第一个有可立足格的区格胜出，格取 landCellKey(seedKey, w, x, y, z) 最小者（并列 (x, y, z) 字典序）；
+ * 建筑、房间、体积足迹的候选就是足迹里 zoneAt 恰为 place 的全部格，取可立足者里 landCellKey 最小者。都没有、区格代表格高度读不到、地点不存在或离场返回 null（未知，调用方不放进岩里、不落到别的地点）。
+ * 可立足标志取 gridView（基底 ⊕ 差分，同一套），读不到可立足的格不当可立足。`kind` 为物时另要求承面（卷五 :502）不在本函数：物经批次写者落格，未落。纯读，同输入同结果。
+ */
+function landFineCell(engine, state, place, seedKey) {
+  const grid = engine.rules && engine.rules[RULES.grid];
+  const radius = isObj(grid) ? grid.landSearchRadiusCells : undefined;
+  if (!Number.isSafeInteger(radius) || radius < 1) throw new KernelError('E-RULES-UNREGISTERED', {}, 'landCell: rules.grid.landSearchRadiusCells is not registered (positive integer, cells)');
+  const rp = planOf(engine, state);
+  if (rp.plans.size === 0 || !rp.kinds.has(place)) return null;
+  const kind = rp.kinds.get(place);
+  // 一批候选格：同批内取 landCellKey 最小者；批与批按序看，第一个有可立足格的批胜出。zoneCheck 为真时逐个核 zoneAt 恰为 place（区域足迹的窗口里可能压着更深的后代足迹）。
+  const standableOf = (w, cells) => {
+    let x0 = Infinity; let y0 = Infinity; let z0 = Infinity; let x1 = -Infinity; let y1 = -Infinity; let z1 = -Infinity;
+    for (const c of cells) { x0 = Math.min(x0, c.x); y0 = Math.min(y0, c.y); z0 = Math.min(z0, c.z); x1 = Math.max(x1, c.x); y1 = Math.max(y1, c.y); z1 = Math.max(z1, c.z); }
+    const view = gridView(engine, state, { w, cells: { x0, y0, z0, x1, y1, z1 } });
+    if (view === null) return new Map();
+    return new Map(view.cells.map((c) => [`${c.x},${c.y},${c.z}`, c.known && c.standable === true]));
+  };
+  const pick = (w, cells, zoneCheck) => {
+    if (cells.length === 0) return null;
+    const stand = standableOf(w, cells);
+    const keyed = cells.filter((c) => stand.get(`${c.x},${c.y},${c.z}`) === true).map((c) => ({ c, k: landCellKey(seedKey, w, c.x, c.y, c.z) }));
+    keyed.sort((a, b) => cmp(a.k, b.k) || cmp(a.c.x, b.c.x) || cmp(a.c.y, b.c.y) || cmp(a.c.z, b.c.z));
+    for (const { c } of keyed) {
+      const cell = { w, x: c.x, y: c.y, z: c.z, coarse: false };
+      if (!zoneCheck || zoneAt(engine, state, cell) === place) return cell;
+    }
+    return null;
+  };
+  if (kind === FOOTPRINT_KIND.building || kind === FOOTPRINT_KIND.room) {
+    const f = buildingFootprint(buildingCtx(engine, state, rp), grid, place);
+    return f === null ? null : pick(f.w, f.cells.filter((c) => c.zone === place).map((c) => ({ x: c.x, y: c.y, z: c.z })), false);
+  }
+  if (kind === FOOTPRINT_KIND.volume) {
+    const ctx = volumeCtx(engine, state, rp);
+    const f = volumeFootprint(ctx, place);
+    return f === null ? null : pick(f.w, volumeCellsOf(ctx, place).map((c) => ({ x: c.x, y: c.y, z: c.z })), false);
+  }
+  const plan = planOfRow(rp, place);
+  if (!plan) return null;
+  const reach = extrudeLayerReach(grid, radius);
+  // 流式取"下一个最小者"：不物化区格列表、不整表排序（全规模区格列表不得物化，G5b）。每轮 eachCell 扫一遍，只留 (landOrderKey, x, y) 严格大于上一个的最小者，
+  // 区格在序里依次出现，第一个有可立足格的区格即返回；结果与"整表排序后逐个看"逐格一致（同键并列按 (x, y) 字典序）。
+  const before = (a, b) => cmp(a.k, b.k) < 0 || (cmp(a.k, b.k) === 0 && (a.x < b.x || (a.x === b.x && a.y < b.y)));
+  let last = null;
+  for (;;) {
+    let next = null;
+    eachCell(plan, place, (idx) => {
+      if (ownerIdAt(plan, idx) !== place) return;
+      const cand = { x: xOf(plan.box, idx), y: yOf(plan.box, idx), k: '' };
+      cand.k = landOrderKey(seedKey, plan.w, cand.x, cand.y);
+      if (last !== null && !before(last, cand)) return;
+      if (next === null || before(cand, next)) next = cand;
+    });
+    if (next === null) break;
+    last = next;
+    const r = { x: next.x, y: next.y };
+    const c0 = regionCell(engine, state, { w: plan.w, region: r });
+    if (c0 === null) return null; // 区格中心列高度读不到：未知，不跳过它往下一个区格找
+    const window = [];
+    for (let x = c0.x - radius; x <= c0.x + radius; x += 1) for (let y = c0.y - radius; y <= c0.y + radius; y += 1) for (let z = c0.z - reach; z <= c0.z + reach; z += 1) window.push({ x, y, z });
+    const hit = pick(plan.w, window, true);
+    if (hit !== null) return hit;
+  }
+  return null;
 }
 
 // ---------- gridView（卷五 §3.1、§4.3 规则 8–11、§4.5；格子迁移 G6） ----------
@@ -645,23 +717,28 @@ const floorDivInt = (a, b) => (a - (((a % b) + b) % b)) / b;
  * 落到同一列正下方第一个可立足格，落差 = 层数差 × storeyM（米，整数）。可立足标志取 gridView（基底 ⊕ 差分，同一套）。下方一路读不到可立足格直到世界最低地表层
  * （rules.grid.surfaceElevationMinM ÷ storeyM 向下取整，卷五 §4.3 规则 8 的截断下界）返回 none；沿途遇到读不到的格（known 为假或可立足未知）返回 unknown，不跳过它往下找。
  * 分窗读 gridView（窗宽从一层起逐窗加倍，不设层数常数）；同输入同结果。不写位置：写位置是 placeSubject、批次写者（卷五 §4.5 规则 6）。纯读。
- * @param {any} engine @param {any} state @param {{w: number, x: number, y: number, z: number}} pos
+ * sinkOnSolid 为真（起点在液体格）：液体柱到底遇到第一个实体格即停在它之上那一格，不穿河床（卷五 :761 勘误 1122k1）。
+ * @param {any} engine @param {any} state @param {{w: number, x: number, y: number, z: number}} pos @param {boolean} [sinkOnSolid]
  * @returns {{kind: 'land', cell: {w: number, x: number, y: number, z: number, coarse: boolean}, dropM: number} | {kind: 'unknown'} | {kind: 'none'}}
  */
-export function fallCell(engine, state, pos) {
+export function fallCell(engine, state, pos, sinkOnSolid = false) {
   const grid = engine.rules && engine.rules[RULES.grid];
   if (!isObj(grid)) throw new KernelError('E-RULES-UNREGISTERED', {}, 'fallCell: rules.grid is not registered');
   const floorZ = floorDivInt(grid.surfaceElevationMinM, grid.storeyM);
   let hi = pos.z - 1;
   let width = 1;
+  let inLiquid = false;
   while (hi >= floorZ) {
     const lo = hi - width + 1 > floorZ ? hi - width + 1 : floorZ;
     const view = gridView(engine, state, { w: pos.w, cells: { x0: pos.x, y0: pos.y, z0: lo, x1: pos.x, y1: pos.y, z1: hi } });
     if (view === null || view.cells.length === 0) return Object.freeze({ kind: SETTLE.none });
     for (let z = hi; z >= lo; z -= 1) {
-      const c = view.cells[z - lo];
-      if (!c.known || c.standable === null) return Object.freeze({ kind: SETTLE.unknown });
-      if (c.standable) return Object.freeze({ kind: SETTLE.land, cell: Object.freeze({ w: pos.w, x: pos.x, y: pos.y, z, coarse: false }), dropM: (pos.z - z) * grid.storeyM });
+      const step = fallStep(view.cells[z - lo], sinkOnSolid || inLiquid);
+      if (view.cells[z - lo].state === STATE.liquid) inLiquid = true; // 路径上一进入液体柱，同"起点在液体里"一个口径：停在柱底第一个实体格之上
+      if (step === SETTLE.unknown) return Object.freeze({ kind: SETTLE.unknown });
+      // land：这一格可立足；sink：液体柱底遇到第一个实体格，停在它之上那一格（不穿河床，李白 11-23 事件 412004ce）。
+      const at = step === SETTLE.land ? z : step === SETTLE.fall ? z + 1 : null;
+      if (at !== null) return Object.freeze({ kind: SETTLE.land, cell: Object.freeze({ w: pos.w, x: pos.x, y: pos.y, z: at, coarse: false }), dropM: (pos.z - at) * grid.storeyM });
     }
     hi = lo - 1;
     width += width;
@@ -671,17 +748,21 @@ export function fallCell(engine, state, pos) {
 
 /**
  * kernelApi `settleCell(engine, state, pos)`（卷五 §4.5 规则 6：现场泡内任一时刻没有人或物处在不可立足格上；坠落与挤出统一在这一处判）：核一次 pos 所在格——
- * 可立足 → stay；本格可穿行（气态）而不可立足 → fall（见 fallCell）；本格是实体或液体 → extrude（见 extrudeCell）；本格读不到 → unknown。同一输入落点唯一。
+ * 可立足 → stay；本格可穿行（气态）或是液体而不可立足 → fall（见 fallCell；液体格不可立足，沉到正下方第一个可立足格，卷五 §4.5 规则 6 :761 字面，李白裁定 1117 末节表-3；不写游泳、涉水，那是另一张规则卡）；
+ * 本格是实体 → extrude（见 extrudeCell）；本格读不到 → unknown。同一输入落点唯一。
  * 返回 {kind: 'stay'} | {kind: 'fall', cell, dropM} | {kind: 'extrude', cell} | {kind: 'buried'} | {kind: 'unknown'} | {kind: 'none'}（none：下方没有可立足格，见 fallCell）。不写位置。纯读。
  * @param {any} engine @param {any} state @param {{w: number, x: number, y: number, z: number}} pos
  */
 export function settleCell(engine, state, pos) {
   const here = gridView(engine, state, { w: pos.w, cells: { x0: pos.x, y0: pos.y, z0: pos.z, x1: pos.x, y1: pos.y, z1: pos.z } });
   const c = here === null || here.cells.length === 0 ? null : here.cells[0];
-  if (c === null || !c.known || c.standable === null) return Object.freeze({ kind: SETTLE.unknown });
-  if (c.standable) return Object.freeze({ kind: SETTLE.stay });
-  if (c.state === STATE.gas) {
-    const f = fallCell(engine, state, pos);
+  if (c === null || !c.known) return Object.freeze({ kind: SETTLE.unknown });
+  const decision = settleKindOf(c.standable, c.state);
+  if (decision === SETTLE.stay || decision === SETTLE.unknown) return Object.freeze({ kind: decision });
+  if (decision === SETTLE.fall) {
+    // 人在液体格：沉到液体柱底、停在第一个实体格之上（按材料物态类判，不认水体 id）；已在柱底则就是站稳。
+    const f = fallCell(engine, state, pos, c.state === STATE.liquid);
+    if (f.kind === SETTLE.land && f.cell.z === pos.z) return Object.freeze({ kind: SETTLE.stay });
     return Object.freeze(f.kind === SETTLE.land ? { kind: SETTLE.fall, cell: f.cell, dropM: f.dropM } : { kind: f.kind });
   }
   const e = extrudeCell(engine, state, pos);
@@ -862,6 +943,15 @@ export function placeView(engine, state, placeId) {
     footprint,
     exits: exits === null ? null : Object.freeze(exits),
   });
+}
+
+/**
+ * kernelApi `isOffstage(engine, state, placeId)`（卷五 §4.1 规则 8 第三条离场子树；卷十七 §3.4 :262 "离场行返回空"的判据）：地点行是否在离场子树内。placeId 须是地点行（否则 E-DIM-REF-MISSING）。纯读。
+ * @param {any} engine @param {any} state @param {string} placeId @returns {boolean}
+ */
+export function isOffstage(engine, state, placeId) {
+  parentOf(engine, state, placeId); // 须是地点（dim() 对非地点抛 E-DIM-REF-MISSING）
+  return planOf(engine, state).offstage.has(placeId);
 }
 
 // 表头声明为派生的足迹量（卷五 §2.1）：由 placeFootprint 取值；取不到（未知）返回 null，维持未建派生的"未知"。

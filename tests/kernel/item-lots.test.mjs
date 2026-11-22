@@ -631,7 +631,7 @@ test('规则表校验（P-7）：stages 的 minSpoilage 须严格递增且首档
 test('itemRot 钩子登记（environment 阶段、文件 item-lots.mjs、节拍一日）；坏透结算：已坏透的整件可腐批次整批记入 sink_decay 汇，新鲜的与不可腐的不动，总量守恒、K-8 审计过', () => {
   assert.equal(advanceHook('itemRot').file, 'item-lots.mjs');
   const { engine } = build();
-  assert.deepEqual(engine.rules.clock.cadence, { itemRot: 1440 });
+  assert.deepEqual(engine.rules.clock.cadence, { itemRot: 1440, rebaseBubble: 1440 }); // 6-27 另登记 rebaseBubble（卷二十七 R27-1.16）
   const state = at(0);
   const book = { entries: [] };
   installEventLog(book);

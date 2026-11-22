@@ -6,6 +6,7 @@
 
 import './item-lots.mjs'; // 6-3：itemRot 推进钩子（卷三乙 §3.3 系统登记表）
 import './death.mjs'; // 6-6：settleBody 终止清理函数（卷四 §3.3；systems.death.terminationCleanup）
+import './position.mjs'; // 6-27（格子 G12）：placeSubject 位置写者、rebaseBubble 日界钩子（卷十七 §3.3；卷二十七 R27-1.16）
 import { checkPrimitiveCatalog } from './primitives-runtime.mjs';
 
 /**

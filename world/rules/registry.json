@@ -172,8 +172,8 @@
     "proposalMax": {"type": "integer", "unit": "count"},
     "drawSites": {"type": "set", "of": {"type": "string"}},
     "contestDefault": "string",
-    "cadence": {"type": "struct", "fields": {"itemRot": {"type": "integer", "unit": "minute", "domain": [1, null]}}},
-    "phaseOffset": {"type": "struct", "fields": {"itemRot": {"type": "integer", "unit": "minute", "domain": [0, null]}}},
+    "cadence": {"type": "struct", "fields": {"itemRot": {"type": "integer", "unit": "minute", "domain": [1, null]}, "rebaseBubble": {"type": "integer", "unit": "minute", "domain": [1, null]}}},
+    "phaseOffset": {"type": "struct", "fields": {"itemRot": {"type": "integer", "unit": "minute", "domain": [0, null]}, "rebaseBubble": {"type": "integer", "unit": "minute", "domain": [0, null]}}},
     "paceFactor": {"type": "struct", "fields": {"num": {"type": "integer", "unit": "count", "domain": [1, null]}, "den": {"type": "integer", "unit": "count", "domain": [1, null]}}, "required": ["num", "den"]}
    },
    "domain": {"reactionDepthMax": [1, null], "proposalMax": [1, null], "drawSites": {}, "contestDefault": {}, "cadence": {}, "phaseOffset": {}, "paceFactor": {}},

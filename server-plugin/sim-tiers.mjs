@@ -60,6 +60,15 @@ function centersOf(engine, state) {
   return out;
 }
 
+/**
+ * `controlledByPlayer(engine, state, id)`（卷九 R9-3.9 :721 玩家控制登记；卷二十七 R27-1.12）：这个实体此刻是不是玩家控制实体——有一条在世的玩家席位边指向它。
+ * 只读席位边，不读位置，所以实体还没有位置时也能判（placeSubject 判"写入后的泡随它移到目标处"用）。读边的路径同 bubbleView 一处（rules.control.seatKind），缺登记抛 E-RULES-UNREGISTERED。
+ * @param {object} engine @param {object} state @param {string} id @returns {boolean}
+ */
+export function controlledByPlayer(engine, state, id) {
+  return openHoldingsOfKind(state, seatKindOf(engine)).some((edge) => edge.subject === id);
+}
+
 const within = (box, x, y) => x >= box.x0 && x < box.x0 + box.cellsX && y >= box.y0 && y < box.y0 + box.cellsY;
 
 /**

@@ -7,6 +7,9 @@
 // 分工边界（本卡只做骨架）：
 // - 只实现目标写者现已存在的适配器：transfer（kernel/ledger.mjs#transfer）。见 docs/卡回报/ds-b5-1.md 的“已建适配器／拒收清单”。
 // - 5-3 补 holding 四条、5-4 补 destroy（转调 kernel/terminate.mjs#terminate）。
+// - 6-27（格子 G12）补 move（经委托调 position.mjs#placeSubject）与 create（按实体类查创建例程，现只有 person；其余类整笔拒收）。time 适配器未落：time 原语的写者是卷二十调度器的推进
+//   （卷九 R9-3.11 :723 "推进只经 time 原语与卷二十的调度器"），而 execute 在已开的内核事务里跑、调度器 advance 自开事务逐刻（kernel/transaction.mjs 禁嵌套事务），
+//   卷九没给"提交后再推进"的交接形状，卷文推不出，留待裁定，仍整笔拒收 E-ACT-WRITER-NOT-READY。
 // - 其余原语（含 emit、learn、transform、schedule 等）没有适配器，一律整笔拒收 E-ACT-WRITER-NOT-READY，
 //   抛出后由调用方已开的内核事务整笔回滚；不造桩、不静默跳过。
 // - 一次 execute 一次事务由调用方保证：execute 只由 resolve() 提交段与推进钩子调度方调用，二者都在调用方已开的内核事务里
@@ -21,6 +24,8 @@
 import { transfer } from './kernel/ledger.mjs';
 import { openHolding, closeHolding, transferHolding, rescaleHolding } from './kernel/holdings.mjs';
 import { terminate } from './kernel/terminate.mjs';
+import { runDelegated } from './kernel/transaction.mjs';
+import { instantiatePerson } from './person.mjs';
 
 // 账户 id 的段序（卷六 §4.1 规则 1、kernel/ledger.mjs 的 accountKey）：持有人、用途、资源种类、资源键。
 // 原语 transfer 的 from、to 是账户 id（卷九 §4.2.1 transfer 行只给 from、to、qty；账户包含资源，
@@ -48,7 +53,7 @@ const CATALOG = [
   { op: 'fact.set', family: 'fact', channel: 'declared', required: { entity: 'id', field: 'dimension' }, oneOf: [[{ value: 'number' }, { delta: 'number' }]] },
   { op: 'vital', family: 'vital', channel: 'declared', required: { target: 'id', delta: 'number' } },
   { op: 'status', family: 'status', channel: 'declared', required: { target: 'id', status: 'ref', duration: 'integer', magnitude: 'integer' } },
-  { op: 'move', family: 'move', channel: 'declared', required: { to: 'id' } },
+  { op: 'move', family: 'move', channel: 'declared', required: { to: 'id' }, optional: { subject: 'id', facing: { type: 'integer', nullable: true } } },
   { op: 'create', family: 'create', channel: 'declared', required: { kind: 'ref', facts: 'map' }, unless: [{ field: 'kind', notEquals: 'mark', required: { template: 'ref' } }] },
   { op: 'destroy', family: 'destroy', channel: 'kernel', required: { entity: 'id' } },
   { op: 'transform', family: 'transform', channel: 'invoke', required: { subject: 'id', variant: 'ref', direction: { type: 'enum', values: ['apply', 'revert'] }, cause: 'id' } },
@@ -188,6 +193,11 @@ export function sortPrimitives(primitives) {
 // 每个原语在契约之上的整类约束（R9-2.3 第一句“逐个按契约校验”的一部分，不合即整批不执行）。
 // transfer 一笔只搬一种资源（卷六 §4.1 规则 1、2）：from、to 是账户 id，资源不同即契约不合，前移到校验期。
 const CONTRACT_EXTRAS = Object.freeze({
+  // move 的行动者：契约只列必填 to（卷九 §4.2.1 :639），行动者由提交段的上下文给（卷九 §2.9 :437 actor），resolve() 提交段未建，所以本适配器现要求调用方带 subject（个体 id）；
+  // 没带即契约不合，不猜"当前行动者"（对照表 #18；resolve 落地后缺省取行动者时去掉这一条）。
+  move(p) {
+    if (!Object.hasOwn(p, 'subject')) throw deny(CODE.contract, 'move.subject required until resolve() supplies the actor (commit stage not built)');
+  },
   transfer(p, maxLength) {
     const from = splitAccount(p.from, maxLength);
     const to = splitAccount(p.to, maxLength);
@@ -276,6 +286,32 @@ const ADAPTERS = Object.freeze({
   // （rules.terminate.unbuilt），与目标实体表或其写者未上线同由 terminate 拒 E-ACT-WRITER-NOT-READY。
   destroy(engine, state, p, reason) {
     terminate(engine, state, p.entity, reason, null);
+  },
+  // move 落位置写者 placeSubject（卷九 §4.2.1 :639；卷十七 C17-11 :873，S17-4：除经 placeSubject 外不存在让个体换位置的写路径）：目标是地点 id，经 runDelegated 以 position.mjs 的身份写
+  // （systems.position.writeDelegations 登记了委托方文件 primitives-runtime.mjs；resolve() 提交段落地时，它的节点文件另加一行委托）。facing 缺省为空：按新旧位置折朝向（卷十七 :305）。
+  move(engine, state, p, reason) {
+    runDelegated(state, 'position.mjs#placeSubject', engine, state, p.subject, { place: p.to }, p.facing === undefined ? null : p.facing, reason);
+  },
+  // create 按实体类（kind）查创建例程；没有登记例程的类整笔拒收（对照表 #18、PLAN.md :70 ③、:82 ②）：
+  // 地点行没有建行写者（K6-42 未建），物品实例要持有人、用途、来源代号（createItemInstance 的 holder、purpose、flow），原语契约里没有，留痕归 mark-actions.mjs（卷九 R9-15.2，未建）。
+  create(engine, state, p, reason) {
+    const make = Object.hasOwn(CREATORS, p.kind) ? CREATORS[p.kind] : undefined;
+    if (!make) throw deny(CODE.writerNotReady, `create of ${p.kind}: no creation routine registered for this entity kind`);
+    make(engine, state, p, reason);
+  },
+});
+
+// create 的创建例程表（按实体类）。person：建行与初值位置成对写在同一事务里（PLAN.md :82 ②"建实例与初值成对写入"）：
+// template 是物种行；facts 里 pos（struct:pos）或 place（地点 id）二取一给初值位置（都不给则不写位置，读到按未知），facing 可选；其余 facts 原样交 instantiatePerson（它核字段与取值域）。
+const CREATORS = Object.freeze({
+  person(engine, state, p, reason) {
+    const { pos, place, facing, ...rest } = p.facts;
+    if (pos !== undefined && place !== undefined) throw deny(CODE.contract, 'create person: facts.pos and facts.place are alternatives');
+    if (rest.species !== undefined && rest.species !== p.template) throw deny(CODE.contract, 'create person: facts.species conflicts with template');
+    const made = instantiatePerson(engine, state, { ...rest, species: p.template });
+    if (pos === undefined && place === undefined) return;
+    const target = pos !== undefined ? { pos } : { place };
+    runDelegated(state, 'position.mjs#placeSubject', engine, state, made.id, target, facing === undefined ? null : facing, reason);
   },
 });
 

@@ -313,8 +313,8 @@ test('rules.clock 按登记载入：七键手写字面量（4-2 加 cadence、ph
     reactionDepthMax: 8,
     proposalMax: 12,
     drawSites: ['site.emit.chance', 'site.weather.precip', 'site.weather.state', 'site.weather.windDir', 'site.weather.windSpeed'],
-    cadence: { itemRot: 1440 }, // 6-3 登记的 itemRot 钩子：一日一拍，相位 0
-    phaseOffset: { itemRot: 0 },
+    cadence: { itemRot: 1440, rebaseBubble: 1440 }, // 6-3 登记的 itemRot 钩子、6-27 登记的 rebaseBubble 钩子（卷二十七 R27-1.16）：都是一日一拍，相位 0
+    phaseOffset: { itemRot: 0, rebaseBubble: 0 },
     paceFactor: { num: 1, den: 1 },
     contestDefault: 'lottery',
   });

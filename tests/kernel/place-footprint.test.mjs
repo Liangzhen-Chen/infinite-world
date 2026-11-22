@@ -10,7 +10,7 @@ import { testTempRoot, writeUnderTempRoot, ROOT } from '../accept/temp-root.mjs'
 import { createHash } from 'node:crypto';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
-import { placeView, routeView, zoneAt, regionCell, landCell, planFootprints, placeNeighbors, locatedChainOf, placeLatitude, straightM, bearingView } from '../../server-plugin/kernel/place.mjs';
+import { placeView, routeView, zoneAt, regionCell, landCell, planFootprints, placeNeighbors, locatedChainOf, placeLatitude, straightM, bearingView, settleCell } from '../../server-plugin/kernel/place.mjs';
 
 installDigestCap({ sha256Hex: (data, encoding) => createHash('sha256').update(data, encoding === 'base64' ? 'base64' : 'utf8').digest('hex') });
 const DIMS = 'world/ontology/dimensions';
@@ -379,7 +379,7 @@ test('placeView：zRange 取层号最小最大、footprint.elevationM 取区格�
   assert.equal(placeView(noSeed, S, 'loc_b').footprint.areaM2, 10000);
 });
 
-test('regionCell：区格中心列地表层那一格；landCell：落在 zoneAt 恰为该地点的区格里，同输入同结果；coarse 为假要细格基底，拒收', () => {
+test('regionCell：区格中心列地表层那一格；landCell：落在 zoneAt 恰为该地点的区格里，同输入同结果；coarse 为假（泡内）落在可立足细格上', () => {
   const e = world(HEIGHTS());
   assert.deepEqual(regionCell(e, S, { w: 0, region: { x: 1, y: 0 } }), { w: 0, x: 150, y: 50, z: 66, coarse: true });
   assert.equal(regionCell(e, S, { w: 0, region: { x: 5, y: 0 } }), null);
@@ -389,7 +389,13 @@ test('regionCell：区格中心列地表层那一格；landCell：落在 zoneAt 
   assert.deepEqual(landCell(e, S, { place: 'loc_b', kind: 'person', seedKey: 'k1', coarse: true }), spot);
   assert.equal(zoneAt(e, S, spot), 'loc_b');
   assert.equal(landCell(e, S, { place: 'loc_root', kind: 'person', seedKey: 'k1', coarse: true }), null); // 根的两个区格都在子行里
-  assert.throws(() => landCell(e, S, { place: 'loc_b', kind: 'person', seedKey: 'k1', coarse: false }), (er) => er.code === 'E-DET-DOMAIN');
+  // coarse 为假（G12 起落地，卷五 §4.1 规则 14 :502）：落在 zoneAt 恰为该地点的区格里、可立足的细格上，同输入同结果（哈希次序不手算，这里核性质）。
+  const fine = landCell(e, S, { place: 'loc_b', kind: 'person', seedKey: 'k1', coarse: false });
+  assert.equal(fine.coarse, false);
+  assert.equal(zoneAt(e, S, fine), 'loc_b');
+  assert.equal(settleCell(e, S, fine).kind, 'stay');
+  assert.deepEqual(landCell(e, S, { place: 'loc_b', kind: 'person', seedKey: 'k1', coarse: false }), fine);
+  assert.equal(landCell(e, S, { place: 'loc_root', kind: 'person', seedKey: 'k1', coarse: false }), null); // 根的两个区格都在子行里：没有归根的格
 });
 
 test('planFootprints：同一套算法求足迹与派生量；proposals 新增行、assumptions 改生成输入只供试排，不进状态', () => {

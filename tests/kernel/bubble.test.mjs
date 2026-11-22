@@ -99,12 +99,12 @@ test('展开只管新进泡的区格里的个体：区格 (0,1)、(1,1) 里的�
   assert.deepEqual(bubbleTransition(E1, s, before).moves.map((m) => m.subject), ['npc_new']);
 });
 
-test('落不下（半径内没有可立足格，个体在 z=−10 的岩里）：个体位置不改（项里 to 为空、from 原样）、仍 coarse，并记一条 E-GRID-LAND-UNKNOWN（告警、字段只有区格序号）；同批别的个体照常落格', () => {
+test('落不下（半径内没有可立足格，个体在 z=−10 的岩里）：个体位置不改（项里 to 为空、from 原样）、仍 coarse；bubbleTransition 是只算的纯函数，不记 E-GRID-LAND-UNKNOWN（G12 对照表 #12 选甲：由 placeSubject 唯一记，见 position.test.mjs）；同批别的个体照常落格', () => {
   const { s, before, swap } = expandScene({ npc_rock: coarse(250, 150, -10), npc_ok: coarse(260, 150) });
   swap();
   let r;
   const logs = captured(() => { r = bubbleTransition(E1, s, before); });
-  assert.deepEqual(logs, [{ code: 'E-GRID-LAND-UNKNOWN', fields: { space: 0, rx: 2, ry: 1 } }]);
+  assert.deepEqual(logs, [], 'bubbleTransition 不记报告');
   assert.deepEqual(r.moves.map((m) => [m.subject, m.outcome]), [['npc_ok', 'land'], ['npc_rock', 'unknown']]);
   assert.equal(r.moves[1].to, null);
   assert.deepEqual(r.moves[1].from, coarse(250, 150, -10));

@@ -18,6 +18,34 @@ export const CELL_KIND = Object.freeze({ stairs: 'stairs', ladder: 'ladder' });
 const STANDABLE_KINDS = Object.freeze([CELL_KIND.stairs, CELL_KIND.ladder]);
 /** 坠落、挤出、落点结果的种类（place.mjs 的 settleCell、fallCell、extrudeCell 与本文件的 extrudeLanding 共用）。 */
 export const SETTLE = Object.freeze({ stay: 'stay', fall: 'fall', extrude: 'extrude', land: 'land', buried: 'buried', unknown: 'unknown', none: 'none' });
+/**
+ * 一格该怎么结算（卷五 §4.5 规则 6 :761–:762；李白裁定 1117 末节表-3：人在液体格先按 :761 字面落格）：纯规则，place.mjs 的 settleCell 与测试共用这一处。
+ * 可立足不动（stay）；不可立足而本格可穿行（气态）或是液体——液体格不可立足——为坠落（fall：落到正下方第一个可立足格）；本格是实体为挤出（extrude）；
+ * 可立足未知或物态读不到为 unknown（未知照卷二 §1.12 往下传，不当成可立足）。
+ * @param {boolean | null} standable @param {string | null} matterState STATE 之一
+ * @returns {'stay' | 'fall' | 'extrude' | 'unknown'}
+ */
+export function settleKindOf(standable, matterState) {
+  if (standable === null || standable === undefined) return SETTLE.unknown;
+  if (standable) return SETTLE.stay;
+  if (matterState === STATE.gas || matterState === STATE.liquid) return SETTLE.fall;
+  if (matterState === STATE.solid) return SETTLE.extrude;
+  return SETTLE.unknown;
+}
+
+/**
+ * 坠落逐格一步（place.mjs 的 fallCell 用；纯规则，按材料物态类判，不认水体 id）：读不到可立足为 unknown；可立足为 land（落在这一格）；
+ * 起点在液体里（sinkOnSolid）且这一格是实体而不可立足，为 fall（液体柱到底：停在它之上那一格，不穿河床——李白 11-23 事件 412004ce，卷五 :761 勘误 1122k1）；否则 none（继续往下）。
+ * @param {{known: boolean, standable: boolean | null, state: string}} c @param {boolean} sinkOnSolid
+ * @returns {'land' | 'fall' | 'unknown' | 'none'}
+ */
+export function fallStep(c, sinkOnSolid) {
+  if (!c.known || c.standable === null) return SETTLE.unknown;
+  if (c.standable) return SETTLE.land;
+  if (sinkOnSolid && c.state === STATE.solid) return SETTLE.fall;
+  return SETTLE.none;
+}
+
 /** 材料的三个格侧布尔维度名（卷三甲 :128–:130）。 */
 export const FLAG = Object.freeze({ opaque: 'opaque', blocksSky: 'blocksSky', bearsLoad: 'bearsLoad' });
 
