@@ -7,8 +7,8 @@
 | 3 | 每个限额/校验都试过特殊值（不限/0/空），无法绕过 | 是 | 未新增校验。唯一的特殊值处置（growthRate、restartKg = 0；packSize、coverDim = null）没落地，登进 docs/问题.md 请李白明说 |
 | 4 | 新测试不依赖仓库当前偶然数字 | 是 | 未新增测试（人类行没落地，无可测对象；"测试先行"的期望值要等李白定值后按字面量写） |
 | 5 | 没有为降计数改写允许的代码、没有假常量 | 是 | 无代码改动 |
-| 6 | 只改了卡文列出的文件；diff 共 __ 行 | 是 | 只改 docs/问题.md（追加一节）与新增本回报；`git diff --cached --shortstat` 见提交 |
-| 7 | 全量测试已跑：命令＋pass/fail 数 | 见回报文末 | `node --test --test-concurrency=3 tests/kernel/*.test.mjs tests/accept/*.test.mjs`；pre_commit verdict pass；`node tools/convert-geo-g5b.mjs --check` 退出码 0 |
+| 6 | 只改了卡文列出的文件；diff 共 42 行（问题.md）加本回报 | 是 | 只改 docs/问题.md（追加一节）与新增本回报 |
+| 7 | 全量测试已跑：命令＋pass/fail 数 | 是 | `node --test --test-concurrency=3 tests/kernel/*.test.mjs tests/accept/*.test.mjs` → tests 2054 pass 2054 fail 0；pre_commit verdict pass；`node tools/convert-geo-g5b.mjs --check` 退出码 0 |
 | 8 | 这张卡让块 6 哪一步更近了（一句话），且没有为此违背北极星任何一条 | 是 | 把"人类物种行"为什么落不了地查实并逐项列清（可填 8 组、要编数 16 项、缺口 5 类），李白一次裁定后下一张卡可直接填行；没有用示意数顶替 |
 | 9 | 前置数据行是否已存在：本卡读写依赖的数据行、组件类、规则表逐项查过存在（列文件:行）；有不存在的，已停下回报，没有自编或绕过 | 否（有缺，已停） | 不存在：body_part、tissue、taxon、damage、renewable、trait 族条目（world/ontology/dimensions/_vocab.json 各 entries 为空）；body_plan.json、species.json 的 rows 为空；rules.attr.bounds 无（world/rules/tables 无 attr 表）。存在：mat_flesh、mat_bone、mat_fat、mat_rawhide（material.json）、diet_omnivore（_vocab.json）、comp_sapient（component 族）、life.json stages 与 growthCurve、_unbuilt-derived.json 的 species 列登记（habitats、pharmSensitivity、senses、sourceStrength 等）。 |
 
