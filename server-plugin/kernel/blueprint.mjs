@@ -641,10 +641,11 @@ export function openingAreasOf(bp, breach, closedPlaces, rules) {
  * 只核平面字段（walled、aspect、storeyBase、roofed、deck、windowEvery、wallThicknessDefaultM、wallThicknessMinM、rooms、planSideMaxCells——后者每种形制必填，没登记即装载报错，封卷后勘误 1121k21）；envelopeReq、技能等字段归建造卡。
  * 新增一个形制条目只加数据：本函数遍历族内全部条目，不点名代号。rooms 各项的 role 须是 roomrole 族条目，同一 level 的 share 之和恰为 1（定点），level 为非负整数。
  * limits 是规则表 rules.facility.blueprint（取值域上下限）；世界里有形制条目而它缺失，报 E-RULES-UNREGISTERED，不当作没有上下限放过。
- * @param {Map<string, {family: string, entry: any}>} vocabIndex 词表索引 @param {any} limits
+ * facilityTypes（适用设施类型，卷十九 §2.4，封卷后勘误 1123k52）：交入设施类型表的行 id 集 facilityTypeIds 时核——必填列表（可空）、每项须是类型表的行、不重复；不交（undefined）即不核这一栏（只测平面字段的调用方）。
+ * @param {Map<string, {family: string, entry: any}>} vocabIndex 词表索引 @param {any} limits @param {Set<string>} [facilityTypeIds] 设施类型表（kind facility_type）的行 id
  * @returns {string[]}
  */
-export function checkBlueprintForms(vocabIndex, limits) {
+export function checkBlueprintForms(vocabIndex, limits, facilityTypeIds) {
   const errors = [];
   const scale = fixedScale();
   const num = (v) => typeof v === 'number' && Number.isFinite(v);
@@ -667,6 +668,18 @@ export function checkBlueprintForms(vocabIndex, limits) {
       else if (fixedUnits(e[k]) <= 0n || fixedUnits(e[k]) > fixedUnits(limits.wallThicknessMaxM)) errors.push(`E-DIM-DOMAIN-RANGE ${at}: ${k} ${e[k]} want (0, ${limits.wallThicknessMaxM}]`);
     }
     if (num(e[FORM.thicknessDefault]) && num(e[FORM.thicknessMin]) && fixedUnits(e[FORM.thicknessDefault]) > 0n && fixedUnits(e[FORM.thicknessMin]) > fixedUnits(e[FORM.thicknessDefault])) errors.push(`E-DIM-DOMAIN-RANGE ${at}: ${FORM.thicknessMin} exceeds ${FORM.thicknessDefault}`);
+    if (facilityTypeIds instanceof Set) {
+      const types = e.facilityTypes;
+      if (!Array.isArray(types)) errors.push(`E-DIM-REQUIRED-MISSING ${at}: facilityTypes is a required list of facility_type rows (may be empty)`);
+      else {
+        const seen = new Set();
+        types.forEach((t, i) => {
+          if (typeof t !== 'string' || !facilityTypeIds.has(t)) errors.push(`E-DIM-REF-MISSING ${at}/facilityTypes/${i}: ${JSON.stringify(t)} is not a row of the facility_type table`);
+          else if (seen.has(t)) errors.push(`E-DIM-DUPLICATE-KEY ${at}/facilityTypes/${i}: ${t} listed twice`);
+          else seen.add(t);
+        });
+      }
+    }
     if (!Array.isArray(e[FORM.rooms])) { errors.push(`E-DIM-REQUIRED-MISSING ${at}: ${FORM.rooms} is a required list (may be empty)`); continue; }
     const sums = new Map();
     e[FORM.rooms].forEach((r, i) => {

@@ -8,10 +8,10 @@
 // 补出的房子必须能展开：补完前三项后先经 planFeasible（不铺格的可行性预判，与面积无关的代价）判，ok 为假（如房间分不下）时把 A 加倍后重做 planCellsOf，可行才调 planBlueprint 真铺，直到 ok 为真；planCells 任一边将超过该形制登记的外包边长上限
 // （形制条目 planSideMaxCells，卷十九 §2.4、封卷后勘误 1121k21、李白 11-22 裁定事件 3ce50e60 取甲；planCellsOf 越界抛，没有全局数）仍不行，即拒收：E-GEN-ROW-INVALID，字段写进生成日志（building、form、
 // need_width_cells、need_depth_cells、max_cells、reason=plan_cells_over_form_cap），不静默截断、不悄悄缩房间。作者写了 planCells 的不重做、不加倍，超形制上限或 ok 为假同样 E-GEN-ROW-INVALID（作者数据错）。
-// form：作者没写（该键缺）时本阶段先补（封卷后勘误 1123k31，李白 11-23 事件 08673f69 第 1 条"按设施类型"）：候选 = 形制登记（bform 族）里按卷十九 §4.5 规则 2 ③ 对本行 intendedType
-// 所指设施类型行（facility_type 族，maxSkyExposure、maxAperture 空即无要求）筛后剩下的条目（形制设计围合值取该形制最小可展开平面的蓝图 design，不超过两个上限才留），按代号序，
-// 按抽取点 site_gen_bldfill_form（对象为本行 id，等权 categorical）取一个，写成该行 generated 节的偏离行（来源"生成补缺"，作者之后手写即覆盖）；
-// 行上没有 intendedType（现在它还不是 place 表登记的维度）、类型行不在族里、或筛后一个形制也不剩，都算"该设施类型在登记里找不到形制"：不补、不报错、不自造，记缺口 form_type_unmatched，
+// form：作者没写（该键缺）时本阶段先补（封卷后勘误 1123k31 按设施类型补；1123k52 改为按"适用设施类型"挑，李白 11-23 事件 b41e0801 P10-1 选乙）：候选 = 形制登记（bform 族）里
+// 条目的 facilityTypes 含本行 intendedType 的全部形制，按代号序，按抽取点 site_gen_bldfill_form（对象为本行 id，等权 categorical）取一个，写成该行 generated 节的偏离行（来源"生成补缺"，作者之后手写即覆盖）；
+// 原按采光、开口两项上限筛（卷十九 §4.5 规则 2 ③）与"最小可展开平面"设计围合值的做法已撤；
+// 行上没有 intendedType、或没有任何形制适用本行的设施类型，都算"该设施类型在登记里找不到形制"：不补、不报错、不自造，记缺口 form_type_unmatched，
 // 该行不参加本阶段其余各项（也不计入站点占地），缺口按行列进交接文件；作者写了 form 的一律不动，写了不在登记里的仍 E-GEN-ROW-INVALID。
 // intendedType 是卷十九必填的作者输入，不补；
 // 来源标记与覆盖同 R10-2.17：补出的维度写成该行的 generated 偏离行（generated.by 记 gstage_siteform），作者之后手写同一维度即覆盖（世界重新创建时本阶段不再补它）。
@@ -30,7 +30,7 @@ import { genDraw, genDiceKey } from './draw.mjs';
 import { layoutOf, defaultFacing } from '../layout.mjs';
 import { fixedUnits, fixedAdd, fixedMultiply, fixedToNumber, truncateTo } from '../det-math.mjs';
 
-const FAMILY = Object.freeze({ form: 'bform', type: 'facility_type' }); // 形制词表族（卷十九 §2.4）、设施类型族（卷十九 §2.2）
+const FAMILY = Object.freeze({ form: 'bform' }); // 形制词表族（卷十九 §2.4）；设施类型是维度表（卷十九 §2.2），本阶段只读形制条目的 facilityTypes，不读类型表
 const REASON = Object.freeze({
   roomRows: 'room_rows_unbuilt', storeysCap: 'storeys_max_unchecked', tractUnplanned: 'tract_footprint_unplanned', formTypeUnmatched: 'form_type_unmatched',
   layoutGrid: 'layout_grid_missing', layoutFootprint: 'layout_footprint_unplanned', latitudeUnknown: 'facing_latitude_unknown', anchorZ: 'anchor_z_unknown',
@@ -68,37 +68,13 @@ export function genSiteForm(ctx) {
   const specOf = new Map(); // 建筑 id → 展开蓝图要的输入 {form, planCells, storeys, wall}（作者写的或本阶段补的）；站点面积一节的落位读
   // 形制登记：bform 族全部条目的代号，按代号序（算一次）。
   const registered = ctx.vocab.index instanceof Map ? [...ctx.vocab.index].filter(([, r]) => r && r.family === FAMILY.form && r.entry !== null && typeof r.entry === 'object').map(([code]) => code).sort(cmp) : [];
-  // 形制的设计围合值（卷十九 §4.5 规则 2 ③ 的比较对象）：取该形制最小可展开平面（面积自 1 m² 起逐次加倍到可展开）的蓝图 design；展不开即 null（不入候选）。
-  const designCache = new Map();
-  const designOf = (code) => {
-    if (designCache.has(code)) return designCache.get(code);
-    const f = ctx.vocab.index.get(code).entry;
-    const wall = f.walled === true ? f.wallThicknessDefaultM : null;
-    const storeys = f.storeyBase !== undefined && 1 - f.storeyBase > 1 ? 1 - f.storeyBase : 1;
-    let design = null;
-    let area = fixedUnits(1);
-    for (;;) {
-      try {
-        const planCells = planCellsOf({ form: f, areaM2: fixedToNumber(area), wallThicknessM: wall }, ctx.blueprint);
-        const input = { form: f, planCells, storeys, wallThicknessM: wall, facing: 0 };
-        const feas = planFeasible(input, ctx.blueprint);
-        if (feas.ok) { design = planBlueprint(input, ctx.blueprint).design; break; }
-        if (feas.reason === BP_REASON.entranceNotAdjacent) break;
-      } catch (e) { break; } // 越形制上限等：该形制展不开，不入候选
-      area = fixedAdd(area, area);
-    }
-    designCache.set(code, design);
-    return design;
-  };
-  // 本行设施类型的候选形制：类型行（facility_type 族）的两个上限，空即无要求；没有类型、类型行不存在即空表。
+  // 本行设施类型的候选形制：形制条目的 facilityTypes（适用设施类型，卷十九 §2.4，封卷后勘误 1123k52）含本行 intendedType 的全部形制，按代号序；行上没有类型即空表。
   const candidatesOf = (b) => {
     const type = b.dims.intendedType;
-    const rec = typeof type === 'string' && ctx.vocab.index instanceof Map ? ctx.vocab.index.get(type) : undefined;
-    if (!rec || rec.family !== FAMILY.type || rec.entry === null || typeof rec.entry !== 'object') return [];
-    const { maxSkyExposure: sky, maxAperture: aperture } = rec.entry;
+    if (typeof type !== 'string') return [];
     return registered.filter((code) => {
-      const d = designOf(code);
-      return d !== null && (typeof sky !== 'number' || d.skyExposure <= sky) && (typeof aperture !== 'number' || d.aperture <= aperture);
+      const types = ctx.vocab.index.get(code).entry.facilityTypes;
+      return Array.isArray(types) && types.includes(type);
     });
   };
   for (const b of buildings) {

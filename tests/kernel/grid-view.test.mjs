@@ -46,6 +46,7 @@ function load({ rows, edges = [], spaces, cellclass = CELLCLASS(), templates = T
     for (const f of readdirSync(join(ROOT, DIMS)).filter((n) => n.endsWith('.json'))) writeUnderTempRoot(tmp, f, realText(f));
     writeUnderTempRoot(tmp, 'place.json', JSON.stringify({ ...HEADER, rows, edges, gridSpaces: spaces }));
     writeUnderTempRoot(tmp, 'item.json', JSON.stringify({ ...JSON.parse(realText('item.json')), rows: {} }));
+    writeUnderTempRoot(tmp, 'org.json', JSON.stringify({ ...JSON.parse(realText('org.json')), rows: {} })); // 真实组织行的驻地不在夹具地点表里
     const unbuilt = JSON.parse(realText('_unbuilt-derived.json'));
     if (!keepUnbuilt) unbuilt.columns = unbuilt.columns.filter((c) => c.table !== 'place');
     writeUnderTempRoot(tmp, '_unbuilt-derived.json', JSON.stringify(unbuilt));
@@ -55,7 +56,7 @@ function load({ rows, edges = [], spaces, cellclass = CELLCLASS(), templates = T
       writeUnderTempRoot(tmp, 'material.json', JSON.stringify(mat));
     }
     const v = structuredClone(VOCAB);
-    v.families.access.entries = { access_test_open: { rank: 0, needsGrant: false } };
+    v.families.access.entries = { ...v.families.access.entries, access_test_open: { rank: 0, needsGrant: false } }; // 真实设施类型表的缺省档要在族里
     v.families.water.entries = { ...v.families.water.entries, water_test_fresh: { navigable: false }, water_test_river: { navigable: false, flowing: true } };
     v.families.cellclass.entries = cellclass;
     v.families.gentemplate.entries = withAir(templates);

@@ -35,15 +35,16 @@ function load({ rows = {}, edges = [], spaces } = {}) {
     for (const f of readdirSync(join(ROOT, DIMS)).filter((n) => n.endsWith('.json'))) writeUnderTempRoot(tmp, f, realText(f));
     writeUnderTempRoot(tmp, 'place.json', JSON.stringify({ ...HEADER, rows, edges, gridSpaces: spaces }));
     writeUnderTempRoot(tmp, 'item.json', JSON.stringify({ ...JSON.parse(realText('item.json')), rows: {} }));
+    writeUnderTempRoot(tmp, 'org.json', JSON.stringify({ ...JSON.parse(realText('org.json')), rows: {} })); // 真实组织行的驻地不在夹具地点表里
     const unbuilt = JSON.parse(realText('_unbuilt-derived.json'));
     unbuilt.columns = unbuilt.columns.filter((c) => c.table !== 'place');
     writeUnderTempRoot(tmp, '_unbuilt-derived.json', JSON.stringify(unbuilt));
     const v = structuredClone(VOCAB);
-    v.families.access.entries = { access_test_open: { rank: 0, needsGrant: false } };
+    v.families.access.entries = { ...v.families.access.entries, access_test_open: { rank: 0, needsGrant: false } }; // 真实设施类型表的缺省档要在族里
     v.families.water.entries = { ...v.families.water.entries, water_test_nav: { navigable: true } };
     v.families.cellclass.entries = FULL_CELLCLASS;
     v.families.gentemplate.entries = GEN_TEMPLATE;
-    v.families.bform.entries = { bldform_test: { walled: true, aspect: 1, storeyBase: 0, roofed: true, deck: false, windowEvery: 0, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.2, planSideMaxCells: 64, rooms: [] } };
+    v.families.bform.entries = { bldform_test: { walled: true, aspect: 1, storeyBase: 0, roofed: true, deck: false, windowEvery: 0, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.2, planSideMaxCells: 64, rooms: [], facilityTypes: ['fac_house'] }, bldform_shrine: v.families.bform.entries.bldform_shrine };
     writeUnderTempRoot(tmp, '_vocab.json', JSON.stringify(v));
     return loadWorld(ROOT, { dimensionsDir: relative(ROOT, tmp) });
   } finally { rmSync(tmp, { recursive: true, force: true }); }
@@ -201,7 +202,7 @@ test('水路边：两端之间没有通航水域即加载报错 E-GRID-WATERWAY-
 
 test('边两端只许区域或体积足迹的行：建筑行、房间行作端点即 E-DIM-DOMAIN-RANGE；体积端加载通过（其栅格化归 G8，派生量按未知）', () => {
   // 挂 comp_facility 的行另须带卷十九 §2.1 的必填列（G7 第一步登记）：形制、外包宽深、层数、完好度、破口列表。
-  const bld = { classes: ['comp_facility'], anchor: { w: 0, x: 10, y: 150, z: 0, coarse: false }, facing: 0, form: 'bldform_test', planCells: { widthCells: 6, depthCells: 6 }, storeys: 1, condition: 1, breaks: [], materialKg: { mat_granite: 1000 } };
+  const bld = { classes: ['comp_facility'], anchor: { w: 0, x: 10, y: 150, z: 0, coarse: false }, facing: 0, form: 'bldform_test', intendedType: 'fac_house', planCells: { widthCells: 6, depthCells: 6 }, storeys: 1, condition: 1, breaks: [], materialKg: { mat_granite: 1000 } };
   const g = ROW8();
   g.rows.loc_h = row('loc_a', bld);
   assert.ok(has(load({ ...g, edges: [edge('loc_a', 'loc_h')] }), 'E-DIM-DOMAIN-RANGE'));

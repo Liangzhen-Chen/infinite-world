@@ -16,11 +16,19 @@
    "bldform_river_house": {
     "walled": true, "roofed": true, "deck": false, "storeyBase": 0, "aspect": 1, "windowEvery": 4,
     "wallThicknessDefaultM": 0.4, "wallThicknessMinM": 0.4, "planSideMaxCells": 18,
+    "facilityTypes": ["fac_clinic", "fac_forge", "fac_granary", "fac_house", "fac_inn", "fac_mill", "fac_office", "fac_school", "fac_workshop"],
     "rooms": [
      {"role": "roomrole_common_room", "share": 0.5, "level": 0, "open": false},
      {"role": "roomrole_sleeping_room", "share": 0.5, "level": 0, "open": false}
     ],
-    "basis": "西陲垄渠人（world/lore/cultures.json:21 culture_river，anchor 为 loc_hw）的盖法：\"夯土下墙与可拆木楼，门槛刻历次水位\"；docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 把它定为 building:river_house（wall rammed_earth、frame timber、roof thatch_reed）。walled 真（有夯土墙）、roofed 真（有草顶）、deck 假、storeyBase 0（设定无地窖）。aspect 1、windowEvery 4、wallThicknessDefaultM 0.4、wallThicknessMinM 0.4：无出处，暂定起点，待试玩标定（设定只写\"夯土下墙厚实\"，cultures.json:38，没有数；卷十九 :601 手算示例写明\"数值都是示意的数据\"，不是出处，不引）。rooms：locations.json 八处私宅各写两个房间\"共用起居间\"（如 :3301）与\"家人睡处\"（如 :3305）；share 0.5/0.5 无出处，暂定起点，待试玩标定。planSideMaxCells 18（外包边长上限，细格计，卷十九 §2.4、封卷后勘误 1121k21，李白 11-22 裁定事件 3ce50e60）：设定原文 docs/世界设计/13-建筑、聚落形态与服饰器物.md:82 把 courtyard_house（river_house 的原型，:170）占地写成 footprintM2 [120, 300]，上限 300 m2；按本形制 aspect 1、细格 1 m 折外包：D = ⌊√300⌋ = 17、W = ceil(300 ÷ 17) = 18，取 18（占地上限的出处是设定原文，折成边长的算法与取整是生成规则，暂定·待试玩标定；不是 :601 示意值）。envelopeReq、skill、skillMin、minutesPerM2、toolAbilities、qualityCurve、portable、packMinutes、beautyBase、provides 等建造字段归卷十九建造卡，本卡未落（planBlueprint 与 checkBlueprintForms 不读）。"
+    "basis": "西陲垄渠人（world/lore/cultures.json:21 culture_river，anchor 为 loc_hw）的盖法：\"夯土下墙与可拆木楼，门槛刻历次水位\"；docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 把它定为 building:river_house（wall rammed_earth、frame timber、roof thatch_reed）。walled 真（有夯土墙）、roofed 真（有草顶）、deck 假、storeyBase 0（设定无地窖）。aspect 1、windowEvery 4、wallThicknessDefaultM 0.4、wallThicknessMinM 0.4：无出处，暂定起点，待试玩标定（设定只写\"夯土下墙厚实\"，cultures.json:38，没有数；卷十九 :601 手算示例写明\"数值都是示意的数据\"，不是出处，不引）。rooms：locations.json 八处私宅各写两个房间\"共用起居间\"（如 :3301）与\"家人睡处\"（如 :3305）；share 0.5/0.5 无出处，暂定起点，待试玩标定。planSideMaxCells 18（外包边长上限，细格计，卷十九 §2.4、封卷后勘误 1121k21，李白 11-22 裁定事件 3ce50e60）：设定原文 docs/世界设计/13-建筑、聚落形态与服饰器物.md:82 把 courtyard_house（river_house 的原型，:170）占地写成 footprintM2 [120, 300]，上限 300 m2；按本形制 aspect 1、细格 1 m 折外包：D = ⌊√300⌋ = 17、W = ceil(300 ÷ 17) = 18，取 18（占地上限的出处是设定原文，折成边长的算法与取整是生成规则，暂定·待试玩标定；不是 :601 示意值）。facilityTypes（适用设施类型，封卷后勘误 1123k52，李白 11-23 事件 b41e0801 P10-1）：13-建筑 :170 写白石镇与五村已有的 458 个地点（含试玩地区的酒馆、磨坊、铁匠铺、学堂、药草院、村务屋、织坊、公仓）都由“夯土下墙与可拆木楼”定为本形制（building:river_house），模板 uses 为 dwelling、shop_front、hall（:76–83）；所以列 fac_house、fac_inn、fac_mill、fac_forge、fac_school、fac_office、fac_workshop、fac_clinic、fac_granary 九类。公仓旧数据 material 为 wood（locations.json:31174），与夯土下墙的盖法不一致，start-buildings.json 的 gap 已记，列入本形制是按 :170 的“已有建筑一律此形制”，须李白核（见 docs/问题.md）。envelopeReq、skill、skillMin、minutesPerM2、toolAbilities、qualityCurve、portable、packMinutes、beautyBase、provides 等建造字段归卷十九建造卡，本卡未落（planBlueprint 与 checkBlueprintForms 不读）。"
+   },
+   "bldform_shrine": {
+    "walled": true, "roofed": true, "deck": false, "storeyBase": 0, "aspect": 1, "windowEvery": 0,
+    "wallThicknessDefaultM": 0.4, "wallThicknessMinM": 0.4, "planSideMaxCells": 5,
+    "facilityTypes": ["fac_shrine"],
+    "rooms": [],
+    "basis": "小龛/小堂（前置卡 D 补，试玩地区的河湾石坛用）：设定原文 docs/世界设计/13-建筑、聚落形态与服饰器物.md:109 的建筑模板 building:shrine（名“小龛/小堂”，forms [\"shrine\"]，requires wall \"*\"、roof \"*\"，footprintM2 [2, 20]，uses [\"shrine\"]；:73 说宗教建筑的模板在本节登记）。walled 真、roofed 真：requires 同时要墙与顶（任意材料）；deck 假、storeyBase 0：设定无承托台与地下层。planSideMaxCells 5：占地上限 20 m2（:109），按本形制 aspect 1、细格 1 m 折外包：D = ⌊√20⌋ = 4、W = ceil(20 ÷ 4) = 5，取 5（算法同 bldform_river_house 的 planSideMaxCells，占地上限的出处是设定原文，折算与取整是生成规则）。rooms 空表（卷十九 §2.4 允许：小龛不分房间；设定 :80 的 shrine_niche 只是围庭院的一个房间，不是本模板的房间）。aspect 1、windowEvery 0、wallThicknessDefaultM 0.4、wallThicknessMinM 0.4：设定无数，暂定起点（墙厚同 bldform_river_house 暂取值，一个墙格；windowEvery 0 即无窗，小龛）·待试玩标定。河湾石坛旧数据写“低矮石坛……遮雨石龛”（locations.json:1375），本形制只对应“遮雨石龛”这一部分；石坛台面本身设定未定盖法（start-buildings.json 的 gap），不另造形制。facilityTypes（封卷后勘误 1123k52）：模板 building:shrine 的 uses 恰为 [\"shrine\"]（13-建筑 :109），对应设施类型 fac_shrine，只列这一类。envelopeReq、skill、skillMin、minutesPerM2、toolAbilities、qualityCurve、portable、packMinutes、beautyBase、provides 等建造字段归卷十九建造卡，本卡未落（planBlueprint 与 checkBlueprintForms 不读）。"
    }
   }, "prefix": "bldform_"},
   "bulkform": {
@@ -45,7 +53,7 @@
    "cellclass_mountain": {"terrains": ["terrain_mountain"], "waterAny": [], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 0, "genTemplate": "gtpl_bedrock", "basis": "兜底条目（同 cellclass_cave）；convert-geo.mjs 的地形文本映射里山地来自砾石山地、高山粒雪台原、赤色褶皱山地，取 gtpl_bedrock；暂定·待试玩标定"},
    "cellclass_plain": {"terrains": ["terrain_plain"], "waterAny": [], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 0, "genTemplate": "gtpl_soil", "basis": "兜底条目（同 cellclass_cave）；河湾村一带的地形文本是\"平地\"（locations.json:12）、转为 terrain_plain；暂定·待试玩标定"},
    "cellclass_river": {"terrains": ["terrain_river"], "waterAny": [], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 0, "genTemplate": "gtpl_silt", "basis": "兜底条目（同 cellclass_cave）；河床取 gtpl_silt；暂定·待试玩标定"},
-   "cellclass_water": {"terrains": ["terrain_cave", "terrain_coast", "terrain_desert", "terrain_forest", "terrain_hill", "terrain_lake", "terrain_marsh", "terrain_mountain", "terrain_plain", "terrain_river"], "waterAny": ["water_lake", "water_navigable", "water_river", "water_sea"], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 10, "genTemplate": "gtpl_silt", "basis": "水体足迹内的区格（卷五 §4.3 规则 9：waterAny 满足所在水体足迹行的 waterKind），任何地形都适用，优先于地形兜底；水体行写 water_river、water_sea（world/geo/water-bodies.json，卷十生成补缺卡按卷五 :248 加的两个条目；旧水路边两端的 waterAccess 仍是 water_navigable），水本身的材料由水体行的 liquid 给，模板只给水底；附表-1122勘误 L1：加 water_lake（镜沼、灰盐池）；暂定·待试玩标定"}
+   "cellclass_water": {"terrains": ["terrain_cave", "terrain_coast", "terrain_desert", "terrain_forest", "terrain_hill", "terrain_lake", "terrain_marsh", "terrain_mountain", "terrain_plain", "terrain_river"], "waterAny": ["water_lake", "water_navigable", "water_river", "water_saltlake", "water_sea"], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 10, "genTemplate": "gtpl_silt", "basis": "水体足迹内的区格（卷五 §4.3 规则 9：waterAny 满足所在水体足迹行的 waterKind），任何地形都适用，优先于地形兜底；水体行写 water_river、water_sea（world/geo/water-bodies.json，卷十生成补缺卡按卷五 :248 加的两个条目；旧水路边两端的 waterAccess 仍是 water_navigable），水本身的材料由水体行的 liquid 给，模板只给水底；附表-1122勘误 L1：加 water_lake（镜沼、灰盐池）；暂定·待试玩标定"}
   }, "prefix": "cellclass_"},
   "cellmark": {"closed": false, "entries": {}, "prefix": "cellmark_"},
   "dockind": {"closed": false, "entries": {}, "prefix": "dockind_"},
@@ -450,7 +458,7 @@
      "relocatable": false,
      "relocatableIn": null,
      "requires": [
-      "capacityL",
+      "capacityM3",
       "catchmentM2",
       "downstream",
       "liquid",
@@ -871,6 +879,20 @@
   "purpose": {
    "closed": false,
    "entries": {
+    "purpose_escrow": {
+     "basis": "卷六 §4.17.1 :1031 四列写全的现成一行（托管：spendable 假，§4.16 规则 3；locksFor 空，各种类合同共用；visibleToMarket 假；trackOutflow 假）；卷八 polity.roles.purposes.escrow 引用它、不另登记（卷八 :1371）。前置卡 D 随公库分区一并登进词表数据",
+     "locksFor": null,
+     "spendable": false,
+     "trackOutflow": false,
+     "visibleToMarket": false
+    },
+    "purpose_general": {
+     "basis": "公库缺省分区（卷八 §5.3 :1371“卷六 用途族”请求登记；卷八 polity.roles.purposes.general 引用；组织行 treasury 必填非空，卷八 :135、E-ORG-TREASURY；卷六封卷后勘误 1123k50 补进 §2.2）。trackOutflow 假：卷八 :1371 明写“公库缺省分区为假”。locksFor 空：卷六 §2.2 :133 的 locksFor 只给锁合同的分区（托管 :1031 写“所锁合同由合同记录列出”），公库缺省分区不锁合同。spendable 真：卷六已登记的 spendable 假各行（unmaterialized :133、transit/custody/consign/escrow :1028–1031）都是“谁都动不了”的专用分区，缺省分区正相反，公库要付俸禄（卷八 :220 salary 行的 fromPurpose 指定俸禄从哪个用途分区付，:106 公库是组织名下按用途分区的账户），所以取真；这是对卷六文字的推读，卷六与卷八都没写这一列，暂定·须李白核。visibleToMarket 假：卷六 §4.1 规则 10（:384）“stockIn 的范围聚合只数 visibleToMarket 为真的用途分区”，公库货不是对市场挂卖的货（寄售分区才为真，:1030），取假；同属推读，暂定·须李白核（若李白裁公库存粮应计入市场供给，改此一列）",
+     "locksFor": null,
+     "spendable": true,
+     "trackOutflow": false,
+     "visibleToMarket": false
+    },
     "purpose_unmaterialized": {
      "locksFor": null,
      "spendable": false,
@@ -2997,8 +3019,9 @@
   "water": {
    "closed": false,
    "entries": {
-    "water_lake": {"basis": "卷五 §2.2 :248（water 族开放，条目必写 navigable、flowing；静水为假，如湖、塘）；湖：静水（附表-1122 4.2 镜沼、灰盐池）；可航取与 water_sea 同（大水面可行船；设定未写湖上行船与否，暂定·待核；附表-1122勘误 L1 补）", "flowing": false, "navigable": true},
+    "water_lake": {"basis": "卷五 §2.2 :248（water 族开放，条目必写 navigable、flowing；静水为假，如湖、塘）；湖：静水（附表-1122 4.2 镜沼；附表-1122勘误 L1 补）。可航取真（前置卡 D 核，李白 11-23 事件 b41e0801 P10-5）：regions.json:644 写镜沼一带“湿季沼水上涨，渡口改走高处的芦滩”，郡名芦语渡（附表 :123）即渡口，渡口要摆渡就是水上通行；设定没有明写湖上行船，这是由渡口推出的读法，不是原文", "flowing": false, "navigable": true},
     "water_navigable": {"navigable": true},
+    "water_saltlake": {"basis": "卷五 §2.2 :248；盐湖：静水、不可航（前置卡 D 核，P10-5：照世界设计方案与附表原文定，查不到按 P-3）。依据：附表 :144、:148 灰盐的盐池洼地低于海平面、取吐鲁番盆地的现象，:203 灰盐气候对照吐鲁番“干热、昼夜温差大”，regions.json:644 “旱季盐地龟裂”、:645 灰盐郡的水份额由缺杯水议席分定（水是缺的、按份额分）——干热盆地里的盐碱洼地，旱季干裂，不是可行船的水面；没有原文明写灰盐池通航与否，不可航是由上述推出的读法（设定值，暂定·待试玩标定）。与 water_lake 分条目的原因：通航按水体类定（卷五 :248 条目字段），两湖同取一类会让灰盐池可航", "flowing": false, "navigable": false},
     "water_river": {"basis": "卷五 §2.2 :248（water 族条目必写 navigable、flowing）；河：可航、流水（regions.json:76、:906、:909）", "flowing": true, "navigable": true},
     "water_sea": {"basis": "卷五 §2.2 :248；海：可航（regions.json:2004）、静水取假（卷五 :664 静水全片一个水面）", "flowing": false, "navigable": true}
    },

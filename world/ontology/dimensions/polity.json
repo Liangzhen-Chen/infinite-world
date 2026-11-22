@@ -32,6 +32,20 @@
  "generated": {},
  "kind": "polity",
  "namespace": "core",
- "rows": {},
+ "rows": {
+  "polity_realm_main": {
+   "basis": "作者；王国政体行：卷八 §2.3 :196 holderEligibility 不设限制写 1 == 1（世界设计方案 :133 王国治理两式未收敛，持有资格先不设限）；domainLimitBase 待调（卷八 §4.6 没给数，直辖上限规则与派生 domainLimit 未建，无读者）；successionDefault 取议案选出条目 succession_by_motion（李白 11-23 事件 b41e0801 ⑨，先按议案选出；具体做法世界设计方案 P1/D2 未定，待调）。由 world/design/opening-polity-hw.json 迁入真实表（前置卡 D）",
+   "polityKind": "pkind_realm",
+   "taxRules": [],
+   "successionDefault": "succession_by_motion",
+   "holderEligibility": "1 == 1",
+   "councilOffices": [],
+   "domainLimitBase": 0,
+   "landless": false,
+   "mobileSeat": false,
+   "casus": [],
+   "influenceSources": []
+  }
+ },
  "version": 1
 }

@@ -1,47 +1,7 @@
 {
  "version": 1,
  "source": "作者",
- "note": "试玩地区（河湾村一带）开局组织的手写数据（李白 11-23 前置卡 A A-2；手写优先，卷十 R10-1.7、卷八 R8-18.9 末句）：王国主权组织一条、河湾村村社组织一条、王国政体行一条，以及两条统治边。显示名（国号等）归语言包，本文件只有代号；国号世界设计方案 D1 未定（docs/研究/世界设计完整方案-1122.md :492），所以不写名字。郡级治理世界设计方案 :134–:140 是王国下的郡守职位、不是郡组织行，郡守职位的种类行与权能词表未定，本文件不写郡组织行（回报\"须李白\"）。",
- "pending": "treasury 暂空：卷六 purpose 表还没有公库缺省分区 purpose_general（前置卡 A 第 6 项另开卡）；E-ORG-TREASURY 要求 hasTreasury 的组织 treasury 非空，所以这批行等第 6 项合入后迁进 org.json、polity.json 的 rows（测试夹具先带分区验证），现在放在这里不进真实表。",
- "polity": {
-  "polity_realm_main": {
-   "basis": "作者；王国政体行：卷八 §2.3 :196 holderEligibility 不设限制写 1 == 1（世界设计方案 :133 王国治理两式未收敛，持有资格先不设限）；domainLimitBase 待调（卷八 §4.6 没给数，直辖上限规则与派生 domainLimit 未建，无读者）；successionDefault 取议案选出条目 succession_by_motion（李白 11-23 事件 b41e0801 ⑨，先按议案选出；具体做法世界设计方案 P1/D2 未定，待调）",
-   "polityKind": "pkind_realm",
-   "taxRules": [],
-   "successionDefault": "succession_by_motion",
-   "holderEligibility": "1 == 1",
-   "councilOffices": [],
-   "domainLimitBase": 0,
-   "landless": false,
-   "mobileSeat": false,
-   "casus": [],
-   "influenceSources": []
-  }
- },
- "org": {
-  "org_realm_main": {
-   "basis": "作者；王国主权组织（世界设计方案 :114 王国是一条主权组织行 orgkind_state，驻地王都 loc_capital）",
-   "extends": "class_org_state",
-   "orgKind": "orgkind_state",
-   "polity": "polity_realm_main",
-   "seat": "loc_capital",
-   "parent": null,
-   "offices": [],
-   "headOffice": null,
-   "treasury": []
-  },
-  "org_village_hw": {
-   "basis": "作者；河湾村村社（卷八 :260 村社：聚落、能征税、tenure 取归组织公有；polity 取 null 沿 realm 取王国政体，卷八 :126；R8-3.2）",
-   "extends": "class_org_village",
-   "orgKind": "orgkind_village",
-   "polity": null,
-   "seat": "loc_hw",
-   "parent": "org_realm_main",
-   "offices": [],
-   "headOffice": null,
-   "treasury": []
-  }
- },
+ "note": "试玩地区（河湾村一带）开局统治边的手写数据（李白 11-23 前置卡 A A-2；手写优先，卷十 R10-1.7、卷八 R8-18.9 末句）：两条统治边。王国主权组织 org_realm_main、河湾村村社 org_village_hw、王国政体行 polity_realm_main 三行已由前置卡 D 迁入真实表（world/ontology/dimensions/org.json、polity.json 的 rows，treasury 取 purpose_general，卷六勘误 1123k50），本文件不再重复。统治边是开局一步写进状态的持有边，不是表里的行，所以留在这里（世界创建事务的装载器读成 heldBy，属 6-16）。显示名（国号等）归语言包，只有代号；国号世界设计方案 D1 未定（docs/研究/世界设计完整方案-1122.md :492），所以不写名字。郡级治理世界设计方案 :134–:140 是王国下的郡守职位、不是郡组织行，郡守职位的种类行与权能词表未定，不写郡组织行（见 docs/卡回报/polity-org.md“须李白”）。",
  "governs": [
   {"place": "loc_capital", "org": "org_realm_main", "cause": "verb_opening", "basis": "作者；卷八 :260 国家驻地之外各站点经下级聚落组织统治，驻地站点自己由国家直接持有"},
   {"place": "loc_hw", "org": "org_village_hw", "cause": "verb_opening", "basis": "作者；河湾村站点归河湾村村社（R8-18.9 ③ 开局统治边在聚落组织上）；原属站点指向它的子站点由生成阶段 ③ 按 originSite 连到本组织"}

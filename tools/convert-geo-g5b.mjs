@@ -206,8 +206,12 @@ export function convertGeo(geoDir, opts = {}) {
   const claim = (id, source) => { if (!buildingSource.has(id)) buildingSource.set(id, source); };
   for (const s of settlements) for (const b of s.buildingIds ?? []) claim(newId(b), 'settlements.json buildingIds');
   const formOf = new Map();
-  for (const r of startBuildings) { claim(newId(r.id), 'start-buildings.json'); if (typeof r.form === 'string') formOf.set(newId(r.id), r.form); }
-  for (const r of extraBuildings) claim(newId(r.id), 'building-classes.json（人工核对清单）');
+  // intendedType（卷十九 §2.1 :106，作者字段）：清单行写了字串的照转；没写的不补、不猜（缺则加载报 E-DIM-REQUIRED-MISSING，清单见 docs/卡回报/data-d.md）。
+  const intendedOf = new Map();
+  for (const r of startBuildings) { claim(newId(r.id), 'start-buildings.json'); if (typeof r.form === 'string') formOf.set(newId(r.id), r.form); if (typeof r.intendedType === 'string') intendedOf.set(newId(r.id), r.intendedType); }
+  for (const r of extraBuildings) { claim(newId(r.id), 'building-classes.json（人工核对清单）'); if (typeof r.intendedType === 'string') intendedOf.set(newId(r.id), r.intendedType); }
+  // 开放范围（卷十 §2.2 :150 genOpen，作者手写；world/geo/gen-open.json）：清单里的地点行写 true，其余不写，开局一步由 openRX 求。
+  const genOpenIds = new Set(readJson(join(geoDir, 'gen-open.json')).rows.map((r) => newId(r.id)));
 
   // 世界根：主世界根挂 comp_layer_root（卷五 §4.1.1 :428），仍是政区（regionLevel）。
   put(WORLD_ROOT.id, { basis: '世界根：旧 mapHierarchy 最上一级"已知大陆片区"；卷五 §4.14.1 要世界根一行，无别的旧值；挂 comp_layer_root 开主世界格空间（卷五 §4.1.1 :428）', classes: [COMP.layerRoot, COMP.region], parent: null, regionLevel: JURIS.world }, WORLD_ROOT.name);
@@ -287,6 +291,7 @@ export function convertGeo(geoDir, opts = {}) {
       row.basis = `旧 world/geo/locations.json（旧 id ${o.id}）；挂 comp_facility：依据 ${buildingSource.get(id)}；旧坐标不进行（建筑足迹没有种子，锚点由 layoutOf 定）`;
       row.classes = [COMP.facility];
       if (formOf.has(id)) row.form = formOf.get(id);
+      if (intendedOf.has(id)) row.intendedType = intendedOf.get(id);
     } else {
       const t = terrainOf(o.terrain, o.id);
       row.basis = `旧 world/geo/locations.json（旧 id ${o.id}）；terrain 取旧文本"${t.from}"的主地形（migrated-from-text 候选，待人工核对）；coord 取旧 coordinates（千米折米）`;
@@ -308,8 +313,10 @@ export function convertGeo(geoDir, opts = {}) {
       row.accessClass = entry;
     }
     if (waterEnds.has(id)) row.waterAccess = [WATER_NAVIGABLE];
+    if (genOpenIds.has(id)) row.genOpen = true;
     put(id, row, o.name);
   }
+  for (const id of genOpenIds) if (!Object.hasOwn(rows, id)) throw new Error(`convert-geo: gen-open.json names unknown row ${id}`);
 
   for (const [id, sub] of Object.entries(subsites)) {
     if (!Object.hasOwn(rows, id)) throw new Error(`convert-geo: subsite-reparent names unknown row ${id}`);
@@ -334,7 +341,8 @@ export function convertGeo(geoDir, opts = {}) {
   // 静水湖（附表 4.2；water 族是开放词表，附表-1122勘误 L1 补 water_lake）：种子与目标面积手写、形状由规则 10 生长，作所在省的子行；液体取材料表现有条目。
   for (const [id, lk] of Object.entries(model.lakes ?? {})) {
     if (!Object.hasOwn(rows, lk.parent)) throw new Error(`convert-geo: lake ${id} names unknown parent ${lk.parent}`);
-    put(id, { basis: `附表 4.2（${lk.source}）；coord 取种子，targetAreaM2 取手写目标面积（平方千米折平方米），形状由规则 10 生长；液体 ${lk.liquid}（${lk.liquidNote}）`, classes: [COMP.tract, COMP.waterbody], coord: { x: meters(lk.seedKm[0]), y: meters(lk.seedKm[1]) }, downstream: null, liquid: lk.liquid, parent: lk.parent, targetAreaM2: round4(lk.areaKm2 * 1e6), terrain: 'terrain_lake', waterKind: 'water_lake' }, lk.name);
+    if (typeof lk.waterKind !== 'string') throw new Error(`convert-geo: lake ${id} has no waterKind in geo-model.json (water 族条目，通航与否按水体类定)`);
+    put(id, { basis: `附表 4.2（${lk.source}）；coord 取种子，targetAreaM2 取手写目标面积（平方千米折平方米），形状由规则 10 生长；液体 ${lk.liquid}（${lk.liquidNote}）；downstream 写空（前置卡 D 核：试过不写、由水体阶段按卷十 R10-2.12 排水去处推，两湖都推得空，而生成补缺写回的空值整体加载仍判 downstream 缺 E-DIM-REQUIRED-MISSING，故作者显式写 null；见 docs/问题.md）`, classes: [COMP.tract, COMP.waterbody], coord: { x: meters(lk.seedKm[0]), y: meters(lk.seedKm[1]) }, downstream: null, liquid: lk.liquid, parent: lk.parent, targetAreaM2: round4(lk.areaKm2 * 1e6), terrain: 'terrain_lake', waterKind: lk.waterKind }, lk.name);
   }
   // 旧控制海拔（world/geo/elevation-controls.json）里仍在表里的行（附表没给的）：作者值，原样转成 anchorElevationM。
   for (const [id, v] of Object.entries(controls)) if (Object.hasOwn(rows, id) && rows[id].anchorElevationM === undefined && Number.isFinite(v.anchorElevationM)) rows[id].anchorElevationM = v.anchorElevationM;
@@ -391,7 +399,7 @@ function sorted(v) {
 }
 const text = (v) => `${JSON.stringify(sorted(v), null, 1)}\n`;
 
-// 按码分组：每组计数加 3 行举例（行 id 取 row 栏，没有则取 got 开头）。
+// 按码与维度分组：每组计数加 3 行举例（行 id 取 row 栏，没有则取 got 开头）。
 const errorText = (w) => {
   const groups = new Map();
   for (const e of w.errors) { const key = e.dim ? `${e.code}/${e.dim}` : e.code; if (!groups.has(key)) groups.set(key, []); groups.get(key).push(e.row || String(e.got).slice(0, 110)); } // 键带维度名：必填缺值按列分开计数

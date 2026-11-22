@@ -178,7 +178,7 @@
    "source": "卷五 §2.1 :98（作者手画的区域足迹：区格序号的集合，非空时覆盖派生划分，§4.1 规则 10；只许区域足迹的行写，kernel/place.mjs 加载校验按足迹种类核禁填）；写法两种（封卷后勘误 1121k22，同一集合的简写）：逐格 {x, y}，或矩形之并 {x0, x1, y0, y1}（区格序号，左闭右开）；一行只用一种，每项的字段齐全由 kernel/place.mjs 加载校验逐项核（checkPlaceTable，不论这一行参不参加划分）、划分时再核一次（E-DIM-STRUCT-FIELD），流水水体只许逐格",
    "type": "list"
   },
-  "capacityL": {
+  "capacityM3": {
    "domain": [
     1,
     null
@@ -187,9 +187,9 @@
    "onUnknown": "error",
    "owner": "卷五 §2.1",
    "required": "byClass:comp_waterbody",
-   "source": "卷五 §2.1 :146（水体容量；水体阶段补缺：卷十 R10-2.12 :427 capacityL = surfaceM2 × 抽得的水深，立方米到升按单位表）",
+   "source": "卷五 §2.1 :146（水体容量，整立方米；封卷后勘误 1123k53：原 capacityL、单位升，李白 11-23 事件 b41e0801 P10-4 改立方米——整升装不进真实大洋；水体阶段补缺：卷十 R10-2.12 :427 capacityM3 = surfaceM2 × 抽得的水深，向下取整）",
    "type": "integer",
-   "unit": "L"
+   "unit": "m3"
   },
   "catchmentM2": {
    "domain": [
@@ -436,6 +436,14 @@
    "type": "enum",
    "vocab": "bform"
   },
+  "genOpen": {
+   "modifiable": false,
+   "onUnknown": "gap",
+   "owner": "卷十 §2.2",
+   "required": "never",
+   "source": "卷十 §2.2 :150（维度 gen.open：开局时这处地点是否对玩家开放，出生地菜单、地图显隐；R10-12.6、R10-12.7；缺失处置 gap，读者取 rules.gen.opening.runtimeOpen）。键名取驼峰平铺 genOpen：表头维度键须 lowerCamel（types.mjs KEY_RE），带点的 gen.open 过不了加载（E-DIM-ID-FORMAT），封卷后勘误 1123k51（卷十 §2.2 键名一句）；同 rules.gen.layout.coverage 取驼峰平铺 layoutCoverage 的先例。作者手写：试玩地区出生地行（world/geo/gen-open.json）；其余行开局一步由 rules.gen.opening.openRX 求（规则键未定，列缺口，见 docs/问题.md）",
+   "type": "boolean"
+  },
   "hiddenness": {
    "domain": [
     0,
@@ -449,6 +457,15 @@
    "source": "卷五 §2.1 :168（他卷，指回卷十七 §2.3）；卷二 §5.6",
    "type": "number",
    "unit": "score"
+  },
+  "intendedType": {
+   "modifiable": false,
+   "onUnknown": "error",
+   "owner": "卷十九 §2.1",
+   "required": "byClass:comp_facility",
+   "source": "卷十九 §2.1 :106（用途意图：建成或改用时由持有者登记，不是分类结果；建筑实际算哪种设施只读 facilityView().type，定义处在卷十九，卷五 §2.1 :162 与卷二 §5.6 只补一行指回）；取值是设施类型表 facility_type 的行（world/ontology/dimensions/facility_type.json，行 id fac_*；李白 11-23 事件 b41e0801 P10-2：照卷十九 §2.2 原文是维度表，不是词表族）",
+   "type": "ref",
+   "kind": "facility_type"
   },
   "ledgerHolder": {
    "modifiable": false,

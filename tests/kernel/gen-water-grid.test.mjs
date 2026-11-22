@@ -3,7 +3,7 @@
 // 手算（区格边长 100 m，一格 10⁴ m²）：loc_t1 目标 1 格、种子 (50,50) → 区格 (0,0)；loc_t2 目标 1 格、种子 (150,50) → 区格 (1,0)；
 // 水体 loc_wa 目标 2 格、种子 (350,50) → 区格 (3,0) 加上唯一剩下的 (2,0)。控制海拔 loc_t1 50、loc_t2 30、loc_wa 0：区格 (0,0)、(1,0)、(3,0) 恰在各自控制点上取点值，
 // 区格 (2,0) 介于 loc_t2 与 loc_wa 之间——所以 loc_wa 的代表海拔严格低于 loc_t2、loc_t2 低于 loc_t1：排水 loc_t1 → loc_t2 → loc_wa。
-// 期望：surfaceM2 = 2 × 10⁴ = 20000；catchmentM2 = loc_t1 10000 + loc_t2 10000 + loc_wa 20000 = 40000；downstream 空；capacityL = floor(20000 × 水深 ÷ 0.001)。
+// 期望：surfaceM2 = 2 × 10⁴ = 20000；catchmentM2 = loc_t1 10000 + loc_t2 10000 + loc_wa 20000 = 40000；downstream 空；capacityM3 = floor(20000 × 水深)。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
@@ -42,11 +42,12 @@ function loadGrid() {
     };
     writeUnderTempRoot(tmp, 'place.json', JSON.stringify({ ...HEADER, rows, edges: [], gridSpaces: [{ w: 0, box: { x0: 0, y0: 0, cellsX: 4, cellsY: 1 }, root: 'loc_root' }] }));
     writeUnderTempRoot(tmp, 'item.json', JSON.stringify({ ...JSON.parse(text('item.json')), rows: {} }));
+    writeUnderTempRoot(tmp, 'org.json', JSON.stringify({ ...JSON.parse(text('org.json')), rows: {} })); // 真实组织行的驻地不在夹具地点表里
     const unbuilt = JSON.parse(text('_unbuilt-derived.json'));
     unbuilt.columns = unbuilt.columns.filter((c) => c.table !== 'place');
     writeUnderTempRoot(tmp, '_unbuilt-derived.json', JSON.stringify(unbuilt));
     const v = structuredClone(VOCAB);
-    v.families.access.entries = { access_test_open: { rank: 0, needsGrant: false } };
+    v.families.access.entries = { ...v.families.access.entries, access_test_open: { rank: 0, needsGrant: false } }; // 真实设施类型表的缺省档要在族里
     v.families.cellclass.entries = CELLCLASS;
     v.families.gentemplate.entries = GEN_TEMPLATE;
     writeUnderTempRoot(tmp, '_vocab.json', JSON.stringify(v));
@@ -54,7 +55,7 @@ function loadGrid() {
   } finally { rmSync(tmp, { recursive: true, force: true }); }
 }
 
-test('水体阶段经 planFootprints 读足迹：surfaceM2 = 足迹面积、catchmentM2 沿排水去处累加、capacityL = 面积 × 水深 ÷ 升换立方米（手算）', () => {
+test('水体阶段经 planFootprints 读足迹：surfaceM2 = 足迹面积、catchmentM2 沿排水去处累加、capacityM3 = 面积 × 水深（立方米，手算）', () => {
   const world = loadGrid();
   assert.equal(world.ok, true, world.text);
   const authored = new Map([['loc_wa', {
@@ -67,14 +68,14 @@ test('水体阶段经 planFootprints 读足迹：surfaceM2 = 足迹面积、catc
   const wa = r.pending.find((p) => p.id === 'loc_wa');
   const rule = world.rules.gen.waterRows[0];
   const d4 = Math.round(drawByKey('seed_one', 'gen_water', 'loc_wa', 0, 'site_gen_water_depth', rule.depthM) * 10000);
-  // 面积 × 水深 ÷ 0.001 = 20000 × (d4 ÷ 10000) × 1000 = 20000 × d4 ÷ 10，向零截断。
+  // 立方米 = 面积 × 水深 = 20000 × (d4 ÷ 10000) = 20000 × d4 ÷ 10000 = 2 × d4，向下取整（勘误 1123k53，P10-4）。
   assert.equal(wa.dims.surfaceM2, 20000);
   assert.equal(wa.dims.catchmentM2, 40000);
-  assert.equal(wa.dims.capacityL, Math.floor((20000 * d4) / 10));
+  assert.equal(wa.dims.capacityM3, Math.floor((20000 * d4) / 10000));
   assert.equal('downstream' in wa.dims, false, 'downstream 作者已写（空），不补');
   // 这条河（flowing 真）作者没写 boundary：水体足迹补缺阶段（卷十 R10-2.17，排在自然量之前）先给它补出窄带，同一行后被自然量阶段补 runoffCoef，来源记先写的阶段（R10-1.2）。
   // 手算（r 的搜索）：种子区格 (3,0)、下游空、目标 20000 m2 = 2 个区格；r=0 一格、r=1 取 (2,0)(3,0) 共两格（(4,0) 出父足迹）、r=2 三格超目标，停在 r=1——
-  // 窄带恰两格，所以上面 surfaceM2、catchmentM2、capacityL 的手算数不变。
+  // 窄带恰两格，所以上面 surfaceM2、catchmentM2、capacityM3 的手算数不变。
   assert.equal(wa.by, 'gstage_waterfoot');
   assert.ok(wa.dims.runoffCoef >= 0 && wa.dims.runoffCoef <= 1);
 });

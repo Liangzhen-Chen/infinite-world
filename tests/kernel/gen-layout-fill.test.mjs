@@ -42,11 +42,12 @@ function loadFixture(buildings, siteExtra = {}) {
     };
     writeUnderTempRoot(tmp, 'place.json', JSON.stringify({ ...HEADER, rows, edges: [], gridSpaces: [{ w: 0, box: { x0: 0, y0: 0, cellsX: 6, cellsY: 1 }, root: 'loc_root' }] }));
     writeUnderTempRoot(tmp, 'item.json', JSON.stringify({ ...JSON.parse(text('item.json')), rows: {} }));
+    writeUnderTempRoot(tmp, 'org.json', JSON.stringify({ ...JSON.parse(text('org.json')), rows: {} })); // 真实组织行的驻地不在夹具地点表里
     const unbuilt = JSON.parse(text('_unbuilt-derived.json'));
     unbuilt.columns = unbuilt.columns.filter((c) => c.table !== 'place');
     writeUnderTempRoot(tmp, '_unbuilt-derived.json', JSON.stringify(unbuilt));
     const v = structuredClone(VOCAB);
-    v.families.access.entries = { access_test_open: { rank: 0, needsGrant: false } };
+    v.families.access.entries = { ...v.families.access.entries, access_test_open: { rank: 0, needsGrant: false } }; // 真实设施类型表的缺省档要在族里
     v.families.cellclass.entries = CELLCLASS;
     v.families.gentemplate.entries = GEN_TEMPLATE;
     writeUnderTempRoot(tmp, '_vocab.json', JSON.stringify(v));

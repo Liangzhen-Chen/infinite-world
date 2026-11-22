@@ -68,14 +68,15 @@ function load(rows, spaces) {
     const keysOf = (fam) => [...Object.keys(v.families[fam].entries), ...{ tissue: ['tissue_flesh', 'tissue_bone'], attr: ['attr_test'], sex: ['sex_test'], gait: ['gait_test'], diet: [] }[fam]];
     writeUnderTempRoot(tmp, 'place.json', JSON.stringify({ ...HEADER, rows, edges: [], gridSpaces: spaces }));
     writeUnderTempRoot(tmp, 'item.json', JSON.stringify({ ...JSON.parse(realText('item.json')), rows: {} }));
+    writeUnderTempRoot(tmp, 'org.json', JSON.stringify({ ...JSON.parse(realText('org.json')), rows: {} })); // 真实组织行的驻地不在夹具地点表里
     const unbuilt = JSON.parse(realText('_unbuilt-derived.json'));
     unbuilt.columns = unbuilt.columns.filter((c) => c.table !== 'place');
     writeUnderTempRoot(tmp, '_unbuilt-derived.json', JSON.stringify(unbuilt));
-    v.families.access.entries = { access_test_open: { rank: 0, needsGrant: false } };
+    v.families.access.entries = { ...v.families.access.entries, access_test_open: { rank: 0, needsGrant: false } }; // 真实设施类型表的缺省档要在族里
     v.families.water.entries = { ...v.families.water.entries, water_test_fresh: { navigable: false } };
     v.families.cellclass.entries = CELLCLASS;
     v.families.gentemplate.entries = TEMPLATE;
-    v.families.bform.entries = { bldform_hut: FORM };
+    v.families.bform.entries = { bldform_hut: { ...FORM, facilityTypes: ['fac_house'] }, bldform_shrine: v.families.bform.entries.bldform_shrine };
     v.families.roomrole.entries = {};
     for (const id of ['bpart_torso', 'bpart_head']) v.families.body_part.entries[id] = {};
     Object.assign(v.families.tissue.entries, { tissue_flesh: { depthOrder: 2, reserve: false }, tissue_bone: { depthOrder: 3, reserve: false } });
@@ -117,7 +118,7 @@ const row = (parent, extra = {}) => ({
 const region = (parent, x, y, extra = {}) => row(parent, { terrain: 'terrain_river', coord: { x, y }, anchorElevationM: 0, ...extra });
 const building = (parent, anchorXYZ, extra = {}) => row(parent, {
   classes: ['comp_facility'], anchor: { w: 0, x: anchorXYZ[0], y: anchorXYZ[1], z: anchorXYZ[2], coarse: false }, facing: 0,
-  form: 'bldform_hut', planCells: { widthCells: 6, depthCells: 6 }, storeys: 1, condition: 1, breaks: [], materialKg: { mat_granite: 1000 }, ...extra,
+  form: 'bldform_hut', intendedType: 'fac_house', planCells: { widthCells: 6, depthCells: 6 }, storeys: 1, condition: 1, breaks: [], materialKg: { mat_granite: 1000 }, ...extra,
 });
 
 const loaded = load({

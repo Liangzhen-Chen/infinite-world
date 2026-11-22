@@ -465,6 +465,20 @@ test('bform 加载校验：合法条目放行；取值域越界、缺必填、�
   assert.deepEqual(checkBlueprintForms(index([['bldform_t', ENTRY]]), undefined).map((s) => s.split(' ')[0]), ['E-RULES-UNREGISTERED']);
 });
 
+test('适用设施类型 facilityTypes（卷十九 §2.4，勘误 1123k52）：交入类型表行集时必填列表（可空）、每项须是表的行、不重复；不交行集的调用方不核这一栏', () => {
+  const TYPES = new Set(['fac_a', 'fac_b']);
+  const run = (patch) => checkBlueprintForms(index([['bldform_t', { ...ENTRY, ...patch }]]), LIMITS, TYPES).map((s) => s.split(' ')[0]);
+  assert.deepEqual(run({ facilityTypes: ['fac_a', 'fac_b'] }), []);
+  assert.deepEqual(run({ facilityTypes: [] }), []); // 空表合法：这种盖法不适用任何类型
+  assert.deepEqual(run({}), ['E-DIM-REQUIRED-MISSING']); // 没写
+  assert.deepEqual(run({ facilityTypes: 'fac_a' }), ['E-DIM-REQUIRED-MISSING']); // 不是列表
+  assert.deepEqual(run({ facilityTypes: ['fac_c'] }), ['E-DIM-REF-MISSING']); // 类型表里没有这一行
+  assert.deepEqual(run({ facilityTypes: [7] }), ['E-DIM-REF-MISSING']);
+  assert.deepEqual(run({ facilityTypes: ['fac_a', 'fac_a'] }), ['E-DIM-DUPLICATE-KEY']);
+  assert.deepEqual(checkBlueprintForms(index([['bldform_t', ENTRY]]), LIMITS), []); // 不交行集：只核平面字段
+  assert.deepEqual(checkBlueprintForms(index([['bldform_t', { ...ENTRY, facilityTypes: ['fac_a'] }]]), LIMITS, new Set()).map((s) => s.split(' ')[0]), ['E-DIM-REF-MISSING']); // 交了空集：任何引用都缺
+});
+
 test('扩展性（A19-5.3）：只加数据——新增一条形制条目即被 planBlueprint 使用，不改代码', () => {
   // 两条形制：第二条是"加的数据"：一层带地窖（storeyBase −1）、墙厚缺省 1.2 m（w = 2）。
   const idx = index([['bldform_t', ENTRY], ['bldform_new', { ...ENTRY, storeyBase: -1, wallThicknessDefaultM: 1.2, windowEvery: 0 }]]);

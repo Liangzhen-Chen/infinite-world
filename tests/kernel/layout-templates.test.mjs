@@ -71,17 +71,18 @@ test('模板里不写设施数量：条目与分片项的键集封闭，多出�
   assert.deepEqual(codes(checkLayoutTemplates(index({ layout_x: { family: 'layout', entry: d } }))), ['E-DIM-REQUIRED-MISSING']);
 });
 
-test('分片角色：typeAffinity 必写（可为空表）；键须是 facility_type 族条目、值 [0, 1]；没有设施类型表时非空亲和度拒（不放过）', () => {
+test('分片角色：typeAffinity 必写（可为空表）；键须是设施类型表（kind facility_type，卷十九 §2.2）的行、值 [0, 1]；没交类型表行集时非空亲和度拒（不放过）', () => {
+  const TYPES = new Set(['fac_inn']);
   // 空表：卷十九 §4.6 规则 3 + 卷十 R10-7.5"模板里没有任何角色对它有亲和度时归份额最大的角色"。
   assert.deepEqual(checkLayoutTemplates(index()), []);
   const noKey = { zrole_a: { family: 'zrole', entry: {} } };
   assert.ok(codes(checkLayoutTemplates(index(noKey))).includes('E-DIM-REQUIRED-MISSING'));
-  const unknownType = { zrole_a: { family: 'zrole', entry: { typeAffinity: { facility_type_inn: 0.5 } } } };
-  assert.deepEqual(codes(checkLayoutTemplates(index(unknownType))), ['E-DIM-REF-MISSING']);
-  const withType = { facility_type_inn: { family: 'facility_type', entry: {} }, zrole_a: { family: 'zrole', entry: { typeAffinity: { facility_type_inn: 0.5 } } } };
-  assert.deepEqual(checkLayoutTemplates(index(withType)), []);
-  const tooBig = { facility_type_inn: { family: 'facility_type', entry: {} }, zrole_a: { family: 'zrole', entry: { typeAffinity: { facility_type_inn: 1.5 } } } };
-  assert.deepEqual(codes(checkLayoutTemplates(index(tooBig))), ['E-DIM-DOMAIN-RANGE']);
+  const unknownType = { zrole_a: { family: 'zrole', entry: { typeAffinity: { fac_inn: 0.5 } } } };
+  assert.deepEqual(codes(checkLayoutTemplates(index(unknownType))), ['E-DIM-REF-MISSING']); // 没交行集：按空集
+  assert.deepEqual(codes(checkLayoutTemplates(index(unknownType), new Set(['fac_house']))), ['E-DIM-REF-MISSING']); // 交了但表里没有这一行
+  assert.deepEqual(checkLayoutTemplates(index(unknownType), TYPES), []);
+  const tooBig = { zrole_a: { family: 'zrole', entry: { typeAffinity: { fac_inn: 1.5 } } } };
+  assert.deepEqual(codes(checkLayoutTemplates(index(tooBig), TYPES)), ['E-DIM-DOMAIN-RANGE']);
   const extra = { zrole_a: { family: 'zrole', entry: { typeAffinity: {}, count: 1 } } };
   assert.deepEqual(codes(checkLayoutTemplates(index(extra))), ['E-DIM-STRUCT-FIELD']);
 });

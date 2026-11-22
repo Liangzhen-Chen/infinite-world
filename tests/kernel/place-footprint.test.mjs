@@ -36,16 +36,17 @@ function load({ rows = {}, edges = [], spaces, cellclass = FULL_CELLCLASS, heade
     if (spaces !== undefined) doc.gridSpaces = spaces;
     writeUnderTempRoot(tmp, 'place.json', JSON.stringify(doc));
     writeUnderTempRoot(tmp, 'item.json', JSON.stringify({ ...JSON.parse(realText('item.json')), rows: {} }));
+    writeUnderTempRoot(tmp, 'org.json', JSON.stringify({ ...JSON.parse(realText('org.json')), rows: {} })); // 真实组织行的驻地不在夹具地点表里
     // 真实世界为旧数据没有的列登记了未建（缺值放行）；本文件的用例要核"缺必填即报错"，前提自己造：拷贝里去掉 place 的未建列登记。
     const unbuilt = JSON.parse(realText('_unbuilt-derived.json'));
     unbuilt.columns = unbuilt.columns.filter((c) => c.table !== 'place');
     writeUnderTempRoot(tmp, '_unbuilt-derived.json', JSON.stringify(unbuilt));
     const v = structuredClone(VOCAB);
-    v.families.access.entries = { access_test_open: { rank: 0, needsGrant: false } };
+    v.families.access.entries = { ...v.families.access.entries, access_test_open: { rank: 0, needsGrant: false } }; // 真实设施类型表的缺省档要在族里
     v.families.water.entries = { ...v.families.water.entries, water_test_fresh: { navigable: false } };
     v.families.cellclass.entries = cellclass === null ? {} : cellclass;
     v.families.gentemplate.entries = GEN_TEMPLATE;
-    v.families.bform.entries = { bldform_test: { walled: true, aspect: 1, storeyBase: 0, roofed: true, deck: false, windowEvery: 0, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.2, planSideMaxCells: 64, rooms: [] } };
+    v.families.bform.entries = { bldform_test: { walled: true, aspect: 1, storeyBase: 0, roofed: true, deck: false, windowEvery: 0, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.2, planSideMaxCells: 64, rooms: [], facilityTypes: ['fac_house'] }, bldform_shrine: v.families.bform.entries.bldform_shrine };
     for (const c of relocatable) v.families.component.entries[c].relocatable = true;
     writeUnderTempRoot(tmp, '_vocab.json', JSON.stringify(v));
     return loadWorld(ROOT, { dimensionsDir: relative(ROOT, tmp) });
@@ -91,7 +92,7 @@ test('byFootprint 必填：区域足迹缺 coord、缺 anchorElevationM、缺 te
 });
 
 // 挂 comp_facility 的行另须带卷十九 §2.1 的必填列（G7 第一步登记）：形制、外包宽深、层数、完好度、破口列表。
-const BLD_COLUMNS = { form: 'bldform_test', planCells: { widthCells: 6, depthCells: 6 }, storeys: 1, condition: 1, breaks: [], materialKg: { mat_granite: 1000 } };
+const BLD_COLUMNS = { form: 'bldform_test', intendedType: 'fac_house', planCells: { widthCells: 6, depthCells: 6 }, storeys: 1, condition: 1, breaks: [], materialKg: { mat_granite: 1000 } };
 
 test('byFootprint 禁填：建筑足迹行（挂 comp_facility）写 coord、terrain、boundary、targetAreaM2 一律 E-DIM-DOMAIN-RANGE；区域足迹行写 anchor、facing、spanZ 同样', () => {
   const bld = { classes: ['comp_facility'], anchor: { w: 0, x: 10, y: 10, z: 0, coarse: false }, facing: 2, ...BLD_COLUMNS };

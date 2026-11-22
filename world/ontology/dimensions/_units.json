@@ -51,6 +51,11 @@
    "si": 0.001
   },
   {
+   "dimension": "volume",
+   "id": "m3",
+   "si": 1
+  },
+  {
    "dimension": "volume_per_mass",
    "id": "L_per_kg",
    "si": 0.001

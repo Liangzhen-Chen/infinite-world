@@ -29,8 +29,8 @@
   "loc_water_river_linxi": { "name": "林溪", "pointsKm": [[-112, -90], [-160, -130]], "downstream": "loc_water_sea_west", "source": "附表 4.2 林溪" }
  },
  "lakes": {
-  "loc_water_lake_jingzhao": { "name": "镜沼", "seedKm": [450, -240], "areaKm2": 3000, "parent": "loc_prov_jingzhao", "liquid": "mat_water", "liquidNote": "淡水，沼水", "source": "附表 4.2 静水湖：镜沼（种子 (450,−240)，目标 3,000 km²），作镜沼省的子行，形状生成；附表-1122勘误 L1：water 族是开放词表，补 water_lake 后建湖" },
-  "loc_water_lake_huiyan": { "name": "灰盐池", "seedKm": [570, -270], "areaKm2": 800, "parent": "loc_prov_jingzhao", "liquid": "mat_seawater", "liquidNote": "咸水；材料表没有盐池卤水条目，暂取海水，待核", "source": "附表 4.2 静水湖：灰盐池（种子 (570,−270)，目标 800 km²），作镜沼省的子行，形状生成；附表-1122勘误 L1" }
+  "loc_water_lake_jingzhao": { "name": "镜沼", "seedKm": [450, -240], "areaKm2": 3000, "parent": "loc_prov_jingzhao", "waterKind": "water_lake", "liquid": "mat_water", "liquidNote": "淡水，沼水", "source": "附表 4.2 静水湖：镜沼（种子 (450,−240)，目标 3,000 km²），作镜沼省的子行，形状生成；附表-1122勘误 L1：water 族是开放词表，补 water_lake 后建湖" },
+  "loc_water_lake_huiyan": { "name": "灰盐池", "seedKm": [570, -270], "areaKm2": 800, "parent": "loc_prov_jingzhao", "waterKind": "water_saltlake", "liquid": "mat_seawater", "liquidNote": "咸水；材料表没有盐池卤水条目，取现有最近的咸水条目海水（前置卡 D 按 P-3 核：卤水材料行须另建，不自造，列须李白）", "source": "附表 4.2 静水湖：灰盐池（种子 (570,−270)，目标 800 km²），作镜沼省的子行，形状生成；附表-1122勘误 L1" }
  },
  "counties": {
   "loc_county_xichui_longqu": { "anchorElevationM": 779, "terrain": "terrain_plain" },

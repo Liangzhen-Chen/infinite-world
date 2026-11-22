@@ -145,12 +145,12 @@ test('R10-2.12 水体：作者输入里的水体行（转换前不在表里）�
   // 水体阶段的缺口（水体足迹补缺阶段另有缺口，见下一条）。
   const waterGaps = r.deferred.filter((d) => d.stage === 'gstage_water');
   assert.deepEqual(waterGaps.map((d) => d.id).sort(), waterIds);
-  // 流水（河）有水深规则行：只缺足迹；静水（海，flowing 假）没有规则行——水深不借河的顶替，整体缺口留着（water_rule_missing）。
+  // 河、海、湖都有水深规则行（海与湖的行由前置卡 D 补，设定值、待调）：每个水体行只缺足迹（footprint_unknown），不再有 water_rule_missing（没有规则行的水体类水深不借别的量顶替，该路径由 gen-water.test 的夹具守）。
   for (const d of waterGaps) {
-    assert.equal(d.reason, world.vocab.index.get(geo.authored.get(d.id).waterKind).entry.flowing === true ? 'footprint_unknown' : 'water_rule_missing');
-    assert.deepEqual(d.gaps.slice().sort(), ['capacityL', 'catchmentM2', 'surfaceM2']);
+    assert.equal(d.reason, 'footprint_unknown');
+    assert.deepEqual(d.gaps.slice().sort(), ['capacityM3', 'catchmentM2', 'surfaceM2']);
   }
-  assert.ok(waterGaps.some((d) => d.reason === 'water_rule_missing') && waterGaps.some((d) => d.reason === 'footprint_unknown'));
+  assert.ok(waterGaps.length > 0);
 });
 
 test('R10-2.17 水体足迹补缺：真实世界还没有格空间表，作者水体行缺的 coord 与窄带 boundary（河）、coord 与 targetAreaM2（海）划不出父足迹，进 deferred 带原因，不编、不出提案', () => {

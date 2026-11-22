@@ -114,10 +114,10 @@
    "id": "loc_water_lake_huiyan",
    "name": "灰盐池",
    "classes": ["comp_tract", "comp_waterbody"],
-   "waterKind": "water_lake",
+   "waterKind": "water_saltlake",
    "liquid": "mat_seawater",
    "downstream": null,
-   "basis": "附表-1122勘误 L1：同镜沼，下游暂写空；液体暂取海水（材料表没有卤水条目，待核）"
+   "basis": "附表-1122勘误 L1：同镜沼，下游写空；水体类前置卡 D 改为 water_saltlake（不可航，依据见 _vocab.json 该条目）；液体取海水（材料表没有卤水条目，P-3：不自造材料行，列须李白）"
   }
  ],
  "openItems": [

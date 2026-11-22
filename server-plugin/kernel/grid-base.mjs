@@ -124,6 +124,7 @@ export function regionSlope(grid, selfH, neighborHs) {
 
 /**
  * 一个区格的水面层号与冰：水体 body = {liquidL, iceL, surfaceM2, flowing}（液体与冰账户余额升、水面面积平方米、流水标志）。
+ * （水体存量单位 1123k53 起是立方米：调用方交入的余额按账户单位，m3PerL 参数名沿用旧称，实为"账户单位的立方米数"——存量按 m3 记时交 1；本函数不认具体单位，水层接上 gridView 时按账户单位交入。）
  * 余额合计为 0 或 surfaceM2 为 0 没有水（返回 null，不做除法）。平均水深 d = 合计 L × m3PerL ÷ surfaceM2（米，定点；m3PerL 是升换立方米，取自单位表 _units.json 里 L 的 si，由调用方交入，不借千分母）；
  * 静水全片一个水面：水面海拔 = footprintMinRepM + d；流水逐区格：水面海拔 = 本区格代表地表高 + d；
  * 水面层号 = max(floor(水面海拔 ÷ storeyM), 水底层号 + 1)，水底层号 = 本区格地表层号最低一列的地表层号（所以账户有水则每个区格最低一列至少一层水）。

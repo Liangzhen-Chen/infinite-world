@@ -1,0 +1,47 @@
+{
+ "$schema": "../../schemas/dimensions.schema.json",
+ "behaviors": [
+  "facility"
+ ],
+ "classes": {},
+ "dimensions": {
+  "accessDefault": {"type": "enum", "vocab": "access", "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷十九 §2.2 :171（这类建筑的进入缺省档；取法 §4.2 规则 7）", "owner": "卷十九 §4.2"},
+  "accessOpen": {"type": "enum", "vocab": "access", "nullable": true, "required": "never", "onUnknown": "skip", "modifiable": false, "source": "卷十九 §2.2 :172（开放时段内的进入档；rank 不高于 accessDefault，§4.12 规则 2）", "owner": "卷十九 §4.12"},
+  "emits": {"type": "list", "domain": {}, "of": {"type": "struct", "required": ["field", "ratePerStep"], "fields": {"field": {"type": "ref", "vocab": "field"}, "ratePerStep": {"type": "number", "unit": "score", "precision": 4}, "chance": {"type": "number", "unit": "fraction", "precision": 4, "nullable": true}}}, "required": "never", "onUnknown": "skip", "modifiable": false, "source": "卷十九 §2.2 :182（运营时向环境场的排放，struct:emission，卷二十 §2.8）；字段照 item 表 emits 同一结构", "owner": "卷十九；结构归卷二十 §2.8"},
+  "envelopeWhere": {"type": "rx", "nullable": true, "required": "never", "onUnknown": "skip", "modifiable": false, "source": "卷十九 §2.2 :170（对围护材料属性的要求，读卷三乙 M-1 聚合口径）", "owner": "卷十九 §4.2"},
+  "functionNeeds": {"type": "map", "key": {"type": "ref", "vocab": "ffunc"}, "value": {"type": "number", "unit": "count", "domain": [0, null], "precision": 4}, "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷十九 §2.2 :168（成为该类设施所需的各功能量下限；允许为空 map；值单位取功能条目的 unit，ffunc 族未建，登记为 count 占位，族建出后改随条目）", "owner": "卷十九 §4.2"},
+  "headline": {"type": "ref", "vocab": "ffunc", "nullable": true, "required": "never", "onUnknown": "skip", "modifiable": false, "source": "卷十九 §2.2 :173（报“容量”时读哪个功能量；须是 functionNeeds 的键）", "owner": "卷十九 §4.2"},
+  "laborPerDay": {"type": "integer", "unit": "count", "domain": [0, 10000], "required": "never", "onUnknown": "gap", "modifiable": false, "source": "卷十九 §2.2 :178（工位之外的最低看守人手）", "owner": "卷十九 §4.15"},
+  "maxAperture": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4, "nullable": true, "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷十九 §2.2 :169（对设计开口比例的上限；每行必写，显式 null 即不设要求）", "owner": "卷十九 §4.5"},
+  "maxSkyExposure": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4, "nullable": true, "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷十九 §2.2 :169（对设计露天比例的上限；每行必写，显式 null 即不设要求）", "owner": "卷十九 §4.5"},
+  "openSpan": {"type": "struct", "requiredFields": ["fromMinute", "toMinute"], "fields": {"fromMinute": {"type": "integer", "unit": "minute", "domain": [0, 1439]}, "toMinute": {"type": "integer", "unit": "minute", "domain": [0, 1439]}}, "nullable": true, "required": "never", "onUnknown": "skip", "modifiable": false, "source": "卷十九 §2.2 :181（缺省开放时段；null 即不对公众开放）", "owner": "卷十九 §4.12"},
+  "ratingWeights": {"type": "map", "key": {"type": "ref", "vocab": "raspect"}, "value": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4}, "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷十九 §2.2 :176（房间评价各项权重，键须覆盖 raspect 族全部条目，值之和为 1）", "owner": "卷十九 §4.11"},
+  "services": {"type": "set", "of": {"type": "ref", "vocab": "service"}, "domain": {}, "required": "always", "onUnknown": "error", "modifiable": false, "source": "卷十九 §2.2 :174（这类设施可承载的服务，代号归卷十四 §4.1）", "owner": "卷十九 §4.12"},
+  "upkeepPerDay": {"type": "map", "key": {"type": "ref", "vocab": "class"}, "value": {"type": "number", "unit": "kg_per_day", "domain": [0, null], "precision": 4}, "required": "never", "onUnknown": "gap", "modifiable": true, "stacking": "penalized", "bounds": [0, 1000000], "source": "卷十九 §2.2 :177（类型自身的日耗，固定装置的另计；可修正，卷二 §5.7 :1859 modifiable、penalized；上界 1,000,000 kg/日是登记占位，无设定出处，待调）", "owner": "卷十九 §4.15"},
+  "wearPerDay": {"type": "number", "unit": "per_day", "domain": [0, 1], "precision": 4, "required": "always", "onUnknown": "error", "modifiable": true, "stacking": "penalized", "bounds": [0, 1], "source": "卷十九 §2.2 :180（满负荷使用带来的日磨损；可修正，卷二 §5.7 :1862 modifiable、penalized；界取取值域 [0, 1]）", "owner": "卷十九 §4.1"}
+ },
+ "entity": {
+  "classPrefix": "class_",
+  "idPrefix": [
+   "fac_"
+  ],
+  "instanceTable": null,
+  "singletonIds": []
+ },
+ "generated": {},
+ "kind": "facility_type",
+ "namespace": "core",
+ "rows": {
+  "fac_clinic": {"functionNeeds": {}, "maxSkyExposure": null, "maxAperture": null, "accessDefault": "access_public", "basis": "诊所（卷二 §5.7 :1867）。药草院旧数据无用途字段（locations.json:444–457），设计数据 world/design/seasonal-hazards.mjs:199 把“请药师治疗”的地点指向 bld_hw_herbs，economy-foundation.mjs:57 药草存放于此。functionNeeds 写空 map（卷十九 :168 允许；固定装置族与功能词表未建）、maxSkyExposure 与 maxAperture 显式 null（:169，设定与卷文没给围合上限，不编）；accessDefault 取 access_public（卷五 :1182 缺省档取 rank 最小，openHours 420–1350 全开）；services、ratingWeights、wearPerDay 登为未建列（_unbuilt-derived.json）。暂定·待试玩标定"},
+  "fac_forge": {"functionNeeds": {}, "maxSkyExposure": null, "maxAperture": null, "accessDefault": "access_public", "basis": "铁匠铺（卷二 §5.7 :1867）。functionNeeds、maxSkyExposure、maxAperture 同 fac_clinic 的理由（空 map、显式 null，不编数）；accessDefault 取 access_public（卷五 :1182 缺省档；旧数据无该建筑的档，openHours 420–1350 全开，locations.json:241）；services、ratingWeights、wearPerDay 登为未建列。暂定·待试玩标定"},
+  "fac_granary": {"functionNeeds": {}, "maxSkyExposure": null, "maxAperture": null, "accessDefault": "access_public", "basis": "粮仓（卷二 §5.7 :1867）。旧数据 bld_hw_grain_annex 自带 facilityType granary（locations.json:31173，卷二 :2273 规定现值 granary 改 fac_granary），access.mode public（:31177）。functionNeeds、maxSkyExposure、maxAperture 同 fac_clinic 的理由；services、ratingWeights、wearPerDay 登为未建列。暂定·待试玩标定"},
+  "fac_house": {"functionNeeds": {}, "maxSkyExposure": null, "maxAperture": null, "accessDefault": "access_private", "basis": "住宅（卷二 §5.7 :1867）。河湾村 8 处私宅旧数据 purpose 私宅、access.mode private（locations.json:3287–3289 起，同式 8 处），accessDefault 取 access_private；河边小屋、八处私宅同取本类。functionNeeds、maxSkyExposure、maxAperture 同 fac_clinic 的理由；services、ratingWeights、wearPerDay 登为未建列。暂定·待试玩标定"},
+  "fac_inn": {"functionNeeds": {}, "maxSkyExposure": null, "maxAperture": null, "accessDefault": "access_public", "basis": "旅店（卷二 §5.7 :1867）。卷十九 §4.12 :960 写“西陲一间酒馆：类型行要求集会位与遮蔽，services 含餐饮与留宿类服务”，酒馆与旅店同取本类；青灯酒馆（有炊事工作站，locations.json:57）、小驿站（lodging 客房 1 间，:1280–1284）取本类。functionNeeds、maxSkyExposure、maxAperture 同 fac_clinic 的理由；accessDefault 取 access_public（卷五 :1182 缺省档，酒馆 openHours 420–1350 全开）；services、ratingWeights、wearPerDay 登为未建列。暂定·待试玩标定"},
+  "fac_mill": {"functionNeeds": {}, "maxSkyExposure": null, "maxAperture": null, "accessDefault": "access_public", "basis": "磨坊（卷二 §5.7 :1867）。旧磨坊名称即磨坊（locations.json:124–125，另有木工工作台 :141）。functionNeeds、maxSkyExposure、maxAperture 同 fac_clinic 的理由；accessDefault 取 access_public（卷五 :1182 缺省档，openHours 全开）；services、ratingWeights、wearPerDay 登为未建列。暂定·待试玩标定"},
+  "fac_office": {"functionNeeds": {}, "maxSkyExposure": null, "maxAperture": null, "accessDefault": "access_public", "basis": "官署（卷二 §5.7 :1867）。村务屋名称即村中办事处所（locations.json:168–169，无其他用途字段）。functionNeeds、maxSkyExposure、maxAperture 同 fac_clinic 的理由；accessDefault 取 access_public（卷五 :1182 缺省档；旧数据无档，是否取议事档 access_council 无设定出处，不编）；services、ratingWeights、wearPerDay 登为未建列。暂定·待试玩标定"},
+  "fac_school": {"functionNeeds": {}, "maxSkyExposure": null, "maxAperture": null, "accessDefault": "access_public", "basis": "学堂（卷二 §5.7 :1867）。小学堂名称即学堂（locations.json:865–866）。functionNeeds、maxSkyExposure、maxAperture 同 fac_clinic 的理由；accessDefault 取 access_public（卷五 :1182 缺省档，openHours 420–1350 全开）；services、ratingWeights、wearPerDay 登为未建列。暂定·待试玩标定"},
+  "fac_shrine": {"functionNeeds": {}, "maxSkyExposure": null, "maxAperture": null, "accessDefault": "access_public", "basis": "神龛神坛（卷二 §5.7 :1867）。河湾石坛旧数据 purpose 复活登记祭坛（locations.json:1376）、描述“村东的低矮石坛……登记簿保存在遮雨石龛里”（:1375）。functionNeeds、maxSkyExposure、maxAperture 同 fac_clinic 的理由；accessDefault 取 access_public（卷五 :1182 缺省档，冒险者随到随登记）；services、ratingWeights、wearPerDay 登为未建列。暂定·待试玩标定"},
+  "fac_workshop": {"functionNeeds": {}, "maxSkyExposure": null, "maxAperture": null, "accessDefault": "access_public", "basis": "作坊（卷二 §5.7 :1867）。织坊有织布工作站（kind weaving，locations.json:737–738）。functionNeeds、maxSkyExposure、maxAperture 同 fac_clinic 的理由；accessDefault 取 access_public（卷五 :1182 缺省档，openHours 全开）；services、ratingWeights、wearPerDay 登为未建列。暂定·待试玩标定"}
+ },
+ "version": 1
+}

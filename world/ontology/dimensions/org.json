@@ -51,6 +51,29 @@
  "kind": "org",
  "namespace": "core",
  "precedenceGroups": {"default": []},
- "rows": {},
+ "rows": {
+  "org_realm_main": {
+   "basis": "作者；王国主权组织（世界设计方案 :114 王国是一条主权组织行 orgkind_state，驻地王都 loc_capital）。由 world/design/opening-polity-hw.json 迁入真实表（前置卡 D，卷六勘误 1123k50 登了公库缺省分区 purpose_general，E-ORG-TREASURY 才过得去）；国号世界设计方案 D1 未定，不写名字；treasury 取 purpose_general（卷八 :328 polity.roles.purposes.general）",
+   "extends": "class_org_state",
+   "orgKind": "orgkind_state",
+   "polity": "polity_realm_main",
+   "seat": "loc_capital",
+   "parent": null,
+   "offices": [],
+   "headOffice": null,
+   "treasury": ["purpose_general"]
+  },
+  "org_village_hw": {
+   "basis": "作者；河湾村村社（卷八 :260 村社：聚落、能征税、tenure 取归组织公有；polity 取 null 沿 realm 取王国政体，卷八 :126；R8-3.2）。由 world/design/opening-polity-hw.json 迁入真实表（前置卡 D）；treasury 取 purpose_general",
+   "extends": "class_org_village",
+   "orgKind": "orgkind_village",
+   "polity": null,
+   "seat": "loc_hw",
+   "parent": "org_realm_main",
+   "offices": [],
+   "headOffice": null,
+   "treasury": ["purpose_general"]
+  }
+ },
  "version": 1
 }

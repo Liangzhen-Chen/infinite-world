@@ -43,7 +43,7 @@ const RUNNERS = Object.freeze(Object.fromEntries([
     waterRows: ctx.rules.waterRows,
     roleTract: ctx.rules.roleTract,
     roleWaterbody: ctx.rules.roleWaterbody,
-    m3PerL: ctx.m3PerL,
+    m3PerUnit: ctx.m3PerUnit,
     // 水体阶段只读水体行与存量单元行的面积、海拔（汇水、排水去处）：只对这两类行求高度，其余行（政区、站点）不逐区格求高度场。
     footprints: ctx.footprints({ bed: false, heights: (id) => { const r = ctx.rows.get(id); return r !== undefined && (r.classes.has(ctx.rules.roleWaterbody) || r.classes.has(ctx.rules.roleTract)); } }),
   })],
@@ -101,7 +101,7 @@ export function generateFill(world, opts) {
   const plan = genPlan(world.vocab, generatorNames());
   const rules = ruleTable(world.rules, RULES_CODE);
   const dims = t.doc.dimensions;
-  const unit = world.env.units.get(dims.capacityL.unit);
+  const unit = world.env.units.get(dims.capacityM3.unit); // 水体容量的单位（m3，勘误 1123k53）；siteform 的蓝图体积另读 L（place-building.mjs），不是这一个
   const tableIds = new Set(t.flat.rows.keys());
   const when = makeWhen(world);
   const grid = world.rules[GRID_CODE];
@@ -135,7 +135,7 @@ export function generateFill(world, opts) {
     const entry = world.vocab.index.get(step.stage).entry;
     const result = run({
       table, stage: step.stage, worldSeed: opts.worldSeed, genesisMinute: opts.genesisMinute, vocab: world.vocab, rows, dims, rules, geo,
-      m3PerL: unit ? unit.si : undefined,
+      m3PerUnit: unit ? unit.si : undefined,
       authoredIds, isAuthored, when, polity,
       gridSpaceCount: Array.isArray(t.doc.gridSpaces) ? t.doc.gridSpaces.length : 0, // 格空间表的行数；0 即世界还没有格空间，划不出足迹
       regionCellM: grid && typeof grid.regionCellM === 'number' ? grid.regionCellM : undefined,

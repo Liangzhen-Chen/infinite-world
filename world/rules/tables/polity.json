@@ -41,12 +41,20 @@
    "basis": "取新登的 verb_opening（kindOnly，只作开局统治边的原因）；不在 holdForcibleCauses 里，加载校验核（kernel/validate/polity-tables.mjs）"
   },
   {
+   "key": "rolesPurposes",
+   "value": {"general": "purpose_general", "escrow": "purpose_escrow"},
+   "file": "server-plugin/kernel/gen/worldgen.mjs",
+   "grade": "referenced",
+   "source": "卷八 §2.6 :328（polity.roles.purposes：公库缺省分区与托管分区，两项都引卷六 purpose 族已登记的条目）、:1371（托管分区引卷六已登记的那条，不另登记）；前置卡 D 补（卷六勘误 1123k50 登了 purpose_general、purpose_escrow，原为未建）",
+   "basis": "general 取 purpose_general（公库缺省分区，trackOutflow 假，卷八 :1371），escrow 取 purpose_escrow（卷六 §4.17.1 :1031）；规则层不出现分区代号字面量，开局组织阶段读 general 作新建组织行的 treasury（worldgen.mjs polityInputs）"
+  },
+  {
    "key": "unbuilt",
-   "value": ["genOpenTiers", "genRealmRows", "rolesPurposes", "settleDemoteDays", "settleReopenDays"],
+   "value": ["genOpenTiers", "genRealmRows", "settleDemoteDays", "settleReopenDays"],
    "file": "server-plugin/kernel/gen/polity.mjs",
    "grade": "designed",
-   "source": "卷八 §2.6 :375（polity.gen.realmRows）、:377（polity.gen.openTiers）、:327（polity.roles.purposes）、:373–:374（polity.settle.demoteDays、reopenDays）",
-   "basis": "待调：卷文只给类型与判据，没给值，不自编：realmRows 与 openTiers 的 whenRX 内容、settletier 层级条目（order、requiresRX、grantsOffices）、两个天数、公库缺省分区的用途行（卷六 purpose 族没有 general，第 6 项另开卡）都不在本卡；开局阶段缺这些输入时整段进 deferred 并列缺口，不建行（gen/polity.mjs，卷十缺输入口径）"
+   "source": "卷八 §2.6 :375（polity.gen.realmRows）、:377（polity.gen.openTiers）、:373–:374（polity.settle.demoteDays、reopenDays）",
+   "basis": "待调：卷文只给类型与判据，没给值，不自编：realmRows 与 openTiers 的 whenRX 内容、settletier 层级条目（order、requiresRX、grantsOffices）、两个天数都不在本卡；开局阶段缺这些输入时整段进 deferred 并列缺口，不建行（gen/polity.mjs，卷十缺输入口径）；公库缺省分区的用途行已由前置卡 D 登（polity.roles.purposes，见 rolesPurposes）"
   }
  ]
 }

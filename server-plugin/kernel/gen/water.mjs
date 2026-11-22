@@ -1,6 +1,7 @@
 // 水体阶段（卷十 R10-2.12 :427、R10-1.7 :374 手写优先生成补缺、R10-1.14 :381 事务内读卷五派生）：给水体行补它缺的水体字段。
 // 水体行 = 挂水体组件类的行（句柄取规则表 rules.gen.roleWaterbody，不认组件类代号）；作者写了的字段一律不动，只补缺：
-//   capacityL = surfaceM2 × 按所挂规则行 depthM 抽得的水深 ÷ 升换立方米（水深抽取点 site_gen_water_depth，对象 = 水体行 id；升换立方米取单位表，由调用方交入）；
+//   capacityM3 = ⌊surfaceM2 × 按所挂规则行 depthM 抽得的水深 ÷ 立方米换算⌋（整立方米，封卷后勘误 1123k53，李白 11-23 事件 b41e0801 P10-4 水体存量单位由升改立方米；水深抽取点 site_gen_water_depth，对象 = 水体行 id；
+//     立方米换算 m3PerUnit 取容量维度所标单位在单位表里的 si（m3 为 1），由调用方交入）；
 //   surfaceM2 = 本行足迹面积 areaM2（卷五由足迹派生，调用方交入）；
 //   排水去处 = 与本行足迹有一对四邻接区格、代表海拔严格低于它的存量单元（挂 rules.gen.roleTract 的行）中海拔最低者（并列取 id 最小），没有即空；
 //   downstream = 从本水体的排水去处出发沿排水去处走、遇到的第一个水体，走到空为止都没遇到则空（海拔沿途严格下降，链必然终止）；
@@ -27,7 +28,7 @@ const withClass = (rows, code) => [...rows.values()].filter((r) => r.classes.has
  *   table: string, stage: string, worldSeed: string, genesisMinute: number, vocab: any,
  *   rows: Map<string, import('./rows.mjs').GenRow>,
  *   waterRows: Array<{priority: number, waterKind: string, depthM: Record<string, any>}>,
- *   roleTract: string, roleWaterbody: string, m3PerL: number,
+ *   roleTract: string, roleWaterbody: string, m3PerUnit: number,
  *   footprints: null | {footprints: Record<string, {areaM2: number | null, elevationM: number | null}>, adjacency: Record<string, string[]>},
  * }} ctx
  *   footprints：卷五 planFootprints 的返回（足迹派生量与足迹相邻集）；null 表示还划不出足迹
@@ -62,7 +63,7 @@ export function genWater(ctx) {
   const deferred = [];
   for (const w of waters) {
     const d = w.dims;
-    const missing = ['capacityL', 'surfaceM2', 'catchmentM2', 'downstream'].filter((k) => d[k] === undefined);
+    const missing = ['capacityM3', 'surfaceM2', 'catchmentM2', 'downstream'].filter((k) => d[k] === undefined);
     if (missing.length === 0) continue;
     if (typeof d.waterKind !== 'string') { deferred.push({ id: w.id, reason: DEFER.kind, gaps: missing }); continue; }
     if (typeof d.liquid !== 'string') { deferred.push({ id: w.id, reason: DEFER.liquid, gaps: missing }); continue; }
@@ -73,16 +74,16 @@ export function genWater(ctx) {
     const dims = {};
     const surface = d.surfaceM2 !== undefined ? d.surfaceM2 : f.areaM2;
     if (d.surfaceM2 === undefined) dims.surfaceM2 = f.areaM2;
-    if (d.capacityL === undefined) {
+    if (d.capacityM3 === undefined) {
       const depth = fixedUnits(genDraw('gen_water', 'site_gen_water_depth', ctx.worldSeed, w.id, ctx.genesisMinute, rule.depthM));
-      // 整升数 = ⌊面积 × 水深 ÷ 每升立方米⌋：三个量都是 10⁴ 标度整数 S、D、M，整升 = ⌊S × D ÷ (M × 标度)⌋（逐步向下取整与一步取整相同）；
-      // 不经"升数的定点值"（它的 10⁴ 标度值对大水体会越过定点安全上限，面积一千平方千米级的河就溢出 E-DET-OVERFLOW），整升数自己装不进安全整数才报错。
-      const unitsM = fixedUnits(ctx.m3PerL);
-      if (unitsM === 0n) throw new KernelError('E-GEN-ROW-INVALID', {}, `water ${w.id}: the volume unit m3PerL is zero`);
+      // 整立方米数 = ⌊面积 × 水深 ÷ 容量单位的立方米数⌋：三个量都是 10⁴ 标度整数 S、D、M，结果 = ⌊S × D ÷ (M × 标度)⌋（逐步向下取整与一步取整相同）；
+      // 不经容量的定点值（它的 10⁴ 标度值对大水体会越过定点安全上限而溢出 E-DET-OVERFLOW），整数自己装不进安全整数才报错（单位改立方米后，南湾 8.04×10¹⁰ m² 乘 100 m 才 8.04×10¹² m³，深海也装得下）。
+      const unitsM = fixedUnits(ctx.m3PerUnit);
+      if (unitsM === 0n) throw new KernelError('E-GEN-ROW-INVALID', {}, `water ${w.id}: the capacity unit in cubic metres (m3PerUnit) is zero`);
       const whole = Number((fixedUnits(surface) * depth) / (unitsM * fixedScale()));
-      if (!Number.isSafeInteger(whole)) throw new KernelError('E-GEN-ROW-INVALID', {}, `water ${w.id}: capacityL does not fit a safe integer (surface ${surface} m2, depth ${fixedToNumber(depth)} m)`);
-      if (!(whole >= 1)) throw new KernelError('E-GEN-ROW-INVALID', {}, `water ${w.id}: capacityL ${whole} is below 1 L (surface ${surface} m2, depth ${fixedToNumber(depth)} m)`);
-      dims.capacityL = whole;
+      if (!Number.isSafeInteger(whole)) throw new KernelError('E-GEN-ROW-INVALID', {}, `water ${w.id}: capacityM3 does not fit a safe integer (surface ${surface} m2, depth ${fixedToNumber(depth)} m)`);
+      if (!(whole >= 1)) throw new KernelError('E-GEN-ROW-INVALID', {}, `water ${w.id}: capacityM3 ${whole} is below 1 m3 (surface ${surface} m2, depth ${fixedToNumber(depth)} m)`);
+      dims.capacityM3 = whole;
     }
     if (d.downstream === undefined) { const dr = drain(w.id); dims.downstream = dr === null ? null : reach(dr); }
     if (d.catchmentM2 === undefined) {

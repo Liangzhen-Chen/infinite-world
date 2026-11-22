@@ -311,7 +311,7 @@ export function layoutOf(grid, input) {
 // ---------- 加载期校验：布局模板族与分片角色族（卷十九 §2.4、§4.6 规则 1、3、4；A19-6.1–6.3） ----------
 
 // 词表族名与条目字段名（卷十九 §2.4）。键集封闭：模板与分片项里没有设施数量（规则 3），多出任何键都拒；basis 是各词表条目通用的出处说明。
-const FAMILY = Object.freeze({ layout: 'layout', zrole: 'zrole', facilityType: 'facility_type' });
+const FAMILY = Object.freeze({ layout: 'layout', zrole: 'zrole' });
 const LAYOUT_KEYS = Object.freeze({ zones: 'zones', applies: 'applies', basis: 'basis' });
 const ZONE_KEYS = Object.freeze({ role: 'role', share: 'share', adjacent: 'adjacent' });
 const ZROLE_KEYS = Object.freeze({ typeAffinity: 'typeAffinity', basis: 'basis' });
@@ -321,10 +321,11 @@ const ZROLE_KEYS = Object.freeze({ typeAffinity: 'typeAffinity', basis: 'basis' 
  * layout：zones 非空列表、applies 非空字符串（RX 文本，由卷十读站点行基值维度求值，本函数不编译）；每个分片项 {role, share, adjacent}：role 是 zrole 族条目且本模板内不重复，
  * share 是 [0, 1] 的数、本模板各项之和恰为 1（定点），adjacent 是本模板内其他角色的列表。
  * zrole：typeAffinity 必写（可为空表）；键须是 facility_type 族条目（设施类型表未建时任何键都报 E-DIM-REF-MISSING，不放过），值是 [0, 1] 的数。
- * @param {Map<string, {family: string, entry: any}>} vocabIndex 词表索引
+ * 设施类型是维度表（卷十九 §2.2，kind facility_type），不是词表族：typeAffinity 的键经表的行 id 集核（李白 11-23 事件 b41e0801 P10-2）；没交（undefined）按空集，任何键都报缺。
+ * @param {Map<string, {family: string, entry: any}>} vocabIndex 词表索引 @param {Set<string>} [facilityTypeIds] 设施类型表的行 id
  * @returns {string[]}
  */
-export function checkLayoutTemplates(vocabIndex) {
+export function checkLayoutTemplates(vocabIndex, facilityTypeIds = new Set()) {
   const errors = [];
   const scale = fixedScale();
   const num = (v) => typeof v === 'number' && Number.isFinite(v);
@@ -368,8 +369,7 @@ export function checkLayoutTemplates(vocabIndex) {
       const aff = e[ZROLE_KEYS.typeAffinity];
       if (!isObj(aff)) { errors.push(`E-DIM-REQUIRED-MISSING ${at}: ${ZROLE_KEYS.typeAffinity} is a required map (may be empty)`); continue; }
       for (const type of Object.keys(aff).sort(cmp)) {
-        const t = vocabIndex.get(type);
-        if (!t || t.family !== FAMILY.facilityType) errors.push(`E-DIM-REF-MISSING ${at}: ${ZROLE_KEYS.typeAffinity} key ${type} is not a facility_type entry`);
+        if (!facilityTypeIds.has(type)) errors.push(`E-DIM-REF-MISSING ${at}: ${ZROLE_KEYS.typeAffinity} key ${type} is not a facility_type entry`);
         if (!inUnit(aff[type])) errors.push(`E-DIM-DOMAIN-RANGE ${at}: ${ZROLE_KEYS.typeAffinity}.${type} ${JSON.stringify(aff[type])} want a number in [0, 1]`);
       }
     }

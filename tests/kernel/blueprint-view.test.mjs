@@ -24,7 +24,7 @@ const CELLCLASS = { cellclass_land: { ...ANY, slopeRange: [0, 1], priority: 1, g
 // 地表材料 mat_soil、地表以下一层土再岩；空气取真实材料行 mat_air。
 const TEMPLATE = { gtpl_land: { surfaceMaterial: 'mat_soil', airMaterial: 'mat_air', soilLayers: 1, soilMaterial: 'mat_soil', rockMaterial: 'mat_granite', blocks: [] } };
 // 形制条目是测试前提：walled 真、一层、屋面、墙厚缺省 0.4（w = 1）；rooms 为空或两间。
-const FORM = { walled: true, aspect: 1, storeyBase: 0, roofed: true, deck: false, windowEvery: 0, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.2, planSideMaxCells: 64, rooms: [] };
+const FORM = { walled: true, aspect: 1, storeyBase: 0, roofed: true, deck: false, windowEvery: 0, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.2, planSideMaxCells: 64, rooms: [], facilityTypes: ['fac_house'] };
 const FORMS = (extra = {}) => ({
   bldform_hut: FORM,
   bldform_tower: { ...FORM, rooms: [] },
@@ -40,15 +40,16 @@ function load({ rows, edges = [], spaces, forms = FORMS(), mutateRules } = {}) {
     for (const f of readdirSync(join(ROOT, DIMS)).filter((n) => n.endsWith('.json'))) writeUnderTempRoot(tmp, f, realText(f));
     writeUnderTempRoot(tmp, 'place.json', JSON.stringify({ ...HEADER, rows, edges, gridSpaces: spaces }));
     writeUnderTempRoot(tmp, 'item.json', JSON.stringify({ ...JSON.parse(realText('item.json')), rows: {} }));
+    writeUnderTempRoot(tmp, 'org.json', JSON.stringify({ ...JSON.parse(realText('org.json')), rows: {} })); // 真实组织行的驻地（王都、河湾村）不在夹具地点表里
     const unbuilt = JSON.parse(realText('_unbuilt-derived.json'));
     unbuilt.columns = unbuilt.columns.filter((c) => c.table !== 'place');
     writeUnderTempRoot(tmp, '_unbuilt-derived.json', JSON.stringify(unbuilt));
     const v = structuredClone(VOCAB);
-    v.families.access.entries = { access_test_open: { rank: 0, needsGrant: false } };
+    v.families.access.entries = { ...v.families.access.entries, access_test_open: { rank: 0, needsGrant: false } }; // 真实设施类型表的缺省档（access_public 等）要在族里
     v.families.water.entries = { ...v.families.water.entries, water_test_fresh: { navigable: false } };
     v.families.cellclass.entries = CELLCLASS;
     v.families.gentemplate.entries = TEMPLATE;
-    v.families.bform.entries = forms;
+    v.families.bform.entries = { ...forms, bldform_shrine: v.families.bform.entries.bldform_shrine }; // 真实 bldfill 规则行读 bldform_shrine，要在族里
     v.families.roomrole.entries = ROLES;
     writeUnderTempRoot(tmp, '_vocab.json', JSON.stringify(v));
     return loadWorld(ROOT, { dimensionsDir: relative(ROOT, tmp) });
@@ -64,7 +65,7 @@ const region = (parent, x, y, extra = {}) => row(parent, { terrain: 'terrain_riv
 // 建筑行：挂 comp_facility，卷十九 §2.1 的必填列照数填（形制、外包宽深、层数、完好度、破口、料）。
 const building = (parent, anchorXYZ, extra = {}) => row(parent, {
   classes: ['comp_facility'], anchor: { w: 0, x: anchorXYZ[0], y: anchorXYZ[1], z: anchorXYZ[2], coarse: false }, facing: 0,
-  form: 'bldform_hut', planCells: { widthCells: 6, depthCells: 6 }, storeys: 1, condition: 1, breaks: [], materialKg: { mat_granite: 1000 }, ...extra,
+  form: 'bldform_hut', intendedType: 'fac_house', planCells: { widthCells: 6, depthCells: 6 }, storeys: 1, condition: 1, breaks: [], materialKg: { mat_granite: 1000 }, ...extra,
 });
 const room = (parent, role) => row(parent, { classes: ['comp_zone'], roomRole: role });
 // 2 × 3 区格，所有控制点海拔 0（地表高处处 0 m，地表层 0）：loc_a 占区格 (0,1)（细格 x 0..99、y 100..199）、loc_b 占 (1,1)，其余归层根。

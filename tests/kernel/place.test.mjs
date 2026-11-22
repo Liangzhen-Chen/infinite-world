@@ -29,13 +29,14 @@ function load({ rows = {}, edges = [], juris = null } = {}) {
     writeUnderTempRoot(tmp, 'place.json', JSON.stringify({ ...HEADER, rows, edges }));
     // 物品行（6-22）的 origin 指向真实地点；本文件的临时世界只有自造的地点，物品表只留表头。
     writeUnderTempRoot(tmp, 'item.json', JSON.stringify({ ...JSON.parse(realText('item.json')), rows: {} }));
+    writeUnderTempRoot(tmp, 'org.json', JSON.stringify({ ...JSON.parse(realText('org.json')), rows: {} })); // 真实组织行的驻地不在夹具地点表里
     // 真实世界为旧数据没有的列登记了未建（6-24，缺值放行）；本文件的用例要核"缺 always 列即报错"，前提自己造：拷贝里去掉 place 的未建列登记。
     const unbuilt = JSON.parse(realText('_unbuilt-derived.json'));
     unbuilt.columns = unbuilt.columns.filter((c) => c.table !== 'place');
     writeUnderTempRoot(tmp, '_unbuilt-derived.json', JSON.stringify(unbuilt));
     // access、water 两族以测试自造的一条进入档与一条水体类替换（真实条目随 6-24 灌行而来），供行填 always 列。
     const v = structuredClone(VOCAB);
-    v.families.access.entries = { access_test_open: { rank: 0, needsGrant: false } };
+    v.families.access.entries = { ...v.families.access.entries, access_test_open: { rank: 0, needsGrant: false } }; // 真实设施类型表的缺省档要在族里
     v.families.water.entries = { ...v.families.water.entries, water_test_fresh: { navigable: false } };
     // gfield 条目的 levels 引用真实 juris 条目（卷十 §2.1 :114）；自造层级表的世界没有生成场。
     if (juris) { v.families.juris.entries = juris; v.families.gfield.entries = {}; }

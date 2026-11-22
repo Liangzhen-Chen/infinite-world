@@ -198,13 +198,13 @@ test('作者写了 form 却是 null 或登记里没有的条目：作者数据�
 });
 
 // ---------- 缺 form 的补缺（卷十 R10-7.12 封卷后勘误 1123k31；李白 11-23 事件 08673f69 第 1 条） ----------
-// 前提：登记里三个有顶形制 bldform_a（墙厚缺省 0.4）、bldform_b（0.8）、bldform_c（1.2），都 walled；设施类型 facility_any 两个上限都空（无要求），候选 = 登记全部条目，等权按抽取点 site_gen_bldfill_form 取；
-// 行上没有 intendedType、类型行不在族里、或筛后无形制，都记缺口 form_type_unmatched、不补。
-const thick = (m) => formEntry({ ...F36, wallThicknessDefaultM: m, wallThicknessMinM: m });
-const TYPE_ANY = ['facility_any', { family: 'facility_type', entry: { maxSkyExposure: null, maxAperture: null } }];
-const THREE = () => vocabOf([['bldform_a', thick(0.4)], ['bldform_b', thick(0.8)], ['bldform_c', thick(1.2)], TYPE_ANY]);
+// 前提：登记里三个有顶形制 bldform_a（墙厚缺省 0.4）、bldform_b（0.8）、bldform_c（1.2），都 walled，适用设施类型 fac_any，候选 = 适用它的全部形制，等权按抽取点 site_gen_bldfill_form 取；
+// 行上没有 intendedType、或没有形制适用该类型，都记缺口 form_type_unmatched、不补。
+// 封卷后勘误 1123k52（李白 11-23 事件 b41e0801 P10-1 选乙）：候选 = 形制条目的 facilityTypes（适用设施类型）含本行 intendedType 的全部形制；原按采光、开口筛与最小可展开平面的做法已撤。设施类型是维度表的行（P10-2），补缺只读形制条目，不读类型表。
+const thick = (m, types = ['fac_any']) => formEntry({ ...F36, wallThicknessDefaultM: m, wallThicknessMinM: m, facilityTypes: types });
+const THREE = () => vocabOf([['bldform_a', thick(0.4)], ['bldform_b', thick(0.8)], ['bldform_c', thick(1.2)]]);
 const WALL_OF = { bldform_a: 0.4, bldform_b: 0.8, bldform_c: 1.2 };
-const noFormRow = (extra = {}) => ({ parent: null, classes: ['comp_facility'], intendedType: 'facility_any', ...extra });
+const noFormRow = (extra = {}) => ({ parent: null, classes: ['comp_facility'], intendedType: 'fac_any', ...extra });
 const manyIds = Array.from({ length: 30 }, (_, i) => `loc_n${String(i).padStart(2, '0')}`);
 
 test('缺 form：从登记里取一个并写进提案，补出的 form 必在登记里；墙厚缺省随所取形制（手算：形制 b 的缺省 0.8，不是别的形制的）；同种子两次逐项相同', () => {
@@ -221,7 +221,7 @@ test('缺 form：从登记里取一个并写进提案，补出的 form 必在登
 });
 
 test('缺 form：登记只有一个形制时恰取它（手算：等权三取一退化为一取一）；换世界种子，30 行里至少一行取到不同的形制', () => {
-  const only = () => vocabOf([['bldform_a', thick(0.4)], TYPE_ANY]);
+  const only = () => vocabOf([['bldform_a', thick(0.4)]]);
   const entries = manyIds.map((id) => [id, noFormRow()]);
   const authored = new Set(manyIds);
   const one = run({ vocab: only(), rows: rowsOf(entries), authoredIds: authored, bldfillRows: fill(36, 1) });
@@ -249,24 +249,31 @@ test('缺 form：补出的 form 记在提案里、来源标记取形制抽取点
   assert.equal(seedOf('loc_w1'), genDiceKey('gen_siteform', 'site_gen_bldfill_area', 'seed_siteform', 'loc_w1', 0));
 });
 
-test('缺 form：行上没有设施类型、类型行不在 facility_type 族、登记为空 → 不报错、不补、不自造，该行进缺口 form_type_unmatched，无提案；不计入站点占地（手算：另一栋 6 × 6 → 36 m² → N = 1 格 = 10,000 m²）', () => {
-  const rows = siteRows([['bld_x', noFormRow({ parent: 'loc_site', intendedType: undefined })], ['bld_y', noFormRow({ parent: 'loc_site', intendedType: 'bldform_a' })], ['bld_z', noFormRow({ parent: 'loc_site' })]]);
+test('缺 form：行上没有设施类型、没有任何形制适用该类型、登记为空 → 不报错、不补、不自造，该行进缺口 form_type_unmatched，无提案；不计入站点占地（手算：另一栋 6 × 6 → 36 m² → N = 1 格 = 10,000 m²）', () => {
+  const rows = siteRows([['bld_x', noFormRow({ parent: 'loc_site', intendedType: undefined })], ['bld_y', noFormRow({ parent: 'loc_site', intendedType: 'fac_none' })], ['bld_z', noFormRow({ parent: 'loc_site' })]]);
   const out = run({ vocab: THREE(), rows, authoredIds: new Set(['loc_site', 'bld_x', 'bld_y', 'bld_z']), bldfillRows: fill(36, 1) });
-  assert.deepEqual(out.proposals.map((p) => p.id), ['bld_z', 'loc_site']); // 有类型的 bld_z 补出；bld_x 无类型、bld_y 的类型不在族里
+  assert.deepEqual(out.proposals.map((p) => p.id), ['bld_z', 'loc_site']); // fac_any 有适用形制的 bld_z 补出；bld_x 无类型、bld_y 的类型没有适用形制
   assert.equal(targetOf(out, 'loc_site'), 10000);
   assert.deepEqual(out.deferred.filter((d) => d.reason === 'form_type_unmatched'), [{ id: 'bld_x', reason: 'form_type_unmatched', gaps: ['form'] }, { id: 'bld_y', reason: 'form_type_unmatched', gaps: ['form'] }]);
-  const empty = run({ vocab: vocabOf([TYPE_ANY]), rows: siteRows([['bld_z', noFormRow({ parent: 'loc_site' })]]), authoredIds: new Set(['loc_site', 'bld_z']), bldfillRows: fill(36, 1) });
+  const empty = run({ vocab: vocabOf([]), rows: siteRows([['bld_z', noFormRow({ parent: 'loc_site' })]]), authoredIds: new Set(['loc_site', 'bld_z']), bldfillRows: fill(36, 1) });
   assert.deepEqual(empty.deferred.filter((d) => d.reason === 'form_type_unmatched').map((d) => d.id), ['bld_z']);
+  // 条目没写 facilityTypes（或不是列表）的形制不适用任何类型：不当作“全适用”。
+  const bare = run({ vocab: vocabOf([['bldform_a', formEntry(F36)]]), rows: siteRows([['bld_z', noFormRow({ parent: 'loc_site' })]]), authoredIds: new Set(['loc_site', 'bld_z']), bldfillRows: fill(36, 1) });
+  assert.deepEqual(bare.deferred.filter((d) => d.reason === 'form_type_unmatched').map((d) => d.id), ['bld_z']);
 });
 
-test('缺 form：按设施类型筛（卷十九 §4.5 规则 2 ③）：类型 facility_dry 要求设计露天比例 ≤ 0，有顶形制 bldform_a（roofed 真，设计露天 0）留下，无顶形制 bldform_open（roofed 假，露天 > 0）剔除，所以只取 bldform_a；类型 facility_open 无要求时两者都可取', () => {
-  const open = formEntry({ ...F36, roofed: false });
-  const vocab = vocabOf([['bldform_a', thick(0.4)], ['bldform_open', open], ['facility_dry', { family: 'facility_type', entry: { maxSkyExposure: 0, maxAperture: null } }], ['facility_open', { family: 'facility_type', entry: { maxSkyExposure: null, maxAperture: null } }]]);
+test('缺 form：按适用设施类型挑（勘误 1123k52）：粮仓类建筑不会取到祠庙形制，祠庙类建筑只取祠庙形制；一个形制可适用多个类型（住宅、粮仓共用民居形制），同种子同结果', () => {
+  const vocab = () => vocabOf([['bldform_house', thick(0.4, ['fac_granary', 'fac_house'])], ['bldform_shrine', thick(0.4, ['fac_shrine'])]]);
   const ids = manyIds;
-  const dry = run({ vocab, rows: rowsOf(ids.map((id) => [id, noFormRow({ intendedType: 'facility_dry' })])), authoredIds: new Set(ids), bldfillRows: fill(36, 1) });
-  assert.deepEqual([...new Set(dry.proposals.map((p) => p.dims.form))], ['bldform_a']);
-  const any = run({ vocab, rows: rowsOf(ids.map((id) => [id, noFormRow({ intendedType: 'facility_open' })])), authoredIds: new Set(ids), bldfillRows: fill(36, 1) });
-  assert.deepEqual([...new Set(any.proposals.map((p) => p.dims.form))].sort(), ['bldform_a', 'bldform_open']);
+  const granary = run({ vocab: vocab(), rows: rowsOf(ids.map((id) => [id, noFormRow({ intendedType: 'fac_granary' })])), authoredIds: new Set(ids), bldfillRows: fill(36, 1) });
+  assert.deepEqual([...new Set(granary.proposals.map((p) => p.dims.form))], ['bldform_house']);
+  const shrine = run({ vocab: vocab(), rows: rowsOf(ids.map((id) => [id, noFormRow({ intendedType: 'fac_shrine' })])), authoredIds: new Set(ids), bldfillRows: fill(36, 1) });
+  assert.deepEqual([...new Set(shrine.proposals.map((p) => p.dims.form))], ['bldform_shrine']);
+  const again = run({ vocab: vocab(), rows: rowsOf(ids.map((id) => [id, noFormRow({ intendedType: 'fac_granary' })])), authoredIds: new Set(ids), bldfillRows: fill(36, 1) });
+  assert.deepEqual(again, granary);
+  // 两个形制都适用同一类型时，30 行里两个形制都出现（等权按种子取）。
+  const both = run({ vocab: vocabOf([['bldform_a', thick(0.4)], ['bldform_b', thick(0.8)]]), rows: rowsOf(ids.map((id) => [id, noFormRow()])), authoredIds: new Set(ids), bldfillRows: fill(36, 1) });
+  assert.deepEqual([...new Set(both.proposals.map((p) => p.dims.form))].sort(), ['bldform_a', 'bldform_b']);
 });
 
 test('层数夹进 [max(1, 1 − storeyBase), storeysMax]：形制 storeyBase −2 时下限 3，区间为空即 E-GEN-ROW-INVALID', () => {
@@ -420,7 +427,7 @@ test('起始地区现有全部手写建筑在真实形制上限下都排得下�
     const before = process.memoryUsage().heapUsed;
     const res = genSiteForm({
       table: 'place', stage: 'gstage_siteform', worldSeed: 'seed_start_region', genesisMinute: 0, vocab: world.vocab,
-      rows: rowsOf(rowsIn.map((r) => [r.id, { parent: null, classes: ['comp_facility'], form: r.form }])), authoredIds: ids,
+      rows: rowsOf(rowsIn.map((r) => [r.id, { parent: null, classes: ['comp_facility'], form: r.form, ...(typeof r.intendedType === 'string' ? { intendedType: r.intendedType } : {}) }])), authoredIds: ids, // 作者行带 intendedType（前置卡 D），按意图类型分行的规则才选得中
       bldfillRows: world.rules.gen.bldfillRows, roleFacility: world.rules.gen.roleFacility, blueprint: BLUEPRINT, when: WHEN,
       layoutCoverage: world.rules.gen.layoutCoverage, regionCellM: world.rules.grid.regionCellM, roleTract: world.rules.gen.roleTract, roleWaterbody: world.rules.gen.roleWaterbody,
     });
@@ -447,7 +454,7 @@ test('起始地区现有全部手写建筑在真实形制上限下都排得下�
 // 站点足迹由 strip 夹具给：N 个区格沿 x 排成一行 (0,0)…(N−1,0)（N 取试排写的 targetAreaM2 ÷ 10,000；真划分在 gen-layout-fill.test.mjs 用真内核走一遍），地表层号恒为 3、格空间序号 w = 0。
 // 行架手算见各用例；站点区格 (0,0) 外包 x 0..99、y 0..99，一栋放得下当且仅当外扩 2 格后全在足迹内：x0 ≥ 2、y0 ≥ 2。
 const BIGF = formEntry({ ...F36, planSideMaxCells: 256 });
-const LAY_VOCAB = () => vocabOf([['bldform_big', BIGF], TYPE_ANY]);
+const LAY_VOCAB = () => vocabOf([['bldform_big', BIGF]]);
 const layRows = (kids, siteExtra = {}) => rowsOf([['loc_root', { parent: null }], ['loc_tract', { parent: 'loc_root', classes: ['comp_tract'] }], ['loc_site', { parent: 'loc_tract', coord: { x: 50, y: 50 }, ...siteExtra }], ...kids]);
 const kid = (id, w, d, extra = {}) => [id, bld({ parent: 'loc_site', form: 'bldform_big', planCells: { widthCells: w, depthCells: d }, storeys: 1, wallThicknessM: 0.4, ...extra })];
 const strip = ({ tract = 8, fixed = 1, z = 3 } = {}) => (o = {}) => {

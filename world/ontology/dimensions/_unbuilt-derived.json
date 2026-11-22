@@ -116,6 +116,9 @@
   {"name": "comp_arcane", "family": "component", "volume": "卷十五《法术与超自然》超自然组件类未建（§2.3 :174、:979 登记顶层条目 comp_arcane 及其材料维度）", "card": "pre_first_reader_card"}
  ],
  "columns": [
+  {"table": "facility_type", "dimension": "services", "missing": ["data"], "card": "pre_first_reader_card", "note": "卷十九 §2.2 :174 always：引 service 族（卷六服务族，未建族，登在 families），行上无从填值；不写空集顶替"},
+  {"table": "facility_type", "dimension": "ratingWeights", "missing": ["data"], "card": "pre_first_reader_card", "note": "卷十九 §2.2 :176 always：键须覆盖 raspect 族全部条目（封闭 4 项：财富、美观、空间、清洁，卷十九 §2.4 :207），raspect 族未建，权重数无出处，不编"},
+  {"table": "facility_type", "dimension": "wearPerDay", "missing": ["data"], "card": "pre_first_reader_card", "note": "卷十九 §2.2 :180 always：满负荷日磨损，无逐类数据（卷二 §5.7 :1863 现有映射“代码”，旧代码已删），不编"},
   {"table": "recipe", "dimension": "skill", "missing": ["data"], "card": "pre_first_reader_card", "note": "卷三乙 §2.7 :365 always：引技能表（卷十四，skill 未建表，登在 kinds），行上无从填值；估值（V-1）只读 skillMin，不读 skill；craftOutcome（R-1）读技能值时按未知"},
   {"table": "species", "dimension": "habitats", "missing": ["data"], "card": "pre_first_reader_card", "note": "引 biome 族（未建族，卷五 §4.3）；条目未前移，行上无从填值"},
   {"table": "species", "dimension": "lairSites", "missing": ["data"], "card": "pre_first_reader_card", "note": "引 site 族（未建族，卷五 §4.6）"},
@@ -179,7 +182,6 @@
   {"table": "person", "dimension": "origin", "missing": ["data"], "card": "pre_first_reader_card", "note": "丙9：卷四 §2.3 :226 always（出身类别，可显式空）；origin 族条目（placeFilter、grants）归 chargen 与卷十（§4.12），未前移，登 families；instantiatePerson 不写缺省，读到按未知"}
  ],
  "kinds": [
-  {"kind": "facility_type", "prefix": "facility_", "volume": "卷十九《建筑与设施》设施类型表（卷二 §2.1 第 8 行 facility_type）；配方 workstation 引用（卷三乙 §2.7 :365）", "card": "pre_first_reader_card"},
   {"kind": "knowledge", "prefix": "lore_", "volume": "卷二十二《知识信息与传播》知识表（卷二 §1.9 实体前缀 lore_，原 know_）；物品 teaches 引用", "card": "pre_first_reader_card"},
   {"kind": "skill", "prefix": "skill_", "volume": "卷十四《职业技能与学艺》技能表（实体前缀 skill_）；个体 skills 引用", "card": "pre_first_reader_card"},
   {"kind": "profession", "prefix": "profession_", "volume": "卷十四职业表（实体前缀 profession_）；个体 primaryProfession 引用", "card": "pre_first_reader_card"},
@@ -196,6 +198,8 @@
   {"unit": "sense_arrival", "missing": ["constant"], "card": "pre_first_reader_card", "note": "卷四 §2.1 sourceStrength“单位随感官，即到达量的单位”（卷五 §4.2 规则 7、11），随键变化，写不成一个登记单位"}
  ],
  "families": [
+  {"family": "ffunc", "prefix": "fn_", "volume": "卷十九《建筑与设施》§2.4 :200 功能族（开放，首批 15 项：遮蔽、床位、炉膛……）；设施类型 functionNeeds、headline 引用", "card": "pre_first_reader_card"},
+  {"family": "raspect", "prefix": "rasp_", "volume": "卷十九《建筑与设施》§2.4 :207 评价项族（封闭 4 项：财富、美观、空间、清洁）；设施类型 ratingWeights 引用", "card": "pre_first_reader_card"},
   {"family": "arcschool", "prefix": "asch_", "volume": "卷十五《法术与超自然》§2.3 流派族；物品 arcSchool 引用", "card": "pre_first_reader_card"},
   {"family": "fixture", "prefix": "fixture_", "volume": "卷十九《建筑与设施》固定装置族（卷三乙 §4.8.5 例 1 写作 fixture_forge）；配方 workstation 引用（卷三乙 §2.7 :365）", "card": "pre_first_reader_card"},
   {"family": "field", "prefix": "field_", "volume": "卷二十《时间日历天气与环境》§2.8 词表族 field（环境场，带字段）；物品 emits 引用", "card": "pre_first_reader_card"},

@@ -625,12 +625,13 @@
     "genSettlementKind": {"type": "ref", "vocab": "orgkind"},
     "genHoldCause": {"type": "ref", "vocab": "verb"},
     "genIdSlots": {"type": "struct", "required": ["office", "realm", "settlement"], "fields": {"realm": {"type": "ref", "vocab": "idslot"}, "settlement": {"type": "ref", "vocab": "idslot"}, "office": {"type": "ref", "vocab": "idslot"}}},
+    "rolesPurposes": {"type": "struct", "required": ["escrow", "general"], "fields": {"general": {"type": "ref", "vocab": "purpose"}, "escrow": {"type": "ref", "vocab": "purpose"}}},
     "unbuilt": {"type": "set", "of": {"type": "string"}}
    },
-   "domain": {"rolesKinds": {}, "holdForcibleCauses": {}, "genSettlementKind": {}, "genHoldCause": {}, "genIdSlots": {}, "unbuilt": {}},
-   "volume": "卷八 §2.6（polity.roles.kinds 的 governs、polity.hold.forcibleCauses、polity.gen.settlementKind；读点 kernel/title.mjs、kernel/gen/polity.mjs）；其余键卷文没给值，登在 unbuilt",
+   "domain": {"rolesKinds": {}, "holdForcibleCauses": {}, "genSettlementKind": {}, "genHoldCause": {}, "genIdSlots": {}, "rolesPurposes": {}, "unbuilt": {}},
+   "volume": "卷八 §2.6（polity.roles.kinds 的 governs、polity.roles.purposes、polity.hold.forcibleCauses、polity.gen.settlementKind；读点 kernel/title.mjs、kernel/gen/polity.mjs、kernel/gen/worldgen.mjs）；其余键卷文没给值，登在 unbuilt",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"rolesKinds": false, "holdForcibleCauses": false, "genSettlementKind": false, "genHoldCause": false, "genIdSlots": false, "unbuilt": false}
+   "packOverridable": {"rolesKinds": false, "holdForcibleCauses": false, "genSettlementKind": false, "genHoldCause": false, "genIdSlots": false, "rolesPurposes": false, "unbuilt": false}
   },
   {
    "code": "social",

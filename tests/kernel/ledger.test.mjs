@@ -187,7 +187,7 @@ test('资源种类表两行（卷六 :112、:371）与本卷词表族按登记�
   assert.equal(W.vocab.families.get('resfam').closed, true);
   assert.deepEqual(fam('transferability'), ['tr_bound', 'tr_free', 'tr_restricted']);
   assert.deepEqual(fam('budget_mode'), ['bm_capped', 'bm_physical']);
-  assert.deepEqual(fam('purpose'), ['purpose_unmaterialized']);
+  assert.deepEqual(fam('purpose'), ['purpose_escrow', 'purpose_general', 'purpose_unmaterialized']); // 卷六勘误 1123k50 登 purpose_general 与 §4.17.1 的 purpose_escrow
   assert.deepEqual(W.vocab.index.get('purpose_unmaterialized').entry, { locksFor: null, spendable: false, trackOutflow: false, visibleToMarket: false });
   assert.deepEqual(fam('src'), ['src_birth', 'src_boundary', 'src_genesis', 'src_issue', 'src_regrow', 'src_transform']);
   assert.deepEqual(fam('sink'), ['sink_boundary', 'sink_consume', 'sink_death', 'sink_decay', 'sink_depart', 'sink_loss', 'sink_redeem', 'sink_seized', 'sink_transform']);

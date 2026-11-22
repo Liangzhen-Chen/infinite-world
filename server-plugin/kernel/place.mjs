@@ -45,6 +45,7 @@ const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 // 本卷的表与维度、边节字段（卷五 §2.1、§4.1.1；表头里登记的名字，本文件只读它们，不另定义含义）。
 const PLACE = 'place';
 const MATERIAL = 'material';
+const FACILITY_TYPE = 'facility_type'; // 设施类型表的 kind（卷十九 §2.2，维度表，不是词表族）
 const DIM = Object.freeze({
   parent: 'parent', areaM2: 'areaM2', underground: 'underground', elevationM: 'elevationM', coord: 'coord',
   centroid: 'centroid', zRange: 'zRange', anchor: 'anchor', facing: 'facing', waterKind: 'waterKind',
@@ -1551,9 +1552,12 @@ export function checkPlaceTable(view) {
     const hasMaterial = (code) => Boolean(mt && mt.flat && mt.flat.rows instanceof Map && mt.flat.rows.has(code));
     if (idx instanceof Map) errors.push(...checkGenTemplates(idx, hasMaterial, true));
     // 建筑形制族（卷十九 §2.4 :203，A19-5.3）：平面字段与取值域；建筑行的蓝图可行、锚点在父足迹内、兄弟足迹不相交（卷五 §4.1 规则 11，E-GRID-FOOTPRINT-OUTSIDE-PARENT、E-GRID-SIBLING-OVERLAP）。
-    if (idx instanceof Map) errors.push(...checkBlueprintForms(idx, view.rules && view.rules.facility ? view.rules.facility.blueprint : undefined));
+    // 设施类型表（kind facility_type，卷十九 §2.2）的行 id：形制 facilityTypes 与分片角色 typeAffinity 的键都经表核，不经词表索引；世界没有这张表即空集（任何引用都报缺）。
+    const ftTable = view.tables instanceof Map ? view.tables.get(FACILITY_TYPE) : undefined;
+    const facilityTypeIds = new Set(ftTable && ftTable.flat && ftTable.flat.rows instanceof Map ? ftTable.flat.rows.keys() : []);
+    if (idx instanceof Map) errors.push(...checkBlueprintForms(idx, view.rules && view.rules.facility ? view.rules.facility.blueprint : undefined, facilityTypeIds));
     // 布局模板与分片角色族（卷十九 §4.6 规则 1、3、4）：份额和为 1、adjacent 引用在本模板内、模板不写设施数量；族条目常查。
-    if (idx instanceof Map) errors.push(...checkLayoutTemplates(idx));
+    if (idx instanceof Map) errors.push(...checkLayoutTemplates(idx, facilityTypeIds));
     // 体积足迹（卷五 §4.1 规则 3、11；卷十 R10-2.14）：不依赖世界种子的部分（父行种类、目标面积上限、嵌套顶层号）；要世界种子的派生核对见 checkVolumeCells。
     errors.push(...checkVolumeRows({ rows, rp, rules: view.rules }));
     errors.push(...checkBuildingRows({ rows, rp, idx, rules: view.rules, units: view.env ? view.env.units : undefined, zoneOfRegion: rp.plans.size > 0 ? (pos) => zoneOfPos(grid, rp.plans, pos) : null }));
