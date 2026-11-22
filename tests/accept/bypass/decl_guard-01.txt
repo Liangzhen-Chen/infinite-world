@@ -1,0 +1,2 @@
+import { writePersonRow } from '../kernel/dimension-writers.mjs';
+export const move = (engine, state, id, at) => writePersonRow(engine, state, { id, pos: at });

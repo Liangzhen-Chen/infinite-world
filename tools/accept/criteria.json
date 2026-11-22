@@ -557,6 +557,53 @@
    }
   },
   {
+   "criterion": "守护对象由声明表登记派生、现在没落地的照样登记且现仓库计数为 0：dimWrite——通用维度写者（createItemInstance、writeItemDeviation、writePersonRow）的调用实参里出现被守维度代号（字串、键名、成员名、折成该字串的 const），所在文件不是该维度声明写者即计；importName——声明表里 fields、fieldCells 的写者文件（场步进实现）具名导入类别行 importNames、或导入类别行 importModules 所列模块即计；nameUse——登记之外的文件具名导入、重导出或命名空间引用某入口即计（已在 kernelApi 登记的交 api-callers 按登记判，定义该名的文件不计）。不按文件名、id 特判。",
+   "log": [
+    {
+     "ref": "格子迁移 G12–G16 开写前门禁卡：新登类别 decl_guard 与检测器 decl_guard；条目 vol17.S17-1、vol9.R9-2.10、vol20.S20-fieldCells、vol20.S20-4.7.6 implemented",
+     "rev": 1
+    }
+   ],
+   "print": "dc2b41ac3fbafa52d08e549dc8099ad1e0d4741e8fe7c488b06a5ad0832fcc36",
+   "rev": 1,
+   "scanClass": "decl_guard",
+   "source": "卷十七 S17-1、S17-4；卷九 R9-2.10；卷二十 §4.7.6；卷十二 §2.4 开放登记",
+   "terms": {
+    "vol17.S17-1": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol20.S20-4.7.6": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol20.S20-fieldCells": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol9.R9-2.10": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
    "criterion": "规则层读到声明表登记为显示的路径即命中。",
    "log": [
     {
@@ -2936,6 +2983,22 @@
      "stage": 0
     },
     "vol2.S19.b": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol20.T-4": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol5.S5-5": {
      "expect": "zero",
      "gates": [
       "pre_commit",

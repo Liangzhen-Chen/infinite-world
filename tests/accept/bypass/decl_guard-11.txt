@@ -1,0 +1,2 @@
+import { writeItemDeviation } from '../kernel/dimension-writers.mjs';
+export const wear = (engine, state, id, pos) => writeItemDeviation(engine, state, id, 'durability', pos);

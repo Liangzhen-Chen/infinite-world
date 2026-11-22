@@ -1,0 +1,3 @@
+export const canSee = (engine, state, id) => awake(engine, state, id).ok;
+// @file server-plugin/action-capacity.mjs
+export const awakeLine = (engine) => engine.rules.capacity.awakeMin;

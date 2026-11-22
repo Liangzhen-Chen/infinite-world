@@ -1,0 +1,1 @@
+export const stepOf = (engine) => engine.rules.weather.stepMinutes;

@@ -190,6 +190,64 @@
   },
   {
    "addedAtRev": 1,
+   "caseKey": "decl_guard-01",
+   "expectCode": "E-POS-WRITER",
+   "fixture": "tests/accept/bypass/decl_guard-01.txt",
+   "group": "rules",
+   "origin": "卷十七 S17-1 :324 正例：规则层经通用维度写者 writePersonRow 写 pos（键名）计 E-POS-WRITER",
+   "polarity": "must_fail",
+   "scanClass": "decl_guard"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "decl_guard-02",
+   "expectCode": "E-POS-WRITER",
+   "fixture": "tests/accept/bypass/decl_guard-02.txt",
+   "group": "rules",
+   "origin": "卷十七 S17-4 :327 正例：命名空间导入 writeItemDeviation、维度代号经 const 别名写 facing 计 E-POS-WRITER",
+   "polarity": "must_fail",
+   "scanClass": "decl_guard"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "decl_guard-03",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/decl_guard-03.txt",
+   "group": "rules",
+   "origin": "卷九 R9-2.10 :670 正例：非登记文件自己调 perceiveEvent 另算目击名单计 E-VIEW-BYPASS",
+   "polarity": "must_fail",
+   "scanClass": "decl_guard"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "decl_guard-04",
+   "expectCode": "E-SIM-BYPASS",
+   "fixture": "tests/accept/bypass/decl_guard-04.txt",
+   "group": "rules",
+   "origin": "卷二十 §4.7.6 :898 正例：离屏结算函数调 foldBubbleFields（经它写 fieldCells）计 E-SIM-BYPASS",
+   "polarity": "must_fail",
+   "scanClass": "decl_guard"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "decl_guard-11",
+   "fixture": "tests/accept/bypass/decl_guard-11.txt",
+   "group": "rules",
+   "origin": "卷十七 S17-1 :324 反例：通用维度写者写别的维度（durability），裸变量名 pos 作实参不计",
+   "polarity": "must_pass",
+   "scanClass": "decl_guard"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "decl_guard-12",
+   "fixture": "tests/accept/bypass/decl_guard-12.txt",
+   "group": "rules",
+   "origin": "卷九 R9-2.10、卷二十 §4.7.6 反例：定义 perceiveEvent、foldBubbleFields 的文件自己声明并使用不计",
+   "polarity": "must_pass",
+   "scanClass": "decl_guard"
+  },
+  {
+   "addedAtRev": 1,
    "caseKey": "display_read-01",
    "expectCode": "E-VIEW-DISPLAY-READ",
    "fixture": "tests/accept/bypass/display_read-01.txt",
@@ -993,6 +1051,44 @@
    "fixture": "tests/accept/bypass/module_edge-49.txt",
    "group": "rules",
    "origin": "卷六 §4.21 规则 9：起步价读 valueBase 不计（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 30,
+   "caseKey": "module_edge-50",
+   "expectCode": "E-VIEW-PREDICATE-LOCAL",
+   "fixture": "tests/accept/bypass/module_edge-50.txt",
+   "group": "rules",
+   "origin": "卷五 S5-5 :404 正例：本地读 suppressesAwake 族字段自己判清醒（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 30,
+   "caseKey": "module_edge-51",
+   "fixture": "tests/accept/bypass/module_edge-51.txt",
+   "group": "rules",
+   "origin": "卷五 S5-5 :404 反例：别处只调 awake 谓词；谓词提供文件 action-capacity.mjs（取自 sys.capacity.predicates）读 awakeMin 不计（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 30,
+   "caseKey": "module_edge-52",
+   "expectCode": "E-ENV-BYPASS",
+   "fixture": "tests/accept/bypass/module_edge-52.txt",
+   "group": "rules",
+   "origin": "卷二十 T-4 :478 正例：规则层直接读 rules.weather（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "module_edge"
+  },
+  {
+   "addedAtRev": 30,
+   "caseKey": "module_edge-53",
+   "fixture": "tests/accept/bypass/module_edge-53.txt",
+   "group": "rules",
+   "origin": "卷二十 T-4 :478 反例：读状态里的 weather 键不是读规则表 rules.weather（必须不报）",
    "polarity": "must_pass",
    "scanClass": "module_edge"
   },

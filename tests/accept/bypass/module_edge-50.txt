@@ -1,0 +1,1 @@
+export const isAsleep = (family) => family.suppressesAwake === true;

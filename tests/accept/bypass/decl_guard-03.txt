@@ -1,0 +1,2 @@
+import { perceiveEvent } from '../kernel/place.mjs';
+export const witnesses = (engine, state, ev) => perceiveEvent(engine, state, ev);

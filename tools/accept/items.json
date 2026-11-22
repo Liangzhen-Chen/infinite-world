@@ -2455,6 +2455,50 @@
    "zeroRows": []
   },
   {
+   "detector": "decl_guard",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/decl_guard.mjs",
+   "itemKey": "vol17.S17-1",
+   "localNo": "S17-1",
+   "method": "static_code",
+   "params": {
+    "access": "dimWrite",
+    "code": "E-POS-WRITER",
+    "entries": [
+     "kernel/dimension-writers.mjs#createItemInstance",
+     "kernel/dimension-writers.mjs#writeItemDeviation",
+     "kernel/dimension-writers.mjs#writePersonRow"
+    ],
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "gate",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "paths": [
+     "facing",
+     "pos"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "decl_guard",
+   "source": "卷十七 S17-1 :324（position.mjs 之外对个体 pos、facing 路径的写入计数为 0）、S17-4 :327（除经 placeSubject 外不存在让个体换位置的写路径；一条守两句）；:288 声明写者 position.mjs；G12–G16 对照表 #1、复核 1123 M7。守写入点，不钉 placeSubject 调用方闭集（卷十七 :288 列的合法调用方跨六卷，卷文没有 S5-9 那种调用链为 0 的原句）。decl_guard dimWrite：通用维度写者的调用实参里出现 pos、facing（字串、键名、成员名、折成该字串的 const）即计，所在文件是该维度声明写者（stateKeys.*.writers 里最后一段恰为该代号的模式所登记的文件）的不计。现声明表没有 pos、facing 写者，现闭集为空、现仓库计数 0；收紧时点：G12 落 position.mjs 时在 state-owners 登 created.*.props.pos、created.*.props.facing 的声明写者（格式照卷二 1120k4③ sys.facility_type 先例），判据自动收紧、不必改本条目。局限：writePath 经 P 句柄写由 vol1.V-3、vol2.S5 按声明表守；解构别名、动态拼维度代号追不到；先建好对象变量（const spec = { id, pos: at }）再传给 writePersonRow 的写法漏报（只看调用实参内联出现的代号），由运行期 E-VIEW-UNDECLARED-WRITE 兜底。",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol17",
+   "zeroRows": []
+  },
+  {
    "detector": "path_access",
    "expect": "zero",
    "form": "scan",
@@ -3257,6 +3301,121 @@
    "zeroRows": []
   },
   {
+   "detector": "decl_guard",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/decl_guard.mjs",
+   "itemKey": "vol20.S20-4.7.6",
+   "localNo": "S20-4.7.6",
+   "method": "static_code",
+   "params": {
+    "access": "importName",
+    "code": "E-VIEW-BYPASS",
+    "paths": [
+     "fieldCells",
+     "fields"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "decl_guard",
+   "source": "卷二十 §4.7.6 :898（场步进与 propagate 的实现不读卷五路网边 edges 节、routeView 与边的开敞比例）、C20-9 :1235；G12–G16 对照表 #58、复核 1123 M8-a。按具名导入判（照 api-callers 的具名导入、命名空间引用、重导出都计）：routeView、pathView 在 place.mjs（:1000、:1051），与场步进必须 import 的 zoneAt（:293）、regionCell（:352）同一个文件，文件级 import 拦不住；类别行 importNames 列 routeView、pathView，importModules 列 route-edges、route-grid（任何导入都计）。范围：声明表 stateKeys 里 fields、fieldCells 的写者文件（卷二十 :458、:459、:829，场步进实现 env-fields.mjs，不点名文件）。不在本条范围：①propagate 的实现文件——卷二十 :914–:921 写 propagate 对状态“写：无”，它不是 fields、fieldCells 的写者，登不进上述范围，除非与 env-fields.mjs 同文件；已定：本条只守场步进半条，propagate 实现文件由 G14/G16 落 propagate 时另给范围来源（给检测器加按声明读者或文件登记取范围的参数）并条目 rev+1，G14 卡验收须写明；理由：卷二十没给 propagate 的文件或登记处，现在选一个来源就是自补。②“边的开敞比例”一支（卷二十 :898 末）：它是数据读取而非导入，不在本条，由场步进卡内测试守。现声明表没有 fields、fieldCells 写者，范围为空、现仓库计数 0；收紧时点：G14 在 state-owners 登 fields.*.*、fieldCells.*.*.*.* 写者 env-fields.mjs 时场步进半条自动生效。用例集不含 must_fail（真声明表里没有写者，无法在夹具里造出范围），正例由 tests/accept/g1216-gates.test.mjs 以声明表覆盖夹具证明真能拦。",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol20",
+   "zeroRows": []
+  },
+  {
+   "detector": "decl_guard",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/decl_guard.mjs",
+   "itemKey": "vol20.S20-fieldCells",
+   "localNo": "S20-fieldCells",
+   "method": "static_code",
+   "params": {
+    "access": "nameUse",
+    "code": "E-SIM-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "gate",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "paths": [
+     "foldBubbleFields"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "decl_guard",
+   "source": "卷二十 §4.7.6 :898（离屏推进路径到 fieldCells.* 写入的调用链为 0）、:881、:459；C20-9 :1235；卷二十七 R27-3.14 第 5 项；G12–G16 对照表 #58。vol5.S5-9 的兄弟条目：env-fields.mjs 写 fieldCells 的入口 foldBubbleFields（卷二十 :1105 写入口）的调用点是闭集，离屏批量、统计形态结算函数不得进闭集。现 foldBubbleFields 未建、kernelApi 无其行：nameUse 判法同 vol9.R9-2.10，现计数 0；收紧时点：G14 落 env-fields.mjs 时登 kernelApi 行并写 callerFiles（展开落格等泡内调用者各自落地时补），并把场步进入口名（卷文只写步进、未给函数名）加进 params.paths，条目 rev+1。fieldCells.* 写者只有 env-fields.mjs 的声明由 vol1.V-3 按声明表守。",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol20",
+   "zeroRows": []
+  },
+  {
+   "detector": "path_access",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/path_access.mjs",
+   "itemKey": "vol20.T-4",
+   "localNo": "T-4",
+   "method": "static_code",
+   "params": {
+    "access": "read",
+    "code": "E-ENV-BYPASS",
+    "groups": [
+     "rules",
+     "textcore",
+     "inputEdge",
+     "gate",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "paths": [
+     "rules.agroclock",
+     "rules.astro",
+     "rules.calendar",
+     "rules.climate",
+     "rules.clock",
+     "rules.env",
+     "rules.fields",
+     "rules.light",
+     "rules.season",
+     "rules.sound",
+     "rules.water",
+     "rules.weather"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "module_edge",
+   "source": "卷二十 T-4 :478（§2.1、§2.2、§2.9 的全部规则表 rules.clock astro weather climate water fields light sound season calendar agroclock env 在 state-owners.json 登记读者，读者表之外读取即命中）、错误码 E-ENV-BYPASS :1452；G12–G16 对照表 #64、复核 1123 ④。写法照 vol27.S27-11.a 与 vol2.K5-24：范围取 kernel 以外的全部服务端组，kernel 目录整体不在范围内（规则表在 kernel 内由内核实现读，不点名文件）；按 rules.<表> 成员链认（根标识符之后的段），状态里同名键（state.clock、state.weather）不是规则表，不计。现声明表没有规则表读者登记，近似为 kernel 以外读规则表计数 0；收紧时点：env 系统落地、读者登进 state-owners 后，把读者派生并入本条目（rev+1）。局限：成员链不含根，根变量本身就叫 rules（const rules = engine.rules; rules.weather）的写法追不到；解构规则根（const { weather } = engine.rules）与把规则根赋给别的变量（const r = engine.rules; r.weather）同样漏报；规则表经字串下标 rules['weather'] 取的计入。未覆盖：envAt 的 import 矩阵一支（现无 envAt、kernelApi 无其行），随 envAt 落地卡登 kernelApi 行后把 envAt 并入 vol20.S20-fieldCells 同类的 nameUse 条目；T-10 随 log10 实现同卡登。",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol20",
+   "zeroRows": []
+  },
+  {
    "expect": "all_pass",
    "form": "invariant",
    "gates": [
@@ -3678,6 +3837,51 @@
    "runsOn": "local_static",
    "scanClass": "geometry_bypass",
    "source": "卷五 §3.5 S5-10 :408（几何只有一处：本卷入口文件之外自算两点直线距离、方位角、视线、\"位置在哪个地点\"的实现计数为 0，一律经 straightM、bearingView、losView、zoneAt；grid-diff.mjs 之外写 cells.* 的调用点计数为 0；唯一的寻路例外卷十七 tripPlan 按自己的耗时度量在格上求路，卷十七 R17-1.7 :373、C17-15 ⑤）。本条目守几何一半：查全局几何原语 Math.hypot/Math.atan2/Math.sqrt 与 det-math 定点几何 fixedSqrtInt、atan（均 kernel/det-math.mjs 导出，全仓唯一开方与方位角定点实现）在 kernel 以外服务端组的调用计数为 0——规则层用定点函数自算距离/方位同算违例（入口文件 straightM/bearingView/losView/zoneAt 与几何原语均在 kernel 组，由 state-owners.json 组登记派生、不点名文件，同 vol2.K5-24 口径）；入口闭集现按 kernel 组近似，收紧时点：straightM、bearingView、losView、zoneAt 登进 kernelApi 后改为按 kernelApi 逐名派生（G3 落 zoneAt 时）。cells.* 写者登记（grid-diff.mjs，只经 alterCells，卷五 §3.3 :362）尚未落：gridKey 类代码未落（G6/G7 前，G1-Opus只核-1121），grid-diff.mjs 未建、cells 尚无合法写点，本条目不另立 cells 写者条目；直接 state.cells 写由 cross_write vol1.V-3 的 E-VIEW-BYPASS 兜底，writePath(P.cells)/alterCells 半截待 cells 写者登记落地（随 gridKey 落地那张卡）由 cross_write vol1.V-3 守。tripPlan 例外不是豁免：tripPlan 若需欧氏估价须经入口、不开白名单，它按耗时度量求路本就不经这些原语。局限：x*x+y*y 比较（不开方）、**0.5、const {sqrt}=Math 解构等词法写法查不到（call_edge 头注释已声明）。",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol5",
+   "zeroRows": []
+  },
+  {
+   "detector": "path_access",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/path_access.mjs",
+   "itemKey": "vol5.S5-5",
+   "localNo": "S5-5",
+   "method": "static_code",
+   "params": {
+    "access": "read",
+    "code": "E-VIEW-PREDICATE-LOCAL",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "gate",
+     "outputGate",
+     "aiGate",
+     "assembly",
+     "host",
+     "display",
+     "clientTextcore"
+    ],
+    "paths": [
+     "awakeMin",
+     "suppressesAwake"
+    ],
+    "readerPredicates": [
+     "sys.capacity"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "module_edge",
+   "source": "卷五 S5-5 :404（本地实现的清醒、在场、睡眠判断计数为 0，卷二 §2.5 的 E-VIEW-PREDICATE-LOCAL）、:581、A5-2.1 :619；G12–G16 对照表 #30。照 vol2.K6-24 先例：awake 谓词的两个输入——状态族字段 suppressesAwake 与规则键 awakeMin（卷二 §2.5 :510、action-capacity.mjs）——读者只有提供 awake 谓词的文件（readerPredicates 取 sys.capacity 登记，不点名文件）；范围取全部服务端与客户端组，含 perceive、perceiveEvent 所在文件；成员链、字串下标与对象解构均计。局限：读 body.consciousness 维度本身、'在场'无专用谓词、按活动文字正则判睡眠，不在本条目（由卡内测试与文字判断类门禁守）。",
    "stage": 0,
    "state": "implemented",
    "target": "runtime_code",
@@ -4208,6 +4412,44 @@
    "zeroRows": [
     "5.1"
    ]
+  },
+  {
+   "detector": "decl_guard",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/decl_guard.mjs",
+   "itemKey": "vol9.R9-2.10",
+   "localNo": "R9-2.10",
+   "method": "static_code",
+   "params": {
+    "access": "nameUse",
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "gate",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "paths": [
+     "perceiveEvent"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "decl_guard",
+   "source": "卷九 R9-2.10 :670（emit 适配器在事务内调一次卷五 perceiveEvent；目击名单只此一处求，别的原语与别卷不为同一事件另调 perceive、perceiveEvent）、卷五 §4.2 规则 9 :592–:593；G12–G16 对照表 #31。现 perceiveEvent 未建、kernelApi 无其行：nameUse 判法——定义该名的文件之外，任何文件具名导入、重导出或命名空间引用它即计，现仓库计数 0；收紧时点：G13 落 perceiveEvent 时在 state-owners kernelApi 登其行并写 callerFiles＝emit 适配器文件（同 vol5.S5-9 先例），此后本条目对它交 api-callers 按登记判，不必改本条目。perceive 的调用方不在本条目（perceive 由 vol5.S5-10 与卡内测试守）。局限：经第三个模块转手再导出的靠转手文件自己受同一核对。",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol9",
+   "zeroRows": []
   }
  ]
 }

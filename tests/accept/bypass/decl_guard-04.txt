@@ -1,0 +1,2 @@
+import { foldBubbleFields } from '../env-fields.mjs';
+export const settleOffscreen = (engine, state, cells) => foldBubbleFields(engine, state, cells);

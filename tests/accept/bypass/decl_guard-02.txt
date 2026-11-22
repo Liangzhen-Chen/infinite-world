@@ -1,0 +1,3 @@
+import * as W from '../kernel/dimension-writers.mjs';
+const FACING = 'facing';
+export const turn = (engine, state, id, dir) => W.writeItemDeviation(engine, state, id, FACING, dir);

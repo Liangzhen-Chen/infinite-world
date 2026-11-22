@@ -45,6 +45,21 @@
   },
   {
    "detectors": [
+    "decl_guard"
+   ],
+   "importModules": [
+    "route-edges",
+    "route-grid"
+   ],
+   "importNames": [
+    "pathView",
+    "routeView"
+   ],
+   "scanClass": "decl_guard",
+   "source": "卷十七 S17-1/S17-4 :324/:327、卷九 R9-2.10 :670、卷二十 §4.7.6 :898；守护对象（写者文件、调用方）取自 state-owners.json 的声明，不点名文件；importNames、importModules 是卷二十 §4.7.6 禁止场步进实现读的卷五路网边入口（routeView、pathView 在 place.mjs，route-edges、route-grid 两个模块）；卷十二 §2.4 开放登记；格子迁移 G12–G16 开写前门禁"
+  },
+  {
+   "detectors": [
     "path_access"
    ],
    "scanClass": "display_read",

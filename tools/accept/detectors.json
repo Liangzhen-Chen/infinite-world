@@ -13,6 +13,10 @@
    "source": "卷十二 §2.3"
   },
   {
+   "detectorCode": "decl_guard",
+   "source": "卷十七 S17-1、S17-4；卷九 R9-2.10；卷二十 §4.7.6、C20-9；卷十二 §2.4 开放登记；格子迁移 G12–G16 开写前门禁（docs/迁移体检/格子G12-G16-规矩检查对照.md #1、#31、#58）。模块 tools/accept/detectors/decl_guard.mjs"
+  },
+  {
    "detectorCode": "doc_candidate",
    "source": "卷十二 §2.3"
   },

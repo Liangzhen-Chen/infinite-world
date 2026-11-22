@@ -1,0 +1,3 @@
+export function foldBubbleFields(engine, state, cells) { return cells.length; }
+export const step = (engine, state) => foldBubbleFields(engine, state, []);
+export function perceiveEvent(engine, state, ev) { return ev.witnesses; }
