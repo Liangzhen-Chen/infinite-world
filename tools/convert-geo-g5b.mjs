@@ -267,6 +267,7 @@ export function convertGeo(geoDir, opts = {}) {
   const waterEnds = new Set(routes.filter(isWater).flatMap((r) => [newId(r.from), newId(r.to)]));
 
   const oldOf = new Map();
+  const locByNew = new Map(locations.map((o) => [newId(o.id), o]));
   for (const o of locations) {
     oldOf.set(newId(o.id), o);
     // 父：旧 parent；旧 parent 为空者挂所属郡；county.places 点名所属郡的地点以郡为父（旧 parent 与所属郡冲突的 6 处，见回报）。
@@ -292,6 +293,22 @@ export function convertGeo(geoDir, opts = {}) {
       row.classes = [COMP.facility];
       if (formOf.has(id)) row.form = formOf.get(id);
       if (intendedOf.has(id)) row.intendedType = intendedOf.get(id);
+      // 父行是建筑行的建筑（住区建筑下的家户，李白 11-22 回 1122-1125 取③）：落位只排站点下直挂的建筑（gen/siteform.mjs），建筑下的建筑没人排；
+      // 同一条规则（不按 id）：沿旧父链往上改挂到第一个非建筑行，原父写进作者字段 originSite（复用 1123k32 字段，不新增维度）。住区行自身仍是建筑行，不改站点
+      // （同营地窟棚相距数米而区格 100 m，种子同格、足迹排不出，试做已回退）。卷五 §4.1 规则 3 与卷十没写"建筑下的建筑"，缺口见 docs/问题.md。
+      if (buildingSource.has(parent) && row.originSite === undefined) {
+        let up = parent;
+        for (let guard = 0; buildingSource.has(up); guard += 1) {
+          const po = locByNew.get(up);
+          if (po === undefined || guard > 16) throw new Error(`convert-geo: building ${id} has a building ancestor chain that does not reach a non-building row (at ${up})`);
+          const pc = countyOfPlace.get(po.id);
+          up = pc !== undefined ? newId(pc) : po.parent !== null ? newId(po.parent) : (() => { throw new Error(`convert-geo: ${po.id} has neither parent nor county`); })();
+        }
+        row.originSite = parent;
+        row.parent = up;
+        parent = up;
+        row.basis += `；父行是建筑行 ${row.originSite}，落位只排站点下直挂的建筑，改挂到沿旧父链第一个非建筑行 ${up}，原父记 originSite`;
+      }
     } else {
       const t = terrainOf(o.terrain, o.id);
       row.basis = `旧 world/geo/locations.json（旧 id ${o.id}）；terrain 取旧文本"${t.from}"的主地形（migrated-from-text 候选，待人工核对）；coord 取旧 coordinates（千米折米）`;

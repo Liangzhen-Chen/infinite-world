@@ -28,12 +28,13 @@
    "key": "bldfillRows",
    "value": [
     {"whenRX": "known(form)", "priority": 1, "areaM2": {"dist": "uniform", "min": 16, "max": 64}, "storeys": {"dist": "uniform", "min": 1, "max": 3}},
-    {"whenRX": "form == bldform_shrine", "priority": 2, "areaM2": {"dist": "uniform", "min": 2, "max": 20}, "storeys": {"dist": "uniform", "min": 1, "max": 2}}
+    {"whenRX": "form == bldform_shrine", "priority": 2, "areaM2": {"dist": "uniform", "min": 2, "max": 20}, "storeys": {"dist": "uniform", "min": 1, "max": 2}},
+    {"whenRX": "form == bldform_open_yard", "priority": 2, "areaM2": {"dist": "uniform", "min": 16, "max": 64}, "storeys": {"dist": "uniform", "min": 1, "max": 2}}
    ],
    "file": "server-plugin/kernel/gen/siteform.mjs",
    "grade": "designed",
    "source": "生成规则（卷十 §2.3 :186 rules.gen.bldfill.rows 的 whenRX、priority、areaM2、storeys 四字段；R10-7.12 手写建筑行缺维度的补缺）",
-   "basis": "暂定·待试玩标定，出处写“生成规则”，不是设定原文；卷十九 :601 手算示例的数值是示意数据，不当设定出处、不作本行取值依据。取值范围的量级推算：一户一栋的民居外包面积 16–64 m2、一至二层（均匀分布 [1, 3) 取整即 1、2），推算依据：细格 1 m（拍板第 1 条）下一间房 3–6 m 见方量级。whenRX 现只能读本行维度：卷十 R10-7.12 要读的 intendedType 还不是 place 表登记的维度（卷十九建行卡登记后再按意图类型分行）、形制数值字段读入口待卷二登记命名空间，所以本行只用 known(form)（建筑行 form 必填，卷十九 §2.1）取全部手写建筑行；标定时按意图类型加行，代码不改。前置卡 D 加第二行（priority 2，whenRX 读本行 form 代号：设施类型现在是维度表的行，RX 的名字只认词表代号，写不出 intendedType == fac_shrine，所以按形制 bldform_shrine 分行）：小龛小堂，面积取设定模板 building:shrine 的占地范围 [2, 20] m2（docs/世界设计/13-建筑、聚落形态与服饰器物.md:109 footprintM2；均匀分布，卷十 R10-7.12 补缺取其中一值），层数均匀分布 [1, 2) 取整即 1（小龛一层，设定无多层）。原因：通用行 16–64 m2 超过 bldform_shrine 的外包上限 planSideMaxCells 5（20 m2，卷十九 §2.4 勘误 1121k21），小形制不能走通用行（走了即 E-GEN-ROW-INVALID，不截断）；形制补缺改按适用设施类型挑后（勘误 1123k52），任何行取到 bldform_shrine（作者写的或补缺取的）都走本行"
+   "basis": "暂定·待试玩标定，出处写“生成规则”，不是设定原文；卷十九 :601 手算示例的数值是示意数据，不当设定出处、不作本行取值依据。取值范围的量级推算：一户一栋的民居外包面积 16–64 m2、一至二层（均匀分布 [1, 3) 取整即 1、2），推算依据：细格 1 m（拍板第 1 条）下一间房 3–6 m 见方量级。whenRX 现只能读本行维度：卷十 R10-7.12 要读的 intendedType 还不是 place 表登记的维度（卷十九建行卡登记后再按意图类型分行）、形制数值字段读入口待卷二登记命名空间，所以本行只用 known(form)（建筑行 form 必填，卷十九 §2.1）取全部手写建筑行；标定时按意图类型加行，代码不改。前置卡 D 加第二行（priority 2，whenRX 读本行 form 代号：设施类型现在是维度表的行，RX 的名字只认词表代号，写不出 intendedType == fac_shrine，所以按形制 bldform_shrine 分行）：小龛小堂，面积取设定模板 building:shrine 的占地范围 [2, 20] m2（docs/世界设计/13-建筑、聚落形态与服饰器物.md:109 footprintM2；均匀分布，卷十 R10-7.12 补缺取其中一值），层数均匀分布 [1, 2) 取整即 1（小龛一层，设定无多层）。原因：通用行 16–64 m2 超过 bldform_shrine 的外包上限 planSideMaxCells 5（20 m2，卷十九 §2.4 勘误 1121k21），小形制不能走通用行（走了即 E-GEN-ROW-INVALID，不截断）；形制补缺改按适用设施类型挑后（勘误 1123k52），任何行取到 bldform_shrine（作者写的或补缺取的）都走本行。第三行（priority 2，续做 11-24，露天场形制 bldform_open_yard）：无墙无顶的露天场只有一层，层数取 [1, 2) 即 1，面积沿用通用行 16–64 m2（折外包 8×8，在 planSideMaxCells 18 内）；面积范围无设定出处，暂定·待试玩标定"
   },
   {
    "key": "roleTract",

@@ -43,7 +43,7 @@ function load({ rows, spaces } = {}) {
     v.families.water.entries = { ...v.families.water.entries, water_test_fresh: { navigable: false, flowing: false } }; // 保留真实条目：规则表 worldgen 的 waterRows 引用 water_river
     v.families.cellclass.entries = CELLCLASS;
     v.families.gentemplate.entries = TEMPLATE;
-    v.families.bform.entries = { bldform_hut: { ...FORM, facilityTypes: ['fac_house'] }, bldform_shrine: v.families.bform.entries.bldform_shrine }; // 只为"体积挂在建筑行之下"那个反例有一栋合法的建筑行
+    v.families.bform.entries = { bldform_hut: { ...FORM, facilityTypes: ['fac_house'] }, bldform_shrine: v.families.bform.entries.bldform_shrine, bldform_open_yard: v.families.bform.entries.bldform_open_yard }; // 只为"体积挂在建筑行之下"那个反例有一栋合法的建筑行
     writeUnderTempRoot(tmp, '_vocab.json', JSON.stringify(v));
     return loadWorld(ROOT, { dimensionsDir: relative(ROOT, tmp) });
   } finally { rmSync(tmp, { recursive: true, force: true }); }

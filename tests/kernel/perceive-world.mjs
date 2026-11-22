@@ -76,7 +76,7 @@ function load(rows, spaces) {
     v.families.water.entries = { ...v.families.water.entries, water_test_fresh: { navigable: false } };
     v.families.cellclass.entries = CELLCLASS;
     v.families.gentemplate.entries = TEMPLATE;
-    v.families.bform.entries = { bldform_hut: { ...FORM, facilityTypes: ['fac_house'] }, bldform_shrine: v.families.bform.entries.bldform_shrine };
+    v.families.bform.entries = { bldform_hut: { ...FORM, facilityTypes: ['fac_house'] }, bldform_shrine: v.families.bform.entries.bldform_shrine, bldform_open_yard: v.families.bform.entries.bldform_open_yard };
     v.families.roomrole.entries = {};
     for (const id of ['bpart_torso', 'bpart_head']) v.families.body_part.entries[id] = {};
     Object.assign(v.families.tissue.entries, { tissue_flesh: { depthOrder: 2, reserve: false }, tissue_bone: { depthOrder: 3, reserve: false } });

@@ -49,7 +49,7 @@ function load({ rows, edges = [], spaces, forms = FORMS(), mutateRules } = {}) {
     v.families.water.entries = { ...v.families.water.entries, water_test_fresh: { navigable: false } };
     v.families.cellclass.entries = CELLCLASS;
     v.families.gentemplate.entries = TEMPLATE;
-    v.families.bform.entries = { ...forms, bldform_shrine: v.families.bform.entries.bldform_shrine }; // 真实 bldfill 规则行读 bldform_shrine，要在族里
+    v.families.bform.entries = { ...forms, bldform_shrine: v.families.bform.entries.bldform_shrine, bldform_open_yard: v.families.bform.entries.bldform_open_yard }; // 真实 bldfill 规则行读 bldform_shrine，要在族里
     v.families.roomrole.entries = ROLES;
     writeUnderTempRoot(tmp, '_vocab.json', JSON.stringify(v));
     return loadWorld(ROOT, { dimensionsDir: relative(ROOT, tmp) });

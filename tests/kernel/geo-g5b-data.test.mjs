@@ -112,7 +112,12 @@ test('子站点改挂（G5b-D）：转换后的地点行 parent 是新挂处（�
     assert.equal(out.rows[id].parent, s.parent, id);
     assert.equal(out.rows[id].originSite, s.originSite, id);
   }
-  assert.equal(Object.values(out.rows).filter((r) => r.originSite !== undefined).length, Object.keys(SUBSITES).length); // 清单之外没有 originSite
+  // 清单之外没有 originSite——除了"父行是建筑行的建筑"那一条规则的产出（住区下的家户改挂营地站点，原父住区记 originSite，tests/kernel/building-types.test.mjs 逐栋核）：
+  // 那些行的 originSite 指向的是建筑行；清单里的子站点行本身不是建筑行。
+  const isBuilding = (r) => (r.classes ?? []).includes('comp_facility');
+  const withOrigin = Object.entries(out.rows).filter(([, r]) => r.originSite !== undefined);
+  assert.equal(withOrigin.filter(([, r]) => !isBuilding(r)).length, Object.keys(SUBSITES).length);
+  for (const [id, r] of withOrigin.filter(([, r]) => isBuilding(r))) assert.equal(isBuilding(out.rows[r.originSite] ?? {}), true, `${id}: a building's originSite is the building row it hung under`);
 });
 
 test('子站点改挂（G5b-D）：逐行核——每行的种子区格落在新挂处的足迹里（新挂处在该格最深拥有者的祖先链上），且不在原父站点的足迹里（所以才改挂）', () => {

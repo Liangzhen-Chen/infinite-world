@@ -1,7 +1,7 @@
 {
  "version": 1,
  "scope": "world_root",
- "note": "转换输入（与 start-buildings.json 同类）：旧数据里 settlements.json 的 buildingIds 与 start-buildings.json 都没有列、但按旧数据本身的字段读是建筑的地点行，逐行写出依据，供 tools/convert-geo.mjs 挂 comp_facility（卷五 §4.1 规则 2：足迹种类只按组件类判）。人工核对清单：这几行没有任何清单出处，挂不挂建筑类须人工核对（卷五 M5-31 :1413 离线派生后人工核对一遍）；不挂则它们留作区域足迹行，同父同区格的种子会被加载器拒收（E-GRID-SEED-SAME-CELL）。不按 id 前缀、不按名字推，每行单独列出。另：本表也登记 start-buildings.json 以外全部建筑行的设施类型 intendedType（作者数据，source 作者，intendedBasis 写依据；转换脚本读 intendedType 字串）；前面几行的 basis 说的是挂建筑类的依据；没有 intendedType 的建筑是设施类型表 10 类里找不到合适项的，清单见 docs/问题.md“待李白：设施类型对不上的建筑”。",
+ "note": "转换输入（与 start-buildings.json 同类）：旧数据里 settlements.json 的 buildingIds 与 start-buildings.json 都没有列、但按旧数据本身的字段读是建筑的地点行，逐行写出依据，供 tools/convert-geo.mjs 挂 comp_facility（卷五 §4.1 规则 2：足迹种类只按组件类判）。人工核对清单：这几行没有任何清单出处，挂不挂建筑类须人工核对（卷五 M5-31 :1413 离线派生后人工核对一遍）；不挂则它们留作区域足迹行，同父同区格的种子会被加载器拒收（E-GRID-SEED-SAME-CELL）。不按 id 前缀、不按名字推，每行单独列出。另：本表也登记 start-buildings.json 以外全部建筑行的设施类型 intendedType（作者数据，source 作者，intendedBasis 写依据；转换脚本读 intendedType 字串）；前面几行的 basis 说的是挂建筑类的依据；原先对不上的 70 栋已由李白 11-24 裁定（S6-2）归类，去向见 docs/问题.md“已裁（11-24 S6-2）：设施类型对不上的建筑”。",
  "rows": [
   {
    "id": "bld_bs_measured_hall",
@@ -26,11 +26,17 @@
   },
   {
    "id": "bld_hc_citywall",
-   "basis": "locations.json 该行有 rooms（空表）、purpose（环绕旧仓城的公共防护城墙）、owner（环城郡署），父为 loc_far_huancheng，与同父的城门同一区格（旧坐标 250 km、12 km）；settlements.json buildingIds、start-buildings.json 都未列。按旧字段读是郡署的公共设施（城墙）"
+   "basis": "locations.json 该行有 rooms（空表）、purpose（环绕旧仓城的公共防护城墙）、owner（环城郡署），父为 loc_far_huancheng，与同父的城门同一区格（旧坐标 250 km、12 km）；settlements.json buildingIds、start-buildings.json 都未列。按旧字段读是郡署的公共设施（城墙）",
+   "intendedType": "fac_open_ground",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：其余对不上的先按最近的现有类型归；环绕旧仓城的公共城墙与石城门是露天的公共防护设施（最近归，待李白核；13-建筑 :111 有关卡/门楼形制 building:gatehouse，不是设施类型）；依据：world/geo/locations.json:31203、31218"
   },
   {
    "id": "bld_hc_stone_gate",
-   "basis": "locations.json 该行有 rooms（空表）、purpose（环城公共城墙的现役石砌门体）、owner（环城郡署），父为 loc_far_huancheng；settlements.json buildingIds、start-buildings.json 都未列。按旧字段读是郡署的公共设施（城门）"
+   "basis": "locations.json 该行有 rooms（空表）、purpose（环城公共城墙的现役石砌门体）、owner（环城郡署），父为 loc_far_huancheng；settlements.json buildingIds、start-buildings.json 都未列。按旧字段读是郡署的公共设施（城门）",
+   "intendedType": "fac_open_ground",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：其余对不上的先按最近的现有类型归；环绕旧仓城的公共城墙与石城门是露天的公共防护设施（最近归，待李白核；13-建筑 :111 有关卡/门楼形制 building:gatehouse，不是设施类型）；依据：world/geo/locations.json:31245、31260"
   },
   {
    "id": "bld_yp_hall",
@@ -1549,6 +1555,414 @@
    "intendedType": "fac_house",
    "source": "作者",
    "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:24495、24510"
+  },
+  {
+   "id": "site_ms_tj_yan",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：住区归私宅；旧用途“住区”，是几户或一族合住的洞窟、棚区、窝居；依据：world/geo/locations.json:20749、20764"
+  },
+  {
+   "id": "site_ms_tj_ding",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：住区归私宅；旧用途“住区”，是几户或一族合住的洞窟、棚区、窝居；依据：world/geo/locations.json:20783、20798"
+  },
+  {
+   "id": "site_ms_tj_li",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：住区归私宅；旧用途“住区”，是几户或一族合住的洞窟、棚区、窝居；依据：world/geo/locations.json:20817、20832"
+  },
+  {
+   "id": "site_ms_td_tai",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：住区归私宅；旧用途“住区”，是几户或一族合住的洞窟、棚区、窝居；依据：world/geo/locations.json:21354、21369"
+  },
+  {
+   "id": "site_ms_td_qing",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：住区归私宅；旧用途“住区”，是几户或一族合住的洞窟、棚区、窝居；依据：world/geo/locations.json:21388、21403"
+  },
+  {
+   "id": "site_ms_td_li",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：住区归私宅；旧用途“住区”，是几户或一族合住的洞窟、棚区、窝居；依据：world/geo/locations.json:21422、21437"
+  },
+  {
+   "id": "site_ms_yg_crown",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：住区归私宅；旧用途“住区”，是几户或一族合住的洞窟、棚区、窝居；依据：world/geo/locations.json:22004、22019"
+  },
+  {
+   "id": "site_ms_yg_stone",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：住区归私宅；旧用途“住区”，是几户或一族合住的洞窟、棚区、窝居；依据：world/geo/locations.json:22038、22053"
+  },
+  {
+   "id": "site_ms_yg_sett",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：住区归私宅；旧用途“住区”，是几户或一族合住的洞窟、棚区、窝居；依据：world/geo/locations.json:22072、22087"
+  },
+  {
+   "id": "site_ms_ll_tents",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：住区归私宅；旧用途“住区”，是几户或一族合住的洞窟、棚区、窝居；依据：world/geo/locations.json:22652、22667"
+  },
+  {
+   "id": "site_ms_ll_huts",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：住区归私宅；旧用途“住区”，是几户或一族合住的洞窟、棚区、窝居；依据：world/geo/locations.json:22686、22701"
+  },
+  {
+   "id": "site_ms_ll_rocks",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：住区归私宅；旧用途“住区”，是几户或一族合住的洞窟、棚区、窝居；依据：world/geo/locations.json:22720、22735"
+  },
+  {
+   "id": "site_ms_hx_water",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：住区归私宅；旧用途“住区”，是几户或一族合住的洞窟、棚区、窝居；依据：world/geo/locations.json:23647、23662"
+  },
+  {
+   "id": "site_ms_hx_land",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：住区归私宅；旧用途“住区”，是几户或一族合住的洞窟、棚区、窝居；依据：world/geo/locations.json:23681、23696"
+  },
+  {
+   "id": "site_ms_gs_tents",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：住区归私宅；旧用途“住区”，是几户或一族合住的洞窟、棚区、窝居；依据：world/geo/locations.json:24096、24111"
+  },
+  {
+   "id": "site_ms_gs_carts",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：住区归私宅；旧用途“住区”，是几户或一族合住的洞窟、棚区、窝居；依据：world/geo/locations.json:24130、24145"
+  },
+  {
+   "id": "bld_bs_hall",
+   "intendedType": "fac_office",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：“议事处”7 栋与已算官署的议事屋并成一类，都归官署，不新登；旧用途为议事（议事区、街区公议）；依据：world/geo/locations.json:14147、14161"
+  },
+  {
+   "id": "site_ms_tj_council",
+   "intendedType": "fac_office",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：“议事处”7 栋与已算官署的议事屋并成一类，都归官署，不新登；旧用途为议事（议事区、街区公议）；依据：world/geo/locations.json:20974、20989"
+  },
+  {
+   "id": "site_ms_td_council",
+   "intendedType": "fac_office",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：“议事处”7 栋与已算官署的议事屋并成一类，都归官署，不新登；旧用途为议事（议事区、街区公议）；依据：world/geo/locations.json:21579、21594"
+  },
+  {
+   "id": "site_ms_yg_council",
+   "intendedType": "fac_office",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：“议事处”7 栋与已算官署的议事屋并成一类，都归官署，不新登；旧用途为议事（议事区、街区公议）；依据：world/geo/locations.json:22229、22244"
+  },
+  {
+   "id": "site_ms_ll_council",
+   "intendedType": "fac_office",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：“议事处”7 栋与已算官署的议事屋并成一类，都归官署，不新登；旧用途为议事（议事区、街区公议）；依据：world/geo/locations.json:22877、22892"
+  },
+  {
+   "id": "site_ms_hx_council",
+   "intendedType": "fac_office",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：“议事处”7 栋与已算官署的议事屋并成一类，都归官署，不新登；旧用途为议事（议事区、街区公议）；依据：world/geo/locations.json:23715、23730"
+  },
+  {
+   "id": "site_ms_gs_council",
+   "intendedType": "fac_office",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：“议事处”7 栋与已算官署的议事屋并成一类，都归官署，不新登；旧用途为议事（议事区、街区公议）；依据：world/geo/locations.json:24164、24179"
+  },
+  {
+   "id": "bld_bs_watch",
+   "intendedType": "fac_office",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：镇巡值房并入官署；旧用途“巡更交接”，是镇上办理报失、值守交接的公事处所；依据：world/geo/locations.json:14113、14127"
+  },
+  {
+   "id": "bld_bs_weigh",
+   "intendedType": "fac_office",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：验秤房并入官署；旧用途“货重核对”，是公秤核对货重的公事处所；依据：world/geo/locations.json:13973、13987"
+  },
+  {
+   "id": "bld_bs_boat",
+   "intendedType": "fac_office",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：其余对不上的先按最近的现有类型归；旧用途“船户约期”，是船户约定船期、登记联络的会屋，与官署办事处所最近（最近归，待李白核）；依据：world/geo/locations.json:13945、13959"
+  },
+  {
+   "id": "bld_bs_guild",
+   "intendedType": "fac_office",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：其余对不上的先按最近的现有类型归；旧用途“货单与担保联络”，是行会办理货单与担保登记的联络处，与官署办事处所最近（最近归，待李白核）；依据：world/geo/locations.json:14057、14071"
+  },
+  {
+   "id": "site_ms_ll_forge",
+   "intendedType": "fac_forge",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：带铁工的共炉并入铁匠铺；旧描述各族的饭和铁都在这口石砌大炉上做，有铁工；依据：world/geo/locations.json:22516、22531"
+  },
+  {
+   "id": "bld_yp_kitchen",
+   "intendedType": "fac_common_kitchen",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登共用灶房；旧用途为轮用灶间或共灶、不留宿不收费供餐；依据：world/geo/locations.json:3941、3956"
+  },
+  {
+   "id": "bld_wt_kitchen",
+   "intendedType": "fac_common_kitchen",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登共用灶房；旧用途为轮用灶间或共灶、不留宿不收费供餐；依据：world/geo/locations.json:6471、6486"
+  },
+  {
+   "id": "bld_lq_kitchen",
+   "intendedType": "fac_common_kitchen",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登共用灶房；旧用途为轮用灶间或共灶、不留宿不收费供餐；依据：world/geo/locations.json:8943、8958"
+  },
+  {
+   "id": "bld_sb_kitchen",
+   "intendedType": "fac_common_kitchen",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登共用灶房；旧用途为轮用灶间或共灶、不留宿不收费供餐；依据：world/geo/locations.json:11505、11520"
+  },
+  {
+   "id": "site_ms_tj_hearth",
+   "intendedType": "fac_common_kitchen",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登共用灶房；旧用途为轮用灶间或共灶、不留宿不收费供餐；依据：world/geo/locations.json:20613、20628"
+  },
+  {
+   "id": "site_ms_gs_kitchen",
+   "intendedType": "fac_common_kitchen",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登共用灶房；旧用途为轮用灶间或共灶、不留宿不收费供餐；依据：world/geo/locations.json:24028、24043"
+  },
+  {
+   "id": "bld_bs_dock",
+   "intendedType": "fac_trading_post",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登交易点；旧用途为换货、交接、摊售、过秤、约车，或入口换货点；依据：world/geo/locations.json:13917、13931"
+  },
+  {
+   "id": "bld_bs_market",
+   "intendedType": "fac_trading_post",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登交易点；旧用途为换货、交接、摊售、过秤、约车，或入口换货点；依据：world/geo/locations.json:14175、14189"
+  },
+  {
+   "id": "bld_bs_oven",
+   "intendedType": "fac_trading_post",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登交易点；旧用途为换货、交接、摊售、过秤、约车，或入口换货点；依据：world/geo/locations.json:14203、14217"
+  },
+  {
+   "id": "bld_bs_carter",
+   "intendedType": "fac_trading_post",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登交易点；旧用途为换货、交接、摊售、过秤、约车，或入口换货点；依据：world/geo/locations.json:14029、14043"
+  },
+  {
+   "id": "site_ms_gs_scale",
+   "intendedType": "fac_trading_post",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登交易点；旧用途为换货、交接、摊售、过秤、约车，或入口换货点；依据：world/geo/locations.json:23959、23974"
+  },
+  {
+   "id": "site_ms_tj_stair",
+   "intendedType": "fac_trading_post",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登交易点；旧用途为换货、交接、摊售、过秤、约车，或入口换货点；依据：world/geo/locations.json:20579、20594"
+  },
+  {
+   "id": "site_ms_td_saltstone",
+   "intendedType": "fac_trading_post",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登交易点；旧用途为换货、交接、摊售、过秤、约车，或入口换货点；依据：world/geo/locations.json:21286、21301"
+  },
+  {
+   "id": "site_ms_yg_gate",
+   "intendedType": "fac_trading_post",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登交易点；旧用途为换货、交接、摊售、过秤、约车，或入口换货点；依据：world/geo/locations.json:21832、21847"
+  },
+  {
+   "id": "site_ms_ll_gate",
+   "intendedType": "fac_trading_post",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登交易点；旧用途为换货、交接、摊售、过秤、约车，或入口换货点；依据：world/geo/locations.json:22480、22497"
+  },
+  {
+   "id": "site_ms_hx_reed",
+   "intendedType": "fac_trading_post",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登交易点；旧用途为换货、交接、摊售、过秤、约车，或入口换货点；依据：world/geo/locations.json:23477、23492"
+  },
+  {
+   "id": "site_ms_gs_gate",
+   "intendedType": "fac_trading_post",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登交易点；旧用途为换货、交接、摊售、过秤、约车，或入口换货点；依据：world/geo/locations.json:23925、23940"
+  },
+  {
+   "id": "bld_yp_yard",
+   "intendedType": "fac_workshop",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：其余对不上的先按最近的现有类型归；旧用途只写检看农具、篓、石件、木梭的劳动与交接场地（房间“劳动与交接处”，不新增工作站），与同村缝补屋、修具棚等手工劳动场地最近，取作坊（最近归，待李白核）；依据：world/geo/locations.json:3887、3902"
+  },
+  {
+   "id": "bld_wt_yard",
+   "intendedType": "fac_workshop",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：其余对不上的先按最近的现有类型归；旧用途只写检看农具、篓、石件、木梭的劳动与交接场地（房间“劳动与交接处”，不新增工作站），与同村缝补屋、修具棚等手工劳动场地最近，取作坊（最近归，待李白核）；依据：world/geo/locations.json:6417、6432"
+  },
+  {
+   "id": "bld_lq_yard",
+   "intendedType": "fac_workshop",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：其余对不上的先按最近的现有类型归；旧用途只写检看农具、篓、石件、木梭的劳动与交接场地（房间“劳动与交接处”，不新增工作站），与同村缝补屋、修具棚等手工劳动场地最近，取作坊（最近归，待李白核）；依据：world/geo/locations.json:8889、8904"
+  },
+  {
+   "id": "bld_sb_yard",
+   "intendedType": "fac_workshop",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：其余对不上的先按最近的现有类型归；旧用途只写检看农具、篓、石件、木梭的劳动与交接场地（房间“劳动与交接处”，不新增工作站），与同村缝补屋、修具棚等手工劳动场地最近，取作坊（最近归，待李白核）；依据：world/geo/locations.json:11451、11466"
+  },
+  {
+   "id": "bld_bs_store",
+   "intendedType": "fac_granary",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：其余对不上的先按最近的现有类型归；旧用途是存放货物、物件的储物处所（非粮食），与存放类的粮仓最近（最近归，待李白核；卷二 :1867 另有 fac_warehouse 可选）；依据：world/geo/locations.json:14001、14015"
+  },
+  {
+   "id": "site_ms_gs_store",
+   "intendedType": "fac_granary",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：其余对不上的先按最近的现有类型归；旧用途是存放货物、物件的储物处所（非粮食），与存放类的粮仓最近（最近归，待李白核；卷二 :1867 另有 fac_warehouse 可选）；依据：world/geo/locations.json:24200、24215"
+  },
+  {
+   "id": "site_ms_td_trapcache",
+   "intendedType": "fac_granary",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：其余对不上的先按最近的现有类型归；旧用途是存放货物、物件的储物处所（非粮食），与存放类的粮仓最近（最近归，待李白核；卷二 :1867 另有 fac_warehouse 可选）；依据：world/geo/locations.json:21615、21630"
+  },
+  {
+   "id": "site_ms_tj_fungus",
+   "intendedType": "fac_open_ground",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登露天场地；旧用途“公共设施”，无墙无顶的圃地、葬地缓坡、沟渠、矿口、堆场、石台、坡、空地；依据：world/geo/locations.json:20647、20662"
+  },
+  {
+   "id": "site_ms_td_garden",
+   "intendedType": "fac_open_ground",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登露天场地；旧用途“公共设施”，无墙无顶的圃地、葬地缓坡、沟渠、矿口、堆场、石台、坡、空地；依据：world/geo/locations.json:21218、21233"
+  },
+  {
+   "id": "site_ms_yg_nursery",
+   "intendedType": "fac_open_ground",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登露天场地；旧用途“公共设施”，无墙无顶的圃地、葬地缓坡、沟渠、矿口、堆场、石台、坡、空地；依据：world/geo/locations.json:21866、21881"
+  },
+  {
+   "id": "site_ms_hx_dew",
+   "intendedType": "fac_open_ground",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登露天场地；旧用途“公共设施”，无墙无顶的圃地、葬地缓坡、沟渠、矿口、堆场、石台、坡、空地；依据：world/geo/locations.json:23511、23526"
+  },
+  {
+   "id": "site_ms_td_lampground",
+   "intendedType": "fac_open_ground",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登露天场地；旧用途“公共设施”，无墙无顶的圃地、葬地缓坡、沟渠、矿口、堆场、石台、坡、空地；依据：world/geo/locations.json:21320、21335"
+  },
+  {
+   "id": "site_ms_yg_rootslope",
+   "intendedType": "fac_open_ground",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登露天场地；旧用途“公共设施”，无墙无顶的圃地、葬地缓坡、沟渠、矿口、堆场、石台、坡、空地；依据：world/geo/locations.json:21970、21985"
+  },
+  {
+   "id": "site_ms_hx_return",
+   "intendedType": "fac_open_ground",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登露天场地；旧用途“公共设施”，无墙无顶的圃地、葬地缓坡、沟渠、矿口、堆场、石台、坡、空地；依据：world/geo/locations.json:23613、23628"
+  },
+  {
+   "id": "site_ms_gs_return",
+   "intendedType": "fac_open_ground",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登露天场地；旧用途“公共设施”，无墙无顶的圃地、葬地缓坡、沟渠、矿口、堆场、石台、坡、空地；依据：world/geo/locations.json:24062、24077"
+  },
+  {
+   "id": "site_ms_tj_shaft",
+   "intendedType": "fac_open_ground",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登露天场地；旧用途“公共设施”，无墙无顶的圃地、葬地缓坡、沟渠、矿口、堆场、石台、坡、空地；依据：world/geo/locations.json:20681、20696"
+  },
+  {
+   "id": "site_ms_yg_ditch",
+   "intendedType": "fac_open_ground",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登露天场地；旧用途“公共设施”，无墙无顶的圃地、葬地缓坡、沟渠、矿口、堆场、石台、坡、空地；依据：world/geo/locations.json:21934、21951"
+  },
+  {
+   "id": "site_ms_ll_adit",
+   "intendedType": "fac_open_ground",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登露天场地；旧用途“公共设施”，无墙无顶的圃地、葬地缓坡、沟渠、矿口、堆场、石台、坡、空地；依据：world/geo/locations.json:22584、22599"
+  },
+  {
+   "id": "site_ms_ll_yard",
+   "intendedType": "fac_open_ground",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登露天场地；旧用途“公共设施”，无墙无顶的圃地、葬地缓坡、沟渠、矿口、堆场、石台、坡、空地；依据：world/geo/locations.json:22618、22633"
+  },
+  {
+   "id": "site_ms_hx_landing",
+   "intendedType": "fac_open_ground",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登露天场地；旧用途“公共设施”，无墙无顶的圃地、葬地缓坡、沟渠、矿口、堆场、石台、坡、空地；依据：world/geo/locations.json:23545、23560"
+  },
+  {
+   "id": "site_ms_td_ropes",
+   "intendedType": "fac_open_ground",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登露天场地；旧用途“公共设施”，无墙无顶的圃地、葬地缓坡、沟渠、矿口、堆场、石台、坡、空地；依据：world/geo/locations.json:21252、21267"
+  },
+  {
+   "id": "site_ms_hx_listen",
+   "intendedType": "fac_open_ground",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登露天场地；旧用途“公共设施”，无墙无顶的圃地、葬地缓坡、沟渠、矿口、堆场、石台、坡、空地；依据：world/geo/locations.json:23579、23594"
+  },
+  {
+   "id": "site_ms_td_commons",
+   "intendedType": "fac_open_ground",
+   "source": "作者",
+   "intendedBasis": "李白 11-24 事件 e6937a77 第②条裁定 S6-2（docs/审查/李白裁定-1117.md:1655）：新登露天场地；旧用途“公共设施”，无墙无顶的圃地、葬地缓坡、沟渠、矿口、堆场、石台、坡、空地；依据：world/geo/locations.json:21184、21199"
   }
  ]
 }

@@ -54,7 +54,7 @@ function load(rows, spaces) {
     v.families.water.entries = { ...v.families.water.entries, water_test_fresh: { navigable: false } };
     v.families.cellclass.entries = CELLCLASS;
     v.families.gentemplate.entries = TEMPLATE;
-    v.families.bform.entries = { bldform_hut: { ...FORM, facilityTypes: ['fac_house'] }, bldform_shrine: v.families.bform.entries.bldform_shrine };
+    v.families.bform.entries = { bldform_hut: { ...FORM, facilityTypes: ['fac_house'] }, bldform_shrine: v.families.bform.entries.bldform_shrine, bldform_open_yard: v.families.bform.entries.bldform_open_yard };
     v.families.roomrole.entries = {};
     v.families.cellmark.entries = CELLMARKS;
     writeUnderTempRoot(tmp, '_vocab.json', JSON.stringify(v));
