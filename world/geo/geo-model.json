@@ -1,0 +1,83 @@
+{
+ "version": 1,
+ "scope": "world_root",
+ "source": "docs/研究/世界地理建模附表-1122.md（提交 6dea3de33；李白 11-23 裁定改用附表上格）：第一节外包框、3.2 省界、3.4 控制海拔与主地形及森林覆盖、4.1 海岸、4.2 河；坐标单位千米，x 向东、y 向北，与 regions.json center 同一坐标系；转换脚本按 rules.grid.regionCellM 折区格（100 米区格 = 千米 × 10），矩形左闭右开。附表以后按亮圳对世界总案的拍板改，改这里的手写值，不改代码。",
+ "box": { "xKm": [-170, 720], "yKm": [-330, 270], "source": "附表第一节：主世界外包框 x −170…720、y −330…270" },
+ "provinces": {
+  "loc_prov_xichui": { "rectsKm": [[-120, -60, -20, 50], [-60, 230, -20, 47], [230, 330, -20, 50], [-15, 60, -110, -20], [40, 130, -30, -20], [0, 40, -169, -110], [-3, 0, -169, -150]], "source": "附表 3.2 西陲；附表-1122勘误 E1（大河改道后大河东岸一块改写，原第三块 [11,40)×[−169,−110)）、B1（北界在 x∈[−60,230) 段南移到 y=47，与寒炉同界）、B2（第二块东界 40→60，另补 [40,130)×[−30,−20)）" },
+  "loc_prov_hanlu": { "rectsKm": [[-60, 230, 47, 140]], "source": "附表 3.2 寒炉；附表-1122勘误 B1：南界 50→47，与西陲同界" },
+  "loc_prov_xingwan": { "rectsKm": [[-20, 230, 140, 250]], "source": "附表 3.2 星湾（扣去冰湾，由转换脚本按海岸扣）" },
+  "loc_prov_feicui": { "rectsKm": [[-150, -15, -110, -20], [-150, -1, -150, -110], [-150, -4, -155, -150]], "source": "附表 3.2 翡翠（扣去大河、林溪）；附表-1122勘误 E1：大河改道后第二块改写（原 [−150,11)×[−155,−110)）" },
+  "loc_prov_hupo": { "rectsKm": [[-150, -4, -169, -155], [-150, 40, -230, -169], [-30, -20, -250, -230], [-45, 5, -285, -250]], "source": "附表 3.2 琥珀（含沙洲 [−30,−20)×[−250,−230)、群岛 [−45,5)×[−285,−250)；扣去琥珀湾、大河）；附表-1122勘误 E1：大河改道后第一块改写（原 [−150,11)×[−169,−155)）" },
+  "loc_prov_zhonglu": { "rectsKm": [[330, 555, -80, 90], [555, 575, -80, 0]], "source": "附表 3.2 中陆（扣去中河）；附表-1122勘误 B3：东界在 y∈[−80,0) 段 555→575（与雾杉 [555,700)×[0,230) 不相交）" },
+  "loc_prov_fengji": { "rectsKm": [[400, 700, -200, -80]], "source": "附表 3.2 风脊" },
+  "loc_prov_jingzhao": { "rectsKm": [[400, 700, -330, -200]], "source": "附表 3.2 镜沼" },
+  "loc_prov_wushan": { "rectsKm": [[555, 700, 0, 230]], "source": "附表 3.2 雾杉" }
+ },
+ "wild": {
+  "loc_wild_beiling": { "name": "北岭", "rectsKm": [[230, 555, 140, 250]], "anchorElevationM": 3000, "terrain": "terrain_mountain", "source": "附表 3.2 北岭（无主，世界根子行）、3.4 北岭 3,000 米 mountain（主峰约 4,500 米）" }
+ },
+ "seas": {
+  "loc_water_sea_north": { "name": "北海", "rectsKm": [[-170, 720, 250, 270], [110, 160, 225, 250]], "source": "附表 4.1 北海（含冰湾 [110,160)×[225,250)）" },
+  "loc_water_sea_west": { "name": "西海", "rectsKm": [[-170, -150, -330, 250], [-150, 40, -330, -230]], "minusKm": [[-45, 5, -285, -250], [-30, -20, -250, -230]], "source": "附表 4.1 西海，扣去盐风群岛与沙洲" },
+  "loc_water_sea_south": { "name": "南湾", "rectsKm": [[40, 400, -330, -110], [-5, 40, -195, -169]], "source": "附表 4.1 南湾（含琥珀湾 [−5,40)×[−195,−169)）" }
+ },
+ "rivers": {
+  "loc_water_river_dahe": { "name": "大河", "pointsKm": [[-80, 32], [5, 8], [-1, 8], [-1, -5], [-3, -5], [-3, -18], [-2, -18], [-2, -32], [-1, -32], [-1, -150], [-4, -150], [-4, -161], [-10, -161], [-10, -162], [-4, -162], [-4, -169]], "downstream": "loc_water_sea_south", "source": "附表 4.2 大河：手描折线顶点，栅格化成 boundary，表序即流向序；附表-1122勘误 E1：折点 (10,0)→(10,−175) 改为沿河湾村、河神矶、雁渡、琥珀港旁（各端点种子区格四邻有河格，不压种子格）至琥珀湾" },
+  "loc_water_river_lushui": { "name": "炉水", "pointsKm": [[60, 57], [8, 9]], "downstream": "loc_water_river_dahe", "source": "附表 4.2 炉水，止于与大河相接" },
+  "loc_water_river_zhonghe": { "name": "中河", "pointsKm": [[495, 60], [460, 30], [455, -15], [415, -45], [395, -80], [395, -130]], "downstream": "loc_water_sea_south", "source": "附表 4.2 中河" },
+  "loc_water_river_linxi": { "name": "林溪", "pointsKm": [[-112, -90], [-160, -130]], "downstream": "loc_water_sea_west", "source": "附表 4.2 林溪" }
+ },
+ "lakes": {
+  "loc_water_lake_jingzhao": { "name": "镜沼", "seedKm": [450, -240], "areaKm2": 3000, "parent": "loc_prov_jingzhao", "liquid": "mat_water", "liquidNote": "淡水，沼水", "source": "附表 4.2 静水湖：镜沼（种子 (450,−240)，目标 3,000 km²），作镜沼省的子行，形状生成；附表-1122勘误 L1：water 族是开放词表，补 water_lake 后建湖" },
+  "loc_water_lake_huiyan": { "name": "灰盐池", "seedKm": [570, -270], "areaKm2": 800, "parent": "loc_prov_jingzhao", "liquid": "mat_seawater", "liquidNote": "咸水；材料表没有盐池卤水条目，暂取海水，待核", "source": "附表 4.2 静水湖：灰盐池（种子 (570,−270)，目标 800 km²），作镜沼省的子行，形状生成；附表-1122勘误 L1" }
+ },
+ "counties": {
+  "loc_county_xichui_longqu": { "anchorElevationM": 779, "terrain": "terrain_plain" },
+  "loc_county_xichui_xiadu": { "anchorElevationM": 150, "terrain": "terrain_river" },
+  "loc_county_xichui_huancheng": { "anchorElevationM": 600, "terrain": "terrain_hill" },
+  "loc_county_xichui_shangzha": { "anchorElevationM": 1100, "terrain": "terrain_hill" },
+  "loc_county_hanlu_tongji": { "anchorElevationM": 1800, "terrain": "terrain_mountain" },
+  "loc_county_hanlu_tuixie": { "anchorElevationM": 2600, "terrain": "terrain_mountain" },
+  "loc_county_hanlu_zheya": { "anchorElevationM": 1300, "terrain": "terrain_desert" },
+  "loc_county_hanlu_heilu": { "anchorElevationM": 1600, "terrain": "terrain_forest" },
+  "loc_county_xingwan_xuedeng": { "anchorElevationM": 600, "terrain": "terrain_hill" },
+  "loc_county_xingwan_fudeng": { "anchorElevationM": 30, "terrain": "terrain_coast" },
+  "loc_county_feicui_shuqiao": { "anchorElevationM": 300, "terrain": "terrain_forest" },
+  "loc_county_feicui_taiyuan": { "anchorElevationM": 150, "terrain": "terrain_marsh" },
+  "loc_county_feicui_lieer": { "anchorElevationM": 450, "terrain": "terrain_forest" },
+  "loc_county_feicui_xiudao": { "anchorElevationM": 350, "terrain": "terrain_forest" },
+  "loc_county_hupo_hupogang": { "anchorElevationM": 0, "terrain": "terrain_coast" },
+  "loc_county_hupo_qiansheng": { "anchorElevationM": 5, "terrain": "terrain_coast" },
+  "loc_county_hupo_yanfeng": { "anchorElevationM": 20, "terrain": "terrain_coast" },
+  "loc_county_zhonglu_wangji": { "anchorElevationM": 300, "terrain": "terrain_plain" },
+  "loc_county_zhonglu_jiekan": { "anchorElevationM": 500, "terrain": "terrain_hill" },
+  "loc_county_zhonglu_xiqian": { "anchorElevationM": 120, "terrain": "terrain_river" },
+  "loc_county_zhonglu_baiguan": { "anchorElevationM": 1400, "terrain": "terrain_forest" },
+  "loc_county_zhonglu_chizhe": { "anchorElevationM": 1200, "terrain": "terrain_mountain" },
+  "loc_county_fengji_zhufeng": { "anchorElevationM": 1100, "terrain": "terrain_plain" },
+  "loc_county_fengji_jinghuan": { "anchorElevationM": 1300, "terrain": "terrain_desert" },
+  "loc_county_fengji_tiyuan": { "anchorElevationM": 900, "terrain": "terrain_hill" },
+  "loc_county_jingzhao_luyu": { "anchorElevationM": 15, "terrain": "terrain_marsh" },
+  "loc_county_jingzhao_huiyan": { "anchorElevationM": -30, "terrain": "terrain_desert" },
+  "loc_county_jingzhao_chaoting": { "anchorElevationM": 5, "terrain": "terrain_marsh" },
+  "loc_county_wushan_shanyi": { "anchorElevationM": 1500, "terrain": "terrain_forest" },
+  "loc_county_wushan_wuling": { "anchorElevationM": 1900, "terrain": "terrain_mountain" },
+  "loc_county_wushan_guanxue": { "anchorElevationM": 3000, "terrain": "terrain_mountain" }
+ },
+ "reparent": {
+  "loc_site_peat_islets": { "parent": "loc_county_feicui_xiudao", "from": "loc_site_rainstone_basin", "oldCounty": "loc_county_feicui_shuqiao", "reason": "种子 (−82,−109) 落在东缘嗅道郡足迹内，圈不进树桥郡", "source": "附表-1122勘误 B" },
+  "loc_site_w5_scent_watch": { "parent": "loc_county_feicui_xiudao", "from": "loc_far_xiushi", "oldCounty": "loc_county_feicui_lieer", "reason": "种子 (−52,−108) 落在东缘嗅道郡足迹内，圈不进砾耳猎林郡", "source": "附表-1122勘误 B" },
+  "loc_site_w5_ferry_shrine": { "parent": "loc_county_xichui_longqu", "from": "loc_yandu", "oldCounty": "loc_county_xichui_xiadu", "reason": "种子 (−1.5,−17) 在大河东岸，落在垄渠郡足迹内，圈不进下渡郡", "source": "附表-1122勘误 B" },
+  "loc_site_w5_reed_salt": { "parent": "loc_county_xichui_shangzha", "from": "loc_yandu", "oldCounty": "loc_county_xichui_xiadu", "reason": "种子 (−6,−38.5) 在大河西岸，落在上闸郡足迹内，圈不进下渡郡", "source": "附表-1122勘误 B" },
+  "loc_site_w5_boundary_pavilion": { "parent": "loc_prov_xichui", "from": "loc_bs", "oldCounty": "loc_county_xichui_longqu", "reason": "种子 (128,5.6) 在垄渠郡足迹之外、西陲省野外（郡界碑亭本在两郡之界），没有郡可挂，改挂本省", "source": "附表-1122勘误 B" },
+  "loc_site_w5_way_temple": { "parent": "loc_prov_xichui", "from": "loc_bs", "oldCounty": "loc_county_xichui_longqu", "reason": "种子 (96,4.2) 在垄渠郡足迹之外、西陲省野外，没有郡可挂，改挂本省", "source": "附表-1122勘误 B" },
+  "loc_site_salt_reeds": { "parent": "loc_prov_xichui", "from": "loc_site_basalt_steps", "oldCounty": "loc_county_xichui_longqu", "reason": "种子 (92,−24) 在垄渠郡足迹之外、西陲省野外（本卡补进省界的 [40,130)×[−30,−20)），没有郡可挂，改挂本省", "source": "附表-1122勘误 B" }
+ },
+ "countiesSource":"附表 3.4（手写设定数；垄渠 779 已有 elevation-controls.json，琥珀港 0 已有）；种子坐标取 regions.json center（与附表 3.3 种子逐个相同，已核）",
+ "forestCoverByTerrain": { "terrain_forest": 0.7, "terrain_hill": 0.35, "terrain_plain": 0.15, "terrain_desert": 0.05, "terrain_marsh": 0.2, "terrain_mountain": 0.3, "terrain_coast": 0.1, "terrain_river": 0.2 },
+ "forestCoverSource": "附表 3.4 末：森林覆盖按主地形取（手写设定数）",
+ "unplaced": [
+  "附表 5 气候原型、第六节干线、第七节聚居地、第八节位面入口：不在本卡"
+ ]
+}

@@ -498,6 +498,16 @@
    "source": "卷五 §2.1 :102（体积足迹有没有通到地表的洞口，封卷后勘误 1121k3；卷十 R10-2.14 第 4 项）",
    "type": "boolean"
   },
+  "originSite": {
+   "kind": "place",
+   "modifiable": false,
+   "nullable": true,
+   "onUnknown": "skip",
+   "owner": "卷八 R8-18.9",
+   "required": "never",
+   "source": "原属站点（作者字段，封卷后勘误 1123k32，李白 11-23 事件 08673f69 第 2 条）：本行按坐标改挂到别的政区、存量单元后，\"它属于哪个站点（村）\"不再靠 parent 包含表达，改由本行写 originSite 为原父站点 id；卷八 R8-18.9 ③ 开局统治边按它从该站点的聚落组织连到本行；只给开局生成读，运行期归属读卷八 governorOf",
+   "type": "ref"
+  },
   "parent": {
    "kind": "place",
    "modifiable": false,

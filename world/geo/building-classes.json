@@ -1,0 +1,27 @@
+{
+ "version": 1,
+ "scope": "world_root",
+ "note": "转换输入（与 start-buildings.json 同类）：旧数据里 settlements.json 的 buildingIds 与 start-buildings.json 都没有列、但按旧数据本身的字段读是建筑的地点行，逐行写出依据，供 tools/convert-geo.mjs 挂 comp_facility（卷五 §4.1 规则 2：足迹种类只按组件类判）。人工核对清单：这几行没有任何清单出处，挂不挂建筑类须人工核对（卷五 M5-31 :1413 离线派生后人工核对一遍）；不挂则它们留作区域足迹行，同父同区格的种子会被加载器拒收（E-GRID-SEED-SAME-CELL）。不按 id 前缀、不按名字推，每行单独列出。",
+ "rows": [
+  {
+   "id": "bld_bs_measured_hall",
+   "basis": "locations.json 该行有 rooms（公开教学前廊）、openHours、purpose（侠客步法与兵器基础），父为 loc_bs_dongxue，与同父另两行同一区格（旧坐标 24.35 km、0.325–0.375 km）；settlements.json buildingIds、start-buildings.json 都未列。按旧字段读是一座有前廊的教学建筑"
+  },
+  {
+   "id": "bld_bs_reed_dao",
+   "basis": "locations.json 该行有 rooms（公开教学前廊）、openHours、purpose（验汀传统控墨、符箓与护界初课），父为 loc_bs_dongxue；settlements.json buildingIds、start-buildings.json 都未列。按旧字段读是一座有前廊的教学建筑"
+  },
+  {
+   "id": "bld_bs_still_temple",
+   "basis": "locations.json 该行有 rooms（公开教学前廊）、openHours、purpose（原创止波师承静息与体术初课），父为 loc_bs_dongxue；settlements.json buildingIds、start-buildings.json 都未列。按旧字段读是一座有前廊的教学建筑"
+  },
+  {
+   "id": "bld_hc_citywall",
+   "basis": "locations.json 该行有 rooms（空表）、purpose（环绕旧仓城的公共防护城墙）、owner（环城郡署），父为 loc_far_huancheng，与同父的城门同一区格（旧坐标 250 km、12 km）；settlements.json buildingIds、start-buildings.json 都未列。按旧字段读是郡署的公共设施（城墙）"
+  },
+  {
+   "id": "bld_hc_stone_gate",
+   "basis": "locations.json 该行有 rooms（空表）、purpose（环城公共城墙的现役石砌门体）、owner（环城郡署），父为 loc_far_huancheng；settlements.json buildingIds、start-buildings.json 都未列。按旧字段读是郡署的公共设施（城门）"
+  }
+ ]
+}

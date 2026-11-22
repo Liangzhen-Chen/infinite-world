@@ -100,6 +100,24 @@
     "boundary 海域范围（海岸线、向海延伸多远）",
     "depthM / capacityL / catchmentM2 / runoffCoef：设定没有，不编"
    ]
+  },
+  {
+   "id": "loc_water_lake_jingzhao",
+   "name": "镜沼",
+   "classes": ["comp_tract", "comp_waterbody"],
+   "waterKind": "water_lake",
+   "liquid": "mat_water",
+   "downstream": null,
+   "basis": "附表-1122勘误 L1：下游暂写空（设定没写湖有无出水，与海同按终点处理，待核）；静水湖，种子、目标面积与父在 geo-model.json 的 lakes，转换脚本读那里；本条只登水体类与液体，水体类条目 water_lake 见 _vocab.json"
+  },
+  {
+   "id": "loc_water_lake_huiyan",
+   "name": "灰盐池",
+   "classes": ["comp_tract", "comp_waterbody"],
+   "waterKind": "water_lake",
+   "liquid": "mat_seawater",
+   "downstream": null,
+   "basis": "附表-1122勘误 L1：同镜沼，下游暂写空；液体暂取海水（材料表没有卤水条目，待核）"
   }
  ],
  "openItems": [

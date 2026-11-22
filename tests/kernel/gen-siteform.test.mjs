@@ -15,6 +15,7 @@ import { blueprintRulesFrom } from '../../server-plugin/kernel/place-building.mj
 import { planBlueprint, planFeasible } from '../../server-plugin/kernel/blueprint.mjs';
 import { buildGenRows } from '../../server-plugin/kernel/gen/rows.mjs';
 import { genSiteForm } from '../../server-plugin/kernel/gen/siteform.mjs';
+import { genDiceKey } from '../../server-plugin/kernel/gen/draw.mjs';
 import { makeWhen } from '../../server-plugin/kernel/gen/when.mjs';
 import { ROOT } from '../accept/temp-root.mjs';
 
@@ -179,10 +180,8 @@ test('作者写的 planCells 分不下一房间也不加倍：E-GEN-ROW-INVALID'
   assert.equal(code, 'E-GEN-ROW-INVALID');
 });
 
-test('缺必填与规则行不适用：缺 form、form 不是 bform 族条目、没有适用规则行、whenRX 不命中都报 E-GEN-ROW-INVALID', () => {
+test('规则行不适用与形制不对：form 不是 bform 族条目、没有适用规则行、whenRX 不命中都报 E-GEN-ROW-INVALID（缺 form 不在此列：按卷十 R10-7.12 勘误 1123k31 先补形制，见下）', () => {
   const id = 'loc_b1';
-  const noForm = rowsOf([[id, { parent: null, classes: ['comp_facility'] }]]);
-  assert.equal(codeOf(() => run({ rows: noForm, authoredIds: new Set([id]), bldfillRows: fill(36, 1) })), 'E-GEN-ROW-INVALID');
   const notForm = vocabOf([['bldform_x', { family: 'gfield', entry: F36 }]]);
   assert.equal(codeOf(() => run({ vocab: notForm, rows: rowsOf([[id, bld({ form: 'bldform_x' })]]), authoredIds: new Set([id]), bldfillRows: fill(36, 1) })), 'E-GEN-ROW-INVALID');
   assert.equal(codeOf(() => run({ rows: rowsOf([[id, bld()]]), authoredIds: new Set([id]), bldfillRows: [] })), 'E-GEN-ROW-INVALID');
@@ -190,10 +189,82 @@ test('缺必填与规则行不适用：缺 form、form 不是 bform 族条目、
   assert.equal(codeOf(() => run({ rows: rowsOf([[id, bld()]]), authoredIds: new Set([id]), bldfillRows: never })), 'E-GEN-ROW-INVALID');
 });
 
-test('form 写 null 或不存在的条目同缺 form：E-GEN-ROW-INVALID，没有"未建列"例外（卷十 :684；真实世界建筑缺形制由数据补齐）', () => {
+test('作者写了 form 却是 null 或登记里没有的条目：作者数据错，E-GEN-ROW-INVALID，不当作"没写"去补（补缺只对 form 键缺的行）', () => {
   for (const form of [null, 'bldform_nope']) {
     assert.equal(codeOf(() => run({ rows: rowsOf([['loc_nl', bld({ form })]]), authoredIds: new Set(['loc_nl']), bldfillRows: fill(36, 1) })), 'E-GEN-ROW-INVALID', String(form));
   }
+});
+
+// ---------- 缺 form 的补缺（卷十 R10-7.12 封卷后勘误 1123k31；李白 11-23 事件 08673f69 第 1 条） ----------
+// 前提：登记里三个有顶形制 bldform_a（墙厚缺省 0.4）、bldform_b（0.8）、bldform_c（1.2），都 walled；设施类型 facility_any 两个上限都空（无要求），候选 = 登记全部条目，等权按抽取点 site_gen_bldfill_form 取；
+// 行上没有 intendedType、类型行不在族里、或筛后无形制，都记缺口 form_type_unmatched、不补。
+const thick = (m) => formEntry({ ...F36, wallThicknessDefaultM: m, wallThicknessMinM: m });
+const TYPE_ANY = ['facility_any', { family: 'facility_type', entry: { maxSkyExposure: null, maxAperture: null } }];
+const THREE = () => vocabOf([['bldform_a', thick(0.4)], ['bldform_b', thick(0.8)], ['bldform_c', thick(1.2)], TYPE_ANY]);
+const WALL_OF = { bldform_a: 0.4, bldform_b: 0.8, bldform_c: 1.2 };
+const noFormRow = (extra = {}) => ({ parent: null, classes: ['comp_facility'], intendedType: 'facility_any', ...extra });
+const manyIds = Array.from({ length: 30 }, (_, i) => `loc_n${String(i).padStart(2, '0')}`);
+
+test('缺 form：从登记里取一个并写进提案，补出的 form 必在登记里；墙厚缺省随所取形制（手算：形制 b 的缺省 0.8，不是别的形制的）；同种子两次逐项相同', () => {
+  const entries = manyIds.map((id) => [id, noFormRow()]);
+  const authored = new Set(manyIds);
+  const a = run({ vocab: THREE(), rows: rowsOf(entries), authoredIds: authored, bldfillRows: fill(36, 1) });
+  const b = run({ vocab: THREE(), rows: rowsOf(entries), authoredIds: authored, bldfillRows: fill(36, 1) });
+  assert.deepEqual(a, b);
+  assert.equal(a.proposals.length, manyIds.length);
+  for (const p of a.proposals) {
+    assert.ok(Object.hasOwn(WALL_OF, p.dims.form), p.id);
+    assert.equal(p.dims.wallThicknessM, WALL_OF[p.dims.form], p.id);
+  }
+});
+
+test('缺 form：登记只有一个形制时恰取它（手算：等权三取一退化为一取一）；换世界种子，30 行里至少一行取到不同的形制', () => {
+  const only = () => vocabOf([['bldform_a', thick(0.4)], TYPE_ANY]);
+  const entries = manyIds.map((id) => [id, noFormRow()]);
+  const authored = new Set(manyIds);
+  const one = run({ vocab: only(), rows: rowsOf(entries), authoredIds: authored, bldfillRows: fill(36, 1) });
+  assert.deepEqual(one.proposals.map((p) => p.dims.form), manyIds.map(() => 'bldform_a'));
+  const x = run({ worldSeed: 'seed_form_x', vocab: THREE(), rows: rowsOf(entries), authoredIds: authored, bldfillRows: fill(36, 1) });
+  const y = run({ worldSeed: 'seed_form_y', vocab: THREE(), rows: rowsOf(entries), authoredIds: authored, bldfillRows: fill(36, 1) });
+  assert.ok(x.proposals.some((p, i) => p.dims.form !== y.proposals[i].dims.form));
+});
+
+test('缺 form：作者写了 form 的行原样不动（提案不带 form，墙厚照作者所写形制的缺省补）；作者已写的 form 不因登记里别的形制而改', () => {
+  const entries = [['loc_w1', bld({ form: 'bldform_b' })], ['loc_w2', noFormRow()]];
+  const out = run({ vocab: THREE(), rows: rowsOf(entries), authoredIds: new Set(['loc_w1', 'loc_w2']), bldfillRows: fill(36, 1) });
+  const kept = out.proposals.find((p) => p.id === 'loc_w1');
+  assert.equal(Object.hasOwn(kept.dims, 'form'), false);
+  assert.equal(kept.dims.wallThicknessM, 0.8);
+  assert.equal(Object.hasOwn(out.proposals.find((p) => p.id === 'loc_w2').dims, 'form'), true);
+});
+
+test('缺 form：补出的 form 记在提案里、来源标记取形制抽取点的骰值键（与面积抽取点的键不同）；作者写了 form 的行仍用面积抽取点的键', () => {
+  const entries = [['loc_w1', bld({ form: 'bldform_b' })], ['loc_w2', noFormRow()]];
+  const out = run({ vocab: THREE(), rows: rowsOf(entries), authoredIds: new Set(['loc_w1', 'loc_w2']), bldfillRows: fill(36, 1) });
+  const seedOf = (id) => out.proposals.find((p) => p.id === id).seedKey;
+  assert.notEqual(seedOf('loc_w1'), seedOf('loc_w2'));
+  assert.equal(seedOf('loc_w2'), genDiceKey('gen_siteform', 'site_gen_bldfill_form', 'seed_siteform', 'loc_w2', 0));
+  assert.equal(seedOf('loc_w1'), genDiceKey('gen_siteform', 'site_gen_bldfill_area', 'seed_siteform', 'loc_w1', 0));
+});
+
+test('缺 form：行上没有设施类型、类型行不在 facility_type 族、登记为空 → 不报错、不补、不自造，该行进缺口 form_type_unmatched，无提案；不计入站点占地（手算：另一栋 6 × 6 → 36 m² → N = 1 格 = 10,000 m²）', () => {
+  const rows = siteRows([['bld_x', noFormRow({ parent: 'loc_site', intendedType: undefined })], ['bld_y', noFormRow({ parent: 'loc_site', intendedType: 'bldform_a' })], ['bld_z', noFormRow({ parent: 'loc_site' })]]);
+  const out = run({ vocab: THREE(), rows, authoredIds: new Set(['loc_site', 'bld_x', 'bld_y', 'bld_z']), bldfillRows: fill(36, 1) });
+  assert.deepEqual(out.proposals.map((p) => p.id), ['bld_z', 'loc_site']); // 有类型的 bld_z 补出；bld_x 无类型、bld_y 的类型不在族里
+  assert.equal(targetOf(out, 'loc_site'), 10000);
+  assert.deepEqual(out.deferred.filter((d) => d.reason === 'form_type_unmatched'), [{ id: 'bld_x', reason: 'form_type_unmatched', gaps: ['form'] }, { id: 'bld_y', reason: 'form_type_unmatched', gaps: ['form'] }]);
+  const empty = run({ vocab: vocabOf([TYPE_ANY]), rows: siteRows([['bld_z', noFormRow({ parent: 'loc_site' })]]), authoredIds: new Set(['loc_site', 'bld_z']), bldfillRows: fill(36, 1) });
+  assert.deepEqual(empty.deferred.filter((d) => d.reason === 'form_type_unmatched').map((d) => d.id), ['bld_z']);
+});
+
+test('缺 form：按设施类型筛（卷十九 §4.5 规则 2 ③）：类型 facility_dry 要求设计露天比例 ≤ 0，有顶形制 bldform_a（roofed 真，设计露天 0）留下，无顶形制 bldform_open（roofed 假，露天 > 0）剔除，所以只取 bldform_a；类型 facility_open 无要求时两者都可取', () => {
+  const open = formEntry({ ...F36, roofed: false });
+  const vocab = vocabOf([['bldform_a', thick(0.4)], ['bldform_open', open], ['facility_dry', { family: 'facility_type', entry: { maxSkyExposure: 0, maxAperture: null } }], ['facility_open', { family: 'facility_type', entry: { maxSkyExposure: null, maxAperture: null } }]]);
+  const ids = manyIds;
+  const dry = run({ vocab, rows: rowsOf(ids.map((id) => [id, noFormRow({ intendedType: 'facility_dry' })])), authoredIds: new Set(ids), bldfillRows: fill(36, 1) });
+  assert.deepEqual([...new Set(dry.proposals.map((p) => p.dims.form))], ['bldform_a']);
+  const any = run({ vocab, rows: rowsOf(ids.map((id) => [id, noFormRow({ intendedType: 'facility_open' })])), authoredIds: new Set(ids), bldfillRows: fill(36, 1) });
+  assert.deepEqual([...new Set(any.proposals.map((p) => p.dims.form))].sort(), ['bldform_a', 'bldform_open']);
 });
 
 test('层数夹进 [max(1, 1 − storeyBase), storeysMax]：形制 storeyBase −2 时下限 3，区间为空即 E-GEN-ROW-INVALID', () => {

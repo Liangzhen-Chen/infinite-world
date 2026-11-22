@@ -108,6 +108,14 @@
      "purpose": "手写建筑行缺 storeys 时的层数抽取（卷十 R10-7.12 :687、§4.12.1 :888，原写 site.gen.bldfill.storeys）：骰值键五段世界种子、流代号 gen_siteform、对象建筑行 id、时刻 genesisMinute、抽取点代号；不放版本成分"
     },
     {
+     "file": "kernel/gen/siteform.mjs",
+     "stream": "gen_siteform",
+     "site": "site_gen_bldfill_form",
+     "role": "role_seed",
+     "prefix": "gen_",
+     "purpose": "手写建筑行缺 form 时从形制登记按种子取一个（卷十 R10-7.12、§4.12.1 :888，封卷后勘误 1123k31）：骰值键五段世界种子、流代号 gen_siteform、对象建筑行 id、时刻 genesisMinute、抽取点代号；候选为登记里全部条目的等权 categorical；不放版本成分"
+    },
+    {
      "file": "kernel/gen/ids.mjs",
      "stream": "gen_ids",
      "site": "instance_digest",

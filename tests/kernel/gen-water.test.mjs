@@ -128,6 +128,14 @@ test('R10-2.10：作者写的与补的 downstream 合起来成环即 E-GEN-SKELE
   assert.throws(() => run({ footprints: tiny, waterRows: [{ priority: 1, waterKind: 'water_river', depthM: { dist: 'uniform', min: 1, max: 2 } }] }), (e) => e.code === 'E-GEN-ROW-INVALID');
 });
 
+test('大水体的容量不溢出定点安全上限（G5b：1,000 平方千米的河）：手算 面积 1e9 m² × 水深 4 m = 4e9 m³ ÷ 0.001 = 4e12 L；整升数装不进安全整数（面积 5e11 m² × 水深 40 m ÷ 0.001 = 2e16 L > 2^53）即 E-GEN-ROW-INVALID，不是 E-DET-OVERFLOW', () => {
+  const rowAt = (depthM) => [{ priority: 1, waterKind: 'water_river', depthM: { dist: 'triangular', min: depthM, mode: depthM, max: depthM } }];
+  const withArea = (areaM2, depthM) => ({ footprints: { footprints: { ...FP.footprints, loc_w1: { areaM2, elevationM: 0 } }, adjacency: FP.adjacency }, waterRows: rowAt(depthM) });
+  const big = run(withArea(1e9, 4)).proposals.find((p) => p.id === 'loc_w1');
+  assert.equal(big.dims.capacityL, 4e12);
+  assert.throws(() => run(withArea(5e11, 40)), (e) => e.code === 'E-GEN-ROW-INVALID');
+});
+
 test('海不借河的水深：水体类（water_sea）没有规则行，进 deferred（water_rule_missing），不出提案', () => {
   const eff = EFFECTIVE();
   eff.set('loc_w1', wet({ waterKind: 'water_sea' }));

@@ -13,7 +13,7 @@
 
 import { KernelError } from '../errors.mjs';
 import { genDraw, genDiceKey } from './draw.mjs';
-import { fixedUnits, fixedAdd, fixedMultiply, fixedDivide, fixedToNumber, truncateTo } from '../det-math.mjs';
+import { fixedUnits, fixedAdd, fixedScale, fixedToNumber } from '../det-math.mjs';
 
 // 骰值键（卷十 §4.12.1 :861 `stream.gen.water` / `site.gen.water.depth`，对象段取水体行 id；代号写成下划线，同卷二十天气抽取点的写法；调用处写字面量并登记在 seed-keys.json）。
 const DEFER = Object.freeze({ footprint: 'footprint_unknown', rule: 'water_rule_missing', kind: 'water_kind_missing', liquid: 'liquid_missing' });
@@ -75,8 +75,12 @@ export function genWater(ctx) {
     if (d.surfaceM2 === undefined) dims.surfaceM2 = f.areaM2;
     if (d.capacityL === undefined) {
       const depth = fixedUnits(genDraw('gen_water', 'site_gen_water_depth', ctx.worldSeed, w.id, ctx.genesisMinute, rule.depthM));
-      const litres = fixedDivide(fixedMultiply(fixedUnits(surface), depth), fixedUnits(ctx.m3PerL));
-      const whole = fixedToNumber(truncateTo(litres, 0));
+      // 整升数 = ⌊面积 × 水深 ÷ 每升立方米⌋：三个量都是 10⁴ 标度整数 S、D、M，整升 = ⌊S × D ÷ (M × 标度)⌋（逐步向下取整与一步取整相同）；
+      // 不经"升数的定点值"（它的 10⁴ 标度值对大水体会越过定点安全上限，面积一千平方千米级的河就溢出 E-DET-OVERFLOW），整升数自己装不进安全整数才报错。
+      const unitsM = fixedUnits(ctx.m3PerL);
+      if (unitsM === 0n) throw new KernelError('E-GEN-ROW-INVALID', {}, `water ${w.id}: the volume unit m3PerL is zero`);
+      const whole = Number((fixedUnits(surface) * depth) / (unitsM * fixedScale()));
+      if (!Number.isSafeInteger(whole)) throw new KernelError('E-GEN-ROW-INVALID', {}, `water ${w.id}: capacityL does not fit a safe integer (surface ${surface} m2, depth ${fixedToNumber(depth)} m)`);
       if (!(whole >= 1)) throw new KernelError('E-GEN-ROW-INVALID', {}, `water ${w.id}: capacityL ${whole} is below 1 L (surface ${surface} m2, depth ${fixedToNumber(depth)} m)`);
       dims.capacityL = whole;
     }

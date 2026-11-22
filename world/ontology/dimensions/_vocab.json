@@ -45,7 +45,7 @@
    "cellclass_mountain": {"terrains": ["terrain_mountain"], "waterAny": [], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 0, "genTemplate": "gtpl_bedrock", "basis": "兜底条目（同 cellclass_cave）；convert-geo.mjs 的地形文本映射里山地来自砾石山地、高山粒雪台原、赤色褶皱山地，取 gtpl_bedrock；暂定·待试玩标定"},
    "cellclass_plain": {"terrains": ["terrain_plain"], "waterAny": [], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 0, "genTemplate": "gtpl_soil", "basis": "兜底条目（同 cellclass_cave）；河湾村一带的地形文本是\"平地\"（locations.json:12）、转为 terrain_plain；暂定·待试玩标定"},
    "cellclass_river": {"terrains": ["terrain_river"], "waterAny": [], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 0, "genTemplate": "gtpl_silt", "basis": "兜底条目（同 cellclass_cave）；河床取 gtpl_silt；暂定·待试玩标定"},
-   "cellclass_water": {"terrains": ["terrain_cave", "terrain_coast", "terrain_desert", "terrain_forest", "terrain_hill", "terrain_lake", "terrain_marsh", "terrain_mountain", "terrain_plain", "terrain_river"], "waterAny": ["water_navigable", "water_river", "water_sea"], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 10, "genTemplate": "gtpl_silt", "basis": "水体足迹内的区格（卷五 §4.3 规则 9：waterAny 满足所在水体足迹行的 waterKind），任何地形都适用，优先于地形兜底；水体行写 water_river、water_sea（world/geo/water-bodies.json，卷十生成补缺卡按卷五 :248 加的两个条目；旧水路边两端的 waterAccess 仍是 water_navigable），水本身的材料由水体行的 liquid 给，模板只给水底；暂定·待试玩标定"}
+   "cellclass_water": {"terrains": ["terrain_cave", "terrain_coast", "terrain_desert", "terrain_forest", "terrain_hill", "terrain_lake", "terrain_marsh", "terrain_mountain", "terrain_plain", "terrain_river"], "waterAny": ["water_lake", "water_navigable", "water_river", "water_sea"], "slopeRange": null, "onRoad": null, "inSettlement": null, "priority": 10, "genTemplate": "gtpl_silt", "basis": "水体足迹内的区格（卷五 §4.3 规则 9：waterAny 满足所在水体足迹行的 waterKind），任何地形都适用，优先于地形兜底；水体行写 water_river、water_sea（world/geo/water-bodies.json，卷十生成补缺卡按卷五 :248 加的两个条目；旧水路边两端的 waterAccess 仍是 water_navigable），水本身的材料由水体行的 liquid 给，模板只给水底；附表-1122勘误 L1：加 water_lake（镜沼、灰盐池）；暂定·待试玩标定"}
   }, "prefix": "cellclass_"},
   "cellmark": {"closed": false, "entries": {}, "prefix": "cellmark_"},
   "dockind": {"closed": false, "entries": {}, "prefix": "dockind_"},
@@ -2841,6 +2841,7 @@
   "water": {
    "closed": false,
    "entries": {
+    "water_lake": {"basis": "卷五 §2.2 :248（water 族开放，条目必写 navigable、flowing；静水为假，如湖、塘）；湖：静水（附表-1122 4.2 镜沼、灰盐池）；可航取与 water_sea 同（大水面可行船；设定未写湖上行船与否，暂定·待核；附表-1122勘误 L1 补）", "flowing": false, "navigable": true},
     "water_navigable": {"navigable": true},
     "water_river": {"basis": "卷五 §2.2 :248（water 族条目必写 navigable、flowing）；河：可航、流水（regions.json:76、:906、:909）", "flowing": true, "navigable": true},
     "water_sea": {"basis": "卷五 §2.2 :248；海：可航（regions.json:2004）、静水取假（卷五 :664 静水全片一个水面）", "flowing": false, "navigable": true}

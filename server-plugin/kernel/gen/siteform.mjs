@@ -8,7 +8,12 @@
 // 补出的房子必须能展开：补完前三项后先经 planFeasible（不铺格的可行性预判，与面积无关的代价）判，ok 为假（如房间分不下）时把 A 加倍后重做 planCellsOf，可行才调 planBlueprint 真铺，直到 ok 为真；planCells 任一边将超过该形制登记的外包边长上限
 // （形制条目 planSideMaxCells，卷十九 §2.4、封卷后勘误 1121k21、李白 11-22 裁定事件 3ce50e60 取甲；planCellsOf 越界抛，没有全局数）仍不行，即拒收：E-GEN-ROW-INVALID，字段写进生成日志（building、form、
 // need_width_cells、need_depth_cells、max_cells、reason=plan_cells_over_form_cap），不静默截断、不悄悄缩房间。作者写了 planCells 的不重做、不加倍，超形制上限或 ok 为假同样 E-GEN-ROW-INVALID（作者数据错）。
-// form、intendedType 是卷十九必填的作者输入，不补，缺 form 即 E-GEN-ROW-INVALID（卷十 :684 R10-7.12；intendedType 现在还不是 place 表登记的维度，见回报）；
+// form：作者没写（该键缺）时本阶段先补（封卷后勘误 1123k31，李白 11-23 事件 08673f69 第 1 条"按设施类型"）：候选 = 形制登记（bform 族）里按卷十九 §4.5 规则 2 ③ 对本行 intendedType
+// 所指设施类型行（facility_type 族，maxSkyExposure、maxAperture 空即无要求）筛后剩下的条目（形制设计围合值取该形制最小可展开平面的蓝图 design，不超过两个上限才留），按代号序，
+// 按抽取点 site_gen_bldfill_form（对象为本行 id，等权 categorical）取一个，写成该行 generated 节的偏离行（来源"生成补缺"，作者之后手写即覆盖）；
+// 行上没有 intendedType（现在它还不是 place 表登记的维度）、类型行不在族里、或筛后一个形制也不剩，都算"该设施类型在登记里找不到形制"：不补、不报错、不自造，记缺口 form_type_unmatched，
+// 该行不参加本阶段其余各项（也不计入站点占地），缺口按行列进交接文件；作者写了 form 的一律不动，写了不在登记里的仍 E-GEN-ROW-INVALID。
+// intendedType 是卷十九必填的作者输入，不补；
 // 来源标记与覆盖同 R10-2.17：补出的维度写成该行的 generated 偏离行（generated.by 记 gstage_siteform），作者之后手写同一维度即覆盖（世界重新创建时本阶段不再补它）。
 // 同种子同结果：抽取只用 site_gen_bldfill_area、site_gen_bldfill_storeys 两个抽取点与行 id，其余是形制条目与纯函数；取值范围是生成规则（占位值待标定），出处写"生成规则"，不是设定原文。
 // 未落（卷文推不出或代码没有，不自编）：storeysMax 取卷十九 buildPlan 按 form、materialKg、wallThicknessM 给出的层数上限，buildPlan 还没有，现取规则表 rules.facility.blueprint.storeysMax
@@ -24,8 +29,8 @@ import { planBlueprint, planFeasible, planCellsOf, REASON as BP_REASON } from '.
 import { genDraw, genDiceKey } from './draw.mjs';
 import { fixedUnits, fixedAdd, fixedMultiply, fixedToNumber, truncateTo } from '../det-math.mjs';
 
-const FAMILY = Object.freeze({ form: 'bform' }); // 形制词表族（卷十九 §2.4）
-const REASON = Object.freeze({ roomRows: 'room_rows_unbuilt', storeysCap: 'storeys_max_unchecked', tractUnplanned: 'tract_footprint_unplanned' });
+const FAMILY = Object.freeze({ form: 'bform', type: 'facility_type' }); // 形制词表族（卷十九 §2.4）、设施类型族（卷十九 §2.2）
+const REASON = Object.freeze({ roomRows: 'room_rows_unbuilt', storeysCap: 'storeys_max_unchecked', tractUnplanned: 'tract_footprint_unplanned', formTypeUnmatched: 'form_type_unmatched' });
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const CAP_REASON = 'plan_cells_over_form_cap'; // blueprint.mjs overFormCap 的 reason
 const wrapDomain = (id, formCode, e) => {
@@ -56,13 +61,58 @@ export function genSiteForm(ctx) {
   if (ctx.blueprint === null) throw new KernelError('E-RULES-UNREGISTERED', {}, 'siteform: rules.grid, rules.facility.blueprint and the volume unit are needed to fill building rows');
   const limits = ctx.blueprint.limits;
   const planOf = new Map(); // 建筑 id → 平面格数（作者写的或本阶段补的）；站点面积一节读
+  // 形制登记：bform 族全部条目的代号，按代号序（算一次）。
+  const registered = ctx.vocab.index instanceof Map ? [...ctx.vocab.index].filter(([, r]) => r && r.family === FAMILY.form && r.entry !== null && typeof r.entry === 'object').map(([code]) => code).sort(cmp) : [];
+  // 形制的设计围合值（卷十九 §4.5 规则 2 ③ 的比较对象）：取该形制最小可展开平面（面积自 1 m² 起逐次加倍到可展开）的蓝图 design；展不开即 null（不入候选）。
+  const designCache = new Map();
+  const designOf = (code) => {
+    if (designCache.has(code)) return designCache.get(code);
+    const f = ctx.vocab.index.get(code).entry;
+    const wall = f.walled === true ? f.wallThicknessDefaultM : null;
+    const storeys = f.storeyBase !== undefined && 1 - f.storeyBase > 1 ? 1 - f.storeyBase : 1;
+    let design = null;
+    let area = fixedUnits(1);
+    for (;;) {
+      try {
+        const planCells = planCellsOf({ form: f, areaM2: fixedToNumber(area), wallThicknessM: wall }, ctx.blueprint);
+        const input = { form: f, planCells, storeys, wallThicknessM: wall, facing: 0 };
+        const feas = planFeasible(input, ctx.blueprint);
+        if (feas.ok) { design = planBlueprint(input, ctx.blueprint).design; break; }
+        if (feas.reason === BP_REASON.entranceNotAdjacent) break;
+      } catch (e) { break; } // 越形制上限等：该形制展不开，不入候选
+      area = fixedAdd(area, area);
+    }
+    designCache.set(code, design);
+    return design;
+  };
+  // 本行设施类型的候选形制：类型行（facility_type 族）的两个上限，空即无要求；没有类型、类型行不存在即空表。
+  const candidatesOf = (b) => {
+    const type = b.dims.intendedType;
+    const rec = typeof type === 'string' && ctx.vocab.index instanceof Map ? ctx.vocab.index.get(type) : undefined;
+    if (!rec || rec.family !== FAMILY.type || rec.entry === null || typeof rec.entry !== 'object') return [];
+    const { maxSkyExposure: sky, maxAperture: aperture } = rec.entry;
+    return registered.filter((code) => {
+      const d = designOf(code);
+      return d !== null && (typeof sky !== 'number' || d.skyExposure <= sky) && (typeof aperture !== 'number' || d.aperture <= aperture);
+    });
+  };
   for (const b of buildings) {
-    const d = b.dims;
-    // 形制没写：形制是作者必填输入、不补不编，缺即 E-GEN-ROW-INVALID（卷十 :684）。
-    const rec = typeof d.form === 'string' && ctx.vocab.index instanceof Map ? ctx.vocab.index.get(d.form) : undefined;
-    if (!rec || rec.family !== FAMILY.form || rec.entry === null || typeof rec.entry !== 'object') throw new KernelError('E-GEN-ROW-INVALID', {}, `building ${b.id}: form ${JSON.stringify(d.form)} is not an entry of the bform family (form is a required authored input, it is never filled)`);
-    const form = rec.entry;
     const dims = {};
+    let formSeedKey = null;
+    let formCode = b.dims.form;
+    if (formCode === undefined) {
+      // 作者没写形制：按设施类型从登记里按种子取一个（卷十 R10-7.12，封卷后勘误 1123k31）；找不到形制不补、不自造，列缺口。
+      const candidates = candidatesOf(b);
+      if (candidates.length === 0) { deferred.push({ id: b.id, reason: REASON.formTypeUnmatched, gaps: ['form'] }); continue; }
+      formCode = genDraw('gen_siteform', 'site_gen_bldfill_form', ctx.worldSeed, b.id, ctx.genesisMinute, { dist: 'categorical', weights: Object.fromEntries(candidates.map((c) => [c, 1])) });
+      formSeedKey = genDiceKey('gen_siteform', 'site_gen_bldfill_form', ctx.worldSeed, b.id, ctx.genesisMinute);
+      dims.form = formCode;
+    }
+    const d = { ...b.dims, form: formCode };
+    // 作者写了形制但不在登记里（或不是字串）：作者数据错，E-GEN-ROW-INVALID。
+    const rec = typeof formCode === 'string' && ctx.vocab.index instanceof Map ? ctx.vocab.index.get(formCode) : undefined;
+    if (!rec || rec.family !== FAMILY.form || rec.entry === null || typeof rec.entry !== 'object') throw new KernelError('E-GEN-ROW-INVALID', {}, `building ${b.id}: form ${JSON.stringify(formCode)} is not an entry of the bform family`);
+    const form = rec.entry;
     // ① 墙厚。
     let wall = typeof d.wallThicknessM === 'number' ? d.wallThicknessM : null;
     if (form.walled === true && wall === null) {
@@ -139,7 +189,7 @@ export function genSiteForm(ctx) {
     }
     if (missing.length > 0) deferred.push({ id: b.id, reason: REASON.roomRows, gaps: missing });
     if (Object.keys(dims).length > 0) {
-      proposals.push({ table: ctx.table, id: b.id, dims, by: ctx.stage, seedKey: genDiceKey('gen_siteform', 'site_gen_bldfill_area', ctx.worldSeed, b.id, ctx.genesisMinute) });
+      proposals.push({ table: ctx.table, id: b.id, dims, by: ctx.stage, seedKey: formSeedKey ?? genDiceKey('gen_siteform', 'site_gen_bldfill_area', ctx.worldSeed, b.id, ctx.genesisMinute) });
     }
   }
   siteAreas(ctx, buildings, planOf, proposals, deferred);
@@ -167,7 +217,8 @@ function siteAreas(ctx, buildings, planOf, proposals, deferred) {
   const occupancyN = (siteId) => {
     let cells = 0;
     for (const b of sites.get(siteId) || []) {
-      const pc = planOf.get(b.id); // 每栋建筑要么补出、要么读到平面格数（缺 form 已在上面报错），这里一定有
+      const pc = planOf.get(b.id); // 每栋建筑要么补出、要么读到平面格数；只有按设施类型找不到形制而没补出的行（缺口 form_type_unmatched）没有，不计占地
+      if (pc === undefined) continue;
       cells += pc.widthCells * pc.depthCells;
     }
     const need = (fixedUnits(cells * cellM * cellM) + denominator - 1n) / denominator; // 向上取整（定点两边同标度，商是整数）

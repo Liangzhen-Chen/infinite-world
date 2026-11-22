@@ -1,40 +1,22 @@
 // 世界总案地理附表的省界核对（docs/研究/世界地理建模附表-1122.md 第三、四节）。
-// 只读本文件里照附表抄下的省界、海、河、郡种子，调仓库 G3 纯函数 planRegionFootprints（server-plugin/kernel/footprint.mjs，卷五 §4.1 规则 10）；
-// 不推进世界、不读写状态与世界数据，只打印结果。区格放大为 1 千米（regionCellM = 1000）以便本机几秒跑完，算法与入参形状同正式；正式 100 米区格时各格数乘 100。
+// 读 world/geo/geo-model.json 的省界、海、河、北岭（转换脚本读的同一份）与本文件里抄下的郡种子，调仓库 G3 纯函数 planRegionFootprints（server-plugin/kernel/footprint.mjs，卷五 §4.1 规则 10）；
+// 不推进世界、不写状态与世界数据，只打印结果。区格放大为 1 千米（regionCellM = 1000）以便本机几秒跑完，算法与入参形状同正式；正式 100 米区格时各格数乘 100。
 // 另核天庭（位面设计 3.2、4.2）：云海、天门区、十二神国按目标面积划得下，飞升台门落点在天门区。
 // 用法：node tools/world-plan-partition-check.mjs　末行 SUMMARY 各项全为 0 即自洽：表本身共格、郡种子不在本省、划分错误、表与划分面积不符、天庭划分错误、天庭面积不足、门落点不在天门区。
+import { readFileSync } from 'node:fs';
 import { planRegionFootprints, cellCountOf, eachCell, xOf, yOf, keyOf, inBox, ownerIdAt } from '../server-plugin/kernel/footprint.mjs';
 import { installFixedConstants } from '../server-plugin/kernel/det-math.mjs';
 
 installFixedConstants({ BASE: 10, SCALE: 10000, PERMILLE: 1000, BPS: 10000 }); // 与 tests/kernel/fixture.mjs 同值
 
 // ---- 附表数据（千米；矩形左闭右开 [x0,x1)×[y0,y1)）----
-const BOX = { x0: -170, y0: -330, cellsX: 890, cellsY: 600 }; // 附表第一节主世界外包框
-const ISLANDS = [-45, 5, -285, -250];
-const CAUSEWAY = [-30, -20, -250, -230];
-const SEAS = { // 附表 4.1；先占
-  sea_north: { rects: [[-170, 720, 250, 270], [110, 160, 225, 250]], minus: [] },
-  sea_west: { rects: [[-170, -150, -330, 250], [-150, 40, -330, -230]], minus: [ISLANDS, CAUSEWAY] },
-  sea_south_gulf: { rects: [[40, 400, -330, -110], [-5, 40, -195, -169]], minus: [] },
-};
-const RIVERS = [ // 附表 4.2；表序即流向序；最后一段止于与下游相接
-  { id: 'river_da', pts: [[-80, 32], [5, 8], [10, 0], [10, -175]], into: 'sea_south_gulf' },
-  { id: 'river_lu', pts: [[60, 57], [8, 9]], into: 'river_da' },
-  { id: 'river_zhong', pts: [[495, 60], [460, 30], [455, -15], [415, -45], [395, -80], [395, -130]], into: 'sea_south_gulf' },
-  { id: 'river_lin', pts: [[-112, -90], [-160, -130]], into: 'sea_west' },
-];
-const LANDS = { // 附表 3.2；各省与北岭
-  prov_xichui: [[-120, 330, -20, 50], [-15, 40, -110, -20], [11, 40, -169, -110]],
-  prov_hanlu: [[-60, 230, 50, 140]],
-  prov_xingwan: [[-20, 230, 140, 250]],
-  prov_feicui: [[-150, -15, -110, -20], [-150, 11, -155, -110]],
-  prov_hupo: [[-150, 11, -169, -155], [-150, 40, -230, -169], CAUSEWAY, ISLANDS],
-  prov_zhonglu: [[330, 555, -80, 90]],
-  prov_fengji: [[400, 700, -200, -80]],
-  prov_jingzhao: [[400, 700, -330, -200]],
-  prov_wushan: [[555, 700, 0, 230]],
-  wild_beiling: [[230, 555, 140, 250]],
-};
+// 省界、海岸、河折线、北岭不在本脚本里另抄一份：读 world/geo/geo-model.json（转换脚本 tools/convert-geo-g5b.mjs 读的同一份），改附表数据只改那一处。
+const MODEL = JSON.parse(readFileSync(new URL('../world/geo/geo-model.json', import.meta.url), 'utf8'));
+const BOX = { x0: MODEL.box.xKm[0], y0: MODEL.box.yKm[0], cellsX: MODEL.box.xKm[1] - MODEL.box.xKm[0], cellsY: MODEL.box.yKm[1] - MODEL.box.yKm[0] }; // 附表第一节主世界外包框（千米，区格 = 1 千米）
+const short = (id) => id.replace(/^loc_water_/, '').replace(/^loc_/, ''); // loc_water_sea_north → sea_north，loc_prov_xichui → prov_xichui
+const SEAS = Object.fromEntries(Object.entries(MODEL.seas).map(([id, s]) => [short(id), { rects: s.rectsKm, minus: s.minusKm ?? [] }])); // 附表 4.1；先占
+const RIVERS = Object.entries(MODEL.rivers).map(([id, r]) => ({ id: short(id), pts: r.pointsKm, into: short(r.downstream) })); // 附表 4.2；表序即流向序；最后一段止于与下游相接
+const LANDS = Object.fromEntries([...Object.entries(MODEL.provinces), ...Object.entries(MODEL.wild)].map(([id, p]) => [short(id), p.rectsKm])); // 附表 3.2；各省与北岭
 const COUNTIES = { // 附表 3.3 种子（= 郡治坐标）
   prov_xichui: { longqu: [20, 5], xiadu: [0, -70], huancheng: [250, 10], shangzha: [-80, 30] },
   prov_hanlu: { tongji: [60, 62], tuixie: [20, 110], zheya: [130, 80], heilu: [165, 120] },
@@ -47,18 +29,19 @@ const COUNTIES = { // 附表 3.3 种子（= 郡治坐标）
   prov_wushan: { shanyi: [620, 40], wuling: [670, 95], guanxue: [585, 155] },
 };
 const TABLE_AREA = { // 附表 3.2、3.3、4.1、4.2 写下的面积或格数（km²），用来核表与划分一致
-  sea_north: 19050, sea_west: 28650, sea_south_gulf: 80370,
-  river_da: 292, river_lu: 101, river_zhong: 271, river_lin: 68,
-  prov_xichui: 37847, prov_hanlu: 26080, prov_xingwan: 26250, prov_feicui: 19282, prov_hupo: 14610,
-  prov_zhonglu: 38009, prov_fengji: 36000, prov_jingzhao: 39000, prov_wushan: 33350, wild_beiling: 35750,
-  county_longqu: 9461, county_xiadu: 5117, county_huancheng: 9461, county_shangzha: 5309,
-  county_tongji: 6520, county_tuixie: 6520, county_zheya: 6098, county_heilu: 6098,
+  sea_north: 19050, sea_west: 28650, sea_south: 80370,
+  river_dahe: 312, river_lushui: 101, river_zhonghe: 271, river_linxi: 68, // 大河 292→312（附表-1122勘误 E1）
+  prov_xichui: 40184, prov_hanlu: 26944, prov_xingwan: 26250, prov_feicui: 18769, prov_hupo: 14402, // 西陲、寒炉、翡翠、琥珀（勘误 E1、B1、B2）
+  prov_zhonglu: 39609, prov_fengji: 36000, prov_jingzhao: 39000, prov_wushan: 33350, wild_beiling: 35750, // 中陆（勘误 B3）
+  county_longqu: 10046, county_xiadu: 7211, county_huancheng: 10046, county_shangzha: 8825, // 西陲四郡（勘误后平分重划）
+  county_tongji: 6736, county_tuixie: 6736, county_zheya: 6303, county_heilu: 6304, // 寒炉四郡
   county_xuedeng: 13125, county_fudeng: 13125,
-  county_shuqiao: 4820, county_taiyuan: 4820, county_lieer: 4671, county_dongyuan: 4820,
-  county_hupogang: 4870, county_qiansheng: 4870, county_yanfeng: 3902,
-  county_wangji: 6435, county_jiekan: 6281, county_xiqian: 6434, county_baiguan: 7601, county_chizhe: 7601,
+  county_shuqiao: 4692, county_taiyuan: 4692, county_lieer: 4536, county_dongyuan: 4692, // 翡翠四郡
+  county_hupogang: 4800, county_qiansheng: 4800, county_yanfeng: 3819, // 琥珀三郡
+  county_wangji: 6435, county_jiekan: 6281, county_xiqian: 6434, county_baiguan: 7921, county_chizhe: 7921, // 中陆：白冠、赤褶
   county_zhufeng: 12000, county_jinghuan: 12000, county_tiyuan: 6660,
-  county_luyu: 12962, county_huiyan: 13000, county_chaoting: 13000,
+  lake_jingzhao: 3000, lake_huiyan: 800, // 镜沼、灰盐池（附表 4.2 目标面积，勘误 L1 补建）
+  county_luyu: 11696, county_huiyan: 11733, county_chaoting: 11733, // 镜沼省三郡（湖占去 3,800 后平分重划）
   county_shanyi: 9949, county_wuling: 11116, county_guanxue: 11116,
 };
 
@@ -125,7 +108,15 @@ function buildRows() {
     if (painted.get(cellKey(x, y)) !== p) { seedMisses += 1; problems.push(`SEED-NOT-IN-PROVINCE ${c} (${x},${y}) painted=${painted.get(cellKey(x, y))}`); }
     rows.set(`county_${c}`, { parent: p, kind: 'region', offstage: false, coord: { x: x * 1000 + 500, y: y * 1000 + 500 }, targetAreaM2: null, boundary: null });
   }
-  return { rows, seedMisses, problems, ids: [...cellsOf.keys()] };
+  // 静水湖（附表 4.2；勘误 L1）：作所在省的子行，种子与目标面积手写，形状由规则 10 生长
+  const lakeIds = [];
+  for (const [id, lk] of Object.entries(MODEL.lakes ?? {})) {
+    const [x, y] = lk.seedKm;
+    if (painted.get(cellKey(Math.floor(x), Math.floor(y))) !== short(lk.parent)) { seedMisses += 1; problems.push(`SEED-NOT-IN-PROVINCE ${id} (${x},${y}) painted=${painted.get(cellKey(Math.floor(x), Math.floor(y)))}`); }
+    rows.set(short(id), { parent: short(lk.parent), kind: 'region', offstage: false, coord: { x: x * 1000 + 500, y: y * 1000 + 500 }, targetAreaM2: lk.areaKm2 * 1000000, boundary: null });
+    lakeIds.push(short(id));
+  }
+  return { rows, seedMisses, problems, ids: [...cellsOf.keys(), ...lakeIds] };
 }
 
 function countyLine(plan, p, c) {
