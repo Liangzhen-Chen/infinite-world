@@ -376,10 +376,14 @@
     {
      "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 72
+    },
+    {
+     "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 73
     }
    ],
-   "print": "2b2a6006b04f1e04328f02ccc95d781efe18c62f8f4c3f78e8f7a2f53518814d",
-   "rev": 72,
+   "print": "c01082c3576501cf7ba62e9bba067614c57a9c7271129dbea8bf22e9ad8d5abf",
+   "rev": 73,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -984,10 +988,14 @@
     {
      "ref": "李白 11-24 10:34「家户两问1122」①：tools/accept/detectors/data_shape.mjs 类词表名单 VOCAB_LIKE_KINDS 只加 facility_type（设施类型原本是词表，D 卡按 P10-2 改成维度表后误触 S6-2.b，状态表有先例；主会话亲改）：判据未放宽，只把设施类型归入类词表，具体设施实例 id 仍计（反向测试 tests/accept/detectors.test.mjs）；本类别因检测器模块的词法指纹变而 rev+1",
      "rev": 73
+    },
+    {
+     "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 74
     }
    ],
-   "print": "81221edfa532db1e60b1ce7d8f06517cfec887af41d46aa6a7967361ede8cd84",
-   "rev": 73,
+   "print": "aed1dde6ac3876f33ec25843db15b14fe100a6a759bedcfaf32dc8f8672e2953",
+   "rev": 74,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1643,10 +1651,14 @@
     {
      "ref": "李白 11-24 10:34「家户两问1122」①：tools/accept/detectors/data_shape.mjs 类词表名单 VOCAB_LIKE_KINDS 只加 facility_type（设施类型原本是词表，D 卡按 P10-2 改成维度表后误触 S6-2.b，状态表有先例；主会话亲改）：判据未放宽，只把设施类型归入类词表，具体设施实例 id 仍计（反向测试 tests/accept/detectors.test.mjs）；本类别因检测器模块的词法指纹变而 rev+1",
      "rev": 70
+    },
+    {
+     "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 71
     }
    ],
-   "print": "f3c5a21bebf26a77cece53491eb1a069e28ad5306f94ebb36f3afad76905221b",
-   "rev": 70,
+   "print": "e6125855e3b77d643ea2d3fdc0dac543da1f760811db96bab203093b813c2157",
+   "rev": 71,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -2124,10 +2136,14 @@
     {
      "ref": "李白 11-24 10:34「家户两问1122」①：tools/accept/detectors/data_shape.mjs 类词表名单 VOCAB_LIKE_KINDS 只加 facility_type（设施类型原本是词表，D 卡按 P10-2 改成维度表后误触 S6-2.b，状态表有先例；主会话亲改）：判据未放宽，只把设施类型归入类词表，具体设施实例 id 仍计（反向测试 tests/accept/detectors.test.mjs）；本类别因检测器模块的词法指纹变而 rev+1",
      "rev": 86
+    },
+    {
+     "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 87
     }
    ],
-   "print": "9d40caf6bcfa48ae4e6ea69c1e952ffb71134c94b12d5570b5a1cfa601a96498",
-   "rev": 86,
+   "print": "1caece23e035a15d117b83548d00dd427c8c4d1d563702479b23e6eba45efcd7",
+   "rev": 87,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -2542,10 +2558,14 @@
     {
      "ref": "李白 11-24 10:34「家户两问1122」①：tools/accept/detectors/data_shape.mjs 类词表名单 VOCAB_LIKE_KINDS 只加 facility_type（设施类型原本是词表，D 卡按 P10-2 改成维度表后误触 S6-2.b，状态表有先例；主会话亲改）：判据未放宽，只把设施类型归入类词表，具体设施实例 id 仍计（反向测试 tests/accept/detectors.test.mjs）；本类别因检测器模块的词法指纹变而 rev+1",
      "rev": 71
+    },
+    {
+     "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 72
     }
    ],
-   "print": "f3c5a21bebf26a77cece53491eb1a069e28ad5306f94ebb36f3afad76905221b",
-   "rev": 71,
+   "print": "e6125855e3b77d643ea2d3fdc0dac543da1f760811db96bab203093b813c2157",
+   "rev": 72,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -3389,10 +3409,14 @@
     {
      "ref": "李白 11-24 10:34「家户两问1122」①：tools/accept/detectors/data_shape.mjs 类词表名单 VOCAB_LIKE_KINDS 只加 facility_type（设施类型原本是词表，D 卡按 P10-2 改成维度表后误触 S6-2.b，状态表有先例；主会话亲改）：判据未放宽，只把设施类型归入类词表，具体设施实例 id 仍计（反向测试 tests/accept/detectors.test.mjs）；本类别因检测器模块的词法指纹变而 rev+1",
      "rev": 71
+    },
+    {
+     "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 72
     }
    ],
-   "print": "f3c5a21bebf26a77cece53491eb1a069e28ad5306f94ebb36f3afad76905221b",
-   "rev": 71,
+   "print": "e6125855e3b77d643ea2d3fdc0dac543da1f760811db96bab203093b813c2157",
+   "rev": 72,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -3659,10 +3683,14 @@
     {
      "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 63
+    },
+    {
+     "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 64
     }
    ],
-   "print": "51dab9263af398d8570f41b63b2fa6278a5fe4e6d2f48435fb382eb393496772",
-   "rev": 63,
+   "print": "fd15428d87b815049368a79780e84c48cb912dbc8dc9433c9c08497b50713358",
+   "rev": 64,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -4005,10 +4033,14 @@
     {
      "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
      "rev": 82
+    },
+    {
+     "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 83
     }
    ],
-   "print": "7b3b18878690a7e20327664e9b7751d1a00385a4af46051d8f7f8700e9493b8e",
-   "rev": 82,
+   "print": "41e9d767e85cf77a086f130e3de592e86ba58eddc3f176f9390ad5b14963fbdd",
+   "rev": 83,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -4372,10 +4404,14 @@
     {
      "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 48
+    },
+    {
+     "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 49
     }
    ],
-   "print": "f7b7c38d41beae5bd5441f8f3374a1445780a8fbf12a73a3d79b38dc9b1441cc",
-   "rev": 48,
+   "print": "54207f6361ed2fdd6fbe7d216d16e2b76ea9c041cf8d85f24c239279932e4c9a",
+   "rev": 49,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -4677,10 +4713,14 @@
     {
      "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 70
+    },
+    {
+     "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 71
     }
    ],
-   "print": "2b2a6006b04f1e04328f02ccc95d781efe18c62f8f4c3f78e8f7a2f53518814d",
-   "rev": 70,
+   "print": "c01082c3576501cf7ba62e9bba067614c57a9c7271129dbea8bf22e9ad8d5abf",
+   "rev": 71,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -4897,10 +4937,14 @@
     {
      "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 46
+    },
+    {
+     "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 47
     }
    ],
-   "print": "e3b4ba06ead155381db72482cf630a43194508f4b8bcb838287aa3fdaa15b303",
-   "rev": 46,
+   "print": "52e4f24846503c9cfa438397171d0a75dd4921244d884a905cf81c1c1abba3c7",
+   "rev": 47,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -5395,10 +5439,14 @@
     {
      "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 65
+    },
+    {
+     "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "rev": 66
     }
    ],
-   "print": "51dab9263af398d8570f41b63b2fa6278a5fe4e6d2f48435fb382eb393496772",
-   "rev": 65,
+   "print": "fd15428d87b815049368a79780e84c48cb912dbc8dc9433c9c08497b50713358",
+   "rev": 66,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

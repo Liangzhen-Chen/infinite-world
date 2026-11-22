@@ -14,7 +14,6 @@
   {"key": "diceKeyMaxQualifiers", "value": 2, "source": "卷二十七 R27-8.5 :728 骰值键 subjectId 为一个 id 后接一到两个限定成分", "basis": "骰值键复合对象段限定成分个数上限：最多两个；代码经规则表 kernelConstants 读入，不在代码里写字面量（卷二 S10 :2404，数值来自 engine.rules 即不计）"},
   {"key": "thermalLagMaxNum", "value": 1, "file": "server-plugin/kernel/calendar.mjs", "source": "卷二十 §2.2 :218 thermalLagPhase 取值域 [0, 1/4)：上界 1/4 的分子", "basis": "上界登记成常数，checkCalendarClimateTables 经 engine.rules 读入交叉乘比较，不在代码里写字面量 4"},
   {"key": "thermalLagMaxDen", "value": 4, "file": "server-plugin/kernel/calendar.mjs", "source": "卷二十 §2.2 :218 thermalLagPhase 取值域 [0, 1/4)：上界 1/4 的分母", "basis": "同 thermalLagMaxNum"},
-  {"key": "grammarMaxLength", "value": 48, "source": "卷二 §1.9 :285 代号文法 ^[a-z][a-z0-9_]{1,47}$（总长至多 48）与维度键文法 ^[a-z][a-zA-Z0-9]{0,47}$（总长至多 48）", "basis": "卷二 :285 代号与键文法长度上限；代码经规则表 kernelConstants 读入，不在代码里写字面量（卷二 S10 :2404，数值来自 engine.rules 即不计）"},
   {"key": "byteRadix", "value": 256, "file": "server-plugin/kernel/bytes.mjs", "source": "卷二 :1047 kernel 自带 base64 码表对 Uint8Array 逐字节查表（字节 = 256 个取值）", "basis": "字节的进制；kernel/bytes.mjs 的 base64 解码读它，代码经规则表 kernelConstants 读入，不写字面量（卷二 S10）"},
   {"key": "base64Radix", "value": 64, "file": "server-plugin/kernel/bytes.mjs", "source": "卷二 :1047 base64（RFC 4648：字母表 64 个字符，每字符 6 位）", "basis": "base64 的进制；须等于 kernel/bytes.mjs 码表的长度，不等启动即拒"},
   {"key": "base64GroupChars", "value": 4, "file": "server-plugin/kernel/bytes.mjs", "source": "卷二 :1047 base64（RFC 4648：每 4 个字符一组，填充 = 补满一组）", "basis": "base64 一组的字符数；填充个数 = 组长 − 末组字符数"},

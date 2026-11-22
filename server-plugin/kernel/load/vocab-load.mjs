@@ -1,7 +1,7 @@
 // 词表族与单位表（卷二 §1.9、§1.4、§1.1）：建代号索引、broader 上位链；核对族前缀与实体前缀不冲突（E-DIM-VOCAB-PREFIX）、
 // 条目代号格式与前缀、broader 闭合无环、单位条目。只按表头与族登记通用处理，不认任何具体族的条目。
 
-const CODE_RE = /^[a-z][a-z0-9_]{1,47}$/;
+import { CODE_RE } from '../validate/types.mjs';
 
 // 一个前缀与另一个前缀冲突：相等、或一个是另一个的开头（§1.9"任何词表族前缀不得等于实体前缀、不得是实体前缀的前缀、也不得以实体前缀开头"）。
 const clash = (a, b) => a.startsWith(b) || b.startsWith(a);
@@ -26,7 +26,7 @@ export function loadVocab(vocabDoc, entityPrefixes, err) {
     const entries = fam.entries && typeof fam.entries === 'object' ? fam.entries : {};
     families.set(name, { name, prefix, closed: fam.closed === true, entries });
     for (const id of Object.keys(entries).sort()) {
-      if (!CODE_RE.test(id) || !id.startsWith(prefix)) { err({ code: 'E-DIM-ID-FORMAT', table: '_vocab', row: id, dim: name, got: id, want: `^[a-z][a-z0-9_]{1,47}$ with prefix ${prefix}` }); continue; }
+      if (!CODE_RE.test(id) || !id.startsWith(prefix)) { err({ code: 'E-DIM-ID-FORMAT', table: '_vocab', row: id, dim: name, got: id, want: `${CODE_RE.source} with prefix ${prefix}` }); continue; }
       if (index.has(id)) { err({ code: 'E-DIM-ID-DUPLICATE', table: '_vocab', row: id, dim: name, got: index.get(id).family, want: 'one family per code' }); continue; }
       index.set(id, { family: name, prefix, entry: entries[id] || {} });
     }

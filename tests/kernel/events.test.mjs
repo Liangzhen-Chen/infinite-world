@@ -15,7 +15,7 @@ import {
 } from '../../server-plugin/kernel/transaction.mjs';
 import { openAccount, balance } from '../../server-plugin/kernel/ledger.mjs';
 import { useReportSink } from '../../server-plugin/kernel/report.mjs';
-import { installDigestCap, installDigestExclude, saveDigest } from '../../server-plugin/kernel/save.mjs';
+import { installDigestCap, installDigestExclude, saveDigest, sha256Text } from '../../server-plugin/kernel/save.mjs';
 import { createDigestCap } from '../../server-plugin/textcore/digest.mjs';
 import { execute } from '../../server-plugin/primitives-runtime.mjs';
 import {
@@ -129,6 +129,11 @@ function terminationEvent(overrides = {}) {
 const KERNEL_ID = { rule: 'rule_test_term', subject: 'evt_prev', position: 'pos.kernel' };
 
 // ---------- 事件 id 派生（卷九 §2.9 :432–:443；卷二十七 R27-8.9 :738） ----------
+
+test('事件 id：键文本照卷二 §1.10 :320 手拼成字面量（世界种子|规则|主体|时刻|位次，竖线相连），id 即其 sha256', () => {
+  const id = deriveEventId(ENGINE, { rule: 'act_trade_buy', subject: 'npc_a', minute: 100, position: 'pos.commit' });
+  assert.equal(id, sha256Text('test_world_seed|act_trade_buy|npc_a|100|pos.commit'));
+});
 
 test('事件 id：五样成分相同即同一 id，任一成分变即不同；成分只收代号、id 与整数', () => {
   const id = deriveEventId(ENGINE, { rule: 'act_trade_buy', subject: 'npc_a', minute: 100, position: 'pos.commit' });

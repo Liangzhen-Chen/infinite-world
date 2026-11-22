@@ -30,6 +30,7 @@ import { emit as writeEvent } from './kernel/events.mjs';
 import { clockView } from './kernel/scheduler.mjs';
 import { instantiatePerson } from './person.mjs';
 import { perceiveEvent, sourceLevelsOf } from './perceive.mjs';
+import { CODE_RE, KEY_RE } from './kernel/validate/types.mjs';
 
 // 账户 id 的段序（卷六 §4.1 规则 1、kernel/ledger.mjs 的 accountKey）：持有人、用途、资源种类、资源键。
 // 原语 transfer 的 from、to 是账户 id（卷九 §4.2.1 transfer 行只给 from、to、qty；账户包含资源，
@@ -96,74 +97,41 @@ function isPlainObject(v) {
   return v !== null && typeof v === 'object' && !Array.isArray(v);
 }
 
-// 卷二 §1.9 :285 的两条文法，逐字符查允许集（不写正则字面量，S13 ①）：
-// CODE = ^[a-z][a-z0-9_]{1,47}$（实体 id、类别 id、枚举值，至少 2 字符、总长至多 48）；
-// KEY  = ^[a-z][a-zA-Z0-9]{0,47}$（维度键与 struct 字段名，至少 1 字符、总长至多 48，允许后续大写、不许下划线）。
-// 总长上限照 S10 登记成规则表常数 kernelConstants.grammarMaxLength（world/rules/tables/kernel-constants.json，
-// 登记行见 world/rules/registry.json），执行器经 engine.rules 读，不在规则层写数值字面量。
-const SCHEMA = Object.freeze({ constantsTable: 'kernelConstants', maxLengthKey: 'grammarMaxLength' });
-const LOWER = 'abcdefghijklmnopqrstuvwxyz';
-const CODE_TAIL = LOWER + '0123456789_';
-const KEY_TAIL = LOWER + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-
-// 文法总长上限：缺键、非正整数即拒（不回落默认、不静默跳过），形状同加载器读同表常数的方式。
-function grammarMaxLength(engine) {
-  const table = isPlainObject(engine) && isPlainObject(engine.rules) ? engine.rules[SCHEMA.constantsTable] : undefined;
-  const v = isPlainObject(table) ? table[SCHEMA.maxLengthKey] : undefined;
-  if (!Number.isSafeInteger(v) || v < 1) {
-    throw deny('E-DIM-STRUCT-FIELD', `rules.${SCHEMA.constantsTable}.${SCHEMA.maxLengthKey} is a positive integer`);
-  }
-  return v;
-}
-
-function isCode(s, maxLength) {
-  // CODE_RE 的尾段至少一个字符：首字符之外还要有一位（用 0/1 只在白名单内，不写字面量 2）。
-  if (typeof s !== 'string' || s.length === 0 || s.length === 1) return false;
-  if (s.length > maxLength) return false;
-  if (!LOWER.includes(s[0])) return false;
-  for (const ch of s.slice(1)) if (!CODE_TAIL.includes(ch)) return false;
-  return true;
-}
-
-function isKey(s, maxLength) {
-  if (typeof s !== 'string' || s.length === 0) return false;
-  if (s.length > maxLength) return false;
-  if (!LOWER.includes(s[0])) return false;
-  for (const ch of s.slice(1)) if (!KEY_TAIL.includes(ch)) return false;
-  return true;
-}
+// 卷二 §1.9 :291 的两条文法（代号 CODE、维度键与 struct 字段名 KEY）只在 kernel/validate/types.mjs 定义，含总长上限；这里只引用，不另写字符集与长度。
+const isCode = (s) => typeof s === 'string' && CODE_RE.test(s);
+const isKey = (s) => typeof s === 'string' && KEY_RE.test(s);
 
 // 账户 id 是恰 ACCOUNT_PARTS.length 段代号以路径分隔符相连（持有人、用途、资源种类、资源键；卷六 §4.1 规则 1）。
-function isAccountId(s, maxLength) {
+function isAccountId(s) {
   if (typeof s !== 'string') return false;
   const segs = s.split('.');
-  return segs.length === ACCOUNT_PARTS.length && segs.every((seg) => isCode(seg, maxLength));
+  return segs.length === ACCOUNT_PARTS.length && segs.every(isCode);
 }
 
 // 契约类型的检查表：键用 §1.5 类型名（数据里的类型记号，不写比较字面量），另加执行器的 id、account、dimension 与 shares。
-// 值为 (值, 字段规格, 文法总长上限) => 是否合契约；查表而不是逐个 === 字面量比较（卷十二 bareCompare 扫描）。
+// 值为 (值, 字段规格) => 是否合契约；查表而不是逐个 === 字面量比较（卷十二 bareCompare 扫描）。
 const TYPE_CHECK = Object.freeze({
   number: (v) => typeof v === 'number' && Number.isFinite(v),
   integer: (v) => Number.isSafeInteger(v),
-  ref: (v, spec, maxLength) => typeof v === 'string' && isCode(v, maxLength),
-  enum: (v, spec, maxLength) => typeof v === 'string' && isCode(v, maxLength) && Array.isArray(spec.values) && spec.values.includes(v),
+  ref: (v) => isCode(v),
+  enum: (v, spec) => isCode(v) && Array.isArray(spec.values) && spec.values.includes(v),
   map: (v) => isPlainObject(v),
-  id: (v, spec, maxLength) => typeof v === 'string' && isCode(v, maxLength),
-  account: (v, spec, maxLength) => typeof v === 'string' && isAccountId(v, maxLength),
-  dimension: (v, spec, maxLength) => typeof v === 'string' && isKey(v, maxLength),
-  shares: (v, spec, maxLength) => isPlainObject(v) && Object.keys(v).every((k) => isCode(k, maxLength)) && Object.values(v).every((x) => typeof x === 'number' && Number.isFinite(x)),
+  id: (v) => isCode(v),
+  account: (v) => isAccountId(v),
+  dimension: (v) => isKey(v),
+  shares: (v) => isPlainObject(v) && Object.keys(v).every(isCode) && Object.values(v).every((x) => typeof x === 'number' && Number.isFinite(x)),
   // 持有原语的可选 terms（卷九 §4.2.1，勘误 1118k28）：只核是普通对象。其中 consentAct 的 EventId 校验与当事人覆盖核对、其余键的类型与是否许写，
   // 都由内核持有写者判（李白 11-19 03:20 裁定 3：适配器只原样透传 terms，不自补、不自判）。
   consentTerms: (v) => isPlainObject(v),
 });
 
-function fits(spec, value, maxLength) {
+function fits(spec, value) {
   const nullable = isPlainObject(spec) && spec.nullable === true;
   if (nullable && value === null) return true;
   const type = typeof spec === 'string' ? spec : spec.type;
   const check = Object.prototype.hasOwnProperty.call(TYPE_CHECK, type) ? TYPE_CHECK[type] : undefined;
   if (!check) throw deny(CODE.contract, `unknown contract field type ${JSON.stringify(type)}`);
-  return check(value, spec, maxLength);
+  return check(value, spec);
 }
 
 /**
@@ -202,9 +170,9 @@ const CONTRACT_EXTRAS = Object.freeze({
   move(p) {
     if (!Object.hasOwn(p, 'subject')) throw deny(CODE.contract, 'move.subject required until resolve() supplies the actor (commit stage not built)');
   },
-  transfer(p, maxLength) {
-    const from = splitAccount(p.from, maxLength);
-    const to = splitAccount(p.to, maxLength);
+  transfer(p) {
+    const from = splitAccount(p.from);
+    const to = splitAccount(p.to);
     if (from.resource.kind !== to.resource.kind || from.resource.key !== to.resource.key) {
       throw deny(CODE.contract, 'transfer from/to are accounts of different resources');
     }
@@ -212,37 +180,37 @@ const CONTRACT_EXTRAS = Object.freeze({
 });
 
 // 契约校验（R9-2.3 第一句：逐个按契约校验，不合即 E-ACT-PRIMITIVE，整批不执行）。只查契约登记的字段；未登记的字段当可选字段放行。
-function checkContract(p, maxLength) {
+function checkContract(p) {
   if (!isPlainObject(p) || typeof p.op !== 'string') throw deny(CODE.contract, 'primitive is {op, ...fields}');
   const row = primitiveContract(p.op);
   for (const [field, spec] of Object.entries(row.required || {})) {
-    if (!Object.hasOwn(p, field) || !fits(spec, p[field], maxLength)) throw deny(CODE.contract, `${row.op}.${field} required (${JSON.stringify(spec)})`);
+    if (!Object.hasOwn(p, field) || !fits(spec, p[field])) throw deny(CODE.contract, `${row.op}.${field} required (${JSON.stringify(spec)})`);
   }
   for (const [field, spec] of Object.entries(row.optional || {})) {
-    if (Object.hasOwn(p, field) && !fits(spec, p[field], maxLength)) throw deny(CODE.contract, `${row.op}.${field} (${JSON.stringify(spec)})`);
+    if (Object.hasOwn(p, field) && !fits(spec, p[field])) throw deny(CODE.contract, `${row.op}.${field} (${JSON.stringify(spec)})`);
   }
   for (const group of row.oneOf || []) {
     let hits = 0;
     for (const alt of group) {
-      if (Object.entries(alt).every(([field, spec]) => Object.hasOwn(p, field) && fits(spec, p[field], maxLength))) hits += 1;
+      if (Object.entries(alt).every(([field, spec]) => Object.hasOwn(p, field) && fits(spec, p[field]))) hits += 1;
     }
     if (hits !== 1) throw deny(CODE.contract, `${row.op}: exactly one of ${group.map((alt) => Object.keys(alt).join('+')).join(' | ')}`);
   }
   for (const rule of row.unless || []) {
     if (p[rule.field] === rule.notEquals) continue;
     for (const [field, spec] of Object.entries(rule.required)) {
-      if (!Object.hasOwn(p, field) || !fits(spec, p[field], maxLength)) throw deny(CODE.contract, `${row.op}.${field} required unless ${rule.field} is ${rule.notEquals}`);
+      if (!Object.hasOwn(p, field) || !fits(spec, p[field])) throw deny(CODE.contract, `${row.op}.${field} required unless ${rule.field} is ${rule.notEquals}`);
     }
   }
   const extra = CONTRACT_EXTRAS[row.op];
-  if (extra) extra(p, maxLength);
+  if (extra) extra(p);
   return row;
 }
 
 // 账户 id → ledger.transfer 的 from/to（{holder, purpose}）；资源从同一账户 id 取出。
-function splitAccount(id, maxLength) {
+function splitAccount(id) {
   const segs = id.split('.');
-  if (segs.length !== ACCOUNT_PARTS.length || !segs.every((seg) => isCode(seg, maxLength))) throw deny(CODE.contract, `account id ${JSON.stringify(id)} is ${ACCOUNT_PARTS.join('.')}`);
+  if (segs.length !== ACCOUNT_PARTS.length || !segs.every(isCode)) throw deny(CODE.contract, `account id ${JSON.stringify(id)} is ${ACCOUNT_PARTS.join('.')}`);
   const [holder, purpose, kind, key] = segs;
   return { holder, purpose, resource: { kind, key } };
 }
@@ -252,9 +220,9 @@ function splitAccount(id, maxLength) {
 // 其余原语不在此表，由 execute 整笔拒收 E-ACT-WRITER-NOT-READY。
 // holding 四条只经 kernelApi 调持有写者（卷二 §2.7 kernelApi 的 kernel/holdings.mjs 条目）；可选字段 terms / grantedBy 照原样转交。
 const ADAPTERS = Object.freeze({
-  transfer(engine, state, p, reason, maxLength) {
-    const from = splitAccount(p.from, maxLength);
-    const to = splitAccount(p.to, maxLength);
+  transfer(engine, state, p, reason) {
+    const from = splitAccount(p.from);
+    const to = splitAccount(p.to);
     // from/to 资源相同由 checkContract 的 CONTRACT_EXTRAS 先核（R9-2.3 整批先校验）。
     // reason 取本笔真实事件动词（本批 emit 原语的 verb），不拿规则/指令代号 cause 充数（卷六 §3.2 :286、5-2 只核必须改 2 附）。
     transfer(engine, state, {
@@ -305,7 +273,7 @@ const ADAPTERS = Object.freeze({
   },
   // emit 落事件写者（卷九 R9-2.3、R9-2.10；卷二十四 R24-1.1）：本事务内、事件落定之前对该事件调一次 perceiveEvent（actor 为行为人、照卷五规则 7 求各感官一次性源强），结果原样写进 `witnesses`。
   // 事件的 actor、targets、payload、id 成分取提交段交入的上下文（ctx.event）；verb、visibility 取本批 emit 原语；primitives 是本批排好序的原语列表；cause 取 execute 的 cause。
-  emit(engine, state, p, reason, maxLength, ctx) {
+  emit(engine, state, p, reason, ctx) {
     const ev = ctx.event;
     const actor = ev.actor === undefined ? null : ev.actor;
     const targets = ev.targets === undefined ? [] : ev.targets;
@@ -368,9 +336,7 @@ const CREATORS = Object.freeze({
  */
 export function execute(engine, state, primitives, cause, event) {
   if (!Array.isArray(primitives)) throw deny(CODE.contract, 'primitives is a list');
-  // 文法总长上限先读：缺键或非正整数即拒，整批不执行（不回落默认，不留绕过口子）。
-  const maxLength = grammarMaxLength(engine);
-  for (const p of primitives) checkContract(p, maxLength);
+  for (const p of primitives) checkContract(p);
   if (typeof cause !== 'string' || cause.length === 0) throw deny(CODE.contract, 'cause is a non-empty code');
   // 本笔真实事件动词只来自本批 emit 原语（表 A :134／:142 "卷九 emit 原语必填"；卷九 §4.2.5 :676 的成交一笔即 transfer、transfer、emit）；
   // 没有它就没有 verb，账本 reason 与事务事件都无从取真值，整笔拒收（E-ACT-WRITER-NOT-READY）。
@@ -385,7 +351,7 @@ export function execute(engine, state, primitives, cause, event) {
   // 写入前先对整批核适配器存在性（5-1 终核非阻塞建议 1）：整批拒收不依赖调用方事务回滚。
   for (const p of ordered) if (!ADAPTERS[p.op]) throw deny(CODE.writerNotReady, `no adapter for ${p.op}`);
   const ctx = { event, primitives: ordered, cause };
-  for (const p of ordered) ADAPTERS[p.op](engine, state, p, eventPrim.verb, maxLength, ctx);
+  for (const p of ordered) ADAPTERS[p.op](engine, state, p, eventPrim.verb, ctx);
   return { ok: true };
 }
 

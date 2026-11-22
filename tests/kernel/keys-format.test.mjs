@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import {
   isModuleFile, isRuleTableFile, isLowerCamelCode,
   isDeclarableNode, isGeneratedNode, isAnyNode, isPathPattern,
-  isHex64, snakeCaseKey,
+  isHex64, snakeCaseKey, eventIdKeyText, instanceDigestKeyText,
 } from '../../server-plugin/kernel/handles/keys.mjs';
 
 test('模块路径与规则表路径', () => {
@@ -62,4 +62,10 @@ test('64 位小写十六进制摘要', () => {
 test('日志键代号形：驼峰转下划线小写', () => {
   assert.equal(snakeCaseKey('reactionDepthMax'), 'reaction_depth_max');
   assert.equal(snakeCaseKey('cadence'), 'cadence');
+});
+
+test('事件 id 与实例位次摘要的键文本：成分按卷文次序、竖线相连、时刻与序位按十进制' , () => {
+  assert.equal(eventIdKeyText('w1', 'act_x', 'npc_a', 5, 'pos.commit'), 'w1|act_x|npc_a|5|pos.commit');
+  // 实例位次（卷十 R10-12.1）：世界种子、位次代号、父 id、时刻、序位；序位在时刻之后。
+  assert.equal(instanceDigestKeyText('w1', 'idslot_x', 'loc_a', 3, 90), 'w1|idslot_x|loc_a|90|3');
 });

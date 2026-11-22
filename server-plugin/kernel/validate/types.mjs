@@ -9,8 +9,15 @@ import { T, TYPES, DOMAIN_OPTIONAL, ROW_FIELDS, CODE_ENUMS, markersOf } from '..
 // 定义源与 T 派生在 kernel/handles/markers.mjs（协议标记叶子，0 import，见该文件头）；这里只引用并转出给既有 import 方，不留第二份。
 export { T, TYPES, DOMAIN_OPTIONAL, ROW_FIELDS, CODE_ENUMS, markersOf };
 
+// 代号文法的唯一出处（卷二 §1.9 :291）：代号 CODE、维度键与 struct 字段名 KEY；总长上限（首字符加 47 位，共 48）只写在这几条正则里，
+// 别处一律引这里的导出，不再另写正则、不再另登长度常数。LOWER_CAMEL 是推进钩子名与视图读取名的小驼峰代号（允许下划线，同一上限）。
 export const CODE_RE = /^[a-z][a-z0-9_]{1,47}$/;
 export const KEY_RE = /^[a-z][a-zA-Z0-9]{0,47}$/;
+export const LOWER_CAMEL_RE = /^[a-z][a-zA-Z0-9_]{0,47}$/;
+// 去掉首尾锚的正则体，供 handles/keys.mjs 把代号文法嵌进 DimKey、节点名等复合文法（嵌入处不自写字符集与长度）。
+const bodyOf = (re) => re.source.slice(1, -1);
+export const CODE_BODY = bodyOf(CODE_RE);
+export const KEY_BODY = bodyOf(KEY_RE);
 
 // 本文件的两处固定记号定义源（单一定义，比较处引用成员）：
 // VOCAB_ANY：ref 的 vocab 部分写 "*" 表示任一词表族（本文件实现口径；卷二 §1.5 ref 行只列 "<family>"/"refs"，未写这处通配，故不按 S13 上下文白名单豁免。

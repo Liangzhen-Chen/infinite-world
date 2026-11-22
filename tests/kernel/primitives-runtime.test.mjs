@@ -153,7 +153,7 @@ test('代号文法按字段类型分开校：CODE 至少 2 字符、KEY 至少 1
   // 维度键用 KEY：允许后续大写、不许下划线。
   bad([{ op: 'fact.set', entity: 'item_q', field: 'SealIntact', value: 1 }]);
   bad([{ op: 'fact.set', entity: 'item_q', field: 'seal_intact', value: 1 }]);
-  // 两条文法各自的总长上限（卷二 §1.9 :285：尾段 {1,47}／{0,47}，总长至多 48；登记为 kernelConstants.grammarMaxLength）。
+  // 两条文法各自的总长上限（卷二 §1.9 :291：尾段 {1,47}／{0,47}，总长至多 48；文法只在 validate/types.mjs）。
   // 首字母 + 47 位（总长 48）合契约，走到适配器（写者未上线）；首字母 + 48 位（总长 49）即 E-ACT-PRIMITIVE。
   const run = (prims) => runTransaction(state, CTX, (s) => execute(ENGINE, s, prims, 'act_t'));
   const len48 = 'a' + 'b'.repeat(47);
@@ -208,22 +208,6 @@ test('holding 三原语的可选 terms.consentAct：目录三行带、holding.cl
     for (const terms of [{ consentAct: 'act_new_consent' }, { consentAct: '7'.repeat(64) }, { consentAct: 7 }, {}, { share: 1 }]) {
       assert.deepEqual(runTransaction(state, CTX, (s) => execute(ENGINE, s, make(terms), 'act_t')), { ok: false, code: 'E-ACT-WRITER-NOT-READY' });
     }
-  }
-  assert.deepEqual(state, snap);
-});
-
-test('文法总长上限经 engine.rules 读：缺键、0、负数、非整数都拒，不回落默认也不跳过', () => {
-  const state = funded(10);
-  const snap = clone(state);
-  const prims = [{ op: 'destroy', entity: 'item_q' }];
-  const withMax = (max) => {
-    const constants = { ...W.rules.kernelConstants };
-    if (max === undefined) delete constants.grammarMaxLength;
-    else constants.grammarMaxLength = max;
-    return { vocab: W.vocab, rules: { ...W.rules, kernelConstants: constants } };
-  };
-  for (const engine of [withMax(undefined), withMax(0), withMax(-1), withMax('48'), { vocab: W.vocab, rules: {} }]) {
-    assert.throws(() => execute(engine, state, prims, 'act_t'), codeIs('E-DIM-STRUCT-FIELD'));
   }
   assert.deepEqual(state, snap);
 });

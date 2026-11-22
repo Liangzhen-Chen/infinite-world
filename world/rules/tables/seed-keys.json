@@ -116,6 +116,13 @@
      "purpose": "手写建筑行缺 form 时从形制登记按种子取一个（卷十 R10-7.12、§4.12.1 :888，封卷后勘误 1123k31）：骰值键五段世界种子、流代号 gen_siteform、对象建筑行 id、时刻 genesisMinute、抽取点代号；候选为登记里全部条目的等权 categorical；不放版本成分"
     },
     {
+     "file": "kernel/events.mjs",
+     "stream": "kernel_events",
+     "site": "event_id",
+     "role": "role_id",
+     "purpose": "事件 id（卷二 §1.10 :320、卷二十七 R27-8.9 :810）：五样成分世界种子、规则或指令代号、主体 id、世界时刻、固定位次代号，键文本在 kernel/handles/keys.mjs eventIdKeyText，sha256 取 64 位十六进制；不放版本成分、不放计数"
+    },
+    {
      "file": "kernel/gen/ids.mjs",
      "stream": "gen_ids",
      "site": "instance_digest",

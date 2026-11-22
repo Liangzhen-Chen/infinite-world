@@ -5,8 +5,8 @@
 // NodeName、RxId、TextScope、EventId 的构造随各自那张卡加。
 // 注册表全部来自加载结果（维度表表头、idIndex、词表索引、pathTypes），不认任何具体表、维度或路径。
 
-import { CODE_RE, HandleError } from './vocab-handle.mjs';
-import { T } from '../validate/types.mjs';
+import { HandleError } from './vocab-handle.mjs';
+import { T, CODE_RE, KEY_RE, LOWER_CAMEL_RE, CODE_BODY, KEY_BODY } from '../validate/types.mjs';
 import { GRAMMAR_TOKENS } from './markers.mjs';
 import { fixedUnits } from '../det-math.mjs';
 import { KernelError } from '../errors.mjs';
@@ -24,10 +24,9 @@ const PATH_SEGMENT_RESERVED_LIST = ['constructor', 'prototype'];
  * tableDims：kind → 该表 dimensions 表头；idIndex：实体 id → kind；vocabIndex：词表代号 → {family}。
  */
 
-// 维度键与 struct 字段名文法（§1.9 :278）。
-const DIM_RE = /^[a-z][a-zA-Z0-9]{0,47}$/;
-// `<kind>.<dimension>[<key>]`（§2.8 第 1 条 DimKey；§5.0 下标键语法 :1586）。
-const DIM_KEY_RE = /^([a-z][a-z0-9_]{1,47})\.([a-z][a-zA-Z0-9]{0,47})(?:\[([^[\]]+)\])?$/;
+// 维度键与 struct 字段名文法的出处在 validate/types.mjs（§1.9 :291，KEY_RE）；这里只引用。
+// `<kind>.<dimension>[<key>]`（§2.8 第 1 条 DimKey；§5.0 下标键语法 :1586）：kind、dimension 嵌入代号文法与键文法的正则体，不另写字符集与长度。
+const DIM_KEY_RE = new RegExp(`^(${CODE_BODY})\\.(${KEY_BODY})(?:\\[([^[\\]]+)\\])?$`);
 const DECIMAL_RE = /^-?(0|[1-9][0-9]*)(\.[0-9]+)?$/;
 
 // 下标是否合该 map 维度的键定义：数值键收有限数；代号键按键定义的族或 kind 查注册表，没写族与 kind 的查 idIndex 或词表。
@@ -44,8 +43,8 @@ function subKeyOk(reg, keyDef, key) {
 
 // 共用：查表头，返回维度定义；未登记交调用方按各自的码报。
 function dimDef(reg, kind, dimension) {
-  if (typeof kind !== 'string' || !CODE_RE.test(kind)) throw new HandleError('E-DIM-ID-FORMAT', `kind ${JSON.stringify(kind)}: want ^[a-z][a-z0-9_]{1,47}$`);
-  if (typeof dimension !== 'string' || !DIM_RE.test(dimension)) throw new HandleError('E-DIM-ID-FORMAT', `dimension ${JSON.stringify(dimension)}: want ^[a-z][a-zA-Z0-9]{0,47}$`);
+  if (typeof kind !== 'string' || !CODE_RE.test(kind)) throw new HandleError('E-DIM-ID-FORMAT', `kind ${JSON.stringify(kind)}: want ${CODE_RE.source}`);
+  if (typeof dimension !== 'string' || !KEY_RE.test(dimension)) throw new HandleError('E-DIM-ID-FORMAT', `dimension ${JSON.stringify(dimension)}: want ${KEY_RE.source}`);
   const dims = reg.tableDims.get(kind);
   return dims && Object.hasOwn(dims, dimension) ? dims[dimension] : undefined;
 }
@@ -145,7 +144,7 @@ export function isSeedKey(reg, text) {
  * @returns {import('../types.d.ts').SeedKey}
  */
 export function seedKeyOf(reg, text) {
-  if (!isSeedKey(reg, text)) throw new HandleError('E-PATH-KEYKINDS', `seedKey ${JSON.stringify(text)}: want ^[a-z][a-z0-9_]{1,47}$, not a vocab code or loaded entity id`);
+  if (!isSeedKey(reg, text)) throw new HandleError('E-PATH-KEYKINDS', `seedKey ${JSON.stringify(text)}: want ${CODE_RE.source}, not a vocab code or loaded entity id`);
   return /** @type {import('../types.d.ts').SeedKey} */ (/** @type {unknown} */ (text));
 }
 
@@ -218,6 +217,25 @@ export function gridSeedKeyText(worldSeed, stream, site, ...parts) {
  */
 export function orderKeyText(seedKey, ...parts) {
   return [seedKey, ...parts.map(String)].join(KEY_JOIN);
+}
+
+/**
+ * 事件 id 的键文本（卷二 §1.10 :320 派生函数；卷二十七 R27-8.9 五样成分；卷二 :1162 keys.mjs 行"`EventId` 由 §1.10 派生函数算出"）：
+ * `世界种子 | 规则或指令代号 | 主体 id | 世界时刻 | 位次代号`。调用方（kernel/events.mjs）已核对各成分是代号、id 或整数；sha256 归调用方。
+ * @param {string} worldSeed @param {string} rule @param {string} subject @param {number} minute @param {string} position
+ * @returns {string}
+ */
+export function eventIdKeyText(worldSeed, rule, subject, minute, position) {
+  return [worldSeed, rule, subject, String(minute), position].join(KEY_JOIN);
+}
+
+/**
+ * 实例位次导出的摘要键文本（卷十 R10-12.1 :937 五样成分）：`世界种子 | 位次代号 | 父 id | 时刻 | 序位`。sha256 归调用方（kernel/gen/draw.mjs）。
+ * @param {string} worldSeed @param {string} slot @param {string} parentId @param {number} ordinal @param {number} minute
+ * @returns {string}
+ */
+export function instanceDigestKeyText(worldSeed, slot, parentId, ordinal, minute) {
+  return [worldSeed, slot, parentId, String(minute), String(ordinal)].join(KEY_JOIN);
 }
 
 // ---------- state 路径里格坐标段 gridKey 的编解码（卷二 §2.7 keyKinds (c) `gridKey`，封卷后勘误 1121k1；李白 11-21 裁定） ----------
@@ -415,13 +433,12 @@ const RULE_TABLE_FILE = /^(?:[a-z0-9][a-z0-9_-]*\/)*[a-z0-9][a-z0-9_-]*\.json$/;
 export const isRuleTableFile = (s) => typeof s === 'string' &&RULE_TABLE_FILE.test(s);
 
 // 小驼峰代号：推进钩子名与视图读取名同用一条文法（advance-registry、view-registry）。
-const LOWER_CAMEL_CODE = /^[a-z][a-zA-Z0-9_]{0,47}$/;
 /** @param {unknown} s @returns {boolean} */
-export const isLowerCamelCode = (s) => typeof s === 'string' &&LOWER_CAMEL_CODE.test(s);
+export const isLowerCamelCode = (s) => typeof s === 'string' &&LOWER_CAMEL_RE.test(s);
 
 // 依赖声明的三类节点名（卷二 §2.3 :470）与加载器机器生成的两类（:470 末句）。
 const DECLARABLE_NODE = /^(view|relation|scope):[A-Za-z][A-Za-z0-9_]*$/;
-const GENERATED_NODE = /^(dim|modified):([a-z][a-z0-9_]{1,47})$/;
+const GENERATED_NODE = new RegExp(`^(dim|modified):(${CODE_BODY})$`);
 const ANY_NODE = /^(view|relation|scope|dim|modified):[A-Za-z][A-Za-z0-9_]*$/;
 /** @param {unknown} s @returns {boolean} */
 export const isDeclarableNode = (s) => typeof s === 'string' &&DECLARABLE_NODE.test(s);

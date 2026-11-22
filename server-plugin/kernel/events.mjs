@@ -10,12 +10,12 @@
 //   只在事务内写；追加经 transaction.mjs#registerLogUndo 纳入本事务回滚范围（提交才落、回滚即无；R24-1.1 :395、卷二 §2.6 :509）。
 //   mount 时由挂接方交入当前存档的日志簿（installEventLog，kernel 组内用，不在 kernelApi；与 transaction.mjs 的 installProposalSession 同法）。
 // - 事件 id 由 §1.10 派生函数（sha256）取卷二十七 R27-8.9 五样成分算出，不收外来串（卷二 §1.10 :197、§2.9 强转豁免表）。
-//   卷二 §2.9 :1119 定的构造函数位置是 kernel/handles/keys.mjs#eventId；本卡文件所有权未含 keys.mjs，构造函数暂在本文件实现，
-//   行为与五样成分校验照卷文（见 docs/卡回报/ds-b5-2.md 的“已定”）。
+//   键文本的拼接在 kernel/handles/keys.mjs#eventIdKeyText（卷二 :1162 keys.mjs 行），本文件核对五样成分后取它的键文本再 sha256；
+//   事件 id 在种子键登记表（world/rules/tables/seed-keys.json）有一行（卷二十七 R27-8.1）。
 // - 表 A 校验只按表 A 的字段与类型判，不按动词名、实体 id 或场景开分支。
 
 import { CODE_RE } from './handles/vocab-handle.mjs';
-import { isHex64 } from './handles/keys.mjs';
+import { isHex64, eventIdKeyText } from './handles/keys.mjs';
 import { GRAMMAR_TOKENS } from './handles/markers.mjs';
 import { isSeedTemplate } from './sample.mjs';
 import { sha256Text, appendLogEntry } from './save.mjs';
@@ -72,8 +72,6 @@ const VERB_ROW_FIELDS = Object.freeze([
 const WORTH_SIDES = Object.freeze(['destroyed', 'moved', 'stake']);
 // 事件 id 五样成分（卷二十七 R27-8.9 :739）；世界时刻取事件的 minute，其余四项由调用方给。
 const ID_PARTS = Object.freeze(['rule', 'subject', 'minute', 'position']);
-// 派生函数的分隔串（卷二 §1.10 :320；文法记号定义源 handles/markers.mjs）。
-const KEY_JOIN = GRAMMAR_TOKENS.joinSep;
 // typeof 的取值记号由语言自身给出（不写裸字串比较；S13 ④）。
 const TYPEOF_STRING = typeof S.empty;
 const TYPEOF_BOOLEAN = typeof true;
@@ -143,7 +141,14 @@ export function deriveEventId(engine, parts) {
   if (!subjectOk) throw deny(CODE.seedComponent, `event id subject ${JSON.stringify(p.subject)} is not a code or EventId`);
   if (!Number.isSafeInteger(p.minute)) throw deny(CODE.seedComponent, `event id minute ${JSON.stringify(p.minute)} is not an integer`);
   if (!isDottedCode(p.position)) throw deny(CODE.seedComponent, `event id position ${JSON.stringify(p.position)} is not a position code`);
-  return sha256Text([seed, p.rule, p.subject, String(p.minute), p.position].join(KEY_JOIN));
+  const digest = eventIdDigest('kernel_events', 'event_id', seed, p.rule, p.subject, p.minute, p.position);
+  return digest;
+}
+
+// 事件 id 的摘要（卷二十七 R27-8.1：每个由种子派生 id 的点在种子键登记表恰有一行；seed_sites 只认前两个实参是字串字面量的调用）。
+// 流代号与抽取点代号只供登记表对号，不入键（同 kernel/gen/draw.mjs genIdKey）；键文本归 keys.mjs。
+function eventIdDigest(stream, site, worldSeed, rule, subject, minute, position) {
+  return sha256Text(eventIdKeyText(worldSeed, rule, subject, minute, position));
 }
 
 // ---------- 动词行（表 B） ----------
