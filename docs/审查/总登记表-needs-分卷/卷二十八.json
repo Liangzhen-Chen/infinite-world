@@ -1,0 +1,10 @@
+{
+  "volume": "卷二十八",
+  "needs": [
+    {"entry": "loadWorld", "targets": ["resolvePackSet"], "line": 297, "quote": "`loadWorld` 的第一步"},
+    {"entry": "requiredTier", "targets": ["respectTier"], "line": 557, "quote": "经卷七 `respectTier` 读出"}
+  ],
+  "rules": [
+    {"entry": "requiredTier", "rules": ["rules.content.tierRules"], "line": 557, "quote": "在 `rules.content.tierRules` 里"}
+  ]
+}

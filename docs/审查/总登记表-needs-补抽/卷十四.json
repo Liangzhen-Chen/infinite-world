@@ -1,0 +1,13 @@
+{
+  "volume": "卷十四",
+  "needs": [
+    {"entry": "gainSkill", "targets": ["workInputs"], "line": 680, "quote": "教师值、`workInputs` 的两项"},
+    {"entry": "professionsOf", "targets": ["skillValue"], "line": 610, "quote": "按 PF-1 用 `skillValue` 复算的值"},
+    {"entry": "skillValue", "targets": ["workInputs"], "line": 757, "quote": "`capabilityFactor` 进读数"}
+  ],
+  "rules": [],
+  "dropped": [
+    {"entry": "qualifies", "target": "holdsLore", "reason": "仅 §2.6 转调，该行不含 qualifies"},
+    {"entry": "qualifies", "target": "skillValue", "reason": "无同行兼含两者，§2.6 分写"}
+  ]
+}

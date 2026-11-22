@@ -1,0 +1,13 @@
+{
+  "volume": "卷二十",
+  "needs": [
+    {"entry": "envAt", "targets": ["zoneAt", "inBubble"], "line": 330, "quote": "`envAt(zoneAt(pos), minute)`"},
+    {"entry": "calendarDayIndex", "targets": ["envAt"], "line": 431, "quote": "取日出、日落时读该地的 `envAt` 日照"},
+    {"entry": "recurrenceNext", "targets": ["plantView"], "line": 596, "quote": "物候由卷二十五 `plantView` 给出"},
+    {"entry": "recurrenceNext", "targets": ["calendarAdd"], "line": 597, "quote": "周年用 `calendarAdd` 求"}
+  ],
+  "rules": [
+    {"entry": "astroView", "rules": ["rules.astro"], "line": 436, "quote": "纯函数，`rules.astro` 年长与历元键的唯一读者"},
+    {"entry": "envAccum", "rules": ["rules.agroclock"], "line": 1058, "quote": "`rules.agroclock` 的"}
+  ]
+}

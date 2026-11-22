@@ -1,0 +1,1 @@
+{"volume":"卷十","rejected":[{"entry":"nameParts","line":276,"reason":"是 composeName 的返回类型，非入口"}],"added":[{"entry":"generateWorld","line":291,"kind":"其他","reason":"只在世界创建流程里运行"},{"entry":"requireMaterialized","line":292,"kind":"其他","reason":"各表登记的建行写者入口"}],"notes":""}

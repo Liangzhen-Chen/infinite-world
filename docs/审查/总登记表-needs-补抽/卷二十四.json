@@ -1,0 +1,15 @@
+{
+  "volume": "卷二十四",
+  "needs": [],
+  "rules": [],
+  "dropped": [
+    {"entry": "chronicleAll", "target": "rules.events.chronicle.minSig", "reason": "原文只有 chronicle.minSig 短名"},
+    {"entry": "commissionBrief", "target": "rules.events.quest.difficultyBands", "reason": "原文只有 quest.difficultyBands 短名"},
+    {"entry": "epochView", "target": "rules.events.era.boundarySig", "reason": "原文只有 era.boundarySig 短名"},
+    {"entry": "originEvents", "target": "rules.events.origin.maxEvents", "reason": "原文只有 origin.maxEvents 短名"},
+    {"entry": "originEvents", "target": "rules.events.origin.minSig", "reason": "原文只有 origin.minSig 短名"},
+    {"entry": "storyView", "target": "rules.events.pulse.quietCapDays", "reason": "原文只有 pulse.quietCapDays 短名"},
+    {"entry": "storyView", "target": "rules.events.pulse.tensionCapBps", "reason": "原文只有 pulse.tensionCapBps 短名"},
+    {"entry": "storyView", "target": "rules.events.pulse.wealthFloor", "reason": "原文只有 pulse.wealthFloor 短名"}
+  ]
+}

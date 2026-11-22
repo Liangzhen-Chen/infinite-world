@@ -1,0 +1,39 @@
+{
+  "volume": "卷二十三",
+  "needs": [
+    {"entry": "pickSubjects", "targets": ["recallFacts"], "line": 395, "quote": "只经主观视图与 `recallFacts` 取候选"}
+  ],
+  "rules": [],
+  "dropped": [
+    {"entry": "itemRenown", "target": "esteemOf", "reason": "无同含入口名与目标的行"},
+    {"entry": "itemRenown", "target": "publicShare", "reason": "无同含入口名与目标的行"},
+    {"entry": "itemRenown", "target": "workReach", "reason": "同含两名的行是表，非读句"},
+    {"entry": "legendStanding", "target": "workReach", "reason": "同含两名的行是表，非读句"},
+    {"entry": "pickSubjects", "target": "culturePref", "reason": "无同含入口名与目标的行"},
+    {"entry": "pickSubjects", "target": "preferenceOf", "reason": "无同含入口名与目标的行"},
+    {"entry": "pickSubjects", "target": "recall", "reason": "无同含入口名与目标的行"},
+    {"entry": "pickSubjects", "target": "subjectiveView", "reason": "无同含入口名与目标的行"},
+    {"entry": "workReach", "target": "knowStanding", "reason": "无同含入口名与目标的行"},
+    {"entry": "workReach", "target": "loreShare", "reason": "无同含入口名与目标的行"},
+    {"entry": "workReach", "target": "publicShare", "reason": "无同含入口名与目标的行"},
+    {"entry": "actOutcome", "target": "rules.works.show.contestCurve", "reason": "卷文只写裸键，无 works 全键"},
+    {"entry": "actOutcome", "target": "rules.works.show.drawBase", "reason": "卷文只写裸键，无 works 全键"},
+    {"entry": "actOutcome", "target": "rules.works.show.marginCurve", "reason": "卷文只写裸键，无 works 全键"},
+    {"entry": "actOutcome", "target": "rules.works.show.openAirImpression", "reason": "卷文只写裸键，无 works 全键"},
+    {"entry": "actOutcome", "target": "rules.works.show.scoreRX", "reason": "卷文只写裸键，无 works 全键"},
+    {"entry": "itemRenown", "target": "rules.works.reach.coverShareBps", "reason": "卷文只写裸键，无 works 全键"},
+    {"entry": "itemRenown", "target": "rules.works.reach.placeTier", "reason": "卷文只写裸键，无 works 全键"},
+    {"entry": "itemRenown", "target": "rules.works.relic.contentCurve", "reason": "卷文只写裸键，无 works 全键"},
+    {"entry": "itemRenown", "target": "rules.works.relic.coverCurve", "reason": "卷文只写裸键，无 works 全键"},
+    {"entry": "itemRenown", "target": "rules.works.relic.originCurve", "reason": "卷文只写裸键，无 works 全键"},
+    {"entry": "pickSubjects", "target": "rules.works.subject.poolMax", "reason": "卷文只写裸键，无 works 全键"},
+    {"entry": "pickSubjects", "target": "rules.works.subject.weights", "reason": "卷文只写裸键，无 works 全键"},
+    {"entry": "renownBonus", "target": "rules.works.relic.bonusUnit", "reason": "卷文只写裸键，无 works 全键"},
+    {"entry": "renownBonus", "target": "rules.works.relic.generationCurve", "reason": "卷文只写裸键，无 works 全键"},
+    {"entry": "renownBonus", "target": "rules.works.relic.renownCurve", "reason": "卷文只写裸键，无 works 全键"},
+    {"entry": "renownBonus", "target": "rules.works.relic.uniqueCurve", "reason": "卷文只写裸键，无 works 全键"},
+    {"entry": "workCount", "target": "rules.works.reach.minPlaces", "reason": "卷文只写裸键，无 works 全键"},
+    {"entry": "workReach", "target": "rules.works.reach.coverShareBps", "reason": "卷文只写裸键，无 works 全键"},
+    {"entry": "workReach", "target": "rules.works.reach.placeTier", "reason": "卷文只写裸键，无 works 全键"}
+  ]
+}

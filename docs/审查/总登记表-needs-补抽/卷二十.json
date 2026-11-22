@@ -1,0 +1,1 @@
+{"volume":"卷二十","needs":[],"rules":[],"dropped":[{"entry":"recurrenceNext","target":"calendarAdd","reason":"原句在§4.2.3锚点定义，非§3.1且行内无入口名"},{"entry":"recurrenceNext","target":"plantView","reason":"原句在§4.2.3的agro锚点，非§3.1且行内无入口名"}]}

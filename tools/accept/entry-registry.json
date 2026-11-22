@@ -1,0 +1,9078 @@
+{
+ "version": 1,
+ "kinds": [
+  "read",
+  "predicate",
+  "write",
+  "hook",
+  "kernel",
+  "part"
+ ],
+ "entries": [
+  {
+   "name": "abilityLevel",
+   "file": null,
+   "vol": "卷三乙",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [],
+   "rules": [
+    "rules.tools.availability"
+   ]
+  },
+  {
+   "name": "aboardOf",
+   "file": null,
+   "vol": "卷十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "accBaseline",
+   "file": null,
+   "vol": "卷十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "accCases",
+   "file": null,
+   "vol": "卷十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "accGate",
+   "file": null,
+   "vol": "卷十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "accHits",
+   "file": null,
+   "vol": "卷十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "accItem",
+   "file": null,
+   "vol": "卷十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "accItems",
+   "file": null,
+   "vol": "卷十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "accReport",
+   "file": null,
+   "vol": "卷十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "accReviewOk",
+   "file": null,
+   "vol": "卷十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "accRun",
+   "file": null,
+   "vol": "卷十二",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "accScope",
+   "file": null,
+   "vol": "卷十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "accZeroCheck",
+   "file": null,
+   "vol": "卷十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#migBackfill"
+   ],
+   "rules": []
+  },
+  {
+   "name": "accessClassAt",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "accessDefaultOf",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "actOutcome",
+   "file": null,
+   "vol": "卷二十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.works.appealBase"
+   ]
+  },
+  {
+   "name": "actionView",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "activityOf",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "addFireHeat",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "admitPractice",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "adornCover",
+   "file": null,
+   "vol": "卷二十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#isAdornment"
+   ],
+   "rules": []
+  },
+  {
+   "name": "advancePlan",
+   "file": null,
+   "vol": "卷二十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#simTierOf",
+    "sim-tiers.mjs#simUnitOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "affordances",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "ageStructure",
+   "file": null,
+   "vol": "卷十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#ageWeights"
+   ],
+   "rules": []
+  },
+  {
+   "name": "ageWeights",
+   "file": null,
+   "vol": "卷十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#vitalRates"
+   ],
+   "rules": [
+    "rules.gen.pop.bandSlices",
+    "rules.gen.pop.bandsRole"
+   ]
+  },
+  {
+   "name": "agendaOf",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "aggregateView",
+   "file": null,
+   "vol": "卷二十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "aiAllows",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.ai.tierUses"
+   ]
+  },
+  {
+   "name": "appropriate",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "arablePotential",
+   "file": null,
+   "vol": "卷二十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#plantView",
+    "respect.mjs#respectTier"
+   ],
+   "rules": []
+  },
+  {
+   "name": "assignBed",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "assumeIdentity",
+   "file": null,
+   "vol": "卷四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "authority",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "disposal.mjs#disposalRight"
+   ],
+   "rules": []
+  },
+  {
+   "name": "awakenOrg",
+   "file": null,
+   "vol": "卷十六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "award",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "baseTierOf",
+   "file": null,
+   "vol": "卷二十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "battleStep",
+   "file": null,
+   "vol": "卷十三",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": [
+    "rules.combat.battle.advantageCurve",
+    "rules.combat.battle.captureCurve",
+    "rules.combat.battle.chaseBps",
+    "rules.combat.battle.deadCurve",
+    "rules.combat.battle.lossDenominator",
+    "rules.combat.battle.rollDist",
+    "rules.combat.battle.roundMinutes",
+    "rules.combat.battle.vulnCurve"
+   ]
+  },
+  {
+   "name": "beliefOf",
+   "file": null,
+   "vol": "卷二十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "bindCampaignSeed",
+   "file": null,
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "breakStructure",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": [
+    "rules.facility.build.demolishShare"
+   ]
+  },
+  {
+   "name": "buildProjectView",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "burnOutcome",
+   "file": null,
+   "vol": "卷三乙",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [],
+   "rules": [
+    "rules.thermal.burnReaction"
+   ]
+  },
+  {
+   "name": "burnPowerAt",
+   "file": null,
+   "vol": "卷三乙",
+   "sec": "§4.11.2",
+   "kind": "read",
+   "needs": [
+    "#burnOutcome"
+   ],
+   "rules": []
+  },
+  {
+   "name": "butcherOutcome",
+   "file": null,
+   "vol": "卷二十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "canAttach",
+   "file": null,
+   "vol": "卷三乙",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [
+    "kernel/item.mjs#itemView"
+   ],
+   "rules": []
+  },
+  {
+   "name": "canOffer",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#facilityView",
+    "#qualifies",
+    "#requirementCheck",
+    "action-capacity.mjs#can"
+   ],
+   "rules": []
+  },
+  {
+   "name": "canRide",
+   "file": null,
+   "vol": "卷二十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#loadOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "canWear",
+   "file": null,
+   "vol": "卷三乙",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [],
+   "rules": [
+    "rules.apparel.fitPenalty"
+   ]
+  },
+  {
+   "name": "careOptions",
+   "file": null,
+   "vol": "卷二十一",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#canOffer",
+    "#facilityTypeView",
+    "#professionView"
+   ],
+   "rules": []
+  },
+  {
+   "name": "carryFacility",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "#siteFit"
+   ],
+   "rules": []
+  },
+  {
+   "name": "certStanding",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.cert.foreignCurve"
+   ]
+  },
+  {
+   "name": "certsOf",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "check",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#skillValue"
+   ],
+   "rules": [
+    "rules.check.degreeBands",
+    "rules.check.rollDist"
+   ]
+  },
+  {
+   "name": "chooseForm",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": [
+    "rules.facility.build.prefFloor"
+   ]
+  },
+  {
+   "name": "chronicleAll",
+   "file": null,
+   "vol": "卷二十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "chronicleView",
+   "file": null,
+   "vol": "卷二十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#chronicleAll",
+    "#knowsFact"
+   ],
+   "rules": []
+  },
+  {
+   "name": "claimHolds",
+   "file": null,
+   "vol": "卷二十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "closeIdentities",
+   "file": null,
+   "vol": "卷四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [
+    "kernel/terminate.mjs#registerTerminationCleanup"
+   ],
+   "rules": []
+  },
+  {
+   "name": "closePeriod",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "coinValue",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "kernel/ledger.mjs#stockIn"
+   ],
+   "rules": []
+  },
+  {
+   "name": "commissionBrief",
+   "file": null,
+   "vol": "卷二十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#wageQuote"
+   ],
+   "rules": []
+  },
+  {
+   "name": "commissionView",
+   "file": null,
+   "vol": "卷二十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "commissionsAt",
+   "file": null,
+   "vol": "卷二十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "commissionsBy",
+   "file": null,
+   "vol": "卷二十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "completeBuild",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": [
+    "rules.facility.build.storeyCurve",
+    "rules.facility.build.storeyStress"
+   ]
+  },
+  {
+   "name": "composeName",
+   "file": null,
+   "vol": "卷十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "language.mjs#nameTable"
+   ],
+   "rules": [
+    "rules.gen.name.fallbackBank",
+    "rules.gen.name.maxSlots",
+    "rules.gen.name.optionalPermille"
+   ]
+  },
+  {
+   "name": "compositionOf",
+   "file": null,
+   "vol": "卷二十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "confirm",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "write",
+   "needs": [
+    "#resolve"
+   ],
+   "rules": []
+  },
+  {
+   "name": "consent",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.consent.edgeKind"
+   ]
+  },
+  {
+   "name": "constructorTree",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#affordances"
+   ],
+   "rules": [
+    "rules.constructor.rankKeys",
+    "rules.open.magnitudeSteps"
+   ]
+  },
+  {
+   "name": "contractStep",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "kernel/ledger.mjs#post"
+   ],
+   "rules": []
+  },
+  {
+   "name": "contractView",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "contributeBuild",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "population.mjs#stratumSkill"
+   ],
+   "rules": []
+  },
+  {
+   "name": "courseSummary",
+   "file": null,
+   "vol": "卷二十一",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.health.tickMinutes"
+   ]
+  },
+  {
+   "name": "covertGrade",
+   "file": null,
+   "vol": "卷二十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#publicShare"
+   ],
+   "rules": []
+  },
+  {
+   "name": "craftOutcome",
+   "file": null,
+   "vol": "卷三乙",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [
+    "#abilityLevel",
+    "#requirementCheck"
+   ],
+   "rules": [
+    "rules.crafting.botchDurabilityCurve",
+    "rules.crafting.emphasisCostRelief",
+    "rules.crafting.failHard",
+    "rules.crafting.failureSalvageCurve",
+    "rules.crafting.improvise",
+    "rules.crafting.masterySpan",
+    "rules.crafting.materialDifficultyScale",
+    "rules.crafting.minPortion",
+    "rules.crafting.residueReaction",
+    "rules.crafting.skillYieldCurve",
+    "rules.quality.baselineTier",
+    "rules.quality.botchTier",
+    "rules.quality.inputWeight",
+    "rules.quality.marginWeight",
+    "rules.quality.thresholds",
+    "rules.quality.toolBonus"
+   ]
+  },
+  {
+   "name": "createCharacter",
+   "file": null,
+   "vol": "卷四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [
+    "person.mjs#instantiatePerson"
+   ],
+   "rules": [
+    "rules.chargen.freePoints",
+    "rules.chargen.placeSets",
+    "rules.chargen.playableClass"
+   ]
+  },
+  {
+   "name": "creditStanding",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#wealth"
+   ],
+   "rules": []
+  },
+  {
+   "name": "cropForage",
+   "file": null,
+   "vol": "卷二十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "cropGrowth",
+   "file": null,
+   "vol": "卷二十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#envAccum",
+    "kernel/place.mjs#placeView"
+   ],
+   "rules": []
+  },
+  {
+   "name": "cultivationOf",
+   "file": null,
+   "vol": "卷二十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "cultureView",
+   "file": null,
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "currentRowOf",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "damageFacility",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "#facilityView"
+   ],
+   "rules": [
+    "rules.facility.wear.passableAperture"
+   ]
+  },
+  {
+   "name": "decisionJitter",
+   "file": null,
+   "vol": "卷二十六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "deedTick",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [],
+   "rules": [
+    "rules.deed.decayCurve"
+   ]
+  },
+  {
+   "name": "deedsOf",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.deed.decayCurve"
+   ]
+  },
+  {
+   "name": "degradeLevelOf",
+   "file": null,
+   "vol": "卷二十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "deityView",
+   "file": null,
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "denomination",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "deployFacility",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "#siteFit",
+    "grid-diff.mjs#alterCells",
+    "kernel/place.mjs#landCell"
+   ],
+   "rules": []
+  },
+  {
+   "name": "dialogueView",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "difficultyOf",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "dimDef",
+   "file": null,
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "disassemblyOf",
+   "file": null,
+   "vol": "卷三乙",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [],
+   "rules": [
+    "rules.crafting.careTimeCurve",
+    "rules.repair.baseSkillMin",
+    "rules.repair.disassemblyLevelOffset",
+    "rules.repair.disassemblySkillFactor",
+    "rules.repair.disassemblyTimeFactor",
+    "rules.repair.salvageCareCurve",
+    "rules.repair.salvageSkillCurve"
+   ]
+  },
+  {
+   "name": "documentStanding",
+   "file": null,
+   "vol": "卷三乙",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [],
+   "rules": [
+    "rules.documents.legibilityCurve"
+   ]
+  },
+  {
+   "name": "downhillMotion",
+   "file": null,
+   "vol": "卷十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "dropIdentity",
+   "file": null,
+   "vol": "卷四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "economyReport",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "effectiveTier",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§4.14.2",
+   "kind": "write",
+   "needs": [
+    "#degradeLevelOf"
+   ],
+   "rules": [
+    "rules.ai.degradeMap"
+   ]
+  },
+  {
+   "name": "encounterStep",
+   "file": null,
+   "vol": "卷十三",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": [
+    "rules.combat.beat.minutes",
+    "rules.combat.roles.verbs.yielded"
+   ]
+  },
+  {
+   "name": "endWorking",
+   "file": null,
+   "vol": "卷十五",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "#contractStep"
+   ],
+   "rules": []
+  },
+  {
+   "name": "ensureVariantRow",
+   "file": null,
+   "vol": "卷十六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "kernel/gen/ids.mjs#instanceIdOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "envAccum",
+   "file": null,
+   "vol": "卷二十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.agroclock"
+   ]
+  },
+  {
+   "name": "envAt",
+   "file": null,
+   "vol": "卷二十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "kernel/place.mjs#zoneAt",
+    "sim-tiers.mjs#inBubble"
+   ],
+   "rules": []
+  },
+  {
+   "name": "epochView",
+   "file": null,
+   "vol": "卷二十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "eraView",
+   "file": null,
+   "vol": "卷二十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "eventCount",
+   "file": null,
+   "vol": "卷二十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "eventTypeView",
+   "file": null,
+   "vol": "卷二",
+   "sec": "§2.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "exchangeRate",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#coinValue",
+    "price.mjs#priceFor"
+   ],
+   "rules": []
+  },
+  {
+   "name": "executeTrade",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "kernel/ledger.mjs#post"
+   ],
+   "rules": []
+  },
+  {
+   "name": "exploreGrade",
+   "file": null,
+   "vol": "卷十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "facilityTypeView",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "facilityView",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "kernel/place.mjs#placeView"
+   ],
+   "rules": []
+  },
+  {
+   "name": "faithView",
+   "file": null,
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "familiarityOf",
+   "file": null,
+   "vol": "卷二十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "memory.mjs#recall"
+   ],
+   "rules": []
+  },
+  {
+   "name": "familyEntries",
+   "file": null,
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "feedWorking",
+   "file": null,
+   "vol": "卷十五",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": [
+    "rules.seal.decayCurve"
+   ]
+  },
+  {
+   "name": "feesFor",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "fixtureCells",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "forageOptions",
+   "file": null,
+   "vol": "卷二十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "freeSlotsOf",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "kernel/calendar.mjs#calendarMinuteOf"
+   ],
+   "rules": [
+    "rules.agenda.slotMinutes"
+   ]
+  },
+  {
+   "name": "gainSkill",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [
+    "#workInputs"
+   ],
+   "rules": [
+    "rules.learning.prereqGainMult",
+    "rules.skill.relearnMult",
+    "rules.skill.upkeepGain"
+   ]
+  },
+  {
+   "name": "gateQuote",
+   "file": null,
+   "vol": "卷十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "gateStep",
+   "file": null,
+   "vol": "卷十七",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [],
+   "rules": [
+    "rules.travel.roles.lawgates.passage",
+    "rules.travel.roles.puses.toll"
+   ]
+  },
+  {
+   "name": "genView",
+   "file": null,
+   "vol": "卷十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "generateWorld",
+   "file": null,
+   "vol": "卷十",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "kernel/gen/stages.mjs#genPlan"
+   ],
+   "rules": [
+    "rules.gen.history.years",
+    "rules.gen.reject.rows"
+   ]
+  },
+  {
+   "name": "giveUp",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "groupNeeds",
+   "file": null,
+   "vol": "卷四",
+   "sec": "§3.3",
+   "kind": "read",
+   "needs": [
+    "person.mjs#personView"
+   ],
+   "rules": []
+  },
+  {
+   "name": "growthOnGain",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [],
+   "rules": [
+    "rules.growth.xpPerPoint"
+   ]
+  },
+  {
+   "name": "guardFor",
+   "file": null,
+   "vol": "卷二十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "handlingOf",
+   "file": null,
+   "vol": "卷二十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "herdView",
+   "file": null,
+   "vol": "卷二十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#groupNeeds",
+    "#renewableOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "holdsLore",
+   "file": null,
+   "vol": "卷二十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "honorCoverage",
+   "file": null,
+   "vol": "卷二十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#legendStanding",
+    "#linkKnown"
+   ],
+   "rules": []
+  },
+  {
+   "name": "householdBudget",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "identify",
+   "file": null,
+   "vol": "卷四",
+   "sec": "§3.3",
+   "kind": "read",
+   "needs": [
+    "#familiarityOf",
+    "#knowsKey",
+    "#linkKnown"
+   ],
+   "rules": [
+    "rules.identity.familiarityFloor"
+   ]
+  },
+  {
+   "name": "identitiesOf",
+   "file": null,
+   "vol": "卷四",
+   "sec": "§3.3",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "incoming",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "initialSkills",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.growth.xpPerPoint",
+    "rules.upbringing.careerShare",
+    "rules.upbringing.noise"
+   ]
+  },
+  {
+   "name": "installFixture",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": [
+    "rules.facility.build.usableShare"
+   ]
+  },
+  {
+   "name": "instancesOn",
+   "file": null,
+   "vol": "卷二十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "intimateAllowed",
+   "file": null,
+   "vol": "卷十八",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [
+    "#intimateEligible"
+   ],
+   "rules": []
+  },
+  {
+   "name": "intimateEligible",
+   "file": null,
+   "vol": "卷十八",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [],
+   "rules": [
+    "rules.social.minor.intimateMinRelMaturity"
+   ]
+  },
+  {
+   "name": "isA",
+   "file": null,
+   "vol": "卷二十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "isAdornment",
+   "file": null,
+   "vol": "卷二十三",
+   "sec": "§3.1",
+   "kind": "predicate",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "isComposition",
+   "file": null,
+   "vol": "卷二十三",
+   "sec": "§3.1",
+   "kind": "predicate",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "isWork",
+   "file": null,
+   "vol": "卷二十三",
+   "sec": "§3.1",
+   "kind": "predicate",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "itemRenown",
+   "file": null,
+   "vol": "卷二十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "itemUniqueness",
+   "file": null,
+   "vol": "卷二十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "joinEncounter",
+   "file": null,
+   "vol": "卷十三",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "kilnReach",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "knowStanding",
+   "file": null,
+   "vol": "卷二十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#holdsLore",
+    "#loreShare"
+   ],
+   "rules": []
+  },
+  {
+   "name": "knowledgeView",
+   "file": null,
+   "vol": "卷二",
+   "sec": "§2.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "knownForms",
+   "file": null,
+   "vol": "卷二十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#skillValue"
+   ],
+   "rules": []
+  },
+  {
+   "name": "knowsFact",
+   "file": null,
+   "vol": "卷二十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "knowsKey",
+   "file": null,
+   "vol": "卷二十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#familiarityOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "laborOffers",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "landedCost",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "landingOf",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "learnOptions",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "leaveEncounter",
+   "file": null,
+   "vol": "卷十三",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "leaveLair",
+   "file": null,
+   "vol": "卷十六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "legSpeed",
+   "file": null,
+   "vol": "卷十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#moveSpeedOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "legalKeyIdOf",
+   "file": null,
+   "vol": "卷二十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "legendStanding",
+   "file": null,
+   "vol": "卷二十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "legendsView",
+   "file": null,
+   "vol": "卷二十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "leverageOf",
+   "file": null,
+   "vol": "卷二十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#knowsFact",
+    "#publicShare"
+   ],
+   "rules": []
+  },
+  {
+   "name": "lifeTick",
+   "file": null,
+   "vol": "卷四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [
+    "death.mjs#die",
+    "person.mjs#instantiatePerson"
+   ],
+   "rules": [
+    "rules.life.birthplaceClass",
+    "rules.life.gestationStatus",
+    "rules.life.naturalCause"
+   ]
+  },
+  {
+   "name": "lifestyleTick",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [],
+   "rules": [
+    "rules.lifestyle.unfocusedShare"
+   ]
+  },
+  {
+   "name": "lifestyleView",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "linkKnown",
+   "file": null,
+   "vol": "卷二十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#beliefOf",
+    "#identitiesOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "loadOf",
+   "file": null,
+   "vol": "卷四",
+   "sec": "§3.3",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "lootStep",
+   "file": null,
+   "vol": "卷十三",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "kernel/ledger.mjs#post",
+    "loot.mjs#lootCapacity"
+   ],
+   "rules": [
+    "rules.combat.loot.burnVerb",
+    "rules.combat.loot.shareRows",
+    "rules.combat.roles.verbs.burned",
+    "rules.combat.roles.verbs.looted"
+   ]
+  },
+  {
+   "name": "loreShare",
+   "file": null,
+   "vol": "卷二十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "magnitudeCap",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#skillValue"
+   ],
+   "rules": []
+  },
+  {
+   "name": "manifestOf",
+   "file": null,
+   "vol": "卷十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "mapGeomView",
+   "file": null,
+   "vol": "卷十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#exploreGrade",
+    "kernel/place.mjs#placeView",
+    "kernel/place.mjs#routeView"
+   ],
+   "rules": []
+  },
+  {
+   "name": "marketQuote",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "marketSupply",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#incoming"
+   ],
+   "rules": []
+  },
+  {
+   "name": "materialized",
+   "file": null,
+   "vol": "卷十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "matterStateOf",
+   "file": null,
+   "vol": "卷三乙",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "meltCoin",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "migBackfill",
+   "file": null,
+   "vol": "卷十一",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "migCard",
+   "file": null,
+   "vol": "卷十一",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "migCards",
+   "file": null,
+   "vol": "卷十一",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "migEvents",
+   "file": null,
+   "vol": "卷十一",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "migExit",
+   "file": null,
+   "vol": "卷十一",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "migFrozen",
+   "file": null,
+   "vol": "卷十一",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "migParallelOk",
+   "file": null,
+   "vol": "卷十一",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.migration.maxParallel"
+   ]
+  },
+  {
+   "name": "migPhaseCount",
+   "file": null,
+   "vol": "卷十一",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "migReady",
+   "file": null,
+   "vol": "卷十一",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "migReceiver",
+   "file": null,
+   "vol": "卷十一",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "migRows",
+   "file": null,
+   "vol": "卷十一",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "mintCoin",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "mintLore",
+   "file": null,
+   "vol": "卷十六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "kernel/gen/ids.mjs#instanceIdOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "missionStep",
+   "file": null,
+   "vol": "卷十三",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": [
+    "rules.combat.roles.contracts.hire",
+    "rules.combat.roles.verbs.missionDone"
+   ]
+  },
+  {
+   "name": "moveSpeedOf",
+   "file": null,
+   "vol": "卷四",
+   "sec": "§3.3",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "needSatisfiers",
+   "file": null,
+   "vol": "卷二十六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "noteFate",
+   "file": null,
+   "vol": "卷十五",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "kernel/scheduler.mjs#cancel",
+    "kernel/scheduler.mjs#schedule"
+   ],
+   "rules": [
+    "rules.afterlife.fateRows"
+   ]
+  },
+  {
+   "name": "noteMerit",
+   "file": null,
+   "vol": "卷十三",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "noteRout",
+   "file": null,
+   "vol": "卷十三",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": [
+    "rules.combat.roles.verbs.routed"
+   ]
+  },
+  {
+   "name": "noteWarScore",
+   "file": null,
+   "vol": "卷十三",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "npcChoose",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#activityOf",
+    "#agendaOf",
+    "#decisionJitter",
+    "#needSatisfiers",
+    "#preferenceOf",
+    "action-capacity.mjs#can",
+    "evaluation.mjs#evaluationOf",
+    "legality.mjs#legalityOf",
+    "memory.mjs#recall",
+    "person.mjs#personView",
+    "stance.mjs#dread",
+    "stance.mjs#stance",
+    "treatment.mjs#treatment"
+   ],
+   "rules": [
+    "rules.npc.grievanceVerbs",
+    "rules.npc.idleAdvanceMinutes",
+    "rules.npc.redLineValence",
+    "rules.npc.stanceWeights",
+    "rules.npc.switchMargin",
+    "rules.npc.utilityWeights"
+   ]
+  },
+  {
+   "name": "npcDecision",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#activityOf",
+    "#agendaOf",
+    "#decisionJitter",
+    "#needSatisfiers",
+    "#preferenceOf",
+    "action-capacity.mjs#can",
+    "evaluation.mjs#evaluationOf",
+    "legality.mjs#legalityOf",
+    "memory.mjs#recall",
+    "person.mjs#personView",
+    "stance.mjs#dread",
+    "stance.mjs#stance",
+    "treatment.mjs#treatment"
+   ],
+   "rules": [
+    "rules.consent.edgeKind",
+    "rules.npc.conditionalStep",
+    "rules.npc.grievanceVerbs",
+    "rules.npc.redLineValence",
+    "rules.npc.stanceWeights",
+    "rules.npc.utilityWeights"
+   ]
+  },
+  {
+   "name": "nsOf",
+   "file": null,
+   "vol": "卷二十八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "obligationsOf",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "occupyStation",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "openBuildProject",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "openSession",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "openWorking",
+   "file": null,
+   "vol": "卷十五",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": [
+    "rules.familyRows",
+    "rules.working.maxProducts"
+   ]
+  },
+  {
+   "name": "openingOf",
+   "file": null,
+   "vol": "卷十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "opportunitiesOf",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#qualifies"
+   ],
+   "rules": []
+  },
+  {
+   "name": "opportunityWatch",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [
+    "#opportunitiesOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "ordained",
+   "file": null,
+   "vol": "卷七",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "originEvents",
+   "file": null,
+   "vol": "卷二十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#chronicleView"
+   ],
+   "rules": []
+  },
+  {
+   "name": "paceView",
+   "file": null,
+   "vol": "卷二十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "packFacility",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "packSet",
+   "file": null,
+   "vol": "卷二十八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "packSetView",
+   "file": null,
+   "vol": "卷二十八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "partsMaterialView",
+   "file": null,
+   "vol": "卷三乙",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [
+    "kernel/item.mjs#materialView"
+   ],
+   "rules": [
+    "rules.items.aggregation"
+   ]
+  },
+  {
+   "name": "partyView",
+   "file": null,
+   "vol": "卷十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "passOf",
+   "file": null,
+   "vol": "卷十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "battle.mjs#siegeView",
+    "kernel/place.mjs#zoneAt"
+   ],
+   "rules": []
+  },
+  {
+   "name": "pickSubjects",
+   "file": null,
+   "vol": "卷二十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#recallFacts"
+   ],
+   "rules": []
+  },
+  {
+   "name": "planProduction",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "plantView",
+   "file": null,
+   "vol": "卷二十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "possibleMatterStates",
+   "file": null,
+   "vol": "卷三乙",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [],
+   "rules": [
+    "rules.climate.envTempDomain"
+   ]
+  },
+  {
+   "name": "practiceTick",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [
+    "#skillsOf"
+   ],
+   "rules": [
+    "rules.profession.lapseDays"
+   ]
+  },
+  {
+   "name": "preferenceOf",
+   "file": null,
+   "vol": "卷二十六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "presentIdentity",
+   "file": null,
+   "vol": "卷四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "prevalenceOf",
+   "file": null,
+   "vol": "卷二十一",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "preview",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "write",
+   "needs": [
+    "#landingOf",
+    "#quoteOf"
+   ],
+   "rules": [
+    "rules.open.previewMinutes"
+   ]
+  },
+  {
+   "name": "productionPlanOf",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "professionView",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "professionsOf",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#skillValue"
+   ],
+   "rules": []
+  },
+  {
+   "name": "projectView",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "propertyView",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "proposeTransform",
+   "file": null,
+   "vol": "卷十六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "publicShare",
+   "file": null,
+   "vol": "卷二十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#identitiesOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "qualifies",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#certStanding"
+   ],
+   "rules": []
+  },
+  {
+   "name": "quotaOf",
+   "file": null,
+   "vol": "卷十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "quoteOf",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "raidAppraisal",
+   "file": null,
+   "vol": "卷十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.travel.roles.puses.fence"
+   ]
+  },
+  {
+   "name": "reachOf",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "readOutcome",
+   "file": null,
+   "vol": "卷二十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "recallFacts",
+   "file": null,
+   "vol": "卷二十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#identify",
+    "memory.mjs#recall"
+   ],
+   "rules": []
+  },
+  {
+   "name": "recurrenceNext",
+   "file": null,
+   "vol": "卷二十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "registerAutonomyProvider",
+   "file": null,
+   "vol": "卷一",
+   "sec": "§2.5",
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "registerEffect",
+   "file": null,
+   "vol": "卷一",
+   "sec": "§2.5",
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "registerIncident",
+   "file": null,
+   "vol": "卷一",
+   "sec": "§2.5",
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "registerMagicEffect",
+   "file": null,
+   "vol": "卷一",
+   "sec": "§2.5",
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "registerNamed",
+   "file": null,
+   "vol": "卷十六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "#mintLore"
+   ],
+   "rules": []
+  },
+  {
+   "name": "registerQuestGenerator",
+   "file": null,
+   "vol": "卷一",
+   "sec": "§2.5",
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "registerWorldEventSubscriber",
+   "file": null,
+   "vol": "卷一",
+   "sec": "§2.5",
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "related",
+   "file": null,
+   "vol": "卷十八",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "releaseBed",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "releaseStation",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "removeFixture",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "renewableOf",
+   "file": null,
+   "vol": "卷四",
+   "sec": "§3.3",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "renownBonus",
+   "file": null,
+   "vol": "卷二十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#itemRenown"
+   ],
+   "rules": []
+  },
+  {
+   "name": "repairFacility",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": [
+    "rules.facility.repair.minutesPerM3",
+    "rules.facility.repair.replaceShare"
+   ]
+  },
+  {
+   "name": "repairPlan",
+   "file": null,
+   "vol": "卷三乙",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [],
+   "rules": [
+    "rules.repair.materialPerDamage",
+    "rules.repair.restoreCurve",
+    "rules.repair.salvageSkillCurve"
+   ]
+  },
+  {
+   "name": "requireMaterialized",
+   "file": null,
+   "vol": "卷十",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "kernel/gen/stages.mjs#genPlan"
+   ],
+   "rules": []
+  },
+  {
+   "name": "requirementCheck",
+   "file": null,
+   "vol": "卷三乙",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "requirementPlan",
+   "file": null,
+   "vol": "卷三乙",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "researchOptions",
+   "file": null,
+   "vol": "卷二十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "resolve",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "write",
+   "needs": [
+    "#authority",
+    "#check",
+    "#consent",
+    "#quoteOf",
+    "primitives-runtime.mjs#execute",
+    "sim-tiers.mjs#controlledByPlayer"
+   ],
+   "rules": [
+    "rules.act.craftDegree"
+   ]
+  },
+  {
+   "name": "restSite",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "#requirementCheck"
+   ],
+   "rules": []
+  },
+  {
+   "name": "returnDigest",
+   "file": null,
+   "vol": "卷二十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "reviewClaims",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.review.tolerance"
+   ]
+  },
+  {
+   "name": "revoke",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "rewriteSpecies",
+   "file": null,
+   "vol": "卷四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "riteStep",
+   "file": null,
+   "vol": "卷十五",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": [
+    "rules.rite.gatherMinutes"
+   ]
+  },
+  {
+   "name": "rollGroup",
+   "file": null,
+   "vol": "卷十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "rosterOf",
+   "file": null,
+   "vol": "卷十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "route",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#affordances",
+    "#preview",
+    "#resolve"
+   ],
+   "rules": [
+    "rules.route.maxSteps"
+   ]
+  },
+  {
+   "name": "routeRisk",
+   "file": null,
+   "vol": "卷十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "lair.mjs#encounterReading"
+   ],
+   "rules": []
+  },
+  {
+   "name": "rowIds",
+   "file": null,
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "runJobs",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "#craftOutcome",
+    "kernel/ledger.mjs#post"
+   ],
+   "rules": []
+  },
+  {
+   "name": "sameFaith",
+   "file": null,
+   "vol": "卷七",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "sceneCard",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.scene.promptBudget",
+    "rules.scene.staticBudget"
+   ]
+  },
+  {
+   "name": "seatOf",
+   "file": null,
+   "vol": "卷十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.gen.pop.cultureLevel"
+   ]
+  },
+  {
+   "name": "secretsOf",
+   "file": null,
+   "vol": "卷二十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "seedSkills",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "setEduFocus",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "setFocus",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [],
+   "rules": [
+    "rules.lifestyle.switchDays"
+   ]
+  },
+  {
+   "name": "setGateTerms",
+   "file": null,
+   "vol": "卷十七",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "setLeaf",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "setMuster",
+   "file": null,
+   "vol": "卷十三",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "settleFacilities",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": [
+    "rules.facility.rating.cleanPerMinute",
+    "rules.facility.repair.dueCondition",
+    "rules.facility.station.loadWindowDays",
+    "rules.facility.structure.burnShareCurve",
+    "rules.facility.wear.visitUseCurve"
+   ]
+  },
+  {
+   "name": "settleHouseholds",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "kernel/ledger.mjs#post"
+   ],
+   "rules": []
+  },
+  {
+   "name": "settleLair",
+   "file": null,
+   "vol": "卷十六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "settleObligations",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "settleStatBuild",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "#requireMaterialized",
+    "population.mjs#stratumSkill"
+   ],
+   "rules": [
+    "rules.facility.build.usableShare",
+    "rules.facility.statBuild.demandSources",
+    "rules.facility.statBuild.minGap",
+    "rules.facility.statBuild.vacancyGap"
+   ]
+  },
+  {
+   "name": "settleStatLabor",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "settleStatProduction",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "#craftOutcome"
+   ],
+   "rules": []
+  },
+  {
+   "name": "settleTrade",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "#executeTrade",
+    "#landedCost"
+   ],
+   "rules": []
+  },
+  {
+   "name": "settleTrips",
+   "file": null,
+   "vol": "卷十七",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "shipmentProfile",
+   "file": null,
+   "vol": "卷三乙",
+   "sec": "§4.18.2",
+   "kind": "read",
+   "needs": [
+    "#matterStateOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "shopView",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "siegeStep",
+   "file": null,
+   "vol": "卷十三",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": [
+    "rules.combat.siege.assaultRow",
+    "rules.combat.siege.consolidateCurve"
+   ]
+  },
+  {
+   "name": "simTierOf",
+   "file": null,
+   "vol": "卷二十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "sit",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [
+    "#qualifies",
+    "action-capacity.mjs#awake"
+   ],
+   "rules": []
+  },
+  {
+   "name": "siteFit",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "kernel/blueprint.mjs#planBlueprint"
+   ],
+   "rules": [
+    "rules.facility.build.levelSpanMax"
+   ]
+  },
+  {
+   "name": "skillBand",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "skillValue",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#workInputs"
+   ],
+   "rules": [
+    "rules.skill.bodyFloor",
+    "rules.skill.rustCurve"
+   ]
+  },
+  {
+   "name": "skillView",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "skillsOf",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#skillValue"
+   ],
+   "rules": []
+  },
+  {
+   "name": "spendAttrPoint",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "stapleCalendar",
+   "file": null,
+   "vol": "卷二十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "stationFee",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#stationLoad",
+    "price.mjs#priceFor"
+   ],
+   "rules": []
+  },
+  {
+   "name": "stationFor",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "stationLoad",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#facilityView"
+   ],
+   "rules": [
+    "rules.facility.station.loadWindowDays"
+   ]
+  },
+  {
+   "name": "stationPlan",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "storeTarget",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "kernel/place.mjs#landCell",
+    "kernel/place.mjs#pathView"
+   ],
+   "rules": []
+  },
+  {
+   "name": "storyView",
+   "file": null,
+   "vol": "卷二十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#tallyOf",
+    "#wealth"
+   ],
+   "rules": []
+  },
+  {
+   "name": "study",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [
+    "#gainSkill"
+   ],
+   "rules": []
+  },
+  {
+   "name": "subjectiveView",
+   "file": null,
+   "vol": "卷二十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.knowledge.credence.shareMin"
+   ]
+  },
+  {
+   "name": "substituteQty",
+   "file": null,
+   "vol": "卷三乙",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "tabooFacts",
+   "file": null,
+   "vol": "卷二十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "takePerk",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [
+    "#qualifies"
+   ],
+   "rules": []
+  },
+  {
+   "name": "takeRenewable",
+   "file": null,
+   "vol": "卷四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "takeUp",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "tallyOf",
+   "file": null,
+   "vol": "卷二十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "teachWillingness",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.teach.refusals"
+   ]
+  },
+  {
+   "name": "thermalStep",
+   "file": null,
+   "vol": "卷三乙",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [],
+   "rules": [
+    "rules.items.aggregation",
+    "rules.thermal.ambientEpsilon",
+    "rules.thermal.deflagEffects",
+    "rules.thermal.heatExchangeCurve",
+    "rules.thermal.leakCurve",
+    "rules.thermal.spreadCurve"
+   ]
+  },
+  {
+   "name": "towShareOf",
+   "file": null,
+   "vol": "卷十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#loadOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "tradeVolume",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "treatmentPreview",
+   "file": null,
+   "vol": "卷二十一",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.health.doseLevels"
+   ]
+  },
+  {
+   "name": "triggerStep",
+   "file": null,
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": [
+    "rules.facility.mechanism.maxHops"
+   ]
+  },
+  {
+   "name": "tripMinutes",
+   "file": null,
+   "vol": "卷十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "tripPlan",
+   "file": null,
+   "vol": "卷十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "tripStep",
+   "file": null,
+   "vol": "卷十七",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [
+    "#passOf",
+    "position.mjs#placeSubject"
+   ],
+   "rules": [
+    "rules.travel.roles.acts.march"
+   ]
+  },
+  {
+   "name": "tripView",
+   "file": null,
+   "vol": "卷十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "typicalSpeedOf",
+   "file": null,
+   "vol": "卷四",
+   "sec": "§3.3",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "unmetSupply",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "upbringingTick",
+   "file": null,
+   "vol": "卷十四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [
+    "#gainSkill",
+    "#skillsOf"
+   ],
+   "rules": [
+    "rules.upbringing.exposureSource"
+   ]
+  },
+  {
+   "name": "validateSegments",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "validateTurn",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "verbView",
+   "file": null,
+   "vol": "卷二十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "vitalRates",
+   "file": null,
+   "vol": "卷四",
+   "sec": "§3.3",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "wageQuote",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "waterAhead",
+   "file": null,
+   "vol": "卷二十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "wealth",
+   "file": null,
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "price.mjs#priceFor"
+   ],
+   "rules": []
+  },
+  {
+   "name": "why",
+   "file": null,
+   "vol": "卷二十二",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "kernel/dimensions.mjs#explain"
+   ],
+   "rules": []
+  },
+  {
+   "name": "withdraw",
+   "file": null,
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "workCount",
+   "file": null,
+   "vol": "卷二十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#workReach"
+   ],
+   "rules": []
+  },
+  {
+   "name": "workInputs",
+   "file": null,
+   "vol": "卷四",
+   "sec": "§3.3",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.attr.modCurve"
+   ]
+  },
+  {
+   "name": "workReach",
+   "file": null,
+   "vol": "卷二十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "wornProfile",
+   "file": null,
+   "vol": "卷三乙",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [],
+   "rules": [
+    "rules.apparel.encumbrancePenaltyCurve"
+   ]
+  },
+  {
+   "name": "awake",
+   "file": "action-capacity.mjs",
+   "vol": "卷二",
+   "sec": "§2.5",
+   "kind": "predicate",
+   "needs": [
+    "body.mjs#bodyView",
+    "status.mjs#statusView"
+   ],
+   "rules": [
+    "rules.capacity"
+   ]
+  },
+  {
+   "name": "can",
+   "file": "action-capacity.mjs",
+   "vol": "卷二",
+   "sec": "§2.5",
+   "kind": "predicate",
+   "needs": [
+    "body.mjs#bodyView",
+    "status.mjs#statusView"
+   ],
+   "rules": [
+    "rules.capacity"
+   ]
+  },
+  {
+   "name": "capacity",
+   "file": "action-capacity.mjs",
+   "vol": "卷二",
+   "sec": "§2.5",
+   "kind": "predicate",
+   "needs": [
+    "body.mjs#bodyView",
+    "status.mjs#statusView"
+   ],
+   "rules": [
+    "rules.capacity"
+   ]
+  },
+  {
+   "name": "dead",
+   "file": "action-capacity.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "terminated",
+   "file": "action-capacity.mjs",
+   "vol": "卷二",
+   "sec": "§2.5",
+   "kind": "predicate",
+   "needs": [
+    "status.mjs#statusView"
+   ],
+   "rules": []
+  },
+  {
+   "name": "pinned",
+   "file": "aggregate.mjs",
+   "vol": "卷二十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#simTierOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "castPreview",
+   "file": "arcana.mjs",
+   "vol": "卷十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.cast.costRows"
+   ]
+  },
+  {
+   "name": "castShape",
+   "file": "arcana.mjs",
+   "vol": "卷十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "rite.mjs#riteView"
+   ],
+   "rules": [
+    "rules.cast.degreeBps",
+    "rules.familyRows"
+   ]
+  },
+  {
+   "name": "classesOfFamily",
+   "file": "arcana.mjs",
+   "vol": "卷十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.familyRows"
+   ]
+  },
+  {
+   "name": "efficacyOf",
+   "file": "arcana.mjs",
+   "vol": "卷十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.efficacy.distanceCurve",
+    "rules.efficacy.offeringCurve",
+    "rules.efficacy.officiantCurve"
+   ]
+  },
+  {
+   "name": "enchantRoom",
+   "file": "arcana.mjs",
+   "vol": "卷十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "situationOf",
+   "file": "arcana.mjs",
+   "vol": "卷十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.roles.holdings"
+   ]
+  },
+  {
+   "name": "spellsOf",
+   "file": "arcana.mjs",
+   "vol": "卷十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "auditGaps",
+   "file": "audit.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#economyReport"
+   ],
+   "rules": [
+    "rules.law.audit.gapRows"
+   ]
+  },
+  {
+   "name": "battlePreview",
+   "file": "battle.mjs",
+   "vol": "卷十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "battleView",
+   "file": "battle.mjs",
+   "vol": "卷十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "siegeView",
+   "file": "battle.mjs",
+   "vol": "卷十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "warView",
+   "file": "battle.mjs",
+   "vol": "卷十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "containReading",
+   "file": "bestiary.mjs",
+   "vol": "卷十六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "displayClassOf",
+   "file": "bestiary.mjs",
+   "vol": "卷十六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "similarity",
+   "file": "bestiary.mjs",
+   "vol": "卷十六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "speciesThreat",
+   "file": "bestiary.mjs",
+   "vol": "卷十六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "threatBrief",
+   "file": "bestiary.mjs",
+   "vol": "卷十六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "bestiary.mjs#threatOf",
+    "lair.mjs#lairOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "threatOf",
+   "file": "bestiary.mjs",
+   "vol": "卷十六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "tierRoom",
+   "file": "bestiary.mjs",
+   "vol": "卷十六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "wardReading",
+   "file": "bestiary.mjs",
+   "vol": "卷十六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "wardTagsOf",
+   "file": "bestiary.mjs",
+   "vol": "卷十六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "bodyView",
+   "file": "body.mjs",
+   "vol": "卷四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "kernel/dimensions.mjs#modified"
+   ],
+   "rules": [
+    "rules.body.integrity.lostBelow"
+   ]
+  },
+  {
+   "name": "bondOf",
+   "file": "bondage.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "bountiesOn",
+   "file": "bounty.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "caseView",
+   "file": "case.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "convictionCount",
+   "file": "case.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "evidenceScore",
+   "file": "case.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "agencyOf",
+   "file": "civil.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "claimsOf",
+   "file": "civil.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "goodFaithOf",
+   "file": "civil.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#knowsFact"
+   ],
+   "rules": []
+  },
+  {
+   "name": "limitationOf",
+   "file": "civil.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "bindingsOf",
+   "file": "code.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "contrabandAt",
+   "file": "code.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "forumOrgOf",
+   "file": "code.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "kernel/title.mjs#governorOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "lawCodeView",
+   "file": "code.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "normStack",
+   "file": "code.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "code.mjs#provisionView"
+   ],
+   "rules": [
+    "rules.law.stack.layerOrder"
+   ]
+  },
+  {
+   "name": "provisionFor",
+   "file": "code.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "code.mjs#provisionView"
+   ],
+   "rules": []
+  },
+  {
+   "name": "provisionView",
+   "file": "code.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "conversionOdds",
+   "file": "conversion.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.faith.conversion.chanceCurve",
+    "rules.faith.conversion.rows"
+   ]
+  },
+  {
+   "name": "costPlan",
+   "file": "cost-model.mjs",
+   "vol": "卷二十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "courtView",
+   "file": "court.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.polity.court.amenities",
+    "rules.polity.court.curves",
+    "rules.polity.court.grandeurMax",
+    "rules.polity.court.spendCurves",
+    "rules.polity.court.tiers"
+   ]
+  },
+  {
+   "name": "crimeProspect",
+   "file": "crime.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "price.mjs#priceFor"
+   ],
+   "rules": [
+    "rules.law.crime.catchCurve",
+    "rules.law.roles.puses.fence"
+   ]
+  },
+  {
+   "name": "acceptance",
+   "file": "culture.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.culture.acceptance.rows",
+    "rules.culture.acceptance.scoreMax"
+   ]
+  },
+  {
+   "name": "acceptanceOfPerson",
+   "file": "culture.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "culture.mjs#acceptance"
+   ],
+   "rules": [
+    "rules.culture.acceptance.scoreMax"
+   ]
+  },
+  {
+   "name": "cultureHead",
+   "file": "culture.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.culture.roles.rule"
+   ]
+  },
+  {
+   "name": "custodyOf",
+   "file": "custody.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "customFor",
+   "file": "custom.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.culture.customs"
+   ]
+  },
+  {
+   "name": "pendingCustoms",
+   "file": "custom.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "carcassOf",
+   "file": "death.mjs",
+   "vol": "卷四",
+   "sec": "§3.3",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.death.lostPartsExcluded"
+   ]
+  },
+  {
+   "name": "die",
+   "file": "death.mjs",
+   "vol": "卷四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [
+    "kernel/terminate.mjs#terminate"
+   ],
+   "rules": [
+    "rules.death.terminalStatus"
+   ]
+  },
+  {
+   "name": "requestRevive",
+   "file": "death.mjs",
+   "vol": "卷四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [
+    "kernel/terminate.mjs#revive"
+   ],
+   "rules": []
+  },
+  {
+   "name": "settleBody",
+   "file": "death.mjs",
+   "vol": "卷四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [
+    "kernel/terminate.mjs#registerTerminationCleanup"
+   ],
+   "rules": [
+    "rules.death.corpseClass"
+   ]
+  },
+  {
+   "name": "demand",
+   "file": "demand.mjs",
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "price.mjs#priceFor"
+   ],
+   "rules": []
+  },
+  {
+   "name": "casusOptions",
+   "file": "diplomacy.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "diploStatus",
+   "file": "diplomacy.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "stance.mjs#stance"
+   ],
+   "rules": [
+    "rules.polity.diplo.statusRows"
+   ]
+  },
+  {
+   "name": "disposalRight",
+   "file": "disposal.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.law.disposal.coOwnerBps",
+    "rules.law.roles.kinds",
+    "rules.law.roles.kinds.owns"
+   ]
+  },
+  {
+   "name": "divinationOptions",
+   "file": "divination.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.faith.divination.accuracyCurve",
+    "rules.faith.divination.oracleBonus"
+   ]
+  },
+  {
+   "name": "deterrenceOf",
+   "file": "encounter.mjs",
+   "vol": "卷十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.combat.deterrence.curve",
+    "rules.combat.deterrence.groupRadius"
+   ]
+  },
+  {
+   "name": "encounterOf",
+   "file": "encounter.mjs",
+   "vol": "卷十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "encounterView",
+   "file": "encounter.mjs",
+   "vol": "卷十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "estateOf",
+   "file": "estate.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "kernel/title.mjs#governorOf",
+    "legality.mjs#legalityOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "naturalizeOptions",
+   "file": "estate.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "esteemOf",
+   "file": "esteem.mjs",
+   "vol": "卷十八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.social.esteem.tiers"
+   ]
+  },
+  {
+   "name": "evaluationOf",
+   "file": "evaluation.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.culture.evaluations"
+   ]
+  },
+  {
+   "name": "tabooBreach",
+   "file": "evaluation.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "renderScreen",
+   "file": "extension/render.mjs",
+   "vol": "卷二十九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "factionView",
+   "file": "faction.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.polity.faction.discontentMax"
+   ]
+  },
+  {
+   "name": "doctrineOf",
+   "file": "faith.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "faithChain",
+   "file": "faith.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "faithCount",
+   "file": "faith.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "faithDistance",
+   "file": "faith.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "faith.mjs#faithChain"
+   ],
+   "rules": [
+    "rules.faith.distance.byCommonLayer"
+   ]
+  },
+  {
+   "name": "faithOf",
+   "file": "faith.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "faithUnlocked",
+   "file": "faith.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "fervorOf",
+   "file": "fervor.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "festivalsAt",
+   "file": "festival.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#recurrenceNext"
+   ],
+   "rules": []
+  },
+  {
+   "name": "nextFestival",
+   "file": "festival.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#recurrenceNext"
+   ],
+   "rules": []
+  },
+  {
+   "name": "riteCount",
+   "file": "festival.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.faith.rite.perFacilityDay"
+   ]
+  },
+  {
+   "name": "vassalTerms",
+   "file": "feudal.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#contractView",
+    "#obligationsOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "commandOf",
+   "file": "force.mjs",
+   "vol": "卷十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.combat.command.maxLevels",
+    "rules.combat.command.relayBps"
+   ]
+  },
+  {
+   "name": "forceView",
+   "file": "force.mjs",
+   "vol": "卷十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "strike.mjs#strikePreview"
+   ],
+   "rules": [
+    "rules.combat.force.powerCurve",
+    "rules.combat.force.powerWeights",
+    "rules.combat.force.valueRows",
+    "rules.combat.force.valueScale",
+    "rules.combat.roles.tactics.baseline"
+   ]
+  },
+  {
+   "name": "garrisonOf",
+   "file": "force.mjs",
+   "vol": "卷十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.combat.force.powerCurve",
+    "rules.combat.force.powerWeights"
+   ]
+  },
+  {
+   "name": "lawGate",
+   "file": "gate.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "code.mjs#provisionFor"
+   ],
+   "rules": [
+    "rules.law.gate.defaults"
+   ]
+  },
+  {
+   "name": "legalCapacity",
+   "file": "gate.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "loadDisplayBlocklist",
+   "file": "gate/load-blocklist.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "matchBlocklist",
+   "file": "gate/matcher.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "screen",
+   "file": "gate/screen.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "electorate",
+   "file": "governance.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "seatVenues",
+   "file": "governance.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "tierOptions",
+   "file": "governance.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#wealth",
+    "population.mjs#popView"
+   ],
+   "rules": []
+  },
+  {
+   "name": "alterCells",
+   "file": "grid-diff.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "clearDiffs",
+   "file": "grid-diff.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "holdingKind",
+   "file": "holding-kinds.mjs",
+   "vol": "卷十八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "holyWarEligible",
+   "file": "hostility.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.faith.holyWar.rows"
+   ]
+  },
+  {
+   "name": "hostilityOf",
+   "file": "hostility.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.faith.hostility.baseByDistance",
+    "rules.faith.hostility.shiftRows"
+   ]
+  },
+  {
+   "name": "influenceOf",
+   "file": "influence.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.polity.influence.tiers"
+   ]
+  },
+  {
+   "name": "integrationOf",
+   "file": "integration.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "interactionsFor",
+   "file": "interactions.mjs",
+   "vol": "卷十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.ixRows"
+   ]
+  },
+  {
+   "name": "initInstanceRot",
+   "file": "item-lots.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "registerAdvanceHook",
+   "file": "kernel/advance-registry.mjs",
+   "vol": "卷一",
+   "sec": "§2.5",
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "registerAdvancePlan",
+   "file": "kernel/advance-registry.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "planBlueprint",
+   "file": "kernel/blueprint.mjs",
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "planCellsOf",
+   "file": "kernel/blueprint.mjs",
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "planFeasible",
+   "file": "kernel/blueprint.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "volumeByMaterialRole",
+   "file": "kernel/blueprint.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "base64ToBytes",
+   "file": "kernel/bytes.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "installByteConstants",
+   "file": "kernel/bytes.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "utf8Length",
+   "file": "kernel/bytes.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "utf8ToText",
+   "file": "kernel/bytes.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "astroView",
+   "file": "kernel/calendar.mjs",
+   "vol": "卷二十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.astro"
+   ]
+  },
+  {
+   "name": "calendarAdd",
+   "file": "kernel/calendar.mjs",
+   "vol": "卷二十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "calendarDayIndex",
+   "file": "kernel/calendar.mjs",
+   "vol": "卷二十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#envAt"
+   ],
+   "rules": []
+  },
+  {
+   "name": "calendarFrom",
+   "file": "kernel/calendar.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "calendarMinuteOf",
+   "file": "kernel/calendar.mjs",
+   "vol": "卷二十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "calendarSpan",
+   "file": "kernel/calendar.mjs",
+   "vol": "卷二十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "calendarView",
+   "file": "kernel/calendar.mjs",
+   "vol": "卷二十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "calendarViewFrom",
+   "file": "kernel/calendar.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkCalendarClimateTables",
+   "file": "kernel/calendar.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "rateBasisView",
+   "file": "kernel/calendar.mjs",
+   "vol": "卷二十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "systemTimeView",
+   "file": "kernel/calendar.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "caveCellsOf",
+   "file": "kernel/cave.mjs",
+   "vol": "卷十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "climateTempC",
+   "file": "kernel/climate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "dailyMeanTemp",
+   "file": "kernel/climate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "daylightMinutes",
+   "file": "kernel/climate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "envelopeUaWPerK",
+   "file": "kernel/climate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "heatPowerW",
+   "file": "kernel/climate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "normalizedSolarPhase",
+   "file": "kernel/climate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "seasonAt",
+   "file": "kernel/climate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "seasonDimension",
+   "file": "kernel/climate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "tempAt",
+   "file": "kernel/climate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "clone",
+   "file": "kernel/clone.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "inputVersionAt",
+   "file": "kernel/dated.mjs",
+   "vol": "卷二",
+   "sec": "§2.7",
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "writeDated",
+   "file": "kernel/dated.mjs",
+   "vol": "卷二",
+   "sec": "§2.7",
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "declareInputs",
+   "file": "kernel/declare.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "finalizeInputs",
+   "file": "kernel/declare.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "inputsBySystem",
+   "file": "kernel/declare.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "resetFinalized",
+   "file": "kernel/declare.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "atan",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "cos",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "exp",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "extPrecisionOk",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "fixedAdd",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "fixedDivide",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "fixedExp",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "fixedLn",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "fixedMultiply",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "fixedPow",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "fixedScale",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "fixedSub",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "fixedToNumber",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "fixedUnits",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "installDetNumeric",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "installExpTable",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "installFixedConstants",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "ln",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "pow",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "precisionOk",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "sin",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "sqrt",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "truncateTo",
+   "file": "kernel/det-math.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "createItemInstance",
+   "file": "kernel/dimension-writers.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "writeItemDeviation",
+   "file": "kernel/dimension-writers.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "writePersonRow",
+   "file": "kernel/dimension-writers.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "dim",
+   "file": "kernel/dimensions.mjs",
+   "vol": "卷二",
+   "sec": "§2.1",
+   "kind": "read",
+   "needs": [
+    "kernel/sample.mjs#sample"
+   ],
+   "rules": []
+  },
+  {
+   "name": "explain",
+   "file": "kernel/dimensions.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "lookupCurve",
+   "file": "kernel/dimensions.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "modified",
+   "file": "kernel/dimensions.mjs",
+   "vol": "卷二",
+   "sec": "§2.1",
+   "kind": "read",
+   "needs": [
+    "kernel/dimensions.mjs#dim"
+   ],
+   "rules": [
+    "rules.modifiers.stackingTable"
+   ]
+  },
+  {
+   "name": "modifiedWith",
+   "file": "kernel/dimensions.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "readsUnbuilt",
+   "file": "kernel/dimensions.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "effects",
+   "file": "kernel/effects.mjs",
+   "vol": "卷二",
+   "sec": "§2.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "codeOf",
+   "file": "kernel/errors.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "reportError",
+   "file": "kernel/errors.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkVerbRows",
+   "file": "kernel/events.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "emit",
+   "file": "kernel/events.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "installEventLog",
+   "file": "kernel/events.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "registerEventDerive",
+   "file": "kernel/events.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "footprintKindOf",
+   "file": "kernel/footprint-kind.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "bearingView",
+   "file": "kernel/footprint.mjs",
+   "vol": "卷五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "kernel/det-math.mjs#atan"
+   ],
+   "rules": []
+  },
+  {
+   "name": "checkGenFields",
+   "file": "kernel/gen/fields.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "instanceIdOf",
+   "file": "kernel/gen/ids.mjs",
+   "vol": "卷十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "chainOf",
+   "file": "kernel/gen/rows.mjs",
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkGenStages",
+   "file": "kernel/gen/stages.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "genPlan",
+   "file": "kernel/gen/stages.mjs",
+   "vol": "卷十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "generatorNames",
+   "file": "kernel/gen/worldgen.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkGeneratedOverAuthored",
+   "file": "kernel/gen/writeback.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "createDiffReader",
+   "file": "kernel/grid-diff-read.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "diffPathSegments",
+   "file": "kernel/grid-diff-read.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "templateBlocksOf",
+   "file": "kernel/grid-template.mjs",
+   "vol": "卷十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "displayLangs",
+   "file": "kernel/handles/display-lang.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "entityId",
+   "file": "kernel/handles/entity-id.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "E",
+   "file": "kernel/handles/generated.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "P",
+   "file": "kernel/handles/generated.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "V",
+   "file": "kernel/handles/generated.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "buildE",
+   "file": "kernel/handles/generated.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "buildP",
+   "file": "kernel/handles/generated.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "installHandles",
+   "file": "kernel/handles/generated.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkPathPattern",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "diceKeyText",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "dimKeyOf",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "gridKeyOf",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "gridKeyParse",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "gridSeedKeyText",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "isAnyNode",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "isDeclarableNode",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "isGridKeySeg",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "isHex64",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "isLowerCamelCode",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "isModuleFile",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "isPathPattern",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "isRuleTableFile",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "isSeedKey",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "modKeyOf",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "orderKeyText",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "parseDimKey",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "pathTypeShape",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "seedHashText",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "seedKeyText",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "snakeCaseKey",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "statePathSegments",
+   "file": "kernel/handles/keys.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "T",
+   "file": "kernel/handles/markers.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "markersOf",
+   "file": "kernel/handles/markers.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "rxTokenAt",
+   "file": "kernel/handles/patterns.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "setFieldNames",
+   "file": "kernel/handles/patterns.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "shapeArgCount",
+   "file": "kernel/handles/patterns.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "errorCodeOf",
+   "file": "kernel/handles/vocab-handle.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "handleOf",
+   "file": "kernel/handles/vocab-handle.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkHoldingKindRows",
+   "file": "kernel/holdings.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "closeHolding",
+   "file": "kernel/holdings.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "openHolding",
+   "file": "kernel/holdings.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "openHoldingsOfKind",
+   "file": "kernel/holdings.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "rescaleHolding",
+   "file": "kernel/holdings.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "transferHolding",
+   "file": "kernel/holdings.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "canContain",
+   "file": "kernel/item-state.mjs",
+   "vol": "卷三乙",
+   "sec": "§4.4.2",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkItemStateTables",
+   "file": "kernel/item-state.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "containerView",
+   "file": "kernel/item-state.mjs",
+   "vol": "卷三乙",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "durabilityOn",
+   "file": "kernel/item-state.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "instanceView",
+   "file": "kernel/item-state.mjs",
+   "vol": "卷二十四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "itemOfResource",
+   "file": "kernel/item-state.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "loadPlan",
+   "file": "kernel/item-state.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "lotKeyCompare",
+   "file": "kernel/item-state.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "lotMergeVerdict",
+   "file": "kernel/item-state.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "lotsView",
+   "file": "kernel/item-state.mjs",
+   "vol": "卷三乙",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "resourceKindsOf",
+   "file": "kernel/item-state.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "rotStep",
+   "file": "kernel/item-state.mjs",
+   "vol": "卷三乙",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [],
+   "rules": [
+    "rules.rot.rotReaction",
+    "rules.rot.stages",
+    "rules.rot.tempCurve"
+   ]
+  },
+  {
+   "name": "rottenLots",
+   "file": "kernel/item-state.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "spoilageOn",
+   "file": "kernel/item-state.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "useWear",
+   "file": "kernel/item-state.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "wearStep",
+   "file": "kernel/item-state.mjs",
+   "vol": "卷三乙",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [],
+   "rules": [
+    "rules.wear.envCurve",
+    "rules.wear.faultCurve",
+    "rules.wear.levels"
+   ]
+  },
+  {
+   "name": "checkItemClasses",
+   "file": "kernel/item.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkItemTables",
+   "file": "kernel/item.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "itemView",
+   "file": "kernel/item.mjs",
+   "vol": "卷三乙",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "itemsInSlot",
+   "file": "kernel/item.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "materialView",
+   "file": "kernel/item.mjs",
+   "vol": "卷三乙",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#matterStateOf"
+   ],
+   "rules": [
+    "rules.items.aggregation"
+   ]
+  },
+  {
+   "name": "stockSlots",
+   "file": "kernel/item.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "defaultFacing",
+   "file": "kernel/layout.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "layoutOf",
+   "file": "kernel/layout.mjs",
+   "vol": "卷十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.gen.layout.gapCells"
+   ]
+  },
+  {
+   "name": "accountsOf",
+   "file": "kernel/ledger.mjs",
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "alertGaps",
+   "file": "kernel/ledger.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "allocateCapped",
+   "file": "kernel/ledger.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "balance",
+   "file": "kernel/ledger.mjs",
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkLedgerTables",
+   "file": "kernel/ledger.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkSubjectFlagDims",
+   "file": "kernel/ledger.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "closeLedgerPeriod",
+   "file": "kernel/ledger.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "lotsUnmergeable",
+   "file": "kernel/ledger.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "mergeLots",
+   "file": "kernel/ledger.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "openAccount",
+   "file": "kernel/ledger.mjs",
+   "vol": "卷六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "post",
+   "file": "kernel/ledger.mjs",
+   "vol": "卷六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "prorateCapped",
+   "file": "kernel/ledger.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "recordTaint",
+   "file": "kernel/ledger.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "settleCappedAllocation",
+   "file": "kernel/ledger.mjs",
+   "vol": "卷六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "stockIn",
+   "file": "kernel/ledger.mjs",
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "transfer",
+   "file": "kernel/ledger.mjs",
+   "vol": "卷六",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "codepointTables",
+   "file": "kernel/load/codepoint-tables.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "readDisplayLangIds",
+   "file": "kernel/load/display-langs.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "flattenTable",
+   "file": "kernel/load/flatten.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "parseJsonStrict",
+   "file": "kernel/load/json-text.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "ruleTable",
+   "file": "kernel/load/rules.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkManifest",
+   "file": "kernel/load/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "importEntry",
+   "file": "kernel/load/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "readManifestDigests",
+   "file": "kernel/load/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "compareSpecificity",
+   "file": "kernel/load/state-owners.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "loadUnitConversions",
+   "file": "kernel/load/vocab-load.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "loadUnits",
+   "file": "kernel/load/vocab-load.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "loadVocab",
+   "file": "kernel/load/vocab-load.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "resolveRuleSi",
+   "file": "kernel/load/vocab-load.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "loadWorld",
+   "file": "kernel/load/world.mjs",
+   "vol": "卷二十八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "kernel/packs.mjs#resolvePackSet"
+   ],
+   "rules": []
+  },
+  {
+   "name": "repoRoot",
+   "file": "kernel/load/world.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "inputsOf",
+   "file": "kernel/memo.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "stateMemo",
+   "file": "kernel/memo.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "mountKernel",
+   "file": "kernel/mount.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "matchStruct",
+   "file": "kernel/named-struct-match.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "namedStructMapOf",
+   "file": "kernel/named-struct-match.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "installNamedStructs",
+   "file": "kernel/named-structs.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "isPosValue",
+   "file": "kernel/named-structs.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "resolvePackSet",
+   "file": "kernel/packs.mjs",
+   "vol": "卷二十八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "blueprintOf",
+   "file": "kernel/place-building.mjs",
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "kernel/blueprint.mjs#planBlueprint"
+   ],
+   "rules": [
+    "rules.facility.wear.breachShare",
+    "rules.facility.wear.roofCurve"
+   ]
+  },
+  {
+   "name": "blueprintRulesFrom",
+   "file": "kernel/place-building.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "buildPlan",
+   "file": "kernel/place-plan.mjs",
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "#chooseForm",
+    "#requirementPlan",
+    "#siteFit"
+   ],
+   "rules": [
+    "rules.facility.build.storeyCurve",
+    "rules.facility.build.storeyStress"
+   ]
+  },
+  {
+   "name": "expandClasses",
+   "file": "kernel/place-plan.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "flowingOfIndex",
+   "file": "kernel/place-plan.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "bearingView",
+   "file": "kernel/place.mjs",
+   "vol": "卷五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "kernel/det-math.mjs#atan"
+   ],
+   "rules": []
+  },
+  {
+   "name": "blueprintOf",
+   "file": "kernel/place.mjs",
+   "vol": "卷十九",
+   "sec": "§3.2",
+   "kind": "write",
+   "needs": [
+    "kernel/blueprint.mjs#planBlueprint"
+   ],
+   "rules": [
+    "rules.facility.wear.breachShare",
+    "rules.facility.wear.roofCurve"
+   ]
+  },
+  {
+   "name": "checkPlaceRasters",
+   "file": "kernel/place.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkPlaceTable",
+   "file": "kernel/place.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "extrudeCell",
+   "file": "kernel/place.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "fallCell",
+   "file": "kernel/place.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "gridSpaceBox",
+   "file": "kernel/place.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "gridView",
+   "file": "kernel/place.mjs",
+   "vol": "卷五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "isOffstage",
+   "file": "kernel/place.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "isStructureCell",
+   "file": "kernel/place.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "landCell",
+   "file": "kernel/place.mjs",
+   "vol": "卷五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "kernel/place.mjs#zoneAt"
+   ],
+   "rules": []
+  },
+  {
+   "name": "locatedChainOf",
+   "file": "kernel/place.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "pathView",
+   "file": "kernel/place.mjs",
+   "vol": "卷五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "placeLatitude",
+   "file": "kernel/place.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "placeNeighbors",
+   "file": "kernel/place.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "placeView",
+   "file": "kernel/place.mjs",
+   "vol": "卷五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#envAccum",
+    "#envAt",
+    "security.mjs#securityOf",
+    "status.mjs#statusView"
+   ],
+   "rules": []
+  },
+  {
+   "name": "planFootprints",
+   "file": "kernel/place.mjs",
+   "vol": "卷五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "regionCell",
+   "file": "kernel/place.mjs",
+   "vol": "卷五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "regionOcclusionM",
+   "file": "kernel/place.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "regionOf",
+   "file": "kernel/place.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "relContains",
+   "file": "kernel/place.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "relResidents",
+   "file": "kernel/place.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "relWithin",
+   "file": "kernel/place.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "routeView",
+   "file": "kernel/place.mjs",
+   "vol": "卷五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "settleCell",
+   "file": "kernel/place.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "sightCache",
+   "file": "kernel/place.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "straightM",
+   "file": "kernel/place.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "zoneAt",
+   "file": "kernel/place.mjs",
+   "vol": "卷五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkRecipeTable",
+   "file": "kernel/recipe.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "recipeView",
+   "file": "kernel/recipe.mjs",
+   "vol": "卷三乙",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "report",
+   "file": "kernel/report.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "reverseLookup",
+   "file": "kernel/reverse-index.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "compileRX",
+   "file": "kernel/rx.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "compileRXInScope",
+   "file": "kernel/rx.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "evaluateRX",
+   "file": "kernel/rx.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "nsKey",
+   "file": "kernel/rx.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "rxChildren",
+   "file": "kernel/rx.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "splitDimKey",
+   "file": "kernel/rx.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "diceKeyOf",
+   "file": "kernel/sample.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "diceSeedKey",
+   "file": "kernel/sample.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "distributionMeanFixed",
+   "file": "kernel/sample.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "drawByKey",
+   "file": "kernel/sample.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "installSampleConstants",
+   "file": "kernel/sample.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "installSampleDistributions",
+   "file": "kernel/sample.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "isSeedTemplate",
+   "file": "kernel/sample.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "sample",
+   "file": "kernel/sample.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "sampleDistribution",
+   "file": "kernel/sample.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "currentGame",
+   "file": "kernel/save-session.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "installSaveEnv",
+   "file": "kernel/save-session.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "saveEnv",
+   "file": "kernel/save-session.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "setGame",
+   "file": "kernel/save-session.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "bookFrom",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "commitSlot",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "compileLayout",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "digestExcludeDoc",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "docOfState",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "installDigestExclude",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "isSealedStoreForm",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "mountSaveRoutes",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "registerUnitOfPath",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "saveDigest",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "sha256Base64",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "sha256Text",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "shardPath",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "slotDir",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "slotOk",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "stateOfDoc",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "tickEnd",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "walkPathTree",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "cancel",
+   "file": "kernel/scheduler.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkClockTables",
+   "file": "kernel/scheduler.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkHookCadence",
+   "file": "kernel/scheduler.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "clockView",
+   "file": "kernel/scheduler.mjs",
+   "vol": "卷二十",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "createWallTimer",
+   "file": "kernel/scheduler.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "installScheduler",
+   "file": "kernel/scheduler.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "installTickEnd",
+   "file": "kernel/scheduler.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "minutesPerDay",
+   "file": "kernel/scheduler.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "schedule",
+   "file": "kernel/scheduler.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "canonicalEqual",
+   "file": "kernel/storage.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "installGridRules",
+   "file": "kernel/storage.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "installStorage",
+   "file": "kernel/storage.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "readPath",
+   "file": "kernel/storage.mjs",
+   "vol": "卷二",
+   "sec": "§2.6",
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "readSealed",
+   "file": "kernel/storage.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "writePath",
+   "file": "kernel/storage.mjs",
+   "vol": "卷二",
+   "sec": "§2.6",
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "writeSealed",
+   "file": "kernel/storage.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "registerSubscriber",
+   "file": "kernel/subscribers.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkTerminationTables",
+   "file": "kernel/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "installTermination",
+   "file": "kernel/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "registerSuccessionOrder",
+   "file": "kernel/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "registerTerminationCleanup",
+   "file": "kernel/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "revive",
+   "file": "kernel/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "terminate",
+   "file": "kernel/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "governorOf",
+   "file": "kernel/title.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "kernel/title.mjs#holdingAllowed"
+   ],
+   "rules": []
+  },
+  {
+   "name": "holdingAllowed",
+   "file": "kernel/title.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "faith.mjs#faithUnlocked"
+   ],
+   "rules": []
+  },
+  {
+   "name": "setGovernor",
+   "file": "kernel/title.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "installDelegations",
+   "file": "kernel/transaction.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "installProposalSession",
+   "file": "kernel/transaction.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "registerDelegate",
+   "file": "kernel/transaction.mjs",
+   "vol": "卷二",
+   "sec": "§2.6",
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "registerHoldWhileRecompute",
+   "file": "kernel/transaction.mjs",
+   "vol": "卷二",
+   "sec": "§2.6",
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "runDelegated",
+   "file": "kernel/transaction.mjs",
+   "vol": "卷二",
+   "sec": "§2.6",
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "submitProposal",
+   "file": "kernel/transaction.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "mountMenuEntry",
+   "file": "kernel/transport/menu-entry.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "onReply",
+   "file": "kernel/transport/reply-channel.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "postReply",
+   "file": "kernel/transport/reply-channel.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "createRouterCaps",
+   "file": "kernel/transport/router-caps.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkBodyTables",
+   "file": "kernel/validate/body-tables.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "validateDimensions",
+   "file": "kernel/validate/dimensions-validate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkPolityTables",
+   "file": "kernel/validate/polity-tables.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "officeRowKinds",
+   "file": "kernel/validate/polity-tables.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkPriceTables",
+   "file": "kernel/validate/price-tables.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "requirement",
+   "file": "kernel/validate/rows.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "valueOf",
+   "file": "kernel/validate/rows.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkSenseTables",
+   "file": "kernel/validate/sense-tables.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkDef",
+   "file": "kernel/validate/types.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkValue",
+   "file": "kernel/validate/types.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "isClosedType",
+   "file": "kernel/validate/types.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "isErrorCode",
+   "file": "kernel/validate/types.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "listItemType",
+   "file": "kernel/validate/types.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "mentionsSealed",
+   "file": "kernel/validate/types.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "parseNumberType",
+   "file": "kernel/validate/types.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "rangeOk",
+   "file": "kernel/validate/types.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "splitKey",
+   "file": "kernel/validate/types.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkValuationTables",
+   "file": "kernel/valuation.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "registerValuer",
+   "file": "kernel/valuation.mjs",
+   "vol": "卷三乙",
+   "sec": "§4.16.2",
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "scarcity",
+   "file": "kernel/valuation.mjs",
+   "vol": "卷三乙",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "valuation",
+   "file": "kernel/valuation.mjs",
+   "vol": "卷三乙",
+   "sec": "§3.2",
+   "kind": "predicate",
+   "needs": [],
+   "rules": [
+    "rules.crafting.laborRate",
+    "rules.crafting.valueAdd",
+    "rules.valuation.selectorRepresentative",
+    "rules.valuation.unitValue"
+   ]
+  },
+  {
+   "name": "valueDensityOf",
+   "file": "kernel/valuation.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "registerViewReader",
+   "file": "kernel/view-registry.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "CAPABILITY_NAMESPACE",
+   "file": "kernel/vocab.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "idIndex",
+   "file": "kernel/vocab.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "installVocab",
+   "file": "kernel/vocab.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "kindOf",
+   "file": "kernel/vocab.mjs",
+   "vol": "卷二",
+   "sec": "§2.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "kindOfEntity",
+   "file": "kernel/vocab.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "registry",
+   "file": "kernel/vocab.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "vocab",
+   "file": "kernel/vocab.mjs",
+   "vol": "卷二",
+   "sec": "§2.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "openingWallFlow",
+   "file": "kernel/wall-flow.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "installWeather",
+   "file": "kernel/weather.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "prepareWeatherRx",
+   "file": "kernel/weather.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "weatherAt",
+   "file": "kernel/weather.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "weatherCellOf",
+   "file": "kernel/weather.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "heirsOf",
+   "file": "kin.mjs",
+   "vol": "卷十八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "kinDegree",
+   "file": "kin.mjs",
+   "vol": "卷十八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.social.kin.maxDegree"
+   ]
+  },
+  {
+   "name": "kinView",
+   "file": "kin.mjs",
+   "vol": "卷十八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "encounterReading",
+   "file": "lair.mjs",
+   "vol": "卷十六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "lairOf",
+   "file": "lair.mjs",
+   "vol": "卷十六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "lairSuitability",
+   "file": "lair.mjs",
+   "vol": "卷十六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "interpretedScore",
+   "file": "language.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.culture.language.interpretFactor"
+   ]
+  },
+  {
+   "name": "languageCap",
+   "file": "language.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.culture.language.attrStep",
+    "rules.culture.language.capBase",
+    "rules.culture.language.knownMin",
+    "rules.culture.roles.learning"
+   ]
+  },
+  {
+   "name": "languageKin",
+   "file": "language.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "nameTable",
+   "file": "language.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "legalityOf",
+   "file": "legality.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "gate.mjs#lawGate"
+   ],
+   "rules": [
+    "rules.law.legality.recognitionGate",
+    "rules.law.legality.rows"
+   ]
+  },
+  {
+   "name": "legitimacy",
+   "file": "legitimacy.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.polity.legit.neutral",
+    "rules.polity.legit.scoreMax",
+    "rules.polity.legit.tiers"
+   ]
+  },
+  {
+   "name": "lootCapacity",
+   "file": "loot.mjs",
+   "vol": "卷十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#loadOf"
+   ],
+   "rules": [
+    "rules.combat.loot.minutesPerKg"
+   ]
+  },
+  {
+   "name": "claimTruth",
+   "file": "lore.mjs",
+   "vol": "卷十六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "loreOf",
+   "file": "lore.mjs",
+   "vol": "卷十六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "loreRegions",
+   "file": "lore.mjs",
+   "vol": "卷十六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "truthClaims",
+   "file": "lore.mjs",
+   "vol": "卷十六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "kernel/place.mjs#placeView",
+    "person.mjs#personView",
+    "species.mjs#speciesView"
+   ],
+   "rules": []
+  },
+  {
+   "name": "recall",
+   "file": "memory.mjs",
+   "vol": "卷十八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "meritOf",
+   "file": "merit.mjs",
+   "vol": "卷十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "meritsOf",
+   "file": "merit.mjs",
+   "vol": "卷十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "miracleOptions",
+   "file": "miracle.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.faith.miracle.rows",
+    "rules.faith.miracle.triggers"
+   ]
+  },
+  {
+   "name": "missionView",
+   "file": "mission.mjs",
+   "vol": "卷十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "vowsOf",
+   "file": "monastic.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.faith.roles.monastic"
+   ]
+  },
+  {
+   "name": "offenseView",
+   "file": "offense.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "offensesOfFact",
+   "file": "offense.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "hasPower",
+   "file": "office.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#facilityView"
+   ],
+   "rules": []
+  },
+  {
+   "name": "officeView",
+   "file": "office.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "officesOf",
+   "file": "office.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "regencyOf",
+   "file": "office.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.polity.regency.rows"
+   ]
+  },
+  {
+   "name": "successorsOf",
+   "file": "office.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "sim-tiers.mjs#simUnitOf"
+   ],
+   "rules": [
+    "rules.polity.office.poolRows",
+    "rules.polity.office.poolTries",
+    "rules.pop.aggKinds.resident"
+   ]
+  },
+  {
+   "name": "opinionOf",
+   "file": "opinion.mjs",
+   "vol": "卷十八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.social.opinion.triggers"
+   ]
+  },
+  {
+   "name": "motionView",
+   "file": "org.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "orgView",
+   "file": "org.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "displayData",
+   "file": "output-gate/display-load.mjs",
+   "vol": "卷二十九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "kernel/rx.mjs#compileRX"
+   ],
+   "rules": []
+  },
+  {
+   "name": "mountOutput",
+   "file": "output-gate/mount.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "composeScreen",
+   "file": "output-gate/panel-composer.mjs",
+   "vol": "卷二十九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "selectRows",
+   "file": "output-gate/select.mjs",
+   "vol": "卷二十九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "kernel/rx.mjs#evaluateRX"
+   ],
+   "rules": []
+  },
+  {
+   "name": "labelText",
+   "file": "output-gate/templates.mjs",
+   "vol": "卷二十九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "textcore/labels.mjs#labels"
+   ],
+   "rules": []
+  },
+  {
+   "name": "renderTpl",
+   "file": "output-gate/templates.mjs",
+   "vol": "卷二十九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "textcore/labels.mjs#labels"
+   ],
+   "rules": []
+  },
+  {
+   "name": "sentenceRange",
+   "file": "penalty.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "case.mjs#convictionCount"
+   ],
+   "rules": [
+    "rules.law.penalty.recidivismBps"
+   ]
+  },
+  {
+   "name": "perceiveEvent",
+   "file": "perceive.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "instantiatePerson",
+   "file": "person.mjs",
+   "vol": "卷四",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [
+    "#initialSkills",
+    "#seedSkills"
+   ],
+   "rules": [
+    "rules.chargen.nativeProficiency",
+    "rules.heredity.minParents"
+   ]
+  },
+  {
+   "name": "personView",
+   "file": "person.mjs",
+   "vol": "卷四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "body.mjs#bodyView",
+    "status.mjs#statusView"
+   ],
+   "rules": [
+    "rules.attr.bounds",
+    "rules.attr.modCurve",
+    "rules.life.growthCurve"
+   ]
+  },
+  {
+   "name": "pietyOf",
+   "file": "piety.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.faith.piety.tiers",
+    "rules.faith.roles.piety"
+   ]
+  },
+  {
+   "name": "worshipTier",
+   "file": "piety.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.faith.roles.pietyValue",
+    "rules.faith.worship.tiers"
+   ]
+  },
+  {
+   "name": "polityView",
+   "file": "polity.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "migrationScore",
+   "file": "population.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "culture.mjs#acceptance",
+    "tax.mjs#taxLoad"
+   ],
+   "rules": [
+    "rules.pop.migration.partCurves",
+    "rules.pop.migration.scoreWeights"
+   ]
+  },
+  {
+   "name": "popCapacity",
+   "file": "population.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#unmetSupply"
+   ],
+   "rules": [
+    "rules.pop.capacity.needs"
+   ]
+  },
+  {
+   "name": "popView",
+   "file": "population.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "sim-tiers.mjs#simUnitOf"
+   ],
+   "rules": [
+    "rules.pop.household.sizeFloor"
+   ]
+  },
+  {
+   "name": "stratumSkill",
+   "file": "population.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#initialSkills"
+   ],
+   "rules": []
+  },
+  {
+   "name": "applyBubbleTransition",
+   "file": "position.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "placeSubject",
+   "file": "position.mjs",
+   "vol": "卷十七",
+   "sec": "§3.3",
+   "kind": "write",
+   "needs": [
+    "kernel/place.mjs#landCell",
+    "kernel/place.mjs#zoneAt",
+    "sim-tiers.mjs#inBubble"
+   ],
+   "rules": []
+  },
+  {
+   "name": "whereOf",
+   "file": "position.mjs",
+   "vol": "卷十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "kernel/place.mjs#zoneAt"
+   ],
+   "rules": []
+  },
+  {
+   "name": "culturePref",
+   "file": "pref.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "priceFor",
+   "file": "price.mjs",
+   "vol": "卷六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#marketQuote",
+    "kernel/valuation.mjs#valuation"
+   ],
+   "rules": []
+  },
+  {
+   "name": "execute",
+   "file": "primitives-runtime.mjs",
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "write",
+   "needs": [
+    "primitives-runtime.mjs#primitiveContract"
+   ],
+   "rules": []
+  },
+  {
+   "name": "primitiveContract",
+   "file": "primitives-runtime.mjs",
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "reformOptions",
+   "file": "reform.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.faith.reform.baseCost",
+    "rules.faith.reform.knownShare",
+    "rules.faith.reform.skillCurve",
+    "rules.faith.roles.theology"
+   ]
+  },
+  {
+   "name": "respectTier",
+   "file": "respect.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "liminalOf",
+   "file": "rite.mjs",
+   "vol": "卷十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "riteView",
+   "file": "rite.mjs",
+   "vol": "卷十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "attackLegality",
+   "file": "safety.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "safetyOf",
+   "file": "safety.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "safety.mjs#attackLegality"
+   ],
+   "rules": []
+  },
+  {
+   "name": "responseOf",
+   "file": "security.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "action-capacity.mjs#awake"
+   ],
+   "rules": [
+    "rules.law.response.curve",
+    "rules.law.response.enforcerCount",
+    "rules.law.response.minSecurity"
+   ]
+  },
+  {
+   "name": "securityOf",
+   "file": "security.mjs",
+   "vol": "卷八b",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.law.security.controlAbsent",
+    "rules.law.security.enforceSkill",
+    "rules.law.security.garrisonWeightBps",
+    "rules.law.security.popFloor",
+    "rules.law.security.weights"
+   ]
+  },
+  {
+   "name": "afterlifeOf",
+   "file": "shade.mjs",
+   "vol": "卷十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "shrineDemand",
+   "file": "shrine.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "faith.mjs#faithCount"
+   ],
+   "rules": [
+    "rules.faith.roles.shrineService",
+    "rules.faith.roles.worshipService",
+    "rules.faith.shrine.perFacility",
+    "rules.faith.shrine.perShrine"
+   ]
+  },
+  {
+   "name": "losView",
+   "file": "sight.mjs",
+   "vol": "卷五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "kernel/place.mjs#zoneAt"
+   ],
+   "rules": []
+  },
+  {
+   "name": "bubbleView",
+   "file": "sim-tiers.mjs",
+   "vol": "卷二十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "controlledByPlayer",
+   "file": "sim-tiers.mjs",
+   "vol": "卷九",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.control.seatKind"
+   ]
+  },
+  {
+   "name": "inBubble",
+   "file": "sim-tiers.mjs",
+   "vol": "卷二十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "simUnitOf",
+   "file": "sim-tiers.mjs",
+   "vol": "卷二十七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "kernel/place.mjs#zoneAt"
+   ],
+   "rules": []
+  },
+  {
+   "name": "compat",
+   "file": "social.mjs",
+   "vol": "卷十八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "speciesView",
+   "file": "species.mjs",
+   "vol": "卷四",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "sphereAffinity",
+   "file": "sphere.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.faith.sphere.matchWeights"
+   ]
+  },
+  {
+   "name": "dread",
+   "file": "stance.mjs",
+   "vol": "卷十八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "stance.mjs#stance"
+   ],
+   "rules": [
+    "rules.social.fear.tiers"
+   ]
+  },
+  {
+   "name": "stance",
+   "file": "stance.mjs",
+   "vol": "卷十八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "bestiary.mjs#wardReading",
+    "culture.mjs#acceptanceOfPerson"
+   ],
+   "rules": [
+    "rules.social.stance.sources",
+    "rules.social.stance.tiers"
+   ]
+  },
+  {
+   "name": "addStatusInstance",
+   "file": "status.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "statusView",
+   "file": "status.mjs",
+   "vol": "卷二",
+   "sec": "§2.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "combatReadings",
+   "file": "strike.mjs",
+   "vol": "卷十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "layersOf",
+   "file": "strike.mjs",
+   "vol": "卷十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "#wornProfile"
+   ],
+   "rules": [
+    "rules.combat.layer.tissueCurve",
+    "rules.combat.layer.tissueMmCurve"
+   ]
+  },
+  {
+   "name": "strikeOutcome",
+   "file": "strike.mjs",
+   "vol": "卷十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.combat.beat.maxStrikes",
+    "rules.combat.layer.armorScale",
+    "rules.combat.part.aimCurve",
+    "rules.combat.part.areaCurve",
+    "rules.combat.part.capacityCurve",
+    "rules.combat.roles.verbs.damage",
+    "rules.combat.strike.bodyShareBps",
+    "rules.combat.strike.countCurve",
+    "rules.combat.strike.degreeBps",
+    "rules.combat.strike.edgeCurve",
+    "rules.combat.strike.faceCurve",
+    "rules.combat.strike.heftCurve",
+    "rules.combat.strike.punchCurve",
+    "rules.combat.strike.speedCurve",
+    "rules.combat.strike.typeRows"
+   ]
+  },
+  {
+   "name": "strikePreview",
+   "file": "strike.mjs",
+   "vol": "卷十三",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.combat.weak.knownBps"
+   ]
+  },
+  {
+   "name": "registerSystems",
+   "file": "systems.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "taxLoad",
+   "file": "tax.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "taxesFor",
+   "file": "tax.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.polity.tax.leakCurve",
+    "rules.polity.tax.remDenominator"
+   ]
+  },
+  {
+   "name": "brand",
+   "file": "textcore/brand.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "createDigestCap",
+   "file": "textcore/digest.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "digestHex",
+   "file": "textcore/digest.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "codeText",
+   "file": "textcore/labels.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "labels",
+   "file": "textcore/labels.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "concatText",
+   "file": "textcore/ops.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "intDigits",
+   "file": "textcore/ops.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "mapCodePoints",
+   "file": "textcore/ops.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "nfc",
+   "file": "textcore/ops.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "sliceByCodePoints",
+   "file": "textcore/ops.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "release",
+   "file": "textcore/release.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "makeScreened",
+   "file": "textcore/text-types.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "textValue",
+   "file": "textcore/text-types.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "claimsOn",
+   "file": "title.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "dejureOf",
+   "file": "title.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.polity.title.driftDays"
+   ]
+  },
+  {
+   "name": "domainOf",
+   "file": "title.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.polity.domain.overTemplate",
+    "rules.polity.domain.perSkill",
+    "rules.polity.domain.rankBonus",
+    "rules.polity.domain.skill"
+   ]
+  },
+  {
+   "name": "placeAuthority",
+   "file": "title.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "legitimacy.mjs#legitimacy"
+   ],
+   "rules": [
+    "rules.polity.legit.scoreMax"
+   ]
+  },
+  {
+   "name": "usurpOptions",
+   "file": "title.mjs",
+   "vol": "卷八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "hostility.mjs#hostilityOf"
+   ],
+   "rules": [
+    "rules.polity.title.usurpShareBps"
+   ]
+  },
+  {
+   "name": "requiredTier",
+   "file": "tools/content/tier.mjs",
+   "vol": "卷二十八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [
+    "respect.mjs#respectTier"
+   ],
+   "rules": [
+    "rules.content.tierRules"
+   ]
+  },
+  {
+   "name": "traditionOptions",
+   "file": "tradition.mjs",
+   "vol": "卷七",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.culture.tradition.baseCost",
+    "rules.culture.tradition.offEthosCost",
+    "rules.culture.tradition.slots"
+   ]
+  },
+  {
+   "name": "variantRowOf",
+   "file": "transform.mjs",
+   "vol": "卷十六",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "treatment",
+   "file": "treatment.mjs",
+   "vol": "卷十八",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": [
+    "rules.social.treatment"
+   ]
+  },
+  {
+   "name": "workingView",
+   "file": "working.mjs",
+   "vol": "卷十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "workingsOf",
+   "file": "working.mjs",
+   "vol": "卷十五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  }
+ ]
+}

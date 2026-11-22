@@ -1,0 +1,41 @@
+{
+  "volume": "卷七",
+  "needs": [
+    {"entry": "shrineDemand", "targets": ["faithCount"], "line": 1107, "quote": "`shrineDemand` 时，`faithCount`"}
+  ],
+  "rules": [
+    {"entry": "acceptanceOfPerson", "rules": ["rules.culture.acceptance.scoreMax"], "line": 327, "quote": "culture.acceptance.scoreMax"},
+    {"entry": "acceptance", "rules": ["rules.culture.acceptance.rows"], "line": 327, "quote": "culture.acceptance.rows"},
+    {"entry": "acceptance", "rules": ["rules.culture.acceptance.scoreMax"], "line": 327, "quote": "culture.acceptance.scoreMax"},
+    {"entry": "conversionOdds", "rules": ["rules.faith.conversion.chanceCurve"], "line": 312, "quote": "faith.conversion.chanceCurve"},
+    {"entry": "conversionOdds", "rules": ["rules.faith.conversion.rows"], "line": 312, "quote": "faith.conversion.rows"},
+    {"entry": "divinationOptions", "rules": ["rules.faith.divination.accuracyCurve"], "line": 319, "quote": "faith.divination.accuracyCurve"},
+    {"entry": "holyWarEligible", "rules": ["rules.faith.holyWar.rows"], "line": 323, "quote": "faith.holyWar.rows"},
+    {"entry": "hostilityOf", "rules": ["rules.faith.hostility.baseByDistance"], "line": 310, "quote": "faith.hostility.baseByDistance"},
+    {"entry": "hostilityOf", "rules": ["rules.faith.hostility.shiftRows"], "line": 310, "quote": "faith.hostility.shiftRows"},
+    {"entry": "languageCap", "rules": ["rules.culture.language.attrStep"], "line": 338, "quote": "culture.language.attrStep"},
+    {"entry": "languageCap", "rules": ["rules.culture.language.capBase"], "line": 338, "quote": "culture.language.capBase"},
+    {"entry": "languageCap", "rules": ["rules.culture.language.knownMin"], "line": 338, "quote": "culture.language.knownMin"},
+    {"entry": "miracleOptions", "rules": ["rules.faith.miracle.rows"], "line": 318, "quote": "faith.miracle.rows"},
+    {"entry": "miracleOptions", "rules": ["rules.faith.miracle.triggers"], "line": 318, "quote": "faith.miracle.triggers"},
+    {"entry": "reformOptions", "rules": ["rules.faith.reform.baseCost"], "line": 311, "quote": "faith.reform.baseCost"},
+    {"entry": "reformOptions", "rules": ["rules.faith.reform.knownShare"], "line": 311, "quote": "faith.reform.knownShare"},
+    {"entry": "reformOptions", "rules": ["rules.faith.reform.skillCurve"], "line": 311, "quote": "faith.reform.skillCurve"},
+    {"entry": "shrineDemand", "rules": ["rules.faith.shrine.perFacility"], "line": 321, "quote": "faith.shrine.perFacility"},
+    {"entry": "shrineDemand", "rules": ["rules.faith.shrine.perShrine"], "line": 321, "quote": "faith.shrine.perShrine"},
+    {"entry": "sphereAffinity", "rules": ["rules.faith.sphere.matchWeights"], "line": 303, "quote": "faith.sphere.matchWeights"},
+    {"entry": "traditionOptions", "rules": ["rules.culture.tradition.baseCost"], "line": 326, "quote": "culture.tradition.baseCost"},
+    {"entry": "traditionOptions", "rules": ["rules.culture.tradition.offEthosCost"], "line": 326, "quote": "culture.tradition.offEthosCost"},
+    {"entry": "traditionOptions", "rules": ["rules.culture.tradition.slots"], "line": 326, "quote": "culture.tradition.slots"}
+  ],
+  "dropped": [
+    {"entry": "acceptanceOfPerson", "target": "integrationOf", "reason": "同含两名的行是读者表，非读句"},
+    {"entry": "customFor", "target": "integrationOf", "reason": "无同含入口名与目标的行"},
+    {"entry": "holyWarEligible", "target": "faithOf", "reason": "无同含入口名与目标的行"},
+    {"entry": "hostilityOf", "target": "faithDistance", "reason": "同含两名的行是扩展性断言"},
+    {"entry": "miracleOptions", "target": "respectTier", "reason": "无同含入口名与目标的行"},
+    {"entry": "miracleOptions", "target": "sphereAffinity", "reason": "无同含入口名与目标的行"},
+    {"entry": "reformOptions", "target": "faithCount", "reason": "无同含入口名与目标的行"},
+    {"entry": "shrineDemand", "target": "facilityView", "reason": "无同含入口名与目标的行"}
+  ]
+}

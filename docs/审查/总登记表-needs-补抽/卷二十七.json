@@ -1,0 +1,21 @@
+{
+  "volume": "卷二十七",
+  "needs": [],
+  "rules": [],
+  "dropped": [
+    {"entry": "baseTierOf", "target": "rules.sim-tiers.individualMaxHops", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "baseTierOf", "target": "rules.sim-tiers.ruleMaxHops", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "baseTierOf", "target": "rules.sim-tiers.ruleSharedAncestorLevel", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "bubbleView", "target": "rules.sim-tiers.bubbleRadiusRegionCells", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "costPlan", "target": "rules.cost-model.budgetCuPerChunk", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "costPlan", "target": "rules.cost-model.cadenceRuleKeys", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "costPlan", "target": "rules.cost-model.chunkMinutes", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "costPlan", "target": "rules.cost-model.coef", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "costPlan", "target": "rules.cost-model.coefMaterialize", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "costPlan", "target": "rules.cost-model.costSubjects", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "costPlan", "target": "rules.cost-model.ladder", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "legalKeyIdOf", "target": "rules.det-numeric.keyIdAggBits", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "legalKeyIdOf", "target": "rules.det-numeric.keyIdOrdinalBits", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "simUnitOf", "target": "rules.sim-tiers.unitAdminLevel", "reason": "卷文只写裸键，无「表名.键」原文行"}
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "volume": "卷八b",
+  "needs": [],
+  "rules": [],
+  "dropped": [
+    {
+      "entry": "disposalRight",
+      "target": "agencyOf",
+      "reason": "行801不含入口名，§3.1 无调用句"
+    },
+    {
+      "entry": "disposalRight",
+      "target": "hasPower",
+      "reason": "行801不含入口名，§3.1 无调用句"
+    },
+    {
+      "entry": "securityOf",
+      "target": "capacity",
+      "reason": "行840不含入口名，§3.1 无调用句"
+    },
+    {
+      "entry": "securityOf",
+      "target": "garrisonOf",
+      "reason": "行840不含入口名，§3.1 无调用句"
+    },
+    {
+      "entry": "securityOf",
+      "target": "popView",
+      "reason": "行840不含入口名，§3.1 无调用句"
+    }
+  ]
+}

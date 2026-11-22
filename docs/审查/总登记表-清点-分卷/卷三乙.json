@@ -1,0 +1,31 @@
+{
+  "volume": "卷三乙",
+  "rejected": [],
+  "added": [
+    { "entry": "partsMaterialView", "line": 436, "kind": "谓词", "reason": "§4.1 M-22" },
+    { "entry": "requirementCheck", "line": 436, "kind": "谓词", "reason": "§4.7" },
+    { "entry": "requirementPlan", "line": 436, "kind": "谓词", "reason": "§4.7" },
+    { "entry": "abilityLevel", "line": 436, "kind": "谓词", "reason": "§4.6" },
+    { "entry": "craftOutcome", "line": 436, "kind": "谓词", "reason": "§4.8" },
+    { "entry": "disassemblyOf", "line": 436, "kind": "谓词", "reason": "§4.9" },
+    { "entry": "repairPlan", "line": 436, "kind": "谓词", "reason": "§4.9" },
+    { "entry": "wearStep", "line": 436, "kind": "谓词", "reason": "§4.10" },
+    { "entry": "matterStateOf", "line": 436, "kind": "谓词", "reason": "§4.11" },
+    { "entry": "possibleMatterStates", "line": 436, "kind": "谓词", "reason": "§4.11" },
+    { "entry": "thermalStep", "line": 436, "kind": "谓词", "reason": "§4.11" },
+    { "entry": "burnOutcome", "line": 436, "kind": "谓词", "reason": "§4.11" },
+    { "entry": "rotStep", "line": 436, "kind": "谓词", "reason": "§4.12" },
+    { "entry": "canWear", "line": 436, "kind": "谓词", "reason": "§4.13" },
+    { "entry": "wornProfile", "line": 436, "kind": "谓词", "reason": "§4.13" },
+    { "entry": "canAttach", "line": 436, "kind": "谓词", "reason": "§4.14" },
+    { "entry": "documentStanding", "line": 436, "kind": "谓词", "reason": "§4.15" },
+    { "entry": "valuation", "line": 436, "kind": "谓词", "reason": "§4.16" },
+    { "entry": "scarcity", "line": 436, "kind": "谓词", "reason": "§4.16" },
+    { "entry": "substituteQty", "line": 436, "kind": "谓词", "reason": "§4.17" },
+    { "entry": "canContain", "line": 1038, "kind": "读入口", "reason": "装入判定" },
+    { "entry": "burnPowerAt", "line": 1467, "kind": "读入口", "reason": "只读；供卷二十读地点热源功率" },
+    { "entry": "registerValuer", "line": 1724, "kind": "register", "reason": "别类实体的估值器登记口" },
+    { "entry": "shipmentProfile", "line": 1822, "kind": "读入口", "reason": "供承运与风险计算一次读全" }
+  ],
+  "notes": "§3.1 五项核对均为真入口；补 §3.2 谓词与 §5.2 入口表内漏收项。"
+}

@@ -1,0 +1,9 @@
+{
+  "volume": "卷二十一",
+  "needs": [],
+  "rules": [],
+  "dropped": [
+    {"entry": "courseSummary", "target": "rules.health.stat.careGrid", "reason": "卷文只写 stat.careGrid，无全路径"},
+    {"entry": "courseSummary", "target": "rules.health.stat.quantilePoints", "reason": "卷文只写 stat.quantilePoints，无全路径"}
+  ]
+}

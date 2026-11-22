@@ -1,0 +1,12 @@
+{
+  "volume": "卷十一",
+  "needs": [],
+  "rules": [
+    {
+      "entry": "migParallelOk",
+      "rules": ["rules.migration.maxParallel"],
+      "line": 554,
+      "quote": "`rules.migration.maxParallel`"
+    }
+  ]
+}

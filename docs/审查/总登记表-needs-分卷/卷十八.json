@@ -1,0 +1,28 @@
+{
+  "volume": "卷十八",
+  "needs": [
+    {"entry": "intimateAllowed", "targets": ["intimateEligible"], "line": 380, "quote": "逐个调 `intimateEligible`"},
+    {"entry": "stance", "targets": ["acceptanceOfPerson"], "line": 265, "quote": "绑定卷七 `acceptanceOfPerson"},
+    {"entry": "stance", "targets": ["wardReading"], "line": 265, "quote": "卷十六 `wardReading` 的敏感度基点"},
+    {"entry": "dread", "targets": ["stance"], "line": 1220, "quote": "dread = stance(o, t, 恐惧轴)"},
+    {"entry": "treatment", "targets": ["acceptanceOfPerson"], "line": 1161, "quote": "卷七 `acceptanceOfPerson` 的 `score`"},
+    {"entry": "opinionOf", "targets": ["publicShare"], "line": 932, "quote": "该卷 `publicShare` 的基点值"}
+  ],
+  "rules": [
+    {"entry": "kinDegree", "rules": ["rules.social.kin.maxDegree"], "line": 116, "quote": "`rules.social.kin.maxDegree`"},
+    {"entry": "stance", "rules": ["rules.social.stance.sources"], "line": 802, "quote": "`rules.social.stance.sources`"},
+    {"entry": "stance", "rules": ["rules.social.stance.conductCap"], "line": 829, "quote": "−conductCap, +conductCap"},
+    {"entry": "stance", "rules": ["rules.social.stance.tiers"], "line": 830, "quote": "rules.social.stance.tiers"},
+    {"entry": "recall", "rules": ["rules.social.memory.salience"], "line": 871, "quote": "`memory.salience` 行"},
+    {"entry": "recall", "rules": ["rules.social.memory.forgetCurve"], "line": 883, "quote": "lookup(forgetCurve, 距得知天数)"},
+    {"entry": "recall", "rules": ["rules.social.memory.recallMin"], "line": 883, "quote": "低于 `recallMin` 的事件"},
+    {"entry": "opinionOf", "rules": ["rules.social.opinion.triggers"], "line": 922, "quote": "rules.social.opinion.triggers"},
+    {"entry": "esteemOf", "rules": ["rules.social.esteem.tiers"], "line": 985, "quote": "rules.social.esteem.tiers"},
+    {"entry": "treatment", "rules": ["rules.social.treatment"], "line": 1171, "quote": "first(rules.social.treatment)"},
+    {"entry": "compat", "rules": ["rules.social.social.compat"], "line": 1264, "quote": "相容性权重 `social.compat"},
+    {"entry": "intimateEligible", "rules": ["rules.social.minor.intimateMinRelMaturity"], "line": 1089, "quote": "`minor.intimateMinRelMaturity`"},
+    {"entry": "dread", "rules": ["rules.social.fear.boldAxis"], "line": 1210, "quote": "`boldAxis` 是规则表里的一个人格轴引用"},
+    {"entry": "dread", "rules": ["rules.social.fear.boldBase", "rules.social.fear.boldScale"], "line": 1210, "quote": "fear.boldBase + fear.boldScale"},
+    {"entry": "dread", "rules": ["rules.social.fear.tiers"], "line": 1220, "quote": "first(fear.tiers)"}
+  ]
+}

@@ -1,0 +1,1 @@
+{"volume":"卷二十二","needs":[],"rules":[],"dropped":[{"entry":"linkKnown","target":"identify","reason":"R22-1.5 讲写入知情时调 identify，是写入路径；linkKnown 只读事实，identify(卷四 K-4b)反过来读 linkKnown，取消这条边破环"}]}

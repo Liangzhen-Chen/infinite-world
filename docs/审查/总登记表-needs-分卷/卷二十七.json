@@ -1,0 +1,25 @@
+{
+  "volume": "卷二十七",
+  "needs": [
+    {"entry": "simUnitOf", "targets": ["zoneAt"], "line": 222, "quote": "主体的地点只经卷五 `zoneAt`"},
+    {"entry": "advancePlan", "targets": ["simUnitOf"], "line": 227, "quote": "（地点，`simUnitOf` 的返回值）"},
+    {"entry": "advancePlan", "targets": ["simTierOf"], "line": 227, "quote": "该单元有效层 `simTierOf`"},
+    {"entry": "pinned", "targets": ["simTierOf"], "line": 226, "quote": "钉住、折叠、推进计划、他卷读层，读的都是它"}
+  ],
+  "rules": [
+    {"entry": "simUnitOf", "rules": ["rules.sim-tiers.unitAdminLevel"], "line": 222, "quote": "行政层级等于 `unitAdminLevel` 的祖先"},
+    {"entry": "bubbleView", "rules": ["rules.sim-tiers.bubbleRadiusRegionCells"], "line": 310, "quote": "r = `bubbleRadiusRegionCells`"},
+    {"entry": "baseTierOf", "rules": ["rules.sim-tiers.individualMaxHops"], "line": 285, "quote": "h ≤ `individualMaxHops` 为个体层"},
+    {"entry": "baseTierOf", "rules": ["rules.sim-tiers.ruleMaxHops"], "line": 285, "quote": "否则 h ≤ `ruleMaxHops`"},
+    {"entry": "baseTierOf", "rules": ["rules.sim-tiers.ruleSharedAncestorLevel"], "line": 285, "quote": "`ruleSharedAncestorLevel` 非空"},
+    {"entry": "legalKeyIdOf", "rules": ["rules.det-numeric.keyIdAggBits"], "line": 396, "quote": "记 P = `keyIdAggBits` +"},
+    {"entry": "legalKeyIdOf", "rules": ["rules.det-numeric.keyIdOrdinalBits"], "line": 397, "quote": "序号 < 2^`keyIdOrdinalBits`"},
+    {"entry": "costPlan", "rules": ["rules.cost-model.coef"], "line": 467, "quote": "块内拍数 × `coef[system][form]`"},
+    {"entry": "costPlan", "rules": ["rules.cost-model.chunkMinutes"], "line": 468, "quote": "块内拍数 = `chunkMinutes` ÷ 该层节拍"},
+    {"entry": "costPlan", "rules": ["rules.cost-model.cadenceRuleKeys"], "line": 468, "quote": "`cadenceRuleKeys` 里有行的系统"},
+    {"entry": "costPlan", "rules": ["rules.cost-model.costSubjects"], "line": 469, "quote": "`costSubjects[system]` 所列实体类"},
+    {"entry": "costPlan", "rules": ["rules.cost-model.coefMaterialize"], "line": 470, "quote": "一次性成本 = `coefMaterialize` ×"},
+    {"entry": "costPlan", "rules": ["rules.cost-model.ladder"], "line": 477, "quote": "从 0 档起逐档套用 `ladder`"},
+    {"entry": "costPlan", "rules": ["rules.cost-model.budgetCuPerChunk"], "line": 477, "quote": "不超过 `budgetCuPerChunk` 的最小档"}
+  ]
+}

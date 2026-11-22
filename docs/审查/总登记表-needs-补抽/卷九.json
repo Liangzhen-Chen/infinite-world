@@ -1,0 +1,19 @@
+{
+  "volume": "卷九",
+  "needs": [
+    {"entry": "constructorTree", "targets": ["affordances"], "line": 786, "quote": "affordances()`、`constructor"}
+  ],
+  "rules": [],
+  "dropped": [
+    {"entry": "resolve", "target": "actionView", "reason": "§3.1:467定义行；704无 resolve 名"},
+    {"entry": "resolve", "target": "activityOf", "reason": "§3.1:469定义行；705无 resolve 名"},
+    {"entry": "resolve", "target": "affordances", "reason": "§3.1:468定义行；715是返回字段"},
+    {"entry": "resolve", "target": "can", "reason": "705无 resolve 名；559是写给别处的规矩"},
+    {"entry": "resolve", "target": "craftOutcome", "reason": "757属提案规则，未写 resolve 调它"},
+    {"entry": "resolve", "target": "custodyOf", "reason": "705无 resolve 名"},
+    {"entry": "resolve", "target": "difficultyOf", "reason": "§3.1:473定义行；708无 resolve 名"},
+    {"entry": "resolve", "target": "effects", "reason": "657说 execute 求值调 effects"},
+    {"entry": "resolve", "target": "gainSkill", "reason": "712无 resolve 名"},
+    {"entry": "resolve", "target": "magnitudeCap", "reason": "§3.1:474定义行；708、710无 resolve"}
+  ]
+}

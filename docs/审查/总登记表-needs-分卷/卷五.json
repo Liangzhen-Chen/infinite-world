@@ -1,0 +1,20 @@
+{
+  "volume": "卷五",
+  "needs": [
+    {"entry": "bearingView", "targets": ["atan"], "line": 603, "quote": "经 det-math 的定点 `atan` 求出的角"},
+    {"entry": "losView", "targets": ["zoneAt"], "line": 606, "quote": "地点与建筑（`zoneAt` 与足迹）"},
+    {"entry": "landCell", "targets": ["zoneAt"], "line": 504, "quote": "且 `zoneAt` 恰为 `place` 的格里取"},
+    {"entry": "placeView", "targets": ["envAt"], "line": 1286, "quote": "环境基值读卷二十的 `envAt`"},
+    {"entry": "placeView", "targets": ["envAccum"], "line": 1286, "quote": "时段累计读 `envAccum`，本卷不包装"},
+    {"entry": "placeView", "targets": ["statusView"], "line": 1282, "quote": "（读 `statusView`），属于本卷的视图字段"},
+    {"entry": "placeView", "targets": ["securityOf"], "line": 236, "quote": "的推导入口 `securityOf`"},
+    {"entry": "placeView", "targets": ["caveCellsOf"], "line": 487, "quote": "洞口由洞穴生成器 `caveCellsOf` 的洞口通路格"},
+    {"entry": "placeView", "targets": ["blueprintOf"], "line": 495, "quote": "建筑蓝图读卷十九 `blueprintOf`"},
+    {"entry": "placeView", "targets": ["caveCellsOf"], "line": 497, "quote": "由卷十的洞穴生成器 `caveCellsOf`"},
+    {"entry": "placeView", "targets": ["pathView"], "line": 1250, "quote": "超界时 `pathView` 返回"},
+    {"entry": "gridView", "targets": ["templateBlocksOf"], "line": 670, "quote": "模板格块（`templateBlocksOf`"},
+    {"entry": "gridView", "targets": ["blueprintOf"], "line": 670, "quote": "建筑蓝图（`blueprintOf`"},
+    {"entry": "gridView", "targets": ["fixtureCells"], "line": 670, "quote": "装置占格作该格的家具 `fixtureCells`"}
+  ],
+  "rules": []
+}

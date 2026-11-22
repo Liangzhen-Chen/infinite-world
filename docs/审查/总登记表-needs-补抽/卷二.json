@@ -1,0 +1,11 @@
+{
+  "volume": "卷二",
+  "needs": [
+    {"entry": "modified", "targets": ["dim"], "line": 512, "quote": "modified:<kind>` = `dim:<kind"}
+  ],
+  "rules": [],
+  "dropped": [
+    {"entry": "modified", "target": "fixedMultiply", "reason": "所引行在§3.3且无入口名"},
+    {"entry": "modified", "target": "fixedUnits", "reason": "所引行在§3.3且无入口名"}
+  ]
+}

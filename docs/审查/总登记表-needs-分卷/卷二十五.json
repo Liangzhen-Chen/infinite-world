@@ -1,0 +1,14 @@
+{
+  "volume": "卷二十五",
+  "needs": [
+    {"entry": "arablePotential", "targets": ["plantView"], "line": 380, "quote": "可种植物里常年产量最大者（`plantView"},
+    {"entry": "arablePotential", "targets": ["respectTier"], "line": 380, "quote": "候选植物先过卷七 `respectTier`"},
+    {"entry": "canRide", "targets": ["loadOf"], "line": 538, "quote": "（骑者连装备的重量不超过 `loadOf` 的余量）"},
+    {"entry": "cropGrowth", "targets": ["placeView"], "line": 304, "quote": "地的输入读 `placeView`"},
+    {"entry": "cropGrowth", "targets": ["envAccum"], "line": 304, "quote": "天的输入读 `envAccum`"},
+    {"entry": "cropGrowth", "targets": ["astroView"], "line": 332, "quote": "（`astroView` 的年序与历法入口）"},
+    {"entry": "herdView", "targets": ["groupNeeds"], "line": 236, "quote": "日需要（读卷四 `groupNeeds`）"},
+    {"entry": "herdView", "targets": ["renewableOf"], "line": 236, "quote": "可采量（读卷四 `renewableOf`）"}
+  ],
+  "rules": []
+}

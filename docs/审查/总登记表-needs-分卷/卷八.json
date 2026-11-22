@@ -1,0 +1,289 @@
+{
+  "volume": "卷八",
+  "needs": [
+    {
+      "entry": "hasPower",
+      "targets": ["facilityView"],
+      "line": 672,
+      "quote": "判定读卷十九的 `facilityView`"
+    },
+    {
+      "entry": "successorsOf",
+      "targets": ["simUnitOf"],
+      "line": 665,
+      "quote": "`simUnitOf`）内的居民聚合体"
+    },
+    {
+      "entry": "usurpOptions",
+      "targets": ["hostilityOf"],
+      "line": 741,
+      "quote": "读卷七的 `hostilityOf`"
+    },
+    {
+      "entry": "governorOf",
+      "targets": ["holdingAllowed"],
+      "line": 775,
+      "quote": "读时现算的 `holdingAllowed`"
+    },
+    {
+      "entry": "holdingAllowed",
+      "targets": ["faithUnlocked"],
+      "line": 774,
+      "quote": "旗标读卷七的 `faithUnlocked`"
+    },
+    {
+      "entry": "domainOf",
+      "targets": ["skillValue"],
+      "line": 810,
+      "quote": "卷十四的 `skillValue`"
+    },
+    {
+      "entry": "legitimacy",
+      "targets": ["kinDegree", "esteemOf", "acceptance", "calendarSpan"],
+      "line": 844,
+      "quote": "（卷十八的 `kinDegree`）"
+    },
+    {
+      "entry": "placeAuthority",
+      "targets": ["governorOf"],
+      "line": 848,
+      "quote": "`governorOf(place).org`"
+    },
+    {
+      "entry": "placeAuthority",
+      "targets": ["legitimacy"],
+      "line": 849,
+      "quote": "`legitNum = legitimacy(该边)`"
+    },
+    {
+      "entry": "vassalTerms",
+      "targets": ["contractView", "obligationsOf"],
+      "line": 949,
+      "quote": "读卷六的 `contractView`"
+    },
+    {
+      "entry": "taxesFor",
+      "targets": ["governorOf"],
+      "line": 990,
+      "quote": "征税方 = `governorOf(该地)` 的组织"
+    },
+    {
+      "entry": "taxesFor",
+      "targets": ["priceFor"],
+      "line": 992,
+      "quote": "地产与所得经卷六的 `priceFor`"
+    },
+    {
+      "entry": "factionView",
+      "targets": ["orgView"],
+      "line": 1031,
+      "quote": "`orgView().dims.forcePower`"
+    },
+    {
+      "entry": "diploStatus",
+      "targets": ["stance"],
+      "line": 1096,
+      "quote": "好恶读卷十八的 `stance`"
+    },
+    {
+      "entry": "casusOptions",
+      "targets": ["holyWarEligible"],
+      "line": 1136,
+      "quote": "条件读卷七的 `holyWarEligible`"
+    },
+    {
+      "entry": "popView",
+      "targets": ["simUnitOf"],
+      "line": 1174,
+      "quote": "（卷二十七的 `simUnitOf`）"
+    },
+    {
+      "entry": "popCapacity",
+      "targets": ["unmetSupply"],
+      "line": 1182,
+      "quote": "取卷六 `unmetSupply` 在窗口内"
+    },
+    {
+      "entry": "stratumSkill",
+      "targets": ["initialSkills"],
+      "line": 1188,
+      "quote": "卷十四的 `initialSkills`"
+    },
+    {
+      "entry": "migrationScore",
+      "targets": ["taxLoad", "acceptance"],
+      "line": 1184,
+      "quote": "该地的 `taxLoad`"
+    },
+    {
+      "entry": "courtView",
+      "targets": ["economyReport"],
+      "line": 1223,
+      "quote": "只读卷六 `economyReport`"
+    },
+    {
+      "entry": "tierOptions",
+      "targets": ["popView", "wealth"],
+      "line": 1260,
+      "quote": "读本卷 `popView` 的 `total`"
+    }
+  ],
+  "rules": [
+    {
+      "entry": "successorsOf",
+      "rules": ["rules.pop.aggKinds.resident", "rules.polity.office.poolRows", "rules.polity.office.poolTries"],
+      "line": 665,
+      "quote": "rules.polity.office.poolRows"
+    },
+    {
+      "entry": "dejureOf",
+      "rules": ["rules.polity.title.driftDays"],
+      "line": 739,
+      "quote": "driftDays"
+    },
+    {
+      "entry": "usurpOptions",
+      "rules": ["rules.polity.title.usurpShareBps"],
+      "line": 740,
+      "quote": "usurpShareBps"
+    },
+    {
+      "entry": "domainOf",
+      "rules": ["rules.polity.domain.skill"],
+      "line": 810,
+      "quote": "rules.polity.domain.skill"
+    },
+    {
+      "entry": "domainOf",
+      "rules": ["rules.polity.domain.rankBonus"],
+      "line": 810,
+      "quote": "polity.domain.rankBonus"
+    },
+    {
+      "entry": "domainOf",
+      "rules": ["rules.polity.domain.perSkill"],
+      "line": 810,
+      "quote": "perSkill"
+    },
+    {
+      "entry": "domainOf",
+      "rules": ["rules.polity.domain.overTemplate"],
+      "line": 811,
+      "quote": "polity.domain.overTemplate"
+    },
+    {
+      "entry": "legitimacy",
+      "rules": ["rules.polity.legit.neutral"],
+      "line": 843,
+      "quote": "neutral"
+    },
+    {
+      "entry": "legitimacy",
+      "rules": ["rules.polity.legit.scoreMax"],
+      "line": 843,
+      "quote": "scoreMax"
+    },
+    {
+      "entry": "legitimacy",
+      "rules": ["rules.polity.legit.tiers"],
+      "line": 846,
+      "quote": "rules.polity.legit.tiers"
+    },
+    {
+      "entry": "placeAuthority",
+      "rules": ["rules.polity.legit.scoreMax"],
+      "line": 849,
+      "quote": "scoreMax"
+    },
+    {
+      "entry": "regencyOf",
+      "rules": ["rules.polity.regency.rows"],
+      "line": 919,
+      "quote": "rules.polity.regency.rows"
+    },
+    {
+      "entry": "taxesFor",
+      "rules": ["rules.polity.tax.remDenominator"],
+      "line": 993,
+      "quote": "polity.tax.remDenominator"
+    },
+    {
+      "entry": "taxesFor",
+      "rules": ["rules.polity.tax.leakCurve"],
+      "line": 997,
+      "quote": "leakCurve"
+    },
+    {
+      "entry": "factionView",
+      "rules": ["rules.polity.faction.discontentMax"],
+      "line": 1032,
+      "quote": "discontentMax"
+    },
+    {
+      "entry": "diploStatus",
+      "rules": ["rules.polity.diplo.statusRows"],
+      "line": 1101,
+      "quote": "statusRows"
+    },
+    {
+      "entry": "popView",
+      "rules": ["rules.pop.household.sizeFloor"],
+      "line": 1188,
+      "quote": "rules.pop.household.sizeFloor"
+    },
+    {
+      "entry": "popCapacity",
+      "rules": ["rules.pop.capacity.needs"],
+      "line": 1182,
+      "quote": "rules.pop.capacity.needs"
+    },
+    {
+      "entry": "migrationScore",
+      "rules": ["rules.pop.migration.partCurves"],
+      "line": 1184,
+      "quote": "pop.migration.partCurves[c]"
+    },
+    {
+      "entry": "migrationScore",
+      "rules": ["rules.pop.migration.scoreWeights"],
+      "line": 1184,
+      "quote": "pop.migration.scoreWeights"
+    },
+    {
+      "entry": "courtView",
+      "rules": ["rules.polity.court.grandeurMax"],
+      "line": 1220,
+      "quote": "polity.court.grandeurMax"
+    },
+    {
+      "entry": "courtView",
+      "rules": ["rules.polity.court.curves"],
+      "line": 1221,
+      "quote": "polity.court.curves.room"
+    },
+    {
+      "entry": "courtView",
+      "rules": ["rules.polity.court.spendCurves"],
+      "line": 1223,
+      "quote": "polity.court.spendCurves"
+    },
+    {
+      "entry": "courtView",
+      "rules": ["rules.polity.court.amenities"],
+      "line": 1223,
+      "quote": "rules.polity.court.amenities"
+    },
+    {
+      "entry": "courtView",
+      "rules": ["rules.polity.court.tiers"],
+      "line": 1226,
+      "quote": "rules.polity.court.tiers"
+    },
+    {
+      "entry": "influenceOf",
+      "rules": ["rules.polity.influence.tiers"],
+      "line": 1302,
+      "quote": "rules.polity.influence.tiers"
+    }
+  ]
+}

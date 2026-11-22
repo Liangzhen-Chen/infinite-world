@@ -1,0 +1,38 @@
+{
+  "volume": "卷六",
+  "needs": [
+    {"entry": "marketSupply", "targets": ["incoming"], "line": 419, "quote": "sellable + incoming(时域内预期到货)"},
+    {"entry": "marketQuote", "targets": ["priceFor"], "line": 420, "quote": "价 = `priceFor(成交用途, 货"},
+    {"entry": "marketQuote", "targets": ["marketSupply"], "line": 420, "quote": "supply: marketSupply − q"},
+    {"entry": "executeTrade", "targets": ["post"], "line": 424, "quote": "各税腿放进同一笔 `post`"},
+    {"entry": "demand", "targets": ["priceFor"], "line": 499, "quote": "惯常价取这件货自己的 `priceFor`"},
+    {"entry": "demand", "targets": ["riteCount"], "line": 500, "quote": "的 `riteCount`（按该地点与时段取）"},
+    {"entry": "landedCost", "targets": ["priceFor"], "line": 570, "quote": "载具的重置估值（`priceFor` 估值角色、成本口径）"},
+    {"entry": "landedCost", "targets": ["routeRisk"], "line": 571, "quote": "卷十七 `routeRisk(计划, 货, 护卫)`"},
+    {"entry": "settleTrade", "targets": ["landedCost"], "line": 574, "quote": "出发地购入总价 − landedCost"},
+    {"entry": "settleTrade", "targets": ["executeTrade"], "line": 582, "quote": "逐条经 `executeTrade` 成交"},
+    {"entry": "settleTrade", "targets": ["chainOf"], "line": 586, "quote": "取 `chainOf` 的结果"},
+    {"entry": "runJobs", "targets": ["craftOutcome"], "line": 620, "quote": "完工时取卷三乙的 `craftOutcome` 提案"},
+    {"entry": "runJobs", "targets": ["post"], "line": 635, "quote": "完工时一笔 `post`"},
+    {"entry": "planProduction", "targets": ["craftOutcome"], "line": 634, "quote": "调 `craftOutcome` 取产出提案"},
+    {"entry": "settleStatProduction", "targets": ["craftOutcome"], "line": 648, "quote": "调同一个 `craftOutcome` 或 `take`"},
+    {"entry": "stationPlan", "targets": ["reachOf"], "line": 642, "quote": "取 `reachOf` 内到岸成本最小的站点"},
+    {"entry": "stationLoad", "targets": ["facilityView"], "line": 752, "quote": "读卷十九 `facilityView()"},
+    {"entry": "stationFee", "targets": ["stationLoad"], "line": 755, "quote": "loadFeeCurve, stationLoad"},
+    {"entry": "stationFee", "targets": ["priceFor"], "line": 755, "quote": "经 `priceFor` 以估值角色取"},
+    {"entry": "settleHouseholds", "targets": ["post"], "line": 826, "quote": "消耗经 `post` 记入去处"},
+    {"entry": "coinValue", "targets": ["stockIn"], "line": 871, "quote": "范围内该币存量（`stockIn`）"},
+    {"entry": "exchangeRate", "targets": ["coinValue"], "line": 884, "quote": "coinValue(A) ÷ coinValue(B)"},
+    {"entry": "exchangeRate", "targets": ["priceFor"], "line": 884, "quote": "对非铸币资源则用其 `priceFor` 估值"},
+    {"entry": "creditStanding", "targets": ["wealth"], "line": 955, "quote": "净资产估值（`wealth` 的个人口径）"},
+    {"entry": "contractStep", "targets": ["post"], "line": 996, "quote": "给付本身是一笔 `post`"},
+    {"entry": "priceFor", "targets": ["marketQuote"], "line": 1195, "quote": "它按用途行路由到 `marketQuote`"},
+    {"entry": "priceFor", "targets": ["valuation"], "line": 1195, "quote": "卷三乙的 `valuation`、合同条款或预算表"},
+    {"entry": "priceFor", "targets": ["wageQuote"], "line": 1213, "quote": "成交工钱行情（`wageQuote`）"},
+    {"entry": "closePeriod", "targets": ["exchangeRate"], "line": 1281, "quote": "exchangeRate(甲, 乙)"},
+    {"entry": "wealth", "targets": ["priceFor"], "line": 1349, "quote": "估值全部经 `priceFor`"}
+  ],
+  "rules": [
+    {"entry": "stationLoad", "rules": ["rules.facility.station.loadWindowDays"], "line": 741, "quote": "负荷窗口的天数读卷十九的规则表键"}
+  ]
+}

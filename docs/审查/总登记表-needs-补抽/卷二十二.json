@@ -1,0 +1,30 @@
+{
+  "volume": "卷二十二",
+  "needs": [],
+  "rules": [
+    {"entry": "subjectiveView", "rules": ["rules.knowledge.credence.shareMin"], "line": 406, "quote": "knowledge.credence.shareMin"}
+  ],
+  "dropped": [
+    {"entry": "readOutcome", "target": "documentStanding", "reason": "行613不含入口名，§3.1 无调用句"},
+    {"entry": "readOutcome", "target": "holdsLore", "reason": "行613不含入口名，§3.1 无调用句"},
+    {"entry": "readOutcome", "target": "skillValue", "reason": "行613不含入口名，§3.1 无调用句"},
+    {"entry": "subjectiveView", "target": "personView", "reason": "行414不含入口名，§3.1 无调用句"},
+    {"entry": "chronicleView", "target": "rules.knowledge.chronicle.gradeBands", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "familiarityOf", "target": "rules.knowledge.familiarity.curve", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "familiarityOf", "target": "rules.knowledge.familiarity.hearsayBps", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "holdsLore", "target": "rules.knowledge.lore.decayDefault", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "holdsLore", "target": "rules.knowledge.lore.graspMin", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "holdsLore", "target": "rules.knowledge.lore.retainCurve", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "leverageOf", "target": "rules.knowledge.secret.guardMax", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "leverageOf", "target": "rules.knowledge.secret.spreadCurve", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "linkKnown", "target": "rules.knowledge.roles.dims.keyBearer", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "linkKnown", "target": "rules.knowledge.roles.dims.sameBearer", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "readOutcome", "target": "rules.knowledge.read.gistShareBps", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "readOutcome", "target": "rules.knowledge.read.gradeCurve", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "recallFacts", "target": "rules.knowledge.recall.claimCurve", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "returnDigest", "target": "rules.knowledge.digest.max", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "returnDigest", "target": "rules.knowledge.digest.shareMin", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "why", "target": "rules.knowledge.why.maxDepth", "reason": "卷文只写裸键，无「表名.键」原文行"},
+    {"entry": "why", "target": "rules.knowledge.why.maxNodes", "reason": "卷文只写裸键，无「表名.键」原文行"}
+  ]
+}

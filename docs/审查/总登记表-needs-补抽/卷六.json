@@ -1,0 +1,21 @@
+{
+  "volume": "卷六",
+  "needs": [
+    {"entry": "contractStep", "targets": ["post"], "line": 1073, "quote": "持有边变更加款项 `post`"},
+    {"entry": "runJobs", "targets": ["post"], "line": 620, "quote": "再经 `post` 记账"},
+    {"entry": "settleTrade", "targets": ["landedCost"], "line": 565, "quote": "读：`landedCost`、`reachOf`"}
+  ],
+  "rules": [],
+  "dropped": [
+    {"entry": "closePeriod", "target": "exchangeRate", "reason": "行1281不含入口名，§3.2无调用句"},
+    {"entry": "demand", "target": "riteCount", "reason": "行500不含入口名，§3.1无调用句"},
+    {"entry": "landedCost", "target": "priceFor", "reason": "行570不含入口名，§3.1无调用句"},
+    {"entry": "landedCost", "target": "routeRisk", "reason": "行571不含入口名，§3.1无调用句"},
+    {"entry": "marketQuote", "target": "marketSupply", "reason": "行413为并列读入口，无依赖句"},
+    {"entry": "marketQuote", "target": "priceFor", "reason": "迁移表改法句；反向已成环"},
+    {"entry": "planProduction", "target": "craftOutcome", "reason": "行620的craftOutcome归runJobs，非本入口"},
+    {"entry": "priceFor", "target": "wageQuote", "reason": "行1213不含priceFor，§3.1无调用句"},
+    {"entry": "settleTrade", "target": "chainOf", "reason": "行586不含入口名，§3.2无调用句"},
+    {"entry": "stationPlan", "target": "reachOf", "reason": "行642不含入口名，§3.1无调用句"}
+  ]
+}

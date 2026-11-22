@@ -1,0 +1,15 @@
+{
+  "volume": "卷一",
+  "rejected": [],
+  "added": [
+    { "entry": "registerAdvanceHook", "line": 188, "kind": "register", "reason": "保留，注册时声明 phase/sortKey" },
+    { "entry": "registerEffect", "line": 188, "kind": "register", "reason": "保留，注册时声明 phase/sortKey" },
+    { "entry": "registerMagicEffect", "line": 188, "kind": "register", "reason": "保留，注册时声明 phase/sortKey" },
+    { "entry": "registerIncident", "line": 188, "kind": "register", "reason": "保留，注册时声明 phase/sortKey" },
+    { "entry": "registerWorldEventSubscriber", "line": 188, "kind": "register", "reason": "保留，注册时声明 phase/sortKey" },
+    { "entry": "registerAutonomyProvider", "line": 188, "kind": "register", "reason": "保留，注册时声明 phase/sortKey" },
+    { "entry": "registerQuestGenerator", "line": 188, "kind": "register", "reason": "保留，注册时声明 phase/sortKey" },
+    { "entry": "registerValuer", "line": 188, "kind": "register", "reason": "保留，注册时声明 phase/sortKey" }
+  ],
+  "notes": "§3.1 无入口登记；补 §2.5 骨架保留的注册式入口 8 个，其余函数均引卷二"
+}

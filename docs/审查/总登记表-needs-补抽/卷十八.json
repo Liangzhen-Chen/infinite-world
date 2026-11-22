@@ -1,0 +1,20 @@
+{
+  "volume": "卷十八",
+  "needs": [],
+  "rules": [
+    {"entry": "dread", "rules": ["rules.social.fear.tiers"], "line": 181, "quote": "rules.social.fear.tiers"},
+    {"entry": "intimateEligible", "rules": ["rules.social.minor.intimateMinRelMaturity"], "line": 1549, "quote": "rules.social.minor.intimateMin"}
+  ],
+  "dropped": [
+    {"entry": "opinionOf", "target": "publicShare", "reason": "§3.1内无含该目标名的行"},
+    {"entry": "treatment", "target": "acceptanceOfPerson", "reason": "§3.1内无含该目标名的行"},
+    {"entry": "compat", "target": "rules.social.social.compat", "reason": "原文只有 social.compat 短名"},
+    {"entry": "dread", "target": "rules.social.fear.boldAxis", "reason": "原文只有 fear.boldAxis 短名"},
+    {"entry": "dread", "target": "rules.social.fear.boldBase", "reason": "原文只有 fear.boldBase 短名"},
+    {"entry": "dread", "target": "rules.social.fear.boldScale", "reason": "原文只有 fear.boldScale 短名"},
+    {"entry": "recall", "target": "rules.social.memory.forgetCurve", "reason": "原文只有 forgetCurve 短名"},
+    {"entry": "recall", "target": "rules.social.memory.recallMin", "reason": "原文只有 recallMin 短名"},
+    {"entry": "recall", "target": "rules.social.memory.salience", "reason": "原文只有 memory.salience 短名"},
+    {"entry": "stance", "target": "rules.social.stance.conductCap", "reason": "原文只有 conductCap 短名"}
+  ]
+}

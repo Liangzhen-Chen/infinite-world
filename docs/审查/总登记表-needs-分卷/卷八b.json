@@ -1,0 +1,229 @@
+{
+  "volume": "卷八b",
+  "needs": [
+    {
+      "entry": "auditGaps",
+      "targets": ["economyReport"],
+      "line": 958,
+      "quote": "读卷六 `economyReport`"
+    },
+    {
+      "entry": "goodFaithOf",
+      "targets": ["knowsFact"],
+      "line": 1158,
+      "quote": "`knowsFact(engine, state,"
+    },
+    {
+      "entry": "forumOrgOf",
+      "targets": ["governorOf"],
+      "line": 601,
+      "quote": "事发地点 `governorOf` 给出的组织"
+    },
+    {
+      "entry": "normStack",
+      "targets": ["provisionView"],
+      "line": 590,
+      "quote": "生效期取 `provisionView` 给出的生效期"
+    },
+    {
+      "entry": "provisionFor",
+      "targets": ["provisionView"],
+      "line": 591,
+      "quote": "读法一律经 `provisionView`"
+    },
+    {
+      "entry": "crimeProspect",
+      "targets": ["priceFor"],
+      "line": 993,
+      "quote": "经卷六 `priceFor` 的估价"
+    },
+    {
+      "entry": "disposalRight",
+      "targets": ["hasPower"],
+      "line": 801,
+      "quote": "读卷八的 `hasPower`"
+    },
+    {
+      "entry": "disposalRight",
+      "targets": ["agencyOf"],
+      "line": 801,
+      "quote": "（`agencyOf`，§4.15）"
+    },
+    {
+      "entry": "estateOf",
+      "targets": ["legalityOf"],
+      "line": 1112,
+      "quote": "`legalityOf` 的 `recognized`"
+    },
+    {
+      "entry": "estateOf",
+      "targets": ["governorOf"],
+      "line": 1112,
+      "quote": "`governorOf(placeId)`"
+    },
+    {
+      "entry": "lawGate",
+      "targets": ["provisionFor"],
+      "line": 722,
+      "quote": "调 `provisionFor` 查门控条目"
+    },
+    {
+      "entry": "legalityOf",
+      "targets": ["lawGate"],
+      "line": 766,
+      "quote": "调 `lawGate(行的 gate, …)`"
+    },
+    {
+      "entry": "sentenceRange",
+      "targets": ["convictionCount"],
+      "line": 683,
+      "quote": "`w` 是 `convictionCount` 的权重和"
+    },
+    {
+      "entry": "safetyOf",
+      "targets": ["attackLegality"],
+      "line": 878,
+      "quote": "求 `attackLegality`"
+    },
+    {
+      "entry": "responseOf",
+      "targets": ["awake"],
+      "line": 844,
+      "quote": "此刻 `awake` 且有行动能力"
+    },
+    {
+      "entry": "securityOf",
+      "targets": ["garrisonOf"],
+      "line": 840,
+      "quote": "`garrisonOf(engine, state,"
+    },
+    {
+      "entry": "securityOf",
+      "targets": ["popView"],
+      "line": 840,
+      "quote": "`P` 取 `popView().total`"
+    },
+    {
+      "entry": "securityOf",
+      "targets": ["capacity"],
+      "line": 840,
+      "quote": "与卷二 `capacity` 谓词为假的不计"
+    }
+  ],
+  "rules": [
+    {
+      "entry": "normStack",
+      "rules": ["rules.law.stack.layerOrder"],
+      "line": 590,
+      "quote": "`rules.law.stack.layerOrder`"
+    },
+    {
+      "entry": "sentenceRange",
+      "rules": ["rules.law.penalty.recidivismBps"],
+      "line": 683,
+      "quote": "recidivismBps"
+    },
+    {
+      "entry": "lawGate",
+      "rules": ["rules.law.gate.defaults"],
+      "line": 722,
+      "quote": "`rules.law.gate.defaults`"
+    },
+    {
+      "entry": "legalityOf",
+      "rules": ["rules.law.legality.rows"],
+      "line": 766,
+      "quote": "`rules.law.legality.rows`"
+    },
+    {
+      "entry": "legalityOf",
+      "rules": ["rules.law.legality.recognitionGate"],
+      "line": 767,
+      "quote": "recognitionGate"
+    },
+    {
+      "entry": "disposalRight",
+      "rules": ["rules.law.roles.kinds.owns"],
+      "line": 801,
+      "quote": "`rules.law.roles.kinds.owns`"
+    },
+    {
+      "entry": "disposalRight",
+      "rules": ["rules.law.disposal.coOwnerBps"],
+      "line": 802,
+      "quote": "rules.law.disposal.coOwnerBps"
+    },
+    {
+      "entry": "disposalRight",
+      "rules": ["rules.law.roles.kinds"],
+      "line": 807,
+      "quote": "`rules.law.roles.kinds`"
+    },
+    {
+      "entry": "securityOf",
+      "rules": ["rules.law.security.weights"],
+      "line": 838,
+      "quote": "`rules.law.security.weights`"
+    },
+    {
+      "entry": "securityOf",
+      "rules": ["rules.law.security.controlAbsent"],
+      "line": 839,
+      "quote": "controlAbsent"
+    },
+    {
+      "entry": "securityOf",
+      "rules": ["rules.law.security.enforceSkill"],
+      "line": 840,
+      "quote": "enforceSkill"
+    },
+    {
+      "entry": "securityOf",
+      "rules": ["rules.law.security.garrisonWeightBps"],
+      "line": 840,
+      "quote": "garrisonWeightBps"
+    },
+    {
+      "entry": "securityOf",
+      "rules": ["rules.law.security.popFloor"],
+      "line": 840,
+      "quote": "`rules.law.security.popFloor`"
+    },
+    {
+      "entry": "responseOf",
+      "rules": ["rules.law.response.minSecurity"],
+      "line": 844,
+      "quote": "rules.law.response.minSecurity"
+    },
+    {
+      "entry": "responseOf",
+      "rules": ["rules.law.response.curve"],
+      "line": 844,
+      "quote": "`rules.law.response.curve`"
+    },
+    {
+      "entry": "responseOf",
+      "rules": ["rules.law.response.enforcerCount"],
+      "line": 844,
+      "quote": "enforcerCount"
+    },
+    {
+      "entry": "auditGaps",
+      "rules": ["rules.law.audit.gapRows"],
+      "line": 958,
+      "quote": "`rules.law.audit.gapRows`"
+    },
+    {
+      "entry": "crimeProspect",
+      "rules": ["rules.law.roles.puses.fence"],
+      "line": 993,
+      "quote": "`rules.law.roles.puses.fence`"
+    },
+    {
+      "entry": "crimeProspect",
+      "rules": ["rules.law.crime.catchCurve"],
+      "line": 993,
+      "quote": "`rules.law.crime.catchCurve`"
+    }
+  ]
+}

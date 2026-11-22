@@ -1,0 +1,43 @@
+{
+  "volume": "卷十六",
+  "needs": [
+    {"entry": "containReading", "targets": ["wardReading"], "line": 959, "quote": "带一个对它 `wardReading` 命中"},
+    {"entry": "ensureVariantRow", "targets": ["instanceIdOf"], "line": 865, "quote": "id 为 `instanceIdOf(engine"},
+    {"entry": "mintLore", "targets": ["instanceIdOf"], "line": 537, "quote": "id 为 `instanceIdOf(engine"},
+    {"entry": "proposeTransform", "targets": ["ensureVariantRow"], "line": 867, "quote": "（如需要，`ensureVariantRow`）"},
+    {"entry": "registerNamed", "targets": ["mintLore"], "line": 336, "quote": "并调 `mintLore`"},
+    {"entry": "threatBrief", "targets": ["threatOf"], "line": 665, "quote": "其一，威胁：`threatOf` 的战力读数与档"},
+    {"entry": "threatBrief", "targets": ["lairOf"], "line": 665, "quote": "位置：`lairOf` 的地点"},
+    {"entry": "truthClaims", "targets": ["speciesView"], "line": 534, "quote": "对物种读 `speciesView`"},
+    {"entry": "truthClaims", "targets": ["personView"], "line": 534, "quote": "对个体读 `personView`"},
+    {"entry": "truthClaims", "targets": ["placeView"], "line": 534, "quote": "对地点读 `placeView`"}
+  ],
+  "rules": [
+    {"entry": "awakenOrg", "rules": ["rules.bestiary.awaken.officeRows"], "line": 922, "quote": "按 `awaken.officeRows` 里"},
+    {"entry": "awakenOrg", "rules": ["rules.bestiary.roles.verbs.orgAwakened"], "line": 922, "quote": "发 `roles.verbs.orgAwakened`"},
+    {"entry": "containReading", "rules": ["rules.bestiary.contain.strengthCurve"], "line": 957, "quote": "lookup(contain.strengthCurve"},
+    {"entry": "containReading", "rules": ["rules.bestiary.contain.insulateCurve"], "line": 958, "quote": "lookup(contain.insulateCurve"},
+    {"entry": "containReading", "rules": ["rules.bestiary.contain.wardMinBps"], "line": 959, "quote": "`contain.wardMinBps`"},
+    {"entry": "displayClassOf", "rules": ["rules.bestiary.displayClassRows"], "line": 773, "quote": "按 `displayClassRows` 取"},
+    {"entry": "encounterReading", "rules": ["rules.bestiary.encounter.approachCurve"], "line": 628, "quote": "encounter.approachCurve"},
+    {"entry": "encounterReading", "rules": ["rules.bestiary.encounter.hungerCurve"], "line": 628, "quote": "encounter.hungerCurve"},
+    {"entry": "ensureVariantRow", "rules": ["rules.bestiary.roles.idslots.variant"], "line": 865, "quote": "roles.idslots.variant"},
+    {"entry": "lairSuitability", "rules": ["rules.bestiary.lair.minHeads"], "line": 610, "quote": "不小于 `lair.minHeads`"},
+    {"entry": "leaveLair", "rules": ["rules.bestiary.roles.verbs.lairLeft"], "line": 626, "quote": "并发 `roles.verbs.lairLeft`"},
+    {"entry": "mintLore", "rules": ["rules.bestiary.lore.claimDims"], "line": 537, "quote": "从 `lore.claimDims` 里"},
+    {"entry": "mintLore", "rules": ["rules.bestiary.lore.claimCount"], "line": 537, "quote": "取 `lore.claimCount` 个维度"},
+    {"entry": "mintLore", "rules": ["rules.bestiary.lore.errorBps"], "line": 537, "quote": "以 `lore.errorBps` 的份额"},
+    {"entry": "mintLore", "rules": ["rules.bestiary.lore.mintDefaults"], "line": 537, "quote": "取 `lore.mintDefaults`"},
+    {"entry": "mintLore", "rules": ["rules.bestiary.roles.idslots.lore"], "line": 537, "quote": "roles.idslots.lore"},
+    {"entry": "mintLore", "rules": ["rules.bestiary.roles.verbs.loreMinted"], "line": 537, "quote": "发 `roles.verbs.loreMinted`"},
+    {"entry": "proposeTransform", "rules": ["rules.bestiary.roles.prims.transform"], "line": 866, "quote": "原语 `roles.prims.transform`"},
+    {"entry": "proposeTransform", "rules": ["rules.bestiary.roles.verbs.transformed"], "line": 870, "quote": "`roles.verbs.transformed` 事件"},
+    {"entry": "settleLair", "rules": ["rules.bestiary.roles.holdings.den"], "line": 611, "quote": "`roles.holdings.den` 所指的持有边"},
+    {"entry": "settleLair", "rules": ["rules.bestiary.roles.verbs.lairSettled"], "line": 611, "quote": "发 `roles.verbs.lairSettled`"},
+    {"entry": "similarity", "rules": ["rules.bestiary.similarity.dims"], "line": 699, "quote": "各用 `similarity.dims` 里"},
+    {"entry": "speciesThreat", "rules": ["rules.bestiary.tier.default"], "line": 456, "quote": "一个都不满足时取 `tier.default`"},
+    {"entry": "threatBrief", "rules": ["rules.bestiary.brief.harmWindowDays"], "line": 665, "quote": "过去 `brief.harmWindowDays` 天内"},
+    {"entry": "threatOf", "rules": ["rules.bestiary.tier.default"], "line": 456, "quote": "一个都不满足时取 `tier.default`"},
+    {"entry": "wardReading", "rules": ["rules.bestiary.ward.unmatchedDistance"], "line": 573, "quote": "距离取 `ward.unmatchedDistance`"}
+  ]
+}

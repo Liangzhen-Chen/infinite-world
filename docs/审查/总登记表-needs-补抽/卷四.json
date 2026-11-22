@@ -1,0 +1,32 @@
+{
+  "volume": "卷四",
+  "needs": [
+    {"entry": "createCharacter", "targets": ["instantiatePerson"], "line": 425, "quote": "调 `instantiatePerson`"}
+  ],
+  "rules": [],
+  "dropped": [
+    {"entry": "loadOf", "target": "aboardOf", "reason": "不在 §3.3，同行无 loadOf"},
+    {"entry": "loadOf", "target": "towShareOf", "reason": "不在 §3.3，同行无 loadOf"},
+    {"entry": "personView", "target": "identify", "reason": "不在 §3.1，同行无 personView"},
+    {"entry": "workInputs", "target": "bodyView", "reason": "不在 §3.3，同行无 workInputs"},
+    {"entry": "createCharacter", "target": "rules.chargen.perAttr", "reason": "不在 §3.3，同行无 createCharacter"},
+    {"entry": "lifeTick", "target": "rules.life.earlyHazard", "reason": "不在 §3.3，同行无 lifeTick"},
+    {"entry": "lifeTick", "target": "rules.life.fertilityByLiving", "reason": "不在 §3.3，同行无 lifeTick"},
+    {"entry": "lifeTick", "target": "rules.life.fertilityCurve", "reason": "不在 §3.3，同行无 lifeTick"},
+    {"entry": "lifeTick", "target": "rules.life.hazardByLiving", "reason": "不在 §3.3，同行无 lifeTick"},
+    {"entry": "lifeTick", "target": "rules.life.senescenceHazard", "reason": "不在 §3.3，同行无 lifeTick"},
+    {"entry": "loadOf", "target": "rules.body.carry.allometry", "reason": "同行只有通配键，非整键"},
+    {"entry": "loadOf", "target": "rules.body.carry.attrCurve", "reason": "同行只有通配键，非整键"},
+    {"entry": "loadOf", "target": "rules.body.carry.capacitySource", "reason": "同行只有通配键，非整键"},
+    {"entry": "loadOf", "target": "rules.body.carry.speedCurve", "reason": "同行只有通配键，非整键"},
+    {"entry": "loadOf", "target": "rules.body.carry.staminaCurve", "reason": "同行只有通配键，非整键"},
+    {"entry": "personView", "target": "rules.body.metabolism.energyCurve", "reason": "不在 §3.1，同行无 personView"},
+    {"entry": "personView", "target": "rules.body.metabolism.waterCurve", "reason": "不在 §3.1，同行无 personView"},
+    {"entry": "typicalSpeedOf", "target": "rules.body.carry.speedCurve", "reason": "行内键写 carry.speedCurve，非整键"},
+    {"entry": "vitalRates", "target": "rules.life.earlyHazard", "reason": "不在 §3.3，同行无 vitalRates"},
+    {"entry": "vitalRates", "target": "rules.life.fertilityByLiving", "reason": "仅牵连清单提到，键非整键"},
+    {"entry": "vitalRates", "target": "rules.life.fertilityCurve", "reason": "不在 §3.3，同行无 vitalRates"},
+    {"entry": "vitalRates", "target": "rules.life.hazardByLiving", "reason": "仅牵连清单提到，键非整键"},
+    {"entry": "vitalRates", "target": "rules.life.senescenceHazard", "reason": "不在 §3.3，同行无 vitalRates"}
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "volume": "卷二十四",
+  "needs": [
+    {
+      "entry": "storyView",
+      "targets": ["tallyOf", "wealth"],
+      "line": 482,
+      "quote": "损失项 = `tallyOf(s"
+    },
+    {
+      "entry": "commissionBrief",
+      "targets": ["wageQuote"],
+      "line": 568,
+      "quote": "× 卷六 `wageQuote`（§4.11）"
+    },
+    {
+      "entry": "originEvents",
+      "targets": ["chronicleView"],
+      "line": 764,
+      "quote": "时间段取其在世期间的 `chronicleView`"
+    }
+  ],
+  "rules": [
+    {
+      "entry": "chronicleAll",
+      "rules": ["rules.events.chronicle.minSig"],
+      "line": 687,
+      "quote": "chronicle.minSig"
+    },
+    {
+      "entry": "storyView",
+      "rules": ["rules.events.pulse.tensionCapBps", "rules.events.pulse.wealthFloor"],
+      "line": 482,
+      "quote": "min(pulse.tensionCapBps"
+    },
+    {
+      "entry": "storyView",
+      "rules": ["rules.events.pulse.quietCapDays"],
+      "line": 483,
+      "quote": "`pulse.quietCapDays`"
+    },
+    {
+      "entry": "commissionBrief",
+      "rules": ["rules.events.quest.difficultyBands"],
+      "line": 565,
+      "quote": "`quest.difficultyBands`"
+    },
+    {
+      "entry": "epochView",
+      "rules": ["rules.events.era.boundarySig"],
+      "line": 650,
+      "quote": "`era.boundarySig`"
+    },
+    {
+      "entry": "originEvents",
+      "rules": ["rules.events.origin.minSig", "rules.events.origin.maxEvents"],
+      "line": 764,
+      "quote": "`origin.maxEvents`"
+    }
+  ]
+}

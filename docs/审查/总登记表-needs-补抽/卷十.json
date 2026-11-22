@@ -1,0 +1,10 @@
+{
+  "volume": "卷十",
+  "needs": [
+    {"entry": "composeName", "targets": ["nameTable"], "line": 589, "quote": "它读卷七的 `nameTable()`"}
+  ],
+  "rules": [
+    {"entry": "layoutOf", "rules": ["rules.gen.layout.gapCells"], "line": 183, "quote": "`rules.gen.layout.gapCells`"}
+  ],
+  "dropped": []
+}

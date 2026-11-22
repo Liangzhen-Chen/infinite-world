@@ -1,0 +1,2260 @@
+{
+ "仍拒": [
+  {
+   "volume": "卷十五",
+   "kind": "rules",
+   "entry": "castPreview",
+   "rule": "rules.arcana.cast.costRows",
+   "quote": "本卷登记的 `cast.costRows`",
+   "line": 449,
+   "reason": "按原文找不到含该规则键的行"
+  },
+  {
+   "volume": "卷十五",
+   "kind": "rules",
+   "entry": "castShape",
+   "rule": "rules.arcana.cast.degreeBps",
+   "quote": "取规则表 `cast.degreeBps`",
+   "line": 334,
+   "reason": "按原文找不到含该规则键的行"
+  },
+  {
+   "volume": "卷十五",
+   "kind": "rules",
+   "entry": "castShape",
+   "rule": "rules.arcana.familyRows",
+   "quote": "`familyRows` 该族的 `minutes`",
+   "line": 446,
+   "reason": "按原文找不到含该规则键的行"
+  },
+  {
+   "volume": "卷十五",
+   "kind": "rules",
+   "entry": "classesOfFamily",
+   "rule": "rules.arcana.familyRows",
+   "quote": "在 `familyRows` 里恰有一行",
+   "line": 447,
+   "reason": "按原文找不到含该规则键的行"
+  },
+  {
+   "volume": "卷十五",
+   "kind": "rules",
+   "entry": "efficacyOf",
+   "rule": "rules.arcana.efficacy.distanceCurve",
+   "quote": "efficacy.distanceCurve",
+   "line": 693,
+   "reason": "按原文找不到含该规则键的行"
+  },
+  {
+   "volume": "卷十五",
+   "kind": "rules",
+   "entry": "efficacyOf",
+   "rule": "rules.arcana.efficacy.offeringCurve",
+   "quote": "efficacy.offeringCurve",
+   "line": 697,
+   "reason": "按原文找不到含该规则键的行"
+  },
+  {
+   "volume": "卷十五",
+   "kind": "rules",
+   "entry": "efficacyOf",
+   "rule": "rules.arcana.efficacy.officiantCurve",
+   "quote": "efficacy.officiantCurve",
+   "line": 696,
+   "reason": "按原文找不到含该规则键的行"
+  },
+  {
+   "volume": "卷十五",
+   "kind": "rules",
+   "entry": "feedWorking",
+   "rule": "rules.arcana.seal.decayCurve",
+   "quote": "seal.decayCurve",
+   "line": 821,
+   "reason": "按原文找不到含该规则键的行"
+  },
+  {
+   "volume": "卷十五",
+   "kind": "rules",
+   "entry": "interactionsFor",
+   "rule": "rules.arcana.ixRows",
+   "quote": "与 `ixRows` 的文件排列无关",
+   "line": 562,
+   "reason": "按原文找不到含该规则键的行"
+  },
+  {
+   "volume": "卷十五",
+   "kind": "rules",
+   "entry": "noteFate",
+   "rule": "rules.arcana.afterlife.fateRows",
+   "quote": "求值时取 `afterlife.fateRows`",
+   "line": 856,
+   "reason": "按原文找不到含该规则键的行"
+  },
+  {
+   "volume": "卷十五",
+   "kind": "rules",
+   "entry": "openWorking",
+   "rule": "rules.arcana.familyRows",
+   "quote": "`familyRows` 该族的 `loadParam`",
+   "line": 454,
+   "reason": "按原文找不到含该规则键的行"
+  },
+  {
+   "volume": "卷十五",
+   "kind": "rules",
+   "entry": "openWorking",
+   "rule": "rules.arcana.working.maxProducts",
+   "quote": "至多 `working.maxProducts` 项",
+   "line": 454,
+   "reason": "按原文找不到含该规则键的行"
+  },
+  {
+   "volume": "卷十五",
+   "kind": "rules",
+   "entry": "riteStep",
+   "rule": "rules.arcana.rite.gatherMinutes",
+   "quote": "登记 `rite.gatherMinutes` 之后",
+   "line": 688,
+   "reason": "按原文找不到含该规则键的行"
+  },
+  {
+   "volume": "卷十五",
+   "kind": "rules",
+   "entry": "situationOf",
+   "rule": "rules.arcana.roles.holdings",
+   "quote": "句柄取 `roles.holdings`",
+   "line": 342,
+   "reason": "按原文找不到含该规则键的行"
+  }
+ ],
+ "判不是": [
+  {
+   "volume": "卷七",
+   "entry": "acceptanceOfPerson",
+   "item": "integrationOf",
+   "判定": "判不是依赖或规则",
+   "原因": "同含两名的行是读者表，非读句"
+  },
+  {
+   "volume": "卷七",
+   "entry": "customFor",
+   "item": "integrationOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "无同含入口名与目标的行"
+  },
+  {
+   "volume": "卷七",
+   "entry": "holyWarEligible",
+   "item": "faithOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "无同含入口名与目标的行"
+  },
+  {
+   "volume": "卷七",
+   "entry": "hostilityOf",
+   "item": "faithDistance",
+   "判定": "判不是依赖或规则",
+   "原因": "同含两名的行是扩展性断言"
+  },
+  {
+   "volume": "卷七",
+   "entry": "miracleOptions",
+   "item": "respectTier",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "无同含入口名与目标的行"
+  },
+  {
+   "volume": "卷七",
+   "entry": "miracleOptions",
+   "item": "sphereAffinity",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "无同含入口名与目标的行"
+  },
+  {
+   "volume": "卷七",
+   "entry": "reformOptions",
+   "item": "faithCount",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "无同含入口名与目标的行"
+  },
+  {
+   "volume": "卷七",
+   "entry": "shrineDemand",
+   "item": "facilityView",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "无同含入口名与目标的行"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "abilityLevel",
+   "item": "bodyView",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "1140不在§3.2，且无入口名"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "abilityLevel",
+   "item": "itemView",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "1140不在§3.2，且无入口名"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "canContain",
+   "item": "matterStateOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "1044不在§4.4.2，且无入口名"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "canContain",
+   "item": "rules.containers.maxNesting",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写 maxNesting，无全路径"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "canWear",
+   "item": "bodyView",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "1586不在§3.2，且无入口名"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "craftOutcome",
+   "item": "facilityView",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "1272有 facilityView 无入口名"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "craftOutcome",
+   "item": "materialView",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "1275无入口名；1864仅列举"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "craftOutcome",
+   "item": "rules.crafting.batchFactor",
+   "判定": "判不是依赖或规则",
+   "原因": "卷文只写 batchFactor，且§2.5未列此键"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "craftOutcome",
+   "item": "rules.crafting.careMasteryCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写 careMasteryCurve，无全路径"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "craftOutcome",
+   "item": "rules.crafting.careQualityCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写 careQualityCurve，无全路径"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "craftOutcome",
+   "item": "rules.crafting.careTimeCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "全路径只在拆解 X-0，非本入口"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "craftOutcome",
+   "item": "rules.crafting.difficultyTimeCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写 difficultyTimeCurve，无全路径"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "craftOutcome",
+   "item": "rules.crafting.masteryTimeCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写 masteryTimeCurve，无全路径"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "matterStateOf",
+   "item": "rules.items.aggregation",
+   "判定": "判不是依赖或规则",
+   "原因": "行1475只写聚合表，无键"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "scarcity",
+   "item": "rules.valuation.scarcityHorizonDays",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写 scarcityHorizonDays，无全路径"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "thermalStep",
+   "item": "rules.thermal.blastRadiusCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写 blastRadiusCurve，无全路径"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "thermalStep",
+   "item": "rules.thermal.fragmentCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写 fragmentCurve，无全路径"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "thermalStep",
+   "item": "rules.thermal.noiseCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写 noiseCurve，无全路径"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "thermalStep",
+   "item": "wearStep",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "1477无入口名；436仅并列"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "valuation",
+   "item": "renownBonus",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "1733不在§3.2，且无入口名"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "valuation",
+   "item": "rules.valuation.beautyValue",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写 beautyValue，无全路径"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "valuation",
+   "item": "rules.valuation.conditionCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写 conditionCurve，无全路径"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "valuation",
+   "item": "rules.valuation.freshnessCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写 freshnessCurve，无全路径"
+  },
+  {
+   "volume": "卷三乙",
+   "entry": "valuation",
+   "item": "rules.valuation.scarcityCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写 scarcityCurve，无全路径"
+  },
+  {
+   "volume": "卷九",
+   "entry": "resolve",
+   "item": "actionView",
+   "判定": "判不是依赖或规则",
+   "原因": "§3.1:467定义行；704无 resolve 名"
+  },
+  {
+   "volume": "卷九",
+   "entry": "resolve",
+   "item": "activityOf",
+   "判定": "判不是依赖或规则",
+   "原因": "§3.1:469定义行；705无 resolve 名"
+  },
+  {
+   "volume": "卷九",
+   "entry": "resolve",
+   "item": "affordances",
+   "判定": "判不是依赖或规则",
+   "原因": "§3.1:468定义行；715是返回字段"
+  },
+  {
+   "volume": "卷九",
+   "entry": "resolve",
+   "item": "can",
+   "判定": "判不是依赖或规则",
+   "原因": "705无 resolve 名；559是写给别处的规矩"
+  },
+  {
+   "volume": "卷九",
+   "entry": "resolve",
+   "item": "craftOutcome",
+   "判定": "判不是依赖或规则",
+   "原因": "757属提案规则，未写 resolve 调它"
+  },
+  {
+   "volume": "卷九",
+   "entry": "resolve",
+   "item": "custodyOf",
+   "判定": "判不是依赖或规则",
+   "原因": "705无 resolve 名"
+  },
+  {
+   "volume": "卷九",
+   "entry": "resolve",
+   "item": "difficultyOf",
+   "判定": "判不是依赖或规则",
+   "原因": "§3.1:473定义行；708无 resolve 名"
+  },
+  {
+   "volume": "卷九",
+   "entry": "resolve",
+   "item": "effects",
+   "判定": "判不是依赖或规则",
+   "原因": "657说 execute 求值调 effects"
+  },
+  {
+   "volume": "卷九",
+   "entry": "resolve",
+   "item": "gainSkill",
+   "判定": "判不是依赖或规则",
+   "原因": "712无 resolve 名"
+  },
+  {
+   "volume": "卷九",
+   "entry": "resolve",
+   "item": "magnitudeCap",
+   "判定": "判不是依赖或规则",
+   "原因": "§3.1:474定义行；708、710无 resolve"
+  },
+  {
+   "volume": "卷二",
+   "entry": "modified",
+   "item": "fixedMultiply",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "所引行在§3.3且无入口名"
+  },
+  {
+   "volume": "卷二",
+   "entry": "modified",
+   "item": "fixedUnits",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "所引行在§3.3且无入口名"
+  },
+  {
+   "volume": "卷二十",
+   "entry": "recurrenceNext",
+   "item": "calendarAdd",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原句在§4.2.3锚点定义，非§3.1且行内无入口名"
+  },
+  {
+   "volume": "卷二十",
+   "entry": "recurrenceNext",
+   "item": "plantView",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原句在§4.2.3的agro锚点，非§3.1且行内无入口名"
+  },
+  {
+   "volume": "卷二十一",
+   "entry": "courseSummary",
+   "item": "rules.health.stat.careGrid",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写 stat.careGrid，无全路径"
+  },
+  {
+   "volume": "卷二十一",
+   "entry": "courseSummary",
+   "item": "rules.health.stat.quantilePoints",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写 stat.quantilePoints，无全路径"
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "baseTierOf",
+   "item": "rules.sim-tiers.individualMaxHops",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "baseTierOf",
+   "item": "rules.sim-tiers.ruleMaxHops",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "baseTierOf",
+   "item": "rules.sim-tiers.ruleSharedAncestorLevel",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "bubbleView",
+   "item": "rules.sim-tiers.bubbleRadiusRegionCells",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "costPlan",
+   "item": "rules.cost-model.budgetCuPerChunk",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "costPlan",
+   "item": "rules.cost-model.cadenceRuleKeys",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "costPlan",
+   "item": "rules.cost-model.chunkMinutes",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "costPlan",
+   "item": "rules.cost-model.coef",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "costPlan",
+   "item": "rules.cost-model.coefMaterialize",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "costPlan",
+   "item": "rules.cost-model.costSubjects",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "costPlan",
+   "item": "rules.cost-model.ladder",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "legalKeyIdOf",
+   "item": "rules.det-numeric.keyIdAggBits",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "legalKeyIdOf",
+   "item": "rules.det-numeric.keyIdOrdinalBits",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十七",
+   "entry": "simUnitOf",
+   "item": "rules.sim-tiers.unitAdminLevel",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "actOutcome",
+   "item": "rules.works.show.contestCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无 works 全键"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "actOutcome",
+   "item": "rules.works.show.drawBase",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无 works 全键"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "actOutcome",
+   "item": "rules.works.show.marginCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无 works 全键"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "actOutcome",
+   "item": "rules.works.show.openAirImpression",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无 works 全键"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "actOutcome",
+   "item": "rules.works.show.scoreRX",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无 works 全键"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "itemRenown",
+   "item": "esteemOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "无同含入口名与目标的行"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "itemRenown",
+   "item": "publicShare",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "无同含入口名与目标的行"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "itemRenown",
+   "item": "rules.works.reach.coverShareBps",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无 works 全键"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "itemRenown",
+   "item": "rules.works.reach.placeTier",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无 works 全键"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "itemRenown",
+   "item": "rules.works.relic.contentCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无 works 全键"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "itemRenown",
+   "item": "rules.works.relic.coverCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无 works 全键"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "itemRenown",
+   "item": "rules.works.relic.originCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无 works 全键"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "itemRenown",
+   "item": "workReach",
+   "判定": "判不是依赖或规则",
+   "原因": "同含两名的行是表，非读句"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "legendStanding",
+   "item": "workReach",
+   "判定": "判不是依赖或规则",
+   "原因": "同含两名的行是表，非读句"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "pickSubjects",
+   "item": "culturePref",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "无同含入口名与目标的行"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "pickSubjects",
+   "item": "preferenceOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "无同含入口名与目标的行"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "pickSubjects",
+   "item": "recall",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "无同含入口名与目标的行"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "pickSubjects",
+   "item": "rules.works.subject.poolMax",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无 works 全键"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "pickSubjects",
+   "item": "rules.works.subject.weights",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无 works 全键"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "pickSubjects",
+   "item": "subjectiveView",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "无同含入口名与目标的行"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "renownBonus",
+   "item": "rules.works.relic.bonusUnit",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无 works 全键"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "renownBonus",
+   "item": "rules.works.relic.generationCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无 works 全键"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "renownBonus",
+   "item": "rules.works.relic.renownCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无 works 全键"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "renownBonus",
+   "item": "rules.works.relic.uniqueCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无 works 全键"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "workCount",
+   "item": "rules.works.reach.minPlaces",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无 works 全键"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "workReach",
+   "item": "knowStanding",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "无同含入口名与目标的行"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "workReach",
+   "item": "loreShare",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "无同含入口名与目标的行"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "workReach",
+   "item": "publicShare",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "无同含入口名与目标的行"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "workReach",
+   "item": "rules.works.reach.coverShareBps",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无 works 全键"
+  },
+  {
+   "volume": "卷二十三",
+   "entry": "workReach",
+   "item": "rules.works.reach.placeTier",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无 works 全键"
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "chronicleView",
+   "item": "rules.knowledge.chronicle.gradeBands",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "familiarityOf",
+   "item": "rules.knowledge.familiarity.curve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "familiarityOf",
+   "item": "rules.knowledge.familiarity.hearsayBps",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "holdsLore",
+   "item": "rules.knowledge.lore.decayDefault",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "holdsLore",
+   "item": "rules.knowledge.lore.graspMin",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "holdsLore",
+   "item": "rules.knowledge.lore.retainCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "leverageOf",
+   "item": "rules.knowledge.secret.guardMax",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "leverageOf",
+   "item": "rules.knowledge.secret.spreadCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "linkKnown",
+   "item": "identify",
+   "判定": "判不是依赖或规则",
+   "原因": "R22-1.5 讲写入知情时调 identify，是写入路径；linkKnown 只读事实，identify(卷四 K-4b)反过来读 linkKnown，取消这条边破环"
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "linkKnown",
+   "item": "rules.knowledge.roles.dims.keyBearer",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "linkKnown",
+   "item": "rules.knowledge.roles.dims.sameBearer",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "readOutcome",
+   "item": "documentStanding",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行613不含入口名，§3.1 无调用句"
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "readOutcome",
+   "item": "holdsLore",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行613不含入口名，§3.1 无调用句"
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "readOutcome",
+   "item": "rules.knowledge.read.gistShareBps",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "readOutcome",
+   "item": "rules.knowledge.read.gradeCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "readOutcome",
+   "item": "skillValue",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行613不含入口名，§3.1 无调用句"
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "recallFacts",
+   "item": "rules.knowledge.recall.claimCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "returnDigest",
+   "item": "rules.knowledge.digest.max",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "returnDigest",
+   "item": "rules.knowledge.digest.shareMin",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "subjectiveView",
+   "item": "personView",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行414不含入口名，§3.1 无调用句"
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "why",
+   "item": "rules.knowledge.why.maxDepth",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十二",
+   "entry": "why",
+   "item": "rules.knowledge.why.maxNodes",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键，无「表名.键」原文行"
+  },
+  {
+   "volume": "卷二十五",
+   "entry": "cropGrowth",
+   "item": "astroView",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行332不在§3.1且不含cropGrowth"
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "chronicleAll",
+   "item": "rules.events.chronicle.minSig",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原文只有 chronicle.minSig 短名"
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "commissionBrief",
+   "item": "rules.events.quest.difficultyBands",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原文只有 quest.difficultyBands 短名"
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "epochView",
+   "item": "rules.events.era.boundarySig",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原文只有 era.boundarySig 短名"
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "originEvents",
+   "item": "rules.events.origin.maxEvents",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原文只有 origin.maxEvents 短名"
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "originEvents",
+   "item": "rules.events.origin.minSig",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原文只有 origin.minSig 短名"
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "storyView",
+   "item": "rules.events.pulse.quietCapDays",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原文只有 pulse.quietCapDays 短名"
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "storyView",
+   "item": "rules.events.pulse.tensionCapBps",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原文只有 pulse.tensionCapBps 短名"
+  },
+  {
+   "volume": "卷二十四",
+   "entry": "storyView",
+   "item": "rules.events.pulse.wealthFloor",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原文只有 pulse.wealthFloor 短名"
+  },
+  {
+   "volume": "卷五",
+   "entry": "gridView",
+   "item": "blueprintOf",
+   "判定": "判不是依赖或规则",
+   "原因": "目标重名（登记表两处同名），无含 gridView 的行"
+  },
+  {
+   "volume": "卷五",
+   "entry": "gridView",
+   "item": "fixtureCells",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原句在§4.3规则10，非§3.1且行内无入口名"
+  },
+  {
+   "volume": "卷五",
+   "entry": "gridView",
+   "item": "templateBlocksOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原句在§4.3规则10，非§3.1且行内无入口名"
+  },
+  {
+   "volume": "卷五",
+   "entry": "placeView",
+   "item": "blueprintOf",
+   "判定": "判不是依赖或规则",
+   "原因": "目标重名（登记表两处同名），无法唯一指向"
+  },
+  {
+   "volume": "卷五",
+   "entry": "placeView",
+   "item": "caveCellsOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行497在§4.1规则11，非§3.1且行内无入口名"
+  },
+  {
+   "volume": "卷五",
+   "entry": "placeView",
+   "item": "pathView",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行1250在§4.15规则1，非§3.1且行内无入口名"
+  },
+  {
+   "volume": "卷八b",
+   "entry": "disposalRight",
+   "item": "agencyOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行801不含入口名，§3.1 无调用句"
+  },
+  {
+   "volume": "卷八b",
+   "entry": "disposalRight",
+   "item": "hasPower",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行801不含入口名，§3.1 无调用句"
+  },
+  {
+   "volume": "卷八b",
+   "entry": "securityOf",
+   "item": "capacity",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行840不含入口名，§3.1 无调用句"
+  },
+  {
+   "volume": "卷八b",
+   "entry": "securityOf",
+   "item": "garrisonOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行840不含入口名，§3.1 无调用句"
+  },
+  {
+   "volume": "卷八b",
+   "entry": "securityOf",
+   "item": "popView",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行840不含入口名，§3.1 无调用句"
+  },
+  {
+   "volume": "卷八",
+   "entry": "casusOptions",
+   "item": "holyWarEligible",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行1136不含入口名，§3.1 无调用句"
+  },
+  {
+   "volume": "卷八",
+   "entry": "courtView",
+   "item": "economyReport",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行1223不含入口名，§3.1 无调用句"
+  },
+  {
+   "volume": "卷八",
+   "entry": "domainOf",
+   "item": "skillValue",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行810不含入口名，§3.1 无调用句"
+  },
+  {
+   "volume": "卷八",
+   "entry": "factionView",
+   "item": "orgView",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行1031不含入口名，§3.1 无调用句"
+  },
+  {
+   "volume": "卷八",
+   "entry": "legitimacy",
+   "item": "acceptance",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行844无独立入口名，§3.1 无调用句"
+  },
+  {
+   "volume": "卷八",
+   "entry": "legitimacy",
+   "item": "calendarSpan",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行844无独立入口名，§3.1 无调用句"
+  },
+  {
+   "volume": "卷八",
+   "entry": "legitimacy",
+   "item": "esteemOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行844无独立入口名，§3.1 无调用句"
+  },
+  {
+   "volume": "卷八",
+   "entry": "legitimacy",
+   "item": "kinDegree",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行844无独立入口名，§3.1 无调用句"
+  },
+  {
+   "volume": "卷八",
+   "entry": "placeAuthority",
+   "item": "governorOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行848不含入口名，§3.1 无调用句"
+  },
+  {
+   "volume": "卷八",
+   "entry": "taxesFor",
+   "item": "governorOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行990不含入口名，§3.1 无调用句"
+  },
+  {
+   "volume": "卷八",
+   "entry": "taxesFor",
+   "item": "priceFor",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行992不含入口名，§3.1 无调用句"
+  },
+  {
+   "volume": "卷六",
+   "entry": "closePeriod",
+   "item": "exchangeRate",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行1281不含入口名，§3.2无调用句"
+  },
+  {
+   "volume": "卷六",
+   "entry": "demand",
+   "item": "riteCount",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行500不含入口名，§3.1无调用句"
+  },
+  {
+   "volume": "卷六",
+   "entry": "landedCost",
+   "item": "priceFor",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行570不含入口名，§3.1无调用句"
+  },
+  {
+   "volume": "卷六",
+   "entry": "landedCost",
+   "item": "routeRisk",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行571不含入口名，§3.1无调用句"
+  },
+  {
+   "volume": "卷六",
+   "entry": "marketQuote",
+   "item": "marketSupply",
+   "判定": "判不是依赖或规则",
+   "原因": "行413为并列读入口，无依赖句"
+  },
+  {
+   "volume": "卷六",
+   "entry": "marketQuote",
+   "item": "priceFor",
+   "判定": "判不是依赖或规则",
+   "原因": "迁移表改法句；反向已成环"
+  },
+  {
+   "volume": "卷六",
+   "entry": "planProduction",
+   "item": "craftOutcome",
+   "判定": "判不是依赖或规则",
+   "原因": "行620的craftOutcome归runJobs，非本入口"
+  },
+  {
+   "volume": "卷六",
+   "entry": "priceFor",
+   "item": "wageQuote",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行1213不含priceFor，§3.1无调用句"
+  },
+  {
+   "volume": "卷六",
+   "entry": "settleTrade",
+   "item": "chainOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行586不含入口名，§3.2无调用句"
+  },
+  {
+   "volume": "卷六",
+   "entry": "stationPlan",
+   "item": "reachOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行642不含入口名，§3.1无调用句"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "downhillMotion",
+   "item": "gridView",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原句在§4.2，非§3.1，同行无该入口"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "downhillMotion",
+   "item": "itemView",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原句在§4.2，非§3.1，同行无该入口"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "downhillMotion",
+   "item": "rules.travel.motion.gravityMmps2",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行内只有 motion.gravityMmps2 短名"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "downhillMotion",
+   "item": "rules.travel.motion.maxSpeedMps",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行内只有 motion.maxSpeedMps 短名"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "downhillMotion",
+   "item": "rules.travel.motion.rollResist",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行内只有 motion.rollResist 短名"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "gateQuote",
+   "item": "rules.travel.gate.detectCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行内只有 gate.detectCurve 短名"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "gateQuote",
+   "item": "rules.travel.gate.volumeCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行内只有 gate.volumeCurve 短名"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "gateStep",
+   "item": "canOffer",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原句在§4.7，非§3.3，同行无该入口"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "gateStep",
+   "item": "lawGate",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原句在§4.7，非§3.3，同行无该入口"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "gateStep",
+   "item": "rules.travel.gate.detectCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行内只有 gate.detectCurve 短名"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "gateStep",
+   "item": "rules.travel.gate.volumeCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行内只有 gate.volumeCurve 短名"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "gateStep",
+   "item": "safetyOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原句在§4.7，非§3.3，同行无该入口"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "gateStep",
+   "item": "taxesFor",
+   "判定": "判不是依赖或规则",
+   "原因": "同行只见事件载荷，非入口调用"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "legSpeed",
+   "item": "envAt",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原句在§4.1，非§3.1，同行无该入口"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "legSpeed",
+   "item": "gridView",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原句在§4.1，非§3.1，同行无该入口"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "legSpeed",
+   "item": "rules.travel.water.fillFlowCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行内只有 water.fillFlowCurve 短名"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "legSpeed",
+   "item": "rules.travel.water.flowCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行内只有 water.flowCurve 短名"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "legSpeed",
+   "item": "zoneAt",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原句在§4.1，非§3.1，同行无该入口"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "passOf",
+   "item": "rules.travel.roles.holdings.siegePass",
+   "判定": "判不是依赖或规则",
+   "原因": "卷文只有 roles.holdings.siegePass"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "placeSubject",
+   "item": "bearingView",
+   "判定": "判不是依赖或规则",
+   "原因": "目标重名"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "raidAppraisal",
+   "item": "deterrenceOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原句在§4.6，非§3.1，同行无该入口"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "raidAppraisal",
+   "item": "loadOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原句在§4.6，非§3.1，同行无该入口"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "raidAppraisal",
+   "item": "priceFor",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原句在§4.6，非§3.1，同行无该入口"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "raidAppraisal",
+   "item": "responseOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原句在§4.6，非§3.1，同行无该入口"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "raidAppraisal",
+   "item": "rules.travel.raid.haulKgPerMinute",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行内只有 raid.haulKgPerMinute 短名"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "raidAppraisal",
+   "item": "rules.travel.raid.maxWindowMinutes",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行内只有 raid.maxWindowMinutes 短名"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "raidAppraisal",
+   "item": "rules.travel.raid.winCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行内只有 raid.winCurve 短名"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "settleTrips",
+   "item": "placeSubject",
+   "判定": "判不是依赖或规则",
+   "原因": "同行只见写者清单，非调用"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "tripPlan",
+   "item": "inBubble",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原句在§4.1，非§3.1，同行无该入口"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "tripPlan",
+   "item": "landCell",
+   "判定": "判不是依赖或规则",
+   "原因": "只在配合项提及，非入口读取"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "tripPlan",
+   "item": "losView",
+   "判定": "判不是依赖或规则",
+   "原因": "只在配合项提及，非入口读取"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "tripPlan",
+   "item": "priceFor",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原句在§4.1，非§3.1，同行无该入口"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "tripPlan",
+   "item": "rules.travel.plan.expandBaseCells",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行内只有 plan.expandBaseCells 短名"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "tripPlan",
+   "item": "rules.travel.plan.expandFactor",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行内只有 plan.expandFactor 短名"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "tripPlan",
+   "item": "rules.travel.plan.stateHorizonMinutes",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行内只有该键短名，非整键"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "tripPlan",
+   "item": "zoneAt",
+   "判定": "判不是依赖或规则",
+   "原因": "只在断言与表提及，非入口读取"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "tripStep",
+   "item": "rules.travel.batch.maxLegs",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行内只有 batch.maxLegs 短名"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "tripStep",
+   "item": "rules.travel.dwell.equivPathM",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行内只有 dwell.equivPathM 短名"
+  },
+  {
+   "volume": "卷十七",
+   "entry": "tripStep",
+   "item": "rules.travel.dwell.reenterMinutes",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行内只有 dwell.reenterMinutes 短名"
+  },
+  {
+   "volume": "卷十三",
+   "entry": "battleStep",
+   "item": "noteMerit",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行1004不含入口名，§3.2 无调用句"
+  },
+  {
+   "volume": "卷十三",
+   "entry": "battleStep",
+   "item": "noteRout",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行880不含入口名，§3.2 无调用句"
+  },
+  {
+   "volume": "卷十三",
+   "entry": "battleStep",
+   "item": "strikePreview",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行1003不含入口名，§3.2 无含目标名行"
+  },
+  {
+   "volume": "卷十三",
+   "entry": "encounterStep",
+   "item": "noteMerit",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行1292不含入口名，§3.2 无调用句"
+  },
+  {
+   "volume": "卷十三",
+   "entry": "encounterStep",
+   "item": "noteRout",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行880不含入口名，§3.2 无调用句"
+  },
+  {
+   "volume": "卷十三",
+   "entry": "forceView",
+   "item": "moveSpeedOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行953不含入口名，§3.1 无含目标名行"
+  },
+  {
+   "volume": "卷十三",
+   "entry": "layersOf",
+   "item": "itemView",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行669不含入口名，§3.1 无含目标名行"
+  },
+  {
+   "volume": "卷十三",
+   "entry": "layersOf",
+   "item": "materialView",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行669不含入口名，§3.1 无含目标名行"
+  },
+  {
+   "volume": "卷十三",
+   "entry": "lootStep",
+   "item": "lotsView",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行1047不含入口名，§3.2 无含目标名行"
+  },
+  {
+   "volume": "卷十三",
+   "entry": "missionStep",
+   "item": "battlePreview",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行1087不含入口名，§3.2 无含目标名行"
+  },
+  {
+   "volume": "卷十三",
+   "entry": "missionStep",
+   "item": "lootStep",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行1088不含入口名，§3.2 无调用句"
+  },
+  {
+   "volume": "卷十三",
+   "entry": "missionStep",
+   "item": "noteMerit",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行1328不含入口名，§3.2 无调用句"
+  },
+  {
+   "volume": "卷十三",
+   "entry": "missionStep",
+   "item": "siegeStep",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行1088不含入口名，§3.2 无调用句"
+  },
+  {
+   "volume": "卷十三",
+   "entry": "siegeStep",
+   "item": "garrisonOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行1006不含入口名，§3.2 无含目标名行"
+  },
+  {
+   "volume": "卷十三",
+   "entry": "strikeOutcome",
+   "item": "encounterOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行593不含入口名，§3.1 无调用句"
+  },
+  {
+   "volume": "卷十三",
+   "entry": "strikeOutcome",
+   "item": "encounterView",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行593不含入口名，§3.1 无调用句"
+  },
+  {
+   "volume": "卷十三",
+   "entry": "strikePreview",
+   "item": "rules.combat.weak.unknownBps",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原文只有 unknownBps 短名"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "accessClassAt",
+   "item": "accessDefaultOf",
+   "判定": "判不是依赖或规则",
+   "原因": "468定义、469引用，须两行合读"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "accessClassAt",
+   "item": "calendarDayIndex",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "944无accessClassAt名，§3.2无此目标"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "accessClassAt",
+   "item": "calendarMinuteOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "944无accessClassAt名，§3.2无此目标"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "accessClassAt",
+   "item": "calendarView",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "944无accessClassAt名，§3.2无此目标"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "chooseForm",
+   "item": "requirementPlan",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "1424是牵连清单交叉引用；639无入口名"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "chooseForm",
+   "item": "rules.facility.build.climateFitCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键名，无facility.x.y全键"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "chooseForm",
+   "item": "rules.facility.build.climateNeedCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键名，无facility.x.y全键"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "chooseForm",
+   "item": "rules.facility.build.skillFitCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键名，无facility.x.y全键"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "chooseForm",
+   "item": "stratumSkill",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "588是给调用方的输入规矩；637无入口名"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "completeBuild",
+   "item": "stratumSkill",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "588该读属contributeBuild；561无入口名"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "contributeBuild",
+   "item": "rules.facility.build.skillTimeCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键名，无facility.x.y全键"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "occupyStation",
+   "item": "placeSubject",
+   "判定": "判不是依赖或规则",
+   "原因": "513是占用动作定义，无occupyStation名"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "restSite",
+   "item": "rules.facility.lodging.impressionRestCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键名，无facility.x.y全键"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "restSite",
+   "item": "rules.facility.lodging.restCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键名，无facility.x.y全键"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "settleFacilities",
+   "item": "rules.facility.rating.dirtPerVisit",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键名，无facility.x.y全键"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "settleFacilities",
+   "item": "rules.facility.rating.dirtPerWorkMinute",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键名，无facility.x.y全键"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "settleFacilities",
+   "item": "rules.facility.station.maxRows",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键名，无facility.x.y全键"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "settleFacilities",
+   "item": "rules.facility.structure.fireCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键名，无facility.x.y全键"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "settleFacilities",
+   "item": "rules.facility.wear.exposureCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键名，无facility.x.y全键"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "settleFacilities",
+   "item": "rules.facility.wear.useShare",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写裸键名，无facility.x.y全键"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "settleStatBuild",
+   "item": "buildPlan",
+   "判定": "判不是依赖或规则",
+   "原因": "539只是入口清单，非调用句"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "settleStatBuild",
+   "item": "chooseForm",
+   "判定": "判不是依赖或规则",
+   "原因": "无同一行同时出现，§3.2内也没有"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "settleStatBuild",
+   "item": "completeBuild",
+   "判定": "判不是依赖或规则",
+   "原因": "539只是入口清单，非调用句"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "settleStatBuild",
+   "item": "contributeBuild",
+   "判定": "判不是依赖或规则",
+   "原因": "539只是入口清单，非调用句"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "settleStatBuild",
+   "item": "facilityView",
+   "判定": "判不是依赖或规则",
+   "原因": "584是定义句，无settleStatBuild名"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "settleStatBuild",
+   "item": "openBuildProject",
+   "判定": "判不是依赖或规则",
+   "原因": "539只是入口清单，非调用句"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "settleStatBuild",
+   "item": "stationPlan",
+   "判定": "判不是依赖或规则",
+   "原因": "586是定义句，无settleStatBuild名"
+  },
+  {
+   "volume": "卷十九",
+   "entry": "triggerStep",
+   "item": "fixtureCells",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "1017是触发规则定义，无入口名"
+  },
+  {
+   "volume": "卷十五",
+   "entry": "efficacyOf",
+   "item": "liminalOf",
+   "判定": "判不是依赖或规则",
+   "原因": "效力规则用它，卷文未写本入口读取"
+  },
+  {
+   "volume": "卷十五",
+   "entry": "efficacyOf",
+   "item": "wardReading",
+   "判定": "判不是依赖或规则",
+   "原因": "效力规则用它，卷文未写本入口读取"
+  },
+  {
+   "volume": "卷十八",
+   "entry": "compat",
+   "item": "rules.social.social.compat",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原文只有 social.compat 短名"
+  },
+  {
+   "volume": "卷十八",
+   "entry": "dread",
+   "item": "rules.social.fear.boldAxis",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原文只有 fear.boldAxis 短名"
+  },
+  {
+   "volume": "卷十八",
+   "entry": "dread",
+   "item": "rules.social.fear.boldBase",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原文只有 fear.boldBase 短名"
+  },
+  {
+   "volume": "卷十八",
+   "entry": "dread",
+   "item": "rules.social.fear.boldScale",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原文只有 fear.boldScale 短名"
+  },
+  {
+   "volume": "卷十八",
+   "entry": "opinionOf",
+   "item": "publicShare",
+   "判定": "判不是依赖或规则",
+   "原因": "§3.1内无含该目标名的行"
+  },
+  {
+   "volume": "卷十八",
+   "entry": "recall",
+   "item": "rules.social.memory.forgetCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原文只有 forgetCurve 短名"
+  },
+  {
+   "volume": "卷十八",
+   "entry": "recall",
+   "item": "rules.social.memory.recallMin",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原文只有 recallMin 短名"
+  },
+  {
+   "volume": "卷十八",
+   "entry": "recall",
+   "item": "rules.social.memory.salience",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原文只有 memory.salience 短名"
+  },
+  {
+   "volume": "卷十八",
+   "entry": "stance",
+   "item": "rules.social.stance.conductCap",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原文只有 conductCap 短名"
+  },
+  {
+   "volume": "卷十八",
+   "entry": "treatment",
+   "item": "acceptanceOfPerson",
+   "判定": "判不是依赖或规则",
+   "原因": "§3.1内无含该目标名的行"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "awakenOrg",
+   "item": "rules.bestiary.awaken.officeRows",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "awakenOrg",
+   "item": "rules.bestiary.roles.verbs.orgAwakened",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "containReading",
+   "item": "rules.bestiary.contain.insulateCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "containReading",
+   "item": "rules.bestiary.contain.strengthCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "containReading",
+   "item": "rules.bestiary.contain.wardMinBps",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "containReading",
+   "item": "wardReading",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原文在§4.14，不在§3.1且无入口名"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "displayClassOf",
+   "item": "rules.bestiary.displayClassRows",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "encounterReading",
+   "item": "rules.bestiary.encounter.approachCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "encounterReading",
+   "item": "rules.bestiary.encounter.hungerCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "ensureVariantRow",
+   "item": "rules.bestiary.roles.idslots.variant",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "lairSuitability",
+   "item": "rules.bestiary.lair.minHeads",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "leaveLair",
+   "item": "rules.bestiary.roles.verbs.lairLeft",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "mintLore",
+   "item": "rules.bestiary.lore.claimCount",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "mintLore",
+   "item": "rules.bestiary.lore.claimDims",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "mintLore",
+   "item": "rules.bestiary.lore.errorBps",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "mintLore",
+   "item": "rules.bestiary.lore.mintDefaults",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "mintLore",
+   "item": "rules.bestiary.roles.idslots.lore",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "mintLore",
+   "item": "rules.bestiary.roles.verbs.loreMinted",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "proposeTransform",
+   "item": "ensureVariantRow",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "原文在§4.12，不在§3.2且无入口名"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "proposeTransform",
+   "item": "rules.bestiary.roles.prims.transform",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "proposeTransform",
+   "item": "rules.bestiary.roles.verbs.transformed",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "settleLair",
+   "item": "rules.bestiary.roles.holdings.den",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "settleLair",
+   "item": "rules.bestiary.roles.verbs.lairSettled",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "similarity",
+   "item": "rules.bestiary.similarity.dims",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "speciesThreat",
+   "item": "rules.bestiary.tier.default",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "threatBrief",
+   "item": "rules.bestiary.brief.harmWindowDays",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "threatOf",
+   "item": "rules.bestiary.tier.default",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十六",
+   "entry": "wardReading",
+   "item": "rules.bestiary.ward.unmatchedDistance",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "卷文只写短名，缺bestiary全路径"
+  },
+  {
+   "volume": "卷十四",
+   "entry": "qualifies",
+   "item": "holdsLore",
+   "判定": "判不是依赖或规则",
+   "原因": "仅 §2.6 转调，该行不含 qualifies"
+  },
+  {
+   "volume": "卷十四",
+   "entry": "qualifies",
+   "item": "skillValue",
+   "判定": "判不是依赖或规则",
+   "原因": "无同行兼含两者，§2.6 分写"
+  },
+  {
+   "volume": "卷四",
+   "entry": "createCharacter",
+   "item": "rules.chargen.perAttr",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "不在 §3.3，同行无 createCharacter"
+  },
+  {
+   "volume": "卷四",
+   "entry": "lifeTick",
+   "item": "rules.life.earlyHazard",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "不在 §3.3，同行无 lifeTick"
+  },
+  {
+   "volume": "卷四",
+   "entry": "lifeTick",
+   "item": "rules.life.fertilityByLiving",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "不在 §3.3，同行无 lifeTick"
+  },
+  {
+   "volume": "卷四",
+   "entry": "lifeTick",
+   "item": "rules.life.fertilityCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "不在 §3.3，同行无 lifeTick"
+  },
+  {
+   "volume": "卷四",
+   "entry": "lifeTick",
+   "item": "rules.life.hazardByLiving",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "不在 §3.3，同行无 lifeTick"
+  },
+  {
+   "volume": "卷四",
+   "entry": "lifeTick",
+   "item": "rules.life.senescenceHazard",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "不在 §3.3，同行无 lifeTick"
+  },
+  {
+   "volume": "卷四",
+   "entry": "loadOf",
+   "item": "aboardOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "不在 §3.3，同行无 loadOf"
+  },
+  {
+   "volume": "卷四",
+   "entry": "loadOf",
+   "item": "rules.body.carry.allometry",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "同行只有通配键，非整键"
+  },
+  {
+   "volume": "卷四",
+   "entry": "loadOf",
+   "item": "rules.body.carry.attrCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "同行只有通配键，非整键"
+  },
+  {
+   "volume": "卷四",
+   "entry": "loadOf",
+   "item": "rules.body.carry.capacitySource",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "同行只有通配键，非整键"
+  },
+  {
+   "volume": "卷四",
+   "entry": "loadOf",
+   "item": "rules.body.carry.speedCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "同行只有通配键，非整键"
+  },
+  {
+   "volume": "卷四",
+   "entry": "loadOf",
+   "item": "rules.body.carry.staminaCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "同行只有通配键，非整键"
+  },
+  {
+   "volume": "卷四",
+   "entry": "loadOf",
+   "item": "towShareOf",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "不在 §3.3，同行无 loadOf"
+  },
+  {
+   "volume": "卷四",
+   "entry": "personView",
+   "item": "identify",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "不在 §3.1，同行无 personView"
+  },
+  {
+   "volume": "卷四",
+   "entry": "personView",
+   "item": "rules.body.metabolism.energyCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "不在 §3.1，同行无 personView"
+  },
+  {
+   "volume": "卷四",
+   "entry": "personView",
+   "item": "rules.body.metabolism.waterCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "不在 §3.1，同行无 personView"
+  },
+  {
+   "volume": "卷四",
+   "entry": "typicalSpeedOf",
+   "item": "rules.body.carry.speedCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "行内键写 carry.speedCurve，非整键"
+  },
+  {
+   "volume": "卷四",
+   "entry": "vitalRates",
+   "item": "rules.life.earlyHazard",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "不在 §3.3，同行无 vitalRates"
+  },
+  {
+   "volume": "卷四",
+   "entry": "vitalRates",
+   "item": "rules.life.fertilityByLiving",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "仅牵连清单提到，键非整键"
+  },
+  {
+   "volume": "卷四",
+   "entry": "vitalRates",
+   "item": "rules.life.fertilityCurve",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "不在 §3.3，同行无 vitalRates"
+  },
+  {
+   "volume": "卷四",
+   "entry": "vitalRates",
+   "item": "rules.life.hazardByLiving",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "仅牵连清单提到，键非整键"
+  },
+  {
+   "volume": "卷四",
+   "entry": "vitalRates",
+   "item": "rules.life.senescenceHazard",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "不在 §3.3，同行无 vitalRates"
+  },
+  {
+   "volume": "卷四",
+   "entry": "workInputs",
+   "item": "bodyView",
+   "判定": "按判据锚不上（卷文写法所致，不等于不是依赖）",
+   "原因": "不在 §3.3，同行无 workInputs"
+  }
+ ]
+}

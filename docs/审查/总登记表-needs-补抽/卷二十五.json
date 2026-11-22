@@ -1,0 +1,25 @@
+{
+ "volume": "卷二十五",
+ "needs": [
+  {
+   "entry": "cropGrowth",
+   "targets": ["envAccum"],
+   "line": 243,
+   "quote": "环境读 `envAt` 与 `envAccum`"
+  },
+  {
+   "entry": "cropGrowth",
+   "targets": ["placeView"],
+   "line": 243,
+   "quote": "地点读 `placeView`"
+  }
+ ],
+ "rules": [],
+ "dropped": [
+  {
+   "entry": "cropGrowth",
+   "target": "astroView",
+   "reason": "行332不在§3.1且不含cropGrowth"
+  }
+ ]
+}

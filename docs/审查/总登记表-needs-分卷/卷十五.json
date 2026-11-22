@@ -1,0 +1,27 @@
+{
+  "volume": "卷十五",
+  "needs": [
+    {"entry": "endWorking", "targets": ["contractStep"], "line": 454, "quote": "合同走 `contractStep` 的解除"},
+    {"entry": "noteFate", "targets": ["cancel"], "line": 407, "quote": "`cancel` 撤销"},
+    {"entry": "noteFate", "targets": ["schedule"], "line": 407, "quote": "`schedule` 以新载体地点"},
+    {"entry": "castShape", "targets": ["riteView"], "line": 689, "quote": "读 `riteView`"},
+    {"entry": "efficacyOf", "targets": ["wardReading"], "line": 693, "quote": "`wardReading(手段, 对象)`"},
+    {"entry": "efficacyOf", "targets": ["liminalOf"], "line": 695, "quote": "`liminalOf` 返回的各条目"}
+  ],
+  "rules": [
+    {"entry": "castShape", "rules": ["rules.arcana.cast.degreeBps"], "line": 334, "quote": "取规则表 `cast.degreeBps`"},
+    {"entry": "castShape", "rules": ["rules.arcana.familyRows"], "line": 446, "quote": "`familyRows` 该族的 `minutes`"},
+    {"entry": "castPreview", "rules": ["rules.arcana.cast.costRows"], "line": 449, "quote": "本卷登记的 `cast.costRows`"},
+    {"entry": "classesOfFamily", "rules": ["rules.arcana.familyRows"], "line": 447, "quote": "在 `familyRows` 里恰有一行"},
+    {"entry": "interactionsFor", "rules": ["rules.arcana.ixRows"], "line": 562, "quote": "与 `ixRows` 的文件排列无关"},
+    {"entry": "efficacyOf", "rules": ["rules.arcana.efficacy.distanceCurve"], "line": 693, "quote": "efficacy.distanceCurve"},
+    {"entry": "efficacyOf", "rules": ["rules.arcana.efficacy.officiantCurve"], "line": 696, "quote": "efficacy.officiantCurve"},
+    {"entry": "efficacyOf", "rules": ["rules.arcana.efficacy.offeringCurve"], "line": 697, "quote": "efficacy.offeringCurve"},
+    {"entry": "situationOf", "rules": ["rules.arcana.roles.holdings"], "line": 342, "quote": "句柄取 `roles.holdings`"},
+    {"entry": "openWorking", "rules": ["rules.arcana.familyRows"], "line": 454, "quote": "`familyRows` 该族的 `loadParam`"},
+    {"entry": "openWorking", "rules": ["rules.arcana.working.maxProducts"], "line": 454, "quote": "至多 `working.maxProducts` 项"},
+    {"entry": "riteStep", "rules": ["rules.arcana.rite.gatherMinutes"], "line": 688, "quote": "登记 `rite.gatherMinutes` 之后"},
+    {"entry": "noteFate", "rules": ["rules.arcana.afterlife.fateRows"], "line": 856, "quote": "求值时取 `afterlife.fateRows`"},
+    {"entry": "feedWorking", "rules": ["rules.arcana.seal.decayCurve"], "line": 821, "quote": "seal.decayCurve"}
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "volume": "卷二十一",
+  "needs": [
+    {"entry": "careOptions", "targets": ["facilityTypeView", "professionView"], "line": 1066, "quote": "对 `facilityTypeView`"},
+    {"entry": "careOptions", "targets": ["canOffer"], "line": 1167, "quote": "谓词 `canOffer`"}
+  ],
+  "rules": [
+    {"entry": "courseSummary", "rules": ["rules.health.tickMinutes"], "line": 1092, "quote": "拍长读 rules.health.tickMinutes"},
+    {"entry": "courseSummary", "rules": ["rules.health.stat.careGrid"], "line": 1105, "quote": "`stat.careGrid`"},
+    {"entry": "courseSummary", "rules": ["rules.health.stat.quantilePoints"], "line": 1105, "quote": "`stat.quantilePoints`"},
+    {"entry": "treatmentPreview", "rules": ["rules.health.doseLevels"], "line": 824, "quote": "读 rules.health.doseLevels"}
+  ]
+}

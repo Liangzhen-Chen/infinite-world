@@ -1,0 +1,18 @@
+{
+  "volume": "卷九",
+  "rejected": [
+    { "entry": "legalityOf", "line": 478, "reason": "报价里的读数，是卷八b §4.5 的入口" },
+    { "entry": "canEnter", "line": 478, "reason": "报价里的读数，是卷五 §4.13 的入口" },
+    { "entry": "labelKey", "line": 479, "reason": "场景卡的返回字段代号，不是入口" },
+    { "entry": "landing_level", "line": 485, "reason": "三级落地判定的返回类型代号，不是入口" }
+  ],
+  "added": [
+    { "entry": "resolve", "line": 491, "kind": "其他", "reason": "写入口另见 §3.2" },
+    { "entry": "execute", "line": 491, "kind": "其他", "reason": "写入口另见 §3.2" },
+    { "entry": "preview", "line": 491, "kind": "其他", "reason": "写入口另见 §3.2" },
+    { "entry": "confirm", "line": 491, "kind": "其他", "reason": "写入口另见 §3.2" },
+    { "entry": "withdraw", "line": 491, "kind": "其他", "reason": "写入口另见 §3.2" },
+    { "entry": "effectiveTier", "line": 1168, "kind": "其他", "reason": "都在 AI 边（aiGate 组）" }
+  ],
+  "notes": "§3.1 驳回四个非入口；补五个写入口与 §4.14.2 的 effectiveTier；别卷函数与边界侧未收。"
+}

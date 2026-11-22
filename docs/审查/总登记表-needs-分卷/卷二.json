@@ -1,0 +1,18 @@
+{
+  "volume": "卷二",
+  "needs": [
+    {"entry": "can", "targets": ["bodyView", "statusView"], "line": 527, "quote": "`bodyView().dims.body.*`"},
+    {"entry": "awake", "targets": ["bodyView", "statusView"], "line": 527, "quote": "`bodyView().dims.body.*`"},
+    {"entry": "capacity", "targets": ["bodyView", "statusView"], "line": 527, "quote": "`bodyView().dims.body.*`"},
+    {"entry": "terminated", "targets": ["statusView"], "line": 528, "quote": "statusView 各实例 `family` 条目"},
+    {"entry": "dim", "targets": ["sample"], "line": 160, "quote": "sample(id, dim)"},
+    {"entry": "modified", "targets": ["dim", "fixedUnits"], "line": 1415, "quote": "dim(subject, dimension)"},
+    {"entry": "modified", "targets": ["fixedMultiply"], "line": 1422, "quote": "v = fixedMultiply(v,"}
+  ],
+  "rules": [
+    {"entry": "can", "rules": ["rules.capacity"], "line": 527, "quote": "`rules.capacity` 阈值表"},
+    {"entry": "awake", "rules": ["rules.capacity"], "line": 527, "quote": "`rules.capacity` 阈值表"},
+    {"entry": "capacity", "rules": ["rules.capacity"], "line": 527, "quote": "`rules.capacity` 阈值表"},
+    {"entry": "modified", "rules": ["rules.modifiers.stackingTable"], "line": 1432, "quote": "rules.modifiers.stackingTable"}
+  ]
+}

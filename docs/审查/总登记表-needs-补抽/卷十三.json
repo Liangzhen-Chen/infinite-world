@@ -1,0 +1,27 @@
+{
+  "volume": "卷十三",
+  "needs": [],
+  "rules": [
+    {"entry": "garrisonOf", "rules": ["rules.combat.force.powerWeights"], "line": 314, "quote": "powerWeights"},
+    {"entry": "garrisonOf", "rules": ["rules.combat.force.powerCurve"], "line": 315, "quote": "powerCurve"}
+  ],
+  "dropped": [
+    {"entry": "battleStep", "target": "noteMerit", "reason": "行1004不含入口名，§3.2 无调用句"},
+    {"entry": "battleStep", "target": "noteRout", "reason": "行880不含入口名，§3.2 无调用句"},
+    {"entry": "battleStep", "target": "strikePreview", "reason": "行1003不含入口名，§3.2 无含目标名行"},
+    {"entry": "encounterStep", "target": "noteMerit", "reason": "行1292不含入口名，§3.2 无调用句"},
+    {"entry": "encounterStep", "target": "noteRout", "reason": "行880不含入口名，§3.2 无调用句"},
+    {"entry": "forceView", "target": "moveSpeedOf", "reason": "行953不含入口名，§3.1 无含目标名行"},
+    {"entry": "layersOf", "target": "itemView", "reason": "行669不含入口名，§3.1 无含目标名行"},
+    {"entry": "layersOf", "target": "materialView", "reason": "行669不含入口名，§3.1 无含目标名行"},
+    {"entry": "lootStep", "target": "lotsView", "reason": "行1047不含入口名，§3.2 无含目标名行"},
+    {"entry": "missionStep", "target": "battlePreview", "reason": "行1087不含入口名，§3.2 无含目标名行"},
+    {"entry": "missionStep", "target": "lootStep", "reason": "行1088不含入口名，§3.2 无调用句"},
+    {"entry": "missionStep", "target": "noteMerit", "reason": "行1328不含入口名，§3.2 无调用句"},
+    {"entry": "missionStep", "target": "siegeStep", "reason": "行1088不含入口名，§3.2 无调用句"},
+    {"entry": "siegeStep", "target": "garrisonOf", "reason": "行1006不含入口名，§3.2 无含目标名行"},
+    {"entry": "strikeOutcome", "target": "encounterOf", "reason": "行593不含入口名，§3.1 无调用句"},
+    {"entry": "strikeOutcome", "target": "encounterView", "reason": "行593不含入口名，§3.1 无调用句"},
+    {"entry": "strikePreview", "target": "rules.combat.weak.unknownBps", "reason": "原文只有 unknownBps 短名"}
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "volume": "卷八",
+  "needs": [
+    {
+      "entry": "placeAuthority",
+      "targets": ["legitimacy"],
+      "line": 839,
+      "quote": "读：`legitimacy(edgeId)`"
+    }
+  ],
+  "rules": [],
+  "dropped": [
+    {
+      "entry": "casusOptions",
+      "target": "holyWarEligible",
+      "reason": "行1136不含入口名，§3.1 无调用句"
+    },
+    {
+      "entry": "courtView",
+      "target": "economyReport",
+      "reason": "行1223不含入口名，§3.1 无调用句"
+    },
+    {
+      "entry": "domainOf",
+      "target": "skillValue",
+      "reason": "行810不含入口名，§3.1 无调用句"
+    },
+    {
+      "entry": "factionView",
+      "target": "orgView",
+      "reason": "行1031不含入口名，§3.1 无调用句"
+    },
+    {
+      "entry": "legitimacy",
+      "target": "acceptance",
+      "reason": "行844无独立入口名，§3.1 无调用句"
+    },
+    {
+      "entry": "legitimacy",
+      "target": "calendarSpan",
+      "reason": "行844无独立入口名，§3.1 无调用句"
+    },
+    {
+      "entry": "legitimacy",
+      "target": "esteemOf",
+      "reason": "行844无独立入口名，§3.1 无调用句"
+    },
+    {
+      "entry": "legitimacy",
+      "target": "kinDegree",
+      "reason": "行844无独立入口名，§3.1 无调用句"
+    },
+    {
+      "entry": "placeAuthority",
+      "target": "governorOf",
+      "reason": "行848不含入口名，§3.1 无调用句"
+    },
+    {
+      "entry": "taxesFor",
+      "target": "governorOf",
+      "reason": "行990不含入口名，§3.1 无调用句"
+    },
+    {
+      "entry": "taxesFor",
+      "target": "priceFor",
+      "reason": "行992不含入口名，§3.1 无调用句"
+    }
+  ]
+}

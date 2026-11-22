@@ -1,6 +1,6 @@
 # 项目规则（无限原野）
 
-开工必读（按序）：`docs/产品原则.md`（北极星）→ `docs/派活卡头规矩.md` → `CLAUDE.md` → `docs/当前状态.md` → `docs/PLAN.md` 末节。指南和其他文件按当前任务需要定位阅读，不通读。主项目为 `F:/dnd`，历史从 Git 标签 `snapshot-20261010` 按需读取。
+开工必读（按序）：`docs/产品原则.md`（北极星）→ `docs/派活卡头规矩.md` → `CLAUDE.md` → `docs/当前状态.md` → `docs/PLAN.md` 末节 → 总登记表 `tools/accept/entry-registry.json`（入口唯一出处；派生状态用 `node tools/entry-registry.mjs`，规矩见卷二 §2.7 与 `docs/研究/总登记表总纲-1122.md`）。派卡前、写依赖前先对着它核：本卡要调的入口在表里有没有、接通状态、`needs` 闭包里的前置是否已落（李白 11-22 Q-12）。指南和其他文件按当前任务需要定位阅读，不通读。主项目为 `F:/dnd`，历史从 Git 标签 `snapshot-20261010` 按需读取。
 
 ## Stop That Shit 开发规则
 

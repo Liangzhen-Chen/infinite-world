@@ -1,0 +1,34 @@
+{
+  "volume": "卷三乙",
+  "needs": [
+    {"entry": "craftOutcome", "targets": ["abilityLevel"], "line": 1284, "quote": "各项 `abilityLevel` 达标"},
+    {"entry": "craftOutcome", "targets": ["requirementCheck"], "line": 1284, "quote": "`requirementCheck(inputs)` 成立"}
+  ],
+  "rules": [],
+  "dropped": [
+    {"entry": "abilityLevel", "target": "bodyView", "reason": "1140不在§3.2，且无入口名"},
+    {"entry": "abilityLevel", "target": "itemView", "reason": "1140不在§3.2，且无入口名"},
+    {"entry": "canContain", "target": "matterStateOf", "reason": "1044不在§4.4.2，且无入口名"},
+    {"entry": "canWear", "target": "bodyView", "reason": "1586不在§3.2，且无入口名"},
+    {"entry": "craftOutcome", "target": "facilityView", "reason": "1272有 facilityView 无入口名"},
+    {"entry": "craftOutcome", "target": "materialView", "reason": "1275无入口名；1864仅列举"},
+    {"entry": "thermalStep", "target": "wearStep", "reason": "1477无入口名；436仅并列"},
+    {"entry": "valuation", "target": "renownBonus", "reason": "1733不在§3.2，且无入口名"},
+    {"entry": "canContain", "target": "rules.containers.maxNesting", "reason": "卷文只写 maxNesting，无全路径"},
+    {"entry": "craftOutcome", "target": "rules.crafting.batchFactor", "reason": "卷文只写 batchFactor，且§2.5未列此键"},
+    {"entry": "craftOutcome", "target": "rules.crafting.careMasteryCurve", "reason": "卷文只写 careMasteryCurve，无全路径"},
+    {"entry": "craftOutcome", "target": "rules.crafting.careQualityCurve", "reason": "卷文只写 careQualityCurve，无全路径"},
+    {"entry": "craftOutcome", "target": "rules.crafting.careTimeCurve", "reason": "全路径只在拆解 X-0，非本入口"},
+    {"entry": "craftOutcome", "target": "rules.crafting.difficultyTimeCurve", "reason": "卷文只写 difficultyTimeCurve，无全路径"},
+    {"entry": "craftOutcome", "target": "rules.crafting.masteryTimeCurve", "reason": "卷文只写 masteryTimeCurve，无全路径"},
+    {"entry": "matterStateOf", "target": "rules.items.aggregation", "reason": "行1475只写聚合表，无键"},
+    {"entry": "scarcity", "target": "rules.valuation.scarcityHorizonDays", "reason": "卷文只写 scarcityHorizonDays，无全路径"},
+    {"entry": "thermalStep", "target": "rules.thermal.blastRadiusCurve", "reason": "卷文只写 blastRadiusCurve，无全路径"},
+    {"entry": "thermalStep", "target": "rules.thermal.fragmentCurve", "reason": "卷文只写 fragmentCurve，无全路径"},
+    {"entry": "thermalStep", "target": "rules.thermal.noiseCurve", "reason": "卷文只写 noiseCurve，无全路径"},
+    {"entry": "valuation", "target": "rules.valuation.beautyValue", "reason": "卷文只写 beautyValue，无全路径"},
+    {"entry": "valuation", "target": "rules.valuation.conditionCurve", "reason": "卷文只写 conditionCurve，无全路径"},
+    {"entry": "valuation", "target": "rules.valuation.freshnessCurve", "reason": "卷文只写 freshnessCurve，无全路径"},
+    {"entry": "valuation", "target": "rules.valuation.scarcityCurve", "reason": "卷文只写 scarcityCurve，无全路径"}
+  ]
+}

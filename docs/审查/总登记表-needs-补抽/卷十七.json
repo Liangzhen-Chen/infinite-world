@@ -1,0 +1,52 @@
+{
+  "volume": "卷十七",
+  "needs": [
+    {"entry": "whereOf", "targets": ["zoneAt"], "line": 262, "quote": "个体取 `zoneAt(pos)`"},
+    {"entry": "legSpeed", "targets": ["moveSpeedOf"], "line": 683, "quote": "`moveSpeedOf` 为 0 使 `legSpeed`"}
+  ],
+  "rules": [
+    {"entry": "gateStep", "rules": ["rules.travel.roles.lawgates.passage"], "line": 159, "quote": "lawgates.passage"},
+    {"entry": "raidAppraisal", "rules": ["rules.travel.roles.puses.fence"], "line": 159, "quote": "puses.fence"}
+  ],
+  "dropped": [
+    {"entry": "downhillMotion", "target": "gridView", "reason": "原句在§4.2，非§3.1，同行无该入口"},
+    {"entry": "downhillMotion", "target": "itemView", "reason": "原句在§4.2，非§3.1，同行无该入口"},
+    {"entry": "gateStep", "target": "canOffer", "reason": "原句在§4.7，非§3.3，同行无该入口"},
+    {"entry": "gateStep", "target": "lawGate", "reason": "原句在§4.7，非§3.3，同行无该入口"},
+    {"entry": "gateStep", "target": "safetyOf", "reason": "原句在§4.7，非§3.3，同行无该入口"},
+    {"entry": "gateStep", "target": "taxesFor", "reason": "同行只见事件载荷，非入口调用"},
+    {"entry": "legSpeed", "target": "envAt", "reason": "原句在§4.1，非§3.1，同行无该入口"},
+    {"entry": "legSpeed", "target": "gridView", "reason": "原句在§4.1，非§3.1，同行无该入口"},
+    {"entry": "legSpeed", "target": "zoneAt", "reason": "原句在§4.1，非§3.1，同行无该入口"},
+    {"entry": "placeSubject", "target": "bearingView", "reason": "目标重名"},
+    {"entry": "raidAppraisal", "target": "deterrenceOf", "reason": "原句在§4.6，非§3.1，同行无该入口"},
+    {"entry": "raidAppraisal", "target": "loadOf", "reason": "原句在§4.6，非§3.1，同行无该入口"},
+    {"entry": "raidAppraisal", "target": "priceFor", "reason": "原句在§4.6，非§3.1，同行无该入口"},
+    {"entry": "raidAppraisal", "target": "responseOf", "reason": "原句在§4.6，非§3.1，同行无该入口"},
+    {"entry": "settleTrips", "target": "placeSubject", "reason": "同行只见写者清单，非调用"},
+    {"entry": "tripPlan", "target": "inBubble", "reason": "原句在§4.1，非§3.1，同行无该入口"},
+    {"entry": "tripPlan", "target": "landCell", "reason": "只在配合项提及，非入口读取"},
+    {"entry": "tripPlan", "target": "losView", "reason": "只在配合项提及，非入口读取"},
+    {"entry": "tripPlan", "target": "priceFor", "reason": "原句在§4.1，非§3.1，同行无该入口"},
+    {"entry": "tripPlan", "target": "zoneAt", "reason": "只在断言与表提及，非入口读取"},
+    {"entry": "downhillMotion", "target": "rules.travel.motion.gravityMmps2", "reason": "行内只有 motion.gravityMmps2 短名"},
+    {"entry": "downhillMotion", "target": "rules.travel.motion.maxSpeedMps", "reason": "行内只有 motion.maxSpeedMps 短名"},
+    {"entry": "downhillMotion", "target": "rules.travel.motion.rollResist", "reason": "行内只有 motion.rollResist 短名"},
+    {"entry": "gateQuote", "target": "rules.travel.gate.detectCurve", "reason": "行内只有 gate.detectCurve 短名"},
+    {"entry": "gateQuote", "target": "rules.travel.gate.volumeCurve", "reason": "行内只有 gate.volumeCurve 短名"},
+    {"entry": "gateStep", "target": "rules.travel.gate.detectCurve", "reason": "行内只有 gate.detectCurve 短名"},
+    {"entry": "gateStep", "target": "rules.travel.gate.volumeCurve", "reason": "行内只有 gate.volumeCurve 短名"},
+    {"entry": "legSpeed", "target": "rules.travel.water.fillFlowCurve", "reason": "行内只有 water.fillFlowCurve 短名"},
+    {"entry": "legSpeed", "target": "rules.travel.water.flowCurve", "reason": "行内只有 water.flowCurve 短名"},
+    {"entry": "passOf", "target": "rules.travel.roles.holdings.siegePass", "reason": "卷文只有 roles.holdings.siegePass"},
+    {"entry": "raidAppraisal", "target": "rules.travel.raid.haulKgPerMinute", "reason": "行内只有 raid.haulKgPerMinute 短名"},
+    {"entry": "raidAppraisal", "target": "rules.travel.raid.maxWindowMinutes", "reason": "行内只有 raid.maxWindowMinutes 短名"},
+    {"entry": "raidAppraisal", "target": "rules.travel.raid.winCurve", "reason": "行内只有 raid.winCurve 短名"},
+    {"entry": "tripPlan", "target": "rules.travel.plan.expandBaseCells", "reason": "行内只有 plan.expandBaseCells 短名"},
+    {"entry": "tripPlan", "target": "rules.travel.plan.expandFactor", "reason": "行内只有 plan.expandFactor 短名"},
+    {"entry": "tripPlan", "target": "rules.travel.plan.stateHorizonMinutes", "reason": "行内只有该键短名，非整键"},
+    {"entry": "tripStep", "target": "rules.travel.batch.maxLegs", "reason": "行内只有 batch.maxLegs 短名"},
+    {"entry": "tripStep", "target": "rules.travel.dwell.equivPathM", "reason": "行内只有 dwell.equivPathM 短名"},
+    {"entry": "tripStep", "target": "rules.travel.dwell.reenterMinutes", "reason": "行内只有 dwell.reenterMinutes 短名"}
+  ]
+}

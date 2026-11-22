@@ -1,0 +1,23 @@
+{
+  "volume": "卷十",
+  "needs": [
+    {"entry": "ageStructure", "targets": ["ageWeights"], "line": 280, "quote": "调 `ageWeights` 再分整数"},
+    {"entry": "ageStructure", "targets": ["ageWeights"], "line": 552, "quote": "调 `ageWeights`，再把 `n`"},
+    {"entry": "ageWeights", "targets": ["vitalRates"], "line": 552, "quote": "取卷四 `vitalRates` 在其起点年龄"},
+    {"entry": "composeName", "targets": ["nameTable"], "line": 589, "quote": "它读卷七的 `nameTable()`"},
+    {"entry": "composeName", "targets": ["nameTable"], "line": 594, "quote": "在 `nameTable(culture)` 展开的命名库里"},
+    {"entry": "generateWorld", "targets": ["genPlan"], "line": 372, "quote": "按 `genPlan()` 的次序调生成器"},
+    {"entry": "requireMaterialized", "targets": ["genPlan"], "line": 372, "quote": "按 `genPlan()` 的次序调生成器"}
+  ],
+  "rules": [
+    {"entry": "ageWeights", "rules": ["rules.gen.pop.bandsRole"], "line": 552, "quote": "`rules.gen.pop.bandsRole`"},
+    {"entry": "ageWeights", "rules": ["rules.gen.pop.bandSlices"], "line": 552, "quote": "rules.gen.pop.bandSlices"},
+    {"entry": "composeName", "rules": ["rules.gen.name.fallbackBank"], "line": 593, "quote": "`rules.gen.name.fallbackBank`"},
+    {"entry": "composeName", "rules": ["rules.gen.name.maxSlots"], "line": 595, "quote": "rules.gen.name.maxSlots"},
+    {"entry": "composeName", "rules": ["rules.gen.name.optionalPermille"], "line": 595, "quote": "optionalPermille"},
+    {"entry": "seatOf", "rules": ["rules.gen.pop.cultureLevel"], "line": 549, "quote": "自身或其祖先里处在这一级"},
+    {"entry": "layoutOf", "rules": ["rules.gen.layout.gapCells"], "line": 699, "quote": "加 `gapCells`"},
+    {"entry": "generateWorld", "rules": ["rules.gen.history.years"], "line": 848, "quote": "rules.gen.history.years"},
+    {"entry": "generateWorld", "rules": ["rules.gen.reject.rows"], "line": 383, "quote": "对 `rules.gen.reject.rows` 逐行求值"}
+  ]
+}

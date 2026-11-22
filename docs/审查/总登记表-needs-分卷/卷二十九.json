@@ -1,0 +1,10 @@
+{
+  "volume": "卷二十九",
+  "needs": [
+    {"entry": "labelText", "targets": ["labels"], "line": 431, "quote": "`labelText`、`renderTpl` 经它取文字"},
+    {"entry": "renderTpl", "targets": ["labels"], "line": 431, "quote": "`labelText`、`renderTpl` 经它取文字"},
+    {"entry": "selectRows", "targets": ["evaluateRX"], "line": 426, "quote": "调卷二唯一的 RX 求值函数 `evaluateRX`"},
+    {"entry": "displayData", "targets": ["compileRX"], "line": 428, "quote": "交 kernelApi 的 `compileRX`"}
+  ],
+  "rules": []
+}

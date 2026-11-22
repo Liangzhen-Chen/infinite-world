@@ -1,0 +1,24 @@
+{
+  "volume": "卷十五",
+  "needs": [],
+  "rules": [
+    {"entry": "castPreview", "rules": ["rules.cast.costRows"], "line": 449, "quote": "本卷登记的 `cast.costRows`"},
+    {"entry": "castShape", "rules": ["rules.cast.degreeBps"], "line": 334, "quote": "取规则表 `cast.degreeBps`"},
+    {"entry": "castShape", "rules": ["rules.familyRows"], "line": 446, "quote": "`familyRows` 该族的 `minutes`"},
+    {"entry": "classesOfFamily", "rules": ["rules.familyRows"], "line": 447, "quote": "在 `familyRows` 里恰有一行"},
+    {"entry": "efficacyOf", "rules": ["rules.efficacy.distanceCurve"], "line": 693, "quote": "lookup(efficacy.distanceCurve"},
+    {"entry": "efficacyOf", "rules": ["rules.efficacy.officiantCurve"], "line": 696, "quote": "lookup(efficacy.officiantCurve"},
+    {"entry": "efficacyOf", "rules": ["rules.efficacy.offeringCurve"], "line": 697, "quote": "lookup(efficacy.offeringCurve"},
+    {"entry": "feedWorking", "rules": ["rules.seal.decayCurve"], "line": 821, "quote": "lookup(seal.decayCurve"},
+    {"entry": "interactionsFor", "rules": ["rules.ixRows"], "line": 562, "quote": "与 `ixRows` 的文件排列无关"},
+    {"entry": "noteFate", "rules": ["rules.afterlife.fateRows"], "line": 856, "quote": "求值时取 `afterlife.fateRows`"},
+    {"entry": "openWorking", "rules": ["rules.familyRows"], "line": 454, "quote": "`familyRows` 该族的 `loadParam`"},
+    {"entry": "openWorking", "rules": ["rules.working.maxProducts"], "line": 454, "quote": "至多 `working.maxProducts` 项"},
+    {"entry": "riteStep", "rules": ["rules.rite.gatherMinutes"], "line": 688, "quote": "登记 `rite.gatherMinutes` 之后"},
+    {"entry": "situationOf", "rules": ["rules.roles.holdings"], "line": 342, "quote": "句柄取 `roles.holdings`"}
+  ],
+  "dropped": [
+    {"entry": "efficacyOf", "target": "liminalOf", "reason": "效力规则用它，卷文未写本入口读取"},
+    {"entry": "efficacyOf", "target": "wardReading", "reason": "效力规则用它，卷文未写本入口读取"}
+  ]
+}

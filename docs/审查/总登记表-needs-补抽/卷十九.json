@@ -1,0 +1,38 @@
+{
+  "volume": "卷十九",
+  "needs": [
+    {"entry": "settleStatBuild", "targets": ["requireMaterialized"], "line": 1752, "quote": "接口取甲（经 `requireMaterialized`"},
+    {"entry": "settleStatBuild", "targets": ["stratumSkill"], "line": 1752, "quote": "出工主体为聚合体时读 `stratumSkill`"}
+  ],
+  "rules": [],
+  "dropped": [
+    {"entry": "accessClassAt", "target": "accessDefaultOf", "reason": "468定义、469引用，须两行合读"},
+    {"entry": "accessClassAt", "target": "calendarDayIndex", "reason": "944无accessClassAt名，§3.2无此目标"},
+    {"entry": "accessClassAt", "target": "calendarMinuteOf", "reason": "944无accessClassAt名，§3.2无此目标"},
+    {"entry": "accessClassAt", "target": "calendarView", "reason": "944无accessClassAt名，§3.2无此目标"},
+    {"entry": "chooseForm", "target": "requirementPlan", "reason": "1424是牵连清单交叉引用；639无入口名"},
+    {"entry": "chooseForm", "target": "stratumSkill", "reason": "588是给调用方的输入规矩；637无入口名"},
+    {"entry": "completeBuild", "target": "stratumSkill", "reason": "588该读属contributeBuild；561无入口名"},
+    {"entry": "occupyStation", "target": "placeSubject", "reason": "513是占用动作定义，无occupyStation名"},
+    {"entry": "settleStatBuild", "target": "buildPlan", "reason": "539只是入口清单，非调用句"},
+    {"entry": "settleStatBuild", "target": "chooseForm", "reason": "无同一行同时出现，§3.2内也没有"},
+    {"entry": "settleStatBuild", "target": "completeBuild", "reason": "539只是入口清单，非调用句"},
+    {"entry": "settleStatBuild", "target": "contributeBuild", "reason": "539只是入口清单，非调用句"},
+    {"entry": "settleStatBuild", "target": "facilityView", "reason": "584是定义句，无settleStatBuild名"},
+    {"entry": "settleStatBuild", "target": "openBuildProject", "reason": "539只是入口清单，非调用句"},
+    {"entry": "settleStatBuild", "target": "stationPlan", "reason": "586是定义句，无settleStatBuild名"},
+    {"entry": "triggerStep", "target": "fixtureCells", "reason": "1017是触发规则定义，无入口名"},
+    {"entry": "chooseForm", "target": "rules.facility.build.climateFitCurve", "reason": "卷文只写裸键名，无facility.x.y全键"},
+    {"entry": "chooseForm", "target": "rules.facility.build.climateNeedCurve", "reason": "卷文只写裸键名，无facility.x.y全键"},
+    {"entry": "chooseForm", "target": "rules.facility.build.skillFitCurve", "reason": "卷文只写裸键名，无facility.x.y全键"},
+    {"entry": "contributeBuild", "target": "rules.facility.build.skillTimeCurve", "reason": "卷文只写裸键名，无facility.x.y全键"},
+    {"entry": "restSite", "target": "rules.facility.lodging.impressionRestCurve", "reason": "卷文只写裸键名，无facility.x.y全键"},
+    {"entry": "restSite", "target": "rules.facility.lodging.restCurve", "reason": "卷文只写裸键名，无facility.x.y全键"},
+    {"entry": "settleFacilities", "target": "rules.facility.rating.dirtPerVisit", "reason": "卷文只写裸键名，无facility.x.y全键"},
+    {"entry": "settleFacilities", "target": "rules.facility.rating.dirtPerWorkMinute", "reason": "卷文只写裸键名，无facility.x.y全键"},
+    {"entry": "settleFacilities", "target": "rules.facility.station.maxRows", "reason": "卷文只写裸键名，无facility.x.y全键"},
+    {"entry": "settleFacilities", "target": "rules.facility.structure.fireCurve", "reason": "卷文只写裸键名，无facility.x.y全键"},
+    {"entry": "settleFacilities", "target": "rules.facility.wear.exposureCurve", "reason": "卷文只写裸键名，无facility.x.y全键"},
+    {"entry": "settleFacilities", "target": "rules.facility.wear.useShare", "reason": "卷文只写裸键名，无facility.x.y全键"}
+  ]
+}

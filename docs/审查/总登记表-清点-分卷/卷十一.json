@@ -1,0 +1,1 @@
+{"volume":"卷十一","rejected":[{"entry":"cardId","line":324,"reason":"是卡记录字段名，非入口"},{"entry":"cardIds","line":324,"reason":"是卡记录字段名，非入口"}],"added":[],"notes":""}
