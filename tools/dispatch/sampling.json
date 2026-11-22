@@ -1,0 +1,25 @@
+{
+  "说明": "DeepSeek 调用采样参数按用途分档；档名与取值只在本文件登记（卡头第二节第 10 条）。temperature 为 null 表示未定、不注入。",
+  "purposes": {
+    "code": {
+      "temperature": 0.0,
+      "source": "https://api-docs.deepseek.com/quick_start/parameter_settings（写代码、数学推荐 0.0）；亮圳 11-22 19:46 批准「温度零点零1122」"
+    },
+    "test": {
+      "temperature": 0.0,
+      "source": "https://api-docs.deepseek.com/quick_start/parameter_settings（写代码、数学推荐 0.0）；亮圳 11-22 19:46 批准「温度零点零1122」"
+    },
+    "review": {
+      "temperature": 0.0,
+      "source": "https://api-docs.deepseek.com/quick_start/parameter_settings（写代码、数学推荐 0.0）；亮圳 11-22 19:46 批准「温度零点零1122」"
+    },
+    "design": {
+      "temperature": null,
+      "source": "未定，亮圳 11-22 19:46 批准原意：发散活以后单独设"
+    },
+    "story": {
+      "temperature": null,
+      "source": "未定，亮圳 11-22 19:46 批准原意：发散活以后单独设"
+    }
+  }
+}
