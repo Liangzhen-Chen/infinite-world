@@ -42,9 +42,10 @@ const RUNNERS = Object.freeze(Object.fromEntries([
     roleTract: ctx.rules.roleTract,
     roleWaterbody: ctx.rules.roleWaterbody,
     m3PerL: ctx.m3PerL,
-    footprints: ctx.footprints({ bed: false }),
+    // 水体阶段只读水体行与存量单元行的面积、海拔（汇水、排水去处）：只对这两类行求高度，其余行（政区、站点）不逐区格求高度场。
+    footprints: ctx.footprints({ bed: false, heights: (id) => { const r = ctx.rows.get(id); return r !== undefined && (r.classes.has(ctx.rules.roleWaterbody) || r.classes.has(ctx.rules.roleTract)); } }),
   })],
-  [NODE.siteform, (ctx) => genSiteForm({ ...ctx, bldfillRows: ctx.rules.bldfillRows, roleFacility: ctx.rules.roleFacility })],
+  [NODE.siteform, (ctx) => genSiteForm({ ...ctx, bldfillRows: ctx.rules.bldfillRows, roleFacility: ctx.rules.roleFacility, roleTract: ctx.rules.roleTract, roleWaterbody: ctx.rules.roleWaterbody, layoutCoverage: ctx.rules.layoutCoverage })],
 ]));
 
 /** 生成器登记表里的节点名（加载期核对 gstage 条目的 generator 用）。@returns {string[]} */
@@ -107,6 +108,7 @@ export function generateFill(world, opts) {
       table, stage: step.stage, worldSeed: opts.worldSeed, genesisMinute: opts.genesisMinute, vocab: world.vocab, rows, dims, rules, geo,
       m3PerL: unit ? unit.si : undefined,
       authoredIds, isAuthored, when,
+      gridSpaceCount: Array.isArray(t.doc.gridSpaces) ? t.doc.gridSpaces.length : 0, // 格空间表的行数；0 即世界还没有格空间，划不出足迹
       regionCellM: grid && typeof grid.regionCellM === 'number' ? grid.regionCellM : undefined,
       blueprint: blueprintRulesFrom(world.rules, world.env.units),
       footprints: (o = {}) => {

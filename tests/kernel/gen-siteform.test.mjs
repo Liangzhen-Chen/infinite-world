@@ -57,6 +57,77 @@ const run = (o) => genSiteForm({
   roleFacility: 'comp_facility',
   blueprint: o.blueprint ?? BLUEPRINT,
   when: o.when ?? WHEN,
+  footprints: o.footprints,
+  gridSpaceCount: o.gridSpaceCount,
+  layoutCoverage: o.layoutCoverage ?? 0.4,
+  regionCellM: 100,
+  roleTract: 'comp_tract',
+  roleWaterbody: 'comp_waterbody',
+});
+
+// ---------- 站点面积由占地反推（R10-7.5 不分片站点；G5b） ----------
+// 前提：区格边长 100 m（面积 10,000 m²）、layoutCoverage 0.4（分母 0.4 × 10,000 = 4,000 m²）、细格 1 m；形制 bldform_t 无房间、planSideMaxCells 64。
+const siteRows = (extra = []) => rowsOf([['loc_root', { parent: null }], ['loc_site', { parent: 'loc_root' }], ...extra]);
+const home = (id, w, d) => [id, bld({ parent: 'loc_site', planCells: { widthCells: w, depthCells: d }, storeys: 1, wallThicknessM: 0.4 })];
+const targetOf = (out, id) => (out.proposals.find((p) => p.id === id) || { dims: {} }).dims.targetAreaM2;
+
+test('站点面积：N = max(1, ceil(占地 ÷ (coverage × 区格面积)))，targetAreaM2 = N × 10,000；占地取各建筑平面格数（宽 × 深 × 1 m²），手算：72 m² → ceil(72 ÷ 4,000) = 1；2 × 50 × 50 = 5,000 m² → ceil(5,000 ÷ 4,000) = 2', () => {
+  const small = run({ rows: siteRows([home('bld_a', 6, 6), home('bld_b', 6, 6)]), authoredIds: new Set(['loc_site', 'bld_a', 'bld_b']) });
+  assert.equal(targetOf(small, 'loc_site'), 10000);
+  const big = run({ rows: siteRows([home('bld_a', 50, 50), home('bld_b', 50, 50)]), authoredIds: new Set(['loc_site', 'bld_a', 'bld_b']) });
+  assert.equal(targetOf(big, 'loc_site'), 20000);
+  // 手写优先：作者写了 targetAreaM2 或 boundary 的站点不动。
+  const authored = rowsOf([['loc_root', { parent: null }], ['loc_site', { parent: 'loc_root', targetAreaM2: 50000 }], home('bld_a', 50, 50)]);
+  assert.equal(targetOf(run({ rows: authored, authoredIds: new Set(['loc_site', 'bld_a']) }), 'loc_site'), undefined);
+  const drawn = rowsOf([['loc_root', { parent: null }], ['loc_site', { parent: 'loc_root', boundary: [{ x: 0, y: 0 }] }], home('bld_a', 50, 50)]);
+  assert.equal(targetOf(run({ rows: drawn, authoredIds: new Set(['loc_site', 'bld_a']) }), 'loc_site'), undefined);
+});
+
+test('站点面积：N 只由占地决定，不按子行加量（R10-7.5）：站点下挂一个目标 30,000 m² 的子行，建筑占地 72 m² 仍写 1 格 = 10,000 m²', () => {
+  const kid = ['loc_k1', { parent: 'loc_site', targetAreaM2: 30000 }];
+  const out = run({ rows: siteRows([home('bld_a', 6, 6), kid]), authoredIds: new Set(['loc_site', 'bld_a', 'loc_k1']) });
+  assert.equal(targetOf(out, 'loc_site'), 10000);
+});
+
+test('站点面积：起始 N 超过所在存量单元足迹格数即 E-GEN-ROW-INVALID（R10-7.5 末，站点的父行是存量单元时判）：2 × 50 × 50 = 5,000 m² → N = ceil(5,000 ÷ 4,000) = 2；存量单元 1 格报错，2 格放行；划不出足迹记缺口 tract_footprint_unplanned；父行不是存量单元不判', () => {
+  const rows = () => rowsOf([['loc_root', { parent: null }], ['loc_tract', { parent: 'loc_root', classes: ['comp_tract'] }], ['loc_site', { parent: 'loc_tract' }], home('bld_a', 50, 50), home('bld_b', 50, 50)]);
+  const authored = new Set(['loc_site', 'bld_a', 'bld_b']);
+  const cells = (n) => () => ({ footprints: { loc_tract: { cellCount: n } } });
+  assert.equal(codeOf(() => run({ rows: rows(), authoredIds: authored, footprints: cells(1), gridSpaceCount: 1 })), 'E-GEN-ROW-INVALID');
+  assert.equal(targetOf(run({ rows: rows(), authoredIds: authored, footprints: cells(2), gridSpaceCount: 1 }), 'loc_site'), 20000);
+  const unplanned = run({ rows: rows(), authoredIds: authored, footprints: () => null, gridSpaceCount: 0 });
+  assert.deepEqual(unplanned.deferred.filter((d) => d.reason === 'tract_footprint_unplanned'), [{ id: 'loc_site', reason: 'tract_footprint_unplanned', gaps: ['loc_tract'] }]);
+  assert.equal(targetOf(unplanned, 'loc_site'), 20000);
+  // 父行不是存量单元：即使给了只有 1 格的足迹也不判。
+  const notTract = run({ rows: siteRows([home('bld_a', 50, 50), home('bld_b', 50, 50)]), authoredIds: authored, footprints: () => ({ footprints: { loc_root: { cellCount: 1 } } }) });
+  assert.equal(targetOf(notTract, 'loc_site'), 20000);
+});
+
+test('站点面积：没有建筑清单的地点也写面积（占地 0 → 最少 1 格 = 10,000 m²，卷五 §4.1 规则 2、13）；政区（有 regionLevel）、存量单元（comp_tract）、水体、层根下的直接子行外的根行不写，仍照规则 10 平分；每个地点的格数来自它自己的目标面积', () => {
+  const rows = rowsOf([
+    ['loc_root', { parent: null }],
+    ['loc_county', { parent: 'loc_root', regionLevel: 'juris_county' }],
+    ['loc_place', { parent: 'loc_county' }],
+    ['loc_field', { parent: 'loc_county', classes: ['comp_tract'] }],
+    ['loc_river', { parent: 'loc_root', classes: ['comp_waterbody'] }],
+  ]);
+  const out = run({ rows, authoredIds: new Set(['loc_root', 'loc_county', 'loc_place', 'loc_field', 'loc_river']) });
+  assert.deepEqual(out.proposals.map((p) => p.id), ['loc_place']);
+  assert.equal(targetOf(out, 'loc_place'), 10000);
+});
+
+test('站点面积：有格空间表、存量单元却没有足迹（不在 footprints 里，或足迹结果为 null）即 E-GEN-ROW-INVALID，不记缺口放行（R10-7.5 排不下同一口径）', () => {
+  const rows = () => rowsOf([['loc_root', { parent: null }], ['loc_tract', { parent: 'loc_root', classes: ['comp_tract'] }], ['loc_site', { parent: 'loc_tract' }], home('bld_a', 6, 6)]);
+  const authored = new Set(['loc_site', 'bld_a']);
+  for (const footprints of [() => ({ footprints: {} }), () => null]) {
+    assert.equal(codeOf(() => run({ rows: rows(), authoredIds: authored, footprints, gridSpaceCount: 1 })), 'E-GEN-ROW-INVALID');
+  }
+});
+
+test('站点面积：layoutCoverage 出域（0、大于 1、负、不是数）即 E-GEN-ROW-INVALID', () => {
+  for (const bad of [0, 1.5, -1, 'x']) {
+    assert.equal(codeOf(() => run({ rows: siteRows([home('bld_a', 6, 6)]), authoredIds: new Set(['loc_site', 'bld_a']), layoutCoverage: bad })), 'E-GEN-ROW-INVALID', String(bad));
+  }
 });
 
 test('A10-2.4 ⑤：缺墙厚、平面格数、层数时按规则行补出，值可与作者值一起展开成蓝图', () => {
@@ -117,6 +188,12 @@ test('缺必填与规则行不适用：缺 form、form 不是 bform 族条目、
   assert.equal(codeOf(() => run({ rows: rowsOf([[id, bld()]]), authoredIds: new Set([id]), bldfillRows: [] })), 'E-GEN-ROW-INVALID');
   const never = [{ whenRX: '!known(form)', priority: 1, areaM2: point(36), storeys: point(1) }];
   assert.equal(codeOf(() => run({ rows: rowsOf([[id, bld()]]), authoredIds: new Set([id]), bldfillRows: never })), 'E-GEN-ROW-INVALID');
+});
+
+test('form 写 null 或不存在的条目同缺 form：E-GEN-ROW-INVALID，没有"未建列"例外（卷十 :684；真实世界建筑缺形制由数据补齐）', () => {
+  for (const form of [null, 'bldform_nope']) {
+    assert.equal(codeOf(() => run({ rows: rowsOf([['loc_nl', bld({ form })]]), authoredIds: new Set(['loc_nl']), bldfillRows: fill(36, 1) })), 'E-GEN-ROW-INVALID', String(form));
+  }
 });
 
 test('层数夹进 [max(1, 1 − storeyBase), storeysMax]：形制 storeyBase −2 时下限 3，区间为空即 E-GEN-ROW-INVALID', () => {
@@ -272,6 +349,7 @@ test('起始地区现有全部手写建筑在真实形制上限下都排得下�
       table: 'place', stage: 'gstage_siteform', worldSeed: 'seed_start_region', genesisMinute: 0, vocab: world.vocab,
       rows: rowsOf(rowsIn.map((r) => [r.id, { parent: null, classes: ['comp_facility'], form: r.form }])), authoredIds: ids,
       bldfillRows: world.rules.gen.bldfillRows, roleFacility: world.rules.gen.roleFacility, blueprint: BLUEPRINT, when: WHEN,
+      layoutCoverage: world.rules.gen.layoutCoverage, regionCellM: world.rules.grid.regionCellM, roleTract: world.rules.gen.roleTract, roleWaterbody: world.rules.gen.roleWaterbody,
     });
     return { res, grown: process.memoryUsage().heapUsed - before };
   })();

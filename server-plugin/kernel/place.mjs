@@ -22,6 +22,7 @@ import {
   zoneOfPos, cellList, regionGeometry, regionHeights, regionCellPos, landRegionCell, accessCell, openBoundaryCells,
   straightM as straightMCore, bearingView as bearingViewCore,
   regionOfPos, ownerIdAt, inBox, keyOf, controlPointsOf, regionCellHeight, regionBedDelta, footprintHas, footprintCells,
+  boundaryEntriesValid, BOUNDARY_ENTRY_DETAIL,
 } from './footprint.mjs';
 import { columnSurface, nearControlPoints, regionSlope, cellAt, cellFlags, extrudeLanding, extrudeLayerReach, SETTLE, STATE, CELL_KIND } from './grid-base.mjs';
 import { datedValueAt, inputVersionAt } from './dated.mjs';
@@ -693,7 +694,7 @@ export function settleCell(engine, state, pos) {
  * assumptions = 可选假设覆盖 {行 id: {维度: 值}}（只供试排、不进状态）。withCells 为假时不物化各行的区格列表（regionCells 为 null）：
  * 列表每格一个对象，根行即全世界约 4,020 万区格、各级合计约 1.6 亿对象，全规模装不下；世界创建里只要面积、海拔、相邻集的调用（卷十水体阶段）一律传假。行都是 place.json 行的形状（维度键与 classes）。
  * bed 为假时区格代表地表高取未修正的 h₀、不求河床（卷十 R10-2.12 求值次序：生成水体行的下游链按未修正 h₀ 派生，链定后再求 bed）；heights 为假时不求高度（elevationM、zRange 为 null，
- * 只要足迹面积与相邻的调用——水体足迹补缺阶段——不必逐区格算全世界的高度场）。
+ * 只要足迹面积与相邻的调用——水体足迹补缺阶段——不必逐区格算全世界的高度场；heights 也可给函数 (id) => 布尔，只对点名的行求高度）。
  * 返回 {footprints: {id: placeFootprint 的形状}, errors: [{code, id, detail}], adjacency: {id: [相邻 id]}, probe}（相邻只含足迹相邻，路网边由 placeNeighbors 并入）。
  * probe = {has(id, x, y), cells(id)}：区格是否在某行足迹内、某行足迹区格按 (x, y) 字典序惰性遍历（不物化列表；水体足迹补缺阶段在世界根这样的巨大父足迹里取种子区格用）。
  * @param {any} engine @param {{base?: Record<string, any>, proposals?: Record<string, any>, assumptions?: Record<string, Record<string, any>>, withCells?: boolean, bed?: boolean, heights?: boolean}} [input]
@@ -721,11 +722,13 @@ export function planFootprints(engine, { base, proposals = {}, assumptions = {},
   });
   const footprints = {};
   const seed = worldSeedOf(engine);
+  // heights 可以是函数 (id) => 布尔：只对点名的行求高度（全规模下逐区格高度场对全部行是上亿次噪声求值，水体阶段只读水体与存量单元行的海拔）。
+  const wantHeights = typeof heights === 'function' ? heights : () => heights;
   for (const plan of rp.plans.values()) {
     for (const id of plan.order) {
       const geo = regionGeometry(grid, plan, id);
       if (!geo) continue;
-      const h = heights ? regionHeights(grid, seed, plan, rp.rows, terrainEntryOf(engine), id) : null;
+      const h = wantHeights(id) ? regionHeights(grid, seed, plan, rp.rows, terrainEntryOf(engine), id) : null;
       footprints[id] = { kind: rp.kinds.get(id), w: plan.w, regionCells: withCells ? cellList(plan, id) : null, cellCount: geo.cellCount, areaM2: geo.areaM2, centroid: geo.centroid, elevationM: h ? h.elevationM : null, zRange: h ? h.zRange : null, waterAccess: waterAccessOf(plan, rp.rows, id) };
     }
   }
@@ -1116,8 +1119,7 @@ const envMemo = new WeakMap();
 
 /**
  * 地点的纬度（卷二十 §2.7 :327 `latitudeDeg`，derived，来源 `coord`）：latitudeOriginDeg + coord.y ÷ metersPerDegreeNorth（rules.astro；定点）。
- * 缺 coord 或任一参数即 null（按未知，不借常数）。本卡不动这条读法：卷五 §7 M5-36"纬度改由形心 centroid 派生"与"世界必有格空间表"同属 G5
- * （6-24 转换把真实世界转成格世界时同卡落地，并按卷二十 §2.7 公式重算依赖纬度的真实数据测试期望值），G3 只提供形心（placeView 的 dims.centroid）。
+ * 缺 coord 或任一参数即 null（按未知，不借常数）。本卡不动这条读法：卷五 §7 M5-36"纬度改由形心 centroid 派生"与"世界必有格空间表"同属 G5b（未落：真实世界上格被种子与层级不嵌套卡住，见 docs/问题.md G5b 遗留）。
  * @param {any} engine @param {any} view placeView 的结果
  * @returns {number | null}
  */
@@ -1306,7 +1308,7 @@ function checkPaceTables(view, errors) {
  * 表里登记了格空间表（gridSpaces 节）时，按卷五 §4.1 规则 3、10 划分区域足迹并核包含：子足迹不在父足迹内 E-GRID-FOOTPRINT-OUTSIDE-PARENT、
  * 兄弟足迹相交 E-GRID-SIBLING-OVERLAP、同父两个种子同区格 E-GRID-SEED-SAME-CELL、boundary 不连通 E-DIM-DOMAIN-RANGE、缺 coord 的派生子行 E-DIM-REQUIRED-MISSING；
  * 层根须有格空间、格空间的根须是层根（E-DIM-REF-MISSING、E-DIM-DOMAIN-RANGE）；每个区格有 cellclass 条目成立（E-GRID-CELL-NO-TERRAIN）。
- * 足迹与区格校验是格空间表的校验：对表里的行生效，没有行就没有格可划；"世界必有格空间表、主世界根必挂层根并有格空间行"归 G5（真实世界的格空间表随 6-24 转换引入）。离场子树不参加这些校验（规则 3 末句）。
+ * 足迹与区格校验是格空间表的校验：对表里的行生效，没有行就没有格可划；"世界必有格空间表、主世界根必挂层根并有格空间行"仍归 G5b（未落，见 docs/问题.md G5b 遗留）。离场子树不参加这些校验（规则 3 末句）。
  * 边节逐条照 edgeStruct 校验（两端须是地点 E-DIM-REF-MISSING，字段与取值域照登记），`from` 小于 `to`（E-DIM-DOMAIN-RANGE），
  * 两端加通路类型唯一（E-DIM-DUPLICATE-KEY）；juris 族条目带整数 rank（E-DIM-STRUCT-FIELD）。表里没有行时没有树可核。
  * 返回 "<登记码> <所在> <说明>" 文字行。
@@ -1367,9 +1369,16 @@ export function checkPlaceTable(view) {
     if (written(row, DIM.anchor) && !isPosValue(row[DIM.anchor])) errors.push(`E-DIM-STRUCT-FIELD place/${id}: anchor is not a struct:pos`);
   }
   // 规则 3、10 与格空间表：划分结果里的违规，层根与格空间的对应，每个区格有地形类。
-  // "世界必有格空间表、主世界根必须挂层根并有格空间行"归 G5（6-24 转换引入真实世界的格空间表时同卡落地、测试先行）；G3 的校验对表里的行生效。
   {
-    for (const e of rp.errors) errors.push(`${e.code} place/${e.id}: ${e.detail}`);
+    // boundary 每项加载期逐项核（卷五 :98 封卷后勘误 1121k22）：全是 {x, y} 或全是 {x0, x1, y0, y1}；不依赖这一行参不参加划分（没有格空间表的世界也报）。
+    for (const id of ids) {
+      const b = rows.get(id).boundary;
+      if (Array.isArray(b) && b.length > 0 && !boundaryEntriesValid(b)) errors.push(`E-DIM-STRUCT-FIELD place/${id}: ${BOUNDARY_ENTRY_DETAIL}`);
+    }
+    for (const e of rp.errors) {
+      const line = `${e.code} place/${e.id}: ${e.detail}`;
+      if (!errors.includes(line)) errors.push(line); // 划分里同一句不重报
+    }
     // 非对象的格空间行已由 checkGridSpaces 报结构错（E-DIM-STRUCT-FIELD），这里只看对象行，不抛 TypeError。
     const objectRows = spaces.filter(isObj);
     const spaceRoots = new Set(objectRows.map((s) => s[GRID_SPACE.root]));

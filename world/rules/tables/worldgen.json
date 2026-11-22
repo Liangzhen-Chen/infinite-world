@@ -56,6 +56,14 @@
    "basis": "组件类代号，由 _vocab.json component 族登记；生成器只经本键认建筑行"
   },
   {
+   "key": "layoutCoverage",
+   "value": 0.4,
+   "file": "server-plugin/kernel/gen/siteform.mjs",
+   "grade": "designed",
+   "source": "卷十 :182（rules.gen.layout.coverage，number（fraction），(0, 1]，分片面积里建筑占地的上限比例；键名取驼峰平铺 layoutCoverage）；R10-7.5 站点面积由占地反推",
+   "basis": "暂定 0.4，待标定。依据：卷十 :182 只给取值域（原句“number（fraction），(0, 1]，分片面积里建筑占地的上限比例”），R10-7.5（:680）写“除数恒为正”，卷文没有数值；取 0.4 是 G11 回报手算例的前提，不是设定原文；登记域写 [0, 1] 而卷文是 (0, 1]，运行期已拒 0（siteform.mjs）；读者是站点面积阶段（siteform.mjs 站点面积一节）"
+  },
+  {
    "key": "underMaxAreaM2",
    "value": 200000,
    "file": "server-plugin/kernel/place-volume.mjs",

@@ -139,6 +139,22 @@ test('checkPlaceTable 直调：没载入 place 表无事可核；边节不是列
   assert.ok(out.errors.some((e) => e.startsWith('E-DIM-STRUCT-FIELD')), out.errors.join('\n'));
 });
 
+test('boundary 每项加载期逐项核（勘误 1121k22）：没有格空间表的世界里，空对象、缺 y、缺矩形字段、一项混写、一行混写、x0 ≥ x1 都报 E-DIM-STRUCT-FIELD；逐格、矩形写法的好行不因 boundary 报这一码', () => {
+  const structErrors = (boundary) => load({ rows: { ...TREE, loc_a: row('loc_w', 100, { boundary }) } }).errors.filter((e) => e.code === 'E-DIM-STRUCT-FIELD').length;
+  const bads = [
+    [{}],
+    [{ x: 1 }],
+    [{ x: 1, y: 1 }, { x: 2 }],
+    [{ x0: 0, x1: 2, y0: 0 }],
+    [{ x: 1, y: 1, x0: 0, x1: 2, y0: 0, y1: 2 }],
+    [{ x: 1, y: 1 }, { x0: 0, x1: 2, y0: 0, y1: 2 }],
+    [{ x0: 2, x1: 2, y0: 0, y1: 1 }],
+  ];
+  for (const b of bads) assert.ok(structErrors(b) >= 1, JSON.stringify(b));
+  assert.equal(structErrors([{ x: 1, y: 1 }, { x: 2, y: 1 }]), 0);
+  assert.equal(structErrors([{ x0: 0, x1: 2, y0: 0, y1: 2 }]), 0);
+});
+
 // ---------- K6-46：regionLevel 词表与列；comp_enclosure 的 aperture ----------
 
 test('regionLevel：挂 comp_region 的行必填，取 juris 族条目；juris 条目须带整数 rank', () => {

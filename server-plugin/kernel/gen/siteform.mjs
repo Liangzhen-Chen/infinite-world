@@ -8,22 +8,24 @@
 // 补出的房子必须能展开：补完前三项后先经 planFeasible（不铺格的可行性预判，与面积无关的代价）判，ok 为假（如房间分不下）时把 A 加倍后重做 planCellsOf，可行才调 planBlueprint 真铺，直到 ok 为真；planCells 任一边将超过该形制登记的外包边长上限
 // （形制条目 planSideMaxCells，卷十九 §2.4、封卷后勘误 1121k21、李白 11-22 裁定事件 3ce50e60 取甲；planCellsOf 越界抛，没有全局数）仍不行，即拒收：E-GEN-ROW-INVALID，字段写进生成日志（building、form、
 // need_width_cells、need_depth_cells、max_cells、reason=plan_cells_over_form_cap），不静默截断、不悄悄缩房间。作者写了 planCells 的不重做、不加倍，超形制上限或 ok 为假同样 E-GEN-ROW-INVALID（作者数据错）。
-// form、intendedType 是卷十九必填的作者输入，不补，缺 form 即 E-GEN-ROW-INVALID（intendedType 现在还不是 place 表登记的维度，见回报）。
+// form、intendedType 是卷十九必填的作者输入，不补，缺 form 即 E-GEN-ROW-INVALID（卷十 :684 R10-7.12；intendedType 现在还不是 place 表登记的维度，见回报）；
 // 来源标记与覆盖同 R10-2.17：补出的维度写成该行的 generated 偏离行（generated.by 记 gstage_siteform），作者之后手写同一维度即覆盖（世界重新创建时本阶段不再补它）。
 // 同种子同结果：抽取只用 site_gen_bldfill_area、site_gen_bldfill_storeys 两个抽取点与行 id，其余是形制条目与纯函数；取值范围是生成规则（占位值待标定），出处写"生成规则"，不是设定原文。
 // 未落（卷文推不出或代码没有，不自编）：storeysMax 取卷十九 buildPlan 按 form、materialKg、wallThicknessM 给出的层数上限，buildPlan 还没有，现取规则表 rules.facility.blueprint.storeysMax
 //   （planBlueprint 输入域的上限）顶替——材料约束的上限随卷十九建行卡落；房间行的补建要卷十九的建行函数与房间位次登记（R10-7.8 ②），还没有，只列缺口不造行；
-//   materialKg 缺时的补法（R10-7.12 末"未落"，仍由作者写）；补出面积是否满足意图类型的功能需求量（R10-7.3 第二次抬升，手写行没有户规模与装置需求，本条不做）。
+//   materialKg 缺时的补法（R10-7.12 末"未落"，仍由作者写）；补出面积是否满足意图类型的功能需求量（R10-7.3 第二次抬升，手写行没有户规模与装置需求，本条不做）；
+//   站点面积（R10-7.5，见 siteAreas）：起始 N 超过所在存量单元足迹格数即 E-GEN-ROW-INVALID 只在站点的父行是存量单元（roleTract）时判；父行不是存量单元的手写站点，
+//   卷文推不出"所在存量单元"是哪一行，不判（写进 docs/问题.md"G5b 机制遗留"）；世界没有格空间表时父足迹格数未知，记缺口 tract_footprint_unplanned、不判；有格空间表而存量单元没有足迹即 E-GEN-ROW-INVALID。
 // 本文件不读 state、墙钟，不用 Math.*。
 
 import { KernelError } from '../errors.mjs';
 import { FOOTPRINT_KIND } from '../footprint-kind.mjs';
 import { planBlueprint, planFeasible, planCellsOf, REASON as BP_REASON } from '../blueprint.mjs';
 import { genDraw, genDiceKey } from './draw.mjs';
-import { fixedUnits, fixedAdd, fixedToNumber, truncateTo } from '../det-math.mjs';
+import { fixedUnits, fixedAdd, fixedMultiply, fixedToNumber, truncateTo } from '../det-math.mjs';
 
 const FAMILY = Object.freeze({ form: 'bform' }); // 形制词表族（卷十九 §2.4）
-const REASON = Object.freeze({ roomRows: 'room_rows_unbuilt', storeysCap: 'storeys_max_unchecked' });
+const REASON = Object.freeze({ roomRows: 'room_rows_unbuilt', storeysCap: 'storeys_max_unchecked', tractUnplanned: 'tract_footprint_unplanned' });
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const CAP_REASON = 'plan_cells_over_form_cap'; // blueprint.mjs overFormCap 的 reason
 const wrapDomain = (id, formCode, e) => {
@@ -51,11 +53,12 @@ export function genSiteForm(ctx) {
   const proposals = [];
   const deferred = [];
   const buildings = [...ctx.rows.values()].filter((r) => r.kind === FOOTPRINT_KIND.building && r.classes.has(ctx.roleFacility) && ctx.authoredIds.has(r.id)).sort((a, b) => cmp(a.id, b.id));
-  if (buildings.length === 0) return { proposals, deferred };
   if (ctx.blueprint === null) throw new KernelError('E-RULES-UNREGISTERED', {}, 'siteform: rules.grid, rules.facility.blueprint and the volume unit are needed to fill building rows');
   const limits = ctx.blueprint.limits;
+  const planOf = new Map(); // 建筑 id → 平面格数（作者写的或本阶段补的）；站点面积一节读
   for (const b of buildings) {
     const d = b.dims;
+    // 形制没写：形制是作者必填输入、不补不编，缺即 E-GEN-ROW-INVALID（卷十 :684）。
     const rec = typeof d.form === 'string' && ctx.vocab.index instanceof Map ? ctx.vocab.index.get(d.form) : undefined;
     if (!rec || rec.family !== FAMILY.form || rec.entry === null || typeof rec.entry !== 'object') throw new KernelError('E-GEN-ROW-INVALID', {}, `building ${b.id}: form ${JSON.stringify(d.form)} is not an entry of the bform family (form is a required authored input, it is never filled)`);
     const form = rec.entry;
@@ -115,6 +118,7 @@ export function genSiteForm(ctx) {
       bp = expand(planCells);
       if (!bp.ok) throw new KernelError('E-GEN-ROW-INVALID', {}, `building ${b.id}: the authored planCells do not unfold into a blueprint (${bp.reason})`);
     }
+    planOf.set(b.id, planCells);
     // ④ 房间行缺口：同一 roomRole 的房间行按行 id 序对应蓝图里该角色的第 k 间。
     const have = new Map();
     for (const r of ctx.rows.values()) {
@@ -138,5 +142,60 @@ export function genSiteForm(ctx) {
       proposals.push({ table: ctx.table, id: b.id, dims, by: ctx.stage, seedKey: genDiceKey('gen_siteform', 'site_gen_bldfill_area', ctx.worldSeed, b.id, ctx.genesisMinute) });
     }
   }
+  siteAreas(ctx, buildings, planOf, proposals, deferred);
   return { proposals, deferred };
+}
+
+// 站点面积由占地反推（卷十 R10-7.5，不分片站点：模板与分片角色未接线，R10-7.1 站点下有直挂手写建筑行即不分片；R10-1.7 手写优先、生成补缺）：
+// 站点 = 作者写的、不是政区也不是存量单元与水体的区域足迹行（地点）；作者写了 targetAreaM2 或 boundary 的不动。占地 = 各建筑平面格数（宽 × 深，细格）× cellM²；
+// N = max(1, ceil(占地 ÷ (layoutCoverage × regionCellM²)))，写 targetAreaM2 = N × regionCellM²（定点整除、向上取整）；N 只由占地决定，不按子行加量（卷文没有这一句，见 docs/问题.md"G5b 机制遗留"）。
+// 站点的父行是存量单元时，起始 N 超过该存量单元足迹格数即 E-GEN-ROW-INVALID（R10-7.5 末）。
+// 未落：R10-7.5 末的"layoutOf 试排、排不下 N 加一重排"（要建筑外包与锚点，建筑锚点阶段未接线）与分片角色归并。
+function siteAreas(ctx, buildings, planOf, proposals, deferred) {
+  const coverage = ctx.layoutCoverage;
+  const regionCellM = ctx.regionCellM;
+  const cellM = ctx.blueprint.cellM;
+  if (typeof coverage !== 'number' || !(coverage > 0) || coverage > 1) throw new KernelError('E-GEN-ROW-INVALID', {}, 'rules.gen.layoutCoverage must be a number in (0, 1]');
+  if (typeof regionCellM !== 'number') throw new KernelError('E-RULES-UNREGISTERED', {}, 'siteform: rules.grid.regionCellM is needed for the site area');
+  const sites = new Map();
+  for (const b of buildings) {
+    if (!sites.has(b.parent)) sites.set(b.parent, []);
+    sites.get(b.parent).push(b);
+  }
+  const cellArea = fixedUnits(regionCellM * regionCellM);
+  const denominator = fixedMultiply(fixedUnits(coverage), cellArea);
+  const occupancyN = (siteId) => {
+    let cells = 0;
+    for (const b of sites.get(siteId) || []) {
+      const pc = planOf.get(b.id); // 每栋建筑要么补出、要么读到平面格数（缺 form 已在上面报错），这里一定有
+      cells += pc.widthCells * pc.depthCells;
+    }
+    const need = (fixedUnits(cells * cellM * cellM) + denominator - 1n) / denominator; // 向上取整（定点两边同标度，商是整数）
+    return need > 1n ? need : 1n;
+  };
+  // 所在存量单元的足迹格数（R10-7.5 末：起始 N 超过它即 E-GEN-ROW-INVALID）：站点的父行是存量单元时才判；足迹经卷五 planFootprints 读，一次、用到才读。
+  let tractFootprints;
+  const tractCellCount = (tractId) => {
+    if (tractFootprints === undefined) tractFootprints = typeof ctx.footprints === 'function' ? ctx.footprints({ bed: false, heights: false }) : null;
+    const f = tractFootprints && tractFootprints.footprints ? tractFootprints.footprints[tractId] : undefined;
+    return f !== undefined && Number.isInteger(f.cellCount) ? f.cellCount : null;
+  };
+  // 要写面积的行：作者写的区域足迹行里不是政区（没有 regionLevel）、不是存量单元与水体（它们的面积来自作者或各自的阶段）、没写 targetAreaM2 与 boundary 者——
+  // 即"地点"：没有建筑清单的地点占地为 0，取最少 1 区格（卷五 §4.1 规则 2、13：区域足迹至少一格）；政区与存量单元仍照规则 10 在父足迹里平分。
+  const places = [...ctx.rows.values()].filter((r) => r.kind === FOOTPRINT_KIND.region && r.parent !== null && r.regionLevel === null && ctx.authoredIds.has(r.id)
+    && !r.classes.has(ctx.roleTract) && !r.classes.has(ctx.roleWaterbody) && typeof r.dims.targetAreaM2 !== 'number' && !(Array.isArray(r.dims.boundary) && r.dims.boundary.length > 0)).sort((a, b) => cmp(a.id, b.id));
+  for (const site of places) {
+    const siteId = site.id;
+    const n = occupancyN(siteId);
+    const parentRow = ctx.rows.get(site.parent);
+    if (parentRow !== undefined && parentRow.classes.has(ctx.roleTract)) {
+      const have = tractCellCount(site.parent);
+      if (have === null) {
+        // 世界没有格空间表：任何行都没有足迹，判不了，如实记缺口；有格空间表而这个存量单元没有足迹：这块地放不下站点，是数据缺口（R10-7.5 排不下同一口径）。
+        if (!(Number.isInteger(ctx.gridSpaceCount) && ctx.gridSpaceCount > 0)) deferred.push({ id: siteId, reason: REASON.tractUnplanned, gaps: [site.parent] });
+        else throw new KernelError('E-GEN-ROW-INVALID', { site: siteId, tract: site.parent, reason: 'tract_has_no_footprint' }, `site ${siteId}: its stock unit ${site.parent} has no footprint in a world that has grid spaces (R10-7.5); the site does not fit on this land`);
+      } else if (n > BigInt(have)) throw new KernelError('E-GEN-ROW-INVALID', { site: siteId, tract: site.parent, need_cells: Number(n), tract_cells: have }, `site ${siteId}: its starting N = ${n} cells exceeds the ${have} cells of its stock unit ${site.parent} (R10-7.5); the site does not fit on this land`);
+    }
+    proposals.push({ table: ctx.table, id: siteId, dims: { targetAreaM2: fixedToNumber(n * cellArea) }, by: ctx.stage, seedKey: genDiceKey('gen_siteform', 'site_gen_bldfill_area', ctx.worldSeed, siteId, ctx.genesisMinute) });
+  }
 }

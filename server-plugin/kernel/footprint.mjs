@@ -6,8 +6,9 @@
 // 本文件不读状态、不读引擎：入参是"行输入"与格空间表行，place.mjs 负责把世界数据整理成这个形状。
 //
 // 规模（卷五 §4.1.4 :522，主世界约 7,800 × 5,150 ≈ 4,020 万区格）：区格归属存成一个按区格下标的 Int32Array（4 字节每格，全规模约 160 MB，
-// 不用 Map/Set——V8 的 Map/Set 单个上限约 1,677 万条）；除层根（足迹恒为整个外包框，不另存）外，每行足迹存成整型数组（下标列表）；
-// 父足迹成员判定用归属数组加祖先链，不建父足迹的集合；生长的"已排队"标记共用一个 Int32Array。
+// 不用 Map/Set——V8 的 Map/Set 单个上限约 1,677 万条）；各行不常驻格列表（只存格数与外包矩形；作者画了 boundary 的行例外，存表序列表），
+// 格的集合由归属数组加外包矩形加祖先链现扫；父足迹成员判定同用归属数组加祖先链，不建父足迹的集合；生长的堆是打包整数键的类型化数组，
+// "已排队"标记共用一个 Int32Array（划完即释放）。划分只在 place-plan.mjs 的内容键记忆里做一次（加载校验与运行期共用）。
 // 面积与形心、相邻集、控制点、各行高度都按计划缓存（计划本身就是"生成输入与当日有效输入版本"的纯函数，place.mjs 按它缓存，
 // 输入变了即重划、缓存随计划丢弃，卷五 §4.1 规则 16）。再往上的里块分块与按需派生随卷二十七 R27-6.9 性能门在腾讯云测。
 
@@ -46,46 +47,77 @@ export const keyOf = (box, x, y) => (y - box.y0) * box.cellsX + (x - box.x0);
 export const xOf = (box, k) => box.x0 + (k % box.cellsX);
 /** 区格下标 → 区格序号 y。@param {{y0: number, x0: number, cellsX: number}} box @param {number} k @returns {number} */
 export const yOf = (box, k) => box.y0 + (k - (k % box.cellsX)) / box.cellsX;
+/** boundary 的矩形写法的一项：{x0, x1, y0, y1} 全是整数，左闭右开且非空。@param {any} r @returns {boolean} */
+export const isRectEntry = (r) => r !== null && typeof r === 'object' && Number.isSafeInteger(r.x0) && Number.isSafeInteger(r.x1) && Number.isSafeInteger(r.y0) && Number.isSafeInteger(r.y1) && r.x0 < r.x1 && r.y0 < r.y1 && !('x' in r) && !('y' in r);
+/** 矩形之并是否四邻连通：两个矩形相交或有一段公共边即相连。@param {{x0: number, x1: number, y0: number, y1: number}[]} rs @returns {boolean} */
+export function rectsConnected(rs) {
+  const parent = rs.map((_, i) => i);
+  const find = (i) => { let r = i; while (parent[r] !== r) r = parent[r]; return r; };
+  const touch = (a, b) => (a.x0 < b.x1 && b.x0 < a.x1 && a.y0 <= b.y1 && b.y0 <= a.y1 && (a.y0 === b.y1 || b.y0 === a.y1 || (a.y0 < b.y1 && b.y0 < a.y1)))
+    || (a.y0 < b.y1 && b.y0 < a.y1 && a.x0 <= b.x1 && b.x0 <= a.x1);
+  for (let i = 0; i < rs.length; i += 1) for (let j = i + 1; j < rs.length; j += 1) if (touch(rs[i], rs[j])) parent[find(i)] = find(j);
+  return rs.every((_, i) => find(i) === find(0));
+}
 const cellLess = (a, b) => a.x < b.x || (a.x === b.x && a.y < b.y);
-const isCellIndex = (c) => c !== null && typeof c === 'object' && Number.isSafeInteger(c.x) && Number.isSafeInteger(c.y);
+const isCellIndex = (c) => c !== null && typeof c === 'object' && Number.isSafeInteger(c.x) && Number.isSafeInteger(c.y) && !('x0' in c) && !('x1' in c) && !('y0' in c) && !('y1' in c);
+/** boundary 的错误说明（划分与加载期逐项核对共用，同一句）。 */
+export const BOUNDARY_ENTRY_DETAIL = 'boundary entries are all cells {x, y} or all rects {x0, x1, y0, y1} of integers (x0 < x1, y0 < y1)';
+/** 一行 boundary 的各项是否合法：全是逐格 {x, y}，或全是矩形 {x0, x1, y0, y1}；混写、缺字段、空对象都不合。与该行是否参加划分无关。@param {any[]} entries @returns {boolean} */
+export const boundaryEntriesValid = (entries) => entries.every(isRectEntry) || entries.every(isCellIndex);
 const NONE = -1; // 归属数组里"没有行"的值
 
-// 二叉最小堆：元素 {d2, x, y}，按 (d2, x, y) 字典序小者先出。
-class MinHeap {
-  constructor() { this.a = []; }
-  static less(p, q) { return p.d2 < q.d2 || (p.d2 === q.d2 && (p.x < q.x || (p.x === q.x && p.y < q.y))); }
-  push(e) {
-    const a = this.a;
-    a.push(e);
-    let i = a.length - 1;
+// 二叉最小堆（类型化数组）：元素是一个打包整数 d2 × 区格数 + 次序号（次序号 = (x − x0) × cellsY + (y − y0)，即按 (x, y) 字典序的区格序），
+// 按整数大小小者先出，等价于按 (d2, x, y) 字典序；打包值须落在 2⁵³ 内（planRegionFootprints 入口核对外包框，超限拒收，不静默降级）。
+// 空堆 pop 得 -1。堆随生长者的边缘大小自动加倍，不建每格对象（全规模单层约 4,020 万次入堆，卷五 §4.1.4 :522）。
+class PackedHeap {
+  constructor() { this.a = new Float64Array(1); this.n = 0; }
+  push(v) {
+    let a = this.a;
+    if (this.n === a.length) { const b = new Float64Array(a.length + a.length); b.set(a); this.a = b; a = b; }
+    let i = this.n;
+    this.n += 1;
     while (i > 0) {
       const p = (i - 1) >> 1;
-      if (!MinHeap.less(a[i], a[p])) break;
-      [a[i], a[p]] = [a[p], a[i]];
+      if (a[p] <= v) break;
+      a[i] = a[p];
       i = p;
     }
+    a[i] = v;
   }
   pop() {
+    if (this.n === 0) return -1;
     const a = this.a;
-    if (a.length === 0) return undefined;
     const top = a[0];
-    const last = a.pop();
-    if (a.length > 0) {
-      a[0] = last;
+    this.n -= 1;
+    const n = this.n;
+    if (n > 0) {
+      const v = a[n];
       let i = 0;
       for (;;) {
-        const l = i + i + 1;
-        const r = l + 1;
-        let m = i;
-        if (l < a.length && MinHeap.less(a[l], a[m])) m = l;
-        if (r < a.length && MinHeap.less(a[r], a[m])) m = r;
-        if (m === i) break;
-        [a[i], a[m]] = [a[m], a[i]];
-        i = m;
+        let c = i + i + 1;
+        if (c >= n) break;
+        if (c + 1 < n && a[c + 1] < a[c]) c += 1;
+        if (a[c] >= v) break;
+        a[i] = a[c];
+        i = c;
       }
+      a[i] = v;
     }
     return top;
   }
+}
+
+// 可增长的整型列表（一行足迹划出的区格下标；不用装箱数组，全规模单层合计约 4,020 万项）。
+class IntList {
+  constructor() { this.a = new Int32Array(1); this.n = 0; }
+  push(v) {
+    if (this.n === this.a.length) { const b = new Int32Array(this.a.length + this.a.length); b.set(this.a); this.a = b; }
+    this.a[this.n] = v;
+    this.n += 1;
+  }
+  get length() { return this.n; }
+  /** 定长拷贝（足迹列表落进计划后不再增长）。@returns {Int32Array} */
+  toInt32() { return this.a.slice(0, this.n); }
 }
 
 // ---------- 计划的读法（计划是 planRegionFootprints 的结果，下面这些是它唯一的读口） ----------
@@ -101,18 +133,38 @@ export function cellCountOf(plan, id) {
   return plan.sizes.has(id) ? plan.sizes.get(id) : 0;
 }
 
-/** 逐格遍历一行足迹的区格下标（层根的足迹是整个外包框，不另存）。@param {any} plan @param {string} id @param {(k: number) => void} fn */
-export function eachCell(plan, id, fn) {
-  if (!plan.cells.has(id)) return;
-  const list = plan.cells.get(id);
-  if (list === null) { for (let k = 0; k < plan.total; k += 1) fn(k); return; }
-  for (let i = 0; i < list.length; i += 1) fn(list[i]);
-}
-
 // 区格 k 是否在行 id（下标 row）的足迹里：k 的最深归属行是它或它的后代（沿计划里的父下标链走，深度就是包含树深度）。
 function inFootprint(plan, row, k) {
   for (let i = plan.owner[k]; i !== NONE; i = plan.parentIdx[i]) if (i === row) return true;
   return false;
+}
+
+/**
+ * 逐格遍历一行足迹的区格下标。层根是整个外包框；作者画了 boundary 的行按它的表序；其余行按区格下标升序（归属数组在行的外包矩形里现扫，不常驻格列表）。
+ * @param {any} plan @param {string} id @param {(k: number) => void} fn
+ */
+export function eachCell(plan, id, fn) {
+  if (!plan.cells.has(id)) return;
+  const list = plan.cells.get(id);
+  if (list === null) { for (let k = 0; k < plan.total; k += 1) fn(k); return; }
+  if (list !== undefined) { for (let i = 0; i < list.length; i += 1) fn(list[i]); return; }
+  const r = plan.rect.get(id);
+  const me = plan.idx.get(id);
+  const { x0, y0, cellsX } = plan.box;
+  for (let y = r.y0; y <= r.y1; y += 1) {
+    const base = (y - y0) * cellsX - x0;
+    for (let x = r.x0; x <= r.x1; x += 1) if (inFootprint(plan, me, base + x)) fn(base + x);
+  }
+}
+
+/** 一行足迹的区格下标数组（顺序同 eachCell；全规模下大行会占数十 MB，只给要整行排序或索引的读者用，用完即弃）。@param {any} plan @param {string} id @returns {Int32Array} */
+export function cellsOf(plan, id) {
+  const stored = plan.cells.get(id);
+  if (stored instanceof Int32Array) return stored;
+  const out = new Int32Array(cellCountOf(plan, id));
+  let n = 0;
+  eachCell(plan, id, (k) => { out[n] = k; n += 1; });
+  return out;
 }
 
 // ---------- 区域足迹划分（卷五 §4.1 规则 10） ----------
@@ -128,7 +180,8 @@ function inFootprint(plan, row, k) {
  * 自己当前足迹的四邻里取一个尚未被占的父足迹区格（离自己种子直线最近者，并列取区格序号 (x, y) 字典序最小），直到全部达标或无格可取；
  * 剩下的区格归父行自己。离场行与它的后代、非区域足迹的行、自己开格空间的层根不参加划分。
  * 违规（种子/边界不在父足迹内、与兄弟相交、同父两个种子同区格、边界不连通、缺 coord）不抛，记进 errors，该子行及其后代不划格。
- * 计划形状：{w, box, root, total, ids（行 id 按划出次序）, idx, parentIdx, owner: Int32Array（区格下标 → ids 下标）, cells: Map<id, Int32Array | null（层根）>,
+ * 计划形状：{w, box, root, total, ids（行 id 按划出次序）, idx, parentIdx, owner: Int32Array（区格下标 → ids 下标）,
+ * cells: Map<id, null（层根）| Int32Array（作者 boundary 的表序列表）| undefined（只登记有足迹，格由 eachCell/cellsOf 现扫）>, rect: Map<id, 外包矩形>,
  * sizes, order, geometry, …缓存}。
  * @param {{regionCellM: number}} grid rules.grid
  * @param {{w: number, box: {x0: number, y0: number, cellsX: number, cellsY: number}, root: string}[]} spaces 格空间表行
@@ -164,7 +217,7 @@ export function planRegionFootprints(grid, spaces, rows) {
   // 给父行 parentIndex 的区域足迹子行划格；owner 立即盖章（父足迹成员 ⇔ owner 仍是父行）。返回 Map<子行 id, 区格下标数组>。
   function partition(plan, parentId, parentIndex, parentSize, children) {
     const box = plan.box;
-    const out = new Map(children.map((c) => [c, []]));
+    const out = new Map(children.map((c) => [c, new IntList()]));
     const childIndex = new Map();
     for (const c of children) childIndex.set(c, register(plan, c, parentIndex));
     const bounded = children.filter((c) => Array.isArray(rows.get(c).boundary) && rows.get(c).boundary.length > 0);
@@ -174,27 +227,40 @@ export function planRegionFootprints(grid, spaces, rows) {
     // 作者覆盖：须在父足迹内、与兄弟不相交、四邻连通。
     for (const id of bounded) {
       const list = out.get(id);
-      const mine = new Set(); // 作者画的边界很小，连通判定用集合
-      for (const c of rows.get(id).boundary) {
-        if (!isCellIndex(c)) { err('E-DIM-STRUCT-FIELD', id, 'boundary entry needs integer x and y'); continue; }
-        const k = inBox(box, c.x, c.y) ? keyOf(box, c.x, c.y) : NONE;
+      const entries = rows.get(id).boundary;
+      // boundary 两种写法（卷五 :98 封卷后勘误：区格集合的简写）：逐格 [{x, y}…]，或矩形之并 [{x0, x1, y0, y1}…]（区格序号，左闭右开）；一行只许用一种；流水水体只许逐格（表序即流向序）。
+      const rectMode = entries.every(isRectEntry);
+      if (!boundaryEntriesValid(entries)) { err('E-DIM-STRUCT-FIELD', id, BOUNDARY_ENTRY_DETAIL); continue; }
+      if (rectMode && rows.get(id).flowing === true) { err('E-DIM-STRUCT-FIELD', id, 'a flowing water body writes boundary as cells in flow order, never as rects'); continue; }
+      const mine = new Set(); // 逐格写法：作者画的边界很小，连通判定用集合
+      const claim = (x, y) => {
+        const k = inBox(box, x, y) ? keyOf(box, x, y) : NONE;
         const o = k === NONE ? NONE : plan.owner[k];
-        if (k === NONE || (o !== parentIndex && !boundedIdx.has(o))) { err('E-GRID-FOOTPRINT-OUTSIDE-PARENT', id, `boundary cell (${c.x},${c.y}) is outside parent ${parentId}`); continue; }
-        if (o !== parentIndex) { err('E-GRID-SIBLING-OVERLAP', id, `boundary cell (${c.x},${c.y}) overlaps a sibling boundary`); continue; }
+        if (k === NONE || (o !== parentIndex && !boundedIdx.has(o))) { err('E-GRID-FOOTPRINT-OUTSIDE-PARENT', id, `boundary cell (${x},${y}) is outside parent ${parentId}`); return false; }
+        if (o === childIndex.get(id) && rectMode) return true; // 矩形之并里几个矩形盖到同一格：同一集合，不算相交
+        if (o !== parentIndex) { err('E-GRID-SIBLING-OVERLAP', id, `boundary cell (${x},${y}) overlaps a sibling boundary`); return false; }
         plan.owner[k] = childIndex.get(id);
         list.push(k);
-        mine.add(k);
+        if (!rectMode) mine.add(k);
         coverCount += 1;
+        return true;
+      };
+      if (rectMode) {
+        let bad = false;
+        for (const r of entries) for (let y = r.y0; y < r.y1 && !bad; y += 1) for (let x = r.x0; x < r.x1; x += 1) if (!claim(x, y)) { bad = true; break; }
+        if (!bad && !rectsConnected(entries)) err('E-DIM-DOMAIN-RANGE', id, 'boundary rects are not 4-connected');
+      } else {
+        for (const c of entries) claim(c.x, c.y);
+        if (mine.size > 0 && !connected(box, mine)) err('E-DIM-DOMAIN-RANGE', id, 'boundary cells are not 4-connected');
       }
-      if (mine.size > 0 && !connected(box, mine)) err('E-DIM-DOMAIN-RANGE', id, 'boundary cells are not 4-connected');
       // 流水水体的 boundary 表序即流向序（规则 10 "流水水体的足迹"，封卷后勘误 1121k17 修改轮 M1）：首格之外每格都与表序里排在它前面的某一格四邻相接（前缀连通）；按 flowing 判，不按 id 或水体类代号。
       if (rows.get(id).flowing === true) {
         const seen = new Set();
         for (let i = 0; i < list.length; i += 1) {
-          const x = xOf(box, list[i]);
-          const y = yOf(box, list[i]);
+          const x = xOf(box, list.a[i]);
+          const y = yOf(box, list.a[i]);
           if (i > 0 && !NEIGHBORS.some(([dx, dy]) => inBox(box, x + dx, y + dy) && seen.has(keyOf(box, x + dx, y + dy)))) { err('E-GRID-WATER-BAND', id, `boundary cell (${x},${y}) at table order ${i} touches none of the cells before it`); break; }
-          seen.add(list[i]);
+          seen.add(list.a[i]);
         }
       }
     }
@@ -230,39 +296,50 @@ export function planRegionFootprints(grid, spaces, rows) {
       const share = remaining > 0n ? remaining / BigInt(noTarget.length) : 1n;
       targets.set(id, share > 0n ? share : 1n);
     }
-    // 多源同步生长。
+    // 多源同步生长（打包整数键的类型化堆；目标格数比较用 Number，目标由 BigInt 算出，入口已核外包框不超 2⁵³ 故不丢精度）。
     if (!plan.queued) plan.queued = new Int32Array(plan.total);
+    const { x0, y0, cellsX, cellsY } = box;
+    const total = plan.total;
     const growers = [];
     for (const id of derived) {
       const s = seedOf.get(id);
       if (!s) continue;
       serial += 1;
-      growers.push({ id, s, me: childIndex.get(id), heap: new MinHeap(), stamp: serial, target: targets.get(id) });
+      growers.push({ id, sx: s.x, sy: s.y, me: childIndex.get(id), heap: new PackedHeap(), stamp: serial, target: targets.get(id), list: out.get(id) });
     }
     const queueNeighbors = (g, x, y) => {
-      for (const [dx, dy] of NEIGHBORS) {
-        const nx = x + dx;
-        const ny = y + dy;
-        if (!inBox(box, nx, ny)) continue;
-        const nk = keyOf(box, nx, ny);
+      for (let d = 0; d < NEIGHBORS.length; d += 1) {
+        const nx = x + NEIGHBORS[d][0];
+        const ny = y + NEIGHBORS[d][1];
+        if (nx < x0 || nx >= x0 + cellsX || ny < y0 || ny >= y0 + cellsY) continue;
+        const nk = (ny - y0) * cellsX + (nx - x0);
         if (plan.owner[nk] !== parentIndex || plan.queued[nk] === g.stamp) continue;
         plan.queued[nk] = g.stamp;
-        g.heap.push({ d2: (nx - g.s.x) * (nx - g.s.x) + (ny - g.s.y) * (ny - g.s.y), x: nx, y: ny });
+        g.heap.push(((nx - g.sx) * (nx - g.sx) + (ny - g.sy) * (ny - g.sy)) * total + (nx - x0) * cellsY + (ny - y0));
       }
     };
-    for (const g of growers) queueNeighbors(g, g.s.x, g.s.y);
+    for (const g of growers) queueNeighbors(g, g.sx, g.sy);
     for (let moved = true; moved;) {
       moved = false;
       for (const g of growers) {
-        const list = out.get(g.id);
-        if (BigInt(list.length) >= g.target) continue;
+        if (BigInt(g.list.n) >= g.target) continue;
         let top = g.heap.pop();
-        while (top !== undefined && plan.owner[keyOf(box, top.x, top.y)] !== parentIndex) top = g.heap.pop();
-        if (top === undefined) continue;
-        const k = keyOf(box, top.x, top.y);
+        let k = -1;
+        let x = 0;
+        let y = 0;
+        while (top >= 0) {
+          const m = top % total;
+          x = x0 + (m - (m % cellsY)) / cellsY;
+          y = y0 + (m % cellsY);
+          k = (y - y0) * cellsX + (x - x0);
+          if (plan.owner[k] === parentIndex) break;
+          top = g.heap.pop();
+          k = -1;
+        }
+        if (k < 0) continue;
         plan.owner[k] = g.me;
-        list.push(k);
-        queueNeighbors(g, top.x, top.y);
+        g.list.push(k);
+        queueNeighbors(g, x, y);
         moved = true;
       }
     }
@@ -288,7 +365,27 @@ export function planRegionFootprints(grid, spaces, rows) {
 
   // 一行的足迹已定（它的格在 owner 里已盖成它），登记结果，再给它的区域足迹子行划格。
   function settle(plan, id, parentIndex, list, size) {
-    plan.cells.set(id, list === null ? null : Int32Array.from(list));
+    // 足迹登记：层根为 null（整个外包框）；作者画了 boundary 的行存下表序列表（表序有意义，流水水体的流向序）；其余行不存格列表——
+    // 格的集合由归属数组加外包矩形加祖先链现扫（eachCell/cellsOf），全规模单层合计约 4,020 万格，三层列表常驻要 480 MB 以上（卷五 §4.1.4 :522）。
+    const { cellsX, cellsY, x0, y0 } = plan.box;
+    let bx0 = x0 + cellsX;
+    let bx1 = x0 - 1;
+    let by0 = y0 + cellsY;
+    let by1 = y0 - 1;
+    if (list === null) { bx0 = x0; bx1 = x0 + cellsX - 1; by0 = y0; by1 = y0 + cellsY - 1; } else {
+      for (let i = 0; i < list.n; i += 1) {
+        const k = list.a[i];
+        const cx = k % cellsX;
+        const cy = (k - cx) / cellsX;
+        if (cx + x0 < bx0) bx0 = cx + x0;
+        if (cx + x0 > bx1) bx1 = cx + x0;
+        if (cy + y0 < by0) by0 = cy + y0;
+        if (cy + y0 > by1) by1 = cy + y0;
+      }
+    }
+    const ordered = list !== null && Array.isArray(rows.get(id).boundary) && rows.get(id).boundary.length > 0 && !rows.get(id).boundary.every(isRectEntry); // 矩形之并没有表序，不存列表
+    plan.cells.set(id, list === null ? null : ordered ? list.toInt32() : undefined);
+    plan.rect.set(id, { x0: bx0, x1: bx1, y0: by0, y1: by1 });
     plan.sizes.set(id, size);
     const children = (kids.get(id) || []).filter((c) => rows.get(c).kind === FOOTPRINT_KIND.region && !roots.has(c));
     if (children.length === 0) return;
@@ -303,7 +400,10 @@ export function planRegionFootprints(grid, spaces, rows) {
     const rootRow = rows.get(sp.root);
     if (!rootRow || rootRow.kind !== FOOTPRINT_KIND.region || rootRow.offstage) { err(rootRow ? 'E-DIM-DOMAIN-RANGE' : 'E-DIM-REF-MISSING', sp.root, `grid space ${sp.w} root is not a region-footprint row`); continue; }
     const total = box.cellsX * box.cellsY;
-    const plan = { w: sp.w, box, root: sp.root, total, ids: [], idx: new Map(), parentIdx: [], owner: new Int32Array(total), cells: new Map(), sizes: new Map(), order: [], geometry: new Map(), queued: null, heights: new Map(), adjacency: null, controlPoints: null };
+    // 生长堆的打包键 = 到种子的距离平方 × 区格数 + 次序号，须是安全整数；外包框大到装不下即拒收（不降级到别的算法、不静默放过）。
+    const maxD2 = (box.cellsX - 1) * (box.cellsX - 1) + (box.cellsY - 1) * (box.cellsY - 1);
+    if (!Number.isSafeInteger(total) || !Number.isSafeInteger((maxD2 + 1) * total)) { err('E-DIM-DOMAIN-RANGE', sp.root, `grid space ${sp.w} box ${box.cellsX} x ${box.cellsY} is too large for the partition heap keys (squared distance x cell count must fit 2^53)`); continue; }
+    const plan = { w: sp.w, box, root: sp.root, total, ids: [], idx: new Map(), parentIdx: [], owner: new Int32Array(total), cells: new Map(), rect: new Map(), sizes: new Map(), order: [], geometry: new Map(), queued: null, heights: new Map(), adjacency: null, controlPoints: null };
     const rootIndex = register(plan, sp.root, NONE);
     plan.owner.fill(rootIndex);
     plans.set(sp.w, plan);
@@ -363,24 +463,9 @@ export function footprintHas(plan, id, x, y) {
  */
 export function* footprintCells(plan, id) {
   if (!plan.cells.has(id)) return;
-  const list = plan.cells.get(id);
-  let x0 = plan.box.x0;
-  let x1 = plan.box.x0 + plan.box.cellsX - 1;
-  let y0 = plan.box.y0;
-  let y1 = plan.box.y0 + plan.box.cellsY - 1;
-  if (list !== null) {
-    if (list.length === 0) return;
-    x0 = xOf(plan.box, list[0]); x1 = x0; y0 = yOf(plan.box, list[0]); y1 = y0;
-    for (let i = 1; i < list.length; i += 1) {
-      const x = xOf(plan.box, list[i]);
-      const y = yOf(plan.box, list[i]);
-      if (x < x0) x0 = x;
-      if (x > x1) x1 = x;
-      if (y < y0) y0 = y;
-      if (y > y1) y1 = y;
-    }
-    // 行的足迹含后代的格，后代的格都在行自己的格之内（子足迹在父足迹内），所以外包矩形取自己的列表即可涵盖。
-  }
+  if (cellCountOf(plan, id) === 0) return;
+  // 行的足迹含后代的格，后代的格都在行自己的格之内（子足迹在父足迹内），所以划分时记下的外包矩形即可涵盖。
+  const { x0, x1, y0, y1 } = plan.rect.get(id);
   const me = plan.idx.get(id);
   for (let x = x0; x <= x1; x += 1) for (let y = y0; y <= y1; y += 1) if (inFootprint(plan, me, keyOf(plan.box, x, y))) yield { x, y };
 }
@@ -460,7 +545,7 @@ function waterBedsOf(grid, worldSeed, plan, rows, terrainOf) {
   const infos = new Map();
   const infoOf = (id) => {
     if (infos.has(id)) return infos.get(id);
-    const list = plan.cells.get(id);
+    const list = cellsOf(plan, id);
     const xs = new Int32Array(list.length);
     const ys = new Int32Array(list.length);
     const h0 = new BigInt64Array(list.length);
@@ -487,7 +572,7 @@ function waterBedsOf(grid, worldSeed, plan, rows, terrainOf) {
 function bedPositionOf(plan, wb, id, k) {
   let idx = wb.index.get(id);
   if (!idx) {
-    const list = plan.cells.get(id);
+    const list = cellsOf(plan, id);
     const n = list.length;
     const packed = new Float64Array(n);
     for (let i = 0; i < n; i += 1) packed[i] = list[i] * n + i;

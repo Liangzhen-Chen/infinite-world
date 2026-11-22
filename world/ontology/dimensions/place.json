@@ -128,7 +128,39 @@
       "type": "integer",
       "unit": "count"
      },
+     "x0": {
+      "domain": [
+       null,
+       null
+      ],
+      "type": "integer",
+      "unit": "count"
+     },
+     "x1": {
+      "domain": [
+       null,
+       null
+      ],
+      "type": "integer",
+      "unit": "count"
+     },
      "y": {
+      "domain": [
+       null,
+       null
+      ],
+      "type": "integer",
+      "unit": "count"
+     },
+     "y0": {
+      "domain": [
+       null,
+       null
+      ],
+      "type": "integer",
+      "unit": "count"
+     },
+     "y1": {
       "domain": [
        null,
        null
@@ -137,16 +169,13 @@
       "unit": "count"
      }
     },
-    "required": [
-     "x",
-     "y"
-    ],
+    "required": [],
     "type": "struct"
    },
    "onUnknown": "skip",
    "owner": "卷五 §2.1",
    "required": "never",
-   "source": "卷五 §2.1 :98（作者手画的区域足迹：区格序号的集合，非空时覆盖派生划分，§4.1 规则 10；只许区域足迹的行写，kernel/place.mjs 加载校验按足迹种类核禁填）",
+   "source": "卷五 §2.1 :98（作者手画的区域足迹：区格序号的集合，非空时覆盖派生划分，§4.1 规则 10；只许区域足迹的行写，kernel/place.mjs 加载校验按足迹种类核禁填）；写法两种（封卷后勘误 1121k22，同一集合的简写）：逐格 {x, y}，或矩形之并 {x0, x1, y0, y1}（区格序号，左闭右开）；一行只用一种，每项的字段齐全由 kernel/place.mjs 加载校验逐项核（checkPlaceTable，不论这一行参不参加划分）、划分时再核一次（E-DIM-STRUCT-FIELD），流水水体只许逐格",
    "type": "list"
   },
   "capacityL": {

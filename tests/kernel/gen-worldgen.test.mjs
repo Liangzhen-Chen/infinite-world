@@ -43,14 +43,18 @@ test('R10-1.1：流程来自 gstage 词表条目——水体足迹补缺、自�
 test('R10-1.7 手写优先：作者给了控制海拔的行（数据卡里每一行）一条偏离行都不出；其余区域足迹行各恰一条，值在 gfield 的 range 内', () => {
   const r = run();
   for (const id of authoredIds) {
-    assert.equal(Object.hasOwn(r.generated, id), false, `${id} 作者已有值，不得出偏离行`);
+    // 作者已有控制海拔：自然量阶段不出该维度的偏离（站点面积阶段另写 targetAreaM2，是别的维度，见下）。
+    assert.equal(r.generated[id] === undefined || r.generated[id].anchorElevationM === undefined, true, `${id} 作者已有值，不得出海拔偏离`);
     assert.equal(r.pending.some((p) => p.id === id && p.dims.anchorElevationM !== undefined), false);
   }
   const range = world.vocab.families.get('gfield').entries.gfield_control_elevation.range;
   const geo = geoOf();
   const buildings = new Set(geo.buildingIds);
+  // 站点面积阶段（R10-7.5）给不是政区的地点行写目标面积：作者给了海拔的地点行（没有 regionLevel）因此也有一条只含 targetAreaM2 的偏离行。
+  const authoredPlaces = authoredIds.filter((id) => place.flat.rows.has(id) && place.flat.rows.get(id).regionLevel === undefined && !buildings.has(id));
   const expected = [...place.flat.rows.keys()].filter((id) => !buildings.has(id) && !authoredIds.includes(id));
-  assert.deepEqual(Object.keys(r.generated).sort(), expected.sort());
+  assert.deepEqual(Object.keys(r.generated).sort(), [...expected, ...authoredPlaces].sort());
+  for (const id of authoredPlaces) assert.deepEqual(Object.keys(r.generated[id]).filter((k) => k !== 'generated'), ['targetAreaM2'], id);
   for (const id of expected) {
     const v = r.generated[id].anchorElevationM;
     assert.ok(Number.isFinite(v) && v >= range.min && v <= range.max, `${id} ${v}`);

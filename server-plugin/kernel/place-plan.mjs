@@ -35,6 +35,30 @@ export function expandClasses(own, broader) {
   return out;
 }
 
+// 划分记忆（卷五 §4.1 规则 16、卷二十七 R27-5.9：投影、不进存档，内容键，同输入同结果；开关它结果逐位相同）：
+// 键是全部划分输入（行输入、格空间表行、regionCellM）的内容串；加载期校验（checkPlaceTable、checkPlaceRasters）与运行期 planOf 对同一份输入只划一次。
+// 记忆的是划出的归属数组与各行足迹列表（只读共享）；每次交出的计划是它的浅拷贝，高度、几何、相邻等缓存与 bedOff 标记各自独立，
+// 所以按词表、种子、河床开关不同而缓存不同的调用互不串味。只留最近两份（全规模一份归属数组约 160 MB）。
+const partitionMemo = { last: null, prev: null }; // 最近一份与前一份（{key, value}）
+
+function partitionOnce(grid, spaces, rows) {
+  const key = JSON.stringify([grid.regionCellM, spaces, [...rows]]);
+  let hit;
+  if (partitionMemo.last !== null && partitionMemo.last.key === key) hit = partitionMemo.last.value;
+  else if (partitionMemo.prev !== null && partitionMemo.prev.key === key) {
+    hit = partitionMemo.prev.value;
+    partitionMemo.prev = partitionMemo.last;
+    partitionMemo.last = { key, value: hit };
+  } else {
+    hit = planRegionFootprints(grid, spaces, rows);
+    partitionMemo.prev = partitionMemo.last;
+    partitionMemo.last = { key, value: hit };
+  }
+  const plans = new Map();
+  for (const [w, plan] of hit.plans) plans.set(w, { ...plan, geometry: new Map(), heights: new Map(), adjacency: null, controlPoints: null, waterBeds: undefined, bedOff: undefined });
+  return { plans, errors: hit.errors };
+}
+
 /**
  * 把地点行整理成足迹划分的输入并划分。
  * @param {{
@@ -96,7 +120,7 @@ export function buildPlan(ctx) {
     });
   }
   const spaces = (ctx.gridSpaces || []).map((s) => ({ w: s.w, box: { x0: s.box.x0, y0: s.box.y0, cellsX: s.box.cellsX, cellsY: s.box.cellsY }, root: s.root }));
-  const { plans, errors } = spaces.length > 0 ? planRegionFootprints(ctx.grid, spaces, rows) : { plans: new Map(), errors: [] };
+  const { plans, errors } = spaces.length > 0 ? partitionOnce(ctx.grid, spaces, rows) : { plans: new Map(), errors: [] };
   if (ctx.bed === false) for (const plan of plans.values()) plan.bedOff = true;
   const layerRoots = ids.filter((id) => isLayerRootClasses(classes.get(id)) && !offstage.has(id));
   return { rows, plans, errors, kinds, classes, offstage, parentOf, layerRoots };
