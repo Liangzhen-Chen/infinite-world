@@ -18,7 +18,8 @@ import { installVocab, kindOf } from '../../server-plugin/kernel/vocab.mjs';
 import { runTransaction } from '../../server-plugin/kernel/transaction.mjs';
 import { installEventLog } from '../../server-plugin/kernel/events.mjs';
 import { useReportSink } from '../../server-plugin/kernel/report.mjs';
-import { installHoldingEngine } from '../../server-plugin/kernel/holdings.mjs';
+import { installHoldingEngine, openHoldingsOfKind } from '../../server-plugin/kernel/holdings.mjs';
+import { applyOpeningPeople } from '../../server-plugin/opening-people.mjs';
 import { balance, auditLedger } from '../../server-plugin/kernel/ledger.mjs';
 import { applyGovernorCalls } from '../../server-plugin/kernel/gen/holdcalls.mjs';
 import { GAP, VIA } from '../../server-plugin/kernel/gen/holdings-open.mjs';
@@ -32,6 +33,7 @@ const json = (p) => JSON.parse(readFileSync(join(ROOT, p), 'utf8'));
 const OPENING = json('world/design/opening-polity-hw.json');
 const LOCATIONS = json('world/geo/locations.json');
 const HOUSEHOLDS = json('world/people/households.json');
+const ROSTER = json('world/people/opening-roster-hw.json'); // 开局人物名册（tools/convert-people-hw.mjs）
 const START = json('world/geo/start-buildings.json').rows;
 const CLASSES = json('world/geo/building-classes.json').rows;
 
@@ -144,12 +146,21 @@ test('其余建筑（转换输入里有行的、试玩地区之外的建筑）�
   for (const e of r.assets) assert.ok(['org', 'person'].includes(kindOf(e.owner)), e.building);
 });
 
-test('家户成员与家长（H-1 家户行先带成员和家长）：户籍索引的成员对应的 person 行真实世界还没有载入，成员边写不了；索引里没有家长字段——两项都是缺口（docs/问题.md），不造人、不编家长', () => {
+test('家户成员与家长（H-4 试玩地区人物载入，李白 11-24「家户两问1122」）：九栋住处的持有户（生产调用点 generateFill 交出的 assets）就是人物载入后成员边与户主边指向的那一户，其成员恰是户籍索引里该户的成员、且恰一个家长；家长不存索引里，由 R18-2.9 在建世界时派生', () => {
   const index = HOUSEHOLDS.filter((h) => h.settlement === 'loc_hw');
-  const members = index.flatMap((h) => h.members);
-  assert.ok(members.length > 0);
-  assert.equal(members.filter((m) => W.idIndex.has(m)).length, 0);
-  for (const h of index) assert.equal(Object.hasOwn(h, 'head'), false, h.id);
+  for (const h of index) assert.equal(Object.hasOwn(h, 'head'), false, h.id); // 索引不存家长（派生值不另存）
+  const state = governed();
+  assert.deepEqual(runTransaction(state, CTX, (s) => { applyOpeningPeople(ENGINE, s, ROSTER); }), { ok: true });
+  const heads = openHoldingsOfKind(state, W.rules.gen.householdHeadKind);
+  const edges = [...heads, ...openHoldingsOfKind(state, W.rules.gen.householdMemberKind)];
+  const dwelling = fill().assets.filter((e) => e.via === VIA.dwellingHousehold && inHw(e));
+  assert.equal(dwelling.length, 9);
+  for (const e of dwelling) {
+    const members = index.find((h) => `org_${h.id}` === e.owner).members;
+    assert.ok(members.length > 0, e.building);
+    assert.deepEqual(edges.filter((x) => x.subject === e.owner).map((x) => x.holder).sort(), [...members].sort(), e.building);
+    assert.equal(heads.filter((x) => x.subject === e.owner).length, 1, e.building);
+  }
 });
 
 test('同输入同结果：两次从头建世界、生成、入账，提案与账本状态逐字节相同', () => {

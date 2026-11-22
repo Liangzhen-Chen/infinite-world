@@ -120,6 +120,18 @@ export function bandMidpoint(engine, band, bands) {
 }
 
 /**
+ * 现刻起 ageYears 年前的分钟（卷四 §4.10 P-4、G-6 的 ageYears → birthMinute：现刻 − ageYears × 年长，年长 = rules.astro 的每年分钟数）。
+ * instantiatePerson 的 ageYears 路径与开局人物载入（opening-people.mjs）共用这一处，不另写一份换算。ageYears 须是 ≥ 0 的数。
+ * @param {object} engine @param {object} state @param {number} ageYears
+ * @returns {number}
+ */
+export function birthMinuteOfAge(engine, state, ageYears) {
+  if (typeof ageYears !== 'number' || !(ageYears >= 0)) throw deny(E.E_DIM_DOMAIN_RANGE, 'ageYears is a number >= 0');
+  const year = astroView(engine).yearMinutes;
+  return clockView(engine, state).minute - Number((BigInt(fixedUnits(ageYears)) * BigInt(year.num)) / (BigInt(fixedScale()) * BigInt(year.den)));
+}
+
+/**
  * `instantiatePerson(engine, state, spec)`（卷四 §3.3 :419；§4.10 P-4）：在调用方的内核事务里建一条个体偏离行，返回 `{id}`。
  * spec 只含代号与数值：instanceId（必给，id 派生未建）、species、birthplace 必给；birthMinute 与 ageYears 二选一必给（ageYears 须落在成年阶段，G-6，转成 birthMinute = 现刻 − ageYears × 年长）；
  * sex、lifespanYears、adultMassKg、attributes（映射，可只给一部分键）、traits、culture 可给，未给的 sex 按物种 sexes 权重、lifespanYears 按物种寿命分布、
@@ -168,13 +180,8 @@ export function instantiatePerson(engine, state, spec) {
   }
   if (spec.culture !== undefined) props[S.dim.culture] = spec.culture;
 
-  const now = clockView(engine, state).minute;
   if (spec.birthMinute !== undefined) props[S.dim.birthMinute] = spec.birthMinute;
-  else {
-    if (typeof spec.ageYears !== 'number' || !(spec.ageYears >= 0)) throw deny(E.E_DIM_DOMAIN_RANGE, 'ageYears is a number >= 0');
-    const year = astroView(engine).yearMinutes;
-    props[S.dim.birthMinute] = now - Number((BigInt(fixedUnits(spec.ageYears)) * BigInt(year.num)) / (BigInt(fixedScale()) * BigInt(year.den)));
-  }
+  else props[S.dim.birthMinute] = birthMinuteOfAge(engine, state, spec.ageYears);
   writePersonRow(engine, state, { id, props });
   // G-6：ageYears 须落在成年阶段内（建行后用同一份 lifeFacts 判，不另写一份判定；不合整笔回滚）。
   if (spec.ageYears !== undefined) {

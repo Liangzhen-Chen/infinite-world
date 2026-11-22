@@ -1,0 +1,476 @@
+{
+ "persons": [
+  {
+   "id": "npc_hw_anhuai",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 30,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_13"
+  },
+  {
+   "id": "npc_hw_ayan",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 19,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_01"
+  },
+  {
+   "id": "npc_hw_baihui",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 28,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_20"
+  },
+  {
+   "id": "npc_hw_chenbai",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 62,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_02"
+  },
+  {
+   "id": "npc_hw_dengjia",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 36,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_17"
+  },
+  {
+   "id": "npc_hw_dengtai",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 9,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_17"
+  },
+  {
+   "id": "npc_hw_duanhe",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 16,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_04"
+  },
+  {
+   "id": "npc_hw_duanyan",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 42,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_04"
+  },
+  {
+   "id": "npc_hw_fangqin",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 60,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_02"
+  },
+  {
+   "id": "npc_hw_fanrong",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 59,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_06"
+  },
+  {
+   "id": "npc_hw_feikai",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 44,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_19"
+  },
+  {
+   "id": "npc_hw_feiyin",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 18,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_19"
+  },
+  {
+   "id": "npc_hw_feizhuo",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 12,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_19"
+  },
+  {
+   "id": "npc_hw_gucen",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 43,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_10"
+  },
+  {
+   "id": "npc_hw_hangli",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 48,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_19"
+  },
+  {
+   "id": "npc_hw_hedi",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 45,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_07"
+  },
+  {
+   "id": "npc_hw_hezhou",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 30,
+   "birthplace": "loc_hw",
+   "household": null
+  },
+  {
+   "id": "npc_hw_huaci",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 78,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_16"
+  },
+  {
+   "id": "npc_hw_jiaoyou",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 24,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_20"
+  },
+  {
+   "id": "npc_hw_jinping",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 50,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_22"
+  },
+  {
+   "id": "npc_hw_linsui",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 34,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_01"
+  },
+  {
+   "id": "npc_hw_liyan",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 69,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_21"
+  },
+  {
+   "id": "npc_hw_luowei",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 30,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_08"
+  },
+  {
+   "id": "npc_hw_luoxing",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 8,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_08"
+  },
+  {
+   "id": "npc_hw_luqing",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 30,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_12"
+  },
+  {
+   "id": "npc_hw_luxun",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 64,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_12"
+  },
+  {
+   "id": "npc_hw_meiling",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 30,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_11"
+  },
+  {
+   "id": "npc_hw_meiyue",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 63,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_11"
+  },
+  {
+   "id": "npc_hw_miaozhen",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 67,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_15"
+  },
+  {
+   "id": "npc_hw_puduo",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 57,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_18"
+  },
+  {
+   "id": "npc_hw_puxin",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 31,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_18"
+  },
+  {
+   "id": "npc_hw_randai",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 35,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_17"
+  },
+  {
+   "id": "npc_hw_ranmo",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 63,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_17"
+  },
+  {
+   "id": "npc_hw_ruanzheng",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 58,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_09"
+  },
+  {
+   "id": "npc_hw_sangwu",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 61,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_11"
+  },
+  {
+   "id": "npc_hw_shaohe",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 70,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_15"
+  },
+  {
+   "id": "npc_hw_shaoyu",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 13,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_15"
+  },
+  {
+   "id": "npc_hw_shaoyun",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 38,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_15"
+  },
+  {
+   "id": "npc_hw_shendu",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 30,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_14"
+  },
+  {
+   "id": "npc_hw_shenhe",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 56,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_14"
+  },
+  {
+   "id": "npc_hw_shijin",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 32,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_08"
+  },
+  {
+   "id": "npc_hw_sulan",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 30,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_09"
+  },
+  {
+   "id": "npc_hw_taozhi",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 30,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_06"
+  },
+  {
+   "id": "npc_hw_wengqiao",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 66,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_18"
+  },
+  {
+   "id": "npc_hw_wengqin",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 14,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_18"
+  },
+  {
+   "id": "npc_hw_wushuo",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 30,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_05"
+  },
+  {
+   "id": "npc_hw_xiejin",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 41,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_21"
+  },
+  {
+   "id": "npc_hw_xierui",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 17,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_21"
+  },
+  {
+   "id": "npc_hw_xieyi",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 6,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_21"
+  },
+  {
+   "id": "npc_hw_xinglu",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 54,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_16"
+  },
+  {
+   "id": "npc_hw_xingshu",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 16,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_16"
+  },
+  {
+   "id": "npc_hw_xuling",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 30,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_03"
+  },
+  {
+   "id": "npc_hw_yinge",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 52,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_22"
+  },
+  {
+   "id": "npc_hw_yinqiu",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 27,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_22"
+  },
+  {
+   "id": "npc_hw_yinzhi",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 7,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_22"
+  },
+  {
+   "id": "npc_hw_yuxing",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 68,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_10"
+  },
+  {
+   "id": "npc_hw_zhengshuisheng",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 46,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_07"
+  },
+  {
+   "id": "npc_hw_zhongxiu",
+   "species": "species_human",
+   "sex": "sex_male",
+   "ageYears": 71,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_20"
+  },
+  {
+   "id": "npc_hw_zhongya",
+   "species": "species_human",
+   "sex": "sex_female",
+   "ageYears": 10,
+   "birthplace": "loc_hw",
+   "household": "org_house_hw_20"
+  }
+ ]
+}

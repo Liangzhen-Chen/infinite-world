@@ -107,6 +107,22 @@
    "grade": "referenced",
    "source": "卷八 §2.1 :133、:1535（tenuremode 族封闭三项：tenure_common 归组织公有、tenure_household 归户、tenure_superior 归上级）；卷六 §4.1 规则 11 :642 按这三项推 ownerRef",
    "basis": "句柄：规则代码只经本键认三种保有方式，不写 tenure_ 字面量（同 roleTract 先例）；读者是开局持有阶段 gstage_holdings"
+  },
+  {
+   "key": "householdMemberKind",
+   "value": "hk_household_member",
+   "file": "server-plugin/opening-people.mjs",
+   "grade": "referenced",
+   "source": "卷十八 §4.1（持有边种类行 hk_household_member，成员边）、:746 A18-2.2（每个在世个体持有的、标的为家户类组织且 membership 为真的现役边至多一条）；李白 11-24「家户两问1122」H-4（试玩地区人物载入，家户成员边）",
+   "basis": "句柄：开局人物载入只经本键认家户成员边的种类，不写 hk_ 字面量（同 tenureModes 先例）；种类行在 _vocab.json holding_kind 族；读者是 opening-people.mjs"
+  },
+  {
+   "key": "householdHeadKind",
+   "value": "hk_household_head",
+   "file": "server-plugin/opening-people.mjs",
+   "grade": "referenced",
+   "source": "卷十八 §4.1（持有边种类行 hk_household_head，户主边，与成员边互斥自动让出）、R18-2.9 :712（户主候补全序）、:746 A18-2.2（每个家户恰有一条户主边）；李白 11-22 15:21 P-2（开局家长照 R18-2.9 全序派生）",
+   "basis": "句柄：同 householdMemberKind；读者是 opening-people.mjs"
   }
  ]
 }
