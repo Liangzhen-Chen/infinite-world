@@ -1,19 +1,28 @@
 {
  "version": 1,
  "scope": "world_root",
- "note": "转换输入（与 start-buildings.json 同类）：旧数据里 settlements.json 的 buildingIds 与 start-buildings.json 都没有列、但按旧数据本身的字段读是建筑的地点行，逐行写出依据，供 tools/convert-geo.mjs 挂 comp_facility（卷五 §4.1 规则 2：足迹种类只按组件类判）。人工核对清单：这几行没有任何清单出处，挂不挂建筑类须人工核对（卷五 M5-31 :1413 离线派生后人工核对一遍）；不挂则它们留作区域足迹行，同父同区格的种子会被加载器拒收（E-GRID-SEED-SAME-CELL）。不按 id 前缀、不按名字推，每行单独列出。",
+ "note": "转换输入（与 start-buildings.json 同类）：旧数据里 settlements.json 的 buildingIds 与 start-buildings.json 都没有列、但按旧数据本身的字段读是建筑的地点行，逐行写出依据，供 tools/convert-geo.mjs 挂 comp_facility（卷五 §4.1 规则 2：足迹种类只按组件类判）。人工核对清单：这几行没有任何清单出处，挂不挂建筑类须人工核对（卷五 M5-31 :1413 离线派生后人工核对一遍）；不挂则它们留作区域足迹行，同父同区格的种子会被加载器拒收（E-GRID-SEED-SAME-CELL）。不按 id 前缀、不按名字推，每行单独列出。另：本表也登记 start-buildings.json 以外全部建筑行的设施类型 intendedType（作者数据，source 作者，intendedBasis 写依据；转换脚本读 intendedType 字串）；前面几行的 basis 说的是挂建筑类的依据；没有 intendedType 的建筑是设施类型表 10 类里找不到合适项的，清单见 docs/问题.md“待李白：设施类型对不上的建筑”。",
  "rows": [
   {
    "id": "bld_bs_measured_hall",
-   "basis": "locations.json 该行有 rooms（公开教学前廊）、openHours、purpose（侠客步法与兵器基础），父为 loc_bs_dongxue，与同父另两行同一区格（旧坐标 24.35 km、0.325–0.375 km）；settlements.json buildingIds、start-buildings.json 都未列。按旧字段读是一座有前廊的教学建筑"
+   "basis": "locations.json 该行有 rooms（公开教学前廊）、openHours、purpose（侠客步法与兵器基础），父为 loc_bs_dongxue，与同父另两行同一区格（旧坐标 24.35 km、0.325–0.375 km）；settlements.json buildingIds、start-buildings.json 都未列。按旧字段读是一座有前廊的教学建筑",
+   "intendedType": "fac_school",
+   "source": "作者",
+   "intendedBasis": "量廊武馆在公开教学前廊授探步量距与兵器基础、按课收费，是武馆学舍；依据：world/geo/locations.json:19417、19431、19442"
   },
   {
    "id": "bld_bs_reed_dao",
-   "basis": "locations.json 该行有 rooms（公开教学前廊）、openHours、purpose（验汀传统控墨、符箓与护界初课），父为 loc_bs_dongxue；settlements.json buildingIds、start-buildings.json 都未列。按旧字段读是一座有前廊的教学建筑"
+   "basis": "locations.json 该行有 rooms（公开教学前廊）、openHours、purpose（验汀传统控墨、符箓与护界初课），父为 loc_bs_dongxue；settlements.json buildingIds、start-buildings.json 都未列。按旧字段读是一座有前廊的教学建筑",
+   "intendedType": "fac_school",
+   "source": "作者",
+   "intendedBasis": "芦衡观在公开教学前廊授控墨、符箓与护界初课并按课收费，主要用作流派学舍；依据：world/geo/locations.json:18653、18667、18678"
   },
   {
    "id": "bld_bs_still_temple",
-   "basis": "locations.json 该行有 rooms（公开教学前廊）、openHours、purpose（原创止波师承静息与体术初课），父为 loc_bs_dongxue；settlements.json buildingIds、start-buildings.json 都未列。按旧字段读是一座有前廊的教学建筑"
+   "basis": "locations.json 该行有 rooms（公开教学前廊）、openHours、purpose（原创止波师承静息与体术初课），父为 loc_bs_dongxue；settlements.json buildingIds、start-buildings.json 都未列。按旧字段读是一座有前廊的教学建筑",
+   "intendedType": "fac_school",
+   "source": "作者",
+   "intendedBasis": "止波寺在公开静息廊授三息定桩与体术初课并按课收费，主要用作流派学舍；依据：world/geo/locations.json:19269、19283、19294"
   },
   {
    "id": "bld_hc_citywall",
@@ -22,6 +31,1524 @@
   {
    "id": "bld_hc_stone_gate",
    "basis": "locations.json 该行有 rooms（空表）、purpose（环城公共城墙的现役石砌门体）、owner（环城郡署），父为 loc_far_huancheng；settlements.json buildingIds、start-buildings.json 都未列。按旧字段读是郡署的公共设施（城门）"
+  },
+  {
+   "id": "bld_yp_hall",
+   "intendedType": "fac_office",
+   "source": "作者",
+   "intendedBasis": "坡口议事屋是村中轮水、换工与口述地名记录的村务处所，不属任何私户，用途同村务屋（官署）；依据：world/geo/locations.json:3784、3799"
+  },
+  {
+   "id": "bld_yp_workroom",
+   "intendedType": "fac_workshop",
+   "source": "作者",
+   "intendedBasis": "南坡缝线屋是各户借位缝补衣物、整理麻线的共用手工工作处所（缝）；依据：world/geo/locations.json:4010、4028"
+  },
+  {
+   "id": "bld_wt_hall",
+   "intendedType": "fac_office",
+   "source": "作者",
+   "intendedBasis": "汀口记事屋是苇场工签、托话与岸界口述记录的村务处所，另一侧住屋才属私宅；依据：world/geo/locations.json:6280、6298"
+  },
+  {
+   "id": "bld_wt_workroom",
+   "intendedType": "fac_workshop",
+   "source": "作者",
+   "intendedBasis": "苇席收边屋做苇席收边与席料、旧衣整理的手工活，库存归各物主；依据：world/geo/locations.json:6540、6558"
+  },
+  {
+   "id": "bld_lq_hall",
+   "intendedType": "fac_office",
+   "source": "作者",
+   "intendedBasis": "泉标记事屋是轮泉簿、工签和旧石标文字核抄的村务处所；依据：world/geo/locations.json:8801、8819"
+  },
+  {
+   "id": "bld_lq_workroom",
+   "intendedType": "fac_workshop",
+   "source": "作者",
+   "intendedBasis": "旧柄缝补屋是拼修旧木柄、补缀工衣的手工工作处所（木作、缝）；依据：world/geo/locations.json:9012、9030"
+  },
+  {
+   "id": "bld_sb_hall",
+   "intendedType": "fac_office",
+   "source": "作者",
+   "intendedBasis": "桑坂换工屋是桑园换工、晒架工时与丝束签记的村务处所，不设常驻住户；依据：world/geo/locations.json:11314、11332"
+  },
+  {
+   "id": "bld_sb_workroom",
+   "intendedType": "fac_workshop",
+   "source": "作者",
+   "intendedBasis": "晒线缝补屋作丝线绕束、衣物裁改与洗晒，是缝织手工工作处所；依据：world/geo/locations.json:11574、11592"
+  },
+  {
+   "id": "bld_bs_office",
+   "intendedType": "fac_office",
+   "source": "作者",
+   "intendedBasis": "白石镇公署办理户籍与公事登记，设递件窗与公开事项板；依据：world/geo/locations.json:14099、14110"
+  },
+  {
+   "id": "bld_bs_inn",
+   "intendedType": "fac_inn",
+   "source": "作者",
+   "intendedBasis": "南市客舍用于旅人住宿联络，设客房，客房依房客及店主许可；依据：world/geo/locations.json:14245、14256"
+  },
+  {
+   "id": "bld_bs_smith",
+   "intendedType": "fac_forge",
+   "source": "作者",
+   "intendedBasis": "炉巷铁作坊做金属修补，设接件桌与旧工具架，工位由匠人安排；依据：world/geo/locations.json:14273、14284"
+  },
+  {
+   "id": "bld_bs_potter",
+   "intendedType": "fac_workshop",
+   "source": "作者",
+   "intendedBasis": "炉巷陶作屋是陶工的手工工作处所（陶），设样坯架与交件桌，镇内小窑在镇口公共处；依据：world/geo/locations.json:14301、14312"
+  },
+  {
+   "id": "bld_bs_cloth",
+   "intendedType": "fac_workshop",
+   "source": "作者",
+   "intendedBasis": "炉巷缝织屋是布衣修补的缝织手工工作处所（缝、织），设接衣柜台与布样架；依据：world/geo/locations.json:14329、14340"
+  },
+  {
+   "id": "bld_bs_school",
+   "intendedType": "fac_school",
+   "source": "作者",
+   "intendedBasis": "东街学馆用于识字与抄录，前厅可问学，未成年学徒安排日常学习；依据：world/geo/locations.json:14357、14368"
+  },
+  {
+   "id": "bld_bs_temple",
+   "intendedType": "fac_shrine",
+   "source": "作者",
+   "intendedBasis": "东街灯祠用于送行与灯会，设灯架与供灯，供灯须先问保管人；依据：world/geo/locations.json:14810、14821"
+  },
+  {
+   "id": "bld_bs_shrine",
+   "intendedType": "fac_shrine",
+   "source": "作者",
+   "intendedBasis": "白石归途殿是复活登记祭坛，登记五级冒险者并以这里为复活点；依据：world/geo/locations.json:1412、1411"
+  },
+  {
+   "id": "site_ms_tj_forge",
+   "intendedType": "fac_forge",
+   "source": "作者",
+   "intendedBasis": "铸补间是用旧窑膛改的小作坊，炉火烧木炭，补破锅、敲直弯钉做金属修补；依据：world/geo/locations.json:20730、20743"
+  },
+  {
+   "id": "site_ms_tj_store",
+   "intendedType": "fac_granary",
+   "source": "作者",
+   "intendedBasis": "仓窟是炭阶地宫存粮的洞室，堆着麻袋装的燕麦，墙上刻着刻痕账；依据：world/geo/locations.json:21025、21038"
+  },
+  {
+   "id": "site_ms_yg_shed",
+   "intendedType": "fac_workshop",
+   "source": "作者",
+   "intendedBasis": "修具棚是削铲柄、补土筐的工具修缮棚，属木作与编筐的手工工作处所；依据：world/geo/locations.json:21915、21928"
+  },
+  {
+   "id": "site_ms_yg_store",
+   "intendedType": "fac_granary",
+   "source": "作者",
+   "intendedBasis": "林产窖存木精收下的榛仁、核桃与干果并按季分份，是榆根里的食物窖；依据：world/geo/locations.json:22280、22293"
+  },
+  {
+   "id": "site_ms_ll_shop",
+   "intendedType": "fac_workshop",
+   "source": "作者",
+   "intendedBasis": "修具棚是共炉旁修矿镐、敲铁钉的手工修具处所，无锻打炉火，与同类修具棚（榆根里、灰棚集）一致取作坊；依据：world/geo/locations.json:22550、22565、22578"
+  },
+  {
+   "id": "site_ms_ll_store",
+   "intendedType": "fac_granary",
+   "source": "作者",
+   "intendedBasis": "贡粮棚存着砾泉送来的贡粮，营头每日清点，是存粮的仓；依据：world/geo/locations.json:22913、22928、22941"
+  },
+  {
+   "id": "site_ms_hx_store",
+   "intendedType": "fac_granary",
+   "source": "作者",
+   "intendedBasis": "回汐存芦棚以芦席包着换来的干粮、由漪衡看管储备并核粮份，是存粮的仓；依据：world/geo/locations.json:23751、23766、23780"
+  },
+  {
+   "id": "site_ms_gs_repair",
+   "intendedType": "fac_workshop",
+   "source": "作者",
+   "intendedBasis": "灰棚补具檐下兽人工匠削小工具木柄、拆绳重结，是手工木作加工处所；依据：world/geo/locations.json:23994、24009、24022"
+  },
+  {
+   "id": "bld_yp_home_01",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:4196、4211"
+  },
+  {
+   "id": "bld_yp_home_02",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:4264、4279"
+  },
+  {
+   "id": "bld_yp_home_03",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:4332、4347"
+  },
+  {
+   "id": "bld_yp_home_04",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:4400、4415"
+  },
+  {
+   "id": "bld_yp_home_05",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:4468、4483"
+  },
+  {
+   "id": "bld_yp_home_06",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:4536、4551"
+  },
+  {
+   "id": "bld_yp_home_07",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:4604、4619"
+  },
+  {
+   "id": "bld_yp_home_08",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:4672、4687"
+  },
+  {
+   "id": "bld_yp_home_09",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:4740、4755"
+  },
+  {
+   "id": "bld_yp_home_10",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:4808、4823"
+  },
+  {
+   "id": "bld_yp_home_11",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:4876、4891"
+  },
+  {
+   "id": "bld_yp_home_12",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:4944、4959"
+  },
+  {
+   "id": "bld_yp_home_13",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:5012、5027"
+  },
+  {
+   "id": "bld_yp_home_14",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:5080、5095"
+  },
+  {
+   "id": "bld_yp_home_15",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:5148、5163"
+  },
+  {
+   "id": "bld_yp_home_16",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:5216、5231"
+  },
+  {
+   "id": "bld_yp_home_17",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:5284、5299"
+  },
+  {
+   "id": "bld_yp_home_18",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:5352、5367"
+  },
+  {
+   "id": "bld_yp_home_19",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:5420、5435"
+  },
+  {
+   "id": "bld_yp_home_20",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:5488、5503"
+  },
+  {
+   "id": "bld_yp_home_21",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:5556、5571"
+  },
+  {
+   "id": "bld_yp_home_22",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:5622、5637"
+  },
+  {
+   "id": "bld_yp_home_23",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:5688、5703"
+  },
+  {
+   "id": "bld_yp_home_24",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:5754、5769"
+  },
+  {
+   "id": "bld_yp_home_25",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:5820、5835"
+  },
+  {
+   "id": "bld_yp_home_26",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:5886、5901"
+  },
+  {
+   "id": "bld_yp_home_27",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:5952、5967"
+  },
+  {
+   "id": "bld_yp_home_28",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:6018、6033"
+  },
+  {
+   "id": "bld_yp_home_29",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:6084、6099"
+  },
+  {
+   "id": "bld_yp_home_30",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:6150、6165"
+  },
+  {
+   "id": "bld_wt_home_01",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:6677、6692"
+  },
+  {
+   "id": "bld_wt_home_02",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:6747、6762"
+  },
+  {
+   "id": "bld_wt_home_03",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:6817、6832"
+  },
+  {
+   "id": "bld_wt_home_04",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:6887、6902"
+  },
+  {
+   "id": "bld_wt_home_05",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:6957、6972"
+  },
+  {
+   "id": "bld_wt_home_06",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:7027、7042"
+  },
+  {
+   "id": "bld_wt_home_07",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:7097、7112"
+  },
+  {
+   "id": "bld_wt_home_08",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:7167、7182"
+  },
+  {
+   "id": "bld_wt_home_09",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:7237、7252"
+  },
+  {
+   "id": "bld_wt_home_10",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:7307、7322"
+  },
+  {
+   "id": "bld_wt_home_11",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:7377、7392"
+  },
+  {
+   "id": "bld_wt_home_12",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:7445、7460"
+  },
+  {
+   "id": "bld_wt_home_13",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:7513、7528"
+  },
+  {
+   "id": "bld_wt_home_14",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:7581、7596"
+  },
+  {
+   "id": "bld_wt_home_15",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:7649、7664"
+  },
+  {
+   "id": "bld_wt_home_16",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:7717、7732"
+  },
+  {
+   "id": "bld_wt_home_17",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:7785、7800"
+  },
+  {
+   "id": "bld_wt_home_18",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:7853、7868"
+  },
+  {
+   "id": "bld_wt_home_19",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:7921、7936"
+  },
+  {
+   "id": "bld_wt_home_20",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:7989、8004"
+  },
+  {
+   "id": "bld_wt_home_21",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:8057、8072"
+  },
+  {
+   "id": "bld_wt_home_22",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:8125、8140"
+  },
+  {
+   "id": "bld_wt_home_23",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:8193、8208"
+  },
+  {
+   "id": "bld_wt_home_24",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:8261、8276"
+  },
+  {
+   "id": "bld_wt_home_25",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:8329、8344"
+  },
+  {
+   "id": "bld_wt_home_26",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:8397、8412"
+  },
+  {
+   "id": "bld_wt_home_27",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:8465、8480"
+  },
+  {
+   "id": "bld_wt_home_28",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:8533、8548"
+  },
+  {
+   "id": "bld_wt_home_29",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:8601、8616"
+  },
+  {
+   "id": "bld_wt_home_30",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:8669、8684"
+  },
+  {
+   "id": "bld_lq_home_01",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:9198、9213"
+  },
+  {
+   "id": "bld_lq_home_02",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:9268、9283"
+  },
+  {
+   "id": "bld_lq_home_03",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:9338、9353"
+  },
+  {
+   "id": "bld_lq_home_04",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:9408、9423"
+  },
+  {
+   "id": "bld_lq_home_05",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:9478、9493"
+  },
+  {
+   "id": "bld_lq_home_06",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:9548、9563"
+  },
+  {
+   "id": "bld_lq_home_07",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:9618、9633"
+  },
+  {
+   "id": "bld_lq_home_08",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:9686、9701"
+  },
+  {
+   "id": "bld_lq_home_09",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:9754、9769"
+  },
+  {
+   "id": "bld_lq_home_10",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:9822、9837"
+  },
+  {
+   "id": "bld_lq_home_11",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:9890、9905"
+  },
+  {
+   "id": "bld_lq_home_12",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:9958、9973"
+  },
+  {
+   "id": "bld_lq_home_13",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:10026、10041"
+  },
+  {
+   "id": "bld_lq_home_14",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:10094、10109"
+  },
+  {
+   "id": "bld_lq_home_15",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:10162、10177"
+  },
+  {
+   "id": "bld_lq_home_16",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:10230、10245"
+  },
+  {
+   "id": "bld_lq_home_17",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:10298、10313"
+  },
+  {
+   "id": "bld_lq_home_18",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:10366、10381"
+  },
+  {
+   "id": "bld_lq_home_19",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:10434、10449"
+  },
+  {
+   "id": "bld_lq_home_20",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:10502、10517"
+  },
+  {
+   "id": "bld_lq_home_21",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:10570、10585"
+  },
+  {
+   "id": "bld_lq_home_22",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:10638、10653"
+  },
+  {
+   "id": "bld_lq_home_23",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:10706、10721"
+  },
+  {
+   "id": "bld_lq_home_24",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:10774、10789"
+  },
+  {
+   "id": "bld_lq_home_25",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:10842、10857"
+  },
+  {
+   "id": "bld_lq_home_26",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:10910、10925"
+  },
+  {
+   "id": "bld_lq_home_27",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:10978、10993"
+  },
+  {
+   "id": "bld_lq_home_28",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:11046、11061"
+  },
+  {
+   "id": "bld_lq_home_29",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:11114、11129"
+  },
+  {
+   "id": "bld_lq_home_30",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:11182、11197"
+  },
+  {
+   "id": "bld_sb_home_01",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:11711、11726"
+  },
+  {
+   "id": "bld_sb_home_02",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:11781、11796"
+  },
+  {
+   "id": "bld_sb_home_03",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:11851、11866"
+  },
+  {
+   "id": "bld_sb_home_04",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:11921、11936"
+  },
+  {
+   "id": "bld_sb_home_05",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:11991、12006"
+  },
+  {
+   "id": "bld_sb_home_06",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:12061、12076"
+  },
+  {
+   "id": "bld_sb_home_07",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:12131、12146"
+  },
+  {
+   "id": "bld_sb_home_08",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:12201、12216"
+  },
+  {
+   "id": "bld_sb_home_09",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:12271、12286"
+  },
+  {
+   "id": "bld_sb_home_10",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:12341、12356"
+  },
+  {
+   "id": "bld_sb_home_11",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:12411、12426"
+  },
+  {
+   "id": "bld_sb_home_12",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:12481、12496"
+  },
+  {
+   "id": "bld_sb_home_13",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:12551、12566"
+  },
+  {
+   "id": "bld_sb_home_14",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:12621、12636"
+  },
+  {
+   "id": "bld_sb_home_15",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:12691、12706"
+  },
+  {
+   "id": "bld_sb_home_16",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:12761、12776"
+  },
+  {
+   "id": "bld_sb_home_17",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:12831、12846"
+  },
+  {
+   "id": "bld_sb_home_18",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:12901、12916"
+  },
+  {
+   "id": "bld_sb_home_19",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:12971、12986"
+  },
+  {
+   "id": "bld_sb_home_20",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:13041、13056"
+  },
+  {
+   "id": "bld_sb_home_21",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:13111、13126"
+  },
+  {
+   "id": "bld_sb_home_22",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:13179、13194"
+  },
+  {
+   "id": "bld_sb_home_23",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:13247、13262"
+  },
+  {
+   "id": "bld_sb_home_24",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:13315、13330"
+  },
+  {
+   "id": "bld_sb_home_25",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:13383、13398"
+  },
+  {
+   "id": "bld_sb_home_26",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:13451、13466"
+  },
+  {
+   "id": "bld_sb_home_27",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:13519、13534"
+  },
+  {
+   "id": "bld_sb_home_28",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:13587、13602"
+  },
+  {
+   "id": "bld_sb_home_29",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:13655、13670"
+  },
+  {
+   "id": "bld_sb_home_30",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:13723、13738"
+  },
+  {
+   "id": "bld_bs_home_001",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15107、15121"
+  },
+  {
+   "id": "bld_bs_home_002",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15147、15161"
+  },
+  {
+   "id": "bld_bs_home_003",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15187、15201"
+  },
+  {
+   "id": "bld_bs_home_004",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15227、15241"
+  },
+  {
+   "id": "bld_bs_home_005",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15267、15281"
+  },
+  {
+   "id": "bld_bs_home_006",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15307、15321"
+  },
+  {
+   "id": "bld_bs_home_007",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15347、15361"
+  },
+  {
+   "id": "bld_bs_home_008",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15387、15401"
+  },
+  {
+   "id": "bld_bs_home_009",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15427、15441"
+  },
+  {
+   "id": "bld_bs_home_010",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15467、15481"
+  },
+  {
+   "id": "bld_bs_home_011",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15507、15521"
+  },
+  {
+   "id": "bld_bs_home_012",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15547、15561"
+  },
+  {
+   "id": "bld_bs_home_013",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15587、15601"
+  },
+  {
+   "id": "bld_bs_home_014",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15627、15641"
+  },
+  {
+   "id": "bld_bs_home_015",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15667、15681"
+  },
+  {
+   "id": "bld_bs_home_016",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15707、15721"
+  },
+  {
+   "id": "bld_bs_home_017",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15747、15761"
+  },
+  {
+   "id": "bld_bs_home_018",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15787、15801"
+  },
+  {
+   "id": "bld_bs_home_019",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15827、15841"
+  },
+  {
+   "id": "bld_bs_home_020",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15867、15881"
+  },
+  {
+   "id": "bld_bs_home_021",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15907、15921"
+  },
+  {
+   "id": "bld_bs_home_022",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15947、15961"
+  },
+  {
+   "id": "bld_bs_home_023",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:15987、16001"
+  },
+  {
+   "id": "bld_bs_home_024",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16027、16041"
+  },
+  {
+   "id": "bld_bs_home_025",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16067、16081"
+  },
+  {
+   "id": "bld_bs_home_026",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16107、16121"
+  },
+  {
+   "id": "bld_bs_home_027",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16147、16161"
+  },
+  {
+   "id": "bld_bs_home_028",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16187、16201"
+  },
+  {
+   "id": "bld_bs_home_029",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16227、16241"
+  },
+  {
+   "id": "bld_bs_home_030",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16267、16281"
+  },
+  {
+   "id": "bld_bs_home_031",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16307、16321"
+  },
+  {
+   "id": "bld_bs_home_032",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16347、16361"
+  },
+  {
+   "id": "bld_bs_home_033",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16387、16401"
+  },
+  {
+   "id": "bld_bs_home_034",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16427、16441"
+  },
+  {
+   "id": "bld_bs_home_035",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16467、16481"
+  },
+  {
+   "id": "bld_bs_home_036",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16507、16521"
+  },
+  {
+   "id": "bld_bs_home_037",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16547、16561"
+  },
+  {
+   "id": "bld_bs_home_038",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16586、16600"
+  },
+  {
+   "id": "bld_bs_home_039",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16625、16639"
+  },
+  {
+   "id": "bld_bs_home_040",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16664、16678"
+  },
+  {
+   "id": "bld_bs_home_041",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16703、16717"
+  },
+  {
+   "id": "bld_bs_home_042",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16742、16756"
+  },
+  {
+   "id": "bld_bs_home_043",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16781、16795"
+  },
+  {
+   "id": "bld_bs_home_044",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16820、16834"
+  },
+  {
+   "id": "bld_bs_home_045",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16859、16873"
+  },
+  {
+   "id": "bld_bs_home_046",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16898、16912"
+  },
+  {
+   "id": "bld_bs_home_047",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16937、16951"
+  },
+  {
+   "id": "bld_bs_home_048",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:16976、16990"
+  },
+  {
+   "id": "bld_bs_home_049",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17015、17029"
+  },
+  {
+   "id": "bld_bs_home_050",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17054、17068"
+  },
+  {
+   "id": "bld_bs_home_051",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17093、17107"
+  },
+  {
+   "id": "bld_bs_home_052",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17132、17146"
+  },
+  {
+   "id": "bld_bs_home_053",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17171、17185"
+  },
+  {
+   "id": "bld_bs_home_054",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17210、17224"
+  },
+  {
+   "id": "bld_bs_home_055",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17249、17263"
+  },
+  {
+   "id": "bld_bs_home_056",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17288、17302"
+  },
+  {
+   "id": "bld_bs_home_057",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17327、17341"
+  },
+  {
+   "id": "bld_bs_home_058",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17366、17380"
+  },
+  {
+   "id": "bld_bs_home_059",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17405、17419"
+  },
+  {
+   "id": "bld_bs_home_060",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17444、17458"
+  },
+  {
+   "id": "bld_bs_home_061",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17483、17497"
+  },
+  {
+   "id": "bld_bs_home_062",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17522、17536"
+  },
+  {
+   "id": "bld_bs_home_063",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17561、17575"
+  },
+  {
+   "id": "bld_bs_home_064",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17600、17614"
+  },
+  {
+   "id": "bld_bs_home_065",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17639、17653"
+  },
+  {
+   "id": "bld_bs_home_066",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17678、17692"
+  },
+  {
+   "id": "bld_bs_home_067",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17717、17731"
+  },
+  {
+   "id": "bld_bs_home_068",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17756、17770"
+  },
+  {
+   "id": "bld_bs_home_069",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17795、17809"
+  },
+  {
+   "id": "bld_bs_home_070",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17834、17848"
+  },
+  {
+   "id": "bld_bs_home_071",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17873、17887"
+  },
+  {
+   "id": "bld_bs_home_072",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17912、17926"
+  },
+  {
+   "id": "bld_bs_home_073",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17951、17965"
+  },
+  {
+   "id": "bld_bs_home_074",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:17990、18004"
+  },
+  {
+   "id": "bld_bs_home_075",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:18029、18043"
+  },
+  {
+   "id": "bld_bs_home_076",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:18068、18082"
+  },
+  {
+   "id": "bld_bs_home_077",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:18107、18121"
+  },
+  {
+   "id": "bld_bs_home_078",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:18146、18160"
+  },
+  {
+   "id": "bld_bs_home_079",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:18185、18199"
+  },
+  {
+   "id": "bld_bs_home_080",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:18224、18238"
+  },
+  {
+   "id": "bld_bs_home_081",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:18263、18277"
+  },
+  {
+   "id": "bld_bs_home_082",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:18302、18316"
+  },
+  {
+   "id": "bld_bs_home_083",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:18341、18355"
+  },
+  {
+   "id": "bld_bs_home_084",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:18380、18394"
+  },
+  {
+   "id": "bld_bs_home_085",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:18419、18433"
+  },
+  {
+   "id": "bld_bs_home_086",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:18458、18472"
+  },
+  {
+   "id": "bld_bs_home_087",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:18497、18511"
+  },
+  {
+   "id": "bld_bs_home_088",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:18536、18550"
+  },
+  {
+   "id": "bld_bs_home_089",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:18575、18589"
+  },
+  {
+   "id": "bld_bs_home_090",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:18614、18628"
+  },
+  {
+   "id": "bld_ms_tj_home_01",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:20851、20866"
+  },
+  {
+   "id": "bld_ms_tj_home_02",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:20892、20907"
+  },
+  {
+   "id": "bld_ms_tj_home_03",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:20933、20948"
+  },
+  {
+   "id": "bld_ms_td_home_01",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:21456、21471"
+  },
+  {
+   "id": "bld_ms_td_home_02",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:21497、21512"
+  },
+  {
+   "id": "bld_ms_td_home_03",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:21538、21553"
+  },
+  {
+   "id": "bld_ms_yg_home_01",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:22106、22121"
+  },
+  {
+   "id": "bld_ms_yg_home_02",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:22148、22163"
+  },
+  {
+   "id": "bld_ms_yg_home_03",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:22189、22204"
+  },
+  {
+   "id": "bld_ms_ll_home_01",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:22754、22769"
+  },
+  {
+   "id": "bld_ms_ll_home_02",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:22796、22811"
+  },
+  {
+   "id": "bld_ms_ll_home_03",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:22838、22853"
+  },
+  {
+   "id": "bld_ms_hx_01",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:24252、24267"
+  },
+  {
+   "id": "bld_ms_hx_02",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:24292、24307"
+  },
+  {
+   "id": "bld_ms_hx_03",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:24332、24347"
+  },
+  {
+   "id": "bld_ms_hx_04",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:24372、24387"
+  },
+  {
+   "id": "bld_ms_gs_01",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:24412、24427"
+  },
+  {
+   "id": "bld_ms_gs_02",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:24453、24468"
+  },
+  {
+   "id": "bld_ms_gs_03",
+   "intendedType": "fac_house",
+   "source": "作者",
+   "intendedBasis": "旧数据 purpose 私宅、access private（同河湾村私宅取 fac_house）；依据：world/geo/locations.json:24495、24510"
   }
  ]
 }
