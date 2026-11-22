@@ -63,9 +63,11 @@ test('⑨ 王国继承不再是占位（李白 11-23 b41e0801）：successionDef
   assert.ok(e.basis.includes('待调'));
 });
 
-test('真实表的公库（卷八 :135、E-ORG-TREASURY；卷六勘误 1123k50）：王国与村社两条组织行 treasury 恰是 [purpose_general]，该分区是 purpose 族条目且 polity.roles.purposes.general 指它；整个真实世界加载无错', () => {
+test('真实表的公库（卷八 :135、E-ORG-TREASURY；卷六勘误 1123k50）：王国、村社与河湾村 22 户家户行（李白 11-24 H-1，开局持有卡）每条组织行 treasury 恰是 [purpose_general]，该分区是 purpose 族条目且 polity.roles.purposes.general 指它；整个真实世界加载无错', () => {
   const orgs = W.tables.get('org').flat.rows;
-  assert.deepEqual([...orgs.keys()].sort(), ['org_realm_main', 'org_village_hw']);
+  const households = [...orgs.keys()].filter((id) => id.startsWith('org_house_hw_'));
+  assert.equal(households.length, 22);
+  assert.deepEqual([...orgs.keys()].filter((id) => !households.includes(id)).sort(), ['org_realm_main', 'org_village_hw']);
   for (const id of orgs.keys()) assert.deepEqual(orgs.get(id).treasury, ['purpose_general'], id);
   assert.equal(W.vocab.index.get('purpose_general').family, 'purpose');
   assert.equal(W.rules.polity.rolesPurposes.general, 'purpose_general');

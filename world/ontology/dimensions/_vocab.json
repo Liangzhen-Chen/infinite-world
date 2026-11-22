@@ -309,6 +309,7 @@
     "class_org_faction": {},
     "class_org_firm": {},
     "class_org_guild": {},
+    "class_org_household": {},
     "class_org_monster_band": {},
     "class_org_state": {},
     "class_org_town": {},
@@ -668,6 +669,17 @@
      "writesFamilies": [],
      "writesKinds": ["place"]
     },
+    "gstage_holdings": {
+     "after": ["gstage_polity"],
+     "before": [],
+     "basis": "卷十 R10-3.9、R10-7.2 ④ 与卷六 §4.1 规则 5 :370、规则 11 :642（李白 11-24 S6-1、H-1，开局持有卡）：开局建筑的所有权份额以 src_genesis 记到 ownerRef 名下，本阶段对全部建筑行推 ownerRef（作者覆盖、住处归驻地家户、其余按聚落组织的保有方式），交出入账提案与缺口，入账在世界创建事务里由 assetcalls.mjs 做；读开局政体阶段建的聚落组织与统治边，所以排在 gstage_polity 之后；不写任何表的行，所以 writesKinds 为空",
+     "generator": "gen/holdings-open.mjs",
+     "phase": "worldgen",
+     "scope": "world",
+     "whenRX": null,
+     "writesFamilies": [],
+     "writesKinds": []
+    },
     "gstage_order": {
      "after": ["gstage_fields"],
      "before": [],
@@ -849,6 +861,7 @@
    "orgkind_faction": {"sovereign": false, "settlement": false, "internal": true, "hasTreasury": true, "canTax": false, "canWar": false, "publicWorks": false, "memberEnds": ["agent"], "dissolveRX": "faction.ultimatum.mphase_enacted >= 1", "template": "class_org_faction", "basis": "卷八 §2.4 :288 数据块；公共取值与理由见 :258、:281"},
    "orgkind_firm": {"sovereign": false, "settlement": false, "internal": false, "hasTreasury": true, "canTax": false, "canWar": false, "publicWorks": false, "memberEnds": ["agent"], "dissolveRX": null, "template": "class_org_firm", "basis": "卷八 §2.4 :269 数据块；公共取值与理由见 :258、:260"},
    "orgkind_guild": {"sovereign": false, "settlement": false, "internal": false, "hasTreasury": true, "canTax": false, "canWar": false, "publicWorks": false, "memberEnds": ["agent"], "dissolveRX": null, "template": "class_org_guild", "basis": "卷八 §2.4 :268 数据块；公共取值与理由见 :258、:260"},
+   "orgkind_household": {"sovereign": false, "settlement": false, "internal": false, "hasTreasury": true, "canTax": false, "canWar": false, "publicWorks": false, "memberEnds": ["agent"], "dissolveRX": null, "template": "class_org_household", "basis": "卷十八 §2.2 :155 数据块（家户是组织行，卷十八 :27、:1515；李白 11-24 H-1 建家户行）；公共取值与理由见卷十八 :150；模板行代号 org_tpl_household 随卷八 1123k40 同批改 class_org_household（卷十八勘误 1124k21）"},
    "orgkind_monster_band": {"sovereign": true, "settlement": true, "internal": false, "hasTreasury": true, "canTax": true, "canWar": true, "publicWorks": true, "memberEnds": ["agent"], "dissolveRX": null, "template": "class_org_monster_band", "basis": "卷八 §2.4 :289 数据块；公共取值与理由见 :258、:281"},
    "orgkind_state": {"sovereign": true, "settlement": false, "internal": false, "hasTreasury": true, "canTax": true, "canWar": true, "publicWorks": true, "memberEnds": ["agent"], "dissolveRX": null, "template": "class_org_state", "basis": "卷八 §2.4 :265 数据块；公共取值与理由见 :258、:260"},
    "orgkind_town": {"sovereign": false, "settlement": true, "internal": false, "hasTreasury": true, "canTax": true, "canWar": false, "publicWorks": true, "memberEnds": ["agent"], "dissolveRX": null, "template": "class_org_town", "basis": "卷八 §2.4 :266 数据块；公共取值与理由见 :258、:260"},

@@ -90,6 +90,22 @@
    "grade": "designed",
    "source": "李白 11-23 事件 7fc731e6（C 卡开局建账 0847）② 选甲：开局建筑状态 condition 一律取 1（完好）；卷十九 :118 只定 condition 必填、范围 [0,1]，两卷对开局初值都没有句子（封卷后勘误 1123k60 补）",
    "basis": "暂定·待调。取 1 即开局时所有手写建筑完好；以后有建成年代再按年代折（主会话挂 PLAN，本卡不做）；读者是 gstage_envelope（gen/envelope.mjs），只对缺 condition 的建筑行写 generated 偏离行，作者写了的不动"
+  },
+  {
+   "key": "dwellingIntendedType",
+   "value": "fac_house",
+   "file": "server-plugin/kernel/gen/worldgen.mjs",
+   "grade": "referenced",
+   "source": "卷十 §2.3 :185（rules.gen.dwelling.intendedType，ref facility_type，住处的建造意图；R10-7.2 ④ 住处一户一处）；键名取驼峰平铺 dwellingIntendedType，同 roleFacility 先例；设施类型行 id 入规则表：李白 11-24 10:34「家户两问1122」①（设施类型归入类词表，S6-2.b 不拦）",
+   "basis": "取设施类型表里的住宅类 fac_house（world/ontology/dimensions/facility_type.json 有该行，试玩地区九栋住处的 intendedType 都是它，world/geo/start-buildings.json）；读者是开局持有阶段 gstage_holdings（李白 11-24 H-1：住处归住在其中的家户）"
+  },
+  {
+   "key": "tenureModes",
+   "value": {"common": "tenure_common", "household": "tenure_household", "superior": "tenure_superior"},
+   "file": "server-plugin/kernel/gen/holdings-open.mjs",
+   "grade": "referenced",
+   "source": "卷八 §2.1 :133、:1535（tenuremode 族封闭三项：tenure_common 归组织公有、tenure_household 归户、tenure_superior 归上级）；卷六 §4.1 规则 11 :642 按这三项推 ownerRef",
+   "basis": "句柄：规则代码只经本键认三种保有方式，不写 tenure_ 字面量（同 roleTract 先例）；读者是开局持有阶段 gstage_holdings"
   }
  ]
 }

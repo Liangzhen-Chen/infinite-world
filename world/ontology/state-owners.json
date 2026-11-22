@@ -204,7 +204,7 @@
   {"export": "kernel/title.mjs#setGovernor", "callers": ["rules"], "callerFiles": ["kernel/gen/holdcalls.mjs"], "acceptsState": true},
   {"export": "kernel/events.mjs#emit", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/events.mjs#registerEventDerive", "callers": ["rules"], "acceptsState": false},
-  {"export": "kernel/ledger.mjs#settleCappedAllocation", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/ledger.mjs#settleCappedAllocation", "callers": ["rules"], "callerFiles": ["kernel/gen/assetcalls.mjs"], "acceptsState": true},
   {"export": "kernel/ledger.mjs#alertGaps", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/ledger.mjs#prorateCapped", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/ledger.mjs#allocateCapped", "callers": ["rules"], "acceptsState": false},

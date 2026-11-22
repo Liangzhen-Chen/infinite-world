@@ -66,6 +66,8 @@ export const SCHEMA = Object.freeze({
   // 经登记的视图读取函数 buildProjectView（卷十九 §3.2 :242，补 sponsor 只读；李白 11-18 05:28 裁定①第 1、2 条）取，不直读 buildProject。
   project: 'project', projectView: 'buildProjectView', sponsor: 'sponsor',
   catalogFamily: 'resfam_point',
+  // 建筑所有权份额的资源族（卷六 §2.1 :112，一族只这一行，键是设施实例；开局入账 kernel/gen/assetcalls.mjs 按它取资源种类，不写种类代号）。
+  assetFamily: 'resfam_asset',
   // transferability：tr_bound 只许与发行者之间转（§2.1 :114）。
   bound: 'tr_bound',
   // 物品类资源的键是批次（§2.1 :104）：这一族的账户每个资源键是一个批次键，批次属性存 stockLots（李白 11-18 04:10）。

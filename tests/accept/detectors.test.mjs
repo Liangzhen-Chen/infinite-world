@@ -521,6 +521,25 @@ test('S6-2 规则表一支：词表代号、固定键名、前缀不带下划线
   assert.deepEqual(tableHits({ rows: [{ key: 'res_x', value: { family: 'resfam_asset', note: 'fxa without underscore, pre_fxa_ in the middle', fxa: 1, n: 5, ok: true, nothing: null, sources: ['src_genesis'], fxsolo2: 'fxsolo2' } }] }), []);
 });
 
+// 类词表名单加 facility_type（李白 11-24 10:34「家户两问1122」①：设施类型原本是词表，D 卡改成维度表后误触 S6-2.b；状态表有先例；判据未放宽，只把 facility_type 归入类词表）。
+// 样本只为这条检查造：前缀表给 fac_（设施类型行，真实 facility_type.json 的 idPrefix）与 bld_（建筑实例，设施实例行）两个，规则表文件是登记里的 worldgen.json。
+const GEN_TBL = 'world/rules/tables/worldgen.json';
+const withReal = (doc) => {
+  const files = new Map([[GEN_TBL, JSON.stringify(doc)]]);
+  return dataShape(loadContext(ROOT, { files: [...files.keys()], read: (p) => files.get(p), prefixes: { prefixes: ['fac_', 'bld_'], singletons: [] } }), KEYCHECK, CLS.instance_name);
+};
+
+test('S6-2 类词表名单含 facility_type：规则表值是设施类型行 id（fac_ 一类，如住处意图 fac_house）不报', () => {
+  assert.deepEqual(withReal({ rows: [{ key: 'dwellingIntendedType', value: 'fac_house' }] }), []);
+});
+
+test('S6-2 类词表名单只放行设施类型一类：规则表里的具体设施实例名（建筑行 id，bld_ 一类）值或键仍各报一条', () => {
+  const v = withReal({ rows: [{ key: 'x', value: 'bld_hw_mill' }] });
+  assert.deepEqual(v.map((h) => [h.file, h.nodeKind, h.symbolPath, h.code]), [[GEN_TBL, 'value', 'rows[].value', 'E-ACC-INSTANCE-NAME']]);
+  const k = withReal({ rows: [{ key: 'x', value: { bld_hw_mill: 1 } }] });
+  assert.deepEqual(k.map((h) => [h.nodeKind, h.symbolPath]), [['key', 'rows[].value']]);
+});
+
 // 规则表取 world/rules/registry.json 全部登记行（卷十二 §2.4 :236），登记与文件存在性取真实根 ctx.root；这里换一个临时根造"登记缺失、无行、登记的文件不存在"。
 const ROW = '{"rows": [{"code": "fxTab", "file": "tables/nope.json", "structure": "processSlots", "volume": "vol6", "multiSourceMerge": "own_key_only", "packOverridable": true}]}';
 const shape = (base, fakeRoot) => dataShape({ ...base, root: fakeRoot }, KEYCHECK, CLS.instance_name).map((h) => [h.nodeKind, h.code, h.file, h.symbolPath]);
@@ -649,9 +668,9 @@ test('param_consumed 真实仓库：如实报无运行期消费者的登记参�
   // rxMaxDepth 自 5-3 起被持有写者读（kernel/holdings.mjs 的 holdWhile 编译），已有人消费。
   // bodyPartChainMaxDepth（6-4，卷四 §2.2 :202"链深 ≤ 8"）与 extendsMaxDepth 同类：只被加载期校验器 kernel/validate/body-tables.mjs 读到，按消费者口径不算。
   // life.stages（6-4 登记列定义、值在 unbuilt）：6-6 起有读者 server-plugin/life.mjs（lifeFacts 读阶段表），不再报。
-  // social.orgTraits（前置卡 A，卷十八 :239）：现只被加载期校验器 kernel/validate/polity-tables.mjs 读到（E-KIN-ORG-TRAITS 同键核对），运行期读者是卷十八家户、世系判定（块 7），按消费者口径不算。
+  // social.orgTraits（前置卡 A，卷十八 :239）：开局持有卡起有运行期读者——生成阶段 gstage_holdings（kernel/gen/worldgen.mjs）读 domestic 判定哪些组织行是家户（李白 11-24 H-1），不再报。
   assert.deepEqual(keys, [
-    'kernelConstants.bodyPartChainMaxDepth', 'kernelConstants.extendsMaxDepth', 'social.orgTraits',
+    'kernelConstants.bodyPartChainMaxDepth', 'kernelConstants.extendsMaxDepth',
   ]);
   for (const k of ['kernelConstants.handleRadix', 'modifiers.stackingTable', 'economyLedger.budget', 'economyLedger.alert',
     'clock.cadence', 'clock.phaseOffset', 'clock.paceFactor', 'clock.contestDefault', 'clock.reactionDepthMax', 'clock.proposalMax', 'clock.drawSites',

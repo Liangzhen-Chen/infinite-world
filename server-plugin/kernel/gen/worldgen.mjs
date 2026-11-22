@@ -23,6 +23,10 @@ import { STATE } from '../grid-base.mjs';
 import { makeWhen } from './when.mjs';
 import { writeback, createRows } from './writeback.mjs';
 import { genPolity } from './polity.mjs';
+import { genOpeningAssets } from './holdings-open.mjs';
+import { chainOf } from './rows.mjs';
+import { FOOTPRINT_KIND } from '../footprint-kind.mjs';
+import { SCHEMA as LEDGER } from '../ledger.mjs';
 import { officeRowKinds } from '../validate/polity-tables.mjs';
 
 const RULES_CODE = 'gen';
@@ -31,7 +35,7 @@ const GRID_CODE = 'grid';
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
 // 生成器登记表：条目的 generator 节点名 → 运行函数 (ctx) => {proposals, deferred?, report?}。新阶段只在这里加一行并登记 gstage 条目（A10-1.3）。
-const NODE = Object.freeze({ fields: 'gen/fields.mjs', water: 'gen/water.mjs', waterfoot: 'gen/waterfoot.mjs', order: 'gen/order.mjs', siteform: 'gen/siteform.mjs', envelope: 'gen/envelope.mjs', polity: 'gen/polity.mjs' });
+const NODE = Object.freeze({ fields: 'gen/fields.mjs', water: 'gen/water.mjs', waterfoot: 'gen/waterfoot.mjs', order: 'gen/order.mjs', siteform: 'gen/siteform.mjs', envelope: 'gen/envelope.mjs', polity: 'gen/polity.mjs', holdings: 'gen/holdings-open.mjs' });
 const RUNNERS = Object.freeze(Object.fromEntries([
   [NODE.fields, (ctx) => ({ proposals: genFields(ctx), deferred: [] })],
   [NODE.order, (ctx) => genOrder({ ...ctx, elevationDim: ctx.geo.elevationDim, downhill: ctx.geo.downhill, roleWaterbody: ctx.rules.roleWaterbody })],
@@ -53,7 +57,50 @@ const RUNNERS = Object.freeze(Object.fromEntries([
   [NODE.siteform, (ctx) => genSiteForm({ ...ctx, bldfillRows: ctx.rules.bldfillRows, roleFacility: ctx.rules.roleFacility, roleTract: ctx.rules.roleTract, roleWaterbody: ctx.rules.roleWaterbody, layoutCoverage: ctx.rules.layoutCoverage, layoutGapCells: ctx.rules.layoutGapCells })],
   [NODE.envelope, (ctx) => genEnvelope({ ...ctx, roleFacility: ctx.rules.roleFacility, openingCondition: ctx.rules.openingCondition, densityOf: ctx.materialDensityOf })],
   [NODE.polity, (ctx) => genPolity({ ...ctx, ...ctx.polity })],
+  [NODE.holdings, (ctx) => openingAssets(ctx)],
 ]));
+
+// 开局持有阶段 gstage_holdings（卷十 R10-3.9、R10-7.2 ④，卷六 :642；李白 11-24 S6-1、H-1）：对全部建筑行推开局 ownerRef，交出入账提案 assets 与缺口 assetGaps；
+// 入账在世界创建事务里由 assetcalls.mjs 的 applyOpeningAssets 做（同 R8-18.9 ③ 的调用提案由 holdcalls.mjs 应用）。读先行阶段已交出的组织行（created.org，开局政体阶段建的聚落组织）、
+// 统治边提案（calls 与作者手写的 heldBy）与表里的组织行（含试玩地区的村社与家户行）；规则表键 tenureModes、dwellingIntendedType（卷十 :185 住处意图，值是设施类型行 id，设施类型归入类词表，李白 11-24「家户两问1122」①）缺了即拒（E-RULES-UNREGISTERED）。
+function openingAssets(ctx) {
+  const g = ctx.rules;
+  const need = (k) => { if (g[k] === undefined) throw new KernelError('E-RULES-UNREGISTERED', {}, `gen/holdings-open: rules.gen.${k} is needed`); return g[k]; };
+  const h = ctx.holdings;
+  const orgs = new Map(h.orgFlat);
+  for (const [id, row] of Object.entries((ctx.created && ctx.created.org) || {})) orgs.set(id, row);
+  const edges = new Map([...ctx.polity.heldBy].map(([place, e]) => [place, e.org]));
+  for (const c of ctx.calls) if (!edges.has(c.place)) edges.set(c.place, c.org);
+  const orgIds = [...orgs.keys()].sort(cmp);
+  const entryOf = (id) => (ctx.vocab.index.get(orgs.get(id).orgKind) || { entry: {} }).entry;
+  const domestic = (id) => { const t = h.orgTraits[orgs.get(id).orgKind]; return t !== undefined && t.domestic === true; };
+  const buildings = [...ctx.rows.values()].filter((r) => r.kind === FOOTPRINT_KIND.building && ctx.authoredIds.has(r.id)).sort((a, b) => cmp(a.id, b.id)) // 足迹种类是建筑：挂 comp_facility 的行，或转换输入标明是建筑的行（rows.mjs buildingIds，G5b 换表前）
+    .map((r) => ({ id: r.id, intendedType: r.dims.intendedType ?? null, owner: h.ownerOf ? (h.ownerOf(r.id) ?? null) : null }));
+  const r = genOpeningAssets({
+    buildings, dwellingType: need('dwellingIntendedType'), tenureModes: need('tenureModes'),
+    placeKind: ctx.table, kindOf: (id) => (orgs.has(id) ? 'org' : h.kindOf(id)),
+    holderKinds: LEDGER.holderKinds.filter((k) => !LEDGER.catalogKinds.includes(k) && !Object.hasOwn(LEDGER.subjectFlags, k)), // 账本持有人类型里的主体，去掉信仰、神祇目录与须带标记的地点
+    governorOf: (p) => { for (const a of chainOf(ctx.rows, p)) if (edges.has(a)) return edges.get(a); return null; },
+    placeChain: (p) => chainOf(ctx.rows, p), isSite: h.isSite,
+    settlementOrgAt: (p) => { const hit = orgIds.filter((id) => orgs.get(id).seat === p && entryOf(id).settlement === true); return hit.length === 0 ? null : hit[0]; },
+    tenureOf: (o) => orgs.get(o).tenure ?? null, parentOrgOf: (o) => orgs.get(o).parent ?? null,
+    householdsAt: (p) => orgIds.filter((id) => orgs.get(id).seat === p && domestic(id)),
+  });
+  return { proposals: [], deferred: [], assets: r.entries, assetGaps: r.gaps };
+}
+
+// 开局持有阶段要的输入：表里的组织行与 orgTraits（卷十八 :239 家户判定）、实体 kind 注册表；作者写的建筑 owner（旧数据，place 表没有这一维）与站点判定（卷五 §4.6，世界里还没有生产者）由调用方经 opts.genViews 交入，没交即不用。
+function holdingsInputs(world, opts) {
+  const rowsOf = (kind) => { const t = world.tables.get(kind); return t ? new Map([...t.flat.rows].map(([id, r]) => [id, { ...r }])) : new Map(); };
+  const views = opts.genViews || {};
+  const social = world.rules.social || {};
+  return {
+    orgFlat: rowsOf('org'),
+    orgTraits: social.orgTraits || {},
+    kindOf: (id) => (world.idIndex && world.idIndex.has(id) ? world.idIndex.get(id) : null),
+    ownerOf: views.ownerOf, isSite: views.siteOf instanceof Function ? (p) => Boolean(views.siteOf(p)) : undefined,
+  };
+}
 
 // 开局政体阶段要的输入（卷八 R8-18.9）：规则表、三张表的展平行、表头与 id 前缀；落位文化、站点类型条目、开局人数三个读入口（卷十 R10-4.2、卷五 §4.6、卷十 R10-3.3）
 // 世界里还没有生产者，由调用方经 opts.genViews 交入；没交即 undefined，阶段整段进 deferred 并列缺口，不编。
@@ -116,6 +163,9 @@ export function generateFill(world, opts) {
   const deferred = [];
   const report = { projections: [], changed: 0 };
   const polity = polityInputs(world, opts);
+  const holdings = holdingsInputs(world, opts);
+  const assets = []; // 开局持有阶段交出的入账提案（建筑 → 持有人），由 assetcalls.mjs 在世界创建事务内第 0 日入账
+  const assetGaps = []; // 推不出归属的建筑及原因
   // 材料的固态栏密度（千克每升）：读材料表的行值。materialView 读材料维度也不套修正表（卷三乙 M-12，数值标量的有效值才走管线，density 是按物态分栏的 map、不是修正键，有效值即基值），
   // 且它要世界创建事务外才装的词表注册表（kindOf），所以这里直接读同一张表的行值，与 materialView(...).dims.density 同值（测试对照）；读不到为 undefined，由用料阶段报错。
   const materialTable = world.tables.get(MATERIAL_TABLE);
@@ -148,7 +198,7 @@ export function generateFill(world, opts) {
     const result = run({
       table, stage: step.stage, worldSeed: opts.worldSeed, genesisMinute: opts.genesisMinute, vocab: world.vocab, rows, dims, rules, geo,
       m3PerUnit: unit ? unit.si : undefined,
-      authoredIds, isAuthored, when, polity, materialDensityOf,
+      authoredIds, isAuthored, when, polity, materialDensityOf, holdings, created, calls,
       gridSpaceCount: Array.isArray(t.doc.gridSpaces) ? t.doc.gridSpaces.length : 0, // 格空间表的行数；0 即世界还没有格空间，划不出足迹
       regionCellM: grid && typeof grid.regionCellM === 'number' ? grid.regionCellM : undefined,
       blueprint: blueprintRulesFrom(world.rules, world.env.units),
@@ -177,6 +227,8 @@ export function generateFill(world, opts) {
       created = { ...created, [other]: createRows({ table: other, stage: step.stage, stageEntry: entry, proposals: result.proposals.filter((p) => p.table === other), tableIds: new Set(ot.flat.rows.keys()), authoredIds: new Set(), classIds: new Set(Object.keys(ot.doc.classes || {})), dims: ot.doc.dimensions, env: world.env, genesisMinute: opts.genesisMinute, created: created[other] || {} }) };
     }
     calls.push(...(result.calls || []));
+    assets.push(...(result.assets || []));
+    assetGaps.push(...(result.assetGaps || []));
     // 同一待转换行被两个阶段补时记先写的阶段与键（与偏离行同一口径，R10-1.2），维度合并；改写（revise）只许改先行阶段已生成的维度。
     for (const p of done.pending) {
       const prev = pendingById.get(p.id);
@@ -192,5 +244,5 @@ export function generateFill(world, opts) {
     if (result.report) { report.projections.push(...result.report.projections); report.changed += result.report.changed; }
   }
   const pending = [...pendingById.values()].map(({ generatedDims, ...p }) => p).sort((a, b) => cmp(a.id, b.id));
-  return { plan, generated, created, calls, pending, deferred, report };
+  return { plan, generated, created, calls, assets, assetGaps, pending, deferred, report };
 }

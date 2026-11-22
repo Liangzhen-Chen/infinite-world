@@ -12,8 +12,8 @@ import { readRules, RULES_LAYOUT } from '../../../server-plugin/kernel/load/rule
 import { itemChecks, keySets } from '../lib/item-form.mjs';
 import { LAYOUT, REGISTRY, regContent } from '../read.mjs';
 
-// 规则表里不计实体 id 的表（词表式代号）：状态表（status）。
-const VOCAB_LIKE_KINDS = ['status'];
+// 规则表里不计实体 id 的表（词表式代号）：状态表（status）；设施类型表（facility_type，原为词表，D 卡按李白 11-23 P10-2 改成维度表后误触 S6-2.b；李白 11-24 10:34「家户两问1122」① 只放行这一个表，具体设施实例 id 仍计）。
+const VOCAB_LIKE_KINDS = ['status', 'facility_type'];
 const PATH_LINE = /[\w./-]+\.[A-Za-z]{1,5}(?::|#L)\d+\b/;
 const ROW_KEY = /^[^|\s]*\|[^|]+\|[^|]*\|[^|]+\|\d+$/;
 

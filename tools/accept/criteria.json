@@ -980,10 +980,14 @@
     {
      "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
      "rev": 72
+    },
+    {
+     "ref": "李白 11-24 10:34「家户两问1122」①：tools/accept/detectors/data_shape.mjs 类词表名单 VOCAB_LIKE_KINDS 只加 facility_type（设施类型原本是词表，D 卡按 P10-2 改成维度表后误触 S6-2.b，状态表有先例；主会话亲改）：判据未放宽，只把设施类型归入类词表，具体设施实例 id 仍计（反向测试 tests/accept/detectors.test.mjs）；本类别因检测器模块的词法指纹变而 rev+1",
+     "rev": 73
     }
    ],
-   "print": "69b66dc09b5400a6314ec618841b55783319ab107db8a6bbd0420fd50195a27e",
-   "rev": 72,
+   "print": "81221edfa532db1e60b1ce7d8f06517cfec887af41d46aa6a7967361ede8cd84",
+   "rev": 73,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1635,10 +1639,14 @@
     {
      "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
      "rev": 69
+    },
+    {
+     "ref": "李白 11-24 10:34「家户两问1122」①：tools/accept/detectors/data_shape.mjs 类词表名单 VOCAB_LIKE_KINDS 只加 facility_type（设施类型原本是词表，D 卡按 P10-2 改成维度表后误触 S6-2.b，状态表有先例；主会话亲改）：判据未放宽，只把设施类型归入类词表，具体设施实例 id 仍计（反向测试 tests/accept/detectors.test.mjs）；本类别因检测器模块的词法指纹变而 rev+1",
+     "rev": 70
     }
    ],
-   "print": "d7a0640d04cefc0f0d7d4cf233e896d932996d9290ab740140826ea95bb2fffe",
-   "rev": 69,
+   "print": "f3c5a21bebf26a77cece53491eb1a069e28ad5306f94ebb36f3afad76905221b",
+   "rev": 70,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -2112,10 +2120,14 @@
     {
      "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
      "rev": 85
+    },
+    {
+     "ref": "李白 11-24 10:34「家户两问1122」①：tools/accept/detectors/data_shape.mjs 类词表名单 VOCAB_LIKE_KINDS 只加 facility_type（设施类型原本是词表，D 卡按 P10-2 改成维度表后误触 S6-2.b，状态表有先例；主会话亲改）：判据未放宽，只把设施类型归入类词表，具体设施实例 id 仍计（反向测试 tests/accept/detectors.test.mjs）；本类别因检测器模块的词法指纹变而 rev+1",
+     "rev": 86
     }
    ],
-   "print": "3f5715e61c5aa06a9d1d63352ea8551e86919e20efad5b4901de1093a73d34e5",
-   "rev": 85,
+   "print": "9d40caf6bcfa48ae4e6ea69c1e952ffb71134c94b12d5570b5a1cfa601a96498",
+   "rev": 86,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -2526,10 +2538,14 @@
     {
      "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
      "rev": 70
+    },
+    {
+     "ref": "李白 11-24 10:34「家户两问1122」①：tools/accept/detectors/data_shape.mjs 类词表名单 VOCAB_LIKE_KINDS 只加 facility_type（设施类型原本是词表，D 卡按 P10-2 改成维度表后误触 S6-2.b，状态表有先例；主会话亲改）：判据未放宽，只把设施类型归入类词表，具体设施实例 id 仍计（反向测试 tests/accept/detectors.test.mjs）；本类别因检测器模块的词法指纹变而 rev+1",
+     "rev": 71
     }
    ],
-   "print": "d7a0640d04cefc0f0d7d4cf233e896d932996d9290ab740140826ea95bb2fffe",
-   "rev": 70,
+   "print": "f3c5a21bebf26a77cece53491eb1a069e28ad5306f94ebb36f3afad76905221b",
+   "rev": 71,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -3369,10 +3385,14 @@
     {
      "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
      "rev": 70
+    },
+    {
+     "ref": "李白 11-24 10:34「家户两问1122」①：tools/accept/detectors/data_shape.mjs 类词表名单 VOCAB_LIKE_KINDS 只加 facility_type（设施类型原本是词表，D 卡按 P10-2 改成维度表后误触 S6-2.b，状态表有先例；主会话亲改）：判据未放宽，只把设施类型归入类词表，具体设施实例 id 仍计（反向测试 tests/accept/detectors.test.mjs）；本类别因检测器模块的词法指纹变而 rev+1",
+     "rev": 71
     }
    ],
-   "print": "d7a0640d04cefc0f0d7d4cf233e896d932996d9290ab740140826ea95bb2fffe",
-   "rev": 70,
+   "print": "f3c5a21bebf26a77cece53491eb1a069e28ad5306f94ebb36f3afad76905221b",
+   "rev": 71,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
