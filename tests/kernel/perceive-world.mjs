@@ -78,6 +78,8 @@ function load(rows, spaces) {
     v.families.gentemplate.entries = TEMPLATE;
     v.families.bform.entries = { bldform_hut: { ...FORM, facilityTypes: ['fac_house'] }, bldform_shrine: v.families.bform.entries.bldform_shrine, bldform_open_yard: v.families.bform.entries.bldform_open_yard };
     v.families.roomrole.entries = {};
+    // 6-23 起真实世界带人类行及其组织、部位、分类条目；本夹具自带测试词表与物种行，先把这几族与两张表的真实行还原成空。
+    for (const k of ['tissue', 'body_part', 'taxon']) v.families[k].entries = {};
     for (const id of ['bpart_torso', 'bpart_head']) v.families.body_part.entries[id] = {};
     Object.assign(v.families.tissue.entries, { tissue_flesh: { depthOrder: 2, reserve: false }, tissue_bone: { depthOrder: 3, reserve: false } });
     Object.assign(v.families.attr.entries, { attr_test: { physical: true, hidden: false, heritability: 0.5, residualFactor: 0.9354, agingCurve: 'flat' } });
@@ -102,9 +104,11 @@ function load(rows, spaces) {
     }
     writeUnderTempRoot(tmp, 'rules/registry.json', JSON.stringify(reg));
     const plan = JSON.parse(realText('body_plan.json'));
+    plan.rows = {};
     Object.assign(plan.rows, clone(PLANS));
     writeUnderTempRoot(tmp, 'body_plan.json', JSON.stringify(plan));
     const sp = JSON.parse(realText('species.json'));
+    sp.rows = {};
     Object.assign(sp.rows, speciesRows(keysOf));
     writeUnderTempRoot(tmp, 'species.json', JSON.stringify(sp));
     return loadWorld(ROOT, { dimensionsDir: relative(ROOT, tmp), rulesDir: join(tmp, 'rules') });

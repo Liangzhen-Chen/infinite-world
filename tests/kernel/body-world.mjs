@@ -121,6 +121,8 @@ export function loadBodyWorld(f) {
       const doc = readDim(name);
       if (name === '_vocab.json') {
         const fam = doc.families;
+        // 6-23 起真实世界带人类行及其组织、部位、分类条目；夹具的测试词表与物种行自成一套，默认把这几族还原成空（f.realHuman 为真则保留真实人类行，由测试自补键）。
+        if (!f.realHuman) for (const k of ['tissue', 'body_part', 'taxon']) fam[k].entries = {};
         Object.assign(fam.capability.entries, clone(f.capabilities));
         for (const id of f.vocab.body_part) fam.body_part.entries[id] = {};
         for (const k of ['tissue', 'attr', 'sex', 'gait', 'taxon', 'class', 'life_stage', 'trait']) Object.assign(fam[k].entries, clone(f.vocab[k]));
@@ -150,6 +152,7 @@ export function loadBodyWorld(f) {
       if (name === 'body_plan.json') {
         const def = doc.capabilities.smell;
         for (const c of Object.values(f.capabilities)) if (typeof c.dimKey === 'string' && !doc.capabilities[c.dimKey]) doc.capabilities[c.dimKey] = clone(def);
+        if (!f.realHuman) doc.rows = {};
         Object.assign(doc.rows, clone(f.plans));
         if (typeof f.editPlanDoc === 'function') f.editPlanDoc(doc);
       }
@@ -168,6 +171,7 @@ export function loadBodyWorld(f) {
             if (row[dim] && typeof row[dim] === 'object') for (const k of keysOf(fam)) if (!Object.hasOwn(row[dim], k)) row[dim][k] = null;
           }
         }
+        if (!f.realHuman) doc.rows = {};
         Object.assign(doc.rows, rows);
         if (typeof f.editSpeciesDoc === 'function') f.editSpeciesDoc(doc);
         if (Object.keys(f.speciesClasses).length) {

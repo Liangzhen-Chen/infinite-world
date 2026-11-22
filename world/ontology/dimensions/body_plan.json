@@ -88,6 +88,21 @@
  },
  "kind": "body_plan",
  "namespace": "core",
- "rows": {},
+ "rows": {
+  "body_humanoid": {
+   "tissueFractions": {"tissue_bone": 0.14, "tissue_fat": 0.20, "tissue_muscle": 0.40, "tissue_organ": 0.22, "tissue_skin": 0.04},
+   "parts": [
+    {"id": "bpart_torso", "parent": null, "sizeFraction": 0.497, "contributes": {"cap_blood_pumping": 1, "cap_breathing": 1, "cap_digestion": 1, "cap_touch": 1}, "vital": true},
+    {"id": "bpart_head", "parent": "bpart_torso", "sizeFraction": 0.081, "contributes": {"cap_consciousness": 1, "cap_hearing": 1, "cap_sight": 1, "cap_smell": 1, "cap_speech": 1}, "vital": true},
+    {"id": "bpart_arm_l", "parent": "bpart_torso", "sizeFraction": 0.044, "contributes": {}, "vital": false},
+    {"id": "bpart_hand_l", "parent": "bpart_arm_l", "sizeFraction": 0.006, "contributes": {"cap_manipulation": 0.5}, "vital": false},
+    {"id": "bpart_arm_r", "parent": "bpart_torso", "sizeFraction": 0.044, "contributes": {}, "vital": false},
+    {"id": "bpart_hand_r", "parent": "bpart_arm_r", "sizeFraction": 0.006, "contributes": {"cap_manipulation": 0.5}, "vital": false},
+    {"id": "bpart_leg_l", "parent": "bpart_torso", "sizeFraction": 0.161, "contributes": {"cap_moving": 0.5}, "vital": false},
+    {"id": "bpart_leg_r", "parent": "bpart_torso", "sizeFraction": 0.161, "contributes": {"cap_moving": 0.5}, "vital": false}
+   ],
+   "basis": "人形身体图（卷四 §4.2.5 :559–:565 只给部位代号与挂接结构，其数值标示例、status placeholder，P-8 不搬）。部位 sizeFraction（出处）：Dempster 节段质量比，经 Winter《Biomechanics and Motor Control of Human Movement》表 4.1 转录，取自 BMClab 公开数据文件 BSP_DempsterWinter.txt（https://raw.githubusercontent.com/BMClab/BMC/master/data/BSP_DempsterWinter.txt ，2026-11-22 读，李白 11-22 15:55 P-11）；合并成卷四身体图部位：躯干取 Trunk 0.497；头取 Head neck 0.081；左右臂各取 Upper arm 0.028 + Forearm 0.016 = 0.044；左右手各取 Hand 0.006；左右腿各取 Total leg 0.161（= Thigh 0.1 + Leg 0.0465 + Foot 0.0145）；合计 0.497 + 0.081 + 2×0.044 + 2×0.006 + 2×0.161 = 1.000。contributes（结构取值）：单部位承担的能力（呼吸、泵血、消化、触觉在躯干；意识、视、听、说、嗅在头）取 1，左右对称的能力（操作在两只手、移动在两条腿）各 0.5；臂不另给操作权重（臂丧失时子部位手随之丧失，卷四 B-3）；touch 记躯干、smell 记头是结构取舍，无量化出处。飞行能力人类没有，贡献和为 0。vital 取躯干与头。tissueFractions：暂定·待试玩标定（李白 11-22 16:04 P-15）：皮肤 0.04、脂肪 0.20、肌肉 0.40、骨 0.14、器官 0.22，和为 1；ICRP Publication 89 原文两次都没读到（官方页无可下 PDF、PMC 被浏览器验证拦住），这组份额是量级估计，不是出处，也不是卷四 :559 的示例数（P-8），读到 ICRP 89 参考人组织质量表后替换。"
+  }
+ },
  "version": 1
 }

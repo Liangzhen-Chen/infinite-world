@@ -244,6 +244,19 @@
    "packOverridable": {"integrity": false, "unbuilt": false}
   },
   {
+   "code": "attr",
+   "file": "tables/attr.json",
+   "structure": "keys",
+   "type": {
+    "bounds": {"type": "struct", "required": ["max", "min"], "fields": {"min": {"type": "number", "unit": "score", "precision": 4}, "max": {"type": "number", "unit": "score", "precision": 4}}},
+    "unbuilt": {"type": "set", "of": {"type": "string"}}
+   },
+   "domain": {"bounds": {}, "unbuilt": {}},
+   "volume": "卷四 §2.5 :305（rules.attr.bounds：[min,max]，属性值的钳位范围，species.attributesBase 的 clamp 须落在其内，:157）；M4-50（:1463）从旧数据 attr.cap.human 迁来（to_data）；其余键 modCurve、agingCurves 卷四 §2.5 :305 未建，登 unbuilt",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"bounds": false, "unbuilt": false}
+  },
+  {
    "code": "capacity",
    "file": "tables/capacity.json",
    "structure": "keys",

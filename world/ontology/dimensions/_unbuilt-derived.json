@@ -123,6 +123,7 @@
   {"table": "facility_type", "dimension": "wearPerDay", "missing": ["data"], "card": "pre_first_reader_card", "note": "卷十九 §2.2 :180 always：满负荷日磨损，无逐类数据（卷二 §5.7 :1863 现有映射“代码”，旧代码已删），不编"},
   {"table": "recipe", "dimension": "skill", "missing": ["data"], "card": "pre_first_reader_card", "note": "卷三乙 §2.7 :365 always：引技能表（卷十四，skill 未建表，登在 kinds），行上无从填值；估值（V-1）只读 skillMin，不读 skill；craftOutcome（R-1）读技能值时按未知"},
   {"table": "species", "dimension": "habitats", "missing": ["data"], "card": "pre_first_reader_card", "note": "引 biome 族（未建族，卷五 §4.3）；条目未前移，行上无从填值"},
+  {"table": "species", "dimension": "coolingC", "missing": ["data"], "card": "pre_first_reader_card", "note": "归卷二十一标定（首个读者是卷二十一 §4.7 heatLimitC，读者卡前补值；Opus 核 S5）。卷四 :152：散热能力折算成的温差，标定由卷二十一做（卷四 :1518 Q-23；卷二十一 §4.7 heatLimitC 读它）；没有量纲对得上的现成文献（docs/研究/人类物种出处-1122.md B6）；李白 11-22 16:04 P-16：所有物种一律按未知，不给值"},
   {"table": "species", "dimension": "lairSites", "missing": ["data"], "card": "pre_first_reader_card", "note": "引 site 族（未建族，卷五 §4.6）"},
   {"table": "species", "dimension": "pharmSensitivity", "missing": ["data"], "card": "pre_first_reader_card", "note": "键为 pharm 族（未建族，卷二十一 §2.4）；展平后键集 = pharm 全族，族未前移即无从写全"},
   {"table": "species", "dimension": "senses", "missing": ["data"], "card": "6-23", "note": "键为 sense 族（卷五 §4.2.1，G13 已建族与 perceive）；展平后键集 = sense 全族；物种行（6-23）才有值，阈值缺则 perceive 的 margin 按未知"},

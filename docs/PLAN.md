@@ -195,6 +195,12 @@
 - [x] 4 读真实世界的测试：gen-worldgen 挪进 tests/cloud/；新增 tests/cloud/real-world-load.test.mjs 记加载耗时与内存。
 - [x] 5 全量测试与 pre_commit 门禁；回报。Opus 一轮核后改：零根世界拒收、siteform 复用 fp0、删 isPosValue 回落与旧 convert-geo.mjs、补 tests/cloud/item-rot-real-world。
 
+## 组织份额 null 键内核修复卡（6-23 人类物种行 Opus 核 M3，11-22；写核均 Opus；内核，单独成卡）
+
+- [ ] 1 server-plugin/death.mjs:77 与 server-plugin/body.mjs:172 遍历 tissueFractions 只取值非 null 的键（卷二 §1.6 第 4 项）；配测试"身体图 tissueFractions 带 null 键"：bodyView 与 carcassOf 不抛错、材料构成与不带该键时相同（期望按手算写字面量）。
+- [ ] 2 全量测试、pre_commit、convert-geo-g5b --check；Opus 核一轮。
+- 修好之前第二个物种行、第二张身体图不得落地（见 docs/问题.md「内核缺陷：遍历 tissueFractions 不跳 null 键」）。
+
 ## 以后需要时的备选（不排期）
 
 - 蓝图改按房间矩形存、细格读时派生，不逐格存（李白 11-22 事件 3ce50e60 第 4 条：现在不做，不挡 G9、G10；需要时改卷五/卷十九蓝图存储口径）。

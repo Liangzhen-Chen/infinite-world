@@ -1,0 +1,6 @@
+{
+ "rows": [
+  {"key": "bounds", "value": {"min": 0, "max": 99}, "file": "server-plugin/kernel/validate/body-tables.mjs", "grade": "referenced", "source": "卷四 §2.5 :305 rules.attr.bounds；M4-50（卷四 :1463）to_data：旧数据 balance/attributes.json 的 attr.cap.human", "basis": "旧数据路径 world/rules/tables/balance/attributes.json（Git 标签 old-final-1117 下读取，git show old-final-1117:world/rules/tables/balance/attributes.json；该文件在 P-2b 提交 1f31a68c7 删除，snapshot-20261010 标签里没有它）。上限 99 = 参数 attr.cap.human 的 value（原 bounds [60,120]、calibration pending）；下限 0 = 同文件 attr.mod 曲线首节点 x=0（points [[0,-5],[10,0],[20,5],[40,10],[99,17]]，曲线定义域 [0,99]）。刻度 [0, 99] 由李白 11-22 16:04 P-17 定。"},
+  {"key": "unbuilt", "value": ["agingCurves", "modCurve"], "file": "server-plugin/kernel/validate/body-tables.mjs", "grade": "designed", "source": "卷四 §2.5 :305（rules.attr.modCurve、rules.attr.agingCurves.<key>）", "basis": "modCurve、agingCurves 本卡不落：旧数据 attr.mod 曲线与 attr.aging 的刻度对应的是以 10 为基准的旧属性尺度，而本表 bounds 与人类均值取值的关系归李白 P-17 的待试玩标定，不在本卡标定；读者（person 的 attrMod、A-2 随龄）未建，登在此处，读到按未知"}
+ ]
+}

@@ -180,7 +180,16 @@
   },
   "body_part": {
    "closed": false,
-   "entries": {},
+   "entries": {
+    "bpart_arm_l": {"basis": "卷四 :561–:564 人形身体图部位代号（左右对称，右侧同）；李白 11-22 15:21 P-1"},
+    "bpart_arm_r": {"basis": "同 bpart_arm_l"},
+    "bpart_hand_l": {"basis": "同 bpart_arm_l"},
+    "bpart_hand_r": {"basis": "同 bpart_arm_l"},
+    "bpart_head": {"basis": "同 bpart_arm_l"},
+    "bpart_leg_l": {"basis": "同 bpart_arm_l"},
+    "bpart_leg_r": {"basis": "同 bpart_arm_l"},
+    "bpart_torso": {"basis": "同 bpart_arm_l"}
+   },
    "prefix": "bpart_"
   },
   "budget_mode": {
@@ -356,6 +365,7 @@
     "comp_livestock": {"enables": [], "requires": [], "table": "item"},
     "comp_readable": {"enables": ["read"], "requires": ["difficulty", "language", "teaches"], "table": "item"},
     "comp_relic": {"enables": [], "requires": [], "table": "item"},
+    "comp_sapient": {"enables": [], "requires": ["birthIntervalDays", "gestationDays", "litterSize"], "table": "species", "basis": "卷四 :156（sapient 与 classes 含 comp_sapient 等价）、:461（有心智的物种挂 comp_sapient，卷二 §1.8 已登记）；requires 取 species 表 byClass:comp_sapient 必填的三项（:132–:134）；李白 11-22 16:04 补登"},
     "comp_tool": {"enables": ["provide_ability"], "requires": ["abilities", "wearPerUse"], "table": "item"},
     "comp_vehicle": {"enables": [], "requires": ["vform"], "table": "item"},
     "comp_weapon": {"enables": [], "requires": ["attacks", "weaponClass"], "table": "item"},
@@ -2768,12 +2778,22 @@
   },
   "taxon": {
    "closed": false,
-   "entries": {},
+   "entries": {
+    "taxon_hominidae": {"broader": "taxon_primates", "basis": "人科（Hominidae）：Homo sapiens 的科，ITIS 分类链 Hominidae → Primates → Mammalia（卷四 §2.1 :127 taxon 单值、§2.4 :287 仅 broader；docs/问题.md 6-23 人类物种行 A 第 8 条；李白 11-22 15:21 P-1）"},
+    "taxon_mammalia": {"basis": "哺乳纲（Mammalia），分类链顶端，无上位；出处同 taxon_hominidae"},
+    "taxon_primates": {"broader": "taxon_mammalia", "basis": "灵长目（Primates）；出处同 taxon_hominidae"}
+   },
    "prefix": "taxon_"
   },
   "tissue": {
    "closed": false,
-   "entries": {},
+   "entries": {
+    "tissue_skin": {"depthOrder": 1, "reserve": false, "basis": "卷四 §2.4 :285、:559 人形身体图的五个组织代号；depthOrder 取解剖由外到内的层序（皮肤、皮下脂肪、骨骼肌、骨、脏器），解剖学常识；reserve 只有脂肪为真（定义即能量储备组织，卷四 :285）。李白 11-22 15:21 P-1、15:48 P-7"},
+    "tissue_fat": {"depthOrder": 2, "reserve": true, "basis": "同 tissue_skin；脂肪是能量储备组织"},
+    "tissue_muscle": {"depthOrder": 3, "reserve": false, "basis": "同 tissue_skin"},
+    "tissue_bone": {"depthOrder": 4, "reserve": false, "basis": "同 tissue_skin"},
+    "tissue_organ": {"depthOrder": 5, "reserve": false, "basis": "同 tissue_skin"}
+   },
    "prefix": "tissue_"
   },
   "trait": {
