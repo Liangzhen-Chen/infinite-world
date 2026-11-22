@@ -152,6 +152,17 @@ function setInTx(tx, segs, value) {
 
 const minuteOf = (state) => (isObj(state) && isObj(state[S.clock]) && Number.isSafeInteger(state[S.clock][S.minute]) ? state[S.clock][S.minute] : 0);
 
+/**
+ * 持有边现役判定（全仓唯一出处；卷十八 R18-1.10 :526、A18-1.6 :682）：`terms.until` 为空，或建立时带的预定到期时刻
+ * 仍在当前世界时刻之后，才是现役；关闭时 `until` 取实际结束时刻（不晚于当前时刻），所以不再算现役。
+ * @param {any} state @param {any} record 边记录（`struct:holding`） @returns {boolean}
+ */
+export function edgeIsActive(state, record) {
+  if (!isObj(record) || !isObj(record.terms) || !own(record.terms, S.until)) return false;
+  const until = record.terms[S.until];
+  return until === null || (Number.isSafeInteger(until) && until > minuteOf(state));
+}
+
 // ---------- 种类行（唯一定义在卷十八 §2.6） ----------
 
 function kindRow(engine, code) {
@@ -245,14 +256,14 @@ function findEdge(state, id) {
 function activeEdges(state, match) {
   const out = [];
   eachEdge(state, (e) => {
-    if (isObj(e.record.terms) && e.record.terms[S.until] === null && match(e)) out.push(e);
+    if (edgeIsActive(state, e.record) && match(e)) out.push(e);
   });
   return out;
 }
 
 /**
  * kernelApi `openHoldingsOfKind(state, kind)`（只读；卷九 R9-3.9 的玩家席位边、卷十八 §4.1 持有边的读入口之一）：
- * 状态里该持有种类的全部开着的边（`terms.until` 为空），按持有者 id、边句柄的码点序，返回 {id, holder, subject}（副本）。没有 holdings 节为空表。
+ * 状态里该持有种类的全部现役边（`edgeIsActive`：`terms.until` 为空或预定到期时刻未到），按持有者 id、边句柄的码点序，返回 {id, holder, subject}（副本）。没有 holdings 节为空表。
  * @param {any} state @param {string} kind @returns {{id: string, holder: string, subject: string}[]}
  */
 export function openHoldingsOfKind(state, kind) {
@@ -332,10 +343,13 @@ function emitHoldingChanged(engine, state, tx, record, edgeId, change, prevHolde
   return emitKernelEvent(engine, state, tx, VERB.holdingChanged, payload, `${edgeId}_${change}`, record.subject);
 }
 
-function emitDomicileChanged(engine, state, tx, row, holder, place, since, until, edgeId) {
+// 事件相位由"建立 / 结束"决定，不由 until 是否为空决定：建立时可带预定到期的 until（R18-1.10 :526），否则与结束事件撞号。
+const DOMICILE_PHASE = Object.freeze({ established: 'in', ended: 'out' });
+
+function emitDomicileChanged(engine, state, tx, row, holder, place, since, until, edgeId, ended) {
   if (row.domicile !== true) return null;
   const payload = { person: holder, place, since, until };
-  const phase = until === null ? 'in' : 'out';
+  const phase = ended ? DOMICILE_PHASE.ended : DOMICILE_PHASE.established;
   return emitKernelEvent(engine, state, tx, VERB.domicileChanged, payload, `${edgeId}_domicile_${phase}`, holder);
 }
 
@@ -417,7 +431,7 @@ function closeEdge(engine, state, tx, edge, cause, endReason, withEvent) {
   setInTx(tx, [S.holdings, edge.holder, edge.id], next);
   if (withEvent !== false) {
     emitHoldingChanged(engine, state, tx, next, edge.id, CHANGE.ended, null);
-    emitDomicileChanged(engine, state, tx, row, next.holder, next.subject, terms[S.since], minute, edge.id);
+    emitDomicileChanged(engine, state, tx, row, next.holder, next.subject, terms[S.since], minute, edge.id, true);
   }
   return next;
 }
@@ -532,7 +546,7 @@ function insertEdge(engine, state, tx, row, holder, subject, terms, grantedBy, c
 
 function emitEstablished(engine, state, tx, row, edge, cause) {
   emitHoldingChanged(engine, state, tx, edge.record, edge.id, CHANGE.established, null);
-  emitDomicileChanged(engine, state, tx, row, edge.record.holder, edge.record.subject, edge.record.terms[S.since], termsUntil(edge.record), edge.id);
+  emitDomicileChanged(engine, state, tx, row, edge.record.holder, edge.record.subject, edge.record.terms[S.since], termsUntil(edge.record), edge.id, false);
 }
 
 function assertEnds(holder, subject) {
@@ -632,7 +646,7 @@ export function closeHolding(engine, state, input) {
   const row = kindRow(engine, edge.record.kind);
   checkAdmission(row);
   assertCarriesRel(engine, row, edge.record.terms);
-  if (!isObj(edge.record.terms) || edge.record.terms[S.until] !== null) throw deny('E-HK-PROTOCOL', `holding ${edge.id} is already closed`);
+  if (!edgeIsActive(state, edge.record)) throw deny('E-HK-PROTOCOL', `holding ${edge.id} is already closed`);
   const endReason = isCode(p.endReason) ? p.endReason : null;
   closeEdge(engine, state, tx, edge, p.cause, endReason, true);
   return edge.id;
@@ -665,7 +679,7 @@ export function transferHolding(engine, state, input) {
   checkAdmission(row);
   assertCarriesRel(engine, row, edge.record.terms);
   if (row.transferable !== true) throw deny('E-HK-PROTOCOL', `holding kind ${row.id} is not transferable`);
-  if (!isObj(edge.record.terms) || edge.record.terms[S.until] !== null) throw deny('E-HK-PROTOCOL', `holding ${edge.id} is already closed`);
+  if (!edgeIsActive(state, edge.record)) throw deny('E-HK-PROTOCOL', `holding ${edge.id} is already closed`);
   assertNotTerminated(state, newHolder);
   const minute = minuteOf(state);
   // 承接边是 R18-1.5 意义上的新边：只带本笔事务自己的同意（入参 terms.consentAct），不复制旧边的 origin/consentAct；
@@ -684,8 +698,8 @@ export function transferHolding(engine, state, input) {
   checkCapacity(engine, state, row, edge.record.subject);
   const next = insertTransferred(engine, state, tx, row, edge, newHolder, terms, p.cause);
   emitHoldingChanged(engine, state, tx, next.record, next.id, CHANGE.transferred, edge.record.holder);
-  emitDomicileChanged(engine, state, tx, row, edge.record.holder, edge.record.subject, edge.record.terms[S.since], minute, edge.id);
-  emitDomicileChanged(engine, state, tx, row, newHolder, edge.record.subject, minute, null, next.id);
+  emitDomicileChanged(engine, state, tx, row, edge.record.holder, edge.record.subject, edge.record.terms[S.since], minute, edge.id, true);
+  emitDomicileChanged(engine, state, tx, row, newHolder, edge.record.subject, minute, null, next.id, false);
   return next.id;
 }
 
@@ -756,7 +770,7 @@ export function rescaleHolding(engine, state, input) {
 function holdWhileEnds(state) {
   const ids = new Set();
   eachEdge(state, (e) => {
-    if (!isObj(e.record.terms) || e.record.terms[S.until] !== null) return;
+    if (!edgeIsActive(state, e.record)) return;
     const row = kindRowFromState(e.record.kind);
     if (!row || row.holdWhile === null) return;
     ids.add(e.record.holder);
@@ -831,7 +845,7 @@ function kindRowFromState(kind) {
 function activeHoldingEnds(state) {
   const ids = new Set();
   eachEdge(state, (e) => {
-    if (!isObj(e.record.terms) || e.record.terms[S.until] !== null) return;
+    if (!edgeIsActive(state, e.record)) return;
     ids.add(e.record.holder);
     ids.add(e.record.subject);
   });
@@ -874,23 +888,71 @@ function recompute(state, written) {
     const row = kindRow(engine, edge.record.kind);
     if (row.holdWhile !== null && !holdWhileHolds(engine, state, row, edge.record)) throw deny('E-HK-HOLD-WHILE', `holding kind ${row.id}: holdWhile is false or unknown for new edge`, edge.record.holder);
   }
-  // 现役边重算（R18-1.12 ②）：写到的持有者或标的所属的这类边按建立先后逐条放回，假的按离任格处置；关了再扫，直到不动。
+  // 现役边重算（R18-1.12 ② :531）：写到的持有者或标的所属的这类边，同一持有者同一种类为一组；组内有一条条件为假时，
+  // 按（terms.since 升序，同刻按边 id 代号序）从空集逐条放回，放回后条件为真的留下，为假的按离任格处置；
+  // 关一条边即写到它的标的，标的并入触达集后再扫，直到不再有边关闭。
+  const touchedEnds = new Set(ends);
   let changed = true;
   while (changed) {
     changed = false;
-    eachEdge(state, (edge) => {
-      if (changed) return;
-      const row = kindRowFromState(edge.record.kind);
-      if (!row || row.holdWhile === null) return;
-      if (!isObj(edge.record.terms) || edge.record.terms[S.until] !== null) return;
-      const touched = edges.has(edge.id) || ends.has(edge.record.holder) || ends.has(edge.record.subject);
-      if (!touched) return;
-      if (holdWhileHolds(engine, state, row, edge.record)) return;
-      if (!vacatesByClose(state, row, edge.record)) throw deny('E-ACT-WRITER-NOT-READY', `holding kind ${row.id}: vacated disposition ${JSON.stringify(row.vacated)} is not wired in block 5`);
-      closeEdge(engine, state, tx, edge, book && book.cause ? book.cause : null, null, true);
-      changed = true;
-    });
+    for (const group of holdWhileGroups(state, edges, touchedEnds)) {
+      if (group.edges.every((e) => holdWhileHolds(engine, state, group.row, e.record))) continue;
+      for (const edge of putBackOrder(engine, state, group)) {
+        if (!vacatesByClose(state, group.row, edge.record)) throw deny('E-ACT-WRITER-NOT-READY', `holding kind ${group.row.id}: vacated disposition ${JSON.stringify(group.row.vacated)} is not wired in block 5`);
+        closeEdge(engine, state, tx, edge, book && book.cause ? book.cause : null, null, true);
+        touchedEnds.add(edge.record.subject);
+        changed = true;
+      }
+      if (changed) break;
+    }
   }
+}
+
+// 被触达的 holdWhile 现役边，按（持有者，种类）成组；组与组内顺序都按码点序，结果与存储遍历次序无关。
+function holdWhileGroups(state, edges, touchedEnds) {
+  const groups = new Map();
+  eachEdge(state, (edge) => {
+    if (!edgeIsActive(state, edge.record)) return;
+    const row = kindRowFromState(edge.record.kind);
+    if (!row || row.holdWhile === null) return;
+    if (!(edges.has(edge.id) || touchedEnds.has(edge.record.holder) || touchedEnds.has(edge.record.subject))) return;
+    const key = `${edge.record.holder}\u0000${edge.record.kind}`;
+    if (!groups.has(key)) groups.set(key, { key, row, edges: [] });
+    groups.get(key).edges.push(edge);
+  });
+  return [...groups.values()].sort((a, b) => cmp(a.key, b.key));
+}
+
+// 从空集放回：假设状态里先去掉本组全部现役边，按建立先后（since 升序，同刻按边 id）逐条放回并求值，
+// 放回后条件为假的边不留在假设状态里，返回这些边（按放回次序）。求值读的是假设状态，读数服务据此数出放回的边。
+function putBackOrder(engine, state, group) {
+  const sinceOf = (e) => (Number.isSafeInteger(e.record.terms[S.since]) ? e.record.terms[S.since] : 0);
+  const ordered = [...group.edges].sort((a, b) => sinceOf(a) - sinceOf(b) || cmp(a.id, b.id));
+  const root = rootOf(state);
+  const without = new Set(ordered.map((e) => `${e.holder}\u0000${e.id}`));
+  const kept = new Set();
+  const dropped = [];
+  const shadow = () => {
+    const holdings = {};
+    for (const holder of Object.keys(root)) {
+      if (!isObj(root[holder])) { holdings[holder] = root[holder]; continue; }
+      const list = {};
+      for (const id of Object.keys(root[holder])) {
+        const key = `${holder}\u0000${id}`;
+        if (!without.has(key) || kept.has(key)) list[id] = root[holder][id];
+      }
+      holdings[holder] = list;
+    }
+    return { ...state, [S.holdings]: holdings };
+  };
+  for (const edge of ordered) {
+    const key = `${edge.holder}\u0000${edge.id}`;
+    kept.add(key);
+    if (holdWhileHolds(engine, shadow(), group.row, edge.record)) continue;
+    kept.delete(key);
+    dropped.push(edge);
+  }
+  return dropped;
 }
 
 /**

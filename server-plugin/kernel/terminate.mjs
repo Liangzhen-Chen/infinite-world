@@ -34,7 +34,7 @@ import { compileRXInScope, evaluateRX } from './rx.mjs';
 import { rxBindings, rowClassesOf } from './dimensions.mjs';
 import { ruleTable } from './load/rules.mjs';
 import { accountsOf, transfer } from './ledger.mjs';
-import { closeHolding } from './holdings.mjs';
+import { closeHolding, edgeIsActive } from './holdings.mjs';
 import { schedule, cancel, clockView, minutesPerDay } from './scheduler.mjs';
 
 // 定义源只此一份：路径键、表名、协议代号。verb 两行与 due_revive_window 条目由卷二、卷二十登记（:524、:530）。
@@ -379,7 +379,7 @@ function activeEdges(state, match) {
     const edges = isObj(root[holder]) ? root[holder] : {};
     for (const edgeId of Object.keys(edges).sort(cmp)) {
       const rec = edges[edgeId];
-      if (isObj(rec) && isObj(rec.terms) && rec.terms.until === null && match(rec)) out.push({ edgeId, rec });
+      if (edgeIsActive(state, rec) && match(rec)) out.push({ edgeId, rec });
     }
   }
   return out;

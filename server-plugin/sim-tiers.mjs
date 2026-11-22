@@ -6,7 +6,7 @@
 // - 范围（R27-1.12 :310）：对每个玩家控制实体取其 pos 的格空间 w 与区格 (cx, cy)；泡 = 同一格空间里 |x − cx| ≤ r 且 |y − cy| ≤ r 的区格之并，
 //   r = bubbleRadiusRegionCells；不同格空间各自成泡；外包框之外的区格不算（框由卷五格空间表经 gridSpaceBox 给，不自算）。竖向不设层数，本文件不碰层。
 // - 玩家控制登记（卷二十七 §8 第 7 条已答：卷九 R9-3.9 :721）：一个实体由玩家出意图，当且仅当它有一条在世的玩家席位边，持有种类由 rules.control.seatKind 指名，
-//   受控实体既是边的持有者也是标的。读边走持有写者模块的只读入口 openHoldingsOfKind（terms.until 为空即在世）。
+//   受控实体既是边的持有者也是标的。读边走持有写者模块的只读入口 openHoldingsOfKind（现役边：terms.until 为空或晚于当刻）。
 //   未落：rules.control 规则表与席位持有种类行归卷九、卷十八，本仓库尚未登记；真实引擎上 rules.control.seatKind 不存在时本文件抛 E-RULES-UNREGISTERED，
 //   不返回空泡、不退回别的读法（不绕过）。
 // - 不按位置精度判，不按 id、名字特判。区格序号只经卷五 regionOf（floor(x × cellM ÷ regionCellM)），不自算。

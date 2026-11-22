@@ -111,7 +111,8 @@ test('没有玩家控制实体（无席位边）时泡为空，inBubble 恒假�
 
 test('已关闭的席位边（terms.until 非空）与别的持有种类的边不算玩家控制（卷九 R9-3.9"在世的玩家席位边"）', () => {
   const engine = make();
-  const closed = seats(edge('npc_a', { terms: { since: 0, until: 60 } }));
+  // 现役 = until 为空或晚于当刻（卷十八 R18-1.10 :526）；已关闭的边 until 不晚于当刻，故状态时钟取 60 分钟。
+  const closed = { ...seats(edge('npc_a', { terms: { since: 0, until: 60 } })), clock: { minute: 60 } };
   assert.deepEqual(bubbleView(engine, closed), []);
   const other = seats(edge('npc_a', { kind: 'hk_other' }));
   assert.deepEqual(bubbleView(engine, other), []);

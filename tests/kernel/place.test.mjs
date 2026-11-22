@@ -354,7 +354,9 @@ const hold = (kind, holder, subject, until = null) => ({ kind, holder, subject, 
 
 test('rel_residents：本行及后代上 domicile 为真且未关闭的持有者；常住边变化后随之', () => {
   const e = regionEngine();
+  // 现役 = until 为空或晚于当刻（卷十八 R18-1.10 :526）；已关闭的边 until 不晚于当刻，故状态时钟取 10 分钟（until 5、9 都已过）。
   const state = {
+    clock: { minute: 10 },
     holdings: {
       npc_a: { h1: hold('hk_resides', 'npc_a', 'loc_r2') },      // 后代上的常住：算
       npc_b: { h1: hold('hk_lodges', 'npc_b', 'loc_r') },        // 种类行 domicile 为假：不算

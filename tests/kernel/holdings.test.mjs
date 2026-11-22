@@ -188,6 +188,20 @@ test('关边：按边 id 关闭写 until=结束时刻并发 ended；重复关闭
   fails(state, (s) => closeHolding(ENGINE, s, { id, cause: CAUSE }), 'E-HK-PROTOCOL');
 });
 
+test('R18-1.10 :526：建立时带预定到期的常住边，建立事件与关闭事件相位不同、事件 id 不撞；到期前可正常关闭', () => {
+  const state = fresh();
+  const until = MINUTE + 60;
+  let id;
+  run(state, (s) => { id = openHolding(ENGINE, s, { holdingKind: 'hk_resides', holder: 'npc_a', subject: 'place_x', terms: { until }, cause: CAUSE }); });
+  const opened = book.entries.find((e) => e.verb === 'verb_domicile_changed');
+  assert.equal(opened.payload.until, until);
+  book.entries.length = 0;
+  assert.deepEqual(run(state, (s) => closeHolding(ENGINE, s, { id, cause: CAUSE })), { ok: true });
+  const closed = book.entries.find((e) => e.verb === 'verb_domicile_changed');
+  assert.equal(closed.payload.until, MINUTE);
+  assert.notEqual(closed.id, opened.id);
+});
+
 test('三元定位：uniqueTriple 为假即拒；为真时按（种类，持有者，标的）关闭唯一现役边', () => {
   const plain = fresh();
   let id;

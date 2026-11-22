@@ -36,6 +36,7 @@ import { volumeColumn, volumeZoneAt, volumeFootprint, volumeCellsOf, volumeExits
 import { buildPlan, expandClasses, waterAccessOf, footprintAdjacency, edgeAdjacency, flowingOfIndex } from './place-plan.mjs';
 import { createRouteEnv, edgeNumbers } from './route-edges.mjs';
 import { report } from './report.mjs';
+import { edgeIsActive } from './holdings.mjs';
 import { isPosValue } from './named-structs.mjs';
 import { matchStruct } from './named-struct-match.mjs';
 import { cellClassOf, surfaceStorey as surfaceStoreyOf, landCellKey, landOrderKey } from './grid.mjs';
@@ -83,7 +84,7 @@ const OFFSTAGE_UNKNOWN = Object.freeze([DIM.anchor, DIM.facing, DIM.centroid, DI
 // 关系行代号（卷五 §4.1.2 表；本文件是这三行的实现方）。
 const REL = Object.freeze({ residents: 'rel_residents' });
 // 持有边的字段（卷二 §1.5 struct:holding；卷十八 §4.1.1 terms 公共键 until）与种类行的 domicile 列（R18-1.10）。
-const HOLDING = Object.freeze({ kind: 'kind', subject: 'subject', terms: 'terms', until: 'until' });
+const HOLDING = Object.freeze({ kind: 'kind', subject: 'subject', terms: 'terms' });
 const DOMICILE = 'domicile';
 // 行政层级族的条目字段（卷五 §4.14.1：rank: integer）；族名比较取 T.vocab_family.juris。
 const JURIS_RANK = 'rank';
@@ -1290,7 +1291,7 @@ export function relWithin(engine, state, id) {
 
 /**
  * relation:rel_residents（§4.1.2 表四步）：① 本行及其全部后代（沿 tree 展开）；② 对每个地点经 reverseLookup 取以它为标的的持有者；
- * ③ 只留在该地点上至少有一条种类行 domicile 为真、且未关闭（terms.until 为 null）的边的持有者（R18-1.10）；④ 按代号序去重合并。
+ * ③ 只留在该地点上至少有一条种类行 domicile 为真、且现役（holdings.mjs 的 edgeIsActive）的边的持有者（R18-1.10）；④ 按代号序去重合并。
  * @param {any} engine @param {any} state @param {string} id @returns {readonly string[]}
  */
 export function relResidents(engine, state, id) {
@@ -1311,8 +1312,7 @@ export function relResidents(engine, state, id) {
       const lives = edges.some((r) => {
         if (!isObj(r) || r[HOLDING.subject] !== place) return false;
         const row = index.get(r[HOLDING.kind]);
-        const open = isObj(r[HOLDING.terms]) && r[HOLDING.terms][HOLDING.until] === null;
-        return Boolean(row) && isObj(row.entry) && row.entry[DOMICILE] === true && open;
+        return Boolean(row) && isObj(row.entry) && row.entry[DOMICILE] === true && edgeIsActive(state, r);
       });
       if (lives) out.add(holder);
     }
