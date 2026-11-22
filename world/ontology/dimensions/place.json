@@ -770,26 +770,18 @@
    "type": "boolean"
   },
   "wallFlowKg": {
-   "domain": {},
-   "key": {
-    "kind": "material",
-    "type": "ref"
+   "fields": {
+    "laidKg": {"combine": "sum", "domain": {}, "key": {"kind": "material", "type": "ref"}, "type": "map", "value": {"domain": [0, null], "precision": 4, "type": "number", "unit": "kg"}},
+    "lostKg": {"combine": "sum", "domain": {}, "key": {"kind": "material", "type": "ref"}, "type": "map", "value": {"domain": [0, null], "precision": 4, "type": "number", "unit": "kg"}},
+    "takenKg": {"combine": "sum", "domain": {}, "key": {"kind": "material", "type": "ref"}, "type": "map", "value": {"domain": [0, null], "precision": 4, "type": "number", "unit": "kg"}}
    },
    "modifiable": false,
-   "onUnknown": "gap",
+   "onUnknown": "error",
    "owner": "卷十九 §2.1 :109、§4.1 规则 11",
    "required": "byClass:comp_facility",
-   "source": "卷十九 §2.1 :109（围护的实物账：每种料自建行起累计砌入 laidKg、取出 takenKg、损失 lostKg，原值，只做加法；恒有 laidKg − takenKg − lostKg = materialKg）；开局建行由卷十写回器在 gstage_envelope 一处写（kernel/wall-flow.mjs openingWallFlow，规则 11 表第一行）；作者不写（写了即 E-GEN-ROW-INVALID）。onUnknown 取 gap 而不是卷十九 :109 的 error：卷二 §1.6 第 4 项规定未标 combine: sum 的映射在 onUnknown 为 error 时须写满键类型的全族（validate/rows.mjs checkMapKeys，E-DIM-MAP-SPARSE-NONSUM），而 struct 值的映射不能标 combine: sum（types.mjs E-DIM-MAP-SPARSE-NONSUM），改 error 即每栋建筑要写 100 多个 null 键；两卷矛盾，待李白裁定（修改轮 M2 停）。",
-   "type": "map",
-   "value": {
-    "fields": {
-     "laidKg": {"domain": [0, null], "precision": 4, "type": "number", "unit": "kg"},
-     "lostKg": {"domain": [0, null], "precision": 4, "type": "number", "unit": "kg"},
-     "takenKg": {"domain": [0, null], "precision": 4, "type": "number", "unit": "kg"}
-    },
-    "required": ["laidKg", "takenKg", "lostKg"],
-    "type": "struct"
-   }
+   "requiredFields": ["laidKg", "takenKg", "lostKg"],
+   "source": "卷十九 §2.1 :109（围护的实物账，封卷后勘误 1124k10 改为 struct{laidKg, takenKg, lostKg}，三项各是 map<ref material, number:kg> combine: sum：每种料自建行起累计砌入、取出、损失的质量，原值，只做加法；没有的料按 0，所以报错级也不必写满键族，卷二 §1.6 第 4 项；恒有 laidKg − takenKg − lostKg = materialKg）；开局建行由卷十写回器在 gstage_envelope 一处写（kernel/wall-flow.mjs openingWallFlow，规则 11 表第一行）；作者不写（写了即 E-GEN-ROW-INVALID）",
+   "type": "struct"
   },
   "wallThicknessM": {
    "domain": [

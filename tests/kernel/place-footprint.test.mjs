@@ -92,7 +92,7 @@ test('byFootprint 必填：区域足迹缺 coord、缺 anchorElevationM、缺 te
 });
 
 // 挂 comp_facility 的行另须带卷十九 §2.1 的必填列（G7 第一步登记）：形制、外包宽深、层数、完好度、破口列表。
-const BLD_COLUMNS = { form: 'bldform_test', intendedType: 'fac_house', planCells: { widthCells: 6, depthCells: 6 }, storeys: 1, condition: 1, breaks: [], materialKg: { mat_granite: 1000 } };
+const BLD_COLUMNS = { form: 'bldform_test', intendedType: 'fac_house', planCells: { widthCells: 6, depthCells: 6 }, storeys: 1, condition: 1, breaks: [], materialKg: { mat_granite: 1000 }, wallFlowKg: { laidKg: { mat_granite: 1000 }, takenKg: { mat_granite: 0 }, lostKg: { mat_granite: 0 } } };
 
 test('byFootprint 禁填：建筑足迹行（挂 comp_facility）写 coord、terrain、boundary、targetAreaM2 一律 E-DIM-DOMAIN-RANGE；区域足迹行写 anchor、facing、spanZ 同样', () => {
   const bld = { classes: ['comp_facility'], anchor: { w: 0, x: 10, y: 10, z: 0, coarse: false }, facing: 2, ...BLD_COLUMNS };

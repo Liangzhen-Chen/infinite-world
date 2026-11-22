@@ -233,7 +233,7 @@ test('#44 三级嵌套体积：逐级 depthM 增大、各自层段不相交、�
 
 test('#44 父行种类与覆盖：父行是建筑（既非区域也非体积）拒收；体积列不压在更深区域足迹的区格上；在已凿空的列上方建区域子行被拒', () => {
   // 父行是区域足迹 loc_a 之下的建筑行：体积挂到它之下，E-GRID-FOOTPRINT-OUTSIDE-PARENT。
-  const building = row('loc_a', { classes: ['comp_facility'], anchor: { w: 0, x: 20, y: 120, z: 0, coarse: false }, facing: 0, form: 'bldform_hut', intendedType: 'fac_house', planCells: { widthCells: 6, depthCells: 6 }, storeys: 1, condition: 1, breaks: [], materialKg: { mat_granite: 1000 } });
+  const building = row('loc_a', { classes: ['comp_facility'], anchor: { w: 0, x: 20, y: 120, z: 0, coarse: false }, facing: 0, form: 'bldform_hut', intendedType: 'fac_house', planCells: { widthCells: 6, depthCells: 6 }, storeys: 1, condition: 1, breaks: [], materialKg: { mat_granite: 1000 }, wallFlowKg: { laidKg: { mat_granite: 1000 }, takenKg: { mat_granite: 0 }, lostKg: { mat_granite: 0 } } });
   assert.ok(codesOf(load(WORLD({ bld_a: building, loc_vx: volume('bld_a') }))).includes('E-GRID-FOOTPRINT-OUTSIDE-PARENT'));
   // 目标面积超过 rules.gen.under.maxAreaM2（200000）拒收：特殊值不绕过。
   assert.ok(codesOf(load(WORLD({ loc_va: volume('loc_a', { targetAreaM2: 200001 }) }))).includes('E-GEN-ROW-INVALID'));

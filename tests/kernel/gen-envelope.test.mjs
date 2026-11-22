@@ -47,7 +47,7 @@ test('一层 3×3：墙 8400 L × 2 = 16800 kg（mat_a）、屋顶 400 L × 0.25
   assert.deepEqual(dimsOf(out, 'bld_1'), {
     materialKg: { mat_a: 16800, mat_c: 100 },
     condition: 1,
-    wallFlowKg: { mat_a: { laidKg: 16800, takenKg: 0, lostKg: 0 }, mat_c: { laidKg: 100, takenKg: 0, lostKg: 0 } },
+    wallFlowKg: { laidKg: { mat_a: 16800, mat_c: 100 }, takenKg: { mat_a: 0, mat_c: 0 }, lostKg: { mat_a: 0, mat_c: 0 } },
   });
   const p = out.proposals[0];
   assert.equal(p.by, 'gstage_envelope');
@@ -67,12 +67,12 @@ test('两个角色同一种料则质量相加：墙与屋顶都用 mat_a → 840
 test('作者写了的不动：写了 materialKg、condition 的行不出这两项提案，流水账仍按作者的 materialKg 记（0 也照记 0）；只缺 condition 的只补 condition', () => {
   const authored = bld({ materialKg: { mat_x: 5, mat_y: 0 }, condition: 0.6 });
   const out = run([['bld_a', authored], ['bld_b', bld({ materialKg: { mat_x: 7 } })]]);
-  assert.deepEqual(dimsOf(out, 'bld_a'), { wallFlowKg: { mat_x: { laidKg: 5, takenKg: 0, lostKg: 0 }, mat_y: { laidKg: 0, takenKg: 0, lostKg: 0 } } });
-  assert.deepEqual(dimsOf(out, 'bld_b'), { condition: 1, wallFlowKg: { mat_x: { laidKg: 7, takenKg: 0, lostKg: 0 } } });
+  assert.deepEqual(dimsOf(out, 'bld_a'), { wallFlowKg: { laidKg: { mat_x: 5, mat_y: 0 }, takenKg: { mat_x: 0, mat_y: 0 }, lostKg: { mat_x: 0, mat_y: 0 } } });
+  assert.deepEqual(dimsOf(out, 'bld_b'), { condition: 1, wallFlowKg: { laidKg: { mat_x: 7 }, takenKg: { mat_x: 0 }, lostKg: { mat_x: 0 } } });
 });
 
 test('流水账是账、作者不写（卷十九 :419）：作者在行上写了 wallFlowKg 即 E-GEN-ROW-INVALID；先行阶段生成的（非作者值）不重写也不报错', () => {
-  const row = bld({ materialKg: { mat_x: 5 }, condition: 1, wallFlowKg: { mat_x: { laidKg: 5, takenKg: 0, lostKg: 0 } } });
+  const row = bld({ materialKg: { mat_x: 5 }, condition: 1, wallFlowKg: { laidKg: { mat_x: 5 }, takenKg: { mat_x: 0 }, lostKg: { mat_x: 0 } } });
   const code = (fn) => { try { fn(); return null; } catch (e) { return e.code; } };
   assert.equal(code(() => run([['bld_c', row]])), 'E-GEN-ROW-INVALID');
   const out = run([['bld_c', row]], { isAuthored: () => false });
@@ -91,7 +91,7 @@ test('缺 form 的行：materialKg 不补、不报错，记缺口 form_type_unma
   assert.deepEqual(out.deferred, [{ id: 'bld_n', reason: 'form_type_unmatched', gaps: ['materialKg'] }]);
   assert.deepEqual(out.proposals.map((p) => p.id), ['bld_m', 'bld_n']);
   assert.deepEqual(dimsOf(out, 'bld_n'), { condition: 1 });
-  assert.deepEqual(dimsOf(out, 'bld_m'), { wallFlowKg: { mat_x: { laidKg: 3, takenKg: 0, lostKg: 0 } } });
+  assert.deepEqual(dimsOf(out, 'bld_m'), { wallFlowKg: { laidKg: { mat_x: 3 }, takenKg: { mat_x: 0 }, lostKg: { mat_x: 0 } } });
 });
 
 test('守恒式：每栋每种料 laidKg − takenKg − lostKg = materialKg（补出的与作者写的都成立）；开局 takenKg、lostKg 为 0', () => {
@@ -99,14 +99,15 @@ test('守恒式：每栋每种料 laidKg − takenKg − lostKg = materialKg（�
   const had = new Map([['bld_c', { mat_x: 12.5, mat_z: 0 }]]);
   for (const p of out.proposals) {
     const kg = p.dims.materialKg ?? had.get(p.id);
-    assert.deepEqual(Object.keys(p.dims.wallFlowKg), Object.keys(kg));
-    for (const [code, flow] of Object.entries(p.dims.wallFlowKg)) {
-      assert.equal(flow.takenKg, 0);
-      assert.equal(flow.lostKg, 0);
-      assert.equal(flow.laidKg - flow.takenKg - flow.lostKg, kg[code], `${p.id}/${code}`);
+    const { laidKg, takenKg, lostKg } = p.dims.wallFlowKg;
+    assert.deepEqual(Object.keys(laidKg), Object.keys(kg));
+    for (const code of Object.keys(kg)) {
+      assert.equal(takenKg[code], 0);
+      assert.equal(lostKg[code], 0);
+      assert.equal(laidKg[code] - takenKg[code] - lostKg[code], kg[code], `${p.id}/${code}`);
     }
   }
-  assert.deepEqual(openingWallFlow({ mat_b: 1, mat_a: 2 }), { mat_a: { laidKg: 2, takenKg: 0, lostKg: 0 }, mat_b: { laidKg: 1, takenKg: 0, lostKg: 0 } });
+  assert.deepEqual(openingWallFlow({ mat_b: 1, mat_a: 2 }), { laidKg: { mat_a: 2, mat_b: 1 }, takenKg: { mat_a: 0, mat_b: 0 }, lostKg: { mat_a: 0, mat_b: 0 } });
 });
 
 test('出错：形制没有默认用料、密度读不到或不为正、开局 condition 出域，都是错误，不拿常量兜底', () => {
@@ -181,7 +182,7 @@ test('起始地区全部手写建筑（含作者没写形制的 grain_annex）�
     for (const code of Object.keys(d.materialKg)) {
       assert.ok(defaults.has(code), `${r.id} 的 ${code} 属形制 ${formCode} 的默认料`);
       assert.ok(d.materialKg[code] > 0, `${r.id}/${code} 质量非零`);
-      assert.deepEqual(d.wallFlowKg[code], { laidKg: d.materialKg[code], takenKg: 0, lostKg: 0 });
+      assert.deepEqual([d.wallFlowKg.laidKg[code], d.wallFlowKg.takenKg[code], d.wallFlowKg.lostKg[code]], [d.materialKg[code], 0, 0]);
     }
     assert.equal(d.condition, world.rules.gen.openingCondition);
   }

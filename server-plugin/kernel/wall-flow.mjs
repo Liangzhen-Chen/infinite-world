@@ -8,12 +8,16 @@
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
 /**
- * 开局建行的围护流水账：每种料 {laidKg: 该料质量, takenKg: 0, lostKg: 0}，料按代号序。
+ * 开局建行的围护流水账（卷十九 :109，封卷后勘误 1124k10：三个求和映射）：{laidKg: {料: 该料质量}, takenKg: {料: 0}, lostKg: {料: 0}}，料按代号序，0 也逐料照记。
  * @param {Record<string, number>} materialKg 行上 materialKg（作者写的或开局按形制默认料补出的）
- * @returns {Record<string, {laidKg: number, takenKg: number, lostKg: number}>}
+ * @returns {{laidKg: Record<string, number>, takenKg: Record<string, number>, lostKg: Record<string, number>}}
  */
 export function openingWallFlow(materialKg) {
-  const out = {};
-  for (const code of Object.keys(materialKg).sort(cmp)) out[code] = { laidKg: materialKg[code], takenKg: 0, lostKg: 0 };
+  const out = { laidKg: {}, takenKg: {}, lostKg: {} };
+  for (const code of Object.keys(materialKg).sort(cmp)) {
+    out.laidKg[code] = materialKg[code];
+    out.takenKg[code] = 0;
+    out.lostKg[code] = 0;
+  }
   return out;
 }

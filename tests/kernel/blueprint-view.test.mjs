@@ -65,7 +65,7 @@ const region = (parent, x, y, extra = {}) => row(parent, { terrain: 'terrain_riv
 // 建筑行：挂 comp_facility，卷十九 §2.1 的必填列照数填（形制、外包宽深、层数、完好度、破口、料）。
 const building = (parent, anchorXYZ, extra = {}) => row(parent, {
   classes: ['comp_facility'], anchor: { w: 0, x: anchorXYZ[0], y: anchorXYZ[1], z: anchorXYZ[2], coarse: false }, facing: 0,
-  form: 'bldform_hut', intendedType: 'fac_house', planCells: { widthCells: 6, depthCells: 6 }, storeys: 1, condition: 1, breaks: [], materialKg: { mat_granite: 1000 }, ...extra,
+  form: 'bldform_hut', intendedType: 'fac_house', planCells: { widthCells: 6, depthCells: 6 }, storeys: 1, condition: 1, breaks: [], materialKg: { mat_granite: 1000 }, wallFlowKg: { laidKg: { mat_granite: 1000 }, takenKg: { mat_granite: 0 }, lostKg: { mat_granite: 0 } }, ...extra,
 });
 const room = (parent, role) => row(parent, { classes: ['comp_zone'], roomRole: role });
 // 2 × 3 区格，所有控制点海拔 0（地表高处处 0 m，地表层 0）：loc_a 占区格 (0,1)（细格 x 0..99、y 100..199）、loc_b 占 (1,1)，其余归层根。
