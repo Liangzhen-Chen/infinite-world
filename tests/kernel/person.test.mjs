@@ -219,6 +219,29 @@ test('采样确定、一键一抽：同种子同 id 同值；换 id 值可不同
   assert.ok(['sex_male', 'sex_female'].includes(a1.sex));
 });
 
+test('寿命按现龄条件采样（卷四 :216 勘误 1124k80、卷二 §1.10 勘误 1124k81）：beast 物种寿命 normal(60,9) clamp [30,90]；现龄不高于下限 30 时不截断、与不看现龄逐位相同；现龄 a > 30 时寿命恒在 [a, 90] 且不成片压在 a 上', () => {
+  const lifeOf = (id, age) => { const st = state({ created: {} }); assert.deepEqual(make(st, base({ instanceId: id, species: 'species_test_beast', birthMinute: born(age) })), { ok: true }); return st.created[id].props.lifespanYears; };
+  const ids = Array.from({ length: 30 }, (_, i) => `npc_c${i}`);
+  for (const id of ids) assert.equal(lifeOf(id, 30), lifeOf(id, 20), id); // 现龄 30 不高于下限 30：不截断
+  for (const age of [45, 60, 75, 85]) {
+    const vals = ids.map((id) => lifeOf(id, age));
+    assert.ok(vals.every((v) => v >= age && v <= 90), `age ${age}: ${JSON.stringify(vals)}`);
+    assert.ok(vals.filter((v) => v === age).length <= 1, `age ${age}: piled at the age`);
+    assert.ok(new Set(vals).size > 20, `age ${age}`);
+  }
+});
+
+test('寿命按现龄条件采样的边界：区间内取不到值（现龄恰 90 或超过上限 91）→ 整笔拒收 E-DIM-SAMPLE-PARAM，不静默放过；给定寿命不受影响；ageYears 路径同口径', () => {
+  assert.deepEqual(make(state({ created: {} }), base({ species: 'species_test_beast', birthMinute: born(90) })), { ok: false, code: 'E-DIM-SAMPLE-PARAM' });
+  assert.deepEqual(make(state({ created: {} }), base({ species: 'species_test_beast', birthMinute: born(91) })), { ok: false, code: 'E-DIM-SAMPLE-PARAM' });
+  const given = state({ created: {} });
+  assert.deepEqual(make(given, base({ species: 'species_test_beast', birthMinute: born(91), lifespanYears: 50 })), { ok: true });
+  assert.equal(given.created.npc_new.props.lifespanYears, 50);
+  const viaAge = state({ created: {} });
+  assert.deepEqual(make(viaAge, base({ species: 'species_test_beast', birthMinute: undefined, ageYears: 85 })), { ok: true });
+  assert.ok(viaAge.created.npc_new.props.lifespanYears >= 85 && viaAge.created.npc_new.props.lifespanYears <= 90);
+});
+
 test('instantiatePerson 拒收：缺必给项、birthMinute 与 ageYears 二选一、id 缺或重复或前缀不属个体、物种不是物种、性别不在物种 sexes、未知属性键、属性出域、无种子', () => {
   const bad = (spec, code, eng) => assert.deepEqual(make(state({ created: {} }), spec, eng), { ok: false, code }, JSON.stringify(spec));
   bad(base({ species: undefined }), 'E-DIM-REQUIRED-MISSING');

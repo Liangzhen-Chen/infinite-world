@@ -7,7 +7,7 @@
 
 import { KernelError } from './errors.mjs';
 import { sha256Text } from './save.mjs';
-import { fixedUnits, fixedScale, truncateTo, fixedToNumber, fixedExp, fixedSqrtInt } from './det-math.mjs';
+import { fixedUnits, fixedAdd, fixedDivide, fixedScale, truncateTo, fixedToNumber, fixedExp, fixedSqrtInt } from './det-math.mjs';
 import { CODE_RE } from './handles/vocab-handle.mjs';
 import { KEY_RE, T } from './validate/types.mjs';
 import { isHex64, seedKeyText, seedHashText, diceKeyText, orderKeyText } from './handles/keys.mjs';
@@ -229,7 +229,8 @@ export function drawBelow(total, worldSeed, streamCode, subjectId, worldTime, dr
 }
 
 // 按骰值键取值可用的分布种类：只取消耗骰值的五种（卷二 §1.10 封卷后勘误 1121k1）；curve 无随机、joint 归卷二十六、ref 不展开，都拒。
-const DRAW_KINDS = Object.freeze([DIST.uniform, DIST.normal, DIST.lognormal, DIST.triangular, DIST.categorical]);
+// 种类清单只在下面的分布种类表 DIST_KINDS（byDice 栏）一处。
+const drawKinds = () => Object.keys(DIST_KINDS).filter((k) => DIST_KINDS[k].byDice === true);
 
 /**
  * kernelApi `drawByKey`（卷二 §1.10 封卷后勘误 1121k1，卷十 C10-14 ⑤；卷十 R10-2.6 场偏差与 rules.gen.* 里的分布用它取值）：
@@ -242,16 +243,11 @@ const DRAW_KINDS = Object.freeze([DIST.uniform, DIST.normal, DIST.lognormal, DIS
  */
 export function drawByKey(worldSeed, streamCode, subjectId, worldTime, drawSiteCode, distribution) {
   validateDistribution(distribution);
-  if (!DRAW_KINDS.includes(distribution.dist)) throw paramError(`drawByKey: distribution ${JSON.stringify(distribution.dist)} is not drawn by dice key (want ${DRAW_KINDS.join('|')})`);
+  const row = kindRow(distribution.dist);
+  if (row.byDice !== true) throw paramError(`drawByKey: distribution ${JSON.stringify(distribution.dist)} is not drawn by dice key (want ${drawKinds().join('|')})`);
   const seedKey = sha256Text(diceKeyOf(worldSeed, streamCode, subjectId, worldTime, drawSiteCode));
   const def = { precision: String(fixedScale()).length - 1 };
-  switch (distribution.dist) {
-    case DIST.normal: return sampleNormal(seedKey, distribution, def);
-    case DIST.lognormal: return sampleLognormal(seedKey, distribution, def);
-    case DIST.uniform: return sampleUniform(seedKey, distribution, def);
-    case DIST.triangular: return sampleTriangular(seedKey, distribution, def);
-    default: return sampleCategorical(seedKey, distribution);
-  }
+  return row.draw(seedKey, distribution, def);
 }
 
 // ---------- 分布参数校验（卷二 §1.10 :318） ----------
@@ -318,37 +314,18 @@ function checkClamp(dist, dimDef) {
  */
 export function validateDistribution(dist, dimDef = {}, engine = null) {
   if (!isObj(dist) || typeof dist.dist !== 'string') throw paramError(`distribution ${JSON.stringify(dist)}: want an object with a dist code`);
-  switch (dist.dist) {
-    case DIST.normal:
-      if (!isNum(dist.mean) || !isNum(dist.sd) || !(dist.sd > 0)) throw paramError('normal: mean is a number and sd > 0');
-      break;
-    case DIST.lognormal:
-      if (!isNum(dist.mu) || !isNum(dist.sigma) || !(dist.sigma > 0)) throw paramError('lognormal: mu is a number and sigma > 0');
-      break;
-    case DIST.uniform:
-      if (!isNum(dist.min) || !isNum(dist.max) || !(dist.min < dist.max)) throw paramError('uniform: min and max are numbers with min < max');
-      break;
-    case DIST.triangular:
-      if (!isNum(dist.min) || !isNum(dist.mode) || !isNum(dist.max) || !(dist.min <= dist.mode && dist.mode <= dist.max)) throw paramError('triangular: min <= mode <= max');
-      break;
-    case DIST.categorical:
-      checkCategorical(dist, dimDef, engine);
-      break;
-    case DIST.joint:
-      if (!isObj(dist.marginals)) throw paramError('joint: marginals must be an object');
-      for (const k of Object.keys(dist.marginals).sort()) validateDistribution(dist.marginals[k], {}, engine);
-      checkCorr(dist.corr);
-      break;
-    case DIST.curve:
-      if (typeof dist.curve !== 'string' || typeof dist.x !== 'string') throw paramError('curve: curve and x must be dimension names');
-      break;
-    case DIST.ref:
-      if (typeof dist.name !== 'string') throw paramError('ref: name must be a string');
-      break;
-    default:
-      throw paramError(`unknown distribution ${JSON.stringify(dist.dist)}`);
-  }
+  kindRow(dist.dist).validate(dist, dimDef, engine);
   checkClamp(dist, dimDef);
+  checkTruncate(dist);
+}
+
+// truncate: [lo, hi]（卷二 §1.10 封卷后勘误 1124k81）：只有分布种类表里 truncatable 的种类可截断（categorical 无序、curve 无随机、joint 归卷二十六）；lo ≤ hi，都是数。
+function checkTruncate(dist) {
+  if (dist.truncate === undefined) return;
+  if (kindRow(dist.dist).truncatable !== true) throw paramError(`truncate: ${dist.dist} cannot be truncated`);
+  const t = dist.truncate;
+  const [lo, hi, ...rest] = Array.isArray(t) ? t : [];
+  if (!isNum(lo) || !isNum(hi) || rest.length > 0 || lo > hi) throw paramError('truncate must be [lo, hi] with numbers and lo <= hi');
 }
 
 // ---------- 首批分布求值 ----------
@@ -387,25 +364,74 @@ function normalZ(seedKey) {
   return table[j] + (((table[j + 1] - table[j]) * f) >> shift);
 }
 
+// 截断采样（卷二 §1.10 封卷后勘误 1124k81）：分布对象可带 truncate: [lo, hi]，按原分布的形状只在 [lo, hi] 内取值（反 CDF 截断）。
+// 同一个种子键、同一个均匀数 u，不拒绝重抽、不加计数；区间内取不到值报 E-DIM-SAMPLE-PARAM。返回 10⁴ 标度定点 [lo, hi] 或 null（未截断）。
+function truncateOf(dist) {
+  if (dist.truncate === undefined) return null;
+  return [fixedUnits(dist.truncate[0]), fixedUnits(dist.truncate[1])];
+}
+
+const noValue = (dist) => paramError(`truncate ${JSON.stringify(dist.truncate)}: the interval holds no value of ${dist.dist}`);
+
+// 标准正态分位数表的截断：valueAt(z) 对 z 单调不减（normal 的 mean + sd×z、lognormal 的 exp(mu + sigma×z)），
+// 二分找出表下标区间 [iLo, iHi]（取值落在 [lo, hi] 内的表点），再把 u 均匀映到这个下标区间上、区间内相邻两点整数线性插值（同 normalZ 的插值法）。
+function truncatedZ(seedKey, dist, valueAt, tr) {
+  const table = quantileTable();
+  let a = 0;
+  let b = table.length;
+  while (a < b) { const m = (a + b) >> 1; if (valueAt(table[m]) >= tr[0]) b = m; else a = m + 1; }
+  const iLo = a;
+  a = 0;
+  b = table.length;
+  while (a < b) { const m = (a + b) >> 1; if (valueAt(table[m]) > tr[1]) b = m; else a = m + 1; }
+  const iHi = a - 1;
+  if (iLo > iHi) throw noValue(dist);
+  if (iLo === iHi) return table[iLo];
+  const shift = BigInt(bitLength(TWO64) - 1);
+  const prod = uniformAt(seedKey, 0) * BigInt(iHi - iLo);
+  const j = iLo + Number(prod >> shift);
+  const f = prod & ((1n << shift) - 1n);
+  return table[j] + (((table[j + 1] - table[j]) * f) >> shift);
+}
+
 function sampleNormal(seedKey, dist, def) {
-  const z = normalZ(seedKey);
-  const v = fixedUnits(dist.mean) + mul(fixedUnits(dist.sd), z);
-  return clampAndTrunc(v, dist, def);
+  const mean = fixedUnits(dist.mean);
+  const sd = fixedUnits(dist.sd);
+  const tr = truncateOf(dist);
+  const z = tr === null ? normalZ(seedKey) : truncatedZ(seedKey, dist, (zz) => mean + mul(sd, zz), tr);
+  return clampAndTrunc(mean + mul(sd, z), dist, def);
 }
 
 // lognormal = exp(mu + sigma×z)：exp 只经内核 fixedExp（唯一定义），再降到 10⁴ 标度（卷二 §1.10 :325、§3.3 :1332）。
 function sampleLognormal(seedKey, dist, def) {
-  const z = normalZ(seedKey);
-  const lin = fixedUnits(dist.mu) + mul(fixedUnits(dist.sigma), z);
-  const e8 = fixedExp(lin * fixedScale());
-  return clampAndTrunc(e8 / fixedScale(), dist, def);
+  const mu = fixedUnits(dist.mu);
+  const sigma = fixedUnits(dist.sigma);
+  const valueAt = (zz) => fixedExp((mu + mul(sigma, zz)) * fixedScale()) / fixedScale();
+  const tr = truncateOf(dist);
+  const z = tr === null ? normalZ(seedKey) : truncatedZ(seedKey, dist, valueAt, tr);
+  return clampAndTrunc(valueAt(z), dist, def);
 }
 
 function sampleUniform(seedKey, dist, def) {
-  const min = fixedUnits(dist.min);
-  const span = fixedUnits(dist.max) - min;
-  const v = min + (span * uniformAt(seedKey, 0)) / TWO64;
+  let min = fixedUnits(dist.min);
+  let max = fixedUnits(dist.max);
+  const tr = truncateOf(dist);
+  if (tr !== null) {
+    if (tr[0] > min) min = tr[0];
+    if (tr[1] < max) max = tr[1];
+    if (min > max) throw noValue(dist);
+  }
+  const v = min + ((max - min) * uniformAt(seedKey, 0)) / TWO64;
   return clampAndTrunc(v, dist, def);
+}
+
+// 三角分布的累积分布 F(x)（10⁴ 标度）：左支 (x−a)² ÷ ((c−a)(b−a))，右支 1 − (c−x)² ÷ ((c−a)(c−b))。
+function triangularCdf(x, a, b, c) {
+  const one = fixedScale();
+  if (x <= a) return 0n;
+  if (x >= c) return one;
+  if (x <= b) return ((x - a) * (x - a) * one) / ((c - a) * (b - a));
+  return one - ((c - x) * (c - x) * one) / ((c - a) * (c - b));
 }
 
 function sampleTriangular(seedKey, dist, def) {
@@ -413,11 +439,23 @@ function sampleTriangular(seedKey, dist, def) {
   const b = fixedUnits(dist.mode);
   const c = fixedUnits(dist.max);
   if (c === a) return clampAndTrunc(a, dist, def);
-  const r = (uniformAt(seedKey, 0) * fixedScale()) / TWO64;
+  let r = (uniformAt(seedKey, 0) * fixedScale()) / TWO64;
+  const tr = truncateOf(dist);
+  let lo = a;
+  let hi = c;
+  if (tr !== null) {
+    if (tr[0] > lo) lo = tr[0];
+    if (tr[1] < hi) hi = tr[1];
+    if (lo > hi) throw noValue(dist);
+    // 反 CDF 截断：r 从 [0, 1] 映到 [F(lo), F(hi)]。
+    const fLo = triangularCdf(lo, a, b, c);
+    r = fLo + (r * (triangularCdf(hi, a, b, c) - fLo)) / fixedScale();
+  }
   const f = ((b - a) * fixedScale()) / (c - a);
-  const v = r < f
+  let v = r < f
     ? a + sqrtFixed(mul(r, mul(c - a, b - a)))
     : c - sqrtFixed(mul(fixedScale() - r, mul(c - a, c - b)));
+  if (tr !== null) { if (v < lo) v = lo; if (v > hi) v = hi; }
   return clampAndTrunc(v, dist, def);
 }
 
@@ -432,6 +470,80 @@ function sampleCategorical(seedKey, dist) {
     if (x < acc) return k;
   }
   throw paramError('categorical: no bucket matched');
+}
+
+// ---------- 分布种类表（模块化原则 1122：同一判断只一处；加一种分布只加一行） ----------
+// 每个分布种类的全部分派都在这一张表里，别处不再按种类写 switch 或 if 链（validateDistribution、drawByKey、sample、sampleDistribution、person.mjs 的属性均值都查它）：
+//   validate(dist, dimDef, engine)  参数校验，必有；
+//   draw(seedKey, dist, def)        求值，没有即该种类还没有首批求值（joint、curve、ref；照旧拒、不给假值）；
+//   byDice                          true = 可经 drawByKey 按骰值键取值（卷二 §1.10 封卷后勘误 1121k1：消耗骰值的五种）；
+//   truncatable                     true = 可带 truncate: [lo, hi]（卷二 §1.10 封卷后勘误 1124k81；draw 自己读 truncate）；
+//   mean(dist)                      闭式均值（10⁴ 标度定点），没有即没有闭式均值实现；
+//   group(dist)                     joint 一次抽整个向量：种子键第四段的 joint 组名。
+const DIST_KINDS = Object.freeze({
+  [DIST.normal]: Object.freeze({
+    validate: (dist) => { if (!isNum(dist.mean) || !isNum(dist.sd) || !(dist.sd > 0)) throw paramError('normal: mean is a number and sd > 0'); },
+    draw: sampleNormal,
+    byDice: true,
+    truncatable: true,
+    mean: (dist) => fixedUnits(dist.mean),
+  }),
+  [DIST.lognormal]: Object.freeze({
+    validate: (dist) => { if (!isNum(dist.mu) || !isNum(dist.sigma) || !(dist.sigma > 0)) throw paramError('lognormal: mu is a number and sigma > 0'); },
+    draw: sampleLognormal,
+    byDice: true,
+    truncatable: true,
+  }),
+  [DIST.uniform]: Object.freeze({
+    validate: (dist) => { if (!isNum(dist.min) || !isNum(dist.max) || !(dist.min < dist.max)) throw paramError('uniform: min and max are numbers with min < max'); },
+    draw: sampleUniform,
+    byDice: true,
+    truncatable: true,
+    mean: (dist) => fixedDivide(fixedAdd(fixedUnits(dist.min), fixedUnits(dist.max)), fixedAdd(fixedScale(), fixedScale())),
+  }),
+  [DIST.triangular]: Object.freeze({
+    validate: (dist) => { if (!isNum(dist.min) || !isNum(dist.mode) || !isNum(dist.max) || !(dist.min <= dist.mode && dist.mode <= dist.max)) throw paramError('triangular: min <= mode <= max'); },
+    draw: sampleTriangular,
+    byDice: true,
+    truncatable: true,
+    mean: (dist) => fixedDivide(fixedAdd(fixedAdd(fixedUnits(dist.min), fixedUnits(dist.mode)), fixedUnits(dist.max)), fixedAdd(fixedAdd(fixedScale(), fixedScale()), fixedScale())),
+  }),
+  [DIST.categorical]: Object.freeze({
+    validate: (dist, dimDef, engine) => checkCategorical(dist, dimDef, engine),
+    draw: (seedKey, dist) => sampleCategorical(seedKey, dist),
+    byDice: true,
+  }),
+  [DIST.joint]: Object.freeze({
+    validate: (dist, dimDef, engine) => {
+      if (!isObj(dist.marginals)) throw paramError('joint: marginals must be an object');
+      for (const k of Object.keys(dist.marginals).sort()) validateDistribution(dist.marginals[k], {}, engine);
+      checkCorr(dist.corr);
+    },
+    group: (dist) => dist.group,
+  }),
+  [DIST.curve]: Object.freeze({
+    validate: (dist) => { if (typeof dist.curve !== 'string' || typeof dist.x !== 'string') throw paramError('curve: curve and x must be dimension names'); },
+  }),
+  [DIST.ref]: Object.freeze({
+    validate: (dist) => { if (typeof dist.name !== 'string') throw paramError('ref: name must be a string'); },
+  }),
+});
+
+// 查分布种类表；不在表里的种类一律 E-DIM-SAMPLE-PARAM。
+function kindRow(kind) {
+  if (typeof kind !== 'string' || !Object.hasOwn(DIST_KINDS, kind)) throw paramError(`unknown distribution ${JSON.stringify(kind)}`);
+  return DIST_KINDS[kind];
+}
+
+/**
+ * 分布的闭式均值（10⁴ 标度定点）：查分布种类表的 mean 栏；该种类没有闭式均值实现返回 null（调用方按各自约定报错，不编值）。
+ * 卷四 §4.12 G-3"各项基数 = 所选物种该属性分布的均值"经 person.mjs 的 speciesAttributeMeans 用它。
+ * @param {Record<string, unknown>} dist 分布对象 @returns {bigint | null}
+ */
+export function distributionMeanFixed(dist) {
+  if (typeof dist.dist !== 'string' || !Object.hasOwn(DIST_KINDS, dist.dist)) return null;
+  const row = DIST_KINDS[dist.dist];
+  return row.mean === undefined ? null : row.mean(dist);
 }
 
 function defOf(engine, kind, dim) {
@@ -457,7 +569,8 @@ export function sample(engine, kind, id, dim) {
   if (!def) throw new KernelError('E-DIM-REF-MISSING', {}, `${JSON.stringify(kind)}.${JSON.stringify(dim)}: no dimension definition`);
   const dist = def.sample;
   if (dist === undefined) throw new KernelError('E-DIM-REF-MISSING', {}, `${JSON.stringify(kind)}.${JSON.stringify(dim)}: dimension has no sample`);
-  return drawFrom(engine, kind, id, dim, dist, def, dist.dist === DIST.joint ? dist.group : undefined);
+  const row = kindRow(dist.dist);
+  return drawFrom(engine, kind, id, dim, dist, def, row.group === undefined ? undefined : row.group(dist));
 }
 
 /**
@@ -482,14 +595,8 @@ function drawFrom(engine, kind, id, dim, dist, def, group) {
   if (typeof id !== 'string' || !CODE_RE.test(id)) throw paramError(`id ${JSON.stringify(id)} is not a code`);
   if (group !== undefined && (typeof group !== 'string' || !CODE_RE.test(group))) throw paramError(`joint group ${JSON.stringify(group)} is not a code`);
   const seedKey = seedKeyFor(templateSeed, kind, id, dim, group);
-  switch (dist.dist) {
-    case DIST.normal: return sampleNormal(seedKey, dist, def);
-    case DIST.lognormal: return sampleLognormal(seedKey, dist, def);
-    case DIST.uniform: return sampleUniform(seedKey, dist, def);
-    case DIST.triangular: return sampleTriangular(seedKey, dist, def);
-    case DIST.categorical: return sampleCategorical(seedKey, dist);
-    default:
-      // 求值依赖冻结表/内核原语，分别由卷二十六落地；这里不静默给假值。
-      throw new Error(`kernel/sample.mjs: distribution ${dist.dist} evaluation needs its frozen tables (vol2 :318, vol27 R27-8) not yet built`);
-  }
+  const row = kindRow(dist.dist);
+  // 没有 draw 的种类（joint、curve、ref）求值依赖冻结表/内核原语，分别由卷二十六落地；这里不静默给假值。
+  if (row.draw === undefined) throw new Error(`kernel/sample.mjs: distribution ${dist.dist} evaluation needs its frozen tables (vol2 :318, vol27 R27-8) not yet built`);
+  return row.draw(seedKey, dist, def);
 }

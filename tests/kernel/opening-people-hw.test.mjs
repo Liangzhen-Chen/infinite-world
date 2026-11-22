@@ -16,6 +16,7 @@ import { useReportSink } from '../../server-plugin/kernel/report.mjs';
 import { installHoldingEngine, openHoldingsOfKind } from '../../server-plugin/kernel/holdings.mjs';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 import { applyOpeningPeople, firstInFullOrder } from '../../server-plugin/opening-people.mjs';
+import { lifeFacts } from '../../server-plugin/life.mjs';
 import { buildRoster } from '../../tools/convert-people-hw.mjs';
 import { ROOT } from './polity-world.mjs'; // 同时装入摘要常数（installDigestCap）
 
@@ -195,4 +196,41 @@ test('规则表缺家户边种类键即拒（E-RULES-UNREGISTERED），不回落
     const { r } = world();
     assert.equal(r.ok, false);
   } finally { ENGINE.rules = saved; }
+});
+
+test('lifeFacts 在真实年长（rules.astro.yearDays 36524219/100000 日）下读 78 岁人的现龄不溢出：华慈名册 78 岁，birthMinute = −41024002，现龄 = 41024002 ÷ 525948.7536 = 77.99999947… → 向零截断 4 位 77.9999', () => {
+  // 手算：78 × 36524219 × 1440 ÷ 100000 = 41024002.78，向下取整分钟 41024002；年长 = 36524219 × 1440 ÷ 100000 = 525948.7536 分钟；
+  // 41024002 ÷ 525948.7536 = 77.9999994…，精度 4 位向零截断得 77.9999。
+  const { state, r } = world();
+  assert.equal(r.ok, true);
+  assert.equal(state.created.npc_hw_huaci.props.birthMinute, -41024002);
+  const f = lifeFacts(ENGINE, state, 'npc_hw_huaci');
+  assert.equal(f.ageYears.value, 77.9999);
+});
+
+test('寿命按现龄条件采样（卷四 :216 勘误 1124k80，李白 P-19）：换 6 个种子建全名册，没有任何人的寿命小于现龄，且不超物种上限；同种子逐字相同', () => {
+  const sp = W.tables.get('species').flat.rows.get('species_human');
+  const build = (seed) => {
+    const eng = { ...ENGINE, template: { seed } };
+    installHoldingEngine(eng);
+    installEventLog({ entries: [] });
+    const state = { clock: { minute: 0, seq: 0 } };
+    const r = runTransaction(state, CTX, (s) => { applyOpeningPeople(eng, s, ROSTER); });
+    assert.equal(r.ok, true, seed);
+    return { state, eng };
+  };
+  for (const seed of ['life_seed_a', 'life_seed_b', 'life_seed_c', 'life_seed_d', 'life_seed_e', 'opening_people_hw_seed']) {
+    const { state, eng } = build(seed);
+    let atAge = 0;
+    for (const p of ROSTER.persons) {
+      // 现龄（年，4 位小数向零截断）= (0 − birthMinute) ÷ 年长，年长 = yearDays（num/den）× 1440 分钟；birthMinute 向下取整分钟，故现龄略小于名册整数岁（如 78 岁 → 77.9999），照此手算。
+      const y = W.rules.astro.yearDays;
+      const age = Number((BigInt(-birthOf(p.ageYears)) * BigInt(y.den) * 10000n) / (BigInt(y.num) * BigInt(MINUTES_PER_DAY))) / 10000;
+      const life = state.created[p.id].props.lifespanYears;
+      assert.ok(life >= age && life <= sp.lifespanYears.clamp[1], `${seed} ${p.id}: lifespan ${life} age ${age}`);
+      if (life === age) atAge += 1;
+    }
+    assert.ok(atAge <= 1, `${seed}: ${atAge} people have relAge exactly 1 (truncation must not pile at the age)`);
+    assert.deepEqual(build(seed).state.created, state.created, seed);
+  }
 });

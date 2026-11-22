@@ -9,14 +9,14 @@
 
 import { dim, readsUnbuilt, modified } from './kernel/dimensions.mjs';
 import { kindOf, kindOfEntity } from './kernel/vocab.mjs';
-import { sampleDistribution } from './kernel/sample.mjs';
+import { sampleDistribution, distributionMeanFixed } from './kernel/sample.mjs';
 import { writePersonRow } from './kernel/dimension-writers.mjs';
 import { clockView } from './kernel/scheduler.mjs';
 import { astroView } from './kernel/calendar.mjs';
 import { fixedUnits, fixedAdd, fixedDivide, fixedToNumber, fixedScale, truncateTo } from './kernel/det-math.mjs';
 import { E } from './kernel/handles/generated.mjs';
 import { bodyView } from './body.mjs';
-import { lifeFacts } from './life.mjs';
+import { lifeFacts, ageFixedOfElapsed } from './life.mjs';
 
 // 卷文定名：表名、维度、物种维度、词表族与规格字段。
 const S = Object.freeze({
@@ -27,7 +27,7 @@ const S = Object.freeze({
     attributes: 'attributes', traits: 'traits', culture: 'culture', adult: 'adult',
   }),
   speciesDim: Object.freeze({ sexes: 'sexes', lifespanYears: 'lifespanYears', bodyMassKg: 'bodyMassKg', attributesBase: 'attributesBase', traitsBase: 'traitsBase' }),
-  dist: Object.freeze({ categorical: 'categorical', normal: 'normal', uniform: 'uniform', triangular: 'triangular' }),
+  dist: Object.freeze({ categorical: 'categorical' }),
   spec: Object.freeze(['instanceId', 'species', 'birthMinute', 'ageYears', 'birthplace', 'sex', 'lifespanYears', 'adultMassKg', 'attributes', 'traits', 'culture']),
   derived: Object.freeze(['ageYears', 'relMaturity', 'relAge', 'lifeStage', 'adult', 'massKg']),
   // 轴值域下界 −1（卷四 §2.3 traits、§4.5 H-5）；均值与等分公式里的系数 2、3 由 1 相加得到，不写数字字面量；数值精度读表头 precision。
@@ -91,12 +91,10 @@ function outNumber(engine, key, f) {
 // 分布的均值（卷四 §4.12 G-3"物种该属性分布的均值"）：normal 取 mean、uniform 取 (min+max)/2、triangular 取 (min+mode+max)/3，全程定点；其余分布没有闭式均值实现，拒。
 function distributionMean(engine, key, dist) {
   if (!isObj(dist)) throw deny(E.E_DIM_SAMPLE_PARAM, 'distribution is an object');
-  const one = fixedUnits(S.one);
-  const two = fixedAdd(one, one);
-  if (dist.dist === S.dist.normal) return outNumber(engine, key, fixedUnits(dist.mean));
-  if (dist.dist === S.dist.uniform) return outNumber(engine, key, fixedDivide(fixedAdd(fixedUnits(dist.min), fixedUnits(dist.max)), two));
-  if (dist.dist === S.dist.triangular) return outNumber(engine, key, fixedDivide(fixedAdd(fixedAdd(fixedUnits(dist.min), fixedUnits(dist.mode)), fixedUnits(dist.max)), fixedAdd(two, one)));
-  throw deny(E.E_DIM_SAMPLE_PARAM, `mean of distribution ${JSON.stringify(dist.dist)} is not built`);
+  // 按种类的均值只在 kernel/sample.mjs 的分布种类表（mean 栏）一处；没有闭式均值的种类（或不认的种类）照旧拒。
+  const mean = distributionMeanFixed(dist);
+  if (mean === null) throw deny(E.E_DIM_SAMPLE_PARAM, `mean of distribution ${JSON.stringify(dist.dist)} is not built`);
+  return outNumber(engine, key, mean);
 }
 
 /**
@@ -132,6 +130,16 @@ export function birthMinuteOfAge(engine, state, ageYears) {
 }
 
 /**
+ * 出生时刻 → 现龄（年）：birthMinuteOfAge 的逆，口径同 life.mjs 的 ageYears（(现刻 − birthMinute) ÷ 年长，按表头 ageYears 精度向零截断）。
+ * 出生时刻在现刻之后给负数（不抛：该错由 lifeFacts 读时报，建行不拦）。供寿命按现龄条件采样用（卷四 :216 封卷后勘误 1124k80）。
+ * @param {object} engine @param {object} state @param {number} birthMinute
+ * @returns {number}
+ */
+function ageYearsOfBirth(engine, state, birthMinute) {
+  return outNumber(engine, 'ageYears', ageFixedOfElapsed(engine, clockView(engine, state).minute - birthMinute));
+}
+
+/**
  * `instantiatePerson(engine, state, spec)`（卷四 §3.3 :419；§4.10 P-4）：在调用方的内核事务里建一条个体偏离行，返回 `{id}`。
  * spec 只含代号与数值：instanceId（必给，id 派生未建）、species、birthplace 必给；birthMinute 与 ageYears 二选一必给（ageYears 须落在成年阶段，G-6，转成 birthMinute = 现刻 − ageYears × 年长）；
  * sex、lifespanYears、adultMassKg、attributes（映射，可只给一部分键）、traits、culture 可给，未给的 sex 按物种 sexes 权重、lifespanYears 按物种寿命分布、
@@ -162,7 +170,14 @@ export function instantiatePerson(engine, state, spec) {
   const weights = isObj(sexes) ? Object.fromEntries(Object.entries(sexes).filter(([, w]) => w !== null)) : {};
   props[S.dim.sex] = spec.sex !== undefined ? spec.sex : sampleDistribution(engine, S.kind, id, S.dim.sex, { dist: S.dist.categorical, weights }, undefined);
   if (!Object.hasOwn(weights, props[S.dim.sex])) throw deny(E.E_PERSON_SEX, `sex ${JSON.stringify(props[S.dim.sex])} is not a key of species ${spec.species} sexes`);
-  props[S.dim.lifespanYears] = spec.lifespanYears !== undefined ? spec.lifespanYears : sampleDistribution(engine, S.kind, id, S.dim.lifespanYears, sp(S.speciesDim.lifespanYears), undefined);
+  // 寿命按现龄条件采样（卷四 :216 封卷后勘误 1124k80，李白 11-22 P-19）：现龄高过物种 clamp 下限时，在 [现龄, clamp 上限] 内截断采样（卷二 §1.10 勘误 1124k81 的 truncate），
+  // 否则不截断、结果与不看现龄时逐位相同；种子键不变；区间内取不到值（含现龄超过上限）报 E-DIM-SAMPLE-PARAM。
+  const birthMinute = spec.birthMinute !== undefined ? spec.birthMinute : birthMinuteOfAge(engine, state, spec.ageYears);
+  const lifespanDist = sp(S.speciesDim.lifespanYears);
+  const lifespanClamp = isObj(lifespanDist) ? (Array.isArray(lifespanDist.clamp) ? lifespanDist.clamp : engine.tables.get(S.kind).doc.dimensions[S.dim.lifespanYears].domain) : null;
+  const nowAge = ageYearsOfBirth(engine, state, birthMinute);
+  const sinceAge = lifespanClamp !== null && nowAge > lifespanClamp[0] ? { ...lifespanDist, truncate: [nowAge, lifespanClamp[1]] } : lifespanDist;
+  props[S.dim.lifespanYears] = spec.lifespanYears !== undefined ? spec.lifespanYears : sampleDistribution(engine, S.kind, id, S.dim.lifespanYears, sinceAge, undefined);
   props[S.dim.adultMassKg] = spec.adultMassKg !== undefined ? spec.adultMassKg : sampleDistribution(engine, S.kind, id, S.dim.adultMassKg, sp(S.speciesDim.bodyMassKg), undefined);
   const attrBase = sp(S.speciesDim.attributesBase);
   const given = isObj(spec.attributes) ? spec.attributes : {};
@@ -180,8 +195,7 @@ export function instantiatePerson(engine, state, spec) {
   }
   if (spec.culture !== undefined) props[S.dim.culture] = spec.culture;
 
-  if (spec.birthMinute !== undefined) props[S.dim.birthMinute] = spec.birthMinute;
-  else props[S.dim.birthMinute] = birthMinuteOfAge(engine, state, spec.ageYears);
+  props[S.dim.birthMinute] = birthMinute;
   writePersonRow(engine, state, { id, props });
   // G-6：ageYears 须落在成年阶段内（建行后用同一份 lifeFacts 判，不另写一份判定；不合整笔回滚）。
   if (spec.ageYears !== undefined) {
