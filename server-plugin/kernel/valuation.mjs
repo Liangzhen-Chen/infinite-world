@@ -10,7 +10,7 @@ import { KernelError } from './errors.mjs';
 import { dim, modifiedWith } from './dimensions.mjs';
 import { kindOf } from './vocab.mjs';
 import { materialView, aggregateMaterialFor, itemView } from './item.mjs';
-import { instanceRow, instanceView, itemOfResource, lotsView } from './item-state.mjs';
+import { instanceRow, instanceView, instanceDeviation, itemOfResource, lotsView } from './item-state.mjs';
 import { recipeView, pricingRecipeOf, groupsOf, measuringKeys, SEL, PER } from './recipe.mjs';
 import { fixedUnits, fixedAdd, fixedMultiply, fixedDivide, fixedToNumber, fixedCurveAt } from './det-math.mjs';
 import { buildE } from './handles/generated.mjs';
@@ -249,8 +249,8 @@ export function resetValuers() {
 }
 
 const createdMaterial = (state, id) => {
-  const c = isObj(state) && isObj(state.created) && Object.hasOwn(state.created, id) ? state.created[id] : undefined;
-  return isObj(c) && isObj(c.props) && Array.isArray(c.props[DIM.material]) ? c.props[DIM.material] : null;
+  const m = instanceDeviation(state, id, DIM.material);
+  return Array.isArray(m) ? m : null;
 };
 
 // 估值对象规整：模板、实例（itemInstances 行）、批次引用（lotRef）；别类实体 {other: kind}。

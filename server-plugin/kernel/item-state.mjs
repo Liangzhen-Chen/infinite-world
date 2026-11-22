@@ -10,7 +10,7 @@
 import { KernelError, codeOf } from './errors.mjs';
 import { clockView, minutesPerDay } from './scheduler.mjs';
 import { dim } from './dimensions.mjs';
-import { materialView, itemView } from './item.mjs';
+import { materialView, aggregateMaterialFor, itemView } from './item.mjs';
 import { dailyMeanTemp, tempAt } from './climate.mjs';
 import { weatherAt } from './weather.mjs';
 import { lotsUnmergeable, lotKeyInstance, resourceAllows, SCHEMA as LEDGER } from './ledger.mjs';
@@ -25,7 +25,7 @@ const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
 // 状态顶层键、规则表、表头维度名（固定记号，单一定义）；表代号 item、material 是维度表的 kind。
 const KIND = Object.freeze({ item: 'item' });
-const ST = Object.freeze({ instances: 'itemInstances', lots: 'stockLots', accounts: 'accounts' });
+const ST = Object.freeze({ instances: 'itemInstances', lots: 'stockLots', accounts: 'accounts', created: 'created', props: 'props' });
 const RT = Object.freeze({ rot: 'rot', wear: 'wear', kernelConstants: 'kernelConstants' });
 const RK = Object.freeze({ tempCurve: 'tempCurve', stages: 'stages', mergeMaxGap: 'mergeMaxGap', envCurve: 'envCurve', radix: 'handleRadix' });
 const F = Object.freeze({
@@ -70,6 +70,16 @@ const ruleVal = (engine, table, key) => (isObj(engine.rules) && isObj(engine.rul
 export function instanceRow(state, id) {
   const r = at(state, ST.instances, id);
   return isObj(r) ? r : undefined;
+}
+
+/**
+ * 实例对模板的偏离值（卷三乙 I-3、§3.3 `itemInstances.<id>.props.*`，落在 created.<id>.props.<维度>，卷二 §1.3 覆盖顺序：偏离行优先于模板行）；没有偏离即 undefined。
+ * 估值、腐坏、用损读实例材料与实例维度的唯一出处。
+ * @param {any} state @param {string} id @param {string} key
+ */
+export function instanceDeviation(state, id, key) {
+  const props = at(state, ST.created, id, ST.props);
+  return isObj(props) && Object.hasOwn(props, key) ? props[key] : undefined;
 }
 
 /** 世界日序（clockView.day）；时钟未设按 null（读者按未知带缺口）。 */
@@ -206,9 +216,11 @@ function sumFactors(day0, day1, factorAt) {
 
 // ---------- 材料聚合率 ----------
 
-// 物品模板的聚合材料量（M-1）：{known, applicable, value}；整件不适用（没有可腐份、没有耐用份）交 applicable:false。
-function aggregated(engine, state, templateId, key) {
-  const v = materialView(engine, state, templateId, { dimensions: [key] }).dims[key];
+// 物品的聚合材料量（M-1）：{known, applicable, value}；整件不适用（没有可腐份、没有耐用份）交 applicable:false。
+// material 是实例或批次对模板的材料偏离（卷三乙 :428 "实例：material 取实例偏离值；批次：material 取批次偏离值"）：给了（数组）按它聚合，否则按模板；
+// 两条路都是 item.mjs 的同一个聚合原语 aggregateDim，差别只在份额表的来源。
+function aggregated(engine, state, templateId, key, material) {
+  const v = Array.isArray(material) ? aggregateMaterialFor(engine, state, templateId, material, key) : materialView(engine, state, templateId, { dimensions: [key] }).dims[key];
   if (v.applicable === false) return NA;
   return v.known === true && typeof v.value === 'number' ? KNOWN(v.value) : UNKNOWN(key);
 }
@@ -226,12 +238,12 @@ const preserveNone = () => fixedUnits(1);
 
 /**
  * 某批次或可腐实例在世界日 day 的腐坏进度（P-1，锚点式）：存的 spoilage ＋ trunc(腐坏率 × 保存系数 ×（C(day) − C(锚点日)))，上限 1。
- * subject：{template, stored: 锚点日的 spoilage, anchorDay, holder? , instance?}。返回 Fact（value 为 [0,1] 的数；未知带 gaps；整件不可腐 applicable:false）。
+ * subject：{template, stored: 锚点日的 spoilage, anchorDay, holder? , instance?, material?（实例或批次的材料偏离，给了按它聚合腐坏率）}。返回 Fact（value 为 [0,1] 的数；未知带 gaps；整件不可腐 applicable:false）。
  * @param {any} engine @param {any} state @param {{template: string, stored: number, anchorDay: number, holder?: string, instance?: string}} subject @param {number} day
  * @returns {any}
  */
 export function spoilageOn(engine, state, subject, day) {
-  const rate = aggregated(engine, state, subject.template, DIMN.rotRate);
+  const rate = aggregated(engine, state, subject.template, DIMN.rotRate, subject.material);
   if (!rate.applicable) return NA;
   if (!rate.known) return rate;
   if (!Number.isSafeInteger(day) || day < subject.anchorDay) throw new KernelError('E-DIM-DOMAIN-RANGE', {}, `spoilage read day ${day} is before the anchor day ${subject.anchorDay}`);
@@ -260,8 +272,8 @@ function stageOf(engine, spoilage) {
 
 // 批次或实例上没有腐坏进度或锚点日：整件不可腐才是"不适用"；可腐物这两字段必填（卷三乙 §2.3 :271–:272），缺了是数据错，
 // 读数按未知带缺口（不当不可腐，永不坏、永不结算就是绕过）。
-function absentAnchor(engine, state, template) {
-  const rate = aggregated(engine, state, template, DIMN.rotRate);
+function absentAnchor(engine, state, template, material) {
+  const rate = aggregated(engine, state, template, DIMN.rotRate, material);
   return { none: true, fact: rate.applicable ? UNKNOWN(GAP.anchor) : NA };
 }
 
@@ -269,8 +281,9 @@ function rotSubject(engine, state, ref) {
   if (typeof ref === 'string') {
     const row = instanceRow(state, ref);
     if (!row) throw new KernelError('E-DIM-REF-MISSING', { entity: ref }, `${JSON.stringify(ref)} is not an item instance`);
-    if (typeof row[F.spoilage] !== 'number' || !Number.isSafeInteger(row[F.rotAnchorDay])) return absentAnchor(engine, state, row[F.template]);
-    return { template: row[F.template], stored: row[F.spoilage], anchorDay: row[F.rotAnchorDay], instance: ref };
+    const material = instanceDeviation(state, ref, F.material);
+    if (typeof row[F.spoilage] !== 'number' || !Number.isSafeInteger(row[F.rotAnchorDay])) return absentAnchor(engine, state, row[F.template], material);
+    return { template: row[F.template], stored: row[F.spoilage], anchorDay: row[F.rotAnchorDay], instance: ref, material };
   }
   const p = lotParts(ref);
   if (!p) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'rot ref is an instance id or lotRef {account: {holder, purpose, kind}, lotKey}');
@@ -278,8 +291,8 @@ function rotSubject(engine, state, ref) {
   if (!isObj(a)) throw new KernelError('E-DIM-REF-MISSING', { entity: p.holder }, `lot ${p.lotKey} has no ${ST.lots} row`);
   const template = itemOfResource(engine, p.kind);
   if (template === null) throw new KernelError('E-DIM-REF-MISSING', { entity: p.holder }, `resource kind ${p.kind} has no item (resource entry field ${RES_FIELD.item})`);
-  if (typeof a[F.spoilage] !== 'number' || !Number.isSafeInteger(a[F.rotAnchorDay])) return absentAnchor(engine, state, template);
-  return { template, stored: a[F.spoilage], anchorDay: a[F.rotAnchorDay], holder: p.holder, lot: p };
+  if (typeof a[F.spoilage] !== 'number' || !Number.isSafeInteger(a[F.rotAnchorDay])) return absentAnchor(engine, state, template, a[F.material]);
+  return { template, stored: a[F.spoilage], anchorDay: a[F.rotAnchorDay], holder: p.holder, lot: p, material: a[F.material] };
 }
 
 /**
@@ -335,11 +348,14 @@ export function rottenLots(engine, state) {
       for (const kind of Object.keys(accounts[holder][purpose]).sort(cmp)) {
         const template = itemOfResource(engine, kind);
         if (template === null || !resourceAllows(engine, kind, ROT.sink)) continue;
-        const shares = itemViewShares(engine, state, template);
-        if (!shares.length || !shares.every((s) => dim(engine, state, ROT.material, s.materialRef, DIMN.rotRate).applicable)) continue;
+        const templateShares = itemViewShares(engine, state, template);
         for (const lotKey of Object.keys(accounts[holder][purpose][kind]).sort((a, b) => lotKeyCompare(engine, a, b))) {
           const qty = accounts[holder][purpose][kind][lotKey];
           if (!(qty > 0)) continue;
+          // 批次的材料偏离（卷三乙 :428）替代模板的材料组成：整件可腐按这一批的各份判。
+          const dev = at(state, ST.lots, holder, purpose, kind, lotKey);
+          const shares = isObj(dev) && Array.isArray(dev[F.material]) ? dev[F.material].filter((s) => s.share > 0) : templateShares;
+          if (!shares.length || !shares.every((s) => dim(engine, state, ROT.material, s.materialRef, DIMN.rotRate).applicable)) continue;
           const r = rotStep(engine, state, { account: { holder, purpose, kind }, lotKey }, 0, { expiry: false });
           if (r.transform !== null) out.push(Object.freeze({ account: { holder, purpose, kind }, lotKey, qty }));
         }
@@ -366,12 +382,13 @@ function itemViewShares(engine, state, templateId) {
 export function durabilityOn(engine, state, instanceId, day) {
   const row = instanceRow(state, instanceId);
   if (!row) throw new KernelError('E-DIM-REF-MISSING', { entity: instanceId }, `${JSON.stringify(instanceId)} is not an item instance`);
-  if (typeof row[F.durability] !== 'number' || !Number.isSafeInteger(row[F.wearAnchorDay])) return aggregated(engine, state, row[F.template], DIMN.corrosionRate).applicable ? UNKNOWN(GAP.wearAnchor) : NA;
+  const material = instanceDeviation(state, instanceId, F.material);
+  if (typeof row[F.durability] !== 'number' || !Number.isSafeInteger(row[F.wearAnchorDay])) return aggregated(engine, state, row[F.template], DIMN.corrosionRate, material).applicable ? UNKNOWN(GAP.wearAnchor) : NA;
   const anchor = row[F.wearAnchorDay];
   if (!Number.isSafeInteger(day) || day < anchor) throw new KernelError('E-DIM-DOMAIN-RANGE', {}, `durability read day ${day} is before the anchor day ${anchor}`);
   const stored = fixedUnits8(row[F.durability]);
   if (day === anchor) return KNOWN(fixedToNumber8(stored));
-  const rate = aggregated(engine, state, row[F.template], DIMN.corrosionRate);
+  const rate = aggregated(engine, state, row[F.template], DIMN.corrosionRate, material);
   if (!rate.applicable) return KNOWN(fixedToNumber8(stored));
   if (!rate.known) return rate;
   if (rate.value === 0) return KNOWN(fixedToNumber8(stored));
@@ -407,26 +424,28 @@ export function wearStep(engine, state, instanceId, cause) {
     const d = durabilityOn(engine, state, instanceId, today);
     return out(d.known ? KNOWN(fixedToNumber8(fixedUnits8(row[F.durability]) - fixedUnits8(d.value))) : d);
   }
-  return out(wearCost(engine, state, row, cause, 1));
+  return out(wearCost(engine, state, instanceId, row, cause, 1));
 }
 
-// 模板维度的值，读表头定义的路径 dim()（wearPerUse、dailyUses 必填 byClass:comp_durable，材料派生组件由 dimensions.mjs 的成员关系算入）；
-// 不适用或行上没写即 undefined（按未知，不当 0）。
-function templateValue(engine, state, templateId, key) {
+// 实例的维度值：实例偏离行（created.<id>.props.<维度>，卷二 §1.3 覆盖顺序）优先，没有偏离读模板，读表头定义的路径 dim()（wearPerUse、dailyUses 必填 byClass:comp_durable，
+// 材料派生组件由 dimensions.mjs 的成员关系算入）；不适用或行上没写即 undefined（按未知，不当 0）。
+function instanceValue(engine, state, instanceId, templateId, key) {
+  const dev = instanceDeviation(state, instanceId, key);
+  if (typeof dev === 'number') return dev;
   const f = dim(engine, state, KIND.item, templateId, key);
   return f.known && typeof f.value === 'number' ? f.value : undefined;
 }
 
 // 用损量（D-1、D-4）：use＝times × wearPerUse ÷ wearResistance；worn＝一日 dailyUses 次用损。先乘次数、后除耐磨，定点向零截断，次数越多截断损失越小。
 // 耐久是 stockMode extScale 字段（precision 8，卷二 §3.3 第 6 条），用损全程在 10⁸ 标度算（李白 11-19 20:3x ③）：单次 0.002 ÷ 60 不再截成 0。
-function wearCost(engine, state, row, cause, times) {
-  const perUse = templateValue(engine, state, row[F.template], DIMN.wearPerUse);
-  const resist = aggregated(engine, state, row[F.template], DIMN.wearResistance);
+function wearCost(engine, state, instanceId, row, cause, times) {
+  const perUse = instanceValue(engine, state, instanceId, row[F.template], DIMN.wearPerUse);
+  const resist = aggregated(engine, state, row[F.template], DIMN.wearResistance, instanceDeviation(state, instanceId, F.material));
   if (!resist.applicable) return NA;
   if (perUse === undefined || !resist.known) return UNKNOWN(DIMN.wearPerUse, DIMN.wearResistance);
   let count = fixedUnits8(times);
   if (cause === CAUSE.worn) {
-    const uses = templateValue(engine, state, row[F.template], DIMN.dailyUses);
+    const uses = instanceValue(engine, state, instanceId, row[F.template], DIMN.dailyUses);
     if (uses === undefined) return UNKNOWN(DIMN.dailyUses);
     count = fixedMultiply8(count, fixedUnits8(uses));
   }
@@ -446,12 +465,12 @@ export function useWear(engine, state, instanceId, times) {
   const row = instanceRow(state, instanceId);
   if (!row) throw new KernelError('E-DIM-REF-MISSING', { entity: instanceId }, `${JSON.stringify(instanceId)} is not an item instance`);
   if (typeof row[F.durability] !== 'number' || !Number.isSafeInteger(row[F.wearAnchorDay])) {
-    if (aggregated(engine, state, row[F.template], DIMN.corrosionRate).applicable) throw new KernelError('E-DIM-UNKNOWN-READ', { entity: instanceId }, 'useWear: a durable instance has no durability or anchor day (required, vol3b s2.3 :225)');
+    if (aggregated(engine, state, row[F.template], DIMN.corrosionRate, instanceDeviation(state, instanceId, F.material)).applicable) throw new KernelError('E-DIM-UNKNOWN-READ', { entity: instanceId }, 'useWear: a durable instance has no durability or anchor day (required, vol3b s2.3 :225)');
     return null;
   }
   const today = todayOf(engine, state);
   if (today === null) throw new KernelError('E-DIM-UNKNOWN-READ', { entity: instanceId }, 'useWear: the world clock is not set');
-  const step = wearCost(engine, state, row, CAUSE.use, times);
+  const step = wearCost(engine, state, instanceId, row, CAUSE.use, times);
   if (!step.known) throw new KernelError('E-DIM-UNKNOWN-READ', { entity: instanceId }, `useWear: per-use wear is unknown (${(step.gaps || []).join(',') || 'not applicable'})`);
   const cost = fixedUnits8(step.value);
   const now = durabilityOn(engine, state, instanceId, today);
