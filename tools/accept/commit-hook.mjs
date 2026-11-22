@@ -10,7 +10,7 @@ import { accRun } from './run.mjs';
 import { CARD_AGENT_ENV, CARD_SELFCHECK_CODE, CARD_RULES_DOC, reportPathOf, selfcheckQuestions, parseSelfcheck } from './lib/card-selfcheck.mjs';
 
 // 卡头自查（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：派卡子代理（环境变量 DND_CARD_AGENT=1）的提交，
-// 暂存区须带回报文件，回报第一张表按 docs/派活卡头规矩.md 第三节的八项自查表对照。主会话（无该环境变量）不查。
+// 暂存区须带回报文件，回报第一张表按 docs/派活卡头规矩.md 第三节的自查表对照。主会话（无该环境变量）不查。
 function gitOut(root, args) {
   return execFileSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 1 << 28, stdio: ['ignore', 'pipe', 'ignore'] });
 }
@@ -30,7 +30,7 @@ export function cardSelfcheck(root, env = process.env) {
   let doc;
   try { doc = readFileSync(join(root, CARD_RULES_DOC), 'utf8'); } catch { return fail([`读不到 ${CARD_RULES_DOC}`]); }
   const questions = selfcheckQuestions(doc);
-  if (!questions) return fail([`${CARD_RULES_DOC} 第三节的八项自查表解析不出`]);
+  if (!questions) return fail([`${CARD_RULES_DOC} 第三节的自查表解析不出`]);
   const parsed = parseSelfcheck(content, questions);
   return { ok: parsed.ok, code: parsed.ok ? null : CARD_SELFCHECK_CODE, reasons: parsed.reasons };
 }

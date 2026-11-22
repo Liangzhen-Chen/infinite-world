@@ -1,7 +1,7 @@
 // 卡头自查（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：派卡脚本派出的子代理（环境变量 DND_CARD_AGENT=1）
 // 做的提交，暂存区必须带回报文件 docs/卡回报/<分支名，/ 换成 ->.md；回报第一张 markdown 表须是 docs/派活卡头规矩.md
-// 第三节那张八项自查表：恰有题面的各行，第三列"是"、第四列证据非空；题面里带 "__" 的那项（diff 行数）证据须已换成数字。
-// 八项题目只有一处定义（docs/派活卡头规矩.md），本文件读它对照，不另抄一份题目。
+// 第三节那张自查表（现九项）：恰有题面的各行，第三列"是"、第四列证据非空；题面里带 "__" 的那项（diff 行数）证据须已换成数字。
+// 题目只有一处定义（docs/派活卡头规矩.md），本文件读它对照，不另抄一份题目。
 
 export const CARD_AGENT_ENV = 'DND_CARD_AGENT';
 export const CARD_SELFCHECK_CODE = 'E-ACC-CARD-SELFCHECK';

@@ -1,5 +1,5 @@
 // 卡头自查（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：派卡子代理的提交缺回报、缺表、缺项、填"否"、证据空、
-// 第 6 项 diff 行数未换成数字都拒；八项齐全填"是"、证据非空放行；主会话（无 DND_CARD_AGENT=1）不查。期望码为字面量。
+// 第 6 项 diff 行数未换成数字都拒；九项齐全填"是"、证据非空放行；主会话（无 DND_CARD_AGENT=1）不查。期望码为字面量。
 // 题面一律从 docs/派活卡头规矩.md 读，测试里不另抄一份。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -27,9 +27,9 @@ function tableText({ verdicts = {}, evidences = {}, drop = [], extra = [] } = {}
 
 const parse = (text) => parseSelfcheck(text, QUESTIONS);
 
-test('题面取自 docs/派活卡头规矩.md：八项、编号 1–8、其中一项题面带 diff 行数占位', () => {
-  assert.equal(QUESTIONS.length, 8);
-  assert.deepEqual(QUESTIONS.map((q) => q.n), ['1', '2', '3', '4', '5', '6', '7', '8']);
+test('题面取自 docs/派活卡头规矩.md：九项（第 9 项前置数据行，李白 11-22 15:21）、编号 1–9、其中一项题面带 diff 行数占位', () => {
+  assert.equal(QUESTIONS.length, 9);
+  assert.deepEqual(QUESTIONS.map((q) => q.n), ['1', '2', '3', '4', '5', '6', '7', '8', '9']);
   assert.equal(QUESTIONS.filter((q) => q.q.includes('__')).length, 1);
 });
 
@@ -38,7 +38,7 @@ test('回报路径：分支名的 / 换成 -', () => {
   assert.equal(reportPathOf('master'), 'docs/卡回报/master.md');
 });
 
-test('八项齐全填"是"、证据非空：放行', () => {
+test('九项齐全填"是"、证据非空：放行', () => {
   assert.deepEqual(parse(tableText()), { ok: true, reasons: [] });
 });
 
@@ -49,15 +49,15 @@ test('回报开头没有表：拒', () => {
 });
 
 test('缺一项：拒', () => {
-  const r = parse(tableText({ drop: ['8'] }));
+  const r = parse(tableText({ drop: ['9'] }));
   assert.equal(r.ok, false);
-  assert.ok(r.reasons.some((x) => x.includes('第 8 项缺行')));
+  assert.ok(r.reasons.some((x) => x.includes('第 9 项缺行')));
 });
 
 test('多一行：拒', () => {
-  const r = parse(tableText({ extra: ['| 9 | 多出来的一项 | 是 | 证据 9 |'] }));
+  const r = parse(tableText({ extra: ['| 10 | 多出来的一项 | 是 | 证据 10 |'] }));
   assert.equal(r.ok, false);
-  assert.ok(r.reasons.some((x) => x.includes('恰有 8 行，实为 9 行')));
+  assert.ok(r.reasons.some((x) => x.includes('恰有 9 行，实为 10 行')));
 });
 
 test('某一项填"否"：拒', () => {

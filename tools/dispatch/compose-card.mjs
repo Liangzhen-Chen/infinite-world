@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 export const CARD_DELIMITER = '===== 以下为本卡卡文 =====';
 export const TAIL_TITLE = '===== 卡尾（派卡脚本自动附） =====';
 
-const TAIL_BODY = '若本卡要提交：把回报（开头为卡头第三节八项自查表，每项填"是"并带证据）写进 docs/卡回报/<分支>.md，每次提交都随提交一并提交该文件（更新为当次实况）；提交关口会核这张表，缺表、缺项、任何一项为"否"都会拒绝提交（E-ACC-CARD-SELFCHECK）。只读核查卡不提交、不写此文件。';
+const TAIL_BODY = '若本卡要提交：把回报（开头为卡头第三节自查表，每项填"是"并带证据）写进 docs/卡回报/<分支>.md，每次提交都随提交一并提交该文件（更新为当次实况）；提交关口会核这张表，缺表、缺项、任何一项为"否"都会拒绝提交（E-ACC-CARD-SELFCHECK）。只读核查卡不提交、不写此文件。';
 
 const trimEndNewlines = (text) => String(text ?? '').replace(/\n+$/, '');
 
