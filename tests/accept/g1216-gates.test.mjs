@@ -36,7 +36,7 @@ const withPosWriter = (facingToo = true) => ({
   stateKeys: { ...DECL.stateKeys, created: { ...DECL.stateKeys.created, writers: { ...BASE_CREATED_WRITERS, '*.props.pos': 'position.mjs', ...(facingToo ? { '*.props.facing': 'position.mjs' } : {}) } } },
 });
 // 声明表覆盖：场的声明写者 env-fields.mjs（卷二十 :458、:459）。
-const withFieldWriter = { ...DECL, stateKeys: { ...DECL.stateKeys, fields: { readers: [], writers: { '*.*': 'env-fields.mjs' } }, fieldCells: { readers: [], writers: { '*.*.*.*': 'env-fields.mjs' } } } };
+const withFieldWriter = { ...DECL, stateKeys: { ...DECL.stateKeys, fields: { readers: [], writers: { '*.*': 'env-fields.mjs' } }, fieldCells: { readers: [], writers: { '*.*.*': 'env-fields.mjs' } } } };
 
 test('六条门禁条目都已登记为 implemented，各自检测器与类别正确', () => {
   const want = {
@@ -143,7 +143,9 @@ test('S20-4.7.6 路网边模块 route-edges、route-grid 的任何导入都计',
 test('S20-4.7.6 范围只取声明表里 fields、fieldCells 的写者文件：别的文件、没登记写者、写者文件不在清单里，都不计', () => {
   const body = "import { routeView } from './kernel/place.mjs';";
   assert.equal(guard('vol20.S20-4.7.6', { 'server-plugin/trip.mjs': body }, withFieldWriter).length, 0);
-  assert.equal(guard('vol20.S20-4.7.6', { 'server-plugin/env-fields.mjs': body }).length, 0);
+  // 没登记写者：真声明表（G14 起已登 env-fields.mjs）去掉 fields、fieldCells 两键后，同一个文件不计。
+  const { fields: _f, fieldCells: _fc, ...withoutFieldKeys } = DECL.stateKeys;
+  assert.equal(guard('vol20.S20-4.7.6', { 'server-plugin/env-fields.mjs': body }, { ...DECL, stateKeys: withoutFieldKeys }).length, 0);
   assert.equal(guard('vol20.S20-4.7.6', { 'server-plugin/other.mjs': body }, withFieldWriter).length, 0);
 });
 

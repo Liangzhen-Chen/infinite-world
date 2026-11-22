@@ -631,6 +631,15 @@
    },
    "prefix": "gait_"
   },
+  "field": {
+   "closed": false,
+   "entries": {
+    "field_din": {"decayPerStep": 0.5, "spread": {"ratePerStep": 0, "whenRX": null}, "quenchPerMm": 0, "byproducts": {}, "soundDbAtRef": 60, "combustionFed": false, "channel": "sense_hearing", "advectedByWind": false, "tiers": [], "basis": "卷二十 §2.8 :383–:394、§4.8.1 :910（持续声源是带 soundDbAtRef 的场）、P-25 只做光声气味；占位行，全部数值暂定·待试玩标定（soundDbAtRef 60 无出处·暂定；docs/问题.md「场规则表暂定值待李白核」）；声的空间传播走 propagate 的 sound 一支，不走场蔓延，故蔓延率 0"},
+    "field_fire": {"decayPerStep": 0.25, "spread": {"ratePerStep": 0, "whenRX": null}, "quenchPerMm": 2, "byproducts": {}, "lumenPerScore": 12, "combustionFed": true, "channel": null, "advectedByWind": false, "tiers": [], "basis": "卷二十 §2.8、§4.7.3 第 4 条（燃烧接收场，combustionFed 为真不填 heatWPerScore）、§4.7.5 :891（衰减 0.25 示例）、§4.8.1 :908（光 = 接收场强度 × lumenPerScore）；P-25 光先够用，火的蔓延与烟副产占位（蔓延率 0、无 byproducts，待可燃量维度与烟行）；数值暂定·待试玩标定"},
+    "field_odor": {"decayPerStep": 0.2, "spread": {"ratePerStep": 0.1, "whenRX": null}, "quenchPerMm": 0, "byproducts": {}, "combustionFed": false, "channel": "sense_smell", "advectedByWind": true, "tiers": [], "basis": "卷二十 §2.8、§4.7.3 第 6 条（channel 非空的场是该感知通道的环境量，气味即此）、§4.8.3 第 4 条；P-25 气味先够用；数值暂定·待试玩标定"}
+   },
+   "prefix": "field_"
+  },
   "gfield": {
    "closed": false,
    "entries": {

@@ -1,0 +1,5 @@
+{
+ "rows": [
+  {"key": "unbuilt", "value": ["epsilon", "oneShotMaxCells", "oneShotReachCurve", "scorePerMJ", "stepMinutes", "windBias"], "basis": "卷二十 §2.9 :397 键表。已设计、未建：现在没有运行期读者，由 G14 后三张卡（地点层与泡内写者、收起与读法、propagate）接读者时连值入表（李白 Q-11：不为过门禁造消费者）。暂定值先记在此，入表时照填、都标暂定·待试玩标定：stepMinutes 10（整除 1440 分钟）、epsilon 0.01、windBias 0.25（取值域 (0,1]）、scorePerMJ 10（内部标度）、oneShotReachCurve [[0,1],[5,0.5],[30,0]]（卷二十 :397 暂定）、oneShotMaxCells 20000（卷二十 :397 暂定）；理由见 docs/问题.md「场规则表暂定值待李白核」"}
+ ]
+}

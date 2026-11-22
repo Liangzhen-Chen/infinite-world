@@ -6,7 +6,7 @@
 // 几何口径：局部 (u, v)，u 沿正面 0 到 W−1，v 由正面 0 往里到 D−1；转世界先取 (x, y) = (u, −v)，再按 k = facing ÷ 2 次 (x, y) → (y, −x)；层 ℓ 落在 anchor.z + 1 + storeyBase + ℓ（anchor.z 是锚点所在列的地表层号；偏移 0 的一层室内在地表层之上，封卷后勘误 1121k14）。
 // 无量纲小整数（0、1、2）是格数与个数的算术，不是常数；cellM、storeyM、升换立方米都由调用方从规则表与单位表交入。
 
-import { fixedUnits, fixedUnits8, fixedScale, fixedMultiply, fixedDivide, fixedToNumber, fixedSqrtInt, fixedCurveAt } from './det-math.mjs';
+import { splitLastRemainder, fixedUnits, fixedUnits8, fixedScale, fixedMultiply, fixedDivide, fixedToNumber, fixedSqrtInt, fixedCurveAt } from './det-math.mjs';
 import { KernelError } from './errors.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -242,16 +242,7 @@ function roomsOfLevel(list, level) {
 
 // 把 R 行按 share 分成 r 份：前 r−1 份各 floor(R × share)，末份取差（卷二 §3.3 第 3 条"拆分末份取差"）。
 function splitRows(rows, shares) {
-  const scale = fixedScale();
-  const out = [];
-  let used = 0n;
-  for (let i = 0; i < shares.length - 1; i += 1) {
-    const q = (BigInt(rows) * fixedUnits(shares[i])) / scale;
-    out.push(Number(q));
-    used += q;
-  }
-  out.push(Number(BigInt(rows) - used));
-  return out;
+  return splitLastRemainder(BigInt(rows), shares.slice(0, -1).map((s) => fixedUnits(s)), fixedScale()).map(Number);
 }
 
 /**
@@ -530,12 +521,8 @@ export function materialsOfElements(bp, materials) {
   let total = 0n;
   for (const l of litres) total += l;
   const share = new Map();
-  let used = 0n;
-  byCode.forEach((x, i) => {
-    const s = i === byCode.length - 1 ? scale - used : (litres[i] * scale) / total;
-    share.set(x.code, s);
-    used += s;
-  });
+  const parts = splitLastRemainder(scale, litres.slice(0, -1), total); // 拆分末份取差：全书唯一一份（det-math）
+  byCode.forEach((x, i) => share.set(x.code, parts[i]));
   const order = [...live].sort((a, b) => cmp(fixedUnits(b.density), fixedUnits(a.density)) || cmp(a.code, b.code));
   let design = 0n;
   for (const e of bp.elements) design += e.volumeL;

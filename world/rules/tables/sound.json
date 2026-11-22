@@ -1,0 +1,5 @@
+{
+ "rows": [
+  {"key": "unbuilt", "value": ["ambientByPrecipCurve", "ambientByWindCurve", "dbPerDecade", "detourDbPerM", "floorDb", "refDistanceM"], "basis": "卷二十 §2.9 :400 键表。已设计、未建：无运行期读者，由 G14 后三张卡（声在 propagate 那张）接读者时入表（李白 Q-11）。卷文给了值的先记在此、入表时照填：refDistanceM 1（:960 算例，下限大于 0）、dbPerDecade 20（:960 算例 90 − 20 × log10(100)）、detourDbPerM 0.1（:400 暂定·待试玩标定，下限大于 0）、floorDb −10（:400 暂定·待试玩标定）；两条底噪曲线无出处不编，建议值见 docs/问题.md「场规则表暂定值待李白核」"}
+ ]
+}

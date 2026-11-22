@@ -100,6 +100,11 @@ function load(rows, spaces) {
         }
         text = JSON.stringify(doc);
       }
+      if (r.code === 'env') { // 新增通道须在 channelLaw 给一种衰减（卷二十 §2.9 :404，E-PROP-LAW）：同样只是数据
+        const doc = JSON.parse(text);
+        for (const x of doc.rows) if (x.key === 'channelLaw') x.value = { ...x.value, sense_test_aura: 'sound' };
+        text = JSON.stringify(doc);
+      }
       writeUnderTempRoot(tmp, `rules/${r.file}`, text);
     }
     writeUnderTempRoot(tmp, 'rules/registry.json', JSON.stringify(reg));

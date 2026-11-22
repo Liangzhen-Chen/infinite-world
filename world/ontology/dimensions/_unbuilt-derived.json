@@ -203,7 +203,6 @@
   {"family": "raspect", "prefix": "rasp_", "volume": "卷十九《建筑与设施》§2.4 :207 评价项族（封闭 4 项：财富、美观、空间、清洁）；设施类型 ratingWeights 引用", "card": "pre_first_reader_card"},
   {"family": "arcschool", "prefix": "asch_", "volume": "卷十五《法术与超自然》§2.3 流派族；物品 arcSchool 引用", "card": "pre_first_reader_card"},
   {"family": "fixture", "prefix": "fixture_", "volume": "卷十九《建筑与设施》固定装置族（卷三乙 §4.8.5 例 1 写作 fixture_forge）；配方 workstation 引用（卷三乙 §2.7 :365）", "card": "pre_first_reader_card"},
-  {"family": "field", "prefix": "field_", "volume": "卷二十《时间日历天气与环境》§2.8 词表族 field（环境场，带字段）；物品 emits 引用", "card": "pre_first_reader_card"},
   {"family": "language", "prefix": "lang_", "volume": "卷二《维度表规范与统一入口》§1.9 语言族（世界里的人说的语言）；物品 language 引用", "card": "pre_first_reader_card"},
   {"family": "vform", "prefix": "vform_", "volume": "卷十七《交通与路途》§2.2 载具形制族；物品 vform 引用", "card": "pre_first_reader_card"},
   {"family": "biome", "prefix": "biome_", "volume": "卷五《地点地形与资源场》§4.3 群落族（卷二 §1.9）；物种 habitats、seasonHabitatRows 引用", "card": "pre_first_reader_card"},

@@ -380,10 +380,14 @@
     {
      "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 73
+    },
+    {
+     "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 74
     }
    ],
-   "print": "c01082c3576501cf7ba62e9bba067614c57a9c7271129dbea8bf22e9ad8d5abf",
-   "rev": 73,
+   "print": "8fb5ecdce07d66a9b32f8c8afc3f0832955051a88252ef7209e01d5806e6c2d6",
+   "rev": 74,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -992,10 +996,14 @@
     {
      "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 74
+    },
+    {
+     "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 75
     }
    ],
-   "print": "aed1dde6ac3876f33ec25843db15b14fe100a6a759bedcfaf32dc8f8672e2953",
-   "rev": 74,
+   "print": "a54dc2dd21ee384d12e6c38d3474dd4355e3940daec08c95e3e84102d64fe612",
+   "rev": 75,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1655,10 +1663,14 @@
     {
      "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 71
+    },
+    {
+     "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 72
     }
    ],
-   "print": "e6125855e3b77d643ea2d3fdc0dac543da1f760811db96bab203093b813c2157",
-   "rev": 71,
+   "print": "81a29c253124e6b9d7447fd0af97dc6acd7ca7111b3e85b5f881385344ad77eb",
+   "rev": 72,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -2140,10 +2152,14 @@
     {
      "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 87
+    },
+    {
+     "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 88
     }
    ],
-   "print": "1caece23e035a15d117b83548d00dd427c8c4d1d563702479b23e6eba45efcd7",
-   "rev": 87,
+   "print": "69b73b4ed3ade3b24eef11d21b91f9285f46fcdc367d2cd97f66ddb97ed23c42",
+   "rev": 88,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -2562,10 +2578,14 @@
     {
      "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 72
+    },
+    {
+     "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 73
     }
    ],
-   "print": "e6125855e3b77d643ea2d3fdc0dac543da1f760811db96bab203093b813c2157",
-   "rev": 72,
+   "print": "81a29c253124e6b9d7447fd0af97dc6acd7ca7111b3e85b5f881385344ad77eb",
+   "rev": 73,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -3413,10 +3433,14 @@
     {
      "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 72
+    },
+    {
+     "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 73
     }
    ],
-   "print": "e6125855e3b77d643ea2d3fdc0dac543da1f760811db96bab203093b813c2157",
-   "rev": 72,
+   "print": "81a29c253124e6b9d7447fd0af97dc6acd7ca7111b3e85b5f881385344ad77eb",
+   "rev": 73,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -3687,10 +3711,14 @@
     {
      "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 64
+    },
+    {
+     "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 65
     }
    ],
-   "print": "fd15428d87b815049368a79780e84c48cb912dbc8dc9433c9c08497b50713358",
-   "rev": 64,
+   "print": "96681980ff2a21bc0e2860eac7af14be527ff429773e52eed0a3e9ad6d141265",
+   "rev": 65,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -4037,10 +4065,14 @@
     {
      "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 83
+    },
+    {
+     "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 84
     }
    ],
-   "print": "41e9d767e85cf77a086f130e3de592e86ba58eddc3f176f9390ad5b14963fbdd",
-   "rev": 83,
+   "print": "54efd0bf91c84d4fe884b79fa994a8d1b22be7ed0c4e574f3874298eee660fff",
+   "rev": 84,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -4408,10 +4440,14 @@
     {
      "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 49
+    },
+    {
+     "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 50
     }
    ],
-   "print": "54207f6361ed2fdd6fbe7d216d16e2b76ea9c041cf8d85f24c239279932e4c9a",
-   "rev": 49,
+   "print": "26bcd1fa06cfc84441838fec885643e65af19f3d1e13bfa5055650c6a1f324d3",
+   "rev": 50,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -4717,10 +4753,14 @@
     {
      "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 71
+    },
+    {
+     "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 72
     }
    ],
-   "print": "c01082c3576501cf7ba62e9bba067614c57a9c7271129dbea8bf22e9ad8d5abf",
-   "rev": 71,
+   "print": "8fb5ecdce07d66a9b32f8c8afc3f0832955051a88252ef7209e01d5806e6c2d6",
+   "rev": 72,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -4941,10 +4981,14 @@
     {
      "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 47
+    },
+    {
+     "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 48
     }
    ],
-   "print": "52e4f24846503c9cfa438397171d0a75dd4921244d884a905cf81c1c1abba3c7",
-   "rev": 47,
+   "print": "2aec1d66668307fe374ed0210ac0650e1d1275a96f6d44ef65d0a603589570dc",
+   "rev": 48,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -5443,10 +5487,14 @@
     {
      "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 66
+    },
+    {
+     "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 67
     }
    ],
-   "print": "fd15428d87b815049368a79780e84c48cb912dbc8dc9433c9c08497b50713358",
-   "rev": 66,
+   "print": "96681980ff2a21bc0e2860eac7af14be527ff429773e52eed0a3e9ad6d141265",
+   "rev": 67,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

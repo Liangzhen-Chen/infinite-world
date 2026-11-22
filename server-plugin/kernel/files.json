@@ -93,6 +93,7 @@
  "server-plugin/kernel/validate/cell-grades.mjs",
  "server-plugin/kernel/validate/dimensions-validate.mjs",
  "server-plugin/kernel/validate/effects-validate.mjs",
+ "server-plugin/kernel/validate/field-tables.mjs",
  "server-plugin/kernel/validate/named-conditions.mjs",
  "server-plugin/kernel/validate/polity-tables.mjs",
  "server-plugin/kernel/validate/price-tables.mjs",

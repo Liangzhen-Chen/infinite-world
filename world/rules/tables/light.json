@@ -1,0 +1,5 @@
+{
+ "rows": [
+  {"key": "unbuilt", "value": ["apertureDaylightCurve", "baseSightM", "cloudOcclusionCurve", "luxFloor", "moonLuxCurve", "opacitySightCurve", "pointMinLm", "pointSourceCap", "sightByLuxCurve", "solarLuxCurve", "zoneSpread"], "basis": "卷二十 §2.9 :399 键表。已设计、未建：无运行期读者，由 G14 后三张卡（点光源与 env.lux 在 propagate 那张）接读者时入表（李白 Q-11）。卷文给了暂定值的三项先记在此、入表时照填：pointMinLm 10（一支蜡烛约 12 流明，https://en.wikipedia.org/wiki/Luminous_flux）、pointSourceCap 64（整数下限 1）、luxFloor 0.001（无月星光约 10⁻³ 勒克斯，https://en.wikipedia.org/wiki/Orders_of_magnitude_(illuminance)）；其余键无出处不编，建议值见 docs/问题.md「场规则表暂定值待李白核」"}
+ ]
+}

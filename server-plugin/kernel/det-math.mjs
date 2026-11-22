@@ -598,3 +598,23 @@ export function fixedToNumber8(v) {
 
 /** @param {bigint} v @returns {boolean} */
 export const isWholeFixed = (v) => v % fixedScale() === 0n;
+
+/**
+ * 拆分末份取差（卷二 §3.3"存量与余数结转"第 3 条；全书唯一一处，房间行分法、账本成本拆分、场蔓延拆分都调它）：
+ * 前几份各为 total × 分子 ÷ 分母（BigInt 整除向零截断，各份独立），末份取 total 减前几份之和，所以各份之和与 total 逐位相等。
+ * 返回 numerators.length + 1 份；分母须为正。
+ * @param {bigint} total @param {readonly bigint[]} numerators 除末份外各份的分子 @param {bigint} denominator
+ * @returns {bigint[]}
+ */
+export function splitLastRemainder(total, numerators, denominator) {
+  if (denominator <= 0n) throw new FixedError('E-DET-DOMAIN', 'splitLastRemainder: denominator must be positive');
+  const out = [];
+  let used = 0n;
+  for (const n of numerators) {
+    const q = (total * n) / denominator;
+    out.push(q);
+    used += q;
+  }
+  out.push(total - used);
+  return out;
+}

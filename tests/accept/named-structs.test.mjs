@@ -43,6 +43,7 @@ const FIELDS = {
   'struct:conception': ['otherParent', 'offspringSpecies', 'sinceMinute'],
   'struct:revivePoint': ['kind', 'counterpart'], // 勘误 1119k11：卷二 §1.5 增行（revivals.<person>.points 的元素）
   'struct:gridCellDiff': ['material', 'fixture', 'mark', 'sinceMinute'], // 勘误 1121k1：卷二 :253 增行（cells.<w>.<里块>.<格键> 的值；G6 登）
+  'struct:fieldCellMap': [], // 卷二 :254：值是 map<ref vocab field, struct:stockAnchor>，没有 struct 字段（G14 声明与数据登）
   'struct:manifestRow': ['ordinal', 'intendedType', 'form', 'areaM2', 'storeys', 'wallThicknessM', 'materialKg', 'zoneRole', 'ownerRef', 'prePlace', 'fixtures'],
   'struct:ownerKey': ['aggregate', 'org'],
   'struct:shopRow': ['ordinal', 'shopkind', 'venue', 'operator'],
@@ -115,7 +116,7 @@ function numericLeaves(node, at, out) {
   return out;
 }
 
-test('命名 struct 登记与卷二 §1.5 表逐条一致：48 行（G1 增 struct:pos；1119k11 增 revivePoint；G6 增 gridCellDiff）、字段名与出处', () => {
+test('命名 struct 登记与卷二 §1.5 表逐条一致：49 行（G1 增 struct:pos；1119k11 增 revivePoint；G6 增 gridCellDiff；G14 增 fieldCellMap）、字段名与出处', () => {
   assert.deepEqual([...rows.keys()].sort(), Object.keys(FIELDS).sort());
   for (const [name, fields] of Object.entries(FIELDS)) {
     const row = rows.get(name);
@@ -171,6 +172,6 @@ test('byState 带类型参数；命名引用都指向已登记的行', () => {
 });
 
 test('登记表只含卷文列出的名字，不给未登记名字开口子', () => {
-  assert.equal(REG.rows.length, 48); // G6 增 struct:gridCellDiff（勘误 1121k1）
-  assert.equal(new Set(REG.rows.map((r) => r.name)).size, 48);
+  assert.equal(REG.rows.length, 49); // G6 增 struct:gridCellDiff（勘误 1121k1）；G14 增 struct:fieldCellMap（卷二 :254）
+  assert.equal(new Set(REG.rows.map((r) => r.name)).size, 49);
 });

@@ -26,6 +26,8 @@ export interface PathTypes {
   readonly 'displayNames.*.seq': number;
   readonly 'displayNames.*.text': SealedValue;
   readonly 'due.*': StructValue<'dueItem'>;
+  readonly 'fieldCells.*.*.*': StructValue<'fieldCellMap'>;
+  readonly 'fields.*.*': StructValue<'stockAnchor'>;
   readonly 'holdings.*.*': StructValue<'holding'>;
   readonly 'itemInstances.*.diedMinute': number;
   readonly 'itemInstances.*.durability': number;
@@ -81,6 +83,8 @@ export type State = {
       readonly text?: SealedValue;
     } };
   readonly due?: { readonly [segment: string]: StructValue<'dueItem'> };
+  readonly fieldCells?: { readonly [segment: string]: { readonly [segment: string]: { readonly [segment: string]: StructValue<'fieldCellMap'> } } };
+  readonly fields?: { readonly [segment: string]: { readonly [segment: string]: StructValue<'stockAnchor'> } };
   readonly holdings?: { readonly [segment: string]: { readonly [segment: string]: StructValue<'holding'> } };
   readonly itemInstances?: { readonly [segment: string]: {
       readonly diedMinute?: number;

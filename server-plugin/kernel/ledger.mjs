@@ -20,7 +20,7 @@ import { currentTransaction } from './transaction.mjs';
 import { TERMINATED_KEY } from './storage.mjs';
 import { invalidateMemo } from './memo.mjs';
 import { clone } from './clone.mjs';
-import { fixedUnits, fixedAdd, fixedMultiply, fixedDivide, fixedToNumber } from './det-math.mjs';
+import { splitLastRemainder, fixedUnits, fixedAdd, fixedMultiply, fixedDivide, fixedToNumber } from './det-math.mjs';
 import { dim } from './dimensions.mjs';
 import { clockView } from './scheduler.mjs';
 import { readView } from './view-registry.mjs';
@@ -678,7 +678,7 @@ function postDraft(engine, state, draft, viaAllocation) {
           const cb = b.attrs[SCHEMA.costBasis];
           if (cb !== undefined) {
             // 卷六 §4.2 规则 5 :418：拆出部分 floor(costBasis × 拆出数量 ÷ 原数量)，原批留下部分取原值减去各拆出部分（末份取差）。
-            const part = Number((BigInt(cb) * BigInt(a.delta)) / BigInt(b.qty));
+            const part = Number(splitLastRemainder(BigInt(cb), [BigInt(a.delta)], BigInt(b.qty))[0]);
             attrs[SCHEMA.costBasis] = part;
             b.taken += part;
           }

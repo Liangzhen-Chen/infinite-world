@@ -667,6 +667,54 @@
    "volume": "卷十八 §2.3 :239（rules.social.orgTraits）；同键与必写核对在 kernel/validate/polity-tables.mjs（E-KIN-ORG-TRAITS，卷十八 :300）",
    "multiSourceMerge": "own_key_only",
    "packOverridable": {"orgTraits": false}
+  },
+  {
+   "code": "fields",
+   "file": "tables/fields.json",
+   "structure": "keys",
+   "type": {
+    "unbuilt": {"type": "set", "of": {"type": "string"}}
+   },
+   "domain": {"unbuilt": {}},
+   "volume": "卷二十 §2.9 :397（rules.fields 键表）；键都登 unbuilt（已设计、未建：无运行期读者，由 G14 后三张卡接读者时入表）；加载期校验在 kernel/validate/field-tables.mjs（表里写了键即照核）",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"unbuilt": false}
+  },
+  {
+   "code": "light",
+   "file": "tables/light.json",
+   "structure": "keys",
+   "type": {
+    "unbuilt": {"type": "set", "of": {"type": "string"}}
+   },
+   "domain": {"unbuilt": {}},
+   "volume": "卷二十 §2.9 :399（rules.light 键表）；键都登 unbuilt（已设计、未建，由 G14 后三张卡接读者时入表）；校验在 field-tables.mjs",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"unbuilt": false}
+  },
+  {
+   "code": "sound",
+   "file": "tables/sound.json",
+   "structure": "keys",
+   "type": {
+    "unbuilt": {"type": "set", "of": {"type": "string"}}
+   },
+   "domain": {"unbuilt": {}},
+   "volume": "卷二十 §2.9 :400（rules.sound 键表）；键都登 unbuilt（已设计、未建，由 G14 后三张卡接读者时入表）；校验在 field-tables.mjs",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"unbuilt": false}
+  },
+  {
+   "code": "env",
+   "file": "tables/env.json",
+   "structure": "keys",
+   "type": {
+    "unbuilt": {"type": "set", "of": {"type": "string"}}
+   },
+   "domain": {"unbuilt": {}},
+   "volume": "卷二十 §2.9 :403–:404（rules.env 键表）；键都登 unbuilt（已设计、未建，由 G14 后三张卡接读者时入表）；校验在 field-tables.mjs（E-PROP-LAW、E-ENV-TARGET）",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"unbuilt": false}
   }
  ]
 }

@@ -31,8 +31,9 @@ test('码表条数：E 与 W 各为手数的字面量', () => {
   // 卷十勘误 1121k16–k19 写码加三码（卷十 §2.7 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT；卷二 1121k19 E-GRID-WATER-BAND）：607 → 610、E 588 → 591。
   // 格子迁移 G9 随 alterCells 加 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）：610 → 612、E 591 → 593。
   // 格子迁移 G10 展开落格加 E-GRID-LAND-UNKNOWN（卷二十七 R27-1.13 :317、:1024，告警级）：612 → 613、E 593 → 594。
-  assert.equal(codes.length, 613);
-  assert.equal(codes.filter((c) => c[0] === 'E').length, 594);
+  // 格子迁移 G14 声明与数据加 E-PROP-LAW（卷二十错误码表 :1454，rules.env.channelLaw 键全覆盖）：613 → 614、E 594 → 595。
+  assert.equal(codes.length, 614);
+  assert.equal(codes.filter((c) => c[0] === 'E').length, 595);
   assert.equal(codes.filter((c) => c[0] === 'W').length, 19);
   assert.equal(REGISTERED_CODES.size, codes.length);
 });

@@ -517,6 +517,11 @@
    }}
   },
   {
+   "name": "struct:fieldCellMap",
+   "source": "卷二 §1.5 :255（泡内格上环境场增量 fieldCells.<w>.<里块>.<格键> 的值，<场> 是 map 的键；卷二十 §4.7.1）",
+   "type": {"map": {"key": "Handle<field>", "value": "struct:stockAnchor"}}
+  },
+  {
    "name": "struct:gridCellDiff",
    "source": "卷二 §1.5 :253（卷五 §3.3、§4.1 规则 15）",
    "type": {"struct": {
