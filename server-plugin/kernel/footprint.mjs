@@ -511,8 +511,10 @@ export function controlPointsOf(grid, plan, rows) {
     const g = regionGeometry(grid, plan, id);
     if (g) out.push({ id, x: g.centroid.x, y: g.centroid.y, elevM: typeof a === 'number' ? a : null });
   }
-  plan.controlPoints = out;
-  return out;
+  // 冻结：grid.mjs 按数组缓存控制点的定点形式，"构造后不再改"由语言保证。
+  for (const p of out) Object.freeze(p);
+  plan.controlPoints = Object.freeze(out);
+  return plan.controlPoints;
 }
 
 // 区格中心那一列的未修正地表高 h₀（定点米）：控制面 + 起伏，起伏幅度取该区格所属最深行的 terrain 条目。无控制点、无 terrain 条目即 null。

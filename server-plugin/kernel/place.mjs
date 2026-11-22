@@ -257,6 +257,7 @@ export function blueprintOf(engine, state, placeId) {
  * 一行的足迹与由足迹派生的量（卷五 §4.1 规则 13，区域足迹在区格粒度上算）：
  * {kind, w, regionCells（区格序号，(x, y) 字典序）, cellCount, areaM2, centroid, elevationM, zRange, waterAccess}。
  * 没有格空间表、离场行、划不出足迹的行返回 null；体积足迹（G8）由洞穴生成器的细格集合派生（place-volume.mjs volumeFootprint，另带 surfaceRefElevationM、depthM、underground），没有世界种子、输入读不到、派生失败（数据错，由 checkVolumeCells 报）为 null；elevationM、zRange 要世界种子与控制点，缺即为 null（未知）。
+ * 区域足迹的 regionCells、elevationM、zRange、waterAccess 是读到才求值的只读属性（值与立即求值逐位相同；高度场结果按（世界种子，行）缓存在计划上，计划随生成输入重划；rules.grid 配错时在读这些属性时才报错，不在取足迹时）。
  * 建筑、房间足迹（G7）：足迹是蓝图的格（房间取它那个房间的格），regionCells 为空，areaM2 = 最低一层细格数 × cellM²，zRange 是占的层号范围，elevationM = zMin × storeyM（卷五 §4.1 规则 13）。
  * @param {any} engine @param {any} state @param {string} placeId
  */
@@ -281,18 +282,30 @@ export function placeFootprint(engine, state, placeId) {
   const grid = engine.rules.grid;
   const geo = regionGeometry(grid, plan, placeId);
   if (!geo) return null;
-  const heights = regionHeights(grid, worldSeedOf(engine), plan, rp.rows, terrainEntryOf(engine), placeId);
-  return Object.freeze({
+  // elevationM、zRange 要整个足迹的区格代表地表高（卷五 §4.1.3 规则 13），读到才求值（定义在对象上的惰性只读属性，值与立即求值逐位相同）；
+  // 求值结果由 regionHeights 按（世界种子，行）缓存在计划上（计划已含全部生成输入，输入变了计划重划，缓存随之丢弃）。
+  const seed = worldSeedOf(engine);
+  const terrainOf = terrainEntryOf(engine);
+  // 区格列表、可及水体类同样读到才求（全规模的父足迹列表装不下，卷五 §4.1.4）。
+  const fp = {
     kind: rp.kinds.get(placeId),
     w: plan.w,
-    regionCells: Object.freeze(cellList(plan, placeId)),
     cellCount: geo.cellCount,
     areaM2: geo.areaM2,
     centroid: Object.freeze({ ...geo.centroid }),
-    elevationM: heights ? heights.elevationM : null,
-    zRange: heights ? Object.freeze({ ...heights.zRange }) : null,
-    waterAccess: Object.freeze(waterAccessOf(plan, rp.rows, placeId)),
-  });
+  };
+  const lazy = (key, compute) => {
+    let v;
+    let done = false;
+    Object.defineProperty(fp, key, { enumerable: true, get: () => { if (!done) { v = compute(); done = true; } return v; } });
+  };
+  let heights;
+  const heightsOf = () => (heights === undefined ? (heights = regionHeights(grid, seed, plan, rp.rows, terrainOf, placeId)) : heights);
+  lazy('regionCells', () => Object.freeze(cellList(plan, placeId)));
+  lazy('elevationM', () => { const h = heightsOf(); return h ? h.elevationM : null; });
+  lazy('zRange', () => { const h = heightsOf(); return h ? Object.freeze({ ...h.zRange }) : null; });
+  lazy('waterAccess', () => Object.freeze(waterAccessOf(plan, rp.rows, placeId)));
+  return Object.freeze(fp);
 }
 
 /**
@@ -989,19 +1002,14 @@ export function placeView(engine, state, placeId) {
   const off = rp.offstage.has(placeId);
   const dims = {};
   for (const key of Object.keys(t.doc.dimensions).sort(cmp)) {
-    // 离场子树内的位置量与依赖足迹的派生量按未知返回，不返回留在存储里的旧值（卷五 §4.1 规则 8 第三条）。
     if (off && OFFSTAGE_UNKNOWN.includes(key)) { dims[key] = UNKNOWN; continue; }
-    try {
-      dims[key] = dim(engine, state, PLACE, placeId, key);
-    } catch (e) {
-      // 读到登记在案的未建派生时 dim() 抛 E-MOD-RX（kernel/dimensions.mjs readBase，卷二 §1.12 封卷后勘误 1118k23）。
-      if (!(codeOf(e) === E.E_MOD_RX && dependsOnUnbuilt(t, key))) throw e;
-      dims[key] = UNKNOWN;
-    }
-    // 表头里声明为派生的足迹量由足迹给值（centroid、zRange、areaM2、elevationM 等）；存储列照读存储值。
-    if (footprint !== null && t.doc.dimensions[key] && t.doc.dimensions[key].derived !== undefined) {
-      const v = FOOTPRINT_DERIVED[key] ? FOOTPRINT_DERIVED[key](footprint) : null;
-      if (v !== null) dims[key] = KNOWN(v);
+    const base = placeDimBase(engine, state, t, placeId, key);
+    if (footprint !== null && FOOTPRINT_HEIGHT_DIMS.includes(key) && footprintDerived(t, key)) {
+      // 依赖高度场的足迹量（elevationM、zRange）读到才求值：基值此刻读定，足迹量取自此刻的足迹对象（其上的高度场属性惰性求值）。
+      let fact;
+      Object.defineProperty(dims, key, { enumerable: true, get: () => (fact === undefined ? (fact = footprintFact(t, key, footprint, base)) : fact) });
+    } else {
+      dims[key] = footprintFact(t, key, footprint, base);
     }
   }
   const ancestors = ancestorsOf(engine, state, placeId);
@@ -1025,6 +1033,48 @@ export function isOffstage(engine, state, placeId) {
   parentOf(engine, state, placeId); // 须是地点（dim() 对非地点抛 E-DIM-REF-MISSING）
   return planOf(engine, state).offstage.has(placeId);
 }
+
+// 一个维度的基值（placeView 与 placeClimateInput 共用）：经内核 dim() 读；
+// 离场子树内的位置量与依赖足迹的派生量由调用方先按未知返回，不返回留在存储里的旧值（卷五 §4.1 规则 8 第三条）。
+function placeDimBase(engine, state, t, placeId, key) {
+  try {
+    return dim(engine, state, PLACE, placeId, key);
+  } catch (e) {
+    // 读到登记在案的未建派生时 dim() 抛 E-MOD-RX（kernel/dimensions.mjs readBase，卷二 §1.12 封卷后勘误 1118k23）。
+    if (!(codeOf(e) === E.E_MOD_RX && dependsOnUnbuilt(t, key))) throw e;
+    return UNKNOWN;
+  }
+}
+
+const footprintDerived = (t, key) => Boolean(t.doc.dimensions[key]) && t.doc.dimensions[key].derived !== undefined;
+
+// 表头里声明为派生的足迹量由足迹给值（centroid、zRange、areaM2、elevationM 等）；存储列照读存储值（base）。
+function footprintFact(t, key, footprint, base) {
+  if (footprint !== null && footprintDerived(t, key)) {
+    const v = FOOTPRINT_DERIVED[key] ? FOOTPRINT_DERIVED[key](footprint) : null;
+    if (v !== null) return KNOWN(v);
+  }
+  return base;
+}
+
+// 单个地点的单维度读口（placeClimateInput 用）：与 placeView 的 dims[key] 同一读法（离场未知、基值、足迹量覆盖），但只算被问到的维度；
+// 足迹对象最多取一次，且只在读到表头声明为派生的维度时才取。表里没有的维度为 undefined。
+function placeDimReader(engine, state, placeId) {
+  const t = placeTable(engine);
+  const off = planOf(engine, state).offstage.has(placeId);
+  let footprint;
+  return (key) => {
+    if (!Object.hasOwn(t.doc.dimensions, key)) return undefined;
+    if (off && OFFSTAGE_UNKNOWN.includes(key)) return UNKNOWN;
+    const base = placeDimBase(engine, state, t, placeId, key);
+    if (!footprintDerived(t, key)) return base;
+    if (footprint === undefined) footprint = placeFootprint(engine, state, placeId);
+    return footprintFact(t, key, footprint, base);
+  };
+}
+
+// 取值要整个区域足迹的高度场的足迹量（卷五 §4.1.3 规则 13：区格代表地表高）：placeFootprint 里按需求值。
+const FOOTPRINT_HEIGHT_DIMS = Object.freeze([DIM.elevationM, DIM.zRange]);
 
 // 表头声明为派生的足迹量（卷五 §2.1）：由 placeFootprint 取值；取不到（未知）返回 null，维持未建派生的"未知"。
 const FOOTPRINT_DERIVED = Object.freeze({
@@ -1306,13 +1356,18 @@ export function placeClimateInput(engine, state, placeId) {
   let byPlace = envMemo.get(engine);
   if (!byPlace) { byPlace = new Map(); envMemo.set(engine, byPlace); }
   if (byPlace.has(placeId)) return byPlace.get(placeId);
-  const own = placeView(engine, state, placeId);
-  const chain = [own, ...own.tree.ancestors.map((a) => placeView(engine, state, a))];
-  const cellNode = chain.find((n) => n.dims[CELL_MARK].applicable === true);
-  const latitudeDeg = placeLatitude(engine, own);
-  const val = (v, k) => (v.dims[k] && v.dims[k].known ? v.dims[k].value : undefined);
+  // 沿包含树惰性上行（卷二十 §2.7 :335 weatherCell = nearest(rel_contains, 挂 comp_weather_cell)）：只读各节点"单元维度适用"这一个维度，遇到第一个挂单元的节点即停；
+  // 之后只取单元维度、两处海拔与自身的形心、围护、地下三类，不求任何一级的完整 placeView（出口、子集、足迹区格列表、高度场都不碰；足迹量由 placeDimReader 按需求值，卷五 §4.1.3 规则 13）。
+  parentOf(engine, state, placeId); // 须是地点（dim() 对非地点抛 E-DIM-REF-MISSING）
+  const readers = new Map();
+  const reader = (id) => { if (!readers.has(id)) readers.set(id, placeDimReader(engine, state, id)); return readers.get(id); };
+  const cellId = [placeId, ...ancestorsOf(engine, state, placeId)].find((id) => reader(id)(CELL_MARK).applicable === true);
+  const own = reader(placeId);
+  const latitudeDeg = cellId === undefined ? null : placeLatitude(engine, { dims: { [DIM.centroid]: own(DIM.centroid) } });
+  const val = (read, k) => { const v = read(k); return v && v.known ? v.value : undefined; };
   let out = null;
-  if (cellNode && latitudeDeg !== null) {
+  if (cellId !== undefined && latitudeDeg !== null) {
+    const cellNode = reader(cellId);
     const cell = Object.fromEntries(CELL_DIMS.filter((k) => val(cellNode, k) !== undefined).map((k) => [k, val(cellNode, k)]));
     const cellElevationM = val(cellNode, SITE.elevation);
     const here = val(own, SITE.elevation);

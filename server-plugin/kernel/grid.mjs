@@ -5,6 +5,7 @@
 // 区格地形类由 cellclass 条目派生，无条目成立返回 null（数据须给全兜底条目、加载期报 E-GRID-CELL-NO-TERRAIN，归 cellclass 内容卡，不在代码里设缺省）。
 
 import { fixedUnits, fixedScale, fixedToNumber, FixedError } from './det-math.mjs';
+import { KernelError } from './errors.mjs';
 import { sha256Text } from './save.mjs';
 import { uniformAt } from './sample.mjs';
 import { gridSeedKeyText } from './handles/keys.mjs';
@@ -188,6 +189,18 @@ export function reliefAt(grid, worldSeed, w, reliefM, reliefRough, qx, qy, memo)
 
 // ---------- 控制面（卷五 §4.3 规则 8「控制面」） ----------
 
+// 控制点的定点形式（x、y、海拔米换成定点整数）：同一个控制点数组只换一次，缓存在数组对象上（WeakMap，不跨数组、不进状态；控制点数组构造后不再改，footprint.mjs controlPointsOf）。
+// 全规模的控制点是万级的区域足迹行，逐列各换一遍是区格代表地表高（卷五 §4.1.3 规则 13）求值的主要开销。
+const fixedPoints = new WeakMap();
+function fixedControlPoints(controlPoints) {
+  let out = fixedPoints.get(controlPoints);
+  if (out === undefined) {
+    out = controlPoints.map((p) => ({ id: p.id, x: fixedUnits(p.x), y: fixedUnits(p.y), elev: p.elevM === null ? null : fixedUnits(p.elevM) }));
+    fixedPoints.set(controlPoints, out);
+  }
+  return out;
+}
+
 /**
  * 控制面（纯函数）：同一格空间里形心离该列最近的 heightCtrlK 个控制点，anchorElevationM 按到该列直线距离的平方反比加权平均；
  * 该列恰在某控制点上时取该点的值。并列取 id 码点序小。全整数定点，除法向零截断。
@@ -198,18 +211,25 @@ export function reliefAt(grid, worldSeed, w, reliefM, reliefRough, qx, qy, memo)
  */
 export function controlSurfaceAt(grid, controlPoints, qx, qy) {
   const k = grid.heightCtrlK;
+  // 与 place.mjs 对 landSearchRadiusCells 的口径一致：取最近几个点必须是正整数，其余（0、负数、非整数、NaN、缺省）拒收，不借 slice 的负数、NaN 语义出值。
+  if (!Number.isSafeInteger(k) || k < 1) throw new KernelError('E-RULES-UNREGISTERED', {}, 'controlSurfaceAt: rules.grid.heightCtrlK is not registered (positive integer, points)');
   // 格空间里没有区域足迹行（层根除外）时卷五 :655 未定义控制面：拒收，不自补海平面缺省（待卷五澄清，见 docs/问题.md）。
   if (controlPoints.length === 0) throw new FixedError('E-DET-DOMAIN', 'controlSurfaceAt: no control points in grid space');
   const qxf = fixedUnits(qx);
   const qyf = fixedUnits(qy);
-  const selected = controlPoints
-    .map((p) => {
-      const dx = fixedUnits(p.x) - qxf;
-      const dy = fixedUnits(p.y) - qyf;
-      return { id: p.id, d2: dx * dx + dy * dy, elev: p.elevM === null ? null : fixedUnits(p.elevM) };
-    })
-    .sort((a, b) => cmp(a.d2, b.d2) || cmp(a.id, b.id))
-    .slice(0, k);
+  // 按（距离平方，id）升序取最近的 k 个：有界插入，等价于全排序后取前 k（并列同键时保持输入次序，与稳定排序一致），但不为每列给全部控制点建对象、排全序。
+  const before = (a, b) => { const c = cmp(a.d2, b.d2); return c !== 0 ? c < 0 : cmp(a.id, b.id) < 0; };
+  const selected = [];
+  for (const p of fixedControlPoints(controlPoints)) {
+    const dx = p.x - qxf;
+    const dy = p.y - qyf;
+    const cand = { id: p.id, d2: dx * dx + dy * dy, elev: p.elev };
+    if (selected.length >= k && !before(cand, selected[selected.length - 1])) continue;
+    let at = selected.length;
+    while (at > 0 && before(cand, selected[at - 1])) at -= 1;
+    selected.splice(at, 0, cand);
+    if (selected.length > k) selected.pop();
+  }
   // 该列恰在某控制点上：取该点的值（卷五 :656），结果不依赖别的点；该点海拔未知则为未知。
   for (const p of selected) if (p.d2 === 0n) return p.elev;
   // 不在任何控制点上：平方反比加权里每个入选点的权都为正，最近 K 个里任何一个海拔未知，这一列的控制面就是未知
