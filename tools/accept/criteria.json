@@ -368,10 +368,14 @@
     {
      "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
      "rev": 71
+    },
+    {
+     "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 72
     }
    ],
-   "print": "4c73fb3843cdb9274ab2b36de0ce812065a731ba511db97f50735c56462ab5cf",
-   "rev": 71,
+   "print": "2b2a6006b04f1e04328f02ccc95d781efe18c62f8f4c3f78e8f7a2f53518814d",
+   "rev": 72,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -917,10 +921,14 @@
     {
      "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
      "rev": 70
+    },
+    {
+     "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 71
     }
    ],
-   "print": "b16a2906efd632bd391310ce4c6c79b293aae36d5c73f8a08ed2af65c40eccf9",
-   "rev": 70,
+   "print": "5142b8f574a46b36c785ed7191692c7b97801cf7c75a0af85699d7a6364fae47",
+   "rev": 71,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1556,10 +1564,14 @@
     {
      "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
      "rev": 67
+    },
+    {
+     "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 68
     }
    ],
-   "print": "fc7d5daa7b9bc092240662dbcc649dec72c851474eb76ec7ff0dc65839fb0ab6",
-   "rev": 67,
+   "print": "e4ec799ada6ec06cad8f4a40ccec6cd9bbd0eade902cb5ac76121f5c7e7422de",
+   "rev": 68,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -2025,10 +2037,14 @@
     {
      "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
      "rev": 83
+    },
+    {
+     "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 84
     }
    ],
-   "print": "01d60275ee82528059f6a6a57a643b55fca4ec9f907fa41e69daa112e30a15a9",
-   "rev": 83,
+   "print": "16c678961e1f4dfb3ed70bfa73f12eec613b0c42d21981e76508998171a25705",
+   "rev": 84,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -2427,10 +2443,14 @@
     {
      "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
      "rev": 68
+    },
+    {
+     "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 69
     }
    ],
-   "print": "fc7d5daa7b9bc092240662dbcc649dec72c851474eb76ec7ff0dc65839fb0ab6",
-   "rev": 68,
+   "print": "e4ec799ada6ec06cad8f4a40ccec6cd9bbd0eade902cb5ac76121f5c7e7422de",
+   "rev": 69,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -3238,10 +3258,14 @@
     {
      "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
      "rev": 68
+    },
+    {
+     "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 69
     }
    ],
-   "print": "fc7d5daa7b9bc092240662dbcc649dec72c851474eb76ec7ff0dc65839fb0ab6",
-   "rev": 68,
+   "print": "e4ec799ada6ec06cad8f4a40ccec6cd9bbd0eade902cb5ac76121f5c7e7422de",
+   "rev": 69,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -3504,10 +3528,14 @@
     {
      "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
      "rev": 62
+    },
+    {
+     "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 63
     }
    ],
-   "print": "3b8c332d58a61b1d701654dd13a72091a3d23761efdb26f54c977080838b7713",
-   "rev": 62,
+   "print": "51dab9263af398d8570f41b63b2fa6278a5fe4e6d2f48435fb382eb393496772",
+   "rev": 63,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -3842,10 +3870,14 @@
     {
      "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
      "rev": 80
+    },
+    {
+     "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 81
     }
    ],
-   "print": "8af65bfc97d206ed51d329e65f5206db215ef6775b20bb681052d39eef3eab38",
-   "rev": 80,
+   "print": "439b244ffa93f8ae7f7545ae2cf2ba1ec43cd28426f648967b0b19256a78bf61",
+   "rev": 81,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -4201,10 +4233,14 @@
     {
      "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
      "rev": 47
+    },
+    {
+     "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 48
     }
    ],
-   "print": "6acfeccbae1cf9ef4e4584c6d3e0c70f36773318bcc1e3584b6742a0870c3c70",
-   "rev": 47,
+   "print": "f7b7c38d41beae5bd5441f8f3374a1445780a8fbf12a73a3d79b38dc9b1441cc",
+   "rev": 48,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -4502,10 +4538,14 @@
     {
      "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
      "rev": 69
+    },
+    {
+     "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 70
     }
    ],
-   "print": "4c73fb3843cdb9274ab2b36de0ce812065a731ba511db97f50735c56462ab5cf",
-   "rev": 69,
+   "print": "2b2a6006b04f1e04328f02ccc95d781efe18c62f8f4c3f78e8f7a2f53518814d",
+   "rev": 70,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -4718,10 +4758,14 @@
     {
      "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
      "rev": 45
+    },
+    {
+     "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 46
     }
    ],
-   "print": "6c789a651cbb1250c58ac454cd40b46f963def604c126a13f9ae25f8755e70bc",
-   "rev": 45,
+   "print": "e3b4ba06ead155381db72482cf630a43194508f4b8bcb838287aa3fdaa15b303",
+   "rev": 46,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -5212,10 +5256,14 @@
     {
      "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
      "rev": 64
+    },
+    {
+     "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 65
     }
    ],
-   "print": "3b8c332d58a61b1d701654dd13a72091a3d23761efdb26f54c977080838b7713",
-   "rev": 64,
+   "print": "51dab9263af398d8570f41b63b2fa6278a5fe4e6d2f48435fb382eb393496772",
+   "rev": 65,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

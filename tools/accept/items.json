@@ -3292,6 +3292,35 @@
     "pre_commit",
     "pre_merge"
    ],
+   "impl": "tests/kernel/bubble.test.mjs",
+   "itemKey": "vol27.A27-1.13",
+   "localNo": "A27-1.13",
+   "method": "property_test",
+   "print": "b7cf7a66cee16dc331631d1492149d56926b43f24586979093facbe75edf6fb0",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "g10b-bubble",
+     "date": "2026-11-22",
+     "rev": 1,
+     "summary": "首次登记（G10 余下：展开收起的计划与切分无关、同一区格收起再展开 gridView 逐格相同、读档不触发展开、落格种子键五段；对照表 #61–#64。未覆盖：推进 30 日用时钟跳变代替真实推进、没用 R27-4.1 世界状态摘要、真实写位置归 G12 placeSubject，故仍 registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-1.13 :371（验收测试，展开收起与切分无关：玩家走出泡、推进 30 个世界日、走回；一次推进与多种切分〔含中途存盘读档〕各走法结束时排除日志分区后的世界状态摘要两两相等，展开落格得到的每个 pos 与落点逐个相同；同一区格收起再展开 gridView 逐格相同；开缓存与关缓存、读档后缓存从空重建结果相同）；卷五 §4.1 规则 17 :513。测试 tests/kernel/bubble.test.mjs（\"A27-1.13 切分无关\"\"展开恒同\"）；真实推进与摘要比对待 sim-advance 与位置写者落地后补。",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
    "impl": "tests/kernel/grid-diff.test.mjs",
    "itemKey": "vol27.A27-1.14",
    "localNo": "A27-1.14",
@@ -3308,6 +3337,35 @@
    ],
    "runsOn": "local_static",
    "source": "卷二十七 A27-1.14 :372（离屏不写差分与回场对账：不在泡内的行为者〔用例须含泡移走后原地留下、位置仍在细格上的 NPC〕、无行为者而目标格在泡外的起因、批量统计形态结算发起的 alterCells 都被拒，写入计数为 0；泡内行为者打到泡外格的局部改动照写；泡为空推进任意时长 cells.* 写入计数为 0、差分片摘要不变；回场展开后卷五 A5-1.2\"差分与离屏\"全部成立）；卷五 §4.1 规则 15 :504、A5-1.2 :537。拒写侧测试 tests/kernel/grid-diff.test.mjs；回场对账与批量统计半条随 G10、G18 补。",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tests/kernel/bubble-scale.test.mjs",
+   "itemKey": "vol27.A27-1.15",
+   "localNo": "A27-1.15",
+   "method": "property_test",
+   "print": "ff14219108ed05560c2973659aa109276a84c5654d4977736a1ec173a02f78bb",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "g10b-bubble",
+     "date": "2026-11-22",
+     "rev": 1,
+     "summary": "首次登记（G10 余下：夹具世界新增格空间 w1、泡在新格空间里成立并能展开落格、改 bubbleRadiusRegionCells 只改规则表；泡内格数上界与格空间大小无关；对照表 #68、#69。\"A27-1.12 至 A27-1.14 在新格空间通过\"中 1.14 回场对账存量半条未落，故仍 registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-1.15 :373（扩展性：新增一个格空间，不改 sim-tiers.mjs、sim-advance.mjs，玩家进入后泡在新格空间里成立，A27-1.12 至 A27-1.14 通过；改 bubbleRadiusRegionCells 的表值只改规则表同样通过）；R27-3.14 :500–:502。测试 tests/kernel/bubble-scale.test.mjs。",
    "stage": 0,
    "state": "registered",
    "target": "tests_code",
