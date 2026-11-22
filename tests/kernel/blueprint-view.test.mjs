@@ -24,7 +24,7 @@ const CELLCLASS = { cellclass_land: { ...ANY, slopeRange: [0, 1], priority: 1, g
 // 地表材料 mat_soil、地表以下一层土再岩；空气取真实材料行 mat_air。
 const TEMPLATE = { gtpl_land: { surfaceMaterial: 'mat_soil', airMaterial: 'mat_air', soilLayers: 1, soilMaterial: 'mat_soil', rockMaterial: 'mat_granite', blocks: [] } };
 // 形制条目是测试前提：walled 真、一层、屋面、墙厚缺省 0.4（w = 1）；rooms 为空或两间。
-const FORM = { walled: true, aspect: 1, storeyBase: 0, roofed: true, deck: false, windowEvery: 0, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.2, planSideMaxCells: 64, rooms: [], facilityTypes: ['fac_house'] };
+const FORM = { walled: true, aspect: 1, storeyBase: 0, roofed: true, deck: false, windowEvery: 0, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.2, planSideMaxCells: 64, defaultMaterials: { wall: 'mat_soil', frame: 'mat_elm', roof: 'mat_straw' }, rooms: [], facilityTypes: ['fac_house'] };
 const FORMS = (extra = {}) => ({
   bldform_hut: FORM,
   bldform_tower: { ...FORM, rooms: [] },

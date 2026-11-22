@@ -17,6 +17,8 @@
     "walled": true, "roofed": true, "deck": false, "storeyBase": 0, "aspect": 1, "windowEvery": 4,
     "wallThicknessDefaultM": 0.4, "wallThicknessMinM": 0.4, "planSideMaxCells": 18,
     "facilityTypes": ["fac_clinic", "fac_forge", "fac_granary", "fac_house", "fac_inn", "fac_mill", "fac_office", "fac_school", "fac_workshop"],
+    "defaultMaterials": {"wall": "mat_soil", "frame": "mat_elm", "roof": "mat_straw"},
+    "defaultMaterialsBasis": "默认用料三项（卷十九 §2.4 默认用料，封卷后勘误 1123k60，李白 11-23 事件 7fc731e6 C 卡开局建账 0847 ①选甲）：docs/世界设计/13-建筑、聚落形态与服饰器物.md:170 写本形制 wall rammed_earth、frame timber、roof thatch_reed。材料表（world/ontology/dimensions/material.json）里对得上的与对不上的：wall 夯土 rammed_earth 的 goods 是 goods:earth（13-建筑 :49），对应材料行 mat_soil（土，固态密度 1.6，设定写夯土 1800 kg/m³ 即 1.8，相差 0.2，待补夯土行）；frame 木 timber（设定密度 600 即 0.6）材料表没有通称木料的行，只有树种行，取密度最近的树种行 mat_elm（榆，0.65；mat_oak 0.75、mat_bamboo 等更远）——对不上，代用；roof 芦苇 thatch_reed（设定密度 150 即 0.15）材料表没有芦苇行，取最近的茎秆类 mat_straw（秸秆，0.3）——对不上，代用。两项代用都标·待补材料行（补了通称木料与芦苇行后只改这一处），不自造材料。",
     "rooms": [
      {"role": "roomrole_common_room", "share": 0.5, "level": 0, "open": false},
      {"role": "roomrole_sleeping_room", "share": 0.5, "level": 0, "open": false}
@@ -27,6 +29,8 @@
     "walled": true, "roofed": true, "deck": false, "storeyBase": 0, "aspect": 1, "windowEvery": 0,
     "wallThicknessDefaultM": 0.4, "wallThicknessMinM": 0.4, "planSideMaxCells": 5,
     "facilityTypes": ["fac_shrine"],
+    "defaultMaterials": {"wall": "mat_soil", "frame": "mat_elm", "roof": "mat_straw"},
+    "defaultMaterialsBasis": "默认用料三项（卷十九 §2.4，封卷后勘误 1123k60，李白 11-23 事件 7fc731e6）：设定原文 13-建筑 :109 小龛模板 requires 只写 wall \"*\"、roof \"*\"（任意材料），没有具体料；暂取与 bldform_river_house 同一组（试玩地区河湾石坛随河湾村一带的盖法），材料代号的对得上、对不上说明同该条目的 defaultMaterialsBasis。暂定·待试玩标定，设定给小龛具体用料后改此处。",
     "rooms": [],
     "basis": "小龛/小堂（前置卡 D 补，试玩地区的河湾石坛用）：设定原文 docs/世界设计/13-建筑、聚落形态与服饰器物.md:109 的建筑模板 building:shrine（名“小龛/小堂”，forms [\"shrine\"]，requires wall \"*\"、roof \"*\"，footprintM2 [2, 20]，uses [\"shrine\"]；:73 说宗教建筑的模板在本节登记）。walled 真、roofed 真：requires 同时要墙与顶（任意材料）；deck 假、storeyBase 0：设定无承托台与地下层。planSideMaxCells 5：占地上限 20 m2（:109），按本形制 aspect 1、细格 1 m 折外包：D = ⌊√20⌋ = 4、W = ceil(20 ÷ 4) = 5，取 5（算法同 bldform_river_house 的 planSideMaxCells，占地上限的出处是设定原文，折算与取整是生成规则）。rooms 空表（卷十九 §2.4 允许：小龛不分房间；设定 :80 的 shrine_niche 只是围庭院的一个房间，不是本模板的房间）。aspect 1、windowEvery 0、wallThicknessDefaultM 0.4、wallThicknessMinM 0.4：设定无数，暂定起点（墙厚同 bldform_river_house 暂取值，一个墙格；windowEvery 0 即无窗，小龛）·待试玩标定。河湾石坛旧数据写“低矮石坛……遮雨石龛”（locations.json:1375），本形制只对应“遮雨石龛”这一部分；石坛台面本身设定未定盖法（start-buildings.json 的 gap），不另造形制。facilityTypes（封卷后勘误 1123k52）：模板 building:shrine 的 uses 恰为 [\"shrine\"]（13-建筑 :109），对应设施类型 fac_shrine，只列这一类。envelopeReq、skill、skillMin、minutesPerM2、toolAbilities、qualityCurve、portable、packMinutes、beautyBase、provides 等建造字段归卷十九建造卡，本卡未落（planBlueprint 与 checkBlueprintForms 不读）。"
    }
@@ -642,6 +646,17 @@
   "gstage": {
    "closed": false,
    "entries": {
+    "gstage_envelope": {
+     "after": ["gstage_siteform"],
+     "before": [],
+     "basis": "卷十 R10-7.12 末与卷十九 §4.1 规则 11（封卷后勘误 1123k60，李白 11-23 事件 7fc731e6 C 卡开局建账 0847）：手写建筑行缺 materialKg 时按形制默认料补、缺 condition 取开局初值，并给每栋建筑记开局建行的围护流水账 wallFlowKg；读 siteform 阶段补出的形制、平面格数、层数，所以排在它之后",
+     "generator": "gen/envelope.mjs",
+     "phase": "worldgen",
+     "scope": "site",
+     "whenRX": null,
+     "writesFamilies": [],
+     "writesKinds": ["place"]
+    },
     "gstage_fields": {
      "after": ["gstage_waterfoot"],
      "before": [],

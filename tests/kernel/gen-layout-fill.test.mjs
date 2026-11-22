@@ -68,7 +68,9 @@ test('真划分上的落位：缺 anchor、facing 的手写建筑由站点面积
 
 test('真划分上的落位：作者写了 anchor、facing 的建筑不动（无偏离行）并作障碍：bld_1 绕到 x0 = 227，锚点 (238, 2)', () => {
   const r = fill({ bld_1: house(), bld_2: house({ anchor: { w: 0, x: 213, y: 13, z: 15, coarse: false }, facing: 0 }) });
-  assert.equal(Object.hasOwn(r.generated, 'bld_2'), false);
+  // 落位一节没给 bld_2 写任何东西：它的偏离行（若有）只来自开局建账阶段（gstage_envelope，补 materialKg、condition、wallFlowKg），没有 anchor、facing，也不是 gstage_siteform 写的。
+  const bld2 = r.generated.bld_2;
+  assert.ok(bld2 === undefined || (bld2.anchor === undefined && bld2.facing === undefined && bld2.generated.by === 'gstage_envelope'));
   assert.deepEqual(r.generated.bld_1.anchor, { w: 0, x: 238, y: 2, z: 15, coarse: false });
   assert.equal(r.generated.bld_1.facing, 4);
   assert.equal(r.generated.loc_site.targetAreaM2, 10000);

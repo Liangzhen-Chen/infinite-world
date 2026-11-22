@@ -82,6 +82,14 @@
    "grade": "designed",
    "source": "卷十 :167（rules.gen.under.maxAreaM2，number（m2），≥ 1，一行地下存量单元的目标面积上限，R10-2.13；键名取驼峰平铺 underMaxAreaM2，同 roleTract 先例）",
    "basis": "暂定·待试玩标定。卷十 :167 给 200000，推算依据见卷十 :167（一层洞的格数不超过现场泡一层列数的两倍上下）；读者是洞穴生成器 caveCellsOf 的格数上限（place-volume.mjs caveRulesFrom）；卷十 rules.gen.under.rows 随生成写码卡登"
+  },
+  {
+   "key": "openingCondition",
+   "value": 1,
+   "file": "server-plugin/kernel/gen/envelope.mjs",
+   "grade": "designed",
+   "source": "李白 11-23 事件 7fc731e6（C 卡开局建账 0847）② 选甲：开局建筑状态 condition 一律取 1（完好）；卷十九 :118 只定 condition 必填、范围 [0,1]，两卷对开局初值都没有句子（封卷后勘误 1123k60 补）",
+   "basis": "暂定·待调。取 1 即开局时所有手写建筑完好；以后有建成年代再按年代折（主会话挂 PLAN，本卡不做）；读者是 gstage_envelope（gen/envelope.mjs），只对缺 condition 的建筑行写 generated 偏离行，作者写了的不动"
   }
  ]
 }

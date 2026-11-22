@@ -1555,7 +1555,7 @@ export function checkPlaceTable(view) {
     // 设施类型表（kind facility_type，卷十九 §2.2）的行 id：形制 facilityTypes 与分片角色 typeAffinity 的键都经表核，不经词表索引；世界没有这张表即空集（任何引用都报缺）。
     const ftTable = view.tables instanceof Map ? view.tables.get(FACILITY_TYPE) : undefined;
     const facilityTypeIds = new Set(ftTable && ftTable.flat && ftTable.flat.rows instanceof Map ? ftTable.flat.rows.keys() : []);
-    if (idx instanceof Map) errors.push(...checkBlueprintForms(idx, view.rules && view.rules.facility ? view.rules.facility.blueprint : undefined, facilityTypeIds));
+    if (idx instanceof Map) errors.push(...checkBlueprintForms(idx, view.rules && view.rules.facility ? view.rules.facility.blueprint : undefined, facilityTypeIds, hasMaterial, (code) => (hasMaterial(code) ? mt.flat.rows.get(code) : undefined)));
     // 布局模板与分片角色族（卷十九 §4.6 规则 1、3、4）：份额和为 1、adjacent 引用在本模板内、模板不写设施数量；族条目常查。
     if (idx instanceof Map) errors.push(...checkLayoutTemplates(idx, facilityTypeIds));
     // 体积足迹（卷五 §4.1 规则 3、11；卷十 R10-2.14）：不依赖世界种子的部分（父行种类、目标面积上限、嵌套顶层号）；要世界种子的派生核对见 checkVolumeCells。

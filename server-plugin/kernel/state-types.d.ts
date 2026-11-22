@@ -22,6 +22,7 @@ export interface PathTypes {
   readonly 'created.*.props.basis': StructValue<'basis'>;
   readonly 'created.*.props.facing': number;
   readonly 'created.*.props.pos': StructValue<'pos'>;
+  readonly 'created.*.props.wallFlowKg': DimensionValue;
   readonly 'displayNames.*.seq': number;
   readonly 'displayNames.*.text': SealedValue;
   readonly 'due.*': StructValue<'dueItem'>;
@@ -72,7 +73,8 @@ export type State = {
         readonly basis?: StructValue<'basis'>;
         readonly facing?: number;
         readonly pos?: StructValue<'pos'>;
-      } & { readonly [segment: string]: (DimensionValue) | (StructValue<'basis'>) | (number) | (StructValue<'pos'>) };
+        readonly wallFlowKg?: DimensionValue;
+      } & { readonly [segment: string]: (DimensionValue) | (StructValue<'basis'>) | (number) | (StructValue<'pos'>) | (DimensionValue) };
     } };
   readonly displayNames?: { readonly [segment: string]: {
       readonly seq?: number;

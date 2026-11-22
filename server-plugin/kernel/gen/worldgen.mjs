@@ -18,17 +18,20 @@ import { genOrder } from './order.mjs';
 import { genWater } from './water.mjs';
 import { genWaterFoot } from './waterfoot.mjs';
 import { genSiteForm } from './siteform.mjs';
+import { genEnvelope } from './envelope.mjs';
+import { STATE } from '../grid-base.mjs';
 import { makeWhen } from './when.mjs';
 import { writeback, createRows } from './writeback.mjs';
 import { genPolity } from './polity.mjs';
 import { officeRowKinds } from '../validate/polity-tables.mjs';
 
 const RULES_CODE = 'gen';
+const MATERIAL_TABLE = 'material'; // 材料表（kind material）
 const GRID_CODE = 'grid';
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
 // 生成器登记表：条目的 generator 节点名 → 运行函数 (ctx) => {proposals, deferred?, report?}。新阶段只在这里加一行并登记 gstage 条目（A10-1.3）。
-const NODE = Object.freeze({ fields: 'gen/fields.mjs', water: 'gen/water.mjs', waterfoot: 'gen/waterfoot.mjs', order: 'gen/order.mjs', siteform: 'gen/siteform.mjs', polity: 'gen/polity.mjs' });
+const NODE = Object.freeze({ fields: 'gen/fields.mjs', water: 'gen/water.mjs', waterfoot: 'gen/waterfoot.mjs', order: 'gen/order.mjs', siteform: 'gen/siteform.mjs', envelope: 'gen/envelope.mjs', polity: 'gen/polity.mjs' });
 const RUNNERS = Object.freeze(Object.fromEntries([
   [NODE.fields, (ctx) => ({ proposals: genFields(ctx), deferred: [] })],
   [NODE.order, (ctx) => genOrder({ ...ctx, elevationDim: ctx.geo.elevationDim, downhill: ctx.geo.downhill, roleWaterbody: ctx.rules.roleWaterbody })],
@@ -48,6 +51,7 @@ const RUNNERS = Object.freeze(Object.fromEntries([
     footprints: ctx.footprints({ bed: false, heights: (id) => { const r = ctx.rows.get(id); return r !== undefined && (r.classes.has(ctx.rules.roleWaterbody) || r.classes.has(ctx.rules.roleTract)); } }),
   })],
   [NODE.siteform, (ctx) => genSiteForm({ ...ctx, bldfillRows: ctx.rules.bldfillRows, roleFacility: ctx.rules.roleFacility, roleTract: ctx.rules.roleTract, roleWaterbody: ctx.rules.roleWaterbody, layoutCoverage: ctx.rules.layoutCoverage, layoutGapCells: ctx.rules.layoutGapCells })],
+  [NODE.envelope, (ctx) => genEnvelope({ ...ctx, roleFacility: ctx.rules.roleFacility, openingCondition: ctx.rules.openingCondition, densityOf: ctx.materialDensityOf })],
   [NODE.polity, (ctx) => genPolity({ ...ctx, ...ctx.polity })],
 ]));
 
@@ -112,6 +116,14 @@ export function generateFill(world, opts) {
   const deferred = [];
   const report = { projections: [], changed: 0 };
   const polity = polityInputs(world, opts);
+  // 材料的固态栏密度（千克每升）：读材料表的行值。materialView 读材料维度也不套修正表（卷三乙 M-12，数值标量的有效值才走管线，density 是按物态分栏的 map、不是修正键，有效值即基值），
+  // 且它要世界创建事务外才装的词表注册表（kindOf），所以这里直接读同一张表的行值，与 materialView(...).dims.density 同值（测试对照）；读不到为 undefined，由用料阶段报错。
+  const materialTable = world.tables.get(MATERIAL_TABLE);
+  const materialDensityOf = (code) => {
+    const row = materialTable && materialTable.flat && materialTable.flat.rows instanceof Map ? materialTable.flat.rows.get(code) : undefined;
+    const byState = row ? row.density : undefined;
+    return byState !== null && typeof byState === 'object' ? byState[STATE.solid] : undefined;
+  };
   let created = {}; // 阶段新建的行（别的表的整行，R10-1.2 建行写回）：表代号 → {id: 整行}
   const calls = []; // 阶段交出的调用提案（卷八 R8-18.9 ③ setGovernor），由 holdcalls.mjs 在世界创建事务内应用
   // 该行该维度的值是作者写的：表里有这个维度的值而 generated 节没有（展平行已并上偏离行，所以要看偏离行），或作者输入里有；本次世界创建里先行阶段刚生成的值不是作者值。
@@ -136,7 +148,7 @@ export function generateFill(world, opts) {
     const result = run({
       table, stage: step.stage, worldSeed: opts.worldSeed, genesisMinute: opts.genesisMinute, vocab: world.vocab, rows, dims, rules, geo,
       m3PerUnit: unit ? unit.si : undefined,
-      authoredIds, isAuthored, when, polity,
+      authoredIds, isAuthored, when, polity, materialDensityOf,
       gridSpaceCount: Array.isArray(t.doc.gridSpaces) ? t.doc.gridSpaces.length : 0, // 格空间表的行数；0 即世界还没有格空间，划不出足迹
       regionCellM: grid && typeof grid.regionCellM === 'number' ? grid.regionCellM : undefined,
       blueprint: blueprintRulesFrom(world.rules, world.env.units),

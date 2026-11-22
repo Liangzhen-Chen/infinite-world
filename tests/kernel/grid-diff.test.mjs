@@ -35,7 +35,7 @@ const FIXTURE_ITEM = 'item_test_bench'; // 一件运行期新建的物品（stat
 const ANY = { terrains: TERRAINS, waterAny: [], onRoad: null, inSettlement: null };
 const CELLCLASS = { cellclass_land: { ...ANY, slopeRange: [0, 1], priority: 1, genTemplate: 'gtpl_land' } };
 const TEMPLATE = { gtpl_land: { surfaceMaterial: 'mat_soil', airMaterial: 'mat_air', soilLayers: 1, soilMaterial: 'mat_soil', rockMaterial: 'mat_granite', blocks: [] } };
-const FORM = { walled: true, aspect: 1, storeyBase: 0, roofed: true, deck: false, windowEvery: 0, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.2, planSideMaxCells: 64, rooms: [] };
+const FORM = { walled: true, aspect: 1, storeyBase: 0, roofed: true, deck: false, windowEvery: 0, wallThicknessDefaultM: 0.4, wallThicknessMinM: 0.2, planSideMaxCells: 64, defaultMaterials: { wall: 'mat_soil', frame: 'mat_elm', roof: 'mat_straw' }, rooms: [] };
 // 格标记：树桩（格材料变土，不再作存量候选格）、焦痕（材料不变）。
 const CELLMARKS = { cellmark_stump: { becomesMaterial: 'mat_soil', excludesStock: true }, cellmark_scorch: { becomesMaterial: null, excludesStock: false } };
 

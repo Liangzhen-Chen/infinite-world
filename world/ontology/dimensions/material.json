@@ -8416,6 +8416,46 @@
      "citation": null,
      "grade": "designed"
     },
+    "soundAttenuation": {
+     "basis": "设：木材取 1 dB/cm 量级，低于致密矿物；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "strength.stress_bend": {
+     "basis": "设：参照 mat_bamboo、mat_bone 的同标度，硬木弯与拉强、抗剪较弱；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "strength.stress_compress": {
+     "basis": "设：参照 mat_bamboo、mat_bone 的同标度，硬木弯与拉强、抗剪较弱；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "strength.stress_impact": {
+     "basis": "设：参照 mat_bamboo、mat_bone 的同标度，硬木弯与拉强、抗剪较弱；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "strength.stress_shear": {
+     "basis": "设：参照 mat_bamboo、mat_bone 的同标度，硬木弯与拉强、抗剪较弱；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "strength.stress_tensile": {
+     "basis": "设：参照 mat_bamboo、mat_bone 的同标度，硬木弯与拉强、抗剪较弱；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "strength.stress_torsion": {
+     "basis": "设：参照 mat_bamboo、mat_bone 的同标度，硬木弯与拉强、抗剪较弱；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "thermalConductivity.solid": {
+     "basis": "设：硬木顺纹以外的导热 0.12 至 0.2 W/m·K，取 0.17；只写 solid；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
     "valueMult": {
      "basis": "暂定，待 M3b-27 标定（块 6 物品表首卡）：P3-T4 同本源成分 subst_wood 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "citation": null,
@@ -8464,7 +8504,19 @@
    "repairedWith": "class_wood",
    "salvageFraction": 0.4,
    "sharpnessMax": 25,
+   "soundAttenuation": 1,
+   "strength": {
+    "stress_bend": 45,
+    "stress_compress": 40,
+    "stress_impact": 45,
+    "stress_shear": 25,
+    "stress_tensile": 50,
+    "stress_torsion": 30
+   },
    "substance": "subst_wood",
+   "thermalConductivity": {
+    "solid": 0.17
+   },
    "valueMult": 1,
    "volatility": 0,
    "wearResistance": 15.7,
@@ -17683,6 +17735,11 @@
      "citation": null,
      "grade": "designed"
     },
+    "corrosionRate": {
+     "basis": "设：参照同本源成分 subst_mineral 的 mat_granite、mat_limestone 的 0.0008；无卷文出处；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
     "density.solid": {
      "basis": "卷三甲 §4.5.5 例 1 全集表\"密度固\"栏的卷文值，没有依据代号指向出处（:528 折 C 级）",
      "citation": null,
@@ -17738,6 +17795,46 @@
      "citation": null,
      "grade": "designed"
     },
+    "soundAttenuation": {
+     "basis": "设：致密矿物固体取 2 dB/cm 量级，高于木材与秸秆；无卷文出处；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "strength.stress_bend": {
+     "basis": "设：参照 mat_bone（压 55、弯 38）、mat_bamboo 的同标度，夯土抗压中等、抗拉抗弯很弱；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "strength.stress_compress": {
+     "basis": "设：参照 mat_bone（压 55、弯 38）、mat_bamboo 的同标度，夯土抗压中等、抗拉抗弯很弱；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "strength.stress_impact": {
+     "basis": "设：参照 mat_bone（压 55、弯 38）、mat_bamboo 的同标度，夯土抗压中等、抗拉抗弯很弱；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "strength.stress_shear": {
+     "basis": "设：参照 mat_bone（压 55、弯 38）、mat_bamboo 的同标度，夯土抗压中等、抗拉抗弯很弱；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "strength.stress_tensile": {
+     "basis": "设：参照 mat_bone（压 55、弯 38）、mat_bamboo 的同标度，夯土抗压中等、抗拉抗弯很弱；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "strength.stress_torsion": {
+     "basis": "设：参照 mat_bone（压 55、弯 38）、mat_bamboo 的同标度，夯土抗压中等、抗拉抗弯很弱；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "thermalConductivity.solid": {
+     "basis": "设：干压实土 0.5 至 1.0 W/m·K 的低端；只写 solid 栏，gas、liquid 不写；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
     "valueMult": {
      "basis": "暂定，待 M3b-27 标定（块 6 物品表首卡）：P3-T4 同本源成分 subst_mineral 例值下中位数（n=1）；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "citation": null,
@@ -17749,6 +17846,7 @@
      "grade": "designed"
     }
    },
+   "corrosionRate": 0.0008,
    "density": {
     "solid": 1.6
    },
@@ -17783,7 +17881,19 @@
    "refMaterial": null,
    "salvageFraction": 0,
    "sharpnessMax": 32.5,
+   "soundAttenuation": 2,
+   "strength": {
+    "stress_bend": 5,
+    "stress_compress": 20,
+    "stress_impact": 5,
+    "stress_shear": 8,
+    "stress_tensile": 3,
+    "stress_torsion": 4
+   },
    "substance": "subst_mineral",
+   "thermalConductivity": {
+    "solid": 0.6
+   },
    "valueMult": 30,
    "workDifficulty": 10
   },
@@ -18597,6 +18707,11 @@
      "citation": "卷三甲 §4.5.5 例 8 依据 碳:饲：FP 12758 麦秸：粗蛋白 4.2、脂肪 1.4、灰分 6.7，差减 87.7；其中淀粉只有 1.0",
      "grade": "measured"
     },
+    "corrosionRate": {
+     "basis": "暂定，待试玩调：P3-T1（同本源成分 subst_plant 组内没有已有值，取该维全表已有值的中位数；全表已有值 0.0005 两个、0.003 五个、其余 0.0008，中位数 0.0008）",
+     "citation": null,
+     "grade": "designed"
+    },
     "decomposePoint": {
      "basis": "卷三甲 §4.5.5 例 1 全集表\"分解点\"栏的卷文值，没有依据代号指向出处（:528 折 C 级）",
      "citation": null,
@@ -18667,6 +18782,46 @@
      "citation": null,
      "grade": "designed"
     },
+    "soundAttenuation": {
+     "basis": "设：疏松纤维 0.3 dB/cm 量级；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "strength.stress_bend": {
+     "basis": "设：疏松纤维，拉强略高于其余；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "strength.stress_compress": {
+     "basis": "设：疏松纤维，拉强略高于其余；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "strength.stress_impact": {
+     "basis": "设：疏松纤维，拉强略高于其余；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "strength.stress_shear": {
+     "basis": "设：疏松纤维，拉强略高于其余；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "strength.stress_tensile": {
+     "basis": "设：疏松纤维，拉强略高于其余；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "strength.stress_torsion": {
+     "basis": "设：疏松纤维，拉强略高于其余；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
+    "thermalConductivity.solid": {
+     "basis": "设：稻草秸秆散料 0.04 至 0.1 W/m·K，取 0.09；只写 solid；暂定·待试玩调",
+     "citation": null,
+     "grade": "designed"
+    },
     "valueMult": {
      "basis": "暂定，待 M3b-27 标定（块 6 物品表首卡）：P3-T4 本源成分无例值，取 1；卷三甲 §4.1.5/§4.3.5 例值；暂定",
      "citation": null,
@@ -18686,6 +18841,7 @@
    "classes": [
     "comp_burnable"
    ],
+   "corrosionRate": 0.0008,
    "decomposePoint": 220,
    "density": {
     "solid": 0.3
@@ -18710,7 +18866,19 @@
    "refMaterial": null,
    "salvageFraction": 0.4,
    "sharpnessMax": 32.5,
+   "soundAttenuation": 0.3,
+   "strength": {
+    "stress_bend": 5,
+    "stress_compress": 3,
+    "stress_impact": 3,
+    "stress_shear": 3,
+    "stress_tensile": 10,
+    "stress_torsion": 3
+   },
    "substance": "subst_plant",
+   "thermalConductivity": {
+    "solid": 0.09
+   },
    "valueMult": 1,
    "volatility": 0,
    "workDifficulty": 10

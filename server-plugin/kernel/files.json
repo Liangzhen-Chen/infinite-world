@@ -19,6 +19,7 @@
  "server-plugin/kernel/footprint-kind.mjs",
  "server-plugin/kernel/footprint.mjs",
  "server-plugin/kernel/gen/draw.mjs",
+ "server-plugin/kernel/gen/envelope.mjs",
  "server-plugin/kernel/gen/fields.mjs",
  "server-plugin/kernel/gen/holdcalls.mjs",
  "server-plugin/kernel/gen/ids.mjs",
@@ -99,6 +100,7 @@
  "server-plugin/kernel/valuation.mjs",
  "server-plugin/kernel/view-registry.mjs",
  "server-plugin/kernel/vocab.mjs",
+ "server-plugin/kernel/wall-flow.mjs",
  "server-plugin/kernel/water-bed.mjs",
  "server-plugin/kernel/weather.mjs"
 ]

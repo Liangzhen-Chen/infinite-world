@@ -27,6 +27,8 @@ const OPENING_ORDER = Object.freeze([OPENING.mainDoor, OPENING.innerDoor, OPENIN
 export const ELEMENT = Object.freeze({ wall: 'wall', partition: 'partition', stairs: 'stairs', ceiling: 'ceiling' });
 /** 外壳处的种类：地上外墙一处、屋面一元（places 里的 type）。 */
 export const PLACE_TYPE = Object.freeze({ wall: 'wall', roof: 'roof' });
+/** 形制默认用料 defaultMaterials 的三项角色（卷十九 §2.4，封卷后勘误 1123k60）。 */
+export const MATERIAL_ROLES = Object.freeze(['wall', 'frame', 'roof']);
 /** 不可行的原因代号（规则 7 第 3、4、7 点）。 */
 export const REASON = Object.freeze({
   planTooSmall: 'bp_plan_too_small', roomsInfeasible: 'bp_rooms_infeasible', entranceNotAdjacent: 'bp_entrance_not_adjacent', floorOverOpenRoom: 'bp_floor_over_open_room',
@@ -552,6 +554,35 @@ export function materialsOfElements(bp, materials) {
   return out;
 }
 
+/**
+ * 围护用料须齐全的物性里这一行缺哪几项（卷十九 §4.1 规则 10）：固态密度为正、固态热导、隔声、腐蚀率、强度（至少一个应力键；toughness 由 strength 合成，不另存）。行为 undefined 时全缺。
+ * @param {any} row @returns {string[]}
+ */
+export function envelopeMaterialMissing(row) {
+  const r = isObj(row) ? row : {};
+  const out = [];
+  if (!(isObj(r.density) && typeof r.density.solid === 'number' && r.density.solid > 0)) out.push('density');
+  if (!(isObj(r.thermalConductivity) && typeof r.thermalConductivity.solid === 'number')) out.push('thermalConductivity');
+  if (typeof r.soundAttenuation !== 'number') out.push('soundAttenuation');
+  if (typeof r.corrosionRate !== 'number') out.push('corrosionRate');
+  if (!(isObj(r.strength) && Object.keys(r.strength).length > 0)) out.push('strength');
+  return out;
+}
+
+/**
+ * 围护设计体积按用料角色分（卷十九 §4.4 规则 1 的体积 V；角色是形制默认用料 defaultMaterials 的三项，封卷后勘误 1123k60）：
+ * 墙 = 外墙与隔墙结构元，梁架 = 楼梯与楼板、桥面（承托的构件），屋顶 = 屋面。各角色体积是该角色全部结构元设计体积之和（定点升，不截断，和等于全部结构元之和）。
+ * @param {{elements: {kind: string, cell: number, volumeL: bigint}[], cells: {ceiling: string | null}[]}} bp @returns {{wall: bigint, frame: bigint, roof: bigint}}
+ */
+export function volumeByMaterialRole(bp) {
+  const out = { wall: 0n, frame: 0n, roof: 0n };
+  for (const e of bp.elements) {
+    const role = e.kind === ELEMENT.wall || e.kind === ELEMENT.partition ? 'wall' : e.kind === ELEMENT.stairs ? 'frame' : bp.cells[e.cell].ceiling === CEILING.roof ? 'roof' : 'frame';
+    out[role] += e.volumeL;
+  }
+  return out;
+}
+
 // ---------- 按完好度派生的破口与缺口（§4.1 规则 3） ----------
 
 /**
@@ -642,10 +673,13 @@ export function openingAreasOf(bp, breach, closedPlaces, rules) {
  * 新增一个形制条目只加数据：本函数遍历族内全部条目，不点名代号。rooms 各项的 role 须是 roomrole 族条目，同一 level 的 share 之和恰为 1（定点），level 为非负整数。
  * limits 是规则表 rules.facility.blueprint（取值域上下限）；世界里有形制条目而它缺失，报 E-RULES-UNREGISTERED，不当作没有上下限放过。
  * facilityTypes（适用设施类型，卷十九 §2.4，封卷后勘误 1123k52）：交入设施类型表的行 id 集 facilityTypeIds 时核——必填列表（可空）、每项须是类型表的行、不重复；不交（undefined）即不核这一栏（只测平面字段的调用方）。
+ * defaultMaterials（默认用料，卷十九 §2.4，封卷后勘误 1123k60）：交入 hasMaterial（材料代号是否材料表的行）时核——必填，墙、梁架、屋顶三项各指一行材料；不交（undefined）即不核这一栏。
  * @param {Map<string, {family: string, entry: any}>} vocabIndex 词表索引 @param {any} limits @param {Set<string>} [facilityTypeIds] 设施类型表（kind facility_type）的行 id
+ * 默认料物性（卷十九 §4.1 规则 10，李白 11-24 裁）：另交 materialRowOf（材料代号 → 材料表行，没有为 undefined）时，核每种默认料的 density、thermalConductivity、soundAttenuation、corrosionRate、strength（toughness 由它合成）都已知。
+ * @param {(code: string) => boolean} [hasMaterial] @param {(code: string) => any} [materialRowOf]
  * @returns {string[]}
  */
-export function checkBlueprintForms(vocabIndex, limits, facilityTypeIds) {
+export function checkBlueprintForms(vocabIndex, limits, facilityTypeIds, hasMaterial, materialRowOf) {
   const errors = [];
   const scale = fixedScale();
   const num = (v) => typeof v === 'number' && Number.isFinite(v);
@@ -678,6 +712,21 @@ export function checkBlueprintForms(vocabIndex, limits, facilityTypeIds) {
           else if (seen.has(t)) errors.push(`E-DIM-DUPLICATE-KEY ${at}/facilityTypes/${i}: ${t} listed twice`);
           else seen.add(t);
         });
+      }
+    }
+    // 默认用料（卷十九 §2.4，封卷后勘误 1123k60）：交入材料存在判定 hasMaterial 时核——必填，墙、梁架、屋顶三项各是材料表的一行；不交即不核这一栏。
+    if (typeof hasMaterial === 'function') {
+      const dm = e.defaultMaterials;
+      if (!isObj(dm)) errors.push(`E-DIM-REQUIRED-MISSING ${at}: defaultMaterials is a required struct {${MATERIAL_ROLES.join(', ')}}`);
+      else {
+        for (const role of MATERIAL_ROLES) {
+          if (typeof dm[role] !== 'string' || !hasMaterial(dm[role])) { errors.push(`E-DIM-REF-MISSING ${at}/defaultMaterials/${role}: ${JSON.stringify(dm[role])} is not a row of the material table`); continue; }
+          // 卷十九 :408 规则 10（李白 11-24 裁第⑤条）：进入围护的料物性须齐全；交入 materialRowOf 时核。
+          if (typeof materialRowOf === 'function') {
+            const lacking = envelopeMaterialMissing(materialRowOf(dm[role]));
+            if (lacking.length > 0) errors.push(`E-DIM-REQUIRED-MISSING ${at}/defaultMaterials/${role}: material ${dm[role]} lacks ${lacking.join(', ')} (vol19 section 4.1 rule 10)`);
+          }
+        }
       }
     }
     if (!Array.isArray(e[FORM.rooms])) { errors.push(`E-DIM-REQUIRED-MISSING ${at}: ${FORM.rooms} is a required list (may be empty)`); continue; }
