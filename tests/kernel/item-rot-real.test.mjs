@@ -1,5 +1,7 @@
-// 块 6 第 6-3 张改三轮：真实世界数据下食物会坏，且坏得与温度有关。前提只在临时世界里加一件食物（真实材料月华浆果 mat_moon_berry，rotRate 0.2 per_day_rot）
-// 和让垄渠郡（挂太原气候单元，6-24）能当持有人；腐坏读数走默认接线（地点→天气单元→太原气候输入，纬度由 coord.y 与 rules.astro 推出），
+// 块 6 第 6-3 张改三轮：真实规则与气候数据下食物会坏，且坏得与温度有关（地点几何是小格夹具，真实世界原样的同类读数见 tests/cloud/item-rot-real-world.test.mjs）。前提只在临时世界里加一件食物（真实材料月华浆果 mat_moon_berry，rotRate 0.2 per_day_rot）
+// 和让垄渠郡（挂太原气候单元，6-24）能当持有人；腐坏读数走默认接线（地点→天气单元→太原气候输入，纬度由形心 y 与 rules.astro 推出，卷二十 §2.7 :334），
+// 纬度要手算得出：夹具里垄渠郡自成一个小格空间，足迹形心 y 恰等于旧坐标 coord.y，所以纬度与下面手算所用的值逐位相同
+// （真实世界的全规模足迹与高度场手算不了、本机也要数分钟，见 mini-place-world.mjs），
 // 温度曲线与档表是 rules.rot 的真实暂定值（world/rules/tables/rot.json），不在测试里造。
 // 期望值按 tempCurve（[-20,0] [0,0.25] [10,0.5] [20,1] [30,2] [40,4]，点间线性）与太原单元当日平均气温手算成字面量：
 //   第 1 日均温 4.2101、第 2 日 4.4272（冬）：倍数 0.25 + T/10 × 0.25 = 0.3552525、0.36068；
@@ -8,6 +10,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { baseFixture, loadItemWorld, itemRow, share } from './item-world.mjs';
+import { miniClimatePlaceDoc } from './mini-place-world.mjs';
 import { installVocab } from '../../server-plugin/kernel/vocab.mjs';
 import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
 import { runTransaction } from '../../server-plugin/kernel/transaction.mjs';
@@ -21,7 +24,10 @@ const SH = 'purpose_test_shelf';
 function world() {
   const f = baseFixture();
   f.items = { item_test_berry: itemRow(0.1, [share('mgroup_body', 'mat_moon_berry', 1)], { bulkForm: 'bform_granule' }) };
-  f.editPlaceDoc = (doc) => { doc.rows[PLACE].ledgerHolder = true; };
+  // 小格世界（mini-place-world.mjs miniClimatePlaceDoc）：垄渠郡足迹的形心 y 与旧坐标 coord.y 相同（纬度逐位同旧值）、海拔 779 m（与旧数据读单元的值等价）。
+  // 真实物品行与组织行引用真实地点：物品只留测试自己的行（itemWorld 已如此），组织行去掉。
+  f.editPlaceDoc = (doc) => miniClimatePlaceDoc(doc, { place: PLACE, child: 'loc_hw' });
+  f.editOrgDoc = (doc) => { doc.rows = {}; };
   const r = loadItemWorld(f);
   assert.ok(r.ok, JSON.stringify(r.messages) + JSON.stringify(r.errors));
   const W = r.world;
@@ -33,7 +39,8 @@ function world() {
   installVocab({ vocab, idIndex: W.idIndex, tables: W.tables });
   const rules = structuredClone(W.rules);
   rules.economyResources.res_test_berry = { family: 'resfam_goods', unit: 'count', transferable: 'tr_free', counterpartRX: null, sources: ['src_regrow'], sinks: ['sink_decay'], onTerminate: 'successor', salvageFraction: 0, countsAsWealth: true, unitOfAccount: false, issuerBacked: false };
-  return { vocab, rules, units: W.env.units, tables: W.tables };
+  // 地点的海拔由足迹与高度场派生（卷五 §4.1.3 规则 13、§4.3 规则 8），高度场要世界种子：引擎带 template.seed，否则海拔输入缺、腐坏读数未知。
+  return { vocab, rules, units: W.env.units, tables: W.tables, template: { seed: 'seed_test' } };
 }
 
 // 在第 entryDay 日入账 3 件新鲜浆果（腐坏 0），返回读数引用。

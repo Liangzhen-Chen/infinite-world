@@ -93,6 +93,7 @@ export function loadItemWorld(f) {
         if (typeof f.editVocab === 'function') f.editVocab(doc);
       }
       if (name === 'place.json' && typeof f.editPlaceDoc === 'function') f.editPlaceDoc(doc);
+      if (name === 'org.json' && typeof f.editOrgDoc === 'function') f.editOrgDoc(doc); // 夹具自带小地点表时，真实组织行（seat 引用真实地点行）随之去掉
       if (name === 'material.json') {
         for (const [id, row] of Object.entries(f.materials)) doc.rows[id] = graded(doc.dimensions, clone(row));
         if (typeof f.editMaterialDoc === 'function') f.editMaterialDoc(doc);

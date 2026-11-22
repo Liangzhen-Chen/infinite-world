@@ -13,10 +13,12 @@ installDigestCap({ sha256Hex: (data, encoding) => createHash('sha256').update(da
 assert.ok(loadWorld(ROOT).ok);
 const DIMS = 'world/ontology/dimensions';
 const realText = (f) => readFileSync(join(ROOT, DIMS, f), 'utf8');
+// 真实地点树里的一段（G5b 上格后）：垄渠郡之下是河湾村站点 loc_bs_hebu 与同级的 loc_bs_liquan（二者旧父是白石镇 loc_bs，上格时按坐标改挂所在郡，
+// 原父记在作者字段 originSite，"属于某镇"不靠 parent 包含表达），河湾村之下是建筑 bld_bs_boat。统治边测试要的"祖先、站点、站点下的建筑、同级"四处取这几行。
 export const SITE = 'loc_bs_hebu';
 export const BUILDING = 'bld_bs_boat';
 export const SIBLING = 'loc_bs_liquan';
-export const PARENT = 'loc_bs';
+export const PARENT = 'loc_county_xichui_longqu';
 
 /**
  * 加载夹具世界。

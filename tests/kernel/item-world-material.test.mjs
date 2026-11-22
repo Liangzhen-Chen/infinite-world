@@ -19,6 +19,7 @@ import { runTransaction } from '../../server-plugin/kernel/transaction.mjs';
 import { post } from '../../server-plugin/kernel/ledger.mjs';
 import { rotStep } from '../../server-plugin/kernel/item-state.mjs';
 import { baseFixture, loadItemWorld, engineOf, ROOT } from './item-world.mjs';
+import { miniClimatePlaceDoc } from './mini-place-world.mjs';
 
 installDigestCap({ sha256Hex: (data, encoding) => createHash('sha256').update(data, encoding === 'base64' ? 'base64' : 'utf8').digest('hex') });
 useReportSink(() => {});
@@ -92,7 +93,10 @@ test('腐坏（P-1，6-3 的读法）：真实粮食行配上真实麦材料后�
   f.vocab = { class: {}, category: readJson('world/ontology/dimensions/_vocab.json').families.category.entries, size: readJson('world/ontology/dimensions/_vocab.json').families.size.entries };
   f.rulesItems = { categoryRules: given('categoryRules'), classRules: given('classRules'), materialClassMin: given('materialClassMin'), sizeClasses: given('sizeClasses') };
   f.items = { item_wheat_grain: structuredClone(ROWS.item_wheat_grain) };
-  f.editPlaceDoc = (doc) => { doc.rows[PA].ledgerHolder = true; };
+  // 小格世界（mini-place-world.mjs）：持有人河湾村挂在垄渠郡（太原气候单元）下；真实世界的足迹与高度场是全规模，本机要数分钟；纬度、海拔与旧读法一致，温度曲线取常数不影响期望。
+  // 真实粮食行 item_wheat_grain 的 origin 是 loc_bs，一并留下。
+  f.editPlaceDoc = (doc) => miniClimatePlaceDoc(doc, { place: 'loc_county_xichui_longqu', child: PA, more: ['loc_bs'] });
+  f.editOrgDoc = (doc) => { doc.rows = {}; };
   f.rulesExtra = {
     rot: { tempCurve: [[-100, 1], [100, 1]], stages: [{ minSpoilage: 0 }, { minSpoilage: 0.3 }, { minSpoilage: 0.7 }, { minSpoilage: 1 }], mergeMaxGap: 0.1 },
     wear: { envCurve: [[0, 1], [1, 1]] },

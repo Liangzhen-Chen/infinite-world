@@ -14,7 +14,7 @@ import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
 import { useReportSink } from '../../server-plugin/kernel/report.mjs';
 import { weatherAt } from '../../server-plugin/kernel/weather.mjs';
-import { convertGeo, newId } from '../../tools/convert-geo.mjs';
+import { convertGeo, newId } from '../../tools/convert-geo-g5b.mjs';
 
 installDigestCap({ sha256Hex: (data, encoding) => createHash('sha256').update(data, encoding === 'base64' ? 'base64' : 'utf8').digest('hex') });
 useReportSink(() => {});
@@ -27,6 +27,9 @@ const OLD = {
   biomes: readJson('world/geo/biomes.json').locations,
   cell: readJson('world/geo/weather-cell.json'),
 };
+// G5b 转换的作者输入（格子迁移）：附表数据（省界、海、河、湖、北岭、改挂清单）与子站点改挂清单；规则都是整类的，不按 id。
+const MODEL = readJson('world/geo/geo-model.json');
+const SUBSITES = readJson('world/geo/subsite-reparent.json').rows;
 const W = loadWorld(ROOT);
 const PLACE = W.tables.get('place').doc;
 const ROWS = PLACE.rows;
@@ -37,17 +40,20 @@ const provinces = OLD.regions.filter((r) => r.category === 'province');
 const counties = OLD.regions.filter((r) => r.category === 'county');
 const levelOf = (id) => ROWS[id].regionLevel;
 const km = (v) => Number((v * 1000).toFixed(4));
+// 建筑行：挂 comp_facility（足迹是建筑足迹，没有种子 coord；路网边两端只许区域或体积足迹，建筑端的边转换时全删，卷五 §4.1 规则 4）。
+const isFacility = (id) => Array.isArray(ROWS[id]?.classes) && ROWS[id].classes.includes('comp_facility');
 
 test('真实世界：加载零错误（含规则 1–5 的加载校验、两族词表引用闭合、未建列登记合法）', () => {
   assert.equal(W.ok, true, W.text);
 });
 
-test('规模：九省 31 郡与旧数据一致；行数 = 世界根 + 省 + 郡 + 旧地点；边数 = 旧路线数（数量从旧数据算出）', () => {
+test('规模：九省 31 郡与旧数据一致；行数 = 世界根 + 省 + 郡 + 旧地点 + 附表的北岭、海、河、湖；边数 = 两端都不是建筑的旧路线数（数量从旧数据与附表算出）', () => {
   assert.equal(IDS.filter((id) => levelOf(id) === 'juris_province').length, provinces.length);
   assert.equal(IDS.filter((id) => levelOf(id) === 'juris_county').length, counties.length);
-  assert.equal(IDS.length, 1 + provinces.length + counties.length + OLD.locations.length);
-  assert.equal(PLACE.edges.length, OLD.routes.length);
-  assert.ok(provinces.length > 0 && counties.length > 0 && OLD.locations.length > 0);
+  const fromModel = ['wild', 'seas', 'rivers', 'lakes'].reduce((n, k) => n + Object.keys(MODEL[k]).length, 0);
+  assert.equal(IDS.length, 1 + provinces.length + counties.length + OLD.locations.length + fromModel);
+  assert.equal(PLACE.edges.length, OLD.routes.filter((r) => !isFacility(newId(r.from)) && !isFacility(newId(r.to))).length);
+  assert.ok(provinces.length > 0 && counties.length > 0 && OLD.locations.length > 0 && PLACE.edges.length > 0);
 });
 
 test('规则 1：全表恰一个根，每行沿 parent 有限步到根；层级只看 regionLevel：省挂世界根、郡挂其省、政区沿树 rank 严格递增', () => {
@@ -70,17 +76,23 @@ test('规则 1：全表恰一个根，每行沿 parent 有限步到根；层级�
   }
 });
 
-test('每处旧地点都有一行，坐标照旧值（千米折米），父按旧 parent；旧 parent 与所属郡（county.places）冲突的以郡为父', () => {
+test('每处旧地点都有一行：区域行坐标照旧值（千米折米），建筑行不写坐标；父按旧 parent、旧 parent 与所属郡（county.places）冲突的以郡为父；附表改挂清单、子站点改挂清单里的行改挂并留痕原父', () => {
   const countyOfPlace = new Map();
   for (const c of counties) for (const p of c.places ?? []) countyOfPlace.set(p, newId(c.id));
   for (const o of OLD.locations) if (o.region) countyOfPlace.set(o.id, newId(o.region));
   for (const o of OLD.locations) {
     const row = ROWS[newId(o.id)];
     assert.ok(row, o.id);
-    assert.deepEqual(row.coord, { x: km(o.coordinates[0]), y: km(o.coordinates[1]) }, o.id);
+    if (isFacility(newId(o.id))) assert.equal(Object.hasOwn(row, 'coord'), false, `${o.id} is a building: no seed coord`);
+    else assert.deepEqual(row.coord, { x: km(o.coordinates[0]), y: km(o.coordinates[1]) }, o.id);
     const listed = countyOfPlace.get(o.id);
     assert.ok(listed || o.parent !== null, `${o.id} has neither parent nor county`);
-    assert.equal(row.parent, listed ?? newId(o.parent), o.id);
+    const oldParent = listed ?? newId(o.parent);
+    const id = newId(o.id);
+    if (SUBSITES[id] !== undefined) { assert.equal(row.parent, SUBSITES[id].parent, o.id); assert.equal(row.originSite, SUBSITES[id].originSite, o.id); }
+    else if (MODEL.reparent[id] !== undefined) assert.equal(row.parent, MODEL.reparent[id].parent, o.id);
+    else if (row.originSite !== undefined) assert.equal(row.originSite, oldParent, o.id); // 父行是建筑行的建筑：改挂到第一个非建筑祖先，原父留痕
+    else assert.equal(row.parent, oldParent, o.id);
     assert.ok(typeof LABELS[newId(o.id)]?.label === 'string' && LABELS[newId(o.id)].label === o.name, `label ${o.id}`);
   }
   for (const r of OLD.regions) {
@@ -89,12 +101,13 @@ test('每处旧地点都有一行，坐标照旧值（千米折米），父按�
   }
 });
 
-test('面积：biomes.json 登记了面积的地点按平方千米折平方米照转，其余不写（缺值登记未建，不编）', () => {
+test('面积：biomes.json 登记了面积的地点按平方千米折平方米转成目标面积 targetAreaM2（足迹种子的面积输入，卷五 M5-37），其余不写；areaM2 是足迹派生量，任何行都不存', () => {
   for (const o of OLD.locations) {
     const a = OLD.biomes[o.id]?.areaKm2;
     const row = ROWS[newId(o.id)];
-    if (a === undefined) assert.equal(Object.hasOwn(row, 'areaM2'), false, o.id);
-    else assert.equal(row.areaM2, Number((a * 1e6).toFixed(4)), o.id);
+    assert.equal(Object.hasOwn(row, 'areaM2'), false, o.id);
+    if (a === undefined) assert.equal(Object.hasOwn(row, 'targetAreaM2'), false, o.id);
+    else assert.equal(row.targetAreaM2, Number((a * 1e6).toFixed(4)), o.id);
   }
 });
 
@@ -122,14 +135,16 @@ test('边：旧路线逐条搬入；from 小于 to；两端加通路类型唯一
     assert.equal(seen.has(key(e)), false, `dup ${key(e)}`);
     seen.add(key(e));
   }
+  for (const e of PLACE.edges) assert.equal(isFacility(e.from) || isFacility(e.to), false, `${e.from}-${e.to} has a building end`); // 建筑端的边全删（卷五 §4.1 规则 4）
   for (const r of OLD.routes) {
     const a = newId(r.from); const b = newId(r.to);
+    if (isFacility(a) || isFacility(b)) continue;
     const water = r.modes.length === 1 && r.modes[0] === 'boat';
     const e = PLACE.edges.find((x) => x.from === (a < b ? a : b) && x.to === (a < b ? b : a) && x.waterway === water);
     assert.ok(e, r.id);
     assert.deepEqual(Object.keys(e).sort(), ['from', 'to', 'waterway'], r.id); // 路长、地形构成、路况、通畅度都不存（A5-1.1）
   }
-  assert.equal(PLACE.edges.filter((e) => e.waterway).length, OLD.routes.filter((r) => r.modes.length === 1 && r.modes[0] === 'boat').length);
+  assert.equal(PLACE.edges.filter((e) => e.waterway).length, OLD.routes.filter((r) => r.modes.length === 1 && r.modes[0] === 'boat' && !isFacility(newId(r.from)) && !isFacility(newId(r.to))).length);
 });
 
 test('水体类：waterAccess 只给旧水路边的两端，条目都有行在用；其余行不写', () => {
@@ -153,7 +168,9 @@ test('必过项③：起始地区（旧数据里 places 含 loc_hw 的郡）挂 
   const row = ROWS[newId(start[0].id)];
   assert.ok(row.classes.includes('comp_weather_cell'));
   for (const [k, v] of Object.entries(OLD.cell.cell)) assert.deepEqual(row[k], v, k);
-  assert.equal(row.elevationM, OLD.cell.cellElevationM);
+  // 海拔：elevationM 是足迹派生量（卷五 §4.1.3 规则 13），行上不存；控制海拔是 anchorElevationM（附表 3.4 手写设定数，来源写在行的 basis）。
+  assert.equal(Object.hasOwn(row, 'elevationM'), false);
+  assert.equal(typeof row.anchorElevationM, 'number');
   assert.equal(row.climateProto, 'cpr_taiyuan');
   const cell = Object.fromEntries(Object.keys(OLD.cell.cell).map((k) => [k, row[k]]));
   const w = weatherAt({ vocab: W.vocab, rules: W.rules, units: W.env.units }, { worldSeed: 'seed_one', streamCode: 'weather', cellId: newId(start[0].id), latitudeDeg: OLD.cell.latitudeDeg, cell }, 10);
@@ -175,10 +192,16 @@ test('必过项④：其余郡的天气单元没有气候数据：不引原型�
   }
 });
 
-test('未建列登记：旧数据没有值的 always 列都登记在 _unbuilt-derived.json（place），且各行缺值而不是被填缺省', () => {
-  const cols = readJson('world/ontology/dimensions/_unbuilt-derived.json').columns.filter((c) => c.table === 'place').map((c) => c.dimension);
-  for (const d of ['areaM2', 'elevationM', 'skyExposure', 'ledgerHolder', 'waterAccess', 'forestCover', 'hiddenness', 'accessClass']) assert.ok(cols.includes(d), d);
-  for (const o of OLD.locations) for (const d of ['elevationM', 'skyExposure', 'ledgerHolder', 'forestCover', 'hiddenness']) assert.equal(Object.hasOwn(ROWS[newId(o.id)], d), false, `${o.id}.${d}`);
+test('未建列登记：旧数据没有值的 always 列都登记在 _unbuilt-derived.json（place），且各行缺值而不是被填缺省；areaM2、elevationM 已是表头里的派生量（足迹给值，卷五 §4.1.3 规则 13）、不再是存储列', () => {
+  const unbuilt = readJson('world/ontology/dimensions/_unbuilt-derived.json');
+  const cols = unbuilt.columns.filter((c) => c.table === 'place').map((c) => c.dimension);
+  for (const d of ['skyExposure', 'ledgerHolder', 'waterAccess', 'forestCover', 'hiddenness', 'accessClass']) assert.ok(cols.includes(d), d);
+  for (const d of ['areaM2', 'elevationM']) {
+    assert.equal(typeof PLACE.dimensions[d].derived, 'string', `${d} is derived in the header`);
+    assert.equal(cols.includes(d), false, `${d} is no longer a stored column`);
+    assert.ok(unbuilt.entries.some((e) => e.table === 'place' && e.dimension === d), `${d} is a registered derived (no RX primitive for footprints)`);
+  }
+  for (const o of OLD.locations) for (const d of ['areaM2', 'elevationM', 'skyExposure', 'ledgerHolder', 'hiddenness']) assert.equal(Object.hasOwn(ROWS[newId(o.id)], d), false, `${o.id}.${d}`);
 });
 
 test('转换脚本可重跑：同一份旧数据重转的 rows、edges、labels 与入库文件一致；旧 id 折新 id 的规则是整类的（loc_、bld_ 原样，其余加 loc_ 前缀）', () => {

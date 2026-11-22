@@ -18,15 +18,44 @@ assert.equal(loadWorld(ROOT).ok, true); // 装配定点常数
 
 const DIMS = 'world/ontology/dimensions';
 const realText = (f) => readFileSync(join(ROOT, DIMS, f), 'utf8');
-const HEADER = JSON.parse(realText('place.json'));
+const HEADER = (({ rows, edges, gridSpaces, generated, ...head }) => ({ ...head, generated: {} }))(JSON.parse(realText('place.json'))); // 只取表头：真实世界的行、边、格空间表、generated 节不进夹具（generated 留空对象）
 const VOCAB = JSON.parse(realText('_vocab.json'));
+const TERRAINS = Object.keys(VOCAB.families.terrain.entries);
+
+// 世界必有格空间表（卷五 §4.1.1 :425、:431）：夹具世界的唯一根挂 comp_layer_root 并开一个格空间；没写 coord 的行按行序给各不相同的种子（同父不得同区格）；
+// 兜底条目齐全的 cellclass（卷五 §4.3 规则 9）与细格模板由本文件自造，其余维度照旧。
+const GEN_TEMPLATE = { gtpl_test: { surfaceMaterial: 'mat_soil', airMaterial: 'mat_air', soilLayers: 1, soilMaterial: 'mat_soil', rockMaterial: 'mat_granite', blocks: [] } };
+const FULL_CELLCLASS = {
+  cellclass_land: { terrains: TERRAINS, waterAny: [], slopeRange: [0, 1], onRoad: null, inSettlement: null, priority: 1, genTemplate: 'gtpl_test' },
+  cellclass_water: { terrains: TERRAINS, waterAny: ['water_test_fresh'], slopeRange: [0, 1], onRoad: null, inSettlement: null, priority: 1, genTemplate: 'gtpl_test' },
+};
+const SEEDS_PER_LINE = 60;
+// 没写 coord 的行：挂在根下的按行序取各不相同的种子；挂在别的行下的取父行的种子（落在父足迹里，卷五 §4.1 规则 3；只有一个子行时不与兄弟同区格）。
+function gridded(rows) {
+  const ids = Object.keys(rows);
+  const rootId = ids.find((id) => rows[id].parent === null);
+  const seedOf = (id, depth = 0) => {
+    const r = rows[id];
+    if (Object.hasOwn(r, 'coord')) return r.coord;
+    const p = r.parent;
+    if (p !== null && p !== rootId && Object.hasOwn(rows, p) && depth < ids.length) return seedOf(p, depth + 1);
+    const i = ids.indexOf(id);
+    return { x: 50 + 100 * (i % SEEDS_PER_LINE), y: 50 + 100 * Math.floor(i / SEEDS_PER_LINE) };
+  };
+  const seeded = Object.fromEntries(ids.map((id) => {
+    const r = Object.hasOwn(rows[id], 'coord') ? rows[id] : { ...rows[id], coord: seedOf(id) };
+    return [id, id === rootId ? { ...r, classes: [...(r.classes || []), 'comp_layer_root'] } : r];
+  }));
+  return { rows: seeded, spaces: rootId === undefined ? [] : [{ w: 0, box: { x0: 0, y0: 0, cellsX: SEEDS_PER_LINE, cellsY: Math.ceil(ids.length / SEEDS_PER_LINE) + 1 }, root: rootId }] };
+}
 
 // 加载一个只改了地点行、边与（可选）词表条目的世界；临时目录用完即删。
-function load({ rows = {}, edges = [], juris = null } = {}) {
+function load({ rows: given = {}, edges = [], juris = null } = {}) {
   const tmp = testTempRoot('place-');
+  const { rows, spaces } = gridded(given);
   try {
     for (const f of readdirSync(join(ROOT, DIMS)).filter((n) => n.endsWith('.json'))) writeUnderTempRoot(tmp, f, realText(f));
-    writeUnderTempRoot(tmp, 'place.json', JSON.stringify({ ...HEADER, rows, edges }));
+    writeUnderTempRoot(tmp, 'place.json', JSON.stringify({ ...HEADER, rows, edges, gridSpaces: spaces }));
     // 物品行（6-22）的 origin 指向真实地点；本文件的临时世界只有自造的地点，物品表只留表头。
     writeUnderTempRoot(tmp, 'item.json', JSON.stringify({ ...JSON.parse(realText('item.json')), rows: {} }));
     writeUnderTempRoot(tmp, 'org.json', JSON.stringify({ ...JSON.parse(realText('org.json')), rows: {} })); // 真实组织行的驻地不在夹具地点表里
@@ -38,6 +67,8 @@ function load({ rows = {}, edges = [], juris = null } = {}) {
     const v = structuredClone(VOCAB);
     v.families.access.entries = { ...v.families.access.entries, access_test_open: { rank: 0, needsGrant: false } }; // 真实设施类型表的缺省档要在族里
     v.families.water.entries = { ...v.families.water.entries, water_test_fresh: { navigable: false } };
+    v.families.cellclass.entries = FULL_CELLCLASS;
+    v.families.gentemplate.entries = GEN_TEMPLATE;
     // gfield 条目的 levels 引用真实 juris 条目（卷十 §2.1 :114）；自造层级表的世界没有生成场。
     if (juris) { v.families.juris.entries = juris; v.families.gfield.entries = {}; }
     writeUnderTempRoot(tmp, '_vocab.json', JSON.stringify(v));
@@ -47,16 +78,16 @@ function load({ rows = {}, edges = [], juris = null } = {}) {
 
 const codes = (r) => r.errors.map((e) => e.code);
 const has = (r, code) => codes(r).includes(code);
-// 一行地点：父、面积、海拔；其余 always 维度照表头给齐。
-const row = (parent, areaM2, extra = {}) => ({
-  parent, coord: { x: 0, y: 0 }, areaM2, elevationM: 0, anchorElevationM: 0, skyExposure: 1, ledgerHolder: false, basis: 'test',
+// 一行地点：父；其余 always 维度照表头给齐。第二参数是旧存储列 areaM2 的占位（areaM2、elevationM 已是足迹派生量，不写，卷五 §4.1.3 规则 13），不读；coord 由 gridded() 补。
+const row = (parent, _legacyAreaM2, extra = {}) => ({
+  parent, anchorElevationM: 0, skyExposure: 1, ledgerHolder: false, basis: 'test',
   terrain: 'terrain_plain', waterAccess: ['water_test_fresh'], forestCover: 0, hiddenness: 0, accessClass: 'access_test_open', ...extra,
 });
 const edge = (from, to, waterway = false, extra = {}) => ({ from, to, waterway, ...extra });
 const engineOf = (r) => ({ tables: r.tables, vocab: r.vocab, rules: r.rules });
 
 // 一棵示例树：根 loc_w（1000 m2）下 loc_a、loc_b、loc_c、loc_d、loc_e 各 100 m2。
-const TREE = { loc_w: row(null, 1000), loc_a: row('loc_w', 100), loc_b: row('loc_w', 100, { elevationM: 5 }), loc_c: row('loc_w', 100), loc_d: row('loc_w', 100), loc_e: row('loc_w', 100) };
+const TREE = { loc_w: row(null, 1000), loc_a: row('loc_w', 100), loc_b: row('loc_w', 100), loc_c: row('loc_w', 100), loc_d: row('loc_w', 100), loc_e: row('loc_w', 100) };
 
 // ---------- 对照表第 18 行：单根树、有限步到根、边两端存在且 from 小于 to、两端加通路类型唯一、面积和 ----------
 
@@ -98,8 +129,8 @@ test('parent 特殊值：不存在的地点 E-DIM-REF-MISSING；空串 E-DIM-ID-
 // 旧规则 3（同父面积和不超过父、子 coord 落在父等效半径内）已由卷五 §4.1 规则 3 的足迹包含取代（格子迁移 G3，M5-35）：
 // 面积和与等效圆两组用例随旧校验一并删除，足迹包含的用例在 place-footprint.test.mjs。
 
-test('areaM2 特殊值：0 与负数出取值域 [1, null]，null 不可空', () => {
-  for (const a of [0, -5, null]) assert.ok(has(load({ rows: { loc_w: row(null, a) } }), 'E-DIM-DOMAIN-RANGE'), String(a));
+test('areaM2、elevationM 是足迹派生量（卷五 §2.1 :105、:107；§4.1.3 规则 13）：手写任何值（0、负数、null、合法值）即 E-DIM-DERIVED-WRITTEN', () => {
+  for (const k of ['areaM2', 'elevationM']) for (const v of [0, -5, null, 1000]) assert.ok(has(load({ rows: { loc_w: row(null, 1, { [k]: v }) } }), 'E-DIM-DERIVED-WRITTEN'), `${k}=${v}`);
 });
 
 test('规则 4 正例：from 小于 to；同两端陆路、水路两条边可并存', () => {
@@ -140,7 +171,7 @@ test('checkPlaceTable 直调：没载入 place 表无事可核；边节不是列
   assert.ok(out.errors.some((e) => e.startsWith('E-DIM-STRUCT-FIELD')), out.errors.join('\n'));
 });
 
-test('boundary 每项加载期逐项核（勘误 1121k22）：没有格空间表的世界里，空对象、缺 y、缺矩形字段、一项混写、一行混写、x0 ≥ x1 都报 E-DIM-STRUCT-FIELD；逐格、矩形写法的好行不因 boundary 报这一码', () => {
+test('boundary 每项加载期逐项核（勘误 1121k22）：空对象、缺 y、缺矩形字段、一项混写、一行混写、x0 ≥ x1 都报 E-DIM-STRUCT-FIELD；逐格、矩形写法的好行不因 boundary 报这一码', () => {
   const structErrors = (boundary) => load({ rows: { ...TREE, loc_a: row('loc_w', 100, { boundary }) } }).errors.filter((e) => e.code === 'E-DIM-STRUCT-FIELD').length;
   const bads = [
     [{}],
@@ -170,7 +201,8 @@ test('regionLevel：挂 comp_region 的行必填，取 juris 族条目；juris �
 
 test('aperture：挂 comp_enclosure 的行必填，取值域 [0,1]', () => {
   const enc = (extra) => ({ ...TREE, bld_house: row('loc_a', 50, { classes: ['comp_enclosure'], skyExposure: 0, wallThicknessM: 0.3, ...extra }) });
-  assert.equal(load({ rows: enc({ aperture: 0 }) }).ok, true);
+  const good = load({ rows: enc({ aperture: 0 }) });
+  assert.equal(good.ok, true, good.text);
   assert.ok(has(load({ rows: enc({}) }), 'E-DIM-REQUIRED-MISSING'));
   assert.ok(has(load({ rows: enc({ aperture: 1.5 }) }), 'E-DIM-DOMAIN-RANGE'));
 });
@@ -279,7 +311,7 @@ test('routeView、placeView 对非地点 id 拒收（E-DIM-REF-MISSING），不�
 
 // ---------- 对照表第 21 行：三关系与 placeView().tree ----------
 
-const REGION = { ...TREE, loc_r: row('loc_w', 300, { classes: ['comp_region'], regionLevel: 'juris_county' }), loc_r1: row('loc_r', 100), loc_r2: row('loc_r1', 50) };
+const REGION = { ...TREE, loc_r: row('loc_w', 300, { classes: ['comp_region'], regionLevel: 'juris_county', targetAreaM2: 30000 }), loc_r1: row('loc_r', 100), loc_r2: row('loc_r1', 50) };
 const regionEngine = () => { const r = load({ rows: REGION, juris: { juris_county: { rank: 1 } } }); assert.equal(r.ok, true, r.text); return engineOf(r); };
 
 test('新增一个区域行：tree、rel_contains、rel_within 对新行即可用', () => {
@@ -299,7 +331,9 @@ test('placeView().dims：存储维度读基值；byClass 不适用；登记未�
   const d = placeView(e, S, 'loc_r').dims;
   assert.equal(d.parent.value, 'loc_w');
   assert.equal(d.regionLevel.value, 'juris_county');
-  assert.equal(d.areaM2.value, 300);
+  // areaM2 由足迹派生（卷五 §4.1.3 规则 13）：区域足迹 = 区格数 × regionCellM²，不读存储。loc_r 目标 30000 m² = 3 区格（regionCellM 100 m），所以 3 × 100² = 30000。
+  assert.equal(d.areaM2.known, true);
+  assert.equal(d.areaM2.value, 30000);
   assert.equal(placeView(e, S, 'loc_a').dims.regionLevel.applicable, false);
   assert.equal(placeView(e, S, 'loc_a').dims.aperture.applicable, false);
   for (const k of ['enclosed', 'surfaceRefElevationM', 'depthM', 'underground']) assert.equal(d[k].known, false, k);

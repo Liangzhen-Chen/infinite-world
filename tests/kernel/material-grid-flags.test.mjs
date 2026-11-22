@@ -27,7 +27,7 @@ function loadWithMaterial(edit) {
 test('真实世界：四个分态布尔维度按 solid／liquid／gas 三栏登记、always 必填，加载零 error', () => {
   const r = loadWorld(ROOT);
   assert.equal(r.ok, true, r.text);
-  assert.deepEqual(r.errors, []);
+  assert.deepEqual(r.errors.filter((e) => e.severity !== 'warning'), []); // 零 error；真实世界上格后另有 W-DIM-GAP 警告（建筑行 breaks 缺，已知缺口），不属本条
   const dims = r.tables.get('material').doc.dimensions;
   for (const dim of FLAGS) {
     const def = dims[dim];

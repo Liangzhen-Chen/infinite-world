@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { baseFixture, loadBodyWorld, engineOf, ROOT } from './body-world.mjs';
 import { itemRow, share } from './item-world.mjs';
+import { miniPlaceDoc } from './mini-place-world.mjs';
 import { installVocab } from '../../server-plugin/kernel/vocab.mjs';
 
 export { engineOf, ROOT };
@@ -16,7 +17,6 @@ export const POS = Object.freeze({ w: 0, x: 20050, y: 5050, z: 0, coarse: false 
 // 子行 SUB 的种子 (5050, 5050) m 落在区格 (50, 50)，zoneAt 得 SUB（最深足迹）。
 export const SUB = 'loc_test_sub';
 export const POS_SUB = Object.freeze({ w: 0, x: 5050, y: 5050, z: 0, coarse: false });
-const WORLD_ROOT = 'loc_world';
 export const FLESH = 'mat_test_flesh';
 export const BONE = 'mat_test_bone';
 export const ATTR = ['attr_agility', 'attr_charisma', 'attr_constitution', 'attr_intellect', 'attr_luck', 'attr_spirit', 'attr_strength', 'attr_test'];
@@ -46,16 +46,12 @@ export function personFixture() {
     [BONE]: { ...plain, decomposePoint: 300, moisture: 0.12, energyDensity: 15 },
   };
   f.items = { item_test_corpse: itemRow(70, [share('mgroup_body', FLESH, 1)], { classes: ['comp_corpse'] }) };
-  // 地点表：尸体落在 zoneAt(pos) 的地点，所以前提要有格空间。真实世界还没有格空间表（G5 余项，整张真实地点表划分是全规模的 4,020 万区格，夹具不用）：
-  // 这里让 PLACE 自成一个 300 × 100 区格的小格空间（挂层根，足迹是整个外包框），它原来的子行挪到世界根下（种子在小框之外，不属这个格空间），
-  // 再加子行 SUB（取 loc_hw 行的列，种子 (5050, 5050) m、目标 40000 m² = 4 区格，在 PLACE 足迹里）。边表清空不影响（本夹具不用路网）。
-  f.editPlaceDoc = (doc) => {
-    for (const r of Object.values(doc.rows)) if (r.parent === PLACE) r.parent = WORLD_ROOT;
-    doc.rows[PLACE].classes = [...doc.rows[PLACE].classes, 'comp_layer_root'];
-    doc.gridSpaces = [{ w: 0, box: { x0: 0, y0: 0, cellsX: 300, cellsY: 100 }, root: PLACE }];
-    doc.rows[SUB] = { ...clone(doc.rows.loc_hw), parent: PLACE, coord: { x: 5050, y: 5050 }, targetAreaM2: 40000, ledgerHolder: true };
-    doc.rows[PLACE].ledgerHolder = true;
-  };
+  // 地点表：尸体落在 zoneAt(pos) 的地点，所以前提要有格空间。真实世界的格空间是全规模外包框，足迹手算不了，夹具不用真实格（mini-place-world.mjs）：
+  // 只留世界根、PLACE（自成一个 300 × 100 区格的小格空间的层根，足迹是整个外包框）、子行 SUB（取 loc_hw 行的列，种子 (5050, 5050) m、目标 40000 m² = 4 区格，在 PLACE 足迹里）。
+  f.editPlaceDoc = (doc) => miniPlaceDoc(doc, { place: PLACE, box: { x0: 0, y0: 0, cellsX: 300, cellsY: 100 }, extra: (effective) => ({ [SUB]: { ...effective('loc_hw'), parent: PLACE, coord: { x: 5050, y: 5050 }, targetAreaM2: 40000, ledgerHolder: true } }) });
+  // 真实物品行（origin）与组织行（seat）引用真实地点行，夹具的小地点表没有它们：物品只留夹具自己的行，组织行去掉（人物夹具不用）。
+  f.editItemDoc = (doc) => { for (const id of Object.keys(doc.rows)) if (!Object.hasOwn(f.items, id)) delete doc.rows[id]; };
+  f.editOrgDoc = (doc) => { doc.rows = {}; };
   // 尸体模板行要有类别（C-1：categoryKind 派生不到即加载失败）：真实 category 族与规则表没有尸体类，测试加一个兜底类别与条件。
   f.editRules = { items: (rows) => { rows.find((r) => r.key === 'categoryRules').value.push({ when: 'massKg > 0', value: 'category_test_other' }); } };
   // 身体图：躯干（0.46）里的肉组织换成骨料，部位大小与组织比例手算友好（肉 0.6、骨 0.4）。

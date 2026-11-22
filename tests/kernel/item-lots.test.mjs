@@ -8,6 +8,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { baseFixture, loadItemWorld, itemRow, share, ROOT } from './item-world.mjs';
+import { miniClimatePlaceDoc } from './mini-place-world.mjs';
 import { installVocab } from '../../server-plugin/kernel/vocab.mjs';
 import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
 import { runTransaction } from '../../server-plugin/kernel/transaction.mjs';
@@ -60,7 +61,9 @@ function build(edit) {
   f.materials[GRAIN] = { flammability: 0, salvageFraction: 0.5, workDifficulty: 10, valueMult: 1, refMaterial: null, wearResistance: 20, basis: '测试', classes: ['comp_rottable'], substance: 'subst_plant', density: { solid: 1 }, decomposePoint: 200, rotRate: 0.04, moisture: 0.12, energyDensity: 15 };
   f.items = itemsFixture();
   // 持有人是真实地点行（6-24：垄渠郡挂太原气候单元，河湾村在其下）；测试前提只是让它们能作账本持有人（ledgerHolder 为真）。
-  f.editPlaceDoc = (doc) => { doc.rows[PA].ledgerHolder = true; doc.rows[PB].ledgerHolder = true; };
+  // 小格世界（mini-place-world.mjs）：真实世界的足迹与高度场是全规模，本机要数分钟；两行都是账本持有人，纬度、海拔与旧读法一致，温度曲线取常数不影响期望。
+  f.editPlaceDoc = (doc) => miniClimatePlaceDoc(doc, { place: PA, child: PB });
+  f.editOrgDoc = (doc) => { doc.rows = {}; };
   f.rulesExtra = {
     rot: { tempCurve: [[-100, 1], [100, 1]], stages: [{ minSpoilage: 0 }, { minSpoilage: 0.3 }, { minSpoilage: 0.7 }, { minSpoilage: 1 }], mergeMaxGap: 0.1 },
     wear: { envCurve: [[0, 1], [1, 1]] },

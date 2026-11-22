@@ -213,7 +213,7 @@ export function generateFill(world, opts) {
         return { footprints: fp.footprints, adjacency: fp.adjacency, probe: fp.probe };
       },
       // 站点的纬度（卷二十 §2.7 latitudeDeg，place 派生的唯一读法 placeLatitude）：落位补朝向时"面向赤道"要它（卷十九 §4.5 规则 11）。
-      latitudeDegOf: (coord) => placeLatitude(world, { dims: { coord: { known: true, value: coord } } }),
+      latitudeDegOf: (centroid) => placeLatitude(world, { dims: { centroid: centroid === undefined ? { known: false } : { known: true, value: centroid } } }),
     });
     // 提案按表分：本表的是补缺（writeback），别的表的是建行（createRows，阶段须在 writesKinds 里声明那张表，R10-9.9）。
     const own = result.proposals.filter((p) => p.table === table);

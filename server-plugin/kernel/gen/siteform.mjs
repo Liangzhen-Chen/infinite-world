@@ -183,7 +183,7 @@ export function genSiteForm(ctx) {
 // N = max(1, ceil(占地 ÷ (layoutCoverage × regionCellM²)))，写 targetAreaM2 = N × regionCellM²（定点整除、向上取整）；N 只由占地决定，不按子行加量（卷文没有这一句，见 docs/问题.md"G5b 机制遗留"）。
 // 站点的父行是存量单元时，起始 N 超过该存量单元足迹格数即 E-GEN-ROW-INVALID（R10-7.5 末）。
 // 落位与重排（R10-7.11、R10-3.12、R10-7.5 末）：站点下直挂的手写建筑行（有形制、平面格数、层数者）缺 anchor、facing 时，按 layoutOf 排出来写成 generated 偏离行（来源"生成补缺"）；
-// 作者写了的原样不动，anchor 已写的当障碍；facing 缺时取 defaultFacing（意图、文化偏好两路现无来源，传空，即面向赤道，纬度取站点 coord）。试排用站点的足迹（经 ctx.footprints 读，
+// 作者写了的原样不动，anchor 已写的当障碍；facing 缺时取 defaultFacing（意图、文化偏好两路现无来源，传空，即面向赤道，纬度取站点起始 N 足迹的形心，卷二十 §2.7 :334）。试排用站点的足迹（经 ctx.footprints 读，
 // 站点 targetAreaM2 试写成 N × A）：排不下就 N 加一重排，至多加到站点所在父足迹的区格数，仍排不下即 E-GEN-ROW-INVALID；作者写了 targetAreaM2 或 boundary 的站点 N 取作者足迹的区格数、不加，
 // 排不下同样即 E-GEN-ROW-INVALID。所有站点同一轮试排、排不下的一起加一，重排到没有排不下的为止（N 只增，所以必止）。不分片（R10-7.1）：zones 恒空，整个站点足迹当一个分片。
 // 缺 form（缺口 form_type_unmatched）的建筑读不到蓝图外包：不排位、不当障碍、不写 anchor 与 facing。
@@ -285,9 +285,14 @@ function placeBuildings(ctx, jobs, specOf, startN, cellArea, proposals, deferred
   const seedKeyOf = () => ''; // 落位不抽取（R10-7.11 首句），来源标记 seedKey 为空（R10-9.2、R10-12.7，同 order.mjs 投影提案）
   // 每栋的朝向与蓝图外包（旋转后，相对锚点的细格偏移）：作者写了 facing 取作者的，否则 defaultFacing（卷十九 §4.5 规则 11）。
   const prepared = [];
+  // 纬度读站点足迹的形心（卷二十 §2.7 :334 第十一版起不读 coord）：取起始 N 下的足迹（最终 N 依赖朝向再定，取起始 N 是无环的定点）；这份结果也作下面试排第一轮的足迹。
+  const startExtra = {};
+  for (const [id, n] of nNow) startExtra[id] = { targetAreaM2: fixedToNumber(n * cellArea) };
+  const fp0 = typeof ctx.footprints === 'function' ? ctx.footprints({ heights: false, extra: startExtra }) : null;
   for (const j of jobs) {
     const coord = j.site.dims.coord;
     if (!(coord !== null && typeof coord === 'object' && typeof coord.x === 'number' && typeof coord.y === 'number')) { gap(j.siteId, REASON.layoutFootprint, ['coord']); continue; }
+    const centroid = fp0 && fp0.footprints && fp0.footprints[j.siteId] ? fp0.footprints[j.siteId].centroid : undefined;
     let latitude;
     const items = [];
     for (const b of j.kids) {
@@ -295,7 +300,7 @@ function placeBuildings(ctx, jobs, specOf, startN, cellArea, proposals, deferred
       if (b.dims.anchor !== undefined && !isXY(b.dims.anchor)) throw new KernelError('E-GEN-ROW-INVALID', {}, `building ${b.id}: authored anchor ${JSON.stringify(b.dims.anchor)} is not a position {x, y, ...}`);
       let facing = b.dims.facing;
       if (facing === undefined) {
-        if (latitude === undefined) latitude = typeof ctx.latitudeDegOf === 'function' ? ctx.latitudeDegOf(coord) : null;
+        if (latitude === undefined) latitude = typeof ctx.latitudeDegOf === 'function' ? ctx.latitudeDegOf(centroid) : null;
         if (latitude === null) { gap(b.id, REASON.latitudeUnknown, ['facing']); continue; }
         facing = defaultFacing(grid, { intentFacing: null, culturePref: null, latitudeDeg: latitude });
       }
@@ -309,10 +314,11 @@ function placeBuildings(ctx, jobs, specOf, startN, cellArea, proposals, deferred
   // 试排：所有要排的站点同一轮，排不下的一起 N 加一，直到都排得下（N 只增，父足迹格数是上界，所以必止）。
   let active = prepared.filter((j) => j.items.some((i) => i.anchor === null));
   const result = new Map();
-  for (;;) {
+  for (let round = 0; ; round += 1) {
     const extra = {};
     for (const [id, n] of nNow) extra[id] = { targetAreaM2: fixedToNumber(n * cellArea) };
-    const fp = typeof ctx.footprints === 'function' ? ctx.footprints({ heights: false, extra }) : null;
+    // 第一轮的输入就是起始 N（上面 fp0 同一份输入），直接复用，省一次全规模划分；之后 N 加一才重算。
+    const fp = round === 0 ? fp0 : typeof ctx.footprints === 'function' ? ctx.footprints({ heights: false, extra }) : null;
     const failed = [];
     const kept = [];
     for (const j of active) {

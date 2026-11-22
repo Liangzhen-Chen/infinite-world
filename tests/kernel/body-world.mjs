@@ -141,6 +141,9 @@ export function loadBodyWorld(f) {
       }
       if (name === 'material.json' && f.materials) for (const [id, row] of Object.entries(f.materials)) doc.rows[id] = gradedRow(doc.dimensions, clone(row));
       if (name === 'item.json' && f.items) Object.assign(doc.rows, clone(f.items));
+      // 物品行、组织行的 origin、seat 引用真实地点行：夹具自带小地点表（editPlaceDoc 只留几行）时，这两张表的真实行随之去掉（f.editItemDoc、f.editOrgDoc 自定）。
+      if (name === 'item.json' && typeof f.editItemDoc === 'function') f.editItemDoc(doc);
+      if (name === 'org.json' && typeof f.editOrgDoc === 'function') f.editOrgDoc(doc);
       if (name === 'place.json' && typeof f.editPlaceDoc === 'function') f.editPlaceDoc(doc);
       // 状态表（kind status，6-5）：真实表头只有 family 一个维度、没有行；夹具按 f.statuses 在抄件上加测试状态行（行内容归卷二十一，不进 world/）。
       if (name === 'status.json' && f.statuses) Object.assign(doc.rows, clone(f.statuses));

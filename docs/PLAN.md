@@ -187,6 +187,14 @@
 - [ ] 3c （已作废，见 3d）块 6 首次可玩顺延估算：约 3 个工作日。估法照迁移计划 §5.3 的卡·天口径：A 2.5、B 1.5、C 1、D 1、上格收尾 0.5。A 与 B、C、D 并行，关键路径是 A 加上格收尾，约 3 卡·天。近两天实测，一张内核卡写加两轮核约半天到一天（如 G12），所以实际可能 1.5–3 天；若卷八组织层牵出更多缺项，按实况再报。G13–G16 用测试夹具照常推进，不在这条关键路径上；块 6 可玩验收仍须用真实世界跑通（李白 G5b-M）。
 - [ ] 4 报李白（docs/问题.md "G5b 机制遗留"）：嵌套地点装不下子行；父行非存量单元的站点不判超格；真实世界建筑缺 form；作者分片行出现前须按组件类排除。
 
+## 真实世界上格收尾（G5b 余项；李白 11-21 G5b 原卡、11-23 G5b-K；分支 ds/geo-finalize；写 Sonnet 5.5 中档，碰加载器属内核、Opus 只核一轮；报告 docs/卡回报/geo-finalize.md）
+
+- [x] 1 加载器次序：地点表校验（place.mjs checkPlaceTable）读加载器的类型登记（view.env.namedStructs 的 struct:pos），不再等运行期装入；只改读法、不放宽校验。新增用例排在 place-footprint-columns 第一条（本进程首次加载即带 anchor 建筑行）。
+- [x] 2 转换产出入库：node tools/convert-geo-g5b.mjs 写盘，place.json 换新数据（行数见回报）。
+- [x] 3 四项未落项：世界必有格空间表（place.mjs，卷五 :425、:431）；纬度改读形心（place.mjs placeLatitude、siteform 与 worldgen 的 latitudeDegOf，卷二十 :334）；areaM2、elevationM 表头转派生（place.json、_unbuilt-derived.json entries）并跟改夹具；generated 节由转换脚本烘入。
+- [x] 4 读真实世界的测试：gen-worldgen 挪进 tests/cloud/；新增 tests/cloud/real-world-load.test.mjs 记加载耗时与内存。
+- [x] 5 全量测试与 pre_commit 门禁；回报。Opus 一轮核后改：零根世界拒收、siteform 复用 fp0、删 isPosValue 回落与旧 convert-geo.mjs、补 tests/cloud/item-rot-real-world。
+
 ## 以后需要时的备选（不排期）
 
 - 蓝图改按房间矩形存、细格读时派生，不逐格存（李白 11-22 事件 3ce50e60 第 4 条：现在不做，不挡 G9、G10；需要时改卷五/卷十九蓝图存储口径）。

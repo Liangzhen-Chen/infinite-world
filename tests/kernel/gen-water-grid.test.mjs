@@ -18,7 +18,7 @@ import { ROOT, testTempRoot, writeUnderTempRoot } from '../accept/temp-root.mjs'
 installDigestCap({ sha256Hex: (data, encoding) => createHash('sha256').update(data, encoding === 'base64' ? 'base64' : 'utf8').digest('hex') });
 const DIMS = 'world/ontology/dimensions';
 const text = (f) => readFileSync(join(ROOT, DIMS, f), 'utf8');
-const HEADER = JSON.parse(text('place.json'));
+const HEADER = (({ rows, edges, gridSpaces, generated, ...head }) => ({ ...head, generated: {} }))(JSON.parse(text('place.json'))); // 只取表头：真实世界的行、边、格空间表、generated 节不进夹具（generated 留空对象）
 const VOCAB = JSON.parse(text('_vocab.json'));
 const TERRAINS = Object.keys(VOCAB.families.terrain.entries);
 const GEN_TEMPLATE = { gtpl_test: { surfaceMaterial: 'mat_soil', airMaterial: 'mat_air', soilLayers: 1, soilMaterial: 'mat_soil', rockMaterial: 'mat_granite', blocks: [] } };
@@ -27,7 +27,7 @@ const CELLCLASS = {
   cellclass_water: { terrains: TERRAINS, waterAny: ['water_river'], slopeRange: [0, 1], onRoad: null, inSettlement: null, priority: 1, genTemplate: 'gtpl_test' },
 };
 const row = (parent, extra = {}) => ({
-  parent, areaM2: 1, elevationM: 0, skyExposure: 1, ledgerHolder: false, basis: 'test', waterAccess: [], forestCover: 0, hiddenness: 0, accessClass: 'access_test_open', ...extra,
+  parent, skyExposure: 1, ledgerHolder: false, basis: 'test', waterAccess: [], forestCover: 0, hiddenness: 0, accessClass: 'access_test_open', ...extra,
 });
 const region = (parent, x, y, extra = {}) => row(parent, { classes: ['comp_tract'], terrain: 'terrain_river', coord: { x, y }, ...extra });
 

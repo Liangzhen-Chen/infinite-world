@@ -37,7 +37,10 @@ import { buildPlan, expandClasses, waterAccessOf, footprintAdjacency, edgeAdjace
 import { createRouteEnv, edgeNumbers } from './route-edges.mjs';
 import { report } from './report.mjs';
 import { isPosValue } from './named-structs.mjs';
+import { matchStruct } from './named-struct-match.mjs';
 import { cellClassOf, surfaceStorey as surfaceStoreyOf, landCellKey, landOrderKey } from './grid.mjs';
+
+const POS_STRUCT = 'struct:pos'; // 命名 struct 登记里位置那一行的名（卷二 §1.5 :252；与 named-structs.mjs 同名）
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
@@ -995,7 +998,7 @@ export function placeView(engine, state, placeId) {
       if (!(codeOf(e) === E.E_MOD_RX && dependsOnUnbuilt(t, key))) throw e;
       dims[key] = UNKNOWN;
     }
-    // 表头里声明为派生的足迹量由足迹给值（centroid、zRange；areaM2、elevationM 待表头转成派生后同样走这里）；存储列照读存储值。
+    // 表头里声明为派生的足迹量由足迹给值（centroid、zRange、areaM2、elevationM 等）；存储列照读存储值。
     if (footprint !== null && t.doc.dimensions[key] && t.doc.dimensions[key].derived !== undefined) {
       const v = FOOTPRINT_DERIVED[key] ? FOOTPRINT_DERIVED[key](footprint) : null;
       if (v !== null) dims[key] = KNOWN(v);
@@ -1277,13 +1280,13 @@ const SITE = Object.freeze({ enclosed: 'enclosed', underground: 'underground', e
 const envMemo = new WeakMap();
 
 /**
- * 地点的纬度（卷二十 §2.7 :327 `latitudeDeg`，derived，来源 `coord`）：latitudeOriginDeg + coord.y ÷ metersPerDegreeNorth（rules.astro；定点）。
- * 缺 coord 或任一参数即 null（按未知，不借常数）。本卡不动这条读法：卷五 §7 M5-36"纬度改由形心 centroid 派生"与"世界必有格空间表"同属 G5b（未落：真实世界上格被种子与层级不嵌套卡住，见 docs/问题.md G5b 遗留）。
+ * 地点的纬度（卷二十 §2.7 :334 `latitudeDeg`，derived，来源形心 `centroid`，第十一版起不读 `coord`；卷五 §2.1 :117、§7 M5-36）：latitudeOriginDeg + centroid.y ÷ metersPerDegreeNorth（rules.astro；定点）。
+ * 形心未知（离场行、没有足迹）或缺任一参数即 null（按未知，不借常数、不回落 coord）。
  * @param {any} engine @param {any} view placeView 的结果
  * @returns {number | null}
  */
 export function placeLatitude(engine, view) {
-  const c = view.dims[DIM.coord];
+  const c = view.dims[DIM.centroid];
   const t = engine.rules && engine.rules[ASTRO.table];
   const origin = t ? t[ASTRO.origin] : undefined;
   const per = t ? t[ASTRO.perDegree] : undefined;
@@ -1378,7 +1381,7 @@ function inSubtree(rp, row, id) {
 
 // 路网边两端（卷五 §4.1 规则 4、7；对照表 33、39 行）：两端只许是区域或体积足迹的行（建筑、房间的出入由蓝图门格派生，不建边）；
 // 非门边两端若都划出了区域足迹须在同一格空间（跨格空间只经门）；门边 portal 的 a 在 from 足迹内、b 在 to 足迹内，a、b 须合 struct:pos，门边不是水路。
-function checkEdgeEnds(rp, grid, e, at, sink) {
+function checkEdgeEnds(rp, grid, e, at, sink, isPos) {
   const ENDS = [FOOTPRINT_KIND.region, FOOTPRINT_KIND.volume];
   for (const end of [e[EDGE.from], e[EDGE.to]]) {
     const kind = rp.kinds.get(end);
@@ -1392,7 +1395,7 @@ function checkEdgeEnds(rp, grid, e, at, sink) {
   }
   const door = e[EDGE.portal];
   if (e[EDGE.waterway] === true) sink({ ...at, code: 'E-DIM-DOMAIN-RANGE', got: 'portal with waterway true', want: 'a portal edge is a door, not a water route' });
-  if (!isObj(door) || !isPosValue(door.a) || !isPosValue(door.b)) { sink({ ...at, code: 'E-DIM-STRUCT-FIELD', got: door, want: 'portal {a: struct:pos, b: struct:pos}' }); return; }
+  if (!isObj(door) || !isPos(door.a) || !isPos(door.b)) { sink({ ...at, code: 'E-DIM-STRUCT-FIELD', got: door, want: 'portal {a: struct:pos, b: struct:pos}' }); return; }
   if (rp.plans.size === 0) return;
   for (const [side, pos, end] of [['a', door.a, e[EDGE.from]], ['b', door.b, e[EDGE.to]]]) {
     const zone = zoneOfPos(grid, rp.plans, pos);
@@ -1467,7 +1470,7 @@ function checkPaceTables(view, errors) {
  * 表里登记了格空间表（gridSpaces 节）时，按卷五 §4.1 规则 3、10 划分区域足迹并核包含：子足迹不在父足迹内 E-GRID-FOOTPRINT-OUTSIDE-PARENT、
  * 兄弟足迹相交 E-GRID-SIBLING-OVERLAP、同父两个种子同区格 E-GRID-SEED-SAME-CELL、boundary 不连通 E-DIM-DOMAIN-RANGE、缺 coord 的派生子行 E-DIM-REQUIRED-MISSING；
  * 层根须有格空间、格空间的根须是层根（E-DIM-REF-MISSING、E-DIM-DOMAIN-RANGE）；每个区格有 cellclass 条目成立（E-GRID-CELL-NO-TERRAIN）。
- * 足迹与区格校验是格空间表的校验：对表里的行生效，没有行就没有格可划；"世界必有格空间表、主世界根必挂层根并有格空间行"仍归 G5b（未落，见 docs/问题.md G5b 遗留）。离场子树不参加这些校验（规则 3 末句）。
+ * 世界必有格空间表（卷五 §4.1.1 :425、:431）：有地点行时唯一的根必须挂 comp_layer_root 并有格空间行（E-DIM-DOMAIN-RANGE、E-DIM-REF-MISSING）。离场子树不参加这些校验（规则 3 末句）。
  * 边节逐条照 edgeStruct 校验（两端须是地点 E-DIM-REF-MISSING，字段与取值域照登记），`from` 小于 `to`（E-DIM-DOMAIN-RANGE），
  * 两端加通路类型唯一（E-DIM-DUPLICATE-KEY）；juris 族条目带整数 rank（E-DIM-STRUCT-FIELD）。表里没有行时没有树可核。
  * 返回 "<登记码> <所在> <说明>" 文字行。
@@ -1484,6 +1487,10 @@ export function checkPlaceTable(view) {
   }
   const t = view && view.tables instanceof Map ? view.tables.get(PLACE) : undefined;
   if (!t) return { ok: errors.length === 0, errors };
+  // struct:pos 的字段表：加载器的类型登记（view.env.namedStructs）先于运行期装入（装入要等全部校验通过），所以加载期核值读它；
+  // 不放宽：登记里没有 struct:pos 行（或校验环境没带登记）则一律不合，不回落到运行期装入的全局登记。
+  const posFields = view.env && view.env.namedStructs instanceof Map ? view.env.namedStructs.get(POS_STRUCT) : undefined;
+  const isPos = (v) => posFields !== undefined && matchStruct(posFields, v);
   const rows = t.flat && t.flat.rows instanceof Map ? t.flat.rows : new Map();
   const ids = [...rows.keys()].sort(cmp);
   const parent = (id) => { const v = rows.get(id)[DIM.parent]; return typeof v === 'string' && rows.has(v) ? v : null; };
@@ -1525,7 +1532,7 @@ export function checkPlaceTable(view) {
     }
     const c = row[DIM.coord];
     if (isObj(c) && (typeof c[COORD.x] !== 'number' || typeof c[COORD.y] !== 'number')) errors.push(`E-DIM-STRUCT-FIELD place/${id}: coord needs numeric x and y`);
-    if (written(row, DIM.anchor) && !isPosValue(row[DIM.anchor])) errors.push(`E-DIM-STRUCT-FIELD place/${id}: anchor is not a struct:pos`);
+    if (written(row, DIM.anchor) && !isPos(row[DIM.anchor])) errors.push(`E-DIM-STRUCT-FIELD place/${id}: anchor is not a struct:pos`);
   }
   // 规则 3、10 与格空间表：划分结果里的违规，层根与格空间的对应，每个区格有地形类。
   {
@@ -1546,6 +1553,10 @@ export function checkPlaceTable(view) {
       if (rows.has(r) && !rp.layerRoots.includes(r)) errors.push(`E-DIM-DOMAIN-RANGE place/${r}: grid space ${s[GRID_SPACE.w]} root must be a layer-root row`);
     }
     for (const r of rp.layerRoots) if (!spaceRoots.has(r)) errors.push(`E-DIM-REF-MISSING place/${r}: layer-root row has no grid space (${SECTION.gridSpaces})`);
+    // 世界必有格空间表（卷五 §4.1.1 :425 主世界一个格空间；:431 主世界根也挂 comp_layer_root，格空间表主世界那一行的根地点填它）：
+    // 有地点行的世界，那唯一的根必须是层根（它有格空间行由上一句核）。没有格空间表的世界没有任何层根，在这里拒收，不再当"没有格可划"放过。
+    if (ids.length > 0 && roots.length === 0) errors.push('E-DIM-DOMAIN-RANGE place: the table has rows but no world root (no non-offstage row with a null parent); exactly one root carrying comp_layer_root is required');
+    if (roots.length === 1 && !rp.layerRoots.includes(roots[0])) errors.push(`E-DIM-DOMAIN-RANGE place/${roots[0]}: the world root must carry comp_layer_root and own a grid space row (${SECTION.gridSpaces}); a world without a grid space table is rejected`);
     if (rp.plans.size > 0) checkCellClasses(view, rp, errors);
     // 细格生成模板（卷十 :118）：族条目字段与材料引用常查；cellclass.genTemplate 的引用在世界划出了区格时核（与 cellclass 兜底同口径）。
     const mt = view.tables instanceof Map ? view.tables.get(MATERIAL) : undefined;
@@ -1580,7 +1591,7 @@ export function checkPlaceTable(view) {
     const key = JSON.stringify([a, b, e[EDGE.waterway]]);
     if (keys.has(key)) sink({ ...at, code: 'E-DIM-DUPLICATE-KEY', got: [a, b, e[EDGE.waterway]], want: 'one edge per (from, to, waterway)' });
     keys.add(key);
-    checkEdgeEnds(rp, grid, e, at, sink);
+    checkEdgeEnds(rp, grid, e, at, sink, isPos);
   });
   checkPaceTables(view, errors);
   return { ok: errors.length === 0, errors };

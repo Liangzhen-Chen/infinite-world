@@ -15,7 +15,7 @@ import { placeView, routeView, zoneAt, regionCell, landCell, planFootprints, pla
 installDigestCap({ sha256Hex: (data, encoding) => createHash('sha256').update(data, encoding === 'base64' ? 'base64' : 'utf8').digest('hex') });
 const DIMS = 'world/ontology/dimensions';
 const realText = (f) => readFileSync(join(ROOT, DIMS, f), 'utf8');
-const HEADER = JSON.parse(realText('place.json'));
+const HEADER = (({ rows, edges, gridSpaces, generated, ...head }) => ({ ...head, generated: {} }))(JSON.parse(realText('place.json'))); // 只取表头：真实世界的行、边、格空间表、generated 节不进夹具（generated 留空对象）
 const VOCAB = JSON.parse(realText('_vocab.json'));
 const TERRAINS = Object.keys(VOCAB.families.terrain.entries);
 
@@ -55,9 +55,9 @@ function load({ rows = {}, edges = [], spaces, cellclass = FULL_CELLCLASS, heade
 
 const codes = (r) => r.errors.map((e) => e.code);
 const has = (r, code) => codes(r).includes(code);
-// 一行区域足迹的地点：always 维度照表头给齐（areaM2 等存储列在 G5 转派生前仍必填）；足迹输入列用 extra 给。
+// 一行区域足迹的地点：always 维度照表头给齐（areaM2、elevationM 已是派生量，不写，卷五 §4.1.3 规则 13）；足迹输入列用 extra 给。
 const row = (parent, extra = {}) => ({
-  parent, areaM2: 1, elevationM: 0, skyExposure: 1, ledgerHolder: false, basis: 'test',
+  parent, skyExposure: 1, ledgerHolder: false, basis: 'test',
   waterAccess: [], forestCover: 0, hiddenness: 0, accessClass: 'access_test_open', ...extra,
 });
 // 区域足迹行带 terrain、coord、anchorElevationM（terrain_river 的 reliefM 为 0，起伏为 0，高度可手算）；建筑、房间行不带 terrain（卷五 §2.1 :105 禁填）。
@@ -157,7 +157,7 @@ test('包含与不重叠：种子在父足迹外、兄弟边界相交、同父�
 });
 
 test('由足迹派生的量不许手填（E-DIM-DERIVED-WRITTEN，卷五 S5-6）；gridSpaces 节写成 null、对象也拒收，不当作没登记放过', () => {
-  for (const [k, v] of [['centroid', { x: 1, y: 1 }], ['zRange', { zMin: 0, zMax: 1 }]]) {
+  for (const [k, v] of [['centroid', { x: 1, y: 1 }], ['zRange', { zMin: 0, zMax: 1 }], ['areaM2', 1], ['elevationM', 0]]) {
     const g = GRID4();
     g.rows.loc_a[k] = v;
     assert.ok(has(load(g), 'E-DIM-DERIVED-WRITTEN'), k);
@@ -197,8 +197,8 @@ test('规则表 facingDirections 不是八向即加载拒收（E-DIM-DOMAIN-RANG
 
 test('等效圆坐标包含已删：子行 coord 离父行很远但仍在父足迹里，不再报错（旧校验按坐标与面积，新校验按足迹）', () => {
   const g = GRID4();
-  g.rows.loc_a = region('loc_root', 50, 50, { areaM2: 1 });
-  g.rows.loc_b = region('loc_root', 350, 350, { areaM2: 1, anchorElevationM: 200 });
+  g.rows.loc_a = region('loc_root', 50, 50);
+  g.rows.loc_b = region('loc_root', 350, 350, { anchorElevationM: 200 });
   assert.equal(load(g).ok, true);
 });
 
@@ -244,8 +244,7 @@ test('E-GRID-CELL-NO-TERRAIN：划出区格后 cellclass 条目缺失、或缺�
   assert.ok(has(load({ ...GRID4(), cellclass: { cellclass_plain: { ...FULL_CELLCLASS.cellclass_land, terrains: ['terrain_plain'] } } }), 'E-GRID-CELL-NO-TERRAIN'));
   // 坡度缺口：条目 slopeRange 只覆盖 [0, 0.5]，坡度 1 无条目。
   assert.ok(has(load({ ...GRID4(), cellclass: { cellclass_flat: { ...FULL_CELLCLASS.cellclass_land, slopeRange: [0, 0.5] } } }), 'E-GRID-CELL-NO-TERRAIN'));
-  // 没登记格空间表的世界没有区格，不要求 cellclass（真实世界转格世界前）。
-  assert.equal(load({ rows: { loc_root: ROOT_ROW({ classes: [] }), loc_a: region('loc_root', 50, 50) }, cellclass: null }).ok, true);
+  // 没登记格空间表的世界不再放行（卷五 §4.1.1 :425、:431：世界必有格空间表），见下"世界必有格空间表"一条。
   // 坡度区间之间的空档：[0, 0.1] 与 [0.2, 1] 之间的坡度（如 0.15）无条目成立，端点探针命中但中点探针报出。
   const gapped = { cellclass_low: { ...FULL_CELLCLASS.cellclass_land, slopeRange: [0, 0.1] }, cellclass_high: { ...FULL_CELLCLASS.cellclass_land, slopeRange: [0.2, 1] }, cellclass_water: FULL_CELLCLASS.cellclass_water };
   assert.ok(has(load({ ...GRID4(), cellclass: gapped }), 'E-GRID-CELL-NO-TERRAIN'));
@@ -320,11 +319,30 @@ test('zoneAt 抽样：4×4 外包框里每个区格中心恰返回一行，且�
   assert.deepEqual(seen, { loc_a: 8, loc_b: 8 });
 });
 
-test('没登记格空间表的世界：zoneAt 一律为 null（未知），placeView 没有足迹', () => {
-  const e = world({ rows: { loc_root: ROOT_ROW({ classes: [] }), loc_a: region('loc_root', 50, 50) }, cellclass: null });
-  assert.equal(zoneAt(e, S, P(0, 0)), null);
-  assert.equal(placeView(e, S, 'loc_a').footprint, null);
-  assert.equal(placeView(e, S, 'loc_a').dims.centroid.known, false);
+// 世界必有格空间表（卷五 §4.1.1 :425 主世界一个格空间；:431 主世界根也挂 comp_layer_root，格空间表主世界那一行的根地点填它）。
+test('世界必有格空间表：有地点行时唯一的根须挂 comp_layer_root 并有格空间行；没有格空间表、根不是层根、层根没有格空间行各自拒收', () => {
+  const noTable = (g) => ({ ...g, spaces: undefined });
+  // 没登记格空间表（根也不是层根）：E-DIM-DOMAIN-RANGE。
+  const none = load({ rows: { loc_root: ROOT_ROW({ classes: [] }), loc_a: region('loc_root', 50, 50) }, cellclass: null });
+  assert.equal(none.ok, false);
+  assert.ok(has(none, 'E-DIM-DOMAIN-RANGE'), none.text);
+  // 根挂了层根但格空间表空列表（或没有这一节）：层根没有格空间，E-DIM-REF-MISSING。
+  for (const spaces of [undefined, []]) {
+    const g = noTable(GRID4());
+    const r = load({ ...g, spaces });
+    assert.equal(r.ok, false);
+    assert.ok(has(r, 'E-DIM-REF-MISSING'), r.text);
+  }
+  // 根不是层根，格空间表却在：同样拒收。
+  const notLayer = GRID4();
+  notLayer.rows.loc_root = ROOT_ROW({ classes: [] });
+  assert.ok(has(load(notLayer), 'E-DIM-DOMAIN-RANGE'));
+  // 零根：只有离场行（parent 为 null、挂可改挂组件类），不计根，没有世界根也没有格空间表：拒收，不能绕过规则 1。
+  const zero = load({ rows: { loc_away: region(null, 50, 50, { classes: ['comp_zone'] }), loc_away_kid: region('loc_away', 50, 50) }, relocatable: ['comp_zone'], cellclass: null });
+  assert.equal(zero.ok, false);
+  assert.ok(has(zero, 'E-DIM-DOMAIN-RANGE'), zero.text);
+  // 完整的格世界通过。
+  assert.equal(load(GRID4()).ok, true);
 });
 
 test('located 起点：个体所在地点 = zoneAt(pos)，沿包含树取它与全部祖先；zoneAt 为未知时为 null（按未知传播）', () => {
@@ -355,11 +373,20 @@ test('形心随足迹变：1×3 区格的一列，loc_a 目标 1 格，种子 y 
   assert.equal(placeView(column(250), S, 'loc_a').dims.centroid.value.y, 250);
 });
 
-test('纬度读法照旧（G3 不动，改读形心与"世界必有格空间表"一起归 G5）：latitudeOriginDeg 37.738 + coord.y ÷ 111120——coord.y 5000 → 0.0449 → 37.7829；缺 rules.astro 参数为未知', () => {
-  const e = world({ rows: { loc_root: ROOT_ROW({ classes: [] }), loc_a: region('loc_root', 1, 5000) }, cellclass: null });
+// 卷二十 §2.7 :334：纬度 = latitudeOriginDeg + 形心 y ÷ metersPerDegreeNorth（第十一版起读形心、不读 coord）。
+// 1×51 区格的一列，loc_a 目标 1 格、种子在第 50 行（y 区格序号 50）：形心 y = 50 × 100 + 50 = 5050 m；5050 ÷ 111120 = 0.045446 → 定点四位向零截断 0.0454；37.738 + 0.0454 = 37.7834。
+test('纬度读形心：latitudeOriginDeg 37.738 + 形心 y 5050 ÷ 111120 → 37.7834；种子 coord 不同而形心相同则纬度相同；缺 rules.astro 参数、形心未知（无足迹）为未知', () => {
+  const column = (seedY) => world({ rows: { loc_root: ROOT_ROW({ coord: { x: 50, y: 150 } }), loc_a: region('loc_root', 50, seedY, { targetAreaM2: 10000 }) }, spaces: [{ w: 0, box: { x0: 0, y0: 0, cellsX: 1, cellsY: 51 }, root: 'loc_root' }] });
+  const e = column(5050);
   const view = placeView(e, S, 'loc_a');
-  assert.equal(placeLatitude(e, view), 37.7829);
+  assert.equal(view.dims.centroid.value.y, 5050);
+  assert.equal(placeLatitude(e, view), 37.7834);
+  // 种子在同一区格内另一点（y 5099）：形心仍是区格中心 5050，纬度不变（coord 不再参与）。
+  const e2 = column(5099);
+  assert.equal(placeLatitude(e2, placeView(e2, S, 'loc_a')), 37.7834);
   assert.equal(placeLatitude({ ...e, rules: { ...e.rules, astro: { ...e.rules.astro, latitudeOriginDeg: undefined } } }, view), null);
+  // 形心未知：只有 dims.centroid 未知的视图（离场行、没有足迹）纬度为未知，不回落 coord。
+  assert.equal(placeLatitude(e, { dims: { centroid: { known: false }, coord: { known: true, value: { x: 0, y: 5000 } } } }), null);
 });
 
 // 2×1 区格：根（anchorElevationM 100）下 loc_a（目标 1 格，种子 (50,50)，anchorElevationM 0）、loc_b（种子 (150,50)，anchorElevationM 200）；
@@ -476,11 +503,5 @@ test('straightM、bearingView 入口：位置须合 struct:pos；同格空间给
   assert.throws(() => bearingView(e, S, P(0, 0), { w: 0, x: 0, y: 0 }), (er) => er.code === 'E-DIM-STRUCT-FIELD');
 });
 
-test('没有格空间表的世界：边没有足迹可栅格化，派生量与路径按未知（不抛错、不借别的量顶替）；边本身照常读出', () => {
-  const e = world({ rows: { loc_root: ROOT_ROW({ classes: [] }), loc_a: region('loc_root', 1, 1), loc_b: region('loc_root', 2, 2) }, edges: [{ from: 'loc_a', to: 'loc_b', waterway: false }], cellclass: null });
-  const r = routeView(e, S, 'loc_a', 'loc_b');
-  assert.equal(r.edge.length, 1);
-  for (const k of ['distanceM', 'terrainMix', 'ascentM', 'speedFactor', 'cells', 'bearingDeg']) assert.equal(r.edge[0][k].known, false, k);
-  assert.equal(r.edge[0].waterway.value, false);
-  assert.equal(r.path, null);
-});
+// （原"没有格空间表的世界：边没有足迹可栅格化……"一条已删：世界必有格空间表后，没有格空间表的世界加载即拒收，该前提不再可造；
+// 路网边端点没有足迹的唯一余下情形是离场行，已在"离场读法"一条里核。）

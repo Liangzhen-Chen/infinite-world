@@ -17,7 +17,7 @@ installDigestCap({ sha256Hex: (data, encoding) => createHash('sha256').update(da
 assert.ok(loadWorld(ROOT).ok); // 先装配命名 struct、定点常数与 sqrt 表
 const DIMS = 'world/ontology/dimensions';
 const realText = (f) => readFileSync(join(ROOT, DIMS, f), 'utf8');
-const HEADER = JSON.parse(realText('place.json'));
+const HEADER = (({ rows, edges, gridSpaces, generated, ...head }) => ({ ...head, generated: {} }))(JSON.parse(realText('place.json'))); // 只取表头：真实世界的行、边、格空间表、generated 节不进夹具（generated 留空对象）
 const VOCAB = JSON.parse(realText('_vocab.json'));
 const TERRAINS = Object.keys(VOCAB.families.terrain.entries);
 
@@ -50,7 +50,7 @@ function load({ rows, spaces } = {}) {
 }
 
 const row = (parent, extra = {}) => ({
-  parent, areaM2: 1, elevationM: 0, skyExposure: 1, ledgerHolder: false, basis: 'test',
+  parent, skyExposure: 1, ledgerHolder: false, basis: 'test',
   waterAccess: [], forestCover: 0, hiddenness: 0, accessClass: 'access_test_open', ...extra,
 });
 const ROOT_ROW = row(null, { classes: ['comp_layer_root'], terrain: 'terrain_river', coord: { x: 100, y: 150 }, anchorElevationM: 0 });

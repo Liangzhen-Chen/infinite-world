@@ -1,3 +1,5 @@
+// 长测，腾讯云块验收（G18）跑；本机常规测试不跑（主会话 11-24 已定的 tests/cloud/ 目录）。自 tests/kernel 挪来：真实世界上格后，每次 generateFill（整段补缺）约两分钟，
+// 本文件调用数次；输入读法（geo.authored 取转换输入、buildingIds 取清单）按上格前的真实世界写成，上格后首跑须核对，见 docs/问题.md "G5b 遗留"。
 // 试玩地区（河湾村）19 栋建筑的开局归属（李白 11-24 S6-1、H-1；卷六 §4.1 规则 5 :370、规则 11 :642、§4.18 规则 2 :1078、§4.22 规则 3；卷十 R10-3.9、R10-7.2 ④、勘误 1124k20）：
 // 开局建筑的所有权份额 = 一笔 src_genesis 资产分录记到 ownerRef 名下，账本是唯一存储，"所有"持有边是只读投影、不另写；资产持有者是家户，不是居民聚合体（H-1）。
 // 本文件走生产调用点：generateFill（世界创建的生成流水）里的阶段 gstage_holdings 交出入账提案 assets 与缺口 assetGaps，再由世界创建事务里的 applyOpeningAssets 经账本入账；不直接调生成函数。
@@ -23,7 +25,7 @@ import { GAP, VIA } from '../../server-plugin/kernel/gen/holdings-open.mjs';
 import { generateFill } from '../../server-plugin/kernel/gen/worldgen.mjs';
 import { applyOpeningAssets } from '../../server-plugin/kernel/gen/assetcalls.mjs';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
-import { ROOT } from './polity-world.mjs'; // 同时装入摘要常数（installDigestCap）
+import { ROOT } from '../kernel/polity-world.mjs'; // 同时装入摘要常数（installDigestCap）
 
 useReportSink(() => {});
 const json = (p) => JSON.parse(readFileSync(join(ROOT, p), 'utf8'));

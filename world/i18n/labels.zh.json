@@ -3110,6 +3110,36 @@
  "loc_site_white_canopy": {
   "label": "白冠高林"
  },
+ "loc_water_lake_huiyan": {
+  "label": "灰盐池"
+ },
+ "loc_water_lake_jingzhao": {
+  "label": "镜沼"
+ },
+ "loc_water_river_dahe": {
+  "label": "大河"
+ },
+ "loc_water_river_linxi": {
+  "label": "林溪"
+ },
+ "loc_water_river_lushui": {
+  "label": "炉水"
+ },
+ "loc_water_river_zhonghe": {
+  "label": "中河"
+ },
+ "loc_water_sea_north": {
+  "label": "北海"
+ },
+ "loc_water_sea_south": {
+  "label": "南湾"
+ },
+ "loc_water_sea_west": {
+  "label": "西海"
+ },
+ "loc_wild_beiling": {
+  "label": "北岭"
+ },
  "loc_wild_bs_kiln": {
   "label": "白石镇西郊废窑"
  },

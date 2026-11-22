@@ -1,5 +1,5 @@
 // 【第三轮（李白 11-23 裁定改用《世界地理建模附表》）：省界、海岸、河道、郡控制海拔与主地形取 world/geo/geo-model.json（来源附表），旧数据只供地点行与边；种子归位已撤。
-//  跑到整体加载校验时旧地点行的种子有 11 行落在附表郡足迹之外（旧数据与附表对不上，不自编坐标，清单见 docs/卡回报/g5b-convert.md），失败即退出、不写盘；入库 place.json 仍由旧的 tools/convert-geo.mjs 转出。】
+//  上格收尾（11-24，docs/卡回报/geo-finalize.md）：整体加载通过后写盘，入库 place.json 即本脚本的产出（rows、edges、gridSpaces、generated）；表头原样保留（areaM2、elevationM 已是派生量）；整体加载失败即退出、不写盘。】
 // 格子迁移 G5b：旧世界地点数据（world/geo/）加附表转成格子世界新版的 place 表（rows、edges、gridSpaces、generated 节）并补静态显示名（world/i18n/labels.zh.json）。
 // 用法：node tools/convert-geo-g5b.mjs          重转并改写 place.json 的 rows、edges、gridSpaces、generated 与 labels.zh.json（表头原样保留；重跑结果恒同）
 //       node tools/convert-geo-g5b.mjs --check  只比对，有差异退出码 1，不写盘

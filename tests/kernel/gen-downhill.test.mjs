@@ -3,7 +3,7 @@
 // ② 整条下游链（作者写的行上 downstream）沿下游控制海拔不上坡，不只设定点名的几处；
 // ③ 作者手写值互相冲突 → E-GEN-ORDER-CONFLICT 拒收，不改作者值；
 // ④ 同 id 的 generated 行与作者行写了同一维度 → 加载 E-GEN-OVERRIDE-AUTHORED；
-// ⑤ planFootprints 传 withCells 假时各行 regionCells 为 null。
+// ⑤ planFootprints 传 withCells 假时各行 regionCells 为 null（真实世界上的这一条已挪进 tests/cloud/real-world-footprints.test.mjs）。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
@@ -12,7 +12,6 @@ import { join, relative } from 'node:path';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
 import { useReportSink } from '../../server-plugin/kernel/report.mjs';
-import { planFootprints } from '../../server-plugin/kernel/place.mjs';
 import { buildGenRows } from '../../server-plugin/kernel/gen/rows.mjs';
 import { genFields } from '../../server-plugin/kernel/gen/fields.mjs';
 import { genOrder } from '../../server-plugin/kernel/gen/order.mjs';
@@ -90,27 +89,23 @@ test('加载期：同 id 的 generated 行与作者行写了同一维度即 E-GE
   const dir = 'world/ontology/dimensions';
   const text = (f) => readFileSync(join(ROOT, dir, f), 'utf8');
   const doc = JSON.parse(text('place.json'));
-  const [id] = Object.keys(doc.rows);
+  // 入库的真实世界已烘入 generated 节（作者行缺的必填列在那里），所以在它之上给一行再加偏离：选一行作者写了 terrain、没写控制海拔的（区域足迹行）。
+  const id = Object.keys(doc.rows).find((k) => doc.rows[k].terrain !== undefined && doc.rows[k][EL] === undefined);
+  assert.ok(id);
   const load = (genRow) => {
     const tmp = testTempRoot('gen-ovr-');
     try {
       for (const f of readdirSync(join(ROOT, dir)).filter((n) => n.endsWith('.json'))) writeUnderTempRoot(tmp, f, text(f));
-      writeUnderTempRoot(tmp, 'place.json', JSON.stringify({ ...doc, generated: { [id]: { ...genRow, generated: { by: 'gstage_fields', seedKey: 'k', at: 0 } } } }));
+      writeUnderTempRoot(tmp, 'place.json', JSON.stringify({ ...doc, generated: { ...doc.generated, [id]: { ...(doc.generated[id] ?? {}), ...genRow, generated: { by: 'gstage_fields', seedKey: 'k', at: 0 } } } }));
       return loadWorld(ROOT, { dimensionsDir: relative(ROOT, tmp) });
     } finally { rmSync(tmp, { recursive: true, force: true }); }
   };
-  const authoredDim = Object.keys(doc.rows[id]).find((k) => Object.hasOwn(doc.dimensions, k) && k !== 'parent');
-  assert.ok(authoredDim);
+  const authoredDim = 'terrain';
   assert.ok(load({ [authoredDim]: doc.rows[id][authoredDim] }).errors.some((e) => e.code === 'E-GEN-OVERRIDE-AUTHORED'));
   assert.equal(load({ [EL]: 1 }).errors.some((e) => e.code === 'E-GEN-OVERRIDE-AUTHORED'), false);
 });
 
-test('planFootprints withCells 假：各行 regionCells 为 null（不物化全树区格列表），面积与相邻照常', () => {
-  const eng = { ...world, template: { seed: 'seed_one' } };
-  const r = planFootprints(eng, { withCells: false });
-  for (const f of Object.values(r.footprints)) assert.equal(f.regionCells, null);
-  assert.equal(typeof r.adjacency, 'object');
-});
+// （原"planFootprints withCells 假"一条挪进 tests/cloud/real-world-footprints.test.mjs：真实世界上格后它是全规模足迹加高度场，本机要数分钟。）
 
 test('跨链作者值冲突：作者次序链 b → x → a 把 b（作者 400）与 a（作者 500）连在一起，上游比下游低——报 E-GEN-ORDER-CONFLICT，不静默返回、不改作者值', () => {
   const eff = base();

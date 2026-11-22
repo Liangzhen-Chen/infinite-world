@@ -1,7 +1,10 @@
 // 卷十 世界创建事务里 worldgen 相的生成补缺（R10-1.1 流程是数据、R10-1.7 手写优先生成补缺、R10-9.2/9.3 来源标记与同一加载器、A10-1.2 确定性、
 // R10-2.6 自然量、R10-2.12 水体）在真实世界数据上的整体行为：真实地点表 + world/geo 的作者输入（控制海拔、水体行、高低次序、建筑清单）。
 // 期望不抄仓库此刻的计数：每条都从数据本身（作者输入文件、加载后的表）推出该有什么。全规模世界创建的推进与性能不在本机测（待腾讯云）。
-import { test } from 'node:test';
+// 【G5b 上格收尾（本文件自 tests/kernel 挪来）：真实世界已有格空间表与 generated 节，下面"水体"与"水体足迹补缺"两条原先按"没有格空间表"写的期望已按新状态改过；
+//  其余条目按旧作者输入读法（readGeoInputs）写成，上格后的读法与转换脚本的补缺读法有出入（转换脚本补缺前删去不在表里的作者输入、清空下坡链与建筑清单），
+//  整条测试待腾讯云块验收首跑时核对，见 docs/问题.md "G5b 遗留"。】
+import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync, rmSync } from 'node:fs';
@@ -17,12 +20,23 @@ import { ROOT, testTempRoot, writeUnderTempRoot } from '../accept/temp-root.mjs'
 
 installDigestCap({ sha256Hex: (data, encoding) => createHash('sha256').update(data, encoding === 'base64' ? 'base64' : 'utf8').digest('hex') });
 const DIMS = 'world/ontology/dimensions';
-const world = loadWorld(ROOT);
-assert.equal(world.ok, true);
+// 长测（真实世界整段补缺一次约两分钟，主会话 11-24 已定挪进 tests/cloud/，腾讯云块验收跑）。
+// 世界创建事务补缺读的是"作者行"：入库的 place.json 已烘入模板种子的 generated 节（G5b 上格收尾），所以这里读一份去掉 generated 节的拷贝，
+// 与转换脚本补缺那一步同一读法（读未校验的表：作者行缺的必填列正是补缺要补的，所以不断言 ok）。
+const tmpAuthored = testTempRoot('gen-world-authored-');
+for (const f of readdirSync(join(ROOT, DIMS)).filter((n) => n.endsWith('.json'))) writeUnderTempRoot(tmpAuthored, f, f === 'place.json' ? JSON.stringify({ ...JSON.parse(readFileSync(join(ROOT, DIMS, f), 'utf8')), generated: {} }) : readFileSync(join(ROOT, DIMS, f), 'utf8'));
+const world = loadWorld(ROOT, { dimensionsDir: relative(ROOT, tmpAuthored) });
+after(() => rmSync(tmpAuthored, { recursive: true, force: true }));
 const place = world.tables.get('place');
 const WORLD_ROOT = [...place.flat.rows].find(([, r]) => r.parent === null)[0];
 const geoOf = () => readGeoInputs(ROOT, { rootId: WORLD_ROOT, elevationDim: 'anchorElevationM' });
-const run = (seed = 'seed_one', geo = geoOf()) => generateFill(world, { worldSeed: seed, genesisMinute: 0, geo });
+// 同一（种子，默认作者输入）只补缺一次：每次约两分钟，各条用例读同一份结果（结果是纯函数，不被用例改）；自带作者输入的调用不记忆。
+const memo = new Map();
+const run = (seed = 'seed_one', geo = undefined) => {
+  if (geo !== undefined) return generateFill(world, { worldSeed: seed, genesisMinute: 0, geo });
+  if (!memo.has(seed)) memo.set(seed, generateFill(world, { worldSeed: seed, genesisMinute: 0, geo: geoOf() }));
+  return memo.get(seed);
+};
 const controls = JSON.parse(readFileSync(join(ROOT, 'world/geo/elevation-controls.json'), 'utf8'));
 const authoredIds = Object.keys(controls.rows);
 
@@ -135,36 +149,23 @@ test('R10-9.3 同一加载器：把偏离行并进地点表的 generated 节后�
   } finally { rmSync(tmp, { recursive: true, force: true }); }
 });
 
-test('R10-2.12 水体：作者输入里的水体行（转换前不在表里）补 runoffCoef 进 pending；足迹还划不出（真实世界没有格空间表）时容量、面积、汇水进 deferred 带原因，不编不借', () => {
+test('R10-2.12 水体：水体行已在表里（附表给了足迹），足迹划得出，水体阶段补出 runoffCoef、容量、面积、汇水进偏离行，没有水体阶段缺口、没有 pending', () => {
   const r = run();
-  const geo = geoOf();
-  const waterIds = [...geo.authored].filter(([, d]) => Array.isArray(d.classes) && d.classes.includes(world.rules.gen.roleWaterbody)).map(([id]) => id).sort();
+  const waterIds = [...place.flat.rows].filter(([, d]) => Array.isArray(d.classes) && d.classes.includes(world.rules.gen.roleWaterbody)).map(([id]) => id).sort();
   assert.ok(waterIds.length > 0);
-  assert.deepEqual(r.pending.map((p) => p.id).sort(), waterIds);
-  for (const p of r.pending) assert.ok(p.dims.runoffCoef >= 0 && p.dims.runoffCoef <= 1, p.id);
-  // 水体阶段的缺口（水体足迹补缺阶段另有缺口，见下一条）。
-  const waterGaps = r.deferred.filter((d) => d.stage === 'gstage_water');
-  assert.deepEqual(waterGaps.map((d) => d.id).sort(), waterIds);
-  // 河、海、湖都有水深规则行（海与湖的行由前置卡 D 补，设定值、待调）：每个水体行只缺足迹（footprint_unknown），不再有 water_rule_missing（没有规则行的水体类水深不借别的量顶替，该路径由 gen-water.test 的夹具守）。
-  for (const d of waterGaps) {
-    assert.equal(d.reason, 'footprint_unknown');
-    assert.deepEqual(d.gaps.slice().sort(), ['capacityM3', 'catchmentM2', 'surfaceM2']);
+  assert.deepEqual(r.pending, []); // 水体行都在表里，补缺走偏离行，不再有"转换前不在表里"的待转换行
+  assert.deepEqual(r.deferred.filter((d) => d.stage === 'gstage_water'), []);
+  for (const id of waterIds) {
+    const g = r.generated[id];
+    assert.ok(g !== undefined && g.runoffCoef >= 0 && g.runoffCoef <= 1, id);
+    for (const k of ['capacityL', 'surfaceM2', 'catchmentM2']) assert.ok(Number.isFinite(g[k]) && g[k] > 0, `${id}.${k}`);
   }
-  assert.ok(waterGaps.length > 0);
 });
 
-test('R10-2.17 水体足迹补缺：真实世界还没有格空间表，作者水体行缺的 coord 与窄带 boundary（河）、coord 与 targetAreaM2（海）划不出父足迹，进 deferred 带原因，不编、不出提案', () => {
+test('R10-2.17 水体足迹补缺：水体行已有作者足迹输入（河的折线栅格、海的矩形并、湖的种子与目标面积），没有 gstage_waterfoot 缺口、不另出 coord、boundary、targetAreaM2 的提案', () => {
   const r = run();
-  const geo = geoOf();
-  const waterIds = [...geo.authored].filter(([, d]) => Array.isArray(d.classes) && d.classes.includes(world.rules.gen.roleWaterbody)).map(([id]) => id).sort();
-  const gaps = r.deferred.filter((d) => d.stage === 'gstage_waterfoot');
-  assert.deepEqual(gaps.map((d) => d.id).sort(), waterIds);
-  for (const d of gaps) {
-    assert.equal(d.reason, 'footprint_unknown');
-    const flowing = world.vocab.index.get(geo.authored.get(d.id).waterKind).entry.flowing === true;
-    assert.deepEqual(d.gaps.slice().sort(), flowing ? ['boundary', 'coord'] : ['coord', 'targetAreaM2']);
-  }
-  assert.deepEqual(r.pending.flatMap((p) => Object.keys(p.dims)).filter((k) => ['coord', 'targetAreaM2', 'boundary'].includes(k)), []);
+  assert.deepEqual(r.deferred.filter((d) => d.stage === 'gstage_waterfoot'), []);
+  for (const [id, g] of Object.entries(r.generated)) for (const k of ['coord', 'targetAreaM2', 'boundary']) if (place.flat.rows.get(id) !== undefined && place.flat.rows.get(id)[k] !== undefined) assert.equal(g[k], undefined, `${id}.${k} 作者已写，不得出偏离`);
 });
 
 test('R10-7.12 手写建筑行缺维度的补缺经 generateFill 接线：作者输入里挂 comp_facility 的建筑行缺墙厚、平面格数、层数时补出（by gstage_siteform），作者写了的不动，补出的房子经 planBlueprint 展开成细格；房间行只列缺口', () => {

@@ -20,14 +20,14 @@ import { P } from '../../server-plugin/kernel/handles/generated.mjs';
 import { runTransaction } from '../../server-plugin/kernel/transaction.mjs';
 import { writeDated } from '../../server-plugin/kernel/dated.mjs';
 import { dim } from '../../server-plugin/kernel/dimensions.mjs';
-import { gridView, settleCell, fallCell, extrudeCell } from '../../server-plugin/kernel/place.mjs';
+import { gridView, settleCell, fallCell, extrudeCell, placeView } from '../../server-plugin/kernel/place.mjs';
 import { alterCells, clearDiffs, diffCellsAmong } from '../../server-plugin/grid-diff.mjs';
 
 installDigestCap({ sha256Hex: (data, encoding) => createHash('sha256').update(data, encoding === 'base64' ? 'base64' : 'utf8').digest('hex') });
 assert.ok(loadWorld(ROOT).ok); // 先装配命名 struct、定点常数与 sqrt 表（夹具世界的加载校验要读 anchor）
 const DIMS = 'world/ontology/dimensions';
 const realText = (f) => readFileSync(join(ROOT, DIMS, f), 'utf8');
-const HEADER = JSON.parse(realText('place.json'));
+const HEADER = (({ rows, edges, gridSpaces, generated, ...head }) => ({ ...head, generated: {} }))(JSON.parse(realText('place.json'))); // 只取表头：真实世界的行、边、格空间表、generated 节不进夹具（generated 留空对象）
 const VOCAB = JSON.parse(realText('_vocab.json'));
 const TERRAINS = Object.keys(VOCAB.families.terrain.entries);
 const FIXTURE_ITEM = 'item_test_bench'; // 一件运行期新建的物品（state.created，见 fresh），当"家具"引用目标；真实物品行引用别的地点，夹具世界里不载入
@@ -63,7 +63,7 @@ function load(rows, spaces) {
 }
 
 const row = (parent, extra = {}) => ({
-  parent, areaM2: 1, elevationM: 0, skyExposure: 1, ledgerHolder: false, basis: 'test',
+  parent, skyExposure: 1, ledgerHolder: false, basis: 'test',
   waterAccess: [], forestCover: 0, hiddenness: 0, accessClass: 'access_test_open', ...extra,
 });
 const region = (parent, x, y, extra = {}) => row(parent, { terrain: 'terrain_river', coord: { x, y }, anchorElevationM: 0, ...extra });
@@ -113,7 +113,7 @@ test('前提：夹具世界加载通过，地表层 0（z=0 土、z=1 空气）�
 
 test('#46 写入：泡内行为者挖地表格，差分记录 {material, fixture, mark, sinceMinute} 落在 cells.<w>.<里块>.<格键>；同事务内 gridView 就读到，邻格与地点行不变', () => {
   const s = fresh();
-  const rowBefore = JSON.stringify(dim(E1, s, 'place', 'loc_a', 'areaM2'));
+  const rowBefore = JSON.stringify(placeView(E1, s, 'loc_a').dims.areaM2); // areaM2 是足迹派生量（卷五 §4.1.3 规则 13），经 placeView 读
   const r = run(s, (st) => {
     assert.deepEqual(alterCells(E1, st, { w: 0, changes: [dig(50, 150, 0)], cause: { actor: 'npc_p' } }), { ok: true, reason: null });
     // 同一事务内后续读 gridView 就看到（卷五 §4.1 规则 16"当场生效"）：地表格读空气、气态。
@@ -124,7 +124,7 @@ test('#46 写入：泡内行为者挖地表格，差分记录 {material, fixture
   // 格 (50,150,0)：里块边长 chunkRegionCells × regionCellM ÷ cellM = 10 × 100 ÷ 1 = 1000 细格，x 50、y 150 都在里块 (0,0)，格键 "50:150:0"。
   assert.deepEqual(readPath(s, P.cells('0', '0:0', '50:150:0')), { material: 'mat_air', fixture: null, mark: null, sinceMinute: 1234 });
   assert.equal(cellOf(E1, s, 51, 150, 0).material, 'mat_soil');
-  assert.equal(JSON.stringify(dim(E1, s, 'place', 'loc_a', 'areaM2')), rowBefore);
+  assert.equal(JSON.stringify(placeView(E1, s, 'loc_a').dims.areaM2), rowBefore);
   assert.equal(cellsOf(s), 1);
 });
 
@@ -323,7 +323,7 @@ test('#50 差分永久：挖坑砌墙 → 泡移走（席位换人）→ 推进 
   const s = fresh();
   assert.deepEqual(run(s, (st) => alterCells(E1, st, { w: 0, changes: [dig(50, 150, 0), dig(51, 150, 1, 'mat_granite'), dig(1050, 150, 0)], cause: { actor: 'npc_p' } })), { ok: true });
   const view = (st) => gridView(E1, st, { w: 0, cells: { x0: 48, y0: 149, z0: -1, x1: 52, y1: 151, z1: 2 } }).cells;
-  const placeDims = (st) => JSON.stringify(['areaM2', 'elevationM', 'anchorElevationM', 'terrain'].map((d) => dim(E1, st, 'place', 'loc_a', d)));
+  const placeDims = (st) => JSON.stringify(['areaM2', 'elevationM', 'anchorElevationM', 'terrain'].map((d) => placeView(E1, st, 'loc_a').dims[d])); // areaM2、elevationM 是足迹派生量，经 placeView 读
   const before = JSON.stringify(view(s));
   const dimsBefore = placeDims(s);
   s.holdings = { npc_far: { hld_1: seatEdge('npc_far') } }; // 泡移到 (7,1)，区格 (0,1) 收起

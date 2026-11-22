@@ -18,7 +18,7 @@ import { routeView, pathView, placeView, zoneAt } from '../../server-plugin/kern
 installDigestCap({ sha256Hex: (data, encoding) => createHash('sha256').update(data, encoding === 'base64' ? 'base64' : 'utf8').digest('hex') });
 const DIMS = 'world/ontology/dimensions';
 const realText = (f) => readFileSync(join(ROOT, DIMS, f), 'utf8');
-const HEADER = JSON.parse(realText('place.json'));
+const HEADER = (({ rows, edges, gridSpaces, generated, ...head }) => ({ ...head, generated: {} }))(JSON.parse(realText('place.json'))); // 只取表头：真实世界的行、边、格空间表、generated 节不进夹具（generated 留空对象）
 const VOCAB = JSON.parse(realText('_vocab.json'));
 const TERRAINS = Object.keys(VOCAB.families.terrain.entries);
 // G6 起每个 cellclass 条目必有 genTemplate（卷五 §2.2；卷十 :118 gentemplate 族），夹具给一个共用的测试模板。
@@ -53,7 +53,7 @@ function load({ rows = {}, edges = [], spaces } = {}) {
 const codes = (r) => r.errors.map((e) => e.code);
 const has = (r, code) => codes(r).includes(code);
 const row = (parent, extra = {}) => ({
-  parent, areaM2: 1, elevationM: 0, skyExposure: 1, ledgerHolder: false, basis: 'test',
+  parent, skyExposure: 1, ledgerHolder: false, basis: 'test',
   waterAccess: [], forestCover: 0, hiddenness: 0, accessClass: 'access_test_open', ...extra,
 });
 // 层根与区域足迹行：锚点海拔都取 0（控制面处处为 0），terrain_river 起伏为 0，地表高处处为 0。

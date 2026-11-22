@@ -14,7 +14,7 @@ import { placeView, routeView, zoneAt, regionCell, landCell, planFootprints, pla
 installDigestCap({ sha256Hex: (data, encoding) => createHash('sha256').update(data, encoding === 'base64' ? 'base64' : 'utf8').digest('hex') });
 const DIMS = 'world/ontology/dimensions';
 const realText = (f) => readFileSync(join(ROOT, DIMS, f), 'utf8');
-const HEADER = JSON.parse(realText('place.json'));
+const HEADER = (({ rows, edges, gridSpaces, generated, ...head }) => ({ ...head, generated: {} }))(JSON.parse(realText('place.json'))); // 只取表头：真实世界的行、边、格空间表、generated 节不进夹具（generated 留空对象）
 const VOCAB = JSON.parse(realText('_vocab.json'));
 const TERRAINS = Object.keys(VOCAB.families.terrain.entries);
 
@@ -54,9 +54,9 @@ function load({ rows = {}, edges = [], spaces, cellclass = FULL_CELLCLASS, heade
 
 const codes = (r) => r.errors.map((e) => e.code);
 const has = (r, code) => codes(r).includes(code);
-// 一行区域足迹的地点：always 维度照表头给齐（areaM2 等存储列在 G5 转派生前仍必填）；足迹输入列用 extra 给。
+// 一行区域足迹的地点：always 维度照表头给齐（areaM2、elevationM 已是派生量，不写，卷五 §4.1.3 规则 13）；足迹输入列用 extra 给。
 const row = (parent, extra = {}) => ({
-  parent, areaM2: 1, elevationM: 0, skyExposure: 1, ledgerHolder: false, basis: 'test',
+  parent, skyExposure: 1, ledgerHolder: false, basis: 'test',
   waterAccess: [], forestCover: 0, hiddenness: 0, accessClass: 'access_test_open', ...extra,
 });
 // 区域足迹行带 terrain、coord、anchorElevationM（terrain_river 的 reliefM 为 0，起伏为 0，高度可手算）；建筑、房间行不带 terrain（卷五 §2.1 :105 禁填）。
@@ -91,6 +91,17 @@ function mustPass(name, mutate) {
   const r = load(g);
   assert.equal(r.ok, true, `${name}: ${r.text}`);
 }
+
+// ---------- 加载次序（G5b 余项）：本条必须排在文件第一条 ----------
+// 带 anchor 的建筑足迹行：地点表校验读加载器的类型登记（struct:pos），不等运行期装入。node --test 每个文件一个进程，
+// 本条是本进程第一次加载，运行期还没装入 struct:pos；此前的加载器先校验地点表、后装入登记，带 anchor 的表过不了。
+test('第一次加载就带 anchor 的建筑行：地点表校验读类型登记，加载通过；anchor 缺 coarse 仍被拒', () => {
+  const ok = load({ ...GRID4(), rows: { ...GRID4().rows, loc_h: bldRow() } });
+  assert.equal(ok.ok, true, ok.text);
+  const bad = load({ ...GRID4(), rows: { ...GRID4().rows, loc_h: bldRow({ anchor: { w: 0, x: 10, y: 10, z: 0 } }) } });
+  assert.equal(bad.ok, false);
+  assert.ok(has(bad, 'E-DIM-STRUCT-FIELD'), codes(bad).join(','));
+});
 
 // ---------- 区域足迹输入列（卷五 §2.1 :96–:105） ----------
 
