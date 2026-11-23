@@ -144,9 +144,11 @@
 - [ ] 世界创建事务总调用方卡（李白 11-22 18:03，块 6 可玩版验收前）：开局持有（holdcalls.mjs）、资产（assetcalls.mjs）、人物（opening-people.mjs）现在只有测试调用；建世界创建入口，让它们在真实世界创建里真跑一遍。
 - [ ] 模块化收口（李白 11-22 18:40 M-7～M-11，评估 docs/研究/模块化评估-1122.md）：①行为与性格设计勘误随 B1–B4，**硬前置：npc-decision 写码卡开之前此勘误必须已落库**；②气候绕过 envAt 收口并入 G16（+0.5）；③足迹种类分派表：G14 合入后、G15 开写前一张小内核卡（0.5–1，place.mjs 串行）；④生成器接口并入世界创建卡（在跑）；⑤采样分布分派表并入寿命截断卡（在跑）。
 - [x] C0 即语法树判（李白 Z-4，取代 Z-3）：C0 本身改成语法树判据再入库，字面版只作分支对照；acorn 开发依赖锁版本、只许 tools/accept 用并加检查；争取 11-23 12:00 入库，做不到 09:00 前报。——11-23 09:44 入主线 5a4d5932c（写 Sonnet；出题 独立 Sonnet；审 Opus 一轮、Sonnet 二轮），全量 2170/2170，已报李白。
-- [ ] C0 第八轮修（独立第二轮报：regionCellM 形参退步、规范序列化绕法漏 4、误拒 2、primitives-runtime.mjs:364 真重复只进待人审）：Sonnet 写，ds/c0-fix8，卡 F:/dnd-tmp/card-c0-fix8.md；修后独立再测＋李白 Flash 测，Sonnet 审。
-- [ ] tools/accept 的世界布局名改引 server-plugin/kernel/load/layout.mjs（read.mjs:13 dimensionsDir、lit_scope.mjs:111 与 decl_cmp.mjs:129 的 _vocab.json 另写一份；主线既有，非 C0 引入），随 C0 第八轮或下张门禁卡顺带。
-- [ ] 寿命按现龄截断（李白 11-22 18:03）：卷四 :216 勘误，寿命在 [现龄, 上限] 内条件采样，覆盖所有物种与名册；测试证明名册里没人寿命小于现龄。在跑（ds/lifespan-trunc）。
+- [x] C0 第八轮修：381695f72 入主线（含布局名改引 layout.mjs）。独立 Sonnet 与李白 Flash 复测结果在 docs/卡档案/ds-c0-fix8/出题-来源.md。
+- [ ] C0 第九轮修（ds/c0-fix9，卡 F:/dnd-tmp/card-c0-fix9.md）：Map.keys、Promise.then、类字段别名、isSink 去裸名、迭代式手写排序；李白 Z-5 加 n07（数组 join 折叠 yearMinutes）、n08（跨文件改名导入 regionCellM/cellM 相除）、l22（genDraw 字符串常量实参被 E-SEED-KEY 拦，核误拦）。三方：写 Sonnet、出题 Haiku、审 Opus。
+- [ ] 档案自查脚本入库：F:/dnd-tmp/check-push-archive.mjs（按推送口径一次列全卡档案问题）改成 tools/accept 下正式入口并加测试；另门禁核三方「模型」互异（Z-5，现只核标识）。小卡，排 C0 第九轮后。
+- [ ] C3 事务、账本与持有（Q-18 修理，11-30 前）：写 Sonnet（F:/dnd-wt/ds-c3，ds/c3-ledger，卡 F:/dnd-tmp/card-c3-write.md）、出题 Haiku（F:/dnd-wt/ts-c3，ts/c3-ledger，卡 F:/dnd-tmp/card-c3-test.md）、审 Opus。之后 C5 → C4（place.mjs 串行）；另一路 C1、C6、C7，再 C8～C11。
+- [x] 寿命按现龄截断：b2036558f 已合（原文：（李白 11-22 18:03）：卷四 :216 勘误，寿命在 [现龄, 上限] 内条件采样，覆盖所有物种与名册；测试证明名册里没人寿命小于现龄。在跑（ds/lifespan-trunc）。
 - [ ] 游泳与涉水规则卡（正式规则，第 6 块可玩版本前必须有）：浅水涉水能走；深水游泳，或至少不会静默淹死。河湾村在河边。G12 先按卷五 :761 字面落格（液体格不可立足），这不算玩法；李白 11-23 事件 412004ce：液体柱坠落停在柱底第一个实体格之上（沉到河床上），怎么游、怎么沉、浮力并入本卡。
 - [x] 卷三乙可燃量勘误（Opus 写、另一 Opus 核；李白 11-23 事件 30d365ac ①）：G14 场传播的前置，等 1123 批勘误合入后开。——已合（d7a1db25b）。
 - [ ] 长测目录 tests/cloud/（主会话 11-24 已定）：推进世界、本机太慢的测试放这里，本机常规全量只跑 tests/kernel 与 tests/accept；G18 腾讯云块验收连同 tests/cloud/*.test.mjs 一起跑。首条：building-types-world（真实世界整段补缺，约 144 秒）。
