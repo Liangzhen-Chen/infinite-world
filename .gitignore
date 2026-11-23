@@ -10,6 +10,8 @@ logs/sessions/*golden-table*.md
 backups/
 跑团资料/安装前设置.json
 node_modules/
+# 门禁执行器带 --write 的本地记录（tools/accept/run.mjs；基线比较不读它）
+tools/accept/out/
 dist/
 AI检查包/
 AI检查包.zip
