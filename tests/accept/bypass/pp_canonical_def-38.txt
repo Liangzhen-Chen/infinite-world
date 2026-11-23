@@ -1,0 +1,9 @@
+import { createHash } from 'node:crypto';
+function canon(o) {
+  return Object.keys(o).sort().map((k) => k + ':' + o[k]).join(',');
+}
+export function id(o) {
+  const h = createHash('sha256');
+  h.update(canon(o));
+  return h.digest('hex');
+}

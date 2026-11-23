@@ -1,0 +1,13 @@
+function myHash(s) {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+  return h;
+}
+function canon(o) {
+  return Object.keys(o).sort().map((k) => k + ':' + o[k]).join(',');
+}
+class Ids {
+  constructor() { this.digest = myHash; }
+  id(o) { return this.digest(canon(o)); }
+}
+export const make = () => new Ids();

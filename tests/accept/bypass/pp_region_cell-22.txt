@@ -1,0 +1,5 @@
+import { regionCellM as a, cellM as b } from './geo.mjs';
+export const per = a / b;
+// @file geo.mjs
+export const regionCellM = 64n;
+export const cellM = 8n;

@@ -1,0 +1,4 @@
+async function ser(o) {
+  return Object.keys(o).sort().map((k) => k + ':' + o[k]).join(',');
+}
+export const id = (o) => ser(o).then((s) => sha256Text(s));

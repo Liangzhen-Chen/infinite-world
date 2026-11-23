@@ -1,0 +1,4 @@
+function canon(o) {
+  return Object.keys(o).sort().map((k) => k + ':' + o[k]).join(',');
+}
+export const id = (o) => Promise.resolve(canon(o)).then((s) => sha256Text(s));

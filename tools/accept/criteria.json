@@ -98,10 +98,18 @@
     {
      "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
      "rev": 24
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 25
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 26
     }
    ],
    "print": "9cc0a9bd0f442939bcfe6aef00128e338bf427cb58f25ca2270994193dafb629",
-   "rev": 24,
+   "rev": 26,
    "scanClass": "baseline_monotone",
    "source": "卷一 V-11（I43）；卷十二 §2.5、E-ACC-BASELINE-UP；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -504,10 +512,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 97
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 98
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 99
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 97,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 99,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -711,10 +727,18 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 31
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 32
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 33
     }
    ],
-   "print": "8cbb28937ee03fc28c2f11fb6dbeb28a28f1a4dd77b038cd079e3375f56d02cf",
-   "rev": 31,
+   "print": "e0e03ae3d658873fbaea7468573d628990aeba763a89eec2f1ef8f7ac0f41703",
+   "rev": 33,
    "scanClass": "cross_write",
    "source": "卷十二 R12-3.1–3.4；卷二 §2.6、§2.7、S5",
    "terms": {
@@ -945,10 +969,18 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 31
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 32
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 33
     }
    ],
-   "print": "8cbb28937ee03fc28c2f11fb6dbeb28a28f1a4dd77b038cd079e3375f56d02cf",
-   "rev": 31,
+   "print": "e0e03ae3d658873fbaea7468573d628990aeba763a89eec2f1ef8f7ac0f41703",
+   "rev": 33,
    "scanClass": "display_read",
    "source": "卷十二 R12-2.10；卷二 S7",
    "terms": {
@@ -1340,10 +1372,22 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 94
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 95
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 96
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 97
     }
    ],
-   "print": "f94833a1d0aa29c278426eec0e388f02a1d49898c14d9682146d0f1e62ce07e1",
-   "rev": 94,
+   "print": "f51fbb1107aa6e7f2bc2d4cac9681801ea5b5db99ac1225456e9fa2737238e79",
+   "rev": 97,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1572,10 +1616,18 @@
     {
      "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
      "rev": 24
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 25
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 26
     }
    ],
    "print": "9cc0a9bd0f442939bcfe6aef00128e338bf427cb58f25ca2270994193dafb629",
-   "rev": 24,
+   "rev": 26,
    "scanClass": "ext_code",
    "terms": {
     "vol12.S12-12": {
@@ -1781,10 +1833,22 @@
     {
      "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
      "rev": 17
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 19
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 20
     }
    ],
-   "print": "c422892bd4c6767f880cc7e5bd97e43858f60320722486430448fa274eb66b57",
-   "rev": 17,
+   "print": "78709bb155bbcf0e6b236762b48c56f0e0199443cd700b2d44dada8bc00b0c4b",
+   "rev": 20,
    "scanClass": "float_math",
    "source": "卷二十七 R27-5.2、A27-5.1；公共部件审查乙规则 7；C0 卡",
    "terms": {
@@ -1903,10 +1967,22 @@
     {
      "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
      "rev": 18
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 19
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 20
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "c422892bd4c6767f880cc7e5bd97e43858f60320722486430448fa274eb66b57",
-   "rev": 18,
+   "print": "78709bb155bbcf0e6b236762b48c56f0e0199443cd700b2d44dada8bc00b0c4b",
+   "rev": 21,
    "scanClass": "geometry_bypass",
    "source": "卷五 §3.5 S5-10 :408；卷十二 §2.4 开放登记",
    "terms": {
@@ -2250,10 +2326,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 82
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 83
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 84
     }
    ],
    "print": "5e16e63cef54c7b86223b49b33a08653f42de5df0697b8e8efad85201eba183d",
-   "rev": 82,
+   "rev": 84,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -2851,10 +2935,22 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 113
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 114
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 115
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 116
     }
    ],
-   "print": "d339c3159a326df328fccd691fd8f26cbba8b958fdd3322e363c5936b08f9acc",
-   "rev": 113,
+   "print": "1dc129927845a48ae8f3a7f0de17681ada0423ffb685d35274b1e5795bd29f1d",
+   "rev": 116,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -2996,10 +3092,18 @@
     {
      "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
      "rev": 24
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 25
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 26
     }
    ],
    "print": "9cc0a9bd0f442939bcfe6aef00128e338bf427cb58f25ca2270994193dafb629",
-   "rev": 24,
+   "rev": 26,
    "scanClass": "item_downgrade",
    "terms": {
     "vol12.S12-16": {
@@ -3345,10 +3449,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 83
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 84
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 85
     }
    ],
    "print": "5e16e63cef54c7b86223b49b33a08653f42de5df0697b8e8efad85201eba183d",
-   "rev": 83,
+   "rev": 85,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -3512,10 +3624,22 @@
     {
      "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
      "rev": 17
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 19
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 20
     }
    ],
-   "print": "8cbb28937ee03fc28c2f11fb6dbeb28a28f1a4dd77b038cd079e3375f56d02cf",
-   "rev": 17,
+   "print": "e0e03ae3d658873fbaea7468573d628990aeba763a89eec2f1ef8f7ac0f41703",
+   "rev": 20,
    "scanClass": "ledger_state_read",
    "source": "卷六 §4.1.2；公共部件审查乙规则 4；C0 卡",
    "terms": {
@@ -3619,10 +3743,18 @@
     {
      "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
      "rev": 22
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 23
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 24
     }
    ],
    "print": "9cc0a9bd0f442939bcfe6aef00128e338bf427cb58f25ca2270994193dafb629",
-   "rev": 22,
+   "rev": 24,
    "scanClass": "ledger_tally",
    "source": "卷十二 §4.1.6 至 §4.14.6 A12-n.1；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -3966,10 +4098,22 @@
     {
      "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
      "rev": 48
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 49
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 50
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 51
     }
    ],
-   "print": "05c5f3068e8d2301c68faea326a158b5491e05d5217d51e65231d876369d7c88",
-   "rev": 48,
+   "print": "329b09f10db23d4743a2c0d7b3ed602b7335abbb6c9d4a207941060d877f89b8",
+   "rev": 51,
    "scanClass": "module_edge",
    "terms": {
     "vol1.V-24.b": {
@@ -4435,10 +4579,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 83
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 84
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 85
     }
    ],
    "print": "5e16e63cef54c7b86223b49b33a08653f42de5df0697b8e8efad85201eba183d",
-   "rev": 83,
+   "rev": 85,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -4785,10 +4937,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 83
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 84
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 85
     }
    ],
-   "print": "2cd950b274a3f589386c4ca22b0e29fa0e3516029e0899e44c67d690925ecae4",
-   "rev": 83,
+   "print": "74001aeff1b11545c0daafddc5da81368dc9fe77fce58f0c0c839fefd082e603",
+   "rev": 85,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -4896,10 +5056,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 23
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 24
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 23,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 25,
    "scanClass": "pp_canonical_def",
    "source": "公共部件审查乙 11；卷二十七 :542；例外 kernel/storage.mjs",
    "terms": {
@@ -4951,10 +5119,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 9
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 10
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 11
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 9,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 11,
    "scanClass": "pp_canonical_review",
    "source": "主会话 11-23 定：规范序列化按定义判，拿不准的待人审",
    "terms": {
@@ -5062,10 +5238,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 23
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 24
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 23,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 25,
    "scanClass": "pp_deep_clone",
    "source": "公共部件审查乙 10；卷二 :897；kernel/clone.mjs（kernelApi clone）",
    "terms": {
@@ -5173,10 +5357,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 23
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 24
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 23,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 25,
    "scanClass": "pp_dist_branch",
    "source": "公共部件审查甲 R7；卷二 §1.10；kernel/sample.mjs 头注",
    "terms": {
@@ -5264,10 +5456,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 18
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 19
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 20
     }
    ],
-   "print": "a269cd70d12b85e8719082841c6e2ecd326b54ac4cc83d52125dae9d0afe8b8a",
-   "rev": 18,
+   "print": "bcd0e916567d193e9d9ec2faf9633843c359c7ad1cfc4050ebf4bcf539917e01",
+   "rev": 20,
    "scanClass": "pp_draw_sites",
    "source": "公共部件审查甲 R6 后半；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479（rules.clock.drawSites）",
    "terms": {
@@ -5355,10 +5555,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 18
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 19
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 20
     }
    ],
-   "print": "2cd950b274a3f589386c4ca22b0e29fa0e3516029e0899e44c67d690925ecae4",
-   "rev": 18,
+   "print": "74001aeff1b11545c0daafddc5da81368dc9fe77fce58f0c0c839fefd082e603",
+   "rev": 20,
    "scanClass": "pp_dup_export",
    "source": "公共部件审查甲 R14、乙 12；卷二 :1162 体例；CLAUDE.md“跨卷共用定义只一处”。职责函数 isPos、distributionMean、weatherCellOf 的职责文件依据：卷二 §1.5 struct:pos（kernel/named-structs.mjs）、卷二 §1.10（kernel/sample.mjs）、卷二十 §3.1（kernel/weather.mjs）",
    "terms": {
@@ -5462,10 +5670,22 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 22
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 23
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 24
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 22,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 25,
    "scanClass": "pp_dynamic_index",
    "source": "李白更正裁定 msg-1122-2255-c0ast（动态下标出现即报，标待人审）；卷二十七 R27-5.2、A27-5.1；卷二十 :436",
    "terms": {
@@ -5553,10 +5773,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 18
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 19
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 20
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 18,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 20,
    "scanClass": "pp_dynamic_review",
    "source": "李白更正裁定 msg-1122-2255-c0ast：运行期才知道的动态下标出现即报，标待人审。本条列全部对象上的动态下标（含数组按位置取），数量大，只报不拦（报告里列出，供人审）；登记在 Math、全局对象、状态根等根上的动态下标由 pp_dynamic_index 拦",
    "terms": {
@@ -5664,10 +5892,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 23
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 24
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 23,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 25,
    "scanClass": "pp_envat_callers",
    "source": "公共部件审查甲 R2；卷二十 :478；state-owners.json kernelApi 行形状",
    "terms": {
@@ -5775,10 +6011,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 23
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 24
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 23,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 25,
    "scanClass": "pp_envat_import",
    "source": "公共部件审查甲 R1（docs/研究/公共部件审查-甲-1122.md 第八节）；卷二十 :478、:631；例外：climate.mjs、weather.mjs 互相引用（甲 R1 原句）",
    "terms": {
@@ -5886,10 +6130,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 23
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 24
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 23,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 25,
    "scanClass": "pp_epsilon",
    "source": "公共部件审查乙 7；卷二十七 :620、:634（R27-5.2 数值运算只有三条路）",
    "terms": {
@@ -5957,10 +6209,22 @@
     {
      "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
      "rev": 13
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 14
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 15
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 16
     }
    ],
-   "print": "c422892bd4c6767f880cc7e5bd97e43858f60320722486430448fa274eb66b57",
-   "rev": 13,
+   "print": "78709bb155bbcf0e6b236762b48c56f0e0199443cd700b2d44dada8bc00b0c4b",
+   "rev": 16,
    "scanClass": "pp_eval",
    "source": "李白更正裁定 msg-1122-2255-c0ast：别名、间接调用都要跟到原名，eval 与 new Function 是语法树追不到的间接执行，出现即报；卷二十七 S27-4 :253（禁用语言特性）",
    "terms": {
@@ -6064,10 +6328,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 22
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 23
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 24
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 22,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 24,
    "scanClass": "pp_float_pow",
    "source": "公共部件审查乙 7；卷二十七 R27-5.2（超越函数只经定点数学设施，幂函数 pow 同属）；独立验收漏项“** 运算符”",
    "terms": {
@@ -6175,10 +6447,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 23
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 24
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 23,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 25,
    "scanClass": "pp_footprint_kind",
    "source": "公共部件审查甲 R12；卷二 §1.9；模块化评估第三节；例外 kernel/footprint-kind.mjs（gen/* 按种类过滤的比较进基线，M-11③ 修后开）",
    "terms": {
@@ -6282,10 +6562,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 22
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 23
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 24
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 22,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 24,
    "scanClass": "pp_gen_callers",
    "source": "公共部件审查乙 9（docs/研究/公共部件审查-乙-1122.md :161）；卷十 :403（生成器只在世界创建事务里按步骤表跑）；例外：generateWorld 所在文件 server-plugin/world-create.mjs（卷十 §3.2 :291）；requireMaterialized 现不存在，建成后其所在文件须加入例外；作者工具在 tools/ 下，不在扫描范围（卷十 :1002）",
    "terms": {
@@ -6393,10 +6681,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 23
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 24
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 23,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 25,
    "scanClass": "pp_grammar_regex",
    "source": "公共部件审查乙 6；卷二 :291；例外 kernel/validate/types.mjs",
    "terms": {
@@ -6476,10 +6772,22 @@
     {
      "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
      "rev": 16
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 17
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 18
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 19
     }
    ],
-   "print": "8cbb28937ee03fc28c2f11fb6dbeb28a28f1a4dd77b038cd079e3375f56d02cf",
-   "rev": 16,
+   "print": "e0e03ae3d658873fbaea7468573d628990aeba763a89eec2f1ef8f7ac0f41703",
+   "rev": 19,
    "scanClass": "pp_holdings_read",
    "source": "公共部件审查乙 5；卷十八:200（持有写者）；卷二 §2.6；读者按文件豁免（fileSets.holdingsReaders，每行带依据）",
    "terms": {
@@ -6587,10 +6895,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 23
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 24
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 23,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 25,
    "scanClass": "pp_key_concat",
    "source": "公共部件审查甲 R5、乙 1、乙 2；卷二 :337、:897、:1162；例外：整份文本摘要 sha256Text(canonical(…))、sha256Text(text) 不拼键（不含 .join，不命中）",
    "terms": {
@@ -6690,10 +7006,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 21
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 22
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 21,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 23,
    "scanClass": "pp_kind_branch",
    "source": "独立验收（亮圳 11-22「独立测门禁1122」）指出“写死数值与种类分支没有 C0 专条”；卷一 二.1（派生优先，不按 ID 或场景特判，docs/产品原则.md）；卷二 S10（常数登记）",
    "terms": {
@@ -6801,10 +7125,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 23
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 24
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 23,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 25,
    "scanClass": "pp_material_read",
    "source": "公共部件审查甲 R11；卷三甲 :268；卷三乙 :541；例外：kernel/item.mjs、kernel/dimensions.mjs、kernel/load/**、kernel/validate/**、kernel/blueprint.mjs（加载期校验 checkBlueprintForms）",
    "terms": {
@@ -6912,10 +7244,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 23
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 24
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 23,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 25,
    "scanClass": "pp_neighbors",
    "source": "公共部件审查甲 R10；卷五 :491、:1216（现 8 处）",
    "terms": {
@@ -7011,10 +7351,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 20
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 21
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 22
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 20,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 22,
    "scanClass": "pp_no_acorn_runtime",
    "source": "李白更正裁定 msg-1122-2255-c0ast：acorn 只许 tools/accept 引用，server-plugin 不得引用",
    "terms": {
@@ -7122,10 +7470,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 23
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 24
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 23,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 25,
    "scanClass": "pp_pos_shape",
    "source": "公共部件审查甲 R8；卷二 §1.5 struct:pos 登记；例外 kernel/named-structs.mjs、kernel/named-struct-match.mjs",
    "terms": {
@@ -7233,10 +7589,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 23
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 24
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 23,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 25,
    "scanClass": "pp_region_cell",
    "source": "公共部件审查甲 R9；卷五 :433、:499；例外：kernel/footprint.mjs 的共用函数（修后建）、kernel/handles/keys.mjs gridChunkCells（卷二 :860）",
    "terms": {
@@ -7344,10 +7708,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 23
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 24
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 23,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 25,
    "scanClass": "pp_rx_empty_clock",
    "source": "公共部件审查甲 R15；卷二十 :312、:685；例外：加载期校验 kernel/validate/**",
    "terms": {
@@ -7455,10 +7827,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 23
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 24
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 23,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 25,
    "scanClass": "pp_seed_args",
    "source": "公共部件审查甲 R6；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479。后半（drawSites 与 seed-keys 两表一致）未落：需读两表对照，现有检测器无此检查",
    "terms": {
@@ -7542,10 +7922,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 17
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 18
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 19
     }
    ],
-   "print": "a269cd70d12b85e8719082841c6e2ecd326b54ac4cc83d52125dae9d0afe8b8a",
-   "rev": 17,
+   "print": "bcd0e916567d193e9d9ec2faf9633843c359c7ad1cfc4050ebf4bcf539917e01",
+   "rev": 19,
    "scanClass": "pp_seed_args_dyn",
    "source": "独立验收漏项“抽取点站点名用变量”；卷二十七 :789（R27-8.1 每个抽取点登记，流代号、抽取点代号须字面量）",
    "terms": {
@@ -7629,10 +8017,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 17
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 18
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 19
     }
    ],
-   "print": "2cd950b274a3f589386c4ca22b0e29fa0e3516029e0899e44c67d690925ecae4",
-   "rev": 17,
+   "print": "74001aeff1b11545c0daafddc5da81368dc9fe77fce58f0c0c839fefd082e603",
+   "rev": 19,
    "scanClass": "pp_tpl_key",
    "source": "公共部件审查甲 R13；卷二 :860（键串形只由登记方给）；模块化原则卡头第二节第 9 条",
    "terms": {
@@ -7736,10 +8132,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 22
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 23
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 24
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 22,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 24,
    "scanClass": "pp_unit_literal",
    "source": "公共部件审查乙 13；卷三乙:179 与表头 unit 字段（item.json 表头 unit 字段）；单位登记表 world/ontology/dimensions/_units.json",
    "terms": {
@@ -7847,10 +8251,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 23
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 24
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 25
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 23,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 25,
    "scanClass": "pp_year_minutes",
    "source": "公共部件审查甲 R3；卷二十 :436、:477 T-3 (c)；例外 climate.mjs（日均温日份额，天文相位，卷二十 :436）",
    "terms": {
@@ -8301,10 +8713,22 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 109
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 110
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 111
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 112
     }
    ],
-   "print": "4ca61e0bcca9cc5d43fcaaebbc2cfaeddef5139e38aa10584a08b37b049e1166",
-   "rev": 109,
+   "print": "53a58c04f5487359012aaac6a5d980114c76fe8857214927d1603d211f905ad8",
+   "rev": 112,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -8466,10 +8890,22 @@
     {
      "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
      "rev": 37
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 38
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 39
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 40
     }
    ],
-   "print": "c422892bd4c6767f880cc7e5bd97e43858f60320722486430448fa274eb66b57",
-   "rev": 37,
+   "print": "78709bb155bbcf0e6b236762b48c56f0e0199443cd700b2d44dada8bc00b0c4b",
+   "rev": 40,
    "scanClass": "rng_bypass",
    "terms": {
     "vol27.A27-8.1.a": {
@@ -8828,10 +9264,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 69
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 70
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 71
     }
    ],
-   "print": "a269cd70d12b85e8719082841c6e2ecd326b54ac4cc83d52125dae9d0afe8b8a",
-   "rev": 69,
+   "print": "bcd0e916567d193e9d9ec2faf9633843c359c7ad1cfc4050ebf4bcf539917e01",
+   "rev": 71,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -9233,10 +9677,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 95
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 96
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 97
     }
    ],
-   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
-   "rev": 95,
+   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
+   "rev": 97,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -9315,10 +9767,18 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 16
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 17
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 18
     }
    ],
-   "print": "8cbb28937ee03fc28c2f11fb6dbeb28a28f1a4dd77b038cd079e3375f56d02cf",
-   "rev": 16,
+   "print": "e0e03ae3d658873fbaea7468573d628990aeba763a89eec2f1ef8f7ac0f41703",
+   "rev": 18,
    "scanClass": "sim_bypass",
    "source": "卷二十七 §4.8 S27-11 :260、A27-1.11 :369；对照表 docs/迁移体检/格子G6-G11-规矩检查对照.md #60；卷十二 §2.4 开放登记",
    "terms": {
@@ -9336,58 +9796,62 @@
    "log": [
     {
      "ref": "3-4 只核整改第 0 步：rebase 主线 4-4a 后 kernel/det-math.mjs 改动使本类别判据代码指纹（经 detect 器 import 闭包 validate/types.mjs）失效，按卡文用登记器重盖；检测器判定口径尚未改，本轮只重盖指纹（R12-14.3）",
-     "rev": 2
+     "rev": 1
     },
     {
      "ref": "3-4 只核 M1–M5 整改：检测器补实体行（维度表 rows.<id> 与该行实际数值）、dimension 偏离行（keyKinds 的实体 kind 维度表表头展开，缺表同加载器跳过）、list<…>/set<…> 容器简写（复用 listItemType/parseNumberType）；豁免收窄为合同、义务记录里 role=payable 的应付数额（命名 struct 登记的 fieldRoles，语义出处卷六 §2.4 :200 应给付），账本三路径仍整键豁免；补必报用例 state_pattern-03/04/05/06/07 与必不报用例 state_pattern-12；判据代码指纹随之重盖",
-     "rev": 3
+     "rev": 2
     },
     {
      "ref": "接主线 B2-W3 后重盖，判定口径不变",
-     "rev": 4
+     "rev": 3
     },
     {
      "ref": "接主线（B2-W3）：4-4b det-numeric 与 fnTables 空表校验进入检测器 import 闭包，判据指纹重盖；判定口径不变",
-     "rev": 5
+     "rev": 4
     },
     {
      "ref": "4-4b（李白 11-18 21:3x 裁定第 1、2 条）：detfn 七值去前缀（exp ln sin cos atan sqrt pow），kernel/handles/markers.mjs 与 kernel/det-math.mjs 改动进入检测器 import 闭包，判据指纹重盖；本类别判定口径不变（R12-14.3）",
-     "rev": 6
+     "rev": 5
     },
     {
      "ref": "4-4c（整数开方全仓一份）：det-math.mjs 加共用整数开方原语 fixedSqrtInt（detfn sqrt 与 sample 三角分布两处调用），检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
-     "rev": 7
+     "rev": 6
     },
     {
      "ref": "接主线 4-4c 后重盖，判定口径不变",
-     "rev": 8
+     "rev": 7
     },
     {
      "ref": "5-5（效果族表与 effects()）：handles/markers.mjs 加效果族标记导出，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
-     "rev": 9
+     "rev": 8
     },
     {
      "ref": "5-5 接 10:4x 裁定后重盖，判定口径不变",
-     "rev": 10
+     "rev": 9
     },
     {
      "ref": "块 5 第 5-7 张：统一加载器 kernel/load/world.mjs 接入 verb/持有种类/终止登记三项加载期核对、kernel/handles/markers.mjs 效果族 primitive 输出 paramsRX 可省略（李白 11-19 11:0x ③），检测器依赖闭包指纹变，判定口径不变，重盖",
-     "rev": 11
+     "rev": 10
     },
     {
      "ref": "块 6 第 6-1 张：rx.mjs 收规则表值、map 下标与无关系原语 known，validate 加载期规则分类与单位换算，dimensions.mjs 读下标与规则分类索引（勘误 1118k31），文件在本类别检测器 import 闭包内；判定口径不变（另 rx.mjs 收已登记未建名、tools/accept/read.mjs 登未建派生登记文件名）",
-     "rev": 12
+     "rev": 11
     },
     {
      "ref": "块 6 第 6-28 张：det-math.mjs 加 sinTurns、cosTurns，dimensions.mjs 导出 lookupCurve，两文件在本类别检测器 import 闭包内；判定口径不变",
-     "rev": 13
+     "rev": 12
     },
     {
      "ref": "6-7 改一轮（docs/审查/6-7-Opus只核-1119.md M2，主会话授权）：kernel/handles/markers.mjs VOCAB_FAMILIES 照卷二 §1.9 :288 补 relation、juris 两个族名，检测器 import 闭包随之变，判据本身不变，重盖指纹",
-     "rev": 14
+     "rev": 13
     },
     {
      "ref": "共用检测器（path_access、lit_scope）或登记参数表（lib/item-form.mjs 加 readerPredicates）改动（块 6 第 6-0 张）；本类别条目判定口径不变",
+     "rev": 14
+    },
+    {
+     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
      "rev": 15
     },
     {
@@ -9403,19 +9867,19 @@
      "rev": 18
     },
     {
-     "ref": "块 6 第 6-4 张：kernel/validate/dimensions-validate.mjs 表头校验覆盖 instanceDimensions 与 capabilities 段、读未建词表族与未建条目字段登记，validate/types.mjs 放行已登记未建族，dimensions.mjs 收读入口合成派生项（modifiedWith）与元组来源 id，vocab.mjs 注册 body.<capability> 修正键；文件在本类别检测器 import 闭包内，判定口径不变",
+     "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
      "rev": 19
     },
     {
-     "ref": "块 6 第 6-29 张合主线（a0c7aed98 后）：本分支 det-math.mjs 加 fixedCurveAt、handles/markers.mjs 加 VOCAB_RX_FIELDS，检测器 import 闭包内容变；本类别判定口径不变，重盖",
+     "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
      "rev": 20
     },
     {
-     "ref": "块 6 第 6-17 张（复核第 2 轮）：合 origin/master 后重盖指纹，判据本身不变",
+     "ref": "块 6 第 6-2 张：kernel/handles/markers.mjs 加 agg_mode 代码枚举、MATTER_STATES、REQUIRED_POLICIES、holding_kind 族名标记（卷三乙 §4.1.1、§2.4；卷十八 §4.1.1），文件在本类别检测器 import 闭包内，判据指纹变动；判定口径不变",
      "rev": 21
     },
     {
-     "ref": "块 6 第 6-2 张：kernel/handles/markers.mjs 加 agg_mode 代码枚举、MATTER_STATES、REQUIRED_POLICIES、holding_kind 族名标记（卷三乙 §4.1.1、§2.4；卷十八 §4.1.1），文件在本类别检测器 import 闭包内，判据指纹变动；判定口径不变",
+     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
      "rev": 22
     },
     {
@@ -9423,15 +9887,15 @@
      "rev": 23
     },
     {
-     "ref": "块 6 第 6-2 张只核改一轮：tools/accept/read.mjs 的实体前缀不再含词表 classPrefix（M1，类别代号不是实体 id）、markers.mjs 加 launchsrc 并收窄 REQUIRED_POLICIES、item.mjs 等；判定口径除 instance_name 类不把类别代号计为实体 id 外不变",
+     "ref": "块 6 补值卡 A（李白 11-19 18:1x ③）：卷六勘误 1119k9 资源单位 bps 改 asset_share_bp，补用例 state_pattern-13（比率单位 bps 不报）、-14（资源单位 asset_share_bp 必报）；检测器判定口径不变",
      "rev": 24
     },
     {
-     "ref": "块 6 补值卡 A（李白 11-19 18:1x ③）：卷六勘误 1119k9 资源单位 bps 改 asset_share_bp，补用例 state_pattern-13（比率单位 bps 不报）、-14（资源单位 asset_share_bp 必报）；检测器判定口径不变",
+     "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
      "rev": 25
     },
     {
-     "ref": "补值卡 C：kernel/det-math.mjs 新增 fixedDivide8、fixedToNumber8（10⁸ 标度除法与读出，durability extScale，李白 11-19 20:3x ③；卷二 §3.3 :1408 第 6 条）；检测器 import 闭包含 det-math，判据代码指纹随之变，判据本身未改",
+     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 26
     },
     {
@@ -9439,39 +9903,39 @@
      "rev": 27
     },
     {
-     "ref": "补值卡 F：kernel/ledger.mjs（实例批次键 lot_i_<实例id>、lotsUnmergeable 补实例批次不合并、auditLots 核实例一一对应）、kernel/item-state.mjs（lotKeyCompare）、kernel/dimension-writers.mjs（createItemInstance 用实例键）、kernel/handles/markers.mjs（LOT_LEG_KEYS 加 instance）；李白 11-19 21:0x ②；卷三乙 K-3、卷六 §2.1 resource 行；勘误 1119k13。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "ref": "补值卡 E：kernel/item.mjs（类别规则 categoryRules、classRules 的 when 读 material.<维度键>，即物品按 M-1 聚合的材料量；加载期读材料对条件必填不满足的维度给不适用）、kernel/validate/rows.mjs（requirement 导出）、kernel/dimensions.mjs（运行期 applicable 改用 requirement，多项条件必填与加载期同口径，卷二 :105；Opus 只核 6-fixE 必须改 1）；李白 11-19 21:0x ①(c)；卷三乙 §4.3.3 C-1 ②、§3.1 :425、M-1 ①。判据本身未改，只因被扫内核文件指纹变而 rev+1",
      "rev": 28
     },
     {
-     "ref": "补值卡 E：kernel/item.mjs（类别规则 categoryRules、classRules 的 when 读 material.<维度键>，即物品按 M-1 聚合的材料量；加载期读材料对条件必填不满足的维度给不适用）、kernel/validate/rows.mjs（requirement 导出）、kernel/dimensions.mjs（运行期 applicable 改用 requirement，多项条件必填与加载期同口径，卷二 :105；Opus 只核 6-fixE 必须改 1）；李白 11-19 21:0x ①(c)；卷三乙 §4.3.3 C-1 ②、§3.1 :425、M-1 ①。判据本身未改，只因被扫内核文件指纹变而 rev+1",
+     "ref": "块 6 第 6-6 张最后一轮：tools/accept/detectors/data_shape.mjs（entityKey 整类收紧：状态表前缀行代号不是六类实体 id，规则表键值里不计；代码里写死仍计；李白 11-19 22:0x ④），并新增 instance_name-46（必须不报）、instance_name-47（必须报）；kernel/dimensions.mjs、terminate.mjs、dimension-writers.mjs（人物类别由物种行派生，删 created.*.classes 存储，⑤）等落在检测器 import 闭包内，指纹变动",
      "rev": 29
     },
     {
-     "ref": "块 6 第 6-6 张最后一轮：tools/accept/detectors/data_shape.mjs（entityKey 整类收紧：状态表前缀行代号不是六类实体 id，规则表键值里不计；代码里写死仍计；李白 11-19 22:0x ④），并新增 instance_name-46（必须不报）、instance_name-47（必须报）；kernel/dimensions.mjs、terminate.mjs、dimension-writers.mjs（人物类别由物种行派生，删 created.*.classes 存储，⑤）等落在检测器 import 闭包内，指纹变动",
+     "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
      "rev": 30
     },
     {
-     "ref": "块 6 第 6-9 张：kernel/handles/markers.mjs 的 CODE_ENUMS 新增 req_per（卷三乙 §4.7.1 :1176、:2178 需求块 per 的代码内封闭枚举：piece、kg、pool；卷文无枚举名，自定）。判据本身未改，只因被扫文件指纹变而 rev+1",
+     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 31
     },
     {
-     "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
+     "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 32
     },
     {
-     "ref": "G2 在 kernel/handles/keys.mjs 加 gridSeedKeyText（区格种子键文本，卷五 §4.1 规则 15、卷二十七 R27-5.9）；检测器 import 闭包含 keys.mjs，判据代码指纹随之变，判据本身未改",
+     "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 33
     },
     {
-     "ref": "G3 在 kernel/error-codes.mjs 登卷二 §4.3 勘误 1121k1 的六个 E-GRID 加载码（足迹、兄弟相交、种子同格、航道、体积顶面、区格地形类）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 34
     },
     {
-     "ref": "G5a 修改轮：validate/types.mjs 的 struct 校验支持引用命名 struct（named）、kernel/named-structs.mjs 加 matchStruct 等；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
      "rev": 35
     },
     {
-     "ref": "寻路方向与超限小卡在 kernel/error-codes.mjs 登卷五 §4.1 规则 5 勘误 1121k12 的 E-GRID-PATH-OVER-CAP（告警级，李白 11-21 15:29）；检测器 import 闭包含 error-codes.mjs，判据代码指纹随之变，判据本身未改",
+     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 36
     },
     {
@@ -9479,7 +9943,7 @@
      "rev": 37
     },
     {
-     "ref": "G6：footprint-kind.mjs 加聚落组件类判据 isSettlementClasses、error-codes.mjs 登 E-GRID-STOCK-OVER-CAP、handles/keys.mjs 与 load/state-owners.mjs 加 gridKey 类；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 38
     },
     {
@@ -9491,35 +9955,35 @@
      "rev": 40
     },
     {
-     "ref": "卷十生成补缺（自然量与水体两阶段）：dimensions-validate.mjs 的 id 唯一核对放行 generated 节与同表实体行同 id（偏离行覆盖实体行）、load/flatten.mjs 逐维合并偏离行、sample.mjs 加 drawByKey；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
      "rev": 41
     },
     {
-     "ref": "G8 末处一补：身份采样键的次序键拼串 orderKeyText 移入 handles/keys.mjs（卷二 :889）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身未改",
+     "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 42
     },
     {
-     "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
      "rev": 43
     },
     {
-     "ref": "卷十勘误 1121k16–k19 写码（gen-errata-code）：error-codes.mjs 登 E-GEN-ORDER-CONFLICT、E-GEN-WATER-FOOTPRINT（卷十 §2.7）与 E-GRID-WATER-BAND（卷二 1121k19）三码；检测器代码未改，指纹随 import 闭包里 error-codes.mjs 的内容变而变",
+     "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
      "rev": 44
     },
     {
-     "ref": "G9：error-codes.mjs 登 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）；检测器 import 闭包含该文件，判据代码指纹随之变，判据本身不变（照 G6 先例，rev 加一补记录）",
+     "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 45
     },
     {
-     "ref": "格子迁移 G10 展开收起登 E-GRID-LAND-UNKNOWN：error-codes.mjs 入检测器闭包，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 46
     },
     {
-     "ref": "C2（公共部件修理）：事件 id 与实例位次摘要的键文本移入 handles/keys.mjs，代号文法收归 validate/types.mjs（新增 LOWER_CAMEL_RE、CODE_BODY、KEY_BODY），vocab-load.mjs 改引 types.mjs；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
+     "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 47
     },
     {
-     "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 48
     },
     {
@@ -9527,28 +9991,24 @@
      "rev": 49
     },
     {
-     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 50
     },
     {
-     "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 51
     },
     {
-     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 52
     },
     {
-     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
-     "rev": 53
-    },
-    {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
-     "rev": 54
+     "rev": 53
     }
    ],
    "print": "fc245f0275c1ee436e0d80da1e5bab019a32fb1546fc1c25780c4eb748cfdbaf",
-   "rev": 54,
+   "rev": 53,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -9863,10 +10323,22 @@
     {
      "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
      "rev": 17
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 19
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 20
     }
    ],
-   "print": "c422892bd4c6767f880cc7e5bd97e43858f60320722486430448fa274eb66b57",
-   "rev": 17,
+   "print": "78709bb155bbcf0e6b236762b48c56f0e0199443cd700b2d44dada8bc00b0c4b",
+   "rev": 20,
    "scanClass": "timer_global",
    "source": "卷二十七 S27-3 :252；公共部件审查甲 R4；C0 卡",
    "terms": {
@@ -10222,10 +10694,18 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 85
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 86
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 87
     }
    ],
-   "print": "2cd950b274a3f589386c4ca22b0e29fa0e3516029e0899e44c67d690925ecae4",
-   "rev": 85,
+   "print": "74001aeff1b11545c0daafddc5da81368dc9fe77fce58f0c0c839fefd082e603",
+   "rev": 87,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -10317,10 +10797,22 @@
     {
      "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
      "rev": 17
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 19
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 20
     }
    ],
-   "print": "c422892bd4c6767f880cc7e5bd97e43858f60320722486430448fa274eb66b57",
-   "rev": 17,
+   "print": "78709bb155bbcf0e6b236762b48c56f0e0199443cd700b2d44dada8bc00b0c4b",
+   "rev": 20,
    "scanClass": "undo_raw_push",
    "source": "公共部件审查乙规则 3；卷二 §2.6；C0 卡",
    "terms": {
@@ -10471,10 +10963,18 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 34
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 35
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 36
     }
    ],
-   "print": "8cbb28937ee03fc28c2f11fb6dbeb28a28f1a4dd77b038cd079e3375f56d02cf",
-   "rev": 34,
+   "print": "e0e03ae3d658873fbaea7468573d628990aeba763a89eec2f1ef8f7ac0f41703",
+   "rev": 36,
    "scanClass": "version_fork",
    "terms": {
     "vol1.V-17": {
@@ -10704,10 +11204,22 @@
     {
      "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
      "rev": 54
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 55
+    },
+    {
+     "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
+     "rev": 56
+    },
+    {
+     "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 57
     }
    ],
-   "print": "4916e2cde9c126fd12917b6659b77d5e6e24b3b68ef65e85886efcb0c767c366",
-   "rev": 54,
+   "print": "6e1f0f09f9dc11e85f192f9d2e7b68bc14cb2e220e0399418af7783cad717782",
+   "rev": 57,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

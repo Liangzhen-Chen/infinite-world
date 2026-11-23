@@ -1,0 +1,7 @@
+function canon(o) {
+  return Object.keys(o).sort().map((k) => k + ':' + o[k]).join(',');
+}
+function save(store, o) {
+  store.setItem('k', canon(o));
+}
+save({ setItem(k, v) { return v.length; } }, {});

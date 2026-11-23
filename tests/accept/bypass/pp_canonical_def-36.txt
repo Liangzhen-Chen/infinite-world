@@ -1,0 +1,15 @@
+export function ser(root) {
+  const queue = [root];
+  let out = '';
+  while (queue.length) {
+    const x = queue.shift();
+    const sorted = [];
+    for (const k of Object.keys(x)) {
+      let p = 0;
+      while (p < sorted.length && sorted[p] < k) p++;
+      sorted.splice(p, 0, k);
+    }
+    for (const k of sorted) out += k + ':' + x[k] + ',';
+  }
+  return sha256Text(out);
+}

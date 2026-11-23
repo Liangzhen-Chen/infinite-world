@@ -1,0 +1,4 @@
+function canon(m) {
+  return [...m.keys()].sort().map((k) => k + ':' + m.get(k)).join(',');
+}
+export const id = (pairs) => sha256Text(canon(new Map(pairs)));

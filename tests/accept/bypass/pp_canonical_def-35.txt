@@ -1,0 +1,13 @@
+export function ser(root) {
+  const keys = Object.keys(root);
+  let i = 1;
+  let out = '';
+  while (i < keys.length) {
+    if (keys[i - 1].localeCompare(keys[i]) > 0) {
+      [keys[i - 1], keys[i]] = [keys[i], keys[i - 1]];
+      i = i > 1 ? i - 1 : 1;
+    } else i++;
+  }
+  for (const k of keys) out += k + ':' + root[k] + ',';
+  return sha256Text(out);
+}

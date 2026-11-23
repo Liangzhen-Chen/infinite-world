@@ -1,0 +1,3 @@
+const K = ['day', 'Minutes'].join('');
+export const y = (c) => c[K];
+export const z = ({ [K]: v }) => v;

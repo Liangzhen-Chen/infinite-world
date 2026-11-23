@@ -1,0 +1,8 @@
+import { sha256Text } from './kernel/storage.mjs';
+function canon(o) {
+  return Object.keys(o).sort().map((k) => k + ':' + o[k]).join(',');
+}
+export class Ids {
+  constructor() { this.hash = sha256Text; }
+  id(o) { return this.hash(canon(o)); }
+}

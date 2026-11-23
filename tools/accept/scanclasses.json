@@ -316,6 +316,9 @@
       "charCodeAt",
       "codePointAt"
      ],
+     "continueMethods": [
+      "then"
+     ],
      "exceptFiles": [
       "server-plugin/kernel/storage.mjs"
      ],
@@ -323,7 +326,11 @@
       "Object.keys",
       "Object.entries",
       "Object.getOwnPropertyNames",
-      "Reflect.ownKeys"
+      "Reflect.ownKeys",
+      "Map.keys",
+      "Map.entries",
+      "Set.keys",
+      "Set.entries"
      ],
      "kind": "canonicalDef",
      "mixCalls": [
@@ -338,6 +345,12 @@
      ],
      "mode": "confirmed",
      "name": "shape",
+     "passCalls": [
+      "Promise.resolve"
+     ],
+     "placeMethods": [
+      "splice"
+     ],
      "sinks": [
       "sha256Text",
       "createHash",
@@ -377,6 +390,9 @@
       "charCodeAt",
       "codePointAt"
      ],
+     "continueMethods": [
+      "then"
+     ],
      "exceptFiles": [
       "server-plugin/kernel/storage.mjs"
      ],
@@ -384,7 +400,11 @@
       "Object.keys",
       "Object.entries",
       "Object.getOwnPropertyNames",
-      "Reflect.ownKeys"
+      "Reflect.ownKeys",
+      "Map.keys",
+      "Map.entries",
+      "Set.keys",
+      "Set.entries"
      ],
      "kind": "canonicalDef",
      "mixCalls": [
@@ -399,6 +419,12 @@
      ],
      "mode": "review",
      "name": "shape",
+     "passCalls": [
+      "Promise.resolve"
+     ],
+     "placeMethods": [
+      "splice"
+     ],
      "sinks": [
       "sha256Text",
       "createHash",

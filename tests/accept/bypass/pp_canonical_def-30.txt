@@ -1,0 +1,5 @@
+export function id(pairs) {
+  const m = new Map(pairs);
+  const text = Array.from(m.entries()).sort().map((e) => e[0] + ':' + e[1]).join(',');
+  return sha256Text(text);
+}

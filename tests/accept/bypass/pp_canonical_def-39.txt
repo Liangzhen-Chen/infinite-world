@@ -1,0 +1,5 @@
+function canon(o) {
+  return Object.keys(o).sort().map((k) => k + ':' + o[k]).join(',');
+}
+const log = { update(s) { return s.length; } };
+export const size = (o) => log.update(canon(o));

@@ -175,6 +175,26 @@ export function fold(node, rec, depth = 0) {
       return null;
     }
     case 'ChainExpression': return fold(node.expression, rec, depth + 1);
+    case 'CallExpression': {
+      // 数组字面量（或沿 const 解开的数组字面量）的 join：元素都折叠得出常量才折叠，分隔符缺省为逗号。
+      const c = node.callee;
+      if (c.type !== 'MemberExpression' || c.computed || c.property.name !== 'join') return null;
+      let arr = c.object;
+      for (let d = 0; d < 4 && arr.type === 'Identifier'; d++) {
+        const b = arr.__scope ? arr.__scope.lookup(arr.name) : null;
+        if (b && b.kind === 'const' && b.init && b.keyPath.length === 0) arr = b.init; else break;
+      }
+      if (arr.type !== 'ArrayExpression') return null;
+      const sep = node.arguments.length ? fold(node.arguments[0], rec, depth + 1) : { v: ',' };
+      if (!sep) return null;
+      const parts = [];
+      for (const e of arr.elements) {
+        const f = e && e.type !== 'SpreadElement' ? fold(e, rec, depth + 1) : null;
+        if (!f) return null;
+        parts.push(String(f.v));
+      }
+      return { v: parts.join(String(sep.v)) };
+    }
     default: return null;
   }
 }
@@ -298,6 +318,14 @@ function exportLocal(target, name, depth = 0, seen = new Set()) {
     }
   }
   return null;
+}
+
+// 导入绑定在导出处的本地名（跟 export { x as y }、export { x } from 链）：按名字名单判的规则用，别名改名后仍认得出导出处声明的那个名字。
+export function importedLocal(rec, b) {
+  if (!b || b.kind !== 'import' || !b.imported) return null;
+  const t = importTarget(rec, b.source);
+  const def = t ? exportLocal(t, b.imported) : null;
+  return def ? def.local : null;
 }
 
 // 项目内“被别的文件调用的导入函数”索引：定义文件::本地名 -> [{ call, rec }]（形参来源跨文件取实参用）。整个项目只建一次。

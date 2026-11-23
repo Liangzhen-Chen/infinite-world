@@ -1756,6 +1756,153 @@
    "scanClass": "pp_canonical_def"
   },
   {
+   "addedAtRev": 22,
+   "caseKey": "pp_canonical_def-29",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-29.txt",
+   "group": "rules",
+   "origin": "C0 第九轮修（独立验收第八轮还漏）：取键用 Map 的 keys()（形参，调用点传 new Map），排序拼串后进摘要",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 22,
+   "caseKey": "pp_canonical_def-30",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-30.txt",
+   "group": "rules",
+   "origin": "C0 第九轮修（独立验收第八轮还漏）：取键用 Map 的 entries()（局部 const new Map），排序拼串后进摘要",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 22,
+   "caseKey": "pp_canonical_def-31",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-31.txt",
+   "group": "rules",
+   "origin": "C0 第九轮修（独立验收第八轮还漏）：串经 Promise.resolve(…).then 回调形参交给摘要",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 22,
+   "caseKey": "pp_canonical_def-32",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-32.txt",
+   "group": "rules",
+   "origin": "C0 第九轮修（独立验收第八轮还漏）：串经 async 函数返回、调用点 .then 回调形参交给摘要",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 22,
+   "caseKey": "pp_canonical_def-33",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-33.txt",
+   "group": "rules",
+   "origin": "C0 第九轮修（独立验收第八轮还漏）：类里 this.hash = sha256Text 的别名，this.hash(串)",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 22,
+   "caseKey": "pp_canonical_def-34",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-34.txt",
+   "group": "rules",
+   "origin": "C0 第九轮修（独立验收第八轮还漏）：对象成员 tools.hash 存了摘要函数别名，tools.hash(串)",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 22,
+   "caseKey": "pp_canonical_def-35",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-35.txt",
+   "group": "rules",
+   "origin": "C0 第九轮修（独立验收第八轮还漏）：单层循环里 localeCompare 比较加解构赋值交换的手写排序",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 22,
+   "caseKey": "pp_canonical_def-36",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-36.txt",
+   "group": "rules",
+   "origin": "C0 第九轮修（独立验收第八轮还漏）：队列外层循环里 splice 插入式手写排序",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 22,
+   "caseKey": "pp_canonical_def-37",
+   "fixture": "tests/accept/bypass/pp_canonical_def-37.txt",
+   "group": "rules",
+   "origin": "C0 第九轮修（独立验收第八轮还漏）：同样的队列加 splice 插入排序，结果只打印，不进摘要也不进存储，不报",
+   "polarity": "must_pass",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 22,
+   "caseKey": "pp_canonical_def-38",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-38.txt",
+   "group": "rules",
+   "origin": "C0 第九轮修（独立验收第八轮还漏）：const h = createHash(…); h.update(串)，接收者沿 const 回到 createHash",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 22,
+   "caseKey": "pp_canonical_def-39",
+   "fixture": "tests/accept/bypass/pp_canonical_def-39.txt",
+   "group": "rules",
+   "origin": "C0 第九轮修（独立验收第八轮还漏）：对象里自己定义的 update 方法（来源不是摘要或存储），不按裸名 update 认",
+   "polarity": "must_pass",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 22,
+   "caseKey": "pp_canonical_def-40",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-40.txt",
+   "group": "rules",
+   "origin": "C0 第九轮修（独立验收第八轮还漏）：类字段 hash = sha256Text，实例在类外 new 出来后 h.hash(串)",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 22,
+   "caseKey": "pp_canonical_def-41",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-41.txt",
+   "group": "rules",
+   "origin": "C0 第九轮修（独立验收第八轮还漏）：类里 this.digest 存了自写摘要函数的别名，this.digest(串)",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 22,
+   "caseKey": "pp_canonical_def-42",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-42.txt",
+   "group": "rules",
+   "origin": "C0 第九轮修（独立验收第八轮还漏）：导出函数的外来形参 store.setItem(串)：形参没有调用点，按成员路径末段认存储写",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 22,
+   "caseKey": "pp_canonical_def-43",
+   "fixture": "tests/accept/bypass/pp_canonical_def-43.txt",
+   "group": "rules",
+   "origin": "C0 第九轮修（独立验收第八轮还漏）：同样的 store.setItem，但调用点传来的是对象字面量里自己定义的方法（来源已知非存储），不报",
+   "polarity": "must_pass",
+   "scanClass": "pp_canonical_def"
+  },
+  {
    "addedAtRev": 11,
    "caseKey": "pp_canonical_review-05",
    "expectCode": "E-VIEW-BYPASS",
@@ -2953,6 +3100,35 @@
    "scanClass": "pp_region_cell"
   },
   {
+   "addedAtRev": 22,
+   "caseKey": "pp_region_cell-21",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_region_cell-21.txt",
+   "group": "rules",
+   "origin": "C0 第九轮修（李白 Flash 复测第八轮）：别的文件 const regionCellM 以 export { regionCellM as x } 导出，本文件改名导入后相除，跟到导出处的本地名",
+   "polarity": "must_fail",
+   "scanClass": "pp_region_cell"
+  },
+  {
+   "addedAtRev": 22,
+   "caseKey": "pp_region_cell-22",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_region_cell-22.txt",
+   "group": "rules",
+   "origin": "C0 第九轮修（李白 Flash 复测第八轮）：别的文件按名导出 regionCellM、cellM，本文件改名导入后相除",
+   "polarity": "must_fail",
+   "scanClass": "pp_region_cell"
+  },
+  {
+   "addedAtRev": 22,
+   "caseKey": "pp_region_cell-23",
+   "fixture": "tests/accept/bypass/pp_region_cell-23.txt",
+   "group": "rules",
+   "origin": "C0 第九轮修（李白 Flash 复测第八轮）：导出处是不相干的 x、y，本文件只是把本地别名取成 regionCellM、cellM：不按本地别名字面判，不报",
+   "polarity": "must_pass",
+   "scanClass": "pp_region_cell"
+  },
+  {
    "addedAtRev": 1,
    "caseKey": "pp_rx_empty_clock-01",
    "expectCode": "E-VIEW-BYPASS",
@@ -3195,6 +3371,25 @@
    "fixture": "tests/accept/bypass/pp_year_minutes-13.txt",
    "group": "rules",
    "origin": "独立验收补漏：别的计算属性名不报",
+   "polarity": "must_pass",
+   "scanClass": "pp_year_minutes"
+  },
+  {
+   "addedAtRev": 22,
+   "caseKey": "pp_year_minutes-21",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_year_minutes-21.txt",
+   "group": "rules",
+   "origin": "C0 第九轮修（李白 Flash 复测第八轮）：['year','Minutes'].join('') 折叠出名字，用作计算属性名与解构形参的计算键",
+   "polarity": "must_fail",
+   "scanClass": "pp_year_minutes"
+  },
+  {
+   "addedAtRev": 22,
+   "caseKey": "pp_year_minutes-22",
+   "fixture": "tests/accept/bypass/pp_year_minutes-22.txt",
+   "group": "rules",
+   "origin": "C0 第九轮修（李白 Flash 复测第八轮）：['day','Minutes'].join('') 折叠出的不是登记名，不报",
    "polarity": "must_pass",
    "scanClass": "pp_year_minutes"
   },
