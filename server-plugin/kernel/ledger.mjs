@@ -16,9 +16,8 @@ import { ruleTable } from './load/rules.mjs';
 import { CODE_RE } from './handles/vocab-handle.mjs';
 import { kindOf } from './vocab.mjs';
 import { KernelError, codeOf } from './errors.mjs';
-import { currentTransaction } from './transaction.mjs';
+import { currentTransaction, txSet, txDelete, markDenied } from './transaction.mjs';
 import { TERMINATED_KEY } from './storage.mjs';
-import { invalidateMemo } from './memo.mjs';
 import { clone } from './clone.mjs';
 import { splitLastRemainder, fixedUnits, fixedAdd, fixedMultiply, fixedDivide, fixedToNumber } from './det-math.mjs';
 import { dim } from './dimensions.mjs';
@@ -298,31 +297,6 @@ function readAt(state, segs) {
   return cur;
 }
 
-// 事务内写（记撤销项，与 kernel/storage.mjs 同一撤销格式；账本路径不经 writePath，卷二 §2.6 第 4 条）。
-function setInTx(tx, segs, value) {
-  let cur = tx.state;
-  for (let i = 0; i < segs.length - 1; i++) {
-    const s = segs[i];
-    if (!Object.hasOwn(cur, s) || !isObj(cur[s])) {
-      tx.undo.push({ segs: segs.slice(0, i + 1), existed: Object.hasOwn(cur, s), prev: cur[s] });
-      cur[s] = {};
-    }
-    cur = cur[s];
-  }
-  const last = segs[segs.length - 1];
-  tx.undo.push({ segs: [...segs], existed: Object.hasOwn(cur, last), prev: cur[last] });
-  cur[last] = value;
-  tx.written.push([...segs]);
-  invalidateMemo(tx.state);
-}
-
-// 被拒即在当前事务上记"已被拒"：规则层 catch 住也照样整笔回滚（卷二 §2.6"事务内拒写的处置"）。
-function denied(e) {
-  const tx = currentTransaction();
-  if (tx && codeOf(e) !== null && tx.denied === undefined) tx.denied = e;
-  return e;
-}
-
 // ---------- 写入口 ----------
 
 // 持有人是主体（§2.1 :103、S6-14；卷三乙 K-2 :1030）：代号形、已载入实体、kind 在 holder 类型里；须带主体标记的 kind（place）其行标记为真，
@@ -386,10 +360,10 @@ export function openAccount(engine, state, holderId, resourceRef, purposeCode) {
     if (Number.isInteger(readAt(state, segs))) return key;
     const tx = currentTransaction();
     if (!tx || tx.state !== state) throw new KernelError('E-VIEW-UNDECLARED-WRITE', { entity: holderId }, 'openAccount outside the transaction of this state');
-    setInTx(tx, segs, 0);
+    txSet(tx, segs, 0);
     return key;
   } catch (e) {
-    throw denied(e);
+    throw markDenied(e);
   }
 }
 
@@ -406,7 +380,7 @@ const structErr = (why) => new KernelError('E-DIM-STRUCT-FIELD', { entity: null 
 const isPosInt = (v) => Number.isSafeInteger(v) && v > 0;
 
 // 批次键计数器的进制：内核常数表 kernelConstants.handleRadix（与卷二十 due_ 句柄同一张表、同一进制，李白 11-18 03:31、04:10）。
-function lotRadix(engine) {
+export function lotRadix(engine) {
   const t = ruleTable(engine.rules, SCHEMA.constantsTable);
   const r = isObj(t) ? t[SCHEMA.radixKey] : undefined;
   if (!Number.isInteger(r)) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, `rules.${SCHEMA.constantsTable}.${SCHEMA.radixKey} is not an integer radix`);
@@ -436,7 +410,7 @@ export function lotKeyInstance(key) {
 }
 
 // 批次键的序号（前缀之后按进制读回、往返一致才算；不是序号键（含实例批次键）即 null）。
-function lotOrdinal(key, radix) {
+export function lotOrdinal(key, radix) {
   if (typeof key !== 'string' || !key.startsWith(SCHEMA.lotPrefix) || lotKeyInstance(key) !== null) return null;
   const digits = key.slice(SCHEMA.lotPrefix.length);
   const n = Number.parseInt(digits, radix);
@@ -671,7 +645,7 @@ function postDraft(engine, state, draft, viaAllocation) {
           const next = readAt(state, [SCHEMA.counters, SCHEMA.lotNext]) ?? 0;
           if (!Number.isSafeInteger(next) || next < 0) throw new KernelError('E-DIM-DOMAIN-RANGE', { entity: null }, `${SCHEMA.counters}.${SCHEMA.lotNext} is not a non-negative integer`);
           key = `${SCHEMA.lotPrefix}${next.toString(radix)}`;
-          setInTx(tx, [SCHEMA.counters, SCHEMA.lotNext], next + 1);
+          txSet(tx, [SCHEMA.counters, SCHEMA.lotNext], next + 1);
         }
         if (Object.hasOwn(a.lot, 'attrs')) attrs = clone(a.lot.attrs);
         else {
@@ -693,26 +667,26 @@ function postDraft(engine, state, draft, viaAllocation) {
       const cur = readAt(state, segs);
       const now = (Number.isInteger(cur) ? cur : 0) + a.delta;
       if (now < 0) throw new KernelError('E-LEDGER-NEGATIVE', { entity: a.holder, balance: Number.isInteger(cur) ? cur : 0, delta: a.delta }, `leg ${a.i}: balance would be ${now}`);
-      setInTx(tx, segs, now);
+      txSet(tx, segs, now);
       // 实例批次出账到 0 即整行删（实例只在一处账户，同键不留零行；散货批次零行照旧保留）。
-      if (now === 0 && lotKeyInstance(key) !== null) { deleteInTx(tx, segs); deleteInTx(tx, [SCHEMA.stockLots, a.holder, a.purpose, a.kind, key]); }
+      if (now === 0 && lotKeyInstance(key) !== null) { txDelete(tx, segs); txDelete(tx, [SCHEMA.stockLots, a.holder, a.purpose, a.kind, key]); }
       if (attrs) {
         // 新批次（新属性或拆分带出）带 project 即核备料持有人等于工程 sponsor（卷三乙 K-8 :1037、卷十九 §4.4 规则 7 :531）。
         const sf = stagingFault(engine, state, a.holder, attrs);
         if (sf) throw new KernelError(sf.code, { entity: a.holder }, `leg ${a.i}: ${sf.why}`);
-        setInTx(tx, [SCHEMA.stockLots, a.holder, a.purpose, a.kind, key], attrs);
+        txSet(tx, [SCHEMA.stockLots, a.holder, a.purpose, a.kind, key], attrs);
       }
       // 规则 13：trackOutflow 为真的分区，每条出账腿的减少量加进流出累计。
       if (a.delta < 0 && a.purposeEntry.trackOutflow === true) {
         const oseg = [SCHEMA.outflow, a.holder, a.purpose, a.kind, a.key, 'cumulative'];
         const prev = readAt(state, oseg);
-        setInTx(tx, oseg, (Number.isInteger(prev) ? prev : 0) - a.delta);
+        txSet(tx, oseg, (Number.isInteger(prev) ? prev : 0) - a.delta);
       }
     }
     // 拆出部分的 costBasis 从原批扣下（留下部分取原值减去拆出部分之和）。
     for (const [k, b] of before) {
       if (b.attrs[SCHEMA.costBasis] === undefined || lotKeyInstance(k.slice(k.indexOf('/') + 1)) !== null) continue;
-      setInTx(tx, [SCHEMA.stockLots, b.src.holder, b.src.purpose, k.slice(0, k.indexOf('/')), k.slice(k.indexOf('/') + 1), SCHEMA.costBasis], b.attrs[SCHEMA.costBasis] - b.taken);
+      txSet(tx, [SCHEMA.stockLots, b.src.holder, b.src.purpose, k.slice(0, k.indexOf('/')), k.slice(k.indexOf('/') + 1), SCHEMA.costBasis], b.attrs[SCHEMA.costBasis] - b.taken);
     }
     // 规则 3：来源、去处按资源种类累计（cumulative 单调不减）；同时记当日用量 usedByDay（§4.1.1 :347；世界日读 clockView，e6）。
     // 不在单笔上做限额拒绝：限额通道超日限额由日终按比例分配（§4.1 规则 6 :376），窗口外按零计（§2.5 :224）也归那一步（3-3）。
@@ -733,7 +707,7 @@ function postDraft(engine, state, draft, viaAllocation) {
         if (last && last.day > today) throw new KernelError('E-LEDGER-USEDBYDAY-ORDER', { entity: null }, `${seg.join(GRAMMAR_TOKENS.pathSep)}: last day ${last.day} is after today ${today}`);
         if (last && last.day === today) last.used += c.qty;
         else days.push({ day: today, used: c.qty });
-        setInTx(tx, seg, { [SCHEMA.cumulative]: prev.cumulative + c.qty, [SCHEMA.usedByDay]: days });
+        txSet(tx, seg, { [SCHEMA.cumulative]: prev.cumulative + c.qty, [SCHEMA.usedByDay]: days });
       }
     }
 
@@ -743,7 +717,7 @@ function postDraft(engine, state, draft, viaAllocation) {
     if (kinds.some((k) => resourceRow(engine, k, null).issuerBacked === true)) notRun.push('issuer_backed');
     return Object.freeze({ lots: Object.freeze(lots), notRun: Object.freeze(notRun.sort(cmp)) });
   } catch (e) {
-    throw denied(e);
+    throw markDenied(e);
   }
 }
 
@@ -768,7 +742,7 @@ export function transfer(engine, state, t) {
     if (t.refs !== undefined) draft.refs = t.refs;
     return post(engine, state, draft);
   } catch (e) {
-    throw denied(e);
+    throw markDenied(e);
   }
 }
 
@@ -1022,6 +996,16 @@ export function balance(engine, state, holderId, resourceRef, purposeCode) {
 }
 
 /**
+ * 账本里至少开过一个账户的持有人，按代号码点序（只读）。卷六 :354 的 accountsOf 是"按持有人取"，要遍历全部持有人（如 itemRot 扫全账本）
+ * 先取这份名单再逐人调 accountsOf；调用方不直读 state.accounts（卷六 :354 读只经读入口）。
+ * @param {any} state @returns {readonly string[]}
+ */
+export function accountHolders(state) {
+  const all = readAt(state, [SCHEMA.accounts]);
+  return Object.freeze(Object.keys(isObj(all) ? all : {}).sort(cmp));
+}
+
+/**
  * kernelApi `accountsOf(holderId, {family, purpose})`（§3.1 :254；§4.1 规则 10 :381 库存是聚合视图）：该持有人的账户列表，
  * 可按资源族（resfam 条目）与用途（purpose 条目）筛；两项都可省。按（用途、资源种类、资源键）升序。
  * 按物品经济大类（卷三乙 §4.3 C-6）聚合要块 6 物品，现不提供（K3-10）。
@@ -1251,7 +1235,7 @@ export function settleCappedAllocation(engine, state, input) {
     }
     return Object.freeze({ ...head, booked: total, alreadyBooked: false });
   } catch (e) {
-    throw denied(e);
+    throw markDenied(e);
   }
 }
 
@@ -1292,7 +1276,7 @@ export function closeLedgerPeriod(engine, state, endDay, writeReport) {
   const report = Object.freeze({ endDay, usage: Object.freeze(usage), gaps });
   writeReport(report);
   for (const k of keep) {
-    setInTx(tx, [SCHEMA.totals, k.kind, k.code], { [SCHEMA.cumulative]: k.cumulative, [SCHEMA.usedByDay]: k.rest.map((d) => ({ day: d.day, used: d.used })) });
+    txSet(tx, [SCHEMA.totals, k.kind, k.code], { [SCHEMA.cumulative]: k.cumulative, [SCHEMA.usedByDay]: k.rest.map((d) => ({ day: d.day, used: d.used })) });
   }
   return Object.freeze({ ...report, cleared: usage.length });
 }
@@ -1309,21 +1293,6 @@ export function resourceAllows(engine, kind, flow) {
   const rows = ruleTable(engine.rules, SCHEMA.resourcesTable);
   const row = Object.hasOwn(rows, kind) ? rows[kind] : undefined;
   return isObj(row) && ((Array.isArray(row.sources) && row.sources.includes(flow)) || (Array.isArray(row.sinks) && row.sinks.includes(flow)));
-}
-
-// 事务内删（记撤销项，格式同 setInTx）：键存在才删。
-function deleteInTx(tx, segs) {
-  let cur = tx.state;
-  for (let i = 0; i < segs.length - 1; i++) {
-    if (!isObj(cur) || !Object.hasOwn(cur, segs[i])) return;
-    cur = cur[segs[i]];
-  }
-  const last = segs[segs.length - 1];
-  if (!isObj(cur) || !Object.hasOwn(cur, last)) return;
-  tx.undo.push({ segs: [...segs], existed: true, prev: cur[last] });
-  delete cur[last];
-  tx.written.push([...segs]);
-  invalidateMemo(tx.state);
 }
 
 // 批次属性里 K-3 判同的键与"受热或在燃烧则不并"的键（卷三乙 §4.4.3 K-3 :1037）；腐坏档与进度差是腐坏规则的事，由调用方先判。
@@ -1393,13 +1362,13 @@ export function mergeLots(engine, state, m) {
     if (Number.isInteger(A[SCHEMA.costBasis]) && Number.isInteger(B[SCHEMA.costBasis])) next[SCHEMA.costBasis] = A[SCHEMA.costBasis] + B[SCHEMA.costBasis];
     else delete next[SCHEMA.costBasis];
     for (const k of LOT_ROT_KEYS) if (Object.hasOwn(A, k)) next[k] = A[k];
-    setInTx(tx, [SCHEMA.stockLots, ...seg(m.into)], next);
-    setInTx(tx, [SCHEMA.accounts, ...seg(m.into)], qa + qb);
-    deleteInTx(tx, [SCHEMA.accounts, ...seg(m.from)]);
-    deleteInTx(tx, [SCHEMA.stockLots, ...seg(m.from)]);
+    txSet(tx, [SCHEMA.stockLots, ...seg(m.into)], next);
+    txSet(tx, [SCHEMA.accounts, ...seg(m.into)], qa + qb);
+    txDelete(tx, [SCHEMA.accounts, ...seg(m.from)]);
+    txDelete(tx, [SCHEMA.stockLots, ...seg(m.from)]);
     return Object.freeze({ into: m.into, qty: qa + qb });
   } catch (e) {
-    throw denied(e);
+    throw markDenied(e);
   }
 }
 
@@ -1426,7 +1395,7 @@ export function recordTaint(engine, state, r) {
       const row = readAt(state, [ITEM.instances, t[TARGET.instance]]);
       if (!isObj(row)) throw new KernelError('E-DIM-REF-MISSING', { entity: null }, `${JSON.stringify(t[TARGET.instance])} is not an item instance`);
       if (r.cause === null && Object.hasOwn(row, SCHEMA.taint)) throw structErr('recordTaint: an instance taint is set once at creation (cause null); changing it needs a cause');
-      setInTx(tx, [ITEM.instances, t[TARGET.instance], SCHEMA.taint], r.taint);
+      txSet(tx, [ITEM.instances, t[TARGET.instance], SCHEMA.taint], r.taint);
       return;
     }
     if (isObj(t) && fieldsWithin(t, [TARGET.lot]) && isObj(t[TARGET.lot])) {
@@ -1435,11 +1404,11 @@ export function recordTaint(engine, state, r) {
       const attrs = readAt(state, [SCHEMA.stockLots, holder, purpose, kind, lotKey]);
       if (!isObj(attrs)) throw new KernelError('E-DIM-REF-MISSING', { entity: holder }, `lot ${lotKey} has no ${SCHEMA.stockLots} row`);
       checkSubject(engine, state, holder);
-      setInTx(tx, [SCHEMA.stockLots, holder, purpose, kind, lotKey, SCHEMA.taint], r.taint);
+      txSet(tx, [SCHEMA.stockLots, holder, purpose, kind, lotKey, SCHEMA.taint], r.taint);
       return;
     }
     throw structErr('recordTaint target is {instance} or {lot: {holder, purpose, kind, lotKey}}');
   } catch (e) {
-    throw denied(e);
+    throw markDenied(e);
   }
 }

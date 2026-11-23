@@ -16,7 +16,7 @@ import { post, transfer, recordTaint, mergeLots, auditLots, auditLedger, lotsUnm
 import { codeOf } from '../../server-plugin/kernel/errors.mjs';
 import { createItemInstance, writeItemDeviation } from '../../server-plugin/kernel/dimension-writers.mjs';
 import { dim } from '../../server-plugin/kernel/dimensions.mjs';
-import { lotsView, rotStep, wearStep, instanceView, canContain, containerView, durabilityOn, loadPlan } from '../../server-plugin/kernel/item-state.mjs';
+import { lotsView, rottenLots, rotStep, wearStep, instanceView, canContain, containerView, durabilityOn, loadPlan } from '../../server-plugin/kernel/item-state.mjs';
 import { transferGoods, reanchorLot, settleRotted } from '../../server-plugin/item-lots.mjs';
 import { installEventLog } from '../../server-plugin/kernel/events.mjs';
 import { advanceHook } from '../../server-plugin/kernel/advance-registry.mjs';
@@ -656,6 +656,16 @@ test('itemRot 钩子登记（environment 阶段、文件 item-lots.mjs、节拍�
   assert.deepEqual(run(state, LOTS, (s) => { n = settleRotted(engine, s); }), { ok: true });
   assert.equal(n, 0);
   assert.deepEqual(auditLots(engine, state), []);
+});
+
+test('rottenLots：持有人同用途下另有非货物族账户（建筑份额，键不是批次序号）时不抛错，只列货物批次里坏透的', () => {
+  const { engine } = build();
+  engine.rules.economyResources.res_test_share = { ...engine.rules.economyResources.res_test_grain, family: 'resfam_asset' };
+  const state = at(0);
+  const rotten = stock(engine, state, PA, 10, { spoilage: 0, rotAnchorDay: 0 });
+  state.clock.minute = 30 * 1440; // 30 × 0.04 = 1.2 封顶 1：坏透
+  state.accounts[PA][SH].res_test_share = { bldg_hall_a: 1, bldg_hall_b: 1 };
+  assert.deepEqual(rottenLots(engine, state), [{ account: { holder: PA, purpose: SH, kind: 'res_test_grain' }, lotKey: rotten, qty: 10 }]);
 });
 
 // ---------- K-3 实例批次不合并；实例批次键 lot_i_<实例id>（勘误 1119k13） ----------

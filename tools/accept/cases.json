@@ -4052,10 +4052,29 @@
   },
   {
    "addedAtRev": 1,
+   "caseKey": "undo_raw_push-03",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/undo_raw_push-03.txt",
+   "group": "kernel",
+   "origin": "卷二:541–:542：事务撤销项只由 kernel/transaction.mjs 产生，别的内核文件里同样写法照报（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "undo_raw_push"
+  },
+  {
+   "addedAtRev": 1,
    "caseKey": "undo_raw_push-11",
    "fixture": "tests/accept/bypass/undo_raw_push-11.txt",
    "group": "rules",
    "origin": "卷二 §2.6：别的对象上的同名成员链不是事务撤销栈（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "undo_raw_push"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "undo_raw_push-12",
+   "fixture": "tests/accept/bypass/undo_raw_push-12.txt",
+   "group": "kernel",
+   "origin": "卷二:541–:542：kernel/transaction.mjs 是唯一事务裸写者，其中的撤销压栈不报（必须不报）",
    "polarity": "must_pass",
    "scanClass": "undo_raw_push"
   },

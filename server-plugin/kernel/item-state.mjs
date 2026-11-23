@@ -13,7 +13,7 @@ import { dim } from './dimensions.mjs';
 import { materialView, aggregateMaterialFor, itemView } from './item.mjs';
 import { dailyMeanTemp, tempAt } from './climate.mjs';
 import { weatherAt } from './weather.mjs';
-import { lotsUnmergeable, lotKeyInstance, resourceAllows, SCHEMA as LEDGER } from './ledger.mjs';
+import { lotsUnmergeable, lotKeyInstance, resourceAllows, balance, accountsOf, accountHolders, lotRadix, lotOrdinal, SCHEMA as LEDGER } from './ledger.mjs';
 import { buildE } from './handles/generated.mjs';
 import { placeClimateInput } from './place.mjs';
 import { kindOf } from './vocab.mjs';
@@ -25,9 +25,9 @@ const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
 // 状态顶层键、规则表、表头维度名（固定记号，单一定义）；表代号 item、material 是维度表的 kind。
 const KIND = Object.freeze({ item: 'item' });
-const ST = Object.freeze({ instances: 'itemInstances', lots: 'stockLots', accounts: 'accounts', created: 'created', props: 'props' });
-const RT = Object.freeze({ rot: 'rot', wear: 'wear', kernelConstants: 'kernelConstants' });
-const RK = Object.freeze({ tempCurve: 'tempCurve', stages: 'stages', mergeMaxGap: 'mergeMaxGap', envCurve: 'envCurve', radix: 'handleRadix' });
+const ST = Object.freeze({ instances: 'itemInstances', lots: 'stockLots', created: 'created', props: 'props' });
+const RT = Object.freeze({ rot: 'rot', wear: 'wear' });
+const RK = Object.freeze({ tempCurve: 'tempCurve', stages: 'stages', mergeMaxGap: 'mergeMaxGap', envCurve: 'envCurve' });
 const F = Object.freeze({
   template: 'template', taint: 'taint', durability: 'durability', wearAnchorDay: 'wearAnchorDay', spoilage: 'spoilage', rotAnchorDay: 'rotAnchorDay',
   qualityTier: 'qualityTier', enteredDay: 'enteredDay', source: 'source', purports: 'purports', batchTag: 'batchTag', material: 'material', project: 'project',
@@ -113,20 +113,11 @@ export function itemOfResource(engine, kind) {
   return rec && rec.family === FAMILY.resource && isObj(rec.entry) && typeof rec.entry[RES_FIELD.item] === 'string' ? rec.entry[RES_FIELD.item] : null;
 }
 
-function radixOf(engine) {
-  const r = ruleVal(engine, RT.kernelConstants, RK.radix);
-  if (!Number.isSafeInteger(r)) throw new KernelError('E-RULES-UNREGISTERED', {}, 'rules.kernelConstants.handleRadix is not set');
-  return r;
-}
-
-/**
- * 批次键的序号（批次键即 lot_＋序号按 handleRadix 进制，先后由序号承担，卷三乙 §2.3 :264）。
- * @param {any} engine @param {string} lotKey
- * @returns {number}
- */
-export function lotSeq(engine, lotKey) {
-  if (lotKeyInstance(lotKey) !== null) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `${lotKey} is an instance lot key: it carries no serial`);
-  return parseInt(lotKey.slice(LEDGER.lotPrefix.length), radixOf(engine));
+// 批次键的序号（批次键即 lot_＋序号按 handleRadix 进制，先后由序号承担，卷三乙 §2.3 :264）：解析只在 ledger.mjs（lotRadix、lotOrdinal，带往返核对），这里只在读不出序号时拒。
+function serialOf(engine, lotKey) {
+  const n = lotOrdinal(lotKey, lotRadix(engine));
+  if (n === null) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `${lotKey} is not a serial lot key`);
+  return n;
 }
 
 /**
@@ -138,7 +129,7 @@ export function lotKeyCompare(engine, a, b) {
   const ia = lotKeyInstance(a) !== null;
   const ib = lotKeyInstance(b) !== null;
   if (ia || ib) return ia === ib ? (a < b ? -1 : a > b ? 1 : 0) : (ia ? 1 : -1);
-  return lotSeq(engine, a) - lotSeq(engine, b);
+  return serialOf(engine, a) - serialOf(engine, b);
 }
 
 /** 批次引用 lotRef = {account: {holder, purpose, kind}, lotKey} 的形状核对与取值。 */
@@ -149,7 +140,7 @@ function lotParts(ref) {
 }
 
 const lotAttrs = (state, p) => at(state, ST.lots, p.holder, p.purpose, p.kind, p.lotKey);
-const lotQty = (state, p) => at(state, ST.accounts, p.holder, p.purpose, p.kind, p.lotKey);
+const lotQty = (engine, state, p) => balance(engine, state, p.holder, { kind: p.kind, key: p.lotKey }, p.purpose);
 
 // ---------- 地点环境接线（卷二十 §4.5 温度、§4.3 湿度） ----------
 
@@ -342,24 +333,24 @@ const ROT = Object.freeze({ sink: 'sink_decay', material: 'material' });
  */
 export function rottenLots(engine, state) {
   const out = [];
-  const accounts = at(state, ST.accounts);
-  for (const holder of Object.keys(isObj(accounts) ? accounts : {}).sort(cmp)) {
-    for (const purpose of Object.keys(accounts[holder]).sort(cmp)) {
-      for (const kind of Object.keys(accounts[holder][purpose]).sort(cmp)) {
+  // 账本只经卷六 :354 的读入口：持有人名单（accountHolders）→ 逐人 accountsOf；账户序是（用途、资源种类、批次键序）。
+  const kindInfo = new Map(); // 资源种类 → 模板与模板材料份（该种类不适用坏透结算即 null）
+  for (const holder of accountHolders(state)) {
+    // 只取货物批次族（账本 accountsOf 的资源族筛）：非货物账户（如建筑份额）的键不是批次序号，不进 itemRot、也不参与批次键排序。
+    const rows = [...accountsOf(engine, state, holder, { family: LEDGER.lotFamily })].sort((a, b) => cmp(a.purpose, b.purpose) || cmp(a.resource.kind, b.resource.kind) || lotKeyCompare(engine, a.resource.key, b.resource.key));
+    for (const { purpose, resource: { kind, key: lotKey }, balance: qty } of rows) {
+      if (!kindInfo.has(kind)) {
         const template = itemOfResource(engine, kind);
-        if (template === null || !resourceAllows(engine, kind, ROT.sink)) continue;
-        const templateShares = itemViewShares(engine, state, template);
-        for (const lotKey of Object.keys(accounts[holder][purpose][kind]).sort((a, b) => lotKeyCompare(engine, a, b))) {
-          const qty = accounts[holder][purpose][kind][lotKey];
-          if (!(qty > 0)) continue;
-          // 批次的材料偏离（卷三乙 :428）替代模板的材料组成：整件可腐按这一批的各份判。
-          const dev = at(state, ST.lots, holder, purpose, kind, lotKey);
-          const shares = isObj(dev) && Array.isArray(dev[F.material]) ? dev[F.material].filter((s) => s.share > 0) : templateShares;
-          if (!shares.length || !shares.every((s) => dim(engine, state, ROT.material, s.materialRef, DIMN.rotRate).applicable)) continue;
-          const r = rotStep(engine, state, { account: { holder, purpose, kind }, lotKey }, 0, { expiry: false });
-          if (r.transform !== null) out.push(Object.freeze({ account: { holder, purpose, kind }, lotKey, qty }));
-        }
+        kindInfo.set(kind, template === null || !resourceAllows(engine, kind, ROT.sink) ? null : { templateShares: itemViewShares(engine, state, template) });
       }
+      const info = kindInfo.get(kind);
+      if (info === null || !(qty > 0)) continue;
+      // 批次的材料偏离（卷三乙 :428）替代模板的材料组成：整件可腐按这一批的各份判。
+      const dev = at(state, ST.lots, holder, purpose, kind, lotKey);
+      const shares = isObj(dev) && Array.isArray(dev[F.material]) ? dev[F.material].filter((s) => s.share > 0) : info.templateShares;
+      if (!shares.length || !shares.every((s) => dim(engine, state, ROT.material, s.materialRef, DIMN.rotRate).applicable)) continue;
+      const r = rotStep(engine, state, { account: { holder, purpose, kind }, lotKey }, 0, { expiry: false });
+      if (r.transform !== null) out.push(Object.freeze({ account: { holder, purpose, kind }, lotKey, qty }));
     }
   }
   return Object.freeze(out);
@@ -506,8 +497,8 @@ export function lotMergeVerdict(engine, state, a, b) {
   if (ra.stage !== rb.stage) return Object.freeze({ ok: false, reason: 'different rot stages', spoilage: null });
   const d = fixedSub(fixedUnits(ra.spoilage.value), fixedUnits(rb.spoilage.value));
   if ((d < 0n ? -d : d) > fixedUnits(gap)) return Object.freeze({ ok: false, reason: 'spoilage gap exceeds rules.rot.mergeMaxGap', spoilage: null });
-  const qa = lotQty(state, pa);
-  const qb = lotQty(state, pb);
+  const qa = lotQty(engine, state, pa);
+  const qb = lotQty(engine, state, pb);
   const num = fixedAdd(fixedMultiply(fixedUnits(ra.spoilage.value), fixedUnits(qa)), fixedMultiply(fixedUnits(rb.spoilage.value), fixedUnits(qb)));
   return Object.freeze({ ok: true, reason: null, spoilage: fixedToNumber(fixedDivide(num, fixedUnits(qa + qb))) });
 }
@@ -537,15 +528,13 @@ export function instanceView(engine, state, id) {
  */
 export function lotsView(engine, state, holderId, itemId, purpose) {
   const out = [];
-  for (const kind of resourceKindsOf(engine, itemId)) {
-    const bucket = at(state, ST.accounts, holderId, purpose, kind);
-    if (!isObj(bucket)) continue;
-    for (const lotKey of Object.keys(bucket)) {
-      if (bucket[lotKey] === 0) continue;
-      const attrs = at(state, ST.lots, holderId, purpose, kind, lotKey);
-      const r = rotStep(engine, state, { account: { holder: holderId, purpose, kind }, lotKey }, 0);
-      out.push({ lotKey, kind, qty: bucket[lotKey], attrs: isObj(attrs) ? attrs : {}, spoilage: r.spoilage, stage: r.stage, expiresDay: r.expiresDay });
-    }
+  const kinds = resourceKindsOf(engine, itemId);
+  for (const acct of accountsOf(engine, state, holderId, { purpose })) {
+    const { kind, key: lotKey } = acct.resource;
+    if (!kinds.includes(kind) || acct.balance === 0) continue;
+    const attrs = at(state, ST.lots, holderId, purpose, kind, lotKey);
+    const r = rotStep(engine, state, { account: { holder: holderId, purpose, kind }, lotKey }, 0);
+    out.push({ lotKey, kind, qty: acct.balance, attrs: isObj(attrs) ? attrs : {}, spoilage: r.spoilage, stage: r.stage, expiresDay: r.expiresDay });
   }
   out.sort((a, b) => lotKeyCompare(engine, a.lotKey, b.lotKey));
   return Object.freeze(out.map((x) => Object.freeze(x)));

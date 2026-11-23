@@ -22,8 +22,7 @@ import { checkValue, markersOf } from './validate/types.mjs';
 const HANDLE_PREFIX = 'due_';
 import { readPath, writePath } from './storage.mjs';
 import { P } from './handles/generated.mjs';
-import { runTransaction, openTickJournal, closeTickJournal, rollbackTickJournal, currentTransaction } from './transaction.mjs';
-import { invalidateMemo } from './memo.mjs';
+import { runTransaction, openTickJournal, closeTickJournal, rollbackTickJournal, currentTransaction, txSet, markDenied } from './transaction.mjs';
 import { report } from './report.mjs';
 import { registry } from './vocab.mjs';
 import { CODE_RE } from './validate/types.mjs';
@@ -319,34 +318,9 @@ function live(state, e) {
   return isObj(row) && row.dueMinute === e.dueMinute && row.registeredMinute === e.registeredMinute;
 }
 
-// 事务内写、删 due.<句柄>（本文件是 due.* 唯一写者，§4.1.2；撤销项与 kernel/storage.mjs、kernel/ledger.mjs 同一格式，事务回滚与整刻作废照撤）。
-function txSet(tx, segs, value) {
-  let cur = tx.state;
-  for (let i = 0; i < segs.length - 1; i++) {
-    const s = segs[i];
-    if (!Object.hasOwn(cur, s) || !isObj(cur[s])) {
-      tx.undo.push({ segs: segs.slice(0, i + 1), existed: Object.hasOwn(cur, s), prev: cur[s] });
-      cur[s] = {};
-    }
-    cur = cur[s];
-  }
-  const last = segs[segs.length - 1];
-  tx.undo.push({ segs: [...segs], existed: Object.hasOwn(cur, last), prev: cur[last] });
-  if (value === undefined) delete cur[last]; else cur[last] = value;
-  tx.written.push([...segs]);
-  invalidateMemo(tx.state);
-}
-
-// 被拒即在当前事务上记"已被拒"：规则层 catch 住也照样整笔回滚（卷二 §2.6"事务内拒写的处置"，同 storage、ledger）。
-function denied(e) {
-  const tx = currentTransaction();
-  if (tx && typeof e.code === 'string' && tx.denied === undefined) tx.denied = e;
-  return e;
-}
-
 function txOrDeny(what) {
   const tx = currentTransaction();
-  if (!tx) throw denied(new KernelError('E-VIEW-UNDECLARED-WRITE', {}, `${what} outside a transaction`));
+  if (!tx) throw markDenied(new KernelError('E-VIEW-UNDECLARED-WRITE', {}, `${what} outside a transaction`));
   return tx;
 }
 
@@ -382,7 +356,7 @@ export function schedule(owner, kind, delayMinutes, ref) {
     if (heaps.has(tx.state)) heapPush(heaps.get(tx.state), { handle, dueMinute, registeredMinute: now });
     return handle;
   } catch (e) {
-    throw (typeof e.code === 'string' ? denied(e) : e);
+    throw (typeof e.code === 'string' ? markDenied(e) : e);
   }
 }
 
@@ -394,8 +368,8 @@ export function schedule(owner, kind, delayMinutes, ref) {
  */
 export function cancel(handle) {
   const tx = txOrDeny('cancel');
-  if (typeof handle !== 'string' || !CODE_RE.test(handle)) throw denied(new KernelError('E-DIM-ID-FORMAT', {}, `cancel: ${JSON.stringify(handle)} is not a runtime handle`));
-  if (!Object.hasOwn(dueRows(tx.state), handle)) throw denied(new KernelError('E-DIM-REF-MISSING', {}, `cancel: no due item ${handle}`));
+  if (typeof handle !== 'string' || !CODE_RE.test(handle)) throw markDenied(new KernelError('E-DIM-ID-FORMAT', {}, `cancel: ${JSON.stringify(handle)} is not a runtime handle`));
+  if (!Object.hasOwn(dueRows(tx.state), handle)) throw markDenied(new KernelError('E-DIM-REF-MISSING', {}, `cancel: no due item ${handle}`));
   txSet(tx, [SCHEMA.dueKey, handle], undefined);
 }
 

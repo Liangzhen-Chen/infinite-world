@@ -8,6 +8,8 @@
 // （李白 11-17 裁定三）；登记写入口（gatefac 的 assertedWriters）的函数体，在先调用断言（writerAsserts）之后的部分不计（裁定四收窄）；临时根变量只认 `const 名 = 登记函数(…)`，其余（拼接、变量路径、别的来源）一律计入。
 // 离线路径段口子（李白 11-17 21:2x 裁定一）：路径实参是 join/resolve(仓库根, 常量前导段…, 校验函数(尾段)…) 时，常量前导段与 guardedPaths 逐段比对必分叉才不计
 // （两个函数取自 gatefac 行 rootFns、segmentFns，须 import 自登记文件，且该行须有非空 requiredTests）；首段可变、前导段命中模式、尾段未过校验函数一律计入。
+// params.exceptSet（C3 修理卡）：按文件豁免的集合代号，集合内容（文件加卷:行依据）登记在本条目扫描类别行 fileSets：{集合代号: [{file, basis}]}，没有 basis 的行不收；
+// 命中文件整个不报（如事务撤销项只由 kernel/transaction.mjs 一处产生，卷二:541–:542）。与 path_access 的 readerSet 同形。
 // 局限：按词法读，`const w = fs.writeFileSync` 这类别名、require 解构、动态 import 取到的函数追不到（待块 2 类型检查）。
 
 import { tokenize, foldAt, buildEnv, importsOf, symbolPaths, isP, matchClose } from '../lib/js-scan.mjs';
@@ -52,6 +54,7 @@ export function detect(ctx, params, cls) {
   const guarded = (cls || {}).guardedPaths || [];
   const joins = (cls || {}).joinFns || {};
   const allowed = new Set(facilityFiles(ctx, params.callers));
+  for (const e of params.exceptSet === undefined ? [] : (((cls || {}).fileSets || {})[params.exceptSet] || [])) if (e && e.file && e.basis) allowed.add(e.file);
   const roots = rootFacilities(ctx, params.roots);
   const segs = segmentFacilities(ctx);
   const hits = [];

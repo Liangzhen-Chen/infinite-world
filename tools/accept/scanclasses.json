@@ -256,6 +256,14 @@
    "dynamicRoots": [
     "state"
    ],
+   "fileSets": {
+    "ledgerReaders": [
+     {
+      "basis": "卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete）",
+      "file": "server-plugin/kernel/transaction.mjs"
+     }
+    ]
+   },
    "scanClass": "ledger_state_read",
    "source": "公共部件审查乙「给检查脚本的规则」4（docs/研究/公共部件审查-乙-1122.md :156）；卷六 §4.1.2 统一入口（改变数量只有 post，读只有 balance、accountsOf、stockIn）；读者文件取 state-owners.json systems.sys.economy 写者登记派生（readerSystems，不抄名单）；C0 卡"
   },
@@ -505,6 +513,9 @@
   {
    "astRules": [
     {
+     "exceptFiles": [
+      "server-plugin/kernel/transaction.mjs"
+     ],
      "kind": "dynamicIndex",
      "name": "dyn",
      "roots": [
@@ -741,6 +752,10 @@
      {
       "basis": "卷二 §2.7 声明表读取（登记读者）",
       "file": "server-plugin/kernel/load/state-owners.mjs"
+     },
+     {
+      "basis": "卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete）",
+      "file": "server-plugin/kernel/transaction.mjs"
      }
     ]
    },
@@ -1530,6 +1545,14 @@
    "detectors": [
     "call_edge"
    ],
+   "fileSets": {
+    "undoWriters": [
+     {
+      "basis": "卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete）",
+      "file": "server-plugin/kernel/transaction.mjs"
+     }
+    ]
+   },
    "localRoots": [
     "tx"
    ],

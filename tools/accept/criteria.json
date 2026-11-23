@@ -94,10 +94,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 23
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 24
     }
    ],
-   "print": "4aa6a7533f7a3ff38abe1994f6f57afb33d7454ef123ac2367fa5af5576157ab",
-   "rev": 23,
+   "print": "9cc0a9bd0f442939bcfe6aef00128e338bf427cb58f25ca2270994193dafb629",
+   "rev": 24,
    "scanClass": "baseline_monotone",
    "source": "卷一 V-11（I43）；卷十二 §2.5、E-ACC-BASELINE-UP；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -1324,10 +1328,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 92
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 93
     }
    ],
-   "print": "3ac198ae8e6c1fc61d56f7654ed99b19c7e98906436a9a3f58bd069184cf8606",
-   "rev": 92,
+   "print": "83ae09423ceb0813c89fd826fe758bf64537bb75ff8788cd2689687551f56b61",
+   "rev": 93,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1552,10 +1560,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 23
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 24
     }
    ],
-   "print": "4aa6a7533f7a3ff38abe1994f6f57afb33d7454ef123ac2367fa5af5576157ab",
-   "rev": 23,
+   "print": "9cc0a9bd0f442939bcfe6aef00128e338bf427cb58f25ca2270994193dafb629",
+   "rev": 24,
    "scanClass": "ext_code",
    "terms": {
     "vol12.S12-12": {
@@ -1757,10 +1769,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 16
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 17
     }
    ],
-   "print": "415ca0bd47e7cfaa7ea2c339b2453dcf53dea32cc0cbf4325e565991a2a5ddb3",
-   "rev": 16,
+   "print": "c422892bd4c6767f880cc7e5bd97e43858f60320722486430448fa274eb66b57",
+   "rev": 17,
    "scanClass": "float_math",
    "source": "卷二十七 R27-5.2、A27-5.1；公共部件审查乙规则 7；C0 卡",
    "terms": {
@@ -1875,10 +1891,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 17
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 18
     }
    ],
-   "print": "415ca0bd47e7cfaa7ea2c339b2453dcf53dea32cc0cbf4325e565991a2a5ddb3",
-   "rev": 17,
+   "print": "c422892bd4c6767f880cc7e5bd97e43858f60320722486430448fa274eb66b57",
+   "rev": 18,
    "scanClass": "geometry_bypass",
    "source": "卷五 §3.5 S5-10 :408；卷十二 §2.4 开放登记",
    "terms": {
@@ -2214,10 +2234,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 80
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 81
     }
    ],
-   "print": "c1e722c355f14a64fcddf0e6d97d47ef0115ee4f46aabece82126b261d54a714",
-   "rev": 80,
+   "print": "943882afc59a5a855e91cc50e44f5b659806e9470f8ea3ab7295c276dcfec78f",
+   "rev": 81,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -2807,10 +2831,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 111
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 112
     }
    ],
-   "print": "cbceb089a093ef3e55bd5af24d8d41b9799e8f8e1bcbd848860970f64cd324d2",
-   "rev": 111,
+   "print": "d8ae7f2b703637c2ea53e2c5d4a53b3ccd89411e3e504003a4e5e2da872ee598",
+   "rev": 112,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -2948,10 +2976,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 23
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 24
     }
    ],
-   "print": "4aa6a7533f7a3ff38abe1994f6f57afb33d7454ef123ac2367fa5af5576157ab",
-   "rev": 23,
+   "print": "9cc0a9bd0f442939bcfe6aef00128e338bf427cb58f25ca2270994193dafb629",
+   "rev": 24,
    "scanClass": "item_downgrade",
    "terms": {
     "vol12.S12-16": {
@@ -3289,10 +3321,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 81
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 82
     }
    ],
-   "print": "c1e722c355f14a64fcddf0e6d97d47ef0115ee4f46aabece82126b261d54a714",
-   "rev": 81,
+   "print": "943882afc59a5a855e91cc50e44f5b659806e9470f8ea3ab7295c276dcfec78f",
+   "rev": 82,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -3452,10 +3488,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 16
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 17
     }
    ],
    "print": "8cbb28937ee03fc28c2f11fb6dbeb28a28f1a4dd77b038cd079e3375f56d02cf",
-   "rev": 16,
+   "rev": 17,
    "scanClass": "ledger_state_read",
    "source": "卷六 §4.1.2；公共部件审查乙规则 4；C0 卡",
    "terms": {
@@ -3555,10 +3595,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 21
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 22
     }
    ],
-   "print": "4aa6a7533f7a3ff38abe1994f6f57afb33d7454ef123ac2367fa5af5576157ab",
-   "rev": 21,
+   "print": "9cc0a9bd0f442939bcfe6aef00128e338bf427cb58f25ca2270994193dafb629",
+   "rev": 22,
    "scanClass": "ledger_tally",
    "source": "卷十二 §4.1.6 至 §4.14.6 A12-n.1；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -3898,10 +3942,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 47
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 48
     }
    ],
-   "print": "600a23dd1178ef9507d232708870dba51ce4ffe9cbf0dd18126dd965fb43f78a",
-   "rev": 47,
+   "print": "05c5f3068e8d2301c68faea326a158b5491e05d5217d51e65231d876369d7c88",
+   "rev": 48,
    "scanClass": "module_edge",
    "terms": {
     "vol1.V-24.b": {
@@ -4359,10 +4407,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 81
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 82
     }
    ],
-   "print": "c1e722c355f14a64fcddf0e6d97d47ef0115ee4f46aabece82126b261d54a714",
-   "rev": 81,
+   "print": "943882afc59a5a855e91cc50e44f5b659806e9470f8ea3ab7295c276dcfec78f",
+   "rev": 82,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -5350,10 +5402,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 20
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 21
     }
    ],
    "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 20,
+   "rev": 21,
    "scanClass": "pp_dynamic_index",
    "source": "李白更正裁定 msg-1122-2255-c0ast（动态下标出现即报，标待人审）；卷二十七 R27-5.2、A27-5.1；卷二十 :436",
    "terms": {
@@ -5825,10 +5881,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 12
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 13
     }
    ],
-   "print": "415ca0bd47e7cfaa7ea2c339b2453dcf53dea32cc0cbf4325e565991a2a5ddb3",
-   "rev": 12,
+   "print": "c422892bd4c6767f880cc7e5bd97e43858f60320722486430448fa274eb66b57",
+   "rev": 13,
    "scanClass": "pp_eval",
    "source": "李白更正裁定 msg-1122-2255-c0ast：别名、间接调用都要跟到原名，eval 与 new Function 是语法树追不到的间接执行，出现即报；卷二十七 S27-4 :253（禁用语言特性）",
    "terms": {
@@ -6324,10 +6384,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 15
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 16
     }
    ],
    "print": "8cbb28937ee03fc28c2f11fb6dbeb28a28f1a4dd77b038cd079e3375f56d02cf",
-   "rev": 15,
+   "rev": 16,
    "scanClass": "pp_holdings_read",
    "source": "公共部件审查乙 5；卷十八:200（持有写者）；卷二 §2.6；读者按文件豁免（fileSets.holdingsReaders，每行带依据）",
    "terms": {
@@ -8089,10 +8153,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 107
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 108
     }
    ],
-   "print": "0328923e8e497b96dd2571f5302f03db29585b24dee00c0b4bd25bc545868265",
-   "rev": 107,
+   "print": "3f7138cfb063e91f6120c780127570db1b9bd86199671e37849e67e9f88f0aa9",
+   "rev": 108,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -8250,10 +8318,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 36
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 37
     }
    ],
-   "print": "415ca0bd47e7cfaa7ea2c339b2453dcf53dea32cc0cbf4325e565991a2a5ddb3",
-   "rev": 36,
+   "print": "c422892bd4c6767f880cc7e5bd97e43858f60320722486430448fa274eb66b57",
+   "rev": 37,
    "scanClass": "rng_bypass",
    "terms": {
     "vol27.A27-8.1.a": {
@@ -9631,10 +9703,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 16
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 17
     }
    ],
-   "print": "415ca0bd47e7cfaa7ea2c339b2453dcf53dea32cc0cbf4325e565991a2a5ddb3",
-   "rev": 16,
+   "print": "c422892bd4c6767f880cc7e5bd97e43858f60320722486430448fa274eb66b57",
+   "rev": 17,
    "scanClass": "timer_global",
    "source": "卷二十七 S27-3 :252；公共部件审查甲 R4；C0 卡",
    "terms": {
@@ -10077,10 +10153,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 16
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 17
     }
    ],
-   "print": "415ca0bd47e7cfaa7ea2c339b2453dcf53dea32cc0cbf4325e565991a2a5ddb3",
-   "rev": 16,
+   "print": "c422892bd4c6767f880cc7e5bd97e43858f60320722486430448fa274eb66b57",
+   "rev": 17,
    "scanClass": "undo_raw_push",
    "source": "公共部件审查乙规则 3；卷二 §2.6；C0 卡",
    "terms": {
@@ -10460,10 +10540,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 53
+    },
+    {
+     "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
+     "rev": 54
     }
    ],
-   "print": "10823df8662aff156d698611a44589ff151d5cabded893b4ba2e2c43b5bbbc1b",
-   "rev": 53,
+   "print": "4916e2cde9c126fd12917b6659b77d5e6e24b3b68ef65e85886efcb0c767c366",
+   "rev": 54,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

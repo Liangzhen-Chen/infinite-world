@@ -7,9 +7,8 @@
 // 与 §3.3"制成时一次写入"同口径），taint 由账本 recordTaint 写。
 // 不认任何物品、类别、材料代号：必填与取值域读表头 instanceDimensions，是否逐件建实例读 rules.items.instancedComponents。
 
-import { KernelError, codeOf } from './errors.mjs';
-import { currentTransaction } from './transaction.mjs';
-import { invalidateMemo } from './memo.mjs';
+import { KernelError } from './errors.mjs';
+import { currentTransaction, txSet, markDenied } from './transaction.mjs';
 import { kindOf, kindOfEntity, registry } from './vocab.mjs';
 import { checkField as checkFieldOf } from './dim-value-check.mjs';
 import { CODE_RE } from './handles/vocab-handle.mjs';
@@ -35,30 +34,6 @@ const OTHER_WRITERS = Object.freeze(['durability', 'wearAnchorDay', 'spoilage', 
 const SPEC_FIELDS = Object.freeze(['id', 'template', 'holder', 'purpose', 'flow', 'reason', 'taint', 'fields']);
 
 const fail = (code, why, entity = null) => new KernelError(code, { entity }, why);
-
-// 事务内写（记撤销项，格式同 ledger.mjs 的 setInTx）。
-function setInTx(tx, segs, value) {
-  let cur = tx.state;
-  for (let i = 0; i < segs.length - 1; i++) {
-    const s = segs[i];
-    if (!Object.hasOwn(cur, s) || !isObj(cur[s])) {
-      tx.undo.push({ segs: segs.slice(0, i + 1), existed: Object.hasOwn(cur, s), prev: cur[s] });
-      cur[s] = {};
-    }
-    cur = cur[s];
-  }
-  const last = segs[segs.length - 1];
-  tx.undo.push({ segs: [...segs], existed: Object.hasOwn(cur, last), prev: cur[last] });
-  cur[last] = value;
-  tx.written.push([...segs]);
-  invalidateMemo(tx.state);
-}
-
-function denied(e) {
-  const tx = currentTransaction();
-  if (tx && codeOf(e) !== null && tx.denied === undefined) tx.denied = e;
-  return e;
-}
 
 const tableOf = (engine, kind = KIND.item) => {
   const t = engine.tables instanceof Map ? engine.tables.get(kind) : undefined;
@@ -125,8 +100,8 @@ export function createItemInstance(engine, state, spec) {
     const kind = kinds.find((k) => resourceAllows(engine, k, spec.flow));
     if (kind === undefined) throw fail('E-ACT-PRIMITIVE', `create of ${spec.template}: no resource kind of the item lists ${JSON.stringify(spec.flow)} as a registered source (vol9 R9-2.7)`, spec.id);
     // 写：实例行（模板与各实例维度初值），再经账本记一件新批次与来源腿，最后由账本写 taint 初值。
-    setInTx(tx, [ST.instances, spec.id, FIELD.template], spec.template);
-    for (const key of Object.keys(out).sort(cmp)) setInTx(tx, [ST.instances, spec.id, key], out[key]);
+    txSet(tx, [ST.instances, spec.id, FIELD.template], spec.template);
+    for (const key of Object.keys(out).sort(cmp)) txSet(tx, [ST.instances, spec.id, key], out[key]);
     post(engine, state, {
       legs: [
         { account: { holder: spec.holder, purpose: spec.purpose, resource: { kind } }, delta: 1, lot: { attrs: { enteredDay: today, taint: spec.taint }, instance: spec.id } },
@@ -137,7 +112,7 @@ export function createItemInstance(engine, state, spec) {
     recordTaint(engine, state, { target: { instance: spec.id }, taint: spec.taint, cause: null });
     return Object.freeze({ id: spec.id });
   } catch (e) {
-    throw denied(e);
+    throw markDenied(e);
   }
 }
 
@@ -158,9 +133,9 @@ export function writeItemDeviation(engine, state, id, dimension, value) {
     if (!isObj(def)) throw fail('E-DIM-REF-MISSING', `${dimension} is not a dimension of the item table`, id);
     if (def.derived !== undefined && def.allowExplicit !== true) throw fail('E-DIM-DERIVED-WRITTEN', `${dimension} is derived and has no deviation channel`, id);
     checkField(engine, state, def, value, dimension, id);
-    setInTx(tx, [ST.created, id, ST.props, dimension], value);
+    txSet(tx, [ST.created, id, ST.props, dimension], value);
   } catch (e) {
-    throw denied(e);
+    throw markDenied(e);
   }
 }
 
@@ -204,10 +179,10 @@ export function writePersonRow(engine, state, spec) {
       if (def.derived !== undefined || def.required !== REQ.always || unbuilt.has(key)) continue;
       if (!Object.hasOwn(spec.props, key)) throw fail('E-DIM-REQUIRED-MISSING', `person dimension ${key} is required (always)`, spec.id);
     }
-    for (const key of Object.keys(spec.props).sort(cmp)) setInTx(tx, [ST.created, spec.id, ST.props, key], spec.props[key]);
-    setInTx(tx, [ST.created, spec.id, ST.props, PERSON.basis], { kind: PERSON.basisKind, seedKey: null, writer: tx.node });
+    for (const key of Object.keys(spec.props).sort(cmp)) txSet(tx, [ST.created, spec.id, ST.props, key], spec.props[key]);
+    txSet(tx, [ST.created, spec.id, ST.props, PERSON.basis], { kind: PERSON.basisKind, seedKey: null, writer: tx.node });
     return Object.freeze({ id: spec.id });
   } catch (e) {
-    throw denied(e);
+    throw markDenied(e);
   }
 }

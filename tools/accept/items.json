@@ -3616,6 +3616,7 @@
      "undo_raw_push"
     ],
     "code": "E-VIEW-BYPASS",
+    "exceptSet": "undoWriters",
     "groups": [
      "rules",
      "kernel",
@@ -5439,6 +5440,7 @@
      "stockLots",
      "ledgerCounters"
     ],
+    "readerSet": "ledgerReaders",
     "readerSystems": [
      "sys.economy"
     ]

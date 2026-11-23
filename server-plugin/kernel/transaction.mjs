@@ -96,6 +96,63 @@ export function registerLogUndo(book, entry) {
   current.logUndo.push({ book, entry });
 }
 
+// ---------- 事务内写原语（撤销项格式的唯一出处：tx.undo 只在本文件写入与消费；卷二 §2.6 :499–503 事务处置、:522 writePath；修理清单 C3 乙 2） ----------
+// 账本、持有、到期、终止、writePath 等"协议自处置的键"（state-owners.mjs:66–67）在事务内落笔都经 txSet / txDelete，不各抄一份撤销项。
+
+const isPlainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+
+/**
+ * 事务内写一条路径（记撤销项、记 written、使 stateMemo 作废）；路径中途缺的对象层补成空对象。value 为 undefined 即删该键。
+ * kernel 组内用，不在 kernelApi；写者核对（写者文件、值类型）是调用方的事，本函数只管落笔与撤销。
+ * @param {Tx} tx @param {string[]} segs @param {any} value
+ * @returns {void}
+ */
+export function txSet(tx, segs, value) {
+  let cur = tx.state;
+  for (let i = 0; i < segs.length - 1; i++) {
+    const s = segs[i];
+    if (!Object.hasOwn(cur, s) || !isPlainObject(cur[s])) {
+      tx.undo.push({ segs: segs.slice(0, i + 1), existed: Object.hasOwn(cur, s), prev: cur[s] });
+      cur[s] = {};
+    }
+    cur = cur[s];
+  }
+  const last = segs[segs.length - 1];
+  tx.undo.push({ segs: [...segs], existed: Object.hasOwn(cur, last), prev: cur[last] });
+  if (value === undefined) delete cur[last]; else cur[last] = value;
+  tx.written.push([...segs]);
+  invalidateMemo(tx.state);
+}
+
+/**
+ * 事务内删一条路径（记撤销项）：路径或键不存在即什么都不做（不记撤销项、不记 written）。
+ * @param {Tx} tx @param {string[]} segs
+ * @returns {void}
+ */
+export function txDelete(tx, segs) {
+  let cur = tx.state;
+  for (let i = 0; i < segs.length - 1; i++) {
+    if (!isPlainObject(cur) || !Object.hasOwn(cur, segs[i])) return;
+    cur = cur[segs[i]];
+  }
+  const last = segs[segs.length - 1];
+  if (!isPlainObject(cur) || !Object.hasOwn(cur, last)) return;
+  tx.undo.push({ segs: [...segs], existed: true, prev: cur[last] });
+  delete cur[last];
+  tx.written.push([...segs]);
+  invalidateMemo(tx.state);
+}
+
+/**
+ * 被拒即在当前事务上记"已被拒"（卷二 §2.6 :499）：规则层 catch 住也照样整笔回滚；以第一次被拒的带登记码错误为准。原样返回 e 供 `throw markDenied(e)`。
+ * @template E @param {E} e @returns {E}
+ */
+export function markDenied(e) {
+  const tx = current;
+  if (tx && codeOf(e) !== null && tx.denied === undefined) tx.denied = e;
+  return e;
+}
+
 // 撤销本事务的全部写入：按记录的倒序恢复原值或删去新加的键；事件日志簿在 state 之外，
 // 按 logUndo 存着的条目引用逐条删去本事务追加的（只删自己的，不动别人的；日志只追加不改已写条目，R24-1.6）。
 function rollback(tx) {

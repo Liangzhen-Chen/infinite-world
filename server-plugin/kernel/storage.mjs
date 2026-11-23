@@ -7,13 +7,12 @@
 // atomicJSON 要 node:fs，按卷二 §2.7 import 矩阵 kernel 行（:779）只许在 kernel/save.mjs，故落在 save.mjs，不在本文件。
 
 import { clone } from './clone.mjs';
-import { invalidateMemo } from './memo.mjs';
 import { statePathSegments, pathTypeShape, isSeedKey, isGridKeySeg } from './handles/keys.mjs';
 import { CODE_RE } from './handles/vocab-handle.mjs';
 import { compareSpecificity, KEY_NONENTITY, KEY_DIMKEY, KEY_SEEDKEY, KEY_HANDLE, KEY_GRIDKEY } from './load/state-owners.mjs';
 import { registry, kindOfEntity } from './vocab.mjs';
-import { KernelError, codeOf } from './errors.mjs';
-import { currentTransaction } from './transaction.mjs';
+import { KernelError } from './errors.mjs';
+import { currentTransaction, txSet, markDenied } from './transaction.mjs';
 import { T, GRAMMAR_TOKENS, DATED_RECORD_FIELDS } from './handles/markers.mjs';
 
 // pathTypes 值文法里超出 §1.5 类型名的固定记号：定义源在 kernel/handles/markers.mjs（卷二 §2.7 :811 的 EventId、dimension 与 sealed 行），
@@ -184,24 +183,6 @@ function typeOk(shape, v) {
 
 // ---------- 写 ----------
 
-// 在事务上下文里写（记撤销项）；中途缺的对象层补成空对象。
-function setAt(tx, segs, value) {
-  let cur = tx.state;
-  for (let i = 0; i < segs.length - 1; i++) {
-    const s = segs[i];
-    if (!Object.hasOwn(cur, s) || cur[s] === null || typeof cur[s] !== 'object') {
-      tx.undo.push({ segs: segs.slice(0, i + 1), existed: Object.hasOwn(cur, s), prev: cur[s] });
-      cur[s] = {};
-    }
-    cur = cur[s];
-  }
-  const last = segs[segs.length - 1];
-  tx.undo.push({ segs, existed: Object.hasOwn(cur, last), prev: cur[last] });
-  cur[last] = value;
-  tx.written.push([...segs]);
-  invalidateMemo(tx.state); // state 变了，按它算的 stateMemo 一律作废（kernel/memo.mjs）
-}
-
 /**
  * 该事务能不能写这条具体路径：最具体的写者模式的改写写者是当前节点所在文件；或当前文件是该模式的建行写者且路径上还没有值（建行时落初值）。
  * 带 viaRelocate 的模式，改写写者不得直接 writePath，只能经行改挂原语（§2.6"行改挂"第 1 点 ②、第 7 点）。
@@ -251,12 +232,6 @@ function stringDimension(rec, ids) {
   return kinds.some((k) => { const dims = reg.tableDims.get(k); return !!dims && Object.hasOwn(dims, name) && dims[name] && dims[name].type === T.type.string; });
 }
 
-// 写入被拒时先在当前事务上记"已被拒"（卷二 :499、:1033）：规则层即使 catch 住这次拒写，runTransaction 见标记仍整笔回滚。
-function markDenied(e) {
-  const tx = currentTransaction();
-  if (tx && codeOf(e) !== null && tx.denied === undefined) tx.denied = e;
-}
-
 function writePathChecked(state, path, value) {
   const d = need();
   const { segs, rec } = resolvePath(path);
@@ -273,7 +248,7 @@ function writePathChecked(state, path, value) {
   if (rec.shape && rec.shape.base === TYPE_EXTRA.dimension && stringDimension(rec, ids)) throw new KernelError('E-TEXT-UNGATED', { entity }, `${rec.pattern}: string dimension is not a dimension path`);
   if (!typeOk(rec.shape, value)) throw new KernelError('E-TEXT-UNGATED', { entity }, `value does not match pathTypes ${rec.pattern}: ${rec.type}`);
   checkNotTerminated(state, rec, ids);
-  setAt(tx, segs, clone(value));
+  txSet(tx, segs, clone(value));
 }
 
 // keyKinds 运行期段（seedKey、handle 及以后同类）：按各自文法核，不过即 E-PATH-KEYKINDS（卷二 :1545、:815，勘误 1118k10、1118k12；李白 11-18 05:50 裁定第 2 条）；
@@ -362,7 +337,7 @@ function appendDatedChecked(state, path, record, today, fitValue) {
   checkNotTerminated(state, rec, ids);
   const existing = getAt(state, segs);
   if (existing !== undefined && !Array.isArray(existing)) throw new KernelError('E-DIM-STRUCT-FIELD', { entity: id }, `${rec.pattern}: the stored records are not a list`);
-  setAt(tx, segs, [...(existing || []), clone(record)]);
+  txSet(tx, segs, [...(existing || []), clone(record)]);
 }
 
 /**
@@ -463,7 +438,7 @@ function writeSealedChecked(state, credential, path, sealed) {
   const shapeOk = sealed !== null && typeof sealed === 'object' && !Array.isArray(sealed)
     && Object.keys(sealed).every((k) => SEALED_FIELD_LIST.includes(k)) && typeof sealed.bytes === 'string' && typeof sealed.digest === 'string';
   if (!shapeOk) throw new KernelError('E-TEXT-UNGATED', { entity: null }, 'value is not a Sealed {bytes, digest}');
-  setAt(tx, segs, clone(sealed));
+  txSet(tx, segs, clone(sealed));
 }
 
 // ---------- 存档序列化用的 pathTypes 查询（卷二十七 R27-4.4；kernel 组内用，不在 kernelApi） ----------

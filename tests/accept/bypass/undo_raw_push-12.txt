@@ -1,0 +1,5 @@
+// @file server-plugin/kernel/transaction.mjs
+export function txSet(tx, cur, last, value) {
+  tx.undo.push({ segs: [last], existed: true, prev: cur[last] });
+  cur[last] = value;
+}

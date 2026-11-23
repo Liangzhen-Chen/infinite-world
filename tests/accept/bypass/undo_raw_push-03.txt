@@ -1,0 +1,5 @@
+// @file server-plugin/kernel/ledger.mjs
+export function setInTx(tx, cur, last, value) {
+  tx.undo.push({ segs: [last], existed: true, prev: cur[last] });
+  cur[last] = value;
+}

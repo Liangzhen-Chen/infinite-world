@@ -25,8 +25,7 @@
 
 import { CODE_RE } from './handles/vocab-handle.mjs';
 import { KernelError } from './errors.mjs';
-import { currentTransaction, registerHoldWhileRecompute } from './transaction.mjs';
-import { invalidateMemo } from './memo.mjs';
+import { currentTransaction, registerHoldWhileRecompute, txSet } from './transaction.mjs';
 import { TERMINATED_KEY } from './storage.mjs';
 import { emit, findEvent } from './events.mjs';
 import { isHex64 } from './handles/keys.mjs';
@@ -35,6 +34,7 @@ import { kindOf } from './vocab.mjs';
 import { compileRXInScope, evaluateRX } from './rx.mjs';
 import { readView } from './view-registry.mjs';
 import { T } from './handles/markers.mjs';
+import { fixedUnits, fixedAdd, fixedToNumber } from './det-math.mjs';
 
 // 定义源只此一份：路径键、事件动词、种类字段与协议代号。动词代号由卷十八 §2.3 登记（:200–:222），持有写者是唯一发出系统。
 const S = Object.freeze({
@@ -132,24 +132,6 @@ function needEngine() {
   if (!engineRef) throw deny('E-ACT-WRITER-NOT-READY', 'holding writer needs installHoldingEngine (commit-time recompute cannot run without engine)');
 }
 
-// 事务内写（记撤销项，与 kernel/ledger.mjs 的 setInTx 同一格式）。
-function setInTx(tx, segs, value) {
-  let cur = tx.state;
-  for (let i = 0; i < segs.length - 1; i += 1) {
-    const s = segs[i];
-    if (!own(cur, s) || !isObj(cur[s])) {
-      tx.undo.push({ segs: segs.slice(0, i + 1), existed: Object.hasOwn(cur, s), prev: cur[s] });
-      cur[s] = {};
-    }
-    cur = cur[s];
-  }
-  const last = segs[segs.length - 1];
-  tx.undo.push({ segs: [...segs], existed: Object.hasOwn(cur, last), prev: cur[last] });
-  cur[last] = value;
-  tx.written.push([...segs]);
-  invalidateMemo(tx.state);
-}
-
 const minuteOf = (state) => (isObj(state) && isObj(state[S.clock]) && Number.isSafeInteger(state[S.clock][S.minute]) ? state[S.clock][S.minute] : 0);
 
 /**
@@ -235,10 +217,10 @@ function rootOf(state) {
 function eachEdge(state, visit) {
   const root = rootOf(state);
   if (!root) return;
-  for (const holder of Object.keys(root)) {
+  for (const holder of Object.keys(root).sort(cmp)) {
     const edges = root[holder];
     if (!isObj(edges)) continue;
-    for (const id of Object.keys(edges)) {
+    for (const id of Object.keys(edges).sort(cmp)) {
       const record = edges[id];
       if (isObj(record)) visit({ holder, id, record });
     }
@@ -253,7 +235,13 @@ function findEdge(state, id) {
   return hit;
 }
 
-function activeEdges(state, match) {
+/**
+ * 持有边遍历的唯一出处（卷十八 §4.1 持有写者；卷六 :354 同类"读只经读入口"）：现役边（edgeIsActive）里 match 为真的，
+ * 按持有者、边句柄的码点序，返回 {holder, id, record}。只读；place.mjs、terminate.mjs 读持有边一律调它，不直读 state.holdings。
+ * @param {any} state @param {(e: {holder: string, id: string, record: any}) => boolean} match
+ * @returns {{holder: string, id: string, record: any}[]}
+ */
+export function activeEdges(state, match) {
   const out = [];
   eachEdge(state, (e) => {
     if (edgeIsActive(state, e.record) && match(e)) out.push(e);
@@ -428,7 +416,7 @@ function closeEdge(engine, state, tx, edge, cause, endReason, withEvent) {
   const minute = minuteOf(state);
   const terms = { ...edge.record.terms, [S.until]: minute, [S.endReason]: endReason === undefined ? (isObj(edge.record.terms) ? edge.record.terms[S.endReason] : null) : endReason };
   const next = { ...edge.record, terms };
-  setInTx(tx, [S.holdings, edge.holder, edge.id], next);
+  txSet(tx, [S.holdings, edge.holder, edge.id], next);
   if (withEvent !== false) {
     emitHoldingChanged(engine, state, tx, next, edge.id, CHANGE.ended, null);
     emitDomicileChanged(engine, state, tx, row, next.holder, next.subject, terms[S.since], minute, edge.id, true);
@@ -527,7 +515,7 @@ function checkExclusive(engine, state, tx, row, subject, cause) {
 function checkShare(row, terms) {
   if (row.shareSum === null || row.shareSum === undefined) return;
   const share = isObj(terms) ? terms.share : undefined;
-  if (!(typeof share === TYPEOF_NUMBER && Number.isFinite(share) && share > 0 && share <= row.shareSum)) throw deny('E-HK-PROTOCOL', `holding kind ${row.id}: terms.share must be in (0, ${row.shareSum}]`);
+  if (!(typeof share === TYPEOF_NUMBER && Number.isFinite(share) && share > 0 && share <= row.shareSum && shareFits(share))) throw deny('E-HK-PROTOCOL', `holding kind ${row.id}: terms.share must be in (0, ${row.shareSum}] at fixed-point precision`);
 }
 
 function makeRecord(row, holder, subject, terms, grantedBy) {
@@ -539,7 +527,7 @@ function makeRecord(row, holder, subject, terms, grantedBy) {
 function insertEdge(engine, state, tx, row, holder, subject, terms, grantedBy, cause) {
   const id = nextEdgeId(state);
   const record = makeRecord(row, holder, subject, terms, grantedBy);
-  setInTx(tx, [S.holdings, holder, id], record);
+  txSet(tx, [S.holdings, holder, id], record);
   txEntry(tx, cause).newEdges.add(id);
   return { holder, id, record };
 }
@@ -692,7 +680,7 @@ export function transferHolding(engine, state, input) {
   checkGrantor(row, terms);
   checkShare(row, terms);
   const oldClosed = { ...edge, record: { ...edge.record, terms: { ...edge.record.terms, [S.until]: minute, [S.endReason]: null } } };
-  setInTx(tx, [S.holdings, edge.holder, edge.id], oldClosed.record);
+  txSet(tx, [S.holdings, edge.holder, edge.id], oldClosed.record);
   checkIncompatible(engine, state, tx, row, newHolder, p.cause);
   checkHolderMax(state, row, newHolder);
   checkCapacity(engine, state, row, edge.record.subject);
@@ -721,13 +709,14 @@ export function rescaleHolding(engine, state, input) {
   if (!isCode(p.subject) || !isObj(p.shares)) throw deny('E-HK-PROTOCOL', 'holding.rescale takes subject and shares');
   const row = kindRow(engine, p.holdingKind);
   if (row.shareSum === null || row.shareSum === undefined) throw deny('E-HK-PROTOCOL', `holding kind ${row.id} has no shareSum`);
-  let total = 0;
+  const listed = [];
   for (const holder of Object.keys(p.shares)) {
     const share = p.shares[holder];
-    if (!isCode(holder) || !(typeof share === TYPEOF_NUMBER && Number.isFinite(share) && share > 0)) throw deny('E-HK-PROTOCOL', 'holding.rescale shares are positive numbers keyed by holder id');
-    total += share;
+    if (!isCode(holder) || !(typeof share === TYPEOF_NUMBER && Number.isFinite(share) && share > 0 && shareFits(share))) throw deny('E-HK-PROTOCOL', 'holding.rescale shares are positive numbers (at fixed-point precision) keyed by holder id');
+    listed.push(share);
   }
-  if (Math.abs(total - row.shareSum) > Number.EPSILON) throw deny('E-HK-PROTOCOL', `holding kind ${row.id}: shares sum to ${total}, want ${row.shareSum}`);
+  const total = shareTotal(listed);
+  if (total !== fixedUnits(row.shareSum)) throw deny('E-HK-PROTOCOL', `holding kind ${row.id}: shares sum to ${fixedToNumber(total)}, want ${row.shareSum}`);
   checkAdmission(row);
   assertCarriesRel(engine, row, null);
   const current = activeEdges(state, (e) => e.record.kind === row.id && e.record.subject === p.subject);
@@ -735,7 +724,7 @@ export function rescaleHolding(engine, state, input) {
   for (const edge of current) {
     if (!Object.hasOwn(p.shares, edge.record.holder)) { closeEdge(engine, state, tx, edge, p.cause, null, true); continue; }
     const share = p.shares[edge.record.holder];
-    if (edge.record.terms.share !== share) setInTx(tx, [S.holdings, edge.holder, edge.id], { ...edge.record, terms: { ...edge.record.terms, share } });
+    if (edge.record.terms.share !== share) txSet(tx, [S.holdings, edge.holder, edge.id], { ...edge.record, terms: { ...edge.record.terms, share } });
   }
   // 新增持有人的边是 R18-1.5 意义上的新边：base 只照带 share/grantor 等字段，不带旧边的 origin/consentAct；
   // 本笔同意取入参 terms.consentAct；运行期没有本笔事务自己的同意即拒 E-REL-CONSENT。
@@ -806,6 +795,17 @@ function touchedFrom(state, written) {
   return { edges, ends };
 }
 
+// 份额求和与判等走定点（卷二十七 :620 R27-5.2 规则层数值路；卷十八 :470 share 为定点）：各份 fixedUnits 后整数相加，与 shareSum 的定点值精确比较，不用浮点容差。
+// 份额须正好落在定点精度上（卷二:406 份额各自 fixedUnits 转定点；卷十八:342 合计须等于 shareSum）：精度以外的位 fixedUnits 会截掉而存下的仍是原值，
+// 合计核对就和存下的值对不上，所以写入时一律拒收（E-HK-PROTOCOL），不静默量化改调用方给的值。
+function shareFits(share) {
+  return fixedToNumber(fixedUnits(share)) === share;
+}
+
+function shareTotal(shares) {
+  return shares.reduce((acc, s) => fixedAdd(acc, fixedUnits(s)), 0n);
+}
+
 function checkShareSums(state, written) {
   const groups = new Map();
   const add = (kind, subject) => {
@@ -824,9 +824,8 @@ function checkShareSums(state, written) {
   for (const g of groups.values()) {
     const edges = activeEdges(state, (e) => e.record.kind === g.kind && e.record.subject === g.subject);
     if (edges.length === 0) continue;
-    let sum = 0;
-    for (const e of edges) sum += isObj(e.record.terms) && typeof e.record.terms.share === TYPEOF_NUMBER ? e.record.terms.share : 0;
-    if (Math.abs(sum - g.row.shareSum) > Number.EPSILON) throw deny('E-HK-PROTOCOL', `holding kind ${g.kind}: shares on ${g.subject} sum to ${sum}, want ${g.row.shareSum}`, g.subject);
+    const sum = shareTotal(edges.map((e) => (isObj(e.record.terms) && typeof e.record.terms.share === TYPEOF_NUMBER ? e.record.terms.share : 0)));
+    if (sum !== fixedUnits(g.row.shareSum)) throw deny('E-HK-PROTOCOL', `holding kind ${g.kind}: shares on ${g.subject} sum to ${fixedToNumber(sum)}, want ${g.row.shareSum}`, g.subject);
   }
 }
 

@@ -22,8 +22,7 @@
 // - 不按实体 id、类别名、种类名开分支：一切只读类别行、种类行、资源种类行与去留表。
 
 import { KernelError, codeOf } from './errors.mjs';
-import { currentTransaction } from './transaction.mjs';
-import { invalidateMemo } from './memo.mjs';
+import { currentTransaction, txSet } from './transaction.mjs';
 import { TERMINATED_KEY } from './storage.mjs';
 import { emit } from './events.mjs';
 import { kindOfEntity } from './vocab.mjs';
@@ -34,7 +33,7 @@ import { compileRXInScope, evaluateRX } from './rx.mjs';
 import { rxBindings, rowClassesOf } from './dimensions.mjs';
 import { ruleTable } from './load/rules.mjs';
 import { accountsOf, transfer } from './ledger.mjs';
-import { closeHolding, edgeIsActive } from './holdings.mjs';
+import { closeHolding, activeEdges } from './holdings.mjs';
 import { schedule, cancel, clockView, minutesPerDay } from './scheduler.mjs';
 
 // 定义源只此一份：路径键、表名、协议代号。verb 两行与 due_revive_window 条目由卷二、卷二十登记（:524、:530）。
@@ -181,24 +180,6 @@ function needTx(state) {
   const tx = currentTransaction();
   if (!tx || tx.state !== state) throw deny(CODE.undeclaredWrite, 'terminate/revive outside the transaction of this state');
   return tx;
-}
-
-// 事务内写、删（撤销项与 kernel/ledger.mjs、kernel/scheduler.mjs 同一格式；value 为 undefined 即删）。
-function txSet(tx, segs, value) {
-  let cur = tx.state;
-  for (let i = 0; i < segs.length - 1; i += 1) {
-    const s = segs[i];
-    if (!own(cur, s) || !isObj(cur[s])) {
-      tx.undo.push({ segs: segs.slice(0, i + 1), existed: Object.hasOwn(cur, s), prev: cur[s] });
-      cur[s] = {};
-    }
-    cur = cur[s];
-  }
-  const last = segs[segs.length - 1];
-  tx.undo.push({ segs: [...segs], existed: Object.hasOwn(cur, last), prev: cur[last] });
-  if (value === undefined) delete cur[last]; else cur[last] = value;
-  tx.written.push([...segs]);
-  invalidateMemo(tx.state);
 }
 
 const marksOf = (state) => (isObj(state) && isObj(state[TERMINATED_KEY]) ? state[TERMINATED_KEY] : {});
@@ -372,19 +353,6 @@ function splitAccounts(engine, state, id, successorId, cause) {
 
 // ---------- 第 4 步：持有边（:523；R18-1.2、R18-1.3、R18-1.8） ----------
 
-function activeEdges(state, match) {
-  const root = isObj(state) && isObj(state[S.holdings]) ? state[S.holdings] : {};
-  const out = [];
-  for (const holder of Object.keys(root).sort(cmp)) {
-    const edges = isObj(root[holder]) ? root[holder] : {};
-    for (const edgeId of Object.keys(edges).sort(cmp)) {
-      const rec = edges[edgeId];
-      if (edgeIsActive(state, rec) && match(rec)) out.push({ edgeId, rec });
-    }
-  }
-  return out;
-}
-
 function holdingRow(engine, kind) {
   const rec = engine.vocab.index.get(kind);
   if (!rec || rec.family !== S.holdingFamily || !isObj(rec.entry)) throw deny('E-HK-UNREGISTERED', `holding kind ${JSON.stringify(kind)} is not a registered holding_kind row`);
@@ -402,7 +370,7 @@ function firstLiveSuccessor(engine, state, id, row, rec) {
 
 function settleHoldings(engine, state, id, cause, windowDays) {
   const points = [];
-  for (const { edgeId, rec } of activeEdges(state, (r) => r.holder === id)) {
+  for (const { id: edgeId, record: rec } of activeEdges(state, (e) => e.record.holder === id)) {
     const row = holdingRow(engine, rec.kind);
     let heir = null;
     if (row.gone === null || row.gone === undefined) continue; // 该触发对本种类不适用：边留着，提交后核对报 E-TERM-RESIDUE
@@ -416,7 +384,7 @@ function settleHoldings(engine, state, id, cause, windowDays) {
   }
   if (points.length > 0) txSet(needTx(state), [S.revivals, id, S.pointsKey], points);
   // 协议乙：以它为标的的边一律解除（R18-1.3；subjectEnd 现只许 send_close，本步不读它）。
-  for (const { edgeId } of activeEdges(state, (r) => r.subject === id)) closeHolding(engine, state, { id: edgeId, cause });
+  for (const { id: edgeId } of activeEdges(state, (e) => e.record.subject === id)) closeHolding(engine, state, { id: edgeId, cause });
 }
 
 // ---------- 第 5 步与核对 ----------
@@ -441,7 +409,7 @@ function protocolEntries(state, id) {
  */
 export function terminationResidue(engine, state, id) {
   const out = [];
-  for (const { edgeId } of activeEdges(state, (r) => r.holder === id || r.subject === id)) out.push(`${S.holdings}:${edgeId}`);
+  for (const { id: edgeId } of activeEdges(state, (e) => e.record.holder === id || e.record.subject === id)) out.push(`${S.holdings}:${edgeId}`);
   for (const a of accountsOf(engine, state, id)) if (a.balance !== 0) out.push(`${S.accounts}:${a.purpose}${GRAMMAR_TOKENS.pathSep}${a.resource.kind}${GRAMMAR_TOKENS.pathSep}${a.resource.key}`);
   for (const k of protocolEntries(state, id)) out.push(k);
   for (const r of subjectRecordPaths(state, id)) if (retentionOf(engine, r.recordClass).atTerminate === KEEP.clear) out.push(r.segs.join(GRAMMAR_TOKENS.pathSep));

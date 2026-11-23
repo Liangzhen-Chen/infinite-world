@@ -36,7 +36,7 @@ import { volumeColumn, volumeZoneAt, volumeFootprint, volumeCellsOf, volumeExits
 import { buildPlan, expandClasses, waterAccessOf, footprintAdjacency, edgeAdjacency, flowingOfIndex } from './place-plan.mjs';
 import { createRouteEnv, edgeNumbers } from './route-edges.mjs';
 import { report } from './report.mjs';
-import { edgeIsActive } from './holdings.mjs';
+import { activeEdges } from './holdings.mjs';
 import { isPosValue } from './named-structs.mjs';
 import { matchStruct } from './named-struct-match.mjs';
 import { cellClassOf, surfaceStorey as surfaceStoreyOf, landCellKey, landOrderKey } from './grid.mjs';
@@ -1303,19 +1303,22 @@ export function relResidents(engine, state, id) {
     places.push(p);
     for (const c of children.get(p) || []) stack.push(c);
   }
-  const holdings = isObj(state) && isObj(state.holdings) ? state.holdings : {};
   const index = engine.vocab.index;
+  // 持有边只经 holdings.mjs 的读入口取（现役判定与遍历都在那里）；一遍扫出"种类行 domicile 为真"的边，按标的归集持有者。
+  const domiciled = new Map();
+  for (const e of activeEdges(state, (x) => {
+    const row = index.get(x.record[HOLDING.kind]);
+    return Boolean(row) && isObj(row.entry) && row.entry[DOMICILE] === true;
+  })) {
+    const subject = e.record[HOLDING.subject];
+    if (!domiciled.has(subject)) domiciled.set(subject, new Set());
+    domiciled.get(subject).add(e.holder);
+  }
   const out = new Set();
   for (const place of places) {
-    for (const holder of reverseLookup(state, REL.residents, place)) {
-      const edges = isObj(holdings[holder]) ? Object.values(holdings[holder]) : [];
-      const lives = edges.some((r) => {
-        if (!isObj(r) || r[HOLDING.subject] !== place) return false;
-        const row = index.get(r[HOLDING.kind]);
-        return Boolean(row) && isObj(row.entry) && row.entry[DOMICILE] === true && edgeIsActive(state, r);
-      });
-      if (lives) out.add(holder);
-    }
+    const lives = domiciled.get(place);
+    if (!lives) continue;
+    for (const holder of reverseLookup(state, REL.residents, place)) if (lives.has(holder)) out.add(holder);
   }
   return Object.freeze([...out].sort(cmp));
 }

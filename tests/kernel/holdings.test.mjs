@@ -312,6 +312,34 @@ test('改份额：同持有人只改 terms.share（不发事件），去掉的�
   fails(state, (s) => rescaleHolding(engine, s, { holdingKind: 'hk_test_share', subject: 'item_q', shares: { npc_b: 0.5 }, cause: CAUSE }), 'E-HK-PROTOCOL');
 });
 
+// 份额精度（卷二:406 份额各自 fixedUnits、SCALE 取 10⁻⁴；卷十八:342 合计恰等于 shareSum）：精度以外的位 fixedUnits 会截掉而存下的仍是原值，所以一律拒收。
+test('份额精度：恰在 10⁻⁴ 精度上的 0.0001 与 0.9999 通过；0.50009、0.00001 这类精度以外的份额拒（开边与改份额同口径），状态不变', () => {
+  const engine = shareEngine();
+  const ok = fresh(engine);
+  assert.deepEqual(run(ok, (s) => {
+    openHolding(engine, s, { holdingKind: 'hk_test_share', holder: 'npc_a', subject: 'item_q', terms: { share: 0.0001 }, cause: CAUSE });
+    openHolding(engine, s, { holdingKind: 'hk_test_share', holder: 'npc_b', subject: 'item_q', terms: { share: 0.9999 }, cause: CAUSE });
+  }), { ok: true });
+
+  for (const [a, b] of [[0.50009, 0.5], [0.5, 0.50009], [0.99999, 0.00001]]) {
+    const st = fresh(engine);
+    assert.deepEqual(run(st, (s) => {
+      openHolding(engine, s, { holdingKind: 'hk_test_share', holder: 'npc_a', subject: 'item_q', terms: { share: a }, cause: CAUSE });
+      openHolding(engine, s, { holdingKind: 'hk_test_share', holder: 'npc_b', subject: 'item_q', terms: { share: b }, cause: CAUSE });
+    }), { ok: false, code: 'E-HK-PROTOCOL' });
+    assert.equal(edges(st).length, 0);
+  }
+
+  const base = fresh(engine);
+  run(base, (s) => {
+    openHolding(engine, s, { holdingKind: 'hk_test_share', holder: 'npc_a', subject: 'item_q', terms: { share: 0.4 }, cause: CAUSE });
+    openHolding(engine, s, { holdingKind: 'hk_test_share', holder: 'npc_b', subject: 'item_q', terms: { share: 0.6 }, cause: CAUSE });
+  });
+  for (const shares of [{ npc_a: 0.50009, npc_b: 0.5 }, { npc_a: 0.5, npc_b: 0.49999, npc_c: 0.00001 }]) {
+    fails(base, (s) => rescaleHolding(engine, s, { holdingKind: 'hk_test_share', subject: 'item_q', shares, cause: CAUSE }), 'E-HK-PROTOCOL');
+  }
+});
+
 // R18-1.5：改份额新增的持有人的边是运行期新边，只用本笔事务自己的同意，不复制旧边的 origin/consentAct。
 test('改份额新增持有人：缔结的种类行不继承旧边的 seeded/consentAct，运行期无同意即拒 E-REL-CONSENT', () => {
   const state = fresh();
