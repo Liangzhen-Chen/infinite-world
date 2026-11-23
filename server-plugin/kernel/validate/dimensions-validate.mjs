@@ -469,6 +469,8 @@ function checkDerivedGraph(t, trees, err) {
   const visiting = new Set();
   const done = new Set();
   const cycle = (dim, got) => err({ code: 'E-DIM-DERIVED-CYCLE', level: 'L1', table: t.kind, row: '', dim, path: `${t.file}#/dimensions/${dim}/derived`, got, want: 'acyclic derived references (self-reference needs recursive)' });
+  // 自引用缺 recursive 是另一种错（卷二 §1.2 :110、附录 A6 :2461、§4.3 :1587；勘误 1124k130）：作者漏写声明，不是真成环。
+  const selfRefNoRecursive = (dim) => err({ code: 'E-DIM-DERIVED-RECURSIVE', level: 'L1', table: t.kind, row: '', dim, path: `${t.file}#/dimensions/${dim}/derived`, got: `${dim} -> ${dim}`, want: 'recursive:{relation} on a self-referencing derived dimension' });
   const visit = (dim) => {
     if (done.has(dim)) return;
     if (visiting.has(dim)) { cycle(dim, dim); return; }
@@ -476,7 +478,7 @@ function checkDerivedGraph(t, trees, err) {
     const recursive = isObj(t.doc.dimensions[dim].recursive) && typeof t.doc.dimensions[dim].recursive.relation === 'string';
     for (const target of treeDimKeys(trees.get(dim))) {
       if (!trees.has(target)) continue;
-      if (target === dim) { if (!recursive) cycle(dim, `${dim} -> ${dim}`); continue; }
+      if (target === dim) { if (!recursive) selfRefNoRecursive(dim); continue; }
       if (visiting.has(target)) { cycle(target, `${dim} -> ${target}`); continue; }
       visit(target);
     }
@@ -648,7 +650,7 @@ function checkHeaderSection(dims, section, t, env, err) {
     if (!KEY_RE.test(key)) bad('E-DIM-ID-FORMAT', '', key, 'lowerCamel dimension key');
     checkDef(def, env, at(key), err, true);
     if (!isObj(def)) continue;
-    if (!requiredSyntaxOk(def.required)) bad('E-DIM-STRUCT-FIELD', 'required', def.required, 'always|never|byClass:<c>|ifPresent:<d>|byEnum:<d>=<v>|anyOf:<a>,<b>|byDigestible|byReader, joined by ;');
+    if (!requiredSyntaxOk(def.required)) bad('E-DIM-STRUCT-FIELD', 'required', def.required, 'always|never|byClass:<c>|ifPresent:<d>|byEnum:<d>=<v>|anyOf:<a>,<b>|byDigestible|byReader|byFootprint:<k>[,<k>]|bySubstance:<s>[,<s>], joined by ;');
     if (def.required !== REQUIRED.always && def.onUnknown === undefined) bad('E-DIM-ONUNKNOWN-MISSING', 'onUnknown', 'missing', CODE_ENUMS.onUnknown.join('|'));
     else if (def.onUnknown !== undefined && !CODE_ENUMS.onUnknown.includes(def.onUnknown)) bad('E-DIM-DOMAIN-ENUM', 'onUnknown', def.onUnknown, CODE_ENUMS.onUnknown.join('|'));
     if (typeof def.modifiable !== 'boolean') bad('E-DIM-MODIFIABLE-TYPE', 'modifiable', def.modifiable, 'true|false');

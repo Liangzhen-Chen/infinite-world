@@ -1284,10 +1284,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 89
+    },
+    {
+     "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 90
     }
    ],
-   "print": "75b96db55b28fd67fd6104aa4aa7de5e5c9694e26685fce317c8d8b735812176",
-   "rev": 89,
+   "print": "501f280d88ba0a17d2793a77849a9b627babd8804ea7c19a7ceabd3d15b8b494",
+   "rev": 90,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -2142,10 +2146,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 77
+    },
+    {
+     "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 78
     }
    ],
-   "print": "ebb9c452b869348e7767bfea26947a24dfa50e257e5658a31e346568416182fa",
-   "rev": 77,
+   "print": "fa7932f827bb7a3be755d5041be336d4254a405d1a338c016408a7a9099eb28f",
+   "rev": 78,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -2719,10 +2727,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 108
+    },
+    {
+     "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 109
     }
    ],
-   "print": "d757d229cd212154efe215be06598d8082456b33ccc6c54fc941be91bfb3bea0",
-   "rev": 108,
+   "print": "1f8c9d9e57090f20a83ad641ebead438ecdce589e569b17758bb341c09e3950f",
+   "rev": 109,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -3185,10 +3197,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 78
+    },
+    {
+     "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 79
     }
    ],
-   "print": "ebb9c452b869348e7767bfea26947a24dfa50e257e5658a31e346568416182fa",
-   "rev": 78,
+   "print": "fa7932f827bb7a3be755d5041be336d4254a405d1a338c016408a7a9099eb28f",
+   "rev": 79,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -4227,10 +4243,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 78
+    },
+    {
+     "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 79
     }
    ],
-   "print": "ebb9c452b869348e7767bfea26947a24dfa50e257e5658a31e346568416182fa",
-   "rev": 78,
+   "print": "fa7932f827bb7a3be755d5041be336d4254a405d1a338c016408a7a9099eb28f",
+   "rev": 79,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -4561,10 +4581,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 79
+    },
+    {
+     "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 80
     }
    ],
-   "print": "eb9d7aad8d8f665e9633bf64cc49419d4544618151f7c0cda90ea1d4b842fc60",
-   "rev": 79,
+   "print": "abe67e692ab583b57c194efa8de45c83cf531ab7f49a8f06b95d2f5cfb0e0304",
+   "rev": 80,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -4976,10 +5000,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 14
+    },
+    {
+     "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 15
     }
    ],
-   "print": "4f3e69b0b0f16cf097ef952fa09c4de386f3a97c8734a0dade3573da3c67c056",
-   "rev": 14,
+   "print": "81c32e23d50692eed3fde454e2bbc34aba453b933db5731e57a9951863997342",
+   "rev": 15,
    "scanClass": "pp_draw_sites",
    "source": "公共部件审查甲 R6 后半；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479（rules.clock.drawSites）",
    "terms": {
@@ -5051,10 +5079,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 14
+    },
+    {
+     "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 15
     }
    ],
-   "print": "eb9d7aad8d8f665e9633bf64cc49419d4544618151f7c0cda90ea1d4b842fc60",
-   "rev": 14,
+   "print": "abe67e692ab583b57c194efa8de45c83cf531ab7f49a8f06b95d2f5cfb0e0304",
+   "rev": 15,
    "scanClass": "pp_dup_export",
    "source": "公共部件审查甲 R14、乙 12；卷二 :1162 体例；CLAUDE.md“跨卷共用定义只一处”。职责函数 isPos、distributionMean、weatherCellOf 的职责文件依据：卷二 §1.5 struct:pos（kernel/named-structs.mjs）、卷二 §1.10（kernel/sample.mjs）、卷二十 §3.1（kernel/weather.mjs）",
    "terms": {
@@ -6986,10 +7018,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 13
+    },
+    {
+     "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 14
     }
    ],
-   "print": "4f3e69b0b0f16cf097ef952fa09c4de386f3a97c8734a0dade3573da3c67c056",
-   "rev": 13,
+   "print": "81c32e23d50692eed3fde454e2bbc34aba453b933db5731e57a9951863997342",
+   "rev": 14,
    "scanClass": "pp_seed_args_dyn",
    "source": "独立验收漏项“抽取点站点名用变量”；卷二十七 :789（R27-8.1 每个抽取点登记，流代号、抽取点代号须字面量）",
    "terms": {
@@ -7057,10 +7093,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 13
+    },
+    {
+     "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 14
     }
    ],
-   "print": "eb9d7aad8d8f665e9633bf64cc49419d4544618151f7c0cda90ea1d4b842fc60",
-   "rev": 13,
+   "print": "abe67e692ab583b57c194efa8de45c83cf531ab7f49a8f06b95d2f5cfb0e0304",
+   "rev": 14,
    "scanClass": "pp_tpl_key",
    "source": "公共部件审查甲 R13；卷二 :860（键串形只由登记方给）；模块化原则卡头第二节第 9 条",
    "terms": {
@@ -8188,10 +8228,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 65
+    },
+    {
+     "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 66
     }
    ],
-   "print": "4f3e69b0b0f16cf097ef952fa09c4de386f3a97c8734a0dade3573da3c67c056",
-   "rev": 65,
+   "print": "81c32e23d50692eed3fde454e2bbc34aba453b933db5731e57a9951863997342",
+   "rev": 66,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -8873,10 +8917,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 50
+    },
+    {
+     "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 51
     }
    ],
-   "print": "2aec1d66668307fe374ed0210ac0650e1d1275a96f6d44ef65d0a603589570dc",
-   "rev": 50,
+   "print": "ee86b541628cb99fbfc9669691042bc9e6506ded310ae4bea0be2a7e3cae5218",
+   "rev": 51,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -9522,10 +9570,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 81
+    },
+    {
+     "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 82
     }
    ],
-   "print": "eb9d7aad8d8f665e9633bf64cc49419d4544618151f7c0cda90ea1d4b842fc60",
-   "rev": 81,
+   "print": "abe67e692ab583b57c194efa8de45c83cf531ab7f49a8f06b95d2f5cfb0e0304",
+   "rev": 82,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

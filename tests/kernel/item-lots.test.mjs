@@ -700,6 +700,16 @@ test('K-3 实例批次 mergeLots 拒（整类条件，不看属性）；lotsUnme
   assert.equal(lotsUnmergeable({}, {}, 'lot_0', 'lot_1'), null);
 });
 
+test('K-3 判同键含落点 spot（卷三乙 :285、卷五 :502，勘误 1124k132）：同地点两个落点的批次不并，落点相同或都在容器里（空）的并得了', () => {
+  const at1 = { w: 0, x: 10, y: 4, z: 0, coarse: false };
+  const at2 = { w: 0, x: 11, y: 4, z: 0, coarse: false };
+  assert.match(lotsUnmergeable({ spot: at1 }, { spot: at2 }, 'lot_0', 'lot_1'), /spot/);
+  assert.match(lotsUnmergeable({ spot: at1 }, {}, 'lot_0', 'lot_1'), /spot/);
+  assert.match(lotsUnmergeable({ spot: at1 }, { spot: null }, 'lot_0', 'lot_1'), /spot/);
+  assert.equal(lotsUnmergeable({ spot: at1 }, { spot: { ...at1 } }, 'lot_0', 'lot_1'), null);
+  assert.equal(lotsUnmergeable({}, { spot: null }, 'lot_0', 'lot_1'), null);
+});
+
 test('K-8 实例批次键审计：多一件（键里的实例不存在）、少一件（实例没有自己那一批）、数量不为 1、两处账户同键，均报已登记码；序号键仍只核序号', () => {
   const { engine } = build();
   const state = at(3);

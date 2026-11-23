@@ -51,10 +51,15 @@ const newMetal = (w) => withGrades(w, {
   refMaterial: null,
 });
 
-test('真实世界 loadWorld：零 error、零 warning；byDigestible 已按表头声明求值，不再列入 notCovered', () => {
+// 夜帽菇记 subst_plant 而植物部位、植物科留空：bySubstance 成立、缺值，卷三甲 1115k3（:1411）定明"在缺口表各记一条"（plantPart、plantFamily 的 onUnknown 都是 gap）；
+// 这是材料表仅有的缺口，不是错误。卷二 :105 bySubstance 登记后（勘误 1124k130）加载器才如实记下。
+const NIGHTCAP_GAPS = ['mat_nightcap_mushroom.plantFamily', 'mat_nightcap_mushroom.plantPart'];
+
+test('真实世界 loadWorld：材料表零 error，仅有夜帽菇的两条植物缺口（卷三甲 1115k3）；byDigestible 已按表头声明求值，不再列入 notCovered', () => {
   const r = loadWorld(ROOT);
   assert.equal(r.ok, true);
-  assert.deepEqual(r.errors.filter((e) => e.table === 'material'), []); // 材料表零 error、零 warning（真实世界上格后另有 place 表建筑行 breaks 缺的 W-DIM-GAP 警告，不属材料表）
+  // 材料表的全部条目（不分级别）恰是夜帽菇两条 W-DIM-GAP；真实世界上格后另有 place 表建筑行 breaks 缺的 W-DIM-GAP 警告，不属材料表
+  assert.deepEqual(r.errors.filter((e) => e.table === 'material').map((e) => `${e.code}|${e.row}.${e.dim}`).sort(), ['W-DIM-GAP|mat_nightcap_mushroom.plantFamily', 'W-DIM-GAP|mat_nightcap_mushroom.plantPart']);
   assert.ok(!r.notCovered.some((x) => x.endsWith(':byDigestible')));
 });
 
@@ -175,11 +180,12 @@ test('四族词表：class、plant_part、damage、diet 在 _vocab.json；diet �
   for (const v of Object.values(vocab.families.diet.entries)) assert.ok(!('primaryConsumer' in v));
 });
 
-test('整表零 E、零缺口；卷文短表留空（"未核"）的格都已填设定值（designed），不再留空（李白 11-17 补裁）', () => {
+test('整表零 E；缺口只有夜帽菇的植物部位与植物科（卷三甲 1115k3）；卷文短表留空（"未核"）的格都已填设定值（designed），不再留空（李白 11-17 补裁）', () => {
   const w = load();
   const r = run(w);
   assert.equal(r.ok, true);
-  assert.deepEqual(r.errors.filter((e) => e.table === 'material'), []); // 材料表整表零 E、零缺口（其他表的已知警告不属本条）
+  // 材料表的全部条目（不分级别）恰是夜帽菇两条 W-DIM-GAP（其他表的已知警告不属本条）
+  assert.deepEqual(r.errors.filter((e) => e.table === 'material').map((e) => `${e.code}|${e.row}.${e.dim}`).sort(), ['W-DIM-GAP|mat_nightcap_mushroom.plantFamily', 'W-DIM-GAP|mat_nightcap_mushroom.plantPart']);
   const vol = readFileSync(join(ROOT, 'docs/统一底层设计/卷三甲-物质本源.md'), 'utf8').split('\n');
   for (const [tag, dim] of [['FIBER-DATA', 'fiberContent'], ['CARB-DATA', 'carbContent']]) {
     const a = vol.findIndex((l) => l.includes(`<!--${tag}-BEGIN-->`));
@@ -280,7 +286,8 @@ test('P3-30/P3-13 byDigestible：食草食性吃得了的干草、秸秆、落�
 
 test('EA-3 / VA-4.4-E：加一行不挂可食的草本秸秆类料，漏 energyDensity 加载失败，漏 fiberContent 只记一条缺口；新增食性不改代码即扩必填', () => {
   const w = load();
-  const base = { basis: '测试：新秸秆', classes: ['comp_burnable'], substance: 'subst_plant', density: { solid: 0.3 }, valueMult: 1, flammability: 0.6, salvageFraction: 0.1, workDifficulty: 5,
+  // 植物质行（bySubstance）自己的部位与科填上，使本用例只看纤维缺口。
+  const base = { basis: '测试：新秸秆', classes: ['comp_burnable'], substance: 'subst_plant', plantPart: 'ppart_stalk', plantFamily: 'pfam_poaceae', density: { solid: 0.3 }, valueMult: 1, flammability: 0.6, salvageFraction: 0.1, workDifficulty: 5,
     decomposePoint: 220, heatValue: 15, ignitePoint: 380, burnRate: 0.2, volatility: 0, moisture: 0.1, energyDensity: 18, fiberContent: 0.4, carbContent: 0.7, nutrients: { nutr_salt: 0.3 }, refMaterial: null };
   w.material.rows.mat_test_straw = withGrades(w, base);
   assert.deepEqual(codesOf(run(w), 'mat_test_straw'), []);
@@ -291,7 +298,7 @@ test('EA-3 / VA-4.4-E：加一行不挂可食的草本秸秆类料，漏 energyD
   drop(x.material.rows.mat_test_straw, 'fiberContent');
   const rx = run(x);
   assert.deepEqual(errs(rx), []);
-  assert.deepEqual(gapList(rx), ['mat_test_straw.fiberContent']);
+  assert.deepEqual(gapList(rx), [...NIGHTCAP_GAPS, 'mat_test_straw.fiberContent']);
   // 只吃金属的新食性：熟铁随即要营养格（卷三甲 VA-4.4-E），撤掉即恢复。
   const y = load();
   y.vocab.families.diet.entries.diet_test_rust = { eats: 'material.substance == subst_metal and lot.spoilage <= 1' };
@@ -313,7 +320,7 @@ test('1117p3 兜底：设定值撤掉后纤维缺值只记一条 W-DIM-GAP、零
   drop(w.material.rows.mat_mash, 'fiberContent');
   const r = run(w);
   assert.deepEqual(errs(r), []);
-  assert.deepEqual(gapList(r), ['mat_mash.fiberContent']);
+  assert.deepEqual(gapList(r), ['mat_mash.fiberContent', ...NIGHTCAP_GAPS]);
 });
 
 test('纤维含量反例：值越出 [0,1] 仍 E；非 gap 的必填维度（energyDensity，error）缺值仍 E；补上有效纤维值后缺口消失', () => {

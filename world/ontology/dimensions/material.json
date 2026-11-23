@@ -2233,7 +2233,7 @@
    "nullable": true,
    "onUnknown": "gap",
    "owner": "卷三甲 §2.1",
-   "required": "never",
+   "required": "bySubstance:subst_plant,subst_wood",
    "source": "卷三甲 §2.1",
    "type": "ref",
    "vocab": "plant_family"
@@ -2243,7 +2243,7 @@
    "nullable": true,
    "onUnknown": "gap",
    "owner": "卷二十五 §2.4",
-   "required": "never",
+   "required": "bySubstance:subst_plant,subst_wood",
    "source": "卷三甲 §2.1",
    "type": "ref",
    "vocab": "plant_part"

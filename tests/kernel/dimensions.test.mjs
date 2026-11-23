@@ -144,10 +144,20 @@ test('加载期：变量不在本表报 E-DIM-DERIVED-VAR（§4.1 L1 :1500"变�
   assert.ok(hasErr(validateDimensions(twoTables(f, widgetTable()), OPTIONS), 'E-DIM-DERIVED-VAR', 'foreignReach'));
 });
 
-test('加载期：自引用不带 recursive 报 E-DIM-DERIVED-CYCLE（§1.12 RA-N3 :380）', () => {
+test('加载期：自引用不带 recursive 报 E-DIM-DERIVED-RECURSIVE，带 recursive 不报；真成环仍报 E-DIM-DERIVED-CYCLE（卷二 :110、:400 勘误 1124k130、:2461 A6）', () => {
   const f = fixture();
   f.gadget.dimensions.loop = derivedDef({ derived: 'loop + 1' });
-  assert.ok(hasErr(validateDimensions(sourcesOf(f), OPTIONS), 'E-DIM-DERIVED-CYCLE', 'loop'));
+  const r = validateDimensions(sourcesOf(f), OPTIONS);
+  assert.ok(hasErr(r, 'E-DIM-DERIVED-RECURSIVE', 'loop'));
+  assert.ok(!hasErr(r, 'E-DIM-DERIVED-CYCLE', 'loop'));
+  f.gadget.dimensions.loop.recursive = { relation: 'rel_part' };
+  const ok = validateDimensions(sourcesOf(f), OPTIONS);
+  assert.ok(!hasErr(ok, 'E-DIM-DERIVED-RECURSIVE', 'loop') && !hasErr(ok, 'E-DIM-DERIVED-CYCLE', 'loop'));
+  const g = fixture();
+  g.gadget.dimensions.ping = derivedDef({ derived: 'pong + 1' });
+  g.gadget.dimensions.pong = derivedDef({ derived: 'ping + 1' });
+  const c = validateDimensions(sourcesOf(g), OPTIONS);
+  assert.ok(errorsOf(c).some((e) => e.code === 'E-DIM-DERIVED-CYCLE' && (e.dim === 'ping' || e.dim === 'pong')));
 });
 
 test('加载期：两表同名不同定义时，本表派生按本表维度编译（卷二 :372、:378"主体的基值维度"）', () => {

@@ -8,8 +8,10 @@ import { rowReads, namedHolds } from './named-conditions.mjs';
 import { FOOTPRINT_KIND, footprintKindOf } from '../footprint-kind.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
-// required 策略（卷二 §1.2：always、byClass、ifPresent、byEnum、anyOf、byDigestible、byReader）与行来源值（§1.3）、map combine（§1.6）、空字串。
-const REQUIRED_FORM = Object.freeze({ always: 'always', byClass: 'byClass', ifPresent: 'ifPresent', byEnum: 'byEnum', anyOf: 'anyOf', byDigestible: 'byDigestible', byReader: 'byReader', byFootprint: 'byFootprint' });
+// required 策略（卷二 §1.2：always、byClass、ifPresent、byEnum、anyOf、byDigestible、byReader、byFootprint、bySubstance）与行来源值（§1.3）、map combine（§1.6）、空字串。
+const REQUIRED_FORM = Object.freeze({ always: 'always', byClass: 'byClass', ifPresent: 'ifPresent', byEnum: 'byEnum', anyOf: 'anyOf', byDigestible: 'byDigestible', byReader: 'byReader', byFootprint: 'byFootprint', bySubstance: 'bySubstance' });
+// bySubstance 读的就是本行的本源成分维度（卷三甲 §2.1 :167："本行的 `substance` 是所列代号之一时必填，否则不适用"）；该条件的定义里写了这个维度名，只在这一处。
+const SUBSTANCE_DIM = 'substance';
 const SOURCE = Object.freeze({ instance: 'instance' });
 const COMBINE = Object.freeze({ sum: 'sum' });
 const SEG = Object.freeze({ empty: '' });
@@ -126,7 +128,7 @@ export function valueOf(t, id, row, dim) {
 
 // byFootprint:<种类>[,<种类>…]（卷二 §1.2 :105，place 表专用；种类是 footprint_kind 封闭枚举，取 kernel/footprint-kind.mjs 的 FOOTPRINT_KIND）。
 const FOOTPRINT_KINDS = Object.values(FOOTPRINT_KIND).join('|');
-const REQ_FORMS = new RegExp(`^(always|never|byClass:[a-z][a-z0-9_]*|ifPresent:[a-z][a-zA-Z0-9]*|byEnum:[a-z][a-zA-Z0-9]*=[a-z][a-z0-9_]*|anyOf:[a-zA-Z0-9.]+(,[a-zA-Z0-9.]+)+|byDigestible|byReader|byFootprint:(${FOOTPRINT_KINDS})(,(${FOOTPRINT_KINDS}))*)$`);
+const REQ_FORMS = new RegExp(`^(always|never|byClass:[a-z][a-z0-9_]*|ifPresent:[a-z][a-zA-Z0-9]*|byEnum:[a-z][a-zA-Z0-9]*=[a-z][a-z0-9_]*|anyOf:[a-zA-Z0-9.]+(,[a-zA-Z0-9.]+)+|byDigestible|byReader|byFootprint:(${FOOTPRINT_KINDS})(,(${FOOTPRINT_KINDS}))*|bySubstance:[a-z][a-z0-9_]*(,[a-z][a-z0-9_]*)*)$`);
 // required 策略的多条件分隔符（卷二 §1.2 :104：一个维度可并列多个条件，以"；"分隔）。
 // 原 kernel/handles/patterns.mjs 搬入（S13 (b) 允许 validate/* 用正则；patterns.mjs 只留从 rx.mjs 搬来的正则）。
 const REQUIRED_TERM_SEPARATOR = /；/;
@@ -137,7 +139,7 @@ export const requiredTerms = splitRequiredTerms;
 /** @param {unknown} s required 策略 @returns {boolean} */
 export const requiredSyntaxOk = (s) => requiredTerms(s).length > 0 && requiredTerms(s).every((x) => REQ_FORMS.test(x));
 
-const CONDITIONAL_FORMS = ['byClass', 'ifPresent', 'byEnum', 'byFootprint'];
+const CONDITIONAL_FORMS = ['byClass', 'ifPresent', 'byEnum', 'byFootprint', 'bySubstance'];
 
 // 一行的足迹种类（卷五 §4.1 规则 2）：本行与各祖先的组件类全集（沿词表上位展开）交给 footprint-kind.mjs 判。祖先沿展平行的 parent 走，有环即止。
 function footprintKindOfRow(t, id, row) {
@@ -158,7 +160,7 @@ function footprintKindOfRow(t, id, row) {
 export function requirement(t, id, row, dim) {
   const terms = requiredTerms((t.doc.dimensions[dim] || {}).required);
   // conditional：策略里有 byClass/ifPresent/byEnum 条件项（§1.3 取值算法 :152，条件都不满足即"不适用"，RA-N5）。
-  const out = { applicable: false, anyOf: null, named: [], conditional: false };
+  const out = { applicable: false, anyOf: null, named: [], conditional: false, substanceGated: false };
   for (const term of terms) {
     const [form, arg] = [term.slice(0, term.indexOf(':') < 0 ? term.length : term.indexOf(':')), term.slice(term.indexOf(':') + 1)];
     if (CONDITIONAL_FORMS.includes(form)) out.conditional = true;
@@ -167,6 +169,7 @@ export function requirement(t, id, row, dim) {
     else if (form === REQUIRED_FORM.ifPresent) { if (valueOf(t, id, row, arg).known) out.applicable = true; }
     else if (form === REQUIRED_FORM.byEnum) { const [d, v] = arg.split('='); if (valueOf(t, id, row, d).value === v) out.applicable = true; }
     else if (form === REQUIRED_FORM.byFootprint) { if (arg.split(',').includes(footprintKindOfRow(t, id, row))) out.applicable = true; }
+    else if (form === REQUIRED_FORM.bySubstance) { out.substanceGated = true; if (arg.split(',').includes(valueOf(t, id, row, SUBSTANCE_DIM).value)) out.applicable = true; }
     else if (form === REQUIRED_FORM.anyOf) { out.applicable = true; out.anyOf = arg.split(','); }
     else if (form === REQUIRED_FORM.byDigestible || form === REQUIRED_FORM.byReader) {
       // 表头声明了判据的命名条件按声明求值（named-conditions.mjs），属条件项；没声明的只记 notCovered。
@@ -225,6 +228,8 @@ export function checkRequired(t, env, err, stats) {
         for (const n of req.named) stats.notCovered.add(`${kind}.${dim}:${n}`);
         const r = valueOf(t, id, row, dim);
         if (r.known && r.value !== undefined) checkMapKeys(dims[dim], r.value, env, at(dim), err);
+        // bySubstance 不成立（本行本源成分不在所列代号内）而本行写了值即加载报错（卷三甲 M-17、M-20 "写了即加载报错"）；null 也算写了，缺值才是未知。
+        if (req.substanceGated && !req.applicable && r.source === SOURCE.instance && r.value !== undefined) err({ code: 'E-DIM-DOMAIN-RANGE', level: 'L3', ...at(dim), got: JSON.stringify(r.value), want: `not written: required ${dims[dim].required} does not hold for this row` });
         const c = cov[dim];
         if (req.applicable || !req.conditional) {
           c.applicable++;

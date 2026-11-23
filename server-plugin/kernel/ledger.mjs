@@ -65,6 +65,8 @@ export const SCHEMA = Object.freeze({
   // 批次属性 project（卷三乙 §2.3 :280，ref 卷十九 buildProject nullable）与工程的发起主体字段 sponsor（卷十九 §3.3 :272），
   // 经登记的视图读取函数 buildProjectView（卷十九 §3.2 :242，补 sponsor 只读；李白 11-18 05:28 裁定①第 1、2 条）取，不直读 buildProject。
   project: 'project', projectView: 'buildProjectView', sponsor: 'sponsor',
+  // 批次属性 spot（落点，struct:pos nullable；卷三乙 §2.3 :285，卷五 §4.5 规则 6 :502）：K-3 判同键之一，落点不同的批次不合并（勘误 1124k132）。
+  spot: 'spot',
   catalogFamily: 'resfam_point',
   // 建筑所有权份额的资源族（卷六 §2.1 :112，一族只这一行，键是设施实例；开局入账 kernel/gen/assetcalls.mjs 按它取资源种类，不写种类代号）。
   assetFamily: 'resfam_asset',
@@ -1325,7 +1327,7 @@ function deleteInTx(tx, segs) {
 }
 
 // 批次属性里 K-3 判同的键与"受热或在燃烧则不并"的键（卷三乙 §4.4.3 K-3 :1037）；腐坏档与进度差是腐坏规则的事，由调用方先判。
-const LOT_SAME_KEYS = Object.freeze(['source', 'qualityTier', 'purports', 'batchTag', 'material', 'project']);
+const LOT_SAME_KEYS = Object.freeze(['source', 'qualityTier', 'purports', 'batchTag', 'material', 'project', SCHEMA.spot]);
 const LOT_MUST_BE_EMPTY = Object.freeze(['temperature', 'burn', 'leakAnchorDay']);
 // 腐坏字段归 item-lots.mjs（同一写者同一条规则，卷三乙 §3.3），合并时账本不碰。
 const LOT_ROT_KEYS = Object.freeze(['spoilage', 'rotAnchorDay']);
@@ -1340,7 +1342,7 @@ function weightedMean(a, qa, b, qb) {
 
 /**
  * kernelApi `lotsUnmergeable(a, b)`（纯函数，卷三乙 §4.4.3 K-3）：两批属性账本侧不能合并的原因（不合则为一句说明，可合并为 null）：
- * 判同键 source / qualityTier / purports / batchTag / material / project 须全同，temperature / burn / leakAnchorDay 须都为空，taint 须两批都写或都不写。
+ * 判同键 source / qualityTier / purports / batchTag / material / project / spot 须全同（落点 spot 空对空视为同，落点不同不合并），temperature / burn / leakAnchorDay 须都为空，taint 须两批都写或都不写。
  * 腐坏档同档与进度差不超 rules.rot.mergeMaxGap 属腐坏规则，由调用方（item-lots.mjs）另判。
  * 属逐件实例的批次（批次键是实例批次键）不与任何批次合并（K-3 整类条件，勘误 1119k13）：两批的键都要给，判在属性之前。
  * @param {any} a @param {any} b @param {string} aKey a 的批次键 @param {string} bKey b 的批次键 @returns {string | null}
@@ -1357,7 +1359,7 @@ export function lotsUnmergeable(a, b, aKey, bKey) {
 /**
  * kernelApi `mergeLots(engine, state, {holder, purpose, kind, into, from})`（卷三乙 §4.4.3 K-3；§3.3 "taint 的写者"合并一行）：
  * 同一账户同一种类的两个批次并成一个：把 from 的余额并入 into，删去 from 的余额行与批次行（数量为 0 的批次即删除，卷六 §2.3）。
- * 账本只判与腐坏无关的条件——判同键 source / qualityTier / purports / batchTag / material / project 全同、temperature / burn / leakAnchorDay 都为空、
+ * 账本只判与腐坏无关的条件——判同键 source / qualityTier / purports / batchTag / material / project / spot 全同、temperature / burn / leakAnchorDay 都为空、
  * 两批余额都为正；任一不合整笔拒。腐坏档同档与进度差不超 rules.rot.mergeMaxGap 由调用方先判，两批的 spoilage、rotAnchorDay 由它们的声明写者
  * （item-lots.mjs）在本笔之后重设，账本不碰（§3.3 两条路径各一个写者）。
  * 账本改写：taint 按两批余额（同一种物品、判同键含 material 相同，故件数之比即质量之比）加权平均（定点 4 位向零截断，除数恒大于 0）；
