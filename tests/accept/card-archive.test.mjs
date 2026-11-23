@@ -91,6 +91,28 @@ test('合格档案放行', () => {
   assert.deepEqual(check(archive()), []);
 });
 
+// 自查表可填否项（李白 Z-6）：规矩键值在测试里自设（项 5、前缀「缘由：」），不依赖真实规矩当前值；“否”项的实据照常核。
+const NO_DOC = DOC.replace(/^- 自查表可填否项：.*$/m, '- 自查表可填否项：5').replace(/^- 否项原因前缀：.*$/m, '- 否项原因前缀：缘由：');
+const { rules: NO_RULES } = loadRules(NO_DOC);
+const noTable = (ev) => selfcheckTable({ 5: ev }).replace(new RegExp(`^(\\| 5 \\|.*?\\| )是( \\|)`, 'm'), '$1否$2');
+const checkNo = (ev) => checkArchive(NO_RULES, QUESTIONS, readOf({ ...GOOD, '反思.md': GOOD['反思.md'].replace(selfcheckTable(), noTable(ev)) }), null, '推送', MEM);
+
+test('规矩两键读成登记：可填否项、原因前缀；缺任一键读取即报错', () => {
+  assert.deepEqual(NO_RULES.noItems, ['5']);
+  assert.equal(NO_RULES.noPrefix, '缘由：');
+  assert.match(loadRules(NO_DOC.replace(/^- 自查表可填否项：.*\r?\n/m, '')).error || '', /缺「自查表可填否项」/);
+  assert.match(loadRules(NO_DOC.replace(/^- 否项原因前缀：.*\r?\n/m, '')).error || '', /缺「否项原因前缀」/);
+});
+
+test('可填否项填"否"：前缀＋原因＋实据放行；缺前缀、原因太短、无实据都拒；未登记项填"否"拒', () => {
+  assert.deepEqual(checkNo('缘由：写者不跑全量，由主会话跑；`node --test x` 末行：# pass 3'), []);
+  assert.ok(has(checkNo('写者不跑全量，由主会话跑；`node --test x` 末行：# pass 3'), '第 5 项', '缘由：'));
+  assert.ok(has(checkNo('缘由：没'), '第 5 项', '不足'));
+  assert.ok(has(checkNo('缘由：写者不跑全量，由主会话跑'), '第 5 项证据须含实据'));
+  const bad = GOOD['反思.md'].replace(selfcheckTable(), noTable('tools/accept/run.mjs:1').replace(/^(\| 3 \|.*?\| )是( \|)/m, '$1否$2'));
+  assert.ok(has(checkArchive(NO_RULES, QUESTIONS, readOf({ ...GOOD, '反思.md': bad }), null, '推送', MEM), '第 3 项', '须为"是"'));
+});
+
 test('缺文件拒；出题.md、审查.md 提交时不要求、推送时要求', () => {
   const noReview = archive(); delete noReview['审查.md']; delete noReview['出题.md'];
   assert.deepEqual(check(noReview, '提交'), []);

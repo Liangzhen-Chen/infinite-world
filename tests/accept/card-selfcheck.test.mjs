@@ -89,6 +89,58 @@ test('任一项证据含 "__"：拒', () => {
   assert.ok(r.reasons.some((x) => x.includes('第 2 项证据含未填占位')));
 });
 
+// 可填否项（李白 Z-6）：登记值由调用方传入，这里自设，不依赖真实规矩当前值。
+const NO = { noItems: ['5'], noPrefix: '缘由：', rules: { allowShort: [], bare: new Set(['done', 'ok', '略']), minChars: 4 } };
+const parseNo = (text) => parseSelfcheck(text, QUESTIONS, { ...NO, evidenceRes: ['`[^`\\n]*\\bnode\\b[^`\\n]*`[^\\n]*末行'] });
+const noRow = (ev) => tableText({ verdicts: { 5: '否' }, evidences: { 5: ev } });
+
+test('可填否项填"否"：带前缀、够字数的原因，证据仍有实据：放行', () => {
+  assert.deepEqual(parseNo(noRow('缘由：写者不跑全量，由主会话合入前跑；`node --test x` 末行：# pass 3')), { ok: true, reasons: [] });
+});
+
+test('可填否项填"否"缺前缀：拒', () => {
+  const r = parseNo(noRow('写者不跑全量，由主会话合入前跑；`node --test x` 末行：# pass 3'));
+  assert.equal(r.ok, false);
+  assert.ok(r.reasons.some((x) => x.includes('第 5 项') && x.includes('缘由：')));
+});
+
+test('可填否项填"否"前缀后原因太短：拒', () => {
+  const r = parseNo(noRow('缘由：没跑'));
+  assert.equal(r.ok, false);
+  assert.ok(r.reasons.some((x) => x.includes('第 5 项') && x.includes('不足 4 字')));
+});
+
+test('可填否项填"否"只有前缀加实据、没有自身够字数的原因：拒；前缀加足够原因加实据：放行（实据不计字数）', () => {
+  const r = parseNo(noRow('缘由：`node --test x` 末行：# pass 3'));
+  assert.equal(r.ok, false);
+  assert.ok(r.reasons.some((x) => x.includes('第 5 项') && x.includes('不足 4 字')));
+  assert.equal(parseNo(noRow('缘由：没；`node --test x` 末行：# pass 3')).ok, false);
+  assert.equal(parseNo(noRow('缘由：不跑全量，主会话跑 `node --test x` 末行：# pass 3')).ok, true);
+});
+
+test('可填否项填"否"前缀加空话词（够 4 字）加实据：拒', () => {
+  const r = parseNo(noRow('缘由：done；`node --test x` 末行：# pass 3'));
+  assert.equal(r.ok, false);
+  assert.ok(r.reasons.some((x) => x.includes('第 5 项') && x.includes('空话')));
+});
+
+test('可填否项填"否"前缀与原因都有但无实据：解析放行，证据种类由 card-archive 拒（见 card-archive.test.mjs）', () => {
+  assert.equal(parseNo(noRow('缘由：写者不跑全量，由主会话合入前跑')).ok, true);
+});
+
+test('未登记的项填"否"、或"是""否"以外的值：拒', () => {
+  const a = parseNo(tableText({ verdicts: { 3: '否' }, evidences: { 3: '缘由：写者不跑全量，由主会话跑' } }));
+  assert.equal(a.ok, false);
+  assert.ok(a.reasons.some((x) => x.includes('第 3 项') && x.includes('须为"是"')));
+  const b = parseNo(tableText({ verdicts: { 5: '部分' }, evidences: { 5: '缘由：写者不跑全量，由主会话跑' } }));
+  assert.equal(b.ok, false);
+  assert.ok(b.reasons.some((x) => x.includes('第 5 项') && x.includes('填的是"部分"')));
+});
+
+test('没传登记（默认）：任何项填"否"都拒', () => {
+  assert.equal(parse(tableText({ verdicts: { 5: '否' }, evidences: { 5: '缘由：写者不跑全量，由主会话跑' } })).ok, false);
+});
+
 test('题目与规矩文件不一致：拒', () => {
   const text = tableText().replace('没有按 id/名字/场景写特例', '没有写特例');
   const r = parse(text);

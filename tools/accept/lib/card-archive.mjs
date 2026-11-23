@@ -2,12 +2,11 @@
 // 小节名、证据判据、触发目录、例外、最少条数等一律从 docs/派活卡头规矩.md 第五节读，本文件不另抄一份（红线第 10 条）。
 // 九项自查表题面同取自规矩文件第三节，沿用 card-selfcheck.mjs 的解析。
 
-import { firstTable, selfcheckQuestions, parseSelfcheck, CARD_RULES_DOC } from './card-selfcheck.mjs';
+import { firstTable, selfcheckQuestions, parseSelfcheck, validValue, strip, CARD_RULES_DOC } from './card-selfcheck.mjs';
 
 export const CARD_ARCHIVE_CODE = 'E-ACC-CARD-ARCHIVE';
 const NONE = new Set(['—', '-', '']);
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const strip = (s) => s.replace(/[\s\p{P}\p{S}]/gu, '').toLowerCase();
 
 const list = (v) => String(v).split('、').map((x) => x.trim()).filter(Boolean);
 const kindsOf = (cell) => (NONE.has(cell) || cell === '无' ? [] : cell.split('/').map((x) => x.trim()).filter(Boolean));
@@ -33,7 +32,7 @@ export function archiveRules(docText) {
     else (kv[key] ||= []).push(val);
   }
   const one = (k) => (kv[k] || [])[0];
-  for (const k of ['档案目录', '提交说明分支行前缀', '绕过标记', '推送目标', '开头自查表文件', '无证据项最少字数', '免条目时须卷文行条数', '自查表证据种类', '卷文件目录', '三方小节', '三方角色', '三方角色字段', '三方标识字段', '标识占位词', '验收目录', '验收目录唯一可改角色', '提交说明角色行前缀', '提交说明标识行前缀', '合并角色', '门禁生效提交']) {
+  for (const k of ['档案目录', '提交说明分支行前缀', '绕过标记', '推送目标', '开头自查表文件', '无证据项最少字数', '免条目时须卷文行条数', '自查表证据种类', '自查表可填否项', '否项原因前缀', '卷文件目录', '三方小节', '三方角色', '三方角色字段', '三方标识字段', '标识占位词', '验收目录', '验收目录唯一可改角色', '提交说明角色行前缀', '提交说明标识行前缀', '合并角色', '门禁生效提交']) {
     if (one(k) === undefined) return { error: `规矩文件第五节缺「${k}」` };
   }
   for (const [k, src] of Object.entries(kinds)) { try { new RegExp(src); } catch { return { error: `证据种类「${k}」的正则不合法` }; } }
@@ -74,6 +73,8 @@ export function archiveRules(docText) {
     kinds,
     verify,
     selfKinds: kindsOf(one('自查表证据种类') || ''),
+    noItems: list(one('自查表可填否项') || '').flatMap((x) => x.split(/[,，/]/)).map((x) => x.trim()).filter(Boolean),
+    noPrefix: one('否项原因前缀') || '',
     volumeDir: one('卷文件目录'),
     rows,
     party: {
@@ -149,15 +150,6 @@ export function verifyRefs(rules, text, repo) {
   return out;
 }
 
-// 值合格：去掉标点符号后不空、不是空话词、够字数（允许短值除外）。
-function validValue(rules, v) {
-  const t = v.trim().replace(/[；;，,。.\s]+$/, '');
-  if (rules.allowShort.includes(t)) return true;
-  const s = strip(t);
-  if (!s || rules.bare.has(s)) return false;
-  return [...t].length >= rules.minChars;
-}
-
 // 取条目里「字段名：值」；值到下一个字段名之前。找不到返回 null。
 function fieldValues(item, names) {
   const hits = [];
@@ -222,7 +214,7 @@ export function checkArchive(rules, questions, readFile, cond = null, stage = '�
     }
     if (cond === null && file === rules.selfcheckFile) {
       const head = text.split(/\r?\n## /)[0];
-      const p = parseSelfcheck(head, questions);
+      const p = parseSelfcheck(head, questions, { noItems: rules.noItems, noPrefix: rules.noPrefix, rules, evidenceRes: rules.selfKinds.map((k) => rules.kinds[k]) });
       for (const r of p.reasons) reasons.push(`${file} 开头自查表：${r}`);
       // 证据格须有实据（自查表证据种类里至少一种），并核实所引文件与行号；不靠枚举敷衍词。
       const t = firstTable(head);

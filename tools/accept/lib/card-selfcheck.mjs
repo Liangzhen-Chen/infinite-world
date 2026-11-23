@@ -45,8 +45,22 @@ export function selfcheckQuestions(docText) {
   return q;
 }
 
+// 值合格的唯一判法（card-archive 与本文件共用）：去掉标点符号后不空、不是空话词、够字数（允许短值除外）。
+export const strip = (s) => s.replace(/[\s\p{P}\p{S}]/gu, '').toLowerCase();
+export function validValue(rules, v) {
+  const t = v.trim().replace(/[；;，,。.\s]+$/, '');
+  if (rules.allowShort.includes(t)) return true;
+  const s = strip(t);
+  if (!s || rules.bare.has(s)) return false;
+  return [...t].length >= rules.minChars;
+}
+
 // 按题面逐行对照回报的第一张表；返回 { ok, reasons }，原因逐条写清楚（打印机读同一份）。
-export function parseSelfcheck(reportText, questions) {
+// opts（规矩第五节登记，调用方传入，本文件不写死）：noItems 可填"否"的项号数组、noPrefix 填"否"时证据须有的原因前缀、
+// rules（{ allowShort, bare, minChars }，同 archiveRules 读出的值）供 validValue 判前缀后、实据之前的原因，evidenceRes 自查表证据种类的正则源数组（李白 Z-6）。没登记的项只认"是"。"否"项的实据（卷:行等）由 card-archive 按自查表证据种类照常核。
+export function parseSelfcheck(reportText, questions, opts = {}) {
+  const noItems = new Set((opts.noItems || []).map(String));
+  const noPrefix = opts.noPrefix || '';
   const t = firstTable(reportText);
   if (!t) return { ok: false, reasons: ['回报开头没有 markdown 表'] };
   const reasons = [];
@@ -59,9 +73,18 @@ export function parseSelfcheck(reportText, questions) {
     if (row[0] !== n) { reasons.push(`${label}编号不对（实为 ${row[0] || '空'}）`); continue; }
     if (row.length !== 4) { reasons.push(`${label}须为 4 列，实为 ${row.length} 列`); continue; }
     if (row[1] !== q) { reasons.push(`${label}题目与 ${CARD_RULES_DOC} 不一致`); continue; }
-    if (row[2] !== '是') { reasons.push(`${label}填的是"${row[2] || '空'}"，须为"是"`); continue; }
+    const canNo = noItems.has(n) && Boolean(noPrefix) && Boolean(opts.rules);
+    if (row[2] !== '是' && !(canNo && row[2] === '否')) { reasons.push(`${label}填的是"${row[2] || '空'}"，须为"${canNo ? '是"或"否' : '是'}"`); continue; }
     const evidence = row[3];
     if (!evidence) { reasons.push(`${label}证据为空`); continue; }
+    if (row[2] === '否') {
+      // 填"否"：证据须以登记的原因前缀开头，前缀后的原因不少于最少字数。
+      if (!evidence.startsWith(noPrefix)) { reasons.push(`${label}填"否"时证据须以"${noPrefix}"开头写原因`); continue; }
+      // 原因 = 前缀后、第一处实据（evidenceRes：自查表证据种类的正则源）之前的那段文字；实据部分不计字数。
+      let body = evidence.slice(noPrefix.length);
+      for (const src of opts.evidenceRes || []) { const m = new RegExp(src).exec(body); if (m) body = body.slice(0, Math.min(body.length, m.index)); }
+      if (!validValue(opts.rules, body)) { reasons.push(`${label}填"否"时"${noPrefix}"后、实据之前的原因为空、是空话或不足 ${opts.rules.minChars} 字`); continue; }
+    }
     const slot = q.includes('__');
     // 任一项证据里都不许留着 "__"（占位未填）。
     if (evidence.includes('__')) { reasons.push(slot ? `${label}的"__"未替换为数字` : `${label}证据含未填占位"__"`); continue; }
