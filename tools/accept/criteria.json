@@ -484,10 +484,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 94
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 95
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 94,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 95,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -1288,10 +1292,14 @@
     {
      "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 90
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 91
     }
    ],
-   "print": "501f280d88ba0a17d2793a77849a9b627babd8804ea7c19a7ceabd3d15b8b494",
-   "rev": 90,
+   "print": "45539d136aea861d7f253d8d8bc36733e108f336a114db4753c7facf951e7ff0",
+   "rev": 91,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -2150,10 +2158,14 @@
     {
      "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 78
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 79
     }
    ],
-   "print": "fa7932f827bb7a3be755d5041be336d4254a405d1a338c016408a7a9099eb28f",
-   "rev": 78,
+   "print": "b864a097ac446e0d79fb2769cdc522a18e1182d599ebfdc055af520a19553963",
+   "rev": 79,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -2731,10 +2743,14 @@
     {
      "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 109
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 110
     }
    ],
-   "print": "1f8c9d9e57090f20a83ad641ebead438ecdce589e569b17758bb341c09e3950f",
-   "rev": 109,
+   "print": "ba039571bb91f4d7d764f87f52fae8fee33811fefce12931c3b6d7b8085179bb",
+   "rev": 110,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -3201,10 +3217,14 @@
     {
      "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 79
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 80
     }
    ],
-   "print": "fa7932f827bb7a3be755d5041be336d4254a405d1a338c016408a7a9099eb28f",
-   "rev": 79,
+   "print": "b864a097ac446e0d79fb2769cdc522a18e1182d599ebfdc055af520a19553963",
+   "rev": 80,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -4247,10 +4267,14 @@
     {
      "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 79
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 80
     }
    ],
-   "print": "fa7932f827bb7a3be755d5041be336d4254a405d1a338c016408a7a9099eb28f",
-   "rev": 79,
+   "print": "b864a097ac446e0d79fb2769cdc522a18e1182d599ebfdc055af520a19553963",
+   "rev": 80,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -4585,10 +4609,14 @@
     {
      "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 80
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 81
     }
    ],
-   "print": "abe67e692ab583b57c194efa8de45c83cf531ab7f49a8f06b95d2f5cfb0e0304",
-   "rev": 80,
+   "print": "7fc6ccfe8e0eeeddf5bfe2e191c440d87b1e91a7c45b725675048f36c3dd00e6",
+   "rev": 81,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -4684,10 +4712,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 20
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 20,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 21,
    "scanClass": "pp_canonical_def",
    "source": "公共部件审查乙 11；卷二十七 :542；例外 kernel/storage.mjs",
    "terms": {
@@ -4727,10 +4759,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 6
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 7
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 6,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 7,
    "scanClass": "pp_canonical_review",
    "source": "主会话 11-23 定：规范序列化按定义判，拿不准的待人审",
    "terms": {
@@ -4826,10 +4862,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 20
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 20,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 21,
    "scanClass": "pp_deep_clone",
    "source": "公共部件审查乙 10；卷二 :897；kernel/clone.mjs（kernelApi clone）",
    "terms": {
@@ -4925,10 +4965,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 20
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 20,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 21,
    "scanClass": "pp_dist_branch",
    "source": "公共部件审查甲 R7；卷二 §1.10；kernel/sample.mjs 头注",
    "terms": {
@@ -5004,10 +5048,14 @@
     {
      "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 15
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 16
     }
    ],
-   "print": "81c32e23d50692eed3fde454e2bbc34aba453b933db5731e57a9951863997342",
-   "rev": 15,
+   "print": "2cabcebf5c8be3e69382ba7a7b5b8c0c6c465aa3a32ab669f61616effa692603",
+   "rev": 16,
    "scanClass": "pp_draw_sites",
    "source": "公共部件审查甲 R6 后半；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479（rules.clock.drawSites）",
    "terms": {
@@ -5083,10 +5131,14 @@
     {
      "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 15
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 16
     }
    ],
-   "print": "abe67e692ab583b57c194efa8de45c83cf531ab7f49a8f06b95d2f5cfb0e0304",
-   "rev": 15,
+   "print": "7fc6ccfe8e0eeeddf5bfe2e191c440d87b1e91a7c45b725675048f36c3dd00e6",
+   "rev": 16,
    "scanClass": "pp_dup_export",
    "source": "公共部件审查甲 R14、乙 12；卷二 :1162 体例；CLAUDE.md“跨卷共用定义只一处”。职责函数 isPos、distributionMean、weatherCellOf 的职责文件依据：卷二 §1.5 struct:pos（kernel/named-structs.mjs）、卷二 §1.10（kernel/sample.mjs）、卷二十 §3.1（kernel/weather.mjs）",
    "terms": {
@@ -5174,10 +5226,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 18
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 19
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 18,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 19,
    "scanClass": "pp_dynamic_index",
    "source": "李白更正裁定 msg-1122-2255-c0ast（动态下标出现即报，标待人审）；卷二十七 R27-5.2、A27-5.1；卷二十 :436",
    "terms": {
@@ -5253,10 +5309,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 15
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 16
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 15,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 16,
    "scanClass": "pp_dynamic_review",
    "source": "李白更正裁定 msg-1122-2255-c0ast：运行期才知道的动态下标出现即报，标待人审。本条列全部对象上的动态下标（含数组按位置取），数量大，只报不拦（报告里列出，供人审）；登记在 Math、全局对象、状态根等根上的动态下标由 pp_dynamic_index 拦",
    "terms": {
@@ -5352,10 +5412,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 20
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 20,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 21,
    "scanClass": "pp_envat_callers",
    "source": "公共部件审查甲 R2；卷二十 :478；state-owners.json kernelApi 行形状",
    "terms": {
@@ -5451,10 +5515,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 20
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 20,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 21,
    "scanClass": "pp_envat_import",
    "source": "公共部件审查甲 R1（docs/研究/公共部件审查-甲-1122.md 第八节）；卷二十 :478、:631；例外：climate.mjs、weather.mjs 互相引用（甲 R1 原句）",
    "terms": {
@@ -5550,10 +5618,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 20
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 20,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 21,
    "scanClass": "pp_epsilon",
    "source": "公共部件审查乙 7；卷二十七 :620、:634（R27-5.2 数值运算只有三条路）",
    "terms": {
@@ -5708,10 +5780,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 19
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 20
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 19,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 20,
    "scanClass": "pp_float_pow",
    "source": "公共部件审查乙 7；卷二十七 R27-5.2（超越函数只经定点数学设施，幂函数 pow 同属）；独立验收漏项“** 运算符”",
    "terms": {
@@ -5807,10 +5883,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 20
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 20,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 21,
    "scanClass": "pp_footprint_kind",
    "source": "公共部件审查甲 R12；卷二 §1.9；模块化评估第三节；例外 kernel/footprint-kind.mjs（gen/* 按种类过滤的比较进基线，M-11③ 修后开）",
    "terms": {
@@ -5902,10 +5982,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 19
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 20
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 19,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 20,
    "scanClass": "pp_gen_callers",
    "source": "公共部件审查乙 9（docs/研究/公共部件审查-乙-1122.md :161）；卷十 :403（生成器只在世界创建事务里按步骤表跑）；例外：generateWorld 所在文件 server-plugin/world-create.mjs（卷十 §3.2 :291）；requireMaterialized 现不存在，建成后其所在文件须加入例外；作者工具在 tools/ 下，不在扫描范围（卷十 :1002）",
    "terms": {
@@ -6001,10 +6085,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 20
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 20,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 21,
    "scanClass": "pp_grammar_regex",
    "source": "公共部件审查乙 6；卷二 :291；例外 kernel/validate/types.mjs",
    "terms": {
@@ -6175,10 +6263,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 20
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 20,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 21,
    "scanClass": "pp_key_concat",
    "source": "公共部件审查甲 R5、乙 1、乙 2；卷二 :337、:897、:1162；例外：整份文本摘要 sha256Text(canonical(…))、sha256Text(text) 不拼键（不含 .join，不命中）",
    "terms": {
@@ -6266,10 +6358,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 18
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 19
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 18,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 19,
    "scanClass": "pp_kind_branch",
    "source": "独立验收（亮圳 11-22「独立测门禁1122」）指出“写死数值与种类分支没有 C0 专条”；卷一 二.1（派生优先，不按 ID 或场景特判，docs/产品原则.md）；卷二 S10（常数登记）",
    "terms": {
@@ -6365,10 +6461,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 20
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 20,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 21,
    "scanClass": "pp_material_read",
    "source": "公共部件审查甲 R11；卷三甲 :268；卷三乙 :541；例外：kernel/item.mjs、kernel/dimensions.mjs、kernel/load/**、kernel/validate/**、kernel/blueprint.mjs（加载期校验 checkBlueprintForms）",
    "terms": {
@@ -6464,10 +6564,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 20
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 20,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 21,
    "scanClass": "pp_neighbors",
    "source": "公共部件审查甲 R10；卷五 :491、:1216（现 8 处）",
    "terms": {
@@ -6551,10 +6655,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 17
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 18
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 17,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 18,
    "scanClass": "pp_no_acorn_runtime",
    "source": "李白更正裁定 msg-1122-2255-c0ast：acorn 只许 tools/accept 引用，server-plugin 不得引用",
    "terms": {
@@ -6650,10 +6758,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 20
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 20,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 21,
    "scanClass": "pp_pos_shape",
    "source": "公共部件审查甲 R8；卷二 §1.5 struct:pos 登记；例外 kernel/named-structs.mjs、kernel/named-struct-match.mjs",
    "terms": {
@@ -6749,10 +6861,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 20
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 20,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 21,
    "scanClass": "pp_region_cell",
    "source": "公共部件审查甲 R9；卷五 :433、:499；例外：kernel/footprint.mjs 的共用函数（修后建）、kernel/handles/keys.mjs gridChunkCells（卷二 :860）",
    "terms": {
@@ -6848,10 +6964,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 20
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 20,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 21,
    "scanClass": "pp_rx_empty_clock",
    "source": "公共部件审查甲 R15；卷二十 :312、:685；例外：加载期校验 kernel/validate/**",
    "terms": {
@@ -6947,10 +7067,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 20
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 20,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 21,
    "scanClass": "pp_seed_args",
    "source": "公共部件审查甲 R6；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479。后半（drawSites 与 seed-keys 两表一致）未落：需读两表对照，现有检测器无此检查",
    "terms": {
@@ -7022,10 +7146,14 @@
     {
      "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 14
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 15
     }
    ],
-   "print": "81c32e23d50692eed3fde454e2bbc34aba453b933db5731e57a9951863997342",
-   "rev": 14,
+   "print": "2cabcebf5c8be3e69382ba7a7b5b8c0c6c465aa3a32ab669f61616effa692603",
+   "rev": 15,
    "scanClass": "pp_seed_args_dyn",
    "source": "独立验收漏项“抽取点站点名用变量”；卷二十七 :789（R27-8.1 每个抽取点登记，流代号、抽取点代号须字面量）",
    "terms": {
@@ -7097,10 +7225,14 @@
     {
      "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 14
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 15
     }
    ],
-   "print": "abe67e692ab583b57c194efa8de45c83cf531ab7f49a8f06b95d2f5cfb0e0304",
-   "rev": 14,
+   "print": "7fc6ccfe8e0eeeddf5bfe2e191c440d87b1e91a7c45b725675048f36c3dd00e6",
+   "rev": 15,
    "scanClass": "pp_tpl_key",
    "source": "公共部件审查甲 R13；卷二 :860（键串形只由登记方给）；模块化原则卡头第二节第 9 条",
    "terms": {
@@ -7192,10 +7324,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 19
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 20
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 19,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 20,
    "scanClass": "pp_unit_literal",
    "source": "公共部件审查乙 13；卷三乙:179 与表头 unit 字段（item.json 表头 unit 字段）；单位登记表 world/ontology/dimensions/_units.json",
    "terms": {
@@ -7291,10 +7427,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 20
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 20,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 21,
    "scanClass": "pp_year_minutes",
    "source": "公共部件审查甲 R3；卷二十 :436、:477 T-3 (c)；例外 climate.mjs（日均温日份额，天文相位，卷二十 :436）",
    "terms": {
@@ -7729,10 +7869,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 105
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 106
     }
    ],
-   "print": "1eb5fd54fbcacc594bd22dfd976b1ac24a86b1cbbf4da6b93c87765b85f0348e",
-   "rev": 105,
+   "print": "0b231d145dceef76a69dc65b5ed675489740eae9a153a96568fa731f71cc360f",
+   "rev": 106,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -8232,10 +8376,14 @@
     {
      "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 66
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 67
     }
    ],
-   "print": "81c32e23d50692eed3fde454e2bbc34aba453b933db5731e57a9951863997342",
-   "rev": 66,
+   "print": "2cabcebf5c8be3e69382ba7a7b5b8c0c6c465aa3a32ab669f61616effa692603",
+   "rev": 67,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -8625,10 +8773,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 92
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 93
     }
    ],
-   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
-   "rev": 92,
+   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
+   "rev": 93,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -8921,10 +9073,14 @@
     {
      "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 51
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 52
     }
    ],
-   "print": "ee86b541628cb99fbfc9669691042bc9e6506ded310ae4bea0be2a7e3cae5218",
-   "rev": 51,
+   "print": "c7e76fcb6339a3db01e6d37883ab93906ebcd91d617aa274204b29ccb7adee8f",
+   "rev": 52,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -9574,10 +9730,14 @@
     {
      "ref": "主会话合入 ds/xvol-cde（跨卷判定 C、D、K-3：rows.mjs 加 bySubstance、dimensions-validate.mjs 自引用报 E-DIM-DERIVED-RECURSIVE、ledger.mjs 登 spot）于 C0 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 82
+    },
+    {
+     "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
+     "rev": 83
     }
    ],
-   "print": "abe67e692ab583b57c194efa8de45c83cf531ab7f49a8f06b95d2f5cfb0e0304",
-   "rev": 82,
+   "print": "7fc6ccfe8e0eeeddf5bfe2e191c440d87b1e91a7c45b725675048f36c3dd00e6",
+   "rev": 83,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

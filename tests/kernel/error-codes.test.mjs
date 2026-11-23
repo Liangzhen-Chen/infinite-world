@@ -32,8 +32,9 @@ test('码表条数：E 与 W 各为手数的字面量', () => {
   // 格子迁移 G9 随 alterCells 加 E-GRID-OFFSCREEN-WRITE、E-GRID-STRUCTURE-CELL（卷五 §4.1 规则 15 :504、:505）：610 → 612、E 591 → 593。
   // 格子迁移 G10 展开落格加 E-GRID-LAND-UNKNOWN（卷二十七 R27-1.13 :317、:1024，告警级）：612 → 613、E 593 → 594。
   // 格子迁移 G14 声明与数据加 E-PROP-LAW（卷二十错误码表 :1454，rules.env.channelLaw 键全覆盖）：613 → 614、E 594 → 595。
-  assert.equal(codes.length, 614);
-  assert.equal(codes.filter((c) => c[0] === 'E').length, 595);
+  // 卡档案门禁加卷十二 §2.12 一码 E-ACC-CARD-ARCHIVE（勘误 1124k140；李白 Q-14、Q-15）：614 → 615、E 595 → 596。
+  assert.equal(codes.length, 615);
+  assert.equal(codes.filter((c) => c[0] === 'E').length, 596);
   assert.equal(codes.filter((c) => c[0] === 'W').length, 19);
   assert.equal(REGISTERED_CODES.size, codes.length);
 });

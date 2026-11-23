@@ -1,21 +1,14 @@
-// 卡头自查（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：派卡脚本派出的子代理（环境变量 DND_CARD_AGENT=1）
-// 做的提交，暂存区必须带回报文件 docs/卡回报/<分支名，/ 换成 ->.md；回报第一张 markdown 表须是 docs/派活卡头规矩.md
-// 第三节那张自查表（现九项）：恰有题面的各行，第三列"是"、第四列证据非空；题面里带 "__" 的那项（diff 行数）证据须已换成数字。
+// 卡头自查（卷十二 §2.12 E-ACC-CARD-SELFCHECK；李白 11-18 17:45）：自查表（docs/派活卡头规矩.md 第三节，现九项）解析。
+// 现在表放在卡档案目录的 反思.md 开头，由 lib/card-archive.mjs 调本文件解析并核对：恰有题面的各行，第三列"是"、
+// 第四列证据非空；题面里带 "__" 的那项（diff 行数）证据须已换成数字。
 // 题目只有一处定义（docs/派活卡头规矩.md），本文件读它对照，不另抄一份题目。
 
-export const CARD_AGENT_ENV = 'DND_CARD_AGENT';
 export const CARD_SELFCHECK_CODE = 'E-ACC-CARD-SELFCHECK';
 export const CARD_RULES_DOC = 'docs/派活卡头规矩.md';
-export const CARD_REPORT_DIR = 'docs/卡回报';
 
 // 题面带 "__" 那项的证据判据：须含"共 N 行"；"约/大约"紧贴数字前、或"行"后接"左右"，即近似。
 const DIFF_LINES = /共\s*[0-9]+\s*行/;
 const DIFF_APPROX = /(?:约|大约)\s*共?\s*[0-9]|共\s*[0-9]+\s*行\s*左右/;
-
-// 回报文件路径：分支名里的 / 换成 -（分支 feature/x → docs/卡回报/feature-x.md）。
-export function reportPathOf(branch) {
-  return `${CARD_REPORT_DIR}/${branch.split('/').join('-')}.md`;
-}
 
 // markdown 表格行拆格：首尾的管道不算格；没有首管道的不算表格行。
 function cellsOf(line) {
