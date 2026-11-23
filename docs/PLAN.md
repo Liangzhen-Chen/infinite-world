@@ -147,7 +147,7 @@
 - [x] C0 第八轮修：381695f72 入主线（含布局名改引 layout.mjs）。独立 Sonnet 与李白 Flash 复测结果在 docs/卡档案/ds-c0-fix8/出题-来源.md。
 - [ ] C0 第九轮修（ds/c0-fix9，卡 F:/dnd-tmp/card-c0-fix9.md）：Map.keys、Promise.then、类字段别名、isSink 去裸名、迭代式手写排序；李白 Z-5 加 n07（数组 join 折叠 yearMinutes）、n08（跨文件改名导入 regionCellM/cellM 相除）、l22（genDraw 字符串常量实参被 E-SEED-KEY 拦，核误拦）。三方：写 Sonnet、出题 Haiku、审 Opus。
 - [ ] 档案自查脚本入库：F:/dnd-tmp/check-push-archive.mjs（按推送口径一次列全卡档案问题）改成 tools/accept 下正式入口并加测试；另门禁核三方「模型」互异（Z-5，现只核标识）。小卡，排 C0 第九轮后。
-- [ ] C3 事务、账本与持有（Q-18 修理，11-30 前）：写 Sonnet（F:/dnd-wt/ds-c3，ds/c3-ledger，卡 F:/dnd-tmp/card-c3-write.md）、出题 Haiku（F:/dnd-wt/ts-c3，ts/c3-ledger，卡 F:/dnd-tmp/card-c3-test.md）、审 Opus。之后 C5 → C4（place.mjs 串行）；另一路 C1、C6、C7，再 C8～C11。
+- [x] C3 已入主线 dc45411e1（11-23 晚，2229/2229）。遗留：TEMPLATE_NAMES 按实体表解析须先有加载器读 world/ontology/entity-templates.json（碰 kernel/load，另开卡，Opus 核）。原条：C3 事务、账本与持有（Q-18 修理，11-30 前）：写 Sonnet（F:/dnd-wt/ds-c3，ds/c3-ledger，卡 F:/dnd-tmp/card-c3-write.md）、出题 Haiku（F:/dnd-wt/ts-c3，ts/c3-ledger，卡 F:/dnd-tmp/card-c3-test.md）、审 Opus。之后 C5 → C4（place.mjs 串行）；另一路 C1、C6、C7，再 C8～C11。
 - [x] 寿命按现龄截断：b2036558f 已合（原文：（李白 11-22 18:03）：卷四 :216 勘误，寿命在 [现龄, 上限] 内条件采样，覆盖所有物种与名册；测试证明名册里没人寿命小于现龄。在跑（ds/lifespan-trunc）。
 - [ ] 游泳与涉水规则卡（正式规则，第 6 块可玩版本前必须有）：浅水涉水能走；深水游泳，或至少不会静默淹死。河湾村在河边。G12 先按卷五 :761 字面落格（液体格不可立足），这不算玩法；李白 11-23 事件 412004ce：液体柱坠落停在柱底第一个实体格之上（沉到河床上），怎么游、怎么沉、浮力并入本卡。
 - [x] 卷三乙可燃量勘误（Opus 写、另一 Opus 核；李白 11-23 事件 30d365ac ①）：G14 场传播的前置，等 1123 批勘误合入后开。——已合（d7a1db25b）。
