@@ -379,7 +379,11 @@ const fieldsWithin = (o, allowed) => isObj(o) && Object.keys(o).every((k) => all
 const structErr = (why) => new KernelError('E-DIM-STRUCT-FIELD', { entity: null }, why);
 const isPosInt = (v) => Number.isSafeInteger(v) && v > 0;
 
-// 批次键计数器的进制：内核常数表 kernelConstants.handleRadix（与卷二十 due_ 句柄同一张表、同一进制，李白 11-18 03:31、04:10）。
+/**
+ * 批次键计数器的进制：内核常数表 kernelConstants.handleRadix（与卷二十 due_ 句柄同一张表、同一进制，李白 11-18 03:31、04:10）。
+ * @param {{rules: any}} engine
+ * @returns {number}
+ */
 export function lotRadix(engine) {
   const t = ruleTable(engine.rules, SCHEMA.constantsTable);
   const r = isObj(t) ? t[SCHEMA.radixKey] : undefined;
@@ -409,7 +413,11 @@ export function lotKeyInstance(key) {
   return typeof key === 'string' && key.startsWith(SCHEMA.instanceLotPrefix) && key.length > SCHEMA.instanceLotPrefix.length ? key.slice(SCHEMA.instanceLotPrefix.length) : null;
 }
 
-// 批次键的序号（前缀之后按进制读回、往返一致才算；不是序号键（含实例批次键）即 null）。
+/**
+ * 批次键的序号（前缀之后按进制读回、往返一致才算；不是序号键（含实例批次键）即 null）。
+ * @param {any} key @param {number} radix
+ * @returns {number | null}
+ */
 export function lotOrdinal(key, radix) {
   if (typeof key !== 'string' || !key.startsWith(SCHEMA.lotPrefix) || lotKeyInstance(key) !== null) return null;
   const digits = key.slice(SCHEMA.lotPrefix.length);
