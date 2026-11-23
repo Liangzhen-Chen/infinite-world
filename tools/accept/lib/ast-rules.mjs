@@ -9,8 +9,9 @@ const isStr = (f) => f && typeof f.v === 'string';
 const realOrigins = (os) => os.filter((o) => o.path);
 // 按全局名、导入名判的规则用：形参或无初值局部名与之同名不算（遮蔽，按作用域判绑定）。
 const globalOrigins = (os) => os.filter((o) => o.path && !o.shadow);
-// 按名字名单判“是哪个成员/绑定”用：成员访问（路径长于 1，如 g.regionCellM，g 是形参也算）照认，只有单独一个名字且是形参/无初值局部（遮蔽）才不认。
-const namedOrigins = (os) => os.filter((o) => o.path && !(o.shadow && o.path.length === 1));
+// 按名字名单判“是哪个成员/绑定”用：名单里的名字是数据字段名（不是全局名），形参、解构形参、无初值局部以这个名字声明，就是这个字段值的承载者
+// （值从调用点来，调用点看不见或传进来的仍是它），所以自身来源也认；只有按全局名判的规则（globalOrigins）才把形参遮蔽排除。
+const namedOrigins = realOrigins;
 const lastName = (o) => (o.path && o.path.length ? o.path[o.path.length - 1] : '');
 const pathKey = (o) => (o.path || []).join('.');
 
@@ -370,32 +371,99 @@ const KINDS = {
     const sinks = new Set(rule.sinks || []);
     const keySrc = new Set(rule.keySources || []);
     const isLoop = (x) => x.type === 'WhileStatement' || x.type === 'DoWhileStatement' || x.type === 'ForStatement' || x.type === 'ForOfStatement' || x.type === 'ForInStatement';
-    const keys = (fn) => hasSub(fn.body, (x) => x.type === 'ForInStatement' || (x.type === 'CallExpression' && globalOrigins(calleeOrigins(x, rec)).some((o) => keySrc.has(pathKey(o)))));
-    const handSort = (fn) => hasSub(fn.body, (x) => isLoop(x) && hasSub(x.body, (y) => isLoop(y) && hasSub(y.body, (z) => z.type === 'BinaryExpression' && ['<', '>', '<=', '>='].includes(z.operator)) && hasSub(y.body, (z) => z.type === 'AssignmentExpression')));
     const sortM = new Set(rule.sortMethods || []); const joinM = new Set(rule.stringMethods || []);
-    const sorts = (fn) => hasSub(fn.body, (x) => x.type === 'CallExpression' && x.callee.type === 'MemberExpression' && sortM.has(propName(x.callee))) || handSort(fn);
-    const strOut = (fn) => hasSub(fn.body, (x) => (x.type === 'TemplateLiteral' && x.expressions.length > 0) || (x.type === 'BinaryExpression' && x.operator === '+' && (isStr(fold(x.left, rec)) || isStr(fold(x.right, rec))))
-      || (x.type === 'AssignmentExpression' && x.operator === '+=' && isStr(fold(x.right, rec))) || (x.type === 'CallExpression' && x.callee.type === 'MemberExpression' && joinM.has(propName(x.callee))));
-    const shaped = (fn) => keys(fn) && sorts(fn) && strOut(fn);
+    const accM = new Set(rule.accumulateMethods || []);
+    const charM = new Set(rule.charMethods || []); const mixOps = new Set(rule.mixOps || []); const mixCalls = new Set(rule.mixCalls || []);
+    const isStrOut = (x, r) => (x.type === 'TemplateLiteral' && x.expressions.length > 0) || (x.type === 'BinaryExpression' && x.operator === '+' && (isStr(fold(x.left, r)) || isStr(fold(x.right, r))))
+      || (x.type === 'AssignmentExpression' && x.operator === '+=' && isStr(fold(x.right, r))) || (x.type === 'CallExpression' && x.callee.type === 'MemberExpression' && joinM.has(propName(x.callee)));
+    // 每个函数节点上的判定只算一次（函数体判定与调用方无关）；递归中的节点按“没有”算，防成环。
+    const cached = () => { const m = new Map(); return (fn, r, compute) => { const k = fn; if (m.has(k)) return m.get(k); m.set(k, false); const v = compute(fn, r); m.set(k, v); return v; }; };
+    const cStr = cached(); const cKeys = cached(); const cSort = cached(); const cKeysVia = cached(); const cSortVia = cached();
+    const strOut = (fn, r) => cStr(fn, r, () => hasSub(fn.body, (x) => isStrOut(x, r)));
+    // 自写的取键、排序辅助函数：被调函数（按取值来源跟到定义，跨文件也跟）里有取键或排序，且它自己不拼串（拼串的整套序列化函数自己会被判，调它不算自己实现）。
+    const calledFns = (call, r) => calleeOrigins(call, r).filter((o) => o.fn).map((o) => ({ fn: o.fn, r: o.rec || r }));
+    const keyCall = (x, r) => x.type === 'CallExpression' && globalOrigins(calleeOrigins(x, r)).some((o) => keySrc.has(pathKey(o)));
+    const keysIn = (fn, r) => cKeys(fn, r, () => hasSub(fn.body, (x) => x.type === 'ForInStatement' || keyCall(x, r)));
+    const cmpIn = (b) => hasSub(b, (z) => z.type === 'BinaryExpression' && ['<', '>', '<=', '>='].includes(z.operator));
+    // 同一个数组的两个元素相比（a[i - 1] > a[i]）并且按下标写回元素（交换）：单层循环里手写排序的形状。
+    const elemOf = (e) => (e.type === 'MemberExpression' && e.computed && e.object.type === 'Identifier' ? e.object.name : null);
+    const swapIn = (b) => hasSub(b, (z) => z.type === 'BinaryExpression' && ['<', '>', '<=', '>='].includes(z.operator) && elemOf(z.left) !== null && elemOf(z.left) === elemOf(z.right))
+      && hasSub(b, (z) => z.type === 'AssignmentExpression' && z.left.type === 'MemberExpression' && z.left.computed);
+    // 手写排序：嵌套循环里比较并赋值（冒泡、插入），或单层循环里数组元素两两相比并按下标交换（地精排序、栈上交换）。
+    const handSort = (fn) => hasSub(fn.body, (x) => isLoop(x) && ((hasSub(x.body, (y) => isLoop(y) && cmpIn(y.body) && hasSub(y.body, (z) => z.type === 'AssignmentExpression'))) || swapIn(x.body)));
+    const sortIn = (fn, r) => cSort(fn, r, () => hasSub(fn.body, (x) => x.type === 'CallExpression' && x.callee.type === 'MemberExpression' && sortM.has(propName(x.callee))) || handSort(fn));
+    // 经辅助函数：函数体里的某个调用，其被调函数（只看直接调的一层）有该成分且自己不拼串。
+    const viaOf = (cache, direct) => (fn, r) => cache(fn, r, () => hasSub(fn.body, (x) => x.type === 'CallExpression' && calledFns(x, r).some((o) => direct(o.fn, o.r) && !strOut(o.fn, o.r))));
+    const keysVia = viaOf(cKeysVia, keysIn); const sortVia = viaOf(cSortVia, sortIn);
+    // 取键、排序经自写辅助函数只在 mode=confirmed 认（要流进摘要才报，噪声小）；待人审清单（review）只认函数里自己写出来的，免得把调了辅助函数的大函数全列进去。
+    const via = rule.mode !== 'review';
+    const shaped = (fn) => (keysIn(fn, rec) || (via && keysVia(fn, rec))) && (sortIn(fn, rec) || (via && sortVia(fn, rec))) && strOut(fn, rec);
     const nameOf = (c) => (c.type === 'Identifier' ? c.name : (c.type === 'MemberExpression' && !c.computed ? c.property.name : null));
-    const isSink = (call, r) => { const nm = nameOf(call.callee); return (nm !== null && sinks.has(nm)) || globalOrigins(calleeOrigins(call, r)).some((o) => sinks.has(lastName(o))); };
+    // 自写摘要函数：逐字符取码（charMethods）并按位混合（mixOps、mixCalls），按函数体的形状判，不按名字。
+    const digestFn = (fn, r) => hasSub(fn.body, (x) => x.type === 'CallExpression' && x.callee.type === 'MemberExpression' && charM.has(propName(x.callee)))
+      && hasSub(fn.body, (x) => ((x.type === 'BinaryExpression' || x.type === 'AssignmentExpression') && mixOps.has(x.operator.replace(/=$/, ''))) || (x.type === 'CallExpression' && globalOrigins(calleeOrigins(x, r)).some((o) => mixCalls.has(pathKey(o)))));
+    const isSink = (call, r) => { const nm = nameOf(call.callee); return (nm !== null && sinks.has(nm)) || globalOrigins(calleeOrigins(call, r)).some((o) => sinks.has(lastName(o))) || calledFns(call, r).some((o) => digestFn(o.fn, o.r)); };
     const PASS = new Set(['TemplateLiteral', 'BinaryExpression', 'ConditionalExpression', 'LogicalExpression', 'SequenceExpression', 'ArrayExpression', 'AwaitExpression', 'ChainExpression', 'SpreadElement']);
     const enclosingFn = (n) => { for (let p = n.__parent; p; p = p.__parent) if (isFn(p)) return p; return null; };
-    // 这个表达式的值是否流进 sinks 里的调用（r 是它所在的文件记录）。
-    const flows = (node, r, depth) => {
+    const memberKey = (m, r) => (m.computed ? (() => { const f = fold(m.property, r); return f ? String(f.v) : null; })() : (m.property.name ?? String(m.property.value)));
+    const isAssignLeft = (m) => m.__parent && m.__parent.type === 'AssignmentExpression' && m.__parent.left === m;
+    // 绑定 b 的各处引用里有没有流进 sinks 的（把串存进变量再取出来用）。
+    const followBinding = (b, r, depth, obj = false) => {
+      if (!b || depth > 4) return false;
+      let found = false;
+      walkAll(r.ast, (x) => { if (!found && x.type === 'Identifier' && x.__scope && x.__scope.lookup(x.name) === b && flows(x, r, depth + 1, obj)) found = true; });
+      return found;
+    };
+    // 存进对象成员（box.text = …、this.text = …）后，从同一成员取出来用：根是变量按绑定、是 this 按文件里的 this.同名成员。
+    const followMember = (m, r, depth) => {
+      if (depth > 4) return false;
+      const key = memberKey(m, r);
+      if (key === null) return false;
+      let found = false;
+      if (m.object.type === 'ThisExpression') {
+        walkAll(r.ast, (x) => { if (!found && x.type === 'MemberExpression' && x.object.type === 'ThisExpression' && !isAssignLeft(x) && memberKey(x, r) === key && flows(x, r, depth + 1)) found = true; });
+        return found;
+      }
+      if (m.object.type !== 'Identifier') return false;
+      const b = m.object.__scope ? m.object.__scope.lookup(m.object.name) : null;
+      if (!b) return false;
+      walkAll(r.ast, (x) => {
+        if (found || x.type !== 'Identifier' || !x.__scope || x.__scope.lookup(x.name) !== b) return;
+        const q = x.__parent;
+        if (q && q.type === 'MemberExpression' && q.object === x) { if (!isAssignLeft(q) && memberKey(q, r) === key && flows(q, r, depth + 1)) found = true; } else if (flows(x, r, depth + 1)) found = true;
+      });
+      return found;
+    };
+    // 这个表达式的值是否流进 sinks 里的调用（r 是它所在的文件记录）：沿拼接、数组、变量、对象成员、实参到自写函数的形参、累加（push）、返回值追，深度 4。
+    const flows = (node, r, depth, obj0 = false) => {
       let n = node;
+      let obj = obj0; // 值已装进对象字面量（{ text: 串 }）：之后取它的成员才算还是那个串
       for (let g = 0; g < 40; g++) {
         const p = n.__parent;
         if (!p) return false;
-        if (p.type === 'CallExpression' && p.arguments.includes(n)) return isSink(p, r);
+        if (p.type === 'CallExpression' && p.arguments.includes(n)) {
+          if (isSink(p, r)) return true;
+          if (depth > 4) return false;
+          const idx = p.arguments.indexOf(n);
+          // 交给自写函数：看它的形参在函数体里是否流进摘要或存储（自写的 hash 包装函数）。
+          if (calledFns(p, r).some((o) => { const pr = o.fn.params[idx]; const id = pr && pr.type === 'AssignmentPattern' ? pr.left : pr; return id && id.type === 'Identifier' && followBinding(id.__scope ? id.__scope.lookup(id.name) : null, o.r, depth + 1, obj); })) return true;
+          // 累加：lines.push(串)、s.concat(串)，累加进的数组或变量再用。
+          if (p.callee.type === 'MemberExpression' && accM.has(propName(p.callee))) {
+            const t = p.callee.object;
+            if (t.type === 'Identifier') return followBinding(t.__scope ? t.__scope.lookup(t.name) : null, r, depth + 1, obj);
+            if (t.type === 'MemberExpression') return followMember(t, r, depth + 1);
+          }
+          return false;
+        }
         if (PASS.has(p.type)) { n = p; continue; }
         if (p.type === 'MemberExpression' && p.object === n && p.__parent && p.__parent.type === 'CallExpression' && p.__parent.callee === p) { n = p.__parent; continue; } // [a, b].join('|')
-        if (p.type === 'VariableDeclarator' && p.init === n && p.id.type === 'Identifier') {
-          const b = p.id.__scope ? p.id.__scope.lookup(p.id.name) : null;
-          if (!b || depth > 3) return false;
-          let found = false;
-          walkAll(r.ast, (x) => { if (!found && x.type === 'Identifier' && x !== p.id && x.__scope && x.__scope.lookup(x.name) === b && flows(x, r, depth + 1)) found = true; });
-          return found;
+        if (obj && p.type === 'MemberExpression' && p.object === n && !isAssignLeft(p)) { n = p; obj = false; continue; } // { text: 串 }.text 取回
+        if (p.type === 'Property' && p.value === n && p.__parent && p.__parent.type === 'ObjectExpression') { n = p.__parent; obj = true; continue; } // { text: 串 }
+        if (p.type === 'VariableDeclarator' && p.init === n && p.id.type === 'Identifier') return followBinding(p.id.__scope ? p.id.__scope.lookup(p.id.name) : null, r, depth, obj);
+        if (p.type === 'AssignmentExpression' && p.right === n) {
+          if (p.left.type === 'Identifier') return followBinding(p.left.__scope ? p.left.__scope.lookup(p.left.name) : null, r, depth, obj);
+          if (p.left.type === 'MemberExpression') return followMember(p.left, r, depth);
+          return false;
         }
         if (p.type === 'ReturnStatement' || (p.type === 'ArrowFunctionExpression' && p.body === n)) {
           const f = p.type === 'ReturnStatement' ? enclosingFn(p) : p;
@@ -406,6 +474,8 @@ const KINDS = {
       }
       return false;
     };
+    // 函数里拼出字符串的表达式（模板串、字串相加、+=、join、stringify）：规范序列化的“产出”，是否流进摘要或存储看它们。
+    const producers = (fn) => { const out = []; walkAll(fn.body, (x) => { if (isStrOut(x, rec)) out.push(x.type === 'AssignmentExpression' ? x.right : x); }); return out; };
     const sites = (fn) => callSitesOf(rec, fn).filter((s) => !(s.rec === rec && s.call.start >= fn.start && s.call.end <= fn.end));
     const exported = (fn) => {
       const p = fn.__parent;
@@ -419,7 +489,8 @@ const KINDS = {
     walkAll(rec.ast, (n) => { if (isFn(n) && shaped(n)) found.push(n); });
     for (const fn of found) {
       if (found.some((o) => o !== fn && o.start >= fn.start && o.end <= fn.end)) continue; // 只看最内层满足形状的函数
-      const confirmed = hasSub(fn.body, (x) => x.type === 'CallExpression' && isSink(x, rec)) || sites(fn).some((s) => flows(s.call, s.rec, 0));
+      // 确认流进：函数里拼出的串自己流进摘要或存储，或它的调用点把结果喂进去。函数里只是另外调了公共的摘要（sha256Text(canonical(x))），串不是自己拼的，不算。
+      const confirmed = producers(fn).some((x) => flows(x, rec, 0)) || sites(fn).some((s) => flows(s.call, s.rec, 0));
       if (rule.mode === 'review') {
         const equality = sites(fn).some((s) => s.call.__parent && s.call.__parent.type === 'BinaryExpression' && CMP.has(s.call.__parent.operator));
         // 对外导出且范围内没有任何调用点（谁在用、结果去哪看不见）才算拿不准；有调用点而都没喂进摘要或存储的，已知不流进，不报。

@@ -1,0 +1,6 @@
+const keysOf = (o) => Object.keys(o);
+const ordered = (xs) => xs.slice().sort();
+function canon(o) {
+  return ordered(keysOf(o)).map((k) => k + ':' + o[k]).join(',');
+}
+export const id = (o) => sha256Text(canon(o));

@@ -1,0 +1,7 @@
+import { sha256Text, canonical } from './kernel/storage.mjs';
+export function check(x, allowed) {
+  for (const k of Object.keys(x).sort()) {
+    if (!allowed.includes(k)) throw new Error('bad key ' + k);
+  }
+  return sha256Text(canonical(x));
+}

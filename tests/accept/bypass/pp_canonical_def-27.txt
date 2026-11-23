@@ -1,0 +1,19 @@
+export function ser(root) {
+  const stack = [root];
+  let out = '';
+  while (stack.length) {
+    const x = stack.pop();
+    const ks = Object.keys(x);
+    let i = 1;
+    while (i < ks.length) {
+      if (ks[i - 1] > ks[i]) {
+        const t = ks[i];
+        ks[i] = ks[i - 1];
+        ks[i - 1] = t;
+        i = i > 1 ? i - 1 : i;
+      } else i++;
+    }
+    for (const k of ks) out += k + ':' + x[k] + ',';
+  }
+  return sha256Text(out);
+}

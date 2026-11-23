@@ -1697,6 +1697,65 @@
    "scanClass": "pp_canonical_def"
   },
   {
+   "addedAtRev": 21,
+   "caseKey": "pp_canonical_def-23",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-23.txt",
+   "group": "rules",
+   "origin": "独立验收第七轮（C0 第八轮修）：结果先经自写的 hash 包装函数再进摘要",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 21,
+   "caseKey": "pp_canonical_def-24",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-24.txt",
+   "group": "rules",
+   "origin": "独立验收第七轮（C0 第八轮修）：取键、排序用自写的辅助函数",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 21,
+   "caseKey": "pp_canonical_def-25",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-25.txt",
+   "group": "rules",
+   "origin": "独立验收第七轮（C0 第八轮修）：自写摘要函数（逐字符取码按位混合）",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 21,
+   "caseKey": "pp_canonical_def-26",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-26.txt",
+   "group": "rules",
+   "origin": "独立验收第七轮（C0 第八轮修）：结果先存进对象成员再取出交给摘要",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 21,
+   "caseKey": "pp_canonical_def-27",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-27.txt",
+   "group": "rules",
+   "origin": "独立验收第七轮（C0 第八轮修）：显式栈加单层循环手写交换排序的非递归序列化",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 21,
+   "caseKey": "pp_canonical_def-28",
+   "fixture": "tests/accept/bypass/pp_canonical_def-28.txt",
+   "group": "rules",
+   "origin": "独立验收第七轮（C0 第八轮修）：函数里有只用于逐项核对的键排序遍历，另调公共的 sha256Text(canonical(x))，串不是自己拼的，不算",
+   "polarity": "must_pass",
+   "scanClass": "pp_canonical_def"
+  },
+  {
    "addedAtRev": 11,
    "caseKey": "pp_canonical_review-05",
    "expectCode": "E-VIEW-BYPASS",
@@ -2871,6 +2930,26 @@
    "group": "rules",
    "origin": "第三方审卡必须改（Opus 11-23）：只是名字前缀相同的 regionCellMeters 不算",
    "polarity": "must_pass",
+   "scanClass": "pp_region_cell"
+  },
+  {
+   "addedAtRev": 21,
+   "caseKey": "pp_region_cell-14",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_region_cell-14.txt",
+   "group": "rules",
+   "origin": "独立验收第七轮（C0 第八轮修）：区格换算的两个量以形参传进来（形参名即所携带的字段值）",
+   "polarity": "must_fail",
+   "scanClass": "pp_region_cell"
+  },
+  {
+   "addedAtRev": 21,
+   "caseKey": "pp_region_cell-15",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_region_cell-15.txt",
+   "group": "rules",
+   "origin": "独立验收第七轮（C0 第八轮修）：解构形参携带区格边长再右移",
+   "polarity": "must_fail",
    "scanClass": "pp_region_cell"
   },
   {

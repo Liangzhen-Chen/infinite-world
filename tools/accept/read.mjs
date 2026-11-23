@@ -6,13 +6,14 @@ import { join, posix } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { tokenize, importsOf } from './lib/js-scan.mjs';
+import { LAYOUT as WORLD_LAYOUT } from '../../server-plugin/kernel/load/layout.mjs';
 
 // 卷二 §1.1 的文件布局与卷十二 §2.11、§2.9、§2.3 的登记位置（相对仓库根）。
 export const LAYOUT = Object.freeze({
-  stateOwners: 'world/ontology/state-owners.json',
-  dimensionsDir: 'world/ontology/dimensions',
-  // 未建派生登记（卷二 §1.12 勘误 1118k23；与 server-plugin/kernel/load/world.mjs LAYOUT.unbuiltDerived 同名），param_consumed 判数据侧消费者时读。
-  unbuiltDerived: '_unbuilt-derived.json',
+  // 世界数据的文件布局只一处：公共部件 kernel/load/layout.mjs（加载器与门禁共用）；这里只引用，不另写一份名字。
+  stateOwners: WORLD_LAYOUT.stateOwners,
+  dimensionsDir: WORLD_LAYOUT.dimensionsDir,
+  unbuiltDerived: WORLD_LAYOUT.unbuiltDerived,
   accDir: 'tools/accept',
   outDir: 'tools/accept/out',
   detectorsDir: 'tools/accept/detectors',

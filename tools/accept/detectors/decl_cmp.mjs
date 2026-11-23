@@ -31,6 +31,7 @@ import { stateChains } from '../lib/js-state.mjs';
 import { filesOfGroups, globToRe, LAYOUT } from '../read.mjs';
 import { projectOf, fileOf, walkAll, fold, where } from '../lib/ast.mjs';
 import { readRules, RULES_LAYOUT } from '../../../server-plugin/kernel/load/rules.mjs';
+import { LAYOUT as WORLD_LAYOUT } from '../../../server-plugin/kernel/load/layout.mjs';
 import { NAME_ROOT } from '../../../server-plugin/kernel/rx.mjs';
 import { VOCAB_RX_FIELDS } from '../../../server-plugin/kernel/handles/markers.mjs';
 import { rxTokenAt } from '../../../server-plugin/kernel/handles/patterns.mjs';
@@ -127,7 +128,7 @@ function dataConsumers(ctx, read) {
     }
   }
   // (a) 续：加载期编译的词表行 RX 字段（handles/markers.mjs VOCAB_RX_FIELDS），只读登记的 {族, 字段}；词表文件名同 lit_scope 的读法。
-  const vocabFile = `${dir}_vocab.json`;
+  const vocabFile = `${dir}${WORLD_LAYOUT.vocab}`;
   const vocab = ctx.files.includes(vocabFile) ? parse(vocabFile) : undefined;
   const families = isObj(vocab) && isObj(vocab.families) ? vocab.families : {};
   for (const { family, field } of VOCAB_RX_FIELDS) {

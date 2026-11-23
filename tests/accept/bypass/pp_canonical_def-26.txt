@@ -1,0 +1,5 @@
+export function id(o) {
+  const box = {};
+  box.text = Object.keys(o).sort().map((k) => k + ':' + o[k]).join(',');
+  return sha256Text(box.text);
+}

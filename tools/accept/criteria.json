@@ -90,10 +90,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 22
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 23
     }
    ],
-   "print": "610a7ff568ba298d082111541af0ec8e23600baeea4d57221479ea64f7e48191",
-   "rev": 22,
+   "print": "4aa6a7533f7a3ff38abe1994f6f57afb33d7454ef123ac2367fa5af5576157ab",
+   "rev": 23,
    "scanClass": "baseline_monotone",
    "source": "卷一 V-11（I43）；卷十二 §2.5、E-ACC-BASELINE-UP；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -488,10 +492,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 95
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 96
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 95,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 96,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -549,10 +557,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 11
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 12
     }
    ],
-   "print": "851fc7ec42dc6c7e8e1e02a6b4608b8d4351d353cf6c60399013b14c1e39a344",
-   "rev": 11,
+   "print": "1eabdebf29d2b7a521c8dd98877cf3fc6489010a313c14eee5789fd2031832af",
+   "rev": 12,
    "scanClass": "crit_version",
    "terms": {
     "vol12.S12-13": {
@@ -687,10 +699,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 30
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 31
     }
    ],
-   "print": "7d20cbc58dba2b96e7da4c5491923dbe1c60452427a2a715a213a1243d51d7ec",
-   "rev": 30,
+   "print": "8cbb28937ee03fc28c2f11fb6dbeb28a28f1a4dd77b038cd079e3375f56d02cf",
+   "rev": 31,
    "scanClass": "cross_write",
    "source": "卷十二 R12-3.1–3.4；卷二 §2.6、§2.7、S5",
    "terms": {
@@ -750,10 +766,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 3
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 4
     }
    ],
-   "print": "dc2b41ac3fbafa52d08e549dc8099ad1e0d4741e8fe7c488b06a5ad0832fcc36",
-   "rev": 3,
+   "print": "29fe9727607c9cdc59efd91ae223631e162c16ab7879d913cd4cf51bd087c1b0",
+   "rev": 4,
    "scanClass": "decl_guard",
    "source": "卷十七 S17-1、S17-4；卷九 R9-2.10；卷二十 §4.7.6；卷十二 §2.4 开放登记",
    "terms": {
@@ -913,10 +933,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 30
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 31
     }
    ],
-   "print": "7d20cbc58dba2b96e7da4c5491923dbe1c60452427a2a715a213a1243d51d7ec",
-   "rev": 30,
+   "print": "8cbb28937ee03fc28c2f11fb6dbeb28a28f1a4dd77b038cd079e3375f56d02cf",
+   "rev": 31,
    "scanClass": "display_read",
    "source": "卷十二 R12-2.10；卷二 S7",
    "terms": {
@@ -1296,10 +1320,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 91
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 92
     }
    ],
-   "print": "45539d136aea861d7f253d8d8bc36733e108f336a114db4753c7facf951e7ff0",
-   "rev": 91,
+   "print": "3ac198ae8e6c1fc61d56f7654ed99b19c7e98906436a9a3f58bd069184cf8606",
+   "rev": 92,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1410,10 +1438,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 24
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 25
     }
    ],
-   "print": "c48ac15bcf8edc966151687afe013a4bae281f1ad2e278821d03dc64590c982f",
-   "rev": 24,
+   "print": "4004ec51bdf935f2645b84203d2e6c9dfde7976885443ad87428323a99a38b79",
+   "rev": 25,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -1516,10 +1548,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 22
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 23
     }
    ],
-   "print": "610a7ff568ba298d082111541af0ec8e23600baeea4d57221479ea64f7e48191",
-   "rev": 22,
+   "print": "4aa6a7533f7a3ff38abe1994f6f57afb33d7454ef123ac2367fa5af5576157ab",
+   "rev": 23,
    "scanClass": "ext_code",
    "terms": {
     "vol12.S12-12": {
@@ -1634,10 +1670,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 25
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 26
     }
    ],
-   "print": "50ca2a06ed1f40b52ac6f5507540ee3922b9e7799a1eac0e5fe8101944c38b68",
-   "rev": 25,
+   "print": "99a33d968701479d5df661d28f869877589059bda2e7528b95c737300eacc0e7",
+   "rev": 26,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -1713,10 +1753,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 15
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 16
     }
    ],
-   "print": "c12d45b9276bb7be1f9bd3e9be5dd514c325f87d332931892916de680b8d8145",
-   "rev": 15,
+   "print": "415ca0bd47e7cfaa7ea2c339b2453dcf53dea32cc0cbf4325e565991a2a5ddb3",
+   "rev": 16,
    "scanClass": "float_math",
    "source": "卷二十七 R27-5.2、A27-5.1；公共部件审查乙规则 7；C0 卡",
    "terms": {
@@ -1827,10 +1871,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 16
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 17
     }
    ],
-   "print": "c12d45b9276bb7be1f9bd3e9be5dd514c325f87d332931892916de680b8d8145",
-   "rev": 16,
+   "print": "415ca0bd47e7cfaa7ea2c339b2453dcf53dea32cc0cbf4325e565991a2a5ddb3",
+   "rev": 17,
    "scanClass": "geometry_bypass",
    "source": "卷五 §3.5 S5-10 :408；卷十二 §2.4 开放登记",
    "terms": {
@@ -2162,10 +2210,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 79
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 80
     }
    ],
-   "print": "b864a097ac446e0d79fb2769cdc522a18e1182d599ebfdc055af520a19553963",
-   "rev": 79,
+   "print": "c1e722c355f14a64fcddf0e6d97d47ef0115ee4f46aabece82126b261d54a714",
+   "rev": 80,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -2281,10 +2333,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 25
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 26
     }
    ],
-   "print": "50ca2a06ed1f40b52ac6f5507540ee3922b9e7799a1eac0e5fe8101944c38b68",
-   "rev": 25,
+   "print": "99a33d968701479d5df661d28f869877589059bda2e7528b95c737300eacc0e7",
+   "rev": 26,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -2747,10 +2803,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 110
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 111
     }
    ],
-   "print": "ba039571bb91f4d7d764f87f52fae8fee33811fefce12931c3b6d7b8085179bb",
-   "rev": 110,
+   "print": "cbceb089a093ef3e55bd5af24d8d41b9799e8f8e1bcbd848860970f64cd324d2",
+   "rev": 111,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -2884,10 +2944,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 22
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 23
     }
    ],
-   "print": "610a7ff568ba298d082111541af0ec8e23600baeea4d57221479ea64f7e48191",
-   "rev": 22,
+   "print": "4aa6a7533f7a3ff38abe1994f6f57afb33d7454ef123ac2367fa5af5576157ab",
+   "rev": 23,
    "scanClass": "item_downgrade",
    "terms": {
     "vol12.S12-16": {
@@ -3221,10 +3285,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 80
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 81
     }
    ],
-   "print": "b864a097ac446e0d79fb2769cdc522a18e1182d599ebfdc055af520a19553963",
-   "rev": 80,
+   "print": "c1e722c355f14a64fcddf0e6d97d47ef0115ee4f46aabece82126b261d54a714",
+   "rev": 81,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -3298,10 +3366,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 15
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 16
     }
    ],
-   "print": "bdbd07de095a0ebe8f9f7376e556cd127ef4d90ac0c1e5aa11d3066a921ca37f",
-   "rev": 15,
+   "print": "9f772837db3c91415c1a9d31f873576dcdb5a20462bc2d477a585afa1137df29",
+   "rev": 16,
    "scanClass": "item_ledger",
    "terms": {
     "vol12.S12-3": {
@@ -3376,10 +3448,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 15
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 16
     }
    ],
-   "print": "7d20cbc58dba2b96e7da4c5491923dbe1c60452427a2a715a213a1243d51d7ec",
-   "rev": 15,
+   "print": "8cbb28937ee03fc28c2f11fb6dbeb28a28f1a4dd77b038cd079e3375f56d02cf",
+   "rev": 16,
    "scanClass": "ledger_state_read",
    "source": "卷六 §4.1.2；公共部件审查乙规则 4；C0 卡",
    "terms": {
@@ -3475,10 +3551,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 20
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 21
     }
    ],
-   "print": "610a7ff568ba298d082111541af0ec8e23600baeea4d57221479ea64f7e48191",
-   "rev": 20,
+   "print": "4aa6a7533f7a3ff38abe1994f6f57afb33d7454ef123ac2367fa5af5576157ab",
+   "rev": 21,
    "scanClass": "ledger_tally",
    "source": "卷十二 §4.1.6 至 §4.14.6 A12-n.1；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -3814,10 +3894,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 46
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 47
     }
    ],
-   "print": "28f2d25e8c57709701e2fea4803a0e8752c30b8f2e3cba92cb96735e709817c0",
-   "rev": 46,
+   "print": "600a23dd1178ef9507d232708870dba51ce4ffe9cbf0dd18126dd965fb43f78a",
+   "rev": 47,
    "scanClass": "module_edge",
    "terms": {
     "vol1.V-24.b": {
@@ -4271,10 +4355,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 80
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 81
     }
    ],
-   "print": "b864a097ac446e0d79fb2769cdc522a18e1182d599ebfdc055af520a19553963",
-   "rev": 80,
+   "print": "c1e722c355f14a64fcddf0e6d97d47ef0115ee4f46aabece82126b261d54a714",
+   "rev": 81,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -4613,10 +4701,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 81
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 82
     }
    ],
-   "print": "7fc6ccfe8e0eeeddf5bfe2e191c440d87b1e91a7c45b725675048f36c3dd00e6",
-   "rev": 81,
+   "print": "33f76c102c4494f49d18dffd7da190773fb47d1ccea4e82b78008c01fb39f278",
+   "rev": 82,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -4631,7 +4723,7 @@
    }
   },
   {
-   "criterion": "定义名为 canonical 的函数（function canonical、const canonical =）在 kernel/storage.mjs 之外计一处（乙 11）。现有违例进基线。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "criterion": "形状像规范序列化（取键、排序、拼字符串；取键与排序可经自写的辅助函数，手写交换排序也算）、且自己拼出的串流进摘要或存储（公共摘要函数、自写的摘要函数、自写的 hash 包装函数、存进对象成员或累加数组再取出、写档）的函数，在 kernel/storage.mjs 之外计一处（乙 11；卷二十七 :542）。函数里只是另调了公共的摘要（sha256Text(canonical(x))）、串不是自己拼的，不计。现有违例进基线。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
    "log": [
     {
      "ref": "C0 续做：新登类别 pp_canonical_def（规范序列化只一份（乙 11））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 1 条",
@@ -4716,10 +4808,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 21
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 22
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 21,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 22,
    "scanClass": "pp_canonical_def",
    "source": "公共部件审查乙 11；卷二十七 :542；例外 kernel/storage.mjs",
    "terms": {
@@ -4763,10 +4859,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 7
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 8
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 7,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 8,
    "scanClass": "pp_canonical_review",
    "source": "主会话 11-23 定：规范序列化按定义判，拿不准的待人审",
    "terms": {
@@ -4866,10 +4966,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 21
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 22
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 21,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 22,
    "scanClass": "pp_deep_clone",
    "source": "公共部件审查乙 10；卷二 :897；kernel/clone.mjs（kernelApi clone）",
    "terms": {
@@ -4969,10 +5073,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 21
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 22
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 21,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 22,
    "scanClass": "pp_dist_branch",
    "source": "公共部件审查甲 R7；卷二 §1.10；kernel/sample.mjs 头注",
    "terms": {
@@ -5052,10 +5160,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 16
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 17
     }
    ],
-   "print": "2cabcebf5c8be3e69382ba7a7b5b8c0c6c465aa3a32ab669f61616effa692603",
-   "rev": 16,
+   "print": "02fa94470fe160f217f6450af304d0e49bf15738d893a8161f6bfcc240b44e45",
+   "rev": 17,
    "scanClass": "pp_draw_sites",
    "source": "公共部件审查甲 R6 后半；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479（rules.clock.drawSites）",
    "terms": {
@@ -5135,10 +5247,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 16
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 17
     }
    ],
-   "print": "7fc6ccfe8e0eeeddf5bfe2e191c440d87b1e91a7c45b725675048f36c3dd00e6",
-   "rev": 16,
+   "print": "33f76c102c4494f49d18dffd7da190773fb47d1ccea4e82b78008c01fb39f278",
+   "rev": 17,
    "scanClass": "pp_dup_export",
    "source": "公共部件审查甲 R14、乙 12；卷二 :1162 体例；CLAUDE.md“跨卷共用定义只一处”。职责函数 isPos、distributionMean、weatherCellOf 的职责文件依据：卷二 §1.5 struct:pos（kernel/named-structs.mjs）、卷二 §1.10（kernel/sample.mjs）、卷二十 §3.1（kernel/weather.mjs）",
    "terms": {
@@ -5230,10 +5346,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 19
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 20
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 19,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 20,
    "scanClass": "pp_dynamic_index",
    "source": "李白更正裁定 msg-1122-2255-c0ast（动态下标出现即报，标待人审）；卷二十七 R27-5.2、A27-5.1；卷二十 :436",
    "terms": {
@@ -5313,10 +5433,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 16
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 17
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 16,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 17,
    "scanClass": "pp_dynamic_review",
    "source": "李白更正裁定 msg-1122-2255-c0ast：运行期才知道的动态下标出现即报，标待人审。本条列全部对象上的动态下标（含数组按位置取），数量大，只报不拦（报告里列出，供人审）；登记在 Math、全局对象、状态根等根上的动态下标由 pp_dynamic_index 拦",
    "terms": {
@@ -5416,10 +5540,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 21
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 22
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 21,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 22,
    "scanClass": "pp_envat_callers",
    "source": "公共部件审查甲 R2；卷二十 :478；state-owners.json kernelApi 行形状",
    "terms": {
@@ -5519,10 +5647,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 21
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 22
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 21,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 22,
    "scanClass": "pp_envat_import",
    "source": "公共部件审查甲 R1（docs/研究/公共部件审查-甲-1122.md 第八节）；卷二十 :478、:631；例外：climate.mjs、weather.mjs 互相引用（甲 R1 原句）",
    "terms": {
@@ -5622,10 +5754,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 21
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 22
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 21,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 22,
    "scanClass": "pp_epsilon",
    "source": "公共部件审查乙 7；卷二十七 :620、:634（R27-5.2 数值运算只有三条路）",
    "terms": {
@@ -5685,10 +5821,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 11
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 12
     }
    ],
-   "print": "c12d45b9276bb7be1f9bd3e9be5dd514c325f87d332931892916de680b8d8145",
-   "rev": 11,
+   "print": "415ca0bd47e7cfaa7ea2c339b2453dcf53dea32cc0cbf4325e565991a2a5ddb3",
+   "rev": 12,
    "scanClass": "pp_eval",
    "source": "李白更正裁定 msg-1122-2255-c0ast：别名、间接调用都要跟到原名，eval 与 new Function 是语法树追不到的间接执行，出现即报；卷二十七 S27-4 :253（禁用语言特性）",
    "terms": {
@@ -5784,10 +5924,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 20
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 21
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 20,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 21,
    "scanClass": "pp_float_pow",
    "source": "公共部件审查乙 7；卷二十七 R27-5.2（超越函数只经定点数学设施，幂函数 pow 同属）；独立验收漏项“** 运算符”",
    "terms": {
@@ -5887,10 +6031,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 21
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 22
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 21,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 22,
    "scanClass": "pp_footprint_kind",
    "source": "公共部件审查甲 R12；卷二 §1.9；模块化评估第三节；例外 kernel/footprint-kind.mjs（gen/* 按种类过滤的比较进基线，M-11③ 修后开）",
    "terms": {
@@ -5986,10 +6134,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 20
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 21
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 20,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 21,
    "scanClass": "pp_gen_callers",
    "source": "公共部件审查乙 9（docs/研究/公共部件审查-乙-1122.md :161）；卷十 :403（生成器只在世界创建事务里按步骤表跑）；例外：generateWorld 所在文件 server-plugin/world-create.mjs（卷十 §3.2 :291）；requireMaterialized 现不存在，建成后其所在文件须加入例外；作者工具在 tools/ 下，不在扫描范围（卷十 :1002）",
    "terms": {
@@ -6089,10 +6241,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 21
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 22
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 21,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 22,
    "scanClass": "pp_grammar_regex",
    "source": "公共部件审查乙 6；卷二 :291；例外 kernel/validate/types.mjs",
    "terms": {
@@ -6164,10 +6320,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 14
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 15
     }
    ],
-   "print": "7d20cbc58dba2b96e7da4c5491923dbe1c60452427a2a715a213a1243d51d7ec",
-   "rev": 14,
+   "print": "8cbb28937ee03fc28c2f11fb6dbeb28a28f1a4dd77b038cd079e3375f56d02cf",
+   "rev": 15,
    "scanClass": "pp_holdings_read",
    "source": "公共部件审查乙 5；卷十八:200（持有写者）；卷二 §2.6；读者按文件豁免（fileSets.holdingsReaders，每行带依据）",
    "terms": {
@@ -6267,10 +6427,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 21
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 22
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 21,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 22,
    "scanClass": "pp_key_concat",
    "source": "公共部件审查甲 R5、乙 1、乙 2；卷二 :337、:897、:1162；例外：整份文本摘要 sha256Text(canonical(…))、sha256Text(text) 不拼键（不含 .join，不命中）",
    "terms": {
@@ -6362,10 +6526,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 19
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 20
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 19,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 20,
    "scanClass": "pp_kind_branch",
    "source": "独立验收（亮圳 11-22「独立测门禁1122」）指出“写死数值与种类分支没有 C0 专条”；卷一 二.1（派生优先，不按 ID 或场景特判，docs/产品原则.md）；卷二 S10（常数登记）",
    "terms": {
@@ -6465,10 +6633,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 21
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 22
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 21,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 22,
    "scanClass": "pp_material_read",
    "source": "公共部件审查甲 R11；卷三甲 :268；卷三乙 :541；例外：kernel/item.mjs、kernel/dimensions.mjs、kernel/load/**、kernel/validate/**、kernel/blueprint.mjs（加载期校验 checkBlueprintForms）",
    "terms": {
@@ -6568,10 +6740,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 21
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 22
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 21,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 22,
    "scanClass": "pp_neighbors",
    "source": "公共部件审查甲 R10；卷五 :491、:1216（现 8 处）",
    "terms": {
@@ -6659,10 +6835,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 18
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 19
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 18,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 19,
    "scanClass": "pp_no_acorn_runtime",
    "source": "李白更正裁定 msg-1122-2255-c0ast：acorn 只许 tools/accept 引用，server-plugin 不得引用",
    "terms": {
@@ -6762,10 +6942,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 21
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 22
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 21,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 22,
    "scanClass": "pp_pos_shape",
    "source": "公共部件审查甲 R8；卷二 §1.5 struct:pos 登记；例外 kernel/named-structs.mjs、kernel/named-struct-match.mjs",
    "terms": {
@@ -6865,10 +7049,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 21
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 22
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 21,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 22,
    "scanClass": "pp_region_cell",
    "source": "公共部件审查甲 R9；卷五 :433、:499；例外：kernel/footprint.mjs 的共用函数（修后建）、kernel/handles/keys.mjs gridChunkCells（卷二 :860）",
    "terms": {
@@ -6968,10 +7156,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 21
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 22
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 21,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 22,
    "scanClass": "pp_rx_empty_clock",
    "source": "公共部件审查甲 R15；卷二十 :312、:685；例外：加载期校验 kernel/validate/**",
    "terms": {
@@ -7071,10 +7263,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 21
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 22
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 21,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 22,
    "scanClass": "pp_seed_args",
    "source": "公共部件审查甲 R6；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479。后半（drawSites 与 seed-keys 两表一致）未落：需读两表对照，现有检测器无此检查",
    "terms": {
@@ -7150,10 +7346,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 15
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 16
     }
    ],
-   "print": "2cabcebf5c8be3e69382ba7a7b5b8c0c6c465aa3a32ab669f61616effa692603",
-   "rev": 15,
+   "print": "02fa94470fe160f217f6450af304d0e49bf15738d893a8161f6bfcc240b44e45",
+   "rev": 16,
    "scanClass": "pp_seed_args_dyn",
    "source": "独立验收漏项“抽取点站点名用变量”；卷二十七 :789（R27-8.1 每个抽取点登记，流代号、抽取点代号须字面量）",
    "terms": {
@@ -7229,10 +7429,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 15
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 16
     }
    ],
-   "print": "7fc6ccfe8e0eeeddf5bfe2e191c440d87b1e91a7c45b725675048f36c3dd00e6",
-   "rev": 15,
+   "print": "33f76c102c4494f49d18dffd7da190773fb47d1ccea4e82b78008c01fb39f278",
+   "rev": 16,
    "scanClass": "pp_tpl_key",
    "source": "公共部件审查甲 R13；卷二 :860（键串形只由登记方给）；模块化原则卡头第二节第 9 条",
    "terms": {
@@ -7328,10 +7532,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 20
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 21
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 20,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 21,
    "scanClass": "pp_unit_literal",
    "source": "公共部件审查乙 13；卷三乙:179 与表头 unit 字段（item.json 表头 unit 字段）；单位登记表 world/ontology/dimensions/_units.json",
    "terms": {
@@ -7431,10 +7639,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 21
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 22
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 21,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 22,
    "scanClass": "pp_year_minutes",
    "source": "公共部件审查甲 R3；卷二十 :436、:477 T-3 (c)；例外 climate.mjs（日均温日份额，天文相位，卷二十 :436）",
    "terms": {
@@ -7873,10 +8085,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 106
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 107
     }
    ],
-   "print": "0b231d145dceef76a69dc65b5ed675489740eae9a153a96568fa731f71cc360f",
-   "rev": 106,
+   "print": "0328923e8e497b96dd2571f5302f03db29585b24dee00c0b4bd25bc545868265",
+   "rev": 107,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -8030,10 +8246,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 35
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 36
     }
    ],
-   "print": "c12d45b9276bb7be1f9bd3e9be5dd514c325f87d332931892916de680b8d8145",
-   "rev": 35,
+   "print": "415ca0bd47e7cfaa7ea2c339b2453dcf53dea32cc0cbf4325e565991a2a5ddb3",
+   "rev": 36,
    "scanClass": "rng_bypass",
    "terms": {
     "vol27.A27-8.1.a": {
@@ -8095,10 +8315,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 12
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 13
     }
    ],
-   "print": "c7c27be28986878b808333a90101565cd377088697f67905e94d65c971d40816",
-   "rev": 12,
+   "print": "793b8a07382e6ba37e6596c45422482c4d14030834c6a8507a148ea422b4af85",
+   "rev": 13,
    "scanClass": "rules_import",
    "terms": {
     "vol1.V-9": {
@@ -8380,10 +8604,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 67
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 68
     }
    ],
-   "print": "2cabcebf5c8be3e69382ba7a7b5b8c0c6c465aa3a32ab669f61616effa692603",
-   "rev": 67,
+   "print": "02fa94470fe160f217f6450af304d0e49bf15738d893a8161f6bfcc240b44e45",
+   "rev": 68,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -8777,10 +9005,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 93
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 94
     }
    ],
-   "print": "94da7d0ff81a35030b78367abb05e625d7d95e49a369616b4ec12d8abf6d7013",
-   "rev": 93,
+   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
+   "rev": 94,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -8855,10 +9087,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 15
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 16
     }
    ],
-   "print": "7d20cbc58dba2b96e7da4c5491923dbe1c60452427a2a715a213a1243d51d7ec",
-   "rev": 15,
+   "print": "8cbb28937ee03fc28c2f11fb6dbeb28a28f1a4dd77b038cd079e3375f56d02cf",
+   "rev": 16,
    "scanClass": "sim_bypass",
    "source": "卷二十七 §4.8 S27-11 :260、A27-1.11 :369；对照表 docs/迁移体检/格子G6-G11-规矩检查对照.md #60；卷十二 §2.4 开放登记",
    "terms": {
@@ -9077,10 +9313,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 52
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 53
     }
    ],
-   "print": "c7e76fcb6339a3db01e6d37883ab93906ebcd91d617aa274204b29ccb7adee8f",
-   "rev": 52,
+   "print": "40ca57186ccaa11b4cc182b728d9b768f93af25e973ee5cbd1c865d76083d17e",
+   "rev": 53,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -9192,10 +9432,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 24
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 25
     }
    ],
-   "print": "50ca2a06ed1f40b52ac6f5507540ee3922b9e7799a1eac0e5fe8101944c38b68",
-   "rev": 24,
+   "print": "99a33d968701479d5df661d28f869877589059bda2e7528b95c737300eacc0e7",
+   "rev": 25,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -9383,10 +9627,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 15
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 16
     }
    ],
-   "print": "c12d45b9276bb7be1f9bd3e9be5dd514c325f87d332931892916de680b8d8145",
-   "rev": 15,
+   "print": "415ca0bd47e7cfaa7ea2c339b2453dcf53dea32cc0cbf4325e565991a2a5ddb3",
+   "rev": 16,
    "scanClass": "timer_global",
    "source": "卷二十七 S27-3 :252；公共部件审查甲 R4；C0 卡",
    "terms": {
@@ -9734,10 +9982,14 @@
     {
      "ref": "主会话合入 ds/card-archive（卡档案合并门禁）时在 kernel/error-codes.mjs 登 E-ACC-CARD-ARCHIVE（卷十二 §2.12 勘误 1124k140）：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 83
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 84
     }
    ],
-   "print": "7fc6ccfe8e0eeeddf5bfe2e191c440d87b1e91a7c45b725675048f36c3dd00e6",
-   "rev": 83,
+   "print": "33f76c102c4494f49d18dffd7da190773fb47d1ccea4e82b78008c01fb39f278",
+   "rev": 84,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -9821,10 +10073,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 15
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 16
     }
    ],
-   "print": "c12d45b9276bb7be1f9bd3e9be5dd514c325f87d332931892916de680b8d8145",
-   "rev": 15,
+   "print": "415ca0bd47e7cfaa7ea2c339b2453dcf53dea32cc0cbf4325e565991a2a5ddb3",
+   "rev": 16,
    "scanClass": "undo_raw_push",
    "source": "公共部件审查乙规则 3；卷二 §2.6；C0 卡",
    "terms": {
@@ -9971,10 +10227,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 33
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 34
     }
    ],
-   "print": "7d20cbc58dba2b96e7da4c5491923dbe1c60452427a2a715a213a1243d51d7ec",
-   "rev": 33,
+   "print": "8cbb28937ee03fc28c2f11fb6dbeb28a28f1a4dd77b038cd079e3375f56d02cf",
+   "rev": 34,
    "scanClass": "version_fork",
    "terms": {
     "vol1.V-17": {
@@ -10196,10 +10456,14 @@
     {
      "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
      "rev": 52
+    },
+    {
+     "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
+     "rev": 53
     }
    ],
-   "print": "748ef8f3a4c4dbda5503c9f9149db0bf79efec573ddcc2df702ff5d8d44749a7",
-   "rev": 52,
+   "print": "10823df8662aff156d698611a44589ff151d5cabded893b4ba2e2c43b5bbbc1b",
+   "rev": 53,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

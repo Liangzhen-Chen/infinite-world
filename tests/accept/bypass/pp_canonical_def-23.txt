@@ -1,0 +1,5 @@
+const wrap = (s) => sha256Text(s);
+function canon(o) {
+  return Object.keys(o).sort().map((k) => k + ':' + o[k]).join(',');
+}
+export const id = (o) => wrap(canon(o));

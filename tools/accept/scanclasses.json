@@ -299,6 +299,15 @@
   {
    "astRules": [
     {
+     "accumulateMethods": [
+      "push",
+      "unshift",
+      "add"
+     ],
+     "charMethods": [
+      "charCodeAt",
+      "codePointAt"
+     ],
      "exceptFiles": [
       "server-plugin/kernel/storage.mjs"
      ],
@@ -309,6 +318,16 @@
       "Reflect.ownKeys"
      ],
      "kind": "canonicalDef",
+     "mixCalls": [
+      "Math.imul"
+     ],
+     "mixOps": [
+      "^",
+      "<<",
+      ">>>",
+      "|",
+      "&"
+     ],
      "mode": "confirmed",
      "name": "shape",
      "sinks": [
@@ -341,6 +360,15 @@
   {
    "astRules": [
     {
+     "accumulateMethods": [
+      "push",
+      "unshift",
+      "add"
+     ],
+     "charMethods": [
+      "charCodeAt",
+      "codePointAt"
+     ],
      "exceptFiles": [
       "server-plugin/kernel/storage.mjs"
      ],
@@ -351,6 +379,16 @@
       "Reflect.ownKeys"
      ],
      "kind": "canonicalDef",
+     "mixCalls": [
+      "Math.imul"
+     ],
+     "mixOps": [
+      "^",
+      "<<",
+      ">>>",
+      "|",
+      "&"
+     ],
      "mode": "review",
      "name": "shape",
      "sinks": [

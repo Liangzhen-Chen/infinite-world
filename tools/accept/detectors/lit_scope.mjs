@@ -111,7 +111,7 @@ function modifierRegistry(ctx) {
     const entity = (table && table.entity) || {};
     for (const p of Array.isArray(entity.idPrefix) ? entity.idPrefix : []) entityPrefixes.push(p);
   }
-  const vocabPath = `${LAYOUT.dimensionsDir}/_vocab.json`;
+  const vocabPath = `${WORLD_LAYOUT.dimensionsDir}/${WORLD_LAYOUT.vocab}`;
   if (ctx.files.includes(vocabPath)) {
     let doc; try { doc = JSON.parse(ctx.read(vocabPath)); } catch { doc = null; }
     const loaded = loadVocab(doc, entityPrefixes, () => {});

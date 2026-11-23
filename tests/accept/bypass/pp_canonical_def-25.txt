@@ -1,0 +1,9 @@
+function myHash(s) {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+  return h;
+}
+function canon(o) {
+  return Object.keys(o).sort().map((k) => k + ':' + o[k]).join(',');
+}
+export const id = (o) => myHash(canon(o));

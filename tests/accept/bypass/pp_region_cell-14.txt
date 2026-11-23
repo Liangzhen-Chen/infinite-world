@@ -1,0 +1,3 @@
+export function per(regionCellM, cellM) {
+  return regionCellM / cellM;
+}
