@@ -97,11 +97,21 @@ const { rules: NO_RULES } = loadRules(NO_DOC);
 const noTable = (ev) => selfcheckTable({ 5: ev }).replace(new RegExp(`^(\\| 5 \\|.*?\\| )是( \\|)`, 'm'), '$1否$2');
 const checkNo = (ev) => checkArchive(NO_RULES, QUESTIONS, readOf({ ...GOOD, '反思.md': GOOD['反思.md'].replace(selfcheckTable(), noTable(ev)) }), null, '推送', MEM);
 
-test('规矩两键读成登记：可填否项、原因前缀；缺任一键读取即报错', () => {
+test('规矩两键读成登记：可填否项、原因前缀；只有一键读取即报错', () => {
   assert.deepEqual(NO_RULES.noItems, ['5']);
   assert.equal(NO_RULES.noPrefix, '缘由：');
-  assert.match(loadRules(NO_DOC.replace(/^- 自查表可填否项：.*\r?\n/m, '')).error || '', /缺「自查表可填否项」/);
-  assert.match(loadRules(NO_DOC.replace(/^- 否项原因前缀：.*\r?\n/m, '')).error || '', /缺「否项原因前缀」/);
+  assert.match(loadRules(NO_DOC.replace(/^- 自查表可填否项：.*\r?\n/m, '')).error || '', /同时有或同时无，只有「否项原因前缀」/);
+  assert.match(loadRules(NO_DOC.replace(/^- 否项原因前缀：.*\r?\n/m, '')).error || '', /同时有或同时无，只有「自查表可填否项」/);
+});
+
+test('规矩没有两键（如推送取远端旧规矩）：不报缺键，没有可填否项；第 7 项「否」拒、「是」过', () => {
+  const OLD = loadRules(NO_DOC.replace(/^- 自查表可填否项：.*\r?\n/m, '').replace(/^- 否项原因前缀：.*\r?\n/m, ''));
+  assert.equal(OLD.error, undefined);
+  assert.deepEqual(OLD.rules.noItems, []);
+  assert.equal(OLD.rules.noPrefix, '');
+  const asNo = GOOD['反思.md'].replace(selfcheckTable(), selfcheckTable().replace(/^(\| 7 \|.*?\| )是( \|)/m, '$1否$2'));
+  assert.ok(has(checkArchive(OLD.rules, QUESTIONS, readOf({ ...GOOD, '反思.md': asNo }), null, '推送', MEM), '第 7 项', '须为"是"'));
+  assert.deepEqual(checkArchive(OLD.rules, QUESTIONS, readOf(GOOD), null, '推送', MEM), []);
 });
 
 test('可填否项填"否"：前缀＋原因＋实据放行；缺前缀、原因太短、无实据都拒；未登记项填"否"拒', () => {

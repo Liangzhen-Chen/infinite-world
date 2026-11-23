@@ -32,9 +32,12 @@ export function archiveRules(docText) {
     else (kv[key] ||= []).push(val);
   }
   const one = (k) => (kv[k] || [])[0];
-  for (const k of ['档案目录', '提交说明分支行前缀', '绕过标记', '推送目标', '开头自查表文件', '无证据项最少字数', '免条目时须卷文行条数', '自查表证据种类', '自查表可填否项', '否项原因前缀', '卷文件目录', '三方小节', '三方角色', '三方角色字段', '三方标识字段', '标识占位词', '验收目录', '验收目录唯一可改角色', '提交说明角色行前缀', '提交说明标识行前缀', '合并角色', '门禁生效提交']) {
+  for (const k of ['档案目录', '提交说明分支行前缀', '绕过标记', '推送目标', '开头自查表文件', '无证据项最少字数', '免条目时须卷文行条数', '自查表证据种类', '卷文件目录', '三方小节', '三方角色', '三方角色字段', '三方标识字段', '标识占位词', '验收目录', '验收目录唯一可改角色', '提交说明角色行前缀', '提交说明标识行前缀', '合并角色', '门禁生效提交']) {
     if (one(k) === undefined) return { error: `规矩文件第五节缺「${k}」` };
   }
+  // 可填否两键（李白 Z-6）：都没有按"没有可填否项"处理（推送门禁取远端旧规矩时没有这两键）；只有一键报错。
+  const noKeys = ['自查表可填否项', '否项原因前缀'].filter((k) => one(k) !== undefined);
+  if (noKeys.length === 1) return { error: `规矩文件第五节「自查表可填否项」「否项原因前缀」须同时有或同时无，只有「${noKeys[0]}」` };
   for (const [k, src] of Object.entries(kinds)) { try { new RegExp(src); } catch { return { error: `证据种类「${k}」的正则不合法` }; } }
   const tableLines = [];
   for (const l of sec) { if (l.trim().startsWith('|')) tableLines.push(l); }
