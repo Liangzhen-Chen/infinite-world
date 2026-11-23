@@ -1,0 +1,4 @@
+// @file server-plugin/kernel/storage.mjs
+export function canonical(v) {
+  return JSON.stringify(v);
+}

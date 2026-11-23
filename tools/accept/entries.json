@@ -1,0 +1,19 @@
+{
+  "codeRoot": "server-plugin/",
+  "reachRoot": "server-plugin/index.mjs",
+  "source": "公共部件审查乙「给检查脚本的规则」14（docs/研究/公共部件审查-乙-1122.md :166）；卡头第四节「查前置不只查函数在不在，还要查生产代码里有没有真实调用者」（李白 11-22 18:36）；C0 卡。入口清单即块 6 必须接通的入口，加一个入口只加一行。via=import：别的文件 import 它再调用；via=member：作为对象方法被 `.名字(` 调用，file 是定义它的文件。",
+  "entries": [
+    { "name": "generateWorld", "file": "server-plugin/world-create.mjs", "via": "import" },
+    { "name": "installSaveEnv", "file": "server-plugin/kernel/save-session.mjs", "via": "import" },
+    { "name": "setGame", "file": "server-plugin/kernel/save-session.mjs", "via": "import" },
+    { "name": "bindCampaignSeed", "file": "server-plugin/kernel/mount.mjs", "via": "member" },
+    { "name": "registerPropagate", "file": "server-plugin/perceive.mjs", "via": "import" },
+    { "name": "registerEnvAt", "file": "server-plugin/perceive.mjs", "via": "import" },
+    { "name": "registerEventDerive", "file": "server-plugin/kernel/events.mjs", "via": "import" },
+    { "name": "routeView", "file": "server-plugin/kernel/place.mjs", "via": "import" },
+    { "name": "pathView", "file": "server-plugin/kernel/place.mjs", "via": "import" },
+    { "name": "losView", "file": "server-plugin/sight.mjs", "via": "import" },
+    { "name": "priceFor", "file": "server-plugin/price.mjs", "via": "import" },
+    { "name": "execute", "file": "server-plugin/primitives-runtime.mjs", "via": "import" }
+  ]
+}

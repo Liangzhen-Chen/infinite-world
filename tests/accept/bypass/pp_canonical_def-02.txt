@@ -1,0 +1,2 @@
+const canonical = (v) => String(v);
+export const c = canonical;

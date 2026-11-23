@@ -1,0 +1,4 @@
+import { root } from './alias.mjs';
+export const f = (x) => root(x);
+// @file alias.mjs
+export const root = (v) => v;

@@ -1,0 +1,2 @@
+import { canonical } from './kernel/storage.mjs';
+export const c = (v) => canonical(v);

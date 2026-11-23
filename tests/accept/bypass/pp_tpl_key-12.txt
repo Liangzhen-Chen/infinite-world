@@ -1,0 +1,3 @@
+// @file server-plugin/kernel/key-a.mjs
+export const ka = (w, x, y) => `${w}:${x}:${y}`;
+export const kc = (w, x, y) => `${y}:${x}:${w}`;

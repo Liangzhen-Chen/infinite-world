@@ -1,0 +1,4 @@
+// @file server-plugin/kernel/key-a.mjs
+export const ka = (w, x, y) => `${w}:${x}:${y}`;
+// @file server-plugin/kernel/key-b.mjs
+export const kb = (c) => `${c.w}:${c.x}:${c.y}`;

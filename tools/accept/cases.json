@@ -384,6 +384,312 @@
   },
   {
    "addedAtRev": 1,
+   "caseKey": "float_math-01",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-01.txt",
+   "group": "kernel",
+   "origin": "卷二十七 R27-5.2：内核用 Math.sqrt（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "float_math-02",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-02.txt",
+   "group": "rules",
+   "origin": "卷二十七 R27-5.2：规则层用 Math.sin、Math.exp（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "float_math-03",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-03.txt",
+   "group": "kernel",
+   "origin": "独立验收补漏：Math 解构取开方（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "float_math-04",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-04.txt",
+   "group": "rules",
+   "origin": "独立验收补漏：Math 下标取幂并赋值别名（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "float_math-05",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-05.txt",
+   "group": "rules",
+   "origin": "按语法树判补用例：超越函数经形参传入再调用",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "float_math-06",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-06.txt",
+   "group": "rules",
+   "origin": "按语法树判补用例：超越函数放进对象成员再调用",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "float_math-07",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-07.txt",
+   "group": "rules",
+   "origin": "按语法树判补用例：函数返回超越函数再调用",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "float_math-08",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-08.txt",
+   "group": "rules",
+   "origin": "按语法树判补用例：运行期才知道的下标取 Math 成员（待人审）",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "float_math-09",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-09.txt",
+   "group": "rules",
+   "origin": "按语法树判补用例：超越函数放进数组再按下标取",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "float_math-10",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-10.txt",
+   "group": "rules",
+   "origin": "按语法树判补用例：先声明后赋值的别名",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "float_math-11",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-11.txt",
+   "group": "rules",
+   "origin": "按语法树判补用例：默认形参带入超越函数",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "float_math-12",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-12.txt",
+   "group": "rules",
+   "origin": "按语法树判补用例：对象成员按变量下标取（待人审，并集里含超越函数）",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "float_math-13",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-13.txt",
+   "group": "rules",
+   "origin": "按语法树判补用例：逗号表达式取函数",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "float_math-14",
+   "fixture": "tests/accept/bypass/float_math-14.txt",
+   "group": "rules",
+   "origin": "按语法树判补用例：局部同名对象遮蔽 Math 不报",
+   "polarity": "must_pass",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 6,
+   "caseKey": "float_math-15",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-15.txt",
+   "group": "rules",
+   "origin": "独立测试方第二轮对照（李白转 11-23）：Reflect.get 取超越函数",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 6,
+   "caseKey": "float_math-16",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-16.txt",
+   "group": "rules",
+   "origin": "独立测试方第二轮对照（李白转 11-23）：Reflect.apply 调超越函数",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 6,
+   "caseKey": "float_math-17",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-17.txt",
+   "group": "rules",
+   "origin": "独立测试方第二轮对照（李白转 11-23）：可选链 Math?.sqrt?.()",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 9,
+   "caseKey": "float_math-18",
+   "fixture": "tests/accept/bypass/float_math-18.txt",
+   "group": "rules",
+   "origin": "独立验收第二轮（亮圳转 11-23）：形参叫 Math（遮蔽），不是全局 Math",
+   "polarity": "must_pass",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 9,
+   "caseKey": "float_math-19",
+   "fixture": "tests/accept/bypass/float_math-19.txt",
+   "group": "rules",
+   "origin": "独立验收第二轮（亮圳转 11-23）：局部 const Math 对象（遮蔽）",
+   "polarity": "must_pass",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 9,
+   "caseKey": "float_math-20",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-20.txt",
+   "group": "rules",
+   "origin": "独立验收第二轮（亮圳转 11-23）：属性赋值传别名 o.f = Math.sqrt 后调 o.f",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 9,
+   "caseKey": "float_math-21",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-21.txt",
+   "group": "rules",
+   "origin": "独立验收第二轮（亮圳转 11-23）：类里 this.f = Math.sqrt，经 this.f 调用",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 10,
+   "caseKey": "float_math-22",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-22.txt",
+   "group": "rules",
+   "origin": "独立验收第三轮（亮圳转 11-23）：跨文件：导出常量别名 Math.sqrt",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 10,
+   "caseKey": "float_math-23",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-23.txt",
+   "group": "rules",
+   "origin": "独立验收第三轮（亮圳转 11-23）：跨文件：导出函数返回 Math.sqrt",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 10,
+   "caseKey": "float_math-24",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-24.txt",
+   "group": "rules",
+   "origin": "独立验收第三轮（亮圳转 11-23）：跨文件：导出对象成员 Math.sqrt",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 10,
+   "caseKey": "float_math-25",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-25.txt",
+   "group": "rules",
+   "origin": "独立验收第三轮（亮圳转 11-23）：跨文件：形参从别的文件传进 Math.sqrt",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 10,
+   "caseKey": "float_math-26",
+   "fixture": "tests/accept/bypass/float_math-26.txt",
+   "group": "rules",
+   "origin": "独立验收第三轮（亮圳转 11-23）：跨文件：导入的别名指向的不是超越函数",
+   "polarity": "must_pass",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 10,
+   "caseKey": "float_math-27",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-27.txt",
+   "group": "rules",
+   "origin": "独立验收第三轮（亮圳转 11-23）：跨文件：import * as 命名空间取别名",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 10,
+   "caseKey": "float_math-28",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-28.txt",
+   "group": "rules",
+   "origin": "独立验收第三轮（亮圳转 11-23）：new Proxy(Math, {}) 再调 sqrt",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 10,
+   "caseKey": "float_math-29",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-29.txt",
+   "group": "rules",
+   "origin": "独立验收第三轮（亮圳转 11-23）：Function.prototype.call.call(Math.sqrt, …)",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 11,
+   "caseKey": "float_math-30",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-30.txt",
+   "group": "rules",
+   "origin": "独立验收第五轮（亮圳转 11-23）：跨文件 export default 的别名（import 默认导入）",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 11,
+   "caseKey": "float_math-31",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/float_math-31.txt",
+   "group": "rules",
+   "origin": "独立验收第五轮（亮圳转 11-23）：跨文件 export { f as default } 的别名",
+   "polarity": "must_fail",
+   "scanClass": "float_math"
+  },
+  {
+   "addedAtRev": 1,
    "caseKey": "geometry_bypass-01",
    "expectCode": "E-VIEW-BYPASS",
    "fixture": "tests/accept/bypass/geometry_bypass-01.txt",
@@ -753,6 +1059,64 @@
    "origin": "卷十二 S12-3；李白 11-17 S12-3 裁定第 2、3 条：拆 a/b 两行按一个原条目计；删除线起首的作废条不计",
    "polarity": "must_pass",
    "scanClass": "item_ledger"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "ledger_state_read-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/ledger_state_read-01.txt",
+   "group": "kernel",
+   "origin": "卷六 §4.1.2：账本内核之外读 accounts（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "ledger_state_read"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "ledger_state_read-02",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/ledger_state_read-02.txt",
+   "group": "rules",
+   "origin": "卷六 §4.1.2：规则层读 ledgerTotals（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "ledger_state_read"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "ledger_state_read-03",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/ledger_state_read-03.txt",
+   "group": "rules",
+   "origin": "独立验收补漏：账本字段解构读（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "ledger_state_read"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "ledger_state_read-04",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/ledger_state_read-04.txt",
+   "group": "rules",
+   "origin": "按语法树判补用例：别名加拆开再拼的键名取账本字段",
+   "polarity": "must_fail",
+   "scanClass": "ledger_state_read"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "ledger_state_read-11",
+   "fixture": "tests/accept/bypass/ledger_state_read-11.txt",
+   "group": "rules",
+   "origin": "卷六 §4.1.2：经账本读入口 balance 取数（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "ledger_state_read"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "ledger_state_read-12",
+   "fixture": "tests/accept/bypass/ledger_state_read-12.txt",
+   "group": "kernel",
+   "origin": "卷六 §4.1.2：账本内核（economy 系统写者登记的文件）自己读 accounts（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "ledger_state_read"
   },
   {
    "addedAtRev": 1,
@@ -1181,6 +1545,1582 @@
   },
   {
    "addedAtRev": 1,
+   "caseKey": "pp_canonical_def-01",
+   "fixture": "tests/accept/bypass/pp_canonical_def-01.txt",
+   "group": "kernel",
+   "origin": "规范序列化只一份（乙 11）：违规写法（必须报）（11-23 起按定义判：只有名字叫 canonical、数据流不进摘要或存储，不报）",
+   "polarity": "must_pass",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_canonical_def-02",
+   "fixture": "tests/accept/bypass/pp_canonical_def-02.txt",
+   "group": "rules",
+   "origin": "规范序列化只一份（乙 11）：违规写法（必须报）（11-23 起按定义判：只有名字叫 canonical、数据流不进摘要或存储，不报）",
+   "polarity": "must_pass",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_canonical_def-03",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-03.txt",
+   "group": "kernel",
+   "origin": "按语法树判补用例：规范序列化函数改名（递归、按键排序）（11-23 起按定义判：数据流不进摘要或存储的归待人审清单）",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_review"
+  },
+  {
+   "addedAtRev": 7,
+   "caseKey": "pp_canonical_def-04",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-04.txt",
+   "group": "rules",
+   "origin": "独立测试方第二轮对照（李白转 11-23）：规范序列化改名（11-23 起按定义判：数据流不进摘要或存储的归待人审清单）",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_review"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_canonical_def-11",
+   "fixture": "tests/accept/bypass/pp_canonical_def-11.txt",
+   "group": "kernel",
+   "origin": "规范序列化只一份（乙 11）：例外 storage.mjs",
+   "polarity": "must_pass",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_canonical_def-12",
+   "fixture": "tests/accept/bypass/pp_canonical_def-12.txt",
+   "group": "rules",
+   "origin": "规范序列化只一份（乙 11）：合规写法（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_canonical_def-13",
+   "fixture": "tests/accept/bypass/pp_canonical_def-13.txt",
+   "group": "kernel",
+   "origin": "按语法树判补用例：不递归的按键排序不报",
+   "polarity": "must_pass",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 9,
+   "caseKey": "pp_canonical_def-14",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-14.txt",
+   "group": "rules",
+   "origin": "独立验收第二轮（亮圳转 11-23）：规范序列化写成迭代式（显式栈 + 键排序）（11-23 起按定义判：数据流不进摘要或存储的归待人审清单）",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_review"
+  },
+  {
+   "addedAtRev": 9,
+   "caseKey": "pp_canonical_def-15",
+   "fixture": "tests/accept/bypass/pp_canonical_def-15.txt",
+   "group": "rules",
+   "origin": "独立验收第二轮（亮圳转 11-23）：有栈循环但没有键排序，不是规范序列化",
+   "polarity": "must_pass",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 10,
+   "caseKey": "pp_canonical_def-16",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-16.txt",
+   "group": "rules",
+   "origin": "独立验收第三轮（亮圳转 11-23）：规范序列化非递归，for 下标迭代（11-23 起按定义判：数据流不进摘要或存储的归待人审清单）",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_review"
+  },
+  {
+   "addedAtRev": 10,
+   "caseKey": "pp_canonical_def-17",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-17.txt",
+   "group": "rules",
+   "origin": "独立验收第三轮（亮圳转 11-23）：规范序列化非递归，键排序后 map/join（11-23 起按定义判：数据流不进摘要或存储的归待人审清单）",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_review"
+  },
+  {
+   "addedAtRev": 11,
+   "caseKey": "pp_canonical_def-18",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-18.txt",
+   "group": "rules",
+   "origin": "独立验收第五轮（亮圳转 11-23）：for…in 取键加手写排序，结果喂 sha256Text",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 11,
+   "caseKey": "pp_canonical_def-19",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-19.txt",
+   "group": "rules",
+   "origin": "独立验收第五轮（亮圳转 11-23）：用 JSON.stringify 的替换函数给键排序，结果喂 sha256Text",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 11,
+   "caseKey": "pp_canonical_def-20",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-20.txt",
+   "group": "rules",
+   "origin": "独立验收第五轮（亮圳转 11-23）：getOwnPropertyNames().toSorted()，结果经另一个函数喂 sha256Text",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 11,
+   "caseKey": "pp_canonical_def-21",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_def-21.txt",
+   "group": "rules",
+   "origin": "独立验收第五轮（亮圳转 11-23）：排序拼串的结果写文件（存储）",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 11,
+   "caseKey": "pp_canonical_def-22",
+   "fixture": "tests/accept/bypass/pp_canonical_def-22.txt",
+   "group": "rules",
+   "origin": "独立验收第五轮（亮圳转 11-23）：形状像（遍历键排序拼多行文本）但结果只打印，不进摘要或存储",
+   "polarity": "must_pass",
+   "scanClass": "pp_canonical_def"
+  },
+  {
+   "addedAtRev": 11,
+   "caseKey": "pp_canonical_review-05",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_canonical_review-05.txt",
+   "group": "rules",
+   "origin": "独立验收第五轮（亮圳转 11-23）：形状像，结果用于相等比较",
+   "polarity": "must_fail",
+   "scanClass": "pp_canonical_review"
+  },
+  {
+   "addedAtRev": 11,
+   "caseKey": "pp_canonical_review-11",
+   "fixture": "tests/accept/bypass/pp_canonical_def-22.txt",
+   "group": "rules",
+   "origin": "独立验收第五轮（亮圳转 11-23）：形状像但非导出、结果只打印：不进待人审清单",
+   "polarity": "must_pass",
+   "scanClass": "pp_canonical_review"
+  },
+  {
+   "addedAtRev": 11,
+   "caseKey": "pp_canonical_review-12",
+   "fixture": "tests/accept/bypass/pp_canonical_review-12.txt",
+   "group": "rules",
+   "origin": "独立验收第五轮（亮圳转 11-23）：递归遍历树拼文本，没有键排序",
+   "polarity": "must_pass",
+   "scanClass": "pp_canonical_review"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_deep_clone-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_deep_clone-01.txt",
+   "group": "kernel",
+   "origin": "深拷贝只经 clone（乙 10）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_deep_clone"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_deep_clone-02",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_deep_clone-02.txt",
+   "group": "kernel",
+   "origin": "独立验收补漏：深拷贝拆两行（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_deep_clone"
+  },
+  {
+   "addedAtRev": 7,
+   "caseKey": "pp_deep_clone-03",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_deep_clone-03.txt",
+   "group": "kernel",
+   "origin": "独立测试方第二轮对照（李白转 11-23）：下标写法 JSON[\"parse\"](JSON[\"stringify\"](x))",
+   "polarity": "must_fail",
+   "scanClass": "pp_deep_clone"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_deep_clone-11",
+   "fixture": "tests/accept/bypass/pp_deep_clone-11.txt",
+   "group": "kernel",
+   "origin": "深拷贝只经 clone（乙 10）：合规写法（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "pp_deep_clone"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_deep_clone-13",
+   "fixture": "tests/accept/bypass/pp_deep_clone-13.txt",
+   "group": "kernel",
+   "origin": "独立验收补漏：只解析、不先序列化再解析不报",
+   "polarity": "must_pass",
+   "scanClass": "pp_deep_clone"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_dist_branch-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_dist_branch-01.txt",
+   "group": "rules",
+   "origin": "分布种类分派只在 sample.mjs（甲 R7）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_dist_branch"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_dist_branch-02",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_dist_branch-02.txt",
+   "group": "rules",
+   "origin": "分布种类分派只在 sample.mjs（甲 R7）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_dist_branch"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_dist_branch-11",
+   "fixture": "tests/accept/bypass/pp_dist_branch-11.txt",
+   "group": "kernel",
+   "origin": "分布种类分派只在 sample.mjs（甲 R7）：例外 sample.mjs",
+   "polarity": "must_pass",
+   "scanClass": "pp_dist_branch"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_dist_branch-12",
+   "fixture": "tests/accept/bypass/pp_dist_branch-12.txt",
+   "group": "rules",
+   "origin": "分布种类分派只在 sample.mjs（甲 R7）：合规写法（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "pp_dist_branch"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_draw_sites-01",
+   "expectCode": "E-SEED-KEY",
+   "fixture": "tests/accept/bypass/pp_draw_sites-01.txt",
+   "group": "rules",
+   "origin": "rules.clock.drawSites 每项须在种子键登记表有行（甲 R6 后半）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_draw_sites"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_draw_sites-11",
+   "fixture": "tests/accept/bypass/pp_draw_sites-11.txt",
+   "group": "rules",
+   "origin": "rules.clock.drawSites 每项须在种子键登记表有行（甲 R6 后半）：两表一致",
+   "polarity": "must_pass",
+   "scanClass": "pp_draw_sites"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_dup_export-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_dup_export-01.txt",
+   "group": "kernel",
+   "origin": "同名导出只一处、职责函数不在职责文件外定义（甲 R14、乙 12）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_dup_export"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_dup_export-02",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_dup_export-02.txt",
+   "group": "rules",
+   "origin": "同名导出只一处、职责函数不在职责文件外定义（甲 R14、乙 12）：职责函数在职责文件外定义",
+   "polarity": "must_fail",
+   "scanClass": "pp_dup_export"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_dup_export-11",
+   "fixture": "tests/accept/bypass/pp_dup_export-11.txt",
+   "group": "kernel",
+   "origin": "同名导出只一处、职责函数不在职责文件外定义（甲 R14、乙 12）：合规写法（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "pp_dup_export"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_dup_export-12",
+   "fixture": "tests/accept/bypass/pp_dup_export-12.txt",
+   "group": "kernel",
+   "origin": "同名导出只一处、职责函数不在职责文件外定义（甲 R14、乙 12）：职责函数在职责文件里",
+   "polarity": "must_pass",
+   "scanClass": "pp_dup_export"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_dynamic_index-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_dynamic_index-01.txt",
+   "group": "rules",
+   "origin": "运行期才知道的下标取成员（待人审）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_dynamic_index"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_dynamic_index-02",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_dynamic_index-02.txt",
+   "group": "rules",
+   "origin": "运行期才知道的下标取成员（待人审）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_dynamic_index"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_dynamic_index-11",
+   "fixture": "tests/accept/bypass/pp_dynamic_index-11.txt",
+   "group": "rules",
+   "origin": "运行期才知道的下标取成员（待人审）：下标是字面常量",
+   "polarity": "must_pass",
+   "scanClass": "pp_dynamic_index"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_dynamic_index-12",
+   "fixture": "tests/accept/bypass/pp_dynamic_index-12.txt",
+   "group": "rules",
+   "origin": "运行期才知道的下标取成员（待人审）：数组按位置取不在登记根上",
+   "polarity": "must_pass",
+   "scanClass": "pp_dynamic_index"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_dynamic_review-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_dynamic_review-01.txt",
+   "group": "rules",
+   "origin": "全部运行期下标取成员（待人审清单，只报不拦）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_dynamic_review"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_dynamic_review-11",
+   "fixture": "tests/accept/bypass/pp_dynamic_review-11.txt",
+   "group": "rules",
+   "origin": "全部运行期下标取成员（待人审清单，只报不拦）：合规写法（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "pp_dynamic_review"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_envat_callers-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_envat_callers-01.txt",
+   "group": "rules",
+   "origin": "kernelApi 登记不得放宽温度天气入口（甲 R2）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_envat_callers"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_envat_callers-11",
+   "fixture": "tests/accept/bypass/pp_envat_callers-11.txt",
+   "group": "rules",
+   "origin": "kernelApi 登记不得放宽温度天气入口（甲 R2）：只许 callerFiles；别的入口 callers rules 不算",
+   "polarity": "must_pass",
+   "scanClass": "pp_envat_callers"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_envat_import-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_envat_import-01.txt",
+   "group": "rules",
+   "origin": "温度、天气模型只经 envAt（甲 R1）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_envat_import"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_envat_import-02",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_envat_import-02.txt",
+   "group": "rules",
+   "origin": "独立验收补漏：命名空间导入温度模型（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_envat_import"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_envat_import-03",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_envat_import-03.txt",
+   "group": "rules",
+   "origin": "独立验收补漏：动态 import 天气模型（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_envat_import"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_envat_import-11",
+   "fixture": "tests/accept/bypass/pp_envat_import-11.txt",
+   "group": "kernel",
+   "origin": "温度、天气模型只经 envAt（甲 R1）：例外：climate.mjs 引 weather.mjs",
+   "polarity": "must_pass",
+   "scanClass": "pp_envat_import"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_envat_import-12",
+   "fixture": "tests/accept/bypass/pp_envat_import-12.txt",
+   "group": "rules",
+   "origin": "温度、天气模型只经 envAt（甲 R1）：经 envAt 不报",
+   "polarity": "must_pass",
+   "scanClass": "pp_envat_import"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_epsilon-01",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/pp_epsilon-01.txt",
+   "group": "kernel",
+   "origin": "不用浮点容差（乙 7 的 Number.EPSILON 半条）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_epsilon"
+  },
+  {
+   "addedAtRev": 7,
+   "caseKey": "pp_epsilon-02",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/pp_epsilon-02.txt",
+   "group": "rules",
+   "origin": "独立测试方第二轮对照（李白转 11-23）：解构取 EPSILON 再比较",
+   "polarity": "must_fail",
+   "scanClass": "pp_epsilon"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_epsilon-11",
+   "fixture": "tests/accept/bypass/pp_epsilon-11.txt",
+   "group": "kernel",
+   "origin": "不用浮点容差（乙 7 的 Number.EPSILON 半条）：合规写法（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "pp_epsilon"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_eval-01",
+   "expectCode": "E-GLOBAL-UNLISTED",
+   "fixture": "tests/accept/bypass/pp_eval-01.txt",
+   "group": "rules",
+   "origin": "运行期动态代码（eval、new Function）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_eval"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_eval-02",
+   "expectCode": "E-GLOBAL-UNLISTED",
+   "fixture": "tests/accept/bypass/pp_eval-02.txt",
+   "group": "rules",
+   "origin": "运行期动态代码（eval、new Function）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_eval"
+  },
+  {
+   "addedAtRev": 10,
+   "caseKey": "pp_eval-03",
+   "expectCode": "E-GLOBAL-UNLISTED",
+   "fixture": "tests/accept/bypass/pp_eval-03.txt",
+   "group": "rules",
+   "origin": "独立验收第三轮（亮圳转 11-23）：Reflect.construct(Function, …)",
+   "polarity": "must_fail",
+   "scanClass": "pp_eval"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_eval-11",
+   "fixture": "tests/accept/bypass/pp_eval-11.txt",
+   "group": "rules",
+   "origin": "运行期动态代码（eval、new Function）：合规写法（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "pp_eval"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_float_pow-01",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/pp_float_pow-01.txt",
+   "group": "kernel",
+   "origin": "不用 ** 做非整数次幂（乙 7 的 ** 半条）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_float_pow"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_float_pow-02",
+   "expectCode": "E-DET-FLOAT",
+   "fixture": "tests/accept/bypass/pp_float_pow-02.txt",
+   "group": "rules",
+   "origin": "不用 ** 做非整数次幂（乙 7 的 ** 半条）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_float_pow"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_float_pow-11",
+   "fixture": "tests/accept/bypass/pp_float_pow-11.txt",
+   "group": "kernel",
+   "origin": "不用 ** 做非整数次幂（乙 7 的 ** 半条）：整数次幂",
+   "polarity": "must_pass",
+   "scanClass": "pp_float_pow"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_footprint_kind-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_footprint_kind-01.txt",
+   "group": "kernel",
+   "origin": "足迹种类分派只在处理器表（甲 R12）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_footprint_kind"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_footprint_kind-02",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_footprint_kind-02.txt",
+   "group": "kernel",
+   "origin": "足迹种类分派只在处理器表（甲 R12）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_footprint_kind"
+  },
+  {
+   "addedAtRev": 7,
+   "caseKey": "pp_footprint_kind-03",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_footprint_kind-03.txt",
+   "group": "kernel",
+   "origin": "独立测试方第二轮对照（李白转 11-23）：种类常量 import as 别名后比较",
+   "polarity": "must_fail",
+   "scanClass": "pp_footprint_kind"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_footprint_kind-11",
+   "fixture": "tests/accept/bypass/pp_footprint_kind-11.txt",
+   "group": "kernel",
+   "origin": "足迹种类分派只在处理器表（甲 R12）：例外 footprint-kind.mjs",
+   "polarity": "must_pass",
+   "scanClass": "pp_footprint_kind"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_footprint_kind-12",
+   "fixture": "tests/accept/bypass/pp_footprint_kind-12.txt",
+   "group": "kernel",
+   "origin": "足迹种类分派只在处理器表（甲 R12）：构造不是比较",
+   "polarity": "must_pass",
+   "scanClass": "pp_footprint_kind"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_gen_callers-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_gen_callers-01.txt",
+   "group": "rules",
+   "origin": "生成器只经世界创建入口调用（乙 9）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_gen_callers"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_gen_callers-02",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_gen_callers-02.txt",
+   "group": "rules",
+   "origin": "独立验收补漏：命名空间导入生成器（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_gen_callers"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_gen_callers-11",
+   "fixture": "tests/accept/bypass/pp_gen_callers-11.txt",
+   "group": "rules",
+   "origin": "生成器只经世界创建入口调用（乙 9）：例外 world-create.mjs",
+   "polarity": "must_pass",
+   "scanClass": "pp_gen_callers"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_gen_callers-12",
+   "fixture": "tests/accept/bypass/pp_gen_callers-12.txt",
+   "group": "rules",
+   "origin": "生成器只经世界创建入口调用（乙 9）：经世界创建入口",
+   "polarity": "must_pass",
+   "scanClass": "pp_gen_callers"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_grammar_regex-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_grammar_regex-01.txt",
+   "group": "kernel",
+   "origin": "代号文法只一处（乙 6）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_grammar_regex"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_grammar_regex-02",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_grammar_regex-02.txt",
+   "group": "kernel",
+   "origin": "代号文法只一处（乙 6）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_grammar_regex"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_grammar_regex-11",
+   "fixture": "tests/accept/bypass/pp_grammar_regex-11.txt",
+   "group": "kernel",
+   "origin": "代号文法只一处（乙 6）：例外 types.mjs",
+   "polarity": "must_pass",
+   "scanClass": "pp_grammar_regex"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_grammar_regex-12",
+   "fixture": "tests/accept/bypass/pp_grammar_regex-12.txt",
+   "group": "kernel",
+   "origin": "代号文法只一处（乙 6）：合规写法（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "pp_grammar_regex"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_holdings_read-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_holdings_read-01.txt",
+   "group": "rules",
+   "origin": "持有状态只经持有模块（乙 5）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_holdings_read"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_holdings_read-11",
+   "fixture": "tests/accept/bypass/pp_holdings_read-11.txt",
+   "group": "kernel",
+   "origin": "持有状态只经持有模块（乙 5）：例外 持有写者",
+   "polarity": "must_pass",
+   "scanClass": "pp_holdings_read"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_holdings_read-12",
+   "fixture": "tests/accept/bypass/pp_holdings_read-12.txt",
+   "group": "rules",
+   "origin": "持有状态只经持有模块（乙 5）：合规写法（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "pp_holdings_read"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_key_concat-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_key_concat-01.txt",
+   "group": "kernel",
+   "origin": "键串只在 keys.mjs 拼，文法记号只放 markers.mjs（甲 R5、乙 1、乙 2）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_key_concat"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_key_concat-02",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_key_concat-02.txt",
+   "group": "rules",
+   "origin": "键串只在 keys.mjs 拼，文法记号只放 markers.mjs（甲 R5、乙 1、乙 2）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_key_concat"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_key_concat-03",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_key_concat-03.txt",
+   "group": "rules",
+   "origin": "独立验收补漏：用 + 拼键串（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_key_concat"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_key_concat-04",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_key_concat-04.txt",
+   "group": "rules",
+   "origin": "独立验收补漏：用 reduce 手拼键串（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_key_concat"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_key_concat-05",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_key_concat-05.txt",
+   "group": "rules",
+   "origin": "独立验收补漏：分隔符经常量传给 join（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_key_concat"
+  },
+  {
+   "addedAtRev": 7,
+   "caseKey": "pp_key_concat-06",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_key_concat-06.txt",
+   "group": "rules",
+   "origin": "独立测试方第二轮对照（李白转 11-23）：reduce 里用模板串拼键",
+   "polarity": "must_fail",
+   "scanClass": "pp_key_concat"
+  },
+  {
+   "addedAtRev": 7,
+   "caseKey": "pp_key_concat-07",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_key_concat-07.txt",
+   "group": "rules",
+   "origin": "独立测试方第二轮对照（李白转 11-23）：数组夹分隔符再 join 空串",
+   "polarity": "must_fail",
+   "scanClass": "pp_key_concat"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_key_concat-11",
+   "fixture": "tests/accept/bypass/pp_key_concat-11.txt",
+   "group": "kernel",
+   "origin": "键串只在 keys.mjs 拼，文法记号只放 markers.mjs（甲 R5、乙 1、乙 2）：例外 keys.mjs",
+   "polarity": "must_pass",
+   "scanClass": "pp_key_concat"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_key_concat-12",
+   "fixture": "tests/accept/bypass/pp_key_concat-12.txt",
+   "group": "rules",
+   "origin": "键串只在 keys.mjs 拼，文法记号只放 markers.mjs（甲 R5、乙 1、乙 2）：整份文本摘要不拼键",
+   "polarity": "must_pass",
+   "scanClass": "pp_key_concat"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_key_concat-13",
+   "fixture": "tests/accept/bypass/pp_key_concat-13.txt",
+   "group": "rules",
+   "origin": "独立验收补漏：加法不拼分隔符不报",
+   "polarity": "must_pass",
+   "scanClass": "pp_key_concat"
+  },
+  {
+   "addedAtRev": 9,
+   "caseKey": "pp_key_concat-14",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_key_concat-14.txt",
+   "group": "rules",
+   "origin": "独立验收第二轮（亮圳转 11-23）：[a,'#',b].join('') 拼键",
+   "polarity": "must_fail",
+   "scanClass": "pp_key_concat"
+  },
+  {
+   "addedAtRev": 9,
+   "caseKey": "pp_key_concat-15",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_key_concat-15.txt",
+   "group": "rules",
+   "origin": "独立验收第二轮（亮圳转 11-23）：a.concat('#', b) 拼键",
+   "polarity": "must_fail",
+   "scanClass": "pp_key_concat"
+  },
+  {
+   "addedAtRev": 9,
+   "caseKey": "pp_key_concat-16",
+   "fixture": "tests/accept/bypass/pp_key_concat-16.txt",
+   "group": "rules",
+   "origin": "独立验收第二轮（亮圳转 11-23）：[a,b].join(空串) 无分隔符",
+   "polarity": "must_pass",
+   "scanClass": "pp_key_concat"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_kind_branch-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_kind_branch-01.txt",
+   "group": "rules",
+   "origin": "写死的种类、类别分支（独立验收补漏）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_kind_branch"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_kind_branch-02",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_kind_branch-02.txt",
+   "group": "rules",
+   "origin": "写死的种类、类别分支（独立验收补漏）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_kind_branch"
+  },
+  {
+   "addedAtRev": 5,
+   "caseKey": "pp_kind_branch-03",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_kind_branch-03.txt",
+   "group": "rules",
+   "origin": "独立测试方第二轮对照（李白转 11-23）：用 includes 判种类",
+   "polarity": "must_fail",
+   "scanClass": "pp_kind_branch"
+  },
+  {
+   "addedAtRev": 5,
+   "caseKey": "pp_kind_branch-04",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_kind_branch-04.txt",
+   "group": "rules",
+   "origin": "独立测试方第二轮对照（李白转 11-23）：用 species 字段判种类",
+   "polarity": "must_fail",
+   "scanClass": "pp_kind_branch"
+  },
+  {
+   "addedAtRev": 5,
+   "caseKey": "pp_kind_branch-05",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_kind_branch-05.txt",
+   "group": "rules",
+   "origin": "独立测试方第二轮对照（李白转 11-23）：写死的查表对象按种类取值",
+   "polarity": "must_fail",
+   "scanClass": "pp_kind_branch"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_kind_branch-11",
+   "fixture": "tests/accept/bypass/pp_kind_branch-11.txt",
+   "group": "rules",
+   "origin": "写死的种类、类别分支（独立验收补漏）：种类与种类比较，不写死代号",
+   "polarity": "must_pass",
+   "scanClass": "pp_kind_branch"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_kind_branch-12",
+   "fixture": "tests/accept/bypass/pp_kind_branch-12.txt",
+   "group": "rules",
+   "origin": "写死的种类、类别分支（独立验收补漏）：合规写法（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "pp_kind_branch"
+  },
+  {
+   "addedAtRev": 5,
+   "caseKey": "pp_kind_branch-13",
+   "fixture": "tests/accept/bypass/pp_kind_branch-13.txt",
+   "group": "rules",
+   "origin": "独立测试方第二轮对照（李白转 11-23）：误拦：typeof x.kind 的类型判断",
+   "polarity": "must_pass",
+   "scanClass": "pp_kind_branch"
+  },
+  {
+   "addedAtRev": 5,
+   "caseKey": "pp_kind_branch-14",
+   "fixture": "tests/accept/bypass/pp_kind_branch-14.txt",
+   "group": "rules",
+   "origin": "独立测试方第二轮对照（李白转 11-23）：误拦：x.kind 的存在性判断",
+   "polarity": "must_pass",
+   "scanClass": "pp_kind_branch"
+  },
+  {
+   "addedAtRev": 9,
+   "caseKey": "pp_kind_branch-15",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_kind_branch-15.txt",
+   "group": "rules",
+   "origin": "独立验收第二轮（亮圳转 11-23）：经函数取种类 kindOf(x) === 'house'",
+   "polarity": "must_fail",
+   "scanClass": "pp_kind_branch"
+  },
+  {
+   "addedAtRev": 9,
+   "caseKey": "pp_kind_branch-16",
+   "fixture": "tests/accept/bypass/pp_kind_branch-16.txt",
+   "group": "rules",
+   "origin": "独立验收第二轮（亮圳转 11-23）：x.category !== 空串 是判有无",
+   "polarity": "must_pass",
+   "scanClass": "pp_kind_branch"
+  },
+  {
+   "addedAtRev": 9,
+   "caseKey": "pp_kind_branch-17",
+   "fixture": "tests/accept/bypass/pp_kind_branch-17.txt",
+   "group": "rules",
+   "origin": "独立验收第二轮（亮圳转 11-23）：row[kind] 按行取字段，不是种类查表",
+   "polarity": "must_pass",
+   "scanClass": "pp_kind_branch"
+  },
+  {
+   "addedAtRev": 9,
+   "caseKey": "pp_kind_branch-18",
+   "fixture": "tests/accept/bypass/pp_kind_branch-18.txt",
+   "group": "rules",
+   "origin": "独立验收第二轮（亮圳转 11-23）：known.has(x.kind)：接收者不是写死的字面量清单",
+   "polarity": "must_pass",
+   "scanClass": "pp_kind_branch"
+  },
+  {
+   "addedAtRev": 10,
+   "caseKey": "pp_kind_branch-19",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_kind_branch-19.txt",
+   "group": "rules",
+   "origin": "独立验收第三轮（亮圳转 11-23）：本文件自定义的 kindOf(x) === 比较",
+   "polarity": "must_fail",
+   "scanClass": "pp_kind_branch"
+  },
+  {
+   "addedAtRev": 10,
+   "caseKey": "pp_kind_branch-20",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_kind_branch-20.txt",
+   "group": "rules",
+   "origin": "独立验收第三轮（亮圳转 11-23）：const k = kindOf(x); k === 比较",
+   "polarity": "must_fail",
+   "scanClass": "pp_kind_branch"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_material_read-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_material_read-01.txt",
+   "group": "rules",
+   "origin": "材料只经 materialView（甲 R11）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_material_read"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_material_read-02",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_material_read-02.txt",
+   "group": "rules",
+   "origin": "材料只经 materialView（甲 R11）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_material_read"
+  },
+  {
+   "addedAtRev": 7,
+   "caseKey": "pp_material_read-03",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_material_read-03.txt",
+   "group": "rules",
+   "origin": "独立测试方第二轮对照（李白转 11-23）：材料表名经常量拼出",
+   "polarity": "must_fail",
+   "scanClass": "pp_material_read"
+  },
+  {
+   "addedAtRev": 12,
+   "caseKey": "pp_material_read-04",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_material_read-04.txt",
+   "group": "rules",
+   "origin": "第三方审卡必须改（Opus 11-23）：const M = MATERIAL 别名后传给 dim",
+   "polarity": "must_fail",
+   "scanClass": "pp_material_read"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_material_read-11",
+   "fixture": "tests/accept/bypass/pp_material_read-11.txt",
+   "group": "kernel",
+   "origin": "材料只经 materialView（甲 R11）：例外 item.mjs",
+   "polarity": "must_pass",
+   "scanClass": "pp_material_read"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_material_read-12",
+   "fixture": "tests/accept/bypass/pp_material_read-12.txt",
+   "group": "rules",
+   "origin": "材料只经 materialView（甲 R11）：合规写法（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "pp_material_read"
+  },
+  {
+   "addedAtRev": 12,
+   "caseKey": "pp_material_read-13",
+   "fixture": "tests/accept/bypass/pp_material_read-13.txt",
+   "group": "rules",
+   "origin": "第三方审卡必须改（Opus 11-23）：形参叫 MATERIAL（遮蔽）不是材料表",
+   "polarity": "must_pass",
+   "scanClass": "pp_material_read"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_neighbors-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_neighbors-01.txt",
+   "group": "kernel",
+   "origin": "邻接方向常量只一处（甲 R10）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_neighbors"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_neighbors-02",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_neighbors-02.txt",
+   "group": "kernel",
+   "origin": "邻接方向常量只一处（甲 R10）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_neighbors"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_neighbors-03",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_neighbors-03.txt",
+   "group": "kernel",
+   "origin": "独立验收补漏：邻接方向换顺序（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_neighbors"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_neighbors-04",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_neighbors-04.txt",
+   "group": "kernel",
+   "origin": "独立验收补漏：邻接方向写成对象（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_neighbors"
+  },
+  {
+   "addedAtRev": 7,
+   "caseKey": "pp_neighbors-05",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_neighbors-05.txt",
+   "group": "rules",
+   "origin": "独立测试方第二轮对照（李白转 11-23）：邻接方向逐个 push",
+   "polarity": "must_fail",
+   "scanClass": "pp_neighbors"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_neighbors-11",
+   "fixture": "tests/accept/bypass/pp_neighbors-11.txt",
+   "group": "kernel",
+   "origin": "邻接方向常量只一处（甲 R10）：合规写法（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "pp_neighbors"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_neighbors-13",
+   "fixture": "tests/accept/bypass/pp_neighbors-13.txt",
+   "group": "kernel",
+   "origin": "独立验收补漏：非邻接向量不报",
+   "polarity": "must_pass",
+   "scanClass": "pp_neighbors"
+  },
+  {
+   "addedAtRev": 7,
+   "caseKey": "pp_neighbors-14",
+   "fixture": "tests/accept/bypass/pp_neighbors-14.txt",
+   "group": "rules",
+   "origin": "独立测试方第二轮对照（李白转 11-23）：误拦：单个向量",
+   "polarity": "must_pass",
+   "scanClass": "pp_neighbors"
+  },
+  {
+   "addedAtRev": 7,
+   "caseKey": "pp_neighbors-15",
+   "fixture": "tests/accept/bypass/pp_neighbors-15.txt",
+   "group": "rules",
+   "origin": "独立测试方第二轮对照（李白转 11-23）：误拦：单位矩阵",
+   "polarity": "must_pass",
+   "scanClass": "pp_neighbors"
+  },
+  {
+   "addedAtRev": 7,
+   "caseKey": "pp_neighbors-16",
+   "fixture": "tests/accept/bypass/pp_neighbors-16.txt",
+   "group": "rules",
+   "origin": "独立测试方第二轮对照（李白转 11-23）：误拦：只有两个方向的数组",
+   "polarity": "must_pass",
+   "scanClass": "pp_neighbors"
+  },
+  {
+   "addedAtRev": 9,
+   "caseKey": "pp_neighbors-17",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_neighbors-17.txt",
+   "group": "rules",
+   "origin": "独立验收第二轮（亮圳转 11-23）：逐个 push 邻接向量，实参是表达式",
+   "polarity": "must_fail",
+   "scanClass": "pp_neighbors"
+  },
+  {
+   "addedAtRev": 9,
+   "caseKey": "pp_neighbors-18",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_neighbors-18.txt",
+   "group": "rules",
+   "origin": "独立验收第二轮（亮圳转 11-23）：逐个 push 到 this.dirs（成员链接收者）",
+   "polarity": "must_fail",
+   "scanClass": "pp_neighbors"
+  },
+  {
+   "addedAtRev": 9,
+   "caseKey": "pp_neighbors-19",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_neighbors-19.txt",
+   "group": "rules",
+   "origin": "独立验收第二轮（亮圳转 11-23）：spread 拼邻接表",
+   "polarity": "must_fail",
+   "scanClass": "pp_neighbors"
+  },
+  {
+   "addedAtRev": 10,
+   "caseKey": "pp_neighbors-20",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_neighbors-20.txt",
+   "group": "rules",
+   "origin": "独立验收第三轮（亮圳转 11-23）：push 逐个压入，实参是变量加减偏移",
+   "polarity": "must_fail",
+   "scanClass": "pp_neighbors"
+  },
+  {
+   "addedAtRev": 10,
+   "caseKey": "pp_neighbors-21",
+   "fixture": "tests/accept/bypass/pp_neighbors-21.txt",
+   "group": "rules",
+   "origin": "独立验收第三轮（亮圳转 11-23）：单个变量偏移位置不是邻接表",
+   "polarity": "must_pass",
+   "scanClass": "pp_neighbors"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_no_acorn_runtime-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_no_acorn_runtime-01.txt",
+   "group": "rules",
+   "origin": "游戏运行时代码不引用语法树解析器 acorn：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_no_acorn_runtime"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_no_acorn_runtime-02",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_no_acorn_runtime-02.txt",
+   "group": "kernel",
+   "origin": "游戏运行时代码不引用语法树解析器 acorn：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_no_acorn_runtime"
+  },
+  {
+   "addedAtRev": 12,
+   "caseKey": "pp_no_acorn_runtime-03",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_no_acorn_runtime-03.txt",
+   "group": "rules",
+   "origin": "第三方审卡必须改（Opus 11-23）：createRequire 得来的 require（同名局部绑定）取 acorn",
+   "polarity": "must_fail",
+   "scanClass": "pp_no_acorn_runtime"
+  },
+  {
+   "addedAtRev": 12,
+   "caseKey": "pp_no_acorn_runtime-04",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_no_acorn_runtime-04.txt",
+   "group": "rules",
+   "origin": "第三方审卡必须改（Opus 11-23）：createRequire 的返回值改名后取 acorn 子路径",
+   "polarity": "must_fail",
+   "scanClass": "pp_no_acorn_runtime"
+  },
+  {
+   "addedAtRev": 12,
+   "caseKey": "pp_no_acorn_runtime-05",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_no_acorn_runtime-05.txt",
+   "group": "rules",
+   "origin": "第三方审卡必须改（Opus 11-23）：createRequire(...)('acorn') 直接调用",
+   "polarity": "must_fail",
+   "scanClass": "pp_no_acorn_runtime"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_no_acorn_runtime-11",
+   "fixture": "tests/accept/bypass/pp_no_acorn_runtime-11.txt",
+   "group": "rules",
+   "origin": "游戏运行时代码不引用语法树解析器 acorn：合规写法（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "pp_no_acorn_runtime"
+  },
+  {
+   "addedAtRev": 12,
+   "caseKey": "pp_no_acorn_runtime-12",
+   "fixture": "tests/accept/bypass/pp_no_acorn_runtime-12.txt",
+   "group": "rules",
+   "origin": "第三方审卡必须改（Opus 11-23）：createRequire 取别的包不算",
+   "polarity": "must_pass",
+   "scanClass": "pp_no_acorn_runtime"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_pos_shape-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_pos_shape-01.txt",
+   "group": "rules",
+   "origin": "struct:pos 形状只经 isPosValue（甲 R8）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_pos_shape"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_pos_shape-11",
+   "fixture": "tests/accept/bypass/pp_pos_shape-11.txt",
+   "group": "kernel",
+   "origin": "struct:pos 形状只经 isPosValue（甲 R8）：例外 named-structs.mjs",
+   "polarity": "must_pass",
+   "scanClass": "pp_pos_shape"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_pos_shape-12",
+   "fixture": "tests/accept/bypass/pp_pos_shape-12.txt",
+   "group": "rules",
+   "origin": "struct:pos 形状只经 isPosValue（甲 R8）：合规写法（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "pp_pos_shape"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_region_cell-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_region_cell-01.txt",
+   "group": "kernel",
+   "origin": "区格边长与中心只一处（甲 R9）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_region_cell"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_region_cell-02",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_region_cell-02.txt",
+   "group": "kernel",
+   "origin": "区格边长与中心只一处（甲 R9）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_region_cell"
+  },
+  {
+   "addedAtRev": 12,
+   "caseKey": "pp_region_cell-03",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_region_cell-03.txt",
+   "group": "rules",
+   "origin": "第三方审卡必须改（Opus 11-23）：换变量名（别名）仍按取值来源认出 regionCellM / cellM",
+   "polarity": "must_fail",
+   "scanClass": "pp_region_cell"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_region_cell-11",
+   "fixture": "tests/accept/bypass/pp_region_cell-11.txt",
+   "group": "kernel",
+   "origin": "区格边长与中心只一处（甲 R9）：例外 footprint.mjs",
+   "polarity": "must_pass",
+   "scanClass": "pp_region_cell"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_region_cell-12",
+   "fixture": "tests/accept/bypass/pp_region_cell-12.txt",
+   "group": "kernel",
+   "origin": "区格边长与中心只一处（甲 R9）：合规写法（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "pp_region_cell"
+  },
+  {
+   "addedAtRev": 12,
+   "caseKey": "pp_region_cell-13",
+   "fixture": "tests/accept/bypass/pp_region_cell-13.txt",
+   "group": "rules",
+   "origin": "第三方审卡必须改（Opus 11-23）：只是名字前缀相同的 regionCellMeters 不算",
+   "polarity": "must_pass",
+   "scanClass": "pp_region_cell"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_rx_empty_clock-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_rx_empty_clock-01.txt",
+   "group": "kernel",
+   "origin": "RX 时刻绑定不得写空（甲 R15）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_rx_empty_clock"
+  },
+  {
+   "addedAtRev": 7,
+   "caseKey": "pp_rx_empty_clock-02",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_rx_empty_clock-02.txt",
+   "group": "kernel",
+   "origin": "独立测试方第二轮对照（李白转 11-23）：clock:{} 先放进变量",
+   "polarity": "must_fail",
+   "scanClass": "pp_rx_empty_clock"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_rx_empty_clock-11",
+   "fixture": "tests/accept/bypass/pp_rx_empty_clock-11.txt",
+   "group": "kernel",
+   "origin": "RX 时刻绑定不得写空（甲 R15）：例外加载期校验",
+   "polarity": "must_pass",
+   "scanClass": "pp_rx_empty_clock"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_rx_empty_clock-12",
+   "fixture": "tests/accept/bypass/pp_rx_empty_clock-12.txt",
+   "group": "kernel",
+   "origin": "RX 时刻绑定不得写空（甲 R15）：合规写法（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "pp_rx_empty_clock"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_seed_args-01",
+   "expectCode": "E-SEED-KEY",
+   "fixture": "tests/accept/bypass/pp_seed_args-01.txt",
+   "group": "rules",
+   "origin": "抽取点实参须字串字面量（甲 R6 前半）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_seed_args"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_seed_args-02",
+   "expectCode": "E-SEED-KEY",
+   "fixture": "tests/accept/bypass/pp_seed_args-02.txt",
+   "group": "rules",
+   "origin": "抽取点实参须字串字面量（甲 R6 前半）：第二实参非字面量",
+   "polarity": "must_fail",
+   "scanClass": "pp_seed_args"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_seed_args-11",
+   "fixture": "tests/accept/bypass/pp_seed_args-11.txt",
+   "group": "rules",
+   "origin": "抽取点实参须字串字面量（甲 R6 前半）：合规写法（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "pp_seed_args"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_seed_args-12",
+   "fixture": "tests/accept/bypass/pp_seed_args-12.txt",
+   "group": "kernel",
+   "origin": "抽取点实参须字串字面量（甲 R6 前半）：声明处不计",
+   "polarity": "must_pass",
+   "scanClass": "pp_seed_args"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_seed_args_dyn-01",
+   "expectCode": "E-SEED-KEY",
+   "fixture": "tests/accept/bypass/pp_seed_args_dyn-01.txt",
+   "group": "rules",
+   "origin": "抽取点站点名用变量（独立验收补漏）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_seed_args_dyn"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_seed_args_dyn-11",
+   "fixture": "tests/accept/bypass/pp_seed_args_dyn-11.txt",
+   "group": "rules",
+   "origin": "抽取点站点名用变量（独立验收补漏）：实参全是字面量",
+   "polarity": "must_pass",
+   "scanClass": "pp_seed_args_dyn"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_tpl_key-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_tpl_key-01.txt",
+   "group": "kernel",
+   "origin": "不跨文件依赖私有键形（甲 R13）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_tpl_key"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_tpl_key-11",
+   "fixture": "tests/accept/bypass/pp_tpl_key-11.txt",
+   "group": "kernel",
+   "origin": "不跨文件依赖私有键形（甲 R13）：键形不同",
+   "polarity": "must_pass",
+   "scanClass": "pp_tpl_key"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_tpl_key-12",
+   "fixture": "tests/accept/bypass/pp_tpl_key-12.txt",
+   "group": "kernel",
+   "origin": "不跨文件依赖私有键形（甲 R13）：同一文件内重复不算跨文件",
+   "polarity": "must_pass",
+   "scanClass": "pp_tpl_key"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_unit_literal-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_unit_literal-01.txt",
+   "group": "rules",
+   "origin": "单位不写死（乙 13）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_unit_literal"
+  },
+  {
+   "addedAtRev": 9,
+   "caseKey": "pp_unit_literal-02",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_unit_literal-02.txt",
+   "group": "rules",
+   "origin": "独立验收第二轮（亮圳转 11-23）：单位代号拼接 'cop' + 'per'",
+   "polarity": "must_fail",
+   "scanClass": "pp_unit_literal"
+  },
+  {
+   "addedAtRev": 9,
+   "caseKey": "pp_unit_literal-03",
+   "fixture": "tests/accept/bypass/pp_unit_literal-03.txt",
+   "group": "rules",
+   "origin": "独立验收第二轮（亮圳转 11-23）：属性名字串 o['copper'] 不是单位取值",
+   "polarity": "must_pass",
+   "scanClass": "pp_unit_literal"
+  },
+  {
+   "addedAtRev": 10,
+   "caseKey": "pp_unit_literal-04",
+   "fixture": "tests/accept/bypass/pp_unit_literal-04.txt",
+   "group": "rules",
+   "origin": "独立验收第三轮（亮圳转 11-23）：'year' + 'Minutes' 拼属性名，整体不是单位",
+   "polarity": "must_pass",
+   "scanClass": "pp_unit_literal"
+  },
+  {
+   "addedAtRev": 10,
+   "caseKey": "pp_unit_literal-05",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_unit_literal-05.txt",
+   "group": "rules",
+   "origin": "独立验收第三轮（亮圳转 11-23）：'ye' + 'ar' 拼出单位 year",
+   "polarity": "must_fail",
+   "scanClass": "pp_unit_literal"
+  },
+  {
+   "addedAtRev": 12,
+   "caseKey": "pp_unit_literal-06",
+   "fixture": "tests/accept/bypass/pp_unit_literal-06.txt",
+   "group": "rules",
+   "origin": "第三方审卡必须改（Opus 11-23）：字段名清单与同名映射里的字串不是单位取值",
+   "polarity": "must_pass",
+   "scanClass": "pp_unit_literal"
+  },
+  {
+   "addedAtRev": 12,
+   "caseKey": "pp_unit_literal-07",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_unit_literal-07.txt",
+   "group": "rules",
+   "origin": "第三方审卡必须改（Opus 11-23）：属性 unit 的值写死单位 copper",
+   "polarity": "must_fail",
+   "scanClass": "pp_unit_literal"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_unit_literal-11",
+   "fixture": "tests/accept/bypass/pp_unit_literal-11.txt",
+   "group": "rules",
+   "origin": "单位不写死（乙 13）：不是登记单位",
+   "polarity": "must_pass",
+   "scanClass": "pp_unit_literal"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_year_minutes-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_year_minutes-01.txt",
+   "group": "rules",
+   "origin": "年长只经 astroView 换算入口（甲 R3）：违规写法（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_year_minutes"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_year_minutes-02",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_year_minutes-02.txt",
+   "group": "rules",
+   "origin": "独立验收补漏：常量折叠出的计算属性名取年长（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "pp_year_minutes"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_year_minutes-11",
+   "fixture": "tests/accept/bypass/pp_year_minutes-11.txt",
+   "group": "kernel",
+   "origin": "年长只经 astroView 换算入口（甲 R3）：例外 climate.mjs",
+   "polarity": "must_pass",
+   "scanClass": "pp_year_minutes"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_year_minutes-12",
+   "fixture": "tests/accept/bypass/pp_year_minutes-12.txt",
+   "group": "rules",
+   "origin": "年长只经 astroView 换算入口（甲 R3）：合规写法（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "pp_year_minutes"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_year_minutes-13",
+   "fixture": "tests/accept/bypass/pp_year_minutes-13.txt",
+   "group": "rules",
+   "origin": "独立验收补漏：别的计算属性名不报",
+   "polarity": "must_pass",
+   "scanClass": "pp_year_minutes"
+  },
+  {
+   "addedAtRev": 1,
    "caseKey": "registry_write-01",
    "fixture": "tests/accept/bypass/registry_write-01.txt",
    "group": "offline",
@@ -1299,6 +3239,16 @@
   },
   {
    "addedAtRev": 1,
+   "caseKey": "rng_bypass-12",
+   "expectCode": "E-SEED-KEY",
+   "fixture": "tests/accept/bypass/rng_bypass-12.txt",
+   "group": "rules",
+   "origin": "独立验收补漏：Math.random 赋值别名（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "rng_bypass"
+  },
+  {
+   "addedAtRev": 1,
    "caseKey": "rules_import-01",
    "expectCode": "E-TSC-PARSE",
    "fixture": "tests/accept/bypass/rules_import-01.txt",
@@ -1351,6 +3301,25 @@
    "fixture": "tests/accept/bypass/seed_sites-22.txt",
    "group": "rules",
    "origin": "卷二十七 R27-8.4 :720：role_seed 行两两不同且前缀非空，不报（夹具表格式随 4-3 新格式落定）",
+   "polarity": "must_pass",
+   "scanClass": "seed_sites"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "seed_sites-23",
+   "expectCode": "E-SEED-KEY",
+   "fixture": "tests/accept/bypass/seed_sites-23.txt",
+   "group": "rules",
+   "origin": "卷二十七 R27-8.1 :717：未登记的抽取点，return 直接返回与先赋值再返回两种写法都必须报",
+   "polarity": "must_fail",
+   "scanClass": "seed_sites"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "seed_sites-24",
+   "fixture": "tests/accept/bypass/seed_sites-24.txt",
+   "group": "rules",
+   "origin": "卷二十七 R27-8.1 :717：已登记的抽取点写成 return 直接返回，与登记行对上，不报",
    "polarity": "must_pass",
    "scanClass": "seed_sites"
   },
@@ -1867,6 +3836,74 @@
   },
   {
    "addedAtRev": 1,
+   "caseKey": "timer_global-01",
+   "expectCode": "E-GLOBAL-UNLISTED",
+   "fixture": "tests/accept/bypass/timer_global-01.txt",
+   "group": "rules",
+   "origin": "卷二十七 S27-3：规则层直接起计时器（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "timer_global"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "timer_global-02",
+   "expectCode": "E-GLOBAL-UNLISTED",
+   "fixture": "tests/accept/bypass/timer_global-02.txt",
+   "group": "kernel",
+   "origin": "卷二十七 S27-3：内核经 node:timers 别名起计时器（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "timer_global"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "timer_global-03",
+   "expectCode": "E-GLOBAL-UNLISTED",
+   "fixture": "tests/accept/bypass/timer_global-03.txt",
+   "group": "rules",
+   "origin": "独立验收补漏：globalThis 前缀起计时器（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "timer_global"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "timer_global-04",
+   "expectCode": "E-GLOBAL-UNLISTED",
+   "fixture": "tests/accept/bypass/timer_global-04.txt",
+   "group": "rules",
+   "origin": "独立验收补漏：计时器赋值别名（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "timer_global"
+  },
+  {
+   "addedAtRev": 9,
+   "caseKey": "timer_global-05",
+   "fixture": "tests/accept/bypass/timer_global-05.txt",
+   "group": "rules",
+   "origin": "独立验收第二轮（亮圳转 11-23）：形参叫 setTimeout（遮蔽）",
+   "polarity": "must_pass",
+   "scanClass": "timer_global"
+  },
+  {
+   "addedAtRev": 10,
+   "caseKey": "timer_global-06",
+   "expectCode": "E-GLOBAL-UNLISTED",
+   "fixture": "tests/accept/bypass/timer_global-06.txt",
+   "group": "rules",
+   "origin": "独立验收第三轮（亮圳转 11-23）：跨文件：导出 setTimeout 别名",
+   "polarity": "must_fail",
+   "scanClass": "timer_global"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "timer_global-11",
+   "fixture": "tests/accept/bypass/timer_global-11.txt",
+   "group": "rules",
+   "origin": "卷二十七 S27-3：成员方法同名不是全局计时器（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "timer_global"
+  },
+  {
+   "addedAtRev": 1,
    "caseKey": "undeclared_io-01",
    "expectCode": "E-VIEW-DYNAMIC-STATE",
    "fixture": "tests/accept/bypass/undeclared_io-01.txt",
@@ -1913,6 +3950,35 @@
    "origin": "卷二 S15 按登记路径读",
    "polarity": "must_pass",
    "scanClass": "undeclared_io"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "undo_raw_push-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/undo_raw_push-01.txt",
+   "group": "kernel",
+   "origin": "卷二 §2.6：内核直接写事务撤销栈（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "undo_raw_push"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "undo_raw_push-02",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/undo_raw_push-02.txt",
+   "group": "kernel",
+   "origin": "独立验收补漏：tx.undo 取别名后 push（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "undo_raw_push"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "undo_raw_push-11",
+   "fixture": "tests/accept/bypass/undo_raw_push-11.txt",
+   "group": "rules",
+   "origin": "卷二 §2.6：别的对象上的同名成员链不是事务撤销栈（必须不报）",
+   "polarity": "must_pass",
+   "scanClass": "undo_raw_push"
   },
   {
    "addedAtRev": 1,
@@ -1997,6 +4063,26 @@
    "group": "rules",
    "origin": "卷二十七 S27-3 :244：带实参的 Date 只换算给定时刻，不取墙钟（必须不报）",
    "polarity": "must_pass",
+   "scanClass": "wallclock"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "wallclock-23",
+   "expectCode": "E-GLOBAL-UNLISTED",
+   "fixture": "tests/accept/bypass/wallclock-23.txt",
+   "group": "rules",
+   "origin": "独立验收补漏：Date.now 经 bind 别名读墙钟（必须报）",
+   "polarity": "must_fail",
+   "scanClass": "wallclock"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "wallclock-24",
+   "expectCode": "E-GLOBAL-UNLISTED",
+   "fixture": "tests/accept/bypass/wallclock-24.txt",
+   "group": "rules",
+   "origin": "独立验收补漏：Date 下标取 now（必须报）",
+   "polarity": "must_fail",
    "scanClass": "wallclock"
   }
  ]

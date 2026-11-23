@@ -1,0 +1,4 @@
+const text = (o) => Object.keys(o).sort().map((k) => `${k}:${o[k]}`).join(',');
+export function save(o) {
+  writeFileSync('x.json', text(o));
+}

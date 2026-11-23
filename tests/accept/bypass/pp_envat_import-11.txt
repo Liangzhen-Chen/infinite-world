@@ -1,0 +1,3 @@
+// @file server-plugin/kernel/climate.mjs
+import { weatherAt } from './weather.mjs';
+export const w = weatherAt;

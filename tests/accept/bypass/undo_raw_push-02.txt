@@ -1,0 +1,4 @@
+export function f(tx) {
+  const u = tx.undo;
+  u.push(1);
+}

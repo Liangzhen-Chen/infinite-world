@@ -1,0 +1,1 @@
+export const isNormal = (d) => d.dist === 'normal';

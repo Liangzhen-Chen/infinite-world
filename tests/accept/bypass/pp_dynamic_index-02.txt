@@ -1,0 +1,1 @@
+export const g = (state, k) => state[k];

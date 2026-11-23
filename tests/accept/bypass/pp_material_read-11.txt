@@ -1,0 +1,2 @@
+// @file server-plugin/kernel/item.mjs
+export const f = (engine, state, flag) => dim(engine, state, MATERIAL, 'iron', flag);

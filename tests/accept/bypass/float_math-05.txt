@@ -1,0 +1,4 @@
+function run(fn, v) {
+  return fn(v);
+}
+export const f = (x) => run(Math.sqrt, x);

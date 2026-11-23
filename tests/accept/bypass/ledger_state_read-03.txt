@@ -1,0 +1,4 @@
+export function f(state) {
+  const { accounts } = state;
+  return accounts;
+}

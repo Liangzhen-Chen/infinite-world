@@ -1,0 +1,3 @@
+export function purse(ledger, state, id) {
+  return ledger.balance(state, id);
+}

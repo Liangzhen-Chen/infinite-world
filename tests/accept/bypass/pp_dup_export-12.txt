@@ -1,0 +1,5 @@
+// @file server-plugin/kernel/sample.mjs
+function distributionMean(d) {
+  return d;
+}
+export const m = distributionMean;

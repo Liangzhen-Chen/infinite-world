@@ -1,0 +1,8 @@
+// @file server-plugin/kernel/one-a.mjs
+export function oneA() {
+  return 1;
+}
+// @file server-plugin/kernel/one-b.mjs
+export function oneB() {
+  return 2;
+}

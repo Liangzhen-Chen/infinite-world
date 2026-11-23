@@ -1,0 +1,2 @@
+import * as wg from './kernel/gen/worldgen.mjs';
+export const g = wg.generateFill;

@@ -1,0 +1,4 @@
+// @file server-plugin/kernel/handles/keys.mjs
+export function id(a, b) {
+  return sha256Text([a, b].join(KEY_JOIN));
+}

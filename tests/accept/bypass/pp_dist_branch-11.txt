@@ -1,0 +1,2 @@
+// @file server-plugin/kernel/sample.mjs
+export const isNormal = (d) => d.dist === 'normal';

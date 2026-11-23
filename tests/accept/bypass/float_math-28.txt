@@ -1,0 +1,2 @@
+const m = new Proxy(Math, {});
+export const f = (x) => m.sqrt(x);

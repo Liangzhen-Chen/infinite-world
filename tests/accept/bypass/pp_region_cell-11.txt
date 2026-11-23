@@ -1,0 +1,2 @@
+// @file server-plugin/kernel/footprint.mjs
+export const per = (g) => g.regionCellM / g.cellM;

@@ -112,8 +112,8 @@ export function baselineVerdict(itemRows, current, baseRow, b0) {
 
 // 合入关口通过后写 baseline.json（R12-8.5；§2.11 基线分量的唯一写者是执行器）。只降不升：现值低于上次合入才更新。
 // 合入号必填（没有则拒写）；首次出现的新分量按 R12-8.9 把基线提交上数出的 B0 与本次实测一起登记（b0Map），不拿本次实测当 B0。
-// 未测到的旧分量原样保留。行按分量代号升序，行键升序，报告确定。
-export function writeBaseline(root, baseRows, components, rows, mergeRef, b0Map) {
+// 未测到的旧分量原样保留（除非登记里已没有条目引用它，见 liveComps）。行按分量代号升序，行键升序，报告确定。
+export function writeBaseline(root, baseRows, components, rows, mergeRef, b0Map, liveComps) {
   if (!mergeRef) throw new Error('E-ACC-BASELINE-EDIT pre_merge 写基线需要 --merge-ref（R12-8.5）');
   const keysOf = compValues(rows);
   const prev = new Map(baseRows.map((r) => [r.compCode, r]));
@@ -131,7 +131,8 @@ export function writeBaseline(root, baseRows, components, rows, mergeRef, b0Map)
     // 持平保持原样（行集合有变而总数持平的已在 le_baseline 条目上按集合拦下，关口不过就不会走到这里）。
     out.push(cur < p.current ? { ...p, current: cur, rowKeys, lastMergeRef: mergeRef } : { ...p, lastMergeRef: mergeRef });
   }
-  for (const r of baseRows) if (!(r.compCode in components)) out.push(r);
+  // 登记里已没有任何条目引用的分量（条目改了基线分量名、旧分量退役）不再保留：旧判据下的行集合留在基线里等于把误报当存量。liveComps 缺省时全部保留。
+  for (const r of baseRows) if (!(r.compCode in components) && (!liveComps || liveComps.has(r.compCode))) out.push(r);
   out.sort((a, b) => (a.compCode < b.compCode ? -1 : a.compCode > b.compCode ? 1 : 0));
   writeFileSync(join(root, LAYOUT.accDir, 'baseline.json'), stableJson({ rows: out }));
 }
@@ -356,7 +357,7 @@ export async function accRun(gate, subject, contentPrint, opts = {}) {
     writeFileSync(join(root, LAYOUT.accDir, 'hits.json'), stableJson({ rows }));
     // R12-8.5：合入关口通过后由执行器把各分量现值写入 baseline.json（只在合入关口，pre_commit 不写）；别的途径改它是 E-ACC-BASELINE-EDIT。
     // 合入号必填：没有 --merge-ref 就拒写（writeBaseline 抛 E-ACC-BASELINE-EDIT）。
-    if (gate === 'pre_merge' && report.verdict === 'pass') writeBaseline(root, Object.values(base), components, rows, opts.mergeRef, b0);
+    if (gate === 'pre_merge' && report.verdict === 'pass') writeBaseline(root, Object.values(base), components, rows, opts.mergeRef, b0, new Set(accItems(root, {}).map((it) => it.baseComp).filter(Boolean)));
   }
   return { report, rows, text: stableJson(report) };
 }

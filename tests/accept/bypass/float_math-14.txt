@@ -1,0 +1,4 @@
+export const f = (x) => {
+  const Math = { sqrt: (v) => v };
+  return Math.sqrt(x);
+};

@@ -1,0 +1,6 @@
+export function stable(v) {
+  if (v && typeof v === "object") {
+    return Object.keys(v).sort().map((k) => k + stable(v[k])).join(",");
+  }
+  return String(v);
+}

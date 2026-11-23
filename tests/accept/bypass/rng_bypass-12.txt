@@ -1,0 +1,2 @@
+const rnd = Math.random;
+export const f = () => rnd();

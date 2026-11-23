@@ -1,0 +1,4 @@
+function canon(o) {
+  return Object.keys(o).sort().map((k) => k + o[k]).join(',');
+}
+export const same = (a, b) => canon(a) === canon(b);

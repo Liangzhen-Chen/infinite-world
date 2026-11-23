@@ -18,9 +18,12 @@
 // params.access = branch：只计落在分支位置的（if/while/for/switch 条件里，或紧邻比较、逻辑运算、`?`、`case`）。
 
 import { tokenize, foldAt, minPrecAt, canStartAt, buildEnv, importsOf, specifierIndexes, symbolPaths, constDecls, conditionSpans, BRANCH_OPS } from '../lib/js-scan.mjs';
-import { scopeFiles, resolveRel, isCode, LAYOUT, REGISTRY } from '../read.mjs';
+import { scopeFiles, resolveRel, isCode, globToRe, LAYOUT, REGISTRY } from '../read.mjs';
+import { projectOf, fileOf } from '../lib/ast.mjs';
+import { runRule } from '../lib/ast-rules.mjs';
 import { parseDimKey, modKeyOf } from '../../../server-plugin/kernel/handles/keys.mjs';
-import { loadVocab } from '../../../server-plugin/kernel/load/vocab-load.mjs';
+import { loadVocab, loadUnits } from '../../../server-plugin/kernel/load/vocab-load.mjs';
+import { LAYOUT as WORLD_LAYOUT } from '../../../server-plugin/kernel/load/layout.mjs';
 
 // 已登记维度表的 kind：维度表文件名即 kind（加载器按 E-DIM-SCHEMA-KIND 核 kind 与文件名一致），取自文件清单，不在本文件列名字。
 // 前缀与 kind 同源：真实执行取 world/ontology/dimensions；用例回归时（带 repoFiles）执行器另把绕法用例维度目录的前缀并入，kind 也同样并入。
@@ -124,7 +127,51 @@ function modifierRegistry(ctx) {
   return { tableDims, idIndex, vocabIndex };
 }
 
+// params.literal = astRule（公共部件检查 C0；亮圳规定检查代码不许靠认字面文字判，李白更正裁定 msg-1122-2255-c0ast）：按语法树判。
+// 规则写在本条目扫描类别行 cls.astRules：[{name, kind, exceptFiles（路径通配，须有卷:行依据）, …种类参数}]，种类见 lib/ast-rules.mjs；
+// cls.fileGlobs：除 params.groups 展开的代码文件外再读的登记 JSON（jsonRows 种类用）。解析失败的文件报 parseError，不静默跳过。
+function astRuleHits(ctx, params, cls) {
+  const rules = Array.isArray(cls.astRules) ? cls.astRules : [];
+  if (!rules.length) throw new Error('E-ACC-ITEM-PARAM literal=astRule scan class has no astRules');
+  const code = params.code || '';
+  const hits = [];
+  const extra = {};
+  // 规则要读单位表写在规则数据里（unitTable: true）；单位表的文件名取公共部件 kernel/load/layout.mjs 的 LAYOUT.units（无副作用的小模块，world.mjs 也从它引），读法用 vocab-load.mjs 的 loadUnits，不在这里拼文件名、不另写解析。
+  if (rules.some((r) => r.unitTable === true)) {
+    const path = `${LAYOUT.dimensionsDir}/${WORLD_LAYOUT.units}`;
+    if (!ctx.files.includes(path)) throw new Error(`E-ACC-ITEM-PARAM unit table missing ${path}`);
+    extra.unitIds = new Set(loadUnits(JSON.parse(ctx.read(path)), () => {}).keys());
+  }
+  const project = projectOf(ctx);
+  const excepted = (rule, file) => (rule.exceptFiles || []).some((g) => globToRe(g, []).test(file));
+  for (const file of scopeFiles(ctx, params)) {
+    const rec = fileOf(project, file);
+    if (!rec || rec.error) { hits.push({ file, line: 0, nodeKind: 'parseError', symbolPath: rec ? rec.error.slice(0, 60) : 'missing', code: 'E-ACC-ITEM-PARAM' }); continue; }
+    for (const rule of rules) {
+      if (rule.kind === 'jsonRows' || excepted(rule, file)) continue;
+      runRule(ctx, rec, rule, (h) => hits.push({ file, line: h.line, nodeKind: h.nodeKind, symbolPath: h.symbolPath, code }), extra);
+    }
+  }
+  for (const rule of rules.filter((r) => r.kind === 'jsonRows')) {
+    for (const g of cls.fileGlobs || []) {
+      const re = globToRe(g, []);
+      for (const file of ctx.files.filter((f) => re.test(f)).sort()) {
+        if (excepted(rule, file)) continue;
+        let doc; try { doc = JSON.parse(ctx.read(file)); } catch { hits.push({ file, line: 0, nodeKind: 'parseError', symbolPath: 'json', code: 'E-ACC-ITEM-PARAM' }); continue; }
+        let rows = doc; for (const k of rule.arrayPath) rows = rows && rows[k];
+        if (!Array.isArray(rows)) { hits.push({ file, line: 0, nodeKind: 'parseError', symbolPath: `no ${rule.arrayPath.join('.')}`, code: 'E-ACC-ITEM-PARAM' }); continue; }
+        for (const row of rows) {
+          if (!row || !Object.entries(rule.where || {}).every(([k, re2]) => typeof row[k] === 'string' && new RegExp(re2).test(row[k]))) continue;
+          if (Array.isArray(row[rule.field]) && row[rule.field].includes(rule.includes)) hits.push({ file, line: 0, nodeKind: `${rule.name}:row`, symbolPath: String(row[rule.idField]), code });
+        }
+      }
+    }
+  }
+  return hits;
+}
+
 export function detect(ctx, params, cls) {
+  if (params.literal === 'astRule') return astRuleHits(ctx, params, cls || {});
   const make = JUDGES[params.literal];
   if (!make) throw new Error(`E-ACC-ITEM-PARAM literal=${params.literal}`);
   const judge = make(ctx, cls || {});

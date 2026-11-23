@@ -1,0 +1,1 @@
+export const k = (a, b) => [a, b].join('|');

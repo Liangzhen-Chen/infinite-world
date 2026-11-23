@@ -16,6 +16,36 @@
 import { tokenize, memberChains, conditionSpans, symbolPaths, BRANCH_OPS, importsOf, isP, buildEnv, matchClose } from '../lib/js-scan.mjs';
 import { stateChains, declPaths, writerOf, segsMatch, serverRel, callsOf } from '../lib/js-state.mjs';
 import { filesOfGroups, globToRe } from '../read.mjs';
+import { projectOf, fileOf, walkAll, fold, originsOf, where, propName } from '../lib/ast.mjs';
+
+// 按语法树读状态顶层键（params.ast = on，C0；亮圳规定检查代码不许靠认字面文字判）：params.paths 的每一项是一个单段键名。
+// 计：成员访问（属性名，或下标折叠得出的字串）、对象解构的键、下标折叠不出常量且对象来源根名在类别行 dynamicRoots 里的（nodeKind review:dynamic，待人审）。
+// 读者文件（readers）不计。别名（const s = state; s.accounts）按属性名照样命中；经形参传来的对象同样命中（只看被取的键名，不看对象叫什么）。
+function astReadHits(ctx, params, cls, readers) {
+  const names = new Set(params.paths || []);
+  const roots = new Set(cls.dynamicRoots || []);
+  const code = params.code || '';
+  const hits = [];
+  const project = projectOf(ctx);
+  for (const file of scopeOf(ctx, params)) {
+    if (readers.has(file)) continue;
+    const rec = fileOf(project, file);
+    if (!rec || rec.error) { hits.push({ file, line: 0, nodeKind: 'parseError', symbolPath: rec ? rec.error.slice(0, 60) : 'missing', code: 'E-ACC-ITEM-PARAM' }); continue; }
+    walkAll(rec.ast, (n) => {
+      if (n.type === 'MemberExpression') {
+        let key = propName(n);
+        if (n.computed) { const f = fold(n.property, rec); key = f ? String(f.v) : null; }
+        if (key !== null && names.has(key)) hits.push({ file, ...where(n), nodeKind: 'member', code });
+        else if (key === null && roots.size && originsOf(n.object, rec).some((o) => o.path && !o.dynamic && o.path.length === 1 && roots.has(o.path[0]))) hits.push({ file, ...where(n), nodeKind: 'review:dynamic', code });
+      } else if (n.type === 'Property' && n.__parent && n.__parent.type === 'ObjectPattern') {
+        let key = n.computed ? null : (n.key.name ?? String(n.key.value));
+        if (n.computed) { const f = fold(n.key, rec); key = f ? String(f.v) : null; }
+        if (key !== null && names.has(key)) hits.push({ file, ...where(n), nodeKind: 'destructure', code });
+      }
+    });
+  }
+  return hits;
+}
 
 export function detect(ctx, params, cls) {
   if (params.access === 'write') return writeHits(ctx, params, cls || {});
@@ -25,7 +55,10 @@ export function detect(ctx, params, cls) {
   const pats = (params.paths || []).map((p) => p.split('.').map((seg) => globToRe(seg, [])));
   // readerSystems：登记的读者是具体文件（卷六 A6-1.1 的账本内核，调用图白名单 S6-13 同法），文件不抄名单，取自声明表该系统（systems.<系统>.writers）所涉状态键的写者登记。
   // readerPredicates：登记的读者是该系统谓词的提供文件（卷二 §2.5 :503 terminal 的读者只有提供 terminated 谓词的 action-capacity.mjs），取自声明表 systems.<系统>.predicates，不点名文件。
-  const readers = new Set([...filesOfGroups(ctx.files, ctx.model, params.readers || []), ...ownerFiles(ctx, params.readerSystems), ...predicateFiles(ctx, params.readerPredicates)]);
+  // readerSet（C0，乙 5）：按文件豁免的读者集合，登记在本条目扫描类别行 fileSets：{集合代号: [{file, basis}]}，没有 basis（卷:行依据）的行不收。
+  const setFiles = params.readerSet === undefined ? [] : (((cls || {}).fileSets || {})[params.readerSet] || []).filter((e) => e && e.file && e.basis).map((e) => e.file);
+  const readers = new Set([...filesOfGroups(ctx.files, ctx.model, params.readers || []), ...ownerFiles(ctx, params.readerSystems), ...predicateFiles(ctx, params.readerPredicates), ...setFiles]);
+  if (params.access === 'read' && params.ast === 'on') return astReadHits(ctx, params, cls || {}, readers);
   // 带 readerSystems 的读条目查的是资源种类行（卷六 A6-1.1）的字段：同名字段出自别的表的行（如卷十八 :337 持有种类行的 transferable）不是该行，按“这一行出自哪张表”认。
   const rowTable = params.readerSystems !== undefined ? resourceTableCode : null;
   // 解构取字段（`const { f } = x`、`({ f }) =>`、`for (const { f: g } of xs)`）：只有单段模式能按键名认，键名合模式即计（宁报勿漏，同 K5-24 stateRead 的解构口径）；

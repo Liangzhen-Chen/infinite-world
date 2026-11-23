@@ -28,7 +28,8 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tokenize, isP, symbolPaths } from '../lib/js-scan.mjs';
 import { stateChains } from '../lib/js-state.mjs';
-import { filesOfGroups, LAYOUT } from '../read.mjs';
+import { filesOfGroups, globToRe, LAYOUT } from '../read.mjs';
+import { projectOf, fileOf, walkAll, fold, where } from '../lib/ast.mjs';
 import { readRules, RULES_LAYOUT } from '../../../server-plugin/kernel/load/rules.mjs';
 import { NAME_ROOT } from '../../../server-plugin/kernel/rx.mjs';
 import { VOCAB_RX_FIELDS } from '../../../server-plugin/kernel/handles/markers.mjs';
@@ -160,9 +161,92 @@ function unconsumedHits(ctx, params) {
   return hits.sort((a, b) => (a.symbolPath < b.symbolPath ? -1 : a.symbolPath > b.symbolPath ? 1 : 0));
 }
 
-export function detect(ctx, params) {
+// ---------- C0：按语法树判（lib/ast.mjs），亮圳规定检查代码不许靠认字面文字判 ----------
+// dupExport（乙 12、甲 R14）：范围内各文件导出的名字（export function/class/const/let、export { a as b }）同名出现在两个及以上文件，每处计一条
+// （nodeKind export，symbolPath 为名字）；cls.dupAllow：[{name, basis}] 有卷:行依据的允许同名；cls.ownedNames：[{name, files, basis}] 职责函数
+// 在职责文件外的定义（函数声明、变量声明，含非导出）每处计一条（nodeKind owned）。
+// dupTplKey（甲 R13，卷二 :860）：键形（模板串首尾无文字、至少 minExprs 个表达式、表达式之间只有 sepRe 匹配的单个分隔符，或 + 拼出的同样形状）
+// 的同一键形出现在两个及以上文件，每处计一条（nodeKind tplkey）；cls.tplKey.except：[{shape, basis}]。
+function astRec(ctx, file, hits) {
+  const rec = fileOf(projectOf(ctx), file);
+  if (!rec || rec.error) { hits.push({ file, line: 0, nodeKind: 'parseError', symbolPath: rec ? rec.error.slice(0, 60) : 'missing', code: 'E-ACC-ITEM-PARAM' }); return null; }
+  return rec;
+}
+const declNames = (id, out) => {
+  if (!id) return;
+  if (id.type === 'Identifier') out.push(id.name);
+  else if (id.type === 'ObjectPattern') id.properties.forEach((p) => declNames(p.type === 'RestElement' ? p.argument : p.value, out));
+  else if (id.type === 'ArrayPattern') id.elements.forEach((e) => declNames(e, out));
+  else if (id.type === 'AssignmentPattern') declNames(id.left, out);
+};
+function dupExportHits(ctx, params, cls) {
+  const allowed = new Set((cls.dupAllow || []).filter((a) => a && a.basis).map((a) => a.name));
+  const owned = (cls.ownedNames || []).filter((o) => o && o.basis && Array.isArray(o.files));
+  const exportsBy = new Map();
+  const hits = [];
+  const code = params.code || '';
+  for (const file of filesOfGroups(ctx.files, ctx.model, params.groups || [])) {
+    const rec = astRec(ctx, file, hits);
+    if (!rec) continue;
+    walkAll(rec.ast, (n) => {
+      if (n.type === 'ExportNamedDeclaration') {
+        const names = [];
+        if (n.declaration) {
+          if (n.declaration.type === 'VariableDeclaration') n.declaration.declarations.forEach((d) => declNames(d.id, names));
+          else if (n.declaration.id) names.push(n.declaration.id.name);
+        } else if (!n.source) n.specifiers.forEach((s) => names.push(s.exported.name ?? String(s.exported.value)));
+        for (const nm of names) { if (!exportsBy.has(nm)) exportsBy.set(nm, []); exportsBy.get(nm).push({ file, line: n.loc.start.line }); }
+      }
+      const defs = [];
+      if ((n.type === 'FunctionDeclaration' || n.type === 'ClassDeclaration') && n.id) defs.push(n.id.name);
+      else if (n.type === 'VariableDeclarator') declNames(n.id, defs);
+      for (const nm of defs) {
+        const o = owned.find((x) => x.name === nm);
+        if (o && !o.files.some((g) => globToRe(g, []).test(file))) hits.push({ file, line: n.loc.start.line, nodeKind: 'owned', symbolPath: nm, code });
+      }
+    });
+  }
+  for (const [name, defs] of exportsBy) {
+    if (defs.length > 1 && !allowed.has(name)) for (const d of defs) hits.push({ file: d.file, line: d.line, nodeKind: 'export', symbolPath: name, code });
+  }
+  return hits.sort((a, b) => (a.file + a.symbolPath < b.file + b.symbolPath ? -1 : 1));
+}
+function dupTplKeyHits(ctx, params, cls) {
+  const cfg = cls.tplKey || {};
+  const sepRe = new RegExp(cfg.sepRe || '^[^\\w\\s]{1,2}$');
+  const minExprs = cfg.minExprs || 2;
+  const allowed = new Set((cfg.except || []).filter((e) => e && e.basis).map((e) => e.shape));
+  const byShape = new Map();
+  const hits = [];
+  for (const file of filesOfGroups(ctx.files, ctx.model, params.groups || [])) {
+    const rec = astRec(ctx, file, hits);
+    if (!rec) continue;
+    const add = (shape, n) => { if (!allowed.has(shape)) { if (!byShape.has(shape)) byShape.set(shape, []); byShape.get(shape).push({ file, line: n.loc.start.line, sym: where(n).symbolPath }); } };
+    walkAll(rec.ast, (n) => {
+      if (n.type === 'TemplateLiteral') {
+        const q = n.quasis.map((x) => x.value.cooked);
+        if (n.expressions.length >= minExprs && q[0] === '' && q[q.length - 1] === '' && q.slice(1, -1).every((s) => sepRe.test(s))) add(`\${}${q.slice(1, -1).map((s) => `${s}\${}`).join('')}`, n);
+      } else if (n.type === 'BinaryExpression' && n.operator === '+' && !(n.__parent && n.__parent.type === 'BinaryExpression' && n.__parent.operator === '+')) {
+        const ops = []; const flat = (e) => { if (e.type === 'BinaryExpression' && e.operator === '+') { flat(e.left); flat(e.right); } else ops.push(e); };
+        flat(n);
+        const seps = ops.filter((_, i) => i % 2 === 1).map((e) => { const f = fold(e, rec); return f && typeof f.v === 'string' && sepRe.test(f.v) ? f.v : null; });
+        const vars = ops.filter((_, i) => i % 2 === 0);
+        if (vars.length >= minExprs && seps.length === vars.length - 1 && seps.every((s) => s !== null) && vars.every((e) => !fold(e, rec) || typeof fold(e, rec).v !== 'string')) add(`\${}${seps.map((s) => `${s}\${}`).join('')}`, n);
+      }
+    });
+  }
+  for (const [shape, defs] of byShape) {
+    if (new Set(defs.map((d) => d.file)).size < 2) continue;
+    for (const d of defs) hits.push({ file: d.file, line: d.line, nodeKind: 'tplkey', symbolPath: d.sym ? `${d.sym}:${shape}` : shape, code: params.code || '' });
+  }
+  return hits.sort((a, b) => (a.file + a.line < b.file + b.line ? -1 : 1));
+}
+
+export function detect(ctx, params, cls) {
   const checks = params.checks || [];
   const hits = [];
+  if (checks.includes('dupExport')) return dupExportHits(ctx, params, cls || {});
+  if (checks.includes('dupTplKey')) return dupTplKeyHits(ctx, params, cls || {});
   if (checks.includes('inputs')) throw new Error('E-ACC-ITEM-UNIMPLEMENTED decl_cmp inputs: declareInputs not built (block 2 card 2-5)');
   if (checks.includes('paramConsumed')) hits.push(...unconsumedHits(ctx, params));
   for (const file of filesOfGroups(ctx.files, ctx.model, params.groups || [])) {

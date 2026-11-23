@@ -1,0 +1,2 @@
+// @file server-plugin/kernel/footprint-kind.mjs
+export const isRegion = (r) => r.kind === FOOTPRINT_KIND.region;

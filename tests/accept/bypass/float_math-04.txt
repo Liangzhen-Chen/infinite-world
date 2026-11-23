@@ -1,0 +1,2 @@
+const p = Math['pow'];
+export const f = (x) => p(x, 2);

@@ -1,0 +1,2 @@
+// @file world/ontology/state-owners.json
+{"kernelApi":{"exports":[{"export":"kernel/climate.mjs#tempAt","callers":["rules"],"acceptsState":true}]}}

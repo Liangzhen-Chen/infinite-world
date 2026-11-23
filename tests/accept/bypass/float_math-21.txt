@@ -1,0 +1,8 @@
+export class A {
+  constructor() {
+    this.f = Math.sqrt;
+  }
+  g(x) {
+    return this.f(x);
+  }
+}

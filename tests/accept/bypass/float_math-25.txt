@@ -1,0 +1,6 @@
+import { run } from './runner.mjs';
+export const f = (x) => run(Math.sqrt, x);
+// @file runner.mjs
+export function run(fn, v) {
+  return fn(v);
+}

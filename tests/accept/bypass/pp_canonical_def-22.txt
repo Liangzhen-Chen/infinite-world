@@ -1,0 +1,6 @@
+function report(o) {
+  const lines = [];
+  for (const k of Object.keys(o).sort()) lines.push('bad ' + k);
+  return lines.join('\n');
+}
+export const run = (o) => console.log(report(o));

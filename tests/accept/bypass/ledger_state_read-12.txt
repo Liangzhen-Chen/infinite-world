@@ -1,0 +1,5 @@
+export const unrelated = 1;
+// @file server-plugin/kernel/ledger.mjs
+export function accountsOf(state, id) {
+  return state.accounts[id];
+}

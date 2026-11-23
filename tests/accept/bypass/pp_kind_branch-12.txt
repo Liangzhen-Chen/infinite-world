@@ -1,0 +1,1 @@
+export const big = (r) => r.size > 3;

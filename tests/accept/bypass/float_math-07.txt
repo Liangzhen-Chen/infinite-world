@@ -1,0 +1,4 @@
+function pick() {
+  return Math.sqrt;
+}
+export const f = (x) => pick()(x);

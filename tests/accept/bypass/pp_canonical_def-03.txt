@@ -1,0 +1,4 @@
+export function stableText(v) {
+  if (v === null || typeof v !== 'object') return JSON.stringify(v);
+  return '{' + Object.keys(v).sort().map((k) => k + ':' + stableText(v[k])).join(',') + '}';
+}

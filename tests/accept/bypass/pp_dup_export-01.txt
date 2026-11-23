@@ -1,0 +1,8 @@
+// @file server-plugin/kernel/twin-a.mjs
+export function twin() {
+  return 1;
+}
+// @file server-plugin/kernel/twin-b.mjs
+export function twin() {
+  return 2;
+}

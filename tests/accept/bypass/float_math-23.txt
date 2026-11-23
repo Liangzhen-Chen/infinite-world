@@ -1,0 +1,7 @@
+import { pick } from './alias.mjs';
+const g = pick();
+export const f = (x) => g(x);
+// @file alias.mjs
+export function pick() {
+  return Math.sqrt;
+}

@@ -1,0 +1,8 @@
+export function ser(o) {
+  const keys = Object.keys(o).sort();
+  let out = '';
+  for (let i = 0; i < keys.length; i++) {
+    out += keys[i] + ':' + JSON.stringify(o[keys[i]]) + ',';
+  }
+  return out;
+}

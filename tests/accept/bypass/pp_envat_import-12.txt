@@ -1,0 +1,2 @@
+import { envAt } from './kernel/env-at.mjs';
+export const e = envAt;

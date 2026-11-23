@@ -1,0 +1,7 @@
+export function dirs() {
+  const out = [];
+  out.push([1 - 0, 0]);
+  out.push([0 - 1, 0]);
+  out.push([0, 0 + 1]);
+  return out;
+}

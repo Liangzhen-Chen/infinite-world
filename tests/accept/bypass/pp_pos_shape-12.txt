@@ -1,0 +1,1 @@
+export const t = (p) => typeof p.name === 'string';

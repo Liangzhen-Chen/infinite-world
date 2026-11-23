@@ -65,9 +65,9 @@ test('V-11 提交关口当次判：当次分量高于入库基线（上次合入
   try {
     const bad = { 'server-plugin/rules.mjs': "\n\nexport function f(doc) { return 'npc_' + doc.id; }\n" };
     const opts = { root: dir, overrides: bad, prefixes: { prefixes: ['npc_'], singletons: [] } };
-    // 入库基线还有 kernel 组 S13 的三个分量（B2-W2b）；本用例只看 c_instance_id，内核分量给足，别让它们掺进来。
+    // 入库基线还有 kernel 组 S13 的三个分量（B2-W2b）与 C0 的四个报告档分量 c_pp_*（临时仓库带了部分内核文件）；本用例只看 c_instance_id，这些分量给足，别让它们掺进来。
     const rows = (cur) => [{ compCode: 'c_instance_id', b0: 0, current: cur },
-      ...['c_text_kernel_1', 'c_text_kernel_3', 'c_text_kernel_4'].map((compCode) => ({ compCode, b0: 0, current: 1000000 }))];
+      ...['c_text_kernel_1', 'c_text_kernel_3', 'c_text_kernel_4', ...readRegistry(ROOT, 'items').map((it) => it.baseComp).filter((c) => c && c.startsWith('c_pp_'))].map((compCode) => ({ compCode, b0: 0, current: 1000000 }))];
     const v11 = (report) => report.items.failed.find((f) => f.itemKey === 'vol1.V-11');
     // 无基线：没有上次合入的值按零基线（方案 R13、R12-8.9），本次 1 个行即拒。
     assert.deepEqual(v11((await accRun('pre_commit', 'x', null, opts)).report).codes, ['E-ACC-BASELINE-UP']);

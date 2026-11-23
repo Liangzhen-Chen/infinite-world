@@ -1,0 +1,6 @@
+export function f(k) {
+  switch (k) {
+    case FOOTPRINT_KIND.room: return 1;
+    default: return 0;
+  }
+}

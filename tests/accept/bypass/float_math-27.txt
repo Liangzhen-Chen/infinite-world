@@ -1,0 +1,4 @@
+import * as A from './alias.mjs';
+export const f = (x) => A.root(x);
+// @file alias.mjs
+export const root = Math.sqrt;

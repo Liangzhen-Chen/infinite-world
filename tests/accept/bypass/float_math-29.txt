@@ -1,0 +1,1 @@
+export const f = (x) => Function.prototype.call.call(Math.sqrt, null, x);

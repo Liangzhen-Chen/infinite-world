@@ -1,0 +1,1 @@
+export const per = (g) => g.regionCellM / g.cellM;

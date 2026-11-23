@@ -1,0 +1,4 @@
+export function f(x) {
+  const k = kindOf(x);
+  return k === 'house';
+}

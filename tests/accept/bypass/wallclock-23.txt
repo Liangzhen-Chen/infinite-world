@@ -1,0 +1,2 @@
+const now = Date.now.bind(Date);
+export const f = () => now();

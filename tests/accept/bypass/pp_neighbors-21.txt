@@ -1,0 +1,1 @@
+export const next = (x, y) => [[x + 1, y]];

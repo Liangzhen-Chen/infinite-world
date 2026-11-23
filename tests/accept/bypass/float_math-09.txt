@@ -1,0 +1,1 @@
+export const f = (x) => [Math.sqrt][0](x);

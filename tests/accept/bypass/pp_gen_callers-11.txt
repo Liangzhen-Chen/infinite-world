@@ -1,0 +1,3 @@
+// @file server-plugin/world-create.mjs
+import { generateFill } from './kernel/gen/worldgen.mjs';
+export const g = generateFill;

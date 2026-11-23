@@ -120,6 +120,37 @@
    "source": "卷十二 §2.4 首批表（卷二 §1.6、S4）；S12-3 转录"
   },
   {
+   "callees": {
+    "": {
+     "Math.acos": [],
+     "Math.asin": [],
+     "Math.atan": [],
+     "Math.atan2": [],
+     "Math.cbrt": [],
+     "Math.cos": [],
+     "Math.cosh": [],
+     "Math.exp": [],
+     "Math.expm1": [],
+     "Math.hypot": [],
+     "Math.log": [],
+     "Math.log10": [],
+     "Math.log1p": [],
+     "Math.log2": [],
+     "Math.pow": [],
+     "Math.sin": [],
+     "Math.sinh": [],
+     "Math.sqrt": [],
+     "Math.tan": [],
+     "Math.tanh": []
+    }
+   },
+   "detectors": [
+    "call_edge"
+   ],
+   "scanClass": "float_math",
+   "source": "公共部件审查乙「给检查脚本的规则」7 的调用半条（docs/研究/公共部件审查-乙-1122.md :159）；卷二十七 R27-5.2、A27-5.1（超越函数全仓只有定点数学设施一处实现，规则层其余数学成员即 E-DET-FLOAT）；与 geometry_bypass（卷五 S5-10，kernel 以外三个几何原语）重叠部分各守各的，本类别覆盖 kernel 组及全部超越函数名；C0 卡"
+  },
+  {
    "detectors": [
     "taint"
    ],
@@ -220,6 +251,16 @@
   },
   {
    "detectors": [
+    "path_access"
+   ],
+   "dynamicRoots": [
+    "state"
+   ],
+   "scanClass": "ledger_state_read",
+   "source": "公共部件审查乙「给检查脚本的规则」4（docs/研究/公共部件审查-乙-1122.md :156）；卷六 §4.1.2 统一入口（改变数量只有 post，读只有 balance、accountsOf、stockIn）；读者文件取 state-owners.json systems.sys.economy 写者登记派生（readerSystems，不抄名单）；C0 卡"
+  },
+  {
+   "detectors": [
     "ledger_count"
    ],
    "scanClass": "ledger_tally",
@@ -254,6 +295,767 @@
    ],
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）；§2.4 开放登记；B2-W1 卡（李白 11-18 08:20 裁定②，勘误 1118k18）"
+  },
+  {
+   "astRules": [
+    {
+     "exceptFiles": [
+      "server-plugin/kernel/storage.mjs"
+     ],
+     "keySources": [
+      "Object.keys",
+      "Object.entries",
+      "Object.getOwnPropertyNames",
+      "Reflect.ownKeys"
+     ],
+     "kind": "canonicalDef",
+     "mode": "confirmed",
+     "name": "shape",
+     "sinks": [
+      "sha256Text",
+      "createHash",
+      "update",
+      "digest",
+      "writeFile",
+      "writeFileSync",
+      "appendFile",
+      "appendFileSync",
+      "setItem"
+     ],
+     "sortMethods": [
+      "sort",
+      "toSorted"
+     ],
+     "stringMethods": [
+      "join",
+      "stringify"
+     ]
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_canonical_def",
+   "source": "公共部件审查乙 11；卷二十七 :542；例外 kernel/storage.mjs"
+  },
+  {
+   "astRules": [
+    {
+     "exceptFiles": [
+      "server-plugin/kernel/storage.mjs"
+     ],
+     "keySources": [
+      "Object.keys",
+      "Object.entries",
+      "Object.getOwnPropertyNames",
+      "Reflect.ownKeys"
+     ],
+     "kind": "canonicalDef",
+     "mode": "review",
+     "name": "shape",
+     "sinks": [
+      "sha256Text",
+      "createHash",
+      "update",
+      "digest",
+      "writeFile",
+      "writeFileSync",
+      "appendFile",
+      "appendFileSync",
+      "setItem"
+     ],
+     "sortMethods": [
+      "sort",
+      "toSorted"
+     ],
+     "stringMethods": [
+      "join",
+      "stringify"
+     ]
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_canonical_review",
+   "source": "主会话 11-23 定：规范序列化按定义判。形状像（取键 + 排序 + 拼串）但没确认流进摘要或存储的，拿不准的进待人审清单（只报不拦、不进基线）：结果用于相等比较，或函数对外导出而范围内没有调用点。不再按名字（canonical）认。例外 kernel/storage.mjs。"
+  },
+  {
+   "astRules": [
+    {
+     "inner": [
+      "JSON",
+      "stringify"
+     ],
+     "kind": "nestedCall",
+     "name": "clone",
+     "outer": [
+      "JSON",
+      "parse"
+     ]
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_deep_clone",
+   "source": "公共部件审查乙 10；卷二 :897；kernel/clone.mjs（kernelApi clone）"
+  },
+  {
+   "astRules": [
+    {
+     "exceptFiles": [
+      "server-plugin/kernel/sample.mjs"
+     ],
+     "kind": "memberCompare",
+     "name": "dist",
+     "other": "any",
+     "props": [
+      "dist"
+     ]
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_dist_branch",
+   "source": "公共部件审查甲 R7；卷二 §1.10；kernel/sample.mjs 头注"
+  },
+  {
+   "detectors": [
+    "seed_sites"
+   ],
+   "scanClass": "pp_draw_sites",
+   "seedTable": "seedKeys",
+   "siteList": {
+    "key": "drawSites",
+    "table": "clock"
+   },
+   "source": "公共部件审查甲 R6 后半；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479（rules.clock.drawSites）"
+  },
+  {
+   "detectors": [
+    "decl_cmp"
+   ],
+   "dupAllow": [],
+   "ownedNames": [
+    {
+     "basis": "卷二 §1.5 struct:pos 登记（甲 R14：isPos 只在 struct 判定处）",
+     "files": [
+      "server-plugin/kernel/named-structs.mjs"
+     ],
+     "name": "isPos"
+    },
+    {
+     "basis": "卷二 §1.10（甲 R7、R14：分布只在 sample.mjs）",
+     "files": [
+      "server-plugin/kernel/sample.mjs"
+     ],
+     "name": "distributionMean"
+    },
+    {
+     "basis": "卷二十 §3.1 天气单元（甲 R1、R14）",
+     "files": [
+      "server-plugin/kernel/weather.mjs"
+     ],
+     "name": "weatherCellOf"
+    }
+   ],
+   "scanClass": "pp_dup_export",
+   "source": "公共部件审查甲 R14、乙 12；卷二 :1162 体例；CLAUDE.md“跨卷共用定义只一处”。职责函数 isPos、distributionMean、weatherCellOf 的职责文件依据：卷二 §1.5 struct:pos（kernel/named-structs.mjs）、卷二 §1.10（kernel/sample.mjs）、卷二十 §3.1（kernel/weather.mjs）"
+  },
+  {
+   "astRules": [
+    {
+     "kind": "dynamicIndex",
+     "name": "dyn",
+     "roots": [
+      "Math",
+      "globalThis",
+      "window",
+      "self",
+      "global",
+      "Date",
+      "JSON",
+      "Number",
+      "Object",
+      "Reflect",
+      "performance",
+      "process",
+      "crypto",
+      "state",
+      "engine"
+     ]
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_dynamic_index",
+   "source": "李白更正裁定 msg-1122-2255-c0ast（动态下标出现即报，标待人审）；卷二十七 R27-5.2、A27-5.1；卷二十 :436"
+  },
+  {
+   "astRules": [
+    {
+     "kind": "dynamicIndex",
+     "name": "dyn",
+     "roots": [
+      "*"
+     ]
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_dynamic_review",
+   "source": "李白更正裁定 msg-1122-2255-c0ast：运行期才知道的动态下标出现即报，标待人审。本条列全部对象上的动态下标（含数组按位置取），数量大，只报不拦（报告里列出，供人审）；登记在 Math、全局对象、状态根等根上的动态下标由 pp_dynamic_index 拦"
+  },
+  {
+   "astRules": [
+    {
+     "arrayPath": [
+      "kernelApi",
+      "exports"
+     ],
+     "field": "callers",
+     "idField": "export",
+     "includes": "rules",
+     "kind": "jsonRows",
+     "name": "callersRules",
+     "where": {
+      "export": "^kernel/(climate|weather)\\.mjs#(tempAt|dailyMeanTemp|outdoorTemp|groundTemp|indoorTemp|climateTempC|seasonAt|weatherAt|weatherCellOf)$"
+     }
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "fileGlobs": [
+    "world/ontology/state-owners.json"
+   ],
+   "scanClass": "pp_envat_callers",
+   "source": "公共部件审查甲 R2；卷二十 :478；state-owners.json kernelApi 行形状"
+  },
+  {
+   "astRules": [
+    {
+     "exceptFiles": [
+      "server-plugin/kernel/climate.mjs",
+      "server-plugin/kernel/weather.mjs"
+     ],
+     "kind": "moduleEdge",
+     "name": "edge",
+     "names": [
+      "tempAt",
+      "dailyMeanTemp",
+      "outdoorTemp",
+      "groundTemp",
+      "indoorTemp",
+      "climateTempC",
+      "seasonAt",
+      "weatherAt",
+      "weatherCellOf"
+     ],
+     "sourceRe": "(climate|weather)\\.mjs$"
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_envat_import",
+   "source": "公共部件审查甲 R1（docs/研究/公共部件审查-甲-1122.md 第八节）；卷二十 :478、:631；例外：climate.mjs、weather.mjs 互相引用（甲 R1 原句）"
+  },
+  {
+   "astRules": [
+    {
+     "kind": "memberRef",
+     "name": "epsilon",
+     "paths": [
+      [
+       "Number",
+       "EPSILON"
+      ]
+     ]
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_epsilon",
+   "source": "公共部件审查乙 7；卷二十七 :620、:634（R27-5.2 数值运算只有三条路）"
+  },
+  {
+   "callees": {
+    "": {
+     "Function": [],
+     "Function()": [],
+     "eval": []
+    }
+   },
+   "detectors": [
+    "call_edge"
+   ],
+   "scanClass": "pp_eval",
+   "source": "李白更正裁定 msg-1122-2255-c0ast：别名、间接调用都要跟到原名，eval 与 new Function 是语法树追不到的间接执行，出现即报；卷二十七 S27-4 :253（禁用语言特性）"
+  },
+  {
+   "astRules": [
+    {
+     "dynamic": true,
+     "kind": "operator",
+     "name": "pow",
+     "op": "**"
+    },
+    {
+     "dynamic": true,
+     "kind": "operator",
+     "name": "powAssign",
+     "op": "**="
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_float_pow",
+   "source": "公共部件审查乙 7；卷二十七 R27-5.2（超越函数只经定点数学设施，幂函数 pow 同属）；独立验收漏项“** 运算符”"
+  },
+  {
+   "astRules": [
+    {
+     "exceptFiles": [
+      "server-plugin/kernel/footprint-kind.mjs"
+     ],
+     "kind": "originCompare",
+     "name": "kind",
+     "roots": [
+      "FOOTPRINT_KIND"
+     ]
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_footprint_kind",
+   "source": "公共部件审查甲 R12；卷二 §1.9；模块化评估第三节；例外 kernel/footprint-kind.mjs（gen/* 按种类过滤的比较进基线，M-11③ 修后开）"
+  },
+  {
+   "astRules": [
+    {
+     "exceptFiles": [
+      "server-plugin/world-create.mjs"
+     ],
+     "kind": "moduleEdge",
+     "name": "edge",
+     "names": [
+      "generateFill",
+      "applyGovernorCalls",
+      "applyOpeningAssets",
+      "openingAssetChannel",
+      "applyOpeningPeople"
+     ],
+     "sourceRe": "(worldgen|holdcalls|assetcalls|opening-people)\\.mjs$"
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_gen_callers",
+   "source": "公共部件审查乙 9（docs/研究/公共部件审查-乙-1122.md :161）；卷十 :403（生成器只在世界创建事务里按步骤表跑）；例外：generateWorld 所在文件 server-plugin/world-create.mjs（卷十 §3.2 :291）；requireMaterialized 现不存在，建成后其所在文件须加入例外；作者工具在 tools/ 下，不在扫描范围（卷十 :1002）"
+  },
+  {
+   "astRules": [
+    {
+     "exceptFiles": [
+      "server-plugin/kernel/validate/types.mjs"
+     ],
+     "kind": "regexText",
+     "name": "regex",
+     "re": "\\{[01],47\\}"
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_grammar_regex",
+   "source": "公共部件审查乙 6；卷二 :291；例外 kernel/validate/types.mjs"
+  },
+  {
+   "detectors": [
+    "path_access"
+   ],
+   "dynamicRoots": [
+    "state"
+   ],
+   "fileSets": {
+    "holdingsReaders": [
+     {
+      "basis": "卷十八:200 持有写者（持有边只由持有写者读写）；卷二 §2.6",
+      "file": "server-plugin/kernel/holdings.mjs"
+     },
+     {
+      "basis": "卷二 §2.6 存档序列化读整份状态",
+      "file": "server-plugin/kernel/save.mjs"
+     },
+     {
+      "basis": "卷二 §2.6 存档序列化读整份状态",
+      "file": "server-plugin/kernel/load/save.mjs"
+     },
+     {
+      "basis": "卷二 §2.7 声明表读取（登记读者）",
+      "file": "server-plugin/kernel/load/state-owners.mjs"
+     }
+    ]
+   },
+   "scanClass": "pp_holdings_read",
+   "source": "公共部件审查乙 5；卷十八:200（持有写者）；卷二 §2.6；读者按文件豁免（fileSets.holdingsReaders，每行带依据）"
+  },
+  {
+   "astRules": [
+    {
+     "digestCallees": [
+      "sha256Text"
+     ],
+     "exceptFiles": [
+      "server-plugin/kernel/handles/keys.mjs"
+     ],
+     "kind": "keyConcat",
+     "name": "digest",
+     "parts": [
+      "digest"
+     ],
+     "seps": [
+      "|",
+      ":",
+      "."
+     ]
+    },
+    {
+     "arraySeps": [
+      "|",
+      ":",
+      ".",
+      "#",
+      ","
+     ],
+     "exceptFiles": [
+      "server-plugin/kernel/handles/keys.mjs",
+      "server-plugin/kernel/handles/markers.mjs"
+     ],
+     "kind": "keyConcat",
+     "name": "sep",
+     "parts": [
+      "join",
+      "reduce",
+      "plus",
+      "plusAssign"
+     ],
+     "seps": [
+      "|",
+      ":",
+      "."
+     ]
+    },
+    {
+     "exceptFiles": [
+      "server-plugin/kernel/handles/keys.mjs",
+      "server-plugin/kernel/handles/markers.mjs"
+     ],
+     "kind": "identifier",
+     "name": "joinSepRef",
+     "names": [
+      "joinSep"
+     ]
+    },
+    {
+     "exceptFiles": [
+      "server-plugin/kernel/handles/markers.mjs"
+     ],
+     "kind": "constValue",
+     "name": "sepConst",
+     "values": [
+      "|"
+     ]
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_key_concat",
+   "source": "公共部件审查甲 R5、乙 1、乙 2；卷二 :337、:897、:1162；例外：整份文本摘要 sha256Text(canonical(…))、sha256Text(text) 不拼键（不含 .join，不命中）"
+  },
+  {
+   "astRules": [
+    {
+     "calls": [
+      "kindOf"
+     ],
+     "kind": "memberCompare",
+     "lookup": true,
+     "methods": [
+      "includes",
+      "has"
+     ],
+     "name": "kind",
+     "names": [
+      "kind",
+      "type",
+      "class",
+      "category",
+      "form"
+     ],
+     "other": "string",
+     "props": [
+      "kind",
+      "type",
+      "class",
+      "category",
+      "form",
+      "species",
+      "role",
+      "subtype"
+     ]
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_kind_branch",
+   "source": "独立验收（亮圳 11-22「独立测门禁1122」）指出“写死数值与种类分支没有 C0 专条”；卷一 二.1（派生优先，不按 ID 或场景特判，docs/产品原则.md）；卷二 S10（常数登记）"
+  },
+  {
+   "astRules": [
+    {
+     "argNames": [
+      "MATERIAL",
+      "MATERIAL_TABLE"
+     ],
+     "argProps": [
+      "material"
+     ],
+     "argStrings": [
+      "material"
+     ],
+     "callees": [
+      "dim"
+     ],
+     "exceptFiles": [
+      "server-plugin/kernel/item.mjs",
+      "server-plugin/kernel/dimensions.mjs",
+      "server-plugin/kernel/load/**",
+      "server-plugin/kernel/validate/**",
+      "server-plugin/kernel/blueprint.mjs"
+     ],
+     "kind": "callWithArg",
+     "name": "dim"
+    },
+    {
+     "argNames": [
+      "MATERIAL",
+      "MATERIAL_TABLE"
+     ],
+     "argStrings": [
+      "material"
+     ],
+     "exceptFiles": [
+      "server-plugin/kernel/item.mjs",
+      "server-plugin/kernel/dimensions.mjs",
+      "server-plugin/kernel/load/**",
+      "server-plugin/kernel/validate/**",
+      "server-plugin/kernel/blueprint.mjs"
+     ],
+     "kind": "callWithArg",
+     "method": "get",
+     "name": "get"
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_material_read",
+   "source": "公共部件审查甲 R11；卷三甲 :268；卷三乙 :541；例外：kernel/item.mjs、kernel/dimensions.mjs、kernel/load/**、kernel/validate/**、kernel/blueprint.mjs（加载期校验 checkBlueprintForms）"
+  },
+  {
+   "astRules": [
+    {
+     "kind": "unitVectors",
+     "min": 3,
+     "name": "dirs"
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_neighbors",
+   "source": "公共部件审查甲 R10；卷五 :491、:1216（现 8 处）"
+  },
+  {
+   "astRules": [
+    {
+     "dynamic": false,
+     "kind": "moduleEdge",
+     "name": "edge",
+     "sourceRe": "^acorn"
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_no_acorn_runtime",
+   "source": "李白更正裁定 msg-1122-2255-c0ast：acorn 只许 tools/accept 引用，server-plugin 不得引用"
+  },
+  {
+   "astRules": [
+    {
+     "equals": "boolean",
+     "exceptFiles": [
+      "server-plugin/kernel/named-structs.mjs",
+      "server-plugin/kernel/named-struct-match.mjs"
+     ],
+     "kind": "typeofMember",
+     "name": "coarse",
+     "prop": "coarse"
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_pos_shape",
+   "source": "公共部件审查甲 R8；卷二 §1.5 struct:pos 登记；例外 kernel/named-structs.mjs、kernel/named-struct-match.mjs"
+  },
+  {
+   "astRules": [
+    {
+     "exceptFiles": [
+      "server-plugin/kernel/footprint.mjs",
+      "server-plugin/kernel/handles/keys.mjs"
+     ],
+     "kind": "binaryNames",
+     "leftNames": [
+      "regionCellM"
+     ],
+     "name": "div",
+     "op": "/",
+     "rightNames": [
+      "cellM"
+     ]
+    },
+    {
+     "exceptFiles": [
+      "server-plugin/kernel/footprint.mjs",
+      "server-plugin/kernel/handles/keys.mjs"
+     ],
+     "kind": "binaryNames",
+     "leftNames": [
+      "regionCellM"
+     ],
+     "name": "half",
+     "op": ">>",
+     "rightValue": "1"
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_region_cell",
+   "source": "公共部件审查甲 R9；卷五 :433、:499；例外：kernel/footprint.mjs 的共用函数（修后建）、kernel/handles/keys.mjs gridChunkCells（卷二 :860）"
+  },
+  {
+   "astRules": [
+    {
+     "callee": "evaluateRX",
+     "exceptFiles": [
+      "server-plugin/kernel/validate/**"
+     ],
+     "kind": "callObjectProp",
+     "name": "clock",
+     "prop": "clock"
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_rx_empty_clock",
+   "source": "公共部件审查甲 R15；卷二十 :312、:685；例外：加载期校验 kernel/validate/**"
+  },
+  {
+   "astRules": [
+    {
+     "args": [
+      0,
+      1
+     ],
+     "callees": [
+      "drawBelow",
+      "drawByKey",
+      "diceSeedKey",
+      "identitySeedKey",
+      "genDraw",
+      "genDiceKey",
+      "genIdKey"
+     ],
+     "kind": "callArgs",
+     "name": "arg"
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_seed_args",
+   "source": "公共部件审查甲 R6；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479。后半（drawSites 与 seed-keys 两表一致）未落：需读两表对照，现有检测器无此检查"
+  },
+  {
+   "detectors": [
+    "seed_sites"
+   ],
+   "scanClass": "pp_seed_args_dyn",
+   "seedTable": "seedKeys",
+   "source": "独立验收漏项“抽取点站点名用变量”；卷二十七 :789（R27-8.1 每个抽取点登记，流代号、抽取点代号须字面量）"
+  },
+  {
+   "detectors": [
+    "decl_cmp"
+   ],
+   "scanClass": "pp_tpl_key",
+   "source": "公共部件审查甲 R13；卷二 :860（键串形只由登记方给）；模块化原则卡头第二节第 9 条",
+   "tplKey": {
+    "except": [],
+    "minExprs": 2,
+    "sepRe": "^[:,|#]$"
+   }
+  },
+  {
+   "astRules": [
+    {
+     "kind": "unitString",
+     "name": "unit",
+     "unitTable": true
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_unit_literal",
+   "source": "公共部件审查乙 13；卷三乙:179 与表头 unit 字段（item.json 表头 unit 字段）；单位登记表 world/ontology/dimensions/_units.json"
+  },
+  {
+   "astRules": [
+    {
+     "exceptFiles": [
+      "server-plugin/kernel/calendar.mjs",
+      "server-plugin/kernel/climate.mjs"
+     ],
+     "kind": "identifier",
+     "name": "ident",
+     "names": [
+      "yearMinutes"
+     ]
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_year_minutes",
+   "source": "公共部件审查甲 R3；卷二十 :436、:477 T-3 (c)；例外 climate.mjs（日均温日份额，天文相位，卷二十 :436）"
   },
   {
    "callees": {
@@ -654,11 +1456,47 @@
    "source": "卷十二 §2.4 首批表、§4.2（卷二 §2.8 第 2–4 条与各组表违例码列；S13 ①③④ 与 (b)(c)；S18、S19）；regexFiles 照卷二 S13 (b) 与 §2.8 表 kernel 行；handleRoots 照卷二 S13 补洞②（句柄根 V，§2.8 第 4 条）；块 2 第 2-3 张登记"
   },
   {
+   "callees": {
+    "": {
+     "setInterval": [],
+     "setTimeout": []
+    },
+    "node:timers": {
+     "setInterval": [],
+     "setTimeout": []
+    },
+    "timers": {
+     "setInterval": [],
+     "setTimeout": []
+    }
+   },
+   "detectors": [
+    "call_edge"
+   ],
+   "scanClass": "timer_global",
+   "source": "公共部件审查甲 R4 补缺（docs/研究/公共部件审查-甲-1122.md 第八节）；卷二十七 S27-3 :252 计时器半条（vol27.S27-3 的 source 登记未覆盖项）；C0 卡（亮圳「公共部件审查1122」Q-3）"
+  },
+  {
    "detectors": [
     "decl_cmp"
    ],
    "scanClass": "undeclared_io",
    "source": "卷十二 §2.4 首批表、§4.3.1、R12-3.4、R12-3.5（卷二 §2.3；S9、S15）；块 2 体检 P1-32；块 2 第 2-3 张登记"
+  },
+  {
+   "callees": {
+    "": {
+     "tx.undo.push": []
+    }
+   },
+   "detectors": [
+    "call_edge"
+   ],
+   "localRoots": [
+    "tx"
+   ],
+   "scanClass": "undo_raw_push",
+   "source": "公共部件审查乙「给检查脚本的规则」3（docs/研究/公共部件审查-乙-1122.md :155）；卷二 §2.6 写者与三接口（写只有三条路）；C0 卡"
   },
   {
    "detectors": [

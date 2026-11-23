@@ -1,0 +1,3 @@
+let g;
+g = Math.sqrt;
+export const f = (x) => g(x);

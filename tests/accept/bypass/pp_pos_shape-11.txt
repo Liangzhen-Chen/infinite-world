@@ -1,0 +1,2 @@
+// @file server-plugin/kernel/named-structs.mjs
+export const isPos = (p) => typeof p.coarse === 'boolean';

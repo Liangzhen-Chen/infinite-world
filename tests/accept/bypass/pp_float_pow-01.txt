@@ -1,0 +1,1 @@
+export const root = (x) => x ** 0.5;

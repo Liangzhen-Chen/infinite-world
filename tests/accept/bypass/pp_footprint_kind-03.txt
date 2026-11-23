@@ -1,0 +1,2 @@
+import { FOOTPRINT_KIND as FK } from "./footprint-kind.mjs";
+export const f = (k) => k === FK.region;

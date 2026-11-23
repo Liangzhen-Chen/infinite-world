@@ -1,0 +1,2 @@
+const K = 'year' + 'Minutes';
+export const y = (c) => c[K];

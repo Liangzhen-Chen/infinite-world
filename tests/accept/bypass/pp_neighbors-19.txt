@@ -1,0 +1,2 @@
+const A = [[1, 0], [-1, 0]];
+export const N = [...A, [0, 1]];

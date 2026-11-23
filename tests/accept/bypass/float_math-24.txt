@@ -1,0 +1,4 @@
+import { T } from './alias.mjs';
+export const f = (x) => T.r(x);
+// @file alias.mjs
+export const T = { r: Math.sqrt };

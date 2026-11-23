@@ -1,0 +1,1 @@
+export const make = () => ({ kind: FOOTPRINT_KIND.region });

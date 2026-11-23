@@ -1,0 +1,1 @@
+export const f = (x) => (0, Math.sqrt)(x);

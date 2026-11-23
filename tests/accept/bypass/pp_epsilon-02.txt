@@ -1,0 +1,2 @@
+const { EPSILON } = Number;
+export const f = (a) => a < EPSILON;

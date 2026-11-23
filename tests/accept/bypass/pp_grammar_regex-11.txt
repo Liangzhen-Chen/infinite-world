@@ -1,0 +1,2 @@
+// @file server-plugin/kernel/validate/types.mjs
+export const RE = /^[a-z][a-z0-9_]{1,47}$/;

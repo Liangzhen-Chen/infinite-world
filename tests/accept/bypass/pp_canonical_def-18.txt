@@ -1,0 +1,14 @@
+export function digestOf(o) {
+  const ks = [];
+  for (const k in o) ks.push(k);
+  for (let i = 0; i < ks.length; i++) {
+    for (let j = i + 1; j < ks.length; j++) {
+      if (ks[j] < ks[i]) {
+        const t = ks[i];
+        ks[i] = ks[j];
+        ks[j] = t;
+      }
+    }
+  }
+  return sha256Text(ks.map((k) => k + ':' + JSON.stringify(o[k])).join(','));
+}

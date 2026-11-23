@@ -1,0 +1,3 @@
+export const PRICE = { unit: 'copper' };
+// @file world/ontology/dimensions/_units.json
+{"units":[{"id":"copper","dimension":"value","si":1},{"id":"day","dimension":"time","si":1}]}

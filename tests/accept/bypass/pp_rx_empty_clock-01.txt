@@ -1,0 +1,1 @@
+export const v = (e) => evaluateRX(e, { clock: {} }, 1);

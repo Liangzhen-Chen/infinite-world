@@ -1,0 +1,2 @@
+const T = { orc: 1, elf: 2 };
+export const f = (x) => T[x.kind];

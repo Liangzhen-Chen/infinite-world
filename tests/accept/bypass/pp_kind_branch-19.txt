@@ -1,0 +1,2 @@
+const kindOf = (x) => x.k;
+export const isHouse = (x) => kindOf(x) === 'house';

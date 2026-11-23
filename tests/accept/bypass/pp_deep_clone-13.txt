@@ -1,0 +1,4 @@
+export function p(t) {
+  const s = t.trim();
+  return JSON.parse(s);
+}

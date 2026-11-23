@@ -1,0 +1,1 @@
+export const ser = (o) => Object.keys(o).sort().map((k) => k + o[k]).join(',');

@@ -1041,6 +1041,40 @@
    "zeroRows": []
   },
   {
+   "detector": "lit_scope",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol10.S10-3.pp_gen_callers",
+   "localNo": "S10-3",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_gen_callers",
+   "source": "公共部件审查乙 9（docs/研究/公共部件审查-乙-1122.md :161）；卷十 :403（生成器只在世界创建事务里按步骤表跑）；例外：generateWorld 所在文件 server-plugin/world-create.mjs（卷十 §3.2 :291）；requireMaterialized 现不存在，建成后其所在文件须加入例外；作者工具在 tools/ 下，不在扫描范围（卷十 :1002）（C0 续做；现违例 0，立即拦）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol10",
+   "zeroRows": []
+  },
+  {
    "detector": "ledger_count",
    "expect": "zero",
    "form": "scan",
@@ -2241,6 +2275,41 @@
    "zeroRows": []
   },
   {
+   "detector": "lit_scope",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol12.S12-12.pp_no_acorn_runtime",
+   "localNo": "S12-12",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly",
+     "gate"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_no_acorn_runtime",
+   "source": "李白更正裁定 msg-1122-2255-c0ast：acorn 只许 tools/accept 引用，server-plugin 不得引用（按语法树判）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
    "detector": "file_set",
    "expect": "zero",
    "form": "scan",
@@ -2499,6 +2568,46 @@
    "zeroRows": []
   },
   {
+   "baseComp": "c_pp_holdings_read_ast3",
+   "detector": "path_access",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/path_access.mjs",
+   "itemKey": "vol18.R18-1.10.pp_holdings_read",
+   "localNo": "R18-1.10",
+   "method": "static_code",
+   "params": {
+    "access": "read",
+    "ast": "on",
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "paths": [
+     "holdings"
+    ],
+    "readerSet": "holdingsReaders"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_holdings_read",
+   "source": "公共部件审查乙 5；卷十八:200（持有写者）；卷二 §2.6；读者按文件豁免（fileSets.holdingsReaders，每行带依据）（C0 续做；现违例 6 条进基线）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol18",
+   "zeroRows": []
+  },
+  {
    "detector": "path_access",
    "expect": "zero",
    "form": "scan",
@@ -2658,6 +2767,76 @@
    "zeroRows": []
   },
   {
+   "baseComp": "c_pp_key_concat_ast2",
+   "detector": "lit_scope",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol2.S10.pp_key_concat",
+   "localNo": "S10",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_key_concat",
+   "source": "公共部件审查甲 R5、乙 1、乙 2；卷二 :337、:897、:1162；例外：整份文本摘要 sha256Text(canonical(…))、sha256Text(text) 不拼键（不含 .join，不命中）（C0 续做；现违例 34 条进基线）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_pp_kind_branch_ast2",
+   "detector": "lit_scope",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol2.S10.pp_kind_branch",
+   "localNo": "S10",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_kind_branch",
+   "source": "独立验收（亮圳 11-22「独立测门禁1122」）指出“写死数值与种类分支没有 C0 专条”；卷一 二.1（派生优先，不按 ID 或场景特判，docs/产品原则.md）；卷二 S10（常数登记）（独立验收补漏；现违例 16 条进基线）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
    "detector": "typed_pos",
    "expect": "zero",
    "form": "scan",
@@ -2796,6 +2975,41 @@
    "runsOn": "local_static",
    "scanClass": "text_judge",
    "source": "卷二 §7 S13（:2415 kernel 组先登逐行清单基线、只降不升；李白裁定-1117 :958 第 1 条）④裸字面量；卷十二 §2.5 c_text_<组键>_<类别号>、R12-8.4、R12-8.5；B2-W2b",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_pp_grammar_regex_ast",
+   "detector": "lit_scope",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol2.S13.pp_grammar_regex",
+   "localNo": "S13",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_grammar_regex",
+   "source": "公共部件审查乙 6；卷二 :291；例外 kernel/validate/types.mjs（C0 续做；现违例 6 条进基线）",
    "stage": 0,
    "state": "in_core",
    "target": "runtime_code",
@@ -3158,6 +3372,183 @@
    "zeroRows": []
   },
   {
+   "baseComp": "c_pp_deep_clone_ast",
+   "detector": "lit_scope",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol2.S3.pp_deep_clone",
+   "localNo": "S3",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_deep_clone",
+   "source": "公共部件审查乙 10；卷二 :897；kernel/clone.mjs（kernelApi clone）（C0 续做；现违例 1 条进基线）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_pp_dist_branch_ast",
+   "detector": "lit_scope",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol2.S3.pp_dist_branch",
+   "localNo": "S3",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_dist_branch",
+   "source": "公共部件审查甲 R7；卷二 §1.10；kernel/sample.mjs 头注（C0 续做；现违例 4 条进基线）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_pp_footprint_kind_ast",
+   "detector": "lit_scope",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol2.S3.pp_footprint_kind",
+   "localNo": "S3",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_footprint_kind",
+   "source": "公共部件审查甲 R12；卷二 §1.9；模块化评估第三节；例外 kernel/footprint-kind.mjs（gen/* 按种类过滤的比较进基线，M-11③ 修后开）（C0 续做；现违例 44 条进基线）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_pp_pos_shape_ast",
+   "detector": "lit_scope",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol2.S3.pp_pos_shape",
+   "localNo": "S3",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_pos_shape",
+   "source": "公共部件审查甲 R8；卷二 §1.5 struct:pos 登记；例外 kernel/named-structs.mjs、kernel/named-struct-match.mjs（C0 续做；现违例 3 条进基线）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_pp_tpl_key_ast",
+   "detector": "decl_cmp",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/decl_cmp.mjs",
+   "itemKey": "vol2.S3.pp_tpl_key",
+   "localNo": "S3",
+   "method": "static_code",
+   "params": {
+    "checks": [
+     "dupTplKey"
+    ],
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_tpl_key",
+   "source": "公共部件审查甲 R13；卷二 :860（键串形只由登记方给）；模块化原则卡头第二节第 9 条（C0 续做；现违例 72 条进基线）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
    "detector": "typed_pos",
    "expect": "zero",
    "form": "scan",
@@ -3203,6 +3594,43 @@
    "source": "卷二 §7 S5 E-VIEW-BYPASS（卷十二 §4.3）",
    "stage": 0,
    "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_pp_undo_push_ast",
+   "detector": "call_edge",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/call_edge.mjs",
+   "itemKey": "vol2.S5.undo",
+   "localNo": "S5",
+   "method": "static_code",
+   "params": {
+    "callees": [
+     "undo_raw_push"
+    ],
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "undo_raw_push",
+   "source": "卷二 §2.6 写者与三接口（写只有三条路，撤销项由事务写入统一产生）；公共部件审查乙规则 3（现 6 文件 13 处，修理卡合入后基线清空）；C0 卡",
+   "stage": 0,
+   "state": "in_core",
    "target": "runtime_code",
    "volume": "vol2",
    "zeroRows": []
@@ -3368,6 +3796,111 @@
    "zeroRows": []
   },
   {
+   "baseComp": "c_pp_envat_callers_ast",
+   "detector": "lit_scope",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol20.T-3.pp_envat_callers",
+   "localNo": "T-3",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_envat_callers",
+   "source": "公共部件审查甲 R2；卷二十 :478；state-owners.json kernelApi 行形状（C0 续做；现违例 6 条进基线）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol20",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_pp_envat_import_ast",
+   "detector": "lit_scope",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol20.T-3.pp_envat_import",
+   "localNo": "T-3",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_envat_import",
+   "source": "公共部件审查甲 R1（docs/研究/公共部件审查-甲-1122.md 第八节）；卷二十 :478、:631；例外：climate.mjs、weather.mjs 互相引用（甲 R1 原句）（C0 续做；现违例 2 条进基线）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol20",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_pp_year_minutes_ast",
+   "detector": "lit_scope",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol20.T-3.pp_year_minutes",
+   "localNo": "T-3",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_year_minutes",
+   "source": "公共部件审查甲 R3；卷二十 :436、:477 T-3 (c)；例外 climate.mjs（日均温日份额，天文相位，卷二十 :436）（C0 续做；现违例 2 条进基线）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol20",
+   "zeroRows": []
+  },
+  {
    "detector": "path_access",
    "expect": "zero",
    "form": "scan",
@@ -3411,6 +3944,41 @@
    "source": "卷二十 T-4 :478（§2.1、§2.2、§2.9 的全部规则表 rules.clock astro weather climate water fields light sound season calendar agroclock env 在 state-owners.json 登记读者，读者表之外读取即命中）、错误码 E-ENV-BYPASS :1452；G12–G16 对照表 #64、复核 1123 ④。写法照 vol27.S27-11.a 与 vol2.K5-24：范围取 kernel 以外的全部服务端组，kernel 目录整体不在范围内（规则表在 kernel 内由内核实现读，不点名文件）；按 rules.<表> 成员链认（根标识符之后的段），状态里同名键（state.clock、state.weather）不是规则表，不计。现声明表没有规则表读者登记，近似为 kernel 以外读规则表计数 0；收紧时点：env 系统落地、读者登进 state-owners 后，把读者派生并入本条目（rev+1）。局限：成员链不含根，根变量本身就叫 rules（const rules = engine.rules; rules.weather）的写法追不到；解构规则根（const { weather } = engine.rules）与把规则根赋给别的变量（const r = engine.rules; r.weather）同样漏报；规则表经字串下标 rules['weather'] 取的计入。未覆盖：envAt 的 import 矩阵一支（现无 envAt、kernelApi 无其行），随 envAt 落地卡登 kernelApi 行后把 envAt 并入 vol20.S20-fieldCells 同类的 nameUse 条目；T-10 随 log10 实现同卡登。",
    "stage": 0,
    "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol20",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_pp_rx_empty_clock_ast",
+   "detector": "lit_scope",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol20.T-4.pp_rx_empty_clock",
+   "localNo": "T-4",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_rx_empty_clock",
+   "source": "公共部件审查甲 R15；卷二十 :312、:685；例外：加载期校验 kernel/validate/**（C0 续做；现违例 5 条进基线）",
+   "stage": 0,
+   "state": "in_core",
    "target": "runtime_code",
    "volume": "vol20",
    "zeroRows": []
@@ -3594,6 +4162,220 @@
    "zeroRows": []
   },
   {
+   "baseComp": "c_pp_float_math_ast2",
+   "detector": "call_edge",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/call_edge.mjs",
+   "itemKey": "vol27.A27-5.1.float",
+   "localNo": "A27-5.1",
+   "method": "static_code",
+   "params": {
+    "callees": [
+     "float_math"
+    ],
+    "code": "E-DET-FLOAT",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "float_math",
+   "source": "卷二十七 R27-5.2、A27-5.1（超越函数全仓只有定点数学设施一处实现，其余数学成员 E-DET-FLOAT）；公共部件审查乙规则 7 调用半条（Number.EPSILON 半条检测器查不到，未落）；C0 卡",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_pp_dup_export_ast",
+   "detector": "decl_cmp",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/decl_cmp.mjs",
+   "itemKey": "vol27.A27-5.1.pp_dup_export",
+   "localNo": "A27-5.1",
+   "method": "static_code",
+   "params": {
+    "checks": [
+     "dupExport"
+    ],
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_dup_export",
+   "source": "公共部件审查甲 R14、乙 12；卷二 :1162 体例；CLAUDE.md“跨卷共用定义只一处”。职责函数 isPos、distributionMean、weatherCellOf 的职责文件依据：卷二 §1.5 struct:pos（kernel/named-structs.mjs）、卷二 §1.10（kernel/sample.mjs）、卷二十 §3.1（kernel/weather.mjs）（C0 续做；现违例 17 条进基线）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_pp_dynamic_index_ast3",
+   "detector": "lit_scope",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol27.A27-5.1.pp_dynamic_index",
+   "localNo": "A27-5.1",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_dynamic_index",
+   "source": "李白更正裁定 msg-1122-2255-c0ast（动态下标出现即报，标待人审）；卷二十七 R27-5.2、A27-5.1；卷二十 :436（按语法树判）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "detector": "lit_scope",
+   "expect": "report_only",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol27.A27-5.1.pp_dynamic_review",
+   "localNo": "A27-5.1",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "reportOnlyMark": "待人审：动态下标清单只报不拦（李白更正裁定 msg-1122-2255-c0ast）",
+   "runsOn": "local_static",
+   "scanClass": "pp_dynamic_review",
+   "source": "李白更正裁定 msg-1122-2255-c0ast：运行期才知道的动态下标出现即报，标待人审。本条列全部对象上的动态下标（含数组按位置取），数量大，只报不拦（报告里列出，供人审）；登记在 Math、全局对象、状态根等根上的动态下标由 pp_dynamic_index 拦",
+   "stage": 0,
+   "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_pp_epsilon_ast2",
+   "detector": "lit_scope",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol27.A27-5.1.pp_epsilon",
+   "localNo": "A27-5.1",
+   "method": "static_code",
+   "params": {
+    "code": "E-DET-FLOAT",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_epsilon",
+   "source": "公共部件审查乙 7；卷二十七 :620、:634（R27-5.2 数值运算只有三条路）（C0 续做；现违例 2 条进基线）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_pp_float_pow",
+   "detector": "lit_scope",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol27.A27-5.1.pp_float_pow",
+   "localNo": "A27-5.1",
+   "method": "static_code",
+   "params": {
+    "code": "E-DET-FLOAT",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_float_pow",
+   "source": "公共部件审查乙 7；卷二十七 R27-5.2（超越函数只经定点数学设施，幂函数 pow 同属）；独立验收漏项“** 运算符”（独立验收补漏；现违例 0，立即拦）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
    "expect": "all_pass",
    "form": "invariant",
    "gates": [
@@ -3652,7 +4434,7 @@
    "scanClass": "rng_bypass",
    "source": "卷二十七 §4.8 A27-8.1 :759（S27-6 :246、S27-10 :250 命中数为 0）；卷一 §8.2 :638（规则代码零 Math.random）；卷二 :320（Math.random 只在 legacy/）；卷十二 §2.4 :253（rng_bypass 类别，call_edge）",
    "stage": 0,
-   "state": "implemented",
+   "state": "in_core",
    "target": "runtime_code",
    "volume": "vol27",
    "zeroRows": []
@@ -3687,9 +4469,9 @@
    ],
    "runsOn": "local_static",
    "scanClass": "seed_sites",
-   "source": "卷二十七 §4.8 R27-8.1 :717（每个抽取点在登记表恰一行，源码与登记表双向比对，任一侧多出即 E-SEED-KEY）；卷十二 §7 M12-5 :1341（源码扫描移到离线组）；卷二 §1.10 :320（种子键登记 role seed）、§4.1 :1508（规则表登记）；表代号经扫描类别行 seedTable 从 world/rules/registry.json 登记行派生（R12-11.5 规则表键）；检测器 tools/accept/detectors/seed_sites.mjs。真实仓库登记表随 4-3 按新格式重建（李白 11-18 16:3x 第 5 条），现读数如实报，状态留 implemented（R12-11.7 :1110）",
+   "source": "卷二十七 §4.8 R27-8.1 :717（每个抽取点在登记表恰一行，源码与登记表双向比对，任一侧多出即 E-SEED-KEY）；卷十二 §7 M12-5 :1341（源码扫描移到离线组）；卷二 §1.10 :320（种子键登记 role seed）、§4.1 :1508（规则表登记）；表代号经扫描类别行 seedTable 从 world/rules/registry.json 登记行派生（R12-11.5 规则表键）；检测器 tools/accept/detectors/seed_sites.mjs。真实仓库登记表随 4-3 按新格式重建（李白 11-18 16:3x 第 5 条），现读数如实报；C0 起已升 in_core（必过），读数为 0",
    "stage": 0,
-   "state": "implemented",
+   "state": "in_core",
    "target": "runtime_code",
    "volume": "vol27",
    "zeroRows": []
@@ -3723,9 +4505,177 @@
    ],
    "runsOn": "local_static",
    "scanClass": "seed_sites",
-   "source": "卷二十七 §4.8 R27-8.4 :720（role_seed 行（流代号, 抽取点代号）两两不同、前缀不得为空，有重复或空前缀即 E-SEED-COLLISION）；A27-8.1 :759；检测器 tools/accept/detectors/seed_sites.mjs；表代号经扫描类别行 seedTable 派生（R12-11.5）。真实仓库登记表随 4-3 重建，现读数如实报，状态留 implemented（R12-11.7 :1110）",
+   "source": "卷二十七 §4.8 R27-8.4 :720（role_seed 行（流代号, 抽取点代号）两两不同、前缀不得为空，有重复或空前缀即 E-SEED-COLLISION）；A27-8.1 :759；检测器 tools/accept/detectors/seed_sites.mjs；表代号经扫描类别行 seedTable 派生（R12-11.5）。真实仓库登记表随 4-3 重建，现读数如实报；C0 起已升 in_core（必过），读数为 0",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_pp_canonical_def_ast4",
+   "detector": "lit_scope",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol27.A27-8.1.pp_canonical_def",
+   "localNo": "A27-8.1",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_canonical_def",
+   "source": "公共部件审查乙 11；卷二十七 :542；例外 kernel/storage.mjs（C0 续做；现违例 1 条进基线）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "detector": "lit_scope",
+   "expect": "report_only",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol27.A27-8.1.pp_canonical_review",
+   "localNo": "A27-8.1",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "reportOnlyMark": "主会话 11-23：规范序列化待人审清单只报不拦",
+   "runsOn": "local_static",
+   "scanClass": "pp_canonical_review",
+   "source": "主会话 11-23 定：规范序列化按定义判；拿不准的待人审清单，只报不拦",
    "stage": 0,
    "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_pp_draw_sites",
+   "detector": "seed_sites",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/seed_sites.mjs",
+   "itemKey": "vol27.A27-8.1.pp_draw_sites",
+   "localNo": "A27-8.1",
+   "method": "static_code",
+   "params": {
+    "checks": [
+     "drawSites"
+    ],
+    "code": "E-SEED-KEY",
+    "groups": [
+     "rules",
+     "kernel"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_draw_sites",
+   "source": "公共部件审查甲 R6 后半；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479（rules.clock.drawSites）（C0 续做；现违例 5 条进基线）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_pp_seed_args_ast",
+   "detector": "lit_scope",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol27.A27-8.1.pp_seed_args",
+   "localNo": "A27-8.1",
+   "method": "static_code",
+   "params": {
+    "code": "E-SEED-KEY",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_seed_args",
+   "source": "公共部件审查甲 R6；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479。后半（drawSites 与 seed-keys 两表一致）未落：需读两表对照，现有检测器无此检查（C0 续做；现违例 3 条进基线）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "detector": "seed_sites",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/seed_sites.mjs",
+   "itemKey": "vol27.A27-8.1.pp_seed_args_dyn",
+   "localNo": "A27-8.1",
+   "method": "static_code",
+   "params": {
+    "checks": [
+     "seedArgs"
+    ],
+    "code": "E-SEED-KEY",
+    "groups": [
+     "rules",
+     "kernel"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_seed_args_dyn",
+   "source": "独立验收漏项“抽取点站点名用变量”；卷二十七 :789（R27-8.1 每个抽取点登记，流代号、抽取点代号须字面量）（独立验收补漏；现违例 0，立即拦）",
+   "stage": 0,
+   "state": "in_core",
    "target": "runtime_code",
    "volume": "vol27",
    "zeroRows": []
@@ -3800,11 +4750,154 @@
    },
    "runsOn": "local_static",
    "scanClass": "wallclock",
-   "source": "卷二十七 S27-3 :244 原句含墙钟、计时器、性能计数器三类引用与 costPlan/advancePlan 封闭参数表；本条只守其中墙钟与性能计数器（wallclock 类别行 callees：Date()、Date.now、performance.now、process.hrtime*、process.uptime），码 E-GLOBAL-UNLISTED；A27-3.1 :478；M27-12 :855（扫描器在 gate 组，不受限，故范围不含 gate）；块6-规矩检查对照门禁条目 1（#34 墙钟半条）。未覆盖（登记挂卡，见 docs/PLAN.md 挂卡栏）：计时器半条（setTimeout/setInterval 等；唯一例外 kernel/scheduler.mjs createWallTimer，豁免须从 kernelApi 登记派生、不点名）——挂 6-19；costPlan/advancePlan 参数表半条——挂首张建 cost-model.mjs、sim-tiers.mjs 的卡",
+   "source": "卷二十七 S27-3 :244 原句含墙钟、计时器、性能计数器三类引用与 costPlan/advancePlan 封闭参数表；本条只守其中墙钟与性能计数器（wallclock 类别行 callees：Date()、Date.now、performance.now、process.hrtime*、process.uptime），码 E-GLOBAL-UNLISTED；A27-3.1 :478；M27-12 :855（扫描器在 gate 组，不受限，故范围不含 gate）；块6-规矩检查对照门禁条目 1（#34 墙钟半条）。计时器半条（setTimeout/setInterval）已由 C0 的 vol27.S27-3.timer 按语法树覆盖（报告档，基线内）；未覆盖（登记挂卡，见 docs/PLAN.md 挂卡栏）：costPlan/advancePlan 参数表半条——挂首张建 cost-model.mjs、sim-tiers.mjs 的卡",
    "stage": 0,
-   "state": "implemented",
+   "state": "in_core",
    "target": "runtime_code",
    "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_pp_timer_ast",
+   "detector": "call_edge",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/call_edge.mjs",
+   "itemKey": "vol27.S27-3.timer",
+   "localNo": "S27-3",
+   "method": "static_code",
+   "params": {
+    "callees": [
+     "timer_global"
+    ],
+    "code": "E-GLOBAL-UNLISTED",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "timer_global",
+   "source": "卷二十七 S27-3 :252 计时器半条（唯一例外：卷二 §2.7 kernelApi 登记的墙钟计时器导出 createWallTimer，其调用点留在基线）；公共部件审查甲 R4 补缺；vol27.S27-3 条目 source 登记的“计时器半条未覆盖”由本条补上；C0 卡",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "detector": "call_edge",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/call_edge.mjs",
+   "itemKey": "vol27.S27-4.pp_eval",
+   "localNo": "S27-4",
+   "method": "static_code",
+   "params": {
+    "callees": [
+     "pp_eval"
+    ],
+    "code": "E-GLOBAL-UNLISTED",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_eval",
+   "source": "李白更正裁定 msg-1122-2255-c0ast：别名、间接调用都要跟到原名，eval 与 new Function 是语法树追不到的间接执行，出现即报；卷二十七 S27-4 :253（禁用语言特性）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_pp_material_read_ast",
+   "detector": "lit_scope",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol3.S3.pp_material_read",
+   "localNo": "S3",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_material_read",
+   "source": "公共部件审查甲 R11；卷三甲 :268；卷三乙 :541；例外：kernel/item.mjs、kernel/dimensions.mjs、kernel/load/**、kernel/validate/**、kernel/blueprint.mjs（加载期校验 checkBlueprintForms）（C0 续做；现违例 5 条进基线）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol3",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_pp_unit_literal_ast",
+   "detector": "lit_scope",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol3.S3.pp_unit_literal",
+   "localNo": "S3",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_unit_literal",
+   "source": "公共部件审查乙 13；卷三乙:179 与表头 unit 字段（item.json 表头 unit 字段）；单位登记表 world/ontology/dimensions/_units.json（C0 续做；现违例 24 条进基线）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol3",
    "zeroRows": []
   },
   {
@@ -3928,6 +5021,76 @@
    "source": "卷五 §3.5 S5-9 :407、卷二十七 S27-11 :260 后半（静态半）、卷十 S10-11 :324、R10-9.12 :755、卷十九 S19-11 ② :329：批量、统计形态结算函数（simform_batch、simform_stat）、生成器、写回器、layoutOf、caveCellsOf、templateBlocksOf 到 alterCells 的调用链为 0；alterCells 的调用点是闭集（泡内开工、泡内建成〔含原地翻修〕、泡内展开三处）。本条目用现有检测器 call_edge 的 entries 形表达（照 vol6.S6-13.a 先例）：许可只读 state-owners.json kernelApi.exports 里 grid-diff.mjs#alterCells 一行的 callers、callerFiles，范围内其余文件 import 该入口即计（定义文件自己不计）。现闭集只有定义文件自己（G9 落地时没有调用者）；三处调用者随各自落地卡（卷十九建造、卷二十七展开 G10、卷五 take）把自己的文件补进该行 callerFiles，并在 systems.*.writeDelegations 登记写者委托；批量、统计结算与生成相关模块不得出现在闭集里。局限：经 runDelegated(state, \"grid-diff.mjs#alterCells\") 字串委托的调用不是 import，由写者委托登记（from 文件）与运行时拒写（R27-1.15 第 2 项）守；个体层泡外行为者静态分不开，同样由运行时拒写守。（G9 修改轮：clearDiffs 同样写格差分，同列入口）",
    "stage": 0,
    "state": "implemented",
+   "target": "runtime_code",
+   "volume": "vol5",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_pp_neighbors_ast2",
+   "detector": "lit_scope",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol5.S5-9.pp_neighbors",
+   "localNo": "S5-9",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_neighbors",
+   "source": "公共部件审查甲 R10；卷五 :491、:1216（现 8 处）（C0 续做；现违例 8 条进基线）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol5",
+   "zeroRows": []
+  },
+  {
+   "baseComp": "c_pp_region_cell_ast",
+   "detector": "lit_scope",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "vol5.S5-9.pp_region_cell",
+   "localNo": "S5-9",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_region_cell",
+   "source": "公共部件审查甲 R9；卷五 :433、:499；例外：kernel/footprint.mjs 的共用函数（修后建）、kernel/handles/keys.mjs gridChunkCells（卷二 :860）（C0 续做；现违例 2 条进基线）",
+   "stage": 0,
+   "state": "in_core",
    "target": "runtime_code",
    "volume": "vol5",
    "zeroRows": []
@@ -4242,6 +5405,52 @@
     "5.1",
     "17.1"
    ]
+  },
+  {
+   "baseComp": "c_pp_ledger_read_ast2",
+   "detector": "path_access",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/path_access.mjs",
+   "itemKey": "vol6.S6-1.read",
+   "localNo": "S6-1",
+   "method": "static_code",
+   "params": {
+    "access": "read",
+    "ast": "on",
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "paths": [
+     "accounts",
+     "ledgerTotals",
+     "outflowTotals",
+     "stockLots",
+     "ledgerCounters"
+    ],
+    "readerSystems": [
+     "sys.economy"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "ledger_state_read",
+   "source": "卷六 §4.1.2 统一入口（读 balance、accountsOf、stockIn；改只有 post）；S6-1 读点一半（vol6.S6-1 守写点）；公共部件审查乙规则 4（现命中 item-state.mjs 三处，修理卡合入后基线清空）；C0 卡",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol6",
+   "zeroRows": []
   },
   {
    "detector": "call_edge",

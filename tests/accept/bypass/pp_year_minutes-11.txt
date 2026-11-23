@@ -1,0 +1,2 @@
+// @file server-plugin/kernel/climate.mjs
+export const half = (c) => c.yearMinutes / 2;

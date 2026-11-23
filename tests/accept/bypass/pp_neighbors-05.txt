@@ -1,0 +1,6 @@
+const d = [];
+d.push([1, 0]);
+d.push([-1, 0]);
+d.push([0, 1]);
+d.push([0, -1]);
+export const dirs = d;

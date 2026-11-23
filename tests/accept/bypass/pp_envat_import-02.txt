@@ -1,0 +1,2 @@
+import * as clim from './kernel/climate.mjs';
+export const t = clim.tempAt;

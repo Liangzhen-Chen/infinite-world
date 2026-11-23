@@ -1,0 +1,9 @@
+export function ser(v) {
+  const stack = [v];
+  const out = [];
+  while (stack.length) {
+    const x = stack.pop();
+    out.push(Object.keys(x).sort());
+  }
+  return JSON.stringify(out);
+}

@@ -1,0 +1,2 @@
+const SEP = '|';
+export const k = (xs) => xs.join(SEP);

@@ -1,0 +1,1 @@
+export const isRegion = (r) => r.kind === FOOTPRINT_KIND.region;

@@ -1,0 +1,4 @@
+function distributionMean(d) {
+  return d;
+}
+export const m = distributionMean;

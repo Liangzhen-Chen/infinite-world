@@ -1,0 +1,1 @@
+export const isHouse = (x) => kindOf(x) === 'house';

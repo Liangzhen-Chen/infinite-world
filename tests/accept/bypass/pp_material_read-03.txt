@@ -1,0 +1,2 @@
+const T = "mate" + "rial";
+export const f = (g) => g.get(T);

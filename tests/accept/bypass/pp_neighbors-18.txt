@@ -1,0 +1,7 @@
+export class G {
+  constructor() {
+    this.dirs = [];
+    this.dirs.push([1, 0], [-1, 0]);
+    this.dirs.push([0, 1]);
+  }
+}

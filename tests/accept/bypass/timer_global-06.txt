@@ -1,0 +1,4 @@
+import { st } from './alias.mjs';
+export const f = (g) => st(g, 1);
+// @file alias.mjs
+export const st = setTimeout;

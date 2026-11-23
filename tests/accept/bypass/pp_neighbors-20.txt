@@ -1,0 +1,7 @@
+export function around(x, y) {
+  const out = [];
+  out.push([x + 1, y]);
+  out.push([x - 1, y]);
+  out.push([x, y + 1]);
+  return out;
+}

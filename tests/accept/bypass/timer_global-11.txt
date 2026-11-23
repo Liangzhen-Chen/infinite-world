@@ -1,0 +1,3 @@
+export function later(queue, fn) {
+  return queue.setTimeout(fn, 10);
+}

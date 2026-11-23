@@ -14,14 +14,40 @@ import { tokenize, foldAt, buildEnv, importsOf, symbolPaths, isP, matchClose } f
 import { scopeFiles, facilityFiles, matchGlobs } from '../read.mjs';
 import { apiCallerHits } from '../lib/api-callers.mjs';
 import { posix } from 'node:path';
+import { projectOf, fileOf, walkAll, calleeOrigins, where } from '../lib/ast.mjs';
+
+// 语法树判一个文件：每个调用与 new，取被调用方的来源，与函数表比。
+function astCallHits(ctx, file, table, params, localRoots) {
+  const rec = fileOf(projectOf(ctx), file);
+  const code = params.code || '';
+  if (!rec || rec.error) return [{ file, line: 0, nodeKind: 'parseError', symbolPath: rec ? rec.error.slice(0, 60) : 'missing', code: 'E-ACC-ITEM-PARAM' }];
+  const own = (entries, key) => (Object.hasOwn(entries, key) ? entries[key] : undefined);
+  const hits = [];
+  walkAll(rec.ast, (n) => {
+    if (n.type !== 'CallExpression' && n.type !== 'NewExpression') return;
+    const zero = n.arguments.length === 0;
+    let reported = false;
+    for (const o of calleeOrigins(n.type === 'NewExpression' ? { callee: n.callee } : n, rec)) {
+      if (!o.path || (o.shadow && !localRoots.has(o.path[0])) || reported) continue; // shadow：形参或无初值的局部名与全局同名不是全局；类别行 localRoots 点名的根（tx.undo.push 的 tx）本来就是形参名，照认
+      const entries = Object.hasOwn(table, o.mod) ? table[o.mod] : null;
+      if (!entries) continue;
+      const key = o.path.join('.');
+      if (!o.dynamic && (Array.isArray(own(entries, key)) || (zero && Array.isArray(own(entries, `${key}()`))))) { hits.push({ file, ...where(n), nodeKind: 'call', code }); reported = true; }
+      else if (o.dynamic && Object.keys(entries).some((k) => k === key || k.startsWith(key ? `${key}.` : ''))) { hits.push({ file, ...where(n), nodeKind: 'review:dynamic', code }); reported = true; }
+    }
+  });
+  return hits;
+}
 
 export function detect(ctx, params, cls) {
   // params.entries（kernelApi 导出 id）：受限内核入口的调用者核对，许可全取自 state-owners 的 callers 登记（lib/api-callers.mjs；卷六 S6-13）。
   if (params.entries) return apiCallerHits(ctx, params);
   const table = {};
+  const localRoots = new Set();
   const rows = new Map((ctx.regs.scanclasses || []).map((c) => [c.scanClass, c]));
   for (const c of params.callees || []) {
     for (const [mod, entries] of Object.entries((rows.get(c) || {}).callees || {})) table[mod] = { ...(table[mod] || {}), ...entries };
+    for (const r of (rows.get(c) || {}).localRoots || []) localRoots.add(r);
   }
   const guarded = (cls || {}).guardedPaths || [];
   const joins = (cls || {}).joinFns || {};
@@ -36,8 +62,12 @@ export function detect(ctx, params, cls) {
     if (!row) { hits.push({ file: 'world/ontology/state-owners.json', line: 0, nodeKind: 'entry', symbolPath: id, code: params.code || '' }); continue; }
     allowed.add((((ctx.model || {}).processes || {}).server || {}).root + id.split('#')[0]);
   }
+  // 纯函数名表（没有路径实参位置、没有测试临时根与路径段设施）一律按语法树判（C0；lib/ast.mjs）：别名、解构、计算属性名、
+  // .bind/.call/.apply、形参与返回值传递、对象成员传递都跟到原名；运行期才知道的下标（Math[k]）出现即报，nodeKind 为 review:dynamic（待人审）。
+  const nameOnly = Object.values(table).length > 0 && Object.values(table).every((es) => Object.values(es).every((p) => Array.isArray(p) && p.length === 0)) && !(params.roots && params.roots.length) && !guarded.length;
   for (const file of scopeFiles(ctx, params)) {
     if (allowed.has(file)) continue;
+    if (nameOnly) { hits.push(...astCallHits(ctx, file, table, params, localRoots)); continue; }
     const toks = tokenize(ctx.read(file));
     const env = buildEnv(toks);
     const sym = symbolPaths(toks);

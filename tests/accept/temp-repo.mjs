@@ -83,5 +83,17 @@ export function tempRepo() {
     if (it.state === 'registered' || !it.impl || it.impl.startsWith('tools/accept/') || existsSync(join(dir, it.impl))) continue;
     writeUnderTempRoot(dir, it.impl, readFileSync(join(ROOT, it.impl)));
   }
+  // 卷二十七 R27-8.1（vol27.A27-8.1.b，seed_sites 双向比对，C0 升必过）：登记表每一行指向的抽取点源文件要在临时仓库里，
+  // 否则“登记行在源码里找不到对应调用点”必报；只放登记行点名的文件本身，经临时根写入口逐个放入。
+  const seedRows = JSON.parse(readFileSync(join(ROOT, 'world/rules/tables/seed-keys.json'), 'utf8')).rows;
+  for (const e of (seedRows.find((r) => r.key === 'entries') || { value: [] }).value) {
+    const rel = e.file.startsWith('server-plugin/') ? e.file : `server-plugin/${e.file}`;
+    if (!existsSync(join(dir, rel))) writeUnderTempRoot(dir, rel, readFileSync(join(ROOT, rel)));
+  }
+  // 语法树判（lib/ast.mjs）跨文件折叠 import 来的常量（如 ledger.mjs 的 TERMINATED_KEY）：被引文件不在临时仓库，折叠不出就多报“动态下标”，命中不再是基线的子集。
+  // 清单放数据（temp-repo-files.json），只列实测需要的文件，经临时根写入口逐个放入。
+  for (const rel of JSON.parse(readFileSync(join(ROOT, 'tests/accept/temp-repo-files.json'), 'utf8')).files) {
+    if (!existsSync(join(dir, rel))) writeUnderTempRoot(dir, rel, readFileSync(join(ROOT, rel)));
+  }
   return dir;
 }

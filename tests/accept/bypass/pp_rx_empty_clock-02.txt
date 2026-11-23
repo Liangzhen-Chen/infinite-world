@@ -1,0 +1,3 @@
+const clock = {};
+const o = { clock };
+export const f = (v) => evaluateRX(v, o);

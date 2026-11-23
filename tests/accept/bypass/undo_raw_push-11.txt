@@ -1,0 +1,4 @@
+export function record(log, entry) {
+  log.undo.push(entry);
+  return log.redo.push(entry);
+}

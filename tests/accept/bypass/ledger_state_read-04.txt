@@ -1,0 +1,4 @@
+export function f(state) {
+  const s = state;
+  return s['acc' + 'ounts'];
+}

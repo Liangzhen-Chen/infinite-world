@@ -1,0 +1,2 @@
+import { generateFill } from './kernel/gen/worldgen.mjs';
+export const g = generateFill;

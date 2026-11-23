@@ -37,6 +37,9 @@ export const PARAM_KINDS = {
   entries: 'api', readerSystems: 'system', scopeSystems: 'system', readerPredicates: 'system',
   // geometryEntries：kernelApi 导出 id，其定义文件就是几何入口文件（call_edge 的入口闭集逐名派生，卷五 S5-10）。
   geometryEntries: 'api',
+  // readerSet：按文件豁免的读者集合代号，集合内容（文件加卷:行依据）登记在条目扫描类别行 fileSets（path_access read，乙 5）；
+  // ast：path_access read 按语法树判（值写 on），动态下标的根名取类别行 dynamicRoots（C0）。
+  readerSet: 'word', ast: 'word',
 };
 
 // 非扫描式条目（没有 scanClass 的）的修订记录（卷十二 S12-16；李白 11-17 S12-16 非扫描式条目修订记录裁定）：记在条目行自身，以条目为单位。

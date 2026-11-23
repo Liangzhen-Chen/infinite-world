@@ -1,0 +1,1 @@
+export const f = (k, x) => Math[k](x);

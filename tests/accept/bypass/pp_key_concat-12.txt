@@ -1,0 +1,1 @@
+export const d = (text) => sha256Text(canonical(text));

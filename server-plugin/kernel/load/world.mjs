@@ -37,27 +37,12 @@ import { checkFieldTables } from '../validate/field-tables.mjs';
 import { checkPolityTables } from '../validate/polity-tables.mjs';
 import { installNamedStructs } from '../named-structs.mjs';
 import { checkGenStages } from '../gen/stages.mjs';
+import { LAYOUT } from './layout.mjs';
 import { checkGenFields } from '../gen/fields.mjs';
 import { checkGeneratedOverAuthored } from '../gen/writeback.mjs';
 import { generatorNames } from '../gen/worldgen.mjs';
 
-export const LAYOUT = Object.freeze({
-  dimensionsDir: 'world/ontology/dimensions',
-  units: '_units.json',
-  vocab: '_vocab.json',
-  effects: '_effects.json',
-  // 冻结分布表（卷二 §1.10 :324–:325；卷二十七 R27-5.2）：与 _units.json 同目录、同一种读法，读入后装配到内核。
-  distributions: '_distributions.json',
-  // 未建派生登记（卷二 §1.12 封卷后勘误 1118k23）：加载器读，与维度表同目录、下划线前缀，不当维度表。
-  unbuiltDerived: '_unbuilt-derived.json',
-  stateOwners: 'world/ontology/state-owners.json',
-  // 效果族行引用闭合要核的原语目录（卷二 §3.9 :1479：`op` 是 primitives.json 的原语）；文件不存在时不交，效果族的原语输出一律被拒。
-  primitives: 'world/ontology/primitives.json',
-  // 命名 struct 登记（卷二 §1.5 :252 struct:pos；事件载荷 pos 的形状从这里派生，G1 记账第一条）；文件不存在时不装入。
-  namedStructs: 'world/ontology/named-structs.json',
-  // 内核常数表在 engine.rules 下的表代号（卷二 S10 登记豁免表；登记行见 world/rules/registry.json）。
-  constants: 'kernelConstants',
-});
+// 世界数据的文件布局常量在无副作用的小模块 layout.mjs（门禁检测器也要引同一处，world.mjs 装配整个内核、不能被检测器直接 import）；没有别处从本文件引 LAYOUT，不再导出（再导出会成同名导出的重复）。
 
 const readText = (p) => readFileSync(p, 'utf8');
 // 地点表的 kind（文件名即 kind，卷二 §1.1）：生成场条目的目标维度在它的表头上核。

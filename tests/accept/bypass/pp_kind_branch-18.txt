@@ -1,0 +1,1 @@
+export const ok = (known, x) => known.has(x.kind);

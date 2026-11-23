@@ -1,0 +1,2 @@
+const st = setTimeout;
+export const f = (g) => st(g, 1);

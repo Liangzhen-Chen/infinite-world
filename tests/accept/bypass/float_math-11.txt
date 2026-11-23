@@ -1,0 +1,4 @@
+function h(fn = Math.sqrt, v) {
+  return fn(v);
+}
+export const f = (x) => h(undefined, x);

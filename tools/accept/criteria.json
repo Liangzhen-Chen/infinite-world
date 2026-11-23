@@ -70,10 +70,30 @@
     {
      "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
      "rev": 17
+    },
+    {
+     "ref": "C0 续做（合 origin/master 后重盖）：lit_scope pattern、decl_cmp dupExport、path_access readerSet、seed_sites NOT_CALL 修补、lib/item-form.mjs 登 readerSet，检测器闭包指纹变，判定口径不变",
+     "rev": 18
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 19
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 20
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 21
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 22
     }
    ],
-   "print": "46cbdeef709fdd0233caf26bf7253449b678f31aa03f37f965c9d7595786bf45",
-   "rev": 17,
+   "print": "610a7ff568ba298d082111541af0ec8e23600baeea4d57221479ea64f7e48191",
+   "rev": 22,
    "scanClass": "baseline_monotone",
    "source": "卷一 V-11（I43）；卷十二 §2.5、E-ACC-BASELINE-UP；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -384,10 +404,90 @@
     {
      "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 74
+    },
+    {
+     "ref": "C0 续做（合 origin/master 后重盖）：lit_scope pattern、decl_cmp dupExport、path_access readerSet、seed_sites NOT_CALL 修补、lib/item-form.mjs 登 readerSet，检测器闭包指纹变，判定口径不变",
+     "rev": 75
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 76
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 77
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 78
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 79
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 80
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 81
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 82
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 83
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 84
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 85
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 86
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 87
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 88
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 89
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 90
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 91
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 92
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 93
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 94
     }
    ],
-   "print": "8fb5ecdce07d66a9b32f8c8afc3f0832955051a88252ef7209e01d5806e6c2d6",
-   "rev": 74,
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 94,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -437,10 +537,18 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 9
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 10
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 11
     }
    ],
    "print": "851fc7ec42dc6c7e8e1e02a6b4608b8d4351d353cf6c60399013b14c1e39a344",
-   "rev": 9,
+   "rev": 11,
    "scanClass": "crit_version",
    "terms": {
     "vol12.S12-13": {
@@ -519,10 +627,66 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 16
+    },
+    {
+     "ref": "C0 续做（合 origin/master 后重盖）：lit_scope pattern、decl_cmp dupExport、path_access readerSet、seed_sites NOT_CALL 修补、lib/item-form.mjs 登 readerSet，检测器闭包指纹变，判定口径不变",
+     "rev": 17
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 18
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 19
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 20
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 21
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 22
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 23
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 24
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 25
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 26
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 27
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 28
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 29
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 30
     }
    ],
-   "print": "08cbca63ff0eff05ddb603abed942c1481d49c046aec7f989d87b56d73ad9f0d",
-   "rev": 16,
+   "print": "7d20cbc58dba2b96e7da4c5491923dbe1c60452427a2a715a213a1243d51d7ec",
+   "rev": 30,
    "scanClass": "cross_write",
    "source": "卷十二 R12-3.1–3.4；卷二 §2.6、§2.7、S5",
    "terms": {
@@ -574,10 +738,18 @@
     {
      "ref": "格子迁移 G12–G16 开写前门禁卡：新登类别 decl_guard 与检测器 decl_guard；条目 vol17.S17-1、vol9.R9-2.10、vol20.S20-fieldCells、vol20.S20-4.7.6 implemented",
      "rev": 1
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 2
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 3
     }
    ],
    "print": "dc2b41ac3fbafa52d08e549dc8099ad1e0d4741e8fe7c488b06a5ad0832fcc36",
-   "rev": 1,
+   "rev": 3,
    "scanClass": "decl_guard",
    "source": "卷十七 S17-1、S17-4；卷九 R9-2.10；卷二十 §4.7.6；卷十二 §2.4 开放登记",
    "terms": {
@@ -681,10 +853,66 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 16
+    },
+    {
+     "ref": "C0 续做（合 origin/master 后重盖）：lit_scope pattern、decl_cmp dupExport、path_access readerSet、seed_sites NOT_CALL 修补、lib/item-form.mjs 登 readerSet，检测器闭包指纹变，判定口径不变",
+     "rev": 17
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 18
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 19
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 20
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 21
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 22
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 23
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 24
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 25
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 26
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 27
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 28
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 29
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 30
     }
    ],
-   "print": "08cbca63ff0eff05ddb603abed942c1481d49c046aec7f989d87b56d73ad9f0d",
-   "rev": 16,
+   "print": "7d20cbc58dba2b96e7da4c5491923dbe1c60452427a2a715a213a1243d51d7ec",
+   "rev": 30,
    "scanClass": "display_read",
    "source": "卷十二 R12-2.10；卷二 S7",
    "terms": {
@@ -1000,10 +1228,66 @@
     {
      "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 75
+    },
+    {
+     "ref": "C0 续做（合 origin/master 后重盖）：lit_scope pattern、decl_cmp dupExport、path_access readerSet、seed_sites NOT_CALL 修补、lib/item-form.mjs 登 readerSet，检测器闭包指纹变，判定口径不变",
+     "rev": 76
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 77
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 78
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 79
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 80
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 81
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 82
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 83
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 84
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 85
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 86
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 87
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 88
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 89
     }
    ],
-   "print": "a54dc2dd21ee384d12e6c38d3474dd4355e3940daec08c95e3e84102d64fe612",
-   "rev": 75,
+   "print": "75b96db55b28fd67fd6104aa4aa7de5e5c9694e26685fce317c8d8b735812176",
+   "rev": 89,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1106,10 +1390,18 @@
     {
      "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 22
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 23
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 24
     }
    ],
    "print": "c48ac15bcf8edc966151687afe013a4bae281f1ad2e278821d03dc64590c982f",
-   "rev": 22,
+   "rev": 24,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -1192,10 +1484,30 @@
     {
      "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
      "rev": 17
+    },
+    {
+     "ref": "C0 续做（合 origin/master 后重盖）：lit_scope pattern、decl_cmp dupExport、path_access readerSet、seed_sites NOT_CALL 修补、lib/item-form.mjs 登 readerSet，检测器闭包指纹变，判定口径不变",
+     "rev": 18
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 19
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 20
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 21
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 22
     }
    ],
-   "print": "46cbdeef709fdd0233caf26bf7253449b678f31aa03f37f965c9d7595786bf45",
-   "rev": 17,
+   "print": "610a7ff568ba298d082111541af0ec8e23600baeea4d57221479ea64f7e48191",
+   "rev": 22,
    "scanClass": "ext_code",
    "terms": {
     "vol12.S12-12": {
@@ -1302,15 +1614,102 @@
     {
      "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 23
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 24
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 25
     }
    ],
    "print": "50ca2a06ed1f40b52ac6f5507540ee3922b9e7799a1eac0e5fe8101944c38b68",
-   "rev": 23,
+   "rev": 25,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
     "vol2.S4": {
      "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "规则层、内核与各服务端组对浮点超越函数 Math.sqrt、pow、exp、log 系、sin/cos/tan 系、反三角、atan2、hypot、cbrt 的调用计数不高于入库基线（卷二十七 R27-5.2、A27-5.1：超越函数全仓只有内核定点数学设施一处实现）；基线之外出现新调用点即不过。Number.EPSILON 一类非调用写法本检测器查不到，未覆盖。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 公共部件检查脚本首批：新登类别 float_math，call_edge 查浮点超越函数调用；le_baseline 逐行基线",
+     "rev": 1
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮：遮蔽判定下 undo_raw_push 的根 tx 本来就是形参名，类别行加 localRoots 点名照认",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 13
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 15
+    }
+   ],
+   "print": "c12d45b9276bb7be1f9bd3e9be5dd514c325f87d332931892916de680b8d8145",
+   "rev": 15,
+   "scanClass": "float_math",
+   "source": "卷二十七 R27-5.2、A27-5.1；公共部件审查乙规则 7；C0 卡",
+   "terms": {
+    "vol27.A27-5.1.float": {
+     "expect": "le_baseline",
      "gates": [
       "pre_commit",
       "pre_merge"
@@ -1360,10 +1759,66 @@
     {
      "ref": "G13（6-8）按对照表 #43、条目备注把 S5-10 入口闭集由\"kernel 组近似\"收紧为按 kernelApi 逐名派生（kernel 以外各组）：call_edge 新增 params.geometryEntries（kernelApi 导出 id，其定义文件即入口文件）；修改轮撤回 exemptFiles、参数类 file 与 kernel 组入范围，判据回到改前范围外加 geometryEntries 逐名派生；判据文字改写，期望、阶段、关口不变；losView（sight.mjs#losView）同批登进 kernelApi",
      "rev": 2
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮：遮蔽判定下 undo_raw_push 的根 tx 本来就是形参名，类别行加 localRoots 点名照认",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 13
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 14
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 15
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 16
     }
    ],
-   "print": "549000fdad67f6395d8f492ada18899f31470196a9212bea036af040ce746e49",
-   "rev": 2,
+   "print": "c12d45b9276bb7be1f9bd3e9be5dd514c325f87d332931892916de680b8d8145",
+   "rev": 16,
    "scanClass": "geometry_bypass",
    "source": "卷五 §3.5 S5-10 :408；卷十二 §2.4 开放登记",
    "terms": {
@@ -1667,10 +2122,30 @@
     {
      "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 72
+    },
+    {
+     "ref": "C0 续做（合 origin/master 后重盖）：lit_scope pattern、decl_cmp dupExport、path_access readerSet、seed_sites NOT_CALL 修补、lib/item-form.mjs 登 readerSet，检测器闭包指纹变，判定口径不变",
+     "rev": 73
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 74
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 75
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 76
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 77
     }
    ],
-   "print": "81a29c253124e6b9d7447fd0af97dc6acd7ca7111b3e85b5f881385344ad77eb",
-   "rev": 72,
+   "print": "ebb9c452b869348e7767bfea26947a24dfa50e257e5658a31e346568416182fa",
+   "rev": 77,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -1778,10 +2253,18 @@
     {
      "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 23
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 24
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 25
     }
    ],
    "print": "50ca2a06ed1f40b52ac6f5507540ee3922b9e7799a1eac0e5fe8101944c38b68",
-   "rev": 23,
+   "rev": 25,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -2156,10 +2639,90 @@
     {
      "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 88
+    },
+    {
+     "ref": "C0 续做（合 origin/master 后重盖）：lit_scope pattern、decl_cmp dupExport、path_access readerSet、seed_sites NOT_CALL 修补、lib/item-form.mjs 登 readerSet，检测器闭包指纹变，判定口径不变",
+     "rev": 89
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 90
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 91
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 92
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 93
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 94
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 95
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 96
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 97
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 98
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 99
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 100
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 101
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 102
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 103
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 104
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 105
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 106
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 107
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 108
     }
    ],
-   "print": "69b73b4ed3ade3b24eef11d21b91f9285f46fcdc367d2cd97f66ddb97ed23c42",
-   "rev": 88,
+   "print": "d757d229cd212154efe215be06598d8082456b33ccc6c54fc941be91bfb3bea0",
+   "rev": 108,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -2273,10 +2836,30 @@
     {
      "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
      "rev": 17
+    },
+    {
+     "ref": "C0 续做（合 origin/master 后重盖）：lit_scope pattern、decl_cmp dupExport、path_access readerSet、seed_sites NOT_CALL 修补、lib/item-form.mjs 登 readerSet，检测器闭包指纹变，判定口径不变",
+     "rev": 18
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 19
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 20
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 21
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 22
     }
    ],
-   "print": "46cbdeef709fdd0233caf26bf7253449b678f31aa03f37f965c9d7595786bf45",
-   "rev": 17,
+   "print": "610a7ff568ba298d082111541af0ec8e23600baeea4d57221479ea64f7e48191",
+   "rev": 22,
    "scanClass": "item_downgrade",
    "terms": {
     "vol12.S12-16": {
@@ -2582,10 +3165,30 @@
     {
      "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 73
+    },
+    {
+     "ref": "C0 续做（合 origin/master 后重盖）：lit_scope pattern、decl_cmp dupExport、path_access readerSet、seed_sites NOT_CALL 修补、lib/item-form.mjs 登 readerSet，检测器闭包指纹变，判定口径不变",
+     "rev": 74
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 75
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 76
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 77
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 78
     }
    ],
-   "print": "81a29c253124e6b9d7447fd0af97dc6acd7ca7111b3e85b5f881385344ad77eb",
-   "rev": 73,
+   "print": "ebb9c452b869348e7767bfea26947a24dfa50e257e5658a31e346568416182fa",
+   "rev": 78,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -2651,14 +3254,101 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 13
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 15
     }
    ],
    "print": "bdbd07de095a0ebe8f9f7376e556cd127ef4d90ac0c1e5aa11d3066a921ca37f",
-   "rev": 13,
+   "rev": 15,
    "scanClass": "item_ledger",
    "terms": {
     "vol12.S12-3": {
      "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "server-plugin 里读状态顶层键 accounts、ledgerTotals、outflowTotals、stockLots、ledgerCounters 的成员链，除账本内核与 state-owners 登记的这些键的声明写者文件外，不高于入库基线（卷六 §4.1.2：数量只经账本入口读写）；基线之外出现新读点即不过。解构取出后的读法按词法追不到。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 公共部件检查脚本首批：新登类别 ledger_state_read，path_access read + readerSystems；le_baseline 逐行基线",
+     "rev": 1
+    },
+    {
+     "ref": "C0 续做：lit_scope 新增 pattern 方式（lib/token-pattern.mjs）、decl_cmp 新增 dupExport 检查、path_access 新增 readerSet、lib/item-form.mjs 登 readerSet 参数键；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 13
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 15
+    }
+   ],
+   "print": "7d20cbc58dba2b96e7da4c5491923dbe1c60452427a2a715a213a1243d51d7ec",
+   "rev": 15,
+   "scanClass": "ledger_state_read",
+   "source": "卷六 §4.1.2；公共部件审查乙规则 4；C0 卡",
+   "terms": {
+    "vol6.S6-1.read": {
+     "expect": "le_baseline",
      "gates": [
       "pre_commit",
       "pre_merge"
@@ -2729,10 +3419,30 @@
     {
      "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
      "rev": 15
+    },
+    {
+     "ref": "C0 续做（合 origin/master 后重盖）：lit_scope pattern、decl_cmp dupExport、path_access readerSet、seed_sites NOT_CALL 修补、lib/item-form.mjs 登 readerSet，检测器闭包指纹变，判定口径不变",
+     "rev": 16
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 17
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 19
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 20
     }
    ],
-   "print": "46cbdeef709fdd0233caf26bf7253449b678f31aa03f37f965c9d7595786bf45",
-   "rev": 15,
+   "print": "610a7ff568ba298d082111541af0ec8e23600baeea4d57221479ea64f7e48191",
+   "rev": 20,
    "scanClass": "ledger_tally",
    "source": "卷十二 §4.1.6 至 §4.14.6 A12-n.1；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -3008,10 +3718,70 @@
     {
      "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
      "rev": 31
+    },
+    {
+     "ref": "C0 续做（合 origin/master 后重盖）：lit_scope pattern、decl_cmp dupExport、path_access readerSet、seed_sites NOT_CALL 修补、lib/item-form.mjs 登 readerSet，检测器闭包指纹变，判定口径不变",
+     "rev": 32
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 33
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 34
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 35
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 36
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 37
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 38
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 39
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮：遮蔽判定下 undo_raw_push 的根 tx 本来就是形参名，类别行加 localRoots 点名照认",
+     "rev": 40
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 41
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 42
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 43
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 44
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 45
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 46
     }
    ],
-   "print": "c53b4745ba7309632dbadc95549d196c94bbd174f133ede5ac1b0245ba242481",
-   "rev": 31,
+   "print": "28f2d25e8c57709701e2fea4803a0e8752c30b8f2e3cba92cb96735e709817c0",
+   "rev": 46,
    "scanClass": "module_edge",
    "terms": {
     "vol1.V-24.b": {
@@ -3437,10 +4207,30 @@
     {
      "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 73
+    },
+    {
+     "ref": "C0 续做（合 origin/master 后重盖）：lit_scope pattern、decl_cmp dupExport、path_access readerSet、seed_sites NOT_CALL 修补、lib/item-form.mjs 登 readerSet，检测器闭包指纹变，判定口径不变",
+     "rev": 74
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 75
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 76
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 77
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 78
     }
    ],
-   "print": "81a29c253124e6b9d7447fd0af97dc6acd7ca7111b3e85b5f881385344ad77eb",
-   "rev": 73,
+   "print": "ebb9c452b869348e7767bfea26947a24dfa50e257e5658a31e346568416182fa",
+   "rev": 78,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -3715,15 +4505,2761 @@
     {
      "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 65
+    },
+    {
+     "ref": "C0 续做（合 origin/master 后重盖）：lit_scope pattern、decl_cmp dupExport、path_access readerSet、seed_sites NOT_CALL 修补、lib/item-form.mjs 登 readerSet，检测器闭包指纹变，判定口径不变",
+     "rev": 66
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 67
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 68
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 69
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 70
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 71
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 72
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 73
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 74
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 75
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 76
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 77
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 78
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 79
     }
    ],
-   "print": "96681980ff2a21bc0e2860eac7af14be527ff429773e52eed0a3e9ad6d141265",
-   "rev": 65,
+   "print": "eb9d7aad8d8f665e9633bf64cc49419d4544618151f7c0cda90ea1d4b842fc60",
+   "rev": 79,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
     "vol12.A12-4.5": {
      "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "定义名为 canonical 的函数（function canonical、const canonical =）在 kernel/storage.mjs 之外计一处（乙 11）。现有违例进基线。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 续做：新登类别 pp_canonical_def（规范序列化只一份（乙 11））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 1 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 13
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 15
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 16
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 17
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 19
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 20
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 20,
+   "scanClass": "pp_canonical_def",
+   "source": "公共部件审查乙 11；卷二十七 :542；例外 kernel/storage.mjs",
+   "terms": {
+    "vol27.A27-8.1.pp_canonical_def": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "形状像规范序列化（取键、排序、拼字符串）、没确认流进摘要或存储、但结果用于相等比较或函数对外导出的函数，以及名字叫 canonical 的函数，计一处（待人审清单），只报不拦：expect report_only。",
+   "log": [
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 1
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 2
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 3
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 4
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 5
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 6
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 6,
+   "scanClass": "pp_canonical_review",
+   "source": "主会话 11-23 定：规范序列化按定义判，拿不准的待人审",
+   "terms": {
+    "vol27.A27-8.1.pp_canonical_review": {
+     "expect": "report_only",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "服务端组里出现 JSON.parse(JSON.stringify( 计一处（乙 10，一律经 clone）。现有违例进基线。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 续做：新登类别 pp_deep_clone（深拷贝只经 clone（乙 10））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 1 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 13
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 15
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 16
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 17
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 19
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 20
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 20,
+   "scanClass": "pp_deep_clone",
+   "source": "公共部件审查乙 10；卷二 :897；kernel/clone.mjs（kernelApi clone）",
+   "terms": {
+    "vol2.S3.pp_deep_clone": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "`.dist ===` 一类比较与 `switch (….dist)` 在 kernel/sample.mjs 之外出现计一处（甲 R7）。现有违例进基线。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 续做：新登类别 pp_dist_branch（分布种类分派只在 sample.mjs（甲 R7））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 4 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 13
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 15
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 16
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 17
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 19
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 20
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 20,
+   "scanClass": "pp_dist_branch",
+   "source": "公共部件审查甲 R7；卷二 §1.10；kernel/sample.mjs 头注",
+   "terms": {
+    "vol2.S3.pp_dist_branch": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "规则表 clock 的键 drawSites 列表里每个抽取点代号，必须在种子键登记表（seedKeys）里有一行 site 与之相同；缺的每个计一条（甲 R6 后半）。两表经 world/rules/registry.json 行取路径。现有违例进基线。",
+   "log": [
+    {
+     "ref": "C0 续做：新登类别 pp_draw_sites（rules.clock.drawSites 每项须在种子键登记表有行（甲 R6 后半））；seed_sites 新增 pattern/dupExport/readerSet 能力，现违例 5 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 12
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 13
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 14
+    }
+   ],
+   "print": "4f3e69b0b0f16cf097ef952fa09c4de386f3a97c8734a0dade3573da3c67c056",
+   "rev": 14,
+   "scanClass": "pp_draw_sites",
+   "source": "公共部件审查甲 R6 后半；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479（rules.clock.drawSites）",
+   "terms": {
+    "vol27.A27-8.1.pp_draw_sites": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "服务端组里 export function/const/class 同名出现在两个及以上文件，每处计一条（nodeKind export）；另 isPos、distributionMean、weatherCellOf 三个职责函数在职责文件之外定义（含非导出）每处计一条（nodeKind owned）。词法级，不认别名与再导出。现有违例进基线；例外只收带卷:行依据的（dupAllow 现为空）。",
+   "log": [
+    {
+     "ref": "C0 续做：新登类别 pp_dup_export（同名导出只一处、职责函数不在职责文件外定义（甲 R14、乙 12））；decl_cmp 新增 pattern/dupExport/readerSet 能力，现违例 17 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 12
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 13
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 14
+    }
+   ],
+   "print": "eb9d7aad8d8f665e9633bf64cc49419d4544618151f7c0cda90ea1d4b842fc60",
+   "rev": 14,
+   "scanClass": "pp_dup_export",
+   "source": "公共部件审查甲 R14、乙 12；卷二 :1162 体例；CLAUDE.md“跨卷共用定义只一处”。职责函数 isPos、distributionMean、weatherCellOf 的职责文件依据：卷二 §1.5 struct:pos（kernel/named-structs.mjs）、卷二 §1.10（kernel/sample.mjs）、卷二十 §3.1（kernel/weather.mjs）",
+   "terms": {
+    "vol27.A27-5.1.pp_dup_export": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "在 Math、全局对象、Date、JSON、Number、Object、Reflect、performance、process、crypto、状态根 state 与引擎 rules 这些根上，用折叠不出常量的下标取成员（Math[k]、state[k]）计一处，nodeKind 标 review:dynamic（待人审）：语法树判不出取的是哪个成员，须人审。其余对象上的动态下标（数组按位置取、Map 风格取值）数量极大，不全报，已写进说明的盲区。",
+   "log": [
+    {
+     "ref": "按语法树判：新登类别 pp_dynamic_index（运行期才知道的下标取成员（待人审））",
+     "rev": 1
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 2
+    },
+    {
+     "ref": "现有违例不为 0：期望由 zero 改为 le_baseline，逐行基线登记（动态下标与变量指数的现有处待人审，只许减不许增）",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 5
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 13
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 14
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 15
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 16
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 17
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 18
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 18,
+   "scanClass": "pp_dynamic_index",
+   "source": "李白更正裁定 msg-1122-2255-c0ast（动态下标出现即报，标待人审）；卷二十七 R27-5.2、A27-5.1；卷二十 :436",
+   "terms": {
+    "vol27.A27-5.1.pp_dynamic_index": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "服务端组里任何对象上、折叠不出常量的下标取成员（obj[k]、arr[i]）计一处，nodeKind 标 review:dynamic（待人审）。只报不拦：expect report_only，块验收由主会话与审卡人看清单；重点人审对象是年长、超越函数、账本与持有字段的取值（cal[key] 一类）。",
+   "log": [
+    {
+     "ref": "按语法树判：新登类别 pp_dynamic_review（全部运行期下标取成员（待人审清单，只报不拦））",
+     "rev": 1
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 2
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 3
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 4
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 5
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 11
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 12
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 13
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 15
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 15,
+   "scanClass": "pp_dynamic_review",
+   "source": "李白更正裁定 msg-1122-2255-c0ast：运行期才知道的动态下标出现即报，标待人审。本条列全部对象上的动态下标（含数组按位置取），数量大，只报不拦（报告里列出，供人审）；登记在 Math、全局对象、状态根等根上的动态下标由 pp_dynamic_index 拦",
+   "terms": {
+    "vol27.A27-5.1.pp_dynamic_review": {
+     "expect": "report_only",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "world/ontology/state-owners.json 的 kernelApi 登记里，温度与天气模型导出（kernel/climate.mjs、kernel/weather.mjs 的 tempAt 等九个）的行写 callers 含 \"rules\" 计一处（只许 callerFiles 指 envAt 实现，甲 R2）。现有违例进基线。词法读 JSON，行内键序变化不影响。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 续做：新登类别 pp_envat_callers（kernelApi 登记不得放宽温度天气入口（甲 R2））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 6 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 13
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 15
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 16
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 17
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 19
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 20
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 20,
+   "scanClass": "pp_envat_callers",
+   "source": "公共部件审查甲 R2；卷二十 :478；state-owners.json kernelApi 行形状",
+   "terms": {
+    "vol20.T-3.pp_envat_callers": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "规则层与内核等服务端组里 import（含 export … from）kernel/climate.mjs、kernel/weather.mjs 的温度与天气模型导出（tempAt、dailyMeanTemp、outdoorTemp、groundTemp、indoorTemp、climateTempC、seasonAt、weatherAt、weatherCellOf）计一处；只许 envAt 实现文件（G16 新建，现不存在）与 climate.mjs、weather.mjs 互引（甲 R1 原句）。现有违例进基线，修理合入后清空。局限：import * as 命名空间与动态 import 不认。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 续做：新登类别 pp_envat_import（温度、天气模型只经 envAt（甲 R1））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 2 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 13
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 15
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 16
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 17
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 19
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 20
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 20,
+   "scanClass": "pp_envat_import",
+   "source": "公共部件审查甲 R1（docs/研究/公共部件审查-甲-1122.md 第八节）；卷二十 :478、:631；例外：climate.mjs、weather.mjs 互相引用（甲 R1 原句）",
+   "terms": {
+    "vol20.T-3.pp_envat_import": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "服务端组里出现 Number.EPSILON 计一处（乙 7）。现有违例进基线。调用半条见 vol27.A27-5.1.float。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 续做：新登类别 pp_epsilon（不用浮点容差（乙 7 的 Number.EPSILON 半条））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 2 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 13
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 15
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 16
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 17
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 19
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 20
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 20,
+   "scanClass": "pp_epsilon",
+   "source": "公共部件审查乙 7；卷二十七 :620、:634（R27-5.2 数值运算只有三条路）",
+   "terms": {
+    "vol27.A27-5.1.pp_epsilon": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "规则层与内核等服务端组里出现 eval、new Function（含别名、globalThis 前缀）计一处。语法树无法跟踪动态代码里的调用，所以这类写法一律报，不允许存在。现违例进基线时只许减不许增。",
+   "log": [
+    {
+     "ref": "按语法树判：新登类别 pp_eval（运行期动态代码（eval、new Function））",
+     "rev": 1
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 2
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 3
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 4
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮：遮蔽判定下 undo_raw_push 的根 tx 本来就是形参名，类别行加 localRoots 点名照认",
+     "rev": 5
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 9
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 10
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 11
+    }
+   ],
+   "print": "c12d45b9276bb7be1f9bd3e9be5dd514c325f87d332931892916de680b8d8145",
+   "rev": 11,
+   "scanClass": "pp_eval",
+   "source": "李白更正裁定 msg-1122-2255-c0ast：别名、间接调用都要跟到原名，eval 与 new Function 是语法树追不到的间接执行，出现即报；卷二十七 S27-4 :253（禁用语言特性）",
+   "terms": {
+    "vol27.S27-4.pp_eval": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "服务端组里 `**`、`**=` 后紧跟非整数数值字面量（如 `x ** 0.5`）或 `(a / b)` 形分数指数计一处（开方与分数次幂应走定点数学设施）。整数次幂不计；变量指数、BigInt 幂（fixedPow 的整数次幂）不计，见盲区。现有违例进基线。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "独立验收补漏：新登类别 pp_float_pow（不用 ** 做非整数次幂（乙 7 的 ** 半条））；现违例 0 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 3
+    },
+    {
+     "ref": "现有违例不为 0：期望由 zero 改为 le_baseline，逐行基线登记（动态下标与变量指数的现有处待人审，只许减不许增）",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 13
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 14
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 15
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 16
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 17
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 19
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 19,
+   "scanClass": "pp_float_pow",
+   "source": "公共部件审查乙 7；卷二十七 R27-5.2（超越函数只经定点数学设施，幂函数 pow 同属）；独立验收漏项“** 运算符”",
+   "terms": {
+    "vol27.A27-5.1.pp_float_pow": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "FOOTPRINT_KIND.<种> 出现在比较（=== !== == != ）或 case 里，在 kernel/footprint-kind.mjs 之外计一处（甲 R12）。gen/* 里“取全部建筑行”一类按种类过滤的比较现在也计，进基线（修后开）。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 续做：新登类别 pp_footprint_kind（足迹种类分派只在处理器表（甲 R12））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 44 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 13
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 15
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 16
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 17
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 19
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 20
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 20,
+   "scanClass": "pp_footprint_kind",
+   "source": "公共部件审查甲 R12；卷二 §1.9；模块化评估第三节；例外 kernel/footprint-kind.mjs（gen/* 按种类过滤的比较进基线，M-11③ 修后开）",
+   "terms": {
+    "vol2.S3.pp_footprint_kind": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "服务端组里 import（含 export … from）gen/worldgen.mjs、gen/holdcalls.mjs、gen/assetcalls.mjs、opening-people.mjs 的生成器与开局应用函数（generateFill、applyGovernorCalls、applyOpeningAssets、openingAssetChannel、applyOpeningPeople）计一处；只许 server-plugin/world-create.mjs（generateWorld 所在）。现有违例进基线。局限：只认 import 名，不认转手调用。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 续做：新登类别 pp_gen_callers（生成器只经世界创建入口调用（乙 9））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 0 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 13
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 14
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 15
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 16
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 17
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 19
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 19,
+   "scanClass": "pp_gen_callers",
+   "source": "公共部件审查乙 9（docs/研究/公共部件审查-乙-1122.md :161）；卷十 :403（生成器只在世界创建事务里按步骤表跑）；例外：generateWorld 所在文件 server-plugin/world-create.mjs（卷十 §3.2 :291）；requireMaterialized 现不存在，建成后其所在文件须加入例外；作者工具在 tools/ 下，不在扫描范围（卷十 :1002）",
+   "terms": {
+    "vol10.S10-3.pp_gen_callers": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "正则字面量或 RegExp 字串里出现 `{1,47}`、`{0,47}` 的代号文法，在 kernel/validate/types.mjs 之外计一处（乙 6）。现有违例进基线。局限：手写字符集循环形态不认。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 续做：新登类别 pp_grammar_regex（代号文法只一处（乙 6））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 6 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 13
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 15
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 16
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 17
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 19
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 20
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 20,
+   "scanClass": "pp_grammar_regex",
+   "source": "公共部件审查乙 6；卷二 :291；例外 kernel/validate/types.mjs",
+   "terms": {
+    "vol2.S13.pp_grammar_regex": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "服务端组里读状态顶层键 holdings 的成员链，除 fileSets.holdingsReaders 登记的文件（kernel/holdings.mjs 持有写者、kernel/save.mjs 与 kernel/load/save.mjs 存档序列化、kernel/load/state-owners.mjs 声明表读取）之外计一处（乙 5）。现有违例进基线，持有模块自身的读点不进基线。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 续做：新登类别 pp_holdings_read（持有状态只经持有模块（乙 5））；path_access 新增 pattern/dupExport/readerSet 能力，现违例 6 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 12
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 13
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 14
+    }
+   ],
+   "print": "7d20cbc58dba2b96e7da4c5491923dbe1c60452427a2a715a213a1243d51d7ec",
+   "rev": 14,
+   "scanClass": "pp_holdings_read",
+   "source": "公共部件审查乙 5；卷十八:200（持有写者）；卷二 §2.6；读者按文件豁免（fileSets.holdingsReaders，每行带依据）",
+   "terms": {
+    "vol18.R18-1.10.pp_holdings_read": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "服务端组里：sha256Text( 的实参含 .join( 或模板串；引用 GRAMMAR_TOKENS.joinSep（joinSep）；`const … = '|'` 作键分隔；.join 的实参是 '|'、':'、'.' 字串字面量，各计一处。拼键只许 kernel/handles/keys.mjs，文法记号字面量只许 kernel/handles/markers.mjs。现有违例进基线。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 续做：新登类别 pp_key_concat（键串只在 keys.mjs 拼，文法记号只放 markers.mjs（甲 R5、乙 1、乙 2））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 34 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 13
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 15
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 16
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 17
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 19
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 20
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 20,
+   "scanClass": "pp_key_concat",
+   "source": "公共部件审查甲 R5、乙 1、乙 2；卷二 :337、:897、:1162；例外：整份文本摘要 sha256Text(canonical(…))、sha256Text(text) 不拼键（不含 .join，不命中）",
+   "terms": {
+    "vol2.S10.pp_key_concat": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "服务端组里按种类、类别写的分支计一处：`.kind/.type/.class/.category/.form` 与字串字面量比较（=== !== == !=，两个方向），`switch (… .kind)` 一类；裸变量 `kind === '…'` 也计。这是宽判据（词法级，不判是不是实体种类），现有写法很多，全部进基线，只许减不许增；新增即拒。数值字面量由既有 vol2.S10 管，不重复。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "独立验收补漏：新登类别 pp_kind_branch（写死的种类、类别分支（独立验收补漏））；现违例 16 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 5
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 13
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 14
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 15
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 16
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 17
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 18
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 18,
+   "scanClass": "pp_kind_branch",
+   "source": "独立验收（亮圳 11-22「独立测门禁1122」）指出“写死数值与种类分支没有 C0 专条”；卷一 二.1（派生优先，不按 ID 或场景特判，docs/产品原则.md）；卷二 S10（常数登记）",
+   "terms": {
+    "vol2.S10.pp_kind_branch": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "直接 dim(engine, state, <material 表>, …) 或 tables.get(<material 表>) 取材料行（表名为 MATERIAL、MATERIAL_TABLE、S.material 或字串 material）在上列例外文件之外出现计一处（甲 R11）。place.mjs :1617 的加载期校验在例外文件之外，作为基线行保留。现有违例进基线。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 续做：新登类别 pp_material_read（材料只经 materialView（甲 R11））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 5 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 13
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 15
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 16
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 17
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 19
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 20
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 20,
+   "scanClass": "pp_material_read",
+   "source": "公共部件审查甲 R11；卷三甲 :268；卷三乙 :541；例外：kernel/item.mjs、kernel/dimensions.mjs、kernel/load/**、kernel/validate/**、kernel/blueprint.mjs（加载期校验 checkBlueprintForms）",
+   "terms": {
+    "vol3.S3.pp_material_read": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "四邻、八邻方向表字面量（[[1, 0], [-1, 0], … 与 [[0, 1], [0, -1], … 两种起头）出现计一处；全仓共用定义只一处，现有各处进基线、只许减不许增（甲 R10；共用定义建成前所有处都在基线里）。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 续做：新登类别 pp_neighbors（邻接方向常量只一处（甲 R10））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 8 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 13
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 15
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 16
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 17
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 19
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 20
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 20,
+   "scanClass": "pp_neighbors",
+   "source": "公共部件审查甲 R10；卷五 :491、:1216（现 8 处）",
+   "terms": {
+    "vol5.S5-9.pp_neighbors": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "server-plugin 各组代码（含 gate 组）里 import、export … from、import()、require() 的模块说明符以 acorn 开头计一处，零违例必过。",
+   "log": [
+    {
+     "ref": "按语法树判：新登类别 pp_no_acorn_runtime（游戏运行时代码不引用语法树解析器 acorn）",
+     "rev": 1
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 4
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 5
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 13
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 14
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 15
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 16
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 17
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 17,
+   "scanClass": "pp_no_acorn_runtime",
+   "source": "李白更正裁定 msg-1122-2255-c0ast：acorn 只许 tools/accept 引用，server-plugin 不得引用",
+   "terms": {
+    "vol12.S12-12.pp_no_acorn_runtime": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "`typeof X.coarse === 'boolean'` 一类手写位置形状核对在 kernel/named-structs.mjs、kernel/named-struct-match.mjs 之外出现计一处（甲 R8）。现有违例进基线。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 续做：新登类别 pp_pos_shape（struct:pos 形状只经 isPosValue（甲 R8））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 3 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 13
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 15
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 16
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 17
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 19
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 20
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 20,
+   "scanClass": "pp_pos_shape",
+   "source": "公共部件审查甲 R8；卷二 §1.5 struct:pos 登记；例外 kernel/named-structs.mjs、kernel/named-struct-match.mjs",
+   "terms": {
+    "vol2.S3.pp_pos_shape": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "同一表达式里 regionCellM 与 cellM 相除，或 regionCellM（含派生名 regionCellMf）与 >> 1n 组合，在 kernel/footprint.mjs、kernel/handles/keys.mjs 之外出现计一处（甲 R9）。现有违例进基线。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 续做：新登类别 pp_region_cell（区格边长与中心只一处（甲 R9））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 2 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 13
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 15
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 16
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 17
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 19
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 20
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 20,
+   "scanClass": "pp_region_cell",
+   "source": "公共部件审查甲 R9；卷五 :433、:499；例外：kernel/footprint.mjs 的共用函数（修后建）、kernel/handles/keys.mjs gridChunkCells（卷二 :860）",
+   "terms": {
+    "vol5.S5-9.pp_region_cell": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "运行期 evaluateRX(…, { … clock: {} }, …) 字面量空对象，在 kernel/validate/** 之外出现计一处（甲 R15，B4 绑定提供者建成后修）。现有违例进基线。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 续做：新登类别 pp_rx_empty_clock（RX 时刻绑定不得写空（甲 R15））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 5 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 13
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 15
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 16
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 17
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 19
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 20
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 20,
+   "scanClass": "pp_rx_empty_clock",
+   "source": "公共部件审查甲 R15；卷二十 :312、:685；例外：加载期校验 kernel/validate/**",
+   "terms": {
+    "vol20.T-4.pp_rx_empty_clock": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "调 drawBelow、drawByKey、diceSeedKey、identitySeedKey、genDraw、genDiceKey、genIdKey 时，流代号（第一实参）或抽取点代号（第二实参）不是字串字面量计一处（函数声明处不计）。常量折叠得出的字串也会计入（词法级，宁报勿漏），进基线。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 续做：新登类别 pp_seed_args（抽取点实参须字串字面量（甲 R6 前半））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 3 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 13
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 15
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 16
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 17
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 19
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 20
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 20,
+   "scanClass": "pp_seed_args",
+   "source": "公共部件审查甲 R6；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479。后半（drawSites 与 seed-keys 两表一致）未落：需读两表对照，现有检测器无此检查",
+   "terms": {
+    "vol27.A27-8.1.pp_seed_args": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "包装的被调名从种子键登记表里已登记的行对上的调用点学出（不点名）；范围内这些被调名的调用，前两个实参不都是字串字面量（站点名、流代号用变量、拼接、模板串）计一处。函数声明与 new 构造不计。现有违例进基线。盲区：包装名没有任何登记行时学不出来；经转手函数传名字不认。",
+   "log": [
+    {
+     "ref": "独立验收补漏：新登类别 pp_seed_args_dyn（抽取点站点名用变量（独立验收补漏））；现违例 0 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 5
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 11
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 12
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 13
+    }
+   ],
+   "print": "4f3e69b0b0f16cf097ef952fa09c4de386f3a97c8734a0dade3573da3c67c056",
+   "rev": 13,
+   "scanClass": "pp_seed_args_dyn",
+   "source": "独立验收漏项“抽取点站点名用变量”；卷二十七 :789（R27-8.1 每个抽取点登记，流代号、抽取点代号须字面量）",
+   "terms": {
+    "vol27.A27-8.1.pp_seed_args_dyn": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "键形模板串（首尾无文字、至少两个表达式、表达式之间只有一个键分隔符 : , | #，如 `${a}:${b}:${c}`；路径与提示文案用的 / . 空格不算）的同一键形出现在两个及以上文件，每处计一条（甲 R13）。词法级：不判是否作 Map 键，凡键形模板串都计，宁报勿漏；允许键形 tplKey.except 须带卷:行依据（现为空）。现有违例进基线。",
+   "log": [
+    {
+     "ref": "C0 续做：新登类别 pp_tpl_key（不跨文件依赖私有键形（甲 R13））；decl_cmp 新增 pattern/dupExport/readerSet 能力，现违例 72 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 5
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 11
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 12
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 13
+    }
+   ],
+   "print": "eb9d7aad8d8f665e9633bf64cc49419d4544618151f7c0cda90ea1d4b842fc60",
+   "rev": 13,
+   "scanClass": "pp_tpl_key",
+   "source": "公共部件审查甲 R13；卷二 :860（键串形只由登记方给）；模块化原则卡头第二节第 9 条",
+   "terms": {
+    "vol2.S3.pp_tpl_key": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "服务端组里字串字面量恰等于单位登记表（_units.json 的 units[].id）里某个单位代号计一处（乙 13，单位应取自表头 unit 字段）。单位代号取自登记，代码里不列；短代号（如 m）也会命中同名字串，宁报勿漏，现有违例进基线、只许减。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 续做：新登类别 pp_unit_literal（单位不写死（乙 13））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 24 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 13
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 14
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 15
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 16
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 17
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 19
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 19,
+   "scanClass": "pp_unit_literal",
+   "source": "公共部件审查乙 13；卷三乙:179 与表头 unit 字段（item.json 表头 unit 字段）；单位登记表 world/ontology/dimensions/_units.json",
+   "terms": {
+    "vol3.S3.pp_unit_literal": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "标识符 yearMinutes 在 kernel/calendar.mjs 与 kernel/climate.mjs 之外出现计一处（甲 R3）。现有违例进基线。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 续做：新登类别 pp_year_minutes（年长只经 astroView 换算入口（甲 R3））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 2 条",
+     "rev": 1
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 13
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 15
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 16
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 17
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 18
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 19
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 20
+    }
+   ],
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 20,
+   "scanClass": "pp_year_minutes",
+   "source": "公共部件审查甲 R3；卷二十 :436、:477 T-3 (c)；例外 climate.mjs（日均温日份额，天文相位，卷二十 :436）",
+   "terms": {
+    "vol20.T-3.pp_year_minutes": {
+     "expect": "le_baseline",
      "gates": [
       "pre_commit",
       "pre_merge"
@@ -4069,10 +7605,94 @@
     {
      "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 84
+    },
+    {
+     "ref": "C0 续做（合 origin/master 后重盖）：lit_scope pattern、decl_cmp dupExport、path_access readerSet、seed_sites NOT_CALL 修补、lib/item-form.mjs 登 readerSet，检测器闭包指纹变，判定口径不变",
+     "rev": 85
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 86
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 87
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 88
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 89
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 90
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 91
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 92
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 93
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮：遮蔽判定下 undo_raw_push 的根 tx 本来就是形参名，类别行加 localRoots 点名照认",
+     "rev": 94
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 95
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 96
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 97
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 98
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 99
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 100
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 101
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 102
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 103
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 104
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 105
     }
    ],
-   "print": "54efd0bf91c84d4fe884b79fa994a8d1b22be7ed0c4e574f3874298eee660fff",
-   "rev": 84,
+   "print": "1eb5fd54fbcacc594bd22dfd976b1ac24a86b1cbbf4da6b93c87765b85f0348e",
+   "rev": 105,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -4170,10 +7790,66 @@
     {
      "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
      "rev": 21
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 22
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 23
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 24
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 25
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 26
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 27
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 28
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮：遮蔽判定下 undo_raw_push 的根 tx 本来就是形参名，类别行加 localRoots 点名照认",
+     "rev": 29
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 30
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 31
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 32
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 33
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 34
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 35
     }
    ],
-   "print": "549000fdad67f6395d8f492ada18899f31470196a9212bea036af040ce746e49",
-   "rev": 21,
+   "print": "c12d45b9276bb7be1f9bd3e9be5dd514c325f87d332931892916de680b8d8145",
+   "rev": 35,
    "scanClass": "rng_bypass",
    "terms": {
     "vol27.A27-8.1.a": {
@@ -4227,10 +7903,18 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 10
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 12
     }
    ],
    "print": "c7c27be28986878b808333a90101565cd377088697f67905e94d65c971d40816",
-   "rev": 10,
+   "rev": 12,
    "scanClass": "rules_import",
    "terms": {
     "vol1.V-9": {
@@ -4444,10 +8128,70 @@
     {
      "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 50
+    },
+    {
+     "ref": "C0 续做（合 origin/master 后重盖）：lit_scope pattern、decl_cmp dupExport、path_access readerSet、seed_sites NOT_CALL 修补、lib/item-form.mjs 登 readerSet，检测器闭包指纹变，判定口径不变",
+     "rev": 51
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 52
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 53
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 54
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 55
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 56
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 57
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 58
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 59
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 60
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 61
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 62
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 63
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 64
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 65
     }
    ],
-   "print": "26bcd1fa06cfc84441838fec885643e65af19f3d1e13bfa5055650c6a1f324d3",
-   "rev": 50,
+   "print": "4f3e69b0b0f16cf097ef952fa09c4de386f3a97c8734a0dade3573da3c67c056",
+   "rev": 65,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -4757,10 +8501,90 @@
     {
      "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 72
+    },
+    {
+     "ref": "C0 续做（合 origin/master 后重盖）：lit_scope pattern、decl_cmp dupExport、path_access readerSet、seed_sites NOT_CALL 修补、lib/item-form.mjs 登 readerSet，检测器闭包指纹变，判定口径不变",
+     "rev": 73
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 74
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 75
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 76
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 77
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 78
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 79
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 80
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 81
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 82
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 83
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 84
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 85
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 86
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 87
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮：规范序列化不再按名字（canonical）认，待人审清单只留形状加去向不明的",
+     "rev": 88
+    },
+    {
+     "ref": "C0 第三方审卡（Opus 11-23）必须改：binaryNames/callWithArg 按取值来源判（名单精确比，不用正则前缀）；acorn 守卫认 createRequire 得来的 require；单位只认值位置（字段名清单与同名映射不算）；单位表取 world.mjs LAYOUT.units 与 loadUnits；规范序列化方法名进数据并删去重复的 functionShape/functionNamed",
+     "rev": 89
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：binaryNames/callWithArg 成员路径照认、形参单名遮蔽；单位表开关改 unitTable 布尔键（避免代码里出现 units 字串）",
+     "rev": 90
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 91
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 92
     }
    ],
-   "print": "8fb5ecdce07d66a9b32f8c8afc3f0832955051a88252ef7209e01d5806e6c2d6",
-   "rev": 72,
+   "print": "df7dfd3c168c2f7be7f3e63cb61eb9381f462c7ca82d0d9e41452974419d4b08",
+   "rev": 92,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -4779,10 +8603,66 @@
     {
      "ref": "G10 第一步（对照表 #60，开写前登）：新登类别 sim_bypass，用现有检测器 path_access 的 read 方式表达读点唯一（照 S5-10 先例）；条目 vol27.S27-11.a implemented",
      "rev": 1
+    },
+    {
+     "ref": "C0 续做（合 origin/master 后重盖）：lit_scope pattern、decl_cmp dupExport、path_access readerSet、seed_sites NOT_CALL 修补、lib/item-form.mjs 登 readerSet，检测器闭包指纹变，判定口径不变",
+     "rev": 2
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 13
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 15
     }
    ],
-   "print": "08cbca63ff0eff05ddb603abed942c1481d49c046aec7f989d87b56d73ad9f0d",
-   "rev": 1,
+   "print": "7d20cbc58dba2b96e7da4c5491923dbe1c60452427a2a715a213a1243d51d7ec",
+   "rev": 15,
    "scanClass": "sim_bypass",
    "source": "卷二十七 §4.8 S27-11 :260、A27-1.11 :369；对照表 docs/迁移体检/格子G6-G11-规矩检查对照.md #60；卷十二 §2.4 开放登记",
    "terms": {
@@ -4985,10 +8865,18 @@
     {
      "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 48
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 49
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 50
     }
    ],
    "print": "2aec1d66668307fe374ed0210ac0650e1d1275a96f6d44ef65d0a603589570dc",
-   "rev": 48,
+   "rev": 50,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -5092,10 +8980,18 @@
     {
      "ref": "G9 前置内核子卡《dated 按日生效写者》：load/state-owners.mjs 写者对象加 dated、handles/markers.mjs 加 DATED_RECORD_FIELDS、storage.mjs 加 appendDated 与 dated 记录读取、dimensions.mjs 读路径加按日取值、error-codes.mjs 登 E-DATED-FROMDAY 与 E-DATED-WRITER；检测器 import 闭包含这些文件，判据代码指纹随之变，判据本身未改",
      "rev": 22
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 23
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 24
     }
    ],
    "print": "50ca2a06ed1f40b52ac6f5507540ee3922b9e7799a1eac0e5fe8101944c38b68",
-   "rev": 22,
+   "rev": 24,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -5213,6 +9109,85 @@
     },
     "vol2.S3.a": {
      "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "规则层、内核与各服务端组对计时器 setTimeout、setInterval（含 node:timers、timers 导入）的调用计数不高于入库基线（卷二十七 S27-3 :252 计时器半条）。唯一例外是卷二 §2.7 kernelApi 登记的墙钟计时器导出 kernel/scheduler.mjs 的 createWallTimer（S27-3 原句），其现有调用点作为基线行保留，不另开文件豁免；基线之外出现新调用点即不过。该导出转为数据登记驱动豁免后，基线清空、本条改为违例为 0。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 公共部件检查脚本首批：新登类别 timer_global，call_edge 查计时器调用；le_baseline 逐行基线",
+     "rev": 1
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮：遮蔽判定下 undo_raw_push 的根 tx 本来就是形参名，类别行加 localRoots 点名照认",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 13
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 15
+    }
+   ],
+   "print": "c12d45b9276bb7be1f9bd3e9be5dd514c325f87d332931892916de680b8d8145",
+   "rev": 15,
+   "scanClass": "timer_global",
+   "source": "卷二十七 S27-3 :252；公共部件审查甲 R4；C0 卡",
+   "terms": {
+    "vol27.S27-3.timer": {
+     "expect": "le_baseline",
      "gates": [
       "pre_commit",
       "pre_merge"
@@ -5491,10 +9466,66 @@
     {
      "ref": "主会话合入 ds/g14-fields（G14 第一张：E-PROP-LAW 登记、det-math splitLastRemainder、field-step、规则表 unbuilt 登记）于 C2 之后：检测器 import 闭包变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 67
+    },
+    {
+     "ref": "C0 续做（合 origin/master 后重盖）：lit_scope pattern、decl_cmp dupExport、path_access readerSet、seed_sites NOT_CALL 修补、lib/item-form.mjs 登 readerSet，检测器闭包指纹变，判定口径不变",
+     "rev": 68
+    },
+    {
+     "ref": "C0 补做：lit_scope 新增 unitCode 字面量类、decl_cmp 新增 dupTplKey、seed_sites 新增 drawSites 检查；本类别判定口径不变，检测器闭包指纹随之变，重盖",
+     "rev": 69
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 70
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 71
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 72
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 73
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 74
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 75
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 76
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 77
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 78
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 79
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 80
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 81
     }
    ],
-   "print": "96681980ff2a21bc0e2860eac7af14be527ff429773e52eed0a3e9ad6d141265",
-   "rev": 67,
+   "print": "eb9d7aad8d8f665e9633bf64cc49419d4544618151f7c0cda90ea1d4b842fc60",
+   "rev": 81,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -5508,6 +9539,85 @@
     },
     "vol2.S9": {
      "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "规则层与内核里直接写事务撤销栈 `tx.undo.push(` 的调用点不高于入库基线（撤销项格式的唯一消费者是 kernel/transaction.mjs 回滚，应由一处事务写入函数产生，卷二 §2.6）；基线之外出现新调用点即不过。对应修理合入后基线清空，本条改为违例为 0。局限：别名（const u = tx.undo; u.push）按词法追不到。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "log": [
+    {
+     "ref": "C0 公共部件检查脚本首批：新登类别 undo_raw_push，call_edge 查 tx.undo.push；le_baseline 逐行基线",
+     "rev": 1
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 2
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 3
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 4
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 5
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 6
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 7
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 8
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮：遮蔽判定下 undo_raw_push 的根 tx 本来就是形参名，类别行加 localRoots 点名照认",
+     "rev": 9
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 10
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 11
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 12
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 13
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 14
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 15
+    }
+   ],
+   "print": "c12d45b9276bb7be1f9bd3e9be5dd514c325f87d332931892916de680b8d8145",
+   "rev": 15,
+   "scanClass": "undo_raw_push",
+   "source": "公共部件审查乙规则 3；卷二 §2.6；C0 卡",
+   "terms": {
+    "vol2.S5.undo": {
+     "expect": "le_baseline",
      "gates": [
       "pre_commit",
       "pre_merge"
@@ -5593,10 +9703,66 @@
     {
      "ref": "b6-20 修改轮：tools/accept/read.mjs 登记表（REGISTRY）加 dettpl（卷十二 §2.8、§2.11），lib/item-form.mjs 的 ENUM 加 dettplCompares，在本类别检测器 import 闭包内；判据逻辑未变",
      "rev": 19
+    },
+    {
+     "ref": "C0 续做（合 origin/master 后重盖）：lit_scope pattern、decl_cmp dupExport、path_access readerSet、seed_sites NOT_CALL 修补、lib/item-form.mjs 登 readerSet，检测器闭包指纹变，判定口径不变",
+     "rev": 20
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 21
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 22
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 23
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 24
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 25
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 26
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 27
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 28
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 29
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 30
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 31
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 32
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 33
     }
    ],
-   "print": "08cbca63ff0eff05ddb603abed942c1481d49c046aec7f989d87b56d73ad9f0d",
-   "rev": 19,
+   "print": "7d20cbc58dba2b96e7da4c5491923dbe1c60452427a2a715a213a1243d51d7ec",
+   "rev": 33,
    "scanClass": "version_fork",
    "terms": {
     "vol1.V-17": {
@@ -5762,10 +9928,66 @@
     {
      "ref": "G13（6-8）tools/accept/detectors/call_edge.mjs 新增 geometryEntries 可选参数，lib/item-form.mjs 新增这一个登记键（只被 vol5.S5-10 用；修改轮已撤回 exemptFiles 与参数类 file）：本类别判据本身未改，只因检测器模块的词法指纹变而 rev+1",
      "rev": 38
+    },
+    {
+     "ref": "C0 独立验收补漏：call_edge 跟别名、解构、下标取成员、全局对象前缀与 bind（lib/alias-scan.mjs）；lit_scope pattern 加 foldStrIn、numFrac；path_access 加 destructure；seed_sites 加 seedArgs；本类别判定口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 39
+    },
+    {
+     "ref": "C0 按语法树判（李白更正裁定 msg-1122-2255-c0ast）：lib/ast.mjs、lib/ast-rules.mjs 引入 acorn（只 tools/accept 引用）；call_edge、lit_scope、decl_cmp、path_access、seed_sites 改按语法树判，别名、解构、计算属性名、.bind/.call/.apply、形参与返回值与对象成员传递跟到原名，运行期才知道的下标报 review:dynamic；判据口径只增不减，检测器闭包指纹变，重盖",
+     "rev": 40
+    },
+    {
+     "ref": "C0 按语法树判：检测器与 lib/ast.mjs、lib/ast-rules.mjs 继续修订（取值来源记忆去重、动态下标按根路径长度判、函数形状含递归），本类别判定口径不变，指纹重盖",
+     "rev": 41
+    },
+    {
+     "ref": "C0 按语法树判：lib/ast.mjs 补数组元素、let 赋值、默认形参、对象/数组动态下标并集的取值来源；本类别判定口径只增不减，指纹重盖",
+     "rev": 42
+    },
+    {
+     "ref": "C0 语法树判补漏第二轮：Reflect.get/apply、解构取 EPSILON、数组夹分隔符 join 与 reduce 模板串、逐个 push 的邻接向量（最少三个，单个、单位矩阵、两方向不算）、种类字段 species/role、includes/has 与按种类查表；判定口径只增不减，分量重数",
+     "rev": 43
+    },
+    {
+     "ref": "C0 语法树判补漏第三轮：Reflect.apply 取第一实参为被调用方（原先被当成 .apply 方法调用取了 Reflect 本身而漏掉 Reflect.apply(Math.sqrt, …)）",
+     "rev": 44
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮（独立验收）：形参与无初值局部名遮蔽全局名按作用域判绑定；种类分支三种误拒（与空串比、row[kind]、非字面量清单 has）与 kindOf(x) 经函数取种类；单位只认值位置并折叠拼接；push 实参表达式与成员链接收者、spread 拼邻接表；数组夹分隔符与 concat 拼键；属性赋值与类 this 别名；迭代式规范序列化",
+     "rev": 45
+    },
+    {
+     "ref": "C0 语法树判补漏第四轮：遮蔽判定下 undo_raw_push 的根 tx 本来就是形参名，类别行加 localRoots 点名照认",
+     "rev": 46
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮（独立验收）：跨文件别名（导出常量/函数返回/对象成员/命名空间/形参由别处传入）按模块导入导出解析跟到原名；Reflect.construct、Proxy、call.call；规范序列化认任何循环与迭代方法；变量加偏移的邻接 push；本文件自定义的 kindOf 与变量持有种类调用；拼接出的单位只认整体",
+     "rev": 47
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 48
+    },
+    {
+     "ref": "C0 语法树判补漏第五轮：calleeOrigins 对 NewExpression 无实参列表的兜底（判据代码指纹变，判据未改）",
+     "rev": 49
+    },
+    {
+     "ref": "C0 语法树判补漏第六轮（主会话 11-23 改定）：规范序列化按定义判，产出字符串并流进摘要（sha256Text、createHash）或存储（写文件）才算重复实现，形状像但数据流不进的不报，拿不准的进待人审清单 pp_canonical_review（只报不拦、不进基线）；取键加 for…in、getOwnPropertyNames，排序加 toSorted 与手写比较交换，替换函数排序；默认导入按 default 解析",
+     "rev": 50
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 51
+    },
+    {
+     "ref": "C0 第三方审卡必须改（续）：单位表文件名 LAYOUT.units 放 read.mjs（world.mjs 不能被检测器 import，副作用改变前缀登记）（判据代码指纹变）",
+     "rev": 52
     }
    ],
-   "print": "a820f32a712fb93f4674d9d1f28e8809009bac59f485375772a4973f52bdda7d",
-   "rev": 38,
+   "print": "748ef8f3a4c4dbda5503c9f9149db0bf79efec573ddcc2df702ff5d8d44749a7",
+   "rev": 52,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

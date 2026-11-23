@@ -1,0 +1,4 @@
+import { setInterval as every } from 'node:timers';
+export function beat(fn) {
+  return every(fn, 1000);
+}

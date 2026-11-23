@@ -1,0 +1,1 @@
+export const f = (engine, state, MATERIAL, flag) => dim(engine, state, MATERIAL, 'iron', flag);

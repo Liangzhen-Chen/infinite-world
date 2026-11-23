@@ -1,0 +1,2 @@
+const o = { go: Math.pow };
+export const f = (x) => o.go(x, 2);

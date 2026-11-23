@@ -1,0 +1,1 @@
+export const f = (x) => typeof x.kind === "string";

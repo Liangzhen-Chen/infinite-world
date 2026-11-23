@@ -1,0 +1,7 @@
+export function drain(q) {
+  const s = [...q];
+  while (s.length) {
+    s.pop();
+  }
+  return Object.keys(q);
+}

@@ -1,0 +1,2 @@
+const fns = { a: Math.sqrt, b: Math.abs };
+export const f = (k, x) => fns[k](x);

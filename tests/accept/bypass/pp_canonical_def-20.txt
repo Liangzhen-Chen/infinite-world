@@ -1,0 +1,4 @@
+export function text(o) {
+  return Object.getOwnPropertyNames(o).toSorted().map((k) => k + '=' + o[k]).join('&');
+}
+export const id = (o) => sha256Text(text(o));
