@@ -1,6 +1,6 @@
 // 建筑与房间足迹（卷五 §4.1 规则 11、12；卷十九 §3.2 blueprintOf、§4.1 规则 3、§4.5 规则 7–10）：把建筑行的输入（形制、planCells、storeys、墙厚、anchor、facing、料、完好度、breaks）
 // 交 blueprint.mjs 的 planBlueprint 铺成蓝图，转世界坐标，读出每格此刻的样子；房间行不存几何，足迹 = 蓝图里它那个房间的格。
-// 本文件不读 state 之外的东西、不写状态；读维度只经 place.mjs 交入的 val(id, key)（内核 dim() 的基值），所以与 placeView 同一套取值。蓝图不存档：只缓存在计划对象上，计划变了缓存即废。
+// 本文件不读 state 之外的东西、不写状态；地点维度只经 place.mjs 交入的 val(id, key)（内核 dim() 的基值），材料量只经 materialAt(id, key, matterState)（materialView），所以与 placeView 同一套取值。蓝图不存档：只缓存在计划对象上，计划变了缓存即废。
 // 规模：蓝图按建筑按需派生；区格 → 建筑的索引只装"建筑 id"（每栋按外包框覆盖的区格登记），不装格；逐格 Map 只在被读到的建筑上建（泡内量级，每栋 10²–10⁴ 格）。
 
 import { fixedUnits, fixedScale, fixedToNumber } from './det-math.mjs';
@@ -52,7 +52,7 @@ function slot(rp) {
 /**
  * 一个建筑行的蓝图输入（形制条目、planCells、storeys、墙厚、anchor、facing）与此刻的料、完好度、breaks；不是建筑行、在离场子树内或任一必需量读不到（未知）为 null。
  * 蓝图不可行（卷十九 §4.5 规则 7 的原因代号）是数据错：加载期核过（checkBuildings），运行期遇到抛 E-DIM-DOMAIN-RANGE。
- * @param {{engine: any, state: any, rp: any, val: (id: string, key: string) => any}} ctx @param {string} id
+ * @param {{engine: any, state: any, rp: any, val: (id: string, key: string) => any, materialAt: (id: string, key: string, matterState: string) => any}} ctx @param {string} id
  */
 export function buildingOf(ctx, id) {
   const s = slot(ctx.rp);
@@ -87,9 +87,8 @@ function read(ctx, b) {
   if (isObj(materialKg)) {
     for (const code of Object.keys(materialKg).sort(cmp)) {
       if (!(materialKg[code] > 0)) continue;
-      // 围护的料是固态：密度取按物态分栏的 solid 栏（卷三甲分态量，千克每升）。
-      const byState = ctx.materialVal(code, DENSITY);
-      const d = isObj(byState) ? byState[STATE.solid] : undefined;
+      // 围护的料是固态：密度取按物态分栏的 solid 栏（卷三甲分态量，千克每升；卷三甲 :268 经 materialView 读）。
+      const d = ctx.materialAt(code, DENSITY, STATE.solid);
       if (typeof d !== 'number' || !(d > 0)) throw new KernelError('E-DIM-REQUIRED-MISSING', {}, `blueprint ${b.id}: material ${code} has no positive solid density`);
       mats.push({ code, massKg: materialKg[code], density: d });
     }

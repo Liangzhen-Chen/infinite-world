@@ -271,6 +271,7 @@
   {"export": "kernel/place.mjs#relResidents", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/item.mjs#itemView", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/item.mjs#materialView", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/item.mjs#matterStateOf", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/item.mjs#stockSlots", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/item.mjs#itemsInSlot", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/valuation.mjs#valuation", "callerFiles": ["price.mjs"], "acceptsState": true},

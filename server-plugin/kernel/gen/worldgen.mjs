@@ -20,13 +20,14 @@ import { stage as waterFootStage } from './waterfoot.mjs';
 import { stage as siteFormStage } from './siteform.mjs';
 import { stage as envelopeStage } from './envelope.mjs';
 import { STATE } from '../grid-base.mjs';
+import { materialView } from '../item.mjs';
+import { installVocab } from '../vocab.mjs';
 import { makeWhen } from './when.mjs';
 import { writeback, createRows } from './writeback.mjs';
 import { stage as polityStage } from './polity.mjs';
 import { stage as holdingsStage } from './holdings-open.mjs';
 
 const RULES_CODE = 'gen';
-const MATERIAL_TABLE = 'material'; // 材料表（kind material）
 const GRID_CODE = 'grid';
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
@@ -92,13 +93,15 @@ export function generateFill(world, opts) {
   const views = opts.genViews || {}; // 世界里还没有生产者的读入口（调用方交入），各阶段自取
   const assets = []; // 开局持有阶段交出的入账提案（建筑 → 持有人），由 assetcalls.mjs 在世界创建事务内第 0 日入账
   const assetGaps = []; // 推不出归属的建筑及原因
-  // 材料的固态栏密度（千克每升）：读材料表的行值。materialView 读材料维度也不套修正表（卷三乙 M-12，数值标量的有效值才走管线，density 是按物态分栏的 map、不是修正键，有效值即基值），
-  // 且它要世界创建事务外才装的词表注册表（kindOf），所以这里直接读同一张表的行值，与 materialView(...).dims.density 同值（测试对照）；读不到为 undefined，由用料阶段报错。
-  const materialTable = world.tables.get(MATERIAL_TABLE);
+  // 材料的固态栏密度（千克每升）：经 materialView 读（卷三甲 :268、卷三乙 :541），不另写一份读法。materialView 读材料经 dim()，它要词表注册表（kernel/vocab.mjs）；
+  // 注册表只在整体校验通过时由加载器收下，而生成补缺读的是读入但不一定校验通过的世界（卷十 R10-1.7"同一套流程既能从零生成一个世界，也能给手写世界补齐缺的部分"，
+  // 作者行缺的必填列正是本流程要补的，tools/convert-geo-g5b.mjs fillPlace 同法），所以世界创建流程先装本次读到的世界的注册表再读（校验通过的世界装的是同一份）。
+  // 世界创建时还没有运行状态，状态传空对象；读不到为 undefined，由用料阶段报错。
+  installVocab(world);
+  const materialEngine = { vocab: world.vocab, rules: world.rules, units: world.env.units, tables: world.tables };
   const materialDensityOf = (code) => {
-    const row = materialTable && materialTable.flat && materialTable.flat.rows instanceof Map ? materialTable.flat.rows.get(code) : undefined;
-    const byState = row ? row.density : undefined;
-    return byState !== null && typeof byState === 'object' ? byState[STATE.solid] : undefined;
+    const f = materialView(materialEngine, {}, code, { dimensions: ['density'], matterState: STATE.solid }).dims.density;
+    return f.known ? f.value : undefined;
   };
   let created = {}; // 阶段新建的行（别的表的整行，R10-1.2 建行写回）：表代号 → {id: 整行}
   const calls = []; // 阶段交出的调用提案（卷八 R8-18.9 ③ setGovernor），由 holdcalls.mjs 在世界创建事务内应用

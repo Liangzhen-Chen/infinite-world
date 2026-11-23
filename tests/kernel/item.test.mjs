@@ -351,6 +351,18 @@ test('materialView(材料 id)：手填维度原样、带单位；派生登记未
   assert.deepEqual(Object.keys(m.dims).sort(), Object.keys(eng.tables.get('material').doc.dimensions).sort());
 });
 
+test('materialView(材料 id) 的 matterState 与 dimensions（卷三乙 :541、:429）：分态维度换成那一栏的 Fact，别的维度原样；只列要的维度；栏名不是族里的栏拒收；物品模板不收栏', () => {
+  const { eng } = loaded((f) => { f.items.item_test_axe = axe(); });
+  const m = materialView(eng, {}, IRON, { dimensions: ['density', 'valueMult'], matterState: 'solid' });
+  assert.deepEqual(Object.keys(m.dims), ['density', 'valueMult']);
+  assert.deepEqual([m.dims.density.known, m.dims.density.value], [true, 4]);
+  assert.equal(m.dims.valueMult.value, 3);
+  const code = (fn) => { try { fn(); } catch (e) { return e.code; } return null; };
+  assert.equal(code(() => materialView(eng, {}, IRON, { matterState: 'plasma' })), 'E-DIM-DOMAIN-RANGE');
+  assert.equal(code(() => materialView(eng, {}, 'item_test_axe', { matterState: 'solid' })), 'E-DIM-STRUCT-FIELD');
+  assert.equal(code(() => materialView(eng, {}, 'item_no_such_thing')), 'E-DIM-REF-MISSING');
+});
+
 test('materialView(物品模板)：按 rules.items.aggregation 聚合——sum 不归一、承担组、固相量、dominant 取主料；带 known、applicable、partial', () => {
   const { eng } = loaded((f) => { f.items.item_test_axe = axe(); });
   const m = materialView(eng, {}, 'item_test_axe').dims;

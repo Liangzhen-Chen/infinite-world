@@ -16,6 +16,7 @@ import { post, transfer, recordTaint, mergeLots, auditLots, auditLedger, lotsUnm
 import { codeOf } from '../../server-plugin/kernel/errors.mjs';
 import { createItemInstance, writeItemDeviation } from '../../server-plugin/kernel/dimension-writers.mjs';
 import { dim } from '../../server-plugin/kernel/dimensions.mjs';
+import { materialView, matterStateOf } from '../../server-plugin/kernel/item.mjs';
 import { lotsView, rottenLots, rotStep, wearStep, instanceView, canContain, containerView, durabilityOn, loadPlan } from '../../server-plugin/kernel/item-state.mjs';
 import { transferGoods, reanchorLot, settleRotted } from '../../server-plugin/item-lots.mjs';
 import { installEventLog } from '../../server-plugin/kernel/events.mjs';
@@ -42,6 +43,8 @@ const TEST_VERBS = ['verb_test', 'verb_test_buy'];
 const itemsFixture = () => {
   const water = itemRow(1, [share('mgroup_body', OIL, 1)]);
   delete water.bulkForm; // 可能物态集不含固：写了形态即报错（I-8）
+  const gas = itemRow(0.01, [share('mgroup_body', 'mat_test_gas', 1)]);
+  delete gas.bulkForm; // 可能物态集不含固：写了形态即报错（I-8）
   return {
     item_test_grain: itemRow(1, [share('mgroup_body', GRAIN, 1)]),
     item_test_axe: itemRow(1.6, [share('mgroup_working', IRON, 0.6), share('mgroup_grip', WOOD, 0.4)], { classes: ['comp_tool'], wearPerUse: 0.05, dailyUses: 40 }),
@@ -50,6 +53,7 @@ const itemsFixture = () => {
     item_test_basket: itemRow(2, [share('mgroup_body', WOOD, 1)], { classes: ['comp_container'], volumeCapacity: 50, maxLoadKg: 30, sealed: false, holdsLiquid: false }),
     item_test_ingot: itemRow(40, [share('mgroup_body', IRON, 1)]),
     item_test_water: water,
+    item_test_gas: gas,
     item_test_icecube: itemRow(2, [share('mgroup_body', ICE, 1)]),
   };
 };
@@ -76,7 +80,7 @@ function build(edit) {
   const index = new Map(W.vocab.index);
   index.set('purpose_test_shelf', { family: 'purpose', prefix: 'purpose_', entry: { spendable: true, locksFor: null, visibleToMarket: true, trackOutflow: false } });
   for (const v of TEST_VERBS) index.set(v, { family: 'verb', prefix: 'verb_', entry: {} });
-  const resources = { res_test_grain: 'item_test_grain', res_test_axe: 'item_test_axe', res_test_blade: 'item_test_blade', res_test_ingot: 'item_test_ingot', res_test_jar: 'item_test_jar', res_test_basket: 'item_test_basket' };
+  const resources = { res_test_grain: 'item_test_grain', res_test_axe: 'item_test_axe', res_test_blade: 'item_test_blade', res_test_ingot: 'item_test_ingot', res_test_jar: 'item_test_jar', res_test_basket: 'item_test_basket', res_test_water: 'item_test_water', res_test_gas: 'item_test_gas' };
   for (const [res, item] of Object.entries(resources)) index.set(res, { family: 'resource', prefix: 'res_', entry: { item } });
   const vocab = { families: W.vocab.families, index };
   installVocab({ vocab, idIndex: W.idIndex, tables: W.tables });
@@ -364,6 +368,83 @@ test('taint 只由账本写：recordTaint 改批次与实例的 taint（只改�
   assert.deepEqual(run(state, COND, (s) => { writePath(s, P.itemInstances_durability('item_inst_9'), 0.5); }), { ok: true });
   assert.deepEqual(run(state, COND, (s) => { writePath(s, P.stockLots_spoilage(PA, SH, 'res_test_grain', k), 0.5); }), { ok: false, code: 'E-VIEW-UNDECLARED-WRITE' });
   assert.deepEqual(run(state, LOTS, (s) => { writePath(s, P.stockLots_spoilage(PA, SH, 'res_test_grain', k), 0.5); }), { ok: true });
+});
+
+test('materialView 接受实例 id 与 lotRef（卷三乙 :429、:428）：有材料偏离按偏离聚合，没有读模板；不是实例也不是 lotRef 即 E-DIM-REF-MISSING', () => {
+  const { engine } = build();
+  const state = at(0);
+  const k = stock(engine, state, PA, 4, { spoilage: 0, rotAnchorDay: 0, material: [share('mgroup_body', IRON, 1)] });
+  const k2 = stock(engine, state, PA, 4, { spoilage: 0, rotAnchorDay: 0 });
+  const ref = (lotKey) => ({ account: acct(PA, 'res_test_grain'), lotKey });
+  // 批次偏离成铁（valueMult 3，sum 口径 1 × 3 = 3）；没偏离的批次读模板粮（valueMult 1）。
+  assert.equal(materialView(engine, state, ref(k), { dimensions: ['valueMult'] }).dims.valueMult.value, 3);
+  assert.equal(materialView(engine, state, ref(k2), { dimensions: ['valueMult'] }).dims.valueMult.value, 1);
+  assert.equal(materialView(engine, state, ref(k)).template, 'item_test_grain');
+  // 实例：刃模板工作部铁（valueMult 3）；偏离成锡（valueMult 1）。
+  state.itemInstances = { item_inst_7: { template: 'item_test_blade' }, item_inst_8: { template: 'item_test_blade' } };
+  state.created = { item_inst_8: { props: { material: [share('mgroup_working', 'mat_test_tin', 1)] } } };
+  assert.equal(materialView(engine, state, 'item_inst_7', { dimensions: ['valueMult'] }).dims.valueMult.value, 3);
+  assert.equal(materialView(engine, state, 'item_inst_8', { dimensions: ['valueMult'] }).dims.valueMult.value, 1);
+  // 物态（卷三乙 :429）：实例与批次按 matterStateOf 的当时物态取栏。item_inst_7、item_inst_8 是直接塞进 itemInstances 的行、账本里没有它的批次，所在处读不到，当时物态未知；
+  // density 是分态量，该维 onUnknown 为 error（material.json），不列维度时整张读数按未知带码交出（known false），不拿固或液顶替。
+  assert.deepEqual([materialView(engine, state, 'item_inst_7').dims.density.known, materialView(engine, state, 'item_inst_8').dims.density.known], [false, false]);
+  // 批次 ref(k) 的持有人是地点 PA，温度读得出、当时物态为固：密度取铁固栏 hmean 1 ÷ (1 ÷ 4) = 4。
+  assert.deepEqual([materialView(engine, state, ref(k)).dims.density.known, materialView(engine, state, ref(k)).dims.density.value], [true, 4]);
+  const code = (fn) => { try { fn(); } catch (e) { return codeOf(e); } return null; };
+  assert.equal(code(() => materialView(engine, state, 'item_inst_8', { matterState: 'solid' })), 'E-DIM-STRUCT-FIELD');
+  assert.equal(code(() => materialView(engine, state, ref(k), { matterState: 'solid' })), 'E-DIM-STRUCT-FIELD');
+  assert.equal(code(() => materialView(engine, state, 'item_inst_none')), 'E-DIM-REF-MISSING');
+  assert.equal(code(() => materialView(engine, state, { account: acct(PA, 'res_test_grain'), lotKey: 'lot_nope' })), 'E-DIM-REF-MISSING');
+  assert.equal(code(() => materialView(engine, state, { nonsense: true })), 'E-DIM-REF-MISSING');
+});
+
+test('matterStateOf（卷三乙 :1475 T-2、:147）：固、液、气、未知', () => {
+  const { engine } = build();
+  const state = at(0);
+  // 任何气温（环境温度域 -60 至 60）下：铁（熔点 1500）为固、油（熔 -100、无沸点）为液、低温气（熔 -200、沸 -100）为气。
+  const ingot = stock(engine, state, PA, 1, {}, 'res_test_ingot');
+  const ingotRef = lotRef(PA, ingot, 'res_test_ingot');
+  const ingotState = matterStateOf(engine, state, ingotRef, 0);
+  assert.deepEqual([ingotState.known, ingotState.value], [true, 'matter_solid']);
+  const water = stock(engine, state, PA, 1, {}, 'res_test_water');
+  assert.equal(matterStateOf(engine, state, lotRef(PA, water, 'res_test_water'), 0).value, 'matter_liquid');
+  const gas = stock(engine, state, PA, 1, {}, 'res_test_gas');
+  assert.equal(matterStateOf(engine, state, lotRef(PA, gas, 'res_test_gas'), 0).value, 'matter_gas');
+  // 逐件实例：铁刃当时为固；密度取固栏 hmean 1 ÷ (1 ÷ 4) = 4，耐磨为固相量 50。
+  assert.deepEqual(create(engine, state, { template: 'item_test_blade', id: 'item_inst_2', fields: { madeDay: 2, qualityTier: 'quality_good' } }), { ok: true });
+  const bladeState = matterStateOf(engine, state, 'item_inst_2', 0);
+  assert.deepEqual([bladeState.known, bladeState.value], [true, 'matter_solid']);
+  const bladeDims = materialView(engine, state, 'item_inst_2', { dimensions: ['density', 'wearResistance'] }).dims;
+  assert.deepEqual([bladeDims.density.value, bladeDims.wearResistance.value], [4, 50]);
+  // 实例偏离成锡：密度取锡固栏 2；耐磨取夹具里锡的 ...solid 50（不是 25）。
+  state.created = { item_inst_2: { props: { material: [share('mgroup_working', 'mat_test_tin', 1)] } } };
+  const tinDims = materialView(engine, state, 'item_inst_2', { dimensions: ['density', 'wearResistance'] }).dims;
+  assert.deepEqual([tinDims.density.value, tinDims.wearResistance.value], [2, 50]);
+  // 未知 ①：实例行在、账本里没有它的批次（所在处读不到），当时物态未知，不拿固或液顶替。
+  state.itemInstances.item_inst_u = { template: 'item_test_blade' };
+  assert.equal(matterStateOf(engine, state, 'item_inst_u', 0).known, false);
+  const code = (fn) => { try { fn(); } catch (e) { return codeOf(e); } return null; };
+  // 未知 ③：不是实例也不是 lotRef；④：minute 须是非负整数。
+  assert.equal(code(() => matterStateOf(engine, state, 'item_inst_none', 0)), 'E-DIM-REF-MISSING');
+  assert.equal(code(() => matterStateOf(engine, state, { nonsense: true }, 0)), 'E-DIM-REF-MISSING');
+  assert.equal(code(() => matterStateOf(engine, state, 'item_inst_2', -1)), 'E-DIM-DOMAIN-RANGE');
+  assert.equal(code(() => matterStateOf(engine, state, 'item_inst_2', 1.5)), 'E-DIM-DOMAIN-RANGE');
+  // 未知 ⑤：世界时钟未设时，materialView 对铁锭批次的密度按未知带出（当时物态未知）。
+  const noClock = structuredClone(state);
+  delete noClock.clock;
+  assert.equal(materialView(engine, noClock, ingotRef).dims.density.known, false);
+});
+
+test('分态量与固相量逐份按该份材料自己的当时物态取栏（卷三乙 :669、M-1 :681）：一件铁与油各半的实例，同一温度下铁为固、油为液', () => {
+  const { engine } = build();
+  const state = at(0);
+  assert.deepEqual(create(engine, state, { template: 'item_test_blade', id: 'item_inst_2', fields: { madeDay: 2, qualityTier: 'quality_good' } }), { ok: true });
+  state.created = { item_inst_2: { props: { material: [share('mgroup_working', IRON, 0.5), share('mgroup_body', OIL, 0.5)] } } };
+  const dims = materialView(engine, state, 'item_inst_2', { dimensions: ['density', 'wearResistance'] }).dims;
+  // 密度分态量：铁取固栏 4、油取液栏 0.8，hmean 1 ÷ (0.5÷4 + 0.5÷0.8) = 1 ÷ 0.75 = 1.3333；不是整件按主料的固态取栏（油没有固栏）。
+  assert.equal(dims.density.value, 1.3333);
+  // 耐磨固相量：承担组工作部只有铁，铁当时为固，适用，50。
+  assert.equal(dims.wearResistance.value, 50);
 });
 
 // ---------- I-2 逐件建实例；R9-2.7 create 实物同事务源汇腿 ----------

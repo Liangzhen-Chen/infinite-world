@@ -13,7 +13,7 @@ import { dim } from './dimensions.mjs';
 import { materialView, aggregateMaterialFor, itemView } from './item.mjs';
 import { dailyMeanTemp, tempAt } from './climate.mjs';
 import { weatherAt } from './weather.mjs';
-import { lotsUnmergeable, lotKeyInstance, resourceAllows, balance, accountsOf, accountHolders, lotRadix, lotOrdinal, SCHEMA as LEDGER } from './ledger.mjs';
+import { lotsUnmergeable, lotKeyInstance, instanceLotKey, resourceAllows, balance, accountsOf, accountHolders, lotRadix, lotOrdinal, SCHEMA as LEDGER } from './ledger.mjs';
 import { buildE } from './handles/generated.mjs';
 import { placeClimateInput } from './place.mjs';
 import { kindOf } from './vocab.mjs';
@@ -80,6 +80,44 @@ export function instanceRow(state, id) {
 export function instanceDeviation(state, id, key) {
   const props = at(state, ST.created, id, ST.props);
   return isObj(props) && Object.hasOwn(props, key) ? props[key] : undefined;
+}
+
+/**
+ * 实例 id 或批次引用 lotRef 的读取主体（卷三乙 :429 materialView 接受实例 id 或 lotRef）：{template: 物品模板 id, material: 实例或批次对模板的材料偏离（没有为 undefined）}。
+ * 实例读 itemInstances 行与 created.<id>.props.material（instanceDeviation），批次读 stockLots 属性行的 material 与资源种类对应的物品模板（itemOfResource）；
+ * 不是实例或不是 lotRef 形状返回 null，是 lotRef 形状却没有属性行或资源种类没有物品即 E-DIM-REF-MISSING（同 rotStep 的读法）。
+ * @param {any} engine @param {any} state @param {unknown} ref
+ * @returns {{template: string, material: unknown} | null}
+ */
+export function materialSubjectOf(engine, state, ref) {
+  if (typeof ref === 'string') {
+    const row = instanceRow(state, ref);
+    return row ? { template: at(row, F.template), material: instanceDeviation(state, ref, F.material) } : null;
+  }
+  const lot = lotSubject(engine, state, ref);
+  return lot === null ? null : { template: lot.template, material: at(lot.attrs, F.material) };
+}
+
+// 批次引用的形状核对、属性行与物品模板（materialSubjectOf、rotSubject 共用）：不是 lotRef 形状返回 null；没有属性行或资源种类没有物品即 E-DIM-REF-MISSING。
+function lotSubject(engine, state, ref) {
+  const p = lotParts(ref);
+  if (!p) return null;
+  const attrs = lotAttrs(state, p);
+  if (!isObj(attrs)) throw new KernelError('E-DIM-REF-MISSING', { entity: p.holder }, `lot ${p.lotKey} has no ${ST.lots} row`);
+  const template = itemOfResource(engine, p.kind);
+  if (template === null) throw new KernelError('E-DIM-REF-MISSING', { entity: p.holder }, `resource kind ${p.kind} has no item (resource entry field ${RES_FIELD.item})`);
+  return { p, attrs, template };
+}
+
+/**
+ * 世界时刻（clockView.minute，全书唯一的"现在几点"）；时钟未设按 null（读者按未知带缺口）。
+ * @param {any} engine @param {any} state @returns {number | null}
+ */
+export function nowMinuteOf(engine, state) {
+  try { return clockView(engine, state).minute; } catch (e) {
+    if (codeOf(e) === E.E_DIM_UNKNOWN_READ) return null;
+    throw e;
+  }
 }
 
 /** 世界日序（clockView.day）；时钟未设按 null（读者按未知带缺口）。 */
@@ -159,6 +197,27 @@ function envOf(engine, state, subject) {
   return input ? input(engine, state, subject.holder) : null;
 }
 
+// 实例所在的持有人：账本里实例批次键（逐件实例是自己那一批，卷三乙 K-3）余额大于 0 的那个账户的持有人；账本里没有即 null。账本只经读入口 accountHolders、accountsOf。
+function instanceHolderOf(engine, state, instanceId) {
+  const key = instanceLotKey(instanceId);
+  for (const holder of accountHolders(state)) {
+    if (accountsOf(engine, state, holder, { family: LEDGER.lotFamily }).some((a) => a.resource.key === key && a.balance > 0)) return holder;
+  }
+  return null;
+}
+
+/**
+ * 实例或批次 ref 在世界时刻 minute 的物温（卷三乙 T-2 第 ① 步）：物温字段为空（T-1 的锚点式至今没有字段与规则表键，没有可读的锚点物温）时等于所在处温度，
+ * 所在处取持有人是地点时的 placeClimateInput 与该地该日的温度（同腐坏的 dayTemp）；持有人不是地点、账本里找不到实例、接线给不出都按未知带缺口，不借常数。
+ * @param {any} engine @param {any} state @param {string | {account: {holder: string, purpose: string, kind: string}, lotKey: string}} ref @param {number} minute
+ */
+export function subjectTemperature(engine, state, ref, minute) {
+  const holder = typeof ref === 'string' ? instanceHolderOf(engine, state, ref) : (lotParts(ref) || {}).holder;
+  const env = typeof holder === 'string' ? envOf(engine, state, { holder }) : null;
+  if (!env || !isObj(env.input)) return UNKNOWN(GAP.env);
+  return dayTemp(engine, env.input, Math.floor(minute / minutesPerDay(engine)));
+}
+
 // 逐日累计量的记忆：按（接线给的 input 对象，曲线）记，只省重算，值与不记忆逐位相同；不入存档。
 const dayMemo = new WeakMap();
 function memoOf(owner, curve) {
@@ -171,13 +230,18 @@ function memoOf(owner, curve) {
 
 const curvePoints = (c) => (Array.isArray(c) ? c.map(([x, y]) => [fixedUnits(x), fixedUnits(y)]) : null);
 
-// 一日的腐坏温度因子 f(d) = tempCurve(当日温度)（定点）。室外取日均温（纯函数）；围合与地下取当日正午温度（室内温度由热源与围护决定，卷二十 §4.5）。
+// 一日的环境温度（卷二十 §4.5；卷三乙 T-2 第 ① 步"取该地该日的温度"）：室外取日均温（纯函数）；围合与地下取当日正午温度（室内温度由热源与围护决定）。
+// 腐坏的日因子与当时物态（subjectTemperature）共用这一处读法。
+function dayTemp(engine, inp, d) {
+  const perDay = minutesPerDay(engine);
+  return inp.enclosed === true || inp.underground === true ? tempAt(engine, inp, d * perDay + (perDay >> 1)) : dailyMeanTemp(engine, inp, d);
+}
+
+// 一日的腐坏温度因子 f(d) = tempCurve(当日温度)（定点）。
 function rotDayFactor(engine, env, curve, d) {
   const memo = memoOf(env.input, curve);
   if (memo.has(d)) return memo.get(d);
-  const inp = env.input;
-  const perDay = minutesPerDay(engine);
-  const t = inp.enclosed === true || inp.underground === true ? tempAt(engine, inp, d * perDay + (perDay >> 1)) : dailyMeanTemp(engine, inp, d);
+  const t = dayTemp(engine, env.input, d);
   const v = t.known ? fixedCurveAt(curvePoints(curve), t.fixed) : { gaps: t.gaps };
   memo.set(d, v);
   return v;
@@ -276,12 +340,9 @@ function rotSubject(engine, state, ref) {
     if (typeof row[F.spoilage] !== 'number' || !Number.isSafeInteger(row[F.rotAnchorDay])) return absentAnchor(engine, state, row[F.template], material);
     return { template: row[F.template], stored: row[F.spoilage], anchorDay: row[F.rotAnchorDay], instance: ref, material };
   }
-  const p = lotParts(ref);
-  if (!p) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'rot ref is an instance id or lotRef {account: {holder, purpose, kind}, lotKey}');
-  const a = lotAttrs(state, p);
-  if (!isObj(a)) throw new KernelError('E-DIM-REF-MISSING', { entity: p.holder }, `lot ${p.lotKey} has no ${ST.lots} row`);
-  const template = itemOfResource(engine, p.kind);
-  if (template === null) throw new KernelError('E-DIM-REF-MISSING', { entity: p.holder }, `resource kind ${p.kind} has no item (resource entry field ${RES_FIELD.item})`);
+  const lot = lotSubject(engine, state, ref);
+  if (lot === null) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'rot ref is an instance id or lotRef {account: {holder, purpose, kind}, lotKey}');
+  const { p, attrs: a, template } = lot;
   if (typeof a[F.spoilage] !== 'number' || !Number.isSafeInteger(a[F.rotAnchorDay])) return absentAnchor(engine, state, template, a[F.material]);
   return { template, stored: a[F.spoilage], anchorDay: a[F.rotAnchorDay], holder: p.holder, lot: p, material: a[F.material] };
 }

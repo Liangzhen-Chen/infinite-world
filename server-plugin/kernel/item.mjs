@@ -3,13 +3,14 @@
 // `itemView(engine, state, id)`：模板 id → 表头全部维度的基值 Fact，其中密度、体积、尺寸档、可能物态集、类别（categoryKind 与 class 族）由本文件派生，
 //   库存槽按 categoryKind 开（C-6）；`materialView(engine, state, id)`：材料 id → 卷三甲 §2.1 手填维度与卷三乙 §2.1 派生量（数值维度经唯一管线给有效值、带 base，本入口不套修正表，M-12）；
 //   物品模板 id → 按 rules.items.aggregation 把各材料组聚合成物品的材料量（M-1），带 known、applicable、partial。
-// 实例与批次（itemInstances、批次引用）的读法随 6-3 物品写者：实例没有登记在 idIndex，kindOf 即 E-DIM-REF-MISSING，不静默当模板读。
+// materialView 另接受实例 id 与批次引用 lotRef（卷三乙 :429）：实例没有登记在 idIndex，由 item-state.mjs 的 materialSubjectOf 取模板与材料偏离；既不是实例也不是 lotRef 即 E-DIM-REF-MISSING，不静默当模板读。
 // `checkItemTables(view)`：加载期校验与派生（I-5、I-6、I-8、I-9、C-1、C-8），派生结果挂在 item 表的 `itemDerived`，运行期只读它。
 // 读规则表值：键在 rules.items.unbuilt（卷文无首批值）即未给，求出的量按未知带缺口，不编数（卷二 §1.6）。
 // 不认任何物品、材料、类别、组件类代号；族条目的字段只按登记读；数值一律经 det-math 的定点算术。
 
 import { dim, modified, readsUnbuilt } from './dimensions.mjs';
 import { kindOf } from './vocab.mjs';
+import { materialSubjectOf, subjectTemperature, nowMinuteOf } from './item-state.mjs';
 import { KernelError } from './errors.mjs';
 import { fixedUnits, fixedAdd, fixedSub, fixedMultiply, fixedDivide, fixedToNumber, truncateTo } from './det-math.mjs';
 import { compileRXInScope, evaluateRX, RxError, splitDimKey, rxChildren, nsKey, dimRxType } from './rx.mjs';
@@ -220,7 +221,7 @@ function combine(mode, rows) {
 /**
  * 物品的一个材料量（M-1）：对每份先分开三种状态——不适用的不参加；未知的按该维 onUnknown（error 抛、skip 使整件退出、gap 不计入且结果带 partial）；已知的参加。
  * 返回 Fact：{known, applicable, partial, value}；承担组内没有适用份时不适用。分态量先按静态读法取栏，固相量只在静态物态为固时适用（T-14、I-7）。
- * @param {{vocab: any, rules: any, matDims: Record<string, any>}} ctx @param {(id: string, key: string) => any} read
+ * @param {{vocab: any, rules: any, matDims: Record<string, any>, phaseOf?: (materialRef: string) => string | null}} ctx @param {(id: string, key: string) => any} read
  * @param {{group: string, materialRef: string, share: bigint}[]} shares @param {string} dimKey
  */
 function aggregateDim(ctx, read, shares, dimKey) {
@@ -236,7 +237,7 @@ function aggregateDim(ctx, read, shares, dimKey) {
   // I-7 使用时：不具有 class_formed（散粒、粉末、不可能为固）的物品，承力各项对它不适用，材料行填了也不读。
   if (spec.solidOnly === true && ctx.formed === false) return NOT_APPLICABLE;
   // 分态量、固相量要先定静态物态（T-14），那要环境温度域（T-13）：规则表还没给这个键（登在 unbuilt）时整件按未知带出，不抛错、不编数。
-  if ((perState || spec.solidOnly === true) && domainOf(rules) === undefined) return UNKNOWN(`rules.${RULES.climate}.${KEY.envTempDomain}`);
+  if ((perState || spec.solidOnly === true) && ctx.phaseOf === undefined && domainOf(rules) === undefined) return UNKNOWN(`rules.${RULES.climate}.${KEY.envTempDomain}`);
   if (spec.mode === AGG.dominant) {
     if (main === null) return NOT_APPLICABLE;
     const f = read(main, dimKey);
@@ -252,7 +253,8 @@ function aggregateDim(ctx, read, shares, dimKey) {
   };
   const stateful = perState || spec.solidOnly === true;
   for (const e of inGroups(spec, shares)) {
-    const phase = stateful ? staticState(statesOfMaterial(read, rules, e.materialRef), order) : null;
+    // 实例与批次（ctx.phaseOf）逐份按该份材料自己的当时物态取栏；没有才按静态读法（T-14，模板）。
+    const phase = stateful ? (ctx.phaseOf !== undefined ? ctx.phaseOf(e.materialRef) : staticState(statesOfMaterial(read, rules, e.materialRef), order)) : null;
     if (stateful && phase === null) { if (skipsWhole()) return UNKNOWN(); partial = true; continue; }
     if (spec.solidOnly === true && phase !== MATTER.solid) continue; // 固相量在静态物态非固时不适用
     const f = read(e.materialRef, dimKey);
@@ -648,29 +650,39 @@ export function itemView(engine, state, id, options = {}) {
   return Object.freeze({ id, dims: Object.freeze(dims), classes: Object.freeze(classes), categoryKind: d === undefined ? null : d.categoryKind, stockSlot: slot, mainMaterial: d === undefined ? null : d.mainMaterial });
 }
 
-/**
- * `materialView(engine, state, id)`（卷三乙 §3.1 :425）：材料 id → 表头每个维度的 Fact（数值标量经唯一管线给有效值并带 base，本入口不套修正表，M-12）；
- * 物品模板 id → rules.items.aggregation 里每个非 none 口径的维度聚合成物品的材料量（M-1，静态读法），Fact 带 known、applicable、partial。
- * 实例与批次随 6-3。options.dimensions（物品模板时）：只读这几个维度，onUnknown 为 error 的未知照 M-1 抛 E-DIM-REQUIRED-MISSING；
- * 不给时列全部口径，某维读到 error 级未知按未知带码交出，不让一个无关维度拖垮整张读数。
- * @param {any} engine @param {any} state @param {string} id @param {{dimensions?: string[]}} [options]
- */
-export function materialView(engine, state, id, options = {}) {
-  const kind = kindOf(id);
-  if (kind === KIND.material) {
-    const t = tableOf(engine, kind);
-    const read = runtimeReader(engine, state);
-    const dims = Object.fromEntries(Object.keys(t.doc.dimensions).sort(cmp).map((k) => [k, read(id, k)]));
-    return Object.freeze({ id, kind, dims: Object.freeze(dims) });
-  }
-  if (kind !== KIND.item) throw new KernelError(CODE.refMissing, { entity: id }, `${JSON.stringify(id)} is neither a material nor an item template`);
+// 分态量取一栏（卷三乙 :541、:429"给实例或批次时，分态量按当时物态取栏"）：Fact 的值是 {solid, liquid, gas}（栏名取自 matter 族）时换成这一栏的 Fact，
+// 读不到统一交未知（Fact 未知，带 reason），不抛错也不返回 null；栏里显式 null 交不适用（同 aggregateDim 对显式 null 的读法）。
+function atMatterColumn(fact, column) {
+  if (!fact.known) return fact;
+  const v = isObj(fact.value) ? fact.value[column] : undefined;
+  if (v === undefined) return UNKNOWN(`matterState.${column}`);
+  if (v === null) return NOT_APPLICABLE;
+  return Object.freeze({ ...fact, value: v });
+}
+
+// matterState 栏名 → {fam: matter 族, code: 该栏的物态条目代号}；栏名不是族里的栏即 E-DIM-DOMAIN-RANGE（取自数据，不点名任何一栏）。
+function matterColumnOf(engine, column) {
+  const fam = matterFamilyOf(engine.vocab, tableOf(engine, KIND.item).doc.dimensions);
+  const columns = fam ? Object.keys(fam.entries).map((c) => stateField(fam, c)) : [];
+  const at = columns.indexOf(column);
+  if (at < 0) throw new KernelError(CODE.range, {}, `materialView matterState ${JSON.stringify(column)} is not a column of the matter family (${columns.join('/')})`);
+  return { fam, code: Object.keys(fam.entries)[at] };
+}
+
+// 物品（模板，或带材料偏离的实例、批次）的材料量读数：materialList 是实例或批次对模板的材料偏离（数组才算给了，同 item-state aggregated），没给读模板的 material；
+// 口径与承担组读 rules.items.aggregation，与 aggregateMaterialFor 同一个 aggregateDim，差别只在份额表的来源。
+// 物态（卷三乙 :429、:669、M-1 :681）：celsius 是 undefined 即模板，按静态读法（T-14）；实例与批次交入此刻所在处的温度（摄氏度），
+// 分态量与固相量逐份按该份材料自己在这个温度下的当时物态取栏、判适用（materialMatterAt，T-2 材料级判法）；温度未知交 null，每份物态都未知，
+// 由 aggregateDim 对分态量、固相量按该维 onUnknown 处置（M-1 第 ② 种，不另写一份）。
+function itemMaterialDims(engine, state, templateId, materialList, asked, celsius) {
+  const itemT = tableOf(engine, KIND.item);
   const list = ruleValue(engine.rules, RULES.items, KEY.aggregation);
-  const mat = readDim(engine, state, kind, id, DIM.material);
+  const mat = Array.isArray(materialList) ? KNOWN(materialList) : readDim(engine, state, KIND.item, templateId, DIM.material);
   const shares = mat.known ? sharesOf(mat.value) : null;
-  const ctx = { vocab: engine.vocab, rules: engine.rules, matDims: tableOf(engine, KIND.material).doc.dimensions, matter: matterFamilyOf(engine.vocab, tableOf(engine, KIND.item).doc.dimensions), formed: tableOf(engine, KIND.item).itemDerived instanceof Map && tableOf(engine, KIND.item).itemDerived.has(id) ? tableOf(engine, KIND.item).itemDerived.get(id).formed : null };
+  const ctx = { vocab: engine.vocab, rules: engine.rules, matDims: tableOf(engine, KIND.material).doc.dimensions, matter: matterFamilyOf(engine.vocab, itemT.doc.dimensions), formed: itemT.itemDerived instanceof Map && itemT.itemDerived.has(templateId) ? itemT.itemDerived.get(templateId).formed : null };
   const read = runtimeReader(engine, state);
+  if (celsius !== undefined) ctx.phaseOf = (materialRef) => (celsius === null ? null : materialMatterAt(read, materialRef, celsius));
   const dims = {};
-  const asked = Array.isArray(options.dimensions) ? options.dimensions : null;
   const specs = asked === null ? (Array.isArray(list) ? list : []).filter((s) => s.mode !== AGG.none).map((s) => s.dimension) : asked;
   for (const key of [...specs].sort(cmp)) {
     if (shares === null) { dims[key] = UNKNOWN('material'); continue; }
@@ -679,7 +691,83 @@ export function materialView(engine, state, id, options = {}) {
       dims[key] = UNKNOWN(CODE.required);
     }
   }
-  return Object.freeze({ id, kind, dims: Object.freeze(dims) });
+  return Object.freeze(dims);
+}
+
+/**
+ * `materialView(engine, state, id)`（卷三乙 §3.1 :429）：接受材料 id、物品模板 id、实例 id 或 lotRef {account: {holder, purpose, kind}, lotKey}。
+ * 材料 id → 表头每个维度的 Fact（数值标量经唯一管线给有效值并带 base，本入口不套修正表，M-12）；
+ * 物品模板 id → rules.items.aggregation 里每个非 none 口径的维度聚合成物品的材料量（M-1，静态读法），Fact 带 known、applicable、partial；
+ * 实例 id 与 lotRef → 同模板的算法，份额表取实例（created.<id>.props.material）或批次（stockLots 属性行 material）对模板的材料偏离，没有偏离读模板（卷三乙 :428、I-3），
+ * 返回里多带 template（物品模板 id）。
+ * options.dimensions：只读这几个维度（材料 id 时只列这几个；物品时 onUnknown 为 error 的未知照 M-1 抛 E-DIM-REQUIRED-MISSING）；
+ * 不给时列全部口径，某维读到 error 级未知按未知带码交出，不让一个无关维度拖垮整张读数。
+ * options.matterState（卷三乙 :429、:541）只给材料 id 用：栏名 solid、liquid、gas 之一（取自 matter 族，不是族里的栏即 E-DIM-DOMAIN-RANGE）；
+ * 分态维度（struct 且字段恰是族的全部栏，如 opaque、blocksSky、bearsLoad、airtight、density）换成这一栏的 Fact，别的维度原样，读不到统一交未知（带 reason），不抛错也不交 null。
+ * 材料没有物态字段（卷三乙 :147），由调用方说要哪一栏。物品模板读静态读法（T-14，卷三乙 :429"给模板时按静态读法取栏"）、实例与 lotRef 读 matterStateOf 的当时物态
+ * （按世界时钟的此刻，卷三乙 :429"给实例或批次时，分态量按 matterStateOf 的当时物态取栏，固相量只在当时为固时适用"），这三种 id 都不收 matterState，给了即 E-DIM-STRUCT-FIELD，不留覆盖的口子；
+ * 当时物态未知（没有时钟、所在处不是地点、温度或温度点未知）时，分态量与固相量按该维 onUnknown 处置（M-1 第 ② 种）。
+ * @param {any} engine @param {any} state @param {string | {account: {holder: string, purpose: string, kind: string}, lotKey: string}} id @param {{dimensions?: string[], matterState?: string}} [options]
+ */
+export function materialView(engine, state, id, options = {}) {
+  const asked = Array.isArray(options.dimensions) ? options.dimensions : null;
+  const column = options.matterState;
+  const kind = typeof id === 'string' ? idKind(id) : null;
+  if (kind !== KIND.material && column !== undefined) throw new KernelError(CODE.structField, {}, 'materialView options.matterState is for a material id only: an item template reads the static state (T-14), an instance or lotRef reads matterStateOf (vol3b :429)');
+  if (kind === KIND.material) {
+    const t = tableOf(engine, kind);
+    const read = runtimeReader(engine, state);
+    let pick = (k, f) => f;
+    if (column !== undefined) {
+      const { fam } = matterColumnOf(engine, column);
+      pick = (k, f) => (isPerState(fam, t.doc.dimensions[k]) ? atMatterColumn(f, column) : f);
+    }
+    const keys = asked === null ? Object.keys(t.doc.dimensions) : asked;
+    const dims = Object.fromEntries([...keys].sort(cmp).map((k) => [k, pick(k, read(id, k))]));
+    return Object.freeze({ id, kind, dims: Object.freeze(dims) });
+  }
+  if (kind === KIND.item) return Object.freeze({ id, kind, dims: itemMaterialDims(engine, state, id, undefined, asked, undefined) });
+  // 不在 idIndex 的字串（实例 id）或 lotRef 对象：实例与批次的材料偏离读口在 item-state.mjs。
+  const subject = kind === null ? materialSubjectOf(engine, state, id) : null;
+  if (subject === null) throw new KernelError(CODE.refMissing, typeof id === 'string' ? { entity: id } : {}, `${JSON.stringify(id)} is neither a material, an item template, an item instance nor a lotRef`);
+  // 当时物态（卷三乙 :429、:669）：此刻 = 世界时钟，温度取所在处；时钟没设或温度未知即 null，各份物态未知，由 aggregateDim 按各维 onUnknown 处置（M-1 第 ② 种）。
+  const now = nowMinuteOf(engine, state);
+  const t = now === null ? null : subjectTemperature(engine, state, id, now);
+  return Object.freeze({ id, kind: KIND.item, template: subject.template, dims: itemMaterialDims(engine, state, subject.template, subject.material, asked, t !== null && t.known ? t.value : null) });
+}
+
+// T-2 当时物态的求值（matterStateOf 与 materialView 共用）：subject 是 materialSubjectOf 的结果。① 取温度（item-state.mjs 的 subjectTemperature）；
+// ② 定主料（mainMaterialOf：结构组里份额最大、平局按材料代号，没有结构组取全部组）；③ 材料级判法（matterStatesOf 用在单个温度上，即 T-13 的域退成一点；点读有效值，M-12）。
+// 判法要用的点未知则物态未知，不拿固或液顶替。
+function matterStateOfSubject(engine, state, ref, subject, minute) {
+  const t = subjectTemperature(engine, state, ref, minute);
+  if (!t.known) return UNKNOWN(Array.isArray(t.gaps) && t.gaps.length ? t.gaps.join(',') : 'temperature');
+  const mat = Array.isArray(subject.material) ? KNOWN(subject.material) : readDim(engine, state, KIND.item, subject.template, DIM.material);
+  const shares = mat.known ? sharesOf(mat.value) : null;
+  const main = shares === null ? null : mainMaterialOf(engine.vocab, shares);
+  if (main === null) return UNKNOWN(DIM.material);
+  const code = materialMatterAt(runtimeReader(engine, state), main, t.value);
+  return code === null ? UNKNOWN(DIM.meltPoint) : KNOWN(code, { source: 'derived' });
+}
+
+// T-2 ③ 材料级判法（一份材料、一个温度）：matterStatesOf 用在单个温度上（T-13 的域退成一点），点读有效值（M-12）；要用的点未知返回 null，不顶替。
+// 整件的当时物态（matterStateOf）取主料这一份，聚合里分态量与固相量逐份各用这一份自己的结果（卷三乙 :669、M-1 :681），同一处判法。
+function materialMatterAt(read, materialRef, celsius) {
+  const states = matterStatesOf({ melt: read(materialRef, DIM.meltPoint), boil: read(materialRef, DIM.boilPoint), decompose: read(materialRef, DIM.decomposePoint) }, { min: celsius, max: celsius });
+  return states === null || states.length !== 1 ? null : states[0];
+}
+
+/**
+ * `matterStateOf(engine, state, ref, minute)`（卷三乙 §4.11.2 :1463，T-2 全书唯一定义；§3.2 :147、:245）：实例 id 或批次引用 lotRef 在世界时刻 minute 的当时物态，
+ * 返回 Fact：已知时值是 matter 族代号（固、液、气），未知带 reason（未知不顶替，T-2）。材料没有物态字段，物态不存在任何行上，每次按当时温度求。
+ * 纯读，不写状态。ref 不是实例也不是 lotRef 即 E-DIM-REF-MISSING。
+ * @param {any} engine @param {any} state @param {string | {account: {holder: string, purpose: string, kind: string}, lotKey: string}} ref @param {number} minute
+ */
+export function matterStateOf(engine, state, ref, minute) {
+  if (!Number.isSafeInteger(minute) || minute < 0) throw new KernelError(CODE.range, {}, `matterStateOf minute ${String(minute)} is a non-negative integer`);
+  const subject = materialSubjectOf(engine, state, ref);
+  if (subject === null) throw new KernelError(CODE.refMissing, typeof ref === 'string' ? { entity: ref } : {}, `${JSON.stringify(ref)} is neither an item instance nor a lotRef`);
+  return matterStateOfSubject(engine, state, ref, subject, minute);
 }
 
 /**

@@ -20,7 +20,7 @@
 // 未落：门、窗扇的此刻状态（卷五 :603 "门窗按此刻状态取对应材料"）——卷十九门窗扇状态未建，gridView 现把门窗洞读作空气（place-building.mjs leafOpen 恒按没装），所以门窗洞按空气处理；
 //    gridView 水层未接时水体足迹地表以上格读未知（docs/问题.md G6 遗留 1），视线遇到它们按未知。
 
-import { dim } from './kernel/dimensions.mjs';
+import { materialView } from './kernel/item.mjs';
 import { fixedUnits } from './kernel/det-math.mjs';
 import { E } from './kernel/handles/generated.mjs';
 import { regionOf, gridView, regionOcclusionM, sightCache } from './kernel/place.mjs';
@@ -29,7 +29,7 @@ import { inBubble } from './sim-tiers.mjs';
 // 本文件定名（单一定义）。
 export const LAYER = Object.freeze({ near: 'near', far: 'far' });
 const S = Object.freeze({
-  material: 'material', opaque: 'opaque', solid: 'solid', grid: 'grid', storeyM: 'storeyM',
+  opaque: 'opaque', solid: 'solid', grid: 'grid', storeyM: 'storeyM',
   stepKey: 'farSightStepRegionCells', maxKey: 'farSightMaxSamples',
   cell: 'cell', slab: 'slab',
 });
@@ -120,14 +120,14 @@ function readCells(engine, state, w, steps) {
   return out;
 }
 
-// 材料 m 在物态 st 下是否不透光：读材料表的 opaque（分态布尔，always 必填）；读不到返回 null（未知）。同一次调用内按 (材料, 物态) 记忆。
+// 材料 m 在物态 st 下是否不透光：经 materialView 读 opaque 的分态栏（卷三乙 :541；卷三甲 :268）；读不到返回 null（未知）。同一次调用内按 (材料, 物态) 记忆。
 function opaqueReader(engine, state) {
   const memo = new Map();
   return (material, matterState) => {
     const key = `${material}\u0000${matterState}`;
     if (memo.has(key)) return memo.get(key);
-    const f = dim(engine, state, S.material, material, S.opaque);
-    const v = f.known && isObj(f.value) && typeof f.value[matterState] === 'boolean' ? f.value[matterState] : null;
+    const f = materialView(engine, state, material, { dimensions: [S.opaque], matterState }).dims[S.opaque];
+    const v = f.known && typeof f.value === 'boolean' ? f.value : null;
     memo.set(key, v);
     return v;
   };

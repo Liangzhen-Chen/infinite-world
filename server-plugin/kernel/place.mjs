@@ -40,6 +40,7 @@ import { activeEdges } from './holdings.mjs';
 import { isPosValue } from './named-structs.mjs';
 import { matchStruct } from './named-struct-match.mjs';
 import { cellClassOf, surfaceStorey as surfaceStoreyOf, landCellKey, landOrderKey } from './grid.mjs';
+import { materialView } from './item.mjs';
 
 const POS_STRUCT = 'struct:pos'; // 命名 struct 登记里位置那一行的名（卷二 §1.5 :252；与 named-structs.mjs 同名）
 
@@ -212,10 +213,16 @@ function bedCorrectedColumn(grid, worldSeed, plan, entry, cps, delta, x, y, memo
 }
 const worldSeedOf = (engine) => (engine && isObj(engine.template) && typeof engine.template.seed === 'string' ? engine.template.seed : undefined);
 
-// 建筑蓝图读取的上下文（place-building.mjs）：维度只经内核 dim() 的基值读（与 placeView 同一套取值）；缓存挂在计划对象 rp 上。
+// 建筑蓝图读取的上下文（place-building.mjs）：地点维度只经内核 dim() 的基值读（与 placeView 同一套取值），材料量只经 materialView（卷三甲 :268）；缓存挂在计划对象 rp 上。
 function buildingCtx(engine, state, rp) {
   const read = (table) => (id, key) => { const f = dim(engine, state, table, id, key); return f.known ? f.value : undefined; };
-  return { engine, state, rp, val: read(PLACE), materialVal: read(MATERIAL) };
+  return {
+    engine, state, rp, val: read(PLACE),
+    materialAt: (id, key, matterState) => {
+      const f = materialView(engine, state, id, { dimensions: [key], matterState }).dims[key];
+      return f.known ? f.value : undefined;
+    },
+  };
 }
 
 // 体积足迹（洞穴）读取的上下文（place-volume.mjs）：同建筑蓝图，维度只经 dim() 的基值读；缓存挂在（计划、世界种子）上。世界种子随新开局或读档才有，没有时体积一律读作未知（卷二 §1.12）。
@@ -519,13 +526,12 @@ function landFineCell(engine, state, place, seedKey) {
 
 // ---------- gridView（卷五 §3.1、§4.3 规则 8–11、§4.5；格子迁移 G6） ----------
 
-// 材料行的分态布尔（卷三甲 :128–:131 always 必填，加载期已核每行三栏都有值）：读 dim()，取格的当时物态那一栏。
-// 读不到（行不是材料、栏不是布尔）说明加载保证被破坏，当内核错误抛出，不当未知也不当假。
+// 材料行的分态布尔（卷三乙 :541）：经 materialView 取格的当时物态那一栏（卷三甲 :268 读材料量的唯一入口）。
+// 读不到（未知、或值不是布尔）按未知（null）带出，grid-base.mjs cellFlags 的 flagOf 约定即 boolean|null。
 function materialFlagReader(engine, state) {
   return (material, matterState, flag) => {
-    const f = dim(engine, state, MATERIAL, material, flag);
-    if (!f.known || !isObj(f.value) || typeof f.value[matterState] !== 'boolean') throw new KernelError('E-DIM-REQUIRED-MISSING', {}, `gridView: material ${material} has no ${flag}.${matterState} (required always)`);
-    return f.value[matterState];
+    const f = materialView(engine, state, material, { dimensions: [flag], matterState }).dims[flag];
+    return f.known && typeof f.value === 'boolean' ? f.value : null;
   };
 }
 
