@@ -196,9 +196,6 @@ const DET_FILE = 'det-numeric.json';
 const W = 10n ** 60n;
 const OUT8 = 10n ** 8n;
 const W_PER_OUT = W / OUT8;
-const LN_MIN = 10_000_000;         // 0.1（10⁸ 标度）
-const LN_MAX = 1_000_000_000;      // 10
-const LN_STEP = 100_000;           // 10⁻³
 const TRIG_PERIOD = 628_320_000;   // 2π 截到 10⁻⁴ 的 10⁸ 标度值（6.2832）
 const TRIG_STEP = 40_000;          // 4×10⁻⁴
 const ATAN_LIM = 100_000_000;      // ±1
@@ -212,40 +209,6 @@ function isqrtBig(n) {
   if (n < 2n) return n;
   let x = 1n << BigInt((bitLength(n) + 1) >> 1);
   for (;;) { const y = (x + n / x) >> 1n; if (y >= x) return x; x = y; }
-}
-
-// ln 2 的 W 标度值：2·atanh(1/3) = 2·(1/3 + 1/(3·3³) + …)。
-function ln2Fixed(w) {
-  const t = w / 3n;
-  const t2 = (t * t) / w;
-  let sum = 0n;
-  let p = t;
-  for (let i = 0; ; i += 1) {
-    const term = p / BigInt(2 * i + 1);
-    if (term === 0n) break;
-    sum += term;
-    p = (p * t2) / w;
-  }
-  return sum + sum;
-}
-
-// ln(x) 的 W 标度值：约到 [1,2) 后用 atanh 级数（|t| < 1/3），n·ln 2 合并。
-function lnW(x, w, ln2) {
-  let n = 0;
-  let m = x;
-  while (m >= 2n * w) { m /= 2n; n += 1; }
-  while (m < w) { m *= 2n; n -= 1; }
-  const t = ((m - w) * w) / (m + w);
-  const t2 = (t * t) / w;
-  let sum = 0n;
-  let p = t;
-  for (let i = 0; ; i += 1) {
-    const term = p / BigInt(2 * i + 1);
-    if (term === 0n) break;
-    sum += term;
-    p = (p * t2) / w;
-  }
-  return BigInt(n) * ln2 + sum + sum;
 }
 
 // sin/cos 的 W 标度值：先按 2π 取余，再 Taylor 级数（r < 2π，约 45 项后为 0）。
@@ -313,16 +276,6 @@ function truncOut(v, name) {
   return out;
 }
 
-function buildLn() {
-  const ln2 = ln2Fixed(W);
-  const values = [];
-  for (let x = LN_MIN; x <= LN_MAX; x += LN_STEP) values.push(truncOut(lnW(BigInt(x) * W_PER_OUT, W, ln2), `ln x=${x}`));
-  if (values[0] !== -230258509) fail(`ln x=0.1 不是向零截断的 ln 0.1×10⁸=-230258509，实为 ${values[0]}`); // ln(0.1) = −2.30258509…，向零截断
-  if (values[(100_000_000 - LN_MIN) / LN_STEP] !== 0) fail('ln x=1 不是 0');
-  if (values[values.length - 1] !== 230258509) fail(`ln x=10 不是 ⌊ln 10×10⁸⌋=230258509，实为 ${values[values.length - 1]}`);
-  return values;
-}
-
 function buildTrig(fn, name) {
   const pi = piFixed(W);
   const values = [];
@@ -358,16 +311,15 @@ function fnEntryText(name, meta, values) {
   return out.join('\n');
 }
 
-const LN_BASIS = '输入 10⁸ 标度；定义域 [0.1, 10]（10⁷–10⁹），步长 10⁻³（10⁵）。两点线性插值误差 ≤ h²|f″|/8 = (10⁻³)²×(1/0.1²)/8 = 1.25×10⁻⁵（x=0.1 处最大）；域外报 E-DET-DOMAIN。首次标定：覆盖常见衰减系数与比值，步长按 10⁻³ 的插值误差给界。';
+const LN_BASIS = '不另立表：直接指向卷二 §3.3 的 fixedLn（唯一定义），标度 10⁸；定义域以 fixedLn 为准（0 < x ≤ expInt[40]，上端超出安全整数，行内取 1 与 2⁵³−1 只作输入类型界），越界报 E-DET-DOMAIN；精度界 <2×10⁻⁸ 见卷二 §3.3。';
 const SIN_BASIS = '输入 10⁸ 标度；表覆盖一个周期 6.2832 rad（2π 截到 10⁻⁴，端点误差 1.47×10⁻⁵，由输入先按周期取余消化），步长 4×10⁻⁴（4×10⁴）；插值误差 ≤ h²/8 = 2×10⁻⁸。首次标定：周期取 10⁸ 标度上最接近 2π 的 10⁻⁴ 整倍数。';
 const COS_BASIS = SIN_BASIS;
 const ATAN_BASIS = '输入 10⁸ 标度；定义域 [-1, 1]，步长 10⁻³（10⁵）；插值误差 ≤ h²·max|f″|/8 ≈ (10⁻³)²×0.65/8 = 8.1×10⁻⁸。域外按 atan(x)=sign(x)·π/2−atan(1/x) 折回，π/2 由本表 x=1 的值乘 2 得出，不另写常数。';
 const EXP_BASIS = '不另立表：直接指向卷二 §1.10 冻结指数表与 fixedExp（唯一定义），标度 10⁸、取值域 [-40, 40] 与卷二 §3.3 一致。';
 const SQRT_BASIS = '不查表：整数牛顿法固定 32 步（卷二 §1.10 :326），32 登在 iterations；结果取 min(y, ⌊n/y⌋) 保证向下取整。定义域 [0, 2⁵³−1] 按输入 10⁸ 标度。';
-const POW_BASIS = '由 exp 与 ln 组合（卷二 §3.3 :1341 非整数次幂唯一写法）：exp(k·ln x)，底数须为正；定义域随 ln（0.1–10），k·ln x 须落在 fixedExp 的 [-40, 40]。';
+const POW_BASIS = '由 exp 与 ln 组合（卷二 §3.3 :1408 非整数次幂唯一写法）：exp(k·ln x)，底数须为正；定义域随 fixedLn，k·ln x 须落在 fixedExp 的 [-40, 40]。';
 
 function detNumericText() {
-  const ln = buildLn();
   const sin = buildTrig(sinW, 'sin');
   const cos = buildTrig(cosW, 'cos');
   const atan = buildAtan();
@@ -376,12 +328,12 @@ function detNumericText() {
   if (sin[0] !== 0 || cos[0] !== OUT8_NUMBER) fail('sin/cos 在 0 处的值不对');
   const entries = [
     fnEntryText('exp', { inScale: 100_000_000, outScale: 100_000_000, domainMin: -4_000_000_000, domainMax: 4_000_000_000, step: 1, basis: EXP_BASIS }),
-    fnEntryText('ln', { inScale: 100_000_000, outScale: 100_000_000, domainMin: LN_MIN, domainMax: LN_MAX, step: LN_STEP, basis: LN_BASIS }, ln),
+    fnEntryText('ln', { inScale: 100_000_000, outScale: 100_000_000, domainMin: 1, domainMax: SAFE_INT_MAX, step: 1, basis: LN_BASIS }),
     fnEntryText('sin', { inScale: 100_000_000, outScale: 100_000_000, domainMin: 0, domainMax: TRIG_PERIOD, step: TRIG_STEP, basis: SIN_BASIS }, sin),
     fnEntryText('cos', { inScale: 100_000_000, outScale: 100_000_000, domainMin: 0, domainMax: TRIG_PERIOD, step: TRIG_STEP, basis: COS_BASIS }, cos),
     fnEntryText('atan', { inScale: 100_000_000, outScale: 100_000_000, domainMin: -ATAN_LIM, domainMax: ATAN_LIM, step: ATAN_STEP, basis: ATAN_BASIS }, atan),
     fnEntryText('sqrt', { inScale: 100_000_000, outScale: 100_000_000, domainMin: 0, domainMax: SAFE_INT_MAX, step: 1, iterations: SQRT_ITERATIONS, basis: SQRT_BASIS }),
-    fnEntryText('pow', { inScale: 100_000_000, outScale: 100_000_000, domainMin: LN_MIN, domainMax: LN_MAX, step: 1, basis: POW_BASIS }),
+    fnEntryText('pow', { inScale: 100_000_000, outScale: 100_000_000, domainMin: 1, domainMax: SAFE_INT_MAX, step: 1, basis: POW_BASIS }),
   ];
   const text = `{
  "rows": [
@@ -400,12 +352,12 @@ function detNumericText() {
    "value": {
 ${entries.join(',\n')}
    },
-   "source": "卷二十七 §2.2 :171、R27-5.2 :570–:575（expo 七函数各一行；exp 指向卷二 §1.10 冻结表；sqrt 牛顿固定步；pow=exp∘ln）"
+   "source": "卷二十七 §2.2 :171、R27-5.2 :570–:575（expo 七函数各一行；exp 指向卷二 §1.10 冻结表；ln 指向卷二 fixedLn；sqrt 牛顿固定步；pow=exp∘ln）"
   }
  ]
 }
 `;
-  return { text, counts: { ln: ln.length, sin: sin.length, cos: cos.length, atan: atan.length } };
+  return { text, counts: { sin: sin.length, cos: cos.length, atan: atan.length } };
 }
 
 const OUT8_NUMBER = Number(OUT8);
@@ -465,7 +417,7 @@ function main(argv) {
   const detFile = detTargetPath();
   const same = existsSync(file) && readFileSync(file, 'utf8') === text;
   const detSame = existsSync(detFile) && readFileSync(detFile, 'utf8') === detText;
-  const summary = `${counts.normalQuantile}/${counts.expInt}/${counts.expFrac}/${counts.ln}/${counts.sin}/${counts.cos}/${counts.atan}`;
+  const summary = `${counts.normalQuantile}/${counts.expInt}/${counts.expFrac}/${counts.sin}/${counts.cos}/${counts.atan}`;
   if (argv.includes('--check')) {
     process.stdout.write(same && detSame
       ? `det tables up to date (${summary})\n`

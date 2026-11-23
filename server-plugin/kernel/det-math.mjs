@@ -431,11 +431,17 @@ function tableLookup(row, x, name) {
 }
 
 /**
- * ln：查表线性插值（卷二十七 :571）。入参、返回按该行的 inScale/outScale（现均为 10⁸）。
+ * ln：不另立表，直接用卷二 §3.3 的 fixedLn（唯一定义；李白 Q-6，卷二十七 R27-5.2 的 ln 行只指向它，写法同 exp）。
+ * 该行只给出标度与指向；入参按 inScale 换成 10⁸ 标度后交 fixedLn，域外由 fixedLn 报 E-DET-DOMAIN，不钳位。
  * @param {number | bigint} x @returns {bigint}
  */
 export function ln(x) {
-  return tableLookup(detRow('ln'), detInt(x, 'ln input'), 'ln');
+  const row = detRow('ln');
+  const v = detInt(x, 'ln input');
+  if (v < row.domainMin || v > row.domainMax) throw new FixedError('E-DET-DOMAIN', `ln input ${v} outside [${row.domainMin}, ${row.domainMax}]`);
+  const s8 = scale8();
+  const l8 = fixedLn((v * s8) / row.inScale);
+  return (l8 * row.outScale) / s8;
 }
 
 // 周期函数：输入先按 [domainMin, domainMax) 取余，再查表（卷二十七 :573）。
@@ -568,8 +574,7 @@ export function pow(x, k) {
   const lnRow = detRow('ln');
   const expRow = detRow('exp');
   const s8 = scale8();
-  const lnOut = tableLookup(lnRow, v, 'ln');
-  const ln8 = (lnOut * s8) / lnRow.outScale;
+  const ln8 = (ln(v) * s8) / lnRow.outScale;
   const product = fixedMultiply8(detInt(k, 'pow exponent'), ln8);
   const e8 = fixedExp(product);
   return (e8 * expRow.outScale) / s8;

@@ -500,10 +500,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 96
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 97
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 96,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 97,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -1332,10 +1336,14 @@
     {
      "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
      "rev": 93
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 94
     }
    ],
-   "print": "83ae09423ceb0813c89fd826fe758bf64537bb75ff8788cd2689687551f56b61",
-   "rev": 93,
+   "print": "f94833a1d0aa29c278426eec0e388f02a1d49898c14d9682146d0f1e62ce07e1",
+   "rev": 94,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -2238,10 +2246,14 @@
     {
      "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
      "rev": 81
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 82
     }
    ],
-   "print": "943882afc59a5a855e91cc50e44f5b659806e9470f8ea3ab7295c276dcfec78f",
-   "rev": 81,
+   "print": "5e16e63cef54c7b86223b49b33a08653f42de5df0697b8e8efad85201eba183d",
+   "rev": 82,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -2835,10 +2847,14 @@
     {
      "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
      "rev": 112
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 113
     }
    ],
-   "print": "d8ae7f2b703637c2ea53e2c5d4a53b3ccd89411e3e504003a4e5e2da872ee598",
-   "rev": 112,
+   "print": "d339c3159a326df328fccd691fd8f26cbba8b958fdd3322e363c5936b08f9acc",
+   "rev": 113,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -3325,10 +3341,14 @@
     {
      "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
      "rev": 82
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 83
     }
    ],
-   "print": "943882afc59a5a855e91cc50e44f5b659806e9470f8ea3ab7295c276dcfec78f",
-   "rev": 82,
+   "print": "5e16e63cef54c7b86223b49b33a08653f42de5df0697b8e8efad85201eba183d",
+   "rev": 83,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -4411,10 +4431,14 @@
     {
      "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
      "rev": 82
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 83
     }
    ],
-   "print": "943882afc59a5a855e91cc50e44f5b659806e9470f8ea3ab7295c276dcfec78f",
-   "rev": 82,
+   "print": "5e16e63cef54c7b86223b49b33a08653f42de5df0697b8e8efad85201eba183d",
+   "rev": 83,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -4757,10 +4781,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 82
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 83
     }
    ],
-   "print": "33f76c102c4494f49d18dffd7da190773fb47d1ccea4e82b78008c01fb39f278",
-   "rev": 82,
+   "print": "2cd950b274a3f589386c4ca22b0e29fa0e3516029e0899e44c67d690925ecae4",
+   "rev": 83,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -4864,10 +4892,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 22
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 22,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 23,
    "scanClass": "pp_canonical_def",
    "source": "公共部件审查乙 11；卷二十七 :542；例外 kernel/storage.mjs",
    "terms": {
@@ -4915,10 +4947,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 8
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 9
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 8,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 9,
    "scanClass": "pp_canonical_review",
    "source": "主会话 11-23 定：规范序列化按定义判，拿不准的待人审",
    "terms": {
@@ -5022,10 +5058,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 22
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 22,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 23,
    "scanClass": "pp_deep_clone",
    "source": "公共部件审查乙 10；卷二 :897；kernel/clone.mjs（kernelApi clone）",
    "terms": {
@@ -5129,10 +5169,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 22
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 22,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 23,
    "scanClass": "pp_dist_branch",
    "source": "公共部件审查甲 R7；卷二 §1.10；kernel/sample.mjs 头注",
    "terms": {
@@ -5216,10 +5260,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 17
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 18
     }
    ],
-   "print": "02fa94470fe160f217f6450af304d0e49bf15738d893a8161f6bfcc240b44e45",
-   "rev": 17,
+   "print": "a269cd70d12b85e8719082841c6e2ecd326b54ac4cc83d52125dae9d0afe8b8a",
+   "rev": 18,
    "scanClass": "pp_draw_sites",
    "source": "公共部件审查甲 R6 后半；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479（rules.clock.drawSites）",
    "terms": {
@@ -5303,10 +5351,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 17
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 18
     }
    ],
-   "print": "33f76c102c4494f49d18dffd7da190773fb47d1ccea4e82b78008c01fb39f278",
-   "rev": 17,
+   "print": "2cd950b274a3f589386c4ca22b0e29fa0e3516029e0899e44c67d690925ecae4",
+   "rev": 18,
    "scanClass": "pp_dup_export",
    "source": "公共部件审查甲 R14、乙 12；卷二 :1162 体例；CLAUDE.md“跨卷共用定义只一处”。职责函数 isPos、distributionMean、weatherCellOf 的职责文件依据：卷二 §1.5 struct:pos（kernel/named-structs.mjs）、卷二 §1.10（kernel/sample.mjs）、卷二十 §3.1（kernel/weather.mjs）",
    "terms": {
@@ -5406,10 +5458,14 @@
     {
      "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
      "rev": 21
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 22
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 21,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 22,
    "scanClass": "pp_dynamic_index",
    "source": "李白更正裁定 msg-1122-2255-c0ast（动态下标出现即报，标待人审）；卷二十七 R27-5.2、A27-5.1；卷二十 :436",
    "terms": {
@@ -5493,10 +5549,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 17
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 18
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 17,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 18,
    "scanClass": "pp_dynamic_review",
    "source": "李白更正裁定 msg-1122-2255-c0ast：运行期才知道的动态下标出现即报，标待人审。本条列全部对象上的动态下标（含数组按位置取），数量大，只报不拦（报告里列出，供人审）；登记在 Math、全局对象、状态根等根上的动态下标由 pp_dynamic_index 拦",
    "terms": {
@@ -5600,10 +5660,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 22
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 22,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 23,
    "scanClass": "pp_envat_callers",
    "source": "公共部件审查甲 R2；卷二十 :478；state-owners.json kernelApi 行形状",
    "terms": {
@@ -5707,10 +5771,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 22
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 22,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 23,
    "scanClass": "pp_envat_import",
    "source": "公共部件审查甲 R1（docs/研究/公共部件审查-甲-1122.md 第八节）；卷二十 :478、:631；例外：climate.mjs、weather.mjs 互相引用（甲 R1 原句）",
    "terms": {
@@ -5814,10 +5882,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 22
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 22,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 23,
    "scanClass": "pp_epsilon",
    "source": "公共部件审查乙 7；卷二十七 :620、:634（R27-5.2 数值运算只有三条路）",
    "terms": {
@@ -5988,10 +6060,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 21
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 22
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 21,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 22,
    "scanClass": "pp_float_pow",
    "source": "公共部件审查乙 7；卷二十七 R27-5.2（超越函数只经定点数学设施，幂函数 pow 同属）；独立验收漏项“** 运算符”",
    "terms": {
@@ -6095,10 +6171,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 22
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 22,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 23,
    "scanClass": "pp_footprint_kind",
    "source": "公共部件审查甲 R12；卷二 §1.9；模块化评估第三节；例外 kernel/footprint-kind.mjs（gen/* 按种类过滤的比较进基线，M-11③ 修后开）",
    "terms": {
@@ -6198,10 +6278,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 21
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 22
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 21,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 22,
    "scanClass": "pp_gen_callers",
    "source": "公共部件审查乙 9（docs/研究/公共部件审查-乙-1122.md :161）；卷十 :403（生成器只在世界创建事务里按步骤表跑）；例外：generateWorld 所在文件 server-plugin/world-create.mjs（卷十 §3.2 :291）；requireMaterialized 现不存在，建成后其所在文件须加入例外；作者工具在 tools/ 下，不在扫描范围（卷十 :1002）",
    "terms": {
@@ -6305,10 +6389,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 22
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 22,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 23,
    "scanClass": "pp_grammar_regex",
    "source": "公共部件审查乙 6；卷二 :291；例外 kernel/validate/types.mjs",
    "terms": {
@@ -6495,10 +6583,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 22
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 22,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 23,
    "scanClass": "pp_key_concat",
    "source": "公共部件审查甲 R5、乙 1、乙 2；卷二 :337、:897、:1162；例外：整份文本摘要 sha256Text(canonical(…))、sha256Text(text) 不拼键（不含 .join，不命中）",
    "terms": {
@@ -6594,10 +6686,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 20
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 21
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 20,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 21,
    "scanClass": "pp_kind_branch",
    "source": "独立验收（亮圳 11-22「独立测门禁1122」）指出“写死数值与种类分支没有 C0 专条”；卷一 二.1（派生优先，不按 ID 或场景特判，docs/产品原则.md）；卷二 S10（常数登记）",
    "terms": {
@@ -6701,10 +6797,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 22
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 22,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 23,
    "scanClass": "pp_material_read",
    "source": "公共部件审查甲 R11；卷三甲 :268；卷三乙 :541；例外：kernel/item.mjs、kernel/dimensions.mjs、kernel/load/**、kernel/validate/**、kernel/blueprint.mjs（加载期校验 checkBlueprintForms）",
    "terms": {
@@ -6808,10 +6908,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 22
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 22,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 23,
    "scanClass": "pp_neighbors",
    "source": "公共部件审查甲 R10；卷五 :491、:1216（现 8 处）",
    "terms": {
@@ -6903,10 +7007,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 19
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 20
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 19,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 20,
    "scanClass": "pp_no_acorn_runtime",
    "source": "李白更正裁定 msg-1122-2255-c0ast：acorn 只许 tools/accept 引用，server-plugin 不得引用",
    "terms": {
@@ -7010,10 +7118,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 22
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 22,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 23,
    "scanClass": "pp_pos_shape",
    "source": "公共部件审查甲 R8；卷二 §1.5 struct:pos 登记；例外 kernel/named-structs.mjs、kernel/named-struct-match.mjs",
    "terms": {
@@ -7117,10 +7229,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 22
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 22,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 23,
    "scanClass": "pp_region_cell",
    "source": "公共部件审查甲 R9；卷五 :433、:499；例外：kernel/footprint.mjs 的共用函数（修后建）、kernel/handles/keys.mjs gridChunkCells（卷二 :860）",
    "terms": {
@@ -7224,10 +7340,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 22
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 22,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 23,
    "scanClass": "pp_rx_empty_clock",
    "source": "公共部件审查甲 R15；卷二十 :312、:685；例外：加载期校验 kernel/validate/**",
    "terms": {
@@ -7331,10 +7451,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 22
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 22,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 23,
    "scanClass": "pp_seed_args",
    "source": "公共部件审查甲 R6；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479。后半（drawSites 与 seed-keys 两表一致）未落：需读两表对照，现有检测器无此检查",
    "terms": {
@@ -7414,10 +7538,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 16
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 17
     }
    ],
-   "print": "02fa94470fe160f217f6450af304d0e49bf15738d893a8161f6bfcc240b44e45",
-   "rev": 16,
+   "print": "a269cd70d12b85e8719082841c6e2ecd326b54ac4cc83d52125dae9d0afe8b8a",
+   "rev": 17,
    "scanClass": "pp_seed_args_dyn",
    "source": "独立验收漏项“抽取点站点名用变量”；卷二十七 :789（R27-8.1 每个抽取点登记，流代号、抽取点代号须字面量）",
    "terms": {
@@ -7497,10 +7625,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 16
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 17
     }
    ],
-   "print": "33f76c102c4494f49d18dffd7da190773fb47d1ccea4e82b78008c01fb39f278",
-   "rev": 16,
+   "print": "2cd950b274a3f589386c4ca22b0e29fa0e3516029e0899e44c67d690925ecae4",
+   "rev": 17,
    "scanClass": "pp_tpl_key",
    "source": "公共部件审查甲 R13；卷二 :860（键串形只由登记方给）；模块化原则卡头第二节第 9 条",
    "terms": {
@@ -7600,10 +7732,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 21
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 22
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 21,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 22,
    "scanClass": "pp_unit_literal",
    "source": "公共部件审查乙 13；卷三乙:179 与表头 unit 字段（item.json 表头 unit 字段）；单位登记表 world/ontology/dimensions/_units.json",
    "terms": {
@@ -7707,10 +7843,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 22
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 23
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 22,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 23,
    "scanClass": "pp_year_minutes",
    "source": "公共部件审查甲 R3；卷二十 :436、:477 T-3 (c)；例外 climate.mjs（日均温日份额，天文相位，卷二十 :436）",
    "terms": {
@@ -8157,10 +8297,14 @@
     {
      "ref": "C3 修理卡：事务写原语并入 kernel/transaction.mjs（txSet、txDelete），按文件例外登 kernel/transaction.mjs（依据 卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete））；call_edge 加 exceptSet 参数（按文件豁免集合，与 path_access readerSet 同形），item-form 登记该参数键；检测器代码指纹随之变",
      "rev": 108
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 109
     }
    ],
-   "print": "3f7138cfb063e91f6120c780127570db1b9bd86199671e37849e67e9f88f0aa9",
-   "rev": 108,
+   "print": "4ca61e0bcca9cc5d43fcaaebbc2cfaeddef5139e38aa10584a08b37b049e1166",
+   "rev": 109,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -8680,10 +8824,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 68
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 69
     }
    ],
-   "print": "02fa94470fe160f217f6450af304d0e49bf15738d893a8161f6bfcc240b44e45",
-   "rev": 68,
+   "print": "a269cd70d12b85e8719082841c6e2ecd326b54ac4cc83d52125dae9d0afe8b8a",
+   "rev": 69,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -9081,10 +9229,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 94
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 95
     }
    ],
-   "print": "68e77d12c14a02fc6f34325a7e20b7fcd949154c261122de69ae7b7d07862573",
-   "rev": 94,
+   "print": "7e3f1c0e2ae43669495be19a1606401115fd16bb7dc2df729ed4c243bf58cfd2",
+   "rev": 95,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -9389,10 +9541,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 53
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 54
     }
    ],
-   "print": "40ca57186ccaa11b4cc182b728d9b768f93af25e973ee5cbd1c865d76083d17e",
-   "rev": 53,
+   "print": "fc245f0275c1ee436e0d80da1e5bab019a32fb1546fc1c25780c4eb748cfdbaf",
+   "rev": 54,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -10062,10 +10218,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 84
+    },
+    {
+     "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
+     "rev": 85
     }
    ],
-   "print": "33f76c102c4494f49d18dffd7da190773fb47d1ccea4e82b78008c01fb39f278",
-   "rev": 84,
+   "print": "2cd950b274a3f589386c4ca22b0e29fa0e3516029e0899e44c67d690925ecae4",
+   "rev": 85,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {

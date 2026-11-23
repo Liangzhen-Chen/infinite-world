@@ -7,7 +7,7 @@
 
 import { KernelError } from './errors.mjs';
 import { sha256Text } from './save.mjs';
-import { fixedUnits, fixedAdd, fixedDivide, fixedScale, truncateTo, fixedToNumber, fixedExp, fixedSqrtInt } from './det-math.mjs';
+import { fixedUnits, fixedAdd, fixedDivide, fixedScale, truncateTo, fixedToNumber, fixedExp, fixedSqrtInt, fixedUnits8 } from './det-math.mjs';
 import { CODE_RE } from './handles/vocab-handle.mjs';
 import { KEY_RE, T } from './validate/types.mjs';
 import { isHex64, seedKeyText, seedHashText, diceKeyText, orderKeyText } from './handles/keys.mjs';
@@ -276,17 +276,23 @@ function checkCorr(corr) {
     if (corr[i][i] !== 1) throw new KernelError('E-DIM-SAMPLE-CORR', {}, `joint: corr diagonal ${i} is not 1`);
     for (let j = 0; j < n; j++) if (corr[i][j] !== corr[j][i]) throw new KernelError('E-DIM-SAMPLE-CORR', {}, `joint: corr (${i},${j}) is not symmetric`);
   }
-  // 半正定：Cholesky 分解，主元为负即拒（RA-S9）。
-  const a = corr.map((row) => row.slice());
+  // 半正定：不开方的整数对称消元（RA-S9）。判定本来不需要开方，也不用浮点：每个元素先转 10⁸ 标度整数
+  // （卷二十七 :634 不现算浮点、:615 只经内核定点设施），主元为负即拒；主元为 0 时该行余下元素须全为 0（否则不是半正定，卷二:325），
+  // 全为 0 则无需更新后续元素；主元为正时对 i 后的每个 (j,k) 令 a[j][k] ← a[j][k]·p − a[j][i]·a[i][k]（整行同乘正数 p，不改变后续主元正负号，全程无除法）。
+  const a = corr.map((row) => row.map((v) => fixedUnits8(v)));
   for (let i = 0; i < n; i++) {
-    let pivot = a[i][i];
-    for (let k = 0; k < i; k++) pivot -= a[i][k] * a[i][k];
-    if (pivot < 0) throw new KernelError('E-DIM-SAMPLE-CORR', {}, 'joint: corr is not positive semidefinite');
-    a[i][i] = pivot > 0 ? Math.sqrt(pivot) : 0;
+    const pivot = a[i][i];
+    if (pivot < 0n) throw new KernelError('E-DIM-SAMPLE-CORR', {}, 'joint: corr is not positive semidefinite');
+    if (pivot === 0n) {
+      for (let k = i + 1; k < n; k++) if (a[i][k] !== 0n) throw new KernelError('E-DIM-SAMPLE-CORR', {}, 'joint: corr is not positive semidefinite');
+      continue;
+    }
     for (let j = i + 1; j < n; j++) {
-      let s = a[j][i];
-      for (let k = 0; k < i; k++) s -= a[j][k] * a[i][k];
-      a[j][i] = a[i][i] > 0 ? s / a[i][i] : 0;
+      for (let k = j; k < n; k++) {
+        const v = a[j][k] * pivot - a[j][i] * a[i][k];
+        a[j][k] = v;
+        a[k][j] = v;
+      }
     }
   }
 }

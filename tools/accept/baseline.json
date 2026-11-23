@@ -272,12 +272,10 @@
    "b0": 1,
    "b0Source": "counted",
    "compCode": "c_pp_float_math_ast2",
-   "current": 1,
+   "current": 0,
    "lastMergeRef": "HEAD",
    "locked": false,
-   "rowKeys": [
-    "c_pp_float_math_ast2|server-plugin/kernel/sample.mjs|checkCorr|call|0"
-   ]
+   "rowKeys": []
   },
   {
    "b0": 3,

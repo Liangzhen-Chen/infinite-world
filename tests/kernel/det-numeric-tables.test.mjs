@@ -94,13 +94,13 @@ test('detfn 七个导出登 kernelApi（卷二十七 :564）', () => {
 });
 
 test('step ≥ 1（卷二十七 :171）', () => {
-  withDet((rows, fnTables) => { fnTables.ln.step = 0; fnTables.ln.values = [0]; fnTables.ln.domainMax = fnTables.ln.domainMin; }, (dir) => {
+  withDet((rows, fnTables) => { fnTables.sin.step = 0; fnTables.sin.values = [0]; fnTables.sin.domainMax = fnTables.sin.domainMin; }, (dir) => {
     assert.deepEqual(codesOf(dir), ['E-DIM-DOMAIN-RANGE']);
   });
 });
 
 test('values 长度 = (domainMax − domainMin) ÷ step + 1（卷二十七 :171）', () => {
-  withDet((rows, fnTables) => { fnTables.ln.values.pop(); }, (dir) => {
+  withDet((rows, fnTables) => { fnTables.sin.values.pop(); }, (dir) => {
     assert.deepEqual(codesOf(dir), ['E-DIM-DOMAIN-SIZE']);
   });
 });
@@ -119,6 +119,12 @@ test('每行标度、步长须写依据（卷二十七 R27-5.2 :575）', () => {
 
 test('exp 行不带 values（卷二十七 :572 "只指向卷二冻结表"）', () => {
   withDet((rows, fnTables) => { fnTables.exp.values = [100000000]; }, (dir) => {
+    assert.deepEqual(codesOf(dir), ['E-DIM-STRUCT-FIELD']);
+  });
+});
+
+test('ln 行不带 values（李白 Q-6：ln 只留卷二 fixedLn，行只指向）', () => {
+  withDet((rows, fnTables) => { fnTables.ln.values = [100000000]; }, (dir) => {
     assert.deepEqual(codesOf(dir), ['E-DIM-STRUCT-FIELD']);
   });
 });
