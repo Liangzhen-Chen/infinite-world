@@ -12,7 +12,9 @@ import { cardArchiveCheck } from '../../tools/accept/commit-hook.mjs';
 import { ROOT, tempRepo } from './temp-repo.mjs';
 import { testTempRoot, writeUnderTempRoot } from './temp-root.mjs';
 
-const DOC = readFileSync(join(ROOT, 'docs/派活卡头规矩.md'), 'utf8');
+// 门禁生效提交一行在真实规矩里会被合入后回填，测试不依赖它的现值：先统一设成「待回填」，要用具体值的用例自己再设。
+const setEffective = (doc, v) => doc.replace(/^(- 门禁生效提交：).*?(\r?)$/m, `$1${v}$2`);
+const DOC = setEffective(readFileSync(join(ROOT, 'docs/派活卡头规矩.md'), 'utf8'), '待回填');
 const { rules: RULES, questions: QUESTIONS, error: LOAD_ERROR } = loadRules(DOC);
 const PASS_GATE = async () => ({ verdict: 'pass' });
 
@@ -384,7 +386,7 @@ test('回归 5：门禁生效线——生效提交及其祖先不查，之后的
     const before = await push(dir, c2);
     assert.equal(before.ok, false);
     assert.ok(before.reasons.some((x) => x.includes(c1.slice(0, 9))), '没回填：祖先提交也查');
-    writeUnderTempRoot(dir, 'docs/派活卡头规矩.md', DOC.replace('门禁生效提交：待回填', `门禁生效提交：${c1}`));
+    writeUnderTempRoot(dir, 'docs/派活卡头规矩.md', setEffective(DOC, c1));
     const after = await push(dir, c2);
     assert.equal(after.ok, false);
     assert.ok(after.reasons.every((x) => !x.includes(c1.slice(0, 9))), '生效提交本身不查');
