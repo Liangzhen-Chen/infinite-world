@@ -17,16 +17,16 @@
 // 测什么：
 //   1 删除路径不存在（world/design 例外，见上）；2 留底标签 pre-rewrite-1124 指向 ae71f231e839142703eba0cf631e1230646ce68e（对照用，修前修后都应绿）；
 //   3 归档文件到位，docs/当前状态.md 与 docs/卡回报 不存在；4 docs/ 顶层文件只在允许清单内且四份必备都在；
-//   5 CLAUDE.md 与指南 392–425 逐行相同、≤80 行、不含禁词；6 AGENTS.md ≤25 行且含 @CLAUDE.md；
+//   5 CLAUDE.md ≤80 行、二级标题（去括号）与指南 392–425 同结构、不含禁词、docs/卡回报/ 只作禁止列举、含亮圳的行附原话出处；6 AGENTS.md ≤25 行且含 @CLAUDE.md；
 //   7 docs/审查/现行有效裁定.json 可解析，rulings 非空数组，每条有 id、summary、source、status。
 //
-// 修前为何失败：1 删除路径仍在；3 归档文件未到、旧文件仍在；4 docs/ 顶层文件过多；5 CLAUDE.md 超长且含旧叠层；
+// 修前为何失败：1 删除路径仍在；3 归档文件未到、旧文件仍在；4 docs/ 顶层文件过多；5 CLAUDE.md 含旧叠层与无原话出处的亮圳条目、标题结构不符；
 //   6 AGENTS.md 仍 65 行；7 现行有效裁定 JSON 尚无。2 修前即存在，故绿。
 //
-// 指南自相矛盾（已按亮圳逐字替换令取 :399）：指南 :451 禁 CLAUDE.md 出现 docs/卡回报/（出处是 :451，不是 :379；:379 只禁"取代下条"等叠层字样），
-//   而 :399 位于 :392–:425 内，含文字 docs/卡回报/（作禁止回写路径列举）。
-//   第 5 条改为：docs/卡回报/ 只许出现在含"严禁往"的那一行（即只作禁止列举）；其余禁词照旧。
-//   矛盾已报 Gemini 复审。
+// 第 5 条依据【亮圳原话更正1124】（李白转）：凡写"亮圳定/亮圳要求"的条目附亮圳原话出处，找不到原话的改标"李白/主会话自定"。
+//   故 CLAUDE.md 不再与指南 :392–:425 逐字相同，改为比对二级标题结构（去括号）。
+//   指南 :451 禁 CLAUDE.md 出现 docs/卡回报/；:399 位于 :392–:425 内，只作禁止列举（含"严禁往"）。
+//   第 5 条 c：docs/卡回报/ 只许出现在以"- `archive/`"开头或含"严禁往"的那一行。
 //
 // 只用 node:test、node:assert、node:fs、node:path、node:child_process（execFileSync 调 git），
 // 另用 node:url 的 fileURLToPath 把 import.meta.url 转成路径（仓库根 = 本文件目录往上三级）。
@@ -119,27 +119,40 @@ test('4 docs/ 顶层文件只剩允许清单（指南 :240–:241）', () => {
   assert.deepEqual(missing, [], `docs/ 顶层缺失的必备文件：${missing.join(', ')}`);
 });
 
-test('5 CLAUDE.md 与指南 :392–:425 逐行相同、≤80 行、不含禁词（指南 :379、:394）', () => {
+test('5 CLAUDE.md ≤80 行；二级标题（去括号）与指南 :392–:425 同结构；不含禁词；docs/卡回报/ 只作禁止列举；含亮圳的行附原话出处（指南 :392、:425，:451）', () => {
   const guideLines = readText('docs/gemini/rewrite-guide-1124.md').split('\n');
-  const block = guideLines.slice(391, 425).join('\n');
+  const block = guideLines.slice(391, 425);
   assert.equal(guideLines[391], '@AGENTS.md', '指南行号漂移：:392 应为 @AGENTS.md');
   assert.equal(guideLines[424].startsWith('- **通知'), true, '指南行号漂移：:425 应为通知条');
 
-  const claude = readText('CLAUDE.md').replace(/\n+$/, '');
-  assert.equal(claude, block, 'CLAUDE.md 与指南 :392–:425 不逐行相同');
+  const claudeLines = readText('CLAUDE.md').replace(/\n+$/, '').split('\n');
+  const claude = claudeLines.join('\n');
 
-  const lineCount = claude.split('\n').length;
-  assert.ok(lineCount <= 80, `CLAUDE.md 共 ${lineCount} 行，超过 80`);
+  // a. 行数上限
+  assert.ok(claudeLines.length <= 80, `CLAUDE.md 共 ${claudeLines.length} 行，超过 80`);
 
+  // b. 二级标题去掉括号及括号内文字后，与指南 :392–:425 的二级标题逐行相同（结构不变）
+  const headKey = (line) => line.replace(/[（(][^）)]*[）)]/g, '').replace(/\s+$/, '');
+  const guideHeads = block.filter((line) => line.startsWith('## ')).map(headKey);
+  const claudeHeads = claudeLines.filter((line) => line.startsWith('## ')).map(headKey);
+  assert.deepEqual(claudeHeads, guideHeads, 'CLAUDE.md 二级标题结构与指南 :392–:425 不一致');
+
+  // c. 禁词；docs/卡回报/ 只许出现在以"- `archive/`"开头或含"严禁往"的那一行
   const forbidden = ['已过期', '取代下条', 'E-ACC-CARD-SELFCHECK', 'F:/dnd-'];
   const hits = forbidden.filter((word) => claude.includes(word));
   assert.deepEqual(hits, [], `CLAUDE.md 含禁词：${hits.join(', ')}`);
 
-  // docs/卡回报/ 只许作禁止列举：出现的每一行都须含"严禁往"
-  const archiveHits = claude
-    .split('\n')
-    .filter((line) => line.includes('docs/卡回报/') && !line.includes('严禁往'));
+  const archiveHits = claudeLines.filter(
+    (line) => line.includes('docs/卡回报/') && !line.startsWith('- `archive/`') && !line.includes('严禁往'),
+  );
   assert.deepEqual(archiveHits, [], `docs/卡回报/ 出现在非禁止列举的行：${archiveHits.join(' | ')}`);
+
+  // d. 每一行含"亮圳"二字，同一行还须含原话出处或自定标注之一（防冒称）
+  const sourceMarks = ['亮圳原话：『', '李白/主会话自定', '报亮圳同意'];
+  const unsourced = claudeLines.filter(
+    (line) => line.includes('亮圳') && !sourceMarks.some((mark) => line.includes(mark)),
+  );
+  assert.deepEqual(unsourced, [], `含"亮圳"但缺原话出处或自定标注的行：${unsourced.join(' | ')}`);
 });
 
 test('6 AGENTS.md ≤25 行且含 @CLAUDE.md（指南 :172）', () => {
