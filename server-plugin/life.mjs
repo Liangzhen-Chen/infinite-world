@@ -9,7 +9,7 @@ import { dim, modified, modifiedWith, lookupCurve, readsUnbuilt } from './kernel
 import { astroView } from './kernel/calendar.mjs';
 import { clockView } from './kernel/scheduler.mjs';
 import { kindOfEntity, vocab } from './kernel/vocab.mjs';
-import { fixedUnits, fixedMultiply, fixedDivide, fixedScale, fixedToNumber, truncateTo } from './kernel/det-math.mjs';
+import { fixedUnits, fixedMultiply, fixedDivide, fixedToNumber, truncateTo } from './kernel/det-math.mjs';
 import { E } from './kernel/handles/generated.mjs';
 
 // 卷文定名：维度、规则表键、阶段表字段、词表族。
@@ -75,17 +75,6 @@ function stageTable(engine) {
 }
 
 /**
- * 现龄（定点标度）= 已过分钟 ÷ 年长分钟（rules.astro.yearDays 经 astroView，卷四 :212）：现龄换算的唯一一份实现，lifeFacts 与 person.mjs 的寿命条件采样都调它。
- * 全程 BigInt：年长是 36524219/100000 日 × 1440 分钟的有理数，elapsed × den × 标度 在真实年龄下会超出安全整数；向零截断到定点标度，不判负（负值由调用方按自己的约定处理）。
- * @param {object} engine @param {number} elapsedMinutes 现刻 − 出生时刻（分钟）
- * @returns {bigint}
- */
-export function ageFixedOfElapsed(engine, elapsedMinutes) {
-  const year = astroView(engine).yearMinutes;
-  return (BigInt(elapsedMinutes) * BigInt(year.den) * fixedScale()) / BigInt(year.num);
-}
-
-/**
  * 个体的六个派生读数（卷四 §2.3 :212–:220；§4.4 L-1、L-2）。返回 `{ageYears, relMaturity, relAge, lifeStage, adult, massKg}`，每项是 Fact：
  * 出生时刻、物种、成熟龄、寿命、成年体重任一读不到，依赖它的项按未知交出并带 reason，不取缺省。
  * ageYears = (clock.minute − birthMinute) ÷ 年长（rules.astro.yearDays 经 astroView，卷四 :212）；relMaturity = ageYears ÷ species.maturityYears；
@@ -104,7 +93,7 @@ export function lifeFacts(engine, state, personId) {
   }
   const elapsed = clockView(engine, state).minute - birth.value;
   if (elapsed < 0) throw deny(E.E_DIM_DOMAIN_RANGE, `${personId}: birthMinute is after the current minute (ageYears domain is >= 0)`);
-  const age = ageFixedOfElapsed(engine, elapsed);
+  const age = astroView(engine).yearsFixedOfElapsedMinute(elapsed);
   out.ageYears = fixedFact(engine, kind, S.ageYears, age);
 
   const sp = readDim(engine, state, kind, personId, S.dim.species);

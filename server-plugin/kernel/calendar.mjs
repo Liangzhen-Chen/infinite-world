@@ -9,6 +9,7 @@
 import { KernelError } from './errors.mjs';
 import { report } from './report.mjs';
 import { minutesPerDay } from './scheduler.mjs';
+import { fixedScale } from './det-math.mjs';
 
 const SCHEMA = Object.freeze({
   family: 'calendar',
@@ -347,6 +348,8 @@ function ratioOf(v, name) {
  * kernelApi `astroView(engine)`（§3.1 :423）：纯函数，rules.astro 年长与历元键的唯一读者。
  * 太阳相位 solarPhase(minute) 返回有理数 {num, den}（0 <= num < den；相位 0 = 北半球春分，§4.4.3 第 1 条）；yearIndex(minute) 是天文年序（自 phaseEpochMinute 起整除，向下取整）；
  * perYearToPerStep(rate, stepMinutes)：按年计的率（定点整数）折成每步的率 = rate × stepMinutes ÷ 年长分钟，BigInt 整除向零截断；
+ * yearsFixedOfElapsedMinute(elapsedMinutes)：已过分钟 → 天文年数（定点标度 BigInt，向零截断），年龄、寿命、成年所按的换算只走这一处（卷四 :214、李白 Q-7）；
+ * minuteOfYearsFixed(yearsFixed)：天文年数（定点标度）→ 分钟（安全整数），向零截断，是上一项的逆；
  * lunarPhase：synodicDays 无出处（rules.astro.unbuilt），返回 null 并报 W-DIM-GAP。
  * @param {any} engine
  */
@@ -360,6 +363,8 @@ export function astroView(engine) {
   const since = (minute) => BigInt(minute - epoch) * BigInt(yearMinutes.den);
   return Object.freeze({
     yearMinutes,
+    yearsFixedOfElapsedMinute: (elapsedMinutes) => (BigInt(elapsedMinutes) * BigInt(yearMinutes.den) * fixedScale()) / phaseDen,
+    minuteOfYearsFixed: (yearsFixed) => Number((BigInt(yearsFixed) * phaseDen) / (fixedScale() * BigInt(yearMinutes.den))),
     solarPhase: (minute) => {
       let n = since(minute) % phaseDen;
       if (n < 0n) n += phaseDen;

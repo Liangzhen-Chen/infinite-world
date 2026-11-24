@@ -13,10 +13,10 @@ import { sampleDistribution, distributionMeanFixed } from './kernel/sample.mjs';
 import { writePersonRow } from './kernel/dimension-writers.mjs';
 import { clockView } from './kernel/scheduler.mjs';
 import { astroView } from './kernel/calendar.mjs';
-import { fixedUnits, fixedAdd, fixedDivide, fixedToNumber, fixedScale, truncateTo } from './kernel/det-math.mjs';
+import { fixedUnits, fixedAdd, fixedDivide, fixedToNumber, truncateTo } from './kernel/det-math.mjs';
 import { E } from './kernel/handles/generated.mjs';
 import { bodyView } from './body.mjs';
-import { lifeFacts, ageFixedOfElapsed } from './life.mjs';
+import { lifeFacts } from './life.mjs';
 
 // 卷文定名：表名、维度、物种维度、词表族与规格字段。
 const S = Object.freeze({
@@ -125,8 +125,7 @@ export function bandMidpoint(engine, band, bands) {
  */
 export function birthMinuteOfAge(engine, state, ageYears) {
   if (typeof ageYears !== 'number' || !(ageYears >= 0)) throw deny(E.E_DIM_DOMAIN_RANGE, 'ageYears is a number >= 0');
-  const year = astroView(engine).yearMinutes;
-  return clockView(engine, state).minute - Number((BigInt(fixedUnits(ageYears)) * BigInt(year.num)) / (BigInt(fixedScale()) * BigInt(year.den)));
+  return clockView(engine, state).minute - astroView(engine).minuteOfYearsFixed(fixedUnits(ageYears));
 }
 
 /**
@@ -136,7 +135,7 @@ export function birthMinuteOfAge(engine, state, ageYears) {
  * @returns {number}
  */
 function ageYearsOfBirth(engine, state, birthMinute) {
-  return outNumber(engine, 'ageYears', ageFixedOfElapsed(engine, clockView(engine, state).minute - birthMinute));
+  return outNumber(engine, 'ageYears', astroView(engine).yearsFixedOfElapsedMinute(clockView(engine, state).minute - birthMinute));
 }
 
 /**

@@ -217,6 +217,30 @@ test('astroView：真实世界年长 = 回归年 365.24219 日（李白 11-19 15
   assert.equal(a.yearIndex(366 * DAY), 1);
 });
 
+test('astroView：已过分钟 → 天文年数（定点标度，向零截断）与逆；0、17 年、10000 年、负值，大值全程 BigInt 不溢出', () => {
+  const a = astroView(ENGINE);
+  // 年长 518400 分钟：17 年 = 17 × 518400 = 8812800 分钟，定点标度 10⁴ 下 = 170000。
+  assert.equal(a.yearsFixedOfElapsedMinute(0), 0n);
+  assert.equal(a.yearsFixedOfElapsedMinute(8812800), 170000n);
+  // 10000 年 = 10000 × 518400 = 5184000000 分钟，定点 = 10000 × 10⁴ = 100000000；中间积已超 32 位，BigInt 不失真。
+  assert.equal(a.yearsFixedOfElapsedMinute(5184000000), 100000000n);
+  // 逆：定点年 → 分钟。
+  assert.equal(a.minuteOfYearsFixed(170000n), 8812800);
+  assert.equal(a.minuteOfYearsFixed(100000000n), 5184000000);
+  // 负的已过分钟（出生在现刻之后）：BigInt 整除向零截断，与现行口径一致。
+  assert.equal(a.yearsFixedOfElapsedMinute(-518401), -10000n);
+  assert.equal(a.minuteOfYearsFixed(-170000n), -8812800);
+});
+
+test('astroView：年 ↔ 分往返误差不超过 1 个定点单位（真实年长 365.24219 日）', () => {
+  const a = astroView(REAL);
+  for (const y of [0n, 1n, 170001n, 5259487536n, 100000000n]) {
+    const m = a.minuteOfYearsFixed(y);
+    const back = a.yearsFixedOfElapsedMinute(m);
+    assert.ok(back <= y && y - back <= 1n, `y=${y}, minute=${m}, back=${back}`);
+  }
+});
+
 test('astroView：缺 yearDays 报 E-DIM-STRUCT-FIELD、整表没登记报 E-RULES-UNREGISTERED，不给缺省', () => {
   const { yearDays, ...rest } = W.rules.astro;
   void yearDays;

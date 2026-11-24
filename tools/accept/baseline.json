@@ -769,13 +769,10 @@
    "b0": 2,
    "b0Source": "counted",
    "compCode": "c_pp_year_minutes_ast",
-   "current": 2,
+   "current": 0,
    "lastMergeRef": "HEAD",
    "locked": false,
-   "rowKeys": [
-    "c_pp_year_minutes_ast|server-plugin/life.mjs|ageFixedOfElapsed|ident:ident|0",
-    "c_pp_year_minutes_ast|server-plugin/person.mjs|birthMinuteOfAge|ident:ident|0"
-   ]
+   "rowKeys": []
   },
   {
    "b0": 0,
