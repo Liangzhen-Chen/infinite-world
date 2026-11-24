@@ -4,7 +4,7 @@
 
 ## 阶段 0：整理工作区与顾问复审（硬门闩）
 
-- 阶段 0A 工作区整理（Step 0–Step 5）：冻结旧队列、打 `pre-rewrite-20261124` 标签、落地 `.github/workflows/ci.yml` + `tsc` + 新门禁与 `dispatch.mjs`、建立六份单一真相源、归档旧文件、获亮圳点头后执行 816 MB 删除清单、清出新 `server-plugin/` 骨架空仓与红灯 E2E 烟测桩。验收：第三章 Step 0–Step 5 命令全通过，整理 PR 在 GitHub CI 绿灯。
+- 阶段 0A 工作区整理（Step 0–Step 5）：冻结旧队列、打 `pre-rewrite-1124` 标签、落地 `.github/workflows/ci.yml` + `tsc` + 新门禁与 `dispatch.mjs`、建立六份单一真相源、归档旧文件、获亮圳点头后执行 816 MB 删除清单、清出新 `server-plugin/` 骨架空仓与红灯 E2E 烟测桩。验收：第三章 Step 0–Step 5 命令全通过，整理 PR 在 GitHub CI 绿灯。
 - 阶段 0B Gemini 复审（硬门闩）：独立顾问逐条核验复审勾选清单，给出明确「复审通过」→ 整理 PR 合入 `master` → 开 `master` 分支保护 → 门闩解锁，允许开工 S1-1。
 
 ## 阶段 1：最小闭环竖切片（4 张强衔接卡，串行优先）
