@@ -6667,6 +6667,15 @@
    "rules": []
   },
   {
+   "name": "footprintNeighbors",
+   "file": "kernel/place.mjs",
+   "vol": "卷五",
+   "sec": "§3.1",
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
    "name": "gridSpaceBox",
    "file": "kernel/place.mjs",
    "vol": null,

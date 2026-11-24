@@ -14,6 +14,7 @@
 
 import { fixedUnits, fixedToNumber, fixedSqrtInt, atan, fixedUnits8 } from './det-math.mjs';
 import { KernelError } from './errors.mjs';
+import { NEIGHBORS_4, dist2Fixed } from './grid-geom.mjs';
 import { surfaceHeightAt, surfaceStorey, landOrderKey } from './grid.mjs';
 import { FOOTPRINT_KIND } from './footprint-kind.mjs';
 import { createWaterBeds } from './water-bed.mjs';
@@ -23,8 +24,6 @@ export { FOOTPRINT_KIND, footprintKindOf, isLayerRootClasses } from './footprint
 
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
-// 四邻（区格四邻接）。
-const NEIGHBORS = Object.freeze([[1, 0], [-1, 0], [0, 1], [0, -1]]);
 // 前后左右的相对方位代号（卷五 §4.2 规则 13：前、右前、右、右后、后、左后、左、左前，依次以 0、一档、…为中心；只定义在八向朝向上）。
 export const RELATIVE = Object.freeze(['front', 'frontRight', 'right', 'backRight', 'back', 'backLeft', 'left', 'frontLeft']);
 
@@ -191,7 +190,7 @@ export function cellsOf(plan, id) {
 export function planRegionFootprints(grid, spaces, rows) {
   const errors = [];
   const plans = new Map();
-  const regionCellMf = fixedUnits(grid.regionCellM);
+  const regionCellMf = regionSideFixed(grid);
   const cellAreaF = fixedUnits(grid.regionCellM * grid.regionCellM);
   const roots = new Set(spaces.map((s) => s.root));
   const kids = new Map();
@@ -259,7 +258,7 @@ export function planRegionFootprints(grid, spaces, rows) {
         for (let i = 0; i < list.length; i += 1) {
           const x = xOf(box, list.a[i]);
           const y = yOf(box, list.a[i]);
-          if (i > 0 && !NEIGHBORS.some(([dx, dy]) => inBox(box, x + dx, y + dy) && seen.has(keyOf(box, x + dx, y + dy)))) { err('E-GRID-WATER-BAND', id, `boundary cell (${x},${y}) at table order ${i} touches none of the cells before it`); break; }
+          if (i > 0 && !NEIGHBORS_4.some(([dx, dy]) => inBox(box, x + dx, y + dy) && seen.has(keyOf(box, x + dx, y + dy)))) { err('E-GRID-WATER-BAND', id, `boundary cell (${x},${y}) at table order ${i} touches none of the cells before it`); break; }
           seen.add(list.a[i]);
         }
       }
@@ -308,9 +307,9 @@ export function planRegionFootprints(grid, spaces, rows) {
       growers.push({ id, sx: s.x, sy: s.y, me: childIndex.get(id), heap: new PackedHeap(), stamp: serial, target: targets.get(id), list: out.get(id) });
     }
     const queueNeighbors = (g, x, y) => {
-      for (let d = 0; d < NEIGHBORS.length; d += 1) {
-        const nx = x + NEIGHBORS[d][0];
-        const ny = y + NEIGHBORS[d][1];
+      for (let d = 0; d < NEIGHBORS_4.length; d += 1) {
+        const nx = x + NEIGHBORS_4[d][0];
+        const ny = y + NEIGHBORS_4[d][1];
         if (nx < x0 || nx >= x0 + cellsX || ny < y0 || ny >= y0 + cellsY) continue;
         const nk = (ny - y0) * cellsX + (nx - x0);
         if (plan.owner[nk] !== parentIndex || plan.queued[nk] === g.stamp) continue;
@@ -352,7 +351,7 @@ export function planRegionFootprints(grid, spaces, rows) {
     const stack = [start];
     while (stack.length) {
       const k = stack.pop();
-      for (const [dx, dy] of NEIGHBORS) {
+      for (const [dx, dy] of NEIGHBORS_4) {
         const nx = xOf(box, k) + dx;
         const ny = yOf(box, k) + dy;
         if (!inBox(box, nx, ny)) continue;
@@ -413,6 +412,45 @@ export function planRegionFootprints(grid, spaces, rows) {
   return { plans, errors };
 }
 
+// ---------- 区格边长与中心的共用函数（卷五 §4.1.1 :433 区格序号、:499 区格中心；全书只在这里换算，别处调用，不各抄一份；门禁 pp_region_cell 的例外文件） ----------
+
+/** 区格边长（定点米，BigInt）。@param {{regionCellM: number}} grid rules.grid @returns {bigint} */
+export const regionSideFixed = (grid) => fixedUnits(grid.regionCellM);
+
+/** 区格边长的一半（定点米，BigInt；区格中心 = 序号 × 边长 + 半边）。@param {{regionCellM: number}} grid @returns {bigint} */
+export const regionHalfFixed = (grid) => fixedUnits(grid.regionCellM) >> 1n;
+
+/**
+ * 区格边长的细格数 = regionCellM ÷ cellM（须整除，否则 E-DET-DOMAIN；全书只在这里核整除）。
+ * @param {{cellM: number, regionCellM: number}} grid rules.grid @returns {bigint}
+ */
+export function regionSideCells(grid) {
+  const side = regionSideFixed(grid);
+  const cell = fixedUnits(grid.cellM);
+  if (cell <= 0n || side <= 0n || side % cell !== 0n) throw new KernelError('E-DET-DOMAIN', {}, 'regionSideCells: regionCellM must be a whole multiple of cellM');
+  return side / cell;
+}
+
+/** 区格中心的定点米坐标（BigInt）：序号 × regionCellM + regionCellM ÷ 2。@param {{regionCellM: number}} grid @param {{x: number, y: number}} r 区格序号 @returns {{x: bigint, y: bigint}} */
+export function regionCenterFixed(grid, r) {
+  const side = regionSideFixed(grid);
+  const half = regionHalfFixed(grid);
+  return { x: BigInt(r.x) * side + half, y: BigInt(r.y) * side + half };
+}
+
+/** 区格中心的米数（number）。@param {{regionCellM: number}} grid @param {{x: number, y: number}} r @returns {{x: number, y: number}} */
+export function regionCenterM(grid, r) {
+  const c = regionCenterFixed(grid, r);
+  return { x: fixedToNumber(c.x), y: fixedToNumber(c.y) };
+}
+
+/** 区格中心那一列的细格列号（序号 × 边长细格数 + 半边）。@param {{cellM: number, regionCellM: number}} grid @param {{x: number, y: number}} r @returns {{x: number, y: number}} */
+export function regionCenterColumn(grid, r) {
+  const per = regionSideCells(grid);
+  const half = per >> 1n;
+  return { x: Number(BigInt(r.x) * per + half), y: Number(BigInt(r.y) * per + half) };
+}
+
 // ---------- 格与位置（卷五 §4.1.1 位置、规则 12） ----------
 
 /**
@@ -421,7 +459,7 @@ export function planRegionFootprints(grid, spaces, rows) {
  */
 export function regionOfPos(grid, pos) {
   const cellMf = fixedUnits(grid.cellM);
-  const regionCellMf = fixedUnits(grid.regionCellM);
+  const regionCellMf = regionSideFixed(grid);
   return { x: Number(floorDiv(BigInt(pos.x) * cellMf, regionCellMf)), y: Number(floorDiv(BigInt(pos.y) * cellMf, regionCellMf)) };
 }
 
@@ -482,8 +520,8 @@ export function regionGeometry(grid, plan, id) {
   if (count === 0) return null;
   // 面积与形心只由足迹与 regionCellM 决定（与种子、地形无关），按计划缓存。
   if (plan.geometry.has(id)) return plan.geometry.get(id);
-  const regionCellMf = fixedUnits(grid.regionCellM);
-  const half = regionCellMf >> 1n;
+  const regionCellMf = regionSideFixed(grid);
+  const half = regionHalfFixed(grid);
   let sumX = 0;
   let sumY = 0;
   eachCell(plan, id, (k) => { sumX += xOf(plan.box, k); sumY += yOf(plan.box, k); });
@@ -523,11 +561,8 @@ function cellH0(grid, worldSeed, plan, rows, terrainOf, controlPoints, k) {
   const entry = owner === undefined ? null : terrainOf(rows.get(owner).terrain);
   let h = null;
   if (entry && controlPoints.length > 0 && typeof worldSeed === 'string') {
-    const regionCellMf = fixedUnits(grid.regionCellM);
-    const half = regionCellMf >> 1n;
-    const cx = fixedToNumber(BigInt(xOf(plan.box, k)) * regionCellMf + half);
-    const cy = fixedToNumber(BigInt(yOf(plan.box, k)) * regionCellMf + half);
-    h = surfaceHeightAt(grid, worldSeed, plan.w, controlPoints, entry.reliefM, entry.reliefRough, cx, cy);
+    const c = regionCenterM(grid, { x: xOf(plan.box, k), y: yOf(plan.box, k) });
+    h = surfaceHeightAt(grid, worldSeed, plan.w, controlPoints, entry.reliefM, entry.reliefRough, c.x, c.y);
   }
   return h;
 }
@@ -667,8 +702,8 @@ export function regionCellPos(grid, worldSeed, plan, rows, terrainOf, rx, ry) {
   if (!inBox(plan.box, rx, ry)) return null;
   const h = cellHeight(grid, worldSeed, plan, rows, terrainOf, controlPointsOf(grid, plan, rows), keyOf(plan.box, rx, ry));
   if (h === null) return null;
-  const perCell = fixedUnits(grid.regionCellM) / fixedUnits(grid.cellM);
-  return { w: plan.w, x: Number(BigInt(rx) * perCell + (perCell >> 1n)), y: Number(BigInt(ry) * perCell + (perCell >> 1n)), z: surfaceStorey(grid, h), coarse: true };
+  const col = regionCenterColumn(grid, { x: rx, y: ry });
+  return { w: plan.w, x: col.x, y: col.y, z: surfaceStorey(grid, h), coarse: true };
 }
 
 /**
@@ -718,14 +753,11 @@ export function landRegionCell(grid, worldSeed, plan, rows, terrainOf, id, seedK
  */
 export function accessCell(grid, plan, id, tx, ty) {
   if (cellCountOf(plan, id) === 0) return null;
-  const regionCellMf = fixedUnits(grid.regionCellM);
-  const half = regionCellMf >> 1n;
   let best = null;
   eachCell(plan, id, (k) => {
     const c = { x: xOf(plan.box, k), y: yOf(plan.box, k) };
-    const dx = BigInt(c.x) * regionCellMf + half - tx;
-    const dy = BigInt(c.y) * regionCellMf + half - ty;
-    const d2 = dx * dx + dy * dy;
+    const m = regionCenterFixed(grid, c);
+    const d2 = dist2Fixed(m.x, m.y, tx, ty);
     if (best === null || d2 < best.d2 || (d2 === best.d2 && cellLess(c, best.c))) best = { d2, c };
   });
   return best.c;
@@ -743,7 +775,7 @@ export function openBoundaryCells(plan, id) {
   eachCell(plan, id, (k) => {
     const x = xOf(plan.box, k);
     const y = yOf(plan.box, k);
-    const open = NEIGHBORS.some(([dx, dy]) => inBox(plan.box, x + dx, y + dy) && !inFootprint(plan, me, keyOf(plan.box, x + dx, y + dy)));
+    const open = NEIGHBORS_4.some(([dx, dy]) => inBox(plan.box, x + dx, y + dy) && !inFootprint(plan, me, keyOf(plan.box, x + dx, y + dy)));
     if (open) out.push({ x, y });
   });
   return out.sort((a, b) => (cellLess(a, b) ? -1 : cellLess(b, a) ? 1 : 0));
@@ -799,12 +831,12 @@ export function footprintAdjacency(plan) {
 // ---------- 两种几何读法：直线距离与方位角（卷五 §4.1 规则 5、§4.2 规则 12–13） ----------
 
 /**
- * 直线距离（全书唯一算法）：同一格空间时 = fixedSqrtInt(dx² + dy² + dz²)，dx、dy 是细格中心的米差（细格序号差 × cellM），
+ * 直线距离的核心算法（kernelApi `straightM` 在 place.mjs，包本函数；本函数改名 straightFixed，避免与入口同名，公共部件修理 C4，乙 15）：同一格空间时 = fixedSqrtInt(dx² + dy² + dz²)，dx、dy 是细格中心的米差（细格序号差 × cellM），
  * dz 是层号差 × storeyM；全程整数定点，开方截断，对称。两位置不在同一格空间为 null（未知）。
  * @param {{cellM: number, storeyM: number}} grid @param {{w: number, x: number, y: number, z: number}} a @param {{w: number, x: number, y: number, z: number}} b
  * @returns {bigint | null} 定点米（SCALE 标度）
  */
-export function straightM(grid, a, b) {
+export function straightFixed(grid, a, b) {
   if (a.w !== b.w) return null;
   const cellMf = fixedUnits(grid.cellM);
   const storeyMf = fixedUnits(grid.storeyM);

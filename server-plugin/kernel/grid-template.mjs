@@ -4,8 +4,9 @@
 // - genTemplateOf：一个区格地形类取得它的模板条目。
 // - templateBlocksOf：模板格块（浮空山一类），按区格种子取千分数，只落在本区格内，与遍历次序无关。
 
-import { fixedUnits, permille } from './det-math.mjs';
+import { permille } from './det-math.mjs';
 import { KernelError } from './errors.mjs';
+import { regionSideCells } from './footprint.mjs';
 import { regionCellSeedKey, tplBlockKey, uniformBelow } from './grid.mjs';
 import { uniformAt } from './sample.mjs';
 
@@ -85,7 +86,7 @@ export function genTemplateOf(vocabIndex, cellClassCode) {
  * @returns {{j: number, x0: number, x1: number, y0: number, y1: number, z0: number, z1: number, material: string, selfSupport: boolean}[]}
  */
 export function templateBlocksOf(grid, worldSeed, w, region, blocks, centerSurfaceZ) {
-  const perCell = Number(fixedUnits(grid.regionCellM) / fixedUnits(grid.cellM));
+  const perCell = Number(regionSideCells(grid));
   const half = perCell >> 1;
   const minX = region.x * perCell;
   const minY = region.y * perCell;

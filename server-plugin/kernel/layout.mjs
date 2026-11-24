@@ -13,7 +13,8 @@
 
 import { fixedUnits, fixedToNumber, fixedScale } from './det-math.mjs';
 import { KernelError } from './errors.mjs';
-import { planRegionFootprints, cellList, FOOTPRINT_KIND } from './footprint.mjs';
+import { NEIGHBORS_4, dist2Fixed, regionCellsTouch } from './grid-geom.mjs';
+import { planRegionFootprints, cellList, FOOTPRINT_KIND, regionCenterFixed, regionCenterM, regionSideCells } from './footprint.mjs';
 
 /** 排不下的原因代号（卷十 R10-7.5：站点面积阶段把 N 加一重排；至多加到存量单元足迹的区格数，仍排不下即 E-GEN-ROW-INVALID，由生成阶段判）。 */
 export const REASON = Object.freeze({
@@ -54,10 +55,7 @@ export function defaultFacing(grid, input) {
 
 function checkInput(grid, input) {
   if (!isObj(grid) || !(grid.regionCellM > 0) || !(grid.cellM > 0)) throw bad('grid {cellM, regionCellM} want positive numbers');
-  const perCellFixed = fixedUnits(grid.regionCellM);
-  const cellFixed = fixedUnits(grid.cellM);
-  if (perCellFixed % cellFixed !== 0n) throw bad('regionCellM must be a whole multiple of cellM');
-  const perCell = Number(perCellFixed / cellFixed);
+  const perCell = Number(regionSideCells(grid));
   if (!isObj(input)) throw bad('input is an object');
   if (typeof input.siteId !== 'string' || input.siteId.length === 0) throw bad('siteId is a non-empty string');
   const c = input.coord;
@@ -106,21 +104,16 @@ function checkInput(grid, input) {
 
 // ---------- 站点区格与分片种子（R10-7.11 第 1、2 点） ----------
 
-// S 按（区格中心到站点 coord 的平方距离，区格序号字典序）排成一列；距离用定点米的两倍标度算，全整数。
+// S 按（区格中心到站点 coord 的平方距离，区格序号字典序）排成一列；距离全整数定点（regionCellM 的定点数恒为偶数，单标度不丢位）。
 function orderedSiteCells(grid, input) {
-  const R = fixedUnits(grid.regionCellM);
-  const cx = fixedUnits(input.coord.x) + fixedUnits(input.coord.x);
-  const cy = fixedUnits(input.coord.y) + fixedUnits(input.coord.y);
+  const cx = fixedUnits(input.coord.x);
+  const cy = fixedUnits(input.coord.y);
   const withD = input.regionCells.map((r) => {
-    const dx = BigInt(r.x + r.x + 1) * R - cx;
-    const dy = BigInt(r.y + r.y + 1) * R - cy;
-    return { x: r.x, y: r.y, d2: dx * dx + dy * dy };
+    const c = regionCenterFixed(grid, r);
+    return { x: r.x, y: r.y, d2: dist2Fixed(c.x, c.y, cx, cy) };
   });
   return withD.sort((a, b) => (a.d2 < b.d2 ? -1 : a.d2 > b.d2 ? 1 : a.x !== b.x ? cmp(a.x, b.x) : cmp(a.y, b.y)));
 }
-
-// 区格中心的米坐标（定点转数）。
-const centerM = (grid, r) => ({ x: fixedToNumber(BigInt(r.x) * fixedUnits(grid.regionCellM) + (fixedUnits(grid.regionCellM) >> 1n)), y: fixedToNumber(BigInt(r.y) * fixedUnits(grid.regionCellM) + (fixedUnits(grid.regionCellM) >> 1n)) });
 
 // 外包框内 S 的补集按四邻连通块切开，每块一行"作者边界"，让 planRegionFootprints 只在 S 里划分。
 function holeRows(S, box) {
@@ -137,7 +130,7 @@ function holeRows(S, box) {
       while (stack.length > 0) {
         const c = stack.pop();
         comp.push({ x: c.x, y: c.y });
-        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        for (const [dx, dy] of NEIGHBORS_4) {
           const nx = c.x + dx;
           const ny = c.y + dy;
           const nk = keyOf(nx, ny);
@@ -170,11 +163,6 @@ function partitionZones(grid, input, S, seeds) {
   input.zones.forEach((z, i) => cells.set(i, plan.cells.has(z.id) ? cellList(plan, z.id) : []));
   return { cells, errors: r.errors };
 }
-
-const adjacentCells = (A, B) => {
-  const inB = new Set(B.map((r) => keyOf(r.x, r.y)));
-  return A.some((a) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => inB.has(keyOf(a.x + dx, a.y + dy))));
-};
 
 // ---------- 行架（R10-7.11 第 4 点） ----------
 
@@ -246,7 +234,7 @@ export function layoutOf(grid, input) {
   // 2 分片种子：第 i 个角色取排好的 S 的第 floor(i × |S| ÷ Z) 项。
   const seeds = input.zones.map((z, i) => {
     const cell = S[Number((BigInt(i) * BigInt(S.length)) / BigInt(Z))];
-    return { cell: { x: cell.x, y: cell.y }, coord: centerM(grid, cell) };
+    return { cell: { x: cell.x, y: cell.y }, coord: regionCenterM(grid, cell) };
   });
   let zoneCells;
   if (Z === 0) {
@@ -260,7 +248,7 @@ export function layoutOf(grid, input) {
     for (let i = 0; i < Z; i += 1) {
       for (const role of input.zones[i].adjacent) {
         const j = input.zones.findIndex((z) => z.role === role);
-        if (!adjacentCells(zoneCells.get(i), zoneCells.get(j))) return fail(REASON.notAdjacent, `zone ${input.zones[i].role} needs to touch ${role}`);
+        if (!regionCellsTouch(zoneCells.get(i), zoneCells.get(j))) return fail(REASON.notAdjacent, `zone ${input.zones[i].role} needs to touch ${role}`);
       }
     }
   }

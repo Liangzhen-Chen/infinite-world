@@ -9,7 +9,7 @@ import { createHash } from 'node:crypto';
 import { testTempRoot, writeUnderTempRoot, ROOT } from '../accept/temp-root.mjs';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
-import { gridView, zoneAt, placeView, blueprintOf, landCell, settleCell } from '../../server-plugin/kernel/place.mjs';
+import { gridView, zoneAt, placeView, planFootprints, blueprintOf, landCell, settleCell } from '../../server-plugin/kernel/place.mjs';
 
 installDigestCap({ sha256Hex: (data, encoding) => createHash('sha256').update(data, encoding === 'base64' ? 'base64' : 'utf8').digest('hex') });
 assert.ok(loadWorld(ROOT).ok); // 先装配命名 struct、定点常数与 sqrt 表（夹具世界的加载校验要读 anchor）
@@ -212,6 +212,23 @@ test('足迹派生几何：areaM2 = 最低一层细格数 × cellM²、zRange、
   // 房间行上没有任何几何存储列：换形制后足迹变、行不改（卷五 §4.1 规则 11）——表头里房间行只带 roomRole。
   assert.equal(Object.hasOwn(HEADER.dimensions, 'roomRole'), true);
   assert.equal(HEADER.dimensions.roomRole.required, 'never');
+});
+
+test('planFootprints（卷五:322 返回各行的 footprint）：建筑、房间行也带出，与 placeView 的足迹同一求法；heights 为假的调用不求', () => {
+  const e = world(WORLD({
+    bld_a: building('loc_a', [20, 120, 0], { form: 'bldform_halls', planCells: { widthCells: 6, depthCells: 7 } }),
+    loc_room_f: room('bld_a', 'roomrole_front'),
+    loc_room_b: room('bld_a', 'roomrole_back'),
+  }));
+  const { footprints } = planFootprints(e, {});
+  // 手算同上一条：6×7 = 42 格一层，areaM2 42、zRange z=1、elevationM = 1 × 3 = 3；房间各 4 列 × 2 行 = 8 格。
+  assert.equal(footprints.bld_a.kind, 'building');
+  assert.equal(footprints.bld_a.areaM2, 42);
+  assert.deepEqual(footprints.bld_a.zRange, { zMin: 1, zMax: 1 });
+  assert.equal(footprints.bld_a.elevationM, 3);
+  assert.equal(footprints.loc_room_f.kind, 'room');
+  assert.equal(footprints.loc_room_f.areaM2, 8);
+  assert.equal('bld_a' in planFootprints(e, { heights: false }).footprints, false);
 });
 
 test('placeView 的出口：建筑与房间的"门"由蓝图门格派生，不建路网边；内门是房间的出口、不是建筑的', () => {

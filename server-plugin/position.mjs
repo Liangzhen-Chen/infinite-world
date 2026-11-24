@@ -37,7 +37,7 @@ import { E, P } from './kernel/handles/generated.mjs';
 import { zoneAt, regionOf, gridSpaceBox, landCell, extrudeCell, settleCell, bearingView, isOffstage } from './kernel/place.mjs';
 import { isPosValue } from './kernel/named-structs.mjs';
 import { bubbleView, inBubble, controlledByPlayer } from './sim-tiers.mjs';
-import { bubbleTransition, subjectsIn } from './bubble.mjs';
+import { bubbleTransition, subjectsIn, subjectsAt } from './bubble.mjs';
 
 // 键名与代号（本文件定名，单一定义）。FRONT 同 kernel/footprint.mjs 的 RELATIVE[0]（测试核两边一致）；种子键的流与抽取点代号登记在 world/rules/tables/seed-keys.json。
 const S = Object.freeze({ person: 'person', place: 'place', pos: 'pos', facing: 'facing', front: 'front' });
@@ -280,7 +280,7 @@ export function rebaseBubble(engine, state) {
   const by = subjectsIn(engine, state, regions);
   const settled = [];
   for (const c of regions) {
-    for (const { id, pos } of by.get(`${c.w}:${c.x}:${c.y}`) || []) {
+    for (const { id, pos } of subjectsAt(by, c)) {
       if (pos.coarse !== false) continue;
       // 挤出写位置一律经 placeSubject（卷二十七 :327）：玩家控制实体被挤出跨区格时，它在写入后同一事务里照常展开新进泡的区格。
       const r = placeSubject(engine, state, id, { settle: true }, null, REBASE_CAUSE);

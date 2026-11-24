@@ -14,10 +14,9 @@
 
 import { fixedUnits, fixedSqrtInt, fixedCurveAt, fixedScale, fixedDivide } from './det-math.mjs';
 import { KernelError } from './errors.mjs';
+import { NEIGHBORS_8 } from './grid-geom.mjs';
 
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
-// 八邻（先四正交、后四斜向）。
-const MOVES = Object.freeze([[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]);
 const absDiff = (a, b) => (a > b ? a - b : b - a);
 const NOT_FOUND = Object.freeze({ cells: null, cost: null });
 
@@ -115,7 +114,7 @@ export function regionPath(env, src, dst, cap) {
   const each = (k, fn) => {
     const x = xs(k);
     const y = ys(k);
-    for (const [mx, my] of MOVES) {
+    for (const [mx, my] of NEIGHBORS_8) {
       const nx = x + mx;
       const ny = y + my;
       if (nx < box.x0 || nx >= box.x0 + w || ny < box.y0 || ny >= box.y0 + box.cellsY) continue;

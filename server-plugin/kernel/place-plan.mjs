@@ -5,6 +5,7 @@
 // 它与它的全部后代是离场子树（包含树的根不挂可改挂的组件类，两者不混淆）。
 
 import { footprintKindOf, isLayerRootClasses, FOOTPRINT_KIND } from './footprint-kind.mjs';
+import { NEIGHBORS_4 } from './grid-geom.mjs';
 import { planRegionFootprints, footprintAdjacency, ownerIdAt, eachCell } from './footprint.mjs';
 
 const DIM = Object.freeze({ parent: 'parent', coord: 'coord', targetAreaM2: 'targetAreaM2', boundary: 'boundary', terrain: 'terrain', anchorElevationM: 'anchorElevationM', waterKind: 'waterKind', downstream: 'downstream' });
@@ -150,7 +151,7 @@ export function waterAccessOf(plan, rows, id) {
     visit(k);
     const x = x0 + (k % cellsX);
     const y = y0 + (k - (k % cellsX)) / cellsX;
-    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+    for (const [dx, dy] of NEIGHBORS_4) {
       const nx = x + dx;
       const ny = y + dy;
       if (nx >= x0 && nx < x0 + cellsX && ny >= y0 && ny < y0 + cellsY) visit((ny - y0) * cellsX + (nx - x0));

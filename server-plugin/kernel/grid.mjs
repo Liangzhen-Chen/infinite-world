@@ -6,6 +6,7 @@
 
 import { fixedUnits, fixedScale, fixedToNumber, FixedError } from './det-math.mjs';
 import { KernelError } from './errors.mjs';
+import { dist2Fixed } from './grid-geom.mjs';
 import { sha256Text } from './save.mjs';
 import { uniformAt } from './sample.mjs';
 import { gridSeedKeyText } from './handles/keys.mjs';
@@ -221,9 +222,7 @@ export function controlSurfaceAt(grid, controlPoints, qx, qy) {
   const before = (a, b) => { const c = cmp(a.d2, b.d2); return c !== 0 ? c < 0 : cmp(a.id, b.id) < 0; };
   const selected = [];
   for (const p of fixedControlPoints(controlPoints)) {
-    const dx = p.x - qxf;
-    const dy = p.y - qyf;
-    const cand = { id: p.id, d2: dx * dx + dy * dy, elev: p.elev };
+    const cand = { id: p.id, d2: dist2Fixed(p.x, p.y, qxf, qyf), elev: p.elev };
     if (selected.length >= k && !before(cand, selected[selected.length - 1])) continue;
     let at = selected.length;
     while (at > 0 && before(cand, selected[at - 1])) at -= 1;

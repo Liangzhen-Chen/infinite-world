@@ -64,7 +64,7 @@
    "b0": 49,
    "b0Source": "counted",
    "compCode": "c_pp_dup_export_ast",
-   "current": 46,
+   "current": 44,
    "lastMergeRef": "HEAD",
    "locked": false,
    "rowKeys": [
@@ -73,7 +73,6 @@
     "c_pp_dup_export_ast|server-plugin/kernel/footprint-kind.mjs|FOOTPRINT_KIND|export|0",
     "c_pp_dup_export_ast|server-plugin/kernel/footprint.mjs|bearingView|export|0",
     "c_pp_dup_export_ast|server-plugin/kernel/footprint.mjs|footprintAdjacency|export|0",
-    "c_pp_dup_export_ast|server-plugin/kernel/footprint.mjs|straightM|export|0",
     "c_pp_dup_export_ast|server-plugin/kernel/gen/envelope.mjs|stage|export|0",
     "c_pp_dup_export_ast|server-plugin/kernel/gen/fields.mjs|stage|export|0",
     "c_pp_dup_export_ast|server-plugin/kernel/gen/holdings-open.mjs|stage|export|0",
@@ -102,7 +101,6 @@
     "c_pp_dup_export_ast|server-plugin/kernel/place.mjs|bearingView|export|0",
     "c_pp_dup_export_ast|server-plugin/kernel/place.mjs|blueprintOf|export|0",
     "c_pp_dup_export_ast|server-plugin/kernel/place.mjs|isPos|owned|0",
-    "c_pp_dup_export_ast|server-plugin/kernel/place.mjs|straightM|export|0",
     "c_pp_dup_export_ast|server-plugin/kernel/validate/types.mjs|CODE_ENUMS|export|0",
     "c_pp_dup_export_ast|server-plugin/kernel/validate/types.mjs|CODE_RE|export|0",
     "c_pp_dup_export_ast|server-plugin/kernel/validate/types.mjs|DOMAIN_OPTIONAL|export|0",
@@ -289,7 +287,7 @@
    "b0": 44,
    "b0Source": "counted",
    "compCode": "c_pp_footprint_kind_ast",
-   "current": 44,
+   "current": 33,
    "lastMergeRef": "HEAD",
    "locked": false,
    "rowKeys": [
@@ -325,18 +323,7 @@
     "c_pp_footprint_kind_ast|server-plugin/kernel/place-volume.mjs|volumeChildren|kind:compare|0",
     "c_pp_footprint_kind_ast|server-plugin/kernel/place-volume.mjs|volumeOf|kind:compare|0",
     "c_pp_footprint_kind_ast|server-plugin/kernel/place-volume.mjs|volumesUnderRegionCells|kind:compare|0",
-    "c_pp_footprint_kind_ast|server-plugin/kernel/place.mjs|checkCellClasses.used|kind:compare|0",
-    "c_pp_footprint_kind_ast|server-plugin/kernel/place.mjs|exitsOf|kind:compare|0",
-    "c_pp_footprint_kind_ast|server-plugin/kernel/place.mjs|landCell|kind:compare|0",
-    "c_pp_footprint_kind_ast|server-plugin/kernel/place.mjs|landCell|kind:compare|1",
-    "c_pp_footprint_kind_ast|server-plugin/kernel/place.mjs|landCell|kind:compare|2",
-    "c_pp_footprint_kind_ast|server-plugin/kernel/place.mjs|landCell|kind:compare|3",
-    "c_pp_footprint_kind_ast|server-plugin/kernel/place.mjs|landFineCell|kind:compare|0",
-    "c_pp_footprint_kind_ast|server-plugin/kernel/place.mjs|landFineCell|kind:compare|1",
-    "c_pp_footprint_kind_ast|server-plugin/kernel/place.mjs|landFineCell|kind:compare|2",
-    "c_pp_footprint_kind_ast|server-plugin/kernel/place.mjs|placeFootprint|kind:compare|0",
-    "c_pp_footprint_kind_ast|server-plugin/kernel/place.mjs|placeFootprint|kind:compare|1",
-    "c_pp_footprint_kind_ast|server-plugin/kernel/place.mjs|placeFootprint|kind:compare|2"
+    "c_pp_footprint_kind_ast|server-plugin/kernel/place.mjs|checkCellClasses.used|kind:compare|0"
    ]
   },
   {
@@ -608,19 +595,10 @@
    "b0": 8,
    "b0Source": "counted",
    "compCode": "c_pp_neighbors_ast2",
-   "current": 8,
+   "current": 0,
    "lastMergeRef": "HEAD",
    "locked": false,
-   "rowKeys": [
-    "c_pp_neighbors_ast2|server-plugin/kernel/cave.mjs||dirs:vectors|0",
-    "c_pp_neighbors_ast2|server-plugin/kernel/footprint.mjs||dirs:vectors|0",
-    "c_pp_neighbors_ast2|server-plugin/kernel/gen/waterband.mjs||dirs:vectors|0",
-    "c_pp_neighbors_ast2|server-plugin/kernel/layout.mjs|adjacentCells|dirs:vectors|0",
-    "c_pp_neighbors_ast2|server-plugin/kernel/layout.mjs|holeRows|dirs:vectors|0",
-    "c_pp_neighbors_ast2|server-plugin/kernel/place-plan.mjs|waterAccessOf|dirs:vectors|0",
-    "c_pp_neighbors_ast2|server-plugin/kernel/place.mjs|regionFacts|dirs:vectors|0",
-    "c_pp_neighbors_ast2|server-plugin/kernel/route-grid.mjs||dirs:vectors|0"
-   ]
+   "rowKeys": []
   },
   {
    "b0": 3,
@@ -635,15 +613,10 @@
    "b0": 4,
    "b0Source": "counted",
    "compCode": "c_pp_region_cell_ast",
-   "current": 4,
+   "current": 0,
    "lastMergeRef": "HEAD",
    "locked": false,
-   "rowKeys": [
-    "c_pp_region_cell_ast|server-plugin/kernel/cave.mjs|caveCellsOf|div:binary|0",
-    "c_pp_region_cell_ast|server-plugin/kernel/grid-template.mjs|templateBlocksOf|div:binary|0",
-    "c_pp_region_cell_ast|server-plugin/kernel/layout.mjs|centerM|half:binary|0",
-    "c_pp_region_cell_ast|server-plugin/kernel/layout.mjs|centerM|half:binary|1"
-   ]
+   "rowKeys": []
   },
   {
    "b0": 5,
@@ -690,11 +663,10 @@
    "b0": 72,
    "b0Source": "counted",
    "compCode": "c_pp_tpl_key_ast",
-   "current": 71,
+   "current": 69,
    "lastMergeRef": "HEAD",
    "locked": false,
    "rowKeys": [
-    "c_pp_tpl_key_ast|server-plugin/bubble.mjs|regionKey:${}:${}:${}|tplkey|0",
     "c_pp_tpl_key_ast|server-plugin/grid-diff.mjs|alterCells:${},${},${}|tplkey|0",
     "c_pp_tpl_key_ast|server-plugin/grid-diff.mjs|checkBubble:${},${}|tplkey|0",
     "c_pp_tpl_key_ast|server-plugin/kernel/blueprint.mjs|breachesOf.keyOfCell:${},${},${}|tplkey|0",
@@ -752,7 +724,6 @@
     "c_pp_tpl_key_ast|server-plugin/kernel/valuation.mjs|valuation:${}:${}|tplkey|0",
     "c_pp_tpl_key_ast|server-plugin/kernel/valuation.mjs|valuation:${}:${}|tplkey|1",
     "c_pp_tpl_key_ast|server-plugin/output-gate/envelope-exit.mjs|createEnvelopeExit.respond:${}:${}|tplkey|0",
-    "c_pp_tpl_key_ast|server-plugin/position.mjs|rebaseBubble:${}:${}:${}|tplkey|0",
     "c_pp_tpl_key_ast|server-plugin/price.mjs|priceFor:${}:${}|tplkey|0",
     "c_pp_tpl_key_ast|server-plugin/sight.mjs|judge:${},${},${}|tplkey|0",
     "c_pp_tpl_key_ast|server-plugin/sight.mjs|judge:${},${},${}|tplkey|1",

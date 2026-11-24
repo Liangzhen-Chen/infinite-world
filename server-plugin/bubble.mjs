@@ -73,6 +73,7 @@ export function personIds(engine, state) {
  * @returns {Map<string, object[]>} 区格键 → 个体项 {id, pos} 的表
  */
 export function subjectsIn(engine, state, regions) {
+  // 返回表的键形是本文件私有的；别的模块取某区格的个体一律经 subjectsAt，不自拼键（公共部件修理 C4，甲 9）。
   const want = new Set(regions.map((r) => regionKey(r.w, r.x, r.y)));
   const out = new Map();
   for (const id of personIds(engine, state)) {
@@ -85,6 +86,15 @@ export function subjectsIn(engine, state, regions) {
     out.get(key).push({ id, pos: f.value });
   }
   return out;
+}
+
+/**
+ * 取 subjectsIn 返回表里某一个区格的个体项（键形只在本文件，调用方传区格对象）。区格里没有个体时为空数组。
+ * @param {Map<string, object[]>} byRegion subjectsIn 的返回 @param {{w: number, x: number, y: number}} region 区格 {w, x, y}
+ * @returns {object[]} 个体项 {id, pos} 的表
+ */
+export function subjectsAt(byRegion, region) {
+  return byRegion.get(regionKey(region.w, region.x, region.y)) || [];
 }
 
 /**
@@ -103,7 +113,7 @@ export function bubbleTransition(engine, state, before) {
   const byRegion = subjectsIn(engine, state, expand);
   const moves = [];
   for (const c of expand) {
-    for (const { id, pos } of byRegion.get(regionKey(c.w, c.x, c.y)) || []) {
+    for (const { id, pos } of subjectsAt(byRegion, c)) {
       const base = { subject: id, w: c.w, region: { x: c.x, y: c.y }, from: pos };
       if (pos.coarse === true) {
         const found = extrudeCell(engine, state, pos);

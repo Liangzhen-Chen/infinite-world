@@ -10,7 +10,7 @@ import { testTempRoot, writeUnderTempRoot, ROOT } from '../accept/temp-root.mjs'
 import { createHash } from 'node:crypto';
 import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
-import { placeView, routeView, zoneAt, regionCell, landCell, planFootprints, placeNeighbors, locatedChainOf, placeLatitude, straightM, bearingView, settleCell } from '../../server-plugin/kernel/place.mjs';
+import { placeView, routeView, zoneAt, regionCell, landCell, planFootprints, placeNeighbors, footprintNeighbors, locatedChainOf, placeLatitude, straightM, bearingView, settleCell } from '../../server-plugin/kernel/place.mjs';
 
 installDigestCap({ sha256Hex: (data, encoding) => createHash('sha256').update(data, encoding === 'base64' ? 'base64' : 'utf8').digest('hex') });
 const DIMS = 'world/ontology/dimensions';
@@ -476,6 +476,13 @@ test('placeNeighbors：足迹有一对四邻接区格即相邻；路网边两端
   const withEdge = world({ ...STRIP(), edges: [{ from: 'loc_a', to: 'loc_t', waterway: false }] });
   assert.deepEqual(placeNeighbors(withEdge, S, 'loc_a'), ['loc_b', 'loc_t']);
   assert.deepEqual(placeNeighbors(withEdge, S, 'loc_t'), ['loc_a']);
+});
+
+test('footprintNeighbors（卷五 §3.1、:1216）：只按足迹相邻，不并路网边；a 与 b 共边相邻，a 与 t 只有路网边故不算', () => {
+  const withEdge = world({ ...STRIP(), edges: [{ from: 'loc_a', to: 'loc_t', waterway: false }] });
+  assert.deepEqual(footprintNeighbors(withEdge, S, 'loc_a'), ['loc_b']); // 手算：a 占 (0,0)、b 占 (1,0) 共边；t 占 (5,0) 与 a 无共边
+  assert.deepEqual(footprintNeighbors(withEdge, S, 'loc_t'), []);
+  assert.deepEqual(placeNeighbors(withEdge, S, 'loc_a'), ['loc_b', 'loc_t']); // 完整判据 = 足迹相邻并路网边
 });
 
 test('placeView().exits：路与开阔边界两种，排序按（种类 路、门、开阔；区格序号 (x,y)；两端）；根的足迹是整个外包框，没有开阔边界', () => {

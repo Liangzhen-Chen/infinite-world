@@ -4,12 +4,12 @@
 // 次序全由 (x, y) 字典序与下标定，与遍历容器顺序无关。
 
 import { KernelError } from '../errors.mjs';
+import { NEIGHBORS_4 } from '../grid-geom.mjs';
 
 const REASON = Object.freeze({ crossParent: 'cross_parent', occupied: 'occupied' });
 const keyOf = (c) => `${c.x},${c.y}`;
 const manhattan = (a, b) => (a.x > b.x ? a.x - b.x : b.x - a.x) + (a.y > b.y ? a.y - b.y : b.y - a.y);
 const cellLess = (a, b) => a.x < b.x || (a.x === b.x && a.y < b.y);
-const NEIGHBORS = Object.freeze([[1, 0], [-1, 0], [0, 1], [0, -1]]);
 
 const fail = (reason, why) => new KernelError('E-GEN-WATER-FOOTPRINT', { reason }, why);
 
@@ -30,7 +30,7 @@ export function centerLine(seed, target, ctx) {
   if (target.length === 0) return [seed];
   const inT = new Set(target.map(keyOf));
   if (inT.has(keyOf(seed))) throw fail(REASON.occupied, `seed cell (${seed.x},${seed.y}) lies in the downstream footprint`);
-  const touches = (c) => NEIGHBORS.some(([dx, dy]) => inT.has(`${c.x + dx},${c.y + dy}`));
+  const touches = (c) => NEIGHBORS_4.some(([dx, dy]) => inT.has(`${c.x + dx},${c.y + dy}`));
   let g = null;
   for (const t of target) {
     if (!ctx.inParent(t.x, t.y)) continue;
@@ -80,7 +80,7 @@ export function bandCells(line, r, ctx) {
     const k = keyOf(e.cell);
     if (isCenter.has(k)) { taken.add(k); out.push(e.cell); continue; }
     if (ctx.occupied(e.cell.x, e.cell.y)) continue;
-    if (NEIGHBORS.some(([dx, dy]) => taken.has(`${e.cell.x + dx},${e.cell.y + dy}`))) { taken.add(k); out.push(e.cell); }
+    if (NEIGHBORS_4.some(([dx, dy]) => taken.has(`${e.cell.x + dx},${e.cell.y + dy}`))) { taken.add(k); out.push(e.cell); }
   }
   return out;
 }

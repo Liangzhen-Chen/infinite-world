@@ -12,7 +12,7 @@ import { loadWorld } from '../../server-plugin/kernel/load/world.mjs';
 import { installDigestCap } from '../../server-plugin/kernel/save.mjs';
 import {
   FOOTPRINT_KIND, footprintKindOf, planRegionFootprints, regionOfPos, zoneOfPos, cellList, regionGeometry, regionHeights, regionCellPos,
-  landRegionCell, accessCell, openBoundaryCells, footprintAdjacency, straightM, bearingView,
+  landRegionCell, accessCell, openBoundaryCells, footprintAdjacency, straightFixed, bearingView,
 } from '../../server-plugin/kernel/footprint.mjs';
 import { fixedUnits } from '../../server-plugin/kernel/det-math.mjs';
 
@@ -402,18 +402,18 @@ const P = (x, y, z, w = 0) => ({ w, x, y, z, coarse: false });
 const m = (v) => fixedUnits(v);
 
 test('规则 5 直线距离：3-4-5 与含层高的 5-12-13（dz = 层号差 × storeyM）；定点米', () => {
-  assert.equal(straightM(GRID, P(0, 0, 0), P(3, 4, 0)), m(5)); // √(3² + 4²) = 5
-  assert.equal(straightM(GRID, P(0, 0, 0), P(5, 0, 4)), m(13)); // dz = 4 × 3 = 12 m：√(25 + 144) = 13
-  assert.equal(straightM(GRID, P(7, 7, 7), P(7, 7, 7)), 0n);
+  assert.equal(straightFixed(GRID,P(0, 0, 0), P(3, 4, 0)), m(5)); // √(3² + 4²) = 5
+  assert.equal(straightFixed(GRID,P(0, 0, 0), P(5, 0, 4)), m(13)); // dz = 4 × 3 = 12 m：√(25 + 144) = 13
+  assert.equal(straightFixed(GRID,P(7, 7, 7), P(7, 7, 7)), 0n);
 });
 
 test('规则 5 直线距离：对称；满足三角不等式（定点开方各截断至多差 1，容差 +2）；不同格空间为未知', () => {
   const pts = [P(0, 0, 0), P(3, 4, 0), P(-10, 25, 2), P(1000, -37, -3), P(5, 5, 5)];
-  for (const a of pts) for (const b of pts) assert.equal(straightM(GRID, a, b), straightM(GRID, b, a));
+  for (const a of pts) for (const b of pts) assert.equal(straightFixed(GRID,a, b), straightFixed(GRID,b, a));
   for (const a of pts) for (const b of pts) for (const c of pts) {
-    assert.ok(straightM(GRID, a, c) <= straightM(GRID, a, b) + straightM(GRID, b, c) + 2n, 'triangle');
+    assert.ok(straightFixed(GRID,a, c) <= straightFixed(GRID,a, b) + straightFixed(GRID,b, c) + 2n, 'triangle');
   }
-  assert.equal(straightM(GRID, P(0, 0, 0, 0), P(0, 0, 0, 1)), null);
+  assert.equal(straightFixed(GRID,P(0, 0, 0, 0), P(0, 0, 0, 1)), null);
 });
 
 // ---------- §4.2 规则 12–13：方位角与前后左右（对照表第 27 行） ----------

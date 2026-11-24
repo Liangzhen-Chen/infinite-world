@@ -7,6 +7,8 @@
 
 import { fixedUnits, fixedScale, fixedToNumber } from './det-math.mjs';
 import { KernelError } from './errors.mjs';
+import { NEIGHBORS_4 } from './grid-geom.mjs';
+import { regionSideCells } from './footprint.mjs';
 import { identitySeedKey, orderKeyAt } from './sample.mjs';
 
 // 实体类代号：体积行是地点表（place）的行（卷十 R10-2.14 :431 身份采样键的第二成分）。
@@ -18,7 +20,7 @@ function floorDiv(a, b) {
   const r = a % b;
   return r !== 0n && r < 0n ? q - 1n : q;
 }
-const NEIGHBORS = Object.freeze([[1, 0], [-1, 0], [0, 1], [0, -1]]); // 四邻（卷十 R10-2.14 第 3 项）
+// 四邻方向表在最上一行的 grid-geom.mjs（NEIGHBORS_4；卷十 R10-2.14 第 3 项），本文件不另抄一份。
 const colKey = (x, y) => `${x},${y}`;
 
 /** 失败原因代号（caveCellsOf 返回 ok: false 时的 reason）。 */
@@ -126,7 +128,7 @@ export function caveCellsOf(spec) {
     if (s === null) { unknown = true; return null; }
     return s.z >= t + 1 ? s : null;
   };
-  const perCell = Number(fixedUnits(grid.regionCellM) / fixedUnits(grid.cellM)); // 区格边长（细格列数）
+  const perCell = Number(regionSideCells(grid)); // 区格边长（细格列数）
   const half = perCell >> 1;
   // 起点：区格按次序键升序取第一个中心列可凿者。只在次序键暂居最小时才求中心列地表，所以不为全部区格求高度。
   let best = null;
@@ -153,7 +155,7 @@ export function caveCellsOf(spec) {
   const columns = [];
   const take = (x, y, s) => {
     columns.push({ x, y, h: s.h, z: s.z });
-    for (const [dx, dy] of NEIGHBORS) {
+    for (const [dx, dy] of NEIGHBORS_4) {
       const nx = x + dx;
       const ny = y + dy;
       const k = colKey(nx, ny);

@@ -7,6 +7,8 @@
 // 它的不透光、遮天、能承托、不透气四个布尔和别的材料一样读材料行（卷三甲 :128–:131），代码里没有"空气恒为假"。
 
 import { fixedUnits, fixedScale, fixedToNumber, FixedError } from './det-math.mjs';
+import { dist2Fixed } from './grid-geom.mjs';
+import { regionCenterFixed, regionSideFixed } from './footprint.mjs';
 import { surfaceHeightAt, surfaceStorey } from './grid.mjs';
 import { blockAt } from './grid-template.mjs';
 
@@ -85,14 +87,9 @@ export function columnSurface(grid, worldSeed, w, controlPoints, entry, x, y, me
 export function nearControlPoints(grid, controlPoints, rx, ry) {
   const k = grid.heightCtrlK;
   if (controlPoints.length <= k) return controlPoints;
-  const cell = fixedUnits(grid.regionCellM);
-  const cx = BigInt(rx) * cell + (cell >> 1n);
-  const cy = BigInt(ry) * cell + (cell >> 1n);
-  const withD = controlPoints.map((p) => {
-    const dx = fixedUnits(p.x) - cx;
-    const dy = fixedUnits(p.y) - cy;
-    return { p, d2: dx * dx + dy * dy };
-  });
+  const cell = regionSideFixed(grid);
+  const c = regionCenterFixed(grid, { x: rx, y: ry });
+  const withD = controlPoints.map((p) => ({ p, d2: dist2Fixed(fixedUnits(p.x), fixedUnits(p.y), c.x, c.y) }));
   const sorted = withD.map((e) => e.d2).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
   const dk2 = sorted[k - 1];
   const twoDelta = cell + cell;
