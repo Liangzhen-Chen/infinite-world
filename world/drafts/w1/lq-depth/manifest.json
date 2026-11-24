@@ -1,7 +1,0 @@
-{
-  "contract": "audit-patch-v1",
-  "design": "design/w1-lq-depth.mjs",
-  "root": "drafts/w1/lq-depth",
-  "worldRoot": "../../..",
-  "foundationHash": "c985bdf9204c7957676fe9b856ba61b10d7bc5e0a1bf93568aa4b9e924149bc4"
-}

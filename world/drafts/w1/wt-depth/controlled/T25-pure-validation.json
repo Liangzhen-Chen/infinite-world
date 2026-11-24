@@ -1,8 +1,0 @@
-{
-  "scope": "official pure prepareDepthRevision; proposal hash is not a model grant",
-  "modelCalls": 0,
-  "controlledChanges": 82,
-  "events": 7,
-  "planHash": "9c58016d9680c2ff5b11469648c8ed3d216d626aee4f7434b4815df8f538fcd6",
-  "authorizationGranted": false
-}

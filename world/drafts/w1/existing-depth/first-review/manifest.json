@@ -1,9 +1,0 @@
-{
-  "contract": "audit-patch-v1",
-  "design": "design/w1-existing-depth-first-review.mjs",
-  "root": "drafts/w1/existing-depth/first-review",
-  "worldRoot": "../../../..",
-  "foundationHash": "734f3b05619ce59696923d650450ad94199aad31a088215d40c5b69c1ab87228",
-  "authoredBackground": "drafts/w1/existing-depth/first-review/authored-background.json",
-  "authoredBackgroundHash": "d4cb722ab2388cc077c9011a337f0e7a81f70f0cf60d5655e925ee8e479dc1d9"
-}

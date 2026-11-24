@@ -1,1 +1,0 @@
-本目录保留实际draft基准窄修前的离线提议；controlled-plan已含主线补充的previousPlan元数据。原offline-report与freeze对应81df67e提议hash，不代表本次官方prepare或完整12人指纹门槛通过。当前真实结果见上级official-prepare-report.json；旧helper不是本次验收入口。

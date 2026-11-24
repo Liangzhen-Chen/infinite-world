@@ -1,6 +1,0 @@
-[
-  {
-    "id": "npc_lq_cuifan",
-    "blocked": "revisions 包含不可去重的来源字段\n+ actual - expected\n... Skipped lines\n\n  [\n    {\n      after: {\n        fact: '崔帆在砾泉坡路口重画过箭头，后来因残留旧线受问而彻底抹去旧线。',\n        reliability: '亲历',\n...\n    {\n+     after: '青岚洗晒工衣要认姓名记号，崔帆向她解释过残线会怎样干扰辨认。',\n-     after: '青岚是同村洗晒工；崔帆若想问工衣姓名记号如何辨认，需先问她是否愿意谈。',\n      before: '认识同村青岚，不因此知道对方秘密或财产。',\n      issues: [\n        {\n          code: 'known-count',\n          field: 'knowledge.known',\n...\n    {\n+     after: '青岚洗晒工衣要认姓名记号，崔帆向她解释过残线会怎样干扰辨认。',\n-     after: '青岚是同村洗晒工；崔帆若想问工衣姓名记号如何辨认，需先问她是否愿意谈。',\n      before: '认识同村青岚，不因此知道对方秘密或财产。',\n      issues: [\n        {\n          code: 'known-count',\n          field: 'knowledge.known',\n"
-  }
-]

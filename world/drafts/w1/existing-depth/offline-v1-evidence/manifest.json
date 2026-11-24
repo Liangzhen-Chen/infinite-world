@@ -1,7 +1,0 @@
-{
-  "contract": "audit-patch-v1",
-  "design": "design/w1-existing-depth.mjs",
-  "root": "drafts/w1/existing-depth",
-  "worldRoot": "../../..",
-  "foundationHash": "0b5b017841e951368c9fcaece05302e2cd90f8586d31a81cea051413a05e019a"
-}

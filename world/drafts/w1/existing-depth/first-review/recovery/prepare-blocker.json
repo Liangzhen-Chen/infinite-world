@@ -1,8 +1,0 @@
-{
-  "status": "blocked-until-T26-merged",
-  "officialPreparePassed": false,
-  "authorizationHash": "07922fdceb52bafdfe8d6292c3aff0fb379e4abbb346462b029f29d75ede3780",
-  "error": "本次仅授权T07，T06继续冻结\n\n'T10' !== 'T07'\n",
-  "source": "tools/npc-depth-content.mjs validateControlledRevision cardId T07 assertion",
-  "modelCalls": 0
-}
