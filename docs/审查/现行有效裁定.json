@@ -8,8 +8,21 @@
       "summary": "会员额度只给主会话调度；写卡、审卡、测试分析一律走 claude -p 与 DeepSeek API，单项超 5 元先停报；DeepSeek 派卡走 run-card-ds.sh，密钥不打印不提交。",
       "source": "archive/docs-governance/CLAUDE-至1124.md:16",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "亮圳",
+      "quote": "主会话仅调度 不允许派任何会员额度 让他用claude api和deepseek api，同时你在界面上把它改成opus中",
+      "quoteSource": "亮圳与李白聊天 t855u，2026-11-24 伦敦下午（李白转，仓库外）",
       "supersedes": ["旧口径-会员额度写码", "旧口径-Claude只用会员额度"]
+    },
+    {
+      "id": "审批闸门5元-1109",
+      "summary": "单项花费超 5 元先停下报亮圳同意；5 元以内常规操作与技术管理决策由李白自定。",
+      "source": "CLAUDE.md:32",
+      "status": "active",
+      "decidedBy": "亮圳",
+      "quote": "",
+      "quoteKind": "转述",
+      "quoteSource": "亮圳 2026-11-09 t219u 长期授权（李白转述：单项5元以内李白直接定，超5元须问他）",
+      "supersedes": []
     },
     {
       "id": "写死红线",
@@ -48,7 +61,10 @@
       "summary": "规则只一版，只保同版确定性；不为旧存档做兼容，也不以存档兼容为由改规则。",
       "source": "archive/docs-governance/CLAUDE-至1124.md:55",
       "status": "active",
-      "decidedBy": "李白",
+      "decidedBy": "亮圳",
+      "quote": "",
+      "quoteKind": "转述",
+      "quoteSource": "archive/docs-reviews/李白裁定-1117.md:111（亮圳 11-17 13:38 答复，李白转述）",
       "supersedes": ["M-6误述-改规则不强迫迁旧存档"]
     },
     {
@@ -136,7 +152,9 @@
       "summary": "仓库只在 F 盘；不碰 C 盘与全局设置、PATH、钩子；不用 Fable。",
       "source": "archive/docs-governance/CLAUDE-至1124.md:45",
       "status": "active",
-      "decidedBy": "李白",
+      "decidedBy": "亮圳",
+      "quote": "额度花不起",
+      "quoteSource": "archive/docs-reviews/李白裁定-1117.md:1427（亮圳 11-19 22:0x 伦敦，李白转）",
       "supersedes": []
     },
     {
@@ -216,6 +234,16 @@
       "supersedes": []
     },
     {
+      "id": "卡测试换人1122",
+      "summary": "写码、出测试、审卡三方分离：测试与审卡都要换成独立的第三方，不许写者自己出题自己过（细化见 Q-16、Q-17）。",
+      "source": "archive/docs-governance/CLAUDE-至1124.md:33",
+      "status": "active",
+      "decidedBy": "亮圳",
+      "quote": "他来写你来测，或者他来写找一个独立的测",
+      "quoteSource": "archive/docs-governance/CLAUDE-至1124.md:33（亮圳 11-22 19:40，李白转）",
+      "supersedes": []
+    },
+    {
       "id": "Q-16",
       "summary": "门禁脚本由写者写，验收测试不许写者自己出、自己跑来证明通过；每个门禁脚本交付说明入库；由与写脚本无关的独立模型另出违规样例测试，漏的改到拦住为止。",
       "source": "docs/审查/李白裁定-1117.md:1738",
@@ -257,6 +285,7 @@
       "source": "docs/审查/李白裁定-1117.md:1782",
       "status": "active",
       "decidedBy": "李白",
+      "basedOn": "卡测试换人1122",
       "supersedes": ["Q-17-模型族口径"]
     },
     {
@@ -744,7 +773,19 @@
       "summary": "任何一项读完仍无出处，按 P-7 定暂定值、标「暂定·待试玩标定」，建议值和理由写进问题.md，不再为这一项停。",
       "source": "docs/审查/李白裁定-1117.md:1698",
       "status": "active",
-      "decidedBy": "李白",
+      "decidedBy": "亮圳",
+      "quote": "价格之类的不是现在能被决定的，有一些或许可以；不用给我表，做完了玩一下就知道合不合理了",
+      "quoteSource": "archive/docs-reviews/李白裁定-1117.md:179",
+      "supersedes": []
+    },
+    {
+      "id": "设定值可编-1117",
+      "summary": "查不到合格出处的奇幻/游戏刻度填合理设定值，记 designed，basis 写明参照与理由，不标 measured、不伪造出处。",
+      "source": "docs/审查/李白裁定-1117.md:250",
+      "status": "active",
+      "decidedBy": "亮圳",
+      "quote": "没事实在找不到编一个合理的就好 这是魔法世界的游戏啊喂！",
+      "quoteSource": "archive/docs-reviews/李白裁定-1117.md:250",
       "supersedes": []
     },
     {
