@@ -13,7 +13,7 @@
 - **确定性边界**：区分“权威状态（进 `saveDigest`）”与“确定性可重建索引/烘焙层（不进 `saveDigest`，可一键重建并验一致）”。不为旧存档做兼容，但 `saveDigest` 拆为 `engineRulesDigest` 与 `dataPacksDigest`（支持只增内容包）。
 - **L0 内核红线**：`server-plugin/kernel/` 只留无领域语义底座（`kernel/files.json` 硬上限 <=15 文件），一切地理/物品/生物/经济/文化/生成代码一律进 `server-plugin/rules/`。
 
-## 3. 模型、额度与三方硬分离（亮圳【裁定1124b】+ Z-5）
+## 3. 模型、额度与三方硬分离（【裁定1124b】+ Z-5；裁定1124b 未找到亮圳引号原话，标李白/主会话自定）
 - **主会话只调度**：主会话（模型自选，走 Claude Ultra 会员额）只负责拆竖切片卡、调用派卡脚本、解冲突与 PR 最终审阅合入；**严禁把会员额度花在写码、出题、审卡、测试分析等任何子任务上**。
 - **子任务全走 API 唯一入口**：所有写码、出题、审卡、测试分析必须经 `tools/dispatch/dispatch.mjs` 调用 **DeepSeek API（只许 `deepseek-flash`，严禁 `v4-pro`）** 或 **Claude API（`claude -p` / SDK，读环境变量 `ANTHROPIC_API_KEY`）**。单次 API 调用强制 `--max-budget-usd 0.65`（锁在单项 5 元红线内），并输出调用收据随 PR 校验。
 - **默认三方组合**：写码 `deepseek-flash`，出题 `claude-haiku` API，审卡普通卡 `claude-sonnet` API / 跨卷内核难卡 `claude-opus` API；三方归一化**模型族**必须完全不同，由 `card-archive.mjs` 与 CI 硬核（不再只核标识串）。
@@ -29,6 +29,6 @@
 
 ## 5. 测试机、花费闸门、安全与通知
 - **运行位置**：本机只跑几秒内纯函数/单测；常规全量走 GitHub Actions；推进世界长测与九省性能基准走腾讯云 `dnd-runner`（经 `tools/cloud/` 自动开机 -> `npm ci` -> 测 -> 自动关机），不在本机抢跑长测。
-- **亮圳审批闸门**：**单项花费 > 5 元、删文件/云资源、充值、拓权、放宽硬规则**，必须先停下报亮圳同意；<= 5 元常规操作与技术管理决策由李白自定。
+- **审批闸门（李白/主会话自定）**：**单项花费 > 5 元、删文件/云资源、充值、拓权、放宽硬规则**，必须先停下报亮圳同意；<= 5 元常规操作与技术管理决策由李白自定。
 - **安全与原创**：不打印、不提交任何密钥，不读 `SillyTavern/data/*/secrets.json`；不复制《再生勇士》正文/人名/地名/情节（受 `world/i18n/blocklist.zh.json` 拦截）；未成年 NPC 不进亲密情节。
 - **通知（只 3 种 JSON，经 `tools/notify/` 发李白）**：`MILESTONE`（竖切片合入含 PR/CI/试玩链接）、`BLOCKED`（冲突文件:行 + 两种备选与代价）、`COST_OR_CLOUD`（云机/花费/审批闸门）。取消 `/compact` 核对通知，取消手写状态汇报。
