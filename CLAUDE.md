@@ -13,7 +13,7 @@
 - **确定性边界**：区分“权威状态（进 `saveDigest`）”与“确定性可重建索引/烘焙层（不进 `saveDigest`，可一键重建并验一致）”。不为旧存档做兼容，但 `saveDigest` 拆为 `engineRulesDigest` 与 `dataPacksDigest`（支持只增内容包）。
 - **L0 内核红线**：`server-plugin/kernel/` 只留无领域语义底座（`kernel/files.json` 硬上限 <=15 文件），一切地理/物品/生物/经济/文化/生成代码一律进 `server-plugin/rules/`。
 
-## 3. 模型、额度与三方硬分离（【裁定1124b】+ Z-5；裁定1124b 未找到亮圳引号原话，标李白/主会话自定）
+## 3. 模型、额度与三方硬分离（【裁定1124b】由李白转达，仓库内无亮圳引号原话，标李白/主会话自定，待亮圳确认）
 - **主会话只调度**：主会话（模型自选，走 Claude Ultra 会员额）只负责拆竖切片卡、调用派卡脚本、解冲突与 PR 最终审阅合入；**严禁把会员额度花在写码、出题、审卡、测试分析等任何子任务上**。
 - **子任务全走 API 唯一入口**：所有写码、出题、审卡、测试分析必须经 `tools/dispatch/dispatch.mjs` 调用 **DeepSeek API（只许 `deepseek-flash`，严禁 `v4-pro`）** 或 **Claude API（`claude -p` / SDK，读环境变量 `ANTHROPIC_API_KEY`）**。单次 API 调用强制 `--max-budget-usd 0.65`（锁在单项 5 元红线内），并输出调用收据随 PR 校验。
 - **默认三方组合**：写码 `deepseek-flash`，出题 `claude-haiku` API，审卡普通卡 `claude-sonnet` API / 跨卷内核难卡 `claude-opus` API；三方归一化**模型族**必须完全不同，由 `card-archive.mjs` 与 CI 硬核（不再只核标识串）。

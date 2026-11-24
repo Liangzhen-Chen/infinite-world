@@ -24,7 +24,7 @@
       "summary": "派生优先，不写死；不按单个 id、文件名、卷名特判；修复落在规则层或原语层。",
       "source": "archive/docs-governance/CLAUDE-至1124.md:51",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -32,7 +32,7 @@
       "summary": "程序不读自然语言判逻辑，只读数值维度与固定代号。",
       "source": "archive/docs-governance/CLAUDE-至1124.md:53",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -40,7 +40,7 @@
       "summary": "账本是数量唯一出处；能由账本推算的数在出报时派生，不另存。",
       "source": "archive/docs-governance/CLAUDE-至1124.md:54",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -48,7 +48,7 @@
       "summary": "规则只一版，只保同版确定性；不为旧存档做兼容，也不以存档兼容为由改规则。",
       "source": "archive/docs-governance/CLAUDE-至1124.md:55",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": ["M-6误述-改规则不强迫迁旧存档"]
     },
     {
@@ -56,7 +56,7 @@
       "summary": "测试期望值按卷文公式手算成字面量；不改测试过关、不降门槛。",
       "source": "archive/docs-governance/CLAUDE-至1124.md:56",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -64,7 +64,7 @@
       "summary": "跨卷共用定义只一处，别处只引用；已封卷只走封卷后勘误，不升版本、历史修订不回改。",
       "source": "archive/docs-governance/CLAUDE-至1124.md:57",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -72,7 +72,7 @@
       "summary": "修改轮只改审卡指出的问题，不加新设计。（只保留旧条这半句；「每卷最多审两轮」「两轮后主会话亲读免复核」已由现行 CLAUDE.md 第 3 节「无免复核逃生门」作废）",
       "source": "archive/docs-governance/CLAUDE-至1124.md:58",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": ["每卷最多审两轮"]
     },
     {
@@ -80,7 +80,7 @@
       "summary": "同一步失败两次，先亲读证据查根因（文件:行），再定方向。",
       "source": "archive/docs-governance/CLAUDE-至1124.md:59",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -88,7 +88,7 @@
       "summary": "技术问题自己定并写「已定：…理由」；花钱、删数据、扩权限、放宽亮圳硬规则要停下报。",
       "source": "archive/docs-governance/CLAUDE-至1124.md:60",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -96,7 +96,7 @@
       "summary": "花费以控制台为准，如实记账；出错先认错、说清原因与改正。",
       "source": "archive/docs-governance/CLAUDE-至1124.md:61",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -104,7 +104,7 @@
       "summary": "合并前主会话亲读 diff；合入或基线变动后跑全量测试并贴命令与末行。",
       "source": "archive/docs-governance/CLAUDE-至1124.md:32",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -112,7 +112,7 @@
       "summary": "每块开写代码前，先把本块设计规矩做成门禁自动检查并合入，在 PLAN 列「规矩→检查」对照表报李白核过才开写。",
       "source": "archive/docs-governance/CLAUDE-至1124.md:36",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -120,7 +120,7 @@
       "summary": "能用普通测试守的写进卡自己的测试并测试先行；只有跨文件静态才做门禁条目；不为测试造东西。",
       "source": "archive/docs-governance/CLAUDE-至1124.md:37",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -128,7 +128,7 @@
       "summary": "排期注明卷、节、行；共用文件同一时段一路独占，冲突即串行。",
       "source": "archive/docs-governance/CLAUDE-至1124.md:38",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -136,7 +136,7 @@
       "summary": "仓库只在 F 盘；不碰 C 盘与全局设置、PATH、钩子；不用 Fable。",
       "source": "archive/docs-governance/CLAUDE-至1124.md:45",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -144,7 +144,7 @@
       "summary": "提交钩子已挂，不许 --no-verify；不许 force-push、不改写历史。",
       "source": "archive/docs-governance/CLAUDE-至1124.md:46",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -152,7 +152,7 @@
       "summary": "推进世界的测试、块验收与守恒长测上腾讯云测试台，攒到块验收一次跑；不推进世界、几秒内的纯函数与校验器测试可本机跑。",
       "source": "archive/docs-governance/CLAUDE-至1124.md:48",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": ["长测交李白Linux机开issue"]
     },
     {
@@ -160,7 +160,7 @@
       "summary": "ln 只留卷二 :1380 一份，卷二十七 :620 改成引用卷二；两处精度或定义域要求不一致时取更严的写进卷二。",
       "source": "docs/审查/李白裁定-1117.md:1729",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -168,7 +168,7 @@
       "summary": "年龄一律用天文年（卷四 :214）；当地历法只管日期与显示，不参与衰老、寿命、成年等机制；只许 astroView 一处换算。",
       "source": "docs/审查/李白裁定-1117.md:1730",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -176,7 +176,7 @@
       "summary": "公共部件问题要完全解决再推进：重复实现、绕开公共部件、写死数字、无人用的入口一律修完；定时检查脚本接进提交前检查，清单只减不增。",
       "source": "docs/审查/李白裁定-1117.md:1733",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": ["Q-8后半", "Q-9后半"]
     },
     {
@@ -184,7 +184,7 @@
       "summary": "补全卷二 §2.7 总登记表（提供方、调用方、是否已接通），作为公共部件审查与开发顺序的唯一依据；检查脚本照表查绕开入口；派卡前必须核这张表。",
       "source": "docs/审查/李白裁定-1117.md:1734",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -192,7 +192,7 @@
       "summary": "Claude 每日预算用完不是停工理由；只有周额度真用完才停，停前先报亮圳；引用亮圳的规矩必须能指出原话出处。",
       "source": "docs/审查/李白裁定-1117.md:1735",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": ["周额度80%封顶旧口径"]
     },
     {
@@ -248,7 +248,7 @@
       "summary": "任何检查代码不许靠认字面文字来判，按语法树判别名、拼接字符串、计算属性名、解构、间接调用；运行期才知道的动态下标出现即报、待人审；acorn 只许 tools/accept 用。",
       "source": "docs/审查/李白裁定-1117.md:1780",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": ["Z-3"]
     },
     {
@@ -256,7 +256,7 @@
       "summary": "每张卡写码、出题、审卡须三个不同模型，不只是不同会话；出题与审卡各用与写码不同的模型。",
       "source": "docs/审查/李白裁定-1117.md:1782",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": ["Q-17-模型族口径"]
     },
     {
@@ -264,7 +264,7 @@
       "summary": "腾讯云 dnd-runner 开机由李白负责、不找亮圳；主会话先做完本机部分，按闸门规矩让两名非实现者审同一哈希并批准后发通知「可开机」附哈希；跑完取回结果、填好验收后再通知关机。",
       "source": "docs/审查/李白裁定-1117.md:1784",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": ["云机开机-1123-2123", "云机开机-1123-2125"]
     },
     {
@@ -304,7 +304,7 @@
       "summary": "行为与性格写死随行为方案 B1–B4 一起做设计勘误，不单独开线；npc-decision 写码前勘误必须先落库；目标仍是加一种性格只加一行数据，不改两卷。",
       "source": "docs/审查/李白裁定-1117.md:1799",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -312,7 +312,7 @@
       "summary": "卷六四套自动决定并进统一选择器，随 B4 做；性格交互读人格基础值。",
       "source": "docs/审查/李白裁定-1117.md:1800",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -320,7 +320,7 @@
       "summary": "待办清单派生，不存；只存愿望、承诺、人情。",
       "source": "docs/审查/李白裁定-1117.md:1532",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -328,7 +328,7 @@
       "summary": "多步规划用有界方法表（深 3、宽 4），不做通用搜索；十步以上的长谋划靠愿望分阶段。",
       "source": "docs/审查/李白裁定-1117.md:1533",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -336,7 +336,7 @@
       "summary": "委派统一成一个「要约」原语；定向对话和公开委托走两路，雇、借、换、人情、搭手用合同种类区分。",
       "source": "docs/审查/李白裁定-1117.md:1534",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -344,7 +344,7 @@
       "summary": "人情记成人情合同，并把卷十五的事件立债机制改成通用行族，两套立债并成一套。",
       "source": "docs/审查/李白裁定-1117.md:1535",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -352,7 +352,7 @@
       "summary": "长期愿望推广现有「奇想发作」行，不另立愿望表。",
       "source": "docs/审查/李白裁定-1117.md:1536",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -360,7 +360,7 @@
       "summary": "日常温饱由卷六自动结算管，心事只接缺口和抉择；习惯性行为保留。",
       "source": "docs/审查/李白裁定-1117.md:1537",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -368,7 +368,7 @@
       "summary": "随机只许在规则内发生，不许越过前提与守恒；以后要「神意」也只能做成带标签的事件，照样走结算、记来源。（拿不准：原文注明亮圳可能推翻，未见回复）",
       "source": "docs/审查/李白裁定-1117.md:1538",
       "status": "uncertain",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -376,7 +376,7 @@
       "summary": "玩家日志范围是委托加全部契约义务（债、人情、雇佣、租约）。",
       "source": "docs/审查/李白裁定-1117.md:1539",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -384,7 +384,7 @@
       "summary": "交差未获认定不加事件，只在当步结果里提示。",
       "source": "docs/审查/李白裁定-1117.md:1540",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -392,7 +392,7 @@
       "summary": "离屏降级时规则层每人每拍只展开 1 条心事、只看 1 层；统计层由卷六阶层规则代表；层与规律不随机器变。",
       "source": "docs/审查/李白裁定-1117.md:1541",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -400,7 +400,7 @@
       "summary": "离屏结算时记下是谁，熟人休眠保留，从没见过的细节在第一次看见时定稿；懒计算只用于从未被看见的细节。",
       "source": "docs/审查/李白裁定-1117.md:1546",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -408,7 +408,7 @@
       "summary": "普通近期细节先留 90 日，标定后改由记忆曲线派生。",
       "source": "docs/审查/李白裁定-1117.md:1547",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -416,7 +416,7 @@
       "summary": "大事留 365 日；涉及熟人、休眠者的转成永久记录。",
       "source": "docs/审查/李白裁定-1117.md:1548",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -424,7 +424,7 @@
       "summary": "可以休眠的是玩家熟人加一度亲属，再加够分量大事的当事人。",
       "source": "docs/审查/李白裁定-1117.md:1549",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -432,7 +432,7 @@
       "summary": "被钉住的人按所在层的节拍批量结算，不再逐人细算。",
       "source": "docs/审查/李白裁定-1117.md:1550",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -440,7 +440,7 @@
       "summary": "离开 7 日后才折叠。",
       "source": "docs/审查/李白裁定-1117.md:1551",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -448,7 +448,7 @@
       "summary": "第一次看见时定稿只限从未被看见过的普通人，且只用已有分布。",
       "source": "docs/审查/李白裁定-1117.md:1552",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -456,7 +456,7 @@
       "summary": "统计层的婚姻、亲子只给涉及休眠、钉住、已见过的人记名，其余在第一次物化时定稿。",
       "source": "docs/审查/李白裁定-1117.md:1553",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -464,7 +464,7 @@
       "summary": "关系与立场用身份键指人，不因此把对方钉住。",
       "source": "docs/审查/李白裁定-1117.md:1554",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -472,7 +472,7 @@
       "summary": "折叠时对组织的好感与立场并成一人份；对个人的低于阈值删除，高于阈值且对象是玩家、休眠者或钉住者的保留。",
       "source": "docs/审查/李白裁定-1117.md:1555",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -480,7 +480,7 @@
       "summary": "技能「忘到不会」的门槛从 4000 降到 2500，并加「刚学会就用得出来」的校验。",
       "source": "docs/审查/李白裁定-1117.md:1556",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -488,7 +488,7 @@
       "summary": "缓存按路径族版本号作废；块 7 开工前单独做，块 6 不动。",
       "source": "docs/审查/李白裁定-1117.md:1557",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -496,7 +496,7 @@
       "summary": "文字模型补离屏生活细节只许在叙述层，标成传闻或推测，不得写回状态。",
       "source": "docs/审查/李白裁定-1117.md:1558",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -520,7 +520,7 @@
       "summary": "gridKey 作为 keyKinds(c) 第六类，已落卷二 :256；不再并入 seedKey、handle 或命名 struct。",
       "source": "docs/审查/李白裁定-1117.md:1522",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -528,7 +528,7 @@
       "summary": "世界地理建模附表（省界矩形、手画海岸、河的全 boundary、31 郡种子）写进 world/ 作作者数据，每行标来源「附表」；以后按亮圳对世界总案的拍板改手写值覆盖，不改代码。",
       "source": "docs/审查/李白裁定-1117.md:1563",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -536,7 +536,7 @@
       "summary": "河湾村必须在河边；附表没有的数据按卷十「生成补缺」补并标来源，不许留百万区格大块；海不能只长 1 格，要加测试。",
       "source": "docs/审查/李白裁定-1117.md:1564",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -544,7 +544,7 @@
       "summary": "河湾村本来就是河弯处：把大河折点挪到河湾村旁，让大河经过雁渡、河神矶、琥珀港，旧地点坐标不动；省界微调，划分核对全 0。",
       "source": "docs/审查/李白裁定-1117.md:1572",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -552,7 +552,7 @@
       "summary": "约 54 个落在父站点足迹外的子站点，坐标不动，按坐标改挂所在郡或存量单元；归属走卷八辖区记录；测试每个原子站点都能查回原来的村。",
       "source": "docs/审查/李白裁定-1117.md:1584",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -560,7 +560,7 @@
       "summary": "作者没写建筑形制时，补缺阶段按设施类型从形制登记里用种子取一个，标「来源=生成补缺」；作者写了的不动；同种子两次生成相同。",
       "source": "docs/审查/李白裁定-1117.md:1590",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -568,7 +568,7 @@
       "summary": "磨坊归河湾村：地点行加作者字段「原属站点」，开局按它从该站点统治组织连统治边到子站点；测试每个子站点都能经统治边查回原村。",
       "source": "docs/审查/李白裁定-1117.md:1591",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -576,7 +576,7 @@
       "summary": "液体柱坠落只停到液体柱底第一个实体格之上，不穿河床；怎么游、怎么沉、浮力并入游泳涉水卡再定。",
       "source": "docs/审查/李白裁定-1117.md:1579",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -584,7 +584,7 @@
       "summary": "视线挡点从观察者一侧数；a 看 b 与 b 看 a 的可见性和层数逐位相同，挡点允许不同。",
       "source": "docs/审查/李白裁定-1117.md:1616",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -592,7 +592,7 @@
       "summary": "地点层可燃量取物品批次加建筑设施材料量；林木、草场等植物可燃量必须登记成正式待办卡，块 6 之后补。",
       "source": "docs/审查/李白裁定-1117.md:1610",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -600,7 +600,7 @@
       "summary": "泡内细格可燃量算落在格上的家具；屋顶顶面料标「待调」。",
       "source": "docs/审查/李白裁定-1117.md:1611",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -608,7 +608,7 @@
       "summary": "九省 31 郡全规模不缩；旧世界全体行全量转换，不删列、不缩规模；缺的登记为未建维度或未建列，不写缺省、不硬造数字。",
       "source": "docs/审查/李白裁定-1117.md:1206",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -616,7 +616,7 @@
       "summary": "设施类型照卷十九原文改成维度表。",
       "source": "docs/审查/李白裁定-1117.md:1629",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -624,7 +624,7 @@
       "summary": "水体存量单位改立方米，勘误卷五；海深不设 100 米上限。",
       "source": "docs/审查/李白裁定-1117.md:1631",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -632,7 +632,7 @@
       "summary": "统治边「直接」按边挂在被问地点自身认，勘误卷八两处。",
       "source": "docs/审查/李白裁定-1117.md:1634",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -640,7 +640,7 @@
       "summary": "开局统治边新登只作原因的「开局」代号，不连带封建契约。",
       "source": "docs/审查/李白裁定-1117.md:1635",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -648,7 +648,7 @@
       "summary": "王位继承先按议案选出，标待调。",
       "source": "docs/审查/李白裁定-1117.md:1636",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -656,7 +656,7 @@
       "summary": "所在存量单元沿上级往上取第一个，勘误卷十。",
       "source": "docs/审查/李白裁定-1117.md:1637",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -664,7 +664,7 @@
       "summary": "往上找不到存量单元时，格数上界退回父行足迹格数，建筑照常排位；这条退路写明是临时的，并加测试证明站点都能排上。",
       "source": "docs/审查/李白裁定-1117.md:1642",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -672,7 +672,7 @@
       "summary": "形制条目加默认用料（墙、梁架、屋顶）；开局按默认料乘围护体积乘密度算，作者可逐栋覆盖；测试开局建筑材料量全部非零。",
       "source": "docs/审查/李白裁定-1117.md:1648",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -680,7 +680,7 @@
       "summary": "开局建筑状态 condition 一律 1（完好），标待调；以后有建成年代再按年代折。",
       "source": "docs/审查/李白裁定-1117.md:1649",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -688,7 +688,7 @@
       "summary": "开局持有卡在块 6 前做：试玩地区手写持有关系、其余生成；只登开局谁持有哪栋，不扩到别的资产。",
       "source": "docs/审查/李白裁定-1117.md:1654",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -696,7 +696,7 @@
       "summary": "70 栋设施类型按归并规则归类：住区归私宅，镇巡值房、街议厅、验秤房并入官署，带铁工的共炉并入铁匠铺，议事处与议事屋并成官署；交易点、露天场地、共用灶房各新登一行；其余按最近的现有类型归并列清单。",
       "source": "docs/审查/李白裁定-1117.md:1655",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -704,7 +704,7 @@
       "summary": "默认料物性：土、榆、秸秆三行现在就补，有出处取、查不到按 P-3；补完再加卷十九规则 10 校验。",
       "source": "docs/审查/李白裁定-1117.md:1658",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -712,7 +712,7 @@
       "summary": "建「家户」实体表，把试玩地区的户从户籍索引物化成家户行，私宅归各自家户；资产持有者是家户，居民聚合体只是统计层汇总，不持有资产。",
       "source": "docs/审查/李白裁定-1117.md:1663",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -720,7 +720,7 @@
       "summary": "19 栋私宅改挂到所在营地站点下直挂，住区行仍按建筑留着；「属于哪个住区」用已有 originSite 字段留痕；测试 19 栋全部落位且 originSite 指向对应住区。",
       "source": "docs/审查/李白裁定-1117.md:1669",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -728,7 +728,7 @@
       "summary": "人类物种行只用有出处的数（身体图、材料映射、speedBase、coreTempC、senses、attributesBase 逐项写卷:行）；查不到的登进缺口，不编数。",
       "source": "docs/审查/李白裁定-1117.md:1674",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -736,7 +736,7 @@
       "summary": "刻度类数值全部标「暂定·待试玩标定」：七项属性均值取刻度中点，temperament 取 0，人类 growthRate 与 restartKg 填 0，游泳 0.4、攀爬 0.3，packSize 填 0 表示不适用。",
       "source": "docs/审查/李白裁定-1117.md:1683",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -744,7 +744,7 @@
       "summary": "任何一项读完仍无出处，按 P-7 定暂定值、标「暂定·待试玩标定」，建议值和理由写进问题.md，不再为这一项停。",
       "source": "docs/审查/李白裁定-1117.md:1698",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -752,7 +752,7 @@
       "summary": "coolingC 照卷四 :152 记成归卷二十一标定的未建列，所有物种一律按未知，不硬编、不给暂定值；体温 36.8 保留。",
       "source": "docs/审查/李白裁定-1117.md:1701",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": ["P-7-coolingC暂定值"]
     },
     {
@@ -760,7 +760,7 @@
       "summary": "属性刻度仍 0–99，人物均值沿旧数据基础 10，标「暂定·待试玩标定」。",
       "source": "docs/审查/李白裁定-1117.md:1702",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -768,7 +768,7 @@
       "summary": "寿命按现龄条件采样，在 [现龄, 上限] 内截断，卷四 :216 一处勘误覆盖所有物种和名册；加测试名册里没人寿命小于现龄。",
       "source": "docs/审查/李白裁定-1117.md:1704",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     },
     {
@@ -776,7 +776,7 @@
       "summary": "查前置不只查函数在不在，还要查生产代码里有没有真实调用者。",
       "source": "docs/审查/李白裁定-1117.md:1717",
       "status": "active",
-      "decidedBy": "李白/主会话自定",
+      "decidedBy": "李白",
       "supersedes": []
     }
   ]
