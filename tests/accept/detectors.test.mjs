@@ -12,6 +12,7 @@ import { detect as callEdge } from '../../tools/accept/detectors/call_edge.mjs';
 import { detect as docStruct, definedNumbers } from '../../tools/accept/detectors/doc_struct.mjs';
 import { detect as dataShape } from '../../tools/accept/detectors/data_shape.mjs';
 import { detect as declCmp } from '../../tools/accept/detectors/decl_cmp.mjs';
+import { detect as archiveRef } from '../../tools/accept/detectors/archive_ref.mjs';
 import { REGISTERED_CODES } from '../../server-plugin/kernel/error-codes.mjs';
 import { ENUM } from '../../tools/accept/lib/item-form.mjs';
 import { tempRepo } from './temp-repo.mjs';
@@ -33,6 +34,34 @@ const ids = (src, extra = {}) => litScope(ctxOf({ 'server-plugin/a.mjs': src, ..
 const nums = (src) => litScope(ctxOf({ 'server-plugin/a.mjs': src }), { groups: RT, literal: 'number' }, CLS.const_literal);
 const edges = (map, codes) => importEdge(ctxOf(map), { groups: RT, codes: codes || ['E-KERNEL-UPWARD-IMPORT', 'E-VIEW-INPUT-IMPORT', 'E-TEXTCORE-IMPORT', 'E-PROC-IMPORT', 'E-GLOBAL-UNLISTED', 'E-TSC-PARSE'] });
 const forks = (src) => pathAccess(ctxOf({ 'server-plugin/a.mjs': src }), { groups: ['rules', 'kernel'], paths: ['metadata.format', 'version', '*Version', 'legacy'], access: 'branch', code: 'E-REPLAY-VERSION-BRANCH' });
+
+// archive_ref：扫描根、排除、字样、豁免都在扫描类别行（数据）；这里造一份小类别行，期望值手写。
+const AR_CLS = {
+  scope: { roots: ['tools/', 'docs/', 'CLAUDE.md'], except: ['docs/gemini/', 'archive/'] },
+  patterns: ['archive/', 'docs/卡回报/', 'E-ACC-CARD-SELFCHECK', 'F:/dnd-'],
+};
+const ar = (map, cls = AR_CLS) => archiveRef(ctxOf(map), { code: 'E-ACC-ARCHIVE-REF' }, cls);
+
+test('archive_ref：范围内命中即报，排除前缀、整文件豁免、按行豁免都不计', () => {
+  assert.deepEqual(ar({ 'tools/a.mjs': 'const a = 1;\nconst p = "archive/x";' }), [
+    { file: 'tools/a.mjs', line: 2, nodeKind: 'text', symbolPath: '', code: 'E-ACC-ARCHIVE-REF' },
+  ]);
+  assert.equal(ar({ 'tools/a.mjs': 'const p = "docs/卡回报/x.md";' }).length, 1);
+  assert.equal(ar({ 'tools/a.mjs': 'E-ACC-CARD-SELFCHECK' }).length, 1);
+  assert.equal(ar({ 'tools/a.mjs': 'const p = "F:/dnd-tmp/x";' }).length, 1);
+  assert.equal(ar({ 'tools/a.mjs': 'const ok = 1;' }).length, 0);
+  assert.equal(ar({ 'docs/gemini/g.md': 'archive/x' }).length, 0);
+  assert.equal(ar({ 'world/w.md': 'archive/x' }).length, 0);
+  assert.equal(ar({ 'tools/a.mjs': 'archive/x' }, { ...AR_CLS, exemptions: [{ path: 'tools/a.mjs', reason: '夹具' }] }).length, 0);
+  const lineEx = { ...AR_CLS, exemptions: [{ path: 'CLAUDE.md', line: '严禁往', reason: '规矩原文' }] };
+  assert.equal(ar({ 'CLAUDE.md': '严禁往 docs/卡回报/' }, lineEx).length, 0);
+  assert.equal(ar({ 'CLAUDE.md': '别的行 docs/卡回报/' }, lineEx).length, 1);
+});
+
+test('archive_ref：扫描根或被禁字样为空报 E-ACC-ITEM-PARAM，不静默放过', () => {
+  assert.deepEqual(ar({ 'tools/a.mjs': 'archive/x' }, { ...AR_CLS, scope: { roots: [], except: [] } }).map((h) => h.code), ['E-ACC-ITEM-PARAM']);
+  assert.deepEqual(ar({ 'tools/a.mjs': 'archive/x' }, { ...AR_CLS, patterns: [] }).map((h) => h.code), ['E-ACC-ITEM-PARAM']);
+});
 
 test('lit_scope 实体前缀：各种写法到达同一值各计一次', () => {
   assert.equal(ids("const a = 'fxa_oats';").length, 1);

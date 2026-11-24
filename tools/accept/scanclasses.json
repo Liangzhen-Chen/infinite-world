@@ -2,6 +2,62 @@
  "rows": [
   {
    "detectors": [
+    "archive_ref"
+   ],
+   "exemptions": [
+    {
+     "path": "tools/dispatch/paths.json",
+     "reason": "本机 claude 与配置路径集中登记，卡文明确允许"
+    },
+    {
+     "line": "严禁往",
+     "path": "CLAUDE.md",
+     "reason": "规矩第 1 节原句必须点出被禁路径"
+    },
+    {
+     "path": "tools/accept/detectors/archive_ref.mjs",
+     "reason": "检测器自身（卡文豁免）"
+    },
+    {
+     "path": "tools/accept/scanclasses.json",
+     "reason": "本类别行登记被禁字样与扫描范围，是检测数据的唯一存放处"
+    },
+    {
+     "path": "tests/accept/detectors.test.mjs",
+     "reason": "检测器用例必须写出被禁字样才能断言命中"
+    },
+    {
+     "path": "tests/accept/bypass/archive_ref-01.txt",
+     "reason": "must_fail 夹具必须含被禁字样"
+    }
+   ],
+   "patterns": [
+    "archive/",
+    "docs/卡回报/",
+    "E-ACC-CARD-SELFCHECK",
+    "F:/dnd-"
+   ],
+   "scanClass": "archive_ref",
+   "scope": {
+    "except": [
+     "archive/",
+     "docs/gemini/",
+     "docs/卡档案/",
+     "docs/审查/现行有效裁定.json"
+    ],
+    "roots": [
+     "server-plugin/",
+     "tools/",
+     "tests/",
+     "CLAUDE.md",
+     "AGENTS.md",
+     "docs/"
+    ]
+   },
+   "source": "docs/gemini/rewrite-guide-1124.md 第 207 行；扫描范围与排除照 Step 1 卡文；豁免按数据登记（路径＋理由）"
+  },
+  {
+   "detectors": [
     "ledger_count"
    ],
    "scanClass": "baseline_monotone",

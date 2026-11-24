@@ -1,6 +1,31 @@
 {
  "rows": [
   {
+   "baseComp": "c_archive_ref",
+   "detector": "archive_ref",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/archive_ref.mjs",
+   "itemKey": "step0a.archive_ref",
+   "localNo": "S12-17",
+   "method": "static_code",
+   "params": {
+    "code": "E-ACC-ARCHIVE-REF"
+   },
+   "runsOn": "local_static",
+   "scanClass": "archive_ref",
+   "source": "docs/gemini/rewrite-guide-1124.md 第 207 行禁引用已归档/已废弃路径检查；卷十二:545 现行档案门禁；Step 1 卡文「禁引用检查 archive_ref」",
+   "stage": 0,
+   "state": "implemented",
+   "target": "tools_code",
+   "volume": "vol12",
+   "zeroRows": []
+  },
+  {
    "detector": "lit_scope",
    "expect": "zero",
    "form": "scan",

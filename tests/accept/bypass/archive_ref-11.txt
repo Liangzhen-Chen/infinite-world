@@ -1,0 +1,2 @@
+// archive_ref 必须不报夹具：普通代码，不引用任何被禁路径或字样。
+export const ok = 1;
