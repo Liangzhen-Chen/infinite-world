@@ -19,8 +19,10 @@
 // 修前为何失败：1 删除路径仍在；3 归档文件未到、旧文件仍在；4 docs/ 顶层文件过多；5 CLAUDE.md 超长且含旧叠层；
 //   6 AGENTS.md 仍 65 行；7 现行有效裁定 JSON 尚无。2 修前即存在，故绿。
 //
-// 已知冲突（未改断言，待主会话裁定）：指南 :399 位于 :392–:425 内，含文字 docs/卡回报/，
-//   而第 5 项禁词又要求 CLAUDE.md 不含 docs/卡回报/。两条同时满足不可能，整理后第 5 项会因此红。
+// 指南自相矛盾（已按亮圳逐字替换令取 :399）：指南 :379 禁词表含"取代下条"等叠层字样，
+//   而 :399 位于 :392–:425 内，含文字 docs/卡回报/（作禁止回写路径列举）。
+//   第 5 条改为：docs/卡回报/ 只许出现在含"严禁往"的那一行（即只作禁止列举）；其余禁词照旧。
+//   矛盾已报 Gemini 复审。
 //
 // 只用 node:test、node:assert、node:fs、node:path、node:child_process（execFileSync 调 git），
 // 另用 node:url 的 fileURLToPath 把 import.meta.url 转成路径（仓库根 = 本文件目录往上三级）。
@@ -118,9 +120,15 @@ test('5 CLAUDE.md 与指南 :392–:425 逐行相同、≤80 行、不含禁词�
   const lineCount = claude.split('\n').length;
   assert.ok(lineCount <= 80, `CLAUDE.md 共 ${lineCount} 行，超过 80`);
 
-  const forbidden = ['已过期', '取代下条', 'docs/卡回报/', 'E-ACC-CARD-SELFCHECK', 'F:/dnd-'];
+  const forbidden = ['已过期', '取代下条', 'E-ACC-CARD-SELFCHECK', 'F:/dnd-'];
   const hits = forbidden.filter((word) => claude.includes(word));
   assert.deepEqual(hits, [], `CLAUDE.md 含禁词：${hits.join(', ')}`);
+
+  // docs/卡回报/ 只许作禁止列举：出现的每一行都须含"严禁往"
+  const archiveHits = claude
+    .split('\n')
+    .filter((line) => line.includes('docs/卡回报/') && !line.includes('严禁往'));
+  assert.deepEqual(archiveHits, [], `docs/卡回报/ 出现在非禁止列举的行：${archiveHits.join(' | ')}`);
 });
 
 test('6 AGENTS.md ≤25 行且含 @CLAUDE.md（指南 :172）', () => {
