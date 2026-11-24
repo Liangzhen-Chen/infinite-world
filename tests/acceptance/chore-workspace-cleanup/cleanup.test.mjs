@@ -10,8 +10,12 @@
 //   现行有效裁定：:221（docs/审查/现行有效裁定.json）
 //   旧验收目录归档：:132（12 个旧卡目录搬到 archive/legacy-tests/acceptance/）
 //
+// 第 1 条裁定（主会话，亮圳删除令下"有真实读取的不删"）：world/design 只保留
+//   world/design/opening-polity-hw.json（被 tests/kernel/world-create-rules.test.mjs:25 等 4 处真实读取），
+//   其余 world/design 文件删除；故 world/design 不再整目录检查不存在，改为 git ls-files 只列出该一个文件。
+//
 // 测什么：
-//   1 删除路径不存在；2 留底标签 pre-rewrite-1124 指向 ae71f231e839142703eba0cf631e1230646ce68e（对照用，修前修后都应绿）；
+//   1 删除路径不存在（world/design 例外，见上）；2 留底标签 pre-rewrite-1124 指向 ae71f231e839142703eba0cf631e1230646ce68e（对照用，修前修后都应绿）；
 //   3 归档文件到位，docs/当前状态.md 与 docs/卡回报 不存在；4 docs/ 顶层文件只在允许清单内且四份必备都在；
 //   5 CLAUDE.md 与指南 392–425 逐行相同、≤80 行、不含禁词；6 AGENTS.md ≤25 行且含 @CLAUDE.md；
 //   7 docs/审查/现行有效裁定.json 可解析，rulings 非空数组，每条有 id、summary、source、status。
@@ -60,7 +64,6 @@ test('1 删除路径已不存在（指南 :249–:258）', () => {
   const deleted = [
     'docs/统一底层设计/版本快照',
     'world/drafts',
-    'world/design',
     'docs/probes',
     'logs',
     'docs/actions.json',
@@ -70,6 +73,14 @@ test('1 删除路径已不存在（指南 :249–:258）', () => {
   ];
   const still = deleted.filter((rel) => fs.existsSync(p(rel)));
   assert.deepEqual(still, [], `仍存在的待删路径：${still.join(', ')}`);
+
+  // world/design：只许剩 opening-polity-hw.json 这一个被真实读取的文件（主会话裁定）
+  const designTracked = git(['ls-files', 'world/design']).split('\n').filter(Boolean);
+  assert.deepEqual(
+    designTracked,
+    ['world/design/opening-polity-hw.json'],
+    `world/design 应只剩 opening-polity-hw.json，实际：${designTracked.join(', ')}`,
+  );
 });
 
 test('2 留底标签 pre-rewrite-1124 指向 ae71f231e839142703eba0cf631e1230646ce68e（对照，修前修后都应绿）', () => {
