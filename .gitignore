@@ -21,3 +21,12 @@ tests/fixtures/private/
 **/.env.*
 *.log
 .tmp/
+# 腾讯云测试台私钥与主机指纹（tools/cloud/gate 脚本按这些路径读；亮圳【停工清理1124】：绝不入库）
+tools/cloud/tc_dnd*
+tools/cloud/tc_review*
+tools/cloud/tc_admin*
+tools/cloud/*.pub
+tools/cloud/known_hosts
+tools/notify/config.local.json
+tools/notify/outbox/
+tools/notify/sent/
