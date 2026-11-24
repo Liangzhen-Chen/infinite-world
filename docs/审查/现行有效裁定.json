@@ -6,140 +6,133 @@
     {
       "id": "裁定1124b",
       "summary": "会员额度只给主会话调度；写卡、审卡、测试分析一律走 claude -p 与 DeepSeek API，单项超 5 元先停报；DeepSeek 派卡走 run-card-ds.sh，密钥不打印不提交。",
-      "source": "CLAUDE.md:16",
+      "source": "archive/docs-governance/CLAUDE-至1124.md:16",
       "status": "active",
       "supersedes": ["旧口径-会员额度写码", "旧口径-Claude只用会员额度"]
     },
     {
       "id": "写死红线",
       "summary": "写死是绝对红线：除世界设定外，任何系统的数值、规则、种类都放数据表、可单独替换；已有公共部件必须调用，不许另算；审卡必查，检查脚本拦新增写死。",
-      "source": "CLAUDE.md:52",
+      "source": "archive/docs-governance/CLAUDE-至1124.md:52",
       "status": "active",
       "supersedes": []
     },
     {
       "id": "派生优先",
       "summary": "派生优先，不写死；不按单个 id、文件名、卷名特判；修复落在规则层或原语层。",
-      "source": "CLAUDE.md:51",
+      "source": "archive/docs-governance/CLAUDE-至1124.md:51",
       "status": "active",
       "supersedes": []
     },
     {
       "id": "程序只读数值代号",
       "summary": "程序不读自然语言判逻辑，只读数值维度与固定代号。",
-      "source": "CLAUDE.md:53",
+      "source": "archive/docs-governance/CLAUDE-至1124.md:53",
       "status": "active",
       "supersedes": []
     },
     {
       "id": "账本唯一出处",
       "summary": "账本是数量唯一出处；能由账本推算的数在出报时派生，不另存。",
-      "source": "CLAUDE.md:54",
+      "source": "archive/docs-governance/CLAUDE-至1124.md:54",
       "status": "active",
       "supersedes": []
     },
     {
       "id": "不为旧存档兼容",
       "summary": "规则只一版，只保同版确定性；不为旧存档做兼容，也不以存档兼容为由改规则。",
-      "source": "CLAUDE.md:55",
+      "source": "archive/docs-governance/CLAUDE-至1124.md:55",
       "status": "active",
       "supersedes": ["M-6误述-改规则不强迫迁旧存档"]
     },
     {
       "id": "测试期望手算",
       "summary": "测试期望值按卷文公式手算成字面量；不改测试过关、不降门槛。",
-      "source": "CLAUDE.md:56",
+      "source": "archive/docs-governance/CLAUDE-至1124.md:56",
       "status": "active",
       "supersedes": []
     },
     {
       "id": "跨卷定义一处",
       "summary": "跨卷共用定义只一处，别处只引用；已封卷只走封卷后勘误，不升版本、历史修订不回改。",
-      "source": "CLAUDE.md:57",
+      "source": "archive/docs-governance/CLAUDE-至1124.md:57",
       "status": "active",
       "supersedes": []
     },
     {
-      "id": "每卷最多审两轮",
-      "summary": "每卷最多审两轮，修改轮不加新设计；两轮是上限不是硬卡。",
-      "source": "CLAUDE.md:58",
+      "id": "修改轮不加新设计",
+      "summary": "修改轮只改审卡指出的问题，不加新设计。（只保留旧条这半句；「每卷最多审两轮」「两轮后主会话亲读免复核」已由现行 CLAUDE.md 第 3 节「无免复核逃生门」作废）",
+      "source": "archive/docs-governance/CLAUDE-至1124.md:58",
       "status": "active",
-      "supersedes": []
+      "supersedes": ["每卷最多审两轮"]
     },
     {
       "id": "失败两次查根因",
       "summary": "同一步失败两次，先亲读证据查根因（文件:行），再定方向。",
-      "source": "CLAUDE.md:59",
+      "source": "archive/docs-governance/CLAUDE-至1124.md:59",
       "status": "active",
       "supersedes": []
     },
     {
       "id": "技术问题自定",
       "summary": "技术问题自己定并写「已定：…理由」；花钱、删数据、扩权限、放宽亮圳硬规则要停下报。",
-      "source": "CLAUDE.md:60",
+      "source": "archive/docs-governance/CLAUDE-至1124.md:60",
       "status": "active",
       "supersedes": []
     },
     {
       "id": "花费如实记账",
       "summary": "花费以控制台为准，如实记账；出错先认错、说清原因与改正。",
-      "source": "CLAUDE.md:61",
+      "source": "archive/docs-governance/CLAUDE-至1124.md:61",
       "status": "active",
       "supersedes": []
     },
     {
-      "id": "复核分档",
-      "summary": "单卡单卷由另一个 Sonnet 中档复核；跨多卷、内核与加载器、改裁定由 Opus 中档复核，第二轮改 Sonnet；Sonnet 两次不过或拿不准升 Opus。",
-      "source": "CLAUDE.md:29",
-      "status": "active",
-      "supersedes": ["只核分档-1807"]
-    },
-    {
       "id": "合并前亲读diff",
       "summary": "合并前主会话亲读 diff；合入或基线变动后跑全量测试并贴命令与末行。",
-      "source": "CLAUDE.md:32",
+      "source": "archive/docs-governance/CLAUDE-至1124.md:32",
       "status": "active",
       "supersedes": []
     },
     {
       "id": "每块先做门禁",
       "summary": "每块开写代码前，先把本块设计规矩做成门禁自动检查并合入，在 PLAN 列「规矩→检查」对照表报李白核过才开写。",
-      "source": "CLAUDE.md:36",
+      "source": "archive/docs-governance/CLAUDE-至1124.md:36",
       "status": "active",
       "supersedes": []
     },
     {
       "id": "普通测试优先",
       "summary": "能用普通测试守的写进卡自己的测试并测试先行；只有跨文件静态才做门禁条目；不为测试造东西。",
-      "source": "CLAUDE.md:37",
+      "source": "archive/docs-governance/CLAUDE-至1124.md:37",
       "status": "active",
       "supersedes": []
     },
     {
       "id": "排期注明卷节行",
       "summary": "排期注明卷、节、行；共用文件同一时段一路独占，冲突即串行。",
-      "source": "CLAUDE.md:38",
+      "source": "archive/docs-governance/CLAUDE-至1124.md:38",
       "status": "active",
       "supersedes": []
     },
     {
       "id": "环境-F盘不用Fable",
       "summary": "仓库只在 F 盘；不碰 C 盘与全局设置、PATH、钩子；不用 Fable。",
-      "source": "CLAUDE.md:45",
+      "source": "archive/docs-governance/CLAUDE-至1124.md:45",
       "status": "active",
       "supersedes": []
     },
     {
       "id": "提交钩子红线",
       "summary": "提交钩子已挂，不许 --no-verify；不许 force-push、不改写历史。",
-      "source": "CLAUDE.md:46",
+      "source": "archive/docs-governance/CLAUDE-至1124.md:46",
       "status": "active",
       "supersedes": []
     },
     {
       "id": "长测上腾讯云",
       "summary": "推进世界的测试、块验收与守恒长测上腾讯云测试台，攒到块验收一次跑；不推进世界、几秒内的纯函数与校验器测试可本机跑。",
-      "source": "CLAUDE.md:48",
+      "source": "archive/docs-governance/CLAUDE-至1124.md:48",
       "status": "active",
       "supersedes": ["长测交李白Linux机开issue"]
     },
