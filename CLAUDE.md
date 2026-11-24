@@ -13,7 +13,7 @@
 - 三层：Opus 5.5 中档 / Sonnet 5.5 中档 / DeepSeek（deepseek-flash）。
 - 默认 Sonnet 统筹、DeepSeek 写代码。内核、加载器、跨卷、改裁定、同一处错两次的交 Opus。
 - 可让一个 Sonnet 或 Opus 包一整块并调 DeepSeek 写码；封卡前复核由另一个 Claude 会话按分档做。
-- Claude 只用会员额度，不用 API（不再用 claude -p 带 API 密钥）；DeepSeek 照常用（派卡统一走仓库内 tools/dispatch/run-card-ds.sh，只在子进程环境设 DeepSeek 地址与密钥，不打印不提交密钥）。
+- 会员额度只给主会话调度；写卡、审卡、测试分析一律走 claude -p（Claude API）和 DeepSeek API，单项超5元先停报（亮圳 11-24【裁定1124b】，取代此前"Claude 只用会员额度、不用 API"及下文派会员子代理的说法）。DeepSeek 派卡统一走 tools/dispatch/run-card-ds.sh（只在子进程环境设密钥，不打印不提交）；ANTHROPIC_API_KEY 由亮圳本人设置，主会话不碰 key；未放好前写与审都走 DeepSeek。
 - **亮圳 11-21 02:58（现行，取代下条的派法）**：写代码默认由主会话派 **Sonnet 子代理**包卡；Sonnet 自己把简单部分经 run-card-ds.sh 委派给 DeepSeek 写，写回来由该 Sonnet 审核整合后交卷。主会话不直接派 DeepSeek，也不把 DeepSeek 产出直接交 Opus 审。Opus 只用于难的、跨卷的写或核。卡文里写明此分工。主会话本身用 Opus、思考力度 high（亮圳 11-18 定；李白 11-21 所说"主会话默认 Sonnet"已由亮圳 11-21 03:02 作废）。
 - 亮圳 11-20 22:21（额度部分仍有效；派法已被上条取代）：写的活优先交 DeepSeek（一律 deepseek-flash，即 V4.1 Flash；亮圳 11-22 20:07 定不再用 deepseek-v4-pro。李白 20:1x 核官方价目页与 /models：v4-pro 仍是单独的 V4-Pro、没转给 Flash，价钱是 Flash 的 3–4 倍，亮圳后台看到花钱大头一直是 V4 Pro；任何打到 v4-pro 的来源一律改成 deepseek-flash；卡回报写者型号如实写 deepseek-flash（V4.1 Flash）），Sonnet 审；跨卷难点才用 Opus，且尽量只核不写。Claude 每日预算用完不许停工，写全交 DeepSeek；只有 Claude 周额度真用尽才停，停前先报亮圳。做完一张直接按排期开下一张，不等回复。
 - （已过期：11-19 10:00 前写与改一律 DeepSeek 的临时口径，10:00 起按上四条三层分工，李白 11-19 03:3x 第③条。）DeepSeek 不可用（无余额）时：写由 Claude Sonnet 中档（会员额度、会话内子代理）承担，只核由另一个 Sonnet，跨卷/内核卡终核最多两轮；DS 恢复后写码回 DS；每卡记模型与轮次。
