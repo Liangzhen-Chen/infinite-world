@@ -21,3 +21,7 @@ tests/fixtures/private/
 **/.env.*
 *.log
 .tmp/
+# notify 的本机配置与队列（只入库无密钥模板与脚本）
+tools/notify/config.local.json
+tools/notify/outbox/
+tools/notify/sent/

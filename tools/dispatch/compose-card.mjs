@@ -1,6 +1,6 @@
 // 派活卡拼接（李白 11-18 19:08）：规矩全文＋===== 以下为本卡卡文 =====＋卡文，一处成型，派卡脚本只管调用。
 // 规矩取自 docs/派活卡头规矩.md（命令行从 origin/master 读）；卡文若自带卡头，必须与现行全文逐字相同，否则拒派。
-// 不再附「卡尾」：回写 docs/卡回报/ 与自查表「每项填是」已被 CLAUDE.md 第 1 节废止（Step 1 防回潮工具）。
+// 不再附「卡尾」：旧回报目录与自查表「每项填是」已被 CLAUDE.md 第 1 节废止（Step 1 防回潮工具）。
 
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
