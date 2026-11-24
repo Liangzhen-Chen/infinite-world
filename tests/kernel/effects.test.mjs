@@ -246,8 +246,8 @@ test('生产表：world/ontology/dimensions/_effects.json 现无卷文已定的�
   assert.deepEqual(doc, {});
 });
 
-test('effects.mjs 不写 state、不 import 写入口：只 import errors、rx、markers', () => {
+test('effects.mjs 不写 state、不 import 写入口：只 import errors、rx、markers、clone（clone 是 kernelApi 唯一深拷贝，纯函数，卷二:1080）', () => {
   const text = readFileSync(join(ROOT, 'server-plugin/kernel/effects.mjs'), 'utf8');
   const imports = [...text.matchAll(/^import .* from '(.+)';$/gm)].map((m) => m[1]).sort();
-  assert.deepEqual(imports, ['./errors.mjs', './handles/markers.mjs', './rx.mjs']);
+  assert.deepEqual(imports, ['./clone.mjs', './errors.mjs', './handles/markers.mjs', './rx.mjs']);
 });

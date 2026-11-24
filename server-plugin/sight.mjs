@@ -24,6 +24,7 @@ import { materialView } from './kernel/item.mjs';
 import { fixedUnits } from './kernel/det-math.mjs';
 import { E } from './kernel/handles/generated.mjs';
 import { regionOf, gridView, regionOcclusionM, sightCache } from './kernel/place.mjs';
+import { isPosValue } from './kernel/named-structs.mjs';
 import { inBubble } from './sim-tiers.mjs';
 
 // 本文件定名（单一定义）。
@@ -40,7 +41,6 @@ const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const isInt = (v) => Number.isSafeInteger(v);
-const isPos = (p) => isObj(p) && isInt(p.w) && isInt(p.x) && isInt(p.y) && isInt(p.z) && typeof p.coarse === 'boolean';
 const abs = (n) => (n < 0 ? -n : n);
 
 function deny(code, detail) {
@@ -229,7 +229,7 @@ function farSight(engine, state, lo, hi) {
  * @returns {{clear: boolean | null, layer: string, blockedAt: {w: number, x: number, y: number, z: number, coarse: boolean} | null}}
  */
 export function losView(engine, state, fromPos, toPos) {
-  if (!isPos(fromPos) || !isPos(toPos)) throw deny(E.E_DIM_STRUCT_FIELD, 'losView: both positions are struct:pos {w, x, y, z, coarse}');
+  if (!isPosValue(fromPos) || !isPosValue(toPos)) throw deny(E.E_DIM_STRUCT_FIELD, 'losView: both positions are struct:pos {w, x, y, z, coarse}');
   const here = (p) => inBubble(engine, state, p.w, regionOf(engine, p));
   const layer = here(fromPos) && here(toPos) ? LAYER.near : LAYER.far;
   if (fromPos.w !== toPos.w) return result(null, layer, null);

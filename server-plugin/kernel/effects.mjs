@@ -9,10 +9,10 @@
 
 import { KernelError } from './errors.mjs';
 import { evaluateRX } from './rx.mjs';
+import { clone } from './clone.mjs';
 import { EFFECT_MAGNITUDE, EFFECT_RX_SUFFIX, EFFECT_ID_PARAMS, EFFECT_ID_SOURCE_TARGET, EFFECT_ID_SOURCE_CTX } from './handles/markers.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
-const copy = (v) => JSON.parse(JSON.stringify(v));
 
 /**
  * @param {{effects?: {rows: Map<string, any>, rx: Map<string, any>}}} engine 统一加载器的结果
@@ -56,7 +56,7 @@ export function effects(engine, _state, familyId, ctx = {}) {
   return row.outputs.map((out, i) => {
     const t = trees.outputs[i];
     const o = {};
-    for (const [k, v] of Object.entries(out)) if (!k.endsWith(EFFECT_RX_SUFFIX) && k !== EFFECT_ID_PARAMS) o[k] = copy(v);
+    for (const [k, v] of Object.entries(out)) if (!k.endsWith(EFFECT_RX_SUFFIX) && k !== EFFECT_ID_PARAMS) o[k] = clone(v);
     for (const [name, tree] of Object.entries(t.values)) o[name] = read(tree, magnitude);
     if (t.params || t.ids) {
       o.params = Object.fromEntries(Object.entries(t.params || {}).map(([k, tree]) => [k, read(tree, magnitude)]));

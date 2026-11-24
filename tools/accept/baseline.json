@@ -31,12 +31,10 @@
    "b0": 1,
    "b0Source": "counted",
    "compCode": "c_pp_deep_clone_ast",
-   "current": 1,
+   "current": 0,
    "lastMergeRef": "HEAD",
    "locked": false,
-   "rowKeys": [
-    "c_pp_deep_clone_ast|server-plugin/kernel/effects.mjs|copy|clone:nested|0"
-   ]
+   "rowKeys": []
   },
   {
    "b0": 0,
@@ -66,7 +64,7 @@
    "b0": 49,
    "b0Source": "counted",
    "compCode": "c_pp_dup_export_ast",
-   "current": 49,
+   "current": 46,
    "lastMergeRef": "HEAD",
    "locked": false,
    "rowKeys": [
@@ -114,10 +112,7 @@
     "c_pp_dup_export_ast|server-plugin/kernel/validate/types.mjs|markersOf|export|0",
     "c_pp_dup_export_ast|server-plugin/output-gate/enums.mjs|KIND|export|0",
     "c_pp_dup_export_ast|server-plugin/output-gate/enums.mjs|fail|export|0",
-    "c_pp_dup_export_ast|server-plugin/perceive.mjs|isPos|owned|0",
     "c_pp_dup_export_ast|server-plugin/person.mjs|distributionMean|owned|0",
-    "c_pp_dup_export_ast|server-plugin/position.mjs|isPos|owned|0",
-    "c_pp_dup_export_ast|server-plugin/sight.mjs|isPos|owned|0",
     "c_pp_dup_export_ast|server-plugin/textcore/fail.mjs|fail|export|0"
    ]
   },
@@ -631,14 +626,10 @@
    "b0": 3,
    "b0Source": "counted",
    "compCode": "c_pp_pos_shape_ast",
-   "current": 3,
+   "current": 0,
    "lastMergeRef": "HEAD",
    "locked": false,
-   "rowKeys": [
-    "c_pp_pos_shape_ast|server-plugin/perceive.mjs|isPos|coarse:typeof|0",
-    "c_pp_pos_shape_ast|server-plugin/position.mjs|isPos|coarse:typeof|0",
-    "c_pp_pos_shape_ast|server-plugin/sight.mjs|isPos|coarse:typeof|0"
-   ]
+   "rowKeys": []
   },
   {
    "b0": 4,
@@ -699,7 +690,7 @@
    "b0": 72,
    "b0Source": "counted",
    "compCode": "c_pp_tpl_key_ast",
-   "current": 72,
+   "current": 71,
    "lastMergeRef": "HEAD",
    "locked": false,
    "rowKeys": [
@@ -763,7 +754,6 @@
     "c_pp_tpl_key_ast|server-plugin/output-gate/envelope-exit.mjs|createEnvelopeExit.respond:${}:${}|tplkey|0",
     "c_pp_tpl_key_ast|server-plugin/position.mjs|rebaseBubble:${}:${}:${}|tplkey|0",
     "c_pp_tpl_key_ast|server-plugin/price.mjs|priceFor:${}:${}|tplkey|0",
-    "c_pp_tpl_key_ast|server-plugin/primitives-runtime.mjs|canonical:${}:${}|tplkey|0",
     "c_pp_tpl_key_ast|server-plugin/sight.mjs|judge:${},${},${}|tplkey|0",
     "c_pp_tpl_key_ast|server-plugin/sight.mjs|judge:${},${},${}|tplkey|1",
     "c_pp_tpl_key_ast|server-plugin/sight.mjs|judge:${},${},${}|tplkey|2",

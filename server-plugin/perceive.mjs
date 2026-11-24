@@ -20,6 +20,7 @@ import { dim } from './kernel/dimensions.mjs';
 import { kindOf, kindOfEntity } from './kernel/vocab.mjs';
 import { fixedUnits, fixedMultiply, fixedSub, fixedToNumber } from './kernel/det-math.mjs';
 import { straightM } from './kernel/place.mjs';
+import { isPosValue } from './kernel/named-structs.mjs';
 import { E } from './kernel/handles/generated.mjs';
 import { awake } from './action-capacity.mjs';
 import { bodyView } from './body.mjs';
@@ -39,8 +40,6 @@ const S = Object.freeze({
 });
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
-const isInt = (v) => Number.isSafeInteger(v);
-const isPos = (p) => isObj(p) && isInt(p.w) && isInt(p.x) && isInt(p.y) && isInt(p.z) && typeof p.coarse === 'boolean';
 const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
@@ -101,7 +100,7 @@ function senseEntry(engine, code) {
 // 个体位置：读 G12 的 whereOf（个体 pos）；读不到 null。
 function posOfPerson(engine, state, id) {
   const w = whereOf(engine, state, id);
-  return w.pos !== null && isPos(w.pos) ? w.pos : null;
+  return w.pos !== null && isPosValue(w.pos) ? w.pos : null;
 }
 
 // 观察者的物种行 id；读不到 null。
@@ -155,7 +154,7 @@ const unknownResult = (channel, shortfall = null) => Object.freeze({ perceived: 
  * @returns {{perceived: boolean, channel: string, margin: number | null, rangeShortfallM: number | null}}
  */
 export function perceive(engine, state, observerId, input) {
-  if (!isObj(input) || !isPos(input.sourcePos)) throw deny(E.E_DIM_STRUCT_FIELD, 'perceive: input is {channel, sourcePos: struct:pos, sourceLevel}');
+  if (!isObj(input) || !isPosValue(input.sourcePos)) throw deny(E.E_DIM_STRUCT_FIELD, 'perceive: input is {channel, sourcePos: struct:pos, sourceLevel}');
   const level = input.sourceLevel === undefined ? null : input.sourceLevel;
   if (!(level === null || isNum(level))) throw deny(E.E_DIM_STRUCT_FIELD, 'perceive: sourceLevel is a number or null');
   const { channel } = input;
@@ -221,7 +220,7 @@ export function sourceLevelsOf(engine, state, actorId) {
 
 // 事件的发生位置：给了 pos 用它；为空取行为人的 pos；仍没有为 null（见卷五 :594）。
 function eventPos(engine, state, pos, actor) {
-  if (pos !== null && pos !== undefined) return isPos(pos) ? pos : null;
+  if (pos !== null && pos !== undefined) return isPosValue(pos) ? pos : null;
   return typeof actor === 'string' ? posOfPerson(engine, state, actor) : null;
 }
 

@@ -35,6 +35,7 @@ import { report } from './kernel/report.mjs';
 import { diceSeedKey } from './kernel/sample.mjs';
 import { E, P } from './kernel/handles/generated.mjs';
 import { zoneAt, regionOf, gridSpaceBox, landCell, extrudeCell, settleCell, bearingView, isOffstage } from './kernel/place.mjs';
+import { isPosValue } from './kernel/named-structs.mjs';
 import { bubbleView, inBubble, controlledByPlayer } from './sim-tiers.mjs';
 import { bubbleTransition, subjectsIn } from './bubble.mjs';
 
@@ -56,10 +57,6 @@ function deny(code, detail) {
   e.fields = {};
   return e;
 }
-
-// struct:pos 的形状（卷二 §1.5：w、x、y、z 整数，coarse 布尔；不多不少）。
-const POS_FIELDS = Object.freeze(['w', 'x', 'y', 'z', 'coarse']);
-const isPos = (p) => isObj(p) && Object.keys(p).length === POS_FIELDS.length && POS_FIELDS.every((k) => Object.hasOwn(p, k)) && isInt(p.w) && isInt(p.x) && isInt(p.y) && isInt(p.z) && typeof p.coarse === 'boolean';
 
 // 种子键（卷二十七 R27-8.5 五段）：流代号、抽取点代号是字面量，登记在 seed-keys.json 一行（seed_sites 检测器按它们双向比对）。
 function landSeed(stream, site, engine, state, subjectId) {
@@ -100,7 +97,7 @@ function checkTarget(state, target) {
   const kind = kinds[0];
   if (Object.hasOwn(target, TARGET.seedKey) && kind !== TARGET.place) throw deny(E.E_DET_DOMAIN, 'placeSubject: seedKey goes with a place target only');
   if (kind === TARGET.pos) {
-    if (!isPos(target.pos)) throw deny(E.E_DIM_STRUCT_FIELD, 'placeSubject: target.pos is not a struct:pos {w, x, y, z, coarse}');
+    if (!isPosValue(target.pos)) throw deny(E.E_DIM_STRUCT_FIELD, 'placeSubject: target.pos is not a struct:pos {w, x, y, z, coarse}');
     return { kind, pos: target.pos };
   }
   if (kind === TARGET.settle) {

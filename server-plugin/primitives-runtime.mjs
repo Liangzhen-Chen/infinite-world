@@ -24,6 +24,7 @@
 
 import { transfer } from './kernel/ledger.mjs';
 import { openHolding, closeHolding, transferHolding, rescaleHolding } from './kernel/holdings.mjs';
+import { canonical } from './kernel/storage.mjs';
 import { terminate } from './kernel/terminate.mjs';
 import { runDelegated } from './kernel/transaction.mjs';
 import { emit as writeEvent } from './kernel/events.mjs';
@@ -360,12 +361,6 @@ export function execute(engine, state, primitives, cause, event) {
 // 旧格式字段（改前 world/ontology/primitives.json）：文件顶层与每条原语行上都不许再出现。
 const OLD_TOP_FIELDS = Object.freeze(['$schema', 'kind', 'namespace', 'note', 'entries']);
 const OLD_ROW_FIELDS = Object.freeze(['event', 'params', 'writable']);
-
-function canonical(value) {
-  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
-  if (isPlainObject(value)) return `{${Object.keys(value).sort().map((k) => `${JSON.stringify(k)}:${canonical(value[k])}`).join(',')}}`;
-  return JSON.stringify(value);
-}
 
 // 契约各位置（required、oneOf 各备选、unless 的 required）出现的类型记号：必须是执行器认识的类型表（TYPE_CHECK 的键）。
 // §1.5 的 string 不在表内，因此无需另写一个 string 字面量比较（R9-2.5 :661 只收 string 之外的类型）。
