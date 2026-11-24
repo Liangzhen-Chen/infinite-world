@@ -1,0 +1,162 @@
+// 统一派卡入口（docs/gemini/rewrite-guide-1124.md:209 Step 1）：DeepSeek 与 claude -p 一处处理，参数数组 spawn，不拼 shell 字符串。
+// 用法：node tools/dispatch/dispatch.mjs --model <deepseek-flash|claude-haiku-5-5|claude-sonnet-5-5|claude-opus-5-5> --wd <工作区> --card <卡文> [--effort medium] [--budget 0.65] [--purpose code]
+// deepseek-flash 行为等同旧 tools/dispatch/run-card-ds.sh：清桌面端注入的环境变量、DeepSeek 地址、采样温度按用途（sampling.json）、模型名全为 deepseek-flash。
+// claude-* 行为等同旧 tools/dispatch/run-card.sh：密钥读 ANTHROPIC_API_KEY，没有则读 CLAUDE_API_KEY，只在子进程环境传 ANTHROPIC_API_KEY；
+// 预算经 tools/dispatch/budget-check.mjs（只许 0 < x <= 0.65）。
+// 本机路径不写死在本文件：从同目录 paths.json 读，缺键报错退出。
+import { readFileSync } from 'node:fs';
+import { spawn, execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { composeCard } from './compose-card.mjs';
+import { budgetValue } from './budget-check.mjs';
+import { samplingBody } from './sampling-body.mjs';
+
+export const MODELS = ['deepseek-flash', 'claude-haiku-5-5', 'claude-sonnet-5-5', 'claude-opus-5-5'];
+const DEEPSEEK_MODEL = 'deepseek-flash';
+const HERE = dirname(fileURLToPath(import.meta.url));
+
+const CLEAR_DEEPSEEK = [
+  'ANTHROPIC_API_KEY', 'CLAUDE_API_KEY', 'ANTHROPIC_BASE_URL', 'CLAUDECODE', 'CLAUDE_CODE_ENTRYPOINT',
+  'CLAUDE_CODE_CHILD_SESSION', 'CLAUDE_CODE_SESSION_ID', 'CLAUDE_CODE_HOST_SESSION_ID', 'CLAUDE_CODE_MESSAGING_SOCKET',
+  'CLAUDE_CODE_MESSAGING_TOKEN', 'CLAUDE_CODE_OAUTH_SCOPES', 'CLAUDE_CODE_ACCOUNT_UUID', 'CLAUDE_CODE_ORGANIZATION_UUID',
+  'CLAUDE_CODE_SDK_HAS_HOST_AUTH_REFRESH', 'CLAUDE_AGENT_SDK_VERSION', 'CLAUDE_AGENT_SDK_MCP_NO_PREFIX',
+  'CLAUDE_CODE_SESSION_ATTENDED', 'CLAUDE_PID',
+];
+const CLEAR_CLAUDE = [
+  'ANTHROPIC_BASE_URL', 'CLAUDECODE', 'CLAUDE_CODE_ENTRYPOINT', 'CLAUDE_CODE_CHILD_SESSION',
+  'CLAUDE_CODE_SESSION_ID', 'CLAUDE_CODE_HOST_SESSION_ID', 'CLAUDE_CODE_MESSAGING_SOCKET', 'CLAUDE_CODE_MESSAGING_TOKEN',
+  'CLAUDE_CODE_OAUTH_SCOPES', 'CLAUDE_CODE_ACCOUNT_UUID', 'CLAUDE_CODE_ORGANIZATION_UUID',
+  'CLAUDE_CODE_SDK_HAS_HOST_AUTH_REFRESH', 'CLAUDE_AGENT_SDK_VERSION', 'CLAUDE_AGENT_SDK_MCP_NO_PREFIX',
+  'CLAUDE_CODE_SESSION_ATTENDED', 'CLAUDE_PID',
+];
+const ALLOWED_TOOLS = [
+  'Read', 'Edit', 'Write', 'Glob', 'Grep', 'Bash(git:*)', 'Bash(node:*)', 'Bash(ls:*)', 'Bash(wc:*)',
+  'Bash(grep:*)', 'Bash(sed -n:*)', 'Bash(cat:*)', 'Bash(head:*)', 'Bash(tail:*)', 'Bash(cp:*)', 'Bash(cmp:*)',
+];
+
+// 命令行解析：只认卡文写明的开关；缺值、未知开关、模型不在白名单都报错。
+export function parseArgs(argv) {
+  const out = { effort: 'medium', budget: '0.65', purpose: 'code' };
+  const takes = new Set(['--model', '--wd', '--card', '--effort', '--budget', '--purpose']);
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (!takes.has(a)) throw new Error(`未知参数: ${a}`);
+    const v = argv[++i];
+    if (v === undefined || v === '') throw new Error(`${a} 缺值`);
+    out[a.slice(2)] = v;
+  }
+  if (!out.model) throw new Error('缺 --model');
+  if (!MODELS.includes(out.model)) throw new Error(`模型不在白名单: ${out.model}（只许 ${MODELS.join('|')}）`);
+  if (!out.wd) throw new Error('缺 --wd');
+  if (!out.card) throw new Error('缺 --card');
+  return out;
+}
+
+// paths.json 的必填键；缺键直接报出来（不回落默认路径）。
+export function loadPaths(obj) {
+  const keys = ['claudeExe', 'claudeConfigDir', 'deepseekConfigDir'];
+  for (const k of keys) if (!obj || typeof obj[k] !== 'string' || !obj[k]) throw new Error(`paths.json 缺键「${k}」`);
+  return Object.fromEntries(keys.map((k) => [k, obj[k]]));
+}
+
+// 把要传给子进程的环境拼出来：从 env 去掉清空表里的键，再覆盖本函数给的键。纯函数，测试传入假 env。
+function childEnv(base, clear, add) {
+  const env = {};
+  for (const [k, v] of Object.entries(base || {})) if (!clear.includes(k)) env[k] = v;
+  return Object.assign(env, add);
+}
+
+// 构造子进程命令与参数（不启动进程）。sampling 是 sampling.json 的内容，只给 deepseek 用。
+export function buildInvocation({ model, prompt, effort = 'medium', budget = '0.65', purpose = 'code', sampling, paths, env = {} }) {
+  if (!MODELS.includes(model)) throw new Error(`模型不在白名单: ${model}`);
+  if (!paths) throw new Error('paths.json 未加载');
+  if (!prompt) throw new Error('卡文为空');
+  const base = ['-p', prompt];
+  const tail = ['--permission-mode', 'acceptEdits', '--allowedTools', ...ALLOWED_TOOLS, '--output-format', 'json'];
+  if (model === DEEPSEEK_MODEL) {
+    if (!env.DEEPSEEK_API_KEY) throw new Error('DEEPSEEK_API_KEY 不存在');
+    const extra = samplingBody(sampling, purpose);
+    const add = {
+      ANTHROPIC_BASE_URL: 'https://api.deepseek.com/anthropic',
+      ANTHROPIC_AUTH_TOKEN: env.DEEPSEEK_API_KEY,
+      ANTHROPIC_MODEL: DEEPSEEK_MODEL, ANTHROPIC_DEFAULT_OPUS_MODEL: DEEPSEEK_MODEL,
+      ANTHROPIC_DEFAULT_SONNET_MODEL: DEEPSEEK_MODEL, ANTHROPIC_DEFAULT_HAIKU_MODEL: DEEPSEEK_MODEL,
+      ANTHROPIC_SMALL_FAST_MODEL: DEEPSEEK_MODEL, CLAUDE_CODE_SUBAGENT_MODEL: DEEPSEEK_MODEL,
+      ANTHROPIC_DEFAULT_MODEL: DEEPSEEK_MODEL, ANTHROPIC_DEFAULT_FABLE_MODEL: DEEPSEEK_MODEL,
+      CLAUDE_CODE_AUTO_MODE_MODEL: DEEPSEEK_MODEL,
+      CLAUDE_CONFIG_DIR: paths.deepseekConfigDir, DND_CARD_AGENT: '1',
+    };
+    if (extra) add.CLAUDE_CODE_EXTRA_BODY = extra;
+    return { command: paths.claudeExe, args: [...base, '--model', DEEPSEEK_MODEL, ...tail], env: childEnv(env, [...CLEAR_DEEPSEEK, 'CLAUDE_CODE_EXTRA_BODY'], add) };
+  }
+  const key = env.ANTHROPIC_API_KEY || env.CLAUDE_API_KEY;
+  if (!key) throw new Error('ANTHROPIC_API_KEY（或 CLAUDE_API_KEY）不存在');
+  const b = budgetValue(budget);
+  return {
+    command: paths.claudeExe,
+    args: [...base, '--model', model, '--effort', effort, '--max-budget-usd', b, ...tail],
+    env: childEnv(env, CLEAR_CLAUDE, { ANTHROPIC_API_KEY: key, CLAUDE_CONFIG_DIR: paths.claudeConfigDir, DND_CARD_AGENT: '1' }),
+  };
+}
+
+function gitOut(wd, args) {
+  return execFileSync('git', ['-C', wd, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 1 << 28 });
+}
+
+export function main(argv) {
+  let opts;
+  try {
+    opts = parseArgs(argv);
+  } catch (e) {
+    process.stderr.write(`${e.message}\n`);
+    return 2;
+  }
+  let paths;
+  try {
+    paths = loadPaths(JSON.parse(readFileSync(join(HERE, 'paths.json'), 'utf8')));
+  } catch (e) {
+    process.stderr.write(`${e.message}\n`);
+    return 2;
+  }
+  try {
+    gitOut(opts.wd, ['fetch', '-q', 'origin']);
+  } catch {
+    // 旧脚本同样忽略 fetch 失败（离线仍可派）。
+  }
+  let header;
+  try {
+    header = gitOut(opts.wd, ['show', 'origin/master:docs/派活卡头规矩.md']);
+  } catch {
+    process.stderr.write('派活卡头规矩取不到（origin/master:docs/派活卡头规矩.md）\n');
+    return 2;
+  }
+  let card;
+  try {
+    card = readFileSync(opts.card, 'utf8');
+  } catch {
+    process.stderr.write(`提示文件不存在: ${opts.card}\n`);
+    return 2;
+  }
+  let inv;
+  try {
+    const sampling = JSON.parse(readFileSync(join(HERE, 'sampling.json'), 'utf8'));
+    const prompt = composeCard(header, card);
+    inv = buildInvocation({ ...opts, prompt, sampling, paths, env: process.env });
+  } catch (e) {
+    process.stderr.write(`${e.message}\n`);
+    return 2;
+  }
+  const child = spawn(inv.command, inv.args, { cwd: opts.wd, env: inv.env, stdio: ['ignore', 'inherit', 'inherit'] });
+  child.on('error', (e) => {
+    process.stderr.write(`${e.message}\n`);
+    process.exit(2);
+  });
+  child.on('exit', (code) => process.exit(code === null ? 1 : code));
+  return null;
+}
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  const code = main(process.argv.slice(2));
+  if (code !== null) process.exit(code);
+}
