@@ -11,6 +11,23 @@ const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const list = (v) => String(v).split('、').map((x) => x.trim()).filter(Boolean);
 const kindsOf = (cell) => (NONE.has(cell) || cell === '无' ? [] : cell.split('/').map((x) => x.trim()).filter(Boolean));
 
+// 三方模型族（Step 1 防回潮工具）：模型字段里含哪个家族就归一成哪个；一个都没命中时原样小写去空白。
+// 族表只此一处，判断里不另写关键字（卡文：族表放成一个常量表）。
+export const MODEL_FAMILIES = [
+  ['deepseek', 'deepseek'],
+  ['haiku', 'claude-haiku'],
+  ['sonnet', 'claude-sonnet'],
+  ['opus', 'claude-opus'],
+  ['gemini', 'gemini'],
+];
+export function modelFamilies(text) {
+  const t = String(text || '').toLowerCase();
+  const hit = MODEL_FAMILIES.filter(([word]) => t.includes(word)).map(([, family]) => family);
+  if (hit.length) return [...new Set(hit)];
+  const rest = t.replace(/\s+/g, '');
+  return rest ? [rest] : [];
+}
+
 // 读规矩文件第五节；坏了返回 { error }。
 export function archiveRules(docText) {
   const lines = docText.split(/\r?\n/);
@@ -82,6 +99,7 @@ export function archiveRules(docText) {
     rows,
     party: {
       section: one('三方小节'), roles: list(one('三方角色') || ''), multiRoles: list(one('三方可多条角色') || ''), roleField: one('三方角色字段'), idField: one('三方标识字段'),
+      modelField: one('三方模型字段'),
       placeholder: one('标识占位词'), acceptDir: one('验收目录'), acceptRole: one('验收目录唯一可改角色'),
       mergeRole: one('合并角色'), roleLine: one('提交说明角色行前缀'), idLine: one('提交说明标识行前缀'),
     },
@@ -245,10 +263,11 @@ export function checkParties(rules, readFile, stage) {
   const body = sectionsOf(text).get(section);
   if (!body) return { map: null, reasons: [] };
   const row = rules.rows.find((r) => r.file === file && r.section === section);
-  const names = [...new Set([p.roleField, p.idField, ...(row ? row.fields.map((f) => f.name) : [])])];
+  const names = [...new Set([p.roleField, p.idField, ...(p.modelField ? [p.modelField] : []), ...(row ? row.fields.map((f) => f.name) : [])])];
   const reasons = [];
   const map = {};
   const seen = [];
+  const models = {};
   for (const item of parseItems(body)) {
     const v = fieldValues(item, names);
     const clean = (s) => (s || '').replace(/[\s；;，,。.]+$/, '');
@@ -260,11 +279,23 @@ export function checkParties(rules, readFile, stage) {
     if (stage === '推送' && id.includes(normId(p.placeholder))) { reasons.push(`${file}「${section}」${role}的${p.idField}「${id}」仍是占位（含「${p.placeholder}」）`); continue; }
     map[role] = [...(map[role] || []), id];
     seen.push([role, id]);
+    if (p.modelField) models[role] = [...(models[role] || []), ...modelFamilies(v[p.modelField])];
   }
   for (const r of p.roles) if (!(r in map)) reasons.push(`${file}「${section}」缺${p.roleField}「${r}」的条目`);
   const byId = new Map();
   for (const [role, id] of seen) byId.set(id, [...(byId.get(id) || []), role]);
   for (const [id, roles] of byId) if (roles.length > 1) reasons.push(`${file}「${section}」${roles.join('、')}的${p.idField}相同（${id}），三方须互不相同`);
+  // 三方模型族（可选规矩键；缺键不核，兼容推送时读远端旧规矩）：写码族与出题族不相交，每个审卡族不在两者并集里；审卡多轮之间可同族。
+  if (p.modelField) {
+    const [writer, tester, ...reviewers] = p.roles;
+    const fams = (role) => new Set(models[role] || []);
+    const wf = fams(writer); const tf = fams(tester); const rf = new Set(reviewers.flatMap((r) => [...fams(r)]));
+    for (const role of p.roles) if (!(models[role] || []).length) reasons.push(`${file}「${section}」${role}的${p.modelField}为空，无法核对模型族`);
+    const same = [...wf].filter((x) => tf.has(x));
+    if (same.length) reasons.push(`${file}「${section}」写码与出题的模型族相同（${same.join('、')}），三方族须互不相同`);
+    const clash = [...rf].filter((x) => wf.has(x) || tf.has(x));
+    if (clash.length) reasons.push(`${file}「${section}」审卡与写码或出题的模型族相同（${clash.join('、')}），三方族须互不相同`);
+  }
   return { map, reasons };
 }
 
