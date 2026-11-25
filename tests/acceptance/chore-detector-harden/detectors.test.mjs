@@ -35,14 +35,14 @@ const failPairs = (report) => {
 // 不覆盖已存在的文件（存在即拒绝）。副本随 withIsolatedRepo 销毁，不改调用方工作区。
 const injectAndDiff = (files) =>
   withIsolatedRepo(async (copyRoot) => {
-    const basePairs = failPairs(runGate(copyRoot).json);
+    const basePairs = failPairs(runGate(copyRoot));
     for (const [rel, text] of Object.entries(files)) {
       const abs = join(copyRoot, rel);
       assert.ok(!existsSync(abs), `注入位置已存在，拒绝覆盖：${rel}`);
       mkdirSync(dirname(abs), { recursive: true });
       writeFileSync(abs, text, 'utf8');
     }
-    const after = failPairs(runGate(copyRoot).json);
+    const after = failPairs(runGate(copyRoot));
     return [...after].filter((p) => !basePairs.has(p));
   });
 
