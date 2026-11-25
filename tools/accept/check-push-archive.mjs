@@ -17,7 +17,7 @@ if (loaded.error) { console.error(loaded.error); process.exit(1); }
 const head = git(['rev-parse', 'HEAD']).trim();
 const files = git(['diff', '--name-only', '-z', 'origin/master...HEAD']).split('\0').filter(Boolean);
 const message = `卡分支：${branch}\n角色：合并\n标识：${mergerId || 'main-session-opus55'}\n`;
-const reasons = judgeCommit(loaded.rules, loaded.questions, {
+const reasons = judgeCommit(loaded.rules, {
   files, branch: null, message, isMerge: false, stage: '推送',
   repo: gitRepo(wt, head),
   readFile: (dir, f) => { try { return git(['show', `${head}:${dir}${f}`]); } catch { return null; } },

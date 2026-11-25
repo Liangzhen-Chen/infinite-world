@@ -7,10 +7,9 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { accRun } from './run.mjs';
-import { CARD_RULES_DOC } from './lib/card-selfcheck.mjs';
-import { CARD_ARCHIVE_CODE, loadRules, judgeCommit } from './lib/card-archive.mjs';
+import { CARD_ARCHIVE_CODE, CARD_RULES_DOC, loadRules, judgeCommit } from './lib/card-archive.mjs';
 
-// 卡档案与自我反思检查（卡头第二节第 11 条、第五节；亮圳 11-22「留档反思1122」）：并入原卡头自查（E-ACC-CARD-SELFCHECK 九项表现在是 反思.md 的开头）。
+// 卡档案与自我反思检查（卡头第二节第 11 条、第五节；亮圳 11-22「留档反思1122」）。
 // 暂存区改了触发目录的文件，就要求卡档案目录（暂存版本）合格。pre-commit 阶段拿不到提交说明，所以这项检查挂在 commit-msg 钩子（git 把说明文件路径传进来）：
 // 有说明时按说明里的「卡分支：」行找档案目录、「角色：合并」走合并口径、核角色标识与绕过标记；message 为 null（没有说明可读）时才退回当前分支名。
 export function gitOut(root, args) {
@@ -44,7 +43,7 @@ export function cardArchiveCheck(root, message = null) {
   try { staged = gitOut(root, ['diff', '--cached', '--name-only', '-z']).split('\0').filter(Boolean); } catch { return fail(['取暂存清单失败（git diff --cached）']); }
   let branch;
   try { branch = gitOut(root, ['rev-parse', '--abbrev-ref', 'HEAD']).trim(); } catch { return fail(['取分支名失败（git rev-parse --abbrev-ref HEAD）']); }
-  const reasons = judgeCommit(loaded.rules, loaded.questions, {
+  const reasons = judgeCommit(loaded.rules, {
     files: staged,
     branch,
     message,

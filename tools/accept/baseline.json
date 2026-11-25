@@ -4,7 +4,7 @@
    "b0": 180,
    "b0Source": "counted",
    "compCode": "c_archive_ref",
-   "current": 157,
+   "current": 153,
    "lastMergeRef": "HEAD",
    "locked": true,
    "rowKeys": [
@@ -144,12 +144,10 @@
     "c_archive_ref|docs/问题.md||text|1",
     "c_archive_ref|docs/问题.md||text|2",
     "c_archive_ref|server-plugin/kernel/error-codes.mjs||text|0",
-    "c_archive_ref|tests/accept/card-selfcheck.test.mjs||text|0",
     "c_archive_ref|tests/accept/dispatch-compose.test.mjs||text|0",
     "c_archive_ref|tests/accept/dispatch-compose.test.mjs||text|1",
     "c_archive_ref|tests/accept/dispatch-compose.test.mjs||text|2",
     "c_archive_ref|tests/accept/dispatch-compose.test.mjs||text|3",
-    "c_archive_ref|tools/accept/commit-hook.mjs||text|0",
     "c_archive_ref|tools/accept/criteria.json||text|0",
     "c_archive_ref|tools/accept/criteria.json||text|1",
     "c_archive_ref|tools/accept/criteria.json||text|10",
@@ -162,9 +160,7 @@
     "c_archive_ref|tools/accept/criteria.json||text|8",
     "c_archive_ref|tools/accept/criteria.json||text|9",
     "c_archive_ref|tools/accept/detectors/state_pattern.mjs||text|0",
-    "c_archive_ref|tools/accept/items.json||text|0",
-    "c_archive_ref|tools/accept/lib/card-selfcheck.mjs||text|0",
-    "c_archive_ref|tools/accept/lib/card-selfcheck.mjs||text|1"
+    "c_archive_ref|tools/accept/items.json||text|0"
    ]
   },
   {
