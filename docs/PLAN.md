@@ -5,6 +5,15 @@
 ## 阶段 0：整理工作区与顾问复审（硬门闩）
 
 - 阶段 0A 工作区整理（Step 0–Step 5）：冻结旧队列、打 `pre-rewrite-1124` 标签、落地 `.github/workflows/ci.yml` + `tsc` + 新门禁与 `dispatch.mjs`、建立六份单一真相源、归档旧文件、获亮圳点头后执行 816 MB 删除清单、清出新 `server-plugin/` 骨架空仓与红灯 E2E 烟测桩。验收：第三章 Step 0–Step 5 命令全通过，整理 PR 在 GitHub CI 绿灯。
+- 阶段 0A 落地清单（照 Gemini 开工文件 docs/gemini/kickoff-1125.md 第八章 L-01–L-20，origin/antigravity d16c0ecde；做完一步标 [x] 并写一句结果）：
+  - [x] L-01 清理分支合入 master：395986f01（快进，补 1 提交把清理记录挪入 archive/docs-status/），全量 2239/2239。
+  - [~] L-02 移除旧工作树 new-session-8e4637：分支已全在 master；`orca worktree rm` 报目录被别的程序占用，git 已标 prunable，待占用解除后再删（分支保留）。
+  - [ ] L-03 Orca setup 钩子改 npm ci（等亮圳拍板 P2；未拍板前派卡建树一律 `--setup skip` 后手跑 `npm ci`）。
+  - [ ] P1 工具与 CI：L-04 typescript+typecheck 脚本；L-05 .github/workflows/ci.yml；L-06 dispatch.mjs（收编 chore/step1-tooling）；L-07 派活卡头规矩 ≤50 行、删 card-selfcheck；L-08 archive_ref 检测器；L-09 检测器六项加固；L-10 tools/cloud、tools/notify 收编去写死。
+  - [ ] P2 抗失忆：L-11 gen-status-snapshot + 状态快照；L-12 world/ontology/contracts.json；L-13 现行有效裁定.json 写入拍板结果（等拍板）；L-14 卡档案 state.json 模板。
+  - [ ] P3 新骨架空仓：L-15 server-plugin 旧码归档、kernel ≤15；L-16 旧测试归档；L-17 baseline/scanclasses/entry-registry 重置；L-18 E2E 红灯桩。
+  - [ ] P4 治理：L-19 master 分支保护（等拍板 P1）；L-20 李白 Routine A/B 上线演练（李白侧）。
+  - [ ] 全部自验后写 F:/dnd-tmp/handoff-0b-review.md，交 antigravity 复核。
 - 阶段 0B Gemini 复审（硬门闩）：独立顾问逐条核验复审勾选清单，给出明确「复审通过」→ 整理 PR 合入 `master` → 开 `master` 分支保护 → 门闩解锁，允许开工 S1-1。
 
 ## 阶段 1：最小闭环竖切片（4 张强衔接卡，串行优先）
