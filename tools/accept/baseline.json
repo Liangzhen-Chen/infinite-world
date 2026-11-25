@@ -171,14 +171,10 @@
    "b0": 3,
    "b0Source": "counted",
    "compCode": "c_big_md",
-   "current": 3,
+   "current": 0,
    "lastMergeRef": "HEAD",
    "locked": true,
-   "rowKeys": [
-    "c_big_md|docs/统一底层设计/卷三乙-物态类别与物品.md||file|0",
-    "c_big_md|docs/统一底层设计/卷二-维度表规范与统一入口.md||file|0",
-    "c_big_md|docs/统一底层设计/卷十九-建筑与设施.md||file|0"
-   ]
+   "rowKeys": []
   },
   {
    "b0": 0,
