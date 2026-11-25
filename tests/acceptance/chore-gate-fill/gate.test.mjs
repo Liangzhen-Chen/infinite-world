@@ -36,18 +36,19 @@ const REVIEW_SONNET = { model: 'Claude Sonnet 5.5（claude -p，API，claude-son
 // 注册表：entries 每条 { name, file, needs }；needs 为条目名数组（假设：卡文「沿条目的 needs 字段做传递闭包」，键即 name）。
 const reg = (entries) => ({ version: 1, entries });
 
+// 行键口径：卷二:764「行键是 `file#name`」；file 为 null 或空串时行键为 `#<name>`。
 test('checkNeeds：闭包内有 file 为 null 的条目，返回含该键', () => {
   const checkNeeds = need('checkNeeds');
   const r = reg([{ name: 'A', file: 'kernel/a.mjs', needs: [] }, { name: 'X', file: null, needs: [] }]);
-  const bad = checkNeeds(r, ['X']);
+  const bad = checkNeeds(r, ['#X']);
   assert.ok(Array.isArray(bad));
-  assert.ok(bad.includes('X'), `应报 X，实际 ${JSON.stringify(bad)}`);
+  assert.ok(bad.includes('#X'), `应报 #X，实际 ${JSON.stringify(bad)}`);
 });
 
 test('checkNeeds：file 为空字符串同样算悬空', () => {
   const checkNeeds = need('checkNeeds');
   const r = reg([{ name: 'E', file: '', needs: [] }]);
-  assert.ok(checkNeeds(r, ['E']).includes('E'));
+  assert.ok(checkNeeds(r, ['#E']).includes('#E'));
 });
 
 test('checkNeeds：键不存在，返回含该键', () => {
@@ -66,14 +67,14 @@ test('checkNeeds：全部接通时返回空数组', () => {
   assert.deepEqual(checkNeeds(r, ['A']), []);
 });
 
-test('checkNeeds：传递闭包——A needs B，B 的 file 为 null，报 B', () => {
+test('checkNeeds：传递闭包——A needs B，B 的 file 为 null，报 #B', () => {
   const checkNeeds = need('checkNeeds');
   const r = reg([
-    { name: 'A', file: 'kernel/a.mjs', needs: ['B'] },
+    { name: 'A', file: 'kernel/a.mjs', needs: ['#B'] },
     { name: 'B', file: null, needs: [] },
   ]);
-  const bad = checkNeeds(r, ['A']);
-  assert.ok(bad.includes('B'), `传递闭包应报 B，实际 ${JSON.stringify(bad)}`);
+  const bad = checkNeeds(r, ['kernel/a.mjs#A']);
+  assert.ok(bad.includes('#B'), `传递闭包应报 #B，实际 ${JSON.stringify(bad)}`);
 });
 
 test('checkNeeds：传递闭包——A→B→C，C 不存在，报 C', () => {
