@@ -852,7 +852,7 @@
     },
     {
       "id": "K1125-P4",
-      "summary": "主会话所在工作区的项目级 .claude/settings.local.json（不入库）禁用内置子代理，写码一律经派卡脚本走 API。",
+      "summary": "主会话所在工作区的项目级 .claude/settings.local.json（不入库）禁用内置子代理，写码一律经派卡脚本走 API（至 2026-11-26 会员额度重置前；重置后写码/出题/审卡改用会员额度，亮圳 11-25 13:31『后面恢复了之后不要用api用会员额度』，李白转 msg_52bbaeef99e7）。",
       "source": "docs/gemini/kickoff-1125.md:451",
       "status": "active",
       "decidedBy": "李白",
