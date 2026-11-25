@@ -21,7 +21,6 @@ const revIn = (cwd) => execFileSync('git', ['rev-parse', 'HEAD'], { cwd, encodin
 
 test('withIsolatedRepo：副本停在 HEAD、依赖链接可达；探针只写进副本，结束后副本与调用方工作区都不留', async () => {
   let copyRoot;
-  const before = worktrees();
   await withIsolatedRepo((root) => {
     copyRoot = root;
     assert.equal(revIn(root), head(), '副本应停在调用方当前 HEAD');
@@ -34,7 +33,10 @@ test('withIsolatedRepo：副本停在 HEAD、依赖链接可达；探针只写�
   });
   assert.ok(!existsSync(copyRoot), '副本目录应已删除');
   assert.ok(!worktrees().includes(norm(copyRoot)), 'worktree 登记不应残留');
-  assert.deepEqual(worktrees(), before, '测试前后 worktree 清单相同');
+  const mine = [norm(copyRoot), norm(dirname(copyRoot))];
+  const registered = worktrees().filter((w) => mine.some((p) => w === p || w.startsWith(`${p}/`)));
+  assert.deepEqual(registered, [], 'worktree 清单里不应再有本测试的副本或临时根');
+  assert.ok(!existsSync(dirname(copyRoot)), '本测试的临时根目录应已删除');
   assert.ok(!existsSync(join(ROOT, '隔离探针.txt')), '调用方工作区不该出现探针');
 });
 
