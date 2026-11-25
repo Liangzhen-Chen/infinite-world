@@ -24,6 +24,11 @@ function rulesFor(root, remoteSha) {
 }
 
 // 返回 { ok, reasons }；runGate 默认真跑 pre_commit（测试可传替身，拒推用例不依赖它）。
+/**
+ * @param {string} root
+ * @param {string} stdinText
+ * @param {{runGate?: (root: string) => Promise<{verdict: string, items?: {failed: {itemKey: string, codes: string[]}[]}}>}} [options]
+ */
 export async function prePush(root, stdinText, { runGate = preCommitGate } = {}) {
   root = root || join(dirname(fileURLToPath(import.meta.url)), '..', '..');
   const reasons = [];

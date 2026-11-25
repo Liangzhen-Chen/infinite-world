@@ -170,6 +170,7 @@ export const DATED_RECORD_FIELDS = Object.freeze(['fromDay', 'value', 'cause']);
 const MARKER_PROTOCOL_KEYS = Object.freeze({ 'then': true, 'toJSON': true, 'constructor': true, 'prototype': true, 'toString': true, 'valueOf': true, 'hasOwnProperty': true, 'is': true, 'family': true });
 
 function markerMiss(family, key) {
+  /** @type {Error & {code?: string}} */
   const e = new Error(`E-DIM-REF-MISSING marker ${JSON.stringify(key)} not defined in family ${family}`);
   e.code = 'E-DIM-REF-MISSING';
   return e;
@@ -179,7 +180,7 @@ function markerMiss(family, key) {
  * 由定义源派生一个族的冻结标记句柄：成员值即定义源里的字串，族名与 is 只作诊断与运行期核对。
  * @param {string} family 族名
  * @param {readonly string[]} values 定义源
- * @returns {Readonly<Record<string, string>>}
+ * @returns {Readonly<Record<string, any>>}
  */
 export function markersOf(family, values) {
   const target = { family, is: (x) => values.includes(x) };
@@ -192,6 +193,7 @@ export function markersOf(family, values) {
   // 未定义标记的读取抛 E-DIM-REF-MISSING；语言自身的协议键（then、toJSON 等）照常取 undefined。
   // symbol 键没有 length，按协议键原样放行（console、迭代器等内部读取）。
   return new Proxy(target, {
+    /** @param {any} t @param {any} key */
     get(t, key) {
       if (key.length === undefined || Object.hasOwn(t, key) || Object.hasOwn(MARKER_PROTOCOL_KEYS, key)) return t[key];
       throw markerMiss(family, key);
@@ -199,6 +201,7 @@ export function markersOf(family, values) {
   });
 }
 
+/** @type {Record<string, Readonly<Record<string, any>>>} */
 const codeEnumFamilies = {};
 for (const fam of Object.keys(CODE_ENUMS)) codeEnumFamilies[fam] = markersOf(`code_enum.${fam}`, CODE_ENUMS[fam]);
 

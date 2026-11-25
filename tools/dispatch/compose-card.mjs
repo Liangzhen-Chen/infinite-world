@@ -18,6 +18,10 @@ function titleMarker(header) {
   return marker || firstLine;
 }
 
+/**
+ * @param {string} header 派活卡头规矩全文
+ * @param {string} card 卡文
+ */
 export function composeCard(header, card) {
   const head = trimEndNewlines(header);
   if (!head.trim()) throw new Error('派活卡头规矩为空，拒派');

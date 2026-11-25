@@ -14,12 +14,12 @@ export class FixedError extends Error {
 }
 
 // 内核定点常数（BASE、SCALE、PERMILLE、BPS）：由加载入口在读到规则表后调一次（与 installScheduler 同法）。
-/** @type {null | {base: bigint, scale: bigint, permille: bigint, bps: bigint}} */
+/** @type {null | {base: bigint, scale: bigint, permille: bigint, bps: bigint, lnWorkExp: number | null, lnInputExp: number | null, lnTerms: number | null, ln2: bigint | null}} */
 let installed = null;
 
 /**
  * 加载期收下 kernelConstants 的四条定点常数（卷二 S10 登记豁免表；不许在代码里另写数值）。
- * @param {{BASE: number, SCALE: number, PERMILLE: number, BPS: number}} c
+ * @param {{BASE: number, SCALE: number, PERMILLE: number, BPS: number, fixedLnWorkExponent?: number, fixedLnInputExponent?: number, fixedLnSeriesTerms?: number, LN2?: string | number}} c
  * @returns {void}
  */
 export function installFixedConstants(c) {
@@ -178,7 +178,7 @@ export function fixedCurveAt(pts, v) {
 /** 10⁸ 标度（SCALE²）。@returns {bigint} */
 const scale8 = () => { const s = fixedScale(); return s * s; };
 
-/** @type {null | {int: bigint[], frac: bigint[]}} */
+/** @type {null | {int: readonly bigint[], frac: readonly bigint[]}} */
 let expTables = null;
 
 const isFixed8 = (v) => typeof v === 'bigint';
@@ -251,12 +251,14 @@ export function fixedDivide8(a, b) {
 }
 
 // 向下取整的整数除法（b > 0）；BigInt 的 / 向零截断，负数要再修正。
+/** @param {bigint} a @param {bigint} b @returns {bigint} */
 function floorDiv(a, b) {
   const q = a / b;
   const r = a % b;
   return r !== 0n && (r < 0n) !== (b < 0n) ? q - 1n : q;
 }
 
+/** @param {bigint} v @returns {number} */
 function bitLength(v) {
   let n = 0;
   let x = v;
@@ -356,9 +358,12 @@ export function fixedLn(x) {
 // 七值各一行登记在规则表 det-numeric 的 fnTables（卷二十七 §2.2 :171）；本文件是这些函数的唯一实现。
 // 表值由 tools/gen-det-tables.mjs 离线生成入库，运行期只读表、不现算（R27-5.2 :574）。
 
-/** @type {null | Record<string, {inScale: bigint, outScale: bigint, domainMin: bigint, domainMax: bigint, step: bigint, iterations: bigint | null, values: bigint[] | null}>} */
+/** @typedef {{inScale: bigint, outScale: bigint, domainMin: bigint, domainMax: bigint, step: bigint, iterations: bigint | null, values: readonly bigint[] | null}} DetRow */
+
+/** @type {null | Record<string, DetRow>} */
 let detTables = null;
 
+/** @param {unknown} v @param {string} where @returns {bigint} */
 const detInt = (v, where) => {
   if (typeof v === 'bigint') return v;
   if (typeof v === 'number' && Number.isSafeInteger(v)) return BigInt(v);
@@ -368,7 +373,7 @@ const detInt = (v, where) => {
 /**
  * 加载期收下 det-numeric 的 fnTables（卷二十七 §2.2 :171）：值可为 JSON 数或 BigInt。
  * 逐行转换；不在这里重做规则表校验（加载器 load/rules.mjs 已按形状查过）。
- * @param {Record<string, object>} fnTables
+ * @param {Record<string, any>} fnTables
  * @returns {void}
  */
 export function installDetTables(fnTables) {
@@ -391,13 +396,13 @@ export function installDetTables(fnTables) {
   detTables = Object.freeze(rows);
 }
 
-/** @type {string[] | null} */
+/** @type {readonly string[] | null} */
 let mathAllowList = null;
 
 /**
  * 加载期收下 det-numeric 表的三个键（卷二十七 §2.2 :167–:171）：fnTables 交 installDetTables，
  * safeIntMax 交 checkedFixed 的上限，mathAllow 交 mathAllowed（空表 = 全禁）。
- * @param {Record<string, unknown>} rules engine.rules
+ * @param {Record<string, any>} rules engine.rules
  * @returns {void}
  */
 export function installDetNumeric(rules) {
@@ -411,12 +416,14 @@ export function installDetNumeric(rules) {
 /** mathAllow 判定：规则层可用的整数安全数学成员（卷二十七 :167；空表 = 全禁）。@param {string} member @returns {boolean} */
 export const mathAllowed = (member) => mathAllowList !== null && mathAllowList.includes(member);
 
+/** @param {string} name @returns {DetRow} */
 function detRow(name) {
   if (!detTables || !Object.hasOwn(detTables, name)) throw new FixedError('E-DIM-STRUCT-FIELD', `rules.det-numeric.fnTables.${name} missing (load order: installDetTables)`);
   return detTables[name];
 }
 
 // 查表线性插值（卷二十七 R27-5.2 :571）：两点之间全程整数，除法向零截断；域外 E-DET-DOMAIN，不外推不钳位。
+/** @param {DetRow} row @param {bigint} x @param {string} name @returns {bigint} */
 function tableLookup(row, x, name) {
   if (row.values === null) throw new FixedError('E-DIM-STRUCT-FIELD', `fnTables.${name}: this row has no values table`);
   if (x < row.domainMin || x > row.domainMax) throw new FixedError('E-DET-DOMAIN', `${name} input ${x} outside [${row.domainMin}, ${row.domainMax}]`);
@@ -445,6 +452,7 @@ export function ln(x) {
 }
 
 // 周期函数：输入先按 [domainMin, domainMax) 取余，再查表（卷二十七 :573）。
+/** @param {string} name @param {number | bigint} x @returns {bigint} */
 function periodicLookup(name, x) {
   const row = detRow(name);
   const v = detInt(x, `${name} input`);
@@ -463,6 +471,7 @@ export const cos = (x) => periodicLookup('cos', x);
 
 // 圈数 → 弧度（10⁸ 标度）：整圈 = atan(1) = π/4 连翻三倍得 2π（atan 表 x=1 处的值，同 atan 域外折回的 π/2 取法，不另写 π 常数）。
 // 圈数是有理数 num/den（太阳相位、昼夜相位）；乘除 BigInt 向零截断；返回落在 [0, 整圈) 的整数弧度，sin/cos 查表不再绕圈。
+/** @returns {bigint} */
 function fullTurnRadians() {
   const row = detRow('atan');
   const quarterOfHalfTurn = tableLookup(row, row.inScale, 'atan');
@@ -471,6 +480,7 @@ function fullTurnRadians() {
   return pi + pi;
 }
 
+/** @param {number | bigint} num @param {number | bigint} den @returns {bigint} */
 function turnsToRadians(num, den) {
   const n = detInt(num, 'turns numerator');
   const d = detInt(den, 'turns denominator');

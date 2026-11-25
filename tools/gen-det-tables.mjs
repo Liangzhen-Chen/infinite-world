@@ -32,14 +32,17 @@ const QUANTILE_POINTS = 4097;
 const CLAMP_Z = 39000;
 const PER_LINE = 12;
 
+/** @param {bigint} n @returns {bigint} */
 const isqrt = (n) => {
   if (n < 2n) return n;
   let x = n;
   for (;;) { const y = (x + n / x) >> 1n; if (y >= x) return x; x = y; }
 };
+/** @param {bigint} a @param {bigint} b @param {bigint} w @returns {bigint} */
 const mul = (a, b, w) => (a * b) / w;
 
 // 固定指数：e^a 的 W 标度值，a ≥ 0（Taylor，逐项整除；a 可为 0）。
+/** @param {bigint} a @param {bigint} w @returns {bigint} */
 function expFixed(a, w) {
   let sum = w;
   let term = w;
@@ -52,6 +55,7 @@ function expFixed(a, w) {
 }
 
 // 固定幂：base^n 的 W 标度值，n 为非负整数；按二进制位高到低反复平方与相乘，次序固定。
+/** @param {bigint} base @param {number} n @param {bigint} w @returns {bigint} */
 function powFixed(base, n, w) {
   let result = w;
   for (const bit of n.toString(2)) {
@@ -62,6 +66,7 @@ function powFixed(base, n, w) {
 }
 
 // atan(1/q) 的 W 标度值（Machin 用）：Σ (−1)^k / ((2k+1) q^(2k+1))。
+/** @param {bigint} q @param {bigint} w @returns {bigint} */
 function atanInv(q, w) {
   const q2 = q * q;
   let sum = 0n;
@@ -77,9 +82,11 @@ function atanInv(q, w) {
   return sum;
 }
 
+/** @param {bigint} w @returns {bigint} */
 const piFixed = (w) => 4n * (4n * atanInv(5n, w) - atanInv(239n, w));
 
 // erf(t) 的 W 标度值（Taylor：2/√π Σ (−1)^n t^(2n+1)/(n!(2n+1))，t 取绝对值后按符号还原）。
+/** @param {bigint} t @param {bigint} w @param {bigint} sqrtPi @returns {bigint} */
 function erfFixed(t, w, sqrtPi) {
   const neg = t < 0n;
   const a = neg ? -t : t;
@@ -96,9 +103,11 @@ function erfFixed(t, w, sqrtPi) {
 }
 
 // Φ(x) 的 W 标度值。
+/** @param {bigint} x @param {bigint} w @param {bigint} sqrtPi @param {bigint} sqrt2 @returns {bigint} */
 const PhiOf = (x, w, sqrtPi, sqrt2) => (w + erfFixed((x * w) / sqrt2, w, sqrtPi)) / 2n;
 
 // 标准正态密度 φ(x) 的 W 标度值。
+/** @param {bigint} x @param {bigint} w @param {bigint} sqrt2pi @returns {bigint} */
 function phiOf(x, w, sqrt2pi) {
   const half = mul(x, x, w) / 2n;
   const e = expFixed(half, w);
@@ -129,6 +138,7 @@ function acklam(p) {
 function fail(message) { throw new Error(`gen-det-tables: ${message}`); }
 
 // 一个分位点的 4 位向零截断值：牛顿求根，再用高精度 Φ 复核截断区间。
+/** @param {number} j @param {bigint} w @param {bigint} sqrtPi @param {bigint} sqrt2 @param {bigint} sqrt2pi @returns {number} */
 function quantilePoint(j, w, sqrtPi, sqrt2, sqrt2pi) {
   const p = (w * BigInt(j)) / BigInt(QUANTILE_POINTS - 1); // W 标度；W 被 4096 整除，精确
   let x = BigInt(Math.round(acklam(j / (QUANTILE_POINTS - 1)) * Number(w)));
@@ -203,8 +213,10 @@ const ATAN_STEP = 100_000;         // 10⁻³
 const SQRT_ITERATIONS = 32;        // 卷二 §1.10 :326 牛顿法固定 32 步
 const SAFE_INT_MAX = 9_007_199_254_740_991; // 2⁵³−1
 
+/** @param {bigint} v @returns {number} */
 const bitLength = (v) => { let n = 0; let x = v; while (x > 0n) { x >>= 1n; n += 1; } return n; };
 // 大整数开方（初值取 2 的幂，牛顿迭代至稳定）；工作标度里算 1+x² 的平方根用。
+/** @param {bigint} n @returns {bigint} */
 function isqrtBig(n) {
   if (n < 2n) return n;
   let x = 1n << BigInt((bitLength(n) + 1) >> 1);
@@ -212,6 +224,7 @@ function isqrtBig(n) {
 }
 
 // sin/cos 的 W 标度值：先按 2π 取余，再 Taylor 级数（r < 2π，约 45 项后为 0）。
+/** @param {bigint} a @param {bigint} w @param {bigint} pi @returns {bigint} */
 function sinW(a, w, pi) {
   const twoPi = pi + pi;
   let r = a % twoPi;
@@ -227,6 +240,7 @@ function sinW(a, w, pi) {
   return sum;
 }
 
+/** @param {bigint} a @param {bigint} w @param {bigint} pi @returns {bigint} */
 function cosW(a, w, pi) {
   const twoPi = pi + pi;
   let r = a % twoPi;
@@ -243,6 +257,7 @@ function cosW(a, w, pi) {
 }
 
 // atan 的 W 标度值：反复用 atan(x)=2·atan(x/(1+√(1+x²))) 把 |x| 压到 0.1 以下，再 Taylor。
+/** @param {bigint} x @param {bigint} w @returns {bigint} */
 function atanW(x, w) {
   const neg = x < 0n;
   let y = neg ? -x : x;

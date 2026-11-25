@@ -10,6 +10,7 @@
 const V2 = 'vol2.s4.3';
 
 // [来源卷与节, 该表登记的码]。卷二 §4.3 表里的 `-ENUM` 一类缩写已按卷文展开成全码。
+/** @type {readonly (readonly [string, readonly string[]])[]} */
 const GROUPS = [
   [V2, [
     'E-DIM-SCHEMA-KIND', 'E-DIM-SCHEMA-NAMESPACE', 'E-DIM-SCHEMA-VERSION', 'E-DIM-SCHEMA-TYPE', 'E-DIM-SCHEMA-PRECISION', 'E-DIM-BEHAVIOR-UNKNOWN',
