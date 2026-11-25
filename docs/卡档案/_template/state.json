@@ -1,0 +1,16 @@
+{
+  "card": "<分支名，/ 换成 ->",
+  "phase": "dispatched",
+  "updatedAt": "<ISO 8601 UTC>",
+  "branches": { "code": "<写码分支>", "test": "<出题分支>" },
+  "pr": null,
+  "parties": {
+    "code": { "family": "<模型族>", "model": "<模型 id>", "receipt": null, "costUsd": null },
+    "test": { "family": "<模型族>", "model": "<模型 id>", "receipt": null, "costUsd": null },
+    "review": { "family": "<模型族>", "model": "<模型 id>", "receipt": null, "costUsd": null }
+  },
+  "ci": { "status": "pending", "runUrl": null },
+  "failCount": 0,
+  "blocker": null,
+  "nextAction": "<下一步一句话>"
+}

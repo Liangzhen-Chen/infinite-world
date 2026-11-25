@@ -6,11 +6,16 @@
 
 - 阶段 0A 工作区整理（Step 0–Step 5）：冻结旧队列、打 `pre-rewrite-1124` 标签、落地 `.github/workflows/ci.yml` + `tsc` + 新门禁与 `dispatch.mjs`、建立六份单一真相源、归档旧文件、获亮圳点头后执行 816 MB 删除清单、清出新 `server-plugin/` 骨架空仓与红灯 E2E 烟测桩。验收：第三章 Step 0–Step 5 命令全通过，整理 PR 在 GitHub CI 绿灯。
 - 阶段 0A 落地清单（照 Gemini 开工文件 docs/gemini/kickoff-1125.md 第八章 L-01–L-20，origin/antigravity d16c0ecde；做完一步标 [x] 并写一句结果）：
-  - [x] L-01 清理分支合入 master：395986f01（快进，补 1 提交把清理记录挪入 archive/docs-status/），全量 2239/2239。
-  - [~] L-02 移除旧工作树 new-session-8e4637：分支已全在 master；`orca worktree rm` 报目录被别的程序占用，git 已标 prunable，待占用解除后再删（分支保留）。
-  - [ ] L-03 Orca setup 钩子改 npm ci（等亮圳拍板 P2；未拍板前派卡建树一律 `--setup skip` 后手跑 `npm ci`）。
+  - [x] L-01 清理分支合入 master：395986f01（快进，补 1 提交把清理记录挪出 docs 顶层），全量 2239/2239。
+  - [x] L-02 旧工作树 new-session-8e4637：git 记录已 prune，Orca 已受理移除；空目录仍被 Orca 自身占用，按李白裁定跳过（分支保留）。P5 deepseek 工作树与分支本已不存在。
+  - [~] L-03 Orca setup 钩子改 npm ci（李白批 P2）：该设置存于 Orca 应用的仓库设置，CLI 无法修改，需在 Orca 界面改一处（已报李白）；改好前派卡建树一律 `--setup skip` 后手跑 `npm ci`。
+  - 拍板记录：P1/P2/P4/P5 李白批（纯技术）；P3 亮圳 11-25 01:59 拍板（11-30 交最小可玩版，5 处卷文按 literature/design_spec 分级）。L-13 写入现行有效裁定。
+  - [~] L-06/L-08/L-10 收编 chore/step1-tooling：与 master 合并仅 .gitignore 冲突；合并后验收 29 条红 6（buildInvocation 未按出题约定 `(opts, env)` 自读 paths.json；archive_ref 基线因 docs/gemini 上涨），pre_commit 红 5 项。派 DeepSeek 写码第二轮。
   - [ ] P1 工具与 CI：L-04 typescript+typecheck 脚本；L-05 .github/workflows/ci.yml；L-06 dispatch.mjs（收编 chore/step1-tooling）；L-07 派活卡头规矩 ≤50 行、删 card-selfcheck；L-08 archive_ref 检测器；L-09 检测器六项加固；L-10 tools/cloud、tools/notify 收编去写死。
-  - [ ] P2 抗失忆：L-11 gen-status-snapshot + 状态快照；L-12 world/ontology/contracts.json；L-13 现行有效裁定.json 写入拍板结果（等拍板）；L-14 卡档案 state.json 模板。
+  - [ ] P2 抗失忆：L-11 gen-status-snapshot + 状态快照；L-12 world/ontology/contracts.json。
+  - [x] L-13 现行有效裁定.json 写入 K1125-P1～P5 与 K1125-ESC（附原话出处）；Q-14/Q-15（亮圳的留档、门禁规矩）与 B7（世界方向）不由主会话改，附理由/备选/代价报李白，Q-14/Q-15 转亮圳，B7 标「产品拍板」。
+  - [x] L-14 docs/卡档案/_template/state.json 模板（照开工文件 5.3 节字段）。
+  - [x] P4 main-session/.claude/settings.local.json 禁用 Agent（不入库）。
   - [ ] P3 新骨架空仓：L-15 server-plugin 旧码归档、kernel ≤15；L-16 旧测试归档；L-17 baseline/scanclasses/entry-registry 重置；L-18 E2E 红灯桩。
   - [ ] P4 治理：L-19 master 分支保护（等拍板 P1）；L-20 李白 Routine A/B 上线演练（李白侧）。
   - [ ] 全部自验后写 F:/dnd-tmp/handoff-0b-review.md，交 antigravity 复核。

@@ -819,6 +819,66 @@
       "status": "active",
       "decidedBy": "李白",
       "supersedes": []
+    },
+    {
+      "id": "K1125-P1",
+      "summary": "master 开分支保护：要求 PR、要求 .github/workflows/ci.yml 全绿、禁直推与 force-push；先建好 ci.yml 并跑绿再开。",
+      "source": "docs/gemini/kickoff-1125.md:448",
+      "status": "active",
+      "decidedBy": "李白",
+      "quote": "P1 批准：master 开分支保护（要求 PR、要求 ci.yml 全绿、禁直推和 force-push）。先建好 ci.yml 并跑绿再开",
+      "quoteSource": "李白 Orca 消息 msg_d7b6d1b1b01b（2026-11-25 01:58 伦敦，「P1-P5裁定，继续落地」）",
+      "supersedes": []
+    },
+    {
+      "id": "K1125-P2",
+      "summary": "Orca 项目 dnd 的 setup 钩子改为 npm ci --prefer-offline，试建测试树验收后删测试树。",
+      "source": "docs/gemini/kickoff-1125.md:449",
+      "status": "active",
+      "decidedBy": "李白",
+      "quote": "P2 批准：Orca dnd 的 setup 改为 npm ci --prefer-offline，按 L-03 试建测试树验收后删测试树。",
+      "quoteSource": "李白 Orca 消息 msg_d7b6d1b1b01b（2026-11-25 01:58 伦敦）",
+      "supersedes": []
+    },
+    {
+      "id": "K1125-P3",
+      "summary": "11-30 20:00（伦敦）交最小可玩版：新 L0 极简骨架 + CI 保护 + 零 mock 最小闭环 + 浏览器能点开试玩，其余放 12 月；5 处待判卷文行按 literature/design_spec 分级落地。",
+      "source": "docs/gemini/kickoff-1125.md:450",
+      "status": "active",
+      "decidedBy": "亮圳",
+      "quote": "P3 交付口径：同意 Gemini 建议，11-30 交最小可玩版（新 L0 极简骨架 + CI 保护 + 零 mock 最小闭环 + 浏览器能点开试玩），其余放 12 月。5 处卷文行分级按 Gemini 建议落地。",
+      "quoteSource": "李白转亮圳 Orca 消息 msg_c0a2336a0923（2026-11-25 01:59 伦敦，「P3亮圳已拍板」）",
+      "supersedes": []
+    },
+    {
+      "id": "K1125-P4",
+      "summary": "主会话所在工作区的项目级 .claude/settings.local.json（不入库）禁用内置子代理，写码一律经派卡脚本走 API。",
+      "source": "docs/gemini/kickoff-1125.md:451",
+      "status": "active",
+      "decidedBy": "李白",
+      "quote": "P4 批准：项目内 .claude/settings.local.json 收窄子代理，只许经 dispatch.mjs 派卡。",
+      "quoteSource": "李白 Orca 消息 msg_d7b6d1b1b01b（2026-11-25 01:58 伦敦）",
+      "supersedes": []
+    },
+    {
+      "id": "K1125-P5",
+      "summary": "确认 deepseek 分支没有 master 以外的提交后，删 deepseek 工作树与本地分支（实查时二者已不存在）。",
+      "source": "docs/gemini/kickoff-1125.md:452",
+      "status": "active",
+      "decidedBy": "李白",
+      "quote": "P5 批准：先确认 deepseek 分支没有 master 以外的提交，再删 deepseek 工作树和本地分支。",
+      "quoteSource": "李白 Orca 消息 msg_d7b6d1b1b01b（2026-11-25 01:58 伦敦）",
+      "supersedes": []
+    },
+    {
+      "id": "K1125-ESC",
+      "summary": "交李白裁定的事须先写清理由、备选、代价；李白只裁纯技术问题，凡涉及交付范围、玩法、世界方向的标「产品拍板」由李白转亮圳。",
+      "source": "docs/gemini/kickoff-1125.md:437",
+      "status": "active",
+      "decidedBy": "亮圳",
+      "quote": "以后交给李白裁定的事，必须先写清理由（为什么这么做、备选是什么、代价），李白只裁纯技术问题；凡涉及交付范围、玩法、世界方向的，直接标「产品拍板」由李白转亮圳。",
+      "quoteSource": "李白转亮圳 Orca 消息 msg_f710e4cde55e（2026-11-25 01:58 伦敦，「撤回P3，裁定规矩」）",
+      "supersedes": []
     }
   ]
 }
