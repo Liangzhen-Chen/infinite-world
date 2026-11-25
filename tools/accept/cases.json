@@ -68,6 +68,25 @@
    "scanClass": "big_md"
   },
   {
+   "addedAtRev": 5,
+   "caseKey": "big_md-21",
+   "expectCode": "E-ACC-ARCHIVE-REF",
+   "fixture": "tests/accept/bypass/big_md-21.txt",
+   "group": "offline",
+   "origin": "chore/bigmd-exempt：不在豁免清单里的 >500 KB .md 仍命中（豁免只认逐字登记路径，不放大成整类），李白裁定 msg_aff2a90c2257",
+   "polarity": "must_fail",
+   "scanClass": "big_md"
+  },
+  {
+   "addedAtRev": 5,
+   "caseKey": "big_md-22",
+   "fixture": "tests/accept/bypass/big_md-22.txt",
+   "group": "offline",
+   "origin": "chore/bigmd-exempt：豁免路径的 >500 KB 封卷设计册不报（只豁免逐字登记的那几个文件），李白裁定 msg_aff2a90c2257",
+   "polarity": "must_pass",
+   "scanClass": "big_md"
+  },
+  {
    "addedAtRev": 1,
    "caseKey": "claude_doc-01",
    "expectCode": "E-ACC-ARCHIVE-REF",
