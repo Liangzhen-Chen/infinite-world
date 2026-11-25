@@ -3,7 +3,8 @@
 # 无限原野：唯一现行规矩（<=80 行；禁止叠层与过期条款，改规矩直接替换旧行）
 
 ## 1. 启动只读 3 文件与六份单一真相源
-- 每次启动或压缩后，只读 3 份文件：`docs/产品原则.md`、`CLAUDE.md`、`docs/状态快照.generated.md`（由 CI 生成，严禁手写）。
+- 每次启动、压缩或换班后，只读 3 份文件：`docs/产品原则.md`、`CLAUDE.md`、`docs/状态快照.generated.md`（由 CI 生成，严禁手写），再看 `orca worktree ps` 与在途卡的 `docs/卡档案/<卡>/state.json`。
+- **主会话换班（亮圳原话：『换班是我定的，照做』，出处 李白转 msg_d0e590ac17f8，2026-11-25 20:24；细则 docs/gemini/collab-eval-1125.md 4.5 节）**：每合完 3–5 张卡、或每天一次、或自动压缩两次以上，在批次收尾的空档换新主会话接班。主会话不留未落盘的状态：每张在途卡推进状态时覆盖写 state.json（phase、blocker、nextAction 必填）；下班前确认在途卡都已收尾或已写进 state.json。总台邮箱用 Orca 持久 run（首个主会话 `orca orchestration run-create` 建，接班会话 `orca orchestration run-use --id <run>` 接管，子会话回报发 `--to run:<run>`）。
 - 全仓唯一真相源：① 北极星 `docs/产品原则.md`；② 规矩 `CLAUDE.md` + `docs/派活卡头规矩.md`（<=50 行）；③ 生效裁定 `docs/审查/现行有效裁定.json`（废止即删，不追流水账）；④ 进度 `docs/状态快照.generated.md`；⑤ 契约与入口 `world/ontology/contracts.json` + `tools/accept/entry-registry.json`；⑥ 现行设计 `docs/统一底层设计/` + `docs/世界设计/`。
 - `archive/` 为物理隔离历史仓：严禁生产代码与现行文档引用，严禁往 `docs/卡回报/`、`docs/当前状态.md`、`docs/统一底层设计/版本快照/`、`world/drafts/` 回写文件。
 
@@ -32,4 +33,4 @@
 - **运行位置**：本机只跑几秒内纯函数/单测；常规全量走 GitHub Actions；推进世界长测与九省性能基准走腾讯云 `dnd-runner`（经 `tools/cloud/` 自动开机 -> `npm ci` -> 测 -> 自动关机），不在本机抢跑长测。
 - **审批闸门**：**删文件/云资源、充值、拓权、放宽硬规则**须先停下报亮圳同意；花费不设单项停线，按省钱原则做并记账（亮圳原话：『我同意。第二个也没问题。』并说从没定过「单项超5元必须问他」，出处 李白转述 2026-11-25 12:31，msg_81259953138a）；常规操作与技术管理决策由李白自定。
 - **安全与原创**：不打印、不提交任何密钥，不读 `SillyTavern/data/*/secrets.json`；不复制《再生勇士》正文/人名/地名/情节（受 `world/i18n/blocklist.zh.json` 拦截）；未成年 NPC 不进亲密情节。
-- **通知（只 3 种 JSON，经 `tools/notify/` 发李白）**：`MILESTONE`（竖切片合入含 PR/CI/试玩链接）、`BLOCKED`（冲突文件:行 + 两种备选与代价）、`COST_OR_CLOUD`（云机/花费/审批闸门）。取消 `/compact` 核对通知，取消手写状态汇报。
+- **找李白**：直接写在主会话自己的回复里（李白读原话），或用 `orca orchestration send/reply` 发；不再用 notify.py（它发往的旧提醒入口已停用，李白技术裁定 msg_d0e590ac17f8）。要报的只三类：合入（含 PR/CI 链接）、卡住（冲突文件:行 + 两种备选与代价）、花费/云机/审批闸门。不打印、不写出任何密钥与 webhook 地址。

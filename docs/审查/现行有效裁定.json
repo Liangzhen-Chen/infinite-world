@@ -881,6 +881,26 @@
       "supersedes": []
     },
     {
+      "id": "K1125-HANDOVER",
+      "summary": "主会话换班：每合 3–5 张卡、或每天一次、或自动压缩两次以上，在空档换新主会话接班；新会话只读 3 份薄文件加在途卡 state.json；每张在途卡强制落盘 state.json；Orca 持久 run 作总台邮箱（run-create / run-use / --to run:<id>）。",
+      "source": "CLAUDE.md:7",
+      "status": "active",
+      "decidedBy": "亮圳",
+      "quote": "换班是我定的，照做",
+      "quoteSource": "亮圳 2026-11-25 20:24 伦敦在李白问题卡上确认，李白转 msg_d0e590ac17f8；细则 docs/gemini/collab-eval-1125.md 4.5 节（origin/antigravity 204ea98ec）",
+      "supersedes": []
+    },
+    {
+      "id": "K1125-NONOTIFY",
+      "summary": "主会话不再用 notify.py 给李白发信（其发往的旧提醒入口已停用，由 Orca 插件状态通知代替）；找李白写在会话回复里或用 orca orchestration 发；failed/ 旧消息不重发。",
+      "source": "CLAUDE.md:36",
+      "status": "active",
+      "decidedBy": "李白",
+      "quote": "以后主会话不要再用 notify.py 给李白发信。要找李白，就把话写在你自己的会话回复里（李白会读你的原话），或者用 Orca orchestration 发。",
+      "quoteSource": "李白技术裁定 Orca 消息 msg_d0e590ac17f8（2026-11-25 20:2x 伦敦）",
+      "supersedes": []
+    },
+    {
       "id": "K1125-DATE",
       "summary": "原定 11-30 交付期限往后推，新日期待定：等 S1-1 新内核底座写出、看清速度后由李白报亮圳再定。",
       "source": "docs/PLAN.md:12",
