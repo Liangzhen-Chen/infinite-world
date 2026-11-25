@@ -881,6 +881,16 @@
       "supersedes": []
     },
     {
+      "id": "K1125-QUOTA",
+      "summary": "靠实时可用额度派活：会员额度充足时 Sonnet 写、Haiku 出题、Opus（medium）审，Gemini 每日全库审核并可选分审 1–2 张关键卡；额度不足时 DeepSeek 作写码主力，DeepSeek 卡由 Sonnet/Gemini 审。取代 15:48 版审卡口径。",
+      "source": "CLAUDE.md:16",
+      "status": "active",
+      "decidedBy": "亮圳",
+      "quote": "没问题，并且现在就改，要告诉主会话靠额度派活，额度不够就ds主力。",
+      "quoteSource": "亮圳 2026-11-25 18:19 伦敦，antigravity 会话 58aa8e3f 原话，李白核（msg_210a029f02f4）；方案 docs/gemini/collab-eval-1125.md",
+      "supersedes": []
+    },
+    {
       "id": "K1125-PUBLIC",
       "summary": "历史改写抹掉云机 IP 与个人邮箱后仓库公开，并开 master 分支保护（PR + ci.yml 主 job 绿、管理员不豁免、禁强推禁删）；接受旧提交仍可按旧 SHA 取到的风险。",
       "source": "docs/PLAN.md:23",

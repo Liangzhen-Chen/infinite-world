@@ -13,10 +13,10 @@
 - **确定性边界**：区分“权威状态（进 `saveDigest`）”与“确定性可重建索引/烘焙层（不进 `saveDigest`，可一键重建并验一致）”。不为旧存档做兼容，但 `saveDigest` 拆为 `engineRulesDigest` 与 `dataPacksDigest`（支持只增内容包）。
 - **L0 内核红线**：`server-plugin/kernel/` 只留无领域语义底座（`kernel/files.json` 硬上限 <=15 文件），一切地理/物品/生物/经济/文化/生成代码一律进 `server-plugin/rules/`。
 
-## 3. 模型、额度与三方硬分离（亮圳原话：『我是有会员额度的，全给ds我要额外花钱，可以考虑sonnet和ds串用，或者ds写sonnet/opus审核。sonnet/opus写gemini审核』，出处 李白转 msg_93b059c9b336，2026-11-25 15:48）
-- **主会话**：按完整功能拆卡（不拆太碎）、派卡、解冲突、PR 审阅合入。
-- **写审分工（自 2026-11-26 周四会员额度重置起）**：会员额度（Sonnet/Opus）是写码主力，DeepSeek（只许 `deepseek-flash`，严禁 `v4-pro`）只作补充，不把大部分卡交给它。规格写死的卡可交 DeepSeek 写、Sonnet 或 Opus 审；Sonnet/Opus 写的卡由 Gemini 审（不用 Opus 审 Sonnet）；Sonnet 写卡时可把简单部分转给 DeepSeek。Gemini 另每天做一次全库独立审核。
-- **重置前（至 2026-11-26 会员额度重置）**：写码、出题、审卡一律经 `tools/dispatch/dispatch.mjs` 走 DeepSeek API 或 Claude API（读 `ANTHROPIC_API_KEY`，缺时读 `CLAUDE_API_KEY`），不用会员额度。Claude API 单次调用强制 `--max-budget-usd 0.65`；DeepSeek 不加（Claude Code 对其估价失真），花费按控制台记账；输出调用收据随 PR 校验。
+## 3. 模型、额度与三方硬分离（亮圳原话：『能不能日常用sonnet。我有claude ultra，额度够用，deepseek会额外花钱』『没问题，并且现在就改，要告诉主会话靠额度派活，额度不够就ds主力。』，出处 亮圳 2026-11-25 18:19 伦敦 antigravity 会话原话，李白核 msg_210a029f02f4；方案 docs/gemini/collab-eval-1125.md）
+- **主会话**：只调度不写码；按完整可验证结果拆卡（约 150–800 行、3–10 个同域文件，不拆碎卡）、派卡、解冲突、PR 审阅合入。
+- **靠实时额度派活（每次派卡前选档，选档依据写进派卡.md）**：① 常态档（Claude Ultra 会员额度充足）：Sonnet 写、Haiku 出题、Opus（medium）审，均为 Orca 可见独立工作树会话；关键或跨卷卡在 Gemini 额度宽裕时每天可分 1–2 张给 Gemini 审；Sonnet 写卡时可把规格写死的成批机械部分转给 DeepSeek（15:48 原话保留条款）。② 降级档（会员额度不足、告急或未重置）：DeepSeek（只许 `deepseek-flash`，严禁 `v4-pro`）经 `tools/dispatch/dispatch.mjs` 在 Orca 可见终端作写码主力，Haiku 出题，DeepSeek 写的卡由 Sonnet（或 Gemini）审，Sonnet 写的卡由 Gemini 或 Opus 审。Gemini 每天一次全库独立审核优先，不因单卡审卡透支。
+- **API 调用**：走 Claude API 时读 `ANTHROPIC_API_KEY`（缺时读 `CLAUDE_API_KEY`），单次强制 `--max-budget-usd 0.65`；DeepSeek 不加（Claude Code 对其估价失真），花费按控制台记账；API 卡留 `dispatch.mjs` 收据，Orca 会员会话卡在 state.json 记工作树、会话与提交号作等效凭证。
 - **三方模型族**：写码、出题、审卡归一化模型族必须完全不同，由 `card-archive.mjs` 与 CI 硬核。
 - **物理隔离验收目录**：出题只在独立分支 `test/<card>` 写 `tests/acceptance/<card>/`，写码分支 `feat/<card>` 物理不含验收目录；写码提交触碰验收目录 CI 直接拒合。
 - **无免复核逃生门**：凡审卡判「必须改」，修改轮必须经干净无历史上下文的第三方 API 复核 + CI 全绿，取消「两轮后主会话亲读免复核」。
