@@ -15,7 +15,7 @@
   - [~] L-12 跨卷契约表：Gemini 规格 docs/gemini/contracts-spec-1125.md 已入 master；卡 chore/contracts 写 DeepSeek、出题 Haiku（20 条）、审 Opus 可合（契约表与规格逐字节一致，V1–V14 全实现），34 条全绿，分支 ds/contracts 已推远端。卡住同 L-11：出题.md 14 条依据无卷文行，等亮圳拍板出题依据口径。
   - [x] L-13 现行有效裁定.json 写入 K1125-P1～P5 与 K1125-ESC（附原话出处）；Q-14/Q-15（亮圳的留档、门禁规矩）与 B7（世界方向）不由主会话改，附理由/备选/代价报李白，Q-14/Q-15 转亮圳，B7 标「产品拍板」。
   - [x] L-14 docs/卡档案/_template/state.json 模板（照开工文件 5.3 节字段）。
-  - [x] P4 main-session/.claude/settings.local.json 禁用 Agent（不入库）。
+  - [x] P4 main-session/.claude/settings.local.json 禁用 Agent（不入库；至 11-26 会员额度重置前，重置后按亮圳 13:31 改用会员额度并撤此限）。
   - [~] L-11 状态快照脚本：卡 chore/status-snapshot 写 DeepSeek 两轮（第二轮补定接通率向下取整）、出题 Haiku、审 Sonnet 可合，33 条全绿，分支 ds/status-snapshot 已审未合。卡住：出题.md 17 条依据出自 Gemini 开工文件、29 卷无对应行，合并门禁拒推；放宽「照设计原文（卷:行）出题」属亮圳规矩，已报李白转亮圳（推荐允许 docs/gemini 文件行）。已定：生成基准与最近提交两段不受 --check 比对（提交快照本身会改 HEAD），入口接通、门禁基线、在途卡三段受检。
   - [~] L-15/L-16 新骨架空仓：Gemini 裁定 msg_82485b7f7ab7——kernel 只留 6 零件的 14 文件 import 闭包、≤15 不放宽；gate/output-gate/textcore 一并归档，S1-3 随真实入口迁回（依赖文件收各自目录，不回 kernel）；tools/accept 自用旧 kernel 读表辅助收进 tools/accept/lib/。卡 chore/new-skeleton 写码第一轮完成并暂存（工作树 new-skel，352 文件，内核 14 文件，测试全绿），但门禁数据（state-owners、items 必过条目、criteria 指纹）仍指旧文件，pre_commit 报错提交不了——L-17 拆到下一轮是拆卡错误。本轮 DeepSeek 疑超单项 5 元（约 6～7 元），已停报李白，第二轮做法（推荐同卡做完 L-17 再提交）待李白回复。出题 Haiku 题已暂存。11-25 12:0x 李白令清工作树：两棵树的暂存成果已存为补丁（本机临时目录 staged-1125 下 new-skeleton-r1.patch、ts-new-skeleton.patch，已验证在 ea7812793 上可干净 git apply --index），工作树已删、分支保留；拍板后新建树从 ea7812793 起 apply 恢复再做第二轮。
   - [ ] L-17 baseline/scanclasses/entry-registry 重置（chore/new-skeleton 下一轮）；L-18 E2E 红灯桩（另卡）。
