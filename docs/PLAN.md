@@ -9,7 +9,7 @@
   - [x] L-01 清理分支合入 master：395986f01（快进，补 1 提交把清理记录挪出 docs 顶层），全量 2239/2239。
   - [x] L-02 旧工作树 new-session-8e4637：git 记录已 prune，Orca 已受理移除；空目录仍被 Orca 自身占用，按李白裁定跳过（分支保留）。P5 deepseek 工作树与分支本已不存在。
   - [~] L-03 Orca setup 钩子改 npm ci（李白批 P2）：该设置存于 Orca 应用的仓库设置，CLI 无法修改，需在 Orca 界面改一处（已报李白）；改好前派卡建树一律 `--setup skip` 后手跑 `npm ci`。
-  - 拍板记录：P1/P2/P4/P5 李白批（纯技术）；P3 亮圳 11-25 01:59 拍板（11-30 交最小可玩版，5 处卷文按 literature/design_spec 分级）。L-13 写入现行有效裁定。
+  - 拍板记录：P1/P2/P4/P5 李白批（纯技术）；P3 亮圳 11-25 01:59 拍板（交最小可玩版，5 处卷文按 literature/design_spec 分级）；交付期限待定——亮圳 11-25 20:01 定原 11-30 往后推，新日期等 S1-1 写出看清速度后由李白报亮圳再定（K1125-DATE）。L-13 写入现行有效裁定。
   - [x] L-06/L-08/L-10 收编 chore/step1-tooling：DeepSeek 写四轮（第二轮照验收题造 write 档、删空卡文防线被打回；第三轮进程挂住由主会话代提交）、Haiku 出题含一轮改题、Opus API 审第一轮必须改 3 条、Sonnet API 第二轮复核可合，合入 master。已定 DeepSeek 不加 --max-budget-usd（估价失真）。遗留：clearDeepseek 补 CLAUDE_CODE_OAUTH_TOKEN（本机未设该变量，随 L-07 卡补）；A12-4.5、S12-2、S12-3 为主线既有非必过项。
   - [ ] P1 工具与 CI：L-04 typescript+typecheck 脚本；L-05 .github/workflows/ci.yml；L-06 dispatch.mjs（收编 chore/step1-tooling）；L-07 派活卡头规矩 ≤50 行、删自查表；L-08 archive_ref 检测器；L-09 检测器六项加固；L-10 tools/cloud、tools/notify 收编去写死。
   - [~] L-12 跨卷契约表：Gemini 规格 docs/gemini/contracts-spec-1125.md 已入 master；卡 chore/contracts 写 DeepSeek、出题 Haiku（20 条）、审 Opus 可合（契约表与规格逐字节一致，V1–V14 全实现），34 条全绿，分支 ds/contracts 已推远端。卡住同 L-11：出题.md 14 条依据无卷文行，等亮圳拍板出题依据口径。
