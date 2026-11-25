@@ -1,0 +1,6 @@
+// @file server-plugin/kernel/files.json
+["server-plugin/kernel/f01.mjs", "server-plugin/kernel/f02.mjs"]
+// @file server-plugin/kernel/f01.mjs
+export const a = 1;
+// @file server-plugin/kernel/f02.mjs
+export const b = 2;

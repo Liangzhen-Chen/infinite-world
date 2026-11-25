@@ -81,6 +81,51 @@
   },
   {
    "detectors": [
+    "hygiene"
+   ],
+   "ext": ".md",
+   "maxBytes": 512000,
+   "mode": "fileSize",
+   "scanClass": "big_md",
+   "scope": {
+    "except": [
+     "archive/",
+     "docs/gemini/",
+     "docs/卡档案/",
+     "docs/审查/现行有效裁定.json",
+     "tests/acceptance/"
+    ],
+    "roots": [
+     "server-plugin/",
+     "tools/",
+     "tests/",
+     "CLAUDE.md",
+     "AGENTS.md",
+     "docs/"
+    ]
+   },
+   "source": "L-08 扩项：单个 .md 超过 500 KB 即命中（docs/gemini/kickoff-1125.md 的对应行）"
+  },
+  {
+   "detectors": [
+    "hygiene"
+   ],
+   "files": [
+    {
+     "forbid": [
+      "已过期",
+      "取代下条"
+     ],
+     "maxLines": 100,
+     "path": "CLAUDE.md"
+    }
+   ],
+   "mode": "docLimits",
+   "scanClass": "claude_doc",
+   "source": "L-08 扩项：CLAUDE.md 不超过 100 行且不含「已过期/取代下条」（docs/gemini/kickoff-1125.md 的对应行）"
+  },
+  {
+   "detectors": [
     "lit_scope"
    ],
    "litAllow": [
@@ -176,6 +221,19 @@
    ],
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4 首批表（卷二 §2.8 第 4a 条）；castFiles 照卷二 §2.9 第 2 条强转豁免文件表；块 2 第 2-3 张登记"
+  },
+  {
+   "apiTables": [
+    "kernelApi",
+    "groupApi"
+   ],
+   "detectors": [
+    "import_edge"
+   ],
+   "kernelDir": "server-plugin/kernel/",
+   "scanClass": "export_guard",
+   "serverRoot": "server-plugin/",
+   "source": "L-09 ①：非内核文件从内核目录 import 具名导出，须在 state-owners.json 的 kernelApi/groupApi 登记里；默认导入与 import * 同拒（docs/gemini/kickoff-1125.md 的对应行、diagnosis-1124.md 的对应行）"
   },
   {
    "detectors": [
@@ -275,6 +333,53 @@
   },
   {
    "detectors": [
+    "hygiene"
+   ],
+   "excludeCidrs": [
+    "127.0.0.0/8",
+    "10.0.0.0/8",
+    "172.16.0.0/12",
+    "192.168.0.0/16",
+    "0.0.0.0/32",
+    "192.0.2.0/24",
+    "198.51.100.0/24",
+    "203.0.113.0/24"
+   ],
+   "exemptions": [
+    {
+     "path": "tools/accept/scanclasses.json",
+     "reason": "本类别行登记 IPv4 的正则、排除段与判法，是检测数据的唯一存放处"
+    },
+    {
+     "path": "tests/accept/bypass/ip_literal-01.txt",
+     "reason": "must_fail 夹具必须含一个公网 IPv4"
+    }
+   ],
+   "match": "\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b",
+   "mode": "ipv4",
+   "scanClass": "ip_literal",
+   "scope": {
+    "except": [
+     "archive/",
+     "docs/gemini/",
+     "docs/卡档案/",
+     "docs/审查/现行有效裁定.json",
+     "tests/acceptance/"
+    ],
+    "roots": [
+     "server-plugin/",
+     "tools/",
+     "tests/",
+     "CLAUDE.md",
+     "AGENTS.md",
+     "docs/"
+    ]
+   },
+   "source": "L-08 扩项：禁硬编码公网 IPv4（docs/gemini/kickoff-1125.md 的对应行）；保留段与版本号判法登记在本行数据里",
+   "versionPrefixRe": "[A-Za-z]+[0-9]+[A-Za-z0-9]*\\s*$"
+  },
+  {
+   "detectors": [
     "ledger_count"
    ],
    "scanClass": "item_downgrade",
@@ -323,6 +428,16 @@
   },
   {
    "detectors": [
+    "kernel_files"
+   ],
+   "limit": 15,
+   "listFile": "server-plugin/kernel/files.json",
+   "root": "server-plugin/kernel/",
+   "scanClass": "kernel_freeze",
+   "source": "L-09 ②：内核白名单冻结，files.json 硬上限 15，实际文件与清单逐一对应（docs/gemini/kickoff-1125.md 的对应行、:88）"
+  },
+  {
+   "detectors": [
     "path_access"
    ],
    "dynamicRoots": [
@@ -352,6 +467,30 @@
    ],
    "scanClass": "legacy_symbol",
    "source": "卷十二 §2.4 首批表（卷二 S3、S6、S14）；S12-3 转录"
+  },
+  {
+   "codeSpanRe": "`[^`\\n]*`",
+   "detectors": [
+    "hygiene"
+   ],
+   "externalRe": "^(?:[a-z][a-z0-9+.-]*:|#|/)",
+   "fenceRe": "^```[\\s\\S]*?^```",
+   "invalidTargetRe": "[\\\\|<>`]",
+   "linkRe": "\\]\\(([^)]+)\\)",
+   "mode": "mdLinks",
+   "scanClass": "md_links",
+   "scope": {
+    "except": [
+     "archive/",
+     "docs/gemini/",
+     "docs/卡档案/",
+     "tests/acceptance/"
+    ],
+    "roots": [
+     "docs/"
+    ]
+   },
+   "source": "L-08 扩项：docs 下 .md 的相对链接指向仓库里不存在的文件即命中（docs/gemini/kickoff-1125.md 的对应行）"
   },
   {
    "detectors": [
@@ -1028,6 +1167,41 @@
   {
    "astRules": [
     {
+     "ctors": [
+      "WeakMap",
+      "Map"
+     ],
+     "exceptFiles": [],
+     "kind": "topModuleNew",
+     "name": "topState"
+    },
+    {
+     "chain": [
+      "idIndex",
+      "get"
+     ],
+     "exceptFiles": [],
+     "kind": "memberChainCall",
+     "name": "idIndex"
+    },
+    {
+     "exceptFiles": [],
+     "kind": "plainCallName",
+     "name": "vocab",
+     "names": [
+      "installVocab"
+     ]
+    }
+   ],
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "pp_module_state",
+   "source": "L-09 ③：禁 memo 模块外顶层 WeakMap/Map、禁加载器外 .idIndex.get、禁加载器外 installVocab（docs/gemini/kickoff-1125.md 的对应行）；新骨架无加载器与 memo 模块，允许名单为空"
+  },
+  {
+   "astRules": [
+    {
      "kind": "unitVectors",
      "min": 3,
      "name": "dirs"
@@ -1521,6 +1695,50 @@
   },
   {
    "detectors": [
+    "hygiene"
+   ],
+   "exemptions": [
+    {
+     "path": "tools/accept/scanclasses.json",
+     "reason": "本类别行登记密钥形态的正则，是检测数据的唯一存放处"
+    },
+    {
+     "path": "tests/accept/bypass/secret_literal-01.txt",
+     "reason": "must_fail 夹具必须含密钥形态字样"
+    }
+   ],
+   "mode": "linePatterns",
+   "patterns": [
+    "\\bsk-[A-Za-z0-9_-]{20,}",
+    "\\bsk-ant-[A-Za-z0-9_-]+",
+    "\\bghp_[A-Za-z0-9]{20,}",
+    "\\bgithub_pat_[A-Za-z0-9_]{20,}",
+    "\\bAKID[A-Za-z0-9]{13,}",
+    "\\bAKIA[A-Za-z0-9]{16}",
+    "BEGIN[ A-Z]*PRIVATE KEY"
+   ],
+   "scanClass": "secret_literal",
+   "scope": {
+    "except": [
+     "archive/",
+     "docs/gemini/",
+     "docs/卡档案/",
+     "docs/审查/现行有效裁定.json",
+     "tests/acceptance/"
+    ],
+    "roots": [
+     "server-plugin/",
+     "tools/",
+     "tests/",
+     "CLAUDE.md",
+     "AGENTS.md",
+     "docs/"
+    ]
+   },
+   "source": "L-08 扩项：禁密钥形态字面量（docs/gemini/kickoff-1125.md 的对应行）；形态正则在数据里"
+  },
+  {
+   "detectors": [
     "seed_sites"
    ],
    "scanClass": "seed_sites",
@@ -1626,6 +1844,14 @@
    ],
    "scanClass": "timer_global",
    "source": "公共部件审查甲 R4 补缺（docs/研究/公共部件审查-甲-1122.md 第八节）；卷二十七 S27-3 :252 计时器半条（vol27.S27-3 的 source 登记未覆盖项）；C0 卡（亮圳「公共部件审查1122」Q-3）"
+  },
+  {
+   "configFile": "jsconfig.json",
+   "detectors": [
+    "typed_pos"
+   ],
+   "scanClass": "typecheck",
+   "source": "L-09 ④：typed_pos 接 tsc，对 jsconfig.json 跑静态类型检查（docs/gemini/kickoff-1125.md 的对应行）"
   },
   {
    "detectors": [

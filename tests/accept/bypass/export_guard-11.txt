@@ -1,0 +1,2 @@
+import { fixedAdd, fixedUnits } from '../kernel/det-math.mjs';
+export const r = (a, b) => fixedAdd(a, b) + fixedUnits(1);

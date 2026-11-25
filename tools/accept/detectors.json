@@ -33,8 +33,16 @@
    "source": "卷十二 §2.3"
   },
   {
+   "detectorCode": "hygiene",
+   "source": "L-08 扩项：公网 IPv4、密钥形态、Markdown 断链、文档行数/叠层词、超大 .md（docs/gemini/kickoff-1125.md 的对应行）。模块 tools/accept/detectors/hygiene.mjs"
+  },
+  {
    "detectorCode": "import_edge",
    "source": "卷十二 §2.3"
+  },
+  {
+   "detectorCode": "kernel_files",
+   "source": "L-09 ②：L0 内核白名单冻结（docs/gemini/kickoff-1125.md 的对应行、diagnosis-1124.md 的对应行）。模块 tools/accept/detectors/kernel_files.mjs"
   },
   {
    "detectorCode": "ledger_count",

@@ -1,0 +1,6 @@
+// @file server-plugin/kernel/files.json
+["server-plugin/kernel/allowed.mjs"]
+// @file server-plugin/kernel/allowed.mjs
+export const a = 1;
+// @file server-plugin/kernel/extra.mjs
+export const b = 2;

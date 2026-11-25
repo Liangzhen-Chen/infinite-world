@@ -573,6 +573,43 @@ const KINDS = {
       } else if (confirmed) emit(fn, 'shape', '');
     }
   },
+  // 模块顶层私有缓存（L-09 ③①；卷十二 §2.3 开放登记）：`new <ctor>(…)` 赋给模块级变量（顶层 const/let/var 声明、导出声明、
+  // 顶层赋值）。ctors 由规则数据点名；memo 模块一类允许文件由 lit_scope 的 exceptFiles 排掉，本函数不列文件名。
+  topModuleNew(ctx, rec, rule, emit) {
+    const ctors = new Set(rule.ctors || []);
+    const isNew = (node) => node && node.type === 'NewExpression' && node.callee.type === 'Identifier' && ctors.has(node.callee.name);
+    const decl = (d) => { if (!d || d.type !== 'VariableDeclaration') return; for (const x of d.declarations) if (isNew(x.init)) emit(x, 'topnew', x.init.callee.name); };
+    for (const st of rec.ast.body) {
+      if (st.type === 'VariableDeclaration') decl(st);
+      else if (st.type === 'ExportNamedDeclaration') decl(st.declaration);
+      else if (st.type === 'ExpressionStatement' && st.expression.type === 'AssignmentExpression') {
+        const e = st.expression;
+        if (e.left.type === 'Identifier' && isNew(e.right)) emit(e, 'topnew', e.right.callee.name);
+      }
+    }
+  },
+  // 成员链之后的调用（L-09 ③②）：`x.a.b(…)`，被调成员链的尾部正好是 rule.chain 点名的成员（非计算属性）。
+  // 加载器一类允许文件由 lit_scope 的 exceptFiles 排掉，本函数不列文件名。
+  memberChainCall(ctx, rec, rule, emit) {
+    const chain = Array.isArray(rule.chain) ? rule.chain : [];
+    if (!chain.length) return;
+    walkAll(rec.ast, (n) => {
+      if (n.type !== 'CallExpression' || n.callee.type !== 'MemberExpression') return;
+      const segs = [];
+      let c = n.callee;
+      while (c && c.type === 'MemberExpression' && !c.computed && c.property.type === 'Identifier') { segs.unshift(c.property.name); c = c.object; }
+      if (segs.length < chain.length) return;
+      const tail = segs.slice(segs.length - chain.length);
+      if (tail.every((s, i) => s === chain[i])) emit(n, 'member', tail.join('.'));
+    });
+  },
+  // 具名函数直接调用（L-09 ③③）：`name(…)`。names 由规则数据点名；允许文件同样走 exceptFiles。
+  plainCallName(ctx, rec, rule, emit) {
+    const names = new Set(rule.names || []);
+    walkAll(rec.ast, (n) => {
+      if (n.type === 'CallExpression' && n.callee.type === 'Identifier' && names.has(n.callee.name)) emit(n, 'call', n.callee.name);
+    });
+  },
 };
 
 export const RULE_KINDS = Object.keys(KINDS);

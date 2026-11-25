@@ -1,0 +1,3 @@
+// @file docs/__case__/md_links-01/broken.md
+# 断链
+[缺失](./nowhere.md)

@@ -2,8 +2,6 @@
 // params.groups：范围；params.checks：
 //   dynamicState  卷二 S15 / R12-3.4 动态访问一律计入（E-VIEW-DYNAMIC-STATE）：顶层键用变量取 `state[k]`；
 //                 state 整体被展开（`...state`）、被枚举（Object.keys/values/entries/assign/fromEntries、for…in 的对象）。
-//   inputs        卷二 S9 / R12-3.5 叶子核对：每个声明节点有 declareInputs，调用图内 state 读取 ⊆ own ∪ 闭包。
-//                 依赖声明与 kernel/declare.mjs#declareInputs 在 2-5 才建（块 2 排期 e14），本项现在没有输入，调用即报错，不静默放过。
 //   paramConsumed 卷十二 §4.4.6 A12-4.5（:784；李白 11-18 08:20 裁定①②，封卷后勘误 1118k18）：登记参数必须有消费者。
 //                 范围＝world/rules/registry.json 全部登记行经 kernel/load/rules.mjs 的 RULES_LAYOUT/readRules 解析出的参数（键表的 t.defs 键），
 //                 不另写解析。消费者口径（A12-4.5）＝规则层组代码，或内核运行期代码经规则入口读到。两类文件的组键从登记派生：
@@ -243,12 +241,15 @@ function dupTplKeyHits(ctx, params, cls) {
   return hits.sort((a, b) => (a.file + a.line < b.file + b.line ? -1 : 1));
 }
 
+// 已实现的核对项（见头注）：不在这一集合里的 check 是登记错，报 E-ACC-ITEM-PARAM，不静默当作通过。
+const KNOWN_CHECKS = new Set(['dupExport', 'dupTplKey', 'paramConsumed', 'dynamicState']);
+
 export function detect(ctx, params, cls) {
   const checks = params.checks || [];
   const hits = [];
+  for (const c of checks) if (!KNOWN_CHECKS.has(c)) throw new Error(`E-ACC-ITEM-PARAM check=${c}`);
   if (checks.includes('dupExport')) return dupExportHits(ctx, params, cls || {});
   if (checks.includes('dupTplKey')) return dupTplKeyHits(ctx, params, cls || {});
-  if (checks.includes('inputs')) throw new Error('E-ACC-ITEM-UNIMPLEMENTED decl_cmp inputs: declareInputs not built (block 2 card 2-5)');
   if (checks.includes('paramConsumed')) hits.push(...unconsumedHits(ctx, params));
   for (const file of filesOfGroups(ctx.files, ctx.model, params.groups || [])) {
     const toks = tokenize(ctx.read(file));

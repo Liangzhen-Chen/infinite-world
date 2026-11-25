@@ -11,15 +11,20 @@
 //   exportParams §2.8 第 4 条末句：导出函数的形参没有 JSDoc 类型标注（E-VIEW-FAMILY-UNRESOLVED；块 2 体检 K2-46，从第一个文件起全量适用）
 //   directive / anyType / assertCast  §2.8 第 4a 条：@ts-ignore 等指令注释、JSDoc 里的 any 与 *、`/** @type */ (…)` 强转与 `x is T` / asserts / @overload（只许类别行 castFiles）
 // 每项报哪个码取类别行 checkCodes；类别行 groupCodes 给了该组该项的码时按组取（卷二 §2.8 各组表的违例码列）。
-// 局限（等 tsc 与 typescript-eslint 进离线组）：S13 ②（对归因为 string 的值做闭集外操作：`x.startsWith`、`x.length`、`switch (text)`、
-// `obj[text]`、展开迭代解构、`Number(text)`、`x < y`、`String(k)`）要静态类型，词法级做不了，本检测器不判；
-// 无法归因的比较（E-VIEW-FAMILY-UNRESOLVED 第 ① 补洞）、句柄族不符（E-VIEW-FAMILY-MISMATCH）、`x ?? V.a.x`、隐式 any 同理不判。
-// 因此依赖本检测器全部判定的 text_judge 条目照卷十二 R12-11.7 不得为 implemented（§2.8 代表性正反例已全部录入用例集，靠 tsc 才能判的几条现在报不出）。
+// 局限（未接 typescript-eslint）：S13 ②（对归因为 string 的值做闭集外操作：`x.startsWith`、`x.length`、`switch (text)`、
+// `obj[text]`、展开迭代解构、`Number(text)`、`x < y`、`String(k)`）要类型感知规则，本检测器仍只做词法级；
+// 静态类型本身由 tsc 一道（checks=["tsc"]）核，两条判据互补，不互相顶替。
+// `tsc` 方式（L-09 ④；docs/gemini/kickoff-1125.md:480）：真仓库用已装的 typescript 跑 jsconfig.json（cls.configFile），
+// 有用错即命中；用例上下文（ctx.repoFiles 存在，文件是虚拟的）把用例文件写到临时目录，用同一份配置的编译选项跑，跑完删除。
 
 import { tokenize, isP, matchClose, symbolPaths, buildEnv } from '../lib/js-scan.mjs';
 import { commentsOf, exportedFunctions, jsdocBefore, jsdocParamNames } from '../lib/js-state.mjs';
 import { scopeFiles, matchGlobs, classify } from '../read.mjs';
 import * as markers from '../../../server-plugin/kernel/handles/markers.mjs';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, existsSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, dirname as pdirname } from 'node:path';
 
 const NON_ASCII = /[^\x00-\x7f]/;
 const EQ_OPS = new Set(['===', '!==', '==', '!=']);
@@ -271,6 +276,66 @@ function commentHits(src, toks, comments, check) {
   return out.sort((a, b) => a.line - b.line);
 }
 
+// tsc 一道（见头注）：真仓库直接跑 jsconfig.json；用例上下文写临时目录后用同一份编译选项跑，只核用例文件。
+// 诊断行按 `<文件>(<行>,<列>): error TS<号>: <文字>` 取；命中按文件、行、TS 号记，信息确定。
+function tscRun(bin, args, cwd) {
+  try {
+    return { status: 0, out: String(execFileSync(process.execPath, [bin, ...args], { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 1 << 28 })) };
+  } catch (e) {
+    return { status: typeof e.status === 'number' ? e.status : 1, out: `${e.stdout || ''}${e.stderr || ''}` };
+  }
+}
+
+function tscDiagnostics(out, code) {
+  const hits = [];
+  for (const line of String(out).split(/\r?\n/)) {
+    const m = /^(.*?)\((\d+),(\d+)\):\s+error\s+TS(\d+):/.exec(line);
+    if (!m) continue;
+    hits.push({ file: m[1].replace(/\\/g, '/'), line: Number(m[2]), nodeKind: 'tsc', symbolPath: `TS${m[4]}`, code });
+  }
+  return hits;
+}
+
+function compilerOptionsOf(ctx, configFile) {
+  const p = join(ctx.root, configFile);
+  if (!existsSync(p)) return {};
+  try {
+    const cfg = JSON.parse(readFileSync(p, 'utf8'));
+    return (cfg && cfg.compilerOptions) || {};
+  } catch {
+    return {};
+  }
+}
+
+function tscHits(ctx, params, cls) {
+  const code = params.code;
+  if (!code) throw new Error('E-ACC-ITEM-PARAM tsc check has no code');
+  const configFile = cls.configFile || 'jsconfig.json';
+  const bin = join(ctx.root, 'node_modules', 'typescript', 'bin', 'tsc');
+  if (!ctx.repoFiles) {
+    const root = String(ctx.root).replace(/\\/g, '/').replace(/\/$/, '');
+    return tscDiagnostics(tscRun(bin, ['-p', configFile], ctx.root).out, code)
+      .map((h) => ({ ...h, file: h.file.startsWith(`${root}/`) ? h.file.slice(root.length + 1) : h.file }))
+      .filter((h) => h.file !== '');
+  }
+  const files = ctx.files.filter((f) => /\.(?:mjs|js|cjs)$/.test(f));
+  if (!files.length) return [];
+  const dir = mkdtempSync(join(tmpdir(), 'acc-tsc-'));
+  try {
+    for (const f of files) {
+      const p = join(dir, f);
+      mkdirSync(pdirname(p), { recursive: true });
+      writeFileSync(p, ctx.read(f));
+    }
+    const opts = { ...compilerOptionsOf(ctx, configFile), allowJs: true, checkJs: true, noEmit: true, types: [], typeRoots: [] };
+    writeFileSync(join(dir, 'tsconfig.json'), JSON.stringify({ compilerOptions: opts, include: ['**/*.mjs', '**/*.js', '**/*.cjs'] }));
+    const out = tscRun(bin, ['-p', 'tsconfig.json'], dir).out;
+    return tscDiagnostics(out, code).map((h) => ({ ...h, file: h.file.startsWith(dir.replace(/\\/g, '/')) ? h.file.slice(dir.replace(/\\/g, '/').length).replace(/^\//, '') : h.file }));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
 export function detect(ctx, params, cls) {
   const checks = params.checks || [];
   const codes = (cls && cls.checkCodes) || {};
@@ -278,6 +343,7 @@ export function detect(ctx, params, cls) {
   const castFiles = (cls && cls.castFiles) || [];
   const handleRoots = (cls && cls.handleRoots) || [];
   const hits = [];
+  if (checks.includes('tsc')) hits.push(...tscHits(ctx, params, cls || {}));
   for (const file of scopeFiles(ctx, params)) {
     const src = ctx.read(file);
     const toks = tokenize(src);
@@ -286,6 +352,7 @@ export function detect(ctx, params, cls) {
     const sym = (idx) => paths[idx] || '';
     const group = classify(file, ctx.model).group;
     for (const check of checks) {
+      if (check === 'tsc') continue; // 整仓一次，见 tscHits
       // 组有自己的违例码的（卷二 §2.8 各模块组表"违例码"列，登记在类别行 groupCodes）按组取，否则取 checkCodes。
       const own = ((cls && cls.groupCodes) || {})[group];
       const code = own && own[check] ? own[check] : codes[check];

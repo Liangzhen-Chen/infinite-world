@@ -1,0 +1,2 @@
+import * as K from '../kernel/det-math.mjs';
+export const r = K;
