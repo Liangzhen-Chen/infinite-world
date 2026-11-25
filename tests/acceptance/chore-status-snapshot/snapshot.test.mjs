@@ -197,7 +197,7 @@ test('同一输入两次生成逐字节相同，且与墙钟时间无关（Date 
   const a = await render(input());
   const b = await render(input());
   assert.equal(a, b);
-  const RealDate = Date;
+  const RealDate = /** @type {any} */ (Date);
   class FakeDate extends RealDate {
     constructor(...args) {
       if (args.length === 0) super('2099-12-31T23:59:59Z');
@@ -208,7 +208,7 @@ test('同一输入两次生成逐字节相同，且与墙钟时间无关（Date 
     }
   }
   let c;
-  globalThis.Date = FakeDate;
+  globalThis.Date = /** @type {DateConstructor} */ (/** @type {unknown} */ (FakeDate));
   try {
     c = await render(input());
   } finally {
