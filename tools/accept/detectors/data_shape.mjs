@@ -8,7 +8,7 @@
 
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { readRules, RULES_LAYOUT } from '../../../server-plugin/kernel/load/rules.mjs';
+import { readRules, RULES_LAYOUT } from '../lib/rules.mjs';
 import { itemChecks, keySets } from '../lib/item-form.mjs';
 import { LAYOUT, REGISTRY, regContent } from '../read.mjs';
 

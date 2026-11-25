@@ -17,7 +17,7 @@
 //   seedArgs（被调名同上学出；这些被调名的调用，前两个实参折叠不出字串常量的每处计一条，站点名、流代号用变量也报；运行期才知道的值即“待人审”）。
 // params.groups：范围（模块组键，rules、kernel）。
 
-import { RULES_LAYOUT } from '../../../server-plugin/kernel/load/rules.mjs';
+import { RULES_LAYOUT } from '../lib/rules.mjs';
 import { filesOfGroups } from '../read.mjs';
 import { projectOf, fileOf, walkAll, fold, calleeOrigins, where } from '../lib/ast.mjs';
 

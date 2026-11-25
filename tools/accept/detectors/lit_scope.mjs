@@ -21,9 +21,9 @@ import { tokenize, foldAt, minPrecAt, canStartAt, buildEnv, importsOf, specifier
 import { scopeFiles, resolveRel, isCode, globToRe, LAYOUT, REGISTRY } from '../read.mjs';
 import { projectOf, fileOf } from '../lib/ast.mjs';
 import { runRule } from '../lib/ast-rules.mjs';
-import { parseDimKey, modKeyOf } from '../../../server-plugin/kernel/handles/keys.mjs';
-import { loadVocab, loadUnits } from '../../../server-plugin/kernel/load/vocab-load.mjs';
-import { LAYOUT as WORLD_LAYOUT } from '../../../server-plugin/kernel/load/layout.mjs';
+import { parseDimKey, modKeyOf } from '../lib/keys.mjs';
+import { loadVocab, loadUnits } from '../lib/vocab-load.mjs';
+import { LAYOUT as WORLD_LAYOUT } from '../lib/world-layout.mjs';
 
 // 已登记维度表的 kind：维度表文件名即 kind（加载器按 E-DIM-SCHEMA-KIND 核 kind 与文件名一致），取自文件清单，不在本文件列名字。
 // 前缀与 kind 同源：真实执行取 world/ontology/dimensions；用例回归时（带 repoFiles）执行器另把绕法用例维度目录的前缀并入，kind 也同样并入。

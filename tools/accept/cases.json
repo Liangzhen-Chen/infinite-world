@@ -200,15 +200,6 @@
   },
   {
    "addedAtRev": 1,
-   "caseKey": "cross_write-11",
-   "fixture": "tests/accept/bypass/cross_write-11.txt",
-   "group": "rules",
-   "origin": "卷二 §2.7 :545 pendingPost.* 的登记写者 kernel/transaction.mjs 写自己的路径；规则层只读",
-   "polarity": "must_pass",
-   "scanClass": "cross_write"
-  },
-  {
-   "addedAtRev": 1,
    "caseKey": "decl_guard-01",
    "expectCode": "E-POS-WRITER",
    "fixture": "tests/accept/bypass/decl_guard-01.txt",
@@ -1275,36 +1266,6 @@
    "scanClass": "module_edge"
   },
   {
-   "addedAtRev": 17,
-   "caseKey": "module_edge-33",
-   "expectCode": "E-VIEW-INPUT-IMPORT",
-   "fixture": "tests/accept/bypass/module_edge-33.txt",
-   "group": "rules",
-   "origin": "卷六 A6-1.1 :398：kernel/ledger.mjs 之外读资源种类行 sources 字段",
-   "polarity": "must_fail",
-   "scanClass": "module_edge"
-  },
-  {
-   "addedAtRev": 17,
-   "caseKey": "module_edge-34",
-   "expectCode": "E-VIEW-INPUT-IMPORT",
-   "fixture": "tests/accept/bypass/module_edge-34.txt",
-   "group": "kernel",
-   "origin": "卷六 A6-1.1 :398：账本内核 kernel/ledger.mjs 引用 priceFor",
-   "polarity": "must_fail",
-   "scanClass": "module_edge"
-  },
-  {
-   "addedAtRev": 20,
-   "caseKey": "module_edge-35",
-   "expectCode": "E-VIEW-INPUT-IMPORT",
-   "fixture": "tests/accept/bypass/module_edge-35.txt",
-   "group": "rules",
-   "origin": "卷六 A6-1.1 :398、李白 11-19 10:4x 裁定①：行取自资源种类表（economyResources）的 transferable，在账本内核之外读必报",
-   "polarity": "must_fail",
-   "scanClass": "module_edge"
-  },
-  {
    "addedAtRev": 21,
    "caseKey": "module_edge-36",
    "expectCode": "E-VIEW-PREDICATE-LOCAL",
@@ -1391,26 +1352,6 @@
   },
   {
    "addedAtRev": 24,
-   "caseKey": "module_edge-45",
-   "expectCode": "E-VIEW-PREDICATE-LOCAL",
-   "fixture": "tests/accept/bypass/module_edge-45.txt",
-   "group": "rules",
-   "origin": "卷二 §2.5 :503：规则层读 status_family 条目 terminal 字段（必须报）",
-   "polarity": "must_fail",
-   "scanClass": "module_edge"
-  },
-  {
-   "addedAtRev": 24,
-   "caseKey": "module_edge-46",
-   "expectCode": "E-VIEW-PREDICATE-LOCAL",
-   "fixture": "tests/accept/bypass/module_edge-46.txt",
-   "group": "rules",
-   "origin": "卷二 §2.5 :503：for…of 嵌套解构取 terminal（必须报）",
-   "polarity": "must_fail",
-   "scanClass": "module_edge"
-  },
-  {
-   "addedAtRev": 24,
    "caseKey": "module_edge-47",
    "fixture": "tests/accept/bypass/module_edge-47.txt",
    "group": "rules",
@@ -1435,16 +1376,6 @@
    "group": "rules",
    "origin": "卷六 §4.21 规则 9：起步价读 valueBase 不计（必须不报）",
    "polarity": "must_pass",
-   "scanClass": "module_edge"
-  },
-  {
-   "addedAtRev": 30,
-   "caseKey": "module_edge-50",
-   "expectCode": "E-VIEW-PREDICATE-LOCAL",
-   "fixture": "tests/accept/bypass/module_edge-50.txt",
-   "group": "rules",
-   "origin": "卷五 S5-5 :404 正例：本地读 suppressesAwake 族字段自己判清醒（必须报）",
-   "polarity": "must_fail",
    "scanClass": "module_edge"
   },
   {
@@ -3561,16 +3492,6 @@
   },
   {
    "addedAtRev": 1,
-   "caseKey": "seed_sites-01",
-   "expectCode": "E-SEED-KEY",
-   "fixture": "tests/accept/bypass/seed_sites-01.txt",
-   "group": "rules",
-   "origin": "卷二十七 R27-8.1 :717：源码里出现的抽取点未在登记表登记，必须报（夹具表格式随 4-3 新格式落定）",
-   "polarity": "must_fail",
-   "scanClass": "seed_sites"
-  },
-  {
-   "addedAtRev": 1,
    "caseKey": "seed_sites-11",
    "fixture": "tests/accept/bypass/seed_sites-11.txt",
    "group": "rules",
@@ -3595,16 +3516,6 @@
    "group": "rules",
    "origin": "卷二十七 R27-8.4 :720：role_seed 行两两不同且前缀非空，不报（夹具表格式随 4-3 新格式落定）",
    "polarity": "must_pass",
-   "scanClass": "seed_sites"
-  },
-  {
-   "addedAtRev": 1,
-   "caseKey": "seed_sites-23",
-   "expectCode": "E-SEED-KEY",
-   "fixture": "tests/accept/bypass/seed_sites-23.txt",
-   "group": "rules",
-   "origin": "卷二十七 R27-8.1 :717：未登记的抽取点，return 直接返回与先赋值再返回两种写法都必须报",
-   "polarity": "must_fail",
    "scanClass": "seed_sites"
   },
   {

@@ -1830,7 +1830,7 @@
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）；§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定②；B2-W1 卡",
    "stage": 0,
-   "state": "implemented",
+   "state": "registered",
    "target": "registry",
    "volume": "vol12",
    "zeroRows": []
@@ -2699,16 +2699,13 @@
     ],
     "paths": [
      "terminal"
-    ],
-    "readerPredicates": [
-     "sys.capacity"
     ]
    },
    "runsOn": "local_static",
    "scanClass": "module_edge",
    "source": "卷二 §2.5 :503（terminal 的读者只有 action-capacity.mjs，别处读即 E-VIEW-PREDICATE-LOCAL；其他所有卷与所有文件只调用 terminated 谓词）；卷四 §3.2 :417、P-5 (b) :448；迁移体检 K6-24，块6-规矩检查对照 #14、门禁条目 2：读者取自 state-owners.json systems.sys.capacity.predicates 登记的提供文件（readerPredicates，不点名文件）；范围取全部服务端与客户端组（卷文“所有文件”）；成员链、字串下标与对象解构（声明、参数、for…of、改名、嵌套）均计",
    "stage": 0,
-   "state": "implemented",
+   "state": "registered",
    "target": "runtime_code",
    "volume": "vol2",
    "zeroRows": []
@@ -4016,7 +4013,6 @@
     "pre_commit",
     "pre_merge"
    ],
-   "impl": "tests/kernel/sim-tiers.test.mjs",
    "itemKey": "vol27.A27-1.12",
    "localNo": "A27-1.12",
    "method": "property_test",
@@ -4033,7 +4029,7 @@
    "runsOn": "local_static",
    "source": "卷二十七 A27-1.12 :370（对任意状态 bubbleView 两次调用结果相同；改动玩家控制实体的位置与登记以外的任何状态，泡不变；没有玩家控制实体时泡为空）；测试 tests/kernel/sim-tiers.test.mjs（泡由状态算出各条）；泡触及单元恒为个体层一句归卷二十七主体卡（simTierOf 落地后补）",
    "stage": 0,
-   "state": "implemented",
+   "state": "registered",
    "target": "tests_code",
    "volume": "vol27",
    "zeroRows": []
@@ -4165,7 +4161,6 @@
    "gates": [
     "pre_merge"
    ],
-   "impl": "tests/kernel/save.test.mjs",
    "itemKey": "vol27.A27-4.9",
    "localNo": "A27-4.9",
    "method": "unit_test",
@@ -4182,7 +4177,7 @@
    "runsOn": "local_static",
    "source": "卷二十七 A27-4.9 :605（格基底不存档：任意存档分片里没有区格或细格基底、没有缓存，part_by_chunk 每一片只含同一（格空间, 里块）的 cells.* 路径）；对照表 #6、#16 归 G1",
    "stage": 0,
-   "state": "implemented",
+   "state": "registered",
    "target": "tests_code",
    "volume": "vol27",
    "zeroRows": []
@@ -4497,7 +4492,7 @@
    "scanClass": "seed_sites",
    "source": "卷二十七 §4.8 R27-8.1 :717（每个抽取点在登记表恰一行，源码与登记表双向比对，任一侧多出即 E-SEED-KEY）；卷十二 §7 M12-5 :1341（源码扫描移到离线组）；卷二 §1.10 :320（种子键登记 role seed）、§4.1 :1508（规则表登记）；表代号经扫描类别行 seedTable 从 world/rules/registry.json 登记行派生（R12-11.5 规则表键）；检测器 tools/accept/detectors/seed_sites.mjs。真实仓库登记表随 4-3 按新格式重建（李白 11-18 16:3x 第 5 条），现读数如实报；C0 起已升 in_core（必过），读数为 0",
    "stage": 0,
-   "state": "in_core",
+   "state": "registered",
    "target": "runtime_code",
    "volume": "vol27",
    "zeroRows": []
@@ -4733,16 +4728,13 @@
     ],
     "paths": [
      "bubbleRadiusRegionCells"
-    ],
-    "readerPredicates": [
-     "sys.simTiers"
     ]
    },
    "runsOn": "local_static",
    "scanClass": "sim_bypass",
    "source": "卷二十七 S27-11 :260 前半（sim-tiers.mjs 之外读 bubbleRadiusRegionCells 即 E-SIM-BYPASS）、A27-1.11 :369（bubbleRadiusRegionCells 只在 sim-tiers.mjs 被读）、§2.2 :153。读者文件取自 state-owners.json systems.sys.simTiers.predicates 所指文件（sim-tiers.mjs，不点名文件）；范围取全部服务端组与内核组；成员链、字串下标与对象解构均计。后半'自算玩家周围区格'语义不可纯静态判，由 tests/kernel/sim-tiers.test.mjs 守（对照表 #59）；S27-11 的 alterCells 调用链半条归 vol5.S5-9（G9 开写前登），故本条目键带 .a。局限：解构取出后的别名追不到（path_access 头注释已声明）。",
    "stage": 0,
-   "state": "implemented",
+   "state": "registered",
    "target": "runtime_code",
    "volume": "vol27",
    "zeroRows": []
@@ -4999,16 +4991,13 @@
     "paths": [
      "awakeMin",
      "suppressesAwake"
-    ],
-    "readerPredicates": [
-     "sys.capacity"
     ]
    },
    "runsOn": "local_static",
    "scanClass": "module_edge",
    "source": "卷五 S5-5 :404（本地实现的清醒、在场、睡眠判断计数为 0，卷二 §2.5 的 E-VIEW-PREDICATE-LOCAL）、:581、A5-2.1 :619；G12–G16 对照表 #30。照 vol2.K6-24 先例：awake 谓词的两个输入——状态族字段 suppressesAwake 与规则键 awakeMin（卷二 §2.5 :510、action-capacity.mjs）——读者只有提供 awake 谓词的文件（readerPredicates 取 sys.capacity 登记，不点名文件）；范围取全部服务端与客户端组，含 perceive、perceiveEvent 所在文件；成员链、字串下标与对象解构均计。局限：读 body.consciousness 维度本身、'在场'无专用谓词、按活动文字正则判睡眠，不在本条目（由卡内测试与文字判断类门禁守）。",
    "stage": 0,
-   "state": "implemented",
+   "state": "registered",
    "target": "runtime_code",
    "volume": "vol5",
    "zeroRows": []
@@ -5151,9 +5140,6 @@
      "counterpartRX",
      "sources",
      "sinks"
-    ],
-    "readerSystems": [
-     "sys.economy"
     ]
    },
    "part": "a",
@@ -5165,7 +5151,7 @@
    "scanClass": "module_edge",
    "source": "卷六 §4.1.6 A6-1.1 :398 中段（读资源种类行 transferable、counterpartRX、sources、sinks 四个字段的模块只有账本内核；调用图白名单，S6-13 同法，故同码 E-VIEW-INPUT-IMPORT）；读者文件取自 state-owners.json systems.sys.economy.writers 所涉状态键的写者登记（readerSystems，不另抄名单）；按成员链读，解构取出后的读法追不到；块 3 第 3-3 张第二部分",
    "stage": 0,
-   "state": "implemented",
+   "state": "registered",
    "target": "runtime_code",
    "volume": "vol6",
    "zeroRows": []
@@ -5188,9 +5174,6 @@
     "paths": [
      "priceFor",
      "valuation"
-    ],
-    "scopeSystems": [
-     "sys.economy"
     ]
    },
    "part": "b",
@@ -5202,7 +5185,7 @@
    "scanClass": "module_edge",
    "source": "卷六 §4.1.6 A6-1.1 :398 后半（账本内核对 priceFor、valuation 的引用为 0；同名标识符与同名模块 import 都算引用，码 E-VIEW-INPUT-IMPORT 照 S6-13 同法）；范围文件取自 state-owners.json systems.sys.economy.writers 所涉状态键的写者登记（scopeSystems，不另抄名单）；前半 S6-1、S6-8 已另行登记，S6-14 因无登记码未做；块 3 第 3-3 张第二部分",
    "stage": 0,
-   "state": "implemented",
+   "state": "registered",
    "target": "runtime_code",
    "volume": "vol6",
    "zeroRows": []
@@ -5214,7 +5197,6 @@
     "pre_commit",
     "pre_merge"
    ],
-   "impl": "tests/kernel/ledger-invariants.test.mjs",
    "itemKey": "vol6.A6-1.2.a",
    "localNo": "A6-1.2",
    "method": "property_test",
@@ -5237,7 +5219,7 @@
    "runsOn": "local_static",
    "source": "卷六 §4.1.6 A6-1.2 :399 守恒式整数相等（§4.1 规则 4 :362）与三元键唯一存法（规则 1 :355）；方案 §3.3 I1′ :367、I15′ :369；测试 tests/kernel/ledger-invariants.test.mjs（I1′、I15′ 各条），审计入口 kernel/ledger.mjs auditLedger",
    "stage": 0,
-   "state": "in_core",
+   "state": "registered",
    "target": "tests_code",
    "volume": "vol6",
    "zeroRows": [
@@ -5253,7 +5235,6 @@
     "pre_commit",
     "pre_merge"
    ],
-   "impl": "tests/kernel/ledger-invariants.test.mjs",
    "itemKey": "vol6.A6-1.2.b",
    "localNo": "A6-1.2",
    "method": "property_test",
@@ -5276,7 +5257,7 @@
    "runsOn": "local_static",
    "source": "卷六 §4.1.6 A6-1.2 :399 所有余额非负（§4.1 规则 2 :356）；方案 §3.3 I2′ :368；测试 tests/kernel/ledger-invariants.test.mjs（I2′ 各条）",
    "stage": 0,
-   "state": "in_core",
+   "state": "registered",
    "target": "tests_code",
    "volume": "vol6",
    "zeroRows": [
@@ -5465,16 +5446,13 @@
      "stockLots",
      "ledgerCounters"
     ],
-    "readerSet": "ledgerReaders",
-    "readerSystems": [
-     "sys.economy"
-    ]
+    "readerSet": "ledgerReaders"
    },
    "runsOn": "local_static",
    "scanClass": "ledger_state_read",
    "source": "卷六 §4.1.2 统一入口（读 balance、accountsOf、stockIn；改只有 post）；S6-1 读点一半（vol6.S6-1 守写点）；公共部件审查乙规则 4（现命中 item-state.mjs 三处，修理卡合入后基线清空）；C0 卡",
    "stage": 0,
-   "state": "in_core",
+   "state": "registered",
    "target": "runtime_code",
    "volume": "vol6",
    "zeroRows": []
