@@ -22,6 +22,31 @@ jobs:
       - run: npm run typecheck
       - run: node tools/accept/run.mjs pre_commit
       - run: node tools/gen-status-snapshot.mjs --check
+      # 卡档案检查（L-05/L-06）：对本次推送/PR 相对 origin/master 的新提交，复用合并门禁 pre-push（含三方模型族与角色标记），
+      # 不另写检查器。新旧头相同（没有新增提交）时整步跳过。
+      - name: 卡档案检查（推送/PR 相对 origin/master 的新提交）
+        if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/heads/')
+        env:
+          EVENT: ${{ github.event_name }}
+          PUSH_REF: ${{ github.ref }}
+          HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          git fetch -q --no-tags origin +refs/heads/master:refs/remotes/origin/master
+          # PR 与分支推送以 origin/master 为基线（规矩也取 master 版）；直推 master 时 origin/master 已被推成新头，
+          # 改取本次推送前的旧 master 尖（event.before），这样 squash 合并提交也会被查。新旧头相同（无新增）时整步跳过。
+          if [ "$EVENT" = "pull_request" ] || [ "$PUSH_REF" != "refs/heads/master" ]; then
+            base=$(git rev-parse origin/master)
+          elif [ -n "$BEFORE_SHA" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] && git cat-file -e "$BEFORE_SHA^{commit}" 2>/dev/null; then
+            base=$BEFORE_SHA
+          else
+            base=$(git rev-parse origin/master)
+          fi
+          if [ "$(git rev-list --count "$base..$HEAD_SHA")" = "0" ]; then
+            echo "相对 $base 没有新提交，跳过卡档案检查"
+            exit 0
+          fi
+          printf 'refs/heads/ci %s refs/heads/master %s\n' "$HEAD_SHA" "$base" | node tools/accept/pre-push.mjs
       - run: npm run test:all
 
   e2e-observe:
