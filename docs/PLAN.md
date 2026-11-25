@@ -16,7 +16,10 @@
   - [x] L-13 现行有效裁定.json 写入 K1125-P1～P5 与 K1125-ESC（附原话出处）；Q-14/Q-15（亮圳的留档、门禁规矩）与 B7（世界方向）不由主会话改，附理由/备选/代价报李白，Q-14/Q-15 转亮圳，B7 标「产品拍板」。
   - [x] L-14 docs/卡档案/_template/state.json 模板（照开工文件 5.3 节字段）。
   - [x] P4 main-session/.claude/settings.local.json 禁用 Agent（不入库）。
-  - [ ] P3 新骨架空仓：L-15 server-plugin 旧码归档、kernel ≤15；L-16 旧测试归档；L-17 baseline/scanclasses/entry-registry 重置；L-18 E2E 红灯桩。
+  - [~] L-11 状态快照脚本：卡 chore/status-snapshot 已派（写 DeepSeek、出题 Haiku、审 Sonnet）。已定：生成基准与最近提交两段不受 --check 比对（提交快照本身会改 HEAD），入口接通、门禁基线、在途卡三段受检。
+  - [~] L-15/L-16 新骨架空仓：Gemini 裁定 msg_82485b7f7ab7——kernel 只留 6 零件的 14 文件 import 闭包、≤15 不放宽；gate/output-gate/textcore 一并归档，S1-3 随真实入口迁回（依赖文件收各自目录，不回 kernel）；tools/accept 自用旧 kernel 读表辅助收进 tools/accept/lib/。卡 chore/new-skeleton 已派（写 DeepSeek、出题 Haiku 并归档旧验收目录、审 Opus）。
+  - [ ] L-17 baseline/scanclasses/entry-registry 重置（chore/new-skeleton 下一轮）；L-18 E2E 红灯桩（另卡）。
+  - [ ] L-07 派活卡头规矩 ≤50 行、删 9 项自查表：等亮圳拍板 Q-14（自我反思是否保留）。
   - [ ] P4 治理：L-19 master 分支保护（等拍板 P1）；L-20 李白 Routine A/B 上线演练（李白侧）。
   - [ ] 全部自验后写 0B 复核交接文件（文件名与发送命令见开工文件第八章末），交 antigravity 复核。
 - 阶段 0B Gemini 复审（硬门闩）：独立顾问逐条核验复审勾选清单，给出明确「复审通过」→ 整理 PR 合入 `master` → 开 `master` 分支保护 → 门闩解锁，允许开工 S1-1。
