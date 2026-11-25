@@ -12,7 +12,7 @@
 
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { RULES_LAYOUT } from '../../../server-plugin/kernel/load/rules.mjs';
+import { RULES_LAYOUT } from '../lib/rules.mjs';
 import { listItemType, parseNumberType } from '../../../server-plugin/kernel/validate/types.mjs';
 import { LAYOUT } from '../read.mjs';
 

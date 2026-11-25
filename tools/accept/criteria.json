@@ -14,10 +14,14 @@
     {
      "ref": "第四轮写码（审查.md 发现与处理第 1、4 条）：claude 子进程清 OAuth 与会员令牌键；豁免缺理由报 E-ACC-ITEM-PARAM；删 docs/gemini/ 死豁免条目",
      "rev": 3
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 4
     }
    ],
-   "print": "b853e4a2dc55fc35cdfbfe74f420488c9f647ccc026020dbed68686f834010fa",
-   "rev": 3,
+   "print": "e9bdd05c07a80b0907db240d8814e27f17a14a7b708418a995b705f977f01bbb",
+   "rev": 4,
    "scanClass": "archive_ref",
    "terms": {
     "step0a.archive_ref": {
@@ -136,10 +140,14 @@
     {
      "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
      "rev": 26
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 27
     }
    ],
-   "print": "9cc0a9bd0f442939bcfe6aef00128e338bf427cb58f25ca2270994193dafb629",
-   "rev": 26,
+   "print": "129f4e6a99175ebe3831f9e4a39da93b184f1a4125498cef6c31f74f4529ddd1",
+   "rev": 27,
    "scanClass": "baseline_monotone",
    "source": "卷一 V-11（I43）；卷十二 §2.5、E-ACC-BASELINE-UP；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -550,10 +558,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 99
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 100
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 99,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 100,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -615,10 +627,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 12
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 13
     }
    ],
-   "print": "1eabdebf29d2b7a521c8dd98877cf3fc6489010a313c14eee5789fd2031832af",
-   "rev": 12,
+   "print": "a4003c1e0be559f01cf34d7a2850744854ccb2df21c347ed9855af9efbf459c9",
+   "rev": 13,
    "scanClass": "crit_version",
    "terms": {
     "vol12.S12-13": {
@@ -765,10 +781,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 33
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 34
     }
    ],
-   "print": "e0e03ae3d658873fbaea7468573d628990aeba763a89eec2f1ef8f7ac0f41703",
-   "rev": 33,
+   "print": "f3f0e16911fd8db838c61d8f33068383f8468ac4a6bb96f49b06069bca4f891b",
+   "rev": 34,
    "scanClass": "cross_write",
    "source": "卷十二 R12-3.1–3.4；卷二 §2.6、§2.7、S5",
    "terms": {
@@ -832,10 +852,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 4
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 5
     }
    ],
-   "print": "29fe9727607c9cdc59efd91ae223631e162c16ab7879d913cd4cf51bd087c1b0",
-   "rev": 4,
+   "print": "8e9093b34cb35c26c79a5a87cc37bf113694f773beb07add9f196bc177344a37",
+   "rev": 5,
    "scanClass": "decl_guard",
    "source": "卷十七 S17-1、S17-4；卷九 R9-2.10；卷二十 §4.7.6；卷十二 §2.4 开放登记",
    "terms": {
@@ -1007,10 +1031,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 33
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 34
     }
    ],
-   "print": "e0e03ae3d658873fbaea7468573d628990aeba763a89eec2f1ef8f7ac0f41703",
-   "rev": 33,
+   "print": "f3f0e16911fd8db838c61d8f33068383f8468ac4a6bb96f49b06069bca4f891b",
+   "rev": 34,
    "scanClass": "display_read",
    "source": "卷十二 R12-2.10；卷二 S7",
    "terms": {
@@ -1414,10 +1442,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 97
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 98
     }
    ],
-   "print": "f51fbb1107aa6e7f2bc2d4cac9681801ea5b5db99ac1225456e9fa2737238e79",
-   "rev": 97,
+   "print": "12fb72fd5f8833e134f5c7d07a7c7ee7772e02bfa4b80d146329adde493206ee",
+   "rev": 98,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1532,10 +1564,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 25
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 26
     }
    ],
-   "print": "4004ec51bdf935f2645b84203d2e6c9dfde7976885443ad87428323a99a38b79",
-   "rev": 25,
+   "print": "6b5002bc5b2bf2f65f0cb840371b2770781dd8ceee5a996bd863eae5cd40a687",
+   "rev": 26,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -1654,10 +1690,14 @@
     {
      "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
      "rev": 26
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 27
     }
    ],
-   "print": "9cc0a9bd0f442939bcfe6aef00128e338bf427cb58f25ca2270994193dafb629",
-   "rev": 26,
+   "print": "129f4e6a99175ebe3831f9e4a39da93b184f1a4125498cef6c31f74f4529ddd1",
+   "rev": 27,
    "scanClass": "ext_code",
    "terms": {
     "vol12.S12-12": {
@@ -1776,10 +1816,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 26
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 27
     }
    ],
-   "print": "99a33d968701479d5df661d28f869877589059bda2e7528b95c737300eacc0e7",
-   "rev": 26,
+   "print": "7d54318d81b9996c5441a0db3f42862e277ecbe4eb70bd852f915d69670bb432",
+   "rev": 27,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -1875,10 +1919,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 20
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 21
     }
    ],
-   "print": "78709bb155bbcf0e6b236762b48c56f0e0199443cd700b2d44dada8bc00b0c4b",
-   "rev": 20,
+   "print": "b54dcf9de226afe2f3fe8221f470c353a80f4740225e38c16c14afe0bc79567c",
+   "rev": 21,
    "scanClass": "float_math",
    "source": "卷二十七 R27-5.2、A27-5.1；公共部件审查乙规则 7；C0 卡",
    "terms": {
@@ -2009,10 +2057,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 21
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 22
     }
    ],
-   "print": "78709bb155bbcf0e6b236762b48c56f0e0199443cd700b2d44dada8bc00b0c4b",
-   "rev": 21,
+   "print": "b54dcf9de226afe2f3fe8221f470c353a80f4740225e38c16c14afe0bc79567c",
+   "rev": 22,
    "scanClass": "geometry_bypass",
    "source": "卷五 §3.5 S5-10 :408；卷十二 §2.4 开放登记",
    "terms": {
@@ -2364,10 +2416,14 @@
     {
      "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
      "rev": 84
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 85
     }
    ],
-   "print": "5e16e63cef54c7b86223b49b33a08653f42de5df0697b8e8efad85201eba183d",
-   "rev": 84,
+   "print": "5876f34c511dc3ebe67a83ab302baa47a57b2fe140e46cc9f79843ed5ea9787f",
+   "rev": 85,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -2487,10 +2543,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 26
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 27
     }
    ],
-   "print": "99a33d968701479d5df661d28f869877589059bda2e7528b95c737300eacc0e7",
-   "rev": 26,
+   "print": "7d54318d81b9996c5441a0db3f42862e277ecbe4eb70bd852f915d69670bb432",
+   "rev": 27,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -2977,10 +3037,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 116
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 117
     }
    ],
-   "print": "1dc129927845a48ae8f3a7f0de17681ada0423ffb685d35274b1e5795bd29f1d",
-   "rev": 116,
+   "print": "93ddc1a41584827b52859401da3e6d435adba7dddef304ca67726515d2ecd405",
+   "rev": 117,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -3130,10 +3194,14 @@
     {
      "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
      "rev": 26
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 27
     }
    ],
-   "print": "9cc0a9bd0f442939bcfe6aef00128e338bf427cb58f25ca2270994193dafb629",
-   "rev": 26,
+   "print": "129f4e6a99175ebe3831f9e4a39da93b184f1a4125498cef6c31f74f4529ddd1",
+   "rev": 27,
    "scanClass": "item_downgrade",
    "terms": {
     "vol12.S12-16": {
@@ -3487,10 +3555,14 @@
     {
      "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
      "rev": 85
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 86
     }
    ],
-   "print": "5e16e63cef54c7b86223b49b33a08653f42de5df0697b8e8efad85201eba183d",
-   "rev": 85,
+   "print": "5876f34c511dc3ebe67a83ab302baa47a57b2fe140e46cc9f79843ed5ea9787f",
+   "rev": 86,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -3568,10 +3640,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 16
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 17
     }
    ],
-   "print": "9f772837db3c91415c1a9d31f873576dcdb5a20462bc2d477a585afa1137df29",
-   "rev": 16,
+   "print": "36f571bed53f563c6a88a47c7a9c9b0c6e4959a43ea58e4f5a10423f91b22b0e",
+   "rev": 17,
    "scanClass": "item_ledger",
    "terms": {
     "vol12.S12-3": {
@@ -3666,10 +3742,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 20
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 21
     }
    ],
-   "print": "e0e03ae3d658873fbaea7468573d628990aeba763a89eec2f1ef8f7ac0f41703",
-   "rev": 20,
+   "print": "f3f0e16911fd8db838c61d8f33068383f8468ac4a6bb96f49b06069bca4f891b",
+   "rev": 21,
    "scanClass": "ledger_state_read",
    "source": "卷六 §4.1.2；公共部件审查乙规则 4；C0 卡",
    "terms": {
@@ -3781,10 +3861,14 @@
     {
      "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
      "rev": 24
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 25
     }
    ],
-   "print": "9cc0a9bd0f442939bcfe6aef00128e338bf427cb58f25ca2270994193dafb629",
-   "rev": 24,
+   "print": "129f4e6a99175ebe3831f9e4a39da93b184f1a4125498cef6c31f74f4529ddd1",
+   "rev": 25,
    "scanClass": "ledger_tally",
    "source": "卷十二 §4.1.6 至 §4.14.6 A12-n.1；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -4140,10 +4224,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 51
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 52
     }
    ],
-   "print": "329b09f10db23d4743a2c0d7b3ed602b7335abbb6c9d4a207941060d877f89b8",
-   "rev": 51,
+   "print": "15cbfbfee6e5940b462942a95162bd570f80fa60e7e34a9fdbdc33530b7505fa",
+   "rev": 52,
    "scanClass": "module_edge",
    "terms": {
     "vol1.V-24.b": {
@@ -4617,10 +4705,14 @@
     {
      "ref": "C0 第九轮修：规范序列化取键认 Map.keys/entries（按构造来源）、串经 Promise.then 回调形参与 Promise.resolve 追、摘要或存储调用只按取值来源认（去掉裸名比对，接收者沿 const 与方法链回到 createHash）、手写排序补循环条件比较与解构交换与 splice 插入；折叠认数组字面量 join、按名字名单判的二元运算跟导入绑定到导出处本地名；ast.mjs 与 ast-rules.mjs 代码变，类别判据指纹随之变",
      "rev": 85
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 86
     }
    ],
-   "print": "5e16e63cef54c7b86223b49b33a08653f42de5df0697b8e8efad85201eba183d",
-   "rev": 85,
+   "print": "5876f34c511dc3ebe67a83ab302baa47a57b2fe140e46cc9f79843ed5ea9787f",
+   "rev": 86,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -4975,10 +5067,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 85
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 86
     }
    ],
-   "print": "74001aeff1b11545c0daafddc5da81368dc9fe77fce58f0c0c839fefd082e603",
-   "rev": 85,
+   "print": "70e283906d035aaa1344313f0c4befcd689aa872ba67320f459efa57bdd25cfd",
+   "rev": 86,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -5094,10 +5190,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 25
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 26
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 25,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 26,
    "scanClass": "pp_canonical_def",
    "source": "公共部件审查乙 11；卷二十七 :542；例外 kernel/storage.mjs",
    "terms": {
@@ -5157,10 +5257,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 11
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 12
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 11,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 12,
    "scanClass": "pp_canonical_review",
    "source": "主会话 11-23 定：规范序列化按定义判，拿不准的待人审",
    "terms": {
@@ -5276,10 +5380,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 25
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 26
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 25,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 26,
    "scanClass": "pp_deep_clone",
    "source": "公共部件审查乙 10；卷二 :897；kernel/clone.mjs（kernelApi clone）",
    "terms": {
@@ -5395,10 +5503,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 25
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 26
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 25,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 26,
    "scanClass": "pp_dist_branch",
    "source": "公共部件审查甲 R7；卷二 §1.10；kernel/sample.mjs 头注",
    "terms": {
@@ -5494,10 +5606,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 20
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 21
     }
    ],
-   "print": "bcd0e916567d193e9d9ec2faf9633843c359c7ad1cfc4050ebf4bcf539917e01",
-   "rev": 20,
+   "print": "04f02ecefc7c7d1e7c0e455e7ef92ac6921b73a39b7e6156f3a9add0e6ea4429",
+   "rev": 21,
    "scanClass": "pp_draw_sites",
    "source": "公共部件审查甲 R6 后半；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479（rules.clock.drawSites）",
    "terms": {
@@ -5593,10 +5709,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 20
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 21
     }
    ],
-   "print": "74001aeff1b11545c0daafddc5da81368dc9fe77fce58f0c0c839fefd082e603",
-   "rev": 20,
+   "print": "70e283906d035aaa1344313f0c4befcd689aa872ba67320f459efa57bdd25cfd",
+   "rev": 21,
    "scanClass": "pp_dup_export",
    "source": "公共部件审查甲 R14、乙 12；卷二 :1162 体例；CLAUDE.md“跨卷共用定义只一处”。职责函数 isPos、distributionMean、weatherCellOf 的职责文件依据：卷二 §1.5 struct:pos（kernel/named-structs.mjs）、卷二 §1.10（kernel/sample.mjs）、卷二十 §3.1（kernel/weather.mjs）",
    "terms": {
@@ -5712,10 +5832,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 25
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 26
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 25,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 26,
    "scanClass": "pp_dynamic_index",
    "source": "李白更正裁定 msg-1122-2255-c0ast（动态下标出现即报，标待人审）；卷二十七 R27-5.2、A27-5.1；卷二十 :436",
    "terms": {
@@ -5811,10 +5935,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 20
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 21
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 20,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 21,
    "scanClass": "pp_dynamic_review",
    "source": "李白更正裁定 msg-1122-2255-c0ast：运行期才知道的动态下标出现即报，标待人审。本条列全部对象上的动态下标（含数组按位置取），数量大，只报不拦（报告里列出，供人审）；登记在 Math、全局对象、状态根等根上的动态下标由 pp_dynamic_index 拦",
    "terms": {
@@ -5930,10 +6058,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 25
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 26
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 25,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 26,
    "scanClass": "pp_envat_callers",
    "source": "公共部件审查甲 R2；卷二十 :478；state-owners.json kernelApi 行形状",
    "terms": {
@@ -6049,10 +6181,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 25
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 26
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 25,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 26,
    "scanClass": "pp_envat_import",
    "source": "公共部件审查甲 R1（docs/研究/公共部件审查-甲-1122.md 第八节）；卷二十 :478、:631；例外：climate.mjs、weather.mjs 互相引用（甲 R1 原句）",
    "terms": {
@@ -6168,10 +6304,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 25
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 26
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 25,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 26,
    "scanClass": "pp_epsilon",
    "source": "公共部件审查乙 7；卷二十七 :620、:634（R27-5.2 数值运算只有三条路）",
    "terms": {
@@ -6251,10 +6391,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 16
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 17
     }
    ],
-   "print": "78709bb155bbcf0e6b236762b48c56f0e0199443cd700b2d44dada8bc00b0c4b",
-   "rev": 16,
+   "print": "b54dcf9de226afe2f3fe8221f470c353a80f4740225e38c16c14afe0bc79567c",
+   "rev": 17,
    "scanClass": "pp_eval",
    "source": "李白更正裁定 msg-1122-2255-c0ast：别名、间接调用都要跟到原名，eval 与 new Function 是语法树追不到的间接执行，出现即报；卷二十七 S27-4 :253（禁用语言特性）",
    "terms": {
@@ -6366,10 +6510,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 24
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 25
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 24,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 25,
    "scanClass": "pp_float_pow",
    "source": "公共部件审查乙 7；卷二十七 R27-5.2（超越函数只经定点数学设施，幂函数 pow 同属）；独立验收漏项“** 运算符”",
    "terms": {
@@ -6485,10 +6633,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 25
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 26
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 25,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 26,
    "scanClass": "pp_footprint_kind",
    "source": "公共部件审查甲 R12；卷二 §1.9；模块化评估第三节；例外 kernel/footprint-kind.mjs（gen/* 按种类过滤的比较进基线，M-11③ 修后开）",
    "terms": {
@@ -6600,10 +6752,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 24
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 25
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 24,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 25,
    "scanClass": "pp_gen_callers",
    "source": "公共部件审查乙 9（docs/研究/公共部件审查-乙-1122.md :161）；卷十 :403（生成器只在世界创建事务里按步骤表跑）；例外：generateWorld 所在文件 server-plugin/world-create.mjs（卷十 §3.2 :291）；requireMaterialized 现不存在，建成后其所在文件须加入例外；作者工具在 tools/ 下，不在扫描范围（卷十 :1002）",
    "terms": {
@@ -6719,10 +6875,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 25
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 26
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 25,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 26,
    "scanClass": "pp_grammar_regex",
    "source": "公共部件审查乙 6；卷二 :291；例外 kernel/validate/types.mjs",
    "terms": {
@@ -6814,10 +6974,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 19
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 20
     }
    ],
-   "print": "e0e03ae3d658873fbaea7468573d628990aeba763a89eec2f1ef8f7ac0f41703",
-   "rev": 19,
+   "print": "f3f0e16911fd8db838c61d8f33068383f8468ac4a6bb96f49b06069bca4f891b",
+   "rev": 20,
    "scanClass": "pp_holdings_read",
    "source": "公共部件审查乙 5；卷十八:200（持有写者）；卷二 §2.6；读者按文件豁免（fileSets.holdingsReaders，每行带依据）",
    "terms": {
@@ -6933,10 +7097,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 25
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 26
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 25,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 26,
    "scanClass": "pp_key_concat",
    "source": "公共部件审查甲 R5、乙 1、乙 2；卷二 :337、:897、:1162；例外：整份文本摘要 sha256Text(canonical(…))、sha256Text(text) 不拼键（不含 .join，不命中）",
    "terms": {
@@ -7044,10 +7212,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 23
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 24
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 23,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 24,
    "scanClass": "pp_kind_branch",
    "source": "独立验收（亮圳 11-22「独立测门禁1122」）指出“写死数值与种类分支没有 C0 专条”；卷一 二.1（派生优先，不按 ID 或场景特判，docs/产品原则.md）；卷二 S10（常数登记）",
    "terms": {
@@ -7163,10 +7335,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 25
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 26
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 25,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 26,
    "scanClass": "pp_material_read",
    "source": "公共部件审查甲 R11；卷三甲 :268；卷三乙 :541；例外：kernel/item.mjs、kernel/dimensions.mjs、kernel/load/**、kernel/validate/**、kernel/blueprint.mjs（加载期校验 checkBlueprintForms）",
    "terms": {
@@ -7282,10 +7458,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 25
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 26
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 25,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 26,
    "scanClass": "pp_neighbors",
    "source": "公共部件审查甲 R10；卷五 :491、:1216（现 8 处）",
    "terms": {
@@ -7389,10 +7569,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 22
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 23
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 22,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 23,
    "scanClass": "pp_no_acorn_runtime",
    "source": "李白更正裁定 msg-1122-2255-c0ast：acorn 只许 tools/accept 引用，server-plugin 不得引用",
    "terms": {
@@ -7508,10 +7692,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 25
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 26
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 25,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 26,
    "scanClass": "pp_pos_shape",
    "source": "公共部件审查甲 R8；卷二 §1.5 struct:pos 登记；例外 kernel/named-structs.mjs、kernel/named-struct-match.mjs",
    "terms": {
@@ -7627,10 +7815,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 25
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 26
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 25,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 26,
    "scanClass": "pp_region_cell",
    "source": "公共部件审查甲 R9；卷五 :433、:499；例外：kernel/footprint.mjs 的共用函数（修后建）、kernel/handles/keys.mjs gridChunkCells（卷二 :860）",
    "terms": {
@@ -7746,10 +7938,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 25
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 26
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 25,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 26,
    "scanClass": "pp_rx_empty_clock",
    "source": "公共部件审查甲 R15；卷二十 :312、:685；例外：加载期校验 kernel/validate/**",
    "terms": {
@@ -7865,10 +8061,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 25
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 26
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 25,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 26,
    "scanClass": "pp_seed_args",
    "source": "公共部件审查甲 R6；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479。后半（drawSites 与 seed-keys 两表一致）未落：需读两表对照，现有检测器无此检查",
    "terms": {
@@ -7960,10 +8160,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 19
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 20
     }
    ],
-   "print": "bcd0e916567d193e9d9ec2faf9633843c359c7ad1cfc4050ebf4bcf539917e01",
-   "rev": 19,
+   "print": "04f02ecefc7c7d1e7c0e455e7ef92ac6921b73a39b7e6156f3a9add0e6ea4429",
+   "rev": 20,
    "scanClass": "pp_seed_args_dyn",
    "source": "独立验收漏项“抽取点站点名用变量”；卷二十七 :789（R27-8.1 每个抽取点登记，流代号、抽取点代号须字面量）",
    "terms": {
@@ -8055,10 +8259,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 19
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 20
     }
    ],
-   "print": "74001aeff1b11545c0daafddc5da81368dc9fe77fce58f0c0c839fefd082e603",
-   "rev": 19,
+   "print": "70e283906d035aaa1344313f0c4befcd689aa872ba67320f459efa57bdd25cfd",
+   "rev": 20,
    "scanClass": "pp_tpl_key",
    "source": "公共部件审查甲 R13；卷二 :860（键串形只由登记方给）；模块化原则卡头第二节第 9 条",
    "terms": {
@@ -8170,10 +8378,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 24
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 25
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 24,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 25,
    "scanClass": "pp_unit_literal",
    "source": "公共部件审查乙 13；卷三乙:179 与表头 unit 字段（item.json 表头 unit 字段）；单位登记表 world/ontology/dimensions/_units.json",
    "terms": {
@@ -8289,10 +8501,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 25
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 26
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 25,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 26,
    "scanClass": "pp_year_minutes",
    "source": "公共部件审查甲 R3；卷二十 :436、:477 T-3 (c)；例外 climate.mjs（日均温日份额，天文相位，卷二十 :436）",
    "terms": {
@@ -8755,10 +8971,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 112
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 113
     }
    ],
-   "print": "53a58c04f5487359012aaac6a5d980114c76fe8857214927d1603d211f905ad8",
-   "rev": 112,
+   "print": "176b55284c0bcff7b503d0f1f7fa112e8a3e237c24f127700771f7c402819e6f",
+   "rev": 113,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -8932,10 +9152,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 40
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 41
     }
    ],
-   "print": "78709bb155bbcf0e6b236762b48c56f0e0199443cd700b2d44dada8bc00b0c4b",
-   "rev": 40,
+   "print": "b54dcf9de226afe2f3fe8221f470c353a80f4740225e38c16c14afe0bc79567c",
+   "rev": 41,
    "scanClass": "rng_bypass",
    "terms": {
     "vol27.A27-8.1.a": {
@@ -9001,10 +9225,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 13
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 14
     }
    ],
-   "print": "793b8a07382e6ba37e6596c45422482c4d14030834c6a8507a148ea422b4af85",
-   "rev": 13,
+   "print": "f2f0309a9959f415d599c86b8c7e44f2562e98e1144f256745ac654715692e69",
+   "rev": 14,
    "scanClass": "rules_import",
    "terms": {
     "vol1.V-9": {
@@ -9302,10 +9530,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 71
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 72
     }
    ],
-   "print": "bcd0e916567d193e9d9ec2faf9633843c359c7ad1cfc4050ebf4bcf539917e01",
-   "rev": 71,
+   "print": "04f02ecefc7c7d1e7c0e455e7ef92ac6921b73a39b7e6156f3a9add0e6ea4429",
+   "rev": 72,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -9715,10 +9947,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 97
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 98
     }
    ],
-   "print": "b2f2d2008b6791f33c3c98cf28534ec8d4df4c72a067ce9c9d21fe5e3a1ad711",
-   "rev": 97,
+   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
+   "rev": 98,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -9805,10 +10041,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 18
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 19
     }
    ],
-   "print": "e0e03ae3d658873fbaea7468573d628990aeba763a89eec2f1ef8f7ac0f41703",
-   "rev": 18,
+   "print": "f3f0e16911fd8db838c61d8f33068383f8468ac4a6bb96f49b06069bca4f891b",
+   "rev": 19,
    "scanClass": "sim_bypass",
    "source": "卷二十七 §4.8 S27-11 :260、A27-1.11 :369；对照表 docs/迁移体检/格子G6-G11-规矩检查对照.md #60；卷十二 §2.4 开放登记",
    "terms": {
@@ -10035,10 +10275,14 @@
     {
      "ref": "C6（李白 Q-6）：kernel/det-math.mjs 的 ln 并入 fixedLn、kernel/sample.mjs 半正定校验改整数消元，检测器 import 闭包内容变，指纹重盖；本类别判定口径不变（R12-14.3）",
      "rev": 53
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 54
     }
    ],
-   "print": "fc245f0275c1ee436e0d80da1e5bab019a32fb1546fc1c25780c4eb748cfdbaf",
-   "rev": 53,
+   "print": "98ac3c2ffbb4dfd7d365e2d796645de71e3f60ce4141b9d0cad4f3e903cabbe3",
+   "rev": 54,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -10154,10 +10398,14 @@
     {
      "ref": "C0 第八轮修：规范序列化补自写摘要、包装函数、取键排序辅助、对象成员、手写交换排序的数据流判；调公共摘要不再误报；名单规则认形参所携带的字段名（判据代码指纹变）",
      "rev": 25
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 26
     }
    ],
-   "print": "99a33d968701479d5df661d28f869877589059bda2e7528b95c737300eacc0e7",
-   "rev": 25,
+   "print": "7d54318d81b9996c5441a0db3f42862e277ecbe4eb70bd852f915d69670bb432",
+   "rev": 26,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -10365,10 +10613,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 20
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 21
     }
    ],
-   "print": "78709bb155bbcf0e6b236762b48c56f0e0199443cd700b2d44dada8bc00b0c4b",
-   "rev": 20,
+   "print": "b54dcf9de226afe2f3fe8221f470c353a80f4740225e38c16c14afe0bc79567c",
+   "rev": 21,
    "scanClass": "timer_global",
    "source": "卷二十七 S27-3 :252；公共部件审查甲 R4；C0 卡",
    "terms": {
@@ -10732,10 +10984,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 87
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 88
     }
    ],
-   "print": "74001aeff1b11545c0daafddc5da81368dc9fe77fce58f0c0c839fefd082e603",
-   "rev": 87,
+   "print": "70e283906d035aaa1344313f0c4befcd689aa872ba67320f459efa57bdd25cfd",
+   "rev": 88,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -10839,10 +11095,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 20
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 21
     }
    ],
-   "print": "78709bb155bbcf0e6b236762b48c56f0e0199443cd700b2d44dada8bc00b0c4b",
-   "rev": 20,
+   "print": "b54dcf9de226afe2f3fe8221f470c353a80f4740225e38c16c14afe0bc79567c",
+   "rev": 21,
    "scanClass": "undo_raw_push",
    "source": "公共部件审查乙规则 3；卷二 §2.6；C0 卡",
    "terms": {
@@ -11001,10 +11261,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 36
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 37
     }
    ],
-   "print": "e0e03ae3d658873fbaea7468573d628990aeba763a89eec2f1ef8f7ac0f41703",
-   "rev": 36,
+   "print": "f3f0e16911fd8db838c61d8f33068383f8468ac4a6bb96f49b06069bca4f891b",
+   "rev": 37,
    "scanClass": "version_fork",
    "terms": {
     "vol1.V-17": {
@@ -11246,10 +11510,14 @@
     {
      "ref": "主会话合入 ds/c0-fix9（C0 第九轮：规范序列化 Map.keys/Promise.then/类字段、isSink 只按取值来源、数组 join 折叠、改名导入跟到导出处、迭代式手写排序、外来形参存储写）于 C3、C5、C6 之后：criteria 三方合并、两边修订记录都保留，检测器 import 闭包合起来变，指纹重盖，本类别判定口径不变（R12-14.3）",
      "rev": 57
+    },
+    {
+     "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
+     "rev": 58
     }
    ],
-   "print": "6e1f0f09f9dc11e85f192f9d2e7b68bc14cb2e220e0399418af7783cad717782",
-   "rev": 57,
+   "print": "a58d98e74c6449367594b1d77ea1e1ed351045e9bf15885dabcaa817a1fe8658",
+   "rev": 58,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

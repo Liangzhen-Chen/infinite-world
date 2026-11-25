@@ -6,7 +6,7 @@ import { join, posix } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { tokenize, importsOf } from './lib/js-scan.mjs';
-import { LAYOUT as WORLD_LAYOUT } from '../../server-plugin/kernel/load/layout.mjs';
+import { LAYOUT as WORLD_LAYOUT } from './lib/world-layout.mjs';
 
 // 卷二 §1.1 的文件布局与卷十二 §2.11、§2.9、§2.3 的登记位置（相对仓库根）。
 export const LAYOUT = Object.freeze({

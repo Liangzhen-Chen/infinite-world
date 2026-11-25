@@ -125,7 +125,7 @@ export function writeBaseline(root, baseRows, components, rows, mergeRef, b0Map,
     if (!p) {
       const b = b0Map && b0Map.get(compCode);
       if (!b) throw new Error(`E-ACC-BASELINE-UP ${compCode} 首次登记缺基线提交的 B0（R12-8.9）`);
-      out.push({ compCode, b0: b.count, b0Source: 'counted', locked: false, current: cur, lastMergeRef: mergeRef, rowKeys });
+      out.push({ compCode, b0: b.count, b0Source: 'counted', locked: true, current: cur, lastMergeRef: mergeRef, rowKeys });
       continue;
     }
     // 持平保持原样（行集合有变而总数持平的已在 le_baseline 条目上按集合拦下，关口不过就不会走到这里）。
@@ -134,6 +134,8 @@ export function writeBaseline(root, baseRows, components, rows, mergeRef, b0Map,
   // 登记里已没有任何条目引用的分量（条目改了基线分量名、旧分量退役）不再保留：旧判据下的行集合留在基线里等于把误报当存量。liveComps 缺省时全部保留。
   for (const r of baseRows) if (!(r.compCode in components) && (!liveComps || liveComps.has(r.compCode))) out.push(r);
   out.sort((a, b) => (a.compCode < b.compCode ? -1 : a.compCode > b.compCode ? 1 : 0));
+  // L-17：新骨架基线全行 locked: true（docs/gemini/kickoff-1125.md:496）。首次登记在 push 处已锁；既有行与保留下来的旧分量同锁，不留下 unlocked 行。
+  for (const r of out) r.locked = true;
   writeFileSync(join(root, LAYOUT.accDir, 'baseline.json'), stableJson({ rows: out }));
 }
 // 检测器命中带的码为空或不在码表里（条目没登 params.code 等），按条目缺字段报 E-ACC-ITEM-FORM（§2.12 :542 整类规则：不过必带登记的码，没有空码）。
