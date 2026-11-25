@@ -1,16 +1,16 @@
 {
   "card": "feat-s1-1a",
-  "phase": "dispatched",
-  "updatedAt": "2026-11-25T21:45:00Z",
+  "phase": "code-done",
+  "updatedAt": "2026-11-25T23:30:00Z",
   "branches": { "code": "feat/s1-1a", "test": "test/s1-1a" },
   "pr": null,
   "parties": {
-    "code": { "family": "deepseek", "model": "deepseek-flash", "receipt": null, "costUsd": null },
+    "code": { "family": "deepseek", "model": "deepseek-flash", "receipt": "commit:b5970c5ae", "costUsd": null },
     "test": { "family": "claude-haiku", "model": "claude-haiku-5-5", "receipt": null, "costUsd": null },
     "review": { "family": "claude-opus", "model": "claude-opus-5-5", "receipt": null, "costUsd": null }
   },
   "ci": { "status": "pending", "runUrl": null },
   "failCount": 0,
   "blocker": null,
-  "nextAction": "等 DeepSeek 写码与 Haiku 出题回报；主会话读 diff 后合出题分支、跑验收，再派 Opus API 审卡"
+  "nextAction": "写码已提交 feat/s1-1a b5970c5ae；主会话合 test/s1-1a 的出题分支（tests/acceptance/feat-s1-1a 与 出题.md）、跑验收后派 Opus API 审卡；check-push-archive 现仅缺 出题.md/审查.md，其余档案通过"
 }
