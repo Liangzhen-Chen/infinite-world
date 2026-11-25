@@ -1,6 +1,6 @@
 # 《无限原野》开工文件（Orca 多代理协作 + 抗失忆 + 全流程落地版）
 
-- **代码与盘面基线**：`origin/chore/workspace-cleanup` 提交 `9e9a53fca`（已快进至分支 `antigravity`，2026-11-25 伦敦时间；`origin/master` 仍停在 `ae71f231e`，待整理合入）。
+- **代码与盘面基线**：`origin/master` 提交 `395986f01`（`chore/workspace-cleanup` 已合并至 `master` 并推送，全量单测 `2239/2239` 绿；已合入分支 `antigravity`，2026-11-25 伦敦时间）。
 - **撰写角色**：Antigravity / Gemini（独立审核席，工作树 `F:/dnd-worktrees/dnd/antigravity`，分支 `antigravity`——固定做独立审核与架构把关，**不写业务代码**）。
 - **继承与生效关系**：本文件**完整继承** `docs/gemini/diagnosis-1124.md`（七条病根与机械防线）与 `docs/gemini/rewrite-guide-1124.md`（主策略、资产处置、代码规则、开发规则、合入门槛、模型分工、阶段卡、A–F 复审门闩），一条不丢；所有因 11-24 夜【停工清理1124】、【亮圳原话更正1124】与接入 **Orca** 而产生的修订，均在第一章逐条标明「改了什么、为什么」。
 - **配套附录**：给李白（Grok Bot）可直接复制粘贴的两套 Routine Prompt 见同目录独立文件 [`docs/gemini/libai-routine-prompt-1125.md`](./libai-routine-prompt-1125.md)。
@@ -13,12 +13,12 @@
 ### 1.1 11-24 夜至今的真实盘面（已亲核仓库与本机 Orca）
 
 1. **已完成（已落盘 / 已推远端）**：
-   - **F 盘清理完毕**（见 `docs/cleanup-1124.md`）：163 个旧 worktree（134.6 GB）、旧 `F:/dnd-tmp`（21.9 GB，保留 3 个云机指纹/私钥文件）、`F:/temp`（3 GB）、`F:/dnd-backup`（1.1 GB）已清，全项目磁盘占用从 ~190 GB 降至 ~5 GB；不可变留底标签 `pre-rewrite-1124`（`ae71f231e`）与留底分支 `backup/pre-cleanup-1124`（`c4072b022`）已推 GitHub。
-   - **仓库第一轮归档与删旧已完成于 `chore/workspace-cleanup`（`9e9a53fca`）**：467 MB `docs/统一底层设计/版本快照/`、343 MB `world/drafts/`、146 个 `world/design/` 旧脚本、`docs/probes/`、`logs/`、A3 残留已删；历史文档/旧本体/旧动作/旧测试已迁 `archive/`；`CLAUDE.md`（35 行）、`AGENTS.md`、`docs/PLAN.md`（18 行）、`docs/问题.md`（32 行）、`docs/审查/现行有效裁定.json`、`使用说明.md` 已更新。
+   - **F 盘清理完毕**（见 `archive/docs-status/cleanup-1124.md`）：163 个旧 worktree（134.6 GB）、旧 `F:/dnd-tmp`（21.9 GB，保留 3 个云机指纹/私钥文件）、`F:/temp`（3 GB）、`F:/dnd-backup`（1.1 GB）已清，全项目磁盘占用从 ~190 GB 降至 ~5 GB；不可变留底标签 `pre-rewrite-1124`（`ae71f231e`）与留底分支 `backup/pre-cleanup-1124`（`c4072b022`）已推 GitHub。
+   - **仓库第一轮归档与删旧已合入 `master`（`395986f01`，全量 `2239/2239` 绿）**：467 MB `docs/统一底层设计/版本快照/`、343 MB `world/drafts/`、146 个 `world/design/` 旧脚本、`docs/probes/`、`logs/`、A3 残留已删；历史文档/旧本体/旧动作/旧测试及清理记录（`archive/docs-status/cleanup-1124.md`）已迁 `archive/`，使 `docs/` 顶层严格仅留允许清单；`CLAUDE.md`（35 行）、`AGENTS.md`、`docs/PLAN.md`（18 行）、`docs/问题.md`（32 行）、`docs/审查/现行有效裁定.json`、`使用说明.md` 已更新。
    - **Orca 环境已搭起**：仓库 `dnd`（`repoId: 7f3bd855-6dec-429f-941f-32a9fcf2e65e`，主克隆 `F:/dnd`，`worktreeBasePath: ../dnd-worktrees`）；常驻工作树 `main-session`（Claude Chat）、`antigravity`（Antigravity Chat）、`deepseek`（OpenCode）；`claude` 与 `antigravity` 已启用 Orca 状态钩子；插件 `tourbut.grokbot-notify` v0.6.0 已安装并处于 `running`。
    - **`origin/chore/step1-tooling` 分支已启动并暂停**：初版 `dispatch.mjs`、`archive_ref.mjs`、模型族校验、`tools/cloud/`、`tools/notify/` 已在分支上起稿，尚未合入且尚未过审。
 2. **尚未完成（阶段 0 剩余硬缺口，进入第八章落地清单）**：
-   - `chore/workspace-cleanup` 尚未合入 `master`；旧残留 worktree `F:/dnd/.claude/worktrees/new-session-8e4637` 待合入后移除；
+   - 旧残留 worktree `F:/dnd/.claude/worktrees/new-session-8e4637` 待移除，并确认 `main-session` 快进到 `origin/master`（`395986f01`）；
    - `.github/workflows/ci.yml` 未建、`master` 分支保护未开、`package.json` 未加 `typescript` 与 `tsc --checkJs`；
    - `docs/状态快照.generated.md` 与 `tools/gen-status-snapshot.mjs` 未建；`world/ontology/contracts.json` 未建；
    - `docs/派活卡头规矩.md` 仍为 142 行旧版，`tools/accept/lib/card-selfcheck.mjs` 仍被提交门禁加载；
@@ -34,8 +34,8 @@
 | **R2** | **独立顾问席位升级** | 独立顾问 Gemini 4 Neon 跑在外部李白 box 机 `/workspace/neon-advisor/` 每周一/四巡查 | 升级为 **Orca 常驻独立审核工作树 `F:/dnd-worktrees/dnd/antigravity`（分支 `antigravity`）**，通过 `orca orchestration send` 接收阶段门闩复审、跨卷根因诊断与重大设计审核，仍严守**只读代码、不写业务代码、只写 `docs/gemini/`** | 亮圳与主会话 11-25 启用 Orca 多代理架构，审核延迟从“等周一/四”降至按需直达 |
 | **R3** | **多代理协作机制落入 Orca** | 11-24 仅设计 GitHub PR + 命令行脚本，未涉及 Orca | 明确 **Orca 管工作树/可见状态/跨代理消息/事件通知**，**`tools/dispatch/dispatch.mjs` 管无头 API 写码/出题/审卡与预算收据**；严禁 `orca agent launch`/`worker-start --agent claude` 跑写审测，避免偷烧 Claude Ultra 会员额 | 实测 `orca` CLI 与【裁定1124b】会员只给主会话调度冲突分析 |
 | **R4** | **API 环境变量名兼容** | `CLAUDE.md` 写死 `ANTHROPIC_API_KEY`，批评 `run-card.sh` 用 `CLAUDE_API_KEY` | 统一规定：宿主机用户环境变量兼容读取 `ANTHROPIC_API_KEY || CLAUDE_API_KEY`（本机实为 `CLAUDE_API_KEY`，不强迫亮圳改 C 盘全局环境变量），由 `dispatch.mjs` 仅在子进程内映射为 `ANTHROPIC_API_KEY`；同步修订 `CLAUDE.md:18` 措辞防报错 | `docs/问题.md:9` 与 `chore/step1-tooling` 的 `dispatch.mjs` 实测现状 |
-| **R5** | **两处过渡文件实读保留** | 11-24 建议整目录删 `world/design/`、整目录归档 `world/meta/` 与 `启动酒馆.*` | 承认 `chore/workspace-cleanup` 的实证保留：`world/design/opening-polity-hw.json`（4 处测试实读，其余 146 文件已删）、`world/meta/`（转换器与 2 测试实读，待 Step 5 切新骨架后再迁入 `archive/legacy-world-data/`）、`启动酒馆.*`（`tools/backup.mjs:15` 实读，待改清单后归档）、`docs/审查/6-22-材料候选清单.md`（`material-candidates.mjs` 实读，待 Step 5 随转换器迁出） | `docs/问题.md:3-4` 实测全量 `2239/2239` 绿灯约束 |
-| **R6** | **留底标签名与时间锚点** | 原指南写 `pre-rewrite-20261124`、11-24 22:00 截止 | 仓库实际已打不可变标签为 **`pre-rewrite-1124`**（指向 `ae71f231e`）+ 备份分支 `backup/pre-cleanup-1124`（`c4072b022`），本文件以此实名生效；11-25 01:00 起剩余距 11-30 20:00 伦敦时间约 **5.8 天（139 小时）**，阶段 0 须在 **11-25 晚**完成落地与复审，否则立刻顺延交付日 | `docs/cleanup-1124.md:9-10` 与当前真实时钟 |
+| **R5** | **两处过渡文件实读保留** | 11-24 建议整目录删 `world/design/`、整目录归档 `world/meta/` 与 `启动酒馆.*` | 承认 `chore/workspace-cleanup`（已合入 `master` `395986f01`）的实证保留：`world/design/opening-polity-hw.json`（4 处测试实读，其余 146 文件已删）、`world/meta/`（转换器与 2 测试实读，待 Step 5 切新骨架后再迁入 `archive/legacy-world-data/`）、`启动酒馆.*`（`tools/backup.mjs:15` 实读，待改清单后归档）、`docs/审查/6-22-材料候选清单.md`（`material-candidates.mjs` 实读，待 Step 5 随转换器迁出） | `docs/问题.md:3-4` 实测全量 `2239/2239` 绿灯约束 |
+| **R6** | **留底标签名与时间锚点** | 原指南写 `pre-rewrite-20261124`、11-24 22:00 截止 | 仓库实际已打不可变标签为 **`pre-rewrite-1124`**（指向 `ae71f231e`）+ 备份分支 `backup/pre-cleanup-1124`（`c4072b022`），本文件以此实名生效；11-25 01:00 起剩余距 11-30 20:00 伦敦时间约 **5.8 天（139 小时）**，阶段 0 须在 **11-25 晚**完成落地与复审，否则立刻顺延交付日 | `archive/docs-status/cleanup-1124.md:9-10` 与当前真实时钟 |
 
 ---
 
@@ -66,7 +66,7 @@
 
 ### 2.2 全仓五类资产处置承接表（11-25 实况对照）
 
-| 仓库区域 | 处置口径 | 11-25（`9e9a53fca`）现状 | 剩余动作（归属落地清单 / 阶段卡） |
+| 仓库区域 | 处置口径 | 11-25（`master 395986f01`）现状 | 剩余动作（归属落地清单 / 阶段卡） |
 |---|---|---|---|
 | `docs/统一底层设计/版本快照/`（467 MB）、`world/drafts/`（343 MB）、`world/design/`（146 文件）、`docs/probes/`、`logs/`、A3 顶层 8 文件、`verbs.json`/`holdings.json` | **删除**（`pre-rewrite-1124` 留底） | **已完成**（`world/design/opening-polity-hw.json` 暂留供 4 测实读） | Step 5 随旧测试归档后将 `opening-polity-hw.json` 迁入 `world/people/` 或 `archive/` |
 | 历史文档（`docs/当前状态.md`、`PLAN_已完成.md`、`卡回报/`、`卡档案/` 旧卡、`审查/` 1,553 份、`架构设计/` 23 份、`研究/` 70 份、`迁移体检/`、`归档/`、写卷草稿/脚本/素材）、旧数据/UI/模板/提示词/Schema/跑团资料 | **归档**至 `archive/` | **已完成**（`world/meta/`、`启动酒馆.*`、`6-22-材料候选清单.md` 因现行测试/转换器实读暂留） | 落地 `archive_ref.mjs` 禁引用防回潮；Step 5 转换器改显式源路径后迁出剩余 3 项 |
@@ -162,7 +162,7 @@
 - **A. 留底、删除与目录干净度**
   - [ ] **A1 `[一票否决]` 不可变留底存在**：`git rev-parse pre-rewrite-1124` 指向 `ae71f231e` 且已推 `origin`（+ `backup/pre-cleanup-1124` 可达），无 force-push。
   - [ ] **A2 `[一票否决]` 删除严格匹配批准清单**：核对 `pre-rewrite-1124..HEAD` 删除清单，无擅自多删，工作树体积（不含 `.git`/`node_modules`）`< 80 MB`。
-  - [ ] **A3 `[一票否决]` `docs/` 默认路径清净**：`docs/` 顶层仅 `产品原则.md`、`状态快照.generated.md`、`PLAN.md`、`问题.md`、`派活卡头规矩.md`（及明确留存的 `cleanup-1124.md` 归档或留史），旧流水与历史文件全在 `archive/`。
+  - [ ] **A3 `[一票否决]` `docs/` 默认路径清净**：`docs/` 顶层严格仅留允许清单（`产品原则.md`、`状态快照.generated.md`、`PLAN.md`、`问题.md`、`派活卡头规矩.md`；`cleanup-1124.md` 已在 `395986f01` 迁至 `archive/docs-status/cleanup-1124.md`），旧流水与历史文件全在 `archive/`。
   - [ ] **A4 `[一票否决]` `world/` 默认目录零死本体混放**：10 张零加载器旧本体已迁/删；除已登记过渡项外旧数据/UI/动作已迁 `archive/`。
 - **B. 六份单一真相源与零自相矛盾**
   - [ ] **B1 `[一票否决]` 规矩短硬且零互殴**：`wc -l CLAUDE.md <= 80`、`AGENTS.md <= 25`、`docs/派活卡头规矩.md <= 50`；不含「已过期」「取代下条」「Sonnet 子代理」「E-ACC-CARD-SELFCHECK」「F:/dnd-」；含亮圳原话处均有出处或自定标注。
@@ -450,7 +450,7 @@ flowchart TD
 | **P3** | **确认 11-30 20:00（伦敦）交付口径与 5 处待判卷文行** | 确认 11-30 检查点收束为「新 L0 极简骨架 + CI 保护 + 零 mock 最小闭环 + 浏览器点开试玩（保留九省 31 郡数据、解锁第二物种）」，阶段 2 在 12 月叠加；同步确认 `docs/问题.md:26-31` 所列 5 处卷文行按 `literature`/`design_spec` 分级与可重建烘焙层落地 | 若仍要求 11-30 交全玩法，物理工期必然无法达成；若 5 处卷文不拍板，S1-2/S2-1 校验器将再次卡停 | ¥0；产品与范围拍板 |
 | **P4** | **主会话防误耗会员子代理的可选项目级收窄** | 决定是否在项目内 `.claude/settings.local.json`（已忽略不入库）收窄主会话内置写码子代理权限，仅允许其经 Bash 调 `dispatch.mjs` | 不改宿主设置，仅靠 `CLAUDE.md` + CI 强制校验 `.dispatch-receipt.json` 收据在合入关口拦下（但合入前可能先误烧一点会员额） | ¥0；可选加固 |
 | **P5** | **旧工作树 `deepseek`（`opencode`）的去留** | 建议删除 `F:/dnd-worktrees/dnd/deepseek` 与本地 `deepseek` 分支（停在旧提交 `ae71f231e`），全部 DeepSeek 写码统一收口到 `dispatch.mjs` 保证预算/温度/收据闭环 | 保留但不用于正式卡开发，由李白巡查确认其不往主线乱提代码 | ¥0；防双轨失控 |
-| **P6** | **手动删除 `F:/codex-tmp`（3.06 GB）** | 见 `docs/cleanup-1124.md:38`，自动化因安全保护无法删除，由亮圳自行决定是否手动清理释放 3 GB 空间 | 留在 F 盘不动，不影响本项目运行（F 盘尚余 386 GB） | ¥0；仅磁盘整洁 |
+| **P6** | **手动删除 `F:/codex-tmp`（3.06 GB）** | 见 `archive/docs-status/cleanup-1124.md:38`，自动化因安全保护无法删除，由亮圳自行决定是否手动清理释放 3 GB 空间 | 留在 F 盘不动，不影响本项目运行（F 盘尚余 386 GB） | ¥0；仅磁盘整洁 |
 
 ---
 
@@ -462,8 +462,8 @@ flowchart TD
 
 | 编号 | 目标文件 / 配置 | 施工要求 | 机械验收方法与期望 | 复核权重 |
 |---|---|---|---|---|
-| **L-01** | `master` 与 `chore/workspace-cleanup` | 核对无误后将 `chore/workspace-cleanup`（`9e9a53fca` 及其后续补正）合入 `master` 并推送 `origin/master`；确认留底标签 `pre-rewrite-1124` 与 `backup/pre-cleanup-1124` 仍在远端 | `git rev-parse pre-rewrite-1124` 指向 `ae71f231e`；`git merge-base --is-ancestor 9e9a53fca origin/master` 返回 0 | `[一票否决]` |
-| **L-02** | `F:/dnd/.claude/worktrees/new-session-8e4637` | 合入清理分支后彻底移除该旧会话残留工作树，并让 `main-session` 快进到 `origin/master` | `orca worktree list --json` 与 `git worktree list` 中不再出现 `new-session-8e4637` | `[一票否决]` |
+| **L-01** | `master` 与 `chore/workspace-cleanup` | **已于 `395986f01` 完成合入并推送 `origin/master`（全量 `2239/2239` 绿）**；复核阶段仍须确认留底标签 `pre-rewrite-1124` 与留底分支 `backup/pre-cleanup-1124` 仍在远端且未被改写，且后续落地分支基于 `395986f01` | `git rev-parse pre-rewrite-1124` 指向 `ae71f231e`；`git merge-base --is-ancestor 395986f01 origin/master` 返回 0 | `[一票否决]`（已达成，复核保留） |
+| **L-02** | `F:/dnd/.claude/worktrees/new-session-8e4637` | 彻底移除该旧会话残留工作树，并让 `main-session` 快进到 `origin/master`（`395986f01`） | `orca worktree list --json` 与 `git worktree list` 中不再出现 `new-session-8e4637` | `[一票否决]` |
 | **L-03** | Orca `dnd` 仓库 `setup` 钩子 & `tools/dispatch/` | 若亮圳拍板 P2，将 Orca `dnd` 的 `setup` 脚本由 `pnpm install` 改为 `npm ci --prefer-offline`（或留空改由 `dispatch.mjs` 建树后自动执行 `npm ci --prefer-offline`，防止新 worktree 缺 `node_modules` 触发 `.githooks/pre-commit` 报 `ERR_MODULE_NOT_FOUND: acorn`）；未改前所有脚本强制传 `--setup skip` 再跑 `npm ci --prefer-offline` | 试建一个测试 worktree，确认未生成 `pnpm-lock.yaml` 且 `node tools/accept/commit-hook.mjs` 可正常运行，随后删除该测试 worktree | `[一票否决]` |
 
 ### P1：防回潮工具、统一派卡收据与 GitHub CI 闭环（收编并补全 `chore/step1-tooling`）
@@ -474,7 +474,7 @@ flowchart TD
 | **L-05** | `.github/workflows/ci.yml` | 新建远端 CI：干净 Linux 容器执行 `npm ci` → `npm run typecheck` → `node tools/accept/run.mjs pre_commit` → `card-archive`（核三方模型族 + 收据 + 禁写码分支改 `tests/acceptance/` + 取消合并提交免查）→ `gen-status-snapshot --check` → `node --test` 全量单测 | 在落地 PR 上存在至少 1 次真实 GitHub Actions **绿灯**运行 URL | `[一票否决]` |
 | **L-06** | `tools/dispatch/dispatch.mjs`、`compose-card.mjs`、`paths.json` | 合并并完善 `chore/step1-tooling` 的 `dispatch.mjs`：① 彻底删除旧 `TAIL_BODY`；② 兼容 `ANTHROPIC_API_KEY || CLAUDE_API_KEY`；③ DeepSeek 锁 `deepseek-flash` + 温度 `0.0`；④ Claude API 锁 `--max-budget-usd 0.65`；⑤ **补齐**派前核 `entry-registry.json` `needs` 闭包 + 核三方模型族互异；⑥ **补齐**自动输出 `.dispatch-receipt.json`（模型族、端点、时间、`total_cost_usd`、prompt/diff 哈希） | 跑 `tests/accept/dispatch.test.mjs` 与 `dispatch-compose.test.mjs` 全绿；故意传同模型族或 `budget=0.70` 或悬空 `needs` 均非 0 拒派 | `[一票否决]` |
 | **L-07** | `docs/派活卡头规矩.md`、`CLAUDE.md`、`tools/accept/lib/card-archive.mjs`、`card-selfcheck.mjs` | 将 `docs/派活卡头规矩.md` 精简重写至 **≤ 50 行**（砍掉 9 项长文本自查表与 4 字空话正则，改读新精简卡档案 + 三方模型族 + 收据）；删除 `card-selfcheck.mjs` 与 `card-selfcheck.test.mjs`；更新 `CLAUDE.md:18` 注明兼容本机 `CLAUDE_API_KEY` 并保持 ≤80 行 | `wc -l CLAUDE.md <= 80`、`AGENTS.md <= 25`、`docs/派活卡头规矩.md <= 50`；`card-archive.test.mjs` 测“写 Sonnet + 题 Haiku + 审 Sonnet”必拒、缺收据必拒 | `[一票否决]` |
-| **L-08** | `tools/accept/detectors/archive_ref.mjs` 与一致性测试 `tests/accept/dispatch-consistency.test.mjs` | 落地并挂入 `pre_commit` + CI：禁默认目录引用 `archive/`、`docs/卡回报/`、`E-ACC-CARD-SELFCHECK`、`F:/dnd-`、硬编码 IP/密钥与断链 Markdown；校验 `CLAUDE.md` ≤100 行且无「已过期/取代下条」；拦截 >500 KB `.md` 快照副本 | 负向用例（故意写 `archive/`、`docs/卡回报/`、`F:/dnd-`、断链）全部非 0 拦截 | `[一票否决]` |
+| **L-08** | `tools/accept/detectors/archive_ref.mjs` 与一致性测试 `tests/accept/dispatch-consistency.test.mjs` | 落地并挂入 `pre_commit` + CI：禁默认目录（豁免 `archive/` 与 `docs/gemini/` 独立审核史料）引用 `archive/`、`docs/卡回报/`、`E-ACC-CARD-SELFCHECK`、`F:/dnd-`、硬编码 IP/密钥与断链 Markdown；校验 `CLAUDE.md` ≤100 行且无「已过期/取代下条」；拦截 >500 KB `.md` 快照副本 | 负向用例（故意写 `archive/`、`docs/卡回报/`、`F:/dnd-`、断链）全部非 0 拦截 | `[一票否决]` |
 | **L-09** | `tools/accept/detectors/import_edge.mjs`、`typed_pos.mjs`、`decl_cmp.mjs`、`path_access.mjs`、`call_edge.mjs`、`lib/ast-rules.mjs`、`run.mjs` | ① `import_edge` 改导出级默认拒绝；② `run.mjs` 增 L0 内核白名单冻结（≤15 文件）；③ `ast-rules.mjs` 增禁 `memo.mjs` 外顶层状态 `WeakMap/Map`、禁加载器外 `registry().idIndex.get`、禁加载器外 `installVocab`；④ `typed_pos` 接 `tsc`；⑤ `decl_cmp` 删 `UNIMPLEMENTED` 桩；⑥ `path_access` 补 `dated` 静态拒写 | 每项补 1 条故意违规负向单测，跑 `node tools/accept/run.mjs pre_commit` 与 `tests/accept/*.test.mjs` 全绿 | `[一票否决]` |
 | **L-10** | `tools/cloud/` 与 `tools/notify/` | 收编 `chore/step1-tooling` 的无密钥版本入库，确保零硬编码 IP/盘符/密钥；验证 `tools/cloud/` 封装“开机→`npm ci`→测→自动关机”，`tools/notify/` 仅发 `MILESTONE`/`BLOCKED`/`COST_OR_CLOUD` 三种 JSON | 全仓（不含 `archive/`）`grep -rnE "F:/dnd-|119\.45\.|sk-[A-Za-z0-9]"` 为 0 命中 | `[一票否决]` |
 
