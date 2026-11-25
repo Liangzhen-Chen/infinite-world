@@ -179,10 +179,14 @@
     {
      "ref": "L-09 检测器加固：hygiene 补特殊值校验（空范围、空模式、无效上限、缺豁免理由一律报 E-ACC-ITEM-PARAM），判据代码指纹变化，按卷十二 S12-13 升版",
      "rev": 4
+    },
+    {
+     "ref": "chore/hygiene-fixes：hygiene mdLinks 遮蔽围栏与行内代码改为保留换行的等长空白（行号不偏移）、docLimits 被管文档缺失报 E-ACC-ITEM-PARAM，判据代码指纹变化，按卷十二 S12-13 升版",
+     "rev": 5
     }
    ],
-   "print": "3a5f80e640a7941c7c31f6880cd8fb0f8288fcaf273a1490e627ae470ff4ebaa",
-   "rev": 4,
+   "print": "646fe83e8f13f007f6f5e645c4345704568a229740cc34ee9f9ae1e2138fa069",
+   "rev": 5,
    "scanClass": "big_md",
    "terms": {
     "L-08.big_md": {
@@ -213,10 +217,14 @@
     {
      "ref": "L-09 检测器加固：hygiene 补特殊值校验（空范围、空模式、无效上限、缺豁免理由一律报 E-ACC-ITEM-PARAM），判据代码指纹变化，按卷十二 S12-13 升版",
      "rev": 4
+    },
+    {
+     "ref": "chore/hygiene-fixes：hygiene mdLinks 遮蔽围栏与行内代码改为保留换行的等长空白（行号不偏移）、docLimits 被管文档缺失报 E-ACC-ITEM-PARAM，判据代码指纹变化，按卷十二 S12-13 升版",
+     "rev": 5
     }
    ],
-   "print": "3a5f80e640a7941c7c31f6880cd8fb0f8288fcaf273a1490e627ae470ff4ebaa",
-   "rev": 4,
+   "print": "646fe83e8f13f007f6f5e645c4345704568a229740cc34ee9f9ae1e2138fa069",
+   "rev": 5,
    "scanClass": "claude_doc",
    "terms": {
     "L-08.claude_doc": {
@@ -3229,10 +3237,14 @@
     {
      "ref": "L-09 检测器加固：hygiene 补特殊值校验（空范围、空模式、无效上限、缺豁免理由一律报 E-ACC-ITEM-PARAM），判据代码指纹变化，按卷十二 S12-13 升版",
      "rev": 4
+    },
+    {
+     "ref": "chore/hygiene-fixes：hygiene mdLinks 遮蔽围栏与行内代码改为保留换行的等长空白（行号不偏移）、docLimits 被管文档缺失报 E-ACC-ITEM-PARAM，判据代码指纹变化，按卷十二 S12-13 升版",
+     "rev": 5
     }
    ],
-   "print": "3a5f80e640a7941c7c31f6880cd8fb0f8288fcaf273a1490e627ae470ff4ebaa",
-   "rev": 4,
+   "print": "646fe83e8f13f007f6f5e645c4345704568a229740cc34ee9f9ae1e2138fa069",
+   "rev": 5,
    "scanClass": "ip_literal",
    "terms": {
     "L-08.ip_literal": {
@@ -4219,10 +4231,14 @@
     {
      "ref": "L-09 检测器加固：hygiene 补特殊值校验（空范围、空模式、无效上限、缺豁免理由一律报 E-ACC-ITEM-PARAM），判据代码指纹变化，按卷十二 S12-13 升版",
      "rev": 4
+    },
+    {
+     "ref": "chore/hygiene-fixes：hygiene mdLinks 遮蔽围栏与行内代码改为保留换行的等长空白（行号不偏移）、docLimits 被管文档缺失报 E-ACC-ITEM-PARAM，判据代码指纹变化，按卷十二 S12-13 升版",
+     "rev": 5
     }
    ],
-   "print": "3a5f80e640a7941c7c31f6880cd8fb0f8288fcaf273a1490e627ae470ff4ebaa",
-   "rev": 4,
+   "print": "646fe83e8f13f007f6f5e645c4345704568a229740cc34ee9f9ae1e2138fa069",
+   "rev": 5,
    "scanClass": "md_links",
    "terms": {
     "L-08.md_links": {
@@ -9629,10 +9645,14 @@
     {
      "ref": "L-09 检测器加固：hygiene 补特殊值校验（空范围、空模式、无效上限、缺豁免理由一律报 E-ACC-ITEM-PARAM），判据代码指纹变化，按卷十二 S12-13 升版",
      "rev": 4
+    },
+    {
+     "ref": "chore/hygiene-fixes：hygiene mdLinks 遮蔽围栏与行内代码改为保留换行的等长空白（行号不偏移）、docLimits 被管文档缺失报 E-ACC-ITEM-PARAM，判据代码指纹变化，按卷十二 S12-13 升版",
+     "rev": 5
     }
    ],
-   "print": "3a5f80e640a7941c7c31f6880cd8fb0f8288fcaf273a1490e627ae470ff4ebaa",
-   "rev": 4,
+   "print": "646fe83e8f13f007f6f5e645c4345704568a229740cc34ee9f9ae1e2138fa069",
+   "rev": 5,
    "scanClass": "secret_literal",
    "terms": {
     "L-08.secret_literal": {

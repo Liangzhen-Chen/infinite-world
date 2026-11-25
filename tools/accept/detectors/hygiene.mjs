@@ -105,6 +105,12 @@ function linePatternHits(ctx, cls, code, ex) {
   return hits;
 }
 
+// 遮蔽围栏代码与行内代码但不改行号：非换行字符换成等长空格，换行原样保留，
+// 后续 lineOf 算出的行号与原文件一致（围栏整段删空会把后面的行号提前）。
+function blankKeepLines(s) {
+  return s.replace(/[^\n]/g, ' ');
+}
+
 function mdLinkHits(ctx, cls, code, ex) {
   let linkRe; let externalRe; let invalidRe; let fenceRe; let spanRe;
   try {
@@ -119,8 +125,8 @@ function mdLinkHits(ctx, cls, code, ex) {
     if (ex.skipFile.has(file) || !file.endsWith('.md')) continue;
     let text = textOf(ctx, file);
     if (text === null) continue;
-    if (fenceRe) text = text.replace(fenceRe, '');
-    if (spanRe) text = text.replace(spanRe, '');
+    if (fenceRe) text = text.replace(fenceRe, blankKeepLines);
+    if (spanRe) text = text.replace(spanRe, blankKeepLines);
     linkRe.lastIndex = 0;
     let m;
     while ((m = linkRe.exec(text))) {
@@ -172,7 +178,8 @@ function docLimitHits(ctx, cls, code) {
   for (const entry of Array.isArray(cls.files) ? cls.files : []) {
     if (!entry || typeof entry.path !== 'string') return paramHit('docLimits entry path');
     const actual = byNorm.get(normPath(entry.path));
-    if (!actual) continue;
+    // 登记了被管文档却找不到：不静默跳过（删档即可绕过行数与叠层词检查），按参数错报。
+    if (!actual) { hits.push(...paramHit(`docLimits entry path missing: ${entry.path}`)); continue; }
     const text = ctx.read(actual);
     if (typeof text !== 'string') continue;
     const lines = text === '' ? 0 : text.replace(/\n$/, '').split('\n').length;

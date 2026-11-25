@@ -1282,6 +1282,16 @@
    "scanClass": "md_links"
   },
   {
+   "addedAtRev": 5,
+   "caseKey": "md_links-21",
+   "expectCode": "E-ACC-ARCHIVE-REF",
+   "fixture": "tests/accept/bypass/md_links-21.txt",
+   "group": "offline",
+   "origin": "chore/hygiene-fixes：围栏之后的断链要报，且命中行号与原文件一致（旧实现删围栏导致行号偏前）",
+   "polarity": "must_fail",
+   "scanClass": "md_links"
+  },
+  {
    "addedAtRev": 1,
    "caseKey": "module_edge-01",
    "expectCode": "E-KERNEL-UPWARD-IMPORT",
