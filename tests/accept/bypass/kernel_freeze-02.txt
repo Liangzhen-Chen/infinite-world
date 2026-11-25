@@ -1,0 +1,34 @@
+// @file server-plugin/kernel/files.json
+["server-plugin/kernel/f01.mjs", "server-plugin/kernel/f02.mjs", "server-plugin/kernel/f03.mjs", "server-plugin/kernel/f04.mjs", "server-plugin/kernel/f05.mjs", "server-plugin/kernel/f06.mjs", "server-plugin/kernel/f07.mjs", "server-plugin/kernel/f08.mjs", "server-plugin/kernel/f09.mjs", "server-plugin/kernel/f10.mjs", "server-plugin/kernel/f11.mjs", "server-plugin/kernel/f12.mjs", "server-plugin/kernel/f13.mjs", "server-plugin/kernel/f14.mjs", "server-plugin/kernel/f15.mjs", "server-plugin/kernel/f16.mjs"]
+// @file server-plugin/kernel/f01.mjs
+export const x = 1;
+// @file server-plugin/kernel/f02.mjs
+export const x = 1;
+// @file server-plugin/kernel/f03.mjs
+export const x = 1;
+// @file server-plugin/kernel/f04.mjs
+export const x = 1;
+// @file server-plugin/kernel/f05.mjs
+export const x = 1;
+// @file server-plugin/kernel/f06.mjs
+export const x = 1;
+// @file server-plugin/kernel/f07.mjs
+export const x = 1;
+// @file server-plugin/kernel/f08.mjs
+export const x = 1;
+// @file server-plugin/kernel/f09.mjs
+export const x = 1;
+// @file server-plugin/kernel/f10.mjs
+export const x = 1;
+// @file server-plugin/kernel/f11.mjs
+export const x = 1;
+// @file server-plugin/kernel/f12.mjs
+export const x = 1;
+// @file server-plugin/kernel/f13.mjs
+export const x = 1;
+// @file server-plugin/kernel/f14.mjs
+export const x = 1;
+// @file server-plugin/kernel/f15.mjs
+export const x = 1;
+// @file server-plugin/kernel/f16.mjs
+export const x = 1;

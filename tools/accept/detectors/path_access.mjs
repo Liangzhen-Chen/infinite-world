@@ -15,7 +15,7 @@
 
 import { tokenize, memberChains, conditionSpans, symbolPaths, BRANCH_OPS, importsOf, isP, buildEnv, matchClose } from '../lib/js-scan.mjs';
 import { stateChains, declPaths, writerOf, segsMatch, serverRel, callsOf } from '../lib/js-state.mjs';
-import { filesOfGroups, globToRe } from '../read.mjs';
+import { filesOfGroups, globToRe, LAYOUT } from '../read.mjs';
 import { projectOf, fileOf, walkAll, fold, originsOf, where, propName } from '../lib/ast.mjs';
 
 // 按语法树读状态顶层键（params.ast = on，C0；亮圳规定检查代码不许靠认字面文字判）：params.paths 的每一项是一个单段键名。
@@ -255,9 +255,36 @@ export function components(ctx, params) {
   return params.access === 'write' ? declPaths(ctx.decl).keys.map((k) => `c_write_${k}`) : [];
 }
 
+// 声明表若在被查内容里（真仓库、或用例把 state-owners.json 当夹具放进虚拟文件集），按被查内容读；否则用载入上下文时读到的。
+// 这样 dated 写者等声明数据能随用例一起给出，检测器本身仍不列任何路径或写者名单。
+function declOf(ctx) {
+  if (ctx.files.includes(LAYOUT.stateOwners)) {
+    try {
+      const doc = JSON.parse(ctx.read(LAYOUT.stateOwners));
+      return doc && typeof doc === 'object' ? doc : ctx.decl;
+    } catch {
+      return ctx.decl;
+    }
+  }
+  return ctx.decl;
+}
+
+// 按日生效改写（卷二 §2.7 `dated` 条）的写者模式集合：写者对象上 dated 为真。记录只经 writeDated 追加，
+// 任何 writePath 直接写到这些模式上都是拒写（L-09 ⑥）。模式取自声明数据，本文件不列字段名以外的路径。
+function datedPatterns(decl) {
+  const out = new Set();
+  for (const [key, row] of Object.entries((decl && decl.stateKeys) || {})) {
+    if (!row || typeof row !== 'object') continue;
+    for (const [rel, w] of Object.entries(row.writers || {})) if (w && typeof w === 'object' && w.dated === true) out.add(`${key}.${rel}`);
+  }
+  return out;
+}
+
 function writeHits(ctx, params, cls) {
   const want = new Set(params.codes || []);
-  const dp = declPaths(ctx.decl);
+  const decl = declOf(ctx);
+  const dp = declPaths(decl);
+  const dated = datedPatterns(decl);
   const entries = new Set((cls.writeEntries || []).map((e) => e.slice(e.indexOf('#') + 1)));
   const comp = (key) => (key ? `c_write_${key}` : undefined);
   const hits = [];
@@ -272,7 +299,8 @@ function writeHits(ctx, params, cls) {
       const pattern = member === null ? null : dp.members.get(member);
       if (!pattern) { push(call.idx, 'write_call', 'E-VIEW-UNDECLARED-WRITE', null); continue; }
       const w = writerOf(dp.writers, pattern.split('.'));
-      const ok = w && rel !== null && (w.rewrite === rel ? !w.viaRelocate : (w.create || []).includes(rel));
+      // dated 模式只许 writeDated 追加记录，writePath 直接写即拒（见 datedPatterns 头注）。
+      const ok = w && rel !== null && !(w && dated.has(w.pattern)) && (w.rewrite === rel ? !w.viaRelocate : (w.create || []).includes(rel));
       if (!ok) push(call.idx, 'write_call', 'E-VIEW-UNDECLARED-WRITE', w ? w.key : pattern.split('.')[0]);
     }
     for (const ch of stateChains(toks)) {

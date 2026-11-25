@@ -1,6 +1,239 @@
 {
  "rows": [
   {
+   "baseComp": "c_big_md",
+   "detector": "hygiene",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/hygiene.mjs",
+   "itemKey": "L-08.big_md",
+   "localNo": "L-08.11",
+   "method": "static_code",
+   "params": {
+    "code": "E-ACC-ARCHIVE-REF"
+   },
+   "runsOn": "local_static",
+   "scanClass": "big_md",
+   "source": "L-08 扩项：禁超大 .md 快照（docs/gemini/kickoff-1125.md 的对应行）；现仓三份设计卷已超限，按基线只降不升",
+   "stage": 0,
+   "state": "in_core",
+   "target": "tools_code",
+   "volume": "vol12"
+  },
+  {
+   "detector": "hygiene",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/hygiene.mjs",
+   "itemKey": "L-08.claude_doc",
+   "localNo": "L-08.10",
+   "method": "static_code",
+   "params": {
+    "code": "E-ACC-ARCHIVE-REF"
+   },
+   "runsOn": "local_static",
+   "scanClass": "claude_doc",
+   "source": "L-08 扩项：CLAUDE.md 行数与叠层词（docs/gemini/kickoff-1125.md 的对应行）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "tools_code",
+   "volume": "vol12"
+  },
+  {
+   "detector": "hygiene",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/hygiene.mjs",
+   "itemKey": "L-08.ip_literal",
+   "localNo": "L-08.7",
+   "method": "static_code",
+   "params": {
+    "code": "E-ACC-ARCHIVE-REF"
+   },
+   "runsOn": "local_static",
+   "scanClass": "ip_literal",
+   "source": "L-08 扩项：禁公网 IPv4（docs/gemini/kickoff-1125.md 的对应行）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "tools_code",
+   "volume": "vol12"
+  },
+  {
+   "detector": "hygiene",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/hygiene.mjs",
+   "itemKey": "L-08.md_links",
+   "localNo": "L-08.9",
+   "method": "static_code",
+   "params": {
+    "code": "E-ACC-ARCHIVE-REF"
+   },
+   "runsOn": "local_static",
+   "scanClass": "md_links",
+   "source": "L-08 扩项：禁 Markdown 断链（docs/gemini/kickoff-1125.md 的对应行）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "tools_code",
+   "volume": "vol12"
+  },
+  {
+   "detector": "hygiene",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/hygiene.mjs",
+   "itemKey": "L-08.secret_literal",
+   "localNo": "L-08.8",
+   "method": "static_code",
+   "params": {
+    "code": "E-ACC-ARCHIVE-REF"
+   },
+   "runsOn": "local_static",
+   "scanClass": "secret_literal",
+   "source": "L-08 扩项：禁密钥形态（docs/gemini/kickoff-1125.md 的对应行）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "tools_code",
+   "volume": "vol12"
+  },
+  {
+   "detector": "import_edge",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/import_edge.mjs",
+   "itemKey": "L-09.export_guard",
+   "localNo": "L-09.1",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-INPUT-IMPORT",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "gate",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ]
+   },
+   "runsOn": "local_static",
+   "scanClass": "export_guard",
+   "source": "L-09 ①：import_edge 导出级默认拒绝（docs/gemini/kickoff-1125.md 的对应行）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol12"
+  },
+  {
+   "detector": "kernel_files",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/kernel_files.mjs",
+   "itemKey": "L-09.kernel_files",
+   "localNo": "L-09.2",
+   "method": "static_code",
+   "params": {
+    "code": "E-FILE-UNASSIGNED"
+   },
+   "runsOn": "local_static",
+   "scanClass": "kernel_freeze",
+   "source": "L-09 ②：内核白名单冻结（docs/gemini/kickoff-1125.md 的对应行、:88）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "tools_code",
+   "volume": "vol12"
+  },
+  {
+   "baseComp": "c_module_state",
+   "detector": "lit_scope",
+   "expect": "le_baseline",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/lit_scope.mjs",
+   "itemKey": "L-09.module_state",
+   "localNo": "L-09.3",
+   "method": "static_code",
+   "params": {
+    "code": "E-VIEW-BYPASS",
+    "groups": [
+     "rules",
+     "kernel",
+     "textcore",
+     "inputEdge",
+     "gate",
+     "outputGate",
+     "aiGate",
+     "assembly"
+    ],
+    "literal": "astRule"
+   },
+   "runsOn": "local_static",
+   "scanClass": "pp_module_state",
+   "source": "L-09 ③：ast-rules 三条（docs/gemini/kickoff-1125.md 的对应行）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol12"
+  },
+  {
+   "detector": "typed_pos",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "impl": "tools/accept/detectors/typed_pos.mjs",
+   "itemKey": "L-09.typecheck",
+   "localNo": "L-09.4",
+   "method": "static_code",
+   "params": {
+    "checks": [
+     "tsc"
+    ],
+    "code": "E-TSC-COVERAGE"
+   },
+   "runsOn": "local_static",
+   "scanClass": "typecheck",
+   "source": "L-09 ④：typed_pos 接 tsc（docs/gemini/kickoff-1125.md 的对应行）",
+   "stage": 0,
+   "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol12"
+  },
+  {
    "baseComp": "c_archive_ref",
    "detector": "archive_ref",
    "expect": "le_baseline",

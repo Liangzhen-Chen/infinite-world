@@ -1,0 +1,5 @@
+// @file docs/__case__/md_links-11/page.md
+# 正常链接
+[同目录](./target.md)、[外链](https://example.com)、[锚点](#top)、[行内代码 `](./x.md)`]。
+// @file docs/__case__/md_links-11/target.md
+# 目标

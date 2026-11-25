@@ -1,0 +1,2 @@
+import { k, dim } from '../kernel/private-probe.mjs';
+export const r = [k, dim];

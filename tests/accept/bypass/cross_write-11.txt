@@ -1,0 +1,2 @@
+/** @param {State} state @returns {void} */
+export function noop(state) { return; }

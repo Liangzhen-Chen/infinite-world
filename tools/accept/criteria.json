@@ -162,6 +162,74 @@
    }
   },
   {
+   "criterion": "L-08 扩项：单个 .md 超过 500 KB 即命中（docs/gemini/kickoff-1125.md 的对应行）",
+   "log": [
+    {
+     "ref": "L-09/L-08 新登扫描类别 big_md：L-08 扩项：单个 .md 超过 500 KB 即命中（docs/gemini/kickoff-1125.md 的对应行）",
+     "rev": 1
+    },
+    {
+     "ref": "L-09 检测器加固：hygiene 围栏代码块正则改用 gm 标志，判据代码指纹变化，按卷十二 S12-13 升版",
+     "rev": 2
+    },
+    {
+     "ref": "L-09 检测器加固：hygiene 文档行数检查加路径归一（用例不带斜杠的 @file 落在用例目录），判据代码指纹变化，按卷十二 S12-13 升版",
+     "rev": 3
+    },
+    {
+     "ref": "L-09 检测器加固：hygiene 补特殊值校验（空范围、空模式、无效上限、缺豁免理由一律报 E-ACC-ITEM-PARAM），判据代码指纹变化，按卷十二 S12-13 升版",
+     "rev": 4
+    }
+   ],
+   "print": "3a5f80e640a7941c7c31f6880cd8fb0f8288fcaf273a1490e627ae470ff4ebaa",
+   "rev": 4,
+   "scanClass": "big_md",
+   "terms": {
+    "L-08.big_md": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "L-08 扩项：CLAUDE.md 不超过 100 行且不含「已过期/取代下条」（docs/gemini/kickoff-1125.md 的对应行）",
+   "log": [
+    {
+     "ref": "L-09/L-08 新登扫描类别 claude_doc：L-08 扩项：CLAUDE.md 不超过 100 行且不含「已过期/取代下条」（docs/gemini/kickoff-1125.md 的对应行）",
+     "rev": 1
+    },
+    {
+     "ref": "L-09 检测器加固：hygiene 围栏代码块正则改用 gm 标志，判据代码指纹变化，按卷十二 S12-13 升版",
+     "rev": 2
+    },
+    {
+     "ref": "L-09 检测器加固：hygiene 文档行数检查加路径归一（用例不带斜杠的 @file 落在用例目录），判据代码指纹变化，按卷十二 S12-13 升版",
+     "rev": 3
+    },
+    {
+     "ref": "L-09 检测器加固：hygiene 补特殊值校验（空范围、空模式、无效上限、缺豁免理由一律报 E-ACC-ITEM-PARAM），判据代码指纹变化，按卷十二 S12-13 升版",
+     "rev": 4
+    }
+   ],
+   "print": "3a5f80e640a7941c7c31f6880cd8fb0f8288fcaf273a1490e627ae470ff4ebaa",
+   "rev": 4,
+   "scanClass": "claude_doc",
+   "terms": {
+    "L-08.claude_doc": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
    "log": [
     {
      "ref": "P-1",
@@ -562,10 +630,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 100
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 101
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 100,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 101,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -648,7 +720,7 @@
    }
   },
   {
-   "criterion": "写入点所在文件不是该路径的登记写者，也不经三条写通道即命中；路径、写者、通道全部来自声明表。",
+   "criterion": "写入点所在文件不是该路径的登记写者，也不经三条写通道即命中；路径、写者、通道全部来自声明表。 dated 改写者模式（声明表写者对象 dated 为真）只许 writeDated 追加，writePath 直接写即拒（L-09 ⑥）。",
    "log": [
     {
      "ref": "块 2 第 2-3 张初版：path_access write 方式，按声明表 stateKeys.writers（最具体模式优先）核对 writeEntries 调用的 P 成员路径与所在文件，直接改 state 成员链计 E-VIEW-BYPASS；分量按状态顶层键派生 c_write_<键>",
@@ -785,10 +857,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 34
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 35
     }
    ],
-   "print": "f3f0e16911fd8db838c61d8f33068383f8468ac4a6bb96f49b06069bca4f891b",
-   "rev": 34,
+   "print": "94a8b8bf5dcd27bbc92e6986ff77395dca88db57e998273e7ba9f57888525b51",
+   "rev": 35,
    "scanClass": "cross_write",
    "source": "卷十二 R12-3.1–3.4；卷二 §2.6、§2.7、S5",
    "terms": {
@@ -1035,10 +1111,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 34
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 35
     }
    ],
-   "print": "f3f0e16911fd8db838c61d8f33068383f8468ac4a6bb96f49b06069bca4f891b",
-   "rev": 34,
+   "print": "94a8b8bf5dcd27bbc92e6986ff77395dca88db57e998273e7ba9f57888525b51",
+   "rev": 35,
    "scanClass": "display_read",
    "source": "卷十二 R12-2.10；卷二 S7",
    "terms": {
@@ -1446,10 +1526,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 98
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 99
     }
    ],
-   "print": "12fb72fd5f8833e134f5c7d07a7c7ee7772e02bfa4b80d146329adde493206ee",
-   "rev": 98,
+   "print": "47805f8936b5e71807bd1f8769c95a10df440f679247e9cc7e70bc9fb7102c25",
+   "rev": 99,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1568,14 +1652,40 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 26
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 27
     }
    ],
-   "print": "6b5002bc5b2bf2f65f0cb840371b2770781dd8ceee5a996bd863eae5cd40a687",
-   "rev": 26,
+   "print": "949fb32e627f24868dfc6b19f113b2d034892cf978262464bf1cedbf9373097b",
+   "rev": 27,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
     "vol1.V-2.b": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "L-09 ①：非内核文件从内核目录 import 具名导出，须在 state-owners.json 的 kernelApi/groupApi 登记里；默认导入与 import * 同拒（docs/gemini/kickoff-1125.md 的对应行、diagnosis-1124.md 的对应行）",
+   "log": [
+    {
+     "ref": "L-09/L-08 新登扫描类别 export_guard：L-09 ①：非内核文件从内核目录 import 具名导出，须在 state-owners.json 的 kernelApi/groupApi 登记里；默认导入与 import * 同拒（docs/gemini/kickoff-1125.md 的对应行、diagnosis-1124.md 的对应行）",
+     "rev": 1
+    }
+   ],
+   "print": "c032e61fc7a6703772d61c466c7a0ef7fad145b4073ab4333ff52e62a146fe50",
+   "rev": 1,
+   "scanClass": "export_guard",
+   "terms": {
+    "L-09.export_guard": {
      "expect": "zero",
      "gates": [
       "pre_commit",
@@ -1820,10 +1930,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 27
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 28
     }
    ],
-   "print": "7d54318d81b9996c5441a0db3f42862e277ecbe4eb70bd852f915d69670bb432",
-   "rev": 27,
+   "print": "a75cac4ea368bf2fc4d83627078bcc6978ff1a6c92a648d35f29d955fa60e1d2",
+   "rev": 28,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -2547,10 +2661,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 27
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 28
     }
    ],
-   "print": "7d54318d81b9996c5441a0db3f42862e277ecbe4eb70bd852f915d69670bb432",
-   "rev": 27,
+   "print": "a75cac4ea368bf2fc4d83627078bcc6978ff1a6c92a648d35f29d955fa60e1d2",
+   "rev": 28,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -3041,10 +3159,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 117
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 118
     }
    ],
-   "print": "93ddc1a41584827b52859401da3e6d435adba7dddef304ca67726515d2ecd405",
-   "rev": 117,
+   "print": "109b732d51edfd58f7ed9add1d0602d0aa59800622152615d6c623f1e203c9f0",
+   "rev": 118,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -3080,6 +3202,40 @@
      "stage": 0
     },
     "vol6.S6-2.b": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "L-08 扩项：禁硬编码公网 IPv4（docs/gemini/kickoff-1125.md 的对应行）；保留段与版本号判法登记在本行数据里",
+   "log": [
+    {
+     "ref": "L-09/L-08 新登扫描类别 ip_literal：L-08 扩项：禁硬编码公网 IPv4（docs/gemini/kickoff-1125.md 的对应行）；保留段与版本号判法登记在本行数据里",
+     "rev": 1
+    },
+    {
+     "ref": "L-09 检测器加固：hygiene 围栏代码块正则改用 gm 标志，判据代码指纹变化，按卷十二 S12-13 升版",
+     "rev": 2
+    },
+    {
+     "ref": "L-09 检测器加固：hygiene 文档行数检查加路径归一（用例不带斜杠的 @file 落在用例目录），判据代码指纹变化，按卷十二 S12-13 升版",
+     "rev": 3
+    },
+    {
+     "ref": "L-09 检测器加固：hygiene 补特殊值校验（空范围、空模式、无效上限、缺豁免理由一律报 E-ACC-ITEM-PARAM），判据代码指纹变化，按卷十二 S12-13 升版",
+     "rev": 4
+    }
+   ],
+   "print": "3a5f80e640a7941c7c31f6880cd8fb0f8288fcaf273a1490e627ae470ff4ebaa",
+   "rev": 4,
+   "scanClass": "ip_literal",
+   "terms": {
+    "L-08.ip_literal": {
      "expect": "zero",
      "gates": [
       "pre_commit",
@@ -3661,6 +3817,28 @@
    }
   },
   {
+   "criterion": "L-09 ②：内核白名单冻结，files.json 硬上限 15，实际文件与清单逐一对应（docs/gemini/kickoff-1125.md 的对应行、:88）",
+   "log": [
+    {
+     "ref": "L-09/L-08 新登扫描类别 kernel_freeze：L-09 ②：内核白名单冻结，files.json 硬上限 15，实际文件与清单逐一对应（docs/gemini/kickoff-1125.md 的对应行、:88）",
+     "rev": 1
+    }
+   ],
+   "print": "c9b6d9f6e4805bfac374689a195cf8fde9dae4dbf76939b1e83e359e9e35c3d9",
+   "rev": 1,
+   "scanClass": "kernel_freeze",
+   "terms": {
+    "L-09.kernel_files": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
    "criterion": "server-plugin 里读状态顶层键 accounts、ledgerTotals、outflowTotals、stockLots、ledgerCounters 的成员链，除账本内核与 state-owners 登记的这些键的声明写者文件外，不高于入库基线（卷六 §4.1.2：数量只经账本入口读写）；基线之外出现新读点即不过。解构取出后的读法按词法追不到。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
    "log": [
     {
@@ -3746,10 +3924,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 21
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 22
     }
    ],
-   "print": "f3f0e16911fd8db838c61d8f33068383f8468ac4a6bb96f49b06069bca4f891b",
-   "rev": 21,
+   "print": "94a8b8bf5dcd27bbc92e6986ff77395dca88db57e998273e7ba9f57888525b51",
+   "rev": 22,
    "scanClass": "ledger_state_read",
    "source": "卷六 §4.1.2；公共部件审查乙规则 4；C0 卡",
    "terms": {
@@ -4020,6 +4202,40 @@
    }
   },
   {
+   "criterion": "L-08 扩项：docs 下 .md 的相对链接指向仓库里不存在的文件即命中（docs/gemini/kickoff-1125.md 的对应行）",
+   "log": [
+    {
+     "ref": "L-09/L-08 新登扫描类别 md_links：L-08 扩项：docs 下 .md 的相对链接指向仓库里不存在的文件即命中（docs/gemini/kickoff-1125.md 的对应行）",
+     "rev": 1
+    },
+    {
+     "ref": "L-09 检测器加固：hygiene 围栏代码块正则改用 gm 标志，判据代码指纹变化，按卷十二 S12-13 升版",
+     "rev": 2
+    },
+    {
+     "ref": "L-09 检测器加固：hygiene 文档行数检查加路径归一（用例不带斜杠的 @file 落在用例目录），判据代码指纹变化，按卷十二 S12-13 升版",
+     "rev": 3
+    },
+    {
+     "ref": "L-09 检测器加固：hygiene 补特殊值校验（空范围、空模式、无效上限、缺豁免理由一律报 E-ACC-ITEM-PARAM），判据代码指纹变化，按卷十二 S12-13 升版",
+     "rev": 4
+    }
+   ],
+   "print": "3a5f80e640a7941c7c31f6880cd8fb0f8288fcaf273a1490e627ae470ff4ebaa",
+   "rev": 4,
+   "scanClass": "md_links",
+   "terms": {
+    "L-08.md_links": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
    "log": [
     {
      "ref": "P-1",
@@ -4228,10 +4444,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 52
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 53
     }
    ],
-   "print": "15cbfbfee6e5940b462942a95162bd570f80fa60e7e34a9fdbdc33530b7505fa",
-   "rev": 52,
+   "print": "bde3d9c1802bfea52b244b5dfee5d36f6562f12cf85e6c3c0b5ab59021cc0ea9",
+   "rev": 53,
    "scanClass": "module_edge",
    "terms": {
     "vol1.V-24.b": {
@@ -5071,10 +5291,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 86
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 87
     }
    ],
-   "print": "70e283906d035aaa1344313f0c4befcd689aa872ba67320f459efa57bdd25cfd",
-   "rev": 86,
+   "print": "11a55f2ebc9c9a50f81453893efd5128eb6e78577ac5fa0abfc1c7a0be40ce88",
+   "rev": 87,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -5194,10 +5418,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 26
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 27
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 26,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 27,
    "scanClass": "pp_canonical_def",
    "source": "公共部件审查乙 11；卷二十七 :542；例外 kernel/storage.mjs",
    "terms": {
@@ -5261,10 +5489,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 12
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 13
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 12,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 13,
    "scanClass": "pp_canonical_review",
    "source": "主会话 11-23 定：规范序列化按定义判，拿不准的待人审",
    "terms": {
@@ -5384,10 +5616,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 26
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 27
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 26,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 27,
    "scanClass": "pp_deep_clone",
    "source": "公共部件审查乙 10；卷二 :897；kernel/clone.mjs（kernelApi clone）",
    "terms": {
@@ -5507,10 +5743,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 26
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 27
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 26,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 27,
    "scanClass": "pp_dist_branch",
    "source": "公共部件审查甲 R7；卷二 §1.10；kernel/sample.mjs 头注",
    "terms": {
@@ -5713,10 +5953,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 21
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 22
     }
    ],
-   "print": "70e283906d035aaa1344313f0c4befcd689aa872ba67320f459efa57bdd25cfd",
-   "rev": 21,
+   "print": "11a55f2ebc9c9a50f81453893efd5128eb6e78577ac5fa0abfc1c7a0be40ce88",
+   "rev": 22,
    "scanClass": "pp_dup_export",
    "source": "公共部件审查甲 R14、乙 12；卷二 :1162 体例；CLAUDE.md“跨卷共用定义只一处”。职责函数 isPos、distributionMean、weatherCellOf 的职责文件依据：卷二 §1.5 struct:pos（kernel/named-structs.mjs）、卷二 §1.10（kernel/sample.mjs）、卷二十 §3.1（kernel/weather.mjs）",
    "terms": {
@@ -5836,10 +6080,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 26
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 27
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 26,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 27,
    "scanClass": "pp_dynamic_index",
    "source": "李白更正裁定 msg-1122-2255-c0ast（动态下标出现即报，标待人审）；卷二十七 R27-5.2、A27-5.1；卷二十 :436",
    "terms": {
@@ -5939,10 +6187,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 21
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 22
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 21,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 22,
    "scanClass": "pp_dynamic_review",
    "source": "李白更正裁定 msg-1122-2255-c0ast：运行期才知道的动态下标出现即报，标待人审。本条列全部对象上的动态下标（含数组按位置取），数量大，只报不拦（报告里列出，供人审）；登记在 Math、全局对象、状态根等根上的动态下标由 pp_dynamic_index 拦",
    "terms": {
@@ -6062,10 +6314,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 26
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 27
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 26,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 27,
    "scanClass": "pp_envat_callers",
    "source": "公共部件审查甲 R2；卷二十 :478；state-owners.json kernelApi 行形状",
    "terms": {
@@ -6185,10 +6441,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 26
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 27
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 26,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 27,
    "scanClass": "pp_envat_import",
    "source": "公共部件审查甲 R1（docs/研究/公共部件审查-甲-1122.md 第八节）；卷二十 :478、:631；例外：climate.mjs、weather.mjs 互相引用（甲 R1 原句）",
    "terms": {
@@ -6308,10 +6568,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 26
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 27
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 26,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 27,
    "scanClass": "pp_epsilon",
    "source": "公共部件审查乙 7；卷二十七 :620、:634（R27-5.2 数值运算只有三条路）",
    "terms": {
@@ -6514,10 +6778,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 25
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 26
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 25,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 26,
    "scanClass": "pp_float_pow",
    "source": "公共部件审查乙 7；卷二十七 R27-5.2（超越函数只经定点数学设施，幂函数 pow 同属）；独立验收漏项“** 运算符”",
    "terms": {
@@ -6637,10 +6905,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 26
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 27
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 26,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 27,
    "scanClass": "pp_footprint_kind",
    "source": "公共部件审查甲 R12；卷二 §1.9；模块化评估第三节；例外 kernel/footprint-kind.mjs（gen/* 按种类过滤的比较进基线，M-11③ 修后开）",
    "terms": {
@@ -6756,10 +7028,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 25
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 26
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 25,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 26,
    "scanClass": "pp_gen_callers",
    "source": "公共部件审查乙 9（docs/研究/公共部件审查-乙-1122.md :161）；卷十 :403（生成器只在世界创建事务里按步骤表跑）；例外：generateWorld 所在文件 server-plugin/world-create.mjs（卷十 §3.2 :291）；requireMaterialized 现不存在，建成后其所在文件须加入例外；作者工具在 tools/ 下，不在扫描范围（卷十 :1002）",
    "terms": {
@@ -6879,10 +7155,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 26
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 27
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 26,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 27,
    "scanClass": "pp_grammar_regex",
    "source": "公共部件审查乙 6；卷二 :291；例外 kernel/validate/types.mjs",
    "terms": {
@@ -6978,10 +7258,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 20
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 21
     }
    ],
-   "print": "f3f0e16911fd8db838c61d8f33068383f8468ac4a6bb96f49b06069bca4f891b",
-   "rev": 20,
+   "print": "94a8b8bf5dcd27bbc92e6986ff77395dca88db57e998273e7ba9f57888525b51",
+   "rev": 21,
    "scanClass": "pp_holdings_read",
    "source": "公共部件审查乙 5；卷十八:200（持有写者）；卷二 §2.6；读者按文件豁免（fileSets.holdingsReaders，每行带依据）",
    "terms": {
@@ -7101,10 +7385,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 26
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 27
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 26,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 27,
    "scanClass": "pp_key_concat",
    "source": "公共部件审查甲 R5、乙 1、乙 2；卷二 :337、:897、:1162；例外：整份文本摘要 sha256Text(canonical(…))、sha256Text(text) 不拼键（不含 .join，不命中）",
    "terms": {
@@ -7216,10 +7504,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 24
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 25
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 24,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 25,
    "scanClass": "pp_kind_branch",
    "source": "独立验收（亮圳 11-22「独立测门禁1122」）指出“写死数值与种类分支没有 C0 专条”；卷一 二.1（派生优先，不按 ID 或场景特判，docs/产品原则.md）；卷二 S10（常数登记）",
    "terms": {
@@ -7339,14 +7631,44 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 26
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 27
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 26,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 27,
    "scanClass": "pp_material_read",
    "source": "公共部件审查甲 R11；卷三甲 :268；卷三乙 :541；例外：kernel/item.mjs、kernel/dimensions.mjs、kernel/load/**、kernel/validate/**、kernel/blueprint.mjs（加载期校验 checkBlueprintForms）",
    "terms": {
     "vol3.S3.pp_material_read": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "L-09 ③：禁 memo 模块外顶层 WeakMap/Map、禁加载器外 .idIndex.get、禁加载器外 installVocab（docs/gemini/kickoff-1125.md 的对应行）；新骨架无加载器与 memo 模块，允许名单为空",
+   "log": [
+    {
+     "ref": "L-09/L-08 新登扫描类别 pp_module_state：L-09 ③：禁 memo 模块外顶层 WeakMap/Map、禁加载器外 .idIndex.get、禁加载器外 installVocab（docs/gemini/kickoff-1125.md 的对应行）；新骨架无加载器与 memo 模块，允许名单为空",
+     "rev": 1
+    },
+    {
+     "ref": "L-09 ③ 首登后修正：现仓顶层 Map 与 load 族 idIndex 直读实存，按只降不升改为基线登记（含来源文字去掉 文件:行 形态，避免 S12-6 误判）",
+     "rev": 2
+    }
+   ],
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 2,
+   "scanClass": "pp_module_state",
+   "terms": {
+    "L-09.module_state": {
      "expect": "le_baseline",
      "gates": [
       "pre_commit",
@@ -7462,10 +7784,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 26
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 27
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 26,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 27,
    "scanClass": "pp_neighbors",
    "source": "公共部件审查甲 R10；卷五 :491、:1216（现 8 处）",
    "terms": {
@@ -7573,10 +7899,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 23
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 24
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 23,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 24,
    "scanClass": "pp_no_acorn_runtime",
    "source": "李白更正裁定 msg-1122-2255-c0ast：acorn 只许 tools/accept 引用，server-plugin 不得引用",
    "terms": {
@@ -7696,10 +8026,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 26
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 27
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 26,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 27,
    "scanClass": "pp_pos_shape",
    "source": "公共部件审查甲 R8；卷二 §1.5 struct:pos 登记；例外 kernel/named-structs.mjs、kernel/named-struct-match.mjs",
    "terms": {
@@ -7819,10 +8153,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 26
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 27
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 26,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 27,
    "scanClass": "pp_region_cell",
    "source": "公共部件审查甲 R9；卷五 :433、:499；例外：kernel/footprint.mjs 的共用函数（修后建）、kernel/handles/keys.mjs gridChunkCells（卷二 :860）",
    "terms": {
@@ -7942,10 +8280,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 26
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 27
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 26,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 27,
    "scanClass": "pp_rx_empty_clock",
    "source": "公共部件审查甲 R15；卷二十 :312、:685；例外：加载期校验 kernel/validate/**",
    "terms": {
@@ -8065,10 +8407,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 26
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 27
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 26,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 27,
    "scanClass": "pp_seed_args",
    "source": "公共部件审查甲 R6；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479。后半（drawSites 与 seed-keys 两表一致）未落：需读两表对照，现有检测器无此检查",
    "terms": {
@@ -8263,10 +8609,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 20
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 21
     }
    ],
-   "print": "70e283906d035aaa1344313f0c4befcd689aa872ba67320f459efa57bdd25cfd",
-   "rev": 20,
+   "print": "11a55f2ebc9c9a50f81453893efd5128eb6e78577ac5fa0abfc1c7a0be40ce88",
+   "rev": 21,
    "scanClass": "pp_tpl_key",
    "source": "公共部件审查甲 R13；卷二 :860（键串形只由登记方给）；模块化原则卡头第二节第 9 条",
    "terms": {
@@ -8382,10 +8732,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 25
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 26
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 25,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 26,
    "scanClass": "pp_unit_literal",
    "source": "公共部件审查乙 13；卷三乙:179 与表头 unit 字段（item.json 表头 unit 字段）；单位登记表 world/ontology/dimensions/_units.json",
    "terms": {
@@ -8505,10 +8859,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 26
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 27
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 26,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 27,
    "scanClass": "pp_year_minutes",
    "source": "公共部件审查甲 R3；卷二十 :436、:477 T-3 (c)；例外 climate.mjs（日均温日份额，天文相位，卷二十 :436）",
    "terms": {
@@ -8975,10 +9333,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 113
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 114
     }
    ],
-   "print": "176b55284c0bcff7b503d0f1f7fa112e8a3e237c24f127700771f7c402819e6f",
-   "rev": 113,
+   "print": "ca5a5aead5c8e599f0afda3e0ce2235caa38b26a113ab39de63be98aa21b57cf",
+   "rev": 114,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -9229,13 +9591,51 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 14
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 15
     }
    ],
-   "print": "f2f0309a9959f415d599c86b8c7e44f2562e98e1144f256745ac654715692e69",
-   "rev": 14,
+   "print": "c032e61fc7a6703772d61c466c7a0ef7fad145b4073ab4333ff52e62a146fe50",
+   "rev": 15,
    "scanClass": "rules_import",
    "terms": {
     "vol1.V-9": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "L-08 扩项：禁密钥形态字面量（docs/gemini/kickoff-1125.md 的对应行）；形态正则在数据里",
+   "log": [
+    {
+     "ref": "L-09/L-08 新登扫描类别 secret_literal：L-08 扩项：禁密钥形态字面量（docs/gemini/kickoff-1125.md 的对应行）；形态正则在数据里",
+     "rev": 1
+    },
+    {
+     "ref": "L-09 检测器加固：hygiene 围栏代码块正则改用 gm 标志，判据代码指纹变化，按卷十二 S12-13 升版",
+     "rev": 2
+    },
+    {
+     "ref": "L-09 检测器加固：hygiene 文档行数检查加路径归一（用例不带斜杠的 @file 落在用例目录），判据代码指纹变化，按卷十二 S12-13 升版",
+     "rev": 3
+    },
+    {
+     "ref": "L-09 检测器加固：hygiene 补特殊值校验（空范围、空模式、无效上限、缺豁免理由一律报 E-ACC-ITEM-PARAM），判据代码指纹变化，按卷十二 S12-13 升版",
+     "rev": 4
+    }
+   ],
+   "print": "3a5f80e640a7941c7c31f6880cd8fb0f8288fcaf273a1490e627ae470ff4ebaa",
+   "rev": 4,
+   "scanClass": "secret_literal",
+   "terms": {
+    "L-08.secret_literal": {
      "expect": "zero",
      "gates": [
       "pre_commit",
@@ -9951,10 +10351,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 98
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 99
     }
    ],
-   "print": "8b2ec275380b4ca8d13256664b329cbbd89d7c65e9f72a015d0d0c4f0b5c3566",
-   "rev": 98,
+   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
+   "rev": 99,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -10045,10 +10449,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 19
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 20
     }
    ],
-   "print": "f3f0e16911fd8db838c61d8f33068383f8468ac4a6bb96f49b06069bca4f891b",
-   "rev": 19,
+   "print": "94a8b8bf5dcd27bbc92e6986ff77395dca88db57e998273e7ba9f57888525b51",
+   "rev": 20,
    "scanClass": "sim_bypass",
    "source": "卷二十七 §4.8 S27-11 :260、A27-1.11 :369；对照表 docs/迁移体检/格子G6-G11-规矩检查对照.md #60；卷十二 §2.4 开放登记",
    "terms": {
@@ -10402,10 +10810,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 26
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 27
     }
    ],
-   "print": "7d54318d81b9996c5441a0db3f42862e277ecbe4eb70bd852f915d69670bb432",
-   "rev": 26,
+   "print": "a75cac4ea368bf2fc4d83627078bcc6978ff1a6c92a648d35f29d955fa60e1d2",
+   "rev": 27,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -10626,6 +11038,28 @@
    "terms": {
     "vol27.S27-3.timer": {
      "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "L-09 ④：typed_pos 接 tsc，对 jsconfig.json 跑静态类型检查（docs/gemini/kickoff-1125.md 的对应行）",
+   "log": [
+    {
+     "ref": "L-09/L-08 新登扫描类别 typecheck：L-09 ④：typed_pos 接 tsc，对 jsconfig.json 跑静态类型检查（docs/gemini/kickoff-1125.md 的对应行）",
+     "rev": 1
+    }
+   ],
+   "print": "a75cac4ea368bf2fc4d83627078bcc6978ff1a6c92a648d35f29d955fa60e1d2",
+   "rev": 1,
+   "scanClass": "typecheck",
+   "terms": {
+    "L-09.typecheck": {
+     "expect": "zero",
      "gates": [
       "pre_commit",
       "pre_merge"
@@ -10988,10 +11422,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 88
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 89
     }
    ],
-   "print": "70e283906d035aaa1344313f0c4befcd689aa872ba67320f459efa57bdd25cfd",
-   "rev": 88,
+   "print": "11a55f2ebc9c9a50f81453893efd5128eb6e78577ac5fa0abfc1c7a0be40ce88",
+   "rev": 89,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -11265,10 +11703,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 37
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 38
     }
    ],
-   "print": "f3f0e16911fd8db838c61d8f33068383f8468ac4a6bb96f49b06069bca4f891b",
-   "rev": 37,
+   "print": "94a8b8bf5dcd27bbc92e6986ff77395dca88db57e998273e7ba9f57888525b51",
+   "rev": 38,
    "scanClass": "version_fork",
    "terms": {
     "vol1.V-17": {
@@ -11514,10 +11956,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 58
+    },
+    {
+     "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
+     "rev": 59
     }
    ],
-   "print": "a58d98e74c6449367594b1d77ea1e1ed351045e9bf15885dabcaa817a1fe8658",
-   "rev": 58,
+   "print": "82550078ae3a8e04bb4a83161a49197545f4e0c4d4998f5ede2f76ac5dac4634",
+   "rev": 59,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

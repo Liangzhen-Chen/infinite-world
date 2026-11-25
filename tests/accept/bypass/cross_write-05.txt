@@ -1,0 +1,5 @@
+/** @param {State} state @param {EntityId} id @returns {void} */
+export function setValue(state, id) { writePath(state, P.things_value(id), { value: 1 }); }
+
+// @file world/ontology/state-owners.json
+{"stateKeys":{"things":{"writers":{"*.value":{"rewrite":"__case__/cross_write-05.mjs","dated":true}}}},"pathTypes":{"things.*.value":"map<number,number>"}}

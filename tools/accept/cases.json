@@ -50,6 +50,44 @@
   },
   {
    "addedAtRev": 1,
+   "caseKey": "big_md-01",
+   "expectCode": "E-ACC-ARCHIVE-REF",
+   "fixture": "tests/accept/bypass/big_md-01.txt",
+   "group": "offline",
+   "origin": "L-08：单个 .md 超过 500 KB",
+   "polarity": "must_fail",
+   "scanClass": "big_md"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "big_md-11",
+   "fixture": "tests/accept/bypass/big_md-11.txt",
+   "group": "offline",
+   "origin": "L-08：小文档不报",
+   "polarity": "must_pass",
+   "scanClass": "big_md"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "claude_doc-01",
+   "expectCode": "E-ACC-ARCHIVE-REF",
+   "fixture": "tests/accept/bypass/claude_doc-01.txt",
+   "group": "offline",
+   "origin": "L-08：CLAUDE.md 含「已过期」",
+   "polarity": "must_fail",
+   "scanClass": "claude_doc"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "claude_doc-11",
+   "fixture": "tests/accept/bypass/claude_doc-11.txt",
+   "group": "offline",
+   "origin": "L-08：短且无叠层词不报",
+   "polarity": "must_pass",
+   "scanClass": "claude_doc"
+  },
+  {
+   "addedAtRev": 1,
    "caseKey": "const_literal-01",
    "fixture": "tests/accept/bypass/const_literal-01.txt",
    "group": "rules",
@@ -196,6 +234,25 @@
    "group": "rules",
    "origin": "卷二 S5 直接改 state.cells[w][chunk][key]（cells 写者登记待 gridKey 落地，直接写由 E-VIEW-BYPASS 兜底）",
    "polarity": "must_fail",
+   "scanClass": "cross_write"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "cross_write-05",
+   "expectCode": "E-VIEW-UNDECLARED-WRITE",
+   "fixture": "tests/accept/bypass/cross_write-05.txt",
+   "group": "rules",
+   "origin": "L-09 ⑥：writePath 写 dated 改写者模式即拒",
+   "polarity": "must_fail",
+   "scanClass": "cross_write"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "cross_write-11",
+   "fixture": "tests/accept/bypass/cross_write-11.txt",
+   "group": "rules",
+   "origin": "L-09 ⑥ 配套：不写状态、不调写入口即不报",
+   "polarity": "must_pass",
    "scanClass": "cross_write"
   },
   {
@@ -372,6 +429,35 @@
    "origin": "卷二 §2.8 第 4a 条 声明前的 @type 不是强转",
    "polarity": "must_pass",
    "scanClass": "escape_hatch"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "export_guard-01",
+   "expectCode": "E-VIEW-INPUT-IMPORT",
+   "fixture": "tests/accept/bypass/export_guard-01.txt",
+   "group": "rules",
+   "origin": "L-09 ①：具名导入内核未登记导出",
+   "polarity": "must_fail",
+   "scanClass": "export_guard"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "export_guard-02",
+   "expectCode": "E-VIEW-INPUT-IMPORT",
+   "fixture": "tests/accept/bypass/export_guard-02.txt",
+   "group": "rules",
+   "origin": "L-09 ①：import * 内核模块同拒",
+   "polarity": "must_fail",
+   "scanClass": "export_guard"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "export_guard-11",
+   "fixture": "tests/accept/bypass/export_guard-11.txt",
+   "group": "rules",
+   "origin": "L-09 ①：已登记内核导出可导入",
+   "polarity": "must_pass",
+   "scanClass": "export_guard"
   },
   {
    "addedAtRev": 1,
@@ -917,6 +1003,25 @@
   },
   {
    "addedAtRev": 1,
+   "caseKey": "ip_literal-01",
+   "expectCode": "E-ACC-ARCHIVE-REF",
+   "fixture": "tests/accept/bypass/ip_literal-01.txt",
+   "group": "offline",
+   "origin": "L-08：公网 IPv4 字面量",
+   "polarity": "must_fail",
+   "scanClass": "ip_literal"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "ip_literal-11",
+   "fixture": "tests/accept/bypass/ip_literal-11.txt",
+   "group": "offline",
+   "origin": "L-08：保留段、文档段与版本号串不报",
+   "polarity": "must_pass",
+   "scanClass": "ip_literal"
+  },
+  {
+   "addedAtRev": 1,
    "caseKey": "item_downgrade-01",
    "expectCode": "E-ACC-ITEM-DOWNGRADE",
    "fixture": "tests/accept/bypass/item_downgrade-01.txt",
@@ -1072,6 +1177,35 @@
   },
   {
    "addedAtRev": 1,
+   "caseKey": "kernel_freeze-01",
+   "expectCode": "E-FILE-UNASSIGNED",
+   "fixture": "tests/accept/bypass/kernel_freeze-01.txt",
+   "group": "rules",
+   "origin": "L-09 ②：内核目录新增未登记文件",
+   "polarity": "must_fail",
+   "scanClass": "kernel_freeze"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "kernel_freeze-02",
+   "expectCode": "E-FILE-UNASSIGNED",
+   "fixture": "tests/accept/bypass/kernel_freeze-02.txt",
+   "group": "rules",
+   "origin": "L-09 ②：files.json 条目超过上限",
+   "polarity": "must_fail",
+   "scanClass": "kernel_freeze"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "kernel_freeze-11",
+   "fixture": "tests/accept/bypass/kernel_freeze-11.txt",
+   "group": "rules",
+   "origin": "L-09 ②：实际文件与清单一致且不超上限",
+   "polarity": "must_pass",
+   "scanClass": "kernel_freeze"
+  },
+  {
+   "addedAtRev": 1,
    "caseKey": "ledger_state_read-01",
    "expectCode": "E-VIEW-BYPASS",
    "fixture": "tests/accept/bypass/ledger_state_read-01.txt",
@@ -1127,6 +1261,25 @@
    "origin": "卷六 §4.1.2：账本内核（economy 系统写者登记的文件）自己读 accounts（必须不报）",
    "polarity": "must_pass",
    "scanClass": "ledger_state_read"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "md_links-01",
+   "expectCode": "E-ACC-ARCHIVE-REF",
+   "fixture": "tests/accept/bypass/md_links-01.txt",
+   "group": "offline",
+   "origin": "L-08：docs 下相对链接指向不存在的文件",
+   "polarity": "must_fail",
+   "scanClass": "md_links"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "md_links-11",
+   "fixture": "tests/accept/bypass/md_links-11.txt",
+   "group": "offline",
+   "origin": "L-08：存在的相对链接、外链、锚点与行内代码不报",
+   "polarity": "must_pass",
+   "scanClass": "md_links"
   },
   {
    "addedAtRev": 1,
@@ -2734,6 +2887,45 @@
   },
   {
    "addedAtRev": 1,
+   "caseKey": "pp_module_state-01",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_module_state-01.txt",
+   "group": "rules",
+   "origin": "L-09 ③①：模块顶层 new Map",
+   "polarity": "must_fail",
+   "scanClass": "pp_module_state"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_module_state-02",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_module_state-02.txt",
+   "group": "rules",
+   "origin": "L-09 ③②：加载器外 .idIndex.get",
+   "polarity": "must_fail",
+   "scanClass": "pp_module_state"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_module_state-03",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/pp_module_state-03.txt",
+   "group": "rules",
+   "origin": "L-09 ③③：加载器外 installVocab",
+   "polarity": "must_fail",
+   "scanClass": "pp_module_state"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "pp_module_state-11",
+   "fixture": "tests/accept/bypass/pp_module_state-11.txt",
+   "group": "rules",
+   "origin": "L-09 ③：函数内局部表、只取 idIndex 不调用、字符串里出现名字都不计",
+   "polarity": "must_pass",
+   "scanClass": "pp_module_state"
+  },
+  {
+   "addedAtRev": 1,
    "caseKey": "pp_neighbors-01",
    "expectCode": "E-VIEW-BYPASS",
    "fixture": "tests/accept/bypass/pp_neighbors-01.txt",
@@ -3492,6 +3684,25 @@
   },
   {
    "addedAtRev": 1,
+   "caseKey": "secret_literal-01",
+   "expectCode": "E-ACC-ARCHIVE-REF",
+   "fixture": "tests/accept/bypass/secret_literal-01.txt",
+   "group": "offline",
+   "origin": "L-08：sk-、AKIA、私钥头形态",
+   "polarity": "must_fail",
+   "scanClass": "secret_literal"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "secret_literal-11",
+   "fixture": "tests/accept/bypass/secret_literal-11.txt",
+   "group": "offline",
+   "origin": "L-08：长度不足的形似串不报",
+   "polarity": "must_pass",
+   "scanClass": "secret_literal"
+  },
+  {
+   "addedAtRev": 1,
    "caseKey": "seed_sites-11",
    "fixture": "tests/accept/bypass/seed_sites-11.txt",
    "group": "rules",
@@ -4105,6 +4316,25 @@
    "origin": "卷二十七 S27-3：成员方法同名不是全局计时器（必须不报）",
    "polarity": "must_pass",
    "scanClass": "timer_global"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "typecheck-01",
+   "expectCode": "E-TSC-COVERAGE",
+   "fixture": "tests/accept/bypass/typecheck-01.txt",
+   "group": "rules",
+   "origin": "L-09 ④：JSDoc 类型与值不符即 tsc 报错",
+   "polarity": "must_fail",
+   "scanClass": "typecheck"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "typecheck-11",
+   "fixture": "tests/accept/bypass/typecheck-11.txt",
+   "group": "rules",
+   "origin": "L-09 ④：类型相符不报",
+   "polarity": "must_pass",
+   "scanClass": "typecheck"
   },
   {
    "addedAtRev": 1,
