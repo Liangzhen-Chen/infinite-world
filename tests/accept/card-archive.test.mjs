@@ -15,7 +15,7 @@ import { testTempRoot, writeUnderTempRoot } from './temp-root.mjs';
 // 门禁生效提交一行在真实规矩里会被合入后回填，测试不依赖它的现值：先统一设成「待回填」，要用具体值的用例自己再设。
 const setEffective = (doc, v) => doc.replace(/^(- 门禁生效提交：).*?(\r?)$/m, `$1${v}$2`);
 const DOC = setEffective(readFileSync(join(ROOT, 'docs/派活卡头规矩.md'), 'utf8'), '待回填');
-const { rules: RULES, questions: QUESTIONS, error: LOAD_ERROR } = loadRules(DOC);
+const { rules: RULES, error: LOAD_ERROR } = loadRules(DOC);
 const PASS_GATE = async () => ({ verdict: 'pass' });
 
 test('规矩文件第五节可解析', () => {
@@ -31,7 +31,6 @@ const fakeText = (n) => Array.from({ length: n }, (_, i) => `行 ${i + 1}`).join
 const FILES = {
   'tools/accept/run.mjs': fakeText(100),
   'tools/accept/lib/card-archive.mjs': fakeText(100),
-  'tools/accept/lib/card-selfcheck.mjs': fakeText(100),
   'tools/accept/commit-hook.mjs': fakeText(100),
   'tests/acceptance/ds-x/a.test.mjs': fakeText(100),
   'docs/统一底层设计/卷十二-验收与自动扫描.md': fakeText(400),
@@ -43,11 +42,6 @@ const MEM = {
   read: (p) => (p in FILES ? FILES[p] : null),
   list: (dir) => Object.keys(FILES).filter((k) => k.startsWith(dir)).map((k) => k.slice(dir.length)),
 };
-
-function selfcheckTable(ev = {}) {
-  const rows = QUESTIONS.map((q) => `| ${q.n} | ${q.q} | 是 | ${q.n in ev ? ev[q.n] : `tools/accept/run.mjs:1${q.q.includes('__') ? ' diff 共 12 行' : ''}`} |`);
-  return ['| # | 问题 | 是/否 | 证据 |', '|---|---|---|---|', ...rows].join('\n');
-}
 
 const ITEM3 = (n) => `- 抽查条目：偏离 ${n}；对照：tools/accept/commit-hook.mjs:30；结论：属实，与代码一致`;
 const GOOD = {
@@ -63,11 +57,10 @@ const GOOD = {
   ].join('\n'),
   '开发.md': [
     '## 改动清单',
-    '- 位置：tools/accept/lib/card-archive.mjs:10；做了什么：新增检查；依据：卷十二:163；公共部件：firstTable（tools/accept/lib/card-selfcheck.mjs）',
+    '- 位置：tools/accept/lib/card-archive.mjs:10；做了什么：新增检查；依据：卷十二:163；公共部件：firstTable（tools/accept/lib/card-archive.mjs）',
     '## 交DeepSeek小卡', '无，DeepSeek 余额耗尽，由本会话自己写', '',
   ].join('\n'),
   '反思.md': [
-    selfcheckTable(), '',
     '## 是否合理完成', '是；`node --test tests/accept/card-archive.test.mjs` 末行：# pass 20', '',
     '## 偏离逐项',
     '- 代码位置：tools/accept/commit-hook.mjs:30；设计原文：卷十二:163；偏成：分支名取当前分支；理由：裁定 Q-12，提交钩子看不到提交说明',
@@ -86,7 +79,7 @@ const GOOD = {
 };
 const archive = (patch = {}) => ({ ...GOOD, ...patch });
 const readOf = (files) => (f) => (f in files ? files[f] : null);
-const check = (files, stage = '推送') => checkArchive(RULES, QUESTIONS, readOf(files), null, stage, MEM);
+const check = (files, stage = '推送') => checkArchive(RULES, readOf(files), null, stage, MEM);
 const has = (reasons, ...parts) => reasons.some((r) => parts.every((p) => r.includes(p)));
 const swap = (file, from, to) => archive({ [file]: GOOD[file].replace(from, to) });
 
@@ -102,38 +95,6 @@ test('交接文件 state.json：没有不拒；非法 JSON、非对象、缺必�
   const miss = { ...state }; delete miss.phase;
   assert.ok(has(check({ ...archive(), 'state.json': JSON.stringify(miss) }), 'state.json', '缺必填键', 'phase'));
   assert.deepEqual(check(archive()), [], '没有 state.json 时不拒');
-});
-
-// 自查表可填否项（李白 Z-6）：规矩键值在测试里自设（项 5、前缀「缘由：」），不依赖真实规矩当前值；“否”项的实据照常核。
-const NO_DOC = DOC.replace(/^- 自查表可填否项：.*$/m, '- 自查表可填否项：5').replace(/^- 否项原因前缀：.*$/m, '- 否项原因前缀：缘由：');
-const { rules: NO_RULES } = loadRules(NO_DOC);
-const noTable = (ev) => selfcheckTable({ 5: ev }).replace(new RegExp(`^(\\| 5 \\|.*?\\| )是( \\|)`, 'm'), '$1否$2');
-const checkNo = (ev) => checkArchive(NO_RULES, QUESTIONS, readOf({ ...GOOD, '反思.md': GOOD['反思.md'].replace(selfcheckTable(), noTable(ev)) }), null, '推送', MEM);
-
-test('规矩两键读成登记：可填否项、原因前缀；只有一键读取即报错', () => {
-  assert.deepEqual(NO_RULES.noItems, ['5']);
-  assert.equal(NO_RULES.noPrefix, '缘由：');
-  assert.match(loadRules(NO_DOC.replace(/^- 自查表可填否项：.*\r?\n/m, '')).error || '', /同时有或同时无，只有「否项原因前缀」/);
-  assert.match(loadRules(NO_DOC.replace(/^- 否项原因前缀：.*\r?\n/m, '')).error || '', /同时有或同时无，只有「自查表可填否项」/);
-});
-
-test('规矩没有两键（如推送取远端旧规矩）：不报缺键，没有可填否项；第 7 项「否」拒、「是」过', () => {
-  const OLD = loadRules(NO_DOC.replace(/^- 自查表可填否项：.*\r?\n/m, '').replace(/^- 否项原因前缀：.*\r?\n/m, ''));
-  assert.equal(OLD.error, undefined);
-  assert.deepEqual(OLD.rules.noItems, []);
-  assert.equal(OLD.rules.noPrefix, '');
-  const asNo = GOOD['反思.md'].replace(selfcheckTable(), selfcheckTable().replace(/^(\| 7 \|.*?\| )是( \|)/m, '$1否$2'));
-  assert.ok(has(checkArchive(OLD.rules, QUESTIONS, readOf({ ...GOOD, '反思.md': asNo }), null, '推送', MEM), '第 7 项', '须为"是"'));
-  assert.deepEqual(checkArchive(OLD.rules, QUESTIONS, readOf(GOOD), null, '推送', MEM), []);
-});
-
-test('可填否项填"否"：前缀＋原因＋实据放行；缺前缀、原因太短、无实据都拒；未登记项填"否"拒', () => {
-  assert.deepEqual(checkNo('缘由：写者不跑全量，由主会话跑；`node --test x` 末行：# pass 3'), []);
-  assert.ok(has(checkNo('写者不跑全量，由主会话跑；`node --test x` 末行：# pass 3'), '第 5 项', '缘由：'));
-  assert.ok(has(checkNo('缘由：没'), '第 5 项', '不足'));
-  assert.ok(has(checkNo('缘由：写者不跑全量，由主会话跑'), '第 5 项证据须含实据'));
-  const bad = GOOD['反思.md'].replace(selfcheckTable(), noTable('tools/accept/run.mjs:1').replace(/^(\| 3 \|.*?\| )是( \|)/m, '$1否$2'));
-  assert.ok(has(checkArchive(NO_RULES, QUESTIONS, readOf({ ...GOOD, '反思.md': bad }), null, '推送', MEM), '第 3 项', '须为"是"'));
 });
 
 test('缺文件拒；出题.md、审查.md 提交时不要求、推送时要求', () => {
@@ -178,9 +139,10 @@ test('没有偏离：只写「无偏离」拒；写「无偏离」并列够卷:�
   assert.deepEqual(check(swap('反思.md', line, '## 偏离逐项\n无偏离。核过：卷十二:163、卷四:327、卷二:88')), []);
 });
 
-test('九项自查表缺、被改成否：拒', () => {
-  assert.ok(has(check(swap('反思.md', selfcheckTable(), '')), '开头自查表'));
-  assert.ok(has(check(swap('反思.md', '| 4 | 新测试不依赖仓库当前偶然数字 | 是 |', '| 4 | 新测试不依赖仓库当前偶然数字 | 否 |')), '第 4 项'));
+test('反思.md 无自查表、只有「是否合理完成」「偏离逐项」两节：放行；缺「偏离逐项」：拒', () => {
+  const onlyTwo = '## 是否合理完成\n是；`node --test tests/accept/card-archive.test.mjs` 末行：# pass 20\n\n## 偏离逐项\n无偏离。核过：卷十二:163、卷四:327、卷二:88\n';
+  assert.deepEqual(check(archive({ '反思.md': onlyTwo })), []);
+  assert.ok(has(check(archive({ '反思.md': onlyTwo.replace('## 偏离逐项', '## 别的') })), '缺小节「偏离逐项」'));
 });
 
 test('审查.md 抽查少于 3 条：拒；抽查条目缺对照：拒', () => {
@@ -228,16 +190,7 @@ test('三方模型族：规矩没有该键（推送时读远端旧规矩）时�
   const OLD = loadRules(DOC.replace(/^- 三方模型字段：.*\r?\n/m, ''));
   assert.equal(OLD.error, undefined);
   const same = { ...GOOD, '派卡.md': GOOD['派卡.md'].replace('模型：Claude Opus 5.5', '模型：DeepSeek flash') };
-  assert.deepEqual(checkArchive(OLD.rules, QUESTIONS, readOf(same), null, '推送', MEM), []);
-});
-
-test('回归 1：自查表证据只写敷衍话拒；须含卷:行、文件:行、命令末行之一', () => {
-  for (const ev of ['✓', '已核', '做完了', '见上', '无问题', '是的']) {
-    const r = check(swap('反思.md', selfcheckTable(), selfcheckTable({ 3: ev })));
-    assert.ok(has(r, '第 3 项证据须含实据'), ev);
-  }
-  assert.deepEqual(check(swap('反思.md', selfcheckTable(), selfcheckTable({ 3: '卷十二:163 原句已摘' }))), []);
-  assert.deepEqual(check(swap('反思.md', selfcheckTable(), selfcheckTable({ 3: '`node --test x` 末行：# fail 0' }))), []);
+  assert.deepEqual(checkArchive(OLD.rules, readOf(same), null, '推送', MEM), []);
 });
 
 test('回归 2：引用的文件不存在、行号超出文件、卷文件不存在或行号超出：拒；真有的放行', () => {
@@ -250,20 +203,19 @@ test('回归 2：引用的文件不存在、行号超出文件、卷文件不存
   assert.ok(has(check(swap('派卡.md', '卷十二:163', '卷九十九:1')), '找不到对应的卷文件'));
   assert.deepEqual(check(swap('派卡.md', '卷十二:163', '卷二十:50')), [], '卷二十不是卷二，按完整卷号找文件');
   assert.ok(has(check(swap('派卡.md', '卷十二:163', '卷二十:51')), '行号超出'));
-  assert.ok(has(check(swap('反思.md', selfcheckTable(), selfcheckTable({ 5: 'tools/accept/nope.mjs:1' }))), '第 5 项', '指向的文件不存在'));
   assert.ok(has(check(swap('开发.md', 'tools/accept/lib/card-archive.mjs:10', 'tools/accept/lib/card-archive.mjs:999')), '改动清单', '行号超出'));
 });
 
 test('回归 3：三方标识只差大小写或首尾空白算同一个人：拒；提交说明的标识同样不分大小写', () => {
   assert.ok(has(check(swap('派卡.md', '标识：agent-r1', '标识：AGENT-W1 ')), '标识相同'));
   assert.ok(has(check(swap('派卡.md', '标识：agent-r1', '标识：Agent-T1')), '标识相同'));
-  const ok = judgeCommit(RULES, QUESTIONS, { files: [SRC], branch: null, message: '卡分支：ds/x\n角色：写码\n标识：AGENT-W1', isMerge: false, stage: '推送', repo: MEM, readFile: (d, f) => readOf(archive())(f) });
+  const ok = judgeCommit(RULES, { files: [SRC], branch: null, message: '卡分支：ds/x\n角色：写码\n标识：AGENT-W1', isMerge: false, stage: '推送', repo: MEM, readFile: (d, f) => readOf(archive())(f) });
   assert.deepEqual(ok, []);
 });
 
 // 判提交（内存版）。
 const SRC = 'server-plugin/a.mjs';
-const judge = (o) => judgeCommit(RULES, QUESTIONS, { branch: 'ds/x', message: null, isMerge: false, stage: '提交', repo: MEM, readFile: (d, f) => (d === 'docs/卡档案/ds-x/' ? readOf(archive())(f) : null), ...o });
+const judge = (o) => judgeCommit(RULES, { branch: 'ds/x', message: null, isMerge: false, stage: '提交', repo: MEM, readFile: (d, f) => (d === 'docs/卡档案/ds-x/' ? readOf(archive())(f) : null), ...o });
 
 test('审卡每轮一条可多条：两条审卡放行；审卡标识等于写码拒；提交用第二条放行、用未登记标识拒；写码仍只许一条', () => {
   const R1 = '- 角色：审卡；模型：Claude Opus 5.5；标识：agent-r1\n';
@@ -275,7 +227,7 @@ test('审卡每轮一条可多条：两条审卡放行；审卡标识等于写�
   assert.ok(has(check(twoWriters), '写了不止一条'));
   const read = (f) => (f === '派卡.md' ? two['派卡.md'] : null);
   const msg = (id) => `卡分支：ds/x\n角色：审卡\n标识：${id}`;
-  const j = (id) => judgeCommit(RULES, QUESTIONS, { files: ['tests/acceptance/ds-x/a.test.mjs'], branch: null, message: msg(id), isMerge: false, stage: '推送', repo: MEM, readFile: (d, f) => read(f) });
+  const j = (id) => judgeCommit(RULES, { files: ['tests/acceptance/ds-x/a.test.mjs'], branch: null, message: msg(id), isMerge: false, stage: '推送', repo: MEM, readFile: (d, f) => read(f) });
   assert.ok(has(j('agent-r2'), '审卡的提交改动了验收目录'), '第二条审卡标识认得（只剩验收目录角色问题）');
   assert.ok(!has(j('agent-r2'), '不一致'));
   assert.ok(!has(j('agent-r1'), '不一致'));
