@@ -1,6 +1,36 @@
 {
  "rows": [
   {
+   "criterion": "扫描范围内出现任一被禁路径或字样即计一条；排除前缀与豁免（路径＋理由）按扫描类别行登记的数据判；扫描根或被禁字样为空、任一豁免缺理由（或空串）报 E-ACC-ITEM-PARAM。",
+   "log": [
+    {
+     "ref": "Step 1 防回潮工具：新登 archive_ref 类别与检测器，扫描 server-plugin/、tools/、tests/、CLAUDE.md、AGENTS.md、docs/（不含已归档目录、docs/gemini/、docs/卡档案/、docs/审查/现行有效裁定.json）",
+     "rev": 1
+    },
+    {
+     "ref": "Step 1 防回潮工具：扫描根或被禁字样为空改报 E-ACC-ITEM-PARAM（不静默放过），补对应用例",
+     "rev": 2
+    },
+    {
+     "ref": "第四轮写码（审查.md 发现与处理第 1、4 条）：claude 子进程清 OAuth 与会员令牌键；豁免缺理由报 E-ACC-ITEM-PARAM；删 docs/gemini/ 死豁免条目",
+     "rev": 3
+    }
+   ],
+   "print": "b853e4a2dc55fc35cdfbfe74f420488c9f647ccc026020dbed68686f834010fa",
+   "rev": 3,
+   "scanClass": "archive_ref",
+   "terms": {
+    "step0a.archive_ref": {
+     "expect": "le_baseline",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
    "criterion": "基线单调类：任一基线分量的现值高于上次合入的值即命中（卷一 V-11、I43；与 E-ACC-BASELINE-UP 同口径，只降不升）。",
    "log": [
     {

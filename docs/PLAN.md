@@ -10,7 +10,7 @@
   - [x] L-02 旧工作树 new-session-8e4637：git 记录已 prune，Orca 已受理移除；空目录仍被 Orca 自身占用，按李白裁定跳过（分支保留）。P5 deepseek 工作树与分支本已不存在。
   - [~] L-03 Orca setup 钩子改 npm ci（李白批 P2）：该设置存于 Orca 应用的仓库设置，CLI 无法修改，需在 Orca 界面改一处（已报李白）；改好前派卡建树一律 `--setup skip` 后手跑 `npm ci`。
   - 拍板记录：P1/P2/P4/P5 李白批（纯技术）；P3 亮圳 11-25 01:59 拍板（11-30 交最小可玩版，5 处卷文按 literature/design_spec 分级）。L-13 写入现行有效裁定。
-  - [~] L-06/L-08/L-10 收编 chore/step1-tooling：与 master 合并仅 .gitignore 冲突；合并后验收 29 条红 6（buildInvocation 未按出题约定 `(opts, env)` 自读 paths.json；archive_ref 基线因 docs/gemini 上涨），pre_commit 红 5 项。派 DeepSeek 写码第二轮。
+  - [x] L-06/L-08/L-10 收编 chore/step1-tooling：DeepSeek 写四轮（第二轮照验收题造 write 档、删空卡文防线被打回；第三轮进程挂住由主会话代提交）、Haiku 出题含一轮改题、Opus API 审第一轮必须改 3 条、Sonnet API 第二轮复核可合，合入 master。已定 DeepSeek 不加 --max-budget-usd（估价失真）。遗留：clearDeepseek 补 CLAUDE_CODE_OAUTH_TOKEN（本机未设该变量，随 L-07 卡补）；A12-4.5、S12-2、S12-3 为主线既有非必过项。
   - [ ] P1 工具与 CI：L-04 typescript+typecheck 脚本；L-05 .github/workflows/ci.yml；L-06 dispatch.mjs（收编 chore/step1-tooling）；L-07 派活卡头规矩 ≤50 行、删 card-selfcheck；L-08 archive_ref 检测器；L-09 检测器六项加固；L-10 tools/cloud、tools/notify 收编去写死。
   - [ ] P2 抗失忆：L-11 gen-status-snapshot + 状态快照；L-12 world/ontology/contracts.json。
   - [x] L-13 现行有效裁定.json 写入 K1125-P1～P5 与 K1125-ESC（附原话出处）；Q-14/Q-15（亮圳的留档、门禁规矩）与 B7（世界方向）不由主会话改，附理由/备选/代价报李白，Q-14/Q-15 转亮圳，B7 标「产品拍板」。
@@ -18,7 +18,7 @@
   - [x] P4 main-session/.claude/settings.local.json 禁用 Agent（不入库）。
   - [ ] P3 新骨架空仓：L-15 server-plugin 旧码归档、kernel ≤15；L-16 旧测试归档；L-17 baseline/scanclasses/entry-registry 重置；L-18 E2E 红灯桩。
   - [ ] P4 治理：L-19 master 分支保护（等拍板 P1）；L-20 李白 Routine A/B 上线演练（李白侧）。
-  - [ ] 全部自验后写 F:/dnd-tmp/handoff-0b-review.md，交 antigravity 复核。
+  - [ ] 全部自验后写 0B 复核交接文件（文件名与发送命令见开工文件第八章末），交 antigravity 复核。
 - 阶段 0B Gemini 复审（硬门闩）：独立顾问逐条核验复审勾选清单，给出明确「复审通过」→ 整理 PR 合入 `master` → 开 `master` 分支保护 → 门闩解锁，允许开工 S1-1。
 
 ## 阶段 1：最小闭环竖切片（4 张强衔接卡，串行优先）

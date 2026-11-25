@@ -1,6 +1,25 @@
 {
  "rows": [
   {
+   "addedAtRev": 1,
+   "caseKey": "archive_ref-01",
+   "expectCode": "E-ACC-ARCHIVE-REF",
+   "fixture": "tests/accept/bypass/archive_ref-01.txt",
+   "group": "offline",
+   "origin": "Step 1 卡文：范围内出现已归档路径与旧回报目录必须报；卷十二 §2.4 开放登记",
+   "polarity": "must_fail",
+   "scanClass": "archive_ref"
+  },
+  {
+   "addedAtRev": 1,
+   "caseKey": "archive_ref-11",
+   "fixture": "tests/accept/bypass/archive_ref-11.txt",
+   "group": "offline",
+   "origin": "Step 1 卡文：不含被禁路径或字样的普通代码不得误报",
+   "polarity": "must_pass",
+   "scanClass": "archive_ref"
+  },
+  {
    "addedAtRev": 2,
    "caseKey": "baseline_monotone-01",
    "expectCode": "E-ACC-BASELINE-UP",

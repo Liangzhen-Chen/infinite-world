@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { readFileSync, rmSync } from 'node:fs';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { loadRules, checkArchive, judgeCommit, archiveDirOf } from '../../tools/accept/lib/card-archive.mjs';
+import { loadRules, checkArchive, judgeCommit, archiveDirOf, modelFamilies } from '../../tools/accept/lib/card-archive.mjs';
 import { prePush } from '../../tools/accept/pre-push.mjs';
 import { cardArchiveCheck } from '../../tools/accept/commit-hook.mjs';
 import { ROOT, tempRepo } from './temp-repo.mjs';
@@ -51,9 +51,9 @@ const GOOD = {
   '派卡.md': [
     '## 派卡人与模型', '主会话 Opus 派卡', '',
     '## 三方标识',
-    '- 角色：写码；模型：Sonnet 5.5；标识：agent-w1',
-    '- 角色：出题；模型：Opus 5.5；标识：agent-t1',
-    '- 角色：审卡；模型：Sonnet 5.5；标识：agent-r1', '',
+    '- 角色：写码；模型：DeepSeek flash；标识：agent-w1',
+    '- 角色：出题；模型：Claude Haiku 5.5；标识：agent-t1',
+    '- 角色：审卡；模型：Claude Opus 5.5；标识：agent-r1', '',
     '## 设计依据', '- 卷十二:163 提交关口', '',
     '## 依赖核查', '- tools/accept/run.mjs:1 存在', '- 某规则表 不存在→先停下回报', '',
     '## 拆分理由', '一张卡完成门禁与规矩改动', '',
@@ -177,12 +177,45 @@ test('审查.md 抽查少于 3 条：拒；抽查条目缺对照：拒', () => {
 });
 
 test('三方标识：缺一方、标识重复、占位词（推送时）：拒', () => {
-  const two = swap('派卡.md', '- 角色：审卡；模型：Sonnet 5.5；标识：agent-r1\n', '');
+  const two = swap('派卡.md', '- 角色：审卡；模型：Claude Opus 5.5；标识：agent-r1\n', '');
   assert.ok(has(check(two), '缺角色「审卡」'));
   assert.ok(has(check(swap('派卡.md', '标识：agent-r1', '标识：agent-w1')), '标识相同'));
   const ph = swap('派卡.md', '标识：agent-t1', '标识：待指派-出题');
   assert.deepEqual(check(ph, '提交'), []);
   assert.ok(has(check(ph, '推送'), '仍是占位'));
+});
+
+// 三方模型族（Step 1 防回潮工具；规矩键「三方模型字段」）：写码族写码∩出题=空、审卡族不在并集，审卡多轮之间可同族。
+const withModels = (w, t, r) => archive({
+  '派卡.md': GOOD['派卡.md'].split('\n').map((l) => (
+    l.startsWith('- 角色：写码；') ? `- 角色：写码；模型：${w}；标识：agent-w1`
+      : l.startsWith('- 角色：出题；') ? `- 角色：出题；模型：${t}；标识：agent-t1`
+        : l.startsWith('- 角色：审卡；') ? `- 角色：审卡；模型：${r}；标识：agent-r1` : l)).join('\n'),
+});
+
+test('三方模型族：三族全异放行；写码与出题同族拒；审卡与写码或出题同族拒；审卡两轮同族放行', () => {
+  assert.deepEqual(check(withModels('DeepSeek flash', 'Claude Haiku 5.5', 'Claude Opus 5.5')), []);
+  assert.ok(has(check(withModels('DeepSeek flash', 'DeepSeek flash', 'Claude Opus 5.5')), '模型族'));
+  assert.ok(has(check(withModels('DeepSeek flash', 'Claude Haiku 5.5', 'DeepSeek flash')), '审卡', '模型族'));
+  assert.ok(has(check(withModels('DeepSeek flash', 'Claude Haiku 5.5', 'Claude Haiku 5.5')), '审卡', '模型族'));
+  const twoReviewers = swap('派卡.md', '- 角色：审卡；模型：Claude Opus 5.5；标识：agent-r1\n', '- 角色：审卡；模型：Claude Opus 5.5；标识：agent-r1\n- 角色：审卡；模型：Claude Opus 5.5 第 2 轮；标识：agent-r2\n');
+  assert.deepEqual(check(twoReviewers), []);
+});
+
+test('三方模型族：写码行列多个模型全部计入；括号里的别名不产生假族；原样小写去空白兜底', () => {
+  assert.deepEqual(modelFamilies('DeepSeek flash（deepseek-flash，V4.1 Flash）'), ['deepseek']);
+  assert.deepEqual(modelFamilies('DeepSeek flash、Claude Sonnet 5.5'), ['deepseek', 'claude-sonnet']);
+  assert.deepEqual(modelFamilies('Some Model'), ['somemodel']);
+  assert.ok(has(check(withModels('DeepSeek flash、Claude Sonnet 5.5', 'Claude Sonnet 5.5', 'Claude Opus 5.5')), '模型族'));
+  assert.deepEqual(check(withModels('DeepSeek flash、Claude Sonnet 5.5', 'Claude Haiku 5.5', 'Claude Opus 5.5')), []);
+  assert.deepEqual(check(withModels('Some Model', 'Another Model', 'Third Model')), []);
+});
+
+test('三方模型族：规矩没有该键（推送时读远端旧规矩）时不核模型字段', () => {
+  const OLD = loadRules(DOC.replace(/^- 三方模型字段：.*\r?\n/m, ''));
+  assert.equal(OLD.error, undefined);
+  const same = { ...GOOD, '派卡.md': GOOD['派卡.md'].replace('模型：Claude Opus 5.5', '模型：DeepSeek flash') };
+  assert.deepEqual(checkArchive(OLD.rules, QUESTIONS, readOf(same), null, '推送', MEM), []);
 });
 
 test('回归 1：自查表证据只写敷衍话拒；须含卷:行、文件:行、命令末行之一', () => {
@@ -220,12 +253,12 @@ const SRC = 'server-plugin/a.mjs';
 const judge = (o) => judgeCommit(RULES, QUESTIONS, { branch: 'ds/x', message: null, isMerge: false, stage: '提交', repo: MEM, readFile: (d, f) => (d === 'docs/卡档案/ds-x/' ? readOf(archive())(f) : null), ...o });
 
 test('审卡每轮一条可多条：两条审卡放行；审卡标识等于写码拒；提交用第二条放行、用未登记标识拒；写码仍只许一条', () => {
-  const R1 = '- 角色：审卡；模型：Sonnet 5.5；标识：agent-r1\n';
-  const two = swap('派卡.md', R1, `${R1}- 角色：审卡；模型：Sonnet 5.5 第 2 轮；标识：agent-r2\n`);
+  const R1 = '- 角色：审卡；模型：Claude Opus 5.5；标识：agent-r1\n';
+  const two = swap('派卡.md', R1, `${R1}- 角色：审卡；模型：Claude Opus 5.5 第 2 轮；标识：agent-r2\n`);
   assert.deepEqual(check(two), []);
-  const dupWriter = swap('派卡.md', R1, `${R1}- 角色：审卡；模型：Sonnet 5.5 第 2 轮；标识：agent-w1\n`);
+  const dupWriter = swap('派卡.md', R1, `${R1}- 角色：审卡；模型：Claude Opus 5.5 第 2 轮；标识：agent-w1\n`);
   assert.ok(has(check(dupWriter), '标识相同'));
-  const twoWriters = swap('派卡.md', R1, `${R1}- 角色：写码；模型：Sonnet 5.5；标识：agent-w2\n`);
+  const twoWriters = swap('派卡.md', R1, `${R1}- 角色：写码；模型：DeepSeek flash；标识：agent-w2\n`);
   assert.ok(has(check(twoWriters), '写了不止一条'));
   const read = (f) => (f === '派卡.md' ? two['派卡.md'] : null);
   const msg = (id) => `卡分支：ds/x\n角色：审卡\n标识：${id}`;

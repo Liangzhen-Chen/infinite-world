@@ -1,0 +1,3 @@
+// archive_ref 必须报夹具：引用已归档路径与已废回报目录。
+const old = 'archive/legacy/place.mjs';
+const report = 'docs/卡回报/old-card.md';

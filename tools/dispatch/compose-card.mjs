@@ -1,15 +1,12 @@
-// 派活卡拼接（李白 11-18 19:08）：规矩全文＋===== 以下为本卡卡文 =====＋卡文＋卡尾，一处成型，派卡脚本只管调用。
+// 派活卡拼接（李白 11-18 19:08）：规矩全文＋===== 以下为本卡卡文 =====＋卡文，一处成型，派卡脚本只管调用。
 // 规矩取自 docs/派活卡头规矩.md（命令行从 origin/master 读）；卡文若自带卡头，必须与现行全文逐字相同，否则拒派。
-// 卡尾文字原样搬自仓库外派卡脚本（F:/dnd-tools/api/run-card-ds.sh），只把分支占位换成 <分支>。
+// 不再附「卡尾」：旧回报目录与自查表「每项填是」已被 CLAUDE.md 第 1 节废止（Step 1 防回潮工具）。
 
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 export const CARD_DELIMITER = '===== 以下为本卡卡文 =====';
-export const TAIL_TITLE = '===== 卡尾（派卡脚本自动附） =====';
-
-const TAIL_BODY = '若本卡要提交：把回报（开头为卡头第三节自查表，每项填"是"并带证据）写进 docs/卡回报/<分支>.md，每次提交都随提交一并提交该文件（更新为当次实况）；提交关口会核这张表，缺表、缺项、任何一项为"否"都会拒绝提交（E-ACC-CARD-SELFCHECK）。只读核查卡不提交、不写此文件。';
 
 const trimEndNewlines = (text) => String(text ?? '').replace(/\n+$/, '');
 
@@ -21,11 +18,10 @@ function titleMarker(header) {
   return marker || firstLine;
 }
 
-export function composeCard(header, card, branch) {
+export function composeCard(header, card) {
   const head = trimEndNewlines(header);
   if (!head.trim()) throw new Error('派活卡头规矩为空，拒派');
   const body = trimEndNewlines(card);
-  const br = String(branch ?? '').replace(/\//g, '-');
 
   const marker = titleMarker(head);
   let filled;
@@ -37,9 +33,8 @@ export function composeCard(header, card, branch) {
     filled = `${head}\n\n${CARD_DELIMITER}\n\n${body}`;
   }
 
-  const prompt = `${filled}\n\n${TAIL_TITLE}\n${TAIL_BODY.replace('<分支>', br)}`;
-  if (!prompt.startsWith(head)) throw new Error('拼接后卡文开头与卡头规矩不一致，拒派');
-  return prompt;
+  if (!filled.startsWith(head)) throw new Error('拼接后卡文开头与卡头规矩不一致，拒派');
+  return filled;
 }
 
 function gitOut(wd, args) {
@@ -63,13 +58,6 @@ function main(argv) {
     process.stderr.write('派活卡头规矩取不到（origin/master:docs/派活卡头规矩.md）\n');
     process.exit(2);
   }
-  let branch;
-  try {
-    branch = gitOut(wd, ['rev-parse', '--abbrev-ref', 'HEAD']).trim();
-  } catch {
-    process.stderr.write('分支名取不到（git rev-parse --abbrev-ref HEAD）\n');
-    process.exit(2);
-  }
   let card;
   try {
     card = readFileSync(cardFile, 'utf8');
@@ -78,7 +66,7 @@ function main(argv) {
     process.exit(2);
   }
   try {
-    process.stdout.write(composeCard(header, card, branch));
+    process.stdout.write(composeCard(header, card));
   } catch (err) {
     process.stderr.write(`${err.message}\n`);
     process.exit(2);

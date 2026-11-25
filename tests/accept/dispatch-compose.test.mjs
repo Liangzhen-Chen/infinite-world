@@ -1,4 +1,4 @@
-// 派卡拼接（李白 11-18 19:08）：规矩全文在最前、卡文居中、卡尾在最后；卡文自带不同卡头即拒，自带相同卡头不重复拼两份。
+// 派卡拼接（李白 11-18 19:08）：规矩全文在最前、卡文居中；不再附卡尾（CLAUDE.md 第 1 节严禁回写 docs/卡回报/）。卡文自带不同卡头即拒，自带相同卡头不重复拼两份。
 // 题面与期望都从 docs/派活卡头规矩.md 与测试内构造的输入推出，不读仓库当前偶然数字。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -10,7 +10,6 @@ import { ROOT } from './temp-root.mjs';
 const DOC = readFileSync(join(ROOT, 'docs/派活卡头规矩.md'), 'utf8');
 const HEAD = DOC.replace(/\n+$/, '');
 const DELIM = '===== 以下为本卡卡文 =====';
-const TAIL = '===== 卡尾（派卡脚本自动附） =====';
 const CARD = '## 目标\n把派卡程序挪进仓库。\n';
 
 test('卡文第一段与规矩文件逐字相同', () => {
@@ -32,7 +31,6 @@ test('卡文自带相同卡头：放行，且不重复拼两份', () => {
   assert.ok(out.startsWith(HEAD));
   assert.equal(out.split('# 派活卡头硬规矩').length - 1, 1);
   assert.ok(out.includes('## 目标\n本卡自带卡头。'));
-  assert.ok(out.includes('docs/卡回报/ds-dispatch.md'));
 });
 
 test('规矩为空：拒派', () => {
@@ -40,8 +38,11 @@ test('规矩为空：拒派', () => {
   assert.throws(() => composeCard('\n\n', CARD, 'ds/dispatch'), /规矩为空，拒派/);
 });
 
-test('卡尾含 docs/卡回报/<分支>.md', () => {
+test('不再附卡尾：卡文段不含 docs/卡回报/ 与 E-ACC-CARD-SELFCHECK', () => {
   const out = composeCard(DOC, CARD, 'ds/dispatch');
-  assert.ok(out.includes(TAIL));
-  assert.ok(out.includes('docs/卡回报/ds-dispatch.md'));
+  const cardBody = out.slice(out.indexOf(DELIM) + DELIM.length);
+  assert.ok(!out.includes('===== 卡尾'));
+  assert.ok(!out.includes('E-ACC-CARD-SELFCHECK'));
+  assert.ok(!cardBody.includes('docs/卡回报/'));
+  assert.ok(out.endsWith(CARD.trimEnd()));
 });

@@ -1,6 +1,10 @@
 {
  "rows": [
   {
+   "detectorCode": "archive_ref",
+   "source": "docs/gemini/rewrite-guide-1124.md 第 207、376–381 行防回潮机械锁；卷十二 §2.4 开放登记；Step 1 卡文"
+  },
+  {
    "detectorCode": "call_edge",
    "source": "卷十二 §2.3"
   },

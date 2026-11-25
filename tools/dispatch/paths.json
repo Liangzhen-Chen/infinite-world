@@ -1,0 +1,5 @@
+{
+  "claudeExe": "F:/dnd-tools/claude-cli/node_modules/@anthropic-ai/claude-code/bin/claude.exe",
+  "claudeConfigDir": "F:/dnd-tools/claude-config",
+  "deepseekConfigDir": "F:/dnd-tools/claude-config-ds"
+}
