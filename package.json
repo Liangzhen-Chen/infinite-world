@@ -10,7 +10,7 @@
     "snapshot": "node tools/gen-status-snapshot.mjs",
     "typecheck": "tsc -p jsconfig.json",
     "test:e2e": "node --test \"tests/e2e/*.test.mjs\"",
-    "test:all": "node --test \"tests/accept/*.test.mjs\" \"tests/kernel/*.test.mjs\" && node --test --test-concurrency=1 \"tests/acceptance/**/*.test.mjs\""
+    "test:all": "node --test \"tests/accept/*.test.mjs\" \"tests/kernel/*.test.mjs\" \"tests/acceptance/**/*.test.mjs\""
   },
   "devDependencies": {
     "@types/node": "24.19.4",
