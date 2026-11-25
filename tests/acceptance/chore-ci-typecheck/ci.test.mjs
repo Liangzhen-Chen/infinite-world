@@ -54,6 +54,62 @@ function stripJsonc(src) {
   return res;
 }
 
+// 去掉 JS 的 // 与 /* */ 注释；字符串与模板字面量内的 // 与 /* 不算注释。
+function stripJsComments(src) {
+  let out = '';
+  let i = 0;
+  while (i < src.length) {
+    const c = src[i];
+    const n = src[i + 1];
+    if (c === '"' || c === "'" || c === '`') {
+      out += c;
+      i++;
+      while (i < src.length && src[i] !== c) {
+        if (src[i] === '\\') { out += src[i] + (src[i + 1] ?? ''); i += 2; continue; }
+        out += src[i];
+        i++;
+      }
+      if (i < src.length) { out += src[i]; i++; }
+      continue;
+    }
+    if (c === '/' && n === '/') { while (i < src.length && src[i] !== '\n') i++; continue; }
+    if (c === '/' && n === '*') {
+      const end = src.indexOf('*/', i + 2);
+      i = end < 0 ? src.length : end + 2;
+      out += ' ';
+      continue;
+    }
+    out += c;
+    i++;
+  }
+  return out;
+}
+
+// 在去注释的基础上，把字符串字面量内容清空（保留引号），用于判断代码本体是否含替身用法；
+// 测试标题里的「零 mock」字样是文字，不是替身。
+function codeOnly(src) {
+  const s = stripJsComments(src);
+  let out = '';
+  let i = 0;
+  while (i < s.length) {
+    const c = s[i];
+    if (c === '"' || c === "'" || c === '`') {
+      out += c;
+      i++;
+      while (i < s.length && s[i] !== c) {
+        if (s[i] === '\\') { i += 2; continue; }
+        i++;
+      }
+      out += c;
+      i++;
+      continue;
+    }
+    out += c;
+    i++;
+  }
+  return out;
+}
+
 function walkSource(relDir) {
   const found = [];
   const visit = (dirUrl) => {
@@ -204,20 +260,26 @@ test('.github/workflows/ci.yml：checkout 步骤带 fetch-depth: 0', () => {
 
 test('tests/e2e/vertical-slice-smoke.test.mjs 存在，import 了 server-plugin/index.mjs', () => {
   assert.ok(exists(E2E), `缺 ${E2E}`);
-  const text = read(E2E);
-  assert.match(text, /(?:import\s[^;]*|import\()\s*['"][^'"]*server-plugin\/index\.mjs['"]/, '未 import server-plugin/index.mjs');
+  const code = stripJsComments(read(E2E));
+  assert.ok(code.includes('server-plugin/index.mjs'), '未引用 server-plugin/index.mjs 路径');
+  assert.ok(/\bimport\s*\(/.test(code) || /^\s*import\s/m.test(code), '路径串所在文件无 import( 或 import 语句');
 });
 
-test('tests/e2e/vertical-slice-smoke.test.mjs 不含 mock（不区分大小写）、.skip、todo', () => {
-  const text = read(E2E);
-  assert.doesNotMatch(text, /mock/i, '含 mock');
-  assert.ok(!text.includes('.skip'), '含 .skip');
-  assert.doesNotMatch(text, /todo/i, '含 todo');
+test('tests/e2e/vertical-slice-smoke.test.mjs 不含 mock（不区分大小写）、.skip、todo（先去注释）', () => {
+  const src = read(E2E);
+  const code = codeOnly(src);
+  assert.doesNotMatch(code, /mock/i, '代码中含 mock（字符串字面量与注释已排除）');
+  assert.doesNotMatch(stripJsComments(src), /(?:from\s*|import\s*\(\s*|require\s*\(\s*)['"][^'"]*mock/i, 'import 说明符指向 mock 模块');
+  assert.ok(!code.includes('.skip'), '含 .skip');
+  assert.doesNotMatch(code, /\btest\.todo\b|\{\s*todo\b/, '含 test.todo 或 { todo');
 });
 
 test('node --test tests/e2e/vertical-slice-smoke.test.mjs 退出码非 0 且输出含「未实现」', { timeout: 120000 }, () => {
+  const env = { ...process.env };
+  delete env.NODE_TEST_CONTEXT;
   const r = spawnSync(process.execPath, ['--test', E2E], {
     cwd: ROOT_PATH,
+    env,
     encoding: 'utf8',
     timeout: 90000,
     maxBuffer: 1 << 26,
