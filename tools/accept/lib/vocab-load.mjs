@@ -8,7 +8,7 @@ import { CODE_RE } from '../../../server-plugin/kernel/validate/types.mjs';
 const clash = (a, b) => a.startsWith(b) || b.startsWith(a);
 
 /**
- * @param {unknown} vocabDoc 已解析的 _vocab.json
+ * @param {Record<string, any>} vocabDoc 已解析的 _vocab.json
  * @param {Iterable<string>} entityPrefixes 维度表登记的实体前缀
  * @param {(...args: unknown[]) => void} err 报错回调
  */
@@ -58,7 +58,7 @@ export function loadVocab(vocabDoc, entityPrefixes, err) {
 }
 
 // `_units.json`：{"units": [{id, dimension, si | siFromRule, calibrate?}]}（§1.4 每条的字段）。
-/** @param {unknown} unitsDoc 已解析的 _units.json @param {(...args: unknown[]) => void} err 报错回调 */
+/** @param {Record<string, any>} unitsDoc 已解析的 _units.json @param {(...args: unknown[]) => void} err 报错回调 */
 export function loadUnits(unitsDoc, err) {
   const units = new Map();
   const rows = unitsDoc && Array.isArray(unitsDoc.units) ? unitsDoc.units : null;

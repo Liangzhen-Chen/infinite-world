@@ -86,13 +86,13 @@ test('S13 ④ 的登记字段/族名定义源：成员即卷二写明的名字',
 
 test('冻结：族对象与根不可改，赋值抛 TypeError', () => {
   assert.ok(Object.isFrozen(T) && Object.isFrozen(T.type) && Object.isFrozen(T.code_enum) && Object.isFrozen(T.code_enum.rx_cmp));
-  assert.throws(() => { T.type.number = 'string'; }, TypeError);
-  assert.throws(() => { T.type.extra = 'extra'; }, TypeError);
+  assert.throws(() => { /** @type {any} */ (T.type).number = 'string'; }, TypeError);
+  assert.throws(() => { /** @type {any} */ (T.type).extra = 'extra'; }, TypeError);
 });
 
 test('未定义标记访问抛 E-DIM-REF-MISSING；语言协议键（then、toJSON）照常取 undefined', () => {
-  assert.throws(() => T.type.nope, (e) => e.code === 'E-DIM-REF-MISSING');
-  assert.throws(() => T.code_enum.rx_cmp.missing, (e) => e.code === 'E-DIM-REF-MISSING');
+  assert.throws(() => T.type.nope, (e) => /** @type {any} */ (e).code === 'E-DIM-REF-MISSING');
+  assert.throws(() => T.code_enum.rx_cmp.missing, (e) => /** @type {any} */ (e).code === 'E-DIM-REF-MISSING');
   assert.equal(T.type.then, undefined);
   assert.equal(T.type.toJSON, undefined);
 });

@@ -62,6 +62,7 @@ const isPlainObject = (value) => {
   const proto = Object.getPrototypeOf(value);
   return proto === Object.prototype || proto === null;
 };
+/** @param {unknown} value @returns {value is string} */
 const isNonEmptyString = (value) => typeof value === 'string' && value.trim().length > 0;
 const isFiniteInteger = (value) => typeof value === 'number' && Number.isInteger(value);
 
@@ -371,6 +372,7 @@ function makeFileReader(repoRoot) {
   };
 }
 
+/** @param {Record<string, any>} doc @param {{repoRoot?: string}} [options] */
 export function validateContractsRefs(doc, { repoRoot } = {}) {
   const errors = [];
   if (!isNonEmptyString(repoRoot)) {
@@ -477,6 +479,7 @@ export function validateContractsRefs(doc, { repoRoot } = {}) {
   return { ok: errors.length === 0, errors };
 }
 
+/** @param {{repoRoot?: string, contractsPath?: string}} [options] */
 export function loadAndValidateContracts({ repoRoot, contractsPath = DEFAULT_CONTRACTS_PATH } = {}) {
   if (!isNonEmptyString(repoRoot)) {
     return { ok: false, doc: null, errors: [{ code: CODES.READ, path: 'repoRoot', message: 'repoRoot 必须是非空字符串' }] };

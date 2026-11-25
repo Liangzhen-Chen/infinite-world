@@ -21,7 +21,7 @@ function ctxOf(map) {
 }
 
 test('真实状态登记表与维度表上计数为 0（账本三路径的余额结构按 S6-14 豁免）', () => {
-  assert.deepEqual(detect(loadContext(ROOT), PARAMS, {}), []);
+  assert.deepEqual(detect(loadContext(ROOT), PARAMS), []);
 });
 
 test('状态键上的资源数量字段报 E-DIM-STRUCT-FIELD', () => {
@@ -29,7 +29,7 @@ test('状态键上的资源数量字段报 E-DIM-STRUCT-FIELD', () => {
     'world/rules/tables/economy/resources.json': RES('copper'),
     'world/ontology/state-owners.json': STATE({ 'npcs.*.coins': 'integer:copper' }),
     'world/ontology/named-structs.json': STRUCTS([]),
-  }), PARAMS, {});
+  }), PARAMS);
   assert.equal(hits.length, 1);
   assert.equal(hits[0].code, 'E-DIM-STRUCT-FIELD');
   assert.match(hits[0].symbolPath, /npcs\.\*\.coins/);
@@ -47,7 +47,7 @@ test('维度表实体行上的资源数量字段报（卷六 S6-14 :337「实体
       itm_x: { mass: 2, note: 'a' },
       itm_y: { note: 'b' },
     }),
-  }), PARAMS, {});
+  }), PARAMS);
   assert.equal(hits.length, 1);
   assert.equal(hits[0].code, 'E-DIM-STRUCT-FIELD');
   assert.equal(hits[0].file, 'world/ontology/dimensions/item.json');
@@ -66,7 +66,7 @@ test('偏离行（created.*.props.* 的 dimension）按维度表表头展开（�
       mass: { type: 'number', unit: 'copper' },
       age: { type: 'integer', unit: 'day' },
     }, {}),
-  }), PARAMS, {});
+  }), PARAMS);
   assert.equal(hits.length, 1);
   assert.equal(hits[0].code, 'E-DIM-STRUCT-FIELD');
   assert.match(hits[0].symbolPath, /created\.\*\.props\.\*/);
@@ -81,7 +81,7 @@ test('偏离行的维度表尚未建：按加载器同口径跳过（kernel/load
       { 'created.*.props.*': [['item', 'person', 'place'], 'dimKey'] },
     ),
     'world/ontology/named-structs.json': STRUCTS([]),
-  }), PARAMS, {});
+  }), PARAMS);
   assert.deepEqual(hits, []);
 });
 
@@ -92,7 +92,7 @@ test('list<…> 简写展开到命名 struct 的数值字段（卷二 §2.7 :675
     'world/ontology/named-structs.json': STRUCTS([
       { name: 'struct:pendingPost', source: 'fixture', type: { struct: { entrySeq: 'integer:count', qty: 'integer:copper' } } },
     ]),
-  }), PARAMS, {});
+  }), PARAMS);
   assert.equal(hits.length, 1);
   assert.equal(hits[0].code, 'E-DIM-STRUCT-FIELD');
   assert.match(hits[0].symbolPath, /qty/);
@@ -103,7 +103,7 @@ test('嵌套 list<…> 同样展开', () => {
     'world/rules/tables/economy/resources.json': RES('copper'),
     'world/ontology/state-owners.json': STATE({ 'queue.*': 'list<list<integer:copper>>' }),
     'world/ontology/named-structs.json': STRUCTS([]),
-  }), PARAMS, {});
+  }), PARAMS);
   assert.equal(hits.length, 1);
   assert.equal(hits[0].code, 'E-DIM-STRUCT-FIELD');
 });
@@ -113,7 +113,7 @@ test('命名 struct 里的资源数量字段同样报（按单位，不按字段
     'world/rules/tables/economy/resources.json': RES('copper'),
     'world/ontology/state-owners.json': STATE({ 'npcs.*.holding': 'struct:holding' }),
     'world/ontology/named-structs.json': STRUCTS([{ name: 'struct:holding', source: 'fixture', type: { struct: { shares: 'integer:copper' } } }]),
-  }), PARAMS, {});
+  }), PARAMS);
   assert.equal(hits.length, 1);
   assert.equal(hits[0].code, 'E-DIM-STRUCT-FIELD');
   assert.match(hits[0].symbolPath, /shares/);
@@ -138,7 +138,7 @@ test('账本三路径与义务记录里的应付数额不报（应付数额按�
         fieldRoles: { qty: { role: 'payable', source: '卷六 §2.4 :200' } },
       },
     ]),
-  }), PARAMS, {});
+  }), PARAMS);
   assert.deepEqual(hits, []);
 });
 
@@ -153,7 +153,7 @@ test('义务记录里未标应付数额的数值字段（已给付 done）照报
         fieldRoles: { qty: { role: 'payable', source: '卷六 §2.4 :200' } },
       },
     ]),
-  }), PARAMS, {});
+  }), PARAMS);
   assert.equal(hits.length, 1);
   assert.equal(hits[0].code, 'E-DIM-STRUCT-FIELD');
   assert.match(hits[0].symbolPath, /done/);
@@ -166,7 +166,7 @@ test('合同记录里未标应付数额的数值字段照报（条款里的数�
     'world/ontology/named-structs.json': STRUCTS([
       { name: 'struct:contract', source: 'fixture', type: { struct: { terms: { map: { key: 'ref vocab cterm', value: 'integer:copper' } } } } },
     ]),
-  }), PARAMS, {});
+  }), PARAMS);
   assert.equal(hits.length, 1);
   assert.equal(hits[0].code, 'E-DIM-STRUCT-FIELD');
   assert.match(hits[0].symbolPath, /terms/);
@@ -183,7 +183,7 @@ test('应付数额角色标记只豁免合同、义务记录里的字段，其�
         fieldRoles: { qty: { role: 'payable', source: '卷六 §2.4 :200' } },
       },
     ]),
-  }), PARAMS, {});
+  }), PARAMS);
   assert.equal(hits.length, 1);
   assert.equal(hits[0].code, 'E-DIM-STRUCT-FIELD');
   assert.match(hits[0].symbolPath, /npcs\.\*\.owe/);
@@ -198,7 +198,7 @@ test('单位不在资源种类表、或数值字段没有单位时不报', () =>
       'npcs.*.value': 'number nullable',
     }),
     'world/ontology/named-structs.json': STRUCTS([]),
-  }), PARAMS, {});
+  }), PARAMS);
   assert.deepEqual(hits, []);
 });
 
@@ -207,7 +207,7 @@ test('引用了未登记的命名 struct：报 E-ACC-ITEM-PARAM，不静默放�
     'world/rules/tables/economy/resources.json': RES('copper'),
     'world/ontology/state-owners.json': STATE({ 'npcs.*.x': 'struct:missing' }),
     'world/ontology/named-structs.json': STRUCTS([]),
-  }), PARAMS, {});
+  }), PARAMS);
   assert.equal(hits.length, 1);
   assert.equal(hits[0].code, 'E-ACC-ITEM-PARAM');
 });
@@ -217,7 +217,7 @@ test('资源种类表缺失：报 E-ACC-ITEM-PARAM，不当作零', () => {
     'world/rules/registry.json': JSON.stringify({ rows: [{ code: 'economyResources', file: 'tables/economy/missing.json' }] }),
     'world/ontology/state-owners.json': STATE({}),
     'world/ontology/named-structs.json': STRUCTS([]),
-  }), PARAMS, {});
+  }), PARAMS);
   assert.equal(hits.length, 1);
   assert.equal(hits[0].code, 'E-ACC-ITEM-PARAM');
 });
@@ -227,7 +227,7 @@ test('资源种类表为空：报 E-ACC-ITEM-PARAM，不当作零', () => {
     'world/rules/tables/economy/resources.json': JSON.stringify({ rows: [] }),
     'world/ontology/state-owners.json': STATE({}),
     'world/ontology/named-structs.json': STRUCTS([]),
-  }), PARAMS, {});
+  }), PARAMS);
   assert.equal(hits.length, 1);
   assert.equal(hits[0].code, 'E-ACC-ITEM-PARAM');
 });

@@ -35,3 +35,11 @@ export type RxId = string & { readonly __brand: 'RxId' };
 
 /** state 路径；P 为 pathTypes 里某条模式的字面量类型，只作 readPath/writePath 的实参（§2.6）。构造：句柄 P。 */
 export type StatePath<P extends string> = string & { readonly __brand: `StatePath<${P}>` };
+
+declare global {
+  // 缺读数的求值失败在 Error 上带 key（kernel/rx.mjs 的 missing / RxError.key），让调用方分清"该键是已知的没有"与"该键未知"；
+  // 其余错误不设该键，读到的是 undefined。类型层只声明可选的附加键，不新增运行期字段。
+  interface Error {
+    key?: string;
+  }
+}

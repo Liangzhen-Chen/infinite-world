@@ -198,6 +198,10 @@ function* leaves(node, at, structs, stack, subst, marks) {
 
 const firstSeg = (p) => p.split('.')[0];
 
+/**
+ * @param {any} ctx
+ * @param {any} params
+ */
 export function detect(ctx, params) {
   const code = params.code || '';
   const hits = [];
