@@ -881,6 +881,16 @@
       "supersedes": []
     },
     {
+      "id": "K1125-PUBLIC",
+      "summary": "历史改写抹掉云机 IP 与个人邮箱后仓库公开，并开 master 分支保护（PR + ci.yml 主 job 绿、管理员不豁免、禁强推禁删）；接受旧提交仍可按旧 SHA 取到的风险。",
+      "source": "docs/PLAN.md:23",
+      "status": "active",
+      "decidedBy": "亮圳",
+      "quote": "ok",
+      "quoteSource": "李白转亮圳 Orca 消息 msg_458d5ee802f3（2026-11-25 15:22 伦敦，回应「现在公开问题不大，你点头我就让主会话公开、装保护」）；改写历史授权见 msg_ea74cc733c66（13:58）",
+      "supersedes": []
+    },
+    {
       "id": "K1125-EVID",
       "summary": "出题.md「依据」的合格出处除卷文行外，也认已入 master 的 docs/gemini 设计文件行（派活卡头规矩第五节「证据 设计文件行」）。",
       "source": "docs/派活卡头规矩.md:123",
