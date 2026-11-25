@@ -9,7 +9,7 @@ const PATHS = { claudeExe: 'X:/tools/claude.exe', claudeConfigDir: 'X:/cfg-claud
 const SAMPLING = { purposes: { code: { temperature: 0 }, quiet: { temperature: null } } };
 const DS_ENV = { DEEPSEEK_API_KEY: 'fake-ds-key' };
 const CL_ENV = { CLAUDE_API_KEY: 'fake-claude-key' };
-const args = (extra) => ({ model: 'deepseek-flash', prompt: 'PROMPT', sampling: SAMPLING, paths: PATHS, env: DS_ENV, ...extra });
+const args = (extra) => ({ model: 'deepseek-flash', prompt: 'PROMPT', sampling: SAMPLING, paths: PATHS, ...extra });
 
 test('参数解析：四个必填与三个可选，缺省 effort=medium、budget=0.65、purpose=code', () => {
   assert.deepEqual(parseArgs(['--model', 'claude-opus-5-5', '--wd', 'W', '--card', 'C']), {
@@ -33,7 +33,7 @@ test('paths.json 缺键报错并点出键名', () => {
 });
 
 test('deepseek-flash：命令、模型名、DeepSeek 环境变量与采样体', () => {
-  const inv = buildInvocation(args({}));
+  const inv = buildInvocation(args({}), DS_ENV);
   assert.equal(inv.command, 'X:/tools/claude.exe');
   assert.deepEqual(inv.args.slice(0, 4), ['-p', 'PROMPT', '--model', 'deepseek-flash']);
   assert.ok(inv.args.includes('--output-format'));
@@ -49,13 +49,13 @@ test('deepseek-flash：命令、模型名、DeepSeek 环境变量与采样体', 
 });
 
 test('deepseek-flash：null 采样档不注入，未知用途报错', () => {
-  assert.ok(!('CLAUDE_CODE_EXTRA_BODY' in buildInvocation(args({ purpose: 'quiet' })).env));
-  assert.throws(() => buildInvocation(args({ purpose: 'zzz' })), /用途不存在: zzz/);
-  assert.throws(() => buildInvocation(args({ env: {} })), /DEEPSEEK_API_KEY 不存在/);
+  assert.ok(!('CLAUDE_CODE_EXTRA_BODY' in buildInvocation(args({ purpose: 'quiet' }), DS_ENV).env));
+  assert.throws(() => buildInvocation(args({ purpose: 'zzz' }), DS_ENV), /用途不存在: zzz/);
+  assert.throws(() => buildInvocation(args({}), {}), /DEEPSEEK_API_KEY 不存在/);
 });
 
 test('claude-*：密钥从 CLAUDE_API_KEY 回退，只传 ANTHROPIC_API_KEY，预算与 effort 进参数', () => {
-  const inv = buildInvocation(args({ model: 'claude-opus-5-5', env: CL_ENV }));
+  const inv = buildInvocation(args({ model: 'claude-opus-5-5' }), CL_ENV);
   assert.deepEqual(inv.args.slice(0, 8), ['-p', 'PROMPT', '--model', 'claude-opus-5-5', '--effort', 'medium', '--max-budget-usd', '0.65']);
   assert.equal(inv.env.ANTHROPIC_API_KEY, 'fake-claude-key');
   assert.equal(inv.env.CLAUDE_CONFIG_DIR, 'X:/cfg-claude');
@@ -63,15 +63,15 @@ test('claude-*：密钥从 CLAUDE_API_KEY 回退，只传 ANTHROPIC_API_KEY，�
 });
 
 test('claude-*：ANTHROPIC_API_KEY 优先，缺两种密钥报错', () => {
-  const inv = buildInvocation(args({ model: 'claude-sonnet-5-5', env: { ANTHROPIC_API_KEY: 'fake-a', CLAUDE_API_KEY: 'fake-c' } }));
+  const inv = buildInvocation(args({ model: 'claude-sonnet-5-5' }), { ANTHROPIC_API_KEY: 'fake-a', CLAUDE_API_KEY: 'fake-c' });
   assert.equal(inv.env.ANTHROPIC_API_KEY, 'fake-a');
-  assert.throws(() => buildInvocation(args({ model: 'claude-sonnet-5-5', env: {} })), /ANTHROPIC_API_KEY（或 CLAUDE_API_KEY）不存在/);
+  assert.throws(() => buildInvocation(args({ model: 'claude-sonnet-5-5' }), {}), /ANTHROPIC_API_KEY（或 CLAUDE_API_KEY）不存在/);
 });
 
 test('预算闸门：只许 0 < x <= 0.65', () => {
   assert.equal(budgetValue('0.65'), '0.65');
   assert.equal(budgetValue('0.01'), '0.01');
   for (const bad of ['0', '-1', '0.66', 'abc', '', undefined]) assert.throws(() => budgetValue(bad), /预算不合法/);
-  assert.throws(() => buildInvocation(args({ model: 'claude-haiku-5-5', env: CL_ENV, budget: '0.66' })), /预算不合法/);
-  assert.equal(buildInvocation(args({ model: 'claude-haiku-5-5', env: CL_ENV, budget: '0.5' })).args[7], '0.5');
+  assert.throws(() => buildInvocation(args({ model: 'claude-haiku-5-5', budget: '0.66' }), CL_ENV), /预算不合法/);
+  assert.equal(buildInvocation(args({ model: 'claude-haiku-5-5', budget: '0.5' }), CL_ENV).args[7], '0.5');
 });

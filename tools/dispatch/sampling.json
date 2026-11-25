@@ -5,6 +5,10 @@
       "temperature": 0.0,
       "source": "https://api-docs.deepseek.com/quick_start/parameter_settings（写代码、数学推荐 0.0）；亮圳 11-22 19:46 批准「温度零点零1122」"
     },
+    "write": {
+      "temperature": 0.0,
+      "source": "写码用途，与 code 同档：写代码、数学推荐 0.0（https://api-docs.deepseek.com/quick_start/parameter_settings）；亮圳 11-22 19:46 批准「温度零点零1122」；Step 1 派卡入口以 write 称呼写码档"
+    },
     "test": {
       "temperature": 0.0,
       "source": "https://api-docs.deepseek.com/quick_start/parameter_settings（写代码、数学推荐 0.0）；亮圳 11-22 19:46 批准「温度零点零1122」"

@@ -67,11 +67,13 @@ function childEnv(base, clear, add) {
   return Object.assign(env, add);
 }
 
-// 构造子进程命令与参数（不启动进程）。sampling 是 sampling.json 的内容，只给 deepseek 用。
-export function buildInvocation({ model, prompt, effort = 'medium', budget = '0.65', purpose = 'code', sampling, paths, env = {} }) {
+// 构造子进程命令与参数（不启动进程）。opts.sampling 是 sampling.json 的内容，只给 deepseek 用；
+// opts.paths 是 paths.json 的解析结果：没带就自己读同目录 paths.json（loadPaths 校验必填键，不另写一份）。
+export function buildInvocation(opts = {}, env = {}) {
+  const { model, prompt = '', effort = 'medium', budget = '0.65', purpose = 'code' } = opts;
   if (!MODELS.includes(model)) throw new Error(`模型不在白名单: ${model}`);
-  if (!paths) throw new Error('paths.json 未加载');
-  if (!prompt) throw new Error('卡文为空');
+  const paths = opts.paths || loadPaths(JSON.parse(readFileSync(join(HERE, 'paths.json'), 'utf8')));
+  const sampling = opts.sampling || JSON.parse(readFileSync(join(HERE, 'sampling.json'), 'utf8'));
   const base = ['-p', prompt];
   const tail = ['--permission-mode', 'acceptEdits', '--allowedTools', ...ALLOWED_TOOLS, '--output-format', 'json'];
   if (model === DEEPSEEK_MODEL) {
@@ -95,7 +97,7 @@ export function buildInvocation({ model, prompt, effort = 'medium', budget = '0.
   const b = budgetValue(budget);
   return {
     command: paths.claudeExe,
-    args: [...base, '--model', model, '--effort', effort, '--max-budget-usd', b, ...tail],
+    args: [...base, '--model', model, '--effort', effort, '--max-budget-usd', String(b), ...tail],
     env: childEnv(env, CLEAR_CLAUDE, { ANTHROPIC_API_KEY: key, CLAUDE_CONFIG_DIR: paths.claudeConfigDir, DND_CARD_AGENT: '1' }),
   };
 }
@@ -108,13 +110,6 @@ export function main(argv) {
   let opts;
   try {
     opts = parseArgs(argv);
-  } catch (e) {
-    process.stderr.write(`${e.message}\n`);
-    return 2;
-  }
-  let paths;
-  try {
-    paths = loadPaths(JSON.parse(readFileSync(join(HERE, 'paths.json'), 'utf8')));
   } catch (e) {
     process.stderr.write(`${e.message}\n`);
     return 2;
@@ -140,9 +135,8 @@ export function main(argv) {
   }
   let inv;
   try {
-    const sampling = JSON.parse(readFileSync(join(HERE, 'sampling.json'), 'utf8'));
     const prompt = composeCard(header, card);
-    inv = buildInvocation({ ...opts, prompt, sampling, paths, env: process.env });
+    inv = buildInvocation({ ...opts, prompt }, process.env);
   } catch (e) {
     process.stderr.write(`${e.message}\n`);
     return 2;
