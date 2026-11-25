@@ -24,7 +24,9 @@
   - [x] 门禁补齐卡（每日审核 A3）：PR #8 合入 f5a06ac26——派前核 needs 闭包（卷二:764 行键）与三方模型族、派卡收据、合并提交要查、state.json 校验、CI 逐提交档案检查、CLAUDE.md 一致性测试。
   - [x] L-09 检测器加固 + L-08 扩项：PR #10 合入 72074c6cd。现仓既有命中登只降不升基线待清：c_module_state 4（kernel named-structs/rx 顶层 Map、validate/types 两处 idIndex.get）、c_big_md 3（三份 >500KB 设计卷）。
   - [ ] 余项：L-07 删九项自查表（亮圳 11-25 20:01 拍板，PR #19 合入中；派活卡头规矩压到 ≤50 行另议）；L-03（李白在 Orca 界面处理）；tools/cloud 长测（李白裁定等 S1-2 后）；notify.py 停用（李白裁定 K1125-NONOTIFY，找李白写在会话回复或 orchestration）；c_module_state 4 处并入 S1-1 验收；c_big_md 已豁免（PR #13）；断链行号与 docLimits 已修（PR #12）；CI 里 tsc 跑两遍保持（见 L-05 规格）；state.json 强制落盘接进档案门禁（K1125-HANDOVER，另卡）。
-  - 写审分工：自 11-26 会员额度重置起照 CLAUDE.md 第 3 节（PR #9 合入 1bdc27b7c）；此后合入一律走 PR（master 已保护）。
+  - 写审分工：靠实时额度派活，照 CLAUDE.md 第 3 节（亮圳 11-25 18:19，PR #15 合入 1cbad9a12）；合入一律走 PR（master 已保护）。
+  - 主会话总台邮箱：Orca 持久 run `run_ff745853fb21`（11-25 21:0x 建）。接班会话启动后先 `orca orchestration run-use --id run_ff745853fb21 --json` 接管，子会话回报发 `--to run:run_ff745853fb21`（CLAUDE.md 第 1 节换班条）。
+  - 下一张：S1-1 新 L0 内核底座（会员额度 11-26 重置后按常态档：Sonnet 写、Haiku 出题、Opus 审）；验收须含 c_module_state 降到 0（李白裁定）；state.json 强制落盘接进档案门禁另立卡（K1125-HANDOVER）。
   - 已定（主会话 11-25）：archive_ref 扫描范围排除 tests/acceptance/。理由：验收题职责就是断言旧路径已归位，必须写出归档目录字样；逐文件豁免要写码方知道验收题文件名，破坏三方分离且每卡重复。archive_ref 出自 Gemini 重写指南 Step 1，非亮圳硬规则，属技术口径修正；已报李白可否决。由 chore/new-skeleton 写码第二轮落数据。
   - 11-25 每日全库审核（Gemini，origin/antigravity a11ed4d45 docs/gemini/daily/2026-11-25-audit.md）A 类整改排期：① L-11/L-12 合入；② L-04/L-05 tsc+CI（新骨架合入后）；③ dispatch.mjs 补 needs 闭包核/派前模型族核/收据、clearDeepseek 补 OAuth 令牌、dispatch-consistency 测试、archive_ref 扩项、派活卡头规矩关「合并提交免查」、使用说明.md 更正、notify 三种 JSON、state.json 接 card-archive——合成一张「门禁补齐」卡；④ 新骨架 L-15～L-17 收尾后接 L-18 E2E 桩与 L-09 检测器加固；⑤ L-02/L-03 环境收尾。B 类（L-19 分支保护 403 需升 Pro/公开/替代、Q-14/Q-15、B7、交付日是否顺延）转李白→亮圳。
   - [ ] L-07 派活卡头规矩 ≤50 行、删 9 项自查表：等亮圳拍板 Q-14（自我反思是否保留）。
