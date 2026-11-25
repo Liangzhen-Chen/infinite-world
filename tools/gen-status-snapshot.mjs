@@ -44,7 +44,7 @@ function registryLine(registry) {
   if (!Array.isArray(registry.entries)) return missing('entries');
   const total = registry.entries.length;
   const wired = registry.entries.filter((entry) => entry && typeof entry.file === 'string' && entry.file.trim() !== '').length;
-  const rate = total === 0 ? 0 : Math.round((wired / total) * 100);
+  const rate = total === 0 ? 0 : Math.floor((wired / total) * 100);
   return `- 条目总数 ${total}；file 非空 ${wired}；接通率 ${rate}%`;
 }
 

@@ -86,6 +86,13 @@ test('renderSnapshot 五段齐全、顺序固定、≤80 行，数字按输入�
   assert.ok(lineCount(text) <= 80);
 });
 
+test('接通率向下取整：6 条中 1 条接通 → 16%', () => {
+  const entries = [{ name: 'a', file: 'x.mjs' }];
+  for (let index = 1; index < 6; index += 1) entries.push({ name: `n${index}`, file: null });
+  const text = renderSnapshot({ registry: { entries } });
+  assert.deepEqual(sectionOf(text, '## 入口接通'), ['- 条目总数 6；file 非空 1；接通率 16%']);
+});
+
 test('缺文件或缺字段写（缺：…），不抛错', () => {
   const text = renderSnapshot({ head: null, commits: null, registry: null, baseline: null, cards: null });
   assert.deepEqual(sectionOf(text, '## 生成基准'), ['（缺：head）']);
