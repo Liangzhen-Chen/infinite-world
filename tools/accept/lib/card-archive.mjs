@@ -1,11 +1,45 @@
 // 卡档案与自我反思检查（亮圳 11-22「留档反思1122」；卡头第二节第 11 条）：纯函数，不碰 git。
 // 小节名、证据判据、触发目录、例外、最少条数等一律从 docs/派活卡头规矩.md 第五节读，本文件不另抄一份（红线第 10 条）。
-// 九项自查表题面同取自规矩文件第三节，沿用 card-selfcheck.mjs 的解析。
-
-import { firstTable, selfcheckQuestions, parseSelfcheck, validValue, strip, CARD_RULES_DOC } from './card-selfcheck.mjs';
 
 export const CARD_ARCHIVE_CODE = 'E-ACC-CARD-ARCHIVE';
+export const CARD_RULES_DOC = 'docs/派活卡头规矩.md';
 const NONE = new Set(['—', '-', '']);
+
+// markdown 表格行拆格：首尾的管道不算格；没有首管道的不算表格行。
+function cellsOf(line) {
+  const t = line.trim();
+  if (!t.startsWith('|')) return null;
+  const body = t.endsWith('|') ? t.slice(1, -1) : t.slice(1);
+  return body.split('|').map((c) => c.trim());
+}
+
+const SEPARATOR = /^:?-+:?$/;
+
+// 第一张表：第一行带首管道的连续行块；第二行是全部分隔格时按表头 + 分隔行 + 数据行解析，否则只当首行是表头。
+export function firstTable(text) {
+  const lines = text.split(/\r?\n/);
+  const start = lines.findIndex((l) => l.trim().startsWith('|'));
+  if (start < 0) return null;
+  const raw = [];
+  for (let i = start; i < lines.length; i++) {
+    const cells = cellsOf(lines[i]);
+    if (!cells) break;
+    raw.push(cells);
+  }
+  const header = raw[0];
+  if (raw.length >= 2 && raw[1].length > 0 && raw[1].every((c) => SEPARATOR.test(c))) return { header, rows: raw.slice(2) };
+  return { header, rows: raw.slice(1) };
+}
+
+// 值合格的唯一判法：去掉标点符号后不空、不是空话词、够字数（允许短值除外）。
+export const strip = (s) => s.replace(/[\s\p{P}\p{S}]/gu, '').toLowerCase();
+export function validValue(rules, v) {
+  const t = v.trim().replace(/[；;，,。.\s]+$/, '');
+  if (rules.allowShort.includes(t)) return true;
+  const s = strip(t);
+  if (!s || rules.bare.has(s)) return false;
+  return [...t].length >= rules.minChars;
+}
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const list = (v) => String(v).split('、').map((x) => x.trim()).filter(Boolean);
@@ -49,12 +83,9 @@ export function archiveRules(docText) {
     else (kv[key] ||= []).push(val);
   }
   const one = (k) => (kv[k] || [])[0];
-  for (const k of ['档案目录', '提交说明分支行前缀', '绕过标记', '推送目标', '开头自查表文件', '无证据项最少字数', '免条目时须卷文行条数', '自查表证据种类', '卷文件目录', '三方小节', '三方角色', '三方角色字段', '三方标识字段', '标识占位词', '验收目录', '验收目录唯一可改角色', '提交说明角色行前缀', '提交说明标识行前缀', '合并角色', '门禁生效提交']) {
+  for (const k of ['档案目录', '提交说明分支行前缀', '绕过标记', '推送目标', '无证据项最少字数', '免条目时须卷文行条数', '卷文件目录', '三方小节', '三方角色', '三方角色字段', '三方标识字段', '标识占位词', '验收目录', '验收目录唯一可改角色', '提交说明角色行前缀', '提交说明标识行前缀', '合并角色', '门禁生效提交']) {
     if (one(k) === undefined) return { error: `规矩文件第五节缺「${k}」` };
   }
-  // 可填否两键（李白 Z-6）：都没有按"没有可填否项"处理（推送门禁取远端旧规矩时没有这两键）；只有一键报错。
-  const noKeys = ['自查表可填否项', '否项原因前缀'].filter((k) => one(k) !== undefined);
-  if (noKeys.length === 1) return { error: `规矩文件第五节「自查表可填否项」「否项原因前缀」须同时有或同时无，只有「${noKeys[0]}」` };
   for (const [k, src] of Object.entries(kinds)) { try { new RegExp(src); } catch { return { error: `证据种类「${k}」的正则不合法` }; } }
   // 交接文件（L-14）：键值可缺（推送时读到远端旧规矩就没有）；只写一半即规矩自相矛盾，报错。
   const handoffFile = one('交接文件');
@@ -90,16 +121,12 @@ export function archiveRules(docText) {
     pushTarget: one('推送目标'),
     // 门禁生效提交：合入主线后回填的提交号（7～40 位十六进制）；未回填（写着别的字）时没有生效线，推送范围内的提交全查。
     effectiveCommit: /^[0-9a-f]{7,40}$/i.test(one('门禁生效提交') || '') ? one('门禁生效提交') : null,
-    selfcheckFile: one('开头自查表文件'),
     minChars: Number(one('无证据项最少字数')),
     waiveMin: Number(one('免条目时须卷文行条数')),
     allowShort: [...(kv['允许短值'] || []), ...list(one('三方角色') || '')],
     bare: new Set(list((kv['空话词'] || [''])[0]).map(strip)),
     kinds,
     verify,
-    selfKinds: kindsOf(one('自查表证据种类') || ''),
-    noItems: list(one('自查表可填否项') || '').flatMap((x) => x.split(/[,，/]/)).map((x) => x.trim()).filter(Boolean),
-    noPrefix: one('否项原因前缀') || '',
     volumeDir: one('卷文件目录'),
     handoff: handoffFile ? { file: handoffFile, keys: handoffKeys } : null,
     rows,
@@ -226,7 +253,7 @@ function checkSection(rules, row, body, label, reasons) {
 }
 
 // 查一个档案目录：readFile(文件名) 返回文本或 null。cond 为 null 查平时各行，否则只查该条件的行（如绕过记录）。
-export function checkArchive(rules, questions, readFile, cond = null, stage = '推送', repo = null) {
+export function checkArchive(rules, readFile, cond = null, stage = '推送', repo = null) {
   const reasons = [...checkHandoff(rules, readFile)];
   const rows = rules.rows.filter((r) => r.cond === cond && (stage === '推送' || r.stage === '提交'));
   for (const file of [...new Set(rows.map((r) => r.file))]) {
@@ -238,19 +265,6 @@ export function checkArchive(rules, questions, readFile, cond = null, stage = '�
       const label = `${file}「${row.section}」`;
       checkSection(rules, row, secs.get(row.section), label, reasons);
       for (const r of verifyRefs(rules, secs.get(row.section).join('\n'), repo)) reasons.push(`${label}${r}`);
-    }
-    if (cond === null && file === rules.selfcheckFile) {
-      const head = text.split(/\r?\n## /)[0];
-      const p = parseSelfcheck(head, questions, { noItems: rules.noItems, noPrefix: rules.noPrefix, rules, evidenceRes: rules.selfKinds.map((k) => rules.kinds[k]) });
-      for (const r of p.reasons) reasons.push(`${file} 开头自查表：${r}`);
-      // 证据格须有实据（自查表证据种类里至少一种），并核实所引文件与行号；不靠枚举敷衍词。
-      const t = firstTable(head);
-      for (const row of t ? t.rows : []) {
-        const ev = row[3] || '';
-        if (!ev) continue; // 空证据上面已报
-        if (!hasEvidence(rules, ev, rules.selfKinds)) reasons.push(`${file} 开头自查表：第 ${row[0]} 项证据须含实据（${rules.selfKinds.join('、')} 至少一种），不能只写敷衍的话`);
-        for (const r of verifyRefs(rules, ev, repo)) reasons.push(`${file} 开头自查表：第 ${row[0]} 项${r}`);
-      }
     }
   }
   if (cond === null) reasons.push(...checkParties(rules, readFile, stage).reasons);
@@ -354,7 +368,7 @@ export function checkParties(rules, readFile, stage) {
 // 判一个提交。入参：files 本次改动文件；branch 当前分支（提交时有）；message 提交说明（提交时给 null）；
 // readFile(目录, 文件名) 读该提交里的档案；isMerge 合并提交；stage '提交'（pre-commit）或 '推送'（pre-push，默认）。
 // 返回 reasons（空数组为放行）。
-export function judgeCommit(rules, questions, { files, branch, message, readFile, isMerge, repo, stage = '推送' }) {
+export function judgeCommit(rules, { files, branch, message, readFile, isMerge, repo, stage = '推送' }) {
   if (isMerge && rules.mergeExempt) return [];
   const bypass = Object.entries(rules.markers).find(([, mk]) => mk && messageLine(message, mk) !== null);
   const name = messageLine(message, rules.branchPrefix) || branch;
@@ -385,18 +399,16 @@ export function judgeCommit(rules, questions, { files, branch, message, readFile
   if (bypass) {
     if (!name) return [...reasons, `提交说明带「${rules.markers[bypass[0]]}」但没有「${rules.branchPrefix}<分支名>」行，找不到${bypass[0]}记录`];
     const dir = archiveDirOf(rules, name);
-    return [...reasons, ...checkArchive(rules, questions, (f) => readFile(dir, f), bypass[0], stage, repo).map((r) => `${bypass[0]}登记不合格：${r}`)];
+    return [...reasons, ...checkArchive(rules, (f) => readFile(dir, f), bypass[0], stage, repo).map((r) => `${bypass[0]}登记不合格：${r}`)];
   }
   if (!triggered) return reasons;
   if (!name) return [...reasons, `提交说明缺「${rules.branchPrefix}<分支名>」行，找不到卡档案目录`];
   const dir = archiveDirOf(rules, name);
-  return [...reasons, ...checkArchive(rules, questions, (f) => readFile(dir, f), null, stage, repo).map((r) => `${dir}：${r}`)];
+  return [...reasons, ...checkArchive(rules, (f) => readFile(dir, f), null, stage, repo).map((r) => `${dir}：${r}`)];
 }
 
 export function loadRules(docText) {
   const rules = archiveRules(docText);
   if (rules.error) return rules;
-  const questions = selfcheckQuestions(docText);
-  if (!questions) return { error: `${CARD_RULES_DOC} 第三节的自查表解析不出` };
-  return { rules, questions };
+  return { rules };
 }

@@ -7,8 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { gitOut, gitOk, gitRepo, preCommitGate } from './commit-hook.mjs';
-import { CARD_RULES_DOC } from './lib/card-selfcheck.mjs';
-import { CARD_ARCHIVE_CODE, loadRules, judgeCommit } from './lib/card-archive.mjs';
+import { CARD_ARCHIVE_CODE, CARD_RULES_DOC, loadRules, judgeCommit } from './lib/card-archive.mjs';
 
 const ZERO = /^0+$/;
 
@@ -39,7 +38,7 @@ export async function prePush(root, stdinText, { runGate = preCommitGate } = {})
     let loaded;
     try { loaded = rulesFor(root, remoteSha); } catch { return { ok: false, reasons: [`${CARD_ARCHIVE_CODE} 读不到 ${CARD_RULES_DOC}`] }; }
     if (loaded.error) return { ok: false, reasons: [`${CARD_ARCHIVE_CODE} ${loaded.error}`] };
-    const { rules, questions } = loaded;
+    const { rules } = loaded;
     if (remoteRef !== rules.pushTarget) continue;
     touched = true;
     const range = ZERO.test(remoteSha || '0') ? [localSha, '--not', '--remotes'] : [`${remoteSha}..${localSha}`];
@@ -53,7 +52,7 @@ export async function prePush(root, stdinText, { runGate = preCommitGate } = {})
       const parents = gitOut(root, ['rev-list', '--parents', '-n', '1', sha]).trim().split(/\s+/).length - 1;
       const files = gitOut(root, ['diff-tree', '--root', '--no-commit-id', '--name-only', '-r', '-z', sha]).split('\0').filter(Boolean);
       const message = gitOut(root, ['log', '-1', '--format=%B', sha]);
-      const r = judgeCommit(rules, questions, {
+      const r = judgeCommit(rules, {
         files,
         branch: null,
         message,
