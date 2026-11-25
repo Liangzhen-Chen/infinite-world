@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node --test \"tests/accept/*.test.mjs\"",
     "accept": "node tools/accept/run.mjs pre_commit",
-    "test:kernel": "node --test \"tests/kernel/*.test.mjs\""
+    "test:kernel": "node --test \"tests/kernel/*.test.mjs\"",
+    "snapshot": "node tools/gen-status-snapshot.mjs"
   },
   "devDependencies": {
     "acorn": "8.19.0",

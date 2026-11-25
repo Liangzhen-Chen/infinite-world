@@ -15,7 +15,7 @@
 
 ## 3. 模型、额度与三方硬分离（亮圳原话：『主会话仅调度 不允许派任何会员额度 让他用claude api和deepseek api』，出处 亮圳与李白聊天 t855u，2026-11-24，李白转）
 - **主会话只调度**：主会话（模型自选，走 Claude Ultra 会员额）只负责拆竖切片卡、调用派卡脚本、解冲突与 PR 最终审阅合入；**严禁把会员额度花在写码、出题、审卡、测试分析等任何子任务上**。
-- **子任务全走 API 唯一入口**：所有写码、出题、审卡、测试分析必须经 `tools/dispatch/dispatch.mjs` 调用 **DeepSeek API（只许 `deepseek-flash`，严禁 `v4-pro`）** 或 **Claude API（`claude -p` / SDK，读环境变量 `ANTHROPIC_API_KEY`）**。单次 API 调用强制 `--max-budget-usd 0.65`（锁在单项 5 元红线内），并输出调用收据随 PR 校验。
+- **子任务全走 API 唯一入口**：所有写码、出题、审卡、测试分析必须经 `tools/dispatch/dispatch.mjs` 调用 **DeepSeek API（只许 `deepseek-flash`，严禁 `v4-pro`）** 或 **Claude API（`claude -p` / SDK，读环境变量 `ANTHROPIC_API_KEY`，缺时读 `CLAUDE_API_KEY`）**。Claude API 单次调用强制 `--max-budget-usd 0.65`；DeepSeek 不加（Claude Code 对其估价失真），花费按控制台记账；并输出调用收据随 PR 校验。
 - **默认三方组合**：写码 `deepseek-flash`，出题 `claude-haiku` API，审卡普通卡 `claude-sonnet` API / 跨卷内核难卡 `claude-opus` API；三方归一化**模型族**必须完全不同，由 `card-archive.mjs` 与 CI 硬核（不再只核标识串）。
 - **物理隔离验收目录**：出题只在独立分支 `test/<card>` 写 `tests/acceptance/<card>/`，写码分支 `feat/<card>` 物理不含验收目录；写码提交触碰验收目录 CI 直接拒合。
 - **无免复核逃生门**：凡审卡判「必须改」，修改轮必须经干净无历史上下文的第三方 API 复核 + CI 全绿，取消「两轮后主会话亲读免复核」。
@@ -29,6 +29,6 @@
 
 ## 5. 测试机、花费闸门、安全与通知
 - **运行位置**：本机只跑几秒内纯函数/单测；常规全量走 GitHub Actions；推进世界长测与九省性能基准走腾讯云 `dnd-runner`（经 `tools/cloud/` 自动开机 -> `npm ci` -> 测 -> 自动关机），不在本机抢跑长测。
-- **审批闸门（李白转述亮圳 2026-11-09 t219u 长期授权：单项5元以内李白直接定，超5元须问他）**：**单项花费 > 5 元、删文件/云资源、充值、拓权、放宽硬规则**，必须先停下报亮圳同意；<= 5 元常规操作与技术管理决策由李白自定。
+- **审批闸门**：**删文件/云资源、充值、拓权、放宽硬规则**须先停下报亮圳同意；花费不设单项停线，按省钱原则做并记账（亮圳原话：『我同意。第二个也没问题。』并说从没定过「单项超5元必须问他」，出处 李白转述 2026-11-25 12:31，msg_81259953138a）；常规操作与技术管理决策由李白自定。
 - **安全与原创**：不打印、不提交任何密钥，不读 `SillyTavern/data/*/secrets.json`；不复制《再生勇士》正文/人名/地名/情节（受 `world/i18n/blocklist.zh.json` 拦截）；未成年 NPC 不进亲密情节。
 - **通知（只 3 种 JSON，经 `tools/notify/` 发李白）**：`MILESTONE`（竖切片合入含 PR/CI/试玩链接）、`BLOCKED`（冲突文件:行 + 两种备选与代价）、`COST_OR_CLOUD`（云机/花费/审批闸门）。取消 `/compact` 核对通知，取消手写状态汇报。
