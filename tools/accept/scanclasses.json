@@ -33,10 +33,6 @@
     {
      "path": "tests/acceptance/chore-step1-tooling/step1.test.mjs",
      "reason": "出题方验收测试必须写出被禁字样（archive/…、docs/卡回报/… 等）才能断言检测器命中；写码方不得改验收目录（卡文），只豁免该测试文件本身"
-    },
-    {
-     "path": "docs/gemini/",
-     "reason": "Gemini 独立审核史料，须原样引用归档路径；开工文件 docs/gemini/kickoff-1125.md 落地清单 L-08"
     }
    ],
    "patterns": [

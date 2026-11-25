@@ -61,6 +61,9 @@ test('archive_ref：范围内命中即报，排除前缀、整文件豁免、按
 test('archive_ref：扫描根或被禁字样为空报 E-ACC-ITEM-PARAM，不静默放过', () => {
   assert.deepEqual(ar({ 'tools/a.mjs': 'archive/x' }, { ...AR_CLS, scope: { roots: [], except: [] } }).map((h) => h.code), ['E-ACC-ITEM-PARAM']);
   assert.deepEqual(ar({ 'tools/a.mjs': 'archive/x' }, { ...AR_CLS, patterns: [] }).map((h) => h.code), ['E-ACC-ITEM-PARAM']);
+  // 豁免缺理由或空串：同样报 E-ACC-ITEM-PARAM，不静默接受。
+  assert.deepEqual(ar({ 'tools/a.mjs': 'const ok = 1;' }, { ...AR_CLS, exemptions: [{ path: 'tools/a.mjs' }] }).map((h) => h.code), ['E-ACC-ITEM-PARAM']);
+  assert.deepEqual(ar({ 'tools/a.mjs': 'const ok = 1;' }, { ...AR_CLS, exemptions: [{ path: 'tools/a.mjs', reason: '' }] }).map((h) => h.code), ['E-ACC-ITEM-PARAM']);
 });
 
 test('lit_scope 实体前缀：各种写法到达同一值各计一次', () => {

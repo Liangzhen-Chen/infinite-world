@@ -2,7 +2,7 @@
 // 构造出的子进程参数与环境。buildInvocation 是纯函数，测试用假值，不起子进程、不碰真密钥。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseArgs, buildInvocation, loadPaths, MODELS } from '../../tools/dispatch/dispatch.mjs';
+import { parseArgs, buildInvocation, loadPaths, loadDispatchConfig, MODELS } from '../../tools/dispatch/dispatch.mjs';
 import { budgetValue } from '../../tools/dispatch/budget-check.mjs';
 
 const PATHS = { claudeExe: 'X:/tools/claude.exe', claudeConfigDir: 'X:/cfg-claude', deepseekConfigDir: 'X:/cfg-ds' };
@@ -30,6 +30,13 @@ test('paths.json 缺键报错并点出键名', () => {
   assert.deepEqual(loadPaths(PATHS), PATHS);
   assert.throws(() => loadPaths({ ...PATHS, claudeExe: '' }), /缺键「claudeExe」/);
   assert.throws(() => loadPaths({ claudeExe: 'X', deepseekConfigDir: 'D' }), /缺键「claudeConfigDir」/);
+});
+
+test('dispatch-config.json 缺键报错并点出键名', () => {
+  const CFG = { models: ['m'], deepseekModel: 'm', deepseekBaseUrl: 'https://x', clearDeepseek: ['A'], clearClaude: ['B'], allowedTools: ['Read'] };
+  assert.deepEqual(loadDispatchConfig(CFG), CFG);
+  assert.throws(() => loadDispatchConfig({ ...CFG, allowedTools: [] }), /缺键「allowedTools」/);
+  assert.throws(() => loadDispatchConfig({ ...CFG, deepseekBaseUrl: undefined }), /缺键「deepseekBaseUrl」/);
 });
 
 test('deepseek-flash：命令、模型名、DeepSeek 环境变量与采样体', () => {
@@ -66,6 +73,13 @@ test('claude-*：密钥从 CLAUDE_API_KEY 回退，只传 ANTHROPIC_API_KEY，�
   assert.equal(inv.env.ANTHROPIC_API_KEY, 'fake-claude-key');
   assert.equal(inv.env.CLAUDE_CONFIG_DIR, 'X:/cfg-claude');
   assert.ok(!('ANTHROPIC_AUTH_TOKEN' in inv.env));
+});
+
+test('claude-*：来源 env 的 OAuth/会员令牌键不进子进程，只留 ANTHROPIC_API_KEY', () => {
+  const src = { ANTHROPIC_API_KEY: 'fake-a', ANTHROPIC_AUTH_TOKEN: 'oauth-a', CLAUDE_CODE_OAUTH_TOKEN: 'oauth-b', CLAUDE_API_KEY: 'fake-c' };
+  const inv = buildInvocation(args({ model: 'claude-opus-5-5' }), src);
+  assert.equal(inv.env.ANTHROPIC_API_KEY, 'fake-a');
+  for (const k of ['ANTHROPIC_AUTH_TOKEN', 'CLAUDE_CODE_OAUTH_TOKEN', 'CLAUDE_API_KEY']) assert.ok(!(k in inv.env), k);
 });
 
 test('claude-*：ANTHROPIC_API_KEY 优先，缺两种密钥报错', () => {
