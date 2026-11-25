@@ -1,21 +1,23 @@
-# 《无限原野》AI 协作方案独立评估报告（2026-11-25）
+# 《无限原野》AI 协作方案独立评估报告（2026-11-25 终稿）
 
 - **评估角色**：独立评估者（Antigravity / Gemini，仅作方案评估并落盘本文，不改代码）
-- **评估缘起**：亮圳 2026-11-25 15:28（伦敦）指示评估 AI 协作架构、层数边界、防信息失真机制、不同 AI 分工与模型族错开，以及 **11-26 周四早上 Claude 会员额度重置后**在 Orca 内的落地方式与额度花法；15:29（伦敦）追加要求评估**拆卡粒度与 Sonnet 何时值得交给 DeepSeek 的可执行判据**（李白 `msg_2e8d188eeb77`）。
+- **评估缘起**：
+  - 亮圳 2026-11-25 15:28（伦敦）指示评估 AI 协作架构、层数边界、防信息失真机制、不同 AI 分工与模型族错开，以及 Claude 会员额度重置后的 Orca 落地与花法；
+  - 15:29（伦敦）追加评估**拆卡粒度**与 **Sonnet 何时值得交给 DeepSeek** 的可执行判据（李白 `msg_2e8d188eeb77`）；
+  - 18:13–18:19（伦敦）亮圳最终拍板定调：**拥有 Claude Ultra 会员、日常希望零额外现金支出；由主会话「靠实时可用额度派活」——Claude Ultra 额度充足时日常全走 Sonnet 主力，额度不足/告急时自动切回 DeepSeek 做写码主力；同时避免把全部审卡压给 Gemini 导致 Gemini 撞限**。
 - **事实基线**：结合本仓实测（`CLAUDE.md`、`docs/派活卡头规矩.md`、`tools/dispatch/dispatch.mjs`、`tools/accept/lib/card-archive.mjs`、`docs/卡档案/_template/state.json`、`docs/gemini/daily/2026-11-25-audit.md`、本机 `orca` CLI 实测参数）及业界多智能体工程实证（Anthropic 2024–2025、Google Research / DeepMind `arXiv:2512.08296` 与 ADK 2025–2026、Cognition 2025–2026）。
 
 ---
 
 ## 核心结论（一屏先看）
 
-1. **绝不再加管理层；不仅够用，反而要把「主会话 → Sonnet → DeepSeek」压平为「严格 2 层为主、仅难卡允许 2.5 层机械外包」**：
-   - 70%–80% 边界清晰的小卡：**主会话直派 DeepSeek API**（严格 2 层，跳过 Sonnet 中间人，既省 Claude 会员额又少一跳信息失真）。
-   - 20%–30% 复杂耦合/内核难卡：**主会话派 Orca 可见 Sonnet 会话**（2 层）；Sonnet 只把大段机械改动当作“零温工具”调用 `dispatch.mjs --model deepseek-flash`，且**禁止 DeepSeek 再向下派活**。
-   - 扩产能靠**第 2 层横向并行（同时跑 2–3 条不冲突工作树）**，绝不靠纵向叠“卷总监 / 模块组长”层级。
-2. **用「传文件指针 + 死锁原文出处 + 机械原始证据回传」压住失真**：层间严禁口头转述，只传仓库内文件与 `卷:行` 原文，回报只认 `git diff` 与原始命令退出码/输出，不认自然语言自夸。
-3. **跨厂商错开模型族 + 兼容现有门禁**：主力组合是 **DeepSeek（大量写码）+ Claude Haiku（独立出题）+ Claude Sonnet（调度/难卡写码/常规审卡）+ Gemini（每日全库审 + 难卡异构审卡）+ 李白 Grok（监工巡检）**；`Opus` 严格留作极少数 L0 内核卡的最后王牌，守住周四重置后的会员周额。
-4. **11-26 重置前必须先清 2 个前置坑**：① 修正 `CLAUDE.md` 第 3 节与 `K1125-P4` 口径（解除 11-24“禁会员额跑子任务”临时条款，改记 Orca 会话审计轨）；② 修掉 Orca `dnd` 仓库的 `L-03` 雷区（把 `setup` 钩子从 `pnpm install` 改成 `npm ci --prefer-offline` 或空），避免开 Claude 可见工作树时反复踩坑。
-5. **拆卡按「完整可验证结果」切、严禁拆碎；Sonnet 过「百行/5处 + 规格写死」门槛才叫 DeepSeek**：一张卡固定流程开销要 10–15 分钟和 3–4 个会话，所以单卡黄金体量应是 **1 个闭合功能/模块（约 150–800 行、3–10 个同域文件、含入口接通与基线闭合）**，严禁拆出 <50 行的零碎半成品卡；在攻坚卡内部，**只有超过 100 行或 ≥5 处同类改动、规格 100% 写死且可一键跑测的成批机械活**才值得 Sonnet 调 DeepSeek，否则 Sonnet 一口气写完更快更省事。
+1. **严格两层、绝不再加管理层**：`第 1 层：主会话（Claude Sonnet，只调度不写码） → 第 2 层：Orca 可见独立工作树会话/终端`。扩产能靠第 2 层横向并行（同时 2–3 条文件域不冲突的工作树），绝不纵向叠加“卷总监 / 模块组长”层级。
+2. **核心调度总则：靠实时可用额度动态派活（双档自动切换）**：
+   - **常态档（Claude Ultra 额度充足，零额外现金开销）**：日常写码全走 **`claude-sonnet`**（Orca 可见会话）+ 独立出题 **`claude-haiku`**（`test/<card>`）+ 独立审卡默认 **`claude-opus`（`--effort medium`）**；**Gemini（Antigravity）** 以每日全库独立审核为主阵地，仅在自身额度宽裕时分流 1–2 张关键/跨卷卡做跨厂商异构审卡（绝不把全部审卡压给 Gemini 防撞限）。此档是纯粹 2 层、零转派失真、DeepSeek 零花费。
+   - **降级档（Claude Ultra 额度不足 / 逼近 5 小时或周上限）**：主会话自动切回 **DeepSeek (`deepseek-flash`) 做写码主力**（`tools/dispatch/dispatch.mjs` 挂在 Orca 可见终端），把剩余 Claude 额度集中留给主会话调度、出题与关键攻坚卡，确保研发不断档。
+3. **用「传文件指针 + 死锁原文出处 + 机械原始输出」压住信息失真**：层间严禁口头转述，卡文写死 `卷:行` 原文、目标文件行号、公共部件与验收命令；交回只认 `git diff` 与未删改的命令退出码/输出；遇卷文矛盾或前置缺失立即停手写 `blocker`；审卡永远新开干净会话。
+4. **拆卡按「完整可验证结果」切、严禁拆碎**：单卡固定流程税约 10–15 分钟、3–4 个会话，黄金体量应是 **1 个闭合功能/模块（约 150–800 行、3–10 同域文件，含入口接通与基线闭合）**，严禁拆出 <50 行半成品碎卡；平时全 Sonnet 档不瞎转派 DeepSeek，仅在降级/混跑遇到 **≥100 行或 ≥5 处同类改动 + 规格 100% 写死 + 可一键跑测** 的成批机械活时才叫 DeepSeek。
+5. **切换落地前同步清 3 项规矩与工具对齐**：① 更新 `CLAUDE.md` 第 3 节与 `现行有效裁定.json` 为「按实时额度派活」新口径；② 统一 API 收据与 Orca 可见会话审计凭证；③ 修掉 Orca `dnd` 仓库的 `L-03` 雷区（`setup` 钩子由 `pnpm install` 改为 `npm ci --prefer-offline` 或留空）。
 
 ---
 
@@ -26,24 +28,20 @@
 | 业界来源 | 核心实证结论 | 对《无限原野》的直接含义 |
 |---|---|---|
 | **Google Research / DeepMind & MIT**<br>*Towards a Science of Scaling Agent Systems* (`arXiv:2512.08296`, 2025.12 / v3 2026.04；180–260 组对照，含 SWE-bench Verified 与 Terminal-Bench) | ① 独立无监督多智能体把错误放大 **17.2×**，即使采用**中心化星型（主控+执行两层）**仍存在 **4.4×** 错误放大；<br>② 对**强顺序、强状态耦合**任务（PlanCraft），**所有**多智能体架构表现反而下降 **39%–70%**；<br>③ 单模型基线超过 **45%** 后，多智能体协调呈现显著边际递减甚至负收益（$\beta = -0.408, p < 0.001$）；工具密集型任务在固定预算下尤为吃亏。 | 写代码改共享引擎是典型的强状态耦合、工具密集任务。**星型两层已是错误放大与收益的上限**；再加第 3/4 层“中层经理”，错误会按跳数复利放大，收益为负。 |
-| **Anthropic**<br>*Building effective AI agents* (2024.12) & *How we built our multi-agent research system* (2025.06) & *Context engineering* (2025.09) | ① 即使 Anthropic 自己面向宽广检索的生产研究系统，也严格保持**两层（Lead → 并行 Subagents）**，不搞递归多层树；<br>② 多智能体 token 消耗约为普通对话的 **15×**（单智能体约 **4×**），只适合**只读、可并行压缩**的高价值探索任务；<br>③ 调度者必须在派发前把计划写入外部持久记忆/文件，避免上下文截断失忆。 | 会员额度是硬预算。多加一层中间会话就会多烧一倍以上的上下文重复读取与协调 token，极快撞上 Claude 5 小时窗与周上限。 |
+| **Anthropic**<br>*Building effective AI agents* (2024.12) & *How we built our multi-agent research system* (2025.06) & *Context engineering* (2025.09) | ① 即使 Anthropic 自己面向宽广检索的生产研究系统，也严格保持**两层（Lead → 并行 Subagents）**，不搞递归多层树；<br>② 多智能体 token 消耗约为普通对话的 **15×**（单智能体约 **4×**），只适合**只读、可并行压缩**的高价值探索任务；<br>③ 调度者必须在派发前把计划写入外部持久记忆/文件，避免上下文截断失忆。 | 会员额度受 5 小时窗与周限约束。多加一层中间会话就会多烧一倍以上的上下文重复读取与协调 token，极快触发限流。 |
 | **Cognition (Devin)**<br>*Don't Build Multi-Agents* (2025.06) & *Multi-Agents: What's Actually Working* (2026.04) | ① 写代码每一步都隐含架构与风格决策（Flappy Bird 冲突案例），把一个功能拆给多层或平行写者会导致全局不自洽；<br>② 2026 生产复盘确认：代码场景真正有效的多智能体只有三种——**单线程写者（一分支一写者）+ 干净上下文独立审校（Clean-Context Review Loop）+ 只读查证助手**。 | 完全吻合《无限原野》的三方分离（写码 / 出题 / 审卡各自独立工作树、干净上下文），而否定了“主会话 → 组长 → 写者”的层级传话模式。 |
 
 ### 1.2 对现状的诊断与明确裁断
 
-先厘清一个容易被低估的事实：目前的「主会话 → Sonnet 卡会话 → Sonnet 自调 DeepSeek」表面叫“两层”，**在信息传递上实际已经是 3 跳**（亮圳/卷文 → 主会话 → Sonnet 卡会话 → DeepSeek）。
-
 - **结论 1：绝对不要再加任何管理/派活层（例如“卷总监”“模块组长”“子协调器”）**。
-  - **为什么不加**：
-    1. 《无限原野》的核心难点不是“人手不够要多几级官”，而是 **29 卷设计文 + `contracts.json` + `entry-registry.json` + 严禁硬编码红线**的强一致性约束。每多一层中间 AI，就会把精确的 `卷:行` 规则压缩成一段容易走样的自然语言摘要。
-    2. 仓库先前已验证过：DeepSeek 写错往往不是不会写，而是**卡文四要素没给清**（亮圳 11-22 原话：“就是你们 prompt 写不清楚”，见 `docs/派活卡头规矩.md:49`）。加一层只会让 prompt 经过两次转写，更模糊、更慢、更费 Claude 额度。
-    3. 本项目已有**外部确定性工具**承担“批量管理”职能——Git 分支、`state.json`、`card-archive.mjs`、CI、`entry-registry.json`、李白巡检。**用确定性脚本和状态文件管规模，不要用更多 LLM 层级管 LLM**。
-- **结论 2：不仅不加层，还要把“Sonnet 再调 DeepSeek”从常态降格为受限特例，把主流压平到严格 2 层**。
-  - **常规卡（占 70%–80%）压平为 2 层**：`主会话 → DeepSeek API`（直接经 `dispatch.mjs` 跑在 Orca 独立 worktree 的可见终端里）。彻底省掉 Sonnet 中间会话：少 1 跳失真、零消耗 Claude 会员额。
-  - **攻坚卡（占 20%–30%）维持 2 层（必要时局部 2.5 层工具调用）**：`主会话 → Sonnet 可见卡会话`。只有当该卡内部遇到 ≥50 行纯机械/批量修改（例如按表补齐几十条数据、批量改字段名、生成机械测试样板）时，Sonnet 才把明确文件与行号写成小卡文件调一次 `dispatch.mjs --model deepseek-flash`，拿到 diff 后立即自己验测；**严禁 DeepSeek 再派任何下级代理**。
+  - 《无限原野》的核心约束是 **29 卷设计文 + `contracts.json` + `entry-registry.json` + 严禁硬编码红线**的强一致性。每多一层中间 AI，就会把精确的 `卷:行` 规则压缩成一段走样的自然语言摘要。
+  - 批量管理职能应当交给**外部确定性工具**——Git 分支、`state.json`、`card-archive.mjs`、CI、`entry-registry.json`、李白巡检。**用脚本和状态文件管规模，不要用更多 LLM 层级管 LLM**。
+- **结论 2：不仅不加层，还要彻底压平到「严格 2 层」**。
+  - **常态档（Ultra 额度充足）**：`主会话（Sonnet）→ 写码（Orca 可见 Sonnet 会话）`。**彻底去掉 Sonnet 再转派 DeepSeek 的第 3 跳**：零转述失真、代码一次过率更高、现金支出 0 元。
+  - **降级档（Ultra 额度不足）**：常规卡由 `主会话 → DeepSeek API`（直接经 `dispatch.mjs` 跑在 Orca 可见终端，同样是严格 2 层）；仅极少数复杂耦合卡交 Sonnet 攻坚，且只有卡内遇到特大成批机械改动（满足第 5.2 节硬门槛）时才允许局部调一次 DeepSeek，**严禁 DeepSeek 再向下派活**。
 - **结论 3：唯一该“加”的是横向能力，不是纵向层级**。
-  - **横向并行**：主会话在同一时间并行推进 2–3 条文件域不重叠的工作树（如 1 条 Sonnet 攻坚卡 + 1–2 条 DeepSeek 快道卡 + 1 条 Haiku 出题卡）。
-  - **侧翼监督（与派活链正交、不插在上下级之间）**：李白（Grok Bot）做心跳巡检与阻塞叫醒；Gemini（Antigravity）做每日全库独立体检与关键难卡异构审卡。
+  - **横向并行**：主会话在同一时间并行推进 2–3 条文件域不重叠的工作树。
+  - **侧翼监督（与派活链正交）**：李白（Grok Bot）做心跳巡检、阻塞叫醒与纯技术裁定；Gemini（Antigravity）做每日全库独立体检（以及额足时的关键卡异构复核）。
 
 ---
 
@@ -63,9 +61,8 @@
 
 1. **卡文钉死「四件套原件」，禁止二次改写**：
    - 主会话写进 `docs/卡档案/<card>/派卡.md` 的四样必须全是**原文与精确指针**：① 逐字摘录的设计卷原文（带 `卷:行`）；② 目标改动 `文件:行` 或导出签名；③ 必须调用的公共部件（文件路径 + 导出名）；④ 可直接复制执行的验收命令与期望判据。
-   - **Sonnet 若内部调 DeepSeek**：同样禁止在命令行拼口语摘要，必须先落盘小卡文件（只摘必要原文片段与精确行号），再经 `compose-card.mjs` + `dispatch.mjs` 执行。
 2. **层间只传「仓库文件路径 + 短信号」，严禁气泡长文转述**：
-   - `orca orchestration send` 与 `--prompt` 只负责指路（如“读 `docs/卡档案/<card>/派卡.md` 与 `state.json`，按规矩在当前分支执行”），**不把需求在消息里重写一遍**。所有上下文以 Git 仓库内的文件为唯一真相源（Pass-by-Reference），避免转抄走样，也天然抗主会话 `/compact` 失忆。
+   - `orca orchestration send` 与 `--prompt` 只负责指路（如“读 `docs/卡档案/<card>/派卡.md` 与 `state.json`，按规矩在当前分支执行”），**不把需求在消息里重写一遍**。所有上下文以 Git 仓库内文件为唯一真相源（Pass-by-Reference），避免转抄走样，也天然抗主会话 `/compact` 失忆。
 3. **交回必须附「原始机械输出」，零信任自然语言汇报**：
    - 任何写码/出题/审卡节点交回时，结论必须落盘并附三样原始证据：① `git rev-parse HEAD` 与 `git diff --stat`；② 验收/类型检查/门禁命令全文 + **未删改的原始退出码与输出末段**；③ 变动文件与行号清单。
    - 主会话只信 `git diff`、CI/单测退出码与审卡清单，不以子会话一句“已修好”作为合入依据。
@@ -78,7 +75,7 @@
 
 ---
 
-## 三、不同 AI 的分工与模型族错开
+## 三、不同 AI 的分工与模型族错开（按额度双档动态切换）
 
 ### 3.1 必须先核对的现有门禁约束（代码实测）
 
@@ -96,134 +93,125 @@ export const MODEL_FAMILIES = [
 ```
 
 - 门禁硬规则：`写码` 模型族集合 $W$、`出题` 模型族集合 $T$、`审卡` 模型族集合 $R$ 必须满足 **$W \cap T = \varnothing$ 且 $R \cap (W \cup T) = \varnothing$**。
-- **极易踩的一个隐形代码细节**：如果某张攻坚卡在 `派卡.md` 的写码模型栏写成 `claude-sonnet + deepseek-flash`，`modelFamilies()` 会同时提取出 **`['deepseek', 'claude-sonnet']`** 两个族！这意味着该卡的 `出题` 与 `审卡` 都不能再用 `deepseek` 或 `claude-sonnet`，必须用 `claude-haiku` + `gemini`（或 `claude-opus`）。提前按这套规则排班，永不撞门禁。
+- **隐形代码细节**：若某卡在降级混跑时写码栏写成 `claude-sonnet + deepseek-flash`，`modelFamilies()` 会同时提取出 **`['deepseek', 'claude-sonnet']`** 两个族，此时出题与审卡不得再用 `deepseek` 或 `claude-sonnet`，只能配 `claude-haiku` + `claude-opus`（或 `gemini`）。
 
-### 3.2 角色分工总表（11-26 会员重置后）
+### 3.2 双档分工总表（靠当前可用额度派活）
 
-| 角色 | 主力模型 | 通道 / 计费方式 | 职责边界 |
+| 角色 | 常态档（Claude Ultra 额度充足·零额外花钱） | 降级档（Claude Ultra 额度不足/告急） | 职责与边界 |
 |---|---|---|---|
-| **总调度（主会话）** | **Claude Sonnet**（常规唯一主力）<br>*(仅极端跨卷架构大拆卡时临时切 Opus，拆完即切回)* | Orca 主工作树 `main-session`（Claude 会员额） | 只管拆竖切片、查 `entry-registry.json` 闭包、写 `派卡.md`/`state.json`、启动与收回第 2 层、读 diff 解冲突与合入；**绝不亲自写业务代码**。 |
-| **写码·赛道 A（常规/数据/工具/单模块，70%–80%）** | **DeepSeek (`deepseek-flash`)** | `tools/dispatch/dispatch.mjs`（DeepSeek API，挂在 Orca 可见终端） | 几毛钱/卡、**零占 Claude 会员额**、温度 `0.0` 稳健执行明确卡文；专注按表写码、单测补齐、批量重构。 |
-| **写码·赛道 B（复杂耦合/L0 骨架/E2E 联调，20%–30%）** | **Claude Sonnet**<br>*(卡内大段机械改动可调用 DeepSeek 工具)* | Orca 独立 worktree + 可见 Claude 会话（会员额，`--model sonnet`） | 单线程深度推理、跨文件接口对齐、疑难根因定位；把机械苦力外包给 DeepSeek API，避免白烧 Sonnet 上下文。 |
-| **独立出题（黑盒验收测试）** | **Claude Haiku**（默认主力）<br>*(若赛道 B 没借 DeepSeek 且为大批量公式/表校验，亦可用 `deepseek-flash`)* | Orca 独立 worktree（`test/<card>`）+ `--agent claude --model haiku`（会员额极省） | **物理不看写码分支**，仅照 `卷:行` 与 `contracts.json` 写行为级黑盒测试到 `tests/acceptance/<card>/` 与 `出题.md`。Haiku 速度快、耗额极低，且天然与 `deepseek`/`sonnet`/`opus`/`gemini` 四族全互异。 |
-| **独立审卡（首轮 + 必须改复核轮）** | **赛道 A 卡**：**Claude Sonnet**（常规）/ **Gemini** 或 **Claude Opus**（高危）<br>**赛道 B 卡**：**Gemini (Antigravity)**（默认首选，真正跨厂商异构 + 零耗 Claude 额）/ **Claude Opus**（仅 L0 内核极难卡） | 全新干净上下文会话：Claude 走 Orca 可见会话（会员额）；Gemini 走 Antigravity 席位 | 对照北极星、严禁硬编码、公共部件复用、验收原始结果逐项审 diff；判「必须改」后的复核轮**必须重开全新干净会话**。 |
-| **每日全库独立审核** | **Gemini (Antigravity)** | `antigravity` 独立工作树（不占 Claude 额） | 跨卡全局体检：核查门禁是否真生效、方向是否漂移、架构是否回潮；只读不写业务代码。 |
-| **监工 / 巡检 / 裁定分流** | **李白 (Grok Bot)** | Orca 插件 `tourbut.grokbot-notify` + `orca orchestration` | 第 4 模型族（xAI），读快照/看板/信箱，叫醒卡死会话、裁纯技术问题、转交「产品拍板」给亮圳，不介入写码传话。 |
+| **总调度（主会话）** | **Claude Sonnet**（Orca `main-session`） | **Claude Sonnet**（最省额模式：严禁读大文件、多用 `rg`） | 拆卡、核前置与闭包、先查额度再选档、落盘 `派卡.md`/`state.json`、读 diff 合入；**绝不亲自写业务代码**。 |
+| **写码（`feat/<card>`）** | **全量 `claude-sonnet`**（Orca 可见会话，`--effort medium`） | **主力 `deepseek-flash`**（`dispatch.mjs` 挂 Orca 可见终端，覆盖 70%–80% 卡）；仅 20%–30% 强耦合/L0 卡留给 `claude-sonnet` | 常态档 0 额外花钱、0 转派失真；额度吃紧时立刻切 DeepSeek 顶住日常产出，不卡研发进度。 |
+| **独立出题（`test/<card>`）** | **`claude-haiku`**（Orca 可见会话，`--effort medium`） | **`claude-haiku`**（Ultra 极省额；若 Ultra 彻底耗尽则由 `dispatch.mjs` 走 API 或冷备） | 物理隔离不看 `feat/<card>`，只照 `卷:行` 与 `contracts.json` 写黑盒行为验收测试。 |
+| **独立审卡（全新干净会话）** | **默认 `claude-opus`（`--effort medium`）**<br>*(关键/跨卷卡在 Gemini 额足时可分流 1–2 张/天给 Gemini，不强求)* | **DeepSeek 写码卡 → `claude-sonnet`**（或 Gemini）；<br>**Sonnet 写码卡 → `gemini` 或 `claude-opus`** | 绝不复用写码或旧审卡会话；审卡只看 `派卡.md` + `git diff` + 验收原始输出；判「必须改」复核轮必开新会话。 |
+| **每日全库独立审核** | **Gemini (Antigravity)** | **Gemini (Antigravity)** | 每日 1 次跨卡全局体检（门禁真生效、方向防偏移、架构防回潮）；**优先保证每日全库审核的 Gemini 额度，不因单卡审卡透支 Gemini**。 |
+| **监工 / 巡检 / 裁定分流** | **李白 (Grok Bot)** | **李白 (Grok Bot)** | 第 4 模型族（xAI），读快照/看板/信箱，叫醒卡死会话、裁纯技术问题、转「产品拍板」给亮圳。 |
 
 ### 3.3 三方模型族错开矩阵（全部 100% 过 `card-archive.mjs` 硬核）
 
-| 卡片档位 | 占比 | 写码（`feat/<card>`） | 出题（`test/<card>`） | 审卡（干净新会话） | 模型族校验结果 | 跨厂商异构度 |
-|---|---:|---|---|---|---|---|
-| **赛道 A·常规卡** | ~70% | `deepseek` (`deepseek-flash`) | `claude-haiku` | `claude-sonnet` | `{deepseek}` / `{claude-haiku}` / `{claude-sonnet}` 全互异 ✓ | 中高（写与审测跨厂商） |
-| **赛道 A·关键规则卡** | ~10% | `deepseek` (`deepseek-flash`) | `claude-haiku` | `gemini` (Antigravity) | `{deepseek}` / `{claude-haiku}` / `{gemini}` 全互异 ✓ | **最高（三方三家不同厂商！）** |
-| **赛道 B·复杂耦合卡** | ~15% | `claude-sonnet` *(可局部调 `deepseek`)* | `claude-haiku` | `gemini` (Antigravity) | `{claude-sonnet[,deepseek]}` / `{claude-haiku}` / `{gemini}` 全互异 ✓ | **高（写与审跨厂商，零烧 Opus 额）** |
-| **赛道 B·L0 内核极难卡** | ~5% | `claude-sonnet` *(可局部调 `deepseek`)* | `claude-haiku` | `claude-opus` *(必要时 Gemini 二审)* | `{claude-sonnet[,deepseek]}` / `{claude-haiku}` / `{claude-opus}` 全互异 ✓ | 满足门禁 ✓（留给最高风险内核） |
-
-> **关键亮点**：把 **Gemini (Antigravity)** 从“仅每日全库审核”扩展一步，兼任 **赛道 B（Sonnet 写码）的默认异构审卡席位**，一举解决三个痛点：① 避免同属 Anthropic 的“Sonnet 写、Opus 审”同源盲区；② 避开 Sonnet 借用 DeepSeek 时 `card-archive.mjs` 族冲突；③ **省下原本最烧 Claude 周额的 Opus 审卡开销**！
+| 运行档位 / 卡类 | 写码（`feat/<card>`） | 出题（`test/<card>`） | 审卡（干净新会话） | 模型族校验结果 | 现金额外支出 |
+|---|---|---|---|---|---|
+| **常态档·默认卡（主力）** | `claude-sonnet` | `claude-haiku` | `claude-opus` (`medium`) | `{claude-sonnet}` / `{claude-haiku}` / `{claude-opus}` 全互异 ✓ | **0 元**（全 Ultra 闭环） |
+| **常态档·关键/跨卷卡（Gemini 额足可选）** | `claude-sonnet` | `claude-haiku` | `gemini` (Antigravity) | `{claude-sonnet}` / `{claude-haiku}` / `{gemini}` 全互异 ✓ | **0 元**（跨厂商异构 + 省 Opus 额） |
+| **降级档·常规卡（70–80%）** | `deepseek-flash` | `claude-haiku` | `claude-sonnet` | `{deepseek}` / `{claude-haiku}` / `{claude-sonnet}` 全互异 ✓ | 仅 DeepSeek 极低费用 |
+| **降级档·高危/耦合卡（20–30%）** | `claude-sonnet` *(超阈可借 `deepseek`)* | `claude-haiku` | `gemini` 或 `claude-opus` | `{claude-sonnet[,deepseek]}` / `{claude-haiku}` / `{gemini\|claude-opus}` 全互异 ✓ | 极低（保质量不断档） |
 
 ---
 
-## 四、推荐落地架构：Orca 操作流与 11-26 重置后额度花法
+## 四、推荐落地架构：靠额度派活与 Orca 操作流
 
-### 4.1 总体拓扑图（严格扁平两层 + 双侧翼）
+### 4.1 总体拓扑图（严格扁平两层 + 额度开关 + 双侧翼）
 
 ```text
                        ┌──────────────────────┐
                        │  亮圳（产品拍板）    │
                        └──────────┬───────────┘
                                   │ （仅产品方向/大闸门）
-                       ┌──────────▼───────────┐       ┌─────────────────────────┐
-                       │ 李白 Grok Bot（监工） │◄─────►│ Gemini Antigravity      │
-                       │ 巡检 / 叫醒 / 裁技术  │       │ 每日全库体检 + 难卡异构审 │
-                       └──────────┬───────────┘       └────────────▲────────────┘
-                                  │ 读快照 / orchestration          │ 独立复核
-┌─────────────────────────────────▼────────────────────────────────┴────────────┐
+                       ┌──────────▼───────────┐       ┌──────────────────────────┐
+                       │ 李白 Grok Bot（监工） │◄─────►│ Gemini Antigravity       │
+                       │ 巡检 / 叫醒 / 裁技术  │       │ 主责每日全库体检         │
+                       └──────────┬───────────┘       │ (额足时可选分流关键审卡) │
+                                  │ 读快照 / orchestration        ▲
+┌─────────────────────────────────▼───────────────────────────────┴─────────────┐
 │  第 1 层：主会话（Claude Sonnet · Orca `main-session` 工作树）                 │
-│  职责：拆卡 → 核前置/闭包 → 落盘 `派卡.md` + `state.json` → 并发派发 → 合入   │
-└───────┬──────────────────────────┬────────────────────────────┬───────────────┘
-        │ 赛道 A（70–80%，直派）    │ 赛道 B（20–30%，攻坚）      │ 平行隔离验证
-        ▼                          ▼                            ▼
-┌───────────────────┐   ┌─────────────────────────┐   ┌─────────────────────────┐
-│ Orca Worktree     │   │ Orca Worktree           │   │ Orca Worktree           │
-│ `feat/<card>`     │   │ `feat/<card>`           │   │ `test/<card>`（出题）   │
-│ 可见终端跑        │   │ 可见 Claude 会话        │   │ 可见 Claude 会话        │
-│ `dispatch.mjs`    │   │ `--model sonnet`        │   │ `--model haiku`         │
-│ (`deepseek-flash`)│   │  └─(可选)机械子任务     │   │ 仅写 `tests/acceptance/`│
-│                   │   │    调 `dispatch.mjs`    │   │                         │
-└────────┬──────────┘   └────────────┬────────────┘   └────────────┬────────────┘
-         │                           │                             │
-         └──────────────┬────────────┴─────────────────────────────┘
-                        ▼
-        ┌───────────────────────────────────────────────┐
-        │ 干净上下文审卡（全新会话，不看写码聊天记录）  │
-        │ 常规卡：Orca `--agent claude --model sonnet`  │
-        │ 攻坚卡：Gemini (`--agent antigravity`) / Opus │
-        └───────────────────────┬───────────────────────┘
-                                ▼
-        ┌───────────────────────────────────────────────┐
-        │ 硬机械门禁：.githooks + tsc + CI + 零 mock E2E│
-        └───────────────────────────────────────────────┘
+│  派卡前必做：① 核前置/闭包 → ② 看当前 Claude Ultra 额度 → ③ 选常态档或降级档   │
+└───────────────┬──────────────────────────────────────────┬────────────────────┘
+                │                                          │
+    [Ultra 额度充足 → 常态档·零额外花钱]       [Ultra 额度不足/受限 → 降级档·DS 主力]
+                ▼                                          ▼
+┌───────────────────────────────┐          ┌────────────────────────────────────┐
+│ 写码 `feat/<card>`            │          │ 写码 `feat/<card>`                 │
+│ Orca 可见 Claude Sonnet 会话  │          │ Orca 可见终端跑 `dispatch.mjs`     │
+│ (`--model sonnet --effort med`)│         │ (`--model deepseek-flash`)         │
+└───────────────┬───────────────┘          └──────────────────┬─────────────────┘
+                │           ┌──────────────────────────┐      │
+                │           │ 平行独立出题 `test/<card>`│      │
+                │           │ Orca `claude --model haiku`      │
+                │           └─────────────┬────────────┘      │
+                └─────────────────────────┼───────────────────┘
+                                          ▼
+        ┌──────────────────────────────────────────────────────────┐
+        │ 干净上下文审卡（全新会话，绝不复用旧会话）               │
+        │ 常态档：默认 Opus (medium) / 关键卡额足时可选 Gemini     │
+        │ 降级档：DS 卡用 Sonnet 审 / Sonnet 卡用 Gemini 或 Opus 审│
+        └─────────────────────────────────┬────────────────────────┘
+                                          ▼
+        ┌──────────────────────────────────────────────────────────┐
+        │ 硬机械门禁：.githooks + tsc --checkJs + CI + 零 mock E2E │
+        └──────────────────────────────────────────────────────────┘
 ```
 
-### 4.2 在 Orca 里的标准落地命令（实测可用参数）
+### 4.2 主会话「靠额度派活」硬切换表（每次立卡前 10 秒判定）
 
-> **实测前置提醒（必做）**：本机 `orca repo list --json` 显示 `dnd` 仓库的 `setup` 钩子目前仍为 `pnpm install`（`L-03`）。**11-26 早上切回 Orca 派 Claude 会话前，务必先在 Orca 仓库设置把 `setup` 改为 `npm ci --prefer-offline` 或置空**；在此之前，每条 `orca worktree create` 必须显式带 `--setup skip`。
+| 当前 Claude Ultra 实时额度状态 | 主会话应选档位 | 写码主力 | 审卡主力 | 说明 |
+|---|---|---|---|---|
+| **充裕**（5 小时窗未告警、周额余量充足、无需省着用） | **常态档（全 Ultra）** | **`claude-sonnet`**（全部卡） | **`claude-opus` (`medium`)**；每日最多分流 1–2 张关键卡给 Gemini（视 Gemini 余量） | 零额外现金开销，质量最高、零转派失真；同时严控 Claude 并发 ≤ 3–4 会话防打爆 5 小时窗。 |
+| **紧张 / 告急 / 未重置空仓**（接近 5 小时限流、周额预警 ≥75%、或会员额暂时不可用/受限） | **降级档（DeepSeek 主力）** | **`deepseek-flash`**（70%–80% 卡直派，仅极难卡留 Sonnet） | DS 卡给 `sonnet`（或 Gemini）；Sonnet 卡给 Gemini / `opus` | 自动无缝切到 DeepSeek 扛日常写码，绝不因 Claude 额度不足停工，也不强烧稀缺额度。 |
+| **Gemini 额度紧张时** | 任意档位均适用 | 不变 | **全部审卡切回 Claude（Opus/Sonnet）** | 永远优先保留 Gemini 每日 1 次全库独立审核额度；单卡审卡绝不依赖 Gemini 作为唯一通道。 |
+
+### 4.3 在 Orca 里的标准落地命令（实测可用参数）
+
+> **实测前置提醒（必做）**：本机 `orca repo list --json` 显示 `dnd` 仓库的 `setup` 钩子目前仍为 `pnpm install`（`L-03`）。**全面切到 Orca 可见工作树前，务必先在 Orca 仓库设置把 `setup` 改为 `npm ci --prefer-offline` 或置空**；在此之前，每条 `orca worktree create` 必须显式带 `--setup skip`。
 
 #### 1. 立卡与落盘（主会话在 `main-session` 完成）
 - 先生成 `docs/卡档案/<card>/派卡.md`（含四件套原件与 `三方标识`）与 `docs/卡档案/<card>/state.json`（含 `baseCommit`、`branches`、`parties`），提交或推送使各工作树按文件读取。
 
-#### 2. 派发「写码」（按赛道二选一）
-- **赛道 A（70%–80% 常规卡，DeepSeek API，严格 2 层，零占 Claude 额）**：
-  ```powershell
-  # 1) 建独立工作树（不带 --agent，不消耗会员额）
-  orca worktree create --branch feat/<card> --base-branch origin/master --setup skip --comment "CODE|<card>|deepseek-flash" --json
-  # 2) 在该工作树里开可见终端跑 dispatch.mjs（亮圳与李白全程可见输出）
-  orca terminal create --worktree branch:feat/<card> --title "CODE|<card>|ds" --keep-open --command "node tools/dispatch/dispatch.mjs --model deepseek-flash --wd . --card docs/卡档案/<card>/派卡.md --purpose code" --json
-  ```
-- **赛道 B（20%–30% 攻坚卡，Orca 可见 Claude Sonnet 会话，走 11-26 重置后的会员额）**：
+#### 2. 派发「写码」（按实时额度二选一）
+- **常态档（Claude Ultra 充足 → 全走 `claude-sonnet` 可见会话）**：
   ```powershell
   orca worktree create --branch feat/<card> --base-branch origin/master --setup skip --agent claude --model sonnet --effort medium --comment "CODE|<card>|claude-sonnet" --prompt "你是本卡写码方。只读 docs/卡档案/<card>/派卡.md 并严格按其中卷:行原文、目标文件、公共部件与验收命令执行；禁止口头转述，完结时把 commit SHA 与原始命令输出写入开发.md/反思.md 与 state.json，再用 orca orchestration send 报主会话。若遇卷文矛盾或前置缺失，立即停手写 blocker。" --json
   ```
-  *(注：若在已有工作树重开/返工，改用 `orca agent launch --agent claude --worktree branch:feat/<card> --model sonnet --effort medium --prompt "..." --json`。)*
+  *(返工/重开改用 `orca agent launch --agent claude --worktree branch:feat/<card> --model sonnet --effort medium --prompt "..." --json`。)*
+- **降级档（Claude Ultra 不足 → `deepseek-flash` 做写码主力，挂 Orca 可见终端）**：
+  ```powershell
+  orca worktree create --branch feat/<card> --base-branch origin/master --setup skip --comment "CODE|<card>|deepseek-flash" --json
+  orca terminal create --worktree branch:feat/<card> --title "CODE|<card>|ds" --keep-open --command "node tools/dispatch/dispatch.mjs --model deepseek-flash --wd . --card docs/卡档案/<card>/派卡.md --purpose code" --json
+  ```
 
-#### 3. 平行派发「独立出题」（物理隔离在 `test/<card>`，走 Haiku 会员额）
+#### 3. 平行派发「独立出题」（物理隔离在 `test/<card>`，走 `claude-haiku`）
 ```powershell
 orca worktree create --branch test/<card> --base-branch origin/master --setup skip --agent claude --model haiku --effort medium --comment "TEST|<card>|claude-haiku" --prompt "你是本卡独立出题方。严禁查看 feat/<card> 分支代码；只读 docs/卡档案/<card>/派卡.md 所列卷:行原文与 contracts.json，在 tests/acceptance/<card>/ 编写黑盒行为验收测试与出题.md，提交后用 orca orchestration send --type worker_done 回报主会话。" --json
 ```
 
 #### 4. 派发「干净上下文审卡」（绝不复用旧会话）
-- **赛道 A 卡（Sonnet 审卡）**：
+- **常态档默认（Opus `medium` 审卡；降级档 DS 卡可换 `--model sonnet`）**：
   ```powershell
-  orca agent launch --agent claude --worktree branch:feat/<card> --model sonnet --effort medium --prompt "你是本卡独立审卡方（全新上下文）。严禁采信口头总结；请直接运行 git diff origin/master...HEAD 与验收测试（先合并/拉取 test/<card> 测试跑原始结果），逐项核对北极星、严禁硬编码、公共部件与卷:行原文，写审查.md 并回报主会话。" --json
+  orca agent launch --agent claude --worktree branch:feat/<card> --model opus --effort medium --prompt "你是本卡独立审卡方（全新上下文）。严禁采信口头总结；请直接运行 git diff origin/master...HEAD 与验收测试（拉取 test/<card> 测试跑原始结果），逐项核对北极星、严禁硬编码、公共部件与卷:行原文，写审查.md 并回报主会话。" --json
   ```
-- **赛道 B 卡（Gemini 异构审卡优先，省 Opus 额）**：
-  - 由主会话经 `orca orchestration send`（或 `orca agent launch --agent antigravity --worktree branch:feat/<card> ...`）通知 Antigravity 席位直接审 `feat/<card>` diff 与 `test/<card>` 原始测试输出；仅 L0 内核高危卡改为 `--agent claude --model opus --effort medium`。
-- **必须改的复核轮**：写码方修完后，**新开**一次 `orca agent launch`（新会话 ID，记入 `派卡.md` 三方标识的审卡新一轮），绝不在旧审卡会话里接着聊。
+- **可选跨厂商异构审卡（仅关键/跨卷卡且 Gemini 额足，每天 ≤1–2 张）**：
+  - 经 `orca agent launch --agent antigravity --worktree branch:feat/<card> ...` 或通知 Antigravity 席位直接审 diff 与验收原始输出；若 Gemini 额紧直接走上条 Opus 命令，零阻塞。
+- **必须改的复核轮**：写码方修完后，**新开**一次 `orca agent launch`（新会话 ID，记入 `派卡.md` 三方标识审卡新一轮），绝不在旧审卡会话里接着聊。
 
 #### 5. 回报、看板与回收（防遗忘、防积压）
-- **结构化回报**：子会话完结统一发 `orca orchestration send --type worker_done --outcome succeeded --report-path docs/卡档案/<card>/state.json --files-modified "..." --subject "<card> 写码完成"`（只传路径和机械摘要，不传大段 prose）。
-- **完结即清理**：主会话合入 `master` 且 CI 绿灯后，立即关闭子会话并清理已合工作树（防重演 `new-session-8e4637` 残留）。
+- **结构化回报**：子会话完结统一发 `orca orchestration send --type worker_done --outcome succeeded --report-path docs/卡档案/<card>/state.json --files-modified "..." --subject "<card> 写码完成"`。
+- **完结即清理**：合入 `master` 且 CI 绿灯后，立刻关闭子会话并清理已合工作树（防工作树积压）。
 
-### 4.3 11-26 重置后的 Claude 会员额度花法（防周中撞限）
+### 4.4 保额硬纪律（防 Claude 5 小时短窗 + 防 Gemini 透支）
 
-Claude 会员额同时受 **5 小时滑动窗口** 与 **每周总限额** 双重约束，且同一次任务中 **Opus 约消耗 Sonnet 的 3–5×、Haiku 的 15× 左右**；结合 Anthropic 多智能体 4×–15× 的上下文倍率，重置后应按以下配比与纪律花额度：
-
-#### 1. 会员额度分配目标（每周总池 100%）
-
-| 用途 | 目标占比 | 选用模型 | 控额抓手 |
-|---|---:|---|---|
-| **攻坚卡写码（20%–30% 卡）** | **30%–35%** | `sonnet` (`--effort medium`) | 其余 70%–80% 卡全部直派 DeepSeek API，**绝不拿 Sonnet 写机械搬砖卡**；卡内机械重活甩给 `dispatch.mjs`。 |
-| **独立审卡（常规卡 + 少数内核卡）** | **25%–30%** | 常规 `sonnet`；内核极难卡 `opus` | 赛道 B 卡优先交给 **Gemini (Antigravity)** 异构审卡，大幅削减 Opus 消耗。 |
-| **主会话总调度** | **20%–25%** | `sonnet` | 启动只读 3 文件，检索用本地 `rg`/`git grep` 不喂整仓大文件，禁止主会话亲自写码。 |
-| **独立出题（验收测试）** | **5%–10%** | `haiku` (`--effort medium`) | Haiku 极省额且最契合“照卷文翻断言”，几乎不占周池。 |
-| **应急缓冲（冲刺/返工/解冲突）** | **10%–15%** | 按需 `sonnet`/`opus` | 留给 11-30 最小可玩版联调或突发连环返工。 |
-
-#### 2. 五条保额硬纪律
-1. **默认 `--effort medium`，禁止常驻 Opus**：Opus 仅限 3 种白名单场景——① L0 内核/事务骨架审卡；② 跨 ≥3 卷架构冲突裁决；③ 同一张卡 Sonnet 返工 2 轮仍卡死。日常全线默认 Sonnet + medium。
-2. **严控 Claude 同时并发 ≤ 3 个会话**（主会话 1 + 最多 2 个 Claude 卡/审会话；同时可挂 2–3 个 DeepSeek 终端）。这是防止 1–2 小时内瞬间打爆 **5 小时滑动窗口** 的最关键闸门。
-3. **一卡一会话，完即关，不复用“长寿胖会话”**：长会话每多一轮都重复计费全量历史上下文；一卡一干净会话既防审卡偏见，又省 50%+ 重复输入消耗。
-4. **能用机械脚本绝不问 LLM**：查依赖闭包、查全仓引用、查类型错误、查基线违例一律跑 `rg`、`tsc --noEmit`、`node tools/accept/run.mjs`，把 Claude 额度 100% 花在“需要理解与判断”的环节。
-5. **保留 `dispatch.mjs` 作热备切换**：如果冲刺期周额意外逼近 85%，无需改任何工作流——只要把赛道 B 的审卡/出题切回 `dispatch.mjs --model claude-*`（API）或把更多写码切到 DeepSeek + Gemini 审卡即可无缝续跑。
+1. **全线默认 `--effort medium`**：无论写码（Sonnet）、出题（Haiku）还是审卡（Opus），默认 `medium` 档；只有极难 L0 内核/并发死锁才临时升 `high`。
+2. **严控 Claude 同时活跃并发 ≤ 3–4 个会话**（主会话 1 + 最多 2–3 个写码/出题/审卡子会话）：这是防止 Ultra 虽周额充裕却在 1–2 小时内打爆 **5 小时滑动窗口** 的最关键闸门。
+3. **一卡一会话、完即关，不养“长寿胖会话”**：长会话每多一轮都重复计费全量历史上下文；单卡单会话既防审卡偏见，又省 50%+ 重复输入。
+4. **能用机械脚本绝不问 LLM**：查依赖闭包、全仓引用、类型错误、基线违例一律跑 `rg`、`npx tsc --noEmit`、`node tools/accept/run.mjs`。
+5. **保护 Gemini 额度红线**：Gemini 优先保 **每日 1 次全库独立审核**；单卡审卡只是“关键卡可选加分项”，每天不超过 1–2 张，绝不让全部单卡排队等 Gemini。
 
 ---
 
@@ -240,7 +228,7 @@ Claude 会员额同时受 **5 小时滑动窗口** 与 **每周总限额** 双�
 | 分区 | 体量与特征 | 典型反例 / 正例 | 处理规则 |
 |---|---|---|---|
 | **过碎（红区·禁止立卡）** | ① 有效代码/数据改动 **< ~50 行**，或仅改 1 个小函数 / 1 条数据 / 1 个配置文件；<br>② 合入后**无独立可观测行为变化**或无真实生产调用者（纯中间半成品）；<br>③ Sonnet 自己 3–5 分钟能写完自测，流程税远大于写码本身。 | ❌ 反例：把“燕麦粥/卖柴/盐”各拆 1 卡（违背 `AGENTS.md` 红线）；<br>❌ 反例：把 `L-15` 换新骨架和 `L-17` 锁基线拆成两卡，致 `chore/new-skeleton` 撞 `pre_commit` 交不上去；<br>❌ 反例：拆成“卡 1 写函数、卡 2 接入口、卡 3 补单测”。 | **一律拒拆**，合并进所属功能卡或同域加固卡。*（唯一例外：P0 线上/门禁阻断紧急止血小修。）* |
-| **黄金粒度（绿区·标准单卡）** | ① **语义完整**：1 个竖切片、1 个独立子系统/模块（数据表 + 规则实现 + 接通生产入口 + 基线/登记表同步），或 1 批同类规则/检测器一次补齐；<br>② **体量参考**：有效改动约 **150–800 行**、涉及 **3–10 个紧密相关文件**（同一业务域）；<br>③ **验收闭合**：能用 **1 组独立黑盒验收测试**判对错，合入不留半吊子尾巴；<br>④ **耗时参考**：写码方单会话 **15–45 分钟** 内连写带自测闭合。 | ✅ 正例：`L-04 + L-05`（`typescript` + `jsconfig` + `ci.yml` 一次建完跑绿）；<br>✅ 正例：`L-09` 六项检测器加固同域一卡收口；<br>✅ 正例：`L-15 + L-16 + L-17 + L-18` 新骨架 + 清旧测 + 锁基线 + E2E 烟测桩一次闭合；<br>✅ 正例：一个完整玩法切片（如“基础交易：数据表 + 价格派生 + 提案事务 + 菜单入口 + E2E 存档一致”）。 | **标准立卡**：规格写死且无强探索的直接走**赛道 A（主会话直派 DeepSeek）**；高耦合复杂逻辑走**赛道 B（Sonnet 会话）**。 |
+| **黄金粒度（绿区·标准单卡）** | ① **语义完整**：1 个竖切片、1 个独立子系统/模块（数据表 + 规则实现 + 接通生产入口 + 基线/登记表同步），或 1 批同类规则/检测器一次补齐；<br>② **体量参考**：有效改动约 **150–800 行**、涉及 **3–10 个紧密相关文件**（同一业务域）；<br>③ **验收闭合**：能用 **1 组独立黑盒验收测试**判对错，合入不留半吊子尾巴；<br>④ **耗时参考**：写码方单会话 **15–45 分钟** 内连写带自测闭合。 | ✅ 正例：`L-04 + L-05`（`typescript` + `jsconfig` + `ci.yml` 一次建完跑绿）；<br>✅ 正例：`L-09` 六项检测器加固同域一卡收口；<br>✅ 正例：`L-15 + L-16 + L-17 + L-18` 新骨架 + 清旧测 + 锁基线 + E2E 烟测桩一次闭合；<br>✅ 正例：一个完整玩法切片（如“基础交易：数据表 + 价格派生 + 提案事务 + 菜单入口 + E2E 存档一致”）。 | **标准立卡**：按主会话实时额度选档派发（常态全 Sonnet，额度不足走 DeepSeek 主力）。 |
 | **过大（黄/红区·必须切分）** | ① 横跨 **≥2 个无强耦合的玩法子系统**或 **≥3 卷独立业务域**；<br>② 预估有效改动 **> 1,200 行** 或涉及 **> 15 个跨模块文件**，单会话上下文装不下完整规格、审卡无法逐行核 diff；<br>③ 验收需拆成多组互不相关的黑盒测试套。 | ❌ 反例：把“九省气候烘焙 + 全市场撮合 + NPC 日常 AI + 浏览器前端”塞进 1 张卡。 | 按**自然竖切片边界**拆成 2–3 张绿区卡，每张卡仍须各自闭合、各自带真实入口与验收。 |
 
 #### 2. 拆卡防碎三条硬检查（主会话落盘 `派卡.md` 前必核）
@@ -252,34 +240,29 @@ Claude 会员额同时受 **5 小时滑动窗口** 与 **每周总限额** 双�
 
 ### 5.2 什么样的活值得 Sonnet 交给 DeepSeek？什么样的不值得？
 
-先区分两条路径，避免把“主会话直派”和“Sonnet 内部转派”混为一谈：
-- **优先走路径 1（主会话直派，不经过 Sonnet）**：整张绿区卡（150–800 行）规格已经写死、属于“照图施工”的，**主会话直接开赛道 A 派 DeepSeek API**——压根别先派给 Sonnet 再让 Sonnet 纠结要不要转派。
-- **仅在赛道 B（Sonnet 攻坚卡）内部，才存在“Sonnet 自己干 vs 叫 DeepSeek 干”的决策**。Sonnet 转派一次 DeepSeek 的**固定摩擦成本约 3–5 分钟**（写小卡文件 + 调 `dispatch.mjs` + 等返回 + 复核 diff），只有省下来的工作量明显盖过这笔摩擦成本，转派才划算。
+结合亮圳最新定调，先看大前提：
+- **在常态档（Claude Ultra 额度充足）**：为了零额外现金支出、零层间失真，**默认 Sonnet 一口气把整张卡写完，不主动外包 DeepSeek**。
+- **在降级档（Claude Ultra 额度不足 / 需要省 Claude 额度）**：
+  - **路径 1（优先，主会话直派）**：整张绿区卡（150–800 行）规格已经写死的，**主会话直接派 DeepSeek API**，压根不经过 Sonnet。
+  - **路径 2（仅在 Sonnet 攻坚卡内部）**：转派一次 DeepSeek 有约 **3–5 分钟固定摩擦成本**（写小卡 + 跑 `dispatch.mjs` + 等返回 + 复核 diff），**只有同时满足下面 4 条硬判据时才值得叫 DeepSeek**，否则 Sonnet 自己写完更快更稳：
 
-#### 可执行 4 项硬判据（全部满足 → 立刻交 DeepSeek；任一不满足 → Sonnet 自己写完）
-
-| 判据维度 | ✅ **值得 Sonnet 交给 DeepSeek（必须派）** | ❌ **不值得，Sonnet 直接自己写（禁止硬派）** |
+| 判据维度 | ✅ **值得 Sonnet 交给 DeepSeek（可派）** | ❌ **不值得，Sonnet 直接自己写（禁止硬派）** |
 |---|---|---|
 | **1. 体量过盈亏线** | 该子任务有效改动 **≥ 100 行**，**或**需机械修改 **≥ 5 个文件 / ≥ 15 条同类数据或调用点**。 | 改动 **< 80 行**、**或**只改 **1–3 个文件**（Sonnet 2 分钟写完，写小卡字数快赶上代码本身）。 |
 | **2. 规格 100% 写死** | 输入/输出形状、公式、数据表 schema、目标 `文件:行`、公共部件名与参考样例**已全部确定**，只需照图铺开。 | 需求或接口还在探索、根因未定位、需要边读代码边试错调整设计方案。 |
-| **3. 属于成批/重复/样板活** | 典型适合场景：① 按 schema 批量补几十行世界数据表/规则表；② 全仓批量替换/迁移同类旧 API 调用点；③ 按统一样板补齐大批边界单测/JSDoc 类型注释（过 `tsc --checkJs`）；④ 规格完全独立的纯函数模块。 | 典型不适合场景：① L0 核心事务/调度器/并发状态机；② 需同时权衡 4–5 个文件隐式约束的精细耦合改动（交给 DeepSeek 易漏一处导致返工两轮，比自己写更慢）。 |
+| **3. 属于成批/重复/样板活** | ① 按 schema 批量补几十行世界数据表/规则表；② 全仓批量替换/迁移同类旧 API 调用点；③ 按统一样板补齐大批边界单测/JSDoc 类型注释；④ 规格完全独立的纯函数模块。 | ① L0 核心事务/调度器/并发状态机；② 需同时权衡 4–5 个文件隐式约束的精细耦合改动（交给 DeepSeek 易漏一处致返工两轮）。 |
 | **4. 验收可一键机械判对错** | 跑一条现成命令（`node --test ...`、`npx tsc --noEmit`、schema 校验）10 秒内直接出 pass/fail，Sonnet 只需抽查 diff。 | 必须靠人逐行语义推演才能判断对错的微妙业务边界。 |
-
-#### 可直接写进赛道 B 卡头的 Sonnet 行动口诀
-> **「少于百行、只碰两三个文件、边探边改或强耦合核心逻辑——你自己一口气写完，别为走形式瞎派 DeepSeek；一旦遇到超过 100 行或 5 处以上同类修改、规格已完全写死且能一键跑测的成批机械活——立刻把精确文件行号与样例写进小卡文件，调 `node tools/dispatch/dispatch.mjs --model deepseek-flash` 干完再验 diff，严禁拿 Sonnet 一行行手敲烧 Claude 会员额。」**
 
 ---
 
-## 六、11-26 早上切换前必做的 3 项规则/工具对齐清单
+## 六、规则与工具对齐清单（避免新旧规矩打架）
 
-为免“实际改用会员额跑 Orca 会话，但仓库旧规矩还在拦截或打架”，建议 11-26 重置前由主会话/李白同步落定三件事：
-
-1. **更新 `CLAUDE.md` 第 3 节与 `现行有效裁定.json`（需亮圳确认）**：
-   - 将 11-24 临时条款「严禁把会员额度花在写码、出题、审卡」更新为 11-26 新口径：「**主力走 Claude 会员额（Orca 可见独立工作树会话）+ DeepSeek API（`dispatch.mjs` 挂 Orca 可见终端），不再常规调用 Claude API**；保留主会话禁止亲自写码与禁用黑盒内置子代理写码（仍须独立工作树、可见可追查）」。
+1. **更新 `CLAUDE.md` 第 3 节与 `现行有效裁定.json`**：
+   - 将 11-24 临时条款「严禁把会员额度花在写码、出题、审卡」替换为亮圳 11-25 拍板新口径：「**靠实时可用会员额度动态派活**——Claude Ultra 额度充足时日常全走 Orca 可见会员会话（Sonnet 写 + Haiku 出题 + Opus `medium` 审，Gemini 主责每日全库审核、额足时可选分流关键审卡，零额外花钱）；Ultra 额度不足/受限时自动切回 DeepSeek (`deepseek-flash`) API 作写码主力（`dispatch.mjs` 挂 Orca 可见终端）。保留主会话只调度不写码、独立工作树可见可追查、三方模型族互异铁律。」
 2. **对齐 `L-06`/`L-07` 审计收据口径**：
-   - DeepSeek API 卡继续签发 `dispatch.mjs` 收据；Orca 可见 Claude 会话卡改为在 `state.json` 中记录 `orcaWorktreeId`、`sessionHandle/transcriptUri` 与 `commitSha` 作为等效审计凭证，避免未来 CI 收据检查误杀 Orca 会员会话。
+   - DeepSeek API 卡继续签发 `dispatch.mjs` 收据；Orca 可见 Claude 会话卡改为在 `state.json` 中记录 `orcaWorktreeId`、`sessionHandle/transcriptUri` 与 `commitSha` 作为等效审计凭证，避免 CI 收据检查误杀会员会话。
 3. **立即修掉 `L-03`（Orca `dnd` 仓库 `setup` 钩子）**：
-   - 在 Orca 把 `dnd` 的 `setup` 脚本从 `pnpm install` 改成 `npm ci --prefer-offline`（或留空），彻底消除每次开 Claude 可见工作树忘加 `--setup skip` 报错的隐患。
+   - 在 Orca 把 `dnd` 的 `setup` 脚本从 `pnpm install` 改成 `npm ci --prefer-offline`（或留空），彻底消除每次开可见工作树忘加 `--setup skip` 报错的隐患。
 
 ---
 
