@@ -842,7 +842,7 @@
     },
     {
       "id": "K1125-P3",
-      "summary": "11-30 20:00（伦敦）交最小可玩版：新 L0 极简骨架 + CI 保护 + 零 mock 最小闭环 + 浏览器能点开试玩，其余放 12 月；5 处待判卷文行按 literature/design_spec 分级落地。",
+      "summary": "首个交付为最小可玩版：新 L0 极简骨架 + CI 保护 + 零 mock 最小闭环 + 浏览器能点开试玩，其余后排；5 处待判卷文行按 literature/design_spec 分级落地。交付日期见 K1125-DATE（原定 11-30 已推后）。",
       "source": "docs/gemini/kickoff-1125.md:450",
       "status": "active",
       "decidedBy": "亮圳",
@@ -878,6 +878,16 @@
       "decidedBy": "亮圳",
       "quote": "以后交给李白裁定的事，必须先写清理由（为什么这么做、备选是什么、代价），李白只裁纯技术问题；凡涉及交付范围、玩法、世界方向的，直接标「产品拍板」由李白转亮圳。",
       "quoteSource": "李白转亮圳 Orca 消息 msg_f710e4cde55e（2026-11-25 01:58 伦敦，「撤回P3，裁定规矩」）",
+      "supersedes": []
+    },
+    {
+      "id": "K1125-DATE",
+      "summary": "原定 11-30 交付期限往后推，新日期待定：等 S1-1 新内核底座写出、看清速度后由李白报亮圳再定。",
+      "source": "docs/PLAN.md:12",
+      "status": "active",
+      "decidedBy": "亮圳",
+      "quote": "11-30往后推",
+      "quoteSource": "亮圳 2026-11-25 20:01 伦敦在李白问题卡上所选项，李白转 msg_447993d707dd",
       "supersedes": []
     },
     {
