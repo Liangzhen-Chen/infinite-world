@@ -4,7 +4,8 @@
 - **评估缘起**：
   - 亮圳 2026-11-25 15:28（伦敦）指示评估 AI 协作架构、层数边界、防信息失真机制、不同 AI 分工与模型族错开，以及 Claude 会员额度重置后的 Orca 落地与花法；
   - 15:29（伦敦）追加评估**拆卡粒度**与 **Sonnet 何时值得交给 DeepSeek** 的可执行判据（李白 `msg_2e8d188eeb77`）；
-  - 18:13–18:19（伦敦）亮圳最终拍板定调：**拥有 Claude Ultra 会员、日常希望零额外现金支出；由主会话「靠实时可用额度派活」——Claude Ultra 额度充足时日常全走 Sonnet 主力，额度不足/告急时自动切回 DeepSeek 做写码主力；同时避免把全部审卡压给 Gemini 导致 Gemini 撞限**。
+  - 18:13–18:19（伦敦）亮圳最终拍板定调：**拥有 Claude Ultra 会员、日常希望零额外现金支出；由主会话「靠实时可用额度派活」——Claude Ultra 额度充足时日常全走 Sonnet 主力，额度不足/告急时自动切回 DeepSeek 做写码主力；同时避免把全部审卡压给 Gemini 导致 Gemini 撞限**；
+  - 20:16（伦敦）亮圳追认补齐主会话长上下文失忆漏洞：**批准「主会话定期主动换班重启 + 启用 Orca 持久 `run:<id>` 总台邮箱 + 李白巡检盯换班」并入本方案，由独立评估者直接转告李白落地**。
 - **事实基线**：结合本仓实测（`CLAUDE.md`、`docs/派活卡头规矩.md`、`tools/dispatch/dispatch.mjs`、`tools/accept/lib/card-archive.mjs`、`docs/卡档案/_template/state.json`、`docs/gemini/daily/2026-11-25-audit.md`、本机 `orca` CLI 实测参数）及业界多智能体工程实证（Anthropic 2024–2025、Google Research / DeepMind `arXiv:2512.08296` 与 ADK 2025–2026、Cognition 2025–2026）。
 
 ---
@@ -16,8 +17,9 @@
    - **常态档（Claude Ultra 额度充足，零额外现金开销）**：日常写码全走 **`claude-sonnet`**（Orca 可见会话）+ 独立出题 **`claude-haiku`**（`test/<card>`）+ 独立审卡默认 **`claude-opus`（`--effort medium`）**；**Gemini（Antigravity）** 以每日全库独立审核为主阵地，仅在自身额度宽裕时分流 1–2 张关键/跨卷卡做跨厂商异构审卡（绝不把全部审卡压给 Gemini 防撞限）。此档是纯粹 2 层、零转派失真、DeepSeek 零花费。
    - **降级档（Claude Ultra 额度不足 / 逼近 5 小时或周上限）**：主会话自动切回 **DeepSeek (`deepseek-flash`) 做写码主力**（`tools/dispatch/dispatch.mjs` 挂在 Orca 可见终端），把剩余 Claude 额度集中留给主会话调度、出题与关键攻坚卡，确保研发不断档。
 3. **用「传文件指针 + 死锁原文出处 + 机械原始输出」压住信息失真**：层间严禁口头转述，卡文写死 `卷:行` 原文、目标文件行号、公共部件与验收命令；交回只认 `git diff` 与未删改的命令退出码/输出；遇卷文矛盾或前置缺失立即停手写 `blocker`；审卡永远新开干净会话。
-4. **拆卡按「完整可验证结果」切、严禁拆碎**：单卡固定流程税约 10–15 分钟、3–4 个会话，黄金体量应是 **1 个闭合功能/模块（约 150–800 行、3–10 同域文件，含入口接通与基线闭合）**，严禁拆出 <50 行半成品碎卡；平时全 Sonnet 档不瞎转派 DeepSeek，仅在降级/混跑遇到 **≥100 行或 ≥5 处同类改动 + 规格 100% 写死 + 可一键跑测** 的成批机械活时才叫 DeepSeek。
-5. **切换落地前同步清 3 项规矩与工具对齐**：① 更新 `CLAUDE.md` 第 3 节与 `现行有效裁定.json` 为「按实时额度派活」新口径；② 统一 API 收据与 Orca 可见会话审计凭证；③ 修掉 Orca `dnd` 仓库的 `L-03` 雷区（`setup` 钩子由 `pnpm install` 改为 `npm ci --prefer-offline` 或留空）。
+4. **主会话防长对话失忆：主动定期换班 + Orca 持久 `run:<id>` 总台邮箱**：不把主会话当成“永不下班的活人”；主会话脑中不存任何独家记忆（全落盘 `state.json` + 3 份薄文件），**每合完 1 批（3–5 张卡）/ 每日 / 发生 ≥2 次自动压缩**即在批次空窗主动重开新主会话接班，通过 `orca orchestration run-create` / `run-use` 无缝接管总台收件箱，由李白定时巡检盯换班。
+5. **拆卡按「完整可验证结果」切、严禁拆碎**：单卡固定流程税约 10–15 分钟、3–4 个会话，黄金体量应是 **1 个闭合功能/模块（约 150–800 行、3–10 同域文件，含入口接通与基线闭合）**，严禁拆出 <50 行半成品碎卡；平时全 Sonnet 档不瞎转派 DeepSeek，仅在降级/混跑遇到 **≥100 行或 ≥5 处同类改动 + 规格 100% 写死 + 可一键跑测** 的成批机械活时才叫 DeepSeek。
+6. **切换落地前同步清 4 项规矩与工具对齐**：① 更新 `CLAUDE.md` 第 3 节与 `现行有效裁定.json` 为「按实时额度派活」新口径；② 统一 API 收据与 Orca 可见会话审计凭证；③ 修掉 Orca `dnd` 仓库的 `L-03` 雷区（`setup` 钩子由 `pnpm install` 改为 `npm ci --prefer-offline` 或留空）；④ 启用主会话主动换班 + 持久 `run:<id>` 总台邮箱 + `state.json` 强制落盘 + 李白 Routine B 盯换班。
 
 ---
 
@@ -213,6 +215,27 @@ orca worktree create --branch test/<card> --base-branch origin/master --setup sk
 4. **能用机械脚本绝不问 LLM**：查依赖闭包、全仓引用、类型错误、基线违例一律跑 `rg`、`npx tsc --noEmit`、`node tools/accept/run.mjs`。
 5. **保护 Gemini 额度红线**：Gemini 优先保 **每日 1 次全库独立审核**；单卡审卡只是“关键卡可选加分项”，每天不超过 1–2 张，绝不让全部单卡排队等 Gemini。
 
+### 4.5 主会话防失忆与主动换班制度（含 Orca 持久 `run:<id>` 总台邮箱 · 20:16 拍板补齐）
+
+子会话一卡一关不会变胖，但**主会话是唯一总台、所有人都找它**，如果不主动换班，聊久了照样压缩失忆、偏离设计。本节把主会话变成**可随时热替换的“轮班值班经理”**：
+
+1. **硬触发换班条件（满足任一条，就在当前批次收尾空窗主动换班）**：
+   - 累计合入 **3–5 张卡**（或完成 1 个阶段/里程碑）；
+   - **每日**开工/收工轮换 1 次，绝不跨多日养“一周长寿主会话”；
+   - 主会话触发 **≥ 2 次自动上下文压缩**，或明显出现记串/漏前置/重复提问征兆。
+2. **零独家记忆铁律（确保 30 秒无缝接班）**：
+   - 主会话脑中**严禁保留任何未落盘的状态、口头约定或临时备忘**；一切规矩入 `CLAUDE.md`、拍板入 `现行有效裁定.json`、进度入自动生成的 `docs/状态快照.generated.md`、每张在途卡的实时现场落盘 `docs/卡档案/<card>/state.json`（强制落盘，补齐 `L-14`）。
+   - 旧主会话下班前只做 1 件事：确认手上在跑的卡都收尾或已把最新 `phase`/`blocker`/`nextAction` 写进 `state.json`，然后停机关闭。
+   - 新主会话在 `main-session` 工作树启动后，**只读 3 份薄文件** + 扫一眼 `orca worktree ps` 与在途卡 `state.json`，30 秒满血接班。
+3. **启用 Orca 持久总台邮箱（`run:<id>`），彻底解耦单次会话 ID**：
+   - **建持久总台**：首个主会话启动时运行 `orca orchestration run-create --objective "infinite-world 主调度总台" --json`，拿到固定 `run_id` 并记入工作区交接信息。
+   - **所有人改寄总台号**：子会话回报、审卡结果及日常外部通知统一发往 `--to run:<run_id>`，**不再死绑单次聊天的 `orca_session_id`**。
+   - **新主会话一键接管**：新主会话在 `main-session` 启动后执行 `orca orchestration run-use --id <run_id> --json` 直接接管整个收件箱（`run-use` 实测支持接管协调权而不丢在途邮件）；李白平时亦按 `workspace == "main-session"` 动态定位当前活会话。
+   - **硬盘双保险**：即便换班瞬间某条聊天回信未即时消费，子会话产物与 `state.json` 均已落盘 Git 分支，新主会话绝不漏单。
+4. **日常“控食瘦身” + 李白巡检盯换班**：
+   - 主会话严禁读整卷大文件、严禁灌几百行原始测试滚屏；所有人发给主会话的消息坚持“3–5 行电报 + 仓库文件路径”。
+   - **李白 Routine B 新增巡检项**：每次巡检顺手核对 `main-session` 会话已运行批次/时长与压缩状态；发现主会话连跑过久或明显老化时，在当前批次收尾空窗提醒主动换班，并协助确认新主会话已 `run-use` 接管到位。
+
 ---
 
 ## 五、卡的粒度与 Sonnet → DeepSeek 委派判据（回应 15:29 追加）
@@ -263,12 +286,16 @@ orca worktree create --branch test/<card> --base-branch origin/master --setup sk
    - DeepSeek API 卡继续签发 `dispatch.mjs` 收据；Orca 可见 Claude 会话卡改为在 `state.json` 中记录 `orcaWorktreeId`、`sessionHandle/transcriptUri` 与 `commitSha` 作为等效审计凭证，避免 CI 收据检查误杀会员会话。
 3. **立即修掉 `L-03`（Orca `dnd` 仓库 `setup` 钩子）**：
    - 在 Orca 把 `dnd` 的 `setup` 脚本从 `pnpm install` 改成 `npm ci --prefer-offline`（或留空），彻底消除每次开可见工作树忘加 `--setup skip` 报错的隐患。
+4. **启用主会话主动换班 + 持久 `run:<id>` 总台邮箱 + 李白巡检盯换班（20:16 拍板）**：
+   - 主会话建立持久 Run（`orca orchestration run-create`），子会话与通知统一切向 `--to run:<run_id>`；换班时新主会话执行 `orca orchestration run-use --id <run_id>` 无缝接管；
+   - 补齐 `L-14`：每张卡强制落盘并更新 `docs/卡档案/<card>/state.json`；
+   - 李白在 Routine B 中加入“主会话老化/压缩次数检查”，在每批（3–5 张卡）收尾空窗提醒主会话主动换班重开。
 
 ---
 
 ## 参考依据
 
-- **仓库内实证**：`CLAUDE.md:16-28`、`docs/派活卡头规矩.md:43-55, 135-137`、`tools/dispatch/dispatch.mjs:66-101`、`tools/accept/lib/card-archive.mjs:16-29, 289-298`、`docs/卡档案/_template/state.json`、`docs/gemini/daily/2026-11-25-audit.md:75-107`、本机 `orca agent launch / worktree create / terminal create / orchestration send --help` 实测。
+- **仓库内实证**：`CLAUDE.md:16-28`、`docs/派活卡头规矩.md:43-55, 135-137`、`tools/dispatch/dispatch.mjs:66-101`、`tools/accept/lib/card-archive.mjs:16-29, 289-298`、`docs/卡档案/_template/state.json`、`docs/gemini/daily/2026-11-25-audit.md:75-107`、本机 `orca agent launch / worktree create / terminal create / orchestration send / run-create / run-use --help` 实测。
 - **业界工程文献**：
   - Anthropic, *Building effective AI agents* (Dec 2024), *How we built our multi-agent research system* (June 2025), *Effective context engineering for AI agents* (Sept 2025).
   - Yubin Kim, Xin Liu et al. (Google Research, Google DeepMind, MIT), *Towards a Science of Scaling Agent Systems* (`arXiv:2512.08296`, Dec 2025; v3 Apr 2026) & Google ADK Multi-Agent Context Engineering Guides (Dec 2025).
