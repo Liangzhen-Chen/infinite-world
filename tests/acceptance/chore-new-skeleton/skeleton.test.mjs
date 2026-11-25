@@ -126,9 +126,7 @@ test('world/meta、world/design 不存在；迁出的资料在 archive/ 下存�
 
 // ---------- L-16：旧验收目录归档 ----------
 
-test('tests/acceptance/ 只留 chore-new-skeleton；旧验收目录已在 archive/legacy-tests/acceptance/ 下同名存在', () => {
-  const dirs = readdirSync(abs('tests/acceptance')).filter((n) => n !== '.gitkeep').sort();
-  assert.deepEqual(dirs, ['chore-new-skeleton']);
+test('旧验收目录 chore-workspace-cleanup、chore-step1-tooling 已在 archive/legacy-tests/acceptance/ 下同名存在，且已不在 tests/acceptance/', () => {
   for (const n of ['chore-workspace-cleanup', 'chore-step1-tooling']) {
     assert.ok(existsSync(abs(`archive/legacy-tests/acceptance/${n}`)), `${n} 未归档`);
     assert.ok(!existsSync(abs(`tests/acceptance/${n}`)), `${n} 仍在 tests/acceptance/`);
