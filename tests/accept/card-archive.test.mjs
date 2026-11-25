@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
-import { readFileSync, rmSync } from 'node:fs';
+import { chmodSync, readFileSync, rmSync } from 'node:fs';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { loadRules, checkArchive, judgeCommit, archiveDirOf, modelFamilies } from '../../tools/accept/lib/card-archive.mjs';
 import { prePush } from '../../tools/accept/pre-push.mjs';
@@ -487,7 +487,8 @@ function hookRepo() {
   git(dir, ['init', '-q']);
   writeUnderTempRoot(dir, 'docs/派活卡头规矩.md', DOC);
   for (const [rel, text] of Object.entries(FILES)) if (!rel.startsWith('tools/')) writeUnderTempRoot(dir, rel, text);
-  writeUnderTempRoot(dir, '.githooks/commit-msg', readFileSync(join(ROOT, '.githooks/commit-msg')));
+  // 钩子必须有执行位：Linux 上 git 会跳过不可执行的钩子（Windows 不看执行位，本机才通过）。
+  chmodSync(writeUnderTempRoot(dir, '.githooks/commit-msg', readFileSync(join(ROOT, '.githooks/commit-msg'))), 0o755);
   git(dir, ['add', '-A']);
   git(dir, ['-c', 'core.hooksPath=', 'commit', '-q', '-m', 'base']);
   git(dir, ['checkout', '-q', '-b', 'main-s']);
