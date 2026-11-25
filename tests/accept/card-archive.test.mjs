@@ -21,6 +21,9 @@ const PASS_GATE = async () => ({ verdict: 'pass' });
 test('规矩文件第五节可解析', () => {
   assert.equal(LOAD_ERROR, undefined);
   assert.equal(archiveDirOf(RULES, 'ds/x'), 'docs/卡档案/ds-x/');
+  // 合并提交不再免查（L-06）；交接文件与必填键从规矩数据里读，不在代码里写死。
+  assert.equal(RULES.mergeExempt, false);
+  assert.deepEqual(RULES.handoff, { file: 'state.json', keys: ['card', 'phase', 'updatedAt', 'branches', 'parties', 'ci', 'failCount', 'blocker', 'nextAction'] });
 });
 
 // 引用要落在仓库里真有的文件与行数内：内存版仓库（纯函数测试用）与写进临时 git 仓库的同一份文件（git 夹具用）。
@@ -89,6 +92,16 @@ const swap = (file, from, to) => archive({ [file]: GOOD[file].replace(from, to) 
 
 test('合格档案放行', () => {
   assert.deepEqual(check(archive()), []);
+});
+
+test('交接文件 state.json：没有不拒；非法 JSON、非对象、缺必填键拒；齐全放行', () => {
+  const state = { card: 'ds-x', phase: 'dispatched', updatedAt: '2026-11-25T00:00:00Z', branches: {}, parties: {}, ci: {}, failCount: 0, blocker: null, nextAction: '继续写' };
+  assert.deepEqual(check({ ...archive(), 'state.json': JSON.stringify(state) }), []);
+  assert.ok(has(check({ ...archive(), 'state.json': '{' }), 'state.json', '不是合法 JSON'));
+  assert.ok(has(check({ ...archive(), 'state.json': '[]' }), 'state.json', '须是 JSON 对象'));
+  const miss = { ...state }; delete miss.phase;
+  assert.ok(has(check({ ...archive(), 'state.json': JSON.stringify(miss) }), 'state.json', '缺必填键', 'phase'));
+  assert.deepEqual(check(archive()), [], '没有 state.json 时不拒');
 });
 
 // 自查表可填否项（李白 Z-6）：规矩键值在测试里自设（项 5、前缀「缘由：」），不依赖真实规矩当前值；“否”项的实据照常核。
@@ -269,11 +282,16 @@ test('审卡每轮一条可多条：两条审卡放行；审卡标识等于写�
   assert.ok(has(j('agent-x9'), '与三方标识里「审卡」的「agent-r1、agent-r2」不一致'));
 });
 
-test('例外提交放行：纯快照、不在触发目录的文档、合并提交', () => {
+test('例外提交放行：纯快照、不在触发目录的文档', () => {
   const none = { readFile: () => null };
   assert.deepEqual(judge({ ...none, files: ['docs/统一底层设计/版本快照/卷四-v1.md'] }), []);
   assert.deepEqual(judge({ ...none, files: ['docs/审查/x.md', 'docs/当前状态.md'] }), []);
-  assert.deepEqual(judge({ ...none, files: [SRC], isMerge: true }), []);
+});
+
+test('合并提交不再免查：无档案拒；带合格档案与合并三行放行', () => {
+  const none = { readFile: () => null };
+  assert.ok(has(judge({ ...none, files: [SRC], isMerge: true }), '缺文件 派卡.md'));
+  assert.deepEqual(judge({ files: [SRC], isMerge: true, stage: '推送', message: '卡分支：ds/x\n角色：合并\n标识：main-session-1' }), []);
 });
 
 test('触发目录的提交没有档案：拒；有合格档案：放行', () => {

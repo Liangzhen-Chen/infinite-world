@@ -56,6 +56,11 @@ export function archiveRules(docText) {
   const noKeys = ['自查表可填否项', '否项原因前缀'].filter((k) => one(k) !== undefined);
   if (noKeys.length === 1) return { error: `规矩文件第五节「自查表可填否项」「否项原因前缀」须同时有或同时无，只有「${noKeys[0]}」` };
   for (const [k, src] of Object.entries(kinds)) { try { new RegExp(src); } catch { return { error: `证据种类「${k}」的正则不合法` }; } }
+  // 交接文件（L-14）：键值可缺（推送时读到远端旧规矩就没有）；只写一半即规矩自相矛盾，报错。
+  const handoffFile = one('交接文件');
+  const handoffKeys = list(one('交接文件必填键') || '');
+  if (handoffFile !== undefined && !handoffKeys.length) return { error: '规矩文件第五节写了「交接文件」但缺「交接文件必填键」' };
+  if (handoffFile === undefined && handoffKeys.length) return { error: '规矩文件第五节写了「交接文件必填键」但缺「交接文件」' };
   const tableLines = [];
   for (const l of sec) { if (l.trim().startsWith('|')) tableLines.push(l); }
   const t = firstTable(tableLines.join('\n'));
@@ -96,6 +101,7 @@ export function archiveRules(docText) {
     noItems: list(one('自查表可填否项') || '').flatMap((x) => x.split(/[,，/]/)).map((x) => x.trim()).filter(Boolean),
     noPrefix: one('否项原因前缀') || '',
     volumeDir: one('卷文件目录'),
+    handoff: handoffFile ? { file: handoffFile, keys: handoffKeys } : null,
     rows,
     party: {
       section: one('三方小节'), roles: list(one('三方角色') || ''), multiRoles: list(one('三方可多条角色') || ''), roleField: one('三方角色字段'), idField: one('三方标识字段'),
@@ -221,7 +227,7 @@ function checkSection(rules, row, body, label, reasons) {
 
 // 查一个档案目录：readFile(文件名) 返回文本或 null。cond 为 null 查平时各行，否则只查该条件的行（如绕过记录）。
 export function checkArchive(rules, questions, readFile, cond = null, stage = '推送', repo = null) {
-  const reasons = [];
+  const reasons = [...checkHandoff(rules, readFile)];
   const rows = rules.rows.filter((r) => r.cond === cond && (stage === '推送' || r.stage === '提交'));
   for (const file of [...new Set(rows.map((r) => r.file))]) {
     const text = readFile(file);
@@ -251,8 +257,64 @@ export function checkArchive(rules, questions, readFile, cond = null, stage = '�
   return reasons;
 }
 
+// 交接文件（L-14）：档案目录里有该文件时须是合法 JSON 对象且规矩登记的必填键齐全；没有不拒（可选）。
+export function checkHandoff(rules, readFile) {
+  if (!rules.handoff) return [];
+  const text = readFile(rules.handoff.file);
+  if (text === null || text === undefined) return [];
+  let obj;
+  try { obj = JSON.parse(text); } catch (e) { return [`${rules.handoff.file} 不是合法 JSON：${e.message}`]; }
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return [`${rules.handoff.file} 须是 JSON 对象`];
+  const missing = rules.handoff.keys.filter((k) => !Object.prototype.hasOwnProperty.call(obj, k));
+  return missing.length ? [`${rules.handoff.file} 缺必填键：${missing.join('、')}`] : [];
+}
+
 // 标识比较前规范化：统一小写、去掉首尾空白（只差大小写或空白算同一个）。
 export const normId = (s) => String(s || '').trim().toLowerCase();
+
+// 「三方标识」条目要认的字段名：角色、标识、模型，加上小节表里登记的字段。一处算，checkParties 与派卡前检查共用。
+function partyFieldNames(rules, file, section) {
+  const p = rules.party;
+  const row = rules.rows.find((r) => r.file === file && r.section === section);
+  return [...new Set([p.roleField, p.idField, ...(p.modelField ? [p.modelField] : []), ...(row ? row.fields.map((f) => f.name) : [])])];
+}
+
+// 三方模型族判据（唯一一处，checkParties 与 dispatch 派前检查共用）：写码族与出题族不相交，每个审卡族不在两者并集里；审卡多轮之间可同族。
+// 某角色没登记模型也报（无从核对）。规矩没有「三方模型字段」键时（推送时读远端旧规矩）不核。
+export function modelFamilyReasons(rules, models, file, section) {
+  const p = rules.party;
+  if (!p.modelField) return [];
+  const [writer, tester, ...reviewers] = p.roles;
+  const fams = (role) => new Set(models[role] || []);
+  const wf = fams(writer); const tf = fams(tester); const rf = new Set(reviewers.flatMap((r) => [...fams(r)]));
+  const reasons = [];
+  for (const role of p.roles) if (!(models[role] || []).length) reasons.push(`${file}「${section}」${role}的${p.modelField}为空，无法核对模型族`);
+  const same = [...wf].filter((x) => tf.has(x));
+  if (same.length) reasons.push(`${file}「${section}」写码与出题的模型族相同（${same.join('、')}），三方族须互不相同`);
+  const clash = [...rf].filter((x) => wf.has(x) || tf.has(x));
+  if (clash.length) reasons.push(`${file}「${section}」审卡与写码或出题的模型族相同（${clash.join('、')}），三方族须互不相同`);
+  return reasons;
+}
+
+// 从派卡.md 的三方标识里取各角色登记的模型族（派卡前检查用；与 checkParties 同一套解析与族表）。
+export function partyModelFamilies(rules, readFile) {
+  const p = rules.party;
+  const [file, section] = p.section.split('/');
+  const text = readFile(file);
+  if (text === null || text === undefined) return null;
+  const body = sectionsOf(text).get(section);
+  if (!body || !p.modelField) return null;
+  const names = partyFieldNames(rules, file, section);
+  const clean = (s) => (s || '').replace(/[\s；;，,。.]+$/, '');
+  const models = {};
+  for (const item of parseItems(body)) {
+    const v = fieldValues(item, names);
+    const role = clean(v[p.roleField]);
+    if (!p.roles.includes(role)) continue;
+    models[role] = [...(models[role] || []), ...modelFamilies(v[p.modelField])];
+  }
+  return { file, section, models };
+}
 
 // 三方标识（写码、出题、审卡）：每个角色恰一条（规矩「三方可多条角色」登记的角色，如审卡每轮一条，可多条）、全部标识互不相同；map[角色] 是该角色的标识数组；推送时标识里不许带占位词。派卡.md 读不到时不重复报（缺文件已报）。
 export function checkParties(rules, readFile, stage) {
@@ -262,8 +324,7 @@ export function checkParties(rules, readFile, stage) {
   if (text === null || text === undefined) return { map: null, reasons: [] };
   const body = sectionsOf(text).get(section);
   if (!body) return { map: null, reasons: [] };
-  const row = rules.rows.find((r) => r.file === file && r.section === section);
-  const names = [...new Set([p.roleField, p.idField, ...(p.modelField ? [p.modelField] : []), ...(row ? row.fields.map((f) => f.name) : [])])];
+  const names = partyFieldNames(rules, file, section);
   const reasons = [];
   const map = {};
   const seen = [];
@@ -285,17 +346,8 @@ export function checkParties(rules, readFile, stage) {
   const byId = new Map();
   for (const [role, id] of seen) byId.set(id, [...(byId.get(id) || []), role]);
   for (const [id, roles] of byId) if (roles.length > 1) reasons.push(`${file}「${section}」${roles.join('、')}的${p.idField}相同（${id}），三方须互不相同`);
-  // 三方模型族（可选规矩键；缺键不核，兼容推送时读远端旧规矩）：写码族与出题族不相交，每个审卡族不在两者并集里；审卡多轮之间可同族。
-  if (p.modelField) {
-    const [writer, tester, ...reviewers] = p.roles;
-    const fams = (role) => new Set(models[role] || []);
-    const wf = fams(writer); const tf = fams(tester); const rf = new Set(reviewers.flatMap((r) => [...fams(r)]));
-    for (const role of p.roles) if (!(models[role] || []).length) reasons.push(`${file}「${section}」${role}的${p.modelField}为空，无法核对模型族`);
-    const same = [...wf].filter((x) => tf.has(x));
-    if (same.length) reasons.push(`${file}「${section}」写码与出题的模型族相同（${same.join('、')}），三方族须互不相同`);
-    const clash = [...rf].filter((x) => wf.has(x) || tf.has(x));
-    if (clash.length) reasons.push(`${file}「${section}」审卡与写码或出题的模型族相同（${clash.join('、')}），三方族须互不相同`);
-  }
+  // 三方模型族（可选规矩键；缺键不核，兼容推送时读远端旧规矩）：判据在 modelFamilyReasons，一处。
+  reasons.push(...modelFamilyReasons(rules, models, file, section));
   return { map, reasons };
 }
 
