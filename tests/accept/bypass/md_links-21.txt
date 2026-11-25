@@ -1,0 +1,7 @@
+// @file docs/__case__/md_links-21/fenced.md
+# 围栏内外的断链
+期望命中行号：6
+```js
+[围栏内的链接](./inside-fence.md)
+```
+[围栏后的断链](./after-fence.md)
