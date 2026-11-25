@@ -2,24 +2,23 @@
 // 依据：docs/gemini/kickoff-1125.md:479（L-08 扩项：拦截 >500 KB .md 快照副本）；李白裁定 msg_aff2a90c2257 第四条（只豁免 3 个文件、路径逐字写死、不许通配符、每条带理由）；卷十二:468（基线只经执行器写，注入不改基线）。
 // 测什么：
 //   D1 tools/accept/scanclasses.json 中 big_md 类别的 exemptions 恰为 3 条路径（逐字比对，无多无少），
-//      每条 path 不含 `*`、不以 `/` 结尾，且带非空 reason。
-//   D2 注入：在 docs/ 下临时写一个 600 KB 的 .md（超过 500 KB，也超过 maxBytes 512000），跑一次 CLI
-//      `node tools/accept/run.mjs pre_commit`（取 stdout JSON），与注入前基线比较 (itemKey, code) 对，断言出现新增失败；
-//      不写死条目名或错误码；finally 删除注入文件与为它新建的目录，恢复原状。
-//   D3 tools/accept/baseline.json 中所有行 locked 为 true。
+//      每条 path 不含 `*`、不以 `/` 结尾，且带非空 reason。（静态，读仓库根）
+//   D2 注入：在隔离副本（tests/support/isolated-repo.mjs 的 withIsolatedRepo，HEAD 干净副本）的 docs/ 下写一个 600 KB 的 .md
+//      （超过 500 KB，也超过 maxBytes 512000），同一副本内先跑一次基线、再注入、再跑一次 CLI
+//      `node tools/accept/run.mjs pre_commit`（经 runGate 取 JSON），与基线比较 (itemKey, code) 对，断言出现新增失败；
+//      不写死条目名或错误码；副本销毁即恢复，不改调用方工作区。
+//   D3 tools/accept/baseline.json 中所有行 locked 为 true。（静态，读仓库根）
 // 预期：实现前 D1 红（豁免尚未登记）；D2 在 big_md 规则对 600 KB 的 .md 命中时为绿；D3 视基线现状而定（实现后应绿）。
-// 耗时：每次 pre_commit 约 2 分钟；基线只跑一次（惰性缓存），D2 注入后再跑一次。
+// 耗时：每次 pre_commit 约 2 分钟；D2 为基线与注入各一次，约 4 分钟。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
-import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync, rmdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { withIsolatedRepo, runGate } from '../../support/isolated-repo.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
-const RUN = join(ROOT, 'tools/accept/run.mjs');
-const RUN_TIMEOUT_MS = 600000; // 单次 pre_commit 上限（约 2 分钟，留足余量）
-const CASE_TIMEOUT_MS = 900000; // 单条注入测试上限（含可能的一次基线运行）
+const CASE_TIMEOUT_MS = 900000; // 单条注入测试上限（含基线与注入各一次 pre_commit）
 
 // 豁免路径逐字写死（不许通配符或目录前缀）。
 const EXPECTED_EXEMPT_PATHS = [
@@ -28,67 +27,28 @@ const EXPECTED_EXEMPT_PATHS = [
   'docs/统一底层设计/卷十九-建筑与设施.md',
 ];
 
-// 运行 pre_commit 关口，返回 JSON 报告。verdict 为 fail 也是数据，不在此断言退出码。
-const runPreCommit = () => {
-  const r = spawnSync(process.execPath, [RUN, 'pre_commit'], {
-    cwd: ROOT,
-    encoding: 'utf8',
-    timeout: RUN_TIMEOUT_MS,
-    maxBuffer: 256 * 1024 * 1024,
-  });
-  assert.equal(r.error, undefined, `pre_commit 无法启动或超时：${r.error}`);
-  let report;
-  try {
-    report = JSON.parse(r.stdout);
-  } catch (e) {
-    assert.fail(`pre_commit 标准输出不是 JSON：${e.message}`);
-  }
-  assert.ok(report && report.items && Array.isArray(report.items.failed), 'JSON 报告须含 items.failed 数组');
-  return report;
-};
-
 // 失败条目展开为 (itemKey, code) 对；新增 = 注入后出现而基线没有的对。不写死条目名或错误码。
-const failPairs = (report) =>
-  new Set(report.items.failed.flatMap((f) => (f.codes ?? []).map((c) => `${f.itemKey}|${c}`)));
-
-// 基线只跑一次（惰性缓存）。
-let BASE;
-const baseline = () => (BASE ??= runPreCommit());
-
-// 在真实工作区写入 files（相对仓库根 → 文本），跑一次 pre_commit，返回新增失败对。
-// 不覆盖已存在的文件（存在即拒绝，避免删掉真实文件）；finally 删除注入文件与为其新建的目录。
-const injectAndDiff = (files) => {
-  const basePairs = failPairs(baseline());
-  const writtenFiles = [];
-  const createdDirs = [];
-  try {
-    for (const [rel, text] of Object.entries(files)) {
-      const abs = join(ROOT, rel);
-      assert.ok(!existsSync(abs), `注入位置已存在，拒绝覆盖：${rel}`);
-      const missing = [];
-      for (let d = dirname(abs); !existsSync(d); d = dirname(d)) missing.push(d);
-      for (const d of missing.reverse()) {
-        mkdirSync(d);
-        createdDirs.push(d);
-      }
-      writeFileSync(abs, text, 'utf8');
-      writtenFiles.push(abs);
-    }
-    const after = failPairs(runPreCommit());
-    return [...after].filter((p) => !basePairs.has(p));
-  } finally {
-    for (const abs of writtenFiles.reverse()) rmSync(abs, { force: true });
-    for (const d of createdDirs.reverse()) {
-      try {
-        rmdirSync(d);
-      } catch {
-        // 目录非空（不应发生）则保留，不强删
-      }
-    }
-  }
+const failPairs = (report) => {
+  assert.ok(report && report.items && Array.isArray(report.items.failed), 'JSON 报告须含 items.failed 数组');
+  return new Set(report.items.failed.flatMap((f) => (f.codes ?? []).map((c) => `${f.itemKey}|${c}`)));
 };
 
-// ---------- D：静态断言 ----------
+// 在隔离副本里：先跑基线，再写入 files（相对副本根 → 文本），再跑一次，返回新增失败对。
+// 不覆盖已存在的文件（存在即拒绝）。副本随 withIsolatedRepo 销毁，不改调用方工作区。
+const injectAndDiff = (files) =>
+  withIsolatedRepo(async (copyRoot) => {
+    const basePairs = failPairs(runGate(copyRoot));
+    for (const [rel, text] of Object.entries(files)) {
+      const abs = join(copyRoot, rel);
+      assert.ok(!existsSync(abs), `注入位置已存在，拒绝覆盖：${rel}`);
+      mkdirSync(dirname(abs), { recursive: true });
+      writeFileSync(abs, text, 'utf8');
+    }
+    const after = failPairs(runGate(copyRoot));
+    return [...after].filter((p) => !basePairs.has(p));
+  });
+
+// ---------- D：静态断言（读仓库根） ----------
 
 test('D1 scanclasses.json 的 big_md 豁免恰为 3 条路径，逐字写死，每条带非空 reason', () => {
   const obj = JSON.parse(readFileSync(join(ROOT, 'tools/accept/scanclasses.json'), 'utf8'));
@@ -111,11 +71,11 @@ test('D3 baseline.json 中所有行 locked 为 true', () => {
   assert.deepEqual(unlocked, [], `以下基线行未 locked：${JSON.stringify(unlocked)}`);
 });
 
-// ---------- D：注入（真实工作区，try/finally 恢复） ----------
+// ---------- D：注入（隔离副本，withIsolatedRepo） ----------
 
-test('D2 注入：docs/ 下 600 KB 的 .md 命中 big_md，pre_commit 新增失败', { timeout: CASE_TIMEOUT_MS }, () => {
+test('D2 注入：docs/ 下 600 KB 的 .md 命中 big_md，pre_commit 新增失败', { timeout: CASE_TIMEOUT_MS }, async () => {
   const big = 'x'.repeat(600 * 1024) + '\n';
-  const added = injectAndDiff({
+  const added = await injectAndDiff({
     'docs/zz-probe-bigmd.md': big,
   });
   assert.ok(added.length > 0, `注入后应有新增失败条目，实得：${JSON.stringify(added)}`);
