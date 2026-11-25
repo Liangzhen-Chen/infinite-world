@@ -9,7 +9,8 @@
 // 为什么修前失败：A 的真实规矩用例、B 全部（dispatch.mjs 尚不存在）、C 的模型族违规拒绝、D 的注入拒绝、E 的文件存在两条修前都会红；
 //   合法对照、同族审卡轮间可同族、缺键放行、D 的豁免目录、E 的 .gitignore 与未入库 修前即绿（它们是对照，不是实现证据）。
 // buildInvocation 形状约定（卷文未定，出题方在此写明，写码方按此导出）：buildInvocation(opts, env) 返回 { command, args, env }；
-//   env 是来源环境，输出的 env 只由它推出，不与 process.env 合并；claude-* 的预算取 opts.budget，缺省 0.65；路径读 tools/dispatch/paths.json，本测试不传 paths。
+//   env 是来源环境，输出的 env 只由它推出，不与 process.env 合并；claude-* 的预算取 opts.budget，缺省 0.65；路径读 tools/dispatch/paths.json，本测试不传 paths；
+//   opts.prompt 必填，非空（空卡文应被拒，不起子进程）。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
@@ -48,7 +49,7 @@ test('A 卡尾（真实规矩）：分隔之后的卡文部分不含卡尾字样
 // ---------- B：buildInvocation ----------
 
 const dispatchMod = () => import('../../../tools/dispatch/dispatch.mjs');
-const OPT = { wd: ROOT, card: 'docs/卡档案/chore-step1-tooling/派卡.md', effort: 'high', purpose: 'write' };
+const OPT = { wd: ROOT, card: 'docs/卡档案/chore-step1-tooling/派卡.md', effort: 'high', purpose: 'code', prompt: 'PROMPT' };
 const CLAUDE_ENV = { ANTHROPIC_API_KEY: 'test-key' };
 const budgetArg = (r) => {
   const i = r.args.indexOf('--max-budget-usd');
@@ -60,6 +61,11 @@ test('B 模型白名单：白名单外的模型名（v4-pro、fable、空）一�
   for (const model of ['deepseek-v4-pro', 'claude-fable', 'claude-fable-5-2', 'gpt-4o', '']) {
     assert.throws(() => buildInvocation({ ...OPT, model, budget: 0.65 }, { DEEPSEEK_API_KEY: 'ds-test', ...CLAUDE_ENV }), /./, `模型「${model}」应拒`);
   }
+});
+
+test('B 空卡文：opts.prompt 为空串时 buildInvocation 抛错（不起子进程）', async () => {
+  const { buildInvocation } = await dispatchMod();
+  assert.throws(() => buildInvocation({ ...OPT, prompt: '', model: 'claude-haiku-5-5' }, CLAUDE_ENV), /./, '空卡文应拒');
 });
 
 test('B 模型白名单：四个白名单模型都能起（返回命令、参数数组、环境）', async () => {
