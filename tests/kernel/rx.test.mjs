@@ -7,6 +7,7 @@ import { installFixedConstants } from '../../server-plugin/kernel/det-math.mjs';
 // 求值走定点算术，常数照 world/rules/tables/kernel-constants.json 在测试里安装（卷二 S10；不经 loadWorld）。
 installFixedConstants({ BASE: 10, SCALE: 10000, PERMILLE: 1000, BPS: 10000 });
 
+/** @type {Map<string, any>} */
 const dims = new Map([
   ['mass', { type: 'number' }],
   ['open', { type: 'boolean' }],
@@ -15,6 +16,7 @@ const dims = new Map([
   ['tagset', { type: 'set', of: { type: 'ref', vocab: 'grade' } }],
   ['label', { type: 'string' }],
 ]);
+/** @type {Map<string, any>} */
 const vocabIndex = new Map([
   ['grd_a', { family: 'grade', prefix: 'grd_' }],
   ['agx_count', { family: 'aggregate', prefix: 'agx_' }],
@@ -102,7 +104,7 @@ test('卷文数据行写法（卷四 §4.7.5 eats）：and/or/not 单词、`集 
   assert.equal(code(() => c('ev.tags')), 'E-MOD-RX');
   // 只有四种读数类型：null 读数不收，求值失败（显式 null 由调用方按字段定义处的含义处理，见 grades-named.test.mjs）；缺读数的失败带缺的键。
   for (const t of ['ev.kind == grd_a', 'ev.kind != grd_a', 'ev.qty >= 0.5']) assert.equal(code(() => evaluateRX(c(t).tree, {}, { 'ev.kind': null, 'ev.qty': null })), 'E-MOD-RX', t);
-  assert.throws(() => evaluateRX(c('ev.kind == grd_a').tree, {}, {}), (e) => e.code === 'E-MOD-RX' && e.key === 'ev.kind');
+  assert.throws(() => evaluateRX(c('ev.kind == grd_a').tree, {}, {}), (e) => /** @type {any} */ (e).code === 'E-MOD-RX' && /** @type {any} */ (e).key === 'ev.kind');
 });
 
 test('命名空间 arg 段数由返回形状推出（五列封闭，无 argCount 列）：每个 <…> 占位一段，单值形状不带 arg', () => {
@@ -140,7 +142,7 @@ test('map 下标读：下标须编译期定成代号或数值，读值类型取 
   assert.deepEqual(tree.left, { op: 'dim', key: 'yields[grd_a]' });
   assert.equal(evaluateRX(tree, { dim: { 'yields[grd_a]': 0.25 } }, {}), 0.5);
   assert.equal(kc('yields[grd_a] > 0').tree.left.key, 'yields[grd_a]');
-  assert.throws(() => evaluateRX(tree, { dim: {} }, {}), (e) => e.code === 'E-MOD-RX' && e.key === 'yields[grd_a]');
+  assert.throws(() => evaluateRX(tree, { dim: {} }, {}), (e) => /** @type {any} */ (e).code === 'E-MOD-RX' && /** @type {any} */ (e).key === 'yields[grd_a]');
   for (const t of ['yields[mass] > 0', 'mass[grd_a] > 0', 'yields[grd_a] == grd_a', 'yields[grd_a > 0']) assert.equal(code(() => kc(t)), 'E-MOD-RX', t);
 });
 

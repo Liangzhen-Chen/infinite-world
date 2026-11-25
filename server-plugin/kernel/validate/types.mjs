@@ -55,6 +55,7 @@ const SEALED_MENTION = /(^|<)sealed(>|$)/;
 /** 类型文法里是否出现 sealed（list<sealed>、struct 名含 sealed 段等）。@param {unknown} t @returns {boolean} */
 export const mentionsSealed = (t) => typeof t === 'string' && SEALED_MENTION.test(t);
 
+/** @param {unknown} v @returns {v is Record<string, any>} */
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const ptr = (base, k) => `${base}/${String(k).replace(/~/g, '~0').replace(/\//g, '~1')}`;
 const vocabOf = (def) => def.vocab !== undefined ? def.vocab : (isObj(def.domain) ? def.domain.vocab : undefined);
@@ -81,7 +82,7 @@ const unbuiltUnit = (env, unit) => env.unbuiltUnits instanceof Set && env.unbuil
 
 // env：{units, vocab, kinds: Set, displaySet: Set, unbuiltFamilies?: Map, unbuiltKinds?: Map, unbuiltUnits?: Set}；at：报错定位（table、row、dim、path）。
 /**
- * @param {Record<string, unknown>} def 类型定义 @param {Record<string, unknown>} env @param {Record<string, unknown>} at
+ * @param {Record<string, any>} def 类型定义 @param {Record<string, any>} env @param {Record<string, any>} at
  * @param {(...args: unknown[]) => void} err @param {boolean} [top] 是否维度顶层定义
  */
 export function checkDef(def, env, at, err, top) {
@@ -174,7 +175,7 @@ export function splitKey(key) {
 
 // 必填字段：嵌套 struct 的 required 是数组；维度顶层的 struct 的 required 是策略字符串，要逐栏必填的（卷三甲 :128 分态布尔"三栏每行都必写"）另写 requiredFields 数组，缺栏报 E-DIM-REQUIRED-MISSING。
 const fieldRequired = (def) => (Array.isArray(def.required) ? def.required : Array.isArray(def.requiredFields) ? def.requiredFields : []);
-/** @param {Record<string, unknown>} def ref 类型定义 */
+/** @param {Record<string, any>} def ref 类型定义 */
 export const refParts = (def) => (Array.isArray(def.refs) ? def.refs : [def]);
 
 // 协议标记句柄（卷二 §7 S13 (a) 上下文白名单）的 markersOf/T 在 handles/markers.mjs，此处不再定义。
@@ -182,8 +183,8 @@ export const refParts = (def) => (Array.isArray(def.refs) ? def.refs : [def]);
 // ---------- 取值 ----------
 // env 另带：idIndex: Map<id, kind>，tableDims: Map<kind, dimensions>，rxScope，compiled: Map（rx 编译结果的落点）。
 /**
- * @param {Record<string, unknown>} def 类型定义 @param {unknown} v 值 @param {Record<string, unknown>} env
- * @param {Record<string, unknown>} at 报错定位 @param {(...args: unknown[]) => void} err
+ * @param {Record<string, any>} def 类型定义 @param {unknown} v 值 @param {Record<string, any>} env
+ * @param {Record<string, any>} at 报错定位 @param {(...args: unknown[]) => void} err
  */
 export function checkValue(def, v, env, at, err) {
   const bad = (code, got, want, level) => err({ code, level: level || 'L1', ...at, got, want });

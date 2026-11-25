@@ -128,6 +128,6 @@ test('atan：定义域内查表，域外按恒等式折回（卷二十七 :573�
 
 test('写入超出 safeIntMax 报 E-DET-OVERFLOW，不截断（卷二十七 R27-5.1 :568）', () => {
   assert.equal(checkedFixed(9007199254740991n), 9007199254740991n);
-  assert.throws(() => checkedFixed(9007199254740992n), (e) => e.code === 'E-DET-OVERFLOW');
-  assert.throws(() => checkedFixed(-9007199254740992n), (e) => e.code === 'E-DET-OVERFLOW');
+  assert.throws(() => checkedFixed(9007199254740992n), (e) => /** @type {any} */ (e).code === 'E-DET-OVERFLOW');
+  assert.throws(() => checkedFixed(-9007199254740992n), (e) => /** @type {any} */ (e).code === 'E-DET-OVERFLOW');
 });

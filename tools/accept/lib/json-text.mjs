@@ -5,6 +5,7 @@
 import { escapeJsonPointer, jsonScalarAt } from './vocab-load.mjs';
 import { GRAMMAR_TOKENS as G } from '../../../server-plugin/kernel/handles/markers.mjs';
 
+/** @type {Set<string>} */
 const WS = new Set([G.jsonSpace, G.jsonTab, G.jsonLf, G.jsonCr]);
 const escPtr = escapeJsonPointer;
 

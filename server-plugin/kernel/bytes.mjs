@@ -17,7 +17,7 @@ let C = null;
 
 /**
  * 加载入口收下 rules.kernelConstants 里的字节常数（kernel 组内用，不在 kernelApi）。缺键或类型不对即 E-DIM-STRUCT-FIELD。
- * @param {Record<string, unknown>} c
+ * @param {Record<string, any>} c
  * @returns {void}
  */
 export function installByteConstants(c) {

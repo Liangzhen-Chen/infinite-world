@@ -7,13 +7,18 @@
     "test": "node --test \"tests/accept/*.test.mjs\"",
     "accept": "node tools/accept/run.mjs pre_commit",
     "test:kernel": "node --test \"tests/kernel/*.test.mjs\"",
-    "snapshot": "node tools/gen-status-snapshot.mjs"
+    "snapshot": "node tools/gen-status-snapshot.mjs",
+    "typecheck": "tsc -p jsconfig.json",
+    "test:e2e": "node --test \"tests/e2e/*.test.mjs\"",
+    "test:all": "node --test \"tests/accept/*.test.mjs\" \"tests/kernel/*.test.mjs\" \"tests/acceptance/**/*.test.mjs\""
   },
   "devDependencies": {
+    "@types/node": "24.19.4",
     "acorn": "8.19.0",
     "express": "4.22.1",
     "fast-check": "4.3.0",
-    "playwright-core": "1.64.0"
+    "playwright-core": "1.64.0",
+    "typescript": "7.0.2"
   },
   "dependencies": {
     "ajv": "8.20.0",

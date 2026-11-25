@@ -20,6 +20,9 @@ const AGG_PRIM = Object.freeze({ exists: 'exists', count: 'count', known: 'known
 // 数值编成 num、已登记代号编成 handle；别的形状与缺键即编译失败（E-MOD-RX）。
 export const NAME_ROOT = Object.freeze({ rules: 'rules' });
 
+/**
+ * @property {string | undefined} [key]
+ */
 export class RxError extends Error {
   constructor(message, code) { super(message); this.code = code || 'E-MOD-RX'; }
 }
@@ -279,18 +282,18 @@ function typeOf(n, scope) {
 // 命名空间行的 arg 段数不另设列（§2.9 第 4 条第 1 点五列封闭）：由"返回形状"列推出——形状里每个 `<…>` 占位是一段 arg
 // （单值的形状如 fraction 不含占位，不带 arg；`<字段>.<句柄>` 两段）。
 // 无返回形状（推不出）即登记行违反第 1 点，按 §2.9 第 4 条第 3 点报 E-RX-NS-UNKNOWN，不取默认值。
-/** @param {{ns: string, shape: string}} row 命名空间登记行 @returns {number} */
+/** @param {{ns?: string, shape?: string}} row 命名空间登记行 @returns {number} */
 export const nsArgCount = (row) => {
   if (!row || typeof row.shape !== 'string') return fail(`namespace row ${row && row.ns} has no return shape`, 'E-RX-NS-UNKNOWN');
   return shapeArgCount(row.shape);
 };
 // 返回形状里写明"（set，只作 member 的 set）"的字段名：`<字段>（set，只作 member 的 set）`，由登记行判，不按命名空间名特判。
-/** @param {{ns: string, shape: string}} row 命名空间登记行 @returns {Set<string>} */
+/** @param {{ns?: string, shape: string}} row 命名空间登记行 @returns {Set<string>} */
 export const nsSetFields = (row) => new Set(setFieldNames(row.shape));
 const sameKind =(a, b) => a === b || (a === T.rx_kind.codeOrHandle && (b === T.rx_kind.code || b === T.rx_kind.handle)) || (b === T.rx_kind.codeOrHandle && (a === T.rx_kind.code || a === T.rx_kind.handle));
 
 // 维度类型 → RX 读数类型（第 1 点 dim 一项）；set 只许作 member 的 set。
-/** @param {Record<string, unknown>} def 维度类型定义 @param {string} key 维度键 @param {boolean} [allowSet] */
+/** @param {Record<string, any>} def 维度类型定义 @param {string} key 维度键 @param {boolean} [allowSet] */
 export function dimRxType(def, key, allowSet = false) {
   if (!def) return fail(`unknown dimension ${key}`);
   if (def.ambiguous) return fail(`dimension ${key} has different types in different tables`);
@@ -331,7 +334,7 @@ export function compileRX(text, profile) {
 // 返回 {tree, nsRefs}；失败抛 RxError（E-MOD-RX；引用未登记命名空间时 code 为 E-RX-NS-UNKNOWN）。
 /**
  * @param {unknown} text 表达式树 @param {string} profile 编译档
- * @param {{dims: Map<string, Record<string, unknown>>, vocabIndex: Map<string, {family: string, prefix: string}>, ns: {ns: string, type: string, shape: string}[], maxDepth: number}} scope
+ * @param {{dims: Map<string, Record<string, unknown>>, vocabIndex: Map<string, {family: string, prefix: string}>, ns: {ns: string, type: string, shape: string}[], maxDepth: number, unbuiltNames?: Set<string>}} scope
  */
 export function compileRXInScope(text, profile, scope) {
   if (!PROFILE_OPS[profile]) fail(`profile ${profile} not available (P-2 builds the data profile only)`);
@@ -363,7 +366,12 @@ export const nsKey = (n) => (n.arg ? [n.ns, ...n.arg].join(GRAMMAR_TOKENS.pathSe
 
 const own = (o, k) => o !== null && typeof o === 'object' && Object.hasOwn(o, k);
 // 缺读数的求值失败带上缺的读数键（RxError.key），让调用方分清"该键是已知的没有"与"该键未知"。
-const missing = (message, key) => { const e = new RxError(message); e.key = key; throw e; };
+const missing = (message, key) => {
+  /** @type {RxError & {key?: string}} */
+  const e = new RxError(message);
+  e.key = key;
+  throw e;
+};
 
 function readValue(v) {
   if (typeof v === 'number') return { t: 'number', v: fixedUnits(v) };
@@ -375,8 +383,8 @@ function readValue(v) {
 
 /**
  * @param {unknown} tree 编译后的表达式树
- * @param {Record<string, number | boolean | string>} bindings 变量绑定
- * @param {Record<string, number | boolean | string>} nsReads 命名空间读数（键为 nsKey）
+ * @param {{dim?: Record<string, any>, clock?: Record<string, any>}} bindings 变量绑定
+ * @param {Record<string, any>} nsReads 命名空间读数（键为 nsKey）
  */
 export function evaluateRX(tree, bindings, nsReads) {
   const run = (n) => {

@@ -1,0 +1,40 @@
+# 远端 CI（docs/gemini/kickoff-1125.md:476 L-05）：干净 Linux 容器跑类型检查、门禁、快照与全量单测。
+# e2e-observe 是 L-18 零 mock 端到端烟测的红灯观测 job：新骨架闭环未通前允许红，不阻塞主 job（S1-3 做通后转绿并在主 job 必过）。
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # 门禁与状态快照要读 git 历史（提交列表、合并提交判断）。
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: node tools/accept/run.mjs pre_commit
+      - run: node tools/gen-status-snapshot.mjs --check
+      - run: npm run test:all
+
+  e2e-observe:
+    runs-on: ubuntu-latest
+    # L-18：显式待转绿红灯桩（S1-3 做通前允许红，不阻塞 main job）。
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run test:e2e

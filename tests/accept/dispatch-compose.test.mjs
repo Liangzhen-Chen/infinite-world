@@ -13,7 +13,7 @@ const DELIM = '===== 以下为本卡卡文 =====';
 const CARD = '## 目标\n把派卡程序挪进仓库。\n';
 
 test('卡文第一段与规矩文件逐字相同', () => {
-  const out = composeCard(DOC, CARD, 'ds/dispatch');
+  const out = composeCard(DOC, CARD);
   assert.ok(out.startsWith(DOC));
   assert.equal(out.split(`\n\n${DELIM}\n\n`)[0], HEAD);
   assert.ok(out.includes(CARD.trimEnd()));
@@ -22,24 +22,24 @@ test('卡文第一段与规矩文件逐字相同', () => {
 test('卡文自带不同卡头：拒派', () => {
   const altered = DOC.replace('照卷文写，不自补', '照感觉写，可以自补');
   assert.notEqual(altered, DOC);
-  assert.throws(() => composeCard(DOC, altered, 'ds/dispatch'), /卡头与 docs\/派活卡头规矩\.md 不一致，拒派/);
+  assert.throws(() => composeCard(DOC, altered), /卡头与 docs\/派活卡头规矩\.md 不一致，拒派/);
 });
 
 test('卡文自带相同卡头：放行，且不重复拼两份', () => {
   const selfContained = `${HEAD}\n\n## 目标\n本卡自带卡头。\n`;
-  const out = composeCard(DOC, selfContained, 'ds/dispatch');
+  const out = composeCard(DOC, selfContained);
   assert.ok(out.startsWith(HEAD));
   assert.equal(out.split('# 派活卡头硬规矩').length - 1, 1);
   assert.ok(out.includes('## 目标\n本卡自带卡头。'));
 });
 
 test('规矩为空：拒派', () => {
-  assert.throws(() => composeCard('', CARD, 'ds/dispatch'), /规矩为空，拒派/);
-  assert.throws(() => composeCard('\n\n', CARD, 'ds/dispatch'), /规矩为空，拒派/);
+  assert.throws(() => composeCard('', CARD), /规矩为空，拒派/);
+  assert.throws(() => composeCard('\n\n', CARD), /规矩为空，拒派/);
 });
 
 test('不再附卡尾：卡文段不含 docs/卡回报/ 与 E-ACC-CARD-SELFCHECK', () => {
-  const out = composeCard(DOC, CARD, 'ds/dispatch');
+  const out = composeCard(DOC, CARD);
   const cardBody = out.slice(out.indexOf(DELIM) + DELIM.length);
   assert.ok(!out.includes('===== 卡尾'));
   assert.ok(!out.includes('E-ACC-CARD-SELFCHECK'));
