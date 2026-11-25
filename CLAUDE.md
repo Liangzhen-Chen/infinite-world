@@ -15,7 +15,7 @@
 
 ## 3. 模型、额度与三方硬分离（亮圳原话：『主会话仅调度 不允许派任何会员额度 让他用claude api和deepseek api』，出处 亮圳与李白聊天 t855u，2026-11-24，李白转）
 - **主会话只调度**：主会话（模型自选，走 Claude Ultra 会员额）只负责拆竖切片卡、调用派卡脚本、解冲突与 PR 最终审阅合入；**严禁把会员额度花在写码、出题、审卡、测试分析等任何子任务上**。
-- **子任务全走 API 唯一入口**：所有写码、出题、审卡、测试分析必须经 `tools/dispatch/dispatch.mjs` 调用 **DeepSeek API（只许 `deepseek-flash`，严禁 `v4-pro`）** 或 **Claude API（`claude -p` / SDK，读环境变量 `ANTHROPIC_API_KEY`）**。单次 API 调用强制 `--max-budget-usd 0.65`（锁在单项 5 元红线内），并输出调用收据随 PR 校验。
+- **子任务全走 API 唯一入口**：所有写码、出题、审卡、测试分析必须经 `tools/dispatch/dispatch.mjs` 调用 **DeepSeek API（只许 `deepseek-flash`，严禁 `v4-pro`）** 或 **Claude API（`claude -p` / SDK，读环境变量 `ANTHROPIC_API_KEY`，缺时读 `CLAUDE_API_KEY`）**。Claude API 单次调用强制 `--max-budget-usd 0.65`；DeepSeek 不加（Claude Code 对其估价失真），花费按控制台记账；并输出调用收据随 PR 校验。
 - **默认三方组合**：写码 `deepseek-flash`，出题 `claude-haiku` API，审卡普通卡 `claude-sonnet` API / 跨卷内核难卡 `claude-opus` API；三方归一化**模型族**必须完全不同，由 `card-archive.mjs` 与 CI 硬核（不再只核标识串）。
 - **物理隔离验收目录**：出题只在独立分支 `test/<card>` 写 `tests/acceptance/<card>/`，写码分支 `feat/<card>` 物理不含验收目录；写码提交触碰验收目录 CI 直接拒合。
 - **无免复核逃生门**：凡审卡判「必须改」，修改轮必须经干净无历史上下文的第三方 API 复核 + CI 全绿，取消「两轮后主会话亲读免复核」。

@@ -20,6 +20,7 @@
   - [~] L-15/L-16 新骨架空仓：Gemini 裁定 msg_82485b7f7ab7——kernel 只留 6 零件的 14 文件 import 闭包、≤15 不放宽；gate/output-gate/textcore 一并归档，S1-3 随真实入口迁回（依赖文件收各自目录，不回 kernel）；tools/accept 自用旧 kernel 读表辅助收进 tools/accept/lib/。卡 chore/new-skeleton 写码第一轮完成并暂存（工作树 new-skel，352 文件，内核 14 文件，测试全绿），但门禁数据（state-owners、items 必过条目、criteria 指纹）仍指旧文件，pre_commit 报错提交不了——L-17 拆到下一轮是拆卡错误。本轮 DeepSeek 疑超单项 5 元（约 6～7 元），已停报李白，第二轮做法（推荐同卡做完 L-17 再提交）待李白回复。出题 Haiku 题已暂存。11-25 12:0x 李白令清工作树：两棵树的暂存成果已存为补丁（本机临时目录 staged-1125 下 new-skeleton-r1.patch、ts-new-skeleton.patch，已验证在 ea7812793 上可干净 git apply --index），工作树已删、分支保留；拍板后新建树从 ea7812793 起 apply 恢复再做第二轮。
   - [ ] L-17 baseline/scanclasses/entry-registry 重置（chore/new-skeleton 下一轮）；L-18 E2E 红灯桩（另卡）。
   - 已定（主会话 11-25）：archive_ref 扫描范围排除 tests/acceptance/。理由：验收题职责就是断言旧路径已归位，必须写出归档目录字样；逐文件豁免要写码方知道验收题文件名，破坏三方分离且每卡重复。archive_ref 出自 Gemini 重写指南 Step 1，非亮圳硬规则，属技术口径修正；已报李白可否决。由 chore/new-skeleton 写码第二轮落数据。
+  - 11-25 每日全库审核（Gemini，origin/antigravity a11ed4d45 docs/gemini/daily/2026-11-25-audit.md）A 类整改排期：① L-11/L-12 合入；② L-04/L-05 tsc+CI（新骨架合入后）；③ dispatch.mjs 补 needs 闭包核/派前模型族核/收据、clearDeepseek 补 OAuth 令牌、dispatch-consistency 测试、archive_ref 扩项、派活卡头规矩关「合并提交免查」、使用说明.md 更正、notify 三种 JSON、state.json 接 card-archive——合成一张「门禁补齐」卡；④ 新骨架 L-15～L-17 收尾后接 L-18 E2E 桩与 L-09 检测器加固；⑤ L-02/L-03 环境收尾。B 类（L-19 分支保护 403 需升 Pro/公开/替代、Q-14/Q-15、B7、交付日是否顺延）转李白→亮圳。
   - [ ] L-07 派活卡头规矩 ≤50 行、删 9 项自查表：等亮圳拍板 Q-14（自我反思是否保留）。
   - [ ] P4 治理：L-19 master 分支保护（等拍板 P1）；L-20 李白 Routine A/B 上线演练（李白侧）。
   - [x] ~~全部自验后交 antigravity 复核~~ 作废（亮圳 11-25 09:47）：Gemini 只做李白每日例程发起的全库审核，不另交。
