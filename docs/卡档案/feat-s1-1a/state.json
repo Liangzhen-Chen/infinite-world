@@ -1,0 +1,16 @@
+{
+  "card": "feat-s1-1a",
+  "phase": "dispatched",
+  "updatedAt": "2026-11-25T21:45:00Z",
+  "branches": { "code": "feat/s1-1a", "test": "test/s1-1a" },
+  "pr": null,
+  "parties": {
+    "code": { "family": "deepseek", "model": "deepseek-flash", "receipt": null, "costUsd": null },
+    "test": { "family": "claude-haiku", "model": "claude-haiku-5-5", "receipt": null, "costUsd": null },
+    "review": { "family": "claude-opus", "model": "claude-opus-5-5", "receipt": null, "costUsd": null }
+  },
+  "ci": { "status": "pending", "runUrl": null },
+  "failCount": 0,
+  "blocker": null,
+  "nextAction": "等 DeepSeek 写码与 Haiku 出题回报；主会话读 diff 后合出题分支、跑验收，再派 Opus API 审卡"
+}

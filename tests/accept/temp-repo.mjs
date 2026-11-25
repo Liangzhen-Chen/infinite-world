@@ -27,20 +27,14 @@ export function tempRepo() {
   // 只许"临时根 + 常量相对路径"写（S12-2，李白 11-17 裁定三），所以逐条按字面路径复制，不用变量拼路径。
   mkdirSync(join(dir, 'server-plugin/kernel/handles'), { recursive: true });
   mkdirSync(join(dir, 'server-plugin/kernel/validate'), { recursive: true });
-  // 协议标记叶子与 S13 正则叶子（卷二 §2.8 封卷后勘误 1118k20、1118k17）：validate/types.mjs、rx.mjs、det-math 的闭包都从这里取定义源。
-  cpSync(join(ROOT, 'server-plugin/kernel/handles/markers.mjs'), join(dir, 'server-plugin/kernel/handles/markers.mjs'));
-  cpSync(join(ROOT, 'server-plugin/kernel/handles/patterns.mjs'), join(dir, 'server-plugin/kernel/handles/patterns.mjs'));
-  cpSync(join(ROOT, 'server-plugin/kernel/handles/vocab-handle.mjs'), join(dir, 'server-plugin/kernel/handles/vocab-handle.mjs'));
+  // 协议标记句柄叶子与 S13 正则叶子（S1-1 卡 A 合并为 handles.mjs）：validate/types.mjs、rx.mjs 的闭包都从这里取定义源。
+  cpSync(join(ROOT, 'server-plugin/kernel/handles.mjs'), join(dir, 'server-plugin/kernel/handles.mjs'));
   cpSync(join(ROOT, 'server-plugin/kernel/validate/types.mjs'), join(dir, 'server-plugin/kernel/validate/types.mjs'));
   cpSync(join(ROOT, 'server-plugin/kernel/det-math.mjs'), join(dir, 'server-plugin/kernel/det-math.mjs'));
   cpSync(join(ROOT, 'server-plugin/kernel/rx.mjs'), join(dir, 'server-plugin/kernel/rx.mjs'));
-  cpSync(join(ROOT, 'server-plugin/kernel/error-codes.mjs'), join(dir, 'server-plugin/kernel/error-codes.mjs'));
   cpSync(join(ROOT, 'server-plugin/kernel/errors.mjs'), join(dir, 'server-plugin/kernel/errors.mjs'));
-  cpSync(join(ROOT, 'server-plugin/kernel/report.mjs'), join(dir, 'server-plugin/kernel/report.mjs'));
-  cpSync(join(ROOT, 'server-plugin/kernel/named-struct-match.mjs'), join(dir, 'server-plugin/kernel/named-struct-match.mjs'));
-  cpSync(join(ROOT, 'server-plugin/kernel/bytes.mjs'), join(dir, 'server-plugin/kernel/bytes.mjs'));
-  cpSync(join(ROOT, 'server-plugin/kernel/clone.mjs'), join(dir, 'server-plugin/kernel/clone.mjs'));
   cpSync(join(ROOT, 'server-plugin/kernel/named-structs.mjs'), join(dir, 'server-plugin/kernel/named-structs.mjs'));
+  cpSync(join(ROOT, 'server-plugin/kernel/bytes.mjs'), join(dir, 'server-plugin/kernel/bytes.mjs'));
   // 放进来的 kernel 文件要在两处登记里站得住：成员闭集清单（E-FILE-UNASSIGNED，S19）与 S10 的常数登记豁免表。
   cpSync(join(ROOT, 'server-plugin/kernel/files.json'), join(dir, 'server-plugin/kernel/files.json'));
   // 卷六 S6-2 的规则表一支（data_shape entityKey）读统一加载器唯一登记 world/rules/registry.json 的全部登记行（经 tools/accept/lib/rules.mjs 的 readRules）：

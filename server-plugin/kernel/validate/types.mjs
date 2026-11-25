@@ -3,15 +3,17 @@
 
 import { precisionOk, extPrecisionOk } from '../det-math.mjs';
 import { compileRXInScope } from '../rx.mjs';
-import { matchStruct } from '../named-struct-match.mjs';
-import { T, TYPES, DOMAIN_OPTIONAL, ROW_FIELDS, CODE_ENUMS, markersOf } from '../handles/markers.mjs';
+import { matchStruct } from '../named-structs.mjs';
+import { T, TYPES, DOMAIN_OPTIONAL, ROW_FIELDS, CODE_ENUMS, markersOf, CODE_RE, isErrorCode } from '../handles.mjs';
 
-// 定义源与 T 派生在 kernel/handles/markers.mjs（协议标记叶子，0 import，见该文件头）；这里只引用并转出给既有 import 方，不留第二份。
-export { T, TYPES, DOMAIN_OPTIONAL, ROW_FIELDS, CODE_ENUMS, markersOf };
+// 定义源与 T 派生在 kernel/handles.mjs（0 import 叶子，见该文件头）；这里只引用并转出给既有 import 方，不留第二份。
+// CODE_RE / isErrorCode 的定义源同在 handles.mjs，这里转出（tools/accept 与 errors.mjs 照旧从这里或那里取）。
+// 转出用带 source 的 export-from：不是本文件另定义的导出，pp_dup_export 只认同名定义（卷二 §1.5 :252 跨卷共用定义只一处）。
+export { T, TYPES, DOMAIN_OPTIONAL, ROW_FIELDS, CODE_ENUMS, markersOf, CODE_RE, isErrorCode } from '../handles.mjs';
 
-// 代号文法的唯一出处（卷二 §1.9 :291）：代号 CODE、维度键与 struct 字段名 KEY；总长上限（首字符加 47 位，共 48）只写在这几条正则里，
-// 别处一律引这里的导出，不再另写正则、不再另登长度常数。LOWER_CAMEL 是推进钩子名与视图读取名的小驼峰代号（允许下划线，同一上限）。
-export const CODE_RE = /^[a-z][a-z0-9_]{1,47}$/;
+// 代号文法的唯一出处（卷二 §1.9 :291）：代号 CODE 在 kernel/handles.mjs（本文件转出）；维度键与 struct 字段名 KEY 在本文件；
+// 总长上限（首字符加 47 位，共 48）只写在这几条正则里，别处一律引这里的导出，不再另写正则、不再另登长度常数。
+// LOWER_CAMEL 是推进钩子名与视图读取名的小驼峰代号（允许下划线，同一上限）。
 export const KEY_RE = /^[a-z][a-zA-Z0-9]{0,47}$/;
 export const LOWER_CAMEL_RE = /^[a-z][a-zA-Z0-9_]{0,47}$/;
 // 去掉首尾锚的正则体，供 handles/keys.mjs 把代号文法嵌进 DimKey、节点名等复合文法（嵌入处不自写字符集与长度）。
@@ -29,10 +31,7 @@ const COMBINE = Object.freeze({ sum: 'sum' });
 // ---------- 错误码文法（卷二 §4.2）与 state-owners 的 pathTypes 值文法（§2.7） ----------
 // 原 kernel/handles/patterns.mjs 搬入（S13 (b) 允许 validate/* 用正则；patterns.mjs 只留从 rx.mjs 搬来的正则）。
 
-// 错误码文法：E-<区>-<名> / W-…（vocab-handle 构造 ErrorCode 前按它核对）。
-const ERROR_CODE = /^[EW]-[A-Z0-9]+(-[A-Z0-9]+)+$/;
-/** @param {unknown} s @returns {boolean} */
-export const isErrorCode = (s) => typeof s === 'string' && ERROR_CODE.test(s);
+// 错误码文法：E-<区>-<名> / W-…（构造 ErrorCode 前按它核对）——定义源在 kernel/handles.mjs，本文件只转出。
 
 const LIST_TYPE = /^list<(?<item>.+)>$/;
 const NUMBER_TYPE = /^(?<base>number|integer)(?::(?<unit>.*))?$/;
@@ -181,7 +180,7 @@ export const refParts = (def) => (Array.isArray(def.refs) ? def.refs : [def]);
 // 协议标记句柄（卷二 §7 S13 (a) 上下文白名单）的 markersOf/T 在 handles/markers.mjs，此处不再定义。
 
 // ---------- 取值 ----------
-// env 另带：idIndex: Map<id, kind>，tableDims: Map<kind, dimensions>，rxScope，compiled: Map（rx 编译结果的落点）。
+// env 另带：kindOf(id)（id → kind；加载器传入，运行期新建实体由它兜底），tableDims: Map<kind, dimensions>，rxScope，compiled: Map（rx 编译结果的落点）。
 /**
  * @param {Record<string, any>} def 类型定义 @param {unknown} v 值 @param {Record<string, any>} env
  * @param {Record<string, any>} at 报错定位 @param {(...args: unknown[]) => void} err
@@ -217,8 +216,8 @@ export function checkValue(def, v, env, at, err) {
       const parts = refParts(def);
       const ok = parts.some((p) => {
         if (p.vocab !== undefined) { const r = env.vocab.index.get(v); return Boolean(r) && (p.vocab === VOCAB_ANY.any || r.family === p.vocab); }
-        if (p.kind !== undefined) return env.idIndex.get(v) === p.kind;
-        if (p.kinds !== undefined) return p.kinds.includes(env.idIndex.get(v));
+        if (p.kind !== undefined) return env.kindOf(v) === p.kind;
+        if (p.kinds !== undefined) return p.kinds.includes(env.kindOf(v));
         if (p.dim !== undefined) { const d = (env.tableDims.get(p.dim) || {})[v]; return Boolean(d) && (d.type === T.type.number || d.type === T.type.integer); }
         return false;
       });

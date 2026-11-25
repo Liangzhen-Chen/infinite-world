@@ -1,45 +1,97 @@
-// 命名 struct 登记装入与 struct:pos 形状校验（卷二 §1.5 :252）：pos 的字段表从 world/ontology/named-structs.json
-// 的 struct:pos 行派生，本文件不手抄字段名与类型（docs/问题.md G1 记账：跨卷共用定义只一处，跨卷勘误只改登记）。
-// 字段表读法与值校验在叶子文件 named-struct-match.mjs（加载期类型校验共用）；本文件管运行期装入的登记与 isPosValue。
-import { KernelError } from './errors.mjs';
-import { namedStructFieldsOf, namedStructMapOf, matchStruct } from './named-struct-match.mjs';
+// 命名 struct 登记（卷二 §1.5 :252）：登记表读法、值校验、装入结果与 struct:pos 形状核对（S1-1 卡 A 合并：原 named-struct-match.mjs 并入本文件）。
+// 字段名与类型只在 world/ontology/named-structs.json，本文件不手抄；加载期类型校验与运行期写入口共用这一份。
+// 装入不再持有模块级状态：installNamedStructs(doc) 返回冻结的登记对象，由调用方（加载入口 / index.mjs）持有并作为参数传给读取函数。
+// 读法与值校验（namedStructFieldsOf、namedStructMapOf、matchStruct）是纯函数；本文件不判任何具体字段名或场景。
 
-export { namedStructFieldsOf, namedStructMapOf, matchStruct };
+import { KernelError } from './errors.mjs';
+
+const S = Object.freeze({ structKey: 'struct', rowsKey: 'rows', nameKey: 'name', typeKey: 'type', integerPrefix: 'integer', booleanType: 'boolean' });
 
 const POS_NAME = 'struct:pos';
 
-/** 已装入的 struct:pos 字段表（字段名 → 类型串，冻结）；未装入为 null。@type {Readonly<Record<string, string>> | null} */
-let posFields = null;
-/** 已装入的全部命名 struct（名 → 字段表）；运行期写入口核值用（表头 `named` 引用）。@type {Map<string, Readonly<Record<string, string>>>} */
-let installed = new Map();
-
 /**
- * 装入命名 struct 登记（加载器在全部校验通过后调一次）：struct:pos 一行单独留作 posStructFields，全部带字段表的行进 installedNamedStructs。
- * struct:pos 行不存在时置空，运行时由 posStructFields 拒收（不给缺省）。
- * @param {{rows?: any[]} | undefined} doc world/ontology/named-structs.json 的解析结果
+ * 命名 struct 登记表里一行的字段表（登记文档解析结果、struct 名）；没有该行或没有 struct 为 null。
+ * @param {{rows?: any[]} | undefined} doc @param {string} name 如 struct:pos @returns {Readonly<Record<string, string>> | null}
  */
-export function installNamedStructs(doc) {
-  posFields = namedStructFieldsOf(doc, POS_NAME);
-  installed = namedStructMapOf(doc);
+export function namedStructFieldsOf(doc, name) {
+  const rows = doc && Array.isArray(doc[S.rowsKey]) ? doc[S.rowsKey] : [];
+  const row = rows.find((r) => r && r[S.nameKey] === name);
+  const type = row && row[S.typeKey] && typeof row[S.typeKey] === 'object' ? row[S.typeKey] : null;
+  const struct = type && type[S.structKey] && typeof type[S.structKey] === 'object' ? type[S.structKey] : null;
+  return struct ? Object.freeze({ ...struct }) : null;
 }
 
-/** @returns {Map<string, Readonly<Record<string, string>>>} 已装入登记的拷贝 */
-export const installedNamedStructs = () => new Map(installed);
+/**
+ * 登记文档里全部带 struct 字段表的命名 struct（名 → 字段表）。加载期校验与运行期装入共用。
+ * @param {{rows?: any[]} | undefined} doc @returns {Map<string, Readonly<Record<string, string>>>}
+ */
+export function namedStructMapOf(doc) {
+  const rows = doc && Array.isArray(doc[S.rowsKey]) ? doc[S.rowsKey] : [];
+  const out = new Map();
+  for (const r of rows) {
+    if (!r || typeof r[S.nameKey] !== 'string') continue;
+    const f = namedStructFieldsOf(doc, r[S.nameKey]);
+    if (f !== null) out.set(r[S.nameKey], f);
+  }
+  return out;
+}
+
+/**
+ * 值是否合一个命名 struct 的字段表：对象、键集与字段表完全一致（不多不少），每个字段按登记的类型串判；类型串不认则不合。
+ * 不按字段名或场景开分支：字段名与类型都只从登记读。
+ * @param {Readonly<Record<string, string>>} fields @param {unknown} v @returns {boolean}
+ */
+export function matchStruct(fields, v) {
+  if (v === null || typeof v !== 'object' || Array.isArray(v)) return false;
+  const want = Object.keys(fields);
+  const got = Object.keys(v);
+  if (got.length !== want.length) return false;
+  for (const key of got) if (!Object.hasOwn(fields, key)) return false;
+  for (const [key, spec] of Object.entries(fields)) {
+    if (typeof spec !== 'string') return false;
+    if (spec.startsWith(S.integerPrefix)) {
+      if (!Number.isSafeInteger(v[key])) return false;
+    } else if (spec === S.booleanType) {
+      if (typeof v[key] !== 'boolean') return false;
+    } else {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * 装入命名 struct 登记（加载器在全部校验通过后调一次）：返回冻结的登记对象，调用方持有并传给 posStructFields / installedNamedStructs / isPosValue。
+ * struct:pos 一行单独留作 posFields；全部带字段表的行进 installed。struct:pos 行不存在时 posFields 为 null，运行时由 posStructFields 拒收（不给缺省）。
+ * @param {{rows?: any[]} | undefined} doc world/ontology/named-structs.json 的解析结果
+ * @returns {Readonly<{posFields: Readonly<Record<string, string>> | null, installed: Map<string, Readonly<Record<string, string>>>}>}
+ */
+export function installNamedStructs(doc) {
+  return Object.freeze({
+    posFields: namedStructFieldsOf(doc, POS_NAME),
+    installed: namedStructMapOf(doc),
+  });
+}
+
+/** 已装入登记的全部命名 struct 的拷贝（调用方传入 installNamedStructs 的结果）。@param {{installed: Map<string, Readonly<Record<string, string>>>}} reg @returns {Map<string, Readonly<Record<string, string>>>} */
+export const installedNamedStructs = (reg) => new Map(reg.installed);
 
 /**
  * 已装入的 struct:pos 字段表（冻结）；未装入即抛 E-DIM-STRUCT-FIELD，不给缺省。
+ * @param {{posFields: Readonly<Record<string, string>> | null}} reg installNamedStructs 的结果
  * @returns {Readonly<Record<string, string>>}
  */
-export function posStructFields() {
-  if (!posFields) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'named struct struct:pos not installed');
-  return posFields;
+export function posStructFields(reg) {
+  if (!reg || !reg.posFields) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'named struct struct:pos not installed');
+  return reg.posFields;
 }
 
 /**
  * payload.pos 的形状核对：对象、键集与登记字段完全一致（不多不少），每个字段按登记的类型串判（integer 开头安全整数，boolean 布尔，其他类型串不合）。
+ * @param {{posFields: Readonly<Record<string, string>> | null}} reg installNamedStructs 的结果
  * @param {unknown} v
  * @returns {boolean}
  */
-export function isPosValue(v) {
-  return matchStruct(posStructFields(), v);
+export function isPosValue(reg, v) {
+  return matchStruct(posStructFields(reg), v);
 }

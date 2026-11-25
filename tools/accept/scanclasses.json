@@ -44,6 +44,11 @@
      "line": "docs/卡回报/old-card.md",
      "path": "tests/accept/bypass/archive_ref-01.txt",
      "reason": "must_fail 夹具必须含被禁字样"
+    },
+    {
+     "line": "E-ACC-CARD-SELFCHECK",
+     "path": "server-plugin/kernel/errors.mjs",
+     "reason": "错误码登记表列全卷二 §4.3 的码，本码是登记项、不是复活旧机制；原 error-codes.mjs 的基线行随合并进 errors.mjs，豁免随行"
     }
    ],
    "patterns": [
@@ -966,6 +971,7 @@
    "astRules": [
     {
      "exceptFiles": [
+      "server-plugin/kernel/handles.mjs",
       "server-plugin/kernel/validate/types.mjs"
      ],
      "kind": "regexText",
@@ -977,7 +983,7 @@
     "lit_scope"
    ],
    "scanClass": "pp_grammar_regex",
-   "source": "公共部件审查乙 6；卷二 :291；例外 kernel/validate/types.mjs"
+   "source": "公共部件审查乙 6；卷二 :291；例外 kernel/handles.mjs（CODE_RE 定义源）与 kernel/validate/types.mjs（KEY_RE 定义源）"
   },
   {
    "detectors": [
@@ -1043,7 +1049,7 @@
      ],
      "exceptFiles": [
       "server-plugin/kernel/handles/keys.mjs",
-      "server-plugin/kernel/handles/markers.mjs"
+      "server-plugin/kernel/handles.mjs"
      ],
      "kind": "keyConcat",
      "name": "sep",
@@ -1062,7 +1068,7 @@
     {
      "exceptFiles": [
       "server-plugin/kernel/handles/keys.mjs",
-      "server-plugin/kernel/handles/markers.mjs"
+      "server-plugin/kernel/handles.mjs"
      ],
      "kind": "identifier",
      "name": "joinSepRef",
@@ -1072,7 +1078,7 @@
     },
     {
      "exceptFiles": [
-      "server-plugin/kernel/handles/markers.mjs"
+      "server-plugin/kernel/handles.mjs"
      ],
      "kind": "constValue",
      "name": "sepConst",
@@ -1185,7 +1191,9 @@
       "WeakMap",
       "Map"
      ],
-     "exceptFiles": [],
+     "exceptFiles": [
+      "server-plugin/kernel/memo.mjs"
+     ],
      "kind": "topModuleNew",
      "name": "topState"
     },
@@ -1831,7 +1839,7 @@
     "V"
    ],
    "regexFiles": [
-    "server-plugin/kernel/handles/*.mjs",
+    "server-plugin/kernel/handles.mjs",
     "server-plugin/kernel/validate/*.mjs",
     "server-plugin/kernel/load/vocab-load.mjs"
    ],

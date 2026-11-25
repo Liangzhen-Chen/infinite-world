@@ -642,10 +642,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 101
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 102
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 101,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 102,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -1538,10 +1542,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 99
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 100
     }
    ],
-   "print": "47805f8936b5e71807bd1f8769c95a10df440f679247e9cc7e70bc9fb7102c25",
-   "rev": 99,
+   "print": "dae794ecd7859ed65b17a532ec0c60eafaf3f7efed63705880ca4523b6812344",
+   "rev": 100,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1664,10 +1672,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 27
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 28
     }
    ],
-   "print": "949fb32e627f24868dfc6b19f113b2d034892cf978262464bf1cedbf9373097b",
-   "rev": 27,
+   "print": "bb604432a7977d72365e4b7a84eca7cce1268b2af9ad5e8cd2af4b7787d6aa9d",
+   "rev": 28,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -1942,10 +1954,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 28
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 29
     }
    ],
-   "print": "a75cac4ea368bf2fc4d83627078bcc6978ff1a6c92a648d35f29d955fa60e1d2",
-   "rev": 28,
+   "print": "e0b08a95940a42af8cdb9d02994c59a2117fe4c00870fdea68fefb012a63a559",
+   "rev": 29,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -2542,10 +2558,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 85
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 86
     }
    ],
-   "print": "5876f34c511dc3ebe67a83ab302baa47a57b2fe140e46cc9f79843ed5ea9787f",
-   "rev": 85,
+   "print": "5206825c8e6ed4500bf70c8ae9053ad71e0b04a7d3a3ccce18ff4eebff1efe0d",
+   "rev": 86,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -2673,10 +2693,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 28
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 29
     }
    ],
-   "print": "a75cac4ea368bf2fc4d83627078bcc6978ff1a6c92a648d35f29d955fa60e1d2",
-   "rev": 28,
+   "print": "e0b08a95940a42af8cdb9d02994c59a2117fe4c00870fdea68fefb012a63a559",
+   "rev": 29,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -3171,10 +3195,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 118
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 119
     }
    ],
-   "print": "109b732d51edfd58f7ed9add1d0602d0aa59800622152615d6c623f1e203c9f0",
-   "rev": 118,
+   "print": "e26a82306deeafb1321cf453501e575dc7402c23ea3c1c3e108cc626739f42cc",
+   "rev": 119,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -3727,10 +3755,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 86
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 87
     }
    ],
-   "print": "5876f34c511dc3ebe67a83ab302baa47a57b2fe140e46cc9f79843ed5ea9787f",
-   "rev": 86,
+   "print": "5206825c8e6ed4500bf70c8ae9053ad71e0b04a7d3a3ccce18ff4eebff1efe0d",
+   "rev": 87,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -4945,10 +4977,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 86
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 87
     }
    ],
-   "print": "5876f34c511dc3ebe67a83ab302baa47a57b2fe140e46cc9f79843ed5ea9787f",
-   "rev": 86,
+   "print": "5206825c8e6ed4500bf70c8ae9053ad71e0b04a7d3a3ccce18ff4eebff1efe0d",
+   "rev": 87,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -5311,10 +5347,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 87
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 88
     }
    ],
-   "print": "11a55f2ebc9c9a50f81453893efd5128eb6e78577ac5fa0abfc1c7a0be40ce88",
-   "rev": 87,
+   "print": "c70bdeb6c80ee91933cdcc0917396affbcaa9fb388ff745d07c7ae8abf634d9b",
+   "rev": 88,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -5438,10 +5478,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 27
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 28
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 27,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 28,
    "scanClass": "pp_canonical_def",
    "source": "公共部件审查乙 11；卷二十七 :542；例外 kernel/storage.mjs",
    "terms": {
@@ -5509,10 +5553,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 13
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 14
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 13,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 14,
    "scanClass": "pp_canonical_review",
    "source": "主会话 11-23 定：规范序列化按定义判，拿不准的待人审",
    "terms": {
@@ -5636,10 +5684,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 27
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 28
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 27,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 28,
    "scanClass": "pp_deep_clone",
    "source": "公共部件审查乙 10；卷二 :897；kernel/clone.mjs（kernelApi clone）",
    "terms": {
@@ -5763,10 +5815,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 27
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 28
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 27,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 28,
    "scanClass": "pp_dist_branch",
    "source": "公共部件审查甲 R7；卷二 §1.10；kernel/sample.mjs 头注",
    "terms": {
@@ -5866,10 +5922,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 21
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 22
     }
    ],
-   "print": "04f02ecefc7c7d1e7c0e455e7ef92ac6921b73a39b7e6156f3a9add0e6ea4429",
-   "rev": 21,
+   "print": "eb0841dde06e48807647cd3d3680ce324e09eca75d3ed55f6530dcb062ba8032",
+   "rev": 22,
    "scanClass": "pp_draw_sites",
    "source": "公共部件审查甲 R6 后半；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479（rules.clock.drawSites）",
    "terms": {
@@ -5973,10 +6033,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 22
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 23
     }
    ],
-   "print": "11a55f2ebc9c9a50f81453893efd5128eb6e78577ac5fa0abfc1c7a0be40ce88",
-   "rev": 22,
+   "print": "c70bdeb6c80ee91933cdcc0917396affbcaa9fb388ff745d07c7ae8abf634d9b",
+   "rev": 23,
    "scanClass": "pp_dup_export",
    "source": "公共部件审查甲 R14、乙 12；卷二 :1162 体例；CLAUDE.md“跨卷共用定义只一处”。职责函数 isPos、distributionMean、weatherCellOf 的职责文件依据：卷二 §1.5 struct:pos（kernel/named-structs.mjs）、卷二 §1.10（kernel/sample.mjs）、卷二十 §3.1（kernel/weather.mjs）",
    "terms": {
@@ -6100,10 +6164,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 27
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 28
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 27,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 28,
    "scanClass": "pp_dynamic_index",
    "source": "李白更正裁定 msg-1122-2255-c0ast（动态下标出现即报，标待人审）；卷二十七 R27-5.2、A27-5.1；卷二十 :436",
    "terms": {
@@ -6207,10 +6275,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 22
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 23
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 22,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 23,
    "scanClass": "pp_dynamic_review",
    "source": "李白更正裁定 msg-1122-2255-c0ast：运行期才知道的动态下标出现即报，标待人审。本条列全部对象上的动态下标（含数组按位置取），数量大，只报不拦（报告里列出，供人审）；登记在 Math、全局对象、状态根等根上的动态下标由 pp_dynamic_index 拦",
    "terms": {
@@ -6334,10 +6406,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 27
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 28
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 27,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 28,
    "scanClass": "pp_envat_callers",
    "source": "公共部件审查甲 R2；卷二十 :478；state-owners.json kernelApi 行形状",
    "terms": {
@@ -6461,10 +6537,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 27
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 28
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 27,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 28,
    "scanClass": "pp_envat_import",
    "source": "公共部件审查甲 R1（docs/研究/公共部件审查-甲-1122.md 第八节）；卷二十 :478、:631；例外：climate.mjs、weather.mjs 互相引用（甲 R1 原句）",
    "terms": {
@@ -6588,10 +6668,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 27
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 28
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 27,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 28,
    "scanClass": "pp_epsilon",
    "source": "公共部件审查乙 7；卷二十七 :620、:634（R27-5.2 数值运算只有三条路）",
    "terms": {
@@ -6798,10 +6882,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 26
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 27
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 26,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 27,
    "scanClass": "pp_float_pow",
    "source": "公共部件审查乙 7；卷二十七 R27-5.2（超越函数只经定点数学设施，幂函数 pow 同属）；独立验收漏项“** 运算符”",
    "terms": {
@@ -6925,10 +7013,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 27
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 28
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 27,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 28,
    "scanClass": "pp_footprint_kind",
    "source": "公共部件审查甲 R12；卷二 §1.9；模块化评估第三节；例外 kernel/footprint-kind.mjs（gen/* 按种类过滤的比较进基线，M-11③ 修后开）",
    "terms": {
@@ -7048,10 +7140,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 26
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 27
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 26,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 27,
    "scanClass": "pp_gen_callers",
    "source": "公共部件审查乙 9（docs/研究/公共部件审查-乙-1122.md :161）；卷十 :403（生成器只在世界创建事务里按步骤表跑）；例外：generateWorld 所在文件 server-plugin/world-create.mjs（卷十 §3.2 :291）；requireMaterialized 现不存在，建成后其所在文件须加入例外；作者工具在 tools/ 下，不在扫描范围（卷十 :1002）",
    "terms": {
@@ -7175,10 +7271,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 27
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 28
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 27,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 28,
    "scanClass": "pp_grammar_regex",
    "source": "公共部件审查乙 6；卷二 :291；例外 kernel/validate/types.mjs",
    "terms": {
@@ -7405,10 +7505,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 27
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 28
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 27,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 28,
    "scanClass": "pp_key_concat",
    "source": "公共部件审查甲 R5、乙 1、乙 2；卷二 :337、:897、:1162；例外：整份文本摘要 sha256Text(canonical(…))、sha256Text(text) 不拼键（不含 .join，不命中）",
    "terms": {
@@ -7524,10 +7628,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 25
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 26
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 25,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 26,
    "scanClass": "pp_kind_branch",
    "source": "独立验收（亮圳 11-22「独立测门禁1122」）指出“写死数值与种类分支没有 C0 专条”；卷一 二.1（派生优先，不按 ID 或场景特判，docs/产品原则.md）；卷二 S10（常数登记）",
    "terms": {
@@ -7651,10 +7759,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 27
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 28
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 27,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 28,
    "scanClass": "pp_material_read",
    "source": "公共部件审查甲 R11；卷三甲 :268；卷三乙 :541；例外：kernel/item.mjs、kernel/dimensions.mjs、kernel/load/**、kernel/validate/**、kernel/blueprint.mjs（加载期校验 checkBlueprintForms）",
    "terms": {
@@ -7678,10 +7790,14 @@
     {
      "ref": "L-09 ③ 首登后修正：现仓顶层 Map 与 load 族 idIndex 直读实存，按只降不升改为基线登记（含来源文字去掉 文件:行 形态，避免 S12-6 误判）",
      "rev": 2
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 3
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 2,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 3,
    "scanClass": "pp_module_state",
    "terms": {
     "L-09.module_state": {
@@ -7804,10 +7920,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 27
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 28
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 27,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 28,
    "scanClass": "pp_neighbors",
    "source": "公共部件审查甲 R10；卷五 :491、:1216（现 8 处）",
    "terms": {
@@ -7919,10 +8039,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 24
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 25
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 24,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 25,
    "scanClass": "pp_no_acorn_runtime",
    "source": "李白更正裁定 msg-1122-2255-c0ast：acorn 只许 tools/accept 引用，server-plugin 不得引用",
    "terms": {
@@ -8046,10 +8170,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 27
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 28
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 27,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 28,
    "scanClass": "pp_pos_shape",
    "source": "公共部件审查甲 R8；卷二 §1.5 struct:pos 登记；例外 kernel/named-structs.mjs、kernel/named-struct-match.mjs",
    "terms": {
@@ -8173,10 +8301,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 27
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 28
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 27,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 28,
    "scanClass": "pp_region_cell",
    "source": "公共部件审查甲 R9；卷五 :433、:499；例外：kernel/footprint.mjs 的共用函数（修后建）、kernel/handles/keys.mjs gridChunkCells（卷二 :860）",
    "terms": {
@@ -8300,10 +8432,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 27
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 28
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 27,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 28,
    "scanClass": "pp_rx_empty_clock",
    "source": "公共部件审查甲 R15；卷二十 :312、:685；例外：加载期校验 kernel/validate/**",
    "terms": {
@@ -8427,10 +8563,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 27
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 28
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 27,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 28,
    "scanClass": "pp_seed_args",
    "source": "公共部件审查甲 R6；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479。后半（drawSites 与 seed-keys 两表一致）未落：需读两表对照，现有检测器无此检查",
    "terms": {
@@ -8526,10 +8666,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 20
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 21
     }
    ],
-   "print": "04f02ecefc7c7d1e7c0e455e7ef92ac6921b73a39b7e6156f3a9add0e6ea4429",
-   "rev": 20,
+   "print": "eb0841dde06e48807647cd3d3680ce324e09eca75d3ed55f6530dcb062ba8032",
+   "rev": 21,
    "scanClass": "pp_seed_args_dyn",
    "source": "独立验收漏项“抽取点站点名用变量”；卷二十七 :789（R27-8.1 每个抽取点登记，流代号、抽取点代号须字面量）",
    "terms": {
@@ -8629,10 +8773,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 21
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 22
     }
    ],
-   "print": "11a55f2ebc9c9a50f81453893efd5128eb6e78577ac5fa0abfc1c7a0be40ce88",
-   "rev": 21,
+   "print": "c70bdeb6c80ee91933cdcc0917396affbcaa9fb388ff745d07c7ae8abf634d9b",
+   "rev": 22,
    "scanClass": "pp_tpl_key",
    "source": "公共部件审查甲 R13；卷二 :860（键串形只由登记方给）；模块化原则卡头第二节第 9 条",
    "terms": {
@@ -8752,10 +8900,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 26
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 27
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 26,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 27,
    "scanClass": "pp_unit_literal",
    "source": "公共部件审查乙 13；卷三乙:179 与表头 unit 字段（item.json 表头 unit 字段）；单位登记表 world/ontology/dimensions/_units.json",
    "terms": {
@@ -8879,10 +9031,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 27
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 28
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 27,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 28,
    "scanClass": "pp_year_minutes",
    "source": "公共部件审查甲 R3；卷二十 :436、:477 T-3 (c)；例外 climate.mjs（日均温日份额，天文相位，卷二十 :436）",
    "terms": {
@@ -9353,10 +9509,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 114
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 115
     }
    ],
-   "print": "ca5a5aead5c8e599f0afda3e0ce2235caa38b26a113ab39de63be98aa21b57cf",
-   "rev": 114,
+   "print": "f8ef01acd2ffda611caca22715fc6494e90dcd12d598251e3de5e86b05a660e9",
+   "rev": 115,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -9954,10 +10114,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 72
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 73
     }
    ],
-   "print": "04f02ecefc7c7d1e7c0e455e7ef92ac6921b73a39b7e6156f3a9add0e6ea4429",
-   "rev": 72,
+   "print": "eb0841dde06e48807647cd3d3680ce324e09eca75d3ed55f6530dcb062ba8032",
+   "rev": 73,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -10375,10 +10539,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 99
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 100
     }
    ],
-   "print": "8d130f97cc76faf300ab29ad92abecfccb0ed4c64e7184a8b19450774b43bdf1",
-   "rev": 99,
+   "print": "acd8293819c1ff33605a255d43dac47663033f9abd3f97ae4b746f7913fdfc2d",
+   "rev": 100,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -10707,10 +10875,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 54
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 55
     }
    ],
-   "print": "98ac3c2ffbb4dfd7d365e2d796645de71e3f60ce4141b9d0cad4f3e903cabbe3",
-   "rev": 54,
+   "print": "d26e0be9e13b0480223caf7462a9741000976db3e6fd23577f5b810d839698fb",
+   "rev": 55,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -10834,10 +11006,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 27
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 28
     }
    ],
-   "print": "a75cac4ea368bf2fc4d83627078bcc6978ff1a6c92a648d35f29d955fa60e1d2",
-   "rev": 27,
+   "print": "e0b08a95940a42af8cdb9d02994c59a2117fe4c00870fdea68fefb012a63a559",
+   "rev": 28,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -11072,10 +11248,14 @@
     {
      "ref": "L-09/L-08 新登扫描类别 typecheck：L-09 ④：typed_pos 接 tsc，对 jsconfig.json 跑静态类型检查（docs/gemini/kickoff-1125.md 的对应行）",
      "rev": 1
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 2
     }
    ],
-   "print": "a75cac4ea368bf2fc4d83627078bcc6978ff1a6c92a648d35f29d955fa60e1d2",
-   "rev": 1,
+   "print": "e0b08a95940a42af8cdb9d02994c59a2117fe4c00870fdea68fefb012a63a559",
+   "rev": 2,
    "scanClass": "typecheck",
    "terms": {
     "L-09.typecheck": {
@@ -11446,10 +11626,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 89
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 90
     }
    ],
-   "print": "11a55f2ebc9c9a50f81453893efd5128eb6e78577ac5fa0abfc1c7a0be40ce88",
-   "rev": 89,
+   "print": "c70bdeb6c80ee91933cdcc0917396affbcaa9fb388ff745d07c7ae8abf634d9b",
+   "rev": 90,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -11980,10 +12164,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 59
+    },
+    {
+     "ref": "S1-1 卡 A：句柄叶子合并为 kernel/handles.mjs、内核登记构造与 memo/storage/dimensions 新建，判据闭包内容变，重盖指纹",
+     "rev": 60
     }
    ],
-   "print": "82550078ae3a8e04bb4a83161a49197545f4e0c4d4998f5ede2f76ac5dac4634",
-   "rev": 59,
+   "print": "993e83cb32d14cf2c6767d3d3a203f7ce85a6184d2701edd72deb17ce56605a6",
+   "rev": 60,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

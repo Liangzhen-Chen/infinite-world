@@ -5,11 +5,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { T, TYPES, CODE_ENUMS, DOMAIN_OPTIONAL, ROW_FIELDS, RX_OPS, RX_KINDS, PATH_TYPE_EXTRAS, NS_ROW_TYPES, GRAMMAR_TOKENS, DECL_FIELDS, RULE_STRUCTURES, VOCAB_FAMILIES, ID_KINDS, KERNEL_MODULES, markersOf } from '../../server-plugin/kernel/handles/markers.mjs';
+import { T, TYPES, CODE_ENUMS, DOMAIN_OPTIONAL, ROW_FIELDS, RX_OPS, RX_KINDS, PATH_TYPE_EXTRAS, NS_ROW_TYPES, GRAMMAR_TOKENS, DECL_FIELDS, RULE_STRUCTURES, VOCAB_FAMILIES, ID_KINDS, KERNEL_MODULES, markersOf } from '../../server-plugin/kernel/handles.mjs';
 import { T as T_REEXPORTED } from '../../server-plugin/kernel/validate/types.mjs';
 
 test('handles/markers.mjs 是 0 import 叶子：源码没有任何 import 语句', () => {
-  const src = readFileSync(new URL('../../server-plugin/kernel/handles/markers.mjs', import.meta.url), 'utf8');
+  const src = readFileSync(new URL('../../server-plugin/kernel/handles.mjs', import.meta.url), 'utf8');
   assert.equal(/^\s*import\b/m.test(src), false);
 });
 

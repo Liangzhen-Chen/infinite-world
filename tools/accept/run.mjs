@@ -9,7 +9,7 @@ import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { runRequiredTests, runTestFile } from './lib/required-tests.mjs';
-import { REGISTERED_CODES } from '../../server-plugin/kernel/error-codes.mjs';
+import { REGISTERED_CODES } from '../../server-plugin/kernel/errors.mjs';
 
 // 方法是测试的条目（卷十二 §4.5.1 :782 进必过集合的三种方法）：没有检测器（§2.2 :194 非静态条目可空），实现就是 `impl` 所指的测试文件
 // （§2.2 :203），期望 `all_pass`（§2.1"用例全过"）——执行器真跑该文件，全过才 pass。

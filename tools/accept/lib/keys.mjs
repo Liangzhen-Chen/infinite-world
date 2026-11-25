@@ -2,7 +2,7 @@
 // 收编自 server-plugin/kernel/handles/keys.mjs（L-15）：门禁只搬它真用到的函数
 // （parseDimKey、modKeyOf、isRuleTableFile）及其内部判据，其余内核键工具留在归档里。
 
-import { HandleError } from '../../../server-plugin/kernel/handles/vocab-handle.mjs';
+import { HandleError } from '../../../server-plugin/kernel/handles.mjs';
 import { T, CODE_RE, KEY_RE, CODE_BODY, KEY_BODY } from '../../../server-plugin/kernel/validate/types.mjs';
 
 /**

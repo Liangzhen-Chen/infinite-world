@@ -1,16 +1,13 @@
 [
  "server-plugin/kernel/bytes.mjs",
- "server-plugin/kernel/clone.mjs",
  "server-plugin/kernel/det-math.mjs",
- "server-plugin/kernel/error-codes.mjs",
+ "server-plugin/kernel/dimensions.mjs",
  "server-plugin/kernel/errors.mjs",
- "server-plugin/kernel/handles/markers.mjs",
- "server-plugin/kernel/handles/patterns.mjs",
- "server-plugin/kernel/handles/vocab-handle.mjs",
- "server-plugin/kernel/named-struct-match.mjs",
+ "server-plugin/kernel/handles.mjs",
+ "server-plugin/kernel/memo.mjs",
  "server-plugin/kernel/named-structs.mjs",
- "server-plugin/kernel/report.mjs",
  "server-plugin/kernel/rx.mjs",
+ "server-plugin/kernel/storage.mjs",
  "server-plugin/kernel/types.d.ts",
  "server-plugin/kernel/validate/types.mjs"
 ]
