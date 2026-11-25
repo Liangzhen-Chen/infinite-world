@@ -70,8 +70,9 @@ function childEnv(base, clear, add) {
 // 构造子进程命令与参数（不启动进程）。opts.sampling 是 sampling.json 的内容，只给 deepseek 用；
 // opts.paths 是 paths.json 的解析结果：没带就自己读同目录 paths.json（loadPaths 校验必填键，不另写一份）。
 export function buildInvocation(opts = {}, env = {}) {
-  const { model, prompt = '', effort = 'medium', budget = '0.65', purpose = 'code' } = opts;
+  const { model, prompt, effort = 'medium', budget = '0.65', purpose = 'code' } = opts;
   if (!MODELS.includes(model)) throw new Error(`模型不在白名单: ${model}`);
+  if (!prompt) throw new Error('卡文为空');
   const paths = opts.paths || loadPaths(JSON.parse(readFileSync(join(HERE, 'paths.json'), 'utf8')));
   const sampling = opts.sampling || JSON.parse(readFileSync(join(HERE, 'sampling.json'), 'utf8'));
   const base = ['-p', prompt];

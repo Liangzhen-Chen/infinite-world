@@ -48,6 +48,12 @@ test('deepseek-flash：命令、模型名、DeepSeek 环境变量与采样体', 
   assert.ok(!('CLAUDE_API_KEY' in inv.env));
 });
 
+test('buildInvocation：卡文缺或为空串时报「卡文为空」', () => {
+  const { prompt, ...noPrompt } = args({});
+  assert.throws(() => buildInvocation(noPrompt, DS_ENV), /卡文为空/);
+  assert.throws(() => buildInvocation(args({ prompt: '' }), DS_ENV), /卡文为空/);
+});
+
 test('deepseek-flash：null 采样档不注入，未知用途报错', () => {
   assert.ok(!('CLAUDE_CODE_EXTRA_BODY' in buildInvocation(args({ purpose: 'quiet' }), DS_ENV).env));
   assert.throws(() => buildInvocation(args({ purpose: 'zzz' }), DS_ENV), /用途不存在: zzz/);
