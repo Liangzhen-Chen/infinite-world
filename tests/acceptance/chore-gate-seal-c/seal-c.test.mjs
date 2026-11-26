@@ -1,7 +1,7 @@
 // 验收：卡 chore/gate-seal-c 子卡 C（门禁封口：黑盒验收 + 老验收迁移的写入口）。出题方：Claude Haiku 5.5（Orca 会员会话），标识 haiku-orca-test-gsc；未参与写码与审卡。
 // 依据：卷十二:600（S12-2 登记器与执行器之外写 §2.11 文件的位置为 0）；卷十二:601（S12-3 卷文正文有、登记表没有的条目编号数为 0，及计数口径）。
 // 测什么：
-//   S1 pre_commit 黑盒：vol12.S12-2、vol12.S12-3 在 items.json 为 in_core（正）；pre_commit 输出的 items.failed 不含这两条（反）。
+//   S1 pre_commit 黑盒：vol12.S12-2 在 items.json 为 in_core、vol12.S12-3 仍为 implemented（正，S12-3 孤儿另立卡）；pre_commit 输出的 items.failed 不含 vol12.S12-2（反）。
 //   S2 临时仓库夹具写入：新登记的写入口（从 tools/accept/gatefacs.json 新增行的 assertedWriters / paths 读出，不写死导出名）
 //      目标在仓库外的临时根里 → 写入成功（正）；目标落在真仓库内 → 抛错且不写（反）。
 //   S3 doc_struct（tools/accept/detectors/doc_struct.mjs）的 unregistered 检查：卷文定义了编号、items 未登记 → E-ACC-ITEM-UNREGISTERED（反）；登记后不报（正）。
@@ -9,28 +9,30 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { ROOT, testTempRoot, removeTempRoot } from '../../accept/temp-root.mjs';
 import { LAYOUT, REGISTRY } from '../../../tools/accept/read.mjs';
 import { detect } from '../../../tools/accept/detectors/doc_struct.mjs';
 
-const MUST = ['vol12.S12-2', 'vol12.S12-3'];
+const MUST = ['vol12.S12-2'];
 const ITEMS = join(ROOT, LAYOUT.accDir, REGISTRY.items.file);
 const itemRows = () => JSON.parse(readFileSync(ITEMS, 'utf8')).rows;
 
 // ---------- S1：pre_commit 黑盒 ----------
 
-test('S1 正：vol12.S12-2、vol12.S12-3 在 items.json 登记为 in_core（必过）', () => {
-  for (const key of MUST) {
-    const row = itemRows().find((r) => r.itemKey === key);
-    assert.ok(row, `缺登记行：${key}`);
-    assert.equal(row.state, 'in_core', `${key} 的 state 应为 in_core`);
-  }
+// 按主会话裁定（S12-3 孤儿另立卡）：S12-3 本卡不升，仍为 implemented；S12-2 升 in_core。
+test('S1 正：vol12.S12-2 为 in_core（必过），vol12.S12-3 仍为 implemented（本卡不升）', () => {
+  const s2 = itemRows().find((r) => r.itemKey === 'vol12.S12-2');
+  assert.ok(s2, '缺登记行：vol12.S12-2');
+  assert.equal(s2.state, 'in_core', 'vol12.S12-2 的 state 应为 in_core');
+  const s3 = itemRows().find((r) => r.itemKey === 'vol12.S12-3');
+  assert.ok(s3, '缺登记行：vol12.S12-3');
+  assert.equal(s3.state, 'implemented', 'vol12.S12-3 本卡不升，应仍为 implemented');
 });
 
-test('S1 反：pre_commit 输出的 items.failed 不含 vol12.S12-2、vol12.S12-3', { timeout: 600000 }, () => {
+test('S1 反：pre_commit 输出的 items.failed 不含 vol12.S12-2', { timeout: 600000 }, () => {
   const r = spawnSync(process.execPath, [join(ROOT, 'tools/accept/run.mjs'), 'pre_commit'], {
     cwd: ROOT, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024,
   });
@@ -72,18 +74,27 @@ test('S2 正：目标在仓库外的临时根里，经登记写入口写文件�
   }
 });
 
-test('S2 反：目标落在真仓库内，登记写入口抛错且不写入', async () => {
-  const write = await fixtureWriter();
-  const rel = join('tests', 'acceptance', 'chore-gate-seal-c', '.fixture-probe.txt');
-  const target = join(ROOT, rel);
-  const existed = existsSync(target);
-  try {
-    assert.throws(() => write(ROOT, rel, 'x'));
-    assert.equal(existsSync(target), existed, '仓库内目标不应被写入');
-  } finally {
-    // 仅当本测试在失败路径上把探针写进了仓库，才删这个探针文件（它原本不存在）。
-    if (!existed && existsSync(target)) rmSync(target, { force: true });
+// 目标在真仓库内时，登记的断言函数（gatefacs writerAsserts，写入口先调它）须抛错；写入口本身不被调用，故不写入。
+// 不把真仓库根直接传给写入口：call_edge 只认从 testTempRoot 拿到的根，真仓库根会被计为 S12-2 命中。
+async function fixtureAsserter() {
+  const rows = JSON.parse(readFileSync(join(ROOT, 'tools/accept/gatefacs.json'), 'utf8')).rows;
+  const [row] = rows.filter((r) => !KNOWN_FAC.includes(r.facCode) && Array.isArray(r.writerAsserts) && r.writerAsserts.length);
+  assert.ok(row, 'gatefacs.json 缺新增行的 writerAsserts');
+  const name = row.writerAsserts[0];
+  for (const p of row.paths.filter((x) => x.endsWith('.mjs'))) {
+    const mod = await import(pathToFileURL(join(ROOT, p)).href);
+    if (typeof mod[name] === 'function') return mod[name];
   }
+  assert.fail(`登记的断言函数 ${name} 未在登记路径中导出`);
+}
+
+test('S2 反：目标落在真仓库内，登记断言抛错，不写入', async () => {
+  const assertPath = await fixtureAsserter();
+  const target = join(ROOT, 'tests', 'acceptance', 'chore-gate-seal-c', '.fixture-probe.txt');
+  const existed = existsSync(target);
+  // 断言只做判定、不写文件，所以这里不需要清理。
+  assert.throws(() => assertPath(ROOT, 'tests/acceptance/chore-gate-seal-c/.fixture-probe.txt'));
+  assert.equal(existsSync(target), existed, '仓库内目标不应被写入');
 });
 
 // ---------- S3：doc_struct 卷文条目对账（S12-3） ----------
