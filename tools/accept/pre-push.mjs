@@ -26,9 +26,9 @@ function rulesFor(root, remoteSha) {
 /**
  * @param {string} root
  * @param {string} stdinText
- * @param {{runGate?: (root: string) => Promise<{verdict: string, items?: {failed: {itemKey: string, codes: string[]}[]}}>}} [options]
+ * @param {{runGate?: (root: string) => Promise<{verdict: string, items?: {failed: {itemKey: string, codes: string[]}[]}}>, headBranch?: string}} [options]
  */
-export async function prePush(root, stdinText, { runGate = preCommitGate } = {}) {
+export async function prePush(root, stdinText, { runGate = preCommitGate, headBranch } = {}) {
   root = root || join(dirname(fileURLToPath(import.meta.url)), '..', '..');
   const reasons = [];
   let touched = false;
@@ -47,10 +47,20 @@ export async function prePush(root, stdinText, { runGate = preCommitGate } = {})
     // 门禁生效线：规矩里登记的「门禁生效提交」及其祖先不查（门禁立起来之前就写好的提交，不改写历史）；解析不出该提交时不跳过任何提交。
     let effective = null;
     if (rules.effectiveCommit) { try { effective = gitOut(root, ['rev-parse', '--verify', '-q', `${rules.effectiveCommit}^{commit}`]).trim() || null; } catch { effective = null; } }
-    for (const sha of shas) {
-      if (effective && gitOk(root, ['merge-base', '--is-ancestor', sha, effective])) continue;
+    // 每个提交的改动文件集：合并提交对第一父提交求差（这次合并给目标分支带进来什么；不用 -m，免得把目标分支那一侧也算进来），其余照常。
+    const commits = shas.map((sha) => {
       const parents = gitOut(root, ['rev-list', '--parents', '-n', '1', sha]).trim().split(/\s+/).length - 1;
-      const files = gitOut(root, ['diff-tree', '--root', '--no-commit-id', '--name-only', '-r', '-z', sha]).split('\0').filter(Boolean);
+      const diff = parents > 1 ? ['diff-tree', '--no-commit-id', '--name-only', '-r', '-z', `${sha}^1`, sha] : ['diff-tree', '--root', '--no-commit-id', '--name-only', '-r', '-z', sha];
+      return { sha, parents, files: gitOut(root, diff).split('\0').filter(Boolean) };
+    });
+    // 本次推送范围的改动文件（借档核对）与推送头的提交历史（orca 凭证核对）。
+    const rangeFiles = [...new Set(commits.flatMap((c) => c.files))];
+    const history = {
+      reachable: (s) => gitOk(root, ['merge-base', '--is-ancestor', s, localSha]),
+      message: (s) => { try { return gitOut(root, ['log', '-1', '--format=%B', s]); } catch { return null; } },
+    };
+    for (const { sha, parents, files } of commits) {
+      if (effective && gitOk(root, ['merge-base', '--is-ancestor', sha, effective])) continue;
       const message = gitOut(root, ['log', '-1', '--format=%B', sha]);
       const r = judgeCommit(rules, {
         files,
@@ -58,6 +68,9 @@ export async function prePush(root, stdinText, { runGate = preCommitGate } = {})
         message,
         isMerge: parents > 1,
         stage: '推送',
+        rangeFiles,
+        headBranch: headBranch || undefined,
+        history,
         repo: gitRepo(root, localSha),
         // 档案读本次推送的最新版（卡常分多次提交，审查、出题晚到）：每个触发提交都要对得上推送后的档案。
         readFile: (dir, f) => { try { return gitOut(root, ['show', `${localSha}:${dir}${f}`]); } catch { return null; } },
@@ -80,7 +93,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const ri = args.indexOf('--root');
   let stdin = '';
   try { stdin = readFileSync(0, 'utf8'); } catch { /* 无输入 */ }
-  const r = await prePush(ri >= 0 ? args[ri + 1] : undefined, stdin);
+  // CI 传入 PR 头分支（直推卡分支时为分支名；推往 master 时不传），用于借档核对。
+  const r = await prePush(ri >= 0 ? args[ri + 1] : undefined, stdin, { headBranch: process.env.CARD_HEAD_BRANCH || undefined });
   if (!r.ok) {
     for (const x of r.reasons) process.stderr.write(`${x}\n`);
     process.stderr.write('pre_push rejected\n');
