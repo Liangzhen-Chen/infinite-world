@@ -74,6 +74,17 @@
    "rules": []
   },
   {
+   "name": "bakePlaceTree",
+   "file": "rules/bake/place-tree.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
    "name": "base64ToBytes",
    "file": "kernel/bytes.mjs",
    "vol": null,
@@ -225,6 +236,19 @@
    "kind": "kernel",
    "needs": [
     "canonical"
+   ],
+   "rules": []
+  },
+  {
+   "name": "dim",
+   "file": "kernel/dimensions.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "stateMemo",
+    "inputsOf",
+    "KernelError"
    ],
    "rules": []
   },
@@ -401,7 +425,9 @@
    "sec": null,
    "kind": "write",
    "needs": [
-    "writePath"
+    "readPath",
+    "writePath",
+    "KernelError"
    ],
    "rules": []
   },
@@ -591,7 +617,13 @@
     "clone",
     "KernelError",
     "replayApply",
-    "closeInputs"
+    "closeInputs",
+    "runTransaction",
+    "runGenesis",
+    "runOpening",
+    "openingOf",
+    "bakePlaceTree",
+    "placeTreeDigest"
    ],
    "rules": []
   },
@@ -623,12 +655,34 @@
    "rules": []
   },
   {
+   "name": "openingOf",
+   "file": "rules/gen/worldgen-writeback.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "readPath"
+   ],
+   "rules": []
+  },
+  {
    "name": "parseNumberType",
    "file": "kernel/validate/types.mjs",
    "vol": null,
    "sec": null,
    "kind": "part",
    "needs": [],
+   "rules": []
+  },
+  {
+   "name": "placeTreeDigest",
+   "file": "rules/bake/place-tree.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "canonical"
+   ],
    "rules": []
   },
   {
@@ -767,6 +821,44 @@
    "rules": []
   },
   {
+   "name": "ruleValue",
+   "file": "rules/load/registry.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "checkValue",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "runGenesis",
+   "file": "rules/gen/worldgen-writeback.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "writePath",
+    "ruleValue"
+   ],
+   "rules": []
+  },
+  {
+   "name": "runOpening",
+   "file": "rules/gen/worldgen-writeback.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "readPath",
+    "writePath",
+    "ruleValue",
+    "dim"
+   ],
+   "rules": []
+  },
+  {
    "name": "runTransaction",
    "file": "kernel/transaction.mjs",
    "vol": null,
@@ -879,6 +971,17 @@
    "sec": null,
    "kind": "kernel",
    "needs": [],
+   "rules": []
+  },
+  {
+   "name": "stateMemo",
+   "file": "kernel/memo.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "KernelError"
+   ],
    "rules": []
   },
   {

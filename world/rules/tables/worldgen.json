@@ -136,6 +136,26 @@
    "grade": "referenced",
    "source": "卷十 §3.2 :291（generateWorld 是世界创建流程里的唯一入口）、:295–:303（各步由写回器在世界创建事务内调用）；李白 11-22 18:36 P-28、P-29（次序写进步骤表数据、按读写依赖排：统治先于资产，人物独立）；亮圳 11-22 模块化原则（卡头第二节第 9 条）",
    "basis": "次序由本表给出，代码不写死（卷十 :295–:303 勘误 1124k90）。每行 {step, reads, writes}：reads 须是调用方交入的外部通道或排在前面的步骤的 writes，违反即拒收（E-GEN-STAGE-CYCLE）。依据：资产的归属有一支取作者写的地点的统治组织（卷六 :642、卷八 R8-5.1），资产一步真读统治一步的结果（跳过的边被资产用到即整笔拒收），所以 assets 读 edge.governor，排在 governors 之后；人物只读名册、不读也不写别步的通道，独立。每步只拿到自己声明的 reads。fill 交出生成补缺的全部产出（生成行、新建组织行、待转换行、推迟项、报告）：生成行与新建组织行的落盘（写回器）尚无步骤，待 6-16 新开局卡建。读者是 world-create.mjs"
+  },
+  {
+   "key": "genesisMinute",
+   "value": 0,
+   "file": "server-plugin/rules/gen/worldgen-writeback.mjs",
+   "grade": "designed",
+   "basisKind": "design_spec",
+   "specRef": "docs/统一底层设计/卷十-世界随机生成.md",
+   "source": "卷十 :224（第 0 日时刻 genesisMinute，世界模板参数之一）、R10-12.5 :972（开局缺省只有三个来路：数据表行、规则表 rules.gen.*、世界模板参数；代码常量即 E-GEN-DEFAULT）；世界模板参数暂落本表，卷十封卷后勘误 1126k1",
+   "basis": "第 0 日时刻取世界分钟轴的原点 0。卷二十 :243：genesisMinute 与历法原点 epochMinute 在同一条分钟轴上、不设换算常数、不必等于任何一部历法的 epochMinute，日期经日历入口求；手写世界西陲（卷十 :866）没有给起始分钟，取轴原点即第 0 日 0 时，不引入额外偏移。读者是 rules/gen/worldgen-writeback.mjs#runGenesis（世界创建事务写 state.genesis.genesisMinute），时钟由 kernel/scheduler.mjs#initClock 从 state.genesis 取"
+  },
+  {
+   "key": "historyYears",
+   "value": 0,
+   "file": "server-plugin/rules/gen/worldgen-writeback.mjs",
+   "grade": "designed",
+   "basisKind": "design_spec",
+   "specRef": "docs/统一底层设计/卷十-世界随机生成.md",
+   "source": "卷十 R10-11.4 :852（years 可以为 0：openingMinute 等于 genesisMinute，不提交推进请求，开局一步紧接世界创建事务运行）、:866（西陲手写世界 years 为 0，作者写的史事是早于第 0 日的静态行）；世界模板参数暂落本表，卷十封卷后勘误 1126k1",
+   "basis": "西陲手写世界的历史预跑年数，卷十 :866 原文给 0。预跑（years > 0）未建，登记取值域只收 0，非 0 加载即拒，不静默跳过。读者是 rules/gen/worldgen-writeback.mjs#runOpening"
   }
  ]
 }
