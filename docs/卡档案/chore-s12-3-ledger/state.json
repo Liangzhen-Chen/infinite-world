@@ -1,7 +1,7 @@
 {
   "card": "chore-s12-3-ledger",
-  "phase": "dispatched",
-  "updatedAt": "2026-11-26T18:39:09.061Z",
+  "phase": "pr",
+  "updatedAt": "2026-11-26T19:40:43.791Z",
   "branches": {
     "code": "chore/s12-3-ledger",
     "test": "test/s12-3-ledger"
@@ -9,41 +9,45 @@
   "pr": null,
   "parties": {
     "code": {
-      "family": "<模型族>",
-      "model": "<模型 id>",
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
       "receipt": null,
       "orca": {
-        "worktree": "<工作树路径>",
-        "session": "<Orca 会话号>",
+        "worktree": "F:/dnd-worktrees/dnd/s123",
+        "session": "ctx_d5dff5635f06",
         "commits": [
-          "<写码提交号>"
+          "52587c160",
+          "ee7fbc33d",
+          "8a2291397"
         ]
       },
       "costUsd": null
     },
     "test": {
-      "family": "<模型族>",
-      "model": "<模型 id>",
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
       "receipt": null,
       "orca": {
-        "worktree": "<工作树路径>",
-        "session": "<Orca 会话号>",
+        "worktree": "F:/dnd-worktrees/dnd/ts-s123",
+        "session": "ctx_0f5f142e2a61",
         "commits": [
-          "<出题提交号>"
+          "edd02f17f",
+          "33bcad46d"
         ]
       },
       "costUsd": null
     },
     "review": [
       {
-        "family": "<模型族>",
-        "model": "<模型 id>",
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
         "receipt": null,
         "orca": {
-          "worktree": "<工作树路径>",
-          "session": "<Orca 会话号>",
+          "worktree": "F:/dnd-worktrees/dnd/ts-s123",
+          "session": "ctx_45098e19aaa7",
           "commits": [
-            "<第 1 轮审卡提交号>"
+            "123e09ccb",
+            "9c25e7430"
           ]
         },
         "costUsd": null
@@ -56,5 +60,5 @@
   },
   "failCount": 0,
   "blocker": null,
-  "nextAction": "写码 Sonnet、出题 Haiku Orca 会话派出；回报后主会话读 diff，再派 Opus 审卡"
+  "nextAction": "开 PR chore/s12-3-ledger→master 走 CI，main 绿即合；合入后删 s123、ts-s123"
 }
