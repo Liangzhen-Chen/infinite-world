@@ -2764,6 +2764,37 @@
    }
   },
   {
+   "criterion": "某些族的句柄字面量出现在登记的读者闭集之外，或出现在禁止特判的 import 闭包内（卷十二 :258）；判据参数待实现卡登记",
+   "log": [
+    {
+     "ref": "门禁封口 C：新登类别（只登记，不实现、无用例）",
+     "rev": 1
+    }
+   ],
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 1,
+   "scanClass": "handle_special",
+   "source": "卷十二 §2.4 :258（handle_special 句柄字面量特判，检测器 lit_scope）、:270（卷二十七 S27-1、S27-9）；门禁封口 C 新登类别，只挂 registered 条目，未实现",
+   "terms": {
+    "vol27.A27-1.1": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol27.A27-2.1": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
    "criterion": "对实体 id 做任何字符串操作来判类别（卷十二 §2.4 首批表）。",
    "log": [
     {
@@ -10804,6 +10835,14 @@
    "rev": 43,
    "scanClass": "rng_bypass",
    "terms": {
+    "vol2.S11": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
     "vol27.A27-8.1.a": {
      "expect": "zero",
      "gates": [
@@ -10882,6 +10921,29 @@
    "scanClass": "rules_import",
    "terms": {
     "vol1.V-9": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    }
+   }
+  },
+  {
+   "criterion": "存档读写文件之外引用分片文件名或清单字段（卷十二 :256）；判据参数待实现卡登记",
+   "log": [
+    {
+     "ref": "门禁封口 C：新登类别（只登记，不实现、无用例）",
+     "rev": 1
+    }
+   ],
+   "print": "2642227cd049c9efe86d61abfe81dd9dda5cbbd692cfeee7a62f61e0e81afe7e",
+   "rev": 1,
+   "scanClass": "save_bypass",
+   "source": "卷十二 §2.4 :256（save_bypass 存档文件旁路，检测器 lit_scope、import_edge）、:276（卷二十七 S27-7）；门禁封口 C 新登类别，只挂 registered 条目，未实现",
+   "terms": {
+    "vol27.A27-4.1": {
      "expect": "zero",
      "gates": [
       "pre_commit",
@@ -11808,6 +11870,14 @@
    "scanClass": "sim_bypass",
    "source": "卷二十七 §4.8 S27-11 :260、A27-1.11 :369；对照表 docs/迁移体检/格子G6-G11-规矩检查对照.md #60；卷十二 §2.4 开放登记",
    "terms": {
+    "vol27.A27-1.11": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
     "vol27.S27-11.a": {
      "expect": "zero",
      "gates": [
@@ -13228,6 +13298,14 @@
       "pre_merge"
      ],
      "stage": 0
+    },
+    "vol27.A27-7.1": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
     }
    }
   },
@@ -13511,6 +13589,14 @@
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {
+     "expect": "zero",
+     "gates": [
+      "pre_commit",
+      "pre_merge"
+     ],
+     "stage": 0
+    },
+    "vol27.A27-3.1": {
      "expect": "zero",
      "gates": [
       "pre_commit",
