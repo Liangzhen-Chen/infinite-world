@@ -1,7 +1,7 @@
 {
   "card": "feat-s2-0b",
-  "phase": "dispatched",
-  "updatedAt": "2026-11-26T17:13:20.172Z",
+  "phase": "reviewed",
+  "updatedAt": "2026-11-26T22:11:47.866Z",
   "branches": {
     "code": "feat/s2-0b",
     "test": "test/s2-0b"
@@ -31,7 +31,7 @@
     "status": "pending",
     "runUrl": null
   },
-  "failCount": 0,
-  "blocker": null,
-  "nextAction": "写码 Sonnet、出题 Haiku Orca 会话派出（在 feat/s2-0a 之上，与 S2-0a 一个 PR）；回报后主会话读 diff，再派 Opus 审卡"
+  "failCount": 1,
+  "blocker": "等 S1-3a（PR #33）合入 master",
+  "nextAction": "S1-3a 合入后（有 54 条来历模板）：出题方合 master 复跑验收，原红 7 例应转绿（仍红则查是否须按来历模板建人）；主会话补 S2-0a、S2-0b 两卡三方凭证（本卡 parties 仍是占位）、重生成快照、--check、check-push-archive 后推 feat/s2-0b 开一个 PR"
 }
