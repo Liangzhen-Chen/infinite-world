@@ -22,9 +22,9 @@ import { commentsOf, exportedFunctions, jsdocBefore, jsdocParamNames } from '../
 import { scopeFiles, matchGlobs, classify } from '../read.mjs';
 import * as markers from '../../../server-plugin/kernel/handles.mjs';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join, dirname as pdirname } from 'node:path';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { testTempRoot, writeUnderTempRoot, removeTempRoot } from '../lib/temp-root.mjs';
 
 const NON_ASCII = /[^\x00-\x7f]/;
 const EQ_OPS = new Set(['===', '!==', '==', '!=']);
@@ -320,19 +320,15 @@ function tscHits(ctx, params, cls) {
   }
   const files = ctx.files.filter((f) => /\.(?:mjs|js|cjs)$/.test(f));
   if (!files.length) return [];
-  const dir = mkdtempSync(join(tmpdir(), 'acc-tsc-'));
+  const dir = testTempRoot('acc-tsc-');
   try {
-    for (const f of files) {
-      const p = join(dir, f);
-      mkdirSync(pdirname(p), { recursive: true });
-      writeFileSync(p, ctx.read(f));
-    }
+    for (const f of files) writeUnderTempRoot(dir, f, ctx.read(f));
     const opts = { ...compilerOptionsOf(ctx, configFile), allowJs: true, checkJs: true, noEmit: true, types: [], typeRoots: [] };
-    writeFileSync(join(dir, 'tsconfig.json'), JSON.stringify({ compilerOptions: opts, include: ['**/*.mjs', '**/*.js', '**/*.cjs'] }));
+    writeUnderTempRoot(dir, 'tsconfig.json', JSON.stringify({ compilerOptions: opts, include: ['**/*.mjs', '**/*.js', '**/*.cjs'] }));
     const out = tscRun(bin, ['-p', 'tsconfig.json'], dir).out;
     return tscDiagnostics(out, code).map((h) => ({ ...h, file: h.file.startsWith(dir.replace(/\\/g, '/')) ? h.file.slice(dir.replace(/\\/g, '/').length).replace(/^\//, '') : h.file }));
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    removeTempRoot(dir);
   }
 }
 

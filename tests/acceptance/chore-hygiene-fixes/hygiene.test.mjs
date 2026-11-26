@@ -13,13 +13,14 @@
 // 耗时：A1 一次 pre_commit 约 2 分钟；A2 只读文件，秒级。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { accRun } from '../../../tools/accept/run.mjs';
 import { loadContext } from '../../../tools/accept/read.mjs';
 import { detect } from '../../../tools/accept/detectors/hygiene.mjs';
 import { withIsolatedRepo } from '../../support/isolated-repo.mjs';
+import { writeUnderTempRoot } from '../../accept/temp-root.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const CASE_TIMEOUT_MS = 900000; // 单条上限（含一次 pre_commit，约 2 分钟，留足余量）
@@ -47,7 +48,7 @@ test('A1 断链行号：docs/ 下 .md 的断链经 md_links 报出的行号等�
   const rows = await withIsolatedRepo(async (copyRoot) => {
     const abs = join(copyRoot, PROBE);
     assert.ok(!existsSync(abs), `注入位置已存在，拒绝覆盖：${PROBE}`);
-    writeFileSync(abs, PROBE_TEXT, 'utf8');
+    writeUnderTempRoot(copyRoot, PROBE, PROBE_TEXT);
     const res = await accRun('pre_commit', '', null, { root: copyRoot, write: false, runRequired: true });
     return res.rows;
   });

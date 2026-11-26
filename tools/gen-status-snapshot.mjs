@@ -2,7 +2,8 @@
 // 唯一渲染入口 renderSnapshot(inputs) 是纯函数；CLI 只按 process.cwd() 读盘、跑 git、写文件。
 // 不读墙钟（kickoff-1125.md:399）：生成基准的提交时间只取自 git，同一提交上两次生成逐字节相同。
 
-import { existsSync, readFileSync, readdirSync, writeFileSync, mkdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, mkdirSync } from 'node:fs';
+import { writeCliOut } from './accept/lib/cli-out.mjs';
 import { execFileSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -244,7 +245,7 @@ function main(argv) {
     return;
   }
   mkdirSync(dirname(target), { recursive: true });
-  writeFileSync(target, memoryText);
+  writeCliOut(root, target, memoryText);
   process.stdout.write(`已写入 ${target}\n`);
 }
 

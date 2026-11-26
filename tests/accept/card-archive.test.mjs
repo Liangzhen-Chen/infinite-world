@@ -4,13 +4,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
-import { chmodSync, readFileSync, rmSync } from 'node:fs';
+import { chmodSync, readFileSync } from 'node:fs';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { loadRules, checkArchive, judgeCommit, archiveDirOf, modelFamilies } from '../../tools/accept/lib/card-archive.mjs';
 import { prePush } from '../../tools/accept/pre-push.mjs';
 import { cardArchiveCheck } from '../../tools/accept/commit-hook.mjs';
 import { ROOT, tempRepo } from './temp-repo.mjs';
-import { testTempRoot, writeUnderTempRoot } from './temp-root.mjs';
+import { testTempRoot, writeUnderTempRoot, removeTempRoot } from './temp-root.mjs';
 
 // 门禁生效提交一行在真实规矩里会被合入后回填，测试不依赖它的现值：先统一设成「待回填」，要用具体值的用例自己再设。
 const setEffective = (doc, v) => doc.replace(/^(- 门禁生效提交：).*?(\r?)$/m, `$1${v}$2`);
@@ -283,7 +283,7 @@ test('pre-push：合格的卡提交放行（并重跑 pre_commit 替身）', asy
   try {
     const sha = commit(dir, { 'server-plugin/a.mjs': 'export const a = 1;\n', ...archFiles(archive()) }, WRITER);
     assert.deepEqual(await push(dir, sha), { ok: true, reasons: [] });
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+  } finally { removeTempRoot(dir); }
 });
 
 test('故意违规 1：缺反思、偏离无理由的提交，推送被拒', async () => {
@@ -294,7 +294,7 @@ test('故意违规 1：缺反思、偏离无理由的提交，推送被拒', asy
     const r1 = await push(dir, s1);
     assert.equal(r1.ok, false);
     assert.ok(has(r1.reasons, '缺文件 反思.md'));
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+  } finally { removeTempRoot(dir); }
   const dir2 = repo();
   try {
     const line = /- 代码位置.*/.exec(GOOD['反思.md'])[0];
@@ -303,7 +303,7 @@ test('故意违规 1：缺反思、偏离无理由的提交，推送被拒', asy
     const r2 = await push(dir2, s2);
     assert.equal(r2.ok, false);
     assert.ok(has(r2.reasons, '缺字段「理由」'));
-  } finally { rmSync(dir2, { recursive: true, force: true }); }
+  } finally { removeTempRoot(dir2); }
 });
 
 test('故意违规 2：--no-verify 绕过提交钩子的提交，推送时被拦', async () => {
@@ -318,7 +318,7 @@ test('故意违规 2：--no-verify 绕过提交钩子的提交，推送时被拦
     const r = await push(dir, sha);
     assert.equal(r.ok, false);
     assert.ok(has(r.reasons, '缺文件 派卡.md'));
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+  } finally { removeTempRoot(dir); }
 });
 
 test('pre-push 命令行：违规退出码 1、报原因；非 master 目标不查', () => {
@@ -331,7 +331,7 @@ test('pre-push 命令行：违规退出码 1、报原因；非 master 目标不�
     assert.match(bad.stderr, /pre_push rejected/);
     const other = spawnSync(process.execPath, [join(ROOT, 'tools/accept/pre-push.mjs'), '--root', dir], { input: `refs/heads/ds/x ${sha} refs/heads/ds/x ${'0'.repeat(40)}\n`, encoding: 'utf8' });
     assert.equal(other.status, 0, other.stderr);
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+  } finally { removeTempRoot(dir); }
 });
 
 test('绕过标记：没有绕过记录拒；带合格的绕过记录放行', async () => {
@@ -350,7 +350,7 @@ test('绕过标记：没有绕过记录拒；带合格的绕过记录放行', as
     const r3 = await push(dir, s3);
     assert.equal(r3.ok, false);
     assert.ok(has(r3.reasons, '缺字段「通知号」'));
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+  } finally { removeTempRoot(dir); }
 });
 
 test('角色标记：写码方改验收目录拒；出题方改放行；缺角色行拒；标识与三方标识不符拒', async () => {
@@ -373,13 +373,13 @@ test('角色标记：写码方改验收目录拒；出题方改放行；缺角�
       assert.ok(has((await push(dir2, noRole)).reasons, '缺「角色：<角色>」'));
       const wrongId = commit(dir2, { [t]: '// 再改2\n' }, roleMsg('出题', 'agent-w1'));
       assert.ok(has((await push(dir2, wrongId)).reasons, '与三方标识里「出题」的「agent-t1」不一致'));
-    } finally { rmSync(dir2, { recursive: true, force: true }); }
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+    } finally { removeTempRoot(dir2); }
+  } finally { removeTempRoot(dir); }
 });
 
 test('提交钩子：暂存区改了触发目录、没有档案即拒；带档案放行；非 git 目录不查', () => {
   const plain = testTempRoot('card-archive-plain-');
-  try { assert.deepEqual(cardArchiveCheck(plain), { ok: true, code: null, reasons: [] }); } finally { rmSync(plain, { recursive: true, force: true }); }
+  try { assert.deepEqual(cardArchiveCheck(plain), { ok: true, code: null, reasons: [] }); } finally { removeTempRoot(plain); }
   const dir = repo();
   try {
     git(dir, ['checkout', '-q', '-b', 'ds/x']);
@@ -391,7 +391,7 @@ test('提交钩子：暂存区改了触发目录、没有档案即拒；带档�
     for (const [rel, text] of Object.entries(archFiles(archive()))) writeUnderTempRoot(dir, rel, text);
     git(dir, ['add', '-A']);
     assert.deepEqual(cardArchiveCheck(dir), { ok: true, code: null, reasons: [] });
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+  } finally { removeTempRoot(dir); }
 });
 
 test('回归 4：档案在盘上但没进暂存区，提交钩子照拒（读的是暂存版本）；部分暂存也拒', () => {
@@ -410,7 +410,7 @@ test('回归 4：档案在盘上但没进暂存区，提交钩子照拒（读的
     assert.ok(has(part.reasons, '缺文件 反思.md'));
     git(dir, ['add', '-A']);
     assert.deepEqual(cardArchiveCheck(dir), { ok: true, code: null, reasons: [] });
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+  } finally { removeTempRoot(dir); }
 });
 
 test('回归 5：门禁生效线——生效提交及其祖先不查，之后的新提交照查；没回填时全查', async () => {
@@ -427,7 +427,7 @@ test('回归 5：门禁生效线——生效提交及其祖先不查，之后的
     assert.ok(after.reasons.every((x) => !x.includes(c1.slice(0, 9))), '生效提交本身不查');
     assert.ok(after.reasons.some((x) => x.includes(c2.slice(0, 9))), '之后的新提交照查');
     assert.deepEqual(await push(dir, c1), { ok: true, reasons: [] });
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+  } finally { removeTempRoot(dir); }
 });
 
 test('回归 6：squash 合并写「卡分支/角色：合并/标识」放行；缺分支行或档案不全拒；非触发目录的文档提交放行', async () => {
@@ -444,10 +444,10 @@ test('回归 6：squash 合并写「卡分支/角色：合并/标识」放行；
     try {
       const bad = commit(dir2, { 'server-plugin/a.mjs': 'export const a = 1;\n', ...archFiles(noRefl) }, merge);
       assert.ok(has((await push(dir2, bad)).reasons, '缺文件 反思.md'));
-    } finally { rmSync(dir2, { recursive: true, force: true }); }
+    } finally { removeTempRoot(dir2); }
     const doc = commit(dir, { 'docs/裁定/x.md': '裁定正文\n', 'docs/交接-x.md': '交接\n' }, ['主会话直提文档']);
     assert.deepEqual(await push(dir, doc).then((r) => r.reasons.filter((x) => x.includes(doc.slice(0, 9)))), []);
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+  } finally { removeTempRoot(dir); }
 });
 
 // 回归 7：提交阶段真装 commit-msg 钩子（core.hooksPath 指向临时仓库自己的 .githooks）。临时仓库用现有 tempRepo（带整套门禁脚本）加 git init；
@@ -486,5 +486,5 @@ test('回归 7：真钩子走提交——主会话 squash 合并带三行放行�
     assert.throws(() => git(dir, ['commit', '-q', '-m', '合并 ds/x', '-m', '角色：合并\n标识：main-session-1']), rejectedWith('缺文件 派卡.md'));
     git(dir, ['commit', '-q', ...MERGE.flatMap((m) => ['-m', m])]);
     assert.equal(git(dir, ['log', '-1', '--format=%s']).trim(), '合并 ds/x');
-  } finally { rmSync(dir, { recursive: true, force: true }); }
+  } finally { removeTempRoot(dir); }
 });

@@ -11,3 +11,5 @@ import test from 'node:test';
 test('assertRelUnderTempRoot（裁定四）：x', () => {});
 test('writeUnderTempRoot（裁定四）：x', () => {});
 test('writeUnderTempRoot（只核第 2 条）：x', () => {});
+test('removeTempRoot（删临时根）：x', () => {});
+test('removeUnderTempRoot（删片）：x', () => {});

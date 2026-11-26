@@ -4,11 +4,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { withIsolatedRepo } from '../../support/isolated-repo.mjs';
+import { removeTempRoot, testTempRoot, writeUnderTempRoot } from '../../accept/temp-root.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 
@@ -55,18 +55,18 @@ async function runProbe(reflection) {
   return withIsolatedRepo((copy) => {
     const dir = join(copy, 'docs/卡档案/zz-probe');
     mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, '派卡.md'), PAI_KA, 'utf8');
-    writeFileSync(join(dir, '开发.md'), KAI_FA, 'utf8');
-    writeFileSync(join(dir, '反思.md'), reflection, 'utf8');
-    writeFileSync(join(copy, 'tools/zz-probe.mjs'), 'export const probe = 1;\n', 'utf8');
+    writeUnderTempRoot(dir, '派卡.md', PAI_KA);
+    writeUnderTempRoot(dir, '开发.md', KAI_FA);
+    writeUnderTempRoot(dir, '反思.md', reflection);
+    writeUnderTempRoot(copy, 'tools/zz-probe.mjs', 'export const probe = 1;\n');
     execFileSync('git', ['add', '-A', '--', 'docs/卡档案/zz-probe', 'tools/zz-probe.mjs'], { cwd: copy, stdio: 'ignore' });
-    const msgFile = join(tmpdir(), `drop-selfcheck-msg-${process.pid}-${Date.now()}.txt`);
-    writeFileSync(msgFile, MSG, 'utf8');
+    const msgRoot = testTempRoot('drop-selfcheck-msg-');
+    const msgFile = writeUnderTempRoot(msgRoot, 'msg.txt', MSG);
     try {
       const r = spawnSync(process.execPath, ['tools/accept/commit-hook.mjs', '--msg-file', msgFile], { cwd: copy, encoding: 'utf8' });
       return { status: r.status, out: `${r.stdout || ''}${r.stderr || ''}` };
     } finally {
-      rmSync(msgFile, { force: true });
+      removeTempRoot(msgRoot);
     }
   });
 }
