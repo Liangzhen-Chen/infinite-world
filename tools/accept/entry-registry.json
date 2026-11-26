@@ -591,7 +591,12 @@
     "clone",
     "KernelError",
     "replayApply",
-    "closeInputs"
+    "closeInputs",
+    "installFixedConstants",
+    "checkBodyPlans",
+    "speciesView",
+    "bodyView",
+    "carcassOf"
    ],
    "rules": []
   },
@@ -952,6 +957,94 @@
     "saveDigest",
     "canonical",
     "readPath",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "presentEntries",
+   "file": "kernel/dimensions.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "modifiedWith",
+   "file": "kernel/dimensions.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "checkBodyPlans",
+   "file": "rules/body/body-plan.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "presentEntries",
+    "fixedUnits",
+    "fixedAdd",
+    "fixedScale",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "speciesView",
+   "file": "rules/body/species.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "fixedToNumber",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "bodyView",
+   "file": "rules/body/body.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "speciesView",
+    "modifiedWith",
+    "presentEntries",
+    "fixedUnits",
+    "fixedSub",
+    "fixedMultiply",
+    "fixedAdd",
+    "fixedScale",
+    "fixedToNumber",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "carcassOf",
+   "file": "rules/body/carcass.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "bodyView",
+    "presentEntries",
+    "fixedUnits",
+    "fixedAdd",
+    "fixedMultiply",
+    "fixedDivide",
+    "fixedScale",
+    "fixedToNumber",
     "KernelError"
    ],
    "rules": []
