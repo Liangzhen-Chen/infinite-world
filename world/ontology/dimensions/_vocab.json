@@ -188,7 +188,9 @@
     "bpart_head": {"basis": "同 bpart_arm_l"},
     "bpart_leg_l": {"basis": "同 bpart_arm_l"},
     "bpart_leg_r": {"basis": "同 bpart_arm_l"},
-    "bpart_torso": {"basis": "同 bpart_arm_l"}
+    "bpart_torso": {"basis": "同 bpart_arm_l"},
+    "bpart_wing_l": {"basis": "卷四 :563 有翼身体图（body_avian）部位代号（左右对称，右侧同）；S1-2b 家鸡"},
+    "bpart_wing_r": {"basis": "同 bpart_wing_l"}
    },
    "prefix": "bpart_"
   },
@@ -2788,8 +2790,11 @@
   "taxon": {
    "closed": false,
    "entries": {
+    "taxon_aves": {"basis": "鸟纲（Aves），分类链顶端，无上位；ITIS 家鸡 Gallus gallus domesticus 分类链 Phasianidae → Galliformes → Aves（S1-2b 第二物种家鸡）"},
+    "taxon_galliformes": {"broader": "taxon_aves", "basis": "鸡形目（Galliformes）；出处同 taxon_aves"},
     "taxon_hominidae": {"broader": "taxon_primates", "basis": "人科（Hominidae）：Homo sapiens 的科，ITIS 分类链 Hominidae → Primates → Mammalia（卷四 §2.1 :127 taxon 单值、§2.4 :287 仅 broader；docs/问题.md 6-23 人类物种行 A 第 8 条；李白 11-22 15:21 P-1）"},
     "taxon_mammalia": {"basis": "哺乳纲（Mammalia），分类链顶端，无上位；出处同 taxon_hominidae"},
+    "taxon_phasianidae": {"broader": "taxon_galliformes", "basis": "雉科（Phasianidae），家鸡所在科；出处同 taxon_aves"},
     "taxon_primates": {"broader": "taxon_mammalia", "basis": "灵长目（Primates）；出处同 taxon_hominidae"}
    },
    "prefix": "taxon_"
@@ -2797,6 +2802,7 @@
   "tissue": {
    "closed": false,
    "entries": {
+    "tissue_feather": {"depthOrder": 0, "reserve": false, "basis": "羽毛：长在皮肤外的角蛋白覆被（S1-2b 第二物种家鸡，主会话 11-26 裁定 3A）；depthOrder 0 取在皮肤（1）之外，解剖常识，不改已有组织的层序；不是能量储备组织"},
     "tissue_skin": {"depthOrder": 1, "reserve": false, "basis": "卷四 §2.4 :285、:559 人形身体图的五个组织代号；depthOrder 取解剖由外到内的层序（皮肤、皮下脂肪、骨骼肌、骨、脏器），解剖学常识；reserve 只有脂肪为真（定义即能量储备组织，卷四 :285）。李白 11-22 15:21 P-1、15:48 P-7"},
     "tissue_fat": {"depthOrder": 2, "reserve": true, "basis": "同 tissue_skin；脂肪是能量储备组织"},
     "tissue_muscle": {"depthOrder": 3, "reserve": false, "basis": "同 tissue_skin"},

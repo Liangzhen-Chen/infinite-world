@@ -60,7 +60,7 @@
    "required": "always",
    "source": "卷四 §2.2",
    "type": "map",
-   "value": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4}
+   "value": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 4, "nullable": true}
   }
  },
  "entity": {
@@ -89,8 +89,20 @@
  "kind": "body_plan",
  "namespace": "core",
  "rows": {
+  "body_avian": {
+   "tissueFractions": {"tissue_bone": 0.115, "tissue_fat": 0.032, "tissue_feather": 0.0641, "tissue_muscle": 0.513, "tissue_organ": 0.1459, "tissue_skin": 0.13},
+   "parts": [
+    {"id": "bpart_torso", "parent": null, "sizeFraction": 0.6384, "contributes": {"cap_blood_pumping": 1, "cap_breathing": 1, "cap_digestion": 1, "cap_touch": 1}, "vital": true},
+    {"id": "bpart_head", "parent": "bpart_torso", "sizeFraction": 0.069, "contributes": {"cap_consciousness": 1, "cap_hearing": 1, "cap_sight": 1, "cap_smell": 1}, "vital": true},
+    {"id": "bpart_wing_l", "parent": "bpart_torso", "sizeFraction": 0.039, "contributes": {"cap_flying": 0.5}, "vital": false},
+    {"id": "bpart_wing_r", "parent": "bpart_torso", "sizeFraction": 0.039, "contributes": {"cap_flying": 0.5}, "vital": false},
+    {"id": "bpart_leg_l", "parent": "bpart_torso", "sizeFraction": 0.1073, "contributes": {"cap_moving": 0.5}, "vital": false},
+    {"id": "bpart_leg_r", "parent": "bpart_torso", "sizeFraction": 0.1073, "contributes": {"cap_moving": 0.5}, "vital": false}
+   ],
+   "basis": "有翼身体图（卷四 §4.2.5 :563 只给结构：翼挂躯干、承担 cap_flying，折翼只损飞行不损行走；其数值标示例、status placeholder，不搬）。S1-2b 第二物种家鸡（主会话 11-26 裁定 4A：按文献拼一组，逐数标出处，拼凑或推算的数标暂定·待试玩标定，报李白知悉）。【部位 sizeFraction，占全体重，暂定·待试玩标定】头取头 + 颈：3.7% + 3.2% = 0.069（Farzana N, Habib M, Ali MH, Hashem MA, Ali MS 2017《Comparison of meat yield and quality characteristics between indigenous chicken and commercial broiler》The Bangladesh Veterinarian 34(1):61–70（https://banglajol.info/index.php/BVET/article/view/49889 ，PDF 2026-11-26 读）表 1 本地鸡 0 日栏）；左右翼各 0.039 = 翼占胴体 13.15%（Behera et al. 2018（Hansli 本地鸡：胸 23.35%、drumstick 14.63%、thigh 16.32%、翼 13.15%、背 21.98%），转引自《An overview of carcass and meat quality traits of indigenous chickens from South and East Asia》（ResearchGate 378241971，检索摘要 2026-11-26 读；原文未读到，分母未注明，按胴体计））× 胴体占活重 59.3%（Farzana 2017 表 1）÷ 2 = 0.03899，取 0.039；左右腿各 0.1073 = [(thigh 16.32% + drumstick 14.63%) × 59.3% + 胫与脚 3.1%（Farzana 2017 表 1 Shank weight (2)）] ÷ 2 = 0.10727，取四位；躯干为余量 1 − 0.069 − 2×0.039 − 2×0.1073 = 0.6384（含胸、背、内脏、血与羽毛等不归四肢与头的部分）；和 = 1.0000。contributes（结构取值，同人形图体例）：泵血、呼吸、消化、触觉在躯干；意识、听、视、嗅在头；飞行两翼各 0.5（卷四 :563）；移动两腿各 0.5；家鸡不会说话，无部位贡献 cap_speech；没有手，cap_manipulation 无贡献（喙啄取是否算操作留待卷十三或试玩定）。vital 取躯干与头。【tissueFractions，占全体重，暂定·待试玩标定】羽 0.0641（Siruvidai 本地鸡 16 周放血损失 3.92±0.09%、脱羽损失 6.41±0.14% 活重（《Carcass characteristics of indigenous Siruvidai chicken of Tamil Nadu raised under farm conditions》，FAO AGRIS 记录 6511ac7d58c30050e8a3c5dc，摘要 2026-11-26 读） 脱羽损失）；肌肉 0.513、骨 0.115 = 骨 9% + 脚 2.5%（脚以骨、腱、鳞皮为主，归骨）、皮 0.13（带皮下脂肪的皮整项归皮）、脂 0.032（腹脂）（Murawska D 2017《The Effect of Age on Growth Performance and Carcass Quality Parameters in Different Poultry Species》in Manafi M (ed.) Poultry Science, IntechOpen, doi 10.5772/64860（https://www.intechopen.com/chapters/52005 ，2026-11-26 读）§2.2–2.4 Ross 308 肉鸡 10 周龄占全体重：肌肉 51.3%、骨 9%、带皮下脂肪的皮 13%、腹脂 3.2%、心肝肫 2.4%、消化道 3.6%、脚 2.5%；肉鸡数值，本地鸡肌肉应更低、骨更高，未查到本地鸡全体解剖表）；器官为余量 0.1459 = 1 − 0.0641 − 0.513 − 0.115 − 0.13 − 0.032，含心肝肫 2.4% + 消化道 3.6%（Murawska 2017）+ 血 3.92%（Siruvidai 放血损失）+ 余 4.67%（头部软组织、肺、肾、生殖道等未分项者，余量归器官）；和 = 1.0000。人形图上的 tissue_feather 写 null（卷二 §1.6 第 4 项；表头 value 加 nullable，主会话已定第 5 条）。"
+  },
   "body_humanoid": {
-   "tissueFractions": {"tissue_bone": 0.14, "tissue_fat": 0.20, "tissue_muscle": 0.40, "tissue_organ": 0.22, "tissue_skin": 0.04},
+   "tissueFractions": {"tissue_bone": 0.14, "tissue_fat": 0.20, "tissue_muscle": 0.40, "tissue_organ": 0.22, "tissue_skin": 0.04, "tissue_feather": null},
    "parts": [
     {"id": "bpart_torso", "parent": null, "sizeFraction": 0.497, "contributes": {"cap_blood_pumping": 1, "cap_breathing": 1, "cap_digestion": 1, "cap_touch": 1}, "vital": true},
     {"id": "bpart_head", "parent": "bpart_torso", "sizeFraction": 0.081, "contributes": {"cap_consciousness": 1, "cap_hearing": 1, "cap_sight": 1, "cap_smell": 1, "cap_speech": 1}, "vital": true},

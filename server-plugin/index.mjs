@@ -38,6 +38,8 @@ function readWorld() {
     tableDocs,
     digestExclude: json('../rules/tables/digest-exclude.json').paths,
     primitivesDoc: json('primitives.json'),
+    // 词表族（能力族条目的 dimKey 等，bodyView 读；S1-2b）。
+    vocabDoc: json('dimensions/_vocab.json'),
   };
 }
 

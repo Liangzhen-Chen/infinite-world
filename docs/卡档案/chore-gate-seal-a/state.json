@@ -1,0 +1,80 @@
+{
+  "card": "chore-gate-seal-a",
+  "phase": "pr",
+  "updatedAt": "2026-11-26T15:37:02.869Z",
+  "branches": {
+    "code": "chore/gate-seal-a",
+    "test": "test/gate-seal-a"
+  },
+  "pr": null,
+  "parties": {
+    "code": {
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/gsa",
+        "session": "ctx_e0f397adf6af",
+        "commits": [
+          "1c029cc59",
+          "cc59c8525",
+          "20249de95",
+          "9013cac96"
+        ]
+      },
+      "costUsd": null
+    },
+    "test": {
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/ts-gsa",
+        "session": "ctx_3f66f9fb9a34",
+        "commits": [
+          "a1f8dd5f8",
+          "f4693fa60"
+        ]
+      },
+      "costUsd": null
+    },
+    "review": [
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": null,
+        "orca": {
+          "worktree": "F:/dnd-worktrees/dnd/ts-gsa",
+          "session": "ctx_7bb30b06fa32",
+          "commits": [
+            "44c424753",
+            "2b4be5920",
+            "f617657f7"
+          ]
+        },
+        "costUsd": null
+      },
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": "docs/卡档案/chore-gate-seal-a/收据/审卡-001.json",
+        "orca": null,
+        "costUsd": 0.66
+      },
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": "docs/卡档案/chore-gate-seal-a/收据/审卡-002.json",
+        "orca": null,
+        "costUsd": null
+      }
+    ]
+  },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
+  "failCount": 3,
+  "blocker": null,
+  "nextAction": "开 PR chore/gate-seal-a→master 走 CI，main 绿即合；合入后删 gsa、ts-gsa；此后各在途卡合入前按新格式补 orca 凭证"
+}

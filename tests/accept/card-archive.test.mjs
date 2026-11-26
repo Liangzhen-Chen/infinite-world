@@ -43,6 +43,11 @@ const MEM = {
   list: (dir) => Object.keys(FILES).filter((k) => k.startsWith(dir)).map((k) => k.slice(dir.length)),
 };
 
+// 三方各一份收据（门禁封口卡 A）：收据的 model 照派卡.md 三方标识里的模型写，模型族才对得上。
+function receipts(w, t, r) {
+  const one = (role, model) => JSON.stringify({ role, model, family: model, endpoint: 'anthropic', startedAt: '2026-11-25T00:00:00Z', endedAt: '2026-11-25T00:05:00Z', exitCode: 0, totalCostUsd: null, promptSha256: 'ab'.repeat(32), headBefore: null, headAfter: null });
+  return { '收据/写码-001.json': one('写码', w), '收据/出题-001.json': one('出题', t), '收据/审卡-001.json': one('审卡', r) };
+}
 const ITEM3 = (n) => `- 抽查条目：偏离 ${n}；对照：tools/accept/commit-hook.mjs:30；结论：属实，与代码一致`;
 const GOOD = {
   '派卡.md': [
@@ -76,10 +81,24 @@ const GOOD = {
     '## 发现与处理', '无阻塞问题，已全部处理', '',
     '## 抽查自我反思', ITEM3(1), ITEM3(2), ITEM3(3), '',
   ].join('\n'),
+  // 门禁封口卡 A：推送阶段交接文件必有、三方派活凭证必齐（收据文件在档案目录的 收据/ 下）。
+  'state.json': JSON.stringify({
+    card: 'ds-x', phase: 'pr', updatedAt: '2026-11-25T00:00:00Z', branches: { code: 'ds/x', test: 'test/x' }, pr: null,
+    parties: {
+      code: { receipt: 'docs/卡档案/ds-x/收据/写码-001.json' },
+      test: { receipt: 'docs/卡档案/ds-x/收据/出题-001.json' },
+      review: [{ receipt: 'docs/卡档案/ds-x/收据/审卡-001.json' }],
+    },
+    ci: {}, failCount: 0, blocker: null, nextAction: '等审卡结果后开 PR',
+  }),
+  ...receipts('DeepSeek flash', 'Claude Haiku 5.5', 'Claude Opus 5.5'),
 };
 const archive = (patch = {}) => ({ ...GOOD, ...patch });
 const readOf = (files) => (f) => (f in files ? files[f] : null);
-const check = (files, stage = '推送') => checkArchive(RULES, readOf(files), null, stage, MEM);
+// 收据由仓库入口按路径读：档案目录下的读这份档案，其余读 MEM（门禁封口卡 A）。
+const ADIR = 'docs/卡档案/ds-x/';
+const repoOf = (files) => ({ read: (p) => (p.startsWith(ADIR) ? readOf(files)(p.slice(ADIR.length)) : MEM.read(p)), list: MEM.list });
+const check = (files, stage = '推送') => checkArchive(RULES, readOf(files), null, stage, repoOf(files), { dir: ADIR });
 const has = (reasons, ...parts) => reasons.some((r) => parts.every((p) => r.includes(p)));
 const swap = (file, from, to) => archive({ [file]: GOOD[file].replace(from, to) });
 
@@ -88,13 +107,14 @@ test('合格档案放行', () => {
 });
 
 test('交接文件 state.json：没有不拒；非法 JSON、非对象、缺必填键拒；齐全放行', () => {
-  const state = { card: 'ds-x', phase: 'dispatched', updatedAt: '2026-11-25T00:00:00Z', branches: {}, parties: {}, ci: {}, failCount: 0, blocker: null, nextAction: '继续写' };
+  const state = { ...JSON.parse(GOOD['state.json']), phase: 'dispatched', ci: {}, nextAction: '继续写代码' };
   assert.deepEqual(check({ ...archive(), 'state.json': JSON.stringify(state) }), []);
   assert.ok(has(check({ ...archive(), 'state.json': '{' }), 'state.json', '不是合法 JSON'));
   assert.ok(has(check({ ...archive(), 'state.json': '[]' }), 'state.json', '须是 JSON 对象'));
   const miss = { ...state }; delete miss.phase;
   assert.ok(has(check({ ...archive(), 'state.json': JSON.stringify(miss) }), 'state.json', '缺必填键', 'phase'));
-  assert.deepEqual(check(archive()), [], '没有 state.json 时不拒');
+  const noState = archive(); delete noState['state.json'];
+  assert.deepEqual(check(noState, '提交'), [], '没有 state.json 时提交阶段不拒（推送阶段必有，见 card-archive-seal.test.mjs）');
 });
 
 test('缺文件拒；出题.md、审查.md 提交时不要求、推送时要求', () => {
@@ -166,6 +186,7 @@ const withModels = (w, t, r) => archive({
     l.startsWith('- 角色：写码；') ? `- 角色：写码；模型：${w}；标识：agent-w1`
       : l.startsWith('- 角色：出题；') ? `- 角色：出题；模型：${t}；标识：agent-t1`
         : l.startsWith('- 角色：审卡；') ? `- 角色：审卡；模型：${r}；标识：agent-r1` : l)).join('\n'),
+  ...receipts(w, t, r),
 });
 
 test('三方模型族：三族全异放行；写码与出题同族拒；审卡与写码或出题同族拒；审卡两轮同族放行', () => {
@@ -190,7 +211,7 @@ test('三方模型族：规矩没有该键（推送时读远端旧规矩）时�
   const OLD = loadRules(DOC.replace(/^- 三方模型字段：.*\r?\n/m, ''));
   assert.equal(OLD.error, undefined);
   const same = { ...GOOD, '派卡.md': GOOD['派卡.md'].replace('模型：Claude Opus 5.5', '模型：DeepSeek flash') };
-  assert.deepEqual(checkArchive(OLD.rules, readOf(same), null, '推送', MEM), []);
+  assert.deepEqual(checkArchive(OLD.rules, readOf(same), null, '推送', repoOf(same), { dir: ADIR }), []);
 });
 
 test('回归 2：引用的文件不存在、行号超出文件、卷文件不存在或行号超出：拒；真有的放行', () => {
@@ -209,13 +230,13 @@ test('回归 2：引用的文件不存在、行号超出文件、卷文件不存
 test('回归 3：三方标识只差大小写或首尾空白算同一个人：拒；提交说明的标识同样不分大小写', () => {
   assert.ok(has(check(swap('派卡.md', '标识：agent-r1', '标识：AGENT-W1 ')), '标识相同'));
   assert.ok(has(check(swap('派卡.md', '标识：agent-r1', '标识：Agent-T1')), '标识相同'));
-  const ok = judgeCommit(RULES, { files: [SRC], branch: null, message: '卡分支：ds/x\n角色：写码\n标识：AGENT-W1', isMerge: false, stage: '推送', repo: MEM, readFile: (d, f) => readOf(archive())(f) });
+  const ok = judgeCommit(RULES, { files: [SRC], branch: null, message: '卡分支：ds/x\n角色：写码\n标识：AGENT-W1', isMerge: false, stage: '推送', repo: repoOf(archive()), rangeFiles: [SRC, `${ADIR}开发.md`], readFile: (d, f) => readOf(archive())(f) });
   assert.deepEqual(ok, []);
 });
 
 // 判提交（内存版）。
 const SRC = 'server-plugin/a.mjs';
-const judge = (o) => judgeCommit(RULES, { branch: 'ds/x', message: null, isMerge: false, stage: '提交', repo: MEM, readFile: (d, f) => (d === 'docs/卡档案/ds-x/' ? readOf(archive())(f) : null), ...o });
+const judge = (o) => judgeCommit(RULES, { branch: 'ds/x', message: null, isMerge: false, stage: '提交', repo: repoOf(archive()), rangeFiles: [SRC, `${ADIR}开发.md`], readFile: (d, f) => (d === 'docs/卡档案/ds-x/' ? readOf(archive())(f) : null), ...o });
 
 test('审卡每轮一条可多条：两条审卡放行；审卡标识等于写码拒；提交用第二条放行、用未登记标识拒；写码仍只许一条', () => {
   const R1 = '- 角色：审卡；模型：Claude Opus 5.5；标识：agent-r1\n';
@@ -242,8 +263,8 @@ test('例外提交放行：纯快照、不在触发目录的文档', () => {
 
 test('合并提交不再免查：无档案拒；带合格档案与合并三行放行', () => {
   const none = { readFile: () => null };
-  assert.ok(has(judge({ ...none, files: [SRC], isMerge: true }), '缺文件 派卡.md'));
-  assert.deepEqual(judge({ files: [SRC], isMerge: true, stage: '推送', message: '卡分支：ds/x\n角色：合并\n标识：main-session-1' }), []);
+  assert.ok(has(judge({ ...none, files: [SRC], isMerge: true, ownFiles: [] }), '缺文件 派卡.md'));
+  assert.deepEqual(judge({ files: [SRC], isMerge: true, ownFiles: [], stage: '推送', message: '卡分支：ds/x\n角色：合并\n标识：main-session-1' }), []);
 });
 
 test('触发目录的提交没有档案：拒；有合格档案：放行', () => {
@@ -343,7 +364,7 @@ test('绕过标记：没有绕过记录拒；带合格的绕过记录放行', as
     const r1 = await push(dir, s1);
     assert.equal(r1.ok, false);
     assert.ok(has(r1.reasons, '绕过登记不合格', '缺文件 开发.md'));
-    const dev = '## 绕过记录\n- 谁：写码会话 agent-w1；为什么：钩子在该机器上故障；通知号：notify-0042\n';
+    const dev = '## 绕过记录\n- 谁：写码会话 agent-w1；为什么：钩子在该机器上故障；通知号：msg_0042abcdef\n';
     const s2 = commit(dir, archFiles({ '开发.md': dev }), msg);
     assert.deepEqual(await push(dir, s2), { ok: true, reasons: [] });
     const s3 = commit(dir, archFiles({ '开发.md': '## 绕过记录\n- 谁：写码会话；为什么：钩子故障' }), msg);
@@ -356,7 +377,7 @@ test('绕过标记：没有绕过记录拒；带合格的绕过记录放行', as
 test('角色标记：写码方改验收目录拒；出题方改放行；缺角色行拒；标识与三方标识不符拒', async () => {
   const dir = repo();
   try {
-    commit(dir, archFiles({ '派卡.md': GOOD['派卡.md'] }), ['派卡']);
+    commit(dir, archFiles(archive()), ['派卡']);
     const t = 'tests/acceptance/ds-x/a.test.mjs';
     const sW = commit(dir, { [t]: '// 写码方偷改\n' }, WRITER);
     const rW = await push(dir, sW);
@@ -366,8 +387,8 @@ test('角色标记：写码方改验收目录拒；出题方改放行；缺角�
     assert.deepEqual((await push(dir, sT)).ok, false, '含前一个违规提交，整体仍拒');
     const dir2 = repo();
     try {
-      commit(dir2, archFiles({ '派卡.md': GOOD['派卡.md'] }), ['派卡']);
-      const ok = commit(dir2, { [t]: '// 出题\n' }, roleMsg('出题', 'agent-t1'));
+      commit(dir2, archFiles(archive()), ['派卡']);
+      const ok = commit(dir2, { [t]: `${fakeText(100)}\n// 出题\n` }, roleMsg('出题', 'agent-t1'));
       assert.deepEqual(await push(dir2, ok), { ok: true, reasons: [] });
       const noRole = commit(dir2, { [t]: '// 再改\n' }, ['卡分支：ds/x']);
       assert.ok(has((await push(dir2, noRole)).reasons, '缺「角色：<角色>」'));
@@ -430,19 +451,32 @@ test('回归 5：门禁生效线——生效提交及其祖先不查，之后的
   } finally { removeTempRoot(dir); }
 });
 
-test('回归 6：squash 合并写「卡分支/角色：合并/标识」放行；缺分支行或档案不全拒；非触发目录的文档提交放行', async () => {
+// 门禁封口卡 A（Q1）：「角色：合并」只认真合并提交，squash 改为 PR 真合并（--no-ff）——卡分支上按角色提交，回主线合并，合并说明写三行。
+function mergeIn(dir, br, steps, mergeLines) {
+  const main = git(dir, ['rev-parse', '--abbrev-ref', 'HEAD']).trim();
+  git(dir, ['checkout', '-q', '-b', br]);
+  for (const [files, lines] of steps) commit(dir, files, lines);
+  git(dir, ['checkout', '-q', main]);
+  git(dir, ['-c', 'core.hooksPath=', 'merge', '-q', '--no-ff', br, ...mergeLines.flatMap((m) => ['-m', m])]);
+  return git(dir, ['rev-parse', 'HEAD']).trim();
+}
+
+test('回归 6：PR 真合并写「卡分支/角色：合并/标识」放行；缺分支行或档案不全拒；非触发目录的文档提交放行', async () => {
   const dir = repo();
   try {
     const t = 'tests/acceptance/ds-x/a.test.mjs';
     const merge = ['卡分支：ds/x\n角色：合并\n标识：main-session-1'];
-    const ok = commit(dir, { 'server-plugin/a.mjs': 'export const a = 1;\n', [t]: `${fakeText(100)}\n// 出题方写的\n`, ...archFiles(archive()) }, merge);
+    const ok = mergeIn(dir, 'ds/x', [
+      [{ 'server-plugin/a.mjs': 'export const a = 1;\n', ...archFiles(archive()) }, WRITER],
+      [{ [t]: `${fakeText(100)}\n// 出题方写的\n` }, roleMsg('出题', 'agent-t1')],
+    ], merge);
     assert.deepEqual(await push(dir, ok), { ok: true, reasons: [] });
-    const noBranch = commit(dir, { 'server-plugin/b.mjs': 'export const b = 1;\n' }, ['角色：合并\n标识：main-session-1']);
+    const noBranch = mergeIn(dir, 'ds/x-b', [[{ 'server-plugin/b.mjs': 'export const b = 1;\n' }, WRITER]], ['角色：合并\n标识：main-session-1']);
     assert.ok(has((await push(dir, noBranch)).reasons, '卡分支'));
     const noRefl = archive(); delete noRefl['反思.md'];
     const dir2 = repo();
     try {
-      const bad = commit(dir2, { 'server-plugin/a.mjs': 'export const a = 1;\n', ...archFiles(noRefl) }, merge);
+      const bad = mergeIn(dir2, 'ds/x', [[{ 'server-plugin/a.mjs': 'export const a = 1;\n', ...archFiles(noRefl) }, WRITER]], merge);
       assert.ok(has((await push(dir2, bad)).reasons, '缺文件 反思.md'));
     } finally { removeTempRoot(dir2); }
     const doc = commit(dir, { 'docs/裁定/x.md': '裁定正文\n', 'docs/交接-x.md': '交接\n' }, ['主会话直提文档']);
@@ -468,7 +502,7 @@ function hookRepo() {
 const stageAll = (dir, files) => { for (const [rel, text] of Object.entries(files)) writeUnderTempRoot(dir, rel, text); git(dir, ['add', '-A']); };
 const rejectedWith = (part) => (e) => String(e.stderr).includes('commit_msg rejected') && String(e.stderr).includes(part);
 
-test('回归 7：真钩子走提交——主会话 squash 合并带三行放行；缺卡分支行拒；卡分支上档案缺反思拒', () => {
+test('回归 7：真钩子走提交——主会话真合并带三行放行；缺卡分支行拒；卡分支上档案缺反思拒', () => {
   const dir = hookRepo();
   try {
     const MERGE = ['合并 ds/x', '卡分支：ds/x\n角色：合并\n标识：main-session-1'];
@@ -480,9 +514,9 @@ test('回归 7：真钩子走提交——主会话 squash 合并带三行放行�
     // 补全后写码提交放行（说明里角色标识与三方标识一致）
     stageAll(dir, archFiles(archive()));
     git(dir, ['commit', '-q', '-m', '写码', '-m', '卡分支：ds/x\n角色：写码\n标识：agent-w1']);
-    // 回主会话分支 squash 合并：说明缺卡分支行 → 拒（当前分支 main-s 没有档案目录）；带三行 → 放行
+    // 回主会话分支真合并（门禁封口卡 A：不再 squash）：说明缺卡分支行 → 拒（当前分支 main-s 没有档案目录）；带三行 → 放行
     git(dir, ['checkout', '-q', 'main-s']);
-    git(dir, ['merge', '--squash', 'ds/x']);
+    git(dir, ['merge', '--no-ff', '--no-commit', 'ds/x']);
     assert.throws(() => git(dir, ['commit', '-q', '-m', '合并 ds/x', '-m', '角色：合并\n标识：main-session-1']), rejectedWith('缺文件 派卡.md'));
     git(dir, ['commit', '-q', ...MERGE.flatMap((m) => ['-m', m])]);
     assert.equal(git(dir, ['log', '-1', '--format=%s']).trim(), '合并 ds/x');

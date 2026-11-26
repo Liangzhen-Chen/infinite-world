@@ -1,0 +1,37 @@
+{
+  "card": "feat-s1-2a",
+  "phase": "pr",
+  "updatedAt": "2026-11-26T14:22:56.417Z",
+  "branches": {
+    "code": "feat/s1-2a",
+    "test": "test/s1-2a"
+  },
+  "pr": null,
+  "parties": {
+    "code": {
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
+      "receipt": "Orca 会员会话 ctx_e97aab289970（工作树 F:/dnd-worktrees/dnd/s2a；提交 289950695）",
+      "costUsd": null
+    },
+    "test": {
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
+      "receipt": "Orca 会员会话 ctx_adb29fae09e5 及后续轮（工作树 F:/dnd-worktrees/dnd/ts-s2a；提交 8daf1c9a9、5cb6aacf9；跳钩子的 02ff3a2da 已在推送前作废）",
+      "costUsd": null
+    },
+    "review": {
+      "family": "claude-opus",
+      "model": "claude-opus-5-5",
+      "receipt": "Orca 会员会话 ctx_f832a5f3def6（工作树 F:/dnd-worktrees/dnd/ts-s2a；提交 cd95fa5e1、def830c78，结论可合）",
+      "costUsd": null
+    }
+  },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
+  "failCount": 0,
+  "blocker": null,
+  "nextAction": "开 PR feat/s1-2a→master 走 CI，main 绿即合；合入后删 s2a、ts-s2a 工作树"
+}

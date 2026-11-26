@@ -1,0 +1,37 @@
+{
+  "card": "feat-s1-2b",
+  "phase": "pr",
+  "updatedAt": "2026-11-26T15:12:19.727Z",
+  "branches": {
+    "code": "feat/s1-2b",
+    "test": "test/s1-2b"
+  },
+  "pr": null,
+  "parties": {
+    "code": {
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
+      "receipt": "Orca 会员会话 ctx_60d5525d02be（工作树 F:/dnd-worktrees/dnd/s2b；提交 0a3a7f6ae、合并解冲突 e106f0491）",
+      "costUsd": null
+    },
+    "test": {
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
+      "receipt": "Orca 会员会话 ctx_e2be35cb2b1f 及后续轮（工作树 F:/dnd-worktrees/dnd/ts-s2b；提交 9d0a72c0c、6d35cdfb4）",
+      "costUsd": null
+    },
+    "review": {
+      "family": "claude-opus",
+      "model": "claude-opus-5-5",
+      "receipt": "Orca 会员会话 ctx_74fc662f1cd3（工作树 F:/dnd-worktrees/dnd/ts-s2b；提交 8bc7b95f0，结论可合）",
+      "costUsd": null
+    }
+  },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
+  "failCount": 0,
+  "blocker": null,
+  "nextAction": "开 PR feat/s1-2b→master 走 CI，main 绿即合（须先于门禁封口 A 合入）；合入后删 s2b、ts-s2b"
+}
