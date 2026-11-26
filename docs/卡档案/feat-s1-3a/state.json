@@ -1,0 +1,71 @@
+{
+  "card": "feat-s1-3a",
+  "phase": "pr",
+  "updatedAt": "2026-11-26T22:03:42.012Z",
+  "branches": {
+    "code": "feat/s1-3a",
+    "test": "test/s1-3a"
+  },
+  "pr": null,
+  "parties": {
+    "code": {
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/s13a",
+        "session": "ctx_25a4d0faea64",
+        "commits": [
+          "49fda6a93",
+          "56d8300f2",
+          "4b8853353"
+        ]
+      },
+      "costUsd": null
+    },
+    "test": {
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/ts-s13a",
+        "session": "ctx_836fa902ed86",
+        "commits": [
+          "d1bb6774b",
+          "77bf4fae9"
+        ]
+      },
+      "costUsd": null
+    },
+    "review": [
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": null,
+        "orca": {
+          "worktree": "F:/dnd-worktrees/dnd/ts-s13a",
+          "session": "ctx_80be0034cc2f",
+          "commits": [
+            "a8a79e62a",
+            "0a1a031df"
+          ]
+        },
+        "costUsd": null
+      },
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": "docs/卡档案/feat-s1-3a/收据/审卡-001.json",
+        "orca": null,
+        "costUsd": null
+      }
+    ]
+  },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
+  "failCount": 1,
+  "blocker": null,
+  "nextAction": "开 PR feat/s1-3a→master 走 CI，main 绿即合；合入后删 s13a、ts-s13a；接着 S1-3b 合 master 后合入、S2-0b 复跑验收（人物模板已有）后与 S2-0a 一个 PR"
+}

@@ -196,6 +196,15 @@
   },
   {
    "detectors": [
+    "import_edge",
+    "call_edge",
+    "path_access"
+   ],
+   "scanClass": "digest_read",
+   "source": "卷十二 §2.4 :255（digest_read 摘要读取，检测器 import_edge、call_edge、path_access）、:276（卷二十七 S27-8）；S12-3 全卷登记卡新登类别，只挂 registered 条目，未实现"
+  },
+  {
+   "detectors": [
     "path_access"
    ],
    "scanClass": "display_read",
@@ -337,6 +346,13 @@
   },
   {
    "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "handle_special",
+   "source": "卷十二 §2.4 :258（handle_special 句柄字面量特判，检测器 lit_scope）、:270（卷二十七 S27-1、S27-9）；门禁封口 C 新登类别，只挂 registered 条目，未实现"
+  },
+  {
+   "detectors": [
     "typed_pos"
    ],
    "scanClass": "id_parse",
@@ -416,25 +432,74 @@
     "doc_struct"
    ],
    "docFamilies": {
+    "kickoff1125": [
+     "L-"
+    ],
     "vol1": [
      "V-"
+    ],
+    "vol10": [
+     "S10-",
+     "A10-"
     ],
     "vol12": [
      "S12-",
      "A12-"
     ],
+    "vol17": [
+     "S17-",
+     "A17-"
+    ],
+    "vol18": [
+     "S18-",
+     "A18-"
+    ],
     "vol2": [
      "S"
     ],
+    "vol20": [
+     "T-"
+    ],
     "vol27": [
-     "A27-"
+     "A27-",
+     "S27-"
+    ],
+    "vol3a": [
+     "AP-",
+     "VA-"
+    ],
+    "vol3b": [
+     "P-",
+     "V3-"
+    ],
+    "vol5": [
+     "S5-",
+     "A5-"
+    ],
+    "vol6": [
+     "S6-",
+     "A6-"
+    ],
+    "vol9": [
+     "S9-",
+     "A9-"
     ]
    },
    "docVolumes": {
+    "kickoff1125": "docs/gemini/kickoff-1125.md",
     "vol1": "docs/统一底层设计/卷一-总纲与分层.md",
+    "vol10": "docs/统一底层设计/卷十-世界随机生成.md",
     "vol12": "docs/统一底层设计/卷十二-验收与自动扫描.md",
+    "vol17": "docs/统一底层设计/卷十七-交通与路途.md",
+    "vol18": "docs/统一底层设计/卷十八-社会关系与家族.md",
     "vol2": "docs/统一底层设计/卷二-维度表规范与统一入口.md",
-    "vol27": "docs/统一底层设计/卷二十七-离屏性能存档与确定性.md"
+    "vol20": "docs/统一底层设计/卷二十-时间日历天气与环境.md",
+    "vol27": "docs/统一底层设计/卷二十七-离屏性能存档与确定性.md",
+    "vol3a": "docs/统一底层设计/卷三甲-物质本源.md",
+    "vol3b": "docs/统一底层设计/卷三乙-物态类别与物品.md",
+    "vol5": "docs/统一底层设计/卷五-地点地形与资源场.md",
+    "vol6": "docs/统一底层设计/卷六-经济.md",
+    "vol9": "docs/统一底层设计/卷九-AI接口.md"
    },
    "formNames": {
     "extend": "扩展性式",
@@ -442,8 +507,27 @@
     "process": "流程式",
     "scan": "扫描式"
    },
+   "formTags": {
+    "extend": [
+     "【扩展性】",
+     "**扩展性式**"
+    ],
+    "invariant": [
+     "【不变量】",
+     "**不变量式**"
+    ],
+    "scan": [
+     "【扫描】",
+     "**扫描式**"
+    ]
+   },
+   "numberTails": [
+    "S",
+    "I",
+    "E"
+   ],
    "scanClass": "item_ledger",
-   "source": "卷十二 §3.4 S12-3、R12-11.3；P-1b 新登类别；vol27 按卷二十七 §4.8 A27-8.1 :759 的定义处登记（B4-G，主会话只核必须改第 3 项，照现有卷的登记写法）"
+   "source": "卷十二 §3.4 S12-3、R12-11.3；P-1b 新登类别；vol27 按卷二十七 §4.8 A27-8.1 :759 的定义处登记（B4-G，主会话只核必须改第 3 项，照现有卷的登记写法）；S12-3 全卷登记卡：新登卷三甲 vol3a、卷三乙 vol3b、卷五、卷六、卷九、卷十、卷十七、卷十八、卷二十与 kickoff1125（docs/gemini/kickoff-1125.md 落地清单），卷二十七补 S27- 族，只登 S/A 两族（卷十二:1298 C12-5「扫描条与断言」，卷二十扫描表首列为 T-，卷三为 AP-/VA-、P-/V3-）；formTags、numberTails 认卷五卷六「【扫描】」与卷三「**扫描式** VA-4.1-S」定义处（主会话裁定 msg_77f457d18186 ①③⑤）"
   },
   {
    "detectors": [
@@ -526,6 +610,13 @@
    ],
    "scanClass": "namelist",
    "source": "卷十二 §3.4 S12-6、R12-14.1、R12-14.7；P-1b 新登类别"
+  },
+  {
+   "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "nl_literal",
+   "source": "卷十二 §2.4 :259（nl_literal 自然语言字面量，检测器 lit_scope）；S12-3 全卷登记卡新登类别，只挂 registered 条目，未实现"
   },
   {
    "detectors": [
@@ -1719,6 +1810,14 @@
    ],
    "scanClass": "rules_import",
    "source": "卷一 R-6 第 5 条；卷十二 §2.4"
+  },
+  {
+   "detectors": [
+    "lit_scope",
+    "import_edge"
+   ],
+   "scanClass": "save_bypass",
+   "source": "卷十二 §2.4 :256（save_bypass 存档文件旁路，检测器 lit_scope、import_edge）、:276（卷二十七 S27-7）；门禁封口 C 新登类别，只挂 registered 条目，未实现"
   },
   {
    "detectors": [

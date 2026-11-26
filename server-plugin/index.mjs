@@ -26,6 +26,12 @@ function readDimensionDocs() {
     .map((f) => JSON.parse(readFileSync(new URL(f, dir), 'utf8')));
 }
 
+/** 动作目录文件（world/actions/*.json，卷九 §2.2），按文件名排序只为确定性。 */
+function readActionDocs() {
+  const dir = new URL('../actions/', WORLD_ONTOLOGY);
+  return readdirSync(dir).filter((f) => f.endsWith('.json')).sort().map((f) => JSON.parse(readFileSync(new URL(f, dir), 'utf8')));
+}
+
 /** 世界数据原文（即存档的 doc_data 副本，卷二十七 :543、:547）：规则表按 registry.json 每行的 file 逐个读（不点名表），按登记 code 收进 tableDocs；组装与核对在 rules/load/registry.mjs#loadWorld。 */
 function readWorld() {
   const json = (/** @type {string} */ f) => JSON.parse(readFileSync(new URL(f, WORLD_ONTOLOGY), 'utf8'));
@@ -44,6 +50,9 @@ function readWorld() {
     vocabDoc: json('dimensions/_vocab.json'),
     // 上下行 wire schema 的唯一数据源（卷二 :983；S1-3b），随 doc_data 进存档，读档复演同用存档里的一份。
     wire: json('../schema/wire-v1.json'),
+    // 效果族表与动作目录（卷二 §3.9、卷九 §2.2；S1-3a）。
+    effectsDoc: json('dimensions/_effects.json'),
+    actionDocs: readActionDocs(),
   };
 }
 

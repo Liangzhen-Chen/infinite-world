@@ -15,7 +15,7 @@ import { mountKernel } from '../load/mount.mjs';
 /** @typedef {{slot: number} & Record<string, unknown>} SaveInfo 存档清单（回应只取 slot 与 clockMinute，卷二 :1014） */
 /** @typedef {{ok: boolean, seq?: number, advancedMinutes?: number, code?: string}} ActResult 动作执行入口的结果（S1-3 接口草案 §2.2） */
 /** @typedef {{act: string, slots: Record<string, number>, numbers: Record<string, number>}} ActIntent 交动作执行入口的意图（槽位与数值已按 wire schema 收窄） */
-/** @typedef {{engine: {docData: {wire: import('./router-caps.mjs').WireDoc}}, save: (slot: number) => SaveInfo, act?: (intent: ActIntent) => ActResult, menu?: (subjectId: string | undefined) => MenuView}} World 一局（mountKernel 的返回值；act、menu 由 S1-3a 加） */
+/** @typedef {{engine: {docData: {wire: import('./router-caps.mjs').WireDoc}}, save: (slot: number) => SaveInfo, act: (intent: ActIntent) => ActResult, menu: (subjectId: string | null) => MenuView}} World 一局（mountKernel 的返回值；act、menu 由 S1-3a 加） */
 /** @typedef {{world: World}} Session 菜单会话：当前这一局（init 或读档复演的结果） */
 /**
  * 按 schema:wire-up-menu-v1 收窄后的载荷（字段与类型见 world/schema/wire-v1.json；三种变体的字段并在一起，按 payload 只出现其一的那些）。
@@ -94,17 +94,23 @@ export function mountMenuEntry(requestCap, replyCap, boot) {
     return { result: R.received };
   };
   /**
-   * 界面命令 view（卷二十九 :319、R29-3.14、:617 R29-3.7）：纯读。菜单投影与可见集都取本局的 world.menu(subjectId) → {affordances, visible}（S1-3a 提供，主会话裁定）；
-   * subject 不在可见集即 E-DISPLAY-SUBJECT（对存在与不存在的 id 回应同形）。S1-3a 合入前本局还没有 world.menu：无观察者、可见集为空，
-   * 凡给 subject 一律 E-DISPLAY-SUBJECT，回应不带 menu（阶段性缺环，见开发.md；3a 合入后此判断恒走有 menu 的一支）。
+   * 界面命令 view（卷二十九 :319、R29-3.14、:617 R29-3.7）：纯读，不提交、不推进、不进日志。菜单投影与可见集取本局 world.menu(null)
+   * （S1-3a rules/act/catalog.mjs#menuOf：参数是观察者，null 即缺省行动者——尚无化身为开局菜单，已有唯一化身按化身投影）；
+   * 载荷的 subject 是要看的对象，不在可见集即 E-DISPLAY-SUBJECT（对存在与不存在的 id 回应同形）。投影本身被拒（带登记码）回 rejected 加该码。
    * @param {Body} body @returns {Reply}
    */
   const onUi = (body) => {
-    const screen = body.panel === undefined ? {} : { panel: body.panel };
-    const view = session.world.menu === undefined ? { affordances: undefined, visible: [] } : session.world.menu(body.subject);
+    let view;
+    try {
+      view = session.world.menu(null);
+    } catch (e) {
+      const code = codeOf(e);
+      if (code === null) throw e;
+      return { result: R.rejected, code };
+    }
     if (body.subject !== undefined && !view.visible.includes(body.subject)) return { result: R.rejected, code: 'E-DISPLAY-SUBJECT' };
-    const shown = body.subject === undefined ? screen : { ...screen, subject: body.subject };
-    return view.affordances === undefined ? { result: R.ok, screen: shown } : { result: R.ok, screen: shown, menu: view.affordances };
+    const screen = { ...(body.panel === undefined ? {} : { panel: body.panel }), ...(body.subject === undefined ? {} : { subject: body.subject }) };
+    return { result: R.ok, screen, menu: view.affordances };
   };
   /** @type {Record<string, (body: Body) => Reply>} */
   const byPayload = { [payload.act]: onAct, [payload.report]: onReport, [payload.ui]: onUi };
