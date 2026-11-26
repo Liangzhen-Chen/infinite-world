@@ -1216,6 +1216,16 @@
    "scanClass": "item_ledger"
   },
   {
+   "addedAtRev": 18,
+   "caseKey": "item_ledger-05",
+   "expectCode": "E-ACC-ITEM-UNREGISTERED",
+   "fixture": "tests/accept/bypass/item_ledger-05.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-3；主会话裁定 msg_77f457d18186 ③：形式标记起首、带尾字母的编号算定义处，登记表没有即未登记",
+   "polarity": "must_fail",
+   "scanClass": "item_ledger"
+  },
+  {
    "addedAtRev": 1,
    "caseKey": "item_ledger-11",
    "fixture": "tests/accept/bypass/item_ledger-11.txt",
@@ -1230,6 +1240,15 @@
    "fixture": "tests/accept/bypass/item_ledger-12.txt",
    "group": "offline",
    "origin": "卷十二 S12-3；李白 11-17 S12-3 裁定第 2、3 条：拆 a/b 两行按一个原条目计；删除线起首的作废条不计",
+   "polarity": "must_pass",
+   "scanClass": "item_ledger"
+  },
+  {
+   "addedAtRev": 18,
+   "caseKey": "item_ledger-13",
+   "fixture": "tests/accept/bypass/item_ledger-13.txt",
+   "group": "offline",
+   "origin": "卷十二 S12-3；主会话裁定 msg_77f457d18186 ③：形式标记起首、带尾字母的编号登了即通过",
    "polarity": "must_pass",
    "scanClass": "item_ledger"
   },
