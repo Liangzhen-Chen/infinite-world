@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os';
 import { ROOT, testTempRoot, assertRelUnderTempRoot, writeUnderTempRoot, removeTempRoot, removeUnderTempRoot } from './temp-root.mjs';
 import { tokenize } from '../../tools/accept/lib/js-scan.mjs';
 import { stateChains } from '../../tools/accept/lib/js-state.mjs';
-import { assertCliOut, writeCliOut } from '../../tools/accept/lib/cli-out.mjs';
+import { assertCliOut, writeCliOut, foldPathCase } from '../../tools/accept/lib/cli-out.mjs';
 import { detect as callEdge } from '../../tools/accept/detectors/call_edge.mjs';
 import { loadContext, readRegistry } from '../../tools/accept/read.mjs';
 import { repoRoot, safeSegment } from '../../tools/path-segment.mjs';
@@ -88,6 +88,13 @@ test('stateChains 绑定声明不算写（门禁封口卡 B）：const/let/var �
     assert.deepEqual(writes(src), [true], src);
   }
   assert.deepEqual(writes('const state = f(); state.a = 1;'), [false, true], '声明之后的成员写照旧算写');
+  // 审卡第一轮必须改 1：成员链不是绑定；跨行的 `f(…)` 换行 `{…}` 是调用加块；无分号换行后的逗号表达式不是前一行声明的续写。
+  for (const src of ['touch(state.gold = 999)\n{ }', 'touch(state = 1)\n{ }', 'let a = 1\nb(), state.gold = 999;', 'let a = 1\nb(), state = 999;', 'f(state[0] = 1) {}']) {
+    assert.deepEqual(writes(src), [true], src);
+  }
+  for (const src of ['let a = 1,\n  state = 2;', 'function g(\n  a,\n  state = {}\n) {}', 'const o = { m(a, state = 1) {} };']) {
+    assert.deepEqual(writes(src), [false], src);
+  }
 });
 
 test('assertCliOut（门禁封口卡 B）：落在本次仓库根内且命中 §2.11 受保护模式即抛；仓库外、仓库内非登记路径放行，返回解析后的完整路径', () => {
@@ -96,10 +103,22 @@ test('assertCliOut（门禁封口卡 B）：落在本次仓库根内且命中 §
     for (const bad of ['tools/accept/items.json', 'tools/accept/out/x.json', 'tools/whitelist.json', 'a/../tools/accept/gatefacs.json', join(dir, 'tools/accept/hits.json'), '.']) {
       assert.throws(() => assertCliOut(dir, bad), /§2\.11|repository root/, bad);
     }
-    assert.equal(assertCliOut(dir, 'docs/x.md'), join(realpathSync(dir), 'docs', 'x.md'));
+    // 审卡第一轮必须改 2：段尾点、段尾空格、备用数据流 `:` 一律拒；win32 上大小写变体照样命中受保护模式。
+    for (const bad of ['tools/accept/hits.json.', 'tools/accept/hits.json ', 'tools/accept/hits.json::$DATA', 'tools./accept/x.json', 'docs/a:b.md']) {
+      assert.throws(() => assertCliOut(dir, bad), /aliasing segment/, bad);
+    }
+    if (process.platform === 'win32') {
+      for (const bad of ['TOOLS/ACCEPT/HITS.JSON', 'tools/accept/Hits.json']) assert.throws(() => assertCliOut(dir, bad), /§2\.11/, bad);
+    }
+    assert.equal(foldPathCase('Tools/A.json'), process.platform === 'win32' ? 'tools/a.json' : 'Tools/A.json');
+    assert.equal(assertCliOut(dir, 'docs/x.md'), join(realpathSync.native(dir), 'docs', 'x.md'));
     const other = testTempRoot('aco-out-');
-    try { assert.equal(assertCliOut(dir, join(other, 'tools/accept/items.json')), join(realpathSync(other), 'tools', 'accept', 'items.json')); } finally { removeTempRoot(other); }
+    try { assert.equal(assertCliOut(dir, join(other, 'tools/accept/items.json')), join(realpathSync.native(other), 'tools', 'accept', 'items.json')); } finally { removeTempRoot(other); }
   } finally { removeTempRoot(dir); }
+  // 审卡第一轮必须改 3：调用方 root 传真仓库子目录、经 `../` 指回受保护文件，仍按本工具所在仓库根判（只断言、不写盘）。
+  assert.throws(() => assertCliOut(join(ROOT, 'docs'), '../tools/accept/hits.json'), /§2\.11/);
+  assert.throws(() => assertCliOut(join(ROOT, 'docs', '卡档案'), '../../tools/accept/items.json'), /§2\.11/);
+  assert.equal(assertCliOut(join(ROOT, 'docs'), '../docs/not-guarded-probe.md'), join(realpathSync.native(ROOT), 'docs', 'not-guarded-probe.md'));
 });
 
 test('writeCliOut（门禁封口卡 B）：受保护路径抛错且不落盘；合规路径写入', () => {

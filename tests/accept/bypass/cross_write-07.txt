@@ -1,0 +1,6 @@
+// 调用实参里的成员写换行后接块语句（ASI 合法），不是函数形参表，仍报（门禁封口卡 B 审卡第一轮必须改 1）。
+/** @param {State} state @param {(x: number) => void} touch @returns {void} */
+export function poke(state, touch) {
+  touch(state.gold = 999)
+  { }
+}
