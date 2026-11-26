@@ -85,6 +85,17 @@ function tableValues(code, rows, spec) {
   return Object.freeze(Object.fromEntries(Object.keys(spec.type).map((k) => [k, tableValue(rows, spec, k)])));
 }
 
+/**
+ * 规则表单键取值（S1-2a 起）：从世界数据副本 raw（= doc_data）取登记代号 code 那张键表的 key 一键，按登记声明核（同 tableValue，不另写一份）。
+ * 给只读整表中个别键的规则模块用（整表含 ref 等要词表环境的键时不能整表核）；代号未登记即 E-DIM-DOMAIN-RANGE。
+ * @param {{registryRows: RegistryRow[], tableDocs: Record<string, {rows?: KeyRow[]}>}} raw @param {string} code @param {string} key @returns {unknown}
+ */
+export function ruleValue(raw, code, key) {
+  const spec = raw.registryRows.find((r) => r.code === code);
+  if (!spec) throw new KernelError('E-DIM-DOMAIN-RANGE', {}, `rules.${code}: no registry declaration`);
+  return tableValue(Object.hasOwn(raw.tableDocs, code) ? raw.tableDocs[code].rows : undefined, spec, key);
+}
+
 // kernel 实际消费的规则表代号（卷文名 rules.host.*、rules.saveLayout.*；S1-1c 派卡「主会话已定」第 5 条）：
 // 只对这几张取值并按登记声明核；其余登记表原样进 doc_data 副本，不核、不报。
 const KERNEL_TABLES = Object.freeze(['host', 'saveLayout']);
