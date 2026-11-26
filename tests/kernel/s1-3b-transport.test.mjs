@@ -14,6 +14,7 @@ import { mountSaveRoutes } from '../../server-plugin/kernel/save.mjs';
 import { canonical } from '../../server-plugin/kernel/storage.mjs';
 import { createDigestCap } from '../../server-plugin/textcore/digest.mjs';
 import { T } from '../../server-plugin/kernel/handles.mjs';
+import { KernelError } from '../../server-plugin/kernel/errors.mjs';
 
 const R = T.code_enum.reply_result;
 const BODY = T.code_enum.wire_body;
@@ -174,7 +175,7 @@ test('save_import 请求体超过 rules.host.saveImportMaxBytes 即 E-SAVE-IMPOR
   } finally { await h.close(); }
 });
 
-test('每个带 ReplyHandle 的请求恰回应一次：二次用同句柄 E-WIRE-REPLY；处理完未回应补回 error + E-WIRE-REPLY；处理抛错回 error；responseId 单调', async () => {
+test('每个带 ReplyHandle 的请求恰回应一次：二次用同句柄 E-WIRE-REPLY；处理完未回应补回 error + E-WIRE-REPLY；处理抛无登记码的错回 error + E-WIRE-REPLY、抛带码的错回 error + 该码（卷二:1017 只含错误代号）；responseId 单调', async () => {
   /** @type {unknown[]} */
   const second = [];
   const routes = T.code_enum.wire_route;
@@ -186,6 +187,7 @@ test('每个带 ReplyHandle 的请求恰回应一次：二次用同句柄 E-WIRE
     });
     requestCap.on(routes.input, () => {});
     requestCap.on(routes.save_export, () => { throw new Error('boom'); });
+    requestCap.on(routes.save_import, () => { throw new KernelError('E-SAVE-EMPTY'); });
     assert.throws(() => requestCap.on('zz', () => {}), /E-WIRE-ENVELOPE/);
     return null;
   });
@@ -196,7 +198,13 @@ test('每个带 ReplyHandle 的请求恰回应一次：二次用同句柄 E-WIRE
     const b = await h.post('input', '{}');
     assert.deepEqual(JSON.parse(b.text), { result: R.error, code: 'E-WIRE-REPLY' });
     const c = await h.post('save_export', '{}');
-    assert.deepEqual(JSON.parse(c.text), { result: R.error });
-    assert.ok(Number(a.responseId) < Number(b.responseId) && Number(b.responseId) < Number(c.responseId));
+    assert.deepEqual(JSON.parse(c.text), { result: R.error, code: 'E-WIRE-REPLY' });
+    const d = await h.post('save_import', '{}');
+    assert.deepEqual(JSON.parse(d.text), { result: R.error, code: 'E-SAVE-EMPTY' });
+    assert.ok(Number(a.responseId) < Number(b.responseId) && Number(b.responseId) < Number(c.responseId) && Number(c.responseId) < Number(d.responseId));
   } finally { await h.close(); }
+});
+
+test('init 必须传宿主 router（卷二:1033；无路由模式已撤）：不传即拒，不静默只装配', async () => {
+  await assert.rejects(() => init(undefined, { saveRoot: testTempRoot('s13b-no-router') }));
 });

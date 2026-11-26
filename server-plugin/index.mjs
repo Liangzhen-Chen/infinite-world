@@ -81,15 +81,13 @@ function capsOf(opts) {
 
 /**
  * SillyTavern 服务端插件入口（卷二 :1033 init(router)；主会话裁定 Q2：init(router, opts)）：装配 engine、初始 state 与日志簿，
- * 给了宿主 router 即取路由能力，挂 menu 路由（mountMenuEntry）与 save_export、save_import 两路（mountSaveRoutes）。返回开局的这一局。
- * @param {any} [router] 宿主交入的 express Router；不给即无路由模式（只装配，不挂路由）
+ * 由宿主 router 取路由能力，挂 menu 路由（mountMenuEntry）与 save_export、save_import 两路（mountSaveRoutes）。返回开局的这一局。
+ * @param {any} router 宿主交入的 express Router（必传，卷二:1033）
  * @param {{saveRoot?: string | URL}} [opts] saveRoot 覆盖默认存档根目录（仓库 saves/）
  */
 export async function init(router, opts = {}) {
   const caps = capsOf(opts);
   const world = mountKernel(readWorld(), caps);
-  // 无路由模式（主会话 11-26 裁定）：宿主之外的调用方（tools、只要引擎的单测、离线复演）没有 router，只装配不挂路由；宿主真挂载总按位置传 router（卷二:1033）。
-  if (router === undefined) return world;
   const { requestCap, replyCap } = createRouterCaps(router);
   mountMenuEntry(requestCap, replyCap, { world, caps });
   mountSaveRoutes(requestCap, replyCap, world);

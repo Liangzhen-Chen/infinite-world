@@ -93,8 +93,12 @@ export function createRouterCaps(router) {
     responseId += 1;
     res.set('wire_body', BODY.envelope).set('responseId', String(responseId)).send(canonical(result));
   };
-  /** 入口抛出的错误：带登记码的报 report 并回 error + 码；不带码的回 error。 @param {unknown} e @returns {ReplyResult} */
-  const failed = (e) => (codeOf(e) === null ? { result: R.error } : { result: R.error, code: reportError(e) });
+  /**
+   * 入口抛出的错误（卷二:1017 回应必只含错误代号）：带登记码的报 report 并回 error + 该码；不带登记码的按「处理结束时还没有回应」同一情形，
+   * 报并回 error + E-WIRE-REPLY（与下面未回应补回同码，不自造码）。
+   * @param {unknown} e @returns {ReplyResult}
+   */
+  const failed = (e) => ({ result: R.error, code: reportError(codeOf(e) === null ? new KernelError('E-WIRE-REPLY', {}, 'entry handler threw without a registered code') : e) });
 
   /** @param {EntryHandler} handler @param {HostRequest} req @param {HostResponse} res */
   const run = async (handler, req, res) => {
