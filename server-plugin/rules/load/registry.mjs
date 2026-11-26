@@ -62,7 +62,7 @@ export function buildRegistry(dimensionDocs) {
  * （type[key] 给类型与单位，domain[key] 给取值域）；判定交公共部件 validate/types.mjs#checkValue，不另写一份。
  * @param {KeyRow[] | undefined} rows @param {RegistryRow} spec registry.json 的该表登记行 @param {string} key @returns {unknown}
  */
-function tableValue(rows, spec, key) {
+function tableValue(rows, spec, key, env = {}) {
   const fail = (/** @type {string} */ why) => new KernelError('E-DIM-DOMAIN-RANGE', {}, `rules.${spec.code}.${key}: ${why}`);
   const decl = spec.type ? spec.type[key] : undefined;
   if (decl === undefined) throw fail('no registry declaration');
@@ -71,7 +71,7 @@ function tableValue(rows, spec, key) {
   const def = { ...(typeof decl === 'string' ? { type: decl } : Object(decl)), nullable: false, domain: spec.domain ? spec.domain[key] : undefined };
   /** @type {unknown[]} */
   const bad = [];
-  checkValue(def, row.value, {}, {}, (e) => { bad.push(e); });
+  checkValue(def, row.value, env, {}, (e) => { bad.push(e); });
   if (bad.length > 0) throw fail(`${JSON.stringify(row.value)} violates ${Object(bad[0]).want}`);
   return row.value;
 }
@@ -86,14 +86,31 @@ function tableValues(code, rows, spec) {
 }
 
 /**
+ * 词表引用的核对环境（S2-0a）：按世界数据副本的 vocabDoc.families 建 {index: 条目代号 → {family}, families}，交 checkValue 核 ref vocab / enum vocab 键。
+ * 副本没带词表时两者为空（引用词表的键照样核出不合，不放行）。
+ * @param {unknown} raw @returns {{vocab: {index: Map<string, {family: string}>, families: Set<string>}}}
+ */
+function vocabEnvOf(raw) {
+  const fams = Object(Object(Object(raw).vocabDoc).families);
+  /** @type {Map<string, {family: string}>} */
+  const index = new Map();
+  for (const [family, doc] of Object.entries(fams)) {
+    const entries = Object(Object(doc).entries);
+    for (const id of Object.keys(entries)) index.set(id, { family });
+  }
+  return { vocab: { index, families: new Set(Object.keys(fams)) } };
+}
+
+/**
  * 规则表单键取值（S1-2a 起）：从世界数据副本 raw（= doc_data）取登记代号 code 那张键表的 key 一键，按登记声明核（同 tableValue，不另写一份）。
  * 给只读整表中个别键的规则模块用（整表含 ref 等要词表环境的键时不能整表核）；代号未登记即 E-DIM-DOMAIN-RANGE。
- * @param {{registryRows: RegistryRow[], tableDocs: Record<string, {rows?: KeyRow[]}>}} raw @param {string} code @param {string} key @returns {unknown}
+ * 值里引用词表条目的（ref vocab、enum vocab），按 raw.vocabDoc 建的环境核（S2-0a）。
+ * @param {{registryRows: RegistryRow[], tableDocs: Record<string, {rows?: KeyRow[]}>, vocabDoc?: any}} raw @param {string} code @param {string} key @returns {unknown}
  */
 export function ruleValue(raw, code, key) {
   const spec = raw.registryRows.find((r) => r.code === code);
   if (!spec) throw new KernelError('E-DIM-DOMAIN-RANGE', {}, `rules.${code}: no registry declaration`);
-  return tableValue(Object.hasOwn(raw.tableDocs, code) ? raw.tableDocs[code].rows : undefined, spec, key);
+  return tableValue(Object.hasOwn(raw.tableDocs, code) ? raw.tableDocs[code].rows : undefined, spec, key, vocabEnvOf(raw));
 }
 
 // kernel 实际消费的规则表代号（卷文名 rules.host.*、rules.saveLayout.*；S1-1c 派卡「主会话已定」第 5 条；S1-2b 加 rules.kernelConstants：定点常数由装配层装入 det-math）：

@@ -8,8 +8,8 @@
 // null 与空串作 ref 目标一律拒（只在声明为 ref 的维度上判）。
 
 import { KernelError } from './errors.mjs';
-import { CODE_RE, T } from './handles.mjs';
-import { requireScope, txSet, txTouch } from './transaction.mjs';
+import { CODE_RE, T, GRAMMAR_TOKENS } from './handles.mjs';
+import { requireScope, txSet, txDelete, txTouch } from './transaction.mjs';
 import { checkValue } from './validate/types.mjs';
 
 // 路径写入时不得作为段的名字（JS 原型链键，不是状态数据）。
@@ -83,6 +83,91 @@ function checkRefValue(engine, state, def, value, segs) {
   if (bad !== null) throw new KernelError(bad.code, {}, `ref check failed: ${String(bad.want)}`);
 }
 
+// 模式的 `*` 段下标（卷二 :536 模式文法，段分隔与通配符取 handles.mjs 的 GRAMMAR_TOKENS）。
+/** @param {string} pattern @returns {number[]} */
+function wildcardIndexes(pattern) {
+  return pattern.split(GRAMMAR_TOKENS.pathSep).flatMap((seg, i) => (seg === GRAMMAR_TOKENS.wildcard ? [i] : []));
+}
+
+/**
+ * 拒写已终止实体（卷二 :554「自这一步起对该实体的写入一律拒写」、:585 内核自己读 state.terminated、勘误 1126s20）：
+ * 路径的某个 `*` 段是已有终止标记的实体 id 即 E-TERM-RESIDUE。终止标记路径未登记（engine.P 没有 terminated 成员）时世界里不可能有标记，无可拒。只读。
+ * @param {any} engine @param {any} state @param {{pattern: string, segs: readonly any[]}} path
+ */
+function rejectTerminated(engine, state, path) {
+  const mark = engine.P.terminated;
+  if (typeof mark !== 'function') return;
+  for (const i of wildcardIndexes(path.pattern)) {
+    if (getAt(state, mark(path.segs[i]).segs) !== undefined) {
+      throw new KernelError('E-TERM-RESIDUE', CODE_RE.test(path.segs[i]) ? { entity: path.segs[i] } : {}, `entity ${JSON.stringify(path.segs[i])} is terminated: writes rejected`);
+    }
+  }
+}
+
+// 登记模式（state-owners.json 的 pathTypes，装配层原样放在 engine.docData.owners）；未登记即 E-PATH-UNDECLARED。
+/** @param {any} engine @param {string} pattern */
+function requirePattern(engine, pattern) {
+  const types = engine && engine.docData && engine.docData.owners ? engine.docData.owners.pathTypes : undefined;
+  if (typeof pattern !== 'string' || types === null || typeof types !== 'object' || !Object.hasOwn(types, pattern)) {
+    throw new KernelError('E-PATH-UNDECLARED', {}, `pattern ${JSON.stringify(pattern)}: not registered in pathTypes`);
+  }
+  return pattern.split(GRAMMAR_TOKENS.pathSep);
+}
+
+/**
+ * 按登记模式列出 state 里现有的路径（S2-0a；终止协议的去留表、状态实例清除与残留核对用）：`*` 段遍历该处的键，
+ * fixed 给的 `*` 段（键是第几个 `*` 段，从 0 起，与 keyKinds 的项同序）只取那一个值。返回 [{segs, keys, value}]（keys 是各 `*` 段的取值），按键名排序，冻结。只读、不碰缓存。
+ * @param {any} engine @param {any} state @param {string} pattern @param {Readonly<Record<number, string>>} fixed
+ * @returns {ReadonlyArray<{segs: readonly string[], keys: readonly string[], value: any}>}
+ */
+export function matchPaths(engine, state, pattern, fixed) {
+  requireState(state);
+  const parts = requirePattern(engine, pattern);
+  /** @type {Array<{segs: readonly string[], keys: readonly string[], value: any}>} */
+  const out = [];
+  /** @param {any} cur @param {number} i @param {string[]} segs @param {string[]} keys 已走过的 `*` 段取值 */
+  const walk = (cur, i, segs, keys) => {
+    if (i === parts.length) { out.push(Object.freeze({ segs: Object.freeze([...segs]), keys: Object.freeze([...keys]), value: cur })); return; }
+    if (cur === null || typeof cur !== 'object' || Array.isArray(cur)) return;
+    const wild = parts[i] === GRAMMAR_TOKENS.wildcard;
+    const next = !wild ? [parts[i]] : Object.hasOwn(fixed, keys.length) ? [fixed[keys.length]] : Object.keys(cur).sort();
+    for (const k of next) if (Object.hasOwn(cur, k)) walk(cur[k], i + 1, [...segs, k], wild ? [...keys, k] : keys);
+  };
+  walk(state, 0, [], []);
+  return Object.freeze(out);
+}
+
+/**
+ * 按登记模式整条删除一条路径（S2-0a；卷二 :562 去留表「整条删除路径，只删不改值」、:557 清状态实例；执行者是终止协议）：
+ * segs 须合模式（非 `*` 段逐字相同、`*` 段为非空串）；删去叶子后，删空的上级对象一并删去（顶层键保留）；写完作废顶层键缓存。
+ * 不核终止标记：终止协议在写标记前删，复生、期满回收删的就是已终止实体名下的记录（卷二 :563–:564）。
+ * @param {any} engine @param {any} state @param {string} pattern @param {readonly string[]} segs @param {any} tx
+ */
+export function deleteMatch(engine, state, pattern, segs, tx) {
+  requireState(state);
+  requireScope(state, tx);
+  const parts = requirePattern(engine, pattern);
+  const ok = Array.isArray(segs) && segs.length === parts.length && segs.every((s, i) => typeof s === 'string' && s.length > 0
+    && !UNSAFE_KEYS.includes(s) && (parts[i] === GRAMMAR_TOKENS.wildcard ? s !== GRAMMAR_TOKENS.wildcard : s === parts[i]));
+  if (!ok) throw new KernelError('E-DIM-ID-FORMAT', {}, `segments do not fit pattern ${JSON.stringify(pattern)}`);
+  /** @type {any[]} */
+  const chain = [state];
+  for (let i = 0; i < segs.length - 1; i++) {
+    const cur = chain[i];
+    if (cur === null || typeof cur !== 'object' || !Object.hasOwn(cur, segs[i])) return;
+    chain.push(cur[segs[i]]);
+  }
+  const parent = chain[segs.length - 1];
+  if (parent === null || typeof parent !== 'object' || !Object.hasOwn(parent, segs[segs.length - 1])) return;
+  txDelete(tx, parent, segs[segs.length - 1]);
+  for (let i = segs.length - 1; i > 1; i--) {
+    const obj = chain[i];
+    if (obj === null || typeof obj !== 'object' || Object.keys(obj).length > 0) break;
+    txDelete(tx, chain[i - 1], segs[i - 1]);
+  }
+  txTouch(tx, segs[0]);
+}
+
 /** 新建空 state：只含登记写者为本模块的顶层键（created）；别的顶层键由各自登记写者的 init 函数写入。 @returns {{created: Record<string, any>}} */
 export function newState() {
   return { created: {} };
@@ -148,7 +233,9 @@ export function writePath(state, path, value, tx) {
   for (const s of segs) {
     if (typeof s !== 'string' || s.length === 0) throw new KernelError('E-DIM-ID-FORMAT', {}, 'path segments must be non-empty strings');
     if (UNSAFE_KEYS.includes(s)) throw new KernelError('E-DIM-ID-FORMAT', {}, `unsafe path segment ${JSON.stringify(s)}`);
+    if (s === GRAMMAR_TOKENS.wildcard) throw new KernelError('E-DIM-ID-FORMAT', {}, 'a wildcard is not a writable path segment');
   }
+  rejectTerminated(engine, state, path);
   const def = createdPropsDef(engine, state, segs);
   if (def !== undefined) checkRefValue(engine, state, def, value, segs);
   else if (!topKeyRegistered(engine, segs[0])) throw new KernelError('E-PATH-UNDECLARED', {}, `top-level state key ${JSON.stringify(segs[0])}: not registered in stateKeys`);

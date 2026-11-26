@@ -14,6 +14,20 @@
    "basis": "rcls_revival_cooldown（revivals.<person>.lastMinute）hold/keep、rcls_revive_points（revivals.<person>.points）hold/clear：卷四 §2.6 去留表原值。丙4 四项照李白 11-19 11:1x ④：created.*.props.*、created.*.props.basis、created.*.classes（建行写的偏离行，后果可追溯）→ rcls_deviation_row keep；outflowTotals.*（卷六 A6-1.2 只增不减）→ rcls_outflow_history keep；displayNames.*.seq（名字历史）→ rcls_name_history keep；stockLots.* 跟账户余额同一笔走，不单独删，按协议自处置的键（与账户同，卷二 §2.6 勘误 1119k11）。其余卷的记录类随该卷建状态键的卡加行（presenting、conceptions、renewables、life、identities 的键卷四未建）"
   },
   {
+   "key": "wreckKind",
+   "value": "item",
+   "source": "卷二 §2.6 :553（wreck 原地生成残骸实体作后继）；卷四 D-4 :882（个体的残骸就是尸体物品）",
+   "grade": "designed",
+   "basis": "卷文未写残骸实体落哪张表、id 怎么取（S2-0 草案 §1 第 3 行【未找到】）；主会话裁定 R5 A（11-26）：取物品表；id = 该表首个前缀 + wreck_ + 主体 id 去掉其前缀 + _ + 终止分钟。卷十 instanceIdOf 建好后改用它并记勘误"
+  },
+  {
+   "key": "protocolKeys",
+   "value": ["holdings", "modifiers", "statuses", "stockLots", "terminated"],
+   "source": "卷二 §2.6 :562（覆盖核对：属于协议自己处置的键——账户、stockLots、holdings、statuses、modifiers、terminated、到期堆——不要求登记去留）",
+   "grade": "designed",
+   "basis": "照 :562 原列举收顶层键名；账户与到期堆卷文未给顶层键名，等账本（S2-L）与到期堆（S2-D）卡登记状态键时加行"
+  },
+  {
    "key": "unbuilt",
    "value": {"onTerminate": ["sink"], "card": "pre_first_reader_card"},
    "source": "卷二 §2.6 :522（sink 转入登记的汇）；卷六 :117（资源行 sinks 是允许的去处集合，不是终止时的单一去处）",

@@ -22,6 +22,9 @@ import { carcassOf } from '../body/carcass.mjs';
 import { runGenesis, runOpening, openingOf } from '../gen/worldgen-writeback.mjs';
 import { bakePlaceTree, placeTreeDigest } from '../bake/place-tree.mjs';
 
+// 终止清理函数的登记项（卷二 :561；各系统模块经 registerTerminationCleanup 产出、在此收齐）。本卡（S2-0a）尚无系统登记，S2-0b 的 death.mjs 加第一项。
+const TERMINATION_CLEANUPS = Object.freeze([]);
+
 // 装配层注入能力的形状（启动强断言；S1-1c 派卡「主会话已定」第 1–3 条）：一张「字段 → 要求 → 判定」表，assertCaps 循环判。
 // unitOfPath 可缺省（卷二十七 :553 只在分片表用到按单元分片时才须有；缺时由 checkShards 同一判定报 E-SAVE-SHARD-UNCOVERED）。
 /** @type {ReadonlyArray<readonly [string, string, (v: any) => boolean]>} */
@@ -118,7 +121,7 @@ export function mountKernel(raw, caps, resume) {
   const engine = Object.freeze({
     registry, structs, modifierSources: Object.freeze([...modifierSources]), unitOfPath, inputs: closeInputs(INPUT_DECLS),
     stateKeys, P, host, saveLayout, primitives, bake, vocab: vocabDoc,
-    advanceHooks: Object.freeze([]), openStates: new WeakSet(),
+    advanceHooks: Object.freeze([]), terminationCleanups: TERMINATION_CLEANUPS, openStates: new WeakSet(),
     advance: (/** @type {object} */ st, /** @type {import('../../kernel/save.mjs').LogBook} */ book, /** @type {number} */ m) => advance(engine, st, book, m),
     docData, digestExclude: Object.freeze([...digestExclude]), digestCap, saveRoot,
     engineRulesDigest: engineRulesDigestOf({ digestCap }, sources),

@@ -1154,6 +1154,240 @@
     "KernelError"
    ],
    "rules": []
+  },
+  {
+   "name": "terminate",
+   "file": "rules/lifecycle/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "readPath",
+    "writePath",
+    "classRowsOf",
+    "txEmit",
+    "ruleValue",
+    "deleteRecords",
+    "clearStatusesOf",
+    "terminationResidue",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "registerTerminationCleanup",
+   "file": "rules/lifecycle/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "terminationResidue",
+   "file": "rules/lifecycle/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "readPath",
+    "statusView",
+    "subjectRecordPaths",
+    "recordValues"
+   ],
+   "rules": []
+  },
+  {
+   "name": "checkTerminationTables",
+   "file": "rules/lifecycle/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "recordValues",
+    "ruleValue",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "recordValues",
+   "file": "rules/lifecycle/records.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "ruleValue"
+   ],
+   "rules": []
+  },
+  {
+   "name": "subjectRecordPaths",
+   "file": "rules/lifecycle/records.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "matchPaths",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "deleteRecords",
+   "file": "rules/lifecycle/records.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "subjectRecordPaths",
+    "recordValues",
+    "deleteMatch",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "terminableKinds",
+   "file": "rules/lifecycle/records.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkRecordCoverage",
+   "file": "rules/lifecycle/records.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "terminableKinds",
+    "recordValues",
+    "ruleValue",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "addStatus",
+   "file": "rules/status/status.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "writePath",
+    "matchPaths",
+    "statusFamilyOf",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "statusView",
+   "file": "rules/status/status.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "matchPaths",
+    "statusFamilyOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "statusFamilyOf",
+   "file": "rules/status/status.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "dim"
+   ],
+   "rules": []
+  },
+  {
+   "name": "clearStatusesOf",
+   "file": "rules/status/status.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "matchPaths",
+    "deleteMatch"
+   ],
+   "rules": []
+  },
+  {
+   "name": "terminated",
+   "file": "rules/body/action-capacity.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "predicate",
+   "needs": [
+    "readPath",
+    "statusView",
+    "statusFamilyOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "dead",
+   "file": "rules/body/action-capacity.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "predicate",
+   "needs": [
+    "terminated"
+   ],
+   "rules": []
+  },
+  {
+   "name": "classRowsOf",
+   "file": "kernel/dimensions.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "matchPaths",
+   "file": "kernel/storage.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "deleteMatch",
+   "file": "kernel/storage.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "txEmit",
+   "file": "kernel/transaction.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
   }
  ]
 }
