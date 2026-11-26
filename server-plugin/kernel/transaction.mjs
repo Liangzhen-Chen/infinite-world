@@ -209,6 +209,13 @@ const HANDLERS = {
       },
     };
   },
+  // destroy（卷九 :641 实体终止协议）：解析时核实体存在；写入阶段调装配层注入的 engine.lifecycle.destroy（规则层按登记路由，草案 §4.1），没有注入即 E-EFF-PARAM。
+  destroy: (engine, state, effect) => {
+    kindOfEntity(engine, state, effect.entity);
+    const life = engine.lifecycle;
+    if (life === null || typeof life !== 'object' || typeof life.destroy !== 'function') throw new KernelError('E-EFF-PARAM', {}, 'destroy: engine.lifecycle.destroy is not assembled');
+    return { write: (tx) => { life.destroy(state, effect.entity, tx); } };
+  },
   'fact.set': (engine, state, effect) => ({
     write: (tx) => {
       const { P } = engine;

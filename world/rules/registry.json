@@ -310,12 +310,14 @@
     "terminalStatus": {"type": "ref", "kind": "status"},
     "lostPartsExcluded": {"type": "boolean"},
     "corpseClass": {"type": "ref", "vocab": "component"},
+    "destroyCause": {"type": "ref", "vocab": "verb"},
+    "corpseMaterialGroup": {"type": "ref", "vocab": "matgroup"},
     "unbuilt": {"type": "set", "of": {"type": "string"}}
    },
-   "domain": {"terminalStatus": {}, "lostPartsExcluded": {}, "corpseClass": {}, "unbuilt": {}},
-   "volume": "卷四 §2.5 :318（rules.death：terminalStatus、vitalLossCause、lostPartsExcluded、corpseClass）、§4.8；terminalStatus 指状态表一行（李白 11-19 22:0x ④：与卷六 S6-2 不冲突，状态行代号不计实例名）；vitalLossCause 的读者是 §4.2 B-8 致命部位反应规则（块 6 不建）登 unbuilt；corpsePurpose（卷文没给的尸体账户用途，读者 death.mjs）登 unbuilt；读者 server-plugin/death.mjs（6-6）",
+   "domain": {"terminalStatus": {}, "lostPartsExcluded": {}, "corpseClass": {}, "destroyCause": {}, "corpseMaterialGroup": {}, "unbuilt": {}},
+   "volume": "卷四 §2.5 :318（rules.death：terminalStatus、vitalLossCause、lostPartsExcluded、corpseClass）、§4.8；terminalStatus 指状态表一行（李白 11-19 22:0x ④：与卷六 S6-2 不冲突，状态行代号不计实例名）；vitalLossCause 的读者是 §4.2 B-8 致命部位反应规则（块 6 不建）登 unbuilt；corpsePurpose（卷文没给的尸体账户用途，读者 death.mjs）登 unbuilt；读者 server-plugin/death.mjs（6-6）；S2-0b 加 destroyCause（卷二十五:579，裁定 R4）、corpseMaterialGroup（卷三乙:931、:2134，裁定 G2）",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"terminalStatus": false, "lostPartsExcluded": false, "corpseClass": false, "unbuilt": false}
+   "packOverridable": {"terminalStatus": false, "lostPartsExcluded": false, "corpseClass": false, "destroyCause": false, "corpseMaterialGroup": false, "unbuilt": false}
   },
   {
    "code": "calendar",

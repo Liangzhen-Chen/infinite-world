@@ -9,7 +9,7 @@ import { GRAMMAR_TOKENS } from '../../kernel/handles.mjs';
 import { ruleValue } from '../load/registry.mjs';
 
 // 终止协议各文件收的 engine 形状（装配层 mountKernel 建的冻结 engine 的子集）。
-/** @typedef {{P: Readonly<Record<string, (...args: string[]) => import('../../kernel/types.d.ts').StatePath<string>>>, registry: {tables: Map<string, unknown>, kindIds: Map<string, {idPrefix?: readonly string[], singletonIds?: readonly string[]}>, kindOfLoaded: (id: string) => string | undefined}, docData: unknown, vocab: unknown, terminationCleanups?: unknown}} LifeEngine */
+/** @typedef {{P: Readonly<Record<string, (...args: string[]) => import('../../kernel/types.d.ts').StatePath<string>>>, registry: {tables: Map<string, unknown>, kindIds: Map<string, {idPrefix?: readonly string[], singletonIds?: readonly string[]}>, kindOfLoaded: (id: string) => string | undefined}, docData: unknown, vocab: unknown, terminationCleanups?: unknown, terminationTriggers?: unknown}} LifeEngine */
 /** 去留表一行的取值（规则表 rules.terminate.records.<rcls_>）。 @typedef {{atTerminate: string, atRevive?: string}} RecordValue */
 /** subjectRecords 一行。 @typedef {{pattern: string, recordClass: string, subjectSegments: number[]}} SubjectRecordRow */
 

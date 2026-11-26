@@ -100,6 +100,7 @@
   "wielders": {"type": "integer", "unit": "count", "domain": [0, null], "derived": "卷十三 R13-5.2：以该物为标的的现役手持边条数", "required": "never", "onUnknown": "gap", "modifiable": false, "source": "卷十三 §2.3 登记", "owner": "卷十三 §2.3"}
  },
  "instanceDimensions": {
+  "classes": {"type": "set", "of": {"type": "ref", "vocab": "component"}, "domain": {}, "required": "never", "onUnknown": "skip", "modifiable": false, "source": "卷三乙 §4.2 :905（物品的全部行为由 classes 里的组件类开启）、:947（comp_corpse 实例的 classes）；卷四 §4.8.3 D-4 :882（经物品写者给残骸补 rules.death.corpseClass 所指组件类）；主会话 S2-0b 裁定 G3 A", "owner": "卷三乙 §4.2"},
   "diedMinute": {"type": "integer", "unit": "minute", "domain": [0, null], "required": "byClass:comp_corpse", "onUnknown": "error", "modifiable": false, "source": "卷三乙 §2.3 :225（卷四 §4.8 提出，台账 N-06）", "owner": "卷四 §4.8"},
   "durability": {"type": "number", "unit": "fraction", "domain": [0, 1], "precision": 8, "stockMode": "extScale", "bounds": [0, 1], "stacking": "none", "required": "byClass:comp_durable", "onUnknown": "error", "modifiable": true, "source": "卷三乙 §2.3 :225；§4.10.1（存的是锚点日的值，D-2）；李白 11-19 20:3x ③（单次用损 0.002÷60 在 10⁴ 标度截 0，改 extScale、precision 8，卷二 §1.2、§3.3 第 6 条）", "owner": "卷三乙 §4.10"},
   "madeDay": {"type": "integer", "unit": "day", "domain": [0, null], "required": "byClass:comp_crafted", "onUnknown": "gap", "modifiable": false, "source": "卷三乙 §2.3 :225；§4.5", "owner": "卷三乙 §4.5"},

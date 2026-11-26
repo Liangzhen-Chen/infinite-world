@@ -21,11 +21,16 @@ import { bodyView } from '../body/body.mjs';
 import { carcassOf } from '../body/carcass.mjs';
 import { runGenesis, runOpening, openingOf } from '../gen/worldgen-writeback.mjs';
 import { bakePlaceTree, placeTreeDigest } from '../bake/place-tree.mjs';
-import { checkTerminationTables } from '../lifecycle/terminate.mjs';
+import { checkTerminationTables, destroyEntity } from '../lifecycle/terminate.mjs';
+import { SETTLE_BODY_CLEANUP, DIE_BY_DESTROY_TRIGGER } from '../body/death.mjs';
 import { checkRecordCoverage } from '../lifecycle/records.mjs';
 
-// 终止清理函数的登记项（卷二 :561；各系统模块经 registerTerminationCleanup 产出、在此收齐）。本卡（S2-0a）尚无系统登记，S2-0b 的 death.mjs 加第一项。
-const TERMINATION_CLEANUPS = Object.freeze([]);
+// 终止清理函数的登记项（卷二 :561；各系统模块经 registerTerminationCleanup 产出、在此收齐）。
+const TERMINATION_CLEANUPS = Object.freeze([SETTLE_BODY_CLEANUP]);
+// 终止发起方的登记项（草案 §4.1；各系统模块经 registerTerminationTrigger 产出、在此收齐，destroy 原语按 systems.*.terminationTrigger 路由）。
+const TERMINATION_TRIGGERS = Object.freeze([DIE_BY_DESTROY_TRIGGER]);
+// 协议入口注入（kernel/transaction.mjs HANDLERS.destroy 调 engine.lifecycle.destroy；内核不 import 规则层，与 engine.advance 同一做法）。
+const LIFECYCLE = Object.freeze({ destroy: destroyEntity });
 
 // 装配层注入能力的形状（启动强断言；S1-1c 派卡「主会话已定」第 1–3 条）：一张「字段 → 要求 → 判定」表，assertCaps 循环判。
 // unitOfPath 可缺省（卷二十七 :553 只在分片表用到按单元分片时才须有；缺时由 checkShards 同一判定报 E-SAVE-SHARD-UNCOVERED）。
@@ -123,7 +128,7 @@ export function mountKernel(raw, caps, resume) {
   const engine = Object.freeze({
     registry, structs, modifierSources: Object.freeze([...modifierSources]), unitOfPath, inputs: closeInputs(INPUT_DECLS),
     stateKeys, P, host, saveLayout, primitives, bake, vocab: vocabDoc,
-    advanceHooks: Object.freeze([]), terminationCleanups: TERMINATION_CLEANUPS, openStates: new WeakSet(),
+    advanceHooks: Object.freeze([]), terminationCleanups: TERMINATION_CLEANUPS, terminationTriggers: TERMINATION_TRIGGERS, lifecycle: LIFECYCLE, openStates: new WeakSet(),
     advance: (/** @type {object} */ st, /** @type {import('../../kernel/save.mjs').LogBook} */ book, /** @type {number} */ m) => advance(engine, st, book, m),
     docData, digestExclude: Object.freeze([...digestExclude]), digestCap, saveRoot,
     engineRulesDigest: engineRulesDigestOf({ digestCap }, sources),

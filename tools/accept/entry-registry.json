@@ -628,7 +628,12 @@
     "checkBodyPlans",
     "speciesView",
     "bodyView",
-    "carcassOf"
+    "carcassOf",
+    "checkTerminationTables",
+    "checkRecordCoverage",
+    "destroyEntity",
+    "settleBody",
+    "dieByDestroy"
    ],
    "rules": []
   },
@@ -1131,7 +1136,8 @@
     "fixedAdd",
     "fixedScale",
     "fixedToNumber",
-    "KernelError"
+    "KernelError",
+    "lookupCurve"
    ],
    "rules": []
   },
@@ -1385,6 +1391,82 @@
    "sec": null,
    "kind": "kernel",
    "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "lookupCurve",
+   "file": "kernel/dimensions.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "KernelError",
+    "fixedUnits"
+   ],
+   "rules": []
+  },
+  {
+   "name": "registerTerminationTrigger",
+   "file": "rules/lifecycle/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "destroyEntity",
+   "file": "rules/lifecycle/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "terminableKinds",
+    "readPath",
+    "KernelError",
+    "dieByDestroy"
+   ],
+   "rules": []
+  },
+  {
+   "name": "die",
+   "file": "rules/body/death.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "terminated",
+    "addStatus",
+    "terminate",
+    "ruleValue"
+   ],
+   "rules": []
+  },
+  {
+   "name": "dieByDestroy",
+   "file": "rules/body/death.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "die",
+    "ruleValue"
+   ],
+   "rules": []
+  },
+  {
+   "name": "settleBody",
+   "file": "rules/body/death.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "carcassOf",
+    "ruleValue",
     "KernelError"
    ],
    "rules": []

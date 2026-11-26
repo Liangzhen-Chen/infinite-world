@@ -8,6 +8,7 @@
 import { KernelError } from './errors.mjs';
 import { T, GRAMMAR_TOKENS } from './handles.mjs';
 import { stateMemo, inputsOf } from './memo.mjs';
+import { fixedUnits, fixedCurveAt } from './det-math.mjs';
 
 const DIM_MEMO = 'kernel/dimensions.mjs#dim';
 // dim 的依赖节点名前缀（卷二 :502 示例 `dim:<kind>`）；按 kind 取 `dim:<kind>`，由 memo.mjs 解析到下面这条通配声明。
@@ -125,6 +126,21 @@ function codePointOrder(a, b) {
     if (d !== 0) return d;
   }
   return x.length - y.length;
+}
+
+/**
+ * kernelApi `lookupCurve(curve, x)`（卷二 §1.5 :189 curve、:386 `lookup(curve, x)` 查曲线，x 出域取端点）：曲线值（登记类型 curve 的 [[x, y], …]，
+ * x 严格递增）对定点 x 求定点 y；插值交 det-math#fixedCurveAt（全书唯一一份）。曲线不是非空点列或 x 不严格递增即 E-DIM-STRUCT-FIELD。
+ * @param {unknown} curve @param {bigint} x 定点 @returns {bigint} 定点
+ */
+export function lookupCurve(curve, x) {
+  const ok = Array.isArray(curve) && curve.length > 0
+    && curve.every((p) => Array.isArray(p) && typeof p[0] === 'number' && typeof p[1] === 'number');
+  if (!ok) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'lookupCurve: curve must be a non-empty list of [x, y] numbers');
+  /** @type {[bigint, bigint][]} */
+  const pts = curve.map((p) => [fixedUnits(p[0]), fixedUnits(p[1])]);
+  if (pts.some((p, i) => i > 0 && p[0] <= pts[i - 1][0])) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'lookupCurve: curve x must be strictly increasing');
+  return fixedCurveAt(pts, x);
 }
 
 /**

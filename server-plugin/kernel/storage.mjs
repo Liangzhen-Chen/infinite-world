@@ -57,9 +57,11 @@ function createdPropsDef(engine, state, segs) {
   if (!topKeyRegistered(engine, top)) return undefined;
   const kind = kindOfEntity(engine, state, id);
   const table = engine && engine.registry && engine.registry.tables instanceof Map ? engine.registry.tables.get(kind) : undefined;
-  const dims = table && table.dimensions !== null && typeof table.dimensions === 'object' ? table.dimensions : {};
-  if (!Object.hasOwn(dims, dimension)) throw new KernelError('E-DIM-UNKNOWN-READ', {}, `dimension ${kind}.${dimension}: not defined in the loaded table`);
-  return dims[dimension];
+  // 表头 dimensions 与实例维度 instanceDimensions（卷三乙 §2.3 :225、:455 只在实例上有值的维度，如尸体的 ofSpecies；S2-0b）都可写进偏离值。
+  for (const part of [table && table.dimensions, table && table.instanceDimensions]) {
+    if (part !== null && typeof part === 'object' && Object.hasOwn(part, dimension)) return part[dimension];
+  }
+  throw new KernelError('E-DIM-UNKNOWN-READ', {}, `dimension ${kind}.${dimension}: not defined in the loaded table`);
 }
 
 // 声明为 ref 的维度：null / 空串照旧拒，其余交 checkValue 按 ref 声明核（不在这里另判一份 ref）。
