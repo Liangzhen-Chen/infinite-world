@@ -2651,7 +2651,7 @@
    "scanClass": "registry_write",
    "source": "卷十二 §3.4 S12-2；§2.11；§3.2",
    "stage": 0,
-   "state": "implemented",
+   "state": "in_core",
    "target": "tools_code",
    "volume": "vol12",
    "zeroRows": []
@@ -3087,6 +3087,26 @@
    "source": "独立验收（亮圳 11-22「独立测门禁1122」）指出“写死数值与种类分支没有 C0 专条”；卷一 二.1（派生优先，不按 ID 或场景特判，docs/产品原则.md）；卷二 S10（常数登记）（独立验收补漏；现违例 16 条进基线）",
    "stage": 0,
    "state": "in_core",
+   "target": "runtime_code",
+   "volume": "vol2",
+   "zeroRows": []
+  },
+  {
+   "detector": "call_edge",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol2.S11",
+   "localNo": "S11",
+   "method": "static_code",
+   "runsOn": "local_static",
+   "scanClass": "rng_bypass",
+   "source": "卷二 S11 :2498（S11 Math.random 只在 legacy/；dimension-sample 键在 seed-keys.json。\r）；类别 rng_bypass：卷十二:268（卷二 S11 → rng_bypass）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
    "target": "runtime_code",
    "volume": "vol2",
    "zeroRows": []
@@ -4240,6 +4260,73 @@
    "zeroRows": []
   },
   {
+   "detector": "lit_scope",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-1.1",
+   "localNo": "A27-1.1",
+   "method": "static_code",
+   "runsOn": "local_static",
+   "scanClass": "handle_special",
+   "source": "卷二十七 A27-1.1 :359（A27-1.1（扫描式）：S27-1 命中数为 0；规则层与内核中行政层级族条目的字面量为 0，层判定只经 `simTierOf` 与 `baseTierOf`；内核对规则层的 i…）；类别 handle_special：卷十二:258、:270（S27-1、S27-9 → handle_special）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "runtime_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-1.10",
+   "localNo": "A27-1.10",
+   "method": "property_test",
+   "print": "ab9bce3b1b0213eb254127e31eb49a7e671541fa2019fb856d4531aceb29d4a0",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-1.10 :368（A27-1.10（不变量式，新单元对时与块切分无关的对照用例；封卷后勘误，李白 11-14）：规则表取该层节拍 60 分钟、`chunkMinutes` = 240（评档块边界在 …）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "detector": "path_access",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-1.11",
+   "localNo": "A27-1.11",
+   "method": "static_code",
+   "runsOn": "local_static",
+   "scanClass": "sim_bypass",
+   "source": "卷二十七 A27-1.11 :369（A27-1.11（扫描式）：S27-11 命中数为 0；规则层与内核里判\"在不在现场泡里\"的实现只有 `bubbleView`、`inBubble` 一处；`bubbleRadiu…）；类别 sim_bypass：卷十二 §2.4 开放登记；sim_bypass 类别行出处已点名 A27-1.11；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "runtime_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
    "expect": "all_pass",
    "form": "invariant",
    "gates": [
@@ -4355,6 +4442,579 @@
    "zeroRows": []
   },
   {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-1.2",
+   "localNo": "A27-1.2",
+   "method": "property_test",
+   "print": "4d207f9e4e18fb4f5989c52822eddb1c8a17925a02a99105365d961ae017a9f1",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-1.2 :360（A27-1.2（不变量式）：对任意状态，`baseTierOf` 只依赖拓扑、观察锚与规则表——同一状态调用两次结果相同，改动任何非锚实体不改变任何单元的基础层。`simTierO…）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-1.3",
+   "localNo": "A27-1.3",
+   "method": "digest_compare",
+   "print": "ca6c55ef83d4fe488be0cc18d8709efd532b67cc3f48168f60488902fc96cb29",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "cloud_ref",
+   "source": "卷二十七 A27-1.3 :361（A27-1.3（验收测试，分段无关；交卷十二机器化）：从同一存档出发、不夹玩家指令，把世界推进 N 分钟。分别取：一次推进 N 分钟；按任意切分分 k 次推进合计 N 分钟；每次换…）；卷十二 §2.8 :421–:431 对到模板 det_split（模板未登记，detector 暂不填）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-1.4",
+   "localNo": "A27-1.4",
+   "method": "property_test",
+   "print": "1acf3dfb10e32672e6f62526a21daf2d487fa6d64ce1fc1238b8bc5a98c6910e",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-1.4 :362（A27-1.4（不变量式，层间一致）：R27-1.9 的基准对矩阵里每个声明了 `observables` 的系统都通过。\r）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-1.5",
+   "localNo": "A27-1.5",
+   "method": "scenario_run",
+   "print": "99d638f5ea938d06f804af93b97982cee4ff8c2514ac0d9ac310d5125a380430",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-1.5 :363（A27-1.5（扩展性式）：新增一个系统，只加系统声明行与矩阵行，不改 `sim-tiers.mjs` 与 `sim-advance.mjs`，A27-1.2 至 A27-1.4 …）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-1.6",
+   "localNo": "A27-1.6",
+   "method": "scenario_run",
+   "print": "638c8c12046bffc789ab12bef127cb9cbe9cd8aa6f659e8e3dda3257aee4bb44",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-1.6 :364（A27-1.6（扩展性式）：换一张拓扑完全不同的世界（非西陲、含不连通区域与无政区地点），不改任何代码与规则表，A27-1.2、A27-1.3 通过；互不相连的两块无政区区域属于不…）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-1.7",
+   "localNo": "A27-1.7",
+   "method": "property_test",
+   "print": "5df70d14bf30f3f705eeafe873f728512a54403a646737ec7930528bb91baba4",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-1.7 :365（A27-1.7（不变量式，换层不缺不重）：在任意时刻 t 让观察锚进入或离开一个单元，对该单元每个声明了粗形态的系统，结算区间首尾相接地覆盖全程——没有哪一分钟被结算两次或漏掉（按…）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-1.8",
+   "localNo": "A27-1.8",
+   "method": "digest_compare",
+   "print": "ecc728610a9af8fd30d6060685c8c18af7fefb6707450d06dcf6d35d8818df94",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "cloud_ref",
+   "source": "卷二十七 A27-1.8 :366（A27-1.8（验收测试，档位与请求无关；交卷十二机器化）：`costPlan` 的签名里没有请求参数（扫描）；同一状态下发出长度不同、类别标签不同的推进请求，到达同一时刻后 `s…）；卷十二 §2.8 :421–:431 对到模板 det_request_indep（模板未登记，detector 暂不填）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-1.9",
+   "localNo": "A27-1.9",
+   "method": "property_test",
+   "print": "da1715ec18cfb0b363dac8b71b71c47b74990454cce38a8ab0ab84b394298920",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-1.9 :367（A27-1.9（不变量式，新单元首桶与切分无关；封卷后勘误，李白 11-14 选甲）：从同一存档出发、不夹玩家指令，其间有一个新单元出现（第一次出现在推进计划里），把世界推进到同一…）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "detector": "lit_scope",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-2.1",
+   "localNo": "A27-2.1",
+   "method": "static_code",
+   "runsOn": "local_static",
+   "scanClass": "handle_special",
+   "source": "卷二十七 A27-2.1 :448（A27-2.1（扫描式）：S27-9 命中数为 0（`aggregate.mjs` 及其 import 闭包里没有任何实体类、物种、组织、持有种类、义务种类、状态族、记录种类、系统…）；类别 handle_special：卷十二:258、:270（S27-1、S27-9 → handle_special）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "runtime_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-2.2",
+   "localNo": "A27-2.2",
+   "method": "digest_compare",
+   "print": "4039bc8835c02880fbdc80cce29d16b11f23046bfcd11c89b80310af9afbedf3",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "cloud_ref",
+   "source": "卷二十七 A27-2.2 :449（A27-2.2（验收测试，往返恒等；交卷十二机器化）：① 对任一实体化事务未给他开出足迹项的聚合成员，实体化后不对他做任何写入就折叠，排除日志分区后的世界状态摘要（定义见 R27-…）；卷十二 §2.8 :421–:431 对到模板 det_roundtrip（模板未登记，detector 暂不填）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-2.3",
+   "localNo": "A27-2.3",
+   "method": "property_test",
+   "print": "81eea7f7e3669c5f05ffaf72d3ed3d60cd3e77f9d1285544830558b8dd7fcf68",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-2.3 :450（A27-2.3（不变量式，守恒）：任意折叠、实体化、分户、迁移前后，每种资源的全局总量不变；全局人数 = 各聚合体成员区间长度之和 + 不在任何成员区间里的个体数，只在出生与死亡事…）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-2.4",
+   "localNo": "A27-2.4",
+   "method": "property_test",
+   "print": "0ff51b1110a5f00429fb3a4700c5ca1e50a14247e4dea5b66c84677579a035f3",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-2.4 :451（A27-2.4（不变量式，身份稳定）：同一（来源种子键, 序号）在任意多次实体化之间，实例 id 与全部采样维度相同。\r）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-2.5",
+   "localNo": "A27-2.5",
+   "method": "scenario_run",
+   "print": "62854673297f1430f29013a5f0943e048838f815e830f38a38912e33d931fdff",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-2.5 :452（A27-2.5（扩展性式）：新增一个在个体身上留状态的系统，不改 `aggregate.mjs`，带该状态的个体自动 `pinned` 为真。\r）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-2.6",
+   "localNo": "A27-2.6",
+   "method": "scenario_run",
+   "print": "fb4b9043c67f2731c089e05d1b95fff9020cf2880dd4f6f1dc90c129ca8c1fbe",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-2.6 :453（A27-2.6（扩展性式）：新增一种聚合种类（任意实体类、任意分组键），只加一行，A27-2.2 至 A27-2.4 通过。\r）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "detector": "call_edge",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-3.1",
+   "localNo": "A27-3.1",
+   "method": "static_code",
+   "runsOn": "local_static",
+   "scanClass": "wallclock",
+   "source": "卷二十七 A27-3.1 :523（A27-3.1（扫描式）：S27-3 命中数为 0；`cost-model.mjs` 与 `sim-tiers.mjs` 的输入声明（卷二 §2.3）里没有 AI、费用账、旁路记录…）；类别 wallclock：卷十二:272（S27-3 → wallclock）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "runtime_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-3.2",
+   "localNo": "A27-3.2",
+   "method": "property_test",
+   "print": "441e19c67e9954ff0b0ca23bedfc6b0e4cc3598cf35c1089e6c0b93e524d127d",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-3.2 :524（A27-3.2（不变量式）：同一状态，`costPlan` 在本机与云上、在项目支持的每个 Node 版本下返回值逐位相同。“本机”读法同 A27-5.4（封卷后勘误，同类收清）。…）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-3.3",
+   "localNo": "A27-3.3",
+   "method": "property_test",
+   "print": "8d8857a59acee8f20b6bb2415f58f91b1996cdce4f051d7034f72507856746e4",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-3.3 :525（A27-3.3（不变量式）：任意档位下，观察锚所在单元的层为个体层；任意档位下 A27-2.3 的守恒成立。\r）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-3.4",
+   "localNo": "A27-3.4",
+   "method": "property_test",
+   "print": "018571f6a4d7fd0ed803257dfe43a6e3b9fb310a462a38e9af5e23bdb64060af",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-3.4 :526（A27-3.4（不变量式）：`degradeLevel` 对预算单调——预算调大，档位不升。\r）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-3.5",
+   "localNo": "A27-3.5",
+   "method": "scenario_run",
+   "print": "478887a5ba8695c618287bdcca0489b7ea1c7ca1fd20706fad724967efe326a8",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-3.5 :527（A27-3.5（扩展性式）：新增一个系统，只加系数行即进入成本模型；缺行即加载失败，不存在“默认零成本”。\r）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-3.6",
+   "localNo": "A27-3.6",
+   "method": "scenario_run",
+   "print": "c0011f247e7874b513e3044b4d2640b3e9f9bd13afed8e32694e500b8e01886c",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-3.6 :528（A27-3.6（扩展性式）：在阶梯里增删一档只改规则表，A27-3.2 至 A27-3.4 仍通过。\r）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "detector": "lit_scope",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-4.1",
+   "localNo": "A27-4.1",
+   "method": "static_code",
+   "runsOn": "local_static",
+   "scanClass": "save_bypass",
+   "source": "卷二十七 A27-4.1 :597（A27-4.1（扫描式）：S27-7 命中数为 0；规则层中“序列化”“反序列化”职责的函数为 0（按是否向存档出口传参判定）；逐条核对：pathTypes 的每一条路径模式、世界…）；类别 save_bypass：卷十二:256、:276（S27-7 → save_bypass）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "runtime_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-4.2",
+   "localNo": "A27-4.2",
+   "method": "digest_compare",
+   "print": "9d3fb288fdc0c91cfe7a0f70f1c9114f121e0af2d036cd9b29eb971b61c3f840",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "cloud_ref",
+   "source": "卷二十七 A27-4.2 :598（A27-4.2（验收测试，分片无关；交卷十二机器化）：同一逻辑文档换任意合法分片表存盘再读回，存档摘要不变。\r）；卷十二 §2.8 :421–:431 对到模板 det_shard（模板未登记，detector 暂不填）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
    "detector": "det_save_load",
    "expect": "all_pass",
    "form": "invariant",
@@ -4382,6 +5042,141 @@
    ],
    "runsOn": "cloud_ref",
    "source": "卷二十七 A27-4.3（存读恒等，交卷十二机器化）；卷十二 §2.8 末表（A27-4.3 → det_save_load）；块 6 第 6-20 张",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-4.4",
+   "localNo": "A27-4.4",
+   "method": "property_test",
+   "print": "7093e6baf316903e0862839bbcbc8be5e0b74e6a7525103d7167a4fd728c1201",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-4.4 :600（A27-4.4（不变量式，中断安全）：在写盘的任一步骤中断，读档得到的要么是新清单的完整状态，要么是上一个清单的完整状态。\r）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-4.5",
+   "localNo": "A27-4.5",
+   "method": "property_test",
+   "print": "b6316ae7b4efe2c44781031ed9b42160043fa4be37a16f2ec24c620844fa8b28",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-4.5 :601（A27-4.5（不变量式，语言无关）：换语言包、换显示层版本后读同一存档，`rulesDigest` 与存档摘要不变（接卷一 I40）；同一状态在不同的真实时刻、写进不同的槽位，存…）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-4.6",
+   "localNo": "A27-4.6",
+   "method": "property_test",
+   "print": "2d4c478c42d113aee38bc6b93fb713429fe67e51a56247c43db6e917b2d5a9f4",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-4.6 :602（A27-4.6（不变量式，拒绝而不破坏）：`rulesDigest` 不符时读档失败，存档目录下所有文件的字节与修改前相同。\r）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-4.7",
+   "localNo": "A27-4.7",
+   "method": "scenario_run",
+   "print": "df334fcc3e159731e5c1785d813623b497074318d42dccf19dd4221cbf378b65",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-4.7 :603（A27-4.7（扩展性式）：新增一个系统及其状态键，只在 pathTypes 与分片表登记，不改存档读写文件，A27-4.2、A27-4.3 通过。\r）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-4.8",
+   "localNo": "A27-4.8",
+   "method": "property_test",
+   "print": "6bc859eae99999d24180e5701f8708f04488c3903d800c9fca56a6fc62899586",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-4.8 :604（A27-4.8（不变量式，折叠；封卷后勘误，C24-10、Q24-2）：任一次折叠（R27-4.12）前后，排除日志分区后的世界状态摘要相同；只取分量不低于 `logKeepSig…）；门禁封口 C 只登记不实现",
    "stage": 0,
    "state": "registered",
    "target": "tests_code",
@@ -4635,6 +5430,114 @@
    "gates": [
     "pre_merge"
    ],
+   "itemKey": "vol27.A27-5.2",
+   "localNo": "A27-5.2",
+   "method": "property_test",
+   "print": "4460b9f62068658d2795a5116cc4e4df1f396382fd9e569dd1b15e02fec4fe61",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-5.2 :659（A27-5.2（不变量式）：任意状态的全部数值路径满足 R27-5.1；存盘读回后逐位相等；`fnTables` 入库文件与生成脚本的输出逐位相同。\r）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-5.3",
+   "localNo": "A27-5.3",
+   "method": "property_test",
+   "print": "1803a2b51e6da916f6481414e9586ee78df714cf59acf87a406b7c8f5b84a3c2",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-5.3 :660（A27-5.3（不变量式）：把系统注册顺序、数据文件加载顺序、状态集合的插入顺序各自打乱后重跑同一指令序列，事件流逐字节相同。\r）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-5.4",
+   "localNo": "A27-5.4",
+   "method": "digest_compare",
+   "print": "6367a9836b25b9ac3e34189cb7376007d0a83b52d35c6bd5770896c74e60a0aa",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "cloud_ref",
+   "source": "卷二十七 A27-5.4 :661（A27-5.4（验收测试，跨环境；交卷十二机器化）：同一指令序列在本机与云、在项目支持的每个 Node 版本下，事件流逐字节相同、存档摘要相等（卷一 I50）。“本机”按卷十二 R…）；卷十二 §2.8 :421–:431 对到模板 det_cross_env（模板未登记，detector 暂不填）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-5.5",
+   "localNo": "A27-5.5",
+   "method": "scenario_run",
+   "print": "0b8a849d15c28c42b742ec8a5d96e8362b06be183cb529117e8a6e9ede399522",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-5.5 :662（A27-5.5（扩展性式）：新增一个需要超越函数的规则，只调内核设施；新增一张查找表只加数据，A27-5.4 仍通过。\r）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
    "itemKey": "vol27.A27-5.6",
    "localNo": "A27-5.6",
    "method": "unit_test",
@@ -4650,6 +5553,296 @@
    ],
    "runsOn": "local_static",
    "source": "卷二十七 A27-5.6 :662（格派生的确定性：同一世界种子派生两遍、乱序派生、清缓存，区格结果逐格相同，种子键登记表里生成流的行不含版本成分）；对照表 #13、#16 归 G2",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-6.2",
+   "localNo": "A27-6.2",
+   "method": "property_test",
+   "print": "dff194f030c7e488f6bde235d8ee7eaed9f6adc38f98bdd0d7da3385d0b88d30",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-6.2 :720（A27-6.2（不变量式）：计数类指标对同一场景重复运行逐位相同，本机与云相同。“本机”读法同 A27-5.4（封卷后勘误，同类收清）。\r）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-6.3",
+   "localNo": "A27-6.3",
+   "method": "property_test",
+   "print": "ca099e88dac03f90b84902bfbaff9a3f27b1096dec44fbd04dd5cdc038193ef5",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-6.3 :721（A27-6.3（不变量式）：每个场景结束时源汇报告全平。\r）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-6.4",
+   "localNo": "A27-6.4",
+   "method": "scenario_run",
+   "print": "cd31fadbfa8004e468db2f4a9bd17889d2fbd4843ddfc13fcdb9f4635c67ae5a",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-6.4 :722（A27-6.4（扩展性式）：新增场景只加一行；新增指标只加词表条目、`metricClass` 一行与采集点，不改门禁判定代码；门禁代码里 `perfmetric` 条目的字面量为…）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-6.5",
+   "localNo": "A27-6.5",
+   "method": "scenario_run",
+   "print": "a871db51e09cbb59a6d663a4375dcc29b529734bb5f29f0651925f7d5fa7a235",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-6.5 :724（A27-6.5（扩展性式）：新增一个系统后，若它没有出现在任何场景的成本分解里，门禁报覆盖缺口。\r）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-6.6",
+   "localNo": "A27-6.6",
+   "method": "property_test",
+   "print": "173096669386ae9c025d223e7a4e1c88fb70dd266e4ab9ebf9d445c328b41afa",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-6.6 :723（A27-6.6（不变量式）：场景表满足 R27-6.4 的标签计数；基线文件相对上一次入库版本的每一处升高都能对上同一次合入的新增登记或标定依据；阶段收口时待标定字段全部已填。\r）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-6.7",
+   "localNo": "A27-6.7",
+   "method": "property_test",
+   "print": "54e735f2ad2da8b5f699194e9c79b962446414f58de7f9e5043fe9240109a88a",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-6.7 :725（A27-6.7（不变量式，格世界基准；第五版）：每个场景的 `pm_offscreen_cells` 为 0；带 `st_bubble_walk` 的场景同一 `sizeClass…）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "detector": "path_access",
+   "expect": "zero",
+   "form": "scan",
+   "gates": [
+    "pre_commit",
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-7.1",
+   "localNo": "A27-7.1",
+   "method": "static_code",
+   "runsOn": "local_static",
+   "scanClass": "version_fork",
+   "source": "卷二十七 A27-7.1 :770（A27-7.1（扫描式）：S27-5 命中数为 0；仓库中 legacy、compat、migrations 目录不存在；对这三者的 import 为 0；名字以迁移结尾的规则层文…）；类别 version_fork：卷十二:274（S27-5 → version_fork）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "runtime_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-7.2",
+   "localNo": "A27-7.2",
+   "method": "property_test",
+   "print": "af23414c0b325705c9a725929b143533ca48e50d3812154761368a0802e7690c",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-7.2 :771（A27-7.2（不变量式）：任意存档从任意保留的快照做 `replay_verify`，事件流逐字节相同；输入序列里含心跳推进请求时同样成立。\r）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-7.3",
+   "localNo": "A27-7.3",
+   "method": "property_test",
+   "print": "98dcf82dad05ed441fd0510ab40df7368c71d05c91cb053ade1ff1c3f9a8d5bf",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-7.3 :773（A27-7.3（不变量式）：状态与日志中不存在任何名称或取值表示“规则版本”“复演版本”的路径（按 pathTypes 清单核对）。\r）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-7.4",
+   "localNo": "A27-7.4",
+   "method": "scenario_run",
+   "print": "de325a72a76c47ff4b9fecc814cae9d5ef4073b751a49357cca5d762858c3356",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-7.4 :774（A27-7.4（扩展性式）：新增任意系统、任意扩展包后，A27-7.2 不需要为它写专门的复演代码即通过。\r）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-7.5",
+   "localNo": "A27-7.5",
+   "method": "digest_compare",
+   "print": "82d17bc271bb249ec579e5422a4b09bda655696b0ab36eec473a313d89155a3a",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "cloud_ref",
+   "source": "卷二十七 A27-7.5 :772（A27-7.5（验收测试，AI 不入逻辑；交卷十二机器化）：同种子、同玩家输入，不开文字模型与开着文字模型各推进同样时长，事件流逐事件相同，textPaths 之外的全部状态路径逐…）；卷十二 §2.8 :421–:431 对到模板 det_ai_off_on（模板未登记，detector 暂不填）；门禁封口 C 只登记不实现",
    "stage": 0,
    "state": "registered",
    "target": "tests_code",
@@ -4931,6 +6124,114 @@
    "stage": 0,
    "state": "in_core",
    "target": "runtime_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-8.2",
+   "localNo": "A27-8.2",
+   "method": "digest_compare",
+   "print": "d52c0caab3bc5f83707ac50bb35f4788173bcd66fbb6410b4cdd59e2dc0bfa0e",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "cloud_ref",
+   "source": "卷二十七 A27-8.2 :833（A27-8.2（验收测试，插入无关；交卷十二机器化）：在任意位置新增一个抽取点后重跑，除该点自身引起的后果外，其余抽取点的取值与新增前逐个相同。用只读取不使用的探针点验证：加探针前…）；卷十二 §2.8 :421–:431 对到模板 det_probe（模板未登记，detector 暂不填）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-8.3",
+   "localNo": "A27-8.3",
+   "method": "property_test",
+   "print": "e2178066ef7360336105836ffe9aefd9ffef4a405f1f83ee72fe78b78c9a0151",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-8.3 :834（A27-8.3（不变量式，无碰撞）：任意基准场景的 `replay_verify` 中，没有哪个键在两个不同的事务里被求值；不同（流代号, 对象, 时刻, 抽取点代号）产生的键两两…）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "invariant",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-8.4",
+   "localNo": "A27-8.4",
+   "method": "digest_compare",
+   "print": "44b892a05077f72fe645824b59338d51fda65e24493aba871deec9081f61fc2c",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "cloud_ref",
+   "source": "卷二十七 A27-8.4 :835（A27-8.4（验收测试，同种子同输出；交卷十二机器化）：同一世界种子两次生成并推进，事件流逐字节相同、存档摘要相等（卷一 I50；不开文字模型）；换 `seedSampleSiz…）；卷十二 §2.8 :421–:431 对到模板 det_same_seed（模板未登记，detector 暂不填）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
+   "volume": "vol27",
+   "zeroRows": []
+  },
+  {
+   "expect": "all_pass",
+   "form": "extend",
+   "gates": [
+    "pre_merge"
+   ],
+   "itemKey": "vol27.A27-8.5",
+   "localNo": "A27-8.5",
+   "method": "scenario_run",
+   "print": "1fa6d9036a2aa4c5dc651ca56952e1cf3b4b2882271c6b662a6e2ab4893a8efd",
+   "rev": 1,
+   "revisions": [
+    {
+     "card": "chore-gate-seal-c",
+     "date": "2026-11-26",
+     "rev": 1,
+     "summary": "首次登记（门禁封口子卡 C：S12-3 未登记条目只登记不实现，state registered）"
+    }
+   ],
+   "runsOn": "local_static",
+   "source": "卷二十七 A27-8.5 :836（A27-8.5（扩展性式）：新增一个带随机性的系统，只登记行并调用统一包装，A27-8.2 至 A27-8.4 不改测试代码即覆盖到它。\r）；门禁封口 C 只登记不实现",
+   "stage": 0,
+   "state": "registered",
+   "target": "tests_code",
    "volume": "vol27",
    "zeroRows": []
   },

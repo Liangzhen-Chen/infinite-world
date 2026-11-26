@@ -337,6 +337,13 @@
   },
   {
    "detectors": [
+    "lit_scope"
+   ],
+   "scanClass": "handle_special",
+   "source": "卷十二 §2.4 :258（handle_special 句柄字面量特判，检测器 lit_scope）、:270（卷二十七 S27-1、S27-9）；门禁封口 C 新登类别，只挂 registered 条目，未实现"
+  },
+  {
+   "detectors": [
     "typed_pos"
    ],
    "scanClass": "id_parse",
@@ -1719,6 +1726,14 @@
    ],
    "scanClass": "rules_import",
    "source": "卷一 R-6 第 5 条；卷十二 §2.4"
+  },
+  {
+   "detectors": [
+    "lit_scope",
+    "import_edge"
+   ],
+   "scanClass": "save_bypass",
+   "source": "卷十二 §2.4 :256（save_bypass 存档文件旁路，检测器 lit_scope、import_edge）、:276（卷二十七 S27-7）；门禁封口 C 新登类别，只挂 registered 条目，未实现"
   },
   {
    "detectors": [
