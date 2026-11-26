@@ -78,8 +78,8 @@
       "file": "world/ontology/dimensions/_effects.json",
       "find": "\"time\"",
       "replace": "\"time_cut\"",
-      "step": 3,
-      "note": "eff_pass_time 的 time 输出被改名：加载期不校验原语名（S1-3a catalog 只核输出种类），第 3 步 act_wait 提交被原语层拒收"
+      "step": 1,
+      "note": "eff_pass_time 的 time 输出改名：3a 加载期即拒（act 目录核对可达原语），开局即抛，停在第 1 步（审卡修订：加载期核对更早拦住）"
     },
     {
       "id": "mount-load-actions",

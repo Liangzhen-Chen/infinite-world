@@ -2,6 +2,7 @@
 // 出题方：Claude Haiku 5.5（Orca 会员会话），标识 haiku-orca-test-s13a。依据见 docs/卡档案/feat-s1-3a/出题.md。
 // 「不改任何 .mjs」的做法：把 server-plugin 与 world 整棵复制进临时根，只改临时根里的 world 数据（JSON），再从临时根的 index.mjs 装配。
 // 写临时根只经 writeUnderTempRoot（temp-root.mjs 登记写入口）；复制也经它逐文件写入。
+import { express } from '../../support/express.mjs';
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -35,7 +36,7 @@ function assertRejected(world, before, r, code) {
 }
 
 async function fresh(root) {
-  return init({ saveRoot: root ?? (() => { const r = testTempRoot('s13a-cat-'); roots.push(r); return r; })() });
+  return init(express.Router(), { saveRoot: root ?? (() => { const r = testTempRoot('s13a-cat-'); roots.push(r); return r; })() });
 }
 
 // ---- 动作表文件的读写（临时根内） ----
@@ -110,7 +111,7 @@ test('9. 动作表加一行（复制 act_wait 改 id 与上限）、不改任何
   writeUnderTempRoot(root, join(ACTIONS_REL, f), JSON.stringify(doc, null, 2));
 
   const { init: initCopy } = await importCopy(root);
-  const world = await initCopy({ saveRoot: root });
+  const world = await initCopy(express.Router(), { saveRoot: root });
   const first = await world.act({ act: 'act_choose_origin', slots: { origin: 0, place: 0 } });
   assert.equal(isOk(first), true, '前提：选来历应成功');
 
@@ -154,7 +155,7 @@ test('10. 动作表加载即拒（不静默）：非 S1 字段非空、baseMinut
     row[field] = value;
     writeUnderTempRoot(root, join(ACTIONS_REL, f), JSON.stringify(doc, null, 2));
     const { init: initCopy } = await importCopy(root);
-    await assert.rejects(initCopy({ saveRoot: root }), refused, `非 S1 字段 ${field} 非空应加载即拒 E-ACT-ROW`);
+    await assert.rejects(initCopy(express.Router(), { saveRoot: root }), refused, `非 S1 字段 ${field} 非空应加载即拒 E-ACT-ROW`);
   }
 
   {
@@ -163,7 +164,7 @@ test('10. 动作表加载即拒（不静默）：非 S1 字段非空、baseMinut
     rowsOf(doc).get('act_wait').baseMinutes = 5;
     writeUnderTempRoot(root, join(ACTIONS_REL, f), JSON.stringify(doc, null, 2));
     const { init: initCopy } = await importCopy(root);
-    await assert.rejects(initCopy({ saveRoot: root }), refused, 'baseMinutes>0 应加载即拒 E-ACT-ROW（活动未实现）');
+    await assert.rejects(initCopy(express.Router(), { saveRoot: root }), refused, 'baseMinutes>0 应加载即拒 E-ACT-ROW（活动未实现）');
   }
 
   // 效果族：取 act_wait 效果里用到的族（卷九 effectCall = {family, params}），改其输出为非 primitive / 原语为无处理函数的原语。
@@ -204,7 +205,7 @@ test('10. 动作表加载即拒（不静默）：非 S1 字段非空、baseMinut
     mutate(outs);
     writeUnderTempRoot(root, 'world/ontology/dimensions/_effects.json', JSON.stringify(effDoc, null, 2));
     const { init: initCopy } = await importCopy(root);
-    await assert.rejects(initCopy({ saveRoot: root }), refused, label);
+    await assert.rejects(initCopy(express.Router(), { saveRoot: root }), refused, label);
   };
 
   await probeFamily((outs) => { outs[0].kind = 'event'; }, '效果族输出非 primitive 应加载即拒 E-ACT-ROW')();
