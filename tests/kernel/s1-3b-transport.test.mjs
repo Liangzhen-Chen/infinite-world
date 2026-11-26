@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import express from 'express';
+import { express } from '../support/express.mjs';
 import { testTempRoot } from '../accept/temp-root.mjs';
 import { init } from '../../server-plugin/index.mjs';
 import { mountKernel } from '../../server-plugin/rules/load/mount.mjs';

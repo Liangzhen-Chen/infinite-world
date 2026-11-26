@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { testTempRoot } from '../accept/temp-root.mjs';
 import { init, saveSlot, loadSlot, replay_apply } from '../../server-plugin/index.mjs';
-import express from 'express';
+import { express } from '../support/express.mjs';
 import { mountKernel } from '../../server-plugin/rules/load/mount.mjs';
 import { closeInputs, inputsOf } from '../../server-plugin/kernel/memo.mjs';
 import { dim, modified } from '../../server-plugin/kernel/dimensions.mjs';

@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { init } from '../../server-plugin/index.mjs';
-import express from 'express';
+import { express } from '../support/express.mjs';
 import { mountKernel } from '../../server-plugin/rules/load/mount.mjs';
 import { clockMinute, advance } from '../../server-plugin/kernel/scheduler.mjs';
 import { runTransaction, submitProposal } from '../../server-plugin/kernel/transaction.mjs';
