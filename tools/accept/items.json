@@ -2651,7 +2651,7 @@
    "scanClass": "registry_write",
    "source": "卷十二 §3.4 S12-2；§2.11；§3.2",
    "stage": 0,
-   "state": "implemented",
+   "state": "in_core",
    "target": "tools_code",
    "volume": "vol12",
    "zeroRows": []
