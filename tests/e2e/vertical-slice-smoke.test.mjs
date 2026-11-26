@@ -33,7 +33,7 @@ test('零 mock 端到端烟测：宿主路由 6 步闭环（存读档经 menu �
     const origin = menuRows.find((m) => m.act === 'act_choose_origin');
     const wait = menuRows.find((m) => m.act === 'act_wait');
     assert.ok(origin && !origin.blocked, '菜单缺未受阻的 act_choose_origin（开局尚无化身）');
-    assert.ok(wait && wait.blocked, '菜单中 act_wait 应带 blocked（尚无化身）');
+    assert.ok(!wait || wait.blocked, '菜单中 act_wait 若列出则须带 blocked（尚无化身；不列出亦可，S1-3a 合同）');
     const s0 = await saveAt(B, 0);
     assert.equal(s0.json?.result, 'ok', `存槽 0 未 ok：${s0.text}`);
     const e0 = await exportAt(B, 0);

@@ -5,10 +5,10 @@
 // 存档字节格式见 tests/support/wire-host.mjs 头注释（Q5 已采纳）；规则指纹字段名按 manifest 里含 rules 与 digest 的键找，找不到即失败。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { startHost, copyRepo, saveAt, loadAt, exportAt, importAt, unpack, tamperShardBytes } from '../../support/wire-host.mjs';
-import { testTempRoot, removeTempRoot } from '../../accept/temp-root.mjs';
+import { testTempRoot, removeTempRoot, writeUnderTempRoot } from '../../accept/temp-root.mjs';
 
 // 起一个用临时根做 saveRoot 的宿主；清理由调用方的 t.after 负责。
 async function fresh(t, prefix, repoDir) {
@@ -54,17 +54,15 @@ test('导入合法字节后可读档：导出的字节导入到另一槽，再�
 });
 
 test('导入超限：字节超过 saveImportMaxBytes 报 E-SAVE-IMPORT-SIZE（临时副本里把上限改为 64）', async (t) => {
-  const tmp = testTempRoot('s13b-save-size-');
-  t.after(() => removeTempRoot(tmp));
-  const repo = copyRepo(join(tmp, 'repo'));
-  const hostPath = join(repo, 'world', 'rules', 'tables', 'host.json');
-  const table = JSON.parse(readFileSync(hostPath, 'utf8'));
+  const { root, repo } = copyRepo();
+  t.after(() => removeTempRoot(root));
+  const table = JSON.parse(readFileSync(join(repo, 'world', 'rules', 'tables', 'host.json'), 'utf8'));
   const row = table.rows.find((r) => r.key === 'saveImportMaxBytes');
   assert.ok(row, 'world/rules/tables/host.json 中应有 saveImportMaxBytes 行');
   row.value = 64;
-  writeFileSync(hostPath, JSON.stringify(table, null, 2), 'utf8');
+  writeUnderTempRoot(root, 'repo/world/rules/tables/host.json', JSON.stringify(table, null, 2));
 
-  const h = await startHost({ repoDir: repo, saveRoot: join(tmp, 'save') });
+  const h = await startHost({ repoDir: repo, saveRoot: join(root, 'save') });
   t.after(() => h.close());
   await saveAt(h.base, 1);
   const e = await exportAt(h.base, 1);
