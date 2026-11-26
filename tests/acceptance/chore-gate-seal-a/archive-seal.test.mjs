@@ -143,11 +143,11 @@ test('规则1 合并提交正例：合并进来的改动都不在触发目录，
 });
 
 test('规则1 合并提交反例（判档）：触发目录改动的合并提交，档案不齐即拒', () => {
-  assert.ok(judge(['tools/side.mjs'], MERGE_MSG, {}, { isMerge: true }).length > 0);
+  assert.ok(judge(['tools/side.mjs'], MERGE_MSG, {}, { isMerge: true, ownFiles: [] }).length > 0);
 });
 
 test('规则1 合并提交正例（判档）：同样改动，档案齐全即放行', () => {
-  assert.deepEqual(judge(['tools/side.mjs'], MERGE_MSG, archiveFiles(), { isMerge: true }), []);
+  assert.deepEqual(judge(['tools/side.mjs'], MERGE_MSG, archiveFiles(), { isMerge: true, ownFiles: [] }), []);
 });
 
 // ---- 规则 2：非合并提交写「角色：合并」即拒；合并提交的合并角色放行 ----
@@ -160,7 +160,7 @@ test('规则2 反例：非合并提交同时改 tests/acceptance/ 且角色合�
 });
 
 test('规则2 正例：合并提交的合并角色可改验收目录，放行', () => {
-  assert.deepEqual(judge(['tests/acceptance/feat-x/a.test.mjs'], MERGE_MSG, archiveFiles(), { isMerge: true }), []);
+  assert.deepEqual(judge(['tests/acceptance/feat-x/a.test.mjs'], MERGE_MSG, archiveFiles(), { isMerge: true, ownFiles: [] }), []);
 });
 
 // ---- 规则 3：主会话角色只许改四类文件，标识须为登记的主会话标识 ----
@@ -196,7 +196,7 @@ test('规则4 正例（借档）：推送范围里同时改了那张卡的档案
 });
 
 const MERGE_Y = msg('卡分支：feat/y', '角色：合并', `标识：${MAIN}`);
-const runY = (arch) => judgeCommit(RULES, { files: ['tools/x.mjs'], branch: null, message: MERGE_Y, readFile: readArchive(arch, 'feat/y'), isMerge: true, repo: repoOf(arch, 'feat/y'), stage: '推送', rangeFiles: ['tools/x.mjs', `${dirOf('feat/y')}审查.md`] });
+const runY = (arch) => judgeCommit(RULES, { files: ['tools/x.mjs'], branch: null, message: MERGE_Y, readFile: readArchive(arch, 'feat/y'), isMerge: true, ownFiles: [], repo: repoOf(arch, 'feat/y'), stage: '推送', rangeFiles: ['tools/x.mjs', `${dirOf('feat/y')}审查.md`] });
 
 test('规则4 反例：head 分支不在 state.json.branches 里即拒', () => {
   const notListed = archiveFiles('feat/y', { 'state.json': stateOf('feat/y', { branches: { code: 'feat/x', test: 'test/x' } }) });
