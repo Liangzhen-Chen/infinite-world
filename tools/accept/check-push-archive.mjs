@@ -40,7 +40,7 @@ if (only) {
   const files = git(['diff', '--name-only', '-z', 'origin/master...HEAD']).split('\0').filter(Boolean);
   const message = `卡分支：${branch}\n角色：合并\n标识：${mergerId || 'main-session-opus55'}\n`;
   reasons = judgeCommit(rules, {
-    files, branch: null, message, isMerge: true, stage,
+    files, branch: null, message, isMerge: true, ownFiles: [], stage,
     rangeFiles: files,
     headBranch: branch,
     history: {

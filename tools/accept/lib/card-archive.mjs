@@ -285,7 +285,7 @@ export function checkArchive(rules, readFile, cond = null, stage = '推送', rep
   const want = (f) => !ctx.only || ctx.only.includes(f);
   const [partyFile] = rules.party.section.split('/');
   const parties = cond === null && want(partyFile) ? checkParties(rules, readFile, stage) : null;
-  const reasons = cond === null && rules.handoff && want(rules.handoff.file) ? checkHandoff(rules, readFile, stage, { ...ctx, repo, models: parties ? parties.models : {} }) : [];
+  const reasons = cond === null && rules.handoff && want(rules.handoff.file) ? checkHandoff(rules, readFile, stage, { ...ctx, repo, models: parties ? parties.models : {}, ids: parties && parties.map ? parties.map : {} }) : [];
   const rows = rules.rows.filter((r) => r.cond === cond && (stage === '推送' || r.stage === '提交') && want(r.file));
   for (const file of [...new Set(rows.map((r) => r.file))]) {
     const text = readFile(file);
@@ -353,17 +353,17 @@ function credentialReasons(rules, obj, ctx) {
     if (Array.isArray(raw) && !p.multiRoles.includes(role)) { out.push(`${f} parties.${key}（${role}）只许一条，不许写成数组`); continue; }
     const entries = Array.isArray(raw) ? raw : [raw];
     if (!entries.length) { out.push(`${f} parties.${key}（${role}）是空数组，缺派活凭证`); continue; }
-    entries.forEach((c, i) => out.push(...credentialOf(rules, role, c, `${f} parties.${key}${Array.isArray(raw) ? `[${i}]` : ''}（${role}）`, ctx)));
+    entries.forEach((c, i) => out.push(...credentialOf(rules, role, c, `${f} parties.${key}${Array.isArray(raw) ? `[${i}]` : ''}（${role}）`, ctx, Array.isArray(raw) ? i : null)));
   }
   return out;
 }
 
-function credentialOf(rules, role, c, at, ctx) {
+function credentialOf(rules, role, c, at, ctx, round) {
   if (!c || typeof c !== 'object' || Array.isArray(c)) return [`${at} 须是对象`];
   const hasReceipt = c.receipt !== null && c.receipt !== undefined;
   const hasOrca = c.orca !== null && c.orca !== undefined;
   if (!hasReceipt && !hasOrca) return [`${at} 没有派活凭证：须写 receipt（档案目录里的收据文件路径）或 orca（{worktree, session, commits}）二选一`];
-  return [...(hasReceipt ? receiptReasons(rules, role, c.receipt, at, ctx) : []), ...(hasOrca ? orcaReasons(rules, role, c.orca, at, ctx) : [])];
+  return [...(hasReceipt ? receiptReasons(rules, role, c.receipt, at, ctx) : []), ...(hasOrca ? orcaReasons(rules, role, c.orca, at, ctx, round) : [])];
 }
 
 function receiptReasons(rules, role, path, at, { dir, repo, models }) {
@@ -383,17 +383,24 @@ function receiptReasons(rules, role, path, at, { dir, repo, models }) {
   return out;
 }
 
-function orcaReasons(rules, role, o, at, { history }) {
+// 提交须是本卡该角色的：角色行是该角色，标识行等于本卡三方标识里该角色登记的标识（审卡写成数组时第 round 条对第 round 个审卡标识）。
+function orcaReasons(rules, role, o, at, { history, ids }, round) {
   if (!o || typeof o !== 'object' || Array.isArray(o)) return [`${at} orca 须是 {worktree, session, commits}`];
   const out = [];
+  const registered = (ids && ids[role]) || [];
+  const expected = round === null ? registered : registered.slice(round, round + 1);
+  if (!expected.length) out.push(`${at} 三方标识里没有对应的「${role}」标识${round === null ? '' : `（第 ${round + 1} 条）`}，无法核对 orca.commits 的标识`);
   for (const k of ['worktree', 'session']) if (typeof o[k] !== 'string' || !o[k].trim()) out.push(`${at} orca.${k} 须是非空字符串`);
   if (!Array.isArray(o.commits) || !o.commits.length) return [...out, `${at} orca.commits 须是非空提交号数组`];
   if (!history) return [...out, `${at} 未提供推送头的提交历史，无法核对 orca.commits`];
   for (const sha of o.commits) {
     if (typeof sha !== 'string' || !/^[0-9a-f]{7,40}$/i.test(sha)) { out.push(`${at} orca.commits 里「${sha}」不是提交号`); continue; }
     if (!history.reachable(sha)) { out.push(`${at} orca.commits 里 ${sha} 不能从推送头到达`); continue; }
-    const r = messageLine(history.message(sha), rules.party.roleLine);
-    if (r !== role) out.push(`${at} orca.commits 里 ${sha} 的提交说明「${rules.party.roleLine}${r || '无'}」不是「${role}」`);
+    const text = history.message(sha);
+    const r = messageLine(text, rules.party.roleLine);
+    if (r !== role) { out.push(`${at} orca.commits 里 ${sha} 的提交说明「${rules.party.roleLine}${r || '无'}」不是「${role}」`); continue; }
+    const id = messageLine(text, rules.party.idLine);
+    if (expected.length && !expected.includes(normId(id))) out.push(`${at} orca.commits 里 ${sha} 的提交说明「${rules.party.idLine}${id || '无'}」不是本卡三方标识里「${role}」的「${expected.join('、')}」`);
   }
   return out;
 }
@@ -511,12 +518,15 @@ export function checkParties(rules, readFile, stage) {
 // readFile(目录, 文件名) 读该提交里的档案；isMerge 合并提交；stage '提交'（pre-commit）或 '推送'（pre-push，默认）。
 // 推送阶段另给（门禁封口卡 A）：rangeFiles 本次推送范围的改动文件（借档核对）；headBranch CI 传入的头分支（可缺）；
 // history { reachable(sha), message(sha) } 推送头的提交历史（核 orca 凭证）。
+// ownFiles（审卡第 1 轮必须改 1）：合并提交自身引入的改动（解冲突或夹带，git diff-tree --cc）；角色与验收目录按它核，
+// 要不要档案仍按 files（对第一父的差集）判。非合并提交不给，等于 files。
 // 返回 reasons（空数组为放行）。
-export function judgeCommit(rules, { files, branch, message, readFile, isMerge, repo, stage = '推送', rangeFiles = null, headBranch = null, history = null }) {
+export function judgeCommit(rules, { files, branch, message, readFile, isMerge, repo, stage = '推送', rangeFiles = null, headBranch = null, history = null, ownFiles = null }) {
   if (isMerge && rules.mergeExempt) return [];
   const bypass = Object.entries(rules.markers).find(([, mk]) => mk && messageLine(message, mk) !== null);
   const name = messageLine(message, rules.branchPrefix) || branch;
-  const touchesAccept = files.some((f) => f.startsWith(rules.party.acceptDir));
+  const own = ownFiles || files;
+  const touchesAccept = own.some((f) => f.startsWith(rules.party.acceptDir));
   const triggered = needsArchive(rules, files);
   const reasons = [];
   const p = rules.party;
@@ -533,8 +543,11 @@ export function judgeCommit(rules, { files, branch, message, readFile, isMerge, 
     if (!role || !id) reasons.push(`提交说明缺「${p.roleLine}<角色>」或「${p.idLine}<标识>」行`);
     else if (!known.includes(role)) reasons.push(`提交说明的${p.roleLine}「${role}」不在 ${known.join('/')} 里`);
     else if (role === p.mergeRole && isMerge) {
-      // PR 真合并：分支名、标识（合并者自己的）都要写；按卡分支找档案目录核，不核三方标识，验收目录的改动不限角色。
+      // PR 真合并：分支名、标识（合并者自己的）都要写；按卡分支找档案目录核，不核三方标识。
+      // 合并者不是三方之一：合并自身引入的改动（ownFiles）不许落在触发目录或验收目录，解冲突须由卡角色在卡分支上提交。
       if (!name) reasons.push(`提交说明缺「${rules.branchPrefix}<分支名>」行，找不到卡档案目录`);
+      const smuggled = own.filter((f) => f.startsWith(p.acceptDir) || needsArchive(rules, [f]));
+      if (smuggled.length) reasons.push(`「${p.roleLine}${p.mergeRole}」的合并提交自身改动了 ${smuggled.join('、')}（合并者不是三方之一，触发目录与验收目录的改动须由卡角色在卡分支上提交）`);
     } else if (fakeMerge || isMain) {
       // 已拒；冒用者碰了验收目录同样报出。
       if (touchesAccept) reasons.push(`${role}的提交改动了验收目录 ${p.acceptDir}，只许「${p.acceptRole}」角色改`);
@@ -557,8 +570,8 @@ export function judgeCommit(rules, { files, branch, message, readFile, isMerge, 
   if (!triggered) return reasons;
   if (!name) return [...reasons, `提交说明缺「${rules.branchPrefix}<分支名>」行，找不到卡档案目录`];
   const dir = archiveDirOf(rules, name);
-  const own = stage === '推送' ? borrowReasons(rules, dir, name, readFile, rangeFiles, headBranch) : [];
-  return [...reasons, ...[...own, ...checkArchive(rules, (f) => readFile(dir, f), null, stage, repo, { dir, history })].map((r) => `${dir}：${r}`)];
+  const borrowed = stage === '推送' ? borrowReasons(rules, dir, name, readFile, rangeFiles, headBranch) : [];
+  return [...reasons, ...[...borrowed, ...checkArchive(rules, (f) => readFile(dir, f), null, stage, repo, { dir, history })].map((r) => `${dir}：${r}`)];
 }
 
 export function loadRules(docText) {
