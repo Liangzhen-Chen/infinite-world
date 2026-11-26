@@ -120,6 +120,36 @@ export function jsdocParamNames(doc) {
 /** 赋值运算符（写入）。 */
 export const ASSIGN_OPS = new Set(['=', '+=', '-=', '*=', '/=', '%=', '**=', '<<=', '>>=', '>>>=', '&=', '|=', '^=', '&&=', '||=', '??=']);
 
+const DECL_WORDS = new Set(['const', 'let', 'var']);
+const NOT_PARAM_LIST = new Set(['if', 'while', 'for', 'switch', 'with', 'catch', 'return', 'typeof', 'void', 'await', 'yield']);
+
+/**
+ * 第 i 个记号（裸标识符，不跟在 `.` 后）是不是绑定位置（声明，不是写入）：前一记号是 const/let/var；
+ * 或前一记号是 `,`、同一括号深度往回找到的语句或括号开头是 const/let/var（`let a = 1, state = 2`、`for (let a, state …)`）；
+ * 或它落在函数形参表里（开头括号前是 `function`/函数名、收尾括号后是 `=>` 或函数体 `{`；`if (…) {` 一类关键字括号不算）。
+ * @param {any[]} toks @param {number} i
+ */
+export function isBindingSite(toks, i) {
+  const prev = toks[i - 1];
+  if (!prev || isP(prev, '.') || isP(prev, '?.')) return false;
+  if (prev.t === 'id' && DECL_WORDS.has(prev.v)) return true;
+  if (!isP(prev, ',') && !isP(prev, '(')) return false;
+  let k = i - 1; let d = 0;
+  for (; k >= 0; k--) {
+    const t = toks[k];
+    if (isP(t, ')') || isP(t, ']') || isP(t, '}')) d++;
+    else if (isP(t, '(') || isP(t, '[') || isP(t, '{')) { if (d === 0) break; d--; }
+    else if (d === 0 && isP(t, ';')) break;
+  }
+  const head = toks[k + 1];
+  if (head && head.t === 'id' && DECL_WORDS.has(head.v)) return true;
+  if (k < 0 || !isP(toks[k], '(')) return false;
+  const close = matchClose(toks, k);
+  if (isP(toks[close + 1], '=>')) return true;
+  const callee = toks[k - 1];
+  return Boolean(isP(toks[close + 1], '{') && callee && callee.t === 'id' && !NOT_PARAM_LIST.has(callee.v));
+}
+
 /**
  * 以 state 为根的成员链：根是标识符 `state`（不跟在 `.` 后）或 `<x>.state`。段：`.名`、`?.名`、`['字面量']` 取名，其余计算属性 `[…]` 记 `*`。
  * 返回 {segs, start, end, write}：write 为真即链是写入目标（后跟赋值运算或 `++`/`--`，或前有 `delete`、`++`/`--`）。
@@ -146,7 +176,7 @@ export function stateChains(toks) {
       break;
     }
     const after = toks[k]; const before = toks[i - (isP(prev, '.') ? 2 : 0) - 1];
-    const write = Boolean((after && after.t === 'p' && (ASSIGN_OPS.has(after.v) || after.v === '++' || after.v === '--'))
+    const write = !isBindingSite(toks, i) && Boolean((after && after.t === 'p' && (ASSIGN_OPS.has(after.v) || after.v === '++' || after.v === '--'))
       || (before && ((before.t === 'id' && before.v === 'delete') || isP(before, '++') || isP(before, '--'))));
     out.push({ segs, start: i, end: k, write, computed: segs.includes('*') });
   }

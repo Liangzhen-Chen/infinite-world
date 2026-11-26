@@ -897,10 +897,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 35
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；补两极用例 cross_write-06、cross_write-12",
+     "rev": 36
     }
    ],
-   "print": "94a8b8bf5dcd27bbc92e6986ff77395dca88db57e998273e7ba9f57888525b51",
-   "rev": 35,
+   "print": "5703829212c3cd4210364d12448688be4b44015918baeb04a2d07beb46028077",
+   "rev": 36,
    "scanClass": "cross_write",
    "source": "卷十二 R12-3.1–3.4；卷二 §2.6、§2.7、S5",
    "terms": {
@@ -968,10 +972,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 5
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
+     "rev": 6
     }
    ],
-   "print": "8e9093b34cb35c26c79a5a87cc37bf113694f773beb07add9f196bc177344a37",
-   "rev": 5,
+   "print": "0600ad861508b36061b761e840c591834dcf3674e8beef14eb008c58a92a824c",
+   "rev": 6,
    "scanClass": "decl_guard",
    "source": "卷十七 S17-1、S17-4；卷九 R9-2.10；卷二十 §4.7.6；卷十二 §2.4 开放登记",
    "terms": {
@@ -1151,10 +1159,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 35
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
+     "rev": 36
     }
    ],
-   "print": "94a8b8bf5dcd27bbc92e6986ff77395dca88db57e998273e7ba9f57888525b51",
-   "rev": 35,
+   "print": "5703829212c3cd4210364d12448688be4b44015918baeb04a2d07beb46028077",
+   "rev": 36,
    "scanClass": "display_read",
    "source": "卷十二 R12-2.10；卷二 S7",
    "terms": {
@@ -1594,10 +1606,14 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 106
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
+     "rev": 107
     }
    ],
-   "print": "be4b6b4337ac8d22b4a4d6363fbc83896ff8735e18865538c1d66744a74098cf",
-   "rev": 106,
+   "print": "74b15b32fe515f620da0bb3a4bb376c5e41ac8bbaf29e89450e56ac2565c22cd",
+   "rev": 107,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1748,10 +1764,14 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 34
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；同卡 typed_pos 的 tsc 临时目录改走临时根设施 tools/accept/lib/temp-root.mjs",
+     "rev": 35
     }
    ],
-   "print": "94e30d11a70dc06e803018867cffbb1a79e3c4f42787a423c421598ed3643a25",
-   "rev": 34,
+   "print": "28f37bbbea435f5bd617fcb8cedfbbed33ebfcdc8dd052e63fac8a71ed380cc4",
+   "rev": 35,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -2054,10 +2074,14 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 35
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；同卡 typed_pos 的 tsc 临时目录改走临时根设施 tools/accept/lib/temp-root.mjs",
+     "rev": 36
     }
    ],
-   "print": "2b3280b33e472be6a66649a9feb2d2f3f3aa6e39bc7c43befd1a2cdb885a8e0b",
-   "rev": 35,
+   "print": "43d7ef649c05790fa02f9f7719a92df78401317cca5d5b5470bc206895d9611b",
+   "rev": 36,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -2157,10 +2181,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 21
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；同卡 call_edge 断言写入口按 gatefac 的 assertedWriters+writerAsserts+requiredTests 认、不再要求 inRepo 为假（裁定 Q4 ②，offline-cli-out）",
+     "rev": 22
     }
    ],
-   "print": "b54dcf9de226afe2f3fe8221f470c353a80f4740225e38c16c14afe0bc79567c",
-   "rev": 21,
+   "print": "da3293a04fd7efcf4b1b2ae69c343b09f60075e762c02fde1b6214831a5a0c07",
+   "rev": 22,
    "scanClass": "float_math",
    "source": "卷二十七 R27-5.2、A27-5.1；公共部件审查乙规则 7；C0 卡",
    "terms": {
@@ -2295,10 +2323,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 22
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；同卡 call_edge 断言写入口按 gatefac 的 assertedWriters+writerAsserts+requiredTests 认、不再要求 inRepo 为假（裁定 Q4 ②，offline-cli-out）",
+     "rev": 23
     }
    ],
-   "print": "b54dcf9de226afe2f3fe8221f470c353a80f4740225e38c16c14afe0bc79567c",
-   "rev": 22,
+   "print": "da3293a04fd7efcf4b1b2ae69c343b09f60075e762c02fde1b6214831a5a0c07",
+   "rev": 23,
    "scanClass": "geometry_bypass",
    "source": "卷五 §3.5 S5-10 :408；卷十二 §2.4 开放登记",
    "terms": {
@@ -2841,10 +2873,14 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 35
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；同卡 typed_pos 的 tsc 临时目录改走临时根设施 tools/accept/lib/temp-root.mjs",
+     "rev": 36
     }
    ],
-   "print": "2b3280b33e472be6a66649a9feb2d2f3f3aa6e39bc7c43befd1a2cdb885a8e0b",
-   "rev": 35,
+   "print": "43d7ef649c05790fa02f9f7719a92df78401317cca5d5b5470bc206895d9611b",
+   "rev": 36,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -4164,10 +4200,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 22
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
+     "rev": 23
     }
    ],
-   "print": "94a8b8bf5dcd27bbc92e6986ff77395dca88db57e998273e7ba9f57888525b51",
-   "rev": 22,
+   "print": "5703829212c3cd4210364d12448688be4b44015918baeb04a2d07beb46028077",
+   "rev": 23,
    "scanClass": "ledger_state_read",
    "source": "卷六 §4.1.2；公共部件审查乙规则 4；C0 卡",
    "terms": {
@@ -4688,10 +4728,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 53
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；同卡 call_edge 断言写入口按 gatefac 的 assertedWriters+writerAsserts+requiredTests 认、不再要求 inRepo 为假（裁定 Q4 ②，offline-cli-out）",
+     "rev": 54
     }
    ],
-   "print": "bde3d9c1802bfea52b244b5dfee5d36f6562f12cf85e6c3c0b5ab59021cc0ea9",
-   "rev": 53,
+   "print": "5928032f7c72bbeab4252ca47f86f2f8ade598355d9ba164130cd5dc21780f51",
+   "rev": 54,
    "scanClass": "module_edge",
    "terms": {
     "vol1.V-24.b": {
@@ -5591,10 +5635,14 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 94
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
+     "rev": 95
     }
    ],
-   "print": "234c9a17c3692bcec310ec408d9469cfde7633c3ed34950ba74afcac547724ea",
-   "rev": 94,
+   "print": "d80cde1a359ad8ee1e718df5fb49f68eb39d20d2e513d2c0cf5316f324a8e2d6",
+   "rev": 95,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -6421,10 +6469,14 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 29
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
+     "rev": 30
     }
    ],
-   "print": "234c9a17c3692bcec310ec408d9469cfde7633c3ed34950ba74afcac547724ea",
-   "rev": 29,
+   "print": "d80cde1a359ad8ee1e718df5fb49f68eb39d20d2e513d2c0cf5316f324a8e2d6",
+   "rev": 30,
    "scanClass": "pp_dup_export",
    "source": "公共部件审查甲 R14、乙 12；卷二 :1162 体例；CLAUDE.md“跨卷共用定义只一处”。职责函数 isPos、distributionMean、weatherCellOf 的职责文件依据：卷二 §1.5 struct:pos（kernel/named-structs.mjs）、卷二 §1.10（kernel/sample.mjs）、卷二十 §3.1（kernel/weather.mjs）",
    "terms": {
@@ -7263,10 +7315,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 17
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；同卡 call_edge 断言写入口按 gatefac 的 assertedWriters+writerAsserts+requiredTests 认、不再要求 inRepo 为假（裁定 Q4 ②，offline-cli-out）",
+     "rev": 18
     }
    ],
-   "print": "b54dcf9de226afe2f3fe8221f470c353a80f4740225e38c16c14afe0bc79567c",
-   "rev": 17,
+   "print": "da3293a04fd7efcf4b1b2ae69c343b09f60075e762c02fde1b6214831a5a0c07",
+   "rev": 18,
    "scanClass": "pp_eval",
    "source": "李白更正裁定 msg-1122-2255-c0ast：别名、间接调用都要跟到原名，eval 与 new Function 是语法树追不到的间接执行，出现即报；卷二十七 S27-4 :253（禁用语言特性）",
    "terms": {
@@ -7978,10 +8034,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 21
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
+     "rev": 22
     }
    ],
-   "print": "94a8b8bf5dcd27bbc92e6986ff77395dca88db57e998273e7ba9f57888525b51",
-   "rev": 21,
+   "print": "5703829212c3cd4210364d12448688be4b44015918baeb04a2d07beb46028077",
+   "rev": 22,
    "scanClass": "pp_holdings_read",
    "source": "公共部件审查乙 5；卷十八:200（持有写者）；卷二 §2.6；读者按文件豁免（fileSets.holdingsReaders，每行带依据）",
    "terms": {
@@ -9665,10 +9725,14 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 28
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
+     "rev": 29
     }
    ],
-   "print": "234c9a17c3692bcec310ec408d9469cfde7633c3ed34950ba74afcac547724ea",
-   "rev": 28,
+   "print": "d80cde1a359ad8ee1e718df5fb49f68eb39d20d2e513d2c0cf5316f324a8e2d6",
+   "rev": 29,
    "scanClass": "pp_tpl_key",
    "source": "公共部件审查甲 R13；卷二 :860（键串形只由登记方给）；模块化原则卡头第二节第 9 条",
    "terms": {
@@ -10473,10 +10537,14 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 121
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；同卡 call_edge 断言写入口按 gatefac 的 assertedWriters+writerAsserts+requiredTests 认、不再要求 inRepo 为假（裁定 Q4 ②，offline-cli-out）",
+     "rev": 122
     }
    ],
-   "print": "227f74f911957ff3e2018d9bee28125500b7766ca459d6193523f07d24081b47",
-   "rev": 121,
+   "print": "04c8feac999eb42fd5812fd83d37bafb167eb1c96c6d9149ede8f2589bad097b",
+   "rev": 122,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -10654,10 +10722,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 41
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；同卡 call_edge 断言写入口按 gatefac 的 assertedWriters+writerAsserts+requiredTests 认、不再要求 inRepo 为假（裁定 Q4 ②，offline-cli-out）",
+     "rev": 42
     }
    ],
-   "print": "b54dcf9de226afe2f3fe8221f470c353a80f4740225e38c16c14afe0bc79567c",
-   "rev": 41,
+   "print": "da3293a04fd7efcf4b1b2ae69c343b09f60075e762c02fde1b6214831a5a0c07",
+   "rev": 42,
    "scanClass": "rng_bypass",
    "terms": {
     "vol27.A27-8.1.a": {
@@ -11649,10 +11721,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 20
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
+     "rev": 21
     }
    ],
-   "print": "94a8b8bf5dcd27bbc92e6986ff77395dca88db57e998273e7ba9f57888525b51",
-   "rev": 20,
+   "print": "5703829212c3cd4210364d12448688be4b44015918baeb04a2d07beb46028077",
+   "rev": 21,
    "scanClass": "sim_bypass",
    "source": "卷二十七 §4.8 S27-11 :260、A27-1.11 :369；对照表 docs/迁移体检/格子G6-G11-规矩检查对照.md #60；卷十二 §2.4 开放登记",
    "terms": {
@@ -12066,10 +12142,14 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 34
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；同卡 typed_pos 的 tsc 临时目录改走临时根设施 tools/accept/lib/temp-root.mjs",
+     "rev": 35
     }
    ],
-   "print": "2b3280b33e472be6a66649a9feb2d2f3f3aa6e39bc7c43befd1a2cdb885a8e0b",
-   "rev": 34,
+   "print": "43d7ef649c05790fa02f9f7719a92df78401317cca5d5b5470bc206895d9611b",
+   "rev": 35,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -12281,10 +12361,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 21
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；同卡 call_edge 断言写入口按 gatefac 的 assertedWriters+writerAsserts+requiredTests 认、不再要求 inRepo 为假（裁定 Q4 ②，offline-cli-out）",
+     "rev": 22
     }
    ],
-   "print": "b54dcf9de226afe2f3fe8221f470c353a80f4740225e38c16c14afe0bc79567c",
-   "rev": 21,
+   "print": "da3293a04fd7efcf4b1b2ae69c343b09f60075e762c02fde1b6214831a5a0c07",
+   "rev": 22,
    "scanClass": "timer_global",
    "source": "卷二十七 S27-3 :252；公共部件审查甲 R4；C0 卡",
    "terms": {
@@ -12332,10 +12416,14 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 8
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；同卡 typed_pos 的 tsc 临时目录改走临时根设施 tools/accept/lib/temp-root.mjs",
+     "rev": 9
     }
    ],
-   "print": "2b3280b33e472be6a66649a9feb2d2f3f3aa6e39bc7c43befd1a2cdb885a8e0b",
-   "rev": 8,
+   "print": "43d7ef649c05790fa02f9f7719a92df78401317cca5d5b5470bc206895d9611b",
+   "rev": 9,
    "scanClass": "typecheck",
    "terms": {
     "L-09.typecheck": {
@@ -12734,10 +12822,14 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 96
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
+     "rev": 97
     }
    ],
-   "print": "234c9a17c3692bcec310ec408d9469cfde7633c3ed34950ba74afcac547724ea",
-   "rev": 96,
+   "print": "d80cde1a359ad8ee1e718df5fb49f68eb39d20d2e513d2c0cf5316f324a8e2d6",
+   "rev": 97,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -12845,10 +12937,14 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 21
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；同卡 call_edge 断言写入口按 gatefac 的 assertedWriters+writerAsserts+requiredTests 认、不再要求 inRepo 为假（裁定 Q4 ②，offline-cli-out）",
+     "rev": 22
     }
    ],
-   "print": "b54dcf9de226afe2f3fe8221f470c353a80f4740225e38c16c14afe0bc79567c",
-   "rev": 21,
+   "print": "da3293a04fd7efcf4b1b2ae69c343b09f60075e762c02fde1b6214831a5a0c07",
+   "rev": 22,
    "scanClass": "undo_raw_push",
    "source": "公共部件审查乙规则 3；卷二 §2.6；C0 卡",
    "terms": {
@@ -13015,10 +13111,14 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 38
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
+     "rev": 39
     }
    ],
-   "print": "94a8b8bf5dcd27bbc92e6986ff77395dca88db57e998273e7ba9f57888525b51",
-   "rev": 38,
+   "print": "5703829212c3cd4210364d12448688be4b44015918baeb04a2d07beb46028077",
+   "rev": 39,
    "scanClass": "version_fork",
    "terms": {
     "vol1.V-17": {
@@ -13296,10 +13396,14 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 66
+    },
+    {
+     "ref": "js-state 排除绑定声明（门禁封口卡 chore/gate-seal-b，主会话裁定 Q8）：const/let/var 声明、逗号续写声明、for 声明、形参默认值不再算写 state；赋值、成员赋值、delete、自增照旧算写；同卡 call_edge 断言写入口按 gatefac 的 assertedWriters+writerAsserts+requiredTests 认、不再要求 inRepo 为假（裁定 Q4 ②，offline-cli-out）；同卡 typed_pos 的 tsc 临时目录改走临时根设施 tools/accept/lib/temp-root.mjs",
+     "rev": 67
     }
    ],
-   "print": "7169674e52fe7cd71aaaf9b0a467dd0b52499f2e74e73f99bf14299c2a84b431",
-   "rev": 66,
+   "print": "821c74cecb688afc5f8bbc53a1c74b5de22fb74d239a5dfed9bc521c6960a253",
+   "rev": 67,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

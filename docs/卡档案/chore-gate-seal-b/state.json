@@ -1,0 +1,37 @@
+{
+  "card": "chore-gate-seal-b",
+  "phase": "dispatched",
+  "updatedAt": "2026-11-26T12:27:27.443Z",
+  "branches": {
+    "code": "chore/gate-seal-b",
+    "test": "test/gate-seal-b"
+  },
+  "pr": null,
+  "parties": {
+    "code": {
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
+      "receipt": null,
+      "costUsd": null
+    },
+    "test": {
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
+      "receipt": null,
+      "costUsd": null
+    },
+    "review": {
+      "family": "claude-opus",
+      "model": "claude-opus-5-5",
+      "receipt": null,
+      "costUsd": null
+    }
+  },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
+  "failCount": 0,
+  "blocker": null,
+  "nextAction": "写码 Sonnet、出题 Haiku Orca 会话派出；回报后主会话读 diff，再派 Opus 审卡"
+}

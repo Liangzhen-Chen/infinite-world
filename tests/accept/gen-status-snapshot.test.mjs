@@ -4,8 +4,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { testTempRoot, writeUnderTempRoot, removeTempRoot } from './temp-root.mjs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderSnapshot } from '../../tools/gen-status-snapshot.mjs';
@@ -33,29 +33,29 @@ function card(cardName, phase, failCount, nextAction) {
 }
 
 function makeRepo() {
-  const root = mkdtempSync(join(tmpdir(), 'snapshot-test-'));
-  mkdirSync(join(root, 'tools', 'accept'), { recursive: true });
-  mkdirSync(join(root, 'docs', '卡档案', 'two'), { recursive: true });
-  mkdirSync(join(root, 'docs', '卡档案', '_template'), { recursive: true });
-  writeFileSync(join(root, 'tools', 'accept', 'entry-registry.json'), JSON.stringify({
+  const dir = testTempRoot('snapshot-test-');
+  mkdirSync(join(dir, 'tools', 'accept'), { recursive: true });
+  mkdirSync(join(dir, 'docs', '卡档案', 'two'), { recursive: true });
+  mkdirSync(join(dir, 'docs', '卡档案', '_template'), { recursive: true });
+  writeFileSync(join(dir, 'tools', 'accept', 'entry-registry.json'), JSON.stringify({
     version: 1,
     entries: [{ name: 'a', file: null }, { name: 'b', file: 'kernel/x.mjs' }],
   }));
-  writeFileSync(join(root, 'tools', 'accept', 'baseline.json'), JSON.stringify({
+  writeFileSync(join(dir, 'tools', 'accept', 'baseline.json'), JSON.stringify({
     rows: [{ current: 3, locked: false }, { current: 4, locked: true }],
   }));
-  writeFileSync(join(root, 'docs', '卡档案', 'two', 'state.json'), JSON.stringify(card('two', 'review_r1', 1, '等审卡')));
-  writeFileSync(join(root, 'docs', '卡档案', '_template', 'state.json'), JSON.stringify(card('模板卡', 'dispatched', 0, '不该出现')));
-  execFileSync('git', ['init', '-q'], { cwd: root });
-  execFileSync('git', ['add', '-A'], { cwd: root });
+  writeFileSync(join(dir, 'docs', '卡档案', 'two', 'state.json'), JSON.stringify(card('two', 'review_r1', 1, '等审卡')));
+  writeFileSync(join(dir, 'docs', '卡档案', '_template', 'state.json'), JSON.stringify(card('模板卡', 'dispatched', 0, '不该出现')));
+  execFileSync('git', ['init', '-q'], { cwd: dir });
+  execFileSync('git', ['add', '-A'], { cwd: dir });
   execFileSync('git', [
     '-c', 'user.name=test', '-c', 'user.email=test@example.com', '-c', 'commit.gpgsign=false',
     'commit', '-q', '-m', 'init',
   ], {
-    cwd: root,
+    cwd: dir,
     env: { ...process.env, GIT_AUTHOR_DATE: '2026-11-25T00:00:00Z', GIT_COMMITTER_DATE: '2026-11-25T00:00:00Z' },
   });
-  return root;
+  return dir;
 }
 
 function run(root, args) {
@@ -134,7 +134,7 @@ test('卡多到超过行数上限时截断并写明省略张数', () => {
 
 test('CLI：生成、跳过 _template、--check 只比受检段', (t) => {
   const root = makeRepo();
-  t.after(() => rmSync(root, { recursive: true, force: true }));
+  t.after(() => removeTempRoot(root));
 
   const gen = run(root, []);
   assert.equal(gen.status, 0, gen.stderr);
@@ -149,7 +149,7 @@ test('CLI：生成、跳过 _template、--check 只比受检段', (t) => {
   const clean = run(root, ['--check']);
   assert.equal(clean.status, 0, clean.stdout + clean.stderr);
 
-  writeFileSync(snapshotPath, text.replace('接通率 50%', '接通率 99%'));
+  writeUnderTempRoot(root, SNAPSHOT_REL, text.replace('接通率 50%', '接通率 99%'));
   const tamperedChecked = run(root, ['--check']);
   assert.equal(tamperedChecked.status, 1);
   assert.match(tamperedChecked.stdout, /第一处差异/);
@@ -158,14 +158,14 @@ test('CLI：生成、跳过 _template、--check 只比受检段', (t) => {
   const regenerated = readFileSync(snapshotPath, 'utf8');
   const tamperedUnchecked = regenerated.replace(/^生成时 HEAD=.*$/m, '生成时 HEAD=deadbee（2000-01-01T00:00:00Z）');
   assert.notEqual(tamperedUnchecked, regenerated);
-  writeFileSync(snapshotPath, tamperedUnchecked);
+  writeUnderTempRoot(root, SNAPSHOT_REL, tamperedUnchecked);
   const uncheckedOnly = run(root, ['--check']);
   assert.equal(uncheckedOnly.status, 0, uncheckedOnly.stdout + uncheckedOnly.stderr);
 });
 
 test('CLI：--out 写到指定路径，--check 也认该路径', (t) => {
   const root = makeRepo();
-  t.after(() => rmSync(root, { recursive: true, force: true }));
+  t.after(() => removeTempRoot(root));
 
   const outPath = 'tmp-snapshot.md';
   const gen = run(root, ['--out', outPath]);
