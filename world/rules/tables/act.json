@@ -1,0 +1,16 @@
+{
+ "rows": [
+  {
+   "key": "advanceMaxMinutes",
+   "value": {
+    "acls_decide": 1,
+    "acls_rest": 1440
+   },
+   "grade": "designed",
+   "basisKind": "design_spec",
+   "specRef": "docs/统一底层设计/卷九-AI接口.md",
+   "source": "卷九 §2.5 :324（rules.act.advanceMaxMinutes：map<act_class, integer:minute>，键全覆盖 act_class，每值 ≥ 1，首值未核待标定）、R9-1.12；主会话 11-26 裁定：等待上限照此键",
+   "basis": "暂定·待试玩标定（卷九 :324 原句“首值未核（无出处，待标定）”）。acls_rest 取 1440（一日）：点一次「等待」最多过一天，再长须再点；acls_decide 是瞬时决定类，没有推进，取取值域下限 1。读者是 world/actions/core.json 数值槽上限的 RX（rules.act.advanceMaxMinutes.<类>），由 rules/act/catalog.mjs 加载期求值并核键覆盖 act_class"
+  }
+ ]
+}
