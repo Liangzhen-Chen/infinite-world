@@ -1,7 +1,7 @@
 {
   "card": "feat-s1-3b",
-  "phase": "dispatched",
-  "updatedAt": "2026-11-26T15:32:21.985Z",
+  "phase": "reviewed",
+  "updatedAt": "2026-11-26T22:09:43.709Z",
   "branches": {
     "code": "feat/s1-3b",
     "test": "test/s1-3b"
@@ -31,7 +31,7 @@
     "status": "pending",
     "runUrl": null
   },
-  "failCount": 0,
-  "blocker": null,
-  "nextAction": "写码 Sonnet、出题 Haiku Orca 会话派出；回报后主会话读 diff，再派 Opus 审卡"
+  "failCount": 1,
+  "blocker": "等 S1-3a（PR #33）合入 master",
+  "nextAction": "S1-3a 合入后：写码方合 master（写码角色），全量应转绿（menu-route 5、wire-cuts、烟测）；主会话补三方 orca 凭证、重生成快照、--check、check-push-archive 后推 feat/s1-3b 开 PR，main 绿即合；合后删 s13b、ts-s13b"
 }
