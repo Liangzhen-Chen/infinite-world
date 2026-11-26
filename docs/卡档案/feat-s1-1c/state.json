@@ -1,7 +1,7 @@
 {
   "card": "feat-s1-1c",
-  "phase": "dispatched",
-  "updatedAt": "2026-11-26T11:40:46.016Z",
+  "phase": "pr",
+  "updatedAt": "2026-11-26T12:52:14.433Z",
   "branches": {
     "code": "feat/s1-1c",
     "test": "test/s1-1c"
@@ -11,19 +11,19 @@
     "code": {
       "family": "claude-sonnet",
       "model": "claude-sonnet-5-5",
-      "receipt": null,
+      "receipt": "Orca 会员会话 ctx_c37051d37300（工作树 F:/dnd-worktrees/dnd/s1c；提交 1318b0c68）",
       "costUsd": null
     },
     "test": {
       "family": "claude-haiku",
       "model": "claude-haiku-5-5",
-      "receipt": null,
+      "receipt": "Orca 会员会话 ctx_e9a6bbe8bc52 及其后续轮（工作树 F:/dnd-worktrees/dnd/ts-s1c；提交 a5e45762d、918cfb13f）",
       "costUsd": null
     },
     "review": {
       "family": "claude-opus",
       "model": "claude-opus-5-5",
-      "receipt": null,
+      "receipt": "Orca 会员会话 ctx_75882cf05912（工作树 F:/dnd-worktrees/dnd/ts-s1c；提交 542647076、4e79a4e48，结论可合）",
       "costUsd": null
     }
   },
@@ -33,5 +33,5 @@
   },
   "failCount": 0,
   "blocker": null,
-  "nextAction": "写码 Sonnet、出题 Haiku Orca 会话派出；回报后主会话读 diff，再派 Opus 审卡"
+  "nextAction": "开 PR feat/s1-1c→master 走 CI，main 绿即合；合入后派 S1-2a/S1-2b，并删 s1c、ts-s1c 两棵工作树（只删目录）"
 }
