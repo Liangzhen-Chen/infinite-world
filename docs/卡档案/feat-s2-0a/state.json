@@ -1,10 +1,11 @@
 {
   "card": "feat-s2-0a",
-  "phase": "dispatched",
-  "updatedAt": "2026-11-26T15:32:20.506Z",
+  "phase": "reviewed",
+  "updatedAt": "2026-11-26T22:10:46.014Z",
   "branches": {
     "code": "feat/s2-0a",
-    "test": "test/s2-0a"
+    "test": "test/s2-0a",
+    "pr": "feat/s2-0b"
   },
   "pr": null,
   "parties": {
@@ -31,7 +32,7 @@
     "status": "pending",
     "runUrl": null
   },
-  "failCount": 0,
-  "blocker": null,
-  "nextAction": "写码 Sonnet、出题 Haiku Orca 会话派出；回报后主会话读 diff，再派 Opus 审卡"
+  "failCount": 1,
+  "blocker": "等 S1-3a（PR #33）合入 master",
+  "nextAction": "不单独合（无生产调用者），随 S2-0b 一个 PR（头分支 feat/s2-0b，已记入 branches.pr）；S1-3a 合入后与 S2-0b 一起补凭证推送"
 }
