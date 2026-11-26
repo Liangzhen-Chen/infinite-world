@@ -1,7 +1,7 @@
 {
   "card": "feat-s2-0a",
   "phase": "reviewed",
-  "updatedAt": "2026-11-26T22:10:46.014Z",
+  "updatedAt": "2026-11-26T22:34:49.987Z",
   "branches": {
     "code": "feat/s2-0a",
     "test": "test/s2-0a",
@@ -33,6 +33,6 @@
     "runUrl": null
   },
   "failCount": 1,
-  "blocker": "等 S1-3a（PR #33）合入 master",
-  "nextAction": "不单独合（无生产调用者），随 S2-0b 一个 PR（头分支 feat/s2-0b，已记入 branches.pr）；S1-3a 合入后与 S2-0b 一起补凭证推送"
+  "blocker": "等 S1-3c（开局化身建档派生）：S1-3a 开局化身缺 species/adultMassKg/birthMinute，真实 init 无人物实体，验收 7 例无合法主体（诊断 msg_e1158b17f773、msg_23b67ef688de 回复）",
+  "nextAction": "随 S2-0b 一个 PR（头分支 feat/s2-0b）；等 S1-3c 合入、S2-0b 验收转绿"
 }
