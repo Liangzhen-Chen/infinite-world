@@ -78,6 +78,9 @@ test('零 mock 端到端烟测：宿主路由 6 步闭环（存读档经 menu �
   });
 
   await step(6, '读档后 replay_apply 验 saveDigest 逐字节一致；续玩时钟连续；导入与篡改', async () => {
+    // 读档前先改状态：读档若是空操作，这 7 分钟会留在状态里，槽 2 摘要就不等于 D1（审卡必须改 ③）。
+    const pre = await act(B, 'act_wait', {}, { minutes: 7 });
+    assert.equal(pre.json?.result, 'ok', `读档前 act_wait 7 未 ok：${pre.text}`);
     const l1 = await loadAt(B, 1);
     assert.equal(l1.json?.result, 'ok', `读档 slot 1 未 ok（读档内部复演校验 saveDigest）：${l1.text}`);
     const s2 = await saveAt(B, 2);

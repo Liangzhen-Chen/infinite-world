@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { testTempRoot, removeTempRoot } from './lib/temp-root.mjs';
 
+const CHILD_ENV = (() => { const e = { ...process.env }; delete e.NODE_TEST_CONTEXT; return e; })();
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CFG = JSON.parse(readFileSync(join(ROOT, 'tests', 'e2e', 'wire-cuts.json'), 'utf8'));
 const SMOKE = join('tests', 'e2e', 'vertical-slice-smoke.test.mjs');
@@ -61,7 +62,7 @@ for (const row of CFG.rows) {
     }
     writeFileSync(file, src.replace(row.find, row.replace ?? ''), 'utf8');
 
-    const r = spawnSync(process.execPath, ['--test', join(dst, SMOKE)], { cwd: dst, encoding: 'utf8', timeout: 600000 });
+    const r = spawnSync(process.execPath, ['--test', join(dst, SMOKE)], { cwd: dst, env: CHILD_ENV, encoding: 'utf8', timeout: 600000 });
     const out = `${r.stdout ?? ''}${r.stderr ?? ''}`;
     const red = r.status !== 0;
     const atStep = out.includes(`停在第 ${row.step}/6 步`);
