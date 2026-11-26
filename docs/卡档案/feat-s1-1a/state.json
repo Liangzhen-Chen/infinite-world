@@ -1,7 +1,7 @@
 {
   "card": "feat-s1-1a",
   "phase": "pr",
-  "updatedAt": "2026-11-26T01:07:37.427Z",
+  "updatedAt": "2026-11-26T01:39:36.261Z",
   "branches": {
     "code": "feat/s1-1a",
     "test": "test/s1-1a"
@@ -24,14 +24,14 @@
       "family": "claude-opus",
       "model": "claude-opus-5-5",
       "receipt": "docs/卡档案/feat-s1-1a/收据",
-      "costUsd": 1.06
+      "costUsd": 1.47
     }
   },
   "ci": {
     "status": "pending",
-    "runUrl": null
+    "runUrl": "https://github.com/Liangzhen-Chen/infinite-world/pull/22"
   },
   "failCount": 3,
   "blocker": null,
-  "nextAction": "审卡第二轮（干净 Opus API）可合；开 PR feat/s1-1a→master 走 CI，绿则合并"
+  "nextAction": "PR #22 第一次 CI 红在旧卡 chore-new-skeleton 写死 L-15 快照 4 条，出题第四轮改读 files.json（门槛不降），审卡第三轮单提交复核可合；重推等 CI"
 }
