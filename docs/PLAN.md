@@ -28,6 +28,7 @@
   - 主会话总台邮箱：Orca 持久 run `run_ff745853fb21`（11-25 21:0x 建）。接班会话启动后先 `orca orchestration run-use --id run_ff745853fb21 --json` 接管，子会话回报发 `--to run:run_ff745853fb21`（CLAUDE.md 第 1 节换班条）。
   - S1-1 拆三张串行卡（主会话 11-25，Sonnet API 勘察 $0.22 + Opus API 接口草案 $0.41；旧内核约 4100 行，超单卡 150–800 行）：
     - [x] S1-1a 底座与黑户（feat/s1-1a）：运行期实体认定 kindOfEntity、顶层键切片 memo、storage/dimensions、rules/load/registry.mjs 登记构造、事务模块最小写入层（writeScope/txSet，整笔撤销，李白 11-25 23:20 裁定选 1）、dim/modified 返回 Fact、零件合并后内核 12 文件、c_module_state 4→0、基线 current 258→233；storage.mjs 两类门禁只读段例外（卷二:535，李白 11-26 00:35 裁定 A）。写 DeepSeek 1–3 轮→Sonnet API 4–7 轮，出题 Haiku API，审 Opus API 两轮（第二轮干净复核可合）。PR 见卡档案 state.json。
+    - [x] S1-1p 插入卡（李白 11-26 02:47 选备选 1）：路径句柄 P（kernel/handles.mjs#makePathHandles）与 readPath/writePath/createEntity 签名对齐卷二:535，init 返回 {engine, state}。**教训：卡 A 设计时漏核卷二:535 签名，以后设计接口卡先逐条对照卷文签名。**
     - [ ] S1-1b 事务、调度与存档：runTransaction/submitProposal、postCommit.advanceMinutes、scheduler 最小版、save（含 save-session）；在 transaction.mjs 最小写入层上扩，不另起裸写处。
     - [ ] S1-1c 挂载与启动强断言：mountKernel 缺 saveEnv/unitOfPath/modifierSource 即抛；加载器移入 server-plugin/rules/load/（并入 registry.mjs，不另写第二份）；inputsOf 替换手传 inputs；engine.modifierSources 缺省改为强断言（审卡提示）。
   - 下一张：S1-1b（会员额度常态档：Sonnet 写、Haiku 出题、Opus 审）；其后门禁封口卡（pre-push.mjs 加 -m、触发目录扩项、收据/state.json 强制校验、S12 登记历史问题，Gemini 11-25 审核 P1，李白 23:35 定排卡 A 之后）。

@@ -1,16 +1,37 @@
 {
   "card": "feat-s1-1p",
-  "phase": "dispatched",
-  "updatedAt": "2026-11-26T03:10:00Z",
-  "branches": { "code": "feat/s1-1p", "test": "test/s1-1p" },
+  "phase": "pr",
+  "updatedAt": "2026-11-26T03:55:10.855Z",
+  "branches": {
+    "code": "feat/s1-1p",
+    "test": "test/s1-1p"
+  },
   "pr": null,
   "parties": {
-    "code": { "family": "claude-sonnet", "model": "claude-sonnet-5-5", "receipt": null, "costUsd": null },
-    "test": { "family": "claude-haiku", "model": "claude-haiku-5-5", "receipt": null, "costUsd": null },
-    "review": { "family": "claude-opus", "model": "claude-opus-5-5", "receipt": null, "costUsd": null }
+    "code": {
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
+      "receipt": "docs/卡档案/feat-s1-1p/收据",
+      "costUsd": 1.3
+    },
+    "test": {
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
+      "receipt": "docs/卡档案/feat-s1-1p/收据",
+      "costUsd": 0.28
+    },
+    "review": {
+      "family": "claude-opus",
+      "model": "claude-opus-5-5",
+      "receipt": "docs/卡档案/feat-s1-1p/收据",
+      "costUsd": 1.12
+    }
   },
-  "ci": { "status": "pending", "runUrl": null },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
   "failCount": 0,
   "blocker": null,
-  "nextAction": "插入卡（李白 02:47 选备选 1）：Sonnet API 写路径句柄 P 与签名对齐、Haiku 出题并改卡 A 验收；连败 2 轮即停交 antigravity 诊断"
+  "nextAction": "审卡第二轮（干净 Opus API）可合；开 PR feat/s1-1p→master 走 CI，合入后用新签名续 B1（B1 前三轮未提交改动已存补丁）"
 }
