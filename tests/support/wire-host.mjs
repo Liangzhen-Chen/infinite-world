@@ -8,18 +8,22 @@
 import { express } from './express.mjs';
 import { cpSync } from 'node:fs';
 import { once } from 'node:events';
+import { testTempRoot } from '../accept/temp-root.mjs';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 export const REPO = fileURLToPath(new URL('../../', import.meta.url));
 export const MOUNT = '/api/plugins/if';
-// 数据改动类用例的临时副本只复制这两块：server-plugin 与 world（不改仓库任何文件）。
-const COPY_PARTS = ['server-plugin', 'world'];
 
-/** 把仓库（或其临时副本）的 server-plugin 与 world 复制到 dst。 */
-export function copyRepo(dst, from = REPO) {
-  for (const part of COPY_PARTS) cpSync(join(from, part), join(dst, part), { recursive: true });
-  return dst;
+/**
+ * 把仓库的 server-plugin 与 world 复制到本函数新建的临时根下的 repo/（数据改动类用例只改副本，不改仓库）。
+ * S12-2：临时根与复制目标在同一函数内建立，写入只落在临时根与常量相对路径。返回 {root, repo}，清理用 removeTempRoot(root)。
+ */
+export function copyRepo() {
+  const root = testTempRoot('s13b-repo-');
+  cpSync(join(REPO, 'server-plugin'), join(root, 'repo', 'server-plugin'), { recursive: true });
+  cpSync(join(REPO, 'world'), join(root, 'repo', 'world'), { recursive: true });
+  return { root, repo: join(root, 'repo') };
 }
 
 /**

@@ -70,16 +70,16 @@
       "file": "world/actions/core.json",
       "find": "\"act_wait\"",
       "replace": "\"act_wait_cut\"",
-      "step": 1,
-      "note": "动作表 act_wait 行（draft §2.1，属 S1-3a）；未合入前锚点缺失，预期红"
+      "step": 3,
+      "note": "动作表 act_wait 行被拔后：菜单不列 act_wait 合法（S1-3a 合同），第 1 步通过，第 3 步 act_wait 提交失败（E-ACT-UNKNOWN）"
     },
     {
       "id": "eff-pass-time-output",
       "file": "world/ontology/dimensions/_effects.json",
       "find": "\"time\"",
       "replace": "\"time_cut\"",
-      "step": 1,
-      "note": "eff_pass_time 的 time 输出（卷九:647，属 S1-3a）；未合入前锚点缺失，预期红"
+      "step": 3,
+      "note": "eff_pass_time 的 time 输出被改名：加载期不校验原语名（S1-3a catalog 只核输出种类），第 3 步 act_wait 提交被原语层拒收"
     },
     {
       "id": "mount-load-actions",
