@@ -1,15 +1,17 @@
 // 新骨架入口（S1-1 卡 A/B1/B2；docs/gemini/kickoff-1125.md:493 的入口形状；Gemini 裁定 msg_82485b7f7ab7）。
 // 装配层：读世界维度表、命名 struct、state-owners、规则表登记 registry.json 及其登记的全部规则表、存档排除表，读源码清单、取摘要能力，
-// 交 mountKernel 组装、核对并建 engine 与 state、日志簿，返回 {engine, state, logBook, submitProposal, advance, save}。本文件不写状态。
+// 交 mountKernel 组装、核对并建 engine 与 state、日志簿；再由宿主 router 取路由能力挂 menu 与存档两路（S1-3b）。本文件不写状态。
 // 读文件只在装配层（本文件），kernel 内的规则零件不读世界文件；不引任何归档文件。
-// saveSlot / loadSlot / replay_apply 是存读档的公共入口（saveSlot 调 kernel 的 writeSlot，loadSlot 调 readSlot，replay_apply 经 mountKernel 复演）；S1-3 接 menu 后由 menu-entry 调同一 kernel 函数。
+// saveSlot / loadSlot / replay_apply 是进程内的存读档薄壳（saveSlot 调 kernel 的 writeSlot，loadSlot 调 readSlot，replay_apply 经 mountKernel 复演）；玩家经 menu 路由存读档时由 menu-entry 调同一 kernel 函数。
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { mountKernel } from './rules/load/mount.mjs';
 import { createDigestCap } from './textcore/digest.mjs';
-import { writeSlot } from './kernel/save.mjs';
+import { writeSlot, mountSaveRoutes } from './kernel/save.mjs';
 import { readSlot } from './kernel/load/save.mjs';
+import { createRouterCaps } from './rules/transport/router-caps.mjs';
+import { mountMenuEntry } from './rules/transport/menu-entry.mjs';
 
 const REPO = new URL('../', import.meta.url);
 const WORLD_ONTOLOGY = new URL('world/ontology/', REPO);
@@ -40,6 +42,8 @@ function readWorld() {
     primitivesDoc: json('primitives.json'),
     // 词表族（能力族条目的 dimKey 等，bodyView 读；S1-2b）。
     vocabDoc: json('dimensions/_vocab.json'),
+    // 上下行 wire schema 的唯一数据源（卷二 :983；S1-3b），随 doc_data 进存档，读档复演同用存档里的一份。
+    wire: json('../schema/wire-v1.json'),
   };
 }
 
@@ -76,11 +80,20 @@ function capsOf(opts) {
 }
 
 /**
- * SillyTavern 服务端插件入口：装配 engine、初始 state 与日志簿（S1-1 卡 B2）。
+ * SillyTavern 服务端插件入口（卷二 :1033 init(router)；主会话裁定 Q2：init(router, opts)）：装配 engine、初始 state 与日志簿，
+ * 给了宿主 router 即取路由能力，挂 menu 路由（mountMenuEntry）与 save_export、save_import 两路（mountSaveRoutes）。返回开局的这一局。
+ * @param {any} [router] 宿主交入的 express Router；不给即无路由模式（只装配，不挂路由）
  * @param {{saveRoot?: string | URL}} [opts] saveRoot 覆盖默认存档根目录（仓库 saves/）
  */
-export async function init(opts = {}) {
-  return mountKernel(readWorld(), capsOf(opts));
+export async function init(router, opts = {}) {
+  const caps = capsOf(opts);
+  const world = mountKernel(readWorld(), caps);
+  // 无路由模式（主会话 11-26 裁定）：宿主之外的调用方（tools、只要引擎的单测、离线复演）没有 router，只装配不挂路由；宿主真挂载总按位置传 router（卷二:1033）。
+  if (router === undefined) return world;
+  const { requestCap, replyCap } = createRouterCaps(router);
+  mountMenuEntry(requestCap, replyCap, { world, caps });
+  mountSaveRoutes(requestCap, replyCap, world);
+  return world;
 }
 
 /** 存槽（薄壳）。 @param {{engine: any, state: any, logBook: any}} world @param {number} [slot] */

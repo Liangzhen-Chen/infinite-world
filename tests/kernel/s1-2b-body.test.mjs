@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { testTempRoot } from '../accept/temp-root.mjs';
 import { init } from '../../server-plugin/index.mjs';
+import express from 'express';
 import { mountKernel } from '../../server-plugin/rules/load/mount.mjs';
 import { presentEntries, modifiedWith } from '../../server-plugin/kernel/dimensions.mjs';
 import { createDigestCap } from '../../server-plugin/textcore/digest.mjs';
@@ -83,7 +84,7 @@ test('modifiedWith：基值加 add 项再过修正来源；非数值基值配 ad
 });
 
 test('第 9 条：现世界开局成功（checkBodyPlans 不抛）；人形图 tissueFractions 有 null 键（第二物种带进新组织）', async () => {
-  const w = await init({ saveRoot: testTempRoot('s1-2b-init') });
+  const w = await init(express.Router(), { saveRoot: testTempRoot('s1-2b-init') });
   assert.equal(typeof w.views.bodyView, 'function');
   const raw = rawWorld();
   const plans = docOf(raw, 'body_plan').rows;
@@ -95,7 +96,7 @@ test('第 9 条：现世界开局成功（checkBodyPlans 不抛）；人形图 t
 });
 
 test('第 10 条：每个物种（含经 create 以物种行为模板的实体）bodyView 不抛；部位集合、组织键集、完好主体能力值 = 结构基值', async () => {
-  const w = await init({ saveRoot: testTempRoot('s1-2b-body') });
+  const w = await init(express.Router(), { saveRoot: testTempRoot('s1-2b-body') });
   const raw = rawWorld();
   const species = docOf(raw, 'species').rows;
   for (const [sid, row] of Object.entries(species)) {
@@ -124,7 +125,7 @@ test('第 10 条：每个物种（含经 create 以物种行为模板的实体�
 });
 
 test('第 11 条：carcassOf 物种均值路径——质量原样、材料和为 1、键集 = 非 null 组织的材料，逐键等于 D-4 手算；个体路径质量未知即抛', async () => {
-  const w = await init({ saveRoot: testTempRoot('s1-2b-carcass') });
+  const w = await init(express.Router(), { saveRoot: testTempRoot('s1-2b-carcass') });
   const raw = rawWorld();
   for (const [sid, row] of Object.entries(docOf(raw, 'species').rows)) {
     const m = 3.25;

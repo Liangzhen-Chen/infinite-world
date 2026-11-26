@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { testTempRoot, writeUnderTempRoot } from '../accept/temp-root.mjs';
 import { init, saveSlot, loadSlot, replay_apply } from '../../server-plugin/index.mjs';
+import express from 'express';
 import { useReportSink } from '../../server-plugin/kernel/errors.mjs';
 import { clockMinute } from '../../server-plugin/kernel/scheduler.mjs';
 import { canonical } from '../../server-plugin/kernel/storage.mjs';
@@ -38,7 +39,7 @@ function captureReports(fn) {
 }
 
 test('日志不在 state：init 后 state 无 log 顶层键，日志簿有开局快照；提交后条数增加、state 顶层键不变', async () => {
-  const g = await init();
+  const g = await init(express.Router());
   assert.equal(Object.hasOwn(g.state, 'log'), false);
   assert.ok(Array.isArray(g.logBook.entries));
   assert.equal(g.logBook.entries.length, 0);
@@ -52,7 +53,7 @@ test('日志不在 state：init 后 state 无 log 顶层键，日志簿有开局
 
 test('存读复演：saveDigest 与存盘时逐字相等，时钟相等；心跳推进按序列重放', async () => {
   await withRoot(async (root, url) => {
-    const g = await init({ saveRoot: url });
+    const g = await init(express.Router(), { saveRoot: url });
     const step = g.engine.host.heartbeatStepMinutes;
     g.submitProposal({ effects: [{ op: 'time', minutes: 2 * step + 5 }] });
     for (let i = 0; i < 3; i++) g.advance(step);
@@ -67,7 +68,7 @@ test('存读复演：saveDigest 与存盘时逐字相等，时钟相等；心跳
 
 test('提交后推进不记 advance 条目；复演后时钟不翻倍', async () => {
   await withRoot(async (root, url) => {
-    const g = await init({ saveRoot: url });
+    const g = await init(express.Router(), { saveRoot: url });
     g.submitProposal({ effects: [{ op: 'time', minutes: 25 }] });
     assert.equal(g.logBook.entries.filter((e) => e.kind === 'advance').length, 0);
     assert.equal(g.logBook.entries.filter((e) => e.kind === 'command').length, 1);
@@ -78,7 +79,7 @@ test('提交后推进不记 advance 条目；复演后时钟不翻倍', async ()
 
 test('被拒请求留在序列；复演时同一处同样被拒（同一 code）', async () => {
   await withRoot(async (root, url) => {
-    const g = await init({ saveRoot: url });
+    const g = await init(express.Router(), { saveRoot: url });
     const bad = g.submitProposal({ effects: [{ op: 'no.such.op' }] });
     assert.equal(bad.ok, false);
     g.submitProposal({ effects: [{ op: 'time', minutes: 5 }] });
@@ -94,7 +95,7 @@ test('被拒请求留在序列；复演时同一处同样被拒（同一 code）
 
 test('篡改结果事件（片摘要自洽）即 E-REPLAY-DIVERGE，fields 带首处分歧 seq', async () => {
   await withRoot(async (root, url) => {
-    const g = await init({ saveRoot: url });
+    const g = await init(express.Router(), { saveRoot: url });
     g.submitProposal({ effects: [{ op: 'time', minutes: 5 }] });
     g.submitProposal({ effects: [{ op: 'time', minutes: 7 }] });
     const saved = saveSlot(g);
@@ -115,7 +116,7 @@ test('篡改结果事件（片摘要自洽）即 E-REPLAY-DIVERGE，fields 带�
 
 test('当前清单引用的片损坏（摘要不符）：回退上一份清单并报 E-SAVE-TORN，复演得第一次存档的 saveDigest；两份清单都无的槽即 E-SAVE-EMPTY', async () => {
   await withRoot(async (root, url) => {
-    const g = await init({ saveRoot: url });
+    const g = await init(express.Router(), { saveRoot: url });
     g.submitProposal({ effects: [{ op: 'time', minutes: 5 }] });
     const first = saveSlot(g);
     g.submitProposal({ effects: [{ op: 'time', minutes: 5 }] });
@@ -132,7 +133,7 @@ test('当前清单引用的片损坏（摘要不符）：回退上一份清单�
 
 test('指纹不符（engineRulesDigest 或 dataPacksDigest）即 E-SAVE-RULES-MISMATCH，存档文件字节不变', async () => {
   await withRoot(async (root, url) => {
-    const g = await init({ saveRoot: url });
+    const g = await init(express.Router(), { saveRoot: url });
     const saved = saveSlot(g);
     const L = layout(g, root, 0);
     for (const field of ['engineRulesDigest', 'dataPacksDigest']) {
@@ -152,7 +153,7 @@ test('指纹不符（engineRulesDigest 或 dataPacksDigest）即 E-SAVE-RULES-MI
 
 test('槽位越界（saveSlotCount、-1、1.5）即 E-SAVE-SLOT-INVALID，不写任何文件', async () => {
   await withRoot(async (root, url) => {
-    const g = await init({ saveRoot: url });
+    const g = await init(express.Router(), { saveRoot: url });
     for (const slot of [g.engine.host.saveSlotCount, -1, 1.5]) {
       assert.throws(() => saveSlot(g, slot), /E-SAVE-SLOT-INVALID/, String(slot));
     }
@@ -162,7 +163,7 @@ test('槽位越界（saveSlotCount、-1、1.5）即 E-SAVE-SLOT-INVALID，不写
 
 test('清单无墙钟：键集合恰为八个字段；不同时刻存同一世界，清单逐字节相同', async () => {
   await withRoot(async (root, url) => {
-    const g = await init({ saveRoot: url });
+    const g = await init(express.Router(), { saveRoot: url });
     g.submitProposal({ effects: [{ op: 'time', minutes: 5 }] });
     const a = saveSlot(g);
     assert.deepEqual(Object.keys(a).sort(), ['clockMinute', 'dataPacksDigest', 'engineRulesDigest', 'logSegments', 'saveDigest', 'shardDigests', 'slot', 'snapshotIndex']);
@@ -176,7 +177,7 @@ test('清单无墙钟：键集合恰为八个字段；不同时刻存同一世�
 
 test('同一世界不变连存两次，第二次不新增片文件', async () => {
   await withRoot(async (root, url) => {
-    const g = await init({ saveRoot: url });
+    const g = await init(express.Router(), { saveRoot: url });
     g.submitProposal({ effects: [{ op: 'time', minutes: 5 }] });
     saveSlot(g);
     const L = layout(g, root, 0);
@@ -188,7 +189,7 @@ test('同一世界不变连存两次，第二次不新增片文件', async () =>
 
 test('saveRoot 传路径字串（不带结尾分隔符）：存读复演 saveDigest 相等', async () => {
   const root = testTempRoot('s1b2-path-');
-  const g = await init({ saveRoot: root });
+  const g = await init(express.Router(), { saveRoot: root });
   g.submitProposal({ effects: [{ op: 'time', minutes: 5 }] });
   g.advance(g.engine.host.heartbeatStepMinutes);
   const saved = saveSlot(g);

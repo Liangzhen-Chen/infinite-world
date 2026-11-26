@@ -414,7 +414,10 @@
    "sec": null,
    "kind": "part",
    "needs": [
-    "mountKernel"
+    "mountKernel",
+    "createRouterCaps",
+    "mountMenuEntry",
+    "mountSaveRoutes"
    ],
    "rules": []
   },
@@ -1055,12 +1058,11 @@
    "kind": "write",
    "needs": [
     "checkSlot",
-    "slotPaths",
     "docOf",
     "saveDigest",
     "canonical",
     "readPath",
-    "KernelError"
+    "commitSlot"
    ],
    "rules": []
   },
@@ -1152,6 +1154,108 @@
     "fixedScale",
     "fixedToNumber",
     "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "commitSlot",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "slotPaths",
+    "canonical",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "shardDigestsOf",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "mountSaveRoutes",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "checkSlot",
+    "slotPaths",
+    "shardDigestsOf",
+    "canonical",
+    "codeOf",
+    "KernelError",
+    "importEntry"
+   ],
+   "rules": []
+  },
+  {
+   "name": "importEntry",
+   "file": "kernel/load/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "checkSlot",
+    "commitSlot",
+    "shardDigestsOf",
+    "canonical",
+    "base64ToBytes",
+    "utf8ToText",
+    "utf8Length",
+    "codeOf",
+    "reportError",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "createRouterCaps",
+   "file": "rules/transport/router-caps.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "checkValue",
+    "canonical",
+    "codeOf",
+    "reportError",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "mountMenuEntry",
+   "file": "rules/transport/menu-entry.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "handleAct",
+    "readSlot",
+    "mountKernel",
+    "markersOf",
+    "report",
+    "codeOf",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "handleAct",
+   "file": "rules/transport/menu-entry.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "codeOf"
    ],
    "rules": []
   }

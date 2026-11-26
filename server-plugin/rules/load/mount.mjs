@@ -12,7 +12,7 @@ import { createLogBook, tickEnd, docOf, writeSlot, dataPacksDigestOf, engineRule
 import { replayApply } from '../../kernel/load/save.mjs';
 import { closeInputs } from '../../kernel/memo.mjs';
 import { DIM_DECL } from '../../kernel/dimensions.mjs';
-import { clone } from '../../kernel/bytes.mjs';
+import { clone, installByteConstants } from '../../kernel/bytes.mjs';
 import { KernelError } from '../../kernel/errors.mjs';
 import { installFixedConstants } from '../../kernel/det-math.mjs';
 import { checkBodyPlans } from '../body/body-plan.mjs';
@@ -98,6 +98,8 @@ export function mountKernel(raw, caps, resume) {
   const { registry, rules } = loadWorld(docData);
   // 定点常数（rules.kernelConstants）装入 det-math，规则层的定点运算由此取标度（S1-2b）。
   installFixedConstants(fixedConstantsOf(rules.kernelConstants));
+  // 字节常数（base64、UTF-8 编解码与导入长度计量用，卷二 :1047）同表装入 kernel/bytes.mjs（S1-3b 导入存档用）。
+  installByteConstants(rules.kernelConstants);
   const { namedStructsDoc, owners, digestExclude, primitivesDoc, vocabDoc } = docData;
   const structs = installNamedStructs(namedStructsDoc);
   // 顶层状态键的登记表（state-owners.json 的 stateKeys，卷二 §2.7 :580）；内核按它判 writePath 的顶层键是否已声明。
