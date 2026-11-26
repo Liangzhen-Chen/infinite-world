@@ -225,6 +225,14 @@ const HANDLERS = {
   }),
 };
 
+/**
+ * 该原语有没有登记处理函数（只读分派表，不暴露表本身）。动作目录加载期据此核「动作可达的原语都有处理函数」（S1-3a；草案 §2.2：防菜单里出现点了必拒的动作）。
+ * @param {string} op @returns {boolean}
+ */
+export function handlesOp(op) {
+  return typeof op === 'string' && Object.hasOwn(HANDLERS, op);
+}
+
 /** resolve：逐个 effect 核原语与参数并取处理结果。未登记原语或无处理函数一律拒收。 */
 function resolve(engine, state, proposal, seq) {
   if (proposal === null || typeof proposal !== 'object' || !Array.isArray(proposal.effects)) throw new KernelError('E-EFF-PARAM', {}, 'proposal.effects must be an array');
@@ -247,18 +255,35 @@ function resolve(engine, state, proposal, seq) {
 /**
  * 外来输入的唯一处理管线（卷二十七 :742）：先把输入条目单独记进日志簿 → resolve → 单事务 execute → 事务提交后记结果事件
  * （日志簿不随事务回滚）→ 事务外按 advanceMinutes 纯推进 → tickEnd（刻边界）。条目的 kind 只作标签留在日志，这里不按它分支；
- * 玩家指令与推进请求都以效果原语提案 input.proposal 处理。复演对每条输入条目也走这里。
+ * 玩家指令与推进请求都以效果原语提案 input.proposal 处理；带意图 input.intent 的条目（菜单动作，S1-3a）先经装配层注入的
+ * engine.resolveIntent 收窄成提案，收窄被拒即记拒绝事件（卷二:545 被拒请求按请求编号留在输入序列，复演时同处同样被拒）。
+ * 复演对每条输入条目也走这里，意图在复演时按同一目录重新收窄。
  * @param {any} engine @param {any} state @param {import('./save.mjs').LogBook} book
- * @param {{kind: string, proposal: {effects: Array<Record<string, any>>}}} input 不含 seq 的输入条目
+ * @param {{kind: string, proposal?: {effects: Array<Record<string, any>>}, intent?: unknown}} input 不含 seq 的输入条目
  * @returns {{ok: boolean, code?: string, seq: number, advancedMinutes: number}}
  */
 export function processInput(engine, state, book, input) {
   const seq = recordInput(engine, book, input);
   try {
-    return processProposal(engine, state, book, input.proposal, seq);
+    if (!Object.hasOwn(input, 'intent')) return processProposal(engine, state, book, input.proposal, seq);
+    const plan = typeof engine.resolveIntent === 'function' ? engine.resolveIntent(state, input.intent) : { ok: false, code: 'E-ACT-UNKNOWN' };
+    if (!plan.ok) {
+      appendEntry(book, { seq, kind: 'event', ok: false, code: plan.code });
+      return { ok: false, code: plan.code, seq, advancedMinutes: 0 };
+    }
+    return processProposal(engine, state, book, plan.proposal, seq);
   } finally {
     tickEnd(engine, state, book);
   }
+}
+
+/**
+ * 提交意图（菜单动作，S1-3a）：输入条目 {kind: command, intent} 先单独记进日志（卷二十七 :742），再走 processInput 的意图分支。
+ * @param {any} engine @param {any} state @param {import('./save.mjs').LogBook} book @param {unknown} intent
+ * @returns {{ok: boolean, code?: string, seq: number, advancedMinutes: number}}
+ */
+export function submitIntent(engine, state, book, intent) {
+  return processInput(engine, state, book, { kind: 'command', intent });
 }
 
 /**

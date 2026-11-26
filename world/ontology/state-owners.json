@@ -22,7 +22,11 @@
   {"ns": "env.solarPhase","type": "number", "entry": "求值主体所在地点当日的半球归一太阳相位（weather.weightRX 的变量域之一）", "shape": "fraction", "volume": "卷二十 §2.5 :276（weightRX 变量域）、§2.7 env.solarPhase、§4.4.3 第 2 条"},
   {"ns": "item","type": "field", "entry": "被求值的那一件物品模板行的维度与手写组件类（类别规则 rules.items.categoryRules、classRules 的 when 读它；变量口径卷三乙 §4.3 C-1、C-8；块 6 第 6-2 张）", "shape": "<维度键>，另有 classes（set，只作 member 的 set）", "volume": "卷三乙 §4.3.3 C-1、C-8"},
   {"ns": "lot.spoilage","type": "number", "entry": "该份材料所在批次或实例的当日腐坏进度", "shape": "fraction", "volume": "卷四 §4.7.7（diet eats 的写法见 §4.7.5）"},
-  {"ns": "material","type": "field", "entry": "被求值的那一份材料的维度（变量口径同卷三乙 §4.3 C-1）；类别规则 rules.items.categoryRules、classRules 的 when 里被求值的是一件物品模板，读它按 M-1 与 rules.items.aggregation 聚合的材料量（同 materialView 给物品模板 id，静态读法 T-14；只收口径不为 none 的维度；卷三乙 §3.1 :425、§4.3.3 C-1 ②）", "shape": "<维度键>，另有 classes（set，只作 member 的 set）", "volume": "卷四 §4.7.7（diet eats 的写法见 §4.7.5）"}
+  {"ns": "material","type": "field", "entry": "被求值的那一份材料的维度（变量口径同卷三乙 §4.3 C-1）；类别规则 rules.items.categoryRules、classRules 的 when 里被求值的是一件物品模板，读它按 M-1 与 rules.items.aggregation 聚合的材料量（同 materialView 给物品模板 id，静态读法 T-14；只收口径不为 none 的维度；卷三乙 §3.1 :425、§4.3.3 C-1 ②）", "shape": "<维度键>，另有 classes（set，只作 member 的 set）", "volume": "卷四 §4.7.7（diet eats 的写法见 §4.7.5）"},
+  {"ns": "slot","type": "field", "entry": "本次动作意图的槽位值：code 槽给所选候选的 id 代号，number 槽给整数（rules/act/resolve.mjs 由意图换出，交动作行 whenRX 与效果族 paramsRX）", "shape": "<槽位>", "volume": "卷二 §2.9 第 4 条（勘误 1115k3 补 slot 命名空间：本动作槽位值，只传代号）、卷九 §2.2 :219 段（族 paramsRX 经 slot.<槽位名> 读，勘误 1115k4）；number 槽给整数是S1-3 接口草案（主会话 11-26） Q6 的技术口径（卷文只写只传代号，未定数值槽）"},
+  {"ns": "player.avatarCount","type": "number", "entry": "本局已建的玩家化身个数 = state.created 中以带出身（person.origin 非空，origin 族条目）的实体行为 template 新建的个体数（rules/act/catalog.mjs#avatarsOf 派生，不另存指针；待 S2-H 玩家席位边替换）", "shape": "count", "volume": "S1-3 接口草案（主会话 11-26） §2.1（选来历仅当尚无玩家化身可用）；设计册 docs/世界设计/14-历史传说与玩家来历.md §4.7 建档流程"},
+  {"ns": "actor.isAvatar","type": "boolean", "entry": "本次意图（或菜单投影）的行动者是否为本局玩家化身（同 player.avatarCount 的派生集合）；无行动者为假", "shape": "boolean", "volume": "S1-3 接口草案（主会话 11-26） §2.1（等待仅当已有化身）；主会话 11-26 裁定 world.menu(null) 返回开局菜单"},
+  {"ns": "origin.open","type": "boolean", "entry": "被筛的来历模板候选是否开放：该行的出身（person.origin）是 origin 族条目，且条目 gate 为空或所指 rules.playerOrigins 开关为真（对象筛选 tf_player_origin 读它）", "shape": "boolean", "volume": "设计册 docs/世界设计/14-历史传说与玩家来历.md §4.7 :218–:220、§3.6 :98–:99"}
  ],
  "inputEdge": {"modules": ["server-plugin/input/**/*.mjs"], "process": "server", "outputSchema": "schema:input-edge-v1"},
  "display": {"modules": ["extension/**/*.mjs", "!extension/host/**", "!extension/textcore/**"], "process": "client"},
@@ -94,6 +98,8 @@
   {"export": "kernel/transaction.mjs#txSet", "callerFiles": ["storage.mjs"], "acceptsState": false},
   {"export": "kernel/transaction.mjs#txDelete", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/transaction.mjs#runTransaction", "callerFiles": ["index.mjs","scheduler.mjs","rules/load/mount.mjs"], "acceptsState": true},
+  {"export": "kernel/transaction.mjs#handlesOp", "callerFiles": ["rules/act/catalog.mjs"], "acceptsState": false},
+  {"export": "kernel/transaction.mjs#submitIntent", "callerFiles": ["rules/load/mount.mjs"], "acceptsState": true},
   {"export": "kernel/transaction.mjs#submitProposal", "callerFiles": ["index.mjs","scheduler.mjs"], "acceptsState": true},
   {"export": "kernel/transaction.mjs#recordInput", "callerFiles": ["index.mjs","scheduler.mjs"], "acceptsState": true},
   {"export": "kernel/scheduler.mjs#advance", "callerFiles": ["index.mjs","transaction.mjs"], "acceptsState": true},
@@ -262,11 +268,11 @@
   {"export": "kernel/transport/reply-channel.mjs#postReply", "callerFiles": ["input/http-entry.mjs"], "acceptsState": false},
   {"export": "kernel/transport/reply-channel.mjs#onReply", "callerFiles": ["output-gate/reply-composer.mjs"], "acceptsState": false},
   {"export": "kernel/rx.mjs#compileRX", "callerFiles": ["output-gate/display-load.mjs"], "acceptsState": false},
-  {"export": "kernel/rx.mjs#evaluateRX", "callerFiles": ["output-gate/select.mjs"], "acceptsState": false},
+  {"export": "kernel/rx.mjs#evaluateRX", "callerFiles": ["output-gate/select.mjs", "rules/act/catalog.mjs", "rules/act/effects.mjs"], "acceptsState": false},
   {"export": "kernel/errors.mjs#report", "callers": ["*"], "acceptsState": false},
   {"export": "kernel/errors.mjs#reportError", "callers": ["*"], "acceptsState": false},
-  {"export": "kernel/validate/types.mjs#checkValue", "callerFiles": ["rules/load/registry.mjs"], "acceptsState": false},
-  {"export": "kernel/errors.mjs#KernelError", "callerFiles": ["rules/load/registry.mjs", "rules/load/mount.mjs"], "acceptsState": false}
+  {"export": "kernel/validate/types.mjs#checkValue", "callerFiles": ["rules/load/registry.mjs", "rules/act/catalog.mjs"], "acceptsState": false},
+  {"export": "kernel/errors.mjs#KernelError", "callerFiles": ["rules/load/registry.mjs", "rules/load/mount.mjs", "rules/act/catalog.mjs", "rules/act/effects.mjs", "rules/act/resolve.mjs"], "acceptsState": false}
  ]},
  "groupApi": {"exports": [
   {"export": "textcore/brand.mjs#brand", "callers": ["textcore", "gate", "aiGate"]},
@@ -293,8 +299,17 @@
   {"export": "rules/gen/worldgen-writeback.mjs#openingOf", "callerFiles": ["rules/load/mount.mjs"]},
   {"export": "rules/bake/place-tree.mjs#bakePlaceTree", "callerFiles": ["rules/load/mount.mjs"]},
   {"export": "rules/bake/place-tree.mjs#placeTreeDigest", "callerFiles": ["rules/load/mount.mjs"]},
-  {"export": "rules/load/registry.mjs#ruleValue", "callerFiles": ["rules/gen/worldgen-writeback.mjs"]},
-  {"export": "rules/load/registry.mjs#unitSi", "callerFiles": ["rules/body/body.mjs", "rules/lifecycle/terminate.mjs"]}
+  {"export": "rules/load/registry.mjs#ruleValue", "callerFiles": ["rules/gen/worldgen-writeback.mjs", "rules/act/catalog.mjs"]},
+  {"export": "rules/load/registry.mjs#unitSi", "callerFiles": ["rules/body/body.mjs", "rules/lifecycle/terminate.mjs"]},
+  {"export": "rules/gen/worldgen-writeback.mjs#openPlacesOf", "callerFiles": ["rules/act/catalog.mjs"]},
+  {"export": "rules/act/catalog.mjs#loadActions", "callerFiles": ["rules/load/mount.mjs"]},
+  {"export": "rules/act/catalog.mjs#menuOf", "callerFiles": ["rules/load/mount.mjs"]},
+  {"export": "rules/act/catalog.mjs#shapeOf", "callerFiles": ["rules/act/resolve.mjs"]},
+  {"export": "rules/act/catalog.mjs#whenHolds", "callerFiles": ["rules/act/resolve.mjs"]},
+  {"export": "rules/act/catalog.mjs#defaultActor", "callerFiles": ["rules/act/resolve.mjs"]},
+  {"export": "rules/act/catalog.mjs#nsReadsFor", "callerFiles": ["rules/act/effects.mjs"]},
+  {"export": "rules/act/effects.mjs#effects", "callerFiles": ["rules/act/resolve.mjs"]},
+  {"export": "rules/act/resolve.mjs#resolveIntent", "callerFiles": ["rules/load/mount.mjs"]}
  ]},
  "importMatrix": {
   "codeExtensions": [".mjs", ".js", ".cjs", ".ts", ".mts", ".cts"],

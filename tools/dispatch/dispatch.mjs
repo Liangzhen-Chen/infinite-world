@@ -13,7 +13,9 @@ import { dirname, join } from 'node:path';
 import { composeCard } from './compose-card.mjs';
 import { budgetValue, MAX_BUDGET_USD } from './budget-check.mjs';
 import { samplingBody } from './sampling-body.mjs';
-import { loadRules, modelFamilies, modelFamilyReasons, partyModelFamilies } from '../accept/lib/card-archive.mjs';
+import { loadRules, modelFamilies, modelFamilyReasons, partyModelFamilies, checkArchive } from '../accept/lib/card-archive.mjs';
+import { buildReceipt } from '../accept/lib/receipt.mjs';
+import { fsRepo } from '../accept/commit-hook.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -115,24 +117,8 @@ export function checkRoleModel(archiveText, role, model) {
   return reasons;
 }
 
-// 派卡收据（L-06 ⑥）：必填字段缺一个就抛，防止写出残收据。totalCostUsd 允许 null（claude -p 输出取不到钱时），
-// headBefore/headAfter 允许 null（取不到 HEAD 时），其余须非空。
-const RECEIPT_FIELDS = ['role', 'model', 'family', 'endpoint', 'startedAt', 'endedAt', 'exitCode', 'totalCostUsd', 'promptSha256', 'headBefore', 'headAfter'];
-export function buildReceipt(fields) {
-  const out = {};
-  for (const k of RECEIPT_FIELDS) {
-    if (!fields || !Object.prototype.hasOwnProperty.call(fields, k)) throw new Error(`收据缺字段「${k}」`);
-    out[k] = fields[k];
-  }
-  for (const k of ['role', 'model', 'family', 'startedAt', 'endedAt', 'promptSha256']) {
-    if (typeof out[k] !== 'string' || !out[k]) throw new Error(`收据字段「${k}」须为非空字符串`);
-  }
-  if (out.endpoint !== 'deepseek' && out.endpoint !== 'anthropic') throw new Error(`收据字段「endpoint」须为 deepseek 或 anthropic`);
-  if (typeof out.exitCode !== 'number' || !Number.isInteger(out.exitCode)) throw new Error('收据字段「exitCode」须为整数');
-  if (out.totalCostUsd !== null && (typeof out.totalCostUsd !== 'number' || !Number.isFinite(out.totalCostUsd) || out.totalCostUsd < 0)) throw new Error('收据字段「totalCostUsd」须为非负数或 null');
-  for (const k of ['headBefore', 'headAfter']) if (out[k] !== null && (typeof out[k] !== 'string' || !out[k])) throw new Error(`收据字段「${k}」须为非空字符串或 null`);
-  return out;
-}
+// 派卡收据（L-06 ⑥）：字段表与校验只在 tools/accept/lib/receipt.mjs 一处（门禁封口卡 A）；这里转出 buildReceipt，接口不变。
+export { buildReceipt };
 
 // 从 claude -p --output-format json 的输出里取 total_cost_usd；整段不是 JSON 就逐行从后往前试；取不到返回 null。
 function parseCost(output) {
@@ -253,6 +239,12 @@ export function main(argv) {
       return 2;
     }
     const reasons = checkRoleModel(archiveText, opts.role, opts.model);
+    // 派前自检（门禁封口卡 A）：派卡.md 按提交阶段口径核小节、证据与引用，与 check-push-archive.mjs --only 同一个函数。
+    const loaded = dispatchRules();
+    if (!loaded.error) {
+      const [file] = loaded.rules.party.section.split('/');
+      reasons.push(...checkArchive(loaded.rules, (f) => (f === file ? archiveText : null), null, '提交', fsRepo(opts.wd), { only: [file] }));
+    }
     if (reasons.length) {
       for (const r of reasons) process.stderr.write(`${r}\n`);
       return 2;

@@ -1,0 +1,72 @@
+{
+  "card": "chore-gate-seal-c",
+  "phase": "pr",
+  "updatedAt": "2026-11-26T16:09:37.605Z",
+  "branches": {
+    "code": "chore/gate-seal-c",
+    "test": "test/gate-seal-c"
+  },
+  "pr": null,
+  "parties": {
+    "code": {
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/gsc",
+        "session": "ctx_f9f80709682f",
+        "commits": [
+          "ca777b308",
+          "df3020ba2",
+          "bfc57056d",
+          "dbfcb76bd"
+        ]
+      },
+      "costUsd": null
+    },
+    "test": {
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/ts-gsc",
+        "session": "ctx_20c1a967587f",
+        "commits": [
+          "81b161577",
+          "48d87e87d"
+        ]
+      },
+      "costUsd": null
+    },
+    "review": [
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": null,
+        "orca": {
+          "worktree": "F:/dnd-worktrees/dnd/gsc",
+          "session": "ctx_98b92fae73b2",
+          "commits": [
+            "324cd5813",
+            "809721fe6"
+          ]
+        },
+        "costUsd": null
+      },
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": "docs/卡档案/chore-gate-seal-c/收据/审卡-001.json",
+        "orca": null,
+        "costUsd": 0.64
+      }
+    ]
+  },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
+  "failCount": 1,
+  "blocker": null,
+  "nextAction": "开 PR chore/gate-seal-c→master 走 CI，main 绿即合；合入后删 gsc、ts-gsc"
+}
