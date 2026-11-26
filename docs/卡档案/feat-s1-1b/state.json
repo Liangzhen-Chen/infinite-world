@@ -1,7 +1,7 @@
 {
   "card": "feat-s1-1b",
-  "phase": "blocked",
-  "updatedAt": "2026-11-26T04:27:31.056Z",
+  "phase": "pr",
+  "updatedAt": "2026-11-26T05:37:30.027Z",
   "branches": {
     "code": "feat/s1-1b",
     "test": "test/s1-1b"
@@ -11,20 +11,20 @@
     "code": {
       "family": "claude-sonnet",
       "model": "claude-sonnet-5-5",
-      "receipt": null,
-      "costUsd": 2.25
+      "receipt": "docs/卡档案/feat-s1-1b/收据",
+      "costUsd": 4.88
     },
     "test": {
       "family": "claude-haiku",
       "model": "claude-haiku-5-5",
-      "receipt": null,
-      "costUsd": 0.38
+      "receipt": "docs/卡档案/feat-s1-1b/收据",
+      "costUsd": 0.41
     },
     "review": {
       "family": "claude-opus",
       "model": "claude-opus-5-5",
-      "receipt": null,
-      "costUsd": null
+      "receipt": "docs/卡档案/feat-s1-1b/收据",
+      "costUsd": 1.02
     }
   },
   "ci": {
@@ -32,6 +32,6 @@
     "runUrl": null
   },
   "failCount": 4,
-  "blocker": "连续 4 轮 pre_commit 不过：E-VIEW-UNDECLARED-WRITE（transaction.mjs initLog/pushLog/recordInput/create.write/write）、index.mjs:48 state_write、effect 参数动态下标；c_write_created/log/requestSeq 基线升。按李白裁定停派，已交 antigravity 独立诊断（msg_3d876e2ba200）",
-  "nextAction": "等 antigravity 诊断回复后定下一步；改动存补丁未提交"
+  "blocker": null,
+  "nextAction": "审卡第二轮（干净 Opus API）可合；开 PR feat/s1-1b→master 走 CI；合入后接 B2（存档与重放，含日志簿移出 state）"
 }
