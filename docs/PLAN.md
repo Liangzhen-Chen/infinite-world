@@ -26,7 +26,11 @@
   - [ ] 余项：L-07 删九项自查表（亮圳 11-25 20:01 拍板，PR #19 合入中；派活卡头规矩压到 ≤50 行另议）；L-03（李白在 Orca 界面处理）；tools/cloud 长测（李白裁定等 S1-2 后）；notify.py 停用（李白裁定 K1125-NONOTIFY，找李白写在会话回复或 orchestration）；c_module_state 4 处并入 S1-1 验收；c_big_md 已豁免（PR #13）；断链行号与 docLimits 已修（PR #12）；CI 里 tsc 跑两遍保持（见 L-05 规格）；state.json 强制落盘接进档案门禁（K1125-HANDOVER，另卡）。
   - 写审分工：靠实时额度派活，照 CLAUDE.md 第 3 节（亮圳 11-25 18:19，PR #15 合入 1cbad9a12）；合入一律走 PR（master 已保护）。
   - 主会话总台邮箱：Orca 持久 run `run_ff745853fb21`（11-25 21:0x 建）。接班会话启动后先 `orca orchestration run-use --id run_ff745853fb21 --json` 接管，子会话回报发 `--to run:run_ff745853fb21`（CLAUDE.md 第 1 节换班条）。
-  - 下一张：S1-1 新 L0 内核底座（会员额度 11-26 重置后按常态档：Sonnet 写、Haiku 出题、Opus 审）；验收须含 c_module_state 降到 0（李白裁定）；state.json 强制落盘接进档案门禁另立卡（K1125-HANDOVER）。
+  - S1-1 拆三张串行卡（主会话 11-25，Sonnet API 勘察 $0.22 + Opus API 接口草案 $0.41；旧内核约 4100 行，超单卡 150–800 行）：
+    - [x] S1-1a 底座与黑户（feat/s1-1a）：运行期实体认定 kindOfEntity、顶层键切片 memo、storage/dimensions、rules/load/registry.mjs 登记构造、事务模块最小写入层（writeScope/txSet，整笔撤销，李白 11-25 23:20 裁定选 1）、dim/modified 返回 Fact、零件合并后内核 12 文件、c_module_state 4→0、基线 current 258→233；storage.mjs 两类门禁只读段例外（卷二:535，李白 11-26 00:35 裁定 A）。写 DeepSeek 1–3 轮→Sonnet API 4–7 轮，出题 Haiku API，审 Opus API 两轮（第二轮干净复核可合）。PR 见卡档案 state.json。
+    - [ ] S1-1b 事务、调度与存档：runTransaction/submitProposal、postCommit.advanceMinutes、scheduler 最小版、save（含 save-session）；在 transaction.mjs 最小写入层上扩，不另起裸写处。
+    - [ ] S1-1c 挂载与启动强断言：mountKernel 缺 saveEnv/unitOfPath/modifierSource 即抛；加载器移入 server-plugin/rules/load/（并入 registry.mjs，不另写第二份）；inputsOf 替换手传 inputs；engine.modifierSources 缺省改为强断言（审卡提示）。
+  - 下一张：S1-1b（会员额度常态档：Sonnet 写、Haiku 出题、Opus 审）；其后门禁封口卡（pre-push.mjs 加 -m、触发目录扩项、收据/state.json 强制校验、S12 登记历史问题，Gemini 11-25 审核 P1，李白 23:35 定排卡 A 之后）。
   - 已定（主会话 11-25）：archive_ref 扫描范围排除 tests/acceptance/。理由：验收题职责就是断言旧路径已归位，必须写出归档目录字样；逐文件豁免要写码方知道验收题文件名，破坏三方分离且每卡重复。archive_ref 出自 Gemini 重写指南 Step 1，非亮圳硬规则，属技术口径修正；已报李白可否决。由 chore/new-skeleton 写码第二轮落数据。
   - 11-25 每日全库审核（Gemini，origin/antigravity a11ed4d45 docs/gemini/daily/2026-11-25-audit.md）A 类整改排期：① L-11/L-12 合入；② L-04/L-05 tsc+CI（新骨架合入后）；③ dispatch.mjs 补 needs 闭包核/派前模型族核/收据、clearDeepseek 补 OAuth 令牌、dispatch-consistency 测试、archive_ref 扩项、派活卡头规矩关「合并提交免查」、使用说明.md 更正、notify 三种 JSON、state.json 接 card-archive——合成一张「门禁补齐」卡；④ 新骨架 L-15～L-17 收尾后接 L-18 E2E 桩与 L-09 检测器加固；⑤ L-02/L-03 环境收尾。B 类（L-19 分支保护 403 需升 Pro/公开/替代、Q-14/Q-15、B7、交付日是否顺延）转李白→亮圳。
   - [ ] L-07 派活卡头规矩 ≤50 行、删 9 项自查表：等亮圳拍板 Q-14（自我反思是否保留）。
