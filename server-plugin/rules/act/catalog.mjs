@@ -424,12 +424,23 @@ function affordances(engine, state, actor) {
 }
 
 /**
- * 菜单（S1-3b 经 world.menu 调；主会话 11-26 裁定）：subjectId 为空即开局菜单；给了须是本局玩家化身，否则 E-DISPLAY-SUBJECT。
+ * 未指名行动者时的缺省行动者（审卡第一轮 ① 选 A）：本局尚无玩家化身即 null（开局建档），恰一个即取它，多于一个不唯一即拒（码由调用方给）。
+ * 化身认定沿用 avatarsOf（派生）；待 S2-H 玩家席位边建成后改由席位边取。
+ * @param {string} code 不唯一时的拒收码 @returns {string | null}
+ */
+export function defaultActor(engine, state, code) {
+  const avatars = avatarsOf(engine, state);
+  if (avatars.length > 1) throw new KernelError(code, {}, 'no actor given and the player avatar is not unique');
+  return avatars.length === 1 ? avatars[0] : null;
+}
+
+/**
+ * 菜单（S1-3b 经 world.menu 调；主会话 11-26 裁定）：subjectId 为空即取缺省行动者（尚无化身为开局菜单，已有唯一化身即按化身投影）；给了须是本局玩家化身，否则 E-DISPLAY-SUBJECT。
  * visible：S1 的可见集 = 主体（若有）与已开放地点（主观视图卷二十二未建，草案 §1 第 18 行）。纯读，不写状态、不进日志。
  * @param {string | null} subjectId
  */
 export function menuOf(engine, state, subjectId) {
-  const subject = subjectId === undefined ? null : subjectId;
+  const subject = subjectId === undefined || subjectId === null ? defaultActor(engine, state, 'E-DISPLAY-SUBJECT') : subjectId;
   if (subject !== null && !(typeof subject === 'string' && avatarsOf(engine, state).includes(subject))) throw new KernelError('E-DISPLAY-SUBJECT', {}, 'menu subject must be null or a player avatar');
   const visible = [...(subject === null ? [] : [subject]), ...openPlacesOf(engine, state)];
   return Object.freeze({ affordances: affordances(engine, state, subject), visible: Object.freeze(visible) });

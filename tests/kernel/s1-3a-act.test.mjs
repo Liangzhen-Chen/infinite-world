@@ -102,9 +102,9 @@ test('2 选来历：经 submitProposal 建化身（template 为所选模板行�
   assert.ok(tplSlot, 'template 是所选候选');
   assert.equal(dim(g.engine, g.state, 'person', avatar, 'birthplace').value, chosen[placeSlot]);
   assert.equal(dim(g.engine, g.state, 'person', avatar, 'culture').value, raw.dimensionDocs.find((d) => d.kind === 'person').rows[rec.template].culture);
-  // 已有化身：再建档被 whenRX 拒，开局菜单为空。
+  // 已有化身：再建档被 whenRX 拒；menu(null) 按唯一化身投影，不再出现建档动作。
   assert.equal(g.act({ act: spawn, slots: pick }).code, 'E-ACT-PRECONDITION');
-  assert.equal(g.menu(null).affordances.length, 0);
+  assert.equal(g.menu(null).affordances.some((x) => x.act === spawn), false);
 });
 
 test('3 等待：化身菜单给数值范围（上限取 rules.act.advanceMaxMinutes 该动作类）；提交推进时钟；越界、无化身、未知动作被拒且不动状态；拒收也按请求编号留在日志（输入条目 + 拒绝事件，卷二:545）', async () => {
@@ -132,7 +132,6 @@ test('3 等待：化身菜单给数值范围（上限取 rules.act.advanceMaxMin
     [{ act: pass, actor: avatar, numbers: { [slotName]: 1.5 } }, 'E-ACT-SLOT'],
     [{ act: pass, actor: avatar }, 'E-ACT-SLOT'],
     [{ act: pass, actor: avatar, numbers: { [slotName]: 5 }, slots: { [slotName]: 0 } }, 'E-ACT-SLOT'],
-    [{ act: pass, numbers: { [slotName]: 5 } }, 'E-ACT-PRECONDITION'],
     [{ act: `${pass}_not_in_catalog` }, 'E-ACT-UNKNOWN'],
   ]) {
     const r = g.act(intent);
@@ -263,4 +262,27 @@ test('9 拒收进日志且复演一致：被拒意图在复演时同处同样被
   assert.equal(r.saveDigest, saved.saveDigest);
   assert.deepEqual(r.logBook.entries, g.logBook.entries);
   assert.deepEqual(r.state.created, g.state.created);
+});
+
+test('10 不带 actor 的意图（S1-3b wire 形状）：选来历后再等待成功；menu(null) 按唯一化身投影、visible 含化身；化身不唯一即拒', async () => {
+  const raw = rawWorld();
+  const { spawn, pass } = rowsOf(raw);
+  const g = await init({ saveRoot: testTempRoot('s3a-noactor-') });
+  assert.equal(g.act({ act: pass, numbers: { minutes: 5 } }).code, 'E-ACT-PRECONDITION');
+  assert.equal(g.act({ act: spawn, slots: { origin: 0, place: 0 } }).ok, true);
+  const avatar = Object.keys(g.state.created)[0];
+  const m = g.menu(null);
+  assert.deepEqual(m.affordances.map((a) => a.act), [pass]);
+  assert.deepEqual([...m.visible], [avatar, ...openPlaces(raw)]);
+  const t0 = clockMinute(g.engine, g.state);
+  const r = g.act({ act: pass, numbers: { minutes: 15 } });
+  assert.equal(r.ok, true, JSON.stringify(r));
+  assert.equal(clockMinute(g.engine, g.state), t0 + 15);
+  // 前提：造出第二个化身（经原语建第二个以带出身的模板行为 template 的个体），缺省行动者不唯一即拒。
+  const tpl = g.state.created[avatar].template;
+  const place = openPlaces(raw)[0];
+  assert.equal(g.submitProposal({ effects: [{ op: 'create', kind: 'person', template: tpl, facts: { birthplace: place } }] }).ok, true);
+  assert.equal(g.act({ act: pass, numbers: { minutes: 5 } }).code, 'E-ACT-SLOT');
+  assert.throws(() => g.menu(null), code('E-DISPLAY-SUBJECT'));
+  assert.equal(g.act({ act: pass, actor: avatar, numbers: { minutes: 5 } }).ok, true);
 });

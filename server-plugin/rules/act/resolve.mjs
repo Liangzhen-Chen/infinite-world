@@ -4,7 +4,7 @@
 // 只认行字段，不按动作、槽位或族代号分支。纯函数：被拒返回 {ok:false, code}，不写状态；日志由调用方 transaction.mjs#processInput 记（被拒也记）。
 
 import { KernelError, reportError } from '../../kernel/errors.mjs';
-import { shapeOf, whenHolds } from './catalog.mjs';
+import { shapeOf, whenHolds, defaultActor } from './catalog.mjs';
 import { effects } from './effects.mjs';
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -19,7 +19,8 @@ export function resolveIntent(engine, state, intent) {
     if (!isObj(intent) || typeof intent.act !== 'string') throw new KernelError('E-ACT-UNKNOWN', {}, 'intent needs an act code');
     const row = engine.actions.rows.get(intent.act);
     if (!row) throw new KernelError('E-ACT-UNKNOWN', {}, `act ${JSON.stringify(intent.act)} not in catalog`);
-    const actor = intent.actor === undefined || intent.actor === null ? null : intent.actor;
+    // 意图不带 actor（S1-3b wire 形状）即取缺省行动者：尚无化身为 null，唯一化身即它，不唯一即拒（审卡第一轮 ① 选 A）。
+    const actor = intent.actor === undefined || intent.actor === null ? defaultActor(engine, state, 'E-ACT-SLOT') : intent.actor;
     if (actor !== null && typeof actor !== 'string') throw new KernelError('E-ACT-SLOT', {}, 'actor must be an id or null');
     const { values, tables } = shapeOf(engine, state, row.id, intent, actor);
     if (!whenHolds(engine, state, row.id, { actor, slots: values }, true)) throw new KernelError('E-ACT-PRECONDITION', {}, `${row.id}: whenRX does not hold`);
