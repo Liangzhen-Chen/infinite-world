@@ -1,15 +1,15 @@
 // 新骨架入口（S1-1 卡 A/B1/B2；docs/gemini/kickoff-1125.md:493 的入口形状；Gemini 裁定 msg_82485b7f7ab7）。
-// 装配层：读世界维度表、命名 struct、state-owners、规则表 host 与 saveLayout、存档排除表，读源码清单、取摘要能力，
-// 建 engine 与初始 state、日志簿，返回 {engine, state, logBook, submitProposal, advance, save}。本文件不写状态。
+// 装配层：读世界维度表、命名 struct、state-owners、规则表登记 registry.json 及其登记的全部规则表、存档排除表，读源码清单、取摘要能力，
+// 交 mountKernel 组装、核对并建 engine 与 state、日志簿，返回 {engine, state, logBook, submitProposal, advance, save}。本文件不写状态。
 // 读文件只在装配层（本文件），kernel 内的规则零件不读世界文件；不引任何归档文件。
-// saveSlot / loadSlot / replay_apply 是存读档的公共入口（绑定 engine 后调 kernel 的 writeSlot / readSlot / replayApply）；S1-3 接 menu 后由 menu-entry 调同一 kernel 函数。
+// saveSlot / loadSlot / replay_apply 是存读档的公共入口（saveSlot 调 kernel 的 writeSlot，loadSlot 调 readSlot，replay_apply 经 mountKernel 复演）；S1-3 接 menu 后由 menu-entry 调同一 kernel 函数。
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { mountKernel } from './rules/load/mount.mjs';
 import { createDigestCap } from './textcore/digest.mjs';
 import { writeSlot } from './kernel/save.mjs';
-import { readSlot, replayApply } from './kernel/load/save.mjs';
+import { readSlot } from './kernel/load/save.mjs';
 
 const REPO = new URL('../', import.meta.url);
 const WORLD_ONTOLOGY = new URL('world/ontology/', REPO);
@@ -24,19 +24,18 @@ function readDimensionDocs() {
     .map((f) => JSON.parse(readFileSync(new URL(f, dir), 'utf8')));
 }
 
-/** 世界数据（即存档的 doc_data 副本，卷二十七 :543）。 */
+/** 世界数据原文（即存档的 doc_data 副本，卷二十七 :543、:547）：规则表按 registry.json 每行的 file 逐个读（不点名表），按登记 code 收进 tableDocs；组装与核对在 rules/load/registry.mjs#loadWorld。 */
 function readWorld() {
   const json = (/** @type {string} */ f) => JSON.parse(readFileSync(new URL(f, WORLD_ONTOLOGY), 'utf8'));
-  const registry = json('../rules/registry.json').rows;
-  const spec = (/** @type {string} */ code) => registry.find((/** @type {any} */ r) => r.code === code);
+  const rulesDir = new URL('../rules/', WORLD_ONTOLOGY);
+  const registryRows = JSON.parse(readFileSync(new URL('registry.json', rulesDir), 'utf8')).rows;
+  const tableDocs = Object.fromEntries(registryRows.map((/** @type {{code: string, file: string}} */ r) => [r.code, JSON.parse(readFileSync(new URL(r.file, rulesDir), 'utf8'))]));
   return {
     dimensionDocs: readDimensionDocs(),
     namedStructsDoc: json('named-structs.json'),
     owners: json('state-owners.json'),
-    hostRows: json('../rules/tables/host.json').rows,
-    hostSpec: spec('host'),
-    saveLayoutRows: json('../rules/tables/save-layout.json').rows,
-    saveLayoutSpec: spec('saveLayout'),
+    registryRows,
+    tableDocs,
     digestExclude: json('../rules/tables/digest-exclude.json').paths,
     primitivesDoc: json('primitives.json'),
   };
@@ -65,9 +64,13 @@ function saveRootOf(root) {
   return url.href.endsWith('/') ? url : new URL(`${url.href}/`);
 }
 
-/** 装配层注入 kernel 的能力：摘要能力、存档根目录（可覆盖，路径字串或 file: URL）、源码清单。 @param {{saveRoot?: string | URL}} opts */
+/**
+ * 装配层注入 kernel 的能力：摘要能力、存档根目录（可覆盖，路径字串或 file: URL）、源码清单、修正来源。
+ * 修正来源显式交空数组（S1 无修正项数据；卷二 :1386 的数据来源接入时由修正规则模块产出）；不交 unitOfPath（S1 分片全为整片，卷二十七 :553）。
+ * @param {{saveRoot?: string | URL}} opts
+ */
 function capsOf(opts) {
-  return { digestCap: createDigestCap(), saveRoot: saveRootOf(opts.saveRoot), sources: readSources() };
+  return { digestCap: createDigestCap(), saveRoot: saveRootOf(opts.saveRoot), sources: readSources(), modifierSources: Object.freeze([]) };
 }
 
 /**
@@ -93,8 +96,10 @@ export function loadSlot(manifest, opts = {}) {
   return { ...readSlot(current.engine, manifest.slot), caps };
 }
 
-/** 读档复演（薄壳）：由存档的 doc_data 重建 engine（卷二十七 :543 世界只读自己的副本），再 replay_apply（:740）。 @param {any} loaded */
+/**
+ * 读档复演（薄壳）：由存档的 doc_data 装配 engine（卷二十七 :543 世界只读自己的副本）并复演（:740），返回与 init 同形（可接着玩）另带 saveDigest。
+ * @param {any} loaded loadSlot 的结果
+ */
 export function replay_apply(loaded) {
-  const { engine } = mountKernel(loaded.docData, loaded.caps);
-  return replayApply(engine, loaded);
+  return mountKernel(loaded.docData, loaded.caps, loaded);
 }
