@@ -67,11 +67,11 @@ async function boot() {
   return env;
 }
 
-function snapshot(state) {
+function snapshot(state, logBook) {
   return {
     minute: state.clock.minute,
     createdIds: Object.keys(state.created ?? {}).sort(),
-    logLen: state.log.entries.length,
+    logLen: logBook.entries.length,
   };
 }
 
@@ -92,18 +92,19 @@ test('1. init 返回四个成员，clock.minute 为 0，log 为空', async () =>
   assert.equal(typeof env.submitProposal, 'function');
   assert.equal(typeof env.advance, 'function');
   assert.equal(env.state.clock.minute, 0);
-  assert.ok(Array.isArray(env.state.log.entries), 'state.log.entries 应为数组');
-  assert.equal(env.state.log.entries.length, 0);
+  assert.ok(!('log' in env.state), 'state 无 log 键（卷二十七:542，日志移出 state）');
+  assert.ok(Array.isArray(env.logBook.entries), 'logBook.entries 应为数组');
+  assert.equal(env.logBook.entries.length, 0);
 });
 
 test('2. submitProposal 的 time 30 成功推进时钟，log 含 command 条目', async () => {
-  const { state, submitProposal } = await boot();
+  const { state, submitProposal, logBook } = await boot();
   const minuteBefore = state.clock.minute;
-  const logBefore = state.log.entries.length;
+  const logBefore = logBook.entries.length;
   const r = await submitProposal({ effects: [{ op: 'time', minutes: 30 }] });
   assert.equal(r.ok, true, JSON.stringify(r));
   assert.equal(state.clock.minute, minuteBefore + 30);
-  const added = state.log.entries.slice(logBefore);
+  const added = logBook.entries.slice(logBefore);
   assert.ok(added.some((e) => e.kind === 'command'), '本次提交应在 log 中追加一条 kind 为 command 的输入条目');
 });
 
@@ -127,8 +128,8 @@ test('4. create 后 fact.set 写入真实数值维度，props 中为写入值', 
 
 test('5. 同一提案 create 后接必被拒的 time -5：整笔回滚，state.created 与 clock 不变，command 条目保留', async () => {
   const env = await boot();
-  const { state, submitProposal } = env;
-  const before = snapshot(state);
+  const { state, submitProposal, logBook } = env;
+  const before = snapshot(state, logBook);
   const r = await submitProposal({
     effects: [
       { op: 'create', kind: FIRST_KIND_TABLE.kind, template: firstRowId(FIRST_KIND_TABLE), facts: {} },
@@ -140,15 +141,15 @@ test('5. 同一提案 create 后接必被拒的 time -5：整笔回滚，state.c
   assert.ok(r.code.length > 0);
   assert.deepEqual(Object.keys(state.created ?? {}).sort(), before.createdIds, '整笔回滚：不得残留新实体');
   assert.equal(state.clock.minute, before.minute, '时钟不变');
-  const added = state.log.entries.slice(before.logLen);
+  const added = logBook.entries.slice(before.logLen);
   assert.ok(added.some((e) => e.kind === 'command'), '输入条目不随回滚撤销：log 中仍应有本次 command 条目');
   assert.ok(!added.some((e) => e.kind === 'advance'), '被拒的提案不应追加 advance 条目');
 });
 
 test('6. 未支持的 op 返回 ok:false 带 code，状态不变', async () => {
   const env = await boot();
-  const { state, submitProposal } = env;
-  const before = snapshot(state);
+  const { state, submitProposal, logBook } = env;
+  const before = snapshot(state, logBook);
   const r = await submitProposal({ effects: [{ op: UNSUPPORTED_OP }] });
   assert.equal(r.ok, false, JSON.stringify(r));
   assert.equal(typeof r.code, 'string', '拒收应带 code');
@@ -176,11 +177,11 @@ test('7. time 分钟数为 0、负数、非整数均拒收，时钟不变', asyn
 test('8. time 25 使时钟恰增 25；advance(10)+advance(15) 与之等效', async () => {
   const env = await boot();
   const before = env.state.clock.minute;
-  const logBefore = env.state.log.entries.length;
+  const logBefore = env.logBook.entries.length;
   const r = await env.submitProposal({ effects: [{ op: 'time', minutes: 25 }] });
   assert.equal(r.ok, true, JSON.stringify(r));
   assert.equal(env.state.clock.minute - before, 25);
-  const advances = env.state.log.entries.slice(logBefore).filter((e) => e.kind === 'advance');
+  const advances = env.logBook.entries.slice(logBefore).filter((e) => e.kind === 'advance');
   const exposed = advances.filter((e) => typeof e.minutes === 'number');
   if (exposed.length > 0) {
     assert.equal(exposed.reduce((s, e) => s + e.minutes, 0), 25, '暴露分钟数的 advance 条目之和应为 25');
@@ -194,7 +195,7 @@ test('8. time 25 使时钟恰增 25；advance(10)+advance(15) 与之等效', asy
 });
 
 test('9. 连续两次提交，后者 seq 大于前者，log 内 seq 单调递增', async () => {
-  const { state, submitProposal } = await boot();
+  const { state, submitProposal, logBook } = await boot();
   const r1 = await submitProposal({ effects: [{ op: 'time', minutes: 5 }] });
   const r2 = await submitProposal({ effects: [{ op: 'time', minutes: 5 }] });
   assert.equal(r1.ok, true, JSON.stringify(r1));
@@ -202,7 +203,7 @@ test('9. 连续两次提交，后者 seq 大于前者，log 内 seq 单调递增
   assert.ok(r2.seq > r1.seq, `后者 seq ${r2.seq} 应大于前者 ${r1.seq}`);
   // 同一次请求写出的 command/event 条目共享一个 seq（同批），故条目级只要求不降，
   // 跨请求的 seq 严格递增由下面的 command 条目序列保证。
-  const entries = state.log.entries;
+  const entries = logBook.entries;
   for (let i = 1; i < entries.length; i++) {
     assert.ok(entries[i].seq >= entries[i - 1].seq, `log 第 ${i} 条 seq 不应下降`);
   }
