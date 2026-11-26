@@ -1,7 +1,7 @@
 {
   "card": "chore-gate-seal-b",
-  "phase": "dispatched",
-  "updatedAt": "2026-11-26T12:27:27.443Z",
+  "phase": "pr",
+  "updatedAt": "2026-11-26T14:01:16.831Z",
   "branches": {
     "code": "chore/gate-seal-b",
     "test": "test/gate-seal-b"
@@ -11,27 +11,27 @@
     "code": {
       "family": "claude-sonnet",
       "model": "claude-sonnet-5-5",
-      "receipt": null,
+      "receipt": "Orca 会员会话 ctx_bfcf824da073 及修改轮（工作树 F:/dnd-worktrees/dnd/gsb；提交 f4c563975、64f950409）",
       "costUsd": null
     },
     "test": {
       "family": "claude-haiku",
       "model": "claude-haiku-5-5",
-      "receipt": null,
+      "receipt": "Orca 会员会话 ctx_0dc7035cea9c 及后续轮（工作树 F:/dnd-worktrees/dnd/ts-gsb；提交 34653ee13）",
       "costUsd": null
     },
     "review": {
       "family": "claude-opus",
       "model": "claude-opus-5-5",
-      "receipt": null,
-      "costUsd": null
+      "receipt": "第一轮 Orca 会员会话 ctx_812ce2e8dea3（提交 3dea1c796，必须改 3 条）；第二轮 Opus API 干净上下文 docs/卡档案/chore-gate-seal-b/收据/审卡-001.json（提交 0e9264b5f，可合）",
+      "costUsd": 0.66
     }
   },
   "ci": {
     "status": "pending",
     "runUrl": null
   },
-  "failCount": 0,
+  "failCount": 1,
   "blocker": null,
-  "nextAction": "写码 Sonnet、出题 Haiku Orca 会话派出；回报后主会话读 diff，再派 Opus 审卡"
+  "nextAction": "开 PR chore/gate-seal-b→master 走 CI，main 绿即合；合入后删 gsb、ts-gsb 工作树，开子卡 C"
 }
