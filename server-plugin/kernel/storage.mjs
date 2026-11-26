@@ -22,10 +22,13 @@ function requireState(state) {
   }
 }
 
-/** @param {unknown} path @returns {any[]} */
+// 路径实参须是句柄 P 发出的冻结对象 {pattern, segs}（卷二 :536）；裸数组、裸字串一律拒。返回段数组。
+/** @param {any} path @returns {readonly any[]} */
 function requirePath(path) {
-  if (!Array.isArray(path) || path.length === 0) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'path must be a non-empty array of segments');
-  return path;
+  const ok = path !== null && typeof path === 'object' && !Array.isArray(path) && Object.isFrozen(path)
+    && typeof path.pattern === 'string' && Array.isArray(path.segs) && path.segs.length > 0;
+  if (!ok) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'path must be a frozen {pattern, segs} issued by engine.P');
+  return path.segs;
 }
 
 // 按段读；中途不是对象或没有该键即 undefined。段名运行期才知道，只能按下标取。
@@ -107,31 +110,36 @@ export function kindOfEntity(engine, state, id) {
 }
 
 /**
- * kernelApi `readPath(engine, state, path)`（卷二 §2.6 第 1 条）：按路径段读取（没有即 undefined）。不写状态、不碰缓存。
- * @param {any} engine
+ * kernelApi `readPath(state, path)`（卷二 :535–:536）：按路径段读取（没有即 undefined）。path 须是句柄 P 发出的路径。不写状态、不碰缓存。
+ * @template {string} P
  * @param {any} state
- * @param {string[]} path
+ * @param {import('./types.d.ts').StatePath<P>} path
  * @returns {any}
  */
-export function readPath(engine, state, path) {
+export function readPath(state, path) {
   requireState(state);
   return getAt(state, requirePath(path));
 }
 
 /**
- * kernelApi `writePath(engine, state, tx, path, value)`（卷二 §2.6 第 3 条运行期一道）：按路径段写入；写完只作废依赖 path[0] 的缓存。
+ * kernelApi `writePath(state, path, value, tx)`（卷二 :535–:538）：按路径段写入；写完只作废依赖 path[0] 的缓存。engine 取自 tx.engine。
+ * path 须是 tx.engine.P 发出的（P.issued 核来路，裸数组、手搓对象、别的 engine 发的一律拒）。
  * `created.<id>.props.<维度>` 的值按该维度声明判：声明为 ref 时目标须存在（null、空串拒）；其余路径的顶层键须已登记。
- * @param {any} engine
+ * @template {string} P
  * @param {any} state
- * @param {any} tx writeScope 给的作用域
- * @param {string[]} path
+ * @param {import('./types.d.ts').StatePath<P>} path
  * @param {any} value
+ * @param {any} tx writeScope 给的作用域
  * @returns {void}
  */
-export function writePath(engine, state, tx, path, value) {
+export function writePath(state, path, value, tx) {
   requireState(state);
   requireScope(state, tx);
+  const engine = tx.engine;
   const segs = requirePath(path);
+  if (!engine || !engine.P || typeof engine.P.issued !== 'function' || !engine.P.issued(path)) {
+    throw new KernelError('E-PATH-UNDECLARED', {}, 'path was not issued by this engine.P');
+  }
   for (const s of segs) {
     if (typeof s !== 'string' || s.length === 0) throw new KernelError('E-DIM-ID-FORMAT', {}, 'path segments must be non-empty strings');
     if (UNSAFE_KEYS.includes(s)) throw new KernelError('E-DIM-ID-FORMAT', {}, `unsafe path segment ${JSON.stringify(s)}`);
@@ -151,19 +159,19 @@ export function writePath(engine, state, tx, path, value) {
 }
 
 /**
- * kernelApi `createEntity(engine, state, tx, id, kind, props)`：写 state.created[id] = {kind, props}；写完作废 'created' 的缓存。
+ * kernelApi `createEntity(state, id, kind, props, tx)`（卷二 :535）：写 state.created[id] = {kind, props}；写完作废 'created' 的缓存。engine 取自 tx.engine。
  * 核对：kind 已登记、id 带该 kind 的前缀（或在它的 singletonIds 里）、id 未被占用（加载期登记与 created 都查）；任一不合即抛。
- * @param {{registry: {kindIds: Map<string, {idPrefix?: readonly string[], singletonIds?: readonly string[]}>, hasLoaded?: (id: string) => boolean}}} engine
  * @param {any} state
- * @param {any} tx writeScope 给的作用域
  * @param {string} id
  * @param {string} kind
  * @param {any} props
+ * @param {any} tx writeScope 给的作用域
  * @returns {void}
  */
-export function createEntity(engine, state, tx, id, kind, props) {
+export function createEntity(state, id, kind, props, tx) {
   requireState(state);
   requireScope(state, tx);
+  const engine = tx.engine;
   if (typeof id !== 'string' || id.length === 0) throw new KernelError('E-DIM-ID-FORMAT', {}, 'id must be a non-empty string');
   const reg = engine && engine.registry;
   const rec = reg && reg.kindIds instanceof Map ? reg.kindIds.get(kind) : undefined;

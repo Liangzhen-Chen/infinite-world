@@ -9,8 +9,8 @@
  "systems": {},
  "textPaths": ["displayNames.*.text", "playerNotes.*.text", "narration.*"],
  "textWriters": {},
- "pathTypes": {},
- "keyKinds": {},
+ "pathTypes": {"created.*.props.*": "dimension"},
+ "keyKinds": {"created.*.props.*": [["body_plan", "facility_type", "item", "material", "office", "org", "person", "place", "polity", "recipe", "species", "status"], "dimKey"]},
  "readShapes": [],
  "phases": ["clock", "environment", "body", "needs", "economy", "society", "events", "projection"],
  "rxNamespaces": [
@@ -67,6 +67,7 @@
   {"export": "kernel/memo.mjs#invalidateTop", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/memo.mjs#inputsOf", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/declare.mjs#declareInputs", "callers": ["rules"], "acceptsState": false},
+  {"export": "kernel/handles.mjs#makePathHandles", "callerFiles": ["index.mjs"], "acceptsState": false},
   {"export": "kernel/storage.mjs#kindOfEntity", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/storage.mjs#readPath", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/storage.mjs#writePath", "callers": ["rules"], "acceptsState": true},

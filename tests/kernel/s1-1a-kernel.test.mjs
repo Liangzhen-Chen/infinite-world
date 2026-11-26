@@ -1,7 +1,5 @@
 // S1-1 卡 A 的内核行为单测（写码方自补，放 tests/kernel；不作验收依据，验收由独立出题方另出）。
-// 测的是行为：kindOfEntity 认加载期实体 / 运行期新建实体 / 认不出即抛；createEntity 的三种拒收；
-// stateMemo 按顶层键切片失活；writePath 按维度声明判 ref（枚举值不误判）、未登记顶层键拒写；
-// 写入全经 writeScope（整笔撤销、作用域外拒写）；dim / modified 返回 Fact。
+// 签名已按卷二 :535 对齐（S1-1p）：路径经 engine.P 构造，writeScope(engine, state, fn)，writePath(state, path, value, tx)。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildRegistry } from '../../server-plugin/rules/load/registry.mjs';
@@ -9,8 +7,8 @@ import { kindOfEntity, readPath, writePath, createEntity } from '../../server-pl
 import { stateMemo, invalidateTop } from '../../server-plugin/kernel/memo.mjs';
 import { writeScope } from '../../server-plugin/kernel/transaction.mjs';
 import { dim, modified } from '../../server-plugin/kernel/dimensions.mjs';
+import { makePathHandles } from '../../server-plugin/kernel/handles.mjs';
 
-// 维度表文档的最小形状：kind + entity.idPrefix/singletonIds + rows（rows 键带本表前缀）。
 const DOCS = [
   {
     kind: 'item',
@@ -22,16 +20,20 @@ const DOCS = [
   { kind: 'person', entity: { idPrefix: ['npc_'], singletonIds: ['player'] }, rows: {}, dimensions: {} },
 ];
 
+export const PATH_TYPES = { 'created.*': 'struct', 'created.*.props.*': 'dimension', 'links.*': 'EventId' };
+export const KEY_KINDS = { 'created.*': [['item', 'person', 'place']], 'created.*.props.*': [['item', 'person', 'place'], 'dimKey'], 'links.*': ['event'] };
+
 function fixture() {
   const registry = buildRegistry(DOCS);
-  const engine = Object.freeze({ registry, structs: Object.freeze({}), modifierSources: Object.freeze([]), stateKeys: Object.freeze({ created: {} }) });
+  const P = makePathHandles(PATH_TYPES, KEY_KINDS, []);
+  const engine = Object.freeze({ registry, structs: Object.freeze({}), modifierSources: Object.freeze([]), stateKeys: Object.freeze({ created: {} }), P });
   const state = { created: {} };
   return { engine, state };
 }
 
 // 每次写都包进一个写入作用域。
-const create = (engine, state, id, kind, props) => writeScope(state, (tx) => createEntity(engine, state, tx, id, kind, props));
-const write = (engine, state, path, value) => writeScope(state, (tx) => writePath(engine, state, tx, path, value));
+const create = (engine, state, id, kind, props) => writeScope(engine, state, (tx) => createEntity(state, id, kind, props, tx));
+const write = (engine, state, path, value) => writeScope(engine, state, (tx) => writePath(state, path, value, tx));
 const code = (c) => (e) => /** @type {any} */ (e).code === c;
 
 test('kindOfEntity：加载期实体、运行期新建实体、认不出即 E-DIM-REF-MISSING', () => {
@@ -71,10 +73,8 @@ test('stateMemo：作废顶层键 X 只重算依赖 X 的格，依赖 Y 的格�
   invalidateTop(state, 'yy');
   assert.equal(readY(), 2);
   assert.equal(readX(), 2);
-  // inputs 空或非数组一律抛，不当成"无依赖"放行。
   assert.throws(() => stateMemo(state, engine, ['z'], () => 1, []));
   assert.throws(() => stateMemo(state, engine, ['z'], () => 1, /** @type {any} */ (null)));
-  // key 不是数组或为空一律抛。
   assert.throws(() => stateMemo(state, engine, /** @type {any} */ ('z'), () => 1, [['xx']]));
   assert.throws(() => stateMemo(state, engine, [], () => 1, [['xx']]));
 });
@@ -93,51 +93,46 @@ test('createEntity / kindOfEntity：registry 缺 hasLoaded / kindOfLoaded 即抛
   const noHas = { ...engine, registry: { kindIds: reg.kindIds, kindOfLoaded: reg.kindOfLoaded } };
   const noKind = { ...engine, registry: { kindIds: reg.kindIds, hasLoaded: reg.hasLoaded } };
   assert.throws(() => kindOfEntity(noKind, state, 'item_a'), code('E-DIM-REF-MISSING'));
-  const tx = /** @type {any} */ ({});
-  assert.throws(() => createEntity(noHas, state, tx, 'item_zz', 'item', {}));
+  assert.throws(() => writeScope(noHas, state, (tx) => createEntity(state, 'item_zz', 'item', {}, tx)));
 });
 
 test('writePath：按维度声明判 ref；枚举值与普通值不按 ref 拒；未登记顶层键拒写', () => {
   const { engine, state } = fixture();
+  const { P } = engine;
   create(engine, state, 'item_b', 'item', { mass: 2 });
-  write(engine, state, ['created', 'item_b', 'props', 'mass'], 3);
-  assert.equal(readPath(engine, state, ['created', 'item_b', 'props', 'mass']), 3);
-  // 声明为 ref 的维度：指向存在的实体可写，不存在的拒。
-  write(engine, state, ['created', 'item_b', 'props', 'origin'], 'place_a');
-  assert.equal(readPath(engine, state, ['created', 'item_b', 'props', 'origin']), 'place_a');
-  assert.throws(() => write(engine, state, ['created', 'item_b', 'props', 'origin'], 'nope_1'), code('E-DIM-REF-MISSING'));
-  assert.throws(() => write(engine, state, ['created', 'item_b', 'props', 'origin'], null), code('E-DIM-REF-MISSING'));
-  assert.throws(() => write(engine, state, ['created', 'item_b', 'props', 'origin'], ''), code('E-DIM-REF-MISSING'));
-  // 声明为 enum 的维度：代号形态的字串是枚举值，不再当 ref 去核。
-  write(engine, state, ['created', 'item_b', 'props', 'color'], 'color_red');
-  assert.equal(readPath(engine, state, ['created', 'item_b', 'props', 'color']), 'color_red');
-  // 维度未定义即抛。
-  assert.throws(() => write(engine, state, ['created', 'item_b', 'props', 'nosuchdim'], 1), code('E-DIM-UNKNOWN-READ'));
-  // 未在 stateKeys 登记的顶层键拒写。
-  assert.throws(() => write(engine, state, ['links', 'to'], 'item_b'), code('E-PATH-UNDECLARED'));
+  write(engine, state, P.created_props('item_b', 'mass'), 3);
+  assert.equal(readPath(state, P.created_props('item_b', 'mass')), 3);
+  write(engine, state, P.created_props('item_b', 'origin'), 'place_a');
+  assert.equal(readPath(state, P.created_props('item_b', 'origin')), 'place_a');
+  assert.throws(() => write(engine, state, P.created_props('item_b', 'origin'), 'nope_1'), code('E-DIM-REF-MISSING'));
+  assert.throws(() => write(engine, state, P.created_props('item_b', 'origin'), null), code('E-DIM-REF-MISSING'));
+  assert.throws(() => write(engine, state, P.created_props('item_b', 'origin'), ''), code('E-DIM-REF-MISSING'));
+  write(engine, state, P.created_props('item_b', 'color'), 'color_red');
+  assert.equal(readPath(state, P.created_props('item_b', 'color')), 'color_red');
+  assert.throws(() => write(engine, state, P.created_props('item_b', 'nosuchdim'), 1), code('E-DIM-UNKNOWN-READ'));
+  assert.throws(() => write(engine, state, P.links('to'), 'item_b'), code('E-PATH-UNDECLARED'));
 });
 
 test('writeScope：作用域内写两笔后抛错，两笔都撤回；作用域外写入拒绝', () => {
   const { engine, state } = fixture();
+  const { P } = engine;
   create(engine, state, 'item_b', 'item', { mass: 2 });
   const boom = new Error('boom');
-  assert.throws(() => writeScope(state, (tx) => {
-    createEntity(engine, state, tx, 'item_c', 'item', { mass: 5 });
-    writePath(engine, state, tx, ['created', 'item_b', 'props', 'mass'], 9);
+  assert.throws(() => writeScope(engine, state, (tx) => {
+    createEntity(state, 'item_c', 'item', { mass: 5 }, tx);
+    writePath(state, P.created_props('item_b', 'mass'), 9, tx);
     throw boom;
   }), (e) => e === boom);
-  assert.equal(readPath(engine, state, ['created', 'item_c']), undefined);
-  assert.equal(readPath(engine, state, ['created', 'item_b', 'props', 'mass']), 2);
-  // 撤回后缓存也失活：dim 读到的是撤回后的值。
+  assert.equal(readPath(state, P.created('item_c')), undefined);
+  assert.equal(readPath(state, P.created_props('item_b', 'mass')), 2);
   assert.equal(dim(engine, state, 'item', 'item_b', 'mass').value, 2);
-  // 作用域外：没有 tx、tx 属于别的 state、tx 已失效，一律抛。
-  assert.throws(() => writePath(engine, state, undefined, ['created', 'item_b', 'props', 'mass'], 4));
+  assert.throws(() => writePath(state, P.created_props('item_b', 'mass'), 4, undefined));
   /** @type {any} */
   let leaked;
-  writeScope(state, (tx) => { leaked = tx; });
-  assert.throws(() => writePath(engine, state, leaked, ['created', 'item_b', 'props', 'mass'], 4));
-  assert.throws(() => writeScope({ created: {} }, (tx) => writePath(engine, state, tx, ['created', 'item_b', 'props', 'mass'], 4)));
-  assert.equal(readPath(engine, state, ['created', 'item_b', 'props', 'mass']), 2);
+  writeScope(engine, state, (tx) => { leaked = tx; });
+  assert.throws(() => writePath(state, P.created_props('item_b', 'mass'), 4, leaked));
+  assert.throws(() => writeScope(engine, { created: {} }, (tx) => writePath(state, P.created_props('item_b', 'mass'), 4, tx)));
+  assert.equal(readPath(state, P.created_props('item_b', 'mass')), 2);
 });
 
 test('dim / modified：返回 Fact，value 与 source 取自对应一级，modified 另带 base', () => {
