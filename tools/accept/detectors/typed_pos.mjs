@@ -20,7 +20,7 @@
 import { tokenize, isP, matchClose, symbolPaths, buildEnv } from '../lib/js-scan.mjs';
 import { commentsOf, exportedFunctions, jsdocBefore, jsdocParamNames } from '../lib/js-state.mjs';
 import { scopeFiles, matchGlobs, classify } from '../read.mjs';
-import * as markers from '../../../server-plugin/kernel/handles/markers.mjs';
+import * as markers from '../../../server-plugin/kernel/handles.mjs';
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';

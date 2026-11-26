@@ -3,7 +3,7 @@
 // handles/keys.mjs → keys-format.test.mjs；validate/types.mjs、validate/rows.mjs → 各自测试；load/vocab-load.mjs → json-text.test.mjs。
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { rxTokenAt, shapeArgCount, setFieldNames } from '../../server-plugin/kernel/handles/patterns.mjs';
+import { rxTokenAt, shapeArgCount, setFieldNames } from '../../server-plugin/kernel/handles.mjs';
 
 test('RX 词法：粘性匹配数字、点分名字、运算符', () => {
   assert.deepEqual(rxTokenAt('mass > 2', 0), { groups: [undefined, 'mass', undefined], end: 4 });

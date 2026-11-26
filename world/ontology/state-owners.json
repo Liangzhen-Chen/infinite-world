@@ -1,6 +1,11 @@
 {
  "version": 1,
- "stateKeys": {},
+ "stateKeys": {
+  "created": {"writers": {
+   "*": {"create": ["kernel/storage.mjs"], "rewrite": null, "viaRelocate": false},
+   "*.props.*": {"create": ["kernel/storage.mjs"], "rewrite": "kernel/storage.mjs", "rewriteRows": "all", "viaRelocate": false}
+  }}
+ },
  "systems": {},
  "textPaths": ["displayNames.*.text", "playerNotes.*.text", "narration.*"],
  "textWriters": {},
@@ -59,10 +64,19 @@
   {"export": "kernel/det-math.mjs#sqrt", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/det-math.mjs#pow", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/memo.mjs#stateMemo", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/memo.mjs#invalidateTop", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/memo.mjs#inputsOf", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/declare.mjs#declareInputs", "callers": ["rules"], "acceptsState": false},
+  {"export": "kernel/storage.mjs#kindOfEntity", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/storage.mjs#readPath", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/storage.mjs#writePath", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/storage.mjs#createEntity", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/transaction.mjs#writeScope", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/transaction.mjs#requireScope", "callerFiles": ["storage.mjs"], "acceptsState": true},
+  {"export": "kernel/transaction.mjs#txSet", "callerFiles": ["storage.mjs"], "acceptsState": false},
+  {"export": "kernel/transaction.mjs#txDelete", "callers": ["rules"], "acceptsState": false},
+  {"export": "kernel/transaction.mjs#txTouch", "callerFiles": ["storage.mjs"], "acceptsState": false},
+  {"export": "kernel/named-structs.mjs#installNamedStructs", "callerFiles": ["index.mjs"], "acceptsState": false},
   {"export": "kernel/dated.mjs#writeDated", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/dated.mjs#inputVersionAt", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/ledger.mjs#openAccount", "callers": ["rules"], "acceptsState": true},
@@ -208,8 +222,9 @@
   {"export": "kernel/transport/reply-channel.mjs#onReply", "callerFiles": ["output-gate/reply-composer.mjs"], "acceptsState": false},
   {"export": "kernel/rx.mjs#compileRX", "callerFiles": ["output-gate/display-load.mjs"], "acceptsState": false},
   {"export": "kernel/rx.mjs#evaluateRX", "callerFiles": ["output-gate/select.mjs"], "acceptsState": false},
-  {"export": "kernel/report.mjs#report", "callers": ["*"], "acceptsState": false},
-  {"export": "kernel/errors.mjs#reportError", "callers": ["*"], "acceptsState": false}
+  {"export": "kernel/errors.mjs#report", "callers": ["*"], "acceptsState": false},
+  {"export": "kernel/errors.mjs#reportError", "callers": ["*"], "acceptsState": false},
+  {"export": "kernel/errors.mjs#KernelError", "callerFiles": ["rules/load/registry.mjs"], "acceptsState": false}
  ]},
  "groupApi": {"exports": [
   {"export": "textcore/brand.mjs#brand", "callers": ["textcore", "gate", "aiGate"]},
@@ -248,9 +263,9 @@
   "rows": {
    "kernel": {"code": "E-KERNEL-UPWARD-IMPORT", "groups": ["kernel"],
     "builtins": {
-     "node:fs": ["server-plugin/kernel/load/*", "server-plugin/kernel/save.mjs", "server-plugin/kernel/report.mjs"],
-     "node:path": ["server-plugin/kernel/load/*", "server-plugin/kernel/save.mjs", "server-plugin/kernel/report.mjs"],
-     "node:url": ["server-plugin/kernel/load/*", "server-plugin/kernel/save.mjs", "server-plugin/kernel/report.mjs"]
+     "node:fs": ["server-plugin/kernel/load/*", "server-plugin/kernel/save.mjs", "server-plugin/kernel/errors.mjs"],
+     "node:path": ["server-plugin/kernel/load/*", "server-plugin/kernel/save.mjs", "server-plugin/kernel/errors.mjs"],
+     "node:url": ["server-plugin/kernel/load/*", "server-plugin/kernel/save.mjs", "server-plugin/kernel/errors.mjs"]
     },
     "packages": {"ajv": ["server-plugin/kernel/validate/narrow.mjs"]}},
    "rules": {"groups": ["kernel", "rules"]},
@@ -267,7 +282,8 @@
     "builtins": {"node:fs": ["server-plugin/output-gate/display-load.mjs"]}},
    "aiGate": {"groups": ["kernel", "rules", "textcore", "gate", "aiGate"],
     "builtins": {"node:fs": ["server-plugin/ai-gate/recorder.mjs"]}},
-   "assembly": {"groups": ["kernel", "rules", "textcore", "inputEdge", "outputGate", "aiGate"]},
+   "assembly": {"groups": ["kernel", "rules", "textcore", "inputEdge", "outputGate", "aiGate"],
+    "builtins": {"node:fs": ["server-plugin/index.mjs"]}},
    "host": {"groups": ["host", "display", "clientTextcore"],
     "external": {"../../../extensions.js": ["extension/host/bootstrap.mjs"]}},
    "display": {"groups": ["display", "clientTextcore"]},

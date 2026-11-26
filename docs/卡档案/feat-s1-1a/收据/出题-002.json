@@ -1,0 +1,13 @@
+{
+  "role": "出题",
+  "model": "claude-haiku-5-5",
+  "family": "claude-haiku",
+  "endpoint": "anthropic",
+  "startedAt": "2026-11-26T00:22:22.926Z",
+  "endedAt": "2026-11-26T00:24:35.864Z",
+  "exitCode": 0,
+  "totalCostUsd": 0.029645015000000004,
+  "promptSha256": "299c6443bfdbb073fddb62c9ed5300eccb0b76eda724b31c85c4a97c3e14a713",
+  "headBefore": "e2cba92bc2010d640f9bbecbd350d0c1e747ed44",
+  "headAfter": "e2cba92bc2010d640f9bbecbd350d0c1e747ed44"
+}

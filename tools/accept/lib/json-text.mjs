@@ -3,7 +3,7 @@
 // 收编自 server-plugin/kernel/load/json-text.mjs（L-15）：门禁读规则表登记要用同一套严格 JSON 解析。
 
 import { escapeJsonPointer, jsonScalarAt } from './vocab-load.mjs';
-import { GRAMMAR_TOKENS as G } from '../../../server-plugin/kernel/handles/markers.mjs';
+import { GRAMMAR_TOKENS as G } from '../../../server-plugin/kernel/handles.mjs';
 
 /** @type {Set<string>} */
 const WS = new Set([G.jsonSpace, G.jsonTab, G.jsonLf, G.jsonCr]);

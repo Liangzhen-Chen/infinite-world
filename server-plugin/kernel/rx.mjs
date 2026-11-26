@@ -5,8 +5,7 @@
 // 与或非另收卷文数据行的单词写法 and、or、not（卷四 §4.7.5 diet `eats`）；`集 has 项` 是 member(项, 集) 的中缀写法（同处）。
 
 import { fixedUnits, fixedAdd, fixedSub, fixedMultiply, fixedDivide, fixedToNumber, FixedError } from './det-math.mjs';
-import { rxTokenAt, shapeArgCount, setFieldNames } from './handles/patterns.mjs';
-import { T, GRAMMAR_TOKENS } from './handles/markers.mjs';
+import { rxTokenAt, shapeArgCount, setFieldNames, T, GRAMMAR_TOKENS } from './handles.mjs';
 
 // 本文件内部的记号表（卷二没写文本语法，见文件头；只在 rx.mjs 用的单一定义，成员引用取代裸字面量比较）。
 // TOK：词法记号种类；PROFILE：编译档代号（卷二 §2.9 第 4 条"显示档与对 outputGate 开放"）；
@@ -36,12 +35,13 @@ const ARITH = { '+': T.rx_op.add, '-': T.rx_op.sub, '*': T.rx_op.mul, '/': T.rx_
 const CMP = { '==': T.code_enum.rx_cmp.eq, '!=': T.code_enum.rx_cmp.ne, '<': T.code_enum.rx_cmp.lt, '<=': T.code_enum.rx_cmp.le, '>': T.code_enum.rx_cmp.gt, '>=': T.code_enum.rx_cmp.ge };
 const CLOCK_FIELDS = new Set([T.code_enum.rx_clock.day, T.code_enum.rx_clock.season]);
 // 序比较的操作数判定函数，键是 rx_cmp 句柄（不以字串字面量作判断表，S13 ④）；eq/ne 在上一层先判。
-const ORDERING = new Map([
-  [T.code_enum.rx_cmp.lt, (x, y) => x < y],
-  [T.code_enum.rx_cmp.le, (x, y) => x <= y],
-  [T.code_enum.rx_cmp.gt, (x, y) => x > y],
-  [T.code_enum.rx_cmp.ge, (x, y) => x >= y],
-]);
+// 冻结的普通对象（不是模块级 Map 实例）：L-09 ③ 只许 memo.mjs 有顶层 WeakMap/Map，且本表本来就只读。
+const ORDERING = Object.freeze({
+  [T.code_enum.rx_cmp.lt]: (x, y) => x < y,
+  [T.code_enum.rx_cmp.le]: (x, y) => x <= y,
+  [T.code_enum.rx_cmp.gt]: (x, y) => x > y,
+  [T.code_enum.rx_cmp.ge]: (x, y) => x >= y,
+});
 const WORD_OPS = Object.freeze({ and: '&&', or: '||', not: '!', has: 'has' });
 
 function tokenize(text) {
@@ -405,7 +405,7 @@ export function evaluateRX(tree, bindings, nsReads) {
           return { t: 'boolean', v: (a.v === b.v) === (n.cmpOp === T.code_enum.rx_cmp.eq) };
         }
         if (a.t !== T.rx_kind.number || b.t !== T.rx_kind.number) fail('ordering needs numbers');
-        const ordering = ORDERING.get(n.cmpOp);
+        const ordering = ORDERING[n.cmpOp];
         return { t: 'boolean', v: ordering ? ordering(a.v, b.v) : undefined };
       }
       case T.rx_op.and: return { t: 'boolean', v: n.items.every((x) => bool(x)) };

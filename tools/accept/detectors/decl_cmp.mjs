@@ -31,8 +31,7 @@ import { projectOf, fileOf, walkAll, fold, where } from '../lib/ast.mjs';
 import { readRules, RULES_LAYOUT } from '../lib/rules.mjs';
 import { LAYOUT as WORLD_LAYOUT } from '../lib/world-layout.mjs';
 import { NAME_ROOT } from '../../../server-plugin/kernel/rx.mjs';
-import { VOCAB_RX_FIELDS } from '../../../server-plugin/kernel/handles/markers.mjs';
-import { rxTokenAt } from '../../../server-plugin/kernel/handles/patterns.mjs';
+import { VOCAB_RX_FIELDS, rxTokenAt } from '../../../server-plugin/kernel/handles.mjs';
 
 const ENUM_FNS = new Set(['keys', 'values', 'entries', 'assign', 'fromEntries', 'getOwnPropertyNames']);
 

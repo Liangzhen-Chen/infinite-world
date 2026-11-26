@@ -1,7 +1,18 @@
-// 协议标记句柄叶子（卷二 §2.8 kernel 闭集叶子文件；§7 S13 (a) 上下文白名单，李白 11-18 13:05 B2-W4 裁定第 1 条）。
-// 本文件是 handles 叶子：不含任何 import 语句（tests/kernel/markers.test.mjs 读文本核对）。只放各族的定义源与由它们派生的冻结标记句柄 T，
-// 定义源只此一份：validate/types.mjs 与 rx.mjs 都从这里取，rx 与 validate 之间因此没有 import 环（同 handles/patterns.mjs 做法）。
-// 族的取值与出处同在定义源处；本文件不判任何具体值，只按定义源派生成员。
+// kernel 句柄叶子（S1-1 卡 A 合并：原 handles/markers.mjs、handles/patterns.mjs、handles/vocab-handle.mjs 三者并成此文件）。
+// 本文件是 handles 叶子：不含任何 import 语句（tests/kernel/markers.test.mjs 读文本核对）。
+// 内含：① 协议标记的定义源与由它们派生的冻结标记句柄 T（卷二 §2.8、§7 S13 (a)，李白 11-18 13:05 B2-W4 裁定第 1 条）；
+// ② 从 rx.mjs 搬来的 RX 词法与返回形状正则（卷二 §2.8 表 kernel 行，封卷后勘误 1118k17）；
+// ③ 词表代号与错误码构造（卷二 §2.9 第 2 条强转豁免文件表，原 vocab-handle.mjs）。
+// 代号文法 CODE_RE 与错误码文法 isErrorCode 的定义源也在这片叶子上（原在 validate/types.mjs，合并叶子后移入以保持 0 import）；
+// validate/types.mjs 照旧转出这两个名字。族的取值与出处同在定义源处；本文件不判任何具体值，只按定义源派生成员。
+
+// 代号文法（卷二 §1.9 :291）：实体 id、类别 id、枚举值；定义源只此一份。总长上限（首字符加 47 位，共 48）只写在这条正则里。
+export const CODE_RE = /^[a-z][a-z0-9_]{1,47}$/;
+
+// 错误码文法（卷二 §4.2）：E-<区>-<名> / W-…。
+const ERROR_CODE = /^[EW]-[A-Z0-9]+(-[A-Z0-9]+)+$/;
+/** @param {unknown} s @returns {boolean} */
+export const isErrorCode = (s) => typeof s === 'string' && ERROR_CODE.test(s);
 
 // 类型清单（卷二 §1.5 封闭 14 种，:183）。
 export const TYPES = Object.freeze(['number', 'integer', 'boolean', 'string', 'enum', 'ref', 'union', 'set', 'map', 'list', 'struct', 'curve', 'distribution', 'rx']);
@@ -166,6 +177,14 @@ export const LOT_LEG_KEYS = Object.freeze(['attrs', 'instance', 'splitFrom']);
 // 定义源只此一份，kernel/storage.mjs（追加口的形状核对）、kernel/dated.mjs（读取）都从这里取字段名。
 export const DATED_RECORD_FIELDS = Object.freeze(['fromDay', 'value', 'cause']);
 
+// 状态实体偏离行的协议段名（卷二 §2.7 :589 `created` 行、:826 的 `created.*.props.*` 通配写者；§2.6 :493–497 按路径读写）：
+// 顶层键 created 与记录字段 props。定义源只此一份，kernel/storage.mjs（路径读写判 created.<id>.props.<维度>）与
+// kernel/dimensions.mjs（dim 的依赖声明）都从这里取段名，不各写一份字串。
+export const STATE_RECORD_SEGS = Object.freeze({ created: 'created', props: 'props' });
+
+// dim / modified 返回 Fact 的 source 取值（卷二 :484 `Fact.source`）：值取自哪一级。定义源只此一份，kernel/dimensions.mjs 从这里取。
+export const FACT_SOURCES = Object.freeze(['created_row', 'entity_row', 'category_row', 'table_default']);
+
 // 语言自身的协议键（不是协议标记）：then 给 thenable 探测、toJSON 给 JSON 序列化，其余是对象自带成员名。
 const MARKER_PROTOCOL_KEYS = Object.freeze({ 'then': true, 'toJSON': true, 'constructor': true, 'prototype': true, 'toString': true, 'valueOf': true, 'hasOwnProperty': true, 'is': true, 'family': true });
 
@@ -217,6 +236,8 @@ export const T = Object.freeze({
   ns_row_type: markersOf('ns_row_type', NS_ROW_TYPES),
   lot_leg_key: markersOf('lot_leg_key', LOT_LEG_KEYS),
   dated_field: markersOf('dated_field', DATED_RECORD_FIELDS),
+  fact_source: markersOf('fact_source', FACT_SOURCES),
+  state_record: markersOf('state_record', Object.values(STATE_RECORD_SEGS)),
   decl_field: markersOf('decl_field', DECL_FIELDS),
   rule_structure: markersOf('rule_structure', RULE_STRUCTURES),
   vocab_family: markersOf('vocab_family', VOCAB_FAMILIES),
@@ -225,3 +246,83 @@ export const T = Object.freeze({
   id_kind: markersOf('id_kind', ID_KINDS),
   effect_vocab: markersOf('effect_vocab', EFFECT_VOCAB_FAMILIES),
 });
+// RX 表达式词法与返回形状的正则叶子（卷二 §2.8 表 kernel 行 :852，封卷后勘误 1118k17；S13 (b)）。
+// 本文件是 handles 叶子：只放从 rx.mjs 搬来的正则与按正则取段的具名函数，不 import 任何其他 kernel 文件（避免 import 环）。
+// 其余格式正则按用途就近放在 S13 (b) 允许的已有文件里：代号/键/路径格式在 handles/keys.mjs，
+// 类型与错误码文法在 validate/types.mjs，required 策略分隔在 validate/rows.mjs，JSON 文本与标量在 load/vocab-load.mjs。
+
+// ---------- RX 表达式与返回形状（rx） ----------
+
+// RX 词法：数字、名字（可带点分下标）、运算符；粘性匹配从 at 起。`[` `]` 是 DimKey 下标段（卷二 :1613；勘误 1118k31）。
+const RX_TOKEN = /\s*(?:(\d+(?:\.\d+)?)|([a-z][A-Za-z0-9_]*(?:\.[A-Za-z0-9_]+)*)|(==|!=|<=|>=|&&|\|\||[-+*/%<>()!,[\]]))/y;
+/** @param {string} text @param {number} at @returns {{groups: (string | undefined)[], end: number} | null} */
+export function rxTokenAt(text, at) {
+  RX_TOKEN.lastIndex = at;
+  const m = RX_TOKEN.exec(text);
+  if (!m) return null;
+  const [, numTok, nameTok, opTok] = m;
+  return { groups: [numTok, nameTok, opTok], end: RX_TOKEN.lastIndex };
+}
+
+// 返回形状里每个 `<…>` 占位是一段 arg。
+const SHAPE_ARG = /<[^<>]+>/g;
+/** @param {string} shape @returns {number} */
+export const shapeArgCount = (shape) => (shape.match(SHAPE_ARG) || []).length;
+
+// 返回形状里写明"（set，只作 member 的 set）"的字段名：`<字段>（set，只作 member 的 set）`。
+const SET_FIELD = /([A-Za-z_][\w]*)（set，只作 member 的 set）/g;
+/** @param {string} shape @returns {string[]} */
+export const setFieldNames = (shape) => [...String(shape).matchAll(SET_FIELD)].map((m) => m[1]);
+// 词表代号与错误码的构造函数（卷二 §2.9 第 2 条强转豁免文件表 `kernel/handles/vocab-handle.mjs` 行：
+// string → Handle<F>、ErrorCode，强转前"按代号正则校验并在词表或错误码登记表内"）。
+// 只按登记数据判，不认任何具体族、代号或错误码。
+
+/** @typedef {import('./types.d.ts').ErrorCode} ErrorCode */
+
+/** 构造函数拒收时抛出；`code` 是卷二 §4.3 登记的码。 */
+export class HandleError extends Error {
+  /** @param {string} code @param {string} message */
+  constructor(code, message) {
+    super(`${code} ${message}`);
+    this.code = code;
+  }
+}
+
+/**
+ * string → Handle<F>：代号合文法、在词表索引内、属于族 F。
+ * 不合文法 E-DIM-ID-FORMAT；不在词表 E-DIM-REF-MISSING（§1.9 :278、§4.1 L2）；在词表但属别族 E-VIEW-FAMILY-MISMATCH（§7 S13 (a)）。
+ * @template {string} F
+ * @param {Map<string, {family: string}>} index loadVocab 的 index（代号 → {family, …}）
+ * @param {F} family
+ * @param {string} id
+ * @returns {import('./types.d.ts').Handle<F>}
+ */
+export function handleOf(index, family, id) {
+  if (typeof id !== 'string' || !CODE_RE.test(id)) throw new HandleError('E-DIM-ID-FORMAT', `vocab code ${JSON.stringify(id)}: want ^[a-z][a-z0-9_]{1,47}$`);
+  const rec = index.get(id);
+  if (!rec) throw new HandleError('E-DIM-REF-MISSING', `vocab code ${id}: not registered in _vocab.json`);
+  if (rec.family !== family) throw new HandleError('E-VIEW-FAMILY-MISMATCH', `vocab code ${id}: family ${rec.family}, want ${family}`);
+  return /** @type {import('./types.d.ts').Handle<F>} */ (id);
+}
+
+/**
+ * string → ErrorCode：码合 §4.2 文法、在登记表内。不合文法 E-DIM-ID-FORMAT；未登记 E-DIM-REF-MISSING。
+ * 登记表由调用方传入（本叶子 0 import，不在此读 kernel/errors.mjs 的 ERROR_CODES；调用方即 errors.mjs）。
+ * @param {string} code
+ * @param {ReadonlySet<string>} registered 错误码登记表
+ * @returns {ErrorCode}
+ */
+export function errorCodeOf(code, registered) {
+  if (!isErrorCode(code)) throw new HandleError('E-DIM-ID-FORMAT', `error code ${JSON.stringify(code)}: want E-<area>-<name> / W-...`);
+  if (!registered.has(code)) throw new HandleError('E-DIM-REF-MISSING', `error code ${code}: not in error code registry`);
+  return /** @type {ErrorCode} */ (code);
+}
+
+/**
+ * 错误码 → `E` 句柄成员名（§4.2"句柄的标识符映射"）：每个连字符换成下划线。
+ * @param {ErrorCode} code
+ * @returns {string}
+ */
+export function errorMemberName(code) {
+  return code.split('-').join('_');
+}

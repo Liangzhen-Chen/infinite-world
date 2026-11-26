@@ -1,4 +1,5 @@
-// 字节与文字的编解码（卷二 §2.9 第 1 条"专用项" :1047：kernel 自带 base64 码表逐字节查表，不用 Buffer、atob、TextDecoder；卷二 :983 导入的存档文件是 base64 的字节）。
+// 字节与文字的编解码 + 深拷贝（S1-1 卡 A 合并：原 clone.mjs 并入本文件）。
+// 字节与文字（卷二 §2.9 第 1 条"专用项" :1047：kernel 自带 base64 码表逐字节查表，不用 Buffer、atob、TextDecoder；卷二 :983 导入的存档文件是 base64 的字节）。
 // 三个函数：base64ToBytes（严格：非法字符、填充不合、长度不合、末位带非零残位都拒）、utf8ToText（严格：过长编码、代理区、越界、截断、孤立续字节都拒）、
 // utf8Length（按 UTF-16 码元数出 UTF-8 字节数，导入长度上限的计量，卷二 :946 单位是 byte）。拒收一律返回 null，由调用方定码。
 // 数值常数只从规则表 kernelConstants 来（与 det-math 同法，卷二 S10；加载入口 installByteConstants 收下，本文件不写 0、1、-1 以外的数值字面量）。
@@ -112,4 +113,15 @@ export function utf8Length(s) {
     total += 1 + Number(u >= oneMax) + Number(u >= twoMax && !surrogate);
   }
   return total;
+}
+
+// kernelApi `clone`（原 clone.mjs 并入；卷二 §2.7 kernelApi :599）：全仓库唯一可用 structuredClone 的文件（§2.9 第 1 条"专用项"、
+// 全局对象白名单 kernel 行；B2-14）。别的文件要深拷贝一律调本函数。
+/**
+ * @template T
+ * @param {T} value
+ * @returns {T}
+ */
+export function clone(value) {
+  return structuredClone(value);
 }

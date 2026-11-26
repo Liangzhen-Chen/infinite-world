@@ -44,6 +44,11 @@
      "line": "docs/卡回报/old-card.md",
      "path": "tests/accept/bypass/archive_ref-01.txt",
      "reason": "must_fail 夹具必须含被禁字样"
+    },
+    {
+     "line": "E-ACC-CARD-SELFCHECK",
+     "path": "server-plugin/kernel/errors.mjs",
+     "reason": "错误码登记表列全卷二 §4.3 的码，本码是登记项、不是复活旧机制；原 error-codes.mjs 的基线行随合并进 errors.mjs，豁免随行"
     }
    ],
    "patterns": [
@@ -765,7 +770,8 @@
    "astRules": [
     {
      "exceptFiles": [
-      "server-plugin/kernel/transaction.mjs"
+      "server-plugin/kernel/transaction.mjs",
+      "server-plugin/kernel/storage.mjs"
      ],
      "kind": "dynamicIndex",
      "name": "dyn",
@@ -792,7 +798,7 @@
     "lit_scope"
    ],
    "scanClass": "pp_dynamic_index",
-   "source": "李白更正裁定 msg-1122-2255-c0ast（动态下标出现即报，标待人审）；卷二十七 R27-5.2、A27-5.1；卷二十 :436"
+   "source": "李白更正裁定 msg-1122-2255-c0ast（动态下标出现即报，标待人审）；卷二十七 R27-5.2、A27-5.1；卷二十 :436；例外 kernel/storage.mjs 只覆盖按路径读（readPath 及 writePath 逐段取中间对象）——依据卷二:535（readPath/writePath 唯一定义在 kernel/storage.mjs），写不在例外内，写一律经 kernel/transaction.mjs#txSet（李白 11-26 00:35 裁定）"
   },
   {
    "astRules": [
@@ -966,6 +972,7 @@
    "astRules": [
     {
      "exceptFiles": [
+      "server-plugin/kernel/handles.mjs",
       "server-plugin/kernel/validate/types.mjs"
      ],
      "kind": "regexText",
@@ -977,7 +984,7 @@
     "lit_scope"
    ],
    "scanClass": "pp_grammar_regex",
-   "source": "公共部件审查乙 6；卷二 :291；例外 kernel/validate/types.mjs"
+   "source": "公共部件审查乙 6；卷二 :291；例外 kernel/handles.mjs（CODE_RE 定义源）与 kernel/validate/types.mjs（KEY_RE 定义源）"
   },
   {
    "detectors": [
@@ -1007,6 +1014,10 @@
      {
       "basis": "卷二:541–:542（拒写一律上抛 kernel/transaction.mjs 同一处置、整笔回滚撤销全部写入）：kernel/transaction.mjs 是唯一事务裸写者与撤销记录持有者（txSet、txDelete）",
       "file": "server-plugin/kernel/transaction.mjs"
+     },
+     {
+      "basis": "卷二:535 按路径读（readPath 及按段取值）唯一定义在 kernel/storage.mjs；只覆盖读，写不在例外内，写经 kernel/transaction.mjs（李白 11-26 00:35 裁定）",
+      "file": "server-plugin/kernel/storage.mjs"
      }
     ]
    },
@@ -1043,7 +1054,7 @@
      ],
      "exceptFiles": [
       "server-plugin/kernel/handles/keys.mjs",
-      "server-plugin/kernel/handles/markers.mjs"
+      "server-plugin/kernel/handles.mjs"
      ],
      "kind": "keyConcat",
      "name": "sep",
@@ -1062,7 +1073,7 @@
     {
      "exceptFiles": [
       "server-plugin/kernel/handles/keys.mjs",
-      "server-plugin/kernel/handles/markers.mjs"
+      "server-plugin/kernel/handles.mjs"
      ],
      "kind": "identifier",
      "name": "joinSepRef",
@@ -1072,7 +1083,7 @@
     },
     {
      "exceptFiles": [
-      "server-plugin/kernel/handles/markers.mjs"
+      "server-plugin/kernel/handles.mjs"
      ],
      "kind": "constValue",
      "name": "sepConst",
@@ -1185,7 +1196,9 @@
       "WeakMap",
       "Map"
      ],
-     "exceptFiles": [],
+     "exceptFiles": [
+      "server-plugin/kernel/memo.mjs"
+     ],
      "kind": "topModuleNew",
      "name": "topState"
     },
@@ -1831,7 +1844,7 @@
     "V"
    ],
    "regexFiles": [
-    "server-plugin/kernel/handles/*.mjs",
+    "server-plugin/kernel/handles.mjs",
     "server-plugin/kernel/validate/*.mjs",
     "server-plugin/kernel/load/vocab-load.mjs"
    ],

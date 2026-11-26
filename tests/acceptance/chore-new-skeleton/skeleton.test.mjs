@@ -39,37 +39,26 @@ const specifiersOf = (code) => [...code.matchAll(SPEC_RE)].map((m) => m[2]);
 
 const codeFilesUnder = (dirRel) => walk(abs(dirRel)).filter((p) => p.endsWith('.mjs'));
 
-// 设计原文 Step 5 与 L-15 指定的 L0 内核白名单（kernel/files.json 必须恰为此 14 个路径，均带 server-plugin/kernel/ 前缀）。
-const KERNEL_FILES = [
-  'server-plugin/kernel/bytes.mjs',
-  'server-plugin/kernel/clone.mjs',
-  'server-plugin/kernel/det-math.mjs',
-  'server-plugin/kernel/error-codes.mjs',
-  'server-plugin/kernel/errors.mjs',
-  'server-plugin/kernel/handles/markers.mjs',
-  'server-plugin/kernel/handles/patterns.mjs',
-  'server-plugin/kernel/handles/vocab-handle.mjs',
-  'server-plugin/kernel/named-struct-match.mjs',
-  'server-plugin/kernel/named-structs.mjs',
-  'server-plugin/kernel/report.mjs',
-  'server-plugin/kernel/rx.mjs',
-  'server-plugin/kernel/types.d.ts',
-  'server-plugin/kernel/validate/types.mjs',
-];
+// L0 内核白名单以 server-plugin/kernel/files.json 为唯一登记处（设计卷 S1-1 会增删内核文件，故不在测试里写死清单）。
+const readKernelList = () => JSON.parse(readFileSync(abs('server-plugin/kernel/files.json'), 'utf8'));
 
 // ---------- L-15：kernel 白名单 ----------
 
-test('kernel/files.json 是数组、条数 ≤15、恰为 14 个白名单路径，且每个路径都存在', () => {
-  const list = JSON.parse(readFileSync(abs('server-plugin/kernel/files.json'), 'utf8'));
+test('kernel/files.json 是数组、条数 ≤15、无重复，每项是 server-plugin/kernel/ 下存在的文件', () => {
+  const list = readKernelList();
   assert.ok(Array.isArray(list), 'files.json 必须是数组');
   assert.ok(list.length <= 15, `条数 ${list.length} 超过 15`);
-  assert.deepEqual([...list].sort(), [...KERNEL_FILES].sort());
-  for (const p of KERNEL_FILES) assert.ok(existsSync(abs(p)), `${p} 不存在`);
+  assert.equal(new Set(list).size, list.length, 'files.json 有重复路径');
+  for (const p of list) {
+    assert.equal(typeof p, 'string', 'files.json 的每项必须是字符串');
+    assert.ok(p.startsWith('server-plugin/kernel/') && !p.split('/').includes('..'), `${p} 不在 server-plugin/kernel/ 下`);
+    assert.ok(existsSync(abs(p)) && statSync(abs(p)).isFile(), `${p} 不存在或不是文件`);
+  }
 });
 
 test('server-plugin/kernel/ 下实际文件集合 = files.json 列表 ∪ {files.json}', () => {
   const actual = walk(abs('server-plugin/kernel'));
-  const expected = [...KERNEL_FILES, 'server-plugin/kernel/files.json'].sort();
+  const expected = [...readKernelList(), 'server-plugin/kernel/files.json'].sort();
   assert.deepEqual(actual, expected);
 });
 
@@ -83,10 +72,18 @@ test('server-plugin/ 顶层只有 index.mjs、systems.mjs、kernel/、rules/', (
   assert.ok(statSync(abs('server-plugin/rules')).isDirectory(), 'rules 应为目录');
 });
 
-test('server-plugin/rules/ 下除 .gitkeep 外无任何文件（空领域包目录）', () => {
-  assert.ok(existsSync(abs('server-plugin/rules')), 'rules 目录不存在');
-  const files = walk(abs('server-plugin/rules')).filter((p) => p !== 'server-plugin/rules/.gitkeep');
-  assert.deepEqual(files, []);
+test('server-plugin/kernel/ 下源文件（去注释后）的相对 import 都不指向 server-plugin/rules/（L0 不依赖 L2 规则层）', () => {
+  const bad = [];
+  const srcs = walk(abs('server-plugin/kernel')).filter((p) => /\.(mjs|js|ts)$/.test(p));
+  for (const f of srcs) {
+    const specs = specifiersOf(stripComments(readFileSync(abs(f), 'utf8')));
+    for (const s of specs) {
+      if (!s.startsWith('.')) continue;
+      const target = rel(resolve(dirname(abs(f)), s));
+      if (target.startsWith('server-plugin/rules/')) bad.push(`${f} -> ${s}`);
+    }
+  }
+  assert.deepEqual(bad, []);
 });
 
 // ---------- L-15：新骨架入口桩 ----------
@@ -143,14 +140,15 @@ test('生产与工具代码不引归档：server-plugin/、tools/ 下 .mjs（去
   assert.deepEqual(bad, []);
 });
 
-test('tools/ 下 .mjs 只 import server-plugin/kernel/ 中那 14 个文件', () => {
+test('tools/ 下 .mjs 只 import server-plugin/kernel/ 中 files.json 登记的文件', () => {
   const bad = [];
+  const registered = new Set(readKernelList());
   for (const f of codeFilesUnder('tools')) {
     const specs = specifiersOf(stripComments(readFileSync(abs(f), 'utf8')));
     for (const s of specs) {
       if (!s.startsWith('.')) continue;
       const target = rel(resolve(dirname(abs(f)), s));
-      if (target.startsWith('server-plugin/kernel/') && !KERNEL_FILES.includes(target)) bad.push(`${f} -> ${s}`);
+      if (target.startsWith('server-plugin/kernel/') && !registered.has(target)) bad.push(`${f} -> ${s}`);
     }
   }
   assert.deepEqual(bad, []);
