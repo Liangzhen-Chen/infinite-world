@@ -1,0 +1,37 @@
+{
+  "card": "feat-s2-0b",
+  "phase": "dispatched",
+  "updatedAt": "2026-11-26T17:13:20.172Z",
+  "branches": {
+    "code": "feat/s2-0b",
+    "test": "test/s2-0b"
+  },
+  "pr": null,
+  "parties": {
+    "code": {
+      "family": "<模型族>",
+      "model": "<模型 id>",
+      "receipt": null,
+      "costUsd": null
+    },
+    "test": {
+      "family": "<模型族>",
+      "model": "<模型 id>",
+      "receipt": null,
+      "costUsd": null
+    },
+    "review": {
+      "family": "<模型族>",
+      "model": "<模型 id>",
+      "receipt": null,
+      "costUsd": null
+    }
+  },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
+  "failCount": 0,
+  "blocker": null,
+  "nextAction": "写码 Sonnet、出题 Haiku Orca 会话派出（在 feat/s2-0a 之上，与 S2-0a 一个 PR）；回报后主会话读 diff，再派 Opus 审卡"
+}

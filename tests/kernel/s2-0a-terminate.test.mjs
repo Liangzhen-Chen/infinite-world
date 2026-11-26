@@ -12,12 +12,12 @@ import { testTempRoot } from '../accept/temp-root.mjs';
 import { mountKernel } from '../../server-plugin/rules/load/mount.mjs';
 import { createDigestCap } from '../../server-plugin/textcore/digest.mjs';
 import { runTransaction } from '../../server-plugin/kernel/transaction.mjs';
-import { canonical, createEntity, setEntityProp, writePath, readPath } from '../../server-plugin/kernel/storage.mjs';
+import { canonical, createEntity, setEntityProp, writePath, readPath, deleteMatch } from '../../server-plugin/kernel/storage.mjs';
 import { classRowsOf } from '../../server-plugin/kernel/dimensions.mjs';
 import { clockMinute } from '../../server-plugin/kernel/scheduler.mjs';
 import { terminate, terminationResidue, checkTerminationTables } from '../../server-plugin/rules/lifecycle/terminate.mjs';
-import { checkRecordCoverage } from '../../server-plugin/rules/lifecycle/records.mjs';
-import { addStatus, statusView } from '../../server-plugin/rules/status/status.mjs';
+import { checkRecordCoverage, deleteRecords } from '../../server-plugin/rules/lifecycle/records.mjs';
+import { addStatus, statusView, clearStatusesOf } from '../../server-plugin/rules/status/status.mjs';
 import { terminated, dead } from '../../server-plugin/rules/body/action-capacity.mjs';
 
 const ONT = new URL('../../world/ontology/', import.meta.url);
@@ -153,9 +153,13 @@ test('覆盖核对：现数据通过；含可终止实体段却没登记去留�
 });
 
 test('不可终止种类：物品实体、类别行没写 termination 的人物，终止整笔拒收（E-TERM-RESIDUE），state 不变', () => {
-  const w = mount(rawWorld());
+  // S2-0b 起现数据物种行挂了 class_person_*：测试副本去掉它们，造「没写 termination 的人物」（只改前提，不改期望）。
+  const raw = rawWorld();
+  const personClasses = Object.keys(docOf(raw, 'person').classes);
+  for (const row of Object.values(docOf(raw, 'species').rows)) row.classes = row.classes.filter((c) => !personClasses.includes(c));
+  const w = mount(raw);
   const before = canonical(w.state);
-  const species = Object.keys(docOf(rawWorld(), 'species').rows).sort()[0];
+  const species = Object.keys(docOf(raw, 'species').rows).sort()[0];
   const r = tx(w, (t) => {
     createEntity(w.state, 'item_probe_1', 'item', {}, t);
     terminate(w.state, 'item_probe_1', CAUSE, null, t);
@@ -179,6 +183,9 @@ test('classesFrom：人物的类别行由其物种行的 classes 派生（测试
   const r = tx(w, (t) => {
     createEntity(w.state, 'creature_probe_1', 'person', {}, t);
     setEntityProp(w.state, 'creature_probe_1', 'species', species, t);
+    // S2-0b 起终止时清理函数 settleBody 要算尸体（卷四 L-2 个体质量）：探针补两个 always 维度（只改前提，不改期望）。
+    setEntityProp(w.state, 'creature_probe_1', 'adultMassKg', 1, t);
+    setEntityProp(w.state, 'creature_probe_1', 'birthMinute', clockMinute(w.engine, w.state), t);
     assert.deepEqual(classRowsOf(w.engine, w.state, 'person', 'creature_probe_1').map(([c]) => c), [beast]);
     return terminate(w.state, 'creature_probe_1', CAUSE, null, t);
   });
@@ -213,4 +220,35 @@ test('cause 不是 verb 族条目即拒；source 只收句柄串或 null', () =>
   assert.equal(tx(w, (t) => terminate(w.state, id, 'not_a_verb', null, t)).code, 'E-DIM-REF-MISSING');
   assert.equal(tx(w, (t) => terminate(w.state, id, CAUSE, '', t)).code, 'E-DIM-STRUCT-FIELD');
   assert.equal(terminated(w.engine, w.state, id).ok, false);
+});
+
+test('终止后删除同样拒写：deleteMatch、deleteRecords、clearStatusesOf 对已终止实体名下路径一律 E-TERM-RESIDUE，state 不变', () => {
+  const w = mount(rawWorld());
+  const id = createOrg(w);
+  assert.equal(tx(w, (t) => { setEntityProp(w.state, id, 'supplyDays', 3, t); terminate(w.state, id, CAUSE, null, t); }).ok, true);
+  const before = canonical(w.state);
+  const keep = Object.keys(w.state.created[id].props).map((f) => ['created', id, 'props', f]);
+  assert.ok(keep.length > 0);
+  assert.equal(tx(w, (t) => deleteMatch(w.engine, w.state, 'created.*.props.*', keep[0], t)).code, 'E-TERM-RESIDUE');
+  assert.equal(tx(w, (t) => deleteRecords(w.engine, w.state, id, ['keep'], t)).code, 'E-TERM-RESIDUE');
+  assert.equal(tx(w, (t) => deleteMatch(w.engine, w.state, 'statuses.*.*.status', ['statuses', id, 'inst_1', 'status'], t)).code, 'E-TERM-RESIDUE');
+  assert.equal(tx(w, (t) => clearStatusesOf(w.engine, w.state, id, t)).ok, true);
+  assert.equal(canonical(w.state), before);
+});
+
+test('classRowsOf 只取列在 precedenceGroups.default 里的类别行，组外类别不追加（卷二:156–:157）', () => {
+  const raw = rawWorld();
+  const species = Object.keys(docOf(raw, 'species').rows).sort()[0];
+  const person = docOf(raw, 'person');
+  const [inGroup, outGroup] = person.precedenceGroups.default;
+  person.precedenceGroups.default = [inGroup];
+  docOf(raw, 'species').rows[species].classes = [...docOf(raw, 'species').rows[species].classes, outGroup, inGroup];
+  const w = mount(raw);
+  const r = tx(w, (t) => {
+    createEntity(w.state, 'creature_probe_1', 'person', {}, t);
+    setEntityProp(w.state, 'creature_probe_1', 'species', species, t);
+    return classRowsOf(w.engine, w.state, 'person', 'creature_probe_1').map(([c]) => c);
+  });
+  assert.equal(r.ok, true, `rejected: ${r.code}`);
+  assert.deepEqual(r.value, [inGroup]);
 });

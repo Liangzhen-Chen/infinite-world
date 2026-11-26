@@ -110,7 +110,8 @@ function addProbe(raw, recordClass) {
   raw.owners.pathTypes[PROBE_PATH] = 'integer';
   raw.owners.keyKinds[PROBE_PATH] = [['org']];
   raw.owners.stateKeys.created.writers['*.probe'] = { create: ['kernel/storage.mjs'], rewrite: null, viaRelocate: false };
-  raw.owners.stateKeys.created.subjectRecords = { [PROBE_PATH]: { recordClass, subjectSegments: [1] } };
+  // 合并而非覆盖：world 的 state-owners 已登记 created.*.props.* → rcls_deviation_row（keep），覆盖会丢掉它，使加载期 E-TERM-RECORD-UNLISTED。
+  raw.owners.stateKeys.created.subjectRecords = { ...raw.owners.stateKeys.created.subjectRecords, [PROBE_PATH]: { recordClass, subjectSegments: [1] } };
 }
 
 // 去留表 records 行的值（卷二:562 与 terminate.json）。
@@ -180,16 +181,16 @@ test('8. 覆盖核对：pathTypes 加一条含 person 段、又未登记去留�
   assert.throws(() => mountRaw(raw), (/** @type {any} */ e) => e.code === 'E-TERM-RECORD-UNLISTED', 'pathTypes 含 person 段且无去留登记应报 E-TERM-RECORD-UNLISTED');
 });
 
-test('10a. 未建数据门：类别行 reviveWindowDays 大于 0 时加载期即拒，错误信息写明要等 S2-0c', () => {
+test('10a. 未建数据门：类别行 reviveWindowDays 大于 0 时加载期即拒，码为 E-ACT-WRITER-NOT-READY（R7）', () => {
   assert.doesNotThrow(() => mountRaw(rawCopy()), '对照副本应能装配');
 
   const raw = rawCopy();
   const person = raw.dimensionDocs.find((d) => d.kind === 'person');
   for (const cls of Object.values(person.classes)) cls.termination.reviveWindowDays = 1;
-  assert.throws(() => mountRaw(raw), (/** @type {any} */ e) => /S2-0c/.test(String(e.message)), '错误信息应写明要等 S2-0c（R7）');
+  assert.throws(() => mountRaw(raw), (/** @type {any} */ e) => e.code === 'E-ACT-WRITER-NOT-READY', '未建数据门应报 E-ACT-WRITER-NOT-READY（R7）');
 });
 
-test('10b. 未建数据门：类别行 successorRX 非 null 时加载期即拒，错误信息写明要等 S2-0c（夹具取现有 RX 文本）', () => {
+test('10b. 未建数据门：类别行 successorRX 非 null 时加载期即拒，码为 E-ACT-WRITER-NOT-READY（夹具取现有 RX 文本）', () => {
   // 数据里没有非空 successorRX 的类别行，故在内存副本上把 org 类别行的 successorRX 改为现有 RX 文本。
   const raw = rawCopy();
   const org = raw.dimensionDocs.find((d) => d.kind === 'org');
@@ -201,5 +202,5 @@ test('10b. 未建数据门：类别行 successorRX 非 null 时加载期即拒�
     }
   }
   assert.ok(changed > 0, '夹具前提：org 应有带 termination 的类别行');
-  assert.throws(() => mountRaw(raw), (/** @type {any} */ e) => /S2-0c/.test(String(e.message)), '错误信息应写明要等 S2-0c（R7）');
+  assert.throws(() => mountRaw(raw), (/** @type {any} */ e) => e.code === 'E-ACT-WRITER-NOT-READY', '未建数据门应报 E-ACT-WRITER-NOT-READY（R7）');
 });

@@ -87,9 +87,9 @@ test('5a. 拒写：org 实体终止后，对 created.<它>.props.* 的 fact.set 
   assert.equal(canonical(env.state), before, '整笔回滚：state 逐位不变');
 });
 
-test('5b. person 读不到类别行的 termination：terminate 整笔拒（E-TERM-RESIDUE），state 逐位不变', async () => {
+test('5b. 物种表实体（非人物）读不到类别行的 termination：terminate 整笔拒（E-TERM-RESIDUE），state 逐位不变', async () => {
   const env = await bootWorld();
-  const id = createSpecies(env); // 家鸡（物种表模板）个体：其物种行没有可读的 termination 类别（卷二:559 ③）
+  const id = createSpecies(env); // 物种表实体（以家鸡行为模板建，不是人物）：该实体的类别行没有可读的 termination（卷二:559 ③）
   const before = canonical(env.state);
   const t = await terminateIn(env, id);
   assert.equal(t.ok, false, '读不到 termination 的个体终止应被整笔拒');

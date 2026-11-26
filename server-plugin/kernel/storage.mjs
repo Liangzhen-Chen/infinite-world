@@ -57,9 +57,11 @@ function createdPropsDef(engine, state, segs) {
   if (!topKeyRegistered(engine, top)) return undefined;
   const kind = kindOfEntity(engine, state, id);
   const table = engine && engine.registry && engine.registry.tables instanceof Map ? engine.registry.tables.get(kind) : undefined;
-  const dims = table && table.dimensions !== null && typeof table.dimensions === 'object' ? table.dimensions : {};
-  if (!Object.hasOwn(dims, dimension)) throw new KernelError('E-DIM-UNKNOWN-READ', {}, `dimension ${kind}.${dimension}: not defined in the loaded table`);
-  return dims[dimension];
+  // 表头 dimensions 与实例维度 instanceDimensions（卷三乙 §2.3 :225、:455 只在实例上有值的维度，如尸体的 ofSpecies；S2-0b）都可写进偏离值。
+  for (const part of [table && table.dimensions, table && table.instanceDimensions]) {
+    if (part !== null && typeof part === 'object' && Object.hasOwn(part, dimension)) return part[dimension];
+  }
+  throw new KernelError('E-DIM-UNKNOWN-READ', {}, `dimension ${kind}.${dimension}: not defined in the loaded table`);
 }
 
 // 声明为 ref 的维度：null / 空串照旧拒，其余交 checkValue 按 ref 声明核（不在这里另判一份 ref）。
@@ -140,7 +142,7 @@ export function matchPaths(engine, state, pattern, fixed) {
 /**
  * 按登记模式整条删除一条路径（S2-0a；卷二 :562 去留表「整条删除路径，只删不改值」、:557 清状态实例；执行者是终止协议）：
  * segs 须合模式（非 `*` 段逐字相同、`*` 段为非空串）；删去叶子后，删空的上级对象一并删去（顶层键保留）；写完作废顶层键缓存。
- * 不核终止标记：终止协议在写标记前删，复生、期满回收删的就是已终止实体名下的记录（卷二 :563–:564）。
+ * 与 writePath 同核终止标记（卷二 :554、:558：终止之后对该实体名下路径无人能写，删同此）；终止协议在写标记之前删，不受影响。
  * @param {any} engine @param {any} state @param {string} pattern @param {readonly string[]} segs @param {any} tx
  */
 export function deleteMatch(engine, state, pattern, segs, tx) {
@@ -150,6 +152,7 @@ export function deleteMatch(engine, state, pattern, segs, tx) {
   const ok = Array.isArray(segs) && segs.length === parts.length && segs.every((s, i) => typeof s === 'string' && s.length > 0
     && !UNSAFE_KEYS.includes(s) && (parts[i] === GRAMMAR_TOKENS.wildcard ? s !== GRAMMAR_TOKENS.wildcard : s === parts[i]));
   if (!ok) throw new KernelError('E-DIM-ID-FORMAT', {}, `segments do not fit pattern ${JSON.stringify(pattern)}`);
+  rejectTerminated(engine, state, { pattern, segs });
   /** @type {any[]} */
   const chain = [state];
   for (let i = 0; i < segs.length - 1; i++) {

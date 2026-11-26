@@ -12,7 +12,7 @@ import { classRowsOf } from '../../kernel/dimensions.mjs';
 import { txEmit } from '../../kernel/transaction.mjs';
 import { clockMinute } from '../../kernel/scheduler.mjs';
 import { ruleValue } from '../load/registry.mjs';
-import { subjectRecordPaths, deleteRecords, recordValues } from './records.mjs';
+import { subjectRecordPaths, deleteRecords, recordValues, terminableKinds } from './records.mjs';
 import { statusView, clearStatusesOf } from '../status/status.mjs';
 
 /** @typedef {import('./records.mjs').LifeEngine} LifeEngine */
@@ -24,6 +24,8 @@ const WRECK_KIND = 'wreckKind';
 // 类别行的终止公共字段（卷二 §5.0、:553）与 state-owners systems.<名> 下清理函数登记的字段（卷二 :561）。
 const TERMINATION_FIELD = 'termination';
 const CLEANUP_FIELD = 'terminationCleanup';
+// 终止发起方的登记字段（卷二 :552「可终止实体类的归属卷只登记触发条件」；草案 §4.1：systems.<名>.terminationTrigger {kinds, handler}，S2-0b）。
+const TRIGGER_FIELD = 'terminationTrigger';
 // 终止事件的动词条目（卷二 :557：verb 族条目，由内核登记；state-owners kernel.emits 已列）。
 const VERB_TERMINATED = 'verb_entity_terminated';
 // cause 所属的词表族（卷二 :552「cause 是 verb 族句柄」）。
@@ -43,12 +45,31 @@ const UNBUILT_REVIVE_WINDOW = 'S2-0c（复生窗口与窗口到期项）';
  * @returns {Readonly<{handlerRef: string, handler: Function}>}
  */
 export function registerTerminationCleanup(handlerRef, handler) {
+  return handlerEntry(handlerRef, handler);
+}
+
+/**
+ * 登记项（清理函数与终止发起方同形）：核 "<文件>#<函数>" 与函数，返回冻结的 {handlerRef, handler}。
+ * @param {string} handlerRef @param {Function} handler @returns {Readonly<{handlerRef: string, handler: Function}>}
+ */
+function handlerEntry(handlerRef, handler) {
   const at = typeof handlerRef === 'string' ? handlerRef.indexOf(HANDLER_REF_SEP) : -1;
   const ok = at > 0 && at === handlerRef.lastIndexOf(HANDLER_REF_SEP) && at < handlerRef.length - 1;
   if (!ok || typeof handler !== 'function') {
-    throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'registerTerminationCleanup: needs "<file>#<function>" and a function');
+    throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'termination handler entry: needs "<file>#<function>" and a function');
   }
   return Object.freeze({ handlerRef, handler });
+}
+
+/**
+ * 终止发起方的登记项（草案 §4.1 systems.<名>.terminationTrigger；与清理函数同一做法、同形，卷二 :561）：同 registerTerminationCleanup，
+ * 由声明它的模块导出、装配层收进 engine.terminationTriggers，destroyEntity 按 terminationTrigger.handler 认函数，签名 handler(engine, state, entityId, tx)。
+ * @param {string} handlerRef
+ * @param {(engine: LifeEngine, state: unknown, entityId: string, tx: unknown) => void} handler
+ * @returns {Readonly<{handlerRef: string, handler: Function}>}
+ */
+export function registerTerminationTrigger(handlerRef, handler) {
+  return handlerEntry(handlerRef, handler);
 }
 
 /**
@@ -78,7 +99,7 @@ function checkTerminationRow(raw, where) {
 }
 
 /**
- * 终止相关登记的核对（registry.json terminate 行所指的 checkTerminationTables；加载期由装配层调，S2-0b 接）：
+ * 终止相关登记的核对（registry.json terminate 行所指的 checkTerminationTables；加载期由装配层 rules/load/mount.mjs#mountKernel 调）：
  * 各表类别行与实体行写的 termination 逐行过 checkTerminationRow（R7 未建数据门）；
  * rules.terminate.records 每行 atRevive 当且仅当 atTerminate = hold 时写（卷二 :562），不合 E-DIM-STRUCT-FIELD；
  * rules.terminate.wreckKind 须是登记的实体表，否则 E-DIM-REF-MISSING。
@@ -125,13 +146,49 @@ function cleanupsFor(engine, kind) {
     if (c.kinds.includes(kind)) rows.push({ name, handlerRef: c.handler, sortKey: Number(c.sortKey) });
   }
   rows.sort((a, b) => (a.sortKey - b.sortKey) || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
-  return rows.map((r) => {
-    /** @type {unknown} */
-    const hit = given.find((g) => Object(g).handlerRef === r.handlerRef);
-    const fn = Object(hit).handler;
-    if (typeof fn !== 'function') throw new KernelError('E-DIM-REF-MISSING', {}, `termination cleanup ${r.handlerRef} (systems.${r.name}): no handler registered`);
-    return fn;
-  });
+  return rows.map((r) => registeredHandler(given, r.handlerRef, `termination cleanup ${r.handlerRef} (systems.${r.name})`));
+}
+
+/**
+ * 登记项数组里按 handlerRef 认函数（registerTerminationCleanup 产出的冻结登记项，卷二 :561 加载时核一致）；对不上即 E-DIM-REF-MISSING。
+ * @param {unknown[]} given @param {string} handlerRef @param {string} where @returns {Function}
+ */
+function registeredHandler(given, handlerRef, where) {
+  /** @type {unknown} */
+  const hit = given.find((g) => Object(g).handlerRef === handlerRef);
+  const fn = Object(hit).handler;
+  if (typeof fn !== 'function') throw new KernelError('E-DIM-REF-MISSING', {}, `${where}: no handler registered`);
+  return fn;
+}
+
+/**
+ * destroy 原语的协议入口（卷九 :641「destroy | entity | 内核原语 | 实体终止协议」；草案 §4.1；装配层注入为 engine.lifecycle.destroy，S2-0b）。
+ * 不按 kind 名分支，按登记路由：实体所属表不可终止（类别行无 termination，卷二 :559 ③）或已终止 → E-TERM-RESIDUE；
+ * 可终止的，取 state-owners systems.*.terminationTrigger 中 kinds 含该表的那一条，按 handler 认装配层交入的登记项（engine.terminationTriggers）并调
+ * handler(engine, state, entityId, tx)；没有发起方登记即 E-ACT-WRITER-NOT-READY（该种类的终止触发未建），多于一条即 E-DIM-STRUCT-FIELD。
+ * @param {unknown} state @param {string} entityId @param {unknown} tx
+ */
+export function destroyEntity(state, entityId, tx) {
+  /** @type {LifeEngine} */
+  const engine = Object(tx).engine;
+  const kind = kindOfEntity(engine, state, entityId);
+  if (!terminableKinds(engine).has(kind)) throw new KernelError('E-TERM-RESIDUE', {}, `destroy: ${kind} ${entityId} is not terminable`);
+  if (readPath(state, engine.P.terminated(entityId)) !== undefined) throw new KernelError('E-TERM-RESIDUE', {}, `destroy: ${entityId} is already terminated`);
+  /** @type {unknown} */
+  const given = engine.terminationTriggers;
+  if (!Array.isArray(given)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'engine.terminationTriggers must be an array');
+  const systems = Object(Object(Object(engine.docData).owners).systems);
+  /** @type {Array<{name: string, handlerRef: string}>} */
+  const rows = [];
+  for (const name of Object.keys(systems).sort()) {
+    const t = Object(systems[name])[TRIGGER_FIELD];
+    if (t === undefined) continue;
+    if (!Array.isArray(t.kinds) || typeof t.handler !== 'string') throw new KernelError('E-DIM-STRUCT-FIELD', {}, `systems.${name}.terminationTrigger needs kinds and handler`);
+    if (t.kinds.includes(kind)) rows.push({ name, handlerRef: t.handler });
+  }
+  if (rows.length === 0) throw new KernelError('E-ACT-WRITER-NOT-READY', {}, `destroy: no terminationTrigger registered for ${kind}`);
+  if (rows.length > 1) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `destroy: ${kind} has more than one terminationTrigger (${rows.map((r) => r.name).join(', ')})`);
+  registeredHandler(given, rows[0].handlerRef, `terminationTrigger ${rows[0].handlerRef} (systems.${rows[0].name})`)(engine, state, entityId, tx);
 }
 
 /**

@@ -25,6 +25,22 @@
    "basis": "物品表现有的、卷三乙登记的尸体组件类（_vocab.json component 族 comp_corpse，table item）；.mjs 不写该代号"
   },
   {
+   "key": "destroyCause",
+   "value": "verb_death_event",
+   "file": "server-plugin/rules/body/death.mjs",
+   "grade": "designed",
+   "source": "卷二十五 :579（宰杀活畜是卷四的 die，cause 取 verb_death_event）；卷九 :641 destroy 原语只带 entity；主会话裁定 R4 A",
+   "basis": "destroy 原语经终止发起方登记路由到 dieByDestroy，原语不带死因，死因行取这里（_vocab.json verb 族 verb_death_event，卷四 §2.8 :397 死因·事件致死）；source 取屠宰事件类型行，事件类型表（卷二十四）未建，暂传 null，建好后由提案带入"
+  },
+  {
+   "key": "corpseMaterialGroup",
+   "value": "mgroup_body",
+   "file": "server-plugin/rules/body/death.mjs",
+   "grade": "designed",
+   "source": "卷三乙 :931（尸体 = 物品实例 + comp_corpse，材料组成由物种的组织材料给出）、:2134 Q-22（材料按组织分组的列表）；item.json material 是 list<{group: matgroup, materialRef, share}>；主会话 S2-0b 裁定 G2 A",
+   "basis": "组织→matgroup 的映射卷文未找到（matgroup 族无组织条目），carcassOf 按材料合并给份额；尸体全部材料份额先归主体组 mgroup_body 一组，后续可细分"
+  },
+  {
    "key": "unbuilt",
    "value": ["corpsePurpose", "vitalLossCause"],
    "file": "server-plugin/death.mjs",

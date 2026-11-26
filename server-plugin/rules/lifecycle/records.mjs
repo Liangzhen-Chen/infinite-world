@@ -9,7 +9,7 @@ import { GRAMMAR_TOKENS } from '../../kernel/handles.mjs';
 import { ruleValue } from '../load/registry.mjs';
 
 // 终止协议各文件收的 engine 形状（装配层 mountKernel 建的冻结 engine 的子集）。
-/** @typedef {{P: Readonly<Record<string, (...args: string[]) => import('../../kernel/types.d.ts').StatePath<string>>>, registry: {tables: Map<string, unknown>, kindIds: Map<string, {idPrefix?: readonly string[], singletonIds?: readonly string[]}>, kindOfLoaded: (id: string) => string | undefined}, docData: unknown, vocab: unknown, terminationCleanups?: unknown}} LifeEngine */
+/** @typedef {{P: Readonly<Record<string, (...args: string[]) => import('../../kernel/types.d.ts').StatePath<string>>>, registry: {tables: Map<string, unknown>, kindIds: Map<string, {idPrefix?: readonly string[], singletonIds?: readonly string[]}>, kindOfLoaded: (id: string) => string | undefined}, docData: unknown, vocab: unknown, terminationCleanups?: unknown, terminationTriggers?: unknown}} LifeEngine */
 /** 去留表一行的取值（规则表 rules.terminate.records.<rcls_>）。 @typedef {{atTerminate: string, atRevive?: string}} RecordValue */
 /** subjectRecords 一行。 @typedef {{pattern: string, recordClass: string, subjectSegments: number[]}} SubjectRecordRow */
 
@@ -98,7 +98,7 @@ export function terminableKinds(engine) {
 }
 
 /**
- * 覆盖核对（卷二 :562，勘误 1117rx7 的机器判定；加载期由装配层调，S2-0b 接）：pathTypes 里凡有某个 `*` 段按 keyKinds 能取到可终止实体类 id 的模式，
+ * 覆盖核对（卷二 :562，勘误 1117rx7 的机器判定；加载期由装配层 rules/load/mount.mjs#mountKernel 调）：pathTypes 里凡有某个 `*` 段按 keyKinds 能取到可终止实体类 id 的模式，
  * 须由同一模式的 subjectRecords 把该段登记为主体，或顶层键属协议自处置的键（rules.terminate.protocolKeys），或属 textPaths；
  * 否则 E-TERM-RECORD-UNLISTED。subjectRecords 引用的记录类在 rules.terminate.records 里没有取值，同码。
  * @param {LifeEngine} engine

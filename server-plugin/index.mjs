@@ -40,7 +40,7 @@ function readWorld() {
     primitivesDoc: json('primitives.json'),
     // 词表族（能力族条目的 dimKey 等，bodyView 读；S1-2b）。
     vocabDoc: json('dimensions/_vocab.json'),
-    // 单位表（日与分钟的换算等，kernel/scheduler.mjs#minutesPerDay 读；S2-0a）。
+    // 单位表（日与分钟的换算等，rules/lifecycle/terminate.mjs 写终止标记的日时读；S2-0a）。
     unitsDoc: json('dimensions/_units.json'),
   };
 }

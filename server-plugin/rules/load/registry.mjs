@@ -88,7 +88,8 @@ function tableValues(code, rows, spec) {
 /**
  * 词表引用的核对环境（S2-0a）：按世界数据副本的 vocabDoc.families 建 {index: 条目代号 → {family}, families}，交 checkValue 核 ref vocab / enum vocab 键。
  * 副本没带词表时两者为空（引用词表的键照样核出不合，不放行）。
- * @param {unknown} raw @returns {{vocab: {index: Map<string, {family: string}>, families: Set<string>}}}
+ * 另带 kindOf（rowKindOf，S2-0b）供 ref kind 键。
+ * @param {unknown} raw @returns {{vocab: {index: Map<string, {family: string}>, families: Set<string>}, kindOf: (id: unknown) => string | undefined}}
  */
 function vocabEnvOf(raw) {
   const fams = Object(Object(Object(raw).vocabDoc).families);
@@ -98,7 +99,22 @@ function vocabEnvOf(raw) {
     const entries = Object(Object(doc).entries);
     for (const id of Object.keys(entries)) index.set(id, { family });
   }
-  return { vocab: { index, families: new Set(Object.keys(fams)) } };
+  return { vocab: { index, families: new Set(Object.keys(fams)) }, kindOf: rowKindOf(raw) };
+}
+
+/**
+ * 实体行引用的核对（S2-0b）：按世界数据副本的 dimensionDocs 各表 rows 建 id → kind，交 checkValue 核 ref kind 键（如 rules.death.terminalStatus 指状态表一行）。
+ * 不在任何表 rows 里的 id 得 undefined（照样核出不合，不放行）。
+ * @param {unknown} raw @returns {(id: unknown) => string | undefined}
+ */
+function rowKindOf(raw) {
+  const docs = Object(raw).dimensionDocs;
+  /** @type {Map<unknown, string>} */
+  const index = new Map();
+  for (const doc of Array.isArray(docs) ? docs : []) {
+    for (const id of Object.keys(Object(Object(doc).rows))) index.set(id, String(Object(doc).kind));
+  }
+  return (id) => index.get(id);
 }
 
 /**
