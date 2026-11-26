@@ -31,12 +31,15 @@ jobs:
           PUSH_REF: ${{ github.ref }}
           HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           BEFORE_SHA: ${{ github.event.before }}
+          # 借档核对（门禁封口卡 A）：PR 取头分支，直推分支取分支名；推往 master 时下面清空不传。
+          HEAD_BRANCH: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
         run: |
           git fetch -q --no-tags origin +refs/heads/master:refs/remotes/origin/master
           # PR 与分支推送以 origin/master 为基线（规矩也取 master 版）；直推 master 时 origin/master 已被推成新头，
-          # 改取本次推送前的旧 master 尖（event.before），这样 squash 合并提交也会被查。新旧头相同（无新增）时整步跳过。
+          # 改取本次推送前的旧 master 尖（event.before），这样 PR 真合并的合并提交也会被查。新旧头相同（无新增）时整步跳过。
           if [ "$EVENT" = "pull_request" ] || [ "$PUSH_REF" != "refs/heads/master" ]; then
             base=$(git rev-parse origin/master)
+            export CARD_HEAD_BRANCH="$HEAD_BRANCH"
           elif [ -n "$BEFORE_SHA" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] && git cat-file -e "$BEFORE_SHA^{commit}" 2>/dev/null; then
             base=$BEFORE_SHA
           else
