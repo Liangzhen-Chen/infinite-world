@@ -96,15 +96,15 @@ export function ruleValue(raw, code, key) {
   return tableValue(Object.hasOwn(raw.tableDocs, code) ? raw.tableDocs[code].rows : undefined, spec, key);
 }
 
-// kernel 实际消费的规则表代号（卷文名 rules.host.*、rules.saveLayout.*；S1-1c 派卡「主会话已定」第 5 条）：
-// 只对这几张取值并按登记声明核；其余登记表原样进 doc_data 副本，不核、不报。
-const KERNEL_TABLES = Object.freeze(['host', 'saveLayout']);
+// kernel 实际消费的规则表代号（卷文名 rules.host.*、rules.saveLayout.*；S1-1c 派卡「主会话已定」第 5 条；S1-2b 加 rules.kernelConstants：定点常数由装配层装入 det-math）：
+// 只对这几张整表取值并按登记声明核；规则层按键读的经 ruleValue 逐键核；其余登记表原样进 doc_data 副本，不核、不报。
+const KERNEL_TABLES = Object.freeze(['host', 'saveLayout', 'kernelConstants']);
 
 /**
  * 世界数据按登记组装与核对（S1-1 卡 C；卷二十七 :547 开局冻结规则表副本）。收装配层已读入、已解析的原文 raw（整份即 doc_data），不读盘：
  *   raw = {dimensionDocs, namedStructsDoc, owners, registryRows, tableDocs: {<登记 code>: 表原文}, digestExclude, primitivesDoc}
  * 核：tableDocs 的代号集合须与 registryRows 的 code 集合恰好相等（登记的每张表都进副本、副本里没有未登记的表），不合 E-DIM-STRUCT-FIELD；
- * 维度表交 buildRegistry；kernel 消费的键表按登记逐键核。返回 {registry, rules}（rules: 代号 → 已核键值），其余字段调用方从 raw 原样取。
+ * 维度表交 buildRegistry；kernel 消费的键表按登记逐键核。返回 {registry, rules}（rules: 代号 → 已核键值；规则层按键读经导出的 ruleValue），其余字段调用方从 raw 原样取。
  * @param {{dimensionDocs: DimensionDoc[], registryRows: RegistryRow[], tableDocs: Record<string, {rows?: KeyRow[]}>}} raw 形状仍逐项在运行期核（来自盘上数据）
  */
 export function loadWorld(raw) {

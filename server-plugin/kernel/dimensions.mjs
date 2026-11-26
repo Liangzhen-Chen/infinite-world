@@ -87,14 +87,61 @@ export function dim(engine, state, kind, id, dimension) {
  * @returns {any}
  */
 export function modified(engine, state, kind, id, dimension) {
+  if (!Array.isArray(engine !== null && typeof engine === 'object' ? engine.modifierSources : undefined)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'engine.modifierSources must be an array');
+  const fact = dim(engine, state, kind, id, dimension);
+  return modifiedWith(engine, state, kind, id, dimension, fact.value, Object.freeze([]), fact);
+}
+
+/**
+ * 读入口合成派生项的求值（卷四 B-5a、B-7）：基值 base 先加上读入口现场合成的 add 项 terms（数值，按序相加），再依次过 engine.modifierSources（同 modified 的调用口径）。
+ * modified 即 terms 为空、base 取 dim 值的这一种；读入口（如 bodyView 的能力值）没有维度行可读时直接交基值。返回 Fact，另带 base。
+ * engine.modifierSources 不是数组、来源不是函数、terms 不是数值数组即 E-DIM-STRUCT-FIELD（不兜底）。
+ * @param {any} engine @param {any} state @param {string} kind @param {string} id @param {string} dimension @param {any} base @param {ReadonlyArray<number>} terms
+ * @param {{source?: string}} [fact] 基值来自 dim 时交 dim 的 Fact（带取值来源）
+ * @returns {any}
+ */
+export function modifiedWith(engine, state, kind, id, dimension, base, terms, fact) {
   const sources = engine !== null && typeof engine === 'object' ? engine.modifierSources : undefined;
   if (!Array.isArray(sources)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'engine.modifierSources must be an array');
-  const fact = dim(engine, state, kind, id, dimension);
-  let value = fact.value;
+  if (!Array.isArray(terms) || !terms.every((t) => typeof t === 'number') || (terms.length > 0 && typeof base !== 'number')) {
+    throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'modifiedWith: terms must be numbers added to a numeric base');
+  }
+  let value = terms.reduce((acc, t) => acc + t, base);
   const ctx = Object.freeze({ engine, state, kind, id, dimension });
   for (const source of sources) {
     if (typeof source !== 'function') throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'engine.modifierSources entries must be functions');
     value = source(value, ctx);
   }
-  return Object.freeze({ ...fact, value, base: fact.value });
+  return Object.freeze({ known: true, applicable: true, ...(fact && fact.source !== undefined ? { source: fact.source } : {}), current: true, value, base });
+}
+
+// 码点序比较（契约 ctr_map_nonnull_view：按键码点序）；逐码点比，不按 UTF-16 码元。
+/** @param {string} a @param {string} b @returns {number} */
+function codePointOrder(a, b) {
+  const x = [...a];
+  const y = [...b];
+  for (let i = 0; i < x.length && i < y.length; i += 1) {
+    const d = Number(x[i].codePointAt(0)) - Number(y[i].codePointAt(0));
+    if (d !== 0) return d;
+  }
+  return x.length - y.length;
+}
+
+/**
+ * 全族映射的非 null 只读视图（契约 ctr_map_nonnull_view，world/ontology/contracts.json:225；卷二 §1.6 第 4 项）：映射展平后覆盖键类型全族，
+ * 「某键没有」写 null；规则层遍历映射一律经它，只见值非 null 的项，按键码点序，冻结。dim 照旧原样给含 null 的映射（null 是已知值）。
+ * 不是映射（null、数组、非对象）即 E-DIM-STRUCT-FIELD。
+ * @param {unknown} map @returns {ReadonlyArray<readonly [string, unknown]>}
+ */
+export function presentEntries(map) {
+  if (map === null || typeof map !== 'object' || Array.isArray(map)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'presentEntries: value must be a map');
+  const m = Object(map);
+  /** @type {Array<readonly [string, unknown]>} */
+  const out = [];
+  for (const k of Object.keys(m).filter((key) => m[key] !== null).sort(codePointOrder)) {
+    /** @type {readonly [string, unknown]} */
+    const pair = Object.freeze([k, m[k]]);
+    out.push(pair);
+  }
+  return Object.freeze(out);
 }
