@@ -51,7 +51,9 @@ export async function prePush(root, stdinText, { runGate = preCommitGate, headBr
     const commits = shas.map((sha) => {
       const parents = gitOut(root, ['rev-list', '--parents', '-n', '1', sha]).trim().split(/\s+/).length - 1;
       const diff = parents > 1 ? ['diff-tree', '--no-commit-id', '--name-only', '-r', '-z', `${sha}^1`, sha] : ['diff-tree', '--root', '--no-commit-id', '--name-only', '-r', '-z', sha];
-      return { sha, parents, files: gitOut(root, diff).split('\0').filter(Boolean) };
+      // 合并提交自身引入的改动（解冲突或夹带）：--cc 只列与每个父提交都不同的文件，角色与验收目录按它核（审卡第 1 轮必须改 1）。
+      const ownFiles = parents > 1 ? gitOut(root, ['diff-tree', '--cc', '--no-commit-id', '--name-only', '-r', '-z', sha]).split('\0').filter(Boolean) : null;
+      return { sha, parents, files: gitOut(root, diff).split('\0').filter(Boolean), ownFiles };
     });
     // 本次推送范围的改动文件（借档核对）与推送头的提交历史（orca 凭证核对）。
     const rangeFiles = [...new Set(commits.flatMap((c) => c.files))];
@@ -59,7 +61,7 @@ export async function prePush(root, stdinText, { runGate = preCommitGate, headBr
       reachable: (s) => gitOk(root, ['merge-base', '--is-ancestor', s, localSha]),
       message: (s) => { try { return gitOut(root, ['log', '-1', '--format=%B', s]); } catch { return null; } },
     };
-    for (const { sha, parents, files } of commits) {
+    for (const { sha, parents, files, ownFiles } of commits) {
       if (effective && gitOk(root, ['merge-base', '--is-ancestor', sha, effective])) continue;
       const message = gitOut(root, ['log', '-1', '--format=%B', sha]);
       const r = judgeCommit(rules, {
@@ -67,6 +69,7 @@ export async function prePush(root, stdinText, { runGate = preCommitGate, headBr
         branch: null,
         message,
         isMerge: parents > 1,
+        ownFiles,
         stage: '推送',
         rangeFiles,
         headBranch: headBranch || undefined,

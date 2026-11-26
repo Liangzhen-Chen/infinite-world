@@ -114,7 +114,7 @@ test('非合并提交写「角色：合并」拒，碰验收目录同样拒；�
   assert.ok(has(fakeAcc, '验收目录'));
   // 不触发的提交写了也拒（冒用本身就拒）
   assert.ok(has(judgePush({ files: ['docs/PLAN.md'], message: msg('合并', 'x-1') }), '不是合并提交'));
-  assert.deepEqual(judgePush({ isMerge: true, message: msg('合并', 'main-session-opus55') }), []);
+  assert.deepEqual(judgePush({ isMerge: true, ownFiles: [], message: msg('合并', 'main-session-opus55') }), []);
 });
 
 test('主会话角色：只改登记路径且标识对放行；标识不对拒；改了登记外文件拒', () => {
@@ -180,6 +180,18 @@ test('orca 凭证：提交不在推送历史拒；提交角色行不符拒；齐
   assert.ok(has(judgePush({ history, arch: { 'state.json': orca(['bbb1234']) } }), '不是「写码」'));
   assert.ok(has(judgePush({ history, arch: { 'state.json': orca([]) } }), 'orca.commits'));
   assert.ok(has(judgePush({ history: null, arch: { 'state.json': orca(['abc1234']) } }), '提交历史'));
+});
+
+// 审卡第 1 轮必须改 2：orca 提交还要是本卡该角色的标识，别卡同角色提交不能顶替；审卡数组按轮次对第几个审卡标识。
+test('orca 凭证：别卡同角色提交（标识不是本卡登记的）拒；审卡数组多出的一轮没有登记标识拒', () => {
+  const parties = JSON.parse(STATE()).parties;
+  const history = { reachable: () => true, message: (s) => (s === 'a0d1234' ? msg('写码', 'old-card-writer', 'old/y') : s === 'abc1234' ? msg('写码', 'AGENT-W1') : msg('审卡', 'agent-r1')) };
+  const code = (commits) => ({ ...parties.code, receipt: null, orca: { worktree: 'F:/wt/x', session: 'orca-1', commits } });
+  assert.ok(has(judgePush({ history, arch: { 'state.json': STATE({ parties: { ...parties, code: code(['a0d1234']) } }) } }), '不是本卡三方标识里「写码」'));
+  assert.deepEqual(judgePush({ history, arch: { 'state.json': STATE({ parties: { ...parties, code: code(['abc1234']) } }) } }), []);
+  const round = (sha) => ({ ...parties.review[0], receipt: null, orca: { worktree: 'F:/wt/r', session: 'orca-r', commits: [sha] } });
+  assert.deepEqual(judgePush({ history, arch: { 'state.json': STATE({ parties: { ...parties, review: [round('dd01234')] } }) } }), []);
+  assert.ok(has(judgePush({ history, arch: { 'state.json': STATE({ parties: { ...parties, review: [round('dd01234'), round('dd05678')] } }) } }), 'review[1]', '第 2 条'));
 });
 
 test('收据格式：buildReceipt 与 checkReceipt 同一判据', () => {
@@ -262,6 +274,44 @@ test('pre-push 真仓库：orca 凭证的提交在推送历史里且角色行一
   const r = await pushRange(dir, head2, base);
   assert.equal(r.ok, false);
   assert.ok(has(r.reasons, '不能从推送头到达'));
+});
+
+// 审卡第 1 轮必须改 1：合并提交的角色与验收目录按合并自身引入的改动（diff-tree --cc）核，要不要档案仍按第一父差集。
+test('合并自身改动：卡分支同步主线带进别卡验收文件放行；合并里夹带改验收目录或 server-plugin，按角色拒', async () => {
+  const dir = repo();
+  git(dir, ['checkout', '-q', '-b', 'ds/x']);
+  commit(dir, { [SRC]: 'export const a = 1;\n', ...inDir(ARCH) }, ['写码', msg('写码', 'agent-w1')]);
+  git(dir, ['checkout', '-q', 'master']);
+  const mainTip = commit(dir, { 'tests/acceptance/other-y/t.test.mjs': '// 别卡出题\n' }, ['别卡出题']);
+  // 正例：卡分支同步主线，主线带来别卡验收文件；合并自身没有改动。
+  git(dir, ['checkout', '-q', 'ds/x']);
+  git(dir, ['merge', '-q', '--no-ff', 'master', '-m', '同步主线', '-m', msg('写码', 'agent-w1')]);
+  const sync = git(dir, ['rev-parse', 'HEAD']).trim();
+  assert.deepEqual(await pushRange(dir, sync, mainTip), { ok: true, reasons: [] });
+  // 反例 1：写码同步主线时在合并里夹带改验收目录 → 按写码角色拒。
+  git(dir, ['reset', '-q', '--hard', 'HEAD^1']);
+  git(dir, ['merge', '-q', '--no-ff', '--no-commit', 'master']);
+  writeUnderTempRoot(dir, 'tests/acceptance/ds-x/evil.test.mjs', '// 写码夹带\n');
+  git(dir, ['add', '-A']);
+  git(dir, ['commit', '-q', '-m', '同步主线', '-m', msg('写码', 'agent-w1')]);
+  const r1 = await pushRange(dir, git(dir, ['rev-parse', 'HEAD']).trim(), mainTip);
+  assert.equal(r1.ok, false);
+  assert.ok(has(r1.reasons, '写码的提交改动了验收目录'));
+  // 反例 2：「角色：合并」的真合并夹带改验收目录与 server-plugin → 拒。
+  git(dir, ['reset', '-q', '--hard', 'HEAD^1']);
+  git(dir, ['checkout', '-q', 'master']);
+  git(dir, ['merge', '-q', '--no-ff', '--no-commit', 'ds/x']);
+  writeUnderTempRoot(dir, 'tests/acceptance/ds-x/evil.test.mjs', '// 合并者夹带\n');
+  writeUnderTempRoot(dir, 'server-plugin/evil.mjs', 'export const evil = 1;\n');
+  git(dir, ['add', '-A']);
+  git(dir, ['commit', '-q', '-m', '合入 ds/x', '-m', msg('合并', 'main-session-opus55')]);
+  const r2 = await pushRange(dir, git(dir, ['rev-parse', 'HEAD']).trim(), mainTip);
+  assert.equal(r2.ok, false);
+  assert.ok(has(r2.reasons, '合并提交自身改动了', 'tests/acceptance/ds-x/evil.test.mjs', 'server-plugin/evil.mjs'));
+  // 同一合并不夹带 → 放行。
+  git(dir, ['reset', '-q', '--hard', mainTip]);
+  git(dir, ['merge', '-q', '--no-ff', 'ds/x', '-m', '合入 ds/x', '-m', msg('合并', 'main-session-opus55')]);
+  assert.deepEqual(await pushRange(dir, git(dir, ['rev-parse', 'HEAD']).trim(), mainTip), { ok: true, reasons: [] });
 });
 
 // 验收要点 8：派前自检命令。临时仓库用 tempRepo（带整套门禁脚本），只读工作区磁盘上的派卡.md，不读其它档案文件。

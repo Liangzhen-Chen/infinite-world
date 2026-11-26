@@ -51,11 +51,20 @@ export function cardArchiveCheck(root, message = null) {
   try { staged = gitOut(root, ['diff', '--cached', '--name-only', '-z']).split('\0').filter(Boolean); } catch { return fail(['取暂存清单失败（git diff --cached）']); }
   let branch;
   try { branch = gitOut(root, ['rev-parse', '--abbrev-ref', 'HEAD']).trim(); } catch { return fail(['取分支名失败（git rev-parse --abbrev-ref HEAD）']); }
+  const isMerge = gitOk(root, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']);
+  // 合并进行中：合并自身引入的改动 = 与两个父提交都不同的文件（暂存区对 HEAD 与对 MERGE_HEAD 的差集取交集，同 pre-push 的 diff-tree --cc 口径）。
+  let ownFiles = null;
+  if (isMerge) {
+    let other;
+    try { other = new Set(gitOut(root, ['diff', '--cached', '--name-only', '-z', 'MERGE_HEAD']).split('\0').filter(Boolean)); } catch { return fail(['取合并自身改动失败（git diff --cached MERGE_HEAD）']); }
+    ownFiles = staged.filter((f) => other.has(f));
+  }
   const reasons = judgeCommit(loaded.rules, {
     files: staged,
     branch,
     message,
-    isMerge: gitOk(root, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']),
+    isMerge,
+    ownFiles,
     stage: '提交',
     repo: gitRepo(root, null),
     readFile: (dir, f) => { try { return gitOut(root, ['show', `:${dir}${f}`]); } catch { return null; } },

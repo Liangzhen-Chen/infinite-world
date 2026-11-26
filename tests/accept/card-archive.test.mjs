@@ -264,7 +264,7 @@ test('例外提交放行：纯快照、不在触发目录的文档', () => {
 test('合并提交不再免查：无档案拒；带合格档案与合并三行放行', () => {
   const none = { readFile: () => null };
   assert.ok(has(judge({ ...none, files: [SRC], isMerge: true }), '缺文件 派卡.md'));
-  assert.deepEqual(judge({ files: [SRC], isMerge: true, stage: '推送', message: '卡分支：ds/x\n角色：合并\n标识：main-session-1' }), []);
+  assert.deepEqual(judge({ files: [SRC], isMerge: true, ownFiles: [], stage: '推送', message: '卡分支：ds/x\n角色：合并\n标识：main-session-1' }), []);
 });
 
 test('触发目录的提交没有档案：拒；有合格档案：放行', () => {
