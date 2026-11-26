@@ -4,7 +4,7 @@
 // 完整检测器反向测试随 L-09 重建，本文件不测检测器实现本身。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, rmSync, existsSync, realpathSync } from 'node:fs';
+import { readFileSync, rmSync, existsSync, realpathSync, symlinkSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { tmpdir } from 'node:os';
 import { ROOT, testTempRoot, assertRelUnderTempRoot, writeUnderTempRoot, removeTempRoot, removeUnderTempRoot } from './temp-root.mjs';
@@ -77,6 +77,20 @@ test('removeUnderTempRoot（删片）：`..` 越界、绝对路径、命中 §2.
     assert.ok(existsSync(kept));
     assert.throws(() => removeUnderTempRoot(ROOT, 'x.json'), /outside the repository/);
   } finally { removeTempRoot(dir); }
+});
+
+test('writeUnderTempRoot 链接落点（审卡 chore/gate-seal-c 必须改 1）：根内目录链接指向根外时，写与删经链接都抛错，目标目录不变', () => {
+  const dir = testTempRoot('wutr-l-');
+  const out = testTempRoot('wutr-o-');
+  try {
+    writeUnderTempRoot(out, 'keep.json', 'k');
+    symlinkSync(out, join(dir, 'lnk'), 'junction');
+    assert.throws(() => assertRelUnderTempRoot(dir, 'lnk/x.json'), /inside the temp root/);
+    assert.throws(() => writeUnderTempRoot(dir, 'lnk/sub/x.json', 'x'), /inside the temp root/);
+    assert.throws(() => removeUnderTempRoot(dir, 'lnk/keep.json'), /inside the temp root/);
+    assert.deepEqual(readdirSync(out), ['keep.json']);
+    assert.equal(readFileSync(writeUnderTempRoot(dir, 'ok/a.json', 'y'), 'utf8'), 'y');
+  } finally { removeTempRoot(dir); removeTempRoot(out); }
 });
 
 test('stateChains 绑定声明不算写（门禁封口卡 B）：const/let/var 声明、逗号续写声明、for-of 声明、形参默认值不出写链；赋值、成员赋值、delete、自增出写链', () => {

@@ -1,7 +1,7 @@
 // 门禁设施 test-temp-repo-fixture（tools/accept/lib/temp-repo-write.mjs）的行为测试；gatefacs.json 该行 requiredTests 指向本文件，标题与登记名一致。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync, realpathSync } from 'node:fs';
+import { readFileSync, existsSync, realpathSync, symlinkSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { ROOT, testTempRoot, removeTempRoot } from './temp-root.mjs';
@@ -34,4 +34,18 @@ test('writeTempRepoFile（门禁封口子卡 C）：临时仓库里可写 §2.11
     assert.throws(() => writeTempRepoFile(ROOT, rel, 'x'), /temp root/);
     assert.equal(readFileSync(join(ROOT, 'tools/accept/baseline.json'), 'utf8'), before);
   } finally { removeTempRoot(dir); }
+});
+
+test('assertTempRepoPath 链接落点（审卡 chore/gate-seal-c 必须改 1）：根内目录链接指向根外时，经链接写入抛错且目标目录无新文件', () => {
+  const dir = testTempRoot('trw-l-');
+  const out = testTempRoot('trw-o-');
+  try {
+    symlinkSync(out, join(dir, 'lnk'), 'junction');
+    assert.throws(() => assertTempRepoPath(dir, 'lnk/x.json'), /inside the temp root/);
+    assert.throws(() => writeTempRepoFile(dir, 'lnk/sub/baseline.json', 'x'), /inside the temp root/);
+    symlinkSync(join(out, 'nope'), join(dir, 'dang'), 'junction');
+    assert.throws(() => writeTempRepoFile(dir, 'dang/x.json', 'x'));
+    assert.deepEqual(readdirSync(out), []);
+    assert.equal(writeTempRepoFile(dir, 'ok/a.json', 'y'), join(realpathSync(dir), 'ok/a.json'));
+  } finally { removeTempRoot(dir); removeTempRoot(out); }
 });

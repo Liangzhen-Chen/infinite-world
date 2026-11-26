@@ -1788,10 +1788,14 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 36
+    },
+    {
+     "ref": "门禁封口子卡 chore/gate-seal-c 修改轮（审卡第一轮必须改 1）：tools/accept/lib/temp-root.mjs 加落点断言 assertRealUnder，assertRelUnderTempRoot 与 temp-repo-write 的 assertTempRepoPath 共用，封目录链接缺口；口径不变，因 temp-root.mjs 在 typed_pos 闭包内指纹变",
+     "rev": 37
     }
    ],
-   "print": "9b5dc0a1453126c591505f1462a820f4991dbf387b315c7dbc6993c6635fb266",
-   "rev": 36,
+   "print": "ccf0716f311e62a3a6bd9825e90422cc44190661ecfc7c162d2c7d15e7cd23dc",
+   "rev": 37,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -2102,10 +2106,14 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 37
+    },
+    {
+     "ref": "门禁封口子卡 chore/gate-seal-c 修改轮（审卡第一轮必须改 1）：tools/accept/lib/temp-root.mjs 加落点断言 assertRealUnder，assertRelUnderTempRoot 与 temp-repo-write 的 assertTempRepoPath 共用，封目录链接缺口；口径不变，因 temp-root.mjs 在 typed_pos 闭包内指纹变",
+     "rev": 38
     }
    ],
-   "print": "cbeb66b46108aef597b71846b65db8ad522e82cc57f05426e3e55bce9a17bdfe",
-   "rev": 37,
+   "print": "260b196975ee42ff1240306777944135b08a8527bbd19c6ef4e0fefead47a7c2",
+   "rev": 38,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -2944,10 +2952,14 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 37
+    },
+    {
+     "ref": "门禁封口子卡 chore/gate-seal-c 修改轮（审卡第一轮必须改 1）：tools/accept/lib/temp-root.mjs 加落点断言 assertRealUnder，assertRelUnderTempRoot 与 temp-repo-write 的 assertTempRepoPath 共用，封目录链接缺口；口径不变，因 temp-root.mjs 在 typed_pos 闭包内指纹变",
+     "rev": 38
     }
    ],
-   "print": "cbeb66b46108aef597b71846b65db8ad522e82cc57f05426e3e55bce9a17bdfe",
-   "rev": 37,
+   "print": "260b196975ee42ff1240306777944135b08a8527bbd19c6ef4e0fefead47a7c2",
+   "rev": 38,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -12296,10 +12308,14 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 36
+    },
+    {
+     "ref": "门禁封口子卡 chore/gate-seal-c 修改轮（审卡第一轮必须改 1）：tools/accept/lib/temp-root.mjs 加落点断言 assertRealUnder，assertRelUnderTempRoot 与 temp-repo-write 的 assertTempRepoPath 共用，封目录链接缺口；口径不变，因 temp-root.mjs 在 typed_pos 闭包内指纹变",
+     "rev": 37
     }
    ],
-   "print": "cbeb66b46108aef597b71846b65db8ad522e82cc57f05426e3e55bce9a17bdfe",
-   "rev": 36,
+   "print": "260b196975ee42ff1240306777944135b08a8527bbd19c6ef4e0fefead47a7c2",
+   "rev": 37,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -12578,10 +12594,14 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 10
+    },
+    {
+     "ref": "门禁封口子卡 chore/gate-seal-c 修改轮（审卡第一轮必须改 1）：tools/accept/lib/temp-root.mjs 加落点断言 assertRealUnder，assertRelUnderTempRoot 与 temp-repo-write 的 assertTempRepoPath 共用，封目录链接缺口；口径不变，因 temp-root.mjs 在 typed_pos 闭包内指纹变",
+     "rev": 11
     }
    ],
-   "print": "cbeb66b46108aef597b71846b65db8ad522e82cc57f05426e3e55bce9a17bdfe",
-   "rev": 10,
+   "print": "260b196975ee42ff1240306777944135b08a8527bbd19c6ef4e0fefead47a7c2",
+   "rev": 11,
    "scanClass": "typecheck",
    "terms": {
     "L-09.typecheck": {
@@ -13582,10 +13602,14 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 68
+    },
+    {
+     "ref": "门禁封口子卡 chore/gate-seal-c 修改轮（审卡第一轮必须改 1）：tools/accept/lib/temp-root.mjs 加落点断言 assertRealUnder，assertRelUnderTempRoot 与 temp-repo-write 的 assertTempRepoPath 共用，封目录链接缺口；口径不变，因 temp-root.mjs 在 typed_pos 闭包内指纹变",
+     "rev": 69
     }
    ],
-   "print": "bd3a12b5b43a66fc8d85690d5bc971df3876c3dfb474ada73fc5b67758e4d15c",
-   "rev": 68,
+   "print": "99dbbb5571ca7e4da7cdf3f6aeb1927f1e4f387611b6c12ce6990d9ae7908988",
+   "rev": 69,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

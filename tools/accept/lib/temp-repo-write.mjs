@@ -5,7 +5,7 @@
 // 且相对路径解析后不越出该根；写入只用断言返回的完整路径。真实仓库里的登记文件仍只经登记器与执行器写。
 import { dirname, relative, isAbsolute, resolve } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { assertTempRoot } from './temp-root.mjs';
+import { assertTempRoot, assertRealUnder } from './temp-root.mjs';
 
 // 断言函数（登记在 gatefac test-temp-repo-fixture 的 writerAsserts）：返回目标文件的完整路径（临时根真实路径下）。
 export function assertTempRepoPath(root, rel) {
@@ -14,6 +14,7 @@ export function assertTempRepoPath(root, rel) {
   const full = resolve(real, rel);
   const r = relative(real, full);
   if (r === '' || r.startsWith('..') || isAbsolute(r)) throw new Error(`write must stay inside the temp repo: ${rel}`);
+  assertRealUnder(real, full);
   return full;
 }
 
