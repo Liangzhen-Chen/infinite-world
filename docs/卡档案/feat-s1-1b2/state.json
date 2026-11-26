@@ -1,0 +1,37 @@
+{
+  "card": "feat-s1-1b2",
+  "phase": "pr",
+  "updatedAt": "2026-11-26T10:59:25.617Z",
+  "branches": {
+    "code": "feat/s1-1b2",
+    "test": "test/s1-1b2"
+  },
+  "pr": null,
+  "parties": {
+    "code": {
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
+      "receipt": "Orca 会员会话 ctx_5c30679ab73f（工作树 F:/dnd-worktrees/dnd/s1b2；提交 3a376ae9b、5445a09f7）",
+      "costUsd": null
+    },
+    "test": {
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
+      "receipt": "Orca 会员会话 ctx_5ebbb9cde12e（工作树 F:/dnd-worktrees/dnd/ts-s1b2；提交 2819cc8c3、c7fb0f50b）",
+      "costUsd": null
+    },
+    "review": {
+      "family": "claude-opus",
+      "model": "claude-opus-5-5",
+      "receipt": "Orca 会员会话 ctx_058357077b4a（工作树 F:/dnd-worktrees/dnd/ts-s1b2；提交 06a20b5b3，结论可合）",
+      "costUsd": null
+    }
+  },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
+  "failCount": 0,
+  "blocker": "e2e-observe 冒烟仍红（停在第 2/6 步，桩自注 S1-3 转绿）：合入前须李白核理由（11-26 09:35），需放宽则报亮圳",
+  "nextAction": "开 PR feat/s1-1b2→master 走 CI；李白核 e2e 理由后才合；合入后接 S1-1c"
+}
