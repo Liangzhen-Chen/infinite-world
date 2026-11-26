@@ -47,13 +47,13 @@
   {"export": "kernel/dimensions.mjs#presentEntries", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/dimensions.mjs#classRowsOf", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/vocab.mjs#CAPABILITY_NAMESPACE", "callerFiles": ["body.mjs"], "acceptsState": false},
-  {"export": "kernel/det-math.mjs#fixedUnits", "callerFiles": ["body.mjs", "life.mjs", "death.mjs", "person.mjs", "price.mjs", "sight.mjs", "perceive.mjs"], "acceptsState": false},
+  {"export": "kernel/det-math.mjs#fixedUnits", "callerFiles": ["body.mjs", "life.mjs", "death.mjs", "person.mjs", "price.mjs", "sight.mjs", "perceive.mjs", "rules/load/registry.mjs"], "acceptsState": false},
   {"export": "kernel/det-math.mjs#fixedAdd", "callerFiles": ["body.mjs", "death.mjs", "person.mjs"], "acceptsState": false},
   {"export": "kernel/det-math.mjs#fixedSub", "callerFiles": ["body.mjs", "perceive.mjs"], "acceptsState": false},
   {"export": "kernel/det-math.mjs#fixedMultiply", "callerFiles": ["body.mjs", "life.mjs", "death.mjs", "price.mjs", "perceive.mjs"], "acceptsState": false},
   {"export": "kernel/det-math.mjs#fixedDivide", "callerFiles": ["body.mjs", "life.mjs", "death.mjs", "person.mjs"], "acceptsState": false},
   {"export": "kernel/det-math.mjs#fixedToNumber", "callerFiles": ["body.mjs", "life.mjs", "death.mjs", "person.mjs", "price.mjs", "perceive.mjs"], "acceptsState": false},
-  {"export": "kernel/det-math.mjs#fixedScale", "callerFiles": ["body.mjs", "person.mjs"], "acceptsState": false},
+  {"export": "kernel/det-math.mjs#fixedScale", "callerFiles": ["body.mjs", "person.mjs", "rules/load/registry.mjs"], "acceptsState": false},
   {"export": "kernel/det-math.mjs#truncateTo", "callerFiles": ["life.mjs", "death.mjs", "person.mjs"], "acceptsState": false},
   {"export": "kernel/effects.mjs#effects", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/sample.mjs#sample", "callers": ["rules"], "acceptsState": true},
@@ -293,7 +293,8 @@
   {"export": "rules/gen/worldgen-writeback.mjs#openingOf", "callerFiles": ["rules/load/mount.mjs"]},
   {"export": "rules/bake/place-tree.mjs#bakePlaceTree", "callerFiles": ["rules/load/mount.mjs"]},
   {"export": "rules/bake/place-tree.mjs#placeTreeDigest", "callerFiles": ["rules/load/mount.mjs"]},
-  {"export": "rules/load/registry.mjs#ruleValue", "callerFiles": ["rules/gen/worldgen-writeback.mjs"]}
+  {"export": "rules/load/registry.mjs#ruleValue", "callerFiles": ["rules/gen/worldgen-writeback.mjs"]},
+  {"export": "rules/load/registry.mjs#unitSi", "callerFiles": ["rules/body/body.mjs", "rules/lifecycle/terminate.mjs"]}
  ]},
  "importMatrix": {
   "codeExtensions": [".mjs", ".js", ".cjs", ".ts", ".mts", ".cts"],

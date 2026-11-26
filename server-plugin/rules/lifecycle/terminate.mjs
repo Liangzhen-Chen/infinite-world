@@ -11,7 +11,7 @@ import { kindOfEntity, readPath, writePath, createEntity } from '../../kernel/st
 import { classRowsOf } from '../../kernel/dimensions.mjs';
 import { txEmit } from '../../kernel/transaction.mjs';
 import { clockMinute } from '../../kernel/scheduler.mjs';
-import { ruleValue } from '../load/registry.mjs';
+import { ruleValue, unitSi } from '../load/registry.mjs';
 import { subjectRecordPaths, deleteRecords, recordValues, terminableKinds } from './records.mjs';
 import { statusView, clearStatusesOf } from '../status/status.mjs';
 
@@ -218,7 +218,7 @@ function createWreck(engine, state, kind, id, minute, tx) {
 
 /**
  * 终止标记里「日」字段与一日的分钟数（卷二 :554 标记 {day, cause, mode}；卷二十 :504 日 = 分钟的单位换算，取 _units.json，不是规则常数）：
- * 字段取标记登记类型（pathTypes 的 terminated 模式所指命名 struct）里唯一带单位的数值字段，其单位与时钟路径登记类型的单位在单位表里的 si 之比即换算比。
+ * 字段取标记登记类型（pathTypes 的 terminated 模式所指命名 struct）里唯一带单位的数值字段，其单位与时钟路径登记类型的单位经 registry.mjs#unitSi 取 si，之比即换算比。
  * 不写单位代号；不是恰一个带单位的数值字段、单位缺行、比值不是正整数即 E-DIM-UNIT-UNKNOWN。
  * @param {LifeEngine} engine @param {string} entityId @returns {{field: string, minutesPerDay: number}}
  */
@@ -234,10 +234,13 @@ function markDayField(engine, entityId) {
     if (t && t.unit) timed.push({ field: k, unit: t.unit });
   }
   const clock = parseNumberType(String(types[P.clock_minute().pattern]));
-  /** @type {unknown[]} */
-  const units = Array.isArray(Object(doc.unitsDoc).units) ? Object(doc.unitsDoc).units : [];
-  const si = (/** @type {unknown} */ id) => Number(Object(units.find((u) => Object(u).id === id)).si);
-  const ratio = timed.length === 1 && clock && clock.unit ? si(timed[0].unit) / si(clock.unit) : NaN;
+  if (timed.length !== 1 || !clock || !clock.unit) throw new KernelError('E-DIM-UNIT-UNKNOWN', {}, 'terminate: mark needs exactly one unit-typed number field and a unit-typed clock path');
+  // 两单位 si 之比经公共入口 unitSi（有理数，整除才算整数比）。
+  const [an, ad] = unitSi(doc, timed[0].unit);
+  const [bn, bd] = unitSi(doc, clock.unit);
+  const num = an * bd;
+  const den = ad * bn;
+  const ratio = den > 0n && num % den === 0n ? Number(num / den) : NaN;
   if (!Number.isInteger(ratio) || ratio <= 0) throw new KernelError('E-DIM-UNIT-UNKNOWN', {}, 'terminate: mark day unit / clock unit must have an integer ratio in the units table');
   return { field: timed[0].field, minutesPerDay: ratio };
 }

@@ -7,6 +7,7 @@
 
 import { KernelError } from '../../kernel/errors.mjs';
 import { checkValue } from '../../kernel/validate/types.mjs';
+import { fixedUnits, fixedScale } from '../../kernel/det-math.mjs';
 
 /** @typedef {{kind?: unknown, entity?: {idPrefix?: unknown, singletonIds?: unknown}, rows?: unknown, dimensions?: unknown}} DimensionDoc */
 
@@ -127,6 +128,34 @@ export function ruleValue(raw, code, key) {
   const spec = raw.registryRows.find((r) => r.code === code);
   if (!spec) throw new KernelError('E-DIM-DOMAIN-RANGE', {}, `rules.${code}: no registry declaration`);
   return tableValue(Object.hasOwn(raw.tableDocs, code) ? raw.tableDocs[code].rows : undefined, spec, key, vocabEnvOf(raw));
+}
+
+// 单位表 siFromRule.key 的写法 "rules.<表>.<键>"（卷二 §1.4）。
+const RULE_KEY_RE = /^rules\.([A-Za-z][A-Za-z0-9]*)\.([A-Za-z][A-Za-z0-9]*)$/;
+
+/**
+ * 单位的 si 值（公共读入口，S2-0b 审卡必须改 1；单位表 world/ontology/dimensions/_units.json，卷二 §1.4、卷二十:504 单位换算一律取单位表）：
+ * 返回有理数 [分子, 分母]（BigInt，十进制按 det-math#fixedUnits 折算，不经浮点）。单位表行写 si 即取它；写 siFromRule 的，
+ * 取所指规则表键（经 ruleValue 按登记声明核；数值，或 {num, den} 有理数）乘以其 unit 的 si，invert 为真取倒数。
+ * 单位缺行、两者都没写、规则键写法不合即 E-DIM-UNIT-UNKNOWN。两单位之比 = (a 分子 × b 分母) ÷ (a 分母 × b 分子)。
+ * @param {{registryRows: RegistryRow[], tableDocs: Record<string, {rows?: KeyRow[]}>, unitsDoc?: unknown}} raw 世界数据副本（engine.docData）
+ * @param {unknown} unit 单位代号 @returns {[bigint, bigint]}
+ */
+export function unitSi(raw, unit) {
+  /** @type {unknown[]} */
+  const units = Array.isArray(Object(Object(raw).unitsDoc).units) ? Object(Object(raw).unitsDoc).units : [];
+  const row = Object(units.find((u) => Object(u).id === unit));
+  const one = fixedScale();
+  if (row.si !== undefined) return [fixedUnits(Number(row.si)), one];
+  const rule = Object(row.siFromRule);
+  const m = typeof rule.key === 'string' ? RULE_KEY_RE.exec(rule.key) : null;
+  if (m === null) throw new KernelError('E-DIM-UNIT-UNKNOWN', {}, `unit ${JSON.stringify(unit)}: no si or siFromRule in the units table`);
+  const [, table, key] = m;
+  const v = ruleValue(raw, table, key);
+  /** @type {[bigint, bigint]} */
+  const ratio = typeof v === 'number' ? [fixedUnits(v), one] : [BigInt(Number(Object(v).num)), BigInt(Number(Object(v).den))];
+  const [bn, bd] = unitSi(raw, rule.unit);
+  return rule.invert === true ? [ratio[1] * bd, ratio[0] * bn] : [ratio[0] * bn, ratio[1] * bd];
 }
 
 // kernel 实际消费的规则表代号（卷文名 rules.host.*、rules.saveLayout.*；S1-1c 派卡「主会话已定」第 5 条；S1-2b 加 rules.kernelConstants：定点常数由装配层装入 det-math）：

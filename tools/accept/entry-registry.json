@@ -1137,7 +1137,8 @@
     "fixedScale",
     "fixedToNumber",
     "KernelError",
-    "lookupCurve"
+    "lookupCurve",
+    "unitSi"
    ],
    "rules": []
   },
@@ -1176,7 +1177,8 @@
     "deleteRecords",
     "clearStatusesOf",
     "terminationResidue",
-    "KernelError"
+    "KernelError",
+    "unitSi"
    ],
    "rules": []
   },
@@ -1467,6 +1469,20 @@
    "needs": [
     "carcassOf",
     "ruleValue",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "unitSi",
+   "file": "rules/load/registry.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "ruleValue",
+    "fixedUnits",
+    "fixedScale",
     "KernelError"
    ],
    "rules": []
