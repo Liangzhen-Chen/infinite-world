@@ -6,9 +6,11 @@
 
 import { KernelError } from '../../kernel/errors.mjs';
 
+/** @typedef {{kind?: unknown, entity?: {idPrefix?: unknown, singletonIds?: unknown}, rows?: unknown, dimensions?: unknown}} DimensionDoc */
+
 /**
- * @param {Array<Record<string, any>>} dimensionDocs 已读入的维度表文档（跳过下划线开头的元表由调用方做）
- * @returns {Readonly<{idIndex: Map<string, string>, kindIds: Map<string, Readonly<{idPrefix: readonly string[], singletonIds: readonly string[]}>>, tables: Map<string, Record<string, any>>}>}
+ * @param {Array<DimensionDoc>} dimensionDocs 已读入的维度表文档（跳过下划线开头的元表由调用方做）
+ * @returns {Readonly<{idIndex: Map<string, string>, kindIds: Map<string, Readonly<{idPrefix: readonly string[], singletonIds: readonly string[]}>>, tables: Map<string, DimensionDoc>, kindOfLoaded: (id: string) => string | undefined, hasLoaded: (id: string) => boolean}>}
  */
 export function buildRegistry(dimensionDocs) {
   if (!Array.isArray(dimensionDocs)) throw new KernelError('E-DIM-SCHEMA-KIND', {}, 'buildRegistry: dimension docs must be an array');
@@ -16,7 +18,7 @@ export function buildRegistry(dimensionDocs) {
   const idIndex = new Map();
   /** @type {Map<string, Readonly<{idPrefix: readonly string[], singletonIds: readonly string[]}>>} */
   const kindIds = new Map();
-  /** @type {Map<string, Record<string, any>>} */
+  /** @type {Map<string, DimensionDoc>} */
   const tables = new Map();
   /** @type {Map<string, string>} */
   const prefixOwner = new Map();
@@ -44,5 +46,8 @@ export function buildRegistry(dimensionDocs) {
       idIndex.set(id, kind);
     }
   }
-  return Object.freeze({ idIndex, kindIds, tables });
+  // id → kind 的取值只经这两个冻结函数交给调用方（加载器外禁直查 idIndex.get；docs/gemini/kickoff-1125.md:64）。
+  const kindOfLoaded = Object.freeze((id) => idIndex.get(id));
+  const hasLoaded = Object.freeze((id) => idIndex.has(id));
+  return Object.freeze({ idIndex, kindIds, tables, kindOfLoaded, hasLoaded });
 }

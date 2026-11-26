@@ -177,6 +177,14 @@ export const LOT_LEG_KEYS = Object.freeze(['attrs', 'instance', 'splitFrom']);
 // 定义源只此一份，kernel/storage.mjs（追加口的形状核对）、kernel/dated.mjs（读取）都从这里取字段名。
 export const DATED_RECORD_FIELDS = Object.freeze(['fromDay', 'value', 'cause']);
 
+// 状态实体偏离行的协议段名（卷二 §2.7 :589 `created` 行、:826 的 `created.*.props.*` 通配写者；§2.6 :493–497 按路径读写）：
+// 顶层键 created 与记录字段 props。定义源只此一份，kernel/storage.mjs（路径读写判 created.<id>.props.<维度>）与
+// kernel/dimensions.mjs（dim 的依赖声明）都从这里取段名，不各写一份字串。
+export const STATE_RECORD_SEGS = Object.freeze({ created: 'created', props: 'props' });
+
+// dim / modified 返回 Fact 的 source 取值（卷二 :484 `Fact.source`）：值取自哪一级。定义源只此一份，kernel/dimensions.mjs 从这里取。
+export const FACT_SOURCES = Object.freeze(['created_row', 'entity_row', 'category_row', 'table_default']);
+
 // 语言自身的协议键（不是协议标记）：then 给 thenable 探测、toJSON 给 JSON 序列化，其余是对象自带成员名。
 const MARKER_PROTOCOL_KEYS = Object.freeze({ 'then': true, 'toJSON': true, 'constructor': true, 'prototype': true, 'toString': true, 'valueOf': true, 'hasOwnProperty': true, 'is': true, 'family': true });
 
@@ -228,6 +236,8 @@ export const T = Object.freeze({
   ns_row_type: markersOf('ns_row_type', NS_ROW_TYPES),
   lot_leg_key: markersOf('lot_leg_key', LOT_LEG_KEYS),
   dated_field: markersOf('dated_field', DATED_RECORD_FIELDS),
+  fact_source: markersOf('fact_source', FACT_SOURCES),
+  state_record: markersOf('state_record', Object.values(STATE_RECORD_SEGS)),
   decl_field: markersOf('decl_field', DECL_FIELDS),
   rule_structure: markersOf('rule_structure', RULE_STRUCTURES),
   vocab_family: markersOf('vocab_family', VOCAB_FAMILIES),

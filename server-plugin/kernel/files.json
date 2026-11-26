@@ -8,6 +8,7 @@
  "server-plugin/kernel/named-structs.mjs",
  "server-plugin/kernel/rx.mjs",
  "server-plugin/kernel/storage.mjs",
+ "server-plugin/kernel/transaction.mjs",
  "server-plugin/kernel/types.d.ts",
  "server-plugin/kernel/validate/types.mjs"
 ]

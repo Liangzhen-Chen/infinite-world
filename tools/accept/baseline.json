@@ -581,6 +581,15 @@
    "lastMergeRef": "HEAD",
    "locked": true,
    "rowKeys": []
+  },
+  {
+   "b0": 0,
+   "b0Source": "counted",
+   "compCode": "c_write_created",
+   "current": 0,
+   "lastMergeRef": "HEAD",
+   "locked": true,
+   "rowKeys": []
   }
  ]
 }

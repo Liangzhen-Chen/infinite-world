@@ -1,6 +1,11 @@
 {
  "version": 1,
- "stateKeys": {},
+ "stateKeys": {
+  "created": {"writers": {
+   "*": {"create": ["kernel/storage.mjs"], "rewrite": null, "viaRelocate": false},
+   "*.props.*": {"create": ["kernel/storage.mjs"], "rewrite": "kernel/storage.mjs", "rewriteRows": "all", "viaRelocate": false}
+  }}
+ },
  "systems": {},
  "textPaths": ["displayNames.*.text", "playerNotes.*.text", "narration.*"],
  "textWriters": {},
@@ -66,6 +71,11 @@
   {"export": "kernel/storage.mjs#readPath", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/storage.mjs#writePath", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/storage.mjs#createEntity", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/transaction.mjs#writeScope", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/transaction.mjs#requireScope", "callerFiles": ["storage.mjs"], "acceptsState": true},
+  {"export": "kernel/transaction.mjs#txSet", "callerFiles": ["storage.mjs"], "acceptsState": false},
+  {"export": "kernel/transaction.mjs#txDelete", "callers": ["rules"], "acceptsState": false},
+  {"export": "kernel/transaction.mjs#txTouch", "callerFiles": ["storage.mjs"], "acceptsState": false},
   {"export": "kernel/named-structs.mjs#installNamedStructs", "callerFiles": ["index.mjs"], "acceptsState": false},
   {"export": "kernel/dated.mjs#writeDated", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/dated.mjs#inputVersionAt", "callers": ["rules"], "acceptsState": true},

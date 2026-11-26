@@ -1,5 +1,5 @@
 // 新骨架入口（S1-1 卡 A；docs/gemini/kickoff-1125.md:493 的入口形状；Gemini 裁定 msg_82485b7f7ab7）。
-// 本卡只做装配的第一段：读世界维度表与命名 struct 登记，建 engine 雏形与最小 state，然后抛「卡 B/C 未实现」。
+// 本卡只做装配的第一段：读世界维度表、命名 struct 与 state-owners 的 stateKeys 登记，建 engine 雏形与最小 state，然后抛「卡 B/C 未实现」。
 // 抛出的错误对象带 engine 与 state 属性，后续卡（B 事务/时间推进/存档、C 加载器移入 rules/ 与挂载强断言）改成返回值。
 // 读文件只在装配层（本文件），kernel 内的规则零件不读文件；不引任何归档文件。
 
@@ -25,10 +25,10 @@ function readDimensionDocs() {
 export async function init() {
   const registry = buildRegistry(readDimensionDocs());
   const structs = installNamedStructs(JSON.parse(readFileSync(new URL('named-structs.json', WORLD_ONTOLOGY), 'utf8')));
-  const engine = Object.freeze({ registry, structs, modifierSources: Object.freeze([]) });
-  const state = { created: {} };
-  const err = /** @type {Error & {engine: any, state: any}} */ (new Error('新骨架未实现：S1-1 卡 B/C'));
-  err.engine = engine;
-  err.state = state;
-  throw err;
+  // 顶层状态键的登记表（state-owners.json 的 stateKeys，卷二 §2.7 :580）；内核按它判 writePath 的顶层键是否已声明。
+  const owners = JSON.parse(readFileSync(new URL('state-owners.json', WORLD_ONTOLOGY), 'utf8'));
+  const stateKeys = Object.freeze({ ...(owners && owners.stateKeys ? owners.stateKeys : {}) });
+  const engine = Object.freeze({ registry, structs, modifierSources: Object.freeze([]), stateKeys });
+  const initial = { created: {} };
+  throw Object.assign(new Error('新骨架未实现：S1-1 卡 B/C'), { engine, state: initial });
 }
