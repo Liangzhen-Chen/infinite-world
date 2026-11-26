@@ -131,6 +131,8 @@ const NOT_PARAM_LIST = new Set(['if', 'while', 'for', 'switch', 'with', 'catch',
  */
 export function isBindingSite(toks, i) {
   const prev = toks[i - 1];
+  // 绑定位置只可能是裸标识符：后接成员访问（`.`、`?.`、`[`）的是成员链，任何位置都不是绑定。
+  if (isP(toks[i + 1], '.') || isP(toks[i + 1], '?.') || isP(toks[i + 1], '[')) return false;
   if (!prev || isP(prev, '.') || isP(prev, '?.')) return false;
   if (prev.t === 'id' && DECL_WORDS.has(prev.v)) return true;
   if (!isP(prev, ',') && !isP(prev, '(')) return false;
@@ -140,6 +142,8 @@ export function isBindingSite(toks, i) {
     if (isP(t, ')') || isP(t, ']') || isP(t, '}')) d++;
     else if (isP(t, '(') || isP(t, '[') || isP(t, '{')) { if (d === 0) break; d--; }
     else if (d === 0 && isP(t, ';')) break;
+    // 同深度回扫越过换行、且换行前的记号能结束语句（无分号换行可能是新语句），在此停，不认前一语句的声明头。
+    if (d === 0 && t.nl && endsStatement(toks[k - 1])) { k--; break; }
   }
   const head = toks[k + 1];
   if (head && head.t === 'id' && DECL_WORDS.has(head.v)) return true;
@@ -147,7 +151,15 @@ export function isBindingSite(toks, i) {
   const close = matchClose(toks, k);
   if (isP(toks[close + 1], '=>')) return true;
   const callee = toks[k - 1];
-  return Boolean(isP(toks[close + 1], '{') && callee && callee.t === 'id' && !NOT_PARAM_LIST.has(callee.v));
+  // 函数体 `{` 须与收尾 `)` 同行；跨行的 `f(…)` 换行 `{…}` 按调用加块语句处理（宁可多报）。
+  return Boolean(isP(toks[close + 1], '{') && toks[close + 1].line === toks[close].line && callee && callee.t === 'id' && !NOT_PARAM_LIST.has(callee.v));
+}
+
+/** 能结束一条语句的记号（其后换行可由自动分号插入断开）：标识符、字面量、收尾括号、后缀自增自减。 */
+function endsStatement(t) {
+  if (!t) return false;
+  if (t.t === 'id' || t.t === 'num' || t.t === 'str' || t.t === 'tpl' || t.t === 're') return true;
+  return isP(t, ')') || isP(t, ']') || isP(t, '}') || isP(t, '++') || isP(t, '--');
 }
 
 /**
