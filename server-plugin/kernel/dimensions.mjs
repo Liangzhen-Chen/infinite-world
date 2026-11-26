@@ -58,7 +58,7 @@ function readBase(engine, state, kind, id, dimension) {
  * @returns {{known: true, applicable: true, value: any, source: string, current: true}}
  */
 export function dim(engine, state, kind, id, dimension) {
-  const key = `${DIM_MEMO}\u0000${kind}\u0000${id}\u0000${dimension}`;
+  const key = [DIM_MEMO, kind, id, dimension];
   return stateMemo(state, engine, key, () => {
     const got = readBase(engine, state, kind, id, dimension);
     return Object.freeze({ known: true, applicable: true, value: got.value, source: got.source, current: true });

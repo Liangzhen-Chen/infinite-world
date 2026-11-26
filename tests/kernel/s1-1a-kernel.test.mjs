@@ -60,8 +60,8 @@ test('stateMemo：作废顶层键 X 只重算依赖 X 的格，依赖 Y 的格�
   const { engine, state } = fixture();
   let buildX = 0;
   let buildY = 0;
-  const readX = () => stateMemo(state, engine, 'x', () => ++buildX, [['xx']]);
-  const readY = () => stateMemo(state, engine, 'y', () => ++buildY, [['yy']]);
+  const readX = () => stateMemo(state, engine, ['x'], () => ++buildX, [['xx']]);
+  const readY = () => stateMemo(state, engine, ['y'], () => ++buildY, [['yy']]);
   assert.equal(readX(), 1);
   assert.equal(readY(), 1);
   assert.equal(readX(), 1);
@@ -72,8 +72,29 @@ test('stateMemo：作废顶层键 X 只重算依赖 X 的格，依赖 Y 的格�
   assert.equal(readY(), 2);
   assert.equal(readX(), 2);
   // inputs 空或非数组一律抛，不当成"无依赖"放行。
-  assert.throws(() => stateMemo(state, engine, 'z', () => 1, []));
-  assert.throws(() => stateMemo(state, engine, 'z', () => 1, /** @type {any} */ (null)));
+  assert.throws(() => stateMemo(state, engine, ['z'], () => 1, []));
+  assert.throws(() => stateMemo(state, engine, ['z'], () => 1, /** @type {any} */ (null)));
+  // key 不是数组或为空一律抛。
+  assert.throws(() => stateMemo(state, engine, /** @type {any} */ ('z'), () => 1, [['xx']]));
+  assert.throws(() => stateMemo(state, engine, [], () => 1, [['xx']]));
+});
+
+test("stateMemo：['a,b'] 与 ['a','b'] 不撞键", () => {
+  const { engine, state } = fixture();
+  const one = stateMemo(state, engine, ['a,b'], () => 'one', [['xx']]);
+  const two = stateMemo(state, engine, ['a', 'b'], () => 'two', [['xx']]);
+  assert.equal(one, 'one');
+  assert.equal(two, 'two');
+});
+
+test('createEntity / kindOfEntity：registry 缺 hasLoaded / kindOfLoaded 即抛，不跳过核对', () => {
+  const { engine, state } = fixture();
+  const reg = engine.registry;
+  const noHas = { ...engine, registry: { kindIds: reg.kindIds, kindOfLoaded: reg.kindOfLoaded } };
+  const noKind = { ...engine, registry: { kindIds: reg.kindIds, hasLoaded: reg.hasLoaded } };
+  assert.throws(() => kindOfEntity(noKind, state, 'item_a'), code('E-DIM-REF-MISSING'));
+  const tx = /** @type {any} */ ({});
+  assert.throws(() => createEntity(noHas, state, tx, 'item_zz', 'item', {}));
 });
 
 test('writePath：按维度声明判 ref；枚举值与普通值不按 ref 拒；未登记顶层键拒写', () => {

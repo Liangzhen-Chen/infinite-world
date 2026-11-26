@@ -92,7 +92,8 @@ export function kindOfEntity(engine, state, id) {
   requireState(state);
   if (typeof id !== 'string' || id.length === 0) throw new KernelError('E-DIM-ID-FORMAT', {}, 'id must be a non-empty string');
   const reg = engine && engine.registry;
-  const known = reg && typeof reg.kindOfLoaded === 'function' ? reg.kindOfLoaded(id) : undefined;
+  if (!reg || typeof reg.kindOfLoaded !== 'function') throw new KernelError('E-DIM-REF-MISSING', {}, 'registry.kindOfLoaded is required');
+  const known = reg.kindOfLoaded(id);
   if (known !== undefined) return known;
   const made = state.created !== null && typeof state.created === 'object' && Object.hasOwn(state.created, id);
   if (made && reg && reg.kindIds instanceof Map) {
@@ -172,7 +173,8 @@ export function createEntity(engine, state, tx, id, kind, props) {
   if (!prefixes.some((p) => id.startsWith(p)) && !singles.includes(id)) {
     throw new KernelError('E-DIM-ID-FORMAT', CODE_RE.test(id) ? { entity: id } : {}, `id ${JSON.stringify(id)}: does not carry a prefix of kind ${kind}`);
   }
-  if (typeof reg.hasLoaded === 'function' && reg.hasLoaded(id)) throw new KernelError('E-DIM-ID-DUPLICATE', CODE_RE.test(id) ? { entity: id } : {}, `id ${id}: already a loaded entity`);
+  if (typeof reg.hasLoaded !== 'function') throw new KernelError('E-DIM-REF-MISSING', {}, 'registry.hasLoaded is required');
+  if (reg.hasLoaded(id)) throw new KernelError('E-DIM-ID-DUPLICATE', CODE_RE.test(id) ? { entity: id } : {}, `id ${id}: already a loaded entity`);
   if (state.created !== null && typeof state.created === 'object' && Object.hasOwn(state.created, id)) {
     throw new KernelError('E-DIM-ID-DUPLICATE', CODE_RE.test(id) ? { entity: id } : {}, `id ${id}: already created`);
   }

@@ -21,7 +21,12 @@ function topKeysOf(inputs) {
 }
 
 // 缓存键：调用方给的 cache 名 + 依赖路径（同一 cache 名配不同依赖不串格）。
-const cellKeyOf = (key, inputs) => `${String(key)}\u0000${JSON.stringify(inputs)}`;
+// key 是非空数组（缓存名 + 参数，卷二:509），整体 JSON 序列化，['a,b'] 与 ['a','b'] 不撞键。
+const cellKeyOf = (key, inputs) => JSON.stringify([key, inputs]);
+
+function requireKey(key) {
+  if (!Array.isArray(key) || key.length === 0) throw new Error('kernel/memo.mjs: stateMemo key must be a non-empty array');
+}
 
 function recordOf(state) {
   let rec = memos.get(state);
@@ -36,12 +41,13 @@ function recordOf(state) {
  * @template T
  * @param {any} state
  * @param {any} engine
- * @param {string} key 调用方登记的缓存名（同一 state 下不同用途互不相混）
+ * @param {ReadonlyArray<unknown>} key 非空数组：缓存名 + 参数（同一 state 下不同用途互不相混）
  * @param {() => T} build
  * @param {ReadonlyArray<ReadonlyArray<any>>} inputs 依赖路径数组（非空）
  * @returns {T}
  */
 export function stateMemo(state, engine, key, build, inputs) {
+  requireKey(key);
   const tops = topKeysOf(inputs);
   if (state === null || typeof state !== 'object') return build();
   const rec = recordOf(state);
