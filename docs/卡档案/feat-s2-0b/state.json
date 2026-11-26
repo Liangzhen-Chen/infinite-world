@@ -1,7 +1,7 @@
 {
   "card": "feat-s2-0b",
   "phase": "reviewed",
-  "updatedAt": "2026-11-26T22:11:47.866Z",
+  "updatedAt": "2026-11-26T22:34:49.984Z",
   "branches": {
     "code": "feat/s2-0b",
     "test": "test/s2-0b"
@@ -32,6 +32,6 @@
     "runUrl": null
   },
   "failCount": 1,
-  "blocker": "等 S1-3a（PR #33）合入 master",
-  "nextAction": "S1-3a 合入后（有 54 条来历模板）：出题方合 master 复跑验收，原红 7 例应转绿（仍红则查是否须按来历模板建人）；主会话补 S2-0a、S2-0b 两卡三方凭证（本卡 parties 仍是占位）、重生成快照、--check、check-push-archive 后推 feat/s2-0b 开一个 PR"
+  "blocker": "等 S1-3c（开局化身建档派生）：S1-3a 开局化身缺 species/adultMassKg/birthMinute，真实 init 无人物实体，验收 7 例无合法主体（诊断 msg_e1158b17f773、msg_23b67ef688de 回复）",
+  "nextAction": "等 S1-3c 合入后：出题方把 7 例前置改为真实开局 act_choose_origin 建化身再触发终止机制（只验 NPC 同律 die/settleBody，不验玩家死后）；转绿后补两卡凭证、快照、--check、check-push-archive，推 feat/s2-0b 开一个 PR"
 }
