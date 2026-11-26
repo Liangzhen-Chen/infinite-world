@@ -1,7 +1,7 @@
 {
   "card": "feat-s1-1b2",
-  "phase": "pr",
-  "updatedAt": "2026-11-26T11:15:58.922Z",
+  "phase": "merged",
+  "updatedAt": "2026-11-26T11:40:46.016Z",
   "branches": {
     "code": "feat/s1-1b2",
     "test": "test/s1-1b2"
@@ -33,5 +33,5 @@
   },
   "failCount": 0,
   "blocker": null,
-  "nextAction": "李白 11-26 11:2x 裁定按①合（e2e-observe 现行允许红）；main 绿即合 PR #25，合入后接 S1-1c"
+  "nextAction": "已合入 master f53db9880（PR #25）"
 }

@@ -603,7 +603,7 @@
   {
    "b0": 0,
    "b0Source": "counted",
-   "compCode": "c_write_log",
+   "compCode": "c_write_genesis",
    "current": 0,
    "lastMergeRef": "HEAD",
    "locked": true,

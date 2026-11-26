@@ -1,0 +1,7 @@
+// 无分号换行后的逗号表达式里的成员写，不是上一行声明的续写，仍报（门禁封口卡 B 审卡第一轮必须改 1）。
+/** @param {State} state @param {() => void} b @returns {void} */
+export function poke(state, b) {
+  let a = 1
+  b(), state.gold = 999;
+  void a;
+}

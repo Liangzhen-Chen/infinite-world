@@ -4,7 +4,8 @@
 // claude-* 行为等同旧 tools/dispatch/run-card.sh：密钥读 ANTHROPIC_API_KEY，没有则读 CLAUDE_API_KEY，只在子进程环境传 ANTHROPIC_API_KEY，并清掉 OAuth/会员令牌键；
 // 预算经 tools/dispatch/budget-check.mjs（只许 0 < x <= 0.65）。
 // 本机路径与派卡配置不写死在本文件：从同目录 paths.json、dispatch-config.json 读，缺键报错退出。
-import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs';
+import { readFileSync, mkdirSync, readdirSync } from 'node:fs';
+import { writeCliOut } from '../accept/lib/cli-out.mjs';
 import { spawn, execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
@@ -313,7 +314,7 @@ export function main(argv) {
       try {
         mkdirSync(dir, { recursive: true });
         const file = join(dir, `${opts.role}-${String(nextReceiptNumber(dir, opts.role)).padStart(3, '0')}.json`);
-        writeFileSync(file, `${JSON.stringify(receipt, null, 2)}\n`, 'utf8');
+        writeCliOut(opts.wd, file, `${JSON.stringify(receipt, null, 2)}\n`);
       } catch (e) {
         process.stderr.write(`写收据失败：${e.message}\n`);
         process.exit(2);

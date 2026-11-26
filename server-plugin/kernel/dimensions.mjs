@@ -1,18 +1,26 @@
 // 横切入口 dim / modified 的最小版（S1-1 卡 A；卷二 §2.1 :436、§2.2 :445）。
 // dim 只给基值，取值顺序：state.created[id].props（偏离行）→ 实体行 rows[created[id].template ?? id] → 类别行 classes[<实体行的 classes>] → 表默认值 def.default；
 // 都没有即抛错（不给缺省）。结果按顶层键 'created' 切片缓存在这份 state 上（kernel/memo.mjs），实体行与类别行是加载期数据、不入依赖。
-// modified = dim 后依次过 engine.modifierSources（冻结数组；空数组即零个修正项）。来源的统一调用口径是 source(value, ctx)，
+// modified = dim 后依次过 engine.modifierSources（冻结数组；空数组即零个修正项；不是数组即抛，不兜底）。来源的统一调用口径是 source(value, ctx)，
 // ctx = {engine, state, kind, id, dimension}；一元函数忽略多余实参或直接用 ctx 都行。本卡不实现九步管线与来源解析（卡 B 起再补）。
 // 只按登记数据判，不认任何具体 kind、维度或 id。
 
 import { KernelError } from './errors.mjs';
-import { T } from './handles.mjs';
-import { stateMemo } from './memo.mjs';
+import { T, GRAMMAR_TOKENS } from './handles.mjs';
+import { stateMemo, inputsOf } from './memo.mjs';
 
 const DIM_MEMO = 'kernel/dimensions.mjs#dim';
-// dim 的依赖声明：只依赖顶层键 created（实体行、类别行与表默认值是加载期数据）。冻结，符合 stateMemo 的 inputs 形状。
-// 段名取 handles.mjs 的 STATE_RECORD_SEGS（T.state_record，定义源一处）。
-const DIM_INPUTS = Object.freeze([Object.freeze([T.state_record.created])]);
+// dim 的依赖节点名前缀（卷二 :502 示例 `dim:<kind>`）；按 kind 取 `dim:<kind>`，由 memo.mjs 解析到下面这条通配声明。
+const DIM_NODE = 'dim:';
+/**
+ * dim 的依赖声明（卷二 :509–:513；装配层收齐交 memo.mjs#closeInputs）：任一 kind 只依赖 state.created 下的实体记录
+ * （实体行、类别行与表默认值是加载期数据）。段名取 handles.mjs（T.state_record、GRAMMAR_TOKENS.wildcard，定义源一处）。
+ */
+export const DIM_DECL = Object.freeze({
+  node: `${DIM_NODE}${GRAMMAR_TOKENS.wildcard}`,
+  own: Object.freeze([Object.freeze([T.state_record.created, GRAMMAR_TOKENS.wildcard])]),
+  uses: Object.freeze([]),
+});
 
 /** @param {{registry: {tables: Map<string, Record<string, any>>}}} engine @param {string} kind @returns {Record<string, any>} */
 function tableDoc(engine, kind) {
@@ -69,23 +77,71 @@ export function dim(engine, state, kind, id, dimension) {
   return stateMemo(state, engine, key, () => {
     const got = readBase(engine, state, kind, id, dimension);
     return Object.freeze({ known: true, applicable: true, value: got.value, source: got.source, current: true });
-  }, DIM_INPUTS);
+  }, inputsOf(engine, `${DIM_NODE}${kind}`));
 }
 
 /**
  * kernelApi `modified(engine, state, kind, id, dimension)`（卷二 §2.1 :436）：dim 后依次过 engine.modifierSources。
- * 空数组即零个修正项（value 等于 base）。返回 Fact，另带 base（dim 的 value）。每个来源以 source(value, ctx) 调用，ctx = {engine, state, kind, id, dimension}。
+ * 空数组即零个修正项（value 等于 base）；engine.modifierSources 不是数组即 E-DIM-STRUCT-FIELD（装配层须显式交，不兜底）。返回 Fact，另带 base（dim 的 value）。每个来源以 source(value, ctx) 调用，ctx = {engine, state, kind, id, dimension}。
  * @param {any} engine @param {any} state @param {string} kind @param {string} id @param {string} dimension
  * @returns {any}
  */
 export function modified(engine, state, kind, id, dimension) {
+  if (!Array.isArray(engine !== null && typeof engine === 'object' ? engine.modifierSources : undefined)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'engine.modifierSources must be an array');
   const fact = dim(engine, state, kind, id, dimension);
-  let value = fact.value;
-  const sources = engine && Array.isArray(engine.modifierSources) ? engine.modifierSources : [];
+  return modifiedWith(engine, state, kind, id, dimension, fact.value, Object.freeze([]), fact);
+}
+
+/**
+ * 读入口合成派生项的求值（卷四 B-5a、B-7）：基值 base 先加上读入口现场合成的 add 项 terms（数值，按序相加），再依次过 engine.modifierSources（同 modified 的调用口径）。
+ * modified 即 terms 为空、base 取 dim 值的这一种；读入口（如 bodyView 的能力值）没有维度行可读时直接交基值。返回 Fact，另带 base。
+ * engine.modifierSources 不是数组、来源不是函数、terms 不是数值数组即 E-DIM-STRUCT-FIELD（不兜底）。
+ * @param {any} engine @param {any} state @param {string} kind @param {string} id @param {string} dimension @param {any} base @param {ReadonlyArray<number>} terms
+ * @param {{source?: string}} [fact] 基值来自 dim 时交 dim 的 Fact（带取值来源）
+ * @returns {any}
+ */
+export function modifiedWith(engine, state, kind, id, dimension, base, terms, fact) {
+  const sources = engine !== null && typeof engine === 'object' ? engine.modifierSources : undefined;
+  if (!Array.isArray(sources)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'engine.modifierSources must be an array');
+  if (!Array.isArray(terms) || !terms.every((t) => typeof t === 'number') || (terms.length > 0 && typeof base !== 'number')) {
+    throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'modifiedWith: terms must be numbers added to a numeric base');
+  }
+  let value = terms.reduce((acc, t) => acc + t, base);
   const ctx = Object.freeze({ engine, state, kind, id, dimension });
   for (const source of sources) {
     if (typeof source !== 'function') throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'engine.modifierSources entries must be functions');
     value = source(value, ctx);
   }
-  return Object.freeze({ ...fact, value, base: fact.value });
+  return Object.freeze({ known: true, applicable: true, ...(fact && fact.source !== undefined ? { source: fact.source } : {}), current: true, value, base });
+}
+
+// 码点序比较（契约 ctr_map_nonnull_view：按键码点序）；逐码点比，不按 UTF-16 码元。
+/** @param {string} a @param {string} b @returns {number} */
+function codePointOrder(a, b) {
+  const x = [...a];
+  const y = [...b];
+  for (let i = 0; i < x.length && i < y.length; i += 1) {
+    const d = Number(x[i].codePointAt(0)) - Number(y[i].codePointAt(0));
+    if (d !== 0) return d;
+  }
+  return x.length - y.length;
+}
+
+/**
+ * 全族映射的非 null 只读视图（契约 ctr_map_nonnull_view，world/ontology/contracts.json:225；卷二 §1.6 第 4 项）：映射展平后覆盖键类型全族，
+ * 「某键没有」写 null；规则层遍历映射一律经它，只见值非 null 的项，按键码点序，冻结。dim 照旧原样给含 null 的映射（null 是已知值）。
+ * 不是映射（null、数组、非对象）即 E-DIM-STRUCT-FIELD。
+ * @param {unknown} map @returns {ReadonlyArray<readonly [string, unknown]>}
+ */
+export function presentEntries(map) {
+  if (map === null || typeof map !== 'object' || Array.isArray(map)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'presentEntries: value must be a map');
+  const m = Object(map);
+  /** @type {Array<readonly [string, unknown]>} */
+  const out = [];
+  for (const k of Object.keys(m).filter((key) => m[key] !== null).sort(codePointOrder)) {
+    /** @type {readonly [string, unknown]} */
+    const pair = Object.freeze([k, m[k]]);
+    out.push(pair);
+  }
+  return Object.freeze(out);
 }

@@ -74,6 +74,17 @@
    "rules": []
   },
   {
+   "name": "bakePlaceTree",
+   "file": "rules/bake/place-tree.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
    "name": "base64ToBytes",
    "file": "kernel/bytes.mjs",
    "vol": null,
@@ -153,6 +164,17 @@
    "rules": []
   },
   {
+   "name": "closeInputs",
+   "file": "kernel/memo.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
    "name": "codeOf",
    "file": "kernel/errors.mjs",
    "vol": null,
@@ -214,6 +236,19 @@
    "kind": "kernel",
    "needs": [
     "canonical"
+   ],
+   "rules": []
+  },
+  {
+   "name": "dim",
+   "file": "kernel/dimensions.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "stateMemo",
+    "inputsOf",
+    "KernelError"
    ],
    "rules": []
   },
@@ -378,7 +413,9 @@
    "vol": null,
    "sec": null,
    "kind": "part",
-   "needs": [],
+   "needs": [
+    "mountKernel"
+   ],
    "rules": []
   },
   {
@@ -388,7 +425,20 @@
    "sec": null,
    "kind": "write",
    "needs": [
-    "writePath"
+    "readPath",
+    "writePath",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "inputsOf",
+   "file": "kernel/memo.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "KernelError"
    ],
    "rules": []
   },
@@ -483,6 +533,31 @@
    "rules": []
   },
   {
+   "name": "loadSlot",
+   "file": "index.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "mountKernel",
+    "readSlot"
+   ],
+   "rules": []
+  },
+  {
+   "name": "loadWorld",
+   "file": "rules/load/registry.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "buildRegistry",
+    "checkValue",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
    "name": "makePathHandles",
    "file": "kernel/handles.mjs",
    "vol": null,
@@ -525,7 +600,7 @@
    "sec": null,
    "kind": "part",
    "needs": [
-    "buildRegistry",
+    "loadWorld",
     "makePathHandles",
     "installNamedStructs",
     "buildState",
@@ -539,9 +614,21 @@
     "writeSlot",
     "dataPacksDigestOf",
     "engineRulesDigestOf",
-    "checkValue",
     "clone",
-    "KernelError"
+    "KernelError",
+    "replayApply",
+    "closeInputs",
+    "runTransaction",
+    "runGenesis",
+    "runOpening",
+    "openingOf",
+    "bakePlaceTree",
+    "placeTreeDigest",
+    "installFixedConstants",
+    "checkBodyPlans",
+    "speciesView",
+    "bodyView",
+    "carcassOf"
    ],
    "rules": []
   },
@@ -573,12 +660,34 @@
    "rules": []
   },
   {
+   "name": "openingOf",
+   "file": "rules/gen/worldgen-writeback.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "readPath"
+   ],
+   "rules": []
+  },
+  {
    "name": "parseNumberType",
    "file": "kernel/validate/types.mjs",
    "vol": null,
    "sec": null,
    "kind": "part",
    "needs": [],
+   "rules": []
+  },
+  {
+   "name": "placeTreeDigest",
+   "file": "rules/bake/place-tree.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "canonical"
+   ],
    "rules": []
   },
   {
@@ -688,6 +797,17 @@
    "rules": []
   },
   {
+   "name": "replay_apply",
+   "file": "index.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "mountKernel"
+   ],
+   "rules": []
+  },
+  {
    "name": "report",
    "file": "kernel/report.mjs",
    "vol": null,
@@ -703,6 +823,44 @@
    "sec": null,
    "kind": "kernel",
    "needs": [],
+   "rules": []
+  },
+  {
+   "name": "ruleValue",
+   "file": "rules/load/registry.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "checkValue",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "runGenesis",
+   "file": "rules/gen/worldgen-writeback.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "writePath",
+    "ruleValue"
+   ],
+   "rules": []
+  },
+  {
+   "name": "runOpening",
+   "file": "rules/gen/worldgen-writeback.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "readPath",
+    "writePath",
+    "ruleValue",
+    "dim"
+   ],
    "rules": []
   },
   {
@@ -743,6 +901,17 @@
    "kind": "kernel",
    "needs": [
     "canonical"
+   ],
+   "rules": []
+  },
+  {
+   "name": "saveSlot",
+   "file": "index.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "writeSlot"
    ],
    "rules": []
   },
@@ -807,6 +976,17 @@
    "sec": null,
    "kind": "kernel",
    "needs": [],
+   "rules": []
+  },
+  {
+   "name": "stateMemo",
+   "file": "kernel/memo.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "KernelError"
+   ],
    "rules": []
   },
   {
@@ -880,6 +1060,97 @@
     "saveDigest",
     "canonical",
     "readPath",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "presentEntries",
+   "file": "kernel/dimensions.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "modifiedWith",
+   "file": "kernel/dimensions.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "checkBodyPlans",
+   "file": "rules/body/body-plan.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "ruleValue",
+    "presentEntries",
+    "fixedUnits",
+    "fixedAdd",
+    "fixedScale",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "speciesView",
+   "file": "rules/body/species.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "fixedToNumber",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "bodyView",
+   "file": "rules/body/body.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "ruleValue",
+    "speciesView",
+    "modifiedWith",
+    "presentEntries",
+    "fixedUnits",
+    "fixedSub",
+    "fixedMultiply",
+    "fixedAdd",
+    "fixedScale",
+    "fixedToNumber",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "carcassOf",
+   "file": "rules/body/carcass.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "ruleValue",
+    "bodyView",
+    "presentEntries",
+    "fixedUnits",
+    "fixedAdd",
+    "fixedMultiply",
+    "fixedDivide",
+    "fixedScale",
+    "fixedToNumber",
     "KernelError"
    ],
    "rules": []

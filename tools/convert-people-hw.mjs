@@ -12,10 +12,13 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { repoRoot, safeSegment } from './path-segment.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, '..');
-const OUT = 'world/people/opening-roster-hw.json';
+const OUT_DIR = 'world/people';
+const OUT_FILE = 'opening-roster-hw.json';
+const OUT = `${OUT_DIR}/${OUT_FILE}`;
 // 试玩地区（河湾村）：开局持有卡的 22 户家户行就是户籍索引里 settlement 为它的那些户。
 export const TRIAL_SCOPE = 'loc_hw';
 // 旧性别标记 → 性别词表代号（物种 sexes 的键，卷四 §2.3）。
@@ -58,7 +61,7 @@ function main() {
   let now = '';
   try { now = readFileSync(join(REPO, OUT), 'utf8').replace(/\r\n/g, '\n'); } catch { now = ''; }
   const same = now === next;
-  if (!same && !check) writeFileSync(join(REPO, OUT), next);
+  if (!same && !check) writeFileSync(join(repoRoot(), OUT_DIR, safeSegment(OUT_FILE)), next);
   process.stdout.write(same ? 'opening roster unchanged\n' : check ? 'opening roster differs\n' : 'opening roster written\n');
   if (check) process.exit(same ? 0 : 1);
 }

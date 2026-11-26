@@ -9857,6 +9857,170 @@
    "valueMult": 1,
    "workDifficulty": 10
   },
+  "mat_feather": {
+   "airtight": {
+    "solid": false,
+    "liquid": true,
+    "gas": false
+   },
+   "basis": "卷四｜家鸡组织 tissue_feather 的材料（S1-2b，主会话 11-26 裁定 3A：按 mat_rawhide 体例新增，能查到文献的维度用文献并写出处，查不到的用卷三甲 designed 档）。羽毛约 90% 以上为角蛋白（Stan & Badea 2013 :277 转引 Dalev 1990），与毛发同类，故未查到文献的维度取 mat_goat_hair 之值并逐格标暂定；热值、含水率有文献（见 cellGrades）。密度、自燃点、分解点、极限氧未查到羽毛文献（MDPI、Georgia Tech、PMC 页面本次均未能读取），取山羊毛值。不设 reactionProducts（毡化是毛的工艺，羽毛未查到）。",
+   "bearsLoad": {
+    "solid": false,
+    "liquid": false,
+    "gas": false
+   },
+   "blocksSky": {
+    "solid": true,
+    "liquid": false,
+    "gas": false
+   },
+   "burnRate": 0.25,
+   "cellGrades": {
+    "airtight.gas": {
+     "basis": "同 mat_goat_hair（同为角蛋白纤维类，卷三甲 :128–:131 分态布尔按材料类别「纤维与织物」）：设：卷三甲 :131 分态布尔，按材料类别与物态的物理常识定（气态不挡视线、不遮天、不承托、不阻气（气体按定义四项皆假））；无卷文出处的设定值，可在试玩后调；类别判定见本行 basis 之后的 cellGrades 注与回报的类别表",
+     "citation": null,
+     "grade": "designed"
+    },
+    "airtight.liquid": {
+     "basis": "同 mat_goat_hair（同为角蛋白纤维类，卷三甲 :128–:131 分态布尔按材料类别「纤维与织物」）：设：卷三甲 :131 分态布尔，按材料类别与物态的物理常识定（液体充满格，挡气体与气味通过）；无卷文出处的设定值，可在试玩后调；类别判定见本行 basis 之后的 cellGrades 注与回报的类别表",
+     "citation": null,
+     "grade": "designed"
+    },
+    "airtight.solid": {
+     "basis": "同 mat_goat_hair（同为角蛋白纤维类，卷三甲 :128–:131 分态布尔按材料类别「纤维与织物」）：暂定·待试玩标定；设：卷三甲 :131 分态布尔，按材料类别与物态的物理常识定（类别「纤维与织物（不承重、透气）」的固态取值）；无卷文出处的设定值，可在试玩后调；类别判定见本行 basis 之后的 cellGrades 注与回报的类别表",
+     "citation": null,
+     "grade": "designed"
+    },
+    "bearsLoad.gas": {
+     "basis": "同 mat_goat_hair（同为角蛋白纤维类，卷三甲 :128–:131 分态布尔按材料类别「纤维与织物」）：设：卷三甲 :130 分态布尔，按材料类别与物态的物理常识定（气态不挡视线、不遮天、不承托、不阻气（气体按定义四项皆假））；无卷文出处的设定值，可在试玩后调；类别判定见本行 basis 之后的 cellGrades 注与回报的类别表",
+     "citation": null,
+     "grade": "designed"
+    },
+    "bearsLoad.liquid": {
+     "basis": "同 mat_goat_hair（同为角蛋白纤维类，卷三甲 :128–:131 分态布尔按材料类别「纤维与织物」）：设：卷三甲 :130 分态布尔，按材料类别与物态的物理常识定（液态托不住人与物（卷五 :751 液态水不能承托））；无卷文出处的设定值，可在试玩后调；类别判定见本行 basis 之后的 cellGrades 注与回报的类别表",
+     "citation": null,
+     "grade": "designed"
+    },
+    "bearsLoad.solid": {
+     "basis": "同 mat_goat_hair（同为角蛋白纤维类，卷三甲 :128–:131 分态布尔按材料类别「纤维与织物」）：暂定·待试玩标定；设：卷三甲 :130 分态布尔，按材料类别与物态的物理常识定（类别「纤维与织物（不承重、透气）」的固态取值）；无卷文出处的设定值，可在试玩后调；类别判定见本行 basis 之后的 cellGrades 注与回报的类别表",
+     "citation": null,
+     "grade": "designed"
+    },
+    "blocksSky.gas": {
+     "basis": "同 mat_goat_hair（同为角蛋白纤维类，卷三甲 :128–:131 分态布尔按材料类别「纤维与织物」）：设：卷三甲 :129 分态布尔，按材料类别与物态的物理常识定（气态不挡视线、不遮天、不承托、不阻气（气体按定义四项皆假））；无卷文出处的设定值，可在试玩后调；类别判定见本行 basis 之后的 cellGrades 注与回报的类别表",
+     "citation": null,
+     "grade": "designed"
+    },
+    "blocksSky.liquid": {
+     "basis": "同 mat_goat_hair（同为角蛋白纤维类，卷三甲 :128–:131 分态布尔按材料类别「纤维与织物」）：设：卷三甲 :129 分态布尔，按材料类别与物态的物理常识定（液体格不遮头顶（卷三甲 :129 水的液栏为假））；无卷文出处的设定值，可在试玩后调；类别判定见本行 basis 之后的 cellGrades 注与回报的类别表",
+     "citation": null,
+     "grade": "designed"
+    },
+    "blocksSky.solid": {
+     "basis": "同 mat_goat_hair（同为角蛋白纤维类，卷三甲 :128–:131 分态布尔按材料类别「纤维与织物」）：设：卷三甲 :129 分态布尔，按材料类别与物态的物理常识定（类别「纤维与织物（不承重、透气）」的固态取值）；无卷文出处的设定值，可在试玩后调；类别判定见本行 basis 之后的 cellGrades 注与回报的类别表",
+     "citation": null,
+     "grade": "designed"
+    },
+    "burnRate": {
+     "basis": "暂定·待试玩标定；未查到羽毛的文献值，取同为角蛋白纤维的 mat_goat_hair 之值（其依据：设：P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_ghost_fire_oil、mat_oak、mat_black_powder、mat_camphor；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；设定，可在试玩后调）",
+     "citation": null,
+     "grade": "designed"
+    },
+    "decomposePoint": {
+     "basis": "暂定·待试玩标定；未查到羽毛的文献值，取同为角蛋白纤维的 mat_goat_hair 之值（其依据：卷三甲 §4.5.5 例 1 全集表\"分解点\"栏的卷文值，没有依据代号指向出处（:528 折 C 级））",
+     "citation": null,
+     "grade": "designed"
+    },
+    "density.solid": {
+     "basis": "暂定·待试玩标定；未查到羽毛的文献值，取同为角蛋白纤维的 mat_goat_hair 之值（其依据：卷三甲 §4.5.5 例 1 全集表\"密度固\"栏的卷文值，没有依据代号指向出处（:528 折 C 级））",
+     "citation": null,
+     "grade": "designed"
+    },
+    "flammability": {
+     "basis": "暂定·待试玩标定；未查到羽毛的文献值，取同为角蛋白纤维的 mat_goat_hair 之值（其依据：卷三甲 §4.5.5 例 1 依据 氧:未核（:528 折 C 级）：毡的原料。第五版：未核到极限氧。栏里的 25 没有出处（查到的 23.6–25.2 是绵羊毛的值，不是山羊毛的；`审查/卷三-丝毛棉与成堆参数上网核对.md` §1.1），依据由\"试\"改记\"未核\"，进加载警告清单；卷三乙按这个数算出来不是燃料，补到出处以前不作正例也不作反例）",
+     "citation": null,
+     "grade": "designed"
+    },
+    "heatValue": {
+     "basis": "弹式量热实测干羽低位热值 24217 kJ/kg（论文图 5 湿度 0% 栏），折 24.2 MJ/kg（取一位小数）",
+     "citation": "Stan C, Badea A 2013《Thermo-physico-chemical analyses and calorific value of poultry processing industry waste》U.P.B. Sci. Bull. Series C 75(4):277–284（https://scientificbulletin.upb.ro/static/pdfs/rezd89_950393.pdf ，2026-11-26 读） §3.3 与图 5",
+     "grade": "measured"
+    },
+    "ignitePoint": {
+     "basis": "暂定·待试玩标定；未查到羽毛的文献值，取同为角蛋白纤维的 mat_goat_hair 之值（其依据：卷三甲 §4.5.5 例 1 全集表\"自燃点\"栏的卷文值，没有依据代号指向出处（:528 折 C 级））",
+     "citation": null,
+     "grade": "designed"
+    },
+    "moisture": {
+     "basis": "羽毛含水约 1%（论文 :277 引 Dalev 1990 Biotechnology Letters 12(1):71–72：羽毛 90% 以上为角蛋白、8% 脂、1% 水）；屠宰场混血湿羽 70% 不取（非羽毛本身）",
+     "citation": "Stan C, Badea A 2013《Thermo-physico-chemical analyses and calorific value of poultry processing industry waste》U.P.B. Sci. Bull. Series C 75(4):277–284（https://scientificbulletin.upb.ro/static/pdfs/rezd89_950393.pdf ，2026-11-26 读） :277（转引 Dalev PG 1990）",
+     "grade": "referenced"
+    },
+    "opaque.gas": {
+     "basis": "同 mat_goat_hair（同为角蛋白纤维类，卷三甲 :128–:131 分态布尔按材料类别「纤维与织物」）：设：卷三甲 :128 分态布尔，按材料类别与物态的物理常识定（气态不挡视线、不遮天、不承托、不阻气（气体按定义四项皆假））；无卷文出处的设定值，可在试玩后调；类别判定见本行 basis 之后的 cellGrades 注与回报的类别表",
+     "citation": null,
+     "grade": "designed"
+    },
+    "opaque.liquid": {
+     "basis": "同 mat_goat_hair（同为角蛋白纤维类，卷三甲 :128–:131 分态布尔按材料类别「纤维与织物」）：设：卷三甲 :128 分态布尔，按材料类别与物态的物理常识定（液态默认不透光（浑浊或有色液体））；无卷文出处的设定值，可在试玩后调；类别判定见本行 basis 之后的 cellGrades 注与回报的类别表",
+     "citation": null,
+     "grade": "designed"
+    },
+    "opaque.solid": {
+     "basis": "同 mat_goat_hair（同为角蛋白纤维类，卷三甲 :128–:131 分态布尔按材料类别「纤维与织物」）：设：卷三甲 :128 分态布尔，按材料类别与物态的物理常识定（类别「纤维与织物（不承重、透气）」的固态取值）；无卷文出处的设定值，可在试玩后调；类别判定见本行 basis 之后的 cellGrades 注与回报的类别表",
+     "citation": null,
+     "grade": "designed"
+    },
+    "salvageFraction": {
+     "basis": "暂定·待试玩标定；未查到羽毛的文献值，取同为角蛋白纤维的 mat_goat_hair 之值（其依据：卷三甲 §4.1.5 例 4 卷文例值（docs/统一底层设计/卷三甲-物质本源.md:347），没有依据代号指向出处（:528 折 C 级））",
+     "citation": null,
+     "grade": "designed"
+    },
+    "sharpnessMax": {
+     "basis": "暂定·待试玩标定；未查到羽毛的文献值，取同为角蛋白纤维的 mat_goat_hair 之值（其依据：设：P3-T1 同本源成分已有值中位数（组内无值，取该维全部已有值，参照 mat_wrought_iron、mat_bamboo、mat_water、mat_bone；方法见卷三甲 §4.5.5 :519、:523 同类推定）；无卷文出处，设定值；卷二 §6.12 rules.dimfill.materialSharpnessMax 90%，分母为有固相栏的材料，缺格填设定值（李白 11-17 P3-32）；设定，可在试玩后调）",
+     "citation": null,
+     "grade": "designed"
+    },
+    "valueMult": {
+     "basis": "暂定·待试玩标定；未查到羽毛的文献值，取同为角蛋白纤维的 mat_goat_hair 之值（其依据：卷三甲 §4.1.5 例 4 卷文例值（docs/统一底层设计/卷三甲-物质本源.md:347），没有依据代号指向出处（:528 折 C 级））",
+     "citation": null,
+     "grade": "designed"
+    },
+    "volatility": {
+     "basis": "暂定·待试玩标定；未查到羽毛的文献值，取同为角蛋白纤维的 mat_goat_hair 之值（其依据：卷三甲 §4.5.5 例 1 全集表\"挥发度\"栏的卷文值，没有依据代号指向出处（:528 折 C 级））",
+     "citation": null,
+     "grade": "designed"
+    },
+    "workDifficulty": {
+     "basis": "暂定·待试玩标定；未查到羽毛的文献值，取同为角蛋白纤维的 mat_goat_hair 之值（其依据：卷三甲 §4.1.5 例 4 卷文例值（docs/统一底层设计/卷三甲-物质本源.md:347），没有依据代号指向出处（:528 折 C 级））",
+     "citation": null,
+     "grade": "designed"
+    }
+   },
+   "classes": [
+    "comp_burnable"
+   ],
+   "decomposePoint": 230,
+   "density": {
+    "solid": 1.3
+   },
+   "flammability": 0.4,
+   "heatValue": 24.2,
+   "ignitePoint": 570,
+   "moisture": 0.01,
+   "opaque": {
+    "solid": true,
+    "liquid": true,
+    "gas": false
+   },
+   "refMaterial": null,
+   "salvageFraction": 0.6,
+   "sharpnessMax": 32.5,
+   "substance": "subst_fiber",
+   "valueMult": 2,
+   "volatility": 0,
+   "workDifficulty": 8
+  },
   "mat_goat_hair": {
    "airtight": {
     "solid": false,

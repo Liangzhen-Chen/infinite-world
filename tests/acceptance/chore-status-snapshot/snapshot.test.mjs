@@ -6,10 +6,10 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { removeTempRoot, testTempRoot, writeUnderTempRoot } from '../../accept/temp-root.mjs';
 
 const SCRIPT = fileURLToPath(new URL('../../../tools/gen-status-snapshot.mjs', import.meta.url));
 const OUT_DEFAULT = join('docs', '状态快照.generated.md');
@@ -233,7 +233,7 @@ test('输出不超过 80 行（10 条提交、30 张在途卡）', async () => {
 
 const dirs = [];
 after(() => {
-  for (const d of dirs) rmSync(d, { recursive: true, force: true });
+  for (const d of dirs) removeTempRoot(d);
 });
 
 const TEMPLATE = {
@@ -265,7 +265,7 @@ const GIT_ENV = {
 
 // 造一个临时仓库：tools/accept/*.json、两张 state.json、一个 _template，提交一次。
 function makeRepo({ withBaseline = true } = {}) {
-  const dir = mkdtempSync(join(tmpdir(), 'snap-acc-'));
+  const dir = testTempRoot('snap-acc-');
   dirs.push(dir);
   const put = (rel, data) => {
     const p = join(dir, rel);
@@ -309,7 +309,7 @@ test('CLI 无参：写出 docs/状态快照.generated.md，覆盖旧内容，首
   const dir = makeRepo();
   const target = join(dir, OUT_DEFAULT);
   mkdirSync(dirname(target), { recursive: true });
-  writeFileSync(target, 'GARBAGE 旧内容\n', 'utf8');
+  writeUnderTempRoot(dir, OUT_DEFAULT, 'GARBAGE 旧内容\n');
   const r = run(dir, []);
   assert.equal(r.status, 0, r.stderr);
   const out = readFileSync(target, 'utf8');
@@ -383,7 +383,7 @@ test('CLI --check：手改「入口接通」段后退出码 1，且 --check 不�
   assert.equal(run(dir, []).status, 0);
   const p = join(dir, OUT_DEFAULT);
   const tampered = insertAfterHeader(readFileSync(p, 'utf8'), '## 入口接通', '手改：入口 999 条');
-  writeFileSync(p, tampered, 'utf8');
+  writeUnderTempRoot(dir, OUT_DEFAULT, tampered);
   const r = run(dir, ['--check']);
   assert.equal(r.status, 1);
   assert.equal(readFileSync(p, 'utf8'), tampered, '--check 不得覆盖写文件');
@@ -393,7 +393,7 @@ test('CLI --check：只手改「最近提交」段（不受检）时退出码 0'
   const dir = makeRepo();
   assert.equal(run(dir, []).status, 0);
   const p = join(dir, OUT_DEFAULT);
-  writeFileSync(p, insertAfterHeader(readFileSync(p, 'utf8'), '## 最近提交', '手改：假提交 0000000 伪造'), 'utf8');
+  writeUnderTempRoot(dir, OUT_DEFAULT, insertAfterHeader(readFileSync(p, 'utf8'), '## 最近提交', '手改：假提交 0000000 伪造'));
   const r = run(dir, ['--check']);
   assert.equal(r.status, 0, r.stdout + (r.stderr ?? ''));
 });
@@ -401,8 +401,7 @@ test('CLI --check：只手改「最近提交」段（不受检）时退出码 0'
 test('CLI --check：仓库里 state.json 变了但快照未重生成（在途卡受检）→ 退出码 1', () => {
   const dir = makeRepo();
   assert.equal(run(dir, []).status, 0);
-  const p = join(dir, 'docs', '卡档案', 'beta-card', 'state.json');
-  writeFileSync(p, JSON.stringify({ ...TEMPLATE, card: 'beta-card', phase: 'ci', failCount: 5, nextAction: '修 CI' }, null, 2), 'utf8');
+  writeUnderTempRoot(dir, 'docs/卡档案/beta-card/state.json', JSON.stringify({ ...TEMPLATE, card: 'beta-card', phase: 'ci', failCount: 5, nextAction: '修 CI' }, null, 2));
   const r = run(dir, ['--check']);
   assert.equal(r.status, 1);
 });

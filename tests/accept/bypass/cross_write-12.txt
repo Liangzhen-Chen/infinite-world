@@ -1,0 +1,9 @@
+// 绑定声明不是写入（门禁封口卡 B，js-state 排除声明）：const/let/var 声明、逗号续写声明、for-of 声明、形参默认值都不报。
+/** @param {State} input @returns {void} */
+export function bindConst(input) { const state = input; void state; }
+/** @param {State} input @returns {void} */
+export function bindComma(input) { let a = input, state = a; void state; }
+/** @param {State[]} xs @returns {void} */
+export function bindForOf(xs) { for (const state of xs) { void state; } }
+/** @param {State} [state] @returns {void} */
+export function bindDefault(state = /** @type {State} */ ({})) { void state; }
