@@ -131,6 +131,8 @@ const loadWorld = (hostRows) => {
     tableDocs,
     digestExclude: json('../rules/tables/digest-exclude.json').paths,
     primitivesDoc: json('primitives.json'),
+    vocabDoc: json('dimensions/_vocab.json'),
+    unitsDoc: json('dimensions/_units.json'),
   };
 };
 // 装配层注入的能力（B2 起 mountKernel 收 caps；卡 C 起须带修正来源、源码清单非空）；本组只测装配期核对，不存档。

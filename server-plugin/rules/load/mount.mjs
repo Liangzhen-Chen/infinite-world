@@ -21,6 +21,8 @@ import { bodyView } from '../body/body.mjs';
 import { carcassOf } from '../body/carcass.mjs';
 import { runGenesis, runOpening, openingOf } from '../gen/worldgen-writeback.mjs';
 import { bakePlaceTree, placeTreeDigest } from '../bake/place-tree.mjs';
+import { checkTerminationTables } from '../lifecycle/terminate.mjs';
+import { checkRecordCoverage } from '../lifecycle/records.mjs';
 
 // 终止清理函数的登记项（卷二 :561；各系统模块经 registerTerminationCleanup 产出、在此收齐）。本卡（S2-0a）尚无系统登记，S2-0b 的 death.mjs 加第一项。
 const TERMINATION_CLEANUPS = Object.freeze([]);
@@ -129,6 +131,9 @@ export function mountKernel(raw, caps, resume) {
   });
   // 装配期核身体图与物种的身体配对（卷四 :202、:197、:144；S1-2b），不合即抛，开局与读档同核。
   checkBodyPlans(engine);
+  // 装配期核终止协议的登记（S2-0a）：类别行 termination 与未建数据门（主会话裁定 R7）、去留表取值；去留表覆盖核对（卷二 :562 E-TERM-RECORD-UNLISTED）。
+  checkTerminationTables(engine);
+  checkRecordCoverage(engine);
   // 开局：世界创建事务（genesisMinute 与时钟）→ 开局一步事务（openingMinute 与开放范围），都在 0 号快照之前、不进日志输入（卷十 R10-11.4、卷二十七 :742）；
   // 读档：同一 engine 上复演（不按种类分支，只看有无 resume）。
   /** @type {{state: any, logBook: any, saveDigest?: string}} */
