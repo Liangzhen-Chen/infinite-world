@@ -7,7 +7,7 @@ import { KernelError, reportError } from './errors.mjs';
 import { invalidateTop } from './memo.mjs';
 import { checkValue } from './validate/types.mjs';
 import { clone } from './bytes.mjs';
-import { newState, createEntity, setEntityProp, readPath, writePath } from './storage.mjs';
+import { newState, kindOfEntity, createEntity, setEntityProp, readPath, writePath } from './storage.mjs';
 
 /** @typedef {{engine: any, state: any, open: boolean, undo: Array<{obj: any, key: string, had: boolean, old: any}>, touched: any[]}} WriteScope */
 
@@ -154,15 +154,15 @@ const PARAM_TYPES = Object.freeze({
   map: { type: 'map', key: { type: 'string' }, value: { type: 'distribution' } },
 });
 
-// 原语参数不含 ref 型定义，checkValue 的引用环境用不到；给空环境。
-const PARAM_ENV = Object.freeze({ vocab: { index: new Map(), families: new Set() }, kindOf: () => undefined, tableDims: new Map() });
+// 原语参数不含 ref 型定义，checkValue 的引用环境用不到；每次现造一份空环境（模块顶层不放 Map/Set，docs/gemini/kickoff-1125.md:64）。
+const paramEnv = () => ({ vocab: { index: new Map(), families: new Set() }, kindOf: () => undefined, tableDims: new Map() });
 
 /** 原语参数核对：规格经 PARAM_TYPES 转成类型定义，交公共部件 checkValue 判；认不出的规格一律拒收。 @param {any} spec @param {any} v @returns {boolean} */
 function typeOk(spec, v) {
   const def = typeof spec === 'string' && Object.hasOwn(PARAM_TYPES, spec) ? PARAM_TYPES[spec] : undefined;
   if (def === undefined) return false;
   let ok = true;
-  checkValue(def, v, PARAM_ENV, {}, () => { ok = false; });
+  checkValue(def, v, paramEnv(), {}, () => { ok = false; });
   return ok;
 }
 
@@ -196,9 +196,19 @@ const HANDLERS = {
     if (typeof prefix !== 'string') throw new KernelError('E-DIM-REF-MISSING', {}, `kind ${effect.kind}: no id prefix to derive an id`);
     // 原语目录的 create 不带 id：id = 该种类首个前缀 + 请求编号（同请求内多个 create 追加序号），确定性。
     const id = ctx.index === 0 ? `${prefix}${ctx.seq}` : `${prefix}${ctx.seq}_${ctx.index}`;
+    // template 须是该 kind 表里登记的实体行 id（卷二:128、:131；卷九:640）；不是即拒收。mark 不带 template。
+    if (Object.hasOwn(effect, 'template')) {
+      const tpl = effect.template;
+      const tables = engine.registry && engine.registry.tables instanceof Map ? engine.registry.tables : undefined;
+      const doc = tables ? tables.get(effect.kind) : undefined;
+      const rows = doc && doc.rows !== null && typeof doc.rows === 'object' ? doc.rows : {};
+      if (kindOfEntity(engine, state, tpl) !== effect.kind || !Object.hasOwn(rows, tpl)) {
+        throw new KernelError('E-DIM-REF-MISSING', {}, `create.template ${JSON.stringify(tpl)}: not a registered ${effect.kind} entity row`);
+      }
+    }
     return {
       write: (tx) => {
-        createEntity(state, id, effect.kind, {}, tx);
+        createEntity(state, id, effect.kind, {}, tx, effect.template);
         for (const [field, value] of Object.entries(effect.facts)) setEntityProp(state, id, field, value, tx);
       },
     };

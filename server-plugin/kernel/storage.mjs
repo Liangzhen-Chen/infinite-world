@@ -171,9 +171,10 @@ export function writePath(state, path, value, tx) {
  * @param {string} kind
  * @param {any} props
  * @param {any} tx writeScope 给的作用域
+ * @param {string} [template] 模板实体 id（卷二:131 实例的实体行即其模板）；给了就记进 created 记录的 template 字段，dim 读值时当实体行用
  * @returns {void}
  */
-export function createEntity(state, id, kind, props, tx) {
+export function createEntity(state, id, kind, props, tx, template) {
   requireState(state);
   requireScope(state, tx);
   const engine = tx.engine;
@@ -192,7 +193,7 @@ export function createEntity(state, id, kind, props, tx) {
     throw new KernelError('E-DIM-ID-DUPLICATE', CODE_RE.test(id) ? { entity: id } : {}, `id ${id}: already created`);
   }
   if (state.created === null || typeof state.created !== 'object') txSet(tx, state, 'created', {});
-  txSet(tx, state.created, id, { kind, props });
+  txSet(tx, state.created, id, template === undefined ? { kind, props } : { kind, props, template });
   txTouch(tx, 'created');
 }
 

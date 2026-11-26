@@ -5,6 +5,7 @@ import { init } from '../../server-plugin/index.mjs';
 import { clockMinute } from '../../server-plugin/kernel/scheduler.mjs';
 import { runTransaction } from '../../server-plugin/kernel/transaction.mjs';
 import { readPath, writePath } from '../../server-plugin/kernel/storage.mjs';
+import { dim } from '../../server-plugin/kernel/dimensions.mjs';
 
 const logOf = (g) => readPath(g.state, g.engine.P.log_entries());
 
@@ -72,4 +73,40 @@ test('create 与 fact.set：新建实体并写 props，请求编号单调', asyn
   } else {
     assert.equal(typeof r.code, 'string');
   }
+});
+
+// create.template（卷二:128、:131；卷九:640）：实例的实体行就是其模板；facts（偏离行）覆盖模板值；template 须是同 kind 登记的实体行。
+const tplCase = (g) => {
+  const doc = g.engine.registry.tables.get('item');
+  for (const [tid, row] of Object.entries(doc.rows)) {
+    const k = Object.keys(row).find((d) => typeof row[d] === 'number' && Object.hasOwn(doc.dimensions, d));
+    if (k) return { tid, dimension: k, value: row[k] };
+  }
+  return undefined;
+};
+
+test('create 带 template：dim 读到模板实体行的值；facts 覆盖后读到 facts 值', async () => {
+  const g = await init();
+  const c = tplCase(g);
+  assert.ok(c, '前提：item 表有带数值维度的实体行');
+  const r = g.submitProposal({ effects: [{ op: 'create', kind: 'item', template: c.tid, facts: {} }] });
+  assert.equal(r.ok, true, JSON.stringify(r));
+  const id = Object.keys(g.state.created)[0];
+  assert.equal(g.state.created[id].template, c.tid);
+  assert.equal(dim(g.engine, g.state, 'item', id, c.dimension).value, c.value);
+  const over = c.value + 1;
+  const r2 = g.submitProposal({ effects: [{ op: 'create', kind: 'item', template: c.tid, facts: { [c.dimension]: over } }] });
+  assert.equal(r2.ok, true, JSON.stringify(r2));
+  const id2 = Object.keys(g.state.created).find((x) => x !== id);
+  assert.equal(dim(g.engine, g.state, 'item', id2, c.dimension).value, over);
+});
+
+test('create 的 template 指向别的 kind 或不存在即拒收，状态不变', async () => {
+  const g = await init();
+  const other = Object.keys(g.engine.registry.tables.get('material').rows)[0];
+  for (const template of [other, 'item_no_such_row']) {
+    const r = g.submitProposal({ effects: [{ op: 'create', kind: 'item', template, facts: {} }] });
+    assert.equal(r.ok, false);
+  }
+  assert.equal(Object.keys(g.state.created).length, 0);
 });
