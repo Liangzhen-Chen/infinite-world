@@ -552,10 +552,10 @@
     "saveSlotCount": {"type": "integer", "unit": "count"},
     "saveImportMaxBytes": {"type": "integer", "unit": "byte"}
    },
-   "domain": {"saveSlotCount": [1, null], "saveImportMaxBytes": [1, null]},
-   "volume": "卷二十七 §2.2 :191–192（rules.host.saveSlotCount、rules.host.saveImportMaxBytes，取值域 ≥1，加载失败）；卷二 §2.9 第 0 条存档四路第 5 点；块 6 第 6-20 张只登这两键，心跳两键（heartbeatStepMinutes、heartbeatMs）随墙钟心跳那张卡登记（6-19 回报缺口 3）；读者是 kernel/save.mjs、kernel/load/save.mjs（经存档环境 installSaveEnv 交入）",
+   "domain": {"saveSlotCount": [1, null], "saveImportMaxBytes": [1, null], "heartbeatStepMinutes": [1, null]},
+   "volume": "卷二十七 §2.2 :191–192（rules.host.saveSlotCount、rules.host.saveImportMaxBytes，取值域 ≥1，加载失败）；卷二 §2.9 第 0 条存档四路第 5 点；S1-1 卡 B1 登 heartbeatStepMinutes（卷二十七 §2.2 :190，≥1），heartbeatMs 随墙钟心跳卡登记；读者是 kernel/save.mjs、kernel/load/save.mjs（经存档环境 installSaveEnv 交入）",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"saveSlotCount": false, "saveImportMaxBytes": false}
+   "packOverridable": {"saveSlotCount": false, "saveImportMaxBytes": false, "heartbeatStepMinutes": false}
   },
   {
    "code": "gen",
