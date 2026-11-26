@@ -6,6 +6,8 @@
 // 该行文字照留作历史。拆行的原条目（跨两类，行上 part/parts）按原条目计，见 detect 内说明。
 // 每卷算哪几族是登记数据：扫描类别登记行 docFamilies：{卷代号: [编号前缀]}（编号 = 前缀 + 数字，数字间可带 . 或 -），卷文件在 docVolumes；
 // 四个形式名在同一行的 formNames：{acc_form 值: 中文名}（键取自 item-form 的 ENUM.form）；代码里没有卷名、前缀与形式名。
+// 列表项开头的形式标记 formTags：{acc_form 值: [标记]}（如卷五、卷六的方括号短名，卷三的加粗形式名），标记后可隔空白紧跟编号，同算定义处；
+// 编号尾 numberTails：[尾字母]，编号可带"-尾字母"（卷三的 VA-4.1-S 一类，同节三式各是一条）。两项都是登记数据（S12-3 全卷登记卡，主会话裁定 msg_77f457d18186 ③）。
 // params.checks：
 //   orphan（E-ACC-ITEM-ORPHAN）  登记表里的条目，它的 localNo 不在所属卷的定义处编号里；卷没有登记卷文件或编号族的同样计入。
 //   unregistered（E-ACC-ITEM-UNREGISTERED）  卷里定义处有、登记表（该卷条目的 localNo）里没有的编号，每个编号一行。
@@ -17,7 +19,7 @@ import { LAYOUT, REGISTRY, regContent } from '../read.mjs';
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // 卷里定义处的编号 → 首次出现的行号（1 起）。
-export function definedNumbers(text, prefixes, formNames = []) {
+export function definedNumbers(text, prefixes, formNames = [], formTags = [], numberTails = []) {
   const out = new Map();
   if (!prefixes.length) return out;
   // 行首须有定义处的记号：表格竖线、标题井号、列表符、加粗；纯段落开头的编号是引用，不算。
@@ -25,8 +27,10 @@ export function definedNumbers(text, prefixes, formNames = []) {
   const bold = '(?:\\*\\*)*';
   const list = '[ \\t>]*(?:[-*+]|\\d+\\.)[ \\t]*';
   const names = formNames.filter(Boolean).map(esc).join('|');
-  const lead = `(?:[ \\t>]*(?:#+|\\|)[ \\t]*${mark}|${list}${bold}|[ \\t>]*\\*\\*${names ? `|${list}(?:${names})：[ \\t]*${bold}` : ''})`;
-  const re = new RegExp(`^${lead}((?:${prefixes.map(esc).join('|')})\\d+(?:[.-]\\d+)*)(?![A-Za-z0-9_])`);
+  const tags = formTags.filter(Boolean).map(esc).join('|');
+  const tails = numberTails.filter(Boolean).map(esc).join('|');
+  const lead = `(?:[ \\t>]*(?:#+|\\|)[ \\t]*${mark}|${list}${bold}|[ \\t>]*\\*\\*${names ? `|${list}(?:${names})：[ \\t]*${bold}` : ''}${tags ? `|${list}(?:${tags})[ \\t]*${bold}` : ''})`;
+  const re = new RegExp(`^${lead}((?:${prefixes.map(esc).join('|')})\\d+(?:[.-]\\d+)*${tails ? `(?:-(?:${tails}))?` : ''})(?![A-Za-z0-9_])`);
   text.split('\n').forEach((line, i) => {
     const m = re.exec(line);
     if (m && !out.has(m[1])) out.set(m[1], i + 1);
@@ -39,6 +43,8 @@ export function detect(ctx, params, cls) {
   const vols = (cls || {}).docVolumes || {};
   const fams = (cls || {}).docFamilies || {};
   const formNames = Object.values((cls || {}).formNames || {});
+  const formTags = Object.values((cls || {}).formTags || {}).flat();
+  const numberTails = (cls || {}).numberTails || [];
   const all = new Set(ctx.files);
   const items = regContent(ctx, 'items') || [];
   const file = `${LAYOUT.accDir}/${REGISTRY.items.file}`;
@@ -46,7 +52,7 @@ export function detect(ctx, params, cls) {
   const defsOf = (vol) => {
     if (!defs.has(vol)) {
       const doc = vols[vol];
-      defs.set(vol, doc && all.has(doc) && fams[vol] ? definedNumbers(ctx.read(doc), fams[vol], formNames) : null);
+      defs.set(vol, doc && all.has(doc) && fams[vol] ? definedNumbers(ctx.read(doc), fams[vol], formNames, formTags, numberTails) : null);
     }
     return defs.get(vol);
   };

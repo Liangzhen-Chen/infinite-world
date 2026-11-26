@@ -64,6 +64,16 @@ function authored(engine, state, kind, id) {
 }
 
 /**
+ * 已开放地点（卷十 R10-12.6、R10-12.7；卷四 §4.12.3 G-2）：烘焙层树上 gen.open 读为真的地点 id（按 byLevel 序）。读不到（gap）不算开放。
+ * S1 菜单的可见集取它（主观视图卷二十二未建，S1-3 接口草案（主会话 11-26） §1 第 18 行；S1-3a）。
+ * @param {OpeningEngine} engine @param {object} state @returns {string[]}
+ */
+export function openPlacesOf(engine, state) {
+  const { kind, byLevel } = engine.bake.placeTree;
+  return byLevel.filter((id) => authored(engine, state, kind, id) && dim(engine, state, kind, id, OPEN_DIM).value === true);
+}
+
+/**
  * openingOf（卷十 :285）：读 state.genesis。openingMinute 在开局一步之前为 null（卷十 :221 nullable）。
  * @param {OpeningEngine} engine @param {object} state
  * @returns {Readonly<{genesisMinute: number, openingMinute: number | null}>}

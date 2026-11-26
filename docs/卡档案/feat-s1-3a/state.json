@@ -1,0 +1,60 @@
+{
+  "card": "feat-s1-3a",
+  "phase": "dispatched",
+  "updatedAt": "2026-11-26T19:28:19.502Z",
+  "branches": {
+    "code": "feat/s1-3a",
+    "test": "test/s1-3a"
+  },
+  "pr": null,
+  "parties": {
+    "code": {
+      "family": "<模型族>",
+      "model": "<模型 id>",
+      "receipt": null,
+      "orca": {
+        "worktree": "<工作树路径>",
+        "session": "<Orca 会话号>",
+        "commits": [
+          "<写码提交号>"
+        ]
+      },
+      "costUsd": null
+    },
+    "test": {
+      "family": "<模型族>",
+      "model": "<模型 id>",
+      "receipt": null,
+      "orca": {
+        "worktree": "<工作树路径>",
+        "session": "<Orca 会话号>",
+        "commits": [
+          "<出题提交号>"
+        ]
+      },
+      "costUsd": null
+    },
+    "review": [
+      {
+        "family": "<模型族>",
+        "model": "<模型 id>",
+        "receipt": null,
+        "orca": {
+          "worktree": "<工作树路径>",
+          "session": "<Orca 会话号>",
+          "commits": [
+            "<第 1 轮审卡提交号>"
+          ]
+        },
+        "costUsd": null
+      }
+    ]
+  },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
+  "failCount": 0,
+  "blocker": null,
+  "nextAction": "写码 Sonnet、出题 Haiku Orca 会话派出；回报后主会话读 diff，再派 Opus 审卡；合入后接 S1-3b"
+}

@@ -1,0 +1,31 @@
+{
+ "act_choose_origin": {
+  "class": "acls_decide",
+  "slots": {
+   "origin": {"kind": "code", "multi": false, "tableRow": "person", "filter": ["tf_player_origin"], "required": true},
+   "place": {"kind": "code", "multi": false, "tableRow": "place", "filter": ["tf_open_place"], "required": true}
+  },
+  "capability": null, "requirement": null,
+  "whenRX": "player.avatarCount == 0",
+  "consent": [], "answer": null, "intimate": false, "baseMinutes": 0, "workFromEdge": null, "stages": [], "resumable": false, "check": null,
+  "effects": {"critical_failure": null, "failure": null, "partial": null, "success": [{"family": "eff_spawn_from_template", "params": {}}], "critical_success": null},
+  "backlash": [], "costRows": [], "skillGain": null, "decision": null,
+  "menu": {"group": "menu_chargen", "order": 0},
+  "shapeFrom": null, "sourceStrength": {},
+  "basis": "选来历建玩家化身：亮圳 11-26 19:25 拍板 Q1=A；设计册 docs/世界设计/14-历史传说与玩家来历.md §4.7 :215–:241（选文化、选背景合为来历模板行一槽，候选按 rules.playerOrigins 开关过滤；出生地从已开放地点选，卷四 §4.12.3 G-2）；卷九 §2.2 行格式，无检定，success 一档，其余四档显式 null（卷九 :196）；仅当本局尚无玩家化身可用（S1-3 接口草案（主会话 11-26） §2.1）"
+ },
+ "act_wait": {
+  "class": "acls_rest",
+  "slots": {
+   "minutes": {"kind": "number", "multi": false, "min": 1, "max": "rules.act.advanceMaxMinutes.acls_rest", "unit": "minute", "required": true}
+  },
+  "capability": null, "requirement": null,
+  "whenRX": "actor.isAvatar",
+  "consent": [], "answer": null, "intimate": false, "baseMinutes": 0, "workFromEdge": null, "stages": [], "resumable": false, "check": null,
+  "effects": {"critical_failure": null, "failure": null, "partial": null, "success": [{"family": "eff_pass_time", "params": {}}], "critical_success": null},
+  "backlash": [], "costRows": [], "skillGain": null, "decision": null,
+  "menu": {"group": "menu_time", "order": 0},
+  "shapeFrom": null, "sourceStrength": {},
+  "basis": "等待：卷二 :1024–:1028（等待/推进走 menu，分钟数在数值参数）；上限照卷九 :324 rules.act.advanceMaxMinutes（主会话 11-26 裁定）；baseMinutes 0（瞬时，耗时由 time 原语给，活动记录 R9-1.3 本阶段未建）；仅当行动者是本局玩家化身可用"
+ }
+}
