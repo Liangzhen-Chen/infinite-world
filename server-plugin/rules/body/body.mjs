@@ -11,6 +11,7 @@ import { KernelError } from '../../kernel/errors.mjs';
 import { fixedUnits, fixedSub, fixedMultiply, fixedAdd, fixedScale, fixedToNumber } from '../../kernel/det-math.mjs';
 import { SPECIES_KIND, DIM, tableOf, headerOf, planKindOf, structuralBase, fixedZero } from './body-plan.mjs';
 import { UNKNOWN } from './species.mjs';
+import { ruleValue } from '../load/registry.mjs';
 
 /** @typedef {import('./body-plan.mjs').BodyEngine} BodyEngine */
 /** @typedef {import('./body-plan.mjs').Part} Part */
@@ -89,7 +90,7 @@ function effOf(byId, integrity, lostBelow, part) {
 export function bodyView(engine, state, subjectId) {
   const body = bodyOf(engine, state, subjectId);
   const one = fixedScale();
-  const lostBelow = fixedUnits(Number(Object(engine.rule('body', 'integrity')).lostBelow));
+  const lostBelow = fixedUnits(Number(Object(ruleValue(engine.docData, 'body', 'integrity')).lostBelow));
   const byId = new Map(body.parts.map((p) => [p.id, p]));
   const integrity = new Map(body.parts.map((p) => [p.id, one]));
   const eff = new Map(body.parts.map((p) => [p.id, effOf(byId, integrity, lostBelow, p)]));

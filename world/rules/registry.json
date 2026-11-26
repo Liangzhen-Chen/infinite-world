@@ -599,12 +599,14 @@
      "step": {"type": "string"},
      "reads": {"type": "list", "of": {"type": "string"}},
      "writes": {"type": "list", "of": {"type": "string"}}
-    }}}
+    }}},
+    "genesisMinute": {"type": "integer", "unit": "minute"},
+    "historyYears": {"type": "integer", "unit": "count"}
    },
-   "domain": {"waterRows": {}, "waterFillRows": {}, "bldfillRows": {}, "roleTract": {}, "roleWaterbody": {}, "roleFacility": {}, "layoutCoverage": [0, 1], "layoutGapCells": [1, null], "underMaxAreaM2": [1, null], "openingCondition": [0, 1], "dwellingIntendedType": {}, "tenureModes": {}, "householdMemberKind": {}, "householdHeadKind": {}, "createSteps": {}},
-   "volume": "卷十 §2.3 :165（rules.gen.water.rows：命中的水体取哪一类、多深；本卡只落 priority、waterKind、depthM，whenRX 与 liquidRX 随存量单元行与 rx 读邻格聚合落地后补）、:166（rules.gen.water.fill.rows，键名取驼峰 waterFillRows：作者手写水体行缺足迹输入时的补法，R10-2.17）、:186（rules.gen.bldfill.rows，键名取驼峰 bldfillRows：手写建筑行缺面积与层数时的取值范围，R10-7.12）、R10-2.12 :427（句柄 rules.gen.roles.tract、rules.gen.roles.waterbody，键名取驼峰 roleTract、roleWaterbody）；读者是 kernel/gen/worldgen.mjs、kernel/gen/water.mjs、kernel/gen/waterfoot.mjs、kernel/gen/siteform.mjs",
+   "domain": {"waterRows": {}, "waterFillRows": {}, "bldfillRows": {}, "roleTract": {}, "roleWaterbody": {}, "roleFacility": {}, "layoutCoverage": [0, 1], "layoutGapCells": [1, null], "underMaxAreaM2": [1, null], "openingCondition": [0, 1], "dwellingIntendedType": {}, "tenureModes": {}, "householdMemberKind": {}, "householdHeadKind": {}, "createSteps": {}, "genesisMinute": [0, null], "historyYears": [0, 0]},
+   "volume": "卷十 §2.3 :165（rules.gen.water.rows：命中的水体取哪一类、多深；本卡只落 priority、waterKind、depthM，whenRX 与 liquidRX 随存量单元行与 rx 读邻格聚合落地后补）、:166（rules.gen.water.fill.rows，键名取驼峰 waterFillRows：作者手写水体行缺足迹输入时的补法，R10-2.17）、:186（rules.gen.bldfill.rows，键名取驼峰 bldfillRows：手写建筑行缺面积与层数时的取值范围，R10-7.12）、R10-2.12 :427（句柄 rules.gen.roles.tract、rules.gen.roles.waterbody，键名取驼峰 roleTract、roleWaterbody）；读者是 kernel/gen/worldgen.mjs、kernel/gen/water.mjs、kernel/gen/waterfoot.mjs、kernel/gen/siteform.mjs；S1-2a 加世界模板参数 genesisMinute（卷十 :224 第 0 日时刻，取值域 ≥0）、historyYears（卷十 R10-11.4 :852 预跑年数，预跑未建取值域只收 0），世界模板参数暂落本表见卷十封卷后勘误 1126k1，读者是 rules/gen/worldgen-writeback.mjs",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"waterRows": false, "waterFillRows": false, "bldfillRows": false, "roleTract": false, "roleWaterbody": false, "roleFacility": false, "layoutCoverage": false, "layoutGapCells": false, "underMaxAreaM2": false, "openingCondition": false, "dwellingIntendedType": false, "tenureModes": false, "householdMemberKind": false, "householdHeadKind": false, "createSteps": false}
+   "packOverridable": {"waterRows": false, "waterFillRows": false, "bldfillRows": false, "roleTract": false, "roleWaterbody": false, "roleFacility": false, "layoutCoverage": false, "layoutGapCells": false, "underMaxAreaM2": false, "openingCondition": false, "dwellingIntendedType": false, "tenureModes": false, "householdMemberKind": false, "householdHeadKind": false, "createSteps": false, "genesisMinute": false, "historyYears": false}
   },
   {
    "code": "simTiers",

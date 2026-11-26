@@ -9,7 +9,8 @@
 // 确定、只读：不写时间、不读网络，所有遍历先排序。用法：node tools/entry-registry.mjs [--check] [--out 路径.json]
 //   默认只把摘要印到标准输出；--out 把完整派生结果写成 JSON（供 cmp 核对重跑一致）；--check 在硬性问题非 0 时以 1 退出。
 
-import { readFileSync, readdirSync, writeFileSync, existsSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
+import { writeCliOut } from './accept/lib/cli-out.mjs';
 import { dirname, join, posix, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tokenize, importsOf, isP, matchClose } from './accept/lib/js-scan.mjs';
@@ -412,7 +413,7 @@ function main(argv) {
   const check = argv.includes('--check');
   const oi = argv.indexOf('--out');
   const res = deriveRegistry(loadInput());
-  if (oi >= 0 && argv[oi + 1]) writeFileSync(argv[oi + 1], `${JSON.stringify(res, null, 1)}\n`);
+  if (oi >= 0 && argv[oi + 1]) writeCliOut(ROOT, resolve(argv[oi + 1]), `${JSON.stringify(res, null, 1)}\n`);
   const s = res.summary;
   const lines = [`总登记表 ${s.行数} 行：已接通 ${s.已接通}，有代码无生产调用 ${s.有代码无生产调用}，未建 ${s.未建}；无卷文锚点的行 ${s.无卷文锚点的行}（kind 为 kernel/part，出处在状态文件或代码）；依赖最大层 ${s.最大层}`];
   for (const [k, v] of Object.entries(res.problems)) lines.push(`${k}：${v.length}${v.length && !argv.includes('--quiet') ? `（前 5：${v.slice(0, 5).map((x) => (Array.isArray(x) ? x.join('→') : x)).join('；')}）` : ''}`);

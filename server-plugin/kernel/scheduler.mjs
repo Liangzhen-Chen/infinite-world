@@ -11,10 +11,15 @@ export function clockMinute(engine, state) {
   return readPath(state, P.clock_minute());
 }
 
-/** 初始化时钟（登记写者 scheduler.mjs；在装配层的事务里调）。 @param {any} engine @param {any} state @param {any} tx */
+/**
+ * 初始化时钟（登记写者 scheduler.mjs；在世界创建事务里、state.genesis.genesisMinute 写入之后调）：时钟取第 0 日时刻（卷十 R10-1.2、R10-12.5，不取代码常量）。
+ * genesisMinute 未写或不是整数即 E-DIM-UNKNOWN-READ。 @param {any} engine @param {any} state @param {any} tx
+ */
 export function initClock(engine, state, tx) {
   const { P } = engine;
-  writePath(state, P.clock_minute(), 0, tx);
+  const genesis = readPath(state, P.genesis_genesisMinute());
+  if (!Number.isInteger(genesis)) throw new KernelError('E-DIM-UNKNOWN-READ', {}, 'initClock: state.genesis.genesisMinute is not written');
+  writePath(state, P.clock_minute(), genesis, tx);
 }
 
 /** 分钟数与步长核对：minutes 须正整数；步长非正整数即抛（卷二十七 :190 取值域 ≥1；装配期已核，这里防 engine 被别处构造）。 */

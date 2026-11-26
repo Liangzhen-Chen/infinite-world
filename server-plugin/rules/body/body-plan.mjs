@@ -4,10 +4,11 @@
 import { KernelError } from '../../kernel/errors.mjs';
 import { dim, presentEntries } from '../../kernel/dimensions.mjs';
 import { fixedUnits, fixedAdd, fixedScale } from '../../kernel/det-math.mjs';
+import { ruleValue } from '../load/registry.mjs';
 
 /**
  * 读入口用到的 engine 部分（装配层 rules/load/mount.mjs 建）。
- * @typedef {{registry: {tables: Map<string, unknown>, kindIds: Map<string, {idPrefix?: readonly string[], singletonIds?: readonly string[]}>, kindOfLoaded?: (id: string) => string}, rule: (code: string, key: string) => unknown, vocab: unknown, modifierSources: ReadonlyArray<Function>}} BodyEngine
+ * @typedef {{registry: {tables: Map<string, unknown>, kindIds: Map<string, {idPrefix?: readonly string[], singletonIds?: readonly string[]}>, kindOfLoaded?: (id: string) => string}, docData: Parameters<typeof ruleValue>[0], vocab: unknown, modifierSources: ReadonlyArray<Function>}} BodyEngine
  */
 /**
  * 身体图的一个部位（卷四 §2.2 parts 的 struct）。
@@ -99,7 +100,7 @@ function checkPlan(planId, parts, fractions, maxDepth) {
  */
 export function checkBodyPlans(engine) {
   const planKind = planKindOf(engine);
-  const maxDepth = Number(engine.rule('kernelConstants', 'bodyPartChainMaxDepth'));
+  const maxDepth = Number(ruleValue(engine.docData, 'kernelConstants', 'bodyPartChainMaxDepth'));
   const plans = Object(tableOf(engine, planKind).rows);
   for (const planId of Object.keys(plans)) {
     checkPlan(planId, dim(engine, null, planKind, planId, DIM.parts).value, dim(engine, null, planKind, planId, DIM.tissueFractions).value, maxDepth);

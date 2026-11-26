@@ -439,8 +439,8 @@ function main(argv) {
       : 'det tables differ from the generated tables (run node tools/gen-det-tables.mjs)\n');
     return same && detSame ? 0 : 1;
   }
-  if (!same) writeFileSync(file, text);
-  if (!detSame) writeFileSync(detFile, detText);
+  if (!same) writeFileSync(join(repoRoot(), 'world', 'ontology', 'dimensions', safeSegment(FILE)), text);
+  if (!detSame) writeFileSync(join(repoRoot(), 'world', 'rules', 'tables', safeSegment(DET_FILE)), detText);
   process.stdout.write(same && detSame ? 'unchanged\n' : 'written\n');
   return 0;
 }

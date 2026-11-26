@@ -7,9 +7,9 @@
 // 不依赖仓库偶然数字：断言只看契约 id 集合、错误码与摘录内容，不写行数或计数基线。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, writeFileSync, mkdtempSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
+import { testTempRoot, writeUnderTempRoot } from '../../accept/temp-root.mjs';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
@@ -226,8 +226,8 @@ test('矩阵14a contractsPath 不存在 → ok === false 且 E-CTR-READ，不得
 
 test('矩阵14b 非法 JSON → ok === false 且 E-CTR-JSON-PARSE，不得静默兜底', async () => {
   const { loadAndValidateContracts } = await mod();
-  const dir = mkdtempSync(join(tmpdir(), 'ctr-bad-json-'));
-  writeFileSync(join(dir, 'bad.json'), '{ "version": 1,');
+  const dir = testTempRoot('ctr-bad-json-');
+  writeUnderTempRoot(dir, 'bad.json', '{ "version": 1,');
   const res = await loadAndValidateContracts({ repoRoot: dir, contractsPath: 'bad.json' });
   assertCode(res, 'E-CTR-JSON-PARSE');
   assert.equal(res.doc, null);

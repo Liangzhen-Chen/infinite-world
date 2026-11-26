@@ -85,6 +85,17 @@ function tableValues(code, rows, spec) {
   return Object.freeze(Object.fromEntries(Object.keys(spec.type).map((k) => [k, tableValue(rows, spec, k)])));
 }
 
+/**
+ * 规则表单键取值（S1-2a 起）：从世界数据副本 raw（= doc_data）取登记代号 code 那张键表的 key 一键，按登记声明核（同 tableValue，不另写一份）。
+ * 给只读整表中个别键的规则模块用（整表含 ref 等要词表环境的键时不能整表核）；代号未登记即 E-DIM-DOMAIN-RANGE。
+ * @param {{registryRows: RegistryRow[], tableDocs: Record<string, {rows?: KeyRow[]}>}} raw @param {string} code @param {string} key @returns {unknown}
+ */
+export function ruleValue(raw, code, key) {
+  const spec = raw.registryRows.find((r) => r.code === code);
+  if (!spec) throw new KernelError('E-DIM-DOMAIN-RANGE', {}, `rules.${code}: no registry declaration`);
+  return tableValue(Object.hasOwn(raw.tableDocs, code) ? raw.tableDocs[code].rows : undefined, spec, key);
+}
+
 // kernel 实际消费的规则表代号（卷文名 rules.host.*、rules.saveLayout.*；S1-1c 派卡「主会话已定」第 5 条；S1-2b 加 rules.kernelConstants：定点常数由装配层装入 det-math）：
 // 只对这几张整表取值并按登记声明核；规则层按键读的经 ruleValue 逐键核；其余登记表原样进 doc_data 副本，不核、不报。
 const KERNEL_TABLES = Object.freeze(['host', 'saveLayout', 'kernelConstants']);
@@ -93,7 +104,7 @@ const KERNEL_TABLES = Object.freeze(['host', 'saveLayout', 'kernelConstants']);
  * 世界数据按登记组装与核对（S1-1 卡 C；卷二十七 :547 开局冻结规则表副本）。收装配层已读入、已解析的原文 raw（整份即 doc_data），不读盘：
  *   raw = {dimensionDocs, namedStructsDoc, owners, registryRows, tableDocs: {<登记 code>: 表原文}, digestExclude, primitivesDoc}
  * 核：tableDocs 的代号集合须与 registryRows 的 code 集合恰好相等（登记的每张表都进副本、副本里没有未登记的表），不合 E-DIM-STRUCT-FIELD；
- * 维度表交 buildRegistry；kernel 消费的键表按登记逐键核。返回 {registry, rules, ruleValue}（rules: 代号 → 已核键值；ruleValue: 规则层按键读），其余字段调用方从 raw 原样取。
+ * 维度表交 buildRegistry；kernel 消费的键表按登记逐键核。返回 {registry, rules}（rules: 代号 → 已核键值；规则层按键读经导出的 ruleValue），其余字段调用方从 raw 原样取。
  * @param {{dimensionDocs: DimensionDoc[], registryRows: RegistryRow[], tableDocs: Record<string, {rows?: KeyRow[]}>}} raw 形状仍逐项在运行期核（来自盘上数据）
  */
 export function loadWorld(raw) {
@@ -105,16 +116,6 @@ export function loadWorld(raw) {
   const codes = rows.map((r) => (r !== null && typeof r === 'object' ? r.code : undefined));
   const same = codes.length === Object.keys(docs).length && codes.every((c) => typeof c === 'string' && Object.hasOwn(docs, c)) && new Set(codes).size === codes.length;
   if (!same) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'loadWorld: tableDocs must hold exactly one table per registry row code');
-  const rowsOf = (/** @type {string} */ code) => (Object.hasOwn(docs, code) ? docs[code].rows : undefined);
-  const rules = Object.freeze(Object.fromEntries(KERNEL_TABLES.map((code) => [code, tableValues(code, rowsOf(code), rows.find((r) => r.code === code))])));
-  /**
-   * 规则层按键读规则表（S1-2b）：取 rules.<code>.<key> 一键并按登记声明核（同 tableValue，一处判）；没有登记行即 E-DIM-DOMAIN-RANGE。
-   * @param {string} code @param {string} key @returns {unknown}
-   */
-  const ruleValue = (code, key) => {
-    const spec = rows.find((r) => r.code === code);
-    if (!spec) throw new KernelError('E-DIM-DOMAIN-RANGE', {}, `rules.${code}: no registry declaration`);
-    return tableValue(rowsOf(code), spec, key);
-  };
-  return Object.freeze({ registry: buildRegistry(dimensionDocs), rules, ruleValue });
+  const rules = Object.freeze(Object.fromEntries(KERNEL_TABLES.map((code) => [code, tableValues(code, Object.hasOwn(docs, code) ? docs[code].rows : undefined, rows.find((r) => r.code === code))])));
+  return Object.freeze({ registry: buildRegistry(dimensionDocs), rules });
 }

@@ -261,18 +261,21 @@ function bindings(toks, table) {
   return out;
 }
 
-// 测试临时根（卷十二 §2.11 gatefac，inRepo 为假）：params.roots 是门禁设施代号；该行 paths 是生成临时根的辅助文件，entries 是函数名。
+// 测试临时根（卷十二 §2.11 gatefac，inRepo 为假）：params.roots 是门禁设施代号；该行 paths 是生成临时根的辅助文件，entries 是函数名（只有这类行的 entries 认作临时根函数）。
+// 断言写入口（门禁封口卡 B，主会话裁定 Q4 ②）：任一 gatefac 行登了非空 assertedWriters、writerAsserts、requiredTests，不论 inRepo，
+// 其 paths 里的写入口按"先过登记断言再写"认（assertedBodies），必跑测试照 requiredTestHits 守着。
 function rootFacilities(ctx, codes) {
-  const facs = new Map((ctx.regs.gatefacs || []).map((g) => [g.facCode, g]));
   const out = new Map();
-  for (const c of codes || []) {
-    const g = facs.get(c);
-    if (!g || g.inRepo !== false || !Array.isArray(g.paths) || !Array.isArray(g.entries)) continue;
+  const nonEmpty = (a) => Array.isArray(a) && a.length > 0;
+  for (const g of ctx.regs.gatefacs || []) {
+    const tempRoot = (codes || []).includes(g.facCode) && g.inRepo === false && Array.isArray(g.entries);
+    const asserted = nonEmpty(g.assertedWriters) && nonEmpty(g.writerAsserts) && nonEmpty(g.requiredTests);
+    if (!Array.isArray(g.paths) || !(tempRoot || asserted)) continue;
     for (const p of g.paths) {
       const cur = out.get(p) || { entries: new Set(), writers: new Set(), asserts: new Set() };
-      for (const e of g.entries) cur.entries.add(e);
+      if (tempRoot) for (const e of g.entries) cur.entries.add(e);
       // 没有 requiredTests 就不给写函数豁免（删掉必跑测试登记不能绕过守卫）。
-      if (Array.isArray(g.requiredTests) && g.requiredTests.length) for (const w of Array.isArray(g.assertedWriters) ? g.assertedWriters : []) cur.writers.add(w);
+      if (nonEmpty(g.requiredTests)) for (const w of Array.isArray(g.assertedWriters) ? g.assertedWriters : []) cur.writers.add(w);
       for (const a of Array.isArray(g.writerAsserts) ? g.writerAsserts : []) cur.asserts.add(a);
       cur.required = (Array.isArray(g.requiredTests) ? g.requiredTests : []).concat(cur.required || []);
       cur.testGlobs = (Array.isArray(g.testGlobs) ? g.testGlobs : []).concat(cur.testGlobs || []);

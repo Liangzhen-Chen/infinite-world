@@ -9,6 +9,7 @@ import { KernelError } from '../../kernel/errors.mjs';
 import { fixedUnits, fixedAdd, fixedMultiply, fixedDivide, fixedScale, fixedToNumber } from '../../kernel/det-math.mjs';
 import { SPECIES_KIND, fixedZero } from './body-plan.mjs';
 import { bodyOf, bodyView, tissueMaterial } from './body.mjs';
+import { ruleValue } from '../load/registry.mjs';
 
 /** @typedef {{subjectId: string} | {speciesId: string, massKg: number}} CarcassArg */
 
@@ -36,7 +37,7 @@ export function carcassOf(engine, state, arg) {
   }
   const body = bodyOf(engine, state, bySubject ? a.subjectId : a.speciesId);
   if (presentEntries(body.tissues).length === 0) return null;
-  const excludeLost = engine.rule('death', 'lostPartsExcluded') === true;
+  const excludeLost = ruleValue(engine.docData, 'death', 'lostPartsExcluded') === true;
   const parts = body.parts.filter((p) => !(excludeLost && lostIds.has(p.id)));
   const sizeSum = parts.reduce((acc, p) => fixedAdd(acc, fixedUnits(Number(p.sizeFraction))), fixedZero());
   if (sizeSum === fixedZero()) return null;
