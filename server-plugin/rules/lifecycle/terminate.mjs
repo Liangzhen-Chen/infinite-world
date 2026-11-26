@@ -78,7 +78,7 @@ function checkTerminationRow(raw, where) {
 }
 
 /**
- * 终止相关登记的核对（registry.json terminate 行所指的 checkTerminationTables；加载期由装配层调，S2-0b 接）：
+ * 终止相关登记的核对（registry.json terminate 行所指的 checkTerminationTables；加载期由装配层 rules/load/mount.mjs#mountKernel 调）：
  * 各表类别行与实体行写的 termination 逐行过 checkTerminationRow（R7 未建数据门）；
  * rules.terminate.records 每行 atRevive 当且仅当 atTerminate = hold 时写（卷二 :562），不合 E-DIM-STRUCT-FIELD；
  * rules.terminate.wreckKind 须是登记的实体表，否则 E-DIM-REF-MISSING。

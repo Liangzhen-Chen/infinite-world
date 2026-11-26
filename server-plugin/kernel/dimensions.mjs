@@ -180,7 +180,7 @@ function extendsChain(doc, rid) {
  * kernelApi `classRowsOf(engine, state, kind, id)`：按取值次序列出该实体要依次查的各行 [行 id, 行]，冻结：
  * ① 实体行（运行期新建的取 template 所指实体行）及其 extends 链；
  * ② 所属类别行：实体行 classes（表头写了 classesFrom 的，再加该维度所指那一行的 classes，卷二:562「由物种行派生」），
- *    只取本表 classes 里有的类别行，按 precedenceGroups.default 次序在前、其余按出现次序，各带自己的 extends 链。
+ *    只取本表 classes 里有、且列在 precedenceGroups.default 里的类别行，按该组次序（卷二:156–:157），各带自己的 extends 链。
  * 只按表头与行数据判，不认任何 kind、类别或 id；运行期新建实体没有实体行时 ① 为空。
  * @param {any} engine @param {any} state @param {string} kind @param {string} id
  * @returns {ReadonlyArray<readonly [string, any]>}
@@ -203,7 +203,7 @@ export function classRowsOf(engine, state, kind, id) {
   const groups = doc.precedenceGroups !== null && typeof doc.precedenceGroups === 'object' ? doc.precedenceGroups : {};
   const order = Array.isArray(groups.default) ? groups.default : [];
   const present = [...new Set(member)].filter((c) => Object.hasOwn(classes, c));
-  const ranked = [...order.filter((c) => present.includes(c)), ...present.filter((c) => !order.includes(c))];
+  const ranked = order.filter((c) => present.includes(c));
   /** @type {Array<readonly [string, any]>} */
   const out = [...own];
   for (const c of ranked) for (const pair of extendsChain(doc, c)) if (!out.some(([seen]) => seen === pair[0])) out.push(pair);
