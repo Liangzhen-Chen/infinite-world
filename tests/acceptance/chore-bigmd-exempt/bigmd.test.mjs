@@ -12,10 +12,11 @@
 // 耗时：每次 pre_commit 约 2 分钟；D2 为基线与注入各一次，约 4 分钟。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { withIsolatedRepo, runGate } from '../../support/isolated-repo.mjs';
+import { writeUnderTempRoot } from '../../accept/temp-root.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const CASE_TIMEOUT_MS = 900000; // 单条注入测试上限（含基线与注入各一次 pre_commit）
@@ -41,8 +42,7 @@ const injectAndDiff = (files) =>
     for (const [rel, text] of Object.entries(files)) {
       const abs = join(copyRoot, rel);
       assert.ok(!existsSync(abs), `注入位置已存在，拒绝覆盖：${rel}`);
-      mkdirSync(dirname(abs), { recursive: true });
-      writeFileSync(abs, text, 'utf8');
+      writeUnderTempRoot(copyRoot, rel, text);
     }
     const after = failPairs(runGate(copyRoot));
     return [...after].filter((p) => !basePairs.has(p));
