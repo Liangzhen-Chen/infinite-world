@@ -6,22 +6,23 @@
 import { KernelError } from './errors.mjs';
 import { invalidateTop } from './memo.mjs';
 
-/** @typedef {{state: any, open: boolean, undo: Array<{obj: any, key: string, had: boolean, old: any}>, touched: any[]}} WriteScope */
+/** @typedef {{engine: any, state: any, open: boolean, undo: Array<{obj: any, key: string, had: boolean, old: any}>, touched: any[]}} WriteScope */
 
 /**
  * 开写入作用域执行 fn(tx) 并返回结果；fn 抛错时按撤销记录逆序撤回本作用域全部写入（整笔撤销，卷二 :541 第 1 点），再原样抛出。
  * 撤销后作废本作用域碰过的顶层键缓存。作用域结束后 tx 失效。
  * 不做嵌套检测（不放模块级登记）：fn 内要继续写就用传入的 tx，不要再对同一 state 开新作用域。
  * @template T
+ * @param {any} engine 装配层交入的 engine（挂在 tx.engine；writePath 从它取路径句柄 P 与登记表）
  * @param {any} state
  * @param {(tx: WriteScope) => T} fn
  * @returns {T}
  */
-export function writeScope(state, fn) {
+export function writeScope(engine, state, fn) {
   if (state === null || typeof state !== 'object' || Array.isArray(state)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'state must be a plain object');
   if (typeof fn !== 'function') throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'writeScope needs a function');
   /** @type {WriteScope} */
-  const tx = { state, open: true, undo: [], touched: [] };
+  const tx = { engine, state, open: true, undo: [], touched: [] };
   try {
     return fn(tx);
   } catch (e) {

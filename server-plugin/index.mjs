@@ -5,6 +5,7 @@
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { buildRegistry } from './rules/load/registry.mjs';
+import { makePathHandles } from './kernel/handles.mjs';
 import { installNamedStructs } from './kernel/named-structs.mjs';
 
 const WORLD_ONTOLOGY = new URL('../world/ontology/', import.meta.url);
@@ -19,8 +20,8 @@ function readDimensionDocs() {
 }
 
 /**
- * SillyTavern 服务端插件入口。新骨架装配尚未实现，调用即抛（错误对象带 engine 与 state）。
- * @returns {Promise<never>}
+ * SillyTavern 服务端插件入口。装配 engine 与最小 state 并返回（主会话裁定：不再抛「未实现」）。
+ * @returns {Promise<{engine: any, state: any}>}
  */
 export async function init() {
   const registry = buildRegistry(readDimensionDocs());
@@ -28,7 +29,9 @@ export async function init() {
   // 顶层状态键的登记表（state-owners.json 的 stateKeys，卷二 §2.7 :580）；内核按它判 writePath 的顶层键是否已声明。
   const owners = JSON.parse(readFileSync(new URL('state-owners.json', WORLD_ONTOLOGY), 'utf8'));
   const stateKeys = Object.freeze({ ...(owners && owners.stateKeys ? owners.stateKeys : {}) });
-  const engine = Object.freeze({ registry, structs, modifierSources: Object.freeze([]), stateKeys });
+  // 路径句柄 P：按 pathTypes / keyKinds / textPaths 在加载期生成，规则层只能经 engine.P 得到读写路径（卷二 §2.6 :536）。
+  const P = makePathHandles(owners.pathTypes || {}, owners.keyKinds || {}, owners.textPaths || []);
+  const engine = Object.freeze({ registry, structs, modifierSources: Object.freeze([]), stateKeys, P });
   const initial = { created: {} };
-  throw Object.assign(new Error('新骨架未实现：S1-1 卡 B/C'), { engine, state: initial });
+  return { engine, state: initial };
 }

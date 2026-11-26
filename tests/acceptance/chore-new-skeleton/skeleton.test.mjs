@@ -88,17 +88,15 @@ test('server-plugin/kernel/ 下源文件（去注释后）的相对 import 都�
 
 // ---------- L-15：新骨架入口桩 ----------
 
-test('import server-plugin/index.mjs：init 调用抛错，错误信息含「未实现」', async () => {
+test('import server-plugin/index.mjs：init 是函数，await init() 返回对象，含 engine 与 state，state.created 为对象，engine.P 为冻结对象', async () => {
   const mod = await import(pathToFileURL(abs('server-plugin/index.mjs')).href);
   assert.equal(typeof mod.init, 'function', 'index.mjs 必须导出 init 函数');
-  let err = null;
-  try {
-    await mod.init();
-  } catch (e) {
-    err = e;
-  }
-  assert.ok(err, 'init 调用必须抛错（骨架桩，未实现）');
-  assert.match(String(err && err.message), /未实现/);
+  const ret = await mod.init();
+  assert.ok(ret && typeof ret === 'object', 'init 必须返回对象');
+  assert.ok(ret.engine, 'init 返回值必须含 engine');
+  assert.ok(ret.state, 'init 返回值必须含 state');
+  assert.ok(ret.state.created && typeof ret.state.created === 'object', 'state.created 必须为对象');
+  assert.ok(Object.isFrozen(ret.engine.P), 'engine.P 必须为冻结对象');
 });
 
 // ---------- L-15：旧代码与旧资料的迁出 ----------

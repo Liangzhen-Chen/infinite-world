@@ -654,10 +654,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 104
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 105
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 106
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 107
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 108
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 104,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 108,
    "scanClass": "const_literal",
    "terms": {
     "vol2.S10": {
@@ -1562,10 +1578,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 102
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 103
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 104
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 105
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 106
     }
    ],
-   "print": "9777e8a3fd9a7a968a5922dba6d5aac3f9900041c0fa70f5935c17ae963bde9a",
-   "rev": 102,
+   "print": "be4b6b4337ac8d22b4a4d6363fbc83896ff8735e18865538c1d66744a74098cf",
+   "rev": 106,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -1700,10 +1732,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 30
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 34
     }
    ],
-   "print": "d84160fbc02a40231c99c2dece68e6a83d9076b0e6583a07ed32a8cf4b390a63",
-   "rev": 30,
+   "print": "94e30d11a70dc06e803018867cffbb1a79e3c4f42787a423c421598ed3643a25",
+   "rev": 34,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -1990,10 +2038,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 31
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 34
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 35
     }
    ],
-   "print": "5ccc75f51dfa445b2324659016b7729c5bab5655323dfb817db703da7a044271",
-   "rev": 31,
+   "print": "2b3280b33e472be6a66649a9feb2d2f3f3aa6e39bc7c43befd1a2cdb885a8e0b",
+   "rev": 35,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -2602,10 +2666,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 88
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 89
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 90
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 91
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 92
     }
    ],
-   "print": "1761a72f019912661411ad17047ff444fa0964ee5e141cc4b96b56b2cba1e2bf",
-   "rev": 88,
+   "print": "fa0765e120af2813bcd0ec5633e2122bd1b1bcb4bed36b5892bd66a6fd62a8fb",
+   "rev": 92,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -2745,10 +2825,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 31
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 34
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 35
     }
    ],
-   "print": "5ccc75f51dfa445b2324659016b7729c5bab5655323dfb817db703da7a044271",
-   "rev": 31,
+   "print": "2b3280b33e472be6a66649a9feb2d2f3f3aa6e39bc7c43befd1a2cdb885a8e0b",
+   "rev": 35,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -3255,10 +3351,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 121
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 122
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 123
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 124
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 125
     }
    ],
-   "print": "275a695a5e077dddd5cea474482ca6252462f6721be621dc14e52090cc5cf01f",
-   "rev": 121,
+   "print": "421ec8c1e6385b038f08197aee29ab126989f76eddc369a67ad9f64ab05b5c40",
+   "rev": 125,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -3823,10 +3935,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 89
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 90
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 91
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 92
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 93
     }
    ],
-   "print": "1761a72f019912661411ad17047ff444fa0964ee5e141cc4b96b56b2cba1e2bf",
-   "rev": 89,
+   "print": "fa0765e120af2813bcd0ec5633e2122bd1b1bcb4bed36b5892bd66a6fd62a8fb",
+   "rev": 93,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -5053,10 +5181,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 89
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 90
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 91
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 92
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 93
     }
    ],
-   "print": "1761a72f019912661411ad17047ff444fa0964ee5e141cc4b96b56b2cba1e2bf",
-   "rev": 89,
+   "print": "fa0765e120af2813bcd0ec5633e2122bd1b1bcb4bed36b5892bd66a6fd62a8fb",
+   "rev": 93,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -5431,10 +5575,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 90
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 91
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 92
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 93
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 94
     }
    ],
-   "print": "281b427307e0e0514a9abc9fa63e8a81fcac2ed8d7f3487e8928b724fdad94c2",
-   "rev": 90,
+   "print": "234c9a17c3692bcec310ec408d9469cfde7633c3ed34950ba74afcac547724ea",
+   "rev": 94,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -5570,10 +5730,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 30
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 34
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 30,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 34,
    "scanClass": "pp_canonical_def",
    "source": "公共部件审查乙 11；卷二十七 :542；例外 kernel/storage.mjs",
    "terms": {
@@ -5653,10 +5829,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 16
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 17
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 18
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 19
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 20
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 16,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 20,
    "scanClass": "pp_canonical_review",
    "source": "主会话 11-23 定：规范序列化按定义判，拿不准的待人审",
    "terms": {
@@ -5792,10 +5984,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 30
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 34
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 30,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 34,
    "scanClass": "pp_deep_clone",
    "source": "公共部件审查乙 10；卷二 :897；kernel/clone.mjs（kernelApi clone）",
    "terms": {
@@ -5931,10 +6139,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 30
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 34
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 30,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 34,
    "scanClass": "pp_dist_branch",
    "source": "公共部件审查甲 R7；卷二 §1.10；kernel/sample.mjs 头注",
    "terms": {
@@ -6046,10 +6270,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 24
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 25
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 26
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 27
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 28
     }
    ],
-   "print": "491cfc688bfecc7142ecd87ee65472932be6283c7b8af30ca84768aa3b3f84cf",
-   "rev": 24,
+   "print": "d8073c54017bf425e93b8d89ea91633db4e3103337c752506368e808a3667fdb",
+   "rev": 28,
    "scanClass": "pp_draw_sites",
    "source": "公共部件审查甲 R6 后半；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479（rules.clock.drawSites）",
    "terms": {
@@ -6165,10 +6405,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 25
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 26
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 27
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 28
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 29
     }
    ],
-   "print": "281b427307e0e0514a9abc9fa63e8a81fcac2ed8d7f3487e8928b724fdad94c2",
-   "rev": 25,
+   "print": "234c9a17c3692bcec310ec408d9469cfde7633c3ed34950ba74afcac547724ea",
+   "rev": 29,
    "scanClass": "pp_dup_export",
    "source": "公共部件审查甲 R14、乙 12；卷二 :1162 体例；CLAUDE.md“跨卷共用定义只一处”。职责函数 isPos、distributionMean、weatherCellOf 的职责文件依据：卷二 §1.5 struct:pos（kernel/named-structs.mjs）、卷二 §1.10（kernel/sample.mjs）、卷二十 §3.1（kernel/weather.mjs）",
    "terms": {
@@ -6304,10 +6560,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 30
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 34
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 30,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 34,
    "scanClass": "pp_dynamic_index",
    "source": "李白更正裁定 msg-1122-2255-c0ast（动态下标出现即报，标待人审）；卷二十七 R27-5.2、A27-5.1；卷二十 :436",
    "terms": {
@@ -6423,10 +6695,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 25
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 26
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 27
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 28
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 29
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 25,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 29,
    "scanClass": "pp_dynamic_review",
    "source": "李白更正裁定 msg-1122-2255-c0ast：运行期才知道的动态下标出现即报，标待人审。本条列全部对象上的动态下标（含数组按位置取），数量大，只报不拦（报告里列出，供人审）；登记在 Math、全局对象、状态根等根上的动态下标由 pp_dynamic_index 拦",
    "terms": {
@@ -6562,10 +6850,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 30
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 34
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 30,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 34,
    "scanClass": "pp_envat_callers",
    "source": "公共部件审查甲 R2；卷二十 :478；state-owners.json kernelApi 行形状",
    "terms": {
@@ -6701,10 +7005,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 30
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 34
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 30,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 34,
    "scanClass": "pp_envat_import",
    "source": "公共部件审查甲 R1（docs/研究/公共部件审查-甲-1122.md 第八节）；卷二十 :478、:631；例外：climate.mjs、weather.mjs 互相引用（甲 R1 原句）",
    "terms": {
@@ -6840,10 +7160,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 30
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 34
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 30,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 34,
    "scanClass": "pp_epsilon",
    "source": "公共部件审查乙 7；卷二十七 :620、:634（R27-5.2 数值运算只有三条路）",
    "terms": {
@@ -7062,10 +7398,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 29
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 30
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 29,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 33,
    "scanClass": "pp_float_pow",
    "source": "公共部件审查乙 7；卷二十七 R27-5.2（超越函数只经定点数学设施，幂函数 pow 同属）；独立验收漏项“** 运算符”",
    "terms": {
@@ -7201,10 +7553,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 30
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 34
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 30,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 34,
    "scanClass": "pp_footprint_kind",
    "source": "公共部件审查甲 R12；卷二 §1.9；模块化评估第三节；例外 kernel/footprint-kind.mjs（gen/* 按种类过滤的比较进基线，M-11③ 修后开）",
    "terms": {
@@ -7336,10 +7704,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 29
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 30
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 29,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 33,
    "scanClass": "pp_gen_callers",
    "source": "公共部件审查乙 9（docs/研究/公共部件审查-乙-1122.md :161）；卷十 :403（生成器只在世界创建事务里按步骤表跑）；例外：generateWorld 所在文件 server-plugin/world-create.mjs（卷十 §3.2 :291）；requireMaterialized 现不存在，建成后其所在文件须加入例外；作者工具在 tools/ 下，不在扫描范围（卷十 :1002）",
    "terms": {
@@ -7475,10 +7859,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 30
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 34
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 30,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 34,
    "scanClass": "pp_grammar_regex",
    "source": "公共部件审查乙 6；卷二 :291；例外 kernel/validate/types.mjs",
    "terms": {
@@ -7717,10 +8117,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 30
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 34
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 30,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 34,
    "scanClass": "pp_key_concat",
    "source": "公共部件审查甲 R5、乙 1、乙 2；卷二 :337、:897、:1162；例外：整份文本摘要 sha256Text(canonical(…))、sha256Text(text) 不拼键（不含 .join，不命中）",
    "terms": {
@@ -7848,10 +8264,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 28
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 29
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 30
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 28,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 32,
    "scanClass": "pp_kind_branch",
    "source": "独立验收（亮圳 11-22「独立测门禁1122」）指出“写死数值与种类分支没有 C0 专条”；卷一 二.1（派生优先，不按 ID 或场景特判，docs/产品原则.md）；卷二 S10（常数登记）",
    "terms": {
@@ -7987,10 +8419,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 30
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 34
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 30,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 34,
    "scanClass": "pp_material_read",
    "source": "公共部件审查甲 R11；卷三甲 :268；卷三乙 :541；例外：kernel/item.mjs、kernel/dimensions.mjs、kernel/load/**、kernel/validate/**、kernel/blueprint.mjs（加载期校验 checkBlueprintForms）",
    "terms": {
@@ -8026,10 +8474,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 5
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 6
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 7
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 8
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 9
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 5,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 9,
    "scanClass": "pp_module_state",
    "terms": {
     "L-09.module_state": {
@@ -8164,10 +8628,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 30
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 34
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 30,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 34,
    "scanClass": "pp_neighbors",
    "source": "公共部件审查甲 R10；卷五 :491、:1216（现 8 处）",
    "terms": {
@@ -8291,10 +8771,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 27
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 28
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 29
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 30
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 27,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 31,
    "scanClass": "pp_no_acorn_runtime",
    "source": "李白更正裁定 msg-1122-2255-c0ast：acorn 只许 tools/accept 引用，server-plugin 不得引用",
    "terms": {
@@ -8430,10 +8926,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 30
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 34
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 30,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 34,
    "scanClass": "pp_pos_shape",
    "source": "公共部件审查甲 R8；卷二 §1.5 struct:pos 登记；例外 kernel/named-structs.mjs、kernel/named-struct-match.mjs",
    "terms": {
@@ -8569,10 +9081,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 30
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 34
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 30,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 34,
    "scanClass": "pp_region_cell",
    "source": "公共部件审查甲 R9；卷五 :433、:499；例外：kernel/footprint.mjs 的共用函数（修后建）、kernel/handles/keys.mjs gridChunkCells（卷二 :860）",
    "terms": {
@@ -8708,10 +9236,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 30
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 34
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 30,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 34,
    "scanClass": "pp_rx_empty_clock",
    "source": "公共部件审查甲 R15；卷二十 :312、:685；例外：加载期校验 kernel/validate/**",
    "terms": {
@@ -8847,10 +9391,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 30
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 34
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 30,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 34,
    "scanClass": "pp_seed_args",
    "source": "公共部件审查甲 R6；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479。后半（drawSites 与 seed-keys 两表一致）未落：需读两表对照，现有检测器无此检查",
    "terms": {
@@ -8958,10 +9518,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 23
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 24
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 25
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 26
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 27
     }
    ],
-   "print": "491cfc688bfecc7142ecd87ee65472932be6283c7b8af30ca84768aa3b3f84cf",
-   "rev": 23,
+   "print": "d8073c54017bf425e93b8d89ea91633db4e3103337c752506368e808a3667fdb",
+   "rev": 27,
    "scanClass": "pp_seed_args_dyn",
    "source": "独立验收漏项“抽取点站点名用变量”；卷二十七 :789（R27-8.1 每个抽取点登记，流代号、抽取点代号须字面量）",
    "terms": {
@@ -9073,10 +9649,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 24
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 25
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 26
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 27
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 28
     }
    ],
-   "print": "281b427307e0e0514a9abc9fa63e8a81fcac2ed8d7f3487e8928b724fdad94c2",
-   "rev": 24,
+   "print": "234c9a17c3692bcec310ec408d9469cfde7633c3ed34950ba74afcac547724ea",
+   "rev": 28,
    "scanClass": "pp_tpl_key",
    "source": "公共部件审查甲 R13；卷二 :860（键串形只由登记方给）；模块化原则卡头第二节第 9 条",
    "terms": {
@@ -9208,10 +9800,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 29
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 30
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 29,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 33,
    "scanClass": "pp_unit_literal",
    "source": "公共部件审查乙 13；卷三乙:179 与表头 unit 字段（item.json 表头 unit 字段）；单位登记表 world/ontology/dimensions/_units.json",
    "terms": {
@@ -9347,10 +9955,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 30
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 34
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 30,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 34,
    "scanClass": "pp_year_minutes",
    "source": "公共部件审查甲 R3；卷二十 :436、:477 T-3 (c)；例外 climate.mjs（日均温日份额，天文相位，卷二十 :436）",
    "terms": {
@@ -9833,10 +10457,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 117
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 118
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 119
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 120
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 121
     }
    ],
-   "print": "638599bfa75744c352dc5fcddd259744c4351c0cf45d40aa1a40d303b9b5f3a6",
-   "rev": 117,
+   "print": "227f74f911957ff3e2018d9bee28125500b7766ca459d6193523f07d24081b47",
+   "rev": 121,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -10446,10 +11086,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 75
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 76
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 77
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 78
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 79
     }
    ],
-   "print": "491cfc688bfecc7142ecd87ee65472932be6283c7b8af30ca84768aa3b3f84cf",
-   "rev": 75,
+   "print": "d8073c54017bf425e93b8d89ea91633db4e3103337c752506368e808a3667fdb",
+   "rev": 79,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -10879,10 +11535,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 102
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 103
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 104
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 105
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 106
     }
    ],
-   "print": "71b49c796dd0b11a9f05ab65a97a2425b30d3630e4bf681f424f727bb4caa7c2",
-   "rev": 102,
+   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
+   "rev": 106,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -11223,10 +11895,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 57
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 58
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 59
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 60
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 61
     }
    ],
-   "print": "66361daa764f3f92c1810e755c740220dd04ee69f3557ef3168814bebdc73add",
-   "rev": 57,
+   "print": "d6b2f583ceff11c0841080ea3861b1755cb13b023316a42947584a7adf709c4f",
+   "rev": 61,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -11362,10 +12050,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 30
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 31
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 32
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 33
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 34
     }
    ],
-   "print": "5ccc75f51dfa445b2324659016b7729c5bab5655323dfb817db703da7a044271",
-   "rev": 30,
+   "print": "2b3280b33e472be6a66649a9feb2d2f3f3aa6e39bc7c43befd1a2cdb885a8e0b",
+   "rev": 34,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -11612,10 +12316,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 4
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 5
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 6
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 7
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 8
     }
    ],
-   "print": "5ccc75f51dfa445b2324659016b7729c5bab5655323dfb817db703da7a044271",
-   "rev": 4,
+   "print": "2b3280b33e472be6a66649a9feb2d2f3f3aa6e39bc7c43befd1a2cdb885a8e0b",
+   "rev": 8,
    "scanClass": "typecheck",
    "terms": {
     "L-09.typecheck": {
@@ -11998,10 +12718,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 92
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 93
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 94
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 95
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 96
     }
    ],
-   "print": "281b427307e0e0514a9abc9fa63e8a81fcac2ed8d7f3487e8928b724fdad94c2",
-   "rev": 92,
+   "print": "234c9a17c3692bcec310ec408d9469cfde7633c3ed34950ba74afcac547724ea",
+   "rev": 96,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -12544,10 +13280,26 @@
     {
      "ref": "S1-1 卡 A 第五轮：kernel/handles.mjs 的 FACT_SOURCES 取值 class_row 改名 category_row（避开类别前缀被判成实例名，卷二 S1），检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 62
+    },
+    {
+     "ref": "S1-1p：kernel/handles.mjs 加路径句柄 P 生成器 makePathHandles，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 63
+    },
+    {
+     "ref": "S1-1p：handles.mjs 的 GRAMMAR_TOKENS 加 issuedMember 记号，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 64
+    },
+    {
+     "ref": "S1-1p：handles.mjs 加 PATH_HANDLE_ISSUED 保留成员名定义，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 65
+    },
+    {
+     "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
+     "rev": 66
     }
    ],
-   "print": "f49762609e68cea3eb945240c0cd713649c3745beb2ff45ed6234348163baf33",
-   "rev": 62,
+   "print": "7169674e52fe7cd71aaaf9b0a467dd0b52499f2e74e73f99bf14299c2a84b431",
+   "rev": 66,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {

@@ -3,6 +3,9 @@
 // 内含：① 协议标记的定义源与由它们派生的冻结标记句柄 T（卷二 §2.8、§7 S13 (a)，李白 11-18 13:05 B2-W4 裁定第 1 条）；
 // ② 从 rx.mjs 搬来的 RX 词法与返回形状正则（卷二 §2.8 表 kernel 行，封卷后勘误 1118k17）；
 // ③ 词表代号与错误码构造（卷二 §2.9 第 2 条强转豁免文件表，原 vocab-handle.mjs）。
+// ④ 路径句柄 P 的生成器 makePathHandles（卷二 §2.6 :536；规则层只能经它得到 readPath/writePath 的路径实参）。
+// 规则层调用约定：先 `const { P } = engine;` 再 `writePath(state, P.x(...), v, tx)`（检测器只认 `标识符.标识符(` 形态，tools/accept/detectors/path_access.mjs:298）；
+// 不得手写数组或对象当路径，不得把 P.x 取出来再另包。
 // 代号文法 CODE_RE 与错误码文法 isErrorCode 的定义源也在这片叶子上（原在 validate/types.mjs，合并叶子后移入以保持 0 import）；
 // validate/types.mjs 照旧转出这两个名字。族的取值与出处同在定义源处；本文件不判任何具体值，只按定义源派生成员。
 
@@ -325,4 +328,64 @@ export function errorCodeOf(code, registered) {
  */
 export function errorMemberName(code) {
   return code.split('-').join('_');
+}
+
+// ---------- 路径句柄 P（卷二 :536） ----------
+
+// P 上保留的来路核验成员名（卷二 :536）：模式派生名不得与它同名；只此一处定义。
+export const PATH_HANDLE_ISSUED = 'issued';
+
+// 成员名派生（卷二 :536）：模式里的点换成下划线，`*` 段不进名字。与 tools/accept/lib/js-state.mjs 的 declPaths 同规则
+// （kernel 不得 import tools/，故此处是 kernel 侧唯一一份；检测器侧另有一份，两处同规则）。
+/** @param {string} pattern @returns {string} */
+function memberName(pattern) {
+  return pattern.split(GRAMMAR_TOKENS.pathSep).filter((seg) => seg !== GRAMMAR_TOKENS.wildcard).join('_');
+}
+
+/**
+ * 加载期按 pathTypes 每条模式（去掉 textPaths）生成路径构造函数，返回冻结的 P。
+ * 成员 P.<派生名>(...实参)：形参个数 = 模式里 `*` 段数，实参须为非空字串，否则抛 E-DIM-ID-FORMAT；返回冻结对象 {pattern, segs}。
+ * 两条模式派生同名抛 E-PATH-NAME-CLASH。P.issued(path) 判断 path 是否是本 P 发出的（writePath 核来路用）；它不可枚举、不可写。
+ * 发出记录放在闭包里的 WeakSet，不产生模块级状态。
+ * @param {Record<string, unknown>} pathTypes
+ * @param {Record<string, unknown>} keyKinds 每个 `*` 段的 kind 声明（卷二 :880）；有 `*` 段的非文字模式须有登记，否则抛 E-PATH-KEYKINDS
+ * @param {readonly string[]} textPaths
+ * @returns {Readonly<Record<string, any>>}
+ */
+export function makePathHandles(pathTypes, keyKinds, textPaths) {
+  const text = new Set(textPaths);
+  /** @type {WeakSet<object>} */
+  const issued = new WeakSet();
+  /** @type {Record<string, any>} */
+  const members = {};
+  // 先占住保留名：模式派生同名时由下面的 hasOwn 判重（不写字串比较）。wasIssued 是 const 箭头，调用发生在其初始化之后。
+  Object.defineProperty(members, PATH_HANDLE_ISSUED, { value: Object.freeze((/** @type {any} */ path) => wasIssued(path)), enumerable: false, writable: false, configurable: false });
+  /** @param {string} code @param {string} message */
+  const fail = (code, message) => Object.assign(new Error(`${code} ${message}`), { code });
+  for (const pattern of Object.keys(pathTypes)) {
+    if (text.has(pattern)) continue;
+    const name = memberName(pattern);
+    if (name.length === 0 || Object.hasOwn(members, name)) throw fail('E-PATH-NAME-CLASH', `pattern ${JSON.stringify(pattern)}: member name ${JSON.stringify(name)} clashes`);
+    const parts = pattern.split(GRAMMAR_TOKENS.pathSep);
+    const arity = parts.filter((seg) => seg === GRAMMAR_TOKENS.wildcard).length;
+    if (arity > 0 && !Object.hasOwn(keyKinds, pattern)) throw fail('E-PATH-KEYKINDS', `pattern ${JSON.stringify(pattern)}: no keyKinds entry`);
+    /** @param {any[]} args */
+    const make = (...args) => {
+      if (args.length !== arity) throw fail('E-DIM-ID-FORMAT', `P.${name}: want ${arity} argument(s), got ${args.length}`);
+      let k = 0;
+      const segs = parts.map((seg) => {
+        if (seg !== GRAMMAR_TOKENS.wildcard) return seg;
+        const arg = args[k++];
+        if (typeof arg !== 'string' || arg.length === 0) throw fail('E-DIM-ID-FORMAT', `P.${name}: arguments must be non-empty strings`);
+        return arg;
+      });
+      const path = Object.freeze({ pattern, segs: Object.freeze(segs) });
+      issued.add(path);
+      return path;
+    };
+    members[name] = Object.freeze(make);
+  }
+  /** @param {any} path */
+  const wasIssued = (path) => path !== null && typeof path === 'object' && issued.has(path);
+  return Object.freeze(members);
 }
