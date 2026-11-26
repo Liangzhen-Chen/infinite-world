@@ -6,10 +6,11 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
+import { mkdirSync, readFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { removeTempRoot, testTempRoot, writeUnderTempRoot } from '../../accept/temp-root.mjs';
+import { writeTempRepoFile } from '../../../tools/accept/lib/temp-repo-write.mjs';
 
 const SCRIPT = fileURLToPath(new URL('../../../tools/gen-status-snapshot.mjs', import.meta.url));
 const OUT_DEFAULT = join('docs', '状态快照.generated.md');
@@ -268,9 +269,7 @@ function makeRepo({ withBaseline = true } = {}) {
   const dir = testTempRoot('snap-acc-');
   dirs.push(dir);
   const put = (rel, data) => {
-    const p = join(dir, rel);
-    mkdirSync(dirname(p), { recursive: true });
-    writeFileSync(p, typeof data === 'string' ? data : JSON.stringify(data, null, 2) + '\n', 'utf8');
+    writeTempRepoFile(dir, rel, typeof data === 'string' ? data : JSON.stringify(data, null, 2) + '\n');
   };
   put(join('tools', 'accept', 'entry-registry.json'), registryOf(['server-plugin/a.mjs', 'server-plugin/b.mjs', null, null]));
   if (withBaseline) put(join('tools', 'accept', 'baseline.json'), BASELINE);
