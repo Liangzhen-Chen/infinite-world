@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { testTempRoot, writeUnderTempRoot } from '../accept/temp-root.mjs';
 import { init, saveSlot, loadSlot, replay_apply } from '../../server-plugin/index.mjs';
-import express from 'express';
+import { express } from '../support/express.mjs';
 import { useReportSink } from '../../server-plugin/kernel/errors.mjs';
 import { clockMinute } from '../../server-plugin/kernel/scheduler.mjs';
 import { canonical } from '../../server-plugin/kernel/storage.mjs';

@@ -6,6 +6,7 @@
 // 登记表从 world/rules/registry.json 每行 file 读。files.json 长度 15 为卡文明确要求，照写。
 // raw 世界数据的形状镜像 server-plugin/index.mjs 的 readWorld（master f53db9880）；mountKernel 的 raw 取该形状。
 // 临时根用 tests/accept/temp-root.mjs#testTempRoot，不清理，写文件只用 writeUnderTempRoot（不用删除函数）。
+import { express } from '../../support/express.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -167,7 +168,7 @@ function closureOf(out, node) {
 
 test('①init 成功并返回六项：engine、state、logBook、submitProposal、advance、save', () => {
   const root = testTempRoot('mount-s1c-');
-  return init({ saveRoot: root }).then((env) => {
+  return init(express.Router(), { saveRoot: root }).then((env) => {
     for (const k of ['engine', 'state', 'logBook', 'submitProposal', 'advance', 'save']) {
       assert.ok(k in env, `返回值应含 ${k}`);
     }
@@ -218,7 +219,7 @@ test('④不给 unitOfPath、数据现状 → 启动成功；raw 副本里某分
 
 test('⑤modifierSources 被去掉的 engine 调 modified → E-DIM-STRUCT-FIELD；modifierSources 为空数组时 modified.value === dim.value', async () => {
   const root = testTempRoot('mount-s1c-');
-  const env = await init({ saveRoot: root });
+  const env = await init(express.Router(), { saveRoot: root });
   const id = await createOne(env, WRITE_TABLE.kind, firstRowId(WRITE_TABLE));
   const seeded = await env.submitProposal({ effects: [{ op: 'fact.set', entity: id, field: WRITE_DIM.name, value: WRITE_DIM.value }] });
   assert.equal(seeded.ok, true, JSON.stringify(seeded));
@@ -234,7 +235,7 @@ test('⑤modifierSources 被去掉的 engine 调 modified → E-DIM-STRUCT-FIELD
 
 test('⑥inputsOf(engine, node) 同一节点两次调用返回同一对象（===），且已冻结', async () => {
   const root = testTempRoot('mount-s1c-');
-  const env = await init({ saveRoot: root });
+  const env = await init(express.Router(), { saveRoot: root });
   const node = `dim:${WRITE_TABLE.kind}`;
   const a = inputsOf(env.engine, node);
   const b = inputsOf(env.engine, node);
@@ -244,7 +245,7 @@ test('⑥inputsOf(engine, node) 同一节点两次调用返回同一对象（===
 
 test('⑦未声明节点 → inputsOf 抛 E-VIEW-UNDECLARED-READ', async () => {
   const root = testTempRoot('mount-s1c-');
-  const env = await init({ saveRoot: root });
+  const env = await init(express.Router(), { saveRoot: root });
   await expectCode(() => inputsOf(env.engine, 'undeclared:s1c-probe-node'), 'E-VIEW-UNDECLARED-READ');
 });
 
@@ -267,7 +268,7 @@ test('⑧closeInputs：a uses b、b own X → a 的闭包含 X（传递）；a�
 
 test('⑨经 submitProposal 的 create 与 fact.set 写 created.<id>.props.<维度> 后，dim 取到新值', async () => {
   const root = testTempRoot('mount-s1c-');
-  const env = await init({ saveRoot: root });
+  const env = await init(express.Router(), { saveRoot: root });
   const id = await createOne(env, WRITE_TABLE.kind, firstRowId(WRITE_TABLE));
   const r = await env.submitProposal({ effects: [{ op: 'fact.set', entity: id, field: WRITE_DIM.name, value: WRITE_DIM.value }] });
   assert.equal(r.ok, true, JSON.stringify(r));
@@ -277,7 +278,7 @@ test('⑨经 submitProposal 的 create 与 fact.set 写 created.<id>.props.<维�
 
 test('⑩读档后继续玩：提交→存→读→复演→advance 后时钟增步长；再存读复演的 saveDigest 等于同输入一口气跑完的世界', async () => {
   const rootA = testTempRoot('mount-s1c-');
-  const env = await init({ saveRoot: rootA });
+  const env = await init(express.Router(), { saveRoot: rootA });
   await playScript(env);
   const m = await saveSlot(env, 0);
   const r = await replay_apply(await loadSlot(m, { saveRoot: rootA }));
@@ -288,7 +289,7 @@ test('⑩读档后继续玩：提交→存→读→复演→advance 后时钟增
   const r2 = await replay_apply(await loadSlot(m2, { saveRoot: rootA }));
 
   const rootB = testTempRoot('mount-s1c-');
-  const once = await init({ saveRoot: rootB });
+  const once = await init(express.Router(), { saveRoot: rootB });
   await playScript(once);
   await once.advance(STEP);
   const mOnce = await once.save(0);
@@ -297,7 +298,7 @@ test('⑩读档后继续玩：提交→存→读→复演→advance 后时钟增
 
 test('⑪存档的 doc_data 含 registry.json 每行 code 对应的表（逐一核在，不写死表名）', async () => {
   const root = testTempRoot('mount-s1c-');
-  const env = await init({ saveRoot: root });
+  const env = await init(express.Router(), { saveRoot: root });
   await playScript(env);
   const m = await saveSlot(env, 0);
   const loaded = await loadSlot(m, { saveRoot: root });

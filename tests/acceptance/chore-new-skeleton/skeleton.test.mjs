@@ -7,6 +7,7 @@
 // 期望值全部按上列原文写成字面量，不从实现反推。实现未落地前本文件应为红，这是预期。
 // 注意：本文件只读仓库，不写任何文件；不 mock，不引用 archive/ 内的代码。
 
+import { express } from '../../support/express.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
@@ -88,10 +89,10 @@ test('server-plugin/kernel/ 下源文件（去注释后）的相对 import 都�
 
 // ---------- L-15：新骨架入口桩 ----------
 
-test('import server-plugin/index.mjs：init 是函数，await init() 返回对象，含 engine 与 state，state.created 为对象，engine.P 为冻结对象', async () => {
+test('import server-plugin/index.mjs：init 是函数，await init(express.Router()) 返回对象，含 engine 与 state，state.created 为对象，engine.P 为冻结对象', async () => {
   const mod = await import(pathToFileURL(abs('server-plugin/index.mjs')).href);
   assert.equal(typeof mod.init, 'function', 'index.mjs 必须导出 init 函数');
-  const ret = await mod.init();
+  const ret = await mod.init(express.Router());
   assert.ok(ret && typeof ret === 'object', 'init 必须返回对象');
   assert.ok(ret.engine, 'init 返回值必须含 engine');
   assert.ok(ret.state, 'init 返回值必须含 state');

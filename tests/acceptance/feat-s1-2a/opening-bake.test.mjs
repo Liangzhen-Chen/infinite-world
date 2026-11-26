@@ -5,6 +5,7 @@
 // 新模块（rules/gen/worldgen-writeback.mjs、rules/bake/place-tree.mjs）未建时只有用到它们的用例红，其余用例照常跑（动态 import）。
 // raw 世界数据形状镜像 server-plugin/index.mjs 的 readWorld；sources 镜像 readSources（与 feat-s1-1c 测试同法）。
 // 临时根用 tests/accept/temp-root.mjs#testTempRoot，不清理、不新增删除函数，本文件不写文件（只读 world/ 与内存副本）。
+import { express } from '../../support/express.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -127,7 +128,7 @@ function idsOf(state) {
 test('1. init 在 3000 ms 内返回，返回值含 engine、state、logBook、submitProposal、advance、save', async () => {
   const root = testTempRoot('s2a-init-');
   const t0 = performance.now();
-  const env = await init({ saveRoot: root });
+  const env = await init(express.Router(), { saveRoot: root });
   const ms = performance.now() - t0;
   assert.ok(ms < 3000, `init 耗时 ${ms.toFixed(0)} ms，应在 3000 ms 内（PLAN:48；卷文无此数，卡文指定）`);
   for (const k of ['engine', 'state', 'logBook', 'submitProposal', 'advance', 'save']) {
@@ -140,7 +141,7 @@ test('1. init 在 3000 ms 内返回，返回值含 engine、state、logBook、su
 
 test('2. 开局后 openingOf 的 genesisMinute === openingMinute === 数据起始分钟 === clock.minute；改副本起始分钟则开局时钟随之改', async () => {
   const root = testTempRoot('s2a-genesis-');
-  const env = await init({ saveRoot: root });
+  const env = await init(express.Router(), { saveRoot: root });
   const { openingOf } = await opening();
   const got = openingOf(env.engine, env.state);
   const start = genesisMinuteOf(loadJson(join(WORLD, 'rules', WORLDGEN_ROW.file)));
@@ -167,7 +168,7 @@ test('3. place 表 comp_region 行数为 41，其中郡级为 31', () => {
 
 test('4. 作者已给 genOpen 的地点开局后不变；其余地点恰有一条偏离行或一条 gap，二者覆盖全部地点且不重不漏', async () => {
   const root = testTempRoot('s2a-open-');
-  const env = await init({ saveRoot: root });
+  const env = await init(express.Router(), { saveRoot: root });
   const { runOpening } = await opening();
   const authored = new Set(PLACE_IDS.filter((id) => Object.hasOwn(PLACE_ROWS[id], 'genOpen')));
   assert.ok(authored.size >= 1, '数据中应至少有一处作者给定的 genOpen（试玩出生地）');
@@ -194,7 +195,7 @@ test('4. 作者已给 genOpen 的地点开局后不变；其余地点恰有一�
 
 test('5. 开局后日志簿输入条目为 0；0 号快照已含 genesis 与全部 genOpen 偏离行', async () => {
   const root = testTempRoot('s2a-log-');
-  const env = await init({ saveRoot: root });
+  const env = await init(express.Router(), { saveRoot: root });
   assert.equal(env.logBook.entries.filter(isInput).length, 0, '开局不是外来输入（卷二十七 R27-7.3）：输入条目应为 0');
   const snap0 = env.logBook.snapshots[0];
   assert.ok(snap0 && snap0.state, '开局后应有 0 号快照');
@@ -210,7 +211,7 @@ test('5. 开局后日志簿输入条目为 0；0 号快照已含 genesis 与全�
 
 test('6. 烘焙层不进摘要：清空烘焙层后重存，saveDigest 不变；doc_state 不含烘焙层任何键', async () => {
   const root = testTempRoot('s2a-bake-');
-  const env = await init({ saveRoot: root });
+  const env = await init(express.Router(), { saveRoot: root });
   const { engine, state, logBook } = env;
   assert.ok(engine.bake && typeof engine.bake === 'object', 'engine.bake 应为烘焙层对象（卷二十七 R27-4.13）');
   const m1 = env.save(0);
@@ -237,7 +238,7 @@ test('6. 烘焙层不进摘要：清空烘焙层后重存，saveDigest 不变；
 
 test('7. 烘焙层可重建且一致：同一 doc_data 两次建树摘要相等；存读复演后重建的树摘要与开局时相等', async () => {
   const root = testTempRoot('s2a-rebuild-');
-  const env = await init({ saveRoot: root });
+  const env = await init(express.Router(), { saveRoot: root });
   const { bakePlaceTree, placeTreeDigest } = await placeTreeMod();
   const t1 = bakePlaceTree(env.engine.registry);
   const t2 = bakePlaceTree(env.engine.registry);
@@ -256,7 +257,7 @@ test('7. 烘焙层可重建且一致：同一 doc_data 两次建树摘要相等�
 
 test('8. 真实开局后的闭环：create 一个实体并 time 30 提交成功；新实体可读；输入条目 +1 且结果事件 ok；时钟 +30；存读复演 saveDigest 相等', async () => {
   const root = testTempRoot('s2a-loop-');
-  const env = await init({ saveRoot: root });
+  const env = await init(express.Router(), { saveRoot: root });
   const before = { minute: env.state.clock.minute, ids: idsOf(env.state), logLen: env.logBook.entries.length };
 
   const r = await env.submitProposal({
