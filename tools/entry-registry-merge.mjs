@@ -9,7 +9,8 @@
 // 确定、只读（除 --write 的登记表与 --rejects 的指定路径）：不读时间、不读网络，遍历先排序，输出按 name、file 排序。
 // 用法：node tools/entry-registry-merge.mjs [--write] [--rejects 路径.json]
 
-import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { writeCliOut } from './accept/lib/cli-out.mjs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { sectionRange, REGISTRY_FILE } from './entry-registry.mjs';
@@ -98,8 +99,8 @@ export function loadMergeInput(root = ROOT) {
 function main(argv) {
   const res = mergeNeeds(loadMergeInput());
   const ri = argv.indexOf('--rejects');
-  if (ri >= 0 && argv[ri + 1]) writeFileSync(argv[ri + 1], `${JSON.stringify({ 仍拒: res.rejects, 判不是: res.decided }, null, 1)}\n`);
-  if (argv.includes('--write')) writeFileSync(join(ROOT, REGISTRY_FILE), `${JSON.stringify(res.registry, null, 1)}\n`);
+  if (ri >= 0 && argv[ri + 1]) writeCliOut(ROOT, resolve(argv[ri + 1]), `${JSON.stringify({ 仍拒: res.rejects, 判不是: res.decided }, null, 1)}\n`);
+  if (argv.includes('--write')) writeCliOut(ROOT, REGISTRY_FILE, `${JSON.stringify(res.registry, null, 1)}\n`);
   console.log(`needs 采信 ${res.accepted.needs}，rules 采信 ${res.accepted.rules}；判不是 ${res.decided.length}；仍拒 ${res.rejects.length}（needs ${res.rejects.filter((x) => x.kind === "needs").length}，rules ${res.rejects.filter((x) => x.kind === "rules").length}）`);
 }
 if (process.argv[1] && resolve(process.argv[1]).replace(/\\/g, '/') === resolve(fileURLToPath(import.meta.url)).replace(/\\/g, '/')) main(process.argv.slice(2));

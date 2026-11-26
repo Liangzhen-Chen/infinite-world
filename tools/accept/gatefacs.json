@@ -57,6 +57,36 @@
    ]
   },
   {
+   "assertedWriters": [
+    "writeCliOut"
+   ],
+   "entries": [
+    "writeCliOut"
+   ],
+   "facCode": "offline-cli-out",
+   "gateCard": "—",
+   "inRepo": true,
+   "ownerVol": "vol12",
+   "paths": [
+    "tools/accept/lib/cli-out.mjs"
+   ],
+   "requiredTests": [
+    {
+     "file": "tests/accept/detectors.test.mjs",
+     "names": [
+      "assertCliOut（门禁封口卡 B）",
+      "writeCliOut（门禁封口卡 B）"
+     ]
+    }
+   ],
+   "testGlobs": [
+    "tests/accept/*.test.mjs"
+   ],
+   "writerAsserts": [
+    "assertCliOut"
+   ]
+  },
+  {
    "entries": [
     "repoRoot",
     "safeSegment"
@@ -89,12 +119,16 @@
   },
   {
    "assertedWriters": [
-    "writeUnderTempRoot"
+    "writeUnderTempRoot",
+    "removeTempRoot",
+    "removeUnderTempRoot"
    ],
    "entries": [
     "tempRepo",
     "testTempRoot",
-    "writeUnderTempRoot"
+    "writeUnderTempRoot",
+    "removeTempRoot",
+    "removeUnderTempRoot"
    ],
    "facCode": "test-temp-root",
    "gateCard": "—",
@@ -102,7 +136,8 @@
    "ownerVol": "vol12",
    "paths": [
     "tests/accept/temp-repo.mjs",
-    "tests/accept/temp-root.mjs"
+    "tests/accept/temp-root.mjs",
+    "tools/accept/lib/temp-root.mjs"
    ],
    "requiredTests": [
     {
@@ -110,7 +145,9 @@
      "names": [
       "assertRelUnderTempRoot（裁定四）",
       "writeUnderTempRoot（裁定四）",
-      "writeUnderTempRoot（只核第 2 条）"
+      "writeUnderTempRoot（只核第 2 条）",
+      "removeTempRoot（删临时根）",
+      "removeUnderTempRoot（删片）"
      ]
     }
    ],
@@ -118,7 +155,8 @@
     "tests/accept/*.test.mjs"
    ],
    "writerAsserts": [
-    "assertRelUnderTempRoot"
+    "assertRelUnderTempRoot",
+    "assertTempRoot"
    ]
   }
  ]

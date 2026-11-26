@@ -1,0 +1,3 @@
+// 声明之外的写仍报（门禁封口卡 B 两极用例反向）：根赋值、成员赋值、delete、自增都是写入（卷二 S5 E-VIEW-BYPASS）。
+/** @param {State} state @param {EntityId} id @returns {void} */
+export function bump(state, id) { const local = state; state.n++; state.a = 1; delete state.pendingPost[id]; void local; }

@@ -266,11 +266,50 @@
    "scanClass": "cross_write"
   },
   {
+   "addedAtRev": 36,
+   "caseKey": "cross_write-06",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/cross_write-06.txt",
+   "group": "rules",
+   "origin": "门禁封口卡 B（chore/gate-seal-b）：js-state 排除绑定声明，反向：state.n++、成员赋值、delete 仍报",
+   "polarity": "must_fail",
+   "scanClass": "cross_write"
+  },
+  {
+   "addedAtRev": 37,
+   "caseKey": "cross_write-07",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/cross_write-07.txt",
+   "group": "rules",
+   "origin": "门禁封口卡 B 审卡第一轮必须改 1：调用实参成员写换行接块语句不是形参表，仍报",
+   "polarity": "must_fail",
+   "scanClass": "cross_write"
+  },
+  {
+   "addedAtRev": 37,
+   "caseKey": "cross_write-08",
+   "expectCode": "E-VIEW-BYPASS",
+   "fixture": "tests/accept/bypass/cross_write-08.txt",
+   "group": "rules",
+   "origin": "门禁封口卡 B 审卡第一轮必须改 1：无分号换行后的逗号表达式成员写不是声明续写，仍报",
+   "polarity": "must_fail",
+   "scanClass": "cross_write"
+  },
+  {
    "addedAtRev": 1,
    "caseKey": "cross_write-11",
    "fixture": "tests/accept/bypass/cross_write-11.txt",
    "group": "rules",
    "origin": "L-09 ⑥ 配套：不写状态、不调写入口即不报",
+   "polarity": "must_pass",
+   "scanClass": "cross_write"
+  },
+  {
+   "addedAtRev": 36,
+   "caseKey": "cross_write-12",
+   "fixture": "tests/accept/bypass/cross_write-12.txt",
+   "group": "rules",
+   "origin": "门禁封口卡 B（chore/gate-seal-b）：js-state 排除绑定声明：const/let 声明、逗号续写、for-of、形参默认值不报",
    "polarity": "must_pass",
    "scanClass": "cross_write"
   },
