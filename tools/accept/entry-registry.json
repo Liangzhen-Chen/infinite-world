@@ -628,7 +628,10 @@
     "checkBodyPlans",
     "speciesView",
     "bodyView",
-    "carcassOf"
+    "carcassOf",
+    "loadActions",
+    "menuOf",
+    "resolveIntent"
    ],
    "rules": []
   },
@@ -1151,6 +1154,122 @@
     "fixedDivide",
     "fixedScale",
     "fixedToNumber",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "loadActions",
+   "file": "rules/act/catalog.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError",
+    "evaluateRX",
+    "checkValue",
+    "handlesOp",
+    "ruleValue"
+   ],
+   "rules": []
+  },
+  {
+   "name": "menuOf",
+   "file": "rules/act/catalog.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "KernelError",
+    "evaluateRX",
+    "dim",
+    "openPlacesOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "shapeOf",
+   "file": "rules/act/catalog.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "KernelError",
+    "evaluateRX",
+    "dim"
+   ],
+   "rules": []
+  },
+  {
+   "name": "whenHolds",
+   "file": "rules/act/catalog.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "predicate",
+   "needs": [
+    "KernelError",
+    "evaluateRX",
+    "dim"
+   ],
+   "rules": []
+  },
+  {
+   "name": "nsReadsFor",
+   "file": "rules/act/catalog.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "KernelError",
+    "dim"
+   ],
+   "rules": []
+  },
+  {
+   "name": "effects",
+   "file": "rules/act/effects.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "KernelError",
+    "evaluateRX",
+    "nsReadsFor"
+   ],
+   "rules": []
+  },
+  {
+   "name": "resolveIntent",
+   "file": "rules/act/resolve.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "KernelError",
+    "reportError",
+    "shapeOf",
+    "whenHolds",
+    "effects"
+   ],
+   "rules": []
+  },
+  {
+   "name": "handlesOp",
+   "file": "kernel/transaction.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "openPlacesOf",
+   "file": "rules/gen/worldgen-writeback.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "dim",
     "KernelError"
    ],
    "rules": []

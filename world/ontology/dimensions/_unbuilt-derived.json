@@ -240,7 +240,6 @@
   {"family": "sxform", "prefix": "sxf_", "volume": "卷十五《法术与超自然》§2.3 六轴之形态；物种 sxForm 引用", "card": "pre_first_reader_card"},
   {"family": "sxorigin", "prefix": "sxo_", "volume": "卷十五《法术与超自然》§2.3 六轴之本源；物种 sxOrigin 引用", "card": "pre_first_reader_card"},
   {"family": "sxpower", "prefix": "sxp_", "volume": "卷十五《法术与超自然》§2.3 六轴之能力；物种 sxPowers 引用", "card": "pre_first_reader_card"},
-  {"family": "origin", "prefix": "origin_", "volume": "卷四 §2.4 origin 族（出身，条目字段 placeFilter、grants）；个体 origin 引用；前缀待卷二 §1.9 核", "card": "pre_first_reader_card"},
   {"family": "identity", "prefix": "identity_", "volume": "卷四 §2.4 identity 族（身份键种类，legal、concealing）；个体 identityKeys 引用", "card": "pre_first_reader_card"},
   {"family": "route", "prefix": "route_", "volume": "卷二十一 暴露途径族；个体 exposureMult 引用；前缀待卷核", "card": "pre_first_reader_card"},
   {"family": "body_need", "prefix": "bneed_", "volume": "卷二十一 身体需要族；个体 needRecover 引用；前缀待卷核", "card": "pre_first_reader_card"},

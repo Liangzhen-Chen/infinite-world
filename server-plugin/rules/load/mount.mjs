@@ -1,7 +1,7 @@
 // 内核装配（卷二 :608、:859、:1033；state-owners.json assembly.calls 的 mountKernel）：
 // 先核装配层注入的能力（assertCaps，启动强断言唯一一处），再按登记组装世界数据（registry.mjs#loadWorld），
 // 建 engine（路径句柄 P、host、存档布局、原语目录、依赖闭包、修正来源、推进钩子、摘要能力与两个指纹）与 state、日志簿，
-// 返回 {engine, state, logBook, submitProposal, advance, save, opening, views}（S1-1 卡 B2、卡 C；opening 为 openingOf 的薄闭包，S1-2a；views 为 S1-2b 的物种、身体、尸体只读入口）。给了 resume（readSlot 的结果）即由 replayApply 复演得 state 与日志簿，另带 saveDigest。
+// 返回 {engine, state, logBook, submitProposal, advance, save, opening, views}（S1-1 卡 B2、卡 C；opening 为 openingOf 的薄闭包，S1-2a；act、menu 为动作入口与菜单投影的薄闭包，S1-3a；views 为 S1-2b 的物种、身体、尸体只读入口）。给了 resume（readSlot 的结果）即由 replayApply 复演得 state 与日志簿，另带 saveDigest。
 // 本文件不读盘（rules 层不许引 node:fs，world 数据由装配层 index.mjs 读入后传入），状态只经登记写者的初始化函数在一笔事务里建，或经复演重建。
 import { loadWorld } from './registry.mjs';
 import { makePathHandles } from '../../kernel/handles.mjs';
@@ -21,6 +21,8 @@ import { bodyView } from '../body/body.mjs';
 import { carcassOf } from '../body/carcass.mjs';
 import { runGenesis, runOpening, openingOf } from '../gen/worldgen-writeback.mjs';
 import { bakePlaceTree, placeTreeDigest } from '../bake/place-tree.mjs';
+import { loadActions, menuOf } from '../act/catalog.mjs';
+import { resolveIntent } from '../act/resolve.mjs';
 
 // 装配层注入能力的形状（启动强断言；S1-1c 派卡「主会话已定」第 1–3 条）：一张「字段 → 要求 → 判定」表，assertCaps 循环判。
 // unitOfPath 可缺省（卷二十七 :553 只在分片表用到按单元分片时才须有；缺时由 checkShards 同一判定报 E-SAVE-SHARD-UNCOVERED）。
@@ -113,11 +115,13 @@ export function mountKernel(raw, caps, resume) {
   if (verifyBake === true && placeTreeDigest({ digestCap }, bakePlaceTree(registry)) !== placeTreeDigest({ digestCap }, bake.placeTree)) {
     throw new KernelError('E-REPLAY-DIVERGE', { bake: 'place_tree' }, 'baked place tree differs between two builds of the same doc_data');
   }
+  // 动作目录（卷九 §2.2；S1-3a）：加载期编成冻结目录挂 engine.actions；世界数据未带动作目录（actionDocs 缺）即为空，act/menu 调用即拒 E-ACT-UNKNOWN。
+  const actions = docData.actionDocs === undefined ? null : loadActions({ registry, docData, vocab: vocabDoc, primitives });
   // 提交后推进由本层注入 engine.advance（transaction 不 import scheduler，免成环）；openStates 记「事务已开」的 state（不嵌套）。
   /** @type {any} */
   const engine = Object.freeze({
     registry, structs, modifierSources: Object.freeze([...modifierSources]), unitOfPath, inputs: closeInputs(INPUT_DECLS),
-    stateKeys, P, host, saveLayout, primitives, bake, vocab: vocabDoc,
+    stateKeys, P, host, saveLayout, primitives, bake, vocab: vocabDoc, actions,
     advanceHooks: Object.freeze([]), openStates: new WeakSet(),
     advance: (/** @type {object} */ st, /** @type {import('../../kernel/save.mjs').LogBook} */ book, /** @type {number} */ m) => advance(engine, st, book, m),
     docData, digestExclude: Object.freeze([...digestExclude]), digestCap, saveRoot,
@@ -140,6 +144,15 @@ export function mountKernel(raw, caps, resume) {
     submitProposal: (/** @type {any} */ p) => submitProposal(engine, built, logBook, p),
     advance: (/** @type {number} */ m) => advanceRequest(engine, built, logBook, m),
     opening: () => openingOf(engine, built),
+    // 动作入口（S1-3a；S1-3b 菜单入口调）：意图经 resolveIntent 换成效果原语提案，再走 submitProposal 落事务与日志；被拒返回 {ok:false, code}，不写状态。
+    act: (intent) => {
+      const r = resolveIntent(engine, built, intent);
+      /** @type {{ok: boolean, code?: string, seq?: number, advancedMinutes?: number}} */
+      const out = 'proposal' in r ? submitProposal(engine, built, logBook, r.proposal) : r;
+      return out;
+    },
+    // 菜单投影（纯读）：subjectId 为空即开局菜单（主会话 11-26 裁定），返回 {affordances, visible}。
+    menu: (/** @type {string | null} */ subjectId) => menuOf(engine, built, subjectId),
     save: (/** @type {number} */ slot) => writeSlot(engine, live, slot),
     // 只读入口（卷四 §3.1、:874），绑本局 engine 与 state，供 S1-3 菜单接（S1-2b）。
     views: Object.freeze({

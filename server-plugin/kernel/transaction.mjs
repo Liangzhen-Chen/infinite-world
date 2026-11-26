@@ -200,6 +200,14 @@ const HANDLERS = {
   }),
 };
 
+/**
+ * 该原语有没有登记处理函数（只读分派表，不暴露表本身）。动作目录加载期据此核「动作可达的原语都有处理函数」（S1-3a；草案 §2.2：防菜单里出现点了必拒的动作）。
+ * @param {string} op @returns {boolean}
+ */
+export function handlesOp(op) {
+  return typeof op === 'string' && Object.hasOwn(HANDLERS, op);
+}
+
 /** resolve：逐个 effect 核原语与参数并取处理结果。未登记原语或无处理函数一律拒收。 */
 function resolve(engine, state, proposal, seq) {
   if (proposal === null || typeof proposal !== 'object' || !Array.isArray(proposal.effects)) throw new KernelError('E-EFF-PARAM', {}, 'proposal.effects must be an array');
