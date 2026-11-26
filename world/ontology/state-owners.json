@@ -4,12 +4,14 @@
   "created": {"writers": {
    "*": {"create": ["kernel/storage.mjs"], "rewrite": null, "viaRelocate": false},
    "*.props.*": {"create": ["kernel/storage.mjs"], "rewrite": "kernel/storage.mjs", "rewriteRows": "all", "viaRelocate": false}
-  }}
+  }},
+  "clock": {"writers": {"*": {"create": ["kernel/scheduler.mjs"], "rewrite": "kernel/scheduler.mjs", "rewriteRows": "all", "viaRelocate": false}}},
+  "log": {"writers": {"*": {"create": ["kernel/transaction.mjs"], "rewrite": "kernel/transaction.mjs", "rewriteRows": "all", "viaRelocate": false}}}
  },
  "systems": {},
  "textPaths": ["displayNames.*.text", "playerNotes.*.text", "narration.*"],
  "textWriters": {},
- "pathTypes": {"created.*.props.*": "dimension"},
+ "pathTypes": {"created.*.props.*": "dimension", "clock.minute": "integer:minute", "log.entries": "list<opaque:logEntry>", "log.requestSeq": "integer:count"},
  "keyKinds": {"created.*.props.*": [["body_plan", "facility_type", "item", "material", "office", "org", "person", "place", "polity", "recipe", "species", "status"], "dimKey"]},
  "readShapes": [],
  "phases": ["clock", "environment", "body", "needs", "economy", "society", "events", "projection"],
@@ -72,10 +74,20 @@
   {"export": "kernel/storage.mjs#readPath", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/storage.mjs#writePath", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/storage.mjs#createEntity", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/storage.mjs#setEntityProp", "callerFiles": ["transaction.mjs"], "acceptsState": true},
   {"export": "kernel/transaction.mjs#writeScope", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/transaction.mjs#requireScope", "callerFiles": ["storage.mjs"], "acceptsState": true},
   {"export": "kernel/transaction.mjs#txSet", "callerFiles": ["storage.mjs"], "acceptsState": false},
   {"export": "kernel/transaction.mjs#txDelete", "callers": ["rules"], "acceptsState": false},
+  {"export": "kernel/transaction.mjs#runTransaction", "callerFiles": ["index.mjs","scheduler.mjs"], "acceptsState": true},
+  {"export": "kernel/transaction.mjs#submitProposal", "callerFiles": ["index.mjs","scheduler.mjs"], "acceptsState": true},
+  {"export": "kernel/transaction.mjs#recordInput", "callerFiles": ["index.mjs","scheduler.mjs"], "acceptsState": true},
+  {"export": "kernel/scheduler.mjs#advance", "callerFiles": ["index.mjs","transaction.mjs"], "acceptsState": true},
+  {"export": "kernel/storage.mjs#newState", "callerFiles": ["transaction.mjs"], "acceptsState": false},
+  {"export": "kernel/transaction.mjs#buildState", "callerFiles": ["index.mjs"], "acceptsState": false},
+  {"export": "kernel/scheduler.mjs#initClock", "callerFiles": ["index.mjs"], "acceptsState": true},
+  {"export": "kernel/transaction.mjs#initLog", "callerFiles": ["index.mjs"], "acceptsState": true},
+  {"export": "kernel/scheduler.mjs#clockMinute", "callerFiles": ["index.mjs","transaction.mjs"], "acceptsState": true},
   {"export": "kernel/transaction.mjs#txTouch", "callerFiles": ["storage.mjs"], "acceptsState": false},
   {"export": "kernel/named-structs.mjs#installNamedStructs", "callerFiles": ["index.mjs"], "acceptsState": false},
   {"export": "kernel/dated.mjs#writeDated", "callers": ["rules"], "acceptsState": true},
@@ -214,7 +226,6 @@
   {"export": "kernel/storage.mjs#readSealed", "callers": ["outputGate"], "acceptsState": true},
   {"export": "kernel/storage.mjs#writeSealed", "callers": ["aiGate"], "acceptsState": true},
   {"export": "kernel/scheduler.mjs#createWallTimer", "callerFiles": ["index.mjs"], "acceptsState": false},
-  {"export": "kernel/mount.mjs#mountKernel", "callerFiles": ["index.mjs"], "acceptsState": false},
   {"export": "kernel/transport/menu-entry.mjs#mountMenuEntry", "callerFiles": ["index.mjs"], "acceptsState": false},
   {"export": "kernel/save.mjs#mountSaveRoutes", "callerFiles": ["index.mjs"], "acceptsState": false},
   {"export": "kernel/transport/router-caps.mjs#createRouterCaps", "callerFiles": ["index.mjs"], "acceptsState": false},
@@ -225,7 +236,8 @@
   {"export": "kernel/rx.mjs#evaluateRX", "callerFiles": ["output-gate/select.mjs"], "acceptsState": false},
   {"export": "kernel/errors.mjs#report", "callers": ["*"], "acceptsState": false},
   {"export": "kernel/errors.mjs#reportError", "callers": ["*"], "acceptsState": false},
-  {"export": "kernel/errors.mjs#KernelError", "callerFiles": ["rules/load/registry.mjs"], "acceptsState": false}
+  {"export": "kernel/validate/types.mjs#checkValue", "callerFiles": ["rules/load/mount.mjs"], "acceptsState": false},
+  {"export": "kernel/errors.mjs#KernelError", "callerFiles": ["rules/load/registry.mjs", "rules/load/mount.mjs"], "acceptsState": false}
  ]},
  "groupApi": {"exports": [
   {"export": "textcore/brand.mjs#brand", "callers": ["textcore", "gate", "aiGate"]},
@@ -245,7 +257,8 @@
   {"export": "output-gate/mount.mjs#mountOutput", "callerFiles": ["index.mjs"]},
   {"export": "textcore/digest.mjs#digestHex", "callerFiles": ["output-gate/envelope-exit.mjs"]},
   {"export": "textcore/digest.mjs#createDigestCap", "callerFiles": ["index.mjs"]},
-  {"export": "systems.mjs#registerSystems", "callerFiles": ["index.mjs"]}
+  {"export": "systems.mjs#registerSystems", "callerFiles": ["index.mjs"]},
+  {"export": "rules/load/mount.mjs#mountKernel", "callerFiles": ["index.mjs"]}
  ]},
  "importMatrix": {
   "codeExtensions": [".mjs", ".js", ".cjs", ".ts", ".mts", ".cts"],

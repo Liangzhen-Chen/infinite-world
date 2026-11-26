@@ -1,12 +1,12 @@
 {
   "card": "feat-s1-1p",
-  "phase": "pr",
-  "updatedAt": "2026-11-26T03:55:10.855Z",
+  "phase": "merged",
+  "updatedAt": "2026-11-26T05:37:30.029Z",
   "branches": {
     "code": "feat/s1-1p",
     "test": "test/s1-1p"
   },
-  "pr": null,
+  "pr": "https://github.com/Liangzhen-Chen/infinite-world/pull/23",
   "parties": {
     "code": {
       "family": "claude-sonnet",
@@ -28,10 +28,10 @@
     }
   },
   "ci": {
-    "status": "pending",
-    "runUrl": null
+    "status": "success",
+    "runUrl": "https://github.com/Liangzhen-Chen/infinite-world/actions/runs/45752357206"
   },
   "failCount": 0,
   "blocker": null,
-  "nextAction": "审卡第二轮（干净 Opus API）可合；开 PR feat/s1-1p→master 走 CI，合入后用新签名续 B1（B1 前三轮未提交改动已存补丁）"
+  "nextAction": "已合入 master 70210792b（PR #23）"
 }

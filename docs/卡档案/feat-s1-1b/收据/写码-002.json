@@ -1,0 +1,13 @@
+{
+  "role": "写码",
+  "model": "claude-sonnet-5-5",
+  "family": "claude-sonnet",
+  "endpoint": "anthropic",
+  "startedAt": "2026-11-26T02:10:37.694Z",
+  "endedAt": "2026-11-26T02:20:44.946Z",
+  "exitCode": 0,
+  "totalCostUsd": 0.3713054,
+  "promptSha256": "93c704b246108b1561f57c1921edbfa1c5298e3fd9456d3e9c92f518f3163e74",
+  "headBefore": "3db24137c31dc02f784ac4162c60dec81e1640b4",
+  "headAfter": "3db24137c31dc02f784ac4162c60dec81e1640b4"
+}

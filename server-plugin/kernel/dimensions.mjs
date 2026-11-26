@@ -1,5 +1,5 @@
 // 横切入口 dim / modified 的最小版（S1-1 卡 A；卷二 §2.1 :436、§2.2 :445）。
-// dim 只给基值，取值顺序：state.created[id].props（偏离行）→ 实体行 rows[id] → 类别行 classes[<实体行的 classes>] → 表默认值 def.default；
+// dim 只给基值，取值顺序：state.created[id].props（偏离行）→ 实体行 rows[created[id].template ?? id] → 类别行 classes[<实体行的 classes>] → 表默认值 def.default；
 // 都没有即抛错（不给缺省）。结果按顶层键 'created' 切片缓存在这份 state 上（kernel/memo.mjs），实体行与类别行是加载期数据、不入依赖。
 // modified = dim 后依次过 engine.modifierSources（冻结数组；空数组即零个修正项）。来源的统一调用口径是 source(value, ctx)，
 // ctx = {engine, state, kind, id, dimension}；一元函数忽略多余实参或直接用 ctx 都行。本卡不实现九步管线与来源解析（卡 B 起再补）。
@@ -27,6 +27,12 @@ function createdProps(state, id) {
   return row !== null && typeof row === 'object' && row.props !== null && typeof row.props === 'object' ? row.props : undefined;
 }
 
+// 实例的实体行 id：运行期新建实体记了 template 就取模板实体行（卷二:131），否则就是它自己。
+function rowId(state, id) {
+  const rec = state !== null && typeof state === 'object' && state.created !== null && typeof state.created === 'object' && Object.hasOwn(state.created, id) ? state.created[id] : undefined;
+  return rec !== null && typeof rec === 'object' && typeof rec.template === 'string' ? rec.template : id;
+}
+
 // 实体的手写类别（实体行的 classes 数组）；没有即空数组。
 function rowClasses(row) {
   return row !== null && typeof row === 'object' && Array.isArray(row.classes) ? row.classes : [];
@@ -38,7 +44,8 @@ function readBase(engine, state, kind, id, dimension) {
   const props = createdProps(state, id);
   if (props && Object.hasOwn(props, dimension)) return { value: props[dimension], source: T.fact_source.created_row };
   const rows = doc.rows !== null && typeof doc.rows === 'object' && !Array.isArray(doc.rows) ? doc.rows : {};
-  const row = Object.hasOwn(rows, id) ? rows[id] : undefined;
+  const rid = rowId(state, id);
+  const row = Object.hasOwn(rows, rid) ? rows[rid] : undefined;
   if (row !== null && typeof row === 'object' && Object.hasOwn(row, dimension)) return { value: row[dimension], source: T.fact_source.entity_row };
   const classes = doc.classes !== null && typeof doc.classes === 'object' ? doc.classes : {};
   for (const cls of rowClasses(row)) {

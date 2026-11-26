@@ -1,12 +1,10 @@
-// 新骨架入口（S1-1 卡 A；docs/gemini/kickoff-1125.md:493 的入口形状；Gemini 裁定 msg_82485b7f7ab7）。
-// 本卡只做装配的第一段：读世界维度表、命名 struct 与 state-owners 的 stateKeys 登记，建 engine 雏形与最小 state，然后抛「卡 B/C 未实现」。
-// 抛出的错误对象带 engine 与 state 属性，后续卡（B 事务/时间推进/存档、C 加载器移入 rules/ 与挂载强断言）改成返回值。
+// 新骨架入口（S1-1 卡 A/B1；docs/gemini/kickoff-1125.md:493 的入口形状；Gemini 裁定 msg_82485b7f7ab7）。
+// 装配层：读世界维度表、命名 struct、state-owners 的 stateKeys 与 pathTypes、规则表 host，建 engine（含路径句柄 P）与初始 state，
+// 返回 {engine, state, submitProposal, advance}。状态由登记写者文件的初始化函数在一笔事务里建，本文件不写状态。
 // 读文件只在装配层（本文件），kernel 内的规则零件不读文件；不引任何归档文件。
 
 import { readdirSync, readFileSync } from 'node:fs';
-import { buildRegistry } from './rules/load/registry.mjs';
-import { makePathHandles } from './kernel/handles.mjs';
-import { installNamedStructs } from './kernel/named-structs.mjs';
+import { mountKernel } from './rules/load/mount.mjs';
 
 const WORLD_ONTOLOGY = new URL('../world/ontology/', import.meta.url);
 
@@ -20,18 +18,17 @@ function readDimensionDocs() {
 }
 
 /**
- * SillyTavern 服务端插件入口。装配 engine 与最小 state 并返回（主会话裁定：不再抛「未实现」）。
- * @returns {Promise<{engine: any, state: any}>}
+ * SillyTavern 服务端插件入口：装配 engine 与初始 state，返回 {engine, state, submitProposal, advance}（S1-1 卡 B1）。
+ * @returns {Promise<{engine: any, state: any, submitProposal: (p: any) => any, advance: (m: number) => any}>}
  */
 export async function init() {
-  const registry = buildRegistry(readDimensionDocs());
-  const structs = installNamedStructs(JSON.parse(readFileSync(new URL('named-structs.json', WORLD_ONTOLOGY), 'utf8')));
-  // 顶层状态键的登记表（state-owners.json 的 stateKeys，卷二 §2.7 :580）；内核按它判 writePath 的顶层键是否已声明。
-  const owners = JSON.parse(readFileSync(new URL('state-owners.json', WORLD_ONTOLOGY), 'utf8'));
-  const stateKeys = Object.freeze({ ...(owners && owners.stateKeys ? owners.stateKeys : {}) });
-  // 路径句柄 P：按 pathTypes / keyKinds / textPaths 在加载期生成，规则层只能经 engine.P 得到读写路径（卷二 §2.6 :536）。
-  const P = makePathHandles(owners.pathTypes || {}, owners.keyKinds || {}, owners.textPaths || []);
-  const engine = Object.freeze({ registry, structs, modifierSources: Object.freeze([]), stateKeys, P });
-  const initial = { created: {} };
-  return { engine, state: initial };
+  const json = (/** @type {string} */ f) => JSON.parse(readFileSync(new URL(f, WORLD_ONTOLOGY), 'utf8'));
+  return mountKernel({
+    dimensionDocs: readDimensionDocs(),
+    namedStructsDoc: json('named-structs.json'),
+    owners: json('state-owners.json'),
+    hostRows: json('../rules/tables/host.json').rows,
+    hostSpec: json('../rules/registry.json').rows.find((/** @type {any} */ r) => r.code === 'host'),
+    primitivesDoc: json('primitives.json'),
+  });
 }

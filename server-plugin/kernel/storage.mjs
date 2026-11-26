@@ -83,6 +83,11 @@ function checkRefValue(engine, state, def, value, segs) {
   if (bad !== null) throw new KernelError(bad.code, {}, `ref check failed: ${String(bad.want)}`);
 }
 
+/** 新建空 state：只含登记写者为本模块的顶层键（created）；别的顶层键由各自登记写者的 init 函数写入。 @returns {{created: Record<string, any>}} */
+export function newState() {
+  return { created: {} };
+}
+
 /**
  * `id 属于哪个 kind`（唯一判断处）：加载期登记的 id 经 kindOfLoaded；运行期新建的实体（state.created.<id> 有偏离行）按登记前缀 / 单例 id 匹配。
  * 两处都认不出 E-DIM-REF-MISSING。state 非对象、id 非字符串或空串一律抛，不放行。只读。
@@ -166,9 +171,10 @@ export function writePath(state, path, value, tx) {
  * @param {string} kind
  * @param {any} props
  * @param {any} tx writeScope 给的作用域
+ * @param {string} [template] 模板实体 id（卷二:131 实例的实体行即其模板）；给了就记进 created 记录的 template 字段，dim 读值时当实体行用
  * @returns {void}
  */
-export function createEntity(state, id, kind, props, tx) {
+export function createEntity(state, id, kind, props, tx, template) {
   requireState(state);
   requireScope(state, tx);
   const engine = tx.engine;
@@ -187,6 +193,21 @@ export function createEntity(state, id, kind, props, tx) {
     throw new KernelError('E-DIM-ID-DUPLICATE', CODE_RE.test(id) ? { entity: id } : {}, `id ${id}: already created`);
   }
   if (state.created === null || typeof state.created !== 'object') txSet(tx, state, 'created', {});
-  txSet(tx, state.created, id, { kind, props });
+  txSet(tx, state.created, id, template === undefined ? { kind, props } : { kind, props, template });
   txTouch(tx, 'created');
+}
+
+/**
+ * kernelApi `setEntityProp(state, id, field, value, tx)`（卷二 :538 写者委托、:813 `created.*.props.*` 写者为本模块）：
+ * 写已建实体的一个维度值；路径由 tx.engine.P 发出，值按该维度声明核（走 writePath）。
+ * @param {any} state
+ * @param {string} id
+ * @param {string} field 维度键
+ * @param {any} value
+ * @param {any} tx writeScope 给的作用域
+ * @returns {void}
+ */
+export function setEntityProp(state, id, field, value, tx) {
+  const { P } = tx.engine;
+  writePath(state, P.created_props(id, field), value, tx);
 }
