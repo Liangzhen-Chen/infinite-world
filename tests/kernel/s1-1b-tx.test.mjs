@@ -1,9 +1,11 @@
 // S1-1 卡 B1 单测：事务与推进（卷二 :539–:545、卷二十七 :190/:742）。期望值按卷文与数据表手算。路径一律经 engine.P（卷二 :536）。
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
 import { init } from '../../server-plugin/index.mjs';
-import { clockMinute } from '../../server-plugin/kernel/scheduler.mjs';
-import { runTransaction } from '../../server-plugin/kernel/transaction.mjs';
+import { mountKernel } from '../../server-plugin/rules/load/mount.mjs';
+import { clockMinute, advance } from '../../server-plugin/kernel/scheduler.mjs';
+import { runTransaction, submitProposal } from '../../server-plugin/kernel/transaction.mjs';
 import { readPath, writePath } from '../../server-plugin/kernel/storage.mjs';
 import { dim } from '../../server-plugin/kernel/dimensions.mjs';
 
@@ -109,4 +111,49 @@ test('create 的 template 指向别的 kind 或不存在即拒收，状态不变
     assert.equal(r.ok, false);
   }
   assert.equal(Object.keys(g.state.created).length, 0);
+});
+
+// heartbeatStepMinutes 装配期按 registry.json 的 host 声明核（卷二十七:190：integer、≥1，缺或不合即加载失败）；步长防线在 scheduler.advance。
+const loadWorld = (hostRows) => {
+  const o = new URL('../../world/ontology/', import.meta.url);
+  const json = (f) => JSON.parse(readFileSync(new URL(f, o), 'utf8'));
+  const dir = new URL('dimensions/', o);
+  return {
+    dimensionDocs: readdirSync(dir).filter((f) => f.endsWith('.json') && !f.startsWith('_')).sort().map((f) => JSON.parse(readFileSync(new URL(f, dir), 'utf8'))),
+    namedStructsDoc: json('named-structs.json'),
+    owners: json('state-owners.json'),
+    hostRows,
+    hostSpec: json('../rules/registry.json').rows.find((r) => r.code === 'host'),
+    primitivesDoc: json('primitives.json'),
+  };
+};
+const realHostRows = () => JSON.parse(readFileSync(new URL('../../world/rules/tables/host.json', import.meta.url), 'utf8')).rows;
+const withStep = (patch) => realHostRows().map((r) => (r.key === 'heartbeatStepMinutes' ? { ...r, ...patch } : r));
+
+test('装配：heartbeatStepMinutes 缺行、0、负数、非整数、非数字各被拒；正常值照常', () => {
+  const missing = realHostRows().filter((r) => r.key !== 'heartbeatStepMinutes');
+  assert.throws(() => mountKernel(loadWorld(missing)), /E-DIM-DOMAIN-RANGE/);
+  for (const v of [0, -5, 2.5, '10', null]) assert.throws(() => mountKernel(loadWorld(withStep({ value: v }))), /E-DIM-DOMAIN-RANGE/, String(v));
+  const g = mountKernel(loadWorld(withStep({ value: 7 })));
+  assert.equal(g.engine.host.heartbeatStepMinutes, 7);
+});
+
+test('scheduler.advance：步长非正整数即抛，不进循环，时钟不动', async () => {
+  const g = await init();
+  for (const bad of [0, -1, 1.5, undefined]) {
+    const e = { ...g.engine, host: { heartbeatStepMinutes: bad } };
+    assert.throws(() => advance(e, g.state, 5), /E-DIM-DOMAIN-RANGE/);
+  }
+  assert.equal(clockMinute(g.engine, g.state), 0);
+});
+
+test('推进中途某步被拒：先前 ok:true 事件之外，另追加 ok:false 事件，带 code 与已推进分钟', async () => {
+  const g = await init();
+  const e = { ...g.engine, advance: () => ({ ok: false, code: 'E-EFF-PARAM', advancedMinutes: 10 }) };
+  const r = submitProposal(e, g.state, { effects: [{ op: 'time', minutes: 25 }] });
+  assert.equal(r.ok, false);
+  const evs = logOf(g).filter((x) => x.seq === r.seq && x.kind === 'event');
+  assert.equal(evs.length, 2);
+  assert.equal(evs[0].ok, true);
+  assert.deepEqual(evs[1], { seq: r.seq, kind: 'event', ok: false, code: 'E-EFF-PARAM', advancedMinutes: 10 });
 });

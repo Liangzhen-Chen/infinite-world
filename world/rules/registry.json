@@ -550,7 +550,8 @@
    "structure": "keys",
    "type": {
     "saveSlotCount": {"type": "integer", "unit": "count"},
-    "saveImportMaxBytes": {"type": "integer", "unit": "byte"}
+    "saveImportMaxBytes": {"type": "integer", "unit": "byte"},
+    "heartbeatStepMinutes": {"type": "integer", "unit": "minute"}
    },
    "domain": {"saveSlotCount": [1, null], "saveImportMaxBytes": [1, null], "heartbeatStepMinutes": [1, null]},
    "volume": "卷二十七 §2.2 :191–192（rules.host.saveSlotCount、rules.host.saveImportMaxBytes，取值域 ≥1，加载失败）；卷二 §2.9 第 0 条存档四路第 5 点；S1-1 卡 B1 登 heartbeatStepMinutes（卷二十七 §2.2 :190，≥1），heartbeatMs 随墙钟心跳卡登记；读者是 kernel/save.mjs、kernel/load/save.mjs（经存档环境 installSaveEnv 交入）",

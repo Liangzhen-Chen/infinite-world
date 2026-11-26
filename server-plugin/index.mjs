@@ -28,6 +28,7 @@ export async function init() {
     namedStructsDoc: json('named-structs.json'),
     owners: json('state-owners.json'),
     hostRows: json('../rules/tables/host.json').rows,
+    hostSpec: json('../rules/registry.json').rows.find((/** @type {any} */ r) => r.code === 'host'),
     primitivesDoc: json('primitives.json'),
   });
 }

@@ -27,6 +27,8 @@ export function advance(engine, state, minutes) {
   if (!Number.isInteger(minutes) || minutes <= 0) throw new KernelError('E-EFF-PARAM', {}, 'advance minutes must be a positive integer');
   const { P } = engine;
   const stepMax = engine.host.heartbeatStepMinutes;
+  // 防线：步长非正整数即抛，不进循环（卷二十七 :190 取值域 ≥1；装配期已核，这里防 engine 被别处构造）。
+  if (!Number.isInteger(stepMax) || stepMax < 1) throw new KernelError('E-DIM-DOMAIN-RANGE', {}, 'heartbeatStepMinutes must be an integer >= 1');
   recordInput(engine, state, { kind: 'advance', minutes });
   let done = 0;
   while (done < minutes) {

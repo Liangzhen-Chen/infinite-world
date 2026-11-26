@@ -236,7 +236,8 @@
   {"export": "kernel/rx.mjs#evaluateRX", "callerFiles": ["output-gate/select.mjs"], "acceptsState": false},
   {"export": "kernel/errors.mjs#report", "callers": ["*"], "acceptsState": false},
   {"export": "kernel/errors.mjs#reportError", "callers": ["*"], "acceptsState": false},
-  {"export": "kernel/errors.mjs#KernelError", "callerFiles": ["rules/load/registry.mjs"], "acceptsState": false}
+  {"export": "kernel/validate/types.mjs#checkValue", "callerFiles": ["rules/load/mount.mjs"], "acceptsState": false},
+  {"export": "kernel/errors.mjs#KernelError", "callerFiles": ["rules/load/registry.mjs", "rules/load/mount.mjs"], "acceptsState": false}
  ]},
  "groupApi": {"exports": [
   {"export": "textcore/brand.mjs#brand", "callers": ["textcore", "gate", "aiGate"]},

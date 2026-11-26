@@ -270,7 +270,10 @@ export function submitProposal(engine, state, proposal) {
   }
   if (plan.advanceMinutes > 0) {
     const a = engine.advance(state, plan.advanceMinutes);
-    return a.ok ? { ok: true, seq, advancedMinutes: a.advancedMinutes } : { ok: false, code: a.code, seq, advancedMinutes: a.advancedMinutes };
+    if (a.ok) return { ok: true, seq, advancedMinutes: a.advancedMinutes };
+    // 推进中途被拒：上面那条 ok:true 已提交，另在事务外追加一条如实的失败事件（产品原则一.4、二.4）。
+    appendLog(engine, state, { seq, kind: 'event', ok: false, code: a.code, advancedMinutes: a.advancedMinutes });
+    return { ok: false, code: a.code, seq, advancedMinutes: a.advancedMinutes };
   }
   return { ok: true, seq, advancedMinutes: 0 };
 }
