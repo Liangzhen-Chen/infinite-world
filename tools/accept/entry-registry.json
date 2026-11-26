@@ -153,6 +153,17 @@
    "rules": []
   },
   {
+   "name": "closeInputs",
+   "file": "kernel/memo.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
    "name": "codeOf",
    "file": "kernel/errors.mjs",
    "vol": null,
@@ -378,7 +389,9 @@
    "vol": null,
    "sec": null,
    "kind": "part",
-   "needs": [],
+   "needs": [
+    "mountKernel"
+   ],
    "rules": []
   },
   {
@@ -389,6 +402,17 @@
    "kind": "write",
    "needs": [
     "writePath"
+   ],
+   "rules": []
+  },
+  {
+   "name": "inputsOf",
+   "file": "kernel/memo.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "KernelError"
    ],
    "rules": []
   },
@@ -483,6 +507,31 @@
    "rules": []
   },
   {
+   "name": "loadSlot",
+   "file": "index.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "mountKernel",
+    "readSlot"
+   ],
+   "rules": []
+  },
+  {
+   "name": "loadWorld",
+   "file": "rules/load/registry.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "buildRegistry",
+    "checkValue",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
    "name": "makePathHandles",
    "file": "kernel/handles.mjs",
    "vol": null,
@@ -525,7 +574,7 @@
    "sec": null,
    "kind": "part",
    "needs": [
-    "buildRegistry",
+    "loadWorld",
     "makePathHandles",
     "installNamedStructs",
     "buildState",
@@ -539,9 +588,10 @@
     "writeSlot",
     "dataPacksDigestOf",
     "engineRulesDigestOf",
-    "checkValue",
     "clone",
-    "KernelError"
+    "KernelError",
+    "replayApply",
+    "closeInputs"
    ],
    "rules": []
   },
@@ -688,6 +738,17 @@
    "rules": []
   },
   {
+   "name": "replay_apply",
+   "file": "index.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "mountKernel"
+   ],
+   "rules": []
+  },
+  {
    "name": "report",
    "file": "kernel/report.mjs",
    "vol": null,
@@ -743,6 +804,17 @@
    "kind": "kernel",
    "needs": [
     "canonical"
+   ],
+   "rules": []
+  },
+  {
+   "name": "saveSlot",
+   "file": "index.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "writeSlot"
    ],
    "rules": []
   },

@@ -36,6 +36,7 @@
  "kernelApi": {"exports": [
   {"export": "kernel/dimensions.mjs#dim", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/dimensions.mjs#modified", "callers": ["rules"], "acceptsState": true},
+  {"export": "kernel/dimensions.mjs#DIM_DECL", "callerFiles": ["rules/load/mount.mjs"], "acceptsState": false},
   {"export": "kernel/dimensions.mjs#explain", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/dimensions.mjs#modifiedWith", "callerFiles": ["body.mjs", "life.mjs"], "acceptsState": true},
   {"export": "kernel/dimensions.mjs#lookupCurve", "callerFiles": ["life.mjs"], "acceptsState": false},
@@ -67,6 +68,7 @@
   {"export": "kernel/memo.mjs#stateMemo", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/memo.mjs#invalidateTop", "callers": ["rules"], "acceptsState": true},
   {"export": "kernel/memo.mjs#inputsOf", "callers": ["rules"], "acceptsState": false},
+  {"export": "kernel/memo.mjs#closeInputs", "callerFiles": ["rules/load/mount.mjs"], "acceptsState": false},
   {"export": "kernel/declare.mjs#declareInputs", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/handles.mjs#makePathHandles", "callerFiles": ["index.mjs"], "acceptsState": false},
   {"export": "kernel/storage.mjs#kindOfEntity", "callers": ["rules"], "acceptsState": true},
@@ -100,7 +102,7 @@
   {"export": "kernel/save.mjs#slotPaths", "callerFiles": ["kernel/load/save.mjs"], "acceptsState": false},
   {"export": "kernel/save.mjs#writeSlot", "callerFiles": ["index.mjs","rules/load/mount.mjs"], "acceptsState": true},
   {"export": "kernel/load/save.mjs#readSlot", "callerFiles": ["index.mjs"], "acceptsState": false},
-  {"export": "kernel/load/save.mjs#replayApply", "callerFiles": ["index.mjs"], "acceptsState": false},
+  {"export": "kernel/load/save.mjs#replayApply", "callerFiles": ["rules/load/mount.mjs"], "acceptsState": false},
   {"export": "kernel/scheduler.mjs#clockMinute", "callerFiles": ["index.mjs","transaction.mjs"], "acceptsState": true},
   {"export": "kernel/transaction.mjs#txTouch", "callerFiles": ["storage.mjs"], "acceptsState": false},
   {"export": "kernel/named-structs.mjs#installNamedStructs", "callerFiles": ["index.mjs"], "acceptsState": false},
@@ -250,7 +252,7 @@
   {"export": "kernel/rx.mjs#evaluateRX", "callerFiles": ["output-gate/select.mjs"], "acceptsState": false},
   {"export": "kernel/errors.mjs#report", "callers": ["*"], "acceptsState": false},
   {"export": "kernel/errors.mjs#reportError", "callers": ["*"], "acceptsState": false},
-  {"export": "kernel/validate/types.mjs#checkValue", "callerFiles": ["rules/load/mount.mjs"], "acceptsState": false},
+  {"export": "kernel/validate/types.mjs#checkValue", "callerFiles": ["rules/load/registry.mjs"], "acceptsState": false},
   {"export": "kernel/errors.mjs#KernelError", "callerFiles": ["rules/load/registry.mjs", "rules/load/mount.mjs"], "acceptsState": false}
  ]},
  "groupApi": {"exports": [
