@@ -631,7 +631,8 @@
     "carcassOf",
     "loadActions",
     "menuOf",
-    "resolveIntent"
+    "resolveIntent",
+    "submitIntent"
    ],
    "rules": []
   },
@@ -1271,6 +1272,17 @@
    "needs": [
     "dim",
     "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "submitIntent",
+   "file": "kernel/transaction.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "processInput"
    ],
    "rules": []
   }

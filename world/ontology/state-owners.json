@@ -89,6 +89,7 @@
   {"export": "kernel/transaction.mjs#txDelete", "callers": ["rules"], "acceptsState": false},
   {"export": "kernel/transaction.mjs#runTransaction", "callerFiles": ["index.mjs","scheduler.mjs","rules/load/mount.mjs"], "acceptsState": true},
   {"export": "kernel/transaction.mjs#handlesOp", "callerFiles": ["rules/act/catalog.mjs"], "acceptsState": false},
+  {"export": "kernel/transaction.mjs#submitIntent", "callerFiles": ["rules/load/mount.mjs"], "acceptsState": true},
   {"export": "kernel/transaction.mjs#submitProposal", "callerFiles": ["index.mjs","scheduler.mjs"], "acceptsState": true},
   {"export": "kernel/transaction.mjs#recordInput", "callerFiles": ["index.mjs","scheduler.mjs"], "acceptsState": true},
   {"export": "kernel/scheduler.mjs#advance", "callerFiles": ["index.mjs","transaction.mjs"], "acceptsState": true},

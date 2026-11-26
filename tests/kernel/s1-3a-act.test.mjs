@@ -103,11 +103,11 @@ test('2 选来历：经 submitProposal 建化身（template 为所选模板行�
   assert.equal(dim(g.engine, g.state, 'person', avatar, 'birthplace').value, chosen[placeSlot]);
   assert.equal(dim(g.engine, g.state, 'person', avatar, 'culture').value, raw.dimensionDocs.find((d) => d.kind === 'person').rows[rec.template].culture);
   // 已有化身：再建档被 whenRX 拒，开局菜单为空。
-  assert.deepEqual(g.act({ act: spawn, slots: pick }), { ok: false, code: 'E-ACT-PRECONDITION' });
+  assert.equal(g.act({ act: spawn, slots: pick }).code, 'E-ACT-PRECONDITION');
   assert.equal(g.menu(null).affordances.length, 0);
 });
 
-test('3 等待：化身菜单给数值范围（上限取 rules.act.advanceMaxMinutes 该动作类）；提交推进时钟；越界、无化身、未知动作被拒且不动状态与日志', async () => {
+test('3 等待：化身菜单给数值范围（上限取 rules.act.advanceMaxMinutes 该动作类）；提交推进时钟；越界、无化身、未知动作被拒且不动状态；拒收也按请求编号留在日志（输入条目 + 拒绝事件，卷二:545）', async () => {
   const raw = rawWorld();
   const { spawn, pass, rows } = rowsOf(raw);
   const g = await init({ saveRoot: testTempRoot('s3a-wait-') });
@@ -125,7 +125,6 @@ test('3 等待：化身菜单给数值范围（上限取 rules.act.advanceMaxMin
   assert.equal(ok.ok, true, JSON.stringify(ok));
   assert.equal(ok.advancedMinutes, 30);
   assert.equal(clockMinute(g.engine, g.state), t0 + 30);
-  const entries = g.logBook.entries.length;
   const created = JSON.stringify(g.state.created);
   for (const [intent, want] of [
     [{ act: pass, actor: avatar, numbers: { [slotName]: 0 } }, 'E-ACT-SLOT'],
@@ -136,10 +135,12 @@ test('3 等待：化身菜单给数值范围（上限取 rules.act.advanceMaxMin
     [{ act: pass, numbers: { [slotName]: 5 } }, 'E-ACT-PRECONDITION'],
     [{ act: `${pass}_not_in_catalog` }, 'E-ACT-UNKNOWN'],
   ]) {
-    assert.deepEqual(g.act(intent), { ok: false, code: want }, JSON.stringify(intent));
+    const r = g.act(intent);
+    assert.equal(r.ok, false, JSON.stringify(intent));
+    assert.equal(r.code, want, JSON.stringify(intent));
+    assert.deepEqual(g.logBook.entries.filter((e) => e.seq === r.seq), [{ seq: r.seq, kind: 'command', intent }, { seq: r.seq, kind: 'event', ok: false, code: want }]);
   }
   assert.equal(clockMinute(g.engine, g.state), t0 + 30);
-  assert.equal(g.logBook.entries.length, entries);
   assert.equal(JSON.stringify(g.state.created), created);
   assert.throws(() => g.menu('npc_not_an_avatar'), code('E-DISPLAY-SUBJECT'));
 });
@@ -150,7 +151,7 @@ test('4 候选编号越界被拒；存档读档复演 saveDigest 一致，复演
   const g = await init({ saveRoot: dir });
   const a = g.menu(null).affordances[0];
   const over = Object.fromEntries(Object.keys(a.slots).map((n) => [n, a.slots[n].length]));
-  assert.deepEqual(g.act({ act: spawn, slots: over }), { ok: false, code: 'E-ACT-SLOT' });
+  assert.equal(g.act({ act: spawn, slots: over }).code, 'E-ACT-SLOT');
   assert.equal(g.act({ act: spawn, slots: { origin: 1, place: 0 } }).ok, true);
   const avatar = Object.keys(g.state.created)[0];
   assert.equal(g.act({ act: pass, actor: avatar, numbers: { minutes: 45 } }).ok, true);
@@ -242,4 +243,24 @@ test('8 规则层不写数据代号：rules/act 源码里没有任何动作、�
     const literals = [...text.matchAll(/(['"`])([A-Za-z0-9_.]+)\1/g)].map((m) => m[2]);
     assert.deepEqual(literals.filter((l) => codes.has(l)), [], f);
   }
+});
+
+test('9 拒收进日志且复演一致：被拒意图在复演时同处同样被拒，saveDigest 逐字相同，日志条目同位相等', async () => {
+  const { spawn, pass } = rowsOf(rawWorld());
+  const dir = testTempRoot('s3a-reject-replay-');
+  const g = await init({ saveRoot: dir });
+  const r0 = g.act({ act: pass, numbers: { minutes: 5 } });
+  assert.equal(r0.code, 'E-ACT-PRECONDITION');
+  assert.equal(g.act({ act: spawn, slots: { origin: 0, place: 0 } }).ok, true);
+  const avatar = Object.keys(g.state.created)[0];
+  const r1 = g.act({ act: pass, actor: avatar, numbers: { minutes: 0 } });
+  assert.equal(r1.code, 'E-ACT-SLOT');
+  assert.equal(g.act({ act: pass, actor: avatar, numbers: { minutes: 20 } }).ok, true);
+  const rejected = g.logBook.entries.filter((e) => e.kind === 'event' && e.ok === false).map((e) => [e.seq, e.code]);
+  assert.deepEqual(rejected, [[r0.seq, 'E-ACT-PRECONDITION'], [r1.seq, 'E-ACT-SLOT']]);
+  const saved = saveSlot(g);
+  const r = replay_apply(loadSlot(saved, { saveRoot: dir }));
+  assert.equal(r.saveDigest, saved.saveDigest);
+  assert.deepEqual(r.logBook.entries, g.logBook.entries);
+  assert.deepEqual(r.state.created, g.state.created);
 });

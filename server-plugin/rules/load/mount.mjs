@@ -6,7 +6,7 @@
 import { loadWorld } from './registry.mjs';
 import { makePathHandles } from '../../kernel/handles.mjs';
 import { installNamedStructs } from '../../kernel/named-structs.mjs';
-import { buildState, submitProposal, runTransaction } from '../../kernel/transaction.mjs';
+import { buildState, submitProposal, submitIntent, runTransaction } from '../../kernel/transaction.mjs';
 import { advance, advanceRequest, initClock } from '../../kernel/scheduler.mjs';
 import { createLogBook, tickEnd, docOf, writeSlot, dataPacksDigestOf, engineRulesDigestOf } from '../../kernel/save.mjs';
 import { replayApply } from '../../kernel/load/save.mjs';
@@ -124,6 +124,8 @@ export function mountKernel(raw, caps, resume) {
     stateKeys, P, host, saveLayout, primitives, bake, vocab: vocabDoc, actions,
     advanceHooks: Object.freeze([]), openStates: new WeakSet(),
     advance: (/** @type {object} */ st, /** @type {import('../../kernel/save.mjs').LogBook} */ book, /** @type {number} */ m) => advance(engine, st, book, m),
+    // 意图收窄由本层注入（transaction 不 import 规则层；同 advance 注入），开局与复演同一函数（S1-3a）。
+    resolveIntent: (/** @type {object} */ st, /** @type {unknown} */ intent) => resolveIntent(engine, st, intent),
     docData, digestExclude: Object.freeze([...digestExclude]), digestCap, saveRoot,
     engineRulesDigest: engineRulesDigestOf({ digestCap }, sources),
     dataPacksDigest: dataPacksDigestOf({ digestCap }, docData),
@@ -144,13 +146,8 @@ export function mountKernel(raw, caps, resume) {
     submitProposal: (/** @type {any} */ p) => submitProposal(engine, built, logBook, p),
     advance: (/** @type {number} */ m) => advanceRequest(engine, built, logBook, m),
     opening: () => openingOf(engine, built),
-    // 动作入口（S1-3a；S1-3b 菜单入口调）：意图经 resolveIntent 换成效果原语提案，再走 submitProposal 落事务与日志；被拒返回 {ok:false, code}，不写状态。
-    act: (intent) => {
-      const r = resolveIntent(engine, built, intent);
-      /** @type {{ok: boolean, code?: string, seq?: number, advancedMinutes?: number}} */
-      const out = 'proposal' in r ? submitProposal(engine, built, logBook, r.proposal) : r;
-      return out;
-    },
+    // 动作入口（S1-3a；S1-3b 菜单入口调）：意图作输入条目先记日志，再经 engine.resolveIntent 换成效果原语提案落事务；被拒也留在日志（卷二:545），不写状态。
+    act: (/** @type {unknown} */ intent) => submitIntent(engine, built, logBook, intent),
     // 菜单投影（纯读）：subjectId 为空即开局菜单（主会话 11-26 裁定），返回 {affordances, visible}。
     menu: (/** @type {string | null} */ subjectId) => menuOf(engine, built, subjectId),
     save: (/** @type {number} */ slot) => writeSlot(engine, live, slot),
