@@ -1,0 +1,39 @@
+{
+ "rows": [
+  {
+   "key": "sampleFrom",
+   "value": [
+    {
+     "target": "sex",
+     "source": "sexes",
+     "basis": "卷四 §2.3 :209 sex（sample 自 species.sexes，整数权重按 categorical 抽）"
+    },
+    {
+     "target": "lifespanYears",
+     "source": "lifespanYears",
+     "basis": "卷四 §2.3 :214 lifespanYears（物种 lifespanYears 分布采样一次）"
+    },
+    {
+     "target": "adultMassKg",
+     "source": "bodyMassKg",
+     "basis": "卷四 §2.3 :219–:220 adultMassKg（物种 bodyMassKg 分布采样一次；有亲本时遗传，遗传律往后排，卷四 §4.10 P-4）"
+    },
+    {
+     "target": "attributes",
+     "source": "attributesBase",
+     "basis": "卷四 §2.3 :221 attributes（先天基础值，物种 attributesBase 逐键采样；卷四 §4.12 G-3 分配点数归 chargen 卡）"
+    },
+    {
+     "target": "sensitivity",
+     "source": "pharmSensitivity",
+     "basis": "卷四 §2.3 :232 sensitivity（经采样，键集 = pharm 族；物种 pharmSensitivity 未填即不写，读者照旧报未知）"
+    }
+   ],
+   "grade": "designed",
+   "basisKind": "design_spec",
+   "specRef": "docs/统一底层设计/卷四-生物身体与人物.md",
+   "source": "卷四 §2.3 :208–:232（person 经采样的 always 维度）、§4.10 P-4；S1-3c 草案 §1（建档补全对照表）",
+   "basis": "每行「person 维度 target ← 物种维度 source」，取值方式由两边表头类型定（分布抽一次、分布映射逐键抽、整数权重映射按 categorical 抽），代码只遍历本表；personality（卷二十六 §4.1，物种表无来源列）不在本表。读者 rules/body/person.mjs#instantiatePerson"
+  }
+ ]
+}

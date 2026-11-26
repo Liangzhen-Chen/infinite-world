@@ -2192,8 +2192,8 @@
    "addedAtRev": 1,
    "caseKey": "pp_dist_branch-11",
    "fixture": "tests/accept/bypass/pp_dist_branch-11.txt",
-   "group": "kernel",
-   "origin": "分布种类分派只在 sample.mjs（甲 R7）：例外 sample.mjs",
+   "group": "rules",
+   "origin": "分布种类分派只在 sample.mjs（甲 R7）：例外 rules/gen/sample.mjs（S1-3c 由旧树遗留路径 kernel/sample.mjs 替换）",
    "polarity": "must_pass",
    "scanClass": "pp_dist_branch"
   },
@@ -2710,8 +2710,8 @@
    "addedAtRev": 1,
    "caseKey": "pp_key_concat-11",
    "fixture": "tests/accept/bypass/pp_key_concat-11.txt",
-   "group": "kernel",
-   "origin": "键串只在 keys.mjs 拼，文法记号只放 markers.mjs（甲 R5、乙 1、乙 2）：例外 keys.mjs",
+   "group": "rules",
+   "origin": "键串只在 keys.mjs 拼，文法记号只放 markers.mjs（甲 R5、乙 1、乙 2）：例外 rules/gen/sample.mjs（S1-3c 由旧树遗留路径 kernel/handles/keys.mjs 替换）",
    "polarity": "must_pass",
    "scanClass": "pp_key_concat"
   },
