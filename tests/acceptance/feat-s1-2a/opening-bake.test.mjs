@@ -83,6 +83,9 @@ function readRaw() {
     tableDocs,
     digestExclude: loadJson(join(WORLD, 'rules/tables/digest-exclude.json')).paths,
     primitivesDoc: json('primitives.json'),
+    // 与 index.mjs#readWorld 同形（S1-2b 词表族、S2-0a 单位表）。
+    vocabDoc: json('dimensions/_vocab.json'),
+    unitsDoc: json('dimensions/_units.json'),
   };
 }
 
