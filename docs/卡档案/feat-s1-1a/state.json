@@ -1,7 +1,7 @@
 {
   "card": "feat-s1-1a",
-  "phase": "rework",
-  "updatedAt": "2026-11-26T00:34:44.209Z",
+  "phase": "pr",
+  "updatedAt": "2026-11-26T01:07:37.427Z",
   "branches": {
     "code": "feat/s1-1a",
     "test": "test/s1-1a"
@@ -12,7 +12,7 @@
       "family": "deepseek+claude-sonnet",
       "model": "deepseek-flash→claude-sonnet-5-5",
       "receipt": "docs/卡档案/feat-s1-1a/收据",
-      "costUsd": 0.6
+      "costUsd": null
     },
     "test": {
       "family": "claude-haiku",
@@ -23,8 +23,8 @@
     "review": {
       "family": "claude-opus",
       "model": "claude-opus-5-5",
-      "receipt": null,
-      "costUsd": null
+      "receipt": "docs/卡档案/feat-s1-1a/收据",
+      "costUsd": 1.06
     }
   },
   "ci": {
@@ -33,5 +33,5 @@
   },
   "failCount": 3,
   "blocker": null,
-  "nextAction": "李白 00:35 裁定选 A：Sonnet 第五轮落 storage 只读段例外（依据卷二:535，写不在例外内）并真改其余 9 项；清不掉即停卡 A、先开门禁封口卡清 S12 历史问题"
+  "nextAction": "审卡第二轮（干净 Opus API）可合；开 PR feat/s1-1a→master 走 CI，绿则合并"
 }
