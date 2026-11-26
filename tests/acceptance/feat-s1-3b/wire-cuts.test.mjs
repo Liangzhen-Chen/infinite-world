@@ -8,11 +8,12 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
+const CHILD_ENV = (() => { const e = { ...process.env }; delete e.NODE_TEST_CONTEXT; return e; })();
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 
 test('烟测六步全绿：tests/e2e/vertical-slice-smoke.test.mjs 从真实宿主路由跑通', () => {
   const r = spawnSync(process.execPath, ['--test', join(ROOT, 'tests', 'e2e', 'vertical-slice-smoke.test.mjs')], {
-    cwd: ROOT, encoding: 'utf8', timeout: 600000,
+    cwd: ROOT, env: CHILD_ENV, encoding: 'utf8', timeout: 600000,
   });
   const out = `${r.stdout ?? ''}${r.stderr ?? ''}`;
   assert.equal(r.status, 0, `烟测未全绿：\n${out.slice(-4000)}`);
@@ -29,7 +30,7 @@ test('拔线登记行数不少于 9，且每行给出文件、锚点、替换与
 
 test('拔任一接线烟测必红且停在登记步', () => {
   const r = spawnSync(process.execPath, [join(ROOT, 'tools', 'accept', 'e2e-wire-cut.mjs')], {
-    cwd: ROOT, encoding: 'utf8', timeout: 1800000,
+    cwd: ROOT, env: CHILD_ENV, encoding: 'utf8', timeout: 1800000,
   });
   const out = `${r.stdout ?? ''}${r.stderr ?? ''}`;
   assert.equal(r.status, 0, `拔线验证未通过：\n${out.slice(-6000)}`);

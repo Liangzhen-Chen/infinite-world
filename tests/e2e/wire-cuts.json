@@ -58,6 +58,14 @@
       "note": "读档复演换局（李白 11-26 条件）；只有第 6 步读档会调到"
     },
     {
+      "id": "menu-entry-replay-noop",
+      "file": "server-plugin/rules/transport/menu-entry.mjs",
+      "find": "session.world = mountKernel(loaded.docData",
+      "replace": "void mountKernel(loaded.docData",
+      "step": 6,
+      "note": "读档中和为空操作（不换局）：读档后状态未被复演换局，第 6 步槽 2 摘要须等于 D1 而失败（审卡必须改 ③）"
+    },
+    {
       "id": "act-wait-row",
       "file": "world/actions/core.json",
       "find": "\"act_wait\"",
