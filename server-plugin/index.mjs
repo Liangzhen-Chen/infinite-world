@@ -5,6 +5,7 @@
 // saveSlot / loadSlot / replay_apply 是存读档的公共入口（绑定 engine 后调 kernel 的 writeSlot / readSlot / replayApply）；S1-3 接 menu 后由 menu-entry 调同一 kernel 函数。
 
 import { readdirSync, readFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import { mountKernel } from './rules/load/mount.mjs';
 import { createDigestCap } from './textcore/digest.mjs';
 import { writeSlot } from './kernel/save.mjs';
@@ -55,14 +56,23 @@ function readSources() {
   return [...kernel, ...rules].sort().map((path) => ({ path, text: readFileSync(new URL(path, REPO), 'utf8') }));
 }
 
-/** 装配层注入 kernel 的能力：摘要能力、存档根目录（可覆盖，file: URL，以 / 结尾）、源码清单。 @param {{saveRoot?: URL}} opts */
+/**
+ * 存档根目录归一（唯一一处）：路径字串经 pathToFileURL 转 file: URL，URL 照用；两者都确保以 / 结尾。kernel 只收 URL。
+ * @param {string | URL | undefined} root @returns {URL}
+ */
+function saveRootOf(root) {
+  const url = root === undefined ? DEFAULT_SAVE_ROOT : typeof root === 'string' ? pathToFileURL(root) : new URL(root.href);
+  return url.href.endsWith('/') ? url : new URL(`${url.href}/`);
+}
+
+/** 装配层注入 kernel 的能力：摘要能力、存档根目录（可覆盖，路径字串或 file: URL）、源码清单。 @param {{saveRoot?: string | URL}} opts */
 function capsOf(opts) {
-  return { digestCap: createDigestCap(), saveRoot: opts.saveRoot === undefined ? DEFAULT_SAVE_ROOT : opts.saveRoot, sources: readSources() };
+  return { digestCap: createDigestCap(), saveRoot: saveRootOf(opts.saveRoot), sources: readSources() };
 }
 
 /**
  * SillyTavern 服务端插件入口：装配 engine、初始 state 与日志簿（S1-1 卡 B2）。
- * @param {{saveRoot?: URL}} [opts] saveRoot 覆盖默认存档根目录（仓库 saves/）
+ * @param {{saveRoot?: string | URL}} [opts] saveRoot 覆盖默认存档根目录（仓库 saves/）
  */
 export async function init(opts = {}) {
   return mountKernel(readWorld(), capsOf(opts));
@@ -75,7 +85,7 @@ export function saveSlot(world, slot = 0) {
 
 /**
  * 读档（薄壳，不复演）：以当前程序与世界数据装配的 engine 比两个指纹。
- * @param {{slot: number}} manifest @param {{saveRoot?: URL}} [opts]
+ * @param {{slot: number}} manifest @param {{saveRoot?: string | URL}} [opts]
  */
 export function loadSlot(manifest, opts = {}) {
   const caps = capsOf(opts);

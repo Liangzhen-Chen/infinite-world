@@ -311,7 +311,7 @@
    "aiGate": {"groups": ["kernel", "rules", "textcore", "gate", "aiGate"],
     "builtins": {"node:fs": ["server-plugin/ai-gate/recorder.mjs"]}},
    "assembly": {"groups": ["kernel", "rules", "textcore", "inputEdge", "outputGate", "aiGate"],
-    "builtins": {"node:fs": ["server-plugin/index.mjs"]}},
+    "builtins": {"node:fs": ["server-plugin/index.mjs"], "node:url": ["server-plugin/index.mjs"]}},
    "host": {"groups": ["host", "display", "clientTextcore"],
     "external": {"../../../extensions.js": ["extension/host/bootstrap.mjs"]}},
    "display": {"groups": ["display", "clientTextcore"]},

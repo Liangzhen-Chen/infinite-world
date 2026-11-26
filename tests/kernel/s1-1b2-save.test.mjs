@@ -185,3 +185,14 @@ test('同一世界不变连存两次，第二次不新增片文件', async () =>
     assert.deepEqual(readdirSync(L.shards).sort(), before);
   });
 });
+
+test('saveRoot 传路径字串（不带结尾分隔符）：存读复演 saveDigest 相等', async () => {
+  const root = testTempRoot('s1b2-path-');
+  const g = await init({ saveRoot: root });
+  g.submitProposal({ effects: [{ op: 'time', minutes: 5 }] });
+  g.advance(g.engine.host.heartbeatStepMinutes);
+  const saved = saveSlot(g);
+  assert.ok(readdirSync(root).length > 0);
+  const replayed = replay_apply(loadSlot(saved, { saveRoot: root }));
+  assert.equal(replayed.saveDigest, saved.saveDigest);
+});
