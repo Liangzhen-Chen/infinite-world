@@ -519,13 +519,15 @@ export function checkParties(rules, readFile, stage) {
 // 推送阶段另给（门禁封口卡 A）：rangeFiles 本次推送范围的改动文件（借档核对）；headBranch CI 传入的头分支（可缺）；
 // history { reachable(sha), message(sha) } 推送头的提交历史（核 orca 凭证）。
 // ownFiles（审卡第 1 轮必须改 1）：合并提交自身引入的改动（解冲突或夹带，git diff-tree --cc）；角色与验收目录按它核，
-// 要不要档案仍按 files（对第一父的差集）判。非合并提交不给，等于 files。
+// 要不要档案仍按 files（对第一父的差集）判。非合并提交不给，等于 files；合并提交不给即抛错。
 // 返回 reasons（空数组为放行）。
 export function judgeCommit(rules, { files, branch, message, readFile, isMerge, repo, stage = '推送', rangeFiles = null, headBranch = null, history = null, ownFiles = null }) {
   if (isMerge && rules.mergeExempt) return [];
   const bypass = Object.entries(rules.markers).find(([, mk]) => mk && messageLine(message, mk) !== null);
   const name = messageLine(message, rules.branchPrefix) || branch;
-  const own = ownFiles || files;
+  // 合并提交必须由调用方给出自身改动（第 3 轮）：不给是编程错误，不回退成全部改动也不当空。
+  if (isMerge && !Array.isArray(ownFiles)) throw new Error('judgeCommit：合并提交须给 ownFiles（合并自身引入的改动，git diff-tree --cc）');
+  const own = isMerge ? ownFiles : files;
   const touchesAccept = own.some((f) => f.startsWith(rules.party.acceptDir));
   const triggered = needsArchive(rules, files);
   const reasons = [];

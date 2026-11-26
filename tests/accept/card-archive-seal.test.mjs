@@ -127,6 +127,21 @@ test('主会话角色：只改登记路径且标识对放行；标识不对拒�
   }
 });
 
+// 第 3 轮：合并提交必须给 ownFiles；带入的改动不核角色，只核自身改动。
+test('合并提交：不给 ownFiles 抛错；带入验收文件、自身改动为空放行', () => {
+  assert.throws(() => judgePush({ isMerge: true, message: msg('合并', 'main-session-opus55') }), /ownFiles/);
+  const brought = [SRC, `${RULES.party.acceptDir}ds-x/a.test.mjs`, `${DIR}开发.md`];
+  assert.deepEqual(judgePush({ isMerge: true, files: brought, ownFiles: [], message: msg('合并', 'main-session-opus55') }), []);
+  assert.deepEqual(judgePush({ isMerge: true, files: brought, ownFiles: [], message: msg('写码', 'agent-w1') }), []);
+});
+
+test('主会话提交收据放行；改别的拒', () => {
+  const id = RULES.party.mainId;
+  assert.deepEqual(judgePush({ files: [`${DIR}收据/写码-002.json`, `${DIR}state.json`], message: msg(RULES.party.mainRole, id) }), []);
+  assert.ok(has(judgePush({ files: [`${DIR}收据/写码-002.txt`], message: msg(RULES.party.mainRole, id) }), '只许改'));
+  assert.ok(has(judgePush({ files: [`${DIR}收据/sub/x.json`], message: msg(RULES.party.mainRole, id) }), '只许改'));
+});
+
 // 验收要点 3：借档。
 test('借档：推送范围没改该卡档案目录拒；branches 不含卡分支拒；CI 头分支不在 branches 拒', () => {
   assert.ok(has(judgePush({ rangeFiles: [SRC] }), '不能借用'));
