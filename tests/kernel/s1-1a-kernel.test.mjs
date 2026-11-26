@@ -4,9 +4,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildRegistry } from '../../server-plugin/rules/load/registry.mjs';
 import { kindOfEntity, readPath, writePath, createEntity } from '../../server-plugin/kernel/storage.mjs';
-import { stateMemo, invalidateTop } from '../../server-plugin/kernel/memo.mjs';
+import { stateMemo, invalidateTop, closeInputs } from '../../server-plugin/kernel/memo.mjs';
 import { writeScope } from '../../server-plugin/kernel/transaction.mjs';
-import { dim, modified } from '../../server-plugin/kernel/dimensions.mjs';
+import { dim, modified, DIM_DECL } from '../../server-plugin/kernel/dimensions.mjs';
 import { makePathHandles } from '../../server-plugin/kernel/handles.mjs';
 
 const DOCS = [
@@ -26,7 +26,7 @@ export const KEY_KINDS = { 'created.*': [['item', 'person', 'place']], 'created.
 function fixture() {
   const registry = buildRegistry(DOCS);
   const P = makePathHandles(PATH_TYPES, KEY_KINDS, []);
-  const engine = Object.freeze({ registry, structs: Object.freeze({}), modifierSources: Object.freeze([]), stateKeys: Object.freeze({ created: {} }), P });
+  const engine = Object.freeze({ registry, structs: Object.freeze({}), modifierSources: Object.freeze([]), inputs: closeInputs([DIM_DECL]), stateKeys: Object.freeze({ created: {} }), P });
   const state = { created: {} };
   return { engine, state };
 }

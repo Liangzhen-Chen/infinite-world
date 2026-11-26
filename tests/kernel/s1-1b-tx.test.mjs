@@ -115,24 +115,26 @@ test('create 的 template 指向别的 kind 或不存在即拒收，状态不变
 });
 
 // heartbeatStepMinutes 装配期按 registry.json 的 host 声明核（卷二十七:190：integer、≥1，缺或不合即加载失败）；步长防线在 scheduler.advance。
+// 卡 C 起 mountKernel 收世界数据原文（规则表按登记 code 收进 tableDocs，组装在 loadWorld）；本助手只把 host 表的 rows 换成给定值。
 const loadWorld = (hostRows) => {
   const o = new URL('../../world/ontology/', import.meta.url);
   const json = (f) => JSON.parse(readFileSync(new URL(f, o), 'utf8'));
   const dir = new URL('dimensions/', o);
+  const registryRows = json('../rules/registry.json').rows;
+  const tableDocs = Object.fromEntries(registryRows.map((r) => [r.code, json(`../rules/${r.file}`)]));
+  tableDocs.host = { ...tableDocs.host, rows: hostRows };
   return {
     dimensionDocs: readdirSync(dir).filter((f) => f.endsWith('.json') && !f.startsWith('_')).sort().map((f) => JSON.parse(readFileSync(new URL(f, dir), 'utf8'))),
     namedStructsDoc: json('named-structs.json'),
     owners: json('state-owners.json'),
-    hostRows,
-    hostSpec: json('../rules/registry.json').rows.find((r) => r.code === 'host'),
-    saveLayoutRows: json('../rules/tables/save-layout.json').rows,
-    saveLayoutSpec: json('../rules/registry.json').rows.find((r) => r.code === 'saveLayout'),
+    registryRows,
+    tableDocs,
     digestExclude: json('../rules/tables/digest-exclude.json').paths,
     primitivesDoc: json('primitives.json'),
   };
 };
-// 装配层注入的能力（B2 起 mountKernel 收 caps）；本组只测装配期核对，不存档。
-const caps = () => ({ digestCap: createDigestCap(), saveRoot: new URL('../../saves/', import.meta.url), sources: [] });
+// 装配层注入的能力（B2 起 mountKernel 收 caps；卡 C 起须带修正来源、源码清单非空）；本组只测装配期核对，不存档。
+const caps = () => ({ digestCap: createDigestCap(), saveRoot: new URL('../../saves/', import.meta.url), sources: [{ path: 'test', text: '' }], modifierSources: Object.freeze([]) });
 const realHostRows = () => JSON.parse(readFileSync(new URL('../../world/rules/tables/host.json', import.meta.url), 'utf8')).rows;
 const withStep = (patch) => realHostRows().map((r) => (r.key === 'heartbeatStepMinutes' ? { ...r, ...patch } : r));
 
