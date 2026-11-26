@@ -8,8 +8,9 @@ import { clockMinute, advance } from '../../server-plugin/kernel/scheduler.mjs';
 import { runTransaction, submitProposal } from '../../server-plugin/kernel/transaction.mjs';
 import { readPath, writePath } from '../../server-plugin/kernel/storage.mjs';
 import { dim } from '../../server-plugin/kernel/dimensions.mjs';
+import { createDigestCap } from '../../server-plugin/textcore/digest.mjs';
 
-const logOf = (g) => readPath(g.state, g.engine.P.log_entries());
+const logOf = (g) => g.logBook.entries;
 
 test('time 原语：推进 25 分钟按步长 10/10/5 分三步，时钟加 25', async () => {
   const g = await init();
@@ -124,17 +125,22 @@ const loadWorld = (hostRows) => {
     owners: json('state-owners.json'),
     hostRows,
     hostSpec: json('../rules/registry.json').rows.find((r) => r.code === 'host'),
+    saveLayoutRows: json('../rules/tables/save-layout.json').rows,
+    saveLayoutSpec: json('../rules/registry.json').rows.find((r) => r.code === 'saveLayout'),
+    digestExclude: json('../rules/tables/digest-exclude.json').paths,
     primitivesDoc: json('primitives.json'),
   };
 };
+// 装配层注入的能力（B2 起 mountKernel 收 caps）；本组只测装配期核对，不存档。
+const caps = () => ({ digestCap: createDigestCap(), saveRoot: new URL('../../saves/', import.meta.url), sources: [] });
 const realHostRows = () => JSON.parse(readFileSync(new URL('../../world/rules/tables/host.json', import.meta.url), 'utf8')).rows;
 const withStep = (patch) => realHostRows().map((r) => (r.key === 'heartbeatStepMinutes' ? { ...r, ...patch } : r));
 
 test('装配：heartbeatStepMinutes 缺行、0、负数、非整数、非数字各被拒；正常值照常', () => {
   const missing = realHostRows().filter((r) => r.key !== 'heartbeatStepMinutes');
-  assert.throws(() => mountKernel(loadWorld(missing)), /E-DIM-DOMAIN-RANGE/);
-  for (const v of [0, -5, 2.5, '10', null]) assert.throws(() => mountKernel(loadWorld(withStep({ value: v }))), /E-DIM-DOMAIN-RANGE/, String(v));
-  const g = mountKernel(loadWorld(withStep({ value: 7 })));
+  assert.throws(() => mountKernel(loadWorld(missing), caps()), /E-DIM-DOMAIN-RANGE/);
+  for (const v of [0, -5, 2.5, '10', null]) assert.throws(() => mountKernel(loadWorld(withStep({ value: v })), caps()), /E-DIM-DOMAIN-RANGE/, String(v));
+  const g = mountKernel(loadWorld(withStep({ value: 7 })), caps());
   assert.equal(g.engine.host.heartbeatStepMinutes, 7);
 });
 
@@ -142,7 +148,7 @@ test('scheduler.advance：步长非正整数即抛，不进循环，时钟不动
   const g = await init();
   for (const bad of [0, -1, 1.5, undefined]) {
     const e = { ...g.engine, host: { heartbeatStepMinutes: bad } };
-    assert.throws(() => advance(e, g.state, 5), /E-DIM-DOMAIN-RANGE/);
+    assert.throws(() => advance(e, g.state, g.logBook, 5), /E-DIM-DOMAIN-RANGE/);
   }
   assert.equal(clockMinute(g.engine, g.state), 0);
 });
@@ -150,7 +156,7 @@ test('scheduler.advance：步长非正整数即抛，不进循环，时钟不动
 test('推进中途某步被拒：先前 ok:true 事件之外，另追加 ok:false 事件，带 code 与已推进分钟', async () => {
   const g = await init();
   const e = { ...g.engine, advance: () => ({ ok: false, code: 'E-EFF-PARAM', advancedMinutes: 10 }) };
-  const r = submitProposal(e, g.state, { effects: [{ op: 'time', minutes: 25 }] });
+  const r = submitProposal(e, g.state, g.logBook, { effects: [{ op: 'time', minutes: 25 }] });
   assert.equal(r.ok, false);
   const evs = logOf(g).filter((x) => x.seq === r.seq && x.kind === 'event');
   assert.equal(evs.length, 2);

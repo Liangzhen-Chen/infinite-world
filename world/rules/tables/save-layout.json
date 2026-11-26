@@ -20,6 +20,20 @@
    "source": "卷二十七 §2.2；块 2-4 暂定 2（执行者按同一量级给值），待试玩调",
    "grade": "designed",
    "basis": "全书无值（R27-4.5 :504、R27-4.8 :512：回读失败回退上一份完好快照，至少留 2 份）；待试玩调"
+  },
+  {
+   "key": "shards",
+   "value": {"doc_data": "part_single", "doc_state": "part_single", "doc_holdings": "part_single", "doc_ledger": "part_single", "doc_log": "part_single"},
+   "source": "卷二十七 R27-4.6 :556（shards 覆盖逻辑文档全部五个部分，族 docpart；分片方式族 partition）；S1-1 卡 B2",
+   "grade": "designed",
+   "basis": "S1 竖切片五个部分各整片一个文件（part_single）；part_by_unit/part_by_segment/part_by_chunk 未实现，表里出现即装配期 E-SAVE-SHARD-UNCOVERED"
+  },
+  {
+   "key": "files",
+   "value": {"slotDirPrefix": "slot-", "manifest": "manifest.json", "prevManifest": "manifest.prev.json", "shardDir": "shards", "shardExt": ".json", "tmpSuffix": ".tmp"},
+   "source": "卷二十七 R27-4.8 :558（先写齐分片、原子改名提交清单、回退上一份完好清单）、R27-4.10 :562（槽位编号区分存档文件）；S1-1 卡 B2",
+   "grade": "designed",
+   "basis": "卷文未定文件名与目录布局（草案 F:/dnd-tmp/draft-s1-1b2.md §1 末行），取 archive 旧布局名，属技术选型"
   }
  ]
 }
