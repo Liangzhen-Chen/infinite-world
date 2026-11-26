@@ -1,13 +1,13 @@
 // 事务模块的最小写入层（S1-1 卡 A；卷二 §2.7 :541 拒写处置、:545 唯一事务裸写者）。
 // 本文件是内核里唯一对状态做裸写（赋值、删除）与持有撤销记录的地方；存储模块的全部写入经 txSet / txDelete。
 // 作用域不放模块级登记（会触发 c_module_state）：writeScope 把作用域对象 tx 作为参数传给 fn，写函数显式收 tx。
-// 完整事务（runTransaction、submitProposal、时间推进、存档）是卡 B，不在这里。
+// 事务与提案见下（卡 B1）；日志簿与存档在 save.mjs（卡 B2）。
 
 import { KernelError, reportError } from './errors.mjs';
 import { invalidateTop } from './memo.mjs';
 import { checkValue } from './validate/types.mjs';
-import { clone } from './bytes.mjs';
-import { newState, kindOfEntity, createEntity, setEntityProp, readPath, writePath } from './storage.mjs';
+import { appendEntry, nextRequestSeq, tickEnd } from './save.mjs';
+import { newState, kindOfEntity, createEntity, setEntityProp, readPath } from './storage.mjs';
 
 /** @typedef {{engine: any, state: any, open: boolean, undo: Array<{obj: any, key: string, had: boolean, old: any}>, touched: any[]}} WriteScope */
 
@@ -96,13 +96,6 @@ export function runTransaction(engine, state, fn) {
   }
 }
 
-/** 初始化日志与请求编号（登记写者 transaction.mjs；在装配层的事务里调）。 @param {any} engine @param {any} state @param {any} tx */
-export function initLog(engine, state, tx) {
-  const { P } = engine;
-  writePath(state, P.log_entries(), [], tx);
-  writePath(state, P.log_requestSeq(), 0, tx);
-}
-
 /**
  * 装配初始 state：newState() 建空 state，再在一笔事务里依次调各顶层键登记写者的初始化函数 inits(engine, state, tx)；
  * 任一被拒即抛。装配层只传初始化函数，不自己碰 state。
@@ -115,29 +108,14 @@ export function buildState(engine, inits) {
   return fresh;
 }
 
-/** 在已开的事务里追加一条日志条目：读出整表 → 新数组 → 写回（待 B2 改追加接口）。 */
-function pushLog(engine, state, tx, entry) {
-  const { P } = engine;
-  writePath(state, P.log_entries(), [...readPath(state, P.log_entries()), clone(entry)], tx);
-}
-
-/** 一笔独立事务追加一条日志条目（不随别的事务回滚）。 */
-function appendLog(engine, state, entry) {
-  const r = runTransaction(engine, state, (tx) => pushLog(engine, state, tx, entry));
-  if (!r.ok) throw new KernelError(/** @type {any} */ (r.code), {}, 'log append rejected');
-}
-
 /**
- * 取下一个请求编号并把输入条目记进 state.log（独立一笔，不随后续回滚）；编号存 state.log.requestSeq，单调递增。
- * @param {any} engine @param {any} state @param {Record<string, any>} entry 不含 seq 的输入条目
+ * 取下一个请求编号并把输入条目单独记进日志簿（卷二十七 :742 条目先单独提交；日志簿不在 state，天然在回滚之外）。
+ * @param {any} engine @param {import('./save.mjs').LogBook} book @param {Record<string, any>} entry 不含 seq 的输入条目
  * @returns {number}
  */
-export function recordInput(engine, state, entry) {
-  const { P } = engine;
-  const seq = readPath(state, P.log_requestSeq()) + 1;
-  const r = runTransaction(engine, state, (tx) => { writePath(state, P.log_requestSeq(), seq, tx); });
-  if (!r.ok) throw new KernelError(/** @type {any} */ (r.code), {}, 'request seq rejected');
-  appendLog(engine, state, { seq, ...entry });
+export function recordInput(engine, book, entry) {
+  const seq = nextRequestSeq(book);
+  appendEntry(book, { seq, ...entry });
   return seq;
 }
 
@@ -242,37 +220,56 @@ function resolve(engine, state, proposal, seq) {
 }
 
 /**
- * 提交提案：先记输入（独立一笔）→ resolve → 单事务 execute 并记结果事件 → 事务外按 advanceMinutes 推进时钟。
- * @param {any} engine @param {any} state @param {{effects: Array<Record<string, any>>}} proposal
+ * 外来输入的唯一处理管线（卷二十七 :742）：先把输入条目单独记进日志簿 → resolve → 单事务 execute → 事务提交后记结果事件
+ * （日志簿不随事务回滚）→ 事务外按 advanceMinutes 纯推进 → tickEnd（刻边界）。条目的 kind 只作标签留在日志，这里不按它分支；
+ * 玩家指令与推进请求都以效果原语提案 input.proposal 处理。复演对每条输入条目也走这里。
+ * @param {any} engine @param {any} state @param {import('./save.mjs').LogBook} book
+ * @param {{kind: string, proposal: {effects: Array<Record<string, any>>}}} input 不含 seq 的输入条目
  * @returns {{ok: boolean, code?: string, seq: number, advancedMinutes: number}}
  */
-export function submitProposal(engine, state, proposal) {
-  const seq = recordInput(engine, state, { kind: 'command', proposal });
+export function processInput(engine, state, book, input) {
+  const seq = recordInput(engine, book, input);
+  try {
+    return processProposal(engine, state, book, input.proposal, seq);
+  } finally {
+    tickEnd(engine, state, book);
+  }
+}
+
+/**
+ * 提交提案（玩家指令）：输入条目标签 command，走 processInput。
+ * @param {any} engine @param {any} state @param {import('./save.mjs').LogBook} book @param {{effects: Array<Record<string, any>>}} proposal
+ * @returns {{ok: boolean, code?: string, seq: number, advancedMinutes: number}}
+ */
+export function submitProposal(engine, state, book, proposal) {
+  return processInput(engine, state, book, { kind: 'command', proposal });
+}
+
+/** submitProposal 的处理段（条目已记）。 @param {any} engine @param {any} state @param {any} book @param {any} proposal @param {number} seq */
+function processProposal(engine, state, book, proposal, seq) {
   let plan;
   try {
     plan = resolve(engine, state, proposal, seq);
   } catch (e) {
     const code = reportError(e);
-    appendLog(engine, state, { seq, kind: 'event', ok: false, code });
+    appendEntry(book, { seq, kind: 'event', ok: false, code });
     return { ok: false, code, seq, advancedMinutes: 0 };
   }
   if (plan.advanceMinutes > 0 && typeof engine.advance !== 'function') {
-    appendLog(engine, state, { seq, kind: 'event', ok: false, code: 'E-EFF-PARAM' });
+    appendEntry(book, { seq, kind: 'event', ok: false, code: 'E-EFF-PARAM' });
     return { ok: false, code: 'E-EFF-PARAM', seq, advancedMinutes: 0 };
   }
-  const r = runTransaction(engine, state, (tx) => {
-    for (const w of plan.writes) w(tx);
-    pushLog(engine, state, tx, { seq, kind: 'event', ok: true, advanceMinutes: plan.advanceMinutes });
-  });
+  const r = runTransaction(engine, state, (tx) => { for (const w of plan.writes) w(tx); });
   if (!r.ok) {
-    appendLog(engine, state, { seq, kind: 'event', ok: false, code: r.code });
+    appendEntry(book, { seq, kind: 'event', ok: false, code: r.code });
     return { ok: false, code: r.code, seq, advancedMinutes: 0 };
   }
+  appendEntry(book, { seq, kind: 'event', ok: true, advanceMinutes: plan.advanceMinutes });
   if (plan.advanceMinutes > 0) {
-    const a = engine.advance(state, plan.advanceMinutes);
+    const a = engine.advance(state, book, plan.advanceMinutes);
     if (a.ok) return { ok: true, seq, advancedMinutes: a.advancedMinutes };
-    // 推进中途被拒：上面那条 ok:true 已提交，另在事务外追加一条如实的失败事件（产品原则一.4、二.4）。
-    appendLog(engine, state, { seq, kind: 'event', ok: false, code: a.code, advancedMinutes: a.advancedMinutes });
+    // 推进中途被拒：上面那条 ok:true 已提交，另追加一条如实的失败事件（产品原则一.4、二.4）。
+    appendEntry(book, { seq, kind: 'event', ok: false, code: a.code, advancedMinutes: a.advancedMinutes });
     return { ok: false, code: a.code, seq, advancedMinutes: a.advancedMinutes };
   }
   return { ok: true, seq, advancedMinutes: 0 };

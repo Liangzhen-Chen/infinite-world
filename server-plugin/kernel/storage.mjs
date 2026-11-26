@@ -211,3 +211,39 @@ export function setEntityProp(state, id, field, value, tx) {
   const { P } = tx.engine;
   writePath(state, P.created_props(id, field), value, tx);
 }
+
+// ---- 卡 B2：规范序列化（存档摘要、分片内容寻址与复演比对共用这一种写法）----
+
+const isPlainObject = (/** @type {any} */ v) => v !== null && typeof v === 'object' && !Array.isArray(v)
+  && (Object.getPrototypeOf(v) === Object.prototype || Object.getPrototypeOf(v) === null);
+
+/** @param {unknown} v */
+function notData(v) {
+  const code = typeof v === 'number' ? 'E-DET-NONFINITE' : 'E-DIM-STRUCT-FIELD';
+  return new KernelError(code, {}, `canonical: not save data (${v === null ? 'null' : Array.isArray(v) ? 'sparse array' : typeof v})`);
+}
+
+/**
+ * 规范序列化（卷二十七 :545 唯一序列化；卷一:643 指本文件；S1-1 卡 B2 存档用）：
+ * null、布尔、字串、有限数照 JSON 写法；数组按下标；普通对象按键名 UTF-16 码元升序；无空白。
+ * 其余（undefined、函数、非有限数、稀疏数组、非普通对象）不是存档数据，抛错，不静默略去。
+ * @param {unknown} value
+ * @returns {string}
+ */
+export function canonical(value) {
+  if (Array.isArray(value)) {
+    const parts = [];
+    for (let i = 0; i < value.length; i++) {
+      if (!Object.hasOwn(value, i)) throw notData(value);
+      parts.push(canonical(value[i]));
+    }
+    return `[${parts.join(',')}]`;
+  }
+  if (value !== null && typeof value === 'object') {
+    if (!isPlainObject(value)) throw notData(value);
+    return `{${Object.keys(value).sort().map((k) => `${JSON.stringify(k)}:${canonical(value[k])}`).join(',')}}`;
+  }
+  if (value === null || typeof value === 'boolean' || typeof value === 'string') return JSON.stringify(value);
+  if (typeof value === 'number' && Number.isFinite(value)) return JSON.stringify(value);
+  throw notData(value);
+}

@@ -64,8 +64,8 @@ test('server-plugin/kernel/ 下实际文件集合 = files.json 列表 ∪ {files
 
 // ---------- L-15：server-plugin 顶层与 rules 空目录 ----------
 
-test('server-plugin/ 顶层只有 index.mjs、systems.mjs、kernel/、rules/', () => {
-  assert.deepEqual(readdirSync(abs('server-plugin')).sort(), ['index.mjs', 'kernel', 'rules', 'systems.mjs']);
+test('server-plugin/ 顶层只有 index.mjs、systems.mjs、kernel/、rules/、textcore/', () => {
+  assert.deepEqual(readdirSync(abs('server-plugin')).sort(), ['index.mjs', 'kernel', 'rules', 'systems.mjs', 'textcore']);
   assert.ok(statSync(abs('server-plugin/index.mjs')).isFile(), 'index.mjs 应为文件');
   assert.ok(statSync(abs('server-plugin/systems.mjs')).isFile(), 'systems.mjs 应为文件');
   assert.ok(statSync(abs('server-plugin/kernel')).isDirectory(), 'kernel 应为目录');
@@ -101,13 +101,26 @@ test('import server-plugin/index.mjs：init 是函数，await init() 返回对�
 
 // ---------- L-15：旧代码与旧资料的迁出 ----------
 
-test('旧泥球三目录已进 archive/legacy-server/；server-plugin/ 下 gate、output-gate、textcore 不存在', () => {
+test('旧泥球三目录已进 archive/legacy-server/；server-plugin/ 下 gate、output-gate 不存在', () => {
   for (const d of ['archive/legacy-server/gate', 'archive/legacy-server/output-gate', 'archive/legacy-server/textcore']) {
     assert.ok(existsSync(abs(d)), `${d} 不存在`);
   }
-  for (const d of ['server-plugin/gate', 'server-plugin/output-gate', 'server-plugin/textcore']) {
+  for (const d of ['server-plugin/gate', 'server-plugin/output-gate']) {
     assert.ok(!existsSync(abs(d)), `${d} 不应存在`);
   }
+});
+
+// textcore 迁回（卷二:1054/:1060；Gemini 裁定 msg_82485b7f7ab7 定 S1-3 迁回，B2 先迁 digest.mjs）：目录下每个源文件都须经 state-owners.json 登记。
+test('server-plugin/textcore/ 下每个文件都经 state-owners.json 登记（importMatrix.rows.textcore 或 assembly.files）', () => {
+  const owners = JSON.parse(readFileSync(abs('world/ontology/state-owners.json'), 'utf8'));
+  const PREFIX = 'server-plugin/textcore/';
+  const strings = (v) =>
+    typeof v === 'string' ? [v] : Array.isArray(v) ? v.flatMap(strings) : v && typeof v === 'object' ? Object.values(v).flatMap(strings) : [];
+  const registered = new Set(
+    [...strings(owners.importMatrix.rows.textcore), ...strings(owners.assembly.files)].filter((p) => p.startsWith(PREFIX)),
+  );
+  const present = walk(abs('server-plugin/textcore'));
+  assert.deepEqual(present.filter((f) => !registered.has(f)), []);
 });
 
 test('world/meta、world/design 不存在；迁出的资料在 archive/ 下存在', () => {

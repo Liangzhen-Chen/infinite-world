@@ -31,3 +31,4 @@ tools/cloud/known_hosts
 tools/notify/config.local.json
 tools/notify/outbox/
 tools/notify/sent/
+saves/
