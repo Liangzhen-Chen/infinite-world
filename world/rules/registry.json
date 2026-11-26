@@ -78,11 +78,15 @@
    "code": "saveLayout",
    "file": "tables/save-layout.json",
    "structure": "keys",
-   "type": {"snapshotEveryEvents": "integer", "segmentEvents": "integer", "keepSnapshots": "integer"},
+   "type": {"snapshotEveryEvents": "integer", "segmentEvents": "integer", "keepSnapshots": "integer",
+    "shards": {"type": "map", "key": {"type": "string"}, "value": {"type": "string"}},
+    "files": {"type": "struct", "required": ["slotDirPrefix", "manifest", "prevManifest", "shardDir", "shardExt", "tmpSuffix"], "fields": {
+     "slotDirPrefix": {"type": "string"}, "manifest": {"type": "string"}, "prevManifest": {"type": "string"},
+     "shardDir": {"type": "string"}, "shardExt": {"type": "string"}, "tmpSuffix": {"type": "string"}}}},
    "domain": {"snapshotEveryEvents": [1, null], "segmentEvents": [1, null], "keepSnapshots": [1, null]},
-   "volume": "卷二十七 §2.2、R27-4.5 :504、R27-4.8 :512；卷二 :1500",
+   "volume": "卷二十七 §2.2、R27-4.5 :504、R27-4.6 :556（shards）、R27-4.8 :512、:558（files 布局名）；卷二 :1500；S1-1 卡 B2 登 shards、files",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"snapshotEveryEvents": false, "segmentEvents": false, "keepSnapshots": false}
+   "packOverridable": {"snapshotEveryEvents": false, "segmentEvents": false, "keepSnapshots": false, "shards": false, "files": false}
   },
   {
    "code": "detNumeric",

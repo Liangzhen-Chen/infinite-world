@@ -10,12 +10,58 @@
  ],
  "entries": [
   {
+   "name": "KernelError",
+   "file": "kernel/errors.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
    "name": "T",
    "file": "kernel/handles/markers.mjs",
    "vol": null,
    "sec": null,
    "kind": "kernel",
    "needs": [],
+   "rules": []
+  },
+  {
+   "name": "advance",
+   "file": "kernel/scheduler.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "runTransaction",
+    "readPath",
+    "writePath",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "advanceRequest",
+   "file": "kernel/scheduler.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "processInput",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "appendEntry",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "clone"
+   ],
    "rules": []
   },
   {
@@ -37,12 +83,55 @@
    "rules": []
   },
   {
+   "name": "buildRegistry",
+   "file": "rules/load/registry.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "buildState",
+   "file": "kernel/transaction.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "runTransaction",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "canonical",
+   "file": "kernel/storage.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
    "name": "checkDef",
    "file": "kernel/validate/types.mjs",
    "vol": null,
    "sec": null,
    "kind": "part",
    "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkSlot",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError"
+   ],
    "rules": []
   },
   {
@@ -56,7 +145,7 @@
   },
   {
    "name": "clone",
-   "file": "kernel/clone.mjs",
+   "file": "kernel/bytes.mjs",
    "vol": null,
    "sec": null,
    "kind": "kernel",
@@ -97,6 +186,55 @@
    "sec": null,
    "kind": "kernel",
    "needs": [],
+   "rules": []
+  },
+  {
+   "name": "createDigestCap",
+   "file": "textcore/digest.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "createLogBook",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "dataPacksDigestOf",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "canonical"
+   ],
+   "rules": []
+  },
+  {
+   "name": "docOf",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "engineRulesDigestOf",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "canonical"
+   ],
    "rules": []
   },
   {
@@ -244,6 +382,17 @@
    "rules": []
   },
   {
+   "name": "initClock",
+   "file": "kernel/scheduler.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "writePath"
+   ],
+   "rules": []
+  },
+  {
    "name": "installByteConstants",
    "file": "kernel/bytes.mjs",
    "vol": null,
@@ -334,6 +483,15 @@
    "rules": []
   },
   {
+   "name": "makePathHandles",
+   "file": "kernel/handles.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
    "name": "markersOf",
    "file": "kernel/handles/markers.mjs",
    "vol": null,
@@ -361,11 +519,47 @@
    "rules": []
   },
   {
+   "name": "mountKernel",
+   "file": "rules/load/mount.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "buildRegistry",
+    "makePathHandles",
+    "installNamedStructs",
+    "buildState",
+    "initClock",
+    "submitProposal",
+    "advance",
+    "advanceRequest",
+    "createLogBook",
+    "tickEnd",
+    "docOf",
+    "writeSlot",
+    "dataPacksDigestOf",
+    "engineRulesDigestOf",
+    "checkValue",
+    "clone",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
    "name": "namedStructMapOf",
    "file": "kernel/named-struct-match.mjs",
    "vol": null,
    "sec": null,
    "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "nextRequestSeq",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
    "needs": [],
    "rules": []
   },
@@ -406,6 +600,21 @@
    "rules": []
   },
   {
+   "name": "processInput",
+   "file": "kernel/transaction.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "recordInput",
+    "runTransaction",
+    "appendEntry",
+    "tickEnd",
+    "reportError"
+   ],
+   "rules": []
+  },
+  {
    "name": "rangeOk",
    "file": "kernel/validate/types.mjs",
    "vol": null,
@@ -415,12 +624,67 @@
    "rules": []
   },
   {
+   "name": "readPath",
+   "file": "kernel/storage.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "readSlot",
+   "file": "kernel/load/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "checkSlot",
+    "slotPaths",
+    "createLogBook",
+    "appendEntry",
+    "KernelError",
+    "reportError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "recordInput",
+   "file": "kernel/transaction.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "appendEntry",
+    "nextRequestSeq"
+   ],
+   "rules": []
+  },
+  {
    "name": "registerSystems",
    "file": "systems.mjs",
    "vol": null,
    "sec": null,
    "kind": "kernel",
    "needs": [],
+   "rules": []
+  },
+  {
+   "name": "replayApply",
+   "file": "kernel/load/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "processInput",
+    "createLogBook",
+    "appendEntry",
+    "saveDigest",
+    "docOf",
+    "canonical",
+    "clone",
+    "KernelError"
+   ],
    "rules": []
   },
   {
@@ -442,6 +706,18 @@
    "rules": []
   },
   {
+   "name": "runTransaction",
+   "file": "kernel/transaction.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "reportError",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
    "name": "rxChildren",
    "file": "kernel/rx.mjs",
    "vol": null,
@@ -457,6 +733,17 @@
    "sec": null,
    "kind": "part",
    "needs": [],
+   "rules": []
+  },
+  {
+   "name": "saveDigest",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "canonical"
+   ],
    "rules": []
   },
   {
@@ -483,6 +770,15 @@
    "vol": null,
    "sec": null,
    "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "slotPaths",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
    "needs": [],
    "rules": []
   },
@@ -514,6 +810,28 @@
    "rules": []
   },
   {
+   "name": "submitProposal",
+   "file": "kernel/transaction.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "processInput"
+   ],
+   "rules": []
+  },
+  {
+   "name": "tickEnd",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "clone"
+   ],
+   "rules": []
+  },
+  {
    "name": "truncateTo",
    "file": "kernel/det-math.mjs",
    "vol": null,
@@ -538,6 +856,32 @@
    "sec": null,
    "kind": "part",
    "needs": [],
+   "rules": []
+  },
+  {
+   "name": "writePath",
+   "file": "kernel/storage.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "writeSlot",
+   "file": "kernel/save.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "checkSlot",
+    "slotPaths",
+    "docOf",
+    "saveDigest",
+    "canonical",
+    "readPath",
+    "KernelError"
+   ],
    "rules": []
   }
  ]
