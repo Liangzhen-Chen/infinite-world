@@ -726,6 +726,8 @@
    "volume": "卷二十 §2.9 :403–:404（rules.env 键表）；键都登 unbuilt（已设计、未建，由 G14 后三张卡接读者时入表）；校验在 field-tables.mjs（E-PROP-LAW、E-ENV-TARGET）",
    "multiSourceMerge": "own_key_only",
    "packOverridable": {"unbuilt": false}
-  }
+  },
+  {"code":"act","file":"tables/act.json","structure":"keys","type":{"advanceMaxMinutes":{"type":"map","key":{"type":"string"},"value":{"type":"integer","unit":"minute","domain":[1,null]}}},"domain":{"advanceMaxMinutes":{}},"volume":"卷九 §2.5 :324（rules.act.advanceMaxMinutes）；读者是 rules/act/catalog.mjs（动作行数值槽上限的 RX 经 rules.act.* 读；键覆盖 act_class 在加载期核）","multiSourceMerge":"own_key_only","packOverridable":{"advanceMaxMinutes":false}},
+  {"code":"playerOrigins","file":"tables/player-origins.json","structure":"keys","type":{"allowBeastkin":{"type":"boolean"},"allowMonsterSocieties":{"type":"boolean"}},"domain":{"allowBeastkin":{},"allowMonsterSocieties":{}},"volume":"设计册 docs/世界设计/14-历史传说与玩家来历.md §3.6 :94（rules.playerOrigins 新节）、§4.7 :215–:241；本卡只登两个开关（出身条目各自以 gate 指名受哪个开关管；条目在 _vocab.json origin 族，规则表不放实体 id，卷六 S6-2），defaultCulture、startingSecondLanguage 等派生项随语言、熟人、传闻系统登记（S1-3a 派卡）；读者是 rules/act/catalog.mjs","multiSourceMerge":"own_key_only","packOverridable":{"allowBeastkin":false,"allowMonsterSocieties":false}}
  ]
 }

@@ -3,7 +3,7 @@
 // 用法：node tools/accept/commit-hook.mjs [--root 目录]；退出码 0 放行，1 拒绝。
 
 import { fileURLToPath } from 'node:url';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { accRun } from './run.mjs';
@@ -31,6 +31,14 @@ export function gitRepo(root, treeish) {
   };
 }
 
+// 同一接口读工作区磁盘（派前自检用：派卡.md 还没 git add 时也能核引用）：read 读不到返回 null；list 返回目录下文件名。
+export function fsRepo(root) {
+  return {
+    read: (p) => { try { return readFileSync(join(root, p), 'utf8'); } catch { return null; } },
+    list: (dir) => { try { return readdirSync(join(root, dir)); } catch { return []; } },
+  };
+}
+
 export function cardArchiveCheck(root, message = null) {
   root = root || join(dirname(fileURLToPath(import.meta.url)), '..', '..');
   const fail = (reasons) => ({ ok: false, code: CARD_ARCHIVE_CODE, reasons });
@@ -43,11 +51,20 @@ export function cardArchiveCheck(root, message = null) {
   try { staged = gitOut(root, ['diff', '--cached', '--name-only', '-z']).split('\0').filter(Boolean); } catch { return fail(['取暂存清单失败（git diff --cached）']); }
   let branch;
   try { branch = gitOut(root, ['rev-parse', '--abbrev-ref', 'HEAD']).trim(); } catch { return fail(['取分支名失败（git rev-parse --abbrev-ref HEAD）']); }
+  const isMerge = gitOk(root, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']);
+  // 合并进行中：合并自身引入的改动 = 与两个父提交都不同的文件（暂存区对 HEAD 与对 MERGE_HEAD 的差集取交集，同 pre-push 的 diff-tree --cc 口径）。
+  let ownFiles = null;
+  if (isMerge) {
+    let other;
+    try { other = new Set(gitOut(root, ['diff', '--cached', '--name-only', '-z', 'MERGE_HEAD']).split('\0').filter(Boolean)); } catch { return fail(['取合并自身改动失败（git diff --cached MERGE_HEAD）']); }
+    ownFiles = staged.filter((f) => other.has(f));
+  }
   const reasons = judgeCommit(loaded.rules, {
     files: staged,
     branch,
     message,
-    isMerge: gitOk(root, ['rev-parse', '-q', '--verify', 'MERGE_HEAD']),
+    isMerge,
+    ownFiles,
     stage: '提交',
     repo: gitRepo(root, null),
     readFile: (dir, f) => { try { return gitOut(root, ['show', `:${dir}${f}`]); } catch { return null; } },

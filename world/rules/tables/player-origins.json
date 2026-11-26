@@ -1,0 +1,22 @@
+{
+ "rows": [
+  {
+   "key": "allowBeastkin",
+   "value": true,
+   "grade": "designed",
+   "basisKind": "design_spec",
+   "specRef": "docs/世界设计/14-历史传说与玩家来历.md",
+   "source": "设计册 docs/世界设计/14-历史传说与玩家来历.md:98（§3.6 rules.playerOrigins.allowBeastkin）、:219（§4.7 步 1 过滤）",
+   "basis": "设计册原值 true（李白决定首版开放兽裔出身，:100 note）；只影响新建档的候选（§4.7 :238）。读者是 rules/act/catalog.mjs 的命名空间读数 origin.open"
+  },
+  {
+   "key": "allowMonsterSocieties",
+   "value": true,
+   "grade": "designed",
+   "basisKind": "design_spec",
+   "specRef": "docs/世界设计/14-历史传说与玩家来历.md",
+   "source": "设计册 docs/世界设计/14-历史传说与玩家来历.md:99（§3.6 rules.playerOrigins.allowMonsterSocieties）、:220（§4.7 步 1 过滤）",
+   "basis": "设计册原值 true；只影响新建档的候选。读者同 allowBeastkin"
+  }
+ ]
+}

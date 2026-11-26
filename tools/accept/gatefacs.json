@@ -119,6 +119,36 @@
   },
   {
    "assertedWriters": [
+    "writeTempRepoFile"
+   ],
+   "entries": [
+    "writeTempRepoFile"
+   ],
+   "facCode": "test-temp-repo-fixture",
+   "gateCard": "—",
+   "inRepo": false,
+   "ownerVol": "vol12",
+   "paths": [
+    "tools/accept/lib/temp-repo-write.mjs"
+   ],
+   "requiredTests": [
+    {
+     "file": "tests/accept/temp-repo-write.test.mjs",
+     "names": [
+      "assertTempRepoPath（门禁封口子卡 C）",
+      "writeTempRepoFile（门禁封口子卡 C）"
+     ]
+    }
+   ],
+   "testGlobs": [
+    "tests/accept/*.test.mjs"
+   ],
+   "writerAsserts": [
+    "assertTempRepoPath"
+   ]
+  },
+  {
+   "assertedWriters": [
     "writeUnderTempRoot",
     "removeTempRoot",
     "removeUnderTempRoot"
