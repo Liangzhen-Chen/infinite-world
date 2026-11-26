@@ -3,7 +3,7 @@
 // 用法：node tools/accept/commit-hook.mjs [--root 目录]；退出码 0 放行，1 拒绝。
 
 import { fileURLToPath } from 'node:url';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { accRun } from './run.mjs';
@@ -28,6 +28,14 @@ export function gitRepo(root, treeish) {
         return out.split('\0').filter(Boolean).map(base);
       } catch { return []; }
     },
+  };
+}
+
+// 同一接口读工作区磁盘（派前自检用：派卡.md 还没 git add 时也能核引用）：read 读不到返回 null；list 返回目录下文件名。
+export function fsRepo(root) {
+  return {
+    read: (p) => { try { return readFileSync(join(root, p), 'utf8'); } catch { return null; } },
+    list: (dir) => { try { return readdirSync(join(root, dir)); } catch { return []; } },
   };
 }
 
