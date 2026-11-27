@@ -1,4 +1,10 @@
 {
+ "stateKeys": {
+  "created": {"writers": {
+   "*.props.facing": {"create": ["kernel/storage.mjs"], "rewrite": "rules/travel/position.mjs", "rewriteRows": "all", "viaRelocate": false},
+   "*.props.pos": {"create": ["kernel/storage.mjs"], "rewrite": "rules/travel/position.mjs", "rewriteRows": "all", "viaRelocate": false}
+  }}
+ },
  "systems": {
   "position": {"primitiveWriter": {"ops": ["move"], "handler": "rules/travel/position.mjs#moveWriter"}}
  },

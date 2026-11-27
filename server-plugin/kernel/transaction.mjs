@@ -8,6 +8,7 @@ import { invalidateTop } from './memo.mjs';
 import { checkValue } from './validate/types.mjs';
 import { appendEntry, nextRequestSeq, tickEnd } from './save.mjs';
 import { newState, kindOfEntity, createEntity, setEntityProp, readPath } from './storage.mjs';
+import { GRAMMAR_TOKENS } from './handles.mjs';
 
 /** @typedef {{engine: any, state: any, open: boolean, undo: Array<{obj: any, key: string, had: boolean, old: any}>, touched: any[], events: Array<Readonly<{verb: string, payload: any, targets: readonly string[]}>>}} WriteScope */
 
@@ -181,6 +182,23 @@ function checkEffect(prim, effect) {
 
 // 原语 → 处理函数 分派表（唯一一处；键取 primitives.json 的 op）。处理函数只做 resolve，不直接写状态。
 // 处理结果可带 produced：本原语建出的实体 id（resolve 收进本提案产物列表，供后面原语的 {produced: k} 引用）。
+/**
+ * 单项登记名单（卷二 §2.7 :815、:828；S2-P 修改轮 Q8 乙）：state-owners 在 fact.set 所写路径模式（P.created_props 的 pattern）的顶层键下另登了
+ * 「末段通配换成该维度键」的具体模式、且其改写写者不同于通配模式的，该维度有专属写者，fact.set 写它即 E-EFF-PARAM（整笔回滚）。只读登记，不认维度名。
+ * @param {any} engine @param {string} entity @param {string} field
+ */
+function rejectDedicated(engine, entity, field) {
+  const [top, ...rest] = engine.P.created_props(entity, field).pattern.split(GRAMMAR_TOKENS.pathSep);
+  const writers = Object(Object(Object(engine.stateKeys)[top]).writers);
+  const rewriteOf = (/** @type {string[]} */ segs) => {
+    const k = Object.keys(writers).find((key) => { const p = key.split(GRAMMAR_TOKENS.pathSep); return p.length === segs.length && p.every((x, i) => x === segs[i]); });
+    const w = k === undefined ? undefined : writers[k];
+    return k === undefined ? undefined : typeof w === 'string' ? w : Object(w).rewrite;
+  };
+  const own = rewriteOf([...rest.slice(0, -1), field]);
+  if (own !== undefined && own !== rewriteOf([...rest.slice(0, -1), GRAMMAR_TOKENS.wildcard])) throw new KernelError('E-EFF-PARAM', {}, `fact.set ${field}: dimension has a dedicated writer (${own}); use its primitive`);
+}
+
 /** @type {Record<string, (engine: any, state: any, effect: any, ctx: {seq: number, index: number}) => {write?: (tx: WriteScope) => void, advanceMinutes?: number, produced?: string}>} */
 const HANDLERS = {
   time: (engine, state, effect) => {
@@ -222,13 +240,16 @@ const HANDLERS = {
     if (life === null || typeof life !== 'object' || typeof life.destroy !== 'function') throw new KernelError('E-EFF-PARAM', {}, 'destroy: engine.lifecycle.destroy is not assembled');
     return { write: (tx) => { life.destroy(state, effect.entity, tx); } };
   },
-  'fact.set': (engine, state, effect) => ({
-    write: (tx) => {
-      const { P } = engine;
-      const value = Object.hasOwn(effect, 'value') ? effect.value : readPath(state, P.created_props(effect.entity, effect.field)) + effect.delta;
-      setEntityProp(state, effect.entity, effect.field, value, tx);
-    },
-  }),
+  'fact.set': (engine, state, effect) => {
+    rejectDedicated(engine, effect.entity, effect.field);
+    return {
+      write: (tx) => {
+        const { P } = engine;
+        const value = Object.hasOwn(effect, 'value') ? effect.value : readPath(state, P.created_props(effect.entity, effect.field)) + effect.delta;
+        setEntityProp(state, effect.entity, effect.field, value, tx);
+      },
+    };
+  },
 };
 
 /**

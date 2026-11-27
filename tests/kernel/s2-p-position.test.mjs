@@ -269,3 +269,33 @@ test('12 就近折档在半档两侧（卷十七 :304 floor((方位角 + 半档)
     assert.equal(g.state.created[p].props.facing, want, `${dx},${dy}`);
   }
 });
+
+test('13 fact.set 守卫（卷二 :815、:828 单项登记名单；S2-P 修改轮 Q8 乙）：名单里有专属改写写者的维度（pos、facing）fact.set 即 E-EFF-PARAM、state 逐位不变；普通维度照常；夹具删去 facing 那条单项登记，fact.set 写 facing 即照常', () => {
+  const raw = rawWorld();
+  const writers = raw.owners.stateKeys.created.writers;
+  const generic = writers['*.props.*'];
+  const dedicated = Object.keys(writers).filter((k) => k !== '*.props.*' && k.startsWith('*.props.') && Object(writers[k]).rewrite !== Object(generic).rewrite).map((k) => k.split('.').pop());
+  assert.ok(dedicated.length > 0, '前提：名单里应有专属写者维度');
+  const g = mountKernel(clone(raw), caps('s2p-guard-'));
+  const av = choose(g);
+  const snap = () => canonical(g.state.created);
+  for (const field of dedicated) {
+    const before = snap();
+    assert.equal(g.submitProposal({ effects: [{ op: 'fact.set', entity: av, field, value: 5 }] }).code, 'E-EFF-PARAM', field);
+    assert.equal(snap(), before, field);
+  }
+  // 普通维度（名单里没有单项登记的数值维度，取化身已有的一个）照常可写。
+  const plain = Object.keys(g.state.created[av].props).find((k) => !dedicated.includes(k) && typeof g.state.created[av].props[k] === 'number');
+  assert.ok(plain, '前提：化身应有一个普通数值维度');
+  const r = g.submitProposal({ effects: [{ op: 'fact.set', entity: av, field: plain, value: g.state.created[av].props[plain] }] });
+  assert.equal(r.ok, true, JSON.stringify(r));
+  // 夹具：只删 facing 的单项登记（数据），同一提案即照常被接受——判据来自名单，不认维度名。
+  const fx = clone(raw);
+  const facingKey = Object.keys(fx.owners.stateKeys.created.writers).find((k) => k.endsWith('.facing'));
+  delete fx.owners.stateKeys.created.writers[facingKey];
+  const g2 = mountKernel(fx, caps('s2p-guard2-'));
+  const av2 = choose(g2);
+  const ok = g2.submitProposal({ effects: [{ op: 'fact.set', entity: av2, field: 'facing', value: 3 }] });
+  assert.equal(ok.ok, true, JSON.stringify(ok));
+  assert.equal(g2.state.created[av2].props.facing, 3);
+});
