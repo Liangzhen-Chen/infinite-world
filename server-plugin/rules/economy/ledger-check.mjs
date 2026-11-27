@@ -3,7 +3,7 @@
 import { KernelError } from '../../kernel/errors.mjs';
 import { readPath } from '../../kernel/storage.mjs';
 import { ruleValue } from '../load/registry.mjs';
-import { LEDGER, FAM, CAPPED, WINDOW, vocabEntry, resourceRow, allHolders } from './ledger.mjs';
+import { LEDGER, FAM, CAPPED, WINDOW, vocabEntry, resourceRow, codesOf, allHolders } from './ledger.mjs';
 
 // rules.economyLedger 的键与来源去处条目字段（同 ledger.mjs 口径）。
 const BUDGET = 'budget';
@@ -17,7 +17,7 @@ const cmp = (/** @type {string} */ a, /** @type {string} */ b) => (a < b ? -1 : 
 /**
  * 守恒核对（卷六 §4.1 规则 4；A6-1.2）：对每一种资源，全部普通账户余额之和 = 各来源累计之和 − 各去处累计之和（整数相等，不设容差），所有余额非负。
  * 返回违例列表（空即守恒），按资源种类、账户排序，冻结。只读。
- * @param {any} engine @param {any} state
+ * @param {import('./ledger.mjs').LedgerEngine} engine @param {import('./ledger.mjs').LedgerState} state
  * @returns {ReadonlyArray<Readonly<{resource: string, balances: number, net: number} | {account: string, balance: number}>>}
  */
 export function conservationCheck(engine, state) {
@@ -55,7 +55,7 @@ export function conservationCheck(engine, state) {
  * ② budget 每格：资源种类行的 sources ∪ sinks 含该代号（E-LEDGER-CODE-UNREGISTERED）、该代号是限额通道、窗口 activeFromDay ≤ activeToDay 都写了（E-DIM-STRUCT-FIELD）；
  * ③ endowment：凡表头声明了 originDimension（ref 词表）的表，其词表族每个条目的起始钱 moneyField 写了即须为非负整数；为正的，钱种 coinField 须有资源种类行、
  *    sources 含 endowment.source、该来源若是限额通道须有 budget 窗口（不合即 E-DIM-STRUCT-FIELD / E-DIM-REF-MISSING / E-LEDGER-CODE-UNREGISTERED）。
- * @param {any} engine
+ * @param {import('./ledger.mjs').LedgerEngine} engine
  */
 export function checkLedgerTables(engine) {
   const doc = Object(engine.docData);
@@ -66,8 +66,8 @@ export function checkLedgerTables(engine) {
     const row = resourceRow(engine, resource);
     for (const [code, w] of Object.entries(Object(byCode))) {
       const fam = Object.hasOwn(Object(Object(Object(engine.vocab).families)[FAM.src]).entries, code) ? FAM.src : FAM.sink;
-      const set = row[ROW_SETS[fam]];
-      if (!Array.isArray(set) || !set.includes(code)) throw new KernelError('E-LEDGER-CODE-UNREGISTERED', {}, `rules.${LEDGER}.${BUDGET}.${resource}.${code}: not in the resource row's ${ROW_SETS[fam]}`);
+      const set = codesOf(row, ROW_SETS[fam]);
+      if (!set.includes(code)) throw new KernelError('E-LEDGER-CODE-UNREGISTERED', {}, `rules.${LEDGER}.${BUDGET}.${resource}.${code}: not in the resource row's ${ROW_SETS[fam]}`);
       if (vocabEntry(engine, fam, code)[BUDGET_MODE] !== CAPPED) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `rules.${LEDGER}.${BUDGET}.${resource}.${code}: only capped channels carry a budget window`);
       const win = Object(w);
       if (!(Number.isInteger(win[WINDOW.from]) && Number.isInteger(win[WINDOW.to]) && win[WINDOW.from] <= win[WINDOW.to])) {
@@ -96,7 +96,7 @@ export function checkLedgerTables(engine) {
       const coin = ent[e.coinField];
       if (typeof coin !== 'string') throw new KernelError('E-DIM-STRUCT-FIELD', {}, `${family} ${id}: ${e.moneyField} > 0 needs ${e.coinField}`);
       const row = resourceRow(engine, coin);
-      if (!Array.isArray(row[ROW_SETS.src]) || !row[ROW_SETS.src].includes(e.source)) throw new KernelError('E-LEDGER-CODE-UNREGISTERED', {}, `${family} ${id}: ${coin}.${ROW_SETS.src} lacks ${e.source}`);
+      if (!codesOf(row, ROW_SETS.src).includes(e.source)) throw new KernelError('E-LEDGER-CODE-UNREGISTERED', {}, `${family} ${id}: ${coin}.${ROW_SETS.src} lacks ${e.source}`);
       if (srcEntry[BUDGET_MODE] === CAPPED && !Object.hasOwn(Object(budget[coin]), e.source)) {
         throw new KernelError('E-DIM-REF-MISSING', {}, `${family} ${id}: rules.${LEDGER}.${BUDGET}.${coin}.${e.source} window missing`);
       }

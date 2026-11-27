@@ -46,19 +46,26 @@ const UNBUILT = Object.freeze({
 });
 
 /** @typedef {{holder: string, purpose: string, resource: string, key: string}} Account */
-/** @typedef {{account: string, delta: number}} AccountLeg */
-/** @typedef {{source?: string, sink?: string, resource: string, qty: number}} FlowLeg */
+// 装配层 engine 里账本用到的部分（与 rules/body/body-plan.mjs BodyEngine 兼容，headerOf 收它）。
+/** @typedef {{P: Readonly<Record<string, (...args: string[]) => import('../../kernel/types.d.ts').StatePath<string>>>, registry: {tables: Map<string, unknown>, kindIds: Map<string, {idPrefix?: readonly string[], singletonIds?: readonly string[]}>, kindOfLoaded: (id: string) => string | undefined}, docData: Parameters<typeof ruleValue>[0], vocab: unknown, modifierSources: ReadonlyArray<Function>}} LedgerEngine */
+/** 世界状态（只经 readPath / writePath 读写，本文件不看它的形状）。 @typedef {object} LedgerState */
+/** 一个持有人名下的余额表（卷二 §1.5 struct:holderAccounts：用途 → 资源种类 → 资源键 → 余额）。 @typedef {Record<string, Record<string, Record<string, number>>>} HolderBook */
+/** 一个持有人名下被跟踪分区的流出累计（struct:holderOutflow）。 @typedef {Record<string, Record<string, Record<string, {cumulative: number}>>>} HolderOutflow */
+/** 资源种类行或词表条目（字段按名读，值形状由各处判）。 @typedef {Record<string, unknown>} Row */
 
 const isObj = (/** @type {unknown} */ v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const cmp = (/** @type {string} */ a, /** @type {string} */ b) => (a < b ? -1 : a > b ? 1 : 0);
 const isQty = (/** @type {unknown} */ v) => Number.isSafeInteger(v) && Number(v) > 0;
 
-/** rules.economyLedger 的 account 行。 @param {any} engine @returns {{sep: string, lotPrefix: string, holderFlag: string}} */
-const accountRule = (engine) => /** @type {any} */ (ruleValue(engine.docData, LEDGER, RULE.account));
+/** rules.economyLedger 的 account 行（登记声明已核三栏都是串）。 @param {LedgerEngine} engine @returns {{sep: string, lotPrefix: string, holderFlag: string}} */
+function accountRule(engine) {
+  const v = Object(ruleValue(engine.docData, LEDGER, RULE.account));
+  return { sep: String(v.sep), lotPrefix: String(v.lotPrefix), holderFlag: String(v.holderFlag) };
+}
 
 /**
  * 词表条目（只认自有键）；族或条目不在即 E-DIM-REF-MISSING。
- * @param {any} engine @param {string} family @param {unknown} code @returns {Record<string, any>}
+ * @param {LedgerEngine} engine @param {string} family @param {unknown} code @returns {Row}
  */
 export function vocabEntry(engine, family, code) {
   const entries = Object(Object(Object(Object(engine.vocab).families)[family]).entries);
@@ -66,14 +73,20 @@ export function vocabEntry(engine, family, code) {
   return Object(entries[code]);
 }
 
-/** 资源种类行（经公共部件 ruleRow 核）。 @param {any} engine @param {unknown} resource @returns {Record<string, any>} */
+/** 资源种类行里一个代号集合栏（sources、sinks；登记声明已核是串集合）。 @param {Row} row @param {string} field @returns {unknown[]} */
+export function codesOf(row, field) {
+  const v = row[field];
+  return Array.isArray(v) ? v : [];
+}
+
+/** 资源种类行（经公共部件 ruleRow 核）。 @param {LedgerEngine} engine @param {unknown} resource @returns {Row} */
 export function resourceRow(engine, resource) {
   return Object(ruleRow(engine.docData, RESOURCES, String(resource)));
 }
 
 /**
  * 账户串 → 四段（文法 <持有人><sep><用途><sep><资源种类><sep><资源键>，分隔符取 rules.economyLedger.account.sep）；不合即 E-EFF-PARAM。
- * @param {any} engine @param {unknown} text @returns {Account}
+ * @param {LedgerEngine} engine @param {unknown} text @returns {Account}
  */
 export function parseAccount(engine, text) {
   const { sep } = accountRule(engine);
@@ -81,21 +94,22 @@ export function parseAccount(engine, text) {
   if (parts.length !== ACCOUNT_FIELDS.length || parts.some((p) => p.length === 0)) {
     throw new KernelError('E-EFF-PARAM', {}, `account ${JSON.stringify(text)}: want ${ACCOUNT_FIELDS.join(sep)}`);
   }
-  return /** @type {Account} */ (Object.fromEntries(ACCOUNT_FIELDS.map((f, i) => [f, parts[i]])));
+  const [holder, purpose, resource, key] = parts;
+  return { holder, purpose, resource, key };
 }
 
-/** 四段 → 账户串。 @param {any} engine @param {Account} a @returns {string} */
+/** 四段 → 账户串。 @param {LedgerEngine} engine @param {Account} a @returns {string} */
 function accountText(engine, a) {
-  return ACCOUNT_FIELDS.map((f) => a[/** @type {keyof Account} */ (f)]).join(accountRule(engine).sep);
+  return [a.holder, a.purpose, a.resource, a.key].join(accountRule(engine).sep);
 }
 
-/** 持有人名下的余额表（struct:holderAccounts；没有即空）。 @param {any} engine @param {any} state @param {string} holder @returns {Record<string, any>} */
+/** 持有人名下的余额表（struct:holderAccounts；没有即空）。 @param {LedgerEngine} engine @param {LedgerState} state @param {string} holder @returns {HolderBook} */
 function holderAccounts(engine, state, holder) {
   const v = readPath(state, engine.P.accounts(holder));
   return isObj(v) ? v : {};
 }
 
-/** 已开户账户的余额；没开户即 undefined。 @param {any} engine @param {any} state @param {Account} a @returns {number | undefined} */
+/** 已开户账户的余额；没开户即 undefined。 @param {LedgerEngine} engine @param {LedgerState} state @param {Account} a @returns {number | undefined} */
 function balanceOf(engine, state, a) {
   const v = readPathIn(state, engine.P.accounts(a.holder), [a.purpose, a.resource, a.key]);
   return Number.isSafeInteger(v) ? v : undefined;
@@ -104,7 +118,7 @@ function balanceOf(engine, state, a) {
 /**
  * 持有人须是账本主体（卷六 :103 holder、:1642 E-LEDGER-HOLDER-NOT-SUBJECT）：种类在 state-owners keyKinds 的 accounts.* 段之内；
  * 该种类的表声明了主体标记维度（rules.economyLedger.account.holderFlag）的，该行此维度须为真；数据未建即 E-ACT-WRITER-NOT-READY 并写明等哪张卡。
- * @param {any} engine @param {any} state @param {string} holderId
+ * @param {LedgerEngine} engine @param {LedgerState} state @param {string} holderId
  */
 function checkHolder(engine, state, holderId) {
   const kind = kindOfEntity(engine, state, holderId);
@@ -126,7 +140,7 @@ function checkHolder(engine, state, holderId) {
 
 /**
  * 新开一个散货批次键（卷三乙 §2.3：前缀 + 全局递增序号，序号取 ledgerCounters.lotNext，只增不回收；计数器未写过即从 0 起）。
- * @param {any} engine @param {any} state @param {unknown} tx @returns {string}
+ * @param {LedgerEngine} engine @param {LedgerState} state @param {unknown} tx @returns {string}
  */
 function newLotKey(engine, state, tx) {
   const { P } = engine;
@@ -139,7 +153,7 @@ function newLotKey(engine, state, tx) {
 /**
  * kernelApi openAccount（卷六 :291；草案 §4 第 3 行）：给 holderId 开一个零余额账户 (用途 purposeCode, 资源 resourceRef.kind, 键 resourceRef.key)，返回账户串。
  * resourceRef.key 不给即新开一个散货批次键（卷三乙 §2.3）。持有人须是账本主体（checkHolder）；用途须是 purpose 族条目；资源种类须有行；同一账户已开即 E-DIM-ID-DUPLICATE。
- * @param {any} engine @param {any} state @param {string} holderId @param {{kind: string, key?: string}} resourceRef @param {string} purposeCode @param {unknown} tx
+ * @param {LedgerEngine} engine @param {LedgerState} state @param {string} holderId @param {{kind: string, key?: string}} resourceRef @param {string} purposeCode @param {unknown} tx
  * @returns {string}
  */
 export function openAccount(engine, state, holderId, resourceRef, purposeCode, tx) {
@@ -163,11 +177,11 @@ export function openAccount(engine, state, holderId, resourceRef, purposeCode, t
 
 /**
  * 当前世界日（卷六 §4.1 规则 6：日序 = ⌊(时钟 − genesisMinute) ÷ 一日分钟数⌋）。一日分钟数 = budget 窗口字段的单位 si ÷ 时钟路径单位 si（单位表经公共入口 unitSi），须为正整数。
- * @param {any} engine @param {any} state @returns {number}
+ * @param {LedgerEngine} engine @param {LedgerState} state @returns {number}
  */
 function worldDay(engine, state) {
   const doc = Object(engine.docData);
-  const spec = Object(doc.registryRows.find((/** @type {any} */ r) => r.code === LEDGER));
+  const spec = Object(engine.docData.registryRows.find((r) => r.code === LEDGER));
   const dayUnit = Object(Object(Object(Object(Object(spec.type)[RULE.budget]).value).value).fields)[WINDOW.from];
   const clock = parseNumberType(String(Object(Object(doc.owners).pathTypes)[engine.P.clock_minute().pattern]));
   if (!clock || !clock.unit || typeof Object(dayUnit).unit !== 'string') throw new KernelError('E-DIM-UNIT-UNKNOWN', {}, 'ledger: budget window and clock paths must carry units');
@@ -184,7 +198,7 @@ function worldDay(engine, state) {
 /**
  * 限额通道的腿（卷六 §4.1 规则 6）：须有 rules.economyLedger.budget[资源][代号] 窗口行，没有即 E-ACT-WRITER-NOT-READY（边界供货与日终分配未建）；
  * 窗口 limit 非空（要按比例分配）同此拒为 E-LEDGER-CAPPED-DIRECT（分配入口未建）；当日不在 [activeFromDay, activeToDay] 之内即 E-LEDGER-CAPPED-DIRECT。
- * @param {any} engine @param {string} resource @param {string} code @param {number} day
+ * @param {LedgerEngine} engine @param {string} resource @param {string} code @param {number} day
  */
 function checkCapped(engine, resource, code, day) {
   const w = Object(Object(Object(ruleValue(engine.docData, LEDGER, RULE.budget))[resource])[code]);
@@ -196,7 +210,7 @@ function checkCapped(engine, resource, code, day) {
 }
 
 // 转让性（卷六 §2.1 transferable；§4.1 规则 7）：按值查表，表外即 E-DIM-STRUCT-FIELD。持有人多于一个（真有对手）才核。
-/** @type {Record<string, (resource: string, row: Record<string, any>) => void>} */
+/** @type {Record<string, (resource: string, row: Row) => void>} */
 const BY_TRANSFERABLE = {
   tr_free: () => {},
   tr_restricted: (resource, row) => {
@@ -211,7 +225,7 @@ const BY_TRANSFERABLE = {
 /**
  * 腿的规整（按腿序）：账户腿核账户串与已开户、增减量为非零安全整数；来源去处腿核代号在该族、在资源种类行的 sources/sinks 之内（否则 E-LEDGER-CODE-UNREGISTERED）、数量为正。
  * 账户腿、来源去处腿分两张表返回（各保腿序），另给按原腿序的事件载荷。
- * @param {any} engine @param {any} state @param {unknown[]} legs
+ * @param {LedgerEngine} engine @param {LedgerState} state @param {unknown[]} legs
  * @returns {{accounts: Array<{account: Account, text: string, delta: number}>, flows: Array<{field: string, family: string, code: string, resource: string, qty: number, sign: number}>, payload: Array<Record<string, unknown>>}}
  */
 function normalizeLegs(engine, state, legs) {
@@ -235,7 +249,7 @@ function normalizeLegs(engine, state, legs) {
     vocabEntry(engine, f.family, code);
     if (!isQty(l.qty)) throw new KernelError('E-EFF-PARAM', {}, `post: ${f.field} leg qty must be a positive safe integer`);
     const row = resourceRow(engine, l.resource);
-    if (!Array.isArray(row[f.rowSet]) || !row[f.rowSet].includes(code)) throw new KernelError('E-LEDGER-CODE-UNREGISTERED', {}, `post: ${code} is not in ${l.resource}.${f.rowSet}`);
+    if (!codesOf(row, f.rowSet).includes(code)) throw new KernelError('E-LEDGER-CODE-UNREGISTERED', {}, `post: ${code} is not in ${l.resource}.${f.rowSet}`);
     out.flows.push({ field: f.field, family: f.family, code: String(code), resource: String(l.resource), qty: Number(l.qty), sign: f.sign });
     out.payload.push({ [f.field]: String(code), resource: String(l.resource), qty: Number(l.qty) });
   }
@@ -248,7 +262,7 @@ function normalizeLegs(engine, state, legs) {
  * 限额通道窗口（checkCapped）；同一资源种类的账户腿涉及多于一个持有人时按 transferable 核（BY_TRANSFERABLE）；按腿序逐条记账，任一腿使余额为负即 E-LEDGER-NEGATIVE。
  * 写：accounts.<持有人>、trackOutflow 为真的用途分区减量腿记 outflowTotals.<持有人>（规则 13）、来源去处腿记 ledgerTotals 的 cumulative 与当日 usedByDay；
  * 记完经 txEmit 发事件 {verb: reason, payload: {legs, refs}, targets: 账户持有人}，随事务提交进日志簿。
- * @param {any} engine @param {any} state @param {{legs: unknown[], reason: string, refs?: Record<string, unknown>}} entry @param {unknown} tx
+ * @param {LedgerEngine} engine @param {LedgerState} state @param {{legs: unknown[], reason: string, refs?: Record<string, unknown>}} entry @param {unknown} tx
  */
 export function post(engine, state, entry, tx) {
   const { P } = engine;
@@ -260,7 +274,14 @@ export function post(engine, state, entry, tx) {
   const { accounts, flows, payload } = normalizeLegs(engine, state, e.legs);
   /** @type {Map<string, {l: number, f: number, holders: Set<string>}>} */
   const byResource = new Map();
-  const tally = (/** @type {string} */ r) => /** @type {{l: number, f: number, holders: Set<string>}} */ (byResource.get(r) || byResource.set(r, { l: 0, f: 0, holders: new Set() }).get(r));
+  const tally = (/** @type {string} */ r) => {
+    const had = byResource.get(r);
+    if (had !== undefined) return had;
+    /** @type {{l: number, f: number, holders: Set<string>}} */
+    const fresh = { l: 0, f: 0, holders: new Set() };
+    byResource.set(r, fresh);
+    return fresh;
+  };
   for (const leg of accounts) { const t = tally(leg.account.resource); t.l += leg.delta; t.holders.add(leg.account.holder); }
   for (const leg of flows) tally(leg.resource).f += leg.sign * leg.qty;
   for (const [resource, t] of byResource) {
@@ -276,13 +297,14 @@ export function post(engine, state, entry, tx) {
   for (const [resource, t] of byResource) {
     if (t.holders.size <= 1) continue;
     const row = resourceRow(engine, resource);
-    const rule = Object.hasOwn(BY_TRANSFERABLE, row[ROW.transferable]) ? BY_TRANSFERABLE[row[ROW.transferable]] : undefined;
-    if (rule === undefined) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `${resource}: transferable ${JSON.stringify(row[ROW.transferable])} has no rule`);
+    const tr = String(row[ROW.transferable]);
+    const rule = Object.hasOwn(BY_TRANSFERABLE, tr) ? BY_TRANSFERABLE[tr] : undefined;
+    if (rule === undefined) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `${resource}: transferable ${JSON.stringify(tr)} has no rule`);
     rule(resource, row);
   }
-  /** @type {Map<string, Record<string, any>>} */
+  /** @type {Map<string, HolderBook>} */
   const books = new Map();
-  /** @type {Map<string, Record<string, any>>} */
+  /** @type {Map<string, HolderOutflow>} */
   const outflows = new Map();
   for (const leg of accounts) {
     const a = leg.account;
@@ -323,7 +345,7 @@ export function post(engine, state, entry, tx) {
 
 /**
  * kernelApi transfer（卷六 :290，post 的两腿简写）：from 减 qty、to 加 qty，两账户须是同一资源种类 resource。
- * @param {any} engine @param {any} state @param {{from: string, to: string, resource: string, qty: number, reason: string}} t @param {unknown} tx
+ * @param {LedgerEngine} engine @param {LedgerState} state @param {{from: string, to: string, resource: string, qty: number, reason: string}} t @param {unknown} tx
  */
 export function transfer(engine, state, t, tx) {
   const from = parseAccount(engine, t.from);
@@ -336,7 +358,7 @@ export function transfer(engine, state, t, tx) {
 /**
  * transfer 原语的写者（卷九 :629；草案 §3 R0，经 state-owners systems.ledger.primitiveWriter 登记、内核 resolve 回落调用）：
  * 解析期核账户串，事由取 rules.economyLedger.primitiveReason；写入阶段调 transfer。
- * @param {any} engine @param {any} state @param {{from: string, to: string, qty: number}} effect
+ * @param {LedgerEngine} engine @param {LedgerState} state @param {{from: string, to: string, qty: number}} effect
  */
 export function transferWriter(engine, state, effect) {
   const { resource } = parseAccount(engine, effect.from);
@@ -350,7 +372,7 @@ export const TRANSFER_WRITER = registerPrimitiveWriter('rules/economy/ledger.mjs
 
 /**
  * kernelApi balance（卷六 :354）：账户串所指账户的余额；没开户即 E-DIM-REF-MISSING。只读。
- * @param {any} engine @param {any} state @param {string} accountKey @returns {number}
+ * @param {LedgerEngine} engine @param {LedgerState} state @param {string} accountKey @returns {number}
  */
 export function balance(engine, state, accountKey) {
   const v = balanceOf(engine, state, parseAccount(engine, accountKey));
@@ -360,7 +382,7 @@ export function balance(engine, state, accountKey) {
 
 /**
  * kernelApi accountsOf（卷六 :354）：持有人名下全部账户，按账户串排序，冻结。只读。
- * @param {any} engine @param {any} state @param {string} holderId
+ * @param {LedgerEngine} engine @param {LedgerState} state @param {string} holderId
  * @returns {ReadonlyArray<Readonly<{account: string, purpose: string, resource: string, key: string, balance: number}>>}
  */
 export function accountsOf(engine, state, holderId) {
@@ -379,7 +401,7 @@ export function accountsOf(engine, state, holderId) {
 /**
  * 全部账户（守恒核对用，ledger-check.mjs 调）：按登记模式 accounts.* 列出持有人与其余额表。只读。
  * 声明表没登记账本路径（engine.P 无 accounts 成员）即没有任何账户可写（writePath 只认登记路径），返回空。
- * @param {any} engine @param {any} state @returns {ReadonlyArray<{holder: string, book: Record<string, any>}>}
+ * @param {LedgerEngine} engine @param {LedgerState} state @returns {ReadonlyArray<{holder: string, book: HolderBook}>}
  */
 export function allHolders(engine, state) {
   if (!Object.hasOwn(engine.P, 'accounts')) return [];
