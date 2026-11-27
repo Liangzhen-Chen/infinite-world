@@ -93,11 +93,22 @@
   },
   {
    "name": "struct:holding_terms",
-   "source": "卷二 §1.5 :212（占位，字段细目归卷十八）",
+   "source": "卷二 §1.5 :215（勘误 1127h1）；公共键照卷十八 §4.1.1 :461；其余键只在种类行 termsKeys 所列（键表卷十八 §4.1.1）",
    "type": {"struct": {
-    "shares": "number:fraction nullable",
-    "since": "integer:day",
-    "expires": "integer:day nullable"
+    "since": "integer:minute",
+    "until": "integer:minute nullable",
+    "endReason": "Handle<end_reason> nullable",
+    "suspended": "boolean",
+    "consentAct": "EventId nullable",
+    "grantor": "EntityId nullable"
+   }}
+  },
+  {
+   "name": "struct:holderHoldings",
+   "source": "卷二 §1.5 :256（勘误 1127h1：holdings.<持有者> 的值，边 id → struct:holding；卷二 :721）；S2-H 主会话 Q2 甲",
+   "type": {"map": {
+    "key": "EdgeId",
+    "value": "struct:holding"
    }}
   },
   {

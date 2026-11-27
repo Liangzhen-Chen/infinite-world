@@ -87,6 +87,28 @@ test('零 mock 端到端烟测：宿主路由 6 步闭环（存读档经 menu �
     const bal = Object.values(st.accounts[holders[0]][endow.purpose][coin]).reduce((s, v) => s + v, 0);
     assert.equal(bal, ent[endow.moneyField], '化身钱账户余额应等于所选来历出身条目的起始钱');
     assert.equal(st.ledgerTotals[coin][endow.source].cumulative, ent[endow.moneyField], 'ledgerTotals 开局来源累计应等于起始钱');
+    // S2-H（草案 §6）：选来历同一提案开玩家席位边、起始物逐件建实例入账并放置、散货按批次入账；期望值取导出包 doc_data。
+    const rowOf = (code, key) => dd.tableDocs[code].rows.find((r) => r.key === key).value;
+    const seatKind = rowOf('control', 'seatKind');
+    const outfit = rowOf('social', 'outfit');
+    const lotPrefix = rowOf('economyLedger', 'account').instanceLotPrefix;
+    const avatar = holders[0];
+    const edges = Object.values(st.holdings ?? {}).flatMap((book) => Object.values(book));
+    const seats = edges.filter((e) => e.kind === seatKind);
+    assert.equal(seats.length, 1, '应恰有一条玩家席位边');
+    assert.ok(seats[0].holder === avatar && seats[0].subject === avatar, '席位边的持有者与标的都应是化身');
+    const instanced = rowOf('items', 'instancedComponents');
+    const itemRows = dd.dimensionDocs.find((d) => d.kind === 'item').rows;
+    const isInst = (id) => (itemRows[id].classes ?? []).some((c) => instanced.includes(c));
+    const items = ent[outfit.itemsField];
+    const instLots = Object.values(st.accounts[avatar]).flatMap((byRes) => Object.values(byRes).flatMap((byKey) => Object.keys(byKey))).filter((k) => k.startsWith(lotPrefix));
+    assert.equal(instLots.length, items.filter((x) => isInst(x.item)).reduce((s, x) => s + x.n, 0), '逐件起始物件数应等于化身名下实例批次账户数');
+    assert.deepEqual(edges.filter((e) => e.kind !== seatKind).map((e) => e.subject).sort(), instLots.map((k) => k.slice(lotPrefix.length)).sort(), '每件实例应恰有一条放置边');
+    const resources = dd.vocabDoc.families.resource.entries;
+    for (const x of items.filter((y) => !isInst(y.item))) {
+      const res = Object.keys(resources).find((k) => resources[k][outfit.resourceItemField] === x.item);
+      assert.equal(Object.values(st.accounts[avatar][outfit.purpose][res]).reduce((s, v) => s + v, 0), x.n, `散货 ${x.item} 余额应等于 n`);
+    }
     ctx.d1 = pkg.manifest.saveDigest;
     ctx.bytes1 = e1.buf;
     assert.equal(typeof ctx.d1, 'string', '存档清单缺 saveDigest');

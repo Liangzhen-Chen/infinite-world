@@ -10,6 +10,8 @@ const PATH_SEP = '.';
 // id 型参数的明文来源（卷二 :1530）：target 即 targetSelector 选出的目标，ctx.<字段> 即调用方 ctx 里的字段。
 const ID_TARGET = 'target';
 const CTX_ROOT = 'ctx';
+// produced.<k>：本提案第 k 个产物（S2-H 主会话 Q1 甲），输出 {produced: k}，由内核 resolve 换成实际 id（kernel/transaction.mjs bindProduced）。
+const PRODUCED_ROOT = 'produced';
 
 /** 按点分路径写进嵌套对象。 @param obj 目标对象 @param {string} path @param {unknown} value */
 function setPath(obj, path, value) {
@@ -22,9 +24,11 @@ function setPath(obj, path, value) {
   cur[segs[segs.length - 1]] = value;
 }
 
-/** 取 ctx 里点分路径的字串值；缺即 E-EFF-PARAM。 @param {object} ctx @param {string} src @returns {string} */
+/** 取 ctx 里点分路径的字串值；缺即 E-EFF-PARAM。produced.<k> 给产物引用 {produced: k}（k 由加载期核为非负整数）。 @param {object} ctx @param {string} src @returns {string | {produced: number}} */
 function fromCtx(ctx, src) {
   const segs = src.split(PATH_SEP);
+  const [root, k] = segs;
+  if (root === PRODUCED_ROOT) return { [PRODUCED_ROOT]: Number(k) };
   if (segs[0] !== CTX_ROOT) throw new KernelError('E-EFF-PARAM', {}, `idParams source ${src}`);
   let cur = ctx;
   for (const s of segs.slice(1)) cur = cur !== null && typeof cur === 'object' && Object.hasOwn(cur, s) ? cur[s] : undefined;

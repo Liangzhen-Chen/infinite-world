@@ -15,6 +15,87 @@
     "orgkind_village": {"domestic": false, "descentGroup": false}
    },
    "basis": "卷十八 §2.3 :239（rules.social.orgTraits：orgkind 族每条条目有同键一行，两项行上必写，E-KIN-ORG-TRAITS :300）；本卷登记的九种组织种类取值照卷八 :1414 orgTraitsRows（两项皆假）。卷十八自己的家户（:170 domestic 真，李白 11-24 H-1 开局持有卡随 orgkind_household 条目同批补行）、世系（:171）与卷七的教团、修会两对条目随它们自己的 orgkind 条目登记那一卡补行（同键规则：条目与行同批进）"
+  },
+  {
+   "key": "endKinds",
+   "value": {
+    "agent": [
+     "person"
+    ],
+    "collective": [
+     "org"
+    ],
+    "place": [
+     "place"
+    ],
+    "thing": [
+     "item"
+    ]
+   },
+   "source": "卷十八 §4.1.1 :455（端类型：实体模板名或目录行实体表名；写入时持有写者核两端类型落在种类行 from、to 之内，E-HK-END-TYPE）",
+   "grade": "designed",
+   "basis": "S2-H 主会话 Q3 甲：端类型 → 实体表映射放数据。agent 取个体表 person、thing 取物品表 item、collective 取组织表 org、place 取地点表 place（卷一 §4.1 八个存储概念与卷二 §2.1 入口清单的对应，卷文未给成表，【未找到】逐项出处，按名对应）；其余端类型（office、business、instrument、interim、population 等）所指实体表未建，不列：种类行里只出现未映射端类型的一端，开边即拒 E-ACT-WRITER-NOT-READY，写明等对应实体表卡"
+  },
+  {
+   "key": "edgePrefix",
+   "value": "edge_",
+   "source": "卷二 :721（holdings.*.* → struct:holding，边按持有者分组存）；卷十八 R18-1.11 :528 EdgeId",
+   "grade": "designed",
+   "basis": "边 id = 本前缀 + holdingCounters.edgeNext（全局递增、只增不回收，同账本 lotNext；S2-H 主会话 Q2 甲）。前缀取 edge_，卷文未给（【未找到】），设计值"
+  },
+  {
+   "key": "events",
+   "value": {
+    "verb": "verb_holding_changed",
+    "domicileVerb": "verb_domicile_changed",
+    "change": {
+     "established": "established",
+     "ended": "ended",
+     "transferred": "transferred"
+    }
+   },
+   "source": "卷十八 R18-1.11 :528（持有变化事件 verb_holding_changed，change 取封闭枚举 holding_change 三值 :1547）；R18-1.10 :526（domicile 为真的边另发 verb_domicile_changed）",
+   "grade": "designed",
+   "basis": "两个动词已在 _vocab verb 族（verb_holding_changed、verb_domicile_changed），state-owners kernel.emits 已列；holding_change 三值照卷十八 :1547 原文。kernel/handles.mjs CODE_ENUMS 在门禁闭包内不改，三值放本行"
+  },
+  {
+   "key": "primitiveOps",
+   "value": {
+    "holding.close": "close",
+    "holding.open": "open",
+    "holding.transfer": "transfer"
+   },
+   "source": "卷九 :630–:633（holding.open、close、transfer 原语；参数照 world/ontology/primitives.json）",
+   "grade": "designed",
+   "basis": "原语 op → 持有写者写入口（open、close、transfer 三入口，rules/social/holdings.mjs 按值查表分派，代码不按 op 名分支）。holding.rescale 不登记写者，提交照旧 E-EFF-PRIMITIVE（份额边归股份卡）"
+  },
+  {
+   "key": "outfit",
+   "value": {
+    "originDimension": "origin",
+    "itemsField": "startingItems",
+    "resourceItemField": "item",
+    "purpose": "purpose_general",
+    "source": "src_genesis",
+    "reason": "verb_grant",
+    "idInfix": "kit_",
+    "containerClass": "comp_container",
+    "placement": [
+     {
+      "whenClass": "comp_wearable",
+      "holdingKind": "hk_wearing",
+      "holder": "self"
+     },
+     {
+      "whenClass": null,
+      "holdingKind": "hk_containing",
+      "holder": "worn_container"
+     }
+    ]
+   },
+   "source": "卷四 G-5（出身给予经账本与持有写者）；卷三乙 I-2 :917（挂 rules.items.instancedComponents 所列组件类的物品逐件建实例，其余为散货）；卷六 :104（实例批次键）；卷十八 R18-1.1 hk_wearing、hk_containing 种类行",
+   "grade": "designed",
+   "basis": "S2-H 草案 §4：新个体出身维度所指出身条目的 itemsField 逐条起始物；逐件物建实例（id = 物品表首前缀 + idInfix + 个体 id 去前缀 + _ + 序号）、按实例批次入账 1 件、按 placement 有序表开放置边：holder self 即本人，worn_container 即本人已经开边持有、物品行挂 containerClass 的第一件实例（按实例 id 序）；散货按新批次入账 n 件。资源行按 resource 族条目的 resourceItemField 反查。来源、用途、事由同开局随身钱（rules.economyLedger.endowment）。idInfix 取 kit_，设计值"
   }
  ]
 }

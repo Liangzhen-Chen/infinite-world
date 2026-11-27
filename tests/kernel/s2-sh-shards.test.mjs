@@ -144,7 +144,21 @@ test('真实 init：dataPacksDigest 与 owners 换成主文件加全部分片合
   assert.deepEqual(engine.instantiators, union('instantiators'));
   assert.deepEqual(engine.advanceHooks, union('advanceHooks'));
   assert.ok(union('terminationCleanups').includes(SETTLE_BODY_CLEANUP) && union('terminationTriggers').includes(DIE_BY_DESTROY_TRIGGER) && union('instantiators').includes(PERSON_INSTANTIATOR));
-  assert.deepEqual([...engine.primitiveWriters.values()], union('primitiveWriters').map((e) => e.handler));
+  // 原语写者（S2-H 主会话裁定【4】：一个登记项可管多个 op，不再假定「一项一 op、系统名序 = 域序」）：
+  // 装配结果每个 op 恰一个写者（Map 键不重），op 集合与装配次序 = 合并后 owners 的 systems.*.primitiveWriter 声明（系统名序、声明内 ops 序），
+  // 每个 op 的函数 = 各域 manifest 收齐的登记项里 handlerRef 与声明 handler 相同的那一项；每个登记项恰被一处声明用到。
+  const writerEntries = union('primitiveWriters');
+  const systems = /** @type {Record<string, {primitiveWriter?: {ops: string[], handler: string}}>} */ (Object(owners).systems);
+  const declared = Object.keys(systems).sort().flatMap((name) => {
+    const w = systems[name].primitiveWriter;
+    if (w === undefined) return [];
+    const hits = writerEntries.filter((e) => e.handlerRef === w.handler);
+    assert.equal(hits.length, 1, `systems.${name}.primitiveWriter ${w.handler}: want exactly one manifest entry`);
+    return w.ops.map((op) => [op, hits[0].handler]);
+  });
+  assert.equal(new Set(declared.map(([op]) => op)).size, declared.length, 'each op declared once');
+  assert.deepEqual([...engine.primitiveWriters.entries()], declared);
+  assert.deepEqual(writerEntries.map((e) => e.handlerRef).sort(), Object.values(systems).flatMap((s) => (s.primitiveWriter === undefined ? [] : [s.primitiveWriter.handler])).sort());
 });
 
 test('domains.mjs 只用静态 import（不含动态 import(）', () => {

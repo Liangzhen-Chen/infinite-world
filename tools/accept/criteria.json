@@ -9722,7 +9722,7 @@
    }
   },
   {
-   "criterion": "服务端组里读状态顶层键 holdings 的成员链，除 fileSets.holdingsReaders 登记的文件（kernel/holdings.mjs 持有写者、kernel/save.mjs 与 kernel/load/save.mjs 存档序列化、kernel/load/state-owners.mjs 声明表读取）之外计一处（乙 5）。现有违例进基线，持有模块自身的读点不进基线。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "criterion": "服务端组里读状态顶层键 holdings 的成员链，除 fileSets.holdingsReaders 登记的文件（rules/social/holdings.mjs 持有写者、kernel/save.mjs 与 kernel/load/save.mjs 存档序列化、kernel/load/state-owners.mjs 声明表读取）之外计一处（乙 5）。现有违例进基线，持有模块自身的读点不进基线。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
    "log": [
     {
      "ref": "C0 续做：新登类别 pp_holdings_read（持有状态只经持有模块（乙 5））；path_access 新增 pattern/dupExport/readerSet 能力，现违例 6 条",
@@ -9827,10 +9827,14 @@
     {
      "ref": "S2-L（主会话裁定【1】甲）：tools/accept/lib/js-state.mjs#declPaths 认 stateKeys.<键>.writers 的空串键 '' 为该键整键（模式即键本身）——整键状态（卷二:252 ledgerTotals）此前无法登记写者；只补这一种写法、仍须显式登记，不是放宽。该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；不登整键写者时判定口径不变",
      "rev": 26
+    },
+    {
+     "ref": "S2-H（主会话裁定【1】甲）：持有写者按 R2 落 rules/social（卷二 kernelApi 勘误），旧路径文件不存在，同 S1-3c 旧树路径改指先例：fileSets.holdingsReaders 的 server-plugin/kernel/holdings.mjs 替换为 server-plugin/rules/social/holdings.mjs，豁免文件数不增、不加通配，判定口径不放宽；同步把 must_pass 夹具 pp_holdings_read-11 的 @file 改到该文件",
+     "rev": 27
     }
    ],
    "print": "9df0fde55354651edb6a2f80381c09195c08f3e0ac0c7e7aae52a0727f74d6f9",
-   "rev": 26,
+   "rev": 27,
    "scanClass": "pp_holdings_read",
    "source": "公共部件审查乙 5；卷十八:200（持有写者）；卷二 §2.6；读者按文件豁免（fileSets.holdingsReaders，每行带依据）",
    "terms": {

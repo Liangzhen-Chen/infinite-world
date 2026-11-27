@@ -1088,7 +1088,7 @@
     "holdingsReaders": [
      {
       "basis": "卷十八:200 持有写者（持有边只由持有写者读写）；卷二 §2.6",
-      "file": "server-plugin/kernel/holdings.mjs"
+      "file": "server-plugin/rules/social/holdings.mjs"
      },
      {
       "basis": "卷二 §2.6 存档序列化读整份状态",

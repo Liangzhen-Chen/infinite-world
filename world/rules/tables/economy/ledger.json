@@ -16,10 +16,10 @@
   },
   {
    "key": "account",
-   "value": {"sep": "/", "lotPrefix": "lot_", "holderFlag": "ledgerHolder"},
+   "value": {"sep": "/", "lotPrefix": "lot_", "instanceLotPrefix": "lot_i_", "holderFlag": "ledgerHolder"},
    "source": "卷六 §2.1 :103–:104（账户 holder、resource{kind, key}、purpose）；卷三乙 §2.3（散货批次键 lot_＋全局递增序号）；卷六 :1642 E-LEDGER-HOLDER-NOT-SUBJECT 与卷二 §5.6 ledgerHolder 标记",
    "grade": "designed",
-   "basis": "原语目录 account 参数是串（kernel/transaction.mjs PARAM_TYPES account: string），账户串文法 <持有人><sep><用途><sep><资源种类><sep><资源键>（S2-L 主会话 Q5 甲）；sep 取 /（代号文法 ^[a-z][a-z0-9_]* 不含它）；散货批次键前缀 lot_ 照卷三乙 §2.3（S2-L 主会话 Q4 甲）；holderFlag 是持有人主体标记维度名：持有人所在表声明了这一维度的（现只 place），该行此维度须为真才可开户（卷六 :103、:1642），未声明的表（person、org）按种类即主体；持有人种类取 state-owners keyKinds 的 accounts.* 段"
+   "basis": "原语目录 account 参数是串（kernel/transaction.mjs PARAM_TYPES account: string），账户串文法 <持有人><sep><用途><sep><资源种类><sep><资源键>（S2-L 主会话 Q5 甲）；sep 取 /（代号文法 ^[a-z][a-z0-9_]* 不含它）；散货批次键前缀 lot_ 照卷三乙 §2.3（S2-L 主会话 Q4 甲）；holderFlag 是持有人主体标记维度名：持有人所在表声明了这一维度的（现只 place），该行此维度须为真才可开户（卷六 :103、:1642），未声明的表（person、org）按种类即主体；持有人种类取 state-owners keyKinds 的 accounts.* 段；instanceLotPrefix 是逐件实例的批次键前缀，键 = 前缀 + 实例 id，余额恒 1 件（卷六 :104 实例批次键；S2-H 主会话 Q11 甲），取 lot_i_ 与散货 lot_<序号> 不相撞"
   },
   {
    "key": "budget",
@@ -38,11 +38,19 @@
     },
     "res_coin_wrap": {
      "src_genesis": {"activeFromDay": 0, "activeToDay": 0, "limit": null}
-    }
+    },
+    "res_ash_walking_stick": {"src_genesis": {"activeFromDay": 0, "activeToDay": 0, "limit": null}},
+    "res_bag": {"src_genesis": {"activeFromDay": 0, "activeToDay": 0, "limit": null}},
+    "res_canvas_satchel": {"src_genesis": {"activeFromDay": 0, "activeToDay": 0, "limit": null}},
+    "res_clothes": {"src_genesis": {"activeFromDay": 0, "activeToDay": 0, "limit": null}},
+    "res_parchment": {"src_genesis": {"activeFromDay": 0, "activeToDay": 0, "limit": null}},
+    "res_quill_set": {"src_genesis": {"activeFromDay": 0, "activeToDay": 0, "limit": null}},
+    "res_ration": {"src_genesis": {"activeFromDay": 0, "activeToDay": 0, "limit": null}},
+    "res_whittling_knife": {"src_genesis": {"activeFromDay": 0, "activeToDay": 0, "limit": null}}
    },
    "source": "卷六 §2.5 :224（budget）；§4.22.1 :1239、§4.22 规则 3 :1260（src_genesis 只在第 0 日）；生效日窗口 activeFromDay/activeToDay 照李白 11-18 02:20 K3-40 裁定（卷六勘误另卡）",
    "grade": "designed",
-   "basis": "只登限额通道 src_genesis（§4.22 规则 2 :1259 限额通道只 src_genesis、src_boundary；边界供货限额不在本表，§4.1 规则 6 :376）；窗口 [0,0] 即第 0 日之后不可用；窗口内 limit 空 = 不限（:224），第 0 日开局量全书无数，待整体经济验收标定。三种钱 res_coin_civic、res_coin_coast、res_coin_wrap 的 src_genesis 窗口 [0,0]（S2-L 主会话 Q9 甲：开局随身钱经账本入账，资源行 sources 已含 src_genesis；不设隐式缺省窗口，R10-12.5）"
+   "basis": "只登限额通道 src_genesis（§4.22 规则 2 :1259 限额通道只 src_genesis、src_boundary；边界供货限额不在本表，§4.1 规则 6 :376）；窗口 [0,0] 即第 0 日之后不可用；窗口内 limit 空 = 不限（:224），第 0 日开局量全书无数，待整体经济验收标定。三种钱 res_coin_civic、res_coin_coast、res_coin_wrap 的 src_genesis 窗口 [0,0]（S2-L 主会话 Q9 甲：开局随身钱经账本入账，资源行 sources 已含 src_genesis；不设隐式缺省窗口，R10-12.5）；S2-H：来历起始物八种资源（res_ash_walking_stick、res_bag、res_canvas_satchel、res_clothes、res_parchment、res_quill_set、res_ration、res_whittling_knife）的 src_genesis 窗口同 [0,0]、limit 空（同 S2-L Q9 甲，开局给物只在第 0 日）"
   },
   {
    "key": "alert",

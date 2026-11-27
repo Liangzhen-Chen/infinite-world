@@ -170,10 +170,17 @@
    "origin": "bld_hw_mill"
   },
   "item_bag": {
-   "basis": "旧 world/meta/items.json：旧 id item_bag；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
-   "classes": [],
+   "basis": "旧 world/meta/items.json：旧 id item_bag；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）；S2-H 主会话 Q4 甲：挂 comp_container 与 comp_wearable（背在身上的容器，同卷三乙 §4.4.5 例 3 item_pack_pannier 写法），能装小件起始物；volumeCapacity 10 L、maxLoadKg 8 kg 为设计值（无出处，待试玩标定），sealed 假、holdsLiquid 假；容积限重核对归卷三乙容器卡，本卡只写「能放进」的持有边",
+   "classes": [
+    "comp_container",
+    "comp_wearable"
+   ],
+   "holdsLiquid": false,
    "massKg": 0.5,
-   "origin": "bld_hw_weaving"
+   "maxLoadKg": 8,
+   "origin": "bld_hw_weaving",
+   "sealed": false,
+   "volumeCapacity": 10
   },
   "item_bamboo_fishing_rod": {
    "basis": "旧 world/meta/items.json：旧 id item_bamboo_fishing_rod；massKg 取旧 weight（单件，kg）；wearPerUse 取 mat_bamboo 耐磨 22 ÷ 旧 durability 100（旧 durability 是可用次数；卷三乙 D-1：可用次数 = 耐磨 ÷ wearPerUse；设定数待调，没有真实使用年限出处）；material 取 mat_bamboo（单组主体、份额 1；旧数据无成分，basis_kind migrated-from-tags，来源 docs/审查/6-22-材料候选清单.md）；bulkForm bform_block（按材料与物品形制核定，设计值待调）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
@@ -1375,10 +1382,17 @@
    "origin": "loc_bs"
   },
   "item_canvas_satchel": {
-   "basis": "旧 world/meta/items.json：旧 id item_canvas_satchel；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",
-   "classes": [],
+   "basis": "旧 world/meta/items.json：旧 id item_canvas_satchel；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）；S2-H 主会话 Q4 甲：挂 comp_container 与 comp_wearable（背在身上的容器，同卷三乙 §4.4.5 例 3 item_pack_pannier 写法），能装小件起始物；volumeCapacity 6 L、maxLoadKg 5 kg 为设计值（无出处，待试玩标定），sealed 假、holdsLiquid 假；容积限重核对归卷三乙容器卡，本卡只写「能放进」的持有边",
+   "classes": [
+    "comp_container",
+    "comp_wearable"
+   ],
+   "holdsLiquid": false,
    "massKg": 0.48,
-   "origin": "bld_hw_weaving"
+   "maxLoadKg": 5,
+   "origin": "bld_hw_weaving",
+   "sealed": false,
+   "volumeCapacity": 6
   },
   "item_caraway_oat_crust": {
    "basis": "旧 world/meta/items.json：旧 id item_caraway_oat_crust；massKg 取旧 weight（单件，kg）；basePrice 不进 valueBase（M3b-27，旧价留在旧文件作标定参考）",

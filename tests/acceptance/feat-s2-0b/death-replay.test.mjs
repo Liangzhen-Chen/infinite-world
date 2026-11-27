@@ -57,8 +57,9 @@ function createIndividual(/** @type {any} */ env) {
   const before = new Set(Object.keys(env.state.created ?? {}));
   const r = env.submitProposal({ effects: [{ op: 'create', kind: PERSON_DOC.kind, template: PERSON_TEMPLATE_ID, facts: { species: SAPIENT_SPECIES_ID } }] });
   assert.equal(r.ok, true, `create 应成功：${JSON.stringify(r)}`);
-  const added = Object.keys(env.state.created ?? {}).filter((id) => !before.has(id));
-  assert.equal(added.length, 1, 'create 应恰好新增一个实体');
+  // Q5 甲（S2-H 起始物实例进 created）：只数 person，其余断言不变。
+  const added = Object.keys(env.state.created ?? {}).filter((id) => !before.has(id) && env.state.created[id].kind === 'person');
+  assert.equal(added.length, 1, 'create 应恰好新增一个 person');
   return added[0];
 }
 
