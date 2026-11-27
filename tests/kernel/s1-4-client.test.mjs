@@ -76,6 +76,39 @@ test('mountClient：穿越、编码绕过、反斜杠、绝对路径、白名单
   assert.equal(hit('/other/app.mjs').status, 'unmatched');
 });
 
+test('真实 init 装配的读能力：请求路径中段是文件（Linux 上读盘 ENOTDIR）回 notFound，宿主不崩，之后 view 仍 ok', async () => {
+  const root = testTempRoot('s14-enotdir-');
+  try {
+    /** @type {Array<{path: RegExp, fn: Function}>} */
+    const gets = [];
+    /** @type {Map<string, Function>} */
+    const posts = new Map();
+    await init({ get: (/** @type {RegExp} */ path, /** @type {Function} */ fn) => { gets.push({ path, fn }); }, post: (/** @type {string} */ path, /** @type {Function} */ fn) => { posts.set(path, fn); } }, { saveRoot: root });
+    /** @param {string} url */
+    const get = (url) => {
+      const out = { status: 200, body: /** @type {unknown} */ (null) };
+      const res = { status(/** @type {number} */ c) { out.status = c; return res; }, set() { return res; }, send(/** @type {unknown} */ b) { out.body = b; } };
+      const g = gets.find((x) => x.path.test(url));
+      assert.ok(g, url);
+      g.fn({ url }, res);
+      return out;
+    };
+    const dirRoot = ROUTE.roots.find((/** @type {any} */ r) => typeof r.dir === 'string');
+    const file = `${base}${dirRoot.url}app.mjs`;
+    assert.equal(get(file).status, 200, 'the real file is served');
+    assert.equal(get(`${file}/x.mjs`).status, ROUTE.notFound);
+    const viewed = await new Promise((resolve) => {
+      const res = { set() { return res; }, send(/** @type {string} */ b) { resolve(JSON.parse(b)); } };
+      const menu = [...posts.entries()].find(([p]) => p.endsWith('/menu'));
+      assert.ok(menu, 'menu route mounted');
+      menu[1]({ body: { payload: 'ui', command: 'view' } }, res);
+    });
+    assert.equal(/** @type {any} */ (viewed).result, 'ok');
+  } finally {
+    removeTempRoot(root);
+  }
+});
+
 test('menuOf 的 self：无化身为 null；有化身时账户与持有取自公共读入口，template 一律 null', async () => {
   const root = testTempRoot('s14-self-');
   try {

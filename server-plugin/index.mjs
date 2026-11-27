@@ -82,13 +82,18 @@ function readClientRoute() {
 
 /**
  * 静态路由的读能力（S1-4 主会话补问甲：读盘只在装配层）：仓库相对路径 → 字节；只读不判白名单（白名单映射在 client-route.mjs），
- * 路径解析到仓库之外或不是已有文件回 null。
+ * 路径解析到仓库之外、不是已有文件或读盘出错回 null。
  * @param {string} relPath @returns {Uint8Array | null}
  */
 function readRepoFile(relPath) {
   const url = new URL(relPath, REPO);
-  if (!url.href.startsWith(REPO.href) || statSync(url, { throwIfNoEntry: false })?.isFile() !== true) return null;
-  return readFileSync(url);
+  if (!url.href.startsWith(REPO.href)) return null;
+  // 读盘两步任一出错（不存在、路径中段是文件的 ENOTDIR、权限等）都按「没有这个文件」回 null，不让静态请求打崩宿主（S1-4 审卡第一轮必须改 1）。
+  try {
+    return statSync(url).isFile() ? readFileSync(url) : null;
+  } catch {
+    return null;
+  }
 }
 
 /** 目录下全部 .mjs 的 URL（递归，按名字排序只为确定性）。 @param {URL} dir @returns {URL[]} */
