@@ -103,13 +103,32 @@ test('9a. 扫描：规则层代码不出现物种 id、文化 id 的字面量（
 
 // 写入形状：setEntityProp(...) 的同一行带 adultMassKg 字面量，或对 props.adultMassKg 赋值（非比较）。读者（如 rules/body/body.mjs 的 dim 读）不命中。
 const WRITE_LINE = /setEntityProp\([^)\n]*adultMassKg|props\.adultMassKg\s*=[^=]|props\[\s*['"]adultMassKg['"]\s*\]\s*=[^=]/;
-test('9b. 扫描：adultMassKg 的写者只有 instantiatePerson（写入语句只出现在 rules/body/person.mjs）', () => {
-  const writers = ALL_SERVER_FILES
+// 数据驱动写者（卷四:220；派卡 9b 结构式改法）：维度名由 rules.person.sampleFrom 的 target 决定，源码不出现 adultMassKg 字面量，
+// 故 9b 改为三条同时断言：(a) 字面量写入语句只允许出现在 instantiatePerson 文件之外的零处；(b) 数据表里确有 target 为 adultMassKg 的行；
+// (c) 读 sampleFrom 键并调 setEntityProp 的文件恰好是 instantiatePerson 所在文件，且它导出 instantiatePerson。
+const WRITER_FILE = 'rules/body/person.mjs';
+test('9b. 扫描：adultMassKg 的写者只有 instantiatePerson（结构式：字面量写入为零；sampleFrom 数据行存在；读 sampleFrom 且写实体属性的文件唯一）', () => {
+  // (a)
+  const literalWriters = ALL_SERVER_FILES
+    .filter(([p]) => p.split('\\').join('/') !== WRITER_FILE)
     .filter(([, text]) => text.split('\n').some((line) => WRITE_LINE.test(line)))
     .map(([p]) => p.split('\\').join('/'));
-  assert.deepEqual(writers, ['rules/body/person.mjs'], `adultMassKg 的写入语句只应在 rules/body/person.mjs，实为 ${JSON.stringify(writers)}`);
-  const src = readFileSync(join(SERVER, 'rules/body/person.mjs'), 'utf8');
-  assert.match(src, /export function instantiatePerson\b/, 'rules/body/person.mjs 应导出 instantiatePerson');
+  assert.deepEqual(literalWriters, [], `除 ${WRITER_FILE} 外不应有 adultMassKg 的写入语句，实为 ${JSON.stringify(literalWriters)}`);
+
+  // (b) 按 registry 找 person 表（路径不写死）
+  const reg = loadJson(join(WORLD, 'rules/registry.json')).rows.find((r) => r.code === 'person');
+  assert.ok(reg, 'world/rules/registry.json 应登记 person 表');
+  const sampleFrom = loadJson(join(WORLD, 'rules', reg.file)).rows.find((r) => r.key === 'sampleFrom');
+  assert.ok(sampleFrom, 'person 表应有 sampleFrom 行');
+  assert.ok(sampleFrom.value.some((row) => row.target === 'adultMassKg'), 'sampleFrom 应有 target 为 adultMassKg 的行');
+
+  // (c)
+  const readers = ALL_SERVER_FILES
+    .filter(([, text]) => /['"`]sampleFrom['"`]/.test(text) && /setEntityProp\(/.test(text))
+    .map(([p]) => p.split('\\').join('/'));
+  assert.deepEqual(readers, [WRITER_FILE], `读 sampleFrom 且调 setEntityProp 的文件应恰为 ${WRITER_FILE}，实为 ${JSON.stringify(readers)}`);
+  const src = readFileSync(join(SERVER, WRITER_FILE), 'utf8');
+  assert.match(src, /export function instantiatePerson\b/, `${WRITER_FILE} 应导出 instantiatePerson`);
 });
 
 // ---------- 第 10 条 ----------
