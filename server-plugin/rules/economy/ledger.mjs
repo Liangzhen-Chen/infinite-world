@@ -5,7 +5,7 @@
 // rules.economyLedger 的 budget（限额通道窗口）、account（账户串文法、批次键前缀、持有人主体标记）、primitiveReason；不认任何资源、持有人或来历 id。
 // 换账本实现只改 rules/economy/*。
 import { KernelError } from '../../kernel/errors.mjs';
-import { GRAMMAR_TOKENS } from '../../kernel/handles.mjs';
+import { GRAMMAR_TOKENS, T } from '../../kernel/handles.mjs';
 import { readPath, readPathIn, writePath, matchPaths, kindOfEntity } from '../../kernel/storage.mjs';
 import { txEmit } from '../../kernel/transaction.mjs';
 import { clockMinute } from '../../kernel/scheduler.mjs';
@@ -15,17 +15,20 @@ import { parseNumberType } from '../../kernel/validate/types.mjs';
 import { ruleValue, ruleRow, unitSi } from '../load/registry.mjs';
 import { headerOf } from '../body/body-plan.mjs';
 import { registerPrimitiveWriter } from '../load/primitive-writers.mjs';
+import { registerTerminationCleanup } from '../lifecycle/terminate.mjs';
 
 // 规则表登记代号（world/rules/registry.json）与 rules.economyLedger 的键。
 export const LEDGER = 'economyLedger';
 const RESOURCES = 'economyResources';
-const RULE = Object.freeze({ account: 'account', budget: 'budget', primitiveReason: 'primitiveReason' });
+const RULE = Object.freeze({ account: 'account', budget: 'budget', primitiveReason: 'primitiveReason', terminateReason: 'terminateReason' });
+// 终止协议规则表（world/rules/tables/terminate.json）里登记未建取值的键（卷二 §2.6；rules.terminate.unbuilt {onTerminate: [...], card}）。
+const TERMINATE = Object.freeze({ table: 'terminate', unbuilt: 'unbuilt' });
 // 词表族（卷六 §2.1–§2.2、§4.22.1）。
 export const FAM = Object.freeze({ src: 'src', sink: 'sink', purpose: 'purpose', verb: 'verb', resource: 'resource' });
 // 来源去处条目与用途条目的字段（卷六 §4.22.1 budgetMode、pairedWith；§2.2 trackOutflow）。
 const ENTRY = Object.freeze({ budgetMode: 'budgetMode', pairedWith: 'pairedWith', trackOutflow: 'trackOutflow' });
 // 资源种类行的字段（卷六 §2.1）。
-const ROW = Object.freeze({ transferable: 'transferable', counterpartRX: 'counterpartRX' });
+const ROW = Object.freeze({ transferable: 'transferable', counterpartRX: 'counterpartRX', onTerminate: 'onTerminate', salvageFraction: 'salvageFraction' });
 // 限额通道（卷六 §4.1 规则 6；budget_mode 族封闭两值，只有限额通道要核窗口）。
 export const CAPPED = 'bm_capped';
 // budget 窗口的字段（卷六 §2.5 :224；生效日窗口照李白 11-18 02:20 K3-40）。
@@ -43,6 +46,7 @@ const UNBUILT = Object.freeze({
   holderFlag: '地点 ledgerHolder 数据卡（_unbuilt-derived.json place.ledgerHolder，排在 S2-0c1 之前）',
   noWindow: '边界供货与日终分配结算卡（卷六 §4.6 规则 8、§4.1 规则 6 settleCappedAllocation）',
   counterpart: 'counterpartRX 求值卡（卷六 :117 读双方实体类别代号与持有边，持有边归 S2-H）',
+  noSuccessor: '卷十八家户卡（inherit / liquidate 的后继与残骸落位，S2-0c1 主会话 Q4）',
 });
 
 /** @typedef {{holder: string, purpose: string, resource: string, key: string}} Account */
@@ -407,3 +411,58 @@ export function allHolders(engine, state) {
   if (!Object.hasOwn(engine.P, 'accounts')) return [];
   return matchPaths(engine, state, engine.P.accounts(GRAMMAR_TOKENS.wildcard).pattern, {}).map((m) => ({ holder: m.keys[0], book: Object(m.value) }));
 }
+
+/**
+ * rules.terminate.unbuilt 里登记为未建的 onTerminate 取值：拒收并写明等哪张卡（同 terminate.mjs 的未建数据门）。
+ * @param {LedgerEngine} engine @param {string} what @returns {KernelError}
+ */
+function terminateNotReady(engine, what) {
+  const u = Object(ruleValue(engine.docData, TERMINATE.table, TERMINATE.unbuilt));
+  return new KernelError('E-ACT-WRITER-NOT-READY', {}, `${what}: not built yet, wait for ${String(u.card)}`);
+}
+
+// 资源种类行 onTerminate 的取值 → 余额去处的持有人（卷二 :556 第 3 步：successor 转给后继，remains 留在残骸上）。
+// sink（转入登记的汇）在 rules.terminate.unbuilt 登记为未建；表外取值即 E-DIM-STRUCT-FIELD。
+/** @type {Record<string, (engine: LedgerEngine, resource: string, row: Row, info: {mode: string, successorId: string | null}) => string>} */
+const BY_ON_TERMINATE = {
+  successor: (engine, resource, row, info) => {
+    if (info.successorId === null) throw new KernelError('E-ACT-WRITER-NOT-READY', {}, `${resource}: mode ${info.mode} has no successor, wait for ${UNBUILT.noSuccessor}`);
+    return info.successorId;
+  },
+  // 留在残骸上（卷二 :556）：只有 wreck 模式有残骸（即后继）；salvageFraction 以外的部分入登记的汇（卷六 :119），汇未建，比例不是 1 即同 sink 拒。
+  remains: (engine, resource, row, info) => {
+    if (info.mode !== T.code_enum.successor_mode.wreck || info.successorId === null) throw new KernelError('E-ACT-WRITER-NOT-READY', {}, `${resource}: remains needs a wreck, mode ${info.mode}, wait for ${UNBUILT.noSuccessor}`);
+    if (row[ROW.salvageFraction] !== 1) throw terminateNotReady(engine, `${resource}: salvageFraction ${JSON.stringify(row[ROW.salvageFraction])} sends the rest to a sink`);
+    return info.successorId;
+  },
+};
+
+/**
+ * 终止清理：账户分流（卷二 §2.6 :556 第 3 步、:561 handler(engine, state, {id, cause, mode, successorId}, tx)；state-owners systems.ledgerTerminate.terminationCleanup）。
+ * 被终止实体名下每个非零账户，按资源种类行 onTerminate 查 BY_ON_TERMINATE 得去处持有人，转进它名下同用途、同资源种类、同资源键的账户（没开即 openAccount，过 checkHolder）；
+ * 全部腿合成一笔 post（全程守恒，事由 rules.economyLedger.terminateReason）。写完核本域残留：名下仍有非零余额即 E-TERM-RESIDUE（卷二 :558）。
+ * @param {LedgerEngine} engine @param {LedgerState} state @param {{id: string, cause: string, mode: string, successorId: string | null}} info @param {unknown} tx
+ */
+export function settleAccountsOnTerminate(engine, state, info, tx) {
+  const unbuilt = Object(ruleValue(engine.docData, TERMINATE.table, TERMINATE.unbuilt))[ROW.onTerminate];
+  /** @type {Array<{account: string, delta: number}>} */
+  const legs = [];
+  for (const a of accountsOf(engine, state, info.id)) {
+    if (a.balance === 0) continue;
+    const row = resourceRow(engine, a.resource);
+    const how = String(row[ROW.onTerminate]);
+    if (Array.isArray(unbuilt) && unbuilt.includes(how)) throw terminateNotReady(engine, `${a.resource}: ${ROW.onTerminate} ${how}`);
+    const to = Object.hasOwn(BY_ON_TERMINATE, how) ? BY_ON_TERMINATE[how] : undefined;
+    if (to === undefined) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `${a.resource}: ${ROW.onTerminate} ${JSON.stringify(how)} has no rule`);
+    /** @type {Account} */
+    const target = { holder: to(engine, a.resource, row, info), purpose: a.purpose, resource: a.resource, key: a.key };
+    if (balanceOf(engine, state, target) === undefined) openAccount(engine, state, target.holder, { kind: target.resource, key: target.key }, target.purpose, tx);
+    legs.push({ account: a.account, delta: -a.balance }, { account: accountText(engine, target), delta: a.balance });
+  }
+  if (legs.length > 0) post(engine, state, { legs, reason: String(ruleValue(engine.docData, LEDGER, RULE.terminateReason)) }, tx);
+  const left = accountsOf(engine, state, info.id).filter((a) => a.balance !== 0).map((a) => a.account);
+  if (left.length > 0) throw new KernelError('E-TERM-RESIDUE', {}, `terminate: ${info.id} still holds ${left.join(', ')}`);
+}
+
+/** 账户分流清理函数的登记项（systems.ledgerTerminate.terminationCleanup；economy 域 manifest 收齐）。 */
+export const SETTLE_ACCOUNTS_CLEANUP = registerTerminationCleanup('rules/economy/ledger.mjs#settleAccountsOnTerminate', settleAccountsOnTerminate);

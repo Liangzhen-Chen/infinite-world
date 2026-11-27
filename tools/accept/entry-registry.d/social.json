@@ -206,7 +206,11 @@
    "sec": null,
    "kind": "write",
    "needs": [
-    "subjectEnded"
+    "KernelError",
+    "holderEnded",
+    "subjectEnded",
+    "holdingsOf",
+    "holdersOf"
    ],
    "rules": []
   },

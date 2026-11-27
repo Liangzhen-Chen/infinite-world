@@ -6,7 +6,7 @@
  "systems": {
   "holdings": {
    "primitiveWriter": {"ops": ["holding.close", "holding.open", "holding.transfer"], "handler": "rules/social/holdings.mjs#holdingWriter"},
-   "terminationCleanup": {"kinds": ["org", "person"], "handler": "rules/social/holdings.mjs#subjectEndCleanup", "sortKey": 1}
+   "terminationCleanup": {"kinds": ["org", "person"], "handler": "rules/social/holdings.mjs#subjectEndCleanup", "sortKey": 3}
   },
   "outfit": {"instantiate": {"kinds": ["person"], "handler": "rules/social/outfit.mjs#outfitFromOrigin", "sortKey": 2}}
  },

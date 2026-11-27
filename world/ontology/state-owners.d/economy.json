@@ -10,7 +10,8 @@
  },
  "systems": {
   "endow": {"instantiate": {"kinds": ["person"], "handler": "rules/economy/endow.mjs#endowFromOrigin", "sortKey": 1}},
-  "ledger": {"primitiveWriter": {"ops": ["transfer"], "handler": "rules/economy/ledger.mjs#transferWriter"}}
+  "ledger": {"primitiveWriter": {"ops": ["transfer"], "handler": "rules/economy/ledger.mjs#transferWriter"}},
+  "ledgerTerminate": {"terminationCleanup": {"kinds": ["person"], "handler": "rules/economy/ledger.mjs#settleAccountsOnTerminate", "sortKey": 2}}
  },
  "pathTypes": {
   "accounts.*": "struct:holderAccounts",
@@ -19,8 +20,8 @@
   "ledgerCounters.lotNext": "integer:count"
  },
  "keyKinds": {
-  "accounts.*": [["org", "person", "place"]],
-  "outflowTotals.*": [["org", "person", "place"]]
+  "accounts.*": [["item", "org", "person", "place"]],
+  "outflowTotals.*": [["item", "org", "person", "place"]]
  },
  "kernelApi": {
   "exports": [
