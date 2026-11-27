@@ -1,10 +1,11 @@
 {
   "card": "feat-s1-3d",
-  "phase": "dispatched",
-  "updatedAt": "2026-11-27T02:35:56.763Z",
+  "phase": "pr",
+  "updatedAt": "2026-11-27T03:22:22.383Z",
   "branches": {
     "code": "feat/s1-3d",
-    "test": "test/s1-3d"
+    "test": "test/s1-3d",
+    "pr": "feat/s1-3d"
   },
   "pr": null,
   "parties": {
@@ -15,7 +16,9 @@
       "orca": {
         "worktree": "F:/dnd-worktrees/dnd/s13d",
         "session": "ctx_0885530e721d",
-        "commits": []
+        "commits": [
+          "ab477d819"
+        ]
       },
       "costUsd": null
     },
@@ -26,11 +29,28 @@
       "orca": {
         "worktree": "F:/dnd-worktrees/dnd/ts-s13d",
         "session": "ctx_d821a1aa98dc",
-        "commits": []
+        "commits": [
+          "f28dfed44"
+        ]
       },
       "costUsd": null
     },
-    "review": []
+    "review": [
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": null,
+        "orca": {
+          "worktree": "F:/dnd-worktrees/dnd/ts-s13d",
+          "session": "ctx_ca5e9f5428b0",
+          "commits": [
+            "60ce63cdd",
+            "0d389be19"
+          ]
+        },
+        "costUsd": null
+      }
+    ]
   },
   "ci": {
     "status": "pending",
@@ -38,5 +58,5 @@
   },
   "failCount": 0,
   "blocker": null,
-  "nextAction": "写码 Sonnet（s13d）与出题 Haiku（ts-s13d）并行；写码交付后出题合入实现跑全量，再派 Opus 审卡"
+  "nextAction": "PR feat/s1-3d→master 走 CI，main 绿即合（合入说明 卡分支：feat/s1-3d）；合后删 s13d、ts-s13d 工作树目录（不删分支）并报李白提交号"
 }

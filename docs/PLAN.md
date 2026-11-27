@@ -58,7 +58,7 @@
 - 第 1 批合入顺序：S2-SH → S2-L（带 R0）→ S2-H → S2-P → S2-T → S1-4 → S2-GOV → S2-D + S2-0c1（同一 PR）。S2-SH 合入后新登记一律写本域分片，不改主登记文件。
 - 派卡须知：卡文写「提交前跑 check-push-archive.mjs 自验通过」；派卡前核基线含全部依赖卡；建树与对比一律以 origin/master 为底。
 - S2-GOV：产品原则.md 第三节第 6 条旧模型分工删掉（李白 11-27 裁定，模型分工只在 CLAUDE.md 写一处）；派活卡头规矩压回 ≤50 行并修合并提交免查自相矛盾；11-26 裁定同步进现行有效裁定.json；瘦身本文件；gen-status-snapshot 自动把已合卡归 merged；tests/support/isolated-repo.mjs 修临时仓库泄漏（亮圳 11-27 准删的 F:/temp/iso-repo-* 已删 10 个）。
-- [ ] S1-3d 开局选种族（亮圳 11-27 01:16「玩家自己挑种族」）：在途，写码 ab477d819 主会话审可合，出题合入跑全量中，待 Opus 审。
+- [x] S1-3d 开局选种族（亮圳 11-27 01:16「玩家自己挑种族」）：选来历菜单加步 0 种族槽，候选为挂 rules.chargen.playableClass（comp_playable）的物种行，槽值写 create.facts.species；删来历行 species 列与 origin.ready，54 条来历全开；旧验收 9 文件前提改写。Sonnet 写一轮、Haiku 出题、Opus 审第一轮可合（旧验收逐条核只改前提）。不阻合：person.mjs:54 注释残留 origin.ready、origin-avatar 第 1 条标题过期。PR 头 feat/s1-3d。
 
 ### 待办登记（11-27 主会话5 并入，不阻当前卡）
 - 兽裔开关（李白 11-27 认可 S1-3d Q3）：allowBeastkin 与 9 条兽裔/远族来历 gate 未挪；第一个兽裔物种行入表的卡同时做「9 条 gate 置空 + 种族侧组件词条 gate 由 catalog 通用读」。
