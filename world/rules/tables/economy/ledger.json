@@ -9,10 +9,10 @@
   },
   {
    "key": "terminateReason",
-   "value": "verb_entity_terminated",
+   "value": "verb_estate_settled",
    "source": "卷二 §2.6 :556 第 3 步（账户分流经账本转移）；卷六 §3.2 :289 post 的 reason 是 verb 代号",
    "grade": "designed",
-   "basis": "终止分流的 post 事由（S2-0c1 主会话 Q6 甲）：取已登的终止动词 verb_entity_terminated，不另加词表行；换专用动词只改本行"
+   "basis": "终止分流的 post 事由（S2-0c1 主会话 Q6 乙）：专用动词 verb_estate_settled（_vocab verb 族，载荷即 post 事件 {legs, refs}）；不借 verb_entity_terminated（它只由内核发、载荷是终止事件，卷二 :557）"
   },
   {
    "key": "endowment",

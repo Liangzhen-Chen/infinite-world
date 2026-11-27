@@ -107,6 +107,7 @@ test('1 守恒与零残留：带来历 NPC 被 destroy，非零余额整笔转�
   const still = Object.values(g.state.holdings).flatMap((book) => Object.keys(book));
   for (const id of itemSide) assert.ok(still.includes(id), `${id} untouched`);
   // 分流只记一笔账本事件，事由为 rules.economyLedger.terminateReason。
+  assert.notEqual(REASON, 'verb_entity_terminated');
   assert.equal(g.logBook.entries.filter((x) => x.seq === d.seq && x.verb === REASON && Array.isArray(Object(x.payload).legs)).length, 1);
 });
 
@@ -116,9 +117,10 @@ test('2 次序：同一事务内尸体维度（settleBody）先于账户分流�
   const d = destroy(g, b);
   assert.equal(d.ok, true, JSON.stringify(d));
   const evs = g.logBook.entries.filter((x) => x.seq === d.seq);
-  const ledgerAt = evs.findIndex((x) => x.verb === REASON && Array.isArray(Object(x.payload).legs));
+  const ledgerAt = evs.findIndex((x) => x.verb === REASON);
   const edgeAt = evs.findIndex((x) => x.verb === EVENTS.verb);
-  const termAt = evs.findIndex((x) => x.verb === REASON && Object(x.payload).id === b);
+  // 终止事件动词名照卷二 :557（内核登记的 verb 族条目）。
+  const termAt = evs.findIndex((x) => x.verb === 'verb_entity_terminated' && Object(x.payload).id === b);
   assert.ok(ledgerAt >= 0 && edgeAt > ledgerAt && termAt > edgeAt, JSON.stringify([ledgerAt, edgeAt, termAt]));
   // 残骸作账本持有人时尸体维度已在（settleBody 在前）。
   const wreck = Object.keys(g.state.accounts).find((h) => g.state.created[h] && g.state.created[h].kind === 'item');
