@@ -1,0 +1,35 @@
+{
+ "source": "S1-4 草案 §3.2（主会话裁定 Q7 甲三栏、Q8 记录栏只有代号与数、Q9 甲 3 个存档槽）；卷二十九 总则 6（面板上出现哪些部件按行在显示配置表里）。S2-U1 用 world/display/panels.json 的面板与部件行替换本表",
+ "title": "uitok_title",
+ "routes": {"menu": "../menu", "export": "../save_export", "import": "../save_import"},
+ "i18n": {"locales": "i18n/locales.json", "labels": {"zh": "i18n/labels.zh.json"}},
+ "logo": "assets/visual/logo.svg",
+ "notices": {"offline": "uitok_notice_offline", "waiting": "uitok_notice_waiting", "envelopeDropped": "uitok_notice_envelope_dropped", "stale": "uitok_notice_stale"},
+ "enumKeys": {"result": "reply_result", "save": "save_op"},
+ "columns": [
+  ["uitok_blk_now", "uitok_blk_here", "uitok_blk_self"],
+  ["uitok_blk_menu"],
+  ["uitok_blk_save", "uitok_blk_log"]
+ ],
+ "blocks": [
+  {"block": "uitok_blk_now", "kind": "fields", "rows": [
+   {"token": "uitok_fld_day", "path": "now.day", "kind": "int"},
+   {"token": "uitok_fld_minute_of_day", "path": "now.minuteOfDay", "kind": "int"},
+   {"token": "uitok_fld_season", "path": "now.season.id", "kind": "code"},
+   {"token": "uitok_fld_solar_term", "path": "now.solarTerm", "kind": "code"},
+   {"token": "uitok_fld_calendar", "path": "now.calendar.id", "kind": "code"},
+   {"token": "uitok_fld_day_part", "path": "now.dayPart", "kind": "int"},
+   {"token": "uitok_fld_gaps", "path": "now.gaps", "kind": "codeList"}
+  ]},
+  {"block": "uitok_blk_here", "kind": "chain", "path": "here.chain"},
+  {"block": "uitok_blk_self", "kind": "table", "tables": [
+   {"token": "uitok_fld_accounts", "path": "self.accounts", "key": ["resource"], "cols": [{"paths": ["resource"], "kind": "code"}, {"paths": ["balance"], "kind": "int"}]},
+   {"token": "uitok_fld_holdings", "path": "self.holdings", "key": ["kind"], "cols": [{"paths": ["kind"], "kind": "code"}, {"paths": ["template", "subject"], "kind": "code"}]}
+  ]},
+  {"block": "uitok_blk_menu", "kind": "menu", "path": "menu", "submit": "uitok_btn_submit"},
+  {"block": "uitok_blk_save", "kind": "save", "slotToken": "uitok_fld_slot", "slots": [1, 2, 3],
+   "buttons": {"save": "uitok_btn_save", "load": "uitok_btn_load", "export": "uitok_btn_export", "import": "uitok_btn_import"},
+   "exportName": {"prefix": "if-save-slot-", "suffix": ".json"}},
+  {"block": "uitok_blk_log", "kind": "log"}
+ ]
+}

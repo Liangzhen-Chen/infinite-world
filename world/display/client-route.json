@@ -1,0 +1,22 @@
+{
+ "version": 1,
+ "source": "S1-4 草案 §3.1（主会话裁定 Q1 甲、Q11 甲）；卷二十九 §2.3 显示配置目录 world/display/；卷二十九 R29-7.1",
+ "basis": "浏览器菜单前端的静态白名单：url 前缀 → 仓库目录或逐个文件；不在表里的一律 404。i18n 一行是过渡（违背卷二十九:225，S2-U1 建信封后删）；字体只放正文 Noto Serif 与标题文楷（Q11 甲，思源黑体不加载）",
+ "mount": "client",
+ "index": "index.html",
+ "notFound": 404,
+ "roots": [
+  {"url": "", "dir": "client/"},
+  {"url": "assets/fonts/", "files": ["assets/fonts/NotoSerifSC-Regular.woff2", "assets/fonts/LXGWWenKai-Regular.woff2"]},
+  {"url": "assets/visual/", "files": ["assets/visual/logo.svg"]},
+  {"url": "i18n/", "files": ["world/i18n/locales.json", "world/i18n/labels.zh.json"]}
+ ],
+ "mime": {
+  ".html": "text/html; charset=utf-8",
+  ".mjs": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".woff2": "font/woff2",
+  ".svg": "image/svg+xml"
+ }
+}
