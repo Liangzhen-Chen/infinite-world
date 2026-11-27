@@ -14,6 +14,8 @@ import { openPlacesOf } from '../gen/worldgen-writeback.mjs';
 import { controlledByPlayer, controlledEntities } from '../social/control.mjs';
 import { placeChainOf } from '../place/zone.mjs';
 import { nowOf } from '../time_env/env.mjs';
+import { accountsOf } from '../economy/ledger.mjs';
+import { holdingsOf } from '../social/holdings.mjs';
 
 // 卷九 §2.2 动作行全部字段 → S1 处置：use 本阶段实现；empty 本阶段未实现，行上必须写空（null、[] 或 {}），非空即 E-ACT-ROW（草案 §1 第 20 行）。
 const ROW_FIELDS = Object.freeze({
@@ -490,7 +492,7 @@ export function defaultActor(engine, state, code) {
 
 /**
  * 菜单（S1-3b 经 world.menu 调；主会话 11-26 裁定）：subjectId 为空即取缺省行动者（尚无化身为开局菜单，已有唯一化身即按化身投影）；给了须是本局玩家化身，否则 E-DISPLAY-SUBJECT。
- * visible：S1 的可见集 = 主体（若有）与已开放地点（主观视图卷二十二未建，草案 §1 第 18 行）。纯读，不写状态、不进日志。
+ * visible：S1 的可见集 = 主体（若有）与已开放地点（主观视图卷二十二未建，草案 §1 第 18 行）。self：身上（钱与持有，S1-4）。纯读，不写状态、不进日志。
  * @param {string | null} subjectId
  */
 export function menuOf(engine, state, subjectId) {
@@ -500,5 +502,17 @@ export function menuOf(engine, state, subjectId) {
   const here = subject === null ? null : hereOf(engine, state, subject);
   const visible = [...new Set([...(subject === null ? [] : [subject]), ...openPlacesOf(engine, state), ...(here === null ? [] : here.chain)])];
   // 此刻（S2-T1 草案 §5）：第几天、日内分钟、历法、季节、节气、天气，纯派生；没有化身只给系统时间。
-  return Object.freeze({ affordances: affordances(engine, state, subject), visible: Object.freeze(visible), here, now: nowOf(engine, state, subject) });
+  return Object.freeze({ affordances: affordances(engine, state, subject), visible: Object.freeze(visible), here, now: nowOf(engine, state, subject), self: selfOf(engine, state, subject) });
+}
+
+/**
+ * 身上（S1-4 主会话 Q2 甲）：化身名下的账户（ledger.mjs#accountsOf，去掉账户串与批次键）与持有边（holdings.mjs#holdingsOf 全列，不按种类筛），只给代号、id 与数。
+ * 没有化身为 null。template 是被持实体的模板行 id：本卡无公共读入口（kernel/dimensions.mjs 的 rowId 私有），一律 null，待开公共 templateOf 后补（主会话 Q2 补问甲）。
+ * @param {string | null} subject
+ */
+function selfOf(engine, state, subject) {
+  if (subject === null) return null;
+  const accounts = accountsOf(engine, state, subject).map((a) => Object.freeze({ resource: a.resource, purpose: a.purpose, balance: a.balance }));
+  const holdings = holdingsOf(engine, state, subject).map((e) => Object.freeze({ kind: e.kind, subject: e.subject, template: null }));
+  return Object.freeze({ subject, accounts: Object.freeze(accounts), holdings: Object.freeze(holdings) });
 }

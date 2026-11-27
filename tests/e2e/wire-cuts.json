@@ -1,5 +1,5 @@
 {
-  "说明": "拔线登记（draft-s1-3 §3.3；出题方 haiku-orca-test-s13b；锚点按已合入实现核对，主会话裁定 2026-11-26 合并后修正）。每行在临时仓副本里把 file 中恰好一次出现的 find 替换为 replace（缺省删除），再跑 tests/e2e/vertical-slice-smoke.test.mjs，要求红且输出含「停在第 step/6 步」。依赖 S1-3a 尚未合入的锚点（act-wait-row、eff-pass-time-output、mount-load-actions）预期红：文件或锚点缺失时工具记 FAIL 并继续，不静默。",
+  "说明": "拔线登记（draft-s1-3 §3.3；出题方 haiku-orca-test-s13b；锚点按已合入实现核对，主会话裁定 2026-11-26 合并后修正）。每行在临时仓副本里把 file 中恰好一次出现的 find 替换为 replace（缺省删除），再跑该行 test 指定的测试文件（缺省 tests/e2e/vertical-slice-smoke.test.mjs；S1-4 Q10 甲），要求红且输出含「停在第 step/总步数 步」。依赖 S1-3a 尚未合入的锚点（act-wait-row、eff-pass-time-output、mount-load-actions）预期红：文件或锚点缺失时工具记 FAIL 并继续，不静默。",
   "rows": [
     {
       "id": "index-create-router-caps",
@@ -88,6 +88,15 @@
       "replace": "loadActions_cut(",
       "step": 1,
       "note": "装载期挂载动作表（属 S1-3a）；未合入前锚点缺失，预期红"
+    },
+    {
+      "id": "index-mount-client",
+      "file": "server-plugin/index.mjs",
+      "find": "mountClient(router,",
+      "replace": "void (router,",
+      "test": "tests/e2e/client-smoke.test.mjs",
+      "step": 1,
+      "note": "浏览器菜单前端静态路由挂接（S1-4 主会话裁定 Q10 甲）；拔掉则页面 404，浏览器冒烟停在第 1 步"
     }
   ]
 }

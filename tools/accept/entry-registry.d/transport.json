@@ -1,0 +1,5 @@
+{
+ "entries": [
+  {"name": "mountClient", "file": "rules/transport/client-route.mjs", "vol": null, "sec": null, "kind": "part", "needs": [], "rules": []}
+ ]
+}

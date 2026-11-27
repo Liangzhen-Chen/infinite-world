@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "node tools/host/serve.mjs",
     "test": "node --test \"tests/accept/*.test.mjs\"",
     "accept": "node tools/accept/run.mjs pre_commit",
     "test:kernel": "node --test \"tests/kernel/*.test.mjs\"",

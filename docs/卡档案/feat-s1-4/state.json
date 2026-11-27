@@ -1,0 +1,35 @@
+{
+  "card": "feat-s1-4",
+  "phase": "dispatched",
+  "updatedAt": "2026-11-27T16:00:00.000Z",
+  "branches": {
+    "code": "feat/s1-4",
+    "test": "test/s1-4",
+    "pr": "feat/s1-4"
+  },
+  "pr": null,
+  "parties": {
+    "code": {
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
+      "receipt": null,
+      "orca": null,
+      "costUsd": null
+    },
+    "test": {
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
+      "receipt": null,
+      "orca": null,
+      "costUsd": null
+    },
+    "review": []
+  },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
+  "failCount": 0,
+  "blocker": null,
+  "nextAction": "写码 Sonnet 于 s14、出题 Haiku 于 ts-s14 并行；写码交卷后主会话读 diff，出题合入实现跑全量，再派 Opus 审卡"
+}

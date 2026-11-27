@@ -39,7 +39,7 @@
  "clientTextcore": {"modules": ["extension/textcore/**/*.mjs"], "process": "client"},
  "kernel": {"modules": ["server-plugin/kernel/**/*.mjs"], "process": "server", "filesList": "server-plugin/kernel/files.json",
   "emits": ["verb_due_elapsed", "verb_entity_revived", "verb_entity_terminated", "verb_holding_changed", "verb_domicile_changed"]},
- "assembly": {"files": ["server-plugin/index.mjs"], "process": "server", "calls": ["createRouterCaps", "createDigestCap", "createWallTimer", "mountKernel", "registerSystems", "mountOutput", "mountAi", "mountMenuEntry", "mountSaveRoutes", "mountNarration", "mountInput"]},
+ "assembly": {"files": ["server-plugin/index.mjs"], "process": "server", "calls": ["createRouterCaps", "createDigestCap", "createWallTimer", "mountKernel", "registerSystems", "mountOutput", "mountAi", "mountMenuEntry", "mountSaveRoutes", "mountNarration", "mountInput", "mountClient"]},
  "retired": ["server-plugin/legacy/**", "server-plugin/compat/**", "server-plugin/migrations/**"],
  "kernelApi": {"exports": [
   {"export": "kernel/dimensions.mjs#dim", "callers": ["rules"], "acceptsState": true},
