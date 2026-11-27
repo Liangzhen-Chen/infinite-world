@@ -16,7 +16,7 @@ const was = () => JSON.parse(execFileSync('git', ['show', `${BASE}:${REL}`], { c
 const ids = (doc) => new Set(doc.rulings.map((r) => r.id));
 const fileLines = (rel) => readFileSync(join(ROOT, rel), 'utf8').replace(/\r\n/g, '\n').split('\n');
 
-// 依据：CLAUDE.md:8；测的是什么：现行有效裁定.json 能解析，且每条都有 id、source；测试位置：tests/acceptance/chore-s2-gov/rulings.test.mjs:20
+// 依据：卷十二:545；补充：CLAUDE.md:8；测的是什么：现行有效裁定.json 能解析，且每条都有 id、source；测试位置：tests/acceptance/chore-s2-gov/rulings.test.mjs:20
 test('现行有效裁定.json 可解析，条目有 id 与 source', () => {
   const doc = now();
   assert.ok(Array.isArray(doc.rulings));
@@ -26,7 +26,7 @@ test('现行有效裁定.json 可解析，条目有 id 与 source', () => {
   }
 });
 
-// 依据：docs/PLAN.md:67；测的是什么：相对基线新增的条目，source 指向的「文件:行」存在，且该行含 11-26 或 11-27 的拍板日期；测试位置：tests/acceptance/chore-s2-gov/rulings.test.mjs:30
+// 依据：卷十二:545；补充：CLAUDE.md:8；测的是什么：相对基线新增的条目，source 指向的「文件:行」存在，且该行含 11-26 或 11-27 的拍板日期；测试位置：tests/acceptance/chore-s2-gov/rulings.test.mjs:30
 test('新增条目的 source 指向存在的文件:行，且该行含拍板日期', () => {
   const added = now().rulings.filter((r) => !ids(was()).has(r.id));
   assert.ok(added.length > 0, '没有新增 11-26 拍板条目');
@@ -41,7 +41,7 @@ test('新增条目的 source 指向存在的文件:行，且该行含拍板日�
   }
 });
 
-// 依据：CLAUDE.md:8；测的是什么：所有写「CLAUDE.md:N」的条目，N 行不是空行也不是标题行；测试位置：tests/acceptance/chore-s2-gov/rulings.test.mjs:45
+// 依据：卷十二:545；补充：CLAUDE.md:8；测的是什么：所有写「CLAUDE.md:N」的条目，N 行不是空行也不是标题行；测试位置：tests/acceptance/chore-s2-gov/rulings.test.mjs:45
 test('CLAUDE.md:N 引用指向非空、非标题行', () => {
   for (const r of now().rulings) {
     const m = /^CLAUDE\.md:(\d+)$/.exec(r.source);
@@ -51,7 +51,7 @@ test('CLAUDE.md:N 引用指向非空、非标题行', () => {
   }
 });
 
-// 依据：CLAUDE.md:8；测的是什么：被后文推翻的「裁定1124b」「审批闸门5元-1109」已从生效裁定里删除，且两条 id 都记在 K1125-QUOTA、K1125-COST 的 supersedes 里；测试位置：tests/acceptance/chore-s2-gov/rulings.test.mjs:55
+// 依据：卷十二:545；补充：CLAUDE.md:8；测的是什么：被后文推翻的「裁定1124b」「审批闸门5元-1109」已从生效裁定里删除，且两条 id 都记在 K1125-QUOTA、K1125-COST 的 supersedes 里；测试位置：tests/acceptance/chore-s2-gov/rulings.test.mjs:55
 test("被推翻的旧条目已删，新裁定记下 supersedes", () => {
   const doc = now();
   const cur = ids(doc);

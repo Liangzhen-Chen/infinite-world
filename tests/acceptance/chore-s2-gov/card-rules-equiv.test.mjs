@@ -11,7 +11,7 @@ import { join } from 'node:path';
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const BASE = '6413e8a47';
 
-// 依据：CLAUDE.md:8；测的是什么：基线提交的派活卡头规矩解析出的规则对象，与新机读文件解析出的规则对象深相等；测试位置：tests/acceptance/chore-s2-gov/card-rules-equiv.test.mjs:15
+// 依据：卷十二:545；补充：CLAUDE.md:8；测的是什么：基线提交的派活卡头规矩解析出的规则对象，与新机读文件解析出的规则对象深相等；测试位置：tests/acceptance/chore-s2-gov/card-rules-equiv.test.mjs:15
 test('新机读规矩与基线第五节解析结果深相等', async () => {
   const { loadRules } = await import(pathToFileURL(join(ROOT, 'tools/accept/lib/card-archive.mjs')).href);
   const oldText = execFileSync('git', ['show', `${BASE}:docs/派活卡头规矩.md`], { cwd: ROOT, encoding: 'utf8' });

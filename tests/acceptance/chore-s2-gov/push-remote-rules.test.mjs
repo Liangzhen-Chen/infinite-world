@@ -49,7 +49,7 @@ function pushCheck(root, branch) {
   return { status: r.status, out: `${r.stdout}${r.stderr}` };
 }
 
-// 依据：CLAUDE.md:28；测的是什么：origin/master 只有旧规矩文件时，触发目录下无档案的分支被拒（与旧版判定相同）；测试位置：tests/acceptance/chore-s2-gov/push-remote-rules.test.mjs:52
+// 依据：卷十二:545；补充：CLAUDE.md:28；测的是什么：origin/master 只有旧规矩文件时，触发目录下无档案的分支被拒（与旧版判定相同）；测试位置：tests/acceptance/chore-s2-gov/push-remote-rules.test.mjs:53
 test('远端只有旧文件：无档案的触发改动被拒', () => {
   const root = makeRepo({ 'docs/派活卡头规矩.md': OLD_RULES });
   branchWithProbe(root, 'feat/probe');
@@ -58,7 +58,7 @@ test('远端只有旧文件：无档案的触发改动被拒', () => {
   assert.match(r.out, /rejected/);
 });
 
-// 依据：CLAUDE.md:8；测的是什么：对照组——只改非触发文件的分支照常通过，证明检查器确实在跑；测试位置：tests/acceptance/chore-s2-gov/push-remote-rules.test.mjs:61
+// 依据：卷十二:545；补充：CLAUDE.md:28；测的是什么：对照组——只改非触发文件的分支照常通过，证明检查器确实在跑；测试位置：tests/acceptance/chore-s2-gov/push-remote-rules.test.mjs:62
 test('对照：只改非触发文件的分支通过', () => {
   const root = makeRepo({ 'docs/派活卡头规矩.md': OLD_RULES });
   git(root, ['checkout', '-q', '-b', 'feat/none']);
@@ -69,7 +69,7 @@ test('对照：只改非触发文件的分支通过', () => {
   assert.match(r.out, /pass/);
 });
 
-// 依据：CLAUDE.md:28；测的是什么：分支把旧规矩里的触发目录行删掉（改宽），推送检查仍按远端版拒绝；测试位置：tests/acceptance/chore-s2-gov/push-remote-rules.test.mjs:72
+// 依据：卷十二:545；补充：CLAUDE.md:28；测的是什么：分支把旧规矩里的触发目录行删掉（改宽），推送检查仍按远端版拒绝；测试位置：tests/acceptance/chore-s2-gov/push-remote-rules.test.mjs:73
 test('远端只有旧文件：分支自改规矩放宽，仍按远端版拒绝', () => {
   const root = makeRepo({ 'docs/派活卡头规矩.md': OLD_RULES });
   branchWithProbe(root, 'feat/loose', (r) => {
@@ -80,7 +80,7 @@ test('远端只有旧文件：分支自改规矩放宽，仍按远端版拒绝',
   assert.match(r.out, /rejected/);
 });
 
-// 依据：CLAUDE.md:8；测的是什么：远端新旧两文件并存时，分支改宽新机读文件，推送检查仍拒（用远端新文件，不信分支自改）；测试位置：tests/acceptance/chore-s2-gov/push-remote-rules.test.mjs:83
+// 依据：卷十二:545；补充：CLAUDE.md:28；测的是什么：远端新旧两文件并存时，分支改宽新机读文件，推送检查仍拒（用远端新文件，不信分支自改）；测试位置：tests/acceptance/chore-s2-gov/push-remote-rules.test.mjs:84
 test('远端新旧并存：分支改宽 tools/accept/card-rules.md，仍按远端版拒绝', () => {
   const root = makeRepo({ 'docs/派活卡头规矩.md': OLD_RULES, 'tools/accept/card-rules.md': OLD_RULES });
   branchWithProbe(root, 'feat/loose2', (r) => {

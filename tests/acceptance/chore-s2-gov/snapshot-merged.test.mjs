@@ -44,7 +44,7 @@ function gen(root) {
 const inFlight = (text, name) => (text.split('## 在途卡')[1] || '').includes(name);
 const merged = (text, name) => (/已合 \d+ 张：[^\n]*/.exec(text)?.[0] || '').includes(name);
 
-// 依据：CLAUDE.md:8；测的是什么：卡分支上还没真合并时判在途；测试位置：tests/acceptance/chore-s2-gov/snapshot-merged.test.mjs:47
+// 依据：卷十二:545；补充：CLAUDE.md:8；测的是什么：卡分支上还没真合并时判在途；测试位置：tests/acceptance/chore-s2-gov/snapshot-merged.test.mjs:48
 test('卡分支未合入：判在途', () => {
   const root = makeRepo();
   git(root, ['checkout', '-q', '-b', 'feat/x']);
@@ -56,7 +56,7 @@ test('卡分支未合入：判在途', () => {
   assert.ok(inFlight(t2, 'chore-x') && !merged(t2, 'chore-x'), '第二次应在途');
 });
 
-// 依据：CLAUDE.md:28；测的是什么：真合并（说明行「角色：合并」）后，HEAD 为真合并提交时即判已合（生成基准取 HEAD，11-27 裁定），再加一个提交后仍判已合；「角色：写码」的同步合并不算合入（判在途）；测试位置：tests/acceptance/chore-s2-gov/snapshot-merged.test.mjs:59
+// 依据：卷十二:545；补充：CLAUDE.md:8；测的是什么：真合并（说明行「角色：合并」）后，HEAD 为真合并提交时即判已合（生成基准取 HEAD，11-27 裁定），再加一个提交后仍判已合；「角色：写码」的同步合并不算合入（判在途）；测试位置：tests/acceptance/chore-s2-gov/snapshot-merged.test.mjs:60
 test('真合并后判 merged；角色写码的同步合并不算合入', () => {
   const root = makeRepo();
   git(root, ['checkout', '-q', '-b', 'feat/x']);
@@ -77,7 +77,7 @@ test('真合并后判 merged；角色写码的同步合并不算合入', () => {
   assert.ok(inFlight(after1, 'chore-y') && !merged(after1, 'chore-y'), '角色写码的同步合并不应判 merged');
 });
 
-// 依据：CLAUDE.md:8；测的是什么：同一 HEAD 两次生成逐字节相同，且 --check 通过；测试位置：tests/acceptance/chore-s2-gov/snapshot-merged.test.mjs:80
+// 依据：卷十二:545；补充：CLAUDE.md:8；测的是什么：同一 HEAD 两次生成逐字节相同，且 --check 通过；测试位置：tests/acceptance/chore-s2-gov/snapshot-merged.test.mjs:81
 test('同一 HEAD 两次生成逐字节相同，--check 通过', () => {
   const root = makeRepo();
   git(root, ['checkout', '-q', '-b', 'feat/x']);
@@ -92,7 +92,7 @@ test('同一 HEAD 两次生成逐字节相同，--check 通过', () => {
   assert.equal(c.status, 0, c.stdout + c.stderr);
 });
 
-// 依据：CLAUDE.md:8；测的是什么：浅克隆时快照标「缺：完整历史」而不是静默误判；测试位置：tests/acceptance/chore-s2-gov/snapshot-merged.test.mjs:95
+// 依据：卷十二:545；补充：CLAUDE.md:8；测的是什么：浅克隆时快照标「缺：完整历史」而不是静默误判；测试位置：tests/acceptance/chore-s2-gov/snapshot-merged.test.mjs:96
 test('浅克隆时快照标出「缺：完整历史」', () => {
   const root = makeRepo();
   git(root, ['checkout', '-q', '-b', 'feat/x']);

@@ -14,7 +14,7 @@ const oldText = (rel) => execFileSync('git', ['show', `${BASE}:${rel}`], { cwd: 
 const nowText = (rel) => readFileSync(join(ROOT, rel), 'utf8');
 const splitLines = (t) => t.replace(/\r\n/g, '\n').replace(/\n$/, '').split('\n');
 
-// 依据：docs/PLAN.md:67；测的是什么：产品原则.md 与基线行数相同，且只有第 29 行改动，新第 29 行不再含「DeepSeek 写代码」；测试位置：tests/acceptance/chore-s2-gov/docs-hygiene.test.mjs:18
+// 依据：卷十二:545；补充：docs/PLAN.md:67；测的是什么：产品原则.md 与基线行数相同，且只有第 29 行改动，新第 29 行不再含「DeepSeek 写代码」；测试位置：tests/acceptance/chore-s2-gov/docs-hygiene.test.mjs:18
 test('产品原则.md 只改第 29 行', () => {
   const a = splitLines(oldText('docs/产品原则.md'));
   const b = splitLines(nowText('docs/产品原则.md'));
@@ -24,18 +24,21 @@ test('产品原则.md 只改第 29 行', () => {
   assert.ok(!b[28].includes('DeepSeek 写代码'), '第 29 行仍含「DeepSeek 写代码」');
 });
 
-// 依据：docs/PLAN.md:67；测的是什么：PLAN.md 没有超过 600 字符的行；测试位置：tests/acceptance/chore-s2-gov/docs-hygiene.test.mjs:28
+// 依据：卷十二:545；补充：docs/PLAN.md:67；测的是什么：PLAN.md 没有超过 600 字符的行；测试位置：tests/acceptance/chore-s2-gov/docs-hygiene.test.mjs:28
 test('PLAN.md 没有超过 600 字的行', () => {
   const over = splitLines(nowText('docs/PLAN.md')).map((l, i) => [i + 1, [...l].length]).filter(([, n]) => n > 600);
   assert.deepStrictEqual(over, [], `超长行（行号, 字数）：${JSON.stringify(over)}`);
 });
 
-// 依据：docs/PLAN.md:67；测的是什么：PLAN.md 拆行、挪位只改版式，去掉空白、列表符（- *）后字符多重集与基线相同，只允许新增「（后续见待办登记）」指引句；测试位置：tests/acceptance/chore-s2-gov/docs-hygiene.test.mjs:34
+// 依据：卷十二:545；补充：docs/PLAN.md:67；测的是什么：PLAN.md 拆行、挪位只改版式，去掉空白、列表符（- *）后字符多重集与基线相同，只允许新增「（后续见待办登记）」指引句；测试位置：tests/acceptance/chore-s2-gov/docs-hygiene.test.mjs:34
 test('PLAN.md 瘦身不丢字：字符多重集与基线相同（允许新增指引句）', () => {
   const norm = (t) => [...t.replace(/[\s\-*]/g, '')];
   const count = (chars) => chars.reduce((m, c) => m.set(c, (m.get(c) || 0) + 1), new Map());
   const before = count(norm(oldText('docs/PLAN.md')));
-  const after = count(norm(nowText('docs/PLAN.md').split('（后续见待办登记）').join('')));
+  // 设计稿 Q7 甲：问题.md 仍有效两条挪进 PLAN 待办（新增内容，不算丢字），只精确放行这一行。
+  const Q7_PREFIX = '- docs/问题.md 11-24 起停更';
+  const kept = nowText('docs/PLAN.md').split('\n').filter((l) => !l.startsWith(Q7_PREFIX)).join('\n');
+  const after = count(norm(kept.split('（后续见待办登记）').join('')));
   for (const [c, n] of before) {
     assert.ok((after.get(c) || 0) === n, `字符「${c}」基线 ${n} 次，现 ${after.get(c) || 0} 次`);
   }

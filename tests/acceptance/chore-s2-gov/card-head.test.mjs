@@ -22,7 +22,7 @@ const sectionFour = (text) => {
   return all.slice(start, next < 0 ? all.length : next).join('\n');
 };
 
-// 依据：CLAUDE.md:8；测的是什么：派活卡头规矩.md 不超过 50 行、首行标题字样不变、不再含第五节、含一至四节；测试位置：tests/acceptance/chore-s2-gov/card-head.test.mjs:26
+// 依据：卷十二:545；补充：CLAUDE.md:8；测的是什么：派活卡头规矩.md 不超过 50 行、首行标题字样不变、不再含第五节、含一至四节；测试位置：tests/acceptance/chore-s2-gov/card-head.test.mjs:26
 test('派活卡头规矩压回 ≤50 行，首行标题不变，不含第五节，含一至四节', () => {
   const text = read(HEAD_DOC);
   assert.ok(lines(text).length <= 50, `行数 ${lines(text).length} 超过 50`);
@@ -31,7 +31,7 @@ test('派活卡头规矩压回 ≤50 行，首行标题不变，不含第五节�
   for (const h of ['## 一、', '## 二、', '## 三、', '## 四、']) assert.ok(text.includes(h), `缺 ${h}`);
 });
 
-// 依据：CLAUDE.md:8；测的是什么：第四节「派卡须知」五条都在文件里（自验脚本、merge-base 前置核对、node 等价、deepseek-flash、分片登记）；测试位置：tests/acceptance/chore-s2-gov/card-head.test.mjs:35
+// 依据：卷十二:545；补充：CLAUDE.md:8；测的是什么：第四节「派卡须知」五条都在文件里（自验脚本、merge-base 前置核对、node 等价、deepseek-flash、分片登记）；测试位置：tests/acceptance/chore-s2-gov/card-head.test.mjs:35
 test('第四节派卡须知五条齐全', () => {
   const four = sectionFour(read(HEAD_DOC));
   for (const k of ['check-push-archive.mjs', 'merge-base --is-ancestor', '等价', 'deepseek-flash', '分片']) {
@@ -39,7 +39,7 @@ test('第四节派卡须知五条齐全', () => {
   }
 });
 
-// 依据：CLAUDE.md:28；测的是什么：两份规矩文件都不再说合并提交免查为「是」或 MERGE_HEAD 免查，机读键为「否」；测试位置：tests/acceptance/chore-s2-gov/card-head.test.mjs:43
+// 依据：卷十二:545；补充：CLAUDE.md:8；测的是什么：两份规矩文件都不再说合并提交免查为「是」或 MERGE_HEAD 免查，机读键为「否」；测试位置：tests/acceptance/chore-s2-gov/card-head.test.mjs:43
 test('合并提交不免查：两份规矩文件无免查说法，机读值为否', () => {
   for (const rel of [HEAD_DOC, RULES_DOC]) {
     const text = read(rel);
@@ -51,7 +51,7 @@ test('合并提交不免查：两份规矩文件无免查说法，机读值为�
   assert.ok(lines(read(RULES_DOC)).some((l) => l.trim() === '- 合并提交免查：否'), `${RULES_DOC} 缺机读行「- 合并提交免查：否」`);
 });
 
-// 依据：CLAUDE.md:28；测的是什么：基线提交里的旧规矩也确有「合并提交免查：否」机读行（说明未被偷换）；测试位置：tests/acceptance/chore-s2-gov/card-head.test.mjs:55
+// 依据：卷十二:545；补充：CLAUDE.md:8；测的是什么：基线提交里的旧规矩也确有「合并提交免查：否」机读行（说明未被偷换）；测试位置：tests/acceptance/chore-s2-gov/card-head.test.mjs:55
 test('基线提交的机读键同为「否」（比对前提）', () => {
   const old = execFileSync('git', ['show', `${BASE}:${HEAD_DOC}`], { cwd: ROOT, encoding: 'utf8' });
   assert.ok(lines(old).some((l) => l.trim() === '- 合并提交免查：否'));

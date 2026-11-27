@@ -17,7 +17,7 @@ const worktrees = () => execFileSync('git', ['worktree', 'list', '--porcelain'],
 const made = [];
 after(() => { for (const r of made) removeTempRoot(r); });
 
-// 依据：docs/PLAN.md:67；测的是什么：正常返回后，本次副本目录与 worktree 登记都已清掉，宿主 node_modules 仍在；测试位置：tests/acceptance/chore-s2-gov/isolated-cleanup.test.mjs:21
+// 依据：卷十二:600；补充：docs/PLAN.md:67；测的是什么：正常返回后，本次副本目录与 worktree 登记都已清掉，宿主 node_modules 仍在；测试位置：tests/acceptance/chore-s2-gov/isolated-cleanup.test.mjs:21
 test('正常返回：副本目录与 worktree 登记清掉，宿主依赖保留', async () => {
   let copy = null;
   await withIsolatedRepo(async (c) => { copy = c; assert.ok(existsSync(c)); });
@@ -27,7 +27,7 @@ test('正常返回：副本目录与 worktree 登记清掉，宿主依赖保留'
   assert.ok(existsSync(join(ROOT, 'node_modules')), '宿主 node_modules 被误删');
 });
 
-// 依据：docs/PLAN.md:67；测的是什么：fn 抛错时副本与登记同样被清掉，错误原样抛出；测试位置：tests/acceptance/chore-s2-gov/isolated-cleanup.test.mjs:31
+// 依据：卷十二:600；补充：docs/PLAN.md:67；测的是什么：fn 抛错时副本与登记同样被清掉，错误原样抛出；测试位置：tests/acceptance/chore-s2-gov/isolated-cleanup.test.mjs:31
 test('fn 抛错：仍清掉副本，错误原样抛出', async () => {
   let copy = null;
   await assert.rejects(withIsolatedRepo(async (c) => { copy = c; throw new Error('probe-boom'); }), /probe-boom/);
@@ -62,7 +62,7 @@ function childRun() {
   return { child, exited, copy };
 }
 
-// 依据：docs/PLAN.md:67；测的是什么：进程被杀（无清理机会）后，下一次 withIsolatedRepo 开头清掉它留下的副本与登记；测试位置：tests/acceptance/chore-s2-gov/isolated-cleanup.test.mjs:66
+// 依据：卷十二:600；补充：docs/PLAN.md:67；测的是什么：进程被杀（无清理机会）后，下一次 withIsolatedRepo 开头清掉它留下的副本与登记；测试位置：tests/acceptance/chore-s2-gov/isolated-cleanup.test.mjs:66
 test('子进程被杀后，下一次调用清掉残留副本与登记', async () => {
   const r = childRun();
   const copy = await r.copy;
@@ -76,7 +76,7 @@ test('子进程被杀后，下一次调用清掉残留副本与登记', async ()
   assert.ok(existsSync(join(ROOT, 'node_modules')), '宿主 node_modules 被误删');
 });
 
-// 依据：docs/PLAN.md:67；测的是什么：子进程 fn 未返回但进程自然退出（node --test 超时后的退出路径）时，退出前已清掉副本与登记；测试位置：tests/acceptance/chore-s2-gov/isolated-cleanup.test.mjs:80
+// 依据：卷十二:600；补充：docs/PLAN.md:67；测的是什么：子进程 fn 未返回但进程自然退出（node --test 超时后的退出路径）时，退出前已清掉副本与登记；测试位置：tests/acceptance/chore-s2-gov/isolated-cleanup.test.mjs:80
 test('子进程自然退出：退出时清掉副本与登记', async () => {
   const r = childRun();
   const copy = await r.copy;
@@ -85,7 +85,7 @@ test('子进程自然退出：退出时清掉副本与登记', async () => {
   assert.ok(!worktrees().includes(norm(copy)), '自然退出后 worktree 登记仍在');
 });
 
-// 依据：docs/PLAN.md:67；测的是什么：没有 owner.json、pid 不明的旧目录一律保留（不误删他人目录）；测试位置：tests/acceptance/chore-s2-gov/isolated-cleanup.test.mjs:89
+// 依据：卷十二:600；补充：docs/PLAN.md:67；测的是什么：没有 owner.json、pid 不明的旧目录一律保留（不误删他人目录）；测试位置：tests/acceptance/chore-s2-gov/isolated-cleanup.test.mjs:89
 test('无 owner.json 的 iso-repo 目录保留不动', async () => {
   const stale = testTempRoot('iso-repo-');
   made.push(stale);
