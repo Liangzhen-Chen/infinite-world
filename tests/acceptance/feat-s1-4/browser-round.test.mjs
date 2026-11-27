@@ -15,7 +15,8 @@ import { testTempRoot, removeTempRoot, writeUnderTempRoot } from '../../accept/t
 
 const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 const MOUNT = '/api/plugins/if';
-const READY_LIMIT_MS = 10000;
+// 测试机余量，非产品要求：只有 host-route 第 1 条有 10 秒产品要求；本文件的等待上限只为全量并发时稳定通过。
+const TEST_MACHINE_WAIT_MS = 120000;
 const CHANNEL = process.env.IF_BROWSER_CHANNEL || 'chrome';
 const CHILD_ENV = (() => {
   const e = { ...process.env };
@@ -51,7 +52,7 @@ function startHost({ cwd = REPO, saveRoot } = {}) {
     let err = '';
     let settled = false;
     const done = (fn, v) => { if (settled) return; settled = true; clearTimeout(timer); fn(v); };
-    const timer = setTimeout(() => done(reject, new Error(`${READY_LIMIT_MS} ms 内未打出 ready 行；stderr 末段：${err.slice(-400)}`)), READY_LIMIT_MS);
+    const timer = setTimeout(() => done(reject, new Error(`${TEST_MACHINE_WAIT_MS} ms 内未打出 ready 行；stderr 末段：${err.slice(-400)}`)), TEST_MACHINE_WAIT_MS);
     child.stdout.on('data', (d) => {
       out += d;
       const line = out.split(/\r?\n/).find((l) => l.trim().startsWith('{'));
@@ -89,7 +90,7 @@ const minCodes = (b) => (b.rows ?? []).filter((r) => r.path.endsWith('minuteOfDa
 /** @param {LayoutBlock} b */
 const pathsOf = (b) => [b.path, ...(b.rows ?? []).map((r) => r.path), ...(b.tables ?? []).map((t) => t.path)].filter((x) => typeof x === 'string');
 
-async function until(fn, msg, limit = 10000) {
+async function until(fn, msg, limit = TEST_MACHINE_WAIT_MS) {
   const t0 = Date.now();
   for (;;) {
     if (await fn()) return;
@@ -99,7 +100,7 @@ async function until(fn, msg, limit = 10000) {
 }
 
 // 反复执行断言直到通过（DOM 重画有先后）；超时抛最后一次的错。
-async function eventually(check, limit = 10000) {
+async function eventually(check, limit = TEST_MACHINE_WAIT_MS) {
   const t0 = Date.now();
   for (;;) {
     try { await check(); return; } catch (e) {
@@ -163,7 +164,8 @@ async function pickSlot(blk, slot) {
 async function playRound(browser, ready, { layout, removedUrls = null }) {
   const menuUrl = new URL('../menu', ready).href;
   const page = await browser.newPage();
-  page.setDefaultTimeout(8000);
+  page.setDefaultTimeout(TEST_MACHINE_WAIT_MS);
+  page.setDefaultNavigationTimeout(TEST_MACHINE_WAIT_MS);
   const consoleErrs = [];
   const pageErrs = [];
   const failedUrls = new Set();
@@ -295,14 +297,20 @@ async function playRound(browser, ready, { layout, removedUrls = null }) {
     });
 
     // 口径：主流程（removedUrls 为空）页面错误、失败请求、控制台错误全为 0。
-    // 拔包变体：pageerror 必须为 0；失败请求集合必须恰好等于被拔掉的 i18n 文件 URL 集合；
-    // 控制台 error 只允许由这些 URL 的网络失败引起（消息或位置里带着其中一个 URL）。
-    // 理由：浏览器把资源 404 记为 console error，属网络日志，不是页面报错。
+    // 拔包变体（主会话更正，出题.md 说明）：pageerror 为 0；失败请求集合非空，且是被拔掉 i18n 文件 URL 集合的子集
+    // （客户端在 locales.json 读不到时不再请求 labels，属正确行为，不要求全部被拔文件都被请求）；
+    // 控制台 error 每条都必须能由这些失败请求解释（消息或位置里带着其中一个失败 URL）。
+    // 理由：浏览器把资源失败记为 console error，属网络日志，不是页面报错。
     const allowed = new Set(removedUrls ?? []);
     assert.deepEqual(pageErrs, [], `页面异常应为 0：${pageErrs.join(' | ')}`);
-    assert.deepEqual([...failedUrls].sort(), [...allowed].sort(), `失败请求集合应恰好等于${removedUrls ? '被拔掉的 i18n 文件 URL 集合' : '空集'}`);
-    const stray = consoleErrs.filter((m) => ![...allowed].some((u) => m.url === u || m.text.includes(u)));
-    assert.deepEqual(stray.map((m) => m.text), [], `控制台 error 中不能由允许的网络失败解释的条应为 0`);
+    if (removedUrls) {
+      assert.ok(failedUrls.size > 0, '拔包变体里应至少有一次对被拔掉文件的失败请求');
+      for (const u of failedUrls) assert.ok(allowed.has(u), `失败请求应只落在被拔掉的 i18n 文件上：${u}`);
+    } else {
+      assert.equal(failedUrls.size, 0, `主流程失败请求应为 0：${[...failedUrls].join(' | ')}`);
+    }
+    const stray = consoleErrs.filter((m) => ![...failedUrls].some((u) => m.url === u || m.text.includes(u)));
+    assert.deepEqual(stray.map((m) => m.text), [], '控制台 error 中不能由失败请求解释的条应为 0');
     if (removedUrls) {
       assert.ok(await page.locator('.untranslated').count() > 0, '拔掉语言包后，缺名的节点应带 untranslated 类');
     }
