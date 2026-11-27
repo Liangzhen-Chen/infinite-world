@@ -1,5 +1,5 @@
 // 世界创建与开局一步的写回器（S1-2a；卷十 §3.2 :221、:294 写者 worldgen-writeback.mjs，:285 openingOf）。
-// runGenesis：世界创建事务里写 state.genesis.genesisMinute（卷十 R10-1.2 :378），值来自规则表 rules.gen.genesisMinute（R10-12.5 开局缺省三来路之一，不写代码常量）。
+// runGenesis：世界创建事务里写 state.genesis.genesisMinute（卷十 R10-1.2 :378）与世界种子 worldSeed（S1-3c Q1），值来自规则表 rules.gen.genesisMinute（R10-12.5 开局缺省三来路之一，不写代码常量）。
 // runOpening：开局一步（R10-12.7 :974）写 openingMinute，并对每个地点求开放范围 gen.open：作者已给的不覆盖；
 //   其余地点由 rules.gen.opening.openRX 求，该规则键尚未登记定值（卷十 :194；world/geo/gen-open.json 自注列缺口），故一律记 gap、不写偏离行（S1-2a 派卡「主会话已定」第 3 条）。
 // openingOf：读 state.genesis（卷十 :285）。地点遍历只经烘焙层 engine.bake.placeTree.byLevel，不按地点 id 或名字分支。
@@ -28,6 +28,8 @@ const UNKNOWN = 'E-DIM-UNKNOWN-READ';
 export function runGenesis(engine, state, tx) {
   const { P } = engine;
   writePath(state, P.genesis_genesisMinute(), ruleValue(engine.docData, GEN, 'genesisMinute'), tx);
+  // 世界种子（S1-3c 主会话 Q1：genesis.worldSeed ← rules.gen.worldSeed 缺省值；卷十 R10-1.3 :379 生成器读世界种子，骰值键第一段，卷二十七 R27-8.5）。
+  writePath(state, P.genesis_worldSeed(), ruleValue(engine.docData, GEN, 'worldSeed'), tx);
 }
 
 /**

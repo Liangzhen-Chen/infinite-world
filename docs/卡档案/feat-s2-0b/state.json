@@ -1,7 +1,7 @@
 {
   "card": "feat-s2-0b",
-  "phase": "dispatched",
-  "updatedAt": "2026-11-26T17:13:20.172Z",
+  "phase": "reviewed",
+  "updatedAt": "2026-11-26T22:34:49.984Z",
   "branches": {
     "code": "feat/s2-0b",
     "test": "test/s2-0b"
@@ -31,7 +31,7 @@
     "status": "pending",
     "runUrl": null
   },
-  "failCount": 0,
-  "blocker": null,
-  "nextAction": "写码 Sonnet、出题 Haiku Orca 会话派出（在 feat/s2-0a 之上，与 S2-0a 一个 PR）；回报后主会话读 diff，再派 Opus 审卡"
+  "failCount": 1,
+  "blocker": "等 S1-3c（开局化身建档派生）：S1-3a 开局化身缺 species/adultMassKg/birthMinute，真实 init 无人物实体，验收 7 例无合法主体（诊断 msg_e1158b17f773、msg_23b67ef688de 回复）",
+  "nextAction": "等 S1-3c 合入后：出题方把 7 例前置改为真实开局 act_choose_origin 建化身再触发终止机制（只验 NPC 同律 die/settleBody，不验玩家死后）；转绿后补两卡凭证、快照、--check、check-push-archive，推 feat/s2-0b 开一个 PR"
 }

@@ -2,6 +2,7 @@
 // 本卡（S2-0a）只做第 1、2、5 步：定后继（现只有 wreck）与领域清理（清理函数、去留表）、终止标记、清状态实例与发终止事件；
 // 第 3 步账户分流、第 4 步持有边、撤销到期项与复生归 S2-0c。标记按主会话裁定 R1 作事务里最后一笔状态写入（五步语义与次序不变）。
 // 全部按登记数据判：类别行 termination、state-owners 的 systems.*.terminationCleanup、规则表 rules.terminate.*；不认任何 kind、类别或 id。
+// 另有建档路由 instantiateEntity（S1-3c 草案 §5）：create 原语建行后按 systems.*.instantiate 登记调实例化函数，与终止发起方同一登记做法。
 
 import { KernelError } from '../../kernel/errors.mjs';
 import { T } from '../../kernel/handles.mjs';
@@ -11,7 +12,7 @@ import { kindOfEntity, readPath, writePath, createEntity } from '../../kernel/st
 import { classRowsOf } from '../../kernel/dimensions.mjs';
 import { txEmit } from '../../kernel/transaction.mjs';
 import { clockMinute } from '../../kernel/scheduler.mjs';
-import { ruleValue } from '../load/registry.mjs';
+import { ruleValue, unitSi } from '../load/registry.mjs';
 import { subjectRecordPaths, deleteRecords, recordValues, terminableKinds } from './records.mjs';
 import { statusView, clearStatusesOf } from '../status/status.mjs';
 
@@ -26,6 +27,8 @@ const TERMINATION_FIELD = 'termination';
 const CLEANUP_FIELD = 'terminationCleanup';
 // 终止发起方的登记字段（卷二 :552「可终止实体类的归属卷只登记触发条件」；草案 §4.1：systems.<名>.terminationTrigger {kinds, handler}，S2-0b）。
 const TRIGGER_FIELD = 'terminationTrigger';
+// 建档实例化的登记字段（S1-3c 草案 §5：systems.<名>.instantiate {kinds, handler}）。
+const INSTANTIATE_FIELD = 'instantiate';
 // 终止事件的动词条目（卷二 :557：verb 族条目，由内核登记；state-owners kernel.emits 已列）。
 const VERB_TERMINATED = 'verb_entity_terminated';
 // cause 所属的词表族（卷二 :552「cause 是 verb 族句柄」）。
@@ -69,6 +72,17 @@ function handlerEntry(handlerRef, handler) {
  * @returns {Readonly<{handlerRef: string, handler: Function}>}
  */
 export function registerTerminationTrigger(handlerRef, handler) {
+  return handlerEntry(handlerRef, handler);
+}
+
+/**
+ * 建档实例化函数的登记项（S1-3c 草案 §5 systems.<名>.instantiate；与终止发起方同形）：由声明它的模块导出、装配层收进 engine.instantiators，
+ * instantiateEntity 按 instantiate.handler 认函数，签名 handler(engine, state, entityId, tx)。
+ * @param {string} handlerRef
+ * @param {Function} handler 实例化函数（engine 取装配层的完整 engine，形状由该函数自己声明）
+ * @returns {Readonly<{handlerRef: string, handler: Function}>}
+ */
+export function registerInstantiator(handlerRef, handler) {
   return handlerEntry(handlerRef, handler);
 }
 
@@ -174,21 +188,42 @@ export function destroyEntity(state, entityId, tx) {
   const kind = kindOfEntity(engine, state, entityId);
   if (!terminableKinds(engine).has(kind)) throw new KernelError('E-TERM-RESIDUE', {}, `destroy: ${kind} ${entityId} is not terminable`);
   if (readPath(state, engine.P.terminated(entityId)) !== undefined) throw new KernelError('E-TERM-RESIDUE', {}, `destroy: ${entityId} is already terminated`);
-  /** @type {unknown} */
-  const given = engine.terminationTriggers;
-  if (!Array.isArray(given)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'engine.terminationTriggers must be an array');
+  const fn = systemRoute(engine, TRIGGER_FIELD, engine.terminationTriggers, kind);
+  if (fn === null) throw new KernelError('E-ACT-WRITER-NOT-READY', {}, `destroy: no terminationTrigger registered for ${kind}`);
+  fn(engine, state, entityId, tx);
+}
+
+/**
+ * 按 state-owners systems.<名>.<field> {kinds, handler} 登记认一个种类的处理函数（终止发起方与建档实例化共用一处）：取 kinds 含该种类的那一条，
+ * 按 handler 在装配层交入的登记项数组 given 里认函数。没有登记返回 null；多于一条或登记形状不合即 E-DIM-STRUCT-FIELD；登记了却没交函数即 E-DIM-REF-MISSING。
+ * @param {LifeEngine} engine @param {string} field @param {unknown} given @param {string} kind @returns {Function | null}
+ */
+function systemRoute(engine, field, given, kind) {
+  if (!Array.isArray(given)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `engine handler entries for systems.*.${field} must be an array`);
   const systems = Object(Object(Object(engine.docData).owners).systems);
   /** @type {Array<{name: string, handlerRef: string}>} */
   const rows = [];
   for (const name of Object.keys(systems).sort()) {
-    const t = Object(systems[name])[TRIGGER_FIELD];
+    const t = Object(systems[name])[field];
     if (t === undefined) continue;
-    if (!Array.isArray(t.kinds) || typeof t.handler !== 'string') throw new KernelError('E-DIM-STRUCT-FIELD', {}, `systems.${name}.terminationTrigger needs kinds and handler`);
+    if (!Array.isArray(t.kinds) || typeof t.handler !== 'string') throw new KernelError('E-DIM-STRUCT-FIELD', {}, `systems.${name}.${field} needs kinds and handler`);
     if (t.kinds.includes(kind)) rows.push({ name, handlerRef: t.handler });
   }
-  if (rows.length === 0) throw new KernelError('E-ACT-WRITER-NOT-READY', {}, `destroy: no terminationTrigger registered for ${kind}`);
-  if (rows.length > 1) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `destroy: ${kind} has more than one terminationTrigger (${rows.map((r) => r.name).join(', ')})`);
-  registeredHandler(given, rows[0].handlerRef, `terminationTrigger ${rows[0].handlerRef} (systems.${rows[0].name})`)(engine, state, entityId, tx);
+  if (rows.length === 0) return null;
+  if (rows.length > 1) throw new KernelError('E-DIM-STRUCT-FIELD', {}, `${kind} has more than one ${field} (${rows.map((r) => r.name).join(', ')})`);
+  return registeredHandler(given, rows[0].handlerRef, `${field} ${rows[0].handlerRef} (systems.${rows[0].name})`);
+}
+
+/**
+ * create 原语的建档入口（S1-3c 草案 §5；装配层注入为 engine.lifecycle.instantiate，kernel/transaction.mjs HANDLERS.create 写入阶段末尾调）：
+ * 不按 kind 名分支，按 systems.*.instantiate 登记路由到实例化函数 handler(engine, state, entityId, tx)；该种类没有登记即不做事（物品、组织等照旧）。
+ * @param {unknown} state @param {string} entityId @param {unknown} tx
+ */
+export function instantiateEntity(state, entityId, tx) {
+  /** @type {LifeEngine} */
+  const engine = Object(tx).engine;
+  const fn = systemRoute(engine, INSTANTIATE_FIELD, Object(engine).instantiators, kindOfEntity(engine, state, entityId));
+  if (fn !== null) fn(engine, state, entityId, tx);
 }
 
 /**
@@ -218,7 +253,7 @@ function createWreck(engine, state, kind, id, minute, tx) {
 
 /**
  * 终止标记里「日」字段与一日的分钟数（卷二 :554 标记 {day, cause, mode}；卷二十 :504 日 = 分钟的单位换算，取 _units.json，不是规则常数）：
- * 字段取标记登记类型（pathTypes 的 terminated 模式所指命名 struct）里唯一带单位的数值字段，其单位与时钟路径登记类型的单位在单位表里的 si 之比即换算比。
+ * 字段取标记登记类型（pathTypes 的 terminated 模式所指命名 struct）里唯一带单位的数值字段，其单位与时钟路径登记类型的单位经 registry.mjs#unitSi 取 si，之比即换算比。
  * 不写单位代号；不是恰一个带单位的数值字段、单位缺行、比值不是正整数即 E-DIM-UNIT-UNKNOWN。
  * @param {LifeEngine} engine @param {string} entityId @returns {{field: string, minutesPerDay: number}}
  */
@@ -234,10 +269,13 @@ function markDayField(engine, entityId) {
     if (t && t.unit) timed.push({ field: k, unit: t.unit });
   }
   const clock = parseNumberType(String(types[P.clock_minute().pattern]));
-  /** @type {unknown[]} */
-  const units = Array.isArray(Object(doc.unitsDoc).units) ? Object(doc.unitsDoc).units : [];
-  const si = (/** @type {unknown} */ id) => Number(Object(units.find((u) => Object(u).id === id)).si);
-  const ratio = timed.length === 1 && clock && clock.unit ? si(timed[0].unit) / si(clock.unit) : NaN;
+  if (timed.length !== 1 || !clock || !clock.unit) throw new KernelError('E-DIM-UNIT-UNKNOWN', {}, 'terminate: mark needs exactly one unit-typed number field and a unit-typed clock path');
+  // 两单位 si 之比经公共入口 unitSi（有理数，整除才算整数比）。
+  const [an, ad] = unitSi(doc, timed[0].unit);
+  const [bn, bd] = unitSi(doc, clock.unit);
+  const num = an * bd;
+  const den = ad * bn;
+  const ratio = den > 0n && num % den === 0n ? Number(num / den) : NaN;
   if (!Number.isInteger(ratio) || ratio <= 0) throw new KernelError('E-DIM-UNIT-UNKNOWN', {}, 'terminate: mark day unit / clock unit must have an integer ratio in the units table');
   return { field: timed[0].field, minutesPerDay: ratio };
 }

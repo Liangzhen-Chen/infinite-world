@@ -4,11 +4,11 @@
    "code": "kernelConstants",
    "file": "tables/kernel-constants.json",
    "structure": "keys",
-   "type": {"BASE": "integer", "SCALE": "integer", "PERMILLE": "integer", "BPS": "integer", "extendsMaxDepth": "integer", "rxMaxDepth": "integer", "handleRadix": "integer", "diceKeyMaxQualifiers": "integer","fixedLnWorkExponent": "integer", "fixedLnInputExponent": "integer", "fixedLnSeriesTerms": "integer", "LN2": "string", "thermalLagMaxNum": "integer", "thermalLagMaxDen": "integer", "bodyPartChainMaxDepth": "integer", "byteRadix": "integer", "base64Radix": "integer", "base64GroupChars": "integer", "utf8ContinuationBase": "integer", "utf8PayloadRadix": "integer", "utf8LeadBases": {"type": "list", "of": {"type": "integer", "unit": "count"}}, "utf8MinCodePoint": {"type": "list", "of": {"type": "integer", "unit": "count"}}, "unicodeMax": "integer", "surrogateFirst": "integer", "surrogateLast": "integer"},
-   "domain": {"BASE": [1, null], "SCALE": [1, null], "PERMILLE": [1, null], "BPS": [1, null], "extendsMaxDepth": [1, null], "rxMaxDepth": [1, null], "handleRadix": [2, 36], "diceKeyMaxQualifiers": [1, null],"fixedLnWorkExponent": [1, null], "fixedLnInputExponent": [1, null], "fixedLnSeriesTerms": [1, null], "LN2": {}, "thermalLagMaxNum": [1, null], "thermalLagMaxDen": [1, null], "bodyPartChainMaxDepth": [1, null], "byteRadix": [1, null], "base64Radix": [1, null], "base64GroupChars": [1, null], "utf8ContinuationBase": [1, null], "utf8PayloadRadix": [1, null], "utf8LeadBases": {}, "utf8MinCodePoint": {}, "unicodeMax": [1, null], "surrogateFirst": [1, null], "surrogateLast": [1, null]},
+   "type": {"BASE": "integer", "SCALE": "integer", "PERMILLE": "integer", "BPS": "integer", "extendsMaxDepth": "integer", "rxMaxDepth": "integer", "handleRadix": "integer", "diceKeyMaxQualifiers": "integer","fixedLnWorkExponent": "integer", "fixedLnInputExponent": "integer", "fixedLnSeriesTerms": "integer", "LN2": "string", "thermalLagMaxNum": "integer", "thermalLagMaxDen": "integer", "bodyPartChainMaxDepth": "integer", "byteRadix": "integer", "base64Radix": "integer", "base64GroupChars": "integer", "utf8ContinuationBase": "integer", "utf8PayloadRadix": "integer", "utf8LeadBases": {"type": "list", "of": {"type": "integer", "unit": "count"}}, "utf8MinCodePoint": {"type": "list", "of": {"type": "integer", "unit": "count"}}, "unicodeMax": "integer", "surrogateFirst": "integer", "surrogateLast": "integer", "prngHexDigits": "integer"},
+   "domain": {"BASE": [1, null], "SCALE": [1, null], "PERMILLE": [1, null], "BPS": [1, null], "extendsMaxDepth": [1, null], "rxMaxDepth": [1, null], "handleRadix": [2, 36], "diceKeyMaxQualifiers": [1, null],"fixedLnWorkExponent": [1, null], "fixedLnInputExponent": [1, null], "fixedLnSeriesTerms": [1, null], "LN2": {}, "thermalLagMaxNum": [1, null], "thermalLagMaxDen": [1, null], "bodyPartChainMaxDepth": [1, null], "byteRadix": [1, null], "base64Radix": [1, null], "base64GroupChars": [1, null], "utf8ContinuationBase": [1, null], "utf8PayloadRadix": [1, null], "utf8LeadBases": {}, "utf8MinCodePoint": {}, "unicodeMax": [1, null], "surrogateFirst": [1, null], "surrogateLast": [1, null], "prngHexDigits": [1, null]},
    "volume": "卷二 §7 S10 :2407（kernel 定点文件常数登记豁免；数值来自 engine.rules 即不计，handleRadix、diceKeyMaxQualifiers 依此过 const_literal）、§3.3 :1319（定点算术段：SCALE、PERMILLE、BPS 同登）、§3.3 :1333、§3.3 :1335–:1339（fixedLn 的 W=10¹⁸、升标度 10¹⁰、级数项数 20、LN2；登记句另见 :1341）、§1.3、§1.5；卷二十七 R27-8.5 :728（骰值键 subjectId 后接一到两个限定成分）；卷四 §2.2 :202（身体图不变量“链深 ≤ 8”，加载期校验器上限）",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"BASE": false, "SCALE": false, "PERMILLE": false, "BPS": false, "extendsMaxDepth": false, "rxMaxDepth": false, "handleRadix": false, "diceKeyMaxQualifiers": false,"fixedLnWorkExponent": false, "fixedLnInputExponent": false, "fixedLnSeriesTerms": false, "LN2": false, "thermalLagMaxNum": false, "thermalLagMaxDen": false, "bodyPartChainMaxDepth": false, "byteRadix": false, "base64Radix": false, "base64GroupChars": false, "utf8ContinuationBase": false, "utf8PayloadRadix": false, "utf8LeadBases": false, "utf8MinCodePoint": false, "unicodeMax": false, "surrogateFirst": false, "surrogateLast": false}
+   "packOverridable": {"BASE": false, "SCALE": false, "PERMILLE": false, "BPS": false, "extendsMaxDepth": false, "rxMaxDepth": false, "handleRadix": false, "diceKeyMaxQualifiers": false,"fixedLnWorkExponent": false, "fixedLnInputExponent": false, "fixedLnSeriesTerms": false, "LN2": false, "thermalLagMaxNum": false, "thermalLagMaxDen": false, "bodyPartChainMaxDepth": false, "byteRadix": false, "base64Radix": false, "base64GroupChars": false, "utf8ContinuationBase": false, "utf8PayloadRadix": false, "utf8LeadBases": false, "utf8MinCodePoint": false, "unicodeMax": false, "surrogateFirst": false, "surrogateLast": false, "prngHexDigits": false}
   },
   {
    "code": "modifiers",
@@ -320,6 +320,22 @@
    "packOverridable": {"terminalStatus": false, "lostPartsExcluded": false, "corpseClass": false, "destroyCause": false, "corpseMaterialGroup": false, "unbuilt": false}
   },
   {
+   "code": "person",
+   "file": "tables/person.json",
+   "structure": "keys",
+   "type": {
+    "sampleFrom": {"type": "list", "of": {"type": "struct", "required": ["target", "source", "basis"], "fields": {
+     "target": {"type": "string"},
+     "source": {"type": "string"},
+     "basis": {"type": "string"}
+    }}}
+   },
+   "domain": {"sampleFrom": {}},
+   "volume": "卷四 §2.3 :208–:232（person 的 always 维度里经采样的几维：sex :209 自 species.sexes、lifespanYears :214、adultMassKg :219–:220、attributes :221、sensitivity :232）、§4.10 P-4（个体实例化）；S1-3c 草案 §1（建档补全的「person 维度 ← 物种维度」对照放数据表，加一维只加一行）。读者 rules/body/person.mjs#instantiatePerson",
+   "multiSourceMerge": "own_key_only",
+   "packOverridable": {"sampleFrom": false}
+  },
+  {
    "code": "calendar",
    "file": "tables/calendar.json",
    "structure": "keys",
@@ -605,12 +621,13 @@
      "writes": {"type": "list", "of": {"type": "string"}}
     }}},
     "genesisMinute": {"type": "integer", "unit": "minute"},
-    "historyYears": {"type": "integer", "unit": "count"}
+    "historyYears": {"type": "integer", "unit": "count"},
+    "worldSeed": {"type": "integer", "unit": "dimensionless"}
    },
-   "domain": {"waterRows": {}, "waterFillRows": {}, "bldfillRows": {}, "roleTract": {}, "roleWaterbody": {}, "roleFacility": {}, "layoutCoverage": [0, 1], "layoutGapCells": [1, null], "underMaxAreaM2": [1, null], "openingCondition": [0, 1], "dwellingIntendedType": {}, "tenureModes": {}, "householdMemberKind": {}, "householdHeadKind": {}, "createSteps": {}, "genesisMinute": [0, null], "historyYears": [0, 0]},
+   "domain": {"waterRows": {}, "waterFillRows": {}, "bldfillRows": {}, "roleTract": {}, "roleWaterbody": {}, "roleFacility": {}, "layoutCoverage": [0, 1], "layoutGapCells": [1, null], "underMaxAreaM2": [1, null], "openingCondition": [0, 1], "dwellingIntendedType": {}, "tenureModes": {}, "householdMemberKind": {}, "householdHeadKind": {}, "createSteps": {}, "genesisMinute": [0, null], "historyYears": [0, 0], "worldSeed": [null, null]},
    "volume": "卷十 §2.3 :165（rules.gen.water.rows：命中的水体取哪一类、多深；本卡只落 priority、waterKind、depthM，whenRX 与 liquidRX 随存量单元行与 rx 读邻格聚合落地后补）、:166（rules.gen.water.fill.rows，键名取驼峰 waterFillRows：作者手写水体行缺足迹输入时的补法，R10-2.17）、:186（rules.gen.bldfill.rows，键名取驼峰 bldfillRows：手写建筑行缺面积与层数时的取值范围，R10-7.12）、R10-2.12 :427（句柄 rules.gen.roles.tract、rules.gen.roles.waterbody，键名取驼峰 roleTract、roleWaterbody）；读者是 kernel/gen/worldgen.mjs、kernel/gen/water.mjs、kernel/gen/waterfoot.mjs、kernel/gen/siteform.mjs；S1-2a 加世界模板参数 genesisMinute（卷十 :224 第 0 日时刻，取值域 ≥0）、historyYears（卷十 R10-11.4 :852 预跑年数，预跑未建取值域只收 0），世界模板参数暂落本表见卷十封卷后勘误 1126k1，读者是 rules/gen/worldgen-writeback.mjs",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"waterRows": false, "waterFillRows": false, "bldfillRows": false, "roleTract": false, "roleWaterbody": false, "roleFacility": false, "layoutCoverage": false, "layoutGapCells": false, "underMaxAreaM2": false, "openingCondition": false, "dwellingIntendedType": false, "tenureModes": false, "householdMemberKind": false, "householdHeadKind": false, "createSteps": false, "genesisMinute": false, "historyYears": false}
+   "packOverridable": {"waterRows": false, "waterFillRows": false, "bldfillRows": false, "roleTract": false, "roleWaterbody": false, "roleFacility": false, "layoutCoverage": false, "layoutGapCells": false, "underMaxAreaM2": false, "openingCondition": false, "dwellingIntendedType": false, "tenureModes": false, "householdMemberKind": false, "householdHeadKind": false, "createSteps": false, "genesisMinute": false, "historyYears": false, "worldSeed": false}
   },
   {
    "code": "simTiers",

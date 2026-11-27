@@ -4,7 +4,7 @@
 // 状态实例的写者 status.mjs 未建，故此处完好度即基值；有效完好度 eff 按 B-3 读 rules.body.integrity.lostBelow。
 // 能力值（B-7）：结构基值（B-1）加 B-4 部位折算项，再过登记修正来源（kernel modifiedWith），钳到表头 bounds。B-5 能力依赖项未建：能力族条目带非空 limitedBy 即报未知读取，不静默略过。
 // 部位质量 = 主体 massKg × sizeFraction（B-9）。主体质量按卷四 L-2 派生（individualMassKg，S2-0b）：adultMassKg × lookup(rules.life.growthCurve, relMaturity)，
-// relMaturity = 年龄 ÷ 物种 maturityYears，年龄 = 时钟 − birthMinute，单位换算一律取单位表（_units.json si / siFromRule），不写单位代号；物种实体自身没有个体质量，读出未知。组织材料按 B-9 优先级：主体 tissueDelta → 部位 tissueOverride → 物种 tissues。
+// relMaturity = 年龄 ÷ 物种 maturityYears，年龄 = 时钟 − birthMinute，单位换算经公共入口 registry.mjs#unitSi（单位表 si / siFromRule），不写单位代号；物种实体自身没有个体质量，读出未知。组织材料按 B-9 优先级：主体 tissueDelta → 部位 tissueOverride → 物种 tissues。
 // 遍历映射一律经 presentEntries（null 键不进）；不认任何具体物种、身体图、部位、组织或能力代号，也不按 kind 分支（只看表头声明）。
 import { dim, modifiedWith, presentEntries, lookupCurve } from '../../kernel/dimensions.mjs';
 import { clockMinute } from '../../kernel/scheduler.mjs';
@@ -13,7 +13,7 @@ import { KernelError } from '../../kernel/errors.mjs';
 import { fixedUnits, fixedSub, fixedMultiply, fixedAdd, fixedScale, fixedToNumber } from '../../kernel/det-math.mjs';
 import { SPECIES_KIND, DIM, tableOf, headerOf, planKindOf, structuralBase, fixedZero } from './body-plan.mjs';
 import { UNKNOWN } from './species.mjs';
-import { ruleValue } from '../load/registry.mjs';
+import { ruleValue, unitSi } from '../load/registry.mjs';
 
 /** @typedef {import('./body-plan.mjs').BodyEngine} BodyEngine */
 /** @typedef {import('./body-plan.mjs').Part} Part */
@@ -28,8 +28,6 @@ const PERSON_DIM = Object.freeze({ species: 'species', bodyPlanOverride: 'bodyPl
 const MATURITY_DIM = 'maturityYears';
 const LIFE_TABLE = 'life';
 const GROWTH_CURVE = 'growthCurve';
-// 单位表 siFromRule.key 的写法 "rules.<表>.<键>"（卷二 §1.4）。
-const RULE_KEY_RE = /^rules\.([A-Za-z][A-Za-z0-9]*)\.([A-Za-z][A-Za-z0-9]*)$/;
 const PART_INTEGRITY = 'partIntegrity';
 // 卷二 §1.6 onUnknown 取值：skip = 缺值不参与。
 const ON_UNKNOWN_SKIP = 'skip';
@@ -69,29 +67,6 @@ export function bodyOf(engine, state, subjectId) {
 }
 
 /**
- * 一个单位的 si 值，作有理数 [分子, 分母]（BigInt，定点 fixedUnits 折算，不经浮点）：单位表行写 si 即取它；写 siFromRule 的，取所指规则表键
- * （数值，或 {num, den} 有理数）乘以其 unit 的 si，invert 为真取倒数（卷二 §1.4 单位表）。单位缺行、规则键写法不合即 E-DIM-UNIT-UNKNOWN。
- * @param {BodyEngine} engine @param {unknown} unit @returns {[bigint, bigint]}
- */
-function siOf(engine, unit) {
-  const doc = Object(engine.docData);
-  /** @type {unknown[]} */
-  const units = Array.isArray(Object(doc.unitsDoc).units) ? Object(doc.unitsDoc).units : [];
-  const row = Object(units.find((u) => Object(u).id === unit));
-  const one = fixedScale();
-  if (row.si !== undefined) return [fixedUnits(Number(row.si)), one];
-  const rule = Object(row.siFromRule);
-  const m = typeof rule.key === 'string' ? RULE_KEY_RE.exec(rule.key) : null;
-  if (m === null) throw new KernelError('E-DIM-UNIT-UNKNOWN', {}, `unit ${JSON.stringify(unit)}: no si or siFromRule in the units table`);
-  const [, table, key] = m;
-  const v = ruleValue(doc, table, key);
-  /** @type {[bigint, bigint]} */
-  const ratio = typeof v === 'number' ? [fixedUnits(v), one] : [BigInt(Number(Object(v).num)), BigInt(Number(Object(v).den))];
-  const [bn, bd] = siOf(engine, rule.unit);
-  return rule.invert === true ? [ratio[1] * bd, ratio[0] * bn] : [ratio[0] * bn, ratio[1] * bd];
-}
-
-/**
  * 个体质量（卷四 §2.3 :220、§4.4 L-2）：massKg = adultMassKg × lookup(rules.life.growthCurve, relMaturity)，
  * relMaturity = (clock − birthMinute) ÷ 物种 maturityYears（卷四 §2.3 :212–:213），两边各按表头单位换成 si 后相除（有理数，最后一次整除截断）。
  * 再过登记修正来源（massKg 表头 modifiable）。主体表头没有声明 massKg（物种实体）或任一输入读出未知（E-DIM-UNKNOWN-READ）即未知。
@@ -108,8 +83,8 @@ function individualMassKg(engine, state, body, subjectId) {
     if (Object(e).code === 'E-DIM-UNKNOWN-READ') return UNKNOWN;
     throw e;
   }
-  const [an, ad] = siOf(engine, headerOf(engine, body.kind, PERSON_DIM.birthMinute).unit);
-  const [mn, md] = siOf(engine, headerOf(engine, SPECIES_KIND, MATURITY_DIM).unit);
+  const [an, ad] = unitSi(engine.docData, headerOf(engine, body.kind, PERSON_DIM.birthMinute).unit);
+  const [mn, md] = unitSi(engine.docData, headerOf(engine, SPECIES_KIND, MATURITY_DIM).unit);
   const one = fixedScale();
   const age = BigInt(clockMinute(engine, state) - Number(birth));
   const mat = fixedUnits(Number(maturity));

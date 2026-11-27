@@ -1,4 +1,4 @@
-// @file server-plugin/kernel/handles/keys.mjs
+// @file server-plugin/rules/gen/sample.mjs
 export function id(a, b) {
   return sha256Text([a, b].join(KEY_JOIN));
 }

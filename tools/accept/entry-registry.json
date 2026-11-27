@@ -637,7 +637,10 @@
     "loadActions",
     "menuOf",
     "resolveIntent",
-    "submitIntent"
+    "submitIntent",
+    "instantiateEntity",
+    "instantiatePerson",
+    "installExpTable"
    ],
    "rules": []
   },
@@ -1141,7 +1144,8 @@
     "fixedScale",
     "fixedToNumber",
     "KernelError",
-    "lookupCurve"
+    "lookupCurve",
+    "unitSi"
    ],
    "rules": []
   },
@@ -1180,7 +1184,8 @@
     "deleteRecords",
     "clearStatusesOf",
     "terminationResidue",
-    "KernelError"
+    "KernelError",
+    "unitSi"
    ],
    "rules": []
   },
@@ -1476,6 +1481,20 @@
    "rules": []
   },
   {
+   "name": "unitSi",
+   "file": "rules/load/registry.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "ruleValue",
+    "fixedUnits",
+    "fixedScale",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
    "name": "loadActions",
    "file": "rules/act/catalog.mjs",
    "vol": null,
@@ -1539,7 +1558,8 @@
    "kind": "read",
    "needs": [
     "KernelError",
-    "dim"
+    "dim",
+    "speciesOf"
    ],
    "rules": []
   },
@@ -1612,6 +1632,79 @@
    "kind": "read",
    "needs": [
     "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "drawByKey",
+   "file": "rules/gen/sample.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "KernelError",
+    "presentEntries",
+    "fixedUnits",
+    "fixedMultiply",
+    "fixedExp",
+    "fixedToNumber",
+    "ruleValue"
+   ],
+   "rules": []
+  },
+  {
+   "name": "speciesOf",
+   "file": "rules/body/person.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "dim"
+   ],
+   "rules": []
+  },
+  {
+   "name": "instantiatePerson",
+   "file": "rules/body/person.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "speciesOf",
+    "drawByKey",
+    "dim",
+    "readPath",
+    "presentEntries",
+    "fixedUnits",
+    "fixedMultiply",
+    "truncateTo",
+    "fixedToNumber",
+    "ruleValue",
+    "unitSi",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "registerInstantiator",
+   "file": "rules/lifecycle/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "instantiateEntity",
+   "file": "rules/lifecycle/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "KernelError",
+    "instantiatePerson"
    ],
    "rules": []
   }

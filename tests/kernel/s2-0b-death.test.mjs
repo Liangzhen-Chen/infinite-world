@@ -16,7 +16,7 @@ import { canonical, readPath } from '../../server-plugin/kernel/storage.mjs';
 import { clockMinute } from '../../server-plugin/kernel/scheduler.mjs';
 import { terminated } from '../../server-plugin/rules/body/action-capacity.mjs';
 import { die } from '../../server-plugin/rules/body/death.mjs';
-import { ruleValue } from '../../server-plugin/rules/load/registry.mjs';
+import { ruleValue, unitSi } from '../../server-plugin/rules/load/registry.mjs';
 
 const ONT = new URL('../../world/ontology/', import.meta.url);
 const json = (f) => JSON.parse(readFileSync(new URL(f, ONT), 'utf8'));
@@ -37,6 +37,8 @@ function rawWorld() {
     primitivesDoc: json('primitives.json'),
     vocabDoc: json('dimensions/_vocab.json'),
     unitsDoc: json('dimensions/_units.json'),
+    // 采样表（S1-3c：create 建人时按物种分布补齐维度，与 index.mjs#readWorld 同形）。
+    distributionsDoc: json('dimensions/_distributions.json'),
   };
 }
 const docOf = (raw, kind) => raw.dimensionDocs.find((d) => d.kind === kind);
@@ -185,4 +187,20 @@ test('rules.death 新键按登记声明核：destroyCause 是 verb 族条目、c
   assert.equal(ruleValue(raw, 'death', 'destroyCause'), DEATH.destroyCause);
   raw.tableDocs.death.rows.find((r) => r.key === 'corpseMaterialGroup').value = DEATH.destroyCause;
   assert.throws(() => ruleValue(raw, 'death', 'corpseMaterialGroup'), (e) => Object(e).code === 'E-DIM-DOMAIN-RANGE');
+});
+
+test('单位 si 公共入口 unitSi：直写 si 的单位与 siFromRule 的单位都与单位表手算一致（有理数逐位）；缺行即 E-DIM-UNIT-UNKNOWN', () => {
+  const raw = rawWorld();
+  mount(raw); // 装入定点常数
+  const direct = units.find((u) => u.si !== undefined);
+  const [dn, dd] = unitSi(raw, direct.id);
+  assert.equal(dn * 1n, dd * BigInt(direct.si));
+  const derived = units.find((u) => u.siFromRule !== undefined && u.siFromRule.invert !== true);
+  const [, table, key] = /^rules\.([^.]+)\.([^.]+)$/.exec(derived.siFromRule.key);
+  const v = json(`../rules/${raw.registryRows.find((r) => r.code === table).file}`).rows.find((r) => r.key === key).value;
+  const base = si(derived.siFromRule.unit).si;
+  const [yn, yd] = unitSi(raw, derived.id);
+  // year 的 si = (num ÷ den) × 所指单位的 si：交叉相乘比对，不经浮点。
+  assert.equal(yn * BigInt(v.den), yd * BigInt(v.num) * BigInt(base));
+  assert.throws(() => unitSi(raw, 'no_such_unit'), (e) => Object(e).code === 'E-DIM-UNIT-UNKNOWN');
 });

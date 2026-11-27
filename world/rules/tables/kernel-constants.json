@@ -24,6 +24,7 @@
   {"key": "unicodeMax", "value": 1114111, "file": "server-plugin/kernel/bytes.mjs", "source": "Unicode：最大码点 U+10FFFF", "basis": "超过即非法"},
   {"key": "surrogateFirst", "value": 55296, "file": "server-plugin/kernel/bytes.mjs", "source": "Unicode：代理区 U+D800–U+DFFF 不是字符，UTF-8 不得编码", "basis": "代理区起点"},
   {"key": "surrogateLast", "value": 57343, "file": "server-plugin/kernel/bytes.mjs", "source": "同上", "basis": "代理区终点"},
-  {"key": "bodyPartChainMaxDepth", "value": 8, "file": "server-plugin/kernel/validate/body-tables.mjs", "source": "卷四 §2.2 :202 身体图不变量“无环，链深 ≤ 8”", "basis": "加载期校验器上限：从根到任一部位经过的部位个数（根算 1）不超过此数；代码经规则表 kernelConstants 读入，不在代码里写字面量（卷二 S10 :2404）"}
+  {"key": "bodyPartChainMaxDepth", "value": 8, "file": "server-plugin/kernel/validate/body-tables.mjs", "source": "卷四 §2.2 :202 身体图不变量“无环，链深 ≤ 8”", "basis": "加载期校验器上限：从根到任一部位经过的部位个数（根算 1）不超过此数；代码经规则表 kernelConstants 读入，不在代码里写字面量（卷二 S10 :2404）"},
+  {"key": "prngHexDigits", "value": 16, "file": "server-plugin/rules/gen/sample.mjs", "source": "卷二 §1.10 :330（第 i 个均匀数 u = BigInt(\"0x\" + h_i.slice(0,16))：取摘要十六进制前 16 位，即 64 位整数）"}
  ]
 }
