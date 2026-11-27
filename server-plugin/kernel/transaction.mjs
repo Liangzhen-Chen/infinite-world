@@ -9,7 +9,7 @@ import { checkValue } from './validate/types.mjs';
 import { appendEntry, nextRequestSeq, tickEnd } from './save.mjs';
 import { newState, kindOfEntity, createEntity, setEntityProp, readPath } from './storage.mjs';
 
-/** @typedef {{engine: any, state: any, open: boolean, undo: Array<{obj: any, key: string, had: boolean, old: any}>, touched: any[]}} WriteScope */
+/** @typedef {{engine: any, state: any, open: boolean, undo: Array<{obj: any, key: string, had: boolean, old: any}>, touched: any[], events: Array<Readonly<{verb: string, payload: any, targets: readonly string[]}>>}} WriteScope */
 
 /**
  * 开写入作用域执行 fn(tx) 并返回结果；fn 抛错时按撤销记录逆序撤回本作用域全部写入（整笔撤销，卷二 :541 第 1 点），再原样抛出。
@@ -25,7 +25,7 @@ export function writeScope(engine, state, fn) {
   if (state === null || typeof state !== 'object' || Array.isArray(state)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'state must be a plain object');
   if (typeof fn !== 'function') throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'writeScope needs a function');
   /** @type {WriteScope} */
-  const tx = { engine, state, open: true, undo: [], touched: [] };
+  const tx = { engine, state, open: true, undo: [], touched: [], events: [] };
   try {
     return fn(tx);
   } catch (e) {
@@ -63,6 +63,21 @@ export function txDelete(tx, obj, key) {
   delete obj[key];
 }
 
+/**
+ * 事务内发事件（S2-0a；卷二 :557 终止事件、卷二十四 :356 事件日志归内核；勘误 1126s20）：记进本作用域的事件缓冲，不认识任何动词。
+ * 事务提交后由提交方按序追加进日志簿；事务回滚即整批丢弃（随作用域失效）。record = {verb, payload, targets}：verb 是非空代号串，
+ * payload 是普通对象，targets 是实体 id 串的数组；不合即 E-DIM-STRUCT-FIELD。
+ * @param {any} tx @param {{verb: string, payload: Record<string, any>, targets: string[]}} record @returns {void}
+ */
+export function txEmit(tx, record) {
+  const scope = requireScope(tx && tx.state, tx);
+  const r = record !== null && typeof record === 'object' ? record : /** @type {any} */ ({});
+  const ok = typeof r.verb === 'string' && r.verb.length > 0 && r.payload !== null && typeof r.payload === 'object' && !Array.isArray(r.payload)
+    && Array.isArray(r.targets) && r.targets.every((/** @type {unknown} */ t) => typeof t === 'string' && t.length > 0);
+  if (!ok) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'txEmit: record must be {verb, payload: object, targets: string[]}');
+  scope.events.push(Object.freeze({ verb: r.verb, payload: r.payload, targets: Object.freeze([...r.targets]) }));
+}
+
 /** 写完作废该顶层键缓存，并记下它：撤销时再作废一次。 @param {any} tx @param {any} topKey @returns {void} */
 export function txTouch(tx, topKey) {
   const scope = requireScope(tx && tx.state, tx);
@@ -75,20 +90,23 @@ export function txTouch(tx, topKey) {
 // 「事务已开」登记：engine.openStates（装配层建的 WeakSet，不放模块级、不挂在 state 上）。
 
 /**
- * 开一笔事务执行 fn(tx)：成功返回 {ok:true, value}；fn 抛错整笔撤回，带登记码的错误经 report 记被拒码并返回 {ok:false, code}；
+ * 开一笔事务执行 fn(tx)：成功返回 {ok:true, value, events}（events 是本事务经 txEmit 发出的事件，按发出次序）；fn 抛错整笔撤回，带登记码的错误经 report 记被拒码并返回 {ok:false, code}；
  * 无登记码的错误撤回后原样抛出。不嵌套：作用域内再调即抛；不重试。
  * @template T
  * @param {any} engine
  * @param {any} state
  * @param {(tx: WriteScope) => T} fn
- * @returns {{ok: boolean, value?: T, code?: any}}
+ * @returns {{ok: boolean, value?: T, code?: any, events?: ReadonlyArray<Readonly<{verb: string, payload: any, targets: readonly string[]}>>}}
  */
 export function runTransaction(engine, state, fn) {
   const open = engine.openStates;
   if (open.has(state)) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'nested transaction');
   open.add(state);
   try {
-    return { ok: true, value: writeScope(engine, state, fn) };
+    /** @type {ReadonlyArray<Readonly<{verb: string, payload: any, targets: readonly string[]}>>} */
+    let events = [];
+    const value = writeScope(engine, state, (tx) => { const v = fn(tx); events = Object.freeze([...tx.events]); return v; });
+    return { ok: true, value, events };
   } catch (e) {
     return { ok: false, code: reportError(e) };
   } finally {
@@ -184,12 +202,23 @@ const HANDLERS = {
         throw new KernelError('E-DIM-REF-MISSING', {}, `create.template ${JSON.stringify(tpl)}: not a registered ${effect.kind} entity row`);
       }
     }
+    // 建行后在同一事务里调装配层注入的 engine.lifecycle.instantiate（规则层按 systems.*.instantiate 登记路由，S1-3c 草案 §5）；没有注入即 E-EFF-PARAM。
+    const life = engine.lifecycle;
+    if (life === null || typeof life !== 'object' || typeof life.instantiate !== 'function') throw new KernelError('E-EFF-PARAM', {}, 'create: engine.lifecycle.instantiate is not assembled');
     return {
       write: (tx) => {
         createEntity(state, id, effect.kind, {}, tx, effect.template);
         for (const [field, value] of Object.entries(effect.facts)) setEntityProp(state, id, field, value, tx);
+        life.instantiate(state, id, tx);
       },
     };
+  },
+  // destroy（卷九 :641 实体终止协议）：解析时核实体存在；写入阶段调装配层注入的 engine.lifecycle.destroy（规则层按登记路由，草案 §4.1），没有注入即 E-EFF-PARAM。
+  destroy: (engine, state, effect) => {
+    kindOfEntity(engine, state, effect.entity);
+    const life = engine.lifecycle;
+    if (life === null || typeof life !== 'object' || typeof life.destroy !== 'function') throw new KernelError('E-EFF-PARAM', {}, 'destroy: engine.lifecycle.destroy is not assembled');
+    return { write: (tx) => { life.destroy(state, effect.entity, tx); } };
   },
   'fact.set': (engine, state, effect) => ({
     write: (tx) => {
@@ -290,6 +319,8 @@ function processProposal(engine, state, book, proposal, seq) {
     return { ok: false, code: r.code, seq, advancedMinutes: 0 };
   }
   appendEntry(book, { seq, kind: 'event', ok: true, advanceMinutes: plan.advanceMinutes });
+  // 事务内经 txEmit 发出的事件随提交按序记进日志簿（卷二 :557；回滚的事务没有这一步）。
+  for (const ev of r.events || []) appendEntry(book, { seq, kind: 'event', ok: true, verb: ev.verb, payload: ev.payload, targets: ev.targets });
   if (plan.advanceMinutes > 0) {
     const a = engine.advance(state, book, plan.advanceMinutes);
     if (a.ok) return { ok: true, seq, advancedMinutes: a.advancedMinutes };

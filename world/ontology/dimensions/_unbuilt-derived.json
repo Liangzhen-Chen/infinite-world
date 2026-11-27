@@ -128,7 +128,6 @@
   {"table": "species", "dimension": "diet", "missing": ["data"], "card": "pre_first_reader_card", "note": "S1-2b 第二物种家鸡（species_chicken）只填身体与尸体用到的维度，此列未填（主会话 11-26 裁定 5B）；人类行已有值照常保留与核对；家鸡的值待其首个读者卡按文献补"},
   {"table": "species", "dimension": "gaits", "missing": ["data"], "card": "pre_first_reader_card", "note": "S1-2b 第二物种家鸡（species_chicken）只填身体与尸体用到的维度，此列未填（主会话 11-26 裁定 5B）；人类行已有值照常保留与核对；家鸡的值待其首个读者卡按文献补"},
   {"table": "species", "dimension": "growthRate", "missing": ["data"], "card": "pre_first_reader_card", "note": "S1-2b 第二物种家鸡（species_chicken）只填身体与尸体用到的维度，此列未填（主会话 11-26 裁定 5B）；人类行已有值照常保留与核对；家鸡的值待其首个读者卡按文献补"},
-  {"table": "species", "dimension": "maturityYears", "missing": ["data"], "card": "pre_first_reader_card", "note": "S1-2b 第二物种家鸡（species_chicken）只填身体与尸体用到的维度，此列未填（主会话 11-26 裁定 5B）；人类行已有值照常保留与核对；家鸡的值待其首个读者卡按文献补"},
   {"table": "species", "dimension": "sleepHoursPerDay", "missing": ["data"], "card": "pre_first_reader_card", "note": "S1-2b 第二物种家鸡（species_chicken）只填身体与尸体用到的维度，此列未填（主会话 11-26 裁定 5B）；人类行已有值照常保留与核对；家鸡的值待其首个读者卡按文献补"},
   {"table": "species", "dimension": "lifespanYears", "missing": ["data"], "card": "pre_first_reader_card", "note": "S1-2b 第二物种家鸡（species_chicken）只填身体与尸体用到的维度，此列未填（主会话 11-26 裁定 5B）；人类行已有值照常保留与核对；家鸡的值待其首个读者卡按文献补"},
   {"table": "species", "dimension": "metabolismMult", "missing": ["data"], "card": "pre_first_reader_card", "note": "S1-2b 第二物种家鸡（species_chicken）只填身体与尸体用到的维度，此列未填（主会话 11-26 裁定 5B）；人类行已有值照常保留与核对；家鸡的值待其首个读者卡按文献补"},

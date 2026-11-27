@@ -632,10 +632,18 @@
     "speciesView",
     "bodyView",
     "carcassOf",
+    "checkTerminationTables",
+    "checkRecordCoverage",
+    "destroyEntity",
+    "settleBody",
+    "dieByDestroy",
     "loadActions",
     "menuOf",
     "resolveIntent",
-    "submitIntent"
+    "submitIntent",
+    "instantiateEntity",
+    "instantiatePerson",
+    "installExpTable"
    ],
    "rules": []
   },
@@ -1137,7 +1145,9 @@
     "fixedAdd",
     "fixedScale",
     "fixedToNumber",
-    "KernelError"
+    "KernelError",
+    "lookupCurve",
+    "unitSi"
    ],
    "rules": []
   },
@@ -1158,6 +1168,545 @@
     "fixedScale",
     "fixedToNumber",
     "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "terminate",
+   "file": "rules/lifecycle/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "readPath",
+    "writePath",
+    "classRowsOf",
+    "txEmit",
+    "ruleValue",
+    "deleteRecords",
+    "clearStatusesOf",
+    "terminationResidue",
+    "KernelError",
+    "unitSi"
+   ],
+   "rules": []
+  },
+  {
+   "name": "registerTerminationCleanup",
+   "file": "rules/lifecycle/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "terminationResidue",
+   "file": "rules/lifecycle/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "readPath",
+    "statusView",
+    "subjectRecordPaths",
+    "recordValues"
+   ],
+   "rules": []
+  },
+  {
+   "name": "checkTerminationTables",
+   "file": "rules/lifecycle/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "recordValues",
+    "ruleValue",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "recordValues",
+   "file": "rules/lifecycle/records.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "ruleValue"
+   ],
+   "rules": []
+  },
+  {
+   "name": "subjectRecordPaths",
+   "file": "rules/lifecycle/records.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "matchPaths",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "deleteRecords",
+   "file": "rules/lifecycle/records.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "subjectRecordPaths",
+    "recordValues",
+    "deleteMatch",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "terminableKinds",
+   "file": "rules/lifecycle/records.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "checkRecordCoverage",
+   "file": "rules/lifecycle/records.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "terminableKinds",
+    "recordValues",
+    "ruleValue",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "addStatus",
+   "file": "rules/status/status.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "writePath",
+    "matchPaths",
+    "statusFamilyOf",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "statusView",
+   "file": "rules/status/status.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "matchPaths",
+    "statusFamilyOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "statusFamilyOf",
+   "file": "rules/status/status.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "dim"
+   ],
+   "rules": []
+  },
+  {
+   "name": "clearStatusesOf",
+   "file": "rules/status/status.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "matchPaths",
+    "deleteMatch"
+   ],
+   "rules": []
+  },
+  {
+   "name": "terminated",
+   "file": "rules/body/action-capacity.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "predicate",
+   "needs": [
+    "readPath",
+    "statusView",
+    "statusFamilyOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "dead",
+   "file": "rules/body/action-capacity.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "predicate",
+   "needs": [
+    "terminated"
+   ],
+   "rules": []
+  },
+  {
+   "name": "classRowsOf",
+   "file": "kernel/dimensions.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "matchPaths",
+   "file": "kernel/storage.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "deleteMatch",
+   "file": "kernel/storage.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "txEmit",
+   "file": "kernel/transaction.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "lookupCurve",
+   "file": "kernel/dimensions.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [
+    "KernelError",
+    "fixedUnits"
+   ],
+   "rules": []
+  },
+  {
+   "name": "registerTerminationTrigger",
+   "file": "rules/lifecycle/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "destroyEntity",
+   "file": "rules/lifecycle/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "terminableKinds",
+    "readPath",
+    "KernelError",
+    "dieByDestroy"
+   ],
+   "rules": []
+  },
+  {
+   "name": "die",
+   "file": "rules/body/death.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "terminated",
+    "addStatus",
+    "terminate",
+    "ruleValue"
+   ],
+   "rules": []
+  },
+  {
+   "name": "dieByDestroy",
+   "file": "rules/body/death.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "die",
+    "ruleValue"
+   ],
+   "rules": []
+  },
+  {
+   "name": "settleBody",
+   "file": "rules/body/death.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "carcassOf",
+    "ruleValue",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "unitSi",
+   "file": "rules/load/registry.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "ruleValue",
+    "fixedUnits",
+    "fixedScale",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "loadActions",
+   "file": "rules/act/catalog.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError",
+    "evaluateRX",
+    "checkValue",
+    "handlesOp",
+    "ruleValue"
+   ],
+   "rules": []
+  },
+  {
+   "name": "menuOf",
+   "file": "rules/act/catalog.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "KernelError",
+    "evaluateRX",
+    "dim",
+    "openPlacesOf",
+    "defaultActor"
+   ],
+   "rules": []
+  },
+  {
+   "name": "shapeOf",
+   "file": "rules/act/catalog.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "KernelError",
+    "evaluateRX",
+    "dim"
+   ],
+   "rules": []
+  },
+  {
+   "name": "whenHolds",
+   "file": "rules/act/catalog.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "predicate",
+   "needs": [
+    "KernelError",
+    "evaluateRX",
+    "dim"
+   ],
+   "rules": []
+  },
+  {
+   "name": "nsReadsFor",
+   "file": "rules/act/catalog.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "KernelError",
+    "dim",
+    "speciesOf"
+   ],
+   "rules": []
+  },
+  {
+   "name": "effects",
+   "file": "rules/act/effects.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "KernelError",
+    "evaluateRX",
+    "nsReadsFor"
+   ],
+   "rules": []
+  },
+  {
+   "name": "resolveIntent",
+   "file": "rules/act/resolve.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "KernelError",
+    "reportError",
+    "shapeOf",
+    "whenHolds",
+    "effects",
+    "defaultActor"
+   ],
+   "rules": []
+  },
+  {
+   "name": "handlesOp",
+   "file": "kernel/transaction.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "kernel",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "openPlacesOf",
+   "file": "rules/gen/worldgen-writeback.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "dim",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "submitIntent",
+   "file": "kernel/transaction.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "processInput"
+   ],
+   "rules": []
+  },
+  {
+   "name": "defaultActor",
+   "file": "rules/act/catalog.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "drawByKey",
+   "file": "rules/gen/sample.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "KernelError",
+    "presentEntries",
+    "fixedUnits",
+    "fixedMultiply",
+    "fixedExp",
+    "fixedToNumber",
+    "ruleValue"
+   ],
+   "rules": []
+  },
+  {
+   "name": "speciesOf",
+   "file": "rules/body/person.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "read",
+   "needs": [
+    "dim"
+   ],
+   "rules": []
+  },
+  {
+   "name": "instantiatePerson",
+   "file": "rules/body/person.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "speciesOf",
+    "drawByKey",
+    "dim",
+    "readPath",
+    "presentEntries",
+    "fixedUnits",
+    "fixedMultiply",
+    "truncateTo",
+    "fixedToNumber",
+    "ruleValue",
+    "unitSi",
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "registerInstantiator",
+   "file": "rules/lifecycle/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "instantiateEntity",
+   "file": "rules/lifecycle/terminate.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "write",
+   "needs": [
+    "KernelError",
+    "instantiatePerson"
    ],
    "rules": []
   },
@@ -1260,146 +1809,6 @@
    "kind": "part",
    "needs": [
     "codeOf"
-   ],
-   "rules": []
-  },
-  {
-   "name": "loadActions",
-   "file": "rules/act/catalog.mjs",
-   "vol": null,
-   "sec": null,
-   "kind": "part",
-   "needs": [
-    "KernelError",
-    "evaluateRX",
-    "checkValue",
-    "handlesOp",
-    "ruleValue"
-   ],
-   "rules": []
-  },
-  {
-   "name": "menuOf",
-   "file": "rules/act/catalog.mjs",
-   "vol": null,
-   "sec": null,
-   "kind": "read",
-   "needs": [
-    "KernelError",
-    "evaluateRX",
-    "dim",
-    "openPlacesOf",
-    "defaultActor"
-   ],
-   "rules": []
-  },
-  {
-   "name": "shapeOf",
-   "file": "rules/act/catalog.mjs",
-   "vol": null,
-   "sec": null,
-   "kind": "read",
-   "needs": [
-    "KernelError",
-    "evaluateRX",
-    "dim"
-   ],
-   "rules": []
-  },
-  {
-   "name": "whenHolds",
-   "file": "rules/act/catalog.mjs",
-   "vol": null,
-   "sec": null,
-   "kind": "predicate",
-   "needs": [
-    "KernelError",
-    "evaluateRX",
-    "dim"
-   ],
-   "rules": []
-  },
-  {
-   "name": "nsReadsFor",
-   "file": "rules/act/catalog.mjs",
-   "vol": null,
-   "sec": null,
-   "kind": "read",
-   "needs": [
-    "KernelError",
-    "dim"
-   ],
-   "rules": []
-  },
-  {
-   "name": "effects",
-   "file": "rules/act/effects.mjs",
-   "vol": null,
-   "sec": null,
-   "kind": "read",
-   "needs": [
-    "KernelError",
-    "evaluateRX",
-    "nsReadsFor"
-   ],
-   "rules": []
-  },
-  {
-   "name": "resolveIntent",
-   "file": "rules/act/resolve.mjs",
-   "vol": null,
-   "sec": null,
-   "kind": "read",
-   "needs": [
-    "KernelError",
-    "reportError",
-    "shapeOf",
-    "whenHolds",
-    "effects",
-    "defaultActor"
-   ],
-   "rules": []
-  },
-  {
-   "name": "handlesOp",
-   "file": "kernel/transaction.mjs",
-   "vol": null,
-   "sec": null,
-   "kind": "kernel",
-   "needs": [],
-   "rules": []
-  },
-  {
-   "name": "openPlacesOf",
-   "file": "rules/gen/worldgen-writeback.mjs",
-   "vol": null,
-   "sec": null,
-   "kind": "read",
-   "needs": [
-    "dim",
-    "KernelError"
-   ],
-   "rules": []
-  },
-  {
-   "name": "submitIntent",
-   "file": "kernel/transaction.mjs",
-   "vol": null,
-   "sec": null,
-   "kind": "write",
-   "needs": [
-    "processInput"
-   ],
-   "rules": []
-  },
-  {
-   "name": "defaultActor",
-   "file": "rules/act/catalog.mjs",
-   "vol": null,
-   "sec": null,
-   "kind": "read",
-   "needs": [
-    "KernelError"
    ],
    "rules": []
   }

@@ -34,6 +34,8 @@ function rawWorld() {
     tableDocs: Object.fromEntries(registryRows.map((r) => [r.code, json(`../rules/${r.file}`)])),
     digestExclude: json('../rules/tables/digest-exclude.json').paths,
     primitivesDoc: json('primitives.json'),
+    vocabDoc: json('dimensions/_vocab.json'),
+    unitsDoc: json('dimensions/_units.json'),
   };
 }
 

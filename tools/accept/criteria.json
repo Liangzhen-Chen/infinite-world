@@ -7375,7 +7375,7 @@
    }
   },
   {
-   "criterion": "`.dist ===` 一类比较与 `switch (….dist)` 在 kernel/sample.mjs 之外出现计一处（甲 R7）。现有违例进基线。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "criterion": "`.dist ===` 一类比较与 `switch (….dist)` 在 rules/gen/sample.mjs 之外出现计一处（甲 R7）。现有违例进基线。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
    "log": [
     {
      "ref": "C0 续做：新登类别 pp_dist_branch（分布种类分派只在 sample.mjs（甲 R7））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 4 条",
@@ -7512,10 +7512,14 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 34
+    },
+    {
+     "ref": "S1-3c 主会话 msg_6c7ebb0dc22f 定 C：例外路径替换不新增——kernel/sample.mjs 是新骨架归档前旧树的遗留路径，新树无此文件；骰值键拼法（卷二:346、:330）与分布分派落 server-plugin/rules/gen/sample.mjs（kernelApi kernel/sample.mjs 依 R2 落 rules），例外文件数不变，判定口径不放宽；同步把 must_pass 夹具 pp_dist_branch-11 的 @file 改到该文件",
+     "rev": 35
     }
    ],
    "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 34,
+   "rev": 35,
    "scanClass": "pp_dist_branch",
    "source": "公共部件审查甲 R7；卷二 §1.10；kernel/sample.mjs 头注",
    "terms": {
@@ -9377,7 +9381,7 @@
    }
   },
   {
-   "criterion": "服务端组里：sha256Text( 的实参含 .join( 或模板串；引用 GRAMMAR_TOKENS.joinSep（joinSep）；`const … = '|'` 作键分隔；.join 的实参是 '|'、':'、'.' 字串字面量，各计一处。拼键只许 kernel/handles/keys.mjs，文法记号字面量只许 kernel/handles/markers.mjs。现有违例进基线。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
+   "criterion": "服务端组里：sha256Text( 的实参含 .join( 或模板串；引用 GRAMMAR_TOKENS.joinSep（joinSep）；`const … = '|'` 作键分隔；.join 的实参是 '|'、':'、'.' 字串字面量，各计一处。拼键只许 rules/gen/sample.mjs，文法记号字面量只许 kernel/handles/markers.mjs。现有违例进基线。 【按语法树判】别名、解构、计算属性名（常量折叠）、拆开再拼的字符串、.bind/.call/.apply、形参与返回值与对象成员传递都跟到原名；运行期才知道的下标报 review:dynamic（待人审）。盲区见 docs/门禁说明/提交门禁-C0.md。",
    "log": [
     {
      "ref": "C0 续做：新登类别 pp_key_concat（键串只在 keys.mjs 拼，文法记号只放 markers.mjs（甲 R5、乙 1、乙 2））；lit_scope 新增 pattern/dupExport/readerSet 能力，现违例 34 条",
@@ -9514,10 +9518,14 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 34
+    },
+    {
+     "ref": "S1-3c 主会话 msg_6c7ebb0dc22f 定 C：例外路径替换不新增——kernel/handles/keys.mjs 是新骨架归档前旧树的遗留路径，新树无此文件；骰值键拼法（卷二:346、:330）与分布分派落 server-plugin/rules/gen/sample.mjs（kernelApi kernel/sample.mjs 依 R2 落 rules），例外文件数不变，判定口径不放宽；同步把 must_pass 夹具 pp_key_concat-11 的 @file 改到该文件",
+     "rev": 35
     }
    ],
    "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 34,
+   "rev": 35,
    "scanClass": "pp_key_concat",
    "source": "公共部件审查甲 R5、乙 1、乙 2；卷二 :337、:897、:1162；例外：整份文本摘要 sha256Text(canonical(…))、sha256Text(text) 不拼键（不含 .join，不命中）",
    "terms": {

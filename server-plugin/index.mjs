@@ -48,6 +48,10 @@ function readWorld() {
     primitivesDoc: json('primitives.json'),
     // 词表族（能力族条目的 dimKey 等，bodyView 读；S1-2b）。
     vocabDoc: json('dimensions/_vocab.json'),
+    // 单位表（日与分钟的换算等，rules/lifecycle/terminate.mjs 写终止标记的日时读；S2-0a）。
+    unitsDoc: json('dimensions/_units.json'),
+    // 采样表（normal 分位数表与 exp 表，rules/gen/sample.mjs 读、mount 装入时核摘要；S1-3c）。
+    distributionsDoc: json('dimensions/_distributions.json'),
     // 上下行 wire schema 的唯一数据源（卷二 :983；S1-3b），随 doc_data 进存档，读档复演同用存档里的一份。
     wire: json('../schema/wire-v1.json'),
     // 效果族表与动作目录（卷二 §3.9、卷九 §2.2；S1-3a）。

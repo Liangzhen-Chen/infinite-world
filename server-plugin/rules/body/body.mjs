@@ -3,15 +3,17 @@
 // 有效身体图（B-9）：主体 bodyPlanOverride 非空取它，否则取物种 bodyPlan。部位完好度（B-2）基值恒 1，只接受挂部位状态实例的修正——
 // 状态实例的写者 status.mjs 未建，故此处完好度即基值；有效完好度 eff 按 B-3 读 rules.body.integrity.lostBelow。
 // 能力值（B-7）：结构基值（B-1）加 B-4 部位折算项，再过登记修正来源（kernel modifiedWith），钳到表头 bounds。B-5 能力依赖项未建：能力族条目带非空 limitedBy 即报未知读取，不静默略过。
-// 部位质量 = 主体 massKg × sizeFraction（B-9）；主体质量依 life（卷四 L-2）未建，读出未知。组织材料按 B-9 优先级：主体 tissueDelta → 部位 tissueOverride → 物种 tissues。
+// 部位质量 = 主体 massKg × sizeFraction（B-9）。主体质量按卷四 L-2 派生（individualMassKg，S2-0b）：adultMassKg × lookup(rules.life.growthCurve, relMaturity)，
+// relMaturity = 年龄 ÷ 物种 maturityYears，年龄 = 时钟 − birthMinute，单位换算经公共入口 registry.mjs#unitSi（单位表 si / siFromRule），不写单位代号；物种实体自身没有个体质量，读出未知。组织材料按 B-9 优先级：主体 tissueDelta → 部位 tissueOverride → 物种 tissues。
 // 遍历映射一律经 presentEntries（null 键不进）；不认任何具体物种、身体图、部位、组织或能力代号，也不按 kind 分支（只看表头声明）。
-import { dim, modifiedWith, presentEntries } from '../../kernel/dimensions.mjs';
+import { dim, modifiedWith, presentEntries, lookupCurve } from '../../kernel/dimensions.mjs';
+import { clockMinute } from '../../kernel/scheduler.mjs';
 import { kindOfEntity } from '../../kernel/storage.mjs';
 import { KernelError } from '../../kernel/errors.mjs';
 import { fixedUnits, fixedSub, fixedMultiply, fixedAdd, fixedScale, fixedToNumber } from '../../kernel/det-math.mjs';
 import { SPECIES_KIND, DIM, tableOf, headerOf, planKindOf, structuralBase, fixedZero } from './body-plan.mjs';
 import { UNKNOWN } from './species.mjs';
-import { ruleValue } from '../load/registry.mjs';
+import { ruleValue, unitSi } from '../load/registry.mjs';
 
 /** @typedef {import('./body-plan.mjs').BodyEngine} BodyEngine */
 /** @typedef {import('./body-plan.mjs').Part} Part */
@@ -21,7 +23,11 @@ import { ruleValue } from '../load/registry.mjs';
  */
 
 // 卷四 §2.3 个体维度名（个体 → 物种、个体级身体图与组织偏离）与 §2.2 实例维度名。
-const PERSON_DIM = Object.freeze({ species: 'species', bodyPlanOverride: 'bodyPlanOverride', tissueDelta: 'tissueDelta' });
+const PERSON_DIM = Object.freeze({ species: 'species', bodyPlanOverride: 'bodyPlanOverride', tissueDelta: 'tissueDelta', massKg: 'massKg', adultMassKg: 'adultMassKg', birthMinute: 'birthMinute' });
+// 卷四 §2.1 物种维度（成熟年龄）与 §2.5 rules.life 的成长曲线键（L-2）。
+const MATURITY_DIM = 'maturityYears';
+const LIFE_TABLE = 'life';
+const GROWTH_CURVE = 'growthCurve';
 const PART_INTEGRITY = 'partIntegrity';
 // 卷二 §1.6 onUnknown 取值：skip = 缺值不参与。
 const ON_UNKNOWN_SKIP = 'skip';
@@ -58,6 +64,36 @@ export function bodyOf(engine, state, subjectId) {
     tissues: dim(engine, state, SPECIES_KIND, speciesId, DIM.tissues).value,
     delta: optional(engine, state, kind, subjectId, PERSON_DIM.tissueDelta),
   };
+}
+
+/**
+ * 个体质量（卷四 §2.3 :220、§4.4 L-2）：massKg = adultMassKg × lookup(rules.life.growthCurve, relMaturity)，
+ * relMaturity = (clock − birthMinute) ÷ 物种 maturityYears（卷四 §2.3 :212–:213），两边各按表头单位换成 si 后相除（有理数，最后一次整除截断）。
+ * 再过登记修正来源（massKg 表头 modifiable）。主体表头没有声明 massKg（物种实体）或任一输入读出未知（E-DIM-UNKNOWN-READ）即未知。
+ * @param {BodyEngine} engine @param {unknown} state @param {Body} body @param {string} subjectId
+ */
+function individualMassKg(engine, state, body, subjectId) {
+  if (Object.keys(headerOf(engine, body.kind, PERSON_DIM.massKg)).length === 0 || body.speciesId === subjectId) return UNKNOWN;
+  let adult; let birth; let maturity;
+  try {
+    adult = dim(engine, state, body.kind, subjectId, PERSON_DIM.adultMassKg).value;
+    birth = dim(engine, state, body.kind, subjectId, PERSON_DIM.birthMinute).value;
+    maturity = dim(engine, state, SPECIES_KIND, body.speciesId, MATURITY_DIM).value;
+  } catch (e) {
+    if (Object(e).code === 'E-DIM-UNKNOWN-READ') return UNKNOWN;
+    throw e;
+  }
+  const [an, ad] = unitSi(engine.docData, headerOf(engine, body.kind, PERSON_DIM.birthMinute).unit);
+  const [mn, md] = unitSi(engine.docData, headerOf(engine, SPECIES_KIND, MATURITY_DIM).unit);
+  const one = fixedScale();
+  const age = BigInt(clockMinute(engine, state) - Number(birth));
+  const mat = fixedUnits(Number(maturity));
+  if (mat <= fixedZero()) throw new KernelError('E-DIM-DOMAIN-RANGE', {}, `species ${JSON.stringify(body.speciesId)}: ${MATURITY_DIM} must be > 0`);
+  // relMaturity（定点）= age·an/ad ÷ (mat/one · mn/md) × one。
+  const rel = (age * an * md * one * one) / (ad * mat * mn);
+  const y = lookupCurve(ruleValue(engine.docData, LIFE_TABLE, GROWTH_CURVE), rel);
+  const base = fixedToNumber(fixedMultiply(fixedUnits(Number(adult)), y));
+  return modifiedWith(engine, state, body.kind, subjectId, PERSON_DIM.massKg, base, []);
 }
 
 /**
@@ -109,15 +145,16 @@ export function bodyView(engine, state, subjectId) {
     dims[key] = Object.freeze({ ...fact, value: Math.min(Math.max(fact.value, bounds[0]), bounds[1]) });
   }
   dims[PART_INTEGRITY] = Object.freeze({ known: true, applicable: true, current: true, value: Object.freeze(Object.fromEntries([...integrity].map(([p, v]) => [p, fixedToNumber(v)]))) });
+  const mass = individualMassKg(engine, state, body, subjectId);
   const parts = Object.freeze(body.parts.map((p) => Object.freeze({
     id: p.id, parent: p.parent, sizeFraction: p.sizeFraction, vital: p.vital,
     integrity: fixedToNumber(integrity.get(p.id) ?? fixedZero()), eff: fixedToNumber(effAt(p)),
-    massKg: UNKNOWN,
+    massKg: mass.known ? Object.freeze({ ...mass, value: fixedToNumber(fixedMultiply(fixedUnits(Number(mass.value)), fixedUnits(Number(p.sizeFraction)))) }) : UNKNOWN,
     tissues: Object.freeze(Object.fromEntries(body.fractions.map(([t]) => {
       const mat = tissueMaterial(body, p, t);
       return [t, mat === undefined ? UNKNOWN : Object.freeze({ known: true, applicable: true, current: true, value: mat })];
     }))),
   })));
   const condition = body.parts.reduce((acc, p) => fixedAdd(acc, fixedMultiply(fixedUnits(Number(p.sizeFraction)), effAt(p))), fixedZero());
-  return Object.freeze({ kind: body.kind, id: subjectId, bodyPlan: body.planId, massKg: UNKNOWN, dims: Object.freeze(dims), parts, condition: fixedToNumber(condition) });
+  return Object.freeze({ kind: body.kind, id: subjectId, bodyPlan: body.planId, massKg: mass, dims: Object.freeze(dims), parts, condition: fixedToNumber(condition) });
 }

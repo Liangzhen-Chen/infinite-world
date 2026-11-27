@@ -8,6 +8,7 @@
 import { KernelError } from './errors.mjs';
 import { T, GRAMMAR_TOKENS } from './handles.mjs';
 import { stateMemo, inputsOf } from './memo.mjs';
+import { fixedUnits, fixedCurveAt } from './det-math.mjs';
 
 const DIM_MEMO = 'kernel/dimensions.mjs#dim';
 // dim 的依赖节点名前缀（卷二 :502 示例 `dim:<kind>`）；按 kind 取 `dim:<kind>`，由 memo.mjs 解析到下面这条通配声明。
@@ -128,6 +129,21 @@ function codePointOrder(a, b) {
 }
 
 /**
+ * kernelApi `lookupCurve(curve, x)`（卷二 §1.5 :189 curve、:386 `lookup(curve, x)` 查曲线，x 出域取端点）：曲线值（登记类型 curve 的 [[x, y], …]，
+ * x 严格递增）对定点 x 求定点 y；插值交 det-math#fixedCurveAt（全书唯一一份）。曲线不是非空点列或 x 不严格递增即 E-DIM-STRUCT-FIELD。
+ * @param {unknown} curve @param {bigint} x 定点 @returns {bigint} 定点
+ */
+export function lookupCurve(curve, x) {
+  const ok = Array.isArray(curve) && curve.length > 0
+    && curve.every((p) => Array.isArray(p) && typeof p[0] === 'number' && typeof p[1] === 'number');
+  if (!ok) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'lookupCurve: curve must be a non-empty list of [x, y] numbers');
+  /** @type {[bigint, bigint][]} */
+  const pts = curve.map((p) => [fixedUnits(p[0]), fixedUnits(p[1])]);
+  if (pts.some((p, i) => i > 0 && p[0] <= pts[i - 1][0])) throw new KernelError('E-DIM-STRUCT-FIELD', {}, 'lookupCurve: curve x must be strictly increasing');
+  return fixedCurveAt(pts, x);
+}
+
+/**
  * 全族映射的非 null 只读视图（契约 ctr_map_nonnull_view，world/ontology/contracts.json:225；卷二 §1.6 第 4 项）：映射展平后覆盖键类型全族，
  * 「某键没有」写 null；规则层遍历映射一律经它，只见值非 null 的项，按键码点序，冻结。dim 照旧原样给含 null 的映射（null 是已知值）。
  * 不是映射（null、数组、非对象）即 E-DIM-STRUCT-FIELD。
@@ -143,5 +159,69 @@ export function presentEntries(map) {
     const pair = Object.freeze([k, m[k]]);
     out.push(pair);
   }
+  return Object.freeze(out);
+}
+
+// ---- S2-0a：所属类别行（卷二 §1.3 :17–:18、:137–:157 取值算法的「类别行一级」；公共部件，终止协议第 1 步读 termination 经它）----
+
+/** 同表 rows 或 classes 里的一行；都没有即 undefined。 @param {Record<string, any>} doc @param {string} rid */
+function tableRow(doc, rid) {
+  const rows = doc.rows !== null && typeof doc.rows === 'object' ? doc.rows : {};
+  if (Object.hasOwn(rows, rid)) return rows[rid];
+  const classes = doc.classes !== null && typeof doc.classes === 'object' ? doc.classes : {};
+  return Object.hasOwn(classes, rid) ? classes[rid] : undefined;
+}
+
+/**
+ * 一行连同它 extends 链上的各行（卷二 :137：extends 复制父有效行，子先父后）；目标不在同表 E-DIM-EXTENDS-TARGET，成环 E-DIM-CYCLE。
+ * @param {Record<string, any>} doc @param {string} rid @returns {Array<readonly [string, any]>}
+ */
+function extendsChain(doc, rid) {
+  /** @type {Array<readonly [string, any]>} */
+  const out = [];
+  /** @type {string | undefined} */
+  let cur = rid;
+  while (cur !== undefined) {
+    const at = cur;
+    if (out.some(([seen]) => seen === at)) throw new KernelError('E-DIM-CYCLE', {}, `extends chain of ${JSON.stringify(rid)} loops at ${JSON.stringify(at)}`);
+    const row = tableRow(doc, at);
+    if (row === null || typeof row !== 'object') throw new KernelError('E-DIM-EXTENDS-TARGET', {}, `${JSON.stringify(at)}: extends target not in table ${String(doc.kind)}`);
+    out.push(Object.freeze([at, row]));
+    cur = typeof row[T.row_field.extends] === 'string' ? row[T.row_field.extends] : undefined;
+  }
+  return out;
+}
+
+/**
+ * kernelApi `classRowsOf(engine, state, kind, id)`：按取值次序列出该实体要依次查的各行 [行 id, 行]，冻结：
+ * ① 实体行（运行期新建的取 template 所指实体行）及其 extends 链；
+ * ② 所属类别行：实体行 classes（表头写了 classesFrom 的，再加该维度所指那一行的 classes，卷二:562「由物种行派生」），
+ *    只取本表 classes 里有、且列在 precedenceGroups.default 里的类别行，按该组次序（卷二:156–:157），各带自己的 extends 链。
+ * 只按表头与行数据判，不认任何 kind、类别或 id；运行期新建实体没有实体行时 ① 为空。
+ * @param {any} engine @param {any} state @param {string} kind @param {string} id
+ * @returns {ReadonlyArray<readonly [string, any]>}
+ */
+export function classRowsOf(engine, state, kind, id) {
+  const doc = tableDoc(engine, kind);
+  const rid = rowId(state, id);
+  const rows = doc.rows !== null && typeof doc.rows === 'object' ? doc.rows : {};
+  const own = Object.hasOwn(rows, rid) ? extendsChain(doc, rid) : [];
+  /** @type {string[]} */
+  const member = [];
+  for (const [, row] of own) for (const c of rowClasses(row)) member.push(c);
+  if (typeof doc.classesFrom === 'string') {
+    const ref = readBase(engine, state, kind, id, doc.classesFrom).value;
+    const refKind = engine.registry.kindOfLoaded(ref);
+    if (typeof refKind !== 'string') throw new KernelError('E-DIM-REF-MISSING', {}, `${kind}.${doc.classesFrom} of ${JSON.stringify(id)}: not a loaded row`);
+    for (const [, row] of extendsChain(tableDoc(engine, refKind), ref)) for (const c of rowClasses(row)) member.push(c);
+  }
+  const classes = doc.classes !== null && typeof doc.classes === 'object' ? doc.classes : {};
+  const groups = doc.precedenceGroups !== null && typeof doc.precedenceGroups === 'object' ? doc.precedenceGroups : {};
+  const order = Array.isArray(groups.default) ? groups.default : [];
+  const present = [...new Set(member)].filter((c) => Object.hasOwn(classes, c));
+  const ranked = order.filter((c) => present.includes(c));
+  /** @type {Array<readonly [string, any]>} */
+  const out = [...own];
+  for (const c of ranked) for (const pair of extendsChain(doc, c)) if (!out.some(([seen]) => seen === pair[0])) out.push(pair);
   return Object.freeze(out);
 }

@@ -33,6 +33,9 @@ function rawWorld() {
     digestExclude: json('rules/tables/digest-exclude.json').paths,
     primitivesDoc: json('ontology/primitives.json'),
     vocabDoc: json('ontology/dimensions/_vocab.json'),
+    // 单位表与采样表（S1-3c：选来历建化身时按物种分布补齐维度、开局年龄折 birthMinute，与 index.mjs#readWorld 同形）。
+    unitsDoc: json('ontology/dimensions/_units.json'),
+    distributionsDoc: json('ontology/dimensions/_distributions.json'),
     effectsDoc: json('ontology/dimensions/_effects.json'),
     actionDocs: readdirSync(acts).filter((f) => f.endsWith('.json')).sort().map((f) => JSON.parse(readFileSync(new URL(f, acts), 'utf8'))),
   };
@@ -49,7 +52,7 @@ function rowsOf(raw) {
   const pass = ids.find((id) => Object.values(rows[id].slots).some((s) => s.kind === 'number'));
   return { rows, spawn, pass };
 }
-/** 开放的出身代号（按设计册 §4.7：gate 为空，或所指开关为真）与带这些出身的模板行。 */
+/** 开放的出身代号（按设计册 §4.7：gate 为空，或所指开关为真）与带这些出身的模板行；S1-3c 起另须模板行 species 是物种表里的行（origin.ready 数据门）。 */
 function openTemplates(raw) {
   const po = raw.tableDocs.playerOrigins.rows;
   const sw = Object.fromEntries(po.map((r) => [r.key, r.value]));
@@ -57,7 +60,8 @@ function openTemplates(raw) {
   const person = raw.dimensionDocs.find((d) => d.kind === 'person').rows;
   return Object.keys(person).filter((id) => {
     const o = origins[person[id].origin];
-    return o && (o.gate === null || sw[o.gate] === true);
+    const species = raw.dimensionDocs.find((d) => d.kind === 'species').rows;
+    return o && (o.gate === null || sw[o.gate] === true) && Object.hasOwn(species, String(person[id].species));
   }).sort();
 }
 /** 开放地点：place 行 genOpen 为真。 */
@@ -175,7 +179,10 @@ test('5 出身开关：开关改假，受它管的出身不进候选（只改数
     const slot = Object.keys(rows[spawn].slots).find((k) => rows[spawn].slots[k].tableRow !== 'place');
     const got = g.menu(null).affordances[0].slots[slot];
     assert.deepEqual([...got], openTemplates(r), gate);
-    assert.ok(got.length < openTemplates(raw).length, gate);
+    // 关掉的开关所管的出身一条也不进候选（S1-3c 起兽裔模板行无物种行，已被 origin.ready 隐藏，候选数不一定再减）。
+    const origins = r.vocabDoc.families.origin.entries;
+    const person = r.dimensionDocs.find((d) => d.kind === 'person').rows;
+    assert.ok([...got].every((id) => origins[person[id].origin].gate !== gate), gate);
   }
 });
 
