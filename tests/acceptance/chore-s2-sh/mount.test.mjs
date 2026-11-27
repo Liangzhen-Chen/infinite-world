@@ -10,6 +10,7 @@ import express from '../../support/express.mjs';
 import { copyRepo } from '../../support/wire-host.mjs';
 import { testTempRoot, removeTempRoot } from '../../accept/temp-root.mjs';
 import { writeTempRepoFile } from '../../../tools/accept/lib/temp-repo-write.mjs';
+import { DOMAINS } from '../../../server-plugin/rules/load/domains.mjs';
 
 const REPO = new URL('../../../', import.meta.url);
 
@@ -51,8 +52,14 @@ test('N-3 domains.mjs 存在且只用静态 import（无 import( 动态导入）
   assert.ok(existsSync(p), '域清单 server-plugin/rules/load/domains.mjs 应存在');
   const text = readFileSync(p, 'utf8');
   assert.equal(/\bimport\s*\(/.test(text), false, 'domains.mjs 不得有动态 import()（import_edge 会判全局未列）');
-  assert.ok(/body/.test(text), '域清单应含 body 域');
-  assert.ok(/lifecycle/.test(text), '域清单应含 lifecycle 域');
+  // 裁定丁（主会话 11-27）：装配期核对是固定断言、按名直调，lifecycle 域没有登记项，不要求它出现在清单里。
+  // 收紧的断言：清单里每个域都至少交一项登记；body 必须在列。
+  assert.ok(DOMAINS.some((d) => d.domain === 'body'), '域清单应含 body 域');
+  for (const d of DOMAINS) {
+    const fields = ['terminationCleanups', 'terminationTriggers', 'instantiators', 'advanceHooks'];
+    const n = fields.filter((k) => /** @type {any} */ (d)[k] && /** @type {any} */ (d)[k].length > 0).length;
+    assert.ok(n > 0, `域 ${d.domain} 没有交任何登记项（四个字段都为空）`);
+  }
 });
 
 test('N-4 mount.mjs 不再直接接线三类登记项（清理、发起方、实例化），它们只经域清单 DOMAINS 收齐', () => {
