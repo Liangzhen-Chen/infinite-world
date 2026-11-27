@@ -1,37 +1,80 @@
 {
   "card": "feat-s2-0b",
-  "phase": "reviewed",
-  "updatedAt": "2026-11-26T22:34:49.984Z",
+  "phase": "pr",
+  "updatedAt": "2026-11-27T01:47:33.688Z",
   "branches": {
     "code": "feat/s2-0b",
-    "test": "test/s2-0b"
+    "test": "test/s2-0b",
+    "pr": "feat/s1-3c"
   },
   "pr": null,
   "parties": {
     "code": {
-      "family": "<模型族>",
-      "model": "<模型 id>",
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
       "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/s20b",
+        "session": "orca_session_id:cd13115e-34b9-46ee-90cb-4eb0e43e3afe",
+        "commits": [
+          "f31086027",
+          "40eee9d7f"
+        ]
+      },
       "costUsd": null
     },
     "test": {
-      "family": "<模型族>",
-      "model": "<模型 id>",
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
       "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/ts-s20b",
+        "session": "orca_session_id:4e57b87b-ed39-4f6b-a60e-30583be55a9b",
+        "commits": [
+          "7758054d4",
+          "5e3c2b0e1",
+          "327af81eb",
+          "a8c5065e6",
+          "66fd802b6"
+        ]
+      },
       "costUsd": null
     },
-    "review": {
-      "family": "<模型族>",
-      "model": "<模型 id>",
-      "receipt": null,
-      "costUsd": null
-    }
+    "review": [
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": null,
+        "orca": {
+          "worktree": "F:/dnd-worktrees/dnd/ts-s20b",
+          "session": "orca_session_id:5f993fbc-14b8-4da6-84e1-16649dbc9707",
+          "commits": [
+            "3c1a8e3f9"
+          ]
+        },
+        "costUsd": null
+      },
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": "docs/卡档案/feat-s2-0b/收据/审卡-001.json",
+        "orca": null,
+        "costUsd": null
+      },
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": "docs/卡档案/feat-s2-0b/收据/审卡-002.json",
+        "orca": null,
+        "costUsd": null
+      }
+    ]
   },
   "ci": {
     "status": "pending",
     "runUrl": null
   },
   "failCount": 1,
-  "blocker": "等 S1-3c（开局化身建档派生）：S1-3a 开局化身缺 species/adultMassKg/birthMinute，真实 init 无人物实体，验收 7 例无合法主体（诊断 msg_e1158b17f773、msg_23b67ef688de 回复）",
-  "nextAction": "等 S1-3c 合入后：出题方把 7 例前置改为真实开局 act_choose_origin 建化身再触发终止机制（只验 NPC 同律 die/settleBody，不验玩家死后）；转绿后补两卡凭证、快照、--check、check-push-archive，推 feat/s2-0b 开一个 PR"
+  "blocker": null,
+  "nextAction": "随 S2-0a/S2-0b/S1-3c 一个 PR（头 feat/s1-3c）→master 走 CI，main 绿即合（合入说明现写 卡分支：feat/s1-3c）；合后删 s13c、ts-s13c、s20a、ts-s20a、s20b、ts-s20b 工作树并报李白；接着派 S1-3d 开局选种族"
 }
