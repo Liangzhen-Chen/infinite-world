@@ -83,6 +83,29 @@ function playableSpecies(raw) {
 const slotOn = (rows, act, table) => Object.keys(rows[act].slots).find((k) => rows[act].slots[k].tableRow === table);
 /** 开放地点：place 行 genOpen 为真。 */
 const openPlaces = (raw) => Object.entries(raw.dimensionDocs.find((d) => d.kind === 'place').rows).filter(([, r]) => r.genOpen === true).map(([id]) => id).sort();
+/** 地点行的祖先（沿 parent 由近到远）。 */
+function placeAncestors(raw, id) {
+  const rows = raw.dimensionDocs.find((d) => d.kind === 'place').rows;
+  const out = [];
+  for (let p = rows[id].parent; p; p = rows[p].parent) out.push(p);
+  return out;
+}
+/** 开局落脚处（S2-P 主会话 Q1 甲）：挂 rules.gen.roleFacility 所指组件类、某祖先开放，且 accessClass（实体行或 generated 节，卷二 :169）所指 access 条目 needsGrant 不为真。 */
+function lodgePlaces(raw) {
+  const doc = raw.dimensionDocs.find((d) => d.kind === 'place');
+  const role = raw.tableDocs.gen.rows.find((r) => r.key === 'roleFacility').value;
+  const access = raw.vocabDoc.families[doc.dimensions.accessClass.vocab].entries;
+  const open = openPlaces(raw);
+  return Object.keys(doc.rows).filter((id) => {
+    const row = { ...doc.rows[id], ...((doc.generated || {})[id] || {}) };
+    return (row.classes || []).includes(role) && placeAncestors(raw, id).some((p) => open.includes(p))
+      && !(row.accessClass !== undefined && access[row.accessClass].needsGrant === true);
+  }).sort();
+}
+/** 筛选 whenRX → 期望候选（各按卷文判据从数据推出）；S2-P 起同一张表可有两个槽（place、lodge），期望按槽的筛选取，不按表名取。 */
+const candidatesByRX = (raw) => ({ genOpen: openPlaces(raw), 'species.playable': playableSpecies(raw), 'origin.open': openTemplates(raw), 'place.lodgeable': lodgePlaces(raw) });
+/** 选来历时 lodge 取 0 号候选后菜单的 here（S2-P 主会话 Q12 甲）：{place, chain: [place, …祖先]}。 */
+const hereAtLodge0 = (raw) => ({ place: lodgePlaces(raw)[0], chain: [lodgePlaces(raw)[0], ...placeAncestors(raw, lodgePlaces(raw)[0])] });
 
 test('1 开局菜单 menu(null)：只有无需化身的建档动作；候选 = 开放出身的模板行 × 开放地点；visible 只含开放地点', async () => {
   const raw = rawWorld();
@@ -91,9 +114,10 @@ test('1 开局菜单 menu(null)：只有无需化身的建档动作；候选 = �
   const m = g.menu(null);
   assert.deepEqual(m.affordances.map((a) => a.act), [spawn]);
   const a = m.affordances[0];
-  const tableOf = (k) => rows[spawn].slots[k].tableRow;
   for (const [slot, ids] of Object.entries(a.slots)) {
-    const want = { place: openPlaces(raw), species: playableSpecies(raw), person: openTemplates(raw) }[tableOf(slot)];
+    const filters = rows[spawn].slots[slot].filter;
+    assert.equal(filters.length, 1, slot);
+    const want = candidatesByRX(raw)[raw.vocabDoc.families.target_filter.entries[filters[0]].whenRX];
     assert.deepEqual([...ids], want, slot);
   }
   assert.deepEqual([...m.visible], openPlaces(raw));
@@ -139,7 +163,9 @@ test('3 等待：化身菜单给数值范围（上限取 rules.act.advanceMaxMin
   const avatar = Object.keys(g.state.created)[0];
   const m = g.menu(avatar);
   assert.deepEqual(m.affordances.map((a) => a.act), [pass]);
-  assert.deepEqual([...m.visible], [avatar, ...openPlaces(raw)]);
+  // S2-P（Q12 甲）：here 单独断言；visible = 化身、开放地点、here 链（去重，按此次序）。
+  assert.deepEqual(m.here, hereAtLodge0(raw));
+  assert.deepEqual([...m.visible], [...new Set([avatar, ...openPlaces(raw), ...hereAtLodge0(raw).chain])]);
   const slotName = Object.keys(rows[pass].slots)[0];
   const max = raw.tableDocs.act.rows.find((r) => r.key === 'advanceMaxMinutes').value[rows[pass].class];
   assert.deepEqual({ ...m.affordances[0].numbers[slotName] }, { min: rows[pass].slots[slotName].min, max, unit: rows[pass].slots[slotName].unit });
@@ -303,7 +329,9 @@ test('10 不带 actor 的意图（S1-3b wire 形状）：选来历后再等待�
   const avatar = Object.keys(g.state.created)[0];
   const m = g.menu(null);
   assert.deepEqual(m.affordances.map((a) => a.act), [pass]);
-  assert.deepEqual([...m.visible], [avatar, ...openPlaces(raw)]);
+  // S2-P（Q12 甲）：here 单独断言；visible = 化身、开放地点、here 链（去重，按此次序）。
+  assert.deepEqual(m.here, hereAtLodge0(raw));
+  assert.deepEqual([...m.visible], [...new Set([avatar, ...openPlaces(raw), ...hereAtLodge0(raw).chain])]);
   const t0 = clockMinute(g.engine, g.state);
   const r = g.act({ act: pass, numbers: { minutes: 15 } });
   assert.equal(r.ok, true, JSON.stringify(r));
