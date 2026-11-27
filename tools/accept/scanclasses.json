@@ -937,8 +937,8 @@
    "astRules": [
     {
      "exceptFiles": [
-      "server-plugin/kernel/climate.mjs",
-      "server-plugin/kernel/weather.mjs"
+      "server-plugin/rules/time_env/env.mjs",
+      "server-plugin/rules/time_env/weather.mjs"
      ],
      "kind": "moduleEdge",
      "name": "edge",
@@ -953,7 +953,7 @@
       "weatherAt",
       "weatherCellOf"
      ],
-     "sourceRe": "(climate|weather)\\.mjs$"
+     "sourceRe": "(season|weather)\\.mjs$"
     }
    ],
    "detectors": [
@@ -1484,8 +1484,8 @@
    "astRules": [
     {
      "exceptFiles": [
-      "server-plugin/kernel/calendar.mjs",
-      "server-plugin/kernel/climate.mjs"
+      "server-plugin/rules/time_env/calendar.mjs",
+      "server-plugin/rules/time_env/season.mjs"
      ],
      "kind": "identifier",
      "name": "ident",

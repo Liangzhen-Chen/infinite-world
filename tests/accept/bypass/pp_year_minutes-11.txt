@@ -1,2 +1,2 @@
-// @file server-plugin/kernel/climate.mjs
+// @file server-plugin/rules/time_env/season.mjs
 export const half = (c) => c.yearMinutes / 2;
