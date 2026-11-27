@@ -1,7 +1,8 @@
 {
-  "note": "临时仓库里语法树判要跨文件折叠常量，必须带上的源文件（只列实测需要的；整个 server-plugin 不拷，免得内核测试类条目在干净临时仓库里也过，见 runner.test.mjs 的提交钩子测试）。",
+  "note": "临时仓库里语法树判要跨文件折叠常量，必须带上的源文件（只列实测需要的；门禁读登记分片经 tools/accept/lib/registry-files.mjs 引规则层合并部件 registry-shards.mjs，也须带上；整个 server-plugin 不拷，免得内核测试类条目在干净临时仓库里也过，见 runner.test.mjs 的提交钩子测试）。",
   "files": [
     "server-plugin/kernel/storage.mjs",
-    "server-plugin/kernel/load/layout.mjs"
+    "server-plugin/kernel/load/layout.mjs",
+    "server-plugin/rules/load/registry-shards.mjs"
   ]
 }

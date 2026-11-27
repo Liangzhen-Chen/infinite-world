@@ -15,7 +15,8 @@
 
 import { tokenize, memberChains, conditionSpans, symbolPaths, BRANCH_OPS, importsOf, isP, buildEnv, matchClose } from '../lib/js-scan.mjs';
 import { stateChains, declPaths, writerOf, segsMatch, serverRel, callsOf } from '../lib/js-state.mjs';
-import { filesOfGroups, globToRe, LAYOUT } from '../read.mjs';
+import { filesOfGroups, globToRe } from '../read.mjs';
+import { readOwnersFiles, hasOwnersFiles } from '../lib/registry-files.mjs';
 import { projectOf, fileOf, walkAll, fold, originsOf, where, propName } from '../lib/ast.mjs';
 
 // 按语法树读状态顶层键（params.ast = on，C0；亮圳规定检查代码不许靠认字面文字判）：params.paths 的每一项是一个单段键名。
@@ -255,12 +256,12 @@ export function components(ctx, params) {
   return params.access === 'write' ? declPaths(ctx.decl).keys.map((k) => `c_write_${k}`) : [];
 }
 
-// 声明表若在被查内容里（真仓库、或用例把 state-owners.json 当夹具放进虚拟文件集），按被查内容读；否则用载入上下文时读到的。
+// 声明表若在被查内容里（真仓库、或用例把 state-owners.json 或其分片当夹具放进虚拟文件集），按被查内容合并读；否则用载入上下文时读到的。
 // 这样 dated 写者等声明数据能随用例一起给出，检测器本身仍不列任何路径或写者名单。
 function declOf(ctx) {
-  if (ctx.files.includes(LAYOUT.stateOwners)) {
+  if (hasOwnersFiles(ctx)) {
     try {
-      const doc = JSON.parse(ctx.read(LAYOUT.stateOwners));
+      const doc = readOwnersFiles(ctx).doc;
       return doc && typeof doc === 'object' ? doc : ctx.decl;
     } catch {
       return ctx.decl;

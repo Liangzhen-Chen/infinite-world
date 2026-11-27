@@ -4,9 +4,10 @@
 // 读文件只在装配层（本文件），kernel 内的规则零件不读世界文件；不引任何归档文件。
 // saveSlot / loadSlot / replay_apply 是进程内的存读档薄壳（saveSlot 调 kernel 的 writeSlot，loadSlot 调 readSlot，replay_apply 经 mountKernel 复演）；玩家经 menu 路由存读档时由 menu-entry 调同一 kernel 函数。
 
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { mountKernel } from './rules/load/mount.mjs';
+import { mergeOwners, shardDirOf } from './rules/load/registry-shards.mjs';
 import { createDigestCap } from './textcore/digest.mjs';
 import { writeSlot, mountSaveRoutes } from './kernel/save.mjs';
 import { readSlot } from './kernel/load/save.mjs';
@@ -32,6 +33,19 @@ function readActionDocs() {
   return readdirSync(dir).filter((f) => f.endsWith('.json')).sort().map((f) => JSON.parse(readFileSync(new URL(f, dir), 'utf8')));
 }
 
+/**
+ * state-owners 声明表（卷二 :57）= 主文件与 state-owners.d/ 下分片按文件名次序的合并结果（S2-SH；合并规则在 rules/load/registry-shards.mjs）。
+ * 合并在装配层一次完成，结果进 doc_data；读档复演用存档里的这一份，不再读分片目录。
+ */
+function readOwners() {
+  const rel = (/** @type {URL} */ u) => u.href.slice(REPO.href.length);
+  const main = new URL('state-owners.json', WORLD_ONTOLOGY);
+  const dir = new URL(`${shardDirOf(rel(main))}/`, REPO);
+  const names = existsSync(dir) ? readdirSync(dir).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)) : [];
+  const shards = names.map((n) => ({ file: rel(new URL(n, dir)), doc: JSON.parse(readFileSync(new URL(n, dir), 'utf8')) }));
+  return mergeOwners({ file: rel(main), doc: JSON.parse(readFileSync(main, 'utf8')) }, shards).doc;
+}
+
 /** 世界数据原文（即存档的 doc_data 副本，卷二十七 :543、:547）：规则表按 registry.json 每行的 file 逐个读（不点名表），按登记 code 收进 tableDocs；组装与核对在 rules/load/registry.mjs#loadWorld。 */
 function readWorld() {
   const json = (/** @type {string} */ f) => JSON.parse(readFileSync(new URL(f, WORLD_ONTOLOGY), 'utf8'));
@@ -41,7 +55,7 @@ function readWorld() {
   return {
     dimensionDocs: readDimensionDocs(),
     namedStructsDoc: json('named-structs.json'),
-    owners: json('state-owners.json'),
+    owners: readOwners(),
     registryRows,
     tableDocs,
     digestExclude: json('../rules/tables/digest-exclude.json').paths,
