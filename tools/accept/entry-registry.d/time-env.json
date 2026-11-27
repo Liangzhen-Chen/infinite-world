@@ -6,12 +6,11 @@
   {"name": "calendarView", "file": "rules/time_env/calendar.mjs", "vol": null, "sec": null, "kind": "read", "needs": ["KernelError"], "rules": []},
   {"name": "dayPartOf", "file": "rules/time_env/calendar.mjs", "vol": null, "sec": null, "kind": "read", "needs": ["KernelError", "calendarDayIndex", "parseNumberType", "unitSi"], "rules": []},
   {"name": "astroView", "file": "rules/time_env/calendar.mjs", "vol": null, "sec": null, "kind": "read", "needs": ["KernelError", "ruleValue", "parseNumberType", "unitSi"], "rules": []},
-  {"name": "latitudeOf", "file": "rules/time_env/season.mjs", "vol": null, "sec": null, "kind": "read", "needs": ["ruleValue", "fixedUnits", "fixedDivide", "fixedToNumber"], "rules": []},
   {"name": "cellOf", "file": "rules/time_env/season.mjs", "vol": null, "sec": null, "kind": "part", "needs": ["ruleValue"], "rules": []},
-  {"name": "normalizedPhase", "file": "rules/time_env/season.mjs", "vol": null, "sec": null, "kind": "read", "needs": ["latitudeOf", "astroView"], "rules": []},
-  {"name": "seasonAt", "file": "rules/time_env/season.mjs", "vol": null, "sec": null, "kind": "read", "needs": ["KernelError", "dim", "cellOf", "normalizedPhase", "systemTimeView"], "rules": []},
-  {"name": "solarTermAt", "file": "rules/time_env/season.mjs", "vol": null, "sec": null, "kind": "read", "needs": ["normalizedPhase", "systemTimeView"], "rules": []},
-  {"name": "envAt", "file": "rules/time_env/env.mjs", "vol": null, "sec": null, "kind": "read", "needs": ["zoneAt", "normalizedPhase", "seasonAt"], "rules": []},
+  {"name": "localPhase", "file": "rules/time_env/season.mjs", "vol": null, "sec": null, "kind": "read", "needs": ["KernelError", "dim", "cellOf", "astroView"], "rules": []},
+  {"name": "seasonAt", "file": "rules/time_env/season.mjs", "vol": null, "sec": null, "kind": "read", "needs": ["KernelError", "dim", "cellOf", "localPhase", "systemTimeView"], "rules": []},
+  {"name": "solarTermAt", "file": "rules/time_env/season.mjs", "vol": null, "sec": null, "kind": "read", "needs": ["KernelError", "dim", "cellOf", "localPhase", "systemTimeView"], "rules": []},
+  {"name": "envAt", "file": "rules/time_env/env.mjs", "vol": null, "sec": null, "kind": "read", "needs": ["zoneAt", "localPhase", "seasonAt"], "rules": []},
   {"name": "nowOf", "file": "rules/time_env/env.mjs", "vol": null, "sec": null, "kind": "read", "needs": ["KernelError", "dim", "zoneAt", "systemTimeView", "calendarFrom", "calendarDayIndex", "calendarView", "dayPartOf", "envAt", "solarTermAt"], "rules": []}
  ]
 }
