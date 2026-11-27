@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { testTempRoot } from '../accept/temp-root.mjs';
 import { init, saveSlot, loadSlot, replay_apply } from '../../server-plugin/index.mjs';
+import { express } from '../support/express.mjs';
 import { mountKernel } from '../../server-plugin/rules/load/mount.mjs';
 import { buildState, runTransaction } from '../../server-plugin/kernel/transaction.mjs';
 import { initClock, clockMinute } from '../../server-plugin/kernel/scheduler.mjs';
@@ -54,7 +55,7 @@ function withRows(raw, kind, patch) {
 
 test('1 真实开局：init 在 3000 ms 内返回，返回值含 engine/state/logBook/submitProposal/advance/save/opening', async () => {
   const t0 = performance.now();
-  const g = await init({ saveRoot: testTempRoot('s2a-init-') });
+  const g = await init(express.Router(), { saveRoot: testTempRoot('s2a-init-') });
   const ms = performance.now() - t0;
   assert.ok(ms < 3000, `init took ${ms} ms`);
   for (const k of ['engine', 'state', 'logBook', 'submitProposal', 'advance', 'save', 'opening']) assert.ok(Object.hasOwn(g, k), k);
@@ -140,7 +141,7 @@ test('6 烘焙层不进摘要：两次装配（烘焙树各自重建）saveDiges
 
 test('7 烘焙层可重建且一致：同一 doc_data 两次建树摘要相等；读档复演后重建的树摘要与开局相等；verifyBake 开着照常开局', async () => {
   const dir = testTempRoot('s2a-bake-');
-  const g = await init({ saveRoot: dir });
+  const g = await init(express.Router(), { saveRoot: dir });
   const d0 = placeTreeDigest(g.engine, g.engine.bake.placeTree);
   assert.equal(placeTreeDigest(g.engine, bakePlaceTree(g.engine.registry)), d0);
   const r = replay_apply(loadSlot(saveSlot(g), { saveRoot: dir }));
@@ -184,7 +185,7 @@ function refPair(engine) {
 
 test('8 真实开局后的闭环：新建实体、在另一新建实体写其 ref、耗时 30 分钟；落盘、日志与时钟；存读复演 saveDigest 一致', async () => {
   const dir = testTempRoot('s2a-loop-');
-  const g = await init({ saveRoot: dir });
+  const g = await init(express.Router(), { saveRoot: dir });
   const pair = refPair(g.engine);
   assert.ok(pair, '前提：数据里有指向可新建种类的 ref 维度');
   const start = clockMinute(g.engine, g.state);

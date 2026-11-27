@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { testTempRoot } from '../accept/temp-root.mjs';
 import { init, saveSlot, loadSlot, replay_apply } from '../../server-plugin/index.mjs';
+import { express } from '../support/express.mjs';
 import { mountKernel } from '../../server-plugin/rules/load/mount.mjs';
 import { closeInputs, inputsOf } from '../../server-plugin/kernel/memo.mjs';
 import { dim, modified } from '../../server-plugin/kernel/dimensions.mjs';
@@ -70,7 +71,7 @@ test('unitOfPath 缺省合法（分片全为整片）；分片表某部分改按
 });
 
 test('modified 无兜底：engine 没有 modifierSources 数组即抛；空数组时 value 等于 dim 的 value', async () => {
-  const g = await init();
+  const g = await init(express.Router());
   // 取任一实体行自带、且在本表登记过的维度（从数据里找，不写死 kind 与维度）。
   const [kind, id, dimension] = [...g.engine.registry.tables].flatMap(([k, d]) => Object.entries(d.rows || {})
     .flatMap(([rid, row]) => Object.keys(row || {}).filter((dm) => Object.hasOwn(d.dimensions || {}, dm)).map((dm) => [k, rid, dm])))[0];
@@ -81,7 +82,7 @@ test('modified 无兜底：engine 没有 modifierSources 数组即抛；空数�
 });
 
 test('inputsOf：已登记 kind 的 dim 节点两次取同一冻结对象；未声明节点 E-VIEW-UNDECLARED-READ；engine 无 inputs 即 E-DIM-STRUCT-FIELD', async () => {
-  const g = await init();
+  const g = await init(express.Router());
   const kind = [...g.engine.registry.tables.keys()][0];
   const a = inputsOf(g.engine, `dim:${kind}`);
   assert.equal(inputsOf(g.engine, `dim:${kind}`), a);
@@ -108,7 +109,7 @@ test('closeInputs：闭包含被调用节点的 own、按名通配解析、改�
 test('读档后接着玩：replay_apply 返回与 init 同形；推进后再存读，saveDigest 等于不存读一口气跑完的世界', async () => {
   const dirA = testTempRoot('s1c-resume-a-');
   const dirB = testTempRoot('s1c-resume-b-');
-  const g = await init({ saveRoot: dirA });
+  const g = await init(express.Router(), { saveRoot: dirA });
   const step = g.engine.host.heartbeatStepMinutes;
   g.submitProposal({ effects: [{ op: 'time', minutes: step + 3 }] });
   const r = replay_apply(loadSlot(saveSlot(g), { saveRoot: dirA }));
@@ -119,7 +120,7 @@ test('读档后接着玩：replay_apply 返回与 init 同形；推进后再存�
   r.submitProposal({ effects: [{ op: 'time', minutes: 2 }] });
   const resumed = replay_apply(loadSlot(r.save(0), { saveRoot: dirA }));
 
-  const straight = await init({ saveRoot: dirB });
+  const straight = await init(express.Router(), { saveRoot: dirB });
   straight.submitProposal({ effects: [{ op: 'time', minutes: step + 3 }] });
   straight.advance(step);
   straight.submitProposal({ effects: [{ op: 'time', minutes: 2 }] });
@@ -130,7 +131,7 @@ test('读档后接着玩：replay_apply 返回与 init 同形；推进后再存�
 
 test('doc_data 含 registry.json 登记的每张规则表（按登记行 code 逐一核在）', async () => {
   const dir = testTempRoot('s1c-docdata-');
-  const g = await init({ saveRoot: dir });
+  const g = await init(express.Router(), { saveRoot: dir });
   const loaded = loadSlot(saveSlot(g), { saveRoot: dir });
   const codes = rawWorld().registryRows.map((r) => r.code);
   assert.ok(codes.length > 0);

@@ -4,10 +4,11 @@
 // 布局名、分片方式、快照间隔与保留数都读 engine.saveLayout（rules.saveLayout），槽位数读 engine.host.saveSlotCount（rules.host）。
 // 不读墙钟（:562）；不放模块级状态，日志簿与 state 一律显式传参。
 
-import { existsSync, mkdirSync, renameSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { clone } from './bytes.mjs';
-import { KernelError } from './errors.mjs';
-import { GRAMMAR_TOKENS } from './handles.mjs';
+import { KernelError, codeOf } from './errors.mjs';
+import { GRAMMAR_TOKENS, T } from './handles.mjs';
+import { importEntry } from './load/save.mjs';
 import { canonical, readPath } from './storage.mjs';
 
 const UTF8 = 'utf8';
@@ -114,23 +115,41 @@ export function slotPaths(engine, slot) {
 }
 
 /**
- * 存槽 writeSlot（index.mjs 的公共入口 saveSlot 调它；卷二十七 :556–:558、:562）：写各片（按内容摘要寻址，已存在即不重写）→ 写临时清单 → 旧清单改名为上一份 → 原子改名提交。
+ * 把一份清单及其各片提交进槽位（卷二十七 :558）：写各片（按内容摘要寻址，已存在即不重写）→ 写临时清单 → 旧清单改名为上一份 → 原子改名提交。
+ * writeSlot 与导入 importSlot 共用这一条写盘流程。写盘失败 E-SAVE-WRITE-FAIL。
+ * @param {any} engine @param {number} n 已核过的槽位 @param {Map<string, string>} texts 片摘要 → 片文本 @param {Record<string, any>} manifest
+ */
+export function commitSlot(engine, n, texts, manifest) {
+  const paths = slotPaths(engine, n);
+  const fail = () => new KernelError('E-SAVE-WRITE-FAIL', {}, 'save write failed');
+  try { mkdirSync(paths.shardDir, { recursive: true }); } catch { throw fail(); }
+  for (const [digest, text] of texts) {
+    const file = paths.shard(digest);
+    if (existsSync(file)) continue;
+    const tmp = new URL(`${file.href}${engine.saveLayout.files.tmpSuffix}`);
+    try { writeFileSync(tmp, text, UTF8); renameSync(tmp, file); } catch { throw fail(); }
+  }
+  try {
+    writeFileSync(paths.tmp, canonical(manifest), UTF8);
+    if (existsSync(paths.current)) renameSync(paths.current, paths.prev);
+    renameSync(paths.tmp, paths.current);
+  } catch { throw fail(); }
+}
+
+/**
+ * 存槽 writeSlot（index.mjs 的公共入口 saveSlot 与菜单存档 menu-entry 经 world.save 调它；卷二十七 :556–:558、:562）：各片按内容摘要寻址，经 commitSlot 落盘。
  * 清单只含 slot、clockMinute、两个指纹、快照索引、片摘要、日志段、存档摘要，不含任何墙钟。写盘失败 E-SAVE-WRITE-FAIL。
  * @param {any} engine @param {{state: any, logBook: LogBook}} world @param {number} slot @returns {{slot: number} & Record<string, any>} 清单
  */
 export function writeSlot(engine, world, slot) {
   const n = checkSlot(engine, slot);
   const doc = docOf(engine, world.state, world.logBook);
-  const paths = slotPaths(engine, n);
-  const fail = () => new KernelError('E-SAVE-WRITE-FAIL', {}, 'save write failed');
-  try { mkdirSync(paths.shardDir, { recursive: true }); } catch { throw fail(); }
+  /** @type {Map<string, string>} */
+  const texts = new Map();
   const put = (/** @type {unknown} */ content) => {
     const text = canonical(content);
     const digest = engine.digestCap.sha256Hex(text, UTF8);
-    const file = paths.shard(digest);
-    if (existsSync(file)) return digest;
-    const tmp = new URL(`${file.href}${engine.saveLayout.files.tmpSuffix}`);
-    try { writeFileSync(tmp, text, UTF8); renameSync(tmp, file); } catch { throw fail(); }
+    texts.set(digest, text);
     return digest;
   };
   /** @type {Record<string, string>} */
@@ -147,10 +166,62 @@ export function writeSlot(engine, world, slot) {
     logSegments: [],
     saveDigest: saveDigest(engine, doc),
   };
-  try {
-    writeFileSync(paths.tmp, canonical(manifest), UTF8);
-    if (existsSync(paths.current)) renameSync(paths.current, paths.prev);
-    renameSync(paths.tmp, paths.current);
-  } catch { throw fail(); }
+  commitSlot(engine, n, texts, manifest);
   return manifest;
+}
+
+/** 清单引用的全部片摘要（各部分与各快照）。 @param {any} manifest @returns {string[]} */
+export function shardDigestsOf(manifest) {
+  return [...Object.values(manifest.shardDigests), ...manifest.snapshotIndex.map((/** @type {any} */ s) => s.state)];
+}
+
+/**
+ * 导出 exportSlot（卷二 :1015；格式按主会话裁定 Q5）：取槽位里完好的清单（当前一份坏了退上一份，同 readSlot 的回退）及它引用的各片原文，
+ * 打成 canonical({format, manifest, shards:{摘要: 片文本}})，其 UTF-8 即存档字节。format 读 world/schema/wire-v1.json 的 exportFormat。
+ * 只核片摘要、不比规则指纹（导出是原样收发，卷二十七 :563）。槽位越界 E-SAVE-SLOT-INVALID；两份清单都没有 E-SAVE-EMPTY；都不完好 E-SAVE-SHARD-DIGEST。
+ * @param {any} engine @param {unknown} slot @returns {string}
+ */
+function exportSlot(engine, slot) {
+  const paths = slotPaths(engine, checkSlot(engine, slot));
+  const files = [paths.current, paths.prev].filter((f) => existsSync(f));
+  if (files.length === 0) throw new KernelError('E-SAVE-EMPTY', {}, 'slot has no manifest');
+  for (const file of files) {
+    try {
+      const manifest = JSON.parse(readFileSync(file, UTF8));
+      /** @type {Record<string, string>} */
+      const shards = {};
+      for (const digest of shardDigestsOf(manifest)) {
+        const text = readFileSync(paths.shard(digest), UTF8);
+        if (engine.digestCap.sha256Hex(text, UTF8) !== digest) throw new KernelError('E-SAVE-SHARD-DIGEST');
+        shards[digest] = text;
+      }
+      return canonical({ format: engine.docData.wire.exportFormat, manifest, shards });
+    } catch { /* 这一份不完好，试上一份 */ }
+  }
+  throw new KernelError('E-SAVE-SHARD-DIGEST', {}, 'no intact manifest in slot');
+}
+
+/**
+ * mountSaveRoutes（卷二 :1033、:1015–:1016；kernelApi 只对 index.mjs 开放）：在 requestCap 上挂 save_export 与 save_import 两路。
+ * save_export：收窄 schema:wire-up-save-v1 → exportSlot → 成功经 replyCap.send 发字节（wire_body=bytes，第 5s 环），失败经 postReply 交拒收代号（第 2c 环）。
+ * save_import：入口在 kernel/load/save.mjs#importEntry（第 2d 环）。两路都只用本局 engine（指纹与槽位目录），不改 state。
+ * @param {{on: Function, narrow: (wire: any, name: string, raw: unknown) => any}} requestCap @param {{send: Function, postReply: Function}} replyCap @param {{engine: any}} world
+ */
+export function mountSaveRoutes(requestCap, replyCap, world) {
+  const { engine } = world;
+  const route = T.code_enum.wire_route;
+  requestCap.on(route.save_export, (/** @type {unknown} */ raw, /** @type {object} */ reply) => {
+    /** @type {string} */
+    let bytes;
+    try {
+      bytes = exportSlot(engine, requestCap.narrow(engine.docData.wire, 'wire-up-save-v1', raw).slot);
+    } catch (e) {
+      const code = codeOf(e);
+      if (code === null) throw e;
+      replyCap.postReply(reply, { result: T.code_enum.reply_result.rejected, code });
+      return;
+    }
+    replyCap.send(reply, bytes, T.code_enum.wire_body.bytes);
+  });
+  requestCap.on(route.save_import, (/** @type {unknown} */ raw, /** @type {object} */ reply) => importEntry(engine, requestCap, replyCap, raw, reply));
 }

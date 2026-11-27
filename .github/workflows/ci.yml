@@ -1,5 +1,5 @@
 # 远端 CI（docs/gemini/kickoff-1125.md:476 L-05）：干净 Linux 容器跑类型检查、门禁、快照与全量单测。
-# e2e-observe 是 L-18 零 mock 端到端烟测的红灯观测 job：新骨架闭环未通前允许红，不阻塞主 job（S1-3 做通后转绿并在主 job 必过）。
+# L-18 零 mock 端到端烟测与拔线门禁（S1-3b 转绿后升格）：都在主 job 必过，原 e2e-observe 红灯观测 job 已删。
 name: CI
 
 on:
@@ -51,18 +51,7 @@ jobs:
           fi
           printf 'refs/heads/ci %s refs/heads/master %s\n' "$HEAD_SHA" "$base" | node tools/accept/pre-push.mjs
       - run: npm run test:all
-
-  e2e-observe:
-    runs-on: ubuntu-latest
-    # L-18：显式待转绿红灯桩（S1-3 做通前允许红，不阻塞 main job）。
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: npm
-      - run: npm ci
+      # L-18 烟测：从真实宿主路由走完六步（S1-3b），必过。
       - run: npm run test:e2e
+      # 拔线门禁（tests/e2e/wire-cuts.json 逐行删一处接线，烟测须红且停在登记步），必过。
+      - run: node tools/accept/e2e-wire-cut.mjs

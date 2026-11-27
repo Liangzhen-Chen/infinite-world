@@ -1,0 +1,84 @@
+{
+  "card": "feat-s1-3b",
+  "phase": "pr",
+  "updatedAt": "2026-11-26T23:53:52.714Z",
+  "branches": {
+    "code": "feat/s1-3b",
+    "test": "test/s1-3b"
+  },
+  "pr": null,
+  "parties": {
+    "code": {
+      "family": "claude-sonnet",
+      "model": "claude-sonnet-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/s13b",
+        "session": "orca_session_id:807aa687-2e67-4549-82d9-1bea0e9df67d",
+        "commits": [
+          "abc5e0704",
+          "797f1a74a",
+          "baca63b0d",
+          "6668f5fdd"
+        ]
+      },
+      "costUsd": null
+    },
+    "test": {
+      "family": "claude-haiku",
+      "model": "claude-haiku-5-5",
+      "receipt": null,
+      "orca": {
+        "worktree": "F:/dnd-worktrees/dnd/ts-s13b",
+        "session": "orca_session_id:523a9f7c-276c-4de5-b1f4-ef077dc19fe9",
+        "commits": [
+          "18a6fb4e6",
+          "5f68fca85",
+          "5cdb3c6e7",
+          "9fccdba7e"
+        ]
+      },
+      "costUsd": null
+    },
+    "review": [
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": null,
+        "orca": {
+          "worktree": "F:/dnd-worktrees/dnd/ts-s13b",
+          "session": "orca_session_id:f9823eb4-c290-466c-befc-7325b4fe71e7",
+          "commits": [
+            "113002d1c",
+            "2c1f5dec5",
+            "821d06b1f",
+            "6217bcf36",
+            "5949ad503"
+          ]
+        },
+        "costUsd": null
+      },
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": "docs/卡档案/feat-s1-3b/收据/审卡-001.json",
+        "orca": null,
+        "costUsd": null
+      },
+      {
+        "family": "claude-opus",
+        "model": "claude-opus-5-5",
+        "receipt": "docs/卡档案/feat-s1-3b/收据/审卡-002.json",
+        "orca": null,
+        "costUsd": 0.625771
+      }
+    ]
+  },
+  "ci": {
+    "status": "pending",
+    "runUrl": null
+  },
+  "failCount": 1,
+  "blocker": null,
+  "nextAction": "推 feat/s1-3b 开 PR→master 走 CI，main 绿即合（合入说明现写 卡分支：feat/s1-3b）；合后删 s13b、ts-s13b 工作树并报李白"
+}

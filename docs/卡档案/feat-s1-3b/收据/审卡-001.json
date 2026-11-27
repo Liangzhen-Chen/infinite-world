@@ -1,0 +1,13 @@
+{
+  "role": "审卡",
+  "model": "claude-opus-5-5",
+  "family": "claude-opus",
+  "endpoint": "anthropic",
+  "startedAt": "2026-11-26T18:00:45.762Z",
+  "endedAt": "2026-11-26T18:05:12.673Z",
+  "exitCode": 0,
+  "totalCostUsd": 0.6418208000000001,
+  "promptSha256": "bc284e0dd1581e14f3c0c941a48e5c7907f0d59836adfcf416c38f659a917da0",
+  "headBefore": "b3ef6b4dc7ad00e1c988b83c8c29877d18b1ab53",
+  "headAfter": "e40032cb3034350244ece51a7587176ec0149fb7"
+}

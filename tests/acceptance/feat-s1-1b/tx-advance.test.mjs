@@ -3,6 +3,7 @@
 // 卷二十七:743（推进目标时刻 = 处理时的 clock.minute 加增量）、卷二十七:190（rules.host.heartbeatStepMinutes）、
 // docs/gemini/kickoff-1125.md:92（耗时动作经 resolve 返回 postCommit.advanceMinutes，提交后外层推进，无嵌套事务）。
 // 不写死任何实体 id、维度名、kind、op：全部从 world/ontology/dimensions/*.json 与 world/ontology/primitives.json 运行时读取。
+import { express } from '../../support/express.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
@@ -62,7 +63,7 @@ const UNSUPPORTED_OP = PRIMITIVES.map((p) => p.op).find((op) => !SUPPORTED_OPS.h
 assert.ok(UNSUPPORTED_OP, 'primitives.json 中应存在 time/create/fact.set 以外的 op');
 
 async function boot() {
-  const env = await init();
+  const env = await init(express.Router());
   assert.ok(env && typeof env.submitProposal === 'function', 'init 应返回 {engine, state, submitProposal, advance}');
   return env;
 }
