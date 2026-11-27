@@ -1,0 +1,60 @@
+{
+ "entries": [
+  {
+   "name": "shardDirOf",
+   "file": "rules/load/registry-shards.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [],
+   "rules": []
+  },
+  {
+   "name": "mergeOwners",
+   "file": "rules/load/registry-shards.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "mergeEntries",
+   "file": "rules/load/registry-shards.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError"
+   ],
+   "rules": []
+  },
+  {
+   "name": "BODY_MANIFEST",
+   "file": "rules/body/manifest.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "settleBody",
+    "dieByDestroy",
+    "instantiatePerson"
+   ],
+   "rules": []
+  },
+  {
+   "name": "DOMAINS",
+   "file": "rules/load/domains.mjs",
+   "vol": null,
+   "sec": null,
+   "kind": "part",
+   "needs": [
+    "KernelError",
+    "BODY_MANIFEST"
+   ],
+   "rules": []
+  }
+ ]
+}

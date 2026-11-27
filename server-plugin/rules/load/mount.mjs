@@ -22,18 +22,21 @@ import { carcassOf } from '../body/carcass.mjs';
 import { runGenesis, runOpening, openingOf } from '../gen/worldgen-writeback.mjs';
 import { bakePlaceTree, placeTreeDigest } from '../bake/place-tree.mjs';
 import { checkTerminationTables, destroyEntity, instantiateEntity } from '../lifecycle/terminate.mjs';
-import { SETTLE_BODY_CLEANUP, DIE_BY_DESTROY_TRIGGER } from '../body/death.mjs';
-import { PERSON_INSTANTIATOR } from '../body/person.mjs';
 import { checkRecordCoverage } from '../lifecycle/records.mjs';
+import { DOMAINS } from './domains.mjs';
 import { loadActions, menuOf } from '../act/catalog.mjs';
 import { resolveIntent } from '../act/resolve.mjs';
 
-// 终止清理函数的登记项（卷二 :561；各系统模块经 registerTerminationCleanup 产出、在此收齐）。
-const TERMINATION_CLEANUPS = Object.freeze([SETTLE_BODY_CLEANUP]);
-// 终止发起方的登记项（草案 §4.1；各系统模块经 registerTerminationTrigger 产出、在此收齐，destroy 原语按 systems.*.terminationTrigger 路由）。
-const TERMINATION_TRIGGERS = Object.freeze([DIE_BY_DESTROY_TRIGGER]);
-// 建档实例化的登记项（S1-3c 草案 §5；各系统模块经 registerInstantiator 产出、在此收齐，create 原语按 systems.*.instantiate 路由）。
-const INSTANTIATORS = Object.freeze([PERSON_INSTANTIATOR]);
+// 各域装配登记按 domains.mjs 的次序收齐（S2-SH 草案 §3）：一个字段名收一张冻结表。
+const collect = (/** @type {'terminationCleanups' | 'terminationTriggers' | 'instantiators' | 'advanceHooks'} */ field) => Object.freeze(DOMAINS.flatMap((d) => d[field] || []));
+// 终止清理函数的登记项（卷二 :561；各系统模块经 registerTerminationCleanup 产出、在其域 manifest 收齐）。
+const TERMINATION_CLEANUPS = collect('terminationCleanups');
+// 终止发起方的登记项（草案 §4.1；各系统模块经 registerTerminationTrigger 产出，destroy 原语按 systems.*.terminationTrigger 路由）。
+const TERMINATION_TRIGGERS = collect('terminationTriggers');
+// 建档实例化的登记项（S1-3c 草案 §5；各系统模块经 registerInstantiator 产出，create 原语按 systems.*.instantiate 路由）。
+const INSTANTIATORS = collect('instantiators');
+// 推进钩子（各域 manifest 的 advanceHooks）。
+const ADVANCE_HOOKS = collect('advanceHooks');
 // 协议入口注入（kernel/transaction.mjs HANDLERS.destroy、HANDLERS.create 调 engine.lifecycle.*；内核不 import 规则层，与 engine.advance 同一做法）。
 const LIFECYCLE = Object.freeze({ destroy: destroyEntity, instantiate: instantiateEntity });
 
@@ -154,7 +157,7 @@ export function mountKernel(raw, caps, resume) {
   const engine = Object.freeze({
     registry, structs, modifierSources: Object.freeze([...modifierSources]), unitOfPath, inputs: closeInputs(INPUT_DECLS),
     stateKeys, P, host, saveLayout, primitives, bake, vocab: vocabDoc, actions,
-    advanceHooks: Object.freeze([]), terminationCleanups: TERMINATION_CLEANUPS, terminationTriggers: TERMINATION_TRIGGERS, instantiators: INSTANTIATORS, lifecycle: LIFECYCLE, openStates: new WeakSet(),
+    advanceHooks: ADVANCE_HOOKS, terminationCleanups: TERMINATION_CLEANUPS, terminationTriggers: TERMINATION_TRIGGERS, instantiators: INSTANTIATORS, lifecycle: LIFECYCLE, openStates: new WeakSet(),
     advance: (/** @type {object} */ st, /** @type {import('../../kernel/save.mjs').LogBook} */ book, /** @type {number} */ m) => advance(engine, st, book, m),
     // 意图收窄由本层注入（transaction 不 import 规则层；同 advance 注入），开局与复演同一函数（S1-3a）。
     resolveIntent: (/** @type {object} */ st, /** @type {unknown} */ intent) => resolveIntent(engine, st, intent),

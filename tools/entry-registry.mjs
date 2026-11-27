@@ -14,11 +14,11 @@ import { writeCliOut } from './accept/lib/cli-out.mjs';
 import { dirname, join, posix, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tokenize, importsOf, isP, matchClose } from './accept/lib/js-scan.mjs';
+import { ENTRY_REGISTRY_FILE, readEntryRegistry, readOwnersFiles } from './accept/lib/registry-files.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..').replace(/\\/g, '/');
-export const REGISTRY_FILE = 'tools/accept/entry-registry.json';
+export const REGISTRY_FILE = ENTRY_REGISTRY_FILE;
 const DESIGN = 'docs/统一底层设计';
-const STATE_OWNERS = 'world/ontology/state-owners.json';
 export const ENTRY_POINT = 'server-plugin/index.mjs';
 const PROD = 'server-plugin';
 const SELF = 'tools/entry-registry.mjs';
@@ -404,9 +404,9 @@ export function loadInput(root = ROOT) {
   for (const base of [PROD, 'tests', 'tools']) for (const f of walk(root, base, [])) files.set(f, readFileSync(join(root, f), 'utf8'));
   const volumes = new Map();
   for (const f of readdirSync(join(root, DESIGN)).filter((x) => /^卷.*\.md$/.test(x)).sort(cmp)) volumes.set(f.split('-')[0], readFileSync(join(root, DESIGN, f), 'utf8').split(/\r?\n/));
-  const registry = JSON.parse(readFileSync(join(root, REGISTRY_FILE), 'utf8'));
-  const so = existsSync(join(root, STATE_OWNERS)) ? JSON.parse(readFileSync(join(root, STATE_OWNERS), 'utf8')) : null;
-  return { files, volumes, registry, stateOwners: so };
+  // 登记表与 state-owners 都按主文件与分片的合并结果读（S2-SH）。
+  const { registry } = readEntryRegistry(root);
+  return { files, volumes, registry, stateOwners: readOwnersFiles(root).doc };
 }
 
 function main(argv) {

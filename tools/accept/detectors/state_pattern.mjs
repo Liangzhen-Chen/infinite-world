@@ -15,6 +15,7 @@ import { join } from 'node:path';
 import { RULES_LAYOUT } from '../lib/rules.mjs';
 import { listItemType, parseNumberType } from '../../../server-plugin/kernel/validate/types.mjs';
 import { LAYOUT } from '../read.mjs';
+import { readOwnersFiles, hasOwnersFiles } from '../lib/registry-files.mjs';
 
 const STATE_OWNERS = LAYOUT.stateOwners;
 // 卷二 §1.5 命名 struct 的机读登记（落处说明见 docs/卡回报/ds-b3-4.md“已定”）。
@@ -213,7 +214,9 @@ export function detect(ctx, params) {
   const structsDoc = namedStructs(ctx);
   if (!structsDoc.rows) { paramHit(structsDoc.file, structsDoc.why); return hits; }
 
-  const decl = readJson(ctx, STATE_OWNERS);
+  // 声明表按主文件与分片的合并结果读（S2-SH）；命中锚点取登记该 pathTypes 键的文件（无分片时即主文件）。
+  const owners = readOwnersFiles(hasOwnersFiles(ctx) ? ctx : ctx.root);
+  const decl = owners.doc;
   if (!isObj(decl) || !isObj(decl.pathTypes)) { paramHit(STATE_OWNERS, 'state-owners.json 无 pathTypes'); return hits; }
 
   const tables = dimensionTables(ctx);
@@ -239,12 +242,13 @@ export function detect(ctx, params) {
   for (const pattern of Object.keys(decl.pathTypes).sort()) {
     const kind = firstSeg(pattern);
     if (LEDGER_KEYS.includes(kind)) continue;
+    const anchor = owners.originOf(['pathTypes', pattern]);
     const type = decl.pathTypes[pattern];
     // 偏离行：dimension 路径按 keyKinds 的实体 kind 取维度表表头（卷二 §2.7 :811；与 kernel/load/state-owners.mjs:255-268 同口径）。
     // 维度名是字面段时只看这一维；kind 的表尚未建时跳过（同加载器 :259-260：无表即无字段）。
     if (type === 'dimension') {
       const kk = isObj(decl.keyKinds) ? decl.keyKinds[pattern] : undefined;
-      if (!Array.isArray(kk)) { paramHit(STATE_OWNERS, `${pattern}: dimension 路径缺 keyKinds`); continue; }
+      if (!Array.isArray(kk)) { paramHit(anchor, `${pattern}: dimension 路径缺 keyKinds`); continue; }
       const segs = pattern.split('.');
       const dimAt = kk.indexOf(DIM_KEY);
       const literalDim = dimAt < 0 ? segs[segs.length - 1] : null;
@@ -266,11 +270,11 @@ export function detect(ctx, params) {
     }
     for (const leaf of leaves(type, '', structsDoc.rows, new Set(), undefined, [])) {
       const at = leaf.at ? `${pattern}.${leaf.at}` : pattern;
-      if (leaf.missing) { paramHit(STATE_OWNERS, `${at}: ${leaf.missing} 未在 ${NAMED_STRUCTS} 登记`); continue; }
+      if (leaf.missing) { paramHit(anchor, `${at}: ${leaf.missing} 未在 ${NAMED_STRUCTS} 登记`); continue; }
       if (!res.units.has(leaf.unit)) continue;
       // 应付数额只豁免合同、义务记录里的字段；其他状态键上的 payable 标记不构成豁免。
       if (leaf.payable && RECORD_KEYS.includes(kind)) continue;
-      hits.push({ file: STATE_OWNERS, line: 0, nodeKind: 'row', symbolPath: at, code });
+      hits.push({ file: anchor, line: 0, nodeKind: 'row', symbolPath: at, code });
     }
   }
   return hits.sort((a, b) => (a.symbolPath < b.symbolPath ? -1 : a.symbolPath > b.symbolPath ? 1 : a.file < b.file ? -1 : a.file > b.file ? 1 : 0));

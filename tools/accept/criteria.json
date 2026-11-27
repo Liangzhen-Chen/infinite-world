@@ -18,10 +18,18 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 4
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 5
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 6
     }
    ],
-   "print": "e9bdd05c07a80b0907db240d8814e27f17a14a7b708418a995b705f977f01bbb",
-   "rev": 4,
+   "print": "1dc758ba0314477290c02a41a070b4acd8f80d70e742d17ffbeec39aeef3352e",
+   "rev": 6,
    "scanClass": "archive_ref",
    "terms": {
     "step0a.archive_ref": {
@@ -144,10 +152,18 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 27
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 28
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 29
     }
    ],
-   "print": "129f4e6a99175ebe3831f9e4a39da93b184f1a4125498cef6c31f74f4529ddd1",
-   "rev": 27,
+   "print": "c0d4e16ef42c93ad98145bd0df2956216fc8e5b6d61fd6f14f9b1c6f32abe103",
+   "rev": 29,
    "scanClass": "baseline_monotone",
    "source": "卷一 V-11（I43）；卷十二 §2.5、E-ACC-BASELINE-UP；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -191,10 +207,18 @@
     {
      "ref": "chore/hygiene-fixes：hygiene mdLinks 遮蔽围栏与行内代码改为保留换行的等长空白（行号不偏移）、docLimits 被管文档缺失报 E-ACC-ITEM-PARAM，判据代码指纹变化，按卷十二 S12-13 升版",
      "rev": 5
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 6
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 7
     }
    ],
-   "print": "646fe83e8f13f007f6f5e645c4345704568a229740cc34ee9f9ae1e2138fa069",
-   "rev": 5,
+   "print": "e242cf24193a2dce4f92ce9bed2fb9cdaf76fb65866cb7747e5d8fb88a307dc0",
+   "rev": 7,
    "scanClass": "big_md",
    "terms": {
     "L-08.big_md": {
@@ -229,10 +253,18 @@
     {
      "ref": "chore/hygiene-fixes：hygiene mdLinks 遮蔽围栏与行内代码改为保留换行的等长空白（行号不偏移）、docLimits 被管文档缺失报 E-ACC-ITEM-PARAM，判据代码指纹变化，按卷十二 S12-13 升版",
      "rev": 5
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 6
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 7
     }
    ],
-   "print": "646fe83e8f13f007f6f5e645c4345704568a229740cc34ee9f9ae1e2138fa069",
-   "rev": 5,
+   "print": "e242cf24193a2dce4f92ce9bed2fb9cdaf76fb65866cb7747e5d8fb88a307dc0",
+   "rev": 7,
    "scanClass": "claude_doc",
    "terms": {
     "L-08.claude_doc": {
@@ -678,10 +710,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 108
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 109
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 110
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 108,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 110,
    "scanClass": "const_literal",
    "terms": {
     "vol10.S10-4": {
@@ -843,10 +883,18 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 13
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 14
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 15
     }
    ],
-   "print": "a4003c1e0be559f01cf34d7a2850744854ccb2df21c347ed9855af9efbf459c9",
-   "rev": 13,
+   "print": "db1d7ba9403958928742155863e27a5de86e6552abc279173aed84f824905308",
+   "rev": 15,
    "scanClass": "crit_version",
    "terms": {
     "vol12.S12-13": {
@@ -1009,10 +1057,18 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；补 must_fail 用例 cross_write-07、cross_write-08",
      "rev": 37
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）；path_access 的 declOf 在被查内容含主文件或分片时同改经合并读取",
+     "rev": 38
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 39
     }
    ],
-   "print": "c26ce7b3032997529002ec6e749286d48e890844cfd34914336c233585c5d459",
-   "rev": 37,
+   "print": "92150e5229b7a361b60cde067d0f67012d42277a11ad78a6fbfd4ff38c8b65ed",
+   "rev": 39,
    "scanClass": "cross_write",
    "source": "卷十二 R12-3.1–3.4；卷二 §2.6、§2.7、S5",
    "terms": {
@@ -1248,10 +1304,18 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 7
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 8
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 9
     }
    ],
-   "print": "e1d2051e54ed92910f864e98a6c943ec254eae8d9bf12cb65ee5539fa13e6ec9",
-   "rev": 7,
+   "print": "896e80c2741b5b0c44eb8718b715ef1285fd77655b93826d32996c108568ecab",
+   "rev": 9,
    "scanClass": "decl_guard",
    "source": "卷十七 S17-1、S17-4；卷九 R9-2.10；卷二十 §4.7.6；卷十二 §2.4 开放登记",
    "terms": {
@@ -1295,10 +1359,18 @@
     {
      "ref": "S12-3 全卷登记卡：新登类别（只登记，不实现、无用例）",
      "rev": 1
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）；path_access 的 declOf 在被查内容含主文件或分片时同改经合并读取",
+     "rev": 2
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 3
     }
    ],
-   "print": "7e274e1ebfbb94a4463df510b323b4d53c8aa9980a2dc74710464c58de83d903",
-   "rev": 1,
+   "print": "757a90ab7ed428971703fa92e21bd5e61e4e98528e60780f763023e87c0d2a96",
+   "rev": 3,
    "scanClass": "digest_read",
    "source": "卷十二 §2.4 :255（digest_read 摘要读取，检测器 import_edge、call_edge、path_access）、:276（卷二十七 S27-8）；S12-3 全卷登记卡新登类别，只挂 registered 条目，未实现",
    "terms": {
@@ -1462,10 +1534,18 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 37
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）；path_access 的 declOf 在被查内容含主文件或分片时同改经合并读取",
+     "rev": 38
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 39
     }
    ],
-   "print": "c26ce7b3032997529002ec6e749286d48e890844cfd34914336c233585c5d459",
-   "rev": 37,
+   "print": "92150e5229b7a361b60cde067d0f67012d42277a11ad78a6fbfd4ff38c8b65ed",
+   "rev": 39,
    "scanClass": "display_read",
    "source": "卷十二 R12-2.10；卷二 S7",
    "terms": {
@@ -1945,10 +2025,18 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 108
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）；path_access 的 declOf 在被查内容含主文件或分片时同改经合并读取",
+     "rev": 109
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 110
     }
    ],
-   "print": "b526f29bfa37ca3fd3093ed5ce9fa1520558431a49b3ff00c6db0b5ecb840ef1",
-   "rev": 108,
+   "print": "a22ad18dd0fca24f871b3e8a8e1b2ee5ae3caab0ae871f9f17531f8ceee82f4d",
+   "rev": 110,
    "scanClass": "dual_write",
    "source": "卷十二 R12-3.2；卷二 §2.7",
    "terms": {
@@ -2111,10 +2199,18 @@
     {
      "ref": "门禁封口子卡 chore/gate-seal-c 修改轮（审卡第一轮必须改 1）：tools/accept/lib/temp-root.mjs 加落点断言 assertRealUnder，assertRelUnderTempRoot 与 temp-repo-write 的 assertTempRepoPath 共用，封目录链接缺口；口径不变，因 temp-root.mjs 在 typed_pos 闭包内指纹变",
      "rev": 37
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 38
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 39
     }
    ],
-   "print": "ccf0716f311e62a3a6bd9825e90422cc44190661ecfc7c162d2c7d15e7cd23dc",
-   "rev": 37,
+   "print": "2092e78966126a6b05db71a4967344556a6f9a4e2fc4b93180cf003e866f5133",
+   "rev": 39,
    "scanClass": "escape_hatch",
    "source": "卷十二 §2.4；卷二 §2.8 第 4a 条、§2.9 第 2 条",
    "terms": {
@@ -2134,10 +2230,18 @@
     {
      "ref": "L-09/L-08 新登扫描类别 export_guard：L-09 ①：非内核文件从内核目录 import 具名导出，须在 state-owners.json 的 kernelApi/groupApi 登记里；默认导入与 import * 同拒（docs/gemini/kickoff-1125.md 的对应行、diagnosis-1124.md 的对应行）",
      "rev": 1
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 2
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 3
     }
    ],
-   "print": "c032e61fc7a6703772d61c466c7a0ef7fad145b4073ab4333ff52e62a146fe50",
-   "rev": 1,
+   "print": "69dc1a7512a9157037ca1cbd9df60bbb278d24f24a47dc454f38683ee4200263",
+   "rev": 3,
    "scanClass": "export_guard",
    "terms": {
     "L-09.export_guard": {
@@ -2259,10 +2363,18 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 27
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 28
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 29
     }
    ],
-   "print": "129f4e6a99175ebe3831f9e4a39da93b184f1a4125498cef6c31f74f4529ddd1",
-   "rev": 27,
+   "print": "c0d4e16ef42c93ad98145bd0df2956216fc8e5b6d61fd6f14f9b1c6f32abe103",
+   "rev": 29,
    "scanClass": "ext_code",
    "terms": {
     "vol12.S12-12": {
@@ -2429,10 +2541,18 @@
     {
      "ref": "门禁封口子卡 chore/gate-seal-c 修改轮（审卡第一轮必须改 1）：tools/accept/lib/temp-root.mjs 加落点断言 assertRealUnder，assertRelUnderTempRoot 与 temp-repo-write 的 assertTempRepoPath 共用，封目录链接缺口；口径不变，因 temp-root.mjs 在 typed_pos 闭包内指纹变",
      "rev": 38
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 39
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 40
     }
    ],
-   "print": "260b196975ee42ff1240306777944135b08a8527bbd19c6ef4e0fefead47a7c2",
-   "rev": 38,
+   "print": "3dec41174be6e11e564305f2a89ae3ce6a5c1bfdddc563831ee9d515cfaffa9d",
+   "rev": 40,
    "scanClass": "fallback",
    "source": "卷十二 §2.4（卷二 §1.6、S4）",
    "terms": {
@@ -2540,10 +2660,18 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 23
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 24
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 25
     }
    ],
-   "print": "32109800f6c349272a2e9e5ab7183ab4d53685a929c330c5c0640b2777df578c",
-   "rev": 23,
+   "print": "0f9656ac9b35fef7008bbeb99dc5460b4f100737ae45a5868eb73f85747656a4",
+   "rev": 25,
    "scanClass": "float_math",
    "source": "卷二十七 R27-5.2、A27-5.1；公共部件审查乙规则 7；C0 卡",
    "terms": {
@@ -2718,10 +2846,18 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 24
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 25
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 26
     }
    ],
-   "print": "32109800f6c349272a2e9e5ab7183ab4d53685a929c330c5c0640b2777df578c",
-   "rev": 24,
+   "print": "0f9656ac9b35fef7008bbeb99dc5460b4f100737ae45a5868eb73f85747656a4",
+   "rev": 26,
    "scanClass": "geometry_bypass",
    "source": "卷五 §3.5 S5-10 :408；卷十二 §2.4 开放登记",
    "terms": {
@@ -3105,10 +3241,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 92
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 93
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 94
     }
    ],
-   "print": "fa0765e120af2813bcd0ec5633e2122bd1b1bcb4bed36b5892bd66a6fd62a8fb",
-   "rev": 92,
+   "print": "aa4bf58a1cd541e9b5eccac516a4a334bd8441ec031672a1037128c7a8b543ff",
+   "rev": 94,
    "scanClass": "handfill_derived",
    "source": "卷十二 R12-4.6；卷一 R-6 第 5 条",
    "terms": {
@@ -3192,10 +3336,18 @@
     {
      "ref": "门禁封口 C：新登类别（只登记，不实现、无用例）",
      "rev": 1
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 2
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 3
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 1,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 3,
    "scanClass": "handle_special",
    "source": "卷十二 §2.4 :258（handle_special 句柄字面量特判，检测器 lit_scope）、:270（卷二十七 S27-1、S27-9）；门禁封口 C 新登类别，只挂 registered 条目，未实现",
    "terms": {
@@ -3459,10 +3611,18 @@
     {
      "ref": "门禁封口子卡 chore/gate-seal-c 修改轮（审卡第一轮必须改 1）：tools/accept/lib/temp-root.mjs 加落点断言 assertRealUnder，assertRelUnderTempRoot 与 temp-repo-write 的 assertTempRepoPath 共用，封目录链接缺口；口径不变，因 temp-root.mjs 在 typed_pos 闭包内指纹变",
      "rev": 38
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 39
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 40
     }
    ],
-   "print": "260b196975ee42ff1240306777944135b08a8527bbd19c6ef4e0fefead47a7c2",
-   "rev": 38,
+   "print": "3dec41174be6e11e564305f2a89ae3ce6a5c1bfdddc563831ee9d515cfaffa9d",
+   "rev": 40,
    "scanClass": "id_parse",
    "source": "卷十二 §2.4（卷二 S12）",
    "terms": {
@@ -3985,10 +4145,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 125
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 126
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 127
     }
    ],
-   "print": "421ec8c1e6385b038f08197aee29ab126989f76eddc369a67ad9f64ab05b5c40",
-   "rev": 125,
+   "print": "82a134e075d284adfaac11255f32d7e8bfb0f165d2a95604e8d9b2ca430c5531",
+   "rev": 127,
    "scanClass": "instance_name",
    "terms": {
     "vol1.V-1.a": {
@@ -4383,10 +4551,18 @@
     {
      "ref": "chore/hygiene-fixes：hygiene mdLinks 遮蔽围栏与行内代码改为保留换行的等长空白（行号不偏移）、docLimits 被管文档缺失报 E-ACC-ITEM-PARAM，判据代码指纹变化，按卷十二 S12-13 升版",
      "rev": 5
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 6
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 7
     }
    ],
-   "print": "646fe83e8f13f007f6f5e645c4345704568a229740cc34ee9f9ae1e2138fa069",
-   "rev": 5,
+   "print": "e242cf24193a2dce4f92ce9bed2fb9cdaf76fb65866cb7747e5d8fb88a307dc0",
+   "rev": 7,
    "scanClass": "ip_literal",
    "terms": {
     "L-08.ip_literal": {
@@ -4508,10 +4684,18 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 27
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 28
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 29
     }
    ],
-   "print": "129f4e6a99175ebe3831f9e4a39da93b184f1a4125498cef6c31f74f4529ddd1",
-   "rev": 27,
+   "print": "c0d4e16ef42c93ad98145bd0df2956216fc8e5b6d61fd6f14f9b1c6f32abe103",
+   "rev": 29,
    "scanClass": "item_downgrade",
    "terms": {
     "vol12.S12-16": {
@@ -4897,10 +5081,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 93
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 94
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 95
     }
    ],
-   "print": "fa0765e120af2813bcd0ec5633e2122bd1b1bcb4bed36b5892bd66a6fd62a8fb",
-   "rev": 93,
+   "print": "aa4bf58a1cd541e9b5eccac516a4a334bd8441ec031672a1037128c7a8b543ff",
+   "rev": 95,
    "scanClass": "item_form",
    "terms": {
     "vol12.S12-4": {
@@ -4986,10 +5178,18 @@
     {
      "ref": "S12-3 全卷登记卡（主会话裁定 msg_77f457d18186 ③）：doc_struct 定义处语法加登记数据 formTags（列表项开头的形式标记）与 numberTails（编号尾字母），只扩大识别；已登卷 vol1、vol2、vol12、vol27 的定义处编号集合不变；新增 must_fail、must_pass 用例各一",
      "rev": 18
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 19
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 20
     }
    ],
-   "print": "4679dcf38412da8f6e96afae5b4b2e33175ef5e3aaa731e9b574fb06c839218d",
-   "rev": 18,
+   "print": "7dfcad689a5ae6b07f2d0e1ac860e28ee46f6208e5aa029f118a195474f6a28e",
+   "rev": 20,
    "scanClass": "item_ledger",
    "terms": {
     "vol12.S12-3": {
@@ -5008,10 +5208,18 @@
     {
      "ref": "L-09/L-08 新登扫描类别 kernel_freeze：L-09 ②：内核白名单冻结，files.json 硬上限 15，实际文件与清单逐一对应（docs/gemini/kickoff-1125.md 的对应行、:88）",
      "rev": 1
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 2
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 3
     }
    ],
-   "print": "c9b6d9f6e4805bfac374689a195cf8fde9dae4dbf76939b1e83e359e9e35c3d9",
-   "rev": 1,
+   "print": "0fca9829aff4311b67a3820ca7d70bdbc7c2bcd350a0349265a1ec31abefa9a3",
+   "rev": 3,
    "scanClass": "kernel_freeze",
    "terms": {
     "L-09.kernel_files": {
@@ -5122,10 +5330,18 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 24
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）；path_access 的 declOf 在被查内容含主文件或分片时同改经合并读取",
+     "rev": 25
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 26
     }
    ],
-   "print": "c26ce7b3032997529002ec6e749286d48e890844cfd34914336c233585c5d459",
-   "rev": 24,
+   "print": "92150e5229b7a361b60cde067d0f67012d42277a11ad78a6fbfd4ff38c8b65ed",
+   "rev": 26,
    "scanClass": "ledger_state_read",
    "source": "卷六 §4.1.2；公共部件审查乙规则 4；C0 卡",
    "terms": {
@@ -5241,10 +5457,18 @@
     {
      "ref": "L-17 去旧绑定：检测器改引 tools/accept/lib 后判据代码指纹（import 闭包）变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改",
      "rev": 25
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 26
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 27
     }
    ],
-   "print": "129f4e6a99175ebe3831f9e4a39da93b184f1a4125498cef6c31f74f4529ddd1",
-   "rev": 25,
+   "print": "c0d4e16ef42c93ad98145bd0df2956216fc8e5b6d61fd6f14f9b1c6f32abe103",
+   "rev": 27,
    "scanClass": "ledger_tally",
    "source": "卷十二 §4.1.6 至 §4.14.6 A12-n.1；李白 11-17 S12-3 裁定第 1 条",
    "terms": {
@@ -5521,10 +5745,18 @@
     {
      "ref": "chore/hygiene-fixes：hygiene mdLinks 遮蔽围栏与行内代码改为保留换行的等长空白（行号不偏移）、docLimits 被管文档缺失报 E-ACC-ITEM-PARAM，判据代码指纹变化，按卷十二 S12-13 升版",
      "rev": 5
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 6
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 7
     }
    ],
-   "print": "646fe83e8f13f007f6f5e645c4345704568a229740cc34ee9f9ae1e2138fa069",
-   "rev": 5,
+   "print": "e242cf24193a2dce4f92ce9bed2fb9cdaf76fb65866cb7747e5d8fb88a307dc0",
+   "rev": 7,
    "scanClass": "md_links",
    "terms": {
     "L-08.md_links": {
@@ -5758,10 +5990,18 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 55
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）；path_access 的 declOf 在被查内容含主文件或分片时同改经合并读取",
+     "rev": 56
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 57
     }
    ],
-   "print": "7e274e1ebfbb94a4463df510b323b4d53c8aa9980a2dc74710464c58de83d903",
-   "rev": 55,
+   "print": "757a90ab7ed428971703fa92e21bd5e61e4e98528e60780f763023e87c0d2a96",
+   "rev": 57,
    "scanClass": "module_edge",
    "terms": {
     "vol1.V-24.b": {
@@ -6515,10 +6755,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 93
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 94
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 95
     }
    ],
-   "print": "fa0765e120af2813bcd0ec5633e2122bd1b1bcb4bed36b5892bd66a6fd62a8fb",
-   "rev": 93,
+   "print": "aa4bf58a1cd541e9b5eccac516a4a334bd8441ec031672a1037128c7a8b543ff",
+   "rev": 95,
    "scanClass": "namelist",
    "terms": {
     "vol12.S12-6": {
@@ -6537,10 +6785,18 @@
     {
      "ref": "S12-3 全卷登记卡：新登类别（只登记，不实现、无用例）",
      "rev": 1
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 2
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 3
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 1,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 3,
    "scanClass": "nl_literal",
    "source": "卷十二 §2.4 :259（nl_literal 自然语言字面量，检测器 lit_scope）；S12-3 全卷登记卡新登类别，只挂 registered 条目，未实现",
    "terms": {
@@ -6948,10 +7204,18 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 96
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 97
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 98
     }
    ],
-   "print": "f1e7fb3c3d81839e957b87745e5f62432e320e4c2f799a74ded62a8de46522c2",
-   "rev": 96,
+   "print": "41f0f43128270549cd93880e1d142ae3b3fb37c1461a052244be30367eb724b4",
+   "rev": 98,
    "scanClass": "param_consumed",
    "source": "卷十二 §4.4.6 A12-4.5（:784）、§2.12 :543 E-ACC-PARAM-UNCONSUMED；李白 11-18 08:20 裁定①②；B2-W1 卡",
    "terms": {
@@ -7103,10 +7367,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 34
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 35
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 36
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 34,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 36,
    "scanClass": "pp_canonical_def",
    "source": "公共部件审查乙 11；卷二十七 :542；例外 kernel/storage.mjs",
    "terms": {
@@ -7202,10 +7474,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 20
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 21
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 22
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 20,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 22,
    "scanClass": "pp_canonical_review",
    "source": "主会话 11-23 定：规范序列化按定义判，拿不准的待人审",
    "terms": {
@@ -7357,10 +7637,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 34
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 35
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 36
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 34,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 36,
    "scanClass": "pp_deep_clone",
    "source": "公共部件审查乙 10；卷二 :897；kernel/clone.mjs（kernelApi clone）",
    "terms": {
@@ -7516,10 +7804,18 @@
     {
      "ref": "S1-3c 主会话 msg_6c7ebb0dc22f 定 C：例外路径替换不新增——kernel/sample.mjs 是新骨架归档前旧树的遗留路径，新树无此文件；骰值键拼法（卷二:346、:330）与分布分派落 server-plugin/rules/gen/sample.mjs（kernelApi kernel/sample.mjs 依 R2 落 rules），例外文件数不变，判定口径不放宽；同步把 must_pass 夹具 pp_dist_branch-11 的 @file 改到该文件",
      "rev": 35
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 36
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 37
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 35,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 37,
    "scanClass": "pp_dist_branch",
    "source": "公共部件审查甲 R7；卷二 §1.10；kernel/sample.mjs 头注",
    "terms": {
@@ -7647,10 +7943,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 28
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 29
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 30
     }
    ],
-   "print": "d8073c54017bf425e93b8d89ea91633db4e3103337c752506368e808a3667fdb",
-   "rev": 28,
+   "print": "8bf1333953edf56c3c9164105235de5371bf3706338eb4cd82ae17cce055c31b",
+   "rev": 30,
    "scanClass": "pp_draw_sites",
    "source": "公共部件审查甲 R6 后半；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479（rules.clock.drawSites）",
    "terms": {
@@ -7790,10 +8094,18 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 31
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 32
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 33
     }
    ],
-   "print": "f1e7fb3c3d81839e957b87745e5f62432e320e4c2f799a74ded62a8de46522c2",
-   "rev": 31,
+   "print": "41f0f43128270549cd93880e1d142ae3b3fb37c1461a052244be30367eb724b4",
+   "rev": 33,
    "scanClass": "pp_dup_export",
    "source": "公共部件审查甲 R14、乙 12；卷二 :1162 体例；CLAUDE.md“跨卷共用定义只一处”。职责函数 isPos、distributionMean、weatherCellOf 的职责文件依据：卷二 §1.5 struct:pos（kernel/named-structs.mjs）、卷二 §1.10（kernel/sample.mjs）、卷二十 §3.1（kernel/weather.mjs）",
    "terms": {
@@ -7945,10 +8257,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 34
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 35
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 36
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 34,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 36,
    "scanClass": "pp_dynamic_index",
    "source": "李白更正裁定 msg-1122-2255-c0ast（动态下标出现即报，标待人审）；卷二十七 R27-5.2、A27-5.1；卷二十 :436",
    "terms": {
@@ -8080,10 +8400,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 29
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 30
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 31
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 29,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 31,
    "scanClass": "pp_dynamic_review",
    "source": "李白更正裁定 msg-1122-2255-c0ast：运行期才知道的动态下标出现即报，标待人审。本条列全部对象上的动态下标（含数组按位置取），数量大，只报不拦（报告里列出，供人审）；登记在 Math、全局对象、状态根等根上的动态下标由 pp_dynamic_index 拦",
    "terms": {
@@ -8235,10 +8563,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 34
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 35
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 36
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 34,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 36,
    "scanClass": "pp_envat_callers",
    "source": "公共部件审查甲 R2；卷二十 :478；state-owners.json kernelApi 行形状",
    "terms": {
@@ -8390,10 +8726,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 34
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 35
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 36
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 34,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 36,
    "scanClass": "pp_envat_import",
    "source": "公共部件审查甲 R1（docs/研究/公共部件审查-甲-1122.md 第八节）；卷二十 :478、:631；例外：climate.mjs、weather.mjs 互相引用（甲 R1 原句）",
    "terms": {
@@ -8545,10 +8889,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 34
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 35
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 36
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 34,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 36,
    "scanClass": "pp_epsilon",
    "source": "公共部件审查乙 7；卷二十七 :620、:634（R27-5.2 数值运算只有三条路）",
    "terms": {
@@ -8640,10 +8992,18 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 19
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 20
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 21
     }
    ],
-   "print": "32109800f6c349272a2e9e5ab7183ab4d53685a929c330c5c0640b2777df578c",
-   "rev": 19,
+   "print": "0f9656ac9b35fef7008bbeb99dc5460b4f100737ae45a5868eb73f85747656a4",
+   "rev": 21,
    "scanClass": "pp_eval",
    "source": "李白更正裁定 msg-1122-2255-c0ast：别名、间接调用都要跟到原名，eval 与 new Function 是语法树追不到的间接执行，出现即报；卷二十七 S27-4 :253（禁用语言特性）",
    "terms": {
@@ -8791,10 +9151,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 33
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 34
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 35
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 33,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 35,
    "scanClass": "pp_float_pow",
    "source": "公共部件审查乙 7；卷二十七 R27-5.2（超越函数只经定点数学设施，幂函数 pow 同属）；独立验收漏项“** 运算符”",
    "terms": {
@@ -8946,10 +9314,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 34
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 35
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 36
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 34,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 36,
    "scanClass": "pp_footprint_kind",
    "source": "公共部件审查甲 R12；卷二 §1.9；模块化评估第三节；例外 kernel/footprint-kind.mjs（gen/* 按种类过滤的比较进基线，M-11③ 修后开）",
    "terms": {
@@ -9097,10 +9473,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 33
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 34
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 35
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 33,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 35,
    "scanClass": "pp_gen_callers",
    "source": "公共部件审查乙 9（docs/研究/公共部件审查-乙-1122.md :161）；卷十 :403（生成器只在世界创建事务里按步骤表跑）；例外：generateWorld 所在文件 server-plugin/world-create.mjs（卷十 §3.2 :291）；requireMaterialized 现不存在，建成后其所在文件须加入例外；作者工具在 tools/ 下，不在扫描范围（卷十 :1002）",
    "terms": {
@@ -9252,10 +9636,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 34
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 35
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 36
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 34,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 36,
    "scanClass": "pp_grammar_regex",
    "source": "公共部件审查乙 6；卷二 :291；例外 kernel/validate/types.mjs",
    "terms": {
@@ -9363,10 +9755,18 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 23
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）；path_access 的 declOf 在被查内容含主文件或分片时同改经合并读取",
+     "rev": 24
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 25
     }
    ],
-   "print": "c26ce7b3032997529002ec6e749286d48e890844cfd34914336c233585c5d459",
-   "rev": 23,
+   "print": "92150e5229b7a361b60cde067d0f67012d42277a11ad78a6fbfd4ff38c8b65ed",
+   "rev": 25,
    "scanClass": "pp_holdings_read",
    "source": "公共部件审查乙 5；卷十八:200（持有写者）；卷二 §2.6；读者按文件豁免（fileSets.holdingsReaders，每行带依据）",
    "terms": {
@@ -9522,10 +9922,18 @@
     {
      "ref": "S1-3c 主会话 msg_6c7ebb0dc22f 定 C：例外路径替换不新增——kernel/handles/keys.mjs 是新骨架归档前旧树的遗留路径，新树无此文件；骰值键拼法（卷二:346、:330）与分布分派落 server-plugin/rules/gen/sample.mjs（kernelApi kernel/sample.mjs 依 R2 落 rules），例外文件数不变，判定口径不放宽；同步把 must_pass 夹具 pp_key_concat-11 的 @file 改到该文件",
      "rev": 35
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 36
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 37
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 35,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 37,
    "scanClass": "pp_key_concat",
    "source": "公共部件审查甲 R5、乙 1、乙 2；卷二 :337、:897、:1162；例外：整份文本摘要 sha256Text(canonical(…))、sha256Text(text) 不拼键（不含 .join，不命中）",
    "terms": {
@@ -9669,10 +10077,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 32
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 33
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 34
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 32,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 34,
    "scanClass": "pp_kind_branch",
    "source": "独立验收（亮圳 11-22「独立测门禁1122」）指出“写死数值与种类分支没有 C0 专条”；卷一 二.1（派生优先，不按 ID 或场景特判，docs/产品原则.md）；卷二 S10（常数登记）",
    "terms": {
@@ -9824,10 +10240,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 34
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 35
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 36
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 34,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 36,
    "scanClass": "pp_material_read",
    "source": "公共部件审查甲 R11；卷三甲 :268；卷三乙 :541；例外：kernel/item.mjs、kernel/dimensions.mjs、kernel/load/**、kernel/validate/**、kernel/blueprint.mjs（加载期校验 checkBlueprintForms）",
    "terms": {
@@ -9879,10 +10303,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 9
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 10
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 11
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 9,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 11,
    "scanClass": "pp_module_state",
    "terms": {
     "L-09.module_state": {
@@ -10033,10 +10465,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 34
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 35
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 36
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 34,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 36,
    "scanClass": "pp_neighbors",
    "source": "公共部件审查甲 R10；卷五 :491、:1216（现 8 处）",
    "terms": {
@@ -10176,10 +10616,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 31
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 32
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 33
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 31,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 33,
    "scanClass": "pp_no_acorn_runtime",
    "source": "李白更正裁定 msg-1122-2255-c0ast：acorn 只许 tools/accept 引用，server-plugin 不得引用",
    "terms": {
@@ -10331,10 +10779,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 34
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 35
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 36
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 34,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 36,
    "scanClass": "pp_pos_shape",
    "source": "公共部件审查甲 R8；卷二 §1.5 struct:pos 登记；例外 kernel/named-structs.mjs、kernel/named-struct-match.mjs",
    "terms": {
@@ -10486,10 +10942,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 34
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 35
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 36
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 34,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 36,
    "scanClass": "pp_region_cell",
    "source": "公共部件审查甲 R9；卷五 :433、:499；例外：kernel/footprint.mjs 的共用函数（修后建）、kernel/handles/keys.mjs gridChunkCells（卷二 :860）",
    "terms": {
@@ -10641,10 +11105,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 34
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 35
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 36
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 34,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 36,
    "scanClass": "pp_rx_empty_clock",
    "source": "公共部件审查甲 R15；卷二十 :312、:685；例外：加载期校验 kernel/validate/**",
    "terms": {
@@ -10796,10 +11268,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 34
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 35
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 36
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 34,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 36,
    "scanClass": "pp_seed_args",
    "source": "公共部件审查甲 R6；卷二十七 :789（R27-8.1 每个抽取点登记）；卷二十 :479。后半（drawSites 与 seed-keys 两表一致）未落：需读两表对照，现有检测器无此检查",
    "terms": {
@@ -10923,10 +11403,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 27
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 28
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 29
     }
    ],
-   "print": "d8073c54017bf425e93b8d89ea91633db4e3103337c752506368e808a3667fdb",
-   "rev": 27,
+   "print": "8bf1333953edf56c3c9164105235de5371bf3706338eb4cd82ae17cce055c31b",
+   "rev": 29,
    "scanClass": "pp_seed_args_dyn",
    "source": "独立验收漏项“抽取点站点名用变量”；卷二十七 :789（R27-8.1 每个抽取点登记，流代号、抽取点代号须字面量）",
    "terms": {
@@ -11062,10 +11550,18 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 30
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 31
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 32
     }
    ],
-   "print": "f1e7fb3c3d81839e957b87745e5f62432e320e4c2f799a74ded62a8de46522c2",
-   "rev": 30,
+   "print": "41f0f43128270549cd93880e1d142ae3b3fb37c1461a052244be30367eb724b4",
+   "rev": 32,
    "scanClass": "pp_tpl_key",
    "source": "公共部件审查甲 R13；卷二 :860（键串形只由登记方给）；模块化原则卡头第二节第 9 条",
    "terms": {
@@ -11213,10 +11709,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 33
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 34
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 35
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 33,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 35,
    "scanClass": "pp_unit_literal",
    "source": "公共部件审查乙 13；卷三乙:179 与表头 unit 字段（item.json 表头 unit 字段）；单位登记表 world/ontology/dimensions/_units.json",
    "terms": {
@@ -11368,10 +11872,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 34
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 35
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 36
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 34,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 36,
    "scanClass": "pp_year_minutes",
    "source": "公共部件审查甲 R3；卷二十 :436、:477 T-3 (c)；例外 climate.mjs（日均温日份额，天文相位，卷二十 :436）",
    "terms": {
@@ -11878,10 +12390,18 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 123
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 124
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 125
     }
    ],
-   "print": "ceff094034a5b7c4e6288aa3e00afa2064a0767c88574a00f8641cab301d592a",
-   "rev": 123,
+   "print": "89d6b9f2a8d6ad99ff2b943ed8012ecf8efe87906e8ba0bf448cd99193aa0630",
+   "rev": 125,
    "scanClass": "registry_write",
    "terms": {
     "vol12.S12-2": {
@@ -12067,10 +12587,18 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 43
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 44
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 45
     }
    ],
-   "print": "32109800f6c349272a2e9e5ab7183ab4d53685a929c330c5c0640b2777df578c",
-   "rev": 43,
+   "print": "0f9656ac9b35fef7008bbeb99dc5460b4f100737ae45a5868eb73f85747656a4",
+   "rev": 45,
    "scanClass": "rng_bypass",
    "terms": {
     "vol17.S17-5": {
@@ -12184,10 +12712,18 @@
     {
      "ref": "L-09 检测器加固：共用检测器/规则库改动（import_edge 导出级、typed_pos 接 tsc、decl_cmp 去 UNIMPLEMENTED 桩、path_access dated、ast-rules 三条），判据代码指纹变化，按卷十二 S12-13、R12-14.3 升版",
      "rev": 15
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 16
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 17
     }
    ],
-   "print": "c032e61fc7a6703772d61c466c7a0ef7fad145b4073ab4333ff52e62a146fe50",
-   "rev": 15,
+   "print": "69dc1a7512a9157037ca1cbd9df60bbb278d24f24a47dc454f38683ee4200263",
+   "rev": 17,
    "scanClass": "rules_import",
    "terms": {
     "vol1.V-9": {
@@ -12238,10 +12774,18 @@
     {
      "ref": "门禁封口 C：新登类别（只登记，不实现、无用例）",
      "rev": 1
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 2
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 3
     }
    ],
-   "print": "2642227cd049c9efe86d61abfe81dd9dda5cbbd692cfeee7a62f61e0e81afe7e",
-   "rev": 1,
+   "print": "9232888582bb58a21f0f324ecbbe5ae30deb62aeec540127cd75808f3888fef1",
+   "rev": 3,
    "scanClass": "save_bypass",
    "source": "卷十二 §2.4 :256（save_bypass 存档文件旁路，检测器 lit_scope、import_edge）、:276（卷二十七 S27-7）；门禁封口 C 新登类别，只挂 registered 条目，未实现",
    "terms": {
@@ -12285,10 +12829,18 @@
     {
      "ref": "chore/hygiene-fixes：hygiene mdLinks 遮蔽围栏与行内代码改为保留换行的等长空白（行号不偏移）、docLimits 被管文档缺失报 E-ACC-ITEM-PARAM，判据代码指纹变化，按卷十二 S12-13 升版",
      "rev": 5
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 6
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 7
     }
    ],
-   "print": "646fe83e8f13f007f6f5e645c4345704568a229740cc34ee9f9ae1e2138fa069",
-   "rev": 5,
+   "print": "e242cf24193a2dce4f92ce9bed2fb9cdaf76fb65866cb7747e5d8fb88a307dc0",
+   "rev": 7,
    "scanClass": "secret_literal",
    "terms": {
     "L-08.secret_literal": {
@@ -12618,10 +13170,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 79
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 80
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 81
     }
    ],
-   "print": "d8073c54017bf425e93b8d89ea91633db4e3103337c752506368e808a3667fdb",
-   "rev": 79,
+   "print": "8bf1333953edf56c3c9164105235de5371bf3706338eb4cd82ae17cce055c31b",
+   "rev": 81,
    "scanClass": "seed_sites",
    "terms": {
     "vol27.A27-8.1.b": {
@@ -13067,10 +13627,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 106
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 107
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 108
     }
    ],
-   "print": "dffab3002ecd7c3a26d907f3334619298f95cb02976bbbf0620c24753eabfb2f",
-   "rev": 106,
+   "print": "d636c39034a13f8822f2f80fdfa4220375184905ea02aa31326ade1196384f96",
+   "rev": 108,
    "scanClass": "self_name",
    "terms": {
     "vol12.S12-5": {
@@ -13173,10 +13741,18 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 22
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）；path_access 的 declOf 在被查内容含主文件或分片时同改经合并读取",
+     "rev": 23
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 24
     }
    ],
-   "print": "c26ce7b3032997529002ec6e749286d48e890844cfd34914336c233585c5d459",
-   "rev": 22,
+   "print": "92150e5229b7a361b60cde067d0f67012d42277a11ad78a6fbfd4ff38c8b65ed",
+   "rev": 24,
    "scanClass": "sim_bypass",
    "source": "卷二十七 §4.8 S27-11 :260、A27-1.11 :369；对照表 docs/迁移体检/格子G6-G11-规矩检查对照.md #60；卷十二 §2.4 开放登记",
    "terms": {
@@ -13443,10 +14019,18 @@
     {
      "ref": "S1-1p：handles.mjs makePathHandles 保留成员名改由 hasOwn 判重，检测器闭包 token 变，按卷十二 S12-13、R12-14.3 重盖指纹；判定口径未改",
      "rev": 61
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）；state_pattern 的声明表同改经合并读取，命中锚点取登记该 pathTypes 键的文件（无分片时仍为主文件）",
+     "rev": 62
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 63
     }
    ],
-   "print": "d6b2f583ceff11c0841080ea3861b1755cb13b023316a42947584a7adf709c4f",
-   "rev": 61,
+   "print": "109da84dd39f1c2b5ed4afc48068b84ff70620d246ac15044680adc4047e7889",
+   "rev": 63,
    "scanClass": "state_pattern",
    "source": "卷六 §3.5 S6-14 :337；卷二 §1.5 :200、:204–:248；块 3 第 3-4 张",
    "terms": {
@@ -13610,10 +14194,18 @@
     {
      "ref": "门禁封口子卡 chore/gate-seal-c 修改轮（审卡第一轮必须改 1）：tools/accept/lib/temp-root.mjs 加落点断言 assertRealUnder，assertRelUnderTempRoot 与 temp-repo-write 的 assertTempRepoPath 共用，封目录链接缺口；口径不变，因 temp-root.mjs 在 typed_pos 闭包内指纹变",
      "rev": 37
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 38
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 39
     }
    ],
-   "print": "260b196975ee42ff1240306777944135b08a8527bbd19c6ef4e0fefead47a7c2",
-   "rev": 37,
+   "print": "3dec41174be6e11e564305f2a89ae3ce6a5c1bfdddc563831ee9d515cfaffa9d",
+   "rev": 39,
    "scanClass": "text_judge",
    "source": "卷十二 §4.2 R12-2.1–2.6；卷二 §2.8、§7 S13、S18、S19",
    "terms": {
@@ -14065,10 +14657,18 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 23
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 24
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 25
     }
    ],
-   "print": "32109800f6c349272a2e9e5ab7183ab4d53685a929c330c5c0640b2777df578c",
-   "rev": 23,
+   "print": "0f9656ac9b35fef7008bbeb99dc5460b4f100737ae45a5868eb73f85747656a4",
+   "rev": 25,
    "scanClass": "timer_global",
    "source": "卷二十七 S27-3 :252；公共部件审查甲 R4；C0 卡",
    "terms": {
@@ -14128,10 +14728,18 @@
     {
      "ref": "门禁封口子卡 chore/gate-seal-c 修改轮（审卡第一轮必须改 1）：tools/accept/lib/temp-root.mjs 加落点断言 assertRealUnder，assertRelUnderTempRoot 与 temp-repo-write 的 assertTempRepoPath 共用，封目录链接缺口；口径不变，因 temp-root.mjs 在 typed_pos 闭包内指纹变",
      "rev": 11
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 12
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 13
     }
    ],
-   "print": "260b196975ee42ff1240306777944135b08a8527bbd19c6ef4e0fefead47a7c2",
-   "rev": 11,
+   "print": "3dec41174be6e11e564305f2a89ae3ce6a5c1bfdddc563831ee9d515cfaffa9d",
+   "rev": 13,
    "scanClass": "typecheck",
    "terms": {
     "L-09.typecheck": {
@@ -14538,10 +15146,18 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 98
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 99
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 100
     }
    ],
-   "print": "f1e7fb3c3d81839e957b87745e5f62432e320e4c2f799a74ded62a8de46522c2",
-   "rev": 98,
+   "print": "41f0f43128270549cd93880e1d142ae3b3fb37c1461a052244be30367eb724b4",
+   "rev": 100,
    "scanClass": "undeclared_io",
    "source": "卷十二 R12-3.4、R12-3.5；卷二 §2.3、S9、S15",
    "terms": {
@@ -14657,10 +15273,18 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 23
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 24
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 25
     }
    ],
-   "print": "32109800f6c349272a2e9e5ab7183ab4d53685a929c330c5c0640b2777df578c",
-   "rev": 23,
+   "print": "0f9656ac9b35fef7008bbeb99dc5460b4f100737ae45a5868eb73f85747656a4",
+   "rev": 25,
    "scanClass": "undo_raw_push",
    "source": "公共部件审查乙规则 3；卷二 §2.6；C0 卡",
    "terms": {
@@ -14835,10 +15459,18 @@
     {
      "ref": "门禁封口卡 chore/gate-seal-b 修改轮（审卡第一轮必须改 1）：js-state isBindingSite 收紧——成员链不算绑定、函数体 { 须与 ) 同行、声明续写回扫遇可断句换行即停；与上一 rev 同一批类别，再升一次；本类别条目判定口径不变，只因 import 闭包内 js-state 指纹变而 rev+1",
      "rev": 40
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）；path_access 的 declOf 在被查内容含主文件或分片时同改经合并读取",
+     "rev": 41
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 42
     }
    ],
-   "print": "c26ce7b3032997529002ec6e749286d48e890844cfd34914336c233585c5d459",
-   "rev": 40,
+   "print": "92150e5229b7a361b60cde067d0f67012d42277a11ad78a6fbfd4ff38c8b65ed",
+   "rev": 42,
    "scanClass": "version_fork",
    "terms": {
     "vol1.V-17": {
@@ -15144,10 +15776,18 @@
     {
      "ref": "门禁封口子卡 chore/gate-seal-c 修改轮（审卡第一轮必须改 1）：tools/accept/lib/temp-root.mjs 加落点断言 assertRealUnder，assertRelUnderTempRoot 与 temp-repo-write 的 assertTempRepoPath 共用，封目录链接缺口；口径不变，因 temp-root.mjs 在 typed_pos 闭包内指纹变",
      "rev": 69
+    },
+    {
+     "ref": "S2-SH 登记分片：tools/accept/read.mjs#readDecl 改经 tools/accept/lib/registry-files.mjs 读 state-owners 主文件与分片的合并结果（合并纯函数 server-plugin/rules/load/registry-shards.mjs），判据代码 import 闭包指纹变化，按卷十二 S12-13、R12-14.3 升版；判定逻辑未改（无分片时读到的声明表与主文件相同）",
+     "rev": 70
+    },
+    {
+     "ref": "S2-SH 审卡第一轮必须改 1（主会话 11-27 裁定）：server-plugin/rules/load/registry-shards.mjs 数组改按行集合表的行键判重、表外数组按叶子拒，删 sameJson；该文件在判据代码 import 闭包内，指纹变化，按卷十二 S12-13、R12-14.3 升版；本类别判定逻辑未改",
+     "rev": 71
     }
    ],
-   "print": "99dbbb5571ca7e4da7cdf3f6aeb1927f1e4f387611b6c12ce6990d9ae7908988",
-   "rev": 69,
+   "print": "b6a85589de2461298e7a241cad3b45ae5926b03e0cf0791e551952c74e491556",
+   "rev": 71,
    "scanClass": "wallclock",
    "terms": {
     "vol12.S12-11": {
