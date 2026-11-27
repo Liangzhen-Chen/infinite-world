@@ -21,7 +21,7 @@ const UNBUILT_LATER_BIRTH = '卷十八家户卡与出生卡（第 0 日之后出
  * 出身维度读不到或显式为空（卷四 :226 没有出身类别）、出身条目没写起始钱或为 0，即不入账；否则开 (个体, endowment.purpose, 钱种, 新批次) 账户，
  * post 两腿 {来源 endowment.source, 钱种, n} 与 {账户, +n}，事由 endowment.reason，refs 带出身条目与个体。
  * 限额通道被拒（第 0 日后）原码照抛，消息写明等家户与出生卡（主会话 Q10 甲）。
- * @param {any} engine @param {any} state @param {string} personId @param {unknown} tx
+ * @param {import('./ledger.mjs').LedgerEngine} engine @param {import('./ledger.mjs').LedgerState} state @param {string} personId @param {unknown} tx
  */
 export function endowFromOrigin(engine, state, personId, tx) {
   const e = Object(ruleValue(engine.docData, LEDGER, ENDOWMENT));
