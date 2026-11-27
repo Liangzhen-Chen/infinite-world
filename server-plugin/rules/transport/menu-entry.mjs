@@ -110,8 +110,8 @@ export function mountMenuEntry(requestCap, replyCap, boot) {
     }
     if (body.subject !== undefined && !view.visible.includes(body.subject)) return { result: R.rejected, code: 'E-DISPLAY-SUBJECT' };
     const screen = { ...(body.panel === undefined ? {} : { panel: body.panel }), ...(body.subject === undefined ? {} : { subject: body.subject }) };
-    // 我在哪（S2-P 主会话 Q12 甲）：{place, chain} 只给 id，显示名交显示层；没有化身或没有位置为 null。
-    return { result: R.ok, screen, menu: view.affordances, here: view.here ?? null };
+    // 我在哪（S2-P 主会话 Q12 甲）：{place, chain} 只给 id，显示名交显示层；没有化身或没有位置为 null。此刻 now（S2-T1）只给数与代号。
+    return { result: R.ok, screen, menu: view.affordances, here: view.here ?? null, now: view.now ?? null };
   };
   /** @type {Record<string, (body: Body) => Reply>} */
   const byPayload = { [payload.act]: onAct, [payload.report]: onReport, [payload.ui]: onUi };

@@ -13,6 +13,7 @@ import { ruleValue } from '../load/registry.mjs';
 import { openPlacesOf } from '../gen/worldgen-writeback.mjs';
 import { controlledByPlayer, controlledEntities } from '../social/control.mjs';
 import { placeChainOf } from '../place/zone.mjs';
+import { nowOf } from '../time_env/env.mjs';
 
 // 卷九 §2.2 动作行全部字段 → S1 处置：use 本阶段实现；empty 本阶段未实现，行上必须写空（null、[] 或 {}），非空即 E-ACT-ROW（草案 §1 第 20 行）。
 const ROW_FIELDS = Object.freeze({
@@ -498,5 +499,6 @@ export function menuOf(engine, state, subjectId) {
   // 我在哪（S2-P 主会话 Q12 甲）：化身 pos 所在地点与祖先链，只给 id；没有化身或没有 pos 为 null。链并入可见集。
   const here = subject === null ? null : hereOf(engine, state, subject);
   const visible = [...new Set([...(subject === null ? [] : [subject]), ...openPlacesOf(engine, state), ...(here === null ? [] : here.chain)])];
-  return Object.freeze({ affordances: affordances(engine, state, subject), visible: Object.freeze(visible), here });
+  // 此刻（S2-T1 草案 §5）：第几天、日内分钟、历法、季节、节气、天气，纯派生；没有化身只给系统时间。
+  return Object.freeze({ affordances: affordances(engine, state, subject), visible: Object.freeze(visible), here, now: nowOf(engine, state, subject) });
 }

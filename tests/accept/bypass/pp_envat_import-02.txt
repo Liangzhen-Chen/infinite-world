@@ -1,2 +1,2 @@
-import * as clim from './kernel/climate.mjs';
+import * as clim from './rules/time_env/season.mjs';
 export const t = clim.tempAt;

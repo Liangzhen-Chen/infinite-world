@@ -367,12 +367,13 @@
    "file": "tables/season.json",
    "structure": "keys",
    "type": {
+    "cellClass": {"type": "ref", "vocab": "component"},
     "unbuilt": {"type": "set", "of": {"type": "string"}}
    },
-   "domain": {"unbuilt": {}},
-   "volume": "卷二十 §2.9 :401（rules.season.schemeRules）与 §2.6 季节行数值维度：卷文没给的值登在 unbuilt（李白 11-19 12:4x 丙6、丙7），季节行本身在词表族 season",
+   "domain": {"cellClass": {}, "unbuilt": {}},
+   "volume": "卷二十 §2.9 :401（rules.season.schemeRules）与 §2.6 季节行数值维度：卷文没给的值登在 unbuilt（李白 11-19 12:4x 丙6、丙7），季节行本身在词表族 season；cellClass 为卷二十 §2.7 :335 天气单元组件类（S2-T1，读者 rules/time_env/season.mjs）",
    "multiSourceMerge": "own_key_only",
-   "packOverridable": {"unbuilt": false}
+   "packOverridable": {"cellClass": false, "unbuilt": false}
   },
   {
    "code": "weather",

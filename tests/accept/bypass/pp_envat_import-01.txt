@@ -1,2 +1,2 @@
-import { tempAt } from './kernel/climate.mjs';
+import { tempAt } from './rules/time_env/season.mjs';
 export const t = tempAt;
